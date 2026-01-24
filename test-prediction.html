@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>预测功能测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        h2 { color: #666; margin-top: 0; }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #45a049; }
+        .result {
+            background: #f9f9f9;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 4px;
+            border-left: 4px solid #4CAF50;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .error {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌅 晚霞预测功能测试</h1>
+    
+    <div class="test-section">
+        <h2>1. 测试完整流程</h2>
+        <p>测试从天气数据到预测生成的完整流程</p>
+        <button onclick="testFullPrediction()">运行测试</button>
+        <div id="fullTestResult"></div>
+    </div>
+
+    <script type="module">
+        import MockWindyAPIService from './src/services/MockWindyAPIService.js';
+        import MockGeocodingService from './src/services/MockGeocodingService.js';
+        import SunsetPredictionService from './src/services/SunsetPredictionService.js';
+        import PredictionController from './src/controllers/PredictionController.js';
+        import StorageService from './src/services/StorageService.js';
+        import Location from './src/models/Location.js';
+
+        window.testFullPrediction = async function() {
+            const resultDiv = document.getElementById('fullTestResult');
+            resultDiv.innerHTML = '测试中...';
+            
+            try {
+                // 1. 创建服务
+                const mockWindyAPI = new MockWindyAPIService('test-key');
+                const mockGeocoding = new MockGeocodingService();
+                const storageService = new StorageService();
+                const predictionController = new PredictionController(storageService);
+
+                resultDiv.innerHTML = '步骤 1: 创建服务 ✓\n';
+
+                // 2. 搜索城市
+                const cityResult = await mockGeocoding.geocode('北京');
+                const location = new Location(cityResult.lat, cityResult.lon, '北京');
+                
+                resultDiv.innerHTML += `步骤 2: 搜索城市 ✓\n  位置: ${location.name} (${location.lat}, ${location.lon})\n`;
+
+                // 3. 获取天气数据
+                const weatherData = await mockWindyAPI.fetchWeatherData(location.lat, location.lon);
+                
+                resultDiv.innerHTML += `步骤 3: 获取天气数据 ✓\n  数据条数: ${weatherData.length}\n`;
+                resultDiv.innerHTML += `  第一条数据时间: ${new Date(weatherData[0].timestamp).toLocaleString()}\n`;
+                resultDiv.innerHTML += `  最后一条数据时间: ${new Date(weatherData[weatherData.length-1].timestamp).toLocaleString()}\n`;
+
+                // 4. 生成预测
+                resultDiv.innerHTML += '\n步骤 4: 生成预测...\n';
+                
+                const predictions = await predictionController.generatePredictions(weatherData, location);
+                
+                if (predictions && predictions.length > 0) {
+                    resultDiv.className = 'result';
+                    resultDiv.innerHTML += `步骤 4: 生成预测 ✓\n  预测数量: ${predictions.length}\n\n`;
+                    
+                    predictions.forEach((pred, index) => {
+                        resultDiv.innerHTML += `预测 ${index + 1}:\n`;
+                        resultDiv.innerHTML += `  日期: ${pred.date.toLocaleDateString()}\n`;
+                        resultDiv.innerHTML += `  评分: ${pred.score.toFixed(0)}/100\n`;
+                        resultDiv.innerHTML += `  质量: ${pred.quality}\n`;
+                        resultDiv.innerHTML += `  日落时间: ${pred.sunsetTime.toLocaleTimeString()}\n`;
+                        resultDiv.innerHTML += `  最佳观赏: ${pred.bestViewingTime.toLocaleTimeString()}\n`;
+                        resultDiv.innerHTML += `  温度: ${pred.temperature.toFixed(1)}°C\n`;
+                        resultDiv.innerHTML += `  湿度: ${pred.humidity.toFixed(0)}%\n`;
+                        resultDiv.innerHTML += `  云量: ${pred.cloudCover.toFixed(0)}%\n`;
+                        resultDiv.innerHTML += `  能见度: ${pred.visibility.toFixed(1)} km\n`;
+                        resultDiv.innerHTML += `  影响因素:\n`;
+                        resultDiv.innerHTML += `    云量评分: ${pred.factors.cloudScore.toFixed(1)}\n`;
+                        resultDiv.innerHTML += `    湿度评分: ${pred.factors.humidityScore.toFixed(1)}\n`;
+                        resultDiv.innerHTML += `    能见度评分: ${pred.factors.visibilityScore.toFixed(1)}\n`;
+                        resultDiv.innerHTML += `    低层云评分: ${pred.factors.lowCloudScore.toFixed(1)}\n`;
+                        resultDiv.innerHTML += '\n';
+                    });
+                    
+                    resultDiv.innerHTML += '✅ 所有测试通过！预测功能正常工作。';
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML += '❌ 未生成任何预测数据\n';
+                    resultDiv.innerHTML += '可能原因:\n';
+                    resultDiv.innerHTML += '1. 天气数据时间范围与日落时间不匹配\n';
+                    resultDiv.innerHTML += '2. 预测算法出错\n';
+                }
+                
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ 测试失败\n\n错误: ${error.message}\n\n堆栈:\n${error.stack}`;
+            }
+        };
+
+        console.log('预测功能测试页面已加载');
+    </script>
+</body>
+</html>

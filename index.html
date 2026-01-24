@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>天气晚霞预测器</title>
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  <div id="app">
+    <!-- API密钥配置模态框 -->
+    <div id="api-key-modal" class="modal hidden">
+      <div class="modal-content">
+        <h2>配置Windy API密钥</h2>
+        <p class="modal-description">请输入您的Windy API密钥以使用天气预测功能</p>
+        <input type="text" id="api-key-input" placeholder="输入API密钥" aria-label="API密钥输入">
+        <div class="modal-actions">
+          <button id="save-api-key" class="btn btn-primary">保存</button>
+        </div>
+        <div id="api-key-error" class="error-message hidden"></div>
+      </div>
+    </div>
+
+    <!-- 需求12：通知设置模态框 -->
+    <div id="notification-modal" class="modal hidden">
+      <div class="modal-content">
+        <h2>通知设置</h2>
+        <p class="modal-description">设置高质量预测提醒</p>
+        <div class="notification-settings">
+          <label class="setting-item">
+            <input type="checkbox" id="notification-enabled">
+            <span>启用通知提醒</span>
+          </label>
+          <div class="setting-item">
+            <label for="notification-threshold">评分阈值（当评分≥此值时提醒）</label>
+            <input type="number" id="notification-threshold" min="0" max="100" value="70" step="5">
+            <span class="threshold-value">70</span>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button id="save-notification-settings" class="btn btn-primary">保存</button>
+          <button id="test-notification" class="btn btn-secondary">测试通知</button>
+          <button id="close-notification-modal" class="btn btn-secondary">关闭</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 主界面 -->
+    <header>
+      <h1>🌅 晚霞预测器</h1>
+      <div class="header-actions">
+        <button id="notification-settings-btn" class="icon-btn" aria-label="通知设置">🔔</button>
+        <button id="settings-btn" class="icon-btn" aria-label="设置">⚙️</button>
+      </div>
+    </header>
+    
+    <main>
+      <!-- 位置选择 -->
+      <section id="location-section" class="card">
+        <h2>选择位置</h2>
+        <div class="location-input-group">
+          <div class="location-input-wrapper">
+            <input type="text" id="location-input" placeholder="输入城市名称" aria-label="城市名称输入">
+            <!-- 需求13：搜索历史下拉列表 -->
+            <div id="search-history-dropdown" class="search-history-dropdown hidden">
+              <!-- 动态填充搜索历史 -->
+            </div>
+          </div>
+          <button id="search-btn" class="btn btn-primary">搜索</button>
+        </div>
+        <button id="current-location-btn" class="btn btn-secondary">
+          📍 使用当前位置
+        </button>
+        <div id="location-error" class="error-message hidden"></div>
+
+        <!-- 需求12：收藏位置列表 -->
+        <div id="favorite-locations" class="favorite-locations-section">
+          <div class="favorite-header">
+            <h3>⭐ 收藏位置</h3>
+            <button id="add-favorite-btn" class="btn btn-small">收藏当前位置</button>
+          </div>
+          <ul id="favorite-list" class="favorite-list">
+            <!-- 动态填充收藏位置 -->
+          </ul>
+        </div>
+      </section>
+      
+      <!-- 当前天气 -->
+      <section id="weather-section" class="card hidden">
+        <h2>天气信息</h2>
+        
+        <!-- 需求11：视图切换按钮 -->
+        <div class="view-toggle">
+          <button id="overview-btn" class="btn btn-toggle active">7天概览</button>
+          <button id="hourly-btn" class="btn btn-toggle">详细预报</button>
+        </div>
+        
+        <!-- 7天概览视图 -->
+        <div id="weekly-overview" class="weather-view">
+          <div id="weekly-cards" class="weekly-cards-container">
+            <!-- 动态填充7天天气卡片 -->
+          </div>
+        </div>
+        
+        <!-- 24小时详细视图 -->
+        <div id="hourly-forecast" class="weather-view hidden">
+          <!-- 日期选择器 -->
+          <div class="day-selector">
+            <button id="today-btn" class="btn btn-toggle active">今天</button>
+            <button id="tomorrow-btn" class="btn btn-toggle">明天</button>
+          </div>
+          
+          <!-- 参数选择器 -->
+          <div class="parameter-selector">
+            <button data-param="temp" class="btn btn-param active">温度</button>
+            <button data-param="precip" class="btn btn-param">降水</button>
+            <button data-param="humidity" class="btn btn-param">湿度</button>
+            <button data-param="wind" class="btn btn-param">风速</button>
+            <button data-param="pressure" class="btn btn-param">气压</button>
+            <button data-param="clouds" class="btn btn-param">云量</button>
+          </div>
+          
+          <!-- 图表容器 -->
+          <div id="chart-container" class="chart-container">
+            <canvas id="weather-chart"></canvas>
+          </div>
+        </div>
+        
+        <!-- 保留原有的当前天气显示（可选） -->
+        <div id="weather-data" style="display: none;">
+          <div class="weather-grid">
+            <div class="weather-item">
+              <span class="weather-label">温度</span>
+              <span id="current-temp" class="weather-value">--</span>
+            </div>
+            <div class="weather-item">
+              <span class="weather-label">湿度</span>
+              <span id="current-humidity" class="weather-value">--</span>
+            </div>
+            <div class="weather-item">
+              <span class="weather-label">云量</span>
+              <span id="current-cloud-cover" class="weather-value">--</span>
+            </div>
+            <div class="weather-item">
+              <span class="weather-label">风速</span>
+              <span id="current-wind-speed" class="weather-value">--</span>
+            </div>
+            <div class="weather-item">
+              <span class="weather-label">气压</span>
+              <span id="current-pressure" class="weather-value">--</span>
+            </div>
+            <div class="weather-item">
+              <span class="weather-label">能见度</span>
+              <span id="current-visibility" class="weather-value">--</span>
+            </div>
+          </div>
+        </div>
+        <div id="weather-error" class="error-message hidden"></div>
+      </section>
+      
+      <!-- 晚霞预测 -->
+      <section id="prediction-section" class="card hidden">
+        <h2>今日晚霞预测</h2>
+        <div id="prediction-display">
+          <!-- 动态填充预测信息 -->
+        </div>
+      </section>
+      
+      <!-- 未来预测 -->
+      <section id="forecast-section" class="card hidden">
+        <h2>未来3天预测</h2>
+        <div id="forecast-timeline">
+          <!-- 动态填充时间线 -->
+        </div>
+      </section>
+      
+      <!-- 加载指示器 -->
+      <div id="loading-indicator" class="loading hidden">
+        <div class="spinner"></div>
+        <p>加载中...</p>
+      </div>
+    </main>
+    
+    <footer>
+      <button id="refresh-btn" class="btn btn-secondary" disabled>
+        🔄 刷新数据
+      </button>
+      <p class="footer-text">数据来源：Windy API</p>
+    </footer>
+    
+    <!-- 全局消息提示 -->
+    <div id="error-message" class="error-message hidden" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; max-width: 500px;"></div>
+    <div id="success-message" class="success-message hidden" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; max-width: 500px;"></div>
+  </div>
+  
+  <script type="module" src="src/app.js?v=13"></script>
+</body>
+</html>

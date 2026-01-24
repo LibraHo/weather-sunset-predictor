@@ -1,0 +1,61 @@
+/**
+ * Jest Configuration for Weather Sunset Predictor
+ * 
+ * This configuration sets up Jest for testing with:
+ * - ES6 modules support
+ * - JSDOM environment for browser APIs
+ * - Coverage reporting
+ * - Property-based testing with fast-check
+ */
+
+export default {
+  // Use jsdom environment to simulate browser APIs
+  testEnvironment: 'jsdom',
+  
+  // Transform ES6 modules using babel-jest
+  transform: {
+    '^.+\\.js$': 'babel-jest',
+  },
+  
+  // Module file extensions
+  moduleFileExtensions: ['js', 'json'],
+  
+  // Test match patterns
+  testMatch: [
+    '**/tests/**/*.test.js',
+    '**/tests/**/*.property.test.js'
+  ],
+  
+  // Coverage configuration
+  collectCoverageFrom: [
+    'src/**/*.js',
+    '!src/app.js', // Exclude main entry point from coverage
+    '!**/node_modules/**',
+    '!**/tests/**'
+  ],
+  
+  // Coverage thresholds (as per design document)
+  coverageThreshold: {
+    global: {
+      branches: 75,
+      functions: 90,
+      lines: 80,
+      statements: 80
+    }
+  },
+  
+  // Setup files to run before tests
+  setupFilesAfterEnv: [],
+  
+  // Verbose output
+  verbose: true,
+  
+  // Clear mocks between tests
+  clearMocks: true,
+  
+  // Restore mocks between tests
+  restoreMocks: true,
+  
+  // Reset mocks between tests
+  resetMocks: true
+};

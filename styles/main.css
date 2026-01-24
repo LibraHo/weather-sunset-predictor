@@ -1,0 +1,2000 @@
+/* ===== CSS变量和主题 ===== */
+:root {
+  /* 颜色方案 */
+  --color-primary: #4a90e2;
+  --color-secondary: #7b68ee;
+  --color-success: #4caf50;
+  --color-warning: #ffc107;
+  --color-error: #f44336;
+  --color-excellent: #4caf50;
+  --color-good: #ffc107;
+  --color-fair: #9e9e9e;
+  
+  /* 中性色 */
+  --color-bg: #f5f5f5;
+  --color-card-bg: #ffffff;
+  --color-text: #333333;
+  --color-text-light: #666666;
+  --color-border: #e0e0e0;
+  
+  /* 间距 */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  
+  /* 圆角 */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  
+  /* 阴影 */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
+  
+  /* 过渡 */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+}
+
+/* ===== 基础样式 ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  min-height: 100vh;
+}
+
+/* ===== 布局 ===== */
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-lg) var(--spacing-md);
+  background-color: var(--color-primary);
+  color: white;
+  box-shadow: var(--shadow-md);
+}
+
+header h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+main {
+  flex: 1;
+  padding: var(--spacing-lg) var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+footer {
+  padding: var(--spacing-lg) var(--spacing-md);
+  background-color: var(--color-card-bg);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.footer-text {
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+}
+
+/* ===== 卡片组件 ===== */
+.card {
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-normal);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.card h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: var(--spacing-md);
+  color: var(--color-text);
+}
+
+/* ===== 按钮 ===== */
+.btn {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  outline: none;
+}
+
+.btn:focus {
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #3a7bc8;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #e8e8e8;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast);
+}
+
+.icon-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ===== 输入框 ===== */
+input[type="text"] {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  width: 100%;
+  transition: border-color var(--transition-fast);
+  outline: none;
+}
+
+input[type="text"]:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+input[type="text"]::placeholder {
+  color: var(--color-text-light);
+}
+
+/* ===== 位置选择区域 ===== */
+.location-input-group {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.location-input-group input {
+  flex: 1;
+}
+
+#current-location-btn {
+  width: 100%;
+}
+
+/* ===== 模态框 ===== */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  max-width: 500px;
+  width: 90%;
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-content h2 {
+  margin-bottom: var(--spacing-sm);
+  color: var(--color-text);
+}
+
+.modal-description {
+  color: var(--color-text-light);
+  margin-bottom: var(--spacing-lg);
+  font-size: 0.875rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+/* ===== 错误消息 ===== */
+.error-message {
+  background-color: #ffebee;
+  color: var(--color-error);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  margin-top: var(--spacing-md);
+  font-size: 0.875rem;
+  border-left: 3px solid var(--color-error);
+}
+
+.error-message.hidden {
+  display: none;
+}
+
+/* ===== 成功消息 ===== */
+.success-message {
+  background-color: #e8f5e9;
+  color: var(--color-success);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  margin-top: var(--spacing-md);
+  font-size: 0.875rem;
+  border-left: 3px solid var(--color-success);
+}
+
+.success-message.hidden {
+  display: none;
+}
+
+/* ===== 加载指示器 ===== */
+.loading {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: var(--color-card-bg);
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+  z-index: 999;
+}
+
+.loading.hidden {
+  display: none;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto var(--spacing-md);
+  border: 4px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== 天气显示 ===== */
+.weather-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.weather-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--spacing-md);
+  background-color: var(--color-bg);
+  border-radius: var(--radius-md);
+}
+
+.weather-label {
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+  margin-bottom: var(--spacing-xs);
+}
+
+.weather-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+#weather-display {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.weather-item-icon {
+  font-size: 2rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+.weather-item-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.weather-item-label {
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+  margin-top: var(--spacing-xs);
+}
+
+/* ===== 预测显示 ===== */
+#prediction-display {
+  text-align: center;
+}
+
+.prediction-score {
+  font-size: 3rem;
+  font-weight: 700;
+  margin: var(--spacing-md) 0;
+}
+
+.prediction-quality {
+  display: inline-block;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: var(--spacing-lg);
+}
+
+.quality-excellent {
+  background-color: var(--color-excellent);
+  color: white;
+}
+
+.quality-good {
+  background-color: var(--color-good);
+  color: white;
+}
+
+.quality-fair {
+  background-color: var(--color-fair);
+  color: white;
+}
+
+.prediction-factors {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+}
+
+.factor-item {
+  padding: var(--spacing-md);
+  background-color: var(--color-bg);
+  border-radius: var(--radius-md);
+  text-align: left;
+}
+
+.factor-label {
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+  margin-bottom: var(--spacing-xs);
+}
+
+.factor-value {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.sunset-time {
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background-color: #fff3e0;
+  border-radius: var(--radius-md);
+  border-left: 3px solid #ff9800;
+}
+
+.sunset-time-label {
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+}
+
+.sunset-time-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ff9800;
+  margin-top: var(--spacing-xs);
+}
+
+/* ===== 未来预测时间线 ===== */
+#forecast-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.forecast-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  background-color: var(--color-bg);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: 2px solid transparent;
+}
+
+.forecast-item:hover {
+  background-color: #e8e8e8;
+  transform: translateX(4px);
+}
+
+.forecast-item.best {
+  border-color: var(--color-excellent);
+  background-color: #e8f5e9;
+}
+
+.forecast-item.expanded {
+  background-color: #f0f7ff;
+  border-color: var(--color-primary);
+}
+
+.forecast-date {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.forecast-score {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.forecast-quality {
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* ===== 预测详情展开 ===== */
+.prediction-details {
+  width: 100%;
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--color-border);
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+}
+
+.prediction-details-content {
+  padding: var(--spacing-sm) 0;
+}
+
+.details-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-md);
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background-color: white;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+.detail-icon {
+  font-size: 1.5rem;
+}
+
+.detail-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-label {
+  font-size: 0.75rem;
+  color: var(--color-text-light);
+}
+
+.detail-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.sunset-time-detail {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background-color: #fff3e0;
+  border-radius: var(--radius-md);
+  border-left: 3px solid #ff9800;
+  margin-bottom: var(--spacing-md);
+}
+
+.sunset-icon {
+  font-size: 2rem;
+}
+
+.sunset-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.sunset-label {
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+}
+
+.sunset-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ff9800;
+}
+
+.factors-explanation {
+  padding: var(--spacing-md);
+  background-color: white;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.factors-explanation h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-sm);
+}
+
+.factors-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.factors-list li {
+  padding: var(--spacing-xs) 0;
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.factors-list li:last-child {
+  border-bottom: none;
+}
+
+.error-text {
+  color: var(--color-error);
+  font-size: 0.875rem;
+  text-align: center;
+  padding: var(--spacing-md);
+}
+
+/* ===== 工具类 ===== */
+.hidden {
+  display: none !important;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.mt-sm {
+  margin-top: var(--spacing-sm);
+}
+
+.mt-md {
+  margin-top: var(--spacing-md);
+}
+
+.mt-lg {
+  margin-top: var(--spacing-lg);
+}
+
+/* ===== 响应式设计 - 移动端 ===== */
+@media (max-width: 768px) {
+  header h1 {
+    font-size: 1.25rem;
+  }
+  
+  main {
+    padding: var(--spacing-md) var(--spacing-sm);
+  }
+  
+  .card {
+    padding: var(--spacing-md);
+  }
+  
+  #weather-display {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .prediction-factors {
+    grid-template-columns: 1fr;
+  }
+  
+  .forecast-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+  
+  .location-input-group {
+    flex-direction: column;
+  }
+  
+  .location-input-group input {
+    width: 100%;
+  }
+
+  /* 预测详情移动端样式 */
+  .details-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-sm);
+  }
+
+  .detail-item {
+    padding: var(--spacing-xs);
+  }
+
+  .detail-icon {
+    font-size: 1.25rem;
+  }
+
+  .detail-label {
+    font-size: 0.7rem;
+  }
+
+  .detail-value {
+    font-size: 0.875rem;
+  }
+
+  .sunset-time-detail {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .factors-explanation {
+    padding: var(--spacing-sm);
+  }
+}
+
+/* ===== 响应式设计 - 桌面端 ===== */
+@media (min-width: 1024px) {
+  header {
+    padding: var(--spacing-xl) var(--spacing-lg);
+  }
+  
+  header h1 {
+    font-size: 2rem;
+  }
+  
+  main {
+    padding: var(--spacing-xl) var(--spacing-lg);
+  }
+  
+  #weather-display {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  .prediction-factors {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  #forecast-timeline {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ===== 可访问性增强 ===== */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  :root {
+    --color-border: #000000;
+    --color-text: #000000;
+  }
+  
+  .btn {
+    border: 2px solid currentColor;
+  }
+}
+
+/* 焦点可见性 */
+:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+
+/* ===== 预测显示增强样式 ===== */
+.prediction-score-container {
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.prediction-score {
+  font-size: 4rem;
+  font-weight: 700;
+  margin: var(--spacing-md) 0;
+  line-height: 1;
+}
+
+.prediction-score.quality-excellent {
+  color: var(--color-excellent);
+}
+
+.prediction-score.quality-good {
+  color: var(--color-good);
+}
+
+.prediction-score.quality-fair {
+  color: var(--color-fair);
+}
+
+.prediction-score.quality-poor {
+  color: var(--color-error);
+}
+
+.prediction-quality {
+  display: inline-block;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.quality-poor {
+  background-color: var(--color-error);
+  color: white;
+}
+
+.prediction-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin: var(--spacing-lg) 0;
+}
+
+.sunset-time,
+.best-time {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background-color: #fff3e0;
+  border-radius: var(--radius-md);
+}
+
+.sunset-icon {
+  font-size: 1.5rem;
+}
+
+.sunset-label,
+.best-time-label {
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+}
+
+.sunset-value,
+.best-time-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.prediction-factors {
+  margin-top: var(--spacing-xl);
+}
+
+.prediction-factors h3 {
+  margin-bottom: var(--spacing-md);
+  color: var(--color-text);
+}
+
+.factors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.factor-item {
+  padding: var(--spacing-md);
+  background-color: var(--color-bg);
+  border-radius: var(--radius-md);
+}
+
+.factor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.factor-name {
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+  font-weight: 500;
+}
+
+.factor-value {
+  font-size: 0.875rem;
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.factor-bar {
+  height: 8px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: var(--spacing-xs) 0;
+}
+
+.factor-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-good), var(--color-excellent));
+  transition: width 0.3s ease;
+}
+
+.factor-score {
+  font-size: 0.75rem;
+  color: var(--color-text-light);
+  text-align: right;
+}
+
+/* ===== 预测时间线 ===== */
+.forecast-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.forecast-item {
+  padding: var(--spacing-md);
+  background-color: var(--color-card-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.forecast-item:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.forecast-item:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.forecast-item.expanded {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.forecast-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.forecast-date {
+  display: flex;
+  flex-direction: column;
+}
+
+.day-label {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.date-label {
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+}
+
+.forecast-score {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.forecast-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.quality-badge {
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.sunset-time-small {
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+}
+
+/* ===== 预测详情 ===== */
+.prediction-details {
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--color-border);
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+}
+
+.prediction-details-content {
+  padding: var(--spacing-md) 0;
+}
+
+.details-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-md);
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background-color: var(--color-bg);
+  border-radius: var(--radius-sm);
+}
+
+.detail-icon {
+  font-size: 1.5rem;
+}
+
+.detail-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-label {
+  font-size: 0.75rem;
+  color: var(--color-text-light);
+}
+
+.detail-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.sunset-time-detail {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background-color: #fff3e0;
+  border-radius: var(--radius-md);
+  margin: var(--spacing-md) 0;
+}
+
+.sunset-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.factors-explanation {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md);
+  background-color: var(--color-bg);
+  border-radius: var(--radius-md);
+}
+
+.factors-explanation h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-sm);
+}
+
+.factors-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.factors-list li {
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+  padding: var(--spacing-xs) 0;
+}
+
+/* ===== 响应式设计 ===== */
+@media (max-width: 768px) {
+  .prediction-score {
+    font-size: 3rem;
+  }
+
+  .factors-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .details-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .forecast-item {
+    padding: var(--spacing-sm);
+  }
+
+  .forecast-score {
+    font-size: 1.5rem;
+  }
+}
+
+
+/* ===== 朝霞/晚霞预测样式 ===== */
+.today-predictions-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.prediction-card {
+  background-color: var(--color-card-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-normal);
+}
+
+.prediction-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.prediction-card .prediction-header {
+  text-align: center;
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.prediction-card .prediction-header h3 {
+  font-size: 1.25rem;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.prediction-card .prediction-factors h4 {
+  font-size: 1rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+.prediction-header {
+  text-align: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.prediction-header h2 {
+  font-size: 1.5rem;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.forecast-day-group {
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background-color: var(--color-bg);
+  border-radius: var(--radius-md);
+}
+
+.forecast-day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.forecast-day-predictions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.forecast-type {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.type-icon {
+  font-size: 1.5rem;
+}
+
+.type-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* 朝霞特殊样式 */
+.forecast-item[data-type="sunrise"] {
+  border-left: 3px solid #ff9800;
+}
+
+.forecast-item[data-type="sunrise"] .type-icon {
+  filter: hue-rotate(30deg);
+}
+
+/* 晚霞特殊样式 */
+.forecast-item[data-type="sunset"] {
+  border-left: 3px solid #ff5722;
+}
+
+@media (max-width: 768px) {
+  .forecast-day-predictions {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ===== 预测分析文字样式 ===== */
+.prediction-analysis {
+  margin: var(--spacing-lg) 0;
+  padding: var(--spacing-md);
+  background-color: #e3f2fd;
+  border-left: 4px solid #2196f3;
+  border-radius: var(--radius-sm);
+}
+
+.prediction-analysis h4 {
+  font-size: 1rem;
+  margin: 0 0 var(--spacing-sm) 0;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.analysis-text {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--color-text);
+  margin: 0;
+}
+
+
+/* ===== 需求11：天气界面优化样式 ===== */
+
+/* 视图切换按钮 */
+.view-toggle {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+  justify-content: center;
+}
+
+.btn-toggle {
+  flex: 1;
+  max-width: 200px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-toggle:hover {
+  background-color: #e8e8e8;
+  border-color: var(--color-primary);
+}
+
+.btn-toggle.active {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+/* 7天概览卡片容器 */
+.weekly-cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+}
+
+.day-card {
+  background-color: var(--color-bg);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  border: 2px solid transparent;
+}
+
+.day-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary);
+}
+
+.day-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-sm);
+}
+
+.weather-icon {
+  font-size: 2.5rem;
+  margin: var(--spacing-sm) 0;
+}
+
+.temp-range {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: var(--spacing-sm) 0;
+}
+
+.max-temp {
+  color: #ff5722;
+}
+
+.min-temp {
+  color: #2196f3;
+}
+
+.temp-separator {
+  color: var(--color-text-light);
+  margin: 0 var(--spacing-xs);
+}
+
+.precip-prob {
+  font-size: 0.85rem;
+  color: var(--color-text-light);
+  margin-top: var(--spacing-xs);
+}
+
+/* 24小时详细视图 */
+.weather-view {
+  margin-top: var(--spacing-md);
+}
+
+.weather-view.hidden {
+  display: none;
+}
+
+/* 日期选择器 */
+.day-selector {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  justify-content: center;
+}
+
+/* 参数选择器 */
+.parameter-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+  justify-content: center;
+}
+
+.btn-param {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  min-width: 80px;
+}
+
+.btn-param:hover {
+  background-color: #e8e8e8;
+  border-color: var(--color-primary);
+}
+
+.btn-param.active {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+/* 图表容器 */
+.chart-container {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+  /* 支持移动端横向滚动 */
+  -webkit-overflow-scrolling: touch;
+}
+
+.chart-container canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+  .weekly-cards-container {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: var(--spacing-sm);
+  }
+
+  .day-card {
+    padding: var(--spacing-sm);
+  }
+
+  .weather-icon {
+    font-size: 2rem;
+  }
+
+  .temp-range {
+    font-size: 1rem;
+  }
+
+  .parameter-selector {
+    gap: var(--spacing-xs);
+  }
+
+  .btn-param {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.8rem;
+    min-width: 70px;
+  }
+
+  .chart-container {
+    padding: var(--spacing-sm);
+  }
+
+  /* 图表在移动端支持横向滚动 */
+  .chart-container canvas {
+    min-width: 600px;
+  }
+}
+
+/* 平板优化 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .weekly-cards-container {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* 桌面优化 */
+@media (min-width: 1025px) {
+  .weekly-cards-container {
+    grid-template-columns: repeat(7, 1fr);
+  }
+
+  .chart-container canvas {
+    width: 100%;
+  }
+}
+
+/* 可访问性增强 */
+.btn-toggle:focus,
+.btn-param:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.day-card:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* 打印样式 */
+@media print {
+  .view-toggle,
+  .day-selector,
+  .parameter-selector {
+    display: none;
+  }
+
+  .chart-container {
+    box-shadow: none;
+    border: 1px solid var(--color-border);
+  }
+}
+
+/* ===== 需求12：朝霞晚霞预测增强功能样式 ===== */
+
+/* 头部操作按钮 */
+.header-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.header-actions .icon-btn {
+  color: white;
+  font-size: 1.5rem;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast);
+}
+
+.header-actions .icon-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* 通知设置模态框 */
+.notification-settings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin: var(--spacing-md) 0;
+}
+
+.setting-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background-color: var(--color-bg);
+  border-radius: var(--radius-sm);
+}
+
+.setting-item label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  cursor: pointer;
+  flex: 1;
+}
+
+.setting-item input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.setting-item input[type="number"] {
+  width: 80px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+}
+
+.threshold-value {
+  font-weight: 600;
+  color: var(--color-primary);
+  min-width: 40px;
+  text-align: center;
+}
+
+.btn-small {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: 0.875rem;
+}
+
+/* 收藏位置区域 */
+.favorite-locations-section {
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--color-border);
+}
+
+.favorite-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.favorite-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.favorite-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.favorite-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-bg);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+}
+
+.favorite-item:hover {
+  background-color: #e8e8e8;
+  border-color: var(--color-primary);
+  transform: translateX(4px);
+}
+
+.favorite-item-name {
+  font-weight: 500;
+  color: var(--color-text);
+  flex: 1;
+}
+
+.favorite-item-coords {
+  font-size: 0.75rem;
+  color: var(--color-text-light);
+  margin-right: var(--spacing-md);
+}
+
+.favorite-item-remove {
+  background: none;
+  border: none;
+  color: var(--color-error);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast);
+}
+
+.favorite-item-remove:hover {
+  background-color: rgba(244, 67, 54, 0.1);
+}
+
+.favorite-list-empty {
+  text-align: center;
+  padding: var(--spacing-lg);
+  color: var(--color-text-light);
+  font-size: 0.875rem;
+}
+
+/* 云层分层信息 */
+.cloud-layers-section {
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background-color: #e3f2fd;
+  border-radius: var(--radius-md);
+  border-left: 4px solid #2196f3;
+}
+
+.cloud-layers-section h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 var(--spacing-md) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.cloud-layers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.cloud-layer {
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-sm);
+  background-color: white;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+.cloud-layer-label {
+  font-size: 0.75rem;
+  color: var(--color-text-light);
+  margin-bottom: var(--spacing-xs);
+}
+
+.cloud-layer-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.cloud-layer-bar {
+  height: 6px;
+  background-color: #e0e0e0;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: var(--spacing-xs);
+}
+
+.cloud-layer-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #90caf9, #2196f3);
+  transition: width 0.3s ease;
+}
+
+.cloud-description {
+  font-size: 0.875rem;
+  color: var(--color-text);
+  line-height: 1.5;
+  margin-top: var(--spacing-sm);
+}
+
+/* 黄金时段和蓝调时段 */
+.golden-hour-info,
+.blue-hour-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  margin: var(--spacing-sm) 0;
+}
+
+.golden-hour-info {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border-left: 4px solid #ff9800;
+}
+
+.blue-hour-info {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border-left: 4px solid #2196f3;
+}
+
+.time-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.time-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* 太阳方位角 */
+.sun-azimuth-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md);
+  background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%);
+  border-radius: var(--radius-md);
+  border-left: 4px solid #fbc02d;
+  margin: var(--spacing-sm) 0;
+}
+
+.azimuth-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.azimuth-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+  .header-actions {
+    gap: var(--spacing-xs);
+  }
+
+  .header-actions .icon-btn {
+    font-size: 1.25rem;
+    padding: var(--spacing-xs);
+  }
+
+  .favorite-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .favorite-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+
+  .favorite-item-coords {
+    margin-right: 0;
+  }
+
+  .cloud-layers-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .golden-hour-info,
+  .blue-hour-info,
+  .sun-azimuth-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+}
+
+/* 可访问性增强 */
+.favorite-item:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.favorite-item-remove:focus {
+  outline: 2px solid var(--color-error);
+  outline-offset: 2px;
+}
+
+/* 打印样式 */
+@media print {
+  .header-actions,
+  .favorite-locations-section,
+  .notification-settings {
+    display: none;
+  }
+}
+
+/* ===== 需求13：搜索历史样式 ===== */
+
+/* 位置输入包装器 */
+.location-input-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+/* 搜索历史下拉列表 */
+.search-history-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: var(--color-card-bg);
+  border: 1px solid var(--color-border);
+  border-top: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  box-shadow: var(--shadow-md);
+  z-index: 100;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: -1px;
+}
+
+.search-history-dropdown.hidden {
+  display: none;
+}
+
+/* 历史记录列表 */
+.history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.history-item:last-child {
+  border-bottom: none;
+}
+
+.history-item:hover {
+  background-color: var(--color-bg);
+}
+
+.history-name {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.history-name:hover {
+  color: var(--color-primary);
+}
+
+/* 删除按钮 */
+.history-remove {
+  background: none;
+  border: none;
+  color: var(--color-text-light);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  line-height: 1;
+}
+
+.history-remove:hover {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: var(--color-error);
+}
+
+/* 空状态 */
+.history-empty {
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--color-text-light);
+  font-size: 0.875rem;
+}
+
+/* 清除全部按钮 */
+.history-clear-all {
+  width: 100%;
+  margin: 0;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  border-top: 1px solid var(--color-border);
+  font-size: 0.875rem;
+  padding: var(--spacing-sm);
+}
+
+.history-clear-all:hover {
+  background-color: #e8e8e8;
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+  .location-input-group {
+    flex-direction: column;
+  }
+
+  .location-input-wrapper {
+    width: 100%;
+  }
+
+  .search-history-dropdown {
+    max-height: 250px;
+  }
+
+  .history-item {
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+
+  .history-name {
+    font-size: 0.85rem;
+  }
+
+  .history-remove {
+    font-size: 1.1rem;
+  }
+}
+
+/* 可访问性增强 */
+.history-item:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.history-remove:focus {
+  outline: 2px solid var(--color-error);
+  outline-offset: 2px;
+}
+
+/* 打印样式 */
+@media print {
+  .search-history-dropdown {
+    display: none;
+  }
+}

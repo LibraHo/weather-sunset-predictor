@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>测试ChartService</title>
+</head>
+<body>
+  <h1>测试ChartService导入</h1>
+  <div id="result"></div>
+  
+  <script type="module">
+    try {
+      const module = await import('./src/services/ChartService.js?v=' + Date.now());
+      document.getElementById('result').innerHTML = '<p style="color: green;">✓ ChartService导入成功！</p><p>默认导出: ' + (module.default ? '存在' : '不存在') + '</p>';
+      console.log('ChartService:', module.default);
+    } catch (error) {
+      document.getElementById('result').innerHTML = '<p style="color: red;">✗ 导入失败: ' + error.message + '</p>';
+      console.error('导入错误:', error);
+    }
+  </script>
+</body>
+</html>
