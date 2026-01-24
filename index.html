@@ -88,51 +88,24 @@
       <!-- 当前天气 -->
       <section id="weather-section" class="card hidden">
         <h2>天气信息</h2>
-        
-        <!-- 需求11：视图切换按钮 -->
-        <div class="view-toggle">
-          <button id="overview-btn" class="btn btn-toggle active">7天概览</button>
-          <button id="hourly-btn" class="btn btn-toggle">详细预报</button>
-        </div>
-        
-        <!-- 7天概览视图 -->
-        <div id="weekly-overview" class="weather-view">
-          <div id="weekly-cards" class="weekly-cards-container">
-            <!-- 动态填充7天天气卡片 -->
-          </div>
-        </div>
-        
-        <!-- 24小时详细视图 -->
-        <div id="hourly-forecast" class="weather-view hidden">
-          <!-- 日期选择器 -->
-          <div class="day-selector">
-            <button id="today-btn" class="btn btn-toggle active">今天</button>
-            <button id="tomorrow-btn" class="btn btn-toggle">明天</button>
-          </div>
-          
-          <!-- 参数选择器 -->
-          <div class="parameter-selector">
-            <button data-param="temp" class="btn btn-param active">温度</button>
-            <button data-param="precip" class="btn btn-param">降水</button>
-            <button data-param="humidity" class="btn btn-param">湿度</button>
-            <button data-param="wind" class="btn btn-param">风速</button>
-            <button data-param="pressure" class="btn btn-param">气压</button>
-            <button data-param="clouds" class="btn btn-param">云量</button>
-          </div>
-          
-          <!-- 图表容器 -->
-          <div id="chart-container" class="chart-container">
-            <canvas id="weather-chart"></canvas>
-          </div>
-        </div>
-        
-        <!-- 保留原有的当前天气显示（可选） -->
+
+        <!-- 当前天气主展示区域 -->
         <div id="weather-data" style="display: none;">
-          <div class="weather-grid">
-            <div class="weather-item">
-              <span class="weather-label">温度</span>
-              <span id="current-temp" class="weather-value">--</span>
+          <!-- 位置 -->
+          <div id="weather-location" class="weather-location">--</div>
+
+          <!-- 主要天气信息 -->
+          <div class="weather-main">
+            <div class="weather-icon-large" id="weather-icon-main">☀️</div>
+            <div class="weather-temp-large">
+              <span id="current-temp-main">--</span>
+              <span class="temp-unit">°C</span>
             </div>
+            <div class="weather-desc" id="weather-description">--</div>
+          </div>
+
+          <!-- 详细信息网格 -->
+          <div class="weather-grid" style="margin-top: 20px;">
             <div class="weather-item">
               <span class="weather-label">湿度</span>
               <span id="current-humidity" class="weather-value">--</span>
@@ -155,12 +128,45 @@
             </div>
           </div>
         </div>
+
+        <!-- 需求11：视图切换按钮 -->
+        <div class="view-toggle" style="margin-top: 30px;">
+          <button id="overview-btn" class="btn btn-toggle active">7天概览</button>
+          <button id="hourly-btn" class="btn btn-toggle">详细预报</button>
+        </div>
+
+        <!-- 7天概览视图 -->
+        <div id="weekly-overview" class="weather-view">
+          <div id="weekly-cards" class="weekly-cards-container">
+            <!-- 动态填充天气卡片 -->
+          </div>
+        </div>
+
+        <!-- 24小时详细视图 -->
+        <div id="hourly-forecast" class="weather-view hidden">
+          <div class="day-selector">
+            <button id="today-btn" class="btn btn-toggle active">今天</button>
+            <button id="tomorrow-btn" class="btn btn-toggle">明天</button>
+          </div>
+          <div class="parameter-selector">
+            <button data-param="temp" class="btn btn-param active">温度</button>
+            <button data-param="precip" class="btn btn-param">降水</button>
+            <button data-param="humidity" class="btn btn-param">湿度</button>
+            <button data-param="wind" class="btn btn-param">风速</button>
+            <button data-param="pressure" class="btn btn-param">气压</button>
+            <button data-param="clouds" class="btn btn-param">云量</button>
+          </div>
+          <div id="chart-container" class="chart-container">
+            <canvas id="weather-chart"></canvas>
+          </div>
+        </div>
+
         <div id="weather-error" class="error-message hidden"></div>
       </section>
       
       <!-- 晚霞预测 -->
       <section id="prediction-section" class="card hidden">
-        <h2>今日晚霞预测</h2>
+        <h2 id="prediction-section-title">朝霞/晚霞预测</h2>
         <div id="prediction-display">
           <!-- 动态填充预测信息 -->
         </div>
@@ -168,7 +174,7 @@
       
       <!-- 未来预测 -->
       <section id="forecast-section" class="card hidden">
-        <h2>未来3天预测</h2>
+        <h2>未来预测</h2>
         <div id="forecast-timeline">
           <!-- 动态填充时间线 -->
         </div>
@@ -193,6 +199,6 @@
     <div id="success-message" class="success-message hidden" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; max-width: 500px;"></div>
   </div>
   
-  <script type="module" src="src/app.js?v=13"></script>
+  <script type="module" src="src/app.js?v=22&cache-bust=1"></script>
 </body>
 </html>

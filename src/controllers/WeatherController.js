@@ -100,8 +100,9 @@ class WeatherController {
   /**
    * 更新天气显示
    * @param {WeatherData[]} weatherData - 天气数据数组
+   * @param {Object} location - 位置对象（可选）
    */
-  updateWeatherDisplay(weatherData) {
+  updateWeatherDisplay(weatherData, location = null) {
     if (!weatherData || weatherData.length === 0) {
       this.showError('没有可用的天气数据');
       return;
@@ -110,9 +111,34 @@ class WeatherController {
     // 获取当前天气（第一个数据点）
     const currentWeather = weatherData[0];
 
-    // 更新 UI 元素
+    // 更新位置
+    const locationEl = document.getElementById('weather-location');
+    if (locationEl) {
+      locationEl.textContent = location && location.name ? location.name : '当前位置';
+    }
+
+    // 更新主要天气信息
+    const tempMainEl = document.getElementById('current-temp-main');
+    if (tempMainEl) {
+      tempMainEl.textContent = currentWeather.temp.toFixed(1);
+    }
+
+    // 更新天气图标
+    const iconMainEl = document.getElementById('weather-icon-main');
+    if (iconMainEl) {
+      const icon = this._getWeatherIcon(currentWeather.cloudCover, 0);
+      iconMainEl.textContent = icon;
+    }
+
+    // 更新天气描述
+    const descEl = document.getElementById('weather-description');
+    if (descEl) {
+      const desc = this._getWeatherDescription(currentWeather.cloudCover, currentWeather.temp);
+      descEl.textContent = desc;
+    }
+
+    // 更新详细信息网格
     const elements = {
-      temp: document.getElementById('current-temp'),
       humidity: document.getElementById('current-humidity'),
       cloudCover: document.getElementById('current-cloud-cover'),
       windSpeed: document.getElementById('current-wind-speed'),
@@ -120,9 +146,6 @@ class WeatherController {
       visibility: document.getElementById('current-visibility')
     };
 
-    if (elements.temp) {
-      elements.temp.textContent = `${currentWeather.temp.toFixed(1)}°C`;
-    }
     if (elements.humidity) {
       elements.humidity.textContent = `${currentWeather.humidity.toFixed(0)}%`;
     }
@@ -226,6 +249,21 @@ class WeatherController {
       weeklyCards.appendChild(card);
     });
 
+    // 更新概览按钮标题，反映实际天数
+    const overviewBtn = document.getElementById('overview-btn');
+    if (overviewBtn) {
+      overviewBtn.textContent = `${dailyData.length}天概览`;
+    }
+
+    // 如果天数少于7天，添加提示说明原因
+    if (dailyData.length < 7 && weeklyCards) {
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'info-message';
+      infoDiv.style.cssText = 'margin-top: 10px; padding: 10px; background: #e3f2fd; border-radius: 4px; font-size: 14px; color: #1976d2;';
+      infoDiv.innerHTML = `ℹ️ 数据源提供 ${weatherData.length} 小时预测数据（约 ${dailyData.length} 天）。若需更多天数，请考虑使用其他天气数据源。`;
+      weeklyCards.appendChild(infoDiv);
+    }
+
     console.log(`[WeatherController] 渲染了 ${dailyData.length} 天的概览`);
   }
 
@@ -290,6 +328,19 @@ class WeatherController {
     if (cloudCover > 70) return '☁️';
     if (cloudCover > 30) return '⛅';
     return '☀️';
+  }
+
+  /**
+   * 获取天气描述
+   * @param {number} cloudCover - 云量百分比
+   * @param {number} temp - 温度
+   * @returns {string} 天气描述
+   */
+  _getWeatherDescription(cloudCover, temp) {
+    if (cloudCover > 70) return '阴天';
+    if (cloudCover > 30) return '多云';
+    if (cloudCover > 10) return '少云';
+    return '晴天';
   }
 
   /**

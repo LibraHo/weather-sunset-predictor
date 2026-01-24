@@ -44,12 +44,19 @@ class PredictionController {
     console.log('[PredictionController] 天气数据条数:', weatherDataArray.length);
     console.log('[PredictionController] 位置:', location);
 
+    // 输出天气数据范围信息
+    if (weatherDataArray.length > 0) {
+      const firstDataTime = new Date(weatherDataArray[0].timestamp);
+      const lastDataTime = new Date(weatherDataArray[weatherDataArray.length - 1].timestamp);
+      console.log(`[PredictionController] 天气数据时间范围: ${firstDataTime.toLocaleString('zh-CN')} 到 ${lastDataTime.toLocaleString('zh-CN')}`);
+    }
+
     const predictions = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // 为未来3天生成预测
-    for (let i = 0; i < 3; i++) {
+    // 为未来5天生成预测
+    for (let i = 0; i < 5; i++) {
       const targetDate = new Date(today);
       targetDate.setDate(today.getDate() + i);
 
@@ -71,6 +78,12 @@ class PredictionController {
           return timeDiff < 3600000; // 1小时内
         });
 
+        console.log(`[PredictionController] 第${i}天 日出天气数据:`, sunriseWeatherData ? `找到 (时间差: ${Math.abs(sunriseWeatherData.timestamp - sunriseTimestamp) / 3600000}小时)` : '未找到');
+
+        // 检查日出时间是否在天气数据范围内
+        const sunriseInRange = sunriseTimestamp >= weatherDataArray[0].timestamp && sunriseTimestamp <= weatherDataArray[weatherDataArray.length - 1].timestamp;
+        console.log(`[PredictionController] 第${i}天 日出时间在数据范围内:`, sunriseInRange);
+
         if (sunriseWeatherData) {
           console.log(`[PredictionController] 找到日出相关天气数据`);
 
@@ -78,7 +91,8 @@ class PredictionController {
             sunriseWeatherData,
             targetDate,
             location.lat,
-            location.lon
+            location.lon,
+            'sunrise'
           );
 
           // 标记为朝霞预测
@@ -104,13 +118,20 @@ class PredictionController {
           location.lon
         );
 
-        console.log(`[PredictionController] 日落时间:`, sunsetTime);
+        console.log(`[PredictionController] 第${i}天 日落时间:`, sunsetTime, `时间戳: ${sunsetTime.getTime()}`);
+        console.log(`[PredictionController] 第${i}天 targetDate:`, targetDate, `时间戳: ${targetDate.getTime()}`);
 
         const sunsetTimestamp = sunsetTime.getTime();
         const sunsetWeatherData = weatherDataArray.find(data => {
           const timeDiff = Math.abs(data.timestamp - sunsetTimestamp);
           return timeDiff < 3600000; // 1小时内
         });
+
+        console.log(`[PredictionController] 第${i}天 日落天气数据:`, sunsetWeatherData ? `找到 (时间差: ${Math.abs(sunsetWeatherData.timestamp - sunsetTimestamp) / 3600000}小时)` : '未找到');
+
+        // 检查日落时间是否在天气数据范围内
+        const inRange = sunsetTimestamp >= weatherDataArray[0].timestamp && sunsetTimestamp <= weatherDataArray[weatherDataArray.length - 1].timestamp;
+        console.log(`[PredictionController] 第${i}天 日落时间在数据范围内:`, inRange);
 
         if (sunsetWeatherData) {
           console.log(`[PredictionController] 找到日落相关天气数据`);
@@ -119,7 +140,8 @@ class PredictionController {
             sunsetWeatherData,
             targetDate,
             location.lat,
-            location.lon
+            location.lon,
+            'sunset'
           );
 
           // 标记为晚霞预测
@@ -160,20 +182,107 @@ class PredictionController {
     }
 
     console.log('[PredictionController] 更新预测显示:', predictions);
-    
+
     // 存储预测数据供详情展开使用
     this.predictions = predictions;
 
-    // 找到今天的朝霞和晚霞预测
-    const todaySunrise = predictions.find(p => p.type === 'sunrise');
-    const todaySunset = predictions.find(p => p.type === 'sunset');
+    // 计算今天的日期
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // 显示今日预测（同时显示朝霞和晚霞）
-    this.updateTodayPredictions(todaySunrise, todaySunset);
+    // 找到今天的朝霞和晚霞预测
+    let todaySunrise = predictions.find(p =>
+      p.type === 'sunrise' && p.date && p.date.toDateString() === today.toDateString()
+    );
+    let todaySunset = predictions.find(p =>
+      p.type === 'sunset' && p.date && p.date.toDateString() === today.toDateString()
+    );
+
+    console.log('[PredictionController] 今日朝霞预测:', todaySunrise ? '找到' : '未找到');
+    console.log('[PredictionController] 今日晚霞预测:', todaySunset ? '找到' : '未找到');
+
+    // 计算今日的日出日落时间用于判断"时间已过"
+    let sunriseTime = null;
+    let sunsetTime = null;
+    let displaySunrise = todaySunrise;
+    let displaySunset = todaySunset;
+    let displayDate = today;
+
+    // 从预测对象中获取日出日落时间
+    if (todaySunrise && todaySunrise.sunsetTime) {
+      sunriseTime = todaySunrise.sunsetTime;
+    }
+    if (todaySunset && todaySunset.sunsetTime) {
+      sunsetTime = todaySunset.sunsetTime;
+    }
+
+    // 检查时间是否已过，智能切换到明天的预测
+    const now = new Date();
+    let needTomorrow = false;
+
+    // 朝霞时间检查
+    if (sunriseTime) {
+      const sunriseEndTime = new Date(sunriseTime.getTime() + 2 * 60 * 60 * 1000);
+      if (now > sunriseEndTime && todaySunrise) {
+        console.log('[PredictionController] 今日朝霞时间已过，查找明天的朝霞预测');
+        needTomorrow = true;
+      }
+    }
+
+    // 晚霞时间检查
+    if (sunsetTime) {
+      const sunsetEndTime = new Date(sunsetTime.getTime() + 1.5 * 60 * 60 * 1000);
+      if (now > sunsetEndTime && todaySunset) {
+        console.log('[PredictionController] 今日晚霞时间已过，查找明天的晚霞预测');
+        needTomorrow = true;
+      }
+    }
+
+    // 如果需要，切换到明天的预测
+    if (needTomorrow) {
+      const tomorrowSunrise = predictions.find(p =>
+        p.type === 'sunrise' && p.date && p.date.toDateString() === tomorrow.toDateString()
+      );
+      const tomorrowSunset = predictions.find(p =>
+        p.type === 'sunset' && p.date && p.date.toDateString() === tomorrow.toDateString()
+      );
+
+      console.log('[PredictionController] 明日朝霞预测:', tomorrowSunrise ? '找到' : '未找到');
+      console.log('[PredictionController] 明日晚霞预测:', tomorrowSunset ? '找到' : '未找到');
+
+      // 使用明天的预测（如果有的话）
+      if (now > (sunriseTime ? new Date(sunriseTime.getTime() + 2 * 60 * 60 * 1000) : new Date(0))) {
+        displaySunrise = tomorrowSunrise;
+        sunriseTime = tomorrowSunrise ? tomorrowSunrise.sunsetTime : null;
+      }
+      if (now > (sunsetTime ? new Date(sunsetTime.getTime() + 1.5 * 60 * 60 * 1000) : new Date(0))) {
+        displaySunset = tomorrowSunset;
+        sunsetTime = tomorrowSunset ? tomorrowSunset.sunsetTime : null;
+      }
+      displayDate = tomorrow;
+    }
+
+    // 判断每个预测是今日还是明日的，用于智能标题
+    const sunriseIsToday = displaySunrise && displaySunrise.date &&
+      displaySunrise.date.toDateString() === today.toDateString();
+    const sunsetIsToday = displaySunset && displaySunset.date &&
+      displaySunset.date.toDateString() === today.toDateString();
+
+    // 显示预测
+    this.updateTodayPredictions(
+      displaySunrise,
+      displaySunset,
+      sunriseTime,
+      sunsetTime,
+      displayDate,
+      { sunriseIsToday, sunsetIsToday }
+    );
 
     // 显示未来预测时间线
     this.updateForecastTimeline(predictions);
-    
+
     // 绑定点击事件到预测卡片（任务 13.5）
     this.bindPredictionCardEvents();
 
@@ -185,14 +294,66 @@ class PredictionController {
    * 更新今日预测显示（朝霞和晚霞）
    * @param {Object} sunrisePrediction - 朝霞预测数据
    * @param {Object} sunsetPrediction - 晚霞预测数据
+   * @param {Date} sunriseTime - 日出时间
+   * @param {Date} sunsetTime - 日落时间
+   * @param {Date} displayDate - 显示的日期
+   * @param {Object} dateInfo - 日期信息 { sunriseIsToday, sunsetIsToday }
    * @private
    */
-  updateTodayPredictions(sunrisePrediction, sunsetPrediction) {
+  updateTodayPredictions(sunrisePrediction, sunsetPrediction, sunriseTime, sunsetTime, displayDate = new Date(), dateInfo = null) {
     const predictionSection = document.getElementById('prediction-section');
     const predictionDisplay = document.getElementById('prediction-display');
+    const sectionTitle = document.getElementById('prediction-section-title');
 
     if (!predictionDisplay) {
       console.error('未找到预测显示元素');
+      return;
+    }
+
+    // 生成智能标题
+    let title = '朝霞/晚霞预测';
+
+    if (dateInfo && dateInfo.sunriseIsToday !== undefined && dateInfo.sunsetIsToday !== undefined) {
+      // 根据实际显示的预测生成标题
+      if (dateInfo.sunriseIsToday && dateInfo.sunsetIsToday) {
+        title = '朝霞/晚霞预测'; // 今日朝霞+今日晚霞，省略"今日"
+      } else if (!dateInfo.sunriseIsToday && !dateInfo.sunsetIsToday) {
+        title = '明日朝霞/晚霞预测';
+      } else if (dateInfo.sunriseIsToday && !dateInfo.sunsetIsToday) {
+        title = '朝霞/晚霞预测'; // 这种情况很少见
+      } else if (!dateInfo.sunriseIsToday && dateInfo.sunsetIsToday) {
+        title = '今日晚霞 明日朝霞预测';
+      }
+    } else {
+      // 兼容旧代码：如果没有 dateInfo，使用 displayDate 判断
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const isToday = displayDate.toDateString() === today.toDateString();
+      title = isToday ? '朝霞/晚霞预测' : '明日朝霞/晚霞预测';
+    }
+
+    if (sectionTitle) {
+      sectionTitle.textContent = title;
+    }
+
+    // 用于错误提示的日期标签
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const isToday = displayDate.toDateString() === today.toDateString();
+    const dateLabel = isToday ? '今日' : '明日';
+
+    // 如果两个预测都缺失，显示错误提示
+    if (!sunrisePrediction && !sunsetPrediction) {
+      predictionDisplay.innerHTML = `
+        <div class="prediction-unavailable">
+          <p>⚠️ 暂无${dateLabel}预测数据</p>
+          <p class="hint-text">天气数据不足，无法生成预测。请稍后刷新数据。</p>
+        </div>
+      `;
+      if (predictionSection) {
+        predictionSection.classList.remove('hidden');
+      }
+      console.warn(`[PredictionController] ${dateLabel}朝霞和晚霞预测均不可用`);
       return;
     }
 
@@ -200,12 +361,30 @@ class PredictionController {
 
     // 朝霞预测
     if (sunrisePrediction) {
-      html += this.renderSinglePrediction(sunrisePrediction, '🌄', '朝霞', '日出时间');
+      html += this.renderSinglePrediction(sunrisePrediction, '🌄', `${dateLabel}朝霞`, '日出时间', dateLabel);
+    } else {
+      // 朝霞预测未生成
+      html += `
+        <div class="prediction-unavailable-card">
+          <h3>🌄 ${dateLabel}朝霞预测</h3>
+          <p class="unavailable-reason">⚠️ 天气数据不足</p>
+          <p class="hint-text">请查看未来预测或稍后刷新数据</p>
+        </div>
+      `;
     }
 
     // 晚霞预测
     if (sunsetPrediction) {
-      html += this.renderSinglePrediction(sunsetPrediction, '🌅', '晚霞', '日落时间');
+      html += this.renderSinglePrediction(sunsetPrediction, '🌅', `${dateLabel}晚霞`, '日落时间', dateLabel);
+    } else {
+      // 晚霞预测未生成
+      html += `
+        <div class="prediction-unavailable-card">
+          <h3>🌅 ${dateLabel}晚霞预测</h3>
+          <p class="unavailable-reason">⚠️ 天气数据不足</p>
+          <p class="hint-text">请查看未来预测或稍后刷新数据</p>
+        </div>
+      `;
     }
 
     html += '</div>';
@@ -217,7 +396,7 @@ class PredictionController {
       predictionSection.classList.remove('hidden');
     }
 
-    console.log('[PredictionController] 今日预测已更新');
+    console.log(`[PredictionController] ${dateLabel}预测已更新`);
   }
 
   /**
@@ -229,13 +408,13 @@ class PredictionController {
    * @returns {string} HTML字符串
    * @private
    */
-  renderSinglePrediction(prediction, icon, title, timeLabel) {
+  renderSinglePrediction(prediction, icon, title, timeLabel, dateLabel = '今日') {
     const viewingWindow = prediction.getOptimalViewingWindow();
-    const analysis = this.generateAnalysisText(prediction);
+    const analysis = this.generateAnalysisText(prediction, dateLabel, prediction.cloudLayers);
 
     // 任务 13.5：添加黄金时段、蓝调时段、太阳方位角、云层分层显示
     let enhancedInfo = '';
-    
+
     // 黄金时段（需求12.2）
     if (prediction.goldenHour) {
       enhancedInfo += `
@@ -267,7 +446,7 @@ class PredictionController {
       `;
     }
 
-    // 云层分层信息（需求12.11）
+    // 云层分层信息（需求12.11）- 只显示云层数据，不显示description
     let cloudLayersHtml = '';
     if (prediction.cloudLayers) {
       cloudLayersHtml = this.renderCloudLayers(prediction.cloudLayers);
@@ -276,7 +455,7 @@ class PredictionController {
     return `
       <div class="prediction-card">
         <div class="prediction-header">
-          <h3>${icon} 今日${title}预测</h3>
+          <h3>${icon} ${title}预测</h3>
         </div>
         <div class="prediction-score-container">
           <div class="prediction-score ${this.getQualityClass(prediction.quality)}">
@@ -303,25 +482,16 @@ class PredictionController {
           <h4>📊 分析原因</h4>
           <p class="analysis-text">${analysis}</p>
         </div>
-        <div class="prediction-factors">
-          <h4>影响因素</h4>
-          <div class="factors-grid">
-            ${this.renderFactor('云量', prediction.factors.cloudCover.score, prediction.factors.cloudCover.value.toFixed(0) + '%')}
-            ${this.renderFactor('湿度', prediction.factors.humidity.score, prediction.factors.humidity.value.toFixed(0) + '%')}
-            ${this.renderFactor('能见度', prediction.factors.visibility.score, prediction.factors.visibility.value.toFixed(1) + ' km')}
-            ${this.renderFactor('低层云', prediction.factors.lowClouds.score, prediction.factors.lowClouds.value.toFixed(0) + '%')}
-          </div>
-        </div>
       </div>
     `;
   }
 
   /**
    * 渲染云层分层信息
-   * 
+   *
    * @param {Object} cloudLayers - 云层分层数据 {high, mid, low, description}
    * @returns {string} HTML字符串
-   * 
+   *
    * 需求：12.11, 12.12, 12.13 - 显示云层分层信息和影响说明
    */
   renderCloudLayers(cloudLayers) {
@@ -331,33 +501,27 @@ class PredictionController {
       <div class="cloud-layers-section">
         <h4>☁️ 云层分层信息</h4>
         <div class="cloud-layers-grid">
-          <div class="cloud-layer high-clouds">
-            <span class="layer-icon">⛅</span>
-            <span class="layer-label">高云 (>6km)</span>
-            <span class="layer-value">${cloudLayers.high.toFixed(0)}%</span>
-            <div class="layer-bar">
-              <div class="layer-bar-fill" style="width: ${cloudLayers.high}%; background-color: #90caf9;"></div>
+          <div class="cloud-layer">
+            <span class="cloud-layer-label">⛅ 高云 (>6km)</span>
+            <span class="cloud-layer-value">${cloudLayers.high.toFixed(0)}%</span>
+            <div class="cloud-layer-bar">
+              <div class="cloud-layer-bar-fill" style="width: ${cloudLayers.high}%; background-color: #90caf9;"></div>
             </div>
           </div>
-          <div class="cloud-layer mid-clouds">
-            <span class="layer-icon">☁️</span>
-            <span class="layer-label">中云 (2-6km)</span>
-            <span class="layer-value">${cloudLayers.mid.toFixed(0)}%</span>
-            <div class="layer-bar">
-              <div class="layer-bar-fill" style="width: ${cloudLayers.mid}%; background-color: #64b5f6;"></div>
+          <div class="cloud-layer">
+            <span class="cloud-layer-label">☁️ 中云 (2-6km)</span>
+            <span class="cloud-layer-value">${cloudLayers.mid.toFixed(0)}%</span>
+            <div class="cloud-layer-bar">
+              <div class="cloud-layer-bar-fill" style="width: ${cloudLayers.mid}%; background-color: #64b5f6;"></div>
             </div>
           </div>
-          <div class="cloud-layer low-clouds">
-            <span class="layer-icon">🌫️</span>
-            <span class="layer-label">低云 (<2km)</span>
-            <span class="layer-value">${cloudLayers.low.toFixed(0)}%</span>
-            <div class="layer-bar">
-              <div class="layer-bar-fill" style="width: ${cloudLayers.low}%; background-color: #42a5f5;"></div>
+          <div class="cloud-layer">
+            <span class="cloud-layer-label">🌫️ 低云 (<2km)</span>
+            <span class="cloud-layer-value">${cloudLayers.low.toFixed(0)}%</span>
+            <div class="cloud-layer-bar">
+              <div class="cloud-layer-bar-fill" style="width: ${cloudLayers.low}%; background-color: #42a5f5;"></div>
             </div>
           </div>
-        </div>
-        <div class="cloud-layers-description">
-          <p>${cloudLayers.description}</p>
         </div>
       </div>
     `;
@@ -366,10 +530,12 @@ class PredictionController {
   /**
    * 生成预测分析文字
    * @param {Object} prediction - 预测数据
+   * @param {string} dateLabel - 日期标签（今日/明日）
+   * @param {Object} cloudLayers - 云层分层数据（可选）
    * @returns {string} 分析文字
    * @private
    */
-  generateAnalysisText(prediction) {
+  generateAnalysisText(prediction, dateLabel = '今日', cloudLayers = null) {
     const factors = prediction.factors;
     const cloudValue = factors.cloudCover.value;
     const humidityValue = factors.humidity.value;
@@ -380,38 +546,41 @@ class PredictionController {
 
     // 总体评价
     if (prediction.score >= 70) {
-      analysis += '今天的气象条件非常适合观赏' + (prediction.typeName || '晚霞') + '！';
+      analysis += `${dateLabel}的气象条件非常适合观赏${prediction.typeName || '晚霞'}！<br><br>`;
     } else if (prediction.score >= 40) {
-      analysis += '今天的气象条件较为适合观赏' + (prediction.typeName || '晚霞') + '。';
+      analysis += `${dateLabel}的气象条件较为适合观赏${prediction.typeName || '晚霞'}。<br><br>`;
     } else {
-      analysis += '今天的气象条件不太理想。';
+      analysis += `${dateLabel}的气象条件不太理想。<br><br>`;
     }
+
+    // 火烧云专项分析
+    analysis += this.generateFireCloudAnalysis(cloudValue, humidityValue, visibilityValue, lowCloudsValue);
 
     // 云量分析
     if (cloudValue >= 30 && cloudValue <= 70) {
-      analysis += ' 云量适中（' + cloudValue.toFixed(0) + '%），有利于形成绚丽的色彩。';
+      analysis += ' 云量适中（' + cloudValue.toFixed(0) + '%），有利于形成绚丽的色彩。<br>';
     } else if (cloudValue < 30) {
-      analysis += ' 云量偏少（' + cloudValue.toFixed(0) + '%），可能缺少足够的云层来反射光线。';
+      analysis += ' 云量偏少（' + cloudValue.toFixed(0) + '%），可能缺少足够的云层来反射光线。<br>';
     } else {
-      analysis += ' 云量较多（' + cloudValue.toFixed(0) + '%），可能遮挡过多阳光。';
+      analysis += ' 云量较多（' + cloudValue.toFixed(0) + '%），可能遮挡过多阳光。<br>';
     }
 
     // 湿度分析
     if (humidityValue >= 30 && humidityValue <= 70) {
-      analysis += ' 湿度适宜（' + humidityValue.toFixed(0) + '%），空气中的水汽有助于光线散射。';
+      analysis += ' 湿度适宜（' + humidityValue.toFixed(0) + '%），空气中的水汽有助于光线散射。<br>';
     } else if (humidityValue < 30) {
-      analysis += ' 湿度偏低（' + humidityValue.toFixed(0) + '%），空气较干燥。';
+      analysis += ' 湿度偏低（' + humidityValue.toFixed(0) + '%），空气较干燥。<br>';
     } else {
-      analysis += ' 湿度较高（' + humidityValue.toFixed(0) + '%），可能影响能见度。';
+      analysis += ' 湿度较高（' + humidityValue.toFixed(0) + '%），可能影响能见度。<br>';
     }
 
     // 能见度分析
     if (visibilityValue >= 10) {
-      analysis += ' 能见度良好（' + visibilityValue.toFixed(1) + ' km），视野清晰。';
+      analysis += ' 能见度良好（' + visibilityValue.toFixed(1) + ' km），视野清晰。<br>';
     } else if (visibilityValue >= 5) {
-      analysis += ' 能见度一般（' + visibilityValue.toFixed(1) + ' km）。';
+      analysis += ' 能见度一般（' + visibilityValue.toFixed(1) + ' km）<br>';
     } else {
-      analysis += ' 能见度较差（' + visibilityValue.toFixed(1) + ' km），可能有雾霾。';
+      analysis += ' 能见度较差（' + visibilityValue.toFixed(1) + ' km），可能有雾霾。<br>';
     }
 
     // 低层云分析
@@ -423,7 +592,136 @@ class PredictionController {
       analysis += ' 低层云较多（' + lowCloudsValue.toFixed(0) + '%），可能遮挡部分景观。';
     }
 
+    // 云层分层分析（整合到分析原因中）
+    if (cloudLayers && cloudLayers.description) {
+      analysis += '<br><br><strong>云层分析：</strong>' + cloudLayers.description;
+    }
+
     return analysis;
+  }
+
+  /**
+   * 生成火烧云专项分析
+   * @param {number} cloudValue - 云量百分比
+   * @param {number} humidityValue - 湿度百分比
+   * @param {number} visibilityValue - 能见度（km）
+   * @param {number} lowCloudsValue - 低层云百分比
+   * @returns {string} 火烧云分析文字
+   * @private
+   */
+  generateFireCloudAnalysis(cloudValue, humidityValue, visibilityValue, lowCloudsValue) {
+    let fireCloudAnalysis = '';
+    let fireCloudScore = 0;
+    const fireCloudConditions = [];
+
+    // 评分标准（满分100分）
+    // 1. 云量 30-70%: 最佳（+30分）
+    // ⚠️ 关键：云量是火烧云形成的必要条件
+    if (cloudValue >= 30 && cloudValue <= 70) {
+      fireCloudScore += 30;
+      fireCloudConditions.push(`✅ 云量理想（${cloudValue.toFixed(0)}%），能充分反射阳光`);
+    } else if (cloudValue >= 20 && cloudValue < 30) {
+      fireCloudScore += 15;
+      fireCloudConditions.push(`⚠️ 云量略少（${cloudValue.toFixed(0)}%），火烧云效果可能偏淡`);
+    } else if (cloudValue > 70) {
+      fireCloudScore += 10;
+      fireCloudConditions.push(`⚠️ 云量过多（${cloudValue.toFixed(0)}%），可能遮挡阳光`);
+    } else {
+      fireCloudScore += 5;
+      fireCloudConditions.push(`❌ 云量严重不足（${cloudValue.toFixed(0)}%），无法形成火烧云`);
+    }
+
+    // 2. 湿度 40-75%: 最佳（+25分）
+    if (humidityValue >= 40 && humidityValue <= 75) {
+      fireCloudScore += 25;
+      fireCloudConditions.push(`✅ 湿度适中（${humidityValue.toFixed(0)}%），利于光线散射`);
+    } else if (humidityValue >= 30 && humidityValue < 40) {
+      fireCloudScore += 15;
+      fireCloudConditions.push(`⚠️ 湿度略低（${humidityValue.toFixed(0)}%），色彩可能不够鲜艳`);
+    } else if (humidityValue > 75) {
+      fireCloudScore += 10;
+      fireCloudConditions.push(`⚠️ 湿度偏高（${humidityValue.toFixed(0)}%），可能影响色彩饱和度`);
+    } else {
+      fireCloudScore += 5;
+      fireCloudConditions.push(`❌ 湿度不足（${humidityValue.toFixed(0)}%），光线散射弱`);
+    }
+
+    // 3. 能见度 >15km: 最佳（+25分）
+    if (visibilityValue >= 15) {
+      fireCloudScore += 25;
+      fireCloudConditions.push(`✅ 能见度极佳（${visibilityValue.toFixed(1)} km），视野通透`);
+    } else if (visibilityValue >= 10) {
+      fireCloudScore += 20;
+      fireCloudConditions.push(`✅ 能见度良好（${visibilityValue.toFixed(1)} km），观赏体验佳`);
+    } else if (visibilityValue >= 5) {
+      fireCloudScore += 10;
+      fireCloudConditions.push(`⚠️ 能见度一般（${visibilityValue.toFixed(1)} km），色彩可能略暗`);
+    } else {
+      fireCloudScore += 5;
+      fireCloudConditions.push(`❌ 能见度差（${visibilityValue.toFixed(1)} km），有雾霾影响`);
+    }
+
+    // 4. 低层云 <30%: 最佳（+20分）
+    if (lowCloudsValue < 20) {
+      fireCloudScore += 20;
+      fireCloudConditions.push(`✅ 低云稀少（${lowCloudsValue.toFixed(0)}%），不会遮挡火烧云`);
+    } else if (lowCloudsValue < 30) {
+      fireCloudScore += 15;
+      fireCloudConditions.push(`✅ 低云较少（${lowCloudsValue.toFixed(0)}%），对观赏影响小`);
+    } else if (lowCloudsValue < 50) {
+      fireCloudScore += 10;
+      fireCloudConditions.push(`⚠️ 低云较多（${lowCloudsValue.toFixed(0)}%），可能部分遮挡`);
+    } else {
+      fireCloudScore += 5;
+      fireCloudConditions.push(`❌ 低云密集（${lowCloudsValue.toFixed(0)}%），严重影响观赏`);
+    }
+
+    // ⚠️ 关键修复：如果云量严重不足（<20%），强制降低评价
+    let finalScore = fireCloudScore;
+    let finalEvaluation = '';
+
+    if (cloudValue < 20) {
+      // 云量严重不足，不可能有火烧云
+      finalEvaluation = '❌ 云量严重不足，无法形成火烧云';
+      finalScore = Math.min(fireCloudScore, 30); // 强制降低分数
+    } else if (cloudValue > 80) {
+      // 云量过多，遮挡阳光
+      finalEvaluation = '❌ 云量过多，遮挡阳光难以形成火烧云';
+      finalScore = Math.min(fireCloudScore, 40); // 强制降低分数
+    } else if (fireCloudScore >= 80) {
+      finalEvaluation = '🌟 具备出现绚烂火烧云的所有条件！';
+    } else if (fireCloudScore >= 60) {
+      finalEvaluation = '✨ 有较大概率出现壮观的火烧云景象';
+    } else if (fireCloudScore >= 40) {
+      finalEvaluation = '💫 可能出现轻微的火烧云效果';
+    } else {
+      finalEvaluation = '⛅ 形成明显火烧云的可能性较低';
+    }
+
+    // 生成综合评价
+    let level = '';
+    if (finalScore >= 80) {
+      level = '（极佳）';
+    } else if (finalScore >= 60) {
+      level = '（良好）';
+    } else if (finalScore >= 40) {
+      level = '（一般）';
+    } else {
+      level = '（较差）';
+    }
+
+    fireCloudAnalysis = ` 🔥 火烧云指数：${finalScore.toFixed(0)}/100${level}`;
+
+    // 组合所有条件
+    fireCloudAnalysis += '<div class="fire-cloud-details" style="margin-top: 10px; padding: 10px; background: #fff3e0; border-radius: 8px;">';
+    fireCloudAnalysis += '<div style="font-weight: 600; margin-bottom: 8px;">🔥 火烧云形成条件分析：</div>';
+    fireCloudConditions.forEach(condition => {
+      fireCloudAnalysis += `<div style="font-size: 14px; margin: 4px 0;">${condition}</div>`;
+    });
+    fireCloudAnalysis += `<div style="margin-top: 8px; font-weight: 600; color: #e65100;">${finalEvaluation}</div>`;
+    fireCloudAnalysis += '</div>';
+
+    return fireCloudAnalysis;
   }
 
   /**
@@ -458,15 +756,26 @@ class PredictionController {
       }
     });
 
-    // 构建时间线HTML
-    let html = '<div class="forecast-list">';
+    // 只取前3天的数据（不包括今天），因为"今日预测"已经在上方单独显示了
+    const daysToShow = Object.values(predictionsByDate).slice(1, 4);
 
-    Object.values(predictionsByDate).forEach((dayPredictions, index) => {
+    // 如果没有未来预测，隐藏整个区域
+    if (daysToShow.length === 0) {
+      forecastSection.classList.add('hidden');
+      return;
+    }
+
+    const now = new Date();
+
+    // 构建横向排列的时间线HTML
+    let html = '<div class="forecast-horizontal-container">';
+
+    daysToShow.forEach((dayPredictions, index) => {
       const dateStr = this.formatDate(dayPredictions.date);
-      const dayLabel = index === 0 ? '今天' : index === 1 ? '明天' : '后天';
+      const dayLabel = index === 0 ? '明天' : index === 1 ? '后天' : `${index + 1}天后`;
 
       html += `
-        <div class="forecast-day-group">
+        <div class="forecast-day-column">
           <div class="forecast-day-header">
             <span class="day-label">${dayLabel}</span>
             <span class="date-label">${dateStr}</span>
@@ -477,12 +786,19 @@ class PredictionController {
       // 朝霞预测
       if (dayPredictions.sunrise) {
         const pred = dayPredictions.sunrise;
+        const sunriseTime = pred.sunsetTime; // 对于朝霞，sunsetTime 实际存储的是日出时间
+
+        // 判断是否已过（日出时间 + 2小时）
+        const isPassed = now > new Date(sunriseTime.getTime() + 2 * 60 * 60 * 1000);
+        const passedLabel = isPassed ? '<span class="passed-badge">已过</span>' : '';
+
         html += `
-          <div class="forecast-item" data-index="${predictions.indexOf(pred)}">
+          <div class="forecast-item ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
             <div class="forecast-header">
               <div class="forecast-type">
                 <span class="type-icon">🌄</span>
                 <span class="type-label">朝霞</span>
+                ${passedLabel}
               </div>
               <div class="forecast-score ${this.getQualityClass(pred.quality)}">
                 ${pred.score.toFixed(0)}
@@ -493,7 +809,7 @@ class PredictionController {
                 ${this.getQualityLabel(pred.quality)}
               </span>
               <span class="sunset-time-small">
-                🌄 ${this.formatTime(pred.sunsetTime)}
+                🌄 ${this.formatTime(sunriseTime)}
               </span>
             </div>
           </div>
@@ -503,12 +819,19 @@ class PredictionController {
       // 晚霞预测
       if (dayPredictions.sunset) {
         const pred = dayPredictions.sunset;
+        const sunsetTime = pred.sunsetTime;
+
+        // 判断是否已过（日落时间 + 1.5小时）
+        const isPassed = now > new Date(sunsetTime.getTime() + 1.5 * 60 * 60 * 1000);
+        const passedLabel = isPassed ? '<span class="passed-badge">已过</span>' : '';
+
         html += `
-          <div class="forecast-item" data-index="${predictions.indexOf(pred)}">
+          <div class="forecast-item ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
             <div class="forecast-header">
               <div class="forecast-type">
                 <span class="type-icon">🌅</span>
                 <span class="type-label">晚霞</span>
+                ${passedLabel}
               </div>
               <div class="forecast-score ${this.getQualityClass(pred.quality)}">
                 ${pred.score.toFixed(0)}
@@ -519,7 +842,7 @@ class PredictionController {
                 ${this.getQualityLabel(pred.quality)}
               </span>
               <span class="sunset-time-small">
-                🌅 ${this.formatTime(pred.sunsetTime)}
+                🌅 ${this.formatTime(sunsetTime)}
               </span>
             </div>
           </div>
@@ -541,7 +864,7 @@ class PredictionController {
       forecastSection.classList.remove('hidden');
     }
 
-    console.log('[PredictionController] 预测时间线已更新');
+    console.log('[PredictionController] 预测时间线已更新（横向排列）');
   }
 
   /**
@@ -612,6 +935,7 @@ class PredictionController {
       if (isNaN(date.getTime())) {
         return '--:--';
       }
+      // 使用本地时间方法获取小时和分钟（天文学计算已经返回本地时间）
       const hours = date.getHours().toString().padStart(2, '0');
       const minutes = date.getMinutes().toString().padStart(2, '0');
       return `${hours}:${minutes}`;
@@ -951,14 +1275,15 @@ class PredictionController {
   formatSunsetTime(sunsetTime) {
     try {
       const date = typeof sunsetTime === 'string' ? new Date(sunsetTime) : sunsetTime;
-      
+
       if (isNaN(date.getTime())) {
         return sunsetTime.toString();
       }
 
+      // 使用本地时间方法获取小时和分钟（天文学计算已经返回本地时间）
       const hours = date.getHours().toString().padStart(2, '0');
       const minutes = date.getMinutes().toString().padStart(2, '0');
-      
+
       return `${hours}:${minutes}`;
     } catch (error) {
       console.error('格式化日落时间失败:', error);

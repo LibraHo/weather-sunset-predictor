@@ -34,10 +34,10 @@ console.log('Global Error Boundary initialized');
 // 创建服务实例
 const storageService = new StorageService();
 
-// 使用 MockGeocodingService 进行离线测试
-// 如果需要使用真实的地理编码服务，请将下面一行改为：
-// const geocodingService = new GeocodingService();
-const geocodingService = new MockGeocodingService();
+// 使用真实的地理编码服务（支持所有城市）
+// 如果需要离线测试，请将下面一行改为：
+// const geocodingService = new MockGeocodingService();
+const geocodingService = new GeocodingService();
 
 // 获取保存的 API 密钥
 const savedAPIKey = storageService.getAPIKey();

@@ -351,6 +351,55 @@ input[type="text"]::placeholder {
   color: var(--color-text);
 }
 
+/* 天气主展示区域 */
+.weather-location {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-lg);
+  text-align: center;
+}
+
+.weather-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-xl) var(--spacing-md);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.weather-icon-large {
+  font-size: 5rem;
+  margin-bottom: var(--spacing-md);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+.weather-temp-large {
+  font-size: 4rem;
+  font-weight: 700;
+  color: white;
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-sm);
+}
+
+.weather-temp-large .temp-unit {
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+  margin-left: 0.25rem;
+}
+
+.weather-desc {
+  font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 #weather-display {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -1156,6 +1205,51 @@ input[type="text"]::placeholder {
   margin-bottom: var(--spacing-sm);
 }
 
+/* 预测不可用卡片样式 */
+.prediction-unavailable {
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  text-align: center;
+}
+
+.prediction-unavailable p {
+  margin: var(--spacing-sm) 0;
+  color: var(--color-text);
+}
+
+.prediction-unavailable .hint-text {
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+}
+
+.prediction-unavailable-card {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+
+.prediction-unavailable-card h3 {
+  font-size: 1.25rem;
+  color: var(--color-text-light);
+  margin-bottom: var(--spacing-md);
+}
+
+.prediction-unavailable-card .unavailable-reason {
+  color: var(--color-warning);
+  font-weight: 600;
+  margin-bottom: var(--spacing-sm);
+}
+
+.prediction-unavailable-card .hint-text {
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+}
+
 .prediction-header {
   text-align: center;
   margin-bottom: var(--spacing-md);
@@ -1676,9 +1770,15 @@ input[type="text"]::placeholder {
 
 .cloud-layers-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-md);
+}
+
+@media (max-width: 768px) {
+  .cloud-layers-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .cloud-layer {
@@ -1996,5 +2096,70 @@ input[type="text"]::placeholder {
 @media print {
   .search-history-dropdown {
     display: none;
+  }
+}
+
+/* ===== 未来预测横向布局样式 ===== */
+.forecast-horizontal-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+}
+
+.forecast-day-column {
+  background-color: var(--color-bg);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border);
+}
+
+.forecast-day-header {
+  text-align: center;
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.forecast-day-header .day-label {
+  display: block;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-xs);
+}
+
+.forecast-day-header .date-label {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.forecast-day-predictions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+/* 已过标签样式 */
+.passed-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background-color: #9e9e9e;
+  color: white;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  margin-left: var(--spacing-xs);
+}
+
+.forecast-item.passed {
+  opacity: 0.6;
+  background-color: #f5f5f5;
+}
+
+/* 移动端响应式 */
+@media (max-width: 768px) {
+  .forecast-horizontal-container {
+    grid-template-columns: 1fr;
   }
 }

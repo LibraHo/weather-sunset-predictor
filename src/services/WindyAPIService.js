@@ -38,10 +38,13 @@ class WindyAPIService {
       lat: lat,
       lon: lon,
       model: 'gfs',
-      // Task 12.2: 添加新气象参数 - precip（降水）、wind_direction（风向）、mclouds（中云）、hclouds（高云）
-      parameters: ['temp', 'rh', 'clouds', 'wind', 'pressure', 'visibility', 'lclouds', 'precip', 'wind_direction', 'mclouds', 'hclouds'],
+      // Windy API GFS 模型支持的参数
+      // 使用 convPrecip 代替 precip，使用cape 作为额外参数
+      parameters: ['temp', 'rh', 'wind', 'pressure', 'lclouds', 'convPrecip', 'mclouds', 'hclouds', 'cape', 'gh'],
       levels: ['surface'],
       key: this.apiKey
+      // 注意：Windy Point Forecast API 不接受 hours 参数
+      // API 返回固定的小时数（通常为80小时，取决于Windy服务器）
     };
 
     try {
@@ -115,20 +118,33 @@ class WindyAPIService {
     const timestamps = data.ts;
     const temps = data['temp-surface'];
     const humidity = data['rh-surface'] || [];
-    const clouds = data['clouds-surface'] || [];
+    // clouds 不再使用，用 lclouds/mclouds/hclouds 计算总云量
     const windU = data['wind_u-surface'] || [];
     const windV = data['wind_v-surface'] || [];
     const pressure = data['pressure-surface'] || [];
+
+    // Windy API 返回的温度是开尔文，需要转换为摄氏度
+    // K = C + 273.15
+    const tempsCelsius = temps.map(tempKelvin => {
+      const tempC = tempKelvin - 273.15;
+      return tempC;
+    });
+    // visibility 和 wind_direction 不在 API 返回中
     const visibility = data['visibility-surface'] || [];
     const lowClouds = data['lclouds-surface'] || [];
     const midClouds = data['mclouds-surface'] || [];
     const highClouds = data['hclouds-surface'] || [];
-    const precipitation = data['precip-surface'] || [];
+    // convPrecip 是 convective precipitation（对流降水）
+    const precipitation = data['convPrecip-surface'] || [];
     const windDirectionData = data['wind_direction-surface'] || [];
+    const cape = data['cape-surface'] || []; // 不用于预测，但记录一下
 
     const weatherDataArray = [];
 
     for (let i = 0; i < timestamps.length; i++) {
+      // 计算总云量（低+中+高层云的平均值）
+      const cloudCover = ((lowClouds[i] || 0) + (midClouds[i] || 0) + (highClouds[i] || 0)) / 3;
+
       // 计算风速（从 u 和 v 分量）
       const windSpeed = Math.sqrt(
         Math.pow(windU[i] || 0, 2) + Math.pow(windV[i] || 0, 2)
@@ -144,9 +160,9 @@ class WindyAPIService {
 
       const weatherData = new WeatherData(
         timestamps[i],
-        temps[i],
+        tempsCelsius[i], // 使用转换后的摄氏度
         humidity[i] || 0,
-        clouds[i] || 0,
+        cloudCover, // 使用计算的总云量
         windSpeed,
         pressure[i] || 1013,
         visibility[i] || 10,
@@ -161,6 +177,7 @@ class WindyAPIService {
     }
 
     console.log(`[WindyAPIService] 解析了 ${weatherDataArray.length} 条天气数据`);
+    console.log(`[WindyAPIService] 温度样本 (开尔文 -> 摄氏度):`, temps.slice(0, 5).map((k, i) => `${k}K -> ${tempsCelsius[i].toFixed(1)}°C`));
     return weatherDataArray;
   }
 

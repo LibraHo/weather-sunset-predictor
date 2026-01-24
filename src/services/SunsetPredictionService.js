@@ -102,25 +102,40 @@ class SunsetPredictionService {
     // 计算日落时角（单位：度）
     const hourAngle = Math.acos(cosHourAngle) * 180 / Math.PI;
 
+    // 计算本地子午线（每个时区15度）
+    const timezone = Math.round(lon / 15);
+    const localMeridian = timezone * 15;
+    const lonOffset = lon - localMeridian;
+
     // 计算日落时间（本地太阳时，单位：分钟）
     // 720分钟 = 12:00 (正午)
-    // 经度每15度对应1小时的时差
-    const solarNoon = 720 - 4 * lon - eqTime;
+    // 使用相对于本地子午线的经度偏移
+    const solarNoon = 720 - 4 * lonOffset - eqTime;
     const sunsetMinutes = solarNoon + 4 * hourAngle;
 
     // 转换为当天的本地时间
-    const hours = Math.floor(sunsetMinutes / 60);
-    const minutes = Math.round(sunsetMinutes % 60);
-    
-    const sunsetLocal = new Date(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate(),
-      hours,
-      minutes,
-      0,
-      0
-    );
+    // 注意：sunsetMinutes 是基于 UTC 计算的本地太阳时，需要加上时区偏移
+    // 处理跨日情况（sunsetMinutes可能为负或超过24小时）
+    let sunsetMinutesAdjusted = sunsetMinutes;
+    let dayOffset = 0;
+
+    if (sunsetMinutesAdjusted < 0) {
+      // 负数表示在前一天
+      dayOffset = -1;
+      sunsetMinutesAdjusted += 24 * 60;
+    } else if (sunsetMinutesAdjusted >= 24 * 60) {
+      // 超过24小时表示在后一天
+      dayOffset = 1;
+      sunsetMinutesAdjusted -= 24 * 60;
+    }
+
+    const hours = Math.floor(sunsetMinutesAdjusted / 60);
+    const minutes = Math.round(sunsetMinutesAdjusted % 60);
+
+    // 创建本地时间（天文学计算已经考虑了经度和时区偏移）
+    const sunsetDate = new Date(date);
+    sunsetDate.setDate(sunsetDate.getDate() + dayOffset);
+    const sunsetLocal = new Date(sunsetDate.getFullYear(), sunsetDate.getMonth(), sunsetDate.getDate(), hours, minutes, 0, 0);
 
     return sunsetLocal;
   }
@@ -199,24 +214,40 @@ class SunsetPredictionService {
     // 计算日出时角（单位：度）- 注意：日出用负的时角
     const hourAngle = Math.acos(cosHourAngle) * 180 / Math.PI;
 
+    // 计算本地子午线（每个时区15度）
+    const timezone = Math.round(lon / 15);
+    const localMeridian = timezone * 15;
+    const lonOffset = lon - localMeridian;
+
     // 计算日出时间（本地太阳时，单位：分钟）
     // 720分钟 = 12:00 (正午)
-    const solarNoon = 720 - 4 * lon - eqTime;
+    // 使用相对于本地子午线的经度偏移
+    const solarNoon = 720 - 4 * lonOffset - eqTime;
     const sunriseMinutes = solarNoon - 4 * hourAngle;
 
     // 转换为当天的本地时间
-    const hours = Math.floor(sunriseMinutes / 60);
-    const minutes = Math.round(sunriseMinutes % 60);
-    
-    const sunriseLocal = new Date(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate(),
-      hours,
-      minutes,
-      0,
-      0
-    );
+    // 注意：sunriseMinutes 是基于 UTC 计算的本地太阳时，需要加上时区偏移
+    // 处理跨日情况（sunriseMinutes可能为负或超过24小时）
+    let sunriseMinutesAdjusted = sunriseMinutes;
+    let dayOffset = 0;
+
+    if (sunriseMinutesAdjusted < 0) {
+      // 负数表示在前一天
+      dayOffset = -1;
+      sunriseMinutesAdjusted += 24 * 60;
+    } else if (sunriseMinutesAdjusted >= 24 * 60) {
+      // 超过24小时表示在后一天
+      dayOffset = 1;
+      sunriseMinutesAdjusted -= 24 * 60;
+    }
+
+    const hours = Math.floor(sunriseMinutesAdjusted / 60);
+    const minutes = Math.round(sunriseMinutesAdjusted % 60);
+
+    // 创建本地时间（天文学计算已经考虑了经度和时区偏移）
+    const sunriseDate = new Date(date);
+    sunriseDate.setDate(sunriseDate.getDate() + dayOffset);
+    const sunriseLocal = new Date(sunriseDate.getFullYear(), sunriseDate.getMonth(), sunriseDate.getDate(), hours, minutes, 0, 0);
 
     return sunriseLocal;
   }

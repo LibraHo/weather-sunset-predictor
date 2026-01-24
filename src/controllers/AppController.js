@@ -58,6 +58,9 @@ class AppController {
       // 需求12：加载收藏位置列表
       this.loadFavoriteLocations();
 
+      // 需求13：加载搜索历史（预填充到下拉列表）
+      this.loadSearchHistory();
+
       // 需求12：请求通知权限（如果用户启用了通知）
       await this.requestNotificationPermissionIfEnabled();
 
@@ -137,7 +140,7 @@ class AppController {
       }
 
       // 更新天气显示
-      this.weatherController.updateWeatherDisplay(weatherData);
+      this.weatherController.updateWeatherDisplay(weatherData, location);
 
       // 生成晚霞预测
       let predictions;
@@ -662,7 +665,14 @@ class AppController {
       await this.handleLocationChange(location);
 
       // 需求13：保存到搜索历史
-      this.storageService.saveSearchHistory(location);
+      const saved = this.storageService.saveSearchHistory(location);
+      if (saved) {
+        console.log('[AppController] 搜索历史已保存:', location.name);
+        // 刷新搜索历史显示
+        this.loadSearchHistory();
+      } else {
+        console.warn('[AppController] 搜索历史保存失败');
+      }
 
       // 清空输入框
       locationInput.value = '';
