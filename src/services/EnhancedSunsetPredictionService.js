@@ -10,8 +10,11 @@
  * @author Enhanced Model v2.0
  */
 
+import i18n from '../i18n.js';
+
 class EnhancedSunsetPredictionService {
   constructor() {
+    this.i18n = i18n;
     // 常量定义
     this.SOLAR_ELEVATION_WINDOW = {
       SUNRISE_START: -6,  // 日出前太阳高度角（度）
@@ -149,43 +152,47 @@ class EnhancedSunsetPredictionService {
 
     // 2. 云量区间评分（梯形函数）
     let cloudRangeScore = 0;
-    let cloudLevel = '';
+    let cloudLevelKey = '';
 
     if (effectiveCloudCover <= 10) {
       cloudRangeScore = 10;
-      cloudLevel = '太空（无云）';
+      cloudLevelKey = 'prediction.canvas.space';
     } else if (effectiveCloudCover <= 30) {
       // 线性插值：10% -> 40分, 30% -> 70分
       cloudRangeScore = 40 + (effectiveCloudCover - 10) / 20 * 30;
-      cloudLevel = '尚可';
+      cloudLevelKey = 'prediction.canvas.fair';
     } else if (effectiveCloudCover <= 70) {
       // 完美区间：70-100分
       cloudRangeScore = 70 + (effectiveCloudCover - 30) / 40 * 30;
-      cloudLevel = '完美';
+      cloudLevelKey = 'prediction.canvas.perfect';
     } else if (effectiveCloudCover <= 90) {
       // 线性下降：70% -> 60分, 90% -> 30分
       cloudRangeScore = 60 - (effectiveCloudCover - 70) / 20 * 30;
-      cloudLevel = '拥挤';
+      cloudLevelKey = 'prediction.canvas.crowded';
     } else {
       cloudRangeScore = 0;
-      cloudLevel = '阴天';
+      cloudLevelKey = 'prediction.canvas.overcast';
     }
+
+    const cloudLevel = this.i18n.t(cloudLevelKey);
 
     // 3. 低云惩罚
     let lowCloudPenalty = 1.0;
-    let penaltyReason = '';
+    let penaltyReasonKey = '';
 
     if (lowClouds < 20) {
       lowCloudPenalty = 1.0;
-      penaltyReason = '无低云遮挡';
+      penaltyReasonKey = 'prediction.canvas.noLowCloudObstruction';
     } else if (lowClouds > 80) {
       lowCloudPenalty = 0.1;
-      penaltyReason = '低云过多（几乎阴天）';
+      penaltyReasonKey = 'prediction.canvas.tooManyLowClouds';
     } else {
       // 线性衰减：20% -> 1.0, 80% -> 0.1
       lowCloudPenalty = 1.0 - (lowClouds - 20) / 60 * 0.9;
-      penaltyReason = `低云量 ${lowClouds.toFixed(0)}%`;
+      penaltyReasonKey = 'prediction.canvas.lowCloudAmount';
     }
+
+    const penaltyReason = this.i18n.t(penaltyReasonKey, { value: lowClouds.toFixed(0) });
 
     // 最终画布得分
     const canvasScore = cloudRangeScore * lowCloudPenalty;
@@ -280,33 +287,37 @@ class EnhancedSunsetPredictionService {
 
     // 1. 能见度修正
     let visibilityFactor = 1.0;
-    let visibilityDesc = '';
+    let visibilityDescKey = '';
 
     if (visibility > 20) {
       visibilityFactor = 1.1;
-      visibilityDesc = '极佳（>20km）';
+      visibilityDescKey = 'prediction.rendering.visibilityExcellent';
     } else if (visibility >= 10) {
       visibilityFactor = 1.0;
-      visibilityDesc = '良好（10-20km）';
+      visibilityDescKey = 'prediction.rendering.visibilityGood';
     } else {
       visibilityFactor = 0.8;
-      visibilityDesc = '较差（<10km）';
+      visibilityDescKey = 'prediction.rendering.visibilityPoor';
     }
+
+    const visibilityDesc = this.i18n.t(visibilityDescKey);
 
     // 2. 湿度修正
     let humidityFactor = 1.0;
-    let humidityDesc = '';
+    let humidityDescKey = '';
 
     if (humidity > 90) {
       humidityFactor = 0.9;
-      humidityDesc = '可能有大雾';
+      humidityDescKey = 'prediction.rendering.humidityFog';
     } else if (humidity < 30) {
       humidityFactor = 1.0;
-      humidityDesc = '空气干燥';
+      humidityDescKey = 'prediction.rendering.humidityDry';
     } else {
       humidityFactor = 1.0;
-      humidityDesc = '湿度适中';
+      humidityDescKey = 'prediction.rendering.humidityModerate';
     }
+
+    const humidityDesc = this.i18n.t(humidityDescKey);
 
     // 3. 特殊模式：雨后初晴
     let rainBonus = 1.0;
@@ -314,27 +325,30 @@ class EnhancedSunsetPredictionService {
 
     if (rainedRecently) {
       rainBonus = 1.2;
-      specialMode = '🌟 雨后初晴模式（超级加倍）';
+      specialMode = this.i18n.t('prediction.rendering.postRainMode');
     }
 
     // 4. AQI修正（色彩倾向）
-    let aqiDesc = '';
-    let colorTendency = '';
+    let aqiDescKey = '';
+    let colorTendencyKey = '';
 
     if (aqi < 50) {
-      aqiDesc = '优';
-      colorTendency = '金黄、亮橙色';
+      aqiDescKey = 'prediction.rendering.aqiExcellent';
+      colorTendencyKey = 'prediction.rendering.colorGoldenOrange';
     } else if (aqi <= 100) {
-      aqiDesc = '良';
-      colorTendency = '偏红、紫红色';
+      aqiDescKey = 'prediction.rendering.aqiGood';
+      colorTendencyKey = 'prediction.rendering.colorReddishPurplish';
     } else {
-      aqiDesc = '差';
-      colorTendency = '暗红、血色（不美）';
+      aqiDescKey = 'prediction.rendering.aqiPoor';
+      colorTendencyKey = 'prediction.rendering.colorDarkRed';
       // 严重污染时降低得分
       if (aqi > 150) {
         rainBonus *= 0.8;
       }
     }
+
+    const aqiDesc = this.i18n.t(aqiDescKey);
+    const colorTendency = this.i18n.t(colorTendencyKey);
 
     // 最终渲染系数
     const renderingFactor = visibilityFactor * humidityFactor * rainBonus;
@@ -380,54 +394,54 @@ class EnhancedSunsetPredictionService {
 
     // 优先检查画布得分：画布得分<30分 → 无火烧云
     if (canvasScore.score < 30) {
-      status = '无火烧云';
+      status = this.i18n.t('prediction.status.noFireCloud');
       icon = '🌫️';
 
       if (canvasScore.cloudLevel === '太空（无云）') {
-        description = '万里无云，缺少"画布"反射光线';
+        description = this.i18n.t('prediction.status.skyClear');
       } else if (canvasScore.cloudLevel === '阴天') {
-        description = '云层过厚，阳光无法穿透';
+        description = this.i18n.t('prediction.status.cloudTooThick');
       } else {
-        description = '云况不适宜形成火烧云';
+        description = this.i18n.t('prediction.status.cloudUnsuitable');
       }
 
-      advice = '建议等待云量适中的天气';
+      advice = this.i18n.t('prediction.status.waitForClouds');
     }
     // 光路得分<50分 → 无火烧云或轻微晚霞
     else if (lightPathScore.score < 50) {
       if (clampedScore < 40) {
-        status = '无火烧云';
+        status = this.i18n.t('prediction.status.noFireCloud');
         icon = '🌫️';
-        description = '西方有云遮挡，光线难以到达';
-        advice = '光路被阻挡';
+        description = this.i18n.t('prediction.status.lightPathBlocked');
+        advice = this.i18n.t('prediction.status.lightPathObstructed');
       } else {
-        status = '轻微晚霞';
+        status = this.i18n.t('prediction.status.lightGlow');
         icon = '🌅';
-        description = '光路受阻，可能局部微弱色彩';
-        advice = '观赏效果不佳';
+        description = 'Light path obstructed, may have weak local colors';
+        advice = this.i18n.t('prediction.status.poorViewing');
       }
     }
     // 根据综合得分判定
     else if (clampedScore < 50) {
-      status = '轻微晚霞';
+      status = this.i18n.t('prediction.status.lightGlow');
       icon = '🌅';
-      description = '条件一般，可能零星色彩';
-      advice = '可适当关注';
+      description = this.i18n.t('prediction.status.conditionsFair');
+      advice = this.i18n.t('prediction.status.canWatch');
     } else if (clampedScore < 70) {
-      status = '有晚霞';
+      status = this.i18n.t('prediction.status.goodGlow');
       icon = '🌆';
-      description = '条件尚可，有一定观赏价值';
-      advice = '可以观赏';
+      description = this.i18n.t('prediction.status.conditionsGood');
+      advice = this.i18n.t('prediction.status.canWatch');
     } else if (clampedScore < 85) {
-      status = '大概率出现漂亮晚霞';
+      status = this.i18n.t('prediction.status.veryLikely');
       icon = '🌆';
-      description = '云量适中，光路通畅';
-      advice = '值得一看';
+      description = this.i18n.t('prediction.status.excellentConditions');
+      advice = 'Worth watching';
     } else {
-      status = '史诗级爆发';
+      status = this.i18n.t('prediction.status.legendaryEruption');
       icon = '🔥';
-      description = '完美的中高云层配合通透光路';
-      advice = '强烈推荐观赏！';
+      description = this.i18n.t('prediction.status.perfectMidHighClouds');
+      advice = this.i18n.t('prediction.status.highlyRecommended');
     }
 
     return {

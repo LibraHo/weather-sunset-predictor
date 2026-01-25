@@ -12,11 +12,11 @@
     <!-- API密钥配置模态框 -->
     <div id="api-key-modal" class="modal hidden">
       <div class="modal-content">
-        <h2>配置Windy API密钥</h2>
-        <p class="modal-description">请输入您的Windy API密钥以使用天气预测功能</p>
-        <input type="text" id="api-key-input" placeholder="输入API密钥" aria-label="API密钥输入">
+        <h2 data-i18n="settings.apiKeyLabel">配置Windy API密钥</h2>
+        <p class="modal-description" data-i18n="settings.apiKeyHelp">请输入您的Windy API密钥以使用天气预测功能</p>
+        <input type="text" id="api-key-input" placeholder="输入API密钥" aria-label="API密钥输入" data-i18n-placeholder="settings.apiKeyPlaceholder">
         <div class="modal-actions">
-          <button id="save-api-key" class="btn btn-primary">保存</button>
+          <button id="save-api-key" class="btn btn-primary" data-i18n="buttons.save">保存</button>
         </div>
         <div id="api-key-error" class="error-message hidden"></div>
       </div>
@@ -25,53 +25,53 @@
     <!-- 需求12：通知设置模态框 -->
     <div id="notification-modal" class="modal hidden">
       <div class="modal-content">
-        <h2>通知设置</h2>
-        <p class="modal-description">设置高质量预测提醒</p>
+        <h2 data-i18n="settings.notificationsTitle">通知设置</h2>
+        <p class="modal-description" data-i18n="settings.notificationsDescription">设置高质量预测提醒</p>
         <div class="notification-settings">
           <label class="setting-item">
             <input type="checkbox" id="notification-enabled">
-            <span>启用通知提醒</span>
+            <span data-i18n="settings.enableNotifications">启用通知提醒</span>
           </label>
           <div class="setting-item">
-            <label for="notification-threshold">评分阈值（当评分≥此值时提醒）</label>
+            <label for="notification-threshold" data-i18n="settings.thresholdLabel">评分阈值（当评分≥此值时提醒）</label>
             <input type="number" id="notification-threshold" min="0" max="100" value="70" step="5">
             <span class="threshold-value">70</span>
           </div>
         </div>
         <div class="modal-actions">
-          <button id="save-notification-settings" class="btn btn-primary">保存</button>
-          <button id="test-notification" class="btn btn-secondary">测试通知</button>
-          <button id="close-notification-modal" class="btn btn-secondary">关闭</button>
+          <button id="save-notification-settings" class="btn btn-primary" data-i18n="buttons.save">保存</button>
+          <button id="test-notification" class="btn btn-secondary" data-i18n="settings.testNotification">测试通知</button>
+          <button id="close-notification-modal" class="btn btn-secondary" data-i18n="buttons.close">关闭</button>
         </div>
       </div>
     </div>
     
     <!-- 主界面 -->
     <header>
-      <h1>🌅 晚霞预测器</h1>
+      <h1 data-i18n="app.title">🌅 晚霞预测器</h1>
       <div class="header-actions">
         <!-- 语言选择器 -->
         <div id="language-selector-container" class="language-selector-container"></div>
-        <button id="notification-settings-btn" class="icon-btn" aria-label="通知设置">🔔</button>
-        <button id="settings-btn" class="icon-btn" aria-label="设置">⚙️</button>
+        <button id="notification-settings-btn" class="icon-btn" aria-label="通知设置" data-i18n-aria-label="settings.notificationsLabel">🔔</button>
+        <button id="settings-btn" class="icon-btn" aria-label="设置" data-i18n-aria-label="settings.title">⚙️</button>
       </div>
     </header>
     
     <main>
       <!-- 位置选择 -->
       <section id="location-section" class="card">
-        <h2>选择位置</h2>
+        <h2 data-i18n="location.label">选择位置</h2>
         <div class="location-input-group">
           <div class="location-input-wrapper">
-            <input type="text" id="location-input" placeholder="输入城市名称" aria-label="城市名称输入">
+            <input type="text" id="location-input" placeholder="输入城市名称" aria-label="城市名称输入" data-i18n-placeholder="location.placeholder">
             <!-- 需求13：搜索历史下拉列表 -->
             <div id="search-history-dropdown" class="search-history-dropdown hidden">
               <!-- 动态填充搜索历史 -->
             </div>
           </div>
-          <button id="search-btn" class="btn btn-primary">搜索</button>
+          <button id="search-btn" class="btn btn-primary" data-i18n="buttons.search">搜索</button>
         </div>
-        <button id="current-location-btn" class="btn btn-secondary">
+        <button id="current-location-btn" class="btn btn-secondary" data-i18n="buttons.useCurrentLocation">
           📍 使用当前位置
         </button>
         <div id="location-error" class="error-message hidden"></div>
@@ -79,8 +79,8 @@
         <!-- 需求12：收藏位置列表 -->
         <div id="favorite-locations" class="favorite-locations-section">
           <div class="favorite-header">
-            <h3>⭐ 收藏位置</h3>
-            <button id="add-favorite-btn" class="btn btn-small">收藏当前位置</button>
+            <h3 data-i18n="favorites.title">⭐ 收藏位置</h3>
+            <button id="add-favorite-btn" class="btn btn-small" data-i18n="favorites.add">收藏当前位置</button>
           </div>
           <ul id="favorite-list" class="favorite-list">
             <!-- 动态填充收藏位置 -->
@@ -90,12 +90,12 @@
       
       <!-- 当前天气 -->
       <section id="weather-section" class="card hidden">
-        <h2>天气信息</h2>
+        <h2 data-i18n="weather.title">天气信息</h2>
 
         <!-- 当前天气主展示区域 -->
         <div id="weather-data" style="display: none;">
           <!-- 位置 -->
-          <div id="weather-location" class="weather-location">--</div>
+          <div id="weather-location" class="weather-location" data-i18n="weather.currentLocation">--</div>
 
           <!-- 主要天气信息 -->
           <div class="weather-main">
@@ -110,23 +110,23 @@
           <!-- 详细信息网格 -->
           <div class="weather-grid" style="margin-top: 20px;">
             <div class="weather-item">
-              <span class="weather-label">湿度</span>
+              <span class="weather-label" data-i18n="weather.humidity">湿度</span>
               <span id="current-humidity" class="weather-value">--</span>
             </div>
             <div class="weather-item">
-              <span class="weather-label">云量</span>
+              <span class="weather-label" data-i18n="weather.cloudCover">云量</span>
               <span id="current-cloud-cover" class="weather-value">--</span>
             </div>
             <div class="weather-item">
-              <span class="weather-label">风速</span>
+              <span class="weather-label" data-i18n="weather.windSpeed">风速</span>
               <span id="current-wind-speed" class="weather-value">--</span>
             </div>
             <div class="weather-item">
-              <span class="weather-label">气压</span>
+              <span class="weather-label" data-i18n="weather.pressure">气压</span>
               <span id="current-pressure" class="weather-value">--</span>
             </div>
             <div class="weather-item">
-              <span class="weather-label">能见度</span>
+              <span class="weather-label" data-i18n="weather.visibility">能见度</span>
               <span id="current-visibility" class="weather-value">--</span>
             </div>
           </div>
@@ -134,8 +134,8 @@
 
         <!-- 需求11：视图切换按钮 -->
         <div class="view-toggle" style="margin-top: 30px;">
-          <button id="overview-btn" class="btn btn-toggle active">7天概览</button>
-          <button id="hourly-btn" class="btn btn-toggle">详细预报</button>
+          <button id="overview-btn" class="btn btn-toggle active" data-i18n="weather.overview">7天概览</button>
+          <button id="hourly-btn" class="btn btn-toggle" data-i18n="weather.hourly">详细预报</button>
         </div>
 
         <!-- 7天概览视图 -->
@@ -148,16 +148,16 @@
         <!-- 24小时详细视图 -->
         <div id="hourly-forecast" class="weather-view hidden">
           <div class="day-selector">
-            <button id="today-btn" class="btn btn-toggle active">今天</button>
-            <button id="tomorrow-btn" class="btn btn-toggle">明天</button>
+            <button id="today-btn" class="btn btn-toggle active" data-i18n="dates.today">今天</button>
+            <button id="tomorrow-btn" class="btn btn-toggle" data-i18n="dates.tomorrow">明天</button>
           </div>
           <div class="parameter-selector">
-            <button data-param="temp" class="btn btn-param active">温度</button>
-            <button data-param="precip" class="btn btn-param">降水</button>
-            <button data-param="humidity" class="btn btn-param">湿度</button>
-            <button data-param="wind" class="btn btn-param">风速</button>
-            <button data-param="pressure" class="btn btn-param">气压</button>
-            <button data-param="clouds" class="btn btn-param">云量</button>
+            <button data-param="temp" class="btn btn-param active" data-i18n="weather.temperature">温度</button>
+            <button data-param="precip" class="btn btn-param" data-i18n="weather.precipitation">降水</button>
+            <button data-param="humidity" class="btn btn-param" data-i18n="weather.humidity">湿度</button>
+            <button data-param="wind" class="btn btn-param" data-i18n="weather.windSpeed">风速</button>
+            <button data-param="pressure" class="btn btn-param" data-i18n="weather.pressure">气压</button>
+            <button data-param="clouds" class="btn btn-param" data-i18n="weather.cloudCover">云量</button>
           </div>
           <div id="chart-container" class="chart-container">
             <canvas id="weather-chart"></canvas>
@@ -169,32 +169,32 @@
       
       <!-- 晚霞预测 -->
       <section id="prediction-section" class="card hidden">
-        <h2 id="prediction-section-title">朝霞/晚霞预测</h2>
+        <h2 id="prediction-section-title" data-i18n="prediction.title">朝霞/晚霞预测</h2>
         <div id="prediction-display">
           <!-- 动态填充预测信息 -->
         </div>
       </section>
-      
+
       <!-- 未来预测 -->
       <section id="forecast-section" class="card hidden">
-        <h2>未来预测</h2>
+        <h2 data-i18n="forecast.title">未来预测</h2>
         <div id="forecast-timeline">
           <!-- 动态填充时间线 -->
         </div>
       </section>
-      
+
       <!-- 加载指示器 -->
       <div id="loading-indicator" class="loading hidden">
         <div class="spinner"></div>
-        <p>加载中...</p>
+        <p data-i18n="common.loading">加载中...</p>
       </div>
     </main>
-    
+
     <footer>
-      <button id="refresh-btn" class="btn btn-secondary" disabled>
+      <button id="refresh-btn" class="btn btn-secondary" disabled data-i18n="buttons.refresh">
         🔄 刷新数据
       </button>
-      <p class="footer-text">数据来源：Windy API</p>
+      <p class="footer-text" data-i18n="common.dataSource">数据来源：Windy API</p>
     </footer>
     
     <!-- 全局消息提示 -->

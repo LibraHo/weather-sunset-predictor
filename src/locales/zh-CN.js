@@ -20,7 +20,8 @@ export default {
     delete: '删除',
     edit: '编辑',
     useCurrentLocation: '使用当前位置',
-    changeLanguage: '切换语言'
+    changeLanguage: '切换语言',
+    switch: '切换'
   },
 
   // 位置
@@ -48,6 +49,7 @@ export default {
     pressure: '气压',
     visibility: '能见度',
     clouds: '云量',
+    cloudCover: '云量',
     precipitation: '降水',
     highClouds: '高云',
     midClouds: '中云',
@@ -62,6 +64,8 @@ export default {
     clear: '晴天',
 
     // 天气概览
+    overview: '概览',
+    hourly: '详细预报',
     daysOverview: '{{days}}天概览',
     precipChance: '{{prob}}%降水',
     dataInfo: 'ℹ️ 数据源提供 {{hours}} 小时预测数据（约 {{days}} 天）。若需更多天数，请考虑使用其他天气数据源。'
@@ -95,9 +99,27 @@ export default {
     // 状态描述
     status: {
       noFireCloud: '无火烧云',
+      lightGlow: '轻微晚霞',
+      goodGlow: '有晚霞',
       highProbability: '大概率出现漂亮晚霞',
       moderateProbability: '可能出现晚霞',
-      lowProbability: '不太可能出现晚霞'
+      lowProbability: '不太可能出现晚霞',
+      skyClear: '万里无云，缺少"画布"反射光线',
+      cloudPerfect: '云层适中，有利于形成漂亮晚霞',
+      cloudTooThick: '云层过厚，阳光无法穿透',
+      cloudUnsuitable: '云况不适宜形成火烧云',
+      waitForClouds: '建议等待云量适中的天气',
+      lightPathBlocked: '西方有云遮挡，光线难以到达',
+      lightPathObstructed: '光路被阻挡',
+      poorViewing: '观赏效果不佳',
+      conditionsFair: '条件一般，可能零星色彩',
+      canWatch: '可以观赏',
+      conditionsGood: '条件尚可，有一定观赏价值',
+      veryLikely: '大概率出现漂亮晚霞',
+      excellentConditions: '云量适中，光路通畅',
+      legendaryEruption: '传说级爆发',
+      perfectMidHighClouds: '完美的中高云层，光路清晰',
+      highlyRecommended: '强烈推荐观赏！'
     },
 
     // 时间段
@@ -120,7 +142,17 @@ export default {
       breakdown: '云层分布',
       canvasScore: '📊 画布: {{score}}分 | {{level}}',
       cloudBreakdown: '高云{{high}}% 中云{{mid}}% 低云{{low}}%',
-      lowCloudPenalty: '| 低云惩罚: {{reason}}'
+      lowCloudPenalty: '| 低云惩罚: {{reason}}',
+      // 云层等级
+      space: '太空（无云）',
+      fair: '尚可',
+      perfect: '完美',
+      crowded: '拥挤',
+      overcast: '阴天',
+      // 低云惩罚原因
+      noLowCloudObstruction: '无低云遮挡',
+      tooManyLowClouds: '低云过多（几乎阴天）',
+      lowCloudAmount: '低云量 {{value}}%'
     },
 
     // 光路评分
@@ -137,7 +169,25 @@ export default {
       score: '渲染得分',
       humidity: '湿度影响',
       renderingFactor: '🎨 渲染系数: {{factor}} | {{visibility}} | {{aqi}} | {{color}}',
-      specialMode: '| {{mode}}'
+      specialMode: '| {{mode}}',
+      // 能见度描述
+      visibilityExcellent: '极佳（>20km）',
+      visibilityGood: '良好（10-20km）',
+      visibilityPoor: '较差（<10km）',
+      // 湿度描述
+      humidityFog: '可能有大雾',
+      humidityDry: '空气干燥',
+      humidityModerate: '湿度适中',
+      // AQI描述
+      aqiExcellent: '优',
+      aqiGood: '良',
+      aqiPoor: '差',
+      // 色彩倾向
+      colorGoldenOrange: '金黄、亮橙色',
+      colorReddishPurplish: '偏红、紫红色',
+      colorDarkRed: '暗红、血色（不美）',
+      // 特殊模式
+      postRainMode: '🌟 雨后初晴模式（超级加倍）'
     },
 
     // 综合评分
@@ -249,6 +299,23 @@ export default {
     format: '{{month}}月{{day}}日'
   },
 
+  // 日期按钮
+  dates: {
+    today: '今天',
+    tomorrow: '明天'
+  },
+
+  // 未来预测
+  forecast: {
+    title: '未来预测'
+  },
+
+  // 通用文本
+  common: {
+    loading: '加载中...',
+    dataSource: '数据来源：Windy API'
+  },
+
   // 错误消息
   errors: {
     title: '错误',
@@ -265,14 +332,19 @@ export default {
   settings: {
     title: '设置',
     apiKey: 'API密钥',
-    apiKeyLabel: 'Windy API密钥',
-    apiKeyPlaceholder: '请输入您的Windy API密钥',
-    apiKeyHelp: '在 https://www.windy.com 注册获取API密钥',
+    apiKeyLabel: '配置Windy API密钥',
+    apiKeyPlaceholder: '输入API密钥',
+    apiKeyHelp: '请输入您的Windy API密钥以使用天气预测功能',
     language: '语言',
     languageLabel: '界面语言',
     notifications: '通知',
+    notificationsTitle: '通知设置',
     notificationsLabel: '晚霞预测通知',
+    notificationsDescription: '设置高质量预测提醒',
     notificationsHelp: '当预测质量高于设定值时发送通知',
+    enableNotifications: '启用通知提醒',
+    thresholdLabel: '评分阈值（当评分≥此值时提醒）',
+    testNotification: '测试通知',
     notificationThreshold: '通知阈值',
     favoriteLocations: '收藏位置',
     searchHistory: '搜索历史',
@@ -305,7 +377,7 @@ export default {
   // 收藏位置
   favorites: {
     title: '收藏位置',
-    add: '添加到收藏',
+    add: '收藏当前位置',
     remove: '取消收藏',
     removeConfirm: '确定要移除这个收藏位置吗？',
     empty: '暂无收藏位置',

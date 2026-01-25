@@ -48,6 +48,7 @@ export default {
     pressure: 'Pressure',
     visibility: 'Visibility',
     clouds: 'Clouds',
+    cloudCover: 'Cloud Cover',
     precipitation: 'Precipitation',
     highClouds: 'High Clouds',
     midClouds: 'Mid Clouds',
@@ -62,6 +63,8 @@ export default {
     clear: 'Clear',
 
     // Weather overview
+    overview: 'Overview',
+    hourly: 'Hourly Forecast',
     daysOverview: '{{days}}-Day Overview',
     precipChance: '{{prob}}% precip',
     dataInfo: 'ℹ️ Data source provides {{hours}} hours forecast data (~{{days}} days). Consider using other weather data sources for more days.'
@@ -95,9 +98,27 @@ export default {
     // Status descriptions
     status: {
       noFireCloud: 'No Fire Cloud',
+      lightGlow: 'Light Glow',
+      goodGlow: 'Good Glow',
       highProbability: 'High probability of beautiful sunset glow',
       moderateProbability: 'Possible sunset glow',
-      lowProbability: 'Unlikely to have sunset glow'
+      lowProbability: 'Unlikely to have sunset glow',
+      skyClear: 'Clear sky, lacking "canvas" to reflect light',
+      cloudPerfect: 'Moderate clouds, favorable for beautiful sunset',
+      cloudTooThick: 'Clouds too thick, sunlight cannot penetrate',
+      cloudUnsuitable: 'Cloud conditions unsuitable for fire cloud formation',
+      waitForClouds: 'Recommend waiting for moderate cloud cover',
+      lightPathBlocked: 'Clouds to the west blocking light path',
+      lightPathObstructed: 'Light path obstructed',
+      poorViewing: 'Poor viewing conditions',
+      conditionsFair: 'Fair conditions, possibly scattered colors',
+      canWatch: 'Can watch',
+      conditionsGood: 'Good conditions with some viewing value',
+      veryLikely: 'High probability of beautiful sunset',
+      excellentConditions: 'Moderate clouds with clear light path',
+      legendaryEruption: 'Legendary eruption',
+      perfectMidHighClouds: 'Perfect mid-high clouds with clear light path',
+      highlyRecommended: 'Highly recommended to watch!'
     },
 
     // Time periods
@@ -120,7 +141,17 @@ export default {
       breakdown: 'Cloud Distribution',
       canvasScore: '📊 Canvas: {{score}}pts | {{level}}',
       cloudBreakdown: 'High {{high}}% Mid {{mid}}% Low {{low}}%',
-      lowCloudPenalty: '| Low cloud penalty: {{reason}}'
+      lowCloudPenalty: '| Low cloud penalty: {{reason}}',
+      // Cloud levels
+      space: 'Space (No Clouds)',
+      fair: 'Fair',
+      perfect: 'Perfect',
+      crowded: 'Crowded',
+      overcast: 'Overcast',
+      // Low cloud penalty reasons
+      noLowCloudObstruction: 'No low cloud obstruction',
+      tooManyLowClouds: 'Too many low clouds (almost overcast)',
+      lowCloudAmount: 'Low clouds {{value}}%'
     },
 
     // Light path score
@@ -137,7 +168,25 @@ export default {
       score: 'Rendering Score',
       humidity: 'Humidity Effect',
       renderingFactor: '🎨 Rendering factor: {{factor}} | {{visibility}} | {{aqi}} | {{color}}',
-      specialMode: '| {{mode}}'
+      specialMode: '| {{mode}}',
+      // Visibility descriptions
+      visibilityExcellent: 'Excellent (>20km)',
+      visibilityGood: 'Good (10-20km)',
+      visibilityPoor: 'Poor (<10km)',
+      // Humidity descriptions
+      humidityFog: 'Possible fog',
+      humidityDry: 'Dry air',
+      humidityModerate: 'Moderate humidity',
+      // AQI descriptions
+      aqiExcellent: 'Excellent',
+      aqiGood: 'Good',
+      aqiPoor: 'Poor',
+      // Color tendencies
+      colorGoldenOrange: 'Golden, bright orange',
+      colorReddishPurplish: 'Reddish, purplish-red',
+      colorDarkRed: 'Dark red, blood red (not beautiful)',
+      // Special mode
+      postRainMode: '🌟 Post-rain clear mode (super bonus)'
     },
 
     // Composite score
@@ -249,6 +298,23 @@ export default {
     format: '{{month}}/{{day}}'
   },
 
+  // Date buttons
+  dates: {
+    today: 'Today',
+    tomorrow: 'Tomorrow'
+  },
+
+  // Future forecast
+  forecast: {
+    title: 'Future Forecast'
+  },
+
+  // Common text
+  common: {
+    loading: 'Loading...',
+    dataSource: 'Data source: Windy API'
+  },
+
   // Error messages
   errors: {
     title: 'Error',
@@ -265,14 +331,19 @@ export default {
   settings: {
     title: 'Settings',
     apiKey: 'API Key',
-    apiKeyLabel: 'Windy API Key',
-    apiKeyPlaceholder: 'Enter your Windy API key',
-    apiKeyHelp: 'Get API key from https://www.windy.com',
+    apiKeyLabel: 'Configure Windy API Key',
+    apiKeyPlaceholder: 'Enter API key',
+    apiKeyHelp: 'Please enter your Windy API key to use weather prediction features',
     language: 'Language',
     languageLabel: 'Interface Language',
     notifications: 'Notifications',
+    notificationsTitle: 'Notification Settings',
     notificationsLabel: 'Sunset Glow Notifications',
+    notificationsDescription: 'Set up high-quality prediction alerts',
     notificationsHelp: 'Send notification when prediction quality is above threshold',
+    enableNotifications: 'Enable notification alerts',
+    thresholdLabel: 'Score threshold (alert when score ≥ this value)',
+    testNotification: 'Test Notification',
     notificationThreshold: 'Notification Threshold',
     favoriteLocations: 'Favorite Locations',
     searchHistory: 'Search History',

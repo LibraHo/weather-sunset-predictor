@@ -25,12 +25,12 @@ class WeatherController {
     
     // 使用简化的内联 ChartService
     this.chartService = {
-      renderTemperatureChart: (data, id) => this._renderSimpleChart(data, id, '温度', '°C', '#ff6b6b'),
-      renderPrecipitationChart: (data, id) => this._renderSimpleChart(data, id, '降水', 'mm', '#4dabf7'),
-      renderHumidityChart: (data, id) => this._renderSimpleChart(data, id, '湿度', '%', '#51cf66'),
-      renderWindChart: (data, id) => this._renderSimpleChart(data, id, '风速', 'km/h', '#748ffc'),
-      renderPressureChart: (data, id) => this._renderSimpleChart(data, id, '气压', 'hPa', '#ffa94d'),
-      renderCloudChart: (data, id) => this._renderSimpleChart(data, id, '云量', '%', '#868e96')
+      renderTemperatureChart: (data, id) => this._renderSimpleChart(data, id, 'temp', this.i18n.t('weather.temperature'), '°C', '#ff6b6b'),
+      renderPrecipitationChart: (data, id) => this._renderSimpleChart(data, id, 'precipitation', this.i18n.t('weather.precipitation'), 'mm', '#4dabf7'),
+      renderHumidityChart: (data, id) => this._renderSimpleChart(data, id, 'humidity', this.i18n.t('weather.humidity'), '%', '#51cf66'),
+      renderWindChart: (data, id) => this._renderSimpleChart(data, id, 'windSpeed', this.i18n.t('weather.windSpeed'), 'km/h', '#748ffc'),
+      renderPressureChart: (data, id) => this._renderSimpleChart(data, id, 'pressure', this.i18n.t('weather.pressure'), 'hPa', '#ffa94d'),
+      renderCloudChart: (data, id) => this._renderSimpleChart(data, id, 'cloudCover', this.i18n.t('weather.cloudCover'), '%', '#868e96')
     };
     
     this.currentWeatherData = null;
@@ -518,20 +518,10 @@ class WeatherController {
    * 渲染简化折线图（内联版本，避免模块导入问题）
    * @private
    */
-  _renderSimpleChart(hourlyData, containerId, label, unit, color) {
+  _renderSimpleChart(hourlyData, containerId, param, label, unit, color) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    const paramMap = {
-      '温度': 'temp',
-      '降水': 'precipitation',
-      '湿度': 'humidity',
-      '风速': 'windSpeed',
-      '气压': 'pressure',
-      '云量': 'cloudCover'
-    };
-
-    const param = paramMap[label];
     const values = hourlyData.map(d => d[param]);
     const min = Math.min(...values);
     const max = Math.max(...values);
@@ -540,7 +530,7 @@ class WeatherController {
     // 图表尺寸
     const chartWidth = 900;
     const chartHeight = 280;
-    const padding = { top: 50, right: 50, bottom: 70, left: 70 };
+    const padding = { top: 50, right: 50, bottom: 70, left: 90 };
     const contentWidth = chartWidth - padding.left - padding.right;
     const contentHeight = chartHeight - padding.top - padding.bottom;
 
@@ -574,7 +564,7 @@ class WeatherController {
       html += `<line x1="${padding.left}" y1="${y}" x2="${chartWidth - padding.right}" y2="${y}" stroke="#e0e0e0" stroke-width="1.5" stroke-dasharray="5,5"/>`;
 
       // Y轴标签
-      html += `<text x="${padding.left - 15}" y="${y + 5}" font-size="13" fill="#555" text-anchor="end" font-weight="500">${value.toFixed(1)} ${unit}</text>`;
+      html += `<text x="${padding.left - 10}" y="${y + 5}" font-size="13" fill="#555" text-anchor="end" font-weight="500">${value.toFixed(1)} ${unit}</text>`;
     }
 
     // X轴标签（时间）
@@ -602,7 +592,7 @@ class WeatherController {
     html += `<text x="${chartWidth / 2}" y="${chartHeight - 15}" font-size="14" fill="#666" text-anchor="middle" font-weight="600">${this.i18n.t('charts.time')}</text>`;
 
     // Y轴标题
-    html += `<text x="20" y="${chartHeight / 2}" font-size="14" fill="#666" text-anchor="middle" transform="rotate(-90, 20, ${chartHeight / 2})" font-weight="600">${label} (${unit})</text>`;
+    html += `<text x="35" y="${chartHeight / 2}" font-size="14" fill="#666" text-anchor="middle" transform="rotate(-90, 35, ${chartHeight / 2})" font-weight="600">${label} (${unit})</text>`;
 
     html += `</svg>`;
     html += `</div>`; // 关闭SVG容器div
@@ -656,7 +646,14 @@ class WeatherController {
 
     // 如果有当前天气数据，重新渲染以更新格式化的日期/时间
     if (this.currentWeatherData) {
-      this.updateWeatherDisplay(this.currentWeatherData);
+      // 根据当前视图重新渲染
+      if (this.currentView === 'hourly') {
+        // 重新渲染24小时图表
+        this.renderHourlyForecast(this.currentWeatherData, this.selectedDay);
+      } else {
+        // 重新渲染概览
+        this.renderWeeklyOverview(this.currentWeatherData);
+      }
     }
   }
 }

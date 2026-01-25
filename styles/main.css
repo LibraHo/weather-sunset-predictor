@@ -1078,7 +1078,7 @@ input[type="text"]::placeholder {
   cursor: pointer;
   transition: all var(--transition-normal);
   width: 100%;
-  max-width: 300px;
+  max-width: 100%;
 }
 
 .forecast-item:hover {
@@ -1102,6 +1102,20 @@ input[type="text"]::placeholder {
   align-items: center;
   margin-bottom: var(--spacing-sm);
   width: 100%;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.forecast-type {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.forecast-score {
+  flex-shrink: 0;
 }
 
 .forecast-date {
@@ -1170,9 +1184,21 @@ input[type="text"]::placeholder {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
   width: 100%;
   margin-top: var(--spacing-xs);
+  flex-wrap: wrap;
+}
+
+.forecast-summary .quality-badge {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+
+.forecast-summary .sunset-time-small {
+  flex-shrink: 0;
+  font-size: 0.8125rem;
 }
 
 .quality-badge {
@@ -1180,6 +1206,10 @@ input[type="text"]::placeholder {
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
   font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 100%;
 }
 
 .sunset-time-small {
@@ -1454,12 +1484,17 @@ input[type="text"]::placeholder {
 
 .type-icon {
   font-size: 1.5rem;
+  flex-shrink: 0;
 }
 
 .type-label {
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-text);
+  line-height: 1.2;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 /* 朝霞特殊样式 */
@@ -2280,10 +2315,11 @@ input[type="text"]::placeholder {
 
 .forecast-day-column {
   flex: 1;
-  max-width: 400px;
+  max-width: 380px;
+  min-width: 280px;
   background: #ffffff;
   border-radius: 12px;
-  padding: var(--spacing-xl);
+  padding: var(--spacing-lg);
   border: 1px solid #e8e8e8;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   transition: all 0.3s ease;
@@ -2348,18 +2384,22 @@ input[type="text"]::placeholder {
   }
 
   .forecast-day-column {
-    max-width: 100%;
-    padding: var(--spacing-lg);
+    min-width: auto;
+    width: 100%;
   }
 
   .forecast-item {
     max-width: 100%;
   }
 
+  .type-label {
+    font-size: 0.8125rem;
+  }
+
   .forecast-score {
-    width: 70px;
-    height: 70px;
-    font-size: 1.5rem;
+    width: 60px;
+    height: 60px;
+    font-size: 1.4rem;
   }
 
   .forecast-type {
@@ -2367,13 +2407,25 @@ input[type="text"]::placeholder {
     align-items: flex-start;
     gap: var(--spacing-xs);
   }
+}
 
-  .score-circle {
-    width: 100px;
-    height: 100px;
+@media (max-width: 480px) {
+  .forecast-day-column {
+    padding: var(--spacing-md);
   }
 
-  .score-number {
-    font-size: 2.2rem;
+  .forecast-score {
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
+  }
+
+  .type-label {
+    font-size: 0.75rem;
+  }
+
+  .quality-badge {
+    font-size: 0.75rem;
+    padding: var(--spacing-xs) var(--spacing-sm);
   }
 }

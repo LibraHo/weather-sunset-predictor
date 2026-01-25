@@ -102,11 +102,11 @@ class AppController {
 
     } catch (error) {
       console.error('应用初始化失败:', error);
-      
+
       // 使用ErrorHandler处理错误
       const errorInfo = ErrorHandler.handleError(error, 'App Initialization');
       this.showError(errorInfo.message);
-      
+
       throw error;
     }
   }
@@ -992,7 +992,7 @@ class AppController {
     favoriteList.innerHTML = '';
 
     if (favorites.length === 0) {
-      favoriteList.innerHTML = '<li class="empty-favorites">暂无收藏位置</li>';
+      favoriteList.innerHTML = `<li class="empty-favorites">${this.i18n.t('favorites.empty')}</li>`;
       return;
     }
 
@@ -1004,10 +1004,10 @@ class AppController {
         <span class="favorite-name">${fav.name}</span>
         <div class="favorite-actions">
           <button class="btn-favorite-switch" data-lat="${fav.lat}" data-lon="${fav.lon}" data-name="${fav.name}">
-            切换
+            ${this.i18n.t('buttons.switch')}
           </button>
           <button class="btn-favorite-remove" data-key="${fav.lat}_${fav.lon}">
-            删除
+            ${this.i18n.t('buttons.delete')}
           </button>
         </div>
       `;
@@ -1268,7 +1268,7 @@ class AppController {
     historyDropdown.innerHTML = '';
 
     if (history.length === 0) {
-      historyDropdown.innerHTML = '<div class="history-empty">暂无搜索历史</div>';
+      historyDropdown.innerHTML = `<div class="history-empty">${this.i18n.t('history.empty')}</div>`;
       historyDropdown.classList.add('hidden');
       return;
     }
@@ -1284,7 +1284,7 @@ class AppController {
         <span class="history-name" data-lat="${item.lat}" data-lon="${item.lon}" data-name="${item.name}">
           📍 ${item.name}
         </span>
-        <button class="history-remove" data-key="${item.lat}_${item.lon}" aria-label="删除">
+        <button class="history-remove" data-key="${item.lat}_${item.lon}" aria-label="${this.i18n.t('buttons.delete')}">
           ✕
         </button>
       `;
@@ -1294,7 +1294,7 @@ class AppController {
     // 添加清除全部按钮
     const clearAllBtn = document.createElement('button');
     clearAllBtn.className = 'history-clear-all btn btn-secondary';
-    clearAllBtn.textContent = '清除全部历史';
+    clearAllBtn.textContent = this.i18n.t('history.clearAll');
     clearAllBtn.addEventListener('click', () => this.clearAllHistory());
 
     historyDropdown.appendChild(historyList);
@@ -1451,65 +1451,53 @@ class AppController {
    * @private
    */
   updateStaticText() {
-    // 定义需要翻译的静态元素映射
-    const translations = {
-      // 位置区域
-      '#location-section h2': 'location.label',
-      '#location-input': { attr: 'placeholder', key: 'location.placeholder' },
-      '#search-btn': 'buttons.search',
-      '#current-location-btn': { content: '📍 ', key: 'buttons.useCurrentLocation' },
-      '#favorite-locations h3': { content: '⭐ ', key: 'favorites.title' },
-      '#add-favorite-btn': 'buttons.save',
+    // 处理所有带有data-i18n属性的元素
+    document.querySelectorAll('[data-i18n]').forEach(element => {
+      const key = element.getAttribute('data-i18n');
+      try {
+        element.textContent = this.i18n.t(key);
+      } catch (error) {
+        console.warn(`[AppController] 翻译失败 "${key}":`, error.message);
+      }
+    });
 
-      // 通知按钮
-      '#notification-settings-btn': { attr: 'aria-label', key: 'settings.notificationsLabel' },
-      '#settings-btn': { attr: 'aria-label', key: 'settings.title' },
+    // 处理placeholder属性
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+      const key = element.getAttribute('data-i18n-placeholder');
+      try {
+        element.placeholder = this.i18n.t(key);
+      } catch (error) {
+        console.warn(`[AppController] 翻译placeholder失败 "${key}":`, error.message);
+      }
+    });
 
-      // 按钮文本
-      'button:contains("收藏当前位置")': 'favorites.add',
-      'button:contains("通知设置")': 'settings.notificationsLabel',
-      'button:contains("设置")': 'settings.title'
-    };
+    // 处理aria-label属性
+    document.querySelectorAll('[data-i18n-aria-label]').forEach(element => {
+      const key = element.getAttribute('data-i18n-aria-label');
+      try {
+        element.setAttribute('aria-label', this.i18n.t(key));
+      } catch (error) {
+        console.warn(`[AppController] 翻译aria-label失败 "${key}":`, error.message);
+      }
+    });
 
-    // 应用翻译
-    for (const selector in translations) {
-      const elements = document.querySelectorAll(selector);
-      const transConfig = translations[selector];
+    // 特殊处理：带emoji前缀的按钮
+    const emojiButtons = [
+      { selector: '#current-location-btn', content: '📍 ', key: 'buttons.useCurrentLocation' },
+      { selector: '#favorite-locations h3', content: '⭐ ', key: 'favorites.title' },
+      { selector: '#refresh-btn', content: '🔄 ', key: 'buttons.refresh' }
+    ];
 
-      elements.forEach(element => {
-        if (typeof transConfig === 'string') {
-          // 直接翻译文本内容
-          element.textContent = this.i18n.t(transConfig);
-        } else if (transConfig.content) {
-          // 带前缀的文本
-          element.textContent = transConfig.content + this.i18n.t(transConfig.key);
-        } else if (transConfig.attr) {
-          // 翻译属性
-          element.setAttribute(transConfig.attr, this.i18n.t(transConfig.key));
+    emojiButtons.forEach(({ selector, content, key }) => {
+      const element = document.querySelector(selector);
+      if (element) {
+        try {
+          element.textContent = content + this.i18n.t(key);
+        } catch (error) {
+          console.warn(`[AppController] 翻译按钮失败 "${key}":`, error.message);
         }
-      });
-    }
-
-    // 更新模态框标题
-    const apiModalTitle = document.querySelector('#api-key-modal h2');
-    if (apiModalTitle) {
-      apiModalTitle.textContent = this.i18n.t('settings.apiKeyLabel');
-    }
-
-    const apiModalDesc = document.querySelector('#api-key-modal .modal-description');
-    if (apiModalDesc) {
-      apiModalDesc.textContent = this.i18n.t('settings.apiKeyHelp');
-    }
-
-    const apiModalInput = document.querySelector('#api-key-input');
-    if (apiModalInput) {
-      apiModalInput.placeholder = this.i18n.t('settings.apiKeyPlaceholder');
-    }
-
-    const apiModalSaveBtn = document.querySelector('#save-api-key');
-    if (apiModalSaveBtn) {
-      apiModalSaveBtn.textContent = this.i18n.t('buttons.save');
-    }
+      }
+    });
   }
 }
 

@@ -1164,9 +1164,13 @@ class PredictionController {
    */
   formatDate(date) {
     try {
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const day = date.getDate().toString().padStart(2, '0');
-      return `${month}月${day}日`;
+      // 使用当前语言环境的日期格式
+      const locale = this.i18n.getCurrentLocale();
+      const formatter = new Intl.DateTimeFormat(locale, {
+        month: '2-digit',
+        day: '2-digit'
+      });
+      return formatter.format(date);
     } catch (error) {
       console.error('格式化日期失败:', error);
       return '';

@@ -38,6 +38,8 @@ export default {
   weather: {
     title: '天氣資訊',
     current: '目前天氣',
+    currentLocation: '目前位置',
+    noData: '沒有可用的天氣資料',
     forecast: '預報',
     temperature: '溫度',
     humidity: '濕度',
@@ -46,12 +48,26 @@ export default {
     pressure: '氣壓',
     visibility: '能見度',
     clouds: '雲量',
+    cloudCover: '雲量',
     precipitation: '降水',
     highClouds: '高雲',
     midClouds: '中雲',
     lowClouds: '低雲',
     feeling: '體感',
-    uvIndex: '紫外線指數'
+    uvIndex: '紫外線指數',
+
+    // 天氣描述
+    overcast: '陰天',
+    cloudy: '多雲',
+    partlyCloudy: '少雲',
+    clear: '晴天',
+
+    // 天氣概覽
+    overview: '概覽',
+    hourly: '詳細預報',
+    daysOverview: '{{days}}天概覽',
+    precipChance: '{{prob}}%降水',
+    dataInfo: 'ℹ️ 資料來源提供 {{hours}} 小時預測資料（約 {{days}} 天）。若需要更多天數，請考慮使用其他天氣資料來源。'
   },
 
   // 預測
@@ -59,11 +75,19 @@ export default {
     title: '晚霞預測',
     sunrise: '朝霞',
     sunset: '晚霞',
+    sunriseAndSunset: '朝晚霞預測',
     score: '預測評分',
+    points: '分',
     quality: '品質等級',
     bestTime: '最佳觀賞時間',
     analysis: '分析',
+    analysisTitle: '📊 分析原因',
     details: '詳情',
+    detailedWeatherData: '詳細氣象資料',
+    noPredictionData: '⚠️ 暫無{{date}}預測資料',
+    insufficientData: '天氣資料不足，無法產生預測。請稍後重新整理資料。',
+    viewFutureOrRefresh: '請查看未來預測或稍後重新整理資料',
+    predictionUnavailable: '⚠️ 天氣資料不足',
 
     // 品質等級
     excellent: '優秀',
@@ -74,37 +98,67 @@ export default {
     // 狀態描述
     status: {
       noFireCloud: '無火燒雲',
+      lightGlow: '輕微晚霞',
+      goodGlow: '有晚霞',
       highProbability: '大概率出現漂亮晚霞',
       moderateProbability: '可能出現晚霞',
-      lowProbability: '不太可能出現晚霞'
+      lowProbability: '不太可能出現晚霞',
+      skyClear: '萬里無雲，缺少"畫布"反射光線',
+      cloudPerfect: '雲層適中，有利於形成漂亮晚霞',
+      cloudTooThick: '雲層過厚，陽光無法穿透',
+      cloudUnsuitable: '雲況不適宜形成火燒雲',
+      waitForClouds: '建議等待雲量適中的天氣',
+      lightPathBlocked: '西方有雲遮擋，光線難以到達',
+      lightPathObstructed: '光路被阻擋',
+      poorViewing: '觀賞效果不佳',
+      conditionsFair: '條件一般，可能零星色彩',
+      canWatch: '可以觀賞',
+      conditionsGood: '條件尚可，有一定觀賞價值',
+      veryLikely: '大概率出現漂亮晚霞',
+      excellentConditions: '雲量適中，光路通暢',
+      legendaryEruption: '傳說級爆發',
+      perfectMidHighClouds: '完美的中高雲層，光路清晰',
+      highlyRecommended: '強烈推薦觀賞！'
     },
 
     // 時間段
-    goldenHour: '黃金時段',
-    blueHour: '藍調時段',
+    goldenHour: '🌟 黃金時段',
+    blueHour: '🌌 藍調時段',
+    sunAzimuth: '🧭 太陽方位',
     sunriseTime: '日出時間',
     sunsetTime: '日落時間',
+    bestViewingTime: '最佳觀賞時間',
+
+    // 最佳觀看視窗描述
+    bestViewingWindowSunrise: '日出前後30分鐘是觀看朝霞的最佳時間',
+    bestViewingWindowSunset: '日落前後30分鐘是觀看晚霞的最佳時間',
 
     // 畫布評分
     canvas: {
       title: '畫布評分',
       score: '畫布得分',
       cloudLevel: '雲層等級',
-      breakdown: '雲層分佈'
+      breakdown: '雲層分佈',
+      canvasScore: '📊 畫布: {{score}}分 | {{level}}',
+      cloudBreakdown: '高雲{{high}}% 中雲{{mid}}% 低雲{{low}}%',
+      lowCloudPenalty: '| 低雲懲罰: {{reason}}'
     },
 
     // 光路評分
     lightPath: {
       title: '光路評分',
       score: '光路得分',
-      visibility: '能見度'
+      visibility: '能見度',
+      lightPathScore: '🌅 光路: {{score}}分 (150km:{{near}} 300km:{{far}})'
     },
 
     // 渲染評分
     rendering: {
       title: '渲染評分',
       score: '渲染得分',
-      humidity: '濕度影響'
+      humidity: '濕度影響',
+      renderingFactor: '🎨 渲染係數: {{factor}} | {{visibility}} | {{aqi}} | {{color}}',
+      specialMode: '| {{mode}}'
     },
 
     // 綜合評分
@@ -116,12 +170,17 @@ export default {
 
     // 雲層分析
     cloudLayers: {
-      title: '雲層分析',
+      title: '☁️ 雲層分層資訊',
+      highCloudLabel: '⛅ 高雲 (>6km)',
+      midCloudLabel: '☁️ 中雲 (2-6km)',
+      lowCloudLabel: '🌫️ 低雲 (<2km)',
       high: '高雲（>6km）',
       mid: '中雲（2-6km）',
       low: '低雲（<2km）',
       favorable: '有利',
-      unfavorable: '不利'
+      unfavorable: '不利',
+      cloudAnalysis: '雲層分析：',
+      description: '高雲{{high}}% 中雲{{mid}}% 低雲{{low}}%'
     },
 
     // 描述
@@ -133,7 +192,62 @@ export default {
       lowHumidity: '濕度過低，雲層可能過薄',
       goodVisibility: '能見度極佳，觀賞條件良好',
       poorVisibility: '能見度較差，可能影響觀賞效果'
-    }
+    },
+
+    // 火燒雲分析
+    fireCloud: {
+      title: '🔥 火燒雲指數：{{score}}/100{{level}}',
+      excellent: '（極佳）',
+      good: '（良好）',
+      fair: '（一般）',
+      poor: '（較差）',
+      analysisTitle: '🔥 火燒雲形成條件分析：',
+      idealCloud: '✅ 雲量理想（{{value}}%），能充分反射陽光',
+      slightlyLowCloud: '⚠️ 雲量略少（{{value}}%），火燒雲效果可能偏淡',
+      tooMuchCloud: '⚠️ 雲量過多（{{value}}%），可能遮擋陽光',
+      severelyLowCloud: '❌ 雲量嚴重不足（{{value}}%），無法形成火燒雲',
+      idealHumidity: '✅ 濕度適中（{{value}}%），利於光線散射',
+      slightlyLowHumidity: '⚠️ 濕度略低（{{value}}%），色彩可能不夠鮮豔',
+      slightlyHighHumidity: '⚠️ 濕度偏高（{{value}}%），可能影響色彩飽和度',
+      severelyLowHumidity: '❌ 濕度不足（{{value}}%），光線散射弱',
+      excellentVisibility: '✅ 能見度極佳（{{value}} km），視野通透',
+      goodVisibility: '✅ 能見度良好（{{value}} km），觀賞體驗佳',
+      fairVisibility: '⚠️ 能見度一般（{{value}} km），色彩可能略暗',
+      poorVisibility: '❌ 能見度差（{{value}} km），有霧霾影響',
+      sparseLowCloud: '✅ 低雲稀少（{{value}}%），不會遮擋火燒雲',
+      littleLowCloud: '✅ 低雲較少（{{value}}%），對觀賞影響小',
+      someLowCloud: '⚠️ 低雲較多（{{value}}%），可能部分遮擋',
+      denseLowCloud: '❌ 低雲密集（{{value}}%），嚴重影響觀賞',
+      excellentConditions: '🌟 具備出現絢爛火燒雲的所有條件！',
+      highProbability: '✨ 有較大概率出現壯觀的火燒雲景象',
+      moderateProbability: '💫 可能出現輕微的火燒雲效果',
+      lowProbability: '⛅ 形成明顯火燒雲的可能性較低',
+      noCloudNoFireCloud: '❌ 雲量嚴重不足，無法形成火燒雲',
+      tooMuchCloud: '❌ 雲量過多，遮擋陽光難以形成火燒雲'
+    },
+
+    // 總體評價
+    overallEvaluation: {
+      excellent: '{{date}}的氣象條件非常適合觀賞{{type}}！<br><br>',
+      good: '{{date}}的氣象條件較為適合觀賞{{type}}。<br><br>',
+      fair: '{{date}}的氣象條件不太理想。<br><br>',
+      idealCloud: ' 雲量適中（{{value}}%），有利於形成絢麗的色彩。<br>',
+      lowCloud: ' 雲量偏少（{{value}}%），可能缺少足夠的雲層來反射光線。<br>',
+      highCloud: ' 雲量較多（{{value}}%），可能遮擋過多陽光。<br>',
+      idealHumidity: ' 濕度適宜（{{value}}%），空氣中的水汽有助於光線散射。<br>',
+      lowHumidity: ' 濕度偏低（{{value}}%），空氣較乾燥。<br>',
+      highHumidity: ' 濕度較高（{{value}}%），可能影響能見度。<br>',
+      excellentVisibility: ' 能見度良好（{{value}} km），視野清晰。<br>',
+      fairVisibility: ' 能見度一般（{{value}} km）<br>',
+      poorVisibility: ' 能見度較差（{{value}} km），可能有霧霾。<br>',
+      sparseLowCloud: ' 低層雲較少，不會遮擋視線。',
+      someLowCloud: ' 有一些低層雲，可能略微影響觀賞效果。',
+      denseLowCloud: ' 低層雲較多（{{value}}%），可能遮擋部分景觀。'
+    },
+
+    // 未來預測
+    passed: '已過',
+    forecast: '未來預測'
   },
 
   // 時間
@@ -141,9 +255,36 @@ export default {
     today: '今天',
     tomorrow: '明天',
     yesterday: '昨天',
+    dayAfterTomorrow: '後天',
+    daysLater: '{{days}}天後',
     week: '週',
     date: '日期',
     time: '時間'
+  },
+
+  // 日期相關
+  date: {
+    today: '今日',
+    tomorrow: '明日',
+    dayAfterTomorrow: '後天',
+    format: '{{month}}月{{day}}日'
+  },
+
+  // 日期按鈕
+  dates: {
+    today: '今天',
+    tomorrow: '明天'
+  },
+
+  // 未來預測
+  forecast: {
+    title: '未來預測'
+  },
+
+  // 通用文本
+  common: {
+    loading: '載入中...',
+    dataSource: '資料來源：Windy API'
   },
 
   // 錯誤訊息
@@ -162,14 +303,19 @@ export default {
   settings: {
     title: '設定',
     apiKey: 'API金鑰',
-    apiKeyLabel: 'Windy API金鑰',
-    apiKeyPlaceholder: '請輸入您的Windy API金鑰',
-    apiKeyHelp: '在 https://www.windy.com 註冊取得API金鑰',
+    apiKeyLabel: '配置Windy API金鑰',
+    apiKeyPlaceholder: '輸入API金鑰',
+    apiKeyHelp: '請輸入您的Windy API金鑰以使用天氣預測功能',
     language: '語言',
     languageLabel: '介面語言',
     notifications: '通知',
+    notificationsTitle: '通知設定',
     notificationsLabel: '晚霞預測通知',
+    notificationsDescription: '設定高品質預測提醒',
     notificationsHelp: '當預測品質高於設定值時發送通知',
+    enableNotifications: '啟用通知提醒',
+    thresholdLabel: '評分閾值（當評分≥此值時提醒）',
+    testNotification: '測試通知',
     notificationThreshold: '通知閾值',
     favoriteLocations: '收藏位置',
     searchHistory: '搜尋歷史',
@@ -202,7 +348,7 @@ export default {
   // 收藏位置
   favorites: {
     title: '收藏位置',
-    add: '加入到收藏',
+    add: '加入收藏',
     remove: '取消收藏',
     removeConfirm: '確定要移除這個收藏位置嗎？',
     empty: '暫無收藏位置',
@@ -229,7 +375,10 @@ export default {
     daily: '7天預報',
     overview: '概覽',
     details: '詳細',
-    parameters: '參數'
+    parameters: '參數',
+    trend: '變化趨勢',
+    time: '時間',
+    unit: '單位'
   },
 
   // 載入狀態
