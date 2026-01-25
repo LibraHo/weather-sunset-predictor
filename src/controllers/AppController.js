@@ -61,6 +61,8 @@ class AppController {
       if (!apiKey) {
         // 需求 1.1：首次访问时显示API密钥配置界面
         console.log('[AppController] 显示API密钥配置界面');
+        // 需求14：先初始化UI以设置语言选择器，然后显示API密钥模态框
+        this.initializeUI();
         this.showAPIKeyModal();
         this.isInitialized = false;
         return;
@@ -538,6 +540,12 @@ class AppController {
     });
 
     // 初始化其他UI组件...
+
+    // 需求14：初始化完成后刷新界面文本以应用正确的语言
+    // 这确保从localStorage加载的语言偏好能够正确应用到UI
+    console.log('[AppController] 初始化UI完成，刷新界面文本...');
+    this.refreshUIText();
+
     this.hideLoading();
   }
 
