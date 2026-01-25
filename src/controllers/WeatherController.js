@@ -107,7 +107,7 @@ class WeatherController {
    */
   updateWeatherDisplay(weatherData, location = null) {
     if (!weatherData || weatherData.length === 0) {
-      this.showError('没有可用的天气数据');
+      this.showError(this.i18n.t('weather.noData'));
       return;
     }
 
@@ -117,7 +117,7 @@ class WeatherController {
     // 更新位置
     const locationEl = document.getElementById('weather-location');
     if (locationEl) {
-      locationEl.textContent = location && location.name ? location.name : '当前位置';
+      locationEl.textContent = location && location.name ? location.name : this.i18n.t('weather.currentLocation');
     }
 
     // 更新主要天气信息
@@ -255,7 +255,7 @@ class WeatherController {
     // 更新概览按钮标题，反映实际天数
     const overviewBtn = document.getElementById('overview-btn');
     if (overviewBtn) {
-      overviewBtn.textContent = `${dailyData.length}天概览`;
+      overviewBtn.textContent = this.i18n.t('weather.daysOverview', { days: dailyData.length });
     }
 
     // 如果天数少于7天，添加提示说明原因
@@ -263,7 +263,10 @@ class WeatherController {
       const infoDiv = document.createElement('div');
       infoDiv.className = 'info-message';
       infoDiv.style.cssText = 'margin-top: 10px; padding: 10px; background: #e3f2fd; border-radius: 4px; font-size: 14px; color: #1976d2;';
-      infoDiv.innerHTML = `ℹ️ 数据源提供 ${weatherData.length} 小时预测数据（约 ${dailyData.length} 天）。若需更多天数，请考虑使用其他天气数据源。`;
+      infoDiv.innerHTML = this.i18n.t('weather.dataInfo', {
+        hours: weatherData.length,
+        days: dailyData.length
+      });
       weeklyCards.appendChild(infoDiv);
     }
 
@@ -282,8 +285,18 @@ class WeatherController {
 
     // 计算日期
     const date = new Date(dayData[0].timestamp);
-    const dayNames = ['今天', '明天', '后天'];
-    const dayLabel = dayIndex < 3 ? dayNames[dayIndex] : date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+
+    // 使用i18n翻译日期标签
+    let dayLabel;
+    if (dayIndex === 0) {
+      dayLabel = this.i18n.t('time.today');
+    } else if (dayIndex === 1) {
+      dayLabel = this.i18n.t('time.tomorrow');
+    } else if (dayIndex === 2) {
+      dayLabel = this.i18n.t('time.dayAfterTomorrow');
+    } else {
+      dayLabel = this.i18n.formatDate(date);
+    }
 
     // 计算最高/最低温度
     const temps = dayData.map(d => d.temp);
@@ -300,6 +313,9 @@ class WeatherController {
     // 选择天气图标
     const weatherIcon = this._getWeatherIcon(avgCloudCover, precipProb);
 
+    // 使用i18n翻译降水概率
+    const precipText = this.i18n.t('weather.precipChance', { prob: precipProb });
+
     card.innerHTML = `
       <div class="day-label">${dayLabel}</div>
       <div class="weather-icon">${weatherIcon}</div>
@@ -308,7 +324,7 @@ class WeatherController {
         <span class="temp-separator">/</span>
         <span class="min-temp">${minTemp.toFixed(0)}°</span>
       </div>
-      <div class="precip-prob">${precipProb}% 降水</div>
+      <div class="precip-prob">${precipText}</div>
     `;
 
     // 点击卡片切换到详细视图
@@ -340,10 +356,10 @@ class WeatherController {
    * @returns {string} 天气描述
    */
   _getWeatherDescription(cloudCover, temp) {
-    if (cloudCover > 70) return '阴天';
-    if (cloudCover > 30) return '多云';
-    if (cloudCover > 10) return '少云';
-    return '晴天';
+    if (cloudCover > 70) return this.i18n.t('weather.overcast');
+    if (cloudCover > 30) return this.i18n.t('weather.cloudy');
+    if (cloudCover > 10) return this.i18n.t('weather.partlyCloudy');
+    return this.i18n.t('weather.clear');
   }
 
   /**
@@ -543,7 +559,7 @@ class WeatherController {
     }).join(' ');
 
     let html = `<div style="padding: 25px; background: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin: 20px auto; max-width: 95%;">`;
-    html += `<h3 style="text-align: center; margin-bottom: 25px; color: ${color}; font-size: 1.5rem;">${label}变化趋势</h3>`;
+    html += `<h3 style="text-align: center; margin-bottom: 25px; color: ${color}; font-size: 1.5rem;">${label}${this.i18n.t('charts.trend')}</h3>`;
 
     // SVG图表容器，居中显示
     html += `<div style="display: flex; justify-content: center;">`;
@@ -583,7 +599,7 @@ class WeatherController {
     });
 
     // X轴标题
-    html += `<text x="${chartWidth / 2}" y="${chartHeight - 15}" font-size="14" fill="#666" text-anchor="middle" font-weight="600">时间</text>`;
+    html += `<text x="${chartWidth / 2}" y="${chartHeight - 15}" font-size="14" fill="#666" text-anchor="middle" font-weight="600">${this.i18n.t('charts.time')}</text>`;
 
     // Y轴标题
     html += `<text x="20" y="${chartHeight / 2}" font-size="14" fill="#666" text-anchor="middle" transform="rotate(-90, 20, ${chartHeight / 2})" font-weight="600">${label} (${unit})</text>`;

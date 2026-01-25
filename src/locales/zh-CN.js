@@ -38,6 +38,8 @@ export default {
   weather: {
     title: '天气信息',
     current: '当前天气',
+    currentLocation: '当前位置',
+    noData: '没有可用的天气数据',
     forecast: '预报',
     temperature: '温度',
     humidity: '湿度',
@@ -51,7 +53,18 @@ export default {
     midClouds: '中云',
     lowClouds: '低云',
     feeling: '体感',
-    uvIndex: '紫外线指数'
+    uvIndex: '紫外线指数',
+
+    // 天气描述
+    overcast: '阴天',
+    cloudy: '多云',
+    partlyCloudy: '少云',
+    clear: '晴天',
+
+    // 天气概览
+    daysOverview: '{{days}}天概览',
+    precipChance: '{{prob}}%降水',
+    dataInfo: 'ℹ️ 数据源提供 {{hours}} 小时预测数据（约 {{days}} 天）。若需更多天数，请考虑使用其他天气数据源。'
   },
 
   // 预测
@@ -59,11 +72,19 @@ export default {
     title: '晚霞预测',
     sunrise: '朝霞',
     sunset: '晚霞',
+    sunriseAndSunset: '朝晚霞预测',
     score: '预测评分',
+    points: '分',
     quality: '质量等级',
     bestTime: '最佳观赏时间',
     analysis: '分析',
+    analysisTitle: '📊 分析原因',
     details: '详情',
+    detailedWeatherData: '详细气象数据',
+    noPredictionData: '⚠️ 暂无{{date}}预测数据',
+    insufficientData: '天气数据不足，无法生成预测。请稍后刷新数据。',
+    viewFutureOrRefresh: '请查看未来预测或稍后刷新数据',
+    predictionUnavailable: '⚠️ 天气数据不足',
 
     // 质量等级
     excellent: '优秀',
@@ -80,31 +101,43 @@ export default {
     },
 
     // 时间段
-    goldenHour: '黄金时段',
-    blueHour: '蓝调时段',
+    goldenHour: '🌟 黄金时段',
+    blueHour: '🌌 蓝调时段',
+    sunAzimuth: '🧭 太阳方位',
     sunriseTime: '日出时间',
     sunsetTime: '日落时间',
+    bestViewingTime: '最佳观赏时间',
+
+    // 最佳观看窗口描述
+    bestViewingWindowSunrise: '日出前后30分钟是观看朝霞的最佳时间',
+    bestViewingWindowSunset: '日落前后30分钟是观看晚霞的最佳时间',
 
     // 画布评分
     canvas: {
       title: '画布评分',
       score: '画布得分',
       cloudLevel: '云层等级',
-      breakdown: '云层分布'
+      breakdown: '云层分布',
+      canvasScore: '📊 画布: {{score}}分 | {{level}}',
+      cloudBreakdown: '高云{{high}}% 中云{{mid}}% 低云{{low}}%',
+      lowCloudPenalty: '| 低云惩罚: {{reason}}'
     },
 
     // 光路评分
     lightPath: {
       title: '光路评分',
       score: '光路得分',
-      visibility: '能见度'
+      visibility: '能见度',
+      lightPathScore: '🌅 光路: {{score}}分 (150km:{{near}} 300km:{{far}})'
     },
 
     // 渲染评分
     rendering: {
       title: '渲染评分',
       score: '渲染得分',
-      humidity: '湿度影响'
+      humidity: '湿度影响',
+      renderingFactor: '🎨 渲染系数: {{factor}} | {{visibility}} | {{aqi}} | {{color}}',
+      specialMode: '| {{mode}}'
     },
 
     // 综合评分
@@ -116,12 +149,17 @@ export default {
 
     // 云层分析
     cloudLayers: {
-      title: '云层分析',
+      title: '☁️ 云层分层信息',
+      highCloudLabel: '⛅ 高云 (>6km)',
+      midCloudLabel: '☁️ 中云 (2-6km)',
+      lowCloudLabel: '🌫️ 低云 (<2km)',
       high: '高云（>6km）',
       mid: '中云（2-6km）',
       low: '低云（<2km）',
       favorable: '有利',
-      unfavorable: '不利'
+      unfavorable: '不利',
+      cloudAnalysis: '云层分析：',
+      description: '高云{{high}}% 中云{{mid}}% 低云{{low}}%'
     },
 
     // 描述
@@ -133,7 +171,62 @@ export default {
       lowHumidity: '湿度过低，云层可能过薄',
       goodVisibility: '能见度极佳，观赏条件良好',
       poorVisibility: '能见度较差，可能影响观赏效果'
-    }
+    },
+
+    // 火烧云分析
+    fireCloud: {
+      title: '🔥 火烧云指数：{{score}}/100{{level}}',
+      excellent: '（极佳）',
+      good: '（良好）',
+      fair: '（一般）',
+      poor: '（较差）',
+      analysisTitle: '🔥 火烧云形成条件分析：',
+      idealCloud: '✅ 云量理想（{{value}}%），能充分反射阳光',
+      slightlyLowCloud: '⚠️ 云量略少（{{value}}%），火烧云效果可能偏淡',
+      tooMuchCloud: '⚠️ 云量过多（{{value}}%），可能遮挡阳光',
+      severelyLowCloud: '❌ 云量严重不足（{{value}}%），无法形成火烧云',
+      idealHumidity: '✅ 湿度适中（{{value}}%），利于光线散射',
+      slightlyLowHumidity: '⚠️ 湿度略低（{{value}}%），色彩可能不够鲜艳',
+      slightlyHighHumidity: '⚠️ 湿度偏高（{{value}}%），可能影响色彩饱和度',
+      severelyLowHumidity: '❌ 湿度不足（{{value}}%），光线散射弱',
+      excellentVisibility: '✅ 能见度极佳（{{value}} km），视野通透',
+      goodVisibility: '✅ 能见度良好（{{value}} km），观赏体验佳',
+      fairVisibility: '⚠️ 能见度一般（{{value}} km），色彩可能略暗',
+      poorVisibility: '❌ 能见度差（{{value}} km），有雾霾影响',
+      sparseLowCloud: '✅ 低云稀少（{{value}}%），不会遮挡火烧云',
+      littleLowCloud: '✅ 低云较少（{{value}}%），对观赏影响小',
+      someLowCloud: '⚠️ 低云较多（{{value}}%），可能部分遮挡',
+      denseLowCloud: '❌ 低云密集（{{value}}%），严重影响观赏',
+      excellentConditions: '🌟 具备出现绚烂火烧云的所有条件！',
+      highProbability: '✨ 有较大概率出现壮观的火烧云景象',
+      moderateProbability: '💫 可能出现轻微的火烧云效果',
+      lowProbability: '⛅ 形成明显火烧云的可能性较低',
+      noCloudNoFireCloud: '❌ 云量严重不足，无法形成火烧云',
+      tooMuchCloud: '❌ 云量过多，遮挡阳光难以形成火烧云'
+    },
+
+    // 总体评价
+    overallEvaluation: {
+      excellent: '{{date}}的气象条件非常适合观赏{{type}}！<br><br>',
+      good: '{{date}}的气象条件较为适合观赏{{type}}。<br><br>',
+      fair: '{{date}}的气象条件不太理想。<br><br>',
+      idealCloud: ' 云量适中（{{value}}%），有利于形成绚丽的色彩。<br>',
+      lowCloud: ' 云量偏少（{{value}}%），可能缺少足够的云层来反射光线。<br>',
+      highCloud: ' 云量较多（{{value}}%），可能遮挡过多阳光。<br>',
+      idealHumidity: ' 湿度适宜（{{value}}%），空气中的水汽有助于光线散射。<br>',
+      lowHumidity: ' 湿度偏低（{{value}}%），空气较干燥。<br>',
+      highHumidity: ' 湿度较高（{{value}}%），可能影响能见度。<br>',
+      excellentVisibility: ' 能见度良好（{{value}} km），视野清晰。<br>',
+      fairVisibility: ' 能见度一般（{{value}} km）<br>',
+      poorVisibility: ' 能见度较差（{{value}} km），可能有雾霾。<br>',
+      sparseLowCloud: ' 低层云较少，不会遮挡视线。',
+      someLowCloud: ' 有一些低层云，可能略微影响观赏效果。',
+      denseLowCloud: ' 低层云较多（{{value}}%），可能遮挡部分景观。'
+    },
+
+    // 未来预测
+    passed: '已过',
+    forecast: '未来预测'
   },
 
   // 时间
@@ -141,9 +234,19 @@ export default {
     today: '今天',
     tomorrow: '明天',
     yesterday: '昨天',
+    dayAfterTomorrow: '后天',
+    daysLater: '{{days}}天后',
     week: '周',
     date: '日期',
     time: '时间'
+  },
+
+  // 日期相关
+  date: {
+    today: '今日',
+    tomorrow: '明日',
+    dayAfterTomorrow: '后天',
+    format: '{{month}}月{{day}}日'
   },
 
   // 错误消息
@@ -229,7 +332,10 @@ export default {
     daily: '7天预报',
     overview: '概览',
     details: '详细',
-    parameters: '参数'
+    parameters: '参数',
+    trend: '变化趋势',
+    time: '时间',
+    unit: '单位'
   },
 
   // 加载状态

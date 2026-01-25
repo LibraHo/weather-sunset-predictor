@@ -460,7 +460,7 @@ class PredictionController {
     }
 
     // 生成智能标题
-    let title = '朝晚霞预测';
+    let title = this.i18n.t('prediction.sunriseAndSunset');
 
     if (sectionTitle) {
       sectionTitle.textContent = title;
@@ -470,14 +470,14 @@ class PredictionController {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const isToday = displayDate.toDateString() === today.toDateString();
-    const dateLabel = isToday ? '今日' : '明日';
+    const dateLabel = isToday ? this.i18n.t('date.today') : this.i18n.t('date.tomorrow');
 
     // 如果两个预测都缺失，显示错误提示
     if (!sunrisePrediction && !sunsetPrediction) {
       predictionDisplay.innerHTML = `
         <div class="prediction-unavailable">
-          <p>⚠️ 暂无${dateLabel}预测数据</p>
-          <p class="hint-text">天气数据不足，无法生成预测。请稍后刷新数据。</p>
+          <p>${this.i18n.t('prediction.noPredictionData', { date: dateLabel })}</p>
+          <p class="hint-text">${this.i18n.t('prediction.insufficientData')}</p>
         </div>
       `;
       if (predictionSection) {
@@ -491,36 +491,36 @@ class PredictionController {
 
     // 确定每个预测的日期标签
     const sunriseDateLabel = sunrisePrediction && sunrisePrediction.date &&
-      sunrisePrediction.date.toDateString() === today.toDateString() ? '今日' : '明日';
+      sunrisePrediction.date.toDateString() === today.toDateString() ? this.i18n.t('date.today') : this.i18n.t('date.tomorrow');
     const sunsetDateLabel = sunsetPrediction && sunsetPrediction.date &&
-      sunsetPrediction.date.toDateString() === today.toDateString() ? '今日' : '明日';
+      sunsetPrediction.date.toDateString() === today.toDateString() ? this.i18n.t('date.today') : this.i18n.t('date.tomorrow');
 
     // 朝霞预测
     if (sunrisePrediction) {
-      html += this.renderSinglePrediction(sunrisePrediction, '🌄', '朝霞', '日出时间', sunriseDateLabel);
+      html += this.renderSinglePrediction(sunrisePrediction, '🌄', this.i18n.t('prediction.sunrise'), this.i18n.t('prediction.sunriseTime'), sunriseDateLabel);
     } else {
       // 朝霞预测未生成
       html += `
         <div class="prediction-unavailable-card">
           <span class="prediction-date-badge">${sunriseDateLabel}</span>
-          <h3>🌄 朝霞预测</h3>
-          <p class="unavailable-reason">⚠️ 天气数据不足</p>
-          <p class="hint-text">请查看未来预测或稍后刷新数据</p>
+          <h3>🌄 ${this.i18n.t('prediction.sunrise')}</h3>
+          <p class="unavailable-reason">${this.i18n.t('prediction.predictionUnavailable')}</p>
+          <p class="hint-text">${this.i18n.t('prediction.viewFutureOrRefresh')}</p>
         </div>
       `;
     }
 
     // 晚霞预测
     if (sunsetPrediction) {
-      html += this.renderSinglePrediction(sunsetPrediction, '🌅', '晚霞', '日落时间', sunsetDateLabel);
+      html += this.renderSinglePrediction(sunsetPrediction, '🌅', this.i18n.t('prediction.sunset'), this.i18n.t('prediction.sunsetTime'), sunsetDateLabel);
     } else {
       // 晚霞预测未生成
       html += `
         <div class="prediction-unavailable-card">
           <span class="prediction-date-badge">${sunsetDateLabel}</span>
-          <h3>🌅 晚霞预测</h3>
-          <p class="unavailable-reason">⚠️ 天气数据不足</p>
-          <p class="hint-text">请查看未来预测或稍后刷新数据</p>
+          <h3>🌅 ${this.i18n.t('prediction.sunset')}</h3>
+          <p class="unavailable-reason">${this.i18n.t('prediction.predictionUnavailable')}</p>
+          <p class="hint-text">${this.i18n.t('prediction.viewFutureOrRefresh')}</p>
         </div>
       `;
     }
@@ -594,13 +594,13 @@ class PredictionController {
       <div class="prediction-card">
         <div class="prediction-header">
           <span class="prediction-date-badge">${dateLabel}</span>
-          <h3>${icon} ${title}预测</h3>
+          <h3>${icon} ${title}${this.i18n.t('prediction.score')}</h3>
         </div>
         <div class="prediction-score-container">
           <div class="score-card ${this.getQualityClass(prediction.quality)}">
             <div class="score-circle">
               <span class="score-number">${prediction.score.toFixed(0)}</span>
-              <span class="score-label">分</span>
+              <span class="score-label">${this.i18n.t('prediction.points')}</span>
             </div>
             <div class="quality-badge">
               ${this.getQualityLabel(prediction.quality)}
@@ -614,14 +614,14 @@ class PredictionController {
             <span class="sunset-value">${this.formatTime(prediction.sunsetTime)}</span>
           </div>
           <div class="best-time">
-            <span class="best-time-label">最佳观赏时间</span>
+            <span class="best-time-label">${this.i18n.t('prediction.bestViewingTime')}</span>
             <span class="best-time-value">${this.formatTime(viewingWindow.start)} - ${this.formatTime(viewingWindow.end)}</span>
           </div>
           ${enhancedInfo}
         </div>
         ${cloudLayersHtml}
         <div class="prediction-analysis">
-          <h4>📊 分析原因</h4>
+          <h4>${this.i18n.t('prediction.analysisTitle')}</h4>
           <p class="analysis-text">${analysis}</p>
         </div>
       </div>
@@ -641,24 +641,24 @@ class PredictionController {
 
     return `
       <div class="cloud-layers-section">
-        <h4>☁️ 云层分层信息</h4>
+        <h4>${this.i18n.t('prediction.cloudLayers.title')}</h4>
         <div class="cloud-layers-grid">
           <div class="cloud-layer">
-            <span class="cloud-layer-label">⛅ 高云 (>6km)</span>
+            <span class="cloud-layer-label">${this.i18n.t('prediction.cloudLayers.highCloudLabel')}</span>
             <span class="cloud-layer-value">${cloudLayers.high.toFixed(0)}%</span>
             <div class="cloud-layer-bar">
               <div class="cloud-layer-bar-fill" style="width: ${cloudLayers.high}%; background-color: #90caf9;"></div>
             </div>
           </div>
           <div class="cloud-layer">
-            <span class="cloud-layer-label">☁️ 中云 (2-6km)</span>
+            <span class="cloud-layer-label">${this.i18n.t('prediction.cloudLayers.midCloudLabel')}</span>
             <span class="cloud-layer-value">${cloudLayers.mid.toFixed(0)}%</span>
             <div class="cloud-layer-bar">
               <div class="cloud-layer-bar-fill" style="width: ${cloudLayers.mid}%; background-color: #64b5f6;"></div>
             </div>
           </div>
           <div class="cloud-layer">
-            <span class="cloud-layer-label">🌫️ 低云 (<2km)</span>
+            <span class="cloud-layer-label">${this.i18n.t('prediction.cloudLayers.lowCloudLabel')}</span>
             <span class="cloud-layer-value">${cloudLayers.low.toFixed(0)}%</span>
             <div class="cloud-layer-bar">
               <div class="cloud-layer-bar-fill" style="width: ${cloudLayers.low}%; background-color: #42a5f5;"></div>
@@ -772,23 +772,43 @@ class PredictionController {
 
     // 简化版画布评分
     analysis += `<div style="margin-top:8px;font-size:13px;">`;
-    analysis += `📊 画布: ${canvas.score.toFixed(0)}分 | ${canvas.cloudLevel}<br>`;
-    analysis += `   高云${canvas.breakdown.highClouds}% 中云${canvas.breakdown.midClouds}% 低云${canvas.breakdown.lowClouds}%`;
+    analysis += this.i18n.t('prediction.canvas.canvasScore', {
+      score: canvas.score.toFixed(0),
+      level: canvas.cloudLevel
+    }) + '<br>';
+    analysis += `   ${this.i18n.t('prediction.canvas.cloudBreakdown', {
+      high: canvas.breakdown.highClouds,
+      mid: canvas.breakdown.midClouds,
+      low: canvas.breakdown.lowClouds
+    })}`;
     if (canvas.lowCloudPenalty < 1.0) {
-      analysis += ` | 低云惩罚: ${canvas.penaltyReason}`;
+      analysis += this.i18n.t('prediction.canvas.lowCloudPenalty', {
+        reason: canvas.penaltyReason
+      });
     }
     analysis += `</div>`;
 
     // 简化版光路评分
     analysis += `<div style="margin-top:8px;font-size:13px;">`;
-    analysis += `🌅 光路: ${lightPath.score.toFixed(0)}分 (150km:${lightPath.nearPointScore} 300km:${lightPath.farPointScore})`;
+    analysis += this.i18n.t('prediction.lightPath.lightPathScore', {
+      score: lightPath.score.toFixed(0),
+      near: lightPath.nearPointScore,
+      far: lightPath.farPointScore
+    });
     analysis += `</div>`;
 
     // 简化版渲染修正
     analysis += `<div style="margin-top:8px;font-size:13px;">`;
-    analysis += `🎨 渲染系数: ${rendering.factor.toFixed(2)} | ${rendering.breakdown.visibility} | ${rendering.breakdown.aqi} | ${rendering.breakdown.colorTendency}`;
+    analysis += this.i18n.t('prediction.rendering.renderingFactor', {
+      factor: rendering.factor.toFixed(2),
+      visibility: rendering.breakdown.visibility,
+      aqi: rendering.breakdown.aqi,
+      color: rendering.breakdown.colorTendency
+    });
     if (rendering.breakdown.specialMode) {
-      analysis += ` | ${rendering.breakdown.specialMode}`;
+      analysis += this.i18n.t('prediction.rendering.specialMode', {
+        mode: rendering.breakdown.specialMode
+      });
     }
     analysis += `</div>`;
 
@@ -967,7 +987,9 @@ class PredictionController {
 
     daysToShow.forEach((dayPredictions, index) => {
       const dateStr = this.formatDate(dayPredictions.date);
-      const dayLabel = index === 0 ? '明天' : index === 1 ? '后天' : `${index + 1}天后`;
+      const dayLabel = index === 0 ? this.i18n.t('time.tomorrow') :
+                        index === 1 ? this.i18n.t('time.dayAfterTomorrow') :
+                        this.i18n.t('time.daysLater', { days: index + 1 });
 
       html += `
         <div class="forecast-day-column">
@@ -985,14 +1007,14 @@ class PredictionController {
 
         // 判断是否已过（日出时间 + 2小时）
         const isPassed = now > new Date(sunriseTime.getTime() + 2 * 60 * 60 * 1000);
-        const passedLabel = isPassed ? '<span class="passed-badge">已过</span>' : '';
+        const passedLabel = isPassed ? `<span class="passed-badge">${this.i18n.t('prediction.passed')}</span>` : '';
 
         html += `
           <div class="forecast-item ${this.getQualityClass(pred.quality)} ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
             <div class="forecast-header">
               <div class="forecast-type">
                 <span class="type-icon">🌄</span>
-                <span class="type-label">朝霞</span>
+                <span class="type-label">${this.i18n.t('prediction.sunrise')}</span>
                 ${passedLabel}
               </div>
               <div class="forecast-score">
@@ -1018,14 +1040,14 @@ class PredictionController {
 
         // 判断是否已过（日落时间 + 1.5小时）
         const isPassed = now > new Date(sunsetTime.getTime() + 1.5 * 60 * 60 * 1000);
-        const passedLabel = isPassed ? '<span class="passed-badge">已过</span>' : '';
+        const passedLabel = isPassed ? `<span class="passed-badge">${this.i18n.t('prediction.passed')}</span>` : '';
 
         html += `
           <div class="forecast-item ${this.getQualityClass(pred.quality)} ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
             <div class="forecast-header">
               <div class="forecast-type">
                 <span class="type-icon">🌅</span>
-                <span class="type-label">晚霞</span>
+                <span class="type-label">${this.i18n.t('prediction.sunset')}</span>
                 ${passedLabel}
               </div>
               <div class="forecast-score">
@@ -1109,13 +1131,7 @@ class PredictionController {
    * @private
    */
   getQualityLabel(quality) {
-    const labelMap = {
-      'excellent': '优秀',
-      'good': '良好',
-      'fair': '一般',
-      'poor': '较差'
-    };
-    return labelMap[quality] || '一般';
+    return this.i18n.t(`prediction.${quality}`) || this.i18n.t('prediction.fair');
   }
 
   /**

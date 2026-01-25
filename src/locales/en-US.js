@@ -38,6 +38,8 @@ export default {
   weather: {
     title: 'Weather Information',
     current: 'Current Weather',
+    currentLocation: 'Current Location',
+    noData: 'No weather data available',
     forecast: 'Forecast',
     temperature: 'Temperature',
     humidity: 'Humidity',
@@ -51,7 +53,18 @@ export default {
     midClouds: 'Mid Clouds',
     lowClouds: 'Low Clouds',
     feeling: 'Feels Like',
-    uvIndex: 'UV Index'
+    uvIndex: 'UV Index',
+
+    // Weather descriptions
+    overcast: 'Overcast',
+    cloudy: 'Cloudy',
+    partlyCloudy: 'Partly Cloudy',
+    clear: 'Clear',
+
+    // Weather overview
+    daysOverview: '{{days}}-Day Overview',
+    precipChance: '{{prob}}% precip',
+    dataInfo: 'ℹ️ Data source provides {{hours}} hours forecast data (~{{days}} days). Consider using other weather data sources for more days.'
   },
 
   // Prediction
@@ -59,11 +72,19 @@ export default {
     title: 'Sunset Glow Prediction',
     sunrise: 'Sunrise Glow',
     sunset: 'Sunset Glow',
+    sunriseAndSunset: 'Sunrise & Sunset Glow Prediction',
     score: 'Prediction Score',
+    points: 'pts',
     quality: 'Quality Level',
     bestTime: 'Best Viewing Time',
     analysis: 'Analysis',
+    analysisTitle: '📊 Analysis',
     details: 'Details',
+    detailedWeatherData: 'Detailed Weather Data',
+    noPredictionData: '⚠️ No {{date}} prediction data available',
+    insufficientData: 'Insufficient weather data to generate prediction. Please refresh later.',
+    viewFutureOrRefresh: 'Please check future predictions or refresh data later',
+    predictionUnavailable: '⚠️ Insufficient weather data',
 
     // Quality levels
     excellent: 'Excellent',
@@ -80,31 +101,43 @@ export default {
     },
 
     // Time periods
-    goldenHour: 'Golden Hour',
-    blueHour: 'Blue Hour',
+    goldenHour: '🌟 Golden Hour',
+    blueHour: '🌌 Blue Hour',
+    sunAzimuth: '🧭 Sun Azimuth',
     sunriseTime: 'Sunrise Time',
     sunsetTime: 'Sunset Time',
+    bestViewingTime: 'Best Viewing Time',
+
+    // Best viewing window descriptions
+    bestViewingWindowSunrise: '30 minutes before and after sunrise is the best time to view sunrise glow',
+    bestViewingWindowSunset: '30 minutes before and after sunset is the best time to view sunset glow',
 
     // Canvas score
     canvas: {
       title: 'Canvas Score',
       score: 'Canvas Score',
       cloudLevel: 'Cloud Level',
-      breakdown: 'Cloud Distribution'
+      breakdown: 'Cloud Distribution',
+      canvasScore: '📊 Canvas: {{score}}pts | {{level}}',
+      cloudBreakdown: 'High {{high}}% Mid {{mid}}% Low {{low}}%',
+      lowCloudPenalty: '| Low cloud penalty: {{reason}}'
     },
 
     // Light path score
     lightPath: {
       title: 'Light Path Score',
       score: 'Light Path Score',
-      visibility: 'Visibility'
+      visibility: 'Visibility',
+      lightPathScore: '🌅 Light path: {{score}}pts (150km:{{near}} 300km:{{far}})'
     },
 
     // Rendering score
     rendering: {
       title: 'Rendering Score',
       score: 'Rendering Score',
-      humidity: 'Humidity Effect'
+      humidity: 'Humidity Effect',
+      renderingFactor: '🎨 Rendering factor: {{factor}} | {{visibility}} | {{aqi}} | {{color}}',
+      specialMode: '| {{mode}}'
     },
 
     // Composite score
@@ -116,12 +149,17 @@ export default {
 
     // Cloud layers
     cloudLayers: {
-      title: 'Cloud Layer Analysis',
+      title: '☁️ Cloud Layer Information',
+      highCloudLabel: '⛅ High Clouds (>6km)',
+      midCloudLabel: '☁️ Mid Clouds (2-6km)',
+      lowCloudLabel: '🌫️ Low Clouds (<2km)',
       high: 'High Clouds (>6km)',
       mid: 'Mid Clouds (2-6km)',
       low: 'Low Clouds (<2km)',
       favorable: 'Favorable',
-      unfavorable: 'Unfavorable'
+      unfavorable: 'Unfavorable',
+      cloudAnalysis: 'Cloud analysis:',
+      description: 'High {{high}}% Mid {{mid}}% Low {{low}}%'
     },
 
     // Descriptions
@@ -133,7 +171,62 @@ export default {
       lowHumidity: 'Humidity too low, clouds may be too thin',
       goodVisibility: 'Excellent visibility, good viewing conditions',
       poorVisibility: 'Poor visibility, may affect viewing experience'
-    }
+    },
+
+    // Fire cloud analysis
+    fireCloud: {
+      title: '🔥 Fire Cloud Index: {{score}}/100{{level}}',
+      excellent: ' (Excellent)',
+      good: ' (Good)',
+      fair: ' (Fair)',
+      poor: ' (Poor)',
+      analysisTitle: '🔥 Fire Cloud Formation Conditions Analysis:',
+      idealCloud: '✅ Ideal cloud cover ({{value}}%), can fully reflect sunlight',
+      slightlyLowCloud: '⚠️ Slightly low cloud cover ({{value}}%), fire cloud effect may be pale',
+      tooMuchCloud: '⚠️ Too much cloud cover ({{value}}%), may block sunlight',
+      severelyLowCloud: '❌ Severely low cloud cover ({{value}}%), cannot form fire clouds',
+      idealHumidity: '✅ Ideal humidity ({{value}}%), favorable for light scattering',
+      slightlyLowHumidity: '⚠️ Slightly low humidity ({{value}}%), colors may not be vibrant enough',
+      slightlyHighHumidity: '⚠️ Slightly high humidity ({{value}}%), may affect color saturation',
+      severelyLowHumidity: '❌ Severely low humidity ({{value}}%), weak light scattering',
+      excellentVisibility: '✅ Excellent visibility ({{value}} km), clear view',
+      goodVisibility: '✅ Good visibility ({{value}} km), good viewing experience',
+      fairVisibility: '⚠️ Fair visibility ({{value}} km), colors may be slightly dim',
+      poorVisibility: '❌ Poor visibility ({{value}} km), haze affecting view',
+      sparseLowCloud: '✅ Sparse low clouds ({{value}}%), will not block fire clouds',
+      littleLowCloud: '✅ Few low clouds ({{value}}%), minimal impact on viewing',
+      someLowCloud: '⚠️ Some low clouds ({{value}}%), may partially block view',
+      denseLowCloud: '❌ Dense low clouds ({{value}}%), seriously affecting viewing',
+      excellentConditions: '🌟 All conditions for magnificent fire clouds are met!',
+      highProbability: '✨ High probability of spectacular fire cloud scenery',
+      moderateProbability: '💫 Possible mild fire cloud effects',
+      lowProbability: '⛅ Low probability of significant fire clouds',
+      noCloudNoFireCloud: '❌ Severely insufficient cloud cover, cannot form fire clouds',
+      tooMuchCloud: '❌ Too much cloud cover, blocking sunlight prevents fire clouds'
+    },
+
+    // Overall evaluation
+    overallEvaluation: {
+      excellent: 'The weather conditions on {{date}} are excellent for viewing {{type}}!<br><br>',
+      good: 'The weather conditions on {{date}} are fairly suitable for viewing {{type}}.<br><br>',
+      fair: 'The weather conditions on {{date}} are not ideal.<br><br>',
+      idealCloud: ' Ideal cloud cover ({{value}}%), favorable for forming brilliant colors.<br>',
+      lowCloud: ' Low cloud cover ({{value}}%), may lack sufficient clouds to reflect light.<br>',
+      highCloud: ' High cloud cover ({{value}}%), may block too much sunlight.<br>',
+      idealHumidity: ' Ideal humidity ({{value}}%), water vapor in the air helps light scattering.<br>',
+      lowHumidity: ' Low humidity ({{value}}%), air is relatively dry.<br>',
+      highHumidity: ' High humidity ({{value}}%), may affect visibility.<br>',
+      excellentVisibility: ' Good visibility ({{value}} km), clear view.<br>',
+      fairVisibility: ' Fair visibility ({{value}} km)<br>',
+      poorVisibility: ' Poor visibility ({{value}} km), possible haze.<br>',
+      sparseLowCloud: ' Few low-level clouds, will not block the view.',
+      someLowCloud: ' Some low-level clouds, may slightly affect viewing experience.',
+      denseLowCloud: ' Many low-level clouds ({{value}}%), may partially block the view.'
+    },
+
+    // Future predictions
+    passed: 'Passed',
+    forecast: 'Future Forecast'
   },
 
   // Time
@@ -141,9 +234,19 @@ export default {
     today: 'Today',
     tomorrow: 'Tomorrow',
     yesterday: 'Yesterday',
+    dayAfterTomorrow: 'Day After Tomorrow',
+    daysLater: '{{days}} days later',
     week: 'Week',
     date: 'Date',
     time: 'Time'
+  },
+
+  // Date
+  date: {
+    today: 'Today',
+    tomorrow: 'Tomorrow',
+    dayAfterTomorrow: 'Day After Tomorrow',
+    format: '{{month}}/{{day}}'
   },
 
   // Error messages
@@ -229,7 +332,10 @@ export default {
     daily: '7-Day Forecast',
     overview: 'Overview',
     details: 'Details',
-    parameters: 'Parameters'
+    parameters: 'Parameters',
+    trend: 'Trend',
+    time: 'Time',
+    unit: 'Unit'
   },
 
   // Loading states
