@@ -43,3 +43,4 @@ build/
 # Temporary files
 *.tmp
 .cache/
+test_results.txt
