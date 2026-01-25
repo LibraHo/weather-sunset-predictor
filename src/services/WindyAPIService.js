@@ -129,6 +129,31 @@ class WindyAPIService {
       const tempC = tempKelvin - 273.15;
       return tempC;
     });
+
+    // Windy API 返回的时间戳可能是秒为单位，需要转换为毫秒
+    const timestampsMs = timestamps.map(ts => {
+      // 如果时间戳小于某个阈值（比如10000000000秒=1970年后的某个时间），则认为是秒为单位
+      // 10000000000秒 = 1970年后的约317年
+      // 10000000000毫秒 = 1970年后的约115天
+      if (ts < 10000000000) {
+        return ts * 1000; // 转换为毫秒
+      }
+      return ts; // 已经是毫秒
+    });
+
+    // Windy API 返回的气压可能是kPa或Pa为单位，需要转换为hPa
+    const pressureHPa = pressure.map(p => {
+      // 如果气压值在 80-120 范围，可能是kPa，需要乘以10转换为hPa
+      // 例如：101 kPa -> 1010 hPa（接近标准大气压1013 hPa）
+      if (p >= 80 && p <= 150) {
+        return p * 10; // kPa -> hPa
+      }
+      // 如果气压值 > 10000，很可能是Pa，需要除以100转换为hPa
+      if (p > 10000) {
+        return p / 100; // Pa -> hPa
+      }
+      return p; // 已经是hPa
+    });
     // visibility 和 wind_direction 不在 API 返回中
     const visibility = data['visibility-surface'] || [];
     const lowClouds = data['lclouds-surface'] || [];
@@ -159,12 +184,12 @@ class WindyAPIService {
       }
 
       const weatherData = new WeatherData(
-        timestamps[i],
+        timestampsMs[i], // 使用转换后的毫秒时间戳
         tempsCelsius[i], // 使用转换后的摄氏度
         humidity[i] || 0,
         cloudCover, // 使用计算的总云量
         windSpeed,
-        pressure[i] || 1013,
+        pressureHPa[i] || 1013, // 使用转换后的hPa气压
         visibility[i] || 10,
         lowClouds[i] || 0,
         precipitation[i] || 0,
@@ -177,6 +202,9 @@ class WindyAPIService {
     }
 
     console.log(`[WindyAPIService] 解析了 ${weatherDataArray.length} 条天气数据`);
+    console.log(`[WindyAPIService] 第一条数据时间: ${new Date(timestampsMs[0]).toLocaleString('zh-CN')}`);
+    console.log(`[WindyAPIService] 最后一条数据时间: ${new Date(timestampsMs[timestampsMs.length - 1]).toLocaleString('zh-CN')}`);
+    console.log(`[WindyAPIService] 气压样本: ${pressureHPa.slice(0, 3).map(p => `${p} hPa`).join(', ')}`);
     console.log(`[WindyAPIService] 温度样本 (开尔文 -> 摄氏度):`, temps.slice(0, 5).map((k, i) => `${k}K -> ${tempsCelsius[i].toFixed(1)}°C`));
     return weatherDataArray;
   }

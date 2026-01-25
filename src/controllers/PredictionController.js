@@ -9,6 +9,7 @@
  */
 
 import SunsetPredictionService from '../services/SunsetPredictionService.js';
+import EnhancedSunsetPredictionService from '../services/EnhancedSunsetPredictionService.js';
 import NotificationService from '../services/NotificationService.js';
 
 class PredictionController {
@@ -19,9 +20,11 @@ class PredictionController {
   constructor(storageService) {
     this.storageService = storageService;
     this.predictionService = new SunsetPredictionService();
+    this.enhancedPredictionService = new EnhancedSunsetPredictionService();
     this.notificationService = new NotificationService(storageService);
     this.predictions = []; // 存储当前预测数据
     this.expandedPredictionIndex = null; // 当前展开的预测索引
+    this.useEnhancedModel = true; // 默认使用增强模型
   }
 
   /**
@@ -73,12 +76,40 @@ class PredictionController {
         console.log(`[PredictionController] 日出时间:`, sunriseTime);
 
         const sunriseTimestamp = sunriseTime.getTime();
-        const sunriseWeatherData = weatherDataArray.find(data => {
+
+        // 首先尝试找到2小时内的数据
+        let sunriseWeatherData = weatherDataArray.find(data => {
           const timeDiff = Math.abs(data.timestamp - sunriseTimestamp);
-          return timeDiff < 3600000; // 1小时内
+          return timeDiff < 7200000; // 2小时内
         });
 
-        console.log(`[PredictionController] 第${i}天 日出天气数据:`, sunriseWeatherData ? `找到 (时间差: ${Math.abs(sunriseWeatherData.timestamp - sunriseTimestamp) / 3600000}小时)` : '未找到');
+        // 备用方案：如果找不到，使用该天最接近日出时间的数据
+        if (!sunriseWeatherData) {
+          console.log(`[PredictionController] 第${i}天 未找到日出2小时内的数据，使用最接近的数据`);
+          // 找到该天范围内最接近日出时间的数据
+          const dayStart = new Date(targetDate).setHours(0, 0, 0, 0);
+          const dayEnd = new Date(targetDate).setHours(23, 59, 59, 999);
+
+          const dayData = weatherDataArray.filter(data => {
+            return data.timestamp >= dayStart && data.timestamp <= dayEnd;
+          });
+
+          console.log(`[PredictionController] 第${i}天 该天的天气数据条数: ${dayData.length}`);
+
+          if (dayData.length > 0) {
+            // 找到最接近日出时间的数据
+            sunriseWeatherData = dayData.reduce((closest, current) => {
+              const closestDiff = Math.abs(closest.timestamp - sunriseTimestamp);
+              const currentDiff = Math.abs(current.timestamp - sunriseTimestamp);
+              return currentDiff < closestDiff ? current : closest;
+            });
+            console.log(`[PredictionController] 第${i}天 使用最接近的数据 (时间差: ${Math.abs(sunriseWeatherData.timestamp - sunriseTimestamp) / 3600000}小时)`);
+          } else {
+            console.log(`[PredictionController] 第${i}天 该天完全没有天气数据！`);
+          }
+        } else {
+          console.log(`[PredictionController] 第${i}天 日出天气数据: 找到 (时间差: ${Math.abs(sunriseWeatherData.timestamp - sunriseTimestamp) / 3600000}小时)`);
+        }
 
         // 检查日出时间是否在天气数据范围内
         const sunriseInRange = sunriseTimestamp >= weatherDataArray[0].timestamp && sunriseTimestamp <= weatherDataArray[weatherDataArray.length - 1].timestamp;
@@ -87,13 +118,27 @@ class PredictionController {
         if (sunriseWeatherData) {
           console.log(`[PredictionController] 找到日出相关天气数据`);
 
-          const sunrisePrediction = this.predictionService.calculatePrediction(
-            sunriseWeatherData,
-            targetDate,
-            location.lat,
-            location.lon,
-            'sunrise'
-          );
+          // 使用增强版或标准预测服务
+          let sunrisePrediction;
+          if (this.useEnhancedModel) {
+            // 增强版需要传入具体的日出时间来计算正确的太阳高度角
+            sunrisePrediction = await this.enhancedPredictionService.calculateEnhancedPrediction(
+              sunriseWeatherData,
+              sunriseTime,  // 使用日出时间而不是日期
+              location.lat,
+              location.lon,
+              'sunrise'
+            );
+            console.log(`[PredictionController] 使用增强模型生成朝霞预测，得分: ${sunrisePrediction.score}`);
+          } else {
+            sunrisePrediction = this.predictionService.calculatePrediction(
+              sunriseWeatherData,
+              targetDate,
+              location.lat,
+              location.lon,
+              'sunrise'
+            );
+          }
 
           // 标记为朝霞预测
           sunrisePrediction.type = 'sunrise';
@@ -107,6 +152,45 @@ class PredictionController {
           sunrisePrediction.pressure = sunriseWeatherData.pressure;
           sunrisePrediction.visibility = sunriseWeatherData.visibility;
           sunrisePrediction.sunsetTime = sunriseTime; // 用于显示日出时间
+
+          // 为增强版预测添加最佳观看窗口方法和factors属性
+          if (this.useEnhancedModel) {
+            if (!sunrisePrediction.getOptimalViewingWindow) {
+              sunrisePrediction.getOptimalViewingWindow = () => {
+                return {
+                  start: new Date(sunriseTime.getTime() - 30 * 60 * 1000), // 日出前30分钟
+                  end: new Date(sunriseTime.getTime() + 30 * 60 * 1000),   // 日出后30分钟
+                  description: '日出前后30分钟是观看朝霞的最佳时间'
+                };
+              };
+            }
+
+            // 为增强版预测添加factors属性以兼容旧的渲染逻辑
+            if (!sunrisePrediction.factors) {
+              sunrisePrediction.factors = {
+                cloudCover: { value: sunriseWeatherData.cloudCover, name: '云量', unit: '%' },
+                humidity: { value: sunriseWeatherData.humidity, name: '湿度', unit: '%' },
+                visibility: { value: sunriseWeatherData.visibility, name: '能见度', unit: 'km' },
+                windSpeed: { value: sunriseWeatherData.windSpeed, name: '风速', unit: 'km/h' },
+                pressure: { value: sunriseWeatherData.pressure, name: '气压', unit: 'hPa' },
+                lowClouds: { value: sunriseWeatherData.lowClouds, name: '低云量', unit: '%' },
+                midClouds: { value: sunriseWeatherData.midClouds, name: '中云量', unit: '%' },
+                highClouds: { value: sunriseWeatherData.highClouds, name: '高云量', unit: '%' }
+              };
+            }
+
+            // 为增强版预测添加cloudLayers属性以显示云层分层信息
+            if (!sunrisePrediction.cloudLayers) {
+              sunrisePrediction.cloudLayers = {
+                high: sunriseWeatherData.highClouds,
+                mid: sunriseWeatherData.midClouds,
+                low: sunriseWeatherData.lowClouds,
+                description: sunrisePrediction.canvasAnalysis ?
+                  `高云${sunriseWeatherData.highClouds.toFixed(0)}% 中云${sunriseWeatherData.midClouds.toFixed(0)}% 低云${sunriseWeatherData.lowClouds.toFixed(0)}%` :
+                  ''
+              };
+            }
+          }
 
           predictions.push(sunrisePrediction);
         }
@@ -122,12 +206,36 @@ class PredictionController {
         console.log(`[PredictionController] 第${i}天 targetDate:`, targetDate, `时间戳: ${targetDate.getTime()}`);
 
         const sunsetTimestamp = sunsetTime.getTime();
-        const sunsetWeatherData = weatherDataArray.find(data => {
+
+        // 首先尝试找到2小时内的数据
+        let sunsetWeatherData = weatherDataArray.find(data => {
           const timeDiff = Math.abs(data.timestamp - sunsetTimestamp);
-          return timeDiff < 3600000; // 1小时内
+          return timeDiff < 7200000; // 2小时内
         });
 
-        console.log(`[PredictionController] 第${i}天 日落天气数据:`, sunsetWeatherData ? `找到 (时间差: ${Math.abs(sunsetWeatherData.timestamp - sunsetTimestamp) / 3600000}小时)` : '未找到');
+        // 备用方案：如果找不到，使用该天最接近日落时间的数据
+        if (!sunsetWeatherData) {
+          console.log(`[PredictionController] 第${i}天 未找到日落2小时内的数据，使用最接近的数据`);
+          // 找到该天范围内最接近日落时间的数据
+          const dayStart = new Date(targetDate).setHours(0, 0, 0, 0);
+          const dayEnd = new Date(targetDate).setHours(23, 59, 59, 999);
+
+          const dayData = weatherDataArray.filter(data => {
+            return data.timestamp >= dayStart && data.timestamp <= dayEnd;
+          });
+
+          if (dayData.length > 0) {
+            // 找到最接近日落时间的数据
+            sunsetWeatherData = dayData.reduce((closest, current) => {
+              const closestDiff = Math.abs(closest.timestamp - sunsetTimestamp);
+              const currentDiff = Math.abs(current.timestamp - sunsetTimestamp);
+              return currentDiff < closestDiff ? current : closest;
+            });
+            console.log(`[PredictionController] 第${i}天 使用最接近的数据 (时间差: ${Math.abs(sunsetWeatherData.timestamp - sunsetTimestamp) / 3600000}小时)`);
+          }
+        } else {
+          console.log(`[PredictionController] 第${i}天 日落天气数据: 找到 (时间差: ${Math.abs(sunsetWeatherData.timestamp - sunsetTimestamp) / 3600000}小时)`);
+        }
 
         // 检查日落时间是否在天气数据范围内
         const inRange = sunsetTimestamp >= weatherDataArray[0].timestamp && sunsetTimestamp <= weatherDataArray[weatherDataArray.length - 1].timestamp;
@@ -136,13 +244,27 @@ class PredictionController {
         if (sunsetWeatherData) {
           console.log(`[PredictionController] 找到日落相关天气数据`);
 
-          const sunsetPrediction = this.predictionService.calculatePrediction(
-            sunsetWeatherData,
-            targetDate,
-            location.lat,
-            location.lon,
-            'sunset'
-          );
+          // 使用增强版或标准预测服务
+          let sunsetPrediction;
+          if (this.useEnhancedModel) {
+            // 增强版需要传入具体的日落时间来计算正确的太阳高度角
+            sunsetPrediction = await this.enhancedPredictionService.calculateEnhancedPrediction(
+              sunsetWeatherData,
+              sunsetTime,  // 使用日落时间而不是日期
+              location.lat,
+              location.lon,
+              'sunset'
+            );
+            console.log(`[PredictionController] 使用增强模型生成晚霞预测，得分: ${sunsetPrediction.score}`);
+          } else {
+            sunsetPrediction = this.predictionService.calculatePrediction(
+              sunsetWeatherData,
+              targetDate,
+              location.lat,
+              location.lon,
+              'sunset'
+            );
+          }
 
           // 标记为晚霞预测
           sunsetPrediction.type = 'sunset';
@@ -156,6 +278,45 @@ class PredictionController {
           sunsetPrediction.pressure = sunsetWeatherData.pressure;
           sunsetPrediction.visibility = sunsetWeatherData.visibility;
           sunsetPrediction.sunsetTime = sunsetTime; // 用于显示日落时间
+
+          // 为增强版预测添加最佳观看窗口方法和factors属性
+          if (this.useEnhancedModel) {
+            if (!sunsetPrediction.getOptimalViewingWindow) {
+              sunsetPrediction.getOptimalViewingWindow = () => {
+                return {
+                  start: new Date(sunsetTime.getTime() - 30 * 60 * 1000), // 日落前30分钟
+                  end: new Date(sunsetTime.getTime() + 30 * 60 * 1000),   // 日落后30分钟
+                  description: '日落前后30分钟是观看晚霞的最佳时间'
+                };
+              };
+            }
+
+            // 为增强版预测添加factors属性以兼容旧的渲染逻辑
+            if (!sunsetPrediction.factors) {
+              sunsetPrediction.factors = {
+                cloudCover: { value: sunsetWeatherData.cloudCover, name: '云量', unit: '%' },
+                humidity: { value: sunsetWeatherData.humidity, name: '湿度', unit: '%' },
+                visibility: { value: sunsetWeatherData.visibility, name: '能见度', unit: 'km' },
+                windSpeed: { value: sunsetWeatherData.windSpeed, name: '风速', unit: 'km/h' },
+                pressure: { value: sunsetWeatherData.pressure, name: '气压', unit: 'hPa' },
+                lowClouds: { value: sunsetWeatherData.lowClouds, name: '低云量', unit: '%' },
+                midClouds: { value: sunsetWeatherData.midClouds, name: '中云量', unit: '%' },
+                highClouds: { value: sunsetWeatherData.highClouds, name: '高云量', unit: '%' }
+              };
+            }
+
+            // 为增强版预测添加cloudLayers属性以显示云层分层信息
+            if (!sunsetPrediction.cloudLayers) {
+              sunsetPrediction.cloudLayers = {
+                high: sunsetWeatherData.highClouds,
+                mid: sunsetWeatherData.midClouds,
+                low: sunsetWeatherData.lowClouds,
+                description: sunsetPrediction.canvasAnalysis ?
+                  `高云${sunsetWeatherData.highClouds.toFixed(0)}% 中云${sunsetWeatherData.midClouds.toFixed(0)}% 低云${sunsetWeatherData.lowClouds.toFixed(0)}%` :
+                  ''
+              };
+            }
+          }
 
           predictions.push(sunsetPrediction);
         }
@@ -514,6 +675,14 @@ class PredictionController {
    * @private
    */
   generateAnalysisText(prediction, dateLabel = '今日', cloudLayers = null) {
+    // 检查是否是增强版预测（包含canvasAnalysis等增强版特有字段）
+    const isEnhanced = prediction.canvasAnalysis && prediction.lightPathAnalysis && prediction.renderingAnalysis;
+
+    if (isEnhanced) {
+      return this.generateEnhancedAnalysisText(prediction, dateLabel);
+    }
+
+    // 旧版预测逻辑
     const factors = prediction.factors;
     const cloudValue = factors.cloudCover.value;
     const humidityValue = factors.humidity.value;
@@ -574,6 +743,51 @@ class PredictionController {
     if (cloudLayers && cloudLayers.description) {
       analysis += '<br><br><strong>云层分析：</strong>' + cloudLayers.description;
     }
+
+    return analysis;
+  }
+
+  /**
+   * 生成增强版预测的分析文本
+   * @param {Object} prediction - 增强版预测数据
+   * @param {string} dateLabel - 日期标签
+   * @returns {string} 分析文本
+   * @private
+   */
+  generateEnhancedAnalysisText(prediction, dateLabel = '今日') {
+    const canvas = prediction.canvasAnalysis;
+    const lightPath = prediction.lightPathAnalysis;
+    const rendering = prediction.renderingAnalysis;
+
+    let analysis = '';
+
+    // 总体评价（使用增强版的状态描述）
+    if (prediction.status) {
+      analysis += `<strong>${prediction.icon} ${prediction.status}</strong><br><br>`;
+      analysis += `${prediction.description}<br>`;
+    }
+
+    // 简化版画布评分
+    analysis += `<div style="margin-top:8px;font-size:13px;">`;
+    analysis += `📊 画布: ${canvas.score.toFixed(0)}分 | ${canvas.cloudLevel}<br>`;
+    analysis += `   高云${canvas.breakdown.highClouds}% 中云${canvas.breakdown.midClouds}% 低云${canvas.breakdown.lowClouds}%`;
+    if (canvas.lowCloudPenalty < 1.0) {
+      analysis += ` | 低云惩罚: ${canvas.penaltyReason}`;
+    }
+    analysis += `</div>`;
+
+    // 简化版光路评分
+    analysis += `<div style="margin-top:8px;font-size:13px;">`;
+    analysis += `🌅 光路: ${lightPath.score.toFixed(0)}分 (150km:${lightPath.nearPointScore} 300km:${lightPath.farPointScore})`;
+    analysis += `</div>`;
+
+    // 简化版渲染修正
+    analysis += `<div style="margin-top:8px;font-size:13px;">`;
+    analysis += `🎨 渲染系数: ${rendering.factor.toFixed(2)} | ${rendering.breakdown.visibility} | ${rendering.breakdown.aqi} | ${rendering.breakdown.colorTendency}`;
+    if (rendering.breakdown.specialMode) {
+      analysis += ` | ${rendering.breakdown.specialMode}`;
+    }
+    analysis += `</div>`;
 
     return analysis;
   }

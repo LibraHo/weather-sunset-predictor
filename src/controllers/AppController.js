@@ -44,15 +44,18 @@ class AppController {
     try {
       // 检查API密钥是否已配置
       const apiKey = this.storageService.getAPIKey();
+      console.log('[AppController] API密钥检查:', apiKey ? `已配置 (${apiKey.substring(0, 8)}...)` : '未配置');
 
       if (!apiKey) {
         // 需求 1.1：首次访问时显示API密钥配置界面
+        console.log('[AppController] 显示API密钥配置界面');
         this.showAPIKeyModal();
         this.isInitialized = false;
         return;
       }
 
       // API密钥已配置，初始化UI
+      console.log('[AppController] API密钥已配置，初始化UI');
       this.initializeUI();
 
       // 需求12：加载收藏位置列表
@@ -211,10 +214,29 @@ class AppController {
     // 如果已有API密钥，显示在输入框中（需求 1.5）
     const existingKey = this.storageService.getAPIKey();
     const input = document.getElementById('api-key-input');
+    const modalTitle = modal.querySelector('h2');
+    const modalDesc = modal.querySelector('.modal-description');
+
     if (input) {
       input.value = existingKey || '';
-      // 聚焦到输入框
-      setTimeout(() => input.focus(), 100);
+
+      // 如果已有API密钥，更新提示文本
+      if (existingKey) {
+        if (modalTitle) modalTitle.textContent = '更新Windy API密钥';
+        if (modalDesc) modalDesc.textContent = '您的API密钥已保存，如需修改请重新输入';
+        // 添加提示信息
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'info-message';
+        infoDiv.style.cssText = 'background: #e3f2fd; color: #1976d2; padding: 12px; border-radius: 4px; margin-top: 16px; font-size: 0.9rem;';
+        infoDiv.innerHTML = '✅ API密钥已保存，下次启动将自动加载<br>💡 如需更换密钥，直接修改并保存即可';
+        const modalContent = modal.querySelector('.modal-content');
+        if (modalContent && !modalContent.querySelector('.info-message')) {
+          modalContent.insertBefore(infoDiv, modal.querySelector('.modal-actions'));
+        }
+      } else {
+        // 聚焦到输入框（首次配置）
+        setTimeout(() => input.focus(), 100);
+      }
     }
 
     // 清除之前的错误消息
@@ -541,6 +563,11 @@ class AppController {
 
       // 保存API密钥到本地存储（需求 1.2）
       this.storageService.saveAPIKey(apiKey);
+      console.log('[AppController] API密钥已保存到本地存储');
+
+      // 验证保存是否成功
+      const savedKey = this.storageService.getAPIKey();
+      console.log('[AppController] 验证保存的API密钥:', savedKey ? '成功' : '失败');
 
       // 更新 WeatherController 的 API 密钥
       if (this.weatherController) {
