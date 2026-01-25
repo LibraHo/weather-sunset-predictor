@@ -496,7 +496,7 @@ class WeatherController {
   }
 
   /**
-   * 渲染简化图表（内联版本，避免模块导入问题）
+   * 渲染简化折线图（内联版本，避免模块导入问题）
    * @private
    */
   _renderSimpleChart(hourlyData, containerId, label, unit, color) {
@@ -505,7 +505,7 @@ class WeatherController {
 
     const paramMap = {
       '温度': 'temp',
-      '降水': 'precipitation', 
+      '降水': 'precipitation',
       '湿度': 'humidity',
       '风速': 'windSpeed',
       '气压': 'pressure',
@@ -518,28 +518,77 @@ class WeatherController {
     const max = Math.max(...values);
     const range = max - min || 1;
 
-    let html = `<div style="padding: 20px; background: #f8f9fa; border-radius: 8px;">`;
-    html += `<h3 style="text-align: center; margin-bottom: 20px; color: ${color};">${label}变化</h3>`;
-    html += `<div style="display: flex; justify-content: space-between; align-items: flex-end; height: 200px; border-bottom: 2px solid #dee2e6; padding: 0 10px;">`;
-    
-    hourlyData.forEach((d, i) => {
+    // 图表尺寸
+    const chartWidth = 900;
+    const chartHeight = 280;
+    const padding = { top: 50, right: 50, bottom: 70, left: 70 };
+    const contentWidth = chartWidth - padding.left - padding.right;
+    const contentHeight = chartHeight - padding.top - padding.bottom;
+
+    // 生成数据点坐标
+    const points = hourlyData.map((d, i) => {
       const value = d[param];
-      const height = ((value - min) / range) * 180;
-      const time = new Date(d.timestamp).getHours();
-      
-      html += `<div style="flex: 1; display: flex; flex-direction: column; align-items: center; margin: 0 2px;">`;
-      html += `<div style="font-size: 10px; color: #666; margin-bottom: 5px;">${value.toFixed(1)}</div>`;
-      html += `<div style="width: 100%; background: ${color}; height: ${height}px; border-radius: 4px 4px 0 0; opacity: 0.8;"></div>`;
-      if (i % 3 === 0) {
-        html += `<div style="font-size: 11px; color: #666; margin-top: 5px;">${time}:00</div>`;
-      }
-      html += `</div>`;
+      const x = padding.left + (i / (hourlyData.length - 1)) * contentWidth;
+      const y = padding.top + contentHeight - ((value - min) / range) * contentHeight;
+      return { x, y, value, time: new Date(d.timestamp).getHours() };
     });
-    
-    html += `</div>`;
-    html += `<div style="text-align: center; margin-top: 10px; color: #666;">单位: ${unit}</div>`;
-    html += `</div>`;
-    
+
+    // 生成折线路径
+    const pathData = points.map((p, i) => {
+      if (i === 0) return `M ${p.x} ${p.y}`;
+      return `L ${p.x} ${p.y}`;
+    }).join(' ');
+
+    let html = `<div style="padding: 25px; background: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin: 20px auto; max-width: 95%;">`;
+    html += `<h3 style="text-align: center; margin-bottom: 25px; color: ${color}; font-size: 1.5rem;">${label}变化趋势</h3>`;
+
+    // SVG图表容器，居中显示
+    html += `<div style="display: flex; justify-content: center;">`;
+    html += `<svg width="${chartWidth}" height="${chartHeight}" style="max-width: 100%; height: auto;">`;
+
+    // Y轴网格线和标签
+    for (let i = 0; i <= 5; i++) {
+      const value = min + (range * i) / 5;
+      const y = padding.top + contentHeight - (i / 5) * contentHeight;
+
+      // 网格线
+      html += `<line x1="${padding.left}" y1="${y}" x2="${chartWidth - padding.right}" y2="${y}" stroke="#e0e0e0" stroke-width="1.5" stroke-dasharray="5,5"/>`;
+
+      // Y轴标签
+      html += `<text x="${padding.left - 15}" y="${y + 5}" font-size="13" fill="#555" text-anchor="end" font-weight="500">${value.toFixed(1)} ${unit}</text>`;
+    }
+
+    // X轴标签（时间）
+    points.forEach((p, i) => {
+      if (i % 3 === 0) { // 每3小时显示一次时间标签
+        html += `<text x="${p.x}" y="${chartHeight - padding.bottom + 25}" font-size="13" fill="#555" text-anchor="middle" font-weight="500">${p.time}:00</text>`;
+      }
+    });
+
+    // 折线
+    html += `<path d="${pathData}" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+
+    // 数据点和数值标签
+    points.forEach((p, i) => {
+      // 数据点圆圈
+      html += `<circle cx="${p.x}" cy="${p.y}" r="6" fill="${color}" stroke="white" stroke-width="2.5"/>`;
+
+      // 数值标签（在点上方）
+      if (i % 3 === 0) { // 每3小时显示一次数值
+        html += `<text x="${p.x}" y="${p.y - 12}" font-size="12" fill="${color}" text-anchor="middle" font-weight="700">${p.value.toFixed(1)}</text>`;
+      }
+    });
+
+    // X轴标题
+    html += `<text x="${chartWidth / 2}" y="${chartHeight - 15}" font-size="14" fill="#666" text-anchor="middle" font-weight="600">时间</text>`;
+
+    // Y轴标题
+    html += `<text x="20" y="${chartHeight / 2}" font-size="14" fill="#666" text-anchor="middle" transform="rotate(-90, 20, ${chartHeight / 2})" font-weight="600">${label} (${unit})</text>`;
+
+    html += `</svg>`;
+    html += `</div>`; // 关闭SVG容器div
+    html += `</div>`; // 关闭外层容器div
+
     container.innerHTML = html;
   }
 }

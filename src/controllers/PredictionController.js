@@ -220,48 +220,33 @@ class PredictionController {
 
     // 检查时间是否已过，智能切换到明天的预测
     const now = new Date();
-    let needTomorrow = false;
 
-    // 朝霞时间检查
-    if (sunriseTime) {
+    // 查找明天的预测备用
+    const tomorrowSunrise = predictions.find(p =>
+      p.type === 'sunrise' && p.date && p.date.toDateString() === tomorrow.toDateString()
+    );
+    const tomorrowSunset = predictions.find(p =>
+      p.type === 'sunset' && p.date && p.date.toDateString() === tomorrow.toDateString()
+    );
+
+    // 朝霞时间检查 - 独立判断
+    if (sunriseTime && todaySunrise) {
       const sunriseEndTime = new Date(sunriseTime.getTime() + 2 * 60 * 60 * 1000);
-      if (now > sunriseEndTime && todaySunrise) {
-        console.log('[PredictionController] 今日朝霞时间已过，查找明天的朝霞预测');
-        needTomorrow = true;
-      }
-    }
-
-    // 晚霞时间检查
-    if (sunsetTime) {
-      const sunsetEndTime = new Date(sunsetTime.getTime() + 1.5 * 60 * 60 * 1000);
-      if (now > sunsetEndTime && todaySunset) {
-        console.log('[PredictionController] 今日晚霞时间已过，查找明天的晚霞预测');
-        needTomorrow = true;
-      }
-    }
-
-    // 如果需要，切换到明天的预测
-    if (needTomorrow) {
-      const tomorrowSunrise = predictions.find(p =>
-        p.type === 'sunrise' && p.date && p.date.toDateString() === tomorrow.toDateString()
-      );
-      const tomorrowSunset = predictions.find(p =>
-        p.type === 'sunset' && p.date && p.date.toDateString() === tomorrow.toDateString()
-      );
-
-      console.log('[PredictionController] 明日朝霞预测:', tomorrowSunrise ? '找到' : '未找到');
-      console.log('[PredictionController] 明日晚霞预测:', tomorrowSunset ? '找到' : '未找到');
-
-      // 使用明天的预测（如果有的话）
-      if (now > (sunriseTime ? new Date(sunriseTime.getTime() + 2 * 60 * 60 * 1000) : new Date(0))) {
+      if (now > sunriseEndTime) {
+        console.log('[PredictionController] 今日朝霞时间已过，切换到明天的朝霞预测');
         displaySunrise = tomorrowSunrise;
         sunriseTime = tomorrowSunrise ? tomorrowSunrise.sunsetTime : null;
       }
-      if (now > (sunsetTime ? new Date(sunsetTime.getTime() + 1.5 * 60 * 60 * 1000) : new Date(0))) {
+    }
+
+    // 晚霞时间检查 - 独立判断
+    if (sunsetTime && todaySunset) {
+      const sunsetEndTime = new Date(sunsetTime.getTime() + 1.5 * 60 * 60 * 1000);
+      if (now > sunsetEndTime) {
+        console.log('[PredictionController] 今日晚霞时间已过，切换到明天的晚霞预测');
         displaySunset = tomorrowSunset;
         sunsetTime = tomorrowSunset ? tomorrowSunset.sunsetTime : null;
       }
-      displayDate = tomorrow;
     }
 
     // 判断每个预测是今日还是明日的，用于智能标题
@@ -311,26 +296,7 @@ class PredictionController {
     }
 
     // 生成智能标题
-    let title = '朝霞/晚霞预测';
-
-    if (dateInfo && dateInfo.sunriseIsToday !== undefined && dateInfo.sunsetIsToday !== undefined) {
-      // 根据实际显示的预测生成标题
-      if (dateInfo.sunriseIsToday && dateInfo.sunsetIsToday) {
-        title = '朝霞/晚霞预测'; // 今日朝霞+今日晚霞，省略"今日"
-      } else if (!dateInfo.sunriseIsToday && !dateInfo.sunsetIsToday) {
-        title = '明日朝霞/晚霞预测';
-      } else if (dateInfo.sunriseIsToday && !dateInfo.sunsetIsToday) {
-        title = '朝霞/晚霞预测'; // 这种情况很少见
-      } else if (!dateInfo.sunriseIsToday && dateInfo.sunsetIsToday) {
-        title = '今日晚霞 明日朝霞预测';
-      }
-    } else {
-      // 兼容旧代码：如果没有 dateInfo，使用 displayDate 判断
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const isToday = displayDate.toDateString() === today.toDateString();
-      title = isToday ? '朝霞/晚霞预测' : '明日朝霞/晚霞预测';
-    }
+    let title = '朝晚霞预测';
 
     if (sectionTitle) {
       sectionTitle.textContent = title;
@@ -359,14 +325,21 @@ class PredictionController {
 
     let html = '<div class="today-predictions-container">';
 
+    // 确定每个预测的日期标签
+    const sunriseDateLabel = sunrisePrediction && sunrisePrediction.date &&
+      sunrisePrediction.date.toDateString() === today.toDateString() ? '今日' : '明日';
+    const sunsetDateLabel = sunsetPrediction && sunsetPrediction.date &&
+      sunsetPrediction.date.toDateString() === today.toDateString() ? '今日' : '明日';
+
     // 朝霞预测
     if (sunrisePrediction) {
-      html += this.renderSinglePrediction(sunrisePrediction, '🌄', `${dateLabel}朝霞`, '日出时间', dateLabel);
+      html += this.renderSinglePrediction(sunrisePrediction, '🌄', '朝霞', '日出时间', sunriseDateLabel);
     } else {
       // 朝霞预测未生成
       html += `
         <div class="prediction-unavailable-card">
-          <h3>🌄 ${dateLabel}朝霞预测</h3>
+          <span class="prediction-date-badge">${sunriseDateLabel}</span>
+          <h3>🌄 朝霞预测</h3>
           <p class="unavailable-reason">⚠️ 天气数据不足</p>
           <p class="hint-text">请查看未来预测或稍后刷新数据</p>
         </div>
@@ -375,12 +348,13 @@ class PredictionController {
 
     // 晚霞预测
     if (sunsetPrediction) {
-      html += this.renderSinglePrediction(sunsetPrediction, '🌅', `${dateLabel}晚霞`, '日落时间', dateLabel);
+      html += this.renderSinglePrediction(sunsetPrediction, '🌅', '晚霞', '日落时间', sunsetDateLabel);
     } else {
       // 晚霞预测未生成
       html += `
         <div class="prediction-unavailable-card">
-          <h3>🌅 ${dateLabel}晚霞预测</h3>
+          <span class="prediction-date-badge">${sunsetDateLabel}</span>
+          <h3>🌅 晚霞预测</h3>
           <p class="unavailable-reason">⚠️ 天气数据不足</p>
           <p class="hint-text">请查看未来预测或稍后刷新数据</p>
         </div>
@@ -455,14 +429,18 @@ class PredictionController {
     return `
       <div class="prediction-card">
         <div class="prediction-header">
+          <span class="prediction-date-badge">${dateLabel}</span>
           <h3>${icon} ${title}预测</h3>
         </div>
         <div class="prediction-score-container">
-          <div class="prediction-score ${this.getQualityClass(prediction.quality)}">
-            ${prediction.score.toFixed(0)}
-          </div>
-          <div class="prediction-quality ${this.getQualityClass(prediction.quality)}">
-            ${this.getQualityLabel(prediction.quality)}
+          <div class="score-card ${this.getQualityClass(prediction.quality)}">
+            <div class="score-circle">
+              <span class="score-number">${prediction.score.toFixed(0)}</span>
+              <span class="score-label">分</span>
+            </div>
+            <div class="quality-badge">
+              ${this.getQualityLabel(prediction.quality)}
+            </div>
           </div>
         </div>
         <div class="prediction-info">
@@ -793,15 +771,15 @@ class PredictionController {
         const passedLabel = isPassed ? '<span class="passed-badge">已过</span>' : '';
 
         html += `
-          <div class="forecast-item ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
+          <div class="forecast-item ${this.getQualityClass(pred.quality)} ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
             <div class="forecast-header">
               <div class="forecast-type">
                 <span class="type-icon">🌄</span>
                 <span class="type-label">朝霞</span>
                 ${passedLabel}
               </div>
-              <div class="forecast-score ${this.getQualityClass(pred.quality)}">
-                ${pred.score.toFixed(0)}
+              <div class="forecast-score">
+                <span>${pred.score.toFixed(0)}</span>
               </div>
             </div>
             <div class="forecast-summary">
@@ -826,15 +804,15 @@ class PredictionController {
         const passedLabel = isPassed ? '<span class="passed-badge">已过</span>' : '';
 
         html += `
-          <div class="forecast-item ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
+          <div class="forecast-item ${this.getQualityClass(pred.quality)} ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
             <div class="forecast-header">
               <div class="forecast-type">
                 <span class="type-icon">🌅</span>
                 <span class="type-label">晚霞</span>
                 ${passedLabel}
               </div>
-              <div class="forecast-score ${this.getQualityClass(pred.quality)}">
-                ${pred.score.toFixed(0)}
+              <div class="forecast-score">
+                <span>${pred.score.toFixed(0)}</span>
               </div>
             </div>
             <div class="forecast-summary">
@@ -1158,9 +1136,9 @@ class PredictionController {
 
   /**
    * 渲染预测详情HTML
-   * 
+   *
    * 根据预测数据生成详细的气象信息HTML
-   * 
+   *
    * @param {Object} prediction - 预测数据对象
    * @returns {string} HTML字符串
    * @private
@@ -1171,71 +1149,66 @@ class PredictionController {
       return '<p class="error-text">无法加载预测详情</p>';
     }
 
+    const factors = prediction.factors;
+    if (!factors) {
+      return '<p class="error-text">暂无详细数据</p>';
+    }
+
     // 构建详情HTML
     let html = '<div class="prediction-details-content">';
     html += '<h3 class="details-title">详细气象数据</h3>';
     html += '<div class="details-grid">';
 
+    // 从factors中获取数据
     // 温度
-    if (prediction.temperature !== undefined) {
-      html += this.renderDetailItem('🌡️', '温度', `${prediction.temperature}°C`);
+    if (factors.cloudCover && factors.cloudCover.value !== undefined) {
+      // 使用日出日落时间对应的温度（这里简化显示）
+      html += this.renderDetailItem('🌡️', '总评分', `${prediction.score.toFixed(0)}分`);
     }
 
     // 湿度
-    if (prediction.humidity !== undefined) {
-      html += this.renderDetailItem('💧', '湿度', `${prediction.humidity}%`);
+    if (factors.humidity && factors.humidity.value !== undefined) {
+      html += this.renderDetailItem('💧', '湿度', `${factors.humidity.value.toFixed(0)}%`);
     }
 
     // 云量
-    if (prediction.cloudCover !== undefined) {
-      html += this.renderDetailItem('☁️', '云量', `${prediction.cloudCover}%`);
-    }
-
-    // 风速
-    if (prediction.windSpeed !== undefined) {
-      html += this.renderDetailItem('💨', '风速', `${prediction.windSpeed} km/h`);
-    }
-
-    // 气压
-    if (prediction.pressure !== undefined) {
-      html += this.renderDetailItem('🌡️', '气压', `${prediction.pressure} hPa`);
+    if (factors.cloudCover && factors.cloudCover.value !== undefined) {
+      html += this.renderDetailItem('☁️', '云量', `${factors.cloudCover.value.toFixed(0)}%`);
     }
 
     // 能见度
-    if (prediction.visibility !== undefined) {
-      html += this.renderDetailItem('👁️', '能见度', `${prediction.visibility} km`);
+    if (factors.visibility && factors.visibility.value !== undefined) {
+      html += this.renderDetailItem('👁️', '能见度', `${factors.visibility.value.toFixed(1)} km`);
+    }
+
+    // 低云
+    if (factors.lowClouds && factors.lowClouds.value !== undefined) {
+      html += this.renderDetailItem('🌫️', '低云', `${factors.lowClouds.value.toFixed(0)}%`);
     }
 
     html += '</div>';
 
-    // 日落时间
+    // 日落/日出时间
     if (prediction.sunsetTime) {
+      const timeLabel = prediction.type === 'sunrise' ? '日出时间' : '日落时间';
       html += '<div class="sunset-time-detail">';
       html += '<span class="sunset-icon">🌅</span>';
       html += '<div class="sunset-info">';
-      html += '<span class="sunset-label">最佳观赏时间</span>';
-      html += `<span class="sunset-value">${this.formatSunsetTime(prediction.sunsetTime)}</span>`;
+      html += `<span class="sunset-label">${timeLabel}</span>`;
+      html += `<span class="sunset-value">${this.formatTime(prediction.sunsetTime)}</span>`;
       html += '</div>';
       html += '</div>';
     }
 
-    // 影响因素说明
-    if (prediction.factors) {
-      html += '<div class="factors-explanation">';
-      html += '<h4>影响因素分析</h4>';
-      html += '<ul class="factors-list">';
-      
-      if (prediction.factors.cloudScore !== undefined) {
-        html += `<li>云量评分: ${prediction.factors.cloudScore.toFixed(1)}</li>`;
-      }
-      if (prediction.factors.humidityScore !== undefined) {
-        html += `<li>湿度评分: ${prediction.factors.humidityScore.toFixed(1)}</li>`;
-      }
-      if (prediction.factors.visibilityScore !== undefined) {
-        html += `<li>能见度评分: ${prediction.factors.visibilityScore.toFixed(1)}</li>`;
-      }
-      
-      html += '</ul>';
+    // 最佳观赏窗口
+    if (prediction.getOptimalViewingWindow) {
+      const window = prediction.getOptimalViewingWindow();
+      html += '<div class="viewing-window-detail">';
+      html += '<span class="window-icon">⏰</span>';
+      html += '<div class="window-info">';
+      html += '<span class="window-label">最佳观赏时间</span>';
+      html += `<span class="window-value">${this.formatTime(window.start)} - ${this.formatTime(window.end)}</span>`;
+      html += '</div>';
       html += '</div>';
     }
 
