@@ -5,6 +5,7 @@
  */
 
 import StorageService from './services/StorageService.js';
+import ConfigService from './services/ConfigService.js';
 import GeocodingService from './services/GeocodingService.js';
 import MockGeocodingService from './services/MockGeocodingService.js';
 import WeatherController from './controllers/WeatherController.js';
@@ -33,19 +34,31 @@ console.log('Global Error Boundary initialized');
 
 // 创建服务实例
 const storageService = new StorageService();
+const configService = new ConfigService();
 
 // 使用真实的地理编码服务（支持所有城市）
 // 如果需要离线测试，请将下面一行改为：
 // const geocodingService = new MockGeocodingService();
 const geocodingService = new GeocodingService();
 
-// 获取保存的 API 密钥
-const savedAPIKey = storageService.getAPIKey();
+// 优先从配置文件读取API密钥，然后从localStorage读取
+const config = await configService.loadConfig();
+let savedAPIKey = storageService.getAPIKey();
 
-// 创建控制器实例
+// 优先级：配置文件 > localStorage
+if (config && config.apiKey) {
+  console.log('[App] 使用配置文件中的API密钥');
+  savedAPIKey = config.apiKey;
+}
+
 // 配置：是否使用模拟API（用于离线测试）
-// 设置为 false 可使用真实的 Windy API（需要有效的API密钥）
-const USE_MOCK_API = false; // 改为 false 使用真实 Windy API
+// 优先从配置文件读取，如果没有配置则使用默认值false
+const USE_MOCK_API = config && typeof config.useMockAPI !== 'undefined'
+  ? config.useMockAPI
+  : false;
+
+console.log('[App] API密钥状态:', savedAPIKey ? '已配置' : '未配置');
+console.log('[App] Mock API:', USE_MOCK_API ? '启用' : '禁用');
 
 const weatherController = new WeatherController(storageService, savedAPIKey, USE_MOCK_API);
 const predictionController = new PredictionController(storageService);
@@ -114,6 +127,7 @@ window.appController = appController;
 window.weatherController = weatherController;
 window.predictionController = predictionController;
 window.storageService = storageService;
+window.configService = configService;
 window.geocodingService = geocodingService;
 window.globalErrorBoundary = globalErrorBoundary;
 window.ErrorHandler = ErrorHandler;

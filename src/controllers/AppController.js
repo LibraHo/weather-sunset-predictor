@@ -88,9 +88,10 @@ class AppController {
           try {
             await this.handleLocationChange(lastLocation);
           } catch (error) {
-            // 加载上次位置失败不应阻止应用启动
+            // 加载上次位置失败不应阻止应用启动（需求：14.1）
             console.warn('加载上次位置失败:', error.message);
-            this.showError('加载上次位置失败，请重新选择位置');
+            console.log('[AppController] 跳过上次位置加载，继续启动应用');
+            // 不要显示错误消息，只记录日志，避免干扰用户体验
           }
         }
       } else {

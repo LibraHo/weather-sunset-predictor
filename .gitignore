@@ -33,6 +33,9 @@ npm-debug.log*
 .env.local
 .env.*.local
 
+# API Key config (contains sensitive data)
+config.json
+
 # Build output
 dist/
 build/
