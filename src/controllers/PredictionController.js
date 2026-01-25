@@ -1,16 +1,18 @@
 /**
  * PredictionController - 晚霞预测控制器
- * 
+ *
  * 管理晚霞预测的生成和显示
- * 
+ *
  * 需求：7.1, 7.2 - 未来预测时间线
  * 需求：7.4 - 预测详情展开功能
  * 需求：12.1, 12.2, 12.3, 12.4, 12.5, 12.8, 12.11, 12.12, 12.13 - 朝霞晚霞预测增强功能
+ * 需求：14 - 多语言支持
  */
 
 import SunsetPredictionService from '../services/SunsetPredictionService.js';
 import EnhancedSunsetPredictionService from '../services/EnhancedSunsetPredictionService.js';
 import NotificationService from '../services/NotificationService.js';
+import i18n from '../i18n.js';
 
 class PredictionController {
   /**
@@ -25,6 +27,7 @@ class PredictionController {
     this.predictions = []; // 存储当前预测数据
     this.expandedPredictionIndex = null; // 当前展开的预测索引
     this.useEnhancedModel = true; // 默认使用增强模型
+    this.i18n = i18n; // 需求14：添加i18n实例
   }
 
   /**
@@ -1480,7 +1483,7 @@ class PredictionController {
 
   /**
    * 显示错误消息
-   * 
+   *
    * @param {string} message - 错误消息
    * @private
    */
@@ -1498,6 +1501,26 @@ class PredictionController {
       }, 3000);
     } else {
       console.error(message);
+    }
+  }
+
+  /**
+   * 刷新界面文本（语言切换后）
+   * 需求：14 - 多语言支持
+   */
+  refreshUIText() {
+    console.log('[PredictionController] 刷新界面文本...');
+
+    // 更新预测区域标题
+    const predictionSection = document.getElementById('prediction-section');
+    if (predictionSection) {
+      const title = predictionSection.querySelector('h2');
+      if (title) title.textContent = this.i18n.t('prediction.title');
+    }
+
+    // 如果有当前预测数据，重新渲染以更新翻译和格式化
+    if (this.predictions && this.predictions.length > 0) {
+      this.updatePredictionDisplay(this.predictions);
     }
   }
 }

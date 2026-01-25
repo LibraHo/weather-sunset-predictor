@@ -1,18 +1,21 @@
 /**
  * WeatherController - 天气数据控制器
- * 
+ *
  * 负责获取和管理天气数据，包括缓存逻辑
  * 支持7天概览和24小时详细视图（需求11）
+ * 需求：14 - 多语言支持
  */
 
 import WindyAPIService from '../services/WindyAPIService.js';
 import MockWindyAPIService from '../services/MockWindyAPIService.js';
+import i18n from '../i18n.js';
 // 暂时禁用 ChartService 导入，使用内联简化版本
 
 class WeatherController {
   constructor(storageService, apiKey, useMockAPI = true) {
     this.storageService = storageService;
     this.useMockAPI = useMockAPI;
+    this.i18n = i18n; // 需求14：添加i18n实例
     
     if (useMockAPI) {
       this.windyAPIService = new MockWindyAPIService(apiKey || 'mock-api-key');
@@ -590,6 +593,55 @@ class WeatherController {
     html += `</div>`; // 关闭外层容器div
 
     container.innerHTML = html;
+  }
+
+  /**
+   * 刷新界面文本（语言切换后）
+   * 需求：14 - 多语言支持
+   */
+  refreshUIText() {
+    console.log('[WeatherController] 刷新界面文本...');
+
+    // 更新天气区域标题
+    const weatherSection = document.getElementById('weather-section');
+    if (weatherSection) {
+      const title = weatherSection.querySelector('h2');
+      if (title) title.textContent = this.i18n.t('weather.title');
+    }
+
+    // 更新"使用当前位置"按钮
+    const currentLocationBtn = document.getElementById('current-location-btn');
+    if (currentLocationBtn) {
+      currentLocationBtn.textContent = `📍 ${this.i18n.t('buttons.useCurrentLocation')}`;
+    }
+
+    // 更新"搜索"按钮
+    const searchBtn = document.getElementById('search-btn');
+    if (searchBtn) {
+      searchBtn.textContent = this.i18n.t('buttons.search');
+    }
+
+    // 更新位置输入框占位符
+    const locationInput = document.getElementById('location-input');
+    if (locationInput) {
+      locationInput.placeholder = this.i18n.t('location.placeholder');
+    }
+
+    // 更新视图切换按钮
+    const overviewBtn = document.getElementById('overview-btn');
+    if (overviewBtn) {
+      overviewBtn.textContent = this.i18n.t('charts.overview');
+    }
+
+    const hourlyBtn = document.getElementById('hourly-btn');
+    if (hourlyBtn) {
+      hourlyBtn.textContent = this.i18n.t('charts.hourly');
+    }
+
+    // 如果有当前天气数据，重新渲染以更新格式化的日期/时间
+    if (this.currentWeatherData) {
+      this.updateWeatherDisplay(this.currentWeatherData);
+    }
   }
 }
 

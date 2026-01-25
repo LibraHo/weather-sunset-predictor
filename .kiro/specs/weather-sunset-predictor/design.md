@@ -103,6 +103,311 @@
 4. **单个删除 + 全部清除**：提供灵活的管理选项，用户可以精细控制历史记录。
 5. **去重逻辑**：搜索已存在的位置时更新时间戳而非创建重复记录，保持列表整洁。
 
+### 需求14：多语言支持
+
+**设计决策理由**：
+
+#### 1. 架构选择：轻量级自实现方案
+
+**理由**：
+- 项目是原生JavaScript应用，无构建系统
+- 翻译量适中（约200-300个文本键），无需重型框架
+- 完全控制实现细节，便于调试和维护
+- 打包体积小，加载速度快
+
+**对比**：
+- ✅ **自实现**：~5KB代码，完全可控
+- ❌ **i18next**：~30KB gzipped，功能过度
+
+#### 2. 核心设计：I18n类
+
+```javascript
+class I18n {
+  constructor() {
+    this.currentLanguage = 'zh-CN';
+    this.translations = {};
+    this.supportedLanguages = {
+      'zh-CN': { name: '简体中文', direction: 'ltr' },
+      'zh-TW': { name: '繁體中文', direction: 'ltr' },
+      'en-US': { name: 'English', direction: 'ltr' },
+      'ja-JP': { name: '日本語', direction: 'ltr' },
+      'ko-KR': { name: '한국어', direction: 'ltr' },
+      'vi-VN': { name: 'Tiếng Việt', direction: 'ltr' },
+      'fr-FR': { name: 'Français', direction: 'ltr' },
+      'es-ES': { name: 'Español', direction: 'ltr' },
+      'it-IT': { name: 'Italiano', direction: 'ltr' },
+      'ar-SA': { name: 'العربية', direction: 'rtl' }
+    };
+  }
+
+  // 核心方法
+  t(key, params) → string           // 翻译文本（支持插值）
+  formatDate(date, options) → string  // 日期格式化
+  formatTime(date) → string            // 时间格式化
+  formatNumber(num, options) → string // 数字格式化（千分位）
+  formatPercent(value, decimals) → string // 百分比格式化
+  changeLanguage(lang) → void         // 切换语言
+  getLanguage() → string             // 获取当前语言
+  isRTL() → boolean                  // 是否RTL语言
+}
+```
+
+**设计特点**：
+- 支持嵌套翻译键（如 `prediction.sunrise`）
+- 支持参数插值（如 `{{score}}`）
+- 自动语言检测（基于浏览器语言）
+- 语言偏好持久化（LocalStorage）
+- RTL自动支持（设置 `dir="rtl"` 和 `.rtl` 类）
+
+#### 3. 翻译文件组织
+
+```
+src/
+├── i18n.js                          # I18n核心类
+└── locales/
+    ├── index.js                     # 加载入口
+    ├── zh-CN.js                     # 简体中文
+    ├── zh-TW.js                     # 繁体中文
+    ├── en-US.js                     # 英语（美国）
+    ├── ja-JP.js                     # 日语
+    ├── ko-KR.js                     # 韩语
+    ├── vi-VN.js                     # 越南语
+    ├── fr-FR.js                     # 法语
+    ├── es-ES.js                     # 西班牙语
+    ├── it-IT.js                     # 意大利语
+    └── ar-SA.js                     # 阿拉伯语（RTL）
+```
+
+**翻译键命名规范**：
+- 使用点号分隔的层级结构（如 `app.title`）
+- 小写字母和连字符（如 `best-time-label`）
+- 描述性命名（如 `cloud-level-perfect`）
+
+**示例翻译文件结构**：
+```javascript
+export default {
+  app: { title: '晚霞预测器' },
+  prediction: {
+    sunrise: '朝霞预测',
+    sunset: '晚霞预测',
+    score: '得分'
+  },
+  status: {
+    noFireCloud: '无火烧云',
+    highProbability: '大概率出现漂亮晚霞'
+  }
+}
+```
+
+#### 4. 日期和数字格式化
+
+**使用原生Intl API实现**：
+
+```javascript
+// 日期格式化
+new Intl.DateTimeFormat('zh-CN', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  weekday: 'long'
+}).format(date);  // "2026年1月25日 星期日"
+
+new Intl.DateTimeFormat('en-US', {
+  hour: 'numeric',
+  minute: '2-digit',
+  hour12: true
+}).format(date);  // "7:29 AM"
+
+// 数字格式化
+new Intl.NumberFormat('zh-CN').format(1234.56);  // "1,234.56"
+new Intl.NumberFormat('de-DE').format(1234.56);  // "1.234,56"
+
+// 百分比格式化
+new Intl.NumberFormat('zh-CN', { style: 'percent' }).format(0.85);  // "85%"
+```
+
+**支持的语言特定格式**：
+- **日期**：中国（年月日）、美国（月日,年）、阿拉伯语（日 月 年）
+- **时间**：中国（24小时制）、美国（12小时制 AM/PM）
+- **数字**：千分位符号（逗号 vs 点）、小数点符号
+- **货币**：货币符号位置（前置 vs 后置）
+
+#### 5. RTL（Right-to-Left）支持
+
+**RTL语言特点**：
+- 阿拉伯语、希伯来语等从右到左书写
+- 需要镜像UI元素（图标、箭头等）
+- 文字方向、文本对齐需要反转
+
+**实现方式**：
+```css
+/* 设置RTL方向 */
+.rtl {
+  direction: rtl;
+}
+
+/* 镜像翻转图标 */
+.rtl .icon-arrow {
+  transform: scaleX(-1);
+}
+
+/* 交换左右边距 */
+.rtl .ml-2 {
+  margin-right: var(--spacing);
+  margin-left: 0;
+}
+```
+
+**自动处理**：
+```javascript
+// 自动设置HTML属性
+document.documentElement.lang = 'ar-SA';
+document.documentElement.dir = 'rtl';
+
+// 添加RTL类名
+document.body.classList.add('rtl');
+```
+
+**需要镜像的元素**：
+- 箭头图标（← → →）
+- 时间轴图标
+- 进度条方向
+- 边距和间距
+
+#### 6. 语言切换器
+
+**UI组件设计**：
+```javascript
+class LanguageSelector {
+  render() {
+    // 返回语言选择下拉菜单
+    // 包含：语言代码、语言名称（本地语言）
+  }
+}
+```
+
+**放置位置**：
+- 设置模态框中
+- 导航栏中
+- 页脚中
+
+**切换流程**：
+1. 用户选择新语言
+2. 显示确认对话框（防止误操作）
+3. 保存到LocalStorage
+4. 刷新页面应用新语言
+5. 保留用户数据（位置、API密钥、收藏等）
+
+#### 7. 翻译键设计
+
+**翻译键结构**：
+```
+app.*                         - 应用级别
+buttons.*                     - 按钮文本
+location.*                    - 位置相关
+weather.*                     - 天气信息
+prediction.*                  - 预测相关
+status.*                      - 状态描述
+clouds.*                      - 云层描述
+errors.*                      - 错误消息
+settings.*                    - 设置界面
+```
+
+**插值支持**：
+```javascript
+t('time.hoursAgo', { hours: 2 })  // "2小时前"
+t('prediction.score', { score: 85 })  // "得分：85"
+```
+
+#### 8. 浏览器语言检测
+
+**自动检测逻辑**：
+```javascript
+detectLanguage() {
+  const browserLang = navigator.language; // "zh-CN", "en-US", "ar-SA"
+
+  // 精确匹配
+  if (this.supportedLanguages[browserLang]) {
+    return browserLang;
+  }
+
+  // 语言代码匹配（如 "zh" 匹配 "zh-CN"）
+  const langCode = browserLang.split('-')[0];
+  const matchedLang = Object.keys(this.supportedLanguages)
+    .find(lang => lang.startsWith(langCode));
+
+  return matchedLang || 'zh-CN'; // 默认中文
+}
+```
+
+**回退机制**：
+- 检测失败 → 使用默认语言（简体中文）
+- 翻译缺失 → 回退到默认语言对应文本
+- 格式化失败 → 使用toLocaleString()等原生方法
+
+#### 9. 性能优化
+
+**优化策略**：
+1. **翻译文件按需加载**：只加载当前语言的翻译
+2. **翻译缓存**：缓存已翻译的文本避免重复查找
+3. **惰性更新**：仅在语言切换时更新界面
+4. **最小化DOM操作**：批量更新翻译文本
+
+**估算影响**：
+- i18n.js：~5KB未压缩
+- 每个语言文件：~3KB未压缩
+- 总计：~14KB（支持3种语言）
+
+#### 10. 与现有架构集成
+
+**修改文件**：
+1. **index.html**：引入i18n系统和RTL样式
+2. **src/i18n.js**：新建核心类
+3. **src/locales/*js**：新建翻译文件
+4. **src/controllers/*Controller.js**：使用 `i18n.t()` 替换硬编码文本
+5. **styles/rtl.css**：新建RTL样式
+6. **src/main.js**：初始化i18n系统
+
+**集成点**：
+- AppController初始化：加载i18n系统
+- 所有Controller方法：使用 `i18n.t()` 获取翻译文本
+- WeatherController/PredictionController：使用 `i18n.formatDate/Time/Number()`
+- HTML渲染：使用 `t()` 而不是硬编码文本
+
+#### 11. 扩展性设计
+
+**添加新语言步骤**：
+1. 创建新的语言文件（如 `ja-JP.js`）
+2. 在 `i18n.js` 的 `supportedLanguages` 中注册
+3. 在 `locales/index.js` 中导入并注册
+4. 如需RTL支持，在 `rtl.css` 中添加特定样式
+
+**添加新的格式化类型**：
+```javascript
+// 货币格式化
+formatCurrency(amount, currency) {
+  return new Intl.NumberFormat(this.currentLanguage, {
+    style: 'currency',
+    currency: currency
+  }).format(amount);
+}
+```
+
+#### 12. 兼容性保证
+
+**浏览器支持**：
+- Chrome/Edge：✅ 完全支持
+- Firefox：✅ 完全支持
+- Safari：✅ 完全支持
+- IE11：⚠️ 部分支持（需要Intl和Fetch polyfills）
+
+**Polyfills**（如需支持旧浏览器）：
+- Intl API（ Intl polyfill ）
+- Fetch API（ whatwg-fetch ）
+- Promise（promise-polyfill）
+
+
+
 ## 组件和接口
 
 ### 1. 数据模型（Models）

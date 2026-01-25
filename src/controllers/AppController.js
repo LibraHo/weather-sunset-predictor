@@ -1,14 +1,17 @@
 /**
  * AppController - 应用主控制器
- * 
+ *
  * 协调各子控制器，管理应用的整体流程
  * 负责初始化应用、处理位置变更等核心功能
- * 
+ *
  * 需求：1.1 - API密钥管理（首次访问显示配置界面）
  * 需求：1.5 - API密钥管理（已配置时允许查看和修改）
+ * 需求：14 - 多语言支持
  */
 
 import ErrorHandler from '../utils/ErrorHandler.js';
+import i18n from '../i18n.js';
+import { LanguageSelector } from '../components/LanguageSelector.js';
 
 class AppController {
   /**
@@ -25,6 +28,10 @@ class AppController {
     this.geocodingService = geocodingService;
     this.currentLocation = null;
     this.isInitialized = false;
+
+    // 需求14：初始化I18n系统
+    this.i18n = i18n;
+    this.languageSelector = null;
   }
 
   /**
@@ -42,6 +49,11 @@ class AppController {
    */
   async initialize() {
     try {
+      // 需求14：初始化I18n系统
+      console.log('[AppController] 初始化I18n系统...');
+      await this.i18n.init();
+      console.log('[AppController] I18n系统初始化完成，当前语言:', this.i18n.getLanguage());
+
       // 检查API密钥是否已配置
       const apiKey = this.storageService.getAPIKey();
       console.log('[AppController] API密钥检查:', apiKey ? `已配置 (${apiKey.substring(0, 8)}...)` : '未配置');
@@ -344,6 +356,16 @@ class AppController {
    * @private
    */
   initializeUI() {
+    // 需求14：初始化语言选择器
+    console.log('[AppController] 初始化语言选择器...');
+    this.languageSelector = new LanguageSelector('language-selector-container');
+
+    // 监听语言切换事件，刷新界面
+    window.addEventListener('languageChanged', (event) => {
+      console.log('[AppController] 语言已切换至:', event.detail.language);
+      this.refreshUIText();
+    });
+
     // 绑定API密钥模态框事件（如果还没绑定）
     this.bindAPIKeyModalEvents();
 
@@ -1369,13 +1391,115 @@ class AppController {
 
   /**
    * 隐藏搜索历史下拉列表
-   * 
+   *
    * 需求：13.4, 13.5, 13.7, 13.8 - 隐藏搜索历史下拉列表
    */
   hideSearchHistory() {
     const historyDropdown = document.getElementById('search-history-dropdown');
     if (historyDropdown) {
       historyDropdown.classList.add('hidden');
+    }
+  }
+
+  /**
+   * 刷新界面文本（语言切换后）
+   * 需求：14 - 多语言支持
+   * @private
+   */
+  refreshUIText() {
+    console.log('[AppController] 刷新界面文本...');
+
+    // 更新应用标题
+    const appTitle = document.querySelector('header h1');
+    if (appTitle) {
+      appTitle.textContent = this.i18n.t('app.title');
+    }
+
+    // 更新页面标题
+    document.title = this.i18n.t('app.title');
+
+    // 刷新语言选择器
+    if (this.languageSelector) {
+      this.languageSelector.updateText();
+    }
+
+    // 更新HTML中的静态文本
+    this.updateStaticText();
+
+    // 通知子控制器刷新文本
+    if (this.weatherController && typeof this.weatherController.refreshUIText === 'function') {
+      this.weatherController.refreshUIText();
+    }
+
+    if (this.predictionController && typeof this.predictionController.refreshUIText === 'function') {
+      this.predictionController.refreshUIText();
+    }
+  }
+
+  /**
+   * 更新HTML中的静态文本
+   * 需求：14 - 多语言支持
+   * @private
+   */
+  updateStaticText() {
+    // 定义需要翻译的静态元素映射
+    const translations = {
+      // 位置区域
+      '#location-section h2': 'location.label',
+      '#location-input': { attr: 'placeholder', key: 'location.placeholder' },
+      '#search-btn': 'buttons.search',
+      '#current-location-btn': { content: '📍 ', key: 'buttons.useCurrentLocation' },
+      '#favorite-locations h3': { content: '⭐ ', key: 'favorites.title' },
+      '#add-favorite-btn': 'buttons.save',
+
+      // 通知按钮
+      '#notification-settings-btn': { attr: 'aria-label', key: 'settings.notificationsLabel' },
+      '#settings-btn': { attr: 'aria-label', key: 'settings.title' },
+
+      // 按钮文本
+      'button:contains("收藏当前位置")': 'favorites.add',
+      'button:contains("通知设置")': 'settings.notificationsLabel',
+      'button:contains("设置")': 'settings.title'
+    };
+
+    // 应用翻译
+    for (const selector in translations) {
+      const elements = document.querySelectorAll(selector);
+      const transConfig = translations[selector];
+
+      elements.forEach(element => {
+        if (typeof transConfig === 'string') {
+          // 直接翻译文本内容
+          element.textContent = this.i18n.t(transConfig);
+        } else if (transConfig.content) {
+          // 带前缀的文本
+          element.textContent = transConfig.content + this.i18n.t(transConfig.key);
+        } else if (transConfig.attr) {
+          // 翻译属性
+          element.setAttribute(transConfig.attr, this.i18n.t(transConfig.key));
+        }
+      });
+    }
+
+    // 更新模态框标题
+    const apiModalTitle = document.querySelector('#api-key-modal h2');
+    if (apiModalTitle) {
+      apiModalTitle.textContent = this.i18n.t('settings.apiKeyLabel');
+    }
+
+    const apiModalDesc = document.querySelector('#api-key-modal .modal-description');
+    if (apiModalDesc) {
+      apiModalDesc.textContent = this.i18n.t('settings.apiKeyHelp');
+    }
+
+    const apiModalInput = document.querySelector('#api-key-input');
+    if (apiModalInput) {
+      apiModalInput.placeholder = this.i18n.t('settings.apiKeyPlaceholder');
+    }
+
+    const apiModalSaveBtn = document.querySelector('#save-api-key');
+    if (apiModalSaveBtn) {
+      apiModalSaveBtn.textContent = this.i18n.t('buttons.save');
     }
   }
 }
