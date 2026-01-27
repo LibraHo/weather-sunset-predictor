@@ -309,7 +309,42 @@ export default {
     favoriteLocations: 'お気に入りの場所',
     searchHistory: '検索履歴',
     clearHistory: '履歴をクリア',
-    confirmClearHistory: 'すべての検索履歴をクリアしてもよろしいですか？'
+    confirmClearHistory: 'すべての検索履歴をクリアしてもよろしいですか？',
+    // 統一設定パネル
+    close: '閉じる',
+    done: '完了',
+    // データソースとネットワーク
+    dataSource: 'データソースとネットワーク',
+    apiMode: 'API アクセスモード',
+    apiModeProxy: 'バックエンドプロキシ',
+    apiModeDirect: '直接モード',
+    apiModeProxyRecommended: 'バックエンドプロキシ（推奨）',
+    currentMode: '現在のモード',
+    proxyUrl: 'バックエンドサーバーのURL',
+    proxyUrlPlaceholder: 'http://localhost:3000',
+    proxyUrlHint: 'バックエンドプロキシサーバーのURLアドレス',
+    apiModeHint: '• バックエンドプロキシ：サーバー経由でWindy APIにアクセス、APIキーはバックエンドで安全に保存<br>• 直接モード：フロントエンドから直接アクセス、APIキーの設定が必要',
+    // 通知とアラート
+    notificationAndAlerts: '通知とアラート',
+    enableSunsetNotification: '夕焼け予測通知を有効にする',
+    notificationHint: '予測品質が閾値に達したときにブラウザ通知を送信',
+    notificationThresholdLabel: '通知閾値',
+    notificationThresholdHint: '予測スコアがこの値を超えたときに通知を送信',
+    // 言語と表示
+    languageAndDisplay: '言語と表示',
+    interfaceLanguage: 'インターフェース言語',
+    // パーソナライゼーション
+    personalization: 'パーソナライゼーション',
+    themeMode: 'テーマモード',
+    themeLight: 'ライトモード',
+    themeDark: 'ダークモード',
+    themeAuto: 'システムに従う',
+    temperatureUnit: '温度単位',
+    tempCelsius: '摂氏 (℃)',
+    tempFahrenheit: '華氏 (℉)',
+    windSpeedUnit: '風速単位',
+    windKmh: 'km/h',
+    windMs: 'm/s'
   },
   // 言語セレクター
   languageSelector: {

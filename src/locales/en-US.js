@@ -348,7 +348,42 @@ export default {
     favoriteLocations: 'Favorite Locations',
     searchHistory: 'Search History',
     clearHistory: 'Clear History',
-    confirmClearHistory: 'Are you sure you want to clear all search history?'
+    confirmClearHistory: 'Are you sure you want to clear all search history?',
+    // Unified Settings Panel
+    close: 'Close',
+    done: 'Done',
+    // Data Source & Network
+    dataSource: 'Data Source & Network',
+    apiMode: 'API Access Mode',
+    apiModeProxy: 'Backend Proxy',
+    apiModeDirect: 'Direct Mode',
+    apiModeProxyRecommended: 'Backend Proxy (Recommended)',
+    currentMode: 'Current Mode',
+    proxyUrl: 'Backend Server URL',
+    proxyUrlPlaceholder: 'http://localhost:3000',
+    proxyUrlHint: 'Backend proxy server URL address',
+    apiModeHint: '• Backend Proxy: Access Windy API through server, API key securely stored on backend<br>• Direct Mode: Frontend direct access, requires you to configure API key',
+    // Notifications & Alerts
+    notificationAndAlerts: 'Notifications & Alerts',
+    enableSunsetNotification: 'Enable sunset glow notifications',
+    notificationHint: 'Send browser notification when prediction quality reaches threshold',
+    notificationThresholdLabel: 'Notification Threshold',
+    notificationThresholdHint: 'Send notification when prediction score is above this value',
+    // Language & Display
+    languageAndDisplay: 'Language & Display',
+    interfaceLanguage: 'Interface Language',
+    // Personalization
+    personalization: 'Personalization',
+    themeMode: 'Theme Mode',
+    themeLight: 'Light Mode',
+    themeDark: 'Dark Mode',
+    themeAuto: 'Follow System',
+    temperatureUnit: 'Temperature Unit',
+    tempCelsius: 'Celsius (℃)',
+    tempFahrenheit: 'Fahrenheit (℉)',
+    windSpeedUnit: 'Wind Speed Unit',
+    windKmh: 'km/h',
+    windMs: 'm/s'
   },
 
   // Language selector

@@ -31,7 +31,9 @@ class AppController {
 
     // 需求14：初始化I18n系统
     this.i18n = i18n;
-    this.languageSelector = null;
+
+    // 任务16：设置面板
+    this.settingsPanel = null;
   }
 
   /**
@@ -359,10 +361,6 @@ class AppController {
    * @private
    */
   initializeUI() {
-    // 需求14：初始化语言选择器
-    console.log('[AppController] 初始化语言选择器...');
-    this.languageSelector = new LanguageSelector('language-selector-container');
-
     // 监听语言切换事件，刷新界面
     window.addEventListener('languageChanged', (event) => {
       console.log('[AppController] 语言已切换至:', event.detail.language);
@@ -372,13 +370,28 @@ class AppController {
     // 绑定API密钥模态框事件（如果还没绑定）
     this.bindAPIKeyModalEvents();
 
-    // 设置设置按钮事件（允许修改API密钥）
+    // 设置设置按钮事件（任务16：打开统一设置面板）
     const settingsBtn = document.getElementById('settings-btn');
     if (settingsBtn) {
       settingsBtn.replaceWith(settingsBtn.cloneNode(true));
       const newSettingsBtn = document.getElementById('settings-btn');
-      newSettingsBtn.addEventListener('click', () => this.showAPIKeyModal());
+      newSettingsBtn.addEventListener('click', () => {
+        if (this.settingsPanel) {
+          this.settingsPanel.toggle();
+        }
+      });
     }
+
+    // 任务16：初始化设置面板
+    console.log('[AppController] 初始化设置面板...');
+    import('../components/SettingsPanel.js').then(module => {
+      const SettingsPanel = module.default;
+      this.settingsPanel = new SettingsPanel();
+      this.settingsPanel.init();
+      console.log('[AppController] 设置面板初始化完成');
+    }).catch(error => {
+      console.error('[AppController] 设置面板加载失败:', error);
+    });
 
     // 设置刷新按钮事件
     const refreshBtn = document.getElementById('refresh-btn');
@@ -1426,11 +1439,6 @@ class AppController {
 
     // 更新页面标题
     document.title = this.i18n.t('app.title');
-
-    // 刷新语言选择器
-    if (this.languageSelector) {
-      this.languageSelector.updateText();
-    }
 
     // 更新HTML中的静态文本
     this.updateStaticText();

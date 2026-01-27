@@ -320,7 +320,42 @@ export default {
     favoriteLocations: '收藏位置',
     searchHistory: '搜尋歷史',
     clearHistory: '清除歷史',
-    confirmClearHistory: '確定要清除所有搜尋歷史嗎？'
+    confirmClearHistory: '確定要清除所有搜尋歷史嗎？',
+    // 統一設定面板
+    close: '關閉',
+    done: '完成',
+    // 資料來源與網路
+    dataSource: '資料來源與網路',
+    apiMode: 'API 存取模式',
+    apiModeProxy: '後端代理',
+    apiModeDirect: '直連模式',
+    apiModeProxyRecommended: '後端代理（推薦）',
+    currentMode: '目前模式',
+    proxyUrl: '後端伺服器位址',
+    proxyUrlPlaceholder: 'http://localhost:3000',
+    proxyUrlHint: '後端代理伺服器的 URL 位址',
+    apiModeHint: '• 後端代理：透過伺服器存取 Windy API，金鑰安全儲存在後端<br>• 直連模式：前端直接存取，需要您配置 API 金鑰',
+    // 通知與提醒
+    notificationAndAlerts: '通知與提醒',
+    enableSunsetNotification: '啟用晚霞預測通知',
+    notificationHint: '當預測品質達到閾值時發送瀏覽器通知',
+    notificationThresholdLabel: '通知閾值',
+    notificationThresholdHint: '預測評分高於此值時發送通知',
+    // 語言與顯示
+    languageAndDisplay: '語言與顯示',
+    interfaceLanguage: '介面語言',
+    // 個人化
+    personalization: '個人化',
+    themeMode: '主題模式',
+    themeLight: '明亮模式',
+    themeDark: '暗色模式',
+    themeAuto: '跟隨系統',
+    temperatureUnit: '溫度單位',
+    tempCelsius: '攝氏度 (℃)',
+    tempFahrenheit: '華氏度 (℉)',
+    windSpeedUnit: '風速單位',
+    windKmh: '公里/小時 (km/h)',
+    windMs: '米/秒 (m/s)'
   },
 
   // 語言選擇

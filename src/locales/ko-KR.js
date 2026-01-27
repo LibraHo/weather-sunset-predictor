@@ -341,7 +341,42 @@ export default {
     favoriteLocations: '즐겨찾기 위치',
     searchHistory: '검색 기록',
     clearHistory: '기록 삭제',
-    confirmClearHistory: '모든 검색 기록을 삭제하시겠습니까?'
+    confirmClearHistory: '모든 검색 기록을 삭제하시겠습니까?',
+    // 통합 설정 패널
+    close: '닫기',
+    done: '완료',
+    // 데이터 소스 및 네트워크
+    dataSource: '데이터 소스 및 네트워크',
+    apiMode: 'API 액세스 모드',
+    apiModeProxy: '백엔드 프록시',
+    apiModeDirect: '직접 모드',
+    apiModeProxyRecommended: '백엔드 프록시 (권장)',
+    currentMode: '현재 모드',
+    proxyUrl: '백엔드 서버 URL',
+    proxyUrlPlaceholder: 'http://localhost:3000',
+    proxyUrlHint: '백엔드 프록시 서버 URL 주소',
+    apiModeHint: '• 백엔드 프록시: 서버를 통해 Windy API에 액세스, API 키는 백엔드에 안전하게 저장<br>• 직접 모드: 프론트엔드에서 직접 액세스, API 키 구성 필요',
+    // 알림
+    notificationAndAlerts: '알림',
+    enableSunsetNotification: '노을 예측 알림 활성화',
+    notificationHint: '예측 품질이 임계값에 도달하면 브라우저 알림 전송',
+    notificationThresholdLabel: '알림 임계값',
+    notificationThresholdHint: '예측 점수가 이 값보다 높으면 알림 전송',
+    // 언어 및 표시
+    languageAndDisplay: '언어 및 표시',
+    interfaceLanguage: '인터페이스 언어',
+    // 개인 설정
+    personalization: '개인 설정',
+    themeMode: '테마 모드',
+    themeLight: '라이트 모드',
+    themeDark: '다크 모드',
+    themeAuto: '시스템 따라가기',
+    temperatureUnit: '온도 단위',
+    tempCelsius: '섭씨 (℃)',
+    tempFahrenheit: '화씨 (℉)',
+    windSpeedUnit: '풍속 단위',
+    windKmh: 'km/h',
+    windMs: 'm/s'
   },
 
   // Language selector

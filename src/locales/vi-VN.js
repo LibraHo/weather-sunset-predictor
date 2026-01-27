@@ -230,7 +230,42 @@ export default {
     favoriteLocations: 'Vị Trí Yêu Thích',
     searchHistory: 'Lịch Sử Tìm Kiếm',
     clearHistory: 'Xóa Lịch Sử',
-    confirmClearHistory: 'Bạn có chắc chắn muốn xóa toàn bộ lịch sử tìm kiếm?'
+    confirmClearHistory: 'Bạn có chắc chắn muốn xóa toàn bộ lịch sử tìm kiếm?',
+    // Unified Settings Panel
+    close: 'Đóng',
+    done: 'Hoàn Thành',
+    // Data Source & Network
+    dataSource: 'Nguồn Dữ Liệu & Mạng',
+    apiMode: 'Chế Độ Truy Cập API',
+    apiModeProxy: 'Proxy Máy Chủ',
+    apiModeDirect: 'Chế Độ Trực Tiếp',
+    apiModeProxyRecommended: 'Proxy Máy Chủ (Khuyên Dùng)',
+    currentMode: 'Chế Độ Hiện Tại',
+    proxyUrl: 'URL Máy Chủ Proxy',
+    proxyUrlPlaceholder: 'http://localhost:3000',
+    proxyUrlHint: 'Địa chỉ URL của máy chủ proxy backend',
+    apiModeHint: '• Proxy Backend: Truy cập Windy API qua máy chủ, khóa API được lưu trữ an toàn trên backend<br>• Chế Độ Trực Tiếp: Truy cập trực tiếp từ frontend, yêu cầu bạn cấu hình khóa API',
+    // Notifications & Alerts
+    notificationAndAlerts: 'Thông Báo & Cảnh Báo',
+    enableSunsetNotification: 'Bật thông báo hoàng hôn',
+    notificationHint: 'Gửi thông báo trình duyệt khi chất lượng dự báo đạt ngưỡng',
+    notificationThresholdLabel: 'Ngưỡng Thông Báo',
+    notificationThresholdHint: 'Gửi thông báo khi điểm dự báo cao hơn giá trị này',
+    // Language & Display
+    languageAndDisplay: 'Ngôn Ngữ & Hiển Thị',
+    interfaceLanguage: 'Ngôn Ngữ Giao Diện',
+    // Personalization
+    personalization: 'Cá Nhân Hóa',
+    themeMode: 'Chế Độ Giao Diện',
+    themeLight: 'Chế Độ Sáng',
+    themeDark: 'Chế Độ Tối',
+    themeAuto: 'Tự Động',
+    temperatureUnit: 'Đơn Vị Nhiệt Độ',
+    tempCelsius: 'Độ C (℃)',
+    tempFahrenheit: 'Độ F (℉)',
+    windSpeedUnit: 'Đơn Vị Tốc Độ Gió',
+    windKmh: 'km/h',
+    windMs: 'm/s'
   },
   languageSelector: {
     title: 'Chọn Ngôn Ngữ',

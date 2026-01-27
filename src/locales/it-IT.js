@@ -267,7 +267,42 @@ export default {
     favoriteLocations: 'Posizioni Preferite',
     searchHistory: 'Cronologia Ricerche',
     clearHistory: 'Cancella Cronologia',
-    confirmClearHistory: 'Sei sicuro di voler cancellare tutta la cronologia delle ricerche?'
+    confirmClearHistory: 'Sei sicuro di voler cancellare tutta la cronologia delle ricerche?',
+    // Pannello Impostazioni Unificato
+    close: 'Chiudi',
+    done: 'Fatto',
+    // Fonte Dati & Rete
+    dataSource: 'Fonte Dati & Rete',
+    apiMode: 'Modalità Accesso API',
+    apiModeProxy: 'Proxy Backend',
+    apiModeDirect: 'Modalità Diretta',
+    apiModeProxyRecommended: 'Proxy Backend (Consigliato)',
+    currentMode: 'Modalità Attuale',
+    proxyUrl: 'URL Server Proxy',
+    proxyUrlPlaceholder: 'http://localhost:3000',
+    proxyUrlHint: 'Indirizzo URL del server proxy backend',
+    apiModeHint: '• Proxy Backend: Accedi all\'API Windy tramite il server, chiave API salvata in sicurezza sul backend<br>• Modalità Diretta: Accesso frontend diretto, richiede di configurare la chiave API',
+    // Notifiche e Avvisi
+    notificationAndAlerts: 'Notifiche e Avvisi',
+    enableSunsetNotification: 'Attiva notifiche tramonto',
+    notificationHint: 'Invia notifica del browser quando la qualità della previsione raggiunge la soglia',
+    notificationThresholdLabel: 'Soglia Notifica',
+    notificationThresholdHint: 'Invia notifica quando il punteggio di previsione è superiore a questo valore',
+    // Lingua e Visualizzazione
+    languageAndDisplay: 'Lingua e Visualizzazione',
+    interfaceLanguage: 'Lingua Interfaccia',
+    // Personalizzazione
+    personalization: 'Personalizzazione',
+    themeMode: 'Modalità Tema',
+    themeLight: 'Modalità Chiara',
+    themeDark: 'Modalità Scura',
+    themeAuto: 'Automatico',
+    temperatureUnit: 'Unità Temperatura',
+    tempCelsius: 'Celsius (℃)',
+    tempFahrenheit: 'Fahrenheit (℉)',
+    windSpeedUnit: 'Unità Velocità Vento',
+    windKmh: 'km/h',
+    windMs: 'm/s'
   },
   languageSelector: {
     title: 'Seleziona Lingua',

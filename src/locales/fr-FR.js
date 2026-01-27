@@ -270,7 +270,42 @@ export default {
     favoriteLocations: 'Emplacements Favoris',
     searchHistory: 'Historique de Recherche',
     clearHistory: 'Effacer l\'Historique',
-    confirmClearHistory: 'Êtes-vous sûr de vouloir effacer tout l\'historique de recherche?'
+    confirmClearHistory: 'Êtes-vous sûr de vouloir effacer tout l\'historique de recherche?',
+    // Panneau de Paramètres Unifié
+    close: 'Fermer',
+    done: 'Terminé',
+    // Source de Données & Réseau
+    dataSource: 'Source de Données & Réseau',
+    apiMode: 'Mode d\'Accès API',
+    apiModeProxy: 'Proxy Backend',
+    apiModeDirect: 'Mode Direct',
+    apiModeProxyRecommended: 'Proxy Backend (Recommandé)',
+    currentMode: 'Mode Actuel',
+    proxyUrl: 'URL du Serveur Proxy',
+    proxyUrlPlaceholder: 'http://localhost:3000',
+    proxyUrlHint: 'Adresse URL du serveur proxy backend',
+    apiModeHint: '• Proxy Backend : Accéder à l\'API Windy via le serveur, clé API stockée en sécurité sur le backend<br>• Mode Direct : Accès frontend direct, nécessite que vous configuriez la clé API',
+    // Notifications & Alertes
+    notificationAndAlerts: 'Notifications & Alertes',
+    enableSunsetNotification: 'Activer les notifications de coucher de soleil',
+    notificationHint: 'Envoyer une notification du navigateur lorsque la qualité de prévision atteint le seuil',
+    notificationThresholdLabel: 'Seuil de Notification',
+    notificationThresholdHint: 'Envoyer une notification lorsque le score de prévision est supérieur à cette valeur',
+    // Langue & Affichage
+    languageAndDisplay: 'Langue & Affichage',
+    interfaceLanguage: 'Langue de l\'Interface',
+    // Personnalisation
+    personalization: 'Personnalisation',
+    themeMode: 'Mode Thème',
+    themeLight: 'Mode Clair',
+    themeDark: 'Mode Sombre',
+    themeAuto: 'Automatique',
+    temperatureUnit: 'Unité de Température',
+    tempCelsius: 'Celsius (℃)',
+    tempFahrenheit: 'Fahrenheit (℉)',
+    windSpeedUnit: 'Unité de Vitesse du Vent',
+    windKmh: 'km/h',
+    windMs: 'm/s'
   },
   languageSelector: {
     title: 'Choisir la Langue',

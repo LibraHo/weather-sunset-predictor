@@ -320,7 +320,42 @@ export default {
     favoriteLocations: 'Ubicaciones Favoritas',
     searchHistory: 'Historial de Búsqueda',
     clearHistory: 'Limpiar Historial',
-    confirmClearHistory: '¿Está seguro de que desea limpiar todo el historial de búsqueda?'
+    confirmClearHistory: '¿Está seguro de que desea limpiar todo el historial de búsqueda?',
+    // Panel de Configuración Unificado
+    close: 'Cerrar',
+    done: 'Hecho',
+    // Fuente de Datos y Red
+    dataSource: 'Fuente de Datos y Red',
+    apiMode: 'Modo de Acceso API',
+    apiModeProxy: 'Proxy Backend',
+    apiModeDirect: 'Modo Directo',
+    apiModeProxyRecommended: 'Proxy Backend (Recomendado)',
+    currentMode: 'Modo Actual',
+    proxyUrl: 'URL del Servidor Proxy',
+    proxyUrlPlaceholder: 'http://localhost:3000',
+    proxyUrlHint: 'Dirección URL del servidor proxy backend',
+    apiModeHint: '• Proxy Backend: Acceder a la API Windy a través del servidor, clave API almacenada de forma segura en el backend<br>• Modo Directo: Acceso frontend directo, requiere que configure la clave API',
+    // Notificaciones y Alertas
+    notificationAndAlerts: 'Notificaciones y Alertas',
+    enableSunsetNotification: 'Activar notificaciones de atardecer',
+    notificationHint: 'Enviar notificación del navegador cuando la calidad de predicción alcance el umbral',
+    notificationThresholdLabel: 'Umbral de Notificación',
+    notificationThresholdHint: 'Enviar notificación cuando la puntuación de predicción sea superior a este valor',
+    // Idioma y Visualización
+    languageAndDisplay: 'Idioma y Visualización',
+    interfaceLanguage: 'Idioma de la Interfaz',
+    // Personalización
+    personalization: 'Personalización',
+    themeMode: 'Modo de Tema',
+    themeLight: 'Modo Claro',
+    themeDark: 'Modo Oscuro',
+    themeAuto: 'Automático',
+    temperatureUnit: 'Unidad de Temperatura',
+    tempCelsius: 'Celsius (℃)',
+    tempFahrenheit: 'Fahrenheit (℉)',
+    windSpeedUnit: 'Unidad de Velocidad del Viento',
+    windKmh: 'km/h',
+    windMs: 'm/s'
   },
 
   // Language selector

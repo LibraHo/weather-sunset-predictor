@@ -267,7 +267,42 @@ export default {
     favoriteLocations: 'المواقع المفضلة',
     searchHistory: 'سجل البحث',
     clearHistory: 'مسح السجل',
-    confirmClearHistory: 'هل أنت متأكد من أنك تريد مسح سجل البحث بالكامل؟'
+    confirmClearHistory: 'هل أنت متأكد من أنك تريد مسح سجل البحث بالكامل؟',
+    // لوحة الإعدادات الموحدة
+    close: 'إغلاق',
+    done: 'تم',
+    // مصدر البيانات والشبكة
+    dataSource: 'مصدر البيانات والشبكة',
+    apiMode: 'وضع الوصول إلى API',
+    apiModeProxy: 'الوكيل الخلفي',
+    apiModeDirect: 'الوضع المباشر',
+    apiModeProxyRecommended: 'الوكيل الخلفي (موصى به)',
+    currentMode: 'الوضع الحالي',
+    proxyUrl: 'رابط خادم الوكيل',
+    proxyUrlPlaceholder: 'http://localhost:3000',
+    proxyUrlHint: 'عنوان رابط خادم الوكيل الخلفي',
+    apiModeHint: '• الوكيل الخلفي: الوصول إلى Windy API عبر الخادم، يتم تخزين مفتاح API بأمان على الخادم الخلفي<br>• الوضع المباشر: الوصول المباشر من الواجهة الأمامية، يتطلب تكوين مفتاح API',
+    // الإشعارات والتنبيهات
+    notificationAndAlerts: 'الإشعارات والتنبيهات',
+    enableSunsetNotification: 'تفعيل إشعارات الغروب',
+    notificationHint: 'إرسال إشعار المتصفح عند وصول جودة التنبؤ إلى الحد',
+    notificationThresholdLabel: 'حد الإشعار',
+    notificationThresholdHint: 'إرسال إشعار عندما تكون درجة التنبؤ أعلى من هذه القيمة',
+    // اللغة والعرض
+    languageAndDisplay: 'اللغة والعرض',
+    interfaceLanguage: 'لغة الواجهة',
+    // التخصيص
+    personalization: 'التخصيص',
+    themeMode: 'وضع المظهر',
+    themeLight: 'الوضع الفاتح',
+    themeDark: 'الوضع الداكن',
+    themeAuto: 'تلقائي',
+    temperatureUnit: 'وحدة درجة الحرارة',
+    tempCelsius: 'مئوية (℃)',
+    tempFahrenheit: 'فهرنهايت (℉)',
+    windSpeedUnit: 'وحدة سرعة الرياح',
+    windKmh: 'كم/ساعة',
+    windMs: 'م/ثانية'
   },
   languageSelector: {
     title: 'اختيار اللغة',

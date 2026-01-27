@@ -349,7 +349,42 @@ export default {
     favoriteLocations: '收藏位置',
     searchHistory: '搜索历史',
     clearHistory: '清除历史',
-    confirmClearHistory: '确定要清除所有搜索历史吗？'
+    confirmClearHistory: '确定要清除所有搜索历史吗？',
+    // 统一设置面板
+    close: '关闭',
+    done: '完成',
+    // 数据源与网络
+    dataSource: '数据源与网络',
+    apiMode: 'API 访问模式',
+    apiModeProxy: '后端代理',
+    apiModeDirect: '直连模式',
+    apiModeProxyRecommended: '后端代理（推荐）',
+    currentMode: '当前模式',
+    proxyUrl: '后端服务器地址',
+    proxyUrlPlaceholder: 'http://localhost:3000',
+    proxyUrlHint: '后端代理服务器的 URL 地址',
+    apiModeHint: '• 后端代理：通过服务器访问 Windy API，密钥安全存储在后端<br>• 直连模式：前端直接访问，需要您配置 API 密钥',
+    // 通知与提醒
+    notificationAndAlerts: '通知与提醒',
+    enableSunsetNotification: '启用晚霞预测通知',
+    notificationHint: '当预测质量达到阈值时发送浏览器通知',
+    notificationThresholdLabel: '通知阈值',
+    notificationThresholdHint: '预测评分高于此值时发送通知',
+    // 语言与显示
+    languageAndDisplay: '语言与显示',
+    interfaceLanguage: '界面语言',
+    // 个性化
+    personalization: '个性化',
+    themeMode: '主题模式',
+    themeLight: '明亮模式',
+    themeDark: '暗色模式',
+    themeAuto: '跟随系统',
+    temperatureUnit: '温度单位',
+    tempCelsius: '摄氏度 (℃)',
+    tempFahrenheit: '华氏度 (℉)',
+    windSpeedUnit: '风速单位',
+    windKmh: '公里/小时 (km/h)',
+    windMs: '米/秒 (m/s)'
   },
 
   // 语言选择

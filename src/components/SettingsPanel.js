@@ -1,0 +1,514 @@
+/**
+ * SettingsPanel - 统一设置面板组件
+ *
+ * 提供集中化的设置界面，管理应用的所有配置项
+ */
+
+import i18n from '../i18n.js';
+
+class SettingsPanel {
+  constructor() {
+    this.panel = null;
+    this.isOpen = false;
+    this.i18n = i18n;
+  }
+
+  /**
+   * 初始化设置面板
+   */
+  async init() {
+    // 等待 i18n 初始化完成
+    if (!this.i18n.currentLanguage) {
+      await this.i18n.init();
+    }
+    // 不在这里创建面板，而是在第一次打开时创建
+    // 这样可以确保使用当前语言
+  }
+
+  /**
+   * 创建设置面板 DOM
+   */
+  createPanel() {
+    // 创建面板容器
+    const panel = document.createElement('div');
+    panel.id = 'settings-panel';
+    panel.className = 'settings-panel hidden';
+    panel.innerHTML = `
+      <div class="settings-overlay"></div>
+      <div class="settings-container">
+        <div class="settings-header">
+          <h2>⚙️ ${this.i18n.t('settings.title')}</h2>
+          <button class="settings-close" aria-label="${this.i18n.t('settings.close')}">✕</button>
+        </div>
+
+        <div class="settings-content">
+          <!-- 数据源与网络 -->
+          <div class="settings-section" data-section="dataSource">
+            <h3 class="settings-section-title">📡 ${this.i18n.t('settings.dataSource')}</h3>
+            <div class="settings-section-content">
+              <div class="setting-item">
+                <label class="setting-label">${this.i18n.t('settings.apiMode')}</label>
+                <div class="setting-description">
+                  ${this.i18n.t('settings.currentMode')}: <span id="api-mode-display" class="setting-value">${this.i18n.t('settings.apiModeProxy')}</span>
+                  <br>
+                  <small class="setting-hint">
+                    ${this.i18n.t('settings.apiModeHint')}
+                  </small>
+                </div>
+                <div class="setting-control">
+                  <select id="api-mode-select" class="setting-select">
+                    <option value="proxy">${this.i18n.t('settings.apiModeProxyRecommended')}</option>
+                    <option value="direct">${this.i18n.t('settings.apiModeDirect')}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="setting-item" id="proxy-url-setting">
+                <label class="setting-label">${this.i18n.t('settings.proxyUrl')}</label>
+                <div class="setting-control">
+                  <input
+                    type="text"
+                    id="proxy-url-input"
+                    class="setting-input"
+                    placeholder="${this.i18n.t('settings.proxyUrlPlaceholder')}"
+                    value="http://localhost:3000"
+                  />
+                </div>
+                <small class="setting-hint">${this.i18n.t('settings.proxyUrlHint')}</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- 通知与提醒 -->
+          <div class="settings-section" data-section="notification">
+            <h3 class="settings-section-title">🔔 ${this.i18n.t('settings.notificationAndAlerts')}</h3>
+            <div class="settings-section-content">
+              <div class="setting-item">
+                <label class="setting-label">
+                  <input type="checkbox" id="notification-enabled" class="setting-checkbox" />
+                  <span>${this.i18n.t('settings.enableSunsetNotification')}</span>
+                </label>
+                <small class="setting-hint">${this.i18n.t('settings.notificationHint')}</small>
+              </div>
+
+              <div class="setting-item">
+                <label class="setting-label">${this.i18n.t('settings.notificationThresholdLabel')}</label>
+                <div class="setting-control">
+                  <input
+                    type="range"
+                    id="notification-threshold"
+                    class="setting-range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    value="70"
+                  />
+                  <span id="threshold-value" class="setting-value">70</span>
+                </div>
+                <small class="setting-hint">${this.i18n.t('settings.notificationThresholdHint')}</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- 语言与显示 -->
+          <div class="settings-section" data-section="language">
+            <h3 class="settings-section-title">🌐 ${this.i18n.t('settings.languageAndDisplay')}</h3>
+            <div class="settings-section-content">
+              <div class="setting-item">
+                <label class="setting-label">${this.i18n.t('settings.interfaceLanguage')}</label>
+                <div class="setting-control">
+                  <select id="language-select" class="setting-select">
+                    ${this.getLanguageOptions()}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 个性化 -->
+          <div class="settings-section" data-section="personalization">
+            <h3 class="settings-section-title">🎨 ${this.i18n.t('settings.personalization')}</h3>
+            <div class="settings-section-content">
+              <div class="setting-item">
+                <label class="setting-label">${this.i18n.t('settings.themeMode')}</label>
+                <div class="setting-control">
+                  <select id="theme-select" class="setting-select">
+                    <option value="light">${this.i18n.t('settings.themeLight')}</option>
+                    <option value="dark">${this.i18n.t('settings.themeDark')}</option>
+                    <option value="auto">${this.i18n.t('settings.themeAuto')}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="setting-item">
+                <label class="setting-label">${this.i18n.t('settings.temperatureUnit')}</label>
+                <div class="setting-control">
+                  <select id="temp-unit-select" class="setting-select">
+                    <option value="celsius">${this.i18n.t('settings.tempCelsius')}</option>
+                    <option value="fahrenheit">${this.i18n.t('settings.tempFahrenheit')}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="setting-item">
+                <label class="setting-label">${this.i18n.t('settings.windSpeedUnit')}</label>
+                <div class="setting-control">
+                  <select id="wind-unit-select" class="setting-select">
+                    <option value="kmh">${this.i18n.t('settings.windKmh')}</option>
+                    <option value="ms">${this.i18n.t('settings.windMs')}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-footer">
+          <button class="settings-close btn-primary">${this.i18n.t('settings.done')}</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(panel);
+    this.panel = panel;
+  }
+
+  /**
+   * 获取语言选项HTML
+   */
+  getLanguageOptions() {
+    const languages = this.i18n.supportedLanguages;
+    return Object.entries(languages)
+      .map(([code, info]) => `<option value="${code}">${info.name}</option>`)
+      .join('');
+  }
+
+  /**
+   * 绑定事件监听器
+   */
+  attachEventListeners() {
+    // 关闭按钮
+    const closeButtons = this.panel.querySelectorAll('.settings-close');
+    closeButtons.forEach(btn => {
+      btn.addEventListener('click', () => this.close());
+    });
+
+    // 点击遮罩关闭
+    const overlay = this.panel.querySelector('.settings-overlay');
+    overlay.addEventListener('click', () => this.close());
+
+    // API 模式切换
+    const apiModeSelect = document.getElementById('api-mode-select');
+    if (apiModeSelect) {
+      apiModeSelect.addEventListener('change', (e) => {
+        this.handleApiModeChange(e.target.value);
+      });
+    }
+
+    // 代理 URL 输入
+    const proxyUrlInput = document.getElementById('proxy-url-input');
+    if (proxyUrlInput) {
+      proxyUrlInput.addEventListener('change', (e) => {
+        this.handleProxyUrlChange(e.target.value);
+      });
+    }
+
+    // 通知设置
+    const notificationEnabled = document.getElementById('notification-enabled');
+    if (notificationEnabled) {
+      notificationEnabled.addEventListener('change', (e) => {
+        this.handleNotificationChange(e.target.checked);
+      });
+    }
+
+    const notificationThreshold = document.getElementById('notification-threshold');
+    if (notificationThreshold) {
+      notificationThreshold.addEventListener('input', (e) => {
+        document.getElementById('threshold-value').textContent = e.target.value;
+        this.handleThresholdChange(e.target.value);
+      });
+    }
+
+    // 语言切换
+    const languageSelect = document.getElementById('language-select');
+    if (languageSelect) {
+      languageSelect.addEventListener('change', (e) => {
+        this.handleLanguageChange(e.target.value);
+      });
+    }
+
+    // 主题切换
+    const themeSelect = document.getElementById('theme-select');
+    if (themeSelect) {
+      themeSelect.addEventListener('change', (e) => {
+        this.handleThemeChange(e.target.value);
+      });
+    }
+
+    // 单位切换
+    const tempUnitSelect = document.getElementById('temp-unit-select');
+    if (tempUnitSelect) {
+      tempUnitSelect.addEventListener('change', (e) => {
+        this.handleTempUnitChange(e.target.value);
+      });
+    }
+
+    const windUnitSelect = document.getElementById('wind-unit-select');
+    if (windUnitSelect) {
+      windUnitSelect.addEventListener('change', (e) => {
+        this.handleWindUnitChange(e.target.value);
+      });
+    }
+  }
+
+  /**
+   * 加载设置
+   */
+  loadSettings() {
+    // 加载 API 模式
+    const apiMode = localStorage.getItem('api_mode') || 'proxy';
+    const apiModeSelect = document.getElementById('api-mode-select');
+    if (apiModeSelect) {
+      apiModeSelect.value = apiMode;
+      this.updateApiModeDisplay(apiMode);
+    }
+
+    // 加载代理 URL
+    const proxyUrl = localStorage.getItem('api_proxy_url') || 'http://localhost:3000';
+    const proxyUrlInput = document.getElementById('proxy-url-input');
+    if (proxyUrlInput) {
+      proxyUrlInput.value = proxyUrl;
+    }
+
+    // 加载通知设置
+    const notificationSettings = JSON.parse(localStorage.getItem('notification_settings') || '{}');
+    const notificationEnabled = document.getElementById('notification-enabled');
+    const notificationThreshold = document.getElementById('notification-threshold');
+    const thresholdValue = document.getElementById('threshold-value');
+
+    if (notificationEnabled) {
+      notificationEnabled.checked = notificationSettings.enabled || false;
+    }
+    if (notificationThreshold) {
+      notificationThreshold.value = notificationSettings.threshold || 70;
+    }
+    if (thresholdValue) {
+      thresholdValue.textContent = notificationSettings.threshold || 70;
+    }
+
+    // 加载语言设置
+    const currentLang = this.i18n.getLanguage();
+    const languageSelect = document.getElementById('language-select');
+    if (languageSelect) {
+      languageSelect.value = currentLang;
+    }
+
+    // 加载主题设置
+    const theme = localStorage.getItem('app_theme') || 'light';
+    const themeSelect = document.getElementById('theme-select');
+    if (themeSelect) {
+      themeSelect.value = theme;
+    }
+
+    // 加载温度单位
+    const tempUnit = localStorage.getItem('temp_unit') || 'celsius';
+    const tempUnitSelect = document.getElementById('temp-unit-select');
+    if (tempUnitSelect) {
+      tempUnitSelect.value = tempUnit;
+    }
+
+    // 加载风速单位
+    const windUnit = localStorage.getItem('wind_unit') || 'kmh';
+    const windUnitSelect = document.getElementById('wind-unit-select');
+    if (windUnitSelect) {
+      windUnitSelect.value = windUnit;
+    }
+  }
+
+  /**
+   * 打开设置面板
+   */
+  open() {
+    // 如果面板还没有创建，或者语言已改变，则重新创建
+    const currentLang = this.i18n.getLanguage();
+    if (!this.panel || this.lastLanguage !== currentLang) {
+      if (this.panel) {
+        this.panel.remove();
+      }
+      this.createPanel();
+      this.attachEventListeners();
+      this.lastLanguage = currentLang;
+    }
+
+    this.panel.classList.remove('hidden');
+    this.isOpen = true;
+    this.loadSettings();
+  }
+
+  /**
+   * 关闭设置面板
+   */
+  close() {
+    this.panel.classList.add('hidden');
+    this.isOpen = false;
+  }
+
+  /**
+   * 切换设置面板
+   */
+  toggle() {
+    if (this.isOpen) {
+      this.close();
+    } else {
+      this.open();
+    }
+  }
+
+  /**
+   * 处理 API 模式变更
+   */
+  handleApiModeChange(mode) {
+    localStorage.setItem('api_mode', mode);
+    this.updateApiModeDisplay(mode);
+
+    // 显示/隐藏代理 URL 设置
+    const proxyUrlSetting = document.getElementById('proxy-url-setting');
+    if (proxyUrlSetting) {
+      if (mode === 'proxy') {
+        proxyUrlSetting.style.display = 'block';
+      } else {
+        proxyUrlSetting.style.display = 'none';
+      }
+    }
+
+    // TODO: 通知应用刷新或重新初始化 API 服务
+    console.log('[SettingsPanel] API 模式已切换为:', mode);
+  }
+
+  /**
+   * 更新 API 模式显示
+   */
+  updateApiModeDisplay(mode) {
+    const display = document.getElementById('api-mode-display');
+    if (display) {
+      display.textContent = mode === 'proxy' ? this.i18n.t('settings.apiModeProxy') : this.i18n.t('settings.apiModeDirect');
+    }
+  }
+
+  /**
+   * 刷新所有翻译文本（当语言切换时调用）
+   */
+  async refreshTranslations() {
+    // 重新创建面板以应用新语言
+    if (this.panel) {
+      this.panel.remove();
+    }
+    await this.createPanel();
+    this.attachEventListeners();
+    this.loadSettings();
+  }
+
+  /**
+   * 处理代理 URL 变更
+   */
+  handleProxyUrlChange(url) {
+    localStorage.setItem('api_proxy_url', url);
+    console.log('[SettingsPanel] 代理 URL 已更新:', url);
+  }
+
+  /**
+   * 处理通知开关变更
+   */
+  handleNotificationChange(enabled) {
+    const settings = {
+      enabled: enabled,
+      threshold: parseInt(document.getElementById('notification-threshold').value)
+    };
+    localStorage.setItem('notification_settings', JSON.stringify(settings));
+    console.log('[SettingsPanel] 通知设置已更新:', settings);
+  }
+
+  /**
+   * 处理通知阈值变更
+   */
+  handleThresholdChange(threshold) {
+    const settings = JSON.parse(localStorage.getItem('notification_settings') || '{}');
+    settings.threshold = parseInt(threshold);
+    localStorage.setItem('notification_settings', JSON.stringify(settings));
+  }
+
+  /**
+   * 处理语言变更
+   */
+  async handleLanguageChange(lang) {
+    console.log('[SettingsPanel] 语言已切换为:', lang);
+
+    // 使用 i18n 系统切换语言
+    await this.i18n.changeLanguage(lang);
+
+    // 刷新设置面板的翻译，并确保保持打开状态
+    await this.refreshTranslations();
+
+    // 重新打开面板（因为 refreshTranslations 会关闭面板）
+    this.panel.classList.remove('hidden');
+    this.isOpen = true;
+
+    // 重新加载设置以更新语言选择器
+    this.loadSettings();
+
+    // 触发自定义事件，通知其他组件语言已更改
+    window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: lang } }));
+  }
+
+  /**
+   * 处理主题变更
+   */
+  handleThemeChange(theme) {
+    localStorage.setItem('app_theme', theme);
+    this.applyTheme(theme);
+    console.log('[SettingsPanel] 主题已切换为:', theme);
+  }
+
+  /**
+   * 应用主题
+   */
+  applyTheme(theme) {
+    const body = document.body;
+
+    // 移除所有主题类
+    body.classList.remove('theme-light', 'theme-dark', 'theme-auto');
+
+    // 应用新主题
+    if (theme === 'auto') {
+      body.classList.add('theme-auto');
+      // 根据系统主题设置
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        body.classList.add('theme-dark');
+      } else {
+        body.classList.add('theme-light');
+      }
+    } else {
+      body.classList.add(`theme-${theme}`);
+    }
+  }
+
+  /**
+   * 处理温度单位变更
+   */
+  handleTempUnitChange(unit) {
+    localStorage.setItem('temp_unit', unit);
+    console.log('[SettingsPanel] 温度单位已切换为:', unit);
+    // TODO: 刷新数据以应用新单位
+  }
+
+  /**
+   * 处理风速单位变更
+   */
+  handleWindUnitChange(unit) {
+    localStorage.setItem('wind_unit', unit);
+    console.log('[SettingsPanel] 风速单位已切换为:', unit);
+    // TODO: 刷新数据以应用新单位
+  }
+}
+
+export default SettingsPanel;
