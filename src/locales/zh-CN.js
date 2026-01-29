@@ -66,6 +66,7 @@ export default {
     // 天气概览
     overview: '概览',
     hourly: '详细预报',
+    mapView: '地图预测',
     daysOverview: '{{days}}天概览',
     precipChance: '{{prob}}%降水',
     dataInfo: 'ℹ️ 数据源提供 {{hours}} 小时预测数据（约 {{days}} 天）。若需更多天数，请考虑使用其他天气数据源。'
@@ -279,6 +280,39 @@ export default {
     forecast: '未来预测'
   },
 
+  // 任务19：周边火烧云
+  surrounding: {
+    title: '周边火烧云分析',
+    radius: '探测半径',
+    radiusUnit: '公里',
+    directions: {
+      N: '北',
+      NE: '东北',
+      E: '东',
+      SE: '东南',
+      S: '南',
+      SW: '西南',
+      W: '西',
+      NW: '西北'
+    },
+    loading: '正在获取周边气象数据...',
+    error: '获取周边数据失败',
+    noData: '暂无周边数据',
+    clickToView: '点击方位查看详情',
+    viewingDirection: '查看{{direction}}方向',
+    distanceInfo: '{{distance}}公里',
+    recommendation: '观赏建议',
+    bestDirections: '推荐观赏方向',
+    scoreBreakdown: '各方位评分',
+    legend: {
+      excellent: '优秀（≥80分）',
+      good: '良好（60-79分）',
+      fair: '一般（40-59分）',
+      poor: '较差（<40分）'
+    },
+    fallbackMessage: '您的浏览器不支持Canvas，使用表格显示'
+  },
+
   // 时间
   time: {
     today: '今天',
@@ -384,7 +418,13 @@ export default {
     tempFahrenheit: '华氏度 (℉)',
     windSpeedUnit: '风速单位',
     windKmh: '公里/小时 (km/h)',
-    windMs: '米/秒 (m/s)'
+    windMs: '米/秒 (m/s)',
+    // 默认位置
+    defaultLocation: '默认位置',
+    noDefaultLocation: '未设置默认位置',
+    setAsDefault: '设为默认',
+    currentDefaultLocation: '当前默认位置',
+    defaultLocationHint: '设置启动时自动加载的位置'
   },
 
   // 语言选择
@@ -443,6 +483,26 @@ export default {
     trend: '变化趋势',
     time: '时间',
     unit: '单位'
+  },
+
+  // 任务18：地图图层
+  map: {
+    title: '地图预测',
+    layers: {
+      wind: '风',
+      temp: '温度',
+      clouds: '云',
+      rain: '降水'
+    },
+    // 任务18.3.3：时间控制
+    currentTime: '当前时间：',
+    timeNow: '现在',
+    timeSunset: '日落',
+    timeSunrise: '日出',
+    timeHint: '💡 提示：也可以使用地图下方的预测时间轴拖动时间',
+    loading: '地图加载中...',
+    error: '地图加载失败',
+    mockNotSupported: '地图功能仅在真实API模式下可用'
   },
 
   // 加载状态

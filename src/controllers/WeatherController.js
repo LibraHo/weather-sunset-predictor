@@ -8,6 +8,10 @@
 
 import WindyAPIService from '../services/WindyAPIService.js';
 import MockWindyAPIService from '../services/MockWindyAPIService.js';
+import UnitConverter from '../utils/UnitConverter.js';
+import WindyMapService from '../services/WindyMapService.js';
+import SurroundingPointsService from '../services/SurroundingPointsService.js';
+import RadarChartService from '../services/RadarChartService.js';
 import i18n from '../i18n.js';
 // 暂时禁用 ChartService 导入，使用内联简化版本
 
@@ -16,30 +20,51 @@ class WeatherController {
     this.storageService = storageService;
     this.useMockAPI = useMockAPI;
     this.i18n = i18n; // 需求14：添加i18n实例
+
+    // 读取单位设置
+    this.tempUnit = localStorage.getItem('temp_unit') || 'celsius';
+    this.windUnit = localStorage.getItem('wind_unit') || 'kmh';
     
     if (useMockAPI) {
       this.windyAPIService = new MockWindyAPIService(apiKey || 'mock-api-key');
     } else {
       this.windyAPIService = apiKey ? new WindyAPIService(apiKey) : null;
     }
-    
-    // 使用简化的内联 ChartService
+
+    // 任务18：初始化Windy地图服务
+    // 注意：Windy地图API需要真实API密钥，mock模式下不初始化
+    this.windyMapService = (!useMockAPI && apiKey) ? new WindyMapService(apiKey) : null;
+
+    // 任务19：初始化周边火烧云服务
+    this.surroundingPointsService = new SurroundingPointsService();
+    this.radarChartService = new RadarChartService();
+    this.surroundingRadius = 100; // 默认半径100公里
+    this.surroundingData = null;
+
+    // 使用简化的内联 ChartService（使用动态单位）
     this.chartService = {
-      renderTemperatureChart: (data, id) => this._renderSimpleChart(data, id, 'temp', this.i18n.t('weather.temperature'), '°C', '#ff6b6b'),
+      renderTemperatureChart: (data, id) => {
+        const unit = this.tempUnit === 'fahrenheit' ? '°F' : '°C';
+        return this._renderSimpleChart(data, id, 'temp', this.i18n.t('weather.temperature'), unit, '#ff6b6b');
+      },
       renderPrecipitationChart: (data, id) => this._renderSimpleChart(data, id, 'precipitation', this.i18n.t('weather.precipitation'), 'mm', '#4dabf7'),
       renderHumidityChart: (data, id) => this._renderSimpleChart(data, id, 'humidity', this.i18n.t('weather.humidity'), '%', '#51cf66'),
-      renderWindChart: (data, id) => this._renderSimpleChart(data, id, 'windSpeed', this.i18n.t('weather.windSpeed'), 'km/h', '#748ffc'),
+      renderWindChart: (data, id) => {
+        const unit = this.windUnit === 'ms' ? 'm/s' : 'km/h';
+        return this._renderSimpleChart(data, id, 'windSpeed', this.i18n.t('weather.windSpeed'), unit, '#748ffc');
+      },
       renderPressureChart: (data, id) => this._renderSimpleChart(data, id, 'pressure', this.i18n.t('weather.pressure'), 'hPa', '#ffa94d'),
       renderCloudChart: (data, id) => this._renderSimpleChart(data, id, 'cloudCover', this.i18n.t('weather.cloudCover'), '%', '#868e96')
     };
     
     this.currentWeatherData = null;
     this.currentLocation = null;
-    
+
     // 需求11：视图状态管理
-    this.currentView = 'overview'; // 'overview' 或 'hourly'
+    this.currentView = 'overview'; // 'overview', 'hourly' 或 'map'
     this.selectedDay = 'today'; // 'today' 或 'tomorrow'
     this.selectedParameter = 'temp'; // 'temp', 'precip', 'humidity', 'wind', 'pressure', 'clouds'
+    this.isMapInitialized = false; // 任务18：地图初始化状态
   }
 
   /**
@@ -123,7 +148,13 @@ class WeatherController {
     // 更新主要天气信息
     const tempMainEl = document.getElementById('current-temp-main');
     if (tempMainEl) {
-      tempMainEl.textContent = currentWeather.temp.toFixed(1);
+      tempMainEl.textContent = this.getConvertedTemp(currentWeather.temp).toFixed(1);
+    }
+
+    // 更新温度单位
+    const tempUnitEl = document.getElementById('current-temp-unit');
+    if (tempUnitEl) {
+      tempUnitEl.textContent = this.tempUnit === 'fahrenheit' ? '°F' : '°C';
     }
 
     // 更新天气图标
@@ -156,7 +187,7 @@ class WeatherController {
       elements.cloudCover.textContent = `${currentWeather.cloudCover.toFixed(0)}%`;
     }
     if (elements.windSpeed) {
-      elements.windSpeed.textContent = `${currentWeather.windSpeed.toFixed(1)} km/h`;
+      elements.windSpeed.textContent = this.formatWindSpeed(currentWeather.windSpeed);
     }
     if (elements.pressure) {
       elements.pressure.textContent = `${currentWeather.pressure.toFixed(0)} hPa`;
@@ -179,6 +210,12 @@ class WeatherController {
 
     // 需求11：自动渲染7天概览（默认视图）
     this.renderWeeklyOverview(weatherData);
+
+    // 任务18.3.1：位置联动 - 更新地图位置
+    if (location && this.windyMapService && this.isMapInitialized) {
+      this.windyMapService.moveTo(location.lat, location.lon);
+      console.log('[WeatherController] 地图已移动到:', location.name);
+    }
 
     console.log('[WeatherController] 天气显示已更新');
   }
@@ -426,40 +463,120 @@ class WeatherController {
   }
 
   /**
-   * 切换视图（概览/详细）
-   * @param {string} view - 'overview' 或 'hourly'
+   * 切换视图（概览/详细/地图）
+   * @param {string} view - 'overview', 'hourly' 或 'map'
    */
   switchView(view) {
     this.currentView = view;
 
     const overviewView = document.getElementById('weekly-overview');
     const hourlyView = document.getElementById('hourly-forecast');
+    const mapView = document.getElementById('map-forecast');
     const overviewBtn = document.getElementById('overview-btn');
     const hourlyBtn = document.getElementById('hourly-btn');
+    const mapBtn = document.getElementById('map-btn');
+
+    // 隐藏所有视图
+    if (overviewView) overviewView.classList.add('hidden');
+    if (hourlyView) hourlyView.classList.add('hidden');
+    if (mapView) mapView.classList.add('hidden');
+
+    // 移除所有按钮的active状态
+    if (overviewBtn) overviewBtn.classList.remove('active');
+    if (hourlyBtn) hourlyBtn.classList.remove('active');
+    if (mapBtn) mapBtn.classList.remove('active');
 
     if (view === 'overview') {
       if (overviewView) overviewView.classList.remove('hidden');
-      if (hourlyView) hourlyView.classList.add('hidden');
       if (overviewBtn) overviewBtn.classList.add('active');
-      if (hourlyBtn) hourlyBtn.classList.remove('active');
 
       // 渲染概览
       if (this.currentWeatherData) {
         this.renderWeeklyOverview(this.currentWeatherData);
       }
-    } else {
-      if (overviewView) overviewView.classList.add('hidden');
+    } else if (view === 'hourly') {
       if (hourlyView) hourlyView.classList.remove('hidden');
-      if (overviewBtn) overviewBtn.classList.remove('active');
       if (hourlyBtn) hourlyBtn.classList.add('active');
 
       // 渲染详细预报
       if (this.currentWeatherData) {
         this.renderHourlyForecast(this.currentWeatherData, this.selectedDay);
       }
+    } else if (view === 'map') {
+      // 任务18：切换到地图视图
+      if (mapView) mapView.classList.remove('hidden');
+      if (mapBtn) mapBtn.classList.add('active');
+
+      // 初始化并显示地图
+      this.initializeAndShowMap();
     }
 
     console.log(`[WeatherController] 切换到 ${view} 视图`);
+  }
+
+  /**
+   * 任务18：初始化并显示地图
+   */
+  async initializeAndShowMap() {
+    if (!this.windyMapService) {
+      const mapError = document.getElementById('map-error');
+      const mapLoading = document.getElementById('map-loading');
+      if (mapLoading) mapLoading.classList.add('hidden');
+
+      if (mapError) {
+        mapError.textContent = this.i18n.t('errors.mockModeMapNotSupported') || '地图功能仅在真实API模式下可用。请配置有效的Windy API密钥。';
+        mapError.classList.remove('hidden');
+      }
+      console.warn('[WeatherController] Windy地图服务未初始化（mock模式）');
+      return;
+    }
+
+    if (this.isMapInitialized) {
+      // 地图已初始化，移动到当前位置
+      if (this.currentLocation) {
+        this.windyMapService.moveTo(this.currentLocation.lat, this.currentLocation.lon, 8);
+      }
+      return;
+    }
+
+    const mapLoading = document.getElementById('map-loading');
+    const mapError = document.getElementById('map-error');
+
+    try {
+      // 显示加载指示器
+      if (mapLoading) mapLoading.classList.remove('hidden');
+      if (mapError) mapError.classList.add('hidden');
+
+      // 初始化地图
+      const mapOptions = {
+        lat: this.currentLocation ? this.currentLocation.lat : 35.6762,
+        lon: this.currentLocation ? this.currentLocation.lon : 139.6503,
+        zoom: 6
+      };
+
+      await this.windyMapService.initializeMap('map-container', mapOptions);
+      this.isMapInitialized = true;
+
+      // 隐藏加载指示器
+      if (mapLoading) mapLoading.classList.add('hidden');
+
+      // 任务18.3.3：初始化时间显示
+      const currentTime = this.windyMapService.getTimestamp();
+      if (currentTime) {
+        this.updateMapTimeDisplay(currentTime);
+      }
+
+      console.log('[WeatherController] 地图初始化成功');
+    } catch (error) {
+      console.error('[WeatherController] 地图初始化失败:', error);
+
+      // 隐藏加载指示器，显示错误
+      if (mapLoading) mapLoading.classList.add('hidden');
+      if (mapError) {
+        mapError.textContent = this.i18n.t('errors.mapInitFailed', { error: error.message }) || `地图加载失败: ${error.message}`;
+        mapError.classList.remove('hidden');
+      }
+    }
   }
 
   /**
@@ -515,6 +632,101 @@ class WeatherController {
   }
 
   /**
+   * 任务18.3.2：切换地图图层
+   * @param {string} layer - 'wind', 'temp', 'clouds', 'rain'
+   */
+  switchMapLayer(layer) {
+    // 更新按钮状态
+    const layerButtons = document.querySelectorAll('.layer-btn');
+    layerButtons.forEach(btn => {
+      if (btn.dataset.layer === layer) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    // 更改地图叠加层
+    if (this.windyMapService && this.isMapInitialized) {
+      this.windyMapService.changeOverlay(layer);
+      console.log(`[WeatherController] 地图图层已切换到: ${layer}`);
+    } else {
+      console.log(`[WeatherController] 地图未初始化，无法切换图层`);
+    }
+  }
+
+  /**
+   * 任务18.3.3：设置地图时间到现在
+   */
+  setMapTimeToNow() {
+    if (!this.windyMapService || !this.isMapInitialized) {
+      console.log('[WeatherController] 地图未初始化，无法设置时间');
+      return;
+    }
+
+    const now = Date.now();
+    this.windyMapService.setTimestamp(now);
+    this.updateMapTimeDisplay(now);
+    console.log('[WeatherController] 地图时间已设置为现在');
+  }
+
+  /**
+   * 任务18.3.3：设置地图时间到日落
+   */
+  setMapTimeToSunset() {
+    if (!this.windyMapService || !this.isMapInitialized) {
+      console.log('[WeatherController] 地图未初始化，无法设置时间');
+      return;
+    }
+
+    // 从当前天气数据中获取日落时间
+    if (!this.currentWeatherData || !this.currentWeatherData.sunset) {
+      this.uiManager.showError('无法获取日落时间数据');
+      return;
+    }
+
+    const sunsetTime = new Date(this.currentWeatherData.sunset).getTime();
+    this.windyMapService.setTimestamp(sunsetTime);
+    this.updateMapTimeDisplay(sunsetTime);
+    console.log('[WeatherController] 地图时间已设置为日:', this.currentWeatherData.sunset);
+  }
+
+  /**
+   * 任务18.3.3：设置地图时间到日出
+   */
+  setMapTimeToSunrise() {
+    if (!this.windyMapService || !this.isMapInitialized) {
+      console.log('[WeatherController] 地图未初始化，无法设置时间');
+      return;
+    }
+
+    // 从当前天气数据中获取日出时间
+    if (!this.currentWeatherData || !this.currentWeatherData.sunrise) {
+      this.uiManager.showError('无法获取日出时间数据');
+      return;
+    }
+
+    const sunriseTime = new Date(this.currentWeatherData.sunrise).getTime();
+    this.windyMapService.setTimestamp(sunriseTime);
+    this.updateMapTimeDisplay(sunriseTime);
+    console.log('[WeatherController] 地图时间已设置为日出:', this.currentWeatherData.sunrise);
+  }
+
+  /**
+   * 任务18.3.3：更新地图时间显示
+   * @param {number} timestamp - Unix时间戳（毫秒）
+   */
+  updateMapTimeDisplay(timestamp) {
+    const timeDisplay = document.getElementById('map-current-time');
+    if (timeDisplay) {
+      const date = new Date(timestamp);
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      timeDisplay.textContent = `${hours}:${minutes}`;
+    }
+  }
+
+  /**
    * 渲染简化折线图（内联版本，避免模块导入问题）
    * @private
    */
@@ -522,7 +734,17 @@ class WeatherController {
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    const values = hourlyData.map(d => d[param]);
+    // 根据参数类型转换数据值
+    const getConvertedValue = (value, param) => {
+      if (param === 'temp') {
+        return this.getConvertedTemp(value);
+      } else if (param === 'windSpeed') {
+        return this.getConvertedWindSpeed(value);
+      }
+      return value;
+    };
+
+    const values = hourlyData.map(d => getConvertedValue(d[param], param));
     const min = Math.min(...values);
     const max = Math.max(...values);
     const range = max - min || 1;
@@ -536,7 +758,7 @@ class WeatherController {
 
     // 生成数据点坐标
     const points = hourlyData.map((d, i) => {
-      const value = d[param];
+      const value = getConvertedValue(d[param], param);
       const x = padding.left + (i / (hourlyData.length - 1)) * contentWidth;
       const y = padding.top + contentHeight - ((value - min) / range) * contentHeight;
       return { x, y, value, time: new Date(d.timestamp).getHours() };
@@ -654,6 +876,251 @@ class WeatherController {
         // 重新渲染概览
         this.renderWeeklyOverview(this.currentWeatherData);
       }
+    }
+  }
+
+  /**
+   * 更新温度单位
+   * @param {string} unit - 新的温度单位 ('celsius' | 'fahrenheit')
+   */
+  updateTemperatureUnit(unit) {
+    if (!['celsius', 'fahrenheit'].includes(unit)) {
+      console.warn('[WeatherController] Invalid temperature unit:', unit);
+      return;
+    }
+
+    this.tempUnit = unit;
+    localStorage.setItem('temp_unit', unit);
+
+    // 如果有当前天气数据，重新渲染显示
+    if (this.currentWeatherData) {
+      this.updateWeatherDisplay(this.currentWeatherData, this.currentLocation);
+    }
+  }
+
+  /**
+   * 更新风速单位
+   * @param {string} unit - 新的风速单位 ('kmh' | 'ms')
+   */
+  updateWindUnit(unit) {
+    if (!['kmh', 'ms'].includes(unit)) {
+      console.warn('[WeatherController] Invalid wind speed unit:', unit);
+      return;
+    }
+
+    this.windUnit = unit;
+    localStorage.setItem('wind_unit', unit);
+
+    // 如果有当前天气数据，重新渲染显示
+    if (this.currentWeatherData) {
+      this.updateWeatherDisplay(this.currentWeatherData, this.currentLocation);
+    }
+  }
+
+  /**
+   * 获取转换后的温度值
+   * @param {number} temp - 原始温度值（摄氏度）
+   * @returns {number} 转换后的温度值
+   */
+  getConvertedTemp(temp) {
+    if (this.tempUnit === 'fahrenheit') {
+      return UnitConverter.celsiusToFahrenheit(temp, 1);
+    }
+    return temp;
+  }
+
+  /**
+   * 获取转换后的风速值
+   * @param {number} windSpeed - 原始风速值（公里/小时）
+   * @returns {number} 转换后的风速值
+   */
+  getConvertedWindSpeed(windSpeed) {
+    if (this.windUnit === 'ms') {
+      return UnitConverter.kmhToMs(windSpeed, 1);
+    }
+    return windSpeed;
+  }
+
+  /**
+   * 格式化温度显示（带单位）
+   * @param {number} temp - 温度值
+   * @returns {string} 格式化后的温度字符串
+   */
+  formatTemperature(temp) {
+    return UnitConverter.formatTemperature(this.getConvertedTemp(temp), this.tempUnit, 1);
+  }
+
+  /**
+   * 格式化风速显示（带单位）
+   * @param {number} windSpeed - 风速值
+   * @returns {string} 格式化后的风速字符串
+   */
+  formatWindSpeed(windSpeed) {
+    return UnitConverter.formatWindSpeed(this.getConvertedWindSpeed(windSpeed), this.windUnit, 1);
+  }
+
+  // ========== 任务19：周边火烧云可视化 ==========
+
+  /**
+   * 任务19：获取并显示周边火烧云数据
+   * @param {Object} location - 当前位置对象
+   * @param {number} radius - 探测半径（公里），默认使用当前设置的半径
+   */
+  async fetchSurroundingData(location, radius = this.surroundingRadius) {
+    if (!location || !location.lat || !location.lon) {
+      console.warn('[WeatherController] 无效的位置，无法获取周边数据');
+      return;
+    }
+
+    console.log(`[WeatherController] 获取周边火烧云数据，半径: ${radius}km`);
+
+    // 显示加载状态
+    const loadingEl = document.getElementById('surrounding-loading');
+    const errorEl = document.getElementById('surrounding-error');
+    const contentEl = document.getElementById('surrounding-content');
+
+    if (loadingEl) loadingEl.classList.remove('hidden');
+    if (errorEl) errorEl.classList.add('hidden');
+    if (contentEl) contentEl.style.display = 'none';
+
+    try {
+      // 需要预测控制器来计算评分
+      const { default: PredictionController } = await import('./PredictionController.js');
+      const predictionController = new PredictionController(this.storageService);
+
+      // 获取周边数据
+      const data = await this.surroundingPointsService.getSurroundingData(
+        location,
+        radius,
+        // 天气数据获取函数
+        async (loc) => {
+          const weatherData = await this.fetchWeather(loc, true);
+          return weatherData[0]; // 返回当前天气数据
+        },
+        // 预测计算函数
+        (weatherData) => {
+          if (!weatherData) return null;
+          return predictionController.predictionService.calculatePrediction(weatherData);
+        }
+      );
+
+      this.surroundingData = data;
+
+      // 渲染雷达图
+      this.renderSurroundingRadar(data);
+
+      // 隐藏加载状态，显示内容
+      if (loadingEl) loadingEl.classList.add('hidden');
+      if (contentEl) contentEl.style.display = 'block';
+
+      console.log('[WeatherController] 周边火烧云数据获取完成');
+    } catch (error) {
+      console.error('[WeatherController] 获取周边火烧云数据失败:', error);
+
+      if (loadingEl) loadingEl.classList.add('hidden');
+      if (errorEl) {
+        errorEl.textContent = this.i18n.t('surrounding.error') || error.message;
+        errorEl.classList.remove('hidden');
+      }
+    }
+  }
+
+  /**
+   * 任务19：渲染周边火烧云雷达图
+   * @param {Object} data - 周边数据对象
+   */
+  renderSurroundingRadar(data) {
+    if (!data || !data.points) {
+      console.warn('[WeatherController] 无周边数据可渲染');
+      return;
+    }
+
+    // 准备雷达图数据
+    const points = data.points.map(p => ({
+      label: p.label,
+      name: p.name,
+      distance: p.distance,
+      score: p.score || 0
+    }));
+
+    // 渲染雷达图
+    const success = this.radarChartService.renderRadarChart('radar-chart', points, {
+      width: 400,
+      height: 400,
+      radius: 150,
+      showLabels: true,
+      showScores: true,
+      showDistance: true,
+      onClick: (point, index) => this.handleSurroundingPointClick(point, index)
+    });
+
+    if (success) {
+      // 显示推荐观赏方向
+      this.renderBestDirections(data.points);
+    }
+  }
+
+  /**
+   * 任务19：渲染推荐观赏方向
+   * @param {Object[]} points - 周边点数据数组
+   */
+  renderBestDirections(points) {
+    const container = document.getElementById('best-directions-list');
+    if (!container) return;
+
+    // 筛选评分>=60的点
+    const bestPoints = points.filter(p => p.score >= 60).sort((a, b) => b.score - a.score);
+
+    if (bestPoints.length === 0) {
+      container.innerHTML = `<p style="color: #666;">${this.i18n.t('surrounding.noData') || '当前周边区域火烧云观赏条件一般'}</p>`;
+      return;
+    }
+
+    container.innerHTML = bestPoints.map(p => {
+      let qualityClass = '';
+      let qualityText = '';
+
+      if (p.score >= 80) {
+        qualityClass = 'color: #4caf50;';
+        qualityText = this.i18n.t('surrounding.legend.excellent') || '优秀';
+      } else if (p.score >= 60) {
+        qualityClass = 'color: #ffc107;';
+        qualityText = this.i18n.t('surrounding.legend.good') || '良好';
+      }
+
+      return `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border-color, #e0e0e0);">
+          <span>${p.name} (${p.label})</span>
+          <span style="${qualityClass} font-weight: 600;">${p.score}分 - ${qualityText}</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  /**
+   * 任务19：处理周边点点击事件
+   * @param {Object} point - 点击的点数据
+   * @param {number} index - 点索引
+   */
+  handleSurroundingPointClick(point, index) {
+    console.log('[WeatherController] 点击周边点:', point);
+
+    // 可以在这里添加显示详细信息的功能
+    // 例如：显示该方向的详细气象数据、观赏建议等
+    alert(`${point.name}方向\n评分: ${point.score}分\n距离: ${point.distance}公里`);
+  }
+
+  /**
+   * 任务19：设置周边探测半径
+   * @param {number} radius - 半径（公里）
+   */
+  setSurroundingRadius(radius) {
+    this.surroundingRadius = radius;
+    console.log(`[WeatherController] 周边半径已设置为: ${radius}km`);
+
+    // 如果有当前位置，重新获取周边数据
+    if (this.currentLocation) {
+      this.fetchSurroundingData(this.currentLocation, radius);
     }
   }
 }

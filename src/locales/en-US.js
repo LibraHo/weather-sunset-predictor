@@ -65,6 +65,7 @@ export default {
     // Weather overview
     overview: 'Overview',
     hourly: 'Hourly Forecast',
+    mapView: 'Map Forecast',
     daysOverview: '{{days}}-Day Overview',
     precipChance: '{{prob}}% precip',
     dataInfo: 'ℹ️ Data source provides {{hours}} hours forecast data (~{{days}} days). Consider using other weather data sources for more days.'
@@ -278,6 +279,39 @@ export default {
     forecast: 'Future Forecast'
   },
 
+  // Task 19: Surrounding fire cloud visualization
+  surrounding: {
+    title: 'Surrounding Fire Cloud Analysis',
+    radius: 'Detection Radius',
+    radiusUnit: 'km',
+    directions: {
+      N: 'North',
+      NE: 'Northeast',
+      E: 'East',
+      SE: 'Southeast',
+      S: 'South',
+      SW: 'Southwest',
+      W: 'West',
+      NW: 'Northwest'
+    },
+    loading: 'Loading surrounding weather data...',
+    error: 'Failed to load surrounding data',
+    noData: 'No surrounding data available',
+    clickToView: 'Click direction to view details',
+    viewingDirection: 'Viewing {{direction}} direction',
+    distanceInfo: '{{distance}}km',
+    recommendation: 'Viewing Recommendation',
+    bestDirections: 'Best Viewing Directions',
+    scoreBreakdown: 'Direction Scores',
+    legend: {
+      excellent: 'Excellent (≥80)',
+      good: 'Good (60-79)',
+      fair: 'Fair (40-59)',
+      poor: 'Poor (<40)'
+    },
+    fallbackMessage: 'Your browser does not support Canvas, using table view'
+  },
+
   // Time
   time: {
     today: 'Today',
@@ -383,7 +417,13 @@ export default {
     tempFahrenheit: 'Fahrenheit (℉)',
     windSpeedUnit: 'Wind Speed Unit',
     windKmh: 'km/h',
-    windMs: 'm/s'
+    windMs: 'm/s',
+    // Default location
+    defaultLocation: 'Default Location',
+    noDefaultLocation: 'No default location set',
+    setAsDefault: 'Set as Default',
+    currentDefaultLocation: 'Current Default Location',
+    defaultLocationHint: 'Set the location to load automatically on startup'
   },
 
   // Language selector
@@ -442,6 +482,26 @@ export default {
     trend: 'Trend',
     time: 'Time',
     unit: 'Unit'
+  },
+
+  // Task 18: Map layers
+  map: {
+    title: 'Map Forecast',
+    layers: {
+      wind: 'Wind',
+      temp: 'Temperature',
+      clouds: 'Clouds',
+      rain: 'Rain'
+    },
+    // Task 18.3.3: Time control
+    currentTime: 'Current Time:',
+    timeNow: 'Now',
+    timeSunset: 'Sunset',
+    timeSunrise: 'Sunrise',
+    timeHint: '💡 Tip: You can also use the forecast timeline at the bottom of the map',
+    loading: 'Loading map...',
+    error: 'Failed to load map',
+    mockNotSupported: 'Map functionality is only available in real API mode'
   },
 
   // Loading states

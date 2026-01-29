@@ -196,6 +196,30 @@
 
 .setting-label input[type="checkbox"] {
   margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* 复选框标签内的文本不换行 */
+.setting-label span,
+.setting-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* 复选框容器 */
+.setting-item label:has(input[type="checkbox"]) {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  gap: 8px;
+}
+
+.setting-item label:has(input[type="checkbox"]) span {
+  white-space: normal;
+  word-wrap: break-word;
+  flex: 1;
 }
 
 .setting-description {

@@ -12,6 +12,7 @@
 import ErrorHandler from '../utils/ErrorHandler.js';
 import i18n from '../i18n.js';
 import { LanguageSelector } from '../components/LanguageSelector.js';
+import ThemeService from '../services/ThemeService.js';
 
 class AppController {
   /**
@@ -31,6 +32,9 @@ class AppController {
 
     // 需求14：初始化I18n系统
     this.i18n = i18n;
+
+    // 任务17：初始化主题服务
+    this.themeService = new ThemeService();
 
     // 任务16：设置面板
     this.settingsPanel = null;
@@ -55,6 +59,11 @@ class AppController {
       console.log('[AppController] 初始化I18n系统...');
       await this.i18n.init();
       console.log('[AppController] I18n系统初始化完成，当前语言:', this.i18n.getLanguage());
+
+      // 任务17.2：初始化主题系统
+      console.log('[AppController] 初始化主题系统...');
+      this.initializeTheme();
+      this.setupThemeListener();
 
       // 检查API密钥是否已配置
       const apiKey = this.storageService.getAPIKey();
@@ -83,16 +92,21 @@ class AppController {
       // 需求12：请求通知权限（如果用户启用了通知）
       await this.requestNotificationPermissionIfEnabled();
 
-      // 尝试加载上次使用的位置（仅当天气控制器可用时）
+      // 任务17.3：尝试加载默认位置，如果不存在则加载上次使用的位置（仅当天气控制器可用时）
       if (this.weatherController && this.predictionController) {
+        // 优先加载默认位置
+        const defaultLocation = this.storageService.getDefaultLocation();
         const lastLocation = this.storageService.getLastLocation();
-        if (lastLocation) {
+        const locationToLoad = defaultLocation || lastLocation;
+
+        if (locationToLoad) {
           try {
-            await this.handleLocationChange(lastLocation);
+            await this.handleLocationChange(locationToLoad);
+            console.log('[AppController] 已加载位置:', locationToLoad.name, defaultLocation ? '(默认位置)' : '(上次位置)');
           } catch (error) {
-            // 加载上次位置失败不应阻止应用启动（需求：14.1）
-            console.warn('加载上次位置失败:', error.message);
-            console.log('[AppController] 跳过上次位置加载，继续启动应用');
+            // 加载位置失败不应阻止应用启动（需求：14.1）
+            console.warn('加载位置失败:', error.message);
+            console.log('[AppController] 跳过位置加载，继续启动应用');
             // 不要显示错误消息，只记录日志，避免干扰用户体验
           }
         }
@@ -188,6 +202,14 @@ class AppController {
         this.predictionController.updatePredictionDisplay(predictions);
       } else {
         console.warn('[AppController] 没有生成预测数据，跳过预测显示');
+      }
+
+      // 任务19：获取周边火烧云数据（异步，不阻塞主流程）
+      if (this.weatherController && this.weatherController.fetchSurroundingData) {
+        this.weatherController.fetchSurroundingData(location).catch(err => {
+          console.warn('[AppController] 获取周边火烧云数据失败:', err.message);
+          // 不显示错误消息，因为这是可选功能
+        });
       }
 
       // 隐藏加载状态
@@ -367,6 +389,22 @@ class AppController {
       this.refreshUIText();
     });
 
+    // 任务17：监听温度单位切换事件
+    window.addEventListener('temperatureUnitChanged', (event) => {
+      console.log('[AppController] 温度单位已切换为:', event.detail.unit);
+      if (this.weatherController) {
+        this.weatherController.updateTemperatureUnit(event.detail.unit);
+      }
+    });
+
+    // 任务17：监听风速单位切换事件
+    window.addEventListener('windUnitChanged', (event) => {
+      console.log('[AppController] 风速单位已切换为:', event.detail.unit);
+      if (this.weatherController) {
+        this.weatherController.updateWindUnit(event.detail.unit);
+      }
+    });
+
     // 绑定API密钥模态框事件（如果还没绑定）
     this.bindAPIKeyModalEvents();
 
@@ -386,7 +424,7 @@ class AppController {
     console.log('[AppController] 初始化设置面板...');
     import('../components/SettingsPanel.js').then(module => {
       const SettingsPanel = module.default;
-      this.settingsPanel = new SettingsPanel();
+      this.settingsPanel = new SettingsPanel(this.storageService, this.themeService);
       this.settingsPanel.init();
       console.log('[AppController] 设置面板初始化完成');
     }).catch(error => {
@@ -523,6 +561,55 @@ class AppController {
       });
     }
 
+    // 任务18：设置地图视图切换按钮事件
+    const mapBtn = document.getElementById('map-btn');
+    if (mapBtn) {
+      mapBtn.addEventListener('click', () => {
+        if (this.weatherController) {
+          this.weatherController.switchView('map');
+        }
+      });
+    }
+
+    // 任务18.3.2：设置地图图层切换按钮事件
+    const layerButtons = document.querySelectorAll('.layer-btn');
+    layerButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const layer = e.target.dataset.layer;
+        if (this.weatherController && layer) {
+          this.weatherController.switchMapLayer(layer);
+        }
+      });
+    });
+
+    // 任务18.3.3：设置地图时间控制按钮事件
+    const mapTimeNowBtn = document.getElementById('map-time-now');
+    if (mapTimeNowBtn) {
+      mapTimeNowBtn.addEventListener('click', () => {
+        if (this.weatherController) {
+          this.weatherController.setMapTimeToNow();
+        }
+      });
+    }
+
+    const mapTimeSunsetBtn = document.getElementById('map-time-sunset');
+    if (mapTimeSunsetBtn) {
+      mapTimeSunsetBtn.addEventListener('click', () => {
+        if (this.weatherController) {
+          this.weatherController.setMapTimeToSunset();
+        }
+      });
+    }
+
+    const mapTimeSunriseBtn = document.getElementById('map-time-sunrise');
+    if (mapTimeSunriseBtn) {
+      mapTimeSunriseBtn.addEventListener('click', () => {
+        if (this.weatherController) {
+          this.weatherController.setMapTimeToSunrise();
+        }
+      });
+    }
+
     // 需求11：设置日期切换按钮事件
     const todayBtn = document.getElementById('today-btn');
     if (todayBtn) {
@@ -549,6 +636,22 @@ class AppController {
         const param = btn.dataset.param;
         if (param && this.weatherController) {
           this.weatherController.switchParameter(param);
+        }
+      });
+    });
+
+    // 任务19：设置周边半径选择按钮事件
+    const radiusButtons = document.querySelectorAll('.radius-btn');
+    radiusButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const radius = parseInt(e.target.dataset.radius);
+        if (radius && this.weatherController) {
+          // 更新按钮状态
+          radiusButtons.forEach(b => b.classList.remove('active'));
+          e.target.classList.add('active');
+
+          // 设置新的半径
+          this.weatherController.setSurroundingRadius(radius);
         }
       });
     });
@@ -1421,6 +1524,35 @@ class AppController {
     if (historyDropdown) {
       historyDropdown.classList.add('hidden');
     }
+  }
+
+  /**
+   * 任务17.2：初始化主题系统
+   * 主题已由ThemeService在构造函数中初始化，这里只需要记录日志
+   * @private
+   */
+  initializeTheme() {
+    console.log('[AppController] 当前主题:', this.themeService.getTheme());
+  }
+
+  /**
+   * 任务17.2：设置主题变化监听器
+   * @private
+   */
+  setupThemeListener() {
+    // 监听主题切换事件
+    window.addEventListener('themeChanged', (event) => {
+      const theme = event.detail.theme;
+      console.log('[AppController] 主题已切换为:', theme);
+
+      // 使用ThemeService应用主题
+      this.themeService.setTheme(theme);
+
+      // 重新初始化设置面板以应用新主题样式
+      if (this.settingsPanel && this.settingsPanel.isOpen) {
+        this.settingsPanel.refreshTranslations();
+      }
+    });
   }
 
   /**

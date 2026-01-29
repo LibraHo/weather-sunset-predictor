@@ -65,6 +65,7 @@ export default {
     // Weather overview
     overview: 'Resumen',
     hourly: 'Pronóstico por Hora',
+    mapView: 'Pronóstico en Mapa',
     daysOverview: 'Resumen de {{days}} Días',
     precipChance: '{{prob}}% precip',
     dataInfo: 'ℹ️ La fuente de datos proporciona {{hours}} horas de datos de pronóstico (~{{days}} días). Considere usar otras fuentes de datos del clima para más días.'
@@ -250,6 +251,39 @@ export default {
     forecast: 'Pronóstico Futuro'
   },
 
+  // Tarea 19: Visualización de nubes de fuego circundantes
+  surrounding: {
+    title: 'Análisis de Nubes de Fuego Circundantes',
+    radius: 'Radio de Detección',
+    radiusUnit: 'km',
+    directions: {
+      N: 'Norte',
+      NE: 'Noreste',
+      E: 'Este',
+      SE: 'Sureste',
+      S: 'Sur',
+      SW: 'Suroeste',
+      W: 'Oeste',
+      NW: 'Noroeste'
+    },
+    loading: 'Cargando datos meteorológicos circundantes...',
+    error: 'Error al cargar datos circundantes',
+    noData: 'No hay datos circundantes disponibles',
+    clickToView: 'Haga clic en dirección para ver detalles',
+    viewingDirection: 'Viendo dirección {{direction}}',
+    distanceInfo: '{{distance}}km',
+    recommendation: 'Recomendación de Visualización',
+    bestDirections: 'Mejores Direcciones para Ver',
+    scoreBreakdown: 'Puntuaciones por Dirección',
+    legend: {
+      excellent: 'Excelente (≥80)',
+      good: 'Bueno (60-79)',
+      fair: 'Regular (40-59)',
+      poor: 'Pobre (<40)'
+    },
+    fallbackMessage: 'Su navegador no soporta Canvas, usando vista de tabla'
+  },
+
   // Time
   time: {
     today: 'Hoy',
@@ -355,7 +389,13 @@ export default {
     tempFahrenheit: 'Fahrenheit (℉)',
     windSpeedUnit: 'Unidad de Velocidad del Viento',
     windKmh: 'km/h',
-    windMs: 'm/s'
+    windMs: 'm/s',
+    // Ubicación predeterminada
+    defaultLocation: 'Ubicación Predeterminada',
+    noDefaultLocation: 'Sin ubicación predeterminada',
+    setAsDefault: 'Establecer como Predeterminada',
+    currentDefaultLocation: 'Ubicación Predeterminada Actual',
+    defaultLocationHint: 'Establecer la ubicación para cargar automáticamente al inicio'
   },
 
   // Language selector
@@ -414,6 +454,26 @@ export default {
     trend: 'Tendencia',
     time: 'Hora',
     unit: 'Unidad'
+  },
+
+  // Tarea 18: Capas del mapa
+  map: {
+    title: 'Pronóstico en Mapa',
+    layers: {
+      wind: 'Viento',
+      temp: 'Temperatura',
+      clouds: 'Nubes',
+      rain: 'Lluvia'
+    },
+    // Tarea 18.3.3: Control de tiempo
+    currentTime: 'Hora Actual:',
+    timeNow: 'Ahora',
+    timeSunset: 'Atardecer',
+    timeSunrise: 'Amanecer',
+    timeHint: '💡 Consejo: También puedes usar la línea de tiempo de pronóstico en la parte inferior del mapa',
+    loading: 'Cargando mapa...',
+    error: 'Error al cargar el mapa',
+    mockNotSupported: 'La funcionalidad del mapa solo está disponible en modo API real'
   },
 
   // Loading states

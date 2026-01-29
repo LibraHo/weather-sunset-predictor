@@ -607,9 +607,9 @@ class StorageService {
 
   /**
    * 清除全部历史记录
-   * 
+   *
    * @returns {boolean} 是否成功清除
-   * 
+   *
    * 需求：13.1, 13.2, 13.3, 13.6, 13.9 - 清除全部历史记录
    */
   clearSearchHistory() {
@@ -619,6 +619,85 @@ class StorageService {
       return true;
     } catch (error) {
       console.error('[StorageService] 清除搜索历史失败:', error);
+      return false;
+    }
+  }
+
+  // ========== 任务17.3：默认位置管理 ==========
+
+  /**
+   * 保存默认位置
+   *
+   * @param {Location} location - 位置对象
+   * @returns {boolean} 是否成功保存
+   *
+   * 需求：17.7, 17.8 - 保存用户默认位置
+   */
+  saveDefaultLocation(location) {
+    if (!location || !location.lat || !location.lon) {
+      console.error('[StorageService] 无效的位置对象');
+      return false;
+    }
+
+    try {
+      const locationData = {
+        lat: location.lat,
+        lon: location.lon,
+        name: location.name || '未命名位置'
+      };
+
+      localStorage.setItem('default_location', JSON.stringify(locationData));
+      console.log('[StorageService] 默认位置已保存:', locationData.name);
+      return true;
+    } catch (error) {
+      console.error('[StorageService] 保存默认位置失败:', error);
+      return false;
+    }
+  }
+
+  /**
+   * 获取默认位置
+   *
+   * @returns {Location|null} 默认位置对象，如果未设置则返回null
+   *
+   * 需求：17.7, 17.8 - 获取用户默认位置
+   */
+  getDefaultLocation() {
+    try {
+      const data = localStorage.getItem('default_location');
+      if (!data) {
+        return null;
+      }
+
+      const locationData = JSON.parse(data);
+
+      return {
+        lat: locationData.lat,
+        lon: locationData.lon,
+        name: locationData.name,
+        isValid: function() {
+          return this.lat >= -90 && this.lat <= 90 &&
+                 this.lon >= -180 && this.lon <= 180;
+        }
+      };
+    } catch (error) {
+      console.error('[StorageService] 读取默认位置失败:', error);
+      return null;
+    }
+  }
+
+  /**
+   * 清除默认位置
+   *
+   * @returns {boolean} 是否成功清除
+   */
+  clearDefaultLocation() {
+    try {
+      localStorage.removeItem('default_location');
+      console.log('[StorageService] 默认位置已清除');
+      return true;
+    } catch (error) {
+      console.error('[StorageService] 清除默认位置失败:', error);
       return false;
     }
   }

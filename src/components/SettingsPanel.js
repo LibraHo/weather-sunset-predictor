@@ -7,10 +7,12 @@
 import i18n from '../i18n.js';
 
 class SettingsPanel {
-  constructor() {
+  constructor(storageService, themeService) {
     this.panel = null;
     this.isOpen = false;
     this.i18n = i18n;
+    this.storageService = storageService;
+    this.themeService = themeService;
   }
 
   /**
@@ -159,6 +161,15 @@ class SettingsPanel {
                   </select>
                 </div>
               </div>
+
+              <div class="setting-item">
+                <label class="setting-label">${this.i18n.t('settings.defaultLocation')}</label>
+                <div class="setting-description">
+                  <span id="default-location-display">${this.i18n.t('settings.noDefaultLocation')}</span>
+                </div>
+                <div id="default-location-list"></div>
+                <small class="setting-hint">${this.i18n.t('settings.defaultLocationHint')}</small>
+              </div>
             </div>
           </div>
         </div>
@@ -304,7 +315,7 @@ class SettingsPanel {
     }
 
     // 加载主题设置
-    const theme = localStorage.getItem('app_theme') || 'light';
+    const theme = this.themeService.getTheme();
     const themeSelect = document.getElementById('theme-select');
     if (themeSelect) {
       themeSelect.value = theme;
@@ -322,6 +333,119 @@ class SettingsPanel {
     const windUnitSelect = document.getElementById('wind-unit-select');
     if (windUnitSelect) {
       windUnitSelect.value = windUnit;
+    }
+
+    // 任务17.3：加载默认位置
+    this.loadDefaultLocation();
+  }
+
+  /**
+   * 任务17.3：加载并显示默认位置
+   */
+  loadDefaultLocation() {
+    // 显示当前默认位置
+    const defaultLocation = this.storageService.getDefaultLocation();
+    const defaultLocationDisplay = document.getElementById('default-location-display');
+    if (defaultLocationDisplay) {
+      if (defaultLocation) {
+        defaultLocationDisplay.textContent = `⭐ ${defaultLocation.name}`;
+      } else {
+        defaultLocationDisplay.textContent = this.i18n.t('settings.noDefaultLocation');
+      }
+    }
+
+    // 渲染收藏位置列表
+    this.renderFavoriteLocationsList();
+  }
+
+  /**
+   * 任务17.3：渲染收藏位置列表，每个位置带有"设为默认"按钮
+   */
+  renderFavoriteLocationsList() {
+    const container = document.getElementById('default-location-list');
+    if (!container) {
+      return;
+    }
+
+    const favorites = this.storageService.getFavoriteLocations();
+
+    if (favorites.length === 0) {
+      container.innerHTML = `<p style="color: var(--text-secondary, #666); font-size: 14px; margin-top: 8px;">
+        ${this.i18n.t('favorites.noFavorites')}
+      </p>`;
+      return;
+    }
+
+    // 获取当前默认位置
+    const defaultLocation = this.storageService.getDefaultLocation();
+
+    // 渲染位置列表
+    container.innerHTML = favorites.map((fav, index) => {
+      const isDefault = defaultLocation &&
+        Math.abs(fav.lat - defaultLocation.lat) < 0.001 &&
+        Math.abs(fav.lon - defaultLocation.lon) < 0.001;
+
+      return `
+        <div class="favorite-location-item" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-top: 1px solid var(--border-color, #e0e0e0);">
+          <span style="flex: 1;">${fav.name}</span>
+          ${isDefault
+            ? `<span style="color: var(--accent-color, #4CAF50); font-size: 12px;">⭐ ${this.i18n.t('settings.currentDefaultLocation')}</span>`
+            : `<button class="set-default-btn" data-index="${index}" style="
+                padding: 4px 12px;
+                background: transparent;
+                border: 1px solid var(--accent-color, #4CAF50);
+                color: var(--accent-color, #4CAF50);
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 12px;
+                transition: all 0.2s;
+              ">${this.i18n.t('settings.setAsDefault')}</button>`
+          }
+        </div>
+      `;
+    }).join('');
+
+    // 绑定"设为默认"按钮事件
+    container.querySelectorAll('.set-default-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const index = parseInt(e.target.dataset.index);
+        this.handleSetDefaultLocation(index);
+      });
+    });
+
+    // 添加按钮悬停效果
+    const style = document.createElement('style');
+    style.textContent = `
+      .set-default-btn:hover {
+        background: var(--accent-color, #4CAF50) !important;
+        color: white !important;
+      }
+    `;
+    if (!document.querySelector('style[data-settings-panel-default-loc]')) {
+      style.setAttribute('data-settings-panel-default-loc', 'true');
+      document.head.appendChild(style);
+    }
+  }
+
+  /**
+   * 任务17.3：处理设置默认位置
+   */
+  handleSetDefaultLocation(favoriteIndex) {
+    const favorites = this.storageService.getFavoriteLocations();
+    if (!favorites[favoriteIndex]) {
+      console.warn('[SettingsPanel] 无效的收藏位置索引:', favoriteIndex);
+      return;
+    }
+
+    const location = favorites[favoriteIndex];
+    const success = this.storageService.saveDefaultLocation(location);
+
+    if (success) {
+      console.log('[SettingsPanel] 默认位置已设置:', location.name);
+      // 重新加载默认位置显示
+      this.loadDefaultLocation();
+    } else {
+      console.error('[SettingsPanel] 设置默认位置失败');
     }
   }
 
@@ -464,32 +588,22 @@ class SettingsPanel {
    * 处理主题变更
    */
   handleThemeChange(theme) {
-    localStorage.setItem('app_theme', theme);
-    this.applyTheme(theme);
+    // 使用ThemeService设置主题
+    this.themeService.setTheme(theme);
+
+    // 触发自定义事件，通知 AppController 主题已更改
+    window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme } }));
+
     console.log('[SettingsPanel] 主题已切换为:', theme);
   }
 
   /**
-   * 应用主题
+   * 应用主题（用于实时预览）
+   * 注意：现在使用ThemeService，此方法保留用于兼容性，但已不再需要
    */
   applyTheme(theme) {
-    const body = document.body;
-
-    // 移除所有主题类
-    body.classList.remove('theme-light', 'theme-dark', 'theme-auto');
-
-    // 应用新主题
-    if (theme === 'auto') {
-      body.classList.add('theme-auto');
-      // 根据系统主题设置
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        body.classList.add('theme-dark');
-      } else {
-        body.classList.add('theme-light');
-      }
-    } else {
-      body.classList.add(`theme-${theme}`);
-    }
+    // 使用ThemeService应用主题
+    this.themeService.setTheme(theme);
   }
 
   /**
@@ -498,7 +612,9 @@ class SettingsPanel {
   handleTempUnitChange(unit) {
     localStorage.setItem('temp_unit', unit);
     console.log('[SettingsPanel] 温度单位已切换为:', unit);
-    // TODO: 刷新数据以应用新单位
+
+    // 触发自定义事件，通知 WeatherController 刷新数据
+    window.dispatchEvent(new CustomEvent('temperatureUnitChanged', { detail: { unit } }));
   }
 
   /**
@@ -507,7 +623,9 @@ class SettingsPanel {
   handleWindUnitChange(unit) {
     localStorage.setItem('wind_unit', unit);
     console.log('[SettingsPanel] 风速单位已切换为:', unit);
-    // TODO: 刷新数据以应用新单位
+
+    // 触发自定义事件，通知 WeatherController 刷新数据
+    window.dispatchEvent(new CustomEvent('windUnitChanged', { detail: { unit } }));
   }
 }
 
