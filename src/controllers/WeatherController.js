@@ -1096,12 +1096,12 @@ class WeatherController {
 
     // 渲染雷达图（传入容器ID而不是canvas ID）
     const success = this.radarChartService.renderRadarChart('radar-chart-container', points, {
-      width: 400,
-      height: 400,
-      radius: 150,
+      width: 280,
+      height: 280,
+      radius: 100,
       showLabels: true,
       showScores: true,
-      showDistance: true,
+      showDistance: false,  // 紧凑模式下不显示距离
       onClick: (point, index) => this.handleSurroundingPointClick(point, index)
     });
 
