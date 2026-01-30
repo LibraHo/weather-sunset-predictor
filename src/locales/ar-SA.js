@@ -245,7 +245,8 @@ export default {
     apiKeyInvalid: 'مفتاح API غير صالح، يرجى التحقق من التكوين',
     timeout: 'انتهت مهلة الطلب، يرجى إعادة المحاولة',
     unknownError: 'حدث خطأ غير معروف، يرجى إعادة المحاولة',
-    locationError: 'فشل تحديد الموقع، جرب اسمًا آخر'
+    locationError: 'فشل تحديد الموقع، جرب اسمًا آخر',
+    mapInitFailed: 'فشل تهيئة الخريطة'
   },
   settings: {
     title: 'الإعدادات',

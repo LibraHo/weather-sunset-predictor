@@ -1017,11 +1017,13 @@ class WeatherController {
 
     console.log(`[WeatherController] 获取周边火烧云数据，半径: ${radius}km`);
 
-    // 显示加载状态
+    // 显示section和加载状态
+    const sectionEl = document.getElementById('surrounding-section');
     const loadingEl = document.getElementById('surrounding-loading');
     const errorEl = document.getElementById('surrounding-error');
     const contentEl = document.getElementById('surrounding-content');
 
+    if (sectionEl) sectionEl.classList.remove('hidden');
     if (loadingEl) loadingEl.classList.remove('hidden');
     if (errorEl) errorEl.classList.add('hidden');
     if (contentEl) contentEl.style.display = 'none';

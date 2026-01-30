@@ -112,26 +112,42 @@ class WindyService {
     const hours = timestamps.length;
 
     // 构造天气数据数组
-    const weatherData = timestamps.map((timestamp, index) => ({
-      timestamp,
-      temp: this.getValue(data, 'temp-surface', index),
-      humidity: this.getValue(data, 'rh-surface', index),
-      cloudCover: this.getValue(data, 'clouds-surface', index),
-      windSpeed: this.calculateWindSpeed(
-        this.getValue(data, 'wind_u-surface', index),
-        this.getValue(data, 'wind_v-surface', index)
-      ),
-      windDirection: this.calculateWindDirection(
-        this.getValue(data, 'wind_u-surface', index),
-        this.getValue(data, 'wind_v-surface', index)
-      ),
-      pressure: this.getValue(data, 'pressure-surface', index),
-      visibility: this.getValue(data, 'visibility-surface', index),
-      precipitation: this.getValue(data, 'precip-surface', index),
-      lowClouds: this.getValue(data, 'lclouds-surface', index),
-      midClouds: this.getValue(data, 'mclouds-surface', index),
-      highClouds: this.getValue(data, 'hclouds-surface', index)
-    }));
+    const weatherData = timestamps.map((timestamp, index) => {
+      const lowClouds = this.getValue(data, 'lclouds-surface', index) || 0;
+      const midClouds = this.getValue(data, 'mclouds-surface', index) || 0;
+      const highClouds = this.getValue(data, 'hclouds-surface', index) || 0;
+      // 计算总云量：取三层云量的最大值或加权平均
+      const cloudCover = Math.min(100, Math.max(lowClouds, midClouds, highClouds, (lowClouds + midClouds + highClouds) / 3));
+      
+      // 温度转换：Windy API 返回开尔文，转换为摄氏度
+      const tempKelvin = this.getValue(data, 'temp-surface', index);
+      const tempCelsius = tempKelvin !== null ? tempKelvin - 273.15 : null;
+      
+      // 气压转换：Windy API 返回帕斯卡，转换为百帕
+      const pressurePa = this.getValue(data, 'pressure-surface', index);
+      const pressureHPa = pressurePa !== null ? pressurePa / 100 : null;
+      
+      return {
+        timestamp,
+        temp: tempCelsius,
+        humidity: this.getValue(data, 'rh-surface', index),
+        cloudCover: cloudCover,
+        windSpeed: this.calculateWindSpeed(
+          this.getValue(data, 'wind_u-surface', index),
+          this.getValue(data, 'wind_v-surface', index)
+        ),
+        windDirection: this.calculateWindDirection(
+          this.getValue(data, 'wind_u-surface', index),
+          this.getValue(data, 'wind_v-surface', index)
+        ),
+        pressure: pressureHPa,
+        visibility: 10, // 默认能见度10km（Windy API不提供此数据）
+        precipitation: this.getValue(data, 'convPrecip-surface', index) || 0,
+        lowClouds: lowClouds,
+        midClouds: midClouds,
+        highClouds: highClouds
+      };
+    });
 
     return {
       hours,

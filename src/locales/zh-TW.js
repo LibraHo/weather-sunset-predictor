@@ -296,7 +296,8 @@ export default {
     apiKeyInvalid: 'API金鑰無效，請檢查配置',
     timeout: '請求逾時，請重試',
     unknownError: '發生未知錯誤，請重試',
-    locationError: '位置解析失敗，請嘗試其他位置名稱'
+    locationError: '位置解析失敗，請嘗試其他位置名稱',
+    mapInitFailed: '地圖初始化失敗'
   },
 
   // 設定

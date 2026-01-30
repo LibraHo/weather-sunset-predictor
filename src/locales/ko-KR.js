@@ -317,7 +317,8 @@ export default {
     apiKeyInvalid: '유효하지 않은 API 키, 구성을 확인하세요',
     timeout: '요청 시간 초과, 다시 시도하세요',
     unknownError: '알 수 없는 오류 발생, 다시 시도하세요',
-    locationError: '위치 확인 실패, 다른 이름을 시도하세요'
+    locationError: '위치 확인 실패, 다른 이름을 시도하세요',
+    mapInitFailed: '지도 초기화 실패'
   },
 
   // Settings

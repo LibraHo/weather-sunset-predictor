@@ -358,7 +358,8 @@ export default {
     apiKeyInvalid: 'Invalid API key, please check configuration',
     timeout: 'Request timeout, please retry',
     unknownError: 'Unknown error occurred, please retry',
-    locationError: 'Location resolution failed, please try a different name'
+    locationError: 'Location resolution failed, please try a different name',
+    mapInitFailed: 'Map initialization failed'
   },
 
   // Settings

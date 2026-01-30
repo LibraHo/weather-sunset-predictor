@@ -403,7 +403,8 @@ export default {
     apiKeyInvalid: 'Khóa API không hợp lệ, vui lòng kiểm tra cấu hình',
     timeout: 'Yêu cầu quá hạn, vui lòng thử lại',
     unknownError: 'Lỗi không xác định, vui lòng thử lại',
-    locationError: 'Giải quyết vị trí thất bại, vui lòng thử tên khác'
+    locationError: 'Giải quyết vị trí thất bại, vui lòng thử tên khác',
+    mapInitFailed: 'Khởi tạo bản đồ thất bại'
   },
   loading: {
     data: 'Đang tải dữ liệu...',

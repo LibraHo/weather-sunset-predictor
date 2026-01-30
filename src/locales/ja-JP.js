@@ -286,7 +286,8 @@ export default {
     apiKeyInvalid: '無効なAPIキーです。設定を確認してください',
     timeout: 'リクエストがタイムアウトしました。再試行してください',
     unknownError: '不明なエラーが発生しました。再試行してください',
-    locationError: '位置情報の解決に失敗しました。別の名前でお試しください'
+    locationError: '位置情報の解決に失敗しました。別の名前でお試しください',
+    mapInitFailed: '地図の初期化に失敗しました'
   },
   // 設定
   settings: {

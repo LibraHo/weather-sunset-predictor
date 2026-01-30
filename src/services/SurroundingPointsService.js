@@ -5,7 +5,7 @@
  * 需求：19.1, 19.2, 19.3
  */
 
-import { Location } from '../models/Location.js';
+import Location from '../models/Location.js';
 
 class SurroundingPointsService {
   constructor() {

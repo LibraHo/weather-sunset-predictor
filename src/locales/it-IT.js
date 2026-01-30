@@ -245,7 +245,8 @@ export default {
     apiKeyInvalid: 'Chiave API non valida, controlla la configurazione',
     timeout: 'Timeout della richiesta, riprova',
     unknownError: 'Errore sconosciuto, riprova',
-    locationError: 'Risoluzione posizione fallita, prova con un nome diverso'
+    locationError: 'Risoluzione posizione fallita, prova con un nome diverso',
+    mapInitFailed: 'Inizializzazione della mappa non riuscita'
   },
   settings: {
     title: 'Impostazioni',

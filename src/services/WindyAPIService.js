@@ -16,7 +16,7 @@ class WindyAPIService {
 
     // 配置选项
     this.useProxy = options.useProxy || false; // 是否使用后端代理
-    this.proxyURL = options.proxyURL || 'http://localhost:3000'; // 后端代理URL
+    this.proxyURL = options.proxyURL || 'http://localhost:3001'; // 后端代理URL
 
     console.log(`[WindyAPIService] 初始化模式: ${this.useProxy ? '后端代理' : '直连'}`);
     if (this.useProxy) {

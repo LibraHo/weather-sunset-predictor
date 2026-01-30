@@ -60,7 +60,12 @@ const USE_MOCK_API = config && typeof config.useMockAPI !== 'undefined'
 console.log('[App] API密钥状态:', savedAPIKey ? '已配置' : '未配置');
 console.log('[App] Mock API:', USE_MOCK_API ? '启用' : '禁用');
 
-const weatherController = new WeatherController(storageService, savedAPIKey, USE_MOCK_API);
+// 读取API模式设置（后端代理或直连）
+const apiMode = localStorage.getItem('api_mode') || 'proxy';
+const useProxy = apiMode === 'proxy';
+console.log('[App] API模式:', useProxy ? '后端代理' : '直连');
+
+const weatherController = new WeatherController(storageService, savedAPIKey, USE_MOCK_API, useProxy);
 const predictionController = new PredictionController(storageService);
 
 const appController = new AppController(

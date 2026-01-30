@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+// 触发重启
 require('dotenv').config();
 
 const weatherRoutes = require('./routes/weather');
@@ -20,6 +21,20 @@ app.use(requestLogger); // Custom request logging
 // Routes
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// 获取地图API Key配置
+app.get('/api/config/map-key', (req, res) => {
+  const mapKey = process.env.WINDY_MAP_API_KEY;
+  if (!mapKey || mapKey === 'your_map_api_key_here') {
+    return res.status(500).json({
+      error: {
+        code: 'MAP_KEY_NOT_CONFIGURED',
+        message: '地图API密钥未配置'
+      }
+    });
+  }
+  res.json({ mapKey });
 });
 
 app.use('/api/weather', weatherRoutes);

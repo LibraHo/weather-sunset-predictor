@@ -330,7 +330,8 @@ export default {
     apiKeyInvalid: 'Clave API inválida, verifique la configuración',
     timeout: 'Tiempo de espera agotado, reintente',
     unknownError: 'Ocurrió un error desconocido, reintente',
-    locationError: 'Falló la resolución de ubicación, pruebe con un nombre diferente'
+    locationError: 'Falló la resolución de ubicación, pruebe con un nombre diferente',
+    mapInitFailed: 'Fallo en la inicialización del mapa'
   },
 
   // Settings

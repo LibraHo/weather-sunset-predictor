@@ -248,7 +248,8 @@ export default {
     apiKeyInvalid: 'Clé API invalide, veuillez vérifier la configuration',
     timeout: 'Délai d\'attente de la requête, veuillez réessayer',
     unknownError: 'Erreur inconnue, veuillez réessayer',
-    locationError: 'Échec de la résolution de l\'emplacement, essayez un autre nom'
+    locationError: 'Échec de la résolution de l\'emplacement, essayez un autre nom',
+    mapInitFailed: 'Échec de l\'initialisation de la carte'
   },
   settings: {
     title: 'Paramètres',
