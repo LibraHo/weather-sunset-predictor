@@ -352,6 +352,59 @@ export default {
     time: 'الوقت',
     unit: 'الوحدة'
   },
+
+  // 任务18：地图图层
+  map: {
+    title: 'تنبؤات الخريطة',
+    layers: {
+      wind: 'رياح',
+      temp: 'درجة الحرارة',
+      clouds: 'السحب',
+      rain: 'مطر'
+    },
+    currentTime: 'الوقت الحالي：',
+    timeNow: 'الآن',
+    timeSunset: 'الغروب',
+    timeSunrise: 'الشروق',
+    timeHint: '💡 تلميح: يمكنك أيضًا سحب الخط الزمني أسفل الخريطة لضبط الوقت',
+    loading: 'جاري تحميل الخريطة...',
+    error: 'فشل تحميل الخريطة',
+    mockNotSupported: 'وظيفة الخريطة متاحة فقط في وضع API الحقيقي'
+  },
+
+  // 任务19：周边火烧云
+  surrounding: {
+    title: 'تحليل السحب الحمراء المحيطة',
+    radius: 'نطاق الكشف',
+    radiusUnit: 'كم',
+    directions: {
+      N: 'شمال',
+      NE: 'شمال شرق',
+      E: 'شرق',
+      SE: 'جنوب شرق',
+      S: 'جنوب',
+      SW: 'جنوب غرب',
+      W: 'غرب',
+      NW: 'شمال غرب'
+    },
+    loading: 'جاري جلب بيانات الطقس المحيطة...',
+    error: 'فشل في جلب البيانات المحيطة',
+    noData: 'لا توجد بيانات محيطة',
+    clickToView: 'انقر على الاتجاه لرؤية التفاصيل',
+    viewingDirection: 'عرض الاتجاه {{direction}}',
+    distanceInfo: '{{distance}} كم',
+    recommendation: 'توصيات المشاهدة',
+    bestDirections: 'الاتجاهات الموصى بها',
+    scoreBreakdown: 'النتائج حسب الاتجاه',
+    legend: {
+      excellent: 'ممتاز（≥80 نقطة）',
+      good: 'جيد（60-79 نقطة）',
+      fair: 'متوسط（40-59 نقطة）',
+      poor: 'ضعيف（<40 نقطة）'
+    },
+    fallbackMessage: 'متصفحك لا يدعم Canvas، عرض الجدول'
+  },
+
   loading: {
     data: 'جاري تحميل البيانات...',
     weather: 'جاري الحصول على بيانات الطقس...',

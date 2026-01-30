@@ -403,6 +403,58 @@ export default {
     unit: '単位'
   },
 
+  // 任务18：地图图层
+  map: {
+    title: '地図予測',
+    layers: {
+      wind: '風',
+      temp: '気温',
+      clouds: '雲',
+      rain: '雨'
+    },
+    currentTime: '現在時刻：',
+    timeNow: '現在',
+    timeSunset: '日没',
+    timeSunrise: '日出',
+    timeHint: '💡 ヒント: 地図下の予測タイムラインをドラッグして時間を調整することもできます',
+    loading: '地図読み込み中...',
+    error: '地図の読み込みに失敗しました',
+    mockNotSupported: '地図機能は実際のAPIモードでのみ使用可能です'
+  },
+
+  // 任务19：周边火烧云
+  surrounding: {
+    title: '周辺焼き雲分析',
+    radius: '探知半径',
+    radiusUnit: 'キロメートル',
+    directions: {
+      N: '北',
+      NE: '北東',
+      E: '東',
+      SE: '南東',
+      S: '南',
+      SW: '南西',
+      W: '西',
+      NW: '北西'
+    },
+    loading: '周辺気象データを取得中...',
+    error: '周辺データの取得に失敗しました',
+    noData: '周辺データはありません',
+    clickToView: '方位をクリックして詳細を表示',
+    viewingDirection: '{{direction}}方向を表示',
+    distanceInfo: '{{distance}}km',
+    recommendation: '観覧アドバイス',
+    bestDirections: 'おすすめ観覧方向',
+    scoreBreakdown: '各方位のスコア',
+    legend: {
+      excellent: '優秀（≥80点）',
+      good: '良好（60-79点）',
+      fair: '普通（40-59点）',
+      poor: '不佳（<40点）'
+    },
+    fallbackMessage: 'ブラウザがCanvasをサポートしていないため、テーブルで表示'
+  },
+
   // ローディング状態
   loading: {
     data: 'データを読み込み中...',

@@ -352,6 +352,59 @@ export default {
     time: 'Ora',
     unit: 'Unità'
   },
+
+  // 任务18：地图图层
+  map: {
+    title: 'Previsione sulla mappa',
+    layers: {
+      wind: 'Vento',
+      temp: 'Temperatura',
+      clouds: 'Nuvole',
+      rain: 'Pioggia'
+    },
+    currentTime: 'Ora attuale：',
+    timeNow: 'Ora',
+    timeSunset: 'Tramonto',
+    timeSunrise: 'Alba',
+    timeHint: '💡 Suggerimento: Puoi anche trascinare la linea temporale sotto la mappa per regolare l\'ora',
+    loading: 'Caricamento mappa...',
+    error: 'Errore nel caricamento della mappa',
+    mockNotSupported: 'La funzione mappa è disponibile solo in modalità API reale'
+  },
+
+  // 任务19：周边火烧云
+  surrounding: {
+    title: 'Analisi nuvole rosse circostanti',
+    radius: 'Raggio di rilevamento',
+    radiusUnit: 'km',
+    directions: {
+      N: 'Nord',
+      NE: 'Nord-Est',
+      E: 'Est',
+      SE: 'Sud-Est',
+      S: 'Sud',
+      SW: 'Sud-Ovest',
+      W: 'Ovest',
+      NW: 'Nord-Ovest'
+    },
+    loading: 'Recupero dati meteorologici circostanti...',
+    error: 'Errore nel recupero dei dati circostanti',
+    noData: 'Nessun dato circostante disponibile',
+    clickToView: 'Clicca su una direzione per vedere i dettagli',
+    viewingDirection: 'Vedi direzione {{direction}}',
+    distanceInfo: '{{distance}} km',
+    recommendation: 'Consigli per l\'osservazione',
+    bestDirections: 'Direzioni consigliate',
+    scoreBreakdown: 'Punteggi per direzione',
+    legend: {
+      excellent: 'Eccellente（≥80 punti）',
+      good: 'Buono（60-79 punti）',
+      fair: 'Discreto（40-59 punti）',
+      poor: 'Scarso（<40 punti）'
+    },
+    fallbackMessage: 'Il tuo browser non supporta Canvas, visualizzazione in tabella'
+  },
+
   loading: {
     data: 'Caricamento dati...',
     weather: 'Ottenimento dati meteo...',

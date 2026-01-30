@@ -342,6 +342,59 @@ export default {
     time: 'Thời Gian',
     unit: 'Đơn Vị'
   },
+
+  // 任务18：地图图层
+  map: {
+    title: 'Dự báo bản đồ',
+    layers: {
+      wind: 'Gió',
+      temp: 'Nhiệt độ',
+      clouds: 'Mây',
+      rain: 'Mưa'
+    },
+    currentTime: 'Thời gian hiện tại：',
+    timeNow: 'Bây giờ',
+    timeSunset: 'Hoàng hôn',
+    timeSunrise: 'Bình minh',
+    timeHint: '💡 Mẹo: Bạn cũng có thể kéo thanh thời gian dự báo dưới bản đồ để điều chỉnh thời gian',
+    loading: 'Đang tải bản đồ...',
+    error: 'Không thể tải bản đồ',
+    mockNotSupported: 'Chức năng bản đồ chỉ khả dụng trong chế độ API thực'
+  },
+
+  // 任务19：周边火烧云
+  surrounding: {
+    title: 'Phân tích mây đỏ lân cận',
+    radius: 'Bán kính thăm dò',
+    radiusUnit: 'km',
+    directions: {
+      N: 'Bắc',
+      NE: 'Đông Bắc',
+      E: 'Đông',
+      SE: 'Đông Nam',
+      S: 'Nam',
+      SW: 'Tây Nam',
+      W: 'Tây',
+      NW: 'Tây Bắc'
+    },
+    loading: 'Đang lấy dữ liệu khí tượng lân cận...',
+    error: 'Không thể lấy dữ liệu lân cận',
+    noData: 'Chưa có dữ liệu lân cận',
+    clickToView: 'Nhấp vào hướng để xem chi tiết',
+    viewingDirection: 'Xem hướng {{direction}}',
+    distanceInfo: '{{distance}}km',
+    recommendation: 'Lời khuyên ngắm nhìn',
+    bestDirections: 'Hướng ngắm nhìn đề xuất',
+    scoreBreakdown: 'Điểm số các hướng',
+    legend: {
+      excellent: 'Xuất sắc（≥80 điểm）',
+      good: 'Tốt（60-79 điểm）',
+      fair: 'Trung bình（40-59 điểm）',
+      poor: 'Kém（<40 điểm）'
+    },
+    fallbackMessage: 'Trình duyệt không hỗ trợ Canvas, hiển thị bằng bảng'
+  },
+
   errors: {
     title: 'Lỗi',
     networkError: 'Lỗi kết nối mạng, vui lòng kiểm tra cài đặt mạng của bạn',

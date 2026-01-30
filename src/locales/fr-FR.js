@@ -405,6 +405,58 @@ export default {
     unit: 'Unité'
   },
 
+  // 任务18：地图图层
+  map: {
+    title: 'Prévisions sur la carte',
+    layers: {
+      wind: 'Vent',
+      temp: 'Température',
+      clouds: 'Nuages',
+      rain: 'Pluie'
+    },
+    currentTime: 'Heure actuelle：',
+    timeNow: 'Maintenant',
+    timeSunset: 'Coucher du soleil',
+    timeSunrise: 'Lever du soleil',
+    timeHint: '💡 Astuce : Vous pouvez également faire glisser la ligne temporelle sous la carte pour ajuster l\'heure',
+    loading: 'Chargement de la carte...',
+    error: 'Échec du chargement de la carte',
+    mockNotSupported: 'La fonction de carte n\'est disponible qu\'en mode API réel'
+  },
+
+  // 任务19：周边火烧云
+  surrounding: {
+    title: 'Analyse des nuages rouges environnants',
+    radius: 'Rayon de détection',
+    radiusUnit: 'km',
+    directions: {
+      N: 'Nord',
+      NE: 'Nord-Est',
+      E: 'Est',
+      SE: 'Sud-Est',
+      S: 'Sud',
+      SW: 'Sud-Ouest',
+      W: 'Ouest',
+      NW: 'Nord-Ouest'
+    },
+    loading: 'Récupération des données météo environnantes...',
+    error: 'Échec de la récupération des données environnantes',
+    noData: 'Aucune donnée environnante disponible',
+    clickToView: 'Cliquez sur une direction pour voir les détails',
+    viewingDirection: 'Voir la direction {{direction}}',
+    distanceInfo: '{{distance}} km',
+    recommendation: 'Conseils d\'observation',
+    bestDirections: 'Directions recommandées',
+    scoreBreakdown: 'Scores par direction',
+    legend: {
+      excellent: 'Excellent（≥80 points）',
+      good: 'Bon（60-79 points）',
+      fair: 'Moyen（40-59 points）',
+      poor: 'Médiocre（<40 points）'
+    },
+    fallbackMessage: 'Votre navigateur ne prend pas en charge Canvas, affichage en tableau'
+  },
+
   // Other
   other: {
     copyright: '© 2026 Prédicteur de Coucher de Soleil',

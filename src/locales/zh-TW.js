@@ -416,6 +416,58 @@ export default {
     unit: '單位'
   },
 
+  // 任务18：地图图层
+  map: {
+    title: '地圖預測',
+    layers: {
+      wind: '風',
+      temp: '溫度',
+      clouds: '雲',
+      rain: '降水'
+    },
+    currentTime: '當前時間：',
+    timeNow: '現在',
+    timeSunset: '日落',
+    timeSunrise: '日出',
+    timeHint: '💡 提示：也可以使用地圖下方的預測時間軸拖動時間',
+    loading: '地圖加載中...',
+    error: '地圖加載失敗',
+    mockNotSupported: '地圖功能僅在真實API模式下可用'
+  },
+
+  // 任务19：周邊火燒雲
+  surrounding: {
+    title: '周邊火燒雲分析',
+    radius: '探測半徑',
+    radiusUnit: '公里',
+    directions: {
+      N: '北',
+      NE: '東北',
+      E: '東',
+      SE: '東南',
+      S: '南',
+      SW: '西南',
+      W: '西',
+      NW: '西北'
+    },
+    loading: '正在獲取周邊氣象數據...',
+    error: '獲取周邊數據失敗',
+    noData: '暫無周邊數據',
+    clickToView: '點擊方位查看詳情',
+    viewingDirection: '查看{{direction}}方向',
+    distanceInfo: '{{distance}}公里',
+    recommendation: '觀賞建議',
+    bestDirections: '推薦觀賞方向',
+    scoreBreakdown: '各方位評分',
+    legend: {
+      excellent: '優秀（≥80分）',
+      good: '良好（60-79分）',
+      fair: '一般（40-59分）',
+      poor: '較差（<40分）'
+    },
+    fallbackMessage: '您的瀏覽器不支持Canvas，使用表格顯示'
+  },
+
   // 載入狀態
   loading: {
     data: '正在載入資料...',

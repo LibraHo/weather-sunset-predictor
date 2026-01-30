@@ -437,6 +437,58 @@ export default {
     unit: '단위'
   },
 
+  // 任务18：地图图层
+  map: {
+    title: '지도 예측',
+    layers: {
+      wind: '바람',
+      temp: '온도',
+      clouds: '구름',
+      rain: '강수'
+    },
+    currentTime: '현재 시간：',
+    timeNow: '현재',
+    timeSunset: '일몰',
+    timeSunrise: '일출',
+    timeHint: '💡 팁: 지도 아래의 예측 시간축을 드래그하여 시간을 조정할 수도 있습니다',
+    loading: '지도 로딩 중...',
+    error: '지도 로딩 실패',
+    mockNotSupported: '지도 기능은 실제 API 모드에서만 사용 가능합니다'
+  },
+
+  // 任务19：周边火烧云
+  surrounding: {
+    title: '주변 노을 분석',
+    radius: '탐지 반경',
+    radiusUnit: '킬로미터',
+    directions: {
+      N: '북',
+      NE: '북동',
+      E: '동',
+      SE: '남동',
+      S: '남',
+      SW: '남서',
+      W: '서',
+      NW: '북서'
+    },
+    loading: '주변 기상 데이터를 가져오는 중...',
+    error: '주변 데이터 가져오기 실패',
+    noData: '주변 데이터 없음',
+    clickToView: '방향을 클릭하여 세부 정보 보기',
+    viewingDirection: '{{direction}} 방향 보기',
+    distanceInfo: '{{distance}}km',
+    recommendation: '관람 제안',
+    bestDirections: '추천 관람 방향',
+    scoreBreakdown: '각 방향 점수',
+    legend: {
+      excellent: '우수（≥80점）',
+      good: '양호（60-79점）',
+      fair: '보통（40-59점）',
+      poor: '부족（<40점）'
+    },
+    fallbackMessage: '브라우저가 Canvas를 지원하지 않아 표로 표시'
+  },
+
   // Loading states
   loading: {
     data: '데이터 로딩 중...',
