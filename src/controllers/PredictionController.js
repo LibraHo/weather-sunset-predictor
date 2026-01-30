@@ -928,12 +928,12 @@ class PredictionController {
     fireCloudAnalysis = ` 🔥 火烧云指数：${finalScore.toFixed(0)}/100${level}`;
 
     // 组合所有条件
-    fireCloudAnalysis += '<div class="fire-cloud-details" style="margin-top: 10px; padding: 10px; background: #fff3e0; border-radius: 8px;">';
+    fireCloudAnalysis += '<div class="fire-cloud-details" style="margin-top: 10px; padding: 10px; background: rgba(255, 243, 224, 0.3); border-radius: 8px;">';
     fireCloudAnalysis += '<div style="font-weight: 600; margin-bottom: 8px;">🔥 火烧云形成条件分析：</div>';
     fireCloudConditions.forEach(condition => {
       fireCloudAnalysis += `<div style="font-size: 14px; margin: 4px 0;">${condition}</div>`;
     });
-    fireCloudAnalysis += `<div style="margin-top: 8px; font-weight: 600; color: #e65100;">${finalEvaluation}</div>`;
+    fireCloudAnalysis += `<div style="margin-top: 8px; font-weight: 600; color: var(--color-text);">${finalEvaluation}</div>`;
     fireCloudAnalysis += '</div>';
 
     return fireCloudAnalysis;
