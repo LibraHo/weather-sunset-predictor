@@ -10,30 +10,50 @@ import WindyAPIService from '../services/WindyAPIService.js';
 import MockWindyAPIService from '../services/MockWindyAPIService.js';
 import UnitConverter from '../utils/UnitConverter.js';
 import WindyMapService from '../services/WindyMapService.js';
+import MockWindyMapService from '../services/MockWindyMapService.js';
 import SurroundingPointsService from '../services/SurroundingPointsService.js';
 import RadarChartService from '../services/RadarChartService.js';
 import i18n from '../i18n.js';
 // 暂时禁用 ChartService 导入，使用内联简化版本
 
 class WeatherController {
-  constructor(storageService, apiKey, useMockAPI = true) {
+  constructor(storageService, apiKey, useMockAPI = true, useProxy = false) {
     this.storageService = storageService;
     this.useMockAPI = useMockAPI;
+    this.useProxy = useProxy; // 任务：后端代理模式
     this.i18n = i18n; // 需求14：添加i18n实例
 
     // 读取单位设置
     this.tempUnit = localStorage.getItem('temp_unit') || 'celsius';
     this.windUnit = localStorage.getItem('wind_unit') || 'kmh';
-    
+
     if (useMockAPI) {
       this.windyAPIService = new MockWindyAPIService(apiKey || 'mock-api-key');
     } else {
-      this.windyAPIService = apiKey ? new WindyAPIService(apiKey) : null;
+      // 任务：支持后端代理模式
+      // 后端代理模式下不需要真实的API key，使用占位符
+      // 直连模式下必须有API key
+      if (useProxy) {
+        this.windyAPIService = new WindyAPIService('proxy-mode-placeholder', { useProxy });
+      } else if (apiKey) {
+        this.windyAPIService = new WindyAPIService(apiKey, { useProxy: false });
+      } else {
+        this.windyAPIService = null;
+      }
     }
 
     // 任务18：初始化Windy地图服务
-    // 注意：Windy地图API需要真实API密钥，mock模式下不初始化
-    this.windyMapService = (!useMockAPI && apiKey) ? new WindyMapService(apiKey) : null;
+    // 注意：Windy地图API需要真实API密钥，mock模式和后端代理模式使用模拟实现
+    if (useProxy) {
+      // 后端代理模式：使用模拟地图服务
+      this.windyMapService = new MockWindyMapService();
+    } else if (!useMockAPI && apiKey) {
+      // 直连模式：使用真实Windy地图服务
+      this.windyMapService = new WindyMapService(apiKey);
+    } else {
+      // Mock模式：不初始化地图
+      this.windyMapService = null;
+    }
 
     // 任务19：初始化周边火烧云服务
     this.surroundingPointsService = new SurroundingPointsService();
@@ -547,6 +567,29 @@ class WeatherController {
       if (mapLoading) mapLoading.classList.remove('hidden');
       if (mapError) mapError.classList.add('hidden');
 
+      // 从后端获取地图专用的API Key
+      let mapApiKey = this.windyMapService.apiKey; // 默认使用前端配置的key
+
+      // 如果使用后端代理模式，尝试从后端获取地图API Key
+      if (this.windyAPIService && this.windyAPIService.useProxy) {
+        try {
+          console.log('[WeatherController] 从后端获取地图API Key...');
+          const proxyURL = this.windyAPIService.proxyURL || 'http://localhost:3000';
+          const response = await fetch(`${proxyURL}/api/config/map-key`);
+          if (response.ok) {
+            const data = await response.json();
+            mapApiKey = data.mapKey;
+            console.log('[WeatherController] 成功获取地图API Key');
+            // 更新WindyMapService的API Key
+            this.windyMapService.apiKey = mapApiKey;
+          } else {
+            console.warn('[WeatherController] 无法从后端获取地图API Key，使用前端配置的Key');
+          }
+        } catch (error) {
+          console.warn('[WeatherController] 获取地图API Key失败，使用前端配置的Key:', error.message);
+        }
+      }
+
       // 初始化地图
       const mapOptions = {
         lat: this.currentLocation ? this.currentLocation.lat : 35.6762,
@@ -1000,7 +1043,13 @@ class WeatherController {
         // 预测计算函数
         (weatherData) => {
           if (!weatherData) return null;
-          return predictionController.predictionService.calculatePrediction(weatherData);
+          // 传递天气数据、当前日期、经纬度
+          return predictionController.predictionService.calculatePrediction(
+            weatherData,
+            new Date(),
+            location.lat,
+            location.lon
+          );
         }
       );
 
