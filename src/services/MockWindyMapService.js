@@ -110,7 +110,7 @@ class MockWindyMapService {
 
       const currentTimeDisplay = document.createElement('div');
       currentTimeDisplay.innerHTML = `
-        <div style="font-size: 12px; color: #666;">当前时间：</div>
+        <div style="font-size: 12px; color: var(--color-text-light);">当前时间：</div>
         <div style="font-size: 16px; font-weight: bold; color: #333;">
           ${this.getCurrentTimeLabel()}
         </div>
@@ -128,7 +128,7 @@ class MockWindyMapService {
       nowBtn.style.border = '1px solid #ddd';
       nowBtn.style.borderRadius = '4px';
       nowBtn.style.cursor = 'pointer';
-      nowBtn.style.background = 'white';
+      nowBtn.style.background = 'var(--color-card-bg)';
       nowBtn.style.fontSize = '12px';
       nowBtn.onclick = () => this.setTime(0);
       quickButtons.appendChild(nowBtn);
@@ -140,7 +140,7 @@ class MockWindyMapService {
       sunsetBtn.style.border = '1px solid #ddd';
       sunsetBtn.style.borderRadius = '4px';
       sunsetBtn.style.cursor = 'pointer';
-      sunsetBtn.style.background = 'white';
+      sunsetBtn.style.background = 'var(--color-card-bg)';
       sunsetBtn.style.fontSize = '12px';
       sunsetBtn.onclick = () => this.setTime(60);
       quickButtons.appendChild(sunsetBtn);
@@ -152,7 +152,7 @@ class MockWindyMapService {
       sunriseBtn.style.border = '1px solid #ddd';
       sunriseBtn.style.borderRadius = '4px';
       sunriseBtn.style.cursor = 'pointer';
-      sunriseBtn.style.background = 'white';
+      sunriseBtn.style.background = 'var(--color-card-bg)';
       sunriseBtn.style.fontSize = '12px';
       sunriseBtn.onclick = () => this.setTime(720);
       quickButtons.appendChild(sunriseBtn);

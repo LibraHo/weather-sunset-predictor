@@ -370,7 +370,7 @@ class SettingsPanel {
     const favorites = this.storageService.getFavoriteLocations();
 
     if (favorites.length === 0) {
-      container.innerHTML = `<p style="color: var(--text-secondary, #666); font-size: 14px; margin-top: 8px;">
+      container.innerHTML = `<p style="color: var(--color-text-light); font-size: 14px; margin-top: 8px;">
         ${this.i18n.t('favorites.noFavorites')}
       </p>`;
       return;

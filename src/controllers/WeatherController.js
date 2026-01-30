@@ -854,10 +854,10 @@ class WeatherController {
     });
 
     // X轴标题
-    html += `<text x="${chartWidth / 2}" y="${chartHeight - 15}" font-size="14" fill="#666" text-anchor="middle" font-weight="600">${this.i18n.t('charts.time')}</text>`;
+    html += `<text x="${chartWidth / 2}" y="${chartHeight - 15}" font-size="14" fill="var(--color-text-light)" text-anchor="middle" font-weight="600">${this.i18n.t('charts.time')}</text>`;
 
     // Y轴标题
-    html += `<text x="35" y="${chartHeight / 2}" font-size="14" fill="#666" text-anchor="middle" transform="rotate(-90, 35, ${chartHeight / 2})" font-weight="600">${label} (${unit})</text>`;
+    html += `<text x="35" y="${chartHeight / 2}" font-size="14" fill="var(--color-text-light)" text-anchor="middle" transform="rotate(-90, 35, ${chartHeight / 2})" font-weight="600">${label} (${unit})</text>`;
 
     html += `</svg>`;
     html += `</div>`; // 关闭SVG容器div
@@ -1123,7 +1123,7 @@ class WeatherController {
     const bestPoints = points.filter(p => p.score >= 60).sort((a, b) => b.score - a.score);
 
     if (bestPoints.length === 0) {
-      container.innerHTML = `<p style="color: #666;">${this.i18n.t('surrounding.noData') || '当前周边区域火烧云观赏条件一般'}</p>`;
+      container.innerHTML = `<p style="color: var(--color-text-light);">${this.i18n.t('surrounding.noData') || '当前周边区域火烧云观赏条件一般'}</p>`;
       return;
     }
 
