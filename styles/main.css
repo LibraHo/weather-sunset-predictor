@@ -596,7 +596,7 @@ input[type="text"]::placeholder {
   align-items: center;
   gap: var(--spacing-sm);
   padding: var(--spacing-sm);
-  background-color: white;
+  background-color: var(--color-card-bg);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-sm);
 }
@@ -654,7 +654,7 @@ input[type="text"]::placeholder {
 
 .factors-explanation {
   padding: var(--spacing-md);
-  background-color: white;
+  background-color: var(--color-card-bg);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
 }
@@ -2035,7 +2035,7 @@ input[type="text"]::placeholder {
   display: flex;
   flex-direction: column;
   padding: var(--spacing-sm);
-  background-color: white;
+  background-color: var(--color-card-bg);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-sm);
 }
