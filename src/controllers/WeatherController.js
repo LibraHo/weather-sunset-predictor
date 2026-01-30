@@ -813,7 +813,7 @@ class WeatherController {
       return `L ${p.x} ${p.y}`;
     }).join(' ');
 
-    let html = `<div style="padding: 25px; background: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin: 20px auto; max-width: 95%;">`;
+    let html = `<div style="padding: 25px; background: var(--color-card-bg); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin: 20px auto; max-width: 95%;">`;
     html += `<h3 style="text-align: center; margin-bottom: 25px; color: ${color}; font-size: 1.5rem;">${label}${this.i18n.t('charts.trend')}</h3>`;
 
     // SVG图表容器，居中显示
@@ -826,16 +826,16 @@ class WeatherController {
       const y = padding.top + contentHeight - (i / 5) * contentHeight;
 
       // 网格线
-      html += `<line x1="${padding.left}" y1="${y}" x2="${chartWidth - padding.right}" y2="${y}" stroke="#e0e0e0" stroke-width="1.5" stroke-dasharray="5,5"/>`;
+      html += `<line x1="${padding.left}" y1="${y}" x2="${chartWidth - padding.right}" y2="${y}" stroke="var(--color-text-light)" stroke-width="1.5" stroke-dasharray="5,5" stroke-opacity="0.3"/>`;
 
       // Y轴标签
-      html += `<text x="${padding.left - 10}" y="${y + 5}" font-size="13" fill="#555" text-anchor="end" font-weight="500">${value.toFixed(1)} ${unit}</text>`;
+      html += `<text x="${padding.left - 10}" y="${y + 5}" font-size="13" fill="var(--color-text)" text-anchor="end" font-weight="500">${value.toFixed(1)} ${unit}</text>`;
     }
 
     // X轴标签（时间）
     points.forEach((p, i) => {
       if (i % 3 === 0) { // 每3小时显示一次时间标签
-        html += `<text x="${p.x}" y="${chartHeight - padding.bottom + 25}" font-size="13" fill="#555" text-anchor="middle" font-weight="500">${p.time}:00</text>`;
+        html += `<text x="${p.x}" y="${chartHeight - padding.bottom + 25}" font-size="13" fill="var(--color-text)" text-anchor="middle" font-weight="500">${p.time}:00</text>`;
       }
     });
 
@@ -845,7 +845,7 @@ class WeatherController {
     // 数据点和数值标签
     points.forEach((p, i) => {
       // 数据点圆圈
-      html += `<circle cx="${p.x}" cy="${p.y}" r="6" fill="${color}" stroke="white" stroke-width="2.5"/>`;
+      html += `<circle cx="${p.x}" cy="${p.y}" r="6" fill="${color}" stroke="var(--color-card-bg)" stroke-width="2.5"/>`;
 
       // 数值标签（在点上方）
       if (i % 3 === 0) { // 每3小时显示一次数值

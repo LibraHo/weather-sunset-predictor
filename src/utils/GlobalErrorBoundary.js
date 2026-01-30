@@ -197,7 +197,7 @@ class GlobalErrorBoundary {
       }
       
       .error-page-content {
-        background: white;
+        background: var(--color-card-bg);
         border-radius: 8px;
         padding: 40px;
         max-width: 600px;

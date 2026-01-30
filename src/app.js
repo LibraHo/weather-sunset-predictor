@@ -118,7 +118,7 @@ async function initializeApp() {
     if (ErrorHandler.isRecoverable(errorInfo)) {
       const retryBtn = document.createElement('button');
       retryBtn.textContent = '重试';
-      retryBtn.style.cssText = 'margin-top: 12px; padding: 8px 16px; background: white; color: #d32f2f; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;';
+      retryBtn.style.cssText = 'margin-top: 12px; padding: 8px 16px; background: var(--color-card-bg); color: #d32f2f; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;';
       retryBtn.onclick = () => {
         window.location.reload();
       };
