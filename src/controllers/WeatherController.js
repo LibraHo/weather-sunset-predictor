@@ -1094,8 +1094,8 @@ class WeatherController {
       score: p.score || 0
     }));
 
-    // 渲染雷达图
-    const success = this.radarChartService.renderRadarChart('radar-chart', points, {
+    // 渲染雷达图（传入容器ID而不是canvas ID）
+    const success = this.radarChartService.renderRadarChart('radar-chart-container', points, {
       width: 400,
       height: 400,
       radius: 150,
