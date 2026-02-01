@@ -313,6 +313,22 @@ export default {
     fallbackMessage: '您的浏览器不支持Canvas，使用表格显示'
   },
 
+  // 任务20：火烧云覆盖层
+  overlay: {
+    title: '火烧云覆盖层',
+    refresh: '刷新',
+    type: '类型',
+    legend: '图例:',
+    legendLow: '低',
+    legendMedium: '中',
+    legendHigh: '高',
+    hint: '💡 提示：启用覆盖层后，地图上将显示火烧云预测的地理分布热力图',
+    loading: '正在生成覆盖层...',
+    active: '覆盖层已显示',
+    error: '覆盖层生成失败',
+    notAvailable: '覆盖层功能不可用（需要先获取周边数据）'
+  },
+
   // 时间
   time: {
     today: '今天',

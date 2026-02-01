@@ -663,6 +663,51 @@ class AppController {
       });
     });
 
+    // 任务20：设置火烧云覆盖层UI事件
+    const overlayToggle = document.getElementById('firecloud-overlay-toggle');
+    const overlayControls = document.getElementById('overlay-controls');
+    const refreshOverlayBtn = document.getElementById('refresh-overlay-btn');
+    const overlayTypeRadios = document.querySelectorAll('input[name="overlay-type"]');
+
+    if (overlayToggle) {
+      overlayToggle.addEventListener('change', async (e) => {
+        const enabled = e.target.checked;
+
+        // 显示/隐藏控制面板
+        if (overlayControls) {
+          overlayControls.style.display = enabled ? 'block' : 'none';
+        }
+
+        // 启用/禁用刷新按钮
+        if (refreshOverlayBtn) {
+          refreshOverlayBtn.disabled = !enabled;
+        }
+
+        // 切换覆盖层
+        if (this.weatherController) {
+          await this.weatherController.toggleFireCloudOverlay(enabled);
+        }
+      });
+    }
+
+    if (refreshOverlayBtn) {
+      refreshOverlayBtn.addEventListener('click', async () => {
+        if (this.weatherController) {
+          await this.weatherController.refreshFireCloudOverlay();
+        }
+      });
+    }
+
+    // 覆盖层类型切换
+    overlayTypeRadios.forEach(radio => {
+      radio.addEventListener('change', async (e) => {
+        const type = e.target.value;
+        if (this.weatherController) {
+          await this.weatherController.setOverlayType(type);
+        }
+      });
+    });
+
     // 初始化其他UI组件...
 
     // 需求14：初始化完成后刷新界面文本以应用正确的语言

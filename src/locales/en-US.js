@@ -312,6 +312,22 @@ export default {
     fallbackMessage: 'Your browser does not support Canvas, using table view'
   },
 
+  // Task 20: Fire cloud overlay
+  overlay: {
+    title: 'Fire Cloud Overlay',
+    refresh: 'Refresh',
+    type: 'Type',
+    legend: 'Legend:',
+    legendLow: 'Low',
+    legendMedium: 'Medium',
+    legendHigh: 'High',
+    hint: '💡 Tip: Enable overlay to display fire cloud prediction heatmap on the map',
+    loading: 'Generating overlay...',
+    active: 'Overlay displayed',
+    error: 'Failed to generate overlay',
+    notAvailable: 'Overlay feature not available (need surrounding data first)'
+  },
+
   // Time
   time: {
     today: 'Today',

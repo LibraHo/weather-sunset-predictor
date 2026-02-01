@@ -13,6 +13,7 @@ import WindyMapService from '../services/WindyMapService.js';
 import MockWindyMapService from '../services/MockWindyMapService.js';
 import SurroundingPointsService from '../services/SurroundingPointsService.js';
 import RadarChartService from '../services/RadarChartService.js';
+import FireCloudOverlayService from '../services/FireCloudOverlayService.js';
 import i18n from '../i18n.js';
 // 暂时禁用 ChartService 导入，使用内联简化版本
 
@@ -62,6 +63,11 @@ class WeatherController {
     this.radarChartService = new RadarChartService();
     this.surroundingRadius = 100; // 默认半径100公里
     this.surroundingData = null;
+
+    // 任务20：初始化火烧云覆盖层服务
+    this.fireCloudOverlayService = new FireCloudOverlayService();
+    this.fireCloudOverlayEnabled = false; // 覆盖层开关状态
+    this.currentOverlayType = 'sunset'; // 当前覆盖层类型 (sunrise/sunset)
 
     // 使用简化的内联 ChartService（使用动态单位）
     this.chartService = {
@@ -1062,6 +1068,11 @@ class WeatherController {
       // 渲染雷达图
       this.renderSurroundingRadar(data);
 
+      // 任务20：如果覆盖层已启用，生成并显示覆盖层
+      if (this.fireCloudOverlayEnabled) {
+        await this.updateFireCloudOverlay(location, data);
+      }
+
       // 隐藏加载状态，显示内容
       if (loadingEl) loadingEl.classList.add('hidden');
       if (contentEl) contentEl.style.display = 'block';
@@ -1182,6 +1193,158 @@ class WeatherController {
     if (this.currentLocation) {
       this.fetchSurroundingData(this.currentLocation, radius);
     }
+  }
+
+  // ========== 任务20：火烧云覆盖层相关方法 ==========
+
+  /**
+   * 任务20：更新火烧云覆盖层
+   * @param {Object} location - 中心位置
+   * @param {Object} surroundingData - 周边数据（可选，如果未提供则使用当前数据）
+   */
+  async updateFireCloudOverlay(location, surroundingData = null) {
+    if (!this.fireCloudOverlayEnabled) {
+      console.log('[WeatherController] 覆盖层未启用，跳过更新');
+      return;
+    }
+
+    const data = surroundingData || this.surroundingData;
+    if (!data || !data.points) {
+      console.warn('[WeatherController] 无周边数据，无法生成覆盖层');
+      return;
+    }
+
+    try {
+      console.log('[WeatherController] 更新火烧云覆盖层...');
+
+      // 生成覆盖层
+      const overlayData = await this.fireCloudOverlayService.generateOverlay(
+        location,
+        data.points,
+        this.surroundingRadius * 2, // 覆盖层半径扩大到周边半径的2倍
+        this.currentOverlayType
+      );
+
+      // 在地图上显示覆盖层
+      const mapContainer = document.getElementById('map-container');
+      if (mapContainer) {
+        this.fireCloudOverlayService.displayOnMap(
+          this.windyMapService,
+          overlayData,
+          mapContainer
+        );
+      }
+
+      console.log('[WeatherController] 火烧云覆盖层更新完成');
+
+      // 更新UI状态
+      this.updateOverlayStatus(true);
+
+    } catch (error) {
+      console.error('[WeatherController] 更新覆盖层失败:', error);
+      this.updateOverlayStatus(false, error.message);
+    }
+  }
+
+  /**
+   * 任务20：切换覆盖层开关
+   * @param {boolean} enabled - 是否启用
+   */
+  async toggleFireCloudOverlay(enabled) {
+    this.fireCloudOverlayEnabled = enabled;
+
+    console.log(`[WeatherController] 覆盖层${enabled ? '启用' : '禁用'}`);
+
+    if (enabled) {
+      // 启用覆盖层：如果已有周边数据，立即生成并显示
+      if (this.surroundingData && this.currentLocation) {
+        await this.updateFireCloudOverlay(this.currentLocation);
+      } else if (this.currentLocation) {
+        // 没有周边数据，先获取周边数据
+        await this.fetchSurroundingData(this.currentLocation, this.surroundingRadius);
+      }
+    } else {
+      // 禁用覆盖层：移除现有覆盖层
+      this.fireCloudOverlayService.removeOverlay();
+    }
+  }
+
+  /**
+   * 任务20：设置覆盖层类型（朝霞/晚霞）
+   * @param {string} type - 类型 ('sunrise' | 'sunset')
+   */
+  async setOverlayType(type) {
+    if (this.currentOverlayType === type) {
+      return; // 类型未改变
+    }
+
+    this.currentOverlayType = type;
+    console.log(`[WeatherController] 覆盖层类型设置为: ${type}`);
+
+    // 如果覆盖层已启用，重新生成覆盖层
+    if (this.fireCloudOverlayEnabled && this.currentLocation && this.surroundingData) {
+      await this.updateFireCloudOverlay(this.currentLocation);
+    }
+  }
+
+  /**
+   * 任务20：手动刷新覆盖层
+   */
+  async refreshFireCloudOverlay() {
+    if (!this.fireCloudOverlayEnabled) {
+      console.log('[WeatherController] 覆盖层未启用，无需刷新');
+      return;
+    }
+
+    if (this.currentLocation && this.surroundingData) {
+      console.log('[WeatherController] 手动刷新覆盖层');
+
+      try {
+        // 刷新覆盖层
+        await this.fireCloudOverlayService.refresh(
+          this.currentLocation,
+          this.surroundingData.points,
+          this.surroundingRadius * 2,
+          this.currentOverlayType
+        );
+
+        console.log('[WeatherController] 覆盖层刷新完成');
+
+      } catch (error) {
+        console.error('[WeatherController] 刷新覆盖层失败:', error);
+        this.updateOverlayStatus(false, error.message);
+      }
+    }
+  }
+
+  /**
+   * 任务20：更新覆盖层UI状态
+   * @param {boolean} success - 是否成功
+   * @param {string} error - 错误消息（可选）
+   */
+  updateOverlayStatus(success, error = null) {
+    const statusEl = document.getElementById('overlay-status');
+    const loadingEl = document.getElementById('overlay-loading');
+
+    if (loadingEl) {
+      loadingEl.style.display = 'none';
+    }
+
+    if (statusEl) {
+      if (success) {
+        statusEl.innerHTML = `<span style="color: var(--color-success, #4caf50);">✓ ${this.i18n.t('overlay.active') || '覆盖层已显示'}</span>`;
+      } else {
+        statusEl.innerHTML = `<span style="color: var(--color-error, #f44336);">✗ ${error || (this.i18n.t('overlay.error') || '覆盖层生成失败')}</span>`;
+      }
+    }
+  }
+
+  /**
+   * 任务20：清除覆盖层缓存
+   */
+  clearOverlayCache() {
+    this.fireCloudOverlayService.clearCache();
+    console.log('[WeatherController] 覆盖层缓存已清除');
   }
 }
 
