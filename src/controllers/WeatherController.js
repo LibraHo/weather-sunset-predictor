@@ -1127,7 +1127,7 @@ class WeatherController {
       return;
     }
 
-    container.innerHTML = bestPoints.map(p => {
+    container.innerHTML = bestPoints.map((p, index) => {
       let qualityClass = '';
       let qualityText = '';
 
@@ -1140,12 +1140,19 @@ class WeatherController {
       }
 
       return `
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border-color, #e0e0e0);">
+        <div class="direction-item" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border-color, #e0e0e0); cursor: pointer;" data-index="${index}">
           <span>${p.name} (${p.label})</span>
           <span style="${qualityClass} font-weight: 600;">${p.score}分 - ${qualityText}</span>
         </div>
       `;
     }).join('');
+
+    // 绑定点击事件
+    container.querySelectorAll('.direction-item').forEach((item, index) => {
+      item.addEventListener('click', () => {
+        this.handleSurroundingPointClick(bestPoints[index], index);
+      });
+    });
   }
 
   /**

@@ -1165,7 +1165,7 @@ class PredictionController {
   formatDate(date) {
     try {
       // 使用当前语言环境的日期格式
-      const locale = this.i18n.getCurrentLocale();
+      const locale = this.i18n.getLanguage();
       const formatter = new Intl.DateTimeFormat(locale, {
         month: '2-digit',
         day: '2-digit'
