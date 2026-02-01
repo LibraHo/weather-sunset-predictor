@@ -1,16 +1,17 @@
 /**
  * WindyMapService - Windy地图服务
  *
- * 封装Windy Map Forecast API，提供地图初始化和交互功能
+ * 使用Windy iframe嵌入方式显示地图（无需API密钥）
  * 需求：18.1, 18.4
  */
 
 class WindyMapService {
   constructor(apiKey) {
-    this.apiKey = apiKey;
-    this.map = null;
-    this.windyAPI = null;
+    this.apiKey = apiKey; // 不再使用，保留用于向后兼容
+    this.container = null;
+    this.iframe = null;
     this.isInitialized = false;
+    this.currentOptions = {};
   }
 
   /**
@@ -31,40 +32,43 @@ class WindyMapService {
       lat: 35.6762,
       lon: 139.6503,
       zoom: 6,
-      overlay: 'wind',
-      level: 'surface',
-      forecast: 'ECMWF'
+      overlay: 'wind'
     };
 
-    const mapOptions = { ...defaultOptions, ...options };
+    this.currentOptions = { ...defaultOptions, ...options };
+    this.container = document.getElementById(containerId);
+
+    if (!this.container) {
+      throw new Error(`地图容器不存在: ${containerId}`);
+    }
 
     try {
-      console.log('[WindyMapService] 正在初始化地图...');
+      console.log('[WindyMapService] 正在初始化地图 (iframe嵌入模式)...');
 
-      // 检查Windy API是否可用
-      if (typeof window.W === 'undefined') {
-        throw new Error('Windy API 未加载。请确保已引入Windy API库。');
-      }
+      // 清空容器
+      this.container.innerHTML = '';
 
-      // 初始化Windy API
-      this.windyAPI = await window.W.init({
-        key: this.apiKey,
-        verbose: true,
-        picker: true,
-        orient: true,
-        hourFormat: '24h',
-        container: containerId,
-        ...mapOptions
-      });
+      // 创建iframe嵌入Windy地图
+      this.iframe = document.createElement('iframe');
+      this.iframe.style.width = '100%';
+      this.iframe.style.height = '100%';
+      this.iframe.style.border = 'none';
+      this.iframe.style.borderRadius = '8px';
 
-      this.map = this.windyAPI.map;
+      // Windy embed URL格式: https://embed.windy.com/?lat,lat,lon,zoom
+      const embedUrl = `https://embed.windy.com/?${this.currentOptions.lat},${this.currentOptions.lon},${this.currentOptions.zoom}`;
+
+      this.iframe.src = embedUrl;
+      this.iframe.allowFullscreen = true;
+
+      this.container.appendChild(this.iframe);
       this.isInitialized = true;
 
-      console.log('[WindyMapService] 地图初始化成功');
+      console.log('[WindyMapService] 地图初始化成功 (iframe)');
 
       // 触发地图初始化完成事件
       window.dispatchEvent(new CustomEvent('mapInitialized', {
-        detail: { map: this.map, windyAPI: this.windyAPI }
+        detail: { iframe: this.iframe, options: this.currentOptions }
       }));
 
     } catch (error) {
@@ -74,7 +78,7 @@ class WindyMapService {
   }
 
   /**
-   * 移动地图到指定位置
+   * 移动地图到指定位置 (iframe模式需要重新加载)
    * @param {number} lat - 纬度
    * @param {number} lon - 经度
    * @param {number} zoom - 缩放级别（可选）
@@ -82,78 +86,62 @@ class WindyMapService {
    * 需求：18.1
    */
   moveTo(lat, lon, zoom) {
-    if (!this.isInitialized || !this.map) {
+    if (!this.isInitialized || !this.iframe) {
       console.warn('[WindyMapService] 地图未初始化');
       return;
     }
 
+    // 更新当前位置
+    this.currentOptions.lat = lat;
+    this.currentOptions.lon = lon;
     if (zoom !== undefined) {
-      this.map.setView([lat, lon], zoom);
-    } else {
-      this.map.setView([lat, lon]);
+      this.currentOptions.zoom = zoom;
     }
+
+    // iframe模式下需要重新加载
+    const embedUrl = `https://embed.windy.com/?${this.currentOptions.lat},${this.currentOptions.lon},${this.currentOptions.zoom}`;
+    this.iframe.src = embedUrl;
 
     console.log('[WindyMapService] 地图已移动到:', lat, lon);
   }
 
   /**
-   * 更改地图叠加层
+   * 更改地图叠加层 (iframe模式不支持此功能)
    * @param {string} overlay - 叠加层类型 ('wind', 'temp', 'rain', 'clouds', etc.)
    *
    * 需求：18.1
    */
   changeOverlay(overlay) {
-    if (!this.isInitialized || !this.windyAPI) {
-      console.warn('[WindyMapService] 地图未初始化');
-      return;
-    }
-
-    this.windyAPI.setOverlay(overlay);
-    console.log('[WindyMapService] 叠加层已更改为:', overlay);
+    // iframe嵌入模式下，用户可以在Windy界面中手动切换图层
+    console.log('[WindyMapService] iframe模式：请手动在地图界面切换图层');
   }
 
   /**
-   * 任务18.3.3：设置地图时间
+   * 任务18.3.3：设置地图时间 (iframe模式不支持此功能)
    * @param {number} timestamp - Unix时间戳（毫秒）
    */
   setTimestamp(timestamp) {
-    if (!this.isInitialized || !this.windyAPI) {
-      console.warn('[WindyMapService] 地图未初始化');
-      return;
-    }
-
-    // 检查时间戳是否在允许范围内
-    const allowedRange = this.getAllowedTimestampRange();
-    if (allowedRange && (timestamp < allowedRange.min || timestamp > allowedRange.max)) {
-      console.warn('[WindyMapService] 时间戳超出允许范围:', allowedRange);
-      return false;
-    }
-
-    this.windyAPI.store.set('timestamp', timestamp);
-    console.log('[WindyMapService] 时间戳已设置为:', new Date(timestamp).toISOString());
-    return true;
+    // iframe嵌入模式下，用户可以在Windy界面中手动切换时间
+    console.log('[WindyMapService] iframe模式：请手动在地图界面切换时间');
+    return false;
   }
 
   /**
-   * 任务18.3.3：获取当前时间戳
+   * 任务18.3.3：获取当前时间戳 (iframe模式不支持此功能)
    * @returns {number|null} 当前时间戳（毫秒）
    */
   getTimestamp() {
-    if (!this.isInitialized || !this.windyAPI) {
-      return null;
-    }
-    return this.windyAPI.store.get('timestamp');
+    // iframe模式下无法获取时间戳
+    return Date.now();
   }
 
   /**
-   * 任务18.3.3：获取允许的时间戳范围
+   * 任务18.3.3：获取允许的时间戳范围 (iframe模式不支持此功能)
    * @returns {Object|null} 包含min和max时间戳的对象
    */
   getAllowedTimestampRange() {
-    if (!this.isInitialized || !this.windyAPI) {
-      return null;
-    }
-    return this.windyAPI.store.getAllowed('timestamp');
+    // iframe模式下无法获取时间范围
+    return null;
   }
 
   /**
@@ -165,16 +153,15 @@ class WindyMapService {
       return null;
     }
 
-    const center = this.map.getCenter();
     return {
       isInitialized: this.isInitialized,
       center: {
-        lat: center.lat,
-        lon: center.lng
+        lat: this.currentOptions.lat,
+        lon: this.currentOptions.lon
       },
-      zoom: this.map.getZoom(),
-      overlay: this.windyAPI.getOverlay ? this.windyAPI.getOverlay() : null,
-      timestamp: this.getTimestamp()
+      zoom: this.currentOptions.zoom,
+      overlay: this.currentOptions.overlay,
+      mode: 'iframe'
     };
   }
 
@@ -184,12 +171,15 @@ class WindyMapService {
    * 需求：18.1
    */
   destroy() {
-    if (this.map) {
-      this.map.remove();
-      this.map = null;
+    if (this.iframe) {
+      this.iframe.remove();
+      this.iframe = null;
     }
 
-    this.windyAPI = null;
+    if (this.container) {
+      this.container.innerHTML = '';
+    }
+
     this.isInitialized = false;
 
     console.log('[WindyMapService] 地图已销毁');
