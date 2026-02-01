@@ -43,15 +43,17 @@ class WeatherController {
     }
 
     // 任务18：初始化Windy地图服务
-    // 注意：Windy地图API需要真实API密钥，mock模式和后端代理模式使用模拟实现
-    if (useProxy) {
-      // 后端代理模式：使用模拟地图服务
-      this.windyMapService = new MockWindyMapService();
-    } else if (!useMockAPI && apiKey) {
-      // 直连模式：使用真实Windy地图服务
-      this.windyMapService = new WindyMapService(apiKey);
+    // 后端代理模式和直连模式都使用真实Windy地图服务（从后端获取API Key）
+    // Mock模式不初始化地图
+    if (!useMockAPI) {
+      // 直连模式或后端代理模式：使用真实Windy地图服务
+      // API Key将在initializeAndShowMap中从后端获取
+      this.windyMapService = new WindyMapService(''); // 临时使用空key，稍后从后端获取
+    } else if (useProxy) {
+      // 后端代理模式：即使使用mock API，也尝试初始化真实地图（从后端获取key）
+      this.windyMapService = new WindyMapService(''); // 临时使用空key，稍后从后端获取
     } else {
-      // Mock模式：不初始化地图
+      // 纯Mock模式：不初始化地图
       this.windyMapService = null;
     }
 

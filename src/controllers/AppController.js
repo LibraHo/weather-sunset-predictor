@@ -1550,10 +1550,11 @@ class AppController {
     // 监听主题切换事件
     window.addEventListener('themeChanged', (event) => {
       const theme = event.detail.theme;
-      console.log('[AppController] 主题已切换为:', theme);
+      const actualTheme = event.detail.actualTheme;
+      console.log('[AppController] 主题已切换为:', theme, '(实际:', actualTheme + ')');
 
-      // 使用ThemeService应用主题
-      this.themeService.setTheme(theme);
+      // 主题已被ThemeService应用，这里只需要处理需要重新渲染的UI
+      // 不要再调用 themeService.setTheme()，否则会形成无限循环！
 
       // 重新初始化设置面板以应用新主题样式
       if (this.settingsPanel && this.settingsPanel.isOpen) {
