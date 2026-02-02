@@ -271,7 +271,7 @@
 
 **设计决策理由**：
 
-1. **后端Python服务处理GFS数据**：GFS气象数据以GRIB2格式提供，需要专业的气象数据处理库。使用Python的xarray、cfgrib库可以高效读取和处理GRIB2数据。siphon库可用于从NOAA服务器获取最新数据。
+1. **后端Python服务处理GFS数据**：GFS气象数据以GRIB2格式提供，需要专业的气象数据处理库。使用Python的xarray、cfgrib库可以高效读取和处理GRIB2数据。直接通过HTTP请求NOAA服务器获取最新数据。
 
 2. **"光路追踪+云量评分"算法实现**：
    - 对每个网格点，向西（日落方向）检查邻近像素的低层云量(LCDC)
@@ -284,10 +284,11 @@
    - 根据概率值设置像素颜色和透明度
    - 记录图像的地理边界(Bounds)用于地图贴图
 
-4. **前端地图叠加集成**：
-   - 扩展WindyMapService或创建FireCloudOverlayService
-   - 在Windy地图上叠加PNG图像作为自定义图层
-   - 监听地图移动和缩放事件，动态更新覆盖层
+4. **Node.js + Python混合架构**：
+   - Node.js Express作为主服务器，处理HTTP请求
+   - Python脚本作为子进程处理GRIB2数据
+   - 通过stdout传递JSON元数据，临时文件传递PNG
+   - 避免管理独立Python服务的复杂性
 
 5. **缓存策略**：
    - 后端缓存生成的PNG覆盖层（30分钟有效期）
@@ -304,19 +305,147 @@
    - 当PNG生成失败时，显示错误提示
    - 提供覆盖层开关，允许用户禁用此功能
 
-**架构扩展**：
+**实现架构（2026-02-02完成）**：
 ```
-后端 (Python/Node.js):
+后端 (Node.js + Python):
   ┌─────────────────────────────────────────────────────┐
-  │  GFS数据获取服务 (server/services/gfsService.js)    │
-  │  - 使用Python子进程或API获取GFS GRIB2数据            │
-  │  - 下载TCDC, LCDC, MCDC, HCDC变量                    │
+  │  Express服务器 (server/index.js)                       │
+  │  - 注册 /api/firecloud 路由                            │
+  │  - 处理CORS、日志、错误                                │
   └─────────────────┬───────────────────────────────────┘
                     │
   ┌─────────────────▼───────────────────────────────────┐
-  │  数据处理服务 (server/services/heatmapProcessor.js)  │
-  │  - 光路追踪算法实现                                   │
-  │  - 云量评分计算                                       │
+  │  FireCloud API路由 (server/routes/firecloud.js)      │
+  │  - GET /api/firecloud/overlay 端点                     │
+  │  - 参数验证（lat, lon, radius, type）                  │
+  │  - 调用Python脚本处理数据                              │
+  └─────────────────┬───────────────────────────────────┘
+                    │
+  ┌─────────────────▼───────────────────────────────────┐
+  │  Python GFS处理器 (server/scripts/gfs_processor.py)  │
+  │  - 下载NOAA GFS GRIB2数据                             │
+  │  - 解析GRIB2 (xarray + cfgrib)                         │
+  │  - 计算火烧云概率（光路追踪算法）                    │
+  │  - 生成RGBA PNG覆盖层 (Pillow)                       │
+  │  - 输出JSON元数据到stdout                              │
+  └─────────────────────────────────────────────────────┘
+
+数据流:
+  1. 前端请求 → Node.js Express
+  2. Node.js → spawn('python', ['gfs_processor.py', args])
+   3. Python → stdout (JSON metadata) + 临时PNG文件
+  4. Node.js → 读取PNG → base64编码 → 返回前端
+  5. 前端 → 在Windy地图上叠加图像
+```
+
+**Python GFS处理器实现细节**：
+
+```python
+# server/scripts/gfs_processor.py
+
+class GFSDataProcessor:
+    # NOAA GFS数据源
+    GFS_BASE_URL = "https://nomads.ncep.noaa.gov/pub/data/nccf/com/gfs/prod"
+
+    # 需要下载的气象变量
+    VARIABLES = ['TCDC', 'LCDC', 'MCDC', 'HCDC']
+
+    def download_gfs_data():
+        """下载GFS GRIB2文件"""
+        # 构造最新GFS运行URL
+        url = f"{GFS_BASE_URL}/gfs.YYYYMMDD/HH/atmos/gfs.tHHz.pgrb2.0p25.f000"
+        # 使用requests库下载（流式传输）
+        # 保存到临时文件（/tmp/gfs_XXXXXX.grib2）
+
+    def parse_grib2(grib2_file):
+        """解析GRIB2文件"""
+        # 使用cfgrib引擎打开
+        ds = xr.open_dataset(grib2_file, engine='cfgrib')
+        # 提取变量：TCDC, LCDC, MCDC, HCDC
+        return ds
+
+    def calculate_firecloud_probability(ds):
+        """计算火烧云概率（光路追踪算法）"""
+        lcdc = ds['LCDC'].values  # 低云量
+        mcdc = ds['MCDC'].values  # 中云量
+        hcdc = ds['HCDC'].values  # 高云量
+
+        # 对每个网格点，向西检查10个网格点（约250km）
+        # 计算光路上的低云阻挡
+        # 结合本地中高云量计算概率
+        return probability_matrix  # 0-1范围
+
+    def generate_overlay_png(probability_matrix):
+        """生成RGBA PNG覆盖层"""
+        # 归一化到0-255
+        # 应用颜色映射：
+        #   0-0.3: 灰色渐变
+        #   0.3-0.7: 黄色渐变
+        #   0.7-1.0: 红橙色渐变
+        # Alpha通道根据概率调整
+        img = Image.fromarray(img_array, mode='RGBA')
+        img.save(temp_file.name, 'PNG')
+        return temp_file.name
+```
+
+**Node.js API集成实现**：
+
+```javascript
+// server/routes/firecloud.js
+
+router.get('/overlay', async (req, res) => {
+  const { lat, lon, radius = 200, type = 'sunset' } = req.query;
+
+  // 参数验证
+  // ...
+
+  // 调用Python脚本
+  const pythonProcess = spawn('python', [
+    'scripts/gfs_processor.py',
+    '--lat', lat.toString(),
+    '--lon', lon.toString(),
+    '--radius', radius.toString(),
+    '--type', type
+  ]);
+
+  // 捕获stdout（JSON格式元数据）
+  let stdout = '';
+  pythonProcess.stdout.on('data', (data) => {
+    stdout += data.toString();
+  });
+
+  pythonProcess.on('close', async (code) => {
+    // 解析元数据
+    const metadata = JSON.parse(stdout);
+
+    // 读取PNG文件
+    const imageBuffer = await fs.readFile(metadata.image_path);
+
+    // 转换为base64
+    const imageBase64 = imageBuffer.toString('base64');
+
+    // 清理临时文件
+    await fs.unlink(metadata.image_path);
+
+    // 返回结果
+    res.json({
+      image: `data:image/png;base64,${imageBase64}`,
+      bounds: metadata.bounds,
+      timestamp: metadata.timestamp
+    });
+  });
+});
+```
+
+**技术栈**：
+- Python 3.x: xarray, cfgrib, numpy, Pillow, requests
+- Node.js: child_process, fs, express
+- 数据源: NOAA GFS 0.25° GRIB2文件
+
+**降级方案**：
+- GFS数据获取失败 → 回退到雷达图模式（需求19）
+- PNG生成失败 → 显示错误提示，禁用覆盖层开关
+- Python脚本超时 → 60秒后终止进程
   │  - PNG覆盖层生成                                      │
   └─────────────────┬───────────────────────────────────┘
                     │

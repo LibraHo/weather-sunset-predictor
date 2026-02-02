@@ -1471,87 +1471,62 @@
 
 ---
 
-## 需求20摘要：火烧云地图覆盖层
+## 测试增强任务（2026-02-02完成）
 
-### 功能概述
-在周边火烧云模块中实现地理热力图覆盖层，通过获取GFS气象数据，应用"光路追踪+云量评分"算法，生成PNG覆盖层并在Windy地图上叠加显示。
+**状态：已完成 ✅**
+- **完成日期**: 2026-02-02
+- **Git commit**: 1532265
 
-### 实现流程
-```
-第一步：获取GFS气象数据 (Backend)
-├── 使用siphon库或HTTP请求NOAA GRIB2数据接口
-├── 下载最近时刻的GFS 0.25度数据
-├── 筛选变量：TCDC, LCDC, MCDC, HCDC
-└── 范围：以用户位置为中心，约200-300公里区域
+### UT-1: WeatherData单元测试增强 ✅
+- [x] 创建 tests/unit/models/WeatherData.test.js
+- 测试极端温度值、边界湿度、云量分层不一致、无效数据
+- 所有边界情况验证完成
 
-第二步：处理数据 (Processing)
-├── 使用xarray和cfgrib读取GRIB2文件
-├── 将数据转换为NumPy矩阵
-└── 应用"光路追踪+云量评分"算法：
-    ├── 对每个像素点，向西检查邻近像素的LCDC值
-    └── 结合本地MCDC/HCDC计算概率值（0.0-1.0）
+### UT-2: 服务层单元测试增强 ✅
+- [x] 创建 tests/unit/services/StorageService.test.js
+- [x] 创建 tests/unit/services/WindyAPIService.test.js
+- localStorage不可用、缓存过期、并发操作测试
+- HTTP 401/429/500错误、网络超时测试
 
-第三步：生成覆盖层 (Overlay Generation)
-├── 生成带透明通道的PNG图片（RGBA）
-├── 概率0 = 完全透明
-├── 概率100 = 红色/橙色渐变，不透明度60%
-└── 记录四个角坐标（Bounds）用于地图贴图
-```
+### UT-3: 控制器交互测试 ✅
+- [x] 创建 tests/integration/controller-interaction.test.js
+- 数据流、错误传播、事件协调测试
 
-### 技术栈
-- **后端数据处理**：Python (xarray, cfgrib, numpy, Pillow, siphon)
-- **后端API**：Node.js Express（调用Python子进程或独立服务）
-- **前端服务**：FireCloudOverlayService
-- **地图集成**：扩展WindyMapService支持自定义图层
-
-### 架构示意
-```
-后端 (Node.js + Python):
-  ┌─────────────────────────────────────────────────────┐
-  │  GFS数据获取服务 (Python)                            │
-  │  - siphon库获取NOAA GFS GRIB2数据                    │
-  │  - 下载TCDC, LCDC, MCDC, HCDC变量                    │
-  └─────────────────┬───────────────────────────────────┘
-                    │
-  ┌─────────────────▼───────────────────────────────────┐
-  │  热力图处理器 (Python)                               │
-  │  - xarray + cfgrib读取GRIB2                          │
-  │  - NumPy矩阵运算                                     │
-  │  - 光路追踪+云量评分算法                              │
-  │  - Pillow生成PNG覆盖层                               │
-  └─────────────────┬───────────────────────────────────┘
-                    │
-  ┌─────────────────▼───────────────────────────────────┐
-  │  API端点: GET /api/firecloud/overlay                │
-  │  - Node.js Express路由                              │
-  │  - 调用Python脚本或服务                              │
-  │  - 返回PNG图像 + Bounds信息                          │
-  └─────────────────────────────────────────────────────┘
-
-前端 (JavaScript):
-  ┌─────────────────────────────────────────────────────┐
-  │  FireCloudOverlayService                            │
-  │  - 调用后端API获取覆盖层PNG                           │
-  │  - 在Windy地图上叠加图像                              │
-  │  - 监听地图事件动态更新                               │
-  └─────────────────────────────────────────────────────┘
-```
+### IT-1: E2E流程测试 ✅
+- [x] 创建 tests/e2e/weather-query-flow.spec.js
+- [x] 创建 tests/e2e/prediction-flow.spec.js
+- [x] 创建 tests/e2e/error-recovery-flow.spec.js
 
 ---
 
-请用户审阅 requirements.md、design.md 和 tasks.md，确认设计方案和任务分解无误后，再开始实施开发工作。
+## GFS数据处理任务（2026-02-02完成）
+
+**状态：已完成 ✅**
+- **完成日期**: 2026-02-02
+- **Git commit**: 1532265
+
+### 任务22：Python GFS数据处理服务 ✅
+- [x] 创建 server/scripts/gfs_processor.py (320行)
+- [x] 创建 server/scripts/requirements.txt
+- [x] 实现GFS数据下载（NOAA API）
+- [x] 实现GRIB2解析（xarray + cfgrib）
+- [x] 实现光路追踪+云量评分算法
+- [x] 实现PNG覆盖层生成（Pillow RGBA）
+
+### 任务23：Node.js集成GFS API ✅
+- [x] 创建 server/routes/firecloud.js
+- [x] 实现 GET /api/firecloud/overlay 路由
+- [x] 实现Python脚本调用（child_process.spawn）
+- [x] 实现错误处理和超时控制
+- [x] 集成到server/index.js
+
+### 任务24：文档和部署 ✅
+- [x] 更新design.md添加GFS架构设计
+- [x] 更新tasks.md添加任务22-24
 
 ---
 
-## 测试增强任务（2026-02-02新增）
-
-**状态：进行中 🔄**
-- **目标**：提升测试覆盖率从60%到80%+
-- **策略**：核心路径完整测试，聚焦主要用户场景
-
-### UT-1: WeatherData单元测试增强
-
-**状态：待开始 ⏸️**
+**注意**：详细的技术架构、算法实现、API设计等内容已移至 design.md 文档中，tasks.md 仅保留任务列表和状态。
 
 - [ ] UT-1.1 创建WeatherData边缘测试文件
   - 创建 `tests/unit/models/WeatherData.test.js`
