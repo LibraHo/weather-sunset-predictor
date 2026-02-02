@@ -1540,3 +1540,245 @@
 ---
 
 请用户审阅 requirements.md、design.md 和 tasks.md，确认设计方案和任务分解无误后，再开始实施开发工作。
+
+---
+
+## 测试增强任务（2026-02-02新增）
+
+**状态：进行中 🔄**
+- **目标**：提升测试覆盖率从60%到80%+
+- **策略**：核心路径完整测试，聚焦主要用户场景
+
+### UT-1: WeatherData单元测试增强
+
+**状态：待开始 ⏸️**
+
+- [ ] UT-1.1 创建WeatherData边缘测试文件
+  - 创建 `tests/unit/models/WeatherData.test.js`
+  - 测试极端温度值（-60°C, 60°C）
+  - 测试边界湿度（0%, 100%）
+  - 测试云量分层不一致（totalClouds != sum(layers)）
+  - 测试无效数据（null, undefined, 负数）
+  - 验证所有边界情况抛出ValidationError
+  - _需求：数据模型健壮性_
+
+### UT-2: 服务层单元测试增强
+
+**状态：待开始 ⏸️**
+
+- [ ] UT-2.1 增强StorageService测试
+  - 创建 `tests/unit/services/StorageService.test.js`
+  - 测试localStorage不可用（Object.defineProperty模拟）
+  - 测试缓存过期边缘（Date.now() - 30分钟 ± 1秒）
+  - 测试并发读写操作
+  - 使用jest.mock模拟localStorage
+  - _需求：存储服务健壮性_
+
+- [ ] UT-2.2 增强WindyAPIService测试
+  - 扩展 `tests/unit/services/WindyAPIService.test.js`
+  - 测试HTTP 401 Unauthorized（API Key错误）
+  - 测试HTTP 429 Too Many Requests（限流）
+  - 测试HTTP 500 Server Error（服务器故障）
+  - 测试网络超时（jest.useFakeTimers模拟）
+  - 使用jest.mock('axios')控制响应
+  - _需求：API服务错误处理_
+
+### UT-3: 控制器交互测试
+
+**状态：待开始 ⏸️**
+
+- [ ] UT-3.1 创建控制器交互测试
+  - 创建 `tests/integration/controller-interaction.test.js`
+  - 测试AppController → WeatherController 数据流
+  - �测试WeatherController → PredictionController 预测生成
+  - 测试错误传播（服务层→控制器→UI）
+  - 测试事件监听（位置切换时各控制器响应）
+  - _需求：控制器集成健壮性_
+
+### IT-1: E2E流程测试
+
+**状态：待开始 ⏸️**
+
+- [ ] IT-1.1 创建天气查询E2E测试
+  - 创建 `tests/e2e/weather-query-flow.spec.js`
+  - 测试：打开应用 → 输入城市 → 等待加载 → 验证显示
+  - 使用Playwright框架
+  - 验证温度、湿度显示
+  - 验证预测卡片显示
+  - _需求：核心用户流程_
+
+- [ ] IT-1.2 创建预测生成E2E测试
+  - 创建 `tests/e2e/prediction-flow.spec.js`
+  - Mock API返回固定天气数据
+  - 验证评分计算正确性
+  - 验证黄金时段、蓝调时段显示
+  - 验证UI渲染（颜色、等级）
+  - _需求：预测算法验证_
+
+- [ ] IT-1.3 创建错误恢复E2E测试
+  - 创建 `tests/e2e/error-recovery-flow.spec.js`
+  - Mock网络错误（route模拟失败）
+  - 验证错误提示显示
+  - 点击重试按钮
+  - Mock成功响应
+  - 验证数据正常加载
+  - _需求：错误处理健壮性_
+
+### 测试执行任务
+
+**状态：待开始 ⏸️**
+
+- [ ] 测试所有新增测试
+  - 运行 `npm run test:coverage`
+  - 验证所有新测试通过
+  - 生成覆盖率报告
+  - 确保总体覆盖率 ≥80%
+  - 修复任何失败的测试
+
+---
+
+## GFS数据处理任务（2026-02-02新增）
+
+**状态：待开始 ⏸️**
+- **目标**：实现火烧云地图覆盖层的后端GFS数据处理
+- **架构**：Node.js + Python混合架构
+
+### 任务22：Python GFS数据处理服务
+
+**状态：待开始 ⏸️**
+
+- [ ] 22.1 创建Python脚本目录和依赖
+  - 创建 `server/scripts/` 目录
+  - 创建 `server/scripts/requirements.txt`
+  - 添加依赖：xarray, cfgrib, numpy, Pillow, requests
+  - 添加安装说明到 `server/README.md`
+  - _需求：Python环境搭建_
+
+- [ ] 22.2 实现GFS数据下载
+  - 创建 `server/scripts/gfs_processor.py`
+  - 实现 `download_gfs_data(lat, lon, radius)` 函数
+  - 使用requests库下载NOAA GFS GRIB2文件
+  - 数据源：https://nomads.ncep.noaa.gov/pub/data/nccf/com/gfs/prod/
+  - 下载变量：TCDC, LCDC, MCDC, HCDC
+  - 保存到临时文件（/tmp/gfs_XXXXXX.grib2）
+  - 添加错误处理（网络超时、文件不存在）
+  - _需求：GFS数据获取_
+
+- [ ] 22.3 实现GRIB2解析
+  - 实现 `parse_grib2(grib2_file)` 函数
+  - 使用cfgrib引擎打开GRIB2文件
+  - 使用xarray提取变量矩阵
+  - 提取目标区域（以用户位置为中心）
+  - 返回：xarray.Dataset
+  - 添加数据验证（检查变量存在性）
+  - _需求：GRIB2数据处理_
+
+- [ ] 22.4 实现"光路追踪+云量评分"算法
+  - 实现 `calculate_firecloud_probability(dataset)` 函数
+  - 对每个网格点向西检查LCDC值（约250km）
+  - 结合本地MCDC/HCDC计算概率
+  - 使用NumPy矢量化运算（避免双重循环）
+  - 返回0-1范围的评分矩阵
+  - 添加单元测试验证算法正确性
+  - _需求：火烧云预测算法_
+
+- [ ] 22.5 实现PNG覆盖层生成
+  - 实现 `generate_overlay_png(probability_matrix, bounds)` 函数
+  - 使用Pillow创建RGBA图像
+  - 应用颜色映射：
+    * 0-0.3：灰色渐变
+    * 0.3-0.7：黄色渐变
+    * 0.7-1.0：红橙色渐变
+  - Alpha通道根据概率调整
+  - 记录Bounds信息（{north, south, east, west}）
+  - 保存到临时文件
+  - _需求：图像生成_
+
+- [ ] 22.6 实现Python脚本主函数
+  - 实现命令行参数解析（argparse）
+  - 参数：--lat, --lon, --radius, --type (sunrise/sunset)
+  - 调用数据处理流程
+  - 输出JSON格式的元数据到stdout
+  - 包含：image_path, bounds, timestamp
+  - 添加日志记录
+  - _需求：脚本集成_
+
+### 任务23：Node.js集成GFS API
+
+**状态：待开始 ⏸️**
+
+- [ ] 23.1 创建FireCloud API路由
+  - 创建 `server/routes/firecloud.js`
+  - 实现 GET /api/firecloud/overlay 路由
+  - 参数验证：lat, lon, radius (默认200)
+  - 调用Python脚本：spawn('python', ['scripts/gfs_processor.py', args])
+  - 捕获stdout（JSON格式元数据）
+  - 读取生成的PNG文件
+  - 转换为base64
+  - 清理临时文件
+  - 返回：{ image, bounds, timestamp }
+  - _需求：API端点实现_
+
+- [ ] 23.2 添加错误处理
+  - Python脚本失败时返回500错误
+  - 超时处理（60秒后终止进程）
+  - 参数验证失败返回400错误
+  - 添加详细错误日志
+  - 实现临时文件清理（即使脚本失败）
+  - _需求：错误处理健壮性_
+
+- [ ] 23.3 集成到主服务器
+  - 在 `server/index.js` 中注册firecloud路由
+  - 添加CORS支持
+  - 添加请求日志记录（morgan）
+  - 更新 `server/.env.example` 添加配置说明
+  - _需求：后端集成_
+
+- [ ] 23.4 前端集成测试
+  - 扩展 `src/services/FireCloudOverlayService.js`（如果需要）
+  - 测试调用新API端点
+  - 验证PNG图像正确显示
+  - 验证Bounds信息正确应用
+  - 测试错误处理（API失败时回退）
+  - _需求：前端集成_
+
+### 任务24：文档和部署
+
+**状态：待开始 ⏸️**
+
+- [ ] 24.1 创建Python依赖安装文档
+  - 更新 `server/README.md`
+  - 添加Python环境安装步骤
+  - 添加依赖安装命令（pip install -r requirements.txt）
+  - 添加常见问题排查
+  - _需求：文档完整性_
+
+- [ ] 24.2 更新部署配置
+  - 更新 `server/.env` 添加GFS相关配置（如果需要）
+  - 配置临时文件目录权限
+  - 添加Python路径验证
+  - _需求：部署配置_
+
+---
+
+## 执行计划总结
+
+### 阶段1：测试增强（预计2天）
+1. Day 1：创建UT-1到UT-3单元测试
+2. Day 2：创建IT-1 E2E测试，运行测试并生成覆盖率报告
+
+### 阶段2：GFS数据处理（预计3天）
+1. Day 1：Python环境搭建，数据下载功能
+2. Day 2：算法实现，PNG生成
+3. Day 3：Node.js集成，前端集成测试
+
+### 成功标准
+- ✅ 所有新测试通过
+- ✅ 测试覆盖率 > 80%
+- ✅ GFS覆盖层API正常工作
+- ✅ 前端能正确显示覆盖层
+- ✅ 文档完整
+
+---
+
+**当前状态**：准备开始执行测试增强和GFS数据处理任务。

@@ -1900,3 +1900,401 @@ const locationArbitrary = fc.record({
 4. **动画过渡**：使用平滑的CSS过渡动画提升体验
 5. **触摸优化**（需求11）：图表支持触摸滑动，按钮有足够的点击区域
 6. **快捷操作**（需求13）：搜索历史支持快速选择，减少输入
+
+---
+
+## 测试增强设计决策
+
+### 测试级别策略：核心路径完整测试
+
+**设计决策理由**：
+
+1. **聚焦核心用户场景**：测试覆盖主要用户流程（天气查询、预测生成、错误恢复），确保80%的用户使用场景正常工作，而非追求100%覆盖率。
+
+2. **边缘情况有选择地测试**：测试关键边缘情况（极端天气值、API错误），跳过极度罕见的场景，平衡测试深度和开发时间。
+
+3. **集成测试优于单元测试**：E2E测试验证组件间协作，发现集成问题，这是单元测试无法覆盖的。
+
+4. **属性测试作为补充**：使用fast-check验证通用属性（如单调性、往返一致性），而不是手动编写大量测试用例。
+
+### 单元测试增强
+
+#### UT-1: WeatherData边缘测试
+```javascript
+tests/unit/models/WeatherData.test.js
+
+测试场景：
+- 极端温度：-60°C, 60°C（验证边界处理）
+- 边界湿度：0%, 100%（验证百分比限制）
+- 云量分层不一致：totalClouds=50, lowClouds=60（验证数据一致性检查）
+- 无效数据：null, undefined, 负数（验证ValidationError抛出）
+- 缺失字段：部分参数为undefined（验证默认值处理）
+```
+
+**设计决策**：WeatherData是核心数据模型，边缘情况处理不当会导致预测算法错误。测试极端值确保验证逻辑健壮。
+
+#### UT-2: 服务层增强测试
+```javascript
+tests/unit/services/StorageService.test.js
+- localStorage不可用（Object.defineProperty(window.localStorage, ...)）
+- 缓存过期边缘：Date.now() - 30分钟 ± 1秒
+- 并发读写：模拟多个快速连续的存储操作
+
+tests/unit/services/WindyAPIService.test.js
+- HTTP 401：API Key无效（axios.post mock return {status: 401}）
+- HTTP 429：请求限流（模拟retry-after header）
+- HTTP 500：服务器错误（模拟网络中断）
+- 超时：jest.useFakeTimers()模拟>10秒延迟
+- 使用jest.mock('axios')控制响应
+```
+
+**设计决策**：服务层是应用与外部世界交互的边界，最容易失败。Mock HTTP响应确保错误处理逻辑正确。
+
+#### UT-3: 控制器交互测试
+```javascript
+tests/integration/controller-interaction.test.js
+
+测试场景：
+- 数据流：AppController → WeatherController → PredictionController
+  * 验证：位置变化 → 天气数据更新 → 预测重新计算
+- 错误传播：WindyAPIService错误 → WeatherController → UI
+  * 验证：错误消息正确显示，应用不崩溃
+- 事件监听：位置切换时所有控制器响应
+  * 验证：各控制器的loadData方法被调用
+```
+
+**设计决策**：控制器集成测试发现组件间通信问题，这是单元测试无法捕获的。
+
+### E2E测试（Playwright）
+
+#### IT-1: 天气查询流程
+```javascript
+tests/e2e/weather-query-flow.spec.js
+
+测试步骤：
+1. 打开应用（page.goto('http://localhost:3000')）
+2. 输入"北京"（page.fill('#location-input', '北京')）
+3. 点击搜索（page.click('#search-btn')）
+4. 等待加载（page.waitForSelector('.weather-data'))
+5. 验证温度显示（expect(locator('.temp')).toHaveText(/\d+°/))
+6. 切换到预测标签（page.click('#prediction-tab'))
+7. 验证预测卡片显示（expect(locator('.prediction-card')).toBeVisible())
+```
+
+#### IT-2: 预测生成流程
+```javascript
+tests/e2e/prediction-flow.spec.js
+
+测试步骤：
+1. Mock API返回固定天气数据（route mock）
+2. 触发预测生成
+3. 验证评分计算正确性
+4. 验证黄金时段、蓝调时段显示
+5. 验证UI渲染：评分颜色、质量等级
+```
+
+#### IT-3: 错误恢复流程
+```javascript
+tests/e2e/error-recovery-flow.spec.js
+
+测试步骤：
+1. Mock网络错误（route模拟失败）
+2. 验证错误提示显示
+3. 点击重试按钮
+4. Mock成功响应
+5. 验证数据正常加载
+```
+
+**设计决策**：E2E测试模拟真实用户操作，发现UI流程问题。使用Playwright的现代API和自动等待机制。
+
+### 测试覆盖率目标
+- **总体覆盖率**：≥80%（当前约60%，目标+20%）
+- **关键路径覆盖率**：100%（预测算法、API调用、错误处理）
+- **分支覆盖率**：≥75%
+
+---
+
+## GFS数据处理设计决策
+
+### 架构选择：Node.js + Python混合
+
+**设计决策理由**：
+
+1. **利用现有基础设施**：项目已有完整的Node.js后端（Express、CORS、日志），无需重构。
+
+2. **Python气象库成熟**：xarray、cfgrib是NOAA官方推荐的GRIB2处理工具，NumPy矢量化运算高效，Pillow生成PNG简单。
+
+3. **实现成本低**：通过child_process.spawn调用Python脚本，不需要管理独立服务端口或跨服务通信。
+
+4. **部署简单**：只需在服务器安装Python依赖，Node.js和Python在同一环境。
+
+### 数据获取层设计
+
+#### NOAA GFS数据源
+```python
+# server/scripts/gfs_processor.py
+
+数据源：https://nomads.ncep.noaa.gov/pub/data/nccf/com/gfs/prod/
+文件格式：gfs.tXXz.pgrb2.0p25.f000（XX为运行时刻，000为预报时刻）
+变量列表：
+- TCDC：总云量（Total Cloud Cover）
+- LCDC：低层云量（Low Cloud Cover, <2km）
+- MCDC：中层云量（Mid Cloud Cover, 2-6km）
+- HCDC：高层云量（High Cloud Cover, >6km）
+
+数据范围：
+- 中心点：用户经纬度
+- 半径：200-300公里（可配置）
+- 分辨率：0.25°（约25km）
+```
+
+**设计决策**：使用NOAA公开数据源，免费稳定。0.25°分辨率平衡精度和性能。
+
+#### 数据下载实现
+```python
+def download_gfs_data(lat, lon, radius_km):
+    """下载GFS GRIB2文件"""
+    # 1. 计算边界坐标（lat±Δ, lon±Δ）
+    # 2. 构造下载URL（最新运行时刻）
+    # 3. 使用requests库下载（流式传输，避免内存溢出）
+    # 4. 保存到临时文件（/tmp/gfs_XXXXXX.grib2）
+    # 5. 返回文件路径
+```
+
+### 数据处理层设计
+
+#### GRIB2解析
+```python
+def parse_grib2(grib2_file):
+    """解析GRIB2文件"""
+    import xarray as xr
+    # 使用cfgrib引擎打开GRIB2文件
+    ds = xr.open_dataset(grib2_file, engine='cfgrib')
+    # 提取变量：TCDC, LCDC, MCDC, HCDC
+    # 返回：xarray.Dataset（多维数组）
+```
+
+**设计决策**：xarray + cfgrib是处理气象数据的标准工具，支持延迟加载和切片操作。
+
+#### "光路追踪+云量评分"算法
+```python
+def calculate_firecloud_probability(dataset, lat, lon):
+    """
+    光路追踪算法实现
+    对每个网格点，向西（日落方向）检查LCDC值
+    """
+    import numpy as np
+
+    # 获取数据矩阵（lat×lon网格）
+    lcdc = dataset['LCDC'].values  # 低云量
+    mcdc = dataset['MCDC'].values  # 中云量
+    hcdc = dataset['HCDC'].values  # 高云量
+
+    # 初始化概率矩阵
+    probability = np.zeros_like(lcdc)
+
+    # 对每个像素点
+    for i in range(lcdc.shape[0]):
+        for j in range(lcdc.shape[1]):
+            # 向西检查10个网格点（约250km）
+            light_path = lcdc[i, max(0, j-10):j+1]
+            blocking_clouds = np.mean(light_path > 50)
+
+            # 计算本地云量评分
+            local_cloud_score = (mcdc[i, j] + hcdc[i, j]) / 2
+
+            # 综合评分
+            if blocking_clouds < 0.3:
+                # 光路通畅，本地云量决定评分
+                probability[i, j] = local_cloud_score / 100
+            else:
+                # 光路被阻，评分降低
+                probability[i, j] = local_cloud_score / 200
+
+    return probability  # 0-1范围
+```
+
+**设计决策**：
+- 向西检查250km（约10个0.25°网格点）
+- 低云>50%视为阻挡
+- 使用NumPy矢量化运算（实际实现时应避免双重循环）
+
+#### 图像生成层
+```python
+def generate_overlay_png(probability_matrix, bounds):
+    """
+    生成RGBA PNG覆盖层
+    """
+    from PIL import Image
+    import numpy as np
+
+    # 归一化到0-255
+    normalized = (probability_matrix * 255).astype(np.uint8)
+
+    # 创建RGBA图像
+    height, width = normalized.shape
+    img_array = np.zeros((height, width, 4), dtype=np.uint8)
+
+    # 应用颜色映射
+    for i in range(height):
+        for j in range(width):
+            prob = probability_matrix[i, j]
+            if prob < 0.3:
+                # 灰色渐变
+                img_array[i, j] = [128, 128, 128, int(prob * 255)]
+            elif prob < 0.7:
+                # 黄色渐变
+                img_array[i, j] = [255, 255, 0, int(prob * 180)]
+            else:
+                # 红橙色渐变
+                img_array[i, j] = [255, int((1-prob) * 165), 0, int(prob * 255)]
+
+    # 生成PNG
+    img = Image.fromarray(img_array, mode='RGBA')
+    img.save('/tmp/firecloud_overlay.png')
+
+    return {
+        'image_path': '/tmp/firecloud_overlay.png',
+        'bounds': bounds  # {north, south, east, west}
+    }
+```
+
+**设计决策**：
+- 颜色编码与现有系统一致（灰色=一般，黄色=良好，红橙色=优秀）
+- Alpha通道根据概率调整（0%=透明，100%=不透明）
+- 临时文件使用后清理
+
+### Node.js集成层设计
+
+#### Python脚本调用
+```javascript
+// server/routes/firecloud.js
+
+import { spawn } from 'child_process';
+import fs from 'fs/promises';
+
+router.get('/overlay', async (req, res) => {
+  const { lat, lon, radius = 200 } = req.query;
+
+  // 参数验证
+  if (!lat || !lon) {
+    return res.status(400).json({ error: 'Missing lat or lon' });
+  }
+
+  try {
+    // 调用Python脚本
+    const pythonProcess = spawn('python', [
+      'scripts/gfs_processor.py',
+      '--lat', lat,
+      '--lon', lon,
+      '--radius', radius
+    ]);
+
+    let stdout = '';
+    let stderr = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    pythonProcess.on('close', async (code) => {
+      if (code !== 0) {
+        return res.status(500).json({ error: 'Python script failed', details: stderr });
+      }
+
+      // 解析输出（JSON格式的元数据）
+      const metadata = JSON.parse(stdout);
+
+      // 读取PNG文件
+      const imageBuffer = await fs.readFile(metadata.image_path);
+
+      // 转换为base64
+      const imageBase64 = imageBuffer.toString('base64');
+
+      // 清理临时文件
+      await fs.unlink(metadata.image_path);
+
+      // 返回结果
+      res.json({
+        image: `data:image/png;base64,${imageBase64}`,
+        bounds: metadata.bounds,
+        timestamp: metadata.timestamp
+      });
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+});
+```
+
+**设计决策**：
+- 使用stdout传递JSON元数据（文件路径、bounds、timestamp）
+- PNG文件通过临时文件传递（避免二进制数据在stdout中的编码问题）
+- 自动清理临时文件
+- 错误处理：Python脚本失败时返回详细错误信息
+
+### 前端集成
+
+#### 调用新API
+```javascript
+// src/services/FireCloudOverlayService.js
+
+async fetchOverlay(lat, lon, radius = 200) {
+  const response = await fetch(`/api/firecloud/overlay?lat=${lat}&lon=${lon}&radius=${radius}`);
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch overlay');
+  }
+
+  const data = await response.json();
+
+  // 在Windy地图上叠加图像
+  this.addOverlayToMap(data.image, data.bounds);
+}
+
+addOverlayToMap(imageBase64, bounds) {
+  const imageBounds = [
+    [bounds.north, bounds.west],
+    [bounds.south, bounds.east]
+  ];
+
+  const overlay = L.imageOverlay(imageBase64, imageBounds, {
+    opacity: 0.7,
+    interactive: false
+  });
+
+  overlay.addTo(this.map);
+}
+```
+
+### 性能优化
+
+1. **缓存策略**：
+   - 后端缓存生成的PNG（30分钟有效期）
+   - 前端缓存覆盖层URL（LocalStorage）
+
+2. **分块处理**：
+   - 大范围数据分块处理（每块100km×100km）
+   - 避免一次性加载过多数据
+
+3. **懒加载**：
+   - 仅在用户启用覆盖层时才获取GFS数据
+   - 地图移动时延迟更新（防抖处理）
+
+### 错误处理
+
+1. **降级方案**：
+   - GFS数据获取失败 → 回退到雷达图模式（需求19）
+   - PNG生成失败 → 显示错误提示，禁用覆盖层开关
+
+2. **超时处理**：
+   - Python脚本超时：60秒后终止进程
+   - API请求超时：30秒后返回错误
+
+3. **资源清理**：
+   - 临时文件清理（即使脚本失败）
+   - 进程管理（避免僵尸进程）
