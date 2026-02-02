@@ -11,7 +11,7 @@
  * 需求：数据模型健壮性
  */
 
-import WeatherData from '../../../../src/models/WeatherData.js';
+import WeatherData from '@models/WeatherData.js';
 
 describe('WeatherData - 边缘测试', () => {
 

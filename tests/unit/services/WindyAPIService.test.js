@@ -12,7 +12,7 @@
  * 需求：API服务错误处理健壮性
  */
 
-import WindyAPIService from '../../../../src/services/WindyAPIService.js';
+import WindyAPIService from '@services/WindyAPIService.js';
 
 // Mock fetch
 global.fetch = jest.fn();

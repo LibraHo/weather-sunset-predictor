@@ -11,7 +11,7 @@
  * 需求：存储服务健壮性
  */
 
-import StorageService from '../../../../src/services/StorageService.js';
+import StorageService from '@services/StorageService.js';
 
 // Mock localStorage
 const mockLocalStorage = {

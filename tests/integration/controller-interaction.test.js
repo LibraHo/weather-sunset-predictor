@@ -9,12 +9,13 @@
  * 需求：控制器集成健壮性
  */
 
-import AppController from '../../../../src/controllers/AppController.js';
-import WeatherController from '../../../../src/controllers/WeatherController.js';
-import PredictionController from '../../../../src/controllers/PredictionController.js';
-import StorageService from '../../../../src/services/StorageService.js';
-import WindyAPIService from '../../../../src/services/WindyAPIService.js';
-import SunsetPredictionService from '../../../../src/services/SunsetPredictionService.js';
+import { jest } from '@jest/globals';
+import AppController from '@controllers/AppController.js';
+import WeatherController from '@controllers/WeatherController.js';
+import PredictionController from '@controllers/PredictionController.js';
+import StorageService from '@services/StorageService.js';
+import WindyAPIService from '@services/WindyAPIService.js';
+import SunsetPredictionService from '@services/SunsetPredictionService.js';
 
 // Mock localStorage
 const mockLocalStorage = {
