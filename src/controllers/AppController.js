@@ -834,7 +834,7 @@ class AppController {
     } catch (error) {
       // 使用ErrorHandler处理错误
       const errorInfo = ErrorHandler.handleError(error, 'Data Refresh');
-      this.showError(errorInfo.message);
+      this.showError(`刷新失败: ${errorInfo.message}`);
     }
   }
 

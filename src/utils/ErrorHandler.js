@@ -141,6 +141,9 @@ class ErrorHandler {
       message = '您的浏览器不支持地理定位功能，请手动输入城市名称';
     } else if (error.message.includes('超时') || error.message.includes('timeout')) {
       message = '获取位置超时，请重试或手动输入城市名称';
+    } else if (error.message.includes('位置信息不可用')) {
+      // 保留原始错误消息
+      message = error.message;
     }
 
     return {
