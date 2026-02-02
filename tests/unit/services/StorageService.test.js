@@ -145,7 +145,11 @@ describe('StorageService - 缓存过期边缘测试', () => {
   const CACHE_DURATION = 30 * 60 * 1000; // 30分钟
 
   beforeEach(() => {
-    global.localStorage = mockLocalStorage;
+    Object.defineProperty(global, 'localStorage', {
+      value: mockLocalStorage,
+      writable: true,
+      configurable: true
+    });
     mockLocalStorage.clear();
     service = new StorageService();
   });
@@ -298,7 +302,11 @@ describe('StorageService - 并发操作测试', () => {
   let service;
 
   beforeEach(() => {
-    global.localStorage = mockLocalStorage;
+    Object.defineProperty(global, 'localStorage', {
+      value: mockLocalStorage,
+      writable: true,
+      configurable: true
+    });
     mockLocalStorage.clear();
     service = new StorageService();
   });
@@ -363,7 +371,11 @@ describe('StorageService - 搜索历史LRU策略测试', () => {
   let service;
 
   beforeEach(() => {
-    global.localStorage = mockLocalStorage;
+    Object.defineProperty(global, 'localStorage', {
+      value: mockLocalStorage,
+      writable: true,
+      configurable: true
+    });
     mockLocalStorage.clear();
     service = new StorageService();
   });
@@ -432,7 +444,11 @@ describe('StorageService - 收藏位置唯一性测试', () => {
   let service;
 
   beforeEach(() => {
-    global.localStorage = mockLocalStorage;
+    Object.defineProperty(global, 'localStorage', {
+      value: mockLocalStorage,
+      writable: true,
+      configurable: true
+    });
     mockLocalStorage.clear();
     service = new StorageService();
   });
@@ -469,7 +485,11 @@ describe('StorageService - 通知设置验证测试', () => {
   let service;
 
   beforeEach(() => {
-    global.localStorage = mockLocalStorage;
+    Object.defineProperty(global, 'localStorage', {
+      value: mockLocalStorage,
+      writable: true,
+      configurable: true
+    });
     mockLocalStorage.clear();
     service = new StorageService();
   });
@@ -511,7 +531,11 @@ describe('StorageService - 默认位置管理测试', () => {
   let service;
 
   beforeEach(() => {
-    global.localStorage = mockLocalStorage;
+    Object.defineProperty(global, 'localStorage', {
+      value: mockLocalStorage,
+      writable: true,
+      configurable: true
+    });
     mockLocalStorage.clear();
     service = new StorageService();
   });

@@ -92,7 +92,7 @@ class WeatherData {
       case 'timestamp':
         return this.timestamp > 0;
       case 'temp':
-        return this.temp >= -100 && this.temp <= 60;
+        return this.temp >= -60 && this.temp <= 60;
       case 'humidity':
         return this.humidity >= 0 && this.humidity <= 100;
       case 'cloudCover':
@@ -128,8 +128,8 @@ class WeatherData {
     if (this.timestamp <= 0) {
       errors.push('时间戳必须是正数');
     }
-    if (this.temp < -100 || this.temp > 60) {
-      errors.push('温度必须在-100°C到60°C之间');
+    if (this.temp < -60 || this.temp > 60) {
+      errors.push('温度必须在-60°C到60°C之间');
     }
     if (this.humidity < 0 || this.humidity > 100) {
       errors.push('湿度必须在0%到100%之间');
