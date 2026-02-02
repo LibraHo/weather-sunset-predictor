@@ -184,12 +184,16 @@ class PredictionController {
 
             // 为增强版预测添加cloudLayers属性以显示云层分层信息
             if (!sunrisePrediction.cloudLayers) {
+              const highClouds = sunriseWeatherData.highClouds ?? 0;
+              const midClouds = sunriseWeatherData.midClouds ?? 0;
+              const lowClouds = sunriseWeatherData.lowClouds ?? 0;
+
               sunrisePrediction.cloudLayers = {
-                high: sunriseWeatherData.highClouds,
-                mid: sunriseWeatherData.midClouds,
-                low: sunriseWeatherData.lowClouds,
+                high: highClouds,
+                mid: midClouds,
+                low: lowClouds,
                 description: sunrisePrediction.canvasAnalysis ?
-                  `高云${sunriseWeatherData.highClouds.toFixed(0)}% 中云${sunriseWeatherData.midClouds.toFixed(0)}% 低云${sunriseWeatherData.lowClouds.toFixed(0)}%` :
+                  `高云${highClouds.toFixed(0)}% 中云${midClouds.toFixed(0)}% 低云${lowClouds.toFixed(0)}%` :
                   ''
               };
             }
@@ -310,12 +314,16 @@ class PredictionController {
 
             // 为增强版预测添加cloudLayers属性以显示云层分层信息
             if (!sunsetPrediction.cloudLayers) {
+              const highClouds = sunsetWeatherData.highClouds ?? 0;
+              const midClouds = sunsetWeatherData.midClouds ?? 0;
+              const lowClouds = sunsetWeatherData.lowClouds ?? 0;
+
               sunsetPrediction.cloudLayers = {
-                high: sunsetWeatherData.highClouds,
-                mid: sunsetWeatherData.midClouds,
-                low: sunsetWeatherData.lowClouds,
+                high: highClouds,
+                mid: midClouds,
+                low: lowClouds,
                 description: sunsetPrediction.canvasAnalysis ?
-                  `高云${sunsetWeatherData.highClouds.toFixed(0)}% 中云${sunsetWeatherData.midClouds.toFixed(0)}% 低云${sunsetWeatherData.lowClouds.toFixed(0)}%` :
+                  `高云${highClouds.toFixed(0)}% 中云${midClouds.toFixed(0)}% 低云${lowClouds.toFixed(0)}%` :
                   ''
               };
             }
@@ -639,29 +647,33 @@ class PredictionController {
   renderCloudLayers(cloudLayers) {
     if (!cloudLayers) return '';
 
+    const high = cloudLayers.high ?? 0;
+    const mid = cloudLayers.mid ?? 0;
+    const low = cloudLayers.low ?? 0;
+
     return `
       <div class="cloud-layers-section">
         <h4>${this.i18n.t('prediction.cloudLayers.title')}</h4>
         <div class="cloud-layers-grid">
           <div class="cloud-layer">
             <span class="cloud-layer-label">${this.i18n.t('prediction.cloudLayers.highCloudLabel')}</span>
-            <span class="cloud-layer-value">${cloudLayers.high.toFixed(0)}%</span>
+            <span class="cloud-layer-value">${high.toFixed(0)}%</span>
             <div class="cloud-layer-bar">
-              <div class="cloud-layer-bar-fill" style="width: ${cloudLayers.high}%; background-color: #90caf9;"></div>
+              <div class="cloud-layer-bar-fill" style="width: ${high}%; background-color: #90caf9;"></div>
             </div>
           </div>
           <div class="cloud-layer">
             <span class="cloud-layer-label">${this.i18n.t('prediction.cloudLayers.midCloudLabel')}</span>
-            <span class="cloud-layer-value">${cloudLayers.mid.toFixed(0)}%</span>
+            <span class="cloud-layer-value">${mid.toFixed(0)}%</span>
             <div class="cloud-layer-bar">
-              <div class="cloud-layer-bar-fill" style="width: ${cloudLayers.mid}%; background-color: #64b5f6;"></div>
+              <div class="cloud-layer-bar-fill" style="width: ${mid}%; background-color: #64b5f6;"></div>
             </div>
           </div>
           <div class="cloud-layer">
             <span class="cloud-layer-label">${this.i18n.t('prediction.cloudLayers.lowCloudLabel')}</span>
-            <span class="cloud-layer-value">${cloudLayers.low.toFixed(0)}%</span>
+            <span class="cloud-layer-value">${low.toFixed(0)}%</span>
             <div class="cloud-layer-bar">
-              <div class="cloud-layer-bar-fill" style="width: ${cloudLayers.low}%; background-color: #42a5f5;"></div>
+              <div class="cloud-layer-bar-fill" style="width: ${low}%; background-color: #42a5f5;"></div>
             </div>
           </div>
         </div>
@@ -687,10 +699,10 @@ class PredictionController {
 
     // 旧版预测逻辑
     const factors = prediction.factors;
-    const cloudValue = factors.cloudCover.value;
-    const humidityValue = factors.humidity.value;
-    const visibilityValue = factors.visibility.value;
-    const lowCloudsValue = factors.lowClouds.value;
+    const cloudValue = factors.cloudCover?.value ?? 50;
+    const humidityValue = factors.humidity?.value ?? 50;
+    const visibilityValue = factors.visibility?.value ?? 10;
+    const lowCloudsValue = factors.lowClouds?.value ?? 0;
 
     let analysis = '';
 
