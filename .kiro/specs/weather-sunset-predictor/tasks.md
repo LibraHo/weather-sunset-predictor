@@ -1285,23 +1285,41 @@
 
 ### 任务 20：火烧云地图覆盖层（需求20）
 
-**状态：已完成 ✅ (第一阶段实现)**
-- **完成日期**: 2026-02-01
-- **实现方式**: 前端Canvas生成覆盖层（使用现有周边数据）
-- **详情**:
-  - ✅ FireCloudOverlayService: 320行，生成热力图PNG覆盖层
-  - ✅ WeatherController集成: 添加8个覆盖层管理方法
-  - ✅ HTML UI组件: 覆盖层开关、类型切换、图例、刷新按钮
-  - ✅ 翻译文件更新: zh-CN, en-US添加overlay相关键
-  - ✅ AppController事件绑定: 覆盖层UI交互事件
-  - 代码已提交到git（commit pending）
+**状态：⚠️ 架构缺陷 - 功能不可用**
+- **发现日期**: 2026-02-03
+- **问题**: 地图拖动时覆盖层错位（iframe跨域隔离导致）
+- **详情**: 见下方"架构缺陷说明"
 
-**第一阶段实现（当前完成）**：
-- 使用现有Windy API周边数据生成热力图覆盖层
-- 使用前端Canvas生成PNG图像并叠加到地图
-- 支持朝霞/晚霞类型切换
-- 实现覆盖层缓存（30分钟有效期）
-- 添加加载状态和错误处理
+**第一阶段实现（2026-02-01完成）**：
+- ✅ FireCloudOverlayService: 320行，生成热力图PNG覆盖层
+- ✅ WeatherController集成: 添加8个覆盖层管理方法
+- ✅ HTML UI组件: 覆盖层开关、类型切换、图例、刷新按钮
+- ✅ 翻译文件更新: zh-CN, en-US添加overlay相关键
+- ✅ AppController事件绑定: 覆盖层UI交互事件
+
+**架构缺陷说明（2026-02-03发现）**：
+
+**问题根因**：
+1. WindyMapService使用`<iframe>`嵌入地图（`https://embed.windy.com/`）
+2. FireCloudOverlayService在主页面DOM中创建覆盖层
+3. **跨域iframe隔离**导致主页面无法访问iframe内容
+4. 地图拖动时，iframe内容移动但覆盖层保持固定位置
+
+**技术细节**：
+```javascript
+// WindyMapService.js - line 58
+this.iframe.src = `https://embed.windy.com/?${lat},${lon},${zoom}`;
+
+// FireCloudOverlayService.js - line 302
+container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
+```
+
+**后果**：地图拖动/缩放时覆盖层完全不跟随，功能不可用
+
+**解决方案（需要重新设计）**：
+- **方案A（推荐）**: 使用Windy API + Leaflet（需Professional许可证）
+- **方案B**: 切换到Leaflet + OpenStreetMap（完全开源可控）
+- **方案C**: 暂时移除此功能，保留雷达图（需求19）
 
 **第二阶段（未来扩展）**：
 - [ ] 20.1 后端GFS数据处理服务（Python）

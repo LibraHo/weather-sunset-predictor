@@ -513,6 +513,68 @@
   5. 前端 → 在Windy地图上叠加图像
 ```
 
+**⚠️ 关键架构缺陷（2026-02-03发现）**：
+
+当前地图覆盖层实现存在**根本性架构缺陷**，导致功能**不可用**。
+
+**问题根因**：
+1. **WindyMapService** 使用 `<iframe>` 嵌入方式加载地图（`https://embed.windy.com/`）
+2. **FireCloudOverlayService** 在主页面DOM中创建覆盖层Canvas元素
+3. 由于**跨域iframe隔离**，主页面无法访问或操作iframe内部内容
+4. 当用户拖动地图时，iframe内容移动，但覆盖层（在主页面DOM中）保持固定
+
+**技术细节**：
+```javascript
+// WindyMapService.js - 创建跨域iframe
+this.iframe = document.createElement('iframe');
+this.iframe.src = `https://embed.windy.com/?${lat},${lon},${zoom}`;
+this.container.appendChild(this.iframe);
+// ↑ iframe创建跨域隔离环境，主页面无法访问内部
+
+// FireCloudOverlayService.js - 在主页面DOM创建覆盖层
+displayOnMap(mapService, overlayData, container) {
+  const overlayDiv = document.createElement('div');
+  overlayDiv.style.cssText = `
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+  `;
+  container.appendChild(overlayDiv);  // ↑ 添加到主页面，不在iframe内！
+}
+```
+
+**后果**：
+- 地图拖动时覆盖层不跟随，完全错位
+- 缩放地图时覆盖层位置错误
+- 功能完全不可用
+
+**解决方案（需要完全重构）**：
+
+1. **方案A：使用Windy API + Leaflet**（推荐）
+   - 放弃iframe嵌入方式
+   - 直接使用Windy Leaflet插件API
+   - 需要：Professional API许可证
+   - 优点：完整地图控制，可自定义图层
+   - 缺点：需要付费API许可证
+
+2. **方案B：切换到开源地图方案**
+   - 使用Leaflet + OpenStreetMap
+   - 叠加自定义火烧云热力图层
+   - 优点：完全可控，免费
+   - 缺点：失去Windy的专业气象图层
+
+3. **方案C：暂时移除此功能**
+   - 隐藏覆盖层开关UI
+   - 保留雷达图可视化（需求19）
+   - 等待确定地图方案后再实现
+
+**当前状态**：
+- ✅ 后端GFS处理服务已完成
+- ✅ 前端覆盖层生成服务已完成
+- ❌ 地图集成存在架构缺陷，功能不可用
+- ⏸️ **需要重新设计地图集成方案**
+
 **Python GFS处理器实现细节**：
 
 ```python
