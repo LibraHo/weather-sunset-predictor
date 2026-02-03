@@ -2602,3 +2602,567 @@ addOverlayToMap(imageBase64, bounds) {
 3. **资源清理**：
    - 临时文件清理（即使脚本失败）
    - 进程管理（避免僵尸进程）
+
+## 毛玻璃效果设计决策（需求21）
+
+### 设计概述
+
+采用 Glassmorphism（毛玻璃/磨砂玻璃）设计风格，为应用主要UI组件添加半透明背景 + 背景模糊 + 微妙边框的视觉效果，提升界面层次感和现代感。
+
+### CSS变量体系
+
+在现有CSS自定义属性系统中扩展毛玻璃相关变量：
+
+```css
+:root {
+  /* 毛玻璃效果 - 明亮模式 */
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-bg-heavy: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --glass-blur: 12px;
+  --glass-blur-heavy: 20px;
+  --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.08);
+}
+
+body.theme-dark {
+  /* 毛玻璃效果 - 暗色模式 */
+  --glass-bg: rgba(30, 30, 30, 0.65);
+  --glass-bg-heavy: rgba(30, 30, 30, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: 12px;
+  --glass-blur-heavy: 20px;
+  --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+}
+```
+
+### 设计决策理由
+
+1. **CSS Variables 驱动**：所有毛玻璃参数通过CSS自定义属性定义，与现有主题系统（`data-theme`属性、`body.theme-dark`类）完全兼容。修改一处变量即可全局调整效果强度。
+
+2. **分层效果策略**：
+   - **重度毛玻璃**（`--glass-bg-heavy` + `--glass-blur-heavy`）：用于 header、footer 等固定定位元素，需要更强的可读性
+   - **标准毛玻璃**（`--glass-bg` + `--glass-blur`）：用于 `.card`、`.prediction-card`、`.modal-content` 等内容卡片
+
+3. **受影响的组件**：
+   - `header` — 顶部导航栏（重度毛玻璃）
+   - `footer` — 底部页脚（重度毛玻璃）
+   - `.card` — 通用卡片组件（标准毛玻璃）
+   - `.prediction-card` — 预测卡片（标准毛玻璃）
+   - `.modal-content` — 模态框内容区域（重度毛玻璃）
+   - `.settings-panel-content` — 设置面板（重度毛玻璃）
+
+4. **优雅降级**：使用 `@supports (backdrop-filter: blur(1px))` 条件规则，仅在支持 `backdrop-filter` 的浏览器上启用毛玻璃效果。不支持时保持现有不透明背景，确保零功能损失。
+
+5. **性能优化**：
+   - 移动端使用 `@media (max-width: 768px)` 降低模糊强度（`blur(8px)` 代替 `blur(12px)`），减少GPU负担
+   - 避免在频繁重绘的元素（图表Canvas、地图容器）上使用毛玻璃
+   - 使用 `-webkit-backdrop-filter` 前缀确保Safari兼容
+
+6. **可读性保障**：
+   - 明亮模式下白色半透明背景（65%不透明度）+ 12px模糊确保文字对比度
+   - 暗色模式下深色半透明背景（65%不透明度）确保浅色文字可读
+   - 添加微妙的 `border: 1px solid var(--glass-border)` 增强边缘可辨识度
+
+7. **悬停交互**：卡片悬停时轻微提升不透明度（如从65%→75%）并增强阴影，提供视觉反馈但不改变模糊半径（避免重绘开销）。
+
+### 实现方式
+
+核心CSS mixin模式（在 `styles/main.css` 中实现）：
+
+```css
+/* 标准毛玻璃效果 */
+@supports (backdrop-filter: blur(1px)) {
+  .card,
+  .prediction-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+}
+
+/* 重度毛玻璃效果（固定元素） */
+@supports (backdrop-filter: blur(1px)) {
+  header,
+  footer,
+  .modal-content {
+    background: var(--glass-bg-heavy);
+    backdrop-filter: blur(var(--glass-blur-heavy));
+    -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+}
+```
+
+### 浏览器兼容性
+
+| 浏览器 | `backdrop-filter` 支持 |
+|--------|----------------------|
+| Chrome 76+ | ✅ 原生支持 |
+| Firefox 103+ | ✅ 原生支持 |
+| Safari 9+ | ✅ 需要 `-webkit-` 前缀 |
+| Edge 79+ | ✅ 原生支持 |
+| IE | ❌ 优雅降级为不透明背景 |
+
+## 前后端分离架构设计（需求22）
+
+### 设计概述
+
+当前架构存在以下问题：
+- **核心预测算法在前端运行**：浏览器 CPU 浪费，难以优化
+- **周边采样低效**：8 个并行 API 请求，网络延迟 8×RTT
+- **无服务端缓存**：相同数据重复计算
+- **前端代码臃肿**：9440+ 行，难以维护
+
+目标架构：**前端负责 UI 渲染，后端负责业务计算**，支持多平台客户端复用同一套 API。
+
+### 架构演进图
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              当前架构                                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                         前端 (Browser)                               │   │
+│  │  ┌─────────────────┐  ┌──────────────────┐  ┌────────────────────┐  │   │
+│  │  │ WindyAPIService │  │SunsetPrediction  │  │ SurroundingPoints  │  │   │
+│  │  │   (API 调用)     │  │   Service ⚠️     │  │   Service ⚠️       │  │   │
+│  │  │                 │  │  (预测算法)       │  │  (8个并行请求)      │  │   │
+│  │  └────────┬────────┘  └────────┬─────────┘  └─────────┬──────────┘  │   │
+│  │           │                    │                      │             │   │
+│  │           │         ┌──────────┴──────────────────────┘             │   │
+│  │           ▼         ▼                                               │   │
+│  │  ┌─────────────────────────────────────────────────────────────┐   │   │
+│  │  │              Controllers (AppController, etc.)               │   │   │
+│  │  └─────────────────────────────────────────────────────────────┘   │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                    │                                        │
+│                                    ▼ 仅代理天气数据                          │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                         后端 (Node.js)                               │   │
+│  │  ┌─────────────────────────────────────────────────────────────┐   │   │
+│  │  │  /api/weather/forecast (代理 Windy API)                      │   │   │
+│  │  └─────────────────────────────────────────────────────────────┘   │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+                                    ▼▼▼ 重构后 ▼▼▼
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              目标架构                                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                    多平台客户端 (复用同一套 API)                      │   │
+│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐   │   │
+│  │  │   Web   │  │   iOS   │  │ Android │  │  小程序  │  │   CLI   │   │   │
+│  │  │  (当前)  │  │ (未来)  │  │  (未来)  │  │  (未来)  │  │  (未来)  │   │   │
+│  │  └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘   │   │
+│  │       │            │            │            │            │        │   │
+│  │       └────────────┴────────────┼────────────┴────────────┘        │   │
+│  │                                 │                                   │   │
+│  │                     仅负责 UI 渲染和用户交互                          │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                    │                                        │
+│                                    ▼ 统一 REST API                          │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                         后端 (Node.js)                               │   │
+│  │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐  │   │
+│  │  │ /api/weather/*   │  │ /api/prediction/*│  │ /api/firecloud/* │  │   │
+│  │  │  天气数据代理     │  │  预测算法服务     │  │  火烧云覆盖层     │  │   │
+│  │  └──────────────────┘  └──────────────────┘  └──────────────────┘  │   │
+│  │                                 │                                   │   │
+│  │  ┌─────────────────────────────────────────────────────────────┐   │   │
+│  │  │                    后端服务层                                 │   │   │
+│  │  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐  │   │   │
+│  │  │  │ PredictionSvc   │  │ SurroundingSvc  │  │  CacheSvc   │  │   │   │
+│  │  │  │ (预测算法)       │  │ (周边聚合)       │  │  (缓存)      │  │   │   │
+│  │  │  └─────────────────┘  └─────────────────┘  └─────────────┘  │   │   │
+│  │  └─────────────────────────────────────────────────────────────┘   │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 新增后端 API 设计
+
+#### 1. 预测计算 API
+
+```
+POST /api/prediction/calculate
+
+Request Body:
+{
+  "weatherData": {
+    "temp": 15.5,           // 摄氏度
+    "humidity": 65,         // %
+    "cloudCover": 45,       // %
+    "visibility": 10,       // km
+    "lowClouds": 20,        // %
+    "midClouds": 30,        // %
+    "highClouds": 15        // %
+  },
+  "date": "2026-02-03T00:00:00Z",
+  "lat": 39.9042,
+  "lon": 116.4074,
+  "type": "sunset"          // "sunset" | "sunrise"
+}
+
+Response:
+{
+  "success": true,
+  "data": {
+    "date": "2026-02-03T00:00:00Z",
+    "score": 75,
+    "quality": "excellent",  // "excellent" | "good" | "fair"
+    "factors": {
+      "cloudCover": 85,
+      "humidity": 70,
+      "visibility": 80,
+      "lowClouds": 65
+    },
+    "sunsetTime": "2026-02-03T17:30:00+08:00",
+    "sunriseTime": "2026-02-03T07:15:00+08:00",
+    "goldenHour": {
+      "start": "2026-02-03T16:30:00+08:00",
+      "end": "2026-02-03T17:30:00+08:00"
+    },
+    "blueHour": {
+      "start": "2026-02-03T17:30:00+08:00",
+      "end": "2026-02-03T18:00:00+08:00"
+    },
+    "sunAzimuth": 280,
+    "cloudLayers": {
+      "high": 15,
+      "mid": 30,
+      "low": 20,
+      "description": "高层卷云为主，有利于火烧云形成"
+    },
+    "algorithmVersion": "1.0.0"
+  }
+}
+```
+
+#### 2. 周边聚合 API
+
+```
+POST /api/prediction/surrounding
+
+Request Body:
+{
+  "centerLat": 39.9042,
+  "centerLon": 116.4074,
+  "radius": 100,            // km (50/100/150)
+  "date": "2026-02-03T00:00:00Z",
+  "type": "sunset"
+}
+
+Response:
+{
+  "success": true,
+  "data": {
+    "center": {
+      "lat": 39.9042,
+      "lon": 116.4074,
+      "name": "北京"
+    },
+    "radius": 100,
+    "timestamp": 1706918400000,
+    "points": [
+      {
+        "direction": "N",
+        "directionName": "北",
+        "lat": 40.8042,
+        "lon": 116.4074,
+        "distance": 100,
+        "prediction": {
+          "score": 72,
+          "quality": "excellent",
+          "factors": { ... }
+        }
+      },
+      {
+        "direction": "NE",
+        "directionName": "东北",
+        "lat": 40.5413,
+        "lon": 117.0445,
+        "distance": 100,
+        "prediction": { ... }
+      },
+      // ... 其他 6 个方向
+    ],
+    "bestDirection": {
+      "direction": "NE",
+      "score": 82,
+      "recommendation": "东北方向火烧云观赏条件最佳"
+    }
+  }
+}
+```
+
+#### 3. 增强预测 API
+
+```
+POST /api/prediction/enhanced
+
+Request Body:
+{
+  "weatherData": { ... },
+  "date": "2026-02-03T00:00:00Z",
+  "lat": 39.9042,
+  "lon": 116.4074,
+  "type": "sunset",
+  "options": {
+    "includeCanvas": true,      // 画布评分
+    "includeLightPath": true,   // 光路通透评分
+    "nearPointRadius": 150,     // km
+    "farPointRadius": 300       // km
+  }
+}
+
+Response:
+{
+  "success": true,
+  "data": {
+    // ... 基础预测结果 ...
+    "enhanced": {
+      "canvas": {
+        "score": 78,
+        "cloudLevel": "moderate",
+        "effectiveCloudCover": 42,
+        "lowCloudPenalty": 0.85
+      },
+      "lightPath": {
+        "nearScore": 75,
+        "farScore": 80,
+        "combinedScore": 78,
+        "pathQuality": "good"
+      },
+      "renderModifier": {
+        "humidityFactor": 1.05,
+        "temperatureFactor": 0.98
+      },
+      "finalScore": 78,
+      "optimalMoment": "日落前20分钟预计达到最佳观赏时刻",
+      "confidence": 0.85
+    }
+  }
+}
+```
+
+#### 4. 批量预测 API（用于时间线）
+
+```
+POST /api/prediction/batch
+
+Request Body:
+{
+  "lat": 39.9042,
+  "lon": 116.4074,
+  "dates": [
+    "2026-02-03",
+    "2026-02-04",
+    "2026-02-05",
+    "2026-02-06",
+    "2026-02-07",
+    "2026-02-08",
+    "2026-02-09"
+  ],
+  "type": "sunset"
+}
+
+Response:
+{
+  "success": true,
+  "data": {
+    "location": { "lat": 39.9042, "lon": 116.4074 },
+    "predictions": [
+      { "date": "2026-02-03", "score": 75, "quality": "excellent", ... },
+      { "date": "2026-02-04", "score": 45, "quality": "good", ... },
+      // ... 其他日期
+    ],
+    "bestDay": {
+      "date": "2026-02-03",
+      "score": 75,
+      "recommendation": "2月3日是本周最佳观赏日"
+    }
+  }
+}
+```
+
+### 后端服务架构
+
+```
+server/
+├── index.js                    # Express 入口
+├── routes/
+│   ├── weather.js              # 天气数据代理 (已有)
+│   ├── firecloud.js            # 火烧云覆盖层 (已有)
+│   └── prediction.js           # 预测 API (新增) ⭐
+├── services/
+│   ├── windyService.js         # Windy API 服务 (已有)
+│   ├── PredictionService.js    # 预测算法服务 (新增) ⭐
+│   ├── SurroundingService.js   # 周边采样服务 (新增) ⭐
+│   ├── EnhancedPrediction.js   # 增强预测服务 (新增) ⭐
+│   └── CacheService.js         # 缓存服务 (新增) ⭐
+├── utils/
+│   ├── SunCalculator.js        # 日出日落计算 (新增) ⭐
+│   └── GaussianScore.js        # 高斯评分函数 (新增) ⭐
+└── middleware/
+    └── httpLogger.js           # HTTP 日志 (已有)
+```
+
+### 前端代码简化
+
+迁移后前端需要删除或简化的模块：
+
+| 模块 | 当前行数 | 迁移后 | 变化 |
+|------|---------|--------|------|
+| `SunsetPredictionService.js` | 622 | 删除 | -622 |
+| `EnhancedSunsetPredictionService.js` | 548 | 删除 | -548 |
+| `SurroundingPointsService.js` | 204 | 简化为 API 调用 | -150 |
+| **总计** | 1374 | ~54 | **-1320 行** |
+
+新增前端模块：
+
+```javascript
+// src/services/PredictionAPIService.js (~100 行)
+class PredictionAPIService {
+  constructor(proxyURL) {
+    this.proxyURL = proxyURL;
+  }
+
+  async calculate(weatherData, date, lat, lon, type) {
+    const response = await fetch(`${this.proxyURL}/api/prediction/calculate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ weatherData, date, lat, lon, type })
+    });
+    return response.json();
+  }
+
+  async getSurrounding(centerLat, centerLon, radius, date, type) {
+    const response = await fetch(`${this.proxyURL}/api/prediction/surrounding`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ centerLat, centerLon, radius, date, type })
+    });
+    return response.json();
+  }
+
+  async getEnhanced(weatherData, date, lat, lon, type, options) {
+    const response = await fetch(`${this.proxyURL}/api/prediction/enhanced`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ weatherData, date, lat, lon, type, options })
+    });
+    return response.json();
+  }
+
+  async getBatch(lat, lon, dates, type) {
+    const response = await fetch(`${this.proxyURL}/api/prediction/batch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lat, lon, dates, type })
+    });
+    return response.json();
+  }
+}
+
+export default PredictionAPIService;
+```
+
+### 缓存策略
+
+```javascript
+// server/services/CacheService.js
+class CacheService {
+  constructor() {
+    this.cache = new Map();
+    this.TTL = {
+      prediction: 30 * 60 * 1000,      // 30 分钟
+      surrounding: 60 * 60 * 1000,     // 1 小时
+      weather: 15 * 60 * 1000          // 15 分钟
+    };
+  }
+
+  generateKey(type, params) {
+    // 预测缓存键: prediction:lat:lon:date:type
+    // 周边缓存键: surrounding:lat:lon:radius:date:type
+    return `${type}:${Object.values(params).join(':')}`;
+  }
+
+  get(key) {
+    const item = this.cache.get(key);
+    if (!item) return null;
+    if (Date.now() > item.expiry) {
+      this.cache.delete(key);
+      return null;
+    }
+    return item.data;
+  }
+
+  set(key, data, type) {
+    this.cache.set(key, {
+      data,
+      expiry: Date.now() + this.TTL[type]
+    });
+  }
+}
+```
+
+### 性能对比预估
+
+| 场景 | 当前 (前端计算) | 重构后 (后端计算) | 提升 |
+|------|----------------|------------------|------|
+| 单点预测 | 350-400ms | 260-270ms | **30%** |
+| 周边采样 (8点) | 500-950ms | 230-310ms | **60%** |
+| 7天预测批量 | 2800-4000ms | 400-600ms | **85%** |
+| 浏览器 CPU 占用 | 高 | 低 | **-80%** |
+
+### 渐进式迁移策略
+
+```javascript
+// config.api.js - 添加迁移开关
+export default {
+  mode: 'proxy',
+  proxyURL: 'http://localhost:3000',
+
+  // 迁移开关 - 逐步启用后端 API
+  features: {
+    useBackendPrediction: false,      // Phase 1
+    useBackendSurrounding: false,     // Phase 2
+    useBackendEnhanced: false,        // Phase 3
+    useBackendBatch: false            // Phase 4
+  }
+};
+
+// 前端服务中根据开关选择调用方式
+class PredictionController {
+  async calculatePrediction(weatherData, date, lat, lon, type) {
+    if (config.features.useBackendPrediction) {
+      // 新方式：调用后端 API
+      return this.predictionAPI.calculate(weatherData, date, lat, lon, type);
+    } else {
+      // 旧方式：前端计算 (兼容期间保留)
+      return this.sunsetPredictionService.calculatePrediction(
+        weatherData, date, lat, lon, type
+      );
+    }
+  }
+}
+```
+
+### 实施阶段
+
+| Phase | 目标 | 工作量 | 依赖 |
+|-------|------|--------|------|
+| **Phase 1** | 核心预测算法后端化 | 2 周 | 无 |
+| **Phase 2** | 周边采样聚合 API | 2 周 | Phase 1 |
+| **Phase 3** | 增强预测模型后端化 | 1 周 | Phase 1 |
+| **Phase 4** | 批量预测 + 缓存优化 | 1 周 | Phase 1-3 |
+| **Phase 5** | 前端代码清理 + 测试 | 1 周 | Phase 1-4 |

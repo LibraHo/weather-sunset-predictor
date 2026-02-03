@@ -43,6 +43,15 @@
   /* 过渡 */
   --transition-fast: 0.15s ease;
   --transition-normal: 0.3s ease;
+
+  /* 毛玻璃效果 - 明亮模式 */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-bg-hover: rgba(255, 255, 255, 0.8);
+  --glass-bg-heavy: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-blur: 12px;
+  --glass-blur-heavy: 20px;
+  --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 }
 
 /* ===== 暗色主题 ===== */
@@ -74,6 +83,15 @@ body.theme-dark {
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.25);
   --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.4);
+
+  /* 毛玻璃效果 - 暗色主题 */
+  --glass-bg: rgba(30, 30, 30, 0.7);
+  --glass-bg-hover: rgba(40, 40, 40, 0.8);
+  --glass-bg-heavy: rgba(25, 25, 25, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-blur: 12px;
+  --glass-blur-heavy: 20px;
+  --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
 }
 
 /* 自动主题（跟随系统）*/
@@ -106,6 +124,15 @@ body.theme-dark {
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.25);
     --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.4);
+
+    /* 毛玻璃效果 - 暗色主题 */
+    --glass-bg: rgba(30, 30, 30, 0.7);
+    --glass-bg-hover: rgba(40, 40, 40, 0.8);
+    --glass-bg-heavy: rgba(25, 25, 25, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-blur: 12px;
+    --glass-blur-heavy: 20px;
+    --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
   }
 }
 
@@ -2596,5 +2623,136 @@ body.theme-dark .sun-azimuth-info {
   .quality-badge {
     font-size: 0.75rem;
     padding: var(--spacing-xs) var(--spacing-sm);
+  }
+}
+
+/* ===== 毛玻璃效果（Glassmorphism）===== */
+/* 需求21：为UI组件添加现代化毛玻璃视觉效果 */
+
+/* 标准毛玻璃效果 - 卡片组件 */
+@supports (backdrop-filter: blur(1px)) {
+  .card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .card:hover {
+    background: var(--glass-bg-hover);
+    box-shadow: var(--shadow-md);
+  }
+
+  .prediction-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .prediction-card:hover {
+    background: var(--glass-bg-hover);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* 重度毛玻璃效果 - 导航栏 */
+  header {
+    background: var(--glass-bg-heavy);
+    backdrop-filter: blur(var(--glass-blur-heavy));
+    -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+    border-bottom: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  /* 重度毛玻璃效果 - 页脚 */
+  footer {
+    background: var(--glass-bg-heavy);
+    backdrop-filter: blur(var(--glass-blur-heavy));
+    -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+    border-top: 1px solid var(--glass-border);
+    box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.05);
+  }
+
+  /* 重度毛玻璃效果 - 模态框 */
+  .modal-content {
+    background: var(--glass-bg-heavy);
+    backdrop-filter: blur(var(--glass-blur-heavy));
+    -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* 搜索历史下拉列表毛玻璃效果 */
+  .search-history-dropdown {
+    background: var(--glass-bg-heavy);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+  }
+
+  /* 收藏位置列表毛玻璃效果 */
+  .favorites-section {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+  }
+
+  /* 天气信息区域毛玻璃效果 */
+  .weather-overview,
+  .weather-details {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+  }
+
+  /* 图表容器毛玻璃效果 */
+  .chart-container {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+  }
+
+  /* 雷达图容器毛玻璃效果 */
+  .radar-chart-container {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+  }
+
+  /* 预测时间区域毛玻璃效果 */
+  .prediction-times {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm);
+  }
+}
+
+/* 移动端毛玻璃性能优化 - 降低模糊强度 */
+@media (max-width: 768px) {
+  :root {
+    --glass-blur: 8px;
+    --glass-blur-heavy: 14px;
+  }
+
+  body.theme-dark {
+    --glass-blur: 8px;
+    --glass-blur-heavy: 14px;
+  }
+}
+
+@media (max-width: 768px) and (prefers-color-scheme: dark) {
+  body.theme-auto {
+    --glass-blur: 8px;
+    --glass-blur-heavy: 14px;
   }
 }
