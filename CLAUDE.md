@@ -4,6 +4,51 @@
 
 Weather Sunset Predictor (天气晚霞预测器) is a web application that predicts sunset/sunrise cloud formations (fire clouds / 火烧云) based on real-time weather data from the Windy API. It features location selection, real-time weather display, multi-factor sunset quality prediction, multi-language support (10 languages), and responsive design for desktop and mobile.
 
+## Specification Documents (.kiro/)
+
+The project has detailed specification documents under `.kiro/specs/weather-sunset-predictor/`. **Always consult these before making significant changes:**
+
+| File | Purpose |
+|------|---------|
+| `requirements.md` | Product requirements with acceptance criteria (20 requirements, all in Chinese) |
+| `design.md` | Architecture diagrams, design decisions, algorithm details, data flow |
+| `tasks.md` | Implementation task breakdown with completion status |
+
+### Requirements Summary (需求)
+
+| # | Requirement | Status |
+|---|-------------|--------|
+| 1 | API Key Management (API密钥管理) | Done |
+| 2 | Location Selection (位置选择) | Done |
+| 3 | Weather Data Fetching (天气数据获取) | Done |
+| 4 | Basic Weather Display (基本天气显示) | Done |
+| 5 | Fire Cloud Prediction Algorithm (火烧云预测算法) | Done |
+| 6 | Prediction Result Display (预测结果展示) | Done |
+| 7 | Future Prediction Timeline (未来预测时间线) | Done |
+| 8 | Responsive Design (响应式设计) | Done |
+| 9 | Data Refresh (数据刷新) | Done |
+| 10 | Error Handling (错误处理) | Done |
+| 11 | Weather UI Enhancement (天气界面优化) — 7-day overview, 24h charts | Done |
+| 12 | Sunrise/Sunset Prediction Enhancement (朝霞晚霞预测增强) — golden hour, blue hour, cloud layers, notifications, favorites | Done |
+| 13 | Recent Search History (最近搜索历史) — LRU 5 items | Done |
+| 14 | Multi-language Support (多语言支持) — 10 languages, RTL | Done |
+| 15 | Backend Proxy for Windy API (后端代理) — key protection | Done |
+| 16 | Unified Settings Panel (统一设置面板) | Done |
+| 17 | Personalization (个性化设置) — units, theme, default location | Done |
+| 18 | Windy Map Forecast API Integration (地图预测) | Done |
+| 19 | Surrounding Fire Cloud Visualization (周边火烧云可视化) — radar chart | Done |
+| 20 | Fire Cloud Map Overlay (火烧云地图覆盖层) — GFS data, heatmap | Phase 1 Done (frontend Canvas); Phase 2 pending (backend Python GFS) |
+
+### Key Design Decisions (from design.md)
+
+- **Prediction algorithm**: Weighted multi-factor scoring (cloud cover 30-70% optimal, humidity 30-70%, visibility, low cloud penalty). Gaussian scoring curves. Quality grades: excellent (>70), good (40-70), fair (<40).
+- **Cloud layer analysis**: High clouds (>6km), mid clouds (2-6km), low clouds (<2km) — each has different impact on fire clouds.
+- **Surrounding points**: 8-direction sampling (N/NE/E/SE/S/SW/W/NW) at configurable radius (50/100/150 km), parallel API calls via `Promise.all`.
+- **Fire cloud overlay**: Phase 1 uses frontend Canvas with existing Windy data. Phase 2 planned: backend Python (xarray+cfgrib) processing NOAA GFS GRIB2 data with "light path tracing + cloud scoring" algorithm.
+- **Theme system**: CSS custom properties with `data-theme` attribute. Three modes: light, dark, auto (follows system `prefers-color-scheme`).
+- **Unit conversion**: Applied at render layer only — raw data stays in metric (Celsius, m/s). `UnitConverter` utility class handles conversions.
+- **Settings panel**: Modal-based, grouped sections (data source, notifications, language, personalization). Changes save immediately to localStorage.
+
 ## Architecture
 
 **3-tier architecture:**
@@ -12,10 +57,25 @@ Weather Sunset Predictor (天气晚霞预测器) is a web application that predi
 2. **Backend Proxy (Node.js)** — Express server in `server/` that proxies Windy API calls to protect API keys.
 3. **Python Services** — Optional GFS weather data processing (`server/scripts/requirements.txt` lists xarray, cfgrib, numpy, Pillow).
 
+### Data Flow
+
+```
+User action → AppController → WeatherController/PredictionController
+  → WindyAPIService (proxy mode) → Backend Express → Windy API
+  → WeatherData model → SunsetPredictionService → SunsetPrediction model → UI render
+```
+
+For fire cloud overlay (Phase 2):
+```
+Frontend request → /api/firecloud/overlay → Node.js → child_process.spawn(Python)
+  → gfs_processor.py → NOAA GFS GRIB2 download → xarray parse → PNG generation → response
+```
+
 ## Directory Structure
 
 ```
 weather-sunset-predictor/
+├── .kiro/specs/                # Project specifications (requirements, design, tasks)
 ├── src/                        # Frontend source (ES6 modules)
 │   ├── app.js                  # Entry point - initializes all services/controllers
 │   ├── i18n.js                 # Internationalization singleton
@@ -30,6 +90,7 @@ weather-sunset-predictor/
 │   ├── routes/                 # API endpoints (weather.js, firecloud.js)
 │   ├── services/               # Windy API proxy service
 │   ├── middleware/              # HTTP logging middleware
+│   ├── scripts/                # Python scripts (gfs_processor.py, requirements.txt)
 │   └── .env.example            # Environment variables template
 ├── styles/                     # CSS (main.css, rtl.css, settings-panel.css)
 ├── tests/                      # All test suites
@@ -109,10 +170,10 @@ cd server && npm install        # Backend dependencies
 - **File names**: PascalCase for classes (`WindyAPIService.js`), camelCase for non-class modules (`weather.js` in routes)
 
 ### Class Patterns
-- **Models**: Simple data containers with validation methods (`isValid()`, `toJSON()`, static `fromJSON()`)
+- **Models**: Simple data containers with validation methods (`isValid()`, `toJSON()`, static `fromJSON()`). Soft validation (returns boolean, never throws).
 - **Services**: Stateful classes with constructor config, public API methods, and private helpers. Each service has a focused responsibility.
 - **Controllers**: Orchestrator classes with dependency injection via constructor. Event handler methods prefixed with `handle*`. UI methods use `show*`/`hide*` pattern.
-- **Utilities**: Static-only classes (no instantiation), e.g., `ErrorHandler`
+- **Utilities**: Static-only classes (no instantiation), e.g., `ErrorHandler`, `UnitConverter`
 
 ### Exports
 - **Default exports** are used throughout (`export default ClassName`)
@@ -135,9 +196,10 @@ cd server && npm install        # Backend dependencies
 - 10 languages: zh-CN, zh-TW, en-US, ja-JP, ko-KR, vi-VN, fr-FR, es-ES, it-IT, ar-SA
 - Translation keys use dot notation: `app.title`, `weather.temperature`
 - Parameter interpolation: `{{paramName}}` syntax
-- RTL support for Arabic (`ar-SA`)
+- RTL support for Arabic (`ar-SA`) via `styles/rtl.css`
 - Singleton `i18n` instance with `t()` method for translations
 - Locale files in `src/locales/` (one file per language)
+- Formatting methods: `formatDate()`, `formatTime()`, `formatNumber()`, `formatPercent()` — all locale-aware via `Intl` API
 
 ## API Configuration
 
@@ -161,22 +223,37 @@ RATE_LIMIT_MAX_REQUESTS=100
 ### Backend API Endpoints
 
 - `GET /health` — Health check
-- `GET /api/weather/forecast?lat=&lon=&hours=` — Proxied weather forecast
+- `GET /api/weather/forecast?lat=&lon=&hours=` — Proxied weather forecast (default 168 hours / 7 days)
 - `GET /api/config/map-key` — Map API key for frontend
-- `/api/firecloud/*` — Fire cloud overlay endpoints
+- `GET /api/firecloud/overlay?lat=&lon=&radius=&type=` — Fire cloud overlay (Phase 2, calls Python GFS processor)
 
 ## Key Files to Know
 
 | File | Purpose |
 |------|---------|
-| `src/app.js` | Application entry point, service instantiation, initialization |
+| `src/app.js` | Application entry point, service instantiation, `USE_MOCK_API` flag |
 | `src/i18n.js` | I18n singleton with language detection, translation, formatting |
 | `src/services/WindyAPIService.js` | Windy Point Forecast API client (proxy + direct modes) |
 | `src/services/SunsetPredictionService.js` | Multi-factor sunset quality prediction algorithm |
 | `src/services/EnhancedSunsetPredictionService.js` | Advanced prediction with cloud layers, golden/blue hour |
+| `src/services/SurroundingPointsService.js` | 8-direction surrounding area weather sampling |
+| `src/services/RadarChartService.js` | Canvas radar chart for surrounding fire cloud visualization |
+| `src/services/FireCloudOverlayService.js` | Heatmap overlay generation for Windy map |
+| `src/services/WindyMapService.js` | Windy Map Forecast API integration (Leaflet-based) |
+| `src/services/ThemeService.js` | Dark/light/auto theme management |
+| `src/services/StorageService.js` | localStorage wrapper for preferences, cache, history, favorites |
+| `src/services/NotificationService.js` | Browser notification for high-quality predictions |
+| `src/utils/UnitConverter.js` | Temperature (°C/°F) and wind speed (m/s, km/h) conversion |
 | `src/controllers/AppController.js` | Main UI orchestrator (~1700 lines), manages all user interactions |
+| `src/controllers/WeatherController.js` | Weather data fetching, map, charts, overlay management |
+| `src/controllers/PredictionController.js` | Sunrise/sunset prediction display, cloud layer rendering |
 | `src/utils/ErrorHandler.js` | Centralized error classification and handling |
+| `src/components/SettingsPanel.js` | Unified settings modal (data source, notifications, language, personalization) |
+| `src/components/LanguageSelector.js` | Language switching dropdown |
 | `server/index.js` | Express server setup with middleware stack |
+| `server/routes/weather.js` | Weather forecast proxy endpoint |
+| `server/routes/firecloud.js` | Fire cloud overlay endpoint (calls Python) |
+| `server/scripts/gfs_processor.py` | Python GFS GRIB2 data processing and PNG generation |
 | `config.api.js` | API mode configuration (proxy vs direct) |
 | `index.html` | Main HTML page |
 
@@ -200,3 +277,6 @@ Toggle with `USE_MOCK_API` flag in `src/app.js`. Mock services are used in Jest 
 - **Large controller**: `AppController.js` is ~1700 lines. Changes here should be careful and targeted.
 - **E2E tests start their own server**: Playwright config auto-starts `npx http-server . -p 8080` — don't conflict with this port.
 - **Python server uses port 9002**, backend uses **port 3000**, Playwright E2E uses **port 8080**.
+- **Requirement traceability**: Code comments reference requirements by number (e.g., `// 需求：5.1`). When modifying code, check which requirement it maps to in `.kiro/specs/weather-sunset-predictor/requirements.md`.
+- **Phase 2 GFS backend not yet implemented**: The fire cloud overlay currently uses frontend-only Canvas rendering. The Python GFS processing pipeline (`server/scripts/gfs_processor.py`) and its API endpoint (`/api/firecloud/overlay`) are scaffolded but not production-ready.
+- **Windy Map API licensing**: Testing environment must use Testing API keys; production requires Professional license per Windy terms.
