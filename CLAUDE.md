@@ -38,7 +38,8 @@ The project has detailed specification documents under `.kiro/specs/weather-suns
 | 18 | Windy Map Forecast API Integration (地图预测) | Done |
 | 19 | Surrounding Fire Cloud Visualization (周边火烧云可视化) — radar chart | Done |
 | 20 | Fire Cloud Map Overlay (火烧云地图覆盖层) — GFS data, heatmap | Phase 1 Done (frontend Canvas); Phase 2 pending (backend Python GFS) |
-| 21 | UI Glassmorphism Effect (UI毛玻璃效果) — backdrop-filter blur on cards, header, modals | Pending |
+| 21 | UI Glassmorphism Effect (UI毛玻璃效果) — backdrop-filter blur on cards, header, modals | Done |
+| 22 | Frontend-Backend Separation (前后端分离) — migrate prediction algorithms to backend, support multi-platform clients | Planned (5 phases) |
 
 ### Key Design Decisions (from design.md)
 
@@ -50,6 +51,7 @@ The project has detailed specification documents under `.kiro/specs/weather-suns
 - **Unit conversion**: Applied at render layer only — raw data stays in metric (Celsius, m/s). `UnitConverter` utility class handles conversions.
 - **Settings panel**: Modal-based, grouped sections (data source, notifications, language, personalization). Changes save immediately to localStorage.
 - **Glassmorphism**: CSS Variables (`--glass-bg`, `--glass-blur`, etc.) drive semi-transparent backgrounds + `backdrop-filter: blur()`. `@supports` for graceful degradation. Reduced blur on mobile for performance.
+- **Frontend-Backend Separation (Planned)**: Migrate prediction algorithms (`SunsetPredictionService`, `EnhancedSunsetPredictionService`) to backend. New APIs: `POST /api/prediction/calculate`, `POST /api/prediction/surrounding`, `POST /api/prediction/enhanced`, `POST /api/prediction/batch`. Benefits: multi-platform client support, backend caching, A/B testing, reduced frontend code (-1300 lines).
 
 ## Architecture
 
@@ -73,6 +75,24 @@ Frontend request → /api/firecloud/overlay → Node.js → child_process.spawn(
   → gfs_processor.py → NOAA GFS GRIB2 download → xarray parse → PNG generation → response
 ```
 
+For prediction APIs (Planned - Requirement 22):
+```
+Frontend request → /api/prediction/calculate → Node.js PredictionService
+  → SunCalculator + GaussianScore → prediction result JSON → response
+
+Frontend request → /api/prediction/surrounding → Node.js SurroundingService
+  → 8 parallel weather fetches → 8 predictions → aggregated result → response
+```
+
+### Planned Backend API Endpoints (Requirement 22)
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/prediction/calculate` | POST | Single point prediction |
+| `/api/prediction/surrounding` | POST | 8-direction aggregated predictions |
+| `/api/prediction/enhanced` | POST | Enhanced prediction with canvas/lightpath scoring |
+| `/api/prediction/batch` | POST | Multi-day batch predictions |
+
 ## Directory Structure
 
 ```
@@ -89,9 +109,10 @@ weather-sunset-predictor/
 │   └── utils/                  # ErrorHandler, GlobalErrorBoundary, UnitConverter
 ├── server/                     # Backend Node.js server (CommonJS)
 │   ├── index.js                # Express server entry point
-│   ├── routes/                 # API endpoints (weather.js, firecloud.js)
-│   ├── services/               # Windy API proxy service
-│   ├── middleware/              # HTTP logging middleware
+│   ├── routes/                 # API endpoints (weather.js, firecloud.js, prediction.js[planned])
+│   ├── services/               # Windy API proxy + prediction services (PredictionService.js[planned])
+│   ├── utils/                  # SunCalculator.js, GaussianScore.js [planned]
+│   ├── middleware/             # HTTP logging middleware
 │   ├── scripts/                # Python scripts (gfs_processor.py, requirements.txt)
 │   └── .env.example            # Environment variables template
 ├── styles/                     # CSS (main.css, rtl.css, settings-panel.css)
