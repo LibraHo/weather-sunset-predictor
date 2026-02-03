@@ -111,13 +111,16 @@ weather-sunset-predictor/
 │   ├── index.js                # Express server entry point
 │   ├── routes/                 # API endpoints (weather.js, firecloud.js, prediction.js[planned])
 │   ├── services/               # Windy API proxy + prediction services (PredictionService.js[planned])
-│   ├── utils/                  # SunCalculator.js, GaussianScore.js [planned]
+│   ├── utils/                  # Backend utilities (已实现)
+│   │   ├── SunCalculator.js    # 日出日落计算 (NOAA算法) ✅
+│   │   └── GaussianScore.js    # 高斯评分函数 ✅
 │   ├── middleware/             # HTTP logging middleware
 │   ├── scripts/                # Python scripts (gfs_processor.py, requirements.txt)
 │   └── .env.example            # Environment variables template
 ├── styles/                     # CSS (main.css, rtl.css, settings-panel.css)
 ├── tests/                      # All test suites
 │   ├── unit/                   # Jest unit tests (controllers, models, services, utils)
+│   │   └── server/             # Backend unit tests (67 tests) ✅
 │   ├── integration/            # Jest integration tests
 │   ├── property/               # fast-check property-based tests
 │   └── e2e/                    # Playwright E2E tests
@@ -276,6 +279,8 @@ RATE_LIMIT_MAX_REQUESTS=100
 | `server/index.js` | Express server setup with middleware stack |
 | `server/routes/weather.js` | Weather forecast proxy endpoint |
 | `server/routes/firecloud.js` | Fire cloud overlay endpoint (calls Python) |
+| `server/utils/SunCalculator.js` | 日出日落计算工具 (NOAA算法) — getSunsetTime, getSunriseTime, getGoldenHour, getBlueHour ✅ |
+| `server/utils/GaussianScore.js` | 高斯评分函数工具 — scoreCloudCover, scoreHumidity, scoreVisibility, scoreLowClouds ✅ |
 | `server/scripts/gfs_processor.py` | Python GFS GRIB2 data processing and PNG generation |
 | `config.api.js` | API mode configuration (proxy vs direct) |
 | `index.html` | Main HTML page |

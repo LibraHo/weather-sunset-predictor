@@ -1887,158 +1887,188 @@
   - 后端：`server/routes/prediction.js`、`server/services/PredictionService.js`、`server/services/SurroundingService.js`
   - 前端：`src/services/PredictionAPIService.js`、`src/controllers/PredictionController.js`
 
+#### Agent 分工说明
+
+| Agent | 职责 | 特点 |
+|-------|------|------|
+| **Agent1** | 独立工具类、单元测试、文档 | 任务小、无依赖、可独立完成 |
+| **Agent2（主力）** | 核心服务、路由、前端集成 | 任务大、有依赖、需要连续上下文 |
+
+**并行执行策略**：
+```
+第一轮（并行）:
+  Agent1: 26.1.2 + 26.1.3 (工具类)
+  Agent2: 26.1.1 (核心服务)
+      ↓
+第二轮:
+  Agent1: 26.1.7 (单元测试)
+  Agent2: 26.1.4 + 26.1.5 + 26.1.6 (路由+前端+开关)
+      ↓
+第三轮（并行）:
+  Agent1: Phase 3 (增强预测)
+  Agent2: Phase 2 (周边聚合)
+```
+
 #### 26.1 Phase 1：核心预测算法后端化
 
-- [ ] 26.1.1 创建后端预测服务
+- [ ] 26.1.1 创建后端预测服务 **🔵 Agent2（主力）**
   - 创建 `server/services/PredictionService.js`
   - 迁移 `SunsetPredictionService` 的所有方法
   - 包含：日出/日落时间计算、多因素评分、黄金/蓝调时段
   - 单元测试确保与前端算法结果一致
   - _需求：22.1, 22.2, 22.3_
 
-- [ ] 26.1.2 创建日出日落计算工具
+- [x] 26.1.2 创建日出日落计算工具 **🟢 Agent1** ✅
   - 创建 `server/utils/SunCalculator.js`
   - 实现 NOAA 太阳计算器算法
   - 支持任意日期/坐标的日出日落时间计算
   - _需求：22.2_
 
-- [ ] 26.1.3 创建高斯评分函数工具
+- [x] 26.1.3 创建高斯评分函数工具 **🟢 Agent1** ✅
   - 创建 `server/utils/GaussianScore.js`
   - 实现高斯曲线评分函数
   - 用于云量、湿度、能见度等因素评分
   - _需求：22.3_
 
-- [ ] 26.1.4 创建预测路由
+- [ ] 26.1.4 创建预测路由 **🔵 Agent2（主力）**
   - 创建 `server/routes/prediction.js`
   - 实现 `POST /api/prediction/calculate` 端点
   - 请求参数验证
   - 错误处理和响应格式统一
   - _需求：22.1, 22.13, 22.14_
 
-- [ ] 26.1.5 创建前端 API 客户端
+- [ ] 26.1.5 创建前端 API 客户端 **🔵 Agent2（主力）**
   - 创建 `src/services/PredictionAPIService.js`
   - 实现 `calculate()` 方法调用后端 API
   - 处理响应数据转换为 `SunsetPrediction` 模型
   - _需求：22.4_
 
-- [ ] 26.1.6 添加迁移开关
+- [ ] 26.1.6 添加迁移开关 **🔵 Agent2（主力）**
   - 在 `config.api.js` 添加 `features.useBackendPrediction` 开关
   - 修改 `PredictionController` 根据开关选择调用方式
   - 支持渐进式迁移
   - _需求：22.19_
 
-- [ ] 26.1.7 后端单元测试
-  - 测试 `PredictionService` 各评分方法
-  - 测试日出日落计算准确性
-  - 测试 API 请求参数验证
-  - 测试与前端算法结果一致性
+- [x] 26.1.7 后端单元测试 **🟢 Agent1** ✅ (工具类测试完成，67 tests)
+  - ~~测试 `PredictionService` 各评分方法~~ (待 Agent2 完成 26.1.1)
+  - ✅ 测试日出日落计算准确性 (SunCalculator.test.js, 30 tests)
+  - ~~测试 API 请求参数验证~~ (待 Agent2 完成 26.1.4)
+  - ✅ 测试高斯评分函数 (GaussianScore.test.js, 37 tests)
   - _需求：22.3, 22.5_
 
-#### 26.2 Phase 2：周边采样聚合 API
+#### 26.2 Phase 2：周边采样聚合 API **🔵 Agent2（主力）**
 
-- [ ] 26.2.1 创建周边采样服务
+> ⚠️ 依赖 Phase 1 完成。可与 Phase 3 并行执行。
+
+- [ ] 26.2.1 创建周边采样服务 **🔵 Agent2**
   - 创建 `server/services/SurroundingService.js`
   - 实现 8 方向坐标计算
   - 并行获取天气数据（Promise.all）
   - 为每个点计算预测结果
   - _需求：22.6, 22.7_
 
-- [ ] 26.2.2 创建周边聚合路由
+- [ ] 26.2.2 创建周边聚合路由 **🔵 Agent2**
   - 实现 `POST /api/prediction/surrounding` 端点
   - 支持配置半径（50/100/150 km）
   - 返回 8 个方向的预测结果
   - 包含最佳方向推荐
   - _需求：22.6_
 
-- [ ] 26.2.3 更新前端 API 客户端
+- [ ] 26.2.3 更新前端 API 客户端 **🔵 Agent2**
   - 在 `PredictionAPIService` 添加 `getSurrounding()` 方法
   - 更新 `WeatherController.getSurroundingPredictions()` 调用新 API
   - 添加 `features.useBackendSurrounding` 开关
   - _需求：22.8_
 
-- [ ] 26.2.4 添加周边数据缓存
+- [ ] 26.2.4 添加周边数据缓存 **🔵 Agent2**
   - 创建 `server/services/CacheService.js`
   - 实现缓存键生成（位置+半径+日期+类型）
   - 设置合理的 TTL（1小时）
   - _需求：22.9_
 
-- [ ] 26.2.5 周边 API 测试
+- [ ] 26.2.5 周边 API 测试 **🟢 Agent1**
   - 测试并行请求性能
   - 测试缓存命中率
   - 测试响应时间 < 2000ms
   - _需求：22.17_
 
-#### 26.3 Phase 3：增强预测模型后端化
+#### 26.3 Phase 3：增强预测模型后端化 **🟢 Agent1**
 
-- [ ] 26.3.1 创建增强预测服务
+> ⚠️ 依赖 Phase 1 完成。可与 Phase 2 并行执行。
+
+- [ ] 26.3.1 创建增强预测服务 **🟢 Agent1**
   - 创建 `server/services/EnhancedPredictionService.js`
   - 迁移 `EnhancedSunsetPredictionService` 的所有方法
   - 包含：画布评分、光路通透评分、渲染修正
   - _需求：22.10_
 
-- [ ] 26.3.2 创建增强预测路由
+- [ ] 26.3.2 创建增强预测路由 **🟢 Agent1**
   - 实现 `POST /api/prediction/enhanced` 端点
   - 支持选项参数（includeCanvas, includeLightPath）
   - 支持模型选择（基础/增强）
   - _需求：22.10, 22.11_
 
-- [ ] 26.3.3 更新前端调用
+- [ ] 26.3.3 更新前端调用 **🟢 Agent1**
   - 在 `PredictionAPIService` 添加 `getEnhanced()` 方法
   - 添加 `features.useBackendEnhanced` 开关
   - _需求：22.11, 22.12_
 
-- [ ] 26.3.4 增强预测测试
+- [ ] 26.3.4 增强预测测试 **🟢 Agent1**
   - 测试与前端算法结果一致性
   - 测试光路采样功能
   - _需求：22.12_
 
-#### 26.4 Phase 4：批量预测与性能优化
+#### 26.4 Phase 4：批量预测与性能优化 **🔵 Agent2（主力）**
 
-- [ ] 26.4.1 创建批量预测路由
+> ⚠️ 依赖 Phase 1-3 完成。
+
+- [ ] 26.4.1 创建批量预测路由 **🔵 Agent2**
   - 实现 `POST /api/prediction/batch` 端点
   - 支持多日期批量预测
   - 包含最佳日期推荐
   - _需求：22.16_
 
-- [ ] 26.4.2 优化缓存策略
+- [ ] 26.4.2 优化缓存策略 **🔵 Agent2**
   - 预测缓存 TTL：30 分钟
   - 周边缓存 TTL：1 小时
   - 天气数据缓存 TTL：15 分钟
   - _需求：22.9_
 
-- [ ] 26.4.3 添加请求日志
+- [ ] 26.4.3 添加请求日志 **🟢 Agent1**
   - 记录请求参数、响应时间、错误信息
   - 支持性能监控
   - _需求：22.15_
 
-- [ ] 26.4.4 性能测试
+- [ ] 26.4.4 性能测试 **🟢 Agent1**
   - 单点预测 < 500ms
   - 周边聚合 < 2000ms
   - 批量预测 < 1000ms
   - _需求：22.16, 22.17, 22.18_
 
-#### 26.5 Phase 5：前端代码清理
+#### 26.5 Phase 5：前端代码清理 **🔵 Agent2（主力）**
 
-- [ ] 26.5.1 删除前端预测算法
+> ⚠️ 依赖 Phase 1-4 完成。
+
+- [ ] 26.5.1 删除前端预测算法 **🔵 Agent2**
   - 确认所有迁移开关已启用
   - 删除 `src/services/SunsetPredictionService.js`
   - 删除 `src/services/EnhancedSunsetPredictionService.js`
   - 简化 `src/services/SurroundingPointsService.js`
   - _需求：22.4_
 
-- [ ] 26.5.2 更新控制器
+- [ ] 26.5.2 更新控制器 **🔵 Agent2**
   - 移除 `PredictionController` 中的前端计算逻辑
   - 移除 `WeatherController` 中的周边采样逻辑
   - 统一使用 `PredictionAPIService`
   - _需求：22.4_
 
-- [ ] 26.5.3 更新测试
+- [ ] 26.5.3 更新测试 **🟢 Agent1**
   - 更新前端单元测试
   - 添加 API 集成测试
   - 更新 E2E 测试
   - _需求：22.19_
 
-- [ ] 26.5.4 文档更新
+- [ ] 26.5.4 文档更新 **🟢 Agent1**
   - 更新 API 文档
   - 更新 CLAUDE.md
   - 更新 README
