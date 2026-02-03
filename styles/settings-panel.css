@@ -40,6 +40,16 @@
   animation: slideIn 0.3s ease-out;
 }
 
+/* 设置面板毛玻璃效果 */
+@supports (backdrop-filter: blur(1px)) {
+  .settings-container {
+    background: var(--glass-bg-heavy, rgba(255, 255, 255, 0.85));
+    backdrop-filter: blur(var(--glass-blur-heavy, 20px));
+    -webkit-backdrop-filter: blur(var(--glass-blur-heavy, 20px));
+    border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.4));
+  }
+}
+
 @keyframes slideIn {
   from {
     opacity: 0;
