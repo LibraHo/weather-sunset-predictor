@@ -5,14 +5,10 @@
  * 调用Python脚本处理GFS数据并生成PNG覆盖层
  */
 
-import express from 'express';
-import { spawn } from 'child_process';
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const express = require('express');
+const { spawn } = require('child_process');
+const fs = require('fs/promises');
+const path = require('path');
 
 const router = express.Router();
 
@@ -218,4 +214,4 @@ router.get('/health', (req, res) => {
   });
 });
 
-export default router;
+module.exports = router;

@@ -1550,8 +1550,26 @@ class PredictionController {
       if (title) title.textContent = this.i18n.t('prediction.title');
     }
 
-    // 如果有当前预测数据，重新渲染以更新翻译和格式化
+    // 如果有当前预测数据，重新生成status和description以更新翻译
     if (this.predictions && this.predictions.length > 0) {
+      // 遍历所有预测并重新生成翻译后的文本
+      this.predictions.forEach(prediction => {
+        if (prediction.canvasAnalysis && prediction.lightPathAnalysis && prediction.renderingAnalysis) {
+          // 重新调用calculateFinalScore来获取新语言的status和description
+          const finalResult = this.enhancedPredictionService.calculateFinalScore(
+            prediction.canvasAnalysis,
+            prediction.lightPathAnalysis,
+            prediction.renderingAnalysis,
+            prediction.type // 传递正确的类型（sunrise/sunset）
+          );
+          // 更新预测对象中的文本字段
+          prediction.status = finalResult.status;
+          prediction.description = finalResult.description;
+          prediction.advice = finalResult.advice;
+        }
+      });
+
+      // 重新渲染预测显示
       this.updatePredictionDisplay(this.predictions);
     }
   }

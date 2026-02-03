@@ -373,9 +373,10 @@ class EnhancedSunsetPredictionService {
    * @param {Object} canvasScore - 画布得分
    * @param {Object} lightPathScore - 光路得分
    * @param {Object} renderingFactor - 渲染系数
+   * @param {string} type - 预测类型 ('sunrise' | 'sunset')
    * @returns {Object} 最终预测结果
    */
-  calculateFinalScore(canvasScore, lightPathScore, renderingFactor) {
+  calculateFinalScore(canvasScore, lightPathScore, renderingFactor, type = 'sunset') {
     // 综合得分 = 画布×0.4 + 光路×0.6
     const baseScore = (canvasScore.score * this.FINAL_WEIGHTS.CLOUD_CANVAS) +
                      (lightPathScore.score * this.FINAL_WEIGHTS.LIGHT_PATH);
@@ -444,6 +445,18 @@ class EnhancedSunsetPredictionService {
       advice = this.i18n.t('prediction.status.highlyRecommended');
     }
 
+    // 根据预测类型（日出/日落）调整状态描述
+    if (type === 'sunrise') {
+      // 将sunset相关文本替换为sunrise
+      status = status.replace(/sunset/gi, 'sunrise').replace(/Sunset/g, 'Sunrise').replace(/SUNSET/g, 'SUNRISE');
+      status = status.replace(/evening/gi, 'morning').replace(/night/gi, 'morning');
+      // 替换日落相关描述为日出
+      description = description.replace(/sunset/gi, 'sunrise').replace(/日落/g, '日出').replace(/晚霞/g, '朝霞');
+      description = description.replace(/evening/gi, 'morning').replace(/tonight/gi, 'this morning');
+      // 替换advice中的文本
+      advice = advice.replace(/sunset/gi, 'sunrise').replace(/日落/g, '日出').replace(/晚霞/g, '朝霞');
+    }
+
     return {
       score: clampedScore,  // 返回数字，不使用toFixed
       status,
@@ -493,7 +506,7 @@ class EnhancedSunsetPredictionService {
     console.log('[EnhancedService] 渲染修正:', renderingFactor);
 
     // 5. 综合输出
-    const finalResult = this.calculateFinalScore(canvasScore, lightPathScore, renderingFactor);
+    const finalResult = this.calculateFinalScore(canvasScore, lightPathScore, renderingFactor, type);
     console.log('[EnhancedService] 最终得分:', finalResult.score);
 
     // 返回完整结果

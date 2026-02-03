@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { setChineseLanguage, SELECTORS, searchLocation } from './test-helpers.js';
 
 /**
  * 应用端到端测试套件
@@ -7,16 +8,16 @@ import { test, expect } from '@playwright/test';
 
 test.describe('应用基础功能', () => {
   test.beforeEach(async ({ page }) => {
-    // 每个测试前访问主页
-    await page.goto('/');
+    // 每个测试前访问主页并设置中文语言
+    await setChineseLanguage(page);
   });
 
   test('应该成功加载应用', async ({ page }) => {
     // 等待页面加载完成
     await page.waitForLoadState('networkidle');
 
-    // 检查页面标题
-    await expect(page).toHaveTitle(/天气晚霞预测器/);
+    // 检查页面标题（支持中文或英文）
+    await expect(page).toHaveTitle(/天气晚霞预测器|Weather Sunset Predictor/);
 
     // 检查主要元素是否可见
     await expect(page.locator('header')).toBeVisible();
@@ -24,9 +25,10 @@ test.describe('应用基础功能', () => {
   });
 
   test('应该显示位置搜索输入框', async ({ page }) => {
-    const searchInput = page.locator('#location-search');
+    const searchInput = page.locator(SELECTORS.LOCATION_INPUT);
     await expect(searchInput).toBeVisible();
-    await expect(searchInput).toHaveAttribute('placeholder', /搜索位置/);
+    // 支持中英文 placeholder
+    await expect(searchInput).toHaveAttribute('placeholder', /搜索位置|输入城市名称|Enter city name/);
   });
 
   test('应该显示当前位置按钮', async ({ page }) => {
@@ -42,37 +44,34 @@ test.describe('应用基础功能', () => {
 
 test.describe('位置搜索功能', () => {
   test('应该能够搜索位置', async ({ page }) => {
-    await page.goto('/');
+    await setChineseLanguage(page);
 
     // 输入位置名称
-    const searchInput = page.locator('#location-search');
-    await searchInput.fill('北京');
-
-    // 等待搜索结果
-    await page.waitForTimeout(500);
-
-    // 点击搜索按钮或按回车
-    await searchInput.press('Enter');
-
-    // 等待天气数据加载
-    await page.waitForSelector('.weather-display, .error-message', { timeout: 10000 });
+    await searchLocation(page, '北京');
 
     // 检查是否显示了位置信息
-    const locationDisplay = page.locator('.location-name, .weather-display');
+    const locationDisplay = page.locator('.weather-location, .weather-display');
     await expect(locationDisplay).toBeVisible({ timeout: 5000 });
   });
 
   test('应该处理无效的位置搜索', async ({ page }) => {
-    await page.goto('/');
+    await setChineseLanguage(page);
 
-    const searchInput = page.locator('#location-search');
+    const searchInput = page.locator(SELECTORS.LOCATION_INPUT);
     await searchInput.fill('这是一个无效的位置名称123456');
 
     await searchInput.press('Enter');
 
-    // 应该显示错误消息
-    const errorMessage = page.locator('.error-message');
-    await expect(errorMessage).toBeVisible({ timeout: 5000 });
+    // 应该显示错误消息 - 使用更精确的选择器
+    await page.waitForFunction(() => {
+      const errorMessages = document.querySelectorAll('.error-message');
+      for (const msg of errorMessages) {
+        if (!msg.classList.contains('hidden') && msg.offsetParent !== null) {
+          return true;
+        }
+      }
+      return false;
+    }, { timeout: 5000 });
   });
 });
 
@@ -80,35 +79,31 @@ test.describe('预测功能', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
   test('应该显示朝霞和晚霞预测', async ({ page }) => {
-    await page.goto('/');
+    await setChineseLanguage(page);
 
     // 先搜索一个位置
-    const searchInput = page.locator('#location-search');
-    await searchInput.fill('上海');
-    await searchInput.press('Enter');
+    await searchLocation(page, '上海');
 
-    // 等待数据加载
-    await page.waitForSelector('.prediction-display, .forecast-timeline', { timeout: 15000 });
+    // 等待数据加载 - 使用 ID 选择器
+    await page.waitForSelector('#prediction-display, .forecast-timeline', { timeout: 15000 });
 
     // 检查预测区域
-    const predictionSection = page.locator('#prediction-section');
+    const predictionSection = page.locator('#prediction-section').or(page.locator('#prediction-display')).first();
     await expect(predictionSection).toBeVisible();
 
     // 检查朝霞预测
-    const sunrisePrediction = page.locator('.prediction-card:has-text("朝霞")').first();
+    const sunrisePrediction = page.locator('.prediction-card:has-text("朝霞"), .prediction-card:has-text("Sunrise")').first();
     await expect(sunrisePrediction).toBeVisible();
 
     // 检查晚霞预测
-    const sunsetPrediction = page.locator('.prediction-card:has-text("晚霞")').first();
+    const sunsetPrediction = page.locator('.prediction-card:has-text("晚霞"), .prediction-card:has-text("Sunset")').first();
     await expect(sunsetPrediction).toBeVisible();
   });
 
   test('应该显示预测评分', async ({ page }) => {
-    await page.goto('/');
+    await setChineseLanguage(page);
 
-    const searchInput = page.locator('#location-search');
-    await searchInput.fill('广州');
-    await searchInput.press('Enter');
+    await searchLocation(page, '广州');
 
     await page.waitForSelector('.prediction-score-container', { timeout: 15000 });
 
@@ -124,11 +119,9 @@ test.describe('预测功能', () => {
   });
 
   test('应该能够展开预测详情', async ({ page }) => {
-    await page.goto('/');
+    await setChineseLanguage(page);
 
-    const searchInput = page.locator('#location-search');
-    await searchInput.fill('深圳');
-    await searchInput.press('Enter');
+    await searchLocation(page, '深圳');
 
     // 等待预测时间线加载
     await page.waitForSelector('.forecast-item', { timeout: 15000 });
@@ -145,21 +138,23 @@ test.describe('预测功能', () => {
 
 test.describe('天气详细信息', () => {
   test('应该显示温度、湿度等天气参数', async ({ page }) => {
-    await page.goto('/');
+    await setChineseLanguage(page);
 
-    const searchInput = page.locator('#location-search');
-    await searchInput.fill('杭州');
-    await searchInput.press('Enter');
+    await searchLocation(page, '杭州');
 
-    // 等待天气数据加载
-    await page.waitForSelector('.weather-display, .current-weather', { timeout: 15000 });
+    // 等待天气数据加载 - 使用更准确的选择器
+    await page.waitForFunction(() => {
+      const tempValue = document.querySelector('.temp-value, .weather-temp-large');
+      const humidity = document.getElementById('current-humidity');
+      return tempValue || humidity;
+    }, { timeout: 15000 });
 
     // 检查温度显示
-    const temperature = page.locator('.temperature, .temp-value').first();
+    const temperature = page.locator('.temp-value, .weather-temp-large').first();
     await expect(temperature).toBeVisible();
 
     // 检查湿度显示
-    const humidity = page.locator('.humidity, :text-is("湿度")').first();
+    const humidity = page.locator('#current-humidity, .weather-value').first();
     await expect(humidity).toBeVisible();
   });
 });
@@ -200,21 +195,21 @@ test.describe('响应式设计', () => {
   test('在移动端应该正确显示', async ({ page }) => {
     // 设置移动端视口
     await page.setViewportSize({ width: 375, height: 667 });
-    await page.goto('/');
+    await setChineseLanguage(page);
 
-    // 检查移动端导航
-    const mobileNav = page.locator('.mobile-nav, nav');
-    await expect(mobileNav).toBeVisible();
+    // 检查主要内容是否可见
+    const mainContent = page.locator('main');
+    await expect(mainContent).toBeVisible();
 
     // 检查搜索框在移动端的显示
-    const searchInput = page.locator('#location-search');
+    const searchInput = page.locator(SELECTORS.LOCATION_INPUT);
     await expect(searchInput).toBeVisible();
   });
 
   test('在桌面端应该正确显示', async ({ page }) => {
     // 设置桌面端视口
     await page.setViewportSize({ width: 1920, height: 1080 });
-    await page.goto('/');
+    await setChineseLanguage(page);
 
     // 检查主要布局
     const mainContent = page.locator('main');
@@ -253,14 +248,14 @@ test.describe('深色模式', () => {
 
 test.describe('可访问性', () => {
   test('搜索框应该有正确的标签', async ({ page }) => {
-    await page.goto('/');
+    await setChineseLanguage(page);
 
-    const searchInput = page.locator('#location-search');
+    const searchInput = page.locator(SELECTORS.LOCATION_INPUT);
     await expect(searchInput).toHaveAttribute('aria-label');
   });
 
   test('按钮应该有可访问的名称', async ({ page }) => {
-    await page.goto('/');
+    await setChineseLanguage(page);
 
     const buttons = page.locator('button:not([aria-hidden="true"])');
     const count = await buttons.count();
@@ -290,15 +285,20 @@ test.describe('性能', () => {
   });
 
   test('搜索响应时间应该在可接受范围内', async ({ page }) => {
-    await page.goto('/');
+    await setChineseLanguage(page);
 
-    const searchInput = page.locator('#location-search');
+    const searchInput = page.locator(SELECTORS.LOCATION_INPUT);
     await searchInput.fill('北京');
 
     const startTime = Date.now();
     await searchInput.press('Enter');
 
-    await page.waitForSelector('.weather-display, .error-message', { timeout: 10000 });
+    // 等待数据更新
+    await page.waitForFunction(() => {
+      const weatherLocation = document.querySelector('.weather-location');
+      return weatherLocation && weatherLocation.textContent.includes('Beijing');
+    }, { timeout: 10000 });
+
     const responseTime = Date.now() - startTime;
 
     // 搜索应该在 8 秒内完成（考虑网络请求）

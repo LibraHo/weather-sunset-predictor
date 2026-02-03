@@ -52,10 +52,10 @@ if (config && config.apiKey) {
 }
 
 // 配置：是否使用模拟API（用于离线测试）
-// 优先从配置文件读取，如果没有配置则使用默认值false
-const USE_MOCK_API = config && typeof config.useMockAPI !== 'undefined'
-  ? config.useMockAPI
-  : false;
+// 优先从 localStorage 读取（测试环境），然后从配置文件读取，如果没有配置则使用默认值false
+const USE_MOCK_API = configService.getUseMockAPI() !== null
+  ? configService.getUseMockAPI()
+  : (config && typeof config.useMockAPI !== 'undefined' ? config.useMockAPI : false);
 
 console.log('[App] API密钥状态:', savedAPIKey ? '已配置' : '未配置');
 console.log('[App] Mock API:', USE_MOCK_API ? '启用' : '禁用');
