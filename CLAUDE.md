@@ -38,6 +38,7 @@ The project has detailed specification documents under `.kiro/specs/weather-suns
 | 18 | Windy Map Forecast API Integration (地图预测) | Done |
 | 19 | Surrounding Fire Cloud Visualization (周边火烧云可视化) — radar chart | Done |
 | 20 | Fire Cloud Map Overlay (火烧云地图覆盖层) — GFS data, heatmap | Phase 1 Done (frontend Canvas); Phase 2 pending (backend Python GFS) |
+| 21 | UI Glassmorphism Effect (UI毛玻璃效果) — backdrop-filter blur on cards, header, modals | Pending |
 
 ### Key Design Decisions (from design.md)
 
@@ -48,6 +49,7 @@ The project has detailed specification documents under `.kiro/specs/weather-suns
 - **Theme system**: CSS custom properties with `data-theme` attribute. Three modes: light, dark, auto (follows system `prefers-color-scheme`).
 - **Unit conversion**: Applied at render layer only — raw data stays in metric (Celsius, m/s). `UnitConverter` utility class handles conversions.
 - **Settings panel**: Modal-based, grouped sections (data source, notifications, language, personalization). Changes save immediately to localStorage.
+- **Glassmorphism**: CSS Variables (`--glass-bg`, `--glass-blur`, etc.) drive semi-transparent backgrounds + `backdrop-filter: blur()`. `@supports` for graceful degradation. Reduced blur on mobile for performance.
 
 ## Architecture
 

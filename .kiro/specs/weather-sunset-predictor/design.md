@@ -2602,3 +2602,106 @@ addOverlayToMap(imageBase64, bounds) {
 3. **资源清理**：
    - 临时文件清理（即使脚本失败）
    - 进程管理（避免僵尸进程）
+
+## 毛玻璃效果设计决策（需求21）
+
+### 设计概述
+
+采用 Glassmorphism（毛玻璃/磨砂玻璃）设计风格，为应用主要UI组件添加半透明背景 + 背景模糊 + 微妙边框的视觉效果，提升界面层次感和现代感。
+
+### CSS变量体系
+
+在现有CSS自定义属性系统中扩展毛玻璃相关变量：
+
+```css
+:root {
+  /* 毛玻璃效果 - 明亮模式 */
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-bg-heavy: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --glass-blur: 12px;
+  --glass-blur-heavy: 20px;
+  --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.08);
+}
+
+body.theme-dark {
+  /* 毛玻璃效果 - 暗色模式 */
+  --glass-bg: rgba(30, 30, 30, 0.65);
+  --glass-bg-heavy: rgba(30, 30, 30, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: 12px;
+  --glass-blur-heavy: 20px;
+  --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+}
+```
+
+### 设计决策理由
+
+1. **CSS Variables 驱动**：所有毛玻璃参数通过CSS自定义属性定义，与现有主题系统（`data-theme`属性、`body.theme-dark`类）完全兼容。修改一处变量即可全局调整效果强度。
+
+2. **分层效果策略**：
+   - **重度毛玻璃**（`--glass-bg-heavy` + `--glass-blur-heavy`）：用于 header、footer 等固定定位元素，需要更强的可读性
+   - **标准毛玻璃**（`--glass-bg` + `--glass-blur`）：用于 `.card`、`.prediction-card`、`.modal-content` 等内容卡片
+
+3. **受影响的组件**：
+   - `header` — 顶部导航栏（重度毛玻璃）
+   - `footer` — 底部页脚（重度毛玻璃）
+   - `.card` — 通用卡片组件（标准毛玻璃）
+   - `.prediction-card` — 预测卡片（标准毛玻璃）
+   - `.modal-content` — 模态框内容区域（重度毛玻璃）
+   - `.settings-panel-content` — 设置面板（重度毛玻璃）
+
+4. **优雅降级**：使用 `@supports (backdrop-filter: blur(1px))` 条件规则，仅在支持 `backdrop-filter` 的浏览器上启用毛玻璃效果。不支持时保持现有不透明背景，确保零功能损失。
+
+5. **性能优化**：
+   - 移动端使用 `@media (max-width: 768px)` 降低模糊强度（`blur(8px)` 代替 `blur(12px)`），减少GPU负担
+   - 避免在频繁重绘的元素（图表Canvas、地图容器）上使用毛玻璃
+   - 使用 `-webkit-backdrop-filter` 前缀确保Safari兼容
+
+6. **可读性保障**：
+   - 明亮模式下白色半透明背景（65%不透明度）+ 12px模糊确保文字对比度
+   - 暗色模式下深色半透明背景（65%不透明度）确保浅色文字可读
+   - 添加微妙的 `border: 1px solid var(--glass-border)` 增强边缘可辨识度
+
+7. **悬停交互**：卡片悬停时轻微提升不透明度（如从65%→75%）并增强阴影，提供视觉反馈但不改变模糊半径（避免重绘开销）。
+
+### 实现方式
+
+核心CSS mixin模式（在 `styles/main.css` 中实现）：
+
+```css
+/* 标准毛玻璃效果 */
+@supports (backdrop-filter: blur(1px)) {
+  .card,
+  .prediction-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+}
+
+/* 重度毛玻璃效果（固定元素） */
+@supports (backdrop-filter: blur(1px)) {
+  header,
+  footer,
+  .modal-content {
+    background: var(--glass-bg-heavy);
+    backdrop-filter: blur(var(--glass-blur-heavy));
+    -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+}
+```
+
+### 浏览器兼容性
+
+| 浏览器 | `backdrop-filter` 支持 |
+|--------|----------------------|
+| Chrome 76+ | ✅ 原生支持 |
+| Firefox 103+ | ✅ 原生支持 |
+| Safari 9+ | ✅ 需要 `-webkit-` 前缀 |
+| Edge 79+ | ✅ 原生支持 |
+| IE | ❌ 优雅降级为不透明背景 |
