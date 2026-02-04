@@ -2107,11 +2107,11 @@ container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
 
 **背景**：需求20（火烧云地图覆盖层）因 iframe 跨域问题暂时移除，需要完全重构。
 
-- [ ] 26.6.1 地图方案决策 **🟢 Agent1**
-  - 调研 Windy Professional API 许可证价格和条款
-  - 评估方案A（Windy + Leaflet）vs 方案B（Leaflet + OSM）
-  - 输出技术选型文档
-  - 工作量：2天
+- [x] 26.6.1 地图方案决策 **🟢 Agent1** ✅
+  - ✅ 调研 Windy Professional API 许可证价格和条款
+  - ✅ 评估方案A（Windy + Leaflet）vs 方案B（Leaflet + OSM）
+  - ✅ 输出技术选型文档（见 design.md "26.6.1 地图方案决策文档"）
+  - ✅ **决策结论**：采用方案C（混合方案）- Leaflet + OSM 开发，可选升级 Windy
   - _需求：20 架构重构_
 
 - [ ] 26.6.2 重构 WindyMapService **🔵 Agent2**
