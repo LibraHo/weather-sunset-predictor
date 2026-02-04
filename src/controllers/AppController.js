@@ -663,7 +663,8 @@ class AppController {
       });
     });
 
-    // 任务20：设置火烧云覆盖层UI事件
+    // 任务20：设置火烧云覆盖层UI事件 - 暂时禁用（2026-02-04，等待Phase 6重构）
+    /*
     const overlayToggle = document.getElementById('firecloud-overlay-toggle');
     const overlayControls = document.getElementById('overlay-controls');
     const refreshOverlayBtn = document.getElementById('refresh-overlay-btn');
@@ -707,6 +708,7 @@ class AppController {
         }
       });
     });
+    */
 
     // 初始化其他UI组件...
 

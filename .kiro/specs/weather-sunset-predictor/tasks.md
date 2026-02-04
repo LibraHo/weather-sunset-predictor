@@ -1285,10 +1285,12 @@
 
 ### 任务 20：火烧云地图覆盖层（需求20）
 
-**状态：⚠️ 架构缺陷 - 功能不可用**
-- **发现日期**: 2026-02-03
-- **问题**: 地图拖动时覆盖层错位（iframe跨域隔离导致）
-- **详情**: 见下方"架构缺陷说明"
+**状态：🔒 暂时移除 - 等待Phase 6重构**
+- **更新日期**: 2026-02-04
+- **决策**: 采用方案C（暂时移除），待需求22完成后启动Phase 6
+- **UI状态**: 已隐藏覆盖层开关和相关UI
+- **重构计划**: 见任务26.6（Phase 6）
+- **预计启动**: Phase 1-5完成后（7-8周后）
 
 **第一阶段实现（2026-02-01完成）**：
 - ✅ FireCloudOverlayService: 320行，生成热力图PNG覆盖层
@@ -1321,12 +1323,15 @@ container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
 - **方案B**: 切换到Leaflet + OpenStreetMap（完全开源可控）
 - **方案C**: 暂时移除此功能，保留雷达图（需求19）
 
-**第二阶段（未来扩展）**：
-- [ ] 20.1 后端GFS数据处理服务（Python）
+**Phase 6 重构计划（见任务26.6）**：
+- [ ] 20.1 后端GFS数据处理服务（Python）→ **任务26.6.4**
   - 创建Python脚本获取GFS GRIB2数据
   - 实现"光路追踪+云量评分"算法
   - 使用xarray、cfgrib、numpy、Pillow处理数据
-- [ ] 20.3 后端API端点
+- [ ] 20.2 地图集成重构 → **任务26.6.2, 26.6.3**
+  - 放弃iframe方式，使用Leaflet直接集成
+  - 覆盖层作为Leaflet图层，实现完美同步
+- [ ] 20.3 后端API端点 → **任务26.6.5**
   - 创建 /api/firecloud/overlay 接口
   - Node.js调用Python子进程或独立服务
 
@@ -2092,6 +2097,88 @@ container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
   - 更新 README
   - _需求：22.20_
 
+
+#### 26.6 Phase 6：火烧云地图重构（需求20）**🟢 Agent1 + 🔵 Agent2**
+
+> ⚠️ 依赖 Phase 1-5 完成。解决需求20的架构缺陷。
+
+**背景**：需求20（火烧云地图覆盖层）因 iframe 跨域问题暂时移除，需要完全重构。
+
+- [ ] 26.6.1 地图方案决策 **🟢 Agent1**
+  - 调研 Windy Professional API 许可证价格和条款
+  - 评估方案A（Windy + Leaflet）vs 方案B（Leaflet + OSM）
+  - 输出技术选型文档
+  - 工作量：2天
+  - _需求：20 架构重构_
+
+- [ ] 26.6.2 重构 WindyMapService **🔵 Agent2**
+  - 移除 iframe 嵌入方式
+  - 使用 Windy Leaflet Plugin 或 Leaflet 直接集成
+  - 实现 `initialize(container, lat, lon, zoom)` 方法
+  - 实现 `getMap()` 返回 Leaflet map 实例
+  - 工作量：3天
+  - _需求：20.7_
+
+- [ ] 26.6.3 重构 FireCloudOverlayService **🔵 Agent2**
+  - 使用 `L.imageOverlay()` 创建覆盖层图层
+  - 实现 `displayOnMap(map, lat, lon, radius, type)` 方法
+  - 实现 `removeFromMap(map)` 方法
+  - 确保覆盖层与地图完美同步
+  - 工作量：2天
+  - _需求：20.7, 20.9_
+
+- [ ] 26.6.4 完成 Python GFS 处理器 **🟢 Agent1**
+  - 实现 `server/scripts/gfs_processor.py`
+  - 下载 GFS GRIB2 数据（TCDC, LCDC, MCDC, HCDC）
+  - 实现光路追踪算法（向西检查低云阻挡）
+  - 实现云量评分算法（高斯曲线）
+  - 生成 RGBA PNG 图像
+  - 输出 JSON 元数据（bounds, path, timestamp）
+  - 工作量：5天
+  - _需求：20.2, 20.3, 20.4, 20.5, 20.6_
+
+- [ ] 26.6.5 后端 API 集成 **🔵 Agent2**
+  - 更新 `server/routes/firecloud.js` 路由
+  - 创建 `server/services/FireCloudService.js`
+  - 实现缓存策略（覆盖层30分钟，GFS数据1小时）
+  - 实现 `child_process.spawn()` 调用 Python
+  - 处理 Python 输出并返回 base64 编码图像
+  - 工作量：2天
+  - _需求：20.11_
+
+- [ ] 26.6.6 前后端联调测试 **🟢 Agent1 + 🔵 Agent2**
+  - 测试地图拖动时覆盖层同步
+  - 测试地图缩放时覆盖层同步
+  - 测试覆盖层刷新功能
+  - 测试朝霞/晚霞切换
+  - 测试错误处理和降级
+  - 工作量：2天
+  - _需求：20.9, 20.10, 20.15_
+
+- [ ] 26.6.7 性能优化 **🟢 Agent1**
+  - 优化 GFS 数据下载速度
+  - 优化光路追踪算法（NumPy 向量化）
+  - 实现后台预下载（可选）
+  - 确保响应时间 < 3秒
+  - 测试缓存命中率 > 60%
+  - 工作量：2天
+  - _需求：20.11, 20.14_
+
+- [ ] 26.6.8 文档和验收 **🟢 Agent1**
+  - 更新 CLAUDE.md（需求20状态改为"已完成"）
+  - 更新 requirements.md（移除"暂时移除"标记）
+  - 更新 design.md（添加最终实现说明）
+  - 验证需求20的全部15个验收标准
+  - 工作量：1天
+  - _需求：20（全部验收标准）_
+
+**Phase 6 总工作量**：19 个工作日（约3-4周）
+
+**风险提示**：
+- ⚠️ Windy Professional 许可证可能成本较高，需提前确认预算
+- ⚠️ GFS 数据下载依赖 NOAA 服务稳定性
+- ⚠️ Python 环境配置（xarray, cfgrib, numpy, Pillow）需要测试
+
 ---
 
 ## 执行计划总结
@@ -2105,12 +2192,13 @@ container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
 2. Day 2：算法实现，PNG生成
 3. Day 3：Node.js集成，前端集成测试
 
-### 阶段3：前后端分离（预计7-8周）
+### 阶段3：前后端分离（预计10-12周）
 1. Phase 1 (2周)：核心预测算法后端化
 2. Phase 2 (2周)：周边采样聚合 API
 3. Phase 3 (1周)：增强预测模型后端化
 4. Phase 4 (1周)：批量预测与性能优化
 5. Phase 5 (1-2周)：前端代码清理与测试
+6. Phase 6 (3-4周)：火烧云地图重构（需求20）
 
 ### 成功标准
 - ✅ 所有新测试通过

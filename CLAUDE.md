@@ -37,9 +37,9 @@ The project has detailed specification documents under `.kiro/specs/weather-suns
 | 17 | Personalization (个性化设置) — units, theme, default location | Done |
 | 18 | Windy Map Forecast API Integration (地图预测) | Done |
 | 19 | Surrounding Fire Cloud Visualization (周边火烧云可视化) — radar chart | Done |
-| 20 | Fire Cloud Map Overlay (火烧云地图覆盖层) — GFS data, heatmap | Phase 1 Done (frontend Canvas); Phase 2 pending (backend Python GFS) |
+| 20 | Fire Cloud Map Overlay (火烧云地图覆盖层) — GFS data, heatmap | Temporarily Removed (架构缺陷，等待Phase 6重构) |
 | 21 | UI Glassmorphism Effect (UI毛玻璃效果) — backdrop-filter blur on cards, header, modals | Done |
-| 22 | Frontend-Backend Separation (前后端分离) — migrate prediction algorithms to backend, support multi-platform clients | Planned (5 phases) |
+| 22 | Frontend-Backend Separation (前后端分离) — migrate prediction algorithms to backend, support multi-platform clients | Planned (6 phases, Phase 6 fixes Req 20) |
 
 ### Key Design Decisions (from design.md)
 
@@ -92,6 +92,8 @@ Frontend request → /api/prediction/surrounding → Node.js SurroundingService
 | `/api/prediction/surrounding` | POST | 8-direction aggregated predictions |
 | `/api/prediction/enhanced` | POST | Enhanced prediction with canvas/lightpath scoring |
 | `/api/prediction/batch` | POST | Multi-day batch predictions |
+
+**Note**: Requirement 22 includes 6 phases. Phase 6 will fix Requirement 20 (Fire Cloud Map Overlay) by refactoring the map integration from iframe to Leaflet + completing the backend GFS processing service.
 
 ## Directory Structure
 
@@ -306,5 +308,6 @@ Toggle with `USE_MOCK_API` flag in `src/app.js`. Mock services are used in Jest 
 - **E2E tests start their own server**: Playwright config auto-starts `npx http-server . -p 8080` — don't conflict with this port.
 - **Python server uses port 9002**, backend uses **port 3000**, Playwright E2E uses **port 8080**.
 - **Requirement traceability**: Code comments reference requirements by number (e.g., `// 需求：5.1`). When modifying code, check which requirement it maps to in `.kiro/specs/weather-sunset-predictor/requirements.md`.
-- **Phase 2 GFS backend not yet implemented**: The fire cloud overlay currently uses frontend-only Canvas rendering. The Python GFS processing pipeline (`server/scripts/gfs_processor.py`) and its API endpoint (`/api/firecloud/overlay`) are scaffolded but not production-ready.
+- **Requirement 20 temporarily removed**: The fire cloud map overlay feature (需求20) has been temporarily removed due to iframe cross-origin issues. UI controls are hidden. The feature will be completely refactored in Phase 6 of Requirement 22 using Leaflet instead of iframe.
+- **Phase 6 pending**: After completing Phases 1-5 of Requirement 22 (7-8 weeks), Phase 6 (3-4 weeks) will fix Requirement 20 by refactoring map integration and completing the Python GFS backend.
 - **Windy Map API licensing**: Testing environment must use Testing API keys; production requires Professional license per Windy terms.
