@@ -46,8 +46,8 @@ class WeatherData {
     return (
       // 时间戳应该是正数
       this.timestamp > 0 &&
-      // 温度范围：-100°C 到 60°C（极端气候范围）
-      this.temp >= -100 &&
+      // 温度范围：-60°C 到 60°C（与 isFieldValid 和 getValidationErrors 保持一致）
+      this.temp >= -60 &&
       this.temp <= 60 &&
       // 湿度：0-100%
       this.humidity >= 0 &&

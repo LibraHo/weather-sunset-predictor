@@ -57,7 +57,7 @@ describe('WeatherData - 边缘测试', () => {
       );
       expect(data.isValid()).toBe(false);
       expect(data.isFieldValid('temp')).toBe(false);
-      expect(data.getValidationErrors()).toContain('温度必须在-100°C到60°C之间');
+      expect(data.getValidationErrors()).toContain('温度必须在-60°C到60°C之间');
     });
 
     test('应该拒绝61°C（超出上限）', () => {
@@ -74,17 +74,18 @@ describe('WeatherData - 边缘测试', () => {
       expect(data.isFieldValid('temp')).toBe(false);
     });
 
-    test('应该接受-100°C（绝对下限）', () => {
+    test('应该拒绝-100°C（超出下限）', () => {
       const data = new WeatherData(
         Date.now(),
-        -100,
+        -100,  // 超出下限
         50,
         30,
         10,
         1013,
         10
       );
-      expect(data.isValid()).toBe(true);
+      expect(data.isValid()).toBe(false);
+      expect(data.isFieldValid('temp')).toBe(false);
     });
   });
 
@@ -489,7 +490,7 @@ describe('WeatherData - 边缘测试', () => {
       const errors = data.getValidationErrors();
       expect(errors.length).toBeGreaterThan(0);
       expect(errors).toContain('时间戳必须是正数');
-      expect(errors).toContain('温度必须在-100°C到60°C之间');
+      expect(errors).toContain('温度必须在-60°C到60°C之间');
       expect(errors).toContain('湿度必须在0%到100%之间');
       expect(errors).toContain('云量必须在0%到100%之间');
       expect(errors).toContain('风速必须在0到500 km/h之间');
