@@ -15,7 +15,7 @@ import EnhancedSunsetPredictionService from '../services/EnhancedSunsetPredictio
 import PredictionAPIService from '../services/PredictionAPIService.js';
 import NotificationService from '../services/NotificationService.js';
 import i18n from '../i18n.js';
-import { loadConfig } from '../config.api.js';
+import { loadConfig } from '../../config.api.js';
 
 class PredictionController {
   /**
