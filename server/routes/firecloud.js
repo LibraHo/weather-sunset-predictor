@@ -3,14 +3,20 @@
  *
  * 提供火烧云地图覆盖层API端点
  * 调用Python脚本处理GFS数据并生成PNG覆盖层
+ * Phase 4: 添加缓存支持
  */
 
 const express = require('express');
 const { spawn } = require('child_process');
 const fs = require('fs/promises');
 const path = require('path');
+const CacheService = require('../services/CacheService.js');
+const cacheConfig = require('../config/cacheConfig.js');
 
 const router = express.Router();
+
+// 创建缓存服务实例
+const cacheService = new CacheService({ defaultTTL: cacheConfig.ttl.FIRECLOUD_OVERLAY });
 
 /**
  * GET /api/firecloud/overlay
@@ -82,6 +88,15 @@ router.get('/overlay', async (req, res) => {
   }
 
   console.log(`[FireCloud API] 处理请求: lat=${latNum}, lon=${lonNum}, radius=${radiusNum}km, type=${type}`);
+
+  // Phase 4: 检查缓存
+  const cacheKey = cacheConfig.buildKey('OVERLAY', `${latNum.toFixed(2)}_${lonNum.toFixed(2)}_${radiusNum}_${type}`);
+  const cachedResult = await cacheService.get(cacheKey);
+
+  if (cachedResult) {
+    console.log('[FireCloud API] 使用缓存数据');
+    return res.json(cachedResult);
+  }
 
   try {
     // 构造Python脚本路径
@@ -157,12 +172,19 @@ router.get('/overlay', async (req, res) => {
           console.warn('[FireCloud API] 清理临时文件失败:', cleanupError);
         }
 
-        // 返回结果
-        res.json({
+        // 构造响应数据
+        const responseData = {
           image: imageDataUrl,
           bounds: metadata.bounds,
           timestamp: metadata.timestamp
-        });
+        };
+
+        // Phase 4: 缓存结果
+        await cacheService.set(cacheKey, responseData);
+        console.log('[FireCloud API] 结果已缓存');
+
+        // 返回结果
+        res.json(responseData);
 
         console.log('[FireCloud API] 请求处理完成');
 

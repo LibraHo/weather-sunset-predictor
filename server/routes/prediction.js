@@ -15,10 +15,11 @@ const PredictionService = require('../services/PredictionService.js');
 const EnhancedPredictionService = require('../services/EnhancedPredictionService.js');
 const SurroundingService = require('../services/SurroundingService.js');
 const CacheService = require('../services/CacheService.js');
+const cacheConfig = require('../config/cacheConfig.js');
 
-// 创建服务实例
+// 创建服务实例（使用统一TTL配置）
 const predictionService = new PredictionService();
-const cacheService = new CacheService({ defaultTTL: 3600 }); // 1小时默认TTL
+const cacheService = new CacheService({ defaultTTL: cacheConfig.ttl.DEFAULT });
 const surroundingService = new SurroundingService({ cacheService });
 
 // ========== 请求验证中间件 ==========

@@ -10,6 +10,7 @@
 
 const windyService = require('./windyService.js');
 const PredictionService = require('./PredictionService.js');
+const cacheConfig = require('../config/cacheConfig.js');
 
 // ========== 服务类定义 ==========
 
@@ -245,7 +246,7 @@ class SurroundingService {
 
     if (this.cacheService) {
       const cacheKey = this._getCacheKey(lat, lon, radius, type, targetDate);
-      await this.cacheService.set(cacheKey, data, 3600); // 1小时TTL
+      await this.cacheService.set(cacheKey, data, cacheConfig.getTTL('SURROUNDING'));
     }
 
     console.log('[SurroundingService] 周边预测数据获取完成');
