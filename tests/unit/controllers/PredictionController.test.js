@@ -1,6 +1,6 @@
 /**
  * PredictionController 单元测试
- * 
+ *
  * 测试预测控制器的功能，包括：
  * - 预测卡片点击事件绑定
  * - 预测详情展开和收起
@@ -9,9 +9,24 @@
 
 import PredictionController from '../../../src/controllers/PredictionController.js';
 
+// Mock StorageService
+const mockStorageService = {
+  getAPIKey: () => 'test-api-key',
+  getCachedWeatherData: () => null,
+  setCachedWeatherData: () => {},
+  getRecentSearches: () => [],
+  addRecentSearch: () => {},
+  clearRecentSearches: () => {},
+  getFavorites: () => [],
+  addFavorite: () => {},
+  removeFavorite: () => {},
+  isFavorite: () => false,
+  getNotificationSettings: () => ({ enabled: false }),
+  setNotificationSettings: () => {}
+};
+
 describe('PredictionController', () => {
   let predictionController;
-  let mockPredictionService;
 
   beforeEach(() => {
     // 设置 DOM 环境
@@ -33,13 +48,8 @@ describe('PredictionController', () => {
       <div id="error-message" class="error-message hidden"></div>
     `;
 
-    // 创建模拟的预测服务
-    mockPredictionService = {
-      calculatePredictions: () => {}
-    };
-
     // 创建控制器实例
-    predictionController = new PredictionController(mockPredictionService);
+    predictionController = new PredictionController(mockStorageService);
   });
 
   afterEach(() => {
@@ -48,9 +58,10 @@ describe('PredictionController', () => {
 
   describe('构造函数', () => {
     test('应该正确初始化控制器', () => {
-      expect(predictionController.predictionService).toBe(mockPredictionService);
+      expect(predictionController.storageService).toBe(mockStorageService);
       expect(predictionController.predictions).toEqual([]);
       expect(predictionController.expandedPredictionIndex).toBeNull();
+      expect(predictionController.predictionService).toBeTruthy();
     });
   });
 
@@ -185,17 +196,14 @@ describe('PredictionController', () => {
   describe('renderPredictionDetails', () => {
     test('应该渲染完整的预测详情', () => {
       const prediction = {
-        temperature: 20,
-        humidity: 65,
-        cloudCover: 50,
-        windSpeed: 10,
-        pressure: 1013,
-        visibility: 15,
-        sunsetTime: '2024-01-01T18:30:00',
+        score: 75,
+        quality: 'excellent',
+        sunsetTime: new Date('2024-01-01T18:30:00'),
         factors: {
-          cloudScore: 8.5,
-          humidityScore: 7.0,
-          visibilityScore: 9.0
+          cloudCover: { value: 50, score: 80 },
+          humidity: { value: 65, score: 70 },
+          visibility: { value: 15, score: 90 },
+          lowClouds: { value: 10, score: 85 }
         }
       };
 
@@ -203,32 +211,32 @@ describe('PredictionController', () => {
 
       // 验证包含所有关键元素
       expect(html).toContain('详细气象数据');
-      expect(html).toContain('20°C');
+      expect(html).toContain('总评分');
       expect(html).toContain('65%');
       expect(html).toContain('50%');
-      expect(html).toContain('10 km/h');
-      expect(html).toContain('1013 hPa');
-      expect(html).toContain('15 km');
-      expect(html).toContain('最佳观赏时间');
-      expect(html).toContain('影响因素分析');
+      expect(html).toContain('15.0 km');
+      expect(html).toContain('10%');
     });
 
     test('应该处理部分数据缺失的情况', () => {
       const prediction = {
-        temperature: 20,
-        humidity: 65
-        // 其他字段缺失
+        score: 60,
+        factors: {
+          cloudCover: { value: 50, score: 80 },
+          humidity: { value: 65, score: 70 }
+          // 其他字段缺失
+        }
       };
 
       const html = predictionController.renderPredictionDetails(prediction);
 
       // 应该包含存在的数据
-      expect(html).toContain('20°C');
       expect(html).toContain('65%');
-      
+      expect(html).toContain('50%');
+
       // 不应该包含缺失的数据
-      expect(html).not.toContain('云量');
-      expect(html).not.toContain('风速');
+      expect(html).not.toContain('能见度');
+      expect(html).not.toContain('低云');
     });
 
     test('当预测对象为空时应该返回错误消息', () => {
@@ -328,19 +336,45 @@ describe('PredictionController', () => {
   describe('updatePredictionDisplay', () => {
     test('应该存储预测数据并绑定事件', () => {
       const mockPredictions = [
-        { date: '2024-01-01', score: 85 },
-        { date: '2024-01-02', score: 70 }
+        {
+          date: new Date('2024-01-01'),
+          score: 85,
+          quality: 'excellent',
+          sunsetTime: new Date('2024-01-01T18:30:00'),
+          sunriseTime: new Date('2024-01-01T06:30:00'),
+          type: 'sunset',
+          factors: {
+            cloudCover: { value: 50, score: 80 },
+            humidity: { value: 60, score: 70 },
+            visibility: { value: 15, score: 90 },
+            lowClouds: { value: 20, score: 75 }
+          }
+        },
+        {
+          date: new Date('2024-01-02'),
+          score: 70,
+          quality: 'good',
+          sunsetTime: new Date('2024-01-02T18:30:00'),
+          sunriseTime: new Date('2024-01-02T06:30:00'),
+          type: 'sunset',
+          factors: {
+            cloudCover: { value: 60, score: 70 },
+            humidity: { value: 65, score: 65 },
+            visibility: { value: 12, score: 80 },
+            lowClouds: { value: 30, score: 60 }
+          }
+        }
       ];
 
       // 记录绑定前的状态
       const initialPredictions = predictionController.predictions;
-      
+
       predictionController.updatePredictionDisplay(mockPredictions);
 
       // 验证预测数据已存储
       expect(predictionController.predictions).toEqual(mockPredictions);
       expect(predictionController.predictions).not.toBe(initialPredictions);
-      
+
       // 验证事件已绑定（通过检查DOM元素的属性）
       const forecastItems = document.querySelectorAll('.forecast-item');
       if (forecastItems.length > 0) {

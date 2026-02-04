@@ -574,7 +574,7 @@ describe('SunsetPredictionService', () => {
 
       expect(window.start).toBeInstanceOf(Date);
       expect(window.end).toBeInstanceOf(Date);
-      expect(window.sunsetTime).toEqual(prediction.sunsetTime);
+      expect(window.referenceTime).toEqual(prediction.sunsetTime);
 
       // 验证时间窗口是日落前后30分钟
       const expectedStart = new Date(prediction.sunsetTime.getTime() - 30 * 60 * 1000);
