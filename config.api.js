@@ -28,8 +28,8 @@ const API_CONFIG = {
     // Phase 1: 基础预测服务后端化
     USE_BACKEND_PREDICTION: true,
 
-    // Phase 2: 周边采样聚合后端化
-    USE_BACKEND_SURROUNDING: false,
+    // Phase 2: 周边采样聚合后端化 ✅ 已完成（2026-02-04）
+    USE_BACKEND_SURROUNDING: true,  // 默认启用，可通过localStorage关闭
 
     // Phase 3: 增强预测模型后端化
     USE_BACKEND_ENHANCED: false
