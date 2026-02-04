@@ -47,6 +47,7 @@ The project has detailed specification documents under `.kiro/specs/weather-suns
 - **Cloud layer analysis**: High clouds (>6km), mid clouds (2-6km), low clouds (<2km) — each has different impact on fire clouds.
 - **Surrounding points**: 8-direction sampling (N/NE/E/SE/S/SW/W/NW) at configurable radius (50/100/150 km), parallel API calls via `Promise.all`.
 - **Fire cloud overlay**: Phase 1 uses frontend Canvas with existing Windy data. Phase 2 planned: backend Python (xarray+cfgrib) processing NOAA GFS GRIB2 data with "light path tracing + cloud scoring" algorithm.
+- **Map solution (Phase 6 decision)**: Adopt hybrid approach - Leaflet + OSM for development/free tier, optional upgrade to Windy Professional API. Uses `L.imageOverlay()` for fire cloud heatmap overlay. See `.kiro/specs/weather-sunset-predictor/design.md` section "26.6.1 地图方案决策文档" for details.
 - **Theme system**: CSS custom properties with `data-theme` attribute. Three modes: light, dark, auto (follows system `prefers-color-scheme`).
 - **Unit conversion**: Applied at render layer only — raw data stays in metric (Celsius, m/s). `UnitConverter` utility class handles conversions.
 - **Settings panel**: Modal-based, grouped sections (data source, notifications, language, personalization). Changes save immediately to localStorage.
