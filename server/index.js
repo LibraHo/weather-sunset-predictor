@@ -6,6 +6,7 @@ require('dotenv').config();
 
 const weatherRoutes = require('./routes/weather');
 const firecloudRoutes = require('./routes/firecloud');
+const predictionRoutes = require('./routes/prediction');
 const { requestLogger } = require('./middleware/logger');
 
 const app = express();
@@ -40,6 +41,7 @@ app.get('/api/config/map-key', (req, res) => {
 
 app.use('/api/weather', weatherRoutes);
 app.use('/api/firecloud', firecloudRoutes);
+app.use('/api/prediction', predictionRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

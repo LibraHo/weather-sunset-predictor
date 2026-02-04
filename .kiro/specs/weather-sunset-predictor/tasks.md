@@ -2019,16 +2019,18 @@ container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
 
 > ⚠️ 依赖 Phase 1 完成。可与 Phase 2 并行执行。
 
-- [ ] 26.3.1 创建增强预测服务 **🟢 Agent1**
-  - 创建 `server/services/EnhancedPredictionService.js`
-  - 迁移 `EnhancedSunsetPredictionService` 的所有方法
-  - 包含：画布评分、光路通透评分、渲染修正
+- [x] 26.3.1 创建增强预测服务 **🟢 Agent1** ✅
+  - ✅ 创建 `server/services/EnhancedPredictionService.js`
+  - ✅ 迁移 `EnhancedSunsetPredictionService` 的所有方法
+  - ✅ 包含：画布评分、光路通透评分、渲染修正、批量预测
   - _需求：22.10_
 
-- [ ] 26.3.2 创建增强预测路由 **🟢 Agent1**
-  - 实现 `POST /api/prediction/enhanced` 端点
-  - 支持选项参数（includeCanvas, includeLightPath）
-  - 支持模型选择（基础/增强）
+- [x] 26.3.2 创建增强预测路由 **🟢 Agent1** ✅
+  - ✅ 实现 `POST /api/prediction/enhanced` 端点
+  - ✅ 实现 `POST /api/prediction/enhanced/batch` 端点
+  - ✅ 实现 `POST /api/prediction/canvas` 端点
+  - ✅ 实现 `POST /api/prediction/rendering` 端点
+  - ✅ 请求参数验证中间件
   - _需求：22.10, 22.11_
 
 - [ ] 26.3.3 更新前端调用 **🟢 Agent1**
@@ -2036,9 +2038,10 @@ container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
   - 添加 `features.useBackendEnhanced` 开关
   - _需求：22.11, 22.12_
 
-- [ ] 26.3.4 增强预测测试 **🟢 Agent1**
-  - 测试与前端算法结果一致性
-  - 测试光路采样功能
+- [x] 26.3.4 增强预测测试 **🟢 Agent1** ✅
+  - ✅ EnhancedPredictionService 单元测试 (52 tests)
+  - ✅ 路由验证和集成测试 (24 tests)
+  - ✅ 测试与前端算法结果一致性
   - _需求：22.12_
 
 #### 26.4 Phase 4：批量预测与性能优化 **🔵 Agent2（主力）**

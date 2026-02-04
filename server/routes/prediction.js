@@ -1,0 +1,299 @@
+/**
+ * Prediction Routes - 预测 API 路由
+ *
+ * 需求：22 (前后端分离 - Phase 3)
+ *
+ * 端点：
+ * - POST /api/prediction/enhanced - 增强版单点预测
+ * - POST /api/prediction/enhanced/batch - 增强版批量预测
+ */
+
+const express = require('express');
+const router = express.Router();
+const EnhancedPredictionService = require('../services/EnhancedPredictionService.js');
+
+// ========== 请求验证中间件 ==========
+
+/**
+ * 验证基础预测请求参数
+ */
+function validatePredictionRequest(req, res, next) {
+  const { weatherData, date, lat, lon, type } = req.body;
+
+  // 验证必需参数
+  if (!weatherData || typeof weatherData !== 'object') {
+    return res.status(400).json({
+      error: 'INVALID_WEATHER_DATA',
+      message: 'weatherData is required and must be an object'
+    });
+  }
+
+  if (!date) {
+    return res.status(400).json({
+      error: 'MISSING_DATE',
+      message: 'date is required'
+    });
+  }
+
+  if (typeof lat !== 'number' || lat < -90 || lat > 90) {
+    return res.status(400).json({
+      error: 'INVALID_LATITUDE',
+      message: 'lat must be a number between -90 and 90'
+    });
+  }
+
+  if (typeof lon !== 'number' || lon < -180 || lon > 180) {
+    return res.status(400).json({
+      error: 'INVALID_LONGITUDE',
+      message: 'lon must be a number between -180 and 180'
+    });
+  }
+
+  if (!type || !['sunrise', 'sunset'].includes(type)) {
+    return res.status(400).json({
+      error: 'INVALID_TYPE',
+      message: 'type must be "sunrise" or "sunset"'
+    });
+  }
+
+  next();
+}
+
+/**
+ * 验证批量预测请求参数
+ */
+function validateBatchRequest(req, res, next) {
+  const { weatherDataArray, lat, lon, type } = req.body;
+
+  if (!Array.isArray(weatherDataArray) || weatherDataArray.length === 0) {
+    return res.status(400).json({
+      error: 'INVALID_WEATHER_DATA_ARRAY',
+      message: 'weatherDataArray must be a non-empty array'
+    });
+  }
+
+  if (weatherDataArray.length > 30) {
+    return res.status(400).json({
+      error: 'TOO_MANY_ITEMS',
+      message: 'Maximum 30 items allowed per batch request'
+    });
+  }
+
+  // 验证数组中每一项
+  for (let i = 0; i < weatherDataArray.length; i++) {
+    const item = weatherDataArray[i];
+    if (!item.weather || typeof item.weather !== 'object') {
+      return res.status(400).json({
+        error: 'INVALID_WEATHER_DATA',
+        message: `weatherDataArray[${i}].weather is required and must be an object`
+      });
+    }
+    if (!item.date) {
+      return res.status(400).json({
+        error: 'MISSING_DATE',
+        message: `weatherDataArray[${i}].date is required`
+      });
+    }
+  }
+
+  if (typeof lat !== 'number' || lat < -90 || lat > 90) {
+    return res.status(400).json({
+      error: 'INVALID_LATITUDE',
+      message: 'lat must be a number between -90 and 90'
+    });
+  }
+
+  if (typeof lon !== 'number' || lon < -180 || lon > 180) {
+    return res.status(400).json({
+      error: 'INVALID_LONGITUDE',
+      message: 'lon must be a number between -180 and 180'
+    });
+  }
+
+  if (!type || !['sunrise', 'sunset'].includes(type)) {
+    return res.status(400).json({
+      error: 'INVALID_TYPE',
+      message: 'type must be "sunrise" or "sunset"'
+    });
+  }
+
+  next();
+}
+
+// ========== API 端点 ==========
+
+/**
+ * POST /api/prediction/enhanced
+ * 增强版单点火烧云预测
+ *
+ * Request Body:
+ * {
+ *   weatherData: { lowClouds, midClouds, highClouds, visibility, humidity, aqi },
+ *   date: "2024-06-21T18:00:00Z",
+ *   lat: 40.0,
+ *   lon: 116.0,
+ *   type: "sunset" | "sunrise",
+ *   options: {
+ *     remoteCloudData: { near: { totalCloud }, far: { totalCloud } },
+ *     rainedRecently: false
+ *   }
+ * }
+ *
+ * Response:
+ * {
+ *   success: true,
+ *   data: { score, quality, status, icon, ... }
+ * }
+ */
+router.post('/enhanced', validatePredictionRequest, (req, res) => {
+  try {
+    const { weatherData, date, lat, lon, type, options = {} } = req.body;
+
+    console.log(`[PredictionRoute] Enhanced prediction request: lat=${lat}, lon=${lon}, type=${type}`);
+
+    const result = EnhancedPredictionService.calculateEnhancedPrediction(
+      weatherData,
+      date,
+      lat,
+      lon,
+      type,
+      options
+    );
+
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    console.error('[PredictionRoute] Enhanced prediction error:', error);
+    res.status(500).json({
+      error: 'PREDICTION_ERROR',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/prediction/enhanced/batch
+ * 增强版批量火烧云预测（多天）
+ *
+ * Request Body:
+ * {
+ *   weatherDataArray: [
+ *     { weather: {...}, date: "...", rainedRecently: false },
+ *     ...
+ *   ],
+ *   lat: 40.0,
+ *   lon: 116.0,
+ *   type: "sunset" | "sunrise"
+ * }
+ *
+ * Response:
+ * {
+ *   success: true,
+ *   data: [ { score, quality, ... }, ... ]
+ * }
+ */
+router.post('/enhanced/batch', validateBatchRequest, (req, res) => {
+  try {
+    const { weatherDataArray, lat, lon, type } = req.body;
+
+    console.log(`[PredictionRoute] Batch prediction request: ${weatherDataArray.length} items, type=${type}`);
+
+    const results = EnhancedPredictionService.calculateBatchEnhancedPredictions(
+      weatherDataArray,
+      lat,
+      lon,
+      type
+    );
+
+    res.json({
+      success: true,
+      data: results,
+      count: results.length
+    });
+
+  } catch (error) {
+    console.error('[PredictionRoute] Batch prediction error:', error);
+    res.status(500).json({
+      error: 'BATCH_PREDICTION_ERROR',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/prediction/canvas
+ * 单独的画布评分（本地云况）
+ *
+ * Request Body:
+ * {
+ *   weatherData: { lowClouds, midClouds, highClouds }
+ * }
+ */
+router.post('/canvas', (req, res) => {
+  try {
+    const { weatherData } = req.body;
+
+    if (!weatherData || typeof weatherData !== 'object') {
+      return res.status(400).json({
+        error: 'INVALID_WEATHER_DATA',
+        message: 'weatherData is required and must be an object'
+      });
+    }
+
+    const result = EnhancedPredictionService.scoreCloudCanvas(weatherData);
+
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    console.error('[PredictionRoute] Canvas score error:', error);
+    res.status(500).json({
+      error: 'CANVAS_SCORE_ERROR',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/prediction/rendering
+ * 单独的渲染评分（画质修正）
+ *
+ * Request Body:
+ * {
+ *   weatherData: { visibility, humidity, aqi },
+ *   rainedRecently: false
+ * }
+ */
+router.post('/rendering', (req, res) => {
+  try {
+    const { weatherData, rainedRecently = false } = req.body;
+
+    if (!weatherData || typeof weatherData !== 'object') {
+      return res.status(400).json({
+        error: 'INVALID_WEATHER_DATA',
+        message: 'weatherData is required and must be an object'
+      });
+    }
+
+    const result = EnhancedPredictionService.scoreRendering(weatherData, rainedRecently);
+
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    console.error('[PredictionRoute] Rendering score error:', error);
+    res.status(500).json({
+      error: 'RENDERING_SCORE_ERROR',
+      message: error.message
+    });
+  }
+});
+
+module.exports = router;
