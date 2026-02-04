@@ -14,6 +14,8 @@ import MockWindyMapService from '../services/MockWindyMapService.js';
 import SurroundingPointsService from '../services/SurroundingPointsService.js';
 import RadarChartService from '../services/RadarChartService.js';
 import FireCloudOverlayService from '../services/FireCloudOverlayService.js';
+import PredictionAPIService from '../services/PredictionAPIService.js';
+import { loadConfig } from '../../config.api.js';
 import i18n from '../i18n.js';
 // 暂时禁用 ChartService 导入，使用内联简化版本
 
@@ -63,6 +65,17 @@ class WeatherController {
     this.radarChartService = new RadarChartService();
     this.surroundingRadius = 100; // 默认半径100公里
     this.surroundingData = null;
+
+    // 需求22 Phase 2：初始化后端预测 API 服务
+    const apiConfig = loadConfig();
+    this.useBackendSurrounding = apiConfig.features.USE_BACKEND_SURROUNDING || false;
+    if (this.useBackendSurrounding) {
+      const baseURL = apiConfig.proxy?.url || 'http://localhost:3000';
+      this.predictionAPIService = new PredictionAPIService(baseURL);
+      console.log('[WeatherController] 后端周边预测 API 已启用');
+    } else {
+      this.predictionAPIService = null;
+    }
 
     // 任务20：初始化火烧云覆盖层服务
     this.fireCloudOverlayService = new FireCloudOverlayService();
@@ -1023,7 +1036,7 @@ class WeatherController {
       return;
     }
 
-    console.log(`[WeatherController] 获取周边火烧云数据，半径: ${radius}km`);
+    console.log(`[WeatherController] 获取周边火烧云数据，半径: ${radius}km, 使用后端API: ${this.useBackendSurrounding}`);
 
     // 显示section和加载状态
     const sectionEl = document.getElementById('surrounding-section');
@@ -1037,31 +1050,46 @@ class WeatherController {
     if (contentEl) contentEl.style.display = 'none';
 
     try {
-      // 需要预测控制器来计算评分
-      const { default: PredictionController } = await import('./PredictionController.js');
-      const predictionController = new PredictionController(this.storageService);
+      let data;
 
-      // 获取周边数据
-      const data = await this.surroundingPointsService.getSurroundingData(
-        location,
-        radius,
-        // 天气数据获取函数
-        async (loc) => {
-          const weatherData = await this.fetchWeather(loc, true);
-          return weatherData[0]; // 返回当前天气数据
-        },
-        // 预测计算函数
-        (weatherData) => {
-          if (!weatherData) return null;
-          // 传递天气数据、当前日期、经纬度
-          return predictionController.predictionService.calculatePrediction(
-            weatherData,
-            new Date(),
-            location.lat,
-            location.lon
-          );
-        }
-      );
+      // 需求22 Phase 2：根据配置选择前端或后端实现
+      if (this.useBackendSurrounding && this.predictionAPIService) {
+        // 调用后端 API
+        data = await this.predictionAPIService.getSurrounding(
+          location.lat,
+          location.lon,
+          radius,
+          'sunset', // 默认晚霞，可根据当前时间调整
+          new Date()
+        );
+
+        // 转换数据格式以匹配前端期望的结构
+        data = this._convertBackendSurroundingData(data, location);
+      } else {
+        // 前端实现（原有逻辑）
+        const { default: PredictionController } = await import('./PredictionController.js');
+        const predictionController = new PredictionController(this.storageService);
+
+        data = await this.surroundingPointsService.getSurroundingData(
+          location,
+          radius,
+          // 天气数据获取函数
+          async (loc) => {
+            const weatherData = await this.fetchWeather(loc, true);
+            return weatherData[0]; // 返回当前天气数据
+          },
+          // 预测计算函数
+          (weatherData) => {
+            if (!weatherData) return null;
+            return predictionController.predictionService.calculatePrediction(
+              weatherData,
+              new Date(),
+              location.lat,
+              location.lon
+            );
+          }
+        );
+      }
 
       this.surroundingData = data;
 
@@ -1087,6 +1115,28 @@ class WeatherController {
         errorEl.classList.remove('hidden');
       }
     }
+  }
+
+  /**
+   * 需求22 Phase 2：转换后端周边数据格式为前端期望的结构
+   * @param {Object} backendData - 后端返回的数据
+   * @param {Object} location - 当前位置对象
+   * @returns {Object} 转换后的数据
+   * @private
+   */
+  _convertBackendSurroundingData(backendData, location) {
+    return {
+      center: location,
+      radius: backendData.radius,
+      points: backendData.points.map(p => ({
+        ...p,
+        location: { lat: p.lat, lon: p.lon, name: p.name },
+        weatherData: p.weatherData,
+        prediction: p.prediction,
+        score: p.score
+      })),
+      timestamp: backendData.timestamp
+    };
   }
 
   /**

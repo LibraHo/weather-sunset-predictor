@@ -13,9 +13,13 @@ const express = require('express');
 const router = express.Router();
 const PredictionService = require('../services/PredictionService.js');
 const EnhancedPredictionService = require('../services/EnhancedPredictionService.js');
+const SurroundingService = require('../services/SurroundingService.js');
+const CacheService = require('../services/CacheService.js');
 
 // 创建服务实例
 const predictionService = new PredictionService();
+const cacheService = new CacheService({ defaultTTL: 3600 }); // 1小时默认TTL
+const surroundingService = new SurroundingService({ cacheService });
 
 // ========== 请求验证中间件 ==========
 
@@ -55,6 +59,43 @@ function validatePredictionRequest(req, res, next) {
   }
 
   if (!type || !['sunrise', 'sunset'].includes(type)) {
+    return res.status(400).json({
+      error: 'INVALID_TYPE',
+      message: 'type must be "sunrise" or "sunset"'
+    });
+  }
+
+  next();
+}
+
+/**
+ * 验证周边预测请求参数
+ */
+function validateSurroundingRequest(req, res, next) {
+  const { lat, lon, radius, type, date } = req.body;
+
+  if (typeof lat !== 'number' || lat < -90 || lat > 90) {
+    return res.status(400).json({
+      error: 'INVALID_LATITUDE',
+      message: 'lat must be a number between -90 and 90'
+    });
+  }
+
+  if (typeof lon !== 'number' || lon < -180 || lon > 180) {
+    return res.status(400).json({
+      error: 'INVALID_LONGITUDE',
+      message: 'lon must be a number between -180 and 180'
+    });
+  }
+
+  if (radius !== undefined && ![50, 100, 150].includes(radius)) {
+    return res.status(400).json({
+      error: 'INVALID_RADIUS',
+      message: 'radius must be 50, 100, or 150 kilometers'
+    });
+  }
+
+  if (type !== undefined && !['sunrise', 'sunset'].includes(type)) {
     return res.status(400).json({
       error: 'INVALID_TYPE',
       message: 'type must be "sunrise" or "sunset"'
@@ -351,6 +392,85 @@ router.post('/rendering', (req, res) => {
     console.error('[PredictionRoute] Rendering score error:', error);
     res.status(500).json({
       error: 'RENDERING_SCORE_ERROR',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/prediction/surrounding
+ * 周边8方向火烧云预测聚合 (Phase 2)
+ *
+ * 需求：22.6, 22.7 - 周边采样聚合 API
+ *
+ * Request Body:
+ * {
+ *   lat: 40.0,
+ *   lon: 116.0,
+ *   radius: 100,          // 可选，50/100/150，默认100
+ *   type: "sunset" | "sunrise",  // 可选，默认"sunset"
+ *   date: "2024-06-21"    // 可选，默认今天
+ * }
+ *
+ * Response:
+ * {
+ *   success: true,
+ *   data: {
+ *     center: { lat: 40.0, lon: 116.0 },
+ *     radius: 100,
+ *     type: "sunset",
+ *     date: "2024-06-21T00:00:00Z",
+ *     points: [
+ *       {
+ *         direction: "N",
+ *         name: "北",
+ *         angle: 0,
+ *         label: "N",
+ *         lat: 40.9,
+ *         lon: 116.0,
+ *         distance: 100,
+ *         weatherData: { cloudCover, humidity, ... },
+ *         prediction: { score, quality, ... },
+ *         score: 75,
+ *         quality: "excellent",
+ *         error: null
+ *       },
+ *       ... // 其他7个方向
+ *     ],
+ *     bestDirection: {
+ *       direction: "NE",
+ *       name: "东北",
+ *       score: 82,
+ *       quality: "excellent",
+ *       location: { lat: 40.6, lon: 117.0 }
+ *     },
+ *     timestamp: 1718928000000
+ *   }
+ * }
+ */
+router.post('/surrounding', validateSurroundingRequest, async (req, res) => {
+  try {
+    const { lat, lon, radius = 100, type = 'sunset', date } = req.body;
+
+    console.log(`[PredictionRoute] Surrounding prediction request: lat=${lat}, lon=${lon}, radius=${radius}, type=${type}`);
+
+    const result = await surroundingService.getSurroundingPredictions({
+      lat,
+      lon,
+      radius,
+      type,
+      date
+    });
+
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    console.error('[PredictionRoute] Surrounding prediction error:', error);
+    res.status(500).json({
+      error: 'SURROUNDING_PREDICTION_ERROR',
       message: error.message
     });
   }

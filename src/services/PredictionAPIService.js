@@ -160,6 +160,67 @@ class PredictionAPIService {
   }
 
   /**
+   * 调用后端周边预测 API
+   *
+   * @param {number} lat - 中心点纬度
+   * @param {number} lon - 中心点经度
+   * @param {number} radius - 半径（公里），50/100/150，默认100
+   * @param {string} type - 预测类型 ('sunrise' | 'sunset')，默认'sunset'
+   * @param {Date|string} date - 预测日期，默认今天
+   * @returns {Promise<Object>} 周边预测数据
+   * @throws {Error} API 调用失败时抛出错误
+   *
+   * 需求：22.8 - 前端改为调用后端周边 API
+   */
+  async getSurrounding(lat, lon, radius = 100, type = 'sunset', date = new Date()) {
+    const startTime = Date.now();
+    console.log(`[PredictionAPIService] 调用后端周边预测 API: lat=${lat}, lon=${lon}, radius=${radius}, type=${type}`);
+
+    try {
+      // 构建请求 URL
+      const url = `${this.baseURL}/api/prediction/surrounding`;
+
+      // 格式化日期
+      const dateString = date instanceof Date ? date.toISOString() : date;
+
+      // 构建请求体
+      const requestBody = {
+        lat: lat,
+        lon: lon,
+        radius: radius,
+        type: type,
+        date: dateString
+      };
+
+      // 发送请求
+      const response = await this._fetchWithTimeout(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      // 解析响应
+      const result = await response.json();
+
+      // 检查响应状态
+      if (!result.success) {
+        throw new Error(result.error?.message || '周边预测计算失败');
+      }
+
+      const elapsed = Date.now() - startTime;
+      console.log(`[PredictionAPIService] 周边 API 调用成功: ${elapsed}ms, ${result.data.points.length} 个方位`);
+
+      return result.data;
+
+    } catch (error) {
+      console.error(`[PredictionAPIService] 周边 API 调用失败:`, error);
+      throw new Error(`后端周边预测 API 调用失败: ${error.message}`);
+    }
+  }
+
+  /**
    * 检查后端 API 可用性
    *
    * @returns {Promise<boolean>} API 是否可用
