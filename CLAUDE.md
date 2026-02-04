@@ -39,7 +39,7 @@ The project has detailed specification documents under `.kiro/specs/weather-suns
 | 19 | Surrounding Fire Cloud Visualization (周边火烧云可视化) — radar chart | Done |
 | 20 | Fire Cloud Map Overlay (火烧云地图覆盖层) — GFS data, heatmap | Temporarily Removed (架构缺陷，等待Phase 6重构) |
 | 21 | UI Glassmorphism Effect (UI毛玻璃效果) — backdrop-filter blur on cards, header, modals | Done |
-| 22 | Frontend-Backend Separation (前后端分离) — migrate prediction algorithms to backend, support multi-platform clients | Planned (6 phases, Phase 6 fixes Req 20) |
+| 22 | Frontend-Backend Separation (前后端分离) — migrate prediction algorithms to backend, support multi-platform clients | ✅ Phase 1-4 完成 |
 
 ### Key Design Decisions (from design.md)
 
@@ -85,18 +85,55 @@ Frontend request → /api/prediction/surrounding → Node.js SurroundingService
   → 8 parallel weather fetches → 8 predictions → aggregated result → response
 ```
 
-### Backend API Endpoints (Requirement 22)
+### Backend API Endpoints (需求22)
 
 | Endpoint | Method | Purpose | Status |
 |----------|--------|---------|--------|
-| `/api/prediction/calculate` | POST | Single point prediction | Planned |
-| `/api/prediction/surrounding` | POST | 8-direction aggregated predictions | Planned |
-| `/api/prediction/enhanced` | POST | Enhanced prediction with canvas/lightpath scoring | ✅ Done |
-| `/api/prediction/enhanced/batch` | POST | Multi-day batch predictions | ✅ Done |
-| `/api/prediction/canvas` | POST | Cloud canvas scoring only | ✅ Done |
-| `/api/prediction/rendering` | POST | Rendering factor scoring only | ✅ Done |
+| `/api/prediction/calculate` | POST | 基础单点预测 | ✅ Phase 1 |
+| `/api/prediction/surrounding` | POST | 周边8方向聚合预测 | ✅ Phase 2 |
+| `/api/prediction/enhanced` | POST | 增强版单点预测 | ✅ Phase 3 |
+| `/api/prediction/enhanced/batch` | POST | 多天批量预测 | ✅ Phase 3 |
+| `/api/prediction/canvas` | POST | 云况画布评分 | ✅ Phase 3 |
+| `/api/prediction/rendering` | POST | 渲染因子评分 | ✅ Phase 3 |
+
+**缓存策略**:
+- 预测缓存：30分钟 TTL
+- 周边预测：1小时 TTL
+- 覆盖层：30分钟 TTL
+- 天气数据：15分钟 TTL
+
+**性能指标** (Phase 4 测试):
+- 单点预测：~3ms
+- 增强预测：~1-6ms
+- 批量预测（10天）：~34ms
+- 8方向坐标计算：< 3ms
 
 **Note**: Requirement 22 includes 6 phases. Phase 6 will fix Requirement 20 (Fire Cloud Map Overlay) by refactoring the map integration from iframe to Leaflet + completing the backend GFS processing service.
+
+### 前后端分离架构 (需求22 - Phase 1-4 完成)
+
+**迁移状态**:
+- ✅ Phase 1: 核心预测算法后端化 (2026-02-04)
+- ✅ Phase 2: 周边采样聚合 API (2026-02-04)
+- ✅ Phase 3: 增强预测模型后端化 (2026-02-04)
+- ✅ Phase 4: 批量预测与性能优化 (2026-02-04)
+- ⏳ Phase 5: 前端代码清理 (保留回退机制)
+- ⏳ Phase 6: 地图重构 + 需求20修复
+
+**配置开关** (config.api.js):
+```javascript
+features: {
+  USE_BACKEND_PREDICTION: true,    // 基础预测
+  USE_BACKEND_SURROUNDING: true,   // 周边聚合
+  USE_BACKEND_ENHANCED: true       // 增强预测
+}
+```
+
+**架构模式**: 渐进式迁移 + 自动回退
+- 前端控制器优先调用后端 API
+- 后端失败时自动回退到前端计算
+- 保留前端服务作为备用机制
+- 通过 `config.api.js` 控制迁移策略
 
 ## Directory Structure
 
