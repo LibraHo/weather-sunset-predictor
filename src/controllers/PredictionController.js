@@ -7,12 +7,15 @@
  * 需求：7.4 - 预测详情展开功能
  * 需求：12.1, 12.2, 12.3, 12.4, 12.5, 12.8, 12.11, 12.12, 12.13 - 朝霞晚霞预测增强功能
  * 需求：14 - 多语言支持
+ * 需求：22 - 前后端分离（Phase 1: 基础预测服务后端化）
  */
 
 import SunsetPredictionService from '../services/SunsetPredictionService.js';
 import EnhancedSunsetPredictionService from '../services/EnhancedSunsetPredictionService.js';
+import PredictionAPIService from '../services/PredictionAPIService.js';
 import NotificationService from '../services/NotificationService.js';
 import i18n from '../i18n.js';
+import { loadConfig } from '../config.api.js';
 
 class PredictionController {
   /**
@@ -28,6 +31,45 @@ class PredictionController {
     this.expandedPredictionIndex = null; // 当前展开的预测索引
     this.useEnhancedModel = true; // 默认使用增强模型
     this.i18n = i18n; // 需求14：添加i18n实例
+
+    // 需求22：前后端分离 - 读取功能开关配置
+    const config = loadConfig();
+    this.features = config.features;
+    this.apiConfig = config;
+
+    // 初始化后端 API 服务
+    this.predictionAPIService = new PredictionAPIService(config.proxy.url);
+    console.log('[PredictionController] 功能开关:', this.features);
+  }
+
+  /**
+   * 根据开关选择使用前端或后端计算预测
+   *
+   * 需求22：前后端分离 - 支持渐进式迁移
+   *
+   * @param {Object} weatherData - 天气数据
+   * @param {Date} date - 预测日期
+   * @param {number} lat - 纬度
+   * @param {number} lon - 经度
+   * @param {string} type - 预测类型 ('sunrise' | 'sunset')
+   * @returns {Promise<SunsetPrediction>} 预测结果
+   * @private
+   */
+  async _calculatePredictionWithBackend(weatherData, date, lat, lon, type) {
+    // 检查是否启用后端基础预测
+    if (this.features.USE_BACKEND_PREDICTION) {
+      try {
+        console.log(`[PredictionController] 使用后端 API 计算预测 (${type})`);
+        return await this.predictionAPIService.calculate(weatherData, date, lat, lon, type);
+      } catch (error) {
+        console.warn(`[PredictionController] 后端 API 调用失败，回退到前端计算:`, error.message);
+        // 回退到前端计算
+        return this.predictionService.calculatePrediction(weatherData, date, lat, lon, type);
+      }
+    } else {
+      // 使用前端计算
+      return this.predictionService.calculatePrediction(weatherData, date, lat, lon, type);
+    }
   }
 
   /**
@@ -134,7 +176,8 @@ class PredictionController {
             );
             console.log(`[PredictionController] 使用增强模型生成朝霞预测，得分: ${sunrisePrediction.score}`);
           } else {
-            sunrisePrediction = this.predictionService.calculatePrediction(
+            // 需求22：根据开关选择前端或后端计算
+            sunrisePrediction = await this._calculatePredictionWithBackend(
               sunriseWeatherData,
               targetDate,
               location.lat,
@@ -264,7 +307,8 @@ class PredictionController {
             );
             console.log(`[PredictionController] 使用增强模型生成晚霞预测，得分: ${sunsetPrediction.score}`);
           } else {
-            sunsetPrediction = this.predictionService.calculatePrediction(
+            // 需求22：根据开关选择前端或后端计算
+            sunsetPrediction = await this._calculatePredictionWithBackend(
               sunsetWeatherData,
               targetDate,
               location.lat,

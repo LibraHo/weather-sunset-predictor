@@ -19,6 +19,20 @@ const API_CONFIG = {
   direct: {
     apiKey: '', // 用户需要在设置中配置
     description: 'Windy API 密钥（仅在直连模式下需要）'
+  },
+
+  // ========== 前后端分离功能开关（需求22）==========
+
+  // 功能迁移开关 - 控制哪些功能使用后端 API
+  features: {
+    // Phase 1: 基础预测服务后端化
+    USE_BACKEND_PREDICTION: true,
+
+    // Phase 2: 周边采样聚合后端化
+    USE_BACKEND_SURROUNDING: false,
+
+    // Phase 3: 增强预测模型后端化
+    USE_BACKEND_ENHANCED: false
   }
 };
 
@@ -34,6 +48,17 @@ function loadConfig() {
     API_CONFIG.proxy.url = savedProxyUrl;
   }
 
+  // 读取功能开关配置
+  const savedFeatures = localStorage.getItem('api_features');
+  if (savedFeatures) {
+    try {
+      const parsedFeatures = JSON.parse(savedFeatures);
+      Object.assign(API_CONFIG.features, parsedFeatures);
+    } catch (error) {
+      console.warn('[config.api.js] 解析功能开关配置失败:', error);
+    }
+  }
+
   return API_CONFIG;
 }
 
@@ -47,6 +72,12 @@ function saveConfig(config) {
   if (config.proxyUrl) {
     localStorage.setItem('api_proxy_url', config.proxyUrl);
     API_CONFIG.proxy.url = config.proxyUrl;
+  }
+
+  // 保存功能开关配置
+  if (config.features) {
+    localStorage.setItem('api_features', JSON.stringify(config.features));
+    Object.assign(API_CONFIG.features, config.features);
   }
 }
 

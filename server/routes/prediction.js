@@ -1,16 +1,21 @@
 /**
  * Prediction Routes - 预测 API 路由
  *
- * 需求：22 (前后端分离 - Phase 3)
+ * 需求：22 (前后端分离)
  *
  * 端点：
- * - POST /api/prediction/enhanced - 增强版单点预测
- * - POST /api/prediction/enhanced/batch - 增强版批量预测
+ * - POST /api/prediction/calculate - 基础单点预测 (Phase 1)
+ * - POST /api/prediction/enhanced - 增强版单点预测 (Phase 3)
+ * - POST /api/prediction/enhanced/batch - 增强版批量预测 (Phase 3)
  */
 
 const express = require('express');
 const router = express.Router();
+const PredictionService = require('../services/PredictionService.js');
 const EnhancedPredictionService = require('../services/EnhancedPredictionService.js');
+
+// 创建服务实例
+const predictionService = new PredictionService();
 
 // ========== 请求验证中间件 ==========
 
@@ -123,8 +128,63 @@ function validateBatchRequest(req, res, next) {
 // ========== API 端点 ==========
 
 /**
+ * POST /api/prediction/calculate
+ * 基础单点火烧云预测 (Phase 1)
+ *
+ * 需求：22.1 - 核心预测算法后端化
+ *
+ * Request Body:
+ * {
+ *   weatherData: { cloudCover, humidity, visibility, lowCloudCover, highClouds, midClouds, lowClouds },
+ *   date: "2024-06-21T18:00:00Z",
+ *   lat: 40.0,
+ *   lon: 116.0,
+ *   type: "sunset" | "sunrise"
+ * }
+ *
+ * Response:
+ * {
+ *   success: true,
+ *   data: {
+ *     date: "...",
+ *     score: 75,
+ *     quality: "excellent",
+ *     factors: { cloudCover: {...}, humidity: {...}, visibility: {...}, lowClouds: {...} },
+ *     sunsetTime: "...",
+ *     sunriseTime: "...",
+ *     type: "sunset",
+ *     goldenHour: { start: "...", end: "..." },
+ *     blueHour: { start: "...", end: "..." },
+ *     sunAzimuth: 280,
+ *     cloudLayers: { high: 30, mid: 50, low: 10, description: "..." }
+ *   }
+ * }
+ */
+router.post('/calculate', validatePredictionRequest, (req, res) => {
+  try {
+    const { weatherData, date, lat, lon, type } = req.body;
+
+    console.log(`[PredictionRoute] Basic prediction request: lat=${lat}, lon=${lon}, type=${type}`);
+
+    const result = predictionService.calculatePrediction(weatherData, date, lat, lon, type);
+
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    console.error('[PredictionRoute] Basic prediction error:', error);
+    res.status(500).json({
+      error: 'PREDICTION_ERROR',
+      message: error.message
+    });
+  }
+});
+
+/**
  * POST /api/prediction/enhanced
- * 增强版单点火烧云预测
+ * 增强版单点火烧云预测 (Phase 3)
  *
  * Request Body:
  * {
