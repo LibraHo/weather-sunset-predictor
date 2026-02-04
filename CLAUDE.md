@@ -47,6 +47,7 @@ The project has detailed specification documents under `.kiro/specs/weather-suns
 - **Cloud layer analysis**: High clouds (>6km), mid clouds (2-6km), low clouds (<2km) — each has different impact on fire clouds.
 - **Surrounding points**: 8-direction sampling (N/NE/E/SE/S/SW/W/NW) at configurable radius (50/100/150 km), parallel API calls via `Promise.all`.
 - **Fire cloud overlay**: Phase 1 uses frontend Canvas with existing Windy data. Phase 2 planned: backend Python (xarray+cfgrib) processing NOAA GFS GRIB2 data with "light path tracing + cloud scoring" algorithm.
+- **Map solution (Phase 6 decision)**: Adopt hybrid approach - Leaflet + OSM for development/free tier, optional upgrade to Windy Professional API. Uses `L.imageOverlay()` for fire cloud heatmap overlay. See `.kiro/specs/weather-sunset-predictor/design.md` section "26.6.1 地图方案决策文档" for details.
 - **Theme system**: CSS custom properties with `data-theme` attribute. Three modes: light, dark, auto (follows system `prefers-color-scheme`).
 - **Unit conversion**: Applied at render layer only — raw data stays in metric (Celsius, m/s). `UnitConverter` utility class handles conversions.
 - **Settings panel**: Modal-based, grouped sections (data source, notifications, language, personalization). Changes save immediately to localStorage.
@@ -84,14 +85,16 @@ Frontend request → /api/prediction/surrounding → Node.js SurroundingService
   → 8 parallel weather fetches → 8 predictions → aggregated result → response
 ```
 
-### Planned Backend API Endpoints (Requirement 22)
+### Backend API Endpoints (Requirement 22)
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/prediction/calculate` | POST | Single point prediction |
-| `/api/prediction/surrounding` | POST | 8-direction aggregated predictions |
-| `/api/prediction/enhanced` | POST | Enhanced prediction with canvas/lightpath scoring |
-| `/api/prediction/batch` | POST | Multi-day batch predictions |
+| Endpoint | Method | Purpose | Status |
+|----------|--------|---------|--------|
+| `/api/prediction/calculate` | POST | Single point prediction | Planned |
+| `/api/prediction/surrounding` | POST | 8-direction aggregated predictions | Planned |
+| `/api/prediction/enhanced` | POST | Enhanced prediction with canvas/lightpath scoring | ✅ Done |
+| `/api/prediction/enhanced/batch` | POST | Multi-day batch predictions | ✅ Done |
+| `/api/prediction/canvas` | POST | Cloud canvas scoring only | ✅ Done |
+| `/api/prediction/rendering` | POST | Rendering factor scoring only | ✅ Done |
 
 **Note**: Requirement 22 includes 6 phases. Phase 6 will fix Requirement 20 (Fire Cloud Map Overlay) by refactoring the map integration from iframe to Leaflet + completing the backend GFS processing service.
 
@@ -111,8 +114,13 @@ weather-sunset-predictor/
 │   └── utils/                  # ErrorHandler, GlobalErrorBoundary, UnitConverter
 ├── server/                     # Backend Node.js server (CommonJS)
 │   ├── index.js                # Express server entry point
-│   ├── routes/                 # API endpoints (weather.js, firecloud.js, prediction.js[planned])
-│   ├── services/               # Windy API proxy + prediction services (PredictionService.js[planned])
+│   ├── routes/                 # API endpoints
+│   │   ├── weather.js          # 天气数据代理 ✅
+│   │   ├── firecloud.js        # 火烧云覆盖层 ✅
+│   │   └── prediction.js       # 增强预测 API ✅ (Phase 3)
+│   ├── services/               # Backend services
+│   │   ├── WindyAPIService.js  # Windy API 代理 ✅
+│   │   └── EnhancedPredictionService.js # 增强预测服务 ✅ (Phase 3)
 │   ├── utils/                  # Backend utilities (已实现)
 │   │   ├── SunCalculator.js    # 日出日落计算 (NOAA算法) ✅
 │   │   └── GaussianScore.js    # 高斯评分函数 ✅
@@ -122,7 +130,7 @@ weather-sunset-predictor/
 ├── styles/                     # CSS (main.css, rtl.css, settings-panel.css)
 ├── tests/                      # All test suites
 │   ├── unit/                   # Jest unit tests (controllers, models, services, utils)
-│   │   └── server/             # Backend unit tests (67 tests) ✅
+│   │   └── server/             # Backend unit tests (143 tests) ✅
 │   ├── integration/            # Jest integration tests
 │   ├── property/               # fast-check property-based tests
 │   └── e2e/                    # Playwright E2E tests

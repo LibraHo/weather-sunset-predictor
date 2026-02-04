@@ -3352,3 +3352,174 @@ class PredictionController {
 | GFS 数据下载速度慢 | 中 | 高 | 实施后台预下载和长缓存策略 |
 | 光路追踪算法性能问题 | 中 | 中 | 使用 NumPy 向量化优化，或改用 Numba JIT |
 | 跨浏览器兼容性问题 | 低 | 低 | Leaflet 成熟库，兼容性好 |
+
+### 26.6.1 地图方案决策文档
+
+**决策日期**：2026-02-04
+**决策者**：Agent1
+**状态**：✅ 已决策
+
+#### 1. 问题陈述
+
+需求20（火烧云地图覆盖层）的当前实现存在**根本性架构缺陷**：
+- `WindyMapService` 使用 `<iframe>` 嵌入 `https://embed.windy.com/`
+- `FireCloudOverlayService` 在主页面 DOM 创建覆盖层
+- 跨域 iframe 隔离导致覆盖层无法与地图同步
+- **功能完全不可用**，已临时移除
+
+#### 2. 方案评估
+
+##### 方案 A：Windy API + Leaflet（官方集成）
+
+| 维度 | 评估 |
+|------|------|
+| **技术可行性** | ✅ 高 - Windy 提供官方 Leaflet 插件 |
+| **功能完整性** | ✅ 高 - 完整气象图层（风场、云量、降水、温度） |
+| **开发复杂度** | 中 - 需要重构 WindyMapService |
+| **成本** | ⚠️ 需要 Professional 许可证（按使用量付费） |
+| **维护性** | ✅ 高 - 官方维护，API 稳定 |
+
+**Windy API 许可证类型**：
+- **Testing API**：免费，仅限开发测试，不可商用
+- **Professional API**：按使用量付费，适合生产环境
+
+**集成方式**：
+```html
+<script src="https://api.windy.com/assets/map-forecast/libBoot.js"></script>
+<script>
+windyInit({
+  key: 'YOUR_PROFESSIONAL_KEY',
+  lat: 40.0,
+  lon: 116.0,
+  zoom: 5
+}, windyAPI => {
+  const { map, store, picker } = windyAPI;
+  // map 是 Leaflet 实例，可以直接操作
+  L.imageOverlay(overlayUrl, bounds).addTo(map);
+});
+</script>
+```
+
+##### 方案 B：Leaflet + OpenStreetMap（开源方案）
+
+| 维度 | 评估 |
+|------|------|
+| **技术可行性** | ✅ 高 - Leaflet 是成熟开源库 |
+| **功能完整性** | ⚠️ 中 - 缺少专业气象图层 |
+| **开发复杂度** | 低 - 标准 Leaflet 用法 |
+| **成本** | ✅ 免费 |
+| **维护性** | ✅ 高 - 开源社区活跃 |
+
+**实现方式**：
+```javascript
+const map = L.map('map').setView([40.0, 116.0], 5);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+// 添加火烧云覆盖层
+L.imageOverlay(overlayUrl, bounds, { opacity: 0.7 }).addTo(map);
+```
+
+**可选气象数据源**：
+- OpenWeatherMap Tile API（基础气象图层）
+- RainViewer API（降水雷达）
+- 自定义 GFS 处理生成的热力图
+
+##### 方案 C：混合方案（推荐）
+
+**策略**：
+1. **开发/测试阶段**：使用 Leaflet + OSM（免费）
+2. **生产阶段**：可选升级到 Windy Professional API
+
+| 维度 | 评估 |
+|------|------|
+| **技术可行性** | ✅ 高 |
+| **功能完整性** | ✅ 高（可渐进增强） |
+| **开发复杂度** | 中 |
+| **成本** | ✅ 灵活可控 |
+| **维护性** | ✅ 高 |
+
+**架构设计**：
+```
+┌─────────────────────────────────────────────────────────┐
+│                    MapService 接口                       │
+│  - initMap(container, options)                          │
+│  - setView(lat, lon, zoom)                              │
+│  - addOverlay(url, bounds)                              │
+│  - removeOverlay()                                      │
+│  - onMove(callback)                                     │
+└────────────────────────┬────────────────────────────────┘
+                         │
+         ┌───────────────┴───────────────┐
+         │                               │
+┌────────▼────────┐           ┌──────────▼──────────┐
+│ LeafletMapService │           │  WindyMapService   │
+│ (Leaflet + OSM)  │           │ (Windy + Leaflet)  │
+│   免费/开发环境   │           │  Professional API  │
+└─────────────────┘           └────────────────────┘
+```
+
+#### 3. 决策结论
+
+**选择：方案 C（混合方案）**
+
+**理由**：
+1. **灵活性**：先用免费方案验证功能，再决定是否升级
+2. **风险控制**：避免前期投入许可证成本
+3. **架构优势**：抽象接口支持未来切换
+4. **开发效率**：Leaflet 学习成本低
+
+**实施计划**：
+
+| 阶段 | 任务 | 工作量 |
+|------|------|--------|
+| 1 | 创建 MapService 抽象接口 | 0.5 天 |
+| 2 | 实现 LeafletMapService | 1 天 |
+| 3 | 重构 FireCloudOverlayService 适配 Leaflet | 1 天 |
+| 4 | 集成测试和调优 | 1 天 |
+| 5 | （可选）实现 WindyMapService | 1 天 |
+
+**技术规范**：
+
+1. **地图容器**：
+   ```html
+   <div id="firecloud-map" style="width: 100%; height: 400px;"></div>
+   ```
+
+2. **覆盖层格式**：
+   - 图片格式：PNG（RGBA，支持透明度）
+   - 分辨率：0.25°（约 27km）或 0.5°（约 55km）
+   - 颜色映射：蓝色（低概率）→ 黄色 → 橙色 → 红色（高概率）
+
+3. **交互行为**：
+   - 地图拖动时覆盖层自动同步（Leaflet 原生支持）
+   - 缩放时覆盖层自动缩放
+   - 点击覆盖层显示该点的具体概率值
+
+4. **性能要求**：
+   - 首次加载 < 3 秒
+   - 拖动流畅度 > 30 FPS
+   - 移动端内存占用 < 50MB
+
+#### 4. 依赖项
+
+| 依赖 | 版本 | 用途 |
+|------|------|------|
+| Leaflet | ^1.9.x | 地图渲染 |
+| leaflet-image | ^0.4.x | 地图截图（可选） |
+
+#### 5. 风险缓解
+
+| 风险 | 缓解措施 |
+|------|---------|
+| OSM 瓦片服务不稳定 | 配置备用瓦片源（如 Carto） |
+| 覆盖层图片过大 | 实施分块加载和懒加载 |
+| 移动端性能问题 | 降低覆盖层分辨率，使用 Canvas 渲染 |
+
+#### 6. 验收标准
+
+1. ✅ 地图可正常加载和交互
+2. ✅ 覆盖层与地图完美同步（拖动/缩放）
+3. ✅ 火烧云概率热力图正确渲染
+4. ✅ 支持切换到 Windy API（配置开关）
+5. ✅ 移动端性能流畅
+
