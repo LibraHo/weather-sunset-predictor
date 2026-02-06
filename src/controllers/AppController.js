@@ -775,10 +775,11 @@ class AppController {
         this.weatherController.setAPIKey(apiKey);
       }
 
-      // TODO: 需求 1.3 - 验证API密钥有效性
-      // 这将在实现WindyAPIService后完成
-      // 目前先保存，后续任务会添加实际的API验证
-      
+      // 需求 1.3 - API密钥有效性验证说明：
+      // 基本格式验证已在上方完成（非空检查、最小长度检查）。
+      // 在 proxy 模式下（默认），API密钥由后端服务器管理，无需前端验证。
+      // 在 direct 模式下，WindyAPIService.validateAPIKey() 可用于在线验证。
+
       // 恢复按钮状态
       if (saveButton) {
         saveButton.disabled = false;

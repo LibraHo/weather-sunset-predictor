@@ -2224,4 +2224,132 @@ container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
 
 ---
 
-**当前状态**：需求21（毛玻璃效果）已完成，准备开始需求22（前后端分离）或其他任务。
+**当前状态**：需求1-22全部完成，536测试全通过（18 suites），进入代码质量优化阶段。
+
+---
+
+## 代码质量优化任务（Phase 7）
+
+### 任务 27：UX 改进 — alert() 替换为 Toast 通知
+
+- [ ] 27.1 创建 ToastService 通知组件
+  - 实现 show(message, type, duration) 方法
+  - 支持 success / error / warning / info 四种类型
+  - 自动消失（默认3秒），支持手动关闭
+  - 响应式布局，移动端适配
+  - 毛玻璃效果与现有 UI 一致
+  - _关联需求：10, 21_
+
+- [ ] 27.2 替换所有 alert() 调用
+  - AppController.js 中的 alert()
+  - WeatherController.js 中的 alert()
+  - LanguageSelector.js 中的 alert()
+  - NotificationService.js 中的 alert()
+  - 确保每处替换使用正确的通知类型
+  - _关联需求：10_
+
+- [ ] 27.3 添加 ToastService 单元测试
+  - 测试各类型通知显示/隐藏
+  - 测试自动消失和手动关闭
+  - 测试多条通知排队显示
+
+### 任务 28：AppController 拆分重构
+
+- [ ] 28.1 提取 ChartRenderController
+  - 从 AppController 提取图表渲染逻辑（_renderSimpleChart 等方法）
+  - 约 200-300 行代码
+  - 保持与 WeatherController 的接口不变
+  - _关联需求：11_
+
+- [ ] 28.2 提取 UIStateController
+  - 提取 showLoading, showError, showSuccess, showAPIKeyModal 等 UI 状态方法
+  - 提取 showLocationError, clearLocationError 等位置错误方法
+  - 约 200-300 行代码
+  - _关联需求：10_
+
+- [ ] 28.3 提取 FavoriteController
+  - 提取收藏位置管理逻辑（loadFavoriteLocations, toggleFavorite 等）
+  - 提取搜索历史管理逻辑（loadSearchHistory, clearSearchHistory 等）
+  - 约 150-200 行代码
+  - _关联需求：12, 13_
+
+- [ ] 28.4 更新 AppController 为协调者
+  - AppController 仅保留初始化和事件绑定逻辑
+  - 通过依赖注入使用新提取的控制器
+  - 目标：AppController 减少到 800 行以下
+  - 更新所有相关测试
+  - _关联需求：全部_
+
+### 任务 29：后端集成测试补充
+
+- [ ] 29.1 预测 API 集成测试
+  - POST /api/prediction/calculate 端点测试
+  - POST /api/prediction/surrounding 端点测试
+  - POST /api/prediction/enhanced 端点测试
+  - POST /api/prediction/enhanced/batch 端点测试
+  - 验证请求参数校验、响应格式、错误处理
+  - _关联需求：22_
+
+- [ ] 29.2 火烧云 API 集成测试
+  - GET /api/firecloud/overlay 端点测试
+  - GET /api/firecloud/health 端点测试
+  - POST /api/firecloud/cache/clear 端点测试
+  - 验证参数范围、缓存行为、超时处理
+  - _关联需求：20_
+
+- [ ] 29.3 天气数据 API 集成测试
+  - GET /api/weather/forecast 端点测试
+  - GET /api/config/map-key 端点测试
+  - GET /health 端点测试
+  - 验证代理转发、错误传播、CORS 配置
+  - _关联需求：15_
+
+### 任务 30：E2E 测试补充
+
+- [ ] 30.1 主题持久化 E2E 测试
+  - 切换主题 → 刷新页面 → 验证主题保持
+  - 自动模式跟随系统 prefers-color-scheme
+  - 三种主题（light/dark/auto）完整流程
+  - _关联需求：17_
+
+- [ ] 30.2 设置面板 E2E 测试
+  - 语言切换 → 验证 UI 文本变化
+  - 单位切换（°C/°F, m/s/km/h）→ 验证数据展示
+  - 默认位置设置 → 刷新 → 验证自动加载
+  - _关联需求：16, 17_
+
+- [ ] 30.3 搜索历史和收藏 E2E 测试
+  - 搜索城市 → 验证历史记录出现
+  - 收藏位置 → 刷新 → 验证收藏列表
+  - LRU 5 条限制验证
+  - _关联需求：12, 13_
+
+### 任务 31：后端 API 文档
+
+- [ ] 31.1 创建 OpenAPI 3.0 规范文件
+  - 覆盖所有后端端点（天气、预测、火烧云、健康检查）
+  - 包含请求/响应 Schema 和示例
+  - 分组标签：天气数据、预测API、火烧云覆盖层、系统
+  - _关联需求：22_
+
+- [ ] 31.2 清理代码中的 TODO 注释
+  - 移除已完成的 TODO
+  - 为仍有效的 TODO 添加上下文说明
+  - _关联：代码质量_
+
+---
+
+## 执行计划：Phase 7 分工
+
+### Agent 1（UX + 重构）
+| 优先级 | 任务 | 预计工时 |
+|--------|------|----------|
+| 1 | 27.1-27.3 alert() 替换 | 1-2h |
+| 2 | 28.1-28.4 AppController 拆分 | 3-4h |
+
+### Agent 2（测试 + 文档）
+| 优先级 | 任务 | 预计工时 |
+|--------|------|----------|
+| 1 | 31.1-31.2 API 文档 + TODO 清理 | 1-2h |
+| 2 | 29.1-29.3 后端集成测试 | 2-3h |
+| 3 | 30.1-30.3 E2E 测试补充 | 1-2h |
