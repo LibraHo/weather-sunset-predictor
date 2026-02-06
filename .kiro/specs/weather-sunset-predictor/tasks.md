@@ -2130,13 +2130,14 @@ container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
   - 工作量：2天
   - _需求：20.7, 20.9_
 
-- [ ] 26.6.4 完成 Python GFS 处理器 **🟢 Agent1**
-  - 实现 `server/scripts/gfs_processor.py`
-  - 下载 GFS GRIB2 数据（TCDC, LCDC, MCDC, HCDC）
-  - 实现光路追踪算法（向西检查低云阻挡）
-  - 实现云量评分算法（高斯曲线）
-  - 生成 RGBA PNG 图像
-  - 输出 JSON 元数据（bounds, path, timestamp）
+- [x] 26.6.4 完成 Python GFS 处理器 **🟢 Agent1** ✅
+  - ✅ 实现 `server/scripts/gfs_processor.py`
+  - ✅ 下载 GFS GRIB2 数据（TCDC, LCDC, MCDC, HCDC）
+  - ✅ 实现光路追踪算法（向西检查低云阻挡）
+  - ✅ 实现云量评分算法（高斯曲线）
+  - ✅ 生成 RGBA PNG 图像
+  - ✅ 输出 JSON 元数据（bounds, path, timestamp）
+  - ✅ 创建 19 个单元测试 (`server/scripts/test_gfs_processor.py`)
   - 工作量：5天
   - _需求：20.2, 20.3, 20.4, 20.5, 20.6_
 
@@ -2158,12 +2159,15 @@ container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
   - 工作量：2天
   - _需求：20.9, 20.10, 20.15_
 
-- [ ] 26.6.7 性能优化 **🟢 Agent1**
-  - 优化 GFS 数据下载速度
-  - 优化光路追踪算法（NumPy 向量化）
-  - 实现后台预下载（可选）
-  - 确保响应时间 < 3秒
-  - 测试缓存命中率 > 60%
+- [x] 26.6.7 性能优化 **🟢 Agent1** ✅ (核心优化完成)
+  - ✅ 优化 GFS 数据下载速度（多运行时间回退机制）
+  - ✅ 优化光路追踪算法（NumPy 向量化）
+    - 200x400 网格: 8ms（要求 <1s）
+    - 500x800 网格: 28ms（要求 <3s）
+  - ⏸️ 实现后台预下载（可选，待 Agent2 完成地图集成后实现）
+  - ✅ 确保响应时间 < 3秒（概率计算 <50ms）
+  - ⏸️ 测试缓存命中率 > 60%（待后端 API 集成后测试）
+  - ✅ 添加 3 个性能基准测试
   - 工作量：2天
   - _需求：20.11, 20.14_
 

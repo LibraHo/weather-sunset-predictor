@@ -329,5 +329,91 @@ class TestIntegration(unittest.TestCase):
             processor.process()
 
 
+class TestPerformance(unittest.TestCase):
+    """性能测试"""
+
+    def test_vectorized_probability_performance(self):
+        """向量化概率计算性能测试"""
+        import time
+
+        processor = GFSDataProcessor(lat=40.0, lon=116.0)
+
+        # 创建较大的测试数据（模拟真实GFS数据大小）
+        height, width = 200, 400  # 约200x400格点
+        cloud_data = {
+            'low': np.random.uniform(0, 100, (height, width)).astype(np.float32),
+            'mid': np.random.uniform(0, 100, (height, width)).astype(np.float32),
+            'high': np.random.uniform(0, 100, (height, width)).astype(np.float32),
+            'lats': np.linspace(35, 45, height),
+            'lons': np.linspace(110, 125, width)
+        }
+
+        # 测量执行时间
+        start_time = time.time()
+        probability = processor.calculate_firecloud_probability(cloud_data)
+        elapsed = time.time() - start_time
+
+        # 验证输出
+        self.assertEqual(probability.shape, (height, width))
+        self.assertGreaterEqual(probability.min(), 0)
+        self.assertLessEqual(probability.max(), 1)
+
+        # 性能要求：处理200x400网格应在1秒内完成
+        self.assertLess(elapsed, 1.0, f"概率计算耗时 {elapsed:.2f}s，超过1秒限制")
+        print(f"\n性能测试：200x400网格概率计算耗时 {elapsed*1000:.1f}ms")
+
+    def test_png_generation_performance(self):
+        """PNG生成性能测试"""
+        import time
+
+        processor = GFSDataProcessor(lat=40.0, lon=116.0)
+
+        # 创建测试概率矩阵
+        height, width = 200, 400
+        probability = np.random.uniform(0, 1, (height, width)).astype(np.float32)
+
+        # 测量执行时间
+        start_time = time.time()
+        image_path = processor.generate_overlay_png(probability)
+        elapsed = time.time() - start_time
+
+        # 验证输出
+        self.assertTrue(os.path.exists(image_path))
+
+        # 性能要求：PNG生成应在0.5秒内完成
+        self.assertLess(elapsed, 0.5, f"PNG生成耗时 {elapsed:.2f}s，超过0.5秒限制")
+        print(f"\n性能测试：200x400 PNG生成耗时 {elapsed*1000:.1f}ms")
+
+        # 清理
+        os.unlink(image_path)
+
+    def test_large_scale_probability_calculation(self):
+        """大规模概率计算测试（模拟完整GFS数据）"""
+        import time
+
+        processor = GFSDataProcessor(lat=40.0, lon=116.0)
+
+        # 模拟完整区域GFS数据（约500x800格点）
+        height, width = 500, 800
+        cloud_data = {
+            'low': np.random.uniform(0, 100, (height, width)).astype(np.float32),
+            'mid': np.random.uniform(0, 100, (height, width)).astype(np.float32),
+            'high': np.random.uniform(0, 100, (height, width)).astype(np.float32),
+            'lats': np.linspace(30, 50, height),
+            'lons': np.linspace(100, 140, width)
+        }
+
+        start_time = time.time()
+        probability = processor.calculate_firecloud_probability(cloud_data)
+        elapsed = time.time() - start_time
+
+        # 验证输出
+        self.assertEqual(probability.shape, (height, width))
+
+        # 性能要求：处理500x800网格应在3秒内完成
+        self.assertLess(elapsed, 3.0, f"大规模计算耗时 {elapsed:.2f}s，超过3秒限制")
+        print(f"\n性能测试：500x800网格概率计算耗时 {elapsed*1000:.1f}ms")
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
