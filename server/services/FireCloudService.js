@@ -78,7 +78,7 @@ class FireCloudService {
     return new Promise((resolve, reject) => {
       console.log(`[FireCloudService] 调用 Python 处理器: lat=${lat}, lon=${lon}, radius=${radius}, type=${type}`);
 
-      const pythonProcess = spawn('python', [
+      const pythonProcess = spawn('python3', [
         this.scriptPath,
         '--lat', lat.toString(),
         '--lon', lon.toString(),
