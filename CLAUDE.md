@@ -39,7 +39,7 @@ The project has detailed specification documents under `.kiro/specs/weather-suns
 | 19 | Surrounding Fire Cloud Visualization (周边火烧云可视化) — radar chart | Done |
 | 20 | Fire Cloud Map Overlay (火烧云地图覆盖层) — GFS data, heatmap | Temporarily Removed (架构缺陷，等待Phase 6重构) |
 | 21 | UI Glassmorphism Effect (UI毛玻璃效果) — backdrop-filter blur on cards, header, modals | Done |
-| 22 | Frontend-Backend Separation (前后端分离) — migrate prediction algorithms to backend, support multi-platform clients | ✅ Phase 1-4 完成 |
+| 22 | Frontend-Backend Separation (前后端分离) — migrate prediction algorithms to backend, support multi-platform clients | ✅ Phase 1-5 完成, Phase 6 进行中 |
 
 ### Key Design Decisions (from design.md)
 
@@ -110,15 +110,19 @@ Frontend request → /api/prediction/surrounding → Node.js SurroundingService
 
 **Note**: Requirement 22 includes 6 phases. Phase 6 will fix Requirement 20 (Fire Cloud Map Overlay) by refactoring the map integration from iframe to Leaflet + completing the backend GFS processing service.
 
-### 前后端分离架构 (需求22 - Phase 1-4 完成)
+### 前后端分离架构 (需求22 - Phase 1-5 完成, Phase 6 进行中)
 
 **迁移状态**:
 - ✅ Phase 1: 核心预测算法后端化 (2026-02-04)
 - ✅ Phase 2: 周边采样聚合 API (2026-02-04)
 - ✅ Phase 3: 增强预测模型后端化 (2026-02-04)
 - ✅ Phase 4: 批量预测与性能优化 (2026-02-04)
-- ⏳ Phase 5: 前端代码清理 (保留回退机制)
-- ⏳ Phase 6: 地图重构 + 需求20修复
+- ✅ Phase 5: 前端代码清理与测试 (2026-02-06)
+  - PredictionAPIService 单元测试 (20 tests)
+  - 文档更新
+- 🔄 Phase 6: 地图重构 + 需求20修复 (进行中)
+  - ✅ 26.6.1 地图方案决策
+  - ✅ 26.6.4 Python GFS 处理器完善 (19 tests)
 
 **配置开关** (config.api.js):
 ```javascript
@@ -307,9 +311,10 @@ RATE_LIMIT_MAX_REQUESTS=100
 | `src/app.js` | Application entry point, service instantiation, `USE_MOCK_API` flag |
 | `src/i18n.js` | I18n singleton with language detection, translation, formatting |
 | `src/services/WindyAPIService.js` | Windy Point Forecast API client (proxy + direct modes) |
-| `src/services/SunsetPredictionService.js` | Multi-factor sunset quality prediction algorithm |
-| `src/services/EnhancedSunsetPredictionService.js` | Advanced prediction with cloud layers, golden/blue hour |
-| `src/services/SurroundingPointsService.js` | 8-direction surrounding area weather sampling |
+| `src/services/PredictionAPIService.js` | Backend prediction API client (calculate, surrounding, health check) ✅ Phase 5 |
+| `src/services/SunsetPredictionService.js` | Multi-factor sunset quality prediction algorithm (前端回退) |
+| `src/services/EnhancedSunsetPredictionService.js` | Advanced prediction with cloud layers, golden/blue hour (前端回退) |
+| `src/services/SurroundingPointsService.js` | 8-direction surrounding area weather sampling (前端回退) |
 | `src/services/RadarChartService.js` | Canvas radar chart for surrounding fire cloud visualization |
 | `src/services/FireCloudOverlayService.js` | Heatmap overlay generation for Windy map |
 | `src/services/WindyMapService.js` | Windy Map Forecast API integration (Leaflet-based) |
@@ -328,7 +333,7 @@ RATE_LIMIT_MAX_REQUESTS=100
 | `server/routes/firecloud.js` | Fire cloud overlay endpoint (calls Python) |
 | `server/utils/SunCalculator.js` | 日出日落计算工具 (NOAA算法) — getSunsetTime, getSunriseTime, getGoldenHour, getBlueHour ✅ |
 | `server/utils/GaussianScore.js` | 高斯评分函数工具 — scoreCloudCover, scoreHumidity, scoreVisibility, scoreLowClouds ✅ |
-| `server/scripts/gfs_processor.py` | Python GFS GRIB2 data processing and PNG generation |
+| `server/scripts/gfs_processor.py` | Python GFS GRIB2 data processing and PNG generation ✅ Phase 6 (光路追踪+高斯评分算法, 19 tests) |
 | `config.api.js` | API mode configuration (proxy vs direct) |
 | `index.html` | Main HTML page |
 
@@ -354,5 +359,5 @@ Toggle with `USE_MOCK_API` flag in `src/app.js`. Mock services are used in Jest 
 - **Python server uses port 9002**, backend uses **port 3000**, Playwright E2E uses **port 8080**.
 - **Requirement traceability**: Code comments reference requirements by number (e.g., `// 需求：5.1`). When modifying code, check which requirement it maps to in `.kiro/specs/weather-sunset-predictor/requirements.md`.
 - **Requirement 20 temporarily removed**: The fire cloud map overlay feature (需求20) has been temporarily removed due to iframe cross-origin issues. UI controls are hidden. The feature will be completely refactored in Phase 6 of Requirement 22 using Leaflet instead of iframe.
-- **Phase 6 pending**: After completing Phases 1-5 of Requirement 22 (7-8 weeks), Phase 6 (3-4 weeks) will fix Requirement 20 by refactoring map integration and completing the Python GFS backend.
+- **Phase 6 in progress**: Phases 1-5 of Requirement 22 are complete. Phase 6 is in progress (26.6.1 地图方案决策 ✅, 26.6.4 GFS处理器 ✅), remaining tasks include Leaflet map integration and frontend/backend integration testing.
 - **Windy Map API licensing**: Testing environment must use Testing API keys; production requires Professional license per Windy terms.
