@@ -226,8 +226,8 @@ class ErrorHandler {
       }
 
       // 地理编码相关错误
-      if (error.message.includes('位置') || error.message.includes('location') || 
-          error.message.includes('geocod')) {
+      if (error.message.includes('位置') || error.message.includes('定位') ||
+          error.message.includes('location') || error.message.includes('geocod')) {
         return this.handleGeocodingError(error);
       }
 

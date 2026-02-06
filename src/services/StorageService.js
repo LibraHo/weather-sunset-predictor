@@ -193,7 +193,7 @@ class StorageService {
       const now = Date.now();
       const age = now - cacheEntry.timestamp;
 
-      if (age > this.CACHE_DURATION) {
+      if (age >= this.CACHE_DURATION) {
         // 缓存已过期，删除它
         delete cache[cacheKey];
         localStorage.setItem(
@@ -329,9 +329,9 @@ class StorageService {
       const favorites = this.getFavoriteLocations();
       
       // 检查是否已存在（基于坐标）
-      const exists = favorites.some(fav => 
-        Math.abs(fav.lat - location.lat) < 0.001 &&
-        Math.abs(fav.lon - location.lon) < 0.001
+      const exists = favorites.some(fav =>
+        fav.lat === location.lat &&
+        fav.lon === location.lon
       );
 
       if (exists) {
@@ -442,7 +442,7 @@ class StorageService {
 
     try {
       const validSettings = {
-        enabled: settings.enabled === true,
+        enabled: settings.enabled === true || settings.enabled === 'true',
         threshold: Math.max(0, Math.min(100, settings.threshold || 70))
       };
 
