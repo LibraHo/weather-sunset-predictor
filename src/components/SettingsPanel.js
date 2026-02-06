@@ -505,7 +505,8 @@ class SettingsPanel {
       }
     }
 
-    // TODO: 通知应用刷新或重新初始化 API 服务
+    // API 模式变更已保存到 localStorage，config.api.js 的 loadConfig() 会在下次初始化时读取。
+    // 当前设计下无需实时通知，服务在页面刷新后自动采用新模式。
     console.log('[SettingsPanel] API 模式已切换为:', mode);
   }
 

@@ -220,9 +220,10 @@ class EnhancedSunsetPredictionService {
    * @returns {Promise<Object>} 光路评分结果
    */
   async scoreLightPath(weatherData, azimuth, getRemoteCloudData) {
-    // 由于Windy API的限制，暂时无法获取150km和300km外的云量数据
-    // 这里使用本地云量作为近似（假设光路通畅）
-    // TODO: 实际应用中需要调用卫星云图API获取远距离云量
+    // 光路评分：评估太阳方位角方向上150km和300km处的云况。
+    // 如果提供了 getRemoteCloudData 回调函数，则使用远程数据；
+    // 否则使用默认满分（假设光路通畅），作为无远程数据时的近似处理。
+    // 注意：后端 EnhancedPredictionService 通过 GFS 数据提供更精确的光路分析。
 
     let nearPointScore = 100;  // 150km点
     let farPointScore = 100;   // 300km点
@@ -248,7 +249,7 @@ class EnhancedSunsetPredictionService {
       nearPointScore: nearPointScore.toFixed(1),
       farPointScore: farPointScore.toFixed(1),
       breakdown: {
-        nearPointCloudCover: '未检测', // TODO: 实际云量数据
+        nearPointCloudCover: '未检测', // 需要 getRemoteCloudData 回调提供实际数据
         farPointCloudCover: '未检测'
       },
       note: '光路检测功能需要卫星云图数据支持，当前使用近似值'

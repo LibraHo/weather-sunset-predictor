@@ -1,0 +1,2004 @@
+openapi: 3.0.3
+info:
+  title: Weather Sunset Predictor API - 天气晚霞预测器后端 API
+  description: |
+    天气晚霞预测器（Weather Sunset Predictor）后端 API 文档。
+
+    本系统基于 Windy Point Forecast API 提供实时天气数据代理，并实现了多因子火烧云（晚霞/朝霞）
+    预测算法，包括基础单点预测、增强版物理模型预测、周边8方向聚合预测、以及基于 GFS 气象数据
+    的火烧云地图覆盖层生成。
+
+    ## 架构说明
+    - 后端作为代理层，保护 Windy API 密钥不暴露给前端
+    - 预测算法在后端运行，支持缓存和多客户端复用
+    - 火烧云覆盖层通过 Python 脚本处理 NOAA GFS GRIB2 数据生成
+
+    ## 缓存策略
+    | 数据类型 | TTL |
+    |---------|-----|
+    | 预测数据 | 30 分钟 |
+    | 周边预测 | 1 小时 |
+    | 天气数据 | 15 分钟 |
+    | 覆盖层数据 | 30 分钟 |
+
+    ## 认证方式
+    API 密钥通过服务器端环境变量（`WINDY_API_KEY`、`WINDY_MAP_API_KEY`）配置，
+    前端客户端无需提供 API 密钥，直接调用后端代理即可。
+  version: 1.0.0
+  contact:
+    name: Weather Sunset Predictor
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3000
+    description: 本地开发服务器（默认端口 3000）
+
+tags:
+  - name: 系统
+    description: 健康检查、配置等系统级端点
+  - name: 天气数据
+    description: Windy API 天气数据代理端点，保护 API 密钥
+  - name: 预测API
+    description: 火烧云（晚霞/朝霞）预测算法 API，包括基础预测、增强预测、批量预测和周边聚合
+  - name: 火烧云覆盖层
+    description: 基于 GFS 气象数据的火烧云地图覆盖层生成，使用 Python 脚本处理
+
+paths:
+  # ==================== 系统端点 ====================
+  /health:
+    get:
+      tags:
+        - 系统
+      summary: 健康检查
+      description: 检查后端服务器是否正常运行。返回服务状态和当前时间戳。
+      operationId: healthCheck
+      responses:
+        '200':
+          description: 服务器运行正常
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResponse'
+              example:
+                status: ok
+                timestamp: "2026-02-06T12:00:00.000Z"
+
+  /api/config/map-key:
+    get:
+      tags:
+        - 系统
+      summary: 获取地图 API Key
+      description: |
+        获取 Windy Map API Key 供前端地图组件使用。
+        密钥从服务器环境变量 `WINDY_MAP_API_KEY` 读取。
+        如果密钥未配置或为默认占位值，返回 500 错误。
+      operationId: getMapKey
+      responses:
+        '200':
+          description: 成功返回地图 API 密钥
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mapKey:
+                    type: string
+                    description: Windy Map API 密钥
+                required:
+                  - mapKey
+              example:
+                mapKey: "wk_xxxxxxxxxxxxxxxxxxxxxxxx"
+        '500':
+          description: 地图 API 密钥未配置
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: MAP_KEY_NOT_CONFIGURED
+                  message: "地图API密钥未配置"
+
+  # ==================== 天气数据端点 ====================
+  /api/weather/forecast:
+    get:
+      tags:
+        - 天气数据
+      summary: 获取天气预报数据
+      description: |
+        代理 Windy Point Forecast API v2，获取指定坐标的天气预报数据。
+
+        后端使用服务器端 `WINDY_API_KEY` 调用 Windy API，前端无需提供密钥。
+
+        返回的天气数据已经过解析和标准化处理：
+        - 温度从开尔文转换为摄氏度
+        - 气压从帕斯卡转换为百帕
+        - 风速从 u/v 分量计算为标量
+        - 云量取三层云的最大值与加权平均
+        - 默认能见度 10km（Windy API 不提供此数据）
+
+        请求的气象参数包括：温度、相对湿度、风场、气压、低云/中云/高云、
+        对流降水、CAPE（对流有效位能）。
+      operationId: getWeatherForecast
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          description: 纬度（-90 到 90）
+          schema:
+            type: number
+            format: double
+            minimum: -90
+            maximum: 90
+          example: 39.9042
+        - name: lon
+          in: query
+          required: true
+          description: 经度（-180 到 180）
+          schema:
+            type: number
+            format: double
+            minimum: -180
+            maximum: 180
+          example: 116.4074
+        - name: hours
+          in: query
+          required: false
+          description: 预测小时数（1-168），默认 168（7 天）
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 168
+            default: 168
+          example: 168
+      responses:
+        '200':
+          description: 成功返回天气预报数据
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeatherForecastResponse'
+              example:
+                success: true
+                location:
+                  lat: 39.9042
+                  lon: 116.4074
+                hours: 56
+                data:
+                  - timestamp: 1717718400000
+                    temp: 28.5
+                    humidity: 55
+                    cloudCover: 45
+                    windSpeed: 3.2
+                    windDirection: 180
+                    pressure: 1013.25
+                    visibility: 10
+                    precipitation: 0
+                    lowClouds: 20
+                    midClouds: 45
+                    highClouds: 30
+        '400':
+          description: 请求参数缺失或无效
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: INVALID_PARAMS
+                  message: "缺少必填参数: lat 和 lon"
+        '500':
+          description: Windy API 调用失败或服务器内部错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: INTERNAL_SERVER_ERROR
+                  message: "Windy API 密钥无效或已过期"
+
+  # ==================== 预测 API 端点 ====================
+  /api/prediction/calculate:
+    post:
+      tags:
+        - 预测API
+      summary: 基础单点火烧云预测
+      description: |
+        基础火烧云预测算法（Phase 1）。
+
+        使用高斯评分函数对多个气象因子进行评分，并计算加权总分：
+        - **云量**（30-70% 最佳，高斯曲线评分）
+        - **湿度**（30-70% 最佳）
+        - **能见度**（越高越好）
+        - **低云惩罚**（低云越多，惩罚越大）
+
+        同时计算日出/日落时间、黄金时段、蓝调时段、太阳方位角和云层分析。
+
+        质量等级：
+        - `excellent`：评分 > 70
+        - `good`：评分 40-70
+        - `fair`：评分 < 40
+      operationId: calculatePrediction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BasicPredictionRequest'
+            example:
+              weatherData:
+                cloudCover: 50
+                humidity: 55
+                visibility: 15
+                lowCloudCover: 20
+                highClouds: 30
+                midClouds: 45
+                lowClouds: 10
+              date: "2026-06-21T18:00:00Z"
+              lat: 39.9042
+              lon: 116.4074
+              type: sunset
+      responses:
+        '200':
+          description: 成功返回预测结果
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BasicPredictionResponse'
+              example:
+                success: true
+                data:
+                  date: "2026-06-21T18:00:00.000Z"
+                  score: 75.3
+                  quality: excellent
+                  factors:
+                    cloudCover:
+                      value: 50
+                      score: 95.2
+                    humidity:
+                      value: 55
+                      score: 88.7
+                    visibility:
+                      value: 15
+                      score: 70.5
+                    lowClouds:
+                      value: 20
+                      score: 60.1
+                  sunsetTime: "2026-06-21T11:32:00.000Z"
+                  sunriseTime: "2026-06-20T21:45:00.000Z"
+                  type: sunset
+                  goldenHour:
+                    start: "2026-06-21T10:32:00.000Z"
+                    end: "2026-06-21T11:32:00.000Z"
+                  blueHour:
+                    start: "2026-06-21T11:32:00.000Z"
+                    end: "2026-06-21T12:02:00.000Z"
+                  sunAzimuth: 298.5
+                  cloudLayers:
+                    high: 30
+                    mid: 45
+                    low: 10
+                    description: "高云为主，有利于火烧云形成"
+        '400':
+          description: 请求参数验证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              examples:
+                missingWeatherData:
+                  summary: 缺少天气数据
+                  value:
+                    error: INVALID_WEATHER_DATA
+                    message: "weatherData is required and must be an object"
+                missingDate:
+                  summary: 缺少日期
+                  value:
+                    error: MISSING_DATE
+                    message: "date is required"
+                invalidLatitude:
+                  summary: 无效纬度
+                  value:
+                    error: INVALID_LATITUDE
+                    message: "lat must be a number between -90 and 90"
+                invalidLongitude:
+                  summary: 无效经度
+                  value:
+                    error: INVALID_LONGITUDE
+                    message: "lon must be a number between -180 and 180"
+                invalidType:
+                  summary: 无效预测类型
+                  value:
+                    error: INVALID_TYPE
+                    message: 'type must be "sunrise" or "sunset"'
+        '500':
+          description: 预测计算出错
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                error: PREDICTION_ERROR
+                message: "无效的天气数据对象"
+
+  /api/prediction/enhanced:
+    post:
+      tags:
+        - 预测API
+      summary: 增强版单点火烧云预测
+      description: |
+        增强版火烧云预测算法（Phase 3），基于物理模型的四模块评分系统：
+
+        1. **时间判定逻辑**（触发机制）：根据太阳高度角判断是否在火烧云观测窗口内
+        2. **画布逻辑**（本地云况评分）：评估高/中/低云的加权有效云量，低云惩罚
+        3. **光路逻辑**（光路通透评分）：评估 150km 和 300km 远处的云量，判断光路是否通畅
+        4. **渲染逻辑**（画质修正系数）：能见度、湿度、AQI、雨后初晴等修正因子
+
+        综合得分 = (画布 x 0.4 + 光路 x 0.6) x 渲染修正系数
+
+        状态判定结果包括：`no_fire_cloud`、`light_glow`、`good_glow`、`very_likely`、`legendary_eruption`
+      operationId: calculateEnhancedPrediction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnhancedPredictionRequest'
+            example:
+              weatherData:
+                lowClouds: 15
+                midClouds: 50
+                highClouds: 35
+                visibility: 20
+                humidity: 45
+                aqi: 40
+              date: "2026-06-21T18:00:00Z"
+              lat: 39.9042
+              lon: 116.4074
+              type: sunset
+              options:
+                remoteCloudData:
+                  near:
+                    totalCloud: 30
+                  far:
+                    totalCloud: 20
+                rainedRecently: false
+      responses:
+        '200':
+          description: 成功返回增强预测结果
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnhancedPredictionResponse'
+              example:
+                success: true
+                data:
+                  date: "2026-06-21T18:00:00.000Z"
+                  type: sunset
+                  score: 72.5
+                  quality: good
+                  status: good_glow
+                  icon: city_sunset
+                  description: conditions_good
+                  advice: can_watch
+                  timeAnalysis:
+                    inWindow: true
+                    elevation: -0.83
+                    optimalMoment: mid_cloud_eruption
+                    windowDescription: "solar_elevation:-0.8"
+                    isInDetectionWindow: true
+                  breakdown:
+                    baseScore: 72.5
+                    canvasScore: 65.3
+                    lightPathScore: 77.3
+                    renderingFactor: 1.0
+                  canvasAnalysis:
+                    score: 65.3
+                    effectiveCloudCover: 38.5
+                    cloudRangeScore: 76.4
+                    cloudLevel: perfect
+                    lowCloudPenalty: 0.85
+                    penaltyReason: no_low_cloud_obstruction
+                    penaltyValue: 15
+                    breakdown:
+                      lowClouds: 15.0
+                      midClouds: 50.0
+                      highClouds: 35.0
+                  lightPathAnalysis:
+                    score: 77.3
+                    nearPointScore: 71.4
+                    farPointScore: 85.7
+                    breakdown:
+                      nearPointCloudCover: 30
+                      farPointCloudCover: 20
+                    hasRemoteData: true
+                  renderingAnalysis:
+                    factor: 1.0
+                    visibilityFactor: 1.1
+                    humidityFactor: 1.0
+                    rainBonus: 1.0
+                    breakdown:
+                      visibility: excellent
+                      humidity: moderate
+                      aqi: excellent
+                      colorTendency: golden_orange
+                      specialMode: null
+        '400':
+          description: 请求参数验证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '500':
+          description: 增强预测计算出错
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                error: PREDICTION_ERROR
+                message: "计算失败"
+
+  /api/prediction/enhanced/batch:
+    post:
+      tags:
+        - 预测API
+      summary: 增强版批量火烧云预测（多天）
+      description: |
+        批量计算多天的增强版火烧云预测（Phase 3）。
+
+        一次请求最多支持 30 天的预测数据。每一天的天气数据和日期需要包含在
+        `weatherDataArray` 数组中。
+
+        内部对每一项调用 `calculateEnhancedPrediction`，返回对应的预测结果数组。
+      operationId: calculateBatchEnhancedPredictions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchPredictionRequest'
+            example:
+              weatherDataArray:
+                - weather:
+                    lowClouds: 15
+                    midClouds: 50
+                    highClouds: 35
+                    visibility: 20
+                    humidity: 45
+                  date: "2026-06-21T18:00:00Z"
+                  rainedRecently: false
+                - weather:
+                    lowClouds: 30
+                    midClouds: 40
+                    highClouds: 20
+                    visibility: 15
+                    humidity: 60
+                  date: "2026-06-22T18:00:00Z"
+                  rainedRecently: true
+              lat: 39.9042
+              lon: 116.4074
+              type: sunset
+      responses:
+        '200':
+          description: 成功返回批量预测结果
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchPredictionResponse'
+              example:
+                success: true
+                data:
+                  - date: "2026-06-21T18:00:00.000Z"
+                    type: sunset
+                    score: 72.5
+                    quality: good
+                    status: good_glow
+                    icon: city_sunset
+                    description: conditions_good
+                    advice: can_watch
+                  - date: "2026-06-22T18:00:00.000Z"
+                    type: sunset
+                    score: 58.3
+                    quality: good
+                    status: good_glow
+                    icon: city_sunset
+                    description: conditions_good
+                    advice: can_watch
+                count: 2
+        '400':
+          description: 请求参数验证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              examples:
+                invalidArray:
+                  summary: 无效的天气数据数组
+                  value:
+                    error: INVALID_WEATHER_DATA_ARRAY
+                    message: "weatherDataArray must be a non-empty array"
+                tooManyItems:
+                  summary: 超过最大批量限制
+                  value:
+                    error: TOO_MANY_ITEMS
+                    message: "Maximum 30 items allowed per batch request"
+                invalidItemWeather:
+                  summary: 数组项天气数据无效
+                  value:
+                    error: INVALID_WEATHER_DATA
+                    message: "weatherDataArray[0].weather is required and must be an object"
+                missingItemDate:
+                  summary: 数组项缺少日期
+                  value:
+                    error: MISSING_DATE
+                    message: "weatherDataArray[0].date is required"
+        '500':
+          description: 批量预测计算出错
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                error: BATCH_PREDICTION_ERROR
+                message: "批量预测计算失败"
+
+  /api/prediction/canvas:
+    post:
+      tags:
+        - 预测API
+      summary: 云况画布评分
+      description: |
+        单独计算本地云况画布得分（增强预测的第二模块）。
+
+        评估高/中/低云的加权有效云量：
+        - 高云权重 0.3、中云权重 0.5、低云权重 0.2
+        - 有效云量 30-70% 为完美区间（70-100 分）
+        - 低云覆盖 > 20% 时开始施加惩罚
+
+        云况等级：`space`（太空/无云）、`fair`（稀疏）、`perfect`（完美画布）、
+        `crowded`（拥挤）、`overcast`（阴天）
+      operationId: scoreCloudCanvas
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CanvasScoreRequest'
+            example:
+              weatherData:
+                lowClouds: 15
+                midClouds: 50
+                highClouds: 35
+      responses:
+        '200':
+          description: 成功返回画布评分结果
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CanvasScoreResponse'
+              example:
+                success: true
+                data:
+                  score: 65.3
+                  effectiveCloudCover: 38.5
+                  cloudRangeScore: 76.4
+                  cloudLevel: perfect
+                  lowCloudPenalty: 0.85
+                  penaltyReason: no_low_cloud_obstruction
+                  penaltyValue: 15
+                  breakdown:
+                    lowClouds: 15.0
+                    midClouds: 50.0
+                    highClouds: 35.0
+        '400':
+          description: 请求参数验证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                error: INVALID_WEATHER_DATA
+                message: "weatherData is required and must be an object"
+        '500':
+          description: 画布评分计算出错
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                error: CANVAS_SCORE_ERROR
+                message: "计算失败"
+
+  /api/prediction/rendering:
+    post:
+      tags:
+        - 预测API
+      summary: 渲染因子评分
+      description: |
+        单独计算画质渲染修正系数（增强预测的第四模块）。
+
+        修正因子包括：
+        - **能见度修正**：> 20km 为极佳（1.1x），>= 10km 为良好（1.0x），< 10km 为差（0.8x）
+        - **湿度修正**：> 90% 可能起雾（0.9x），其他情况不影响
+        - **雨后初晴加成**：最近下过雨时获得 1.2x 加成
+        - **AQI 色彩倾向**：影响预期色调（金橙、红紫、暗红）
+
+        最终渲染系数 = 能见度因子 x 湿度因子 x 雨后加成
+      operationId: scoreRendering
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenderingScoreRequest'
+            example:
+              weatherData:
+                visibility: 25
+                humidity: 45
+                aqi: 35
+              rainedRecently: true
+      responses:
+        '200':
+          description: 成功返回渲染评分结果
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RenderingScoreResponse'
+              example:
+                success: true
+                data:
+                  factor: 1.32
+                  visibilityFactor: 1.1
+                  humidityFactor: 1.0
+                  rainBonus: 1.2
+                  breakdown:
+                    visibility: excellent
+                    humidity: moderate
+                    aqi: excellent
+                    colorTendency: golden_orange
+                    specialMode: post_rain
+        '400':
+          description: 请求参数验证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                error: INVALID_WEATHER_DATA
+                message: "weatherData is required and must be an object"
+        '500':
+          description: 渲染评分计算出错
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                error: RENDERING_SCORE_ERROR
+                message: "计算失败"
+
+  /api/prediction/surrounding:
+    post:
+      tags:
+        - 预测API
+      summary: 周边8方向火烧云预测聚合
+      description: |
+        计算中心点周边 8 个方向（N/NE/E/SE/S/SW/W/NW）的火烧云预测（Phase 2）。
+
+        对每个方向：
+        1. 根据中心坐标和半径计算目标点坐标（球面三角学）
+        2. 并行调用 Windy API 获取各点天气数据
+        3. 对每个点运行基础预测算法计算评分
+        4. 找出最佳观赏方向
+
+        支持的半径：50km、100km、150km。
+        默认半径 100km，默认类型 sunset。
+
+        缓存 TTL：1 小时。
+      operationId: getSurroundingPredictions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SurroundingPredictionRequest'
+            example:
+              lat: 39.9042
+              lon: 116.4074
+              radius: 100
+              type: sunset
+              date: "2026-06-21"
+      responses:
+        '200':
+          description: 成功返回周边预测结果
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SurroundingPredictionResponse'
+              example:
+                success: true
+                data:
+                  center:
+                    lat: 39.9042
+                    lon: 116.4074
+                  radius: 100
+                  type: sunset
+                  date: "2026-06-21T00:00:00.000Z"
+                  points:
+                    - direction: "N"
+                      name: "北"
+                      angle: 0
+                      label: "N"
+                      lat: 40.804
+                      lon: 116.4074
+                      distance: 100
+                      weatherData:
+                        cloudCover: 40
+                        humidity: 50
+                        visibility: 10
+                        lowCloudCover: 15
+                      prediction:
+                        score: 68
+                        quality: good
+                      score: 68
+                      quality: good
+                      error: null
+                    - direction: "NE"
+                      name: "东北"
+                      angle: 45
+                      label: "NE"
+                      lat: 40.54
+                      lon: 117.24
+                      distance: 100
+                      score: 82
+                      quality: excellent
+                      error: null
+                  bestDirection:
+                    direction: "NE"
+                    name: "东北"
+                    score: 82
+                    quality: excellent
+                    location:
+                      lat: 40.54
+                      lon: 117.24
+                  timestamp: 1718928000000
+        '400':
+          description: 请求参数验证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              examples:
+                invalidLatitude:
+                  summary: 无效纬度
+                  value:
+                    error: INVALID_LATITUDE
+                    message: "lat must be a number between -90 and 90"
+                invalidRadius:
+                  summary: 无效半径
+                  value:
+                    error: INVALID_RADIUS
+                    message: "radius must be 50, 100, or 150 kilometers"
+                invalidType:
+                  summary: 无效预测类型
+                  value:
+                    error: INVALID_TYPE
+                    message: 'type must be "sunrise" or "sunset"'
+        '500':
+          description: 周边预测计算出错
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                error: SURROUNDING_PREDICTION_ERROR
+                message: "周边预测计算失败"
+
+  # ==================== 火烧云覆盖层端点 ====================
+  /api/firecloud/overlay:
+    get:
+      tags:
+        - 火烧云覆盖层
+      summary: 获取火烧云地图覆盖层
+      description: |
+        生成火烧云地图覆盖层图片（Phase 6 重构版）。
+
+        后端调用 Python 脚本（`gfs_processor.py`）下载和处理 NOAA GFS GRIB2 气象数据，
+        使用光路追踪 + 高斯评分算法生成火烧云热力图 PNG 图片，并以 base64 编码返回。
+
+        返回的 `bounds` 对象包含覆盖层的地理边界，可直接用于 Leaflet `L.imageOverlay()`。
+
+        缓存 TTL：30 分钟。Python 脚本执行超时：60 秒。
+      operationId: getFirecloudOverlay
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          description: 中心点纬度（-90 到 90）
+          schema:
+            type: number
+            format: double
+            minimum: -90
+            maximum: 90
+          example: 39.9042
+        - name: lon
+          in: query
+          required: true
+          description: 中心点经度（-180 到 180）
+          schema:
+            type: number
+            format: double
+            minimum: -180
+            maximum: 180
+          example: 116.4074
+        - name: radius
+          in: query
+          required: false
+          description: 覆盖半径（50-500 公里），默认 200
+          schema:
+            type: integer
+            minimum: 50
+            maximum: 500
+            default: 200
+          example: 200
+        - name: type
+          in: query
+          required: false
+          description: 预测类型（sunrise 或 sunset），默认 sunset
+          schema:
+            type: string
+            enum:
+              - sunrise
+              - sunset
+            default: sunset
+          example: sunset
+      responses:
+        '200':
+          description: 成功返回覆盖层数据（含 base64 图片）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirecloudOverlayResponse'
+              example:
+                image: "data:image/png;base64,iVBORw0KGgo..."
+                bounds:
+                  north: 41.7
+                  south: 38.1
+                  east: 118.8
+                  west: 114.0
+                timestamp: 1718928000000
+        '400':
+          description: 请求参数验证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirecloudErrorResponse'
+              examples:
+                missingParams:
+                  summary: 缺少必需参数
+                  value:
+                    error: "缺少必需参数"
+                    message: "lat和lon参数是必需的"
+                invalidLat:
+                  summary: 无效纬度
+                  value:
+                    error: "无效的纬度"
+                    message: "纬度必须在-90到90之间"
+                invalidLon:
+                  summary: 无效经度
+                  value:
+                    error: "无效的经度"
+                    message: "经度必须在-180到180之间"
+                invalidRadius:
+                  summary: 无效半径
+                  value:
+                    error: "无效的半径"
+                    message: "半径必须在50到500公里之间"
+                invalidType:
+                  summary: 无效预测类型
+                  value:
+                    error: "无效的预测类型"
+                    message: "type必须是sunrise或sunset"
+        '500':
+          description: Python 脚本执行失败或数据处理错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirecloudErrorResponse'
+              example:
+                error: PYTHON_ERROR
+                message: "Python脚本执行失败"
+                details: "traceback info..."
+        '504':
+          description: GFS 数据处理超时（超过 60 秒）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirecloudErrorResponse'
+              example:
+                error: TIMEOUT
+                message: "GFS数据处理超时（>60秒），请稍后重试"
+
+  /api/firecloud/health:
+    get:
+      tags:
+        - 火烧云覆盖层
+      summary: 火烧云服务健康检查
+      description: |
+        检查火烧云覆盖层服务的运行状态，包括 Python GFS 处理脚本是否存在、
+        脚本路径和缓存状态。
+
+        如果 Python 脚本不存在，状态为 `degraded`（降级模式）。
+      operationId: firecloudHealthCheck
+      responses:
+        '200':
+          description: 返回火烧云服务健康状态
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirecloudHealthResponse'
+              example:
+                status: ok
+                scriptExists: true
+                scriptPath: "/home/user/weather-sunset-predictor/server/scripts/gfs_processor.py"
+                cacheSize: 3
+                timestamp: 1718928000000
+
+  /api/firecloud/cache/clear:
+    post:
+      tags:
+        - 火烧云覆盖层
+      summary: 清除覆盖层缓存
+      description: 清除火烧云覆盖层服务的所有缓存数据，强制下次请求重新生成覆盖层。
+      operationId: clearFirecloudCache
+      responses:
+        '200':
+          description: 缓存清除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "缓存已清除"
+                required:
+                  - success
+                  - message
+
+# ==================== 数据模型定义 ====================
+components:
+  schemas:
+    # ---------- 通用响应 ----------
+    HealthCheckResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: 服务状态
+          enum:
+            - ok
+        timestamp:
+          type: string
+          format: date-time
+          description: 当前服务器时间（ISO 8601 格式）
+      required:
+        - status
+        - timestamp
+
+    ErrorResponse:
+      type: object
+      description: 标准错误响应格式（由全局错误处理中间件返回）
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: 错误代码
+              example: INTERNAL_SERVER_ERROR
+            message:
+              type: string
+              description: 错误描述信息
+              example: "服务器内部错误"
+          required:
+            - code
+            - message
+      required:
+        - error
+
+    ValidationErrorResponse:
+      type: object
+      description: 预测 API 验证错误响应格式
+      properties:
+        error:
+          type: string
+          description: 错误代码
+        message:
+          type: string
+          description: 错误描述信息
+      required:
+        - error
+        - message
+
+    # ---------- 天气数据 ----------
+    WeatherDataPoint:
+      type: object
+      description: 单个时间点的标准化天气数据
+      properties:
+        timestamp:
+          type: integer
+          format: int64
+          description: Unix 时间戳（毫秒）
+        temp:
+          type: number
+          format: double
+          nullable: true
+          description: 温度（摄氏度，从开尔文转换）
+        humidity:
+          type: number
+          format: double
+          nullable: true
+          description: 相对湿度（百分比，0-100）
+        cloudCover:
+          type: number
+          format: double
+          description: 总云量（百分比，0-100，取三层云最大值与均值的较大者）
+        windSpeed:
+          type: number
+          format: double
+          nullable: true
+          description: 风速（m/s，从 u/v 分量计算）
+        windDirection:
+          type: number
+          format: double
+          nullable: true
+          description: 风向（度，0-360）
+        pressure:
+          type: number
+          format: double
+          nullable: true
+          description: 气压（hPa，从帕斯卡转换）
+        visibility:
+          type: number
+          format: double
+          description: 能见度（km，默认 10）
+          default: 10
+        precipitation:
+          type: number
+          format: double
+          description: 对流降水量
+          default: 0
+        lowClouds:
+          type: number
+          format: double
+          description: 低云覆盖率（百分比，0-100，< 2km）
+        midClouds:
+          type: number
+          format: double
+          description: 中云覆盖率（百分比，0-100，2-6km）
+        highClouds:
+          type: number
+          format: double
+          description: 高云覆盖率（百分比，0-100，> 6km）
+
+    WeatherForecastResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: 请求是否成功
+        location:
+          type: object
+          properties:
+            lat:
+              type: number
+              format: double
+              description: 纬度
+            lon:
+              type: number
+              format: double
+              description: 经度
+          required:
+            - lat
+            - lon
+        hours:
+          type: integer
+          description: 返回的预报时间点数量
+        data:
+          type: array
+          description: 天气数据数组，每个元素对应一个时间点
+          items:
+            $ref: '#/components/schemas/WeatherDataPoint'
+      required:
+        - success
+        - location
+        - hours
+        - data
+
+    # ---------- 基础预测 ----------
+    WeatherDataInput:
+      type: object
+      description: 预测请求中的天气数据输入
+      properties:
+        cloudCover:
+          type: number
+          description: 总云量（百分比，0-100）
+        humidity:
+          type: number
+          description: 相对湿度（百分比，0-100）
+        visibility:
+          type: number
+          description: 能见度（km）
+        lowCloudCover:
+          type: number
+          description: 低云覆盖率（百分比，0-100）
+        highClouds:
+          type: number
+          description: 高云覆盖率（百分比，0-100）
+        midClouds:
+          type: number
+          description: 中云覆盖率（百分比，0-100）
+        lowClouds:
+          type: number
+          description: 低云覆盖率（百分比，0-100）
+
+    BasicPredictionRequest:
+      type: object
+      description: 基础单点火烧云预测请求
+      properties:
+        weatherData:
+          $ref: '#/components/schemas/WeatherDataInput'
+        date:
+          type: string
+          format: date-time
+          description: 预测日期（ISO 8601 格式）
+        lat:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          description: 纬度
+        lon:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          description: 经度
+        type:
+          type: string
+          enum:
+            - sunrise
+            - sunset
+          description: 预测类型（朝霞或晚霞）
+      required:
+        - weatherData
+        - date
+        - lat
+        - lon
+        - type
+
+    FactorDetail:
+      type: object
+      description: 单个预测因子的值和得分
+      properties:
+        value:
+          type: number
+          description: 因子原始值
+        score:
+          type: number
+          description: 因子得分（0-100）
+
+    TimeRange:
+      type: object
+      description: 时间范围（黄金时段或蓝调时段）
+      properties:
+        start:
+          type: string
+          format: date-time
+          description: 开始时间（ISO 8601 格式）
+        end:
+          type: string
+          format: date-time
+          description: 结束时间（ISO 8601 格式）
+
+    CloudLayerAnalysis:
+      type: object
+      description: 云层分析结果
+      properties:
+        high:
+          type: number
+          description: 高云覆盖率（百分比）
+        mid:
+          type: number
+          description: 中云覆盖率（百分比）
+        low:
+          type: number
+          description: 低云覆盖率（百分比）
+        description:
+          type: string
+          description: 云层状况描述
+
+    BasicPredictionResult:
+      type: object
+      description: 基础预测结果
+      properties:
+        date:
+          type: string
+          format: date-time
+          description: 预测日期
+        score:
+          type: number
+          description: 综合预测评分（0-100）
+        quality:
+          type: string
+          enum:
+            - excellent
+            - good
+            - fair
+          description: |
+            质量等级：
+            - excellent: 评分 > 70，火烧云可能性高
+            - good: 评分 40-70，有一定可能
+            - fair: 评分 < 40，可能性较低
+        factors:
+          type: object
+          description: 各气象因子评分详情
+          properties:
+            cloudCover:
+              $ref: '#/components/schemas/FactorDetail'
+            humidity:
+              $ref: '#/components/schemas/FactorDetail'
+            visibility:
+              $ref: '#/components/schemas/FactorDetail'
+            lowClouds:
+              $ref: '#/components/schemas/FactorDetail'
+        sunsetTime:
+          type: string
+          format: date-time
+          description: 日落时间（UTC）
+        sunriseTime:
+          type: string
+          format: date-time
+          description: 日出时间（UTC）
+        type:
+          type: string
+          enum:
+            - sunrise
+            - sunset
+          description: 预测类型
+        goldenHour:
+          $ref: '#/components/schemas/TimeRange'
+        blueHour:
+          $ref: '#/components/schemas/TimeRange'
+        sunAzimuth:
+          type: number
+          nullable: true
+          description: 太阳方位角（度，0-360），仅当评分 > 70 时计算
+        cloudLayers:
+          $ref: '#/components/schemas/CloudLayerAnalysis'
+
+    BasicPredictionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/BasicPredictionResult'
+      required:
+        - success
+        - data
+
+    # ---------- 增强预测 ----------
+    RemoteCloudData:
+      type: object
+      description: 远程云量数据（用于光路评估）
+      properties:
+        near:
+          type: object
+          description: 150km 处的云量数据
+          properties:
+            totalCloud:
+              type: number
+              description: 总云量（百分比）
+        far:
+          type: object
+          description: 300km 处的云量数据
+          properties:
+            totalCloud:
+              type: number
+              description: 总云量（百分比）
+
+    EnhancedPredictionOptions:
+      type: object
+      description: 增强预测可选参数
+      properties:
+        remoteCloudData:
+          $ref: '#/components/schemas/RemoteCloudData'
+        rainedRecently:
+          type: boolean
+          description: 最近 6 小时是否下过雨（雨后初晴加成）
+          default: false
+
+    EnhancedWeatherDataInput:
+      type: object
+      description: 增强预测的天气数据输入
+      properties:
+        lowClouds:
+          type: number
+          description: 低云覆盖率（百分比，0-100）
+        midClouds:
+          type: number
+          description: 中云覆盖率（百分比，0-100）
+        highClouds:
+          type: number
+          description: 高云覆盖率（百分比，0-100）
+        visibility:
+          type: number
+          description: 能见度（km）
+        humidity:
+          type: number
+          description: 相对湿度（百分比，0-100）
+        aqi:
+          type: number
+          description: 空气质量指数（AQI，默认 50）
+
+    EnhancedPredictionRequest:
+      type: object
+      description: 增强版单点火烧云预测请求
+      properties:
+        weatherData:
+          $ref: '#/components/schemas/EnhancedWeatherDataInput'
+        date:
+          type: string
+          format: date-time
+          description: 预测日期（ISO 8601 格式）
+        lat:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          description: 纬度
+        lon:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          description: 经度
+        type:
+          type: string
+          enum:
+            - sunrise
+            - sunset
+          description: 预测类型
+        options:
+          $ref: '#/components/schemas/EnhancedPredictionOptions'
+      required:
+        - weatherData
+        - date
+        - lat
+        - lon
+        - type
+
+    TimeAnalysis:
+      type: object
+      description: 时间判定结果（太阳高度角窗口判断）
+      properties:
+        inWindow:
+          type: boolean
+          description: 是否在火烧云观测窗口内
+        elevation:
+          type: number
+          description: 太阳高度角（度）
+        optimalMoment:
+          type: string
+          nullable: true
+          description: |
+            最佳爆发时刻类型：
+            - high_cloud_eruption: 烧高云爆发时刻
+            - mid_cloud_eruption: 烧中云爆发时刻
+            - low_cloud_moment: 烧低云时刻
+            - sunrise_high_cloud_eruption: 朝霞高云爆发
+            - sunrise_mid_cloud_eruption: 朝霞中云爆发
+            - null: 不在最佳时刻
+          enum:
+            - high_cloud_eruption
+            - mid_cloud_eruption
+            - low_cloud_moment
+            - sunrise_high_cloud_eruption
+            - sunrise_mid_cloud_eruption
+            - null
+        windowDescription:
+          type: string
+          description: 窗口描述（如 "solar_elevation:-0.8"）
+        isInDetectionWindow:
+          type: boolean
+          description: 是否在检测窗口内（与 inWindow 相同）
+
+    CanvasAnalysis:
+      type: object
+      description: 画布评分（本地云况）分析结果
+      properties:
+        score:
+          type: number
+          description: 画布得分（0-100）
+        effectiveCloudCover:
+          type: number
+          description: 加权有效云量（百分比）
+        cloudRangeScore:
+          type: number
+          description: 云量区间评分（0-100）
+        cloudLevel:
+          type: string
+          enum:
+            - space
+            - fair
+            - perfect
+            - crowded
+            - overcast
+          description: |
+            云况等级：
+            - space: 太空（无云，<= 10%）
+            - fair: 画布稀疏（10-30%）
+            - perfect: 完美画布（30-70%）
+            - crowded: 画布拥挤（70-90%）
+            - overcast: 阴天（> 90%）
+        lowCloudPenalty:
+          type: number
+          description: 低云惩罚系数（0.1-1.0）
+        penaltyReason:
+          type: string
+          description: 惩罚原因
+        penaltyValue:
+          type: number
+          description: 低云覆盖率值
+        breakdown:
+          type: object
+          properties:
+            lowClouds:
+              type: number
+            midClouds:
+              type: number
+            highClouds:
+              type: number
+
+    LightPathAnalysis:
+      type: object
+      description: 光路评分（远距离通透性）分析结果
+      properties:
+        score:
+          type: number
+          description: 光路得分（0-100）
+        nearPointScore:
+          type: number
+          description: 150km 点得分（0-100）
+        farPointScore:
+          type: number
+          description: 300km 点得分（0-100）
+        breakdown:
+          type: object
+          properties:
+            nearPointCloudCover:
+              type: number
+              nullable: true
+              description: 150km 点总云量
+            farPointCloudCover:
+              type: number
+              nullable: true
+              description: 300km 点总云量
+        hasRemoteData:
+          type: boolean
+          description: 是否提供了远程云量数据
+
+    RenderingAnalysis:
+      type: object
+      description: 渲染修正（画质系数）分析结果
+      properties:
+        factor:
+          type: number
+          description: 最终渲染修正系数
+        visibilityFactor:
+          type: number
+          description: 能见度修正系数
+        humidityFactor:
+          type: number
+          description: 湿度修正系数
+        rainBonus:
+          type: number
+          description: 雨后初晴加成系数
+        breakdown:
+          type: object
+          properties:
+            visibility:
+              type: string
+              enum: [excellent, good, poor]
+              description: 能见度等级
+            humidity:
+              type: string
+              enum: [fog, dry, moderate]
+              description: 湿度等级
+            aqi:
+              type: string
+              enum: [excellent, good, poor]
+              description: 空气质量等级
+            colorTendency:
+              type: string
+              enum: [golden_orange, reddish_purple, dark_red]
+              description: 预期色调倾向
+            specialMode:
+              type: string
+              nullable: true
+              enum: [post_rain, null]
+              description: 特殊模式（雨后初晴等）
+
+    EnhancedPredictionResult:
+      type: object
+      description: 增强预测结果
+      properties:
+        date:
+          type: string
+          format: date-time
+          description: 预测日期
+        type:
+          type: string
+          enum: [sunrise, sunset]
+        score:
+          type: number
+          description: 综合预测评分（0-100）
+        quality:
+          type: string
+          enum: [excellent, good, fair]
+          description: 质量等级
+        status:
+          type: string
+          enum:
+            - no_fire_cloud
+            - light_glow
+            - good_glow
+            - very_likely
+            - legendary_eruption
+          description: |
+            预测状态码（由前端翻译为多语言文本）：
+            - no_fire_cloud: 无火烧云
+            - light_glow: 轻微晚霞
+            - good_glow: 较好晚霞
+            - very_likely: 很有可能出现火烧云
+            - legendary_eruption: 传说级火烧云爆发
+        icon:
+          type: string
+          enum: [cloudy, sunset, city_sunset, fire]
+          description: 状态图标标识
+        description:
+          type: string
+          description: 状态描述码（由前端翻译）
+        advice:
+          type: string
+          description: 观赏建议码（由前端翻译）
+        timeAnalysis:
+          $ref: '#/components/schemas/TimeAnalysis'
+        breakdown:
+          type: object
+          description: 评分分解
+          properties:
+            baseScore:
+              type: number
+              description: 基础分（画布 x 0.4 + 光路 x 0.6）
+            canvasScore:
+              type: number
+              description: 画布得分
+            lightPathScore:
+              type: number
+              description: 光路得分
+            renderingFactor:
+              type: number
+              description: 渲染修正系数
+        canvasAnalysis:
+          $ref: '#/components/schemas/CanvasAnalysis'
+        lightPathAnalysis:
+          $ref: '#/components/schemas/LightPathAnalysis'
+        renderingAnalysis:
+          $ref: '#/components/schemas/RenderingAnalysis'
+
+    EnhancedPredictionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/EnhancedPredictionResult'
+      required:
+        - success
+        - data
+
+    # ---------- 批量预测 ----------
+    BatchWeatherDataItem:
+      type: object
+      description: 批量预测中的单天天气数据项
+      properties:
+        weather:
+          type: object
+          description: 天气数据对象
+        date:
+          type: string
+          format: date-time
+          description: 预测日期
+        rainedRecently:
+          type: boolean
+          description: 最近是否下过雨
+          default: false
+      required:
+        - weather
+        - date
+
+    BatchPredictionRequest:
+      type: object
+      description: 增强版批量火烧云预测请求
+      properties:
+        weatherDataArray:
+          type: array
+          description: 天气数据数组（每天一项，最多 30 项）
+          maxItems: 30
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/BatchWeatherDataItem'
+        lat:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          description: 纬度
+        lon:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          description: 经度
+        type:
+          type: string
+          enum: [sunrise, sunset]
+          description: 预测类型
+      required:
+        - weatherDataArray
+        - lat
+        - lon
+        - type
+
+    BatchPredictionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/EnhancedPredictionResult'
+        count:
+          type: integer
+          description: 返回的预测结果数量
+      required:
+        - success
+        - data
+        - count
+
+    # ---------- 画布评分 ----------
+    CanvasScoreRequest:
+      type: object
+      description: 云况画布评分请求
+      properties:
+        weatherData:
+          type: object
+          description: 云量数据
+          properties:
+            lowClouds:
+              type: number
+              description: 低云覆盖率（百分比，0-100）
+            midClouds:
+              type: number
+              description: 中云覆盖率（百分比，0-100）
+            highClouds:
+              type: number
+              description: 高云覆盖率（百分比，0-100）
+      required:
+        - weatherData
+
+    CanvasScoreResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/CanvasAnalysis'
+      required:
+        - success
+        - data
+
+    # ---------- 渲染评分 ----------
+    RenderingScoreRequest:
+      type: object
+      description: 渲染因子评分请求
+      properties:
+        weatherData:
+          type: object
+          description: 渲染相关天气数据
+          properties:
+            visibility:
+              type: number
+              description: 能见度（km）
+            humidity:
+              type: number
+              description: 相对湿度（百分比，0-100）
+            aqi:
+              type: number
+              description: 空气质量指数
+        rainedRecently:
+          type: boolean
+          description: 最近 6 小时是否下过雨
+          default: false
+      required:
+        - weatherData
+
+    RenderingScoreResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/RenderingAnalysis'
+      required:
+        - success
+        - data
+
+    # ---------- 周边预测 ----------
+    SurroundingPredictionRequest:
+      type: object
+      description: 周边8方向火烧云预测请求
+      properties:
+        lat:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          description: 中心点纬度
+        lon:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          description: 中心点经度
+        radius:
+          type: integer
+          enum: [50, 100, 150]
+          description: 采样半径（公里），默认 100
+          default: 100
+        type:
+          type: string
+          enum: [sunrise, sunset]
+          description: 预测类型，默认 sunset
+          default: sunset
+        date:
+          type: string
+          format: date
+          description: 预测日期（YYYY-MM-DD 格式），默认今天
+      required:
+        - lat
+        - lon
+
+    SurroundingPoint:
+      type: object
+      description: 单个方向的预测数据
+      properties:
+        direction:
+          type: string
+          enum: [N, NE, E, SE, S, SW, W, NW]
+          description: 方位代码
+        name:
+          type: string
+          description: 方位中文名称（如"北"、"东北"）
+        angle:
+          type: integer
+          description: 方位角度（0-315，间隔 45）
+        label:
+          type: string
+          description: 方位标签（与 direction 相同）
+        lat:
+          type: number
+          format: double
+          description: 目标点纬度
+        lon:
+          type: number
+          format: double
+          description: 目标点经度
+        distance:
+          type: number
+          description: 与中心点的距离（公里）
+        weatherData:
+          type: object
+          nullable: true
+          description: 该点的天气数据（获取失败时为 null）
+        prediction:
+          type: object
+          nullable: true
+          description: 该点的预测结果（获取失败时为 null）
+        score:
+          type: number
+          description: 预测评分（0-100，获取失败时为 0）
+        quality:
+          type: string
+          description: 质量等级（获取失败时为 "unknown"）
+        error:
+          type: string
+          nullable: true
+          description: 错误信息（成功时为 null）
+
+    BestDirection:
+      type: object
+      nullable: true
+      description: 最佳观赏方向（所有方向都失败时为 null）
+      properties:
+        direction:
+          type: string
+          description: 方位代码
+        name:
+          type: string
+          description: 方位中文名称
+        score:
+          type: number
+          description: 最高评分
+        quality:
+          type: string
+          description: 质量等级
+        location:
+          type: object
+          properties:
+            lat:
+              type: number
+              format: double
+            lon:
+              type: number
+              format: double
+
+    SurroundingPredictionResult:
+      type: object
+      description: 周边预测聚合结果
+      properties:
+        center:
+          type: object
+          properties:
+            lat:
+              type: number
+              format: double
+            lon:
+              type: number
+              format: double
+        radius:
+          type: integer
+          description: 采样半径（公里）
+        type:
+          type: string
+          description: 预测类型
+        date:
+          type: string
+          format: date-time
+          description: 预测日期
+        points:
+          type: array
+          description: 8 个方向的预测数据
+          items:
+            $ref: '#/components/schemas/SurroundingPoint'
+          minItems: 8
+          maxItems: 8
+        bestDirection:
+          $ref: '#/components/schemas/BestDirection'
+        timestamp:
+          type: integer
+          format: int64
+          description: 响应生成时间戳（毫秒）
+
+    SurroundingPredictionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/SurroundingPredictionResult'
+      required:
+        - success
+        - data
+
+    # ---------- 火烧云覆盖层 ----------
+    OverlayBounds:
+      type: object
+      description: 覆盖层地理边界（用于 Leaflet L.imageOverlay）
+      properties:
+        north:
+          type: number
+          format: double
+          description: 北边界纬度
+        south:
+          type: number
+          format: double
+          description: 南边界纬度
+        east:
+          type: number
+          format: double
+          description: 东边界经度
+        west:
+          type: number
+          format: double
+          description: 西边界经度
+      required:
+        - north
+        - south
+        - east
+        - west
+
+    FirecloudOverlayResponse:
+      type: object
+      description: 火烧云覆盖层响应
+      properties:
+        image:
+          type: string
+          description: 覆盖层图片（data:image/png;base64,... 格式）
+        bounds:
+          $ref: '#/components/schemas/OverlayBounds'
+        timestamp:
+          type: integer
+          format: int64
+          description: 数据生成时间戳（毫秒）
+      required:
+        - image
+        - bounds
+        - timestamp
+
+    FirecloudErrorResponse:
+      type: object
+      description: 火烧云服务错误响应
+      properties:
+        error:
+          type: string
+          description: 错误代码或描述
+        message:
+          type: string
+          description: 详细错误信息
+        details:
+          type: string
+          description: 附加错误详情（如 Python traceback）
+      required:
+        - error
+        - message
+
+    FirecloudHealthResponse:
+      type: object
+      description: 火烧云服务健康检查响应
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+          description: |
+            服务状态：
+            - ok: 正常（Python 脚本存在）
+            - degraded: 降级（Python 脚本不存在）
+        scriptExists:
+          type: boolean
+          description: Python GFS 处理脚本是否存在
+        scriptPath:
+          type: string
+          description: Python 脚本绝对路径
+        cacheSize:
+          type: integer
+          description: 当前缓存条目数量
+        timestamp:
+          type: integer
+          format: int64
+          description: 检查时间戳（毫秒）
+      required:
+        - status
+        - scriptExists
+        - scriptPath
+        - cacheSize
+        - timestamp

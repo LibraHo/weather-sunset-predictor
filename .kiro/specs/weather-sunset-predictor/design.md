@@ -3542,3 +3542,89 @@ L.imageOverlay(overlayUrl, bounds, { opacity: 0.7 }).addTo(map);
 - 后端 GFS 处理器优先，前端 Canvas 回退，自动降级
 - 缓存：覆盖层 30分钟 TTL，Python 60秒超时保护
 
+---
+
+## 27. Phase 7：代码质量优化
+
+### 27.1 Toast 通知系统设计
+
+**目标**：替换所有 `alert()` 为统一的 Toast 通知组件，提升用户体验。
+
+**架构**：
+```
+ToastService (src/services/ToastService.js)
+├── show(message, type, duration)  // 显示通知
+├── success(message)               // 成功通知（绿色）
+├── error(message)                 // 错误通知（红色）
+├── warning(message)               // 警告通知（黄色）
+├── info(message)                  // 信息通知（蓝色）
+└── _createToastElement()          // 创建 DOM 元素
+```
+
+**视觉规范**：
+- 位置：屏幕右上角，固定定位
+- 动画：slideIn 进入，fadeOut 消失
+- 样式：毛玻璃效果（与需求21一致），`backdrop-filter: blur()`
+- 多条排队：最多同时显示 3 条，新通知从上方推入
+- 移动端：底部居中显示，全宽
+
+**替换清单**（5 处 alert）：
+| 文件 | 当前代码 | 替换为 |
+|------|----------|--------|
+| AppController.js | `alert('...')` | `ToastService.error(...)` |
+| WeatherController.js | `alert('...')` | `ToastService.warning(...)` |
+| LanguageSelector.js | `alert('...')` | `ToastService.info(...)` |
+| NotificationService.js | `alert('...')` | `ToastService.success(...)` |
+
+### 27.2 AppController 拆分设计
+
+**目标**：将 ~1700 行的 AppController 拆分为 4 个职责明确的控制器。
+
+**拆分方案**：
+```
+AppController (协调者, ~800 行)
+├── UIStateController (UI 状态管理, ~250 行)
+│   ├── showLoading / hideLoading
+│   ├── showError / showSuccess
+│   ├── showAPIKeyModal / hideAPIKeyModal
+│   └── showLocationError / clearLocationError
+├── ChartRenderController (图表渲染, ~250 行)
+│   ├── _renderSimpleChart
+│   ├── chartService 封装
+│   └── 图表数据格式化
+└── FavoriteController (收藏与历史, ~200 行)
+    ├── loadFavoriteLocations / toggleFavorite
+    ├── loadSearchHistory / clearSearchHistory
+    └── 收藏/历史 UI 更新
+```
+
+**依赖关系**：
+```
+AppController
+├── inject → UIStateController
+├── inject → ChartRenderController
+├── inject → FavoriteController
+├── own   → WeatherController
+└── own   → PredictionController
+```
+
+**迁移策略**：渐进式提取，每步保证测试通过。
+
+### 27.3 测试补充设计
+
+**后端集成测试**（tests/integration/server/）：
+- 使用 supertest 库对 Express app 进行 HTTP 级别测试
+- 不依赖外部 API（mock Windy 服务）
+- 验证完整的请求→路由→服务→响应链路
+
+**E2E 测试补充**（tests/e2e/）：
+- 使用现有 Playwright 框架
+- 覆盖设置持久化场景（localStorage 跨页面验证）
+- 覆盖多语言切换视觉一致性
+
+### 27.4 API 文档设计
+
+**格式**：OpenAPI 3.0 YAML（server/api-docs.yaml）
+**分组标签**：天气数据 / 预测API / 火烧云覆盖层 / 系统
+**可选**：集成 swagger-ui-express 提供在线文档浏览
+
