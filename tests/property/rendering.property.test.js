@@ -268,7 +268,7 @@ describe('Rendering Functions - Property-Based Tests', () => {
         { score: 100, color: 'green' }
       ];
 
-      boundaryCases.forEach(({ score, expectedColor }) => {
+      boundaryCases.forEach(({ score, color: expectedColor }) => {
         const actualColor = score >= 70 ? 'green' :
                            score >= 40 ? 'yellow' : 'red';
         expect(actualColor).toBe(expectedColor);

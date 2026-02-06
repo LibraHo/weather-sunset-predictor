@@ -30,7 +30,7 @@ describe('Data Models - Property-Based Tests', () => {
     test('coordinates outside valid ranges fail validation', () => {
       fc.assert(
         fc.property(
-          fc.float({ min: -180, max: -90.01, noNaN: true }),
+          fc.float({ min: -180, max: Math.fround(-90.01), noNaN: true }),
           fc.float({ min: -360, max: 360, noNaN: true }),
           (invalidLat, lon) => {
             const location = new Location(invalidLat, lon, 'Invalid');
@@ -44,7 +44,7 @@ describe('Data Models - Property-Based Tests', () => {
     test('coordinates outside valid ranges fail validation (upper bound)', () => {
       fc.assert(
         fc.property(
-          fc.float({ min: 90.01, max: 180, noNaN: true }),
+          fc.float({ min: Math.fround(90.01), max: 180, noNaN: true }),
           fc.float({ min: -360, max: 360, noNaN: true }),
           (invalidLat, lon) => {
             const location = new Location(invalidLat, lon, 'Invalid');
@@ -60,8 +60,8 @@ describe('Data Models - Property-Based Tests', () => {
         fc.property(
           fc.float({ min: -90, max: 90, noNaN: true }),
           fc.oneof(
-            fc.float({ min: -360, max: -180.01, noNaN: true }),
-            fc.float({ min: 180.01, max: 360, noNaN: true })
+            fc.float({ min: -360, max: Math.fround(-180.01), noNaN: true }),
+            fc.float({ min: Math.fround(180.01), max: 360, noNaN: true })
           ),
           (lat, invalidLon) => {
             const location = new Location(lat, invalidLon, 'Invalid');
@@ -181,7 +181,7 @@ describe('Data Models - Property-Based Tests', () => {
     test('good quality requires score in [40, 70)', () => {
       fc.assert(
         fc.property(
-          fc.float({ min: 40, max: 69.99, noNaN: true }),
+          fc.float({ min: 40, max: Math.fround(69.99), noNaN: true }),
           (score) => {
             const prediction = new SunsetPrediction(
               new Date(),
@@ -203,7 +203,7 @@ describe('Data Models - Property-Based Tests', () => {
     test('fair quality requires score < 40', () => {
       fc.assert(
         fc.property(
-          fc.float({ min: 0, max: 39.99, noNaN: true }),
+          fc.float({ min: 0, max: Math.fround(39.99), noNaN: true }),
           (score) => {
             const prediction = new SunsetPrediction(
               new Date(),
@@ -222,12 +222,14 @@ describe('Data Models - Property-Based Tests', () => {
     });
 
     test('optimal viewing window is 60 minutes centered on reference time', () => {
+      // Use constrained dates to avoid overflow at Date epoch limits
+      const safeDate = fc.date({ min: new Date('2000-01-01'), max: new Date('2100-01-01') });
       fc.assert(
         fc.property(
-          fc.date(),
+          safeDate,
           fc.float({ min: 0, max: 100, noNaN: true }),
           fc.object(),
-          fc.date(),
+          safeDate,
           fc.constantFrom('sunrise', 'sunset'),
           (date, score, factors, referenceTime, type) => {
             const prediction = new SunsetPrediction(
