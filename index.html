@@ -11,7 +11,13 @@
   <link rel="stylesheet" href="styles/rtl.css">
   <link rel="stylesheet" href="styles/settings-panel.css">
 
-  <!-- 任务18：Windy地图使用iframe嵌入方式，无需额外脚本 -->
+  <!-- 任务26.6.2：使用 Leaflet + OSM 替代 iframe 嵌入方式 -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""></script>
 </head>
 <body>
   <div id="app">
@@ -206,8 +212,8 @@
             </div>
           </div>
 
-          <!-- 任务20：火烧云覆盖层控制 - 暂时隐藏（2026-02-04，等待Phase 6重构） -->
-          <div style="margin-top: 15px; padding: 12px; background: var(--card-bg, #f9f9f9); border-radius: 8px; border: 1px solid var(--border-color, #e0e0e0); display: none;">
+          <!-- 任务20 + 26.6：火烧云覆盖层控制（Phase 6 Leaflet 重构完成） -->
+          <div style="margin-top: 15px; padding: 12px; background: var(--card-bg, #f9f9f9); border-radius: 8px; border: 1px solid var(--border-color, #e0e0e0);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
               <div style="display: flex; align-items: center; gap: 10px;">
                 <label class="switch" style="display: flex; align-items: center; cursor: pointer;">
