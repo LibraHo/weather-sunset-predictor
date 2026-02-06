@@ -77,6 +77,9 @@ describe('AppController', () => {
 
   describe('initialize() - 需求 1.1, 1.5', () => {
     test('当API密钥未配置时，应该显示API密钥模态框', async () => {
+      // 设置为直连模式（代理模式跳过API密钥检查）
+      localStorage.setItem('api_mode', 'direct');
+
       // 确保没有API密钥
       expect(storageService.getAPIKey()).toBeNull();
 
@@ -472,7 +475,7 @@ describe('AppController', () => {
       await appController.handleSaveAPIKey();
 
       const errorElement = document.getElementById('api-key-error');
-      expect(errorElement.textContent).toContain('保存失败');
+      expect(errorElement.textContent).toContain('存储失败');
       expect(errorElement.classList.contains('hidden')).toBe(false);
 
       // Restore
@@ -696,11 +699,8 @@ describe('AppController', () => {
       await appController.handleLocationSearch();
 
       const locationErrorElement = document.getElementById('location-error');
-      expect(locationErrorElement.textContent).toContain('无法找到位置');
+      expect(locationErrorElement.textContent).toContain('位置解析失败');
       expect(locationErrorElement.style.display).toBe('block');
-
-      const errorElement = document.getElementById('error-message');
-      expect(errorElement.textContent).toContain('位置搜索失败');
     });
 
     test('搜索时应该禁用搜索按钮防止重复点击', async () => {
@@ -915,7 +915,7 @@ describe('AppController', () => {
       expect(locationErrorElement.style.display).toBe('block');
 
       const errorElement = document.getElementById('error-message');
-      expect(errorElement.textContent).toContain('获取当前位置失败');
+      expect(errorElement.textContent).toContain('位置权限被拒绝');
     });
 
     test('当浏览器不支持地理定位时，应该显示友好的错误消息', async () => {

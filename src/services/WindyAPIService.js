@@ -80,7 +80,8 @@ class WindyAPIService {
       // 解析后端返回的数据
       return this.parseProxyData(result.data);
     } catch (error) {
-      if (error.message.includes('API') || error.message.includes('后端')) {
+      if (error.message.includes('API') || error.message.includes('后端') ||
+          error.message.includes('参数') || error.message.includes('频繁')) {
         throw error;
       }
       console.error('[WindyAPIService] 后端代理网络错误:', error);
@@ -129,7 +130,7 @@ class WindyAPIService {
 
       return this.parseWeatherData(data);
     } catch (error) {
-      if (error.message.includes('API')) {
+      if (error.message.includes('API') || error.message.includes('Windy')) {
         throw error;
       }
       console.error('[WindyAPIService] Windy API 网络错误:', error);

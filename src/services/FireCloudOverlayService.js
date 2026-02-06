@@ -347,15 +347,16 @@ class FireCloudOverlayService {
    */
   removeOverlay() {
     if (this.leafletOverlay) {
+      const overlayRef = this.leafletOverlay;
       // Leaflet overlay 移除
       this.leafletOverlay.remove();
       this.leafletOverlay = null;
       console.log('[FireCloudOverlayService] 覆盖层已移除');
-    }
 
-    // 同时通知 mapService 移除覆盖层记录
-    if (this.mapService && this.mapService.removeImageOverlay) {
-      this.mapService.removeImageOverlay(this.leafletOverlay);
+      // 同时通知 mapService 移除覆盖层记录（传递原引用而非 null）
+      if (this.mapService && this.mapService.removeImageOverlay) {
+        this.mapService.removeImageOverlay(overlayRef);
+      }
     }
   }
 
