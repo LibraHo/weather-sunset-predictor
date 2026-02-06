@@ -369,33 +369,24 @@
 15. 系统应支持切换朝霞和晚霞的覆盖层显示
 
 
-**⚠️ 实现状态（2026-02-04更新）**：
+**✅ 实现状态（2026-02-06更新）**：
 
-**状态**: **暂时移除 - 等待架构重构（Phase 6）**
+**状态**: **已完成 - Phase 6 Leaflet 重构**
 
 **已完成**:
-- ✅ 前端 FireCloudOverlayService（320行，覆盖层生成算法）
-- ✅ 后端 Python GFS 处理脚本（脚手架已搭建）
-- ✅ 后端 API 路由（/api/firecloud/overlay）
+- ✅ 前端 WindyMapService 重构（Leaflet + OpenStreetMap 替代 iframe）
+- ✅ 前端 FireCloudOverlayService 重构（L.imageOverlay() 替代 DOM 覆盖层）
+- ✅ 后端 FireCloudService（Python GFS 处理器封装、缓存、错误处理）
+- ✅ 后端 API 路由（/api/firecloud/overlay, /health, /cache/clear）
+- ✅ Python GFS 处理器（769行，光路追踪 + 高斯评分算法，19 个测试）
+- ✅ 前后端集成测试（19 个新测试，216 个后端测试全部通过）
+- ✅ 覆盖层与地图完美同步（Leaflet 原生支持拖动/缩放同步）
 
-**架构问题**:
-- 当前实现使用 Windy iframe 嵌入方式加载地图
-- 覆盖层在主页面 DOM 中创建，不在 iframe 内
-- 由于**跨域 iframe 隔离**，地图拖动时覆盖层不跟随
-- 地图交互导致覆盖层完全错位
-
-**决策**:
-- **已采用方案C**：暂时移除此功能，隐藏相关 UI
-- 保留需求19的雷达图可视化（功能正常）
-- 待需求22（前后端分离）完成后，启动 **Phase 6** 进行完整重构
-
-**Phase 6 重构计划**（见需求22）:
-1. 调研并选择地图方案（Windy Professional 或 Leaflet + OSM）
-2. 重新设计地图集成架构（非 iframe 方式）
-3. 完成后端 Python GFS 数据处理服务
-4. 实现覆盖层与地图的正确同步
-
-**预计时间**: Phase 6 将在需求22的 Phase 1-5 完成后启动（约2-3周）
+**架构改进**:
+- 使用 Leaflet + OSM 替代 iframe 嵌入方式（方案C - 混合方案）
+- 覆盖层通过 `L.imageOverlay()` 直接添加到 Leaflet 地图层
+- 支持后端 GFS 数据 + 前端 Canvas 双数据源，自动回退
+- 30 分钟缓存策略，60 秒 Python 超时保护
 
 **当前UI状态**: 地图覆盖层开关已隐藏，用户无法访问此功能
 

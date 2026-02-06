@@ -2,21 +2,18 @@
  * FireCloud API路由
  *
  * 提供火烧云地图覆盖层API端点
- * 调用Python脚本处理GFS数据并生成PNG覆盖层
- * Phase 4: 添加缓存支持
+ * Phase 6 重构：使用 FireCloudService 封装 Python 调用逻辑
+ *
+ * 需求：20.11, 22 (Phase 6)
  */
 
 const express = require('express');
-const { spawn } = require('child_process');
-const fs = require('fs/promises');
-const path = require('path');
-const CacheService = require('../services/CacheService.js');
-const cacheConfig = require('../config/cacheConfig.js');
+const FireCloudService = require('../services/FireCloudService.js');
 
 const router = express.Router();
 
-// 创建缓存服务实例
-const cacheService = new CacheService({ defaultTTL: cacheConfig.ttl.FIRECLOUD_OVERLAY });
+// 创建 FireCloudService 实例
+const fireCloudService = new FireCloudService();
 
 /**
  * GET /api/firecloud/overlay
@@ -89,136 +86,21 @@ router.get('/overlay', async (req, res) => {
 
   console.log(`[FireCloud API] 处理请求: lat=${latNum}, lon=${lonNum}, radius=${radiusNum}km, type=${type}`);
 
-  // Phase 4: 检查缓存
-  const cacheKey = cacheConfig.buildKey('OVERLAY', `${latNum.toFixed(2)}_${lonNum.toFixed(2)}_${radiusNum}_${type}`);
-  const cachedResult = await cacheService.get(cacheKey);
-
-  if (cachedResult) {
-    console.log('[FireCloud API] 使用缓存数据');
-    return res.json(cachedResult);
-  }
-
   try {
-    // 构造Python脚本路径
-    const scriptPath = path.join(__dirname, '../scripts/gfs_processor.py');
-
-    // 检查脚本是否存在
-    try {
-      await fs.access(scriptPath);
-    } catch (error) {
-      console.error('[FireCloud API] Python脚本不存在:', scriptPath);
-      return res.status(500).json({
-        error: '服务未配置',
-        message: 'GFS处理脚本未找到，请确认Python环境已配置'
-      });
-    }
-
-    // 调用Python脚本
-    const pythonProcess = spawn('python', [
-      scriptPath,
-      '--lat', latNum.toString(),
-      '--lon', lonNum.toString(),
-      '--radius', radiusNum.toString(),
-      '--type', type
-    ]);
-
-    let stdout = '';
-    let stderr = '';
-
-    pythonProcess.stdout.on('data', (data) => {
-      stdout += data.toString();
-    });
-
-    pythonProcess.stderr.on('data', (data) => {
-      stderr += data.toString();
-      console.error('[Python stderr]:', data.toString());
-    });
-
-    pythonProcess.on('close', async (code) => {
-      if (code !== 0) {
-        console.error(`[FireCloud API] Python脚本失败，退出码: ${code}`);
-        console.error(`[FireCloud API] stderr: ${stderr}`);
-
-        return res.status(500).json({
-          error: '数据处理失败',
-          message: 'Python脚本执行失败',
-          details: stderr
-        });
-      }
-
-      try {
-        // 解析stdout（JSON格式）
-        const metadata = JSON.parse(stdout);
-
-        // 检查是否有错误
-        if (metadata.error) {
-          throw new Error(metadata.error);
-        }
-
-        console.log('[FireCloud API] Python脚本成功，metadata:', metadata);
-
-        // 读取PNG文件
-        const imageBuffer = await fs.readFile(metadata.image_path);
-
-        // 转换为base64
-        const imageBase64 = imageBuffer.toString('base64');
-        const imageDataUrl = `data:image/png;base64,${imageBase64}`;
-
-        // 清理临时PNG文件
-        try {
-          await fs.unlink(metadata.image_path);
-          console.log('[FireCloud API] 临时文件已清理:', metadata.image_path);
-        } catch (cleanupError) {
-          console.warn('[FireCloud API] 清理临时文件失败:', cleanupError);
-        }
-
-        // 构造响应数据
-        const responseData = {
-          image: imageDataUrl,
-          bounds: metadata.bounds,
-          timestamp: metadata.timestamp
-        };
-
-        // Phase 4: 缓存结果
-        await cacheService.set(cacheKey, responseData);
-        console.log('[FireCloud API] 结果已缓存');
-
-        // 返回结果
-        res.json(responseData);
-
-        console.log('[FireCloud API] 请求处理完成');
-
-      } catch (parseError) {
-        console.error('[FireCloud API] 解析Python输出失败:', parseError);
-        console.error('[FireCloud API] stdout:', stdout);
-
-        return res.status(500).json({
-          error: '数据处理失败',
-          message: '无法解析Python脚本输出',
-          details: parseError.message
-        });
-      }
-    });
-
-    // 设置超时（60秒）
-    setTimeout(() => {
-      if (!pythonProcess.killed) {
-        console.error('[FireCloud API] Python脚本超时，终止进程');
-        pythonProcess.kill('SIGTERM');
-
-        return res.status(500).json({
-          error: '请求超时',
-          message: 'GFS数据处理超时（>60秒），请稍后重试'
-        });
-      }
-    }, 60000);
-
+    const result = await fireCloudService.generateOverlay(latNum, lonNum, radiusNum, type);
+    res.json(result);
+    console.log('[FireCloud API] 请求处理完成');
   } catch (error) {
-    console.error('[FireCloud API] 服务器错误:', error);
+    console.error('[FireCloud API] 错误:', error);
 
-    return res.status(500).json({
-      error: '内部服务器错误',
-      message: error.message
+    const statusCode = error.code === 'SCRIPT_NOT_FOUND' ? 500
+      : error.code === 'TIMEOUT' ? 504
+      : 500;
+
+    res.status(statusCode).json({
+      error: error.code || '数据处理失败',
+      message: error.message,
+      details: error.details
     });
   }
 });
@@ -228,12 +110,19 @@ router.get('/overlay', async (req, res) => {
  *
  * 健康检查端点
  */
-router.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    service: 'firecloud',
-    timestamp: Date.now()
-  });
+router.get('/health', async (req, res) => {
+  const health = await fireCloudService.healthCheck();
+  res.json(health);
+});
+
+/**
+ * POST /api/firecloud/cache/clear
+ *
+ * 清除覆盖层缓存
+ */
+router.post('/cache/clear', async (req, res) => {
+  await fireCloudService.clearCache();
+  res.json({ success: true, message: '缓存已清除' });
 });
 
 module.exports = router;

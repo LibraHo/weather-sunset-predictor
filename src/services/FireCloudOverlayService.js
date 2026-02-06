@@ -1,13 +1,19 @@
 /**
  * FireCloudOverlayService - 火烧云地图覆盖层服务
  *
- * 生成并管理火烧云预测的地理热力图覆盖层
+ * Phase 6 重构：使用 Leaflet L.imageOverlay() 替代 DOM 覆盖层
+ * 覆盖层与地图完美同步（拖动/缩放），解决原 iframe 跨域问题
+ *
+ * 支持两种数据源：
+ * 1. 前端生成（基于周边点 Canvas 热力图）
+ * 2. 后端 GFS 处理器（高精度 PNG 覆盖层）
+ *
  * 需求：20.1, 20.4, 20.7, 20.9, 20.10, 20.11, 20.14
  */
 
 class FireCloudOverlayService {
   constructor() {
-    this.overlay = null;
+    this.leafletOverlay = null; // Leaflet L.imageOverlay 实例
     this.mapService = null;
     this.currentData = null;
     this.isLoading = false;
@@ -24,15 +30,22 @@ class FireCloudOverlayService {
         low: [128, 128, 128]   // 灰色 - 低概率
       }
     };
+
+    // 后端 API 配置
+    this.useBackendOverlay = true; // 优先使用后端 GFS 数据
+    this.backendURL = 'http://localhost:3000';
+  }
+
+  /**
+   * 设置后端 API 基础 URL
+   * @param {string} url - 后端 URL
+   */
+  setBackendURL(url) {
+    this.backendURL = url;
   }
 
   /**
    * 生成缓存键
-   * @param {number} lat - 纬度
-   * @param {number} lon - 经度
-   * @param {number} radius - 半径（公里）
-   * @param {string} type - 类型 (sunrise/sunset)
-   * @returns {string} 缓存键
    * @private
    */
   _getCacheKey(lat, lon, radius, type) {
@@ -41,22 +54,60 @@ class FireCloudOverlayService {
 
   /**
    * 检查缓存是否有效
-   * @param {Object} cacheItem - 缓存项
-   * @returns {boolean} 是否有效
    * @private
    */
   _isCacheValid(cacheItem) {
     if (!cacheItem || !cacheItem.timestamp) {
       return false;
     }
-    const now = Date.now();
-    return (now - cacheItem.timestamp) < this.CACHE_DURATION;
+    return (Date.now() - cacheItem.timestamp) < this.CACHE_DURATION;
   }
 
   /**
-   * 生成熟力图覆盖层
+   * 从后端 GFS API 获取覆盖层数据
+   * @param {Object} centerLocation - 中心位置 {lat, lon}
+   * @param {number} radius - 半径（公里）
+   * @param {string} type - 类型 ('sunrise' | 'sunset')
+   * @returns {Promise<Object>} 覆盖层数据 { dataUrl, bounds, metadata }
+   *
+   * 需求：20.4, 20.11
+   */
+  async fetchBackendOverlay(centerLocation, radius = 200, type = 'sunset') {
+    const { lat, lon } = centerLocation;
+
+    console.log(`[FireCloudOverlayService] 从后端获取 GFS 覆盖层: lat=${lat}, lon=${lon}, radius=${radius}`);
+
+    const url = `${this.backendURL}/api/firecloud/overlay?lat=${lat}&lon=${lon}&radius=${radius}&type=${type}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      signal: AbortSignal.timeout(30000) // 30秒超时
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || `后端 API 错误: HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    return {
+      dataUrl: data.image,
+      bounds: data.bounds,
+      metadata: {
+        center: { lat, lon },
+        radius,
+        type,
+        timestamp: data.timestamp,
+        source: 'gfs'
+      }
+    };
+  }
+
+  /**
+   * 生成覆盖层（前端 Canvas 或后端 GFS）
    * @param {Object} centerLocation - 中心位置 {lat, lon, name}
-   * @param {Object[]} surroundingData - 周边点数据（来自SurroundingPointsService）
+   * @param {Object[]} surroundingData - 周边点数据
    * @param {number} radius - 半径（公里）
    * @param {string} type - 类型 ('sunrise' | 'sunset')
    * @returns {Promise<Object>} 覆盖层数据 { dataUrl, bounds, metadata }
@@ -78,32 +129,20 @@ class FireCloudOverlayService {
     console.log('[FireCloudOverlayService] 生成覆盖层...');
 
     try {
-      // 计算地理边界
-      const bounds = this._calculateBounds(lat, lon, radius);
+      let result;
 
-      // 创建Canvas并生成热力图
-      const canvas = await this._createHeatmapCanvas(
-        surroundingData,
-        bounds,
-        centerLocation
-      );
-
-      // 转换为DataURL
-      const dataUrl = canvas.toDataURL('image/png');
-
-      // 组装结果
-      const result = {
-        dataUrl,
-        bounds,
-        metadata: {
-          center: { lat, lon },
-          radius,
-          type,
-          timestamp: Date.now(),
-          gridSize: this.config.gridSize,
-          points: surroundingData.length
+      // 优先尝试后端 GFS 数据
+      if (this.useBackendOverlay) {
+        try {
+          result = await this.fetchBackendOverlay(centerLocation, radius, type);
+          console.log('[FireCloudOverlayService] 后端 GFS 覆盖层获取成功');
+        } catch (backendError) {
+          console.warn('[FireCloudOverlayService] 后端不可用，回退到前端生成:', backendError.message);
+          result = await this._generateFrontendOverlay(centerLocation, surroundingData, radius, type);
         }
-      };
+      } else {
+        result = await this._generateFrontendOverlay(centerLocation, surroundingData, radius, type);
+      }
 
       // 缓存结果
       this.cache.set(cacheKey, {
@@ -112,6 +151,7 @@ class FireCloudOverlayService {
       });
 
       this.isLoading = false;
+      this.currentData = result;
       console.log('[FireCloudOverlayService] 覆盖层生成完成');
       return result;
 
@@ -123,21 +163,37 @@ class FireCloudOverlayService {
   }
 
   /**
+   * 前端 Canvas 生成覆盖层（回退方案）
+   * @private
+   */
+  async _generateFrontendOverlay(centerLocation, surroundingData, radius, type) {
+    const { lat, lon } = centerLocation;
+    const bounds = this._calculateBounds(lat, lon, radius);
+    const canvas = await this._createHeatmapCanvas(surroundingData, bounds, centerLocation);
+    const dataUrl = canvas.toDataURL('image/png');
+
+    return {
+      dataUrl,
+      bounds,
+      metadata: {
+        center: { lat, lon },
+        radius,
+        type,
+        timestamp: Date.now(),
+        gridSize: this.config.gridSize,
+        points: surroundingData.length,
+        source: 'frontend'
+      }
+    };
+  }
+
+  /**
    * 计算覆盖层的地理边界
-   * @param {number} centerLat - 中心纬度
-   * @param {number} centerLon - 中心经度
-   * @param {number} radius - 半径（公里）
-   * @returns {Object} 边界 { north, south, east, west }
    * @private
    */
   _calculateBounds(centerLat, centerLon, radius) {
-    // 地球半径（公里）
     const EARTH_RADIUS = 6371;
-
-    // 计算纬度范围
     const latDelta = (radius / EARTH_RADIUS) * (180 / Math.PI);
-
-    // 计算经度范围（考虑纬度影响）
     const latRad = (centerLat * Math.PI) / 180;
     const lonDelta = (radius / (EARTH_RADIUS * Math.cos(latRad))) * (180 / Math.PI);
 
@@ -151,40 +207,29 @@ class FireCloudOverlayService {
 
   /**
    * 创建热力图Canvas
-   * @param {Object[]} points - 周边点数据
-   * @param {Object} bounds - 地理边界
-   * @param {Object} centerLocation - 中心位置
-   * @returns {Promise<HTMLCanvasElement>} Canvas元素
    * @private
    */
   async _createHeatmapCanvas(points, bounds, centerLocation) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
 
-    // 设置Canvas尺寸
     const size = 512;
     canvas.width = size;
     canvas.height = size;
 
-    // 清空Canvas（透明背景）
     ctx.clearRect(0, 0, size, size);
 
     // 为每个点绘制热力图效果
     points.forEach(point => {
       if (!point.score || point.score === 0) return;
 
-      // 将经纬度转换为Canvas坐标
       const x = this._lonToX(point.lon, bounds, size);
       const y = this._latToY(point.lat, bounds, size);
-
-      // 根据评分确定颜色和大小
       const normalizedScore = point.score / 100;
       const color = this._getColorForScore(normalizedScore);
-      const radius = 30 + normalizedScore * 20; // 30-50像素半径
+      const radius = 30 + normalizedScore * 20;
 
-      // 绘制径向渐变
       const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
-
       const [r, g, b] = color;
       const alpha = this.config.opacity * normalizedScore;
 
@@ -210,62 +255,36 @@ class FireCloudOverlayService {
     return canvas;
   }
 
-  /**
-   * 将经度转换为Canvas X坐标
-   * @param {number} lon - 经度
-   * @param {Object} bounds - 边界
-   * @param {number} size - Canvas尺寸
-   * @returns {number} X坐标
-   * @private
-   */
+  /** @private */
   _lonToX(lon, bounds, size) {
     const lonRange = bounds.east - bounds.west;
-    const normalizedLon = (lon - bounds.west) / lonRange;
-    return normalizedLon * size;
+    return ((lon - bounds.west) / lonRange) * size;
   }
 
-  /**
-   * 将纬度转换为Canvas Y坐标
-   * @param {number} lat - 纬度
-   * @param {Object} bounds - 边界
-   * @param {number} size - Canvas尺寸
-   * @returns {number} Y坐标
-   * @private
-   */
+  /** @private */
   _latToY(lat, bounds, size) {
     const latRange = bounds.north - bounds.south;
-    // 注意：Canvas Y轴向下，纬度向上
-    const normalizedLat = 1 - (lat - bounds.south) / latRange;
-    return normalizedLat * size;
+    return (1 - (lat - bounds.south) / latRange) * size;
   }
 
-  /**
-   * 根据评分获取颜色
-   * @param {number} normalizedScore - 标准化评分（0-1）
-   * @returns {number[]} RGB颜色数组
-   * @private
-   */
+  /** @private */
   _getColorForScore(normalizedScore) {
-    if (normalizedScore >= 0.7) {
-      return this.config.colors.high; // 红橙色
-    } else if (normalizedScore >= 0.4) {
-      return this.config.colors.medium; // 金色
-    } else {
-      return this.config.colors.low; // 灰色
-    }
+    if (normalizedScore >= 0.7) return this.config.colors.high;
+    if (normalizedScore >= 0.4) return this.config.colors.medium;
+    return this.config.colors.low;
   }
 
   /**
-   * 在地图上显示覆盖层
-   * @param {Object} mapService - WindyMapService实例
-   * @param {Object} overlayData - 覆盖层数据
-   * @param {HTMLElement} container - 地图容器元素
+   * 在地图上显示覆盖层（使用 Leaflet L.imageOverlay）
+   * @param {Object} mapService - WindyMapService 实例（Leaflet 版本）
+   * @param {Object} overlayData - 覆盖层数据 { dataUrl, bounds }
+   * @param {HTMLElement} container - 地图容器元素（兼容性参数）
    * @returns {boolean} 是否成功
    *
    * 需求：20.7, 20.9
    */
   displayOnMap(mapService, overlayData, container) {
-    if (!mapService || !overlayData || !container) {
+    if (!mapService || !overlayData) {
       console.error('[FireCloudOverlayService] 缺少必要参数');
       return false;
     }
@@ -274,43 +293,46 @@ class FireCloudOverlayService {
       // 移除旧的覆盖层
       this.removeOverlay();
 
-      // 创建覆盖层元素
-      const overlayDiv = document.createElement('div');
-      overlayDiv.id = 'firecloud-overlay';
-      overlayDiv.style.cssText = `
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 1000;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-      `;
-
-      // 创建图像元素
-      const img = document.createElement('img');
-      img.src = overlayData.dataUrl;
-      img.style.cssText = `
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      `;
-
-      overlayDiv.appendChild(img);
-      container.appendChild(overlayDiv);
-
-      // 淡入效果
-      requestAnimationFrame(() => {
-        overlayDiv.style.opacity = '1';
-      });
-
-      this.overlay = overlayDiv;
       this.mapService = mapService;
 
-      console.log('[FireCloudOverlayService] 覆盖层已显示');
-      return true;
+      // 使用 Leaflet imageOverlay API（通过 WindyMapService 的接口）
+      if (mapService.addImageOverlay) {
+        this.leafletOverlay = mapService.addImageOverlay(
+          overlayData.dataUrl,
+          overlayData.bounds,
+          {
+            opacity: this.config.opacity,
+            interactive: false,
+            zIndex: 400
+          }
+        );
+
+        if (this.leafletOverlay) {
+          console.log('[FireCloudOverlayService] Leaflet 覆盖层已显示');
+          return true;
+        }
+      }
+
+      // 回退：直接操作 Leaflet map
+      const map = mapService.getMap ? mapService.getMap() : null;
+      if (map && typeof L !== 'undefined') {
+        const bounds = L.latLngBounds(
+          [overlayData.bounds.south, overlayData.bounds.west],
+          [overlayData.bounds.north, overlayData.bounds.east]
+        );
+
+        this.leafletOverlay = L.imageOverlay(overlayData.dataUrl, bounds, {
+          opacity: this.config.opacity,
+          interactive: false,
+          zIndex: 400
+        }).addTo(map);
+
+        console.log('[FireCloudOverlayService] Leaflet 覆盖层已显示（直接添加）');
+        return true;
+      }
+
+      console.error('[FireCloudOverlayService] 无法添加覆盖层：地图服务不支持');
+      return false;
 
     } catch (error) {
       console.error('[FireCloudOverlayService] 显示覆盖层失败:', error);
@@ -324,10 +346,16 @@ class FireCloudOverlayService {
    * 需求：20.7
    */
   removeOverlay() {
-    if (this.overlay) {
-      this.overlay.remove();
-      this.overlay = null;
+    if (this.leafletOverlay) {
+      // Leaflet overlay 移除
+      this.leafletOverlay.remove();
+      this.leafletOverlay = null;
       console.log('[FireCloudOverlayService] 覆盖层已移除');
+    }
+
+    // 同时通知 mapService 移除覆盖层记录
+    if (this.mapService && this.mapService.removeImageOverlay) {
+      this.mapService.removeImageOverlay(this.leafletOverlay);
     }
   }
 
@@ -343,6 +371,10 @@ class FireCloudOverlayService {
    */
   async refresh(centerLocation, surroundingData, radius, type) {
     try {
+      // 清除相关缓存
+      const cacheKey = this._getCacheKey(centerLocation.lat, centerLocation.lon, radius, type);
+      this.cache.delete(cacheKey);
+
       // 移除旧覆盖层
       this.removeOverlay();
 
@@ -382,7 +414,6 @@ class FireCloudOverlayService {
    * 清除过期缓存
    */
   clearExpiredCache() {
-    const now = Date.now();
     for (const [key, value] of this.cache.entries()) {
       if (!this._isCacheValid(value)) {
         this.cache.delete(key);
@@ -398,8 +429,10 @@ class FireCloudOverlayService {
   getStatus() {
     return {
       isLoading: this.isLoading,
-      hasOverlay: !!this.overlay,
-      cacheSize: this.cache.size
+      hasOverlay: !!this.leafletOverlay,
+      cacheSize: this.cache.size,
+      useBackendOverlay: this.useBackendOverlay,
+      source: this.currentData?.metadata?.source || null
     };
   }
 }

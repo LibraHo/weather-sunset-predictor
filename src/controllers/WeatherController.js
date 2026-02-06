@@ -77,10 +77,14 @@ class WeatherController {
       this.predictionAPIService = null;
     }
 
-    // 任务20：初始化火烧云覆盖层服务
+    // 任务20 + 26.6：初始化火烧云覆盖层服务（Phase 6 Leaflet 重构）
     this.fireCloudOverlayService = new FireCloudOverlayService();
     this.fireCloudOverlayEnabled = false; // 覆盖层开关状态
     this.currentOverlayType = 'sunset'; // 当前覆盖层类型 (sunrise/sunset)
+
+    // 配置覆盖层服务的后端 URL
+    const overlayBaseURL = apiConfig.proxy?.url || 'http://localhost:3000';
+    this.fireCloudOverlayService.setBackendURL(overlayBaseURL);
 
     // 使用简化的内联 ChartService（使用动态单位）
     this.chartService = {

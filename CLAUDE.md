@@ -37,9 +37,9 @@ The project has detailed specification documents under `.kiro/specs/weather-suns
 | 17 | Personalization (个性化设置) — units, theme, default location | Done |
 | 18 | Windy Map Forecast API Integration (地图预测) | Done |
 | 19 | Surrounding Fire Cloud Visualization (周边火烧云可视化) — radar chart | Done |
-| 20 | Fire Cloud Map Overlay (火烧云地图覆盖层) — GFS data, heatmap | Temporarily Removed (架构缺陷，等待Phase 6重构) |
+| 20 | Fire Cloud Map Overlay (火烧云地图覆盖层) — Leaflet + GFS heatmap | Done (Phase 6 Leaflet 重构完成) |
 | 21 | UI Glassmorphism Effect (UI毛玻璃效果) — backdrop-filter blur on cards, header, modals | Done |
-| 22 | Frontend-Backend Separation (前后端分离) — migrate prediction algorithms to backend, support multi-platform clients | ✅ Phase 1-5 完成, Phase 6 进行中 |
+| 22 | Frontend-Backend Separation (前后端分离) — migrate prediction algorithms to backend, support multi-platform clients | ✅ Phase 1-6 全部完成 |
 
 ### Key Design Decisions (from design.md)
 
@@ -108,9 +108,7 @@ Frontend request → /api/prediction/surrounding → Node.js SurroundingService
 - 批量预测（10天）：~34ms
 - 8方向坐标计算：< 3ms
 
-**Note**: Requirement 22 includes 6 phases. Phase 6 will fix Requirement 20 (Fire Cloud Map Overlay) by refactoring the map integration from iframe to Leaflet + completing the backend GFS processing service.
-
-### 前后端分离架构 (需求22 - Phase 1-5 完成, Phase 6 进行中)
+### 前后端分离架构 (需求22 - Phase 1-6 全部完成)
 
 **迁移状态**:
 - ✅ Phase 1: 核心预测算法后端化 (2026-02-04)
@@ -118,11 +116,11 @@ Frontend request → /api/prediction/surrounding → Node.js SurroundingService
 - ✅ Phase 3: 增强预测模型后端化 (2026-02-04)
 - ✅ Phase 4: 批量预测与性能优化 (2026-02-04)
 - ✅ Phase 5: 前端代码清理与测试 (2026-02-06)
-  - PredictionAPIService 单元测试 (20 tests)
-  - 文档更新
-- 🔄 Phase 6: 地图重构 + 需求20修复 (进行中)
-  - ✅ 26.6.1 地图方案决策
-  - ✅ 26.6.4 Python GFS 处理器完善 (19 tests)
+- ✅ Phase 6: 地图重构 + 需求20修复 (2026-02-06)
+  - WindyMapService 重构（Leaflet + OSM 替代 iframe）
+  - FireCloudOverlayService 重构（L.imageOverlay 替代 DOM）
+  - FireCloudService 后端服务（Python GFS 调用封装 + 缓存）
+  - 前后端集成测试（19 新测试）
 
 **配置开关** (config.api.js):
 ```javascript
@@ -161,7 +159,8 @@ weather-sunset-predictor/
 │   │   └── prediction.js       # 增强预测 API ✅ (Phase 3)
 │   ├── services/               # Backend services
 │   │   ├── WindyAPIService.js  # Windy API 代理 ✅
-│   │   └── EnhancedPredictionService.js # 增强预测服务 ✅ (Phase 3)
+│   │   ├── EnhancedPredictionService.js # 增强预测服务 ✅ (Phase 3)
+│   │   └── FireCloudService.js # 火烧云覆盖层服务 ✅ (Phase 6)
 │   ├── utils/                  # Backend utilities (已实现)
 │   │   ├── SunCalculator.js    # 日出日落计算 (NOAA算法) ✅
 │   │   └── GaussianScore.js    # 高斯评分函数 ✅
@@ -171,7 +170,7 @@ weather-sunset-predictor/
 ├── styles/                     # CSS (main.css, rtl.css, settings-panel.css)
 ├── tests/                      # All test suites
 │   ├── unit/                   # Jest unit tests (controllers, models, services, utils)
-│   │   └── server/             # Backend unit tests (143 tests) ✅
+│   │   └── server/             # Backend unit tests (216 tests) ✅
 │   ├── integration/            # Jest integration tests
 │   ├── property/               # fast-check property-based tests
 │   └── e2e/                    # Playwright E2E tests
@@ -358,6 +357,6 @@ Toggle with `USE_MOCK_API` flag in `src/app.js`. Mock services are used in Jest 
 - **E2E tests start their own server**: Playwright config auto-starts `npx http-server . -p 8080` — don't conflict with this port.
 - **Python server uses port 9002**, backend uses **port 3000**, Playwright E2E uses **port 8080**.
 - **Requirement traceability**: Code comments reference requirements by number (e.g., `// 需求：5.1`). When modifying code, check which requirement it maps to in `.kiro/specs/weather-sunset-predictor/requirements.md`.
-- **Requirement 20 temporarily removed**: The fire cloud map overlay feature (需求20) has been temporarily removed due to iframe cross-origin issues. UI controls are hidden. The feature will be completely refactored in Phase 6 of Requirement 22 using Leaflet instead of iframe.
-- **Phase 6 in progress**: Phases 1-5 of Requirement 22 are complete. Phase 6 is in progress (26.6.1 地图方案决策 ✅, 26.6.4 GFS处理器 ✅), remaining tasks include Leaflet map integration and frontend/backend integration testing.
+- **Requirement 20 completed (Phase 6)**: The fire cloud map overlay feature (需求20) was refactored in Phase 6 using Leaflet + OSM (replacing iframe). `WindyMapService` now uses native Leaflet, `FireCloudOverlayService` uses `L.imageOverlay()` for overlay sync.
+- **All phases complete**: All 6 phases of Requirement 22 (Frontend-Backend Separation) are complete as of 2026-02-06. All 22 requirements are now done.
 - **Windy Map API licensing**: Testing environment must use Testing API keys; production requires Professional license per Windy terms.

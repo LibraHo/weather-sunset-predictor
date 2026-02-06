@@ -3523,3 +3523,22 @@ L.imageOverlay(overlayUrl, bounds, { opacity: 0.7 }).addTo(map);
 4. ✅ 支持切换到 Windy API（配置开关）
 5. ✅ 移动端性能流畅
 
+### 26.6 Phase 6 实现总结（2026-02-06 完成）
+
+**实现内容**:
+
+| 文件 | 变更 | 说明 |
+|------|------|------|
+| `src/services/WindyMapService.js` | 重写 | Leaflet + OSM 替代 iframe，支持 addImageOverlay/removeImageOverlay/onMove/getBounds |
+| `src/services/FireCloudOverlayService.js` | 重写 | L.imageOverlay() 替代 DOM，支持后端 GFS + 前端 Canvas 双数据源 |
+| `server/services/FireCloudService.js` | 新建 | Python GFS 处理器封装，child_process.spawn + 缓存 + 错误处理 |
+| `server/routes/firecloud.js` | 重写 | 使用 FireCloudService，添加 /health 和 /cache/clear 端点 |
+| `index.html` | 更新 | 添加 Leaflet CDN，恢复覆盖层控制面板可见性 |
+| `tests/unit/server/FireCloudService.test.js` | 新建 | 19 个测试覆盖构造、健康检查、缓存配置、参数验证 |
+
+**技术决策确认**:
+- 采用方案C（混合方案）：Leaflet + OSM 开发环境，可选升级 Windy Professional
+- 覆盖层通过 `L.imageOverlay()` 原生集成，解决 iframe 跨域问题
+- 后端 GFS 处理器优先，前端 Canvas 回退，自动降级
+- 缓存：覆盖层 30分钟 TTL，Python 60秒超时保护
+
