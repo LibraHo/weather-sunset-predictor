@@ -2358,43 +2358,25 @@ container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
 
 ## 紧急任务：测试修复 (83 failures / 11 suites)
 
-> **状态：待修复** (2026-02-10 发现)
-> 全量测试 600 个，511 通过，83 失败，6 跳过。
-> 以下 5 个任务完全独立、零依赖，可并行分配给不同 agent。
+> **状态：修复中** (2026-02-10 发现，已修复 60/83)
+> 全量测试 600 个。当前：571 通过，23 失败，6 跳过。
+> **前置条件**：必须先运行 `cd server && npm install` 安装后端依赖。
+> 以下 3 个任务完全独立、零依赖，可并行分配给不同 agent。
 > 每个 agent 只需关注自己的任务范围，修完后运行对应验证命令确认通过。
 
-### 任务 32：后端服务 CommonJS import 修复 (36 failures)
+### 任务 32：后端服务依赖安装 (36 failures) ✅ 已修复
 
-- [ ] 32.1 修复 prediction-performance.test.js 的模块导入 (11 tests)
-  - 测试用 `(await import(...)).default` 导入 CommonJS 模块 (`module.exports = X`)
-  - ESM dynamic import 下 `.default` 拿到 `undefined`，导致所有测试构造类失败
-  - 修复方式：改为 `const mod = await import(...); Service = mod.default || mod;`
-  - _关联文件：`tests/unit/server/prediction-performance.test.js`_
-  - _关联源码（只读）：`server/services/PredictionService.js`, `server/services/SurroundingService.js`, `server/services/EnhancedPredictionService.js`, `server/services/CacheService.js`_
+- [x] 32.1 安装 server/node_modules 依赖 (36 tests 全部修复)
+  - **真实根因**：`server/node_modules` 未安装（缺少 axios 等依赖），导致 CommonJS 模块加载失败
+  - **修复方式**：`cd server && npm install`
+  - import 写法 `(await import(...)).default` 本身没有问题
+  - _修复日期：2026-02-10_
 
-- [ ] 32.2 修复 SurroundingService.test.js 的模块导入 (25 tests)
-  - 同 32.1 根因
-  - _关联文件：`tests/unit/server/SurroundingService.test.js`_
-  - _关联源码（只读）：`server/services/SurroundingService.js`, `server/services/CacheService.js`_
+### 任务 33：prediction.route 测试修复 (24 failures) ✅ 已修复
 
-**验证命令：**
-```bash
-node --experimental-vm-modules node_modules/.bin/jest --no-coverage tests/unit/server/prediction-performance.test.js tests/unit/server/SurroundingService.test.js
-```
-
-### 任务 33：prediction.route 测试修复 (24 failures)
-
-- [ ] 33.1 修复 prediction.route.test.js 的模块导入和断言 (24 tests)
-  - CommonJS/ESM import 问题（同任务32）
-  - 路由处理逻辑测试与当前 `EnhancedPredictionService` 实现不匹配
-  - 需对比 `server/routes/prediction.js` 和 `server/services/EnhancedPredictionService.js` 当前 API，更新测试断言
-  - _关联文件：`tests/unit/server/prediction.route.test.js`_
-  - _关联源码（只读）：`server/routes/prediction.js`, `server/services/EnhancedPredictionService.js`_
-
-**验证命令：**
-```bash
-node --experimental-vm-modules node_modules/.bin/jest --no-coverage tests/unit/server/prediction.route.test.js
-```
+- [x] 33.1 随任务 32 一起修复 (24 tests 全部通过)
+  - 同为 server 依赖缺失问题，安装后自动修复
+  - _修复日期：2026-02-10_
 
 ### 任务 34：前端 Property-based 测试修复 (19 failures)
 
@@ -2472,14 +2454,19 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage tests/unit/s
 
 ### 测试修复汇总
 
-| 任务 | 失败数 | 测试文件数 | 改动范围 | 难度 |
+| 任务 | 失败数 | 测试文件数 | 改动范围 | 状态 |
 |------|--------|-----------|----------|------|
-| 32 | 36 | 2 | 改测试 import | 低 |
-| 33 | 24 | 1 | import + 断言对齐 | 中 |
-| 34 | 19 | 5 | property 断言对齐 | 中 |
-| 35 | 4 | 1 | 预测逻辑断言 | 中 |
-| 36 | 2 suite crash | 2 | jest import + mock 补全 | 低 |
-| **总计** | **83** | **11** | | |
+| 32 | 36 | 2 | `cd server && npm install` | ✅ 已修复 |
+| 33 | 24 | 1 | 同上 | ✅ 已修复 |
+| 34 | 19 | 5 | property 断言对齐 | 待修复 |
+| 35 | 4 | 1 | 预测逻辑断言 | 待修复 |
+| 36 | 2 suite crash | 2 | jest import + mock 补全 | 待修复 |
+| **总计** | **83** | **11** | 已修复 60, 剩余 23 | |
+
+**前置条件（必须）：**
+```bash
+cd server && npm install   # 安装后端依赖，否则 60 个后端测试会失败
+```
 
 **全量验证命令：**
 ```bash
