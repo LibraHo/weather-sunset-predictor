@@ -165,9 +165,12 @@ describe('StorageService - Property-Based Tests', () => {
             const cachedData1 = service.getCachedWeatherData(location);
             const cachedData2 = service.getCachedWeatherData(location);
 
-            expect(cachedData1).toEqual(weatherData);
-            expect(cachedData2).toEqual(weatherData);
-            expect(cachedData1).toEqual(cachedData2);
+            // 统一 -0 / 0 表示，避免 JSON 序列化后符号位差异导致的误报
+            const normalize = (value) => JSON.parse(JSON.stringify(value));
+
+            expect(normalize(cachedData1)).toEqual(normalize(weatherData));
+            expect(normalize(cachedData2)).toEqual(normalize(weatherData));
+            expect(normalize(cachedData1)).toEqual(normalize(cachedData2));
           }
         ),
         { numRuns: 50 }

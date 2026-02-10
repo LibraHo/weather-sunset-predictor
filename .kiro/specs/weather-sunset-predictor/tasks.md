@@ -2232,7 +2232,7 @@ container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
 
 ### 任务 27：UX 改进 — alert() 替换为 Toast 通知
 
-- [ ] 27.1 创建 ToastService 通知组件
+- [x] 27.1 创建 ToastService 通知组件
   - 实现 show(message, type, duration) 方法
   - 支持 success / error / warning / info 四种类型
   - 自动消失（默认3秒），支持手动关闭
@@ -2240,7 +2240,7 @@ container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
   - 毛玻璃效果与现有 UI 一致
   - _关联需求：10, 21_
 
-- [ ] 27.2 替换所有 alert() 调用
+- [x] 27.2 替换所有 alert() 调用
   - AppController.js 中的 alert()
   - WeatherController.js 中的 alert()
   - LanguageSelector.js 中的 alert()
@@ -2248,7 +2248,7 @@ container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
   - 确保每处替换使用正确的通知类型
   - _关联需求：10_
 
-- [ ] 27.3 添加 ToastService 单元测试
+- [x] 27.3 添加 ToastService 单元测试
   - 测试各类型通知显示/隐藏
   - 测试自动消失和手动关闭
   - 测试多条通知排队显示
