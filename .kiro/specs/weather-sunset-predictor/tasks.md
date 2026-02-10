@@ -2353,3 +2353,136 @@ container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
 | 1 | 31.1-31.2 API 文档 + TODO 清理 | 1-2h |
 | 2 | 29.1-29.3 后端集成测试 | 2-3h |
 | 3 | 30.1-30.3 E2E 测试补充 | 1-2h |
+
+---
+
+## 紧急任务：测试修复 (83 failures / 11 suites)
+
+> **状态：待修复** (2026-02-10 发现)
+> 全量测试 600 个，511 通过，83 失败，6 跳过。
+> 以下 5 个任务完全独立、零依赖，可并行分配给不同 agent。
+> 每个 agent 只需关注自己的任务范围，修完后运行对应验证命令确认通过。
+
+### 任务 32：后端服务 CommonJS import 修复 (36 failures)
+
+- [ ] 32.1 修复 prediction-performance.test.js 的模块导入 (11 tests)
+  - 测试用 `(await import(...)).default` 导入 CommonJS 模块 (`module.exports = X`)
+  - ESM dynamic import 下 `.default` 拿到 `undefined`，导致所有测试构造类失败
+  - 修复方式：改为 `const mod = await import(...); Service = mod.default || mod;`
+  - _关联文件：`tests/unit/server/prediction-performance.test.js`_
+  - _关联源码（只读）：`server/services/PredictionService.js`, `server/services/SurroundingService.js`, `server/services/EnhancedPredictionService.js`, `server/services/CacheService.js`_
+
+- [ ] 32.2 修复 SurroundingService.test.js 的模块导入 (25 tests)
+  - 同 32.1 根因
+  - _关联文件：`tests/unit/server/SurroundingService.test.js`_
+  - _关联源码（只读）：`server/services/SurroundingService.js`, `server/services/CacheService.js`_
+
+**验证命令：**
+```bash
+node --experimental-vm-modules node_modules/.bin/jest --no-coverage tests/unit/server/prediction-performance.test.js tests/unit/server/SurroundingService.test.js
+```
+
+### 任务 33：prediction.route 测试修复 (24 failures)
+
+- [ ] 33.1 修复 prediction.route.test.js 的模块导入和断言 (24 tests)
+  - CommonJS/ESM import 问题（同任务32）
+  - 路由处理逻辑测试与当前 `EnhancedPredictionService` 实现不匹配
+  - 需对比 `server/routes/prediction.js` 和 `server/services/EnhancedPredictionService.js` 当前 API，更新测试断言
+  - _关联文件：`tests/unit/server/prediction.route.test.js`_
+  - _关联源码（只读）：`server/routes/prediction.js`, `server/services/EnhancedPredictionService.js`_
+
+**验证命令：**
+```bash
+node --experimental-vm-modules node_modules/.bin/jest --no-coverage tests/unit/server/prediction.route.test.js
+```
+
+### 任务 34：前端 Property-based 测试修复 (19 failures)
+
+- [ ] 34.1 修复 api-service.property.test.js (8 tests)
+  - `WindyAPIService` 接口/行为变更后测试未更新
+  - _关联文件：`tests/property/api-service.property.test.js`_
+  - _关联源码（只读）：`src/services/WindyAPIService.js`_
+
+- [ ] 34.2 修复 models.property.test.js (6 / 12 tests)
+  - `Location` 坐标校验边界 + `SunsetPrediction` quality 分级阈值变了
+  - _关联文件：`tests/property/models.property.test.js`_
+  - _关联源码（只读）：`src/models/Location.js`, `src/models/SunsetPrediction.js`_
+
+- [ ] 34.3 修复 rendering.property.test.js (1 / 13 tests)
+  - 颜色映射边界值不匹配
+  - _关联文件：`tests/property/rendering.property.test.js`_
+
+- [ ] 34.4 修复 storage.property.test.js (3 / 7 tests)
+  - `StorageService` 缓存 API 变更
+  - _关联文件：`tests/property/storage.property.test.js`_
+  - _关联源码（只读）：`src/services/StorageService.js`_
+
+- [ ] 34.5 修复 error-handling.property.test.js (1 / 16 tests)
+  - `ErrorHandler` 上下文保留逻辑
+  - _关联文件：`tests/property/error-handling.property.test.js`_
+  - _关联源码（只读）：`src/utils/ErrorHandler.js`_
+
+**验证命令：**
+```bash
+node --experimental-vm-modules node_modules/.bin/jest --no-coverage tests/property/api-service.property.test.js tests/property/models.property.test.js tests/property/rendering.property.test.js tests/property/storage.property.test.js tests/property/error-handling.property.test.js
+```
+
+### 任务 35：controller.property.test.js 修复 (4 failures)
+
+- [ ] 35.1 修复预测数量和排序断言 (3 tests)
+  - `generates predictions for exactly 5 days` — 多天预测数量不是固定5天
+  - `predictions are in chronological order` — 同 timestamp 数据点导致排序断言失败
+  - `prediction dates are unique for each day` — 同 timestamp 导致日期不唯一
+  - _关联文件：`tests/property/controller.property.test.js`_
+  - _关联源码（只读）：`src/services/SunsetPredictionService.js`, `src/controllers/PredictionController.js`_
+
+- [ ] 35.2 修复 quality 分级断言 (1 test)
+  - `quality classification matches score ranges` — score=0 时返回 `excellent` 而非 `fair`
+  - 需读源码确认 quality 分级的真实阈值
+  - _关联文件：`tests/property/controller.property.test.js`_
+  - _关联源码（只读）：`src/services/SunsetPredictionService.js`_
+
+**注意：此测试运行耗时约 355 秒**
+
+**验证命令：**
+```bash
+node --experimental-vm-modules node_modules/.bin/jest --no-coverage tests/property/controller.property.test.js
+```
+
+### 任务 36：WindyAPIService 单元测试 + controller-interaction 集成测试 (2 suites crash)
+
+- [ ] 36.1 修复 WindyAPIService.test.js (crash: jest is not defined)
+  - 第18行 `global.fetch = jest.fn()` 报 `ReferenceError: jest is not defined`
+  - 缺少 `import { jest } from '@jest/globals'`
+  - 添加 import 后需逐一验证后续断言是否正确
+  - _关联文件：`tests/unit/services/WindyAPIService.test.js`_
+  - _关联源码（只读）：`src/services/WindyAPIService.js`_
+
+- [ ] 36.2 修复 controller-interaction.test.js (crash: mock 不完整)
+  - mock 对象缺少 `getCachedWeatherData` 方法 → `TypeError`
+  - `PredictionController.generatePredictions` 抛 `Error: 天气数据为空` 未被捕获
+  - 需补全 mock 的 `storageService` 并提供有效天气数据
+  - _关联文件：`tests/integration/controller-interaction.test.js`_
+  - _关联源码（只读）：`src/controllers/AppController.js`, `src/controllers/WeatherController.js`, `src/controllers/PredictionController.js`, `src/services/StorageService.js`_
+
+**验证命令：**
+```bash
+node --experimental-vm-modules node_modules/.bin/jest --no-coverage tests/unit/services/WindyAPIService.test.js tests/integration/controller-interaction.test.js
+```
+
+### 测试修复汇总
+
+| 任务 | 失败数 | 测试文件数 | 改动范围 | 难度 |
+|------|--------|-----------|----------|------|
+| 32 | 36 | 2 | 改测试 import | 低 |
+| 33 | 24 | 1 | import + 断言对齐 | 中 |
+| 34 | 19 | 5 | property 断言对齐 | 中 |
+| 35 | 4 | 1 | 预测逻辑断言 | 中 |
+| 36 | 2 suite crash | 2 | jest import + mock 补全 | 低 |
+| **总计** | **83** | **11** | | |
+
+**全量验证命令：**
+```bash
+npm test
+```
+期望结果：28 suites 全部 PASS，600 tests 全部通过。
