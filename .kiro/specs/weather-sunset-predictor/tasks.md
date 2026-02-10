@@ -2261,13 +2261,13 @@ container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
   - 保持与 WeatherController 的接口不变
   - _关联需求：11_
 
-- [ ] 28.2 提取 UIStateController
+- [x] 28.2 提取 UIStateController
   - 提取 showLoading, showError, showSuccess, showAPIKeyModal 等 UI 状态方法
   - 提取 showLocationError, clearLocationError 等位置错误方法
   - 约 200-300 行代码
   - _关联需求：10_
 
-- [ ] 28.3 提取 FavoriteController
+- [x] 28.3 提取 FavoriteController
   - 提取收藏位置管理逻辑（loadFavoriteLocations, toggleFavorite 等）
   - 提取搜索历史管理逻辑（loadSearchHistory, clearSearchHistory 等）
   - 约 150-200 行代码
@@ -2282,7 +2282,7 @@ container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
 
 ### 任务 29：后端集成测试补充
 
-- [ ] 29.1 预测 API 集成测试
+- [x] 29.1 预测 API 集成测试
   - POST /api/prediction/calculate 端点测试
   - POST /api/prediction/surrounding 端点测试
   - POST /api/prediction/enhanced 端点测试
@@ -2290,7 +2290,7 @@ container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
   - 验证请求参数校验、响应格式、错误处理
   - _关联需求：22_
 
-- [ ] 29.2 火烧云 API 集成测试
+- [x] 29.2 火烧云 API 集成测试
   - GET /api/firecloud/overlay 端点测试
   - GET /api/firecloud/health 端点测试
   - POST /api/firecloud/cache/clear 端点测试
@@ -2306,23 +2306,24 @@ container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
 
 ### 任务 30：E2E 测试补充
 
-- [ ] 30.1 主题持久化 E2E 测试
+- [x] 30.1 主题持久化 E2E 测试
   - 切换主题 → 刷新页面 → 验证主题保持
   - 自动模式跟随系统 prefers-color-scheme
   - 三种主题（light/dark/auto）完整流程
   - _关联需求：17_
 
-- [ ] 30.2 设置面板 E2E 测试
+- [x] 30.2 设置面板 E2E 测试
   - 语言切换 → 验证 UI 文本变化
   - 单位切换（°C/°F, m/s/km/h）→ 验证数据展示
   - 默认位置设置 → 刷新 → 验证自动加载
   - _关联需求：16, 17_
 
-- [ ] 30.3 搜索历史和收藏 E2E 测试
+- [x] 30.3 搜索历史和收藏 E2E 测试
   - 搜索城市 → 验证历史记录出现
   - 收藏位置 → 刷新 → 验证收藏列表
   - LRU 5 条限制验证
   - _关联需求：12, 13_
+  - 备注：30.x 用例已补齐，需在本地安装 Playwright 浏览器后二次验收。
 
 ### 任务 31：后端 API 文档
 
