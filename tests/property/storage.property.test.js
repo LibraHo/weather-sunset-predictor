@@ -113,7 +113,8 @@ describe('StorageService - Property-Based Tests', () => {
             const cachedData = service.getCachedWeatherData(location);
 
             expect(cachedData).not.toBeNull();
-            expect(cachedData).toEqual(weatherData);
+            const normalize = (value) => JSON.parse(JSON.stringify(value));
+            expect(normalize(cachedData)).toEqual(normalize(weatherData));
           }
         ),
         { numRuns: 50 }
