@@ -6,6 +6,8 @@
  * 需求：12.6, 12.7, 12.8 - 预测提醒功能
  */
 
+import toastService from './ToastService.js';
+
 class NotificationService {
   constructor(storageService) {
     this.storageService = storageService;
@@ -205,12 +207,12 @@ class NotificationService {
    */
   async testNotification() {
     if (!this.isSupported) {
-      alert('您的浏览器不支持通知功能');
+      toastService.show('您的浏览器不支持通知功能', 'warning', 4000);
       return false;
     }
 
     if (Notification.permission === 'denied') {
-      alert('通知权限已被拒绝，请在浏览器设置中允许通知');
+      toastService.show('通知权限已被拒绝，请在浏览器设置中允许通知', 'warning', 5000);
       return false;
     }
 

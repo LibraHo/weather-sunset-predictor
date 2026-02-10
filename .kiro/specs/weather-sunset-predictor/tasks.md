@@ -2232,7 +2232,7 @@ container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
 
 ### 任务 27：UX 改进 — alert() 替换为 Toast 通知
 
-- [ ] 27.1 创建 ToastService 通知组件
+- [x] 27.1 创建 ToastService 通知组件
   - 实现 show(message, type, duration) 方法
   - 支持 success / error / warning / info 四种类型
   - 自动消失（默认3秒），支持手动关闭
@@ -2240,7 +2240,7 @@ container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
   - 毛玻璃效果与现有 UI 一致
   - _关联需求：10, 21_
 
-- [ ] 27.2 替换所有 alert() 调用
+- [x] 27.2 替换所有 alert() 调用
   - AppController.js 中的 alert()
   - WeatherController.js 中的 alert()
   - LanguageSelector.js 中的 alert()
@@ -2248,7 +2248,7 @@ container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
   - 确保每处替换使用正确的通知类型
   - _关联需求：10_
 
-- [ ] 27.3 添加 ToastService 单元测试
+- [x] 27.3 添加 ToastService 单元测试
   - 测试各类型通知显示/隐藏
   - 测试自动消失和手动关闭
   - 测试多条通知排队显示
@@ -2261,13 +2261,13 @@ container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
   - 保持与 WeatherController 的接口不变
   - _关联需求：11_
 
-- [ ] 28.2 提取 UIStateController
+- [x] 28.2 提取 UIStateController
   - 提取 showLoading, showError, showSuccess, showAPIKeyModal 等 UI 状态方法
   - 提取 showLocationError, clearLocationError 等位置错误方法
   - 约 200-300 行代码
   - _关联需求：10_
 
-- [ ] 28.3 提取 FavoriteController
+- [x] 28.3 提取 FavoriteController
   - 提取收藏位置管理逻辑（loadFavoriteLocations, toggleFavorite 等）
   - 提取搜索历史管理逻辑（loadSearchHistory, clearSearchHistory 等）
   - 约 150-200 行代码
@@ -2363,6 +2363,10 @@ container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
 > **前置条件**：必须先运行 `cd server && npm install` 安装后端依赖。
 > 以下 3 个任务完全独立、零依赖，可并行分配给不同 agent。
 > 每个 agent 只需关注自己的任务范围，修完后运行对应验证命令确认通过。
+>
+> **增量验证（2026-02-10）**：运行任务 34/35/36 关联的 8 个测试文件（`--runInBand --silent`）后，结果为 **8 suites 全部通过，119 通过 / 0 失败**。
+> - 通过：`api-service.property.test.js`、`controller.property.test.js`、`WindyAPIService.test.js`、`controller-interaction.test.js`、`models.property.test.js`、`rendering.property.test.js`、`storage.property.test.js`、`error-handling.property.test.js`
+> - 说明：此前两处失败（`global.fetch.mockClear` mock 问题、controller 属性断言与当前实现不一致）已修复并回归通过。
 
 ### 任务 32：后端服务依赖安装 (36 failures) ✅ 已修复
 
