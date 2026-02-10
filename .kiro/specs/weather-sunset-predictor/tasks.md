@@ -2363,6 +2363,10 @@ container.appendChild(overlayDiv); // 添加到主页面DOM，不在iframe内！
 > **前置条件**：必须先运行 `cd server && npm install` 安装后端依赖。
 > 以下 3 个任务完全独立、零依赖，可并行分配给不同 agent。
 > 每个 agent 只需关注自己的任务范围，修完后运行对应验证命令确认通过。
+>
+> **增量验证（2026-02-10）**：运行任务 34/35/36 关联的 8 个测试文件（`--runInBand --silent`）后，结果为 **8 suites 全部通过，119 通过 / 0 失败**。
+> - 通过：`api-service.property.test.js`、`controller.property.test.js`、`WindyAPIService.test.js`、`controller-interaction.test.js`、`models.property.test.js`、`rendering.property.test.js`、`storage.property.test.js`、`error-handling.property.test.js`
+> - 说明：此前两处失败（`global.fetch.mockClear` mock 问题、controller 属性断言与当前实现不一致）已修复并回归通过。
 
 ### 任务 32：后端服务依赖安装 (36 failures) ✅ 已修复
 
