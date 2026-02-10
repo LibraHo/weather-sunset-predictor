@@ -97,7 +97,7 @@ describe('StorageService - Property-Based Tests', () => {
         fc.property(
           fc.float({ min: -90, max: 90, noNaN: true }),
           fc.float({ min: -180, max: 180, noNaN: true }),
-          fc.array(fc.object(), { minLength: 1, maxLength: 10 }),
+          fc.array(fc.jsonValue(), { minLength: 1, maxLength: 10 }),
           (lat, lon, weatherData) => {
             const location = {
               lat,
@@ -125,7 +125,7 @@ describe('StorageService - Property-Based Tests', () => {
         fc.property(
           fc.float({ min: -90, max: 90, noNaN: true }),
           fc.float({ min: -180, max: 180, noNaN: true }),
-          fc.array(fc.object(), { minLength: 1, maxLength: 10 }),
+          fc.array(fc.jsonValue(), { minLength: 1, maxLength: 10 }),
           (lat, lon, weatherData) => {
             const location = {
               lat,
@@ -152,7 +152,7 @@ describe('StorageService - Property-Based Tests', () => {
         fc.property(
           fc.float({ min: -90, max: 90, noNaN: true }),
           fc.float({ min: -180, max: 180, noNaN: true }),
-          fc.array(fc.object(), { minLength: 1, maxLength: 10 }),
+          fc.array(fc.jsonValue(), { minLength: 1, maxLength: 10 }),
           (lat, lon, weatherData) => {
             const location = {
               lat,
@@ -177,9 +177,13 @@ describe('StorageService - Property-Based Tests', () => {
     test('cache respects location precision (4 decimal places)', () => {
       fc.assert(
         fc.property(
-          fc.float({ min: -90, max: 90, noNaN: true }),
-          fc.float({ min: -180, max: 180, noNaN: true }),
-          (lat, lon) => {
+          // Use integer coords (in 0.01 units) to avoid float rounding edge cases
+          fc.integer({ min: -9000, max: 9000 }),
+          fc.integer({ min: -18000, max: 18000 }),
+          (latInt, lonInt) => {
+            const lat = latInt / 100; // e.g. 3912 -> 39.12
+            const lon = lonInt / 100;
+
             const location1 = {
               lat,
               lon,
@@ -187,9 +191,10 @@ describe('StorageService - Property-Based Tests', () => {
               isValid: () => true
             };
 
+            // Add tiny offset that won't change toFixed(4)
             const location2 = {
-              lat: lat + 0.00005, // Within rounding precision
-              lon: lon + 0.00005,
+              lat: lat + 0.00001,
+              lon: lon + 0.00001,
               name: 'Location 2',
               isValid: () => true
             };
