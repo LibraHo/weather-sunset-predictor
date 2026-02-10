@@ -12,6 +12,7 @@
 import ErrorHandler from '../utils/ErrorHandler.js';
 import i18n from '../i18n.js';
 import { LanguageSelector } from '../components/LanguageSelector.js';
+import toastService from '../services/ToastService.js';
 import ThemeService from '../services/ThemeService.js';
 
 class AppController {
@@ -1054,8 +1055,7 @@ class AppController {
    * @private
    */
   showError(message) {
-    // 简单实现：使用alert或创建错误提示元素
-    // 后续任务会实现更好的UI
+    // 同步渲染页面内消息区域，并通过 ToastService 显示浮层通知
     console.error(message);
     
     const errorElement = document.getElementById('error-message');
@@ -1069,10 +1069,9 @@ class AppController {
         errorElement.style.display = 'none';
         errorElement.className = 'error-message';
       }, 5000);
-    } else {
-      // 降级方案：使用alert
-      alert(message);
     }
+
+    toastService.show(message, 'error', 5000);
   }
 
   /**
@@ -1095,6 +1094,8 @@ class AppController {
         successElement.className = 'success-message';
       }, 3000);
     }
+
+    toastService.show(message, 'success', 3000);
   }
 
   /**
