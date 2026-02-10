@@ -17,6 +17,7 @@ import FireCloudOverlayService from '../services/FireCloudOverlayService.js';
 import PredictionAPIService from '../services/PredictionAPIService.js';
 import { loadConfig } from '../../config.api.js';
 import i18n from '../i18n.js';
+import toastService from '../services/ToastService.js';
 // 暂时禁用 ChartService 导入，使用内联简化版本
 
 class WeatherController {
@@ -1232,7 +1233,7 @@ class WeatherController {
 
     // 可以在这里添加显示详细信息的功能
     // 例如：显示该方向的详细气象数据、观赏建议等
-    alert(`${point.name}方向\n评分: ${point.score}分\n距离: ${point.distance}公里`);
+    toastService.show(`${point.name}方向｜评分: ${point.score}分｜距离: ${point.distance}公里`, 'info', 5000);
   }
 
   /**

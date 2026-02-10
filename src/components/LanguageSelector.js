@@ -3,6 +3,7 @@
  * 允许用户切换界面语言
  */
 import i18n from '../i18n.js';
+import toastService from '../services/ToastService.js';
 
 export class LanguageSelector {
   constructor(containerId) {
@@ -84,7 +85,7 @@ export class LanguageSelector {
       // window.location.reload();
     } catch (error) {
       console.error('Failed to change language:', error);
-      alert('语言切换失败，请重试');
+      toastService.show('语言切换失败，请重试', 'error', 4000);
     }
   }
 

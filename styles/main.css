@@ -2772,3 +2772,63 @@ body.theme-dark .sun-azimuth-info {
     --glass-blur-heavy: 14px;
   }
 }
+
+/* Toast 通知 */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: min(92vw, 360px);
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--shadow-md);
+  color: var(--text-primary);
+}
+
+.toast-message {
+  font-size: 14px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.toast-close {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 18px;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.toast-close:hover {
+  opacity: 1;
+}
+
+.toast-success { border-left: 4px solid #4caf50; }
+.toast-error { border-left: 4px solid #f44336; }
+.toast-warning { border-left: 4px solid #ff9800; }
+.toast-info { border-left: 4px solid #2196f3; }
+
+@media (max-width: 768px) {
+  .toast-container {
+    right: 12px;
+    left: 12px;
+    top: 12px;
+    max-width: none;
+  }
+}
