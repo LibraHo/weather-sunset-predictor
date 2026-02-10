@@ -29,7 +29,9 @@ describe('FireCloudService', () => {
     });
 
     test('scriptPath 应指向 server/scripts/gfs_processor.py', () => {
-      expect(fireCloudService.scriptPath).toMatch(/server\/scripts\/gfs_processor\.py$/);
+      // Normalize path separators for cross-platform compatibility
+      const normalizedPath = fireCloudService.scriptPath.replace(/\\/g, '/');
+      expect(normalizedPath).toMatch(/server\/scripts\/gfs_processor\.py$/);
     });
   });
 
