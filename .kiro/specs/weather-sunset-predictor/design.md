@@ -3628,3 +3628,129 @@ AppController
 **分组标签**：天气数据 / 预测API / 火烧云覆盖层 / 系统
 **可选**：集成 swagger-ui-express 提供在线文档浏览
 
+---
+
+## 28. 测试覆盖率达标方案（需求 23）
+
+### 28.1 现状分析
+
+**当前覆盖率基线（2026-02-11）**：
+
+| 指标 | 当前值 | 目标阈值 | 差距 |
+|------|--------|----------|------|
+| Statements | 42.66% | 80% | -37.34pp |
+| Branches | 42.59% | 75% | -32.41pp |
+| Lines | 43.39% | 80% | -36.61pp |
+| Functions | 35.23% | 90% | -54.77pp |
+
+**根本原因**：大量生产代码文件（Canvas 服务、Leaflet 地图服务、UI 组件、工具类）目前 0% 或极低覆盖，同时语言翻译数据文件和 Mock 服务被计入覆盖率分母，人为拉低了整体指标。
+
+### 28.2 两阶段提升策略
+
+#### 阶段一：覆盖率配置修正（快速提升）
+
+**目标**：通过调整 `jest.config.js` 的 `collectCoverageFrom` 排除非生产逻辑文件，使分母合理化。
+
+排除规则：
+```javascript
+// jest.config.js - collectCoverageFrom 新增排除项
+'!src/locales/**',        // 纯翻译数据，无业务逻辑
+'!src/services/Mock*.js', // 离线开发用测试替身
+'!src/**/*.test.js',      // 测试文件本身
+'!tests/**',              // 测试目录
+```
+
+预期效果：排除约 15 个文件（10 个 locale + 3 个 Mock 服务），函数覆盖率预计从 35% 提升至约 50%。
+
+#### 阶段二：补充单元测试（系统性补全）
+
+按 ROI（投入产出比）由高到低排序：
+
+| 优先级 | 文件 | 当前覆盖率 | 难度 | 预期收益 |
+|--------|------|-----------|------|----------|
+| P0 | `UnitConverter.js` | 3.44% | 低 | 高（纯静态工具类） |
+| P0 | `ConfigService.js` | 0% | 低 | 高（纯逻辑无 DOM） |
+| P1 | `StorageService.js` | 54% | 低 | 中（填补空白分支） |
+| P1 | `ThemeService.js` | 40.81% | 中 | 中（需 mock DOM） |
+| P1 | `NotificationService.js` | 13.33% | 中 | 中（需 mock Notification API） |
+| P2 | `SurroundingPointsService.js` | 6% | 中 | 中（需 mock fetch） |
+| P2 | `SunsetPrediction.js` 模型 | 72.41% | 低 | 低（填补分支） |
+| P3 | `RadarChartService.js` | 1.26% | 高 | 中（需 mock Canvas） |
+| P3 | `FireCloudOverlayService.js` | 6.84% | 高 | 中（需 mock Canvas + fetch） |
+| P3 | `WindyMapService.js` | 0% | 高 | 中（需 mock Leaflet） |
+| P4 | `src/components/*.js` | ~3% | 高 | 低（重度 DOM 依赖） |
+
+### 28.3 各类型文件的 Mock 策略
+
+#### Canvas API Mock（RadarChartService、FireCloudOverlayService）
+
+```javascript
+// tests/setup.js 或各测试文件顶部
+const mockContext = {
+  clearRect: jest.fn(),
+  beginPath: jest.fn(),
+  moveTo: jest.fn(),
+  lineTo: jest.fn(),
+  stroke: jest.fn(),
+  fill: jest.fn(),
+  arc: jest.fn(),
+  fillText: jest.fn(),
+  createLinearGradient: jest.fn(() => ({ addColorStop: jest.fn() })),
+  // ... 其他 Canvas 2D 方法
+};
+HTMLCanvasElement.prototype.getContext = jest.fn(() => mockContext);
+```
+
+#### Leaflet Mock（WindyMapService）
+
+```javascript
+// tests/__mocks__/leaflet.js (Jest 自动 mock)
+const L = {
+  map: jest.fn(() => ({ setView: jest.fn().mockReturnThis(), ... })),
+  tileLayer: jest.fn(() => ({ addTo: jest.fn() })),
+  imageOverlay: jest.fn(() => ({ addTo: jest.fn(), remove: jest.fn() })),
+  latLngBounds: jest.fn(),
+};
+export default L;
+```
+
+#### Notification API Mock（NotificationService）
+
+```javascript
+global.Notification = {
+  requestPermission: jest.fn().mockResolvedValue('granted'),
+  permission: 'granted',
+};
+global.Notification.prototype.close = jest.fn();
+```
+
+### 28.4 覆盖率收集配置
+
+更新 `jest.config.js` 的 `collectCoverageFrom` 字段：
+
+```javascript
+collectCoverageFrom: [
+  'src/**/*.js',
+  'server/**/*.js',
+  '!src/locales/**',         // 翻译数据文件
+  '!src/services/Mock*.js',  // 测试替身服务
+  '!src/app.js',             // 应用入口（难以单测）
+  '!server/scripts/**',      // Python 脚本封装（由 pytest 覆盖）
+  '!**/node_modules/**',
+  '!**/*.test.js',
+],
+```
+
+### 28.5 预期覆盖率路径
+
+```
+阶段       Statements  Branches  Functions  Lines
+基线        42.66%     42.59%    35.23%    43.39%
+阶段一后    ~58%       ~56%      ~55%      ~59%   （排除非生产文件）
+P0 完成后  ~68%       ~64%      ~72%      ~68%   （+UnitConverter, ConfigService）
+P1 完成后  ~75%       ~72%      ~83%      ~75%   （+Storage, Theme, Notification）
+P2 完成后  ~79%       ~76%      ~88%      ~79%   （+Surrounding, 模型补全）
+P3 完成后  ~83%       ~79%      ~92%      ~83%   （+Canvas/Leaflet mock）
+目标阈值   80%        75%       90%       80%    ✅ 全部达标
+```
+

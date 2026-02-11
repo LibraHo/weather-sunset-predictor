@@ -205,3 +205,171 @@
 ```bash
 node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand --silent
 ```
+
+---
+
+## Phase 8：测试覆盖率达标（需求 23）
+
+> **目标**：所有 Jest 覆盖率阈值全部通过（Statements ≥ 80%，Branches ≥ 75%，Functions ≥ 90%，Lines ≥ 80%）
+> **当前基线**：31 suites 全通过，667/673 测试通过；覆盖率约 42%（语句），远低于阈值
+> **分两阶段**：阶段一修正配置（1~2 任务），阶段二按优先级补测试（P0→P3）
+
+### 任务 37：Jest 覆盖率配置修正（阶段一）
+
+- [ ] 37.1 更新 `jest.config.js` 的 `collectCoverageFrom`
+  - 排除 `src/locales/**`（纯翻译数据，无业务逻辑）
+  - 排除 `src/services/Mock*.js`（离线开发测试替身）
+  - 排除 `src/app.js`（应用入口文件，难以有意义地单测）
+  - 排除 `server/scripts/**`（Python 脚本封装，由 pytest 覆盖）
+  - 确保排除后现有 667 个测试依然全部通过
+  - _关联需求：23.6_
+
+- [ ] 37.2 验证配置修正效果
+  - 运行 `npm run test:coverage`，记录新的覆盖率基线
+  - 预期：语句覆盖率从 42% 提升至约 55-58%
+  - 将新基线数据更新到 design.md 第 28.5 节的路径表格
+  - _关联需求：23.1-23.5_
+
+### 任务 38：P0 工具类测试补全
+
+- [ ] 38.1 `UnitConverter.js` 全量测试（`tests/unit/utils/UnitConverter.test.js`）
+  - 温度转换：`toFahrenheit()`、`toCelsius()` 边界值（0°C、-40°C/°F、极值）
+  - 风速转换：`msToKmh()`、`msToMph()`、`kmhToMs()` 精度验证
+  - 格式化方法：`formatTemperature()`、`formatWindSpeed()` 含单位字符串
+  - 空值/NaN 输入的防御性处理
+  - 目标覆盖率：函数 100%，语句 100%
+  - _关联需求：17, 23.8_
+
+- [ ] 38.2 `ConfigService.js` 全量测试（`tests/unit/services/ConfigService.test.js`）
+  - 读取默认配置值
+  - `getApiMode()`、`isProxyMode()` 返回值正确性
+  - 配置合并/覆盖逻辑
+  - 目标覆盖率：函数 ≥ 95%，语句 ≥ 90%
+  - _关联需求：15, 23.8_
+
+### 任务 39：P1 服务层测试补全
+
+- [ ] 39.1 `StorageService.js` 覆盖率补全（`tests/unit/services/StorageService.test.js`）
+  - 补充当前未覆盖的方法：`saveFavoriteLocations()`、`getFavoriteLocations()`、`saveDefaultLocation()`、`getDefaultLocation()`
+  - 补充当前未覆盖的分支：`try/catch` 存储异常处理、`JSON.parse` 失败回退
+  - 通知设置读写：`saveNotificationSettings()`、`getNotificationSettings()`
+  - 单位/主题设置读写：`saveUnitSettings()`、`getUnitSettings()`
+  - 目标：将语句覆盖率从 54% 提升至 ≥ 85%
+  - _关联需求：12, 13, 17, 23.10_
+
+- [ ] 39.2 `ThemeService.js` 单元测试（`tests/unit/services/ThemeService.test.js`）
+  - `setTheme('light'|'dark'|'auto')` 验证 `document.documentElement.dataset.theme` 设置
+  - `getTheme()` 返回当前主题
+  - `applyStoredTheme()` 从 Storage 读取并应用
+  - `watchSystemTheme()` 监听 `prefers-color-scheme` 媒体查询（mock `matchMedia`）
+  - 目标：函数覆盖率 ≥ 90%，语句覆盖率 ≥ 80%
+  - _关联需求：17, 23.10_
+
+- [ ] 39.3 `NotificationService.js` 单元测试（`tests/unit/services/NotificationService.test.js`）
+  - mock `global.Notification`（`requestPermission`、`permission`）
+  - `requestPermission()` 各返回值（granted/denied/default）的分支覆盖
+  - `notify()` 发送通知参数验证
+  - `scheduleNotification()` 定时逻辑（mock `setTimeout`）
+  - 权限拒绝时的降级处理
+  - 目标：函数覆盖率从 27% 提升至 ≥ 80%
+  - _关联需求：12, 23.13_
+
+### 任务 40：P2 算法服务测试补全
+
+- [ ] 40.1 `SurroundingPointsService.js` 核心逻辑测试（`tests/unit/services/SurroundingPointsService.test.js`）
+  - `calculateSurroundingPoints(lat, lon, radiusKm)` 返回 8 方向坐标计算正确性
+  - `fetchSurroundingWeather()` mock `fetch` 并验证并行调用逻辑（`Promise.all`）
+  - `aggregateScores()` 聚合评分计算
+  - 网络失败时单个方向的错误隔离（不影响其他 7 个方向）
+  - 目标：语句覆盖率从 6% 提升至 ≥ 70%
+  - _关联需求：19, 23.10_
+
+- [ ] 40.2 `SunsetPrediction.js` 模型分支补全（`tests/unit/models/SunsetPrediction.test.js`）
+  - 补充 `toJSON()` / `fromJSON()` 边界输入（null/undefined 字段）
+  - 补充 `getQualityLabel()` 各阈值分支（>70, 40-70, <40）
+  - 目标：语句覆盖率从 72% 提升至 ≥ 90%
+  - _关联需求：5, 6, 23.9_
+
+### 任务 41：P3 Canvas/Leaflet 服务测试
+
+- [ ] 41.1 建立 Canvas Mock 基础设施（`tests/__mocks__/canvas.js`）
+  - 实现 `HTMLCanvasElement.prototype.getContext` 的 Jest mock
+  - 覆盖常用 2D Context 方法：`clearRect`、`beginPath`、`moveTo`、`lineTo`、`stroke`、`fill`、`arc`、`fillText`、`fillRect`、`strokeRect`
+  - 覆盖渐变工厂方法：`createLinearGradient`、`createRadialGradient`（返回带 `addColorStop` mock 的对象）
+  - 在 `jest.config.js` 的 `setupFilesAfterFramework` 中引入
+  - _关联需求：23.13_
+
+- [ ] 41.2 `RadarChartService.js` 单元测试（`tests/unit/services/RadarChartService.test.js`）
+  - 依赖 41.1 的 Canvas Mock
+  - `renderRadarChart(canvas, data)` 验证 mock 方法被正确调用
+  - `calculatePolygonPoints()` 极坐标转笛卡尔坐标数学正确性
+  - 数据为空/评分全零时的降级渲染
+  - 目标：语句覆盖率从 1.26% 提升至 ≥ 70%
+  - _关联需求：19, 23.13_
+
+- [ ] 41.3 `FireCloudOverlayService.js` 单元测试（`tests/unit/services/FireCloudOverlayService.test.js`）
+  - 依赖 41.1 的 Canvas Mock，并 mock `fetch`
+  - `generateOverlay(lat, lon)` 验证请求参数和 Canvas 绘制调用
+  - `updateOverlay()` 更新逻辑
+  - 后端请求失败时回退到前端 Canvas 降级路径
+  - 目标：语句覆盖率从 6.84% 提升至 ≥ 65%
+  - _关联需求：20, 23.13_
+
+- [ ] 41.4 建立 Leaflet Mock（`tests/__mocks__/leaflet.js`）
+  - 实现 `L.map()`、`L.tileLayer()`、`L.imageOverlay()`、`L.latLngBounds()` 的链式调用 mock
+  - 导出为 ES Module 格式与 Jest moduleNameMapper 兼容
+  - _关联需求：23.13_
+
+- [ ] 41.5 `WindyMapService.js` 单元测试（`tests/unit/services/WindyMapService.test.js`）
+  - 依赖 41.4 的 Leaflet Mock
+  - `initMap(containerId)` 验证 Leaflet 初始化调用
+  - `setLocation(lat, lon)` 验证地图平移
+  - `addFireCloudOverlay(imageUrl, bounds)` 验证 `L.imageOverlay` 调用
+  - 地图未初始化时调用方法的防御处理
+  - 目标：语句覆盖率从 0% 提升至 ≥ 65%
+  - _关联需求：18, 20, 23.13_
+
+### 任务 42：P4 UI 组件测试补充（可选）
+
+> 优先级低于 P0-P3；若 P3 完成后覆盖率已达标则此任务可推迟。
+
+- [ ] 42.1 `LanguageSelector.js` 单元测试
+  - mock `document.querySelector` 和 DOM 事件
+  - `init()` 方法绑定事件验证
+  - `setLanguage(code)` 触发 i18n 切换
+  - _关联需求：14, 23.11_
+
+- [ ] 42.2 `SettingsPanel.js` 核心逻辑测试
+  - mock DOM 元素
+  - `open()` / `close()` 面板显示隐藏
+  - 设置保存回调调用验证
+  - _关联需求：16, 23.11_
+
+### 任务 43：覆盖率达标验证与 CI 门禁
+
+- [ ] 43.1 运行完整覆盖率报告并验证所有阈值通过
+  - 执行 `npm run test:coverage`
+  - 确认无 `Jest: "global" coverage threshold ... not met` 错误
+  - 确认原有 667 个通过测试未受影响
+  - _关联需求：23.1-23.5_
+
+- [ ] 43.2 更新 `tasks.md` 标记 Phase 8 完成
+  - 记录最终覆盖率数据（各项指标）
+  - 更新 CLAUDE.md 中的测试状态说明
+
+---
+
+## Phase 8 执行顺序
+
+```
+任务 37（配置）→ 任务 38（P0）→ 任务 39（P1）→ 任务 40（P2）
+       ↓
+  任务 41.1（Canvas Mock）
+       ├→ 任务 41.2（RadarChart）
+       ├→ 任务 41.3（FireCloudOverlay）
+       └→ 任务 41.4（Leaflet Mock）→ 任务 41.5（WindyMap）
+       ↓
+  [可选] 任务 42 → 任务 43（验证）
+```
+
+**并行机会**：任务 38 和 39 完全独立，可分配给不同 Agent 并行执行。任务 41.2、41.3、41.5 依赖 Mock 基础设施（41.1、41.4）但相互独立，Mock 就绪后可并行。

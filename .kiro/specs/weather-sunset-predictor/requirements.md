@@ -459,3 +459,51 @@
 
 19. 前端应保留对旧 API 的兼容，支持渐进式迁移
 20. 系统应提供 API 版本管理机制，便于未来 API 升级
+
+
+### 需求 23：测试覆盖率达标
+
+**用户故事：** 作为开发者，我希望代码库的测试覆盖率达到并持续维持规定阈值，以便保障代码质量、防止回归缺陷，并为后续重构和功能扩展提供安全网。
+
+#### 验收标准
+
+**覆盖率阈值（Jest 全局配置）**
+
+1. 系统的语句覆盖率（Statements）应达到 **≥ 80%**
+2. 系统的分支覆盖率（Branches）应达到 **≥ 75%**
+3. 系统的函数覆盖率（Functions）应达到 **≥ 90%**
+4. 系统的行覆盖率（Lines）应达到 **≥ 80%**
+5. 当运行 `npm run test:coverage` 时，所有阈值均通过，无覆盖率失败报告
+
+**覆盖率范围界定**
+
+6. 以下文件应从覆盖率统计中排除，因为它们是纯数据/测试替身，不包含可测业务逻辑：
+   - `src/locales/*.js`（语言翻译数据文件）
+   - `src/services/Mock*.js`（离线开发用的模拟服务）
+   - `tests/**`（测试文件本身）
+7. 以下文件属于生产代码，应纳入覆盖率统计并补充测试：
+   - `src/utils/UnitConverter.js`（单位转换工具）
+   - `src/services/ConfigService.js`（配置服务）
+   - `src/services/ThemeService.js`（主题管理服务）
+   - `src/services/StorageService.js`（本地存储服务）
+   - `src/services/NotificationService.js`（通知服务）
+   - `src/services/SurroundingPointsService.js`（周边采样服务）
+   - `src/services/RadarChartService.js`（雷达图服务）
+   - `src/services/FireCloudOverlayService.js`（地图覆盖层服务）
+   - `src/services/WindyMapService.js`（地图服务）
+   - `src/components/SettingsPanel.js`（设置面板组件）
+   - `src/components/LanguageSelector.js`（语言选择组件）
+
+**各模块覆盖率子目标**
+
+8. `src/utils/` 目录整体函数覆盖率应达到 **≥ 90%**
+9. `src/models/` 目录整体函数覆盖率应达到 **≥ 90%**
+10. `src/services/` 目录整体语句覆盖率应达到 **≥ 75%**
+11. `src/controllers/` 目录整体语句覆盖率应达到 **≥ 60%**（受限于 DOM 环境复杂性）
+
+**测试质量要求**
+
+12. 新增测试应遵循现有 Jest + jsdom 框架，不引入新的测试框架依赖
+13. Canvas API、Leaflet、浏览器通知等原生 API 应使用 Jest mock 进行模拟，不跳过相关代码路径
+14. 每个新增测试文件应包含正常路径（happy path）和异常路径（error path）的测试用例
+15. 新增测试不应破坏现有 667 个通过的测试用例
