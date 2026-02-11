@@ -28,7 +28,8 @@ export default {
     '^@controllers/(.*)$': '<rootDir>/src/controllers/$1',
     '^@utils/(.*)$': '<rootDir>/src/utils/$1',
     '^@components/(.*)$': '<rootDir>/src/components/$1',
-    '^@locales/(.*)$': '<rootDir>/src/locales/$1'
+    '^@locales/(.*)$': '<rootDir>/src/locales/$1',
+    '^leaflet$': '<rootDir>/tests/__mocks__/leaflet.js'
   },
 
   // Test match patterns
@@ -58,7 +59,7 @@ export default {
   },
   
   // Setup files to run before tests
-  setupFilesAfterEnv: [],
+  setupFilesAfterEnv: ['<rootDir>/tests/__mocks__/canvas.js'],
   
   // Verbose output
   verbose: true,
