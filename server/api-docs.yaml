@@ -24,7 +24,9 @@ info:
     ## 认证方式
     API 密钥通过服务器端环境变量（`WINDY_API_KEY`、`WINDY_MAP_API_KEY`）配置，
     前端客户端无需提供 API 密钥，直接调用后端代理即可。
-  version: 1.0.0
+
+    最后更新：2026-02-11（补充天气代理、系统配置与火烧云 API 端点示例）
+  version: 1.1.0
   contact:
     name: Weather Sunset Predictor
   license:
