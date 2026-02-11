@@ -67,7 +67,7 @@
 
 ### 任务 28：AppController 拆分重构
 
-- [ ] 28.1 提取 ChartRenderController
+- [x] 28.1 提取 ChartRenderController
   - 从 AppController 提取图表渲染逻辑（_renderSimpleChart 等方法）
   - 约 200-300 行代码
   - 保持与 WeatherController 的接口不变
@@ -85,7 +85,7 @@
   - 约 150-200 行代码
   - _关联需求：12, 13_
 
-- [ ] 28.4 更新 AppController 为协调者
+- [x] 28.4 更新 AppController 为协调者
   - AppController 仅保留初始化和事件绑定逻辑
   - 通过依赖注入使用新提取的控制器
   - 目标：AppController 减少到 800 行以下
@@ -109,7 +109,7 @@
   - 验证参数范围、缓存行为、超时处理
   - _关联需求：20_
 
-- [ ] 29.3 天气数据 API 集成测试
+- [x] 29.3 天气数据 API 集成测试
   - GET /api/weather/forecast 端点测试
   - GET /api/config/map-key 端点测试
   - GET /health 端点测试
@@ -139,13 +139,13 @@
 
 ### 任务 31：后端 API 文档
 
-- [ ] 31.1 创建 OpenAPI 3.0 规范文件
+- [x] 31.1 创建 OpenAPI 3.0 规范文件
   - 覆盖所有后端端点（天气、预测、火烧云、健康检查）
   - 包含请求/响应 Schema 和示例
   - 分组标签：天气数据、预测API、火烧云覆盖层、系统
   - _关联需求：22_
 
-- [ ] 31.2 清理代码中的 TODO 注释
+- [x] 31.2 清理代码中的 TODO 注释
   - 移除已完成的 TODO
   - 为仍有效的 TODO 添加上下文说明
   - _关联：代码质量_

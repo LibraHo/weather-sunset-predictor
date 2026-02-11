@@ -12,8 +12,9 @@
 import ErrorHandler from '../utils/ErrorHandler.js';
 import i18n from '../i18n.js';
 import { LanguageSelector } from '../components/LanguageSelector.js';
-import toastService from '../services/ToastService.js';
 import ThemeService from '../services/ThemeService.js';
+import UIStateController from './UIStateController.js';
+import FavoriteController from './FavoriteController.js';
 
 class AppController {
   /**
@@ -23,7 +24,7 @@ class AppController {
    * @param {PredictionController} predictionController - 预测控制器实例
    * @param {GeocodingService} geocodingService - 地理编码服务实例（任务 13.2）
    */
-  constructor(storageService, weatherController, predictionController, geocodingService = null) {
+  constructor(storageService, weatherController, predictionController, geocodingService = null, dependencies = {}) {
     this.storageService = storageService;
     this.weatherController = weatherController;
     this.predictionController = predictionController;
@@ -39,6 +40,14 @@ class AppController {
 
     // 任务16：设置面板
     this.settingsPanel = null;
+    this.uiStateController = dependencies.uiStateController || new UIStateController();
+    this.favoriteController = dependencies.favoriteController || new FavoriteController({
+      storageService: this.storageService,
+      i18n: this.i18n,
+      onSuccess: (message) => this.showSuccess(message),
+      onError: (message) => this.showError(message),
+      onLocationChange: (location) => this.handleLocationChange(location)
+    });
   }
 
   /**
@@ -1002,12 +1011,7 @@ class AppController {
    * @private
    */
   showLocationError(message) {
-    const errorElement = document.getElementById('location-error');
-    if (errorElement) {
-      errorElement.textContent = message;
-      errorElement.classList.remove('hidden');
-      errorElement.style.display = 'block';
-    }
+    this.uiStateController.showLocationError(message);
   }
 
   /**
@@ -1015,12 +1019,7 @@ class AppController {
    * @private
    */
   clearLocationError() {
-    const errorElement = document.getElementById('location-error');
-    if (errorElement) {
-      errorElement.textContent = '';
-      errorElement.classList.add('hidden');
-      errorElement.style.display = 'none';
-    }
+    this.uiStateController.clearLocationError();
   }
 
   /**
@@ -1029,16 +1028,7 @@ class AppController {
    * @private
    */
   showLoading(show = true) {
-    const loadingElement = document.getElementById('loading-indicator');
-    if (loadingElement) {
-      loadingElement.style.display = show ? 'block' : 'none';
-    }
-
-    // 禁用/启用刷新按钮
-    const refreshBtn = document.getElementById('refresh-btn');
-    if (refreshBtn) {
-      refreshBtn.disabled = show;
-    }
+    this.uiStateController.showLoading(show);
   }
 
   /**
@@ -1055,23 +1045,7 @@ class AppController {
    * @private
    */
   showError(message) {
-    // 同步渲染页面内消息区域，并通过 ToastService 显示浮层通知
-    console.error(message);
-    
-    const errorElement = document.getElementById('error-message');
-    if (errorElement) {
-      errorElement.textContent = message;
-      errorElement.style.display = 'block';
-      errorElement.className = 'error-message show';
-
-      // 5秒后自动隐藏
-      setTimeout(() => {
-        errorElement.style.display = 'none';
-        errorElement.className = 'error-message';
-      }, 5000);
-    }
-
-    toastService.show(message, 'error', 5000);
+    this.uiStateController.showError(message);
   }
 
   /**
@@ -1080,22 +1054,7 @@ class AppController {
    * @private
    */
   showSuccess(message) {
-    console.log(message);
-    
-    const successElement = document.getElementById('success-message');
-    if (successElement) {
-      successElement.textContent = message;
-      successElement.style.display = 'block';
-      successElement.className = 'success-message show';
-
-      // 3秒后自动隐藏
-      setTimeout(() => {
-        successElement.style.display = 'none';
-        successElement.className = 'success-message';
-      }, 3000);
-    }
-
-    toastService.show(message, 'success', 3000);
+    this.uiStateController.showSuccess(message);
   }
 
   /**
@@ -1125,25 +1084,7 @@ class AppController {
    * 需求：12.9, 12.10 - 支持用户收藏多个位置
    */
   addFavoriteLocation(location) {
-    if (!location) {
-      location = this.currentLocation;
-    }
-
-    if (!location || !location.isValid()) {
-      this.showError('无效的位置信息');
-      return false;
-    }
-
-    const success = this.storageService.saveFavoriteLocation(location);
-    
-    if (success) {
-      this.showSuccess(`已收藏：${location.name}`);
-      this.loadFavoriteLocations(); // 刷新收藏列表显示
-      return true;
-    } else {
-      this.showError('该位置已在收藏列表中');
-      return false;
-    }
+    return this.favoriteController.addFavoriteLocation(location, this.currentLocation);
   }
 
   /**
@@ -1152,61 +1093,7 @@ class AppController {
    * 需求：12.9, 12.10 - 显示收藏位置列表
    */
   loadFavoriteLocations() {
-    const favorites = this.storageService.getFavoriteLocations();
-    const favoriteList = document.getElementById('favorite-list');
-
-    if (!favoriteList) {
-      console.warn('[AppController] 收藏位置列表元素未找到');
-      return;
-    }
-
-    // 清空现有列表
-    favoriteList.innerHTML = '';
-
-    if (favorites.length === 0) {
-      favoriteList.innerHTML = `<li class="empty-favorites">${this.i18n.t('favorites.empty')}</li>`;
-      return;
-    }
-
-    // 渲染收藏位置列表
-    favorites.forEach(fav => {
-      const li = document.createElement('li');
-      li.className = 'favorite-item';
-      li.innerHTML = `
-        <span class="favorite-name">${fav.name}</span>
-        <div class="favorite-actions">
-          <button class="btn-favorite-switch" data-lat="${fav.lat}" data-lon="${fav.lon}" data-name="${fav.name}">
-            ${this.i18n.t('buttons.switch')}
-          </button>
-          <button class="btn-favorite-remove" data-key="${fav.lat}_${fav.lon}">
-            ${this.i18n.t('buttons.delete')}
-          </button>
-        </div>
-      `;
-      favoriteList.appendChild(li);
-    });
-
-    // 绑定切换按钮事件
-    const switchButtons = favoriteList.querySelectorAll('.btn-favorite-switch');
-    switchButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const location = {
-          lat: parseFloat(btn.dataset.lat),
-          lon: parseFloat(btn.dataset.lon),
-          name: btn.dataset.name,
-          isValid: () => true
-        };
-        this.switchToFavoriteLocation(location);
-      });
-    });
-
-    // 绑定删除按钮事件
-    const removeButtons = favoriteList.querySelectorAll('.btn-favorite-remove');
-    removeButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        this.removeFavoriteLocation(btn.dataset.key);
-      });
-    });
+    this.favoriteController.loadFavoriteLocations();
   }
 
   /**
@@ -1217,14 +1104,7 @@ class AppController {
    * 需求：12.9, 12.10 - 删除收藏位置
    */
   removeFavoriteLocation(locationKey) {
-    const success = this.storageService.removeFavoriteLocation(locationKey);
-    
-    if (success) {
-      this.showSuccess('已删除收藏位置');
-      this.loadFavoriteLocations(); // 刷新收藏列表显示
-    } else {
-      this.showError('删除失败');
-    }
+    this.favoriteController.removeFavoriteLocation(locationKey);
   }
 
   /**
@@ -1235,13 +1115,7 @@ class AppController {
    * 需求：12.9, 12.10 - 在位置列表中快速切换
    */
   async switchToFavoriteLocation(location) {
-    try {
-      await this.handleLocationChange(location);
-      this.showSuccess(`已切换到：${location.name}`);
-    } catch (error) {
-      const errorInfo = ErrorHandler.handleError(error, 'Switch to Favorite Location');
-      this.showError(errorInfo.message);
-    }
+    return this.favoriteController.switchToFavoriteLocation(location);
   }
 
   // ========== 需求12：通知设置管理 ==========
@@ -1428,72 +1302,7 @@ class AppController {
    * 需求：13.1, 13.4, 13.5, 13.7, 13.8, 13.9 - 加载搜索历史
    */
   loadSearchHistory() {
-    const history = this.storageService.getSearchHistory();
-    const historyDropdown = document.getElementById('search-history-dropdown');
-
-    if (!historyDropdown) {
-      console.warn('[AppController] 搜索历史下拉列表元素未找到');
-      return;
-    }
-
-    // 清空现有列表
-    historyDropdown.innerHTML = '';
-
-    if (history.length === 0) {
-      historyDropdown.innerHTML = `<div class="history-empty">${this.i18n.t('history.empty')}</div>`;
-      historyDropdown.classList.add('hidden');
-      return;
-    }
-
-    // 渲染历史记录列表
-    const historyList = document.createElement('ul');
-    historyList.className = 'history-list';
-
-    history.forEach(item => {
-      const li = document.createElement('li');
-      li.className = 'history-item';
-      li.innerHTML = `
-        <span class="history-name" data-lat="${item.lat}" data-lon="${item.lon}" data-name="${item.name}">
-          📍 ${item.name}
-        </span>
-        <button class="history-remove" data-key="${item.lat}_${item.lon}" aria-label="${this.i18n.t('buttons.delete')}">
-          ✕
-        </button>
-      `;
-      historyList.appendChild(li);
-    });
-
-    // 添加清除全部按钮
-    const clearAllBtn = document.createElement('button');
-    clearAllBtn.className = 'history-clear-all btn btn-secondary';
-    clearAllBtn.textContent = this.i18n.t('history.clearAll');
-    clearAllBtn.addEventListener('click', () => this.clearAllHistory());
-
-    historyDropdown.appendChild(historyList);
-    historyDropdown.appendChild(clearAllBtn);
-
-    // 绑定点击事件
-    const historyNames = historyDropdown.querySelectorAll('.history-name');
-    historyNames.forEach(nameEl => {
-      nameEl.addEventListener('click', () => {
-        const location = {
-          lat: parseFloat(nameEl.dataset.lat),
-          lon: parseFloat(nameEl.dataset.lon),
-          name: nameEl.dataset.name,
-          isValid: () => true
-        };
-        this.handleHistoryItemClick(location);
-      });
-    });
-
-    // 绑定删除按钮事件
-    const removeButtons = historyDropdown.querySelectorAll('.history-remove');
-    removeButtons.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation(); // 防止触发父元素的点击事件
-        this.removeHistoryItem(btn.dataset.key);
-      });
-    });
+    this.favoriteController.loadSearchHistory();
   }
 
   /**
@@ -1504,23 +1313,7 @@ class AppController {
    * 需求：13.1, 13.4, 13.5, 13.7, 13.8, 13.9 - 点击历史记录加载天气数据
    */
   async handleHistoryItemClick(location) {
-    try {
-      // 隐藏历史下拉列表
-      this.hideSearchHistory();
-
-      // 填充到输入框
-      const locationInput = document.getElementById('location-input');
-      if (locationInput) {
-        locationInput.value = location.name;
-      }
-
-      // 加载天气数据
-      await this.handleLocationChange(location);
-      this.showSuccess(`已切换到：${location.name}`);
-    } catch (error) {
-      const errorInfo = ErrorHandler.handleError(error, 'History Item Click');
-      this.showError(errorInfo.message);
-    }
+    return this.favoriteController.handleHistoryItemClick(location);
   }
 
   /**
@@ -1531,14 +1324,7 @@ class AppController {
    * 需求：13.1, 13.4, 13.5, 13.7, 13.8, 13.9 - 删除单个历史记录
    */
   removeHistoryItem(locationKey) {
-    const success = this.storageService.removeSearchHistoryItem(locationKey);
-    
-    if (success) {
-      this.showSuccess('已删除历史记录');
-      this.loadSearchHistory(); // 刷新历史列表显示
-    } else {
-      this.showError('删除失败');
-    }
+    this.favoriteController.removeHistoryItem(locationKey);
   }
 
   /**
@@ -1547,14 +1333,7 @@ class AppController {
    * 需求：13.1, 13.4, 13.5, 13.7, 13.8, 13.9 - 清除全部历史记录
    */
   clearAllHistory() {
-    const success = this.storageService.clearSearchHistory();
-    
-    if (success) {
-      this.showSuccess('已清除所有搜索历史');
-      this.loadSearchHistory(); // 刷新历史列表显示
-    } else {
-      this.showError('清除失败');
-    }
+    this.favoriteController.clearAllHistory();
   }
 
   /**
@@ -1563,11 +1342,7 @@ class AppController {
    * 需求：13.4, 13.5, 13.7, 13.8 - 显示搜索历史下拉列表
    */
   showSearchHistory() {
-    this.loadSearchHistory();
-    const historyDropdown = document.getElementById('search-history-dropdown');
-    if (historyDropdown) {
-      historyDropdown.classList.remove('hidden');
-    }
+    this.favoriteController.showSearchHistory();
   }
 
   /**
@@ -1576,10 +1351,7 @@ class AppController {
    * 需求：13.4, 13.5, 13.7, 13.8 - 隐藏搜索历史下拉列表
    */
   hideSearchHistory() {
-    const historyDropdown = document.getElementById('search-history-dropdown');
-    if (historyDropdown) {
-      historyDropdown.classList.add('hidden');
-    }
+    this.favoriteController.hideSearchHistory();
   }
 
   /**
