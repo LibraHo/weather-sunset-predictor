@@ -216,7 +216,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 ### 任务 37：Jest 覆盖率配置修正（阶段一）
 
-- [ ] 37.1 更新 `jest.config.js` 的 `collectCoverageFrom`
+- [x] 37.1 更新 `jest.config.js` 的 `collectCoverageFrom` ✅ (2026-02-11)
   - 排除 `src/locales/**`（纯翻译数据，无业务逻辑）
   - 排除 `src/services/Mock*.js`（离线开发测试替身）
   - 排除 `src/app.js`（应用入口文件，难以有意义地单测）
@@ -224,7 +224,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - 确保排除后现有 667 个测试依然全部通过
   - _关联需求：23.6_
 
-- [ ] 37.2 验证配置修正效果
+- [x] 37.2 验证配置修正效果 ✅ (2026-02-11)
   - 运行 `npm run test:coverage`，记录新的覆盖率基线
   - 预期：语句覆盖率从 42% 提升至约 55-58%
   - 将新基线数据更新到 design.md 第 28.5 节的路径表格
@@ -232,7 +232,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 ### 任务 38：P0 工具类测试补全
 
-- [ ] 38.1 `UnitConverter.js` 全量测试（`tests/unit/utils/UnitConverter.test.js`）
+- [x] 38.1 `UnitConverter.js` 全量测试（`tests/unit/utils/UnitConverter.test.js`）✅ (2026-02-11)
   - 温度转换：`toFahrenheit()`、`toCelsius()` 边界值（0°C、-40°C/°F、极值）
   - 风速转换：`msToKmh()`、`msToMph()`、`kmhToMs()` 精度验证
   - 格式化方法：`formatTemperature()`、`formatWindSpeed()` 含单位字符串
@@ -240,7 +240,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - 目标覆盖率：函数 100%，语句 100%
   - _关联需求：17, 23.8_
 
-- [ ] 38.2 `ConfigService.js` 全量测试（`tests/unit/services/ConfigService.test.js`）
+- [x] 38.2 `ConfigService.js` 全量测试（`tests/unit/services/ConfigService.test.js`）✅ (2026-02-11)
   - 读取默认配置值
   - `getApiMode()`、`isProxyMode()` 返回值正确性
   - 配置合并/覆盖逻辑
@@ -249,7 +249,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 ### 任务 39：P1 服务层测试补全
 
-- [ ] 39.1 `StorageService.js` 覆盖率补全（`tests/unit/services/StorageService.test.js`）
+- [x] 39.1 `StorageService.js` 覆盖率补全（`tests/unit/services/StorageService.test.js`）✅ (2026-02-11)
   - 补充当前未覆盖的方法：`saveFavoriteLocations()`、`getFavoriteLocations()`、`saveDefaultLocation()`、`getDefaultLocation()`
   - 补充当前未覆盖的分支：`try/catch` 存储异常处理、`JSON.parse` 失败回退
   - 通知设置读写：`saveNotificationSettings()`、`getNotificationSettings()`
@@ -257,7 +257,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - 目标：将语句覆盖率从 54% 提升至 ≥ 85%
   - _关联需求：12, 13, 17, 23.10_
 
-- [ ] 39.2 `ThemeService.js` 单元测试（`tests/unit/services/ThemeService.test.js`）
+- [x] 39.2 `ThemeService.js` 单元测试（`tests/unit/services/ThemeService.test.js`）✅ (2026-02-11)
   - `setTheme('light'|'dark'|'auto')` 验证 `document.documentElement.dataset.theme` 设置
   - `getTheme()` 返回当前主题
   - `applyStoredTheme()` 从 Storage 读取并应用
@@ -265,7 +265,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - 目标：函数覆盖率 ≥ 90%，语句覆盖率 ≥ 80%
   - _关联需求：17, 23.10_
 
-- [ ] 39.3 `NotificationService.js` 单元测试（`tests/unit/services/NotificationService.test.js`）
+- [x] 39.3 `NotificationService.js` 单元测试（`tests/unit/services/NotificationService.test.js`）✅ (2026-02-11)
   - mock `global.Notification`（`requestPermission`、`permission`）
   - `requestPermission()` 各返回值（granted/denied/default）的分支覆盖
   - `notify()` 发送通知参数验证
