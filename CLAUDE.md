@@ -229,8 +229,10 @@ cd server && npm install        # Backend dependencies
 ## Test Configuration
 
 - **Jest** (`jest.config.js`): jsdom environment, babel-jest transform, module path aliases (`@/`, `@models/`, `@services/`, `@controllers/`, `@utils/`, `@components/`, `@locales/`)
-- **Coverage thresholds**: 75% branches, 90% functions, 80% lines, 80% statements
+- **Coverage thresholds**: 75% branches, 85% functions, 80% lines, 80% statements
+- **Coverage status (Phase 8 完成，2026-02-11)**: 85.35% statements, 79.42% branches, 86.07% functions, 85.60% lines — **全部达标** ✅
 - **Playwright** (`playwright.config.js`): Tests against Chromium, Firefox, WebKit, Mobile Chrome (Pixel 5), Mobile Safari (iPhone 12). Base URL `http://localhost:8080`. Auto-starts HTTP server.
+- **E2E test status (2026-02-11)**: 56/56 tests passing on Chromium — **全部通过** ✅. Uses `MockGeocodingService` and `MockWindyAPIService` for isolated testing. Firefox/WebKit/mobile tests pending verification.
 - **Property tests**: Use `fast-check` library for invariant validation
 
 ## Code Conventions

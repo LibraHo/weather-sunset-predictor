@@ -22,13 +22,24 @@ export default defineConfig({
   /* 全局设置 */
   use: {
     /* 基础 URL */
-    baseURL: 'http://localhost:8080',
+    baseURL: 'http://localhost:8080?e2e=true',
     /* 收集失败测试的追踪信息 */
     trace: 'on-first-retry',
     /* 截图配置 */
     screenshot: 'only-on-failure',
     /* 视频录制配置 */
     video: 'retain-on-failure',
+    /* 在每个测试前执行 - 关闭 API Key Modal */
+    storageState: {
+      origins: [{
+        origin: 'http://localhost:8080',
+        localStorage: [
+          { name: 'e2e_test_mode', value: 'true' },
+          { name: 'api_mode', value: 'proxy' },
+          { name: 'use_mock_api', value: 'true' }
+        ]
+      }]
+    }
   },
 
   /* 配置不同的浏览器项目 */

@@ -36,10 +36,15 @@ console.log('Global Error Boundary initialized');
 const storageService = new StorageService();
 const configService = new ConfigService();
 
+// E2E 测试模式：检测 URL 参数或 localStorage 标记
+const isE2ETestMode = window.location.search.includes('e2e=true') ||
+                         localStorage.getItem('e2e_test_mode') === 'true';
+
 // 使用真实的地理编码服务（支持所有城市）
-// 如果需要离线测试，请将下面一行改为：
-// const geocodingService = new MockGeocodingService();
-const geocodingService = new GeocodingService();
+// E2E 测试模式下使用 Mock 服务
+const geocodingService = isE2ETestMode
+  ? new MockGeocodingService()
+  : new GeocodingService();
 
 // 优先从配置文件读取API密钥，然后从localStorage读取
 const config = await configService.loadConfig();
@@ -53,9 +58,15 @@ if (config && config.apiKey) {
 
 // 配置：是否使用模拟API（用于离线测试）
 // 优先从 localStorage 读取（测试环境），然后从配置文件读取，如果没有配置则使用默认值false
-const USE_MOCK_API = configService.getUseMockAPI() !== null
+let USE_MOCK_API = configService.getUseMockAPI() !== null
   ? configService.getUseMockAPI()
   : (config && typeof config.useMockAPI !== 'undefined' ? config.useMockAPI : false);
+
+// E2E 测试模式下强制使用 Mock API
+if (isE2ETestMode) {
+  USE_MOCK_API = true;
+  console.log('[App] E2E 测试模式已启用，强制使用 Mock API');
+}
 
 console.log('[App] API密钥状态:', savedAPIKey ? '已配置' : '未配置');
 console.log('[App] Mock API:', USE_MOCK_API ? '启用' : '禁用');

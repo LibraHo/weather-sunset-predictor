@@ -16,8 +16,10 @@ export async function setTestEnvironment(page) {
   await page.evaluate(() => {
     // 设置中文语言
     localStorage.setItem('language', 'zh-CN');
-    // 设置 API 模式为 mock
-    localStorage.setItem('api_mode', 'direct');
+    // 设置 API 模式为 proxy（后端代理模式，跳过API密钥检查）
+    localStorage.setItem('api_mode', 'proxy');
+    // 设置 E2E 测试模式标记
+    localStorage.setItem('e2e_test_mode', 'true');
     // 设置 Mock API 标志
     localStorage.setItem('use_mock_api', 'true');
     // 设置 API key (即使使用 mock 也可以设置一个假的)

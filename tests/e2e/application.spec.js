@@ -293,10 +293,10 @@ test.describe('性能', () => {
     const startTime = Date.now();
     await searchInput.press('Enter');
 
-    // 等待数据更新
+    // 等待数据更新（MockGeocodingService 返回中文结果）
     await page.waitForFunction(() => {
       const weatherLocation = document.querySelector('.weather-location');
-      return weatherLocation && weatherLocation.textContent.includes('Beijing');
+      return weatherLocation && (weatherLocation.textContent.includes('北京') || weatherLocation.textContent.includes('Beijing'));
     }, { timeout: 10000 });
 
     const responseTime = Date.now() - startTime;
