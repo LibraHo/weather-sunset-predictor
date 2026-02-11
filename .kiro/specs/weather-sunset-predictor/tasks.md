@@ -276,7 +276,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 ### 任务 40：P2 算法服务测试补全
 
-- [ ] 40.1 `SurroundingPointsService.js` 核心逻辑测试（`tests/unit/services/SurroundingPointsService.test.js`）
+- [x] 40.1 `SurroundingPointsService.js` 核心逻辑测试（`tests/unit/services/SurroundingPointsService.test.js`）
   - `calculateSurroundingPoints(lat, lon, radiusKm)` 返回 8 方向坐标计算正确性
   - `fetchSurroundingWeather()` mock `fetch` 并验证并行调用逻辑（`Promise.all`）
   - `aggregateScores()` 聚合评分计算
@@ -284,7 +284,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - 目标：语句覆盖率从 6% 提升至 ≥ 70%
   - _关联需求：19, 23.10_
 
-- [ ] 40.2 `SunsetPrediction.js` 模型分支补全（`tests/unit/models/SunsetPrediction.test.js`）
+- [x] 40.2 `SunsetPrediction.js` 模型分支补全（`tests/unit/models/SunsetPrediction.test.js`）
   - 补充 `toJSON()` / `fromJSON()` 边界输入（null/undefined 字段）
   - 补充 `getQualityLabel()` 各阈值分支（>70, 40-70, <40）
   - 目标：语句覆盖率从 72% 提升至 ≥ 90%
@@ -292,14 +292,14 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 ### 任务 41：P3 Canvas/Leaflet 服务测试
 
-- [ ] 41.1 建立 Canvas Mock 基础设施（`tests/__mocks__/canvas.js`）
+- [x] 41.1 建立 Canvas Mock 基础设施（`tests/__mocks__/canvas.js`）
   - 实现 `HTMLCanvasElement.prototype.getContext` 的 Jest mock
   - 覆盖常用 2D Context 方法：`clearRect`、`beginPath`、`moveTo`、`lineTo`、`stroke`、`fill`、`arc`、`fillText`、`fillRect`、`strokeRect`
   - 覆盖渐变工厂方法：`createLinearGradient`、`createRadialGradient`（返回带 `addColorStop` mock 的对象）
   - 在 `jest.config.js` 的 `setupFilesAfterFramework` 中引入
   - _关联需求：23.13_
 
-- [ ] 41.2 `RadarChartService.js` 单元测试（`tests/unit/services/RadarChartService.test.js`）
+- [x] 41.2 `RadarChartService.js` 单元测试（`tests/unit/services/RadarChartService.test.js`）
   - 依赖 41.1 的 Canvas Mock
   - `renderRadarChart(canvas, data)` 验证 mock 方法被正确调用
   - `calculatePolygonPoints()` 极坐标转笛卡尔坐标数学正确性
@@ -307,7 +307,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - 目标：语句覆盖率从 1.26% 提升至 ≥ 70%
   - _关联需求：19, 23.13_
 
-- [ ] 41.3 `FireCloudOverlayService.js` 单元测试（`tests/unit/services/FireCloudOverlayService.test.js`）
+- [x] 41.3 `FireCloudOverlayService.js` 单元测试（`tests/unit/services/FireCloudOverlayService.test.js`）
   - 依赖 41.1 的 Canvas Mock，并 mock `fetch`
   - `generateOverlay(lat, lon)` 验证请求参数和 Canvas 绘制调用
   - `updateOverlay()` 更新逻辑
@@ -315,12 +315,12 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - 目标：语句覆盖率从 6.84% 提升至 ≥ 65%
   - _关联需求：20, 23.13_
 
-- [ ] 41.4 建立 Leaflet Mock（`tests/__mocks__/leaflet.js`）
+- [x] 41.4 建立 Leaflet Mock（`tests/__mocks__/leaflet.js`）
   - 实现 `L.map()`、`L.tileLayer()`、`L.imageOverlay()`、`L.latLngBounds()` 的链式调用 mock
   - 导出为 ES Module 格式与 Jest moduleNameMapper 兼容
   - _关联需求：23.13_
 
-- [ ] 41.5 `WindyMapService.js` 单元测试（`tests/unit/services/WindyMapService.test.js`）
+- [x] 41.5 `WindyMapService.js` 单元测试（`tests/unit/services/WindyMapService.test.js`）
   - 依赖 41.4 的 Leaflet Mock
   - `initMap(containerId)` 验证 Leaflet 初始化调用
   - `setLocation(lat, lon)` 验证地图平移
