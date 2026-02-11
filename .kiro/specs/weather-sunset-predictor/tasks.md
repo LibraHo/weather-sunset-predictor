@@ -333,13 +333,13 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 > 优先级低于 P0-P3；若 P3 完成后覆盖率已达标则此任务可推迟。
 
-- [ ] 42.1 `LanguageSelector.js` 单元测试
+- [x] 42.1 `LanguageSelector.js` 单元测试 ✅ (2026-02-11)
   - mock `document.querySelector` 和 DOM 事件
   - `init()` 方法绑定事件验证
   - `setLanguage(code)` 触发 i18n 切换
   - _关联需求：14, 23.11_
 
-- [ ] 42.2 `SettingsPanel.js` 核心逻辑测试
+- [x] 42.2 `SettingsPanel.js` 核心逻辑测试 ✅ (2026-02-11)
   - mock DOM 元素
   - `open()` / `close()` 面板显示隐藏
   - 设置保存回调调用验证
