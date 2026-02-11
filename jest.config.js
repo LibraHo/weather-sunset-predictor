@@ -40,7 +40,9 @@ export default {
   // Coverage configuration
   collectCoverageFrom: [
     'src/**/*.js',
-    '!src/app.js', // Exclude main entry point from coverage
+    '!src/app.js',           // 应用入口，难以有意义地单测
+    '!src/locales/**',       // 纯翻译数据，无业务逻辑（需求 23.6）
+    '!src/services/Mock*.js', // 离线开发测试替身（需求 23.6）
     '!**/node_modules/**',
     '!**/tests/**'
   ],
