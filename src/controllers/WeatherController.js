@@ -18,6 +18,7 @@ import PredictionAPIService from '../services/PredictionAPIService.js';
 import { loadConfig } from '../../config.api.js';
 import i18n from '../i18n.js';
 import toastService from '../services/ToastService.js';
+import ChartRenderController from './ChartRenderController.js';
 // 暂时禁用 ChartService 导入，使用内联简化版本
 
 class WeatherController {
@@ -87,21 +88,12 @@ class WeatherController {
     const overlayBaseURL = apiConfig.proxy?.url || 'http://localhost:3000';
     this.fireCloudOverlayService.setBackendURL(overlayBaseURL);
 
-    // 使用简化的内联 ChartService（使用动态单位）
-    this.chartService = {
-      renderTemperatureChart: (data, id) => {
-        const unit = this.tempUnit === 'fahrenheit' ? '°F' : '°C';
-        return this._renderSimpleChart(data, id, 'temp', this.i18n.t('weather.temperature'), unit, '#ff6b6b');
-      },
-      renderPrecipitationChart: (data, id) => this._renderSimpleChart(data, id, 'precipitation', this.i18n.t('weather.precipitation'), 'mm', '#4dabf7'),
-      renderHumidityChart: (data, id) => this._renderSimpleChart(data, id, 'humidity', this.i18n.t('weather.humidity'), '%', '#51cf66'),
-      renderWindChart: (data, id) => {
-        const unit = this.windUnit === 'ms' ? 'm/s' : 'km/h';
-        return this._renderSimpleChart(data, id, 'windSpeed', this.i18n.t('weather.windSpeed'), unit, '#748ffc');
-      },
-      renderPressureChart: (data, id) => this._renderSimpleChart(data, id, 'pressure', this.i18n.t('weather.pressure'), 'hPa', '#ffa94d'),
-      renderCloudChart: (data, id) => this._renderSimpleChart(data, id, 'cloudCover', this.i18n.t('weather.cloudCover'), '%', '#868e96')
-    };
+    this.chartRenderController = new ChartRenderController({
+      i18n: this.i18n,
+      getConvertedTemp: (value) => this.getConvertedTemp(value),
+      getConvertedWindSpeed: (value) => this.getConvertedWindSpeed(value)
+    });
+    this.chartService = this.chartRenderController.createChartService(this.tempUnit, this.windUnit);
     
     this.currentWeatherData = null;
     this.currentLocation = null;
@@ -466,46 +458,9 @@ class WeatherController {
     }
 
     // 根据选择的参数渲染对应图表
-    this._renderParameterChart(hourlyData, this.selectedParameter);
+    this.chartRenderController.renderParameterChart(hourlyData, this.selectedParameter, this.chartService);
 
     console.log(`[WeatherController] 渲染了 ${day} 的 ${this.selectedParameter} 图表`);
-  }
-
-  /**
-   * 渲染指定参数的图表
-   * @param {WeatherData[]} hourlyData - 24小时天气数据
-   * @param {string} parameter - 参数类型
-   */
-  _renderParameterChart(hourlyData, parameter) {
-    const containerId = 'chart-container';
-
-    if (!this.chartService) {
-      console.warn('[WeatherController] ChartService 未初始化');
-      return;
-    }
-
-    switch (parameter) {
-      case 'temp':
-        this.chartService.renderTemperatureChart(hourlyData, containerId);
-        break;
-      case 'precip':
-        this.chartService.renderPrecipitationChart(hourlyData, containerId);
-        break;
-      case 'humidity':
-        this.chartService.renderHumidityChart(hourlyData, containerId);
-        break;
-      case 'wind':
-        this.chartService.renderWindChart(hourlyData, containerId);
-        break;
-      case 'pressure':
-        this.chartService.renderPressureChart(hourlyData, containerId);
-        break;
-      case 'clouds':
-        this.chartService.renderCloudChart(hourlyData, containerId);
-        break;
-      default:
-        console.error(`[WeatherController] 未知的参数类型: ${parameter}`);
-    }
   }
 
   /**
@@ -796,103 +751,6 @@ class WeatherController {
   }
 
   /**
-   * 渲染简化折线图（内联版本，避免模块导入问题）
-   * @private
-   */
-  _renderSimpleChart(hourlyData, containerId, param, label, unit, color) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-
-    // 根据参数类型转换数据值
-    const getConvertedValue = (value, param) => {
-      if (param === 'temp') {
-        return this.getConvertedTemp(value);
-      } else if (param === 'windSpeed') {
-        return this.getConvertedWindSpeed(value);
-      }
-      return value;
-    };
-
-    const values = hourlyData.map(d => getConvertedValue(d[param], param));
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    const range = max - min || 1;
-
-    // 图表尺寸
-    const chartWidth = 900;
-    const chartHeight = 280;
-    const padding = { top: 50, right: 50, bottom: 70, left: 90 };
-    const contentWidth = chartWidth - padding.left - padding.right;
-    const contentHeight = chartHeight - padding.top - padding.bottom;
-
-    // 生成数据点坐标
-    const points = hourlyData.map((d, i) => {
-      const value = getConvertedValue(d[param], param);
-      const x = padding.left + (i / (hourlyData.length - 1)) * contentWidth;
-      const y = padding.top + contentHeight - ((value - min) / range) * contentHeight;
-      return { x, y, value, time: new Date(d.timestamp).getHours() };
-    });
-
-    // 生成折线路径
-    const pathData = points.map((p, i) => {
-      if (i === 0) return `M ${p.x} ${p.y}`;
-      return `L ${p.x} ${p.y}`;
-    }).join(' ');
-
-    let html = `<div style="padding: 25px; background: var(--color-card-bg); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin: 20px auto; max-width: 95%;">`;
-    html += `<h3 style="text-align: center; margin-bottom: 25px; color: ${color}; font-size: 1.5rem;">${label}${this.i18n.t('charts.trend')}</h3>`;
-
-    // SVG图表容器，居中显示
-    html += `<div style="display: flex; justify-content: center;">`;
-    html += `<svg width="${chartWidth}" height="${chartHeight}" style="max-width: 100%; height: auto;">`;
-
-    // Y轴网格线和标签
-    for (let i = 0; i <= 5; i++) {
-      const value = min + (range * i) / 5;
-      const y = padding.top + contentHeight - (i / 5) * contentHeight;
-
-      // 网格线
-      html += `<line x1="${padding.left}" y1="${y}" x2="${chartWidth - padding.right}" y2="${y}" stroke="var(--color-text-light)" stroke-width="1.5" stroke-dasharray="5,5" stroke-opacity="0.3"/>`;
-
-      // Y轴标签
-      html += `<text x="${padding.left - 10}" y="${y + 5}" font-size="13" fill="var(--color-text)" text-anchor="end" font-weight="500">${value.toFixed(1)} ${unit}</text>`;
-    }
-
-    // X轴标签（时间）
-    points.forEach((p, i) => {
-      if (i % 3 === 0) { // 每3小时显示一次时间标签
-        html += `<text x="${p.x}" y="${chartHeight - padding.bottom + 25}" font-size="13" fill="var(--color-text)" text-anchor="middle" font-weight="500">${p.time}:00</text>`;
-      }
-    });
-
-    // 折线
-    html += `<path d="${pathData}" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`;
-
-    // 数据点和数值标签
-    points.forEach((p, i) => {
-      // 数据点圆圈
-      html += `<circle cx="${p.x}" cy="${p.y}" r="6" fill="${color}" stroke="var(--color-card-bg)" stroke-width="2.5"/>`;
-
-      // 数值标签（在点上方）
-      if (i % 3 === 0) { // 每3小时显示一次数值
-        html += `<text x="${p.x}" y="${p.y - 12}" font-size="12" fill="${color}" text-anchor="middle" font-weight="700">${p.value.toFixed(1)}</text>`;
-      }
-    });
-
-    // X轴标题
-    html += `<text x="${chartWidth / 2}" y="${chartHeight - 15}" font-size="14" fill="var(--color-text-light)" text-anchor="middle" font-weight="600">${this.i18n.t('charts.time')}</text>`;
-
-    // Y轴标题
-    html += `<text x="35" y="${chartHeight / 2}" font-size="14" fill="var(--color-text-light)" text-anchor="middle" transform="rotate(-90, 35, ${chartHeight / 2})" font-weight="600">${label} (${unit})</text>`;
-
-    html += `</svg>`;
-    html += `</div>`; // 关闭SVG容器div
-    html += `</div>`; // 关闭外层容器div
-
-    container.innerHTML = html;
-  }
-
-  /**
    * 刷新界面文本（语言切换后）
    * 需求：14 - 多语言支持
    */
@@ -934,6 +792,8 @@ class WeatherController {
     if (hourlyBtn) {
       hourlyBtn.textContent = this.i18n.t('charts.hourly');
     }
+
+    this.chartService = this.chartRenderController.createChartService(this.tempUnit, this.windUnit);
 
     // 如果有当前天气数据，重新渲染以更新格式化的日期/时间
     if (this.currentWeatherData) {
