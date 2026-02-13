@@ -438,9 +438,8 @@ class WeatherController {
       return;
     }
 
-    // 根据选择的日期提取24小时数据
-    const startIndex = day === 'today' ? 0 : 24;
-    const hourlyData = weatherData.slice(startIndex, startIndex + 24);
+    // 根据选择的日期提取并重采样为连续24小时数据
+    const hourlyData = this.buildContinuous24HourData(weatherData, day);
 
     if (hourlyData.length === 0) {
       console.error('[WeatherController] 没有足够的数据显示24小时预报');
@@ -451,6 +450,92 @@ class WeatherController {
     this.chartRenderController.renderParameterChart(hourlyData, this.selectedParameter, this.chartService);
 
     console.log(`[WeatherController] 渲染了 ${day} 的 ${this.selectedParameter} 图表`);
+  }
+
+  /**
+   * 构建连续的24小时数据（按时间排序 + 必要时线性插值）
+   * 兼容后端返回 1h / 3h 间隔数据，避免曲线出现异常跳变
+   * @param {WeatherData[]} weatherData - 原始天气数据
+   * @param {string} day - 'today' 或 'tomorrow'
+   * @returns {Array<Object>} 24条按小时连续的数据
+   */
+  buildContinuous24HourData(weatherData, day) {
+    if (!Array.isArray(weatherData) || weatherData.length === 0) {
+      return [];
+    }
+
+    const oneHourMs = 60 * 60 * 1000;
+    const numericFields = [
+      'temp', 'humidity', 'cloudCover', 'windSpeed', 'pressure',
+      'visibility', 'lowClouds', 'precipitation', 'windDirection', 'highClouds', 'midClouds'
+    ];
+
+    // 先按时间升序，避免后端或缓存返回乱序数据导致折线“来回跳”
+    const sorted = [...weatherData]
+      .filter(item => item && Number.isFinite(item.timestamp))
+      .sort((a, b) => a.timestamp - b.timestamp);
+
+    if (sorted.length === 0) {
+      return [];
+    }
+
+    const baseStart = sorted[0].timestamp;
+    const dayOffsetHours = day === 'tomorrow' ? 24 : 0;
+    const targetStart = baseStart + (dayOffsetHours * oneHourMs);
+
+    return Array.from({ length: 24 }, (_, hourOffset) => {
+      const targetTs = targetStart + (hourOffset * oneHourMs);
+      const source = this.interpolateWeatherPoint(sorted, targetTs, numericFields);
+
+      return {
+        ...source,
+        timestamp: targetTs
+      };
+    });
+  }
+
+  /**
+   * 对目标时间做线性插值，获取平滑天气点
+   * @param {WeatherData[]} sortedData - 已按时间升序数据
+   * @param {number} targetTs - 目标时间戳
+   * @param {string[]} numericFields - 需要插值的数值字段
+   * @returns {Object} 插值后的天气点
+   */
+  interpolateWeatherPoint(sortedData, targetTs, numericFields) {
+    if (sortedData.length === 1) {
+      return { ...sortedData[0] };
+    }
+
+    let left = sortedData[0];
+    let right = sortedData[sortedData.length - 1];
+
+    for (let i = 0; i < sortedData.length; i++) {
+      if (sortedData[i].timestamp <= targetTs) {
+        left = sortedData[i];
+      }
+      if (sortedData[i].timestamp >= targetTs) {
+        right = sortedData[i];
+        break;
+      }
+    }
+
+    if (left.timestamp === right.timestamp) {
+      return { ...left };
+    }
+
+    const ratio = (targetTs - left.timestamp) / (right.timestamp - left.timestamp);
+    const interpolated = { ...left };
+
+    numericFields.forEach(field => {
+      const leftValue = left[field];
+      const rightValue = right[field];
+
+      if (Number.isFinite(leftValue) && Number.isFinite(rightValue)) {
+        interpolated[field] = leftValue + ((rightValue - leftValue) * ratio);
+      }
+    });
+
+    return interpolated;
   }
 
   /**
