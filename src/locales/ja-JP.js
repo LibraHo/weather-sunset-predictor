@@ -3,7 +3,7 @@
  */
 export default {
   app: {
-    title: '天気夕焼け予測',
+    title: '霞客 Sunset Voyager',
     subtitle: '焼き雲の最佳タイミングを予測'
   },
   buttons: {

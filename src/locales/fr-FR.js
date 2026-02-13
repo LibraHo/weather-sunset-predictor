@@ -3,7 +3,7 @@
  */
 export default {
   app: {
-    title: 'Prédicteur de Coucher de Soleil',
+    title: '霞客 Sunset Voyager',
     subtitle: 'Prédire le meilleur moment pour les nuages rouges'
   },
   buttons: {

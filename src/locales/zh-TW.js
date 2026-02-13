@@ -4,7 +4,7 @@
 export default {
   // 應用
   app: {
-    title: '天氣晚霞預測器',
+    title: '霞客 Sunset Voyager',
     subtitle: '預測火燒雲出現的最佳時機'
   },
 

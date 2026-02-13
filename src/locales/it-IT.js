@@ -3,7 +3,7 @@
  */
 export default {
   app: {
-    title: 'Previsore del Tramonto',
+    title: '霞客 Sunset Voyager',
     subtitle: 'Prevedere il momento migliore per le nuvole rosse'
   },
   buttons: {
