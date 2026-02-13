@@ -1,4 +1,6 @@
 const axios = require('axios');
+const { execFile } = require('child_process');
+const { promisify } = require('util');
 
 /**
  * Windy API 服务
@@ -6,6 +8,8 @@ const axios = require('axios');
  */
 
 const WINDY_API_URL = 'https://api.windy.com/api/point-forecast/v2';
+
+const execFileAsync = promisify(execFile);
 
 class WindyService {
   constructor() {
@@ -62,14 +66,13 @@ class WindyService {
 
       console.log(`[Windy API] 请求天气数据: lat=${lat}, lon=${lon}, hours=${hours}`);
 
-      const response = await axios.post(WINDY_API_URL, requestBody, {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        timeout: 10000 // 10秒超时
-      });
-
-      return this.parseWindyResponse(response.data);
+      const apiData = await this.requestWindyData(requestBody);
+      const parsedData = this.parseWindyResponse(apiData);
+      const requestedHours = Math.min(hours, parsedData.hours);
+      return {
+        hours: requestedHours,
+        data: parsedData.data.slice(0, requestedHours)
+      };
     } catch (error) {
       console.error('[Windy API] 请求失败:', error.message);
 
@@ -94,6 +97,40 @@ class WindyService {
       } else {
         throw error;
       }
+    }
+  }
+
+
+  async requestWindyData(requestBody) {
+    try {
+      const response = await axios.post(WINDY_API_URL, requestBody, {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        timeout: 10000 // 10秒超时
+      });
+      return response.data;
+    } catch (error) {
+      // 某些代理环境下 axios 可能出现重定向循环，回退到 curl 请求
+      if (error.code === 'ERR_FR_TOO_MANY_REDIRECTS' || error.code === 'ENETUNREACH') {
+        console.warn(`[Windy API] axios 请求失败(${error.code})，尝试使用 curl 回退`);
+        const { stdout } = await execFileAsync('curl', [
+          '--silent',
+          '--show-error',
+          '--fail',
+          '--max-time',
+          '15',
+          '-H',
+          'Content-Type: application/json',
+          '-X',
+          'POST',
+          '-d',
+          JSON.stringify(requestBody),
+          WINDY_API_URL
+        ]);
+        return JSON.parse(stdout);
+      }
+      throw error;
     }
   }
 

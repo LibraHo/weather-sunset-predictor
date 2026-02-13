@@ -490,6 +490,8 @@ server {
 }
 ```
 
+> 推荐仅让 Nginx 对外提供 80/443，Node.js 后端端口（如 3000）保持内网/本机可访问即可。
+
 生产环境变量：
 
 ```env
@@ -515,6 +517,7 @@ CORS_ORIGIN=https://your-domain.com
 
 1. 检查 `.env` 中 `CORS_ORIGIN` 是否与前端实际地址完全匹配（含协议、主机名、端口）
 2. 若同时使用多个前端端口，用逗号分隔：`CORS_ORIGIN=http://localhost:9002,http://localhost:8080`
+3. 若为域名部署，请确保前端通过同源地址访问 `/api/*`（由 Nginx 反代），避免浏览器直接请求 `localhost:3000`
 
 ### 请求超时
 
