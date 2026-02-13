@@ -9,7 +9,7 @@ import WeatherData from '../models/WeatherData.js';
 
 class WindyAPIService {
   constructor(_apiKey, options = {}) {
-    this.proxyURL = options.proxyURL || 'http://localhost:3001'; // 后端代理URL
+    this.proxyURL = options.proxyURL || 'http://localhost:3000'; // 后端代理URL
 
     console.log(`[WindyAPIService] 初始化后端代理模式`);
     console.log(`[WindyAPIService] 后端代理地址: ${this.proxyURL}`);

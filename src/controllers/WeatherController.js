@@ -35,7 +35,9 @@ class WeatherController {
       this.windyAPIService = new MockWindyAPIService(apiKey || 'mock-api-key');
     } else {
       // 固定使用后端代理模式
-      this.windyAPIService = new WindyAPIService(null);
+      const initConfig = loadConfig();
+      const proxyURL = initConfig.proxy?.url || 'http://localhost:3000';
+      this.windyAPIService = new WindyAPIService(null, { proxyURL });
     }
 
     // 任务18：初始化Windy地图服务
@@ -99,7 +101,9 @@ class WeatherController {
       this.windyAPIService = new MockWindyAPIService(apiKey);
     } else {
       // 后端代理模式固定，apiKey 由后端管理
-      this.windyAPIService = new WindyAPIService(null);
+      const cfg = loadConfig();
+      const proxyURL = cfg.proxy?.url || 'http://localhost:3000';
+      this.windyAPIService = new WindyAPIService(null, { proxyURL });
     }
   }
 

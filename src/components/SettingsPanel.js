@@ -56,7 +56,7 @@ class SettingsPanel {
                     id="proxy-url-input"
                     class="setting-input"
                     placeholder="${this.i18n.t('settings.proxyUrlPlaceholder')}"
-                    value="http://localhost:3001"
+                    value="http://localhost:3000"
                   />
                 </div>
                 <small class="setting-hint">${this.i18n.t('settings.proxyUrlHint')}</small>
@@ -252,7 +252,7 @@ class SettingsPanel {
    */
   loadSettings() {
     // 加载代理 URL
-    const proxyUrl = localStorage.getItem('api_proxy_url') || 'http://localhost:3001';
+    const proxyUrl = localStorage.getItem('api_proxy_url') || 'http://localhost:3000';
     const proxyUrlInput = document.getElementById('proxy-url-input');
     if (proxyUrlInput) {
       proxyUrlInput.value = proxyUrl;
