@@ -18,7 +18,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(morgan('combined')); // HTTP request logging
-app.use(requestLogger); // Custom request logging
+app.use(requestLogger()); // Custom request logging
 
 // Routes
 app.get('/health', (req, res) => {
