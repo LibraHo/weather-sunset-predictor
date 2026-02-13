@@ -48,7 +48,35 @@ class SettingsPanel {
           <div class="settings-section" data-section="dataSource">
             <h3 class="settings-section-title">📡 ${this.i18n.t('settings.dataSource')}</h3>
             <div class="settings-section-content">
-              <div class="setting-item" id="proxy-url-setting">
+              <!-- 后端地址模式 -->
+              <div class="setting-item">
+                <label class="setting-label">${this.i18n.t('settings.proxyMode')}</label>
+                <div class="setting-control">
+                  <select id="proxy-mode-select" class="setting-select">
+                    <option value="auto">${this.i18n.t('settings.proxyModeAuto')}</option>
+                    <option value="manual">${this.i18n.t('settings.proxyModeManual')}</option>
+                  </select>
+                </div>
+                <small class="setting-hint">${this.i18n.t('settings.proxyModeHint')}</small>
+              </div>
+
+              <!-- auto 模式：只读显示当前页面 origin -->
+              <div class="setting-item" id="proxy-auto-display" style="display:none">
+                <label class="setting-label">${this.i18n.t('settings.proxyAutoUrl')}</label>
+                <div class="setting-control">
+                  <input
+                    type="text"
+                    id="proxy-auto-url-display"
+                    class="setting-input"
+                    readonly
+                    style="opacity:0.6;cursor:default"
+                  />
+                </div>
+                <small class="setting-hint">${this.i18n.t('settings.proxyAutoUrlHint')}</small>
+              </div>
+
+              <!-- manual 模式：手动填写 URL -->
+              <div class="setting-item" id="proxy-url-setting" style="display:none">
                 <label class="setting-label">${this.i18n.t('settings.proxyUrl')}</label>
                 <div class="setting-control">
                   <input
@@ -191,7 +219,15 @@ class SettingsPanel {
     const overlay = this.panel.querySelector('.settings-overlay');
     overlay.addEventListener('click', () => this.close());
 
-    // 代理 URL 输入
+    // 后端模式切换
+    const proxyModeSelect = document.getElementById('proxy-mode-select');
+    if (proxyModeSelect) {
+      proxyModeSelect.addEventListener('change', (e) => {
+        this.handleProxyModeChange(e.target.value);
+      });
+    }
+
+    // 代理 URL 输入（manual 模式）
     const proxyUrlInput = document.getElementById('proxy-url-input');
     if (proxyUrlInput) {
       proxyUrlInput.addEventListener('change', (e) => {
@@ -248,10 +284,39 @@ class SettingsPanel {
   }
 
   /**
+   * 根据代理模式显示/隐藏对应的 URL 配置区域
+   * @param {string} mode - 'auto' | 'manual'
+   */
+  _updateProxyModeUI(mode) {
+    const autoDisplay = document.getElementById('proxy-auto-display');
+    const manualSetting = document.getElementById('proxy-url-setting');
+    const autoInput = document.getElementById('proxy-auto-url-display');
+
+    if (mode === 'auto') {
+      if (autoDisplay) autoDisplay.style.display = '';
+      if (manualSetting) manualSetting.style.display = 'none';
+      if (autoInput && typeof window !== 'undefined' && window.location) {
+        autoInput.value = window.location.origin;
+      }
+    } else {
+      if (autoDisplay) autoDisplay.style.display = 'none';
+      if (manualSetting) manualSetting.style.display = '';
+    }
+  }
+
+  /**
    * 加载设置
    */
   loadSettings() {
-    // 加载代理 URL
+    // 加载代理模式
+    const proxyMode = localStorage.getItem('api_proxy_mode') || 'auto';
+    const proxyModeSelect = document.getElementById('proxy-mode-select');
+    if (proxyModeSelect) {
+      proxyModeSelect.value = proxyMode;
+    }
+    this._updateProxyModeUI(proxyMode);
+
+    // 加载代理 URL（manual 模式使用）
     const proxyUrl = localStorage.getItem('api_proxy_url') || 'http://localhost:3000';
     const proxyUrlInput = document.getElementById('proxy-url-input');
     if (proxyUrlInput) {
@@ -469,10 +534,27 @@ class SettingsPanel {
   }
 
   /**
-   * 处理代理 URL 变更
+   * 处理后端地址模式切换（auto / manual）
+   * @param {string} mode
+   */
+  handleProxyModeChange(mode) {
+    localStorage.setItem('api_proxy_mode', mode);
+    // 同步到运行时配置
+    import('../../config.api.js').then(({ API_CONFIG, resolveProxyUrl }) => {
+      API_CONFIG.proxyMode = mode;
+      console.log(`[SettingsPanel] 后端模式已切换为: ${mode}，当前地址: ${resolveProxyUrl()}`);
+    });
+    this._updateProxyModeUI(mode);
+  }
+
+  /**
+   * 处理代理 URL 变更（manual 模式）
    */
   handleProxyUrlChange(url) {
     localStorage.setItem('api_proxy_url', url);
+    import('../../config.api.js').then(({ API_CONFIG }) => {
+      API_CONFIG.proxy.url = url;
+    });
     console.log('[SettingsPanel] 代理 URL 已更新:', url);
   }
 

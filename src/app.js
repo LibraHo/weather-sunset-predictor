@@ -13,25 +13,36 @@ import PredictionController from './controllers/PredictionController.js';
 import AppController from './controllers/AppController.js';
 import GlobalErrorBoundary from './utils/GlobalErrorBoundary.js';
 import ErrorHandler from './utils/ErrorHandler.js';
-import { API_CONFIG } from '../config.api.js';
+import { API_CONFIG, loadConfig, resolveProxyUrl } from '../config.api.js';
 
 console.log('Weather Sunset Predictor - Application Starting...');
 
-// 从脚本URL读取后端端口配置（支持 index.html 中的 port 参数）
-// 例如：<script src="src/app.js?port=3001"> 会将后端代理URL配置为 http://localhost:3001
+// 优先加载持久化配置（proxyMode / api_proxy_url 等）
+loadConfig();
+
+// 从脚本 URL 读取 port 参数，作为 manual 模式的快速注入方式。
+// 例如：<script src="src/app.js?port=3001"> 会强制切换到 manual 模式并使用 localhost:3001。
+// 若已持久化为 auto 模式，此参数不覆盖用户选择。
 try {
   const scriptUrl = new URL(import.meta.url);
   const backendPort = scriptUrl.searchParams.get('port');
   if (backendPort && /^\d+$/.test(backendPort)) {
-    const newProxyUrl = `http://localhost:${backendPort}`;
-    API_CONFIG.proxy.url = newProxyUrl;
-    // 同步到 localStorage，确保 loadConfig() 返回正确的值
-    localStorage.setItem('api_proxy_url', newProxyUrl);
-    console.log(`[App] 后端代理地址已从URL参数更新为: ${newProxyUrl}`);
+    // 仅当用户未明确选择过模式时（首次访问），才通过 port 参数注入 manual 配置
+    const hasSavedMode = localStorage.getItem('api_proxy_mode');
+    if (!hasSavedMode) {
+      const newProxyUrl = `http://localhost:${backendPort}`;
+      API_CONFIG.proxyMode = 'manual';
+      API_CONFIG.proxy.url = newProxyUrl;
+      localStorage.setItem('api_proxy_mode', 'manual');
+      localStorage.setItem('api_proxy_url', newProxyUrl);
+      console.log(`[App] 通过 port 参数注入后端地址 (manual): ${newProxyUrl}`);
+    }
   }
 } catch (e) {
   console.warn('[App] 无法从脚本URL读取端口配置:', e.message);
 }
+
+console.log(`[App] 后端代理模式: ${API_CONFIG.proxyMode}, 地址: ${resolveProxyUrl()}`);
 
 // 初始化全局错误边界
 const globalErrorBoundary = new GlobalErrorBoundary({

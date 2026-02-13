@@ -237,9 +237,15 @@ export default {
     // Data Source & Network
     dataSource: 'Nguồn Dữ Liệu & Mạng',
     currentMode: 'Chế Độ Hiện Tại',
-    proxyUrl: 'URL Máy Chủ Proxy',
+    proxyMode: 'Chế Độ Địa Chỉ Backend',
+    proxyModeAuto: 'Tự động (cùng origin)',
+    proxyModeManual: 'Thủ công',
+    proxyModeHint: 'Chế độ tự động dùng origin của trang hiện tại làm địa chỉ backend. Chế độ thủ công cho phép bạn nhập URL tùy chỉnh.',
+    proxyAutoUrl: 'URL Backend Hiện Tại (tự động)',
+    proxyAutoUrlHint: 'Trong chế độ tự động, backend dùng cùng origin với frontend.',
+    proxyUrl: 'URL Máy Chủ Backend (thủ công)',
     proxyUrlPlaceholder: 'http://localhost:3000',
-    proxyUrlHint: 'Địa chỉ URL của máy chủ proxy backend',
+    proxyUrlHint: 'Nhập URL đầy đủ của máy chủ proxy backend cho chế độ thủ công.',
     // Notifications & Alerts
     notificationAndAlerts: 'Thông Báo & Cảnh Báo',
     enableSunsetNotification: 'Bật thông báo hoàng hôn',

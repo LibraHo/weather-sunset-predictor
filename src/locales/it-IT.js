@@ -275,9 +275,15 @@ export default {
     // Fonte Dati & Rete
     dataSource: 'Fonte Dati & Rete',
     currentMode: 'Modalità Attuale',
-    proxyUrl: 'URL Server Proxy',
+    proxyMode: 'Modalità Indirizzo Backend',
+    proxyModeAuto: 'Automatico (stessa origine)',
+    proxyModeManual: 'Manuale',
+    proxyModeHint: 'La modalità automatica usa l\'origine della pagina corrente come URL del backend — ideale per deployment sullo stesso dominio. La modalità manuale permette di specificare un URL personalizzato.',
+    proxyAutoUrl: 'URL Backend Corrente (auto)',
+    proxyAutoUrlHint: 'In modalità automatica, il backend condivide la stessa origine del frontend.',
+    proxyUrl: 'URL Server Backend (manuale)',
     proxyUrlPlaceholder: 'http://localhost:3000',
-    proxyUrlHint: 'Indirizzo URL del server proxy backend',
+    proxyUrlHint: 'Inserire l\'URL completo del server proxy backend per la modalità manuale.',
     // Notifiche e Avvisi
     notificationAndAlerts: 'Notifiche e Avvisi',
     enableSunsetNotification: 'Attiva notifiche tramonto',

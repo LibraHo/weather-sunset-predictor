@@ -317,9 +317,15 @@ export default {
     // データソースとネットワーク
     dataSource: 'データソースとネットワーク',
     currentMode: '現在のモード',
-    proxyUrl: 'バックエンドサーバーのURL',
+    proxyMode: 'バックエンドアドレスモード',
+    proxyModeAuto: '自動（同一オリジン）',
+    proxyModeManual: '手動指定',
+    proxyModeHint: '自動モードは現在のページのオリジンをバックエンドURLとして使用します。手動モードではカスタムURLを指定できます。',
+    proxyAutoUrl: '現在のバックエンドURL（自動）',
+    proxyAutoUrlHint: '自動モードではフロントエンドと同じオリジンが使用されます。',
+    proxyUrl: 'バックエンドサーバーURL（手動）',
     proxyUrlPlaceholder: 'http://localhost:3000',
-    proxyUrlHint: 'バックエンドプロキシサーバーのURLアドレス',
+    proxyUrlHint: '手動モードでバックエンドプロキシサーバーのURLを入力してください。',
     // 通知とアラート
     notificationAndAlerts: '通知とアラート',
     enableSunsetNotification: '夕焼け予測通知を有効にする',

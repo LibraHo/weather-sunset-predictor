@@ -407,9 +407,15 @@ export default {
     // 数据源与网络
     dataSource: '数据源与网络',
     currentMode: '当前模式',
-    proxyUrl: '后端服务器地址',
+    proxyMode: '后端地址模式',
+    proxyModeAuto: '自动（同源）',
+    proxyModeManual: '手动指定',
+    proxyModeHint: '自动模式使用当前页面域名作为后端地址，适合前后端同域部署；手动模式可自定义后端地址',
+    proxyAutoUrl: '当前后端地址（自动）',
+    proxyAutoUrlHint: '自动模式下后端地址与前端同源，无需额外配置',
+    proxyUrl: '后端服务器地址（手动）',
     proxyUrlPlaceholder: 'http://localhost:3000',
-    proxyUrlHint: '后端代理服务器的 URL 地址',
+    proxyUrlHint: '手动模式下填写后端代理服务器的完整 URL',
     // 通知与提醒
     notificationAndAlerts: '通知与提醒',
     enableSunsetNotification: '启用晚霞预测通知',

@@ -349,9 +349,15 @@ export default {
     // 데이터 소스 및 네트워크
     dataSource: '데이터 소스 및 네트워크',
     currentMode: '현재 모드',
-    proxyUrl: '백엔드 서버 URL',
+    proxyMode: '백엔드 주소 모드',
+    proxyModeAuto: '자동 (동일 출처)',
+    proxyModeManual: '수동 지정',
+    proxyModeHint: '자동 모드는 현재 페이지의 출처를 백엔드 URL로 사용합니다. 수동 모드에서는 사용자 지정 URL을 지정할 수 있습니다.',
+    proxyAutoUrl: '현재 백엔드 URL (자동)',
+    proxyAutoUrlHint: '자동 모드에서는 프런트엔드와 동일한 출처가 사용됩니다.',
+    proxyUrl: '백엔드 서버 URL (수동)',
     proxyUrlPlaceholder: 'http://localhost:3000',
-    proxyUrlHint: '백엔드 프록시 서버 URL 주소',
+    proxyUrlHint: '수동 모드에서 백엔드 프록시 서버의 전체 URL을 입력하세요.',
     // 알림
     notificationAndAlerts: '알림',
     enableSunsetNotification: '노을 예측 알림 활성화',

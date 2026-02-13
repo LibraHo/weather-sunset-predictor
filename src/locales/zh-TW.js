@@ -328,9 +328,15 @@ export default {
     // 資料來源與網路
     dataSource: '資料來源與網路',
     currentMode: '目前模式',
-    proxyUrl: '後端伺服器位址',
+    proxyMode: '後端位址模式',
+    proxyModeAuto: '自動（同源）',
+    proxyModeManual: '手動指定',
+    proxyModeHint: '自動模式使用目前頁面域名作為後端位址，適合前後端同域部署；手動模式可自訂後端位址',
+    proxyAutoUrl: '目前後端位址（自動）',
+    proxyAutoUrlHint: '自動模式下後端位址與前端同源，無需額外設定',
+    proxyUrl: '後端伺服器位址（手動）',
     proxyUrlPlaceholder: 'http://localhost:3000',
-    proxyUrlHint: '後端代理伺服器的 URL 位址',
+    proxyUrlHint: '手動模式下填寫後端代理伺服器的完整 URL',
     // 通知與提醒
     notificationAndAlerts: '通知與提醒',
     enableSunsetNotification: '啟用晚霞預測通知',

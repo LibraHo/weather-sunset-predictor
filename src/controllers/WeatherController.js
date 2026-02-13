@@ -15,7 +15,7 @@ import SurroundingPointsService from '../services/SurroundingPointsService.js';
 import RadarChartService from '../services/RadarChartService.js';
 import FireCloudOverlayService from '../services/FireCloudOverlayService.js';
 import PredictionAPIService from '../services/PredictionAPIService.js';
-import { loadConfig } from '../../config.api.js';
+import { loadConfig, resolveProxyUrl } from '../../config.api.js';
 import i18n from '../i18n.js';
 import toastService from '../services/ToastService.js';
 import ChartRenderController from './ChartRenderController.js';
@@ -34,9 +34,9 @@ class WeatherController {
     if (useMockAPI) {
       this.windyAPIService = new MockWindyAPIService(apiKey || 'mock-api-key');
     } else {
-      // 固定使用后端代理模式
-      const initConfig = loadConfig();
-      const proxyURL = initConfig.proxy?.url || 'http://localhost:3000';
+      // 固定使用后端代理模式，URL 由 resolveProxyUrl() 根据当前模式决定
+      loadConfig();
+      const proxyURL = resolveProxyUrl();
       this.windyAPIService = new WindyAPIService(null, { proxyURL });
     }
 
@@ -59,7 +59,7 @@ class WeatherController {
     const apiConfig = loadConfig();
     this.useBackendSurrounding = apiConfig.features.USE_BACKEND_SURROUNDING || false;
     if (this.useBackendSurrounding) {
-      const baseURL = apiConfig.proxy?.url || 'http://localhost:3000';
+      const baseURL = resolveProxyUrl();
       this.predictionAPIService = new PredictionAPIService(baseURL);
       console.log('[WeatherController] 后端周边预测 API 已启用');
     } else {
@@ -72,8 +72,7 @@ class WeatherController {
     this.currentOverlayType = 'sunset'; // 当前覆盖层类型 (sunrise/sunset)
 
     // 配置覆盖层服务的后端 URL
-    const overlayBaseURL = apiConfig.proxy?.url || 'http://localhost:3000';
-    this.fireCloudOverlayService.setBackendURL(overlayBaseURL);
+    this.fireCloudOverlayService.setBackendURL(resolveProxyUrl());
 
     this.chartRenderController = new ChartRenderController({
       i18n: this.i18n,
@@ -100,10 +99,9 @@ class WeatherController {
     if (this.useMockAPI) {
       this.windyAPIService = new MockWindyAPIService(apiKey);
     } else {
-      // 后端代理模式固定，apiKey 由后端管理
-      const cfg = loadConfig();
-      const proxyURL = cfg.proxy?.url || 'http://localhost:3000';
-      this.windyAPIService = new WindyAPIService(null, { proxyURL });
+      // 后端代理模式固定，apiKey 由后端管理，URL 由 resolveProxyUrl() 决定
+      loadConfig();
+      this.windyAPIService = new WindyAPIService(null, { proxyURL: resolveProxyUrl() });
     }
   }
 
@@ -545,7 +543,7 @@ class WeatherController {
       if (this.windyAPIService && this.windyAPIService.proxyURL) {
         try {
           console.log('[WeatherController] 从后端获取地图API Key...');
-          const proxyURL = this.windyAPIService.proxyURL || 'http://localhost:3000';
+          const proxyURL = resolveProxyUrl();
           const response = await fetch(`${proxyURL}/api/config/map-key`);
           if (response.ok) {
             const data = await response.json();
