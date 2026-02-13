@@ -3,7 +3,7 @@
  */
 export default {
   app: {
-    title: 'تنبؤ الغروب',
+    title: '霞客 Sunset Voyager',
     subtitle: 'التنبؤ بأفضل وقت للسحب الحمراء'
   },
   buttons: {
