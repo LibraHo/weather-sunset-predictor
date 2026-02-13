@@ -1000,12 +1000,6 @@ class WeatherController {
       // 渲染雷达图
       this.renderSurroundingRadar(data);
 
-      // 周边数据加载完成后，更新地图气象数据图层
-      if (this.windyMapService && this.isMapInitialized) {
-        const currentLayer = this.windyMapService.currentOptions && this.windyMapService.currentOptions.overlay || 'wind';
-        this._renderWeatherLayerOnMap(currentLayer);
-      }
-
       // 任务20：如果覆盖层已启用，生成并显示覆盖层
       if (this.fireCloudOverlayEnabled) {
         await this.updateFireCloudOverlay(location, data);
@@ -1023,6 +1017,13 @@ class WeatherController {
       if (errorEl) {
         errorEl.textContent = this.i18n.t('surrounding.error') || error.message;
         errorEl.classList.remove('hidden');
+      }
+    } finally {
+      // 无论周边数据获取成功或失败，都刷新地图气象数据标记，
+      // 防止后端中断时地图保留上一个位置的过期圆圈。
+      if (this.windyMapService && this.isMapInitialized) {
+        const currentLayer = (this.windyMapService.currentOptions && this.windyMapService.currentOptions.overlay) || 'wind';
+        this._renderWeatherLayerOnMap(currentLayer);
       }
     }
   }
@@ -1064,7 +1065,8 @@ class WeatherController {
       location,
       radius,
       async (loc) => {
-        const weatherData = await this.fetchWeather(loc, true);
+        // 使用不修改全局状态的私有方法，避免周边请求覆盖当前位置/天气数据
+        const weatherData = await this._fetchWeatherWithoutMutation(loc);
         return weatherData[0]; // 返回当前天气数据
       },
       (weatherData) => {
@@ -1077,6 +1079,39 @@ class WeatherController {
         );
       }
     );
+  }
+
+  /**
+   * 获取指定位置的天气数据，不修改 this.currentWeatherData / this.currentLocation 全局状态。
+   * 用于周边采样等需要并行获取多点天气但不应影响主状态的场景。
+   * @param {Location} location - 位置对象
+   * @returns {Promise<WeatherData[]>} 天气数据数组
+   * @private
+   */
+  async _fetchWeatherWithoutMutation(location) {
+    if (!this.windyAPIService) {
+      throw new Error('API密钥未设置，请先配置API密钥');
+    }
+
+    if (!location || !location.isValid()) {
+      throw new Error('无效的位置信息');
+    }
+
+    // 先查缓存（只读，不写入全局状态）
+    const cachedData = this.storageService.getCachedWeatherData(location);
+    if (cachedData) {
+      return cachedData;
+    }
+
+    const weatherData = await this.windyAPIService.fetchWeatherData(
+      location.lat,
+      location.lon
+    );
+
+    // 写缓存，但不更新 this.currentWeatherData / this.currentLocation
+    this.storageService.cacheWeatherData(location, weatherData);
+
+    return weatherData;
   }
 
   /**
