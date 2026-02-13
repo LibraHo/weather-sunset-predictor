@@ -76,20 +76,16 @@ describe('AppController', () => {
   });
 
   describe('initialize() - 需求 1.1, 1.5', () => {
-    test('当API密钥未配置时，应该显示API密钥模态框', async () => {
-      // 设置为直连模式（代理模式跳过API密钥检查）
-      localStorage.setItem('api_mode', 'direct');
-
+    test('当API密钥未配置时，仍应完成初始化（固定后端代理）', async () => {
       // 确保没有API密钥
       expect(storageService.getAPIKey()).toBeNull();
 
       await appController.initialize();
 
-      // 检查模态框是否显示
+      // 不再弹出 API Key 模态框
       const modal = document.getElementById('api-key-modal');
-      expect(modal.style.display).toBe('flex');
-      expect(modal.classList.contains('hidden')).toBe(false);
-      expect(appController.isInitialized).toBe(false);
+      expect(modal.style.display).toBe('none');
+      expect(appController.isInitialized).toBe(true);
     });
 
     test('当API密钥已配置时，应该初始化UI', async () => {

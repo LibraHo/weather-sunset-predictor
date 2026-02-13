@@ -48,25 +48,11 @@ class SettingsPanel {
           <div class="settings-section" data-section="dataSource">
             <h3 class="settings-section-title">📡 ${this.i18n.t('settings.dataSource')}</h3>
             <div class="settings-section-content">
-              <div class="setting-item">
-                <label class="setting-label">${this.i18n.t('settings.apiMode')}</label>
-                <div class="setting-description">
-                  ${this.i18n.t('settings.currentMode')}: <span id="api-mode-display" class="setting-value">${this.i18n.t('settings.apiModeProxy')}</span>
-                  <br>
-                  <small class="setting-hint">
-                    ${this.i18n.t('settings.apiModeHint')}
-                  </small>
-                </div>
-                <div class="setting-control">
-                  <select id="api-mode-select" class="setting-select">
-                    <option value="proxy">${this.i18n.t('settings.apiModeProxyRecommended')}</option>
-                    <option value="direct">${this.i18n.t('settings.apiModeDirect')}</option>
-                  </select>
-                </div>
-              </div>
-
               <div class="setting-item" id="proxy-url-setting">
                 <label class="setting-label">${this.i18n.t('settings.proxyUrl')}</label>
+                <div class="setting-description">
+                  <small class="setting-hint">${this.i18n.t('settings.apiModeProxyRecommended')}</small>
+                </div>
                 <div class="setting-control">
                   <input
                     type="text"
@@ -208,14 +194,6 @@ class SettingsPanel {
     const overlay = this.panel.querySelector('.settings-overlay');
     overlay.addEventListener('click', () => this.close());
 
-    // API 模式切换
-    const apiModeSelect = document.getElementById('api-mode-select');
-    if (apiModeSelect) {
-      apiModeSelect.addEventListener('change', (e) => {
-        this.handleApiModeChange(e.target.value);
-      });
-    }
-
     // 代理 URL 输入
     const proxyUrlInput = document.getElementById('proxy-url-input');
     if (proxyUrlInput) {
@@ -276,14 +254,6 @@ class SettingsPanel {
    * 加载设置
    */
   loadSettings() {
-    // 加载 API 模式
-    const apiMode = localStorage.getItem('api_mode') || 'proxy';
-    const apiModeSelect = document.getElementById('api-mode-select');
-    if (apiModeSelect) {
-      apiModeSelect.value = apiMode;
-      this.updateApiModeDisplay(apiMode);
-    }
-
     // 加载代理 URL
     const proxyUrl = localStorage.getItem('api_proxy_url') || 'http://localhost:3001';
     const proxyUrlInput = document.getElementById('proxy-url-input');
@@ -485,38 +455,6 @@ class SettingsPanel {
       this.close();
     } else {
       this.open();
-    }
-  }
-
-  /**
-   * 处理 API 模式变更
-   */
-  handleApiModeChange(mode) {
-    localStorage.setItem('api_mode', mode);
-    this.updateApiModeDisplay(mode);
-
-    // 显示/隐藏代理 URL 设置
-    const proxyUrlSetting = document.getElementById('proxy-url-setting');
-    if (proxyUrlSetting) {
-      if (mode === 'proxy') {
-        proxyUrlSetting.style.display = 'block';
-      } else {
-        proxyUrlSetting.style.display = 'none';
-      }
-    }
-
-    // API 模式变更已保存到 localStorage，config.api.js 的 loadConfig() 会在下次初始化时读取。
-    // 当前设计下无需实时通知，服务在页面刷新后自动采用新模式。
-    console.log('[SettingsPanel] API 模式已切换为:', mode);
-  }
-
-  /**
-   * 更新 API 模式显示
-   */
-  updateApiModeDisplay(mode) {
-    const display = document.getElementById('api-mode-display');
-    if (display) {
-      display.textContent = mode === 'proxy' ? this.i18n.t('settings.apiModeProxy') : this.i18n.t('settings.apiModeDirect');
     }
   }
 

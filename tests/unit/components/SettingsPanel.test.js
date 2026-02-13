@@ -176,14 +176,6 @@ describe('SettingsPanel.loadSettings', () => {
     jest.restoreAllMocks();
   });
 
-  test('加载 localStorage 中的 api_mode', () => {
-    localStorage.setItem('api_mode', 'direct');
-    const sp = makePanel();
-    sp.open(); // open 内部调用 loadSettings
-    const select = document.getElementById('api-mode-select');
-    expect(select.value).toBe('direct');
-  });
-
   test('加载通知设置：enabled 和 threshold', () => {
     const sp = makePanel({
       getNotificationSettings: jest.fn().mockReturnValue({ enabled: true, threshold: 80 })
@@ -222,6 +214,26 @@ describe('SettingsPanel.loadSettings', () => {
   });
 });
 
+describe('SettingsPanel - API 配置入口', () => {
+  beforeEach(() => {
+    setupI18nMock();
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    const panel = document.getElementById('settings-panel');
+    if (panel) panel.remove();
+    jest.restoreAllMocks();
+  });
+
+  test('设置面板不再显示 API 模式选择器', () => {
+    const sp = makePanel();
+    sp.open();
+    const select = document.getElementById('api-mode-select');
+    expect(select).toBeNull();
+  });
+});
+
 describe('SettingsPanel - 事件处理', () => {
   let sp;
 
@@ -248,25 +260,6 @@ describe('SettingsPanel - 事件处理', () => {
     const overlay = sp.panel.querySelector('.settings-overlay');
     overlay.click();
     expect(sp.isOpen).toBe(false);
-  });
-
-  test('handleApiModeChange 保存到 localStorage 并更新显示', () => {
-    sp.handleApiModeChange('direct');
-    expect(localStorage.getItem('api_mode')).toBe('direct');
-    const display = document.getElementById('api-mode-display');
-    expect(display).not.toBeNull();
-  });
-
-  test('handleApiModeChange("proxy") 显示代理 URL 设置', () => {
-    sp.handleApiModeChange('proxy');
-    const proxyUrlSetting = document.getElementById('proxy-url-setting');
-    expect(proxyUrlSetting.style.display).toBe('block');
-  });
-
-  test('handleApiModeChange("direct") 隐藏代理 URL 设置', () => {
-    sp.handleApiModeChange('direct');
-    const proxyUrlSetting = document.getElementById('proxy-url-setting');
-    expect(proxyUrlSetting.style.display).toBe('none');
   });
 
   test('handleProxyUrlChange 保存 URL 到 localStorage', () => {
