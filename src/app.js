@@ -17,17 +17,23 @@ import { API_CONFIG } from '../config.api.js';
 
 console.log('Weather Sunset Predictor - Application Starting...');
 
-// 从脚本URL读取后端端口配置（支持 index.html 中的 port 参数）
+// 从脚本URL读取后端端口配置（仅本地开发环境启用）
 // 例如：<script src="src/app.js?port=3001"> 会将后端代理URL配置为 http://localhost:3001
 try {
   const scriptUrl = new URL(import.meta.url);
   const backendPort = scriptUrl.searchParams.get('port');
+  const isLocalDevHost = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
+
   if (backendPort && /^\d+$/.test(backendPort)) {
-    const newProxyUrl = `http://localhost:${backendPort}`;
-    API_CONFIG.proxy.url = newProxyUrl;
-    // 同步到 localStorage，确保 loadConfig() 返回正确的值
-    localStorage.setItem('api_proxy_url', newProxyUrl);
-    console.log(`[App] 后端代理地址已从URL参数更新为: ${newProxyUrl}`);
+    if (isLocalDevHost) {
+      const newProxyUrl = `http://localhost:${backendPort}`;
+      API_CONFIG.proxy.url = newProxyUrl;
+      // 同步到 localStorage，确保 loadConfig() 返回正确的值
+      localStorage.setItem('api_proxy_url', newProxyUrl);
+      console.log(`[App] 后端代理地址已从URL参数更新为: ${newProxyUrl}`);
+    } else {
+      console.warn('[App] 检测到生产域名环境，已忽略 port 参数，避免将后端代理错误指向 localhost');
+    }
   }
 } catch (e) {
   console.warn('[App] 无法从脚本URL读取端口配置:', e.message);

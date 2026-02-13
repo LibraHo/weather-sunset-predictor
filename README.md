@@ -357,7 +357,7 @@ server {
         index index.html;
     }
 
-    # 后端 API 代理
+    # 后端 API 代理（后端仅监听本机端口，不对公网暴露）
     location /api/ {
         proxy_pass http://localhost:3000;
         proxy_set_header Host $host;
@@ -370,6 +370,8 @@ server {
     }
 }
 ```
+
+> 部署建议：公网仅开放 80/443 给 Nginx，不需要直接暴露 Node.js 的 3000 端口。
 
 生产环境下 `CORS_ORIGIN` 需改为实际域名：
 
@@ -397,7 +399,10 @@ curl http://localhost:3000/health
 # 预期返回: {"status":"ok","timestamp":"..."}
 ```
 
-如后端端口已更改，同步修改 `config.api.js` 中的 `proxy.url`。
+同时检查 Nginx 反向代理是否指向正确后端端口（`proxy_pass http://localhost:3000`）。
+
+> 前端在域名环境下默认请求同源地址（`window.location.origin`），通常无需修改 `config.api.js`；
+> 仅本地开发（localhost）默认使用 `http://localhost:3000`。
 
 ### Windy API 密钥无效（401）
 

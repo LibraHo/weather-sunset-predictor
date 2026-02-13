@@ -3,13 +3,20 @@
  * 用于管理 Windy API 的访问模式
  */
 
+const isBrowser = typeof window !== 'undefined' && !!window.location;
+const isLocalHostname = isBrowser && ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
+
+const DEFAULT_PROXY_URL = isLocalHostname
+  ? 'http://localhost:3000'
+  : (isBrowser ? window.location.origin : 'http://localhost:3000');
+
 const API_CONFIG = {
   // API 访问模式已固定为后端代理（直连模式已移除）
   mode: 'proxy',
 
   // 后端服务器配置（当 mode='proxy' 时使用）
   proxy: {
-    url: 'http://localhost:3000',
+    url: DEFAULT_PROXY_URL,
     description: '后端代理服务器地址'
   },
 
@@ -32,7 +39,17 @@ const API_CONFIG = {
 function loadConfig() {
   const savedProxyUrl = localStorage.getItem('api_proxy_url');
   if (savedProxyUrl) {
-    API_CONFIG.proxy.url = savedProxyUrl;
+    const isSavedLocalhostUrl = /^https?:\/\/localhost(?::\d+)?$/i.test(savedProxyUrl) ||
+      /^https?:\/\/127\.0\.0\.1(?::\d+)?$/i.test(savedProxyUrl);
+
+    // 在生产域名环境，自动忽略历史保存的 localhost 配置，避免前端误连本机
+    if (!isLocalHostname && isSavedLocalhostUrl && isBrowser) {
+      API_CONFIG.proxy.url = window.location.origin;
+      localStorage.setItem('api_proxy_url', API_CONFIG.proxy.url);
+      console.warn('[config.api.js] 检测到非本地环境中的 localhost 代理地址，已自动切换为当前域名');
+    } else {
+      API_CONFIG.proxy.url = savedProxyUrl;
+    }
   }
 
   // 读取功能开关配置
