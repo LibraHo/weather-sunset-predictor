@@ -590,6 +590,9 @@ class WeatherController {
         this.updateMapTimeDisplay(currentTime);
       }
 
+      // 初始化后渲染默认图层（风速）
+      this._renderWeatherLayerOnMap('wind');
+
       console.log('[WeatherController] 地图初始化成功');
     } catch (error) {
       console.error('[WeatherController] 地图初始化失败:', error);
@@ -670,13 +673,76 @@ class WeatherController {
       }
     });
 
-    // 更改地图叠加层
+    // 更改地图叠加层并渲染气象数据点
     if (this.windyMapService && this.isMapInitialized) {
       this.windyMapService.changeOverlay(layer);
+      this._renderWeatherLayerOnMap(layer);
       console.log(`[WeatherController] 地图图层已切换到: ${layer}`);
     } else {
       console.log(`[WeatherController] 地图未初始化，无法切换图层`);
     }
+  }
+
+  /**
+   * 使用现有天气数据在地图上渲染气象数据点
+   * @param {string} layer - 'wind', 'temp', 'clouds', 'rain'
+   * @private
+   */
+  _renderWeatherLayerOnMap(layer) {
+    if (!this.windyMapService || !this.isMapInitialized) return;
+
+    const dataPoints = [];
+
+    // 图层参数配置：{ key, unit, min, max, label }
+    const layerConfig = {
+      wind: { key: 'windSpeed', unit: 'km/h', min: 0, max: 80 },
+      temp: { key: 'temp', unit: '°C', min: -10, max: 40 },
+      clouds: { key: 'cloudCover', unit: '%', min: 0, max: 100 },
+      rain: { key: 'precipitation', unit: 'mm', min: 0, max: 20 }
+    };
+
+    const cfg = layerConfig[layer];
+    if (!cfg) return;
+
+    // 添加中心位置数据点（使用当前天气数据的第一条）
+    const centerWeather = Array.isArray(this.currentWeatherData)
+      ? this.currentWeatherData[0]
+      : this.currentWeatherData;
+
+    if (centerWeather && this.currentLocation) {
+      const value = centerWeather[cfg.key] || 0;
+      dataPoints.push({
+        lat: this.currentLocation.lat,
+        lon: this.currentLocation.lon,
+        value,
+        label: `📍 ${this.currentLocation.name || ''}<br>${value.toFixed(1)} ${cfg.unit}`
+      });
+    }
+
+    // 添加周边点数据（如果已有周边数据）
+    if (this.surroundingData && this.surroundingData.points) {
+      this.surroundingData.points.forEach(point => {
+        if (point.weatherData && !point.error) {
+          const value = point.weatherData[cfg.key] || 0;
+          dataPoints.push({
+            lat: point.lat,
+            lon: point.lon,
+            value,
+            label: `${point.name}<br>${value.toFixed(1)} ${cfg.unit}`
+          });
+        }
+      });
+    }
+
+    if (dataPoints.length === 0) {
+      console.log('[WeatherController] 暂无可用气象数据点，图层无法渲染');
+      return;
+    }
+
+    this.windyMapService.showWeatherDataLayer(dataPoints, layer, {
+      min: cfg.min,
+      max: cfg.max
+    });
   }
 
   /**
@@ -917,49 +983,38 @@ class WeatherController {
     try {
       let data;
 
-      // 需求22 Phase 2：根据配置选择前端或后端实现
+      // 需求22 Phase 2：根据配置选择前端或后端实现，后端失败时自动回退
       if (this.useBackendSurrounding && this.predictionAPIService) {
-        // 调用后端 API
-        data = await this.predictionAPIService.getSurrounding(
-          location.lat,
-          location.lon,
-          radius,
-          'sunset', // 默认晚霞，可根据当前时间调整
-          new Date()
-        );
+        try {
+          // 优先调用后端 API
+          data = await this.predictionAPIService.getSurrounding(
+            location.lat,
+            location.lon,
+            radius,
+            'sunset', // 默认晚霞，可根据当前时间调整
+            new Date()
+          );
 
-        // 转换数据格式以匹配前端期望的结构
-        data = this._convertBackendSurroundingData(data, location);
+          // 转换数据格式以匹配前端期望的结构
+          data = this._convertBackendSurroundingData(data, location);
+        } catch (backendError) {
+          console.warn('[WeatherController] 后端周边预测 API 不可用，回退到前端实现:', backendError.message);
+          data = await this._fetchSurroundingFrontend(location, radius);
+        }
       } else {
-        // 前端实现（原有逻辑）
-        const { default: PredictionController } = await import('./PredictionController.js');
-        const predictionController = new PredictionController(this.storageService);
-
-        data = await this.surroundingPointsService.getSurroundingData(
-          location,
-          radius,
-          // 天气数据获取函数
-          async (loc) => {
-            const weatherData = await this.fetchWeather(loc, true);
-            return weatherData[0]; // 返回当前天气数据
-          },
-          // 预测计算函数
-          (weatherData) => {
-            if (!weatherData) return null;
-            return predictionController.predictionService.calculatePrediction(
-              weatherData,
-              new Date(),
-              location.lat,
-              location.lon
-            );
-          }
-        );
+        data = await this._fetchSurroundingFrontend(location, radius);
       }
 
       this.surroundingData = data;
 
       // 渲染雷达图
       this.renderSurroundingRadar(data);
+
+      // 周边数据加载完成后，更新地图气象数据图层
+      if (this.windyMapService && this.isMapInitialized) {
+        const currentLayer = this.windyMapService.currentOptions && this.windyMapService.currentOptions.overlay || 'wind';
+        this._renderWeatherLayerOnMap(currentLayer);
+      }
 
       // 任务20：如果覆盖层已启用，生成并显示覆盖层
       if (this.fireCloudOverlayEnabled) {
@@ -1002,6 +1057,36 @@ class WeatherController {
       })),
       timestamp: backendData.timestamp
     };
+  }
+
+  /**
+   * 前端实现的周边数据获取（后端不可用时的回退）
+   * @param {Object} location - 位置对象
+   * @param {number} radius - 半径（公里）
+   * @returns {Promise<Object>} 周边数据
+   * @private
+   */
+  async _fetchSurroundingFrontend(location, radius) {
+    const { default: PredictionController } = await import('./PredictionController.js');
+    const predictionController = new PredictionController(this.storageService);
+
+    return await this.surroundingPointsService.getSurroundingData(
+      location,
+      radius,
+      async (loc) => {
+        const weatherData = await this.fetchWeather(loc, true);
+        return weatherData[0]; // 返回当前天气数据
+      },
+      (weatherData) => {
+        if (!weatherData) return null;
+        return predictionController.predictionService.calculatePrediction(
+          weatherData,
+          new Date(),
+          location.lat,
+          location.lon
+        );
+      }
+    );
   }
 
   /**

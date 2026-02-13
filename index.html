@@ -212,55 +212,9 @@
             </div>
           </div>
 
-          <!-- 任务20 + 26.6：火烧云覆盖层控制（Phase 6 Leaflet 重构完成） -->
-          <div style="margin-top: 15px; padding: 12px; background: var(--card-bg, #f9f9f9); border-radius: 8px; border: 1px solid var(--border-color, #e0e0e0);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <label class="switch" style="display: flex; align-items: center; cursor: pointer;">
-                  <input type="checkbox" id="firecloud-overlay-toggle" style="margin-right: 8px;">
-                  <span data-i18n="overlay.title" style="font-weight: 600; font-size: 14px;">火烧云覆盖层</span>
-                </label>
-                <div id="overlay-loading" style="display: none;">
-                  <div class="spinner" style="width: 16px; height: 16px; border-width: 2px;"></div>
-                </div>
-                <div id="overlay-status"></div>
-              </div>
-              <button id="refresh-overlay-btn" class="btn btn-small" style="padding: 5px 12px; font-size: 13px;" disabled>
-                🔄 <span data-i18n="overlay.refresh">刷新</span>
-              </button>
-            </div>
-
-            <!-- 覆盖层类型切换和图例 -->
-            <div id="overlay-controls" style="display: none; margin-top: 10px;">
-              <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 8px;">
-                <span data-i18n="overlay.type" style="font-size: 13px;">类型:</span>
-                <label style="display: flex; align-items: center; cursor: pointer; font-size: 13px;">
-                  <input type="radio" name="overlay-type" value="sunset" checked style="margin-right: 4px;">
-                  <span data-i18n="prediction.sunset">晚霞</span>
-                </label>
-                <label style="display: flex; align-items: center; cursor: pointer; font-size: 13px;">
-                  <input type="radio" name="overlay-type" value="sunrise" style="margin-right: 4px;">
-                  <span data-i18n="prediction.sunrise">朝霞</span>
-                </label>
-              </div>
-
-              <!-- 图例 -->
-              <div style="display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--color-text-light, #666);">
-                <span data-i18n="overlay.legend">图例:</span>
-                <div style="display: flex; align-items: center; gap: 4px;">
-                  <div style="width: 20px; height: 12px; background: linear-gradient(to right, rgba(128,128,128,0.6), rgba(255,69,0,0.6)); border-radius: 2px;"></div>
-                  <span data-i18n="overlay.legendLow">低</span>
-                  <div style="width: 20px; height: 12px; background: rgba(255,215,0,0.6); border-radius: 2px;"></div>
-                  <span data-i18n="overlay.legendMedium">中</span>
-                  <div style="width: 20px; height: 12px; background: rgba(255,69,0,0.6); border-radius: 2px;"></div>
-                  <span data-i18n="overlay.legendHigh">高</span>
-                </div>
-              </div>
-
-              <p style="font-size: 11px; color: var(--color-text-light, #666); margin-top: 6px; margin-bottom: 0;" data-i18n="overlay.hint">
-                💡 提示：启用覆盖层后，地图上将显示火烧云预测的地理分布热力图
-              </p>
-            </div>
+          <!-- 气象图层说明 -->
+          <div style="margin-top: 10px; padding: 8px 12px; background: var(--card-bg, #f9f9f9); border-radius: 8px; border: 1px solid var(--border-color, #e0e0e0); font-size: 12px; color: var(--color-text-light, #666);">
+            💡 切换上方图层按钮可查看当前位置及周边各方向的风速、温度、云量、降水数据（加载周边分析后显示更多数据点）
           </div>
           <div id="map-error" class="error-message hidden"></div>
         </div>
