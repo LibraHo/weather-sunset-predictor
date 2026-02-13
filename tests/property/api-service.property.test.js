@@ -9,20 +9,39 @@ import WindyAPIService from '../../src/services/WindyAPIService.js';
 // Mock fetch globally
 global.fetch = jest.fn(() => Promise.resolve({
   ok: true,
-  json: () => Promise.resolve({})
+  json: () => Promise.resolve({ data: [] })
 }));
 
 describe('WindyAPIService - Property-Based Tests', () => {
   let service;
 
   beforeEach(() => {
-    service = new WindyAPIService('test-api-key');
+    service = new WindyAPIService('test-api-key', { proxyURL: 'http://localhost:3000' });
     global.fetch.mockClear();
   });
 
+  // Helper: create a mock proxy weather item
+  function mockProxyItem(overrides = {}) {
+    return {
+      timestamp: Date.now(),
+      temp: 20,
+      humidity: 65,
+      cloudCover: 50,
+      windSpeed: 10,
+      pressure: 1013,
+      visibility: 10,
+      lowClouds: 30,
+      precipitation: 0,
+      windDirection: 180,
+      highClouds: 20,
+      midClouds: 40,
+      ...overrides
+    };
+  }
+
   // Property 3: API Request Format Completeness - Validates: Requirements 3.2, 3.3
   describe('Property 3: API Request Format Completeness', () => {
-    test('request includes required fields', async () => {
+    test('request uses GET method and includes lat/lon/hours in URL', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.float({ min: -90, max: 90, noNaN: true }),
@@ -31,28 +50,14 @@ describe('WindyAPIService - Property-Based Tests', () => {
           async (lat, lon, hours) => {
             global.fetch.mockResolvedValueOnce({
               ok: true,
-              json: async () => ({
-                ts: [Date.now()],
-                'temp-surface': [283.15],
-                'rh-surface': [50],
-                'wind_u-surface': [5],
-                'wind_v-surface': [3],
-                'pressure-surface': [1013],
-                'lclouds-surface': [30],
-                'mclouds-surface': [20],
-                'hclouds-surface': [10]
-              })
+              json: async () => ({ data: [mockProxyItem()] })
             });
 
             await service.fetchWeatherData(lat, lon, hours);
 
             expect(global.fetch).toHaveBeenCalledWith(
-              service.baseURL,
-              expect.objectContaining({
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: expect.stringContaining('"lat"')
-              })
+              expect.stringContaining(`lat=${lat}`),
+              expect.objectContaining({ method: 'GET' })
             );
           }
         ),
@@ -69,17 +74,7 @@ describe('WindyAPIService - Property-Based Tests', () => {
           async (lat, lon, hours) => {
             global.fetch.mockResolvedValueOnce({
               ok: true,
-              json: async () => ({
-                ts: [Date.now()],
-                'temp-surface': [283.15],
-                'rh-surface': [50],
-                'wind_u-surface': [5],
-                'wind_v-surface': [3],
-                'pressure-surface': [1013],
-                'lclouds-surface': [30],
-                'mclouds-surface': [20],
-                'hclouds-surface': [10]
-              })
+              json: async () => ({ data: [mockProxyItem()] })
             });
 
             if (hours < 1 || hours > 168) {
@@ -112,15 +107,15 @@ describe('WindyAPIService - Property-Based Tests', () => {
 
   // Property 4: Weather Data Parsing Completeness - Validates: Requirements 3.4
   describe('Property 4: Weather Data Parsing Completeness', () => {
-    test('valid API response produces valid weather data array', async () => {
+    test('valid proxy response produces valid weather data array', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.array(
             fc.record({
-              temp: fc.double({ min: 273.15, max: 320, noNaN: true, noDefaultInfinity: true }),
+              temp: fc.double({ min: -50, max: 50, noNaN: true, noDefaultInfinity: true }),
               humidity: fc.float({ min: 0, max: 100, noNaN: true }),
-              windU: fc.float({ min: -50, max: 50, noNaN: true }),
-              windV: fc.float({ min: -50, max: 50, noNaN: true }),
+              cloudCover: fc.float({ min: 0, max: 100, noNaN: true }),
+              windSpeed: fc.float({ min: 0, max: 100, noNaN: true }),
               pressure: fc.float({ min: 900, max: 1100, noNaN: true }),
               lowClouds: fc.float({ min: 0, max: 100, noNaN: true }),
               midClouds: fc.float({ min: 0, max: 100, noNaN: true }),
@@ -129,20 +124,21 @@ describe('WindyAPIService - Property-Based Tests', () => {
             { minLength: 1, maxLength: 24 }
           ),
           async (weatherParams) => {
-            const timestamps = weatherParams.map((_, i) => Date.now() + i * 3600000);
+            const mockData = weatherParams.map((p, i) => mockProxyItem({
+              timestamp: Date.now() + i * 3600000,
+              temp: p.temp,
+              humidity: p.humidity,
+              cloudCover: p.cloudCover,
+              windSpeed: p.windSpeed,
+              pressure: p.pressure,
+              lowClouds: p.lowClouds,
+              midClouds: p.midClouds,
+              highClouds: p.highClouds
+            }));
+
             global.fetch.mockResolvedValueOnce({
               ok: true,
-              json: async () => ({
-                ts: timestamps,
-                'temp-surface': weatherParams.map(p => p.temp),
-                'rh-surface': weatherParams.map(p => p.humidity),
-                'wind_u-surface': weatherParams.map(p => p.windU),
-                'wind_v-surface': weatherParams.map(p => p.windV),
-                'pressure-surface': weatherParams.map(p => p.pressure),
-                'lclouds-surface': weatherParams.map(p => p.lowClouds),
-                'mclouds-surface': weatherParams.map(p => p.midClouds),
-                'hclouds-surface': weatherParams.map(p => p.highClouds)
-              })
+              json: async () => ({ data: mockData })
             });
 
             const result = await service.fetchWeatherData(39.9042, 116.4074, 24);
@@ -155,35 +151,25 @@ describe('WindyAPIService - Property-Based Tests', () => {
       );
     });
 
-    test('temperature is converted from Kelvin to Celsius', async () => {
+    test('temperature data is correctly passed through from proxy', async () => {
       await fc.assert(
         fc.asyncProperty(
-          fc.double({ min: 273.15, max: 320, noNaN: true, noDefaultInfinity: true }),
-          async (tempKelvin) => {
+          fc.double({ min: -50, max: 50, noNaN: true, noDefaultInfinity: true }),
+          async (tempCelsius) => {
             global.fetch.mockResolvedValueOnce({
               ok: true,
-              json: async () => ({
-                ts: [Date.now()],
-                'temp-surface': [tempKelvin],
-                'rh-surface': [50],
-                'wind_u-surface': [5],
-                'wind_v-surface': [3],
-                'pressure-surface': [1013],
-                'lclouds-surface': [30],
-                'mclouds-surface': [20],
-                'hclouds-surface': [10]
-              })
+              json: async () => ({ data: [mockProxyItem({ temp: tempCelsius })] })
             });
 
             const result = await service.fetchWeatherData(39.9042, 116.4074, 1);
-            expect(result[0].temp).toBeCloseTo(tempKelvin - 273.15, 1);
+            expect(result[0].temp).toBeCloseTo(tempCelsius, 5);
           }
         ),
         { numRuns: 30 }
       );
     });
 
-    test('cloud cover is calculated as average of low, mid, high clouds', async () => {
+    test('cloud cover data is correctly passed through from proxy', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.float({ min: 0, max: 100, noNaN: true }),
@@ -193,20 +179,14 @@ describe('WindyAPIService - Property-Based Tests', () => {
             global.fetch.mockResolvedValueOnce({
               ok: true,
               json: async () => ({
-                ts: [Date.now()],
-                'temp-surface': [283.15],
-                'rh-surface': [50],
-                'wind_u-surface': [5],
-                'wind_v-surface': [3],
-                'pressure-surface': [1013],
-                'lclouds-surface': [low],
-                'mclouds-surface': [mid],
-                'hclouds-surface': [high]
+                data: [mockProxyItem({ lowClouds: low, midClouds: mid, highClouds: high, cloudCover: (low + mid + high) / 3 })]
               })
             });
 
             const result = await service.fetchWeatherData(39.9042, 116.4074, 1);
-            expect(result[0].cloudCover).toBeCloseTo((low + mid + high) / 3, 1);
+            expect(result[0].lowClouds).toBeCloseTo(low, 5);
+            expect(result[0].midClouds).toBeCloseTo(mid, 5);
+            expect(result[0].highClouds).toBeCloseTo(high, 5);
           }
         ),
         { numRuns: 30 }
@@ -217,15 +197,15 @@ describe('WindyAPIService - Property-Based Tests', () => {
       global.fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          ts: [Date.now()],
-          'temp-surface': [283.15],
-          'rh-surface': [50],
-          'wind_u-surface': [5],
-          'wind_v-surface': [3],
-          'pressure-surface': [1013],
-          'lclouds-surface': [30],
-          'mclouds-surface': [20],
-          'hclouds-surface': [10]
+          data: [{
+            timestamp: Date.now(),
+            temp: 20,
+            humidity: 65,
+            cloudCover: 50,
+            windSpeed: 10,
+            pressure: 1013
+            // visibility, lowClouds, precipitation, windDirection, highClouds, midClouds omitted
+          }]
         })
       });
 

@@ -6,7 +6,7 @@
  * - HTTP 429 Too Many Requests（限流）
  * - HTTP 500 Server Error（服务器故障）
  * - 网络超时（>10秒）
- * - 代理模式和直连模式
+ * - 代理模式
  * - 数据解析错误
  *
  * 需求：API服务错误处理健壮性
@@ -39,16 +39,16 @@ describe('WindyAPIService - HTTP错误处理测试', () => {
   });
 
   describe('HTTP 401错误测试', () => {
-    test('直连模式：应该处理401 Unauthorized（API Key无效）', async () => {
+    test('应该处理401 Unauthorized（API Key无效）', async () => {
       fetch.mockResolvedValueOnce({
         ok: false,
         status: 401,
-        json: async () => ({ message: 'Invalid API key' })
+        json: async () => ({ error: { message: 'API密钥错误' } })
       });
 
       await expect(service.fetchWeatherData(39.9042, 116.4074, 24))
         .rejects
-        .toThrow('API密钥无效，请检查您的密钥');
+        .toThrow('Windy API 密钥错误');
     });
 
     test('代理模式：应该处理401 Unauthorized', async () => {
@@ -66,16 +66,16 @@ describe('WindyAPIService - HTTP错误处理测试', () => {
   });
 
   describe('HTTP 403错误测试', () => {
-    test('直连模式：应该处理403 Forbidden', async () => {
+    test('应该处理403 Forbidden', async () => {
       fetch.mockResolvedValueOnce({
         ok: false,
         status: 403,
-        json: async () => ({ message: 'Access denied' })
+        json: async () => ({ error: { message: '权限不足' } })
       });
 
       await expect(service.fetchWeatherData(39.9042, 116.4074, 24))
         .rejects
-        .toThrow('API访问被拒绝，请检查您的权限');
+        .toThrow('Windy API 密钥错误');
     });
 
     test('代理模式：应该处理403 Forbidden', async () => {
@@ -93,7 +93,7 @@ describe('WindyAPIService - HTTP错误处理测试', () => {
   });
 
   describe('HTTP 429错误测试（限流）', () => {
-    test('直连模式：应该处理429 Too Many Requests', async () => {
+    test('应该处理429 Too Many Requests', async () => {
       fetch.mockResolvedValueOnce({
         ok: false,
         status: 429,
@@ -102,7 +102,7 @@ describe('WindyAPIService - HTTP错误处理测试', () => {
 
       await expect(service.fetchWeatherData(39.9042, 116.4074, 24))
         .rejects
-        .toThrow('API请求次数超限，请稍后再试');
+        .toThrow('请求过于频繁，请稍后再试');
     });
 
     test('代理模式：应该处理429 Too Many Requests', async () => {
@@ -120,40 +120,40 @@ describe('WindyAPIService - HTTP错误处理测试', () => {
   });
 
   describe('HTTP 500错误测试', () => {
-    test('直连模式：应该处理500 Internal Server Error', async () => {
+    test('应该处理500 Internal Server Error', async () => {
       fetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
-        json: async () => ({ message: 'Internal server error' })
+        json: async () => ({ error: { message: 'Internal server error' } })
       });
 
       await expect(service.fetchWeatherData(39.9042, 116.4074, 24))
         .rejects
-        .toThrow('Windy服务暂时不可用，请稍后再试');
+        .toThrow('后端服务器暂时不可用，请稍后再试');
     });
 
-    test('直连模式：应该处理502 Bad Gateway', async () => {
+    test('应该处理502 Bad Gateway', async () => {
       fetch.mockResolvedValueOnce({
         ok: false,
         status: 502,
-        json: async () => ({ message: 'Bad gateway' })
+        json: async () => ({ error: { message: 'Bad gateway' } })
       });
 
       await expect(service.fetchWeatherData(39.9042, 116.4074, 24))
         .rejects
-        .toThrow('Windy服务暂时不可用，请稍后再试');
+        .toThrow('后端服务器暂时不可用，请稍后再试');
     });
 
-    test('直连模式：应该处理503 Service Unavailable', async () => {
+    test('应该处理503 Service Unavailable', async () => {
       fetch.mockResolvedValueOnce({
         ok: false,
         status: 503,
-        json: async () => ({ message: 'Service unavailable' })
+        json: async () => ({ error: { message: 'Service unavailable' } })
       });
 
       await expect(service.fetchWeatherData(39.9042, 116.4074, 24))
         .rejects
-        .toThrow('Windy服务暂时不可用，请稍后再试');
+        .toThrow('后端服务器暂时不可用，请稍后再试');
     });
 
     test('代理模式：应该处理500 Internal Server Error', async () => {
@@ -191,7 +191,7 @@ describe('WindyAPIService - HTTP错误处理测试', () => {
 
       await expect(service.fetchWeatherData(39.9042, 116.4074, 24))
         .rejects
-        .toThrow('网络连接失败，请检查网络设置');
+        .toThrow('无法连接到后端服务器，请检查服务器是否运行');
     });
 
     test('应该处理超时错误', async () => {
@@ -200,7 +200,7 @@ describe('WindyAPIService - HTTP错误处理测试', () => {
 
       await expect(service.fetchWeatherData(39.9042, 116.4074, 24))
         .rejects
-        .toThrow('网络连接失败，请检查网络设置');
+        .toThrow('无法连接到后端服务器，请检查服务器是否运行');
     });
 
     test('代理模式：应该处理后端连接失败', async () => {
@@ -226,25 +226,25 @@ describe('WindyAPIService - 数据解析错误测试', () => {
     fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
-        // 缺少 ts 字段
-        'temp-surface': [280, 281]
+        // data 字段为非数组
+        data: 'invalid'
       })
     });
 
     await expect(service.fetchWeatherData(39.9042, 116.4074, 24))
       .rejects
-      .toThrow('API返回数据格式错误');
+      .toThrow('后端返回数据格式错误');
   });
 
   test('应该处理空数据响应', async () => {
     fetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => null
+      json: async () => ({ data: null })
     });
 
     await expect(service.fetchWeatherData(39.9042, 116.4074, 24))
       .rejects
-      .toThrow();
+      .toThrow('后端返回数据格式错误');
   });
 
   test('应该处理无效的JSON响应', async () => {
@@ -311,7 +311,7 @@ describe('WindyAPIService - 边缘参数测试', () => {
     test('应该接受边界坐标（90, 180）', async () => {
       fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockAPIResponse()
+        json: async () => ({ data: mockWeatherDataArray(24) })
       });
 
       await expect(service.fetchWeatherData(90, 180, 24))
@@ -322,7 +322,7 @@ describe('WindyAPIService - 边缘参数测试', () => {
     test('应该接受边界坐标（-90, -180）', async () => {
       fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockAPIResponse()
+        json: async () => ({ data: mockWeatherDataArray(24) })
       });
 
       await expect(service.fetchWeatherData(-90, -180, 24))
@@ -347,7 +347,7 @@ describe('WindyAPIService - 边缘参数测试', () => {
     test('应该接受最小小时数（1）', async () => {
       fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockAPIResponse(1)
+        json: async () => ({ data: mockWeatherDataArray(1) })
       });
 
       await expect(service.fetchWeatherData(39.9042, 116.4074, 1))
@@ -358,7 +358,7 @@ describe('WindyAPIService - 边缘参数测试', () => {
     test('应该接受最大小时数（168）', async () => {
       fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockAPIResponse(168)
+        json: async () => ({ data: mockWeatherDataArray(168) })
       });
 
       await expect(service.fetchWeatherData(39.9042, 116.4074, 168))
@@ -369,19 +369,12 @@ describe('WindyAPIService - 边缘参数测试', () => {
 });
 
 describe('WindyAPIService - API Key验证测试', () => {
-  test('直连模式：没有API密钥时应该抛出错误', async () => {
-    const noKeyService = new WindyAPIService(null);
-
-    await expect(noKeyService.fetchWeatherData(39.9042, 116.4074, 24))
-      .rejects
-      .toThrow('API密钥未设置');
-  });
 
   test('validateAPIKey应该返回true对于有效密钥', async () => {
     const service = new WindyAPIService('valid-key');
     fetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => mockAPIResponse()
+      json: async () => ({ data: mockWeatherDataArray(24) })
     });
 
     const isValid = await service.validateAPIKey();
@@ -393,7 +386,7 @@ describe('WindyAPIService - API Key验证测试', () => {
     fetch.mockResolvedValueOnce({
       ok: false,
       status: 401,
-      json: async () => ({ message: 'Invalid API key' })
+      json: async () => ({ error: { message: 'Invalid API key' } })
     });
 
     const isValid = await service.validateAPIKey();
@@ -406,7 +399,7 @@ describe('WindyAPIService - API Key验证测试', () => {
 
     await expect(service.validateAPIKey())
       .rejects
-      .toThrow('网络连接失败');
+      .toThrow('无法连接到后端服务器');
   });
 });
 
@@ -458,13 +451,11 @@ describe('WindyAPIService - 数据解析测试', () => {
     fetch.mockClear();
   });
 
-  test('应该正确转换开尔文温度为摄氏度', async () => {
-    const response = mockAPIResponse(1);
-    response['temp-surface'] = [280.15]; // 7°C
-
+  test('应该正确解析后端返回的温度数据', async () => {
+    const mockData = [{ ...mockWeatherDataArray(1)[0], temp: 7.0 }];
     fetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => response
+      json: async () => ({ data: mockData })
     });
 
     const result = await service.fetchWeatherData(39.9042, 116.4074, 1);
@@ -472,77 +463,53 @@ describe('WindyAPIService - 数据解析测试', () => {
     expect(result[0].temp).toBeCloseTo(7.0, 1);
   });
 
-  test('应该正确转换秒时间戳为毫秒', async () => {
-    const response = mockAPIResponse(1);
-    response.ts = [1640000000]; // 秒时间戳
-
+  test('应该正确解析后端返回的时间戳', async () => {
+    const ts = Date.now() + 3600000;
+    const mockData = [{ ...mockWeatherDataArray(1)[0], timestamp: ts }];
     fetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => response
+      json: async () => ({ data: mockData })
     });
 
     const result = await service.fetchWeatherData(39.9042, 116.4074, 1);
 
-    expect(result[0].timestamp).toBe(1640000000000); // 毫秒
+    expect(result[0].timestamp).toBe(ts);
   });
 
-  test('应该正确转换kPa气压为hPa', async () => {
-    const response = mockAPIResponse(1);
-    response['pressure-surface'] = [101]; // 101 kPa
-
+  test('应该正确解析后端返回的气压数据', async () => {
+    const mockData = [{ ...mockWeatherDataArray(1)[0], pressure: 1013 }];
     fetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => response
+      json: async () => ({ data: mockData })
     });
 
     const result = await service.fetchWeatherData(39.9042, 116.4074, 1);
 
-    expect(result[0].pressure).toBe(1010); // 1010 hPa
+    expect(result[0].pressure).toBe(1013);
   });
 
-  test('应该正确转换Pa气压为hPa', async () => {
-    const response = mockAPIResponse(1);
-    response['pressure-surface'] = [101300]; // 101300 Pa
-
+  test('应该正确解析后端返回的云量数据', async () => {
+    const mockData = [{ ...mockWeatherDataArray(1)[0], cloudCover: 50, lowClouds: 30, midClouds: 50, highClouds: 70 }];
     fetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => response
+      json: async () => ({ data: mockData })
     });
 
     const result = await service.fetchWeatherData(39.9042, 116.4074, 1);
 
-    expect(result[0].pressure).toBe(1013); // 1013 hPa
+    expect(result[0].cloudCover).toBe(50);
+    expect(result[0].lowClouds).toBe(30);
   });
 
-  test('应该计算总云量为分层云量的平均值', async () => {
-    const response = mockAPIResponse(1);
-    response['lclouds-surface'] = [30];
-    response['mclouds-surface'] = [50];
-    response['hclouds-surface'] = [70];
-
+  test('应该正确解析后端返回的风速数据', async () => {
+    const mockData = [{ ...mockWeatherDataArray(1)[0], windSpeed: 18 }];
     fetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => response
+      json: async () => ({ data: mockData })
     });
 
     const result = await service.fetchWeatherData(39.9042, 116.4074, 1);
 
-    expect(result[0].cloudCover).toBeCloseTo(50, 1); // (30+50+70)/3 = 50
-  });
-
-  test('应该从u和v分量计算风速', async () => {
-    const response = mockAPIResponse(1);
-    response['wind_u-surface'] = [3];
-    response['wind_v-surface'] = [4];
-
-    fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => response
-    });
-
-    const result = await service.fetchWeatherData(39.9042, 116.4074, 1);
-
-    // sqrt(3^2 + 4^2) * 3.6 = 5 * 3.6 = 18 km/h
     expect(result[0].windSpeed).toBeCloseTo(18, 0);
   });
 });

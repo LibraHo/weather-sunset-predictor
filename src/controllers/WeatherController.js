@@ -22,10 +22,9 @@ import ChartRenderController from './ChartRenderController.js';
 // 暂时禁用 ChartService 导入，使用内联简化版本
 
 class WeatherController {
-  constructor(storageService, apiKey, useMockAPI = true, useProxy = false) {
+  constructor(storageService, apiKey, useMockAPI = true, _useProxy = false) {
     this.storageService = storageService;
     this.useMockAPI = useMockAPI;
-    this.useProxy = useProxy; // 任务：后端代理模式
     this.i18n = i18n; // 需求14：添加i18n实例
 
     // 读取单位设置
@@ -35,27 +34,13 @@ class WeatherController {
     if (useMockAPI) {
       this.windyAPIService = new MockWindyAPIService(apiKey || 'mock-api-key');
     } else {
-      // 任务：支持后端代理模式
-      // 后端代理模式下不需要真实的API key，使用占位符
-      // 直连模式下必须有API key
-      if (useProxy) {
-        this.windyAPIService = new WindyAPIService('proxy-mode-placeholder', { useProxy });
-      } else if (apiKey) {
-        this.windyAPIService = new WindyAPIService(apiKey, { useProxy: false });
-      } else {
-        this.windyAPIService = null;
-      }
+      // 固定使用后端代理模式
+      this.windyAPIService = new WindyAPIService(null);
     }
 
     // 任务18：初始化Windy地图服务
-    // 后端代理模式和直连模式都使用真实Windy地图服务（从后端获取API Key）
-    // Mock模式不初始化地图
     if (!useMockAPI) {
-      // 直连模式或后端代理模式：使用真实Windy地图服务
-      // API Key将在initializeAndShowMap中从后端获取
-      this.windyMapService = new WindyMapService(''); // 临时使用空key，稍后从后端获取
-    } else if (useProxy) {
-      // 后端代理模式：即使使用mock API，也尝试初始化真实地图（从后端获取key）
+      // 后端代理模式：使用真实Windy地图服务，API Key将在initializeAndShowMap中从后端获取
       this.windyMapService = new WindyMapService(''); // 临时使用空key，稍后从后端获取
     } else {
       // 纯Mock模式：不初始化地图
@@ -113,7 +98,8 @@ class WeatherController {
     if (this.useMockAPI) {
       this.windyAPIService = new MockWindyAPIService(apiKey);
     } else {
-      this.windyAPIService = new WindyAPIService(apiKey);
+      // 后端代理模式固定，apiKey 由后端管理
+      this.windyAPIService = new WindyAPIService(null);
     }
   }
 
@@ -551,8 +537,8 @@ class WeatherController {
       // 从后端获取地图专用的API Key
       let mapApiKey = this.windyMapService.apiKey; // 默认使用前端配置的key
 
-      // 如果使用后端代理模式，尝试从后端获取地图API Key
-      if (this.windyAPIService && this.windyAPIService.useProxy) {
+      // 从后端获取地图API Key
+      if (this.windyAPIService && this.windyAPIService.proxyURL) {
         try {
           console.log('[WeatherController] 从后端获取地图API Key...');
           const proxyURL = this.windyAPIService.proxyURL || 'http://localhost:3000';

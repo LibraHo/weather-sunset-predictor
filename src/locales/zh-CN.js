@@ -406,15 +406,10 @@ export default {
     done: '完成',
     // 数据源与网络
     dataSource: '数据源与网络',
-    apiMode: 'API 访问模式',
-    apiModeProxy: '后端代理',
-    apiModeDirect: '直连模式',
-    apiModeProxyRecommended: '后端代理（推荐）',
     currentMode: '当前模式',
     proxyUrl: '后端服务器地址',
     proxyUrlPlaceholder: 'http://localhost:3000',
     proxyUrlHint: '后端代理服务器的 URL 地址',
-    apiModeHint: '• 后端代理：通过服务器访问 Windy API，密钥安全存储在后端<br>• 直连模式：前端直接访问，需要您配置 API 密钥',
     // 通知与提醒
     notificationAndAlerts: '通知与提醒',
     enableSunsetNotification: '启用晚霞预测通知',

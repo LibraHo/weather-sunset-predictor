@@ -274,15 +274,10 @@ export default {
     done: 'تم',
     // مصدر البيانات والشبكة
     dataSource: 'مصدر البيانات والشبكة',
-    apiMode: 'وضع الوصول إلى API',
-    apiModeProxy: 'الوكيل الخلفي',
-    apiModeDirect: 'الوضع المباشر',
-    apiModeProxyRecommended: 'الوكيل الخلفي (موصى به)',
     currentMode: 'الوضع الحالي',
     proxyUrl: 'رابط خادم الوكيل',
     proxyUrlPlaceholder: 'http://localhost:3000',
     proxyUrlHint: 'عنوان رابط خادم الوكيل الخلفي',
-    apiModeHint: '• الوكيل الخلفي: الوصول إلى Windy API عبر الخادم، يتم تخزين مفتاح API بأمان على الخادم الخلفي<br>• الوضع المباشر: الوصول المباشر من الواجهة الأمامية، يتطلب تكوين مفتاح API',
     // الإشعارات والتنبيهات
     notificationAndAlerts: 'الإشعارات والتنبيهات',
     enableSunsetNotification: 'تفعيل إشعارات الغروب',
