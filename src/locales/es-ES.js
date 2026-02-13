@@ -361,15 +361,10 @@ export default {
     done: 'Hecho',
     // Fuente de Datos y Red
     dataSource: 'Fuente de Datos y Red',
-    apiMode: 'Modo de Acceso API',
-    apiModeProxy: 'Proxy Backend',
-    apiModeDirect: 'Modo Directo',
-    apiModeProxyRecommended: 'Proxy Backend (Recomendado)',
     currentMode: 'Modo Actual',
     proxyUrl: 'URL del Servidor Proxy',
     proxyUrlPlaceholder: 'http://localhost:3000',
     proxyUrlHint: 'Dirección URL del servidor proxy backend',
-    apiModeHint: '• Proxy Backend: Acceder a la API Windy a través del servidor, clave API almacenada de forma segura en el backend<br>• Modo Directo: Acceso frontend directo, requiere que configure la clave API',
     // Notificaciones y Alertas
     notificationAndAlerts: 'Notificaciones y Alertas',
     enableSunsetNotification: 'Activar notificaciones de atardecer',

@@ -50,9 +50,6 @@ class SettingsPanel {
             <div class="settings-section-content">
               <div class="setting-item" id="proxy-url-setting">
                 <label class="setting-label">${this.i18n.t('settings.proxyUrl')}</label>
-                <div class="setting-description">
-                  <small class="setting-hint">${this.i18n.t('settings.apiModeProxyRecommended')}</small>
-                </div>
                 <div class="setting-control">
                   <input
                     type="text"

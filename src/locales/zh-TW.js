@@ -327,15 +327,10 @@ export default {
     done: '完成',
     // 資料來源與網路
     dataSource: '資料來源與網路',
-    apiMode: 'API 存取模式',
-    apiModeProxy: '後端代理',
-    apiModeDirect: '直連模式',
-    apiModeProxyRecommended: '後端代理（推薦）',
     currentMode: '目前模式',
     proxyUrl: '後端伺服器位址',
     proxyUrlPlaceholder: 'http://localhost:3000',
     proxyUrlHint: '後端代理伺服器的 URL 位址',
-    apiModeHint: '• 後端代理：透過伺服器存取 Windy API，金鑰安全儲存在後端<br>• 直連模式：前端直接存取，需要您配置 API 金鑰',
     // 通知與提醒
     notificationAndAlerts: '通知與提醒',
     enableSunsetNotification: '啟用晚霞預測通知',

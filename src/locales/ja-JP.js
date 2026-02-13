@@ -316,15 +316,10 @@ export default {
     done: '完了',
     // データソースとネットワーク
     dataSource: 'データソースとネットワーク',
-    apiMode: 'API アクセスモード',
-    apiModeProxy: 'バックエンドプロキシ',
-    apiModeDirect: '直接モード',
-    apiModeProxyRecommended: 'バックエンドプロキシ（推奨）',
     currentMode: '現在のモード',
     proxyUrl: 'バックエンドサーバーのURL',
     proxyUrlPlaceholder: 'http://localhost:3000',
     proxyUrlHint: 'バックエンドプロキシサーバーのURLアドレス',
-    apiModeHint: '• バックエンドプロキシ：サーバー経由でWindy APIにアクセス、APIキーはバックエンドで安全に保存<br>• 直接モード：フロントエンドから直接アクセス、APIキーの設定が必要',
     // 通知とアラート
     notificationAndAlerts: '通知とアラート',
     enableSunsetNotification: '夕焼け予測通知を有効にする',

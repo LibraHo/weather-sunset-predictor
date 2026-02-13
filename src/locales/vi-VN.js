@@ -236,15 +236,10 @@ export default {
     done: 'Hoàn Thành',
     // Data Source & Network
     dataSource: 'Nguồn Dữ Liệu & Mạng',
-    apiMode: 'Chế Độ Truy Cập API',
-    apiModeProxy: 'Proxy Máy Chủ',
-    apiModeDirect: 'Chế Độ Trực Tiếp',
-    apiModeProxyRecommended: 'Proxy Máy Chủ (Khuyên Dùng)',
     currentMode: 'Chế Độ Hiện Tại',
     proxyUrl: 'URL Máy Chủ Proxy',
     proxyUrlPlaceholder: 'http://localhost:3000',
     proxyUrlHint: 'Địa chỉ URL của máy chủ proxy backend',
-    apiModeHint: '• Proxy Backend: Truy cập Windy API qua máy chủ, khóa API được lưu trữ an toàn trên backend<br>• Chế Độ Trực Tiếp: Truy cập trực tiếp từ frontend, yêu cầu bạn cấu hình khóa API',
     // Notifications & Alerts
     notificationAndAlerts: 'Thông Báo & Cảnh Báo',
     enableSunsetNotification: 'Bật thông báo hoàng hôn',
