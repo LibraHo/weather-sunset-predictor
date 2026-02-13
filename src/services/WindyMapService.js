@@ -147,7 +147,91 @@ class WindyMapService {
    */
   changeOverlay(overlay) {
     this.currentOptions.overlay = overlay;
-    console.log(`[WindyMapService] 图层切换为: ${overlay}（OSM 基础地图不支持气象图层，需升级 Windy API）`);
+    console.log(`[WindyMapService] 图层切换为: ${overlay}`);
+  }
+
+  /**
+   * 在地图上显示气象数据点（使用现有天气数据可视化图层）
+   * @param {Array} dataPoints - 数据点数组，每个点包含 {lat, lon, value, label}
+   * @param {string} layerType - 图层类型 ('wind'|'temp'|'clouds'|'rain')
+   * @param {Object} colorConfig - 颜色配置 {min, max, lowColor, highColor}
+   */
+  showWeatherDataLayer(dataPoints, layerType, colorConfig = {}) {
+    if (!this.isInitialized || !this.map) return;
+
+    // 清除旧的气象数据图层
+    this.clearWeatherDataLayer();
+
+    if (!dataPoints || dataPoints.length === 0) return;
+
+    const { min = 0, max = 100 } = colorConfig;
+
+    // 各图层的颜色配置
+    const layerColors = {
+      wind: { low: '#4fc3f7', high: '#e53935' },   // 蓝→红
+      temp: { low: '#42a5f5', high: '#ef5350' },   // 蓝→红
+      clouds: { low: '#b0bec5', high: '#37474f' }, // 浅灰→深灰
+      rain: { low: '#e3f2fd', high: '#1565c0' }    // 浅蓝→深蓝
+    };
+
+    const colors = layerColors[layerType] || layerColors.clouds;
+
+    this._weatherCircles = dataPoints.map(point => {
+      const ratio = Math.min(1, Math.max(0, (point.value - min) / (max - min)));
+      const color = this._interpolateColor(colors.low, colors.high, ratio);
+
+      const circle = L.circleMarker([point.lat, point.lon], {
+        radius: 28,
+        fillColor: color,
+        fillOpacity: 0.65,
+        color: '#fff',
+        weight: 1.5,
+        opacity: 0.9,
+        interactive: true
+      }).addTo(this.map);
+
+      circle.bindTooltip(point.label, {
+        permanent: false,
+        direction: 'top',
+        className: 'weather-layer-tooltip'
+      });
+
+      return circle;
+    });
+
+    console.log(`[WindyMapService] 气象数据图层已显示 (${layerType}), ${dataPoints.length} 个数据点`);
+  }
+
+  /**
+   * 清除气象数据图层
+   */
+  clearWeatherDataLayer() {
+    if (this._weatherCircles && this._weatherCircles.length > 0) {
+      this._weatherCircles.forEach(c => c.remove());
+      this._weatherCircles = [];
+    }
+  }
+
+  /**
+   * 线性插值两个十六进制颜色
+   * @param {string} colorA - 起始颜色 '#rrggbb'
+   * @param {string} colorB - 终止颜色 '#rrggbb'
+   * @param {number} t - 插值比例 [0,1]
+   * @returns {string} 插值后的颜色
+   * @private
+   */
+  _interpolateColor(colorA, colorB, t) {
+    const parse = hex => [
+      parseInt(hex.slice(1, 3), 16),
+      parseInt(hex.slice(3, 5), 16),
+      parseInt(hex.slice(5, 7), 16)
+    ];
+    const [r1, g1, b1] = parse(colorA);
+    const [r2, g2, b2] = parse(colorB);
+    const r = Math.round(r1 + (r2 - r1) * t);
+    const g = Math.round(g1 + (g2 - g1) * t);
+    const b = Math.round(b1 + (b2 - b1) * t);
+    return `rgb(${r},${g},${b})`;
   }
 
   /**
