@@ -12,9 +12,15 @@ const { requestLogger, errorLogger } = require('./middleware/logger');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// 支持逗号分隔的多个 CORS 来源（如 "http://localhost:9002,http://localhost:8080"）
+const corsOrigins = (process.env.CORS_ORIGIN || 'http://localhost:9002')
+  .split(',')
+  .map(o => o.trim())
+  .filter(Boolean);
+
 // Middleware
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:9002'
+  origin: corsOrigins.length === 1 ? corsOrigins[0] : corsOrigins
 }));
 app.use(express.json());
 app.use(morgan('combined')); // HTTP request logging
@@ -44,7 +50,7 @@ app.use('/api/firecloud', firecloudRoutes);
 app.use('/api/prediction', predictionRoutes);
 
 // Error logging middleware
-app.use(errorLogger);
+app.use(errorLogger());
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -70,7 +76,7 @@ app.use((req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 后端服务器运行在 http://localhost:${PORT}`);
   console.log(`📝 环境: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🌐 CORS 允许源: ${process.env.CORS_ORIGIN || 'http://localhost:9002'}`);
+  console.log(`🌐 CORS 允许源: ${corsOrigins.join(', ')}`);
 });
 
 module.exports = app;
