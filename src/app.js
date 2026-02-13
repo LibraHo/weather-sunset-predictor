@@ -13,8 +13,25 @@ import PredictionController from './controllers/PredictionController.js';
 import AppController from './controllers/AppController.js';
 import GlobalErrorBoundary from './utils/GlobalErrorBoundary.js';
 import ErrorHandler from './utils/ErrorHandler.js';
+import { API_CONFIG } from '../config.api.js';
 
 console.log('Weather Sunset Predictor - Application Starting...');
+
+// 从脚本URL读取后端端口配置（支持 index.html 中的 port 参数）
+// 例如：<script src="src/app.js?port=3001"> 会将后端代理URL配置为 http://localhost:3001
+try {
+  const scriptUrl = new URL(import.meta.url);
+  const backendPort = scriptUrl.searchParams.get('port');
+  if (backendPort && /^\d+$/.test(backendPort)) {
+    const newProxyUrl = `http://localhost:${backendPort}`;
+    API_CONFIG.proxy.url = newProxyUrl;
+    // 同步到 localStorage，确保 loadConfig() 返回正确的值
+    localStorage.setItem('api_proxy_url', newProxyUrl);
+    console.log(`[App] 后端代理地址已从URL参数更新为: ${newProxyUrl}`);
+  }
+} catch (e) {
+  console.warn('[App] 无法从脚本URL读取端口配置:', e.message);
+}
 
 // 初始化全局错误边界
 const globalErrorBoundary = new GlobalErrorBoundary({
