@@ -4,21 +4,13 @@
  */
 
 const API_CONFIG = {
-  // API 访问模式: 'proxy' | 'direct'
-  // - proxy: 通过后端服务器代理（推荐，更安全）
-  // - direct: 前端直接调用（需要 API 密钥）
+  // API 访问模式已固定为后端代理（直连模式已移除）
   mode: 'proxy',
 
   // 后端服务器配置（当 mode='proxy' 时使用）
   proxy: {
     url: 'http://localhost:3000',
     description: '后端代理服务器地址'
-  },
-
-  // Windy API 配置（当 mode='direct' 时使用）
-  direct: {
-    apiKey: '', // 用户需要在设置中配置
-    description: 'Windy API 密钥（仅在直连模式下需要）'
   },
 
   // ========== 前后端分离功能开关（需求22）==========
@@ -38,11 +30,6 @@ const API_CONFIG = {
 
 // 从 localStorage 读取用户配置（如果有）
 function loadConfig() {
-  const savedMode = localStorage.getItem('api_mode');
-  if (savedMode) {
-    API_CONFIG.mode = savedMode;
-  }
-
   const savedProxyUrl = localStorage.getItem('api_proxy_url');
   if (savedProxyUrl) {
     API_CONFIG.proxy.url = savedProxyUrl;
@@ -64,10 +51,8 @@ function loadConfig() {
 
 // 保存配置到 localStorage
 function saveConfig(config) {
-  if (config.mode) {
-    localStorage.setItem('api_mode', config.mode);
-    API_CONFIG.mode = config.mode;
-  }
+  // 模式固定为 proxy，不再持久化 api_mode
+  API_CONFIG.mode = 'proxy';
 
   if (config.proxyUrl) {
     localStorage.setItem('api_proxy_url', config.proxyUrl);

@@ -512,3 +512,21 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 - 使用 `MockGeocodingService` 和 `MockWindyAPIService` 避免真实 API 调用
 - `storageState` 配置 + `setTestEnvironment` 确保测试环境隔离
 - 测试辅助函数（`setTestEnvironment`, `searchLocation`）简化测试编写
+
+
+### 任务 37：前端 API 配置入口收敛（后端统一配置）
+
+- [x] 37.1 取消前端 API 直连模式
+  - 删除设置面板中的 API 模式下拉（proxy/direct）
+  - 前端运行时固定为后端代理模式
+  - _关联需求：15, 22_
+
+- [x] 37.2 保留并明确后端 API 配置入口
+  - 设置菜单仅保留代理地址（Proxy URL）配置
+  - 配置项用于多环境后端地址切换（开发/测试/生产）
+  - _关联需求：15_
+
+- [x] 37.3 移除 API 模式选择相关测试与门禁逻辑
+  - 更新 SettingsPanel / AppController 单元测试断言
+  - 初始化流程不再因前端 API Key 缺失而阻断
+  - _关联需求：1, 15, 22_

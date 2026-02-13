@@ -75,29 +75,8 @@ class AppController {
       this.initializeTheme();
       this.setupThemeListener();
 
-      // 检查API模式（后端代理 vs 直连）
-      const apiMode = localStorage.getItem('api_mode') || 'proxy';
-      const useProxy = apiMode === 'proxy';
-      console.log('[AppController] API模式:', useProxy ? '后端代理' : '直连');
-
-      // 仅在直连模式下检查API密钥
-      if (!useProxy) {
-        const apiKey = this.storageService.getAPIKey();
-        console.log('[AppController] API密钥检查:', apiKey ? `已配置 (${apiKey.substring(0, 8)}...)` : '未配置');
-
-        if (!apiKey) {
-          // 需求 1.1：首次访问时显示API密钥配置界面
-          console.log('[AppController] 显示API密钥配置界面');
-          // 需求14：先初始化UI以设置语言选择器，然后显示API密钥模态框
-          this.initializeUI();
-          this.showAPIKeyModal();
-          this.isInitialized = false;
-          return;
-        }
-        console.log('[AppController] API密钥已配置，初始化UI');
-      } else {
-        console.log('[AppController] 后端代理模式：跳过API密钥检查，使用后端服务器的密钥');
-      }
+      // API 模式固定为后端代理：前端不再执行 API 密钥门禁
+      console.log('[AppController] API模式: 后端代理（固定），跳过前端 API 密钥检查');
       this.initializeUI();
 
       // 需求12：加载收藏位置列表
