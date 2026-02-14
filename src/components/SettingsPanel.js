@@ -48,9 +48,12 @@ class SettingsPanel {
           <div class="settings-section" data-section="dataSource">
             <h3 class="settings-section-title">📡 ${this.i18n.t('settings.dataSource')}</h3>
             <div class="settings-section-content">
-              <div class="setting-item" id="proxy-url-setting">
-                <label class="setting-label">${this.i18n.t('settings.proxyUrl')}</label>
-                <div class="setting-control">
+              <div class="setting-item setting-item-stack" id="proxy-url-setting">
+                <div class="setting-text-block">
+                  <label class="setting-label setting-label-title" for="proxy-url-input">${this.i18n.t('settings.proxyUrl')}</label>
+                  <small class="setting-subtitle">${this.i18n.t('settings.proxyUrlHint')}</small>
+                </div>
+                <div class="setting-control setting-control-full">
                   <input
                     type="text"
                     id="proxy-url-input"
@@ -59,21 +62,27 @@ class SettingsPanel {
                     value="http://localhost:3000"
                   />
                 </div>
-                <small class="setting-hint">${this.i18n.t('settings.proxyUrlHint')}</small>
               </div>
             </div>
           </div>
+
+          <hr class="settings-section-divider" />
 
           <!-- 通知与提醒 -->
           <div class="settings-section" data-section="notification">
             <h3 class="settings-section-title">🔔 ${this.i18n.t('settings.notificationAndAlerts')}</h3>
             <div class="settings-section-content">
-              <div class="setting-item">
-                <label class="setting-label">
-                  <input type="checkbox" id="notification-enabled" class="setting-checkbox" />
-                  <span>${this.i18n.t('settings.enableSunsetNotification')}</span>
-                </label>
-                <small class="setting-hint">${this.i18n.t('settings.notificationHint')}</small>
+              <div class="setting-item setting-item-toggle">
+                <div class="setting-row setting-row-between">
+                  <div class="setting-text-block">
+                    <label class="setting-label setting-label-title" for="notification-enabled">${this.i18n.t('settings.enableSunsetNotification')}</label>
+                    <small class="setting-subtitle">${this.i18n.t('settings.notificationHint')}</small>
+                  </div>
+                  <label class="setting-switch" for="notification-enabled">
+                    <input type="checkbox" id="notification-enabled" class="setting-checkbox" />
+                    <span class="setting-switch-slider" aria-hidden="true"></span>
+                  </label>
+                </div>
               </div>
 
               <div class="setting-item">
@@ -95,6 +104,8 @@ class SettingsPanel {
             </div>
           </div>
 
+          <hr class="settings-section-divider" />
+
           <!-- 语言与显示 -->
           <div class="settings-section" data-section="language">
             <h3 class="settings-section-title">🌐 ${this.i18n.t('settings.languageAndDisplay')}</h3>
@@ -109,6 +120,8 @@ class SettingsPanel {
               </div>
             </div>
           </div>
+
+          <hr class="settings-section-divider" />
 
           <!-- 个性化 -->
           <div class="settings-section" data-section="personalization">
@@ -145,12 +158,12 @@ class SettingsPanel {
                 </div>
               </div>
 
-              <div class="setting-item">
-                <label class="setting-label">${this.i18n.t('settings.defaultLocation')}</label>
-                <div class="setting-description">
-                  <span id="default-location-display">${this.i18n.t('settings.noDefaultLocation')}</span>
+              <div class="setting-item setting-item-default-location">
+                <div class="setting-row setting-row-between">
+                  <label class="setting-label setting-label-title" for="default-location-display">${this.i18n.t('settings.defaultLocation')}</label>
+                  <span id="default-location-display" class="setting-default-location-value setting-default-location-empty">${this.i18n.t('settings.noDefaultLocation')}</span>
                 </div>
-                <div id="default-location-list"></div>
+                <div id="default-location-list" class="default-location-list"></div>
                 <small class="setting-hint">${this.i18n.t('settings.defaultLocationHint')}</small>
               </div>
             </div>
@@ -316,8 +329,10 @@ class SettingsPanel {
     if (defaultLocationDisplay) {
       if (defaultLocation) {
         defaultLocationDisplay.textContent = `⭐ ${defaultLocation.name}`;
+        defaultLocationDisplay.classList.remove('setting-default-location-empty');
       } else {
         defaultLocationDisplay.textContent = this.i18n.t('settings.noDefaultLocation');
+        defaultLocationDisplay.classList.add('setting-default-location-empty');
       }
     }
 
@@ -337,9 +352,7 @@ class SettingsPanel {
     const favorites = this.storageService.getFavoriteLocations();
 
     if (favorites.length === 0) {
-      container.innerHTML = `<p style="color: var(--color-text-light); font-size: 14px; margin-top: 8px;">
-        ${this.i18n.t('favorites.noFavorites')}
-      </p>`;
+      container.innerHTML = '';
       return;
     }
 

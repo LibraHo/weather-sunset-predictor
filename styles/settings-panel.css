@@ -2,14 +2,12 @@
 
 .settings-panel {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   z-index: 2000;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 24px;
 }
 
 .settings-panel.hidden {
@@ -18,42 +16,30 @@
 
 .settings-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(2px);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .settings-container {
   position: relative;
-  width: 90%;
-  max-width: 800px;
-  max-height: 90vh;
-  background: var(--bg-primary, #ffffff);
-  border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  width: min(820px, 100%);
+  max-height: calc(100vh - 48px);
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 18px;
+  box-shadow: 0 22px 45px rgba(15, 23, 42, 0.16);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: slideIn 0.3s ease-out;
-}
-
-/* 设置面板毛玻璃效果 */
-@supports (backdrop-filter: blur(1px)) {
-  .settings-container {
-    background: var(--glass-bg-heavy, rgba(255, 255, 255, 0.85));
-    backdrop-filter: blur(var(--glass-blur-heavy, 20px));
-    -webkit-backdrop-filter: blur(var(--glass-blur-heavy, 20px));
-    border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.4));
-  }
+  animation: slideIn 0.24s ease-out;
 }
 
 @keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateY(-12px);
   }
   to {
     opacity: 1;
@@ -64,8 +50,10 @@
 /* 暗色主题 */
 .theme-dark .settings-container,
 .settings-container.theme-dark {
-  background: var(--bg-primary, #1e1e1e);
-  color: var(--text-primary, #e0e0e0);
+  background: rgba(17, 24, 39, 0.72);
+  border-color: rgba(148, 163, 184, 0.28);
+  box-shadow: 0 22px 45px rgba(2, 6, 23, 0.48);
+  color: #f3f4f6;
 }
 
 /* 设置面板头部 */
@@ -74,29 +62,29 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  border-bottom: 1px solid var(--border-color, #e0e0e0);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
 }
 
 .theme-dark .settings-header {
-  border-bottom-color: var(--border-color, #333);
+  border-bottom-color: rgba(148, 163, 184, 0.2);
 }
 
 .settings-header h2 {
   margin: 0;
-  font-size: 24px;
-  font-weight: 600;
-  color: var(--text-primary, #1a1a1a);
+  font-size: 32px;
+  font-weight: 700;
+  color: #1f2937;
 }
 
 .theme-dark .settings-header h2 {
-  color: var(--text-primary, #e0e0e0);
+  color: #f3f4f6;
 }
 
 .settings-close {
   background: none;
   border: none;
   font-size: 28px;
-  color: var(--text-secondary, #666);
+  color: #6b7280;
   cursor: pointer;
   padding: 0;
   width: 36px;
@@ -104,48 +92,43 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
+  border-radius: 8px;
   transition: all 0.2s;
 }
 
 .settings-close:hover {
-  background: var(--bg-secondary, #f5f5f5);
-  color: var(--text-primary, #1a1a1a);
+  background: rgba(107, 114, 128, 0.12);
+  color: #1f2937;
+}
+
+.theme-dark .settings-close {
+  color: #d1d5db;
 }
 
 .theme-dark .settings-close:hover {
-  background: var(--bg-secondary, #2a2a2a);
-  color: var(--text-primary, #ffffff);
+  background: rgba(148, 163, 184, 0.2);
+  color: #f9fafb;
 }
 
 /* 设置面板内容 */
 .settings-content {
   flex: 1;
   overflow-y: auto;
-  padding: 20px 24px;
+  padding: 18px 24px 22px;
 }
 
-/* 自定义滚动条 */
 .settings-content::-webkit-scrollbar {
   width: 8px;
 }
 
-.settings-content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
 .settings-content::-webkit-scrollbar-thumb {
-  background: var(--border-color, #ccc);
-  border-radius: 4px;
-}
-
-.settings-content::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary, #999);
+  background: rgba(107, 114, 128, 0.35);
+  border-radius: 999px;
 }
 
 /* 设置分组 */
 .settings-section {
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .settings-section:last-child {
@@ -153,146 +136,190 @@
 }
 
 .settings-section-title {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 600;
-  margin: 0 0 16px 0;
-  color: var(--text-primary, #1a1a1a);
-  padding-bottom: 8px;
-  border-bottom: 2px solid var(--accent-color, #4CAF50);
-  display: inline-block;
+  margin: 0 0 10px;
+  color: #374151;
+  padding-left: 8px;
+  letter-spacing: 0.2px;
 }
 
 .theme-dark .settings-section-title {
-  color: var(--text-primary, #e0e0e0);
+  color: #e5e7eb;
+}
+
+.settings-section-content {
+  background: transparent;
+}
+
+.settings-section-divider {
+  border: 0;
+  border-top: 1px solid rgba(209, 213, 219, 0.5);
+  margin: 16px 0;
+}
+
+.theme-dark .settings-section-divider {
+  border-top-color: rgba(148, 163, 184, 0.35);
 }
 
 /* 设置项 */
-.setting-item {
-  padding: 16px;
-  margin-bottom: 12px;
-  background: var(--bg-secondary, #f9f9f9);
-  border-radius: 8px;
-  border: 1px solid var(--border-color, #e0e0e0);
-  transition: all 0.2s;
-}
-
-.setting-item:hover {
-  border-color: var(--accent-color, #4CAF50);
-}
-
-.theme-dark .setting-item {
-  background: var(--bg-secondary, #2a2a2a);
-  border-color: var(--border-color, #333);
-}
-
-.setting-item:last-child {
-  margin-bottom: 0;
-}
-
-.setting-label {
+.settings-panel .setting-item {
   display: block;
-  font-weight: 500;
-  margin-bottom: 8px;
-  color: var(--text-primary, #1a1a1a);
-  word-break: keep-all;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  padding: 12px 0;
+  background: transparent;
 }
 
-.theme-dark .setting-label {
-  color: var(--text-primary, #e0e0e0);
+.settings-panel .setting-item:not(:last-child) {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.setting-label input[type="checkbox"] {
-  margin-right: 8px;
-  vertical-align: middle;
+.theme-dark .settings-panel .setting-item:not(:last-child) {
+  border-bottom-color: rgba(148, 163, 184, 0.2);
 }
 
-/* 复选框标签内的文本不换行 */
-.setting-label span,
-.setting-label {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
+.settings-panel .settings-section-content .setting-item {
+  min-height: 72px;
 }
 
-/* 复选框容器 */
-.setting-item label:has(input[type="checkbox"]) {
+.setting-item-stack {
   display: flex;
-  align-items: center;
-  white-space: nowrap;
+  flex-direction: column;
   gap: 8px;
 }
 
-.setting-item label:has(input[type="checkbox"]) span {
-  white-space: normal;
-  word-wrap: break-word;
-  flex: 1;
+.setting-item-toggle {
+  display: flex;
+  align-items: center;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.setting-row-between {
+  align-items: center;
+}
+
+.settings-panel .setting-label {
+  display: block;
+  font-weight: 500;
+  margin: 0;
+  color: #1f2937;
+  line-height: 1.45;
+}
+
+.settings-panel .setting-label-title {
+  color: #111827;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.theme-dark .settings-panel .setting-label,
+.theme-dark .settings-panel .setting-label-title {
+  color: #f3f4f6;
+}
+
+.setting-text-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  width: 100%;
+  align-items: flex-start;
+}
+
+.setting-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.35;
+}
+
+.theme-dark .setting-subtitle {
+  color: #9ca3af;
 }
 
 .setting-description {
-  margin-bottom: 12px;
-  color: var(--text-secondary, #666);
+  margin-top: 8px;
+  color: #4b5563;
   line-height: 1.6;
 }
 
 .theme-dark .setting-description {
-  color: var(--text-secondary, #aaa);
+  color: #d1d5db;
 }
 
 .setting-value {
   font-weight: 600;
-  color: var(--accent-color, #4CAF50);
+  color: #16a34a;
+  min-width: 2ch;
 }
 
 .setting-hint {
   display: block;
   margin-top: 8px;
-  color: var(--text-secondary, #999);
-  font-size: 13px;
-  line-height: 1.5;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.45;
 }
 
-.setting-control {
+.theme-dark .setting-hint {
+  color: #9ca3af;
+}
+
+.settings-panel .setting-control {
   display: flex;
   align-items: center;
   gap: 12px;
+  width: 100%;
+}
+
+.settings-panel .setting-control .setting-select,
+.settings-panel .setting-control .setting-input {
+  width: 100%;
+}
+
+.settings-panel .setting-control-full {
+  width: 100%;
 }
 
 /* 输入控件 */
-.setting-input,
-.setting-select {
-  flex: 1;
+.settings-panel .setting-input,
+.settings-panel .setting-select {
+  width: 100%;
+  height: 42px;
   padding: 10px 12px;
-  border: 1px solid var(--border-color, #ccc);
-  border-radius: 6px;
+  border: 1px solid rgba(229, 231, 235, 0.9);
+  border-radius: 10px;
   font-size: 14px;
-  background: var(--bg-primary, #ffffff);
-  color: var(--text-primary, #1a1a1a);
+  background: rgba(255, 255, 255, 0.5);
+  color: #1f2937;
   transition: all 0.2s;
 }
 
-.setting-input:focus,
-.setting-select:focus {
+.settings-panel .setting-input:focus,
+.settings-panel .setting-select:focus {
   outline: none;
-  border-color: var(--accent-color, #4CAF50);
-  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+  background: rgba(255, 255, 255, 0.85);
 }
 
-.theme-dark .setting-input,
-.theme-dark .setting-select {
-  background: var(--bg-primary, #1e1e1e);
-  border-color: var(--border-color, #444);
-  color: var(--text-primary, #e0e0e0);
+.theme-dark .settings-panel .setting-input,
+.theme-dark .settings-panel .setting-select {
+  background: rgba(15, 23, 42, 0.42);
+  border-color: rgba(148, 163, 184, 0.4);
+  color: #f3f4f6;
 }
 
 .setting-range {
   flex: 1;
   height: 6px;
-  border-radius: 3px;
-  background: var(--border-color, #ccc);
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.45);
   outline: none;
   -webkit-appearance: none;
 }
@@ -303,115 +330,162 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: var(--accent-color, #4CAF50);
+  background: #22c55e;
   cursor: pointer;
-  transition: all 0.2s;
-}
-
-.setting-range::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
 }
 
 .setting-range::-moz-range-thumb {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: var(--accent-color, #4CAF50);
+  background: #22c55e;
   cursor: pointer;
   border: none;
 }
 
+.setting-switch {
+  position: relative;
+  width: 46px;
+  height: 28px;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
 .setting-checkbox {
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-  accent-color: var(--accent-color, #4CAF50);
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.setting-switch-slider {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.85);
+  transition: 0.2s ease;
+}
+
+.setting-switch-slider::before {
+  content: '';
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  left: 3px;
+  top: 3px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
+  transition: transform 0.2s ease;
+}
+
+.setting-checkbox:checked + .setting-switch-slider {
+  background: #22c55e;
+}
+
+.setting-checkbox:checked + .setting-switch-slider::before {
+  transform: translateX(18px);
+}
+
+
+.setting-item-default-location .setting-row {
+  align-items: baseline;
+}
+
+.setting-default-location-value {
+  color: #374151;
+  font-size: 14px;
+  text-align: right;
+}
+
+.setting-default-location-empty {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.theme-dark .setting-default-location-value {
+  color: #d1d5db;
+}
+
+.theme-dark .setting-default-location-empty {
+  color: #9ca3af;
+}
+
+.default-location-list {
+  margin-top: 8px;
+}
+
+.default-location-list .favorite-location-item {
+  border-top: 1px solid rgba(209, 213, 219, 0.45) !important;
+}
+
+.theme-dark .default-location-list .favorite-location-item {
+  border-top-color: rgba(148, 163, 184, 0.3) !important;
 }
 
 /* 设置面板底部 */
 .settings-footer {
-  padding: 20px 24px;
-  border-top: 1px solid var(--border-color, #e0e0e0);
+  padding: 18px 24px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
 }
 
 .theme-dark .settings-footer {
-  border-top-color: var(--border-color, #333);
+  border-top-color: rgba(148, 163, 184, 0.2);
 }
 
 .btn-primary {
-  padding: 12px 32px;
-  background: linear-gradient(135deg, var(--accent-color, #4CAF50) 0%, var(--accent-color-dark, #45a049) 100%);
+  padding: 11px 28px;
+  background: linear-gradient(135deg, #4caf50 0%, #3b9a40 100%);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.25);
-  letter-spacing: 0.3px;
-  position: relative;
-  overflow: hidden;
-  white-space: nowrap;
-  min-width: fit-content;
-}
-
-.btn-primary::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s ease;
-}
-
-.btn-primary:hover::before {
-  left: 100%;
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 18px rgba(76, 175, 80, 0.2);
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #5CB860 0%, #4CAF50 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(76, 175, 80, 0.24);
 }
 
 .btn-primary:active {
   transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+  .settings-panel {
+    padding: 0;
+  }
+
   .settings-container {
     width: 100%;
     height: 100%;
-    max-width: 100%;
     max-height: 100%;
     border-radius: 0;
   }
 
-  .settings-header {
-    padding: 16px 20px;
-  }
-
-  .settings-content {
-    padding: 16px 20px;
-  }
-
+  .settings-header,
+  .settings-content,
   .settings-footer {
-    padding: 16px 20px;
+    padding-left: 18px;
+    padding-right: 18px;
   }
 
   .settings-header h2 {
-    font-size: 20px;
+    font-size: 26px;
   }
 
-  .setting-item {
-    padding: 12px;
+  .settings-panel .setting-item {
+    padding: 12px 14px;
+  }
+
+  .setting-item-stack {
+    gap: 6px;
   }
 }
