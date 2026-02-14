@@ -607,33 +607,18 @@ class PredictionController {
 
     // 黄金时段（需求12.2）
     if (prediction.goldenHour) {
-      enhancedInfo += `
-        <div class="golden-hour-info">
-          <span class="time-label">🌟 黄金时段</span>
-          <span class="time-value">${this.formatTime(prediction.goldenHour.start)} - ${this.formatTime(prediction.goldenHour.end)}</span>
-        </div>
-      `;
+      enhancedInfo += `<div class="compact-extra-time">🌟 ${this.formatTime(prediction.goldenHour.start)}–${this.formatTime(prediction.goldenHour.end)}</div>`;
     }
 
     // 蓝调时段（需求12.3）
     if (prediction.blueHour) {
-      enhancedInfo += `
-        <div class="blue-hour-info">
-          <span class="time-label">🌌 蓝调时段</span>
-          <span class="time-value">${this.formatTime(prediction.blueHour.start)} - ${this.formatTime(prediction.blueHour.end)}</span>
-        </div>
-      `;
+      enhancedInfo += `<div class="compact-extra-time">🌌 ${this.formatTime(prediction.blueHour.start)}–${this.formatTime(prediction.blueHour.end)}</div>`;
     }
 
     // 太阳方位角（需求12.5，仅当评分>70时）
     if (prediction.shouldShowAzimuth && prediction.shouldShowAzimuth()) {
       const direction = prediction.getAzimuthDirection();
-      enhancedInfo += `
-        <div class="sun-azimuth-info">
-          <span class="azimuth-label">🧭 太阳方位</span>
-          <span class="azimuth-value">${direction} (${prediction.sunAzimuth}°)</span>
-        </div>
-      `;
+      enhancedInfo += `<div class="compact-extra-time">🧭 ${direction} (${prediction.sunAzimuth}°)</div>`;
     }
 
     // 云层分层信息（需求12.11）- 只显示云层数据，不显示description
@@ -642,40 +627,31 @@ class PredictionController {
       cloudLayersHtml = this.renderCloudLayers(prediction.cloudLayers);
     }
 
+    // 分析文本：第一句加粗
+    const firstBr = analysis.indexOf('<br>');
+    const formattedAnalysis = firstBr > -1
+      ? `<strong>${analysis.substring(0, firstBr)}</strong>${analysis.substring(firstBr)}`
+      : `<strong>${analysis}</strong>`;
+
     return `
       <div class="prediction-card">
         <div class="prediction-header">
           <span class="prediction-date-badge">${dateLabel}</span>
-          <h3>${icon} ${title}${this.i18n.t('prediction.score')}</h3>
+          <h3>${icon} ${title}</h3>
         </div>
-        <div class="prediction-score-container">
-          <div class="score-card ${this.getQualityClass(prediction.quality)}">
-            <div class="score-circle">
-              <span class="score-number">${prediction.score.toFixed(0)}</span>
-              <span class="score-label">${this.i18n.t('prediction.points')}</span>
-            </div>
-            <div class="quality-badge">
-              ${this.getQualityLabel(prediction.quality)}
-            </div>
+        <div class="prediction-dashboard-row">
+          <div class="score-display ${this.getQualityClass(prediction.quality)}">
+            <span class="score-big-number">${prediction.score.toFixed(0)}</span>
+            <span class="score-quality-label">${this.getQualityLabel(prediction.quality)}</span>
           </div>
-        </div>
-        <div class="prediction-info">
-          <div class="sunset-time">
-            <span class="sunset-icon">${icon}</span>
-            <span class="sunset-label">${timeLabel}</span>
-            <span class="sunset-value">${this.formatTime(prediction.sunsetTime)}</span>
+          <div class="time-display">
+            <div class="main-time">${this.formatTime(prediction.sunsetTime)}</div>
+            <div class="viewing-time">${this.i18n.t('prediction.bestViewingTime')}: ${this.formatTime(viewingWindow.start)}–${this.formatTime(viewingWindow.end)}</div>
+            ${enhancedInfo}
           </div>
-          <div class="best-time">
-            <span class="best-time-label">${this.i18n.t('prediction.bestViewingTime')}</span>
-            <span class="best-time-value">${this.formatTime(viewingWindow.start)} - ${this.formatTime(viewingWindow.end)}</span>
-          </div>
-          ${enhancedInfo}
         </div>
         ${cloudLayersHtml}
-        <div class="prediction-analysis">
-          <h4>${this.i18n.t('prediction.analysisTitle')}</h4>
-          <p class="analysis-text">${analysis}</p>
-        </div>
+        <div class="compact-analysis">${formattedAnalysis}</div>
       </div>
     `;
   }
@@ -696,31 +672,19 @@ class PredictionController {
     const low = cloudLayers.low ?? 0;
 
     return `
-      <div class="cloud-layers-section">
-        <h4>${this.i18n.t('prediction.cloudLayers.title')}</h4>
-        <div class="cloud-layers-grid">
-          <div class="cloud-layer">
-            <span class="cloud-layer-label">${this.i18n.t('prediction.cloudLayers.highCloudLabel')}</span>
-            <span class="cloud-layer-value">${high.toFixed(0)}%</span>
-            <div class="cloud-layer-bar">
-              <div class="cloud-layer-bar-fill" style="width: ${high}%; background-color: #90caf9;"></div>
-            </div>
-          </div>
-          <div class="cloud-layer">
-            <span class="cloud-layer-label">${this.i18n.t('prediction.cloudLayers.midCloudLabel')}</span>
-            <span class="cloud-layer-value">${mid.toFixed(0)}%</span>
-            <div class="cloud-layer-bar">
-              <div class="cloud-layer-bar-fill" style="width: ${mid}%; background-color: #64b5f6;"></div>
-            </div>
-          </div>
-          <div class="cloud-layer">
-            <span class="cloud-layer-label">${this.i18n.t('prediction.cloudLayers.lowCloudLabel')}</span>
-            <span class="cloud-layer-value">${low.toFixed(0)}%</span>
-            <div class="cloud-layer-bar">
-              <div class="cloud-layer-bar-fill" style="width: ${low}%; background-color: #42a5f5;"></div>
-            </div>
-          </div>
-        </div>
+      <div class="compact-cloud-info">
+        <span class="cloud-icon">☁️</span>
+        <span class="cloud-item">High: <strong>${high.toFixed(0)}%</strong>
+          <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(high,100)}%;background:#90caf9;"></span></span>
+        </span>
+        <span class="cloud-sep">|</span>
+        <span class="cloud-item">Mid: <strong>${mid.toFixed(0)}%</strong>
+          <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(mid,100)}%;background:#64b5f6;"></span></span>
+        </span>
+        <span class="cloud-sep">|</span>
+        <span class="cloud-item">Low: <strong>${low.toFixed(0)}%</strong>
+          <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(low,100)}%;background:#42a5f5;"></span></span>
+        </span>
       </div>
     `;
   }
