@@ -445,81 +445,161 @@ input[type="text"]::placeholder {
 }
 
 /* ===== 天气显示 ===== */
+.weather-panel-title {
+  margin-bottom: var(--spacing-sm);
+}
+
+#weather-section {
+  position: relative;
+  overflow: hidden;
+}
+
+#weather-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top left, rgba(255, 195, 113, 0.28), transparent 45%),
+              radial-gradient(circle at bottom right, rgba(102, 126, 234, 0.24), transparent 40%);
+  pointer-events: none;
+}
+
+#weather-section > * {
+  position: relative;
+  z-index: 1;
+}
+
+.weather-glass-panel {
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.16));
+  backdrop-filter: blur(8px);
+  box-shadow: 0 14px 30px rgba(29, 46, 74, 0.2);
+}
+
 .weather-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: var(--spacing-md);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.35);
 }
 
 .weather-item {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   text-align: center;
-  padding: var(--spacing-md);
-  background-color: var(--color-bg);
-  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
 }
 
 .weather-label {
-  font-size: 0.875rem;
-  color: var(--color-text-light);
-  margin-bottom: var(--spacing-xs);
+  font-size: 0.75rem;
+  color: rgba(52, 67, 89, 0.78);
+  margin-bottom: 2px;
 }
 
 .weather-value {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 600;
-  color: var(--color-text);
+  color: #1f2a3d;
+}
+
+.weather-item-highlight {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* 天气主展示区域 */
 .weather-location {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  color: var(--color-text);
-  margin-bottom: var(--spacing-lg);
-  text-align: center;
+  color: #1f2a3d;
+  margin-bottom: 10px;
+  text-align: left;
 }
 
 .weather-main {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.weather-side-info {
+  display: flex;
   flex-direction: column;
   align-items: center;
-  padding: var(--spacing-xl) var(--spacing-md);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: var(--radius-lg);
-  margin-bottom: var(--spacing-lg);
+  text-align: center;
+  min-width: 120px;
 }
 
 .weather-icon-large {
-  font-size: 5rem;
-  margin-bottom: var(--spacing-md);
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  font-size: 3rem;
+  margin-bottom: 2px;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.16));
 }
 
 .weather-temp-large {
-  font-size: 4rem;
+  font-size: 4.5rem;
   font-weight: 700;
-  color: white;
+  color: #ffffff;
+  text-shadow: 0 3px 14px rgba(35, 49, 70, 0.24);
   display: flex;
   align-items: flex-start;
-  margin-bottom: var(--spacing-sm);
+  line-height: 0.95;
 }
 
 .weather-temp-large .temp-unit {
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 500;
-  margin-top: 0.5rem;
+  margin-top: 0.3rem;
   margin-left: 0.25rem;
 }
 
 .weather-desc {
-  font-size: 1.25rem;
-  color: rgba(255, 255, 255, 0.95);
+  font-size: 1.1rem;
+  color: rgba(31, 42, 61, 0.9);
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.01em;
+  text-transform: capitalize;
+}
+
+@media (max-width: 900px) {
+  .weather-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .weather-glass-panel {
+    padding: 12px;
+  }
+
+  .weather-main {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .weather-side-info {
+    width: 100%;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .weather-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .weather-temp-large {
+    font-size: 3.6rem;
+  }
+
+  .weather-temp-large .temp-unit {
+    font-size: 1.4rem;
+  }
 }
 
 #weather-display {
@@ -1259,7 +1339,7 @@ body.theme-dark .best-time {
   cursor: pointer;
   transition: all var(--transition-normal);
   width: 100%;
-  max-width: 100%;
+  max-width: none;
 }
 
 .forecast-item:hover {
@@ -1390,7 +1470,7 @@ body.theme-dark .best-time {
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
-  max-width: 100%;
+  max-width: none;
 }
 
 .sunset-time-small {
@@ -2060,7 +2140,7 @@ body.theme-dark .prediction-analysis {
 
 .chart-container canvas {
   display: block;
-  max-width: 100%;
+  max-width: none;
   height: auto;
 }
 
@@ -2685,60 +2765,157 @@ body.theme-dark .sun-azimuth-info {
 }
 
 /* ===== 未来预测横向布局样式 ===== */
-.forecast-horizontal-container {
-  display: flex;
-  justify-content: center;
-  gap: var(--spacing-xl);
-  margin: var(--spacing-xl) auto;
+#forecast-section {
+  overflow: hidden;
+}
+
+#forecast-section #forecast-timeline {
+  display: block;
   width: 100%;
-  max-width: 1400px;
-  padding: 0 var(--spacing-xl);
+  margin-top: var(--spacing-sm);
 }
 
-.forecast-day-column {
-  flex: 1;
-  max-width: 380px;
-  min-width: 280px;
-  background: var(--color-card-bg);
-  border-radius: 12px;
-  padding: var(--spacing-lg);
-  border: 1px solid var(--color-border);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  transition: all 0.3s ease;
-  text-align: center;
+#forecast-section .forecast-horizontal-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: var(--spacing-md) auto 0;
+  width: 100%;
+  padding: 0;
 }
 
-.forecast-day-column:hover {
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+#forecast-section .forecast-day-column {
+  width: 100%;
+  min-width: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.36) 100%);
+  border-radius: 14px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 8px 20px rgba(24, 39, 75, 0.08);
+  transition: all 0.24s ease;
+  text-align: left;
 }
 
-.forecast-day-header {
-  text-align: center;
-  margin-bottom: var(--spacing-lg);
-  padding-bottom: var(--spacing-md);
-  border-bottom: 1px solid var(--color-border);
+#forecast-section .forecast-day-column:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(24, 39, 75, 0.12);
 }
 
-.forecast-day-header .day-label {
+#forecast-section .forecast-day-header {
+  text-align: left;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(76, 93, 122, 0.18);
+}
+
+#forecast-section .forecast-day-header .day-label {
   display: block;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--color-text);
-  margin-bottom: var(--spacing-xs);
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2f3948;
+  margin-bottom: 2px;
 }
 
-.forecast-day-header .date-label {
+#forecast-section .forecast-day-header .date-label {
   display: block;
-  font-size: 0.875rem;
-  color: var(--color-text-light);
-  font-weight: 400;
+  font-size: 0.82rem;
+  color: rgba(47, 57, 72, 0.72);
+  font-weight: 500;
 }
 
-.forecast-day-predictions {
+#forecast-section .forecast-day-predictions {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: 10px;
+  align-items: stretch;
+}
+
+#forecast-section .forecast-item {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(76, 93, 122, 0.2);
+  background: rgba(255, 255, 255, 0.86);
+  width: 100%;
+}
+
+#forecast-section .forecast-item .passed-badge {
+  margin-left: 4px;
+}
+
+#forecast-section .forecast-header {
+  margin-bottom: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+#forecast-section .forecast-main-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#forecast-section .forecast-type {
+  display: flex;
   align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+#forecast-section .forecast-type .type-icon {
+  font-size: 0.95rem;
+}
+
+#forecast-section .forecast-type .type-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #2f3948;
+}
+
+#forecast-section .sunset-time-small {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+#forecast-section .forecast-score-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+#forecast-section .forecast-score {
+  width: 58px;
+  height: 58px;
+  font-size: 1.2rem;
+  border-width: 2px;
+}
+
+#forecast-section .quality-badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+#forecast-section .quality-badge.quality-excellent {
+  color: #2f9e44;
+}
+
+#forecast-section .quality-badge.quality-good {
+  color: #d39e00;
+}
+
+#forecast-section .quality-badge.quality-fair {
+  color: #d97706;
+}
+
+#forecast-section .quality-badge.quality-poor {
+  color: #dc2626;
 }
 
 /* 已过标签样式 */
@@ -2757,21 +2934,28 @@ body.theme-dark .sun-azimuth-info {
   opacity: 0.4;
 }
 
+
+@media (max-width: 1200px) {
+  #forecast-section .forecast-horizontal-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 /* 移动端响应式 */
 @media (max-width: 768px) {
-  .forecast-horizontal-container {
-    flex-direction: column;
-    width: 95%;
-    gap: var(--spacing-lg);
-  }
-
-  .forecast-day-column {
-    min-width: auto;
+  #forecast-section .forecast-horizontal-container {
+    grid-template-columns: minmax(0, 1fr);
     width: 100%;
+    gap: 10px;
   }
 
-  .forecast-item {
-    max-width: 100%;
+  #forecast-section .forecast-day-column {
+    width: 100%;
+    padding: 10px;
+  }
+
+  #forecast-section .forecast-item {
+    max-width: none;
   }
 
   .type-label {
@@ -2784,31 +2968,31 @@ body.theme-dark .sun-azimuth-info {
     font-size: 1.4rem;
   }
 
-  .forecast-type {
+  #forecast-section .forecast-type {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     gap: var(--spacing-xs);
   }
 }
 
 @media (max-width: 480px) {
-  .forecast-day-column {
-    padding: var(--spacing-md);
+  #forecast-section .forecast-day-column {
+    padding: 9px;
   }
 
-  .forecast-score {
+  #forecast-section .forecast-score {
     width: 50px;
     height: 50px;
-    font-size: 1.2rem;
+    font-size: 1.08rem;
   }
 
-  .type-label {
-    font-size: 0.75rem;
+  #forecast-section .type-label {
+    font-size: 0.72rem;
   }
 
-  .quality-badge {
-    font-size: 0.75rem;
-    padding: var(--spacing-xs) var(--spacing-sm);
+  #forecast-section .quality-badge {
+    font-size: 0.7rem;
+    padding: 3px 7px;
   }
 }
 

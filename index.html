@@ -100,44 +100,48 @@
       
       <!-- 当前天气 -->
       <section id="weather-section" class="card hidden">
-        <h2 data-i18n="weather.title">天气信息</h2>
+        <h2 class="weather-panel-title" data-i18n="weather.title">天气信息</h2>
 
         <!-- 当前天气主展示区域 -->
         <div id="weather-data" style="display: none;">
-          <!-- 位置 -->
-          <div id="weather-location" class="weather-location" data-i18n="weather.currentLocation">--</div>
+          <div class="weather-glass-panel">
+            <!-- 位置 -->
+            <div id="weather-location" class="weather-location" data-i18n="weather.currentLocation">--</div>
 
-          <!-- 主要天气信息 -->
-          <div class="weather-main">
-            <div class="weather-icon-large" id="weather-icon-main">☀️</div>
-            <div class="weather-temp-large">
-              <span id="current-temp-main">--</span>
-              <span id="current-temp-unit" class="temp-unit">°C</span>
+            <!-- 主要天气信息 -->
+            <div class="weather-main">
+              <div class="weather-temp-large">
+                <span id="current-temp-main">--</span>
+                <span id="current-temp-unit" class="temp-unit">°C</span>
+              </div>
+              <div class="weather-side-info">
+                <div class="weather-icon-large" id="weather-icon-main">☀️</div>
+                <div class="weather-desc" id="weather-description">--</div>
+              </div>
             </div>
-            <div class="weather-desc" id="weather-description">--</div>
-          </div>
 
-          <!-- 详细信息网格 -->
-          <div class="weather-grid" style="margin-top: 20px;">
-            <div class="weather-item">
-              <span class="weather-label" data-i18n="weather.humidity">湿度</span>
-              <span id="current-humidity" class="weather-value">--</span>
-            </div>
-            <div class="weather-item">
-              <span class="weather-label" data-i18n="weather.cloudCover">云量</span>
-              <span id="current-cloud-cover" class="weather-value">--</span>
-            </div>
-            <div class="weather-item">
-              <span class="weather-label" data-i18n="weather.windSpeed">风速</span>
-              <span id="current-wind-speed" class="weather-value">--</span>
-            </div>
-            <div class="weather-item">
-              <span class="weather-label" data-i18n="weather.pressure">气压</span>
-              <span id="current-pressure" class="weather-value">--</span>
-            </div>
-            <div class="weather-item">
-              <span class="weather-label" data-i18n="weather.visibility">能见度</span>
-              <span id="current-visibility" class="weather-value">--</span>
+            <!-- 详细信息网格 -->
+            <div class="weather-grid">
+              <div class="weather-item">
+                <span class="weather-label" data-i18n="weather.humidity">湿度</span>
+                <span id="current-humidity" class="weather-value">--</span>
+              </div>
+              <div class="weather-item">
+                <span class="weather-label" data-i18n="weather.cloudCover">云量</span>
+                <span id="current-cloud-cover" class="weather-value">--</span>
+              </div>
+              <div class="weather-item">
+                <span class="weather-label" data-i18n="weather.windSpeed">风速</span>
+                <span id="current-wind-speed" class="weather-value">--</span>
+              </div>
+              <div class="weather-item">
+                <span class="weather-label" data-i18n="weather.pressure">气压</span>
+                <span id="current-pressure" class="weather-value">--</span>
+              </div>
+              <div class="weather-item weather-item-highlight">
+                <span class="weather-label" data-i18n="weather.visibility">能见度</span>
+                <span id="current-visibility" class="weather-value">--</span>
+              </div>
             </div>
           </div>
         </div>
