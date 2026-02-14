@@ -530,3 +530,181 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - 更新 SettingsPanel / AppController 单元测试断言
   - 初始化流程不再因前端 API Key 缺失而阻断
   - _关联需求：1, 15, 22_
+
+
+---
+
+## Phase 9：中国定位服务 & 用户 Windy API Key 配置（需求 24、25）
+
+> 状态：🔄 进行中（2026-02-14 开始）
+>
+> 目标：让中国大陆用户能正常使用位置搜索功能；让用户可以在设置界面配置自己的 Windy API Key。
+
+### 进度概览
+
+| 编号 | 任务 | 关联需求 | 状态 | 预计行数 |
+|------|------|---------|------|---------|
+| 38.1 | 后端地理编码代理路由 | 24 | ✅ 已完成 | ~200 |
+| 38.2 | 注册后端路由 | 24 | ✅ 已完成 | +2 |
+| 38.3 | 后端 weather 路由支持 X-Windy-API-Key 头 | 25 | ✅ 已完成 | +5 |
+| 38.4 | 后端 windyService 接受 userApiKey 参数 | 25 | ✅ 已完成 | +8 |
+| 38.5 | 前端 BackendGeocodingService | 24 | ✅ 已完成 | ~150 |
+| 38.6 | 前端 GeocodingServiceFactory | 24 | ✅ 已完成 | ~60 |
+| 38.7 | 设置面板：位置解析服务 UI | 24 | ⏳ 待实现 | +80 |
+| 38.8 | 设置面板：Windy API Key UI | 25 | ⏳ 待实现 | +60 |
+| 38.9 | 前端 WindyAPIService 发送用户 API Key 头 | 25 | ⏳ 待实现 | +10 |
+| 38.10 | app.js 使用 GeocodingServiceFactory | 24 | ⏳ 待实现 | +5 |
+| 38.11 | i18n 新增翻译 Key（zh-CN + en-US） | 24/25 | ⏳ 待实现 | +40 |
+| 38.12 | 单元测试：BackendGeocodingService | 24 | ⏳ 待实现 | ~120 |
+| 38.13 | 单元测试：GeocodingServiceFactory | 24 | ⏳ 待实现 | ~60 |
+| 38.14 | 后端集成测试：/api/geocoding/* | 24 | ⏳ 待实现 | ~100 |
+| 38.15 | 单元测试：windyService.userApiKey | 25 | ⏳ 待实现 | +40 |
+
+### 任务详情
+
+#### 任务 38.1 后端地理编码代理路由（✅ 已完成）
+
+文件：`server/routes/geocoding.js`（新建）
+
+- [x] GET `/api/geocoding/search` — 正向地理编码，支持 `provider=nominatim|gaode`
+- [x] GET `/api/geocoding/reverse` — 反向地理编码，支持 `provider=nominatim|gaode`
+- [x] Nominatim 处理：代理请求至 `nominatim.openstreetmap.org`
+- [x] 高德地图处理：代理请求至 `restapi.amap.com/v3`
+- [x] 统一响应格式 `{ results: [{name, lat, lon, provider}] }`
+- _关联需求：24.1_
+
+#### 任务 38.2 注册路由（✅ 已完成）
+
+文件：`server/index.js`
+
+- [x] `app.use('/api/geocoding', geocodingRoutes)`
+- _关联需求：24.1_
+
+#### 任务 38.3 后端 weather 路由支持用户 API Key（✅ 已完成）
+
+文件：`server/routes/weather.js`
+
+- [x] 读取 `req.headers['x-windy-api-key']`，传入 `windyService.fetchWeatherData()`
+- _关联需求：25.4_
+
+#### 任务 38.4 windyService 接受 userApiKey（✅ 已完成）
+
+文件：`server/services/windyService.js`
+
+- [x] `fetchWeatherData(lat, lon, hours, userApiKey)` 新增第 4 参数
+- [x] `userApiKey` 非空时覆盖 `this.apiKey`
+- _关联需求：25.5_
+
+#### 任务 38.5 前端 BackendGeocodingService（✅ 已完成）
+
+文件：`src/services/BackendGeocodingService.js`（新建）
+
+- [x] `geocode(locationName)` — 调用 `/api/geocoding/search`
+- [x] `reverseGeocode(lat, lon)` — 调用 `/api/geocoding/reverse`
+- [x] `getCurrentLocation()` — 浏览器 Geolocation + 反向地理编码
+- [x] 构造函数接受 `{ proxyURL, provider, apiKey }`
+- _关联需求：24.2_
+
+#### 任务 38.6 前端 GeocodingServiceFactory（✅ 已完成）
+
+文件：`src/services/GeocodingServiceFactory.js`（新建）
+
+- [x] `GeocodingServiceFactory.create(proxyURL)` 静态方法
+- [x] 读取 `localStorage.geocoding_provider` 决定返回哪种服务
+- [x] 支持 `backend_nominatim`（默认）、`backend_gaode`、`direct_nominatim`
+- _关联需求：24.3_
+
+#### 任务 38.7 设置面板：位置解析服务 UI（⏳ 待实现）
+
+文件：`src/components/SettingsPanel.js`
+
+- [ ] 在「数据源」区新增「位置解析服务」下拉框
+  ```
+  选项：
+  ├ 后端 Nominatim（默认，推荐）  → backend_nominatim
+  ├ 高德地图（中国优化）          → backend_gaode
+  └ 直连 Nominatim（传统）       → direct_nominatim
+  ```
+- [ ] 选择「高德地图」时，显示「高德 API Key」输入框（type=text）
+- [ ] 保存到 `localStorage.geocoding_provider` / `localStorage.geocoding_api_key`
+- [ ] `handleGeocodingProviderChange()` 触发 `geocodingProviderChanged` 自定义事件
+- [ ] `loadSettings()` 中恢复下拉和输入框状态
+- _关联需求：24.4, 24.5, 24.6_
+
+#### 任务 38.8 设置面板：Windy API Key UI（⏳ 待实现）
+
+文件：`src/components/SettingsPanel.js`
+
+- [ ] 在「数据源」区新增「Windy API 来源」单选组：
+  ```
+  ○ 使用系统 API（推荐）
+  ○ 使用我的 API Key
+  ```
+- [ ] 选择「我的 API Key」时，显示 Key 输入框（type=password）+ 保存按钮
+- [ ] Key 格式校验：非空 + 长度 > 8 字符
+- [ ] 保存到 `localStorage.user_windy_api_key`
+- [ ] 清除 Key 时，恢复「使用系统 API」模式
+- _关联需求：25.1, 25.2, 25.7_
+
+#### 任务 38.9 前端 WindyAPIService 发送用户 API Key（⏳ 待实现）
+
+文件：`src/services/WindyAPIService.js`
+
+- [ ] `fetchFromProxy()` 中读取 `localStorage.user_windy_api_key`
+- [ ] 非空时在请求头附加 `X-Windy-API-Key: <key>`
+- [ ] Key 仅通过 HTTPS 传输（后端 URL 须为 HTTPS 或 localhost）
+- _关联需求：25.3_
+
+#### 任务 38.10 app.js 使用 GeocodingServiceFactory（⏳ 待实现）
+
+文件：`src/app.js`
+
+- [ ] import `GeocodingServiceFactory`
+- [ ] 非 E2E 测试模式下，使用 `GeocodingServiceFactory.create(proxyURL)` 替代 `new GeocodingService()`
+- [ ] 监听 `geocodingProviderChanged` 事件，重新创建 `geocodingService` 并注入 `appController`
+- _关联需求：24.6_
+
+#### 任务 38.11 i18n 新增翻译 Key（⏳ 待实现）
+
+文件：`src/locales/zh-CN.js`、`src/locales/en-US.js`（优先，其余语言可后续补充）
+
+新增 `settings` 命名空间下的 Key：
+
+```javascript
+// 位置解析服务（需求 24）
+geocodingProvider: '位置解析服务',
+geocodingProviderBackendNominatim: '后端 Nominatim（默认，推荐）',
+geocodingProviderBackendGaode: '高德地图（中国优化）',
+geocodingProviderDirectNominatim: '直连 Nominatim（传统）',
+geocodingApiKey: '高德 API Key',
+geocodingApiKeyPlaceholder: '输入高德地图 Web 服务 API Key',
+geocodingApiKeyHint: '申请地址：lbs.amap.com（免费）',
+geocodingApiKeyRequired: '请先在设置中填写高德 API Key',
+// Windy API Key（需求 25）
+windyApiKeyMode: 'Windy API 来源',
+windyApiKeyModeSystem: '使用系统 API（推荐）',
+windyApiKeyModeCustom: '使用我的 API Key',
+windyApiKeyCustom: '我的 Windy API Key',
+windyApiKeyCustomPlaceholder: '输入 Windy Point Forecast API Key',
+windyApiKeyCustomHint: '申请地址：windy.com/developer',
+windyApiKeyInvalid: 'API Key 格式无效（长度须 > 8 字符）',
+```
+
+- _关联需求：24.4, 25.1_
+
+#### 任务 38.12 ~ 38.15 测试（⏳ 待实现）
+
+- [ ] `tests/unit/services/BackendGeocodingService.test.js`
+  - geocode 成功 / 失败 / 空结果
+  - reverseGeocode 成功 / 失败
+  - getCurrentLocation 成功 / 权限拒绝
+- [ ] `tests/unit/services/GeocodingServiceFactory.test.js`
+  - 各 provider 枚举返回正确服务类型
+  - 默认值处理
+- [ ] `tests/unit/server/geocoding.test.js`
+  - Nominatim 搜索 mock / 反向 mock
+  - 高德搜索 mock / 缺失 Key 报错
+  - 参数校验错误
+- [ ] `tests/unit/server/windyService.userApiKey.test.js`
+  - userApiKey 存在时覆盖系统 Key
+  - userApiKey 为空时使用系统 Key

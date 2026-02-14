@@ -24,9 +24,10 @@ class WindyService {
    * @param {number} lat - 纬度
    * @param {number} lon - 经度
    * @param {number} hours - 预测小时数（默认168，即7天）
+   * @param {string|null} userApiKey - 用户自带的 Windy API Key（优先于环境变量，需求：25）
    * @returns {Promise<Object>} Windy API 响应数据
    */
-  async fetchWeatherData(lat, lon, hours = 168) {
+  async fetchWeatherData(lat, lon, hours = 168, userApiKey = null) {
     // 验证输入参数
     if (typeof lat !== 'number' || typeof lon !== 'number') {
       throw new Error('无效的坐标参数');
@@ -45,6 +46,9 @@ class WindyService {
     }
 
     try {
+      // 需求 25：优先使用用户自带 API Key，否则使用系统配置的 Key
+      const effectiveApiKey = (userApiKey && userApiKey.trim()) ? userApiKey.trim() : this.apiKey;
+
       const requestBody = {
         lat,
         lon,
@@ -61,7 +65,7 @@ class WindyService {
           'cape'
         ],
         levels: ['surface'],
-        key: this.apiKey
+        key: effectiveApiKey
       };
 
       console.log(`[Windy API] 请求天气数据: lat=${lat}, lon=${lon}, hours=${hours}`);

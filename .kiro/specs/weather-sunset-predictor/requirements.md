@@ -523,3 +523,103 @@
 2. 前端初始化时即使本地没有 API Key，也可正常进入应用。
 3. 前端所有天气/预测请求均经由后端代理发起。
 4. 前端仍可配置后端地址（如 `api_proxy_url`）用于开发环境切换。
+
+
+---
+
+## 变更记录（2026-02-14）
+
+### 需求 24：中国国内可用的定位服务
+
+**用户故事：** 作为用户（尤其是中国大陆用户），我想要一个在中国境内可正常使用的位置搜索服务，以便在 Google 服务不可用时也能正确解析地名坐标。同时，我希望可以在设置界面选择使用哪家定位服务。
+
+#### 背景说明
+
+- 当前实现（`GeocodingService.js`）直接调用 OpenStreetMap Nominatim 接口，在中国大陆可能因网络问题访问缓慢或失败。
+- Google Maps Geocoding API 在中国大陆不可用。
+- 高德地图（Amap/高德）提供免费的 REST API，是中国大陆最优的备选方案，地名覆盖完整。
+- 新方案将地理编码请求**路由到后端代理**，由后端代调各提供商，避免前端跨域和 API Key 泄露问题。
+
+#### 验收标准
+
+1. 后端新增 `/api/geocoding/search` 和 `/api/geocoding/reverse` 端点，支持 `provider=nominatim|gaode` 参数
+2. 前端新增 `BackendGeocodingService`，通过后端代理发起地理编码请求
+3. 前端新增 `GeocodingServiceFactory`，根据用户设置实例化对应服务
+4. 设置面板「数据源」区新增「位置解析服务」下拉选项：
+   - **后端 Nominatim（默认，推荐）** — 通过后端代理调用 OSM，全球可用
+   - **高德地图（中国优化）** — 需用户填入自己的高德 API Key
+   - **直连 Nominatim（传统）** — 前端直接调用 OSM（不推荐，中国可能受限）
+5. 选择「高德地图」时，设置面板显示「高德 API Key」输入框；Key 存入 `localStorage.geocoding_api_key`
+6. 切换提供商后，下次搜索立即使用新提供商，无需刷新页面
+7. 当高德 API Key 未填写时，切换到高德后搜索应提示「请先在设置中填写高德 API Key」
+
+#### 新增 API 端点
+
+| 端点 | 方法 | 参数 | 说明 |
+|------|------|------|------|
+| `/api/geocoding/search` | GET | `q`, `provider`, `key` | 正向地理编码 |
+| `/api/geocoding/reverse` | GET | `lat`, `lon`, `provider`, `key` | 反向地理编码 |
+
+#### 工作量评估
+
+| 任务 | 文件 | 估算行数 |
+|------|------|---------|
+| 后端路由 `server/routes/geocoding.js` | 新建 | ~200 行 |
+| 注册路由 `server/index.js` | +2 行 | 微小 |
+| `src/services/BackendGeocodingService.js` | 新建 | ~150 行 |
+| `src/services/GeocodingServiceFactory.js` | 新建 | ~60 行 |
+| `src/components/SettingsPanel.js` — 新增 UI 段 | 修改 | +80 行 |
+| `src/app.js` — 使用 Factory | 修改 | +5 行 |
+| i18n `zh-CN.js` + 其他 9 个语言文件（至少 en-US） | 修改 | +20 行/文件 |
+| 单元测试 `BackendGeocodingService` | 新建 | ~120 行 |
+| 单元测试 `GeocodingServiceFactory` | 新建 | ~60 行 |
+| 后端路由测试 `geocoding.test.js` | 新建 | ~100 行 |
+| **合计** | | **~850 行** |
+
+---
+
+### 需求 25：用户可配置 Windy API Key
+
+**用户故事：** 作为用户，我可以在设置界面选择使用「系统提供的 Windy API」（由后端统一管理），或者输入**我自己的 Windy API Key**，以支持个人额度管理和多用户场景。
+
+#### 背景说明
+
+- 当前 Windy API Key 固定存储于后端 `.env`，所有用户共享同一个 Key 额度。
+- 未来支持多用户或高频用户自带 Key，可大幅缓解共享 Key 的速率限制问题。
+- 前端将 Key 存入 `localStorage`，每次请求通过自定义 HTTP 头 `X-Windy-API-Key` 传递给后端，后端优先使用该 Key 调用 Windy API。
+
+#### 验收标准
+
+1. 设置面板「数据源」区新增「Windy API 来源」配置：
+   - **使用系统 API（推荐）** — 不填写 Key，使用后端 `.env` 中的 Key
+   - **使用我的 API Key** — 用户输入自己的 Windy Point Forecast API Key
+2. 当选择「使用我的 API Key」时，显示 Key 输入框（`password` 类型），Key 存入 `localStorage.user_windy_api_key`
+3. 前端 `WindyAPIService.fetchFromProxy()` 在请求后端时，若 `localStorage.user_windy_api_key` 有值则添加 `X-Windy-API-Key` 请求头
+4. 后端 `server/routes/weather.js` 读取 `X-Windy-API-Key` 头，非空时传递给 `windyService.fetchWeatherData()`
+5. 后端 `windyService.fetchWeatherData()` 接受可选 `userApiKey` 参数，优先于 `process.env.WINDY_API_KEY`
+6. 用户 Key 在传输中仅存在于 HTTP 请求头，不写入服务端日志
+7. Key 格式简单校验（非空、长度 > 8 字符），不合法时前端提示并不保存
+
+#### 工作量评估
+
+| 任务 | 文件 | 估算行数 |
+|------|------|---------|
+| 后端 `server/routes/weather.js` — 读取用户 Key 头 | 修改 | +5 行 |
+| 后端 `server/services/windyService.js` — 接受 `userApiKey` 参数 | 修改 | +8 行 |
+| 前端 `src/services/WindyAPIService.js` — 发送 Key 头 | 修改 | +10 行 |
+| `src/components/SettingsPanel.js` — 新增 Windy Key UI 段 | 修改 | +60 行 |
+| i18n `zh-CN.js` + `en-US.js` | 修改 | +15 行/文件 |
+| 单元测试（windyService + WindyAPIService） | 修改/新增 | +80 行 |
+| **合计** | | **~200 行** |
+
+---
+
+### 两项需求总工作量汇总
+
+| 需求 | 预估行数变更 | 新增文件数 | 修改文件数 |
+|------|------------|-----------|-----------|
+| 需求 24：中国定位服务 | ~850 行 | 4 | 5 |
+| 需求 25：用户 Windy API Key | ~200 行 | 0 | 4 |
+| **合计** | **~1050 行** | **4** | **7** |
+
+> **注**：测试覆盖率需维持现有阈值（≥75% 分支 / ≥85% 函数），新增功能必须附带对应单元测试。
