@@ -1533,12 +1533,168 @@ body.theme-dark .sunset-time-detail {
   margin-bottom: var(--spacing-xl);
 }
 
+/* ===== 高密度仪表盘预测卡片样式 ===== */
+
+/* 分数+时间并排行 */
+.prediction-dashboard-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xs);
+}
+
+/* 左侧大数字分数区 */
+.score-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  min-width: 52px;
+}
+
+.score-big-number {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #9e9e9e;
+}
+
+.score-display.quality-excellent .score-big-number { color: #4caf50; }
+.score-display.quality-good .score-big-number { color: #ffc107; }
+.score-display.quality-fair .score-big-number { color: #ff9800; }
+.score-display.quality-poor .score-big-number { color: #f44336; }
+
+.score-quality-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--color-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-top: 2px;
+  text-align: center;
+}
+
+/* 右侧时间信息区 */
+.time-display {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow: hidden;
+}
+
+.main-time {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.viewing-time {
+  font-size: 0.78rem;
+  color: var(--color-text-light);
+  line-height: 1.3;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.compact-extra-time {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--color-text-light);
+  line-height: 1.4;
+  flex-wrap: wrap;
+}
+
+.compact-extra-time .hour-label {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.compact-extra-time .hour-time {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.compact-extra-golden .hour-label { color: #e6a800; }
+.compact-extra-blue   .hour-label { color: #4a90d9; }
+
+/* 紧凑云层行 */
+.compact-cloud-info {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  padding: 5px 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  margin: var(--spacing-xs) 0;
+  font-size: 0.82rem;
+  color: var(--color-text);
+}
+
+.cloud-icon {
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.cloud-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.cloud-mini-bar-track {
+  display: inline-block;
+  width: 28px;
+  height: 4px;
+  background: var(--color-border);
+  border-radius: 2px;
+  overflow: hidden;
+  vertical-align: middle;
+}
+
+.cloud-mini-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.cloud-sep {
+  color: var(--color-text-light);
+  opacity: 0.5;
+  font-size: 0.75rem;
+}
+
+/* 紧凑分析文本 */
+.compact-analysis {
+  font-size: 0.845rem;
+  line-height: 1.55;
+  color: var(--color-text);
+  margin-top: var(--spacing-xs);
+  text-align: left;
+}
+
+.compact-analysis strong {
+  font-weight: 700;
+  color: var(--color-text);
+}
+
 .prediction-card {
-  background-color: var(--color-card-bg);
-  border: 1px solid var(--color-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: var(--spacing-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--glass-shadow);
   transition: all var(--transition-normal);
 }
 
@@ -1549,9 +1705,9 @@ body.theme-dark .sunset-time-detail {
 
 .prediction-card .prediction-header {
   text-align: center;
-  margin-bottom: var(--spacing-md);
-  padding-bottom: var(--spacing-sm);
-  border-bottom: 2px solid var(--color-border);
+  margin-bottom: var(--spacing-sm);
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--color-border);
   position: relative;
 }
 
@@ -1575,9 +1731,9 @@ body.theme-dark .prediction-date-badge {
 }
 
 .prediction-card .prediction-header h3 {
-  font-size: 1.25rem;
+  font-size: 1rem;
   color: var(--color-text);
-  margin: var(--spacing-xs) 0 0 0;
+  margin: 2px 0 0 0;
 }
 
 .prediction-card .prediction-factors h4 {
