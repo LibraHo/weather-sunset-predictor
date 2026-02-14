@@ -371,11 +371,24 @@ describe('SettingsPanel.renderFavoriteLocationsList', () => {
     jest.restoreAllMocks();
   });
 
-  test('没有收藏位置时显示无收藏提示', () => {
+  test('没有收藏位置时不渲染 favorites.noFavorites 文案', () => {
     const sp = makePanel({ getFavoriteLocations: jest.fn().mockReturnValue([]) });
     sp.open();
     const container = document.getElementById('default-location-list');
-    expect(container.innerHTML).toContain('favorites.noFavorites');
+    expect(container.innerHTML.trim()).toBe('');
+  });
+
+  
+  test('未设置默认位置时使用空状态样式并显示设置文案', () => {
+    const sp = makePanel({
+      getFavoriteLocations: jest.fn().mockReturnValue([]),
+      getDefaultLocation: jest.fn().mockReturnValue(null)
+    });
+    sp.open();
+
+    const display = document.getElementById('default-location-display');
+    expect(display.textContent).toBe('settings.noDefaultLocation');
+    expect(display.classList.contains('setting-default-location-empty')).toBe(true);
   });
 
   test('有收藏位置时渲染位置列表', () => {
