@@ -200,3 +200,48 @@
 .rtl .slider {
   direction: ltr; /* 滑块保持从左到右 */
 }
+
+/* ========== 预测卡片 RTL 修复 ========== */
+
+/* 分数+时间并排行：分数块在视觉右侧（逻辑起始端） */
+[dir="rtl"] .prediction-dashboard-row {
+  flex-direction: row-reverse;
+}
+
+/* 时间信息区文本对齐 */
+[dir="rtl"] .time-display {
+  text-align: right;
+}
+
+/* 蓝调/黄金时段行：标签在右、时间在左 */
+[dir="rtl"] .compact-extra-time {
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+}
+
+/* 时间数字保持 LTR（避免阿拉伯数字/冒号被镜像） */
+[dir="rtl"] .compact-extra-time .hour-time {
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+/* 云层信息行：从右到左排列 */
+[dir="rtl"] .compact-cloud-info {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+/* 云层 mini bar 保持 LTR（填充方向不变） */
+[dir="rtl"] .cloud-mini-bar-track {
+  direction: ltr;
+}
+
+/* 分析文本右对齐 */
+[dir="rtl"] .compact-analysis {
+  text-align: right;
+}
+
+/* 卡片标题右对齐 */
+[dir="rtl"] .prediction-header {
+  text-align: right;
+}
