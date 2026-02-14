@@ -75,6 +75,27 @@ test.describe('天气查询流程', () => {
     await expect(locationElement).toBeVisible();
   });
 
+
+  test('应该：搜索后天气面板显示真实数据且保持紧凑高度', async ({ page }) => {
+    await searchLocation(page, '台北');
+
+    const weatherPanel = page.locator('.weather-glass-panel');
+    await expect(weatherPanel).toBeVisible();
+
+    const tempMain = page.locator('#current-temp-main');
+    await expect(tempMain).not.toHaveText('--', { timeout: 10000 });
+
+    const description = page.locator('#weather-description');
+    await expect(description).not.toHaveText('--');
+
+    const humidity = page.locator('#current-humidity');
+    await expect(humidity).not.toHaveText('--');
+
+    const panelBox = await weatherPanel.boundingBox();
+    expect(panelBox).not.toBeNull();
+    expect(panelBox.height).toBeLessThan(420);
+  });
+
   test('应该：输入框为空 → 点击搜索 → 显示错误提示', async ({ page }) => {
     // 1. 不输入任何内容，直接点击搜索按钮
     await page.click(SELECTORS.SEARCH_BTN);

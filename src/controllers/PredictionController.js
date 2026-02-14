@@ -1068,22 +1068,20 @@ class PredictionController {
         html += `
           <div class="forecast-item ${this.getQualityClass(pred.quality)} ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
             <div class="forecast-header">
-              <div class="forecast-type">
-                <span class="type-icon">🌄</span>
-                <span class="type-label">${this.i18n.t('prediction.sunrise')}</span>
-                ${passedLabel}
+              <div class="forecast-main-info">
+                <div class="forecast-type">
+                  <span class="type-icon">🌄</span>
+                  <span class="type-label">${this.i18n.t('prediction.sunrise')}</span>
+                  ${passedLabel}
+                </div>
+                <span class="sunset-time-small">🌄 ${this.formatTime(sunriseTime)}</span>
               </div>
-              <div class="forecast-score">
-                <span>${pred.score.toFixed(0)}</span>
+              <div class="forecast-score-group">
+                <div class="forecast-score">
+                  <span>${pred.score.toFixed(0)}</span>
+                </div>
+                <span class="quality-badge ${this.getQualityClass(pred.quality)}">${this.getQualityLabel(pred.quality)}</span>
               </div>
-            </div>
-            <div class="forecast-summary">
-              <span class="quality-badge ${this.getQualityClass(pred.quality)}">
-                ${this.getQualityLabel(pred.quality)}
-              </span>
-              <span class="sunset-time-small">
-                🌄 ${this.formatTime(sunriseTime)}
-              </span>
             </div>
           </div>
         `;
@@ -1101,22 +1099,20 @@ class PredictionController {
         html += `
           <div class="forecast-item ${this.getQualityClass(pred.quality)} ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
             <div class="forecast-header">
-              <div class="forecast-type">
-                <span class="type-icon">🌅</span>
-                <span class="type-label">${this.i18n.t('prediction.sunset')}</span>
-                ${passedLabel}
+              <div class="forecast-main-info">
+                <div class="forecast-type">
+                  <span class="type-icon">🌅</span>
+                  <span class="type-label">${this.i18n.t('prediction.sunset')}</span>
+                  ${passedLabel}
+                </div>
+                <span class="sunset-time-small">🌅 ${this.formatTime(sunsetTime)}</span>
               </div>
-              <div class="forecast-score">
-                <span>${pred.score.toFixed(0)}</span>
+              <div class="forecast-score-group">
+                <div class="forecast-score">
+                  <span>${pred.score.toFixed(0)}</span>
+                </div>
+                <span class="quality-badge ${this.getQualityClass(pred.quality)}">${this.getQualityLabel(pred.quality)}</span>
               </div>
-            </div>
-            <div class="forecast-summary">
-              <span class="quality-badge ${this.getQualityClass(pred.quality)}">
-                ${this.getQualityLabel(pred.quality)}
-              </span>
-              <span class="sunset-time-small">
-                🌅 ${this.formatTime(sunsetTime)}
-              </span>
             </div>
           </div>
         `;
