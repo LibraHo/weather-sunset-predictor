@@ -5,26 +5,30 @@ const axios = require('axios');
 /**
  * 地理编码代理路由
  *
- * 支持多个地理编码服务提供商，解决中国大陆 Google/Nominatim 访问问题。
+ * 将地理编码请求通过后端代理转发给各提供商，解决前端跨域和中国网络限制。
  *
  * 支持的提供商:
- * - nominatim: OpenStreetMap Nominatim (免费，全球可用)
- * - gaode: 高德地图 (中国大陆优化，需要 API Key)
+ * - nominatim : OpenStreetMap Nominatim，免费，全球可用，无需 Key
+ * - gaode     : 高德地图，中国大陆优化，需要免费 API Key（lbs.amap.com）
+ * - google    : Google Maps Geocoding，覆盖最全，需付费 Key，后端须能访问 Google
  *
  * 需求：24
  */
 
 const NOMINATIM_BASE = 'https://nominatim.openstreetmap.org';
-const GAODE_BASE = 'https://restapi.amap.com/v3';
+const GAODE_BASE     = 'https://restapi.amap.com/v3';
+const GOOGLE_BASE    = 'https://maps.googleapis.com/maps/api/geocode';
+
+// ========== 路由 ==========
 
 /**
  * GET /api/geocoding/search
  * 地名转坐标（正向地理编码）
  *
  * 查询参数:
- * - q: 搜索关键词 (必填)
- * - provider: nominatim | gaode (可选，默认 nominatim)
- * - key: 提供商 API Key (gaode 必填)
+ * - q:        搜索关键词（必填）
+ * - provider: nominatim | gaode | google（可选，默认 nominatim）
+ * - key:      提供商 API Key（gaode / google 必填）
  */
 router.get('/search', async (req, res, next) => {
   try {
@@ -36,10 +40,13 @@ router.get('/search', async (req, res, next) => {
       });
     }
 
-    if (provider === 'gaode') {
-      return await handleGaodeSearch(req, res, q.trim(), key);
-    } else {
-      return await handleNominatimSearch(req, res, q.trim());
+    switch (provider) {
+      case 'gaode':
+        return await handleGaodeSearch(res, q.trim(), key);
+      case 'google':
+        return await handleGoogleSearch(res, q.trim(), key);
+      default: // nominatim
+        return await handleNominatimSearch(res, q.trim());
     }
   } catch (error) {
     next(error);
@@ -51,10 +58,10 @@ router.get('/search', async (req, res, next) => {
  * 坐标转地名（反向地理编码）
  *
  * 查询参数:
- * - lat: 纬度 (必填)
- * - lon: 经度 (必填)
- * - provider: nominatim | gaode (可选，默认 nominatim)
- * - key: 提供商 API Key (gaode 必填)
+ * - lat:      纬度（必填）
+ * - lon:      经度（必填）
+ * - provider: nominatim | gaode | google（可选，默认 nominatim）
+ * - key:      提供商 API Key（gaode / google 必填）
  */
 router.get('/reverse', async (req, res, next) => {
   try {
@@ -74,150 +81,165 @@ router.get('/reverse', async (req, res, next) => {
       });
     }
 
-    if (provider === 'gaode') {
-      return await handleGaodeReverse(req, res, latNum, lonNum, key);
-    } else {
-      return await handleNominatimReverse(req, res, latNum, lonNum);
+    switch (provider) {
+      case 'gaode':
+        return await handleGaodeReverse(res, latNum, lonNum, key);
+      case 'google':
+        return await handleGoogleReverse(res, latNum, lonNum, key);
+      default: // nominatim
+        return await handleNominatimReverse(res, latNum, lonNum);
     }
   } catch (error) {
     next(error);
   }
 });
 
-// ========== Nominatim 处理函数 ==========
+// ========== Nominatim (OpenStreetMap) ==========
 
-async function handleNominatimSearch(req, res, query) {
-  const url = `${NOMINATIM_BASE}/search`;
-  const params = {
-    q: query,
-    format: 'json',
-    limit: 5,
-    addressdetails: 1
-  };
-
+async function handleNominatimSearch(res, query) {
   console.log(`[Geocoding] Nominatim 搜索: "${query}"`);
 
-  const response = await axios.get(url, {
-    params,
+  const response = await axios.get(`${NOMINATIM_BASE}/search`, {
+    params: { q: query, format: 'json', limit: 5, addressdetails: 1 },
     headers: { 'User-Agent': 'WeatherSunsetPredictor/1.0' },
     timeout: 8000
   });
 
   const data = response.data;
-  if (!data || data.length === 0) {
-    return res.json({ results: [] });
-  }
-
-  const results = data.map(item => ({
-    name: item.display_name,
-    lat: parseFloat(item.lat),
-    lon: parseFloat(item.lon),
-    type: item.type,
-    provider: 'nominatim'
-  }));
-
-  return res.json({ results });
-}
-
-async function handleNominatimReverse(req, res, lat, lon) {
-  const url = `${NOMINATIM_BASE}/reverse`;
-  const params = {
-    lat,
-    lon,
-    format: 'json',
-    addressdetails: 1
-  };
-
-  console.log(`[Geocoding] Nominatim 反向地理编码: ${lat},${lon}`);
-
-  const response = await axios.get(url, {
-    params,
-    headers: { 'User-Agent': 'WeatherSunsetPredictor/1.0' },
-    timeout: 8000
-  });
-
-  const data = response.data;
-  if (!data || !data.display_name) {
-    return res.json({ name: null });
-  }
+  if (!data || data.length === 0) return res.json({ results: [] });
 
   return res.json({
-    name: data.display_name,
-    lat,
-    lon,
-    provider: 'nominatim'
+    results: data.map(item => ({
+      name: item.display_name,
+      lat: parseFloat(item.lat),
+      lon: parseFloat(item.lon),
+      type: item.type,
+      provider: 'nominatim'
+    }))
   });
 }
 
-// ========== 高德地图 处理函数 ==========
+async function handleNominatimReverse(res, lat, lon) {
+  console.log(`[Geocoding] Nominatim 反向地理编码: ${lat},${lon}`);
 
-async function handleGaodeSearch(req, res, query, apiKey) {
+  const response = await axios.get(`${NOMINATIM_BASE}/reverse`, {
+    params: { lat, lon, format: 'json', addressdetails: 1 },
+    headers: { 'User-Agent': 'WeatherSunsetPredictor/1.0' },
+    timeout: 8000
+  });
+
+  const data = response.data;
+  if (!data || !data.display_name) return res.json({ name: null });
+
+  return res.json({ name: data.display_name, lat, lon, provider: 'nominatim' });
+}
+
+// ========== 高德地图 (Gaode/Amap) ==========
+
+function requireKey(res, apiKey, providerName) {
   if (!apiKey) {
-    return res.status(400).json({
-      error: { code: 'MISSING_API_KEY', message: '使用高德地图需要提供 API Key' }
+    res.status(400).json({
+      error: { code: 'MISSING_API_KEY', message: `使用${providerName}需要提供 API Key` }
     });
+    return false;
   }
+  return true;
+}
 
-  const url = `${GAODE_BASE}/geocode/geo`;
-  const params = {
-    address: query,
-    key: apiKey,
-    output: 'JSON'
-  };
+async function handleGaodeSearch(res, query, apiKey) {
+  if (!requireKey(res, apiKey, '高德地图')) return;
 
   console.log(`[Geocoding] 高德地图搜索: "${query}"`);
 
-  const response = await axios.get(url, { params, timeout: 8000 });
-  const data = response.data;
+  const response = await axios.get(`${GAODE_BASE}/geocode/geo`, {
+    params: { address: query, key: apiKey, output: 'JSON' },
+    timeout: 8000
+  });
 
+  const data = response.data;
   if (data.status !== '1' || !data.geocodes || data.geocodes.length === 0) {
     return res.json({ results: [] });
   }
 
-  const results = data.geocodes.map(item => {
-    const [lonStr, latStr] = item.location.split(',');
-    return {
-      name: item.formatted_address,
-      lat: parseFloat(latStr),
-      lon: parseFloat(lonStr),
-      type: 'place',
-      provider: 'gaode'
-    };
+  return res.json({
+    results: data.geocodes.map(item => {
+      const [lonStr, latStr] = item.location.split(',');
+      return {
+        name: item.formatted_address,
+        lat: parseFloat(latStr),
+        lon: parseFloat(lonStr),
+        type: 'place',
+        provider: 'gaode'
+      };
+    })
   });
-
-  return res.json({ results });
 }
 
-async function handleGaodeReverse(req, res, lat, lon, apiKey) {
-  if (!apiKey) {
-    return res.status(400).json({
-      error: { code: 'MISSING_API_KEY', message: '使用高德地图需要提供 API Key' }
-    });
-  }
-
-  const url = `${GAODE_BASE}/geocode/regeo`;
-  const params = {
-    location: `${lon},${lat}`,
-    key: apiKey,
-    output: 'JSON',
-    radius: 1000,
-    extensions: 'base'
-  };
+async function handleGaodeReverse(res, lat, lon, apiKey) {
+  if (!requireKey(res, apiKey, '高德地图')) return;
 
   console.log(`[Geocoding] 高德地图反向地理编码: ${lat},${lon}`);
 
-  const response = await axios.get(url, { params, timeout: 8000 });
-  const data = response.data;
+  const response = await axios.get(`${GAODE_BASE}/geocode/regeo`, {
+    params: { location: `${lon},${lat}`, key: apiKey, output: 'JSON', extensions: 'base' },
+    timeout: 8000
+  });
 
-  if (data.status !== '1' || !data.regeocode || !data.regeocode.formatted_address) {
+  const data = response.data;
+  if (data.status !== '1' || !data.regeocode?.formatted_address) {
+    return res.json({ name: null });
+  }
+
+  return res.json({ name: data.regeocode.formatted_address, lat, lon, provider: 'gaode' });
+}
+
+// ========== Google Maps Geocoding API ==========
+
+async function handleGoogleSearch(res, query, apiKey) {
+  if (!requireKey(res, apiKey, 'Google Maps')) return;
+
+  console.log(`[Geocoding] Google Maps 搜索: "${query}"`);
+
+  const response = await axios.get(`${GOOGLE_BASE}/json`, {
+    params: { address: query, key: apiKey },
+    timeout: 8000
+  });
+
+  const data = response.data;
+  if (data.status !== 'OK' || !data.results || data.results.length === 0) {
+    return res.json({ results: [] });
+  }
+
+  return res.json({
+    results: data.results.map(item => ({
+      name: item.formatted_address,
+      lat: item.geometry.location.lat,
+      lon: item.geometry.location.lng,
+      type: item.types?.[0] || 'place',
+      provider: 'google'
+    }))
+  });
+}
+
+async function handleGoogleReverse(res, lat, lon, apiKey) {
+  if (!requireKey(res, apiKey, 'Google Maps')) return;
+
+  console.log(`[Geocoding] Google Maps 反向地理编码: ${lat},${lon}`);
+
+  const response = await axios.get(`${GOOGLE_BASE}/json`, {
+    params: { latlng: `${lat},${lon}`, key: apiKey },
+    timeout: 8000
+  });
+
+  const data = response.data;
+  if (data.status !== 'OK' || !data.results || data.results.length === 0) {
     return res.json({ name: null });
   }
 
   return res.json({
-    name: data.regeocode.formatted_address,
-    lat,
-    lon,
-    provider: 'gaode'
+    name: data.results[0].formatted_address,
+    lat, lon,
+    provider: 'google'
   });
 }
 

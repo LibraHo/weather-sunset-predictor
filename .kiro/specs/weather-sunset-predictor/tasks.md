@@ -605,31 +605,34 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 - [x] 构造函数接受 `{ proxyURL, provider, apiKey }`
 - _关联需求：24.2_
 
-#### 任务 38.6 前端 GeocodingServiceFactory（✅ 已完成）
+#### 任务 38.6 前端 GeocodingServiceFactory — 二层架构（✅ 已完成）
 
 文件：`src/services/GeocodingServiceFactory.js`（新建）
 
 - [x] `GeocodingServiceFactory.create(proxyURL)` 静态方法
-- [x] 读取 `localStorage.geocoding_provider` 决定返回哪种服务
-- [x] 支持 `backend_nominatim`（默认）、`backend_gaode`、`direct_nominatim`
+- [x] 读取 `localStorage.geocoding_mode`（`'backend'` | `'direct'`）
+- [x] 读取 `localStorage.geocoding_provider`（`'nominatim'` | `'gaode'` | `'google'`）
+- [x] `_createDirect(provider, apiKey)` — 前端直连分支
+- [x] `_createBackend(provider, apiKey, proxyURL)` — 后端代理分支（含高德、Google）
+- [x] `GeocodingServiceFactory.getOptions()` — 返回所有选项及其元数据（中国可用标记）
 - _关联需求：24.3_
 
 #### 任务 38.7 设置面板：位置解析服务 UI（⏳ 待实现）
 
 文件：`src/components/SettingsPanel.js`
 
-- [ ] 在「数据源」区新增「位置解析服务」下拉框
-  ```
-  选项：
-  ├ 后端 Nominatim（默认，推荐）  → backend_nominatim
-  ├ 高德地图（中国优化）          → backend_gaode
-  └ 直连 Nominatim（传统）       → direct_nominatim
-  ```
-- [ ] 选择「高德地图」时，显示「高德 API Key」输入框（type=text）
-- [ ] 保存到 `localStorage.geocoding_provider` / `localStorage.geocoding_api_key`
-- [ ] `handleGeocodingProviderChange()` 触发 `geocodingProviderChanged` 自定义事件
-- [ ] `loadSettings()` 中恢复下拉和输入框状态
-- _关联需求：24.4, 24.5, 24.6_
+- [ ] 在「数据源」区新增「位置解析服务」二级配置
+  - **第一层（单选 radio）**：`后端代理（推荐）` | `前端直连`
+  - **第二层（下拉 select，随第一层动态变化）**：
+    - 后端代理时：`Nominatim/OSM（默认）` / `高德地图 🇨🇳` / `Google Maps`
+    - 前端直连时：`Nominatim/OSM` / `Google Maps`
+    - 高德仅在后端代理模式下出现
+- [ ] 选择高德地图或 Google Maps 时，显示「API Key」输入框（type=text）+ 申请链接
+- [ ] 各选项后附「🇨🇳 中国可用」 / ⚠️ 标记
+- [ ] 保存：`localStorage.geocoding_mode` + `geocoding_provider` + `geocoding_api_key`
+- [ ] `handleGeocodingSettingChange()` 触发 `geocodingSettingChanged` 自定义事件
+- [ ] `loadSettings()` 恢复所有控件状态
+- _关联需求：24.4, 24.5, 24.6, 24.8_
 
 #### 任务 38.8 设置面板：Windy API Key UI（⏳ 待实现）
 

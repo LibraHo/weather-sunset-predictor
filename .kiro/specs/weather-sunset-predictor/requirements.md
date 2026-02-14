@@ -531,50 +531,75 @@
 
 ### 需求 24：中国国内可用的定位服务
 
-**用户故事：** 作为用户（尤其是中国大陆用户），我想要一个在中国境内可正常使用的位置搜索服务，以便在 Google 服务不可用时也能正确解析地名坐标。同时，我希望可以在设置界面选择使用哪家定位服务。
+**用户故事：** 作为用户（尤其是中国大陆用户），我想要一个在中国境内可正常使用的位置搜索服务，并能在设置界面自由选择定位服务的「调用模式」和「提供商」。
 
 #### 背景说明
 
-- 当前实现（`GeocodingService.js`）直接调用 OpenStreetMap Nominatim 接口，在中国大陆可能因网络问题访问缓慢或失败。
-- Google Maps Geocoding API 在中国大陆不可用。
-- 高德地图（Amap/高德）提供免费的 REST API，是中国大陆最优的备选方案，地名覆盖完整。
-- 新方案将地理编码请求**路由到后端代理**，由后端代调各提供商，避免前端跨域和 API Key 泄露问题。
+- **当前实现**（`GeocodingService.js`）：前端**直连** OpenStreetMap Nominatim，在中国大陆可能因 GFW 导致访问缓慢或失败。这不是 Google，是免费的 OSM 服务。
+- **Google Maps**：覆盖最全，但需付费 API Key，中国大陆直连不可用。
+- **高德地图**：中国大陆最优选，免费 API Key，地名覆盖完整，仅限后端代理模式（防止 Key 暴露在前端）。
+- 新方案采用**二层架构**：用户先选「模式」，再选「提供商」。
+
+#### 二层架构设计
+
+```
+调用模式 (geocoding_mode)
+├── 后端代理 backend（推荐）— 前端请求 /api/geocoding/*，后端转发
+│   ├── Nominatim/OSM（默认）— 免费，后端可访问 OSM
+│   ├── 高德地图            — 中国首选，需用户填入免费 Key
+│   └── Google Maps        — 需付费 Key，后端部署在境外时可用
+└── 前端直连 direct         — 前端直接请求外部 API
+    ├── Nominatim/OSM       — 免费，中国直连可能受限
+    └── Google Maps         — 需付费 Key，中国不可用
+```
+
+> 注：高德地图仅支持「后端代理」模式（避免 API Key 暴露在浏览器）
 
 #### 验收标准
 
-1. 后端新增 `/api/geocoding/search` 和 `/api/geocoding/reverse` 端点，支持 `provider=nominatim|gaode` 参数
+1. 后端新增 `/api/geocoding/search` 和 `/api/geocoding/reverse` 端点，支持 `provider=nominatim|gaode|google` 参数
 2. 前端新增 `BackendGeocodingService`，通过后端代理发起地理编码请求
-3. 前端新增 `GeocodingServiceFactory`，根据用户设置实例化对应服务
-4. 设置面板「数据源」区新增「位置解析服务」下拉选项：
-   - **后端 Nominatim（默认，推荐）** — 通过后端代理调用 OSM，全球可用
-   - **高德地图（中国优化）** — 需用户填入自己的高德 API Key
-   - **直连 Nominatim（传统）** — 前端直接调用 OSM（不推荐，中国可能受限）
-5. 选择「高德地图」时，设置面板显示「高德 API Key」输入框；Key 存入 `localStorage.geocoding_api_key`
-6. 切换提供商后，下次搜索立即使用新提供商，无需刷新页面
-7. 当高德 API Key 未填写时，切换到高德后搜索应提示「请先在设置中填写高德 API Key」
+3. 前端新增 `GeocodingServiceFactory`，读取 `geocoding_mode` + `geocoding_provider` 返回对应服务实例
+4. 设置面板「数据源」区新增「位置解析服务」二级配置：
+   - **模式选择**（单选）：后端代理 / 前端直连
+   - **提供商选择**（根据模式动态显示）：
+     - 后端代理时：Nominatim / 高德地图 / Google Maps
+     - 前端直连时：Nominatim / Google Maps
+5. 选择高德地图或 Google Maps 时，显示对应 API Key 输入框；Key 存入 `localStorage.geocoding_api_key`
+6. 切换设置后立即生效，下次搜索使用新配置，无需刷新页面
+7. 高德/Google Key 未填写时，搜索报错提示「请先填写 API Key」
+8. 各选项展示「中国可用」标记，帮助用户快速识别
 
 #### 新增 API 端点
 
 | 端点 | 方法 | 参数 | 说明 |
 |------|------|------|------|
-| `/api/geocoding/search` | GET | `q`, `provider`, `key` | 正向地理编码 |
+| `/api/geocoding/search` | GET | `q`, `provider`, `key` | 正向地理编码，provider: nominatim\|gaode\|google |
 | `/api/geocoding/reverse` | GET | `lat`, `lon`, `provider`, `key` | 反向地理编码 |
+
+#### 配置 localStorage 键
+
+| 键 | 值 | 说明 |
+|---|---|---|
+| `geocoding_mode` | `'backend'`（默认）\| `'direct'` | 调用模式 |
+| `geocoding_provider` | `'nominatim'`（默认）\| `'gaode'` \| `'google'` | 提供商 |
+| `geocoding_api_key` | 字符串 | 高德或 Google API Key |
 
 #### 工作量评估
 
 | 任务 | 文件 | 估算行数 |
 |------|------|---------|
-| 后端路由 `server/routes/geocoding.js` | 新建 | ~200 行 |
-| 注册路由 `server/index.js` | +2 行 | 微小 |
-| `src/services/BackendGeocodingService.js` | 新建 | ~150 行 |
-| `src/services/GeocodingServiceFactory.js` | 新建 | ~60 行 |
-| `src/components/SettingsPanel.js` — 新增 UI 段 | 修改 | +80 行 |
-| `src/app.js` — 使用 Factory | 修改 | +5 行 |
-| i18n `zh-CN.js` + 其他 9 个语言文件（至少 en-US） | 修改 | +20 行/文件 |
-| 单元测试 `BackendGeocodingService` | 新建 | ~120 行 |
-| 单元测试 `GeocodingServiceFactory` | 新建 | ~60 行 |
-| 后端路由测试 `geocoding.test.js` | 新建 | ~100 行 |
-| **合计** | | **~850 行** |
+| 后端路由 `server/routes/geocoding.js`（含 Google） | ✅ 已完成 | ~250 行 |
+| 注册路由 `server/index.js` | ✅ 已完成 | +2 行 |
+| `src/services/BackendGeocodingService.js` | ✅ 已完成 | ~150 行 |
+| `src/services/GeocodingServiceFactory.js`（二层架构） | ✅ 已完成 | ~150 行 |
+| `src/components/SettingsPanel.js` — 模式+提供商 UI | ⏳ 待实现 | +100 行 |
+| `src/app.js` — 使用 Factory | ⏳ 待实现 | +5 行 |
+| i18n `zh-CN.js` + `en-US.js` | ⏳ 待实现 | +30 行/文件 |
+| 单元测试 `BackendGeocodingService` | ⏳ 待实现 | ~120 行 |
+| 单元测试 `GeocodingServiceFactory` | ⏳ 待实现 | ~80 行 |
+| 后端路由测试 `geocoding.test.js` | ⏳ 待实现 | ~130 行 |
+| **合计** | | **~1050 行** |
 
 ---
 
