@@ -549,7 +549,7 @@ class PredictionController {
 
     // 朝霞预测
     if (sunrisePrediction) {
-      html += this.renderSinglePrediction(sunrisePrediction, '🌄', this.i18n.t('prediction.sunrise'), this.i18n.t('prediction.sunriseTime'), sunriseDateLabel);
+      html += this.renderSinglePrediction(sunrisePrediction, '🌄', this.i18n.t('prediction.sunrise'), this.i18n.t('prediction.sunriseTime'), sunriseDateLabel, 'sunrise');
     } else {
       // 朝霞预测未生成
       html += `
@@ -564,7 +564,7 @@ class PredictionController {
 
     // 晚霞预测
     if (sunsetPrediction) {
-      html += this.renderSinglePrediction(sunsetPrediction, '🌅', this.i18n.t('prediction.sunset'), this.i18n.t('prediction.sunsetTime'), sunsetDateLabel);
+      html += this.renderSinglePrediction(sunsetPrediction, '🌅', this.i18n.t('prediction.sunset'), this.i18n.t('prediction.sunsetTime'), sunsetDateLabel, 'sunset');
     } else {
       // 晚霞预测未生成
       html += `
@@ -598,21 +598,29 @@ class PredictionController {
    * @returns {string} HTML字符串
    * @private
    */
-  renderSinglePrediction(prediction, icon, title, timeLabel, dateLabel = '今日') {
+  renderSinglePrediction(prediction, icon, title, timeLabel, dateLabel = '今日', type = 'sunset') {
     const viewingWindow = prediction.getOptimalViewingWindow();
     const analysis = this.generateAnalysisText(prediction, dateLabel, prediction.cloudLayers);
 
     // 任务 13.5：添加黄金时段、蓝调时段、太阳方位角、云层分层显示
+    // 需求12.2/12.3：顺序逻辑 — 日出：蓝调先→黄金后；日落：黄金先→蓝调后
     let enhancedInfo = '';
 
-    // 黄金时段（需求12.2）
-    if (prediction.goldenHour) {
-      enhancedInfo += `<div class="compact-extra-time">🌟 ${this.formatTime(prediction.goldenHour.start)}–${this.formatTime(prediction.goldenHour.end)}</div>`;
-    }
+    const goldenLabel = this.i18n.t('prediction.goldenHour');
+    const blueLabel = this.i18n.t('prediction.blueHour');
 
-    // 蓝调时段（需求12.3）
-    if (prediction.blueHour) {
-      enhancedInfo += `<div class="compact-extra-time">🌌 ${this.formatTime(prediction.blueHour.start)}–${this.formatTime(prediction.blueHour.end)}</div>`;
+    const goldenRow = prediction.goldenHour
+      ? `<div class="compact-extra-time compact-extra-golden"><span class="hour-label">${goldenLabel}</span><span class="hour-time">${this.formatTime(prediction.goldenHour.start)}–${this.formatTime(prediction.goldenHour.end)}</span></div>`
+      : '';
+    const blueRow = prediction.blueHour
+      ? `<div class="compact-extra-time compact-extra-blue"><span class="hour-label">${blueLabel}</span><span class="hour-time">${this.formatTime(prediction.blueHour.start)}–${this.formatTime(prediction.blueHour.end)}</span></div>`
+      : '';
+
+    // 日出：蓝调 → 黄金（时间升序）；日落：黄金 → 蓝调（时间升序）
+    if (type === 'sunrise') {
+      enhancedInfo = blueRow + goldenRow;
+    } else {
+      enhancedInfo = goldenRow + blueRow;
     }
 
     // 太阳方位角（需求12.5，仅当评分>70时）
