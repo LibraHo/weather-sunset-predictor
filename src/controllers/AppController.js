@@ -529,6 +529,8 @@ class AppController {
     document.addEventListener('click', (e) => {
       const locationInput = document.getElementById('location-input');
       const historyDropdown = document.getElementById('search-history-dropdown');
+      const favoritesToggleBtn = document.getElementById('favorites-toggle-btn');
+      const favoritesPopover = document.getElementById('favorite-locations');
       
       // 如果点击的不是输入框或下拉列表，则隐藏下拉列表
       if (locationInput && historyDropdown && 
@@ -536,7 +538,26 @@ class AppController {
           !historyDropdown.contains(e.target)) {
         this.hideSearchHistory();
       }
+
+      if (favoritesToggleBtn && favoritesPopover &&
+          !favoritesToggleBtn.contains(e.target) &&
+          !favoritesPopover.contains(e.target)) {
+        favoritesPopover.classList.add('hidden');
+      }
     });
+
+    const favoritesToggleBtn = document.getElementById('favorites-toggle-btn');
+    if (favoritesToggleBtn) {
+      favoritesToggleBtn.replaceWith(favoritesToggleBtn.cloneNode(true));
+      const newFavoritesToggleBtn = document.getElementById('favorites-toggle-btn');
+      newFavoritesToggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const favoritesPopover = document.getElementById('favorite-locations');
+        if (favoritesPopover) {
+          favoritesPopover.classList.toggle('hidden');
+        }
+      });
+    }
 
     // 需求11：设置天气视图切换按钮事件
     const overviewBtn = document.getElementById('overview-btn');
@@ -945,7 +966,7 @@ class AppController {
       const currentLocationBtn = document.getElementById('current-location-btn');
       if (currentLocationBtn) {
         currentLocationBtn.disabled = true;
-        currentLocationBtn.textContent = '📍 获取位置中...';
+        currentLocationBtn.setAttribute('aria-label', '获取位置中...');
       }
 
       // 检查地理编码服务是否已初始化
@@ -976,7 +997,7 @@ class AppController {
       const currentLocationBtn = document.getElementById('current-location-btn');
       if (currentLocationBtn) {
         currentLocationBtn.disabled = false;
-        currentLocationBtn.textContent = '📍 使用当前位置';
+        currentLocationBtn.setAttribute('aria-label', this.i18n.t('buttons.useCurrentLocation'));
       }
 
       // 隐藏加载状态
@@ -1431,7 +1452,6 @@ class AppController {
 
     // 特殊处理：带emoji前缀的按钮
     const emojiButtons = [
-      { selector: '#current-location-btn', content: '📍 ', key: 'buttons.useCurrentLocation' },
       { selector: '#favorite-locations h3', content: '⭐ ', key: 'favorites.title' },
       { selector: '#refresh-btn', content: '🔄 ', key: 'buttons.refresh' }
     ];
