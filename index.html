@@ -71,31 +71,30 @@
       <!-- 位置选择 -->
       <section id="location-section" class="card">
         <h2 data-i18n="location.label">选择位置</h2>
-        <div class="location-input-group">
+        <div class="location-superbar">
+          <div class="favorite-dropdown-wrapper">
+            <button id="favorites-toggle-btn" class="icon-chip" aria-label="收藏位置" data-i18n-aria-label="favorites.title">⭐</button>
+            <div id="favorite-locations" class="favorite-popover hidden" role="dialog" aria-label="收藏位置弹窗">
+              <div class="favorite-header">
+                <h3 data-i18n="favorites.title">⭐ 收藏位置</h3>
+                <button id="add-favorite-btn" class="btn btn-small" data-i18n="favorites.add">收藏当前位置</button>
+              </div>
+              <ul id="favorite-list" class="favorite-list">
+                <!-- 动态填充收藏位置 -->
+              </ul>
+            </div>
+          </div>
           <div class="location-input-wrapper">
             <input type="text" id="location-input" placeholder="输入城市名称" aria-label="城市名称输入" data-i18n-placeholder="location.placeholder">
+            <button id="current-location-btn" class="input-icon-btn" aria-label="使用当前位置" data-i18n-aria-label="buttons.useCurrentLocation">📍</button>
             <!-- 需求13：搜索历史下拉列表 -->
             <div id="search-history-dropdown" class="search-history-dropdown hidden">
               <!-- 动态填充搜索历史 -->
             </div>
           </div>
-          <button id="search-btn" class="btn btn-primary" data-i18n="buttons.search">搜索</button>
+          <button id="search-btn" class="btn btn-primary search-action-btn" data-i18n="buttons.search">查询</button>
         </div>
-        <button id="current-location-btn" class="btn btn-secondary" data-i18n="buttons.useCurrentLocation">
-          📍 使用当前位置
-        </button>
         <div id="location-error" class="error-message hidden"></div>
-
-        <!-- 需求12：收藏位置列表 -->
-        <div id="favorite-locations" class="favorite-locations-section">
-          <div class="favorite-header">
-            <h3 data-i18n="favorites.title">⭐ 收藏位置</h3>
-            <button id="add-favorite-btn" class="btn btn-small" data-i18n="favorites.add">收藏当前位置</button>
-          </div>
-          <ul id="favorite-list" class="favorite-list">
-            <!-- 动态填充收藏位置 -->
-          </ul>
-        </div>
       </section>
       
       <!-- 当前天气 -->

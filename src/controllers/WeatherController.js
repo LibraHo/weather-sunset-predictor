@@ -905,10 +905,10 @@ class WeatherController {
       if (title) title.textContent = this.i18n.t('weather.title');
     }
 
-    // 更新"使用当前位置"按钮
+    // 更新"使用当前位置"按钮提示
     const currentLocationBtn = document.getElementById('current-location-btn');
     if (currentLocationBtn) {
-      currentLocationBtn.textContent = `📍 ${this.i18n.t('buttons.useCurrentLocation')}`;
+      currentLocationBtn.setAttribute('aria-label', this.i18n.t('buttons.useCurrentLocation'));
     }
 
     // 更新"搜索"按钮
