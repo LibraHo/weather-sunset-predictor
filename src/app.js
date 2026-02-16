@@ -160,6 +160,25 @@ async function initializeApp() {
   }
 }
 
+// 访客计数器
+async function updateVisitorCount() {
+  try {
+    const proxyUrl = API_CONFIG.proxy.url;
+    const response = await fetch(`${proxyUrl}/api/visitor/count`, { method: 'POST' });
+    if (response.ok) {
+      const data = await response.json();
+      const el = document.getElementById('visitor-count');
+      if (el) {
+        el.textContent = data.count.toLocaleString();
+      }
+    }
+  } catch (error) {
+    console.warn('[App] 访客计数器更新失败:', error.message);
+  }
+}
+
+updateVisitorCount();
+
 // 导出控制器实例供调试使用
 window.appController = appController;
 window.weatherController = weatherController;

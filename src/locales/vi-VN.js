@@ -293,7 +293,8 @@ export default {
   },
   common: {
     loading: 'Đang tải...',
-    dataSource: 'Nguồn dữ liệu: Windy API'
+    dataSource: 'Nguồn dữ liệu: Windy API',
+    visitorCount: 'Lượt truy cập: '
   },
   notifications: {
     title: 'Nhắc Nhở Hoàng Hôn',

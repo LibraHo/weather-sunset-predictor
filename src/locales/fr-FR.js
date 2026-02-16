@@ -324,7 +324,8 @@ export default {
   // Common text
   common: {
     loading: 'Chargement...',
-    dataSource: 'Source de données: API Windy'
+    dataSource: 'Source de données: API Windy',
+    visitorCount: 'Visiteurs : '
   },
   notifications: {
     title: 'Alerte Coucher de Soleil',

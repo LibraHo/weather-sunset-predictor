@@ -235,7 +235,8 @@ export default {
   },
   common: {
     loading: 'جاري التحميل...',
-    dataSource: 'مصدر البيانات: Windy API'
+    dataSource: 'مصدر البيانات: Windy API',
+    visitorCount: 'عدد الزوار: '
   },
   errors: {
     title: 'خطأ',

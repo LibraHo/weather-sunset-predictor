@@ -318,7 +318,8 @@ export default {
   // Common text
   common: {
     loading: 'Cargando...',
-    dataSource: 'Fuente de datos: Windy API'
+    dataSource: 'Fuente de datos: Windy API',
+    visitorCount: 'Visitantes: '
   },
 
   // Error messages

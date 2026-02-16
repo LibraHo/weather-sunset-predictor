@@ -305,7 +305,8 @@ export default {
   // Common text
   common: {
     loading: '로드 중...',
-    dataSource: '데이터 출처: Windy API'
+    dataSource: '데이터 출처: Windy API',
+    visitorCount: '방문자 수: '
   },
 
   // Error messages

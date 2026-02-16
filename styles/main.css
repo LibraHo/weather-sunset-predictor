@@ -222,6 +222,29 @@ footer {
   color: var(--color-text-light);
 }
 
+.visitor-counter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--color-text-light);
+  padding: 6px 14px;
+  border-radius: var(--radius-md);
+  background: var(--glass-bg, rgba(255, 255, 255, 0.5));
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid var(--color-border);
+}
+
+.visitor-icon {
+  font-size: 1rem;
+}
+
+.visitor-count-number {
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
 /* ===== 卡片组件 ===== */
 .card {
   background-color: var(--color-card-bg);

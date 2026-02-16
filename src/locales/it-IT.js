@@ -235,7 +235,8 @@ export default {
   },
   common: {
     loading: 'Caricamento...',
-    dataSource: 'Fonte dati: Windy API'
+    dataSource: 'Fonte dati: Windy API',
+    visitorCount: 'Visitatori: '
   },
   errors: {
     title: 'Errore',
