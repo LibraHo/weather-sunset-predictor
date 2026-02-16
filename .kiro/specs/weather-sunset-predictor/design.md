@@ -3837,3 +3837,162 @@ P3 完成后  ~83%       ~79%      ~92%      ~83%   （+Canvas/Leaflet mock）
 - **设置面板简化**：删除 API 模式选择 UI，保留“后端服务器地址”输入框作为唯一 API 配置入口。
 - **启动流程调整**：`AppController` 初始化不再进行直连模式 API Key 门禁校验，避免 API Key Modal 阻断。
 - **安全边界**：API Key 仅存在于后端运行环境（如 `WINDY_API_KEY`），前端不负责配置与持久化。
+
+
+## 30. 需求 24：中国定位服务 — 架构设计（2026-02-14）
+
+### 30.1 问题背景
+
+当前 `GeocodingService.js` 从**前端直连** `nominatim.openstreetmap.org`（OpenStreetMap，非 Google），在中国大陆可能因 GFW 导致连接缓慢或超时。Google Maps Geocoding API 中国直连完全不可用。
+
+### 30.2 整体架构：模式 × 提供商 二层设计
+
+```
+用户配置
+  geocoding_mode: 'backend' | 'direct'
+  geocoding_provider: 'nominatim' | 'gaode' | 'google'
+  geocoding_api_key: string（gaode/google 需要）
+
+调用链路
+─────────────────────────────────────────────────────────
+mode=backend  →  BackendGeocodingService
+                     ↓ GET /api/geocoding/search?provider=...&key=...
+               Express (server/routes/geocoding.js)
+                     ↓
+               nominatim.openstreetmap.org   （provider=nominatim）
+               restapi.amap.com/v3           （provider=gaode）
+               maps.googleapis.com           （provider=google）
+─────────────────────────────────────────────────────────
+mode=direct   →  GeocodingService（原有，Nominatim 直连）
+                 或 BackendGeocodingService(provider=google_direct)
+                     ↓ 前端直接调用外部 API
+```
+
+> **高德仅支持后端代理**：高德 API Key 不能暴露在浏览器，必须经后端转发。
+
+### 30.3 各提供商对比
+
+| 提供商 | 中国可用（后端代理） | 中国可用（直连） | 需要 Key | 费用 |
+|--------|:---:|:---:|:---:|------|
+| Nominatim / OSM | ✅ | ⚠️ 受限 | ❌ | 免费 |
+| 高德地图 | ✅ 最佳 | N/A（仅后端） | ✅ | 免费配额 |
+| Google Maps | ⚠️ 后端境外 | ❌ | ✅ | 付费 |
+
+### 30.4 新增文件与职责
+
+#### `src/services/BackendGeocodingService.js`
+- 替代 `GeocodingService`，通过 `/api/geocoding/*` 端点代理地理编码
+- 构造器接受 `{ proxyURL, provider, apiKey }`
+- 实现同接口：`geocode()` / `getCurrentLocation()` / `reverseGeocode()`
+
+#### `src/services/GeocodingServiceFactory.js`
+- 工厂类，读取 localStorage 配置返回正确服务实例
+- `create(proxyURL?)` — 静态工厂方法
+- `_createDirect(provider, apiKey)` — 直连分支
+- `_createBackend(provider, apiKey, proxyURL)` — 后端代理分支
+- `getOptions()` — 返回选项元数据（中国可用标记，供 UI 渲染）
+
+#### `server/routes/geocoding.js`
+- GET `/api/geocoding/search?q&provider&key`
+- GET `/api/geocoding/reverse?lat&lon&provider&key`
+- 支持：nominatim / gaode / google
+- 统一响应格式：`{ results: [{name, lat, lon, type, provider}] }`
+
+### 30.5 设置面板 UI 设计
+
+```
+📡 数据源与网络
+  ┌──────────────────────────────────────────────┐
+  │ 位置解析服务                                   │
+  │  调用方式  ○ 后端代理（推荐）  ○ 前端直连       │
+  │                                              │
+  │  服务商    [下拉选择]                          │
+  │            ├ Nominatim/OSM（默认）🟢 中国可用  │  ← 后端代理时
+  │            ├ 高德地图 🇨🇳 🟢 中国首选           │
+  │            └ Google Maps（需付费 Key）         │
+  │                                              │
+  │  API Key   [____________]  申请→              │  ← 高德/Google时显示
+  └──────────────────────────────────────────────┘
+```
+
+### 30.6 localStorage 数据结构
+
+```javascript
+localStorage.geocoding_mode     = 'backend'     // 'backend' | 'direct'
+localStorage.geocoding_provider = 'nominatim'   // 'nominatim' | 'gaode' | 'google'
+localStorage.geocoding_api_key  = ''            // gaode/google key
+```
+
+### 30.7 动态重建服务实例
+
+设置更改后需要立即生效（无需刷新）：
+
+```
+SettingsPanel → handleGeocodingSettingChange()
+    → dispatchEvent('geocodingSettingChanged')
+    → AppController.handleGeocodingSettingChanged()
+    → geocodingService = GeocodingServiceFactory.create(proxyURL)
+    → appController.geocodingService = geocodingService  （已有注入点）
+```
+
+---
+
+## 31. 需求 25：用户可配置 Windy API Key — 架构设计（2026-02-14）
+
+### 31.1 问题背景
+
+当前 Windy API Key 固定在后端 `.env`，所有用户共享同一额度。需要支持用户携带自己的 Key，缓解速率限制，并为未来多租户架构打基础。
+
+### 31.2 数据流设计
+
+```
+前端 localStorage.user_windy_api_key = "xxx"
+    ↓
+WindyAPIService.fetchFromProxy()
+    → headers['X-Windy-API-Key'] = 'xxx'
+    ↓
+POST /api/weather/forecast (HTTP)
+    ↓
+server/routes/weather.js
+    → userApiKey = req.headers['x-windy-api-key']
+    ↓
+windyService.fetchWeatherData(lat, lon, hours, userApiKey)
+    → effectiveApiKey = userApiKey || process.env.WINDY_API_KEY
+    ↓
+Windy Point Forecast API（使用 effectiveApiKey）
+```
+
+### 31.3 安全考量
+
+- Key 仅通过 HTTP 请求头传输，不落地服务端日志（`morgan` 默认不记录请求头）
+- Key 存于浏览器 `localStorage`，与其他本地设置同级，用户自行负责安全
+- Key 经由**后端中转**调用 Windy API，不直接暴露在 URL 或前端网络请求体中
+- 格式校验：非空 + 长度 > 8，防止误操作提交空字符串
+
+### 31.4 设置面板 UI 设计
+
+```
+📡 数据源与网络
+  ┌──────────────────────────────────────────────┐
+  │ Windy API 来源                                │
+  │  ○ 使用系统 API（推荐）                        │
+  │  ○ 使用我的 API Key                           │
+  │    [••••••••••••••]  保存  清除               │  ← 选我的Key时显示
+  │    申请地址：windy.com/developer               │
+  └──────────────────────────────────────────────┘
+```
+
+### 31.5 后端修改点（已完成）
+
+| 文件 | 变更 |
+|------|------|
+| `server/routes/weather.js` | 读取 `req.headers['x-windy-api-key']` 并传入 windyService |
+| `server/services/windyService.js` | `fetchWeatherData(lat, lon, hours, userApiKey=null)` 新增第 4 参数，`effectiveApiKey = userApiKey \|\| this.apiKey` |
+
+### 31.6 前端待修改点
+
+| 文件 | 变更 |
+|------|------|
+| `src/services/WindyAPIService.js` | `fetchFromProxy()` 中读取 `localStorage.user_windy_api_key`，非空时附加 `X-Windy-API-Key` 请求头 |
+| `src/components/SettingsPanel.js` | 新增 Windy API 来源单选组 + Key 输入框 |
+| `src/locales/zh-CN.js` / `en-US.js` | 新增相关 i18n Key |
