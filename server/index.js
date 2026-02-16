@@ -8,6 +8,7 @@ const weatherRoutes = require('./routes/weather');
 const firecloudRoutes = require('./routes/firecloud');
 const predictionRoutes = require('./routes/prediction');
 const visitorRoutes = require('./routes/visitor');
+const geocodingRoutes = require('./routes/geocoding');
 const { requestLogger, errorLogger } = require('./middleware/logger');
 
 const app = express();
@@ -50,6 +51,7 @@ app.use('/api/weather', weatherRoutes);
 app.use('/api/firecloud', firecloudRoutes);
 app.use('/api/prediction', predictionRoutes);
 app.use('/api/visitor', visitorRoutes);
+app.use('/api/geocoding', geocodingRoutes);
 
 // Error logging middleware
 app.use(errorLogger());

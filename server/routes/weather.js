@@ -30,8 +30,12 @@ router.get('/forecast', async (req, res, next) => {
     const lonNum = parseFloat(lon);
     const hoursNum = hours ? parseInt(hours) : 168;
 
+    // 支持用户自带 Windy API Key（通过请求头传入）
+    // 需求：25
+    const userApiKey = req.headers['x-windy-api-key'] || null;
+
     // 调用 Windy 服务获取数据
-    const result = await windyService.fetchWeatherData(latNum, lonNum, hoursNum);
+    const result = await windyService.fetchWeatherData(latNum, lonNum, hoursNum, userApiKey);
 
     // 返回成功响应
     res.json({
