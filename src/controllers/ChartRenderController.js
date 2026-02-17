@@ -73,9 +73,13 @@ class ChartRenderController {
     const max = Math.max(...values);
     const range = max - min || 1;
 
-    const chartWidth = 900;
-    const chartHeight = 280;
-    const padding = { top: 50, right: 50, bottom: 70, left: 90 };
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const containerWidth = container.clientWidth || 900;
+    const chartWidth = isMobile ? Math.max(containerWidth - 8, 320) : 900;
+    const chartHeight = isMobile ? 240 : 280;
+    const padding = isMobile
+      ? { top: 36, right: 20, bottom: 52, left: 60 }
+      : { top: 50, right: 50, bottom: 70, left: 90 };
     const contentWidth = chartWidth - padding.left - padding.right;
     const contentHeight = chartHeight - padding.top - padding.bottom;
 
@@ -88,21 +92,25 @@ class ChartRenderController {
 
     const pathData = points.map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(' ');
 
-    let html = `<div style="padding: 25px; background: var(--color-card-bg); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin: 20px auto; max-width: 95%;">`;
-    html += `<h3 style="text-align: center; margin-bottom: 25px; color: ${color}; font-size: 1.5rem;">${label}${this.i18n.t('charts.trend')}</h3>`;
-    html += '<div style="display: flex; justify-content: center;">';
-    html += `<svg width="${chartWidth}" height="${chartHeight}" style="max-width: 100%; height: auto;">`;
+    const titleFontSize = isMobile ? '1.1rem' : '1.5rem';
+    const chartPadding = isMobile ? '12px' : '25px';
+    const axisFontSize = isMobile ? 11 : 13;
+
+    let html = `<div style="padding: ${chartPadding}; background: var(--color-card-bg); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin: 12px 0;">`;
+    html += `<h3 style="text-align: center; margin-bottom: 16px; color: ${color}; font-size: ${titleFontSize};">${label}${this.i18n.t('charts.trend')}</h3>`;
+    html += '<div>';
+    html += `<svg width="100%" viewBox="0 0 ${chartWidth} ${chartHeight}" style="display: block;">`;
 
     for (let i = 0; i <= 5; i++) {
       const value = min + (range * i) / 5;
       const y = padding.top + contentHeight - (i / 5) * contentHeight;
       html += `<line x1="${padding.left}" y1="${y}" x2="${chartWidth - padding.right}" y2="${y}" stroke="var(--color-text-light)" stroke-width="1.5" stroke-dasharray="5,5" stroke-opacity="0.3"/>`;
-      html += `<text x="${padding.left - 10}" y="${y + 5}" font-size="13" fill="var(--color-text)" text-anchor="end" font-weight="500">${value.toFixed(1)} ${unit}</text>`;
+      html += `<text x="${padding.left - 10}" y="${y + 5}" font-size="${axisFontSize}" fill="var(--color-text)" text-anchor="end" font-weight="500">${value.toFixed(1)} ${unit}</text>`;
     }
 
     points.forEach((p, i) => {
       if (i % 3 === 0) {
-        html += `<text x="${p.x}" y="${chartHeight - padding.bottom + 25}" font-size="13" fill="var(--color-text)" text-anchor="middle" font-weight="500">${p.time}:00</text>`;
+        html += `<text x="${p.x}" y="${chartHeight - padding.bottom + 25}" font-size="${axisFontSize}" fill="var(--color-text)" text-anchor="middle" font-weight="500">${p.time}:00</text>`;
       }
     });
 
@@ -111,12 +119,14 @@ class ChartRenderController {
     points.forEach((p, i) => {
       html += `<circle cx="${p.x}" cy="${p.y}" r="6" fill="${color}" stroke="var(--color-card-bg)" stroke-width="2.5"/>`;
       if (i % 3 === 0) {
-        html += `<text x="${p.x}" y="${p.y - 12}" font-size="12" fill="${color}" text-anchor="middle" font-weight="700">${p.value.toFixed(1)}</text>`;
+        html += `<text x="${p.x}" y="${p.y - 12}" font-size="${isMobile ? 10 : 12}" fill="${color}" text-anchor="middle" font-weight="700">${p.value.toFixed(1)}</text>`;
       }
     });
 
-    html += `<text x="${chartWidth / 2}" y="${chartHeight - 15}" font-size="14" fill="var(--color-text-light)" text-anchor="middle" font-weight="600">${this.i18n.t('charts.time')}</text>`;
-    html += `<text x="35" y="${chartHeight / 2}" font-size="14" fill="var(--color-text-light)" text-anchor="middle" transform="rotate(-90, 35, ${chartHeight / 2})" font-weight="600">${label} (${unit})</text>`;
+    html += `<text x="${chartWidth / 2}" y="${chartHeight - 15}" font-size="${isMobile ? 12 : 14}" fill="var(--color-text-light)" text-anchor="middle" font-weight="600">${this.i18n.t('charts.time')}</text>`;
+    if (!isMobile) {
+      html += `<text x="35" y="${chartHeight / 2}" font-size="14" fill="var(--color-text-light)" text-anchor="middle" transform="rotate(-90, 35, ${chartHeight / 2})" font-weight="600">${label} (${unit})</text>`;
+    }
 
     html += '</svg>';
     html += '</div>';

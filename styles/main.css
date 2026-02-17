@@ -2324,13 +2324,19 @@ body.theme-dark .prediction-analysis {
   }
 
   .parameter-selector {
-    gap: var(--spacing-xs);
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 6px;
+    align-items: stretch;
   }
 
   .btn-param {
-    padding: var(--spacing-xs) var(--spacing-sm);
-    font-size: 0.8rem;
-    min-width: 70px;
+    width: 100%;
+    min-width: 0;
+    padding: 6px 4px;
+    font-size: 0.78rem;
+    line-height: 1.2;
+    white-space: nowrap;
   }
 
   .chart-container {
