@@ -41,6 +41,9 @@ npm-debug.log*
 # API Key config (contains sensitive data)
 config.json
 
+# Runtime data
+server/data/
+
 # Build output
 dist/
 build/

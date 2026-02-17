@@ -274,7 +274,8 @@ export default {
   // 共通テキスト
   common: {
     loading: '読み込み中...',
-    dataSource: 'データソース：Windy API'
+    dataSource: 'データソース：Windy API',
+    visitorCount: '訪問者数：'
   },
 
   // エラーメッセージ

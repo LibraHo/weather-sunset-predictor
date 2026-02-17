@@ -284,7 +284,8 @@ export default {
   // 通用文本
   common: {
     loading: '載入中...',
-    dataSource: '資料來源：Windy API'
+    dataSource: '資料來源：Windy API',
+    visitorCount: '訪問人數：'
   },
 
   // 錯誤訊息
