@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import WeatherController from '../../../src/controllers/WeatherController.js';
 
 describe('WeatherController - 24小时温度连续化', () => {
@@ -53,4 +54,27 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(tomorrow[0].temp).toBeCloseTo(24, 5);
     expect(tomorrow[23].temp).toBeCloseTo(47, 5);
   });
+
+  test('setMapTimeToSunset 在缺少日落数据时应调用 controller.showError 而不是 uiManager', () => {
+    controller.windyMapService = { setTimestamp: jest.fn() };
+    controller.isMapInitialized = true;
+    controller.currentWeatherData = null;
+    controller.showError = jest.fn();
+
+    controller.setMapTimeToSunset();
+
+    expect(controller.showError).toHaveBeenCalledWith('无法获取日落时间数据');
+  });
+
+  test('setMapTimeToSunrise 在缺少日出数据时应调用 controller.showError 而不是 uiManager', () => {
+    controller.windyMapService = { setTimestamp: jest.fn() };
+    controller.isMapInitialized = true;
+    controller.currentWeatherData = null;
+    controller.showError = jest.fn();
+
+    controller.setMapTimeToSunrise();
+
+    expect(controller.showError).toHaveBeenCalledWith('无法获取日出时间数据');
+  });
+
 });
