@@ -2109,6 +2109,10 @@ body.theme-dark .prediction-analysis {
   margin-top: var(--spacing-md);
 }
 
+.weekly-cards-container .info-message {
+  grid-column: 1 / -1;
+}
+
 .day-card {
   background-color: var(--color-bg);
   border-radius: var(--radius-md);
@@ -2235,7 +2239,7 @@ body.theme-dark .prediction-analysis {
 /* 移动端优化 */
 @media (max-width: 768px) {
   .weekly-cards-container {
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--spacing-sm);
   }
 
