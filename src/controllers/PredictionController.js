@@ -641,16 +641,62 @@ class PredictionController {
       ? `<strong>${analysis.substring(0, firstBr)}</strong>${analysis.substring(firstBr)}`
       : `<strong>${analysis}</strong>`;
 
+    // 现代圆形仪表盘评分：SVG 圆弧 + 渐变色
+    const score = prediction.score;
+    const qualityClass = this.getQualityClass(prediction.quality);
+    const qualityLabel = this.getQualityLabel(prediction.quality);
+
+    // SVG 圆弧参数
+    const radius = 36;
+    const circumference = 2 * Math.PI * radius;
+    const arcLength = circumference * 0.75; // 仪表盘 270° 弧度
+    const scoreFill = arcLength * (score / 100);
+    const scoreGap = arcLength - scoreFill;
+    // 颜色：poor→红, fair→橙, good→黄绿, excellent→绿
+    const gaugeColor = prediction.quality === 'excellent' ? '#22c55e'
+      : prediction.quality === 'good' ? '#f59e0b'
+      : prediction.quality === 'fair' ? '#f97316'
+      : '#ef4444';
+
+    const svgGauge = `
+      <svg class="score-gauge-svg" viewBox="0 0 96 96" width="96" height="96">
+        <defs>
+          <linearGradient id="gauge-grad-${type}" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="${gaugeColor}" stop-opacity="0.7"/>
+            <stop offset="100%" stop-color="${gaugeColor}" stop-opacity="1"/>
+          </linearGradient>
+        </defs>
+        <!-- 轨道背景 -->
+        <circle cx="48" cy="48" r="${radius}"
+          fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="8"
+          stroke-dasharray="${arcLength} ${circumference - arcLength}"
+          stroke-dashoffset="${circumference * 0.125}"
+          stroke-linecap="round"/>
+        <!-- 进度弧 -->
+        <circle cx="48" cy="48" r="${radius}"
+          fill="none" stroke="url(#gauge-grad-${type})" stroke-width="8"
+          stroke-dasharray="${scoreFill.toFixed(2)} ${scoreGap.toFixed(2) + circumference * 0.25}"
+          stroke-dashoffset="${circumference * 0.125}"
+          stroke-linecap="round"
+          style="filter:drop-shadow(0 0 6px ${gaugeColor}88)"/>
+        <!-- 分数数字 -->
+        <text x="48" y="46" text-anchor="middle" dominant-baseline="middle"
+          font-size="20" font-weight="800" fill="${gaugeColor}">${score.toFixed(0)}</text>
+        <!-- 满分标注 -->
+        <text x="48" y="63" text-anchor="middle"
+          font-size="9" font-weight="600" fill="rgba(255,255,255,0.45)">/100</text>
+      </svg>`;
+
     return `
-      <div class="prediction-card">
+      <div class="prediction-card ${qualityClass}">
         <div class="prediction-header">
           <span class="prediction-date-badge">${dateLabel}</span>
           <h3>${icon} ${title}</h3>
         </div>
         <div class="prediction-dashboard-row">
-          <div class="score-display ${this.getQualityClass(prediction.quality)}">
-            <span class="score-big-number">${prediction.score.toFixed(0)}</span>
-            <span class="score-quality-label">${this.getQualityLabel(prediction.quality)}</span>
+          <div class="score-gauge-wrap ${qualityClass}">
+            ${svgGauge}
+            <span class="score-gauge-label" style="color:${gaugeColor}">${qualityLabel}</span>
           </div>
           <div class="time-display">
             <div class="main-time">${this.formatTime(prediction.sunsetTime)}</div>
