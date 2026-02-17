@@ -446,8 +446,16 @@ function calculateFinalScore(canvasScore, lightPathScore, renderingFactor, type 
     advice = 'highly_recommended';
   }
 
+  // 分数与状态保持一致，避免“无火烧云”却出现高分
+  let displayScore = clampedScore;
+  if (status === 'no_fire_cloud') {
+    displayScore = Math.min(displayScore, 39.9);
+  } else if (status === 'light_glow') {
+    displayScore = Math.min(displayScore, 59.9);
+  }
+
   return {
-    score: parseFloat(clampedScore.toFixed(1)),
+    score: parseFloat(displayScore.toFixed(1)),
     status,
     icon,
     description,
@@ -457,7 +465,8 @@ function calculateFinalScore(canvasScore, lightPathScore, renderingFactor, type 
       baseScore: parseFloat(baseScore.toFixed(1)),
       canvasScore: parseFloat(canvasScore.score.toFixed(1)),
       lightPathScore: parseFloat(lightPathScore.score.toFixed(1)),
-      renderingFactor: renderingFactor.factor
+      renderingFactor: renderingFactor.factor,
+      unclampedFinalScore: parseFloat(clampedScore.toFixed(1))
     },
     canvasAnalysis: canvasScore,
     lightPathAnalysis: lightPathScore,

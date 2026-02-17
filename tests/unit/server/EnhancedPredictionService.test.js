@@ -346,6 +346,35 @@ describe('EnhancedPredictionService', () => {
       expect(result.status).toBe('light_glow');
     });
 
+
+
+    test('should cap score under 40 when status is no_fire_cloud', () => {
+      const canvasScore = { score: 5, cloudLevel: 'space' };
+      const lightPathScore = { score: 100 };
+      const renderingFactor = { factor: 1.0 };
+
+      const result = EnhancedPredictionService.calculateFinalScore(
+        canvasScore, lightPathScore, renderingFactor, 'sunset'
+      );
+
+      expect(result.status).toBe('no_fire_cloud');
+      expect(result.score).toBeLessThan(40);
+      expect(result.breakdown.unclampedFinalScore).toBe(62);
+    });
+
+    test('should cap score under 60 when status is light_glow', () => {
+      const canvasScore = { score: 70, cloudLevel: 'perfect' };
+      const lightPathScore = { score: 40 };
+      const renderingFactor = { factor: 1.0 };
+
+      const result = EnhancedPredictionService.calculateFinalScore(
+        canvasScore, lightPathScore, renderingFactor, 'sunset'
+      );
+
+      expect(result.status).toBe('light_glow');
+      expect(result.score).toBeLessThan(60);
+      expect(result.breakdown.unclampedFinalScore).toBe(52);
+    });
     test('should identify legendary_eruption for score >= 85', () => {
       const canvasScore = { score: 95, cloudLevel: 'perfect' };
       const lightPathScore = { score: 100 };
