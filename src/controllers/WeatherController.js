@@ -846,7 +846,7 @@ class WeatherController {
 
     // 从当前天气数据中获取日落时间
     if (!this.currentWeatherData || !this.currentWeatherData.sunset) {
-      this.uiManager.showError('无法获取日落时间数据');
+      this.showError('无法获取日落时间数据');
       return;
     }
 
@@ -867,7 +867,7 @@ class WeatherController {
 
     // 从当前天气数据中获取日出时间
     if (!this.currentWeatherData || !this.currentWeatherData.sunrise) {
-      this.uiManager.showError('无法获取日出时间数据');
+      this.showError('无法获取日出时间数据');
       return;
     }
 
