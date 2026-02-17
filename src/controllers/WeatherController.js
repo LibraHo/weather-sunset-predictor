@@ -323,18 +323,6 @@ class WeatherController {
       overviewBtn.textContent = this.i18n.t('weather.daysOverview', { days: dailyData.length });
     }
 
-    // 如果天数少于7天，添加提示说明原因
-    if (dailyData.length < 7 && weeklyCards) {
-      const infoDiv = document.createElement('div');
-      infoDiv.className = 'info-message';
-      infoDiv.style.cssText = 'margin-top: 10px; padding: 10px; background: #e3f2fd; border-radius: 4px; font-size: 14px; color: #1976d2;';
-      infoDiv.innerHTML = this.i18n.t('weather.dataInfo', {
-        hours: weatherData.length,
-        days: dailyData.length
-      });
-      weeklyCards.appendChild(infoDiv);
-    }
-
     console.log(`[WeatherController] 渲染了 ${dailyData.length} 天的概览`);
   }
 
