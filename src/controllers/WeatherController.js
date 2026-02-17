@@ -668,6 +668,15 @@ class WeatherController {
       // 初始化后渲染默认图层（风速）
       this._renderWeatherLayerOnMap('wind');
 
+      // 地图就绪后：如果覆盖层已启用但之前因地图未就绪被跳过，现在补刷
+      if (this.fireCloudOverlayEnabled && this.currentLocation) {
+        if (this.surroundingData) {
+          this.updateFireCloudOverlay(this.currentLocation);
+        } else {
+          this.fetchSurroundingData(this.currentLocation, this.surroundingRadius);
+        }
+      }
+
       console.log('[WeatherController] 地图初始化成功');
     } catch (error) {
       console.error('[WeatherController] 地图初始化失败:', error);
@@ -1318,6 +1327,18 @@ class WeatherController {
       return;
     }
 
+    // 检查地图服务是否可用且已初始化
+    if (!this.windyMapService || !this.isMapInitialized) {
+      console.warn('[WeatherController] 地图服务未就绪，无法显示覆盖层');
+      this.updateOverlayStatus(false, '地图未初始化，请先切换到地图视图');
+      return;
+    }
+
+    if (!location || !location.lat || !location.lon) {
+      console.warn('[WeatherController] 无效的位置，无法生成覆盖层');
+      return;
+    }
+
     const data = surroundingData || this.surroundingData;
     if (!data || !data.points) {
       console.warn('[WeatherController] 无周边数据，无法生成覆盖层');
@@ -1335,14 +1356,26 @@ class WeatherController {
         this.currentOverlayType
       );
 
+      // 检查覆盖层数据是否有效
+      if (!overlayData || !overlayData.dataUrl || !overlayData.bounds) {
+        console.warn('[WeatherController] 覆盖层数据无效，跳过显示');
+        this.updateOverlayStatus(false, '覆盖层数据生成失败');
+        return;
+      }
+
       // 在地图上显示覆盖层
       const mapContainer = document.getElementById('map-container');
       if (mapContainer) {
-        this.fireCloudOverlayService.displayOnMap(
+        const success = this.fireCloudOverlayService.displayOnMap(
           this.windyMapService,
           overlayData,
           mapContainer
         );
+        if (!success) {
+          console.warn('[WeatherController] 覆盖层显示失败');
+          this.updateOverlayStatus(false, '覆盖层无法显示在地图上');
+          return;
+        }
       }
 
       console.log('[WeatherController] 火烧云覆盖层更新完成');
@@ -1366,6 +1399,13 @@ class WeatherController {
     console.log(`[WeatherController] 覆盖层${enabled ? '启用' : '禁用'}`);
 
     if (enabled) {
+      // 检查地图服务是否可用且已初始化
+      if (!this.windyMapService || !this.isMapInitialized) {
+        console.warn('[WeatherController] 地图未初始化，覆盖层将在地图就绪后显示');
+        this.updateOverlayStatus(false, '请先切换到地图视图以初始化地图');
+        return;
+      }
+
       // 启用覆盖层：如果已有周边数据，立即生成并显示
       if (this.surroundingData && this.currentLocation) {
         await this.updateFireCloudOverlay(this.currentLocation);
