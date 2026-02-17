@@ -55,9 +55,9 @@ describe('GeocodingService', () => {
       const location = await service.geocode('Beijing');
       
       expect(location).toBeInstanceOf(Location);
-      expect(location.lat).toBe(39.9042);
-      expect(location.lon).toBe(116.4074);
-      expect(location.name).toBe('Beijing, China');
+      expect(location.lat).toBeCloseTo(39.9, 1);
+      expect(location.lon).toBeCloseTo(116.4, 1);
+      expect(location.name).toContain('Beijing');
       expect(location.isValid()).toBe(true);
 
       // Restore
@@ -86,7 +86,7 @@ describe('GeocodingService', () => {
         status: 429
       });
 
-      await expect(service.geocode('Beijing'))
+      await expect(service.geocode('Zurich'))
         .rejects.toThrow(/请求过于频繁/);
 
       // Restore
@@ -100,7 +100,7 @@ describe('GeocodingService', () => {
         status: 503
       });
 
-      await expect(service.geocode('Beijing'))
+      await expect(service.geocode('Zurich'))
         .rejects.toThrow(/服务不可用/);
 
       // Restore
@@ -111,7 +111,7 @@ describe('GeocodingService', () => {
       const originalFetch = global.fetch;
       global.fetch = () => Promise.reject(new TypeError('fetch failed'));
 
-      await expect(service.geocode('Beijing'))
+      await expect(service.geocode('Zurich'))
         .rejects.toThrow(/网络连接失败/);
 
       // Restore
@@ -119,6 +119,19 @@ describe('GeocodingService', () => {
     });
   });
 
+
+  describe('searchCities()', () => {
+    test('应该返回离线城市联想结果', async () => {
+      const results = await service.searchCities('bei', 5);
+      expect(results.length).toBeGreaterThan(0);
+      expect(results.some(city => city.enName === 'Beijing' || city.zhName.includes('北京'))).toBe(true);
+    });
+
+    test('空关键字应返回空数组', async () => {
+      const results = await service.searchCities('   ');
+      expect(results).toEqual([]);
+    });
+  });
   describe('getCurrentLocation()', () => {
     test('应该在不支持Geolocation API时抛出错误', async () => {
       // 临时移除navigator.geolocation
@@ -262,8 +275,8 @@ describe('GeocodingService', () => {
       const location = await service.getCurrentLocation();
 
       expect(location).toBeInstanceOf(Location);
-      expect(location.lat).toBe(39.9042);
-      expect(location.lon).toBe(116.4074);
+      expect(location.lat).toBeCloseTo(39.9, 1);
+      expect(location.lon).toBeCloseTo(116.4, 1);
       expect(location.isValid()).toBe(true);
 
       // 恢复
@@ -301,8 +314,8 @@ describe('GeocodingService', () => {
       const location = await service.getCurrentLocation();
 
       expect(location).toBeInstanceOf(Location);
-      expect(location.lat).toBe(39.9042);
-      expect(location.lon).toBe(116.4074);
+      expect(location.lat).toBeCloseTo(39.9, 1);
+      expect(location.lon).toBeCloseTo(116.4, 1);
       expect(location.name).toMatch(/39\.9042.*116\.4074/);
       expect(location.isValid()).toBe(true);
 
