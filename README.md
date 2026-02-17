@@ -2,6 +2,25 @@
 
 基于 Windy API 的火烧云（晚霞/朝霞）预测 Web 应用程序，支持实时天气数据、多因子预测算法、10 种语言、响应式设计。
 
+## 常用命令速查
+
+```bash
+# 1) 安装全部依赖（根目录 + server）
+npm install && (cd server && npm install)
+
+# 2) 启动后端（终端 A）
+cd server && npm run dev
+
+# 3) 启动前端（终端 B）
+python server.py
+```
+
+默认访问地址：
+- 前端：`http://localhost:9002`
+- 后端健康检查：`http://localhost:3000/health`
+
+---
+
 ## 项目结构
 
 ```
@@ -275,6 +294,14 @@ CORS_ORIGIN=http://localhost:9002,http://localhost:8080
 | `/api/prediction/enhanced/batch` | POST | 多天批量预测 | 30 分钟 |
 | `/api/prediction/canvas` | POST | 云况画布评分 | 30 分钟 |
 | `/api/prediction/rendering` | POST | 渲染因子评分 | 30 分钟 |
+
+---
+
+## 开发工作流建议
+
+- 首次运行建议先使用 **Mock 模式**（无需 API Key），确认页面交互和预测流程正常。
+- 接入真实数据时，只需在 `server/.env` 配置 `WINDY_API_KEY` 并重启后端。
+- 本地调试建议固定端口：前端 `9002`、后端 `3000`，可避免 CORS 和配置漂移问题。
 
 ---
 
