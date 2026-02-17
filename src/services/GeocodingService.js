@@ -7,12 +7,54 @@
  */
 
 import Location from '../models/Location.js';
+import { CITY_DATABASE, getCityDisplayName } from '../data/cityDatabase.js';
 
 class GeocodingService {
   constructor() {
     // 使用OpenStreetMap的Nominatim API作为地理编码服务
     // 这是一个免费的服务，不需要API密钥
     this.geocodingBaseURL = 'https://nominatim.openstreetmap.org';
+    this.offlineCities = CITY_DATABASE;
+  }
+
+  normalizeQuery(query) {
+    return query.trim().toLowerCase();
+  }
+
+  searchOfflineCities(query, limit = 8) {
+    const normalized = this.normalizeQuery(query);
+    if (!normalized) {
+      return [];
+    }
+
+    const scored = this.offlineCities.map(city => {
+      const tokens = [city.zhName, city.enName, ...(city.aliases || [])].map(v => v.toLowerCase());
+      let score = 0;
+
+      for (const token of tokens) {
+        if (token === normalized) {
+          score = Math.max(score, 100);
+        } else if (token.startsWith(normalized)) {
+          score = Math.max(score, 70);
+        } else if (token.includes(normalized)) {
+          score = Math.max(score, 40);
+        }
+      }
+
+      return { city, score };
+    }).filter(item => item.score > 0)
+      .sort((a, b) => b.score - a.score || a.city.enName.localeCompare(b.city.enName))
+      .slice(0, limit)
+      .map(item => ({
+        ...item.city,
+        displayName: getCityDisplayName(item.city)
+      }));
+
+    return scored;
+  }
+
+  async searchCities(query, limit = 8) {
+    return this.searchOfflineCities(query, limit);
   }
 
   /**
@@ -30,6 +72,11 @@ class GeocodingService {
     }
 
     try {
+      const offlineMatch = this.searchOfflineCities(locationName, 1)[0];
+      if (offlineMatch) {
+        return new Location(offlineMatch.lat, offlineMatch.lon, offlineMatch.displayName);
+      }
+
       // 构造Nominatim API请求
       const url = new URL(`${this.geocodingBaseURL}/search`);
       url.searchParams.append('q', locationName.trim());

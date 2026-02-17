@@ -31,6 +31,7 @@ class AppController {
     this.geocodingService = geocodingService;
     this.currentLocation = null;
     this.isInitialized = false;
+    this.citySuggestions = [];
 
     // 需求14：初始化I18n系统
     this.i18n = i18n;
@@ -456,13 +457,24 @@ class AppController {
         }
       });
 
+      newLocationInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          this.hideCitySuggestions();
+        }
+      });
+
       // 输入时清除错误消息
-      newLocationInput.addEventListener('input', () => {
+      newLocationInput.addEventListener('input', async () => {
         this.clearLocationError();
+        await this.updateCitySuggestions(newLocationInput.value);
       });
 
       // 需求13：点击输入框时显示搜索历史
-      newLocationInput.addEventListener('focus', () => {
+      newLocationInput.addEventListener('focus', async () => {
+        if (newLocationInput.value.trim()) {
+          await this.updateCitySuggestions(newLocationInput.value);
+          return;
+        }
         this.showSearchHistory();
       });
     }
@@ -537,6 +549,13 @@ class AppController {
           !locationInput.contains(e.target) && 
           !historyDropdown.contains(e.target)) {
         this.hideSearchHistory();
+      }
+
+      const cityDropdown = document.getElementById('city-suggestions-dropdown');
+      if (locationInput && cityDropdown &&
+          !locationInput.contains(e.target) &&
+          !cityDropdown.contains(e.target)) {
+        this.hideCitySuggestions();
       }
 
       if (favoritesToggleBtn && favoritesPopover &&
@@ -871,6 +890,7 @@ class AppController {
     }
 
     const locationName = locationInput.value.trim();
+    this.hideCitySuggestions();
 
     // 验证输入不为空
     if (!locationName) {
@@ -1294,6 +1314,59 @@ class AppController {
     }
   }
 
+  async updateCitySuggestions(query) {
+    const dropdown = document.getElementById('city-suggestions-dropdown');
+    if (!dropdown) {
+      return;
+    }
+
+    const keyword = query.trim();
+    if (!keyword || !this.geocodingService || !this.geocodingService.searchCities) {
+      this.hideCitySuggestions();
+      return;
+    }
+
+    const suggestions = await this.geocodingService.searchCities(keyword, 8);
+    this.citySuggestions = suggestions;
+
+    if (!suggestions.length) {
+      this.hideCitySuggestions();
+      return;
+    }
+
+    dropdown.innerHTML = suggestions.map((city, index) => `
+      <div class="history-item city-suggestion-item" data-index="${index}">
+        <span class="history-name">📍 ${city.displayName}</span>
+      </div>
+    `).join('');
+
+    dropdown.classList.remove('hidden');
+    this.hideSearchHistory();
+
+    dropdown.querySelectorAll('.city-suggestion-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const locationInput = document.getElementById('location-input');
+        const index = parseInt(item.dataset.index, 10);
+        const selected = this.citySuggestions[index];
+
+        if (locationInput && selected) {
+          locationInput.value = selected.enName;
+          this.hideCitySuggestions();
+          this.handleLocationSearch();
+        }
+      });
+    });
+  }
+
+  hideCitySuggestions() {
+    const dropdown = document.getElementById('city-suggestions-dropdown');
+    if (dropdown) {
+      dropdown.classList.add('hidden');
+      dropdown.innerHTML = '';
+    }
+    this.citySuggestions = [];
+  }
+
   // ========== 需求13：搜索历史管理 ==========
 
   /**
@@ -1342,6 +1415,7 @@ class AppController {
    * 需求：13.4, 13.5, 13.7, 13.8 - 显示搜索历史下拉列表
    */
   showSearchHistory() {
+    this.hideCitySuggestions();
     this.favoriteController.showSearchHistory();
   }
 
