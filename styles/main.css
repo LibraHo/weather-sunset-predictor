@@ -1711,7 +1711,35 @@ body.theme-dark .sunset-time-detail {
   margin-bottom: var(--spacing-xs);
 }
 
-/* 左侧大数字分数区 */
+/* ===== 现代圆形仪表盘评分 ===== */
+.score-gauge-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 4px;
+}
+
+.score-gauge-svg {
+  display: block;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.25));
+  transition: transform 0.2s ease;
+}
+
+.score-gauge-wrap:hover .score-gauge-svg {
+  transform: scale(1.06);
+}
+
+.score-gauge-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  text-align: center;
+  line-height: 1;
+}
+
+/* 左侧大数字分数区（兼容旧版） */
 .score-display {
   display: flex;
   flex-direction: column;
@@ -1727,10 +1755,10 @@ body.theme-dark .sunset-time-detail {
   color: #9e9e9e;
 }
 
-.score-display.quality-excellent .score-big-number { color: #4caf50; }
-.score-display.quality-good .score-big-number { color: #ffc107; }
-.score-display.quality-fair .score-big-number { color: #ff9800; }
-.score-display.quality-poor .score-big-number { color: #f44336; }
+.score-display.quality-excellent .score-big-number { color: #22c55e; }
+.score-display.quality-good .score-big-number { color: #f59e0b; }
+.score-display.quality-fair .score-big-number { color: #f97316; }
+.score-display.quality-poor .score-big-number { color: #ef4444; }
 
 .score-quality-label {
   font-size: 0.68rem;
@@ -1864,7 +1892,24 @@ body.theme-dark .sunset-time-detail {
   padding: var(--spacing-lg);
   box-shadow: var(--glass-shadow);
   transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
 }
+
+/* 顶部彩色指示条 */
+.prediction-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: rgba(255,255,255,0.15);
+  transition: background 0.3s;
+}
+.prediction-card.quality-excellent::before { background: linear-gradient(90deg,#22c55e,#4ade80); }
+.prediction-card.quality-good::before     { background: linear-gradient(90deg,#f59e0b,#fcd34d); }
+.prediction-card.quality-fair::before     { background: linear-gradient(90deg,#f97316,#fb923c); }
+.prediction-card.quality-poor::before     { background: linear-gradient(90deg,#ef4444,#f87171); }
 
 .prediction-card:hover {
   box-shadow: var(--shadow-md);

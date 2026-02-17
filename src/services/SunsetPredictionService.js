@@ -432,8 +432,22 @@ class SunsetPredictionService {
       visibilityScore * this.weights.visibility +
       lowCloudsScore * this.weights.lowClouds;
 
-    // 确保评分在0-100范围内
-    const finalScore = Math.max(0, Math.min(100, Math.round(totalScore)));
+    // 低云强制惩罚乘数：低云过多时，日落/日出景观被遮挡，评分大幅降低
+    // 需求：5.4 - 低层云少为佳（修复：需要对整体评分施加乘数惩罚）
+    const lowCloudValue = weatherData.lowCloudCover ?? weatherData.cloudCover ?? 0;
+    let lowCloudMultiplier = 1.0;
+    if (lowCloudValue >= 80) {
+      lowCloudMultiplier = 0.20; // 低云≥80%: 严重遮挡，评分×0.2
+    } else if (lowCloudValue >= 60) {
+      lowCloudMultiplier = 0.40; // 低云≥60%: 大幅遮挡，评分×0.4
+    } else if (lowCloudValue >= 40) {
+      lowCloudMultiplier = 0.65; // 低云≥40%: 部分遮挡，评分×0.65
+    } else if (lowCloudValue >= 20) {
+      lowCloudMultiplier = 0.85; // 低云≥20%: 轻微影响，评分×0.85
+    }
+
+    // 确保评分在0-100范围内，并应用低云乘数
+    const finalScore = Math.max(0, Math.min(100, Math.round(totalScore * lowCloudMultiplier)));
 
     // 根据评分确定质量等级
     let quality;
