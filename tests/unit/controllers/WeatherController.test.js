@@ -77,4 +77,126 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(controller.showError).toHaveBeenCalledWith('无法获取日出时间数据');
   });
 
+  test('今天/明天保留相对文案，且所有天数都追加“(日期)”；后天起仅显示星期 + 日期', () => {
+    controller.i18n = {
+      currentLanguage: 'zh-CN',
+      t: jest.fn((key, params) => {
+        if (key === 'time.today') return '今天';
+        if (key === 'time.tomorrow') return '明天';
+        if (key === 'weather.precipChance') return `${params.prob}%降水`;
+        return key;
+      })
+    };
+
+    const dateFormatterSpy = jest.spyOn(Intl, 'DateTimeFormat').mockImplementation((locale, options = {}) => ({
+      format: () => {
+        if (options.weekday === 'short') return '周四';
+        if (options.day === 'numeric') return '26';
+        return '';
+      }
+    }));
+
+    const dayData = [{
+      timestamp: new Date('2026-02-26T06:00:00Z').getTime(),
+      temp: 22,
+      cloudCover: 40,
+      precipitation: 0,
+      windSpeed: 8,
+      pressure: 1008
+    }];
+
+    const todayCard = controller._createDayCard(dayData, 0);
+    const tomorrowCard = controller._createDayCard(dayData, 1);
+    const dayAfterTomorrowCard = controller._createDayCard(dayData, 2);
+    const fourthDayCard = controller._createDayCard(dayData, 3);
+
+    expect(todayCard.querySelector('.day-label-primary').textContent).toBe('今天');
+    expect(todayCard.querySelector('.day-label-date').textContent).toBe('(26日)');
+    expect(tomorrowCard.querySelector('.day-label-primary').textContent).toBe('明天');
+    expect(tomorrowCard.querySelector('.day-label-date').textContent).toBe('(26日)');
+    expect(dayAfterTomorrowCard.querySelector('.day-label-primary').textContent).toBe('周四');
+    expect(dayAfterTomorrowCard.querySelector('.day-label-date').textContent).toBe('(26日)');
+    expect(fourthDayCard.querySelector('.day-label-primary').textContent).toBe('周四');
+    expect(fourthDayCard.querySelector('.day-label-date').textContent).toBe('(26日)');
+
+    expect(dateFormatterSpy).toHaveBeenCalledWith('zh-CN', { day: 'numeric' });
+    expect(dateFormatterSpy).toHaveBeenCalledWith('zh-CN', { weekday: 'short' });
+
+    dateFormatterSpy.mockRestore();
+  });
+
+  test('英文环境日期应使用序数格式（如 18TH）', () => {
+    controller.i18n = {
+      currentLanguage: 'en-US',
+      t: jest.fn((key, params) => {
+        if (key === 'time.today') return 'Today';
+        if (key === 'time.tomorrow') return 'Tomorrow';
+        if (key === 'weather.precipChance') return `${params.prob}% precip`;
+        return key;
+      })
+    };
+
+    const dateFormatterSpy = jest.spyOn(Intl, 'DateTimeFormat').mockImplementation((locale, options = {}) => ({
+      format: () => {
+        if (options.weekday === 'short') return 'Thu';
+        if (options.day === 'numeric') return '18';
+        return '';
+      }
+    }));
+
+    const dayData = [{
+      timestamp: new Date('2026-06-18T06:00:00Z').getTime(),
+      temp: 23,
+      cloudCover: 40,
+      precipitation: 0,
+      windSpeed: 8,
+      pressure: 1008
+    }];
+
+    const todayCard = controller._createDayCard(dayData, 0);
+    const tomorrowCard = controller._createDayCard(dayData, 1);
+    const dayAfterTomorrowCard = controller._createDayCard(dayData, 2);
+
+    expect(todayCard.querySelector('.day-label-primary').textContent).toBe('Today');
+    expect(todayCard.querySelector('.day-label-date').textContent).toBe('(18TH)');
+    expect(tomorrowCard.querySelector('.day-label-primary').textContent).toBe('Tomorrow');
+    expect(tomorrowCard.querySelector('.day-label-date').textContent).toBe('(18TH)');
+    expect(dayAfterTomorrowCard.querySelector('.day-label-primary').textContent).toBe('Thu');
+    expect(dayAfterTomorrowCard.querySelector('.day-label-date').textContent).toBe('(18TH)');
+
+    dateFormatterSpy.mockRestore();
+  });
+
+  test('每日温度显示应为低温在前、高温在后', () => {
+    controller.i18n = {
+      currentLanguage: 'zh-CN',
+      t: jest.fn((key, params) => {
+        if (key === 'time.today') return '今天';
+        if (key === 'weather.precipChance') return `${params.prob}%降水`;
+        return key;
+      })
+    };
+
+    const dateFormatterSpy = jest.spyOn(Intl, 'DateTimeFormat').mockImplementation((locale, options = {}) => ({
+      format: () => {
+        if (options.day === 'numeric') return '18';
+        if (options.weekday === 'short') return '周四';
+        return '';
+      }
+    }));
+
+    const dayData = [
+      { timestamp: new Date('2026-06-18T00:00:00Z').getTime(), temp: 30, cloudCover: 20, precipitation: 0, windSpeed: 8, pressure: 1008 },
+      { timestamp: new Date('2026-06-18T03:00:00Z').getTime(), temp: 10, cloudCover: 20, precipitation: 0, windSpeed: 8, pressure: 1008 }
+    ];
+
+    const card = controller._createDayCard(dayData, 0);
+    const range = card.querySelector('.temp-range').textContent.replace(/\s+/g, ' ').trim();
+    expect(range).toContain('10°');
+    expect(range).toContain('30°');
+    expect(range.indexOf('10°')).toBeLessThan(range.indexOf('30°'));
+
+    dateFormatterSpy.mockRestore();
+  });
+
 });

@@ -332,6 +332,28 @@ class WeatherController {
    * @param {number} dayIndex - 天数索引（0=今天，1=明天，等等）
    * @returns {HTMLElement} 卡片元素
    */
+  _formatDayOfMonthLabel(date, locale) {
+    const rawDay = new Intl.DateTimeFormat(locale, { day: 'numeric' }).format(date).trim();
+
+    if (locale.startsWith('zh')) {
+      return rawDay.endsWith('日') ? rawDay : `${rawDay}日`;
+    }
+
+    if (locale.startsWith('en')) {
+      const dayNum = Number.parseInt(rawDay, 10);
+      if (Number.isNaN(dayNum)) return rawDay;
+
+      const mod100 = dayNum % 100;
+      const suffix = (mod100 >= 11 && mod100 <= 13)
+        ? 'TH'
+        : ({ 1: 'ST', 2: 'ND', 3: 'RD' }[dayNum % 10] || 'TH');
+
+      return `${dayNum}${suffix}`;
+    }
+
+    return rawDay;
+  }
+
   _createDayCard(dayData, dayIndex) {
     const card = document.createElement('div');
     card.className = 'day-card';
@@ -340,16 +362,19 @@ class WeatherController {
     const date = new Date(dayData[0].timestamp);
 
     // 使用i18n翻译日期标签
-    let dayLabel;
+    const locale = this.i18n?.currentLanguage || 'zh-CN';
+    const dayOfMonthLabel = this._formatDayOfMonthLabel(date, locale);
+
+    let dayPrefix;
     if (dayIndex === 0) {
-      dayLabel = this.i18n.t('time.today');
+      dayPrefix = this.i18n.t('time.today');
     } else if (dayIndex === 1) {
-      dayLabel = this.i18n.t('time.tomorrow');
-    } else if (dayIndex === 2) {
-      dayLabel = this.i18n.t('time.dayAfterTomorrow');
+      dayPrefix = this.i18n.t('time.tomorrow');
     } else {
-      dayLabel = this.i18n.formatDate(date);
+      dayPrefix = new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(date);
     }
+
+    const dayDateLabel = `(${dayOfMonthLabel})`;
 
     // 计算最高/最低温度
     const temps = dayData.map(d => d.temp);
@@ -370,12 +395,15 @@ class WeatherController {
     const precipText = this.i18n.t('weather.precipChance', { prob: precipProb });
 
     card.innerHTML = `
-      <div class="day-label">${dayLabel}</div>
+      <div class="day-label" aria-label="${dayPrefix} ${dayDateLabel}">
+        <span class="day-label-primary">${dayPrefix}</span>
+        <span class="day-label-date">${dayDateLabel}</span>
+      </div>
       <div class="weather-icon">${weatherIcon}</div>
       <div class="temp-range">
-        <span class="max-temp">${maxTemp.toFixed(0)}°</span>
-        <span class="temp-separator">/</span>
         <span class="min-temp">${minTemp.toFixed(0)}°</span>
+        <span class="temp-separator">/</span>
+        <span class="max-temp">${maxTemp.toFixed(0)}°</span>
       </div>
       <div class="precip-prob">${precipText}</div>
     `;
