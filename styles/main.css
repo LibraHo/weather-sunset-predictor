@@ -785,18 +785,23 @@ input[type="text"]::placeholder {
   margin-bottom: var(--spacing-lg);
 }
 
-.quality-excellent {
+.prediction-quality.quality-excellent {
   background-color: var(--color-excellent);
   color: white;
 }
 
-.quality-good {
+.prediction-quality.quality-good {
   background-color: var(--color-good);
   color: white;
 }
 
-.quality-fair {
+.prediction-quality.quality-fair {
   background-color: var(--color-fair);
+  color: white;
+}
+
+.prediction-quality.quality-poor {
+  background-color: var(--color-poor);
   color: white;
 }
 
