@@ -110,10 +110,14 @@ describe('WeatherController - 24小时温度连续化', () => {
     const dayAfterTomorrowCard = controller._createDayCard(dayData, 2);
     const fourthDayCard = controller._createDayCard(dayData, 3);
 
-    expect(todayCard.querySelector('.day-label').textContent).toBe('今天 (26日)');
-    expect(tomorrowCard.querySelector('.day-label').textContent).toBe('明天 (26日)');
-    expect(dayAfterTomorrowCard.querySelector('.day-label').textContent).toBe('周四 (26日)');
-    expect(fourthDayCard.querySelector('.day-label').textContent).toBe('周四 (26日)');
+    expect(todayCard.querySelector('.day-label-primary').textContent).toBe('今天');
+    expect(todayCard.querySelector('.day-label-date').textContent).toBe('(26日)');
+    expect(tomorrowCard.querySelector('.day-label-primary').textContent).toBe('明天');
+    expect(tomorrowCard.querySelector('.day-label-date').textContent).toBe('(26日)');
+    expect(dayAfterTomorrowCard.querySelector('.day-label-primary').textContent).toBe('周四');
+    expect(dayAfterTomorrowCard.querySelector('.day-label-date').textContent).toBe('(26日)');
+    expect(fourthDayCard.querySelector('.day-label-primary').textContent).toBe('周四');
+    expect(fourthDayCard.querySelector('.day-label-date').textContent).toBe('(26日)');
 
     expect(dateFormatterSpy).toHaveBeenCalledWith('zh-CN', { day: 'numeric' });
     expect(dateFormatterSpy).toHaveBeenCalledWith('zh-CN', { weekday: 'short' });
@@ -153,9 +157,12 @@ describe('WeatherController - 24小时温度连续化', () => {
     const tomorrowCard = controller._createDayCard(dayData, 1);
     const dayAfterTomorrowCard = controller._createDayCard(dayData, 2);
 
-    expect(todayCard.querySelector('.day-label').textContent).toBe('Today (18TH)');
-    expect(tomorrowCard.querySelector('.day-label').textContent).toBe('Tomorrow (18TH)');
-    expect(dayAfterTomorrowCard.querySelector('.day-label').textContent).toBe('Thu (18TH)');
+    expect(todayCard.querySelector('.day-label-primary').textContent).toBe('Today');
+    expect(todayCard.querySelector('.day-label-date').textContent).toBe('(18TH)');
+    expect(tomorrowCard.querySelector('.day-label-primary').textContent).toBe('Tomorrow');
+    expect(tomorrowCard.querySelector('.day-label-date').textContent).toBe('(18TH)');
+    expect(dayAfterTomorrowCard.querySelector('.day-label-primary').textContent).toBe('Thu');
+    expect(dayAfterTomorrowCard.querySelector('.day-label-date').textContent).toBe('(18TH)');
 
     dateFormatterSpy.mockRestore();
   });

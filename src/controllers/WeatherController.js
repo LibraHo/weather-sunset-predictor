@@ -386,7 +386,7 @@ class WeatherController {
       dayPrefix = new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(date);
     }
 
-    const dayLabel = `${dayPrefix} (${dayOfMonthLabel})`;
+    const dayDateLabel = `(${dayOfMonthLabel})`;
 
     // 计算最高/最低温度
     const temps = dayData.map(d => d.temp);
@@ -407,7 +407,10 @@ class WeatherController {
     const precipText = this.i18n.t('weather.precipChance', { prob: precipProb });
 
     card.innerHTML = `
-      <div class="day-label">${dayLabel}</div>
+      <div class="day-label" aria-label="${dayPrefix} ${dayDateLabel}">
+        <span class="day-label-primary">${dayPrefix}</span>
+        <span class="day-label-date">${dayDateLabel}</span>
+      </div>
       <div class="weather-icon">${weatherIcon}</div>
       <div class="temp-range">
         <span class="min-temp">${minTemp.toFixed(0)}°</span>
