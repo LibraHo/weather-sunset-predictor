@@ -147,6 +147,29 @@ function scoreCloudCanvas(weatherData) {
   const midClouds = weatherData.midClouds || 0;
   const highClouds = weatherData.highClouds || 0;
 
+  // 总云量（优先使用上游总云量字段，其次由分层云量估算）
+  const layerBasedCloudCover = Math.min(
+    100,
+    (lowClouds + midClouds + highClouds) / 3
+  );
+  const totalCloudCover = Math.max(
+    0,
+    Math.min(100, weatherData.cloudCover ?? layerBasedCloudCover)
+  );
+
+  // 阴天关键字兜底（有些天气源会直接给出“阴天/overcast”文案）
+  const weatherConditionText = [
+    weatherData.weatherMain,
+    weatherData.weather,
+    weatherData.weatherText,
+    weatherData.weatherDescription,
+    weatherData.condition
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+  const hasOvercastKeyword = /(overcast|阴天|阴)/.test(weatherConditionText);
+
   // 1. 计算有效云量（加权）
   const effectiveCloudCover =
     (highClouds * CLOUD_WEIGHTS.HIGH) +
@@ -193,8 +216,22 @@ function scoreCloudCanvas(weatherData) {
     penaltyReason = 'low_cloud_amount';
   }
 
+  // 4. 阴天抑制：总云量过高时，强制压低画布得分，避免“阴天高分”
+  let overcastPenalty = 1.0;
+
+  if (totalCloudCover >= 85) {
+    // 85%-100%线性衰减：1.0 -> 0.05
+    overcastPenalty = 1.0 - ((totalCloudCover - 85) / 15) * 0.95;
+    overcastPenalty = Math.max(0.05, overcastPenalty);
+  }
+
+  if (hasOvercastKeyword) {
+    // 文案明确为阴天时，进一步抑制，避免误报
+    overcastPenalty *= 0.2;
+  }
+
   // 最终画布得分
-  const canvasScore = cloudRangeScore * lowCloudPenalty;
+  const canvasScore = cloudRangeScore * lowCloudPenalty * overcastPenalty;
 
   return {
     score: canvasScore,
@@ -202,6 +239,9 @@ function scoreCloudCanvas(weatherData) {
     cloudRangeScore: parseFloat(cloudRangeScore.toFixed(1)),
     cloudLevel,
     lowCloudPenalty: parseFloat(lowCloudPenalty.toFixed(2)),
+    overcastPenalty: parseFloat(overcastPenalty.toFixed(2)),
+    totalCloudCover: parseFloat(totalCloudCover.toFixed(1)),
+    hasOvercastKeyword,
     penaltyReason,
     penaltyValue: lowClouds,
     breakdown: {

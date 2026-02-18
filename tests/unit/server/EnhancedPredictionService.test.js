@@ -172,6 +172,35 @@ describe('EnhancedPredictionService', () => {
       expect(result.cloudLevel).toBe('overcast');
       expect(result.score).toBeLessThan(10);
     });
+
+    test('should heavily penalize high total cloud cover even when layer mix looks good', () => {
+      const weatherData = {
+        lowClouds: 18,
+        midClouds: 80,
+        highClouds: 0,
+        cloudCover: 96
+      };
+      const result = EnhancedPredictionService.scoreCloudCanvas(weatherData);
+
+      expect(result.totalCloudCover).toBe(96);
+      expect(result.overcastPenalty).toBeLessThanOrEqual(0.4);
+      expect(result.score).toBeLessThan(30);
+    });
+
+    test('should apply extra penalty when weather text indicates overcast', () => {
+      const weatherData = {
+        lowClouds: 10,
+        midClouds: 65,
+        highClouds: 35,
+        weatherDescription: '阴天'
+      };
+      const result = EnhancedPredictionService.scoreCloudCanvas(weatherData);
+
+      expect(result.hasOvercastKeyword).toBe(true);
+      expect(result.overcastPenalty).toBeLessThan(0.5);
+      expect(result.score).toBeLessThan(25);
+    });
+
   });
 
   // ========== 光路评分测试 ==========
