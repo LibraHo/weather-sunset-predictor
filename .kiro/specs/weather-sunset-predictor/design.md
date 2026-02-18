@@ -1057,7 +1057,7 @@ class WeatherData {
 #### SunsetPrediction
 ```javascript
 class SunsetPrediction {
-  constructor(date, score, quality, factors, sunsetTime, sunriseTime, type, goldenHour, blueHour, sunAzimuth, cloudLayers) {
+  constructor(date, score, quality, factors, sunsetTime, sunriseTime, type, goldenHour, blueHour, sunAzimuth, sunsetDirection, cloudLayers) {
     this.date = date;              // 日期
     this.score = score;            // 预测评分（0-100）
     this.quality = quality;        // 质量等级：'excellent', 'good', 'fair'
@@ -1068,6 +1068,7 @@ class SunsetPrediction {
     this.goldenHour = goldenHour;  // 黄金时段 {start, end}
     this.blueHour = blueHour;      // 蓝调时段 {start, end}
     this.sunAzimuth = sunAzimuth;  // 太阳方位角（度数，仅当score>70时计算）
+    this.sunsetDirection = sunsetDirection; // 日落方向（方位文本，例如“西偏北”）
     this.cloudLayers = cloudLayers; // 云层分层信息 {high, mid, low, description}
   }
   
@@ -1082,7 +1083,7 @@ class SunsetPrediction {
 **设计决策**：扩展SunsetPrediction模型以支持需求12（朝霞晚霞预测增强功能）。新增字段包括：
 - 日出时间和预测类型，支持朝霞和晚霞的独立预测
 - 黄金时段和蓝调时段，为摄影爱好者提供专业时间建议
-- 太阳方位角，帮助用户确定最佳拍摄方向
+- 太阳方位角与日落方向，帮助用户确定最佳拍摄方向
 - 云层分层信息，提供更详细的气象分析
 
 ### 2. 服务层（Services）
@@ -1499,7 +1500,7 @@ class PredictionController {
   
   updatePredictionDisplay(predictions) {
     // 更新UI显示预测结果
-    // 需求12：显示日出/日落时间、黄金/蓝调时段、太阳方位角、云层分层
+    // 需求12：显示日出/日落时间、黄金/蓝调时段、最佳观赏时间、日落方向、太阳方位角、云层分层
   }
   
   // 需求12：云层分层显示
@@ -1516,7 +1517,7 @@ class PredictionController {
 }
 ```
 
-**设计决策**：扩展PredictionController以支持需求12的朝霞晚霞预测增强功能。生成独立的朝霞和晚霞预测，显示专业时间信息（黄金/蓝调时段）、太阳方位角、云层分层。集成NotificationService实现通知提醒。
+**设计决策**：扩展PredictionController以支持需求12的朝霞晚霞预测增强功能。生成独立的朝霞和晚霞预测，显示专业时间信息（黄金/蓝调时段、最佳观赏时间、日落方向）、太阳方位角、云层分层。集成NotificationService实现通知提醒。
 
 ### 4. UI组件（View）
 
@@ -3010,6 +3011,7 @@ Response:
       },
       "finalScore": 78,
       "optimalMoment": "日落前20分钟预计达到最佳观赏时刻",
+      "sunsetDirection": "西偏北（约280°）",
       "confidence": 0.85
     }
   }
