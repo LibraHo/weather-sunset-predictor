@@ -7,9 +7,46 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>霞客 SUNSET VOYAGER</title>
-  <link rel="stylesheet" href="styles/main.css">
-  <link rel="stylesheet" href="styles/rtl.css">
-  <link rel="stylesheet" href="styles/settings-panel.css">
+  <style>
+    .hidden { display: none !important; }
+  </style>
+  <script>
+    (function () {
+      const cssFiles = ['styles/main.css', 'styles/rtl.css', 'styles/settings-panel.css'];
+      const path = window.location.pathname;
+      const baseCandidates = [];
+
+      if (path.endsWith('/')) {
+        baseCandidates.push(path);
+      } else {
+        baseCandidates.push(path.replace(/\/[^/]*$/, '/'));
+      }
+
+      baseCandidates.push('/');
+      const uniqueBases = [...new Set(baseCandidates)];
+
+      function loadStylesheet(file, baseIndex = 0) {
+        if (baseIndex >= uniqueBases.length) return;
+
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = `${uniqueBases[baseIndex]}${file}`;
+        link.onerror = function () {
+          link.remove();
+          loadStylesheet(file, baseIndex + 1);
+        };
+
+        document.head.appendChild(link);
+      }
+
+      cssFiles.forEach((file) => loadStylesheet(file));
+    })();
+  </script>
+  <noscript>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="stylesheet" href="/styles/rtl.css">
+    <link rel="stylesheet" href="/styles/settings-panel.css">
+  </noscript>
 
   <!-- 任务26.6.2：使用 Leaflet + OSM 替代 iframe 嵌入方式 -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
