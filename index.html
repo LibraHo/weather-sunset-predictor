@@ -106,41 +106,43 @@
         <div id="weather-data" style="display: none;">
           <div class="weather-glass-panel">
             <!-- 位置 -->
-            <div id="weather-location" class="weather-location" data-i18n="weather.currentLocation">--</div>
-
-            <!-- 主要天气信息 -->
-            <div class="weather-main">
-              <div class="weather-temp-large">
-                <span id="current-temp-main">--</span>
-                <span id="current-temp-unit" class="temp-unit">°C</span>
-              </div>
-              <div class="weather-side-info">
-                <div class="weather-icon-large" id="weather-icon-main">☀️</div>
-                <div class="weather-desc" id="weather-description">--</div>
-              </div>
+            <div class="weather-location-block">
+              <div id="weather-location" class="weather-location" data-i18n="weather.currentLocation">--</div>
             </div>
 
-            <!-- 详细信息网格 -->
-            <div class="weather-grid">
-              <div class="weather-item">
-                <span class="weather-label" data-i18n="weather.humidity">湿度</span>
-                <span id="current-humidity" class="weather-value">--</span>
+            <!-- 主体信息（参考线框布局：左大区 + 右侧纵向数据框） -->
+            <div class="weather-main-layout">
+              <div class="weather-visual-panel">
+                <div class="weather-icon-large" id="weather-icon-main">☀️</div>
+                <div class="weather-temp-large">
+                  <span id="current-temp-main">--</span>
+                  <span id="current-temp-unit" class="temp-unit">°C</span>
+                </div>
+                <div class="weather-desc" id="weather-description">--</div>
               </div>
-              <div class="weather-item">
-                <span class="weather-label" data-i18n="weather.cloudCover">云量</span>
-                <span id="current-cloud-cover" class="weather-value">--</span>
-              </div>
-              <div class="weather-item">
-                <span class="weather-label" data-i18n="weather.windSpeed">风速</span>
-                <span id="current-wind-speed" class="weather-value">--</span>
-              </div>
-              <div class="weather-item">
-                <span class="weather-label" data-i18n="weather.pressure">气压</span>
-                <span id="current-pressure" class="weather-value">--</span>
-              </div>
-              <div class="weather-item weather-item-highlight">
-                <span class="weather-label" data-i18n="weather.visibility">能见度</span>
-                <span id="current-visibility" class="weather-value">--</span>
+
+              <div class="weather-feature-stack">
+                <div class="weather-feature-item">
+                  <span class="weather-label" data-i18n="weather.humidity">湿度</span>
+                  <span id="current-humidity" class="weather-value">--</span>
+                </div>
+                <div class="weather-feature-item">
+                  <span class="weather-label" data-i18n="weather.cloudCover">云量</span>
+                  <span id="current-cloud-cover" class="weather-value">--</span>
+                </div>
+
+                <div class="weather-feature-item weather-feature-item-compact">
+                  <span class="weather-label" data-i18n="weather.windSpeed">风速</span>
+                  <span id="current-wind-speed" class="weather-value">--</span>
+                </div>
+                <div class="weather-feature-item weather-feature-item-compact">
+                  <span class="weather-label" data-i18n="weather.pressure">气压</span>
+                  <span id="current-pressure" class="weather-value">--</span>
+                </div>
+                <div class="weather-feature-item weather-feature-item-compact weather-item-highlight">
+                  <span class="weather-label" data-i18n="weather.visibility">能见度</span>
+                  <span id="current-visibility" class="weather-value">--</span>
+                </div>
               </div>
             </div>
           </div>
