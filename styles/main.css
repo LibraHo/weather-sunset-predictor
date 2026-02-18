@@ -573,23 +573,33 @@ input[type="text"]::placeholder {
 .weather-item {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   text-align: center;
+  justify-content: center;
+  min-height: 68px;
   padding: 8px 10px;
   background-color: rgba(255, 255, 255, 0.2);
   border-radius: 12px;
 }
 
 .weather-label {
+  width: 100%;
   font-size: 0.75rem;
   color: rgba(52, 67, 89, 0.78);
   margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .weather-value {
+  width: 100%;
   font-size: 1rem;
   font-weight: 600;
   color: #1f2a3d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .weather-item-highlight {
@@ -2198,10 +2208,15 @@ body.theme-dark .prediction-analysis {
 }
 
 .day-label {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--color-text);
   margin-bottom: var(--spacing-sm);
+  min-height: 1.2em;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .weather-icon {
