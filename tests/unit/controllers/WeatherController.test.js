@@ -199,4 +199,63 @@ describe('WeatherController - 24小时温度连续化', () => {
     dateFormatterSpy.mockRestore();
   });
 
+  test('每日概览应按“降水/风速/风向”文字顺序展示风信息', () => {
+    controller.i18n = {
+      currentLanguage: 'zh-CN',
+      t: jest.fn((key, params) => {
+        if (key === 'time.today') return '今天';
+        if (key === 'weather.precipitation') return '降水';
+        if (key === 'weather.windSpeed') return '风速';
+        if (key === 'weather.windDirection') return '风向';
+        if (key === 'surrounding.directions.E') return '东';
+        if (key === 'surrounding.directions.SE') return '东南';
+        return key;
+      })
+    };
+
+    controller.windSpeedUnit = 'kmh';
+
+    const dateFormatterSpy = jest.spyOn(Intl, 'DateTimeFormat').mockImplementation((locale, options = {}) => ({
+      format: () => {
+        if (options.day === 'numeric') return '18';
+        if (options.weekday === 'short') return '周四';
+        return '';
+      }
+    }));
+
+    const dayData = [
+      { timestamp: new Date('2026-06-18T00:00:00Z').getTime(), temp: 30, cloudCover: 20, precipitation: 0.2, windSpeed: 8, windDirection: 90, pressure: 1008 },
+      { timestamp: new Date('2026-06-18T03:00:00Z').getTime(), temp: 10, cloudCover: 20, precipitation: 0, windSpeed: 12, windDirection: 120, pressure: 1008 }
+    ];
+
+    const card = controller._createDayCard(dayData, 0);
+    const rows = card.querySelectorAll('.day-meta-row');
+
+    expect(rows[0].textContent.trim()).toBe('降水 50%');
+    expect(rows[1].textContent.trim()).toBe('风速 12 km/h');
+    expect(rows[2].textContent.replace(/\s+/g, ' ').trim()).toContain('风向 东');
+    expect(card.querySelector('.day-wind-direction-icon').style.transform).toBe('rotate(105deg)');
+
+    dateFormatterSpy.mockRestore();
+  });
+
+  test('风向角度应被规范化到0-360度', () => {
+    expect(controller._normalizeWindDirection(450)).toBe(90);
+    expect(controller._normalizeWindDirection(-30)).toBe(330);
+    expect(controller._normalizeWindDirection(Number.NaN)).toBe(0);
+  });
+
+  test('风向文案应映射到八方位', () => {
+    controller.i18n = {
+      t: jest.fn((key) => {
+        if (key === 'surrounding.directions.N') return '北';
+        if (key === 'surrounding.directions.NE') return '东北';
+        return key;
+      })
+    };
+
+    expect(controller._getWindDirectionLabel(10)).toBe('北');
+    expect(controller._getWindDirectionLabel(40)).toBe('东北');
+  });
+
 });

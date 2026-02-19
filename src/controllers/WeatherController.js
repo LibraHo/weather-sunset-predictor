@@ -204,6 +204,8 @@ class WeatherController {
       humidity: document.getElementById('current-humidity'),
       cloudCover: document.getElementById('current-cloud-cover'),
       windSpeed: document.getElementById('current-wind-speed'),
+      windDirectionIcon: document.getElementById('current-wind-direction-icon'),
+      windDirectionText: document.getElementById('current-wind-direction-text'),
       pressure: document.getElementById('current-pressure'),
       visibility: document.getElementById('current-visibility')
     };
@@ -216,6 +218,13 @@ class WeatherController {
     }
     if (elements.windSpeed) {
       elements.windSpeed.textContent = this.formatWindSpeed(currentWeather.windSpeed);
+    }
+    const normalizedDirection = this._normalizeWindDirection(currentWeather.windDirection);
+    if (elements.windDirectionIcon) {
+      elements.windDirectionIcon.style.transform = `rotate(${normalizedDirection}deg)`;
+    }
+    if (elements.windDirectionText) {
+      elements.windDirectionText.textContent = this._getWindDirectionLabel(normalizedDirection);
     }
     if (elements.pressure) {
       elements.pressure.textContent = `${currentWeather.pressure.toFixed(0)} hPa`;
@@ -388,11 +397,13 @@ class WeatherController {
     const precipCount = dayData.filter(d => d.precipitation > 0.1).length;
     const precipProb = Math.round((precipCount / dayData.length) * 100);
 
+    const maxWindSpeed = Math.max(...dayData.map(d => d.windSpeed ?? 0));
+    const avgWindDirection = dayData.reduce((sum, d) => sum + this._normalizeWindDirection(d.windDirection), 0) / dayData.length;
+
     // 选择天气图标
     const weatherIcon = this._getWeatherIcon(avgCloudCover, precipProb);
 
-    // 使用i18n翻译降水概率
-    const precipText = this.i18n.t('weather.precipChance', { prob: precipProb });
+    const directionLabel = this._getWindDirectionLabel(avgWindDirection);
 
     card.innerHTML = `
       <div class="day-label" aria-label="${dayPrefix} ${dayDateLabel}">
@@ -405,7 +416,12 @@ class WeatherController {
         <span class="temp-separator">/</span>
         <span class="max-temp">${maxTemp.toFixed(0)}°</span>
       </div>
-      <div class="precip-prob">${precipText}</div>
+      <div class="day-meta-row">${this.i18n.t('weather.precipitation')} ${precipProb}%</div>
+      <div class="day-meta-row">${this.i18n.t('weather.windSpeed')} ${this.formatWindSpeed(maxWindSpeed)}</div>
+      <div class="day-meta-row day-meta-row-direction">
+        <span>${this.i18n.t('weather.windDirection')} ${directionLabel}</span>
+        <span class="day-wind-direction-icon" style="transform: rotate(${avgWindDirection.toFixed(0)}deg);" aria-hidden="true">↑</span>
+      </div>
     `;
 
     // 点击卡片切换到详细视图
@@ -415,6 +431,45 @@ class WeatherController {
     });
 
     return card;
+  }
+
+
+  /**
+   * 规范化风向角度，确保在0-360度区间内
+   * @param {number} direction - 风向角度
+   * @returns {number} 规范化角度
+   */
+  _normalizeWindDirection(direction) {
+    if (!Number.isFinite(direction)) {
+      return 0;
+    }
+
+    const normalized = direction % 360;
+    return normalized >= 0 ? normalized : normalized + 360;
+  }
+
+
+  /**
+   * 将角度映射为八方位编码
+   * @param {number} direction - 风向角度
+   * @returns {string} 方位编码
+   */
+  _getWindDirectionCode(direction) {
+    const normalized = this._normalizeWindDirection(direction);
+    const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    const index = Math.round(normalized / 45) % directions.length;
+    return directions[index];
+  }
+
+  /**
+   * 获取风向文字
+   * @param {number} direction - 风向角度
+   * @returns {string} 风向文字
+   */
+  _getWindDirectionLabel(direction) {
+    const directionCode = this._getWindDirectionCode(direction);
+    const key = `surrounding.directions.${directionCode}`;
+    return this.i18n?.t ? this.i18n.t(key) : directionCode;
   }
 
   /**
