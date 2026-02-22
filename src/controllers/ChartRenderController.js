@@ -85,9 +85,17 @@ class ChartRenderController {
 
     const points = hourlyData.map((d, i) => {
       const value = getConvertedValue(d[param], param);
+      const time = new Date(d.timestamp);
       const x = padding.left + (i / (hourlyData.length - 1)) * contentWidth;
       const y = padding.top + contentHeight - ((value - min) / range) * contentHeight;
-      return { x, y, value, time: new Date(d.timestamp).getHours() };
+      return {
+        x,
+        y,
+        value,
+        hour: time.getHours(),
+        month: time.getMonth() + 1,
+        day: time.getDate()
+      };
     });
 
     const pathData = points.map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(' ');
@@ -110,7 +118,12 @@ class ChartRenderController {
 
     points.forEach((p, i) => {
       if (i % 3 === 0) {
-        html += `<text x="${p.x}" y="${chartHeight - padding.bottom + 25}" font-size="${axisFontSize}" fill="var(--color-text)" text-anchor="middle" font-weight="500">${p.time}:00</text>`;
+        const prev = points[i - 1];
+        const isDayBoundary = !prev || prev.day !== p.day || prev.month !== p.month;
+        const axisText = isDayBoundary
+          ? `${p.month}/${p.day} ${p.hour}:00`
+          : `${p.hour}:00`;
+        html += `<text x="${p.x}" y="${chartHeight - padding.bottom + 25}" font-size="${axisFontSize}" fill="var(--color-text)" text-anchor="middle" font-weight="500">${axisText}</text>`;
       }
     });
 
