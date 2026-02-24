@@ -3998,3 +3998,83 @@ Windy Point Forecast API（使用 effectiveApiKey）
 | `src/services/WindyAPIService.js` | `fetchFromProxy()` 中读取 `localStorage.user_windy_api_key`，非空时附加 `X-Windy-API-Key` 请求头 |
 | `src/components/SettingsPanel.js` | 新增 Windy API 来源单选组 + Key 输入框 |
 | `src/locales/zh-CN.js` / `en-US.js` | 新增相关 i18n Key |
+
+---
+
+## 需求26设计：主页分页菜单 + 火烧云计算方法页
+
+### 设计目标
+
+- 在不改变现有后端接口的前提下，优化主页信息架构
+- 通过分页菜单将「使用功能」与「算法说明」分离，降低新用户理解门槛
+- 为后续算法可视化（分项权重、案例模拟）预留扩展位
+
+### 信息架构调整
+
+在主页主内容区引入一级分页导航（Tab/Pager Nav）：
+
+1. **预测功能页（默认）**
+   - 保留现有天气查询、预测结果、图表与地图相关功能
+2. **火烧云计算方法页（新增）**
+   - 展示算法说明、评分构成和评分区间解释
+
+> 切页行为采用前端状态切换，不触发整页刷新，不新增后端 API。
+
+### 组件设计
+
+新增/扩展前端组件建议如下：
+
+- `HomePager`（可作为独立组件或并入现有主控制器）
+  - 管理当前分页状态：`forecast` / `methodology`
+  - 对外提供 `switchPage(pageId)`
+- `MethodologyPanel`
+  - 渲染火烧云计算方法内容
+  - 包含四大因子说明：中高云、低云、湿度、能见度
+  - 包含评分等级说明：优秀（>70）、良好（40-70）、一般（<40）
+
+### 状态与事件流
+
+- 初始状态：`activePage = 'forecast'`
+- 用户点击分页菜单：
+  1. 更新 `activePage`
+  2. 切换内容容器可见性
+  3. 更新激活样式（`aria-selected` + active class）
+- 可选增强：将 `activePage` 写入 `localStorage.home_active_page`，刷新后恢复
+
+### 可访问性与响应式
+
+- 分页导航使用语义化结构（`role="tablist"`、`role="tab"`、`role="tabpanel"`）
+- 支持键盘切换（左右方向键、Enter/Space）
+- 移动端采用横向滚动 tab 或两列紧凑按钮，确保触控点击区域 >= 40px
+- 页面文案采用分段与列表，避免移动端长段落阅读负担
+
+### 文案与国际化
+
+新增 i18n Key（最小集）：
+
+- `home.tabs.forecast`
+- `home.tabs.methodology`
+- `methodology.title`
+- `methodology.intro`
+- `methodology.factor.midHighCloud`
+- `methodology.factor.lowCloud`
+- `methodology.factor.humidity`
+- `methodology.factor.visibility`
+- `methodology.score.excellent`
+- `methodology.score.good`
+- `methodology.score.fair`
+
+首批补齐 `zh-CN` 与 `en-US`，其他语言可回退默认文案。
+
+### 风险与缓解
+
+1. **风险：分页改造影响现有主页面布局**
+   - 缓解：默认页保持原 DOM 结构，仅新增外层分页容器
+2. **风险：多语言遗漏导致 key 显示异常**
+   - 缓解：增加 i18n key 存在性测试或渲染兜底
+3. **风险：移动端分页导航拥挤**
+   - 缓解：使用横向滚动和短文案标题
+
+### 本次范围声明
+
+本次仅完成规格设计更新，不执行具体编码任务；实现工作在后续 Phase 中排期。
