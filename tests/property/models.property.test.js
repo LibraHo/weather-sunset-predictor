@@ -257,7 +257,7 @@ describe('Data Models - Property-Based Tests', () => {
       );
     });
 
-    test('sun azimuth should only show when score > 70', () => {
+    test('sun azimuth should show whenever azimuth exists', () => {
       fc.assert(
         fc.property(
           fc.float({ min: 0, max: 100, noNaN: true }),
@@ -278,11 +278,7 @@ describe('Data Models - Property-Based Tests', () => {
 
             const shouldShow = prediction.shouldShowAzimuth();
 
-            if (score > 70) {
-              expect(shouldShow).toBe(true);
-            } else {
-              expect(shouldShow).toBe(false);
-            }
+            expect(shouldShow).toBe(true);
           }
         ),
         { numRuns: 100 }

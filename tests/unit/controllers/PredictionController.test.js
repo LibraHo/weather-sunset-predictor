@@ -333,6 +333,48 @@ describe('PredictionController', () => {
     });
   });
 
+
+
+  describe('北京晚霞方向展示', () => {
+    test('北京场景下晚霞卡片应显示太阳方位角方向（不依赖高分）', () => {
+      const sunsetTime = new Date('2024-06-21T19:45:00+08:00');
+      const prediction = {
+        score: 25,
+        quality: 'fair',
+        sunsetTime,
+        type: 'sunset',
+        goldenHour: null,
+        blueHour: null,
+        sunAzimuth: 296,
+        cloudLayers: null,
+        factors: {
+          cloudCover: { value: 45 },
+          humidity: { value: 65 },
+          visibility: { value: 12 },
+          lowClouds: { value: 20 }
+        },
+        getOptimalViewingWindow: () => ({
+          start: new Date(sunsetTime.getTime() - 30 * 60 * 1000),
+          end: new Date(sunsetTime.getTime() + 30 * 60 * 1000)
+        }),
+        shouldShowAzimuth: () => true,
+        getAzimuthDirection: () => '西北偏西'
+      };
+
+      const html = predictionController.renderSinglePrediction(
+        prediction,
+        '🌅',
+        '晚霞',
+        '日落时间',
+        '北京',
+        'sunset'
+      );
+
+      expect(html).toContain('北京');
+      expect(html).toContain('🧭');
+      expect(html).toContain('西北偏西 (296°)');
+    });
+  });
   describe('updatePredictionDisplay', () => {
     test('应该存储预测数据并绑定事件', () => {
       const mockPredictions = [

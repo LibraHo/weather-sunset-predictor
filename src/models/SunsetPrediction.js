@@ -20,7 +20,7 @@ class SunsetPrediction {
    * @param {string} type - 预测类型：'sunrise' 或 'sunset'（需求12.4）
    * @param {Object} goldenHour - 黄金时段 {start, end}（需求12.2）
    * @param {Object} blueHour - 蓝调时段 {start, end}（需求12.3）
-   * @param {number} sunAzimuth - 太阳方位角（度数，仅当score>70时）（需求12.5）
+   * @param {number} sunAzimuth - 太阳方位角（度数）（需求12.5）
    * @param {Object} cloudLayers - 云层分层信息 {high, mid, low, description}（需求12.11）
    * 
    * 需求：5.5 - 输出0-100的预测质量评分
@@ -90,10 +90,10 @@ class SunsetPrediction {
    * 
    * @returns {boolean} 是否显示方位角
    * 
-   * 需求：12.5 - 仅当评分>70时显示太阳方位角
+   * 需求：12.5 - 显示太阳方位角信息（存在即显示）
    */
   shouldShowAzimuth() {
-    return this.score > 70 && this.sunAzimuth !== null;
+    return this.sunAzimuth !== null && this.sunAzimuth !== undefined;
   }
 
   /**
