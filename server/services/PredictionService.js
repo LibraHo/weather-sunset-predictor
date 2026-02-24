@@ -106,11 +106,9 @@ class PredictionService {
     const goldenHour = SunCalculator.getGoldenHour(referenceTime, type);
     const blueHour = SunCalculator.getBlueHour(referenceTime, type);
 
-    // ========== 计算太阳方位角（仅当评分>70时）==========
+    // ========== 计算太阳方位角（与评分无关）==========
 
-    const sunAzimuth = totalScore > 70
-      ? SunCalculator.getSunAzimuth(date, referenceTime, lat, lon)
-      : null;
+    const sunAzimuth = SunCalculator.getSunAzimuth(date, referenceTime, lat, lon);
 
     // ========== 分析云层分层 ==========
 

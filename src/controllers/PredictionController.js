@@ -73,6 +73,41 @@ class PredictionController {
   }
 
   /**
+   * 为增强模型结果补齐太阳方位角相关字段，兼容统一渲染逻辑
+   * @param {Object} prediction - 预测对象
+   * @param {Date} referenceTime - 日出/日落时间
+   * @param {Date} baseDate - 预测日期
+   * @param {number} lat - 纬度
+   * @param {number} lon - 经度
+   * @private
+   */
+  _ensureAzimuthCompatibility(prediction, referenceTime, baseDate, lat, lon) {
+    if (prediction.sunAzimuth === null || prediction.sunAzimuth === undefined) {
+      prediction.sunAzimuth = this.predictionService.getSunAzimuth(baseDate, referenceTime, lat, lon);
+    }
+
+    if (!prediction.getAzimuthDirection) {
+      prediction.getAzimuthDirection = () => {
+        if (prediction.sunAzimuth === null || prediction.sunAzimuth === undefined) return '';
+
+        const directions = [
+          '北', '东北偏北', '东北', '东北偏东',
+          '东', '东南偏东', '东南', '东南偏南',
+          '南', '西南偏南', '西南', '西南偏西',
+          '西', '西北偏西', '西北', '西北偏北'
+        ];
+
+        const index = Math.round(prediction.sunAzimuth / 22.5) % 16;
+        return directions[index];
+      };
+    }
+
+    if (!prediction.shouldShowAzimuth) {
+      prediction.shouldShowAzimuth = () => prediction.sunAzimuth !== null && prediction.sunAzimuth !== undefined;
+    }
+  }
+
+  /**
    * 生成晚霞预测
    * 
    * @param {Array} weatherDataArray - 天气数据数组
@@ -201,6 +236,8 @@ class PredictionController {
 
           // 为增强版预测添加最佳观看窗口方法和factors属性
           if (this.useEnhancedModel) {
+            this._ensureAzimuthCompatibility(sunrisePrediction, sunriseTime, targetDate, location.lat, location.lon);
+
             if (!sunrisePrediction.getOptimalViewingWindow) {
               sunrisePrediction.getOptimalViewingWindow = () => {
                 return {
@@ -332,6 +369,8 @@ class PredictionController {
 
           // 为增强版预测添加最佳观看窗口方法和factors属性
           if (this.useEnhancedModel) {
+            this._ensureAzimuthCompatibility(sunsetPrediction, sunsetTime, targetDate, location.lat, location.lon);
+
             if (!sunsetPrediction.getOptimalViewingWindow) {
               sunsetPrediction.getOptimalViewingWindow = () => {
                 return {
@@ -623,8 +662,12 @@ class PredictionController {
       enhancedInfo = goldenRow + blueRow;
     }
 
-    // 太阳方位角（需求12.5，仅当评分>70时）
-    if (prediction.shouldShowAzimuth && prediction.shouldShowAzimuth()) {
+    // 太阳方位角（需求12.5：有方位角就显示）
+    const shouldShowAzimuth = prediction.shouldShowAzimuth
+      ? prediction.shouldShowAzimuth()
+      : prediction.sunAzimuth !== null && prediction.sunAzimuth !== undefined;
+
+    if (shouldShowAzimuth) {
       const direction = prediction.getAzimuthDirection();
       enhancedInfo += `<div class="compact-extra-time">🧭 ${direction} (${prediction.sunAzimuth}°)</div>`;
     }

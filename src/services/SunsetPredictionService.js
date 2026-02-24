@@ -464,8 +464,8 @@ class SunsetPredictionService {
     const goldenHour = this.getGoldenHour(referenceTime, type);
     const blueHour = this.getBlueHour(referenceTime, type);
 
-    // 需求12：计算太阳方位角（仅当评分>70时）
-    const sunAzimuth = finalScore > 70 ? this.getSunAzimuth(date, referenceTime, lat, lon) : null;
+    // 需求12：计算太阳方位角（与评分无关）
+    const sunAzimuth = this.getSunAzimuth(date, referenceTime, lat, lon);
 
     // 需求12：分析云层分层
     const cloudLayers = this.analyzeCloudLayers(
