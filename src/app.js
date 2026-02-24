@@ -6,7 +6,7 @@
 
 import StorageService from './services/StorageService.js';
 import ConfigService from './services/ConfigService.js';
-import GeocodingService from './services/GeocodingService.js';
+import GeocodingServiceFactory from './services/GeocodingServiceFactory.js';
 import MockGeocodingService from './services/MockGeocodingService.js';
 import WeatherController from './controllers/WeatherController.js';
 import PredictionController from './controllers/PredictionController.js';
@@ -63,11 +63,12 @@ const configService = new ConfigService();
 const isE2ETestMode = window.location.search.includes('e2e=true') ||
                          localStorage.getItem('e2e_test_mode') === 'true';
 
-// 使用真实的地理编码服务（支持所有城市）
+// 使用 GeocodingServiceFactory 创建地理编码服务（需求 24）
 // E2E 测试模式下使用 Mock 服务
-const geocodingService = isE2ETestMode
+const proxyURL = localStorage.getItem('api_proxy_url') || API_CONFIG.proxy.url || 'http://localhost:3000';
+let geocodingService = isE2ETestMode
   ? new MockGeocodingService()
-  : new GeocodingService();
+  : GeocodingServiceFactory.create(proxyURL);
 
 // 优先从配置文件读取API密钥，然后从localStorage读取
 const config = await configService.loadConfig();
@@ -107,6 +108,17 @@ const appController = new AppController(
   predictionController,
   geocodingService
 );
+
+// 需求 24：监听地理编码设置变更，热重建服务实例
+if (!isE2ETestMode) {
+  window.addEventListener('geocodingSettingChanged', () => {
+    const newProxyURL = localStorage.getItem('api_proxy_url') || API_CONFIG.proxy.url || 'http://localhost:3000';
+    geocodingService = GeocodingServiceFactory.create(newProxyURL);
+    appController.geocodingService = geocodingService;
+    window.geocodingService = geocodingService;
+    console.log('[App] 地理编码服务已重建:', geocodingService.constructor.name);
+  });
+}
 
 // 当 DOM 加载完成后初始化应用
 if (document.readyState === 'loading') {

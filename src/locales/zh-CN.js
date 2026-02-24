@@ -440,7 +440,31 @@ export default {
     noDefaultLocation: '未设置默认位置',
     setAsDefault: '设为默认',
     currentDefaultLocation: '当前默认位置',
-    defaultLocationHint: '设置启动时自动加载的位置'
+    defaultLocationHint: '设置启动时自动加载的位置',
+    // 位置解析服务（需求 24）
+    geocodingService: '位置解析服务',
+    geocodingMode: '调用模式',
+    geocodingModeBackend: '后端代理（推荐）',
+    geocodingModeDirect: '前端直连',
+    geocodingProvider: '服务提供商',
+    geocodingBackendNominatim: 'Nominatim / OSM（推荐，免费）',
+    geocodingBackendGaode: '高德地图（中国优化，免费）🇨🇳',
+    geocodingBackendGoogle: 'Google Maps（需付费 Key）',
+    geocodingDirectNominatim: 'Nominatim / OSM（直连，中国可能受限）',
+    geocodingDirectGoogle: 'Google Maps（直连，中国不可用）',
+    geocodingApiKey: 'API Key',
+    geocodingApiKeyPlaceholder: '输入 API Key',
+    geocodingApiKeyHint: '高德地图免费申请：lbs.amap.com',
+    geocodingApiKeyRequired: '请先在设置中填写 API Key',
+    geocodingChinaTag: '🇨🇳 中国可用',
+    // Windy API Key（需求 25）
+    windyApiKeyMode: 'Windy API 来源',
+    windyApiKeyModeSystem: '使用系统 API（推荐）',
+    windyApiKeyModeCustom: '使用我的 API Key',
+    windyApiKeyCustom: '我的 Windy API Key',
+    windyApiKeyCustomPlaceholder: '输入 Windy Point Forecast API Key',
+    windyApiKeyCustomHint: '申请地址：windy.com/developer',
+    windyApiKeyInvalid: 'API Key 格式无效（长度须 > 8 字符）'
   },
 
   // 语言选择

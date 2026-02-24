@@ -352,7 +352,31 @@ export default {
     tempFahrenheit: '華氏度 (℉)',
     windSpeedUnit: '風速單位',
     windKmh: '公里/小時 (km/h)',
-    windMs: '米/秒 (m/s)'
+    windMs: '米/秒 (m/s)',
+    // Location service (Req 24)
+    geocodingService: 'Location Service',
+    geocodingMode: 'Mode',
+    geocodingModeBackend: 'Backend Proxy (Recommended)',
+    geocodingModeDirect: 'Frontend Direct',
+    geocodingProvider: 'Provider',
+    geocodingBackendNominatim: 'Nominatim / OSM (Recommended, Free)',
+    geocodingBackendGaode: 'Amap / Gaode (China Optimized, Free) 🇨🇳',
+    geocodingBackendGoogle: 'Google Maps (Paid Key Required)',
+    geocodingDirectNominatim: 'Nominatim / OSM (Direct, May Be Blocked in China)',
+    geocodingDirectGoogle: 'Google Maps (Direct, Not Available in China)',
+    geocodingApiKey: 'API Key',
+    geocodingApiKeyPlaceholder: 'Enter API Key',
+    geocodingApiKeyHint: 'Get free Amap key at: lbs.amap.com',
+    geocodingApiKeyRequired: 'Please enter an API Key in Settings first',
+    geocodingChinaTag: '🇨🇳 Available in China',
+    // Windy API Key (Req 25)
+    windyApiKeyMode: 'Windy API Source',
+    windyApiKeyModeSystem: 'Use System API (Recommended)',
+    windyApiKeyModeCustom: 'Use My API Key',
+    windyApiKeyCustom: 'My Windy API Key',
+    windyApiKeyCustomPlaceholder: 'Enter Windy Point Forecast API Key',
+    windyApiKeyCustomHint: 'Get key at: windy.com/developer',
+    windyApiKeyInvalid: 'Invalid API Key format (length must be > 8 characters)'
   },
 
   // 語言選擇
