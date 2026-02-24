@@ -63,6 +63,72 @@ class SettingsPanel {
                   />
                 </div>
               </div>
+
+              <!-- 位置解析服务（需求 24）-->
+              <div class="setting-item setting-item-stack" id="geocoding-service-setting">
+                <div class="setting-text-block">
+                  <label class="setting-label setting-label-title">📍 ${this.i18n.t('settings.geocodingService')}</label>
+                </div>
+                <div class="setting-control setting-control-full">
+                  <label class="setting-label">${this.i18n.t('settings.geocodingMode')}</label>
+                  <div class="setting-radio-group">
+                    <label class="setting-radio-label">
+                      <input type="radio" name="geocoding-mode" value="backend" id="geocoding-mode-backend" />
+                      ${this.i18n.t('settings.geocodingModeBackend')}
+                    </label>
+                    <label class="setting-radio-label">
+                      <input type="radio" name="geocoding-mode" value="direct" id="geocoding-mode-direct" />
+                      ${this.i18n.t('settings.geocodingModeDirect')}
+                    </label>
+                  </div>
+                </div>
+                <div class="setting-control setting-control-full">
+                  <label class="setting-label" for="geocoding-provider-select">${this.i18n.t('settings.geocodingProvider')}</label>
+                  <select id="geocoding-provider-select" class="setting-select">
+                    ${this.getGeocodingProviderOptions('backend')}
+                  </select>
+                </div>
+                <div class="setting-control setting-control-full" id="geocoding-api-key-section" style="display:none">
+                  <label class="setting-label" for="geocoding-api-key-input">${this.i18n.t('settings.geocodingApiKey')}</label>
+                  <input
+                    type="text"
+                    id="geocoding-api-key-input"
+                    class="setting-input"
+                    placeholder="${this.i18n.t('settings.geocodingApiKeyPlaceholder')}"
+                  />
+                  <small class="setting-hint" id="geocoding-api-key-hint"></small>
+                </div>
+              </div>
+
+              <!-- Windy API Key（需求 25）-->
+              <div class="setting-item setting-item-stack" id="windy-api-key-setting">
+                <div class="setting-text-block">
+                  <label class="setting-label setting-label-title">🔑 ${this.i18n.t('settings.windyApiKeyMode')}</label>
+                </div>
+                <div class="setting-control setting-control-full">
+                  <div class="setting-radio-group">
+                    <label class="setting-radio-label">
+                      <input type="radio" name="windy-api-mode" value="system" id="windy-api-system" />
+                      ${this.i18n.t('settings.windyApiKeyModeSystem')}
+                    </label>
+                    <label class="setting-radio-label">
+                      <input type="radio" name="windy-api-mode" value="custom" id="windy-api-custom" />
+                      ${this.i18n.t('settings.windyApiKeyModeCustom')}
+                    </label>
+                  </div>
+                </div>
+                <div class="setting-control setting-control-full" id="windy-api-key-section" style="display:none">
+                  <label class="setting-label" for="windy-api-key-input">${this.i18n.t('settings.windyApiKeyCustom')}</label>
+                  <input
+                    type="password"
+                    id="windy-api-key-input"
+                    class="setting-input"
+                    placeholder="${this.i18n.t('settings.windyApiKeyCustomPlaceholder')}"
+                  />
+                  <small class="setting-hint">${this.i18n.t('settings.windyApiKeyCustomHint')}</small>
+                  <span id="windy-api-key-error" class="setting-error" style="display:none;color:var(--color-error,#e53935);font-size:12px;"></span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -181,6 +247,26 @@ class SettingsPanel {
   }
 
   /**
+   * 根据调用模式返回地理编码提供商选项 HTML
+   * 需求：24
+   * @param {string} mode - 'backend' | 'direct'
+   * @returns {string}
+   */
+  getGeocodingProviderOptions(mode) {
+    const options = mode === 'backend'
+      ? [
+          { value: 'nominatim', label: this.i18n.t('settings.geocodingBackendNominatim') },
+          { value: 'gaode',     label: this.i18n.t('settings.geocodingBackendGaode') },
+          { value: 'google',    label: this.i18n.t('settings.geocodingBackendGoogle') }
+        ]
+      : [
+          { value: 'nominatim', label: this.i18n.t('settings.geocodingDirectNominatim') },
+          { value: 'google',    label: this.i18n.t('settings.geocodingDirectGoogle') }
+        ];
+    return options.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+  }
+
+  /**
    * 获取语言选项HTML
    */
   getLanguageOptions() {
@@ -258,6 +344,43 @@ class SettingsPanel {
         this.handleWindUnitChange(e.target.value);
       });
     }
+
+    // 位置解析模式（需求 24）
+    const geocodingModeRadios = this.panel.querySelectorAll('input[name="geocoding-mode"]');
+    geocodingModeRadios.forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        this.handleGeocodingModeChange(e.target.value);
+      });
+    });
+
+    const geocodingProviderSelect = document.getElementById('geocoding-provider-select');
+    if (geocodingProviderSelect) {
+      geocodingProviderSelect.addEventListener('change', (e) => {
+        this.handleGeocodingProviderChange(e.target.value);
+      });
+    }
+
+    const geocodingApiKeyInput = document.getElementById('geocoding-api-key-input');
+    if (geocodingApiKeyInput) {
+      geocodingApiKeyInput.addEventListener('change', (e) => {
+        this.handleGeocodingApiKeyChange(e.target.value);
+      });
+    }
+
+    // Windy API Key 模式（需求 25）
+    const windyApiModeRadios = this.panel.querySelectorAll('input[name="windy-api-mode"]');
+    windyApiModeRadios.forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        this.handleWindyApiModeChange(e.target.value);
+      });
+    });
+
+    const windyApiKeyInput = document.getElementById('windy-api-key-input');
+    if (windyApiKeyInput) {
+      windyApiKeyInput.addEventListener('change', (e) => {
+        this.handleWindyApiKeyChange(e.target.value);
+      });
+    }
   }
 
   /**
@@ -317,6 +440,12 @@ class SettingsPanel {
 
     // 任务17.3：加载默认位置
     this.loadDefaultLocation();
+
+    // 加载位置解析服务设置（需求 24）
+    this.loadGeocodingSettings();
+
+    // 加载 Windy API Key 设置（需求 25）
+    this.loadWindyApiKeySettings();
   }
 
   /**
@@ -575,6 +704,180 @@ class SettingsPanel {
 
     // 触发自定义事件，通知 WeatherController 刷新数据
     window.dispatchEvent(new CustomEvent('windUnitChanged', { detail: { unit } }));
+  }
+
+  // ========== 位置解析服务（需求 24）==========
+
+  /**
+   * 加载位置解析服务设置，恢复控件状态
+   */
+  loadGeocodingSettings() {
+    const mode = localStorage.getItem('geocoding_mode') || 'backend';
+    const provider = localStorage.getItem('geocoding_provider') || 'nominatim';
+    const apiKey = localStorage.getItem('geocoding_api_key') || '';
+
+    // 恢复模式单选
+    const modeRadio = this.panel.querySelector(`input[name="geocoding-mode"][value="${mode}"]`);
+    if (modeRadio) modeRadio.checked = true;
+
+    // 更新提供商下拉选项
+    const providerSelect = document.getElementById('geocoding-provider-select');
+    if (providerSelect) {
+      providerSelect.innerHTML = this.getGeocodingProviderOptions(mode);
+      // 尝试恢复上次选择的提供商（若对应模式下有此选项）
+      const option = providerSelect.querySelector(`option[value="${provider}"]`);
+      if (option) providerSelect.value = provider;
+    }
+
+    // 恢复 API Key 输入框
+    const apiKeyInput = document.getElementById('geocoding-api-key-input');
+    if (apiKeyInput) apiKeyInput.value = apiKey;
+
+    // 根据当前提供商决定是否显示 API Key 区域
+    this.updateGeocodingApiKeyVisibility(providerSelect ? providerSelect.value : provider);
+  }
+
+  /**
+   * 根据所选提供商决定是否显示 API Key 输入框
+   * @param {string} provider
+   */
+  updateGeocodingApiKeyVisibility(provider) {
+    const section = document.getElementById('geocoding-api-key-section');
+    const hint = document.getElementById('geocoding-api-key-hint');
+    if (!section) return;
+
+    const needsKey = provider === 'gaode' || provider === 'google';
+    section.style.display = needsKey ? '' : 'none';
+
+    if (hint) {
+      hint.textContent = provider === 'gaode'
+        ? this.i18n.t('settings.geocodingApiKeyHint')
+        : this.i18n.t('settings.geocodingApiKeyHint');
+    }
+  }
+
+  /**
+   * 处理地理编码调用模式变更
+   * @param {string} mode - 'backend' | 'direct'
+   */
+  handleGeocodingModeChange(mode) {
+    localStorage.setItem('geocoding_mode', mode);
+
+    // 重建提供商选项
+    const providerSelect = document.getElementById('geocoding-provider-select');
+    if (providerSelect) {
+      const currentProvider = providerSelect.value;
+      providerSelect.innerHTML = this.getGeocodingProviderOptions(mode);
+      // 保留选择（如果新模式下还有此提供商）
+      const option = providerSelect.querySelector(`option[value="${currentProvider}"]`);
+      if (option) providerSelect.value = currentProvider;
+      localStorage.setItem('geocoding_provider', providerSelect.value);
+      this.updateGeocodingApiKeyVisibility(providerSelect.value);
+    }
+
+    console.log('[SettingsPanel] 地理编码模式已切换为:', mode);
+    this.dispatchGeocodingSettingChanged();
+  }
+
+  /**
+   * 处理地理编码提供商变更
+   * @param {string} provider
+   */
+  handleGeocodingProviderChange(provider) {
+    localStorage.setItem('geocoding_provider', provider);
+    this.updateGeocodingApiKeyVisibility(provider);
+    console.log('[SettingsPanel] 地理编码提供商已切换为:', provider);
+    this.dispatchGeocodingSettingChanged();
+  }
+
+  /**
+   * 处理地理编码 API Key 变更
+   * @param {string} apiKey
+   */
+  handleGeocodingApiKeyChange(apiKey) {
+    localStorage.setItem('geocoding_api_key', apiKey.trim());
+    console.log('[SettingsPanel] 地理编码 API Key 已更新');
+    this.dispatchGeocodingSettingChanged();
+  }
+
+  /**
+   * 触发 geocodingSettingChanged 自定义事件
+   */
+  dispatchGeocodingSettingChanged() {
+    window.dispatchEvent(new CustomEvent('geocodingSettingChanged', {
+      detail: {
+        mode: localStorage.getItem('geocoding_mode') || 'backend',
+        provider: localStorage.getItem('geocoding_provider') || 'nominatim',
+        apiKey: localStorage.getItem('geocoding_api_key') || ''
+      }
+    }));
+  }
+
+  // ========== Windy API Key（需求 25）==========
+
+  /**
+   * 加载 Windy API Key 设置，恢复控件状态
+   */
+  loadWindyApiKeySettings() {
+    const userKey = localStorage.getItem('user_windy_api_key') || '';
+    const mode = userKey ? 'custom' : 'system';
+
+    const modeRadio = this.panel.querySelector(`input[name="windy-api-mode"][value="${mode}"]`);
+    if (modeRadio) modeRadio.checked = true;
+
+    const keySection = document.getElementById('windy-api-key-section');
+    if (keySection) keySection.style.display = mode === 'custom' ? '' : 'none';
+
+    const keyInput = document.getElementById('windy-api-key-input');
+    if (keyInput) keyInput.value = userKey;
+  }
+
+  /**
+   * 处理 Windy API 模式变更（system / custom）
+   * @param {string} mode
+   */
+  handleWindyApiModeChange(mode) {
+    const keySection = document.getElementById('windy-api-key-section');
+    if (keySection) keySection.style.display = mode === 'custom' ? '' : 'none';
+
+    if (mode === 'system') {
+      // 清除用户自定义 Key
+      localStorage.removeItem('user_windy_api_key');
+      const keyInput = document.getElementById('windy-api-key-input');
+      if (keyInput) keyInput.value = '';
+      const errorEl = document.getElementById('windy-api-key-error');
+      if (errorEl) errorEl.style.display = 'none';
+    }
+
+    console.log('[SettingsPanel] Windy API 模式已切换为:', mode);
+  }
+
+  /**
+   * 处理 Windy API Key 输入变更（格式校验 + 保存）
+   * @param {string} key
+   */
+  handleWindyApiKeyChange(key) {
+    const trimmed = key.trim();
+    const errorEl = document.getElementById('windy-api-key-error');
+
+    if (trimmed && trimmed.length <= 8) {
+      // 格式无效
+      if (errorEl) {
+        errorEl.textContent = this.i18n.t('settings.windyApiKeyInvalid');
+        errorEl.style.display = '';
+      }
+      return;
+    }
+
+    if (errorEl) errorEl.style.display = 'none';
+
+    if (trimmed) {
+      localStorage.setItem('user_windy_api_key', trimmed);
+      console.log('[SettingsPanel] 用户 Windy API Key 已保存');
+    } else {
+      localStorage.removeItem('user_windy_api_key');
+      console.log('[SettingsPanel] 用户 Windy API Key 已清除');
+    }
   }
 }
 

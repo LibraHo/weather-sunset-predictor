@@ -48,12 +48,17 @@ class WindyAPIService {
 
     console.log('[WindyAPIService] 通过后端代理获取天气数据:', { lat, lon, hours });
 
+    // 需求：25 — 若用户配置了自己的 Windy API Key，通过请求头传递给后端
+    const headers = { 'Content-Type': 'application/json' };
+    const userApiKey = localStorage.getItem('user_windy_api_key');
+    if (userApiKey && userApiKey.trim()) {
+      headers['X-Windy-API-Key'] = userApiKey.trim();
+    }
+
     try {
       const response = await fetch(url, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        headers
       });
 
       if (!response.ok) {
