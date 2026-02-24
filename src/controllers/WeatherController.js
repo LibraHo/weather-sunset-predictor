@@ -311,14 +311,17 @@ class WeatherController {
     // 清空现有内容
     weeklyCards.innerHTML = '';
 
-    // 按天分组数据（每24小时一组）
-    const dailyData = [];
-    for (let i = 0; i < 7 && i * 24 < weatherData.length; i++) {
-      const dayData = weatherData.slice(i * 24, (i + 1) * 24);
-      if (dayData.length > 0) {
-        dailyData.push(dayData);
+    // 按日历日期分组数据（基于时间戳，兼容任意时间间隔）
+    const dayMap = new Map();
+    for (const dataPoint of weatherData) {
+      const date = new Date(dataPoint.timestamp);
+      const dateKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+      if (!dayMap.has(dateKey)) {
+        dayMap.set(dateKey, []);
       }
+      dayMap.get(dateKey).push(dataPoint);
     }
+    const dailyData = Array.from(dayMap.values()).slice(0, 7);
 
     // 为每一天创建卡片
     dailyData.forEach((dayData, index) => {
