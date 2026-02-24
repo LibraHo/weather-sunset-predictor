@@ -724,19 +724,22 @@ class PredictionController {
     const high = cloudLayers.high ?? 0;
     const mid = cloudLayers.mid ?? 0;
     const low = cloudLayers.low ?? 0;
+    const highLabel = this.i18n.t('prediction.cloudLayers.shortHigh');
+    const midLabel = this.i18n.t('prediction.cloudLayers.shortMid');
+    const lowLabel = this.i18n.t('prediction.cloudLayers.shortLow');
 
     return `
       <div class="compact-cloud-info">
         <span class="cloud-icon">☁️</span>
-        <span class="cloud-item">High: <strong>${high.toFixed(0)}%</strong>
+        <span class="cloud-item">${highLabel}: <strong>${high.toFixed(0)}%</strong>
           <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(high,100)}%;background:#90caf9;"></span></span>
         </span>
         <span class="cloud-sep">|</span>
-        <span class="cloud-item">Mid: <strong>${mid.toFixed(0)}%</strong>
+        <span class="cloud-item">${midLabel}: <strong>${mid.toFixed(0)}%</strong>
           <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(mid,100)}%;background:#64b5f6;"></span></span>
         </span>
         <span class="cloud-sep">|</span>
-        <span class="cloud-item">Low: <strong>${low.toFixed(0)}%</strong>
+        <span class="cloud-item">${lowLabel}: <strong>${low.toFixed(0)}%</strong>
           <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(low,100)}%;background:#42a5f5;"></span></span>
         </span>
       </div>
