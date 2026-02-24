@@ -438,6 +438,13 @@
   justify-content: flex-end;
 }
 
+.settings-footer .settings-close {
+  width: auto;
+  height: auto;
+  font-size: 15px;
+  border-radius: 10px;
+}
+
 .theme-dark .settings-footer {
   border-top-color: rgba(148, 163, 184, 0.2);
 }
