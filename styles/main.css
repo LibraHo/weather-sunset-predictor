@@ -1932,6 +1932,27 @@ body.theme-dark .sunset-time-detail {
 .compact-extra-golden .hour-label { color: #e6a800; }
 .compact-extra-blue   .hour-label { color: #4a90d9; }
 
+.compact-extra-azimuth {
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+}
+
+.compact-extra-azimuth .azimuth-line-label {
+  white-space: nowrap;
+}
+
+.compact-extra-azimuth .azimuth-line-value {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.compact-extra-azimuth .azimuth-direction-icon {
+  display: inline-block;
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
 /* 紧凑云层行 */
 .compact-cloud-info {
   display: flex;

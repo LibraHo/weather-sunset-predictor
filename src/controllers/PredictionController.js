@@ -668,8 +668,17 @@ class PredictionController {
       : prediction.sunAzimuth !== null && prediction.sunAzimuth !== undefined;
 
     if (shouldShowAzimuth) {
-      const direction = prediction.getAzimuthDirection();
-      enhancedInfo += `<div class="compact-extra-time">🧭 ${direction} (${prediction.sunAzimuth}°)</div>`;
+      const direction = this.getLocalizedAzimuthDirection(prediction);
+      const directionLabel = type === 'sunrise'
+        ? this.i18n.t('prediction.sunriseDirectionLabel')
+        : this.i18n.t('prediction.sunsetDirectionLabel');
+      enhancedInfo += `
+        <div class="compact-extra-time compact-extra-azimuth">
+          <span class="azimuth-line-label">${directionLabel} :</span>
+          <span class="azimuth-line-value">${direction}</span>
+          <span class="azimuth-direction-icon" style="transform: rotate(${prediction.sunAzimuth}deg);" aria-hidden="true">↑</span>
+        </div>
+      `;
     }
 
     // 云层分层信息（需求12.11）- 只显示云层数据，不显示description
@@ -751,6 +760,37 @@ class PredictionController {
         <div class="compact-analysis">${formattedAnalysis}</div>
       </div>
     `;
+  }
+
+
+  /**
+   * 根据当前语言返回方位角方向描述
+   * @param {Object} prediction - 预测对象
+   * @returns {string} 本地化方向描述
+   * @private
+   */
+  getLocalizedAzimuthDirection(prediction) {
+    if (!prediction || prediction.sunAzimuth === null || prediction.sunAzimuth === undefined) {
+      return '';
+    }
+
+    const language = this.i18n?.currentLanguage || 'zh-CN';
+    const directions = language === 'en-US'
+      ? [
+        'N', 'NNE', 'NE', 'ENE',
+        'E', 'ESE', 'SE', 'SSE',
+        'S', 'SSW', 'SW', 'WSW',
+        'W', 'WNW', 'NW', 'NNW'
+      ]
+      : [
+        '北', '东北偏北', '东北', '东北偏东',
+        '东', '东南偏东', '东南', '东南偏南',
+        '南', '西南偏南', '西南', '西南偏西',
+        '西', '西北偏西', '西北', '西北偏北'
+      ];
+
+    const index = Math.round(prediction.sunAzimuth / 22.5) % 16;
+    return directions[index];
   }
 
   /**

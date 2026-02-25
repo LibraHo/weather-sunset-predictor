@@ -28,8 +28,8 @@ test.describe('北京日出日落方向显示', () => {
     await expect(sunriseCard).toBeVisible({ timeout: 45000 });
     await expect(sunsetCard).toBeVisible({ timeout: 45000 });
 
-    const sunriseAzimuthRow = sunriseCard.locator('.compact-extra-time', { hasText: '🧭' }).first();
-    const sunsetAzimuthRow = sunsetCard.locator('.compact-extra-time', { hasText: '🧭' }).first();
+    const sunriseAzimuthRow = sunriseCard.locator('.compact-extra-azimuth').first();
+    const sunsetAzimuthRow = sunsetCard.locator('.compact-extra-azimuth').first();
 
     await expect(sunriseAzimuthRow).toBeVisible({ timeout: 45000 });
     await expect(sunsetAzimuthRow).toBeVisible({ timeout: 45000 });
@@ -37,8 +37,17 @@ test.describe('北京日出日落方向显示', () => {
     const sunriseAzimuthText = (await sunriseAzimuthRow.textContent()) || '';
     const sunsetAzimuthText = (await sunsetAzimuthRow.textContent()) || '';
 
-    expect(sunriseAzimuthText).toMatch(/🧭\s*.+\(\d+°\)/);
-    expect(sunsetAzimuthText).toMatch(/🧭\s*.+\(\d+°\)/);
+    expect(sunriseAzimuthText).toMatch(/(日出方向|Sunrise Direction)\s*:/);
+    expect(sunsetAzimuthText).toMatch(/(日落方向|Sunset Direction)\s*:/);
+
+    const sunriseDirectionText = await sunriseAzimuthRow.locator('.azimuth-line-value').textContent();
+    const sunsetDirectionText = await sunsetAzimuthRow.locator('.azimuth-line-value').textContent();
+
+    expect((sunriseDirectionText || '').trim().length).toBeGreaterThan(0);
+    expect((sunsetDirectionText || '').trim().length).toBeGreaterThan(0);
+
+    await expect(sunriseAzimuthRow.locator('.azimuth-direction-icon')).toBeVisible();
+    await expect(sunsetAzimuthRow.locator('.azimuth-direction-icon')).toBeVisible();
 
     await sunsetCard.scrollIntoViewIfNeeded();
     await page.screenshot({ path: 'test-results/beijing-sunrise-sunset-azimuth-success.png', fullPage: true });
