@@ -8,6 +8,37 @@ export default {
     subtitle: 'Predict the best time for fire clouds'
   },
 
+  // Home tabs & methodology
+  home: {
+    tabs: {
+      ariaLabel: 'Home tab navigation',
+      forecast: 'Forecast',
+      methodology: 'Methodology'
+    },
+    menu: {
+      ariaLabel: 'Switch home view',
+      dropdownAriaLabel: 'Home view menu'
+    },
+    methodology: {
+      title: 'How Fire Cloud Scoring Works',
+      intro: 'The fire-cloud score combines four key factors to estimate whether sunset watching is worthwhile.',
+      factors: {
+        highMidCloudTitle: 'Mid/High Clouds (Canvas)',
+        highMidCloudDesc: 'Balanced mid/high cloud cover provides better orange-red layering; too little or too much hurts the effect.',
+        lowCloudTitle: 'Low Cloud Obstruction (Penalty)',
+        lowCloudDesc: 'Excess low clouds can block horizon light and are a major reason for poor sunset-glow visibility.',
+        humidityTitle: 'Humidity (Rendering Boost)',
+        humidityDesc: 'Moderate humidity can enrich colors; too high may reduce clarity, too low can make colors look flat.',
+        visibilityTitle: 'Visibility (Clarity)',
+        visibilityDesc: 'Higher visibility usually means cleaner sky background and clearer sunset color transitions.'
+      },
+      scoreGuideTitle: 'Score Guide',
+      scoreExcellent: 'Excellent: >70 (recommended)',
+      scoreGood: 'Good: 40-70 (watchable)',
+      scoreFair: 'Fair: <40 (manage expectations)'
+    }
+  },
+
   // Buttons
   buttons: {
     search: 'Search',

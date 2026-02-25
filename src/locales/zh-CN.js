@@ -8,6 +8,37 @@ export default {
     subtitle: '预测火烧云出现的最佳时机'
   },
 
+  // Home tabs & methodology
+  home: {
+    tabs: {
+      ariaLabel: '主页分页导航',
+      forecast: '预测功能',
+      methodology: '火烧云计算方法'
+    },
+    menu: {
+      ariaLabel: '页面切换',
+      dropdownAriaLabel: '页面切换菜单'
+    },
+    methodology: {
+      title: '火烧云计算方法',
+      intro: '火烧云指数由四个关键因子综合计算，帮助你快速判断当天是否值得蹲守晚霞。',
+      factors: {
+        highMidCloudTitle: '中高云（画布条件）',
+        highMidCloudDesc: '中高云越理想，越容易形成丰富的橙红色层次；过少或过厚都会降低效果。',
+        lowCloudTitle: '低云遮挡（扣分项）',
+        lowCloudDesc: '低云过多会阻挡地平线附近光线，是火烧云观赏失败的主要风险之一。',
+        humidityTitle: '湿度（渲染增强）',
+        humidityDesc: '适中的湿度有利于色彩渲染；湿度过高可能导致雾霾感，过低则色彩偏淡。',
+        visibilityTitle: '能见度（清晰度）',
+        visibilityDesc: '更高能见度通常意味着更清晰的天空背景，晚霞边界和色彩过渡更明显。'
+      },
+      scoreGuideTitle: '评分解读',
+      scoreExcellent: '优秀：>70（推荐出门）',
+      scoreGood: '良好：40-70（可观赏）',
+      scoreFair: '一般：<40（谨慎期待）'
+    }
+  },
+
   // 按钮
   buttons: {
     search: '查询',
