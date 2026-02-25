@@ -130,18 +130,25 @@ class PredictionAPIService {
    * @private
    */
   _convertToPrediction(data) {
-    // 转换日期字符串为 Date 对象
-    const date = new Date(data.date);
-    const sunsetTime = new Date(data.sunsetTime);
-    const sunriseTime = new Date(data.sunriseTime);
-    const goldenHour = {
-      start: new Date(data.goldenHour.start),
-      end: new Date(data.goldenHour.end)
-    };
-    const blueHour = {
-      start: new Date(data.blueHour.start),
-      end: new Date(data.blueHour.end)
-    };
+    // 转换日期字符串为 Date 对象，缺失时回退到当前时间
+    const date = data.date ? new Date(data.date) : new Date();
+    const sunsetTime = data.sunsetTime ? new Date(data.sunsetTime) : null;
+    const sunriseTime = data.sunriseTime ? new Date(data.sunriseTime) : null;
+
+    // goldenHour / blueHour 可能在旧版后端响应中缺失
+    const goldenHour = data.goldenHour
+      ? {
+          start: new Date(data.goldenHour.start),
+          end: new Date(data.goldenHour.end)
+        }
+      : null;
+
+    const blueHour = data.blueHour
+      ? {
+          start: new Date(data.blueHour.start),
+          end: new Date(data.blueHour.end)
+        }
+      : null;
 
     // 创建 SunsetPrediction 对象
     return new SunsetPrediction(

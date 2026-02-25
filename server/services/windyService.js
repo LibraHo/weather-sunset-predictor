@@ -1,6 +1,5 @@
 const axios = require('axios');
-const { execFile } = require('child_process');
-const { promisify } = require('util');
+const https = require('https');
 
 /**
  * Windy API 服务
@@ -8,8 +7,6 @@ const { promisify } = require('util');
  */
 
 const WINDY_API_URL = 'https://api.windy.com/api/point-forecast/v2';
-
-const execFileAsync = promisify(execFile);
 
 class WindyService {
   constructor() {
@@ -115,27 +112,62 @@ class WindyService {
       });
       return response.data;
     } catch (error) {
-      // 某些代理环境下 axios 可能出现重定向循环，回退到 curl 请求
+      // 某些代理环境下 axios 可能出现重定向循环，回退到 Node.js https（不经过命令行，避免敏感参数泄漏）
       if (error.code === 'ERR_FR_TOO_MANY_REDIRECTS' || error.code === 'ENETUNREACH') {
-        console.warn(`[Windy API] axios 请求失败(${error.code})，尝试使用 curl 回退`);
-        const { stdout } = await execFileAsync('curl', [
-          '--silent',
-          '--show-error',
-          '--fail',
-          '--max-time',
-          '15',
-          '-H',
-          'Content-Type: application/json',
-          '-X',
-          'POST',
-          '-d',
-          JSON.stringify(requestBody),
-          WINDY_API_URL
-        ]);
-        return JSON.parse(stdout);
+        console.warn(`[Windy API] axios 请求失败(${error.code})，尝试使用 https 回退`);
+        return this._httpsPost(WINDY_API_URL, requestBody);
       }
       throw error;
     }
+  }
+
+  /**
+   * 使用 Node.js 内置 https 模块发送 POST 请求（不经过命令行，API Key 不会暴露给 ps）
+   * @param {string} url - 请求 URL
+   * @param {Object} body - 请求体对象
+   * @returns {Promise<Object>} 解析后的响应体
+   * @private
+   */
+  _httpsPost(url, body) {
+    return new Promise((resolve, reject) => {
+      const parsed = new URL(url);
+      const bodyStr = JSON.stringify(body);
+
+      const options = {
+        hostname: parsed.hostname,
+        path: parsed.pathname + (parsed.search || ''),
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(bodyStr)
+        },
+        timeout: 15000
+      };
+
+      const req = https.request(options, (res) => {
+        let data = '';
+        res.on('data', (chunk) => { data += chunk; });
+        res.on('end', () => {
+          try {
+            resolve(JSON.parse(data));
+          } catch (e) {
+            reject(new Error(`[Windy API] https 回退：响应解析失败 - ${e.message}`));
+          }
+        });
+      });
+
+      req.on('timeout', () => {
+        req.destroy();
+        reject(new Error('[Windy API] https 回退：请求超时'));
+      });
+
+      req.on('error', (e) => {
+        reject(new Error(`[Windy API] https 回退：请求失败 - ${e.message}`));
+      });
+
+      req.write(bodyStr);
+      req.end();
+    });
   }
 
   /**
@@ -182,7 +214,11 @@ class WindyService {
           this.getValue(data, 'wind_v-surface', index)
         ),
         pressure: pressureHPa,
-        visibility: 10, // 默认能见度10km（Windy API不提供此数据）
+        visibility: this.estimateVisibility(
+          this.getValue(data, 'rh-surface', index),
+          this.getValue(data, 'convPrecip-surface', index) || 0,
+          Math.min(100, Math.max(lowClouds, midClouds, highClouds, (lowClouds + midClouds + highClouds) / 3))
+        ),
         precipitation: this.getValue(data, 'convPrecip-surface', index) || 0,
         lowClouds: lowClouds,
         midClouds: midClouds,
@@ -207,6 +243,34 @@ class WindyService {
   }
 
   /**
+   * 根据湿度、降水和云量估算能见度（km）
+   *
+   * Windy Point Forecast API 不提供能见度字段，此方法使用
+   * 气象学经验规则从可用数据推算：
+   * - 有降水：5 km
+   * - 湿度 > 90%（接近饱和）：8 km
+   * - 湿度 > 80% 且厚云：10 km
+   * - 湿度 > 70%：15 km
+   * - 其余晴好条件：20 km
+   *
+   * @param {number|null} humidity - 相对湿度（0-100）
+   * @param {number} precipitation - 降水量（mm/h）
+   * @param {number} cloudCover - 总云量（0-100）
+   * @returns {number} 估算能见度（km）
+   */
+  estimateVisibility(humidity, precipitation, cloudCover) {
+    const rh = humidity ?? 50;
+    const precip = precipitation ?? 0;
+    const cloud = cloudCover ?? 0;
+
+    if (precip > 0.1) return 5;          // 降水时能见度较差
+    if (rh > 90) return 8;               // 接近饱和，可能有雾
+    if (rh > 80 && cloud > 70) return 10; // 高湿 + 厚云
+    if (rh > 70) return 15;              // 湿度较高
+    return 20;                           // 晴好条件
+  }
+
+  /**
    * 计算风速（从 u 和 v 分量）
    */
   calculateWindSpeed(u, v) {
@@ -224,4 +288,7 @@ class WindyService {
   }
 }
 
-module.exports = new WindyService();
+// 同时导出类（便于依赖注入和单元测试实例化）和默认单例（供现有调用方使用）
+const defaultInstance = new WindyService();
+module.exports = defaultInstance;
+module.exports.WindyService = WindyService;

@@ -68,8 +68,15 @@ class SurroundingService {
       const targetLonRad = (centerLon * Math.PI) / 180 + dLon;
 
       // 转换回度数
-      const targetLat = (targetLatRad * 180) / Math.PI;
-      const targetLon = (targetLonRad * 180) / Math.PI;
+      let targetLat = (targetLatRad * 180) / Math.PI;
+      let targetLon = (targetLonRad * 180) / Math.PI;
+
+      // 纬度夹紧到 [-90, 90]，极地附近点退化为极点
+      targetLat = Math.max(-90, Math.min(90, targetLat));
+
+      // 经度归一化到 [-180, 180]（穿越本初子午线 / 日界线）
+      if (targetLon > 180) targetLon -= 360;
+      else if (targetLon < -180) targetLon += 360;
 
       points.push({
         direction: key,
@@ -206,8 +213,16 @@ class SurroundingService {
       }
     });
 
-    // 等待所有请求完成
-    const results = await Promise.all(promises);
+    // 等待所有请求完成，同时设置全局超时（防止单个挂起请求拖慢整体响应）
+    const GLOBAL_TIMEOUT_MS = 20000; // 20 秒：8 方向各自 10s axios 超时，留出余量
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('周边预测请求超时（超过20秒）')), GLOBAL_TIMEOUT_MS)
+    );
+
+    const results = await Promise.race([
+      Promise.all(promises),
+      timeoutPromise
+    ]);
 
     // ========== 找出最佳方向 ==========
 
