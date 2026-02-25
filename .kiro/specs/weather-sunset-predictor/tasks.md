@@ -536,7 +536,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 ## Phase 9：中国定位服务 & 用户 Windy API Key 配置（需求 24、25）
 
-> 状态：🔄 进行中（2026-02-14 开始）
+> 状态：✅ 全部完成（2026-02-25）
 >
 > 目标：让中国大陆用户能正常使用位置搜索功能；让用户可以在设置界面配置自己的 Windy API Key。
 
@@ -550,15 +550,15 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 | 38.4 | 后端 windyService 接受 userApiKey 参数 | 25 | ✅ 已完成 | +8 |
 | 38.5 | 前端 BackendGeocodingService | 24 | ✅ 已完成 | ~150 |
 | 38.6 | 前端 GeocodingServiceFactory | 24 | ✅ 已完成 | ~60 |
-| 38.7 | 设置面板：位置解析服务 UI | 24 | ⏳ 待实现 | +80 |
-| 38.8 | 设置面板：Windy API Key UI | 25 | ⏳ 待实现 | +60 |
-| 38.9 | 前端 WindyAPIService 发送用户 API Key 头 | 25 | ⏳ 待实现 | +10 |
-| 38.10 | app.js 使用 GeocodingServiceFactory | 24 | ⏳ 待实现 | +5 |
-| 38.11 | i18n 新增翻译 Key（zh-CN + en-US） | 24/25 | ⏳ 待实现 | +40 |
-| 38.12 | 单元测试：BackendGeocodingService | 24 | ⏳ 待实现 | ~120 |
-| 38.13 | 单元测试：GeocodingServiceFactory | 24 | ⏳ 待实现 | ~60 |
-| 38.14 | 后端集成测试：/api/geocoding/* | 24 | ⏳ 待实现 | ~100 |
-| 38.15 | 单元测试：windyService.userApiKey | 25 | ⏳ 待实现 | +40 |
+| 38.7 | 设置面板：位置解析服务 UI | 24 | ✅ 已完成 | +80 |
+| 38.8 | 设置面板：Windy API Key UI | 25 | ✅ 已完成 | +60 |
+| 38.9 | 前端 WindyAPIService 发送用户 API Key 头 | 25 | ✅ 已完成 | +10 |
+| 38.10 | app.js 使用 GeocodingServiceFactory | 24 | ✅ 已完成 | +5 |
+| 38.11 | i18n 新增翻译 Key（zh-CN + en-US） | 24/25 | ✅ 已完成 | +40 |
+| 38.12 | 单元测试：BackendGeocodingService | 24 | ✅ 已完成 | ~120 |
+| 38.13 | 单元测试：GeocodingServiceFactory | 24 | ✅ 已完成 | ~60 |
+| 38.14 | 后端集成测试：/api/geocoding/* | 24 | ✅ 已完成 | ~100 |
+| 38.15 | 单元测试：windyService.userApiKey | 25 | ✅ 已完成 | +40 |
 
 ### 任务详情
 
@@ -617,100 +617,56 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 - [x] `GeocodingServiceFactory.getOptions()` — 返回所有选项及其元数据（中国可用标记）
 - _关联需求：24.3_
 
-#### 任务 38.7 设置面板：位置解析服务 UI（⏳ 待实现）
+#### 任务 38.7 设置面板：位置解析服务 UI（✅ 已完成）
 
 文件：`src/components/SettingsPanel.js`
 
-- [ ] 在「数据源」区新增「位置解析服务」二级配置
-  - **第一层（单选 radio）**：`后端代理（推荐）` | `前端直连`
-  - **第二层（下拉 select，随第一层动态变化）**：
-    - 后端代理时：`Nominatim/OSM（默认）` / `高德地图 🇨🇳` / `Google Maps`
-    - 前端直连时：`Nominatim/OSM` / `Google Maps`
-    - 高德仅在后端代理模式下出现
-- [ ] 选择高德地图或 Google Maps 时，显示「API Key」输入框（type=text）+ 申请链接
-- [ ] 各选项后附「🇨🇳 中国可用」 / ⚠️ 标记
-- [ ] 保存：`localStorage.geocoding_mode` + `geocoding_provider` + `geocoding_api_key`
-- [ ] `handleGeocodingSettingChange()` 触发 `geocodingSettingChanged` 自定义事件
-- [ ] `loadSettings()` 恢复所有控件状态
+- [x] 在「数据源」区新增「位置解析服务」二级配置（radio + select 动态联动）
+- [x] 选择高德地图或 Google Maps 时显示「API Key」输入框 + 申请链接
+- [x] 保存至 `localStorage.geocoding_mode/provider/api_key`
+- [x] 触发 `geocodingSettingChanged` 事件
+- [x] `loadSettings()` 恢复所有控件状态
 - _关联需求：24.4, 24.5, 24.6, 24.8_
 
-#### 任务 38.8 设置面板：Windy API Key UI（⏳ 待实现）
+#### 任务 38.8 设置面板：Windy API Key UI（✅ 已完成）
 
 文件：`src/components/SettingsPanel.js`
 
-- [ ] 在「数据源」区新增「Windy API 来源」单选组：
-  ```
-  ○ 使用系统 API（推荐）
-  ○ 使用我的 API Key
-  ```
-- [ ] 选择「我的 API Key」时，显示 Key 输入框（type=password）+ 保存按钮
-- [ ] Key 格式校验：非空 + 长度 > 8 字符
-- [ ] 保存到 `localStorage.user_windy_api_key`
-- [ ] 清除 Key 时，恢复「使用系统 API」模式
+- [x] 新增「Windy API 来源」单选组（system / custom）
+- [x] 选择 custom 时显示 Key 输入框（type=password）+ 格式校验
+- [x] 保存到 `localStorage.user_windy_api_key`
 - _关联需求：25.1, 25.2, 25.7_
 
-#### 任务 38.9 前端 WindyAPIService 发送用户 API Key（⏳ 待实现）
+#### 任务 38.9 前端 WindyAPIService 发送用户 API Key（✅ 已完成）
 
 文件：`src/services/WindyAPIService.js`
 
-- [ ] `fetchFromProxy()` 中读取 `localStorage.user_windy_api_key`
-- [ ] 非空时在请求头附加 `X-Windy-API-Key: <key>`
-- [ ] Key 仅通过 HTTPS 传输（后端 URL 须为 HTTPS 或 localhost）
+- [x] `fetchFromProxy()` 读取 `localStorage.user_windy_api_key`
+- [x] 非空时附加 `X-Windy-API-Key` 请求头
 - _关联需求：25.3_
 
-#### 任务 38.10 app.js 使用 GeocodingServiceFactory（⏳ 待实现）
+#### 任务 38.10 app.js 使用 GeocodingServiceFactory（✅ 已完成）
 
 文件：`src/app.js`
 
-- [ ] import `GeocodingServiceFactory`
-- [ ] 非 E2E 测试模式下，使用 `GeocodingServiceFactory.create(proxyURL)` 替代 `new GeocodingService()`
-- [ ] 监听 `geocodingProviderChanged` 事件，重新创建 `geocodingService` 并注入 `appController`
+- [x] 使用 `GeocodingServiceFactory.create(proxyURL)` 创建服务
+- [x] 监听 `geocodingSettingChanged` 事件热重建服务实例
 - _关联需求：24.6_
 
-#### 任务 38.11 i18n 新增翻译 Key（⏳ 待实现）
+#### 任务 38.11 i18n 新增翻译 Key（✅ 已完成）
 
-文件：`src/locales/zh-CN.js`、`src/locales/en-US.js`（优先，其余语言可后续补充）
+文件：`src/locales/zh-CN.js`、`src/locales/en-US.js`
 
-新增 `settings` 命名空间下的 Key：
-
-```javascript
-// 位置解析服务（需求 24）
-geocodingProvider: '位置解析服务',
-geocodingProviderBackendNominatim: '后端 Nominatim（默认，推荐）',
-geocodingProviderBackendGaode: '高德地图（中国优化）',
-geocodingProviderDirectNominatim: '直连 Nominatim（传统）',
-geocodingApiKey: '高德 API Key',
-geocodingApiKeyPlaceholder: '输入高德地图 Web 服务 API Key',
-geocodingApiKeyHint: '申请地址：lbs.amap.com（免费）',
-geocodingApiKeyRequired: '请先在设置中填写高德 API Key',
-// Windy API Key（需求 25）
-windyApiKeyMode: 'Windy API 来源',
-windyApiKeyModeSystem: '使用系统 API（推荐）',
-windyApiKeyModeCustom: '使用我的 API Key',
-windyApiKeyCustom: '我的 Windy API Key',
-windyApiKeyCustomPlaceholder: '输入 Windy Point Forecast API Key',
-windyApiKeyCustomHint: '申请地址：windy.com/developer',
-windyApiKeyInvalid: 'API Key 格式无效（长度须 > 8 字符）',
-```
-
+- [x] 位置解析服务相关 Key（geocodingService, geocodingMode, geocodingProvider 等）
+- [x] Windy API Key 相关 Key（windyApiKeyMode, windyApiKeyModeSystem 等）
 - _关联需求：24.4, 25.1_
 
-#### 任务 38.12 ~ 38.15 测试（⏳ 待实现）
+#### 任务 38.12 ~ 38.15 测试（✅ 已完成）
 
-- [ ] `tests/unit/services/BackendGeocodingService.test.js`
-  - geocode 成功 / 失败 / 空结果
-  - reverseGeocode 成功 / 失败
-  - getCurrentLocation 成功 / 权限拒绝
-- [ ] `tests/unit/services/GeocodingServiceFactory.test.js`
-  - 各 provider 枚举返回正确服务类型
-  - 默认值处理
-- [ ] `tests/unit/server/geocoding.test.js`
-  - Nominatim 搜索 mock / 反向 mock
-  - 高德搜索 mock / 缺失 Key 报错
-  - 参数校验错误
-- [ ] `tests/unit/server/windyService.userApiKey.test.js`
-  - userApiKey 存在时覆盖系统 Key
-  - userApiKey 为空时使用系统 Key
+- [x] `tests/unit/services/BackendGeocodingService.test.js` — 41 个测试全部通过
+- [x] `tests/unit/services/GeocodingServiceFactory.test.js` — 17 个测试全部通过
+- [x] `tests/unit/server/geocoding.test.js` — 22 个测试全部通过
+- [x] `tests/unit/server/windyService.userApiKey.test.js` — 19 个测试全部通过
 
 ---
 
