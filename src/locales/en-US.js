@@ -129,6 +129,8 @@ export default {
     sunriseTime: 'Sunrise Time',
     sunsetTime: 'Sunset Time',
     bestViewingTime: 'Best Viewing Time',
+    sunriseDirectionLabel: 'Sunrise Direction',
+    sunsetDirectionLabel: 'Sunset Direction',
 
     // Best viewing window descriptions
     bestViewingWindowSunrise: '30 minutes before and after sunrise is the best time to view sunrise glow',

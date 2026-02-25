@@ -130,6 +130,8 @@ export default {
     sunriseTime: '日出时间',
     sunsetTime: '日落时间',
     bestViewingTime: '最佳观赏时间',
+    sunriseDirectionLabel: '日出方向',
+    sunsetDirectionLabel: '日落方向',
 
     // 最佳观看窗口描述
     bestViewingWindowSunrise: '日出前后30分钟是观看朝霞的最佳时间',
