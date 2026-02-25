@@ -4011,12 +4011,17 @@ Windy Point Forecast API（使用 effectiveApiKey）
 
 ### 信息架构调整
 
-在主页主内容区引入一级分页导航（Tab/Pager Nav）：
+在主页顶栏引入一级视图切换入口（图标下拉菜单 + 兼容 Tab 语义）：
 
 1. **预测功能页（默认）**
    - 保留现有天气查询、预测结果、图表与地图相关功能
 2. **火烧云计算方法页（新增）**
    - 展示算法说明、评分构成和评分区间解释
+
+交互入口：
+- 顶栏列表图标（☰）点击展开下拉菜单
+- 菜单选项：Forecast / Methodology
+- 下拉菜单采用毛玻璃风格，与现有 UI 一致
 
 > 切页行为采用前端状态切换，不触发整页刷新，不新增后端 API。
 
@@ -4043,9 +4048,9 @@ Windy Point Forecast API（使用 effectiveApiKey）
 
 ### 可访问性与响应式
 
-- 分页导航使用语义化结构（`role="tablist"`、`role="tab"`、`role="tabpanel"`）
-- 支持键盘切换（左右方向键、Enter/Space）
-- 移动端采用横向滚动 tab 或两列紧凑按钮，确保触控点击区域 >= 40px
+- 分页导航使用语义化结构（`role="menu"` / `role="menuitemradio"`，面板使用 `role="tabpanel"`）
+- 支持键盘与点击切换（Enter/Space/ESC + 点击外部关闭）
+- 移动端菜单保持可触达，确保触控点击区域 >= 40px
 - 页面文案采用分段与列表，避免移动端长段落阅读负担
 
 ### 文案与国际化
@@ -4077,4 +4082,4 @@ Windy Point Forecast API（使用 effectiveApiKey）
 
 ### 本次范围声明
 
-本次仅完成规格设计更新，不执行具体编码任务；实现工作在后续 Phase 中排期。
+已落地实现：顶栏列表图标下拉切页 + 方法页内容 + i18n + 单测；后续仅补充更多 E2E/可访问性测试。

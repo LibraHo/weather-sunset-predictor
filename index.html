@@ -64,14 +64,26 @@
     
     <!-- 主界面 -->
     <header>
-      <h1 data-i18n="app.title" class="app-title">霞客 SUNSET VOYAGER</h1>
-      <div class="header-actions">
-        <button id="notification-settings-btn" class="icon-btn" aria-label="通知设置" data-i18n-aria-label="settings.notificationsLabel">🔔</button>
-        <button id="settings-btn" class="icon-btn" aria-label="设置" data-i18n-aria-label="settings.title">⚙️</button>
+      <div class="header-top-row">
+        <h1 data-i18n="app.title" class="app-title">霞客 SUNSET VOYAGER</h1>
+        <div class="header-right-group">
+          <div class="home-view-menu">
+            <button id="home-view-menu-btn" class="icon-btn" aria-label="页面切换" data-i18n-aria-label="home.menu.ariaLabel" aria-expanded="false" aria-controls="home-view-menu-dropdown">☰</button>
+            <div id="home-view-menu-dropdown" class="home-view-menu-dropdown hidden" role="menu" aria-label="页面切换菜单" data-i18n-aria-label="home.menu.dropdownAriaLabel">
+              <button class="home-view-option active" role="menuitemradio" aria-checked="true" data-view="forecast" data-i18n="home.tabs.forecast">预测功能</button>
+              <button class="home-view-option" role="menuitemradio" aria-checked="false" data-view="methodology" data-i18n="home.tabs.methodology">火烧云计算方法</button>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button id="notification-settings-btn" class="icon-btn" aria-label="通知设置" data-i18n-aria-label="settings.notificationsLabel">🔔</button>
+            <button id="settings-btn" class="icon-btn" aria-label="设置" data-i18n-aria-label="settings.title">⚙️</button>
+          </div>
+        </div>
       </div>
     </header>
     
     <main>
+      <div id="tab-panel-forecast" role="tabpanel" aria-label="forecast-panel" tabindex="0">
       <!-- 位置选择 -->
       <section id="location-section" class="card">
         <h2 data-i18n="location.label">选择位置</h2>
@@ -309,6 +321,39 @@
         <h2 data-i18n="forecast.title">未来预测</h2>
         <div id="forecast-timeline">
           <!-- 动态填充时间线 -->
+        </div>
+      </section>
+
+      </div>
+
+      <section id="tab-panel-methodology" class="card methodology-panel hidden" role="tabpanel" aria-label="methodology-panel" tabindex="0" hidden>
+        <h2 data-i18n="home.methodology.title">火烧云计算方法</h2>
+        <p data-i18n="home.methodology.intro">火烧云指数由四个关键因子综合计算，帮助你快速判断当天是否值得蹲守晚霞。</p>
+        <div class="methodology-grid">
+          <article class="methodology-item">
+            <h3 data-i18n="home.methodology.factors.highMidCloudTitle">中高云（画布条件）</h3>
+            <p data-i18n="home.methodology.factors.highMidCloudDesc">中高云越理想，越容易形成丰富的橙红色层次；过少或过厚都会降低效果。</p>
+          </article>
+          <article class="methodology-item">
+            <h3 data-i18n="home.methodology.factors.lowCloudTitle">低云遮挡（扣分项）</h3>
+            <p data-i18n="home.methodology.factors.lowCloudDesc">低云过多会阻挡地平线附近光线，是火烧云观赏失败的主要风险之一。</p>
+          </article>
+          <article class="methodology-item">
+            <h3 data-i18n="home.methodology.factors.humidityTitle">湿度（渲染增强）</h3>
+            <p data-i18n="home.methodology.factors.humidityDesc">适中的湿度有利于色彩渲染；湿度过高可能导致雾霾感，过低则色彩偏淡。</p>
+          </article>
+          <article class="methodology-item">
+            <h3 data-i18n="home.methodology.factors.visibilityTitle">能见度（清晰度）</h3>
+            <p data-i18n="home.methodology.factors.visibilityDesc">更高能见度通常意味着更清晰的天空背景，晚霞边界和色彩过渡更明显。</p>
+          </article>
+        </div>
+        <div class="methodology-score-guide">
+          <h3 data-i18n="home.methodology.scoreGuideTitle">评分解读</h3>
+          <ul>
+            <li data-i18n="home.methodology.scoreExcellent">优秀：>70（推荐出门）</li>
+            <li data-i18n="home.methodology.scoreGood">良好：40-70（可观赏）</li>
+            <li data-i18n="home.methodology.scoreFair">一般：<40（谨慎期待）</li>
+          </ul>
         </div>
       </section>
 

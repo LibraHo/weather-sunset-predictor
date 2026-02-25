@@ -14,6 +14,7 @@ import AppController from './controllers/AppController.js';
 import GlobalErrorBoundary from './utils/GlobalErrorBoundary.js';
 import ErrorHandler from './utils/ErrorHandler.js';
 import { API_CONFIG } from '../config.api.js';
+import initializeHomeTabs from './utils/HomeTabs.js';
 
 console.log('Weather Sunset Predictor - Application Starting...');
 
@@ -136,6 +137,7 @@ if (document.readyState === 'loading') {
 async function initializeApp() {
   try {
     console.log('Initializing application...');
+    initializeHomeTabs();
     await appController.initialize();
     console.log('Application initialized successfully');
   } catch (error) {
