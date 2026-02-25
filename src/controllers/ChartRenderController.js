@@ -116,15 +116,44 @@ class ChartRenderController {
       html += `<text x="${padding.left - 10}" y="${y + 5}" font-size="${axisFontSize}" fill="var(--color-text)" text-anchor="end" font-weight="500">${value.toFixed(1)} ${unit}</text>`;
     }
 
-    points.forEach((p, i) => {
-      if (i % 3 === 0) {
+    const tickCandidates = points
+      .map((p, i) => {
         const prev = points[i - 1];
         const isDayBoundary = !prev || prev.day !== p.day || prev.month !== p.month;
-        const axisText = isDayBoundary
-          ? `${p.month}/${p.day} ${p.hour}:00`
-          : `${p.hour}:00`;
-        html += `<text x="${p.x}" y="${chartHeight - padding.bottom + 25}" font-size="${axisFontSize}" fill="var(--color-text)" text-anchor="middle" font-weight="500">${axisText}</text>`;
+        const isRegularTick = i % 3 === 0;
+
+        if (!isRegularTick && !isDayBoundary) {
+          return null;
+        }
+
+        return {
+          ...p,
+          i,
+          isDayBoundary,
+          priority: isDayBoundary ? 2 : 1,
+          label: isDayBoundary ? `${p.month}/${p.day} ${p.hour}:00` : `${p.hour}:00`
+        };
+      })
+      .filter(Boolean);
+
+    const minTickGap = isMobile ? 44 : 54;
+    const selectedTicks = [];
+
+    tickCandidates.forEach((candidate) => {
+      const last = selectedTicks[selectedTicks.length - 1];
+
+      if (!last || (candidate.x - last.x) >= minTickGap) {
+        selectedTicks.push(candidate);
+        return;
       }
+
+      if (candidate.priority > last.priority) {
+        selectedTicks[selectedTicks.length - 1] = candidate;
+      }
+    });
+
+    selectedTicks.forEach((tick) => {
+      html += `<text x="${tick.x}" y="${chartHeight - padding.bottom + 25}" font-size="${axisFontSize}" fill="var(--color-text)" text-anchor="middle" font-weight="500">${tick.label}</text>`;
     });
 
     html += `<path d="${pathData}" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`;
