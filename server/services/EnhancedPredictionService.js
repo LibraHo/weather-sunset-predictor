@@ -12,6 +12,7 @@
  */
 
 const SunCalculator = require('../utils/SunCalculator.js');
+const logger = require('../utils/logger.js');
 
 // ========== 常量定义 ==========
 
@@ -59,16 +60,38 @@ function getJulianDay(date) {
 
 /**
  * 计算太阳高度角（Solar Elevation Angle）
- * 在日出/日落时刻，太阳高度角约为0°（考虑大气折射，实际是-0.83°左右）
- * @param {Date} date - 日期时间
- * @param {number} lat - 纬度
- * @param {number} lon - 经度
- * @returns {number} 太阳高度角（度）
+ *
+ * 基于 NOAA 算法，使用 UTC 时间 + 经度偏移推算真太阳时，
+ * 再由时角和赤纬计算实际太阳高度角。
+ *
+ * @param {Date} date - 日期时间（UTC）
+ * @param {number} lat - 纬度（-90 到 90）
+ * @param {number} lon - 经度（-180 到 180）
+ * @returns {number} 太阳高度角（度，范围 -90 到 90，正值表示在地平线上方）
  */
 function calculateSolarElevation(date, lat, lon) {
-  // 日出日落时的太阳高度角（考虑大气折射和日面定义）
-  // 标准天文日出日落：太阳中心在地平线下0.83°
-  return -0.83;
+  const dayOfYear = SunCalculator.getDayOfYear(date);
+  const fractionalYear = SunCalculator.getFractionalYear(dayOfYear);
+  const eqTime = SunCalculator.getEquationOfTime(fractionalYear);
+  const declination = SunCalculator.getSolarDeclination(fractionalYear);
+
+  // 将当前 UTC 时间转换为真太阳时（分钟）
+  // 公式：真太阳时 = UTC分钟数 + 时差修正 + 经度补偿（每度4分钟）
+  const utcMinutes = date.getUTCHours() * 60 + date.getUTCMinutes() + date.getUTCSeconds() / 60;
+  const apparentSolarMinutes = utcMinutes + eqTime + 4 * lon;
+
+  // 时角（度）：真太阳正午为0°，每小时15°，上午为负
+  const hourAngleDeg = (apparentSolarMinutes - 720) / 4;
+  const hourAngleRad = hourAngleDeg * Math.PI / 180;
+
+  const latRad = lat * Math.PI / 180;
+
+  // 太阳高度角：sin(elev) = sin(lat)*sin(decl) + cos(lat)*cos(decl)*cos(HRA)
+  const sinElevation = Math.sin(latRad) * Math.sin(declination) +
+                       Math.cos(latRad) * Math.cos(declination) * Math.cos(hourAngleRad);
+
+  const elevationRad = Math.asin(Math.max(-1, Math.min(1, sinElevation)));
+  return parseFloat((elevationRad * 180 / Math.PI).toFixed(2));
 }
 
 /**
@@ -361,33 +384,35 @@ function scoreRendering(weatherData, rainedRecently = false) {
     specialMode = 'post_rain';      // 雨后初晴模式
   }
 
-  // 4. AQI修正（色彩倾向）
+  // 4. AQI修正（色彩倾向 + 独立惩罚系数）
   let aqiLevel = '';
   let colorTendency = '';
+  let aqiFactor = 1.0;  // 独立于 rainBonus，避免语义混淆
 
   if (aqi < 50) {
-    aqiLevel = 'excellent';         // 空气优
+    aqiLevel = 'excellent';          // 空气优
     colorTendency = 'golden_orange'; // 金橙色调
+    aqiFactor = 1.0;
   } else if (aqi <= 100) {
-    aqiLevel = 'good';              // 空气良
+    aqiLevel = 'good';               // 空气良
     colorTendency = 'reddish_purple'; // 红紫色调
+    aqiFactor = 1.0;
   } else {
-    aqiLevel = 'poor';              // 空气差
-    colorTendency = 'dark_red';     // 暗红色调
-    // 严重污染时降低得分
-    if (aqi > 150) {
-      rainBonus *= 0.8;
-    }
+    aqiLevel = 'poor';               // 空气差
+    colorTendency = 'dark_red';      // 暗红色调
+    // 严重污染（AQI > 150）单独施加惩罚
+    aqiFactor = aqi > 150 ? 0.8 : 1.0;
   }
 
-  // 最终渲染系数
-  const renderingFactor = visibilityFactor * humidityFactor * rainBonus;
+  // 最终渲染系数 = 能见度 × 湿度 × 雨后加成 × AQI 修正
+  const renderingFactor = visibilityFactor * humidityFactor * rainBonus * aqiFactor;
 
   return {
     factor: parseFloat(renderingFactor.toFixed(2)),
     visibilityFactor: parseFloat(visibilityFactor.toFixed(2)),
     humidityFactor: parseFloat(humidityFactor.toFixed(2)),
     rainBonus: parseFloat(rainBonus.toFixed(2)),
+    aqiFactor: parseFloat(aqiFactor.toFixed(2)),
     breakdown: {
       visibility: visibilityLevel,
       humidity: humidityLevel,
@@ -400,12 +425,16 @@ function scoreRendering(weatherData, rainedRecently = false) {
 
 /**
  * 根据得分获取质量等级
- * @param {number} score - 预测得分
- * @returns {string} 质量等级
+ *
+ * 阈值与 GaussianScore.getQualityLevel 保持一致（需求：5.6-5.8）：
+ * excellent ≥ 70，good ≥ 40，fair < 40
+ *
+ * @param {number} score - 预测得分（0-100）
+ * @returns {string} 质量等级：'excellent' | 'good' | 'fair'
  */
 function getQualityLevel(score) {
-  if (score >= 80) return 'excellent';
-  if (score >= 50) return 'good';
+  if (score >= 70) return 'excellent';
+  if (score >= 40) return 'good';
   return 'fair';
 }
 
@@ -532,28 +561,28 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
 
   const { remoteCloudData = null, rainedRecently = false } = options;
 
-  console.log('[EnhancedPredictionService] 开始计算增强版预测...');
+  logger.debug('[EnhancedPredictionService]', '开始计算增强版预测...');
 
   // 1. 时间判定
   const timeCheck = checkTimeWindow(dateObj, lat, lon, type);
-  console.log('[EnhancedPredictionService] 时间判定:', timeCheck);
+  logger.debug('[EnhancedPredictionService]', '时间判定:', timeCheck);
 
   // 2. 画布评分（本地云况）
   const canvasScore = scoreCloudCanvas(weatherData);
-  console.log('[EnhancedPredictionService] 画布评分:', canvasScore.score);
+  logger.debug('[EnhancedPredictionService]', '画布评分:', canvasScore.score);
 
   // 3. 光路评分（远距离通透性）
   const azimuth = calculateSolarAzimuth(dateObj, lat, lon);
   const lightPathScore = scoreLightPath(weatherData, azimuth, remoteCloudData);
-  console.log('[EnhancedPredictionService] 光路评分:', lightPathScore.score);
+  logger.debug('[EnhancedPredictionService]', '光路评分:', lightPathScore.score);
 
   // 4. 渲染修正（画质系数）
   const renderingFactor = scoreRendering(weatherData, rainedRecently);
-  console.log('[EnhancedPredictionService] 渲染修正:', renderingFactor.factor);
+  logger.debug('[EnhancedPredictionService]', '渲染修正:', renderingFactor.factor);
 
   // 5. 综合输出
   const finalResult = calculateFinalScore(canvasScore, lightPathScore, renderingFactor, type);
-  console.log('[EnhancedPredictionService] 最终得分:', finalResult.score);
+  logger.debug('[EnhancedPredictionService]', '最终得分:', finalResult.score);
 
   // 返回完整结果
   return {

@@ -8,6 +8,8 @@
  * @author Backend Migration v1.0
  */
 
+const logger = require('../utils/logger.js');
+
 // ========== 服务类定义 ==========
 
 class CacheService {
@@ -28,7 +30,12 @@ class CacheService {
       this._cleanupExpired();
     }, 5 * 60 * 1000);
 
-    console.log('[CacheService] 缓存服务已初始化，默认TTL: ' + this.defaultTTL + '秒');
+    // 标记为非阻塞定时器，确保 Node.js 进程可在无其他引用时正常退出
+    if (this.cleanupInterval.unref) {
+      this.cleanupInterval.unref();
+    }
+
+    logger.info('[CacheService]', `缓存服务已初始化，默认TTL: ${this.defaultTTL}秒`);
   }
 
   /**
@@ -56,7 +63,7 @@ class CacheService {
       return null;
     }
 
-    console.log(`[CacheService] 缓存命中: ${key}`);
+    logger.debug('[CacheService]', `缓存命中: ${key}`);
     return entry.value;
   }
 
@@ -93,7 +100,7 @@ class CacheService {
       createdAt: Date.now()
     });
 
-    console.log(`[CacheService] 缓存写入: ${key}, TTL: ${ttlSeconds}秒`);
+    logger.debug('[CacheService]', `缓存写入: ${key}, TTL: ${ttlSeconds}秒`);
     return true;
   }
 
@@ -110,7 +117,7 @@ class CacheService {
 
     const deleted = this.cache.delete(key);
     if (deleted) {
-      console.log(`[CacheService] 缓存删除: ${key}`);
+      logger.debug('[CacheService]', `缓存删除: ${key}`);
     }
     return deleted;
   }
@@ -122,7 +129,7 @@ class CacheService {
    */
   async clear() {
     this.cache.clear();
-    console.log('[CacheService] 缓存已清空');
+    logger.info('[CacheService]', '缓存已清空');
     return true;
   }
 
@@ -192,7 +199,7 @@ class CacheService {
     }
 
     if (cleanedCount > 0) {
-      console.log(`[CacheService] 清理了 ${cleanedCount} 个过期缓存条目`);
+      logger.debug('[CacheService]', `清理了 ${cleanedCount} 个过期缓存条目`);
     }
 
     return cleanedCount;
@@ -221,7 +228,7 @@ class CacheService {
       this.cleanupInterval = null;
     }
     this.cache.clear();
-    console.log('[CacheService] 缓存服务已销毁');
+    logger.info('[CacheService]', '缓存服务已销毁');
   }
 }
 

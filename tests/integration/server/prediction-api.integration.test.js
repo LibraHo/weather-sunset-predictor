@@ -60,7 +60,7 @@ describe('Prediction API Integration', () => {
         .send({ ...validPayload, lat: 123 })
         .expect(400);
 
-      expect(res.body.error).toBe('INVALID_LATITUDE');
+      expect(res.body.error).toHaveProperty('code', 'INVALID_LATITUDE');
     });
   });
 
@@ -71,7 +71,7 @@ describe('Prediction API Integration', () => {
         .send({ lat: 39.9, lon: 116.4, radius: 75, type: 'sunset' })
         .expect(400);
 
-      expect(res.body.error).toBe('INVALID_RADIUS');
+      expect(res.body.error).toHaveProperty('code', 'INVALID_RADIUS');
     });
 
     test('rejects invalid type with 400', async () => {
@@ -80,7 +80,7 @@ describe('Prediction API Integration', () => {
         .send({ lat: 39.9, lon: 116.4, radius: 100, type: 'midnight' })
         .expect(400);
 
-      expect(res.body.error).toBe('INVALID_TYPE');
+      expect(res.body.error).toHaveProperty('code', 'INVALID_TYPE');
     });
   });
 
@@ -120,7 +120,7 @@ describe('Prediction API Integration', () => {
         .send(invalidPayload)
         .expect(400);
 
-      expect(res.body.error).toBe('INVALID_WEATHER_DATA');
+      expect(res.body.error).toHaveProperty('code', 'INVALID_WEATHER_DATA');
     });
   });
 
@@ -164,7 +164,7 @@ describe('Prediction API Integration', () => {
         })
         .expect(400);
 
-      expect(res.body.error).toBe('INVALID_WEATHER_DATA_ARRAY');
+      expect(res.body.error).toHaveProperty('code', 'INVALID_WEATHER_DATA_ARRAY');
     });
   });
 });

@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 // 触发重启
 require('dotenv').config();
 
@@ -20,6 +21,23 @@ const corsOrigins = (process.env.CORS_ORIGIN || 'http://localhost:9002')
   .map(o => o.trim())
   .filter(Boolean);
 
+// 速率限制：读取 .env 配置，未设置时使用合理默认值
+const rateLimitWindowMs = parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000; // 15 分钟
+const rateLimitMax = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100;
+
+const apiLimiter = rateLimit({
+  windowMs: rateLimitWindowMs,
+  max: rateLimitMax,
+  standardHeaders: true,  // 在响应头返回 RateLimit-* 字段
+  legacyHeaders: false,
+  message: {
+    error: {
+      code: 'RATE_LIMIT_EXCEEDED',
+      message: '请求过于频繁，请稍后再试'
+    }
+  }
+});
+
 // Middleware
 app.use(cors({
   origin: corsOrigins.length === 1 ? corsOrigins[0] : corsOrigins
@@ -27,6 +45,9 @@ app.use(cors({
 app.use(express.json());
 app.use(morgan('combined')); // HTTP request logging
 app.use(requestLogger()); // Custom request logging
+
+// 对所有 /api/* 路由启用速率限制
+app.use('/api/', apiLimiter);
 
 // Routes
 app.get('/health', (req, res) => {

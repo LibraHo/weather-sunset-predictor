@@ -65,10 +65,44 @@ describe('EnhancedPredictionService', () => {
     });
 
     describe('calculateSolarElevation', () => {
-      test('should return -0.83 for standard sunset elevation', () => {
+      test('should return a number in valid range [-90, 90]', () => {
         const date = new Date('2024-06-21T18:00:00Z');
         const elevation = EnhancedPredictionService.calculateSolarElevation(date, 40.0, 116.0);
-        expect(elevation).toBe(-0.83);
+        expect(typeof elevation).toBe('number');
+        expect(elevation).toBeGreaterThanOrEqual(-90);
+        expect(elevation).toBeLessThanOrEqual(90);
+      });
+
+      test('should return positive elevation near solar noon at Beijing', () => {
+        // 北京夏至日太阳正午约 04:17 UTC（UTC+8 12:17 本地时间）
+        const solarNoon = new Date('2024-06-21T04:17:00Z');
+        const elevation = EnhancedPredictionService.calculateSolarElevation(solarNoon, 40.0, 116.0);
+        expect(elevation).toBeGreaterThan(60); // 夏至正午约 73°
+      });
+
+      test('should return deeply negative elevation at midnight UTC+8', () => {
+        // 18:00 UTC = 02:00 北京次日，深夜
+        const midnight = new Date('2024-06-21T18:00:00Z');
+        const elevation = EnhancedPredictionService.calculateSolarElevation(midnight, 40.0, 116.0);
+        expect(elevation).toBeLessThan(-15);
+      });
+
+      test('should vary with time (not return constant value)', () => {
+        const dateA = new Date('2024-06-21T04:17:00Z'); // 正午
+        const dateB = new Date('2024-06-21T18:00:00Z'); // 深夜
+        const elevA = EnhancedPredictionService.calculateSolarElevation(dateA, 40.0, 116.0);
+        const elevB = EnhancedPredictionService.calculateSolarElevation(dateB, 40.0, 116.0);
+        expect(elevA).not.toBe(elevB);
+        expect(elevA).toBeGreaterThan(elevB);
+      });
+
+      test('should return near-zero elevation at actual sunset time', () => {
+        // 北京夏至日日落约 11:48 UTC
+        const sunsetUTC = new Date('2024-06-21T11:48:00Z');
+        const elevation = EnhancedPredictionService.calculateSolarElevation(sunsetUTC, 40.0, 116.0);
+        // 日落时太阳高度角应接近 0°（含大气折射约 -0.83°）
+        expect(elevation).toBeGreaterThan(-5);
+        expect(elevation).toBeLessThan(5);
       });
     });
 
@@ -308,29 +342,36 @@ describe('EnhancedPredictionService', () => {
       expect(poorAqi.breakdown.colorTendency).toBe('dark_red');
     });
 
-    test('should further reduce score for severe pollution (AQI > 150)', () => {
+    test('should apply separate aqiFactor penalty for severe pollution (AQI > 150)', () => {
       const weatherData = { visibility: 15, humidity: 50, aqi: 200 };
       const result = EnhancedPredictionService.scoreRendering(weatherData, true);
 
-      // Rain bonus 1.2 * 0.8 = 0.96
-      expect(result.rainBonus).toBeLessThan(1.2);
+      // rainBonus 保持 1.2（雨后加成不受 AQI 影响）
+      expect(result.rainBonus).toBe(1.2);
+      // AQI 惩罚通过独立的 aqiFactor 施加
+      expect(result.aqiFactor).toBe(0.8);
+      // 最终系数 = 1.0 * 1.0 * 1.2 * 0.8 = 0.96
+      expect(result.factor).toBeCloseTo(0.96, 2);
     });
   });
 
   // ========== 质量等级测试 ==========
   describe('getQualityLevel', () => {
-    test('should return excellent for score >= 80', () => {
+    // 阈值与 GaussianScore.getQualityLevel 对齐：excellent ≥70, good ≥40, fair <40
+    test('should return excellent for score >= 70', () => {
+      expect(EnhancedPredictionService.getQualityLevel(70)).toBe('excellent');
       expect(EnhancedPredictionService.getQualityLevel(80)).toBe('excellent');
       expect(EnhancedPredictionService.getQualityLevel(95)).toBe('excellent');
     });
 
-    test('should return good for score 50-79', () => {
-      expect(EnhancedPredictionService.getQualityLevel(50)).toBe('good');
-      expect(EnhancedPredictionService.getQualityLevel(79)).toBe('good');
+    test('should return good for score 40-69', () => {
+      expect(EnhancedPredictionService.getQualityLevel(40)).toBe('good');
+      expect(EnhancedPredictionService.getQualityLevel(55)).toBe('good');
+      expect(EnhancedPredictionService.getQualityLevel(69)).toBe('good');
     });
 
-    test('should return fair for score < 50', () => {
-      expect(EnhancedPredictionService.getQualityLevel(49)).toBe('fair');
+    test('should return fair for score < 40', () => {
+      expect(EnhancedPredictionService.getQualityLevel(39)).toBe('fair');
       expect(EnhancedPredictionService.getQualityLevel(0)).toBe('fair');
     });
   });
