@@ -6,6 +6,36 @@ export default {
     title: '霞客 SUNSET VOYAGER',
     subtitle: '焼き雲の最佳タイミングを予測'
   },
+  // ホームタブ & 算法説明
+  home: {
+    tabs: {
+      ariaLabel: 'ホームタブナビゲーション',
+      forecast: '予測機能',
+      methodology: '焼き雲スコアの計算方法'
+    },
+    menu: {
+      ariaLabel: 'ページ切り替え',
+      dropdownAriaLabel: 'ページ切り替えメニュー'
+    },
+    methodology: {
+      title: '焼き雲スコアの計算方法',
+      intro: '焼き雲指数は4つの主要因子を組み合わせて計算され、その日の夕焼け観賞が価値あるかどうかを素早く判断するのに役立ちます。',
+      factors: {
+        highMidCloudTitle: '中高層雲（キャンバス条件）',
+        highMidCloudDesc: '中高層雲が理想的であればあるほど、豊かなオレンジ・赤の階調が生まれやすくなります。少なすぎても多すぎても効果は低下します。',
+        lowCloudTitle: '下層雲の遮蔽（減点項目）',
+        lowCloudDesc: '下層雲が多すぎると地平線付近の光を遮り、焼き雲鑑賞の失敗の主な原因となります。',
+        humidityTitle: '湿度（レンダリング強化）',
+        humidityDesc: '適度な湿度は色彩のレンダリングに有利です。高すぎると霞が生じ、低すぎると色が薄くなります。',
+        visibilityTitle: '視程（鮮明度）',
+        visibilityDesc: '視程が高いほど、空の背景がクリアで夕焼けの輪郭と色彩の移行がより明確になります。'
+      },
+      scoreGuideTitle: 'スコアの解釈',
+      scoreExcellent: '優秀：>70（観賞を推奨）',
+      scoreGood: '良好：40-70（観賞可能）',
+      scoreFair: '普通：<40（期待は控えめに）'
+    }
+  },
   buttons: {
     search: '検索',
     refresh: '更新',

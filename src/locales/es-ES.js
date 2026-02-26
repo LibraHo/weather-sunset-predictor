@@ -8,6 +8,37 @@ export default {
     subtitle: 'Predecir el mejor momento para nubes rojas'
   },
 
+  // Pestañas & metodología
+  home: {
+    tabs: {
+      ariaLabel: 'Navegación por pestañas',
+      forecast: 'Pronóstico',
+      methodology: 'Metodología de cálculo'
+    },
+    menu: {
+      ariaLabel: 'Cambiar vista',
+      dropdownAriaLabel: 'Menú de navegación'
+    },
+    methodology: {
+      title: 'Cómo se calcula la puntuación',
+      intro: 'El índice de nubes rojas combina cuatro factores clave para estimar si vale la pena salir a ver el atardecer.',
+      factors: {
+        highMidCloudTitle: 'Nubes medias/altas (lienzo)',
+        highMidCloudDesc: 'Una cobertura equilibrada de nubes medias y altas proporciona mejores capas naranja-rojo; demasiado pocas o gruesas perjudican el efecto.',
+        lowCloudTitle: 'Nubes bajas (penalización)',
+        lowCloudDesc: 'Un exceso de nubes bajas puede bloquear la luz cerca del horizonte y es la causa principal de una mala visión del crepúsculo.',
+        humidityTitle: 'Humedad (intensidad de color)',
+        humidityDesc: 'La humedad moderada enriquece los colores; demasiada puede reducir la claridad y muy poca los hace apagados.',
+        visibilityTitle: 'Visibilidad (nitidez)',
+        visibilityDesc: 'Mayor visibilidad suele significar un cielo más limpio y transiciones de color más claras al atardecer.'
+      },
+      scoreGuideTitle: 'Guía de puntuación',
+      scoreExcellent: 'Excelente: >70 (recomendado salir)',
+      scoreGood: 'Bueno: 40-70 (vale la pena)',
+      scoreFair: 'Regular: <40 (modera expectativas)'
+    }
+  },
+
   // Buttons
   buttons: {
     search: 'Buscar',

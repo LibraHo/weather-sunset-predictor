@@ -6,6 +6,36 @@ export default {
     title: '霞客 SUNSET VOYAGER',
     subtitle: 'Dự đoán thời điểm tốt nhất để thấy mây đẹp'
   },
+  // Tab trang chủ & mô tả thuật toán
+  home: {
+    tabs: {
+      ariaLabel: 'Điều hướng tab trang chủ',
+      forecast: 'Chức năng dự báo',
+      methodology: 'Phương pháp tính điểm mây đẹp'
+    },
+    menu: {
+      ariaLabel: 'Chuyển trang',
+      dropdownAriaLabel: 'Menu chuyển trang'
+    },
+    methodology: {
+      title: 'Phương pháp tính điểm mây đẹp',
+      intro: 'Chỉ số mây đẹp được tính toán tổng hợp từ bốn yếu tố chính, giúp bạn nhanh chóng đánh giá liệu ngày hôm đó có đáng để chờ đợi hoàng hôn hay không.',
+      factors: {
+        highMidCloudTitle: 'Mây trung cao (điều kiện khung trời)',
+        highMidCloudDesc: 'Mây trung cao càng lý tưởng thì càng dễ tạo ra các lớp cam đỏ phong phú; quá ít hoặc quá dày đều làm giảm hiệu quả.',
+        lowCloudTitle: 'Mây thấp che khuất (hạ điểm)',
+        lowCloudDesc: 'Mây thấp quá nhiều sẽ chặn ánh sáng gần đường chân trời, là rủi ro chính khiến không nhìn thấy mây đẹp.',
+        humidityTitle: 'Độ ẩm (tăng cường hiển thị màu sắc)',
+        humidityDesc: 'Độ ẩm vừa phải có lợi cho hiển thị màu sắc; quá cao có thể gây sương mù, quá thấp thì màu sắc nhạt.',
+        visibilityTitle: 'Tầm nhìn (độ rõ nét)',
+        visibilityDesc: 'Tầm nhìn càng cao thì nền trời càng trong, ranh giới hoàng hôn và chuyển màu càng rõ ràng.'
+      },
+      scoreGuideTitle: 'Hướng dẫn điểm số',
+      scoreExcellent: 'Xuất sắc：>70（nên ra ngoài）',
+      scoreGood: 'Tốt：40-70（có thể ngắm）',
+      scoreFair: 'Bình thường：<40（kỳ vọng vừa phải）'
+    }
+  },
   buttons: {
     search: 'Tìm kiếm',
     refresh: 'Làm mới',

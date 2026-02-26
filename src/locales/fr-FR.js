@@ -6,6 +6,36 @@ export default {
     title: '霞客 SUNSET VOYAGER',
     subtitle: 'Prédire le meilleur moment pour les nuages rouges'
   },
+  // Onglets & méthodologie
+  home: {
+    tabs: {
+      ariaLabel: 'Navigation par onglets',
+      forecast: 'Prévisions',
+      methodology: 'Méthode de calcul'
+    },
+    menu: {
+      ariaLabel: 'Changer de vue',
+      dropdownAriaLabel: 'Menu de navigation'
+    },
+    methodology: {
+      title: 'Comment le score est calculé',
+      intro: "L'indice de nuages rouges est calculé à partir de quatre facteurs clés pour vous aider à décider rapidement si la soirée vaut le déplacement.",
+      factors: {
+        highMidCloudTitle: 'Nuages moyens/hauts (toile)',
+        highMidCloudDesc: 'Des nuages moyens et hauts équilibrés favorisent de riches teintes orange-rouge ; trop peu ou trop épais nuit à l\'effet.',
+        lowCloudTitle: 'Nuages bas (pénalité)',
+        lowCloudDesc: 'Un excès de nuages bas peut bloquer la lumière près de l\'horizon, principale cause d\'un coucher de soleil raté.',
+        humidityTitle: 'Humidité (intensité des couleurs)',
+        humidityDesc: "Une humidité modérée enrichit les couleurs ; trop élevée peut créer une brume, trop basse les rend ternes.",
+        visibilityTitle: 'Visibilité (netteté)',
+        visibilityDesc: 'Une meilleure visibilité signifie généralement un ciel plus clair et des transitions de couleurs plus nettes.'
+      },
+      scoreGuideTitle: 'Interprétation du score',
+      scoreExcellent: 'Excellent : >70 (sortir recommandé)',
+      scoreGood: 'Bon : 40-70 (vaut le coup)',
+      scoreFair: 'Passable : <40 (tempérez vos attentes)'
+    }
+  },
   buttons: {
     search: 'Rechercher',
     refresh: 'Actualiser',

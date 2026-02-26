@@ -6,6 +6,36 @@ export default {
     title: '霞客 SUNSET VOYAGER',
     subtitle: '화염구름이 나타나는 최적의 시간 예측'
   },
+  // 홈 탭 & 알고리즘 설명
+  home: {
+    tabs: {
+      ariaLabel: '홈 탭 내비게이션',
+      forecast: '예측 기능',
+      methodology: '화염구름 점수 계산 방법'
+    },
+    menu: {
+      ariaLabel: '페이지 전환',
+      dropdownAriaLabel: '페이지 전환 메뉴'
+    },
+    methodology: {
+      title: '화염구름 점수 계산 방법',
+      intro: '화염구름 지수는 4가지 주요 요인을 종합하여 계산되며, 해당 날의 노을 관람이 가치 있는지 빠르게 판단하는 데 도움을 줍니다.',
+      factors: {
+        highMidCloudTitle: '중고층 구름 (캔버스 조건)',
+        highMidCloudDesc: '중고층 구름이 이상적일수록 풍부한 오렌지·빨간 층이 형성되기 쉽습니다. 너무 적거나 너무 두꺼우면 효과가 낮아집니다.',
+        lowCloudTitle: '저층 구름 차단 (감점 항목)',
+        lowCloudDesc: '저층 구름이 너무 많으면 지평선 부근의 빛을 차단하며, 화염구름 관람 실패의 주요 원인 중 하나입니다.',
+        humidityTitle: '습도 (렌더링 강화)',
+        humidityDesc: '적당한 습도는 색채 렌더링에 유리합니다. 너무 높으면 스모그가 발생할 수 있고, 너무 낮으면 색이 옅어집니다.',
+        visibilityTitle: '가시거리 (선명도)',
+        visibilityDesc: '가시거리가 높을수록 하늘 배경이 더 깨끗하고 노을의 경계와 색채 전환이 더 뚜렷해집니다.'
+      },
+      scoreGuideTitle: '점수 해석',
+      scoreExcellent: '우수：>70（관람 권장）',
+      scoreGood: '양호：40-70（관람 가능）',
+      scoreFair: '보통：<40（기대치 조정 필요）'
+    }
+  },
   buttons: {
     search: '검색',
     refresh: '새로고침',

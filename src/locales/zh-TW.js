@@ -8,6 +8,37 @@ export default {
     subtitle: '預測火燒雲出現的最佳時機'
   },
 
+  // 首頁分頁 & 算法說明
+  home: {
+    tabs: {
+      ariaLabel: '主頁分頁導航',
+      forecast: '預測功能',
+      methodology: '火燒雲計算方法'
+    },
+    menu: {
+      ariaLabel: '切換頁面',
+      dropdownAriaLabel: '頁面切換選單'
+    },
+    methodology: {
+      title: '火燒雲計算方法',
+      intro: '火燒雲指數由四個關鍵因子綜合計算，幫助你快速判斷當天是否值得守候晚霞。',
+      factors: {
+        highMidCloudTitle: '中高雲（畫布條件）',
+        highMidCloudDesc: '中高雲越理想，越容易形成豐富的橙紅色層次；過少或過厚都會降低效果。',
+        lowCloudTitle: '低雲遮擋（扣分項）',
+        lowCloudDesc: '低雲過多會阻擋地平線附近光線，是火燒雲觀賞失敗的主要風險之一。',
+        humidityTitle: '濕度（渲染增強）',
+        humidityDesc: '適中的濕度有利於色彩渲染；濕度過高可能導致霧霾感，過低則色彩偏淡。',
+        visibilityTitle: '能見度（清晰度）',
+        visibilityDesc: '更高能見度通常意味著更清晰的天空背景，晚霞邊界和色彩過渡更明顯。'
+      },
+      scoreGuideTitle: '評分解讀',
+      scoreExcellent: '優秀：>70（推薦出門）',
+      scoreGood: '良好：40-70（可觀賞）',
+      scoreFair: '一般：<40（謹慎期待）'
+    }
+  },
+
   // 按鈕
   buttons: {
     search: '查詢',

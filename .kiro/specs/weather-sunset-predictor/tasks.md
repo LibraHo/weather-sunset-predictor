@@ -672,7 +672,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 ## Phase 10：主页分页菜单与算法说明页（需求 26）
 
-> 状态：🔄 进行中（本轮已实现 39.1~39.4）
+> 状态：✅ 全部完成（2026-02-26）
 >
 > 目标：主页新增分页菜单，并增加「火烧云计算方法」独立页面，提升功能可理解性。
 
@@ -684,7 +684,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 | 39.2 | 新增「火烧云计算方法」页面内容组件 | 26.4, 26.5 | ✅ 已完成 |
 | 39.3 | i18n 增补（zh-CN / en-US） | 26.6 | ✅ 已完成 |
 | 39.4 | 响应式与可访问性优化（Tab 语义、键盘导航） | 26.7 | ✅ 已完成 |
-| 39.5 | 文档与测试补充（仅在开发阶段执行） | 26.8 | ⏳ 待开始 |
+| 39.5 | 文档与测试补充（仅在开发阶段执行） | 26.8 | ✅ 已完成 |
 
 ### 任务详情（不执行）
 
@@ -713,14 +713,17 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 - [x] 支持键盘切换（← → / Enter / Space）
 - [x] 移动端支持横向滚动分页按钮
 
-#### 39.5 测试与文档（开发阶段）
+#### 39.5 测试与文档（✅ 已完成，2026-02-26）
 
-- [ ] 组件单测：分页切换与激活态
-- [ ] i18n key 存在性检查
-- [ ] E2E：从预测页切到方法页并验证关键文案显示
-- [ ] 更新 README 导航说明（如需要）
-
-> 备注：39.5（测试与文档）留待下一轮补充。
+- [x] 组件单测：分页切换与激活态（HomeTabs.test.js，17 个测试全部通过）
+  - 新增：外部点击关闭菜单、ESC 键关闭、菜单开关切换、aria-checked 更新
+  - 新增：ArrowRight/Left 焦点循环、Enter/Space 激活、tabIndex 更新
+  - 新增：边界安全用例（无面板、无菜单元素）
+- [x] i18n key 补全（8 种语言补充 `home.tabs`/`home.menu`/`home.methodology.*` 共 31 个 key）
+  - ✅ zh-TW、ja-JP、ko-KR、vi-VN、fr-FR、es-ES、it-IT、ar-SA
+- [x] E2E：从预测页切到方法页并验证关键文案（home-navigation.spec.js，13 个测试用例）
+  - 覆盖：初始状态、菜单交互、视图切换、内容验证、响应式、ESC 键
+- [x] HomeTabs.js JSDoc 文档更新（新增详细 @param/@returns/@example）
 
 #### 39.6 顶栏切页入口优化（✅ 已完成）
 

@@ -1,7 +1,32 @@
 /**
- * Initialize home view switcher (Forecast / Methodology)
- * Supports both tab buttons (legacy) and icon dropdown menu (current UI).
- * @param {Document} documentRef
+ * Initialize home view switcher (Forecast / Methodology).
+ *
+ * Supports two modes depending on which DOM elements are present:
+ *
+ * **Dropdown menu mode** (current UI, 需求26 Phase 10):
+ * - `#home-view-menu-btn`   — toggle button (☰ icon)
+ * - `#home-view-menu-dropdown` — dropdown container
+ * - `.home-view-option[data-view]` — individual menu options
+ *
+ * **Legacy tab mode** (backward-compatible):
+ * - `#tab-forecast` / `#tab-methodology` — tab buttons
+ * - Keyboard: ← → to move focus, Enter/Space to activate
+ *
+ * Both modes control two panels:
+ * - `#tab-panel-forecast`    — default visible panel
+ * - `#tab-panel-methodology` — hidden by default
+ *
+ * @param {Document} [documentRef=document] - Document reference (injectable for testing)
+ * @returns {void}
+ *
+ * @example
+ * // Standard usage in app.js
+ * import initializeHomeTabs from './utils/HomeTabs.js';
+ * initializeHomeTabs();
+ *
+ * @example
+ * // Testing with injected jsdom document
+ * initializeHomeTabs(document);
  */
 export function initializeHomeTabs(documentRef = document) {
   const forecastPanel = documentRef.getElementById('tab-panel-forecast');

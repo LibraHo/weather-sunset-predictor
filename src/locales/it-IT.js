@@ -6,6 +6,36 @@ export default {
     title: '霞客 SUNSET VOYAGER',
     subtitle: 'Prevedere il momento migliore per le nuvole rosse'
   },
+  // Schede & metodologia
+  home: {
+    tabs: {
+      ariaLabel: 'Navigazione a schede',
+      forecast: 'Previsioni',
+      methodology: 'Metodologia di calcolo'
+    },
+    menu: {
+      ariaLabel: 'Cambia vista',
+      dropdownAriaLabel: 'Menu di navigazione'
+    },
+    methodology: {
+      title: 'Come viene calcolato il punteggio',
+      intro: "L'indice nuvole rosse combina quattro fattori chiave per stimare se vale la pena osservare il tramonto.",
+      factors: {
+        highMidCloudTitle: 'Nuvole medie/alte (tela)',
+        highMidCloudDesc: 'Una copertura equilibrata di nuvole medie e alte favorisce ricche sfumature arancio-rosse; troppo poche o spesse penalizzano l\'effetto.',
+        lowCloudTitle: 'Nuvole basse (penalità)',
+        lowCloudDesc: 'Un eccesso di nuvole basse può bloccare la luce vicino all\'orizzonte, causa principale di un tramonto deludente.',
+        humidityTitle: 'Umidità (intensità colore)',
+        humidityDesc: "L'umidità moderata arricchisce i colori; troppa può creare foschia, troppo poca li rende sbiaditi.",
+        visibilityTitle: 'Visibilità (nitidezza)',
+        visibilityDesc: 'Una visibilità maggiore significa generalmente un cielo più limpido e transizioni di colore più nette.'
+      },
+      scoreGuideTitle: 'Guida al punteggio',
+      scoreExcellent: 'Eccellente: >70 (uscire consigliato)',
+      scoreGood: 'Buono: 40-70 (vale la pena)',
+      scoreFair: 'Sufficiente: <40 (aspettative moderate)'
+    }
+  },
   buttons: {
     search: 'Cerca',
     refresh: 'Aggiorna',
