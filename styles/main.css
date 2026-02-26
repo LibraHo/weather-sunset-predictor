@@ -172,6 +172,9 @@ body {
 
 header {
   /* 与首个搜索卡片的内容区域保持同一水平对齐 */
+  position: relative;
+  z-index: 1000;
+  overflow: visible;
   padding: var(--spacing-lg) calc(var(--spacing-md) + var(--spacing-lg));
   background-color: var(--color-primary);
   color: white;
@@ -230,6 +233,7 @@ main {
 
 .home-view-menu {
   position: relative;
+  z-index: 2100;
 }
 
 .home-view-menu-dropdown {
