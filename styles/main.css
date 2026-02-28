@@ -2115,6 +2115,7 @@ body.theme-dark .sunset-time-detail {
 .compact-cloud-info {
   display: flex;
   align-items: center;
+  justify-content: center;
   flex-wrap: wrap;
   gap: 4px 6px;
   padding: 5px 0;
@@ -2123,6 +2124,7 @@ body.theme-dark .sunset-time-detail {
   margin: var(--spacing-xs) 0;
   font-size: 0.82rem;
   color: var(--color-text);
+  text-align: center;
 }
 
 .cloud-icon {
