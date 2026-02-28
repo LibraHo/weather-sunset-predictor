@@ -55,6 +55,25 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(tomorrow[23].temp).toBeCloseTo(47, 5);
   });
 
+
+  test('today 应从当天00:00开始，而不是从首条预测时刻开始', () => {
+    const baseTs = new Date('2026-01-01T05:00:00Z').getTime();
+    const raw = Array.from({ length: 30 }, (_, i) => ({
+      timestamp: baseTs + (i * 60 * 60 * 1000),
+      temp: i,
+      humidity: 60,
+      cloudCover: 20,
+      windSpeed: 8,
+      pressure: 1005
+    }));
+
+    const today = controller.buildContinuous24HourData(raw, 'today');
+
+    expect(today).toHaveLength(24);
+    expect(today[0].timestamp).toBe(new Date('2026-01-01T00:00:00Z').getTime());
+    expect(today[20].timestamp).toBe(new Date('2026-01-01T20:00:00Z').getTime());
+  });
+
   test('setMapTimeToSunset 在缺少日落数据时应调用 controller.showError 而不是 uiManager', () => {
     controller.windyMapService = { setTimestamp: jest.fn() };
     controller.isMapInitialized = true;

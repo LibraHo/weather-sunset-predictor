@@ -553,9 +553,11 @@ class WeatherController {
       return [];
     }
 
-    const baseStart = sorted[0].timestamp;
+    const firstForecastDate = new Date(sorted[0].timestamp);
+    firstForecastDate.setHours(0, 0, 0, 0);
+
     const dayOffsetHours = day === 'tomorrow' ? 24 : 0;
-    const targetStart = baseStart + (dayOffsetHours * oneHourMs);
+    const targetStart = firstForecastDate.getTime() + (dayOffsetHours * oneHourMs);
 
     return Array.from({ length: 24 }, (_, hourOffset) => {
       const targetTs = targetStart + (hourOffset * oneHourMs);
