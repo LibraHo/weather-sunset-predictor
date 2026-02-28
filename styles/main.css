@@ -52,6 +52,12 @@
   --glass-blur: 12px;
   --glass-blur-heavy: 20px;
   --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+
+  /* 顶部栏视觉变量 */
+  --header-surface: rgba(255, 255, 255, 0.78);
+  --header-border: rgba(255, 255, 255, 0.62);
+  --header-title-color: #7a4a12;
+  --header-icon-color: #5d3b11;
 }
 
 /* ===== 暗色主题 ===== */
@@ -92,6 +98,12 @@ body.theme-dark {
   --glass-blur: 12px;
   --glass-blur-heavy: 20px;
   --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+
+  /* 顶部栏视觉变量 - 暗色 */
+  --header-surface: rgba(28, 28, 28, 0.82);
+  --header-border: rgba(255, 255, 255, 0.12);
+  --header-title-color: #ffd9a0;
+  --header-icon-color: #ffd9a0;
 }
 
 /* 自动主题（跟随系统）*/
@@ -133,6 +145,12 @@ body.theme-dark {
     --glass-blur: 12px;
     --glass-blur-heavy: 20px;
     --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+
+    /* 顶部栏视觉变量 - 自动暗色 */
+    --header-surface: rgba(28, 28, 28, 0.82);
+    --header-border: rgba(255, 255, 255, 0.12);
+    --header-title-color: #ffd9a0;
+    --header-icon-color: #ffd9a0;
   }
 }
 
@@ -176,9 +194,10 @@ header {
   z-index: 1000;
   overflow: visible;
   padding: var(--spacing-lg) calc(var(--spacing-md) + var(--spacing-lg));
-  background-color: var(--color-primary);
-  color: white;
+  background: linear-gradient(120deg, var(--header-surface) 0%, rgba(255, 237, 205, 0.72) 100%);
+  color: var(--header-title-color);
   box-shadow: var(--shadow-md);
+  border-bottom: 1px solid var(--header-border);
 }
 
 .header-top-row {
@@ -202,17 +221,22 @@ header h1 {
 }
 
 header h1.app-title {
-  letter-spacing: 0.03em;
-  text-shadow:
-    0 2px 10px rgba(255, 166, 0, 0.22),
-    -1px -1px 0 rgba(88, 45, 0, 0.28),
-    1px -1px 0 rgba(88, 45, 0, 0.28),
-    -1px 1px 0 rgba(88, 45, 0, 0.28),
-    1px 1px 0 rgba(88, 45, 0, 0.28);
-  background: linear-gradient(90deg, #fff7e6 0%, #ffe0b3 45%, #ffd6a5 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  -webkit-text-stroke: 0.8px rgba(88, 45, 0, 0.32);
+  letter-spacing: 0.02em;
+  font-weight: 800;
+  color: var(--header-title-color);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.header-right-group .icon-btn {
+  color: var(--header-icon-color);
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 4px 12px rgba(122, 74, 18, 0.14);
+}
+
+.header-right-group .icon-btn:hover {
+  background: rgba(255, 255, 255, 0.7);
+  transform: translateY(-1px);
 }
 
 main {
@@ -3483,10 +3507,10 @@ body.theme-dark .sun-azimuth-info {
 
   /* 重度毛玻璃效果 - 导航栏 */
   header {
-    background: var(--glass-bg-heavy);
+    background: linear-gradient(120deg, var(--header-surface) 0%, rgba(255, 237, 205, 0.72) 100%);
     backdrop-filter: blur(var(--glass-blur-heavy));
     -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
-    border-bottom: 1px solid var(--glass-border);
+    border-bottom: 1px solid var(--header-border);
     box-shadow: var(--glass-shadow);
   }
 
