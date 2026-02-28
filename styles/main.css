@@ -525,9 +525,14 @@ input[type="text"]::placeholder {
   min-width: 80px;
   max-width: 112px;
   height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 0 var(--spacing-sm);
   border-radius: 10px;
   font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
   background: linear-gradient(135deg, #2ea043, #45c65a);
   border: none;
   box-shadow: 0 4px 16px rgba(46, 160, 67, 0.42);
