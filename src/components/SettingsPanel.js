@@ -5,6 +5,7 @@
  */
 
 import i18n from '../i18n.js';
+import GeocodingServiceFactory from '../services/GeocodingServiceFactory.js';
 
 class SettingsPanel {
   constructor(storageService, themeService) {
@@ -239,12 +240,9 @@ class SettingsPanel {
    * @returns {string}
    */
   getGeocodingProviderOptions() {
-    const options = [
-      { value: 'nominatim', label: this.i18n.t('settings.geocodingBackendNominatim') },
-      { value: 'gaode',     label: this.i18n.t('settings.geocodingBackendGaode') },
-      { value: 'google',    label: this.i18n.t('settings.geocodingBackendGoogle') }
-    ];
-    return options.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+    return GeocodingServiceFactory.getOptions()
+      .map(o => `<option value="${o.provider}">${this.i18n.t(o.labelKey)}</option>`)
+      .join('');
   }
 
   /**
@@ -690,10 +688,7 @@ class SettingsPanel {
     const apiKey = localStorage.getItem('geocoding_api_key') || '';
 
     const providerSelect = document.getElementById('geocoding-provider-select');
-    if (providerSelect) {
-      const option = providerSelect.querySelector(`option[value="${provider}"]`);
-      if (option) providerSelect.value = provider;
-    }
+    if (providerSelect) providerSelect.value = provider;
 
     const apiKeyInput = document.getElementById('geocoding-api-key-input');
     if (apiKeyInput) apiKeyInput.value = apiKey;
@@ -707,17 +702,14 @@ class SettingsPanel {
    */
   updateGeocodingApiKeyVisibility(provider) {
     const section = document.getElementById('geocoding-api-key-section');
-    const hint = document.getElementById('geocoding-api-key-hint');
     if (!section) return;
 
-    const needsKey = provider === 'gaode' || provider === 'google';
+    const opt = GeocodingServiceFactory.getOptions().find(o => o.provider === provider);
+    const needsKey = opt ? opt.requiresKey : false;
     section.style.display = needsKey ? '' : 'none';
 
-    if (hint) {
-      hint.textContent = provider === 'gaode'
-        ? this.i18n.t('settings.geocodingApiKeyHint')
-        : this.i18n.t('settings.geocodingApiKeyHint');
-    }
+    const hint = document.getElementById('geocoding-api-key-hint');
+    if (hint) hint.textContent = this.i18n.t('settings.geocodingApiKeyHint');
   }
 
   /**
@@ -728,7 +720,7 @@ class SettingsPanel {
     localStorage.setItem('geocoding_provider', provider);
     this.updateGeocodingApiKeyVisibility(provider);
     console.log('[SettingsPanel] 地理编码提供商已切换为:', provider);
-    this.dispatchGeocodingSettingChanged();
+    this.dispatchGeocodingSettingChanged(provider, localStorage.getItem('geocoding_api_key') || '');
   }
 
   /**
@@ -736,20 +728,20 @@ class SettingsPanel {
    * @param {string} apiKey
    */
   handleGeocodingApiKeyChange(apiKey) {
-    localStorage.setItem('geocoding_api_key', apiKey.trim());
+    const trimmed = apiKey.trim();
+    localStorage.setItem('geocoding_api_key', trimmed);
     console.log('[SettingsPanel] 地理编码 API Key 已更新');
-    this.dispatchGeocodingSettingChanged();
+    this.dispatchGeocodingSettingChanged(localStorage.getItem('geocoding_provider') || 'nominatim', trimmed);
   }
 
   /**
    * 触发 geocodingSettingChanged 自定义事件
+   * @param {string} provider
+   * @param {string} apiKey
    */
-  dispatchGeocodingSettingChanged() {
+  dispatchGeocodingSettingChanged(provider, apiKey) {
     window.dispatchEvent(new CustomEvent('geocodingSettingChanged', {
-      detail: {
-        provider: localStorage.getItem('geocoding_provider') || 'nominatim',
-        apiKey: localStorage.getItem('geocoding_api_key') || ''
-      }
+      detail: { provider, apiKey }
     }));
   }
 
