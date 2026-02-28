@@ -70,22 +70,9 @@ class SettingsPanel {
                   <label class="setting-label setting-label-title">📍 ${this.i18n.t('settings.geocodingService')}</label>
                 </div>
                 <div class="setting-control setting-control-full">
-                  <label class="setting-label">${this.i18n.t('settings.geocodingMode')}</label>
-                  <div class="setting-radio-group">
-                    <label class="setting-radio-label">
-                      <input type="radio" name="geocoding-mode" value="backend" id="geocoding-mode-backend" />
-                      ${this.i18n.t('settings.geocodingModeBackend')}
-                    </label>
-                    <label class="setting-radio-label">
-                      <input type="radio" name="geocoding-mode" value="direct" id="geocoding-mode-direct" />
-                      ${this.i18n.t('settings.geocodingModeDirect')}
-                    </label>
-                  </div>
-                </div>
-                <div class="setting-control setting-control-full">
                   <label class="setting-label" for="geocoding-provider-select">${this.i18n.t('settings.geocodingProvider')}</label>
                   <select id="geocoding-provider-select" class="setting-select">
-                    ${this.getGeocodingProviderOptions('backend')}
+                    ${this.getGeocodingProviderOptions()}
                   </select>
                 </div>
                 <div class="setting-control setting-control-full" id="geocoding-api-key-section" style="display:none">
@@ -247,22 +234,16 @@ class SettingsPanel {
   }
 
   /**
-   * 根据调用模式返回地理编码提供商选项 HTML
+   * 返回地理编码提供商选项 HTML（后端代理模式）
    * 需求：24
-   * @param {string} mode - 'backend' | 'direct'
    * @returns {string}
    */
-  getGeocodingProviderOptions(mode) {
-    const options = mode === 'backend'
-      ? [
-          { value: 'nominatim', label: this.i18n.t('settings.geocodingBackendNominatim') },
-          { value: 'gaode',     label: this.i18n.t('settings.geocodingBackendGaode') },
-          { value: 'google',    label: this.i18n.t('settings.geocodingBackendGoogle') }
-        ]
-      : [
-          { value: 'nominatim', label: this.i18n.t('settings.geocodingDirectNominatim') },
-          { value: 'google',    label: this.i18n.t('settings.geocodingDirectGoogle') }
-        ];
+  getGeocodingProviderOptions() {
+    const options = [
+      { value: 'nominatim', label: this.i18n.t('settings.geocodingBackendNominatim') },
+      { value: 'gaode',     label: this.i18n.t('settings.geocodingBackendGaode') },
+      { value: 'google',    label: this.i18n.t('settings.geocodingBackendGoogle') }
+    ];
     return options.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
   }
 
@@ -345,14 +326,7 @@ class SettingsPanel {
       });
     }
 
-    // 位置解析模式（需求 24）
-    const geocodingModeRadios = this.panel.querySelectorAll('input[name="geocoding-mode"]');
-    geocodingModeRadios.forEach(radio => {
-      radio.addEventListener('change', (e) => {
-        this.handleGeocodingModeChange(e.target.value);
-      });
-    });
-
+    // 位置解析提供商（需求 24）
     const geocodingProviderSelect = document.getElementById('geocoding-provider-select');
     if (geocodingProviderSelect) {
       geocodingProviderSelect.addEventListener('change', (e) => {
@@ -712,28 +686,18 @@ class SettingsPanel {
    * 加载位置解析服务设置，恢复控件状态
    */
   loadGeocodingSettings() {
-    const mode = localStorage.getItem('geocoding_mode') || 'backend';
     const provider = localStorage.getItem('geocoding_provider') || 'nominatim';
     const apiKey = localStorage.getItem('geocoding_api_key') || '';
 
-    // 恢复模式单选
-    const modeRadio = this.panel.querySelector(`input[name="geocoding-mode"][value="${mode}"]`);
-    if (modeRadio) modeRadio.checked = true;
-
-    // 更新提供商下拉选项
     const providerSelect = document.getElementById('geocoding-provider-select');
     if (providerSelect) {
-      providerSelect.innerHTML = this.getGeocodingProviderOptions(mode);
-      // 尝试恢复上次选择的提供商（若对应模式下有此选项）
       const option = providerSelect.querySelector(`option[value="${provider}"]`);
       if (option) providerSelect.value = provider;
     }
 
-    // 恢复 API Key 输入框
     const apiKeyInput = document.getElementById('geocoding-api-key-input');
     if (apiKeyInput) apiKeyInput.value = apiKey;
 
-    // 根据当前提供商决定是否显示 API Key 区域
     this.updateGeocodingApiKeyVisibility(providerSelect ? providerSelect.value : provider);
   }
 
@@ -754,29 +718,6 @@ class SettingsPanel {
         ? this.i18n.t('settings.geocodingApiKeyHint')
         : this.i18n.t('settings.geocodingApiKeyHint');
     }
-  }
-
-  /**
-   * 处理地理编码调用模式变更
-   * @param {string} mode - 'backend' | 'direct'
-   */
-  handleGeocodingModeChange(mode) {
-    localStorage.setItem('geocoding_mode', mode);
-
-    // 重建提供商选项
-    const providerSelect = document.getElementById('geocoding-provider-select');
-    if (providerSelect) {
-      const currentProvider = providerSelect.value;
-      providerSelect.innerHTML = this.getGeocodingProviderOptions(mode);
-      // 保留选择（如果新模式下还有此提供商）
-      const option = providerSelect.querySelector(`option[value="${currentProvider}"]`);
-      if (option) providerSelect.value = currentProvider;
-      localStorage.setItem('geocoding_provider', providerSelect.value);
-      this.updateGeocodingApiKeyVisibility(providerSelect.value);
-    }
-
-    console.log('[SettingsPanel] 地理编码模式已切换为:', mode);
-    this.dispatchGeocodingSettingChanged();
   }
 
   /**
@@ -806,7 +747,6 @@ class SettingsPanel {
   dispatchGeocodingSettingChanged() {
     window.dispatchEvent(new CustomEvent('geocodingSettingChanged', {
       detail: {
-        mode: localStorage.getItem('geocoding_mode') || 'backend',
         provider: localStorage.getItem('geocoding_provider') || 'nominatim',
         apiKey: localStorage.getItem('geocoding_api_key') || ''
       }
