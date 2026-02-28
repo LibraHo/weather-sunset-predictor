@@ -708,7 +708,7 @@ input[type="text"]::placeholder {
   gap: 12px;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.4);
-  background: transparent;
+  background: linear-gradient(145deg, rgba(30, 80, 160, 0.82) 0%, rgba(70, 40, 130, 0.72) 100%);
   padding: 18px 14px;
 }
 
@@ -722,7 +722,7 @@ input[type="text"]::placeholder {
   font-size: clamp(3rem, 7vw, 4.8rem);
   font-weight: 700;
   color: #ffffff;
-  text-shadow: 0 3px 14px rgba(35, 49, 70, 0.24);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: flex-start;
   line-height: 0.95;
@@ -740,7 +740,7 @@ input[type="text"]::placeholder {
   align-items: baseline;
   gap: 8px;
   color: #ffffff;
-  text-shadow: 0 3px 14px rgba(35, 49, 70, 0.24);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
 .weather-wind-speed {
@@ -770,10 +770,11 @@ input[type="text"]::placeholder {
 
 .weather-desc {
   font-size: 1.05rem;
-  color: rgba(31, 42, 61, 0.92);
+  color: rgba(255, 255, 255, 0.92);
   font-weight: 600;
   letter-spacing: 0.01em;
   text-transform: capitalize;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
 }
 
 .weather-feature-stack {
