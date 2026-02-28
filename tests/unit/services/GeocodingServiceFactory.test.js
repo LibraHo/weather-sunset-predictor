@@ -5,7 +5,6 @@
 
 import { jest } from '@jest/globals';
 import GeocodingServiceFactory from '../../../src/services/GeocodingServiceFactory.js';
-import GeocodingService from '../../../src/services/GeocodingService.js';
 import BackendGeocodingService from '../../../src/services/BackendGeocodingService.js';
 
 // localStorage mock (plain object, no jest.fn at module level)
@@ -45,20 +44,19 @@ describe('GeocodingServiceFactory', () => {
 
   // ========== create() — 后端代理模式 ==========
 
-  describe("create() — mode='backend'", () => {
+  describe('create() — 后端代理模式', () => {
     beforeEach(() => {
-      localStorageStore['geocoding_mode'] = 'backend';
       localStorageStore['api_proxy_url'] = 'http://localhost:3000';
     });
 
-    test('backend + nominatim → BackendGeocodingService, provider=nominatim', () => {
+    test('nominatim → BackendGeocodingService, provider=nominatim', () => {
       localStorageStore['geocoding_provider'] = 'nominatim';
       const service = GeocodingServiceFactory.create();
       expect(service).toBeInstanceOf(BackendGeocodingService);
       expect(service.provider).toBe('nominatim');
     });
 
-    test('backend + gaode → BackendGeocodingService, provider=gaode', () => {
+    test('gaode → BackendGeocodingService, provider=gaode', () => {
       localStorageStore['geocoding_provider'] = 'gaode';
       localStorageStore['geocoding_api_key'] = 'my-gaode-key';
       const service = GeocodingServiceFactory.create();
@@ -67,7 +65,7 @@ describe('GeocodingServiceFactory', () => {
       expect(service.apiKey).toBe('my-gaode-key');
     });
 
-    test('backend + google → BackendGeocodingService, provider=google', () => {
+    test('google → BackendGeocodingService, provider=google', () => {
       localStorageStore['geocoding_provider'] = 'google';
       localStorageStore['geocoding_api_key'] = 'my-google-key';
       const service = GeocodingServiceFactory.create();
@@ -90,46 +88,18 @@ describe('GeocodingServiceFactory', () => {
     });
   });
 
-  // ========== create() — 前端直连模式 ==========
-
-  describe("create() — mode='direct'", () => {
-    beforeEach(() => {
-      localStorageStore['geocoding_mode'] = 'direct';
-    });
-
-    test('direct + nominatim → GeocodingService（原生直连）', () => {
-      localStorageStore['geocoding_provider'] = 'nominatim';
-      const service = GeocodingServiceFactory.create();
-      expect(service).toBeInstanceOf(GeocodingService);
-    });
-
-    test('direct + google → BackendGeocodingService（借用代理类直连）', () => {
-      localStorageStore['geocoding_provider'] = 'google';
-      localStorageStore['geocoding_api_key'] = 'g-key';
-      const service = GeocodingServiceFactory.create();
-      expect(service).toBeInstanceOf(BackendGeocodingService);
-    });
-
-    test('direct + unknown provider → 默认 GeocodingService', () => {
-      localStorageStore['geocoding_provider'] = 'unknown_provider';
-      const service = GeocodingServiceFactory.create();
-      expect(service).toBeInstanceOf(GeocodingService);
-    });
-  });
-
   // ========== getOptions() ==========
 
   describe('getOptions()', () => {
-    test('应返回 5 个选项', () => {
+    test('应返回 3 个选项', () => {
       const options = GeocodingServiceFactory.getOptions();
       expect(Array.isArray(options)).toBe(true);
-      expect(options.length).toBe(5);
+      expect(options.length).toBe(3);
     });
 
     test('每个选项应包含必要字段', () => {
       const options = GeocodingServiceFactory.getOptions();
       options.forEach(opt => {
-        expect(opt).toHaveProperty('mode');
         expect(opt).toHaveProperty('provider');
         expect(opt).toHaveProperty('labelKey');
         expect(opt).toHaveProperty('requiresKey');
@@ -137,33 +107,25 @@ describe('GeocodingServiceFactory', () => {
       });
     });
 
-    test('后端 Nominatim 不需要 Key 且中国可用', () => {
+    test('Nominatim 不需要 Key 且中国可用', () => {
       const options = GeocodingServiceFactory.getOptions();
-      const opt = options.find(o => o.mode === 'backend' && o.provider === 'nominatim');
+      const opt = options.find(o => o.provider === 'nominatim');
       expect(opt).toBeDefined();
       expect(opt.requiresKey).toBe(false);
       expect(opt.chinaCompatible).toBe(true);
     });
 
-    test('后端高德需要 Key 且中国可用', () => {
+    test('高德需要 Key 且中国可用', () => {
       const options = GeocodingServiceFactory.getOptions();
-      const opt = options.find(o => o.mode === 'backend' && o.provider === 'gaode');
+      const opt = options.find(o => o.provider === 'gaode');
       expect(opt).toBeDefined();
       expect(opt.requiresKey).toBe(true);
       expect(opt.chinaCompatible).toBe(true);
     });
 
-    test('直连 Nominatim 不需要 Key 但中国受限', () => {
+    test('Google 需要 Key 且中国不可用', () => {
       const options = GeocodingServiceFactory.getOptions();
-      const opt = options.find(o => o.mode === 'direct' && o.provider === 'nominatim');
-      expect(opt).toBeDefined();
-      expect(opt.requiresKey).toBe(false);
-      expect(opt.chinaCompatible).toBe(false);
-    });
-
-    test('直连 Google 需要 Key 且中国不可用', () => {
-      const options = GeocodingServiceFactory.getOptions();
-      const opt = options.find(o => o.mode === 'direct' && o.provider === 'google');
+      const opt = options.find(o => o.provider === 'google');
       expect(opt).toBeDefined();
       expect(opt.requiresKey).toBe(true);
       expect(opt.chinaCompatible).toBe(false);
