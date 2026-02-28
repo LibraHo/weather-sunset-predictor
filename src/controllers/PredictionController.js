@@ -723,13 +723,13 @@ class PredictionController {
           fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="8"
           stroke-dasharray="${arcLength} ${circumference - arcLength}"
           stroke-dashoffset="${circumference * 0.125}"
-          stroke-linecap="round"/>
+          stroke-linecap="butt"/>
         <!-- 进度弧 -->
         <circle cx="48" cy="48" r="${radius}"
           fill="none" stroke="url(#gauge-grad-${type})" stroke-width="8"
           stroke-dasharray="${scoreFill.toFixed(2)} ${scoreGap.toFixed(2) + circumference * 0.25}"
           stroke-dashoffset="${circumference * 0.125}"
-          stroke-linecap="round"
+          stroke-linecap="butt"
           style="filter:drop-shadow(0 0 6px ${gaugeColor}88)"/>
         <!-- 分数数字 -->
         <text x="48" y="46" text-anchor="middle" dominant-baseline="middle"
