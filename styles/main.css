@@ -283,7 +283,6 @@ main {
   color: #111111;
   border-radius: 8px;
   padding: 8px 10px;
-  cursor: pointer;
   font-size: 0.92rem;
   font-weight: 400;
   line-height: 1.35;
@@ -306,7 +305,6 @@ main {
   color: #ffffff;
   border-radius: 999px;
   padding: 7px 12px;
-  cursor: pointer;
   font-size: 0.95rem;
   white-space: nowrap;
 }
@@ -410,7 +408,6 @@ footer {
   border-radius: var(--radius-md);
   font-size: 1rem;
   font-weight: 500;
-  cursor: pointer;
   transition: all var(--transition-fast);
   outline: none;
 }
@@ -449,7 +446,6 @@ footer {
   background: none;
   border: none;
   font-size: 1.5rem;
-  cursor: pointer;
   padding: var(--spacing-sm);
   border-radius: var(--radius-sm);
   transition: background-color var(--transition-fast);
@@ -509,7 +505,6 @@ input[type="text"]::placeholder {
   border-radius: 10px;
   font-size: 1.05rem;
   font-weight: 700;
-  cursor: pointer;
 }
 
 .location-input-wrapper {
@@ -534,7 +529,6 @@ input[type="text"]::placeholder {
   background: transparent;
   color: var(--color-primary);
   font-size: 1rem;
-  cursor: pointer;
   width: 30px;
   height: 30px;
   border-radius: 8px;
@@ -1050,116 +1044,6 @@ input[type="text"]::placeholder {
   gap: var(--spacing-md);
 }
 
-/* ===== 预测详情展开 ===== */
-.prediction-details {
-  width: 100%;
-  margin-top: var(--spacing-md);
-  padding-top: var(--spacing-md);
-  border-top: 1px solid var(--color-border);
-  overflow: hidden;
-  transition: max-height 0.3s ease-out;
-}
-
-.prediction-details-content {
-  padding: var(--spacing-sm) 0;
-}
-
-.details-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-text);
-  margin-bottom: var(--spacing-md);
-}
-
-.details-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-lg);
-}
-
-.detail-item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm);
-  background-color: var(--color-card-bg);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-sm);
-}
-
-.detail-icon {
-  font-size: 1.5rem;
-}
-
-.detail-content {
-  display: flex;
-  flex-direction: column;
-}
-
-.detail-label {
-  font-size: 0.75rem;
-  color: var(--color-text-light);
-}
-
-.detail-value {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.sunset-time-detail {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-md);
-  background-color: var(--sunset-time-bg);
-  border-radius: var(--radius-md);
-  border-left: 3px solid var(--sunset-time-border);
-  margin-bottom: var(--spacing-md);
-}
-
-body.theme-dark .sunset-time-detail {
-  background-color: var(--sunset-time-bg-subtle);
-  border-left-color: var(--sunset-time-border);
-}
-
-.viewing-window-detail {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-md);
-  background-color: var(--color-card-bg);
-  border-radius: var(--radius-md);
-  border-left: 3px solid var(--color-primary);
-  margin-bottom: var(--spacing-md);
-}
-
-body.theme-dark .viewing-window-detail {
-  background-color: rgba(33, 150, 243, 0.08);
-  border-left-color: var(--color-primary);
-}
-
-.window-icon {
-  font-size: 2rem;
-}
-
-.window-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.window-label {
-  font-size: 0.875rem;
-  color: var(--color-text-light);
-}
-
-.window-value {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
 .sunset-icon {
   font-size: 2rem;
 }
@@ -1294,34 +1178,6 @@ body.theme-dark .viewing-window-detail {
   .search-action-btn {
     flex: 0 0 25%;
     min-width: 72px;
-  }
-
-  /* 预测详情移动端样式 */
-  .details-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--spacing-sm);
-  }
-
-  .detail-item {
-    padding: var(--spacing-xs);
-  }
-
-  .detail-icon {
-    font-size: 1.25rem;
-  }
-
-  .detail-label {
-    font-size: 0.7rem;
-  }
-
-  .detail-value {
-    font-size: 0.875rem;
-  }
-
-  .sunset-time-detail {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-sm);
   }
 
   .factors-explanation {
@@ -1694,26 +1550,11 @@ body.theme-dark .best-time {
   background-color: var(--color-card-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  cursor: pointer;
   transition: all var(--transition-normal);
   width: 100%;
   max-width: none;
 }
 
-.forecast-item:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-}
-
-.forecast-item:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-.forecast-item.expanded {
-  border-color: var(--color-primary);
-  box-shadow: var(--shadow-md);
-}
 
 .forecast-header {
   display: flex;
@@ -1790,10 +1631,6 @@ body.theme-dark .best-time {
   color: #f44336;
 }
 
-.forecast-item:hover .forecast-score {
-  transform: scale(1.1);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-}
 
 .forecast-score span {
   color: inherit;
@@ -1836,83 +1673,6 @@ body.theme-dark .best-time {
   color: var(--color-text-light);
 }
 
-/* ===== 预测详情 ===== */
-.prediction-details {
-  margin-top: var(--spacing-md);
-  padding-top: var(--spacing-md);
-  border-top: 1px solid var(--color-border);
-  overflow: hidden;
-  transition: max-height 0.3s ease-out;
-}
-
-.prediction-details-content {
-  padding: var(--spacing-md) 0;
-}
-
-.details-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-text);
-  margin-bottom: var(--spacing-md);
-}
-
-.details-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-md);
-}
-
-.detail-item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm);
-  background-color: var(--color-bg);
-  border-radius: var(--radius-sm);
-}
-
-.detail-icon {
-  font-size: 1.5rem;
-}
-
-.detail-content {
-  display: flex;
-  flex-direction: column;
-}
-
-.detail-label {
-  font-size: 0.75rem;
-  color: var(--color-text-light);
-}
-
-.detail-value {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.sunset-time-detail {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-md);
-  background-color: var(--sunset-time-bg);
-  border-radius: var(--radius-md);
-  border-left: 3px solid var(--sunset-time-border);
-  margin: var(--spacing-md) 0;
-}
-
-body.theme-dark .sunset-time-detail {
-  background-color: var(--sunset-time-bg-subtle);
-  border-left-color: var(--sunset-time-border);
-}
-
-.sunset-info {
-  display: flex;
-  flex-direction: column;
-}
-
 .factors-explanation {
   margin-top: var(--spacing-md);
   padding: var(--spacing-md);
@@ -1947,10 +1707,6 @@ body.theme-dark .sunset-time-detail {
 
   .factors-grid {
     grid-template-columns: 1fr;
-  }
-
-  .details-grid {
-    grid-template-columns: repeat(2, 1fr);
   }
 
   .forecast-item {
@@ -2424,7 +2180,6 @@ body.theme-dark .prediction-analysis {
   border-radius: var(--radius-md);
   font-size: 0.9rem;
   font-weight: 500;
-  cursor: pointer;
   transition: all var(--transition-fast);
 }
 
@@ -2456,7 +2211,6 @@ body.theme-dark .prediction-analysis {
   border-radius: var(--radius-md);
   padding: var(--spacing-md);
   text-align: center;
-  cursor: pointer;
   transition: all var(--transition-normal);
   border: 2px solid transparent;
 }
@@ -2577,7 +2331,6 @@ body.theme-dark .prediction-analysis {
   border-radius: var(--radius-md);
   font-size: 0.85rem;
   font-weight: 500;
-  cursor: pointer;
   transition: all var(--transition-fast);
   min-width: 80px;
 }
@@ -2743,14 +2496,12 @@ body.theme-dark .prediction-analysis {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  cursor: pointer;
   flex: 1;
 }
 
 .setting-item input[type="checkbox"] {
   width: 20px;
   height: 20px;
-  cursor: pointer;
 }
 
 .setting-item input[type="number"] {
@@ -2822,7 +2573,6 @@ body.theme-dark .prediction-analysis {
   padding: var(--spacing-sm) var(--spacing-md);
   background-color: var(--glass-bg);
   border-radius: var(--radius-sm);
-  cursor: pointer;
   transition: all var(--transition-fast);
   border: 1px solid transparent;
 }
@@ -2850,7 +2600,6 @@ body.theme-dark .prediction-analysis {
   border: none;
   color: var(--color-error);
   font-size: 1.25rem;
-  cursor: pointer;
   padding: var(--spacing-xs);
   border-radius: var(--radius-sm);
   transition: background-color var(--transition-fast);
@@ -3138,7 +2887,6 @@ body.theme-dark .sun-azimuth-info {
   justify-content: space-between;
   align-items: center;
   padding: var(--spacing-sm) var(--spacing-md);
-  cursor: pointer;
   transition: background-color var(--transition-fast);
   border-bottom: 1px solid var(--color-border);
 }
@@ -3155,7 +2903,6 @@ body.theme-dark .sun-azimuth-info {
   flex: 1;
   font-size: 0.9rem;
   color: var(--color-text);
-  cursor: pointer;
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
@@ -3171,7 +2918,6 @@ body.theme-dark .sun-azimuth-info {
   border: none;
   color: var(--color-text-light);
   font-size: 1.25rem;
-  cursor: pointer;
   padding: var(--spacing-xs);
   border-radius: var(--radius-sm);
   transition: all var(--transition-fast);
@@ -3651,7 +3397,6 @@ body.theme-dark .sun-azimuth-info {
   background: transparent;
   color: inherit;
   font-size: 18px;
-  cursor: pointer;
   opacity: 0.8;
 }
 
