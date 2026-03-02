@@ -51,12 +51,6 @@ class GeocodingServiceFactory {
         labelKey: 'settings.geocodingBackendNominatim',
         requiresKey: false,
         chinaCompatible: true
-      },
-      {
-        provider: 'nominatim-frontend',
-        labelKey: 'settings.geocodingFrontendNominatim',
-        requiresKey: false,
-        chinaCompatible: false
       }
     ];
   }
