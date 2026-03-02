@@ -3,7 +3,7 @@
  */
 export default {
   app: {
-    title: '霞客 SUNSET VOYAGER',
+    title: 'Sunset Voyager',
     subtitle: 'التنبؤ بأفضل وقت للسحب الحمراء'
   },
   // تبويبات الصفحة الرئيسية & شرح الخوارزمية
