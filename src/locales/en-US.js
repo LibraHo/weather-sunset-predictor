@@ -4,7 +4,7 @@
 export default {
   // App
   app: {
-    title: '霞客 SUNSET VOYAGER',
+    title: 'Sunset Voyager',
     subtitle: 'Predict the best time for fire clouds'
   },
 
