@@ -147,7 +147,9 @@ function requireKey(res, apiKey, providerName) {
 }
 
 async function handleGaodeSearch(res, query, apiKey) {
-  if (!requireKey(res, apiKey, '高德地图')) return;
+  const effectiveKey = apiKey || process.env.GAODE_API_KEY;
+  if (!requireKey(res, effectiveKey, '高德地图')) return;
+  apiKey = effectiveKey;
 
   console.log(`[Geocoding] 高德地图搜索: "${query}"`);
 
@@ -176,7 +178,9 @@ async function handleGaodeSearch(res, query, apiKey) {
 }
 
 async function handleGaodeReverse(res, lat, lon, apiKey) {
-  if (!requireKey(res, apiKey, '高德地图')) return;
+  const effectiveKey = apiKey || process.env.GAODE_API_KEY;
+  if (!requireKey(res, effectiveKey, '高德地图')) return;
+  apiKey = effectiveKey;
 
   console.log(`[Geocoding] 高德地图反向地理编码: ${lat},${lon}`);
 
