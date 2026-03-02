@@ -726,3 +726,62 @@
 3. SQLite 不可用时自动降级为内存计数，服务不崩溃
 4. GET `/api/visitor/count` 返回当前计数
 5. POST `/api/visitor/count` 原子递增并返回最新值
+
+
+---
+
+### 需求 30：日落投稿社区功能（规划中）
+
+**用户故事：** 作为霞客用户，我希望能上传自己拍摄的日落/火烧云照片，与社区分享，并查看其他用户在同一地点的拍摄记录。
+
+#### 核心功能（待细化）
+
+1. **照片投稿**
+   - 用户上传日落照片，关联拍摄时间和地理位置
+   - 支持简短描述/标签
+
+2. **社区浏览**
+   - 按地点、日期、评分筛选浏览投稿
+   - 地图叠加层展示投稿热点
+
+3. **互动**
+   - 点赞 / 收藏
+   - 评论（可选）
+
+#### 数据库设计方向
+
+沿用 SQLite（`~/.xiake/xiake.db`），统一管理所有持久化数据：
+
+```sql
+-- 投稿表
+CREATE TABLE submissions (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id     TEXT,                    -- 匿名 UUID 或未来账户 ID
+  lat         REAL NOT NULL,
+  lon         REAL NOT NULL,
+  location    TEXT,                    -- 地名
+  photo_path  TEXT NOT NULL,           -- 图片存储路径
+  description TEXT,
+  score       INTEGER,                 -- 当天预测评分（可选）
+  taken_at    DATETIME NOT NULL,       -- 拍摄时间
+  created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 点赞表
+CREATE TABLE likes (
+  submission_id INTEGER REFERENCES submissions(id),
+  user_id       TEXT,
+  created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (submission_id, user_id)
+);
+```
+
+#### 技术方向
+
+- 图片存储：服务器本地（`~/xiake-media/`）或后期迁移对象存储（腾讯 COS）
+- 后端：复用现有 Express 服务器，新增 `/api/submissions/` 路由
+- 前端：新增「社区」分页（复用主页分页菜单机制）
+
+#### 状态
+
+> 📋 **规划中** — 待需求细化后进入设计与开发阶段
