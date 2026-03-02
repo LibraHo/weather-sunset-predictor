@@ -3417,3 +3417,27 @@ body.theme-dark .sun-azimuth-info {
     max-width: none;
   }
 }
+
+/* ===== App Logo ===== */
+.app-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #C49A3C;
+}
+.app-logo-icon {
+  height: 36px;
+  width: auto;
+  flex-shrink: 0;
+  color: #C49A3C;
+}
+.app-logo-text {
+  font-family: 'Cormorant Garamond', 'PingFang SC', 'Hiragino Sans GB', Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 300;
+  letter-spacing: 0.06em;
+  color: #C49A3C;
+  line-height: 1;
+  white-space: nowrap;
+}
+.app-title { display: none; }
