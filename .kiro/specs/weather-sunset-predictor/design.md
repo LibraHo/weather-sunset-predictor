@@ -4083,3 +4083,162 @@ Windy Point Forecast API（使用 effectiveApiKey）
 ### 本次范围声明
 
 已落地实现：顶栏列表图标下拉切页 + 方法页内容 + i18n + 单测；后续仅补充更多 E2E/可访问性测试。
+
+
+---
+
+## Phase 11 设计：品牌升级、设置重组、访客持久化（需求 27-29）
+
+> 实现日期：2026-03-02
+
+---
+
+### 需求 27：霞客 / Sunset Voyager Logo 设计
+
+#### 视觉方案
+
+顶栏标题由纯文字替换为 **内联 SVG 图标 + 文字** 横排组合：
+
+```
+[☀ 图标]  [霞客 / Sunset Voyager]
+```
+
+**图标设计：**
+- 半圆弧（日出）+ 长横线（地平线）+ 两条短横线（水面倒影）
+- 全部使用 `stroke="currentColor"`，深色/浅色主题自适应
+- SVG viewBox: `0 0 76 76`
+
+**颜色：** `#C49A3C`（暖金色，与顶栏整体色调一致）
+
+**字体：** Cormorant Garamond 300（Google Fonts），回退 Georgia / PingFang SC
+
+#### 多语言文字规则
+
+| 语言 | 显示文字 |
+|------|---------|
+| zh-CN / zh-TW | 霞客 |
+| ja-JP | 霞客 |
+| ko-KR | 하객(霞客) |
+| 其余 7 种语言 | Sunset Voyager |
+
+#### 响应式规格
+
+| 断点 | 图标高度 | 字号 | gap |
+|------|---------|------|-----|
+| 默认（移动） | 36px | 1.5rem | 12px |
+| ≥768px（桌面） | 48px | 2rem | 16px |
+
+#### HTML 结构
+
+```html
+<div class="app-logo">
+  <svg class="app-logo-icon" viewBox="0 0 76 76">
+    <!-- 半圆日出 -->
+    <path d="M12 44 A26 26 0 0 1 64 44" stroke="currentColor" fill="none" stroke-width="4"/>
+    <!-- 地平线 -->
+    <line x1="0" y1="44" x2="76" y2="44" stroke="currentColor" stroke-width="4"/>
+    <!-- 倒影 -->
+    <line x1="10" y1="55" x2="66" y2="55" stroke="currentColor" stroke-width="3.5"/>
+    <line x1="22" y1="66" x2="54" y2="66" stroke="currentColor" stroke-width="3"/>
+  </svg>
+  <span class="app-logo-text" data-i18n="app.title">霞客</span>
+</div>
+```
+
+---
+
+### 需求 28：设置界面重组设计
+
+#### Section 划分
+
+```
+⚙️ 设置
+├── 🌐 语言与显示
+│   ├── 界面语言（select）
+│   ├── 主题模式（select: 浅色/深色/跟随系统）
+│   ├── 温度单位（select: °C / °F）
+│   └── 风速单位（select: km/h / m/s）
+├── ⭐ 默认位置
+│   └── 收藏列表 + 设为默认按钮
+├── 📍 位置解析
+│   └── 提供商（select）：高德后端 / Nominatim后端 / Nominatim前端
+├── 🔑 Windy API
+│   └── 模式（radio）：系统Key / 自定义Key
+│       └── [自定义时] Key输入框
+├── 🔔 通知与提醒
+│   ├── 启用通知（toggle）
+│   └── 通知阈值（range slider）
+└── ⚙️ 高级（<details> 折叠）
+    └── 后端代理 URL（input）
+```
+
+#### 位置解析提供商说明
+
+| 选项 | provider 值 | Key 来源 | 适用场景 |
+|------|------------|---------|---------|
+| 高德地图（后端代理）| `gaode` | 服务器 `.env` | 腾讯云/国内生产 |
+| Nominatim（后端代理）| `nominatim` | 无需 Key | 海外生产 |
+| Nominatim（前端直连）| `nominatim-frontend` | 无需 Key | 本地开发 |
+
+**默认值：** `gaode`（服务器端 `GAODE_API_KEY` 环境变量）
+
+#### 关键设计决策
+
+- API Key **不在前端 UI 暴露**，统一由服务器 `.env` 管理
+- 高级区域默认折叠（`<details>`），减少视觉噪音
+- 每个 Section 独立，顺序按用户使用频率排列
+
+---
+
+### 需求 29：访客计数持久化设计
+
+#### 存储方案
+
+| 方案 | 选择原因 |
+|------|---------|
+| SQLite（better-sqlite3）| 轻量、零依赖外部服务、同步 API、适合单机部署 |
+| 放弃 JSON 文件 | 代码更新/重部署会覆盖，数据不可靠 |
+| 放弃 Redis | 需额外服务，过度设计 |
+
+#### 数据库路径
+
+```
+~/.xiake/visitor.db   ← 与项目代码目录完全隔离
+```
+
+#### 数据库 Schema
+
+```sql
+CREATE TABLE IF NOT EXISTS visitor_count (
+  id         INTEGER PRIMARY KEY CHECK (id = 1),
+  count      INTEGER NOT NULL DEFAULT 0,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+INSERT OR IGNORE INTO visitor_count (id, count) VALUES (1, 0);
+```
+
+#### 接口设计（不变）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/visitor/count` | 读取当前计数 |
+| POST | `/api/visitor/count` | 原子递增，返回最新值 |
+
+#### 降级策略
+
+SQLite 初始化失败时（权限问题等），自动降级为内存计数，服务不崩溃，日志记录警告。
+
+#### nginx /api/ 路由修复
+
+生产环境 nginx 80 端口配置必须包含：
+
+```nginx
+location /api/ {
+    proxy_pass http://localhost:3000;
+}
+location /health {
+    proxy_pass http://localhost:3000;
+}
+```
+
+否则 `/api/` 请求会落到 Python 前端服务器（9002），返回 404。
