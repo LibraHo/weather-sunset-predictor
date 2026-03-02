@@ -3441,3 +3441,17 @@ body.theme-dark .sun-azimuth-info {
   white-space: nowrap;
 }
 .app-title { display: none; }
+
+/* Desktop logo scaling */
+@media (min-width: 768px) {
+  .app-logo {
+    gap: 16px;
+  }
+  .app-logo-icon {
+    height: 48px;
+  }
+  .app-logo-text {
+    font-size: 2rem;
+    letter-spacing: 0.08em;
+  }
+}
