@@ -25,7 +25,7 @@ class GeocodingServiceFactory {
    * @returns {BackendGeocodingService}
    */
   static create(proxyURL) {
-    const provider = localStorage.getItem('geocoding_provider') || 'nominatim';
+    const provider = localStorage.getItem('geocoding_provider') || 'gaode';
     const apiKey = localStorage.getItem('geocoding_api_key') || '';
     const storedProxyURL = localStorage.getItem('api_proxy_url') || 'http://localhost:3000';
     const effectiveProxyURL = proxyURL || storedProxyURL;
@@ -41,21 +41,21 @@ class GeocodingServiceFactory {
   static getOptions() {
     return [
       {
-        provider: 'nominatim',
-        labelKey: 'settings.geocodingBackendNominatim',
-        requiresKey: false,
-        chinaCompatible: true
-      },
-      {
         provider: 'gaode',
         labelKey: 'settings.geocodingBackendGaode',
         requiresKey: true,
         chinaCompatible: true
       },
       {
-        provider: 'google',
-        labelKey: 'settings.geocodingBackendGoogle',
-        requiresKey: true,
+        provider: 'nominatim',
+        labelKey: 'settings.geocodingBackendNominatim',
+        requiresKey: false,
+        chinaCompatible: true
+      },
+      {
+        provider: 'nominatim-frontend',
+        labelKey: 'settings.geocodingFrontendNominatim',
+        requiresKey: false,
         chinaCompatible: false
       }
     ];
