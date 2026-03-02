@@ -119,16 +119,7 @@ class SettingsPanel {
                   </select>
                 </div>
               </div>
-              <div id="geocoding-api-key-section" style="display:none">
-                <div class="setting-item">
-                  <label class="setting-label" for="geocoding-api-key-input">${this.i18n.t('settings.geocodingApiKey')}</label>
-                  <div class="setting-control">
-                    <input type="text" id="geocoding-api-key-input" class="setting-input"
-                      placeholder="${this.i18n.t('settings.geocodingApiKeyPlaceholder')}" />
-                    <small class="setting-hint" id="geocoding-api-key-hint"></small>
-                  </div>
-                </div>
-              </div>
+
             </div>
           </div>
 
