@@ -45,55 +45,101 @@ class SettingsPanel {
         </div>
 
         <div class="settings-content">
-          <!-- 数据源与网络 -->
-          <div class="settings-section" data-section="dataSource">
-            <h3 class="settings-section-title">📡 ${this.i18n.t('settings.dataSource')}</h3>
+
+          <!-- 🌐 语言与显示 -->
+          <div class="settings-section">
+            <h3 class="settings-section-title">🌐 ${this.i18n.t('settings.languageAndDisplay')}</h3>
             <div class="settings-section-content">
-              <div class="setting-item setting-item-stack" id="proxy-url-setting">
-                <div class="setting-text-block">
-                  <label class="setting-label setting-label-title" for="proxy-url-input">${this.i18n.t('settings.proxyUrl')}</label>
-                  <small class="setting-subtitle">${this.i18n.t('settings.proxyUrlHint')}</small>
-                </div>
-                <div class="setting-control setting-control-full">
-                  <input
-                    type="text"
-                    id="proxy-url-input"
-                    class="setting-input"
-                    placeholder="${this.i18n.t('settings.proxyUrlPlaceholder')}"
-                    value="http://localhost:3000"
-                  />
+              <div class="setting-item">
+                <label class="setting-label">${this.i18n.t('settings.interfaceLanguage')}</label>
+                <div class="setting-control">
+                  <select id="language-select" class="setting-select">
+                    ${this.getLanguageOptions()}
+                  </select>
                 </div>
               </div>
-
-              <!-- 位置解析服务（需求 24）-->
-              <div class="setting-item setting-item-stack" id="geocoding-service-setting">
-                <div class="setting-text-block">
-                  <label class="setting-label setting-label-title">📍 ${this.i18n.t('settings.geocodingService')}</label>
+              <div class="setting-item">
+                <label class="setting-label">${this.i18n.t('settings.themeMode')}</label>
+                <div class="setting-control">
+                  <select id="theme-select" class="setting-select">
+                    <option value="light">${this.i18n.t('settings.themeLight')}</option>
+                    <option value="dark">${this.i18n.t('settings.themeDark')}</option>
+                    <option value="auto">${this.i18n.t('settings.themeAuto')}</option>
+                  </select>
                 </div>
-                <div class="setting-control setting-control-full">
-                  <label class="setting-label" for="geocoding-provider-select">${this.i18n.t('settings.geocodingProvider')}</label>
+              </div>
+              <div class="setting-item">
+                <label class="setting-label">${this.i18n.t('settings.temperatureUnit')}</label>
+                <div class="setting-control">
+                  <select id="temp-unit-select" class="setting-select">
+                    <option value="celsius">${this.i18n.t('settings.tempCelsius')}</option>
+                    <option value="fahrenheit">${this.i18n.t('settings.tempFahrenheit')}</option>
+                  </select>
+                </div>
+              </div>
+              <div class="setting-item">
+                <label class="setting-label">${this.i18n.t('settings.windSpeedUnit')}</label>
+                <div class="setting-control">
+                  <select id="wind-unit-select" class="setting-select">
+                    <option value="kmh">${this.i18n.t('settings.windKmh')}</option>
+                    <option value="ms">${this.i18n.t('settings.windMs')}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="settings-section-divider" />
+
+          <!-- ⭐ 默认位置 -->
+          <div class="settings-section">
+            <h3 class="settings-section-title">⭐ ${this.i18n.t('settings.defaultLocation')}</h3>
+            <div class="settings-section-content">
+              <div class="setting-item setting-item-default-location">
+                <div class="setting-row setting-row-between">
+                  <span id="default-location-display" class="setting-default-location-value setting-default-location-empty">${this.i18n.t('settings.noDefaultLocation')}</span>
+                </div>
+                <div id="default-location-list" class="default-location-list"></div>
+                <small class="setting-hint">${this.i18n.t('settings.defaultLocationHint')}</small>
+              </div>
+            </div>
+          </div>
+
+          <hr class="settings-section-divider" />
+
+          <!-- 📍 位置解析 -->
+          <div class="settings-section">
+            <h3 class="settings-section-title">📍 ${this.i18n.t('settings.geocodingService')}</h3>
+            <div class="settings-section-content">
+              <div class="setting-item">
+                <label class="setting-label" for="geocoding-provider-select">${this.i18n.t('settings.geocodingProvider')}</label>
+                <div class="setting-control">
                   <select id="geocoding-provider-select" class="setting-select">
                     ${this.getGeocodingProviderOptions()}
                   </select>
                 </div>
-                <div class="setting-control setting-control-full" id="geocoding-api-key-section" style="display:none">
+              </div>
+              <div id="geocoding-api-key-section" style="display:none">
+                <div class="setting-item">
                   <label class="setting-label" for="geocoding-api-key-input">${this.i18n.t('settings.geocodingApiKey')}</label>
-                  <input
-                    type="text"
-                    id="geocoding-api-key-input"
-                    class="setting-input"
-                    placeholder="${this.i18n.t('settings.geocodingApiKeyPlaceholder')}"
-                  />
-                  <small class="setting-hint" id="geocoding-api-key-hint"></small>
+                  <div class="setting-control">
+                    <input type="text" id="geocoding-api-key-input" class="setting-input"
+                      placeholder="${this.i18n.t('settings.geocodingApiKeyPlaceholder')}" />
+                    <small class="setting-hint" id="geocoding-api-key-hint"></small>
+                  </div>
                 </div>
               </div>
+            </div>
+          </div>
 
-              <!-- Windy API Key（需求 25）-->
-              <div class="setting-item setting-item-stack" id="windy-api-key-setting">
-                <div class="setting-text-block">
-                  <label class="setting-label setting-label-title">🔑 ${this.i18n.t('settings.windyApiKeyMode')}</label>
-                </div>
-                <div class="setting-control setting-control-full">
+          <hr class="settings-section-divider" />
+
+          <!-- 🔑 Windy API -->
+          <div class="settings-section">
+            <h3 class="settings-section-title">🔑 ${this.i18n.t('settings.windyApiKeyMode')}</h3>
+            <div class="settings-section-content">
+              <div class="setting-item">
+                <div class="setting-control">
                   <div class="setting-radio-group">
                     <label class="setting-radio-label">
                       <input type="radio" name="windy-api-mode" value="system" id="windy-api-system" />
@@ -105,16 +151,16 @@ class SettingsPanel {
                     </label>
                   </div>
                 </div>
-                <div class="setting-control setting-control-full" id="windy-api-key-section" style="display:none">
+              </div>
+              <div id="windy-api-key-section" style="display:none">
+                <div class="setting-item">
                   <label class="setting-label" for="windy-api-key-input">${this.i18n.t('settings.windyApiKeyCustom')}</label>
-                  <input
-                    type="password"
-                    id="windy-api-key-input"
-                    class="setting-input"
-                    placeholder="${this.i18n.t('settings.windyApiKeyCustomPlaceholder')}"
-                  />
-                  <small class="setting-hint">${this.i18n.t('settings.windyApiKeyCustomHint')}</small>
-                  <span id="windy-api-key-error" class="setting-error" style="display:none;color:var(--color-error,#e53935);font-size:12px;"></span>
+                  <div class="setting-control">
+                    <input type="password" id="windy-api-key-input" class="setting-input"
+                      placeholder="${this.i18n.t('settings.windyApiKeyCustomPlaceholder')}" />
+                    <small class="setting-hint">${this.i18n.t('settings.windyApiKeyCustomHint')}</small>
+                    <span id="windy-api-key-error" class="setting-error" style="display:none;color:var(--color-error,#e53935);font-size:12px;"></span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -122,8 +168,8 @@ class SettingsPanel {
 
           <hr class="settings-section-divider" />
 
-          <!-- 通知与提醒 -->
-          <div class="settings-section" data-section="notification">
+          <!-- 🔔 通知与提醒 -->
+          <div class="settings-section">
             <h3 class="settings-section-title">🔔 ${this.i18n.t('settings.notificationAndAlerts')}</h3>
             <div class="settings-section-content">
               <div class="setting-item setting-item-toggle">
@@ -138,19 +184,10 @@ class SettingsPanel {
                   </label>
                 </div>
               </div>
-
               <div class="setting-item">
                 <label class="setting-label">${this.i18n.t('settings.notificationThresholdLabel')}</label>
                 <div class="setting-control">
-                  <input
-                    type="range"
-                    id="notification-threshold"
-                    class="setting-range"
-                    min="0"
-                    max="100"
-                    step="5"
-                    value="70"
-                  />
+                  <input type="range" id="notification-threshold" class="setting-range" min="0" max="100" step="5" value="70" />
                   <span id="threshold-value" class="setting-value">70</span>
                 </div>
                 <small class="setting-hint">${this.i18n.t('settings.notificationThresholdHint')}</small>
@@ -160,68 +197,22 @@ class SettingsPanel {
 
           <hr class="settings-section-divider" />
 
-          <!-- 语言与显示 -->
-          <div class="settings-section" data-section="language">
-            <h3 class="settings-section-title">🌐 ${this.i18n.t('settings.languageAndDisplay')}</h3>
+          <!-- ⚙️ 高级 -->
+          <details class="settings-section settings-advanced">
+            <summary class="settings-section-title settings-advanced-toggle">⚙️ ${this.i18n.t('settings.dataSource')}</summary>
             <div class="settings-section-content">
               <div class="setting-item">
-                <label class="setting-label">${this.i18n.t('settings.interfaceLanguage')}</label>
-                <div class="setting-control">
-                  <select id="language-select" class="setting-select">
-                    ${this.getLanguageOptions()}
-                  </select>
+                <label class="setting-label setting-label-title" for="proxy-url-input">${this.i18n.t('settings.proxyUrl')}</label>
+                <small class="setting-subtitle">${this.i18n.t('settings.proxyUrlHint')}</small>
+                <div class="setting-control setting-control-full">
+                  <input type="text" id="proxy-url-input" class="setting-input"
+                    placeholder="${this.i18n.t('settings.proxyUrlPlaceholder')}"
+                    value="http://localhost:3000" />
                 </div>
               </div>
             </div>
-          </div>
+          </details>
 
-          <hr class="settings-section-divider" />
-
-          <!-- 个性化 -->
-          <div class="settings-section" data-section="personalization">
-            <h3 class="settings-section-title">🎨 ${this.i18n.t('settings.personalization')}</h3>
-            <div class="settings-section-content">
-              <div class="setting-item">
-                <label class="setting-label">${this.i18n.t('settings.themeMode')}</label>
-                <div class="setting-control">
-                  <select id="theme-select" class="setting-select">
-                    <option value="light">${this.i18n.t('settings.themeLight')}</option>
-                    <option value="dark">${this.i18n.t('settings.themeDark')}</option>
-                    <option value="auto">${this.i18n.t('settings.themeAuto')}</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="setting-item">
-                <label class="setting-label">${this.i18n.t('settings.temperatureUnit')}</label>
-                <div class="setting-control">
-                  <select id="temp-unit-select" class="setting-select">
-                    <option value="celsius">${this.i18n.t('settings.tempCelsius')}</option>
-                    <option value="fahrenheit">${this.i18n.t('settings.tempFahrenheit')}</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="setting-item">
-                <label class="setting-label">${this.i18n.t('settings.windSpeedUnit')}</label>
-                <div class="setting-control">
-                  <select id="wind-unit-select" class="setting-select">
-                    <option value="kmh">${this.i18n.t('settings.windKmh')}</option>
-                    <option value="ms">${this.i18n.t('settings.windMs')}</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="setting-item setting-item-default-location">
-                <div class="setting-row setting-row-between">
-                  <label class="setting-label setting-label-title" for="default-location-display">${this.i18n.t('settings.defaultLocation')}</label>
-                  <span id="default-location-display" class="setting-default-location-value setting-default-location-empty">${this.i18n.t('settings.noDefaultLocation')}</span>
-                </div>
-                <div id="default-location-list" class="default-location-list"></div>
-                <small class="setting-hint">${this.i18n.t('settings.defaultLocationHint')}</small>
-              </div>
-            </div>
-          </div>
         </div>
 
         <div class="settings-footer">
