@@ -3,7 +3,7 @@
  */
 export default {
   app: {
-    title: '霞客 SUNSET VOYAGER',
+    title: '하객(霞客)',
     subtitle: '화염구름이 나타나는 최적의 시간 예측'
   },
   // 홈 탭 & 알고리즘 설명
