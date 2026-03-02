@@ -1,57 +1,82 @@
 /**
  * 访客计数器路由
  *
- * 提供访客计数的读取和递增功能
- * 使用文件存储持久化访客数据
+ * 使用 SQLite 持久化存储，数据库位于 ~/.xiake/visitor.db
+ * 不受代码更新/重启影响
  */
 
 const express = require('express');
-const fs = require('fs');
 const path = require('path');
+const os = require('os');
+const fs = require('fs');
 
 const router = express.Router();
 
-const DATA_DIR = path.join(__dirname, '..', 'data');
-const COUNT_FILE = path.join(DATA_DIR, 'visitor-count.json');
+// 数据库存在用户 home 目录下，与代码完全隔离
+const DB_DIR = path.join(os.homedir(), '.xiake');
+const DB_PATH = path.join(DB_DIR, 'visitor.db');
 
-/**
- * 确保数据目录和文件存在
- */
-function ensureDataFile() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-  if (!fs.existsSync(COUNT_FILE)) {
-    fs.writeFileSync(COUNT_FILE, JSON.stringify({ count: 0 }), 'utf-8');
-  }
-}
-
-/**
- * 读取当前访客数
- * @returns {number}
- */
-function readCount() {
-  ensureDataFile();
+// 初始化 SQLite
+let db;
+function getDB() {
+  if (db) return db;
   try {
-    const data = JSON.parse(fs.readFileSync(COUNT_FILE, 'utf-8'));
-    return data.count || 0;
-  } catch {
-    return 0;
+    if (!fs.existsSync(DB_DIR)) {
+      fs.mkdirSync(DB_DIR, { recursive: true });
+    }
+    const Database = require('better-sqlite3');
+    db = new Database(DB_PATH);
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS visitor_count (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        count INTEGER NOT NULL DEFAULT 0,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      INSERT OR IGNORE INTO visitor_count (id, count) VALUES (1, 0);
+    `);
+    console.log('[Visitor] SQLite 数据库已连接:', DB_PATH);
+  } catch (err) {
+    console.error('[Visitor] SQLite 初始化失败，降级为内存计数:', err.message);
+    db = null;
   }
+  return db;
 }
 
-/**
- * 写入访客数
- * @param {number} count
- */
-function writeCount(count) {
-  ensureDataFile();
-  fs.writeFileSync(COUNT_FILE, JSON.stringify({ count }), 'utf-8');
+// 内存计数（SQLite 不可用时的备用）
+let memCount = 0;
+
+function readCount() {
+  const database = getDB();
+  if (database) {
+    try {
+      const row = database.prepare('SELECT count FROM visitor_count WHERE id = 1').get();
+      return row ? row.count : 0;
+    } catch (err) {
+      console.error('[Visitor] 读取失败:', err.message);
+    }
+  }
+  return memCount;
+}
+
+function incrementCount() {
+  const database = getDB();
+  if (database) {
+    try {
+      database.prepare(`
+        UPDATE visitor_count SET count = count + 1, updated_at = CURRENT_TIMESTAMP WHERE id = 1
+      `).run();
+      const row = database.prepare('SELECT count FROM visitor_count WHERE id = 1').get();
+      return row ? row.count : 0;
+    } catch (err) {
+      console.error('[Visitor] 递增失败:', err.message);
+    }
+  }
+  memCount += 1;
+  return memCount;
 }
 
 /**
  * GET /api/visitor/count
- * 获取当前访客数（不递增）
  */
 router.get('/count', (req, res) => {
   const count = readCount();
@@ -60,12 +85,9 @@ router.get('/count', (req, res) => {
 
 /**
  * POST /api/visitor/count
- * 递增访客数并返回最新值
  */
 router.post('/count', (req, res) => {
-  let count = readCount();
-  count += 1;
-  writeCount(count);
+  const count = incrementCount();
   res.json({ count });
 });
 
