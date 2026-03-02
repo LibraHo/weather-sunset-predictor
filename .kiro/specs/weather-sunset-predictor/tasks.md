@@ -732,3 +732,69 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 - [x] 提升菜单文本对比度（颜色/字重），确保可读性
 - [x] 与铃铛、设置图标并排，保持头部操作区一致性
 
+
+
+---
+
+## Phase 11：品牌、设置优化与访客持久化（需求 27-29）
+
+> 状态：✅ 全部完成（2026-03-02）
+
+### 任务拆分
+
+| 编号 | 任务 | 关联需求 | 状态 |
+|------|------|---------|------|
+| 40.1 | 顶栏 SVG Logo 替换文字标题 | 27.1-27.4 | ✅ 已完成 |
+| 40.2 | 桌面端 Logo 响应式放大 | 27.5 | ✅ 已完成 |
+| 40.3 | 各语言 app.title 更新 | 27.3 | ✅ 已完成 |
+| 40.4 | 设置界面重组为独立 Section | 28.1 | ✅ 已完成 |
+| 40.5 | 位置解析选项精简（删高德前端，保留 Nominatim 前端） | 28.2 | ✅ 已完成 |
+| 40.6 | 高德 API Key 迁移至服务器 .env，前端移除输入框 | 28.3 | ✅ 已完成 |
+| 40.7 | nginx 补充 /api/ 反代规则（80 端口） | 28.3 | ✅ 已完成 |
+| 40.8 | 访客计数迁移至 SQLite（better-sqlite3） | 29.1-29.5 | ✅ 已完成 |
+| 40.9 | setup-ssh.sh 加入 .env 同步逻辑 | 29.1 | ✅ 已完成 |
+
+### 任务详情
+
+#### 40.1 SVG Logo（✅ 已完成）
+
+- [x] `index.html` 第68行：`<h1>` 替换为内联 SVG 图标 + `<span data-i18n="app.title">`
+- [x] 图标：半圆日出 + 三条水平线（日落倒影），`stroke="currentColor"`
+- [x] `<head>` 引入 Cormorant Garamond 字体
+
+#### 40.2 响应式 Logo（✅ 已完成）
+
+- [x] `styles/main.css` 追加 `@media (min-width: 768px)` 规则
+- [x] 桌面：图标 48px，字号 2rem，间距 16px
+
+#### 40.3 多语言 app.title（✅ 已完成）
+
+- [x] zh-CN / zh-TW / ja-JP → `霞客`
+- [x] ko-KR → `하객(霞客)`
+- [x] 其余 7 种语言 → `Sunset Voyager`
+
+#### 40.4 设置面板重组（✅ 已完成）
+
+- [x] `SettingsPanel.js` createPanel() HTML 重构为 6 个 Section
+- [x] 高级（代理 URL）使用 `<details>` 折叠，默认收起
+
+#### 40.5-40.6 位置解析优化（✅ 已完成）
+
+- [x] `GeocodingServiceFactory.js`：删除 google，加入 nominatim-frontend，默认 gaode
+- [x] `server/routes/geocoding.js`：高德 Key 从 `process.env.GAODE_API_KEY` 读取
+- [x] `server/.env`：新增 `GAODE_API_KEY=aa63fc22cbf7788649d28c71d30a1cbe`
+
+#### 40.7 nginx 修复（✅ 已完成）
+
+- [x] `/etc/nginx/sites-enabled/weather-predictor` 补充 `location /api/` 和 `location /health/` 反代到 3000 端口
+
+#### 40.8 访客计数 SQLite（✅ 已完成）
+
+- [x] `server/routes/visitor.js` 重写：使用 better-sqlite3
+- [x] 数据库路径：`~/.xiake/visitor.db`（与代码目录隔离）
+- [x] SQLite 不可用时降级为内存计数
+
+#### 40.9 SSH 脚本同步 .env（✅ 已完成）
+
+- [x] `skills/tencent-cloud-connect/setup-ssh.sh` 加入写入服务器 `.env` 逻辑
+- [x] API Key 统一在脚本中维护，容器重建后一键恢复
