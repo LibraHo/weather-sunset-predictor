@@ -22,6 +22,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin=""></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
 </head>
 <body>
   <div id="app">
@@ -65,7 +66,15 @@
     <!-- 主界面 -->
     <header>
       <div class="header-top-row">
-        <h1 data-i18n="app.title" class="app-title">霞客 SUNSET VOYAGER</h1>
+        <div class="app-logo">
+          <svg class="app-logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 76 76" aria-hidden="true">
+            <path d="M12 44 A26 26 0 0 1 64 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+            <line x1="0" y1="44" x2="76" y2="44" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+            <line x1="10" y1="55" x2="66" y2="55" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+            <line x1="22" y1="66" x2="54" y2="66" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+          <span class="app-logo-text" data-i18n="app.title">霞客</span>
+        </div>
         <div class="header-right-group">
           <div class="home-view-menu">
             <button id="home-view-menu-btn" class="icon-btn" aria-label="页面切换" data-i18n-aria-label="home.menu.ariaLabel" aria-expanded="false" aria-controls="home-view-menu-dropdown">☰</button>
