@@ -3,7 +3,7 @@
  */
 export default {
   app: {
-    title: '霞客 SUNSET VOYAGER',
+    title: 'Sunset Voyager',
     subtitle: 'Dự đoán thời điểm tốt nhất để thấy mây đẹp'
   },
   // Tab trang chủ & mô tả thuật toán
