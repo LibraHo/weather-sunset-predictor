@@ -3,7 +3,7 @@
  */
 export default {
   app: {
-    title: '霞客 SUNSET VOYAGER',
+    title: 'Sunset Voyager',
     subtitle: 'Prédire le meilleur moment pour les nuages rouges'
   },
   // Onglets & méthodologie
