@@ -3455,3 +3455,19 @@ body.theme-dark .sun-azimuth-info {
     letter-spacing: 0.08em;
   }
 }
+
+/* ===== Settings Advanced Section ===== */
+.settings-advanced {
+  border: none;
+}
+.settings-advanced-toggle {
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  color: var(--color-text-light);
+  font-size: 0.9rem;
+}
+.settings-advanced-toggle::-webkit-details-marker { display: none; }
+.settings-advanced[open] .settings-advanced-toggle {
+  color: var(--color-text);
+}
