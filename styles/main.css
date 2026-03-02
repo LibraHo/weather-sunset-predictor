@@ -112,14 +112,14 @@ body.theme-dark {
 @media (prefers-color-scheme: dark) {
   body.theme-auto {
     /* 颜色方案 */
-    --color-primary: #5a9fe4;
-    --color-secondary: #8b78ff;
-    --color-success: #66bb6a;
-    --color-warning: #ffb74d;
-    --color-error: #ef5350;
-    --color-excellent: #66bb6a;
-    --color-good: #ffb74d;
-    --color-fair: #bdbdbd;
+    --color-primary: #64a8f0;
+    --color-secondary: #a78bfa;
+    --color-success: #4ade80;
+    --color-warning: #fbbf24;
+    --color-error: #f87171;
+    --color-excellent: #4ade80;
+    --color-good: #fbbf24;
+    --color-fair: #94a3b8;
 
     /* 中性色 - 暗色主题 */
     --color-bg: #0a0f1e;
@@ -129,15 +129,15 @@ body.theme-dark {
     --color-border: rgba(255, 255, 255, 0.08);
 
     /* 日出日落时间颜色 - 暗色主题 */
-    --sunset-time-bg: rgba(33, 150, 243, 0.08);
-    --sunset-time-border: #ff9800;
-    --sunset-time-text: #ffb74d;
-    --sunset-time-bg-subtle: rgba(30, 41, 59, 0.8);
+    --sunset-time-bg: rgba(251, 146, 60, 0.10);
+    --sunset-time-border: #fb923c;
+    --sunset-time-text: #fdba74;
+    --sunset-time-bg-subtle: rgba(15, 23, 42, 0.85);
 
     /* 阴影 - 暗色主题 */
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.25);
-    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.4);
+    --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(255,255,255,0.04);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45), 0 0 0 0.5px rgba(255,255,255,0.06);
+    --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 0 0.5px rgba(255,255,255,0.08);
 
     /* 毛玻璃效果 - 暗色主题 */
     --glass-bg: rgba(18, 28, 52, 0.60);
@@ -3477,13 +3477,28 @@ body.theme-dark .sun-azimuth-info {
 /* ===== 暗色主题背景 — 深邃星空感 ===== */
 body.theme-dark,
 body.theme-auto {
+  background-color: #0a0f1e;
   background-image:
     radial-gradient(at 20% 10%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
     radial-gradient(at 80% 5%,  rgba(168, 85, 247, 0.10) 0px, transparent 50%),
     radial-gradient(at 50% 80%, rgba(251, 146, 60, 0.08) 0px, transparent 50%),
     radial-gradient(at 10% 90%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
     radial-gradient(at 90% 90%, rgba(168, 85, 247, 0.06) 0px, transparent 50%);
-  background-color: #0a0f1e;
+  background-attachment: fixed;
+}
+
+/* auto 模式跟随系统 */
+@media (prefers-color-scheme: dark) {
+  body.theme-auto {
+    background-color: #0a0f1e;
+    background-image:
+      radial-gradient(at 20% 10%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+      radial-gradient(at 80% 5%,  rgba(168, 85, 247, 0.10) 0px, transparent 50%),
+      radial-gradient(at 50% 80%, rgba(251, 146, 60, 0.08) 0px, transparent 50%),
+      radial-gradient(at 10% 90%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
+      radial-gradient(at 90% 90%, rgba(168, 85, 247, 0.06) 0px, transparent 50%);
+    background-attachment: fixed;
+  }
 }
 
 /* 暗色 card 毛玻璃质感升级 */
