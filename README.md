@@ -1,23 +1,113 @@
-# 天气晚霞预测器 (Weather Sunset Predictor)
+# 霞客 · Sunset Voyager
 
 基于 Windy API 的火烧云（晚霞/朝霞）预测 Web 应用程序，支持实时天气数据、多因子预测算法、10 种语言、响应式设计。
 
-## 常用命令速查
+---
+
+## 快速开始
+
+### 1. 安装依赖
 
 ```bash
-# 1) 安装全部依赖（根目录 + server）
-npm install && (cd server && npm install)
+# 前端依赖
+npm install
 
-# 2) 启动后端（终端 A）
+# 后端依赖（含 SQLite）
+cd server && npm install && cd ..
+```
+
+### 2. 配置环境变量
+
+```bash
+cd server
+cp .env.example .env
+```
+
+编辑 `server/.env`，填入必要的 Key：
+
+```env
+# Windy API（天气数据，必填）
+WINDY_API_KEY=your_windy_point_forecast_key
+
+# Windy 地图 Key
+WINDY_MAP_API_KEY=your_windy_map_key
+
+# 高德地图地理编码（中国大陆部署必填）
+GAODE_API_KEY=your_gaode_key
+
+# 服务器配置
+PORT=3000
+NODE_ENV=development
+CORS_ORIGIN=*
+```
+
+> **获取方式：**
+> - Windy API：https://api.windy.com/
+> - 高德地图：https://lbs.amap.com/（免费注册）
+
+### 3. 启动服务
+
+```bash
+# 后端（终端 A）
 cd server && npm run dev
 
-# 3) 启动前端（终端 B）
-python server.py
+# 前端（终端 B）
+python3 server.py
 ```
 
 默认访问地址：
 - 前端：`http://localhost:9002`
 - 后端健康检查：`http://localhost:3000/health`
+
+---
+
+## 生产部署（腾讯云 / Linux 服务器）
+
+```bash
+# 1. 下载代码
+git clone https://github.com/LibraHo/weather-sunset-predictor.git
+cd weather-sunset-predictor
+
+# 2. 安装依赖
+npm install
+cd server && npm install && cd ..
+
+# 3. 配置 .env
+cd server && cp .env.example .env
+# 编辑 .env 填入生产 Key
+
+# 4. 启动后端
+cd server && nohup node index.js > /tmp/weather-backend.log 2>&1 &
+
+# 5. 启动前端
+nohup python3 server.py > /tmp/weather-frontend.log 2>&1 &
+```
+
+> **访客数据库** 自动创建于 `~/.xiake/visitor.db`，与代码目录隔离，重新部署不丢失数据。
+
+### nginx 配置参考
+
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    # 后端 API
+    location /api/ {
+        proxy_pass http://localhost:3000;
+    }
+
+    location /health {
+        proxy_pass http://localhost:3000;
+    }
+
+    # 前端
+    location / {
+        proxy_pass http://localhost:9002;
+        proxy_set_header Cache-Control "no-cache";
+    }
+}
+```
 
 ---
 
