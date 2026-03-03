@@ -313,8 +313,8 @@ function scoreLightPath(weatherData, azimuth, remoteCloudData = null) {
   let farPointCloudCover = null;
 
   // 如果提供了远程云量数据，使用它
+  // Bug 1 修复：当没有远程数据时，用本地云量估算光路
   if (remoteCloudData && remoteCloudData.near && remoteCloudData.far) {
-    // Bug 1 修复：当没有远程数据时，用本地云量估算光路
     if (remoteCloudData.near) {
       nearPointScore = calculateLightPathPointScore(remoteCloudData.near);
       nearPointCloudCover = remoteCloudData.near.totalCloud;
