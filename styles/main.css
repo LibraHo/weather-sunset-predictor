@@ -110,50 +110,8 @@ body.theme-dark {
 
 /* 自动主题（跟随系统）*/
 @media (prefers-color-scheme: dark) {
-  body.theme-auto {
-    /* 颜色方案 */
-    --color-primary: #64a8f0;
-    --color-secondary: #a78bfa;
-    --color-success: #4ade80;
-    --color-warning: #fbbf24;
-    --color-error: #f87171;
-    --color-excellent: #4ade80;
-    --color-good: #fbbf24;
-    --color-fair: #94a3b8;
+  body.theme-auto { }
 
-    /* 中性色 - 暗色主题 */
-    --color-bg: #0a0f1e;
-    --color-card-bg: rgba(15, 22, 40, 0.85);
-    --color-text: rgba(255, 255, 255, 0.92);
-    --color-text-light: rgba(255, 255, 255, 0.50);
-    --color-border: rgba(255, 255, 255, 0.08);
-
-    /* 日出日落时间颜色 - 暗色主题 */
-    --sunset-time-bg: rgba(251, 146, 60, 0.10);
-    --sunset-time-border: #fb923c;
-    --sunset-time-text: #fdba74;
-    --sunset-time-bg-subtle: rgba(15, 23, 42, 0.85);
-
-    /* 阴影 - 暗色主题 */
-    --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(255,255,255,0.04);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45), 0 0 0 0.5px rgba(255,255,255,0.06);
-    --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 0 0.5px rgba(255,255,255,0.08);
-
-    /* 毛玻璃效果 - 暗色主题 */
-    --glass-bg: rgba(18, 28, 52, 0.60);
-    --glass-bg-hover: rgba(24, 36, 64, 0.72);
-    --glass-bg-heavy: rgba(12, 20, 40, 0.80);
-    --glass-border: rgba(255, 255, 255, 0.10);
-    --glass-blur: 20px;
-    --glass-blur-heavy: 40px;
-    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.08);
-
-    /* 顶部栏视觉变量 - 自动暗色 */
-    --header-surface: rgba(14, 20, 38, 0.85);
-    --header-border: rgba(255, 200, 120, 0.12);
-    --header-title-color: #f5c87a;
-    --header-icon-color: #f5c87a;
-  }
 }
 
 /* ===== 基础样式 ===== */
