@@ -798,3 +798,21 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 - [x] `skills/tencent-cloud-connect/setup-ssh.sh` 加入写入服务器 `.env` 逻辑
 - [x] API Key 统一在脚本中维护，容器重建后一键恢复
+
+
+---
+
+## 本次迭代完成任务（2026-03-03）
+
+> 以下任务已在当前会话中完成并推送到 GitHub + 服务器
+
+| 编号 | 任务 | 文件 | 状态 |
+|------|------|------|------|
+| B-01 | 光路评分永远 100 分修复：`remoteCloudData=null` 时用本地云量估算，不再默认满分 | `server/services/EnhancedPredictionService.js` | ✅ 已完成 |
+| B-02a | 总云量计算修复：从平均值改为 `max(low, mid, high)` 更符合物理叠加关系 | `server/services/EnhancedPredictionService.js` | ✅ 已完成 |
+| B-02b | 阴天惩罚阈值提前：从 85% 提前到 65%，更早触发降分避免阴天高分 | `server/services/EnhancedPredictionService.js` | ✅ 已完成 |
+| B-03 | 24 小时预报全部相同值修复：不再强制锚点到今天 00:00，改用实际 Windy 3h 数据点 + 插值 | `src/controllers/WeatherController.js` | ✅ 已完成 |
+| B-04 | 跟随系统主题背景不变修复：暗色变量从 `body.theme-auto {}` 移到 `@media (prefers-color-scheme: dark)` 内部 | `styles/main.css` | ✅ 已完成 |
+| F-01 | 高德地图地理编码后端服务：新建 `BackendGeocodingService.js`，调用 `restapi.amap.com` 实现地理编码 | `server/services/BackendGeocodingService.js` | ✅ 已完成 |
+| F-02 | Apple 风格暗色主题：午夜深蓝背景、毛玻璃卡片、顶栏渐变、细边框发光 | `styles/main.css` | ✅ 已完成 |
+| F-03 | 天气面板暗色适配：云层进度条、位置文字、玻璃面板颜色修复 | `styles/main.css` | ✅ 已完成 |
