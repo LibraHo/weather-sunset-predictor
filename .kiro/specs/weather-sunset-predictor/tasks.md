@@ -816,3 +816,14 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 | F-01 | 高德地图地理编码后端服务：新建 `BackendGeocodingService.js`，调用 `restapi.amap.com` 实现地理编码 | `server/services/BackendGeocodingService.js` | ✅ 已完成 |
 | F-02 | Apple 风格暗色主题：午夜深蓝背景、毛玻璃卡片、顶栏渐变、细边框发光 | `styles/main.css` | ✅ 已完成 |
 | F-03 | 天气面板暗色适配：云层进度条、位置文字、玻璃面板颜色修复 | `styles/main.css` | ✅ 已完成 |
+
+> 以下任务已在当前迭代中完成
+
+| 编号 | 任务 | 文件 | 状态 |
+|------|------|------|------|
+| B-01 | 光路评分永远 100 分修复 | `server/services/EnhancedPredictionService.js` | ✅ 已完成 |
+| B-02a | 总云量计算修复：平均值改为 max(low,mid,high) | `server/services/EnhancedPredictionService.js` | ✅ 已完成 |
+| B-02b | 阴天惩罚阈值提前：从 85% 提前到 65% | `server/services/EnhancedPredictionService.js` | ✅ 已完成 |
+| B-03 | 24 小时预报全部相同值修复 | `src/controllers/WeatherController.js` | ✅ 已完成 |
+| B-04 | 跟随系统主题背景不变修复 | `styles/main.css` | ✅ 已完成 |
+| F-01 | 高德地图地理编码后端服务 | `server/services/BackendGeocodingService.js` | ✅ 已完成 |
