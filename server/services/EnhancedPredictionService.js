@@ -170,17 +170,22 @@ function scoreCloudCanvas(weatherData) {
   const midClouds = weatherData.midClouds || 0;
   const highClouds = weatherData.highClouds || 0;
 
-  // 总云量（优先使用上游总云量字段，其次由分层云量估算）
+  // Bug 2 修复：总云量改用最大值（更符合物理叠加）
   const layerBasedCloudCover = Math.min(
     100,
-    (lowClouds + midClouds + highClouds) / 3
+    Math.max(
+      lowClouds,
+      midClouds,
+      highClouds,
+      (lowClouds + midClouds + highClouds) / 3
+    )
   );
   const totalCloudCover = Math.max(
     0,
     Math.min(100, weatherData.cloudCover ?? layerBasedCloudCover)
   );
 
-  // 阴天关键字兜底（有些天气源会直接给出“阴天/overcast”文案）
+  // 阴天关键字兜底（有些天气源会直接给出"阴天/overcast"文案）
   const weatherConditionText = [
     weatherData.weatherMain,
     weatherData.weather,
@@ -239,12 +244,13 @@ function scoreCloudCanvas(weatherData) {
     penaltyReason = 'low_cloud_amount';
   }
 
-  // 4. 阴天抑制：总云量过高时，强制压低画布得分，避免“阴天高分”
+  // 4. 阴天抑制：总云量过高时，强制压低画布得分，避免"阴天高分"
   let overcastPenalty = 1.0;
 
-  if (totalCloudCover >= 85) {
-    // 85%-100%线性衰减：1.0 -> 0.05
-    overcastPenalty = 1.0 - ((totalCloudCover - 85) / 15) * 0.95;
+  // Bug 2 修复：阴天惩罚阈值从 85% 提前到 65%
+  if (totalCloudCover >= 65) {
+    // 65%-100%线性衰减：1.0 -> 0.05
+    overcastPenalty = 1.0 - ((totalCloudCover - 65) / 35) * 0.95;
     overcastPenalty = Math.max(0.05, overcastPenalty);
   }
 
@@ -316,6 +322,18 @@ function scoreLightPath(weatherData, azimuth, remoteCloudData = null) {
       farPointScore = calculateLightPathPointScore(remoteCloudData.far);
       farPointCloudCover = remoteCloudData.far.totalCloud;
     }
+  } else {
+    // Bug 1 修复：当没有远程数据时，用本地云量估算光路（避免永远100分）
+    const lowClouds = weatherData.lowClouds || 0;
+    const midClouds = weatherData.midClouds || 0;
+    const highClouds = weatherData.highClouds || 0;
+    // 使用总云量最大值作为光路估算
+    const localTotalCloud = Math.min(100, Math.max(lowClouds, midClouds, highClouds, weatherData.cloudCover || 0));
+    const estimatedScore = calculateLightPathPointScore({ totalCloud: localTotalCloud });
+    nearPointScore = estimatedScore;
+    farPointScore = estimatedScore;
+    nearPointCloudCover = localTotalCloud;
+    farPointCloudCover = localTotalCloud;
   }
 
   // 光路最终得分 = 近点×0.4 + 远点×0.6
@@ -515,7 +533,7 @@ function calculateFinalScore(canvasScore, lightPathScore, renderingFactor, type 
     advice = 'highly_recommended';
   }
 
-  // 分数与状态保持一致，避免“无火烧云”却出现高分
+  // 分数与状态保持一致，避免"无火烧云"却出现高分
   let displayScore = clampedScore;
   if (status === 'no_fire_cloud') {
     displayScore = Math.min(displayScore, 39.9);
@@ -645,3 +663,4 @@ module.exports = {
   calculateEnhancedPrediction,
   calculateBatchEnhancedPredictions
 };
+
