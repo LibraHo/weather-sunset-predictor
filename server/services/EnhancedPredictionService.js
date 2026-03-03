@@ -313,7 +313,8 @@ function scoreLightPath(weatherData, azimuth, remoteCloudData = null) {
   let farPointCloudCover = null;
 
   // 如果提供了远程云量数据，使用它
-  if (remoteCloudData) {
+  if (remoteCloudData && remoteCloudData.near && remoteCloudData.far) {
+    // Bug 1 修复：当没有远程数据时，用本地云量估算光路
     if (remoteCloudData.near) {
       nearPointScore = calculateLightPathPointScore(remoteCloudData.near);
       nearPointCloudCover = remoteCloudData.near.totalCloud;
@@ -322,6 +323,17 @@ function scoreLightPath(weatherData, azimuth, remoteCloudData = null) {
       farPointScore = calculateLightPathPointScore(remoteCloudData.far);
       farPointCloudCover = remoteCloudData.far.totalCloud;
     }
+  } else {
+    // 没有远程数据时用本地云量估算
+    const lowClouds = weatherData.lowClouds || 0;
+    const midClouds = weatherData.midClouds || 0;
+    const highClouds = weatherData.highClouds || 0;
+    const localTotalCloud = Math.min(100, Math.max(lowClouds, midClouds, highClouds, weatherData.cloudCover || 0));
+    const estimatedScore = calculateLightPathPointScore({ totalCloud: localTotalCloud });
+    nearPointScore = estimatedScore;
+    farPointScore = estimatedScore;
+    nearPointCloudCover = localTotalCloud;
+    farPointCloudCover = localTotalCloud;
   } else {
     // Bug 1 修复：当没有远程数据时，用本地云量估算光路（避免永远100分）
     const lowClouds = weatherData.lowClouds || 0;
