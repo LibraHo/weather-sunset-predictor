@@ -827,3 +827,13 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 | B-03 | 24 小时预报全部相同值修复 | `src/controllers/WeatherController.js` | ✅ 已完成 |
 | B-04 | 跟随系统主题背景不变修复 | `styles/main.css` | ✅ 已完成 |
 | F-01 | 高德地图地理编码后端服务 | `server/services/BackendGeocodingService.js` | ✅ 已完成 |
+
+
+---
+
+> 注：以下任务已在当前迭代中完成 - 前端临时方案
+
+| 编号 | 任务 | 文件 | 状态 |
+|------|------|------|------|
+| [x] | 临时方案 | 前端只使用 Nominatim（快速修复） | 已完成 | ✅ |
+
