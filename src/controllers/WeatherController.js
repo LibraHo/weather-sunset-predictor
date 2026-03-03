@@ -81,7 +81,7 @@ class WeatherController {
       getConvertedWindSpeed: (value) => this.getConvertedWindSpeed(value)
     });
     this.chartService = this.chartRenderController.createChartService(this.tempUnit, this.windUnit);
-    
+
     this.currentWeatherData = null;
     this.currentLocation = null;
 
@@ -142,7 +142,7 @@ class WeatherController {
 
       // 缓存数据
       this.storageService.cacheWeatherData(location, weatherData);
-      
+
       this.currentWeatherData = weatherData;
       this.currentLocation = location;
 
@@ -266,7 +266,7 @@ class WeatherController {
     if (errorElement) {
       errorElement.textContent = message;
       errorElement.style.display = 'block';
-      
+
       // 3秒后自动隐藏
       setTimeout(() => {
         errorElement.style.display = 'none';
@@ -544,7 +544,7 @@ class WeatherController {
       'visibility', 'lowClouds', 'precipitation', 'windDirection', 'highClouds', 'midClouds'
     ];
 
-    // 先按时间升序，避免后端或缓存返回乱序数据导致折线“来回跳”
+    // 先按时间升序，避免后端或缓存返回乱序数据导致折线"来回跳”
     const sorted = [...weatherData]
       .filter(item => item && Number.isFinite(item.timestamp))
       .sort((a, b) => a.timestamp - b.timestamp);
@@ -553,21 +553,59 @@ class WeatherController {
       return [];
     }
 
+    // Bug 修复：使用实际第一条数据的时间作为起点，不强制设为午夜
+    // Windy API 返回 3 小时间隔数据，直接返回连续的 3 小时数据点
+    // 不再强制插值为 1 小时，避免"前 X 个小时全部是同一个值"的问题
+
     const firstForecastDate = new Date(sorted[0].timestamp);
-    firstForecastDate.setHours(0, 0, 0, 0);
 
-    const dayOffsetHours = day === 'tomorrow' ? 24 : 0;
-    const targetStart = firstForecastDate.getTime() + (dayOffsetHours * oneHourMs);
+    // 确定"今天"和"明天"的起始索引
+    // Windy 数据 3 小时一次，每天约 8 个点
+    const startIndex = day === 'tomorrow' ? 8 : 0;  // 明天从第 8 个点开始
 
-    return Array.from({ length: 24 }, (_, hourOffset) => {
-      const targetTs = targetStart + (hourOffset * oneHourMs);
-      const source = this.interpolateWeatherPoint(sorted, targetTs, numericFields);
+    // 返回 24 小时数据（8 个 3 小时点，通过插值平滑到 24 个小时）
+    const targetStart = firstForecastDate.getTime();
+    const dataPoints = sorted.slice(startIndex, startIndex + 8);  // 取 8 个点（24 小时）
 
-      return {
-        ...source,
-        timestamp: targetTs
-      };
-    });
+    // 对每 3 小时点进行 3 段插值，生成 1 小时数据
+    const hourlyData = [];
+    for (let i = 0; i < 8; i++) {
+      const basePoint = dataPoints[i];
+      if (!basePoint) break;
+
+      const baseTime = new Date(basePoint.timestamp);
+      const nextPoint = dataPoints[i + 1];
+
+      for (let h = 0; h < 3; h++) {
+        const offsetHours = i * 3 + h;  // 从起点开始的偏移小时数
+        const targetTs = targetStart + (offsetHours * oneHourMs);
+
+        if (h === 0) {
+          // 3 小时整点直接用原始值
+          hourlyData.push({ ...basePoint, timestamp: targetTs });
+        } else if (nextPoint && i < 7) {
+          // 中间小时在当前点和下一点之间线性插值
+          const ratio = h / 3;
+          const interpolated = { ...basePoint, timestamp: targetTs };
+
+          numericFields.forEach(field => {
+            const baseValue = basePoint[field];
+            const nextValue = nextPoint[field];
+
+            if (Number.isFinite(baseValue) && Number.isFinite(nextValue)) {
+              interpolated[field] = baseValue + ((nextValue - baseValue) * ratio);
+            }
+          });
+
+          hourlyData.push(interpolated);
+        } else {
+          // 最后一段（第 21-23 小时）复制最后一个点的值
+          hourlyData.push({ ...basePoint, timestamp: targetTs });
+        }
+      }
+    }
+
+    return hourlyData;
   }
 
   /**
