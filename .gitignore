@@ -1,0 +1,63 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Testing
+coverage/
+.nyc_output/
+
+# Playwright
+playwright-report/
+test-results/
+playwright/.cache/
+
+# IDE
+.vscode/
+.idea/
+.cursor/
+
+# AI / Tool config
+.claude/
+.kiro/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# API Key config (contains sensitive data)
+config.json
+
+# Runtime data
+server/data/
+
+# Build output
+dist/
+build/
+
+# Temporary files
+*.tmp
+.cache/
+test_results.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/

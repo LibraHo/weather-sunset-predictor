@@ -1,0 +1,5 @@
+{
+  "apiKey": "your-windy-api-key-here",
+  "useMockAPI": false,
+  "note": "将你的Windy API密钥粘贴到apiKey字段中。如果要使用模拟数据进行离线测试，将useMockAPI设置为true。"
+}

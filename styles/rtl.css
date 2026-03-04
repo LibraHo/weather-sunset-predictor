@@ -1,0 +1,247 @@
+/**
+ * RTL（Right-to-Left）样式支持
+ * 用于阿拉伯语等从右到左书写的语言
+ */
+
+/* 基础RTL方向 */
+.rtl {
+  direction: rtl;
+}
+
+/* 文本对齐 */
+.rtl .text-left {
+  text-align: right;
+}
+
+.rtl .text-right {
+  text-align: left;
+}
+
+/* Margin和Padding交换 */
+.rtl .mr-1 { margin-right: 0; margin-left: 0.25rem; }
+.rtl .mr-2 { margin-right: 0; margin-left: 0.5rem; }
+.rtl .mr-3 { margin-right: 0; margin-left: 1rem; }
+.rtl .mr-4 { margin-right: 0; margin-left: 1.5rem; }
+
+.rtl .ml-1 { margin-left: 0; margin-right: 0.25rem; }
+.rtl .ml-2 { margin-left: 0; margin-right: 0.5rem; }
+.rtl .ml-3 { margin-left: 0; margin-right: 1rem; }
+.rtl .ml-4 { margin-left: 0; margin-right: 1.5rem; }
+
+.rtl .mx-auto { margin-right: auto; margin-left: auto; }
+
+.rtl .pr-1 { padding-right: 0; padding-left: 0.25rem; }
+.rtl .pr-2 { padding-right: 0; padding-left: 0.5rem; }
+.rtl .pr-3 { padding-right: 0; padding-left: 1rem; }
+.rtl .pr-4 { padding-right: 0; padding-left: 1.5rem; }
+
+.rtl .pl-1 { padding-left: 0; padding-right: 0.25rem; }
+.rtl .pl-2 { padding-left: 0; padding-right: 0.5rem; }
+.rtl .pl-3 { padding-left: 0; padding-right: 1rem; }
+.rtl .pl-4 { padding-left: 0; padding-right: 1.5rem; }
+
+/* Flexbox布局 */
+.rtl .flex-row {
+  flex-direction: row-reverse;
+}
+
+.rtl .justify-start {
+  justify-content: flex-end;
+}
+
+.rtl .justify-end {
+  justify-content: flex-start;
+}
+
+/* 图标镜像翻转 */
+.rtl .icon-arrow,
+.rtl .icon-chevron,
+.rtl .icon-caret {
+  transform: scaleX(-1);
+}
+
+/* 特定UI组件的RTL样式 */
+.rtl .weather-card {
+  text-align: right;
+}
+
+.rtl .prediction-score {
+  text-align: right;
+}
+
+.rtl .btn-group .btn:first-child {
+  border-top-right-radius: 0;
+  border-top-left-radius: 0.25rem;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0.25rem;
+}
+
+.rtl .btn-group .btn:last-child {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0.25rem;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0.25rem;
+}
+
+/* 语言选择器RTL样式 */
+.rtl .language-selector {
+  text-align: right;
+}
+
+.rtl .language-option {
+  text-align: right;
+}
+
+/* 导航栏RTL样式 */
+.rtl nav {
+  text-align: right;
+}
+
+.rtl nav .nav-links {
+  flex-direction: row-reverse;
+}
+
+/* 表单RTL样式 */
+.rtl input,
+.rtl select,
+.rtl textarea {
+  text-align: right;
+}
+
+.rtl label {
+  text-align: right;
+}
+
+/* 列表RTL样式 */
+.rtl .list-item {
+  text-align: right;
+}
+
+.rtl .list-item .icon {
+  margin-left: 0.5rem;
+  margin-right: 0;
+}
+
+/* 卡片RTL样式 */
+.rtl .card {
+  text-align: right;
+}
+
+.rtl .card .card-header {
+  text-align: right;
+}
+
+/* 模态框RTL样式 */
+.rtl .modal {
+  text-align: right;
+}
+
+.rtl .modal .modal-header {
+  text-align: right;
+}
+
+/* 表格RTL样式 */
+.rtl table {
+  text-align: right;
+}
+
+.rtl table th,
+.rtl table td {
+  text-align: right;
+}
+
+/* 工具提示RTL样式 */
+.rtl .tooltip {
+  text-align: right;
+}
+
+/* 徽章RTL样式 */
+.rtl .badge {
+  text-align: right;
+}
+
+/* 分页RTL样式 */
+.rtl .pagination {
+  flex-direction: row-reverse;
+}
+
+/* 面包屑RTL样式 */
+.rtl .breadcrumb {
+  flex-direction: row-reverse;
+}
+
+.rtl .breadcrumb-item::before {
+  content: "";
+}
+
+.rtl .breadcrumb-item::after {
+  content: "/";
+  margin: 0 0.5rem;
+}
+
+/* 下拉菜单RTL样式 */
+.rtl .dropdown-menu {
+  right: 0;
+  left: auto;
+  text-align: right;
+}
+
+/* 标签页RTL样式 */
+.rtl .tabs {
+  flex-direction: row-reverse;
+}
+
+/* 进度条RTL样式 */
+.rtl .progress-bar {
+  direction: ltr; /* 进度条保持从左到右 */
+}
+
+/* 滑块RTL样式 */
+.rtl .slider {
+  direction: ltr; /* 滑块保持从左到右 */
+}
+
+/* ========== 预测卡片 RTL 修复 ========== */
+
+/* 分数+时间并排行：分数块在视觉右侧（逻辑起始端） */
+[dir="rtl"] .prediction-dashboard-row {
+  flex-direction: row-reverse;
+}
+
+/* 时间信息区文本对齐 */
+[dir="rtl"] .time-display {
+  text-align: right;
+}
+
+/* 蓝调/黄金时段行：标签在右、时间在左 */
+[dir="rtl"] .compact-extra-time {
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+}
+
+/* 时间数字保持 LTR（避免阿拉伯数字/冒号被镜像） */
+[dir="rtl"] .compact-extra-time .hour-time {
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+/* 云层信息行：从右到左排列 */
+[dir="rtl"] .compact-cloud-info {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+/* 云层 mini bar 保持 LTR（填充方向不变） */
+[dir="rtl"] .cloud-mini-bar-track {
+  direction: ltr;
+}
+
+/* 分析文本右对齐 */
+[dir="rtl"] .compact-analysis {
+  text-align: right;
+}
+
+/* 卡片标题右对齐 */
+[dir="rtl"] .prediction-header {
+  text-align: right;
+}
