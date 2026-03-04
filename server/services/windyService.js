@@ -192,9 +192,13 @@ class WindyService {
       // 计算总云量：取三层云量的最大值或加权平均
       const cloudCover = Math.min(100, Math.max(lowClouds, midClouds, highClouds, (lowClouds + midClouds + highClouds) / 3));
       
-      // 温度转换：Windy API 返回开尔文，转换为摄氏度
-      const tempKelvin = this.getValue(data, 'temp-surface', index);
+      // 温度：Windy API 直接返回 temp 字段（摄氏度）
       const tempCelsius = data.temp ? data.temp[index] : null;
+      
+      // 如果 temp 字段不存在，fallback 到 temp-surface（开尔文）
+      if (!tempCelsius && data['temp-surface']) {
+        tempCelsius = data['temp-surface'][index] - 273.15;
+      }
       
       // 气压转换：Windy API 返回帕斯卡，转换为百帕
       const pressurePa = this.getValue(data, 'pressure-surface', index);
@@ -202,12 +206,6 @@ class WindyService {
       
       return {
         timestamp,
-      // Windy API 直接返回 temp 字段（摄氏度）
-      // 如果 temp 字段不存在，fallback 到 temp-surface（开尔文）
-      if (!tempCelsius && data['temp-surface']) {
-        tempCelsius = data['temp-surface'][index] - 273.15;
-      }
-
         temp: tempCelsius,
         humidity: this.getValue(data, 'rh-surface', index),
         cloudCover: cloudCover,
