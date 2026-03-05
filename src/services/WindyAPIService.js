@@ -1,8 +1,8 @@
 /**
- * WindyAPIService - Windy API 服务
+ * WindyAPIService - 天气 API 服务
  *
- * 负责与 Windy Point Forecast API 通信，获取天气数据
- * 通过后端服务器代理调用（无需前端密钥）
+ * 负责与后端服务器通信，获取天气数据。
+ * 后端通过 ProviderOrchestrator 调度具体的供应商。
  */
 
 import WeatherData from '../models/WeatherData.js';
@@ -20,7 +20,7 @@ class WindyAPIService {
    * @param {number} lat - 纬度
    * @param {number} lon - 经度
    * @param {number} hours - 预测小时数（默认168小时/7天）
-   * @returns {Promise<WeatherData[]>} 天气数据数组（最多168小时预测）
+   * @returns {Promise<WeatherData[] & {providerMeta: Object}>} 天气数据数组（最多168小时预测），附带 providerMeta 属性
    */
   async fetchWeatherData(lat, lon, hours = 168) {
     // 验证坐标
@@ -41,73 +41,38 @@ class WindyAPIService {
    * @param {number} lat - 纬度
    * @param {number} lon - 经度
    * @param {number} hours - 预测小时数
-   * @returns {Promise<WeatherData[]>} 天气数据数组
+   * @returns {Promise<WeatherData[] & {providerMeta: Object}>} 天气数据数组，附带 providerMeta 属性
    */
   async fetchFromProxy(lat, lon, hours) {
     const url = `${this.proxyURL}/api/weather/forecast?lat=${lat}&lon=${lon}&hours=${hours}`;
 
     console.log('[WindyAPIService] 通过后端代理获取天气数据:', { lat, lon, hours });
 
-    // 需求：25 — 若用户配置了自己的 Windy API Key，通过请求头传递给后端
-    const headers = { 'Content-Type': 'application/json' };
-    const userApiKey = localStorage.getItem('user_windy_api_key');
-    if (userApiKey && userApiKey.trim()) {
-      headers['X-Windy-API-Key'] = userApiKey.trim();
-    }
-
     try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers
-      });
+      const response = await fetch(url);
 
       if (!response.ok) {
-        await this.handleProxyError(response);
+        throw new Error(`后端请求失败: ${response.status}`);
       }
 
       const result = await response.json();
-      console.log('[WindyAPIService] 后端代理响应:', result);
+      console.log('[WindyAPIService] 后端代理响应 providerMeta:', result.providerMeta);
 
       // 解析后端返回的数据
-      return this.parseProxyData(result.data);
+      const dataArray = this.parseProxyData(result.data);
+      // 附加 providerMeta 到数组对象上（兼容现有结构，同时暴露元数据）
+      if (result.providerMeta) {
+        dataArray.providerMeta = result.providerMeta;
+      }
+      return dataArray;
     } catch (error) {
-      if (error.message.includes('API') || error.message.includes('后端') ||
-          error.message.includes('参数') || error.message.includes('频繁')) {
+      if (error.message.includes('后端') ||
+          error.message.includes('参数') ||
+          error.message.includes('频繁')) {
         throw error;
       }
       console.error('[WindyAPIService] 后端代理网络错误:', error);
       throw new Error('无法连接到后端服务器，请检查服务器是否运行');
-    }
-  }
-
-  /**
-   * 处理后端代理错误响应
-   * @param {Response} response - Fetch 响应对象
-   */
-  async handleProxyError(response) {
-    let errorMessage = '后端服务器错误';
-
-    try {
-      const errorData = await response.json();
-      errorMessage = errorData.error?.message || errorMessage;
-    } catch (e) {
-      // 无法解析错误响应
-    }
-
-    switch (response.status) {
-      case 400:
-        throw new Error(`请求参数错误: ${errorMessage}`);
-      case 401:
-      case 403:
-        throw new Error(`Windy API 密钥错误: ${errorMessage}`);
-      case 429:
-        throw new Error('请求过于频繁，请稍后再试');
-      case 500:
-      case 502:
-      case 503:
-        throw new Error('后端服务器暂时不可用，请稍后再试');
-      default:
-        throw new Error(`后端服务器错误: ${errorMessage}`);
     }
   }
 
@@ -152,10 +117,7 @@ class WindyAPIService {
       await this.fetchWeatherData(39.9042, 116.4074); // 北京
       return true;
     } catch (error) {
-      if (error.message.includes('API密钥无效') || error.message.includes('Windy API 密钥错误')) {
-        return false;
-      }
-      // 其他错误（如网络错误）不代表密钥无效
+      // 网络错误不代表密钥无效
       throw error;
     }
   }

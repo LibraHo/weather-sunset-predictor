@@ -3550,3 +3550,26 @@ body.theme-dark .cloud-layers-section {
     background-color: rgba(59, 130, 246, 0.08);
   }
 }
+
+/* 天气数据源状态只读信息区 */
+.readonly-info {
+  background: var(--bg-card);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+.info-label {
+  color: var(--text-secondary);
+}
+.info-value {
+  color: var(--text-primary);
+  font-weight: 500;
+}

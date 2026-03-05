@@ -418,6 +418,13 @@ export default {
   // Settings
   settings: {
     title: 'Settings',
+    weatherProvider: 'Weather Provider',
+    providerCurrent: 'Current Source',
+    providerQuality: 'Data Quality',
+    providerUpdateTime: 'Last Updated',
+    providerStatusExcellent: 'Excellent',
+    providerStatusStandard: 'Standard',
+    providerStatusDegraded: 'Degraded',
     apiKey: 'API Key',
     apiKeyLabel: 'Configure Windy API Key',
     apiKeyPlaceholder: 'Enter API key',

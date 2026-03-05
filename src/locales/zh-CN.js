@@ -419,6 +419,13 @@ export default {
   // 设置
   settings: {
     title: '设置',
+    weatherProvider: '天气数据源',
+    providerCurrent: '当前来源',
+    providerQuality: '数据质量',
+    providerUpdateTime: '最近更新',
+    providerStatusExcellent: '极佳',
+    providerStatusStandard: '良好',
+    providerStatusDegraded: '降级',
     apiKey: 'API密钥',
     apiKeyLabel: '配置Windy API密钥',
     apiKeyPlaceholder: '输入API密钥',

@@ -125,6 +125,31 @@ class SettingsPanel {
 
           <hr class="settings-section-divider" />
 
+          <!-- ☁️ 天气数据源 -->
+          <div class="settings-section">
+            <h3 class="settings-section-title">☁️ ${this.i18n.t('settings.weatherProvider')}</h3>
+            <div class="settings-section-content">
+              <div class="setting-item readonly-info">
+                <div class="info-row">
+                  <span class="info-label">${this.i18n.t('settings.providerCurrent')}:</span>
+                  <span class="info-value" id="provider-current">-</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">${this.i18n.t('settings.providerQuality')}:</span>
+                  <span class="info-value" id="provider-quality">-</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">${this.i18n.t('settings.providerUpdateTime')}:</span>
+                  <span class="info-value" id="provider-update-time">-</span>
+                </div>
+                <div id="provider-issues-container" style="display:none; margin-top: 8px;">
+                  <small class="setting-hint" style="color: var(--color-warning, #f59e0b);" id="provider-issues">-</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="settings-section-divider" />
           <!-- 🔑 Windy API -->
           <div class="settings-section">
             <h3 class="settings-section-title">🔑 ${this.i18n.t('settings.windyApiKeyMode')}</h3>
@@ -322,6 +347,9 @@ class SettingsPanel {
     }
 
     // Windy API Key 模式（需求 25）
+    // 天气数据源状态 (任务 44)
+    this.updateProviderStatus();
+
     const windyApiModeRadios = this.panel.querySelectorAll('input[name="windy-api-mode"]');
     windyApiModeRadios.forEach(radio => {
       radio.addEventListener('change', (e) => {
@@ -372,6 +400,17 @@ class SettingsPanel {
     }
 
     // 加载主题设置
+    // 加载 Windy API Key 模式 (需求 25)
+    const windyApiMode = localStorage.getItem('windy_api_mode') || 'system';
+    const windyApiModeRadios = this.panel.querySelectorAll('input[name="windy-api-mode"]');
+    windyApiModeRadios.forEach(radio => {
+      if (radio.value === windyApiMode) radio.checked = true;
+    });
+
+    const windyApiKeyInput = document.getElementById('windy-api-key-input');
+    if (windyApiKeyInput) {
+      windyApiKeyInput.value = localStorage.getItem('windy_api_key') || '';
+    }
     const theme = this.themeService.getTheme();
     const themeSelect = document.getElementById('theme-select');
     if (themeSelect) {
@@ -796,3 +835,58 @@ class SettingsPanel {
 }
 
 export default SettingsPanel;
+  /**
+   * 更新天气数据源状态信息
+   * 从最后一次调用的 WindyAPIService 响应中提取 providerMeta 并显示
+   */
+  updateProviderStatus() {
+    const providerCurrentEl = document.getElementById('provider-current');
+    const providerQualityEl = document.getElementById('provider-quality');
+    const providerUpdateTimeEl = document.getElementById('provider-update-time');
+    const providerIssuesEl = document.getElementById('provider-issues-container');
+
+    if (!providerCurrentEl || !providerQualityEl) {
+      return;
+    }
+
+    const weatherData = this.appState?.weatherData;
+    const meta = weatherData?.providerMeta;
+
+    if (!meta) {
+      providerCurrentEl.textContent = '-';
+      providerQualityEl.textContent = '-';
+      providerUpdateTimeEl.textContent = '-';
+      return;
+    }
+
+    providerCurrentEl.textContent = meta.name || 'unknown';
+
+    const qualityMap = {
+      excellent: this.i18n.t('settings.providerStatusExcellent'),
+      standard: this.i18n.t('settings.providerStatusStandard'),
+      degraded: this.i18n.t('settings.providerStatusDegraded')
+    };
+    providerQualityEl.textContent = qualityMap[meta.dataQuality] || meta.dataQuality;
+
+    if (meta.latency) {
+      const latencySeconds = (meta.latency / 1000).toFixed(2);
+      providerUpdateTimeEl.textContent = new Date().toLocaleTimeString();
+    }
+
+    const issues = meta.unsupportedFields || [];
+    const degradedReasons = meta.degradedReason || [];
+
+    if (issues.length > 0 || degradedReasons.length > 0) {
+      providerIssuesEl.style.display = 'block';
+      const issueTexts = [];
+      if (issues.length > 0) {
+        issueTexts.push(`不支持字段: ${issues.join(', ')}`);
+      }
+      if (degradedReasons.length > 0) {
+        issueTexts.push(degradedReasons.join('; '));
+      }
+      providerIssuesEl.querySelector('small').textContent = issueTexts.join(' | ');
+    } else {
+      providerIssuesEl.style.display = 'none';
+    }
+  }
