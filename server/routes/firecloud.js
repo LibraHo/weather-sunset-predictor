@@ -9,11 +9,13 @@
 
 const express = require('express');
 const FireCloudService = require('../services/FireCloudService.js');
+const FireCloudTileService = require('../services/FireCloudTileService.js');
 
 const router = express.Router();
 
 // 创建 FireCloudService 实例
 const fireCloudService = new FireCloudService();
+const fireCloudTileService = new FireCloudTileService();
 
 /**
  * GET /api/firecloud/overlay
@@ -123,6 +125,58 @@ router.get('/health', async (req, res) => {
 router.post('/cache/clear', async (req, res) => {
   await fireCloudService.clearCache();
   res.json({ success: true, message: '缓存已清除' });
+});
+
+/**
+ * GET /api/firecloud/grid
+ *
+ * 火烧云网格数据 PoC（中国→全球统一接口）
+ * 查询参数：
+ * - bbox: west,south,east,north（必需）
+ * - zoom: 缩放等级（可选，默认6）
+ * - time: 时间戳（可选，默认当前时间）
+ */
+router.get('/grid', async (req, res) => {
+  const { bbox, zoom = 6, time = Date.now() } = req.query;
+
+  if (!bbox) {
+    return res.status(400).json({
+      error: '缺少必需参数',
+      message: 'bbox 参数是必需的（格式：west,south,east,north）'
+    });
+  }
+
+  const parts = bbox.split(',').map(Number);
+  if (parts.length !== 4 || parts.some(Number.isNaN)) {
+    return res.status(400).json({
+      error: '无效的 bbox',
+      message: 'bbox 必须是 west,south,east,north 的数字格式'
+    });
+  }
+
+  const grid = await fireCloudTileService.getGrid({ bbox, zoom: Number(zoom), time: Number(time) });
+  return res.json(grid);
+});
+
+/**
+ * GET /api/firecloud/tiles/:z/:x/:y.png
+ *
+ * 火烧云专题瓦片接口（Phase 11 PoC）
+ */
+router.get('/tiles/:z/:x/:y.png', async (req, res) => {
+  const { z, x, y } = req.params;
+  const { time = Date.now() } = req.query;
+
+  const tileBuffer = await fireCloudTileService.getTilePng({
+    z: Number(z),
+    x: Number(x),
+    y: Number(y),
+    time: Number(time)
+  });
+
+  res.setHeader('Content-Type', 'image/png');
+  res.setHeader('Cache-Control', 'public, max-age=600');
+  return res.send(tileBuffer);
 });
 
 module.exports = router;
