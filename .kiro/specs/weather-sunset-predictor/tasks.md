@@ -837,3 +837,218 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 |------|------|------|------|
 | [x] | 临时方案 | 前端只使用 Nominatim（快速修复） | 已完成 | ✅ |
 
+
+---
+
+## Phase 10：天气 API 迁移（Windy → Open-Meteo，彩云兜底）
+
+> 背景：Windy 免费 API 出现预测时序随机打乱，导致算法输入失真。
+> 目标：建立可切换、可回退、可观测的数据源架构，优先迁移到 Open-Meteo，并评估彩云作为中国区兜底。
+
+### 任务 41：提供商能力评估与决策记录
+
+- [ ] 41.1 建立对比矩阵（Windy / Open-Meteo / 彩云）
+  - 成本、字段覆盖、调用限制、可达性、SLA、法律合规
+  - 产出 ADR：`docs/adr/adr-weather-provider-migration.md`
+  - _关联需求：31_
+
+- [ ] 41.2 完成真实网络探测
+  - 在目标部署区（含中国大陆）做可达性与延迟采样
+  - 记录 95 分位延迟与失败率
+  - _关联需求：31_
+
+- [ ] 41.3 最终选型评审
+  - 主：Open-Meteo；备：彩云（如 key 就绪）
+  - 风险清单与回滚条件
+  - _关联需求：31_
+
+### 任务 42：后端 Provider 抽象层改造
+
+- [ ] 42.1 定义 `IWeatherProvider` 接口与标准模型
+  - 统一 hourly/daily/cloudLayer/sunTimes 字段
+  - _关联需求：31, 5, 7, 12_
+
+- [ ] 42.2 新增 `OpenMeteoProviderAdapter`
+  - 接入 forecast API 并完成字段标准化
+  - _关联需求：3, 31_
+
+- [ ] 42.3 新增 `CaiyunProviderAdapter`（可 feature flag）
+  - 支持鉴权、错误码映射、配额告警
+  - _关联需求：31_
+
+- [ ] 42.4 实现 `ProviderOrchestrator`
+  - primary/fallback 路由、熔断与重试
+  - _关联需求：10, 31_
+
+### 任务 43：数据质量门禁（解决“随机打乱”）
+
+- [ ] 43.1 实现 `ForecastSequenceValidator`
+  - 升序校验、重复去重、缺口检测
+  - _关联需求：31_
+
+- [ ] 43.2 接入质量标签
+  - 响应增加 `providerMeta.dataQuality`
+  - _关联需求：31, 10_
+
+- [ ] 43.3 异常自动降级
+  - 当时序异常触发 fallbackProvider
+  - _关联需求：31, 10_
+
+### 任务 44：前端兼容与配置改造
+
+- [ ] 44.1 设置面板新增“天气数据源状态”只读区
+  - 显示当前 provider、是否回退、最近更新时间
+  - _关联需求：6, 31_
+
+- [ ] 44.2 API Service 兼容 `providerMeta`
+  - 不改变现有图表与预测组件输入结构
+  - _关联需求：11, 12, 31_
+
+- [ ] 44.3 多语言文案补充
+  - provider 状态、回退提示、数据质量提示
+  - _关联需求：14, 31_
+
+### 任务 45：测试与灰度发布
+
+- [ ] 45.1 单元测试
+  - Provider adapter 映射、序列校验、orchestrator 降级逻辑
+  - _关联需求：31_
+
+- [ ] 45.2 集成测试
+  - `/api/weather/forecast` 在主备切换下的行为一致性
+  - _关联需求：3, 10, 31_
+
+- [ ] 45.3 双读对比脚本
+  - 同坐标同时间比较温度/湿度/云量偏差
+  - 设定告警阈值
+  - _关联需求：31_
+
+- [ ] 45.4 灰度与回滚预案
+  - 10%→50%→100% 切流；一键回滚至 Windy
+  - _关联需求：31_
+
+### 任务 46：迁移执行建议（结论）
+
+- [ ] 建议优先落地 **Open-Meteo 主 + 彩云备**。
+- [ ] 仅在彩云 key 与商务条款已明确时启用中国区兜底。
+- [ ] 保留 Windy 于地图展示能力，不再作为唯一预测数据源。
+
+### 任务 47：功能支持差异与降级策略落地
+
+- [ ] 47.1 建立“需求到字段”映射清单
+  - 按需求 3/5/7/11/12 列出必需字段与可降级字段
+  - 输出 `docs/weather-provider-feature-matrix.md`
+  - _关联需求：31_
+
+- [ ] 47.2 实现彩云分层云量估算器（仅在缺少 low/mid/high 时启用）
+  - 提供保守估算 + 置信度标记
+  - 评分结果附带 `cloudLayerEstimated=true`
+  - _关联需求：5, 12, 31_
+
+- [ ] 47.3 实现 Windy 特有字段替代策略
+  - `convPrecip/cape` 缺失时使用替代项或禁用子评分项
+  - 保证总分可解释、不会异常偏高
+  - _关联需求：5, 31_
+
+- [ ] 47.4 地图能力解耦验证
+  - 确认切换 Open-Meteo/彩云 后，WindyMap/Leaflet 仍可独立运行
+  - _关联需求：18, 19, 31_
+
+- [ ] 47.5 可观测性增强
+  - API 响应附带 `unsupportedFields[]` 和 `degradedReason[]`
+  - 前端展示“数据降级提示”
+  - _关联需求：10, 31_
+
+---
+
+## Phase 11：Open-Meteo 单源迁移 + 火烧云地图图层化
+
+### 任务 48：收敛范围（暂不接彩云）
+
+- [ ] 48.1 将 Provider 计划调整为 Open-Meteo first
+  - 代码与文档中将 `caiyun` 标记为 Phase 2（deferred）
+  - _关联需求：32_
+
+- [ ] 48.2 精简配置项
+  - 第一阶段仅保留 `primaryProvider=openmeteo`
+  - 删除或隐藏彩云配置入口（若已存在）
+  - _关联需求：32_
+
+### 任务 49：Windy 特定字段迁移清单
+
+- [ ] 49.1 梳理 Windy 请求字段与用途
+  - `temp/rh/wind/pressure/lclouds/mclouds/hclouds/convPrecip/cape`
+  - 输出字段用途文档与替代映射状态
+  - _关联需求：31, 32_
+
+- [ ] 49.2 `convPrecip/cape` 子评分开关化
+  - 可配置启用/禁用，禁用时写入 `degradedReason`
+  - _关联需求：31, 32_
+
+### 任务 50：火烧云地图图层能力（中国→全球）
+
+- [ ] 50.1 设计专题图层 API
+  - `/api/firecloud/tiles/{z}/{x}/{y}.png`
+  - `/api/firecloud/grid?bbox=&zoom=&time=`
+  - _关联需求：33_
+
+- [ ] 50.2 中国范围 PoC
+  - 使用网格 JSON + Canvas 渲染验证色带、交互、性能
+  - _关联需求：33_
+
+- [ ] 50.3 全球范围瓦片化
+  - 服务端瓦片渲染 + 缓存策略 + 过期策略
+  - _关联需求：33_
+
+- [ ] 50.4 地图引擎解耦
+  - 以 Leaflet/MapLibre 为主；Windy 地图降级为可选入口
+  - _关联需求：33_
+
+---
+
+## Phase 12：逐步移除 Windy 天气 API（执行计划）
+
+### 任务 51：切流与观测
+
+- [ ] 51.1 `/api/weather/forecast` 默认仅 Open-Meteo
+  - Windy 开关仅保留 emergency fallback
+  - _关联需求：32, 34_
+
+- [ ] 51.2 providerMeta 强制校验
+  - 监控 `provider=openmeteo` 占比，目标 > 99%
+  - _关联需求：31, 34_
+
+### 任务 52：前端清理 Windy Key 能力
+
+- [ ] 52.1 SettingsPanel 移除 Windy API Key UI
+  - 删除来源切换与 key 输入框
+  - _关联需求：34_
+
+- [ ] 52.2 Storage 清理迁移
+  - 删除 `user_windy_api_key` / `windyApiKeyMode*`
+  - 增加一次性迁移清理逻辑
+  - _关联需求：34_
+
+### 任务 53：后端清理 Windy 透传路径
+
+- [ ] 53.1 weather route 移除 `X-Windy-API-Key` 读取
+  - 不再透传 `userApiKey`
+  - _关联需求：34_
+
+- [ ] 53.2 windyService 降级到 legacy
+  - 从主链路摘除，保留短期回滚模块
+  - _关联需求：34_
+
+### 任务 54：测试与文档收口
+
+- [ ] 54.1 测试替换
+  - WindyAPIService 相关测试迁移为 OpenMeteoAPIService
+  - _关联需求：34_
+
+- [ ] 54.2 文档更新
+  - README / OpenAPI / 部署手册去除 Windy 预测依赖说明
+  - _关联需求：34_
+
+- [ ] 54.3 验收回归
+  - 验证需求 5/6/7/11/12 结果不低于基线
+  - _关联需求：34_
