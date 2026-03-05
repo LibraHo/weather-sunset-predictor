@@ -864,11 +864,11 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 ### 任务 42：后端 Provider 抽象层改造
 
-- [ ] 42.1 定义 `IWeatherProvider` 接口与标准模型
+- [x] 42.1 定义 `IWeatherProvider` 接口与标准模型
   - 统一 hourly/daily/cloudLayer/sunTimes 字段
   - _关联需求：31, 5, 7, 12_
 
-- [ ] 42.2 新增 `OpenMeteoProviderAdapter`
+- [x] 42.2 新增 `OpenMeteoProviderAdapter`
   - 接入 forecast API 并完成字段标准化
   - _关联需求：3, 31_
 
@@ -876,7 +876,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - 支持鉴权、错误码映射、配额告警
   - _关联需求：31_
 
-- [ ] 42.4 实现 `ProviderOrchestrator`
+- [x] 42.4 实现 `ProviderOrchestrator`
   - primary/fallback 路由、熔断与重试
   - _关联需求：10, 31_
 

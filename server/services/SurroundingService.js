@@ -8,7 +8,7 @@
  * @author Backend Migration v1.0
  */
 
-const windyService = require('./windyService.js');
+const orchestrator = require('./ProviderOrchestrator');
 const PredictionService = require('./PredictionService.js');
 const cacheConfig = require('../config/cacheConfig.js');
 
@@ -158,7 +158,7 @@ class SurroundingService {
     const promises = points.map(async (point) => {
       try {
         // 获取天气数据
-        const weatherResponse = await windyService.fetchWeatherData(point.lat, point.lon, 24);
+        const weatherResponse = await orchestrator.fetchWeatherData(point.lat, point.lon, 24);
 
         // 提取当前小时的天气数据
         const currentWeather = weatherResponse.data[0];

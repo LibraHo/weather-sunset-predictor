@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const windyService = require('../services/windyService');
+const orchestrator = require('../services/ProviderOrchestrator');
 
 /**
  * GET /api/weather/forecast
@@ -35,7 +35,7 @@ router.get('/forecast', async (req, res, next) => {
     const userApiKey = req.headers['x-windy-api-key'] || null;
 
     // 调用 Windy 服务获取数据
-    const result = await windyService.fetchWeatherData(latNum, lonNum, hoursNum, userApiKey);
+    const result = await orchestrator.fetchWeatherData(latNum, lonNum, hoursNum, userApiKey);
 
     // 返回成功响应
     res.json({
@@ -45,7 +45,8 @@ router.get('/forecast', async (req, res, next) => {
         lon: lonNum
       },
       hours: result.hours,
-      data: result.data
+      data: result.data,
+      providerMeta: result.providerMeta
     });
 
   } catch (error) {
