@@ -882,7 +882,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 ### 任务 43：数据质量门禁（解决“随机打乱”）
 
-- [ ] 43.1 实现 `ForecastSequenceValidator`
+- [x] 43.1 实现 `ForecastSequenceValidator`
   - 升序校验、重复去重、缺口检测
   - _关联需求：31_
 

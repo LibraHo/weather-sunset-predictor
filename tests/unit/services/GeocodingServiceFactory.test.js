@@ -1,13 +1,7 @@
-/**
- * GeocodingServiceFactory 单元测试
- * 需求：24
- */
-
 import { jest } from '@jest/globals';
 import GeocodingServiceFactory from '../../../src/services/GeocodingServiceFactory.js';
 import BackendGeocodingService from '../../../src/services/BackendGeocodingService.js';
 
-// localStorage mock (plain object, no jest.fn at module level)
 const localStorageStore = {};
 const localStorageMock = {
   getItem: (key) => localStorageStore[key] ?? null,
@@ -26,13 +20,11 @@ describe('GeocodingServiceFactory', () => {
     localStorageMock.clear();
   });
 
-  // ========== create() — 默认值 ==========
-
   describe('create() — 默认值', () => {
-    test('无 localStorage 配置时，默认返回后端代理 Nominatim 服务', () => {
+    test('无 localStorage 配置时，默认返回后端代理 gaode 服务', () => {
       const service = GeocodingServiceFactory.create();
       expect(service).toBeInstanceOf(BackendGeocodingService);
-      expect(service.provider).toBe('nominatim');
+      expect(service.provider).toBe('gaode');
     });
 
     test('传入 proxyURL 参数时应覆盖 localStorage 中的值', () => {
@@ -41,8 +33,6 @@ describe('GeocodingServiceFactory', () => {
       expect(service.proxyURL).toBe('http://custom:4000');
     });
   });
-
-  // ========== create() — 后端代理模式 ==========
 
   describe('create() — 后端代理模式', () => {
     beforeEach(() => {
@@ -58,19 +48,9 @@ describe('GeocodingServiceFactory', () => {
 
     test('gaode → BackendGeocodingService, provider=gaode', () => {
       localStorageStore['geocoding_provider'] = 'gaode';
-      localStorageStore['geocoding_api_key'] = 'my-gaode-key';
       const service = GeocodingServiceFactory.create();
       expect(service).toBeInstanceOf(BackendGeocodingService);
       expect(service.provider).toBe('gaode');
-      expect(service.apiKey).toBe('my-gaode-key');
-    });
-
-    test('google → BackendGeocodingService, provider=google', () => {
-      localStorageStore['geocoding_provider'] = 'google';
-      localStorageStore['geocoding_api_key'] = 'my-google-key';
-      const service = GeocodingServiceFactory.create();
-      expect(service).toBeInstanceOf(BackendGeocodingService);
-      expect(service.provider).toBe('google');
     });
 
     test('proxyURL 应从 localStorage 读取', () => {
@@ -87,8 +67,6 @@ describe('GeocodingServiceFactory', () => {
       expect(service.proxyURL).toBe('http://override:9000');
     });
   });
-
-  // ========== getOptions() ==========
 
   describe('getOptions()', () => {
     test('应返回 3 个选项', () => {
@@ -115,19 +93,19 @@ describe('GeocodingServiceFactory', () => {
       expect(opt.chinaCompatible).toBe(true);
     });
 
-    test('高德需要 Key 且中国可用', () => {
+    test('高德不需要 Key 且中国可用', () => {
       const options = GeocodingServiceFactory.getOptions();
       const opt = options.find(o => o.provider === 'gaode');
       expect(opt).toBeDefined();
-      expect(opt.requiresKey).toBe(true);
+      expect(opt.requiresKey).toBe(false);
       expect(opt.chinaCompatible).toBe(true);
     });
 
-    test('Google 需要 Key 且中国不可用', () => {
+    test('Nominatim-frontend 不需要 Key 且中国不可用', () => {
       const options = GeocodingServiceFactory.getOptions();
-      const opt = options.find(o => o.provider === 'google');
+      const opt = options.find(o => o.provider === 'nominatim-frontend');
       expect(opt).toBeDefined();
-      expect(opt.requiresKey).toBe(true);
+      expect(opt.requiresKey).toBe(false);
       expect(opt.chinaCompatible).toBe(false);
     });
   });

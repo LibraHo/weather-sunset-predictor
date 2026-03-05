@@ -26,7 +26,7 @@ describe('Weather API Integration', () => {
 
     const supertestModule = await import('supertest');
     const weatherRouterModule = await import('../../../server/routes/weather.js');
-    const windyServiceModule = await import('../../../server/services/windyService.js');
+    const windyServiceModule = await import('../../../server/services/ProviderOrchestrator.js');
 
     request = supertestModule.default || supertestModule;
     const weatherRouter = weatherRouterModule.default || weatherRouterModule;
