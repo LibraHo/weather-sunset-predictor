@@ -1,4 +1,6 @@
 /**
+  const CloudLayerEstimator = require('./CloudLayerEstimator.js');
+  const LightPathService = require('./LightPathService.js');
  * Enhanced Prediction Service - 增强版火烧云预测服务 (后端版)
  *
  * 基于物理模型的火烧云预测系统，包含四个核心模块：
