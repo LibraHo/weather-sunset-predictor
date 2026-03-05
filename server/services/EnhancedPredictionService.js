@@ -13,6 +13,7 @@
 
 const SunCalculator = require('../utils/SunCalculator.js');
 const logger = require('../utils/logger.js');
+const CloudLayerEstimator = require('./CloudLayerEstimator.js');
 
 // ========== 常量定义 ==========
 
