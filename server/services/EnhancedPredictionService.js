@@ -13,6 +13,7 @@
 
 const SunCalculator = require('../utils/SunCalculator.js');
 const logger = require('../utils/logger.js');
+const CloudLayerEstimator = require('./CloudLayerEstimator.js');
 
 // ========== 常量定义 ==========
 
@@ -328,18 +329,6 @@ function scoreLightPath(weatherData, azimuth, remoteCloudData = null) {
     const lowClouds = weatherData.lowClouds || 0;
     const midClouds = weatherData.midClouds || 0;
     const highClouds = weatherData.highClouds || 0;
-    const localTotalCloud = Math.min(100, Math.max(lowClouds, midClouds, highClouds, weatherData.cloudCover || 0));
-    const estimatedScore = calculateLightPathPointScore({ totalCloud: localTotalCloud });
-    nearPointScore = estimatedScore;
-    farPointScore = estimatedScore;
-    nearPointCloudCover = localTotalCloud;
-    farPointCloudCover = localTotalCloud;
-  } else {
-    // Bug 1 修复：当没有远程数据时，用本地云量估算光路（避免永远100分）
-    const lowClouds = weatherData.lowClouds || 0;
-    const midClouds = weatherData.midClouds || 0;
-    const highClouds = weatherData.highClouds || 0;
-    // 使用总云量最大值作为光路估算
     const localTotalCloud = Math.min(100, Math.max(lowClouds, midClouds, highClouds, weatherData.cloudCover || 0));
     const estimatedScore = calculateLightPathPointScore({ totalCloud: localTotalCloud });
     nearPointScore = estimatedScore;
