@@ -1,6 +1,8 @@
 # Weather Sunset Predictor — 后端服务器
 
-后端代理服务器，用于保护 Windy API 密钥、提供天气数据接口，以及运行预测算法服务。
+后端代理服务器，用于提供天气数据接口与预测算法服务。
+
+> Phase 11 起，天气数据源默认 **Open‑Meteo first**。Windy 保留为回退与地图能力，不再作为默认主数据源。
 
 ## 功能特性
 
@@ -33,12 +35,20 @@ npm install
 cp .env.example .env
 ```
 
-编辑 `.env` 文件（必填项：`WINDY_API_KEY`）：
+编辑 `.env` 文件（Open‑Meteo 模式可不填 Windy Key）：
 
 ```env
 # Windy Point Forecast API 密钥（必填）
 # 获取方式: https://api.windy.com/
 WINDY_API_KEY=your_point_forecast_api_key_here
+
+# 主/备天气数据源（Phase 11 默认）
+PRIMARY_WEATHER_PROVIDER=openmeteo
+FALLBACK_WEATHER_PROVIDER=windy
+
+# Windy 特有子评分开关（默认关闭）
+ENABLE_CAPE_SCORE=false
+ENABLE_CONVECTIVE_PRECIP_SCORE=false
 
 # Windy Map API 密钥（可选，用于前端地图叠加层）
 # 获取方式: https://api.windy.com/
@@ -83,7 +93,11 @@ curl http://localhost:3000/health
 
 | 变量名 | 必填 | 默认值 | 说明 |
 |--------|------|--------|------|
-| `WINDY_API_KEY` | **是** | — | Windy Point Forecast API 密钥 |
+| `WINDY_API_KEY` | 条件必填 | — | 仅在启用 Windy 回退/联调时需要 |
+| `PRIMARY_WEATHER_PROVIDER` | 否 | `openmeteo` | 主天气数据源（Phase 11 默认 Open‑Meteo） |
+| `FALLBACK_WEATHER_PROVIDER` | 否 | `windy` | 回退天气数据源 |
+| `ENABLE_CAPE_SCORE` | 否 | `false` | 是否启用 `cape` 子评分 |
+| `ENABLE_CONVECTIVE_PRECIP_SCORE` | 否 | `false` | 是否启用 `convPrecip` 子评分 |
 | `WINDY_MAP_API_KEY` | 否 | — | Windy 地图 API 密钥 |
 | `PORT` | 否 | `3000` | 服务器监听端口 |
 | `NODE_ENV` | 否 | `development` | 运行环境 |
@@ -197,6 +211,22 @@ curl "http://localhost:3000/api/firecloud/overlay?lat=39.9042&lon=116.4074&radiu
 ```
 
 **响应**：PNG 图像（`Content-Type: image/png`）
+
+#### GET /api/firecloud/grid
+
+获取火烧云网格数据（中国范围 PoC + 全球统一接口）。
+
+**查询参数：**
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `bbox` | 是 | `west,south,east,north` |
+| `zoom` | 否 | 缩放等级，默认 `6` |
+| `time` | 否 | Unix 毫秒时间戳 |
+
+#### GET /api/firecloud/tiles/:z/:x/:y.png
+
+火烧云专题瓦片接口（Phase 11，服务端缓存）。
 
 ---
 

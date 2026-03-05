@@ -965,42 +965,42 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 ### 任务 48：收敛范围（暂不接彩云）
 
-- [ ] 48.1 将 Provider 计划调整为 Open-Meteo first
+- [x] 48.1 将 Provider 计划调整为 Open-Meteo first
   - 代码与文档中将 `caiyun` 标记为 Phase 2（deferred）
   - _关联需求：32_
 
-- [ ] 48.2 精简配置项
+- [x] 48.2 精简配置项
   - 第一阶段仅保留 `primaryProvider=openmeteo`
   - 删除或隐藏彩云配置入口（若已存在）
   - _关联需求：32_
 
 ### 任务 49：Windy 特定字段迁移清单
 
-- [ ] 49.1 梳理 Windy 请求字段与用途
+- [x] 49.1 梳理 Windy 请求字段与用途
   - `temp/rh/wind/pressure/lclouds/mclouds/hclouds/convPrecip/cape`
   - 输出字段用途文档与替代映射状态
   - _关联需求：31, 32_
 
-- [ ] 49.2 `convPrecip/cape` 子评分开关化
+- [x] 49.2 `convPrecip/cape` 子评分开关化
   - 可配置启用/禁用，禁用时写入 `degradedReason`
   - _关联需求：31, 32_
 
 ### 任务 50：火烧云地图图层能力（中国→全球）
 
-- [ ] 50.1 设计专题图层 API
+- [x] 50.1 设计专题图层 API
   - `/api/firecloud/tiles/{z}/{x}/{y}.png`
   - `/api/firecloud/grid?bbox=&zoom=&time=`
   - _关联需求：33_
 
-- [ ] 50.2 中国范围 PoC
+- [x] 50.2 中国范围 PoC
   - 使用网格 JSON + Canvas 渲染验证色带、交互、性能
   - _关联需求：33_
 
-- [ ] 50.3 全球范围瓦片化
+- [x] 50.3 全球范围瓦片化
   - 服务端瓦片渲染 + 缓存策略 + 过期策略
   - _关联需求：33_
 
-- [ ] 50.4 地图引擎解耦
+- [x] 50.4 地图引擎解耦
   - 以 Leaflet/MapLibre 为主；Windy 地图降级为可选入口
   - _关联需求：33_
 

@@ -11,6 +11,37 @@ class ProviderOrchestrator {
     
     this.primaryProvider = process.env.PRIMARY_WEATHER_PROVIDER || 'openmeteo';
     this.fallbackProvider = process.env.FALLBACK_WEATHER_PROVIDER || 'windy';
+
+    // 任务 49.2：Windy 特定子评分开关（迁移到 Open-Meteo 时默认关闭）
+    this.featureFlags = {
+      capeScoreEnabled: process.env.ENABLE_CAPE_SCORE === 'true',
+      convectivePrecipScoreEnabled: process.env.ENABLE_CONVECTIVE_PRECIP_SCORE === 'true'
+    };
+  }
+
+  _appendScoringDegradeMeta(providerMeta = {}) {
+    const meta = {
+      ...providerMeta,
+      unsupportedFields: providerMeta.unsupportedFields || [],
+      degradedReason: providerMeta.degradedReason || []
+    };
+
+    if (!this.featureFlags.capeScoreEnabled) {
+      meta.unsupportedFields = [...new Set([...meta.unsupportedFields, 'cape'])];
+      meta.degradedReason.push('cape scoring disabled by feature flag');
+    }
+
+    if (!this.featureFlags.convectivePrecipScoreEnabled) {
+      meta.unsupportedFields = [...new Set([...meta.unsupportedFields, 'convPrecip'])];
+      meta.degradedReason.push('convPrecip scoring disabled by feature flag');
+    }
+
+    meta.scoringFeatures = {
+      cape: this.featureFlags.capeScoreEnabled,
+      convPrecip: this.featureFlags.convectivePrecipScoreEnabled
+    };
+
+    return meta;
   }
 
   async fetchWeatherData(lat, lon, hours = 168, userApiKey = null) {
@@ -37,6 +68,7 @@ class ProviderOrchestrator {
           rawData.providerMeta.degradedReason.push(...validated.issues);
         }
       }
+      rawData.providerMeta = this._appendScoringDegradeMeta(rawData.providerMeta);
       return rawData;
     } catch (primaryError) {
       console.error(`[ProviderOrchestrator] Primary (${this.primaryProvider}) 失败/被拒绝:`, primaryError.message);
@@ -61,6 +93,7 @@ class ProviderOrchestrator {
               `Primary Provider (${this.primaryProvider}) failed: ${primaryError.message}`
             );
           }
+          fallbackData.providerMeta = this._appendScoringDegradeMeta(fallbackData.providerMeta);
           return fallbackData;
         } catch (fallbackError) {
           console.error(`[ProviderOrchestrator] Fallback (${this.fallbackProvider}) 也失败了:`, fallbackError.message);
