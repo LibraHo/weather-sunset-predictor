@@ -239,13 +239,13 @@ describe('EnhancedPredictionService', () => {
 
   // ========== 光路评分测试 ==========
   describe('scoreLightPath', () => {
-    test('should return perfect score without remote data', () => {
+    test('should return neutral score without remote data (not 100)', () => {
       const weatherData = {};
       const result = EnhancedPredictionService.scoreLightPath(weatherData, 270, null);
 
-      expect(result.score).toBe(100);
-      expect(result.nearPointScore).toBe(100);
-      expect(result.farPointScore).toBe(100);
+      expect(result.score).toBeLessThanOrEqual(50);
+      expect(result.nearPointScore).toBeLessThanOrEqual(50);
+      expect(result.farPointScore).toBeLessThanOrEqual(50);
       expect(result.hasRemoteData).toBe(false);
     });
 
@@ -270,14 +270,14 @@ describe('EnhancedPredictionService', () => {
       };
       const result = EnhancedPredictionService.scoreLightPath(weatherData, 270, remoteData);
 
-      // 100*0.4 + 0*0.6 = 40
-      expect(result.score).toBe(40);
+      // 35*0.4 + 0*0.6 = 14
+      expect(result.score).toBe(14);
     });
   });
 
   describe('calculateLightPathPointScore', () => {
-    test('should return 100 for clear sky (<10% clouds)', () => {
-      expect(EnhancedPredictionService.calculateLightPathPointScore({ totalCloud: 5 })).toBe(100);
+    test('should return capped score for clear sky (<10% clouds)', () => {
+      expect(EnhancedPredictionService.calculateLightPathPointScore({ totalCloud: 5 })).toBe(35);
     });
 
     test('should return 0 for cloud wall (>80% clouds)', () => {
@@ -380,7 +380,7 @@ describe('EnhancedPredictionService', () => {
   describe('calculateFinalScore', () => {
     test('should combine canvas and light path scores with weights', () => {
       const canvasScore = { score: 80, cloudLevel: 'perfect' };
-      const lightPathScore = { score: 100 };
+      const lightPathScore = { score: 100, hasRemoteData: true };
       const renderingFactor = { factor: 1.0 };
 
       const result = EnhancedPredictionService.calculateFinalScore(
@@ -393,7 +393,7 @@ describe('EnhancedPredictionService', () => {
 
     test('should identify no_fire_cloud when canvas score < 30', () => {
       const canvasScore = { score: 20, cloudLevel: 'space' };
-      const lightPathScore = { score: 100 };
+      const lightPathScore = { score: 100, hasRemoteData: true };
       const renderingFactor = { factor: 1.0 };
 
       const result = EnhancedPredictionService.calculateFinalScore(
@@ -419,8 +419,8 @@ describe('EnhancedPredictionService', () => {
 
 
     test('should cap score under 40 when status is no_fire_cloud', () => {
-      const canvasScore = { score: 5, cloudLevel: 'space' };
-      const lightPathScore = { score: 100 };
+      const canvasScore = { score: 5, cloudLevel: 'space', effectiveCloudCover: 5 };
+      const lightPathScore = { score: 100, hasRemoteData: true };
       const renderingFactor = { factor: 1.0 };
 
       const result = EnhancedPredictionService.calculateFinalScore(
@@ -447,7 +447,7 @@ describe('EnhancedPredictionService', () => {
     });
     test('should identify legendary_eruption for score >= 85', () => {
       const canvasScore = { score: 95, cloudLevel: 'perfect' };
-      const lightPathScore = { score: 100 };
+      const lightPathScore = { score: 100, hasRemoteData: true };
       const renderingFactor = { factor: 1.0 };
 
       const result = EnhancedPredictionService.calculateFinalScore(
@@ -460,7 +460,7 @@ describe('EnhancedPredictionService', () => {
 
     test('should apply rendering factor to final score', () => {
       const canvasScore = { score: 80, cloudLevel: 'perfect' };
-      const lightPathScore = { score: 100 };
+      const lightPathScore = { score: 100, hasRemoteData: true };
       const renderingFactor = { factor: 1.1 };
 
       const result = EnhancedPredictionService.calculateFinalScore(
@@ -473,7 +473,7 @@ describe('EnhancedPredictionService', () => {
 
     test('should clamp score to 0-100 range', () => {
       const canvasScore = { score: 100, cloudLevel: 'perfect' };
-      const lightPathScore = { score: 100 };
+      const lightPathScore = { score: 100, hasRemoteData: true };
       const renderingFactor = { factor: 1.5 };
 
       const result = EnhancedPredictionService.calculateFinalScore(
@@ -485,7 +485,7 @@ describe('EnhancedPredictionService', () => {
 
     test('should include type in result', () => {
       const canvasScore = { score: 80, cloudLevel: 'perfect' };
-      const lightPathScore = { score: 100 };
+      const lightPathScore = { score: 100, hasRemoteData: true };
       const renderingFactor = { factor: 1.0 };
 
       const sunsetResult = EnhancedPredictionService.calculateFinalScore(

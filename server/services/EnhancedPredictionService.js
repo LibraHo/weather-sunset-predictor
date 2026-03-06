@@ -293,7 +293,8 @@ function calculateLightPathPointScore(cloudData) {
   const totalCloud = cloudData.totalCloud || 0;
 
   if (totalCloud < 10) {
-    return 100; // 晴空，光线畅通
+    // 修复：几乎无云不应给满分，否则会抬高总分
+    return 35;
   } else if (totalCloud > 80) {
     return 0;   // 云墙，光线阻断
   } else {
@@ -310,8 +311,9 @@ function calculateLightPathPointScore(cloudData) {
  * @returns {Object} 光路评分结果
  */
 function scoreLightPath(weatherData, azimuth, remoteCloudData = null) {
-  let nearPointScore = 100;  // 150km点
-  let farPointScore = 100;   // 300km点
+  // 修复：无远端数据时不再默认100分，改为中性分
+  let nearPointScore = 50;  // 150km点
+  let farPointScore = 50;   // 300km点
   let nearPointCloudCover = null;
   let farPointCloudCover = null;
 
@@ -538,6 +540,23 @@ function calculateFinalScore(canvasScore, lightPathScore, renderingFactor, type 
 
   // 分数与状态保持一致，避免"无火烧云"却出现高分
   let displayScore = clampedScore;
+
+  // 修复：云量极低（无云）时强制封顶，避免出现70+误报
+  const hasEffectiveCloud = Number.isFinite(canvasScore.effectiveCloudCover);
+  const isVeryLowCloud = canvasScore.cloudLevel === 'space' || (hasEffectiveCloud && canvasScore.effectiveCloudCover < 10);
+  if (isVeryLowCloud) {
+    status = 'no_fire_cloud';
+    description = 'sky_clear';
+    advice = 'wait_for_clouds';
+    icon = 'cloudy';
+    displayScore = Math.min(displayScore, 35);
+  }
+
+  // 修复：无远端数据时，光路评分不能抬高上限
+  if (!lightPathScore.hasRemoteData) {
+    displayScore = Math.min(displayScore, 69.9);
+  }
+
   if (status === 'no_fire_cloud') {
     displayScore = Math.min(displayScore, 39.9);
   } else if (status === 'light_glow') {

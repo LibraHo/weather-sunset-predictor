@@ -564,8 +564,12 @@ class WeatherController {
     const startIndex = day === 'tomorrow' ? 8 : 0;  // 明天从第 8 个点开始
 
     // 返回 24 小时数据（8 个 3 小时点，通过插值平滑到 24 个小时）
-    const targetStart = firstForecastDate.getTime();
     const dataPoints = sorted.slice(startIndex, startIndex + 8);  // 取 8 个点（24 小时）
+    if (dataPoints.length === 0) return [];
+
+    // 修复：today/tomorrow 都应从各自首个点开始，不能总是用第一天首点
+    // 否则会出现明天曲线时间轴错位，视觉上像“单边持续上涨”
+    const targetStart = dataPoints[0].timestamp;
 
     // 对每 3 小时点进行 3 段插值，生成 1 小时数据
     const hourlyData = [];
