@@ -857,7 +857,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - 记录 95 分位延迟与失败率
   - _关联需求：31_
 
-- [ ] 41.3 最终选型评审
+- [x] 41.3 最终选型评审
   - 主：Open-Meteo；备：彩云（如 key 就绪）
   - 风险清单与回滚条件
   - _关联需求：31_
@@ -872,7 +872,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - 接入 forecast API 并完成字段标准化
   - _关联需求：3, 31_
 
-- [ ] 42.3 新增 `CaiyunProviderAdapter`（可 feature flag）
+- [x] 42.3 新增 `CaiyunProviderAdapter`（可 feature flag）
   - 支持鉴权、错误码映射、配额告警
   - _关联需求：31_
 
@@ -886,11 +886,11 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - 升序校验、重复去重、缺口检测
   - _关联需求：31_
 
-- [ ] 43.2 接入质量标签
+- [x] 43.2 接入质量标签
   - 响应增加 `providerMeta.dataQuality`
   - _关联需求：31, 10_
 
-- [ ] 43.3 异常自动降级
+- [x] 43.3 异常自动降级
   - 当时序异常触发 fallbackProvider
   - _关联需求：31, 10_
 
@@ -910,11 +910,11 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 ### 任务 45：测试与灰度发布
 
-- [ ] 45.1 单元测试
+- [x] 45.1 单元测试
   - Provider adapter 映射、序列校验、orchestrator 降级逻辑
   - _关联需求：31_
 
-- [ ] 45.2 集成测试
+- [x] 45.2 集成测试
   - `/api/weather/forecast` 在主备切换下的行为一致性
   - _关联需求：3, 10, 31_
 
@@ -923,7 +923,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - 设定告警阈值
   - _关联需求：31_
 
-- [ ] 45.4 灰度与回滚预案
+- [x] 45.4 灰度与回滚预案
   - 10%→50%→100% 切流；一键回滚至 Windy
   - _关联需求：31_
 
@@ -950,7 +950,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - 保证总分可解释、不会异常偏高
   - _关联需求：5, 31_
 
-- [ ] 47.4 地图能力解耦验证
+- [x] 47.4 地图能力解耦验证
   - 确认切换 Open-Meteo/彩云 后，WindyMap/Leaflet 仍可独立运行
   - _关联需求：18, 19, 31_
 
