@@ -896,15 +896,15 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 ### 任务 44：前端兼容与配置改造
 
-- [ ] 44.1 设置面板新增“天气数据源状态”只读区
+- [x] 44.1 设置面板新增“天气数据源状态”只读区
   - 显示当前 provider、是否回退、最近更新时间
   - _关联需求：6, 31_
 
-- [ ] 44.2 API Service 兼容 `providerMeta`
+- [x] 44.2 API Service 兼容 `providerMeta`
   - 不改变现有图表与预测组件输入结构
   - _关联需求：11, 12, 31_
 
-- [ ] 44.3 多语言文案补充
+- [x] 44.3 多语言文案补充
   - provider 状态、回退提示、数据质量提示
   - _关联需求：14, 31_
 
@@ -918,7 +918,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - `/api/weather/forecast` 在主备切换下的行为一致性
   - _关联需求：3, 10, 31_
 
-- [ ] 45.3 双读对比脚本
+- [x] 45.3 双读对比脚本
   - 同坐标同时间比较温度/湿度/云量偏差
   - 设定告警阈值
   - _关联需求：31_
@@ -929,23 +929,23 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 ### 任务 46：迁移执行建议（结论）
 
-- [ ] 建议优先落地 **Open-Meteo 主 + 彩云备**。
-- [ ] 仅在彩云 key 与商务条款已明确时启用中国区兜底。
-- [ ] 保留 Windy 于地图展示能力，不再作为唯一预测数据源。
+- [x] 建议优先落地 **Open-Meteo 主 + 彩云备**。
+- [x] 仅在彩云 key 与商务条款已明确时启用中国区兜底。
+- [x] 保留 Windy 于地图展示能力，不再作为唯一预测数据源。
 
 ### 任务 47：功能支持差异与降级策略落地
 
-- [ ] 47.1 建立“需求到字段”映射清单
+- [x] 47.1 建立“需求到字段”映射清单
   - 按需求 3/5/7/11/12 列出必需字段与可降级字段
   - 输出 `docs/weather-provider-feature-matrix.md`
   - _关联需求：31_
 
-- [ ] 47.2 实现彩云分层云量估算器（仅在缺少 low/mid/high 时启用）
+- [x] 47.2 实现彩云分层云量估算器（仅在缺少 low/mid/high 时启用）
   - 提供保守估算 + 置信度标记
   - 评分结果附带 `cloudLayerEstimated=true`
   - _关联需求：5, 12, 31_
 
-- [ ] 47.3 实现 Windy 特有字段替代策略
+- [x] 47.3 实现 Windy 特有字段替代策略
   - `convPrecip/cape` 缺失时使用替代项或禁用子评分项
   - 保证总分可解释、不会异常偏高
   - _关联需求：5, 31_
