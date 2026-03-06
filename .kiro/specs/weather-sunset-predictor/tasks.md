@@ -954,7 +954,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - 确认切换 Open-Meteo/彩云 后，WindyMap/Leaflet 仍可独立运行
   - _关联需求：18, 19, 31_
 
-- [ ] 47.5 可观测性增强
+- [x] 47.5 可观测性增强
   - API 响应附带 `unsupportedFields[]` 和 `degradedReason[]`
   - 前端展示“数据降级提示”
   - _关联需求：10, 31_
@@ -1010,45 +1010,45 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 ### 任务 51：切流与观测
 
-- [ ] 51.1 `/api/weather/forecast` 默认仅 Open-Meteo
+- [x] 51.1 `/api/weather/forecast` 默认仅 Open-Meteo
   - Windy 开关仅保留 emergency fallback
   - _关联需求：32, 34_
 
-- [ ] 51.2 providerMeta 强制校验
+- [x] 51.2 providerMeta 强制校验
   - 监控 `provider=openmeteo` 占比，目标 > 99%
   - _关联需求：31, 34_
 
 ### 任务 52：前端清理 Windy Key 能力
 
-- [ ] 52.1 SettingsPanel 移除 Windy API Key UI
+- [x] 52.1 SettingsPanel 移除 Windy API Key UI
   - 删除来源切换与 key 输入框
   - _关联需求：34_
 
-- [ ] 52.2 Storage 清理迁移
+- [x] 52.2 Storage 清理迁移
   - 删除 `user_windy_api_key` / `windyApiKeyMode*`
   - 增加一次性迁移清理逻辑
   - _关联需求：34_
 
 ### 任务 53：后端清理 Windy 透传路径
 
-- [ ] 53.1 weather route 移除 `X-Windy-API-Key` 读取
+- [x] 53.1 weather route 移除 `X-Windy-API-Key` 读取
   - 不再透传 `userApiKey`
   - _关联需求：34_
 
-- [ ] 53.2 windyService 降级到 legacy
+- [x] 53.2 windyService 降级到 legacy
   - 从主链路摘除，保留短期回滚模块
   - _关联需求：34_
 
 ### 任务 54：测试与文档收口
 
-- [ ] 54.1 测试替换
+- [x] 54.1 测试替换
   - WindyAPIService 相关测试迁移为 OpenMeteoAPIService
   - _关联需求：34_
 
-- [ ] 54.2 文档更新
+- [x] 54.2 文档更新
   - README / OpenAPI / 部署手册去除 Windy 预测依赖说明
   - _关联需求：34_
 
-- [ ] 54.3 验收回归
+- [x] 54.3 验收回归
   - 验证需求 5/6/7/11/12 结果不低于基线
   - _关联需求：34_

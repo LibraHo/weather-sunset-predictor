@@ -30,12 +30,8 @@ router.get('/forecast', async (req, res, next) => {
     const lonNum = parseFloat(lon);
     const hoursNum = hours ? parseInt(hours) : 168;
 
-    // 支持用户自带 Windy API Key（通过请求头传入）
-    // 需求：25
-    const userApiKey = req.headers['x-windy-api-key'] || null;
-
-    // 调用 Windy 服务获取数据
-    const result = await orchestrator.fetchWeatherData(latNum, lonNum, hoursNum, userApiKey);
+    // 任务53.1：不再读取/透传 X-Windy-API-Key（已切换到 Open-Meteo 主链路）
+    const result = await orchestrator.fetchWeatherData(latNum, lonNum, hoursNum);
 
     // 返回成功响应
     res.json({

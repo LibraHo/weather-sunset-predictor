@@ -6,10 +6,10 @@ class WindyProviderAdapter extends BaseWeatherProvider {
     super('windy');
   }
 
-  async fetchWeatherData(lat, lon, hours = 168, userApiKey = null) {
+  async fetchWeatherData(lat, lon, hours = 168) {
     const startTime = Date.now();
     try {
-      const result = await windyService.fetchWeatherData(lat, lon, hours, userApiKey);
+      const result = await windyService.fetchWeatherData(lat, lon, hours);
       
       // 检查原本的数据，补充 providerMeta
       return {
