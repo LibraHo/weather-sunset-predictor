@@ -150,39 +150,6 @@ class SettingsPanel {
           </div>
 
           <hr class="settings-section-divider" />
-          <!-- 🔑 Windy API -->
-          <div class="settings-section">
-            <h3 class="settings-section-title">🔑 ${this.i18n.t('settings.windyApiKeyMode')}</h3>
-            <div class="settings-section-content">
-              <div class="setting-item">
-                <div class="setting-control">
-                  <div class="setting-radio-group">
-                    <label class="setting-radio-label">
-                      <input type="radio" name="windy-api-mode" value="system" id="windy-api-system" />
-                      ${this.i18n.t('settings.windyApiKeyModeSystem')}
-                    </label>
-                    <label class="setting-radio-label">
-                      <input type="radio" name="windy-api-mode" value="custom" id="windy-api-custom" />
-                      ${this.i18n.t('settings.windyApiKeyModeCustom')}
-                    </label>
-                  </div>
-                </div>
-              </div>
-              <div id="windy-api-key-section" style="display:none">
-                <div class="setting-item">
-                  <label class="setting-label" for="windy-api-key-input">${this.i18n.t('settings.windyApiKeyCustom')}</label>
-                  <div class="setting-control">
-                    <input type="password" id="windy-api-key-input" class="setting-input"
-                      placeholder="${this.i18n.t('settings.windyApiKeyCustomPlaceholder')}" />
-                    <small class="setting-hint">${this.i18n.t('settings.windyApiKeyCustomHint')}</small>
-                    <span id="windy-api-key-error" class="setting-error" style="display:none;color:var(--color-error,#e53935);font-size:12px;"></span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <hr class="settings-section-divider" />
 
           <!-- 🔔 通知与提醒 -->
           <div class="settings-section">
@@ -346,23 +313,9 @@ class SettingsPanel {
       });
     }
 
-    // Windy API Key 模式（需求 25）
     // 天气数据源状态 (任务 44)
     this.updateProviderStatus();
 
-    const windyApiModeRadios = this.panel.querySelectorAll('input[name="windy-api-mode"]');
-    windyApiModeRadios.forEach(radio => {
-      radio.addEventListener('change', (e) => {
-        this.handleWindyApiModeChange(e.target.value);
-      });
-    });
-
-    const windyApiKeyInput = document.getElementById('windy-api-key-input');
-    if (windyApiKeyInput) {
-      windyApiKeyInput.addEventListener('change', (e) => {
-        this.handleWindyApiKeyChange(e.target.value);
-      });
-    }
   }
 
   /**
@@ -400,17 +353,6 @@ class SettingsPanel {
     }
 
     // 加载主题设置
-    // 加载 Windy API Key 模式 (需求 25)
-    const windyApiMode = localStorage.getItem('windy_api_mode') || 'system';
-    const windyApiModeRadios = this.panel.querySelectorAll('input[name="windy-api-mode"]');
-    windyApiModeRadios.forEach(radio => {
-      if (radio.value === windyApiMode) radio.checked = true;
-    });
-
-    const windyApiKeyInput = document.getElementById('windy-api-key-input');
-    if (windyApiKeyInput) {
-      windyApiKeyInput.value = localStorage.getItem('windy_api_key') || '';
-    }
     const theme = this.themeService.getTheme();
     const themeSelect = document.getElementById('theme-select');
     if (themeSelect) {
@@ -437,8 +379,8 @@ class SettingsPanel {
     // 加载位置解析服务设置（需求 24）
     this.loadGeocodingSettings();
 
-    // 加载 Windy API Key 设置（需求 25）
-    this.loadWindyApiKeySettings();
+    // 任务52.2：一次性清理历史 Windy Key 存储
+    this.migrateLegacyWindyStorage();
   }
 
   /**
@@ -766,78 +708,27 @@ class SettingsPanel {
     }));
   }
 
-  // ========== Windy API Key（需求 25）==========
-
   /**
-   * 加载 Windy API Key 设置，恢复控件状态
+   * 任务52.2：一次性清理历史 Windy API Key 本地存储
    */
-  loadWindyApiKeySettings() {
-    const userKey = localStorage.getItem('user_windy_api_key') || '';
-    const mode = userKey ? 'custom' : 'system';
-
-    const modeRadio = this.panel.querySelector(`input[name="windy-api-mode"][value="${mode}"]`);
-    if (modeRadio) modeRadio.checked = true;
-
-    const keySection = document.getElementById('windy-api-key-section');
-    if (keySection) keySection.style.display = mode === 'custom' ? '' : 'none';
-
-    const keyInput = document.getElementById('windy-api-key-input');
-    if (keyInput) keyInput.value = userKey;
-  }
-
-  /**
-   * 处理 Windy API 模式变更（system / custom）
-   * @param {string} mode
-   */
-  handleWindyApiModeChange(mode) {
-    const keySection = document.getElementById('windy-api-key-section');
-    if (keySection) keySection.style.display = mode === 'custom' ? '' : 'none';
-
-    if (mode === 'system') {
-      // 清除用户自定义 Key
-      localStorage.removeItem('user_windy_api_key');
-      const keyInput = document.getElementById('windy-api-key-input');
-      if (keyInput) keyInput.value = '';
-      const errorEl = document.getElementById('windy-api-key-error');
-      if (errorEl) errorEl.style.display = 'none';
-    }
-
-    console.log('[SettingsPanel] Windy API 模式已切换为:', mode);
-  }
-
-  /**
-   * 处理 Windy API Key 输入变更（格式校验 + 保存）
-   * @param {string} key
-   */
-  handleWindyApiKeyChange(key) {
-    const trimmed = key.trim();
-    const errorEl = document.getElementById('windy-api-key-error');
-
-    if (trimmed && trimmed.length <= 8) {
-      // 格式无效
-      if (errorEl) {
-        errorEl.textContent = this.i18n.t('settings.windyApiKeyInvalid');
-        errorEl.style.display = '';
-      }
+  migrateLegacyWindyStorage() {
+    if (localStorage.getItem('windy_storage_migrated_v1') === 'true') {
       return;
     }
 
-    if (errorEl) errorEl.style.display = 'none';
+    [
+      'user_windy_api_key',
+      'windy_api_key',
+      'windy_api_mode',
+      'windyApiKeyMode',
+      'windyApiKeyModeV2'
+    ].forEach((k) => localStorage.removeItem(k));
 
-    if (trimmed) {
-      localStorage.setItem('user_windy_api_key', trimmed);
-      console.log('[SettingsPanel] 用户 Windy API Key 已保存');
-    } else {
-      localStorage.removeItem('user_windy_api_key');
-      console.log('[SettingsPanel] 用户 Windy API Key 已清除');
-    }
+    localStorage.setItem('windy_storage_migrated_v1', 'true');
   }
-}
 
-export default SettingsPanel;
   /**
    * 更新天气数据源状态信息
-   * 从最后一次调用的 WindyAPIService 响应中提取 providerMeta 并显示
    */
   updateProviderStatus() {
     const providerCurrentEl = document.getElementById('provider-current');
@@ -845,7 +736,7 @@ export default SettingsPanel;
     const providerUpdateTimeEl = document.getElementById('provider-update-time');
     const providerIssuesEl = document.getElementById('provider-issues-container');
 
-    if (!providerCurrentEl || !providerQualityEl) {
+    if (!providerCurrentEl || !providerQualityEl || !providerUpdateTimeEl || !providerIssuesEl) {
       return;
     }
 
@@ -856,22 +747,18 @@ export default SettingsPanel;
       providerCurrentEl.textContent = '-';
       providerQualityEl.textContent = '-';
       providerUpdateTimeEl.textContent = '-';
+      providerIssuesEl.style.display = 'none';
       return;
     }
 
     providerCurrentEl.textContent = meta.name || 'unknown';
-
     const qualityMap = {
       excellent: this.i18n.t('settings.providerStatusExcellent'),
       standard: this.i18n.t('settings.providerStatusStandard'),
       degraded: this.i18n.t('settings.providerStatusDegraded')
     };
-    providerQualityEl.textContent = qualityMap[meta.dataQuality] || meta.dataQuality;
-
-    if (meta.latency) {
-      const latencySeconds = (meta.latency / 1000).toFixed(2);
-      providerUpdateTimeEl.textContent = new Date().toLocaleTimeString();
-    }
+    providerQualityEl.textContent = qualityMap[meta.dataQuality] || meta.dataQuality || '-';
+    providerUpdateTimeEl.textContent = new Date().toLocaleTimeString();
 
     const issues = meta.unsupportedFields || [];
     const degradedReasons = meta.degradedReason || [];
@@ -879,14 +766,14 @@ export default SettingsPanel;
     if (issues.length > 0 || degradedReasons.length > 0) {
       providerIssuesEl.style.display = 'block';
       const issueTexts = [];
-      if (issues.length > 0) {
-        issueTexts.push(`不支持字段: ${issues.join(', ')}`);
-      }
-      if (degradedReasons.length > 0) {
-        issueTexts.push(degradedReasons.join('; '));
-      }
-      providerIssuesEl.querySelector('small').textContent = issueTexts.join(' | ');
+      if (issues.length > 0) issueTexts.push(`不支持字段: ${issues.join(', ')}`);
+      if (degradedReasons.length > 0) issueTexts.push(degradedReasons.join('; '));
+      const issueSmall = providerIssuesEl.querySelector('small');
+      if (issueSmall) issueSmall.textContent = issueTexts.join(' | ');
     } else {
       providerIssuesEl.style.display = 'none';
     }
   }
+}
+
+export default SettingsPanel;

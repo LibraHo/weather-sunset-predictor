@@ -42,8 +42,9 @@ cp .env.example .env
 # 获取方式: https://api.windy.com/
 WINDY_API_KEY=your_point_forecast_api_key_here
 
-# 主/备天气数据源（Phase 11 默认）
+# 主/备天气数据源（Phase 12 默认）
 PRIMARY_WEATHER_PROVIDER=openmeteo
+ENABLE_WINDY_EMERGENCY_FALLBACK=false
 FALLBACK_WEATHER_PROVIDER=windy
 
 # Windy 特有子评分开关（默认关闭）
@@ -95,7 +96,8 @@ curl http://localhost:3000/health
 |--------|------|--------|------|
 | `WINDY_API_KEY` | 条件必填 | — | 仅在启用 Windy 回退/联调时需要 |
 | `PRIMARY_WEATHER_PROVIDER` | 否 | `openmeteo` | 主天气数据源（Phase 11 默认 Open‑Meteo） |
-| `FALLBACK_WEATHER_PROVIDER` | 否 | `windy` | 回退天气数据源 |
+| `ENABLE_WINDY_EMERGENCY_FALLBACK` | 否 | `false` | 是否启用 Windy 紧急回退 |
+| `FALLBACK_WEATHER_PROVIDER` | 否 | `windy` | 回退天气数据源（仅 emergency fallback 启用时生效） |
 | `ENABLE_CAPE_SCORE` | 否 | `false` | 是否启用 `cape` 子评分 |
 | `ENABLE_CONVECTIVE_PRECIP_SCORE` | 否 | `false` | 是否启用 `convPrecip` 子评分 |
 | `WINDY_MAP_API_KEY` | 否 | — | Windy 地图 API 密钥 |

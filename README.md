@@ -1,6 +1,6 @@
 # 霞客 · Sunset Voyager
 
-基于 Windy API 的火烧云（晚霞/朝霞）预测 Web 应用程序，支持实时天气数据、多因子预测算法、10 种语言、响应式设计。
+基于 Open-Meteo 的火烧云（晚霞/朝霞）预测 Web 应用程序，支持实时天气数据、多因子预测算法、10 种语言、响应式设计。
 
 ---
 
@@ -23,13 +23,18 @@ cd server
 cp .env.example .env
 ```
 
-编辑 `server/.env`，填入必要的 Key：
+编辑 `server/.env`，填入必要配置：
 
 ```env
-# Windy API（天气数据，必填）
+# Open-Meteo 主数据源（默认）
+PRIMARY_WEATHER_PROVIDER=openmeteo
+
+# 仅紧急情况下启用 Windy 回退
+ENABLE_WINDY_EMERGENCY_FALLBACK=false
+FALLBACK_WEATHER_PROVIDER=windy
 WINDY_API_KEY=your_windy_point_forecast_key
 
-# Windy 地图 Key
+# Windy 地图 Key（仅地图展示）
 WINDY_MAP_API_KEY=your_windy_map_key
 
 # 高德地图地理编码（中国大陆部署必填）
@@ -42,8 +47,8 @@ CORS_ORIGIN=*
 ```
 
 > **获取方式：**
-> - Windy API：https://api.windy.com/
 > - 高德地图：https://lbs.amap.com/（免费注册）
+> - Windy API（仅 emergency fallback）：https://api.windy.com/
 
 ### 3. 启动服务
 
@@ -366,7 +371,7 @@ CORS_ORIGIN=http://localhost:9002,http://localhost:8080
 
 | 端点 | 方法 | 参数 | 说明 |
 |------|------|------|------|
-| `/api/weather/forecast` | GET | `lat`, `lon`, `hours`(可选,默认168) | 代理 Windy 天气预测数据 |
+| `/api/weather/forecast` | GET | `lat`, `lon`, `hours`(可选,默认168) | 代理 Open-Meteo 天气预测数据（可紧急回退 Windy） |
 
 ### 火烧云叠加层
 

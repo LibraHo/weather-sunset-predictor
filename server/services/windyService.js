@@ -2,8 +2,8 @@ const axios = require('axios');
 const https = require('https');
 
 /**
- * Windy API 服务
- * 封装对 Windy Point Forecast API 的调用
+ * Windy API 服务（Legacy）
+ * 任务53.2：已从主链路摘除，仅用于 emergency fallback。
  */
 
 const WINDY_API_URL = 'https://api.windy.com/api/point-forecast/v2';
@@ -17,14 +17,13 @@ class WindyService {
   }
 
   /**
-   * 获取天气数据
+   * 获取天气数据（Legacy fallback）
    * @param {number} lat - 纬度
    * @param {number} lon - 经度
    * @param {number} hours - 预测小时数（默认168，即7天）
-   * @param {string|null} userApiKey - 用户自带的 Windy API Key（优先于环境变量，需求：25）
    * @returns {Promise<Object>} Windy API 响应数据
    */
-  async fetchWeatherData(lat, lon, hours = 168, userApiKey = null) {
+  async fetchWeatherData(lat, lon, hours = 168) {
     // 验证输入参数
     if (typeof lat !== 'number' || typeof lon !== 'number') {
       throw new Error('无效的坐标参数');
@@ -43,8 +42,7 @@ class WindyService {
     }
 
     try {
-      // 需求 25：优先使用用户自带 API Key，否则使用系统配置的 Key
-      const effectiveApiKey = (userApiKey && userApiKey.trim()) ? userApiKey.trim() : this.apiKey;
+      const effectiveApiKey = this.apiKey;
 
       const requestBody = {
         lat,
