@@ -199,30 +199,36 @@ async function handleGaodeSearch(res, query, apiKey) {
 
   console.log(`[Geocoding] 高德地图搜索: "${query}"`);
 
-  const response = await axios.get(`${GAODE_BASE}/geocode/geo`, {
-    params: { address: query, key: apiKey, output: 'JSON' },
-    timeout: 8000
-  });
+  try {
+    const response = await axios.get(`${GAODE_BASE}/geocode/geo`, {
+      params: { address: query, key: apiKey, output: 'JSON' },
+      timeout: 8000
+    });
 
-  const data = response.data;
-  if (data.status !== '1' || !data.geocodes || data.geocodes.length === 0) {
-    // 国际城市在高德经常无结果，自动回退到 Open-Meteo Geocoding
-    console.log('[Geocoding] 高德无结果，fallback 到 Open-Meteo');
+    const data = response.data;
+    if (data.status !== '1' || !data.geocodes || data.geocodes.length === 0) {
+      // 国际城市在高德经常无结果，自动回退到 Open-Meteo Geocoding
+      console.log('[Geocoding] 高德无结果，fallback 到 Open-Meteo');
+      return await handleOpenMeteoSearch(res, query);
+    }
+
+    return res.json({
+      results: data.geocodes.map(item => {
+        const [lonStr, latStr] = item.location.split(',');
+        return {
+          name: item.formatted_address,
+          lat: parseFloat(latStr),
+          lon: parseFloat(lonStr),
+          type: 'place',
+          provider: 'gaode'
+        };
+      })
+    });
+  } catch (error) {
+    // 修复：高德超时/网络错误时，也应自动回退到 Open-Meteo
+    console.warn(`[Geocoding] 高德请求失败(${error.code || 'ERR'})，fallback 到 Open-Meteo: ${error.message}`);
     return await handleOpenMeteoSearch(res, query);
   }
-
-  return res.json({
-    results: data.geocodes.map(item => {
-      const [lonStr, latStr] = item.location.split(',');
-      return {
-        name: item.formatted_address,
-        lat: parseFloat(latStr),
-        lon: parseFloat(lonStr),
-        type: 'place',
-        provider: 'gaode'
-      };
-    })
-  });
 }
 
 async function handleGaodeReverse(res, lat, lon, apiKey) {
