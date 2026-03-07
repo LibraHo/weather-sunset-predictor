@@ -53,6 +53,12 @@ class GeocodingServiceFactory {
         chinaCompatible: true
       },
       {
+        provider: 'openmeteo',
+        labelKey: 'settings.geocodingBackendOpenMeteo',
+        requiresKey: false,
+        chinaCompatible: true
+      },
+      {
         provider: 'nominatim-frontend',
         labelKey: 'settings.geocodingFrontendNominatim',
         requiresKey: false,

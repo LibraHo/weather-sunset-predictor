@@ -490,6 +490,7 @@ export default {
     geocodingBackendNominatim: 'Nominatim（后端代理）',
         geocodingFrontendNominatim: 'Nominatim（前端直连）',
     geocodingBackendGaode: '高德地图（后端代理）',
+    geocodingBackendOpenMeteo: 'Open-Meteo Geocoding（后端代理）',
     geocodingDirectNominatim: 'Nominatim / OSM（直连，中国可能受限）',
     geocodingDirectGoogle: 'Google Maps（直连，中国不可用）',
     geocodingApiKey: 'API Key',

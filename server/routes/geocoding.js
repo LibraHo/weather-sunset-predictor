@@ -18,6 +18,7 @@ const axios = require('axios');
 const NOMINATIM_BASE = 'https://nominatim.openstreetmap.org';
 const GAODE_BASE     = 'https://restapi.amap.com/v3';
 const GOOGLE_BASE    = 'https://maps.googleapis.com/maps/api/geocode';
+const OPENMETEO_GEOCODING_BASE = 'https://geocoding-api.open-meteo.com/v1';
 
 // ========== 路由 ==========
 
@@ -45,6 +46,8 @@ router.get('/search', async (req, res, next) => {
         return await handleGaodeSearch(res, q.trim(), key);
       case 'google':
         return await handleGoogleSearch(res, q.trim(), key);
+      case 'openmeteo':
+        return await handleOpenMeteoSearch(res, q.trim());
       default: // nominatim
         return await handleNominatimSearch(res, q.trim());
     }
@@ -86,6 +89,8 @@ router.get('/reverse', async (req, res, next) => {
         return await handleGaodeReverse(res, latNum, lonNum, key);
       case 'google':
         return await handleGoogleReverse(res, latNum, lonNum, key);
+      case 'openmeteo':
+        return await handleOpenMeteoReverse(res, latNum, lonNum);
       default: // nominatim
         return await handleNominatimReverse(res, latNum, lonNum);
     }
@@ -134,6 +139,47 @@ async function handleNominatimReverse(res, lat, lon) {
   return res.json({ name: data.display_name, lat, lon, provider: 'nominatim' });
 }
 
+// ========== Open-Meteo Geocoding ==========
+
+async function handleOpenMeteoSearch(res, query) {
+  console.log(`[Geocoding] Open-Meteo 搜索: "${query}"`);
+
+  const response = await axios.get(`${OPENMETEO_GEOCODING_BASE}/search`, {
+    params: {
+      name: query,
+      count: 8,
+      language: 'zh',
+      format: 'json'
+    },
+    timeout: 8000
+  });
+
+  const results = response.data?.results || [];
+  if (!Array.isArray(results) || results.length === 0) {
+    return res.json({ results: [] });
+  }
+
+  return res.json({
+    results: results.map((item) => ({
+      name: [item.name, item.admin1, item.country].filter(Boolean).join(', '),
+      lat: Number(item.latitude),
+      lon: Number(item.longitude),
+      type: item.feature_code || 'place',
+      provider: 'openmeteo'
+    }))
+  });
+}
+
+async function handleOpenMeteoReverse(res, lat, lon) {
+  // Open-Meteo geocoding 目前无 reverse 接口，这里返回坐标文本保证流程可用
+  return res.json({
+    name: `${lat.toFixed(4)}, ${lon.toFixed(4)}`,
+    lat,
+    lon,
+    provider: 'openmeteo'
+  });
+}
+
 // ========== 高德地图 (Gaode/Amap) ==========
 
 function requireKey(res, apiKey, providerName) {
@@ -160,7 +206,9 @@ async function handleGaodeSearch(res, query, apiKey) {
 
   const data = response.data;
   if (data.status !== '1' || !data.geocodes || data.geocodes.length === 0) {
-    return res.json({ results: [] });
+    // 国际城市在高德经常无结果，自动回退到 Open-Meteo Geocoding
+    console.log('[Geocoding] 高德无结果，fallback 到 Open-Meteo');
+    return await handleOpenMeteoSearch(res, query);
   }
 
   return res.json({

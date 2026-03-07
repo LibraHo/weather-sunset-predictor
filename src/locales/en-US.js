@@ -489,6 +489,7 @@ export default {
     geocodingBackendNominatim: 'Nominatim (Backend)',
         geocodingFrontendNominatim: 'Nominatim (Frontend)',
     geocodingBackendGaode: 'Gaode Maps (Backend)',
+    geocodingBackendOpenMeteo: 'Open-Meteo Geocoding (Backend)',
     geocodingDirectNominatim: 'Nominatim / OSM (Direct, May Be Blocked in China)',
     geocodingDirectGoogle: 'Google Maps (Direct, Not Available in China)',
     geocodingApiKey: 'API Key',
