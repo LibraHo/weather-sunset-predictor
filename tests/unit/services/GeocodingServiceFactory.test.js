@@ -69,10 +69,10 @@ describe('GeocodingServiceFactory', () => {
   });
 
   describe('getOptions()', () => {
-    test('应返回 3 个选项', () => {
+    test('应返回 4 个选项', () => {
       const options = GeocodingServiceFactory.getOptions();
       expect(Array.isArray(options)).toBe(true);
-      expect(options.length).toBe(3);
+      expect(options.length).toBe(4);
     });
 
     test('每个选项应包含必要字段', () => {
@@ -96,6 +96,14 @@ describe('GeocodingServiceFactory', () => {
     test('高德不需要 Key 且中国可用', () => {
       const options = GeocodingServiceFactory.getOptions();
       const opt = options.find(o => o.provider === 'gaode');
+      expect(opt).toBeDefined();
+      expect(opt.requiresKey).toBe(false);
+      expect(opt.chinaCompatible).toBe(true);
+    });
+
+    test('Open-Meteo Geocoding 不需要 Key 且中国可用', () => {
+      const options = GeocodingServiceFactory.getOptions();
+      const opt = options.find(o => o.provider === 'openmeteo');
       expect(opt).toBeDefined();
       expect(opt.requiresKey).toBe(false);
       expect(opt.chinaCompatible).toBe(true);
