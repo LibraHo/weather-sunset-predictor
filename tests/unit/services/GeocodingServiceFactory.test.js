@@ -21,10 +21,10 @@ describe('GeocodingServiceFactory', () => {
   });
 
   describe('create() — 默认值', () => {
-    test('无 localStorage 配置时，默认返回后端代理 gaode 服务', () => {
+    test('无 localStorage 配置时，默认返回后端代理 auto 服务', () => {
       const service = GeocodingServiceFactory.create();
       expect(service).toBeInstanceOf(BackendGeocodingService);
-      expect(service.provider).toBe('gaode');
+      expect(service.provider).toBe('auto');
     });
 
     test('传入 proxyURL 参数时应覆盖 localStorage 中的值', () => {
@@ -69,10 +69,10 @@ describe('GeocodingServiceFactory', () => {
   });
 
   describe('getOptions()', () => {
-    test('应返回 4 个选项', () => {
+    test('应返回 5 个选项', () => {
       const options = GeocodingServiceFactory.getOptions();
       expect(Array.isArray(options)).toBe(true);
-      expect(options.length).toBe(4);
+      expect(options.length).toBe(5);
     });
 
     test('每个选项应包含必要字段', () => {
@@ -83,6 +83,14 @@ describe('GeocodingServiceFactory', () => {
         expect(opt).toHaveProperty('requiresKey');
         expect(opt).toHaveProperty('chinaCompatible');
       });
+    });
+
+    test('Auto 模式不需要 Key 且中国可用', () => {
+      const options = GeocodingServiceFactory.getOptions();
+      const opt = options.find(o => o.provider === 'auto');
+      expect(opt).toBeDefined();
+      expect(opt.requiresKey).toBe(false);
+      expect(opt.chinaCompatible).toBe(true);
     });
 
     test('Nominatim 不需要 Key 且中国可用', () => {

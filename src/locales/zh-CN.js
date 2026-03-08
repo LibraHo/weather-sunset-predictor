@@ -487,6 +487,7 @@ export default {
     geocodingModeBackend: '后端代理（推荐）',
     geocodingModeDirect: '前端直连',
     geocodingProvider: '服务提供商',
+    geocodingBackendAuto: '自动（国内优先高德，失败回退 Open-Meteo）',
     geocodingBackendNominatim: 'Nominatim（后端代理）',
         geocodingFrontendNominatim: 'Nominatim（前端直连）',
     geocodingBackendGaode: '高德地图（后端代理）',

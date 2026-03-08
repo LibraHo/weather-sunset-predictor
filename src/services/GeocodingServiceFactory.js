@@ -25,7 +25,7 @@ class GeocodingServiceFactory {
    * @returns {BackendGeocodingService}
    */
   static create(proxyURL) {
-    const provider = localStorage.getItem('geocoding_provider') || 'gaode';
+    const provider = localStorage.getItem('geocoding_provider') || 'auto';
     const apiKey = localStorage.getItem('geocoding_api_key') || '';
     const storedProxyURL = localStorage.getItem('api_proxy_url') || 'http://localhost:3000';
     const effectiveProxyURL = proxyURL || storedProxyURL;
@@ -40,6 +40,12 @@ class GeocodingServiceFactory {
    */
   static getOptions() {
     return [
+      {
+        provider: 'auto',
+        labelKey: 'settings.geocodingBackendAuto',
+        requiresKey: false,
+        chinaCompatible: true
+      },
       {
         provider: 'gaode',
         labelKey: 'settings.geocodingBackendGaode',
