@@ -74,7 +74,7 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(today[20].timestamp).toBe(new Date('2026-01-01T20:00:00Z').getTime());
   });
 
-  test('buildContinuous24HourData: tomorrow 应从 tomorrow 数据起点构建，不复用 today 起点', () => {
+  test('buildContinuous24HourData: tomorrow 应从当前小时+24h 起算，不复用 today 起点', () => {
     const baseTs = new Date('2026-01-01T00:00:00Z').getTime();
     // 3小时点，覆盖 2 天
     const raw = Array.from({ length: 16 }, (_, i) => ({
@@ -83,16 +83,25 @@ describe('WeatherController - 24小时温度连续化', () => {
       humidity: 60,
       cloudCover: 20,
       windSpeed: 8,
-      pressure: 1005
+      pressure: 1005,
+      timezone: 'Europe/Paris'
     }));
+
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(baseTs + (5 * 60 * 60 * 1000) + 12345); // 05:00:12
 
     const today = controller.buildContinuous24HourData(raw, 'today');
     const tomorrow = controller.buildContinuous24HourData(raw, 'tomorrow');
 
+    const expectedTodayStart = baseTs + (5 * 60 * 60 * 1000); // 向下取整到整点
+    const expectedTomorrowStart = expectedTodayStart + (24 * 60 * 60 * 1000);
+
     expect(today).toHaveLength(24);
     expect(tomorrow).toHaveLength(24);
-    expect(tomorrow[0].timestamp).toBe(baseTs + (24 * 60 * 60 * 1000));
+    expect(today[0].timestamp).toBe(expectedTodayStart);
+    expect(tomorrow[0].timestamp).toBe(expectedTomorrowStart);
     expect(today[0].timestamp).not.toBe(tomorrow[0].timestamp);
+
+    nowSpy.mockRestore();
   });
 
   test('setMapTimeToSunset 在缺少日落数据时应调用 controller.showError 而不是 uiManager', () => {

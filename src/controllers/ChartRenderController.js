@@ -83,18 +83,38 @@ class ChartRenderController {
     const contentWidth = chartWidth - padding.left - padding.right;
     const contentHeight = chartHeight - padding.top - padding.bottom;
 
+    const getTimeParts = (timestamp, timezone) => {
+      const time = new Date(timestamp);
+      if (timezone) {
+        const parts = new Intl.DateTimeFormat('en-US', {
+          timeZone: timezone,
+          hour: '2-digit',
+          day: '2-digit',
+          month: '2-digit',
+          hour12: false
+        }).formatToParts(time);
+        const pick = (type) => Number(parts.find(p => p.type === type)?.value);
+        return { hour: pick('hour'), day: pick('day'), month: pick('month') };
+      }
+      return {
+        hour: time.getHours(),
+        month: time.getMonth() + 1,
+        day: time.getDate()
+      };
+    };
+
     const points = hourlyData.map((d, i) => {
       const value = getConvertedValue(d[param], param);
-      const time = new Date(d.timestamp);
       const x = padding.left + (i / (hourlyData.length - 1)) * contentWidth;
       const y = padding.top + contentHeight - ((value - min) / range) * contentHeight;
+      const t = getTimeParts(d.timestamp, d.timezone);
       return {
         x,
         y,
         value,
-        hour: time.getHours(),
-        month: time.getMonth() + 1,
-        day: time.getDate()
+        hour: t.hour,
+        month: t.month,
+        day: t.day
       };
     });
 

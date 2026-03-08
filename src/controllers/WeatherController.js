@@ -553,60 +553,24 @@ class WeatherController {
       return [];
     }
 
-    // Bug 修复：使用实际第一条数据的时间作为起点，不强制设为午夜
-    // Windy API 返回 3 小时间隔数据，直接返回连续的 3 小时数据点
-    // 不再强制插值为 1 小时，避免"前 X 个小时全部是同一个值"的问题
+    // 修复：24小时图必须从“当前小时”起算，而不是固定切片
+    // today: 从当前小时开始 24h；tomorrow: 从当前小时+24h 开始 24h
+    const now = Date.now();
+    const currentHourStart = Math.floor(now / oneHourMs) * oneHourMs;
+    const targetStart = day === 'tomorrow'
+      ? currentHourStart + (24 * oneHourMs)
+      : currentHourStart;
 
-    const firstForecastDate = new Date(sorted[0].timestamp);
-
-    // 确定"今天"和"明天"的起始索引
-    // Windy 数据 3 小时一次，每天约 8 个点
-    const startIndex = day === 'tomorrow' ? 8 : 0;  // 明天从第 8 个点开始
-
-    // 返回 24 小时数据（8 个 3 小时点，通过插值平滑到 24 个小时）
-    const dataPoints = sorted.slice(startIndex, startIndex + 8);  // 取 8 个点（24 小时）
-    if (dataPoints.length === 0) return [];
-
-    // 修复：today/tomorrow 都应从各自首个点开始，不能总是用第一天首点
-    // 否则会出现明天曲线时间轴错位，视觉上像“单边持续上涨”
-    const targetStart = dataPoints[0].timestamp;
-
-    // 对每 3 小时点进行 3 段插值，生成 1 小时数据
     const hourlyData = [];
-    for (let i = 0; i < 8; i++) {
-      const basePoint = dataPoints[i];
-      if (!basePoint) break;
-
-      const baseTime = new Date(basePoint.timestamp);
-      const nextPoint = dataPoints[i + 1];
-
-      for (let h = 0; h < 3; h++) {
-        const offsetHours = i * 3 + h;  // 从起点开始的偏移小时数
-        const targetTs = targetStart + (offsetHours * oneHourMs);
-
-        if (h === 0) {
-          // 3 小时整点直接用原始值
-          hourlyData.push({ ...basePoint, timestamp: targetTs });
-        } else if (nextPoint && i < 7) {
-          // 中间小时在当前点和下一点之间线性插值
-          const ratio = h / 3;
-          const interpolated = { ...basePoint, timestamp: targetTs };
-
-          numericFields.forEach(field => {
-            const baseValue = basePoint[field];
-            const nextValue = nextPoint[field];
-
-            if (Number.isFinite(baseValue) && Number.isFinite(nextValue)) {
-              interpolated[field] = baseValue + ((nextValue - baseValue) * ratio);
-            }
-          });
-
-          hourlyData.push(interpolated);
-        } else {
-          // 最后一段（第 21-23 小时）复制最后一个点的值
-          hourlyData.push({ ...basePoint, timestamp: targetTs });
-        }
+    for (let i = 0; i < 24; i++) {
+      const targetTs = targetStart + (i * oneHourMs);
+      const interpolated = this.interpolateWeatherPoint(sorted, targetTs, numericFields);
+      interpolated.timestamp = targetTs;
+      // 透传时区元信息供图表按目标城市时区显示
+      if (sorted[0]?.timezone) {
+        interpolated.timezone = sorted[0].timezone;
       }
+      hourlyData.push(interpolated);
     }
 
     return hourlyData;

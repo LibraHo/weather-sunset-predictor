@@ -59,7 +59,7 @@ class WindyAPIService {
       console.log('[WindyAPIService] 后端代理响应 providerMeta:', result.providerMeta);
 
       // 解析后端返回的数据
-      const dataArray = this.parseProxyData(result.data);
+      const dataArray = this.parseProxyData(result.data, result.providerMeta);
       // 附加 providerMeta 到数组对象上（兼容现有结构，同时暴露元数据）
       if (result.providerMeta) {
         dataArray.providerMeta = result.providerMeta;
@@ -81,13 +81,15 @@ class WindyAPIService {
    * @param {Array} data - 后端返回的天气数据数组
    * @returns {WeatherData[]} 天气数据数组
    */
-  parseProxyData(data) {
+  parseProxyData(data, providerMeta = null) {
     if (!Array.isArray(data)) {
       throw new Error('后端返回数据格式错误');
     }
 
+    const timezone = providerMeta?.timezone || null;
+
     const weatherDataArray = data.map(item => {
-      return new WeatherData(
+      const wd = new WeatherData(
         item.timestamp,
         item.temp,
         item.humidity,
@@ -101,6 +103,9 @@ class WindyAPIService {
         item.highClouds ?? 0,
         item.midClouds ?? 0
       );
+      // 非侵入式附加，用于图表按目标城市时区显示
+      if (timezone) wd.timezone = timezone;
+      return wd;
     });
 
     console.log(`[WindyAPIService] 从后端代理解析了 ${weatherDataArray.length} 条天气数据`);
