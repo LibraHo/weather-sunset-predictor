@@ -486,6 +486,7 @@ export default {
     geocodingModeBackend: 'Backend Proxy (Recommended)',
     geocodingModeDirect: 'Frontend Direct',
     geocodingProvider: 'Provider',
+    geocodingBackendAuto: 'Auto (Gaode first in China, fallback to Open-Meteo)',
     geocodingBackendNominatim: 'Nominatim (Backend)',
         geocodingFrontendNominatim: 'Nominatim (Frontend)',
     geocodingBackendGaode: 'Gaode Maps (Backend)',

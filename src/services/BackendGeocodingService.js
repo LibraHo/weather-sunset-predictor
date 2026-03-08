@@ -2,8 +2,10 @@
  * BackendGeocodingService - 通过后端代理进行地理编码
  *
  * 将地理编码请求通过后端服务器转发，支持多个提供商：
+ * - auto:     自动模式（国内优先高德，失败回退 Open-Meteo，显式返回 fallback 信息）
  * - nominatim: OpenStreetMap Nominatim（免费，全球可用）
  * - gaode:    高德地图（中国大陆优化，需要 API Key）
+ * - openmeteo: Open-Meteo Geocoding（全球可用，免 Key）
  *
  * 需求：24 - 中国国内可用的定位服务方案
  */
@@ -14,7 +16,7 @@ class BackendGeocodingService {
   /**
    * @param {Object} options
    * @param {string} options.proxyURL   - 后端服务器地址，默认 http://localhost:3000
-   * @param {string} options.provider   - 地理编码提供商: 'nominatim' | 'gaode'
+   * @param {string} options.provider   - 地理编码提供商: 'auto' | 'nominatim' | 'gaode' | 'openmeteo'
    * @param {string} [options.apiKey]   - 提供商 API Key（gaode 必填）
    */
   constructor(options = {}) {

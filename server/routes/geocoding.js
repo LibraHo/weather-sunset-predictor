@@ -28,12 +28,12 @@ const OPENMETEO_GEOCODING_BASE = 'https://geocoding-api.open-meteo.com/v1';
  *
  * 查询参数:
  * - q:        搜索关键词（必填）
- * - provider: nominatim | gaode | google（可选，默认 nominatim）
+ * - provider: auto | nominatim | gaode | google | openmeteo（可选，默认 auto）
  * - key:      提供商 API Key（gaode / google 必填）
  */
 router.get('/search', async (req, res, next) => {
   try {
-    const { q, provider = 'nominatim', key } = req.query;
+    const { q, provider = 'auto', key } = req.query;
 
     if (!q || !q.trim()) {
       return res.status(400).json({
@@ -42,6 +42,8 @@ router.get('/search', async (req, res, next) => {
     }
 
     switch (provider) {
+      case 'auto':
+        return await handleAutoSearch(res, q.trim(), key);
       case 'gaode':
         return await handleGaodeSearch(res, q.trim(), key);
       case 'google':
@@ -63,12 +65,12 @@ router.get('/search', async (req, res, next) => {
  * 查询参数:
  * - lat:      纬度（必填）
  * - lon:      经度（必填）
- * - provider: nominatim | gaode | google（可选，默认 nominatim）
+ * - provider: auto | nominatim | gaode | google | openmeteo（可选，默认 auto）
  * - key:      提供商 API Key（gaode / google 必填）
  */
 router.get('/reverse', async (req, res, next) => {
   try {
-    const { lat, lon, provider = 'nominatim', key } = req.query;
+    const { lat, lon, provider = 'auto', key } = req.query;
 
     if (!lat || !lon) {
       return res.status(400).json({
@@ -85,6 +87,8 @@ router.get('/reverse', async (req, res, next) => {
     }
 
     switch (provider) {
+      case 'auto':
+        return await handleAutoReverse(res, latNum, lonNum, key);
       case 'gaode':
         return await handleGaodeReverse(res, latNum, lonNum, key);
       case 'google':
@@ -98,6 +102,81 @@ router.get('/reverse', async (req, res, next) => {
     next(error);
   }
 });
+
+// ========== Auto provider（国内优先高德 + 显式回退） ==========
+
+function attachSearchMeta(payload, meta) {
+  return {
+    ...payload,
+    providerUsed: meta.providerUsed,
+    fallbackUsed: Boolean(meta.fallbackUsed),
+    fallbackReason: meta.fallbackReason || null
+  };
+}
+
+async function handleAutoSearch(res, query, apiKey) {
+  // Auto 策略：先高德（国内优先），失败/无结果再 Open-Meteo
+  const effectiveKey = apiKey || process.env.GAODE_API_KEY;
+
+  if (effectiveKey) {
+    try {
+      const response = await axios.get(`${GAODE_BASE}/geocode/geo`, {
+        params: { address: query, key: effectiveKey, output: 'JSON' },
+        timeout: 8000
+      });
+      const data = response.data;
+      if (data.status === '1' && data.geocodes && data.geocodes.length > 0) {
+        return res.json(attachSearchMeta({
+          results: data.geocodes.map(item => {
+            const [lonStr, latStr] = item.location.split(',');
+            return {
+              name: item.formatted_address,
+              lat: parseFloat(latStr),
+              lon: parseFloat(lonStr),
+              type: 'place',
+              provider: 'gaode'
+            };
+          })
+        }, { providerUsed: 'gaode', fallbackUsed: false }));
+      }
+
+      const om = await fetchOpenMeteoResults(query);
+      return res.json(attachSearchMeta({ results: om }, {
+        providerUsed: 'openmeteo',
+        fallbackUsed: true,
+        fallbackReason: 'gaode_empty_result'
+      }));
+    } catch (error) {
+      const om = await fetchOpenMeteoResults(query);
+      return res.json(attachSearchMeta({ results: om }, {
+        providerUsed: 'openmeteo',
+        fallbackUsed: true,
+        fallbackReason: error.code === 'ECONNABORTED' ? 'gaode_timeout' : 'gaode_error'
+      }));
+    }
+  }
+
+  // 无高德 key 时直接 openmeteo
+  const om = await fetchOpenMeteoResults(query);
+  return res.json(attachSearchMeta({ results: om }, {
+    providerUsed: 'openmeteo',
+    fallbackUsed: true,
+    fallbackReason: 'missing_gaode_key'
+  }));
+}
+
+async function handleAutoReverse(res, lat, lon, apiKey) {
+  // reverse 也优先高德，失败回退到坐标文本
+  const effectiveKey = apiKey || process.env.GAODE_API_KEY;
+  if (effectiveKey) {
+    try {
+      return await handleGaodeReverse(res, lat, lon, effectiveKey);
+    } catch (_) {
+      return await handleOpenMeteoReverse(res, lat, lon);
+    }
+  }
+  return await handleOpenMeteoReverse(res, lat, lon);
+}
 
 // ========== Nominatim (OpenStreetMap) ==========
 
@@ -141,9 +220,7 @@ async function handleNominatimReverse(res, lat, lon) {
 
 // ========== Open-Meteo Geocoding ==========
 
-async function handleOpenMeteoSearch(res, query) {
-  console.log(`[Geocoding] Open-Meteo 搜索: "${query}"`);
-
+async function fetchOpenMeteoResults(query) {
   const response = await axios.get(`${OPENMETEO_GEOCODING_BASE}/search`, {
     params: {
       name: query,
@@ -156,18 +233,25 @@ async function handleOpenMeteoSearch(res, query) {
 
   const results = response.data?.results || [];
   if (!Array.isArray(results) || results.length === 0) {
-    return res.json({ results: [] });
+    return [];
   }
 
-  return res.json({
-    results: results.map((item) => ({
-      name: [item.name, item.admin1, item.country].filter(Boolean).join(', '),
-      lat: Number(item.latitude),
-      lon: Number(item.longitude),
-      type: item.feature_code || 'place',
-      provider: 'openmeteo'
-    }))
-  });
+  return results.map((item) => ({
+    name: [item.name, item.admin1, item.country].filter(Boolean).join(', '),
+    lat: Number(item.latitude),
+    lon: Number(item.longitude),
+    type: item.feature_code || 'place',
+    provider: 'openmeteo'
+  }));
+}
+
+async function handleOpenMeteoSearch(res, query) {
+  console.log(`[Geocoding] Open-Meteo 搜索: "${query}"`);
+  const results = await fetchOpenMeteoResults(query);
+  return res.json(attachSearchMeta({ results }, {
+    providerUsed: 'openmeteo',
+    fallbackUsed: false
+  }));
 }
 
 async function handleOpenMeteoReverse(res, lat, lon) {
