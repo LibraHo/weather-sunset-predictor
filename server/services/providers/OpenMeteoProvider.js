@@ -22,7 +22,7 @@ class OpenMeteoProvider extends BaseWeatherProvider {
           hourly: 'temperature_2m,relative_humidity_2m,surface_pressure,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,visibility,precipitation',
           wind_speed_unit: 'ms',      // 转换为 m/s
           timeformat: 'unixtime',     // unix 秒级时间戳
-          timezone: 'UTC',            // 强制 UTC
+          timezone: 'auto',           // 按查询位置自动时区
           forecast_days: forecastDays // 预测天数
         },
         timeout: 10000
@@ -73,6 +73,8 @@ class OpenMeteoProvider extends BaseWeatherProvider {
         providerMeta: {
           name: this.name,
           latency: Date.now() - startTime,
+          timezone: response.data?.timezone || null,
+          utcOffsetSeconds: response.data?.utc_offset_seconds ?? null,
           dataQuality: 'standard',
           unsupportedFields: ['convPrecip', 'cape'],
           degradedReason: ['Open-Meteo API does not provide cape and convPrecip in this tier']
