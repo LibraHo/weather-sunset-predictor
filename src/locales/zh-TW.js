@@ -180,7 +180,7 @@ export default {
       title: '光路評分',
       score: '光路得分',
       visibility: '能見度',
-      lightPathScore: '🌅 光路: {{score}}分 (150km:{{near}} 300km:{{far}})'
+      lightPathScore: '🌅 光路: {{score}}分 '
     },
 
     // 渲染評分

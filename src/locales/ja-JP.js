@@ -170,7 +170,7 @@ export default {
       title: '光路スコア',
       score: '光路スコア',
       visibility: '視程',
-      lightPathScore: '🌅 光路：{{score}}点 (150km:{{near}} 300km:{{far}})'
+      lightPathScore: '🌅 光路：{{score}}点 '
     },
 
     // レンダリングスコア

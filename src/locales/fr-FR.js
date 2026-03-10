@@ -170,7 +170,7 @@ export default {
       title: 'Score du Chemin Lumineux',
       score: 'Score du Chemin Lumineux',
       visibility: 'Visibilité',
-      lightPathScore: '🌅 chemin lumineux: {{score}}pts (150km:{{near}} 300km:{{far}})'
+      lightPathScore: '🌅 chemin lumineux: {{score}}pts '
     },
 
     // Rendering score
