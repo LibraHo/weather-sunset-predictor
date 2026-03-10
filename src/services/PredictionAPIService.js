@@ -37,8 +37,8 @@ class PredictionAPIService {
     console.log(`[PredictionAPIService] 调用后端预测 API: lat=${lat}, lon=${lon}, type=${type}`);
 
     try {
-      // 构建请求 URL
-      const url = `${this.baseURL}/api/prediction/calculate`;
+      // 构建请求 URL（使用增强算法）
+      const url = `${this.baseURL}/api/prediction/enhanced`;
 
       // 格式化日期为 ISO 字符串
       const dateString = date instanceof Date ? date.toISOString() : date;
@@ -52,7 +52,11 @@ class PredictionAPIService {
           lowCloudCover: weatherData.lowCloudCover,
           highClouds: weatherData.highClouds || 0,
           midClouds: weatherData.midClouds || 0,
-          lowClouds: weatherData.lowClouds || 0
+          lowClouds: weatherData.lowClouds || 0,
+          precipitation: weatherData.precipitation || 0,
+          convPrecip: weatherData.convPrecip || weatherData.precipitation || 0,
+          weatherCode: weatherData.weatherCode ?? null,
+          cloudBaseHeight: weatherData.cloudBaseHeight ?? null
         },
         date: dateString,
         lat: lat,
