@@ -73,12 +73,12 @@ class CloudLayerEstimator {
    * @param {number} highClouds - 高云量
    * @returns {boolean}
    */
-  shouldEstimate(lowClouds, midClouds, highClouds) {
-    // 所有分层云量都缺失或为 0 时，需要估算
+  shouldEstimate(lowClouds, midClouds, highClouds, cloudCover = 0) {
+    // 所有分层云量都缺失或为 0，且总云量有值时，需要估算
     return (
-      (lowClouds == null || lowClouds === undefined || lowClouds === 0) &&
-      (midClouds == null || midClouds === undefined || midClouds === 0) &&
-      (highClouds == null || highClouds === undefined || highClouds === 0) &&
+      (!lowClouds  || lowClouds  === 0) &&
+      (!midClouds  || midClouds  === 0) &&
+      (!highClouds || highClouds === 0) &&
       cloudCover > 0
     );
   }

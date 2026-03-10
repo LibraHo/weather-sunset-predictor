@@ -1,6 +1,44 @@
 const express = require('express');
 const router = express.Router();
 const orchestrator = require('../services/ProviderOrchestrator');
+const openMeteoProvider = require('../services/providers/OpenMeteoProvider');
+
+function round2(n) {
+  return Number.isFinite(n) ? Math.round(n * 100) / 100 : null;
+}
+
+function buildCompareSummary(primaryData = [], baselineData = []) {
+  const map = new Map(baselineData.map(item => [item.timestamp, item]));
+
+  const fields = ['temp', 'humidity', 'cloudCover', 'lowClouds', 'midClouds', 'highClouds', 'cape', 'convPrecip', 'cloudBaseHeight'];
+  const stats = Object.fromEntries(fields.map(f => [f, { sumAbs: 0, count: 0, maxAbs: 0 }]));
+
+  let matched = 0;
+  for (const p of primaryData) {
+    const b = map.get(p.timestamp);
+    if (!b) continue;
+    matched += 1;
+
+    for (const f of fields) {
+      const pv = p[f];
+      const bv = b[f];
+      if (!Number.isFinite(pv) || !Number.isFinite(bv)) continue;
+      const d = Math.abs(pv - bv);
+      stats[f].sumAbs += d;
+      stats[f].count += 1;
+      if (d > stats[f].maxAbs) stats[f].maxAbs = d;
+    }
+  }
+
+  const mae = {};
+  const maxAbs = {};
+  for (const f of fields) {
+    mae[f] = stats[f].count > 0 ? round2(stats[f].sumAbs / stats[f].count) : null;
+    maxAbs[f] = stats[f].count > 0 ? round2(stats[f].maxAbs) : null;
+  }
+
+  return { matchedHours: matched, mae, maxAbs };
+}
 
 /**
  * GET /api/weather/forecast
@@ -33,6 +71,31 @@ router.get('/forecast', async (req, res, next) => {
     // 任务53.1：不再读取/透传 X-Windy-API-Key（已切换到 Open-Meteo 主链路）
     const result = await orchestrator.fetchWeatherData(latNum, lonNum, hoursNum);
 
+    // 自动对比：当前站点输出 vs Open-Meteo基线（用于监控偏差）
+    let compareMeta = null;
+    try {
+      const baseline = await openMeteoProvider.fetchWeatherData(latNum, lonNum, hoursNum);
+      compareMeta = {
+        baselineProvider: 'openmeteo',
+        comparedProvider: result.providerMeta?.name || 'unknown',
+        summary: buildCompareSummary(result.data, baseline.data)
+      };
+      console.log('[Weather Compare]', JSON.stringify({
+        lat: latNum,
+        lon: lonNum,
+        hours: hoursNum,
+        provider: compareMeta.comparedProvider,
+        summary: compareMeta.summary
+      }));
+    } catch (compareError) {
+      compareMeta = {
+        baselineProvider: 'openmeteo',
+        comparedProvider: result.providerMeta?.name || 'unknown',
+        error: compareError.message
+      };
+      console.warn('[Weather Compare] baseline compare failed:', compareError.message);
+    }
+
     // 返回成功响应
     res.json({
       success: true,
@@ -42,7 +105,8 @@ router.get('/forecast', async (req, res, next) => {
       },
       hours: result.hours,
       data: result.data,
-      providerMeta: result.providerMeta
+      providerMeta: result.providerMeta,
+      compareMeta
     });
 
   } catch (error) {

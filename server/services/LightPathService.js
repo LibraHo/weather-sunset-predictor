@@ -1,149 +1,109 @@
 /**
- * 第三模块：光路逻辑（光路通透评分）
- * 包含 CAPE 和对流降水的安全检查和降级处理
+ * LightPathService - 光路通透评分服务
+ *
+ * 基于分层云量（low/mid/high）评估太阳方位角方向的光路通透性。
+ * Open-Meteo 提供 cloud_cover_low/mid/high，直接使用，无需 CAPE/convPrecip。
+ *
+ * 物理模型：
+ * - 低云（< 2km）：直接遮挡光路，权重最高（0.7）
+ * - 中云（2-6km）：适量中云有助于染色，超过 40% 才惩罚（权重 0.2）
+ * - 高云（> 6km）：卷云几乎不阻光，超过 70% 才轻微惩罚（权重 0.1）
  */
 
 const CloudLayerEstimator = require('./CloudLayerEstimator.js');
 
-// ========== 常量定义 ==========
+// ========== 常量 ==========
 
-const LIGHT_PATH_WEIGHTS = {
-  NEAR: 0.4,    // 150km点权重
-  FAR: 0.6      // 300km点权重（更重要）
+const CLOUD_LAYER_WEIGHTS = {
+  LOW:  0.7,
+  MID:  0.2,
+  HIGH: 0.1
 };
-
-const CAPE_WEIGHT = 0.5;     // CAPE 权重（降低到 50%）
-const CONV_PRECIP_WEIGHT = 0.5; // 对流降水量权重（降低到 50%）
-
-const CAPE_NEUTRAL_VALUE = 500; // 中等稳定性
-const CONV_PRECIP_NEUTRAL_VALUE = 0; // 无对流降水
 
 // ========== 辅助函数 ==========
 
 /**
- * 安全获取 CAPE 值
- * @param {Object} weatherData - 天气数据
- * @returns {number} CAPE 值或中性值
+ * 检查分层云量是否缺失，需要用估算器补全
  */
-function getSafeCAPE(weatherData) {
-  if (weatherData.cape === undefined || weatherData.cape === null) {
-    return CAPE_NEUTRAL_VALUE;
-  }
-  return weatherData.cape;
+function needsCloudLayerEstimation(weatherData) {
+  const { lowClouds = 0, midClouds = 0, highClouds = 0, cloudCover = 0 } = weatherData;
+  return (lowClouds === 0 && midClouds === 0 && highClouds === 0 && cloudCover > 0);
 }
 
 /**
- * 安全获取对流降水量值
- * @param {Object} weatherData - 天气数据
- * @returns {number} 对流降水量值或零
+ * 计算基于分层云量的光路得分
+ *
+ * @param {number} lowCloud  - 低云量 (0-100)
+ * @param {number} midCloud  - 中云量 (0-100)
+ * @param {number} highCloud - 高云量 (0-100)
+ * @returns {number} 光路得分 (0-100)
  */
-function getSafeConvPrecip(weatherData) {
-  if (weatherData.convPrecip === undefined || weatherData.convPrecip === null) {
-    return CONV_PRECIP_NEUTRAL_VALUE;
-  }
-  return weatherData.convPrecip;
+function scoreByCloudLayers(lowCloud, midCloud, highCloud) {
+  // 低云：> 20% 开始快速下降
+  const lowScore = lowCloud <= 20 ? 100
+    : lowCloud >= 80 ? 0
+    : 100 - ((lowCloud - 20) / 60) * 100;
+
+  // 中云：> 40% 才开始下降
+  const midScore = midCloud <= 40 ? 100
+    : midCloud >= 90 ? 10
+    : 100 - ((midCloud - 40) / 50) * 90;
+
+  // 高云：> 70% 才轻微下降（最多降 30 分）
+  const highScore = highCloud <= 70 ? 100
+    : 100 - ((highCloud - 70) / 30) * 30;
+
+  return Math.max(0, Math.min(100,
+    lowScore  * CLOUD_LAYER_WEIGHTS.LOW  +
+    midScore  * CLOUD_LAYER_WEIGHTS.MID  +
+    highScore * CLOUD_LAYER_WEIGHTS.HIGH
+  ));
 }
 
-/**
- * 检查分层云量是否缺失并需要使用估算器
- */
-function shouldUseCloudLayerEstimator(weatherData) {
-  const lowClouds = weatherData.lowClouds || 0;
-  const midClouds = weatherData.midClouds || 0;
-  const highClouds = weatherData.highClouds || 0;
-  const cloudCover = weatherData.cloudCover || 0;
-  
-  // 所有分层云量都缺失或为 0 时，需要估算
-  return (
-    (lowClouds == null || lowClouds === undefined || lowClouds === 0) &&
-    (midClouds == null || midClouds === undefined || midClouds === 0) &&
-    (highClouds == null || highClouds === undefined || highClouds === 0) &&
-    cloudCover > 0
-  );
-}
+// ========== 主类 ==========
 
-// ========== 主函数 ==========
+class LightPathService {
+  /**
+   * 计算光路通透评分
+   *
+   * @param {Object} weatherData - 天气数据（含 lowClouds/midClouds/highClouds/cloudCover）
+   * @returns {Object} 光路评分结果
+   */
+  scoreLightPath(weatherData) {
+    if (!weatherData) {
+      return { score: 50, breakdown: {}, estimated: false, reason: 'no_data' };
+    }
 
-/**
- * 计算光路通透评分
- * 包含 CAPE 和对流降水的安全检查和降级处理
- * 
- * @param {Object} weatherData - 天气数据
- * @returns {Object} 光路评分结果
- */
-function scoreLightPath(weatherData) {
-  // 基础验证：确保天气数据对象存在
-  if (!weatherData) {
+    let { lowClouds = 0, midClouds = 0, highClouds = 0, cloudCover = 0 } = weatherData;
+    let estimated = false;
+
+    // 分层数据缺失时用估算器补全
+    if (needsCloudLayerEstimation(weatherData)) {
+      const est = CloudLayerEstimator.estimateCloudLayers(cloudCover, weatherData.temp || 15);
+      lowClouds  = est.lowClouds;
+      midClouds  = est.midClouds;
+      highClouds = est.highClouds;
+      estimated  = true;
+    }
+
+    const score = scoreByCloudLayers(lowClouds, midClouds, highClouds);
+
     return {
-      score: 50,
-      breakdown: { cape: 50, convPrecip: 50 },
-      capeAvailable: false,
-      convPrecipAvailable: false,
-      weightsUsed: { cape: 0.5, convPrecip: 0.5 }
+      score: parseFloat(score.toFixed(1)),
+      breakdown: {
+        lowClouds:  parseFloat(lowClouds.toFixed(1)),
+        midClouds:  parseFloat(midClouds.toFixed(1)),
+        highClouds: parseFloat(highClouds.toFixed(1))
+      },
+      estimated,
+      weightsUsed: CLOUD_LAYER_WEIGHTS
     };
   }
-
-  // 检查是否需要使用云层估算器
-  if (shouldUseCloudLayerEstimator(weatherData)) {
-    const estimated = CloudLayerEstimator.estimateCloudLayers(
-      weatherData.cloudCover || 0,
-      weatherData.temp || 15
-    );
-    
-    weatherData.lowClouds = estimated.lowClouds;
-    weatherData.midClouds = estimated.midClouds;
-    weatherData.highClouds = estimated.highClouds;
-  }
-
-  // 获取 CAPE 和对流降水量（安全检查）
-  const cape = getSafeCAPE(weatherData);
-  const convPrecip = getSafeConvPrecip(weatherData);
-
-  // CAPE 评分
-  let capeScore = 0;
-  if (cape < 500) {
-    capeScore = cape / 5; // 0-100 分
-  } else if (cape < 2000) {
-    capeScore = 80 + (cape - 500) / 30; // 500-2000: 80-100 分
-  } else {
-    capeScore = 100; // 极不稳定
-  }
-
-  // 对流降水量评分
-  let convPrecipScore = 0;
-  if (convPrecip < 0.1) {
-    convPrecipScore = 100;
-  } else if (convPrecip < 1) {
-    convPrecipScore = 80;
-  } else if (convPrecip < 5) {
-    convPrecipScore = 40;
-  } else {
-    convPrecipScore = 0;
-  }
-
-  // 综合得分
-  const lightPathScore = (capeScore * CAPE_WEIGHT) + (convPrecipScore * CONV_PRECIP_WEIGHT);
-
-  return {
-    score: Math.max(0, Math.min(100, lightPathScore)),
-    breakdown: {
-      cape: capeScore,
-      convPrecip: convPrecipScore
-    },
-    capeAvailable: cape !== CAPE_NEUTRAL_VALUE,
-    convPrecipAvailable: convPrecip !== CONV_PRECIP_NEUTRAL_VALUE,
-    weightsUsed: {
-      cape: CAPE_WEIGHT,
-      convPrecip: CONV_PRECIP_WEIGHT
-    },
-    cloudLayerEstimated: shouldUseCloudLayerEstimator({
-      lowClouds: weatherData.lowClouds,
-      midClouds: weatherData.midClouds,
-      highClouds: weatherData.highClouds,
-      cloudCover: weatherData.cloudCover
-    })
-  };
 }
 
-module.exports = new LightPathService();
+// ========== 导出 ==========
+
+const instance = new LightPathService();
+module.exports = instance;
 module.exports.LightPathService = LightPathService;
+module.exports.scoreByCloudLayers = scoreByCloudLayers;
