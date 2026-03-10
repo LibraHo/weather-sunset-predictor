@@ -154,7 +154,7 @@ export default {
       title: 'Punteggio Percorso Luminoso',
       score: 'Punteggio Percorso Luminoso',
       visibility: 'Visibilità',
-      lightPathScore: '🌅 Percorso luminoso: {{score}}pt (150km:{{near}} 300km:{{far}})'
+      lightPathScore: '🌅 Percorso luminoso: {{score}}pt '
     },
     rendering: {
       title: 'Punteggio Resa',

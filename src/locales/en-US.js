@@ -193,7 +193,7 @@ export default {
       title: 'Light Path Score',
       score: 'Light Path Score',
       visibility: 'Visibility',
-      lightPathScore: '🌅 Light path: {{score}}pts (150km:{{near}} 300km:{{far}})'
+      lightPathScore: '🌅 Light path: {{score}}pts '
     },
 
     // Rendering score

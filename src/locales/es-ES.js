@@ -181,7 +181,7 @@ export default {
       title: 'Puntuación del Trayecto de Luz',
       score: 'Puntuación del Trayecto de Luz',
       visibility: 'Visibilidad',
-      lightPathScore: '🌅 Trayecto de luz: {{score}}pts (150km:{{near}} 300km:{{far}})'
+      lightPathScore: '🌅 Trayecto de luz: {{score}}pts '
     },
 
     // Rendering score

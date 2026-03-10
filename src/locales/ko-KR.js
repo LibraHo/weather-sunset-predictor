@@ -182,7 +182,7 @@ export default {
       title: '빛 경로 점수',
       score: '빛 경로 점수',
       visibility: '가시거리',
-      lightPathScore: '🌅 빛 경로: {{score}}점 (150km:{{near}} 300km:{{far}})'
+      lightPathScore: '🌅 빛 경로: {{score}}점 '
     },
 
     // Rendering score

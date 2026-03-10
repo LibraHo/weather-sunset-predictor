@@ -946,10 +946,11 @@ class PredictionController {
     // 简化版光路评分
     analysis += `<div style="margin-top:8px;font-size:13px;">`;
     analysis += this.i18n.t('prediction.lightPath.lightPathScore', {
-      score: lightPath.score.toFixed(0),
-      near: lightPath.nearPointScore,
-      far: lightPath.farPointScore
+      score: lightPath.score.toFixed(0)
     });
+    if (prediction.severeWeatherCap?.reason) {
+      analysis += `<br>⛔ ${prediction.severeWeatherCap.reason}`;
+    }
     analysis += `</div>`;
 
     // 简化版渲染修正
