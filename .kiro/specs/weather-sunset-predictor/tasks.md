@@ -1130,3 +1130,45 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 - [ ] 59.3 发布验收报告
   - 记录线上样本对比与结论
   - _关联需求：35.9_
+
+---
+
+## Phase 14：Windy 彻底移除（需求 36）
+
+### 任务 60：冻结与门禁
+
+- [ ] 60.1 增加预测链路 provider 门禁
+  - 非 openmeteo 请求打告警并拒绝进入预测核心
+  - _关联需求：36.1_
+
+- [ ] 60.2 PR 检查规则
+  - 阻止新增 windy 预测依赖（静态扫描关键词）
+  - _关联需求：36.1_
+
+### 任务 61：前后端清理
+
+- [ ] 61.1 前端移除 Windy Key 入口与本地存储
+  - 清理 `user_windy_api_key` 及相关 UI
+  - _关联需求：36.2, 36.7_
+
+- [ ] 61.2 后端移除 `X-Windy-API-Key` 透传
+  - weather route / service 不再读取该头
+  - _关联需求：36.3_
+
+- [ ] 61.3 windyService 预测主路径退役
+  - 从 orchestrator 主链路摘除，必要时迁移至 legacy 包
+  - _关联需求：36.1, 36.3_
+
+### 任务 62：测试与文档收口
+
+- [ ] 62.1 测试替换为 Open-Meteo 基线
+  - 删除/归档 windy 预测相关测试
+  - _关联需求：36.5_
+
+- [ ] 62.2 文档全量同步
+  - README/OpenAPI/.kiro 去除 Windy 预测描述
+  - _关联需求：36.5_
+
+- [ ] 62.3 7天零调用验收
+  - 输出运行报告：Windy 预测调用=0
+  - _关联需求：36.6_

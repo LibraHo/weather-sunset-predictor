@@ -4551,3 +4551,41 @@ location /health {
    - `capReason` 命中率
    - 异常告警：`cloudCover>85 && lightPathScore>60`
 
+---
+
+## 36. Windy 彻底移除设计（预测链路）
+
+### 36.1 范围定义
+
+- **移除范围**：天气预测与评分链路
+- **保留范围（可选）**：地图可视化（若独立模块仍需）
+
+### 36.2 三阶段执行
+
+1. **Freeze 阶段**
+   - 禁止新增 Windy 预测依赖
+   - 新功能仅允许接入 Open-Meteo 字段
+
+2. **Cutover 阶段**
+   - weather/prediction API 强制走 Open-Meteo
+   - 删除前端 Windy Key UI 与存储键
+   - 删除后端 `X-Windy-API-Key` 透传
+
+3. **Purge 阶段**
+   - 删除 windyService 在预测主链路引用
+   - 清理测试、文档、配置残留
+   - 增加“7天无 Windy 调用”验收门禁
+
+### 36.3 技术控制点
+
+- provider gate：请求进入预测前强校验 `provider=openmeteo`
+- telemetry：记录 `providerMeta.provider` 分布
+- migration cleanup：前端启动时一次性清理 `user_windy_api_key`
+- rollback：仅保留短期开关，默认关闭且限时下线
+
+### 36.4 验收输出
+
+- 代码层：无预测链路 Windy 依赖
+- 运行层：连续 7 天 Windy 预测调用为 0
+- 文档层：README/OpenAPI/.kiro 全量同步为 Open-Meteo 主链路
+
