@@ -285,75 +285,110 @@ function scoreCloudCanvas(weatherData) {
 }
 
 /**
- * 计算单个光路点的得分
+ * 基于分层云量计算单个光路点得分
+ *
+ * 物理逻辑：
+ * - 低云（< 2km）：直接遮挡，惩罚最重（权重 0.7）
+ * - 中云（2-6km）：适量不惩罚，超过 40% 才下降（权重 0.2）
+ * - 高云（> 6km）：卷云几乎不阻光，超过 70% 才轻微惩罚（权重 0.1）
+ * - 晴空光路最好 → 低云=0 时得 100 分（不再给 35 分）
+ *
  * @param {Object} cloudData - 云量数据
+ * @param {number} [cloudData.lowCloud]   低云量 (0-100)
+ * @param {number} [cloudData.midCloud]   中云量 (0-100)
+ * @param {number} [cloudData.highCloud]  高云量 (0-100)
+ * @param {number} [cloudData.totalCloud] 总云量回退 (0-100)
  * @returns {number} 得分 (0-100)
  */
 function calculateLightPathPointScore(cloudData) {
-  const totalCloud = cloudData.totalCloud || 0;
+  const lowCloud  = cloudData.lowCloud  ?? cloudData.lowClouds  ?? null;
+  const midCloud  = cloudData.midCloud  ?? cloudData.midClouds  ?? null;
+  const highCloud = cloudData.highCloud ?? cloudData.highClouds ?? null;
 
-  if (totalCloud < 10) {
-    // 修复：几乎无云不应给满分，否则会抬高总分
-    return 35;
-  } else if (totalCloud > 80) {
-    return 0;   // 云墙，光线阻断
-  } else {
-    // 线性插值
-    return 100 - ((totalCloud - 10) / 70) * 100;
+  if (lowCloud !== null && midCloud !== null && highCloud !== null) {
+    // 低云评分：> 20% 开始快速下降
+    const lowScore = lowCloud <= 20 ? 100
+      : lowCloud >= 80 ? 0
+      : 100 - ((lowCloud - 20) / 60) * 100;
+
+    // 中云评分：> 40% 才开始下降
+    const midScore = midCloud <= 40 ? 100
+      : midCloud >= 90 ? 10
+      : 100 - ((midCloud - 40) / 50) * 90;
+
+    // 高云评分：> 70% 才轻微下降（最多降 30 分）
+    const highScore = highCloud <= 70 ? 100
+      : 100 - ((highCloud - 70) / 30) * 30;
+
+    return Math.max(0, Math.min(100,
+      lowScore * 0.7 + midScore * 0.2 + highScore * 0.1
+    ));
   }
+
+  // 回退：无分层数据，用总云量线性插值
+  const totalCloud = cloudData.totalCloud || 0;
+  if (totalCloud < 10) return 100;
+  if (totalCloud > 80) return 0;
+  return 100 - ((totalCloud - 10) / 70) * 100;
 }
 
 /**
  * 第三模块：光路逻辑（光路通透评分）
- * @param {Object} weatherData - 本地天气数据
- * @param {number} azimuth - 太阳方位角
- * @param {Object} remoteCloudData - 远程云量数据 { near: {totalCloud}, far: {totalCloud} }
+ *
+ * Open-Meteo 提供 lowClouds/midClouds/highClouds 分层数据，
+ * 直接使用分层云量评分，不再依赖 CAPE/convPrecip（Open-Meteo 无此字段）。
+ * 无远程采样点数据时，用本地分层云量估算，远点额外 ×0.9 体现不确定性。
+ *
+ * @param {Object} weatherData    - 本地天气数据
+ * @param {number} azimuth        - 太阳方位角
+ * @param {Object} remoteCloudData - 远程云量 { near: {...}, far: {...} }（可选）
  * @returns {Object} 光路评分结果
  */
 function scoreLightPath(weatherData, azimuth, remoteCloudData = null) {
-  // 修复：无远端数据时不再默认100分，改为中性分
-  let nearPointScore = 50;  // 150km点
-  let farPointScore = 50;   // 300km点
+  let nearPointScore;
+  let farPointScore;
   let nearPointCloudCover = null;
   let farPointCloudCover = null;
+  let hasRemoteData = false;
 
-  // 如果提供了远程云量数据，使用它
-  // Bug 1 修复：当没有远程数据时，用本地云量估算光路
   if (remoteCloudData && remoteCloudData.near && remoteCloudData.far) {
-    if (remoteCloudData.near) {
-      nearPointScore = calculateLightPathPointScore(remoteCloudData.near);
-      nearPointCloudCover = remoteCloudData.near.totalCloud;
-    }
-    if (remoteCloudData.far) {
-      farPointScore = calculateLightPathPointScore(remoteCloudData.far);
-      farPointCloudCover = remoteCloudData.far.totalCloud;
-    }
+    hasRemoteData = true;
+    nearPointScore = calculateLightPathPointScore(remoteCloudData.near);
+    farPointScore  = calculateLightPathPointScore(remoteCloudData.far);
+    nearPointCloudCover = remoteCloudData.near.totalCloud ?? remoteCloudData.near.lowCloud;
+    farPointCloudCover  = remoteCloudData.far.totalCloud  ?? remoteCloudData.far.lowCloud;
   } else {
-    // 没有远程数据时用本地云量估算
-    const lowClouds = weatherData.lowClouds || 0;
-    const midClouds = weatherData.midClouds || 0;
-    const highClouds = weatherData.highClouds || 0;
-    const localTotalCloud = Math.min(100, Math.max(lowClouds, midClouds, highClouds, weatherData.cloudCover || 0));
-    const estimatedScore = calculateLightPathPointScore({ totalCloud: localTotalCloud });
-    nearPointScore = estimatedScore;
-    farPointScore = estimatedScore;
-    nearPointCloudCover = localTotalCloud;
-    farPointCloudCover = localTotalCloud;
+    // 无远程数据：用本地分层云量估算
+    const localCloudData = {
+      lowCloud:   weatherData.lowClouds  || 0,
+      midCloud:   weatherData.midClouds  || 0,
+      highCloud:  weatherData.highClouds || 0,
+      totalCloud: Math.min(100, Math.max(
+        weatherData.lowClouds  || 0,
+        weatherData.midClouds  || 0,
+        weatherData.highClouds || 0,
+        weatherData.cloudCover || 0
+      ))
+    };
+    nearPointScore = calculateLightPathPointScore(localCloudData);
+    // 远点用本地数据估算时加 0.9 折扣（本地数据无法代表 300km 外）
+    farPointScore  = nearPointScore * 0.9;
+    nearPointCloudCover = localCloudData.totalCloud;
+    farPointCloudCover  = localCloudData.totalCloud;
   }
 
-  // 光路最终得分 = 近点×0.4 + 远点×0.6
   const lightPathScore = (nearPointScore * LIGHT_PATH_WEIGHTS.NEAR) +
-                         (farPointScore * LIGHT_PATH_WEIGHTS.FAR);
+                         (farPointScore  * LIGHT_PATH_WEIGHTS.FAR);
 
   return {
-    score: lightPathScore,
+    score: parseFloat(lightPathScore.toFixed(1)),
     nearPointScore: parseFloat(nearPointScore.toFixed(1)),
-    farPointScore: parseFloat(farPointScore.toFixed(1)),
+    farPointScore:  parseFloat(farPointScore.toFixed(1)),
     breakdown: {
-      nearPointCloudCover: nearPointCloudCover,
-      farPointCloudCover: farPointCloudCover
+      nearPointCloudCover,
+      farPointCloudCover
     },
-    hasRemoteData: remoteCloudData !== null
+    hasRemoteData
   };
 }
 
