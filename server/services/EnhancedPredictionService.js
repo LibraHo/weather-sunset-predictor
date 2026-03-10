@@ -497,6 +497,44 @@ function getQualityLevel(score) {
 }
 
 /**
+ * 太阳遮挡判定（试验版）
+ *
+ * 使用云底高度（m）和距离（km）计算临界太阳高度角：
+ *   critical = atan(H / D)
+ * 当太阳高度角低于临界角，认为远端云墙开始遮挡直射光。
+ */
+function checkSolarOcclusion(solarElevation, lightPathCloudData, fallbackCloudBaseHeight = null) {
+  const far = lightPathCloudData?.far || null;
+  const cloudBaseHeightM = far?.cloudBaseHeight ?? fallbackCloudBaseHeight;
+
+  if (typeof cloudBaseHeightM !== 'number' || !Number.isFinite(cloudBaseHeightM)) {
+    return { occluded: false, reason: 'no_cloud_base_height' };
+  }
+
+  const distanceKm = 300;
+  const cloudBaseHeightKm = cloudBaseHeightM / 1000;
+  const criticalElevation = Math.atan(cloudBaseHeightKm / distanceKm) * 180 / Math.PI;
+
+  if (solarElevation < criticalElevation) {
+    return {
+      occluded: true,
+      reason: 'distant_cloud_wall',
+      cloudBaseHeightM: parseFloat(cloudBaseHeightM.toFixed(0)),
+      distanceKm,
+      criticalElevation: parseFloat(criticalElevation.toFixed(2))
+    };
+  }
+
+  return {
+    occluded: false,
+    reason: 'light_path_clear',
+    cloudBaseHeightM: parseFloat(cloudBaseHeightM.toFixed(0)),
+    distanceKm,
+    criticalElevation: parseFloat(criticalElevation.toFixed(2))
+  };
+}
+
+/**
  * 第五模块：综合输出逻辑（最终评分）
  * @param {Object} canvasScore - 画布得分
  * @param {Object} lightPathScore - 光路得分
@@ -657,16 +695,41 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
 
   // 5. 综合输出
   const finalResult = calculateFinalScore(canvasScore, lightPathScore, renderingFactor, type);
-  logger.debug('[EnhancedPredictionService]', '最终得分:', finalResult.score);
+
+  // 6. 太阳遮挡判定（试验版，温和惩罚）
+  const occlusion = checkSolarOcclusion(
+    timeCheck.elevation,
+    remoteCloudData,
+    weatherData.cloudBaseHeight
+  );
+
+  let adjustedScore = finalResult.score;
+  let adjustedStatus = finalResult.status;
+  let adjustedDescription = finalResult.description;
+
+  if (occlusion.occluded) {
+    adjustedScore = parseFloat((adjustedScore * 0.75).toFixed(1));
+    if (adjustedScore < 40) {
+      adjustedStatus = 'no_fire_cloud';
+      adjustedDescription = 'light_path_blocked';
+    }
+  }
+
+  logger.debug('[EnhancedPredictionService]', '最终得分:', adjustedScore, 'occlusion:', occlusion);
 
   // 返回完整结果
   return {
     date: dateObj.toISOString(),
     type: type,
-    score: finalResult.score,
-    quality: getQualityLevel(finalResult.score),
+    score: adjustedScore,
+    quality: getQualityLevel(adjustedScore),
     timeAnalysis: timeCheck,
-    ...finalResult
+    occlusionAnalysis: occlusion,
+    ...finalResult,
+    status: adjustedStatus,
+    description: adjustedDescription,
+    scoreBeforeOcclusion: finalResult.score,
+    score: adjustedScore
   };
 }
 
@@ -715,6 +778,7 @@ module.exports = {
   // 综合评分
   calculateFinalScore,
   getQualityLevel,
+  checkSolarOcclusion,
 
   // 主函数
   calculateEnhancedPrediction,
