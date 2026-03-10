@@ -511,7 +511,8 @@ function checkSolarOcclusion(solarElevation, lightPathCloudData, fallbackCloudBa
     return { occluded: false, reason: 'no_cloud_base_height' };
   }
 
-  const distanceKm = 300;
+  // 山地/局地天气下使用更短光路距离，减少远距离误判
+  const distanceKm = 120;
   const cloudBaseHeightKm = cloudBaseHeightM / 1000;
   const criticalElevation = Math.atan(cloudBaseHeightKm / distanceKm) * 180 / Math.PI;
 
@@ -532,6 +533,33 @@ function checkSolarOcclusion(solarElevation, lightPathCloudData, fallbackCloudBa
     distanceKm,
     criticalElevation: parseFloat(criticalElevation.toFixed(2))
   };
+}
+
+/**
+ * 恶劣天气硬性封顶，避免雨雪/阴天出现高分
+ */
+function applySevereWeatherCap(score, weatherData) {
+  const cloudCover = weatherData.cloudCover || 0;
+  const precipitation = weatherData.precipitation || 0;
+  const convPrecip = weatherData.convPrecip || 0;
+  const weatherCode = weatherData.weatherCode;
+
+  // Open-Meteo WMO weather codes: 51-67 雨/冻雨, 71-77 雪, 80-86 阵雨/阵雪
+  const isRainSnowCode = typeof weatherCode === 'number' && (
+    (weatherCode >= 51 && weatherCode <= 67) ||
+    (weatherCode >= 71 && weatherCode <= 77) ||
+    (weatherCode >= 80 && weatherCode <= 86)
+  );
+
+  if (cloudCover >= 85) {
+    return { score: Math.min(score, 35), reason: 'overcast_cap_35' };
+  }
+
+  if (precipitation > 0.5 || convPrecip > 0.5 || isRainSnowCode) {
+    return { score: Math.min(score, 45), reason: 'precipitation_cap_45' };
+  }
+
+  return { score, reason: null };
 }
 
 /**
@@ -715,7 +743,15 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     }
   }
 
-  logger.debug('[EnhancedPredictionService]', '最终得分:', adjustedScore, 'occlusion:', occlusion);
+  // 7. 恶劣天气硬性封顶
+  const severeCap = applySevereWeatherCap(adjustedScore, weatherData);
+  adjustedScore = severeCap.score;
+  if (severeCap.reason && adjustedScore < 40) {
+    adjustedStatus = 'no_fire_cloud';
+    adjustedDescription = 'cloud_too_thick';
+  }
+
+  logger.debug('[EnhancedPredictionService]', '最终得分:', adjustedScore, 'occlusion:', occlusion, 'severeCap:', severeCap.reason);
 
   // 返回完整结果
   return {
@@ -725,6 +761,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     quality: getQualityLevel(adjustedScore),
     timeAnalysis: timeCheck,
     occlusionAnalysis: occlusion,
+    severeWeatherCap: severeCap,
     ...finalResult,
     status: adjustedStatus,
     description: adjustedDescription,
@@ -779,6 +816,7 @@ module.exports = {
   calculateFinalScore,
   getQualityLevel,
   checkSolarOcclusion,
+  applySevereWeatherCap,
 
   // 主函数
   calculateEnhancedPrediction,
