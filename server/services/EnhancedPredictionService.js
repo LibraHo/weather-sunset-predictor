@@ -38,8 +38,8 @@ const LIGHT_PATH_WEIGHTS = {
 };
 
 const FINAL_WEIGHTS = {
-  CLOUD_CANVAS: 0.4,   // 本地云况（画布）
-  LIGHT_PATH: 0.6      // 光路通透（权重更高）
+  CLOUD_CANVAS: 0.8,   // 本地云况（主）
+  LIGHT_PATH: 0.2      // 光路约束（保守权重）
 };
 
 // ========== 辅助函数 ==========
@@ -284,111 +284,141 @@ function scoreCloudCanvas(weatherData) {
   };
 }
 
-/**
- * 基于分层云量计算单个光路点得分
- *
- * 物理逻辑：
- * - 低云（< 2km）：直接遮挡，惩罚最重（权重 0.7）
- * - 中云（2-6km）：适量不惩罚，超过 40% 才下降（权重 0.2）
- * - 高云（> 6km）：卷云几乎不阻光，超过 70% 才轻微惩罚（权重 0.1）
- * - 晴空光路最好 → 低云=0 时得 100 分（不再给 35 分）
- *
- * @param {Object} cloudData - 云量数据
- * @param {number} [cloudData.lowCloud]   低云量 (0-100)
- * @param {number} [cloudData.midCloud]   中云量 (0-100)
- * @param {number} [cloudData.highCloud]  高云量 (0-100)
- * @param {number} [cloudData.totalCloud] 总云量回退 (0-100)
- * @returns {number} 得分 (0-100)
- */
-function calculateLightPathPointScore(cloudData) {
-  const lowCloud  = cloudData.lowCloud  ?? cloudData.lowClouds  ?? null;
-  const midCloud  = cloudData.midCloud  ?? cloudData.midClouds  ?? null;
-  const highCloud = cloudData.highCloud ?? cloudData.highClouds ?? null;
-
-  if (lowCloud !== null && midCloud !== null && highCloud !== null) {
-    // 低云评分：> 20% 开始快速下降
-    const lowScore = lowCloud <= 20 ? 100
-      : lowCloud >= 80 ? 0
-      : 100 - ((lowCloud - 20) / 60) * 100;
-
-    // 中云评分：> 40% 才开始下降
-    const midScore = midCloud <= 40 ? 100
-      : midCloud >= 90 ? 10
-      : 100 - ((midCloud - 40) / 50) * 90;
-
-    // 高云评分：> 70% 才轻微下降（最多降 30 分）
-    const highScore = highCloud <= 70 ? 100
-      : 100 - ((highCloud - 70) / 30) * 30;
-
-    return Math.max(0, Math.min(100,
-      lowScore * 0.7 + midScore * 0.2 + highScore * 0.1
-    ));
-  }
-
-  // 回退：无分层数据，用总云量线性插值
-  const totalCloud = cloudData.totalCloud || 0;
-  if (totalCloud < 10) return 100;
-  if (totalCloud > 80) return 0;
-  return 100 - ((totalCloud - 10) / 70) * 100;
+function sigmoid(x) {
+  return 1 / (1 + Math.exp(-x));
 }
 
 /**
- * 第三模块：光路逻辑（光路通透评分）
- *
- * Open-Meteo 提供 lowClouds/midClouds/highClouds 分层数据，
- * 直接使用分层云量评分，不再依赖 CAPE/convPrecip（Open-Meteo 无此字段）。
- * 无远程采样点数据时，用本地分层云量估算，远点额外 ×0.9 体现不确定性。
- *
- * @param {Object} weatherData    - 本地天气数据
- * @param {number} azimuth        - 太阳方位角
- * @param {Object} remoteCloudData - 远程云量 { near: {...}, far: {...} }（可选）
- * @returns {Object} 光路评分结果
+ * 兼容旧接口：按分层云量估算单点通透分（0-100）
  */
-function scoreLightPath(weatherData, azimuth, remoteCloudData = null) {
-  let nearPointScore;
-  let farPointScore;
-  let nearPointCloudCover = null;
-  let farPointCloudCover = null;
+function calculateLightPathPointScore(cloudData) {
+  const low = cloudData.lowCloud ?? cloudData.lowClouds ?? 0;
+  const mid = cloudData.midCloud ?? cloudData.midClouds ?? 0;
+  const high = cloudData.highCloud ?? cloudData.highClouds ?? 0;
+  const opacity = (low * 0.7 + mid * 0.2 + high * 0.1) / 100;
+  return parseFloat((100 * (1 - Math.max(0, Math.min(1, opacity)))).toFixed(1));
+}
+
+function estimateCloudBaseHeight(weatherData) {
+  if (typeof weatherData.cloudBaseHeight === 'number' && Number.isFinite(weatherData.cloudBaseHeight)) {
+    return weatherData.cloudBaseHeight;
+  }
+  const low = weatherData.lowClouds || 0;
+  const mid = weatherData.midClouds || 0;
+  if (low > 60) return 700;
+  if (low > 30) return 1000;
+  if (mid > 50) return 1800;
+  return 2200;
+}
+
+function buildLocalLightPathSamples(weatherData) {
+  const baseH = estimateCloudBaseHeight(weatherData);
+  const low = weatherData.lowClouds || 0;
+  const mid = weatherData.midClouds || 0;
+  const high = weatherData.highClouds || 0;
+
+  const distances = [20, 50, 100];
+  return distances.map((distanceKm) => {
+    const factor = 0.9 + (distanceKm / 200); // 远处略保守
+    return {
+      distanceKm,
+      cloudBaseHeight: baseH,
+      lowCloud: Math.min(100, low * factor),
+      midCloud: Math.min(100, mid * factor),
+      highCloud: Math.min(100, high * factor)
+    };
+  });
+}
+
+function calcSampleBlock(sample, solarElevation) {
+  const Hkm = (sample.cloudBaseHeight || 1000) / 1000;
+  const Dkm = sample.distanceKm || 50;
+  const criticalElevation = Math.atan(Hkm / Dkm) * 180 / Math.PI;
+
+  const low = sample.lowCloud || 0;
+  const mid = sample.midCloud || 0;
+  const high = sample.highCloud || 0;
+
+  const layerOpacity = (low * 0.7 + mid * 0.2 + high * 0.1) / 100;
+  const geometryBlock = sigmoid((criticalElevation - solarElevation) * 1.2);
+  const block = Math.max(0, Math.min(1, geometryBlock * 0.6 + layerOpacity * 0.4));
+
+  return {
+    distanceKm: Dkm,
+    cloudBaseHeight: sample.cloudBaseHeight,
+    criticalElevation: parseFloat(criticalElevation.toFixed(2)),
+    block: parseFloat(block.toFixed(3))
+  };
+}
+
+/**
+ * 第三模块：光路逻辑（物理重构版）
+ * 基于太阳高度角 + 云底高度 + 多点采样估算光路遮挡概率。
+ */
+function scoreLightPath(weatherData, solarElevation, azimuth, remoteCloudData = null) {
+  const distanceWeights = [0.2, 0.3, 0.5]; // 20/50/100km
+
+  let samples = [];
   let hasRemoteData = false;
 
-  if (remoteCloudData && remoteCloudData.near && remoteCloudData.far) {
+  if (remoteCloudData && Array.isArray(remoteCloudData.samples) && remoteCloudData.samples.length >= 3) {
     hasRemoteData = true;
-    nearPointScore = calculateLightPathPointScore(remoteCloudData.near);
-    farPointScore  = calculateLightPathPointScore(remoteCloudData.far);
-    nearPointCloudCover = remoteCloudData.near.totalCloud ?? remoteCloudData.near.lowCloud;
-    farPointCloudCover  = remoteCloudData.far.totalCloud  ?? remoteCloudData.far.lowCloud;
+    samples = remoteCloudData.samples.slice(0, 3);
   } else {
-    // 无远程数据：用本地分层云量估算
-    const localCloudData = {
-      lowCloud:   weatherData.lowClouds  || 0,
-      midCloud:   weatherData.midClouds  || 0,
-      highCloud:  weatherData.highClouds || 0,
-      totalCloud: Math.min(100, Math.max(
-        weatherData.lowClouds  || 0,
-        weatherData.midClouds  || 0,
-        weatherData.highClouds || 0,
-        weatherData.cloudCover || 0
-      ))
-    };
-    nearPointScore = calculateLightPathPointScore(localCloudData);
-    // 远点用本地数据估算时加 0.9 折扣（本地数据无法代表 300km 外）
-    farPointScore  = nearPointScore * 0.9;
-    nearPointCloudCover = localCloudData.totalCloud;
-    farPointCloudCover  = localCloudData.totalCloud;
+    samples = buildLocalLightPathSamples(weatherData);
   }
 
-  const lightPathScore = (nearPointScore * LIGHT_PATH_WEIGHTS.NEAR) +
-                         (farPointScore  * LIGHT_PATH_WEIGHTS.FAR);
+  const sampleResults = samples.map((s, i) => {
+    const r = calcSampleBlock(s, solarElevation);
+    return { ...r, weightedBlock: r.block * (distanceWeights[i] || 0.3) };
+  });
+
+  const occlusionProbability = 1 - sampleResults.reduce((prod, s) => prod * (1 - s.weightedBlock), 1);
+  let lightPathScore = 100 * (1 - occlusionProbability);
+
+  // 恶劣天气硬封顶（作用于光路分本身）
+  const cloudCover = weatherData.cloudCover || 0;
+  const precipitation = weatherData.precipitation || 0;
+  const convPrecip = weatherData.convPrecip || 0;
+  const weatherCode = weatherData.weatherCode;
+  const isRainSnowCode = typeof weatherCode === 'number' && (
+    (weatherCode >= 51 && weatherCode <= 67) ||
+    (weatherCode >= 71 && weatherCode <= 77) ||
+    (weatherCode >= 80 && weatherCode <= 86)
+  );
+
+  let capReason = null;
+  if (cloudCover >= 85) {
+    lightPathScore = Math.min(lightPathScore, 40);
+    capReason = 'overcast_cap_40';
+  }
+  if (precipitation > 0.5 || convPrecip > 0.5 || isRainSnowCode) {
+    lightPathScore = Math.min(lightPathScore, 50);
+    capReason = capReason || 'precipitation_cap_50';
+  }
+
+  // 兼容旧字段：near/far 映射到前两个采样点
+  const nearPointScore = 100 * (1 - (sampleResults[0]?.block || 0));
+  const farPointScore = 100 * (1 - (sampleResults[2]?.block || 0));
 
   return {
     score: parseFloat(lightPathScore.toFixed(1)),
+    occlusionProbability: parseFloat(occlusionProbability.toFixed(3)),
     nearPointScore: parseFloat(nearPointScore.toFixed(1)),
-    farPointScore:  parseFloat(farPointScore.toFixed(1)),
+    farPointScore: parseFloat(farPointScore.toFixed(1)),
+    samples: sampleResults.map(({ distanceKm, cloudBaseHeight, criticalElevation, block }) => ({
+      distanceKm,
+      cloudBaseHeight,
+      criticalElevation,
+      block
+    })),
+    capReason,
+    explain: capReason ? '恶劣天气触发光路分封顶' : '基于太阳几何与分层云量的光路估算',
+    hasRemoteData,
     breakdown: {
-      nearPointCloudCover,
-      farPointCloudCover
-    },
-    hasRemoteData
+      nearPointCloudCover: weatherData.cloudCover || 0,
+      farPointCloudCover: weatherData.cloudCover || 0
+    }
   };
 }
 
@@ -714,7 +744,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
 
   // 3. 光路评分（远距离通透性）
   const azimuth = calculateSolarAzimuth(dateObj, lat, lon);
-  const lightPathScore = scoreLightPath(weatherData, azimuth, remoteCloudData);
+  const lightPathScore = scoreLightPath(weatherData, timeCheck.elevation, azimuth, remoteCloudData);
   logger.debug('[EnhancedPredictionService]', '光路评分:', lightPathScore.score);
 
   // 4. 渲染修正（画质系数）

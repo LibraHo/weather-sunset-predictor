@@ -4456,3 +4456,136 @@ location /health {
 
 - 每个 Stage 均可独立发布，出现异常可回滚到上一 Stage。
 - 关键指标：小时序列完整率、预测评分稳定性、接口错误率、地图首屏时延。
+
+---
+
+## 35. 光路评分物理重构设计（一步到位）
+
+### 35.1 设计目标
+
+- 让光路分具备物理可解释性（而非经验常数拼接）
+- 避免“雨雪阴天高分”与“展示文案和算法脱节”
+- 将光路模块从“加分噪声源”转为“稳定抑制误报的约束项”
+
+### 35.2 新算法总览
+
+输入（来自 Open-Meteo + 现有天文计算）：
+- `solarElevation`（太阳高度角）
+- `solarAzimuth`（太阳方位角）
+- `cloudBaseHeight`（由 pressure-level RH + geopotential 估算）
+- `lowClouds/midClouds/highClouds`
+- `cloudCover/precipitation/convPrecip/weatherCode`
+
+核心流程：
+1. **沿光路采样**：在太阳反向来光方向采样 20/50/100km 三个点
+2. **几何遮挡判定**：各点计算 `criticalElevation = atan(cloudBaseHeight / distance)`
+3. **分层遮挡因子**：低云 > 中云 > 高云
+4. **融合为 occlusionProbability**：输出 0~1 遮挡概率
+5. **恶劣天气封顶**：厚云/雨雪强制上限
+6. **输出 lightPathScore + 解释字段**
+
+### 35.3 关键公式
+
+- 几何遮挡临界角：
+  - `criticalElevation_i = atan(H_i / D_i)`
+- 单点遮挡强度：
+  - `block_i = sigmoid(criticalElevation_i - solarElevation) * layerWeight_i`
+- 全路径遮挡概率：
+  - `occlusionProbability = 1 - Π(1 - block_i)`
+- 光路分：
+  - `lightPathScore = 100 * (1 - occlusionProbability)`
+
+其中 `layerWeight` 默认：低云 0.7 / 中云 0.2 / 高云 0.1。
+
+### 35.4 恶劣天气硬封顶策略
+
+- `cloudCover >= 85` → `lightPathScore <= 40`
+- `precipitation > 0.5 || convPrecip > 0.5 || rain/snow weatherCode` → `lightPathScore <= 50`
+- 如同时命中，取更严格上限。
+
+### 35.5 数据结构（后端响应）
+
+新增/规范字段：
+
+```json
+{
+  "lightPath": {
+    "score": 0,
+    "occlusionProbability": 0.0,
+    "samples": [
+      {"distanceKm": 20, "cloudBaseHeight": 900, "criticalElevation": 2.58, "block": 0.31},
+      {"distanceKm": 50, "cloudBaseHeight": 1200, "criticalElevation": 1.37, "block": 0.44},
+      {"distanceKm": 100, "cloudBaseHeight": 1500, "criticalElevation": 0.86, "block": 0.27}
+    ],
+    "capReason": "overcast_cap_40",
+    "explain": "厚云且低云遮挡，直射光路受阻"
+  }
+}
+```
+
+### 35.6 前端展示策略
+
+- 不再展示 `150km/300km` 固定文案
+- 显示：
+  - 光路分
+  - 遮挡概率（可选）
+  - 封顶原因（命中时）
+- 文案必须完全来源于后端返回字段，不允许前端硬编码旧模型术语。
+
+### 35.7 权重与开关
+
+- 推荐默认：`final = canvas*0.5 + lightPath*0.2 + rendering*0.3`（示意）
+- `lightPathWeight` 可配置，默认保守（<=0.3）
+- 保留短期回滚开关：`LIGHT_PATH_V2_ENABLED=true/false`（默认 true，旧算法默认关闭）
+
+### 35.8 验证与观测
+
+1. 单元测试：
+   - 太阳高度角边界
+   - 云底高度缺失回退
+   - 雨雪/厚云封顶触发
+2. 回放样本：
+   - Val Thorens 雨夹雪/阴天样本应低分
+3. 线上观测：
+   - `lightPathScore` 直方图
+   - `capReason` 命中率
+   - 异常告警：`cloudCover>85 && lightPathScore>60`
+
+---
+
+## 36. Windy 彻底移除设计（预测链路）
+
+### 36.1 范围定义
+
+- **移除范围**：天气预测与评分链路
+- **保留范围（可选）**：地图可视化（若独立模块仍需）
+
+### 36.2 三阶段执行
+
+1. **Freeze 阶段**
+   - 禁止新增 Windy 预测依赖
+   - 新功能仅允许接入 Open-Meteo 字段
+
+2. **Cutover 阶段**
+   - weather/prediction API 强制走 Open-Meteo
+   - 删除前端 Windy Key UI 与存储键
+   - 删除后端 `X-Windy-API-Key` 透传
+
+3. **Purge 阶段**
+   - 删除 windyService 在预测主链路引用
+   - 清理测试、文档、配置残留
+   - 增加“7天无 Windy 调用”验收门禁
+
+### 36.3 技术控制点
+
+- provider gate：请求进入预测前强校验 `provider=openmeteo`
+- telemetry：记录 `providerMeta.provider` 分布
+- migration cleanup：前端启动时一次性清理 `user_windy_api_key`
+- rollback：仅保留短期开关，默认关闭且限时下线
+
+### 36.4 验收输出
+
+- 代码层：无预测链路 Windy 依赖
+- 运行层：连续 7 天 Windy 预测调用为 0
+- 文档层：README/OpenAPI/.kiro 全量同步为 Open-Meteo 主链路
+
