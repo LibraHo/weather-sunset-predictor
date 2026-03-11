@@ -242,14 +242,36 @@ class EnhancedSunsetPredictionService {
     }
 
     // 光路最终得分 = 近点×0.4 + 远点×0.6
-    const lightPathScore = (nearPointScore * 0.4) + (farPointScore * 0.6);
+    let lightPathScore = (nearPointScore * 0.4) + (farPointScore * 0.6);
+
+    // 恶劣天气硬封顶（V2同步逻辑）：任意云层或总云量>=85% 触发封顶
+    const cc = weatherData.cloudCover || 0;
+    const lc = weatherData.lowClouds || 0;
+    const mc = weatherData.midClouds || 0;
+    const hc = weatherData.highClouds || 0;
+    const precip = weatherData.precipitation || 0;
+    const isOvercast = cc >= 85 || lc >= 85 || mc >= 85 || hc >= 85;
+    const hasPrecip = precip > 0.5;
+
+    let capReason = null;
+    if (isOvercast && hasPrecip) {
+      lightPathScore = Math.min(lightPathScore, 40);
+      capReason = 'overcast_cap_40';
+    } else if (isOvercast) {
+      lightPathScore = Math.min(lightPathScore, 40);
+      capReason = 'overcast_cap_40';
+    } else if (hasPrecip) {
+      lightPathScore = Math.min(lightPathScore, 50);
+      capReason = 'precipitation_cap_50';
+    }
 
     return {
       score: lightPathScore,
       nearPointScore: nearPointScore.toFixed(1),
       farPointScore: farPointScore.toFixed(1),
+      capReason,
       breakdown: {
-        nearPointCloudCover: '未检测', // 需要 getRemoteCloudData 回调提供实际数据
+        nearPointCloudCover: '未检测',
         farPointCloudCover: '未检测'
       },
       note: '光路检测功能需要卫星云图数据支持，当前使用近似值'

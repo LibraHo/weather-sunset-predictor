@@ -132,11 +132,14 @@ function scoreLightPathV2(params) {
   const isPrecipCode = typeof weatherCode === 'number' && PRECIPITATION_WEATHER_CODES.has(weatherCode);
   const hasPrecipitation = precipitation > 0.5 || convPrecip > 0.5 || isPrecipCode;
 
-  if (cloudCover >= 85 && hasPrecipitation) {
+  // 任意云层>=85% 或总云量>=85% 均视为 overcast
+  const isOvercast = cloudCover >= 85 || lowClouds >= 85 || midClouds >= 85 || highClouds >= 85;
+
+  if (isOvercast && hasPrecipitation) {
     // 同时命中取更严格上限（overcast_cap_40 < precipitation_cap_50）
     lightPathScore = Math.min(lightPathScore, 40);
     capReason = 'overcast_cap_40';
-  } else if (cloudCover >= 85) {
+  } else if (isOvercast) {
     lightPathScore = Math.min(lightPathScore, 40);
     capReason = 'overcast_cap_40';
   } else if (hasPrecipitation) {
@@ -145,8 +148,8 @@ function scoreLightPathV2(params) {
   }
 
   // 5. 任务59：异常告警
-  if (cloudCover > 85 && lightPathScore > 60) {
-    console.warn(`[LightPathV2] ANOMALY: cloudCover=${cloudCover} > 85 but lightPathScore=${lightPathScore.toFixed(1)} > 60`);
+  if (isOvercast && lightPathScore > 60) {
+    console.warn(`[LightPathV2] ANOMALY: cloudCover=${cloudCover} lowClouds=${lowClouds} but lightPathScore=${lightPathScore.toFixed(1)} > 60`);
   }
 
   const explain = capReason
