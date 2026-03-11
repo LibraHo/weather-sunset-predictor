@@ -502,6 +502,7 @@ class SunsetPredictionService {
    * 需求：12.2 - 标注黄金时段（日出后/日落前30-60分钟）
    */
   getGoldenHour(referenceTime, type) {
+    if (!referenceTime) return { start: null, end: null };
     if (type === 'sunrise') {
       // 日出后30-60分钟
       const start = new Date(referenceTime.getTime() + 30 * 60 * 1000);
@@ -525,6 +526,7 @@ class SunsetPredictionService {
    * 需求：12.3 - 标注蓝调时段（日出前/日落后20-30分钟）
    */
   getBlueHour(referenceTime, type) {
+    if (!referenceTime) return { start: null, end: null };
     if (type === 'sunrise') {
       // 日出前20-30分钟
       const start = new Date(referenceTime.getTime() - 30 * 60 * 1000);

@@ -64,8 +64,9 @@ class SunsetPrediction {
    */
   getOptimalViewingWindow() {
     const referenceTime = this.type === 'sunrise' ? this.sunriseTime : this.sunsetTime;
-    const start = new Date(referenceTime.getTime() - 30 * 60 * 1000); // 前30分钟
-    const end = new Date(referenceTime.getTime() + 30 * 60 * 1000);   // 后30分钟
+    if (!referenceTime) return { start: null, end: null, description: '时间未知' };
+    const start = new Date(referenceTime.getTime() - 30 * 60 * 1000);
+    const end = new Date(referenceTime.getTime() + 30 * 60 * 1000);
     
     return {
       start,
