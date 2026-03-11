@@ -133,3 +133,34 @@ describe('LightPathV2Service', () => {
     expect(result.samples).toHaveLength(3);
   });
 });
+
+
+describe('坏样本回放', () => {
+  test('Val Thorens 雨夹雪场景：cloudCover=100, lowClouds=96, precipitation=2, weatherCode=85 → score <= 10', () => {
+    const result = scoreLightPathV2({
+      solarElevation: 5,
+      solarAzimuth: 250,
+      lowClouds: 96, midClouds: 72, highClouds: 0,
+      cloudCover: 100,
+      precipitation: 2, convPrecip: 0,
+      weatherCode: 85,
+      cloudBaseHeight: 830
+    });
+    expect(result.score).toBeLessThanOrEqual(10);
+    expect(result.capReason).toBe('overcast_cap_40');
+  });
+
+  test('北京阴天：cloudCover=100, highClouds=100 → score <= 40', () => {
+    const result = scoreLightPathV2({
+      solarElevation: 10,
+      solarAzimuth: 260,
+      lowClouds: 0, midClouds: 0, highClouds: 100,
+      cloudCover: 100,
+      precipitation: 0, convPrecip: 0,
+      weatherCode: 3,
+      cloudBaseHeight: null
+    });
+    expect(result.score).toBeLessThanOrEqual(40);
+    expect(result.capReason).toBe('overcast_cap_40');
+  });
+});

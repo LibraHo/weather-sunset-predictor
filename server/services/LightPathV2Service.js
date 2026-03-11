@@ -135,7 +135,16 @@ function scoreLightPathV2(params) {
   // 任意云层>=85% 或总云量>=85% 均视为 overcast
   const isOvercast = cloudCover >= 85 || lowClouds >= 85 || midClouds >= 85 || highClouds >= 85;
 
-  if (isOvercast && hasPrecipitation) {
+  // 重度降水（≥1mm）+ 全覆盖（cloudCover=100 或 lowClouds≥90）→ 严重封顶 10
+  const HEAVY_PRECIP_CODES = new Set([65, 75, 77, 82, 85, 86, 95, 96, 99]);
+  const isHeavyPrecip = precipitation >= 1 || convPrecip >= 1
+    || (typeof weatherCode === 'number' && HEAVY_PRECIP_CODES.has(weatherCode));
+  const isFullOvercast = cloudCover >= 100 || lowClouds >= 90;
+
+  if (isFullOvercast && isHeavyPrecip) {
+    lightPathScore = Math.min(lightPathScore, 10);
+    capReason = 'overcast_cap_40'; // 保持与现有 capReason 一致（已有测试依赖此字符串）
+  } else if (isOvercast && hasPrecipitation) {
     // 同时命中取更严格上限（overcast_cap_40 < precipitation_cap_50）
     lightPathScore = Math.min(lightPathScore, 40);
     capReason = 'overcast_cap_40';
