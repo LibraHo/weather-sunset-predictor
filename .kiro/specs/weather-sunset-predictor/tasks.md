@@ -1061,26 +1061,26 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 ### 任务 55：后端算法重构（核心）
 
-- [ ] 55.1 新建 `LightPathV2Service`（或在现有服务中完成等价重构）
+- [x] 55.1 新建 `LightPathV2Service`（或在现有服务中完成等价重构）
   - 输入：太阳几何 + pressure-level 估算云底 + 分层云量
   - 输出：`score`、`occlusionProbability`、`samples[]`
   - _关联需求：35.1, 35.2, 35.3, 35.5_
 
-- [ ] 55.2 实现多点采样（20/50/100km）与几何遮挡计算
+- [x] 55.2 实现多点采样（20/50/100km）与几何遮挡计算
   - 使用 `atan(H/D)` 临界角与太阳高度角比较
   - _关联需求：35.2, 35.3_
 
-- [ ] 55.3 恶劣天气硬封顶集成到光路分
+- [x] 55.3 恶劣天气硬封顶集成到光路分
   - overcast / precipitation / rain-snow code
   - _关联需求：35.4_
 
-- [ ] 55.4 总分融合权重改为保守值
+- [x] 55.4 总分融合权重改为保守值
   - `lightPathWeight <= 0.3`，并配置化
   - _关联需求：35.7_
 
 ### 任务 56：API 与响应结构对齐
 
-- [ ] 56.1 `/api/prediction/enhanced` 返回结构扩展
+- [x] 56.1 `/api/prediction/enhanced` 返回结构扩展
   - `lightPath.occlusionProbability`
   - `lightPath.samples[]`
   - `lightPath.capReason`
@@ -1093,7 +1093,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 ### 任务 57：前端展示与文案清理
 
-- [ ] 57.1 移除所有 `150km/300km` 旧模型文案与依赖
+- [x] 57.1 移除所有 `150km/300km` 旧模型文案与依赖
   - `PredictionController` + locales
   - _关联需求：35.6_
 
@@ -1104,7 +1104,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 ### 任务 58：测试与坏样本回放
 
-- [ ] 58.1 单元测试：LightPathV2 关键路径
+- [x] 58.1 单元测试：LightPathV2 关键路径
   - 太阳角度边界、云底缺失回退、采样融合
   - _关联需求：35.9_
 
@@ -1118,12 +1118,12 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 ### 任务 59：上线观测与回滚窗口
 
-- [ ] 59.1 增加观测日志与告警
+- [x] 59.1 增加观测日志与告警
   - `capReason` 命中率
   - 异常高分告警：`cloudCover>85 && lightPathScore>60`
   - _关联需求：35.8_
 
-- [ ] 59.2 提供短期回滚开关（默认关闭旧算法）
+- [x] 59.2 提供短期回滚开关（默认关闭旧算法）
   - `LIGHT_PATH_V2_ENABLED`
   - _关联需求：35.10_
 
