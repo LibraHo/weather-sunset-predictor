@@ -198,26 +198,15 @@ class PredictionController {
 
           // 使用增强版或标准预测服务
           let sunrisePrediction;
-          if (this.useEnhancedModel) {
-            // 增强版需要传入具体的日出时间来计算正确的太阳高度角
-            sunrisePrediction = await this.enhancedPredictionService.calculateEnhancedPrediction(
-              sunriseWeatherData,
-              sunriseTime,  // 使用日出时间而不是日期
-              location.lat,
-              location.lon,
-              'sunrise'
-            );
-            console.log(`[PredictionController] 使用增强模型生成朝霞预测，得分: ${sunrisePrediction.score}`);
-          } else {
-            // 需求22：根据开关选择前端或后端计算
-            sunrisePrediction = await this._calculatePredictionWithBackend(
-              sunriseWeatherData,
-              targetDate,
-              location.lat,
-              location.lon,
-              'sunrise'
-            );
-          }
+          // 统一走后端预测，后端失败才 fallback 到前端本地计算
+          sunrisePrediction = await this._calculatePredictionWithBackend(
+            sunriseWeatherData,
+            targetDate,
+            location.lat,
+            location.lon,
+            'sunrise'
+          );
+          console.log(`[PredictionController] 朝霞预测完成，得分: ${sunrisePrediction.score}`);
 
           // 标记为朝霞预测
           sunrisePrediction.type = 'sunrise';
@@ -331,26 +320,15 @@ class PredictionController {
 
           // 使用增强版或标准预测服务
           let sunsetPrediction;
-          if (this.useEnhancedModel) {
-            // 增强版需要传入具体的日落时间来计算正确的太阳高度角
-            sunsetPrediction = await this.enhancedPredictionService.calculateEnhancedPrediction(
-              sunsetWeatherData,
-              sunsetTime,  // 使用日落时间而不是日期
-              location.lat,
-              location.lon,
-              'sunset'
-            );
-            console.log(`[PredictionController] 使用增强模型生成晚霞预测，得分: ${sunsetPrediction.score}`);
-          } else {
-            // 需求22：根据开关选择前端或后端计算
-            sunsetPrediction = await this._calculatePredictionWithBackend(
-              sunsetWeatherData,
-              targetDate,
-              location.lat,
-              location.lon,
-              'sunset'
-            );
-          }
+          // 统一走后端预测，后端失败才 fallback 到前端本地计算
+          sunsetPrediction = await this._calculatePredictionWithBackend(
+            sunsetWeatherData,
+            targetDate,
+            location.lat,
+            location.lon,
+            'sunset'
+          );
+          console.log(`[PredictionController] 晚霞预测完成，得分: ${sunsetPrediction.score}`);
 
           // 标记为晚霞预测
           sunsetPrediction.type = 'sunset';
