@@ -929,6 +929,17 @@ class PredictionController {
     analysis += this.i18n.t('prediction.lightPath.lightPathScore', {
       score: lightPath.score.toFixed(0)
     });
+    // 展示封顶原因
+    if (lightPath.capReason) {
+      const capText = lightPath.capReason === 'overcast_cap_40'
+        ? '⛅ 阴天封顶 ≤40'
+        : lightPath.capReason === 'precipitation_cap_50'
+          ? '🌧 降水封顶 ≤50'
+          : lightPath.capReason;
+      analysis += `<br><span style="color:#ff9800;font-size:12px;">${capText}</span>`;
+    } else if (lightPath.explain && lightPath.explain !== '光路通畅') {
+      analysis += `<br><span style="color:#aaa;font-size:12px;">${lightPath.explain}</span>`;
+    }
     if (prediction.severeWeatherCap?.reason) {
       analysis += `<br>⛔ ${prediction.severeWeatherCap.reason}`;
     }
