@@ -80,7 +80,7 @@ class PredictionController {
    * @private
    */
   _ensureAzimuthCompatibility(prediction, referenceTime, baseDate, lat, lon) {
-    if (prediction.sunAzimuth === null || prediction.sunAzimuth === undefined) {
+    if ((prediction.sunAzimuth === null || prediction.sunAzimuth === undefined) && referenceTime) {
       prediction.sunAzimuth = this.predictionService.getSunAzimuth(baseDate, referenceTime, lat, lon);
     }
 
@@ -227,9 +227,10 @@ class PredictionController {
 
             if (!sunrisePrediction.getOptimalViewingWindow) {
               sunrisePrediction.getOptimalViewingWindow = () => {
+                if (!sunriseTime) return { start: null, end: null, description: '日出时间未知' };
                 return {
-                  start: new Date(sunriseTime.getTime() - 30 * 60 * 1000), // 日出前30分钟
-                  end: new Date(sunriseTime.getTime() + 30 * 60 * 1000),   // 日出后30分钟
+                  start: new Date(sunriseTime.getTime() - 30 * 60 * 1000),
+                  end: new Date(sunriseTime.getTime() + 30 * 60 * 1000),
                   description: '日出前后30分钟是观看朝霞的最佳时间'
                 };
               };
@@ -349,9 +350,10 @@ class PredictionController {
 
             if (!sunsetPrediction.getOptimalViewingWindow) {
               sunsetPrediction.getOptimalViewingWindow = () => {
+                if (!sunsetTime) return { start: null, end: null, description: '日落时间未知' };
                 return {
-                  start: new Date(sunsetTime.getTime() - 30 * 60 * 1000), // 日落前30分钟
-                  end: new Date(sunsetTime.getTime() + 30 * 60 * 1000),   // 日落后30分钟
+                  start: new Date(sunsetTime.getTime() - 30 * 60 * 1000),
+                  end: new Date(sunsetTime.getTime() + 30 * 60 * 1000),
                   description: '日落前后30分钟是观看晚霞的最佳时间'
                 };
               };
