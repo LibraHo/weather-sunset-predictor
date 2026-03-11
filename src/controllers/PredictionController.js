@@ -277,9 +277,10 @@ class PredictionController {
           location.lon
         );
 
-        console.log(`[PredictionController] 第${i}天 日落时间:`, sunsetTime, `时间戳: ${sunsetTime.getTime()}`);
-        console.log(`[PredictionController] 第${i}天 targetDate:`, targetDate, `时间戳: ${targetDate.getTime()}`);
+        console.log(`[PredictionController] 第${i}天 日落时间:`, sunsetTime, `时间戳: ${sunsetTime?.getTime()}`);
+        console.log(`[PredictionController] 第${i}天 targetDate:`, targetDate, `时间戳: ${targetDate?.getTime()}`);
 
+        if (!sunsetTime) continue;
         const sunsetTimestamp = sunsetTime.getTime();
 
         // 首先尝试找到2小时内的数据
@@ -1142,7 +1143,7 @@ class PredictionController {
         const sunriseTime = pred.sunsetTime; // 对于朝霞，sunsetTime 实际存储的是日出时间
 
         // 判断是否已过（日出时间 + 2小时）
-        const isPassed = now > new Date(sunriseTime.getTime() + 2 * 60 * 60 * 1000);
+        const isPassed = sunriseTime ? now > new Date(sunriseTime.getTime() + 2 * 60 * 60 * 1000) : false;
         const passedLabel = isPassed ? `<span class="passed-badge">${this.i18n.t('prediction.passed')}</span>` : '';
 
         html += `
@@ -1173,7 +1174,7 @@ class PredictionController {
         const sunsetTime = pred.sunsetTime;
 
         // 判断是否已过（日落时间 + 1.5小时）
-        const isPassed = now > new Date(sunsetTime.getTime() + 1.5 * 60 * 60 * 1000);
+        const isPassed = sunsetTime ? now > new Date(sunsetTime.getTime() + 1.5 * 60 * 60 * 1000) : false;
         const passedLabel = isPassed ? `<span class="passed-badge">${this.i18n.t('prediction.passed')}</span>` : '';
 
         html += `
