@@ -16,6 +16,7 @@
 const SunCalculator = require('../utils/SunCalculator.js');
 const logger = require('../utils/logger.js');
 const CloudLayerEstimator = require('./CloudLayerEstimator.js');
+const LightPathV2Service = require('./LightPathV2Service.js');
 
 // ========== 常量定义 ==========
 
@@ -744,7 +745,11 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
 
   // 3. 光路评分（远距离通透性）
   const azimuth = calculateSolarAzimuth(dateObj, lat, lon);
-  const lightPathScore = scoreLightPath(weatherData, timeCheck.elevation, azimuth, remoteCloudData);
+  // 优先使用 V2 物理重构算法（回滚开关：LIGHT_PATH_V2_ENABLED=false）
+  const v2Result = LightPathV2Service.scoreFromWeatherData(weatherData, timeCheck.elevation, azimuth);
+  const lightPathScore = v2Result !== null
+    ? { ...v2Result, hasRemoteData: false, nearPointScore: v2Result.score, farPointScore: v2Result.score, breakdown: { nearPointCloudCover: weatherData.cloudCover || 0, farPointCloudCover: weatherData.cloudCover || 0 } }
+    : scoreLightPath(weatherData, timeCheck.elevation, azimuth, remoteCloudData);
   logger.debug('[EnhancedPredictionService]', '光路评分:', lightPathScore.score);
 
   // 4. 渲染修正（画质系数）
