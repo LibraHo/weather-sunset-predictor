@@ -405,8 +405,6 @@ function scoreLightPath(weatherData, solarElevation, azimuth, remoteCloudData = 
   return {
     score: parseFloat(lightPathScore.toFixed(1)),
     occlusionProbability: parseFloat(occlusionProbability.toFixed(3)),
-    nearPointScore: parseFloat(nearPointScore.toFixed(1)),
-    farPointScore: parseFloat(farPointScore.toFixed(1)),
     samples: sampleResults.map(({ distanceKm, cloudBaseHeight, criticalElevation, block }) => ({
       distanceKm,
       cloudBaseHeight,
@@ -415,7 +413,14 @@ function scoreLightPath(weatherData, solarElevation, azimuth, remoteCloudData = 
     })),
     capReason,
     explain: capReason ? '恶劣天气触发光路分封顶' : '基于太阳几何与分层云量的光路估算',
+    // --- deprecated fields (Phase 13 兼容窗口，Phase 14 移除) ---
+    /** @deprecated 使用 samples[0] 替代 */
+    nearPointScore: parseFloat(nearPointScore.toFixed(1)),
+    /** @deprecated 使用 samples[2] 替代 */
+    farPointScore: parseFloat(farPointScore.toFixed(1)),
+    /** @deprecated 远程采样已移除，始终为 false */
     hasRemoteData,
+    /** @deprecated 使用 samples[].cloudBaseHeight 替代 */
     breakdown: {
       nearPointCloudCover: weatherData.cloudCover || 0,
       farPointCloudCover: weatherData.cloudCover || 0
