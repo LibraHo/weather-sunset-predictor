@@ -1172,3 +1172,62 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 - [ ] 62.3 7天零调用验收
   - 输出运行报告：Windy 预测调用=0
   - _关联需求：36.6_
+
+---
+
+## Phase 15：Windy 孤立封装 & 一键启用（需求 37）
+
+> 目标：将 Windy 相关代码统一收归可插拔模块，通过单一环境变量 `ENABLE_WINDY` 控制后端注册与前端 UI，支持随时一键恢复接入。
+
+### 任务概览
+
+| 编号 | 任务 | 状态 |
+|------|------|------|
+| 63.1 | ProviderOrchestrator：统一 ENABLE_WINDY 开关 | - [ ] |
+| 63.2 | weather.js 路由：按 flag 决定是否读取 X-Windy-API-Key | - [ ] |
+| 63.3 | 前端：Settings UI Windy Key 入口由后端 flag 控制 | - [ ] |
+| 63.4 | 前端：WindyAPIService 按 flag 决定是否透传 Key | - [ ] |
+| 63.5 | .env.example 补充 ENABLE_WINDY 说明 | - [ ] |
+| 63.6 | 单元测试：orchestrator flag 行为验证 | - [ ] |
+
+### 任务详情
+
+#### 63.1 ProviderOrchestrator 统一开关
+
+- [ ] 63.1 读取 `ENABLE_WINDY=true/false`（默认 false）
+  - `false`：Windy 不注册到 providers map，emergency fallback 也不生效
+  - `true`：Windy 作为 emergency fallback（`ENABLE_WINDY_EMERGENCY_FALLBACK` 可进一步控制是否自动触发）
+  - 移除 `ENABLE_WINDY_EMERGENCY_FALLBACK` 单独变量，合并语义
+
+#### 63.2 weather.js 路由 Key 透传
+
+- [ ] 63.2 仅当 `ENABLE_WINDY=true` 时读取 `X-Windy-API-Key` 头并透传
+  - `false` 时完全忽略该请求头
+
+#### 63.3 前端 Settings UI
+
+- [ ] 63.3 `/api/config/features` 接口暴露 `windyEnabled: bool`
+  - SettingsPanel 初始化时请求该接口
+  - `windyEnabled=false`：隐藏 Windy Key 相关 UI
+  - `windyEnabled=true`：恢复显示 Key 输入框与来源切换
+
+#### 63.4 前端 WindyAPIService Key 透传
+
+- [ ] 63.4 读取 `/api/config/features` 中的 `windyEnabled`
+  - `false`：不附加 `X-Windy-API-Key` 请求头
+  - `true`：恢复透传 localStorage 中的 key
+
+#### 63.5 环境变量文档
+
+- [ ] 63.5 `server/.env.example` 补充注释
+  ```
+  # Windy API 孤立开关（默认关闭）
+  # 改为 true 可一键启用 Windy 作为 emergency fallback
+  ENABLE_WINDY=false
+  ```
+
+#### 63.6 单元测试
+
+- [ ] 63.6 `tests/unit/server/ProviderOrchestrator.windy.test.js`
+  - ENABLE_WINDY=false：providers map 不含 windy，fallback 不触发
+  - ENABLE_WINDY=true：windy 注册，emergency fallback 可正常触发

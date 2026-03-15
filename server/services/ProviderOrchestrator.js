@@ -5,9 +5,14 @@ const sequenceValidator = require('./validators/ForecastSequenceValidator');
 
 class ProviderOrchestrator {
   constructor() {
+    // Phase 15 任务63.1：ENABLE_WINDY 统一开关（默认 false）
+    // true  → Windy 注册为 emergency fallback，可一键接入
+    // false → Windy 完全不注册，fallback 也不触发
+    this.windyEnabled = process.env.ENABLE_WINDY === 'true';
+
     this.providers = {
       openmeteo: openMeteoProvider,
-      windy: windyProvider,
+      ...(this.windyEnabled ? { windy: windyProvider } : {}),
       caiyun: caiyunProvider
     };
 
@@ -15,8 +20,10 @@ class ProviderOrchestrator {
     this.primaryProvider = process.env.PRIMARY_WEATHER_PROVIDER || 'openmeteo';
     this.fallbackProvider = process.env.FALLBACK_WEATHER_PROVIDER || 'windy';
 
-    // emergency fallback: 主服务网络/配置故障时启用（默认关闭）
-    this.emergencyFallbackEnabled = process.env.ENABLE_WINDY_EMERGENCY_FALLBACK === 'true';
+    // emergency fallback: ENABLE_WINDY=true 时生效（默认关闭）
+    // 兼容旧变量 ENABLE_WINDY_EMERGENCY_FALLBACK，新项目统一用 ENABLE_WINDY
+    this.emergencyFallbackEnabled = this.windyEnabled &&
+      process.env.ENABLE_WINDY_EMERGENCY_FALLBACK !== 'false';
 
     // 任务43.3：时序质量门禁 fallback（默认开启）
     // 当序列校验抛出严重错误时，自动切到 fallback provider

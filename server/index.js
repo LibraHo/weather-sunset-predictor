@@ -68,6 +68,16 @@ app.get('/api/config/map-key', (req, res) => {
   res.json({ mapKey });
 });
 
+// Phase15 任务63.3：暴露 feature flags 给前端
+app.get('/api/config/features', (req, res) => {
+  const orchestrator = require('./services/ProviderOrchestrator');
+  res.json({
+    windyEnabled: orchestrator.windyEnabled,
+    capeScoreEnabled: orchestrator.featureFlags.capeScoreEnabled,
+    convectivePrecipScoreEnabled: orchestrator.featureFlags.convectivePrecipScoreEnabled
+  });
+});
+
 app.use('/api/weather', weatherRoutes);
 app.use('/api/firecloud', firecloudRoutes);
 app.use('/api/prediction', predictionRoutes);

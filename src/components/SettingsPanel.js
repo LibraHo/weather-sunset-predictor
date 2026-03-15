@@ -149,6 +149,23 @@ class SettingsPanel {
             </div>
           </div>
 
+          <!-- Phase15 任务63.3：Windy API Key（默认隐藏，ENABLE_WINDY=true 时显示） -->
+          <div id="windy-key-section" style="display:none;">
+            <hr class="settings-section-divider" />
+            <div class="settings-section">
+              <h3 class="settings-section-title">🌬️ Windy API Key</h3>
+              <div class="settings-section-content">
+                <div class="setting-item">
+                  <label class="setting-label" for="windy-api-key-input">${this.i18n.t('settings.windyApiKey') || 'Windy API Key'}</label>
+                  <input type="password" id="windy-api-key-input" class="setting-input"
+                    placeholder="${this.i18n.t('settings.windyApiKeyPlaceholder') || '输入你的 Windy API Key'}"
+                    value="${localStorage.getItem('user_windy_api_key') || ''}" />
+                  <small class="setting-hint">${this.i18n.t('settings.windyApiKeyHint') || '用于启用 Windy 数据源，留空使用系统默认'}</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <hr class="settings-section-divider" />
 
           <!-- 🔔 通知与提醒 -->
@@ -494,9 +511,36 @@ class SettingsPanel {
   }
 
   /**
+   * Phase15 任务63.3：从后端获取 feature flags
+   */
+  async _fetchFeatureFlags() {
+    try {
+      const proxyURL = localStorage.getItem('proxy_url') || '';
+      const base = proxyURL.replace(/\/$/, '');
+      const resp = await fetch(`${base}/api/config/features`);
+      if (resp.ok) {
+        this._featureFlags = await resp.json();
+      }
+    } catch (e) {
+      // 网络失败时保持默认（windyEnabled=false）
+      this._featureFlags = this._featureFlags || { windyEnabled: false };
+    }
+  }
+
+  /**
+   * Phase15 任务63.3：根据 windyEnabled flag 控制 Windy Key UI 显隐
+   */
+  _applyWindyUIVisibility() {
+    const windySection = this.panel?.querySelector('#windy-key-section');
+    if (!windySection) return;
+    const enabled = this._featureFlags?.windyEnabled === true;
+    windySection.style.display = enabled ? '' : 'none';
+  }
+
+  /**
    * 打开设置面板
    */
-  open() {
+  async open() {
     // 如果面板还没有创建，或者语言已改变，则重新创建
     const currentLang = this.i18n.getLanguage();
     if (!this.panel || this.lastLanguage !== currentLang) {
@@ -511,6 +555,10 @@ class SettingsPanel {
     this.panel.classList.remove('hidden');
     this.isOpen = true;
     this.loadSettings();
+
+    // Phase15 任务63.3：获取 feature flags 并更新 UI
+    await this._fetchFeatureFlags();
+    this._applyWindyUIVisibility();
   }
 
   /**
