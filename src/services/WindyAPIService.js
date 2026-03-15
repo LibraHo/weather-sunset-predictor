@@ -48,8 +48,27 @@ class WindyAPIService {
 
     console.log('[WindyAPIService] 通过后端代理获取天气数据:', { lat, lon, hours });
 
+    // Phase15 任务63.4：仅当后端 windyEnabled=true 时透传用户 Key
+    const headers = {};
+    if (this._windyEnabled !== false) {
+      // 懒加载 feature flags（已缓存则直接用）
+      if (this._windyEnabled === undefined) {
+        try {
+          const featResp = await fetch(`${this.proxyURL}/api/config/features`);
+          const flags = featResp.ok ? await featResp.json() : {};
+          this._windyEnabled = flags.windyEnabled === true;
+        } catch {
+          this._windyEnabled = false;
+        }
+      }
+      if (this._windyEnabled) {
+        const userKey = localStorage.getItem('user_windy_api_key');
+        if (userKey) headers['X-Windy-API-Key'] = userKey;
+      }
+    }
+
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, { headers });
 
       if (!response.ok) {
         throw new Error(`后端请求失败: ${response.status}`);

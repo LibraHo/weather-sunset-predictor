@@ -68,8 +68,11 @@ router.get('/forecast', async (req, res, next) => {
     const lonNum = parseFloat(lon);
     const hoursNum = hours ? parseInt(hours) : 168;
 
-    // 任务53.1：不再读取/透传 X-Windy-API-Key（已切换到 Open-Meteo 主链路）
-    const result = await orchestrator.fetchWeatherData(latNum, lonNum, hoursNum);
+    // Phase15 任务63.2：仅当 ENABLE_WINDY=true 时读取并透传 X-Windy-API-Key
+    const userApiKey = orchestrator.windyEnabled
+      ? req.headers['x-windy-api-key'] || null
+      : null;
+    const result = await orchestrator.fetchWeatherData(latNum, lonNum, hoursNum, userApiKey);
 
     // 自动对比：当前站点输出 vs Open-Meteo基线（用于监控偏差）
     let compareMeta = null;
@@ -114,5 +117,7 @@ router.get('/forecast', async (req, res, next) => {
     next(error);
   }
 });
+
+
 
 module.exports = router;
