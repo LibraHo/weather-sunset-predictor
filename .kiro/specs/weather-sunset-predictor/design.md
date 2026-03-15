@@ -4591,3 +4591,93 @@ location /health {
 - 运行层：连续 7 天 Windy 预测调用为 0
 - 文档层：README/OpenAPI/.kiro 全量同步为 Open-Meteo 主链路
 
+
+---
+
+## 需求 37 设计：晚霞评分热力地图
+
+### 37.1 架构概览
+
+```
+[定时任务 Cron]
+    ↓ 每天 4 次（08/12/15/17 CST）
+[GridScoreService]
+    ↓ 并发请求 ~100 个网格点
+[Open-Meteo API]
+    ↓
+[EnhancedPredictionService] × 100
+    ↓
+[GridCache] → 内存 + 文件持久化（~/.xiake/grid-cache.json）
+    ↓
+[GET /api/heatmap/grid]
+    ↓
+[前端 HeatmapLayer]
+    ↓ 双线性插值 + Canvas 渲染
+[Leaflet 地图叠加层]
+```
+
+### 37.2 网格设计（中国区域）
+
+| 参数 | 值 |
+|------|-----|
+| 经度范围 | 72°E – 135°E |
+| 纬度范围 | 18°N – 53°N |
+| 间隔 | 经向 5°，纬向 5° |
+| 总点数 | 约 104 点（13×8） |
+| API 消耗 | 104 次/更新 × 4 次/天 = 416 次/天 |
+
+> 后续可升级到 2° 间隔（~750 点），需付费 API。
+
+### 37.3 后端实现
+
+#### GridScoreService（新建）
+- `generateGrid(date)` — 生成网格坐标列表
+- `fetchAndScore(gridPoints, date)` — 并发获取天气数据并评分（concurrency limit=10）
+- `getCache()` — 返回当前缓存（含 timestamp）
+- `refreshIfStale(maxAgeMs)` — 超时才刷新（频控保护）
+
+#### API 接口
+- `GET /api/heatmap/grid` — 返回缓存网格评分
+  ```json
+  {
+    "updatedAt": "2026-03-15T09:00:00Z",
+    "gridPoints": [
+      { "lat": 30, "lon": 120, "score": 75, "quality": "excellent" }
+    ]
+  }
+  ```
+- `POST /api/heatmap/refresh` — 手动触发刷新（需频控，60分钟内只能触发一次）
+
+#### 定时任务
+- Cron 表达式（CST）：`0 0,4,7,9 * * *`（UTC）= 08/12/15/17 CST
+- 使用 node-cron 或系统 cron 调用 `/api/heatmap/refresh`
+
+### 37.4 前端实现
+
+#### HeatmapLayer.js（新建）
+- `init(map)` — 在 Leaflet 地图上创建 Canvas overlay
+- `render(gridData)` — 双线性插值 + 颜色映射渲染
+- `toggle(visible)` — 显隐图层
+- `onMapClick(lat, lon)` — 获取点击位置评分（最近网格点或插值）
+
+#### 颜色映射（与评分系统一致，低分不渲染）
+
+> 低分区域（< 40）完全透明，地图只显示"值得期待"的区域，视觉更干净。
+
+| 评分 | 颜色 | 透明度 | 说明 |
+|------|------|--------|------|
+| ≥ 80 | `#FF4500`（深橙红） | 0.75 | 顶级，必去 |
+| 65–80 | `#FF8C00`（橙色） | 0.65 | 优质，值得期待 |
+| 50–65 | `#FFD166`（金黄） | 0.5 | 还行，可以关注 |
+| < 50 | 透明，不渲染 | 0 | 不显示，避免大面积渲染 |
+
+#### 中国边界裁剪
+- 使用简化版中国行政边界 GeoJSON（境外不渲染）
+- 或用矩形范围 + 透明度梯度模拟（MVP 版本）
+
+### 37.5 性能与限制
+
+- **缓存有效期**：1 小时（maxAge = 3600000ms）
+- **并发控制**：同时最多 10 个 Open-Meteo 请求
+- **文件持久化**：`~/.xiake/grid-cache.json`，重启后不丢缓存
+- **降级策略**：缓存过期且刷新失败时，返回旧缓存 + `stale: true` 标记

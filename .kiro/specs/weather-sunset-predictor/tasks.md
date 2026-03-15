@@ -1108,11 +1108,11 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - 太阳角度边界、云底缺失回退、采样融合
   - _关联需求：35.9_
 
-- [x] 58.2 集成测试：增强预测接口输出完整性
+- [ ] 58.2 集成测试：增强预测接口输出完整性
   - 校验新字段存在且数值范围正确
   - _关联需求：35.5_
 
-- [x] 58.3 回放坏样本
+- [ ] 58.3 回放坏样本
   - Val Thorens 雨夹雪/阴天样本不允许出现 100 分光路
   - _关联需求：35.4, 35.9_
 
@@ -1127,7 +1127,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - `LIGHT_PATH_V2_ENABLED`
   - _关联需求：35.10_
 
-- [x] 59.3 发布验收报告
+- [ ] 59.3 发布验收报告
   - 记录线上样本对比与结论
   - _关联需求：35.9_
 
@@ -1177,57 +1177,91 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 ## Phase 15：Windy 孤立封装 & 一键启用（需求 37）
 
-> 目标：将 Windy 相关代码统一收归可插拔模块，通过单一环境变量 `ENABLE_WINDY` 控制后端注册与前端 UI，支持随时一键恢复接入。
+> 状态：✅ 全部完成（2026-03-15，PR #109 已合并）
+>
+> 目标：将 Windy 相关代码统一收归可插拔模块，通过单一环境变量 `ENABLE_WINDY` 控制后端注册与前端 UI。
+
+| 编号 | 任务 | 状态 |
+|------|------|------|
+| 63.1 | ProviderOrchestrator：ENABLE_WINDY 统一开关 | ✅ |
+| 63.2 | weather.js 路由按 flag 决定 X-Windy-API-Key 透传 | ✅ |
+| 63.3 | /api/config/features 接口 + SettingsPanel UI 显隐 | ✅ |
+| 63.4 | WindyAPIService 懒加载 flags，按需透传 Key | ✅ |
+| 63.5 | .env.example 补充 ENABLE_WINDY 说明 | ✅ |
+| 63.6 | 单元测试（7 个通过） | ✅ |
+
+**使用方法：**
+- 默认 `ENABLE_WINDY=false` → 完全走 Open-Meteo
+- `ENABLE_WINDY=true` → Windy 作为 emergency fallback，前端 Key 入口自动显示
+
+---
+
+## Phase 16：晚霞评分热力地图（需求 37）
+
+> 目标：在地图上渲染中国区域的晚霞评分分布，后端定时更新网格缓存，前端双线性插值热力图叠加。
 
 ### 任务概览
 
 | 编号 | 任务 | 状态 |
 |------|------|------|
-| 63.1 | ProviderOrchestrator：统一 ENABLE_WINDY 开关 | - [ ] |
-| 63.2 | weather.js 路由：按 flag 决定是否读取 X-Windy-API-Key | - [ ] |
-| 63.3 | 前端：Settings UI Windy Key 入口由后端 flag 控制 | - [ ] |
-| 63.4 | 前端：WindyAPIService 按 flag 决定是否透传 Key | - [ ] |
-| 63.5 | .env.example 补充 ENABLE_WINDY 说明 | - [ ] |
-| 63.6 | 单元测试：orchestrator flag 行为验证 | - [ ] |
+| 64.1 | GridScoreService：网格生成 + 批量评分 + 缓存 | - [ ] |
+| 64.2 | /api/heatmap/grid 接口 + /api/heatmap/refresh | - [ ] |
+| 64.3 | 定时更新任务（每天 4 次） | - [ ] |
+| 64.4 | 前端 HeatmapLayer：Canvas 插值渲染 | - [ ] |
+| 64.5 | 地图 UI：图层开关 + 点击查询 + 时间戳显示 | - [ ] |
+| 64.6 | 单元测试：GridScoreService + HeatmapLayer | - [ ] |
 
 ### 任务详情
 
-#### 63.1 ProviderOrchestrator 统一开关
+#### 64.1 GridScoreService（后端，新建）
 
-- [ ] 63.1 读取 `ENABLE_WINDY=true/false`（默认 false）
-  - `false`：Windy 不注册到 providers map，emergency fallback 也不生效
-  - `true`：Windy 作为 emergency fallback（`ENABLE_WINDY_EMERGENCY_FALLBACK` 可进一步控制是否自动触发）
-  - 移除 `ENABLE_WINDY_EMERGENCY_FALLBACK` 单独变量，合并语义
+- [ ] 64.1 `server/services/GridScoreService.js`
+  - `CHINA_GRID`：5° 间隔网格坐标列表（72–135°E，18–53°N，约 104 点）
+  - `generateGrid()` → 返回 `[{lat, lon}]`
+  - `fetchAndScore(gridPoints)` → 并发（limit=10）调用 Open-Meteo + EnhancedPredictionService，返回 `[{lat, lon, score, quality, breakdown}]`
+  - `getCache()` → `{ updatedAt, gridPoints, stale }`
+  - `refreshIfStale(maxAgeMs=3600000)` → 超时才重新 fetch，频控保护
+  - 缓存持久化到 `~/.xiake/grid-cache.json`
+  - _关联需求：37.3, 37.5, 37.6_
 
-#### 63.2 weather.js 路由 Key 透传
+#### 64.2 Heatmap API 路由（后端，新建）
 
-- [ ] 63.2 仅当 `ENABLE_WINDY=true` 时读取 `X-Windy-API-Key` 头并透传
-  - `false` 时完全忽略该请求头
+- [ ] 64.2 `server/routes/heatmap.js`
+  - `GET /api/heatmap/grid` → 返回缓存数据（含 `updatedAt`、`stale`）
+  - `POST /api/heatmap/refresh` → 手动触发刷新，频控 60 分钟内最多 1 次
+  - 注册到 `server/index.js`
+  - _关联需求：37.3, 37.9_
 
-#### 63.3 前端 Settings UI
+#### 64.3 定时更新任务
 
-- [ ] 63.3 `/api/config/features` 接口暴露 `windyEnabled: bool`
-  - SettingsPanel 初始化时请求该接口
-  - `windyEnabled=false`：隐藏 Windy Key 相关 UI
-  - `windyEnabled=true`：恢复显示 Key 输入框与来源切换
+- [ ] 64.3 在 `server/index.js` 或独立 `server/jobs/gridRefreshJob.js` 中
+  - 使用 `node-cron`，UTC `0 0,4,7,9 * * *`（= CST 08/12/15/17）
+  - 启动时检查缓存，若超 1 小时则立即刷新一次
+  - _关联需求：37.3_
 
-#### 63.4 前端 WindyAPIService Key 透传
+#### 64.4 前端 HeatmapLayer.js（新建）
 
-- [ ] 63.4 读取 `/api/config/features` 中的 `windyEnabled`
-  - `false`：不附加 `X-Windy-API-Key` 请求头
-  - `true`：恢复透传 localStorage 中的 key
+- [ ] 64.4 `src/services/HeatmapLayer.js`
+  - `init(leafletMap)` → 创建 Leaflet Canvas overlay
+  - `loadData()` → 调用 `/api/heatmap/grid`
+  - `render(gridData)` → 双线性插值 + 颜色映射 → 画到 Canvas
+  - 颜色映射：≥70 橙红 / 50–70 金黄 / 30–50 浅蓝 / <30 灰蓝
+  - `toggle(visible)` → 显隐
+  - `getScoreAt(lat, lon)` → 返回插值评分（用于点击查询）
+  - _关联需求：37.2, 37.4, 37.7_
 
-#### 63.5 环境变量文档
+#### 64.5 地图 UI 集成
 
-- [ ] 63.5 `server/.env.example` 补充注释
-  ```
-  # Windy API 孤立开关（默认关闭）
-  # 改为 true 可一键启用 Windy 作为 emergency fallback
-  ENABLE_WINDY=false
-  ```
+- [ ] 64.5
+  - 在地图右上角加"晚霞热力图"开关按钮
+  - 底部/角落显示"数据更新于 HH:mm"时间戳
+  - 点击地图触发 `getScoreAt` 弹出 tooltip：评分 + 质量标签
+  - 加载中显示 loading 状态，失败时 toast 提示
+  - _关联需求：37.7, 37.8, 37.9_
 
-#### 63.6 单元测试
+#### 64.6 测试
 
-- [ ] 63.6 `tests/unit/server/ProviderOrchestrator.windy.test.js`
-  - ENABLE_WINDY=false：providers map 不含 windy，fallback 不触发
-  - ENABLE_WINDY=true：windy 注册，emergency fallback 可正常触发
+- [ ] 64.6
+  - `tests/unit/server/GridScoreService.test.js`：网格生成、缓存逻辑、频控
+  - `tests/unit/services/HeatmapLayer.test.js`：双线性插值、颜色映射
+  - _关联需求：37_
