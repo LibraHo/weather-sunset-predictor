@@ -11,6 +11,7 @@ import MockWindyAPIService from '../services/MockWindyAPIService.js';
 import UnitConverter from '../utils/UnitConverter.js';
 import WindyMapService from '../services/WindyMapService.js';
 import MockWindyMapService from '../services/MockWindyMapService.js';
+import HeatmapLayer from '../services/HeatmapLayer.js';
 import SurroundingPointsService from '../services/SurroundingPointsService.js';
 import RadarChartService from '../services/RadarChartService.js';
 import FireCloudOverlayService from '../services/FireCloudOverlayService.js';
@@ -48,6 +49,13 @@ class WeatherController {
       // 纯Mock模式：不初始化地图
       this.windyMapService = null;
     }
+
+    // Phase16：初始化热力图图层
+    const heatmapProxyURL = !useMockAPI
+      ? (loadConfig().proxy?.url || 'http://localhost:3000')
+      : '';
+    this.heatmapLayer = new HeatmapLayer(heatmapProxyURL);
+    this.heatmapVisible = false;
 
     // 任务19：初始化周边火烧云服务
     this.surroundingPointsService = new SurroundingPointsService();
@@ -737,6 +745,12 @@ class WeatherController {
 
       await this.windyMapService.initializeMap('map-container', mapOptions);
       this.isMapInitialized = true;
+
+      // Phase16：绑定热力图到 Leaflet map 实例
+      if (this.windyMapService.map) {
+        this.heatmapLayer.init(this.windyMapService.map);
+        this._initHeatmapUI();
+      }
 
       // 隐藏加载指示器
       if (mapLoading) mapLoading.classList.add('hidden');
@@ -1537,6 +1551,108 @@ class WeatherController {
   clearOverlayCache() {
     this.fireCloudOverlayService.clearCache();
     console.log('[WeatherController] 覆盖层缓存已清除');
+  }
+
+  // ---- Phase16：热力图 UI ----
+
+  /**
+   * 初始化热力图控制 UI（开关按钮、时间戳、点击查询）
+   */
+  _initHeatmapUI() {
+    // 在地图容器右上角插入开关按钮
+    const mapContainer = document.getElementById('map-container');
+    if (!mapContainer) return;
+
+    // 开关按钮
+    const btn = document.createElement('button');
+    btn.id = 'heatmap-toggle-btn';
+    btn.className = 'heatmap-toggle-btn';
+    btn.innerHTML = '🌅 晚霞热力图';
+    btn.title = '开启/关闭晚霞评分热力图';
+    btn.style.cssText = `
+      position: absolute; top: 10px; right: 10px; z-index: 1000;
+      background: rgba(30,30,40,0.85); backdrop-filter: blur(8px);
+      color: #fff; border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px; padding: 6px 12px; cursor: pointer;
+      font-size: 13px; font-weight: 500;
+    `;
+    mapContainer.style.position = 'relative';
+    mapContainer.appendChild(btn);
+
+    // 时间戳标签
+    const timestamp = document.createElement('div');
+    timestamp.id = 'heatmap-timestamp';
+    timestamp.style.cssText = `
+      position: absolute; bottom: 10px; left: 10px; z-index: 1000;
+      background: rgba(30,30,40,0.75); color: #ccc;
+      border-radius: 6px; padding: 4px 8px; font-size: 11px;
+      display: none;
+    `;
+    mapContainer.appendChild(timestamp);
+
+    // 点击查询 tooltip
+    const tooltip = document.createElement('div');
+    tooltip.id = 'heatmap-tooltip';
+    tooltip.style.cssText = `
+      position: absolute; z-index: 1001; pointer-events: none;
+      background: rgba(20,20,30,0.9); color: #fff;
+      border-radius: 8px; padding: 8px 12px; font-size: 12px;
+      display: none; min-width: 120px;
+    `;
+    mapContainer.appendChild(tooltip);
+
+    // 开关事件
+    btn.addEventListener('click', async () => {
+      this.heatmapVisible = !this.heatmapVisible;
+      btn.style.background = this.heatmapVisible
+        ? 'rgba(255,100,0,0.85)'
+        : 'rgba(30,30,40,0.85)';
+
+      if (this.heatmapVisible) {
+        btn.innerHTML = '⏳ 加载中...';
+        try {
+          await this.heatmapLayer.loadData();
+          this.heatmapLayer.toggle(true);
+          // 更新时间戳
+          const label = this.heatmapLayer.getUpdatedAtLabel();
+          if (label) {
+            timestamp.textContent = `数据更新于 ${label}`;
+            timestamp.style.display = 'block';
+          }
+          btn.innerHTML = '🌅 热力图 ON';
+        } catch {
+          toastService.show('热力图数据加载失败，请稍后重试', 'error');
+          this.heatmapVisible = false;
+          btn.style.background = 'rgba(30,30,40,0.85)';
+          btn.innerHTML = '🌅 晚霞热力图';
+        }
+      } else {
+        this.heatmapLayer.toggle(false);
+        timestamp.style.display = 'none';
+        tooltip.style.display = 'none';
+        btn.innerHTML = '🌅 晚霞热力图';
+      }
+    });
+
+    // 地图点击查询
+    if (this.windyMapService?.map) {
+      this.windyMapService.map.on('click', (e) => {
+        if (!this.heatmapVisible) return;
+        const score = this.heatmapLayer.getScoreAt(e.latlng.lat, e.latlng.lng);
+        if (score === null) {
+          tooltip.style.display = 'none';
+          return;
+        }
+        const quality = score >= 80 ? '顶级 🔥' : score >= 65 ? '优质 ✨' : score >= 50 ? '还行 🌤' : '一般';
+        tooltip.innerHTML = `📍 ${e.latlng.lat.toFixed(1)}°N ${e.latlng.lng.toFixed(1)}°E<br>晚霞评分：<b>${score.toFixed(0)}</b><br>${quality}`;
+        // 定位 tooltip 到点击处
+        const containerPoint = this.windyMapService.map.latLngToContainerPoint(e.latlng);
+        tooltip.style.left = `${containerPoint.x + 12}px`;
+        tooltip.style.top = `${containerPoint.y - 40}px`;
+        tooltip.style.display = 'block';
+        setTimeout(() => { tooltip.style.display = 'none'; }, 4000);
+      });
+    }
   }
 }
 

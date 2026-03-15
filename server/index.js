@@ -10,6 +10,7 @@ const firecloudRoutes = require('./routes/firecloud');
 const predictionRoutes = require('./routes/prediction');
 const visitorRoutes = require('./routes/visitor');
 const geocodingRoutes = require('./routes/geocoding');
+const heatmapRoutes = require('./routes/heatmap');
 const { requestLogger, errorLogger } = require('./middleware/logger');
 
 const app = express();
@@ -83,6 +84,7 @@ app.use('/api/firecloud', firecloudRoutes);
 app.use('/api/prediction', predictionRoutes);
 app.use('/api/visitor', visitorRoutes);
 app.use('/api/geocoding', geocodingRoutes);
+app.use('/api/heatmap', heatmapRoutes);
 
 // Error logging middleware
 app.use(errorLogger());
@@ -112,6 +114,38 @@ app.listen(PORT, () => {
   console.log(`🚀 后端服务器运行在 http://localhost:${PORT}`);
   console.log(`📝 环境: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🌐 CORS 允许源: ${corsOrigins.join(', ')}`);
+
+  // Phase16 任务64.3：定时刷新晚霞评分网格
+  // 每天 4 次：UTC 0/4/7/9 = CST 08/12/15/17
+  _scheduleGridRefresh();
 });
+
+/**
+ * Phase16 任务64.3：定时刷新网格评分
+ */
+function _scheduleGridRefresh() {
+  const gridService = require('./services/GridScoreService');
+
+  // 启动时检查并刷新一次
+  gridService.refreshIfStale().catch(err =>
+    console.error('[GridRefresh] 启动刷新失败:', err.message)
+  );
+
+  // 定时任务：每天 UTC 0/4/7/9 点（= CST 8/12/15/17）
+  // 用 setInterval 模拟，每小时检查是否到了刷新时间点
+  const REFRESH_HOURS_UTC = [0, 4, 7, 9];
+
+  setInterval(() => {
+    const now = new Date();
+    const hourUTC = now.getUTCHours();
+    const minUTC = now.getUTCMinutes();
+    if (REFRESH_HOURS_UTC.includes(hourUTC) && minUTC < 5) {
+      console.log(`[GridRefresh] 定时触发刷新（UTC ${hourUTC}:${String(minUTC).padStart(2,'0')}）`);
+      gridService.refreshIfStale(0).catch(err =>
+        console.error('[GridRefresh] 定时刷新失败:', err.message)
+      );
+    }
+  }, 5 * 60 * 1000); // 每 5 分钟检查一次
+}
 
 module.exports = app;
