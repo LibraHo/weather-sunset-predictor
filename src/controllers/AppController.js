@@ -597,55 +597,6 @@ class AppController {
       });
     }
 
-    // 任务18：设置地图视图切换按钮事件
-    const mapBtn = document.getElementById('map-btn');
-    if (mapBtn) {
-      mapBtn.addEventListener('click', () => {
-        if (this.weatherController) {
-          this.weatherController.switchView('map');
-        }
-      });
-    }
-
-    // 任务18.3.2：设置地图图层切换按钮事件
-    const layerButtons = document.querySelectorAll('.layer-btn');
-    layerButtons.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const layer = e.target.dataset.layer;
-        if (this.weatherController && layer) {
-          this.weatherController.switchMapLayer(layer);
-        }
-      });
-    });
-
-    // 任务18.3.3：设置地图时间控制按钮事件
-    const mapTimeNowBtn = document.getElementById('map-time-now');
-    if (mapTimeNowBtn) {
-      mapTimeNowBtn.addEventListener('click', () => {
-        if (this.weatherController) {
-          this.weatherController.setMapTimeToNow();
-        }
-      });
-    }
-
-    const mapTimeSunsetBtn = document.getElementById('map-time-sunset');
-    if (mapTimeSunsetBtn) {
-      mapTimeSunsetBtn.addEventListener('click', () => {
-        if (this.weatherController) {
-          this.weatherController.setMapTimeToSunset();
-        }
-      });
-    }
-
-    const mapTimeSunriseBtn = document.getElementById('map-time-sunrise');
-    if (mapTimeSunriseBtn) {
-      mapTimeSunriseBtn.addEventListener('click', () => {
-        if (this.weatherController) {
-          this.weatherController.setMapTimeToSunrise();
-        }
-      });
-    }
-
     // 需求11：设置日期切换按钮事件
     const todayBtn = document.getElementById('today-btn');
     if (todayBtn) {
