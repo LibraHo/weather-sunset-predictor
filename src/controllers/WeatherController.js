@@ -1604,8 +1604,8 @@ class WeatherController {
       const useGaode = mapTileSetting === 'gaode' || (mapTileSetting === 'auto' && isChina);
 
       if (useGaode) {
-        window.L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
-          subdomains: '1234',
+        // 高德瓦片走后端代理，避免浏览器直连受限
+        window.L.tileLayer('/api/tiles/gaode/{z}/{x}/{y}', {
           maxZoom: 10,
           attribution: '© 高德地图'
         }).addTo(map);
