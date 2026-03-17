@@ -2,19 +2,20 @@
  * FireCloudOverlayService - 火烧云地图覆盖层服务
  *
  * Phase 6 重构：使用 Leaflet L.imageOverlay() 替代 DOM 覆盖层
- * 覆盖层与地图完美同步（拖动/缩放），解决原 iframe 跨域问题
+ * Phase 12 重构：新增 L.tileLayer 模式，拖动/缩放与底图完全同步
  *
  * 支持两种数据源：
  * 1. 前端生成（基于周边点 Canvas 热力图）
- * 2. 后端 GFS 处理器（高精度 PNG 覆盖层）
+ * 2. 后端瓦片服务（L.tileLayer → /api/firecloud/tiles/{z}/{x}/{y}.png）
  *
  * 需求：20.1, 20.4, 20.7, 20.9, 20.10, 20.11, 20.14
  */
 
 class FireCloudOverlayService {
   constructor() {
-    this.leafletOverlay = null; // Leaflet L.imageOverlay 实例
+    this.leafletOverlay = null; // Leaflet L.imageOverlay 或 L.tileLayer 实例
     this.mapService = null;
+    this._tileLayerMode = false; // 当前是否使用 tileLayer 模式
     this.currentData = null;
     this.isLoading = false;
     this.cache = new Map();
@@ -275,65 +276,108 @@ class FireCloudOverlayService {
   }
 
   /**
-   * 在地图上显示覆盖层（使用 Leaflet L.imageOverlay）
+   * 在地图上以 L.tileLayer 模式显示火烧云覆盖层
+   * 拖动/缩放时由 Leaflet 自动补瓦片，与底图完全同步
+   *
+   * @param {Object} mapService - WindyMapService 实例
+   * @param {string} type - 预测类型 'sunset' | 'sunrise'
+   * @returns {boolean} 是否成功
+   */
+  displayTileLayer(mapService, type = 'sunset') {
+    const map = mapService && mapService.getMap ? mapService.getMap() : null;
+    if (!map || typeof L === 'undefined') {
+      console.error('[FireCloudOverlayService] 无法获取 Leaflet map 实例');
+      return false;
+    }
+
+    try {
+      this.removeOverlay();
+      this.mapService = mapService;
+
+      const tileUrl = `${this.backendURL}/api/firecloud/tiles/{z}/{x}/{y}.png?type=${type}&time=${Date.now()}`;
+
+      this.leafletOverlay = L.tileLayer(tileUrl, {
+        opacity: this.config.opacity,
+        zIndex: 400,
+        tileSize: 256,
+        maxZoom: 12,
+        minZoom: 2,
+        attribution: '火烧云预测 · 霞客',
+        // 瓦片加载失败时静默（不显示破图标）
+        errorTileUrl: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+      }).addTo(map);
+
+      this._tileLayerMode = true;
+      console.log('[FireCloudOverlayService] TileLayer 覆盖层已挂载，type=' + type);
+      return true;
+    } catch (error) {
+      console.error('[FireCloudOverlayService] TileLayer 挂载失败:', error);
+      return false;
+    }
+  }
+
+  /**
+   * 在地图上显示覆盖层
+   * 优先使用 L.tileLayer（拖动同步），降级使用 L.imageOverlay
+   *
    * @param {Object} mapService - WindyMapService 实例（Leaflet 版本）
-   * @param {Object} overlayData - 覆盖层数据 { dataUrl, bounds }
+   * @param {Object} overlayData - 覆盖层数据 { dataUrl, bounds, metadata }
    * @param {HTMLElement} container - 地图容器元素（兼容性参数）
    * @returns {boolean} 是否成功
    *
    * 需求：20.7, 20.9
    */
   displayOnMap(mapService, overlayData, container) {
-    if (!mapService || !overlayData) {
-      console.error('[FireCloudOverlayService] 缺少必要参数');
+    if (!mapService) {
+      console.error('[FireCloudOverlayService] 缺少 mapService');
+      return false;
+    }
+
+    // 优先：L.tileLayer 模式（真正跟随拖动）
+    const type = overlayData?.metadata?.type || 'sunset';
+    if (this.displayTileLayer(mapService, type)) {
+      return true;
+    }
+
+    // 降级：L.imageOverlay（仅在 tileLayer 失败时使用）
+    if (!overlayData) {
+      console.error('[FireCloudOverlayService] tileLayer 降级失败：无 overlayData');
       return false;
     }
 
     try {
-      // 移除旧的覆盖层
       this.removeOverlay();
-
       this.mapService = mapService;
 
-      // 使用 Leaflet imageOverlay API（通过 WindyMapService 的接口）
       if (mapService.addImageOverlay) {
         this.leafletOverlay = mapService.addImageOverlay(
           overlayData.dataUrl,
           overlayData.bounds,
-          {
-            opacity: this.config.opacity,
-            interactive: false,
-            zIndex: 400
-          }
+          { opacity: this.config.opacity, interactive: false, zIndex: 400 }
         );
-
         if (this.leafletOverlay) {
-          console.log('[FireCloudOverlayService] Leaflet 覆盖层已显示');
+          this._tileLayerMode = false;
+          console.log('[FireCloudOverlayService] 降级：imageOverlay 已显示');
           return true;
         }
       }
 
-      // 回退：直接操作 Leaflet map
       const map = mapService.getMap ? mapService.getMap() : null;
       if (map && typeof L !== 'undefined') {
         const bounds = L.latLngBounds(
           [overlayData.bounds.south, overlayData.bounds.west],
           [overlayData.bounds.north, overlayData.bounds.east]
         );
-
         this.leafletOverlay = L.imageOverlay(overlayData.dataUrl, bounds, {
-          opacity: this.config.opacity,
-          interactive: false,
-          zIndex: 400
+          opacity: this.config.opacity, interactive: false, zIndex: 400
         }).addTo(map);
-
-        console.log('[FireCloudOverlayService] Leaflet 覆盖层已显示（直接添加）');
+        this._tileLayerMode = false;
+        console.log('[FireCloudOverlayService] 降级：imageOverlay（直接添加）');
         return true;
       }
 
-      console.error('[FireCloudOverlayService] 无法添加覆盖层：地图服务不支持');
+      console.error('[FireCloudOverlayService] 无法添加覆盖层');
       return false;
-
     } catch (error) {
       console.error('[FireCloudOverlayService] 显示覆盖层失败:', error);
       return false;
@@ -341,20 +385,20 @@ class FireCloudOverlayService {
   }
 
   /**
-   * 移除覆盖层
+   * 移除覆盖层（支持 tileLayer 和 imageOverlay）
    *
    * 需求：20.7
    */
   removeOverlay() {
     if (this.leafletOverlay) {
       const overlayRef = this.leafletOverlay;
-      // Leaflet overlay 移除
       this.leafletOverlay.remove();
       this.leafletOverlay = null;
+      this._tileLayerMode = false;
       console.log('[FireCloudOverlayService] 覆盖层已移除');
 
-      // 同时通知 mapService 移除覆盖层记录（传递原引用而非 null）
-      if (this.mapService && this.mapService.removeImageOverlay) {
+      // imageOverlay 模式下通知 mapService 清理记录
+      if (!this._tileLayerMode && this.mapService && this.mapService.removeImageOverlay) {
         this.mapService.removeImageOverlay(overlayRef);
       }
     }
@@ -431,9 +475,10 @@ class FireCloudOverlayService {
     return {
       isLoading: this.isLoading,
       hasOverlay: !!this.leafletOverlay,
+      tileLayerMode: this._tileLayerMode,
       cacheSize: this.cache.size,
       useBackendOverlay: this.useBackendOverlay,
-      source: this.currentData?.metadata?.source || null
+      source: this._tileLayerMode ? 'tile-service' : (this.currentData?.metadata?.source || null)
     };
   }
 }
