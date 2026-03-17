@@ -1,33 +1,32 @@
 #!/bin/bash
-# 霞客部署脚本：本地拉代码 → rsync 推服务器 → 重启服务
+# 霞客部署脚本
+# 流程：本地 git pull → scp 推文件到腾讯云 → 重启服务
 
 set -e
 
 REMOTE="ubuntu@43.143.237.15"
 SSH_KEY="$HOME/.ssh/id_ed25519"
-REMOTE_DIR="~/weather-sunset-predictor"
-LOCAL_DIR="$(cd "$(dirname "$0")" && pwd)"
+LOCAL="$(cd "$(dirname "$0")" && pwd)"
 
 echo "📦 拉取最新代码..."
-git pull origin main
+git -C "$LOCAL" pull origin main
 
-echo "🚀 同步到服务器..."
-rsync -avz --delete \
-  --exclude='.git' \
-  --exclude='node_modules' \
-  --exclude='.env' \
-  --exclude='*.log' \
-  -e "ssh -i $SSH_KEY" \
-  "$LOCAL_DIR/" "$REMOTE:$REMOTE_DIR/"
+echo "🚀 推送文件到服务器..."
+scp -i "$SSH_KEY" "$LOCAL/index.html" $REMOTE:~/weather-sunset-predictor/
+scp -i "$SSH_KEY" "$LOCAL/server/index.js" $REMOTE:~/weather-sunset-predictor/server/
+scp -i "$SSH_KEY" "$LOCAL/server/routes/"*.js $REMOTE:~/weather-sunset-predictor/server/routes/
+scp -i "$SSH_KEY" "$LOCAL/server/services/"*.js $REMOTE:~/weather-sunset-predictor/server/services/
+scp -i "$SSH_KEY" "$LOCAL/src/controllers/"*.js $REMOTE:~/weather-sunset-predictor/src/controllers/
+scp -i "$SSH_KEY" "$LOCAL/src/services/"*.js $REMOTE:~/weather-sunset-predictor/src/services/
+scp -i "$SSH_KEY" "$LOCAL/styles/"*.css $REMOTE:~/weather-sunset-predictor/styles/ 2>/dev/null || true
 
-echo "🔄 重启后端服务..."
-ssh -i "$SSH_KEY" "$REMOTE" "
+echo "🔄 重启后端..."
+ssh -i "$SSH_KEY" $REMOTE "
   kill \$(ps aux | grep 'node index' | grep -v grep | awk '{print \$2}') 2>/dev/null || true
   sleep 1
-  cd $REMOTE_DIR/server
-  PATH=/usr/local/node-v18/bin:\$PATH npm install --silent
-  nohup /usr/local/node-v18/bin/node index.js > ~/backend.log 2>&1 &
-  sleep 2
+  cd ~/weather-sunset-predictor/server
+  PATH=/usr/local/node-v18/bin:\$PATH nohup node index.js > ~/backend.log 2>&1 &
+  sleep 3
   curl -s http://localhost:3000/health
 "
 
