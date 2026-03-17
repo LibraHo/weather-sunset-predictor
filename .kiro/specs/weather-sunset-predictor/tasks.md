@@ -1196,72 +1196,72 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 ---
 
-## Phase 16：晚霞评分热力地图（需求 37）
+## Phase 16：朝霞/晚霞散点地图（需求 37）
 
-> 目标：在地图上渲染中国区域的晚霞评分分布，后端定时更新网格缓存，前端双线性插值热力图叠加。
+> **方向调整（2026-03-17）：** 原热力图方案（插值大圆圈）已废弃，改为散点标注方案。
+> 目标：在朝霞/晚霞预测卡片内嵌地图，中国区域显示今日评分≥60的散点，干净清爽，无插值无圆圈。
 
 ### 任务概览
 
 | 编号 | 任务 | 状态 |
 |------|------|------|
-| 64.1 | GridScoreService：网格生成 + 批量评分 + 缓存 | - [ ] |
-| 64.2 | /api/heatmap/grid 接口 + /api/heatmap/refresh | - [ ] |
-| 64.3 | 定时更新任务（每天 4 次） | - [ ] |
-| 64.4 | 前端 HeatmapLayer：Canvas 插值渲染 | - [ ] |
-| 64.5 | 地图 UI：图层开关 + 点击查询 + 时间戳显示 | - [ ] |
-| 64.6 | 单元测试：GridScoreService + HeatmapLayer | - [ ] |
+| 64.1 | 移除热力图相关代码（HeatmapLayer、GridScoreService 热力图部分） | ✅ |
+| 64.2 | 后端 SunsetSpotsService：每日一次生成中国散点评分缓存 | - [ ] |
+| 64.3 | `/api/spots/china` 接口：返回评分≥60的散点列表 | - [ ] |
+| 64.4 | 定时任务：每天 CST 15:00 刷新一次 | - [ ] |
+| 64.5 | 前端：预测卡片内嵌地图 + 散点标注 | - [ ] |
+| 64.6 | 地域检测：非中国区域自动隐藏此功能 | - [ ] |
+| 64.7 | 单元测试 | - [ ] |
 
 ### 任务详情
 
-#### 64.1 GridScoreService（后端，新建）
+#### 64.2 SunsetSpotsService（后端）
 
-- [ ] 64.1 `server/services/GridScoreService.js`
-  - `CHINA_GRID`：5° 间隔网格坐标列表（72–135°E，18–53°N，约 104 点）
-  - `generateGrid()` → 返回 `[{lat, lon}]`
-  - `fetchAndScore(gridPoints)` → 并发（limit=10）调用 Open-Meteo + EnhancedPredictionService，返回 `[{lat, lon, score, quality, breakdown}]`
-  - `getCache()` → `{ updatedAt, gridPoints, stale }`
-  - `refreshIfStale(maxAgeMs=3600000)` → 超时才重新 fetch，频控保护
-  - 缓存持久化到 `~/.xiake/grid-cache.json`
-  - _关联需求：37.3, 37.5, 37.6_
+- [ ] 64.2 `server/services/SunsetSpotsService.js`
+  - `CHINA_GRID`：约 80 个采样点（5° 间隔，72–135°E，18–53°N）
+  - `refreshDaily()` → 并发（limit=10）批量评分，过滤评分≥60 的点
+  - 缓存结构：`{ updatedAt, date, spots: [{lat, lon, score, quality}] }`
+  - 持久化到 `~/.xiake/spots-cache.json`
+  - 启动时若缓存日期非今日则自动刷新
+  - _关联需求：37.3, 37.5_
 
-#### 64.2 Heatmap API 路由（后端，新建）
+#### 64.3 API 路由
 
-- [ ] 64.2 `server/routes/heatmap.js`
-  - `GET /api/heatmap/grid` → 返回缓存数据（含 `updatedAt`、`stale`）
-  - `POST /api/heatmap/refresh` → 手动触发刷新，频控 60 分钟内最多 1 次
+- [ ] 64.3 `GET /api/spots/china`
+  - 返回当日缓存的散点数据（仅 score≥60 的点）
+  - 包含 `updatedAt`、`date`
   - 注册到 `server/index.js`
-  - _关联需求：37.3, 37.9_
+  - _关联需求：37.3, 37.8_
 
-#### 64.3 定时更新任务
+#### 64.4 定时任务
 
-- [ ] 64.3 在 `server/index.js` 或独立 `server/jobs/gridRefreshJob.js` 中
-  - 使用 `node-cron`，UTC `0 0,4,7,9 * * *`（= CST 08/12/15/17）
-  - 启动时检查缓存，若超 1 小时则立即刷新一次
+- [ ] 64.4 `server/index.js` 中添加：
+  - `node-cron`，UTC `0 7 * * *`（= CST 15:00）每天一次
+  - 启动时检查缓存日期，非今日则立即刷新
   - _关联需求：37.3_
 
-#### 64.4 前端 HeatmapLayer.js（新建）
+#### 64.5 前端散点地图
 
-- [ ] 64.4 `src/services/HeatmapLayer.js`
-  - `init(leafletMap)` → 创建 Leaflet Canvas overlay
-  - `loadData()` → 调用 `/api/heatmap/grid`
-  - `render(gridData)` → 双线性插值 + 颜色映射 → 画到 Canvas
-  - 颜色映射：≥70 橙红 / 50–70 金黄 / 30–50 浅蓝 / <30 灰蓝
-  - `toggle(visible)` → 显隐
-  - `getScoreAt(lat, lon)` → 返回插值评分（用于点击查询）
-  - _关联需求：37.2, 37.4, 37.7_
+- [ ] 64.5 `src/services/ChinaSpotsOverlay.js`（新建）
+  - `init(leafletMap)` → 挂载到现有地图实例
+  - `loadAndRender()` → 调用 `/api/spots/china`，用 Leaflet marker 渲染
+  - 图标：评分≥80 用 🌅，60–79 用 🌄，Leaflet DivIcon 实现
+  - 点击 marker 显示 tooltip：评分 + 质量标签
+  - `show() / hide()` 控制显隐
+  - _关联需求：37.2, 37.6, 37.7_
 
-#### 64.5 地图 UI 集成
-
-- [ ] 64.5
-  - 在地图右上角加"晚霞热力图"开关按钮
-  - 底部/角落显示"数据更新于 HH:mm"时间戳
-  - 点击地图触发 `getScoreAt` 弹出 tooltip：评分 + 质量标签
-  - 加载中显示 loading 状态，失败时 toast 提示
-  - _关联需求：37.7, 37.8, 37.9_
-
-#### 64.6 测试
+#### 64.6 地域检测 + 预测卡片集成
 
 - [ ] 64.6
-  - `tests/unit/server/GridScoreService.test.js`：网格生成、缓存逻辑、频控
-  - `tests/unit/services/HeatmapLayer.test.js`：双线性插值、颜色映射
+  - 判断当前位置是否在中国区域（72–135°E，18–53°N）
+  - 是：预测卡片底部显示嵌入地图，调用 `ChinaSpotsOverlay`
+  - 否：不显示地图，不请求 API
+  - 显示"今日数据，更新于 HH:mm"时间戳
+  - _关联需求：37.1, 37.7, 37.8_
+
+#### 64.7 测试
+
+- [ ] 64.7
+  - `tests/unit/server/SunsetSpotsService.test.js`：网格生成、缓存逻辑、过滤
+  - `tests/unit/services/ChinaSpotsOverlay.test.js`：marker 渲染、地域检测
   - _关联需求：37_
