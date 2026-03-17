@@ -839,49 +839,8 @@ class PredictionController {
       analysis += `${dateLabel}的气象条件不太理想。<br><br>`;
     }
 
-    // 火烧云专项分析
+    // 火烧云专项分析（已包含条件明细，不再重复拼接）
     analysis += this.generateFireCloudAnalysis(cloudValue, humidityValue, visibilityValue, lowCloudsValue);
-
-    // 云量分析
-    if (cloudValue >= 30 && cloudValue <= 70) {
-      analysis += ' 云量适中（' + cloudValue.toFixed(0) + '%），有利于形成绚丽的色彩。<br>';
-    } else if (cloudValue < 30) {
-      analysis += ' 云量偏少（' + cloudValue.toFixed(0) + '%），可能缺少足够的云层来反射光线。<br>';
-    } else {
-      analysis += ' 云量较多（' + cloudValue.toFixed(0) + '%），可能遮挡过多阳光。<br>';
-    }
-
-    // 湿度分析
-    if (humidityValue >= 30 && humidityValue <= 70) {
-      analysis += ' 湿度适宜（' + humidityValue.toFixed(0) + '%），空气中的水汽有助于光线散射。<br>';
-    } else if (humidityValue < 30) {
-      analysis += ' 湿度偏低（' + humidityValue.toFixed(0) + '%），空气较干燥。<br>';
-    } else {
-      analysis += ' 湿度较高（' + humidityValue.toFixed(0) + '%），可能影响能见度。<br>';
-    }
-
-    // 能见度分析
-    if (visibilityValue >= 10) {
-      analysis += ' 能见度良好（' + visibilityValue.toFixed(1) + ' km），视野清晰。<br>';
-    } else if (visibilityValue >= 5) {
-      analysis += ' 能见度一般（' + visibilityValue.toFixed(1) + ' km）<br>';
-    } else {
-      analysis += ' 能见度较差（' + visibilityValue.toFixed(1) + ' km），可能有雾霾。<br>';
-    }
-
-    // 低层云分析
-    if (lowCloudsValue < 20) {
-      analysis += ' 低层云较少，不会遮挡视线。';
-    } else if (lowCloudsValue < 40) {
-      analysis += ' 有一些低层云，可能略微影响观赏效果。';
-    } else {
-      analysis += ' 低层云较多（' + lowCloudsValue.toFixed(0) + '%），可能遮挡部分景观。';
-    }
-
-    // 云层分层分析（整合到分析原因中）
-    if (cloudLayers && cloudLayers.description) {
-      analysis += '<br><br><strong>云层分析：</strong>' + cloudLayers.description;
-    }
 
     return analysis;
   }
