@@ -209,6 +209,17 @@ class AppController {
         });
       }
 
+      // Phase 16：中国散点地图（异步，不阻塞主流程）
+      if (
+        this.weatherController &&
+        this.weatherController._isInChina &&
+        this.weatherController._isInChina(location.lat, location.lon)
+      ) {
+        this.weatherController._initChinaSpotsMap().catch(err => {
+          console.warn('[AppController] 初始化中国散点地图失败:', err.message);
+        });
+      }
+
       // 隐藏加载状态
       this.showLoading(false);
 
