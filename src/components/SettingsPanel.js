@@ -125,6 +125,23 @@ class SettingsPanel {
 
           <hr class="settings-section-divider" />
 
+          <!-- 🗺️ 地图底图 -->
+          <div class="settings-section">
+            <h3 class="settings-section-title">🗺️ ${this.i18n.t('settings.mapTileProvider') || '地图底图'}</h3>
+            <div class="settings-section-content">
+              <div class="setting-item">
+                <label class="setting-label">${this.i18n.t('settings.mapTileSource') || '底图来源'}</label>
+                <select id="map-tile-provider-select" class="setting-select">
+                  <option value="auto">${this.i18n.t('settings.mapTileAuto') || '自动（中国用高德/海外用OSM）'}</option>
+                  <option value="gaode">${this.i18n.t('settings.mapTileGaode') || '高德地图（中国）'}</option>
+                  <option value="osm">${this.i18n.t('settings.mapTileOSM') || 'OpenStreetMap（海外）'}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <hr class="settings-section-divider" />
+
           <!-- ☁️ 天气数据源 -->
           <div class="settings-section">
             <h3 class="settings-section-title">☁️ ${this.i18n.t('settings.weatherProvider')}</h3>
@@ -330,6 +347,15 @@ class SettingsPanel {
       });
     }
 
+    // 地图底图选择
+    const mapTileSelect = document.getElementById('map-tile-provider-select');
+    if (mapTileSelect) {
+      mapTileSelect.value = localStorage.getItem('map_tile_provider') || 'auto';
+      mapTileSelect.addEventListener('change', (e) => {
+        localStorage.setItem('map_tile_provider', e.target.value);
+      });
+    }
+
     // 天气数据源状态 (任务 44)
     this.updateProviderStatus();
 
@@ -388,6 +414,12 @@ class SettingsPanel {
     const windUnitSelect = document.getElementById('wind-unit-select');
     if (windUnitSelect) {
       windUnitSelect.value = windUnit;
+    }
+
+    // 加载地图底图设置
+    const mapTileSelect = document.getElementById('map-tile-provider-select');
+    if (mapTileSelect) {
+      mapTileSelect.value = localStorage.getItem('map_tile_provider') || 'auto';
     }
 
     // 任务17.3：加载默认位置

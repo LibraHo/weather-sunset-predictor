@@ -1590,10 +1590,27 @@ class WeatherController {
         attributionControl: false
       });
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 10,
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(map);
+      // 地图底图：根据设置选择（auto/gaode/osm）
+      const mapTileSetting = localStorage.getItem('map_tile_provider') || 'auto';
+      const isChina = this._isInChina(
+        this.currentLocation?.lat ?? 35,
+        this.currentLocation?.lon ?? 105
+      );
+      const useGaode = mapTileSetting === 'gaode' || (mapTileSetting === 'auto' && isChina);
+
+      if (useGaode) {
+        L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+          subdomains: '1234',
+          maxZoom: 10,
+          attribution: '© 高德地图'
+        }).addTo(map);
+      } else {
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 10,
+          subdomains: 'abc',
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+      }
 
       this._chinaSpotsMapInstance = map;
       this.chinaSpotsOverlay.init(map);
