@@ -17,6 +17,7 @@ export default class ChinaSpotsOverlay {
     this._button = null;
     this._animFrame = null;
     this._boundRedraw = null;
+    this._boundMove = null;
   }
 
   /**
@@ -29,6 +30,10 @@ export default class ChinaSpotsOverlay {
     this._initButton();
     this._boundRedraw = () => this._redrawCanvas();
     this._map.on('moveend zoomend resize', this._boundRedraw);
+
+    // 拖动中实时重绘（rAF 节流）
+    this._boundMove = () => this._scheduleRedraw();
+    this._map.on('move', this._boundMove);
   }
 
   /** 创建并挂载 Canvas 覆盖层 */
@@ -78,6 +83,18 @@ export default class ChinaSpotsOverlay {
     btn.addEventListener('click', () => this.toggle());
     this._map.getContainer().appendChild(btn);
     this._button = btn;
+  }
+
+  /**
+   * rAF 节流重绘（用于 move 事件）
+   */
+  _scheduleRedraw() {
+    if (!this._visible) return;
+    if (this._animFrame) return;
+    this._animFrame = requestAnimationFrame(() => {
+      this._animFrame = null;
+      this._redrawCanvas();
+    });
   }
 
   /** 更新按钮高亮状态 */
