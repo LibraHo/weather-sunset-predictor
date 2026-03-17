@@ -122,11 +122,11 @@ export default class ChinaSpotsOverlay {
 
       // 高分点（≥70）添加小 marker
       this._spots.forEach(spot => {
-        if (spot.score < 70) return;
+        if (spot.score < 50) return;
 
         const emoji = spot.score >= 80 ? '🌅' : '🌄';
         const size = spot.score >= 80 ? 16 : 13;
-        const icon = L.divIcon({
+        const icon = window.L.divIcon({
           html: `<div style="font-size:${size}px; line-height:1; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));">${emoji}</div>`,
           className: '',
           iconSize: [size + 4, size + 4],
@@ -134,8 +134,8 @@ export default class ChinaSpotsOverlay {
           popupAnchor: [0, -(size + 4) / 2 - 2]
         });
 
-        const qualityLabel = spot.score >= 80 ? '顶级' : spot.score >= 70 ? '优质' : '良好';
-        const marker = L.marker([spot.lat, spot.lon], { icon });
+        const qualityLabel = spot.score >= 80 ? '顶级' : spot.score >= 65 ? '优质' : spot.score >= 50 ? '良好' : '一般';
+        const marker = window.L.marker([spot.lat, spot.lon], { icon });
         marker.bindPopup(
           `<div style="font-size:13px; line-height:1.7;">
             <b>${emoji} ${qualityLabel}</b><br>
