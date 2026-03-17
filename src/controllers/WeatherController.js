@@ -1582,8 +1582,13 @@ class WeatherController {
     }
 
     try {
+      if (typeof window === 'undefined' || !window.L) {
+        console.error('[WeatherController] Leaflet 未加载，跳过中国散点地图初始化');
+        return;
+      }
+
       // 初始化 Leaflet 地图（中国中心）
-      const map = L.map(mapEl, {
+      const map = window.L.map(mapEl, {
         center: [35, 105],
         zoom: 4,
         zoomControl: true,
@@ -1599,13 +1604,13 @@ class WeatherController {
       const useGaode = mapTileSetting === 'gaode' || (mapTileSetting === 'auto' && isChina);
 
       if (useGaode) {
-        L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+        window.L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
           subdomains: '1234',
           maxZoom: 10,
           attribution: '© 高德地图'
         }).addTo(map);
       } else {
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 10,
           subdomains: 'abc',
           attribution: '© OpenStreetMap contributors'
