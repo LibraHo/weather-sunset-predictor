@@ -27,8 +27,16 @@ export default class ChinaSpotsOverlay {
     this._map = leafletMap;
     this._initCanvas();
     this._initButton();
-    this._boundRedraw = () => this._redrawCanvas();
-    this._map.on('moveend zoomend resize', this._boundRedraw);
+    // 用 rAF 节流：拖动时每帧最多重绘一次，保证跟手流畅
+    this._boundRedraw = () => {
+      if (this._animFrame) return;
+      this._animFrame = requestAnimationFrame(() => {
+        this._animFrame = null;
+        this._redrawCanvas();
+      });
+    };
+    // move 实时跟手，zoomend/resize 补充
+    this._map.on('move zoom moveend zoomend resize', this._boundRedraw);
   }
 
   /** 创建并挂载 Canvas 覆盖层 */
@@ -234,10 +242,6 @@ export default class ChinaSpotsOverlay {
     this._canvas.style.width = mapSize.x + 'px';
     this._canvas.style.height = mapSize.y + 'px';
     this._canvas.style.display = 'block';
-    // markers 显示
-    this._markers.forEach(m => {
-      if (!this._map.hasLayer(m)) m.addTo(this._map);
-    });
     this._redrawCanvas();
     this._updateButtonState();
   }
@@ -247,10 +251,6 @@ export default class ChinaSpotsOverlay {
     if (!this._map) return;
     this._visible = false;
     this._canvas.style.display = 'none';
-    // 隐藏 markers
-    this._markers.forEach(m => {
-      if (this._map.hasLayer(m)) this._map.removeLayer(m);
-    });
     this._updateButtonState();
   }
 
