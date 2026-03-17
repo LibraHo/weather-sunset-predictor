@@ -11,6 +11,7 @@ const predictionRoutes = require('./routes/prediction');
 const visitorRoutes = require('./routes/visitor');
 const geocodingRoutes = require('./routes/geocoding');
 const heatmapRoutes = require('./routes/heatmap');
+const spotsRoutes = require('./routes/spots');
 const { requestLogger, errorLogger } = require('./middleware/logger');
 
 const app = express();
@@ -85,6 +86,7 @@ app.use('/api/prediction', predictionRoutes);
 app.use('/api/visitor', visitorRoutes);
 app.use('/api/geocoding', geocodingRoutes);
 app.use('/api/heatmap', heatmapRoutes);
+app.use('/api/spots', spotsRoutes);
 
 // Error logging middleware
 app.use(errorLogger());
