@@ -169,8 +169,8 @@ export default class ChinaSpotsOverlay {
     const ctx = this._ctx;
     ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
 
-    // 获取当前左上角地图像素原点偏移（Leaflet 在平移时移动 overlayPane）
-    const topLeft = this._map.containerPointToLayerPoint([0, 0]);
+    // 叠加模式：让多个热点颜色自然融合，避免只看到零散点
+    ctx.globalCompositeOperation = 'lighter';
 
     this._spots.forEach(spot => {
       if (spot.score < 40) return;
@@ -180,34 +180,41 @@ export default class ChinaSpotsOverlay {
       const x = containerPt.x;
       const y = containerPt.y;
 
-      // 300km 约对应的像素半径（根据当前缩放级别计算）
-      const metersPerPixel = this._getMetersPerPixel(spot.lat);
-      const radiusPx = Math.max(30, 300000 / metersPerPixel);
+      // 采用“屏幕像素半径”而非 300km 实际半径，保证手机端可视效果
+      const zoom = this._map.getZoom();
+      const zoomScale = Math.pow(1.16, Math.max(0, zoom - 5));
+      const baseRadius = spot.score >= 80 ? 85 : spot.score >= 65 ? 72 : 60;
+      const radiusPx = Math.max(45, Math.min(230, baseRadius * zoomScale));
 
-      // 根据分数选颜色
-      let innerColor, outerColor;
+      // 根据分数选颜色（更高 alpha，确保能看到图层）
+      let c0, c1, c2;
       if (spot.score >= 80) {
-        innerColor = 'rgba(255, 69, 0, 0.6)';
-        outerColor = 'rgba(255, 69, 0, 0)';
+        c0 = 'rgba(255, 80, 0, 0.82)';
+        c1 = 'rgba(255, 130, 0, 0.40)';
+        c2 = 'rgba(255, 130, 0, 0.00)';
       } else if (spot.score >= 60) {
-        innerColor = 'rgba(255, 165, 0, 0.5)';
-        outerColor = 'rgba(255, 165, 0, 0)';
+        c0 = 'rgba(255, 165, 0, 0.72)';
+        c1 = 'rgba(255, 200, 0, 0.34)';
+        c2 = 'rgba(255, 200, 0, 0.00)';
       } else {
-        // 40-59
-        innerColor = 'rgba(255, 220, 50, 0.4)';
-        outerColor = 'rgba(255, 220, 50, 0)';
+        c0 = 'rgba(255, 225, 70, 0.58)';
+        c1 = 'rgba(255, 235, 120, 0.26)';
+        c2 = 'rgba(255, 235, 120, 0.00)';
       }
 
       const grad = ctx.createRadialGradient(x, y, 0, x, y, radiusPx);
-      grad.addColorStop(0, innerColor);
-      grad.addColorStop(0.5, innerColor.replace(/[\d.]+\)$/, s => `${parseFloat(s) * 0.5})`));
-      grad.addColorStop(1, outerColor);
+      grad.addColorStop(0.00, c0);
+      grad.addColorStop(0.45, c1);
+      grad.addColorStop(1.00, c2);
 
       ctx.beginPath();
       ctx.arc(x, y, radiusPx, 0, Math.PI * 2);
       ctx.fillStyle = grad;
       ctx.fill();
     });
+
+    // 恢复默认混合模式
+    ctx.globalCompositeOperation = 'source-over';
   }
 
   /** 计算当前纬度每像素对应的实际米数 */
