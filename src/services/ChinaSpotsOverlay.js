@@ -38,17 +38,16 @@ export default class ChinaSpotsOverlay {
       'position: absolute',
       'top: 0',
       'left: 0',
-      'width: 100%',
-      'height: 100%',
       'pointer-events: none',
-      'z-index: 400',
+      'z-index: 450',
       'display: none'
     ].join(';');
     canvas.className = 'china-spots-canvas';
 
-    // 挂载到 Leaflet 的 overlayPane
-    const pane = this._map.getPanes().overlayPane;
-    pane.appendChild(canvas);
+    // 挂到地图容器本身（不是 overlayPane，避免 Leaflet transform 偏移影响绘制坐标）
+    const container = this._map.getContainer();
+    container.style.position = 'relative';
+    container.appendChild(canvas);
 
     this._canvas = canvas;
     this._ctx = canvas.getContext('2d');
@@ -228,6 +227,12 @@ export default class ChinaSpotsOverlay {
   show() {
     if (!this._map) return;
     this._visible = true;
+    // 同步 canvas 尺寸
+    const mapSize = this._map.getSize();
+    this._canvas.width = mapSize.x;
+    this._canvas.height = mapSize.y;
+    this._canvas.style.width = mapSize.x + 'px';
+    this._canvas.style.height = mapSize.y + 'px';
     this._canvas.style.display = 'block';
     // markers 显示
     this._markers.forEach(m => {
