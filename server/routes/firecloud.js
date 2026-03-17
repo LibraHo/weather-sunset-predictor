@@ -137,7 +137,7 @@ router.post('/cache/clear', async (req, res) => {
  * - time: 时间戳（可选，默认当前时间）
  */
 router.get('/grid', async (req, res) => {
-  const { bbox, zoom = 6, time = Date.now() } = req.query;
+  const { bbox, zoom = 6, time = Date.now(), type = 'sunset' } = req.query;
 
   if (!bbox) {
     return res.status(400).json({
@@ -154,7 +154,7 @@ router.get('/grid', async (req, res) => {
     });
   }
 
-  const grid = await fireCloudTileService.getGrid({ bbox, zoom: Number(zoom), time: Number(time) });
+  const grid = await fireCloudTileService.getGrid({ bbox, zoom: Number(zoom), time: Number(time), type });
   return res.json(grid);
 });
 
@@ -165,13 +165,14 @@ router.get('/grid', async (req, res) => {
  */
 router.get('/tiles/:z/:x/:y.png', async (req, res) => {
   const { z, x, y } = req.params;
-  const { time = Date.now() } = req.query;
+  const { time = Date.now(), type = 'sunset' } = req.query;
 
   const tileBuffer = await fireCloudTileService.getTilePng({
     z: Number(z),
     x: Number(x),
     y: Number(y),
-    time: Number(time)
+    time: Number(time),
+    type
   });
 
   res.setHeader('Content-Type', 'image/png');

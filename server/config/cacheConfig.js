@@ -24,6 +24,12 @@ const CACHE_TTL = {
   // 理由：覆盖层生成较慢，但云况变化相对较快
   FIRECLOUD_OVERLAY: 30 * 60, // 1800秒 = 30分钟
 
+  // 火烧云网格评分缓存（20分钟）
+  FIRECLOUD_GRID: 20 * 60, // 1200秒 = 20分钟
+
+  // 火烧云瓦片 PNG 缓存（20分钟）
+  FIRECLOUD_TILE: 20 * 60, // 1200秒 = 20分钟
+
   // 默认缓存时间（1小时）
   DEFAULT: 60 * 60 // 3600秒 = 1小时
 };
@@ -48,7 +54,11 @@ const CACHE_PREFIX = {
 
   // GFS数据
   GFS_DATA: 'gfs:data:',
-  GFS_OVERLAY: 'gfs:overlay:'
+  GFS_OVERLAY: 'gfs:overlay:',
+
+  // 火烧云瓦片
+  FIRECLOUD_GRID: 'fc:grid:',
+  FIRECLOUD_TILE: 'fc:tile:'
 };
 
 // ========== 缓存配置对象 ==========
