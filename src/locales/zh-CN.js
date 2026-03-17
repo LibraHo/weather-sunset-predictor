@@ -499,6 +499,16 @@ export default {
     geocodingApiKeyHint: '高德地图免费申请：lbs.amap.com',
     geocodingApiKeyRequired: '请先在设置中填写 API Key',
     geocodingChinaTag: '🇨🇳 中国可用',
+    // 地图底图
+    mapTileProvider: '地图底图',
+    mapTileSource: '底图来源',
+    mapTileAuto: '自动（中国用高德 / 海外用 OSM）',
+    mapTileGaode: '高德地图（中国）',
+    mapTileOSM: 'OpenStreetMap（海外）',
+    // Windy API Key（兼容旧 key）
+    windyApiKey: 'Windy API Key',
+    windyApiKeyPlaceholder: '输入你的 Windy API Key',
+    windyApiKeyHint: '用于启用 Windy 数据源，留空使用系统默认',
     // Windy API Key（需求 25）
     windyApiKeyMode: 'Windy API 来源',
     windyApiKeyModeSystem: '使用系统 API（推荐）',
