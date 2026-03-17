@@ -15,9 +15,24 @@
   <link rel="stylesheet" href="styles/settings-panel.css">
   <link rel="stylesheet" href="/styles/settings-panel.css">
 
-  <!-- Leaflet：改用国内可访问 CDN，避免 unpkg 超时 -->
-  <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-  <script src="https://cdn.bootcdn.net/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <!-- Leaflet：多 CDN 兜底，避免单点失败导致 L 未定义 -->
+  <link id="leaflet-css" rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script>
+    (function () {
+      var css = document.getElementById('leaflet-css');
+      if (css) {
+        css.onerror = function () {
+          this.href = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css';
+        };
+      }
+    })();
+  </script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    if (!window.L) {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"><\\/script>');
+    }
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
 </head>
 <body>
