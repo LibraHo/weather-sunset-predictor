@@ -23,7 +23,7 @@ class ConfigService {
       const response = await fetch(this.configFilePath);
 
       if (!response.ok) {
-        console.log('[ConfigService] 配置文件不存在或无法访问');
+        // config.json 不存在是正常情况，静默处理
         return null;
       }
 

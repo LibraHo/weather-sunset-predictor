@@ -117,17 +117,19 @@ class I18n {
       }
     }
 
-    // 如果仍然找不到，尝试从 zh-CN 获取 fallback
+    // 如果仍然找不到，尝试 fallback：先英文，再 zh-CN
     if (value === undefined) {
-      const zhFallback = this.translations['zh-CN'];
-      if (zhFallback && this.currentLang !== 'zh-CN') {
-        const keys = key.split('.');
-        let fallbackValue = zhFallback;
-        for (const k of keys) {
-          fallbackValue = fallbackValue?.[k];
-        }
-        if (fallbackValue !== undefined && typeof fallbackValue === 'string') {
-          return fallbackValue;
+      for (const fallbackLang of ['en-US', 'zh-CN']) {
+        const fallbackTranslations = this.translations[fallbackLang];
+        if (fallbackTranslations && this.currentLang !== fallbackLang) {
+          const keys = key.split('.');
+          let fallbackValue = fallbackTranslations;
+          for (const k of keys) {
+            fallbackValue = fallbackValue?.[k];
+          }
+          if (fallbackValue !== undefined && typeof fallbackValue === 'string') {
+            return fallbackValue;
+          }
         }
       }
       console.warn(`Translation key not found: ${key}`);

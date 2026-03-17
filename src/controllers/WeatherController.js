@@ -1590,9 +1590,11 @@ class WeatherController {
         attributionControl: false
       });
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      // 使用高德地图底图（国内可访问）
+      L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+        subdomains: '1234',
         maxZoom: 10,
-        attribution: '© OpenStreetMap contributors'
+        attribution: '© 高德地图'
       }).addTo(map);
 
       this._chinaSpotsMapInstance = map;
