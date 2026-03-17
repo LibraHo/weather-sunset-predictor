@@ -1276,8 +1276,9 @@ class PredictionController {
    */
   formatTime(time) {
     try {
+      if (time === null || time === undefined) return '--:--';
       const date = typeof time === 'string' ? new Date(time) : time;
-      if (isNaN(date.getTime())) {
+      if (!date || isNaN(date.getTime())) {
         return '--:--';
       }
       // 使用本地时间方法获取小时和分钟（天文学计算已经返回本地时间）

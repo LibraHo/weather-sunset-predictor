@@ -117,8 +117,19 @@ class I18n {
       }
     }
 
-    // 如果仍然找不到，返回键名
+    // 如果仍然找不到，尝试从 zh-CN 获取 fallback
     if (value === undefined) {
+      const zhFallback = this.translations['zh-CN'];
+      if (zhFallback && this.currentLang !== 'zh-CN') {
+        const keys = key.split('.');
+        let fallbackValue = zhFallback;
+        for (const k of keys) {
+          fallbackValue = fallbackValue?.[k];
+        }
+        if (fallbackValue !== undefined && typeof fallbackValue === 'string') {
+          return fallbackValue;
+        }
+      }
       console.warn(`Translation key not found: ${key}`);
       return key;
     }
