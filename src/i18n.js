@@ -34,8 +34,10 @@ class I18n {
       this.currentLanguage = this.detectBrowserLanguage();
     }
 
-    // 加载对应翻译文件
+    // 加载对应翻译文件 + fallback 语言
     await this.loadTranslations(this.currentLanguage);
+    if (!this.translations['en-US']) await this.loadTranslations('en-US');
+    if (!this.translations['zh-CN']) await this.loadTranslations('zh-CN');
 
     // 应用RTL布局（如果需要）
     this.applyDirection();
@@ -102,34 +104,25 @@ class I18n {
       }
     }
 
-    // 如果找不到翻译，回退到默认语言
-    if (value === undefined && this.currentLanguage !== 'zh-CN') {
-      value = this.translations['zh-CN'];
-      if (value) {
+    // 如果找不到翻译，按优先级 fallback：en-US -> zh-CN
+    if (value === undefined) {
+      const fallbackOrder = ['en-US', 'zh-CN'];
+      for (const lang of fallbackOrder) {
+        if (lang === this.currentLanguage) continue;
+        let fallbackValue = this.translations[lang];
+        if (!fallbackValue) continue;
         for (const k of keys) {
-          if (value && typeof value === 'object') {
-            value = value[k];
-          } else {
-            value = undefined;
-            break;
-          }
+          fallbackValue = fallbackValue?.[k];
+        }
+        if (fallbackValue !== undefined) {
+          value = fallbackValue;
+          break;
         }
       }
     }
 
-    // 如果仍然找不到，尝试从 zh-CN 获取 fallback
+    // 如果仍然找不到，返回键名
     if (value === undefined) {
-      const zhFallback = this.translations['zh-CN'];
-      if (zhFallback && this.currentLang !== 'zh-CN') {
-        const keys = key.split('.');
-        let fallbackValue = zhFallback;
-        for (const k of keys) {
-          fallbackValue = fallbackValue?.[k];
-        }
-        if (fallbackValue !== undefined && typeof fallbackValue === 'string') {
-          return fallbackValue;
-        }
-      }
       console.warn(`Translation key not found: ${key}`);
       return key;
     }
