@@ -783,9 +783,9 @@ class PredictionController {
     const high = cloudLayers.high ?? 0;
     const mid = cloudLayers.mid ?? 0;
     const low = cloudLayers.low ?? 0;
-    const highLabel = this.i18n.t('prediction.cloudLayers.shortHigh');
-    const midLabel = this.i18n.t('prediction.cloudLayers.shortMid');
-    const lowLabel = this.i18n.t('prediction.cloudLayers.shortLow');
+    const highLabel = this.i18n.t('prediction.cloudLayers.shortHigh') || '高云';
+    const midLabel = this.i18n.t('prediction.cloudLayers.shortMid') || '中云';
+    const lowLabel = this.i18n.t('prediction.cloudLayers.shortLow') || '低云';
 
     return `
       <div class="compact-cloud-info" style="display:flex;align-items:center;flex-wrap:nowrap;gap:4px;width:100%;overflow:hidden;">
@@ -827,6 +827,8 @@ class PredictionController {
     const humidityValue = factors.humidity?.value ?? 50;
     const visibilityValue = factors.visibility?.value ?? 10;
     const lowCloudsValue = factors.lowClouds?.value ?? 0;
+    const precipitationValue = factors.precipitation?.value ?? 0;
+    const weatherCodeValue = factors.weatherCode?.value ?? null;
 
     let analysis = '';
 
@@ -840,7 +842,7 @@ class PredictionController {
     }
 
     // 火烧云专项分析（已包含条件明细，不再重复拼接）
-    analysis += this.generateFireCloudAnalysis(cloudValue, humidityValue, visibilityValue, lowCloudsValue);
+    analysis += this.generateFireCloudAnalysis(cloudValue, humidityValue, visibilityValue, lowCloudsValue, precipitationValue, weatherCodeValue);
 
     return analysis;
   }
@@ -931,10 +933,39 @@ class PredictionController {
    * @returns {string} 火烧云分析文字
    * @private
    */
-  generateFireCloudAnalysis(cloudValue, humidityValue, visibilityValue, lowCloudsValue) {
+  generateFireCloudAnalysis(cloudValue, humidityValue, visibilityValue, lowCloudsValue, precipitation = 0, weatherCode = null) {
     let fireCloudAnalysis = '';
     let fireCloudScore = 0;
     const fireCloudConditions = [];
+
+    // ⚠️ 前置天气状况判断：恶劣天气直接短路，不列其他条件
+    const isRainSnow = precipitation > 0.5 ||
+      (typeof weatherCode === 'number' && (
+        (weatherCode >= 51 && weatherCode <= 67) ||
+        (weatherCode >= 71 && weatherCode <= 77) ||
+        (weatherCode >= 80 && weatherCode <= 86)
+      ));
+
+    if (isRainSnow) {
+      fireCloudAnalysis = ` 🔥 火烧云指数：0/100（较差）`;
+      fireCloudAnalysis += '<div class="fire-cloud-details" style="margin-top: 10px; padding: 10px; background: rgba(255, 243, 224, 0.3); border-radius: 8px;">';
+      fireCloudAnalysis += '<div style="font-weight: 600; margin-bottom: 8px;">🔥 火烧云形成条件分析：</div>';
+      fireCloudAnalysis += `<div style="font-size: 14px; margin: 4px 0;">🌧 当前有降水（${precipitation.toFixed(1)} mm/h），无法形成火烧云</div>`;
+      fireCloudAnalysis += `<div style="margin-top: 8px; font-weight: 600; color: var(--color-text);">❌ 降水天气，不适合观赏火烧云</div>`;
+      fireCloudAnalysis += '</div>';
+      return fireCloudAnalysis;
+    }
+
+    // 阴天判断（云量>85% 且能见度<5km）
+    if (cloudValue > 85 && visibilityValue < 5) {
+      fireCloudAnalysis = ` 🔥 火烧云指数：10/100（较差）`;
+      fireCloudAnalysis += '<div class="fire-cloud-details" style="margin-top: 10px; padding: 10px; background: rgba(255, 243, 224, 0.3); border-radius: 8px;">';
+      fireCloudAnalysis += '<div style="font-weight: 600; margin-bottom: 8px;">🔥 火烧云形成条件分析：</div>';
+      fireCloudAnalysis += `<div style="font-size: 14px; margin: 4px 0;">☁️ 阴天（云量 ${cloudValue.toFixed(0)}%，能见度 ${visibilityValue.toFixed(1)} km），阳光无法穿透云层</div>`;
+      fireCloudAnalysis += `<div style="margin-top: 8px; font-weight: 600; color: var(--color-text);">❌ 阴天条件，火烧云概率极低</div>`;
+      fireCloudAnalysis += '</div>';
+      return fireCloudAnalysis;
+    }
 
     // 评分标准（满分100分）
     // 1. 云量 30-70%: 最佳（+30分）
