@@ -176,7 +176,7 @@ export default class ChinaSpotsOverlay {
       if (spot.score < 40) return;
 
       // 经纬度 → 容器像素坐标
-      const containerPt = this._map.latLngToContainerPoint(L.latLng(spot.lat, spot.lon));
+      const containerPt = this._map.latLngToContainerPoint(window.L.latLng(spot.lat, spot.lon));
       const x = containerPt.x;
       const y = containerPt.y;
 
