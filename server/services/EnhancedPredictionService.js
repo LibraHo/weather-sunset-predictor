@@ -164,6 +164,82 @@ function checkTimeWindow(date, lat, lon, type) {
   };
 }
 
+// ========== 云种判别（需求39，Phase 19 任务67.1）==========
+
+/**
+ * 根据分层云量判别主导云种及评分乘数
+ * 来源：sunsetbot.top 火烧云预报教程 章节2
+ *
+ * @param {number} low   - 低云量 % (0-2500m)
+ * @param {number} mid   - 中云量 % (2500-7000m)
+ * @param {number} high  - 高云量 % (7000m+)
+ * @param {number|null} cloudBaseHeightM - 云底高度(m)，可选，提供时更准确
+ * @returns {{type, label, labelEn, canvasMultiplier, lightPathMultiplier, reason}}
+ */
+function cloudTypeClassifier(low, mid, high, cloudBaseHeightM = null) {
+  // 若有云底高度，层云判别更准确（层云云底 < 500m）
+  const isDefinitelyStratus = cloudBaseHeightM !== null && cloudBaseHeightM < 500 && low > 40;
+
+  // 各层主导分数
+  const dominant = Math.max(low, mid, high);
+
+  let type, label, labelEn, canvasMultiplier, lightPathMultiplier, reason;
+
+  if (isDefinitelyStratus || low > 70) {
+    // 层云型：低云超厚，几乎封死
+    type             = 'stratus';
+    label            = '层云（强遮挡）';
+    labelEn          = 'Stratus (blocking)';
+    canvasMultiplier  = 0.4;
+    lightPathMultiplier = 0.5;
+    reason           = '低云超过70%，光线难以穿透';
+  } else if (low > 40) {
+    // 层积云型：低云为主，有一定遮挡
+    type             = 'stratocumulus';
+    label            = '层积云';
+    labelEn          = 'Stratocumulus';
+    canvasMultiplier  = 1.0;
+    lightPathMultiplier = 1.0;
+    reason           = '低云主导，层积云型';
+  } else if (low < 20 && high >= mid && high > 25) {
+    // 高层云/卷层云型：高云主导，低云少，最佳
+    type             = 'altostratus';
+    label            = '高层云（最佳画布）';
+    labelEn          = 'Altostratus (optimal)';
+    canvasMultiplier  = 1.2;
+    lightPathMultiplier = 1.1;
+    reason           = '高云主导且低云干扰少，最利于火烧云';
+  } else if (low < 20 && mid > 25) {
+    // 高积云/中层云型：中云主导，低云少，很好
+    type             = 'altocumulus';
+    label            = '高积云（优质画布）';
+    labelEn          = 'Altocumulus (good)';
+    canvasMultiplier  = 1.15;
+    lightPathMultiplier = 1.0;
+    reason           = '中云主导且低云干扰少，利于火烧云';
+  } else if (dominant < 10) {
+    // 几乎无云：有光无云，火烧云条件差
+    type             = 'clear';
+    label            = '少云';
+    labelEn          = 'Clear (few clouds)';
+    canvasMultiplier  = 0.6;
+    lightPathMultiplier = 1.2;
+    reason           = '云量过少，缺乏"画布"';
+  } else {
+    // 混合型
+    type             = 'mixed';
+    label            = '混合云层';
+    labelEn          = 'Mixed';
+    canvasMultiplier  = 0.85;
+    lightPathMultiplier = 0.9;
+    reason           = '多层混合云，条件一般';
+  }
+
+  return { type, label, labelEn, canvasMultiplier, lightPathMultiplier, reason };
+}
+
+// ========== 第二模块：画布评分 ==========
+
 /**
  * 第二模块：画布逻辑（本地云况评分）
  * @param {Object} weatherData - 天气数据
@@ -744,18 +820,35 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   const timeCheck = checkTimeWindow(dateObj, lat, lon, type);
   logger.debug('[EnhancedPredictionService]', '时间判定:', timeCheck);
 
-  // 2. 画布评分（本地云况）
-  const canvasScore = scoreCloudCanvas(weatherData);
-  logger.debug('[EnhancedPredictionService]', '画布评分:', canvasScore.score);
+  // 2. 云种判别（需求39）
+  const cloudType = cloudTypeClassifier(
+    weatherData.lowClouds  || 0,
+    weatherData.midClouds  || 0,
+    weatherData.highClouds || 0,
+    weatherData.cloudBaseHeight ?? null
+  );
+  logger.debug('[EnhancedPredictionService]', '云种判别:', cloudType.type, cloudType.reason);
+
+  // 3. 画布评分（本地云况）+ 云种乘数
+  const canvasScoreRaw = scoreCloudCanvas(weatherData);
+  const canvasScore = {
+    ...canvasScoreRaw,
+    score: Math.min(100, parseFloat((canvasScoreRaw.score * cloudType.canvasMultiplier).toFixed(1)))
+  };
+  logger.debug('[EnhancedPredictionService]', '画布评分(含云种):', canvasScore.score);
 
   // 3. 光路评分（远距离通透性）
   const azimuth = calculateSolarAzimuth(dateObj, lat, lon);
   // 优先使用 V2 物理重构算法（回滚开关：LIGHT_PATH_V2_ENABLED=false）
   const v2Result = LightPathV2Service.scoreFromWeatherData(weatherData, timeCheck.elevation, azimuth);
-  const lightPathScore = v2Result !== null
+  const lightPathScoreRaw = v2Result !== null
     ? { ...v2Result, hasRemoteData: false, nearPointScore: v2Result.score, farPointScore: v2Result.score, breakdown: { nearPointCloudCover: weatherData.cloudCover || 0, farPointCloudCover: weatherData.cloudCover || 0 } }
     : scoreLightPath(weatherData, timeCheck.elevation, azimuth, remoteCloudData);
-  logger.debug('[EnhancedPredictionService]', '光路评分:', lightPathScore.score);
+  const lightPathScore = {
+    ...lightPathScoreRaw,
+    score: Math.min(100, parseFloat((lightPathScoreRaw.score * cloudType.lightPathMultiplier).toFixed(1)))
+  };
+  logger.debug('[EnhancedPredictionService]', '光路评分(含云种):', lightPathScore.score);
 
   // 4. 渲染修正（画质系数）
   const renderingFactor = scoreRendering(weatherData, rainedRecently);
@@ -802,6 +895,14 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     timeAnalysis: timeCheck,
     occlusionAnalysis: occlusion,
     severeWeatherCap: severeCap,
+    cloudType: {
+      type:                cloudType.type,
+      label:               cloudType.label,
+      labelEn:             cloudType.labelEn,
+      canvasMultiplier:    cloudType.canvasMultiplier,
+      lightPathMultiplier: cloudType.lightPathMultiplier,
+      reason:              cloudType.reason
+    },
     ...finalResult,
     status: adjustedStatus,
     description: adjustedDescription,
@@ -847,6 +948,7 @@ module.exports = {
 
   // 核心评分模块
   checkTimeWindow,
+  cloudTypeClassifier,
   scoreCloudCanvas,
   scoreLightPath,
   scoreRendering,
