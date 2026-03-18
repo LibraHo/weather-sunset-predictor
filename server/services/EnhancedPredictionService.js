@@ -388,6 +388,74 @@ function estimateCloudBaseHeight(weatherData) {
   return 2200;
 }
 
+// ========== 光路几何模型（需求40，Phase 19 任务67.2）==========
+
+/**
+ * 火烧云几何光路模型
+ * 来源：sunsetbot.top 火烧云预报教程 章节1.2
+ *
+ * 公式：
+ *   d_max = h_cloud_km / tan(sunAlt_rad)   → 光线能覆盖的最远云底距离
+ *   t_duration = h_cloud_km / (v_sun * sin(sunAlt_rad))  → 持续时长(min)
+ *   t_start_offset = (d_cloud / v_sun) - t_duration      → 日落后开始时间(min)
+ *
+ * @param {number} sunAltitudeDeg    - 太阳高度角（度，日落约为 -0.8°）
+ * @param {number} cloudBaseKm       - 云底高度（km）
+ * @param {number} lat               - 纬度（用于修正 v_sun）
+ * @returns {{feasible, cloudBoundaryKm, startOffsetMin, durationMin, sunAltitudeDeg, cloudBaseKm}}
+ */
+function geometricLightModel(sunAltitudeDeg, cloudBaseKm, lat = 35) {
+  // 太阳线速度：纬度修正（cos(lat)），北京(40°N)约 21km/min，赤道约 27.5km/min
+  const v_sun = 27.5 * Math.cos(lat * Math.PI / 180);  // km/min
+
+  // 若太阳高度角过高（>15°）或过低（<-6°），几何上无法形成典型火烧云
+  if (sunAltitudeDeg > 15 || sunAltitudeDeg < -6) {
+    return {
+      feasible: false,
+      reason: sunAltitudeDeg > 15 ? '太阳高度角过高，非黄昏时段' : '太阳已沉入地平线过深',
+      sunAltitudeDeg: parseFloat(sunAltitudeDeg.toFixed(2)),
+      cloudBaseKm: parseFloat(cloudBaseKm.toFixed(2)),
+      cloudBoundaryKm: null,
+      startOffsetMin: null,
+      durationMin: null,
+      vsun: parseFloat(v_sun.toFixed(1))
+    };
+  }
+
+  const sunAltRad = sunAltitudeDeg * Math.PI / 180;
+
+  // 避免 tan(0) 除零：高度角绝对值 < 0.1° 时用近似
+  const tanAlt = Math.abs(sunAltRad) < 0.00175 ? 0.00175 : Math.tan(Math.abs(sunAltRad));
+  const sinAlt = Math.max(Math.abs(Math.sin(sunAltRad)), 0.00175);
+
+  // 最大光路距离（km）
+  const d_max = cloudBaseKm / tanAlt;
+
+  // 持续时长（分钟）
+  const t_duration = cloudBaseKm / (v_sun * sinAlt);
+
+  // 估算云边界距离：用 d_max 的 60% 作为典型值（无实测云边界时）
+  const cloudBoundaryKm = parseFloat((d_max * 0.6).toFixed(1));
+
+  // 开始偏移（日落后多少分钟开始出现火烧云）
+  const t_start_raw = (cloudBoundaryKm / v_sun) - t_duration;
+  const t_start_offset = parseFloat(Math.max(0, t_start_raw).toFixed(1));
+
+  const feasible = d_max > 10 && t_duration > 0.5;
+
+  return {
+    feasible,
+    reason: feasible ? '几何条件满足，可能出现火烧云' : '云底太低或距离不足',
+    sunAltitudeDeg: parseFloat(sunAltitudeDeg.toFixed(2)),
+    cloudBaseKm: parseFloat(cloudBaseKm.toFixed(2)),
+    d_maxKm: parseFloat(d_max.toFixed(1)),
+    cloudBoundaryKm,
+    startOffsetMin: t_start_offset,
+    durationMin: parseFloat(t_duration.toFixed(1)),
+    vsun: parseFloat(v_sun.toFixed(1))
+  };
+}
+
 function buildLocalLightPathSamples(weatherData) {
   const baseH = estimateCloudBaseHeight(weatherData);
   const low = weatherData.lowClouds || 0;
@@ -837,7 +905,11 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   };
   logger.debug('[EnhancedPredictionService]', '画布评分(含云种):', canvasScore.score);
 
-  // 3. 光路评分（远距离通透性）
+  // 3.5 光路几何模型（需求40）——预测开始时间 + 持续时长
+  const cloudBaseM = estimateCloudBaseHeight(weatherData);
+  const geometric = geometricLightModel(timeCheck.elevation, cloudBaseM / 1000, lat);
+  logger.debug('[EnhancedPredictionService]', '光路几何:', geometric.feasible ? '可行' : '不可行', '开始偏移(min):', geometric.startOffsetMin, '持续(min):', geometric.durationMin);
+
   const azimuth = calculateSolarAzimuth(dateObj, lat, lon);
   // 优先使用 V2 物理重构算法（回滚开关：LIGHT_PATH_V2_ENABLED=false）
   const v2Result = LightPathV2Service.scoreFromWeatherData(weatherData, timeCheck.elevation, azimuth);
@@ -867,6 +939,12 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   let adjustedScore = finalResult.score;
   let adjustedStatus = finalResult.status;
   let adjustedDescription = finalResult.description;
+
+  // 6.5 几何不可行硬性上限（需求40.2）
+  if (!geometric.feasible) {
+    adjustedScore = Math.min(adjustedScore, 30);
+    logger.warn('[EnhancedPredictionService]', '几何条件不满足，设置上限30:', geometric.reason);
+  }
 
   if (occlusion.occluded) {
     adjustedScore = parseFloat((adjustedScore * 0.75).toFixed(1));
@@ -902,6 +980,16 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
       canvasMultiplier:    cloudType.canvasMultiplier,
       lightPathMultiplier: cloudType.lightPathMultiplier,
       reason:              cloudType.reason
+    },
+    geometricModel: {
+      feasible:            geometric.feasible,
+      reason:              geometric.reason,
+      sunAltitudeDeg:      geometric.sunAltitudeDeg,
+      cloudBaseKm:         geometric.cloudBaseKm,
+      cloudBoundaryKm:      geometric.cloudBoundaryKm,
+      startOffsetMin:       geometric.startOffsetMin,
+      durationMin:         geometric.durationMin,
+      vsun:                geometric.vsun
     },
     ...finalResult,
     status: adjustedStatus,
@@ -949,6 +1037,7 @@ module.exports = {
   // 核心评分模块
   checkTimeWindow,
   cloudTypeClassifier,
+  geometricLightModel,
   scoreCloudCanvas,
   scoreLightPath,
   scoreRendering,
