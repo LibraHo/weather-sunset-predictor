@@ -3,19 +3,25 @@
  *
  * Phase 6 重构：使用 Leaflet L.imageOverlay() 替代 DOM 覆盖层
  * Phase 12 重构：新增 L.tileLayer 模式，拖动/缩放与底图完全同步
+ * Phase 17 重构：新增 canvas-native 模式（NativeFireCloudRenderer），拖动实时跟手
  *
- * 支持两种数据源：
- * 1. 前端生成（基于周边点 Canvas 热力图）
- * 2. 后端瓦片服务（L.tileLayer → /api/firecloud/tiles/{z}/{x}/{y}.png）
+ * 渲染模式（localStorage: firecloud_render_mode）：
+ *   canvas-native  — 推荐，原生 Canvas 实时跟手（默认）
+ *   tile-layer     — Leaflet tileLayer，兼容
+ *   image-overlay  — 单图覆盖，已弃用
  *
- * 需求：20.1, 20.4, 20.7, 20.9, 20.10, 20.11, 20.14
+ * 需求：20.1, 20.4, 20.7, 20.9, 20.10, 20.11, 20.14, 38
  */
+
+import NativeFireCloudRenderer from './NativeFireCloudRenderer.js';
 
 class FireCloudOverlayService {
   constructor() {
     this.leafletOverlay = null; // Leaflet L.imageOverlay 或 L.tileLayer 实例
     this.mapService = null;
     this._tileLayerMode = false; // 当前是否使用 tileLayer 模式
+    this._nativeMode = false;    // 当前是否使用 canvas-native 模式
+    this._nativeRenderer = null; // NativeFireCloudRenderer 实例
     this.currentData = null;
     this.isLoading = false;
     this.cache = new Map();
@@ -43,6 +49,16 @@ class FireCloudOverlayService {
    */
   setBackendURL(url) {
     this.backendURL = url;
+    if (this._nativeRenderer) this._nativeRenderer.proxyURL = url;
+  }
+
+  getRenderMode() {
+    try { return localStorage.getItem('firecloud_render_mode') || 'canvas-native'; }
+    catch (_) { return 'canvas-native'; }
+  }
+
+  setRenderMode(mode) {
+    try { localStorage.setItem('firecloud_render_mode', mode); } catch (_) {}
   }
 
   /**
@@ -318,14 +334,17 @@ class FireCloudOverlayService {
 
   /**
    * 在地图上显示覆盖层
-   * 优先使用 L.tileLayer（拖动同步），降级使用 L.imageOverlay
+   * 渲染模式由 localStorage(firecloud_render_mode) 决定：
+   *   canvas-native → NativeFireCloudRenderer（默认，拖动实时跟手）
+   *   tile-layer    → L.tileLayer
+   *   image-overlay → L.imageOverlay（降级）
    *
    * @param {Object} mapService - WindyMapService 实例（Leaflet 版本）
    * @param {Object} overlayData - 覆盖层数据 { dataUrl, bounds, metadata }
-   * @param {HTMLElement} container - 地图容器元素（兼容性参数）
+   * @param {HTMLElement} container - 兼容性参数
    * @returns {boolean} 是否成功
    *
-   * 需求：20.7, 20.9
+   * 需求：20.7, 20.9, 38
    */
   displayOnMap(mapService, overlayData, container) {
     if (!mapService) {
@@ -333,16 +352,42 @@ class FireCloudOverlayService {
       return false;
     }
 
-    // 优先：L.tileLayer 模式（真正跟随拖动）
+    const mode = this.getRenderMode();
     const type = overlayData?.metadata?.type || 'sunset';
-    if (this.displayTileLayer(mapService, type)) {
-      return true;
+
+    if (mode === 'canvas-native') {
+      const map = mapService.getMap ? mapService.getMap() : null;
+      if (map) {
+        try {
+          this.removeOverlay();
+          this.mapService = mapService;
+          if (!this._nativeRenderer) {
+            this._nativeRenderer = new NativeFireCloudRenderer({
+              proxyURL: this.backendURL, type, opacity: this.config.opacity
+            });
+            this._nativeRenderer.init(map);
+          } else {
+            this._nativeRenderer.setType(type);
+          }
+          this._nativeRenderer.show();
+          this._nativeMode = true;
+          console.log('[FireCloudOverlayService] canvas-native 渲染器已启动');
+          return true;
+        } catch (err) {
+          console.error('[FireCloudOverlayService] canvas-native 启动失败，降级:', err);
+        }
+      }
     }
 
-    // 降级：L.imageOverlay（仅在 tileLayer 失败时使用）
+    // tile-layer（含 canvas-native 降级）
+    if (mode !== 'image-overlay') {
+      return this.displayTileLayer(mapService, type);
+    }
+
+    // image-overlay
     if (!overlayData) {
-      console.error('[FireCloudOverlayService] tileLayer 降级失败：无 overlayData');
-      return false;
+      console.warn('[FireCloudOverlayService] image-overlay 无 overlayData，降级 tile-layer');
+      return this.displayTileLayer(mapService, type);
     }
 
     try {
@@ -351,13 +396,12 @@ class FireCloudOverlayService {
 
       if (mapService.addImageOverlay) {
         this.leafletOverlay = mapService.addImageOverlay(
-          overlayData.dataUrl,
-          overlayData.bounds,
+          overlayData.dataUrl, overlayData.bounds,
           { opacity: this.config.opacity, interactive: false, zIndex: 400 }
         );
         if (this.leafletOverlay) {
           this._tileLayerMode = false;
-          console.log('[FireCloudOverlayService] 降级：imageOverlay 已显示');
+          console.log('[FireCloudOverlayService] imageOverlay 已显示');
           return true;
         }
       }
@@ -372,7 +416,6 @@ class FireCloudOverlayService {
           opacity: this.config.opacity, interactive: false, zIndex: 400
         }).addTo(map);
         this._tileLayerMode = false;
-        console.log('[FireCloudOverlayService] 降级：imageOverlay（直接添加）');
         return true;
       }
 
@@ -385,20 +428,25 @@ class FireCloudOverlayService {
   }
 
   /**
-   * 移除覆盖层（支持 tileLayer 和 imageOverlay）
+   * 移除覆盖层（支持 canvas-native / tileLayer / imageOverlay）
    *
    * 需求：20.7
    */
   removeOverlay() {
+    if (this._nativeMode && this._nativeRenderer) {
+      this._nativeRenderer.hide();
+      this._nativeMode = false;
+    }
+
     if (this.leafletOverlay) {
       const overlayRef = this.leafletOverlay;
+      const wasTileLayer = this._tileLayerMode;
       this.leafletOverlay.remove();
       this.leafletOverlay = null;
       this._tileLayerMode = false;
       console.log('[FireCloudOverlayService] 覆盖层已移除');
 
-      // imageOverlay 模式下通知 mapService 清理记录
-      if (!this._tileLayerMode && this.mapService && this.mapService.removeImageOverlay) {
+      if (!wasTileLayer && this.mapService && this.mapService.removeImageOverlay) {
         this.mapService.removeImageOverlay(overlayRef);
       }
     }
@@ -474,11 +522,16 @@ class FireCloudOverlayService {
   getStatus() {
     return {
       isLoading: this.isLoading,
-      hasOverlay: !!this.leafletOverlay,
+      hasOverlay: !!this.leafletOverlay || this._nativeMode,
+      renderMode: this.getRenderMode(),
       tileLayerMode: this._tileLayerMode,
+      nativeMode: this._nativeMode,
       cacheSize: this.cache.size,
       useBackendOverlay: this.useBackendOverlay,
-      source: this._tileLayerMode ? 'tile-service' : (this.currentData?.metadata?.source || null)
+      source: this._nativeMode ? 'canvas-native'
+            : this._tileLayerMode ? 'tile-service'
+            : (this.currentData?.metadata?.source || null),
+      ...(this._nativeMode && this._nativeRenderer ? this._nativeRenderer.getStatus() : {})
     };
   }
 }
