@@ -30,17 +30,19 @@ class NativeFireCloudRenderer {
     this._fetchTimer = null;
     this._fetching = false;
 
-    this._onMove   = () => this._scheduleFrame();
-    this._onZoom   = () => { this._grid = null; this._scheduleFrame(); };
-    this._onResize = () => this._resetCanvas();
+    this._onMove      = () => this._scheduleFrame();
+    this._onZoomStart = () => { if (this._canvas) this._canvas.style.opacity = '0'; };
+    this._onZoom      = () => { this._grid = null; this._resetCanvas(); };
+    this._onResize    = () => this._resetCanvas();
   }
 
   init(leafletMap) {
     this._map = leafletMap;
     this._createCanvas();
-    this._map.on('move',   this._onMove);
-    this._map.on('zoom',   this._onZoom);
-    this._map.on('resize', this._onResize);
+    this._map.on('move',      this._onMove);
+    this._map.on('zoomstart', this._onZoomStart);
+    this._map.on('zoom',      this._onZoom);
+    this._map.on('resize',    this._onResize);
     this._resetCanvas();
   }
 
@@ -68,9 +70,10 @@ class NativeFireCloudRenderer {
   destroy() {
     this.hide();
     if (this._map) {
-      this._map.off('move',   this._onMove);
-      this._map.off('zoom',   this._onZoom);
-      this._map.off('resize', this._onResize);
+      this._map.off('move',      this._onMove);
+      this._map.off('zoomstart', this._onZoomStart);
+      this._map.off('zoom',      this._onZoom);
+      this._map.off('resize',    this._onResize);
     }
     if (this._canvas && this._canvas.parentNode) {
       this._canvas.parentNode.removeChild(this._canvas);
@@ -105,6 +108,7 @@ class NativeFireCloudRenderer {
     const size = this._map.getSize();
     this._canvas.width  = size.x;
     this._canvas.height = size.y;
+    this._canvas.style.opacity = '1';
     if (this._visible) this._scheduleFrame();
   }
 
