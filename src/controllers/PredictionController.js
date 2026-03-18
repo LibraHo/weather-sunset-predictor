@@ -734,6 +734,7 @@ class PredictionController {
         </div>
         ${cloudLayersHtml}
         <div class="compact-analysis">${formattedAnalysis}</div>
+        <div id="radar-compass-${type}" style="margin-top:12px;display:none;"></div>
       </div>
     `;
   }

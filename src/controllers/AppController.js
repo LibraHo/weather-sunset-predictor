@@ -202,9 +202,13 @@ class AppController {
       }
 
       // Phase 18：雷达罗盘（异步，不阻塞主流程）
+      // 需求：分别放在朝霞/晚霞卡片下方，并按对应时段计算
       if (this.weatherController?.renderRadarCompass) {
-        this.weatherController.renderRadarCompass(location).catch(err => {
-          console.warn('[AppController] 雷达罗盘加载失败:', err.message);
+        this.weatherController.renderRadarCompass(location, 'sunrise').catch(err => {
+          console.warn('[AppController] 朝霞雷达罗盘加载失败:', err.message);
+        });
+        this.weatherController.renderRadarCompass(location, 'sunset').catch(err => {
+          console.warn('[AppController] 晚霞雷达罗盘加载失败:', err.message);
         });
       }
 

@@ -1118,8 +1118,11 @@ class WeatherController {
   /**
    * Phase 18：渲染雷达罗盘（需求19 v2）
    */
-  async renderRadarCompass(location) {
-    const container = document.getElementById('radar-compass-container');
+  async renderRadarCompass(location, predictionType = null) {
+    const container = predictionType
+      ? document.getElementById(`radar-compass-${predictionType}`)
+      : document.getElementById('radar-compass-container');
+
     if (!container || !location?.lat || !location?.lon) return;
 
     container.style.display = 'block';
@@ -1128,18 +1131,28 @@ class WeatherController {
     try {
       let dirs;
       const radius = 100;
-      const baseURL = window._appConfig?.proxyURL || 'http://localhost:3000';
-      try {
-        const res = await fetch(
-          `${baseURL}/api/prediction/surrounding?lat=${location.lat}&lon=${location.lon}&radius=${radius}&type=sunset`,
-          { signal: AbortSignal.timeout(12000) }
-        );
-        if (res.ok) {
-          dirs = this._convertSurroundingToRadarDirs(await res.json());
-        } else throw new Error(`HTTP ${res.status}`);
-      } catch (_) {
-        dirs = await this._fetchRadarDirsFrontend(location, radius);
+      const now = new Date();
+      const type = predictionType || (now.getHours() < 12 ? 'sunrise' : 'sunset');
+
+      // 优先后端聚合 API（POST /api/prediction/surrounding）
+      if (this.predictionAPIService) {
+        try {
+          const data = await this.predictionAPIService.getSurrounding(
+            location.lat,
+            location.lon,
+            radius,
+            type,
+            now
+          );
+          dirs = this._convertSurroundingToRadarDirs(data);
+        } catch (apiError) {
+          console.warn('[WeatherController] 后端周边API失败，回退前端逐点请求:', apiError.message);
+          dirs = await this._fetchRadarDirsFrontend(location, radius, type);
+        }
+      } else {
+        dirs = await this._fetchRadarDirsFrontend(location, radius, type);
       }
+
       this._radarCompass.render(container, { directions: dirs });
     } catch (err) {
       console.error('[WeatherController] 雷达罗盘渲染失败:', err);
@@ -1155,7 +1168,7 @@ class WeatherController {
     }));
   }
 
-  async _fetchRadarDirsFrontend(location, radius = 100) {
+  async _fetchRadarDirsFrontend(location, radius = 100, type = 'sunset') {
     const DIRS = [
       {dir:'N', label:'北', b:0}, {dir:'NE', label:'东北', b:45},
       {dir:'E', label:'东', b:90}, {dir:'SE', label:'东南', b:135},
@@ -1169,7 +1182,7 @@ class WeatherController {
       const dLat = (radius / R) * Math.cos(rad) * (180 / Math.PI);
       const dLon = (radius / R) * Math.sin(rad) / Math.cos(location.lat * Math.PI / 180) * (180 / Math.PI);
       const res  = await fetch(
-        `${base}/api/prediction?lat=${(location.lat+dLat).toFixed(4)}&lon=${(location.lon+dLon).toFixed(4)}&type=sunset`,
+        `${base}/api/prediction?lat=${(location.lat+dLat).toFixed(4)}&lon=${(location.lon+dLon).toFixed(4)}&type=${type}`,
         { signal: AbortSignal.timeout(8000) }
       );
       const json = res.ok ? await res.json() : {};
