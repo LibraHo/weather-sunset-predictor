@@ -10,6 +10,7 @@
 
 const orchestrator = require('./ProviderOrchestrator');
 const PredictionService = require('./PredictionService.js');
+const SunCalculator = require('../utils/SunCalculator.js');
 const cacheConfig = require('../config/cacheConfig.js');
 
 // ========== 服务类定义 ==========
@@ -160,27 +161,41 @@ class SurroundingService {
         // 获取天气数据
         const weatherResponse = await orchestrator.fetchWeatherData(point.lat, point.lon, 24);
 
-        // 提取当前小时的天气数据
-        const currentWeather = weatherResponse.data[0];
+        // 按类型选择参考时刻：朝霞用日出时刻，晚霞用日落时刻
+        const referenceTime = type === 'sunrise'
+          ? SunCalculator.getSunriseTime(targetDate, point.lat, point.lon)
+          : SunCalculator.getSunsetTime(targetDate, point.lat, point.lon);
 
-        if (!currentWeather) {
+        // 取与参考时刻最接近的小时数据（而不是固定 data[0]）
+        const hourly = Array.isArray(weatherResponse.data) ? weatherResponse.data : [];
+        if (hourly.length === 0) {
           throw new Error('天气数据为空');
+        }
+
+        let selectedWeather = hourly[0];
+        if (referenceTime instanceof Date && !isNaN(referenceTime.getTime())) {
+          const refTs = referenceTime.getTime();
+          selectedWeather = hourly.reduce((closest, current) => {
+            const cDiff = Math.abs((closest.timestamp || 0) - refTs);
+            const nDiff = Math.abs((current.timestamp || 0) - refTs);
+            return nDiff < cDiff ? current : closest;
+          }, hourly[0]);
         }
 
         // 标准化天气数据格式（对齐前端WeatherData模型）
         const weatherData = {
-          cloudCover: currentWeather.cloudCover || 0,
-          humidity: currentWeather.humidity || 0,
-          visibility: currentWeather.visibility || 10,
-          lowCloudCover: currentWeather.lowClouds || currentWeather.cloudCover || 0,
-          temp: currentWeather.temp || 0,
-          windSpeed: currentWeather.windSpeed || 0,
-          windDirection: currentWeather.windDirection || 0,
-          pressure: currentWeather.pressure || 1013,
-          precipitation: currentWeather.precipitation || 0,
-          lowClouds: currentWeather.lowClouds || 0,
-          midClouds: currentWeather.midClouds || 0,
-          highClouds: currentWeather.highClouds || 0
+          cloudCover: selectedWeather.cloudCover || 0,
+          humidity: selectedWeather.humidity || 0,
+          visibility: selectedWeather.visibility || 10,
+          lowCloudCover: selectedWeather.lowClouds || selectedWeather.cloudCover || 0,
+          temp: selectedWeather.temp || 0,
+          windSpeed: selectedWeather.windSpeed || 0,
+          windDirection: selectedWeather.windDirection || 0,
+          pressure: selectedWeather.pressure || 1013,
+          precipitation: selectedWeather.precipitation || 0,
+          lowClouds: selectedWeather.lowClouds || 0,
+          midClouds: selectedWeather.midClouds || 0,
+          highClouds: selectedWeather.highClouds || 0
         };
 
         // 计算预测评分
