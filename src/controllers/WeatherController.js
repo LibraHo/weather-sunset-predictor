@@ -11,7 +11,7 @@ import MockWindyAPIService from '../services/MockWindyAPIService.js';
 import UnitConverter from '../utils/UnitConverter.js';
 import WindyMapService from '../services/WindyMapService.js';
 import MockWindyMapService from '../services/MockWindyMapService.js';
-import SurroundingPointsService from '../services/SurroundingPointsService.js';
+import RadarCompass from '../components/RadarCompass.js';
 import RadarChartService from '../services/RadarChartService.js';
 import FireCloudOverlayService from '../services/FireCloudOverlayService.js';
 import PredictionAPIService from '../services/PredictionAPIService.js';
@@ -50,11 +50,9 @@ class WeatherController {
       this.windyMapService = null;
     }
 
-    // 任务19：初始化周边火烧云服务
-    this.surroundingPointsService = new SurroundingPointsService();
-    this.radarChartService = new RadarChartService();
-    this.surroundingRadius = 100; // 默认半径100公里
-    this.surroundingData = null;
+    // Phase 18：雷达罗盘
+    this._radarCompass = new RadarCompass({ size: 300 });
+    this.surroundingData = null; // 兼容旧引用
 
     // 需求22 Phase 2：初始化后端预测 API 服务
     const apiConfig = loadConfig();
@@ -1115,12 +1113,76 @@ class WeatherController {
     return UnitConverter.formatWindSpeed(this.getConvertedWindSpeed(windSpeed), this.windUnit, 1);
   }
 
-  // ========== 任务19：周边火烧云可视化 ==========
+  // ========== Phase 18：周边火烧云雷达罗盘 ==========
 
   /**
-   * 任务19：获取并显示周边火烧云数据
-   * @param {Object} location - 当前位置对象
-   * @param {number} radius - 探测半径（公里），默认使用当前设置的半径
+   * Phase 18：渲染雷达罗盘（需求19 v2）
+   */
+  async renderRadarCompass(location) {
+    const container = document.getElementById('radar-compass-container');
+    if (!container || !location?.lat || !location?.lon) return;
+
+    container.style.display = 'block';
+    container.innerHTML = '<p style="text-align:center;color:var(--color-text-light,#aaa);font-size:13px;padding:12px 0;">加载周边数据中…</p>';
+
+    try {
+      let dirs;
+      const radius = 100;
+      const baseURL = window._appConfig?.proxyURL || 'http://localhost:3000';
+      try {
+        const res = await fetch(
+          `${baseURL}/api/prediction/surrounding?lat=${location.lat}&lon=${location.lon}&radius=${radius}&type=sunset`,
+          { signal: AbortSignal.timeout(12000) }
+        );
+        if (res.ok) {
+          dirs = this._convertSurroundingToRadarDirs(await res.json());
+        } else throw new Error(`HTTP ${res.status}`);
+      } catch (_) {
+        dirs = await this._fetchRadarDirsFrontend(location, radius);
+      }
+      this._radarCompass.render(container, { directions: dirs });
+    } catch (err) {
+      console.error('[WeatherController] 雷达罗盘渲染失败:', err);
+      container.style.display = 'none';
+    }
+  }
+
+  _convertSurroundingToRadarDirs(json) {
+    const L = { N:'北', NE:'东北', E:'东', SE:'东南', S:'南', SW:'西南', W:'西', NW:'西北' };
+    return (json.points || json.directions || []).map(p => ({
+      dir: p.direction||p.dir, label: L[p.direction||p.dir]||(p.direction||p.dir),
+      score: Math.round(p.score||p.prediction?.score||0), dist: p.distance||50
+    }));
+  }
+
+  async _fetchRadarDirsFrontend(location, radius = 100) {
+    const DIRS = [
+      {dir:'N', label:'北', b:0}, {dir:'NE', label:'东北', b:45},
+      {dir:'E', label:'东', b:90}, {dir:'SE', label:'东南', b:135},
+      {dir:'S', label:'南', b:180}, {dir:'SW', label:'西南', b:225},
+      {dir:'W', label:'西', b:270}, {dir:'NW', label:'西北', b:315},
+    ];
+    const R = 6371;
+    const base = window._appConfig?.proxyURL || 'http://localhost:3000';
+    const results = await Promise.allSettled(DIRS.map(async d => {
+      const rad  = d.b * Math.PI / 180;
+      const dLat = (radius / R) * Math.cos(rad) * (180 / Math.PI);
+      const dLon = (radius / R) * Math.sin(rad) / Math.cos(location.lat * Math.PI / 180) * (180 / Math.PI);
+      const res  = await fetch(
+        `${base}/api/prediction?lat=${(location.lat+dLat).toFixed(4)}&lon=${(location.lon+dLon).toFixed(4)}&type=sunset`,
+        { signal: AbortSignal.timeout(8000) }
+      );
+      const json = res.ok ? await res.json() : {};
+      return { dir: d.dir, label: d.label, score: Math.round(json.score||0), dist: radius };
+    }));
+    return results.map((r,i) =>
+      r.status === 'fulfilled' ? r.value : { dir: DIRS[i].dir, label: DIRS[i].label, score: 0, dist: radius }
+    );
+  }
+
+  /**
+   * 任务19（旧）：保留签名避免运行时报错
+   * @deprecated 使用 renderRadarCompass 替代
    */
   async fetchSurroundingData(location, radius = this.surroundingRadius) {
     if (!location || !location.lat || !location.lon) {
