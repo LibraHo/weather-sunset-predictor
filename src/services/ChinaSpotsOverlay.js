@@ -136,34 +136,6 @@ export default class ChinaSpotsOverlay {
         return;
       }
 
-      // 高分点（≥70）添加小 marker
-      this._spots.forEach(spot => {
-        if (spot.score < 50) return;
-
-        const emoji = spot.score >= 80 ? '🌅' : '🌄';
-        const size = spot.score >= 80 ? 16 : 13;
-        const icon = window.L.divIcon({
-          html: `<div style="font-size:${size}px; line-height:1; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));">${emoji}</div>`,
-          className: '',
-          iconSize: [size + 4, size + 4],
-          iconAnchor: [(size + 4) / 2, (size + 4) / 2],
-          popupAnchor: [0, -(size + 4) / 2 - 2]
-        });
-
-        const qualityLabel = spot.score >= 80 ? '顶级' : spot.score >= 65 ? '优质' : spot.score >= 50 ? '良好' : '一般';
-        const marker = window.L.marker([spot.lat, spot.lon], { icon });
-        marker.bindPopup(
-          `<div style="font-size:13px; line-height:1.7;">
-            <b>${emoji} ${qualityLabel}</b><br>
-            评分：<b>${spot.score}</b> 分<br>
-            位置：${spot.lat.toFixed(2)}°N, ${spot.lon.toFixed(2)}°E
-          </div>`,
-          { maxWidth: 180 }
-        );
-        marker.addTo(this._map);
-        this._markers.push(marker);
-      });
-
       this.show();
       console.log(`[ChinaSpotsOverlay] 已加载 ${this._spots.length} 个点，渲染 ${this._markers.length} 个 marker`);
     } catch (err) {
