@@ -201,11 +201,10 @@ class AppController {
         console.warn('[AppController] 没有生成预测数据，跳过预测显示');
       }
 
-      // 任务19：获取周边火烧云数据（异步，不阻塞主流程）
-      if (this.weatherController && this.weatherController.fetchSurroundingData) {
-        this.weatherController.fetchSurroundingData(location).catch(err => {
-          console.warn('[AppController] 获取周边火烧云数据失败:', err.message);
-          // 不显示错误消息，因为这是可选功能
+      // Phase 18：雷达罗盘（异步，不阻塞主流程）
+      if (this.weatherController?.renderRadarCompass) {
+        this.weatherController.renderRadarCompass(location).catch(err => {
+          console.warn('[AppController] 雷达罗盘加载失败:', err.message);
         });
       }
 
