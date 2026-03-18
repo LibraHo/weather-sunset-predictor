@@ -1145,6 +1145,12 @@ class WeatherController {
             now
           );
           dirs = this._convertSurroundingToRadarDirs(data);
+          this._radarCompass.render(container, {
+            directions: dirs,
+            type,
+            sunAzimuth: data?.sunAzimuth
+          });
+          return;
         } catch (apiError) {
           console.warn('[WeatherController] 后端周边API失败，回退前端逐点请求:', apiError.message);
           dirs = await this._fetchRadarDirsFrontend(location, radius, type);
@@ -1153,7 +1159,11 @@ class WeatherController {
         dirs = await this._fetchRadarDirsFrontend(location, radius, type);
       }
 
-      this._radarCompass.render(container, { directions: dirs });
+      this._radarCompass.render(container, {
+        directions: dirs,
+        type,
+        sunAzimuth: null
+      });
     } catch (err) {
       console.error('[WeatherController] 雷达罗盘渲染失败:', err);
       container.style.display = 'none';
@@ -1162,10 +1172,18 @@ class WeatherController {
 
   _convertSurroundingToRadarDirs(json) {
     const L = { N:'北', NE:'东北', E:'东', SE:'东南', S:'南', SW:'西南', W:'西', NW:'西北' };
-    return (json.points || json.directions || []).map(p => ({
-      dir: p.direction||p.dir, label: L[p.direction||p.dir]||(p.direction||p.dir),
-      score: Math.round(p.score||p.prediction?.score||0), dist: p.distance||50
-    }));
+    return (json.points || json.directions || []).map(p => {
+      const wd = p.weatherData || {};
+      return {
+        dir: p.direction || p.dir,
+        label: L[p.direction || p.dir] || (p.direction || p.dir),
+        score: Math.round(p.score || p.prediction?.score || 0),
+        lowClouds: wd.lowClouds ?? 0,
+        midClouds: wd.midClouds ?? 0,
+        highClouds: wd.highClouds ?? 0,
+        dist: p.distance || 50
+      };
+    });
   }
 
   async _fetchRadarDirsFrontend(location, radius = 100, type = 'sunset') {

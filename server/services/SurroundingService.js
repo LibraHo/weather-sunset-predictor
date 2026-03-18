@@ -250,6 +250,19 @@ class SurroundingService {
 
     // ========== 组装结果 ==========
 
+    const centerReferenceTime = type === 'sunrise'
+      ? SunCalculator.getSunriseTime(targetDate, lat, lon)
+      : SunCalculator.getSunsetTime(targetDate, lat, lon);
+
+    let sunAzimuth = null;
+    try {
+      if (centerReferenceTime instanceof Date && !isNaN(centerReferenceTime.getTime())) {
+        sunAzimuth = SunCalculator.getSunAzimuth(targetDate, centerReferenceTime, lat, lon);
+      }
+    } catch (e) {
+      console.warn('[SurroundingService] sunAzimuth 计算失败:', e.message);
+    }
+
     const data = {
       center: {
         lat: lat,
@@ -258,6 +271,7 @@ class SurroundingService {
       radius: radius,
       type: type,
       date: targetDate,
+      sunAzimuth: Number.isFinite(sunAzimuth) ? sunAzimuth : null,
       points: results,
       bestDirection: bestDirection ? {
         direction: bestDirection.direction,
