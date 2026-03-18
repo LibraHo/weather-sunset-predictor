@@ -1119,7 +1119,10 @@ class WeatherController {
    * Phase 18：渲染雷达罗盘（需求19 v2）
    */
   async renderRadarCompass(location, predictionType = null) {
-    const container = document.getElementById('radar-compass-container');
+    const container = predictionType
+      ? document.getElementById(`radar-compass-${predictionType}`)
+      : document.getElementById('radar-compass-container');
+
     if (!container || !location?.lat || !location?.lon) return;
 
     container.style.display = 'block';
