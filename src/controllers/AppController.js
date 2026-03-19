@@ -77,6 +77,7 @@ class AppController {
       console.log('[AppController] 初始化主题系统...');
       this.initializeTheme();
       this.setupThemeListener();
+      this.setupWeatherModelListener();
 
       // API 模式固定为后端代理：前端不再执行 API 密钥门禁
       console.log('[AppController] API模式: 后端代理（固定），跳过前端 API 密钥检查');
@@ -1427,6 +1428,23 @@ class AppController {
       if (this.weatherController?.renderRadarCompass && this.currentLocation) {
         this.weatherController.renderRadarCompass(this.currentLocation, 'sunrise').catch(() => {});
         this.weatherController.renderRadarCompass(this.currentLocation, 'sunset').catch(() => {});
+      }
+    });
+  }
+
+  setupWeatherModelListener() {
+    window.addEventListener('weatherModelChanged', async (event) => {
+      const model = event?.detail?.model || localStorage.getItem('weather_model') || 'ecmwf_ifs025';
+      console.log('[AppController] 天气模型已切换:', model);
+      if (!this.currentLocation || !this.weatherController) return;
+
+      try {
+        const weatherData = await this.weatherController.fetchWeather(this.currentLocation, true);
+        this.currentWeatherData = weatherData;
+        this.weatherController.updateWeatherDisplay(weatherData, this.currentLocation);
+        this.weatherController.renderWeeklyOverview(weatherData);
+      } catch (error) {
+        console.error('[AppController] 切换天气模型后刷新失败:', error);
       }
     });
   }

@@ -171,10 +171,14 @@ class WeatherController {
     const badgeEl = document.getElementById('data-source-badge');
     if (badgeEl) {
       if (meta) {
-        const isMulti = meta.dataQuality === 'multi_model';
-        badgeEl.textContent = isMulti ? '📡 GFS + ECMWF' : '⚠️ GFS only（ECMWF 不可用）';
-        badgeEl.title = meta.cloudSource || '';
-        badgeEl.style.color = isMulti ? 'var(--color-success,#4ade80)' : 'var(--color-warning,#fbbf24)';
+        const modelText = {
+          ecmwf_ifs025: 'ECMWF IFS 025',
+          gfs_seamless: 'GFS Seamless',
+          best_match: 'Best Match'
+        }[meta.weatherModel] || meta.weatherModel || 'Open-Meteo';
+        badgeEl.textContent = `📡 ${modelText}`;
+        badgeEl.title = meta.cloudSource || `Open-Meteo ${modelText}`;
+        badgeEl.style.color = 'var(--color-text-light)';
       } else {
         badgeEl.textContent = '📡 Open-Meteo';
         badgeEl.style.color = 'var(--color-text-light)';

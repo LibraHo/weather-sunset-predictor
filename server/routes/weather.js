@@ -51,7 +51,7 @@ function buildCompareSummary(primaryData = [], baselineData = []) {
  */
 router.get('/forecast', async (req, res, next) => {
   try {
-    const { lat, lon, hours } = req.query;
+    const { lat, lon, hours, model } = req.query;
 
     // 验证必填参数
     if (!lat || !lon) {
@@ -67,17 +67,18 @@ router.get('/forecast', async (req, res, next) => {
     const latNum = parseFloat(lat);
     const lonNum = parseFloat(lon);
     const hoursNum = hours ? parseInt(hours) : 168;
+    const modelName = typeof model === 'string' && model.trim() ? model.trim() : 'ecmwf_ifs025';
 
     // Phase15 任务63.2：仅当 ENABLE_WINDY=true 时读取并透传 X-Windy-API-Key
     const userApiKey = orchestrator.windyEnabled
       ? req.headers['x-windy-api-key'] || null
       : null;
-    const result = await orchestrator.fetchWeatherData(latNum, lonNum, hoursNum, userApiKey);
+    const result = await orchestrator.fetchWeatherData(latNum, lonNum, hoursNum, modelName);
 
     // 自动对比：当前站点输出 vs Open-Meteo基线（用于监控偏差）
     let compareMeta = null;
     try {
-      const baseline = await openMeteoProvider.fetchWeatherData(latNum, lonNum, hoursNum);
+      const baseline = await openMeteoProvider.fetchWeatherData(latNum, lonNum, hoursNum, null, modelName);
       compareMeta = {
         baselineProvider: 'openmeteo',
         comparedProvider: result.providerMeta?.name || 'unknown',
