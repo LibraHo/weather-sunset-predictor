@@ -820,19 +820,24 @@ class SettingsPanel {
       return;
     }
 
-    const weatherData = this.appState?.weatherData;
-    const meta = weatherData?.providerMeta;
+    // 从回调或全局 weatherController 获取 providerMeta
+    const meta = (typeof this._getProviderMeta === 'function' && this._getProviderMeta()) ||
+                 window._weatherController?.currentWeatherData?.providerMeta ||
+                 this.appState?.weatherData?.providerMeta;
 
     if (!meta) {
-      providerCurrentEl.textContent = '-';
+      providerCurrentEl.textContent = 'Open-Meteo';
       providerQualityEl.textContent = '-';
       providerUpdateTimeEl.textContent = '-';
       providerIssuesEl.style.display = 'none';
       return;
     }
 
-    providerCurrentEl.textContent = meta.name || 'unknown';
+    // 数据源名称：优先显示 cloudSource，fallback 到 name
+    providerCurrentEl.textContent = meta.cloudSource || meta.name || 'Open-Meteo';
     const qualityMap = {
+      multi_model: 'GFS + ECMWF 融合',
+      gfs_only: 'GFS（ECMWF 不可用）',
       excellent: this.i18n.t('settings.providerStatusExcellent'),
       standard: this.i18n.t('settings.providerStatusStandard'),
       degraded: this.i18n.t('settings.providerStatusDegraded')

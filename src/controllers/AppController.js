@@ -29,6 +29,8 @@ class AppController {
     this.weatherController = weatherController;
     this.predictionController = predictionController;
     this.geocodingService = geocodingService;
+    // 挂到 window，供 SettingsPanel 读取 providerMeta
+    window._weatherController = weatherController;
     this.currentLocation = null;
     this.isInitialized = false;
     this.citySuggestions = [];
