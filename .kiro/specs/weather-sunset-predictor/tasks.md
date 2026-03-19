@@ -1252,8 +1252,8 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 #### 64.6 地域检测 + 预测卡片集成
 
-- [ ] 64.6
-  - 判断当前位置是否在中国区域（72–135°E，18–53°N）
+- [x] 64.6（2026-03-20 增量完成：大陆区域过滤）
+  - 判断当前位置是否在中国大陆渲染区域（使用 `isInMainlandChina`，排除南海远海与台湾区域）
   - 是：预测卡片底部显示嵌入地图，调用 `ChinaSpotsOverlay`
   - 否：不显示地图，不请求 API
   - 显示"今日数据，更新于 HH:mm"时间戳

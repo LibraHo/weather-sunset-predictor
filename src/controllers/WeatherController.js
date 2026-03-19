@@ -20,6 +20,7 @@ import i18n from '../i18n.js';
 import toastService from '../services/ToastService.js';
 import ChartRenderController from './ChartRenderController.js';
 import ChinaSpotsOverlay from '../services/ChinaSpotsOverlay.js';
+import { isInMainlandChina } from '../utils/mainlandChinaRegion.js';
 // 暂时禁用 ChartService 导入，使用内联简化版本
 
 class WeatherController {
@@ -1656,7 +1657,7 @@ class WeatherController {
    * @returns {boolean}
    */
   _isInChina(lat, lon) {
-    return lon >= 72 && lon <= 135 && lat >= 18 && lat <= 53;
+    return isInMainlandChina(lat, lon);
   }
 
   /**
