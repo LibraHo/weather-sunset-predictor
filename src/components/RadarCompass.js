@@ -23,7 +23,26 @@ class RadarCompass {
     if (!container) return;
     const dirs = this._parse(data?.directions || []);
     if (!dirs.length) { container.innerHTML = ''; return; }
-    container.innerHTML = this._build(dirs, data?.sunAzimuths || {});
+    // 读取当前主题 CSS 变量
+    const cs = getComputedStyle(document.documentElement);
+    const v = k => cs.getPropertyValue(k).trim();
+    const theme = {
+      bg:         v('--radar-bg')          || 'linear-gradient(180deg,rgba(15,23,42,0.82),rgba(15,23,42,0.60))',
+      border:     v('--radar-border')      || 'rgba(148,163,184,0.18)',
+      ring:       v('--radar-ring')        || 'rgba(180,200,230,0.22)',
+      axisMain:   v('--radar-axis-main')   || 'rgba(180,200,230,0.28)',
+      axisSub:    v('--radar-axis-sub')    || 'rgba(180,200,230,0.12)',
+      labelFill:  v('--radar-label-fill')  || 'rgba(220,230,245,0.92)',
+      labelBg:    v('--radar-label-bg')    || 'rgba(10,18,35,0.60)',
+      title:      v('--radar-title')       || 'rgba(241,245,249,0.95)',
+      subtitle:   v('--radar-subtitle')    || 'rgba(148,163,184,0.80)',
+      legendText: v('--radar-legend-text') || 'rgba(200,212,228,0.85)',
+      center:     v('--radar-center')      || 'rgba(249,115,22,0.90)',
+      cloudLow:   v('--radar-cloud-low')   || 'rgba(120,190,255,0.92)',
+      cloudMid:   v('--radar-cloud-mid')   || 'rgba(255,155,60,0.92)',
+      cloudHigh:  v('--radar-cloud-high')  || 'rgba(255,220,70,0.92)',
+    };
+    container.innerHTML = this._build(dirs, data?.sunAzimuths || {}, theme);
   }
 
   _parse(directions) {
@@ -63,29 +82,38 @@ class RadarCompass {
    * 在 (x,y) 处画一个云朵形状，width/height 控制大小，angle 控制旋转（对齐方向轴）
    */
   /**
-   * 用多个圆形叠加画经典云朵，比 Q 路径更圆润自然
-   * 以 (x,y) 为中心，r 控制整体大小
+   * Windy风格云层渲染：扁平有机形状 + 径向渐变
+   * 用多层椭圆叠加模拟云层厚度感
    */
   _cloud(x, y, w, h, color, opacity, angleDeg = 0) {
-    const r = Math.min(w, h) / 2.2;
-    // 5个圆：底部大椭圆 + 顶部4个圆形凸起
-    const circles = [
-      // 底部主体（扁椭圆）
-      { cx: 0,       cy: r * 0.35,  rx: r * 1.1, ry: r * 0.65 },
-      // 左侧凸起
-      { cx: -r * 0.7, cy: -r * 0.1, rx: r * 0.55, ry: r * 0.55 },
-      // 中左凸起（最高）
-      { cx: -r * 0.15, cy: -r * 0.45, rx: r * 0.62, ry: r * 0.62 },
-      // 中右凸起
-      { cx: r * 0.5,  cy: -r * 0.25, rx: r * 0.58, ry: r * 0.58 },
-      // 右侧凸起
-      { cx: r * 0.9,  cy: r * 0.05,  rx: r * 0.45, ry: r * 0.45 },
-    ].map(c =>
-      `<ellipse cx="${c.cx.toFixed(1)}" cy="${c.cy.toFixed(1)}" rx="${c.rx.toFixed(1)}" ry="${c.ry.toFixed(1)}" fill="${color}"/>`
+    const uid = Math.random().toString(36).slice(2, 7);
+    const rx = w / 2, ry = h / 2;
+
+    // 主云体：扁椭圆 + 顶部鼓出
+    const bumps = [
+      { cx: 0,       cy: 0,         rx: rx,        ry: ry * 0.65 },   // 主体
+      { cx: -rx*0.35, cy: -ry*0.35, rx: rx * 0.45, ry: ry * 0.55 },   // 左凸
+      { cx:  rx*0.1,  cy: -ry*0.55, rx: rx * 0.52, ry: ry * 0.60 },   // 中凸（最高）
+      { cx:  rx*0.55, cy: -ry*0.25, rx: rx * 0.40, ry: ry * 0.48 },   // 右凸
+    ];
+
+    const ellipses = bumps.map(b =>
+      `<ellipse cx="${b.cx.toFixed(1)}" cy="${b.cy.toFixed(1)}" rx="${b.rx.toFixed(1)}" ry="${b.ry.toFixed(1)}" fill="url(#cg${uid})"/>`
     ).join('');
 
-    return `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${angleDeg.toFixed(1)})" opacity="${opacity.toFixed(2)}">
-      ${circles}
+    // 底部阴影感（加深底边）
+    const shadow = `<ellipse cx="0" cy="${(ry*0.4).toFixed(1)}" rx="${(rx*0.85).toFixed(1)}" ry="${(ry*0.28).toFixed(1)}" fill="${color}" opacity="0.3"/>`;
+
+    return `<defs>
+      <radialGradient id="cg${uid}" cx="40%" cy="35%" r="65%">
+        <stop offset="0%" stop-color="white" stop-opacity="0.95"/>
+        <stop offset="45%" stop-color="${color}" stop-opacity="0.88"/>
+        <stop offset="100%" stop-color="${color}" stop-opacity="0.60"/>
+      </radialGradient>
+    </defs>
+    <g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${angleDeg.toFixed(1)})" opacity="${opacity.toFixed(2)}">
+      ${shadow}
+      ${ellipses}
     </g>`;
   }
 
@@ -126,31 +154,33 @@ class RadarCompass {
     }
   }
 
-  _build(dirs, sun) {
+  _build(dirs, sun, theme = {}) {
     const S = this.size;
     const cx = S / 2, cy = S / 2;
     const uid = Math.random().toString(36).slice(2, 7);
 
-    // 三圈：低/中/高云，等间距
+    const T = theme; // 主题颜色快捷引用
+
+    // 三圈：低/中/高云
     const R_LOW  = S * 0.20;
     const R_MID  = S * 0.32;
     const R_HIGH = S * 0.42;
 
-    // ── 同心圆 + 标签
-    const rings = [
-      [R_LOW,  '低云\n~1km',  'rgba(80,160,255,0.08)'],
-      [R_MID,  '中云\n~3km',  'rgba(255,140,50,0.06)'],
-      [R_HIGH, '高云\n~7km',  'rgba(255,210,60,0.05)'],
-    ].map(([r, lbl, fill]) => {
+    // ── 同心圆 + 标签（用主题颜色）
+    const RING_DEF = [
+      [R_LOW,  '低云', '~1km'],
+      [R_MID,  '中云', '~3km'],
+      [R_HIGH, '高云', '~7km'],
+    ];
+    const rings = RING_DEF.map(([r, lbl, sub]) => {
       const [tx, ty] = this._pt(cx, cy, r, 355);
-      const lines = lbl.split('\n');
       return `
         <circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}"
-          fill="${fill}" stroke="rgba(180,200,230,0.25)" stroke-width="1"/>
-        <text x="${tx.toFixed(1)}" y="${(ty-3).toFixed(1)}" font-size="8"
-          fill="rgba(180,200,230,0.65)" text-anchor="middle">${lines[0]}</text>
-        <text x="${tx.toFixed(1)}" y="${(ty+6).toFixed(1)}" font-size="7.5"
-          fill="rgba(150,170,200,0.55)" text-anchor="middle">${lines[1]}</text>`;
+          fill="transparent" stroke="${T.ring || 'rgba(180,200,230,0.22)'}" stroke-width="1"/>
+        <text x="${tx.toFixed(1)}" y="${(ty-2).toFixed(1)}" font-size="8"
+          fill="${T.ring || 'rgba(180,200,230,0.55)'}" text-anchor="middle">${lbl}</text>
+        <text x="${tx.toFixed(1)}" y="${(ty+7).toFixed(1)}" font-size="7"
+          fill="${T.ring || 'rgba(180,200,230,0.40)'}" text-anchor="middle">${sub}</text>`;
     }).join('');
 
     // ── 轴线
@@ -159,30 +189,30 @@ class RadarCompass {
       const [x2,y2] = this._pt(cx, cy, R_HIGH * 1.04, this._dirAz(d));
       const main = ['N','E','S','W'].includes(d);
       return `<line x1="${cx}" y1="${cy}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"
-        stroke="rgba(180,195,220,${main?'0.28':'0.13'})" stroke-width="${main?'1':'0.6'}"/>`;
+        stroke="${main ? (T.axisMain||'rgba(180,200,230,0.28)') : (T.axisSub||'rgba(180,200,230,0.12)')}"
+        stroke-width="${main?'1':'0.6'}"/>`;
     }).join('');
 
-    // ── 云朵（每层圆环的中心半径 + 圆环高度）
+    // ── 云朵（用主题云色）
     const LAYERS = [
-      { key: 'low',  r: (R_LOW  * 0.5),               ringH: R_LOW  * 0.9, color: 'rgba(140,200,255,0.95)' },
-      { key: 'mid',  r: (R_LOW  + R_MID)  / 2,        ringH: (R_MID  - R_LOW)  * 0.9, color: 'rgba(255,160,65,0.95)'  },
-      { key: 'high', r: (R_MID  + R_HIGH) / 2,        ringH: (R_HIGH - R_MID)  * 0.9, color: 'rgba(255,225,80,0.95)'  },
+      { key: 'low',  r: R_LOW * 0.5,              ringH: R_LOW * 0.9,          color: T.cloudLow  || 'rgba(120,190,255,0.92)' },
+      { key: 'mid',  r: (R_LOW + R_MID) / 2,      ringH: (R_MID - R_LOW) * 0.9, color: T.cloudMid  || 'rgba(255,155,60,0.92)'  },
+      { key: 'high', r: (R_MID + R_HIGH) / 2,     ringH: (R_HIGH - R_MID) * 0.9, color: T.cloudHigh || 'rgba(255,220,70,0.92)'  },
     ];
     const clouds = dirs.map(d => {
       const az = this._dirAz(d.dir);
       return LAYERS.map(l => this._drawClouds(cx, cy, l.r, az, d[l.key], l.color, l.ringH)).join('');
     }).join('');
 
-    // ── 方位文字（labelR 要大于 R_HIGH，渲染在最后确保不被遮挡）
+    // ── 方位文字（最顶层，用主题色）
     const labelR = R_HIGH * 1.28;
     const labels = DIR_ORDER.map(d => {
       const lbl = { N:'北',NE:'东北',E:'东',SE:'东南',S:'南',SW:'西南',W:'西',NW:'西北' }[d];
       const [x,y] = this._pt(cx, cy, labelR, this._dirAz(d));
-      // 加半透明背景块，防止云朵颜色渗透
       return `<rect x="${(x-14).toFixed(1)}" y="${(y-11).toFixed(1)}" width="28" height="14" rx="3"
-          fill="rgba(10,18,35,0.55)"/>
+          fill="${T.labelBg || 'rgba(10,18,35,0.55)'}"/>
         <text x="${x.toFixed(1)}" y="${(y+3).toFixed(1)}" text-anchor="middle"
-          font-size="11" font-weight="600" fill="rgba(225,232,245,0.95)">${lbl}</text>`;
+          font-size="11" font-weight="600" fill="${T.labelFill || 'rgba(225,232,245,0.95)'}">${lbl}</text>`;
     }).join('');
 
     // ── 日出/日落图标
@@ -197,26 +227,27 @@ class RadarCompass {
       icons.push(`<text x="${ix.toFixed(1)}" y="${(iy+5).toFixed(1)}" text-anchor="middle" font-size="14">🌇</text>`);
     }
 
-    // ── 中心
-    const center = `<circle cx="${cx}" cy="${cy}" r="4" fill="rgba(249,115,22,0.9)" stroke="#0f172a" stroke-width="1.5"/>`;
+    // ── 中心点
+    const center = `<circle cx="${cx}" cy="${cy}" r="4" fill="${T.center||'rgba(249,115,22,0.9)'}" stroke="rgba(0,0,0,0.3)" stroke-width="1.5"/>`;
 
     // ── 图例
-    const legend = [
-      ['rgba(120,190,255,0.85)', '低云'],
-      ['rgba(255,155,60,0.85)',  '中云'],
-      ['rgba(255,220,70,0.85)',  '高云'],
-    ].map(([c,l], i) => `
+    const LEGEND = [
+      [T.cloudLow  || 'rgba(120,190,255,0.85)', '低云'],
+      [T.cloudMid  || 'rgba(255,155,60,0.85)',  '中云'],
+      [T.cloudHigh || 'rgba(255,220,70,0.85)',  '高云'],
+    ];
+    const legend = LEGEND.map(([c,l], i) => `
       <rect x="${6+i*52}" y="2" width="14" height="6" rx="2" fill="${c}"/>
-      <text x="${24+i*52}" y="11" font-size="9.5" fill="rgba(200,212,228,0.85)">${l}</text>`
+      <text x="${24+i*52}" y="11" font-size="9.5" fill="${T.legendText||'rgba(200,212,228,0.85)'}">${l}</text>`
     ).join('');
 
     return `
-<div style="border:1px solid rgba(148,163,184,0.18);border-radius:12px;
-  background:linear-gradient(180deg,rgba(15,23,42,0.78),rgba(15,23,42,0.52));
+<div style="border:1px solid ${T.border||'rgba(148,163,184,0.18)'};border-radius:12px;
+  background:${T.bg||'linear-gradient(180deg,rgba(15,23,42,0.78),rgba(15,23,42,0.52))'};
   padding:10px 10px 8px;">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-    <div style="font-size:13px;font-weight:600;color:rgba(241,245,249,0.95);">周边云况雷达</div>
-    <div style="font-size:11px;color:rgba(148,163,184,0.78);">50km · 三层云</div>
+    <div style="font-size:13px;font-weight:600;color:${T.title||'rgba(241,245,249,0.95)'};">周边云况雷达</div>
+    <div style="font-size:11px;color:${T.subtitle||'rgba(148,163,184,0.78)'};">50km · 三层云</div>
   </div>
   <svg width="${S}" height="${S}" viewBox="0 0 ${S} ${S}"
     style="max-width:100%;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">

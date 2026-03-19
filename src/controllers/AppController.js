@@ -1420,6 +1420,12 @@ class AppController {
       if (this.settingsPanel && this.settingsPanel.isOpen) {
         this.settingsPanel.refreshTranslations();
       }
+
+      // 主题切换时重渲染雷达罗盘（颜色跟随主题）
+      if (this.weatherController?.renderRadarCompass && this.currentLocation) {
+        this.weatherController.renderRadarCompass(this.currentLocation, 'sunrise').catch(() => {});
+        this.weatherController.renderRadarCompass(this.currentLocation, 'sunset').catch(() => {});
+      }
     });
   }
 

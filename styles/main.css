@@ -3573,3 +3573,38 @@ body.theme-dark .cloud-layers-section {
   color: var(--text-primary);
   font-weight: 500;
 }
+
+/* ===== 周边云况雷达罗盘 主题变量 ===== */
+:root {
+  --radar-bg: linear-gradient(180deg, rgba(240,244,252,0.92), rgba(230,236,250,0.75));
+  --radar-border: rgba(100,130,200,0.20);
+  --radar-ring: rgba(80,100,160,0.22);
+  --radar-axis-main: rgba(80,100,160,0.30);
+  --radar-axis-sub: rgba(80,100,160,0.12);
+  --radar-label-fill: rgba(40,60,100,0.88);
+  --radar-label-bg: rgba(230,236,250,0.70);
+  --radar-title: rgba(30,50,90,0.95);
+  --radar-subtitle: rgba(80,100,160,0.75);
+  --radar-legend-text: rgba(40,60,100,0.85);
+  --radar-center: rgba(220,80,20,0.90);
+  --radar-cloud-low: rgba(60,140,220,0.92);
+  --radar-cloud-mid: rgba(220,110,30,0.92);
+  --radar-cloud-high: rgba(200,170,30,0.92);
+}
+
+body.theme-dark {
+  --radar-bg: linear-gradient(180deg, rgba(15,23,42,0.82), rgba(10,15,35,0.65));
+  --radar-border: rgba(148,163,184,0.18);
+  --radar-ring: rgba(180,200,230,0.22);
+  --radar-axis-main: rgba(180,200,230,0.28);
+  --radar-axis-sub: rgba(180,200,230,0.12);
+  --radar-label-fill: rgba(220,230,245,0.92);
+  --radar-label-bg: rgba(10,18,35,0.60);
+  --radar-title: rgba(241,245,249,0.95);
+  --radar-subtitle: rgba(148,163,184,0.80);
+  --radar-legend-text: rgba(200,212,228,0.85);
+  --radar-center: rgba(249,115,22,0.90);
+  --radar-cloud-low: rgba(120,190,255,0.92);
+  --radar-cloud-mid: rgba(255,155,60,0.92);
+  --radar-cloud-high: rgba(255,220,70,0.92);
+}
