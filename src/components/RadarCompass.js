@@ -166,13 +166,16 @@ class RadarCompass {
       return LAYERS.map(l => this._drawClouds(cx, cy, l.r, az, d[l.key], l.color, l.ringH)).join('');
     }).join('');
 
-    // ── 方位文字
-    const labelR = R_HIGH * 1.20;
+    // ── 方位文字（labelR 要大于 R_HIGH，渲染在最后确保不被遮挡）
+    const labelR = R_HIGH * 1.28;
     const labels = DIR_ORDER.map(d => {
       const lbl = { N:'北',NE:'东北',E:'东',SE:'东南',S:'南',SW:'西南',W:'西',NW:'西北' }[d];
       const [x,y] = this._pt(cx, cy, labelR, this._dirAz(d));
-      return `<text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="middle"
-        font-size="11" font-weight="500" fill="rgba(215,225,240,0.88)">${lbl}</text>`;
+      // 加半透明背景块，防止云朵颜色渗透
+      return `<rect x="${(x-14).toFixed(1)}" y="${(y-11).toFixed(1)}" width="28" height="14" rx="3"
+          fill="rgba(10,18,35,0.55)"/>
+        <text x="${x.toFixed(1)}" y="${(y+3).toFixed(1)}" text-anchor="middle"
+          font-size="11" font-weight="600" fill="rgba(225,232,245,0.95)">${lbl}</text>`;
     }).join('');
 
     // ── 日出/日落图标
@@ -221,8 +224,8 @@ class RadarCompass {
     ${axes}
     ${clouds}
     ${center}
-    ${labels}
     ${icons.join('')}
+    ${labels}
   </svg>
   <svg width="${S*0.88}" height="18" style="display:block;margin:4px auto 0;">
     ${legend}
