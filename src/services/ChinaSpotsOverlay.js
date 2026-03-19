@@ -1,15 +1,30 @@
 /**
- * ChinaSpotsOverlay.js - 中国火烧云渐变图层覆盖层（Phase 16）
+ * ChinaSpotsOverlay.js - 中国火烧云连续覆盖层（Phase 16）
  *
- * 在 Leaflet 地图上渲染来自 /api/spots/china 的评分热力渐变图层。
- * 使用 HTML5 Canvas 自定义图层实现天气 App 风格的颜色渐变效果。
+ * 目标：做出“连续图层”视觉，而不是散点 marker。
+ * 本版本聚焦中国大陆（排除南海插图区域、排除台湾 bbox），
+ * 使用 IDW（反距离加权）在画布上生成平滑火烧云概率场。
  */
+
+const MAINLAND_BOUNDS = {
+  minLon: 73,
+  maxLon: 135,
+  minLat: 18,
+  maxLat: 54
+};
+
+// 当前阶段先排除台湾区域，聚焦中国大陆连续图层
+const TAIWAN_EXCLUDE_BBOX = {
+  minLon: 119,
+  maxLon: 123,
+  minLat: 21.5,
+  maxLat: 26
+};
 
 export default class ChinaSpotsOverlay {
   constructor() {
     this._map = null;
     this._spots = [];
-    this._markers = [];
     this._updatedAt = null;
     this._visible = false;
     this._canvas = null;
@@ -20,10 +35,6 @@ export default class ChinaSpotsOverlay {
     this._boundMove = null;
   }
 
-  /**
-   * 初始化，绑定 Leaflet 地图实例，创建 canvas layer + 控制按钮
-   * @param {L.Map} leafletMap
-   */
   init(leafletMap) {
     this._map = leafletMap;
     this._initCanvas();
@@ -31,12 +42,10 @@ export default class ChinaSpotsOverlay {
     this._boundRedraw = () => this._redrawCanvas();
     this._map.on('moveend zoomend resize', this._boundRedraw);
 
-    // 拖动中实时重绘（rAF 节流）
     this._boundMove = () => this._scheduleRedraw();
     this._map.on('move', this._boundMove);
   }
 
-  /** 创建并挂载 Canvas 覆盖层 */
   _initCanvas() {
     const canvas = document.createElement('canvas');
     canvas.style.cssText = [
@@ -49,7 +58,6 @@ export default class ChinaSpotsOverlay {
     ].join(';');
     canvas.className = 'china-spots-canvas';
 
-    // 挂到地图容器本身（不是 overlayPane，避免 Leaflet transform 偏移影响绘制坐标）
     const container = this._map.getContainer();
     container.style.position = 'relative';
     container.appendChild(canvas);
@@ -58,7 +66,6 @@ export default class ChinaSpotsOverlay {
     this._ctx = canvas.getContext('2d');
   }
 
-  /** 在右上角注入开关按钮 */
   _initButton() {
     const btn = document.createElement('button');
     btn.textContent = '🌅 火烧云';
@@ -85,9 +92,6 @@ export default class ChinaSpotsOverlay {
     this._button = btn;
   }
 
-  /**
-   * rAF 节流重绘（用于 move 事件）
-   */
   _scheduleRedraw() {
     if (!this._visible) return;
     if (this._animFrame) return;
@@ -97,7 +101,6 @@ export default class ChinaSpotsOverlay {
     });
   }
 
-  /** 更新按钮高亮状态 */
   _updateButtonState() {
     if (!this._button) return;
     if (this._visible) {
@@ -111,10 +114,6 @@ export default class ChinaSpotsOverlay {
     }
   }
 
-  /**
-   * 从 /api/spots/china 加载数据并在地图上渲染
-   * @returns {Promise<void>}
-   */
   async loadAndRender() {
     if (!this._map) {
       console.warn('[ChinaSpotsOverlay] 地图未初始化，无法渲染');
@@ -126,29 +125,27 @@ export default class ChinaSpotsOverlay {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       this._updatedAt = data.updatedAt || null;
-      this._spots = data.spots || [];
 
-      // 清除旧 markers
-      this._clearMarkers();
+      const rawSpots = Array.isArray(data.spots) ? data.spots : [];
+      this._spots = rawSpots.filter(spot => this._isMainlandCoordinate(spot.lat, spot.lon));
 
       if (this._spots.length === 0) {
-        console.log('[ChinaSpotsOverlay] 暂无散点数据');
+        console.log('[ChinaSpotsOverlay] 暂无中国大陆散点数据');
+        this.hide();
         return;
       }
 
       this.show();
-      console.log(`[ChinaSpotsOverlay] 已加载 ${this._spots.length} 个点，渲染 ${this._markers.length} 个 marker`);
+      console.log(`[ChinaSpotsOverlay] 已加载 ${rawSpots.length} 个点，保留大陆点 ${this._spots.length} 个`);
     } catch (err) {
       console.error('[ChinaSpotsOverlay] 加载散点失败:', err);
     }
   }
 
-  /** 重绘 Canvas 渐变图层 */
   _redrawCanvas() {
     if (!this._visible || !this._canvas || !this._map || this._spots.length === 0) return;
 
     const mapSize = this._map.getSize();
-    // 同步 canvas 尺寸与地图像素尺寸
     if (this._canvas.width !== mapSize.x || this._canvas.height !== mapSize.y) {
       this._canvas.width = mapSize.x;
       this._canvas.height = mapSize.y;
@@ -157,93 +154,108 @@ export default class ChinaSpotsOverlay {
     const ctx = this._ctx;
     ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
 
-    // 叠加模式：让多个热点颜色自然融合，避免只看到零散点
-    ctx.globalCompositeOperation = 'lighter';
+    const renderSpots = this._spots
+      .filter(spot => Number.isFinite(spot.lat) && Number.isFinite(spot.lon) && Number.isFinite(spot.score))
+      .map(spot => {
+        const p = this._map.latLngToContainerPoint([spot.lat, spot.lon]);
+        return { x: p.x, y: p.y, score: spot.score };
+      });
 
-    this._spots.forEach(spot => {
-      if (spot.score < 40) return;
+    if (renderSpots.length === 0) return;
 
-      // 经纬度 → 容器像素坐标
-      const containerPt = this._map.latLngToContainerPoint(window.L.latLng(spot.lat, spot.lon));
-      const x = containerPt.x;
-      const y = containerPt.y;
+    const step = this._map.getZoom() >= 6 ? 8 : 10;
+    const influenceRadius = this._map.getZoom() >= 6 ? 140 : 120;
 
-      // 采用“屏幕像素半径”而非 300km 实际半径，保证手机端可视效果
-      const zoom = this._map.getZoom();
-      const zoomScale = Math.pow(1.16, Math.max(0, zoom - 5));
-      const baseRadius = spot.score >= 80 ? 85 : spot.score >= 65 ? 72 : 60;
-      const radiusPx = Math.max(45, Math.min(230, baseRadius * zoomScale));
+    for (let y = 0; y < this._canvas.height; y += step) {
+      for (let x = 0; x < this._canvas.width; x += step) {
+        const latLng = this._map.containerPointToLatLng([x + step / 2, y + step / 2]);
+        if (!this._isMainlandCoordinate(latLng.lat, latLng.lng)) continue;
 
-      // 根据分数选颜色（更高 alpha，确保能看到图层）
-      let c0, c1, c2;
-      if (spot.score >= 80) {
-        c0 = 'rgba(255, 80, 0, 0.82)';
-        c1 = 'rgba(255, 130, 0, 0.40)';
-        c2 = 'rgba(255, 130, 0, 0.00)';
-      } else if (spot.score >= 60) {
-        c0 = 'rgba(255, 165, 0, 0.72)';
-        c1 = 'rgba(255, 200, 0, 0.34)';
-        c2 = 'rgba(255, 200, 0, 0.00)';
-      } else {
-        c0 = 'rgba(255, 225, 70, 0.58)';
-        c1 = 'rgba(255, 235, 120, 0.26)';
-        c2 = 'rgba(255, 235, 120, 0.00)';
+        const score = this._sampleScore(renderSpots, x + step / 2, y + step / 2, influenceRadius);
+        if (score < 52) continue;
+
+        ctx.globalAlpha = this._scoreToAlpha(score);
+        ctx.fillStyle = this._scoreToColor(score);
+        ctx.fillRect(x, y, step, step);
       }
+    }
 
-      const grad = ctx.createRadialGradient(x, y, 0, x, y, radiusPx);
-      grad.addColorStop(0.00, c0);
-      grad.addColorStop(0.45, c1);
-      grad.addColorStop(1.00, c2);
-
-      ctx.beginPath();
-      ctx.arc(x, y, radiusPx, 0, Math.PI * 2);
-      ctx.fillStyle = grad;
-      ctx.fill();
-    });
-
-    // 恢复默认混合模式
-    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
   }
 
-  /** 计算当前纬度每像素对应的实际米数 */
-  _getMetersPerPixel(lat) {
-    const zoom = this._map.getZoom();
-    // Leaflet 标准公式
-    return (156543.03392 * Math.cos((lat * Math.PI) / 180)) / Math.pow(2, zoom);
+  _sampleScore(spots, x, y, influenceRadius) {
+    let weighted = 0;
+    let weightSum = 0;
+
+    for (const spot of spots) {
+      const dx = x - spot.x;
+      const dy = y - spot.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > influenceRadius) continue;
+
+      const w = 1 / Math.max(1, dist * dist);
+      weighted += spot.score * w;
+      weightSum += w;
+    }
+
+    if (weightSum === 0) return 0;
+    return weighted / weightSum;
   }
 
-  /** 显示图层 */
+  _scoreToColor(score) {
+    if (score >= 82) return '#ff5a00';
+    if (score >= 72) return '#ff7a00';
+    if (score >= 62) return '#ff9800';
+    return '#ffb347';
+  }
+
+  _scoreToAlpha(score) {
+    if (score >= 82) return 0.50;
+    if (score >= 72) return 0.38;
+    if (score >= 62) return 0.30;
+    return 0.22;
+  }
+
+  _isMainlandCoordinate(lat, lon) {
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return false;
+
+    const inChinaRect =
+      lon >= MAINLAND_BOUNDS.minLon &&
+      lon <= MAINLAND_BOUNDS.maxLon &&
+      lat >= MAINLAND_BOUNDS.minLat &&
+      lat <= MAINLAND_BOUNDS.maxLat;
+
+    if (!inChinaRect) return false;
+
+    const inTaiwanBox =
+      lon >= TAIWAN_EXCLUDE_BBOX.minLon &&
+      lon <= TAIWAN_EXCLUDE_BBOX.maxLon &&
+      lat >= TAIWAN_EXCLUDE_BBOX.minLat &&
+      lat <= TAIWAN_EXCLUDE_BBOX.maxLat;
+
+    return !inTaiwanBox;
+  }
+
   show() {
     if (!this._map) return;
     this._visible = true;
-    // 同步 canvas 尺寸
     const mapSize = this._map.getSize();
     this._canvas.width = mapSize.x;
     this._canvas.height = mapSize.y;
-    this._canvas.style.width = mapSize.x + 'px';
-    this._canvas.style.height = mapSize.y + 'px';
+    this._canvas.style.width = `${mapSize.x}px`;
+    this._canvas.style.height = `${mapSize.y}px`;
     this._canvas.style.display = 'block';
-    // markers 显示
-    this._markers.forEach(m => {
-      if (!this._map.hasLayer(m)) m.addTo(this._map);
-    });
     this._redrawCanvas();
     this._updateButtonState();
   }
 
-  /** 隐藏图层 */
   hide() {
     if (!this._map) return;
     this._visible = false;
     this._canvas.style.display = 'none';
-    // 隐藏 markers
-    this._markers.forEach(m => {
-      if (this._map.hasLayer(m)) this._map.removeLayer(m);
-    });
     this._updateButtonState();
   }
 
-  /** 切换显示/隐藏 */
   toggle() {
     if (this._visible) {
       this.hide();
@@ -252,30 +264,14 @@ export default class ChinaSpotsOverlay {
     }
   }
 
-  /** 清除 markers */
-  _clearMarkers() {
-    if (this._map) {
-      this._markers.forEach(m => {
-        if (this._map.hasLayer(m)) this._map.removeLayer(m);
-      });
-    }
-    this._markers = [];
-  }
-
-  /** 完全清除（含 canvas 内容） */
   clear() {
     this.hide();
-    this._clearMarkers();
     this._spots = [];
     if (this._ctx) {
       this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
     }
   }
 
-  /**
-   * 返回数据更新时间（ISO 字符串）
-   * @returns {string|null}
-   */
   getUpdatedAt() {
     return this._updatedAt;
   }

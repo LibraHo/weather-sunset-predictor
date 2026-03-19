@@ -1240,13 +1240,13 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - 启动时检查缓存日期，非今日则立即刷新
   - _关联需求：37.3_
 
-#### 64.5 前端散点地图
+#### 64.5 前端覆盖层渲染（中国大陆连续图层）
 
-- [ ] 64.5 `src/services/ChinaSpotsOverlay.js`（新建）
+- [x] 64.5 `src/services/ChinaSpotsOverlay.js`
   - `init(leafletMap)` → 挂载到现有地图实例
-  - `loadAndRender()` → 调用 `/api/spots/china`，用 Leaflet marker 渲染
-  - 图标：评分≥80 用 🌅，60–79 用 🌄，Leaflet DivIcon 实现
-  - 点击 marker 显示 tooltip：评分 + 质量标签
+  - `loadAndRender()` → 调用 `/api/spots/china` 并过滤为中国大陆范围
+  - 使用 Canvas + IDW（反距离加权）输出连续火烧云色带（非雷达颗粒点）
+  - 排除台湾 bbox 与南海插图区域（当前阶段先聚焦大陆）
   - `show() / hide()` 控制显隐
   - _关联需求：37.2, 37.6, 37.7_
 
@@ -1262,6 +1262,6 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 #### 64.7 测试
 
 - [ ] 64.7
-  - `tests/unit/server/SunsetSpotsService.test.js`：网格生成、缓存逻辑、过滤
-  - `tests/unit/services/ChinaSpotsOverlay.test.js`：marker 渲染、地域检测
+  - [ ] `tests/unit/server/SunsetSpotsService.test.js`：网格生成、缓存逻辑、过滤
+  - [x] `tests/unit/services/ChinaSpotsOverlay.test.js`：连续图层渲染、大陆过滤、显隐切换（2026-03-20）
   - _关联需求：37_
