@@ -158,7 +158,8 @@ class SurroundingService {
 
     console.log('[SurroundingService] 开始获取周边点气象数据和预测...');
 
-    const promises = points.map(async (point) => {
+    // 分批请求，每批4个，间隔300ms，避免 Open-Meteo 429
+    const _fetchPoint = async (point) => {
       try {
         // 获取天气数据
         const weatherResponse = await orchestrator.fetchWeatherData(point.lat, point.lon, 24);
@@ -237,16 +238,28 @@ class SurroundingService {
           error: error.message
         };
       }
-    });
+    };
 
-    // 等待所有请求完成，同时设置全局超时（防止单个挂起请求拖慢整体响应）
-    const GLOBAL_TIMEOUT_MS = 20000; // 20 秒：8 方向各自 10s axios 超时，留出余量
+    // 分两批并行，批间延迟 400ms，避免 Open-Meteo 429
+    const BATCH_SIZE = 4;
+    const allResults = [];
+    for (let i = 0; i < points.length; i += BATCH_SIZE) {
+      const batch = points.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.all(batch.map(_fetchPoint));
+      allResults.push(...batchResults);
+      if (i + BATCH_SIZE < points.length) {
+        await new Promise(resolve => setTimeout(resolve, 400));
+      }
+    }
+
+    // 兼容旧超时逻辑（分批后不再需要，但保留结构）
+    const GLOBAL_TIMEOUT_MS = 30000;
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('周边预测请求超时（超过20秒）')), GLOBAL_TIMEOUT_MS)
+      setTimeout(() => reject(new Error('周边预测请求超时')), GLOBAL_TIMEOUT_MS)
     );
 
     const results = await Promise.race([
-      Promise.all(promises),
+      Promise.resolve(allResults),
       timeoutPromise
     ]);
 
