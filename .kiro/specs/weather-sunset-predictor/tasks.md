@@ -1087,7 +1087,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - `lightPath.explain`
   - _关联需求：35.5_
 
-- [ ] 56.2 旧字段兼容窗口
+- [x] 56.2 旧字段兼容窗口
   - 短期保留兼容字段但标注 deprecated
   - _关联需求：35.10_
 
@@ -1097,7 +1097,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - `PredictionController` + locales
   - _关联需求：35.6_
 
-- [ ] 57.2 新增解释展示
+- [x] 57.2 新增解释展示
   - 命中封顶时展示 `capReason`
   - 展示 `explain`（用户可读）
   - _关联需求：35.5, 35.6_
@@ -1108,11 +1108,11 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - 太阳角度边界、云底缺失回退、采样融合
   - _关联需求：35.9_
 
-- [ ] 58.2 集成测试：增强预测接口输出完整性
+- [x] 58.2 集成测试：增强预测接口输出完整性
   - 校验新字段存在且数值范围正确
   - _关联需求：35.5_
 
-- [ ] 58.3 回放坏样本
+- [x] 58.3 回放坏样本
   - Val Thorens 雨夹雪/阴天样本不允许出现 100 分光路
   - _关联需求：35.4, 35.9_
 
@@ -1127,7 +1127,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - `LIGHT_PATH_V2_ENABLED`
   - _关联需求：35.10_
 
-- [ ] 59.3 发布验收报告
+- [x] 59.3 发布验收报告
   - 记录线上样本对比与结论
   - _关联需求：35.9_
 

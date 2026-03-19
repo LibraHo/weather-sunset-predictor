@@ -230,9 +230,20 @@ router.post('/enhanced', validatePredictionRequest, (req, res) => {
       options
     );
 
+    // 任务 56.2：旧字段兼容窗口（deprecated 标注，保留兼容字段供旧客户端使用）
+    const compatResult = {
+      ...result,
+      // @deprecated - 使用 lightPathAnalysis.score 替代
+      lightPathScore: result.lightPathAnalysis?.score ?? null,
+      // @deprecated - 使用 canvasAnalysis.score 替代
+      canvasScore: result.canvasAnalysis?.score ?? null,
+      // @deprecated - 使用 breakdown.baseScore 替代
+      baseScore: result.breakdown?.baseScore ?? null,
+    };
+
     res.json({
       success: true,
-      data: result
+      data: compatResult
     });
 
   } catch (error) {
