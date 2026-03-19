@@ -1,5 +1,5 @@
 /**
- * RadarCompass v8
+ * RadarCompass v9
  *
  * 目标：从“离散云朵贴片”切换为“极坐标连续云场渲染”。
  * - 三层云（低/中/高）均按连续 alpha 场逐像素渲染
@@ -33,10 +33,10 @@ class RadarCompass {
       subtitle:   v('--color-text-light')  || '#666666',
       legendText: v('--color-text-light')  || '#666666',
       center:     v('--radar-center')      || 'rgba(249,115,22,0.9)',
-      // 更接近 Windy 的冷灰蓝层次
-      cloudLow:   v('--radar-cloud-low')   || 'rgba(122,138,164,0.90)',
-      cloudMid:   v('--radar-cloud-mid')   || 'rgba(164,176,196,0.78)',
-      cloudHigh:  v('--radar-cloud-high')  || 'rgba(199,208,222,0.58)',
+      // 更接近你确认“有感觉”的强化版冷灰蓝层次
+      cloudLow:   v('--radar-cloud-low')   || 'rgba(138,156,186,0.95)',
+      cloudMid:   v('--radar-cloud-mid')   || 'rgba(184,198,218,0.88)',
+      cloudHigh:  v('--radar-cloud-high')  || 'rgba(218,226,238,0.72)',
       ringLow:    'rgba(100,150,220,0.08)',
       ringMid:    'rgba(130,160,200,0.06)',
       ringHigh:   'rgba(160,170,200,0.05)',
@@ -184,43 +184,43 @@ class RadarCompass {
     const R_MID = S * 0.32;
     const R_HIGH = S * 0.42;
 
-    // 三层环带（与可视化圈层对应）
+    // 三层环带（强化云层可见度，减少脏颗粒）
     const layers = [
       {
         key: 'low',
         inner: R_LOW * 0.04,
         outer: R_LOW * 0.96,
         fade: R_LOW * 0.30,
-        alphaMax: 0.62,
-        gamma: 1.40,
-        color: this._parseRgba(theme.cloudLow, { r: 122, g: 138, b: 164, a: 0.90 }),
-        angStretch: 11.5,
-        radStretch: 2.1,
-        edgeCut: 0.30,
+        alphaMax: 0.85,
+        gamma: 1.20,
+        color: this._parseRgba(theme.cloudLow, { r: 138, g: 156, b: 186, a: 0.95 }),
+        angStretch: 12.5,
+        radStretch: 1.6,
+        edgeCut: 0.18,
       },
       {
         key: 'mid',
         inner: R_LOW * 1.03,
         outer: R_MID * 0.98,
-        fade: (R_MID - R_LOW) * 0.32,
-        alphaMax: 0.52,
-        gamma: 1.30,
-        color: this._parseRgba(theme.cloudMid, { r: 164, g: 176, b: 196, a: 0.78 }),
-        angStretch: 13.2,
-        radStretch: 2.4,
-        edgeCut: 0.34,
+        fade: (R_MID - R_LOW) * 0.34,
+        alphaMax: 0.78,
+        gamma: 1.12,
+        color: this._parseRgba(theme.cloudMid, { r: 184, g: 198, b: 218, a: 0.88 }),
+        angStretch: 12.5,
+        radStretch: 1.6,
+        edgeCut: 0.20,
       },
       {
         key: 'high',
         inner: R_MID * 1.02,
         outer: R_HIGH * 0.97,
-        fade: (R_HIGH - R_MID) * 0.36,
-        alphaMax: 0.42,
-        gamma: 1.22,
-        color: this._parseRgba(theme.cloudHigh, { r: 199, g: 208, b: 222, a: 0.58 }),
-        angStretch: 15.0,
-        radStretch: 2.8,
-        edgeCut: 0.40,
+        fade: (R_HIGH - R_MID) * 0.38,
+        alphaMax: 0.62,
+        gamma: 1.05,
+        color: this._parseRgba(theme.cloudHigh, { r: 218, g: 226, b: 238, a: 0.72 }),
+        angStretch: 12.5,
+        radStretch: 1.6,
+        edgeCut: 0.24,
       },
     ];
 
@@ -261,11 +261,11 @@ class RadarCompass {
           const u = (theta / (Math.PI * 2)) * layer.angStretch * 8;
           const v = ((r - (layer.inner + layer.outer) / 2) / Math.max(1, (layer.outer - layer.inner))) * layer.radStretch;
 
-          const nLarge = this._fbm(u * 0.9, v * 0.8, 3);      // 大尺度起伏
-          const nSmall = this._fbm(u * 2.3 + 37, v * 1.7 - 11, 2); // 局部层次
+          const nLarge = this._fbm(u * 0.65, v * 0.55, 3);       // 大块起伏
+          const nSmall = this._fbm(u * 1.6 + 21, v * 1.0 - 7, 2); // 轻细节
 
-          // 非线性混合，避免“圆团块”，突出带状连续感
-          const tex = 0.56 + 0.34 * nLarge + 0.18 * (nSmall - 0.5);
+          // 提高整体云量可见性，减少碎纹理“脏感”
+          const tex = 0.74 + 0.24 * nLarge + 0.08 * (nSmall - 0.5);
           const shaped = this._smoothstep(layer.edgeCut, 0.98, base * tex);
 
           const a = Math.max(0, Math.min(1, shaped * ringW * layer.alphaMax * layer.color.a));
@@ -293,7 +293,7 @@ class RadarCompass {
 
     // 全局轻模糊，进一步消除像素感
     ctx.globalCompositeOperation = 'source-over';
-    ctx.filter = `blur(${Math.max(1.5, S * 0.008)}px)`;
+    ctx.filter = `blur(${Math.max(2.2, S * 0.007)}px)`;
     ctx.drawImage(canvas, 0, 0);
     ctx.filter = 'none';
   }
@@ -367,9 +367,9 @@ class RadarCompass {
     const center = `<circle cx="${cx}" cy="${cy}" r="4" fill="${T.center || 'rgba(249,115,22,0.9)'}" stroke="rgba(0,0,0,0.2)" stroke-width="1.5"/>`;
 
     const LEGEND = [
-      [T.cloudLow || 'rgba(122,138,164,0.90)', '低云'],
-      [T.cloudMid || 'rgba(164,176,196,0.78)', '中云'],
-      [T.cloudHigh || 'rgba(199,208,222,0.58)', '高云'],
+      [T.cloudLow || 'rgba(138,156,186,0.95)', '低云'],
+      [T.cloudMid || 'rgba(184,198,218,0.88)', '中云'],
+      [T.cloudHigh || 'rgba(218,226,238,0.72)', '高云'],
     ];
     const legend = LEGEND.map(([c, l], i) => `
       <ellipse cx="${13 + i * 56}" cy="5" rx="9" ry="5.5" fill="${c}"/>
