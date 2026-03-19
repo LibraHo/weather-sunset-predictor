@@ -20,8 +20,8 @@ class RadarCompass {
     const dirs = this._parse(data?.directions || []);
     if (!dirs.length) { container.innerHTML = ''; return; }
 
-    // 读取主题 CSS 变量
-    const cs = getComputedStyle(document.documentElement);
+    // 读取主题 CSS 变量（必须从 body 读，暗色主题加在 body.theme-dark 上）
+    const cs = getComputedStyle(document.body);
     const v = k => cs.getPropertyValue(k).trim();
     const theme = {
       // 面板背景/边框跟随主题卡片
