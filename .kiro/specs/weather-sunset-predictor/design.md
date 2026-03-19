@@ -4681,3 +4681,181 @@ location /health {
 - **并发控制**：同时最多 10 个 Open-Meteo 请求
 - **文件持久化**：`~/.xiake/grid-cache.json`，重启后不丢缓存
 - **降级策略**：缓存过期且刷新失败时，返回旧缓存 + `stale: true` 标记
+
+---
+
+## 需求 38 设计：火烧云全球分享地图
+
+### 38.1 架构概览
+
+```
+[管理员后台 /admin]
+    ↓ 上传照片 + EXIF解析 / 手动指定坐标
+[PhotoService] → sharp 缩略图 → ~/.xiake/photos/
+    ↓
+[GET /api/photos] → 返回照片列表（含缩略图 URL + 坐标）
+    ↓
+[分享页面 /gallery]
+    ↓ Leaflet 世界地图（CartoDB Dark Matter）
+[PhotoMarkerLayer] → 随机挑选最多50张，DivIcon 圆形缩略图
+[VisitorDotLayer]  → IP 转地理位置的橙色小点
+
+[访问 /gallery 时] → 中间件记录 IP
+[VisitorService]  → ip-api.com GeoIP → visitors.json
+    ↓
+[GET /api/visitors] → 返回访客地理分布点列表
+```
+
+### 38.2 数据存储设计
+
+**照片数据**：
+
+- 原图目录：`~/.xiake/photos/originals/`
+- 缩略图目录：`~/.xiake/photos/thumbs/`（300×300 center-crop）
+- 索引文件：`~/.xiake/photos/photos.json`
+
+```json
+[
+  {
+    "id": "uuid-v4",
+    "filename": "photo_20260319_abc123.jpg",
+    "thumbnail": "thumb_photo_20260319_abc123.jpg",
+    "lat": 39.9,
+    "lon": 116.4,
+    "takenAt": "2026-03-19T17:00:00Z",
+    "uploadedAt": "2026-03-19T18:00:00Z",
+    "description": "北京火烧云",
+    "location_manual": false
+  }
+]
+```
+
+**访客数据**：`~/.xiake/visitors.json`
+
+```json
+[
+  {
+    "ip_hash": "sha256_of_ip",
+    "lat": 39.9,
+    "lon": 116.4,
+    "country": "China",
+    "city": "Beijing",
+    "firstSeen": "2026-03-19T10:00:00Z",
+    "lastSeen": "2026-03-19T18:00:00Z",
+    "count": 5
+  }
+]
+```
+
+### 38.3 后端服务设计
+
+#### PhotoService (`server/services/PhotoService.js`)
+
+```javascript
+class PhotoService {
+  initDirs()                              // 创建必要目录
+  async savePhoto(fileBuffer, lat, lon, description, takenAt)  // 保存照片
+  async getPhotos()                       // 读取 photos.json
+  async deletePhoto(id)                   // 删除照片和缩略图
+  async generateThumbnail(inputPath, outputPath)  // sharp 300×300
+  parseExifCoords(exifData)               // 提取 GPS lat/lon
+}
+```
+
+#### VisitorService (`server/services/VisitorService.js`)
+
+```javascript
+class VisitorService {
+  async track(ip)          // GeoIP 查询 → 更新 visitors.json（同IP合并）
+  async getAll()           // 返回去重访客点列表
+  hashIP(ip)               // SHA256 hash
+  async geolocate(ip)      // 调用 ip-api.com 或 fallback
+}
+```
+
+#### API 路由
+
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| GET | /gallery | 分享页面 HTML | 无 |
+| GET | /admin | 后台管理页面 | Basic Auth |
+| POST | /admin/upload | 上传照片 | Basic Auth |
+| DELETE | /admin/photos/:id | 删除照片 | Basic Auth |
+| GET | /api/photos | 照片列表（含缩略图 URL） | 无 |
+| GET | /api/visitors | 访客地理分布 | 无 |
+| POST | /api/visitors/track | 记录访客 IP | 无（限流） |
+
+### 38.4 前端设计
+
+#### 分享页面 (`public/gallery.html` + `src/gallery/`)
+
+```
+gallery/
+  GalleryApp.js        — 页面初始化
+  PhotoMarkerLayer.js  — 照片 Marker 图层
+  VisitorDotLayer.js   — 访客点图层
+  PhotoModal.js        — 点击照片弹出预览
+```
+
+**地图配置**：
+- 底图：CartoDB Dark Matter（暗色，突出橙色点和照片）
+- 初始视角：世界全图（zoom=2）
+- 最大显示 50 张照片（随机采样）
+
+**照片 Marker**：
+```javascript
+// DivIcon 实现圆形缩略图
+L.divIcon({
+  html: `<div class="photo-marker">
+    <img src="/api/photos/${id}/thumb" style="border-radius:50%;width:48px;height:48px;border:2px solid #ff6b35"/>
+  </div>`,
+  iconSize: [52, 52]
+})
+```
+
+**访客点**：
+```javascript
+L.circleMarker([lat, lon], {
+  radius: 4,
+  color: '#ff6b35',
+  fillOpacity: 0.7
+}).bindTooltip(`${city}, ${country}`)
+```
+
+### 38.5 后台管理页面
+
+- 路径：`/admin`（服务端渲染 HTML）
+- 认证：HTTP Basic Auth，密码来自 `process.env.ADMIN_PASSWORD`
+- 功能：
+  1. 照片列表（缩略图 + 坐标 + 删除按钮）
+  2. 上传表单：选择文件 + 描述 + 手动坐标输入 + 小地图点选
+  3. 访客统计摘要
+
+### 38.6 主页集成
+
+**底部统计**：
+- 现有访客计数数字改为可点击链接，跳转 `/gallery`
+
+**顶部菜单**：
+- 在竖直导航栏新增「📸 分享」入口
+
+### 38.7 安全设计
+
+- IP 隐私：只存 SHA256 hash，不存原始 IP
+- 文件上传：multer 限制 20MB，MIME 类型白名单
+- 管理认证：Basic Auth，密码不硬编码
+- 限流：`/api/visitors/track` 同 IP 每分钟最多记录 1 次
+- 路径穿越防护：上传文件名 sanitize
+
+### 38.8 依赖
+
+```json
+{
+  "sharp": "^0.33.x",       // 图片处理（缩略图生成）
+  "multer": "^1.4.x",       // 文件上传
+  "exifr": "^7.x",          // EXIF 解析（含 GPS）
+  "uuid": "^9.x"             // 照片 ID 生成
+}
+```
+
+GeoIP：优先使用 `ip-api.com` 免费 HTTP 接口（无需 Key），超时 fallback 到空值。

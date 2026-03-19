@@ -912,3 +912,162 @@ CREATE TABLE likes (
 6. 点击地图上的标注点，弹出简单 tooltip 显示地名（如有）+ 评分。
 7. 当前选择位置不在中国区域时，不显示此地图，不消耗 API。
 8. 缓存附带生成时间，前端显示"今日数据，更新于 HH:mm"。
+
+---
+
+## 附录：火烧云预测算法原理
+
+> 本章节基于 sunsetbot.top 火烧云预报教程（第1-4章）整理，作为系统评分算法的理论依据。
+
+### A.1 几何模型
+
+火烧云的本质是：太阳在地平线以下时，阳光从云底斜射入射，照亮云层下表面。
+
+**霞光最大深入距离公式**（精确）：
+
+```
+L = sqrt(2 × R_earth × H_cloud_base)
+```
+
+- R_earth = 6,371,000 m（地球半径）
+- H_cloud_base = 云底高度（米）
+
+| 云底高度 | 霞光最大深入距离 |
+|---------|---------------|
+| 2 km    | ~319 km       |
+| 3 km    | ~391 km       |
+| 6 km    | ~553 km       |
+| 8 km    | ~638 km       |
+
+**阳光路径近似（极坐标抛物线）**：
+
+在以观察者为原点的坐标系中，阳光路径近似为抛物线：
+
+```
+h(x) = x² / (2 × R_earth) - x × sin(θ_sun)
+```
+
+其中 θ_sun 为太阳高度角（负值表示在地平线以下）。
+
+随太阳下沉，抛物线向远处平移，等效于：
+- 晚霞：云边界内侧先烧，向外扩展，内侧先结束
+- 朝霞：时序相反
+
+**视线高度角近似**（观察者看远处云的仰角）：
+
+```
+θ_view ≈ (H_target - D²/(2R)) / D
+```
+
+其中 D = 水平距离，H_target = 目标云底高度。
+简化：`θ_view ≈ H_target / D`（地球曲率修正 = D/(2R)）
+
+### A.2 云层分类与火烧云贡献
+
+基于国际云图分类与散射特性：
+
+| 云层 | 高度范围 | 组成 | 火烧云贡献 |
+|------|---------|------|-----------|
+| 高云（卷云/卷层云） | >6 km | 冰晶 | **最佳**，冰晶折射产生橙红色，权重 0.70 |
+| 中云（高积云/高层云） | 2.5-6 km | 过冷水+冰晶 | **良好**，颜色鲜艳，权重 0.45 |
+| 低云（层积云/积云） | <2.5 km | 液态水 | 作为遮挡评估，多则遮挡光路，权重 0.10 |
+
+**最佳云量区间：30-70%**
+- <10%：云量太少，无充足载体
+- >85%：完全遮蔽，光路无法穿透
+
+### A.3 大气消光模型
+
+大气消光遵循比尔-朗伯定律：
+
+```
+I = I₀ × exp(-τ / sin(θ_sun))
+```
+
+其中：
+- τ = 气溶胶光学厚度（AOD）
+- θ_sun = 太阳高度角
+
+AOD 与能见度的关系（经验公式）：
+
+```
+AOD ≈ 3.91 / (visibility_km × σ_rayleigh_correction)
+```
+
+**等效云底高度修正**：
+
+当 AOD 较高时，需要计算气溶胶层对阳光的"等效地表高度"：
+
+```
+H_equiv = H_aerosol_scale × ln(σ_surface × H_aerosol_scale / AOD_threshold)
+```
+
+实际有效云底高度 = 原始云底高度 - H_equiv，影响是否能出现火烧云。
+
+### A.4 当前系统评分公式
+
+**云画布评分（Cloud Canvas Score）**：
+
+```javascript
+cloudCoverScore = cloudCover × CLOUD_WEIGHTS[level]
+// CLOUD_WEIGHTS = { high: 0.70, mid: 0.45, low: 0.10 }
+
+optimalBonus = (cloudCover >= 30 && cloudCover <= 70) ? +15 : 0
+lowCloudPenalty = lowClouds > 50 ? -(lowClouds - 50) × 0.5 : 0
+
+canvasScore = cloudCoverScore + optimalBonus + lowCloudPenalty
+```
+
+**光路评分（Light Path V2 Score）**：
+
+```javascript
+// 多采样点（20/50/100km）计算几何可见性
+geometryScore = computeGeometryFromSunPosition(lat, lon, sunAzimuth, sunElevation)
+
+// 大气消光
+extinctionFactor = exp(-AOD / sin(sunElevation))
+
+// 硬封顶
+if (cloudCover > 85) lightPathScore = 0  // 全遮蔽
+if (precipitation > 0) lightPathScore = 0  // 降水
+
+lightPathScore = geometryScore × extinctionFactor × 100
+```
+
+**最终融合**：
+
+```javascript
+FINAL_WEIGHTS = { CLOUD_CANVAS: 0.8, LIGHT_PATH: 0.2 }
+
+finalScore = canvasScore × 0.8 + lightPathScore × 0.2
+```
+
+### A.5 预报不确定性来源
+
+根据教程第四章，以下因素会放大预报误差：
+
+1. **云边界位置不确定性**：云边界处湿度梯度平缓时误差大
+2. **云边界移动速度**：风速 >15m/s 时不确定性明显增大
+3. **云边界与日落方向夹角**：夹角 <10° 时极不稳定
+4. **气溶胶光学厚度 AOD**：直接影响等效云底高度修正
+
+---
+
+## 需求 38：火烧云全球分享地图
+
+**用户故事：** 作为火烧云爱好者，我希望能上传自己拍摄的火烧云照片，分享到全球地图上，同时能看到来自世界各地的火烧云照片和访客记录。
+
+### 验收标准
+
+1. 系统提供密码保护的后台管理界面（`/admin`），支持上传火烧云照片
+2. 上传时优先读取照片 EXIF 地理位置信息，若无则支持在地图上手动指定位置
+3. 分享页面（`/gallery`）渲染全屏 Leaflet 世界地图
+4. 照片以随机挑选的缩略图圆形头像形式展示在地图对应坐标位置
+5. 点击照片缩略图弹出 Modal 显示原图、拍摄时间和地点信息
+6. 访客 IP 自动记录并通过 GeoIP 转换为地理坐标，在地图上以橙色小圆点展示
+7. hover 访客点显示国家/城市信息
+8. 主页底部统计"来访者"数字可点击进入分享页面
+9. 顶部竖直菜单栏新增分享页面入口
+10. 管理员密码从环境变量 `ADMIN_PASSWORD` 读取
+11. IP 存储前做 SHA256 hash 保护隐私
+12. 上传文件限制：最大 20MB，仅允许 JPEG/PNG/HEIC 格式

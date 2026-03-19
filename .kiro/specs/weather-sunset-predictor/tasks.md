@@ -1265,3 +1265,168 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - `tests/unit/server/SunsetSpotsService.test.js`：网格生成、缓存逻辑、过滤
   - `tests/unit/services/ChinaSpotsOverlay.test.js`：marker 渲染、地域检测
   - _关联需求：37_
+
+---
+
+## Phase 20：火烧云全球分享地图（需求 38）
+
+### 任务概览
+
+| 编号 | 任务 | 状态 |
+|------|------|------|
+| 70.1 | 后端：PhotoService + 照片存储目录初始化 | - [ ] |
+| 70.2 | 后端：multer 上传 + sharp 缩略图生成 + EXIF 解析 | - [ ] |
+| 70.3 | 后端：/admin 路由 + Basic Auth 密码保护 | - [ ] |
+| 70.4 | 后端：/api/photos 接口 | - [ ] |
+| 70.5 | 后端：VisitorService + IP GeoIP + /api/visitors 接口 | - [ ] |
+| 70.6 | 后端：POST /api/visitors/track 中间件 | - [ ] |
+| 70.7 | 前端：/gallery 页面骨架 + Leaflet 世界地图 | - [ ] |
+| 70.8 | 前端：PhotoMarkerLayer — 随机挑选缩略图 marker | - [ ] |
+| 70.9 | 前端：VisitorDotLayer — 访客小圆点 | - [ ] |
+| 70.10 | 前端：点击照片 Modal + 原图预览 | - [ ] |
+| 70.11 | 前端：主页底部统计“来访者”链接接入 | - [ ] |
+| 70.12 | 前端：顶部竖直菜单栏新增入口 | - [ ] |
+| 70.13 | 后台管理页面：上传表单 + 地图手动指定位置 | - [ ] |
+| 70.14 | 测试：上传流程 + 访客记录 + 地图渲染 | - [ ] |
+
+### 任务 70.1：PhotoService 设计
+
+```javascript
+// server/services/PhotoService.js
+const PHOTOS_DIR = '~/.xiake/photos/'
+const ORIGINALS_DIR = '~/.xiake/photos/originals/'
+const THUMBS_DIR = '~/.xiake/photos/thumbs/'
+const PHOTOS_INDEX = '~/.xiake/photos/photos.json'
+
+initDirs()                 // 初始化目录与空索引
+savePhoto(file, meta)      // 保存原图 + 写入索引
+getPhotos()                // 获取照片列表
+deletePhoto(id)            // 删除照片与缩略图
+generateThumbnail(src, dst) // sharp 300×300 center-crop
+```
+
+### 任务 70.2：上传与 EXIF 解析
+
+```javascript
+// server/routes/admin.js
+POST /admin/upload
+  - multer 接收 multipart/form-data
+  - exifr.parse(buffer) 提取 EXIF GPS 坐标
+  - 若无 GPS：读取 body.lat/body.lon（手动指定）
+  - sharp 生成缩略图
+  - PhotoService.savePhoto(...)
+```
+
+### 任务 70.3：后台认证
+
+- 路由：`/admin`
+- 认证方式：HTTP Basic Auth
+- 密码来源：`.env` 中 `ADMIN_PASSWORD`
+- 未通过认证返回 401
+
+### 任务 70.4：照片 API
+
+- `GET /api/photos`
+  - 返回公开照片列表（id, thumbnailUrl, lat, lon, takenAt, description）
+- `GET /api/photos/:id/original`
+  - 返回原图（可选，后续按需）
+- `DELETE /admin/photos/:id`
+  - 后台删除照片
+
+### 任务 70.5：VisitorService
+
+```javascript
+// server/services/VisitorService.js
+const VISITORS_FILE = '~/.xiake/visitors.json'
+
+track(ip) {
+  // 1) hashIP = sha256(ip)
+  // 2) GeoIP 查询（优先 ip-api.com）
+  // 3) 按 ip_hash 聚合更新 count / lastSeen
+}
+
+getAll() // 返回 [{ lat, lon, country, city, count }]
+```
+
+GeoIP 策略：
+- 优先：`ip-api.com` 免费接口（无需 key，有限流）
+- fallback：本地 MaxMind（后续可选）
+
+### 任务 70.6：访客跟踪中间件
+
+- `POST /api/visitors/track`
+- 同 IP 1 分钟仅记录一次（限流）
+- 自动写入 `visitors.json`
+- 前端进入 `/gallery` 时自动调用
+
+### 任务 70.7：分享页面骨架
+
+- 新页面：`/gallery`（独立 HTML）
+- Leaflet 世界地图（zoom=2）
+- 底图：CartoDB Dark Matter
+- 初始化并行请求：`/api/photos`、`/api/visitors`
+
+### 任务 70.8：PhotoMarkerLayer
+
+- 随机采样最多 50 张照片
+- DivIcon 显示圆形缩略图（48px）
+- marker 点击弹窗显示照片基本信息
+
+### 任务 70.9：VisitorDotLayer
+
+- 访客点渲染为 4px 橙色圆点（`#ff6b35`）
+- hover 展示国家/城市
+- count>1 可显示轻微放大效果
+
+### 任务 70.10：照片 Modal
+
+- 点击缩略图弹出全屏/居中 Modal
+- 展示：原图、拍摄时间、坐标（或地点名）、描述
+- 支持关闭与键盘 Esc
+
+### 任务 70.11：主页底部入口
+
+- 将现有底部统计“来访者”数字改为可点击链接
+- 点击后跳转 `/gallery`
+
+### 任务 70.12：顶部菜单入口
+
+- 在竖直菜单栏新增“分享地图/📸 分享”项
+- 与其他菜单项风格一致
+
+### 任务 70.13：后台上传页面
+
+- 上传表单：文件 + 描述 + 手动经纬度输入
+- 小地图点选位置（当 EXIF 缺失时）
+- 上传结果即时预览（缩略图 + 坐标）
+
+### 任务 70.14：测试与验收
+
+- 单元测试：PhotoService、VisitorService
+- 集成测试：上传→索引写入→缩略图生成→API 返回
+- 前端测试：地图渲染、marker 数量上限、Modal 交互
+- 安全测试：
+  - 认证拦截
+  - 非图片格式拦截
+  - 大文件拦截（>20MB）
+  - IP hash 不落原文
+
+### 依赖与配置
+
+**新增依赖：**
+- `sharp`
+- `multer`
+- `exifr`
+- `uuid`
+
+**新增环境变量：**
+
+```env
+ADMIN_PASSWORD=your_admin_password_here
+```
+
+**安全要求：**
+1. IP 仅存 SHA256 hash，不存明文
+2. 上传 MIME 白名单：`image/jpeg`, `image/png`, `image/heic`
+3. 单文件大小上限 20MB
+4. 管理员操作全量记录审计日志
