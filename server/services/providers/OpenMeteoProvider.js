@@ -28,22 +28,27 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     
     // Open-Meteo 仅支持查询天数，7天为 168 小时
     const forecastDays = Math.max(1, Math.ceil(hours / 24));
+
+    const BASE_PARAMS = {
+      latitude: lat,
+      longitude: lon,
+      hourly: 'temperature_2m,relative_humidity_2m,surface_pressure,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,visibility,precipitation,showers,cape,weather_code,relative_humidity_925hPa,relative_humidity_850hPa,relative_humidity_700hPa,relative_humidity_500hPa,geopotential_height_925hPa,geopotential_height_850hPa,geopotential_height_700hPa,geopotential_height_500hPa',
+      wind_speed_unit: 'ms',
+      timeformat: 'unixtime',
+      timezone: 'auto',
+      forecast_days: forecastDays
+    };
     
     try {
-      const response = await axios.get(this.API_URL, {
-        params: {
-          latitude: lat,
-          longitude: lon,
-          // 需要的字段：温度,湿度,地表气压,总云量,低云,中云,高云,风速,风向,能见度,降水
-          // + 试验：气压层湿度/位势高度（用于估算云底高度）
-          hourly: 'temperature_2m,relative_humidity_2m,surface_pressure,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,visibility,precipitation,showers,cape,weather_code,relative_humidity_925hPa,relative_humidity_850hPa,relative_humidity_700hPa,relative_humidity_500hPa,geopotential_height_925hPa,geopotential_height_850hPa,geopotential_height_700hPa,geopotential_height_500hPa',
-          wind_speed_unit: 'ms',      // 转换为 m/s
-          timeformat: 'unixtime',     // unix 秒级时间戳
-          timezone: 'auto',           // 按查询位置自动时区
-          forecast_days: forecastDays // 预测天数
-        },
-        timeout: 10000
-      });
+      // 同时请求默认模型（GFS）和 ECMWF，取云量最大值提高准确性
+      const [gfsResp, ecmwfResp] = await Promise.allSettled([
+        axios.get(this.API_URL, { params: BASE_PARAMS, timeout: 10000 }),
+        axios.get(this.API_URL, { params: { ...BASE_PARAMS, models: 'ecmwf_ifs025' }, timeout: 10000 })
+      ]);
+
+      if (gfsResp.status === 'rejected') throw new Error(gfsResp.reason?.message || 'GFS 请求失败');
+      const response = gfsResp.value;
+      const ecmwfHourly = ecmwfResp.status === 'fulfilled' ? ecmwfResp.value.data?.hourly : null;
 
       const { hourly } = response.data;
       if (!hourly || !hourly.time) {
@@ -70,11 +75,19 @@ class OpenMeteoProvider extends BaseWeatherProvider {
 
         const cloudBaseHeight = this.estimateCloudBaseHeight(hourly, i);
 
+        // 多模型融合：云量取 GFS 和 ECMWF 的最大值（更接近实际）
+        const ecIdx = ecmwfHourly ? ecmwfHourly.time?.indexOf(hourly.time[i]) : -1;
+        const mergeMax = (gfsVal, key) => {
+          if (!ecmwfHourly || ecIdx < 0) return gfsVal ?? 0;
+          const ecVal = ecmwfHourly[key]?.[ecIdx];
+          return Math.max(gfsVal ?? 0, ecVal ?? 0);
+        };
+
         data.push({
           timestamp,
           temp: hourly.temperature_2m[i] ?? null,
           humidity: humidity ?? null,
-          cloudCover: cloudCover ?? 0,
+          cloudCover: mergeMax(cloudCover, 'cloud_cover'),
           windSpeed: hourly.wind_speed_10m[i] ?? null,
           windDirection: hourly.wind_direction_10m[i] ?? null,
           pressure: hourly.surface_pressure[i] ?? null,
@@ -82,12 +95,12 @@ class OpenMeteoProvider extends BaseWeatherProvider {
           precipitation: precipitation ?? 0,
           convPrecip: hourly.showers?.[i] ?? 0,
           cape: hourly.cape?.[i] ?? null,
-          lowClouds: hourly.cloud_cover_low[i] ?? 0,
-          cloudBaseHeight: hourly.cloud_base_height?.[i] ?? null,
-          midClouds: hourly.cloud_cover_mid[i] ?? 0,
-          highClouds: hourly.cloud_cover_high[i] ?? 0,
+          lowClouds: mergeMax(hourly.cloud_cover_low[i], 'cloud_cover_low'),
+          midClouds: mergeMax(hourly.cloud_cover_mid[i], 'cloud_cover_mid'),
+          highClouds: mergeMax(hourly.cloud_cover_high[i], 'cloud_cover_high'),
           weatherCode: hourly.weather_code?.[i] ?? null,
-          cloudBaseHeight
+          cloudBaseHeight,
+          _models: { gfs: cloudCover ?? 0, ecmwf: ecmwfHourly && ecIdx >= 0 ? (ecmwfHourly.cloud_cover?.[ecIdx] ?? null) : null }
         });
       }
 
@@ -99,7 +112,8 @@ class OpenMeteoProvider extends BaseWeatherProvider {
           latency: Date.now() - startTime,
           timezone: response.data?.timezone || null,
           utcOffsetSeconds: response.data?.utc_offset_seconds ?? null,
-          dataQuality: 'standard',
+          dataQuality: ecmwfHourly ? 'multi_model' : 'standard',
+          models: ecmwfHourly ? ['gfs', 'ecmwf_ifs025'] : ['gfs'],
           unsupportedFields: [],
           degradedReason: []
         }
