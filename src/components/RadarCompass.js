@@ -63,29 +63,38 @@ class RadarCompass {
    * 在 (x,y) 处画一个云朵形状，width/height 控制大小，angle 控制旋转（对齐方向轴）
    */
   /**
-   * 用多个圆形叠加画经典云朵，比 Q 路径更圆润自然
-   * 以 (x,y) 为中心，r 控制整体大小
+   * Windy风格云层渲染：扁平有机形状 + 径向渐变
+   * 用多层椭圆叠加模拟云层厚度感
    */
   _cloud(x, y, w, h, color, opacity, angleDeg = 0) {
-    const r = Math.min(w, h) / 2.2;
-    // 5个圆：底部大椭圆 + 顶部4个圆形凸起
-    const circles = [
-      // 底部主体（扁椭圆）
-      { cx: 0,       cy: r * 0.35,  rx: r * 1.1, ry: r * 0.65 },
-      // 左侧凸起
-      { cx: -r * 0.7, cy: -r * 0.1, rx: r * 0.55, ry: r * 0.55 },
-      // 中左凸起（最高）
-      { cx: -r * 0.15, cy: -r * 0.45, rx: r * 0.62, ry: r * 0.62 },
-      // 中右凸起
-      { cx: r * 0.5,  cy: -r * 0.25, rx: r * 0.58, ry: r * 0.58 },
-      // 右侧凸起
-      { cx: r * 0.9,  cy: r * 0.05,  rx: r * 0.45, ry: r * 0.45 },
-    ].map(c =>
-      `<ellipse cx="${c.cx.toFixed(1)}" cy="${c.cy.toFixed(1)}" rx="${c.rx.toFixed(1)}" ry="${c.ry.toFixed(1)}" fill="${color}"/>`
+    const uid = Math.random().toString(36).slice(2, 7);
+    const rx = w / 2, ry = h / 2;
+
+    // 主云体：扁椭圆 + 顶部鼓出
+    const bumps = [
+      { cx: 0,       cy: 0,         rx: rx,        ry: ry * 0.65 },   // 主体
+      { cx: -rx*0.35, cy: -ry*0.35, rx: rx * 0.45, ry: ry * 0.55 },   // 左凸
+      { cx:  rx*0.1,  cy: -ry*0.55, rx: rx * 0.52, ry: ry * 0.60 },   // 中凸（最高）
+      { cx:  rx*0.55, cy: -ry*0.25, rx: rx * 0.40, ry: ry * 0.48 },   // 右凸
+    ];
+
+    const ellipses = bumps.map(b =>
+      `<ellipse cx="${b.cx.toFixed(1)}" cy="${b.cy.toFixed(1)}" rx="${b.rx.toFixed(1)}" ry="${b.ry.toFixed(1)}" fill="url(#cg${uid})"/>`
     ).join('');
 
-    return `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${angleDeg.toFixed(1)})" opacity="${opacity.toFixed(2)}">
-      ${circles}
+    // 底部阴影感（加深底边）
+    const shadow = `<ellipse cx="0" cy="${(ry*0.4).toFixed(1)}" rx="${(rx*0.85).toFixed(1)}" ry="${(ry*0.28).toFixed(1)}" fill="${color}" opacity="0.3"/>`;
+
+    return `<defs>
+      <radialGradient id="cg${uid}" cx="40%" cy="35%" r="65%">
+        <stop offset="0%" stop-color="white" stop-opacity="0.95"/>
+        <stop offset="45%" stop-color="${color}" stop-opacity="0.88"/>
+        <stop offset="100%" stop-color="${color}" stop-opacity="0.60"/>
+      </radialGradient>
+    </defs>
+    <g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${angleDeg.toFixed(1)})" opacity="${opacity.toFixed(2)}">
+      ${shadow}
+      ${ellipses}
     </g>`;
   }
 
