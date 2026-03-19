@@ -836,8 +836,9 @@ class SettingsPanel {
     // 数据源名称：优先显示 cloudSource，fallback 到 name
     providerCurrentEl.textContent = meta.cloudSource || meta.name || 'Open-Meteo';
     const qualityMap = {
+      ecmwf: 'ECMWF IFS 025（高精度）',
       multi_model: 'GFS + ECMWF 融合',
-      gfs_only: 'GFS（ECMWF 不可用）',
+      gfs_only: 'GFS only',
       excellent: this.i18n.t('settings.providerStatusExcellent'),
       standard: this.i18n.t('settings.providerStatusStandard'),
       degraded: this.i18n.t('settings.providerStatusDegraded')

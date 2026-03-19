@@ -40,16 +40,11 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     };
     
     try {
-      // 同时请求默认模型（GFS）和 ECMWF，取云量最大值提高准确性
-      const [gfsResp, ecmwfResp] = await Promise.allSettled([
-        axios.get(this.API_URL, { params: BASE_PARAMS, timeout: 10000 }),
-        axios.get(this.API_URL, { params: { ...BASE_PARAMS, models: 'ecmwf_ifs025' }, timeout: 10000 })
-      ]);
-
-      if (gfsResp.status === 'rejected') throw new Error(gfsResp.reason?.message || 'GFS 请求失败');
-      const response = gfsResp.value;
-      const ecmwfHourly = ecmwfResp.status === 'fulfilled' ? ecmwfResp.value.data?.hourly : null;
-
+      // 使用 ECMWF IFS 025 模型（与 Windy 同源，精度更高）
+      const response = await axios.get(this.API_URL, {
+        params: { ...BASE_PARAMS, models: 'ecmwf_ifs025' },
+        timeout: 10000
+      });
       const { hourly } = response.data;
       if (!hourly || !hourly.time) {
         throw new Error('Open-Meteo API 响应格式错误');
@@ -75,19 +70,11 @@ class OpenMeteoProvider extends BaseWeatherProvider {
 
         const cloudBaseHeight = this.estimateCloudBaseHeight(hourly, i);
 
-        // 多模型融合：云量取 GFS 和 ECMWF 的最大值（更接近实际）
-        const ecIdx = ecmwfHourly ? ecmwfHourly.time?.indexOf(hourly.time[i]) : -1;
-        const mergeMax = (gfsVal, key) => {
-          if (!ecmwfHourly || ecIdx < 0) return gfsVal ?? 0;
-          const ecVal = ecmwfHourly[key]?.[ecIdx];
-          return Math.max(gfsVal ?? 0, ecVal ?? 0);
-        };
-
         data.push({
           timestamp,
           temp: hourly.temperature_2m[i] ?? null,
           humidity: humidity ?? null,
-          cloudCover: mergeMax(cloudCover, 'cloud_cover'),
+          cloudCover: cloudCover ?? 0,
           windSpeed: hourly.wind_speed_10m[i] ?? null,
           windDirection: hourly.wind_direction_10m[i] ?? null,
           pressure: hourly.surface_pressure[i] ?? null,
@@ -95,12 +82,11 @@ class OpenMeteoProvider extends BaseWeatherProvider {
           precipitation: precipitation ?? 0,
           convPrecip: hourly.showers?.[i] ?? 0,
           cape: hourly.cape?.[i] ?? null,
-          lowClouds: mergeMax(hourly.cloud_cover_low[i], 'cloud_cover_low'),
-          midClouds: mergeMax(hourly.cloud_cover_mid[i], 'cloud_cover_mid'),
-          highClouds: mergeMax(hourly.cloud_cover_high[i], 'cloud_cover_high'),
+          lowClouds: hourly.cloud_cover_low[i] ?? 0,
+          midClouds: hourly.cloud_cover_mid[i] ?? 0,
+          highClouds: hourly.cloud_cover_high[i] ?? 0,
           weatherCode: hourly.weather_code?.[i] ?? null,
-          cloudBaseHeight,
-          _models: { gfs: cloudCover ?? 0, ecmwf: ecmwfHourly && ecIdx >= 0 ? (ecmwfHourly.cloud_cover?.[ecIdx] ?? null) : null }
+          cloudBaseHeight
         });
       }
 
@@ -112,8 +98,10 @@ class OpenMeteoProvider extends BaseWeatherProvider {
           latency: Date.now() - startTime,
           timezone: response.data?.timezone || null,
           utcOffsetSeconds: response.data?.utc_offset_seconds ?? null,
-          dataQuality: ecmwfHourly ? 'multi_model' : 'standard',
-          models: ecmwfHourly ? ['gfs', 'ecmwf_ifs025'] : ['gfs'],
+          dataQuality: 'ecmwf',
+          models: ['ecmwf_ifs025'],
+          cloudSource: 'Open-Meteo ECMWF IFS 025',
+          ecmwfAvailable: true,
           unsupportedFields: [],
           degradedReason: []
         }
