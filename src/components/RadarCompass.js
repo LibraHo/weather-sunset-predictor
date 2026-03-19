@@ -232,9 +232,9 @@ class RadarCompass {
 
     // ── 图例
     const LEGEND = [
-      [T.cloudLow  || 'rgba(120,190,255,0.85)', '低云'],
-      [T.cloudMid  || 'rgba(255,155,60,0.85)',  '中云'],
-      [T.cloudHigh || 'rgba(255,220,70,0.85)',  '高云'],
+      [T.cloudLow  || 'rgba(140,160,185,0.90)', '低云'],
+      [T.cloudMid  || 'rgba(190,200,215,0.88)', '中云'],
+      [T.cloudHigh || 'rgba(230,225,210,0.92)', '高云'],
     ];
     const legend = LEGEND.map(([c,l], i) => `
       <rect x="${6+i*52}" y="2" width="14" height="6" rx="2" fill="${c}"/>
