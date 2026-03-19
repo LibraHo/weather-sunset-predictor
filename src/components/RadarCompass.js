@@ -180,6 +180,7 @@ class RadarCompass {
     const cx = S / 2;
     const cy = S / 2;
 
+    const R_LOW_INNER = S * 0.11;
     const R_LOW = S * 0.20;
     const R_MID = S * 0.32;
     const R_HIGH = S * 0.42;
@@ -188,9 +189,9 @@ class RadarCompass {
     const layers = [
       {
         key: 'low',
-        inner: R_LOW * 0.04,
+        inner: R_LOW_INNER * 1.02,
         outer: R_LOW * 0.96,
-        fade: R_LOW * 0.30,
+        fade: (R_LOW - R_LOW_INNER) * 0.34,
         alphaMax: 0.90,
         gamma: 1.20,
         color: this._parseRgba(theme.cloudLow, { r: 138, g: 156, b: 186, a: 0.95 }),
@@ -304,27 +305,32 @@ class RadarCompass {
     const cy = S / 2;
     const T = theme;
 
+    const R_LOW_INNER = S * 0.11;
     const R_LOW = S * 0.20;
     const R_MID = S * 0.32;
     const R_HIGH = S * 0.42;
 
+    const ringStroke = T.ring || 'rgba(100,130,180,0.25)';
     const rings = [
-      [R_LOW, T.ringLow || 'rgba(100,150,220,0.08)', '低云'],
-      [R_MID, T.ringMid || 'rgba(130,160,200,0.06)', '中云'],
-      [R_HIGH, T.ringHigh || 'rgba(160,170,200,0.05)', '高云'],
-    ].map(([r, fill, lbl], i) => {
-      const innerR = i === 0 ? 0 : [R_LOW, R_MID][i - 1];
+      [R_LOW, '低云'],
+      [R_MID, '中云'],
+      [R_HIGH, '高云'],
+    ].map(([r, lbl], i) => {
+      const innerR = i === 0 ? R_LOW_INNER : [R_LOW, R_MID][i - 1];
       const [tx, ty] = this._pt(cx, cy, r - (r - innerR) / 2, 340);
-      const bw = 26;
-      const bh = 14;
+      const bw = 30;
+      const bh = 16;
       return `
         <circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}"
-          fill="transparent" stroke="${T.ring || 'rgba(100,130,180,0.25)'}" stroke-width="1"/>
-        <rect x="${(tx - bw / 2).toFixed(1)}" y="${(ty - bh / 2 - 1).toFixed(1)}" width="${bw}" height="${bh}" rx="7"
-          fill="${T.bg || 'rgba(255,255,255,0.92)'}" opacity="0.92"/>
-        <text x="${tx.toFixed(1)}" y="${(ty + 3).toFixed(1)}" font-size="10.5" font-weight="700"
-          fill="${T.title || '#333333'}" text-anchor="middle">${lbl}</text>`;
+          fill="transparent" stroke="${ringStroke}" stroke-width="1"/>
+        <rect x="${(tx - bw / 2).toFixed(1)}" y="${(ty - bh / 2 - 1).toFixed(1)}" width="${bw}" height="${bh}" rx="8"
+          fill="rgba(255,255,255,0.94)"/>
+        <text x="${tx.toFixed(1)}" y="${(ty + 3.5).toFixed(1)}" font-size="11" font-weight="800"
+          fill="#1f2937" text-anchor="middle">${lbl}</text>`;
     }).join('');
+
+    const lowInnerRing = `<circle cx="${cx}" cy="${cy}" r="${R_LOW_INNER.toFixed(1)}"
+      fill="transparent" stroke="${ringStroke}" stroke-width="1" opacity="0.95"/>`;
 
     const DIR_ORDER = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
     const axes = DIR_ORDER.map(d => {
@@ -335,31 +341,42 @@ class RadarCompass {
         stroke-width="${main ? '1' : '0.6'}"/>`;
     }).join('');
 
-    const labelR = R_HIGH * 1.12;
+    const labelR = R_HIGH * 1.15;
     const labels = DIR_ORDER.map(d => {
       const lbl = { N: '北', NE: '东北', E: '东', SE: '东南', S: '南', SW: '西南', W: '西', NW: '西北' }[d];
       const [x, y] = this._pt(cx, cy, labelR, this._dirAz(d));
       return `<text x="${x.toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="middle"
-          font-size="12" font-weight="800" fill="${T.labelFill || '#333333'}"
-          stroke="${T.bg || 'rgba(255,255,255,0.95)'}" stroke-width="2.6" paint-order="stroke">${lbl}</text>`;
+          font-size="12" font-weight="800" fill="${T.labelFill || '#334155'}">${lbl}</text>`;
     }).join('');
 
-    const iconR = R_HIGH * 1.08;
+    const getSunRadius = az => {
+      if (az == null) return R_HIGH * 0.92;
+      const cardinals = [0, 90, 180, 270];
+      const nearCardinal = cardinals.some(a => {
+        let d = Math.abs(((az - a) % 360 + 540) % 360 - 180);
+        return d < 14;
+      });
+      return nearCardinal ? (R_HIGH * 0.82) : (R_HIGH * 0.92);
+    };
+
     let sunIcons = '';
     const isDawn = predictionType === 'sunrise';
     if (isDawn && sun.sunrise != null) {
+      const iconR = getSunRadius(sun.sunrise);
       const [ix, iy] = this._pt(cx, cy, iconR, sun.sunrise);
       sunIcons = `
         <text x="${ix.toFixed(1)}" y="${(iy + 4).toFixed(1)}" text-anchor="middle" font-size="15">🌅</text>
         <text x="${ix.toFixed(1)}" y="${(iy + 17).toFixed(1)}" text-anchor="middle" font-size="9"
           fill="${T.subtitle || '#666666'}">日出</text>`;
     } else if (!isDawn && sun.sunset != null) {
+      const iconR = getSunRadius(sun.sunset);
       const [ix, iy] = this._pt(cx, cy, iconR, sun.sunset);
       sunIcons = `
         <text x="${ix.toFixed(1)}" y="${(iy + 4).toFixed(1)}" text-anchor="middle" font-size="15">🌇</text>
         <text x="${ix.toFixed(1)}" y="${(iy + 17).toFixed(1)}" text-anchor="middle" font-size="9"
           fill="${T.subtitle || '#666666'}">日落</text>`;
     } else if (sun.sunset != null) {
+      const iconR = getSunRadius(sun.sunset);
       const [ix, iy] = this._pt(cx, cy, iconR, sun.sunset);
       sunIcons = `
         <text x="${ix.toFixed(1)}" y="${(iy + 4).toFixed(1)}" text-anchor="middle" font-size="15">🌇</text>
@@ -377,8 +394,8 @@ class RadarCompass {
       [T.cloudHigh || 'rgba(218,226,238,0.72)', '高云'],
     ];
     const legend = LEGEND.map(([c, l], i) => `
-      <ellipse cx="${13 + i * 56}" cy="5" rx="9" ry="5.5" fill="${c}"/>
-      <text x="${26 + i * 56}" y="9" font-size="10" fill="${T.legendText || '#666666'}">${l}</text>`
+      <ellipse cx="${13 + i * 58}" cy="6" rx="9" ry="5.5" fill="${c}"/>
+      <text x="${27 + i * 58}" y="10" font-size="11" font-weight="700" fill="${T.title || '#334155'}">${l}</text>`
     ).join('');
 
     return `
@@ -393,6 +410,7 @@ class RadarCompass {
       style="position:absolute;inset:0;width:${S}px;height:${S}px;display:block;"></canvas>
     <svg width="${S}" height="${S}" viewBox="0 0 ${S} ${S}"
       style="position:absolute;inset:0;display:block;font-family:${zhFont};" xmlns="http://www.w3.org/2000/svg">
+      ${lowInnerRing}
       ${rings}
       ${axes}
       ${center}
