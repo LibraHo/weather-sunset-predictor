@@ -1252,16 +1252,16 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 #### 64.6 地域检测 + 预测卡片集成
 
-- [ ] 64.6
-  - 判断当前位置是否在中国区域（72–135°E，18–53°N）
-  - 是：预测卡片底部显示嵌入地图，调用 `ChinaSpotsOverlay`
-  - 否：不显示地图，不请求 API
-  - 显示"今日数据，更新于 HH:mm"时间戳
+- [x] 64.6（2026-03-20）
+  - [x] 判断当前位置是否在中国区域（72–135°E，18–53°N）
+  - [x] 是：预测卡片底部显示嵌入地图，调用 `ChinaSpotsOverlay`
+  - [x] 否：不显示地图，不请求 API（通过 `updateChinaSpotsForLocation` 统一收口）
+  - [x] 显示"今日数据，更新于 HH:mm"时间戳
   - _关联需求：37.1, 37.7, 37.8_
 
 #### 64.7 测试
 
 - [ ] 64.7
-  - `tests/unit/server/SunsetSpotsService.test.js`：网格生成、缓存逻辑、过滤
-  - `tests/unit/services/ChinaSpotsOverlay.test.js`：marker 渲染、地域检测
+  - [ ] `tests/unit/server/SunsetSpotsService.test.js`：网格生成、缓存逻辑、过滤
+  - [x] `tests/unit/services/ChinaSpotsOverlay.test.js`：大陆过滤、显隐切换、时间戳相关逻辑（2026-03-20）
   - _关联需求：37_

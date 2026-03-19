@@ -9,7 +9,6 @@ export default class ChinaSpotsOverlay {
   constructor() {
     this._map = null;
     this._spots = [];
-    this._markers = [];
     this._updatedAt = null;
     this._visible = false;
     this._canvas = null;
@@ -126,21 +125,42 @@ export default class ChinaSpotsOverlay {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       this._updatedAt = data.updatedAt || null;
-      this._spots = data.spots || [];
-
-      // 清除旧 markers
-      this._clearMarkers();
+      this._spots = Array.isArray(data.spots)
+        ? data.spots.filter(spot => this._isMainlandChinaSpot(spot))
+        : [];
 
       if (this._spots.length === 0) {
-        console.log('[ChinaSpotsOverlay] 暂无散点数据');
+        console.log('[ChinaSpotsOverlay] 大陆范围暂无可用散点数据');
+        this.hide();
         return;
       }
 
       this.show();
-      console.log(`[ChinaSpotsOverlay] 已加载 ${this._spots.length} 个点，渲染 ${this._markers.length} 个 marker`);
+      console.log(`[ChinaSpotsOverlay] 已加载并渲染 ${this._spots.length} 个大陆散点`);
     } catch (err) {
       console.error('[ChinaSpotsOverlay] 加载散点失败:', err);
     }
+  }
+
+  /**
+   * 判断点位是否属于中国大陆主图范围
+   * - 主范围：72~135E, 18~53N
+   * - 排除：台湾区域 bbox（当前阶段先聚焦大陆）
+   * @param {{lat:number, lon:number}} spot
+   * @returns {boolean}
+   */
+  _isMainlandChinaSpot(spot) {
+    if (!spot || typeof spot.lat !== 'number' || typeof spot.lon !== 'number') {
+      return false;
+    }
+
+    const inChinaBounds = spot.lon >= 72 && spot.lon <= 135 && spot.lat >= 18 && spot.lat <= 53;
+    if (!inChinaBounds) return false;
+
+    const inTaiwanBounds = spot.lon >= 119 && spot.lon <= 123.8 && spot.lat >= 21.5 && spot.lat <= 26.5;
+    if (inTaiwanBounds) return false;
+
+    return true;
   }
 
   /** 重绘 Canvas 渐变图层 */
@@ -223,10 +243,6 @@ export default class ChinaSpotsOverlay {
     this._canvas.style.width = mapSize.x + 'px';
     this._canvas.style.height = mapSize.y + 'px';
     this._canvas.style.display = 'block';
-    // markers 显示
-    this._markers.forEach(m => {
-      if (!this._map.hasLayer(m)) m.addTo(this._map);
-    });
     this._redrawCanvas();
     this._updateButtonState();
   }
@@ -236,10 +252,6 @@ export default class ChinaSpotsOverlay {
     if (!this._map) return;
     this._visible = false;
     this._canvas.style.display = 'none';
-    // 隐藏 markers
-    this._markers.forEach(m => {
-      if (this._map.hasLayer(m)) this._map.removeLayer(m);
-    });
     this._updateButtonState();
   }
 
@@ -252,24 +264,21 @@ export default class ChinaSpotsOverlay {
     }
   }
 
-  /** 清除 markers */
-  _clearMarkers() {
-    if (this._map) {
-      this._markers.forEach(m => {
-        if (this._map.hasLayer(m)) this._map.removeLayer(m);
-      });
-    }
-    this._markers = [];
-  }
-
   /** 完全清除（含 canvas 内容） */
   clear() {
     this.hide();
-    this._clearMarkers();
     this._spots = [];
     if (this._ctx) {
       this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
     }
+  }
+
+  /**
+   * 返回当前已加载的大陆散点数量
+   * @returns {number}
+   */
+  getSpotCount() {
+    return this._spots.length;
   }
 
   /**
