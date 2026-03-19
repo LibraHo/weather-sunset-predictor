@@ -399,7 +399,7 @@ export default {
   // 通用文本
   common: {
     loading: '加载中...',
-    dataSource: '数据来源：Windy API',
+    dataSource: '数据来源：Open-Meteo（GFS + ECMWF）',
     visitorCount: '访问人数：'
   },
 
