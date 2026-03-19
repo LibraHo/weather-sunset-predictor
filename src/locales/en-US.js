@@ -333,7 +333,7 @@ const translations = {
   },
   "common": {
     "loading": "Loading...",
-    "dataSource": "Data source: Windy API",
+    "dataSource": "Data source: Open-Meteo (GFS + ECMWF)",
     "visitorCount": "Visitors: "
   },
   "errors": {

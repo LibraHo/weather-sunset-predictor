@@ -85,35 +85,14 @@ class RadarCompass {
    * Windy风格云层渲染：扁平有机形状 + 径向渐变
    * 用多层椭圆叠加模拟云层厚度感
    */
+  /**
+   * 扁平风格云块：圆角矩形 pill，简洁无渐变
+   */
   _cloud(x, y, w, h, color, opacity, angleDeg = 0) {
-    const uid = Math.random().toString(36).slice(2, 7);
-    const rx = w / 2, ry = h / 2;
-
-    // 主云体：扁椭圆 + 顶部鼓出
-    const bumps = [
-      { cx: 0,       cy: 0,         rx: rx,        ry: ry * 0.65 },   // 主体
-      { cx: -rx*0.35, cy: -ry*0.35, rx: rx * 0.45, ry: ry * 0.55 },   // 左凸
-      { cx:  rx*0.1,  cy: -ry*0.55, rx: rx * 0.52, ry: ry * 0.60 },   // 中凸（最高）
-      { cx:  rx*0.55, cy: -ry*0.25, rx: rx * 0.40, ry: ry * 0.48 },   // 右凸
-    ];
-
-    const ellipses = bumps.map(b =>
-      `<ellipse cx="${b.cx.toFixed(1)}" cy="${b.cy.toFixed(1)}" rx="${b.rx.toFixed(1)}" ry="${b.ry.toFixed(1)}" fill="url(#cg${uid})"/>`
-    ).join('');
-
-    // 底部阴影感（加深底边）
-    const shadow = `<ellipse cx="0" cy="${(ry*0.4).toFixed(1)}" rx="${(rx*0.85).toFixed(1)}" ry="${(ry*0.28).toFixed(1)}" fill="${color}" opacity="0.3"/>`;
-
-    return `<defs>
-      <radialGradient id="cg${uid}" cx="40%" cy="35%" r="65%">
-        <stop offset="0%" stop-color="white" stop-opacity="0.95"/>
-        <stop offset="45%" stop-color="${color}" stop-opacity="0.88"/>
-        <stop offset="100%" stop-color="${color}" stop-opacity="0.60"/>
-      </radialGradient>
-    </defs>
-    <g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${angleDeg.toFixed(1)})" opacity="${opacity.toFixed(2)}">
-      ${shadow}
-      ${ellipses}
+    const rw = w / 2, rh = Math.min(h / 2, w * 0.22); // 扁平：高度限制
+    const cr = rh; // corner radius = 半高，即 pill 形
+    return `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${angleDeg.toFixed(1)})" opacity="${opacity.toFixed(2)}">
+      <rect x="${(-rw).toFixed(1)}" y="${(-rh).toFixed(1)}" width="${(rw*2).toFixed(1)}" height="${(rh*2).toFixed(1)}" rx="${cr.toFixed(1)}" fill="${color}"/>
     </g>`;
   }
 
@@ -232,9 +211,9 @@ class RadarCompass {
 
     // ── 图例
     const LEGEND = [
-      [T.cloudLow  || 'rgba(120,190,255,0.85)', '低云'],
-      [T.cloudMid  || 'rgba(255,155,60,0.85)',  '中云'],
-      [T.cloudHigh || 'rgba(255,220,70,0.85)',  '高云'],
+      [T.cloudLow  || 'rgba(140,160,185,0.90)', '低云'],
+      [T.cloudMid  || 'rgba(190,200,215,0.88)', '中云'],
+      [T.cloudHigh || 'rgba(230,225,210,0.92)', '高云'],
     ];
     const legend = LEGEND.map(([c,l], i) => `
       <rect x="${6+i*52}" y="2" width="14" height="6" rx="2" fill="${c}"/>
