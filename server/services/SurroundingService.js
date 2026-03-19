@@ -319,7 +319,8 @@ class SurroundingService {
    */
   _getCacheKey(lat, lon, radius, type, date) {
     const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
-    return `surrounding_${lat.toFixed(2)}_${lon.toFixed(2)}_${radius}_${type}_${dateStr}`;
+    // v2: 换用 EnhancedPredictionService，缓存键加版本号避免读到旧结果
+    return `surrounding_v2_${lat.toFixed(2)}_${lon.toFixed(2)}_${radius}_${type}_${dateStr}`;
   }
 }
 
