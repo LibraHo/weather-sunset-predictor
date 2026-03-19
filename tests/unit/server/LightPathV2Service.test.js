@@ -1,9 +1,14 @@
 /**
  * LightPathV2Service 单元测试
- * 需求：35，任务：58
+ * 需求：35，任务：58.1, 58.3（坏样本回放）
  */
 
-const { scoreLightPathV2 } = require('../../../server/services/LightPathV2Service');
+let scoreLightPathV2;
+
+beforeAll(async () => {
+  const mod = await import('../../../server/services/LightPathV2Service.js');
+  scoreLightPathV2 = mod.scoreLightPathV2;
+});
 
 describe('LightPathV2Service', () => {
   // 1. 太阳高度角为负 → 低分
@@ -135,7 +140,7 @@ describe('LightPathV2Service', () => {
 });
 
 
-describe('坏样本回放', () => {
+describe('坏样本回放（任务58.3）', () => {
   test('Val Thorens 雨夹雪场景：cloudCover=100, lowClouds=96, precipitation=2, weatherCode=85 → score <= 10', () => {
     const result = scoreLightPathV2({
       solarElevation: 5,
