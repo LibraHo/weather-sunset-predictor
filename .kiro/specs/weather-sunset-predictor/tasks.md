@@ -1262,6 +1262,6 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 #### 64.7 测试
 
 - [ ] 64.7
-  - `tests/unit/server/SunsetSpotsService.test.js`：网格生成、缓存逻辑、过滤
-  - `tests/unit/services/ChinaSpotsOverlay.test.js`：marker 渲染、地域检测
+  - [ ] `tests/unit/server/SunsetSpotsService.test.js`：网格生成、缓存逻辑、过滤
+  - [x] `tests/unit/services/ChinaSpotsOverlay.test.js`：连续图层渲染、地域过滤、显隐切换（2026-03-20）
   - _关联需求：37_
