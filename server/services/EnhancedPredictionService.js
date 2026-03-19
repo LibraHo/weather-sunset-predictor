@@ -28,9 +28,9 @@ const SOLAR_ELEVATION_WINDOW = {
 };
 
 const CLOUD_WEIGHTS = {
-  HIGH: 0.3,    // 高云权重
-  MID: 0.5,     // 中云权重（最高）
-  LOW: 0.2      // 低云权重（通常是干扰项）
+  HIGH: 0.70,   // 高云权重最高（卷云/高积云是火烧云最佳载体）
+  MID:  0.45,   // 中云次之（高积云/高层云）
+  LOW:  0.10    // 低云权重最低（层云/积云通常遮挡光路）
 };
 
 const LIGHT_PATH_WEIGHTS = {

@@ -201,7 +201,7 @@ class PredictionController {
           // 统一走后端预测，后端失败才 fallback 到前端本地计算
           sunrisePrediction = await this._calculatePredictionWithBackend(
             sunriseWeatherData,
-            targetDate,
+            sunriseTime,  // 用实际日出时刻，后端才能正确计算太阳高度角
             location.lat,
             location.lon,
             'sunrise'
@@ -325,7 +325,7 @@ class PredictionController {
           // 统一走后端预测，后端失败才 fallback 到前端本地计算
           sunsetPrediction = await this._calculatePredictionWithBackend(
             sunsetWeatherData,
-            targetDate,
+            sunsetTime,   // 用实际日落时刻，后端才能正确计算太阳高度角
             location.lat,
             location.lon,
             'sunset'
