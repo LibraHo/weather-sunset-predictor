@@ -1174,7 +1174,7 @@ class WeatherController {
         dirs = await this._fetchRadarDirsFrontend(location, radius, type);
       }
 
-      this._radarCompass.render(container, { directions: dirs, sunAzimuths });
+      this._radarCompass.render(container, { directions: dirs, sunAzimuths, predictionType: type });
     } catch (err) {
       console.error('[WeatherController] 雷达罗盘渲染失败:', err);
       container.style.display = 'none';
