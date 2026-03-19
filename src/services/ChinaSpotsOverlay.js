@@ -20,6 +20,14 @@ export default class ChinaSpotsOverlay {
     this._boundMove = null;
   }
 
+  /** 仅中国大陆范围（不含南海扩展框） */
+  static MAINLAND_BOUNDS = {
+    minLon: 72,
+    maxLon: 135,
+    minLat: 18,
+    maxLat: 53
+  };
+
   /**
    * 初始化，绑定 Leaflet 地图实例，创建 canvas layer + 控制按钮
    * @param {L.Map} leafletMap
@@ -126,7 +134,8 @@ export default class ChinaSpotsOverlay {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       this._updatedAt = data.updatedAt || null;
-      this._spots = data.spots || [];
+      const rawSpots = Array.isArray(data.spots) ? data.spots : [];
+      this._spots = rawSpots.filter(spot => this._isInMainlandChina(spot.lat, spot.lon));
 
       // 清除旧 markers
       this._clearMarkers();
@@ -137,10 +146,64 @@ export default class ChinaSpotsOverlay {
       }
 
       this.show();
-      console.log(`[ChinaSpotsOverlay] 已加载 ${this._spots.length} 个点，渲染 ${this._markers.length} 个 marker`);
+      console.log(`[ChinaSpotsOverlay] 已加载 ${rawSpots.length} 个点，过滤后保留中国大陆 ${this._spots.length} 个点`);
     } catch (err) {
       console.error('[ChinaSpotsOverlay] 加载散点失败:', err);
     }
+  }
+
+  /**
+   * 判定是否在中国大陆范围（粗边界）
+   * @param {number} lat
+   * @param {number} lon
+   * @returns {boolean}
+   */
+  _isInMainlandChina(lat, lon) {
+    return lon >= ChinaSpotsOverlay.MAINLAND_BOUNDS.minLon
+      && lon <= ChinaSpotsOverlay.MAINLAND_BOUNDS.maxLon
+      && lat >= ChinaSpotsOverlay.MAINLAND_BOUNDS.minLat
+      && lat <= ChinaSpotsOverlay.MAINLAND_BOUNDS.maxLat;
+  }
+
+  /**
+   * 根据分数和缩放级别计算渐变半径（像素）
+   * @param {number} score
+   * @param {number} zoom
+   * @returns {number}
+   */
+  _getRadiusPx(score, zoom) {
+    const zoomScale = Math.pow(1.15, Math.max(0, zoom - 5));
+    const baseRadius = score >= 85 ? 88 : score >= 75 ? 76 : 64;
+    return Math.max(52, Math.min(190, baseRadius * zoomScale));
+  }
+
+  /**
+   * 根据分数返回颜色阶梯（连续云层视觉）
+   * @param {number} score
+   * @returns {{c0: string, c1: string, c2: string}}
+   */
+  _getColorStops(score) {
+    if (score >= 85) {
+      return {
+        c0: 'rgba(255, 88, 10, 0.86)',
+        c1: 'rgba(255, 145, 20, 0.42)',
+        c2: 'rgba(255, 145, 20, 0.00)'
+      };
+    }
+
+    if (score >= 75) {
+      return {
+        c0: 'rgba(255, 138, 20, 0.78)',
+        c1: 'rgba(255, 188, 42, 0.38)',
+        c2: 'rgba(255, 188, 42, 0.00)'
+      };
+    }
+
+    return {
+      c0: 'rgba(255, 182, 45, 0.68)',
+      c1: 'rgba(255, 215, 90, 0.34)',
+      c2: 'rgba(255, 215, 90, 0.00)'
+    };
   }
 
   /** 重绘 Canvas 渐变图层 */
@@ -161,7 +224,7 @@ export default class ChinaSpotsOverlay {
     ctx.globalCompositeOperation = 'lighter';
 
     this._spots.forEach(spot => {
-      if (spot.score < 40) return;
+      if (spot.score < 60) return;
 
       // 经纬度 → 容器像素坐标
       const containerPt = this._map.latLngToContainerPoint(window.L.latLng(spot.lat, spot.lon));
@@ -170,25 +233,8 @@ export default class ChinaSpotsOverlay {
 
       // 采用“屏幕像素半径”而非 300km 实际半径，保证手机端可视效果
       const zoom = this._map.getZoom();
-      const zoomScale = Math.pow(1.16, Math.max(0, zoom - 5));
-      const baseRadius = spot.score >= 80 ? 85 : spot.score >= 65 ? 72 : 60;
-      const radiusPx = Math.max(45, Math.min(230, baseRadius * zoomScale));
-
-      // 根据分数选颜色（更高 alpha，确保能看到图层）
-      let c0, c1, c2;
-      if (spot.score >= 80) {
-        c0 = 'rgba(255, 80, 0, 0.82)';
-        c1 = 'rgba(255, 130, 0, 0.40)';
-        c2 = 'rgba(255, 130, 0, 0.00)';
-      } else if (spot.score >= 60) {
-        c0 = 'rgba(255, 165, 0, 0.72)';
-        c1 = 'rgba(255, 200, 0, 0.34)';
-        c2 = 'rgba(255, 200, 0, 0.00)';
-      } else {
-        c0 = 'rgba(255, 225, 70, 0.58)';
-        c1 = 'rgba(255, 235, 120, 0.26)';
-        c2 = 'rgba(255, 235, 120, 0.00)';
-      }
+      const radiusPx = this._getRadiusPx(spot.score, zoom);
+      const { c0, c1, c2 } = this._getColorStops(spot.score);
 
       const grad = ctx.createRadialGradient(x, y, 0, x, y, radiusPx);
       grad.addColorStop(0.00, c0);
