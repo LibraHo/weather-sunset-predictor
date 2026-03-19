@@ -191,7 +191,7 @@ class RadarCompass {
         inner: R_LOW * 0.04,
         outer: R_LOW * 0.96,
         fade: R_LOW * 0.30,
-        alphaMax: 0.85,
+        alphaMax: 0.90,
         gamma: 1.20,
         color: this._parseRgba(theme.cloudLow, { r: 138, g: 156, b: 186, a: 0.95 }),
         angStretch: 12.5,
@@ -203,7 +203,7 @@ class RadarCompass {
         inner: R_LOW * 1.03,
         outer: R_MID * 0.98,
         fade: (R_MID - R_LOW) * 0.34,
-        alphaMax: 0.78,
+        alphaMax: 0.82,
         gamma: 1.12,
         color: this._parseRgba(theme.cloudMid, { r: 184, g: 198, b: 218, a: 0.88 }),
         angStretch: 12.5,
@@ -215,7 +215,7 @@ class RadarCompass {
         inner: R_MID * 1.02,
         outer: R_HIGH * 0.97,
         fade: (R_HIGH - R_MID) * 0.38,
-        alphaMax: 0.62,
+        alphaMax: 0.66,
         gamma: 1.05,
         color: this._parseRgba(theme.cloudHigh, { r: 218, g: 226, b: 238, a: 0.72 }),
         angStretch: 12.5,
@@ -265,7 +265,7 @@ class RadarCompass {
           const nSmall = this._fbm(u * 1.6 + 21, v * 1.0 - 7, 2); // 轻细节
 
           // 提高整体云量可见性，减少碎纹理“脏感”
-          const tex = 0.74 + 0.24 * nLarge + 0.08 * (nSmall - 0.5);
+          const tex = 0.78 + 0.24 * nLarge + 0.08 * (nSmall - 0.5);
           const shaped = this._smoothstep(layer.edgeCut, 0.98, base * tex);
 
           const a = Math.max(0, Math.min(1, shaped * ringW * layer.alphaMax * layer.color.a));
@@ -315,11 +315,15 @@ class RadarCompass {
     ].map(([r, fill, lbl], i) => {
       const innerR = i === 0 ? 0 : [R_LOW, R_MID][i - 1];
       const [tx, ty] = this._pt(cx, cy, r - (r - innerR) / 2, 340);
+      const bw = 26;
+      const bh = 14;
       return `
         <circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}"
           fill="transparent" stroke="${T.ring || 'rgba(100,130,180,0.25)'}" stroke-width="1"/>
-        <text x="${tx.toFixed(1)}" y="${(ty + 3).toFixed(1)}" font-size="9.5" font-weight="600"
-          fill="${T.ring || 'rgba(100,130,180,0.55)'}" text-anchor="middle" opacity="0.85">${lbl}</text>`;
+        <rect x="${(tx - bw / 2).toFixed(1)}" y="${(ty - bh / 2 - 1).toFixed(1)}" width="${bw}" height="${bh}" rx="7"
+          fill="${T.bg || 'rgba(255,255,255,0.92)'}" opacity="0.92"/>
+        <text x="${tx.toFixed(1)}" y="${(ty + 3).toFixed(1)}" font-size="10.5" font-weight="700"
+          fill="${T.title || '#333333'}" text-anchor="middle">${lbl}</text>`;
     }).join('');
 
     const DIR_ORDER = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
@@ -331,14 +335,13 @@ class RadarCompass {
         stroke-width="${main ? '1' : '0.6'}"/>`;
     }).join('');
 
-    const labelR = R_HIGH * 1.28;
+    const labelR = R_HIGH * 1.12;
     const labels = DIR_ORDER.map(d => {
       const lbl = { N: '北', NE: '东北', E: '东', SE: '东南', S: '南', SW: '西南', W: '西', NW: '西北' }[d];
       const [x, y] = this._pt(cx, cy, labelR, this._dirAz(d));
-      return `<rect x="${(x - 15).toFixed(1)}" y="${(y - 10).toFixed(1)}" width="30" height="14" rx="3"
-          fill="${T.labelBg || 'rgba(255,255,255,0.75)'}" opacity="0.85"/>
-        <text x="${x.toFixed(1)}" y="${(y + 3).toFixed(1)}" text-anchor="middle"
-          font-size="11" font-weight="600" fill="${T.labelFill || '#333333'}">${lbl}</text>`;
+      return `<text x="${x.toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="middle"
+          font-size="12" font-weight="800" fill="${T.labelFill || '#333333'}"
+          stroke="${T.bg || 'rgba(255,255,255,0.95)'}" stroke-width="2.6" paint-order="stroke">${lbl}</text>`;
     }).join('');
 
     const iconR = R_HIGH * 1.08;
