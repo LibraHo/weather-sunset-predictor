@@ -112,10 +112,15 @@ class OpenMeteoProvider extends BaseWeatherProvider {
           latency: Date.now() - startTime,
           timezone: response.data?.timezone || null,
           utcOffsetSeconds: response.data?.utc_offset_seconds ?? null,
-          dataQuality: ecmwfHourly ? 'multi_model' : 'standard',
+          // 数据源标注：方便前端展示是否 fallback
+          dataQuality: ecmwfHourly ? 'multi_model' : 'gfs_only',
           models: ecmwfHourly ? ['gfs', 'ecmwf_ifs025'] : ['gfs'],
+          cloudSource: ecmwfHourly
+            ? 'GFS + ECMWF IFS 025（取最大值）'
+            : 'GFS（ECMWF fallback 失败）',
+          ecmwfAvailable: !!ecmwfHourly,
           unsupportedFields: [],
-          degradedReason: []
+          degradedReason: ecmwfHourly ? [] : ['ecmwf_unavailable']
         }
       };
     } catch (error) {

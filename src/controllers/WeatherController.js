@@ -166,6 +166,21 @@ class WeatherController {
       return;
     }
 
+    // 数据源 badge（显示 GFS / GFS+ECMWF / fallback 状态）
+    const meta = weatherData.providerMeta;
+    if (meta) {
+      const badgeEl = document.getElementById('data-source-badge');
+      if (badgeEl) {
+        const isMulti = meta.dataQuality === 'multi_model';
+        const isFallback = !meta.ecmwfAvailable;
+        badgeEl.textContent = isMulti
+          ? '📡 GFS + ECMWF'
+          : (isFallback ? '⚠️ GFS only（ECMWF 不可用）' : '📡 GFS');
+        badgeEl.title = meta.cloudSource || '';
+        badgeEl.style.color = isMulti ? 'var(--color-success,#4ade80)' : 'var(--color-warning,#fbbf24)';
+      }
+    }
+
     // 获取当前天气（第一个数据点）
     const currentWeather = weatherData[0];
 
