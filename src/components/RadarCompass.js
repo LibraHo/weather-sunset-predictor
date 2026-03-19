@@ -62,23 +62,30 @@ class RadarCompass {
   /**
    * 在 (x,y) 处画一个云朵形状，width/height 控制大小，angle 控制旋转（对齐方向轴）
    */
+  /**
+   * 用多个圆形叠加画经典云朵，比 Q 路径更圆润自然
+   * 以 (x,y) 为中心，r 控制整体大小
+   */
   _cloud(x, y, w, h, color, opacity, angleDeg = 0) {
-    // 云朵：底部平，顶部3个凸起圆弧
-    const hw = w / 2, hh = h / 2;
-    const path = `
-      M ${-hw},${hh * 0.3}
-      Q ${-hw},${hh} ${-hw * 0.1},${hh}
-      L ${hw * 0.1},${hh}
-      Q ${hw},${hh} ${hw},${hh * 0.3}
-      Q ${hw},${-hh * 0.1} ${hw * 0.55},${-hh * 0.1}
-      Q ${hw * 0.55},${-hh * 0.85} ${hw * 0.15},${-hh * 0.85}
-      Q ${hw * 0.15},${-hh} ${-hw * 0.1},${-hh}
-      Q ${-hw * 0.45},${-hh} ${-hw * 0.45},${-hh * 0.6}
-      Q ${-hw * 0.9},${-hh * 0.6} ${-hw * 0.9},${-hh * 0.1}
-      Q ${-hw},${-hh * 0.1} ${-hw},${hh * 0.3}
-      Z`;
-    return `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${angleDeg.toFixed(1)})">
-      <path d="${path}" fill="${color}" opacity="${opacity.toFixed(2)}"/>
+    const r = Math.min(w, h) / 2.2;
+    // 5个圆：底部大椭圆 + 顶部4个圆形凸起
+    const circles = [
+      // 底部主体（扁椭圆）
+      { cx: 0,       cy: r * 0.35,  rx: r * 1.1, ry: r * 0.65 },
+      // 左侧凸起
+      { cx: -r * 0.7, cy: -r * 0.1, rx: r * 0.55, ry: r * 0.55 },
+      // 中左凸起（最高）
+      { cx: -r * 0.15, cy: -r * 0.45, rx: r * 0.62, ry: r * 0.62 },
+      // 中右凸起
+      { cx: r * 0.5,  cy: -r * 0.25, rx: r * 0.58, ry: r * 0.58 },
+      // 右侧凸起
+      { cx: r * 0.9,  cy: r * 0.05,  rx: r * 0.45, ry: r * 0.45 },
+    ].map(c =>
+      `<ellipse cx="${c.cx.toFixed(1)}" cy="${c.cy.toFixed(1)}" rx="${c.rx.toFixed(1)}" ry="${c.ry.toFixed(1)}" fill="${color}"/>`
+    ).join('');
+
+    return `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${angleDeg.toFixed(1)})" opacity="${opacity.toFixed(2)}">
+      ${circles}
     </g>`;
   }
 
