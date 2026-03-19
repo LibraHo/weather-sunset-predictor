@@ -60,34 +60,63 @@ class RadarCompass {
   }
 
   /**
-   * 画环形扇区：填满 innerR~outerR 之间的圆环，按 cover% 控制角度宽度
-   * cover=100% → 38°（8方向各45°，留7°间隙）
+   * 在 (x,y) 处画一个云朵形状，width/height 控制大小，angle 控制旋转（对齐方向轴）
    */
-  _ringArc(cx, cy, innerR, outerR, az, cover, color) {
+  _cloud(x, y, w, h, color, opacity, angleDeg = 0) {
+    // 云朵：底部平，顶部3个凸起圆弧
+    const hw = w / 2, hh = h / 2;
+    const path = `
+      M ${-hw},${hh * 0.3}
+      Q ${-hw},${hh} ${-hw * 0.1},${hh}
+      L ${hw * 0.1},${hh}
+      Q ${hw},${hh} ${hw},${hh * 0.3}
+      Q ${hw},${-hh * 0.1} ${hw * 0.55},${-hh * 0.1}
+      Q ${hw * 0.55},${-hh * 0.85} ${hw * 0.15},${-hh * 0.85}
+      Q ${hw * 0.15},${-hh} ${-hw * 0.1},${-hh}
+      Q ${-hw * 0.45},${-hh} ${-hw * 0.45},${-hh * 0.6}
+      Q ${-hw * 0.9},${-hh * 0.6} ${-hw * 0.9},${-hh * 0.1}
+      Q ${-hw},${-hh * 0.1} ${-hw},${hh * 0.3}
+      Z`;
+    return `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${angleDeg.toFixed(1)})">
+      <path d="${path}" fill="${color}" opacity="${opacity.toFixed(2)}"/>
+    </g>`;
+  }
+
+  /**
+   * 在方向 az、圆环中心半径 r 处，按 cover% 画云朵
+   * ringH = 圆环高度（用于云朵尺寸参考）
+   */
+  _drawClouds(cx, cy, r, az, cover, color, ringH) {
     if (cover === null || cover < 1) return '';
 
-    // 云量 → 半角（度）
-    const maxHalf = 19; // 最大半角，100%=38°
-    const halfDeg = Math.max(3, maxHalf * (cover / 100));
-    const opacity = 0.45 + (cover / 100) * 0.45;
+    const opacity = 0.55 + (cover / 100) * 0.40;
+    const rotate = az; // 云朵沿方向轴旋转
 
-    const a1 = az - halfDeg;
-    const a2 = az + halfDeg;
-    const [ox1, oy1] = this._pt(cx, cy, outerR, a1);
-    const [ox2, oy2] = this._pt(cx, cy, outerR, a2);
-    const [ix1, iy1] = this._pt(cx, cy, innerR, a1);
-    const [ix2, iy2] = this._pt(cx, cy, innerR, a2);
-    const large = halfDeg * 2 > 180 ? 1 : 0;
-
-    const d = [
-      `M ${ox1.toFixed(1)},${oy1.toFixed(1)}`,
-      `A ${outerR.toFixed(1)},${outerR.toFixed(1)} 0 ${large},1 ${ox2.toFixed(1)},${oy2.toFixed(1)}`,
-      `L ${ix2.toFixed(1)},${iy2.toFixed(1)}`,
-      `A ${innerR.toFixed(1)},${innerR.toFixed(1)} 0 ${large},0 ${ix1.toFixed(1)},${iy1.toFixed(1)}`,
-      'Z'
-    ].join(' ');
-
-    return `<path d="${d}" fill="${color}" opacity="${opacity.toFixed(2)}" />`;
+    if (cover < 15) {
+      // 零星：1小云
+      const [px, py] = this._pt(cx, cy, r, az);
+      return this._cloud(px, py, ringH * 0.8, ringH * 0.55, color, opacity, rotate);
+    } else if (cover < 40) {
+      // 少量：1中云
+      const [px, py] = this._pt(cx, cy, r, az);
+      return this._cloud(px, py, ringH * 1.2, ringH * 0.8, color, opacity, rotate);
+    } else if (cover < 70) {
+      // 较多：1大 + 两侧各1小
+      const [px, py]   = this._pt(cx, cy, r, az);
+      const [px2, py2] = this._pt(cx, cy, r, az - 18);
+      const [px3, py3] = this._pt(cx, cy, r, az + 18);
+      return this._cloud(px,  py,  ringH * 1.6, ringH * 1.0, color, opacity, rotate) +
+             this._cloud(px2, py2, ringH * 0.9, ringH * 0.6, color, opacity * 0.8, rotate) +
+             this._cloud(px3, py3, ringH * 0.9, ringH * 0.6, color, opacity * 0.8, rotate);
+    } else {
+      // 连片：3大云并排
+      const [px, py]   = this._pt(cx, cy, r, az);
+      const [px2, py2] = this._pt(cx, cy, r, az - 20);
+      const [px3, py3] = this._pt(cx, cy, r, az + 20);
+      return this._cloud(px,  py,  ringH * 1.9, ringH * 1.1, color, opacity, rotate) +
+             this._cloud(px2, py2, ringH * 1.5, ringH * 0.9, color, opacity * 0.85, rotate) +
+             this._cloud(px3, py3, ringH * 1.5, ringH * 0.9, color, opacity * 0.85, rotate);
+    }
   }
 
   _build(dirs, sun) {
@@ -126,26 +155,27 @@ class RadarCompass {
         stroke="rgba(180,195,220,${main?'0.28':'0.13'})" stroke-width="${main?'1':'0.6'}"/>`;
     }).join('');
 
-    // ── 云层环形扇区（填满圆环宽度）
-    // 中心留空 gap，三层各自填满内外圈之间
-    const R_CENTER = S * 0.06; // 中心空白
+    // ── 云朵（每层圆环的中心半径 + 圆环高度）
     const LAYERS = [
-      { key: 'low',  inner: R_CENTER, outer: R_LOW,  color: 'rgba(120,190,255,0.95)' },
-      { key: 'mid',  inner: R_LOW,    outer: R_MID,  color: 'rgba(255,155,60,0.95)'  },
-      { key: 'high', inner: R_MID,    outer: R_HIGH, color: 'rgba(255,220,70,0.95)'  },
+      { key: 'low',  r: (R_LOW  * 0.5),               ringH: R_LOW  * 0.9, color: 'rgba(140,200,255,0.95)' },
+      { key: 'mid',  r: (R_LOW  + R_MID)  / 2,        ringH: (R_MID  - R_LOW)  * 0.9, color: 'rgba(255,160,65,0.95)'  },
+      { key: 'high', r: (R_MID  + R_HIGH) / 2,        ringH: (R_HIGH - R_MID)  * 0.9, color: 'rgba(255,225,80,0.95)'  },
     ];
     const clouds = dirs.map(d => {
       const az = this._dirAz(d.dir);
-      return LAYERS.map(l => this._ringArc(cx, cy, l.inner, l.outer, az, d[l.key], l.color)).join('');
+      return LAYERS.map(l => this._drawClouds(cx, cy, l.r, az, d[l.key], l.color, l.ringH)).join('');
     }).join('');
 
-    // ── 方位文字
-    const labelR = R_HIGH * 1.20;
+    // ── 方位文字（labelR 要大于 R_HIGH，渲染在最后确保不被遮挡）
+    const labelR = R_HIGH * 1.28;
     const labels = DIR_ORDER.map(d => {
       const lbl = { N:'北',NE:'东北',E:'东',SE:'东南',S:'南',SW:'西南',W:'西',NW:'西北' }[d];
       const [x,y] = this._pt(cx, cy, labelR, this._dirAz(d));
-      return `<text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="middle"
-        font-size="11" font-weight="500" fill="rgba(215,225,240,0.88)">${lbl}</text>`;
+      // 加半透明背景块，防止云朵颜色渗透
+      return `<rect x="${(x-14).toFixed(1)}" y="${(y-11).toFixed(1)}" width="28" height="14" rx="3"
+          fill="rgba(10,18,35,0.55)"/>
+        <text x="${x.toFixed(1)}" y="${(y+3).toFixed(1)}" text-anchor="middle"
+          font-size="11" font-weight="600" fill="rgba(225,232,245,0.95)">${lbl}</text>`;
     }).join('');
 
     // ── 日出/日落图标
@@ -194,8 +224,8 @@ class RadarCompass {
     ${axes}
     ${clouds}
     ${center}
-    ${labels}
     ${icons.join('')}
+    ${labels}
   </svg>
   <svg width="${S*0.88}" height="18" style="display:block;margin:4px auto 0;">
     ${legend}
