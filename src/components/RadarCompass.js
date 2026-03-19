@@ -71,19 +71,21 @@ class RadarCompass {
   _cloudArc(cx, cy, r, az, cover, color) {
     if (cover === null || cover < 1) return '';
 
-    // 弧宽（度）：coverage → 弧的角度范围
-    let spanDeg, strokeW, dasharray;
-    if (cover < 16) {
-      // 零星：3个小点
-      return this._cloudDots(cx, cy, r, az, color);
-    } else if (cover < 41) {
-      spanDeg = 28; strokeW = 3.5; dasharray = '';
-    } else if (cover < 71) {
-      spanDeg = 52; strokeW = 5; dasharray = '';
+    // 弧宽（度）+ 线宽：coverage → 弧的角度范围
+    let spanDeg, strokeW;
+    if (cover < 10) {
+      // 零星：2个小点
+      return this._cloudDots(cx, cy, r, az, color, 2);
+    } else if (cover < 25) {
+      spanDeg = 22; strokeW = 4;
+    } else if (cover < 50) {
+      spanDeg = 38; strokeW = 6;
+    } else if (cover < 75) {
+      spanDeg = 58; strokeW = 8;
     } else {
-      spanDeg = 76; strokeW = 7; dasharray = '';
+      spanDeg = 78; strokeW = 11;
     }
-    const opacity = 0.55 + (cover / 100) * 0.40;
+    const opacity = 0.60 + (cover / 100) * 0.35;
 
     const a1 = az - spanDeg / 2;
     const a2 = az + spanDeg / 2;
@@ -96,11 +98,11 @@ class RadarCompass {
       opacity="${opacity.toFixed(2)}" />`;
   }
 
-  _cloudDots(cx, cy, r, az, color) {
-    const offsets = [-12, 0, 12];
+  _cloudDots(cx, cy, r, az, color, count = 3) {
+    const offsets = count === 2 ? [-9, 9] : [-14, 0, 14];
     return offsets.map(off => {
       const [x, y] = this._pt(cx, cy, r, az + off);
-      return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.2" fill="${color}" opacity="0.65"/>`;
+      return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.8" fill="${color}" opacity="0.70"/>`;
     }).join('');
   }
 
