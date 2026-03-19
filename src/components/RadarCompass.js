@@ -369,6 +369,8 @@ class RadarCompass {
 
     const center = `<circle cx="${cx}" cy="${cy}" r="4" fill="${T.center || 'rgba(249,115,22,0.9)'}" stroke="rgba(0,0,0,0.2)" stroke-width="1.5"/>`;
 
+    const zhFont = "'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans CJK SC','Source Han Sans SC','WenQuanYi Micro Hei',sans-serif";
+
     const LEGEND = [
       [T.cloudLow || 'rgba(138,156,186,0.95)', '低云'],
       [T.cloudMid || 'rgba(184,198,218,0.88)', '中云'],
@@ -381,7 +383,7 @@ class RadarCompass {
 
     return `
 <div style="border:1px solid ${T.border || 'rgba(0,0,0,0.1)'};border-radius:12px;
-  background:${T.bg || '#ffffff'};padding:10px 10px 8px;">
+  background:${T.bg || '#ffffff'};padding:10px 10px 8px;font-family:${zhFont};">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
     <div style="font-size:13px;font-weight:600;color:${T.title || '#333333'};">周边云况雷达</div>
     <div style="font-size:11px;color:${T.subtitle || '#666666'};">50km · 连续云场</div>
@@ -390,7 +392,7 @@ class RadarCompass {
     <canvas id="radar-cloud-field-${uid}" width="${S}" height="${S}"
       style="position:absolute;inset:0;width:${S}px;height:${S}px;display:block;"></canvas>
     <svg width="${S}" height="${S}" viewBox="0 0 ${S} ${S}"
-      style="position:absolute;inset:0;display:block;" xmlns="http://www.w3.org/2000/svg">
+      style="position:absolute;inset:0;display:block;font-family:${zhFont};" xmlns="http://www.w3.org/2000/svg">
       ${rings}
       ${axes}
       ${center}
@@ -398,7 +400,7 @@ class RadarCompass {
       ${labels}
     </svg>
   </div>
-  <svg width="${S * 0.88}" height="18" style="display:block;margin:4px auto 0;">
+  <svg width="${S * 0.88}" height="18" style="display:block;margin:4px auto 0;font-family:${zhFont};">
     ${legend}
   </svg>
 </div>`;
