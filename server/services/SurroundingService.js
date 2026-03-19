@@ -10,6 +10,7 @@
 
 const orchestrator = require('./ProviderOrchestrator');
 const PredictionService = require('./PredictionService.js');
+const EnhancedPredictionService = require('./EnhancedPredictionService.js');
 const SunCalculator = require('../utils/SunCalculator.js');
 const cacheConfig = require('../config/cacheConfig.js');
 
@@ -108,7 +109,7 @@ class SurroundingService {
    * 需求：22.6, 22.7 - 周边8方向并行获取和预测聚合
    */
   async getSurroundingPredictions(params) {
-    const { lat, lon, radius = 100, type = 'sunset', date = new Date() } = params;
+    const { lat, lon, radius = 50, type = 'sunset', date = new Date() } = params;
 
     // ========== 参数验证 ==========
 
@@ -121,7 +122,8 @@ class SurroundingService {
     }
 
     if (![50, 100, 150].includes(radius)) {
-      throw new Error('半径必须是50、100或150公里');
+      // 宽松兼容，不抛出错误，直接使用传入值
+      console.warn(`[SurroundingService] 非标准半径 ${radius}km，继续执行`);
     }
 
     if (!['sunrise', 'sunset'].includes(type)) {
@@ -195,11 +197,14 @@ class SurroundingService {
           precipitation: selectedWeather.precipitation || 0,
           lowClouds: selectedWeather.lowClouds || 0,
           midClouds: selectedWeather.midClouds || 0,
-          highClouds: selectedWeather.highClouds || 0
+          highClouds: selectedWeather.highClouds || 0,
+          cloudBaseHeight: selectedWeather.cloudBaseHeight ?? null,
+          cape: selectedWeather.cape ?? null,
+          weatherCode: selectedWeather.weatherCode ?? null
         };
 
-        // 计算预测评分
-        const prediction = this.predictionService.calculatePrediction(
+        // 使用增强版预测服务（与主页面评分一致）
+        const prediction = EnhancedPredictionService.calculateEnhancedPrediction(
           weatherData,
           targetDate,
           point.lat,
@@ -213,6 +218,12 @@ class SurroundingService {
           prediction: prediction,
           score: prediction.score,
           quality: prediction.quality,
+          cloudLayers: {
+            low: weatherData.lowClouds,
+            mid: weatherData.midClouds,
+            high: weatherData.highClouds,
+            cloudBaseHeight: weatherData.cloudBaseHeight
+          },
           error: null
         };
       } catch (error) {
@@ -248,6 +259,12 @@ class SurroundingService {
         )
       : null;
 
+    // ========== 计算日出/日落方位角 ==========
+    const sunriseTime = SunCalculator.getSunriseTime(targetDate, lat, lon);
+    const sunsetTime = SunCalculator.getSunsetTime(targetDate, lat, lon);
+    const sunriseAzimuth = sunriseTime ? SunCalculator.getSunAzimuth(targetDate, sunriseTime, lat, lon) : null;
+    const sunsetAzimuth = sunsetTime ? SunCalculator.getSunAzimuth(targetDate, sunsetTime, lat, lon) : null;
+
     // ========== 组装结果 ==========
 
     const data = {
@@ -258,12 +275,18 @@ class SurroundingService {
       radius: radius,
       type: type,
       date: targetDate,
+      sunAzimuths: {
+        sunrise: sunriseAzimuth,
+        sunset: sunsetAzimuth,
+        south: 180
+      },
       points: results,
       bestDirection: bestDirection ? {
         direction: bestDirection.direction,
         name: bestDirection.name,
         score: bestDirection.score,
         quality: bestDirection.quality,
+        cloudLayers: bestDirection.cloudLayers || null,
         location: {
           lat: bestDirection.lat,
           lon: bestDirection.lon
