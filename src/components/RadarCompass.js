@@ -60,49 +60,34 @@ class RadarCompass {
   }
 
   /**
-   * 在 (cx,cy) 处画一个云朵，尺寸 scale，颜色 color
-   * 云朵路径是以原点为中心的简单凸起轮廓
+   * 画环形扇区：填满 innerR~outerR 之间的圆环，按 cover% 控制角度宽度
+   * cover=100% → 38°（8方向各45°，留7°间隙）
    */
-  _cloudShape(cx, cy, scale, color, opacity) {
-    const s = scale;
-    // 云朵由 4 个圆弧组成的轮廓（以 cx,cy 为中心）
-    const path = `
-      M ${(cx - s*0.9).toFixed(1)},${(cy + s*0.4).toFixed(1)}
-      Q ${(cx - s*1.1).toFixed(1)},${(cy + s*0.4).toFixed(1)} ${(cx - s*1.1).toFixed(1)},${(cy - s*0.05).toFixed(1)}
-      Q ${(cx - s*1.1).toFixed(1)},${(cy - s*0.5).toFixed(1)} ${(cx - s*0.6).toFixed(1)},${(cy - s*0.5).toFixed(1)}
-      Q ${(cx - s*0.6).toFixed(1)},${(cy - s*1.0).toFixed(1)} ${(cx).toFixed(1)},${(cy - s*1.0).toFixed(1)}
-      Q ${(cx + s*0.5).toFixed(1)},${(cy - s*1.0).toFixed(1)} ${(cx + s*0.55).toFixed(1)},${(cy - s*0.5).toFixed(1)}
-      Q ${(cx + s*1.1).toFixed(1)},${(cy - s*0.5).toFixed(1)} ${(cx + s*1.1).toFixed(1)},${(cy - s*0.0).toFixed(1)}
-      Q ${(cx + s*1.1).toFixed(1)},${(cy + s*0.4).toFixed(1)} ${(cx + s*0.9).toFixed(1)},${(cy + s*0.4).toFixed(1)}
-      Z`;
-    return `<path d="${path}" fill="${color}" opacity="${opacity.toFixed(2)}" />`;
-  }
-
-  /**
-   * 在方向 az、半径 r 的位置上，根据 cover% 画云朵
-   */
-  _drawClouds(cx, cy, r, az, cover, color) {
+  _ringArc(cx, cy, innerR, outerR, az, cover, color) {
     if (cover === null || cover < 1) return '';
 
-    const [px, py] = this._pt(cx, cy, r, az);
+    // 云量 → 半角（度）
+    const maxHalf = 19; // 最大半角，100%=38°
+    const halfDeg = Math.max(3, maxHalf * (cover / 100));
+    const opacity = 0.45 + (cover / 100) * 0.45;
 
-    if (cover < 16) {
-      // 零星：1个小云
-      return this._cloudShape(px, py, 5, color, 0.65);
-    } else if (cover < 41) {
-      // 少量：1个中云
-      return this._cloudShape(px, py, 8, color, 0.72);
-    } else if (cover < 71) {
-      // 较多：1大1小
-      const [px2, py2] = this._pt(cx, cy, r, az - 12);
-      return this._cloudShape(px, py, 11, color, 0.80) +
-             this._cloudShape(px2, py2, 7, color, 0.60);
-    } else {
-      // 大量/连片：2大云重叠
-      const [px2, py2] = this._pt(cx, cy, r, az + 11);
-      return this._cloudShape(px, py, 13, color, 0.88) +
-             this._cloudShape(px2, py2, 11, color, 0.75);
-    }
+    const a1 = az - halfDeg;
+    const a2 = az + halfDeg;
+    const [ox1, oy1] = this._pt(cx, cy, outerR, a1);
+    const [ox2, oy2] = this._pt(cx, cy, outerR, a2);
+    const [ix1, iy1] = this._pt(cx, cy, innerR, a1);
+    const [ix2, iy2] = this._pt(cx, cy, innerR, a2);
+    const large = halfDeg * 2 > 180 ? 1 : 0;
+
+    const d = [
+      `M ${ox1.toFixed(1)},${oy1.toFixed(1)}`,
+      `A ${outerR.toFixed(1)},${outerR.toFixed(1)} 0 ${large},1 ${ox2.toFixed(1)},${oy2.toFixed(1)}`,
+      `L ${ix2.toFixed(1)},${iy2.toFixed(1)}`,
+      `A ${innerR.toFixed(1)},${innerR.toFixed(1)} 0 ${large},0 ${ix1.toFixed(1)},${iy1.toFixed(1)}`,
+      'Z'
+    ].join(' ');
+
+    return `<path d="${d}" fill="${color}" opacity="${opacity.toFixed(2)}" />`;
   }
 
   _build(dirs, sun) {
@@ -141,15 +126,17 @@ class RadarCompass {
         stroke="rgba(180,195,220,${main?'0.28':'0.13'})" stroke-width="${main?'1':'0.6'}"/>`;
     }).join('');
 
-    // ── 云朵（三层，每方向分别画）
+    // ── 云层环形扇区（填满圆环宽度）
+    // 中心留空 gap，三层各自填满内外圈之间
+    const R_CENTER = S * 0.06; // 中心空白
     const LAYERS = [
-      { key: 'low',  r: R_LOW,  color: 'rgba(120,190,255,0.92)' },
-      { key: 'mid',  r: R_MID,  color: 'rgba(255,155,60,0.92)'  },
-      { key: 'high', r: R_HIGH, color: 'rgba(255,220,70,0.92)'  },
+      { key: 'low',  inner: R_CENTER, outer: R_LOW,  color: 'rgba(120,190,255,0.95)' },
+      { key: 'mid',  inner: R_LOW,    outer: R_MID,  color: 'rgba(255,155,60,0.95)'  },
+      { key: 'high', inner: R_MID,    outer: R_HIGH, color: 'rgba(255,220,70,0.95)'  },
     ];
     const clouds = dirs.map(d => {
       const az = this._dirAz(d.dir);
-      return LAYERS.map(l => this._drawClouds(cx, cy, l.r, az, d[l.key], l.color)).join('');
+      return LAYERS.map(l => this._ringArc(cx, cy, l.inner, l.outer, az, d[l.key], l.color)).join('');
     }).join('');
 
     // ── 方位文字
