@@ -146,6 +146,15 @@ class SettingsPanel {
           <div class="settings-section">
             <h3 class="settings-section-title">☁️ ${this.i18n.t('settings.weatherProvider')}</h3>
             <div class="settings-section-content">
+              <div class="setting-item">
+                <label class="setting-label" for="weather-model-select">天气模型</label>
+                <select id="weather-model-select" class="setting-select">
+                  <option value="ecmwf_ifs025">ECMWF IFS 025（推荐）</option>
+                  <option value="gfs_seamless">GFS Seamless</option>
+                  <option value="best_match">Best Match（自动）</option>
+                </select>
+                <small class="setting-hint">切换后会自动刷新天气数据</small>
+              </div>
               <div class="setting-item readonly-info">
                 <div class="info-row">
                   <span class="info-label">${this.i18n.t('settings.providerCurrent')}:</span>
@@ -356,6 +365,15 @@ class SettingsPanel {
       });
     }
 
+    const weatherModelSelect = document.getElementById('weather-model-select');
+    if (weatherModelSelect) {
+      weatherModelSelect.value = localStorage.getItem('weather_model') || 'ecmwf_ifs025';
+      weatherModelSelect.addEventListener('change', (e) => {
+        localStorage.setItem('weather_model', e.target.value);
+        window.dispatchEvent(new CustomEvent('weatherModelChanged', { detail: { model: e.target.value } }));
+      });
+    }
+
     // 天气数据源状态 (任务 44)
     this.updateProviderStatus();
 
@@ -420,6 +438,12 @@ class SettingsPanel {
     const mapTileSelect = document.getElementById('map-tile-provider-select');
     if (mapTileSelect) {
       mapTileSelect.value = localStorage.getItem('map_tile_provider') || 'auto';
+    }
+
+    // 加载天气模型设置
+    const weatherModelSelect = document.getElementById('weather-model-select');
+    if (weatherModelSelect) {
+      weatherModelSelect.value = localStorage.getItem('weather_model') || 'ecmwf_ifs025';
     }
 
     // 任务17.3：加载默认位置
@@ -836,14 +860,12 @@ class SettingsPanel {
     // 数据源名称：优先显示 cloudSource，fallback 到 name
     providerCurrentEl.textContent = meta.cloudSource || meta.name || 'Open-Meteo';
     const qualityMap = {
-      ecmwf: 'ECMWF IFS 025（高精度）',
-      multi_model: 'GFS + ECMWF 融合',
-      gfs_only: 'GFS only',
       excellent: this.i18n.t('settings.providerStatusExcellent'),
       standard: this.i18n.t('settings.providerStatusStandard'),
       degraded: this.i18n.t('settings.providerStatusDegraded')
     };
-    providerQualityEl.textContent = qualityMap[meta.dataQuality] || meta.dataQuality || '-';
+    const q = meta.sequenceQuality || meta.dataQuality;
+    providerQualityEl.textContent = qualityMap[q] || q || '-';
     providerUpdateTimeEl.textContent = new Date().toLocaleTimeString();
 
     const issues = meta.unsupportedFields || [];

@@ -23,11 +23,14 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     return firstSaturated ? firstSaturated.h : null;
   }
 
-  async fetchWeatherData(lat, lon, hours = 168, userApiKey = null) {
+  async fetchWeatherData(lat, lon, hours = 168, userApiKey = null, weatherModel = 'ecmwf_ifs025') {
     const startTime = Date.now();
     
     // Open-Meteo 仅支持查询天数，7天为 168 小时
     const forecastDays = Math.max(1, Math.ceil(hours / 24));
+
+    const ALLOWED_MODELS = ['ecmwf_ifs025', 'gfs_seamless', 'best_match'];
+    const model = ALLOWED_MODELS.includes(weatherModel) ? weatherModel : 'ecmwf_ifs025';
 
     const BASE_PARAMS = {
       latitude: lat,
@@ -42,7 +45,7 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     try {
       // 使用 ECMWF IFS 025 模型（与 Windy 同源，精度更高）
       const response = await axios.get(this.API_URL, {
-        params: { ...BASE_PARAMS, models: 'ecmwf_ifs025' },
+        params: { ...BASE_PARAMS, models: model },
         timeout: 10000
       });
       const { hourly } = response.data;
@@ -98,10 +101,13 @@ class OpenMeteoProvider extends BaseWeatherProvider {
           latency: Date.now() - startTime,
           timezone: response.data?.timezone || null,
           utcOffsetSeconds: response.data?.utc_offset_seconds ?? null,
-          dataQuality: 'ecmwf',
-          models: ['ecmwf_ifs025'],
-          cloudSource: 'Open-Meteo ECMWF IFS 025',
-          ecmwfAvailable: true,
+          weatherModel: model,
+          models: [model],
+          cloudSource: {
+            ecmwf_ifs025: 'Open-Meteo ECMWF IFS 025',
+            gfs_seamless: 'Open-Meteo GFS Seamless',
+            best_match: 'Open-Meteo Best Match'
+          }[model] || `Open-Meteo ${model}`,
           unsupportedFields: [],
           degradedReason: []
         }

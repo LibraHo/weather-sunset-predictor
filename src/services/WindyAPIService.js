@@ -44,9 +44,10 @@ class WindyAPIService {
    * @returns {Promise<WeatherData[] & {providerMeta: Object}>} 天气数据数组，附带 providerMeta 属性
    */
   async fetchFromProxy(lat, lon, hours) {
-    const url = `${this.proxyURL}/api/weather/forecast?lat=${lat}&lon=${lon}&hours=${hours}`;
+    const weatherModel = localStorage.getItem('weather_model') || 'ecmwf_ifs025';
+    const url = `${this.proxyURL}/api/weather/forecast?lat=${lat}&lon=${lon}&hours=${hours}&model=${encodeURIComponent(weatherModel)}`;
 
-    console.log('[WindyAPIService] 通过后端代理获取天气数据:', { lat, lon, hours });
+    console.log('[WindyAPIService] 通过后端代理获取天气数据:', { lat, lon, hours, weatherModel });
 
     // Phase15 任务63.4：仅当后端 windyEnabled=true 时透传用户 Key
     const headers = {};

@@ -171,8 +171,13 @@ class WeatherController {
     const badgeEl = document.getElementById('data-source-badge');
     if (badgeEl) {
       if (meta) {
-        badgeEl.textContent = '📡 ECMWF IFS 025';
-        badgeEl.title = meta.cloudSource || 'Open-Meteo ECMWF IFS 025';
+        const modelText = {
+          ecmwf_ifs025: 'ECMWF IFS 025',
+          gfs_seamless: 'GFS Seamless',
+          best_match: 'Best Match'
+        }[meta.weatherModel] || meta.weatherModel || 'Open-Meteo';
+        badgeEl.textContent = `📡 ${modelText}`;
+        badgeEl.title = meta.cloudSource || `Open-Meteo ${modelText}`;
         badgeEl.style.color = 'var(--color-text-light)';
       } else {
         badgeEl.textContent = '📡 Open-Meteo';

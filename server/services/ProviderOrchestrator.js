@@ -62,7 +62,7 @@ class ProviderOrchestrator {
   }
 
   /**
-   * 任务43.2：校验数据时序并将 quality 写入 providerMeta.dataQuality
+   * 任务43.2：校验数据时序并写入 providerMeta.sequenceQuality
    * 任务43.3：时序严重异常时抛出，由调用方决定是否触发 fallback
    */
   _validateAndAnnotate(rawData, providerName) {
@@ -73,9 +73,12 @@ class ProviderOrchestrator {
     rawData.providerMeta = rawData.providerMeta || { name: providerName };
     rawData.providerMeta.name = rawData.providerMeta.name || providerName;
 
-    // 任务43.2：接入质量标签
-    rawData.providerMeta.dataQuality = validated.quality;
+    // 任务43.2：接入时序质量标签（不要覆盖数据源自带 quality 字段）
+    rawData.providerMeta.sequenceQuality = validated.quality;
     rawData.providerMeta.dataQualityIssues = validated.issues;
+    if (!rawData.providerMeta.dataQuality) {
+      rawData.providerMeta.dataQuality = validated.quality;
+    }
 
     rawData.providerMeta.degradedReason = rawData.providerMeta.degradedReason || [];
     if (validated.issues.length > 0) {
@@ -96,13 +99,13 @@ class ProviderOrchestrator {
    * 任务43.3：尝试从指定 provider 获取数据并经过质量门禁
    * @returns { data, isQualityError } - isQualityError 为 true 时表示是序列校验失败
    */
-  async _fetchWithQualityGate(providerKey, lat, lon, hours) {
+  async _fetchWithQualityGate(providerKey, lat, lon, hours, weatherModel = 'ecmwf_ifs025') {
     const provider = this.providers[providerKey];
     if (!provider) {
       throw new Error(`未知的天气数据源: ${providerKey}`);
     }
 
-    const rawData = await provider.fetchWeatherData(lat, lon, hours);
+    const rawData = await provider.fetchWeatherData(lat, lon, hours, null, weatherModel);
 
     // 序列校验可能抛出（严重缺口/数据量太少）- 这是质量门禁错误
     let annotated;
@@ -117,14 +120,14 @@ class ProviderOrchestrator {
     return annotated;
   }
 
-  async fetchWeatherData(lat, lon, hours = 168) {
+  async fetchWeatherData(lat, lon, hours = 168, weatherModel = 'ecmwf_ifs025') {
     const primaryKey = this.primaryProvider;
     const fallbackKey = this.fallbackProvider;
 
     let primaryError = null;
 
     try {
-      return await this._fetchWithQualityGate(primaryKey, lat, lon, hours);
+      return await this._fetchWithQualityGate(primaryKey, lat, lon, hours, weatherModel);
     } catch (err) {
       primaryError = err;
       const isQuality = err.isQualityError;
@@ -153,7 +156,7 @@ class ProviderOrchestrator {
       console.warn(`[ProviderOrchestrator] 触发 fallback (${fallbackKey}), 原因: ${err.message}`);
 
       try {
-        const fallbackData = await this._fetchWithQualityGate(fallbackKey, lat, lon, hours);
+        const fallbackData = await this._fetchWithQualityGate(fallbackKey, lat, lon, hours, weatherModel);
         fallbackData.providerMeta.degradedReason = fallbackData.providerMeta.degradedReason || [];
         fallbackData.providerMeta.degradedReason.push(
           `Primary Provider (${primaryKey}) failed: ${primaryError.message}`
