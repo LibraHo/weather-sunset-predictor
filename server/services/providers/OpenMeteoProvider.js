@@ -36,7 +36,7 @@ class OpenMeteoProvider extends BaseWeatherProvider {
           longitude: lon,
           // 需要的字段：温度,湿度,地表气压,总云量,低云,中云,高云,风速,风向,能见度,降水
           // + 试验：气压层湿度/位势高度（用于估算云底高度）
-          hourly: 'temperature_2m,relative_humidity_2m,surface_pressure,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,cloud_base_height,wind_speed_10m,wind_direction_10m,visibility,precipitation,showers,cape,weather_code,relative_humidity_925hPa,relative_humidity_850hPa,relative_humidity_700hPa,relative_humidity_500hPa,geopotential_height_925hPa,geopotential_height_850hPa,geopotential_height_700hPa,geopotential_height_500hPa',
+          hourly: 'temperature_2m,relative_humidity_2m,surface_pressure,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,visibility,precipitation,showers,cape,weather_code,relative_humidity_925hPa,relative_humidity_850hPa,relative_humidity_700hPa,relative_humidity_500hPa,geopotential_height_925hPa,geopotential_height_850hPa,geopotential_height_700hPa,geopotential_height_500hPa',
           wind_speed_unit: 'ms',      // 转换为 m/s
           timeformat: 'unixtime',     // unix 秒级时间戳
           timezone: 'auto',           // 按查询位置自动时区
