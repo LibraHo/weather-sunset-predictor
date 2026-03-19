@@ -86,11 +86,54 @@ class RadarCompass {
    * 用多层椭圆叠加模拟云层厚度感
    */
   /**
-   * 扁平风格云块：圆角矩形 pill，简洁无渐变
+   * 弧形 pill：沿圆弧方向弯曲的云块
+   * r = 所在圆环半径（用于计算弧度），cx/cy = 圆心
    */
-  _cloud(x, y, w, h, color, opacity, angleDeg = 0) {
-    const rw = w / 2, rh = Math.min(h / 2, w * 0.22); // 扁平：高度限制
-    const cr = rh; // corner radius = 半高，即 pill 形
+  _cloud(x, y, w, h, color, opacity, angleDeg = 0, arcR = 0) {
+    const rw = w / 2;
+    const rh = Math.min(h * 0.38, rw * 0.28); // 扁平高度
+    const cr = rh; // pill corner radius
+
+    if (arcR > 8) {
+      // 弧形 pill：用两条弧线 + 圆端帽
+      const halfAngle = (rw / arcR) * (180 / Math.PI); // 弧占角度（度）
+      const innerR = arcR - rh, outerR = arcR + rh;
+      const toRad = a => (a - 90) * Math.PI / 180;
+
+      const startAng = angleDeg - halfAngle;
+      const endAng   = angleDeg + halfAngle;
+
+      // 四个角点（相对圆心 cx,cy）
+      const p = (R, a) => [
+        Math.cos(toRad(a)) * R,
+        Math.sin(toRad(a)) * R
+      ];
+      const [ox1, oy1] = p(outerR, startAng);
+      const [ox2, oy2] = p(outerR, endAng);
+      const [ix1, iy1] = p(innerR, startAng);
+      const [ix2, iy2] = p(innerR, endAng);
+
+      const laf = halfAngle * 2 > 180 ? 1 : 0;
+      // 中点（画端帽圆心）
+      const [mox, moy] = p(arcR, startAng);
+      const [mex, mey] = p(arcR, endAng);
+
+      const d = [
+        `M ${ox1.toFixed(1)},${oy1.toFixed(1)}`,
+        `A ${outerR.toFixed(1)},${outerR.toFixed(1)} 0 ${laf},1 ${ox2.toFixed(1)},${oy2.toFixed(1)}`,
+        `A ${cr.toFixed(1)},${cr.toFixed(1)} 0 0,1 ${ix2.toFixed(1)},${iy2.toFixed(1)}`,
+        `A ${innerR.toFixed(1)},${innerR.toFixed(1)} 0 ${laf},0 ${ix1.toFixed(1)},${iy1.toFixed(1)}`,
+        `A ${cr.toFixed(1)},${cr.toFixed(1)} 0 0,1 ${ox1.toFixed(1)},${oy1.toFixed(1)}`,
+        'Z'
+      ].join(' ');
+
+      // 渲染相对圆心 (cx,cy)，但调用方传入的 x,y 是圆弧点 → 改用全局坐标
+      // 注意：调用方传 cx,cy 而不是弧上的点
+      // x,y 是 SVG 圆心坐标，path 坐标系是相对于圆心的偏移 → 加 translate
+      return `<path d="${d}" fill="${color}" opacity="${opacity.toFixed(2)}" transform="translate(${x.toFixed(1)},${y.toFixed(1)})"/>`;
+    }
+
+    // fallback：普通 pill
     return `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${angleDeg.toFixed(1)})" opacity="${opacity.toFixed(2)}">
       <rect x="${(-rw).toFixed(1)}" y="${(-rh).toFixed(1)}" width="${(rw*2).toFixed(1)}" height="${(rh*2).toFixed(1)}" rx="${cr.toFixed(1)}" fill="${color}"/>
     </g>`;
@@ -104,32 +147,23 @@ class RadarCompass {
     if (cover === null || cover < 1) return '';
 
     const opacity = 0.55 + (cover / 100) * 0.40;
-    const rotate = az; // 云朵沿方向轴旋转
+
+    // 弧形 pill：传圆心 + 弧半径 + 方向角，让 _cloud 自己计算弧路径
+    const arc = (w, offsetAz = 0) =>
+      this._cloud(cx, cy, w, ringH, color, opacity, az + offsetAz, r);
 
     if (cover < 15) {
-      // 零星：1小云
-      const [px, py] = this._pt(cx, cy, r, az);
-      return this._cloud(px, py, ringH * 0.8, ringH * 0.55, color, opacity, rotate);
+      return arc(ringH * 2.0);
     } else if (cover < 40) {
-      // 少量：1中云
-      const [px, py] = this._pt(cx, cy, r, az);
-      return this._cloud(px, py, ringH * 1.2, ringH * 0.8, color, opacity, rotate);
+      return arc(ringH * 3.2);
     } else if (cover < 70) {
-      // 较多：1大 + 两侧各1小
-      const [px, py]   = this._pt(cx, cy, r, az);
-      const [px2, py2] = this._pt(cx, cy, r, az - 18);
-      const [px3, py3] = this._pt(cx, cy, r, az + 18);
-      return this._cloud(px,  py,  ringH * 1.6, ringH * 1.0, color, opacity, rotate) +
-             this._cloud(px2, py2, ringH * 0.9, ringH * 0.6, color, opacity * 0.8, rotate) +
-             this._cloud(px3, py3, ringH * 0.9, ringH * 0.6, color, opacity * 0.8, rotate);
+      return arc(ringH * 4.5) +
+             arc(ringH * 2.2, -22) +
+             arc(ringH * 2.2,  22);
     } else {
-      // 连片：3大云并排
-      const [px, py]   = this._pt(cx, cy, r, az);
-      const [px2, py2] = this._pt(cx, cy, r, az - 20);
-      const [px3, py3] = this._pt(cx, cy, r, az + 20);
-      return this._cloud(px,  py,  ringH * 1.9, ringH * 1.1, color, opacity, rotate) +
-             this._cloud(px2, py2, ringH * 1.5, ringH * 0.9, color, opacity * 0.85, rotate) +
-             this._cloud(px3, py3, ringH * 1.5, ringH * 0.9, color, opacity * 0.85, rotate);
+      return arc(ringH * 5.5) +
+             arc(ringH * 3.5, -24) +
+             arc(ringH * 3.5,  24);
     }
   }
 

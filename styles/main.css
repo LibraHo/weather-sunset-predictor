@@ -3587,9 +3587,9 @@ body.theme-dark .cloud-layers-section {
   --radar-subtitle: rgba(80,100,160,0.75);
   --radar-legend-text: rgba(40,60,100,0.85);
   --radar-center: rgba(220,80,20,0.90);
-  --radar-cloud-low: rgba(140,160,185,0.90);
-  --radar-cloud-mid: rgba(190,200,215,0.88);
-  --radar-cloud-high: rgba(230,225,210,0.92);
+  --radar-cloud-low: rgba(80,110,155,0.85);
+  --radar-cloud-mid: rgba(110,130,165,0.82);
+  --radar-cloud-high: rgba(145,155,175,0.80);
 }
 
 body.theme-dark {
@@ -3604,7 +3604,7 @@ body.theme-dark {
   --radar-subtitle: rgba(148,163,184,0.80);
   --radar-legend-text: rgba(200,212,228,0.85);
   --radar-center: rgba(249,115,22,0.90);
-  --radar-cloud-low: rgba(100,130,165,0.88);
-  --radar-cloud-mid: rgba(160,175,195,0.88);
-  --radar-cloud-high: rgba(220,215,200,0.92);
+  --radar-cloud-low: rgba(130,165,210,0.80);
+  --radar-cloud-mid: rgba(165,185,215,0.75);
+  --radar-cloud-high: rgba(190,200,220,0.70);
 }
