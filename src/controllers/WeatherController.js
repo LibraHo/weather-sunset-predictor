@@ -1661,6 +1661,28 @@ class WeatherController {
   }
 
   /**
+   * 根据当前位置更新中国火烧云图层显隐。
+   * - 中国大陆：展示并初始化/刷新图层
+   * - 非中国大陆：隐藏并停止刷新
+   * @param {{lat:number, lon:number}|null} location
+   */
+  async updateChinaSpotsForLocation(location) {
+    const section = document.getElementById('china-spots-section');
+    const tsEl = document.getElementById('china-spots-timestamp');
+
+    if (!section) return;
+
+    if (!location || !this._isInChina(location.lat, location.lon)) {
+      section.classList.add('hidden');
+      if (tsEl) tsEl.textContent = '';
+      this.chinaSpotsOverlay.hide();
+      return;
+    }
+
+    await this._initChinaSpotsMap();
+  }
+
+  /**
    * 初始化并展示中国散点地图（嵌入预测卡片底部）
    * 仅在位置位于中国境内时调用。
    */
@@ -1680,8 +1702,18 @@ class WeatherController {
     // 若地图已初始化，直接刷新数据
     if (this._chinaSpotsMapInstance) {
       await this.chinaSpotsOverlay.loadAndRender();
-      if (tsEl && this.chinaSpotsOverlay.getUpdatedAt()) {
-        tsEl.textContent = '更新于 ' + new Date(this.chinaSpotsOverlay.getUpdatedAt()).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+
+      if (this.chinaSpotsOverlay.getSpotCount() === 0) {
+        section.classList.add('hidden');
+        if (tsEl) tsEl.textContent = '';
+        return;
+      }
+
+      if (tsEl) {
+        const updatedAt = this.chinaSpotsOverlay.getUpdatedAt();
+        tsEl.textContent = updatedAt
+          ? '今日数据，更新于 ' + new Date(updatedAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+          : '今日数据';
       }
       return;
     }
@@ -1728,9 +1760,18 @@ class WeatherController {
       // 加载散点
       await this.chinaSpotsOverlay.loadAndRender();
 
+      if (this.chinaSpotsOverlay.getSpotCount() === 0) {
+        section.classList.add('hidden');
+        if (tsEl) tsEl.textContent = '';
+        return;
+      }
+
       // 更新时间戳
-      if (tsEl && this.chinaSpotsOverlay.getUpdatedAt()) {
-        tsEl.textContent = '更新于 ' + new Date(this.chinaSpotsOverlay.getUpdatedAt()).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+      if (tsEl) {
+        const updatedAt = this.chinaSpotsOverlay.getUpdatedAt();
+        tsEl.textContent = updatedAt
+          ? '今日数据，更新于 ' + new Date(updatedAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+          : '今日数据';
       }
 
       console.log('[WeatherController] 中国散点地图初始化完成');
