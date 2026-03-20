@@ -38,6 +38,7 @@ function makeOrch(overrides = {}) {
     windy: { fetchWeatherData: jest.fn(async () => ({ hours: 24, data: makeData(), providerMeta: { name: 'windy' } })) }
   };
   orch.primaryProvider = 'openmeteo';
+  orch.openmeteoOnlyMode = false; // 测试环境中禁用 provider 门禁，允许 fallback 到 windy
   orch.fallbackProvider = 'windy';
   orch.emergencyFallbackEnabled = false;
   orch.qualityGateFallbackEnabled = true;

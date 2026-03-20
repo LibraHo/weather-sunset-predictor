@@ -29,6 +29,11 @@ class ProviderOrchestrator {
     // 当序列校验抛出严重错误时，自动切到 fallback provider
     this.qualityGateFallbackEnabled = process.env.ENABLE_QUALITY_GATE_FALLBACK !== 'false';
 
+    // Phase 14 任务60.1：预测链路 provider 门禁（默认开启）
+    // true  → 强制要求使用 Open-Meteo，非 openmeteo 请求直接拒绝
+    // false → 允许使用其他 provider（用于开发测试或紧急 fallback）
+    this.openmeteoOnlyMode = process.env.DISABLE_OPENMETEO_GATE !== 'true';
+
     // 任务49.2：Windy 特定子评分开关（迁移到 Open-Meteo 时默认关闭）
     this.featureFlags = {
       capeScoreEnabled: process.env.ENABLE_CAPE_SCORE === 'true',
@@ -103,6 +108,19 @@ class ProviderOrchestrator {
     const provider = this.providers[providerKey];
     if (!provider) {
       throw new Error(`未知的天气数据源: ${providerKey}`);
+    }
+
+    // Phase 14 任务60.1：预测链路 provider 门禁
+    // 非 openmeteo 请求打告警并拒绝进入预测核心
+    if (this.openmeteoOnlyMode && providerKey !== 'openmeteo') {
+      const error = new Error(
+        `预测链路 provider 门禁：当前仅允许使用 Open-Meteo（provider=${providerKey}）。` +
+        `如需使用其他 provider，请设置环境变量 DISABLE_OPENMETEO_GATE=true。`
+      );
+      error.code = 'PROVIDER_GATE_VIOLATION';
+      error.providerKey = providerKey;
+      console.error('[ProviderOrchestrator]', error.message);
+      throw error;
     }
 
     const rawData = await provider.fetchWeatherData(lat, lon, hours, null, weatherModel);
