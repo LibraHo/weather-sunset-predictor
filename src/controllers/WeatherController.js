@@ -1691,11 +1691,39 @@ class WeatherController {
     if (!location || !this._isInChina(location.lat, location.lon)) {
       section.classList.add('hidden');
       if (tsEl) tsEl.textContent = '';
+      this._setChinaSpotsEmptyState(false);
       this.chinaSpotsOverlay.hide();
       return;
     }
 
     await this._initChinaSpotsMap();
+  }
+
+  _setChinaSpotsEmptyState(show, message = '今日暂无可见火烧云点位') {
+    const emptyEl = document.getElementById('china-spots-empty');
+    if (!emptyEl) return;
+
+    emptyEl.textContent = message;
+    emptyEl.classList.toggle('hidden', !show);
+  }
+
+  _renderChinaSpotsTimestamp() {
+    const tsEl = document.getElementById('china-spots-timestamp');
+    if (!tsEl) return;
+
+    const count = this.chinaSpotsOverlay.getSpotCount();
+    const updatedAt = this.chinaSpotsOverlay.getUpdatedAt();
+
+    if (count === 0) {
+      tsEl.textContent = updatedAt
+        ? '今日数据，更新于 ' + new Date(updatedAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+        : '今日数据';
+      return;
+    }
+
+    tsEl.textContent = updatedAt
+      ? '今日数据，更新于 ' + new Date(updatedAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+      : '今日数据';
   }
 
   /**
@@ -1705,7 +1733,6 @@ class WeatherController {
   async _initChinaSpotsMap() {
     const section = document.getElementById('china-spots-section');
     const mapEl = document.getElementById('china-spots-map');
-    const tsEl = document.getElementById('china-spots-timestamp');
 
     if (!section || !mapEl) {
       console.warn('[WeatherController] 未找到 china-spots-section 元素');
@@ -1720,18 +1747,9 @@ class WeatherController {
       this.chinaSpotsOverlay.setPeriod(this.currentOverlayType);
       await this.chinaSpotsOverlay.loadAndRender();
 
-      if (this.chinaSpotsOverlay.getSpotCount() === 0) {
-        section.classList.add('hidden');
-        if (tsEl) tsEl.textContent = '';
-        return;
-      }
-
-      if (tsEl) {
-        const updatedAt = this.chinaSpotsOverlay.getUpdatedAt();
-        tsEl.textContent = updatedAt
-          ? '今日数据，更新于 ' + new Date(updatedAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-          : '今日数据';
-      }
+      const count = this.chinaSpotsOverlay.getSpotCount();
+      this._setChinaSpotsEmptyState(count === 0);
+      this._renderChinaSpotsTimestamp();
       return;
     }
 
@@ -1778,24 +1796,15 @@ class WeatherController {
       this.chinaSpotsOverlay.setPeriod(this.currentOverlayType);
       await this.chinaSpotsOverlay.loadAndRender();
 
-      if (this.chinaSpotsOverlay.getSpotCount() === 0) {
-        section.classList.add('hidden');
-        if (tsEl) tsEl.textContent = '';
-        return;
-      }
-
-      // 更新时间戳
-      if (tsEl) {
-        const updatedAt = this.chinaSpotsOverlay.getUpdatedAt();
-        tsEl.textContent = updatedAt
-          ? '今日数据，更新于 ' + new Date(updatedAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-          : '今日数据';
-      }
+      const count = this.chinaSpotsOverlay.getSpotCount();
+      this._setChinaSpotsEmptyState(count === 0);
+      this._renderChinaSpotsTimestamp();
 
       console.log('[WeatherController] 中国散点地图初始化完成');
     } catch (err) {
       console.error('[WeatherController] 初始化中国散点地图失败:', err);
       if (section) section.classList.add('hidden');
+      this._setChinaSpotsEmptyState(false);
     }
   }
 

@@ -220,9 +220,29 @@ describe('ChinaSpotsOverlay integration', () => {
 
     expect(fetch).toHaveBeenCalledWith('/api/spots/china?period=sunset');
     expect(overlay._spots).toHaveLength(1);
+    expect(overlay.getSpotCount()).toBe(1);
     expect(overlay._spots[0]).toEqual(expect.objectContaining({ lat: 39.9, lon: 116.4 }));
     expect(overlay._visible).toBe(true);
     expect(overlay.getUpdatedAt()).toBe('2026-03-20T01:00:00.000Z');
+  });
+
+  test('loadAndRender: 无可渲染大陆点位时隐藏连续图层（供外部显示空态文案）', async () => {
+    fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        updatedAt: '2026-03-20T01:00:00.000Z',
+        spots: [
+          { lat: 25.03, lon: 121.56, score: 88 },
+          { lat: 31.2, lon: 121.5, score: 35 }
+        ]
+      })
+    });
+
+    await overlay.loadAndRender();
+
+    expect(overlay.getSpotCount()).toBe(0);
+    expect(overlay._visible).toBe(false);
+    expect(overlay._button.style.display).toBe('none');
   });
 
   test('setPeriod + loadAndRender: 支持朝/晚独立接口参数', async () => {
