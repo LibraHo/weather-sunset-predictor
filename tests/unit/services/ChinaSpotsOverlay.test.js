@@ -3,7 +3,8 @@ import ChinaSpotsOverlay, {
   MAINLAND_RENDER_MIN_SCORE,
   mapScoreToOverlayStyle,
   normalizeOverlayScore,
-  isRenderableMainlandSpot
+  isRenderableMainlandSpot,
+  isSpotInViewport
 } from '../../../src/services/ChinaSpotsOverlay.js';
 
 describe('ChinaSpotsOverlay helpers', () => {
@@ -54,6 +55,14 @@ describe('ChinaSpotsOverlay helpers', () => {
       isRenderableMainlandSpot({ lat: 39.9, lon: 116.4, score: 20 })
     ).toBe(false); // 分数过低
   });
+
+  test('isSpotInViewport: 仅渲染当前视窗（带缓冲）范围内点位', () => {
+    const viewport = { latMin: 25, latMax: 40, lonMin: 100, lonMax: 122 };
+
+    expect(isSpotInViewport({ lat: 31.2, lon: 121.5 }, viewport)).toBe(true);
+    expect(isSpotInViewport({ lat: 24.9, lon: 121.5 }, viewport)).toBe(false);
+    expect(isSpotInViewport({ lat: 31.2, lon: 122.1 }, viewport)).toBe(false);
+  });
 });
 
 describe('ChinaSpotsOverlay integration', () => {
@@ -85,6 +94,12 @@ describe('ChinaSpotsOverlay integration', () => {
       getContainer: jest.fn(() => mapContainer),
       getSize: jest.fn(() => ({ x: 600, y: 360 })),
       getZoom: jest.fn(() => 6),
+      getBounds: jest.fn(() => ({
+        getSouth: () => 20,
+        getNorth: () => 40,
+        getWest: () => 105,
+        getEast: () => 123
+      })),
       latLngToContainerPoint: jest.fn(() => ({ x: 120, y: 80 }))
     };
 
@@ -135,4 +150,17 @@ describe('ChinaSpotsOverlay integration', () => {
     expect(mockCtx.clearRect).toHaveBeenCalled();
     expect(mockCtx.globalCompositeOperation).toBe('source-over');
   });
+
+  test('show 后 _redrawCanvas: 视窗外点位不参与绘制，降低无效渲染开销', () => {
+    overlay._spots = [
+      { lat: 39.9, lon: 116.4, score: 85 }, // 视窗内
+      { lat: 58, lon: 125, score: 90 } // 视窗外
+    ];
+
+    overlay.show();
+
+    expect(map.latLngToContainerPoint).toHaveBeenCalledTimes(1);
+    expect(mockCtx.createRadialGradient).toHaveBeenCalledTimes(2);
+  });
+
 });

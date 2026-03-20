@@ -1242,7 +1242,8 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 #### 64.5 前端散点地图
 
-- [ ] 64.5 `src/services/ChinaSpotsOverlay.js`（新建）
+- [~] 64.5 `src/services/ChinaSpotsOverlay.js`（新建）
+  - [x] 2026-03-20 增量：连续火烧云 Canvas 图层加入“视窗裁剪渲染”（按当前地图 bounds + 缓冲过滤点位），减少视窗外无效绘制，提升生产性能与稳定性
   - `init(leafletMap)` → 挂载到现有地图实例
   - `loadAndRender()` → 调用 `/api/spots/china`，用 Leaflet marker 渲染
   - 图标：评分≥80 用 🌅，60–79 用 🌄，Leaflet DivIcon 实现
