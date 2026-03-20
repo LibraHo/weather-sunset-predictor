@@ -1137,8 +1137,13 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 ### 任务 60：冻结与门禁
 
-- [ ] 60.1 增加预测链路 provider 门禁
+- [x] 60.1 增加预测链路 provider 门禁（2026-03-21）
   - 非 openmeteo 请求打告警并拒绝进入预测核心
+  - 实现：新增 openmeteoOnlyMode 配置（默认启用）
+  - 错误码：PROVIDER_GATE_VIOLATION
+  - 环境变量：DISABLE_OPENMETEO_GATE 可禁用门禁
+  - 测试：ProviderOrchestrator.providerGate.test.js（8 个测试全部通过）
+  - 提交：48c2c45
   - _关联需求：36.1_
 
 - [ ] 60.2 PR 检查规则
@@ -1219,29 +1224,34 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 ### 任务详情
 
-#### 64.2 SunsetSpotsService（后端）
+#### 64.2 SunsetSpotsService（后端） ✅ 已完成（2026-03-21）
 
-- [ ] 64.2 `server/services/SunsetSpotsService.js`
+- [x] 64.2 `server/services/GridScoreService.js`（原计划为 SunsetSpotsService，实际实现为 GridScoreService）
   - `CHINA_GRID`：约 80 个采样点（5° 间隔，72-135°E，18-53°N）
-  - `refreshDaily()` → 并发（limit=10）批量评分，过滤评分≥60 的点
-  - 缓存结构：`{ updatedAt, date, spots: [{lat, lon, score, quality}] }`
-  - 持久化到 `~/.xiake/spots-cache.json`
+  - `refreshIfStale()` → 并发（limit=10）批量评分，过滤评分≥60 的点
+  - 缓存结构：`{ sunrise: { updatedAt, gridPoints }, sunset: { ... } }`
+  - 持久化到 `~/.xiake/grid-cache.json`
   - 启动时若缓存日期非今日则自动刷新
+  - **实现备注**：支持朝霞/晚霞分时段缓存（sunrise/sunset），通过 `normalizePeriod()` 统一参数处理
   - _关联需求：37.3, 37.5_
 
-#### 64.3 API 路由
+#### 64.3 API 路由 ✅ 已完成（2026-03-21）
 
-- [ ] 64.3 `GET /api/spots/china`
+- [x] 64.3 `GET /api/spots/china`
   - 返回当日缓存的散点数据（仅 score≥60 的点）
-  - 包含 `updatedAt`、`date`
+  - 包含 `updatedAt`、`date`、`period`（支持 sunrise/sunset 参数）
   - 注册到 `server/index.js`
+  - **实现位置**：`server/routes/spots.js`
   - _关联需求：37.3, 37.8_
 
-#### 64.4 定时任务
+#### 64.4 定时任务 ✅ 已完成（2026-03-21）
 
-- [ ] 64.4 `server/index.js` 中添加：
-  - `node-cron`，UTC `0 7 * * *`（= CST 15:00）每天一次
-  - 启动时检查缓存日期，非今日则立即刷新
+- [x] 64.4 缓存刷新逻辑已集成到 `GridScoreService`
+  - `refreshIfStale()` 在首次 API 请求时自动检查缓存是否过期
+  - 缓存最大年龄：1小时（DEFAULT_MAX_AGE_MS）
+  - 启动时自动从 `~/.xiake/grid-cache.json` 加载缓存
+  - **实现备注**：未使用 node-cron，改为按需刷新策略（更节省资源）
+  - 频控保护：手动刷新 60 分钟内仅触发一次
   - _关联需求：37.3_
 
 #### 64.5 前端散点地图
@@ -1270,14 +1280,17 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - 显示"今日数据，更新于 HH:mm"时间戳
   - _关联需求：37.1, 37.7, 37.8_
 
-#### 64.7 测试
+#### 64.7 测试 ✅ 已完成（2026-03-21）
 
-- [~] 64.7（2026-03-20 增量）
-  - [ ] `tests/unit/server/SunsetSpotsService.test.js`：网格生成、缓存逻辑、过滤
+- [x] 64.7（2026-03-20 增量）
+  - [x] `tests/unit/server/GridScoreService.test.js`：网格生成、缓存逻辑、过滤、频控保护（原计划为 SunsetSpotsService.test.js，实际服务为 GridScoreService）
+  - [x] `tests/unit/server/spots.test.js`：spots API 路由工具函数单元测试（normalizeSpotsPeriod, SUPPORTED_PERIODS），5个测试用例全部通过 ✅ (2026-03-21)
+  - [x] `tests/integration/server/spots-api.integration.test.js`：spots API 集成测试（过滤评分>=60、降序排序、503 错误处理）
   - [x] `tests/unit/services/ChinaSpotsOverlay.test.js`：连续图层渲染（halo + 主体双层渐变）、地域检测过滤
   - [x] `tests/unit/services/ChinaSpotsOverlay.test.js`：新增分值平滑归一化（normalizeOverlayScore）与连续色带映射回归用例
   - [x] `tests/unit/services/ChinaSpotsOverlay.test.js`：新增高缩放透明度衰减（zoom-aware alpha）与 zoom-aware canvas filter（blur+saturate）回归用例，防止放大过曝
   - [x] `tests/unit/services/ChinaSpotsOverlay.test.js`：新增 density-aware opacity 回归用例（视窗点位密度越高透明度越低），防止大陆连续图层局部过曝
+  - **实现备注**：GridScoreService 已有完整单元测试覆盖，包含网格生成、缓存逻辑、朝晚霞分时段支持、频控保护等核心功能
   - _关联需求：37_
 
 #### 64.8 朝霞/晚霞分离（执行中）
