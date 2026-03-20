@@ -141,14 +141,12 @@
         <!-- 当前天气主展示区域 -->
         <div id="weather-data" style="display: none;">
           <div class="weather-glass-panel">
-            <!-- 位置 -->
-            <div class="weather-location-block">
-              <div id="weather-location" class="weather-location" data-i18n="weather.currentLocation">--</div>
-            </div>
-
             <!-- 主体信息（参考线框布局：左大区 + 右侧纵向数据框） -->
             <div class="weather-main-layout">
               <div class="weather-visual-panel">
+                <!-- 位置（移至左主卡顶部） -->
+                <div id="weather-location" class="weather-location-inline" data-i18n="weather.currentLocation">--</div>
+
                 <div class="weather-icon-large" id="weather-icon-main">☀️</div>
                 <div class="weather-desc" id="weather-description">--</div>
                 <div class="weather-temp-large">

@@ -1774,12 +1774,12 @@ class WeatherController {
   _getChinaSpotsMapOptions() {
     return {
       center: [35, 105],
-      zoom: 4,
-      minZoom: 4,
-      maxZoom: 4,
+      zoom: 5,
+      minZoom: 5,
+      maxZoom: 5,
       zoomControl: false,
       attributionControl: false,
-      dragging: false,
+      dragging: true,
       scrollWheelZoom: false,
       doubleClickZoom: false,
       boxZoom: false,

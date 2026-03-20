@@ -332,19 +332,20 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(controller._getWindDirectionLabel(40)).toBe('东北');
   });
 
-  test('64.9: 中国火烧云地图应使用静态地图配置（不可拖拽/缩放）', () => {
+  test('64.10: 中国火烧云地图应支持拖拽平移，禁用缩放', () => {
     const options = controller._getChinaSpotsMapOptions();
 
-    expect(options.zoom).toBe(4);
-    expect(options.minZoom).toBe(4);
-    expect(options.maxZoom).toBe(4);
-    expect(options.zoomControl).toBe(false);
-    expect(options.dragging).toBe(false);
-    expect(options.scrollWheelZoom).toBe(false);
-    expect(options.touchZoom).toBe(false);
+    expect(options.zoom).toBe(5);  // 默认比例更大
+    expect(options.minZoom).toBe(5);  // 固定 zoom
+    expect(options.maxZoom).toBe(5);  // 固定 zoom
+    expect(options.zoomControl).toBe(false);  // 禁用缩放控件
+    expect(options.dragging).toBe(true);  // 允许拖拽
+    expect(options.scrollWheelZoom).toBe(false);  // 禁用滚轮缩放
+    expect(options.doubleClickZoom).toBe(false);  // 禁用双击缩放
+    expect(options.touchZoom).toBe(false);  // 禁用触摸缩放
   });
 
-  test('64.9: 初始化中国火烧云地图时应锁定大陆边界', async () => {
+  test('64.10: 初始化中国火烧云地图时应支持交互并锁定大陆边界', async () => {
     document.body.innerHTML = `
       <section id="china-spots-section" class="hidden"></section>
       <div id="china-spots-map"></div>
@@ -386,11 +387,14 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(window.L.map).toHaveBeenCalledWith(
       document.getElementById('china-spots-map'),
       expect.objectContaining({
-        zoom: 4,
-        minZoom: 4,
-        maxZoom: 4,
-        dragging: false,
-        scrollWheelZoom: false
+        zoom: 5,
+        minZoom: 5,
+        maxZoom: 5,
+        dragging: true,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        touchZoom: false,
+        zoomControl: false
       })
     );
 
