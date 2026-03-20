@@ -332,6 +332,75 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(controller._getWindDirectionLabel(40)).toBe('东北');
   });
 
+  test('64.9: 中国火烧云地图应使用静态地图配置（不可拖拽/缩放）', () => {
+    const options = controller._getChinaSpotsMapOptions();
+
+    expect(options.zoom).toBe(4);
+    expect(options.minZoom).toBe(4);
+    expect(options.maxZoom).toBe(4);
+    expect(options.zoomControl).toBe(false);
+    expect(options.dragging).toBe(false);
+    expect(options.scrollWheelZoom).toBe(false);
+    expect(options.touchZoom).toBe(false);
+  });
+
+  test('64.9: 初始化中国火烧云地图时应锁定大陆边界', async () => {
+    document.body.innerHTML = `
+      <section id="china-spots-section" class="hidden"></section>
+      <div id="china-spots-map"></div>
+      <div id="china-spots-timestamp"></div>
+      <div id="china-spots-empty" class="hidden"></div>
+    `;
+
+    const mapStub = {
+      fitBounds: jest.fn(),
+      setMaxBounds: jest.fn()
+    };
+    const tileLayerStub = { addTo: jest.fn() };
+
+    window.L = {
+      map: jest.fn(() => mapStub),
+      tileLayer: jest.fn(() => tileLayerStub),
+      latLngBounds: jest.fn(() => ({ type: 'mainland-bounds' }))
+    };
+
+    const activeOverlay = {
+      setPeriod: jest.fn(),
+      init: jest.fn(),
+      loadAndRender: jest.fn(),
+      getSpotCount: jest.fn(() => 0),
+      getUpdatedAt: jest.fn(() => null),
+      hide: jest.fn(),
+      setButtonVisible: jest.fn()
+    };
+
+    controller.currentOverlayType = 'sunset';
+    controller.currentLocation = { lat: 39.9, lon: 116.4 };
+    controller.chinaSpotsOverlays = {
+      sunrise: activeOverlay,
+      sunset: activeOverlay
+    };
+
+    await controller._initChinaSpotsMap();
+
+    expect(window.L.map).toHaveBeenCalledWith(
+      document.getElementById('china-spots-map'),
+      expect.objectContaining({
+        zoom: 4,
+        minZoom: 4,
+        maxZoom: 4,
+        dragging: false,
+        scrollWheelZoom: false
+      })
+    );
+
+    expect(mapStub.fitBounds).toHaveBeenCalledWith(
+      { type: 'mainland-bounds' },
+      { animate: false, padding: [8, 8] }
+    );
+    expect(mapStub.setMaxBounds).toHaveBeenCalledWith({ type: 'mainland-bounds' });
+  });
+
   test('64.8: 朝/晚双 overlay 应独立切换，非激活 overlay 自动隐藏', async () => {
     controller.currentOverlayType = 'sunset';
     controller.fireCloudOverlayEnabled = false;
