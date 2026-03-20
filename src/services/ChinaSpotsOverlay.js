@@ -111,6 +111,19 @@ export function normalizeOverlayScore(score) {
   return smoothstep01(linearNorm);
 }
 
+export function getPlumeDriftOffset(score, zoom = 5) {
+  const scoreNorm = normalizeOverlayScore(score);
+  const driftBase = clamp(lerp(8, 20, scoreNorm), 8, 20);
+  const zoomFactor = Math.pow(1.06, Math.max(0, zoom - 5));
+  const driftPx = clamp(driftBase * zoomFactor, 8, 34);
+
+  // 固定偏东偏北，形成“顺风拉伸”效果，降低同心圆观感
+  return {
+    x: driftPx,
+    y: -driftPx * 0.42
+  };
+}
+
 /**
  * 将评分映射到连续视觉样式（半径 + 颜色）
  * @param {number} score
@@ -122,6 +135,7 @@ export function mapScoreToOverlayStyle(score, zoom = 4, opacityFactor = 1) {
 
   const radiusPx = clamp(lerp(62, 124, scoreNorm) * zoomFactor, 44, 240);
   const haloRadiusPx = clamp(radiusPx * lerp(1.42, 1.88, scoreNorm), radiusPx + 10, 330);
+  const plumeRadiusPx = clamp(radiusPx * lerp(1.08, 1.26, scoreNorm), radiusPx + 8, 280);
 
   const warm = interpolatePalette(scoreNorm);
   const glow = interpolatePalette(clamp(scoreNorm * 0.82, 0, 1));
@@ -130,7 +144,9 @@ export function mapScoreToOverlayStyle(score, zoom = 4, opacityFactor = 1) {
   return {
     radiusPx,
     haloRadiusPx,
+    plumeRadiusPx,
     haloColor: `rgba(${glow.r}, ${glow.g}, ${glow.b}, ${alpha(0.19, scoreNorm, zoomOpacityFactor)})`,
+    plumeColor: `rgba(${glow.r}, ${glow.g}, ${glow.b}, ${alpha(0.15, scoreNorm, zoomOpacityFactor)})`,
     innerColor: `rgba(${warm.r}, ${warm.g}, ${warm.b}, ${alpha(0.76, scoreNorm, zoomOpacityFactor)})`,
     midColor: `rgba(${glow.r}, ${glow.g}, ${glow.b}, ${alpha(0.38, scoreNorm, zoomOpacityFactor)})`,
     outerColor: `rgba(${glow.r}, ${glow.g}, ${glow.b}, 0)`
@@ -311,7 +327,23 @@ export default class ChinaSpotsOverlay {
       const pt = this._map.latLngToContainerPoint(window.L.latLng(spot.lat, spot.lon));
       const edgeOpacityFactor = getMainlandEdgeOpacityFactor(spot, zoom);
       const opacityFactor = densityOpacityFactor * edgeOpacityFactor;
-      const { radiusPx, haloRadiusPx, haloColor, innerColor, midColor, outerColor } = mapScoreToOverlayStyle(spot.score, zoom, opacityFactor);
+      const { radiusPx, haloRadiusPx, plumeRadiusPx, haloColor, plumeColor, innerColor, midColor, outerColor } = mapScoreToOverlayStyle(spot.score, zoom, opacityFactor);
+      const plumeOffset = getPlumeDriftOffset(spot.score, zoom);
+
+      const plumeGrad = ctx.createRadialGradient(
+        pt.x + plumeOffset.x,
+        pt.y + plumeOffset.y,
+        0,
+        pt.x + plumeOffset.x,
+        pt.y + plumeOffset.y,
+        plumeRadiusPx
+      );
+      plumeGrad.addColorStop(0.0, plumeColor);
+      plumeGrad.addColorStop(1.0, 'rgba(255, 180, 80, 0)');
+      ctx.beginPath();
+      ctx.arc(pt.x + plumeOffset.x, pt.y + plumeOffset.y, plumeRadiusPx, 0, Math.PI * 2);
+      ctx.fillStyle = plumeGrad;
+      ctx.fill();
 
       const haloGrad = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, haloRadiusPx);
       haloGrad.addColorStop(0.0, haloColor);

@@ -8,7 +8,8 @@ import ChinaSpotsOverlay, {
   getCanvasFilterStyle,
   getOverlayBlendMode,
   getDensityOpacityFactor,
-  getMainlandEdgeOpacityFactor
+  getMainlandEdgeOpacityFactor,
+  getPlumeDriftOffset
 } from '../../../src/services/ChinaSpotsOverlay.js';
 
 function rgbaAlpha(rgba) {
@@ -25,7 +26,9 @@ describe('ChinaSpotsOverlay helpers', () => {
     expect(high.radiusPx).toBeGreaterThan(low.radiusPx);
     expect(low.haloRadiusPx).toBeGreaterThan(low.radiusPx);
     expect(high.haloRadiusPx).toBeGreaterThan(high.radiusPx);
+    expect(low.plumeRadiusPx).toBeGreaterThan(low.radiusPx);
     expect(typeof low.haloColor).toBe('string');
+    expect(typeof low.plumeColor).toBe('string');
     expect(typeof high.midColor).toBe('string');
   });
 
@@ -42,6 +45,17 @@ describe('ChinaSpotsOverlay helpers', () => {
 
     expect(rgbaAlpha(z10.innerColor)).toBeLessThan(rgbaAlpha(z4.innerColor));
     expect(rgbaAlpha(z10.haloColor)).toBeLessThan(rgbaAlpha(z4.haloColor));
+  });
+
+  test('getPlumeDriftOffset: 分值/缩放越高，顺风偏移越明显（降低同心圆感）', () => {
+    const low = getPlumeDriftOffset(45, 5);
+    const high = getPlumeDriftOffset(90, 5);
+    const zoomed = getPlumeDriftOffset(90, 9);
+
+    expect(low.x).toBeGreaterThan(0);
+    expect(low.y).toBeLessThan(0);
+    expect(high.x).toBeGreaterThan(low.x);
+    expect(zoomed.x).toBeGreaterThan(high.x);
   });
 
   test('getCanvasFilterStyle: 低缩放更强平滑，高缩放降低模糊', () => {
@@ -204,14 +218,14 @@ describe('ChinaSpotsOverlay integration', () => {
     expect(overlay.getUpdatedAt()).toBe('2026-03-20T01:00:00.000Z');
   });
 
-  test('show 后 _redrawCanvas: 每个点绘制 halo + 主体两层径向渐变', () => {
+  test('show 后 _redrawCanvas: 每个点绘制 plume + halo + 主体三层渐变', () => {
     overlay._spots = [{ lat: 39.9, lon: 116.4, score: 85 }];
 
     overlay.show();
 
-    expect(mockCtx.createRadialGradient).toHaveBeenCalledTimes(2);
-    expect(mockCtx.arc).toHaveBeenCalledTimes(2);
-    expect(mockCtx.fill).toHaveBeenCalledTimes(2);
+    expect(mockCtx.createRadialGradient).toHaveBeenCalledTimes(3);
+    expect(mockCtx.arc).toHaveBeenCalledTimes(3);
+    expect(mockCtx.fill).toHaveBeenCalledTimes(3);
     expect(mockCtx.clearRect).toHaveBeenCalled();
     expect(overlay._canvas.style.filter).toBe(getCanvasFilterStyle(6));
     expect(mockCtx.globalCompositeOperation).toBe('source-over');
@@ -226,7 +240,7 @@ describe('ChinaSpotsOverlay integration', () => {
     overlay.show();
 
     expect(map.latLngToContainerPoint).toHaveBeenCalledTimes(1);
-    expect(mockCtx.createRadialGradient).toHaveBeenCalledTimes(2);
+    expect(mockCtx.createRadialGradient).toHaveBeenCalledTimes(3);
   });
 
 });
