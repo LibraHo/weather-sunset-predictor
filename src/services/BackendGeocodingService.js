@@ -72,6 +72,8 @@ class BackendGeocodingService {
 
     const first = data.results[0];
     const location = new Location(first.lat, first.lon, first.name);
+    location.countryCode = (first.countryCode || '').toUpperCase() || null;
+    location.regionCode = first.regionCode || null;
     if (!location.isValid()) {
       throw new Error('返回的坐标无效');
     }

@@ -20,7 +20,7 @@ import i18n from '../i18n.js';
 import toastService from '../services/ToastService.js';
 import ChartRenderController from './ChartRenderController.js';
 import ChinaSpotsOverlay from '../services/ChinaSpotsOverlay.js';
-import { isInMainlandChina, MAINLAND_BOUNDS } from '../utils/mainlandChinaRegion.js';
+import { isInMainlandChina, isMainlandChinaLocation, MAINLAND_BOUNDS } from '../utils/mainlandChinaRegion.js';
 // 暂时禁用 ChartService 导入，使用内联简化版本
 
 class WeatherController {
@@ -1688,6 +1688,10 @@ class WeatherController {
     return isInMainlandChina(lat, lon);
   }
 
+  _isMainlandChinaLocation(location) {
+    return isMainlandChinaLocation(location);
+  }
+
   _getChinaSpotsOverlay(period = this.currentOverlayType) {
     const safePeriod = period === 'sunrise' ? 'sunrise' : 'sunset';
     return this.chinaSpotsOverlays?.[safePeriod] || null;
@@ -1727,7 +1731,7 @@ class WeatherController {
 
     if (!section) return;
 
-    if (!location || !this._isInChina(location.lat, location.lon)) {
+    if (!location || !this._isMainlandChinaLocation(location)) {
       section.classList.add('hidden');
       if (tsEl) tsEl.textContent = '';
       this._setChinaSpotsEmptyState(false);

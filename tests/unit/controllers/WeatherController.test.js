@@ -445,7 +445,7 @@ describe('WeatherController - 24小时温度连续化', () => {
   test('64.8: 非中国大陆时应同时隐藏 sunrise/sunset 两层', async () => {
     document.body.innerHTML = '<section id="china-spots-section"></section><div id="china-spots-timestamp"></div>';
 
-    controller._isInChina = jest.fn(() => false);
+    controller._isMainlandChinaLocation = jest.fn(() => false);
     controller._setChinaSpotsEmptyState = jest.fn();
 
     const sunriseOverlay = {
@@ -462,12 +462,31 @@ describe('WeatherController - 24小时温度连续化', () => {
       sunset: sunsetOverlay
     };
 
-    await controller.updateChinaSpotsForLocation({ lat: 48.8, lon: 2.3 });
+    await controller.updateChinaSpotsForLocation({ lat: 48.8, lon: 2.3, countryCode: 'FR' });
 
     expect(sunriseOverlay.hide).toHaveBeenCalled();
     expect(sunsetOverlay.hide).toHaveBeenCalled();
     expect(sunriseOverlay.setButtonVisible).toHaveBeenCalledWith(false);
     expect(sunsetOverlay.setButtonVisible).toHaveBeenCalledWith(false);
+  });
+
+  test('64.6: 港澳台查询城市应隐藏大陆火烧云图层', async () => {
+    document.body.innerHTML = '<section id="china-spots-section"></section><div id="china-spots-timestamp"></div>';
+
+    controller._setChinaSpotsEmptyState = jest.fn();
+    controller._hideInactiveChinaSpotsOverlays = jest.fn();
+    controller._isMainlandChinaLocation = WeatherController.prototype._isMainlandChinaLocation;
+
+    const section = document.getElementById('china-spots-section');
+
+    await controller.updateChinaSpotsForLocation({ lat: 22.3193, lon: 114.1694, countryCode: 'CN', regionCode: 'HK' });
+    expect(section.classList.contains('hidden')).toBe(true);
+
+    await controller.updateChinaSpotsForLocation({ lat: 22.1987, lon: 113.5439, countryCode: 'CN', regionCode: 'MO' });
+    expect(section.classList.contains('hidden')).toBe(true);
+
+    await controller.updateChinaSpotsForLocation({ lat: 25.033, lon: 121.5654, countryCode: 'CN', regionCode: 'TW' });
+    expect(section.classList.contains('hidden')).toBe(true);
   });
 
 });
