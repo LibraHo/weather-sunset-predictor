@@ -3759,5 +3759,49 @@ body.theme-dark {
   --radar-cloud-mid: rgba(165,185,215,0.75);
   --radar-cloud-high: rgba(190,200,220,0.70);
 }
-,220,0.70);
+
+/* China Spots Toggle Buttons */
+.china-spots-toggle-group {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  background: var(--color-surface-1, rgba(255,255,255,0.6));
+  border-radius: 8px;
+  border: 1px solid var(--color-border, rgba(0,0,0,0.08));
 }
+
+.china-spots-toggle-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-secondary, #666);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.china-spots-toggle-btn:hover {
+  background: var(--color-surface-2, rgba(0,0,0,0.04));
+}
+
+.china-spots-toggle-btn.active {
+  background: var(--color-primary, #ff6b35);
+  color: white;
+  font-weight: 600;
+}
+
+body.theme-dark .china-spots-toggle-group {
+  background: var(--color-surface-1-dark, rgba(30,41,59,0.6));
+  border-color: var(--color-border-dark, rgba(255,255,255,0.1));
+}
+
+body.theme-dark .china-spots-toggle-btn {
+  color: var(--color-text-secondary-dark, #94a3b8);
+}
+
+body.theme-dark .china-spots-toggle-btn:hover {
+  background: var(--color-surface-2-dark, rgba(255,255,255,0.05));
+}
+

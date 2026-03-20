@@ -503,6 +503,11 @@ const translations = {
     "error": "Failed to load map",
     "mockNotSupported": "Map functionality is only available in real API mode"
   },
+  "chinaSpots": {
+    "sunrise": "Sunrise",
+    "sunset": "Sunset",
+    "emptyData": "No visible fire cloud spots today"
+  },
   "loading": {
     "data": "Loading data...",
     "weather": "Getting weather data...",

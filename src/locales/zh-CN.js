@@ -597,6 +597,13 @@ export default {
     mockNotSupported: '地图功能仅在真实API模式下可用'
   },
 
+  // 中国火烧云分布
+  chinaSpots: {
+    sunrise: '朝霞',
+    sunset: '晚霞',
+    emptyData: '今日暂无可见火烧云点位'
+  },
+
   // 加载状态
   loading: {
     data: '正在加载数据...',

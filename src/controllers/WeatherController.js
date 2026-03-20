@@ -1801,6 +1801,51 @@ class WeatherController {
   }
 
   /**
+   * 绑定朝霞/晚霞切换按钮事件
+   * @private
+   */
+  _bindChinaSpotsToggleEvents() {
+    const toggleBtns = document.querySelectorAll('.china-spots-toggle-btn');
+    if (toggleBtns.length === 0) {
+      console.warn('[WeatherController] 未找到朝霞/晚霞切换按钮');
+      return;
+    }
+
+    toggleBtns.forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const period = e.target.getAttribute('data-period');
+        if (!period || (period !== 'sunrise' && period !== 'sunset')) {
+          console.warn('[WeatherController] 无效的 period 值:', period);
+          return;
+        }
+
+        // 如果已经是当前类型，不执行任何操作
+        if (this.currentOverlayType === period) return;
+
+        console.log(`[WeatherController] 切换到 ${period === 'sunrise' ? '朝霞' : '晚霞'} 视图`);
+
+        // 更新按钮状态
+        toggleBtns.forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+
+        // 更新 section 的数据属性
+        const section = document.getElementById('china-spots-section');
+        if (section) {
+          section.setAttribute('data-current-period', period);
+        }
+
+        // 切换 overlay
+        await this.switchOverlayType(period);
+
+        // 重新渲染时间戳
+        this._renderChinaSpotsTimestamp();
+      });
+    });
+
+    console.log('[WeatherController] 朝霞/晚霞切换按钮事件已绑定');
+  }
+
+  /**
    * 初始化并展示中国散点地图（嵌入预测卡片底部）
    * 仅在位置位于中国境内时调用。
    */
@@ -1882,6 +1927,9 @@ class WeatherController {
       sunsetOverlay?.setPeriod('sunset');
       sunriseOverlay?.init(map);
       sunsetOverlay?.init(map);
+
+      // 绑定朝霞/晚霞切换按钮事件
+      this._bindChinaSpotsToggleEvents();
 
       this._syncActiveChinaSpotsOverlayRef();
       const activeOverlay = this._getActiveChinaSpotsOverlay();
