@@ -1,4 +1,4 @@
-import { isInMainlandChina } from '../../../src/utils/mainlandChinaRegion.js';
+import { isInMainlandChina, isMainlandChinaLocation } from '../../../src/utils/mainlandChinaRegion.js';
 
 describe('mainlandChinaRegion', () => {
   test('中国大陆核心城市应返回 true', () => {
@@ -7,8 +7,10 @@ describe('mainlandChinaRegion', () => {
     expect(isInMainlandChina(30.5928, 114.3055)).toBe(true); // 武汉
   });
 
-  test('应排除台湾和南海远海区域', () => {
+  test('应排除台湾、港澳和南海远海区域', () => {
     expect(isInMainlandChina(25.033, 121.5654)).toBe(false); // 台北
+    expect(isInMainlandChina(22.3193, 114.1694)).toBe(false); // 香港
+    expect(isInMainlandChina(22.1987, 113.5439)).toBe(false); // 澳门
     expect(isInMainlandChina(10.0, 114.0)).toBe(false); // 南海远海
   });
 
@@ -16,5 +18,14 @@ describe('mainlandChinaRegion', () => {
     expect(isInMainlandChina(NaN, 116.4)).toBe(false);
     expect(isInMainlandChina(39.9, Infinity)).toBe(false);
     expect(isInMainlandChina(undefined, 116.4)).toBe(false);
+  });
+
+  test('isMainlandChinaLocation: 仅接受 CN 且排除港澳台 regionCode', () => {
+    expect(isMainlandChinaLocation({ lat: 39.9, lon: 116.4, countryCode: 'CN' })).toBe(true);
+    expect(isMainlandChinaLocation({ lat: 39.9, lon: 116.4, countryCode: 'US' })).toBe(false);
+    expect(isMainlandChinaLocation({ lat: 31.2, lon: 121.5, countryCode: 'CN', regionCode: 'HK' })).toBe(false);
+    expect(isMainlandChinaLocation({ lat: 31.2, lon: 121.5, countryCode: 'CN', regionCode: 'MO' })).toBe(false);
+    expect(isMainlandChinaLocation({ lat: 31.2, lon: 121.5, countryCode: 'CN', regionCode: 'TW' })).toBe(false);
+    expect(isMainlandChinaLocation({ lat: 31.2, lon: 121.5, countryCode: 'CN', regionCode: '110000' })).toBe(true);
   });
 });

@@ -129,12 +129,16 @@ async function handleAutoSearch(res, query, apiKey) {
         return res.json(attachSearchMeta({
           results: data.geocodes.map(item => {
             const [lonStr, latStr] = item.location.split(',');
+            const regionCode = resolveGaodeRegionCode(item.adcode);
             return {
               name: item.formatted_address,
               lat: parseFloat(latStr),
               lon: parseFloat(lonStr),
               type: 'place',
-              provider: 'gaode'
+              provider: 'gaode',
+              countryCode: 'CN',
+              regionCode,
+              adcode: item.adcode || null
             };
           })
         }, { providerUsed: 'gaode', fallbackUsed: false }));
@@ -198,7 +202,9 @@ async function handleNominatimSearch(res, query) {
       lat: parseFloat(item.lat),
       lon: parseFloat(item.lon),
       type: item.type,
-      provider: 'nominatim'
+      provider: 'nominatim',
+      countryCode: (item.address?.country_code || '').toUpperCase() || null,
+      regionCode: deriveNominatimRegionCode(item.address)
     }))
   });
 }
@@ -215,7 +221,14 @@ async function handleNominatimReverse(res, lat, lon) {
   const data = response.data;
   if (!data || !data.display_name) return res.json({ name: null });
 
-  return res.json({ name: data.display_name, lat, lon, provider: 'nominatim' });
+  return res.json({
+    name: data.display_name,
+    lat,
+    lon,
+    provider: 'nominatim',
+    countryCode: (data.address?.country_code || '').toUpperCase() || null,
+    regionCode: deriveNominatimRegionCode(data.address)
+  });
 }
 
 // ========== Open-Meteo Geocoding ==========
@@ -241,7 +254,9 @@ async function fetchOpenMeteoResults(query) {
     lat: Number(item.latitude),
     lon: Number(item.longitude),
     type: item.feature_code || 'place',
-    provider: 'openmeteo'
+    provider: 'openmeteo',
+    countryCode: (item.country_code || '').toUpperCase() || null,
+    regionCode: resolveAdminRegionCode(item.admin1)
   }));
 }
 
@@ -299,12 +314,16 @@ async function handleGaodeSearch(res, query, apiKey) {
     return res.json({
       results: data.geocodes.map(item => {
         const [lonStr, latStr] = item.location.split(',');
+        const regionCode = resolveGaodeRegionCode(item.adcode);
         return {
           name: item.formatted_address,
           lat: parseFloat(latStr),
           lon: parseFloat(lonStr),
           type: 'place',
-          provider: 'gaode'
+          provider: 'gaode',
+          countryCode: 'CN',
+          regionCode,
+          adcode: item.adcode || null
         };
       })
     });
@@ -332,7 +351,16 @@ async function handleGaodeReverse(res, lat, lon, apiKey) {
     return res.json({ name: null });
   }
 
-  return res.json({ name: data.regeocode.formatted_address, lat, lon, provider: 'gaode' });
+  const adcode = data.regeocode?.addressComponent?.adcode || null;
+  return res.json({
+    name: data.regeocode.formatted_address,
+    lat,
+    lon,
+    provider: 'gaode',
+    countryCode: 'CN',
+    regionCode: resolveGaodeRegionCode(adcode),
+    adcode
+  });
 }
 
 // ========== Google Maps Geocoding API ==========
@@ -358,7 +386,9 @@ async function handleGoogleSearch(res, query, apiKey) {
       lat: item.geometry.location.lat,
       lon: item.geometry.location.lng,
       type: item.types?.[0] || 'place',
-      provider: 'google'
+      provider: 'google',
+      countryCode: deriveGoogleCountryCode(item.address_components),
+      regionCode: deriveGoogleRegionCode(item.address_components)
     }))
   });
 }
@@ -378,11 +408,54 @@ async function handleGoogleReverse(res, lat, lon, apiKey) {
     return res.json({ name: null });
   }
 
+  const first = data.results[0];
   return res.json({
-    name: data.results[0].formatted_address,
-    lat, lon,
-    provider: 'google'
+    name: first.formatted_address,
+    lat,
+    lon,
+    provider: 'google',
+    countryCode: deriveGoogleCountryCode(first.address_components),
+    regionCode: deriveGoogleRegionCode(first.address_components)
   });
+}
+
+function resolveAdminRegionCode(admin1 = '') {
+  const text = String(admin1 || '');
+  if (/台湾|taiwan/i.test(text)) return 'TW';
+  if (/香港|hong kong/i.test(text)) return 'HK';
+  if (/澳门|macao|macau/i.test(text)) return 'MO';
+  return null;
+}
+
+function resolveGaodeRegionCode(adcode = '') {
+  const code = String(adcode || '');
+  if (code.startsWith('71')) return 'TW';
+  if (code.startsWith('81')) return 'HK';
+  if (code.startsWith('82')) return 'MO';
+  return null;
+}
+
+function deriveNominatimRegionCode(address = {}) {
+  const text = [address?.state, address?.province, address?.county, address?.city, address?.region]
+    .filter(Boolean)
+    .join(' ');
+  return resolveAdminRegionCode(text);
+}
+
+function getGoogleAddressShortCode(addressComponents = [], type) {
+  if (!Array.isArray(addressComponents)) return null;
+  const item = addressComponents.find(component => Array.isArray(component.types) && component.types.includes(type));
+  return item?.short_name || null;
+}
+
+function deriveGoogleCountryCode(addressComponents = []) {
+  const code = getGoogleAddressShortCode(addressComponents, 'country');
+  return code ? code.toUpperCase() : null;
+}
+
+function deriveGoogleRegionCode(addressComponents = []) {
+  const admin1Code = getGoogleAddressShortCode(addressComponents, 'administrative_area_level_1');
+  return resolveAdminRegionCode(admin1Code);
 }
 
 module.exports = router;

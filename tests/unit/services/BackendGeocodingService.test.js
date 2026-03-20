@@ -62,12 +62,12 @@ describe('BackendGeocodingService', () => {
       await expect(service.geocode(123)).rejects.toThrow('位置名称不能为空');
     });
 
-    test('成功时返回 Location 对象', async () => {
+    test('成功时返回 Location 对象并携带 country/region 元数据', async () => {
       fetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
         json: async () => ({
-          results: [{ name: '北京市', lat: 39.9042, lon: 116.4074, provider: 'nominatim' }]
+          results: [{ name: '北京市', lat: 39.9042, lon: 116.4074, provider: 'nominatim', countryCode: 'cn', regionCode: '110000' }]
         })
       });
 
@@ -76,6 +76,8 @@ describe('BackendGeocodingService', () => {
       expect(result.lat).toBeCloseTo(39.9042);
       expect(result.lon).toBeCloseTo(116.4074);
       expect(result.name).toBe('北京市');
+      expect(result.countryCode).toBe('CN');
+      expect(result.regionCode).toBe('110000');
     });
 
     test('结果为空时应抛出错误', async () => {
