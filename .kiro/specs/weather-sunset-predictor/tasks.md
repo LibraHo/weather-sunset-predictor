@@ -1248,6 +1248,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - [x] 2026-03-20 增量：连续图层加入“高缩放透明度衰减（zoom-aware alpha ramp）”，避免放大时光晕过曝，更贴近参考火烧云叠加风格
   - [x] 2026-03-20 增量：连续图层混合模式按缩放切换（low zoom=screen / high zoom=lighter），低缩放更接近参考的连续云带质感，高缩放保留局部层次
   - [x] 2026-03-20 增量：新增视窗密度自适应透明度（density-aware opacity），高密度区域自动降透明，减少过曝并保持连续层次
+  - [x] 2026-03-20 增量：新增大陆边缘羽化透明度（edge falloff），靠近大陆渲染边界自动降透明，减轻边缘硬截断感
   - `init(leafletMap)` → 挂载到现有地图实例
   - `loadAndRender()` → 调用 `/api/spots/china`，用 Leaflet marker 渲染
   - 图标：评分≥80 用 🌅，60–79 用 🌄，Leaflet DivIcon 实现

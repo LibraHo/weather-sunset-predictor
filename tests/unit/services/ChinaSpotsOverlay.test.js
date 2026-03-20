@@ -7,7 +7,8 @@ import ChinaSpotsOverlay, {
   isSpotInViewport,
   getCanvasFilterStyle,
   getOverlayBlendMode,
-  getDensityOpacityFactor
+  getDensityOpacityFactor,
+  getMainlandEdgeOpacityFactor
 } from '../../../src/services/ChinaSpotsOverlay.js';
 
 function rgbaAlpha(rgba) {
@@ -69,6 +70,26 @@ describe('ChinaSpotsOverlay helpers', () => {
 
     expect(rgbaAlpha(dense.innerColor)).toBeLessThan(rgbaAlpha(sparse.innerColor));
     expect(rgbaAlpha(dense.haloColor)).toBeLessThan(rgbaAlpha(sparse.haloColor));
+  });
+
+  test('getMainlandEdgeOpacityFactor: 靠近大陆边界时透明度因子更低（边缘羽化）', () => {
+    const center = getMainlandEdgeOpacityFactor({ lat: 35, lon: 110 }, 5);
+    const edge = getMainlandEdgeOpacityFactor({ lat: 20.1, lon: 110 }, 5);
+
+    expect(center).toBeGreaterThan(edge);
+    expect(edge).toBeGreaterThanOrEqual(0.66);
+    expect(center).toBeLessThanOrEqual(1);
+  });
+
+  test('mapScoreToOverlayStyle: 边缘羽化会降低颜色 alpha，避免大陆边界突兀', () => {
+    const centerFactor = getMainlandEdgeOpacityFactor({ lat: 35, lon: 110 }, 5);
+    const edgeFactor = getMainlandEdgeOpacityFactor({ lat: 20.1, lon: 110 }, 5);
+
+    const centerStyle = mapScoreToOverlayStyle(88, 5, centerFactor);
+    const edgeStyle = mapScoreToOverlayStyle(88, 5, edgeFactor);
+
+    expect(rgbaAlpha(edgeStyle.innerColor)).toBeLessThan(rgbaAlpha(centerStyle.innerColor));
+    expect(rgbaAlpha(edgeStyle.haloColor)).toBeLessThan(rgbaAlpha(centerStyle.haloColor));
   });
 
   test('normalizeOverlayScore: 对低分更保守，映射在 0~1 区间', () => {
