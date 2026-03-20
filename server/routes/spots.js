@@ -8,15 +8,32 @@ const express = require('express');
 const router = express.Router();
 const gridService = require('../services/GridScoreService');
 
+const SUPPORTED_PERIODS = ['sunrise', 'sunset'];
+
+function normalizeSpotsPeriod(period) {
+  const safe = typeof period === 'string' ? period.toLowerCase() : '';
+  return SUPPORTED_PERIODS.includes(safe) ? safe : null;
+}
+
 /**
  * GET /api/spots/china
  * 从 GridScoreService 缓存中返回评分 >= 60 的散点数据
  */
 router.get('/china', async (req, res, next) => {
   try {
-    await gridService.refreshIfStale();
+    const period = normalizeSpotsPeriod(req.query?.period || 'sunset');
+    if (!period) {
+      return res.status(400).json({
+        error: {
+          code: 'INVALID_PERIOD',
+          message: 'period 仅支持 sunrise 或 sunset'
+        }
+      });
+    }
 
-    const cache = gridService.getCache();
+    await gridService.refreshIfStale(undefined, period);
+
+    const cache = gridService.getCache(period);
     if (!cache) {
       return res.status(503).json({
         error: { code: 'GRID_NOT_READY', message: '网格数据尚未就绪，请稍后再试' }
@@ -37,6 +54,7 @@ router.get('/china', async (req, res, next) => {
     res.json({
       updatedAt: cache.updatedAt,
       date: today,
+      period,
       spots
     });
   } catch (err) {
@@ -45,3 +63,5 @@ router.get('/china', async (req, res, next) => {
 });
 
 module.exports = router;
+module.exports.normalizeSpotsPeriod = normalizeSpotsPeriod;
+module.exports.SUPPORTED_PERIODS = SUPPORTED_PERIODS;
