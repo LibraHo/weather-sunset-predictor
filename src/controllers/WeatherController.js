@@ -20,6 +20,7 @@ import i18n from '../i18n.js';
 import toastService from '../services/ToastService.js';
 import ChartRenderController from './ChartRenderController.js';
 import ChinaSpotsOverlay from '../services/ChinaSpotsOverlay.js';
+import ChinaSpotsOverlayManager from '../services/ChinaSpotsOverlayManager.js';
 import { isInMainlandChina, isMainlandChinaLocation, MAINLAND_BOUNDS } from '../utils/mainlandChinaRegion.js';
 // 暂时禁用 ChartService 导入，使用内联简化版本
 
@@ -91,13 +92,10 @@ class WeatherController {
     this.selectedParameter = 'temp'; // 'temp', 'precip', 'humidity', 'wind', 'pressure', 'clouds'
     this.isMapInitialized = false; // 任务18：地图初始化状态
 
-    // Phase 16：中国散点地图覆盖层（64.8：朝/晚双实例，状态隔离）
-    this.chinaSpotsOverlays = {
-      sunrise: new ChinaSpotsOverlay(),
-      sunset: new ChinaSpotsOverlay()
-    };
-    // 兼容旧引用，始终指向当前激活实例
-    this.chinaSpotsOverlay = this._getActiveChinaSpotsOverlay();
+    // Phase 16：中国散点地图覆盖层（64.8：朝/晚独立管理器）
+    this.chinaSpotsOverlayManager = new ChinaSpotsOverlayManager();
+    // 兼容旧引用，指向管理器当前激活的叠加层
+    this.chinaSpotsOverlay = null; // 稍后在 initChinaSpotsMap() 中设置
   }
 
   /**
@@ -1603,15 +1601,14 @@ class WeatherController {
       await this.updateFireCloudOverlay(this.currentLocation);
     }
 
-    if (this._chinaSpotsMapInstance) {
-      this._syncActiveChinaSpotsOverlayRef();
-      const activeOverlay = this._getActiveChinaSpotsOverlay();
+    if (this._chinaSpotsMapInstance && this.chinaSpotsOverlayManager) {
+      this.chinaSpotsOverlayManager.switchPeriod(type);
+      const activeOverlay = this.chinaSpotsOverlayManager.getOverlay(type);
       if (activeOverlay) {
-        activeOverlay.setPeriod(type);
         await activeOverlay.loadAndRender(type);
       }
-      this._hideInactiveChinaSpotsOverlays(type);
-      this._setChinaSpotsEmptyState((activeOverlay?.getSpotCount?.() || 0) === 0);
+      const count = activeOverlay?.getSpotCount?.() || 0;
+      this._setChinaSpotsEmptyState(count === 0);
       this._renderChinaSpotsTimestamp();
     }
   }
@@ -1692,33 +1689,6 @@ class WeatherController {
     return isMainlandChinaLocation(location);
   }
 
-  _getChinaSpotsOverlay(period = this.currentOverlayType) {
-    const safePeriod = period === 'sunrise' ? 'sunrise' : 'sunset';
-    return this.chinaSpotsOverlays?.[safePeriod] || null;
-  }
-
-  _getActiveChinaSpotsOverlay() {
-    const active = this._getChinaSpotsOverlay(this.currentOverlayType);
-    if (active) return active;
-    return this._getChinaSpotsOverlay('sunset') || null;
-  }
-
-  _syncActiveChinaSpotsOverlayRef() {
-    this.chinaSpotsOverlay = this._getActiveChinaSpotsOverlay();
-  }
-
-  _hideInactiveChinaSpotsOverlays(activePeriod = this.currentOverlayType) {
-    const safeActive = activePeriod === 'sunrise' || activePeriod === 'sunset' ? activePeriod : null;
-    ['sunrise', 'sunset'].forEach(period => {
-      const overlay = this._getChinaSpotsOverlay(period);
-      if (!overlay) return;
-
-      const isActive = safeActive ? period === safeActive : false;
-      if (overlay.setButtonVisible) overlay.setButtonVisible(isActive);
-      if (!isActive && overlay.hide) overlay.hide();
-    });
-  }
-
   /**
    * 根据当前位置更新中国火烧云图层显隐。
    * - 中国大陆：展示并初始化/刷新图层
@@ -1735,7 +1705,7 @@ class WeatherController {
       section.classList.add('hidden');
       if (tsEl) tsEl.textContent = '';
       this._setChinaSpotsEmptyState(false);
-      this._hideInactiveChinaSpotsOverlays('none');
+      this.chinaSpotsOverlayManager?.hide();
       return;
     }
 
@@ -1754,8 +1724,9 @@ class WeatherController {
     const tsEl = document.getElementById('china-spots-timestamp');
     if (!tsEl) return;
 
-    this._syncActiveChinaSpotsOverlayRef();
-    const activeOverlay = this._getActiveChinaSpotsOverlay();
+    const activeOverlay = this.chinaSpotsOverlayManager?.getOverlay(
+      this.chinaSpotsOverlayManager?.getActivePeriod() || 'sunset'
+    );
     const count = activeOverlay?.getSpotCount?.() || 0;
     const updatedAt = activeOverlay?.getUpdatedAt?.() || null;
 
@@ -1807,8 +1778,9 @@ class WeatherController {
   async _initChinaSpotsMap() {
     const section = document.getElementById('china-spots-section');
     const mapEl = document.getElementById('china-spots-map');
+    const tabsContainer = document.getElementById('china-spots-tabs-container');
 
-    if (!section || !mapEl) {
+    if (!section || !mapEl || !tabsContainer) {
       console.warn('[WeatherController] 未找到 china-spots-section 元素');
       return;
     }
@@ -1818,14 +1790,10 @@ class WeatherController {
 
     // 若地图已初始化，直接刷新当前时段数据
     if (this._chinaSpotsMapInstance) {
-      this._syncActiveChinaSpotsOverlayRef();
-      const activeOverlay = this._getActiveChinaSpotsOverlay();
+      const activeOverlay = this.chinaSpotsOverlayManager?.getOverlay(this.chinaSpotsOverlayManager.getActivePeriod());
       if (!activeOverlay) return;
 
-      activeOverlay.setPeriod(this.currentOverlayType);
-      await activeOverlay.loadAndRender();
-      this._hideInactiveChinaSpotsOverlays(this.currentOverlayType);
-
+      await activeOverlay.loadAndRender(this.chinaSpotsOverlayManager.getActivePeriod());
       const count = activeOverlay.getSpotCount();
       this._setChinaSpotsEmptyState(count === 0);
       this._renderChinaSpotsTimestamp();
@@ -1876,19 +1844,16 @@ class WeatherController {
 
       this._chinaSpotsMapInstance = map;
 
-      const sunriseOverlay = this._getChinaSpotsOverlay('sunrise');
-      const sunsetOverlay = this._getChinaSpotsOverlay('sunset');
-      sunriseOverlay?.setPeriod('sunrise');
-      sunsetOverlay?.setPeriod('sunset');
-      sunriseOverlay?.init(map);
-      sunsetOverlay?.init(map);
+      // 使用管理器初始化叠加层
+      this.chinaSpotsOverlayManager.init(map, tabsContainer);
 
-      this._syncActiveChinaSpotsOverlayRef();
-      const activeOverlay = this._getActiveChinaSpotsOverlay();
-      await activeOverlay?.loadAndRender(this.currentOverlayType);
-      this._hideInactiveChinaSpotsOverlays(this.currentOverlayType);
+      // 加载所有时段数据
+      await this.chinaSpotsOverlayManager.loadAllPeriods();
 
-      const count = activeOverlay?.getSpotCount?.() || 0;
+      // 更新兼容引用
+      this.chinaSpotsOverlay = this.chinaSpotsOverlayManager._getActiveOverlay();
+
+      const count = this.chinaSpotsOverlay.getSpotCount();
       this._setChinaSpotsEmptyState(count === 0);
       this._renderChinaSpotsTimestamp();
 
