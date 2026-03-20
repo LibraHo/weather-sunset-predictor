@@ -32,6 +32,12 @@ function getZoomOpacityFactor(zoom = 5) {
   return clamp(1.04 - (zoom - 5) * 0.09, 0.62, 1.08);
 }
 
+export function getCanvasFilterStyle(zoom = 5) {
+  const blurPx = clamp(6.2 - (zoom - 4) * 0.55, 2.2, 6.2);
+  const warmBoost = clamp(1.08 - (zoom - 5) * 0.025, 0.95, 1.1);
+  return `blur(${blurPx.toFixed(1)}px) saturate(${warmBoost.toFixed(2)})`;
+}
+
 function getViewportPaddingDeg(zoom = 5) {
   return clamp(3.2 - (zoom - 4) * 0.35, 1.1, 3.2);
 }
@@ -244,10 +250,11 @@ export default class ChinaSpotsOverlay {
     }
 
     const ctx = this._ctx;
+    const zoom = this._map.getZoom();
+
+    this._canvas.style.filter = getCanvasFilterStyle(zoom);
     ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
     ctx.globalCompositeOperation = 'lighter';
-
-    const zoom = this._map.getZoom();
 
     let viewport = null;
     if (typeof this._map.getBounds === 'function') {

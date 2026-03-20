@@ -4,7 +4,8 @@ import ChinaSpotsOverlay, {
   mapScoreToOverlayStyle,
   normalizeOverlayScore,
   isRenderableMainlandSpot,
-  isSpotInViewport
+  isSpotInViewport,
+  getCanvasFilterStyle
 } from '../../../src/services/ChinaSpotsOverlay.js';
 
 function rgbaAlpha(rgba) {
@@ -38,6 +39,11 @@ describe('ChinaSpotsOverlay helpers', () => {
 
     expect(rgbaAlpha(z10.innerColor)).toBeLessThan(rgbaAlpha(z4.innerColor));
     expect(rgbaAlpha(z10.haloColor)).toBeLessThan(rgbaAlpha(z4.haloColor));
+  });
+
+  test('getCanvasFilterStyle: 低缩放更强平滑，高缩放降低模糊', () => {
+    expect(getCanvasFilterStyle(4)).toContain('blur(6.2px)');
+    expect(getCanvasFilterStyle(10)).toContain('blur(2.9px)');
   });
 
   test('normalizeOverlayScore: 对低分更保守，映射在 0~1 区间', () => {
@@ -161,6 +167,7 @@ describe('ChinaSpotsOverlay integration', () => {
     expect(mockCtx.arc).toHaveBeenCalledTimes(2);
     expect(mockCtx.fill).toHaveBeenCalledTimes(2);
     expect(mockCtx.clearRect).toHaveBeenCalled();
+    expect(overlay._canvas.style.filter).toBe(getCanvasFilterStyle(6));
     expect(mockCtx.globalCompositeOperation).toBe('source-over');
   });
 
