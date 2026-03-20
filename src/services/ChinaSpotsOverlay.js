@@ -6,7 +6,7 @@
  * - 区域策略：仅渲染中国大陆区域（排除南海远海/台湾区域）
  */
 
-import { isInMainlandChina } from '../utils/mainlandChinaRegion.js';
+import { isInMainlandChina, MAINLAND_BOUNDS } from '../utils/mainlandChinaRegion.js';
 
 export const MAINLAND_RENDER_MIN_SCORE = 40;
 
@@ -38,6 +38,21 @@ export function getDensityOpacityFactor(spotsInViewCount = 0, zoom = 5) {
   const base = 1.05 - density * 0.2;
   const zoomCompensation = zoom <= 5 ? 0.04 : 0;
   return clamp(base + zoomCompensation, 0.72, 1.08);
+}
+
+export function getMainlandEdgeOpacityFactor(spot, zoom = 5) {
+  if (!spot || !Number.isFinite(spot.lat) || !Number.isFinite(spot.lon)) return 1;
+
+  const distToBorderDeg = Math.min(
+    spot.lon - MAINLAND_BOUNDS.lonMin,
+    MAINLAND_BOUNDS.lonMax - spot.lon,
+    spot.lat - MAINLAND_BOUNDS.latMin,
+    MAINLAND_BOUNDS.latMax - spot.lat
+  );
+
+  const featherBandDeg = clamp(2.6 - (zoom - 5) * 0.18, 1.4, 2.8);
+  const t = smoothstep01(clamp(distToBorderDeg / featherBandDeg, 0, 1));
+  return clamp(0.66 + t * 0.34, 0.66, 1);
 }
 
 export function getCanvasFilterStyle(zoom = 5) {
@@ -294,7 +309,9 @@ export default class ChinaSpotsOverlay {
 
     spotsToDraw.forEach(spot => {
       const pt = this._map.latLngToContainerPoint(window.L.latLng(spot.lat, spot.lon));
-      const { radiusPx, haloRadiusPx, haloColor, innerColor, midColor, outerColor } = mapScoreToOverlayStyle(spot.score, zoom, densityOpacityFactor);
+      const edgeOpacityFactor = getMainlandEdgeOpacityFactor(spot, zoom);
+      const opacityFactor = densityOpacityFactor * edgeOpacityFactor;
+      const { radiusPx, haloRadiusPx, haloColor, innerColor, midColor, outerColor } = mapScoreToOverlayStyle(spot.score, zoom, opacityFactor);
 
       const haloGrad = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, haloRadiusPx);
       haloGrad.addColorStop(0.0, haloColor);
