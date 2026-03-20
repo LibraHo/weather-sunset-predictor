@@ -18,8 +18,44 @@ function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
+function smoothstep01(t) {
+  const x = clamp(t, 0, 1);
+  return x * x * (3 - 2 * x);
+}
+
 function alpha(base, scoreNorm) {
-  return (base * (0.78 + scoreNorm * 0.32)).toFixed(3);
+  return (base * (0.76 + scoreNorm * 0.38)).toFixed(3);
+}
+
+const FIRECLOUD_PALETTE = [
+  { t: 0, rgb: [255, 214, 132] },
+  { t: 0.45, rgb: [255, 158, 74] },
+  { t: 1, rgb: [255, 82, 18] }
+];
+
+function interpolatePalette(norm) {
+  const x = clamp(norm, 0, 1);
+  for (let i = 0; i < FIRECLOUD_PALETTE.length - 1; i += 1) {
+    const left = FIRECLOUD_PALETTE[i];
+    const right = FIRECLOUD_PALETTE[i + 1];
+    if (x >= left.t && x <= right.t) {
+      const localT = (x - left.t) / (right.t - left.t);
+      return {
+        r: Math.round(lerp(left.rgb[0], right.rgb[0], localT)),
+        g: Math.round(lerp(left.rgb[1], right.rgb[1], localT)),
+        b: Math.round(lerp(left.rgb[2], right.rgb[2], localT))
+      };
+    }
+  }
+
+  const [r, g, b] = FIRECLOUD_PALETTE[FIRECLOUD_PALETTE.length - 1].rgb;
+  return { r, g, b };
+}
+
+export function normalizeOverlayScore(score) {
+  const safeScore = clamp(Number.isFinite(score) ? score : 0, MAINLAND_RENDER_MIN_SCORE, 95);
+  const linearNorm = (safeScore - MAINLAND_RENDER_MIN_SCORE) / (95 - MAINLAND_RENDER_MIN_SCORE);
+  return smoothstep01(linearNorm);
 }
 
 /**
@@ -28,30 +64,21 @@ function alpha(base, scoreNorm) {
  * @param {number} zoom
  */
 export function mapScoreToOverlayStyle(score, zoom = 4) {
-  const safeScore = clamp(Number.isFinite(score) ? score : 0, MAINLAND_RENDER_MIN_SCORE, 95);
-  const scoreNorm = (safeScore - MAINLAND_RENDER_MIN_SCORE) / (95 - MAINLAND_RENDER_MIN_SCORE);
-  const zoomFactor = Math.pow(1.15, Math.max(0, zoom - 5));
+  const scoreNorm = normalizeOverlayScore(score);
+  const zoomFactor = Math.pow(1.12, Math.max(0, zoom - 5));
 
-  const radiusPx = clamp(lerp(58, 112, scoreNorm) * zoomFactor, 42, 240);
-  const haloRadiusPx = clamp(radiusPx * lerp(1.35, 1.75, scoreNorm), radiusPx + 8, 320);
+  const radiusPx = clamp(lerp(62, 124, scoreNorm) * zoomFactor, 44, 240);
+  const haloRadiusPx = clamp(radiusPx * lerp(1.42, 1.88, scoreNorm), radiusPx + 10, 330);
 
-  const warm = {
-    r: Math.round(lerp(255, 255, scoreNorm)),
-    g: Math.round(lerp(198, 90, scoreNorm)),
-    b: Math.round(lerp(92, 8, scoreNorm))
-  };
-  const glow = {
-    r: Math.round(lerp(255, 255, scoreNorm)),
-    g: Math.round(lerp(226, 160, scoreNorm)),
-    b: Math.round(lerp(145, 40, scoreNorm))
-  };
+  const warm = interpolatePalette(scoreNorm);
+  const glow = interpolatePalette(clamp(scoreNorm * 0.82, 0, 1));
 
   return {
     radiusPx,
     haloRadiusPx,
-    haloColor: `rgba(${glow.r}, ${glow.g}, ${glow.b}, ${alpha(0.16, scoreNorm)})`,
-    innerColor: `rgba(${warm.r}, ${warm.g}, ${warm.b}, ${alpha(0.72, scoreNorm)})`,
-    midColor: `rgba(${glow.r}, ${glow.g}, ${glow.b}, ${alpha(0.34, scoreNorm)})`,
+    haloColor: `rgba(${glow.r}, ${glow.g}, ${glow.b}, ${alpha(0.19, scoreNorm)})`,
+    innerColor: `rgba(${warm.r}, ${warm.g}, ${warm.b}, ${alpha(0.76, scoreNorm)})`,
+    midColor: `rgba(${glow.r}, ${glow.g}, ${glow.b}, ${alpha(0.38, scoreNorm)})`,
     outerColor: `rgba(${glow.r}, ${glow.g}, ${glow.b}, 0)`
   };
 }

@@ -1264,6 +1264,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 - [~] 64.7（2026-03-20 增量）
   - [ ] `tests/unit/server/SunsetSpotsService.test.js`：网格生成、缓存逻辑、过滤
   - [x] `tests/unit/services/ChinaSpotsOverlay.test.js`：连续图层渲染（halo + 主体双层渐变）、地域检测过滤
+  - [x] `tests/unit/services/ChinaSpotsOverlay.test.js`：新增分值平滑归一化（normalizeOverlayScore）与连续色带映射回归用例
   - _关联需求：37_
 
 ---

@@ -2,6 +2,7 @@ import { jest } from '@jest/globals';
 import ChinaSpotsOverlay, {
   MAINLAND_RENDER_MIN_SCORE,
   mapScoreToOverlayStyle,
+  normalizeOverlayScore,
   isRenderableMainlandSpot
 } from '../../../src/services/ChinaSpotsOverlay.js';
 
@@ -23,6 +24,17 @@ describe('ChinaSpotsOverlay helpers', () => {
     const z8 = mapScoreToOverlayStyle(75, 8);
     expect(z8.radiusPx).toBeGreaterThan(z4.radiusPx);
     expect(z8.haloRadiusPx).toBeGreaterThan(z4.haloRadiusPx);
+  });
+
+  test('normalizeOverlayScore: 对低分更保守，映射在 0~1 区间', () => {
+    const s40 = normalizeOverlayScore(40);
+    const s65 = normalizeOverlayScore(65);
+    const s90 = normalizeOverlayScore(90);
+
+    expect(s40).toBeGreaterThanOrEqual(0);
+    expect(s90).toBeLessThanOrEqual(1);
+    expect(s65).toBeGreaterThan(s40);
+    expect(s90).toBeGreaterThan(s65);
   });
 
   test('isRenderableMainlandSpot: 仅保留大陆有效点', () => {
