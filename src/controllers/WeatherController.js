@@ -1597,6 +1597,11 @@ class WeatherController {
     if (this.fireCloudOverlayEnabled && this.currentLocation && this.surroundingData) {
       await this.updateFireCloudOverlay(this.currentLocation);
     }
+
+    if (this._chinaSpotsMapInstance && this.chinaSpotsOverlay) {
+      this.chinaSpotsOverlay.setPeriod(type);
+      await this.chinaSpotsOverlay.loadAndRender(type);
+    }
   }
 
   /**
@@ -1739,6 +1744,7 @@ class WeatherController {
 
     // 若地图已初始化，直接刷新数据
     if (this._chinaSpotsMapInstance) {
+      this.chinaSpotsOverlay.setPeriod(this.currentOverlayType);
       await this.chinaSpotsOverlay.loadAndRender();
 
       const count = this.chinaSpotsOverlay.getSpotCount();
@@ -1787,6 +1793,7 @@ class WeatherController {
       this.chinaSpotsOverlay.init(map);
 
       // 加载散点
+      this.chinaSpotsOverlay.setPeriod(this.currentOverlayType);
       await this.chinaSpotsOverlay.loadAndRender();
 
       const count = this.chinaSpotsOverlay.getSpotCount();

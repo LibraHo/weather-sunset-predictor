@@ -1282,7 +1282,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 #### 64.8 朝霞/晚霞分离（执行中）
 
-- [ ] 后端 `/api/spots/china` 支持 `period=sunrise|sunset` 的独立缓存与返回
+- [x] 2026-03-20 增量：后端 `/api/spots/china` 支持 `period=sunrise|sunset` 参数，接入分时段独立缓存读取/刷新并返回 `period`
 - [ ] 前端拆分为朝霞/晚霞两套独立状态与渲染容器（不复用同一 overlay）
 - [ ] 交互层提供朝/晚分栏或双卡片并行展示
 - _关联需求：37.2_

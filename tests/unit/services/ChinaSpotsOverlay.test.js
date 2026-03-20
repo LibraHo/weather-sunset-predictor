@@ -9,7 +9,8 @@ import ChinaSpotsOverlay, {
   getOverlayBlendMode,
   getDensityOpacityFactor,
   getMainlandEdgeOpacityFactor,
-  getPlumeDriftOffset
+  getPlumeDriftOffset,
+  normalizeSpotsPeriod
 } from '../../../src/services/ChinaSpotsOverlay.js';
 
 function rgbaAlpha(rgba) {
@@ -142,6 +143,12 @@ describe('ChinaSpotsOverlay helpers', () => {
     expect(isSpotInViewport({ lat: 24.9, lon: 121.5 }, viewport)).toBe(false);
     expect(isSpotInViewport({ lat: 31.2, lon: 122.1 }, viewport)).toBe(false);
   });
+
+  test('normalizeSpotsPeriod: 仅允许 sunrise/sunset，非法值回落 sunset', () => {
+    expect(normalizeSpotsPeriod('sunrise')).toBe('sunrise');
+    expect(normalizeSpotsPeriod('sunset')).toBe('sunset');
+    expect(normalizeSpotsPeriod('NOON')).toBe('sunset');
+  });
 });
 
 describe('ChinaSpotsOverlay integration', () => {
@@ -211,7 +218,7 @@ describe('ChinaSpotsOverlay integration', () => {
 
     await overlay.loadAndRender();
 
-    expect(fetch).toHaveBeenCalledWith('/api/spots/china');
+    expect(fetch).toHaveBeenCalledWith('/api/spots/china?period=sunset');
     expect(overlay._spots).toHaveLength(1);
     expect(overlay.getSpotCount()).toBe(1);
     expect(overlay._spots[0]).toEqual(expect.objectContaining({ lat: 39.9, lon: 116.4 }));
@@ -236,6 +243,19 @@ describe('ChinaSpotsOverlay integration', () => {
     expect(overlay.getSpotCount()).toBe(0);
     expect(overlay._visible).toBe(false);
     expect(overlay._button.style.display).toBe('none');
+  });
+
+  test('setPeriod + loadAndRender: 支持朝/晚独立接口参数', async () => {
+    fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ updatedAt: '2026-03-20T02:00:00.000Z', spots: [] })
+    });
+
+    overlay.setPeriod('sunrise');
+    await overlay.loadAndRender();
+
+    expect(overlay.getPeriod()).toBe('sunrise');
+    expect(fetch).toHaveBeenCalledWith('/api/spots/china?period=sunrise');
   });
 
   test('show 后 _redrawCanvas: 每个点绘制 plume + halo + 主体三层渐变', () => {

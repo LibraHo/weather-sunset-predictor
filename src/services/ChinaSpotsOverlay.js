@@ -9,6 +9,7 @@
 import { isInMainlandChina, MAINLAND_BOUNDS } from '../utils/mainlandChinaRegion.js';
 
 export const MAINLAND_RENDER_MIN_SCORE = 40;
+const SUPPORTED_SPOT_PERIODS = ['sunrise', 'sunset'];
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -68,6 +69,11 @@ export function getOverlayBlendMode(zoom = 5) {
 
 function getViewportPaddingDeg(zoom = 5) {
   return clamp(3.2 - (zoom - 4) * 0.35, 1.1, 3.2);
+}
+
+export function normalizeSpotsPeriod(period = 'sunset') {
+  const safe = typeof period === 'string' ? period.toLowerCase() : 'sunset';
+  return SUPPORTED_SPOT_PERIODS.includes(safe) ? safe : 'sunset';
 }
 
 export function isSpotInViewport(spot, viewport) {
@@ -176,6 +182,7 @@ export default class ChinaSpotsOverlay {
     this._animFrame = null;
     this._boundRedraw = null;
     this._boundMove = null;
+    this._period = 'sunset';
   }
 
   getSpotCount() {
@@ -267,14 +274,25 @@ export default class ChinaSpotsOverlay {
     }
   }
 
-  async loadAndRender() {
+  setPeriod(period) {
+    this._period = normalizeSpotsPeriod(period);
+  }
+
+  getPeriod() {
+    return this._period;
+  }
+
+  async loadAndRender(period = this._period) {
     if (!this._map) {
       console.warn('[ChinaSpotsOverlay] 地图未初始化，无法渲染');
       return;
     }
 
+    this._period = normalizeSpotsPeriod(period);
+
     try {
-      const res = await fetch('/api/spots/china');
+      const params = new URLSearchParams({ period: this._period });
+      const res = await fetch(`/api/spots/china?${params.toString()}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
 
@@ -290,7 +308,7 @@ export default class ChinaSpotsOverlay {
 
       this._setButtonVisibility(true);
       this.show();
-      console.log(`[ChinaSpotsOverlay] 已加载并渲染 ${this._spots.length} 个大陆点位`);
+      console.log(`[ChinaSpotsOverlay] 已加载并渲染 ${this._spots.length} 个大陆点位（${this._period}）`);
     } catch (err) {
       console.error('[ChinaSpotsOverlay] 加载散点失败:', err);
     }
@@ -412,6 +430,10 @@ export default class ChinaSpotsOverlay {
     if (this._ctx && this._canvas) {
       this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
     }
+  }
+
+  getSpotCount() {
+    return this._spots.length;
   }
 
   getUpdatedAt() {
