@@ -27,6 +27,20 @@ function alpha(base, scoreNorm) {
   return (base * (0.76 + scoreNorm * 0.38)).toFixed(3);
 }
 
+function getViewportPaddingDeg(zoom = 5) {
+  return clamp(3.2 - (zoom - 4) * 0.35, 1.1, 3.2);
+}
+
+export function isSpotInViewport(spot, viewport) {
+  if (!spot || !viewport) return true;
+  return (
+    spot.lat >= viewport.latMin &&
+    spot.lat <= viewport.latMax &&
+    spot.lon >= viewport.lonMin &&
+    spot.lon <= viewport.lonMax
+  );
+}
+
 const FIRECLOUD_PALETTE = [
   { t: 0, rgb: [255, 214, 132] },
   { t: 0.45, rgb: [255, 158, 74] },
@@ -228,7 +242,30 @@ export default class ChinaSpotsOverlay {
     ctx.globalCompositeOperation = 'lighter';
 
     const zoom = this._map.getZoom();
-    this._spots.forEach(spot => {
+
+    let viewport = null;
+    if (typeof this._map.getBounds === 'function') {
+      const bounds = this._map.getBounds();
+      if (
+        bounds &&
+        typeof bounds.getSouth === 'function' &&
+        typeof bounds.getNorth === 'function' &&
+        typeof bounds.getWest === 'function' &&
+        typeof bounds.getEast === 'function'
+      ) {
+        const pad = getViewportPaddingDeg(zoom);
+        viewport = {
+          latMin: bounds.getSouth() - pad,
+          latMax: bounds.getNorth() + pad,
+          lonMin: bounds.getWest() - pad,
+          lonMax: bounds.getEast() + pad
+        };
+      }
+    }
+
+    const spotsToDraw = viewport ? this._spots.filter(spot => isSpotInViewport(spot, viewport)) : this._spots;
+
+    spotsToDraw.forEach(spot => {
       const pt = this._map.latLngToContainerPoint(window.L.latLng(spot.lat, spot.lon));
       const { radiusPx, haloRadiusPx, haloColor, innerColor, midColor, outerColor } = mapScoreToOverlayStyle(spot.score, zoom);
 
