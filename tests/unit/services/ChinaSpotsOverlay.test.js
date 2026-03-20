@@ -4,8 +4,14 @@ import ChinaSpotsOverlay, {
   mapScoreToOverlayStyle,
   normalizeOverlayScore,
   isRenderableMainlandSpot,
-  isSpotInViewport
+  isSpotInViewport,
+  getCanvasFilterStyle
 } from '../../../src/services/ChinaSpotsOverlay.js';
+
+function rgbaAlpha(rgba) {
+  const match = /,\s*([0-9.]+)\)$/.exec(rgba);
+  return match ? Number(match[1]) : NaN;
+}
 
 describe('ChinaSpotsOverlay helpers', () => {
   test('mapScoreToOverlayStyle: 分数越高半径越大，且包含外扩 halo 层', () => {
@@ -25,6 +31,19 @@ describe('ChinaSpotsOverlay helpers', () => {
     const z8 = mapScoreToOverlayStyle(75, 8);
     expect(z8.radiusPx).toBeGreaterThan(z4.radiusPx);
     expect(z8.haloRadiusPx).toBeGreaterThan(z4.haloRadiusPx);
+  });
+
+  test('mapScoreToOverlayStyle: 高缩放下透明度自动衰减，避免高亮过曝', () => {
+    const z4 = mapScoreToOverlayStyle(85, 4);
+    const z10 = mapScoreToOverlayStyle(85, 10);
+
+    expect(rgbaAlpha(z10.innerColor)).toBeLessThan(rgbaAlpha(z4.innerColor));
+    expect(rgbaAlpha(z10.haloColor)).toBeLessThan(rgbaAlpha(z4.haloColor));
+  });
+
+  test('getCanvasFilterStyle: 低缩放更强平滑，高缩放降低模糊', () => {
+    expect(getCanvasFilterStyle(4)).toContain('blur(6.2px)');
+    expect(getCanvasFilterStyle(10)).toContain('blur(2.9px)');
   });
 
   test('normalizeOverlayScore: 对低分更保守，映射在 0~1 区间', () => {
@@ -148,6 +167,7 @@ describe('ChinaSpotsOverlay integration', () => {
     expect(mockCtx.arc).toHaveBeenCalledTimes(2);
     expect(mockCtx.fill).toHaveBeenCalledTimes(2);
     expect(mockCtx.clearRect).toHaveBeenCalled();
+    expect(overlay._canvas.style.filter).toBe(getCanvasFilterStyle(6));
     expect(mockCtx.globalCompositeOperation).toBe('source-over');
   });
 

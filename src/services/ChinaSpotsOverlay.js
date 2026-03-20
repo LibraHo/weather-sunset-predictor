@@ -23,8 +23,19 @@ function smoothstep01(t) {
   return x * x * (3 - 2 * x);
 }
 
-function alpha(base, scoreNorm) {
-  return (base * (0.76 + scoreNorm * 0.38)).toFixed(3);
+function alpha(base, scoreNorm, zoomOpacityFactor = 1) {
+  const raw = base * (0.76 + scoreNorm * 0.38) * zoomOpacityFactor;
+  return clamp(raw, 0, 0.95).toFixed(3);
+}
+
+function getZoomOpacityFactor(zoom = 5) {
+  return clamp(1.04 - (zoom - 5) * 0.09, 0.62, 1.08);
+}
+
+export function getCanvasFilterStyle(zoom = 5) {
+  const blurPx = clamp(6.2 - (zoom - 4) * 0.55, 2.2, 6.2);
+  const warmBoost = clamp(1.08 - (zoom - 5) * 0.025, 0.95, 1.1);
+  return `blur(${blurPx.toFixed(1)}px) saturate(${warmBoost.toFixed(2)})`;
 }
 
 function getViewportPaddingDeg(zoom = 5) {
@@ -86,13 +97,14 @@ export function mapScoreToOverlayStyle(score, zoom = 4) {
 
   const warm = interpolatePalette(scoreNorm);
   const glow = interpolatePalette(clamp(scoreNorm * 0.82, 0, 1));
+  const zoomOpacityFactor = getZoomOpacityFactor(zoom);
 
   return {
     radiusPx,
     haloRadiusPx,
-    haloColor: `rgba(${glow.r}, ${glow.g}, ${glow.b}, ${alpha(0.19, scoreNorm)})`,
-    innerColor: `rgba(${warm.r}, ${warm.g}, ${warm.b}, ${alpha(0.76, scoreNorm)})`,
-    midColor: `rgba(${glow.r}, ${glow.g}, ${glow.b}, ${alpha(0.38, scoreNorm)})`,
+    haloColor: `rgba(${glow.r}, ${glow.g}, ${glow.b}, ${alpha(0.19, scoreNorm, zoomOpacityFactor)})`,
+    innerColor: `rgba(${warm.r}, ${warm.g}, ${warm.b}, ${alpha(0.76, scoreNorm, zoomOpacityFactor)})`,
+    midColor: `rgba(${glow.r}, ${glow.g}, ${glow.b}, ${alpha(0.38, scoreNorm, zoomOpacityFactor)})`,
     outerColor: `rgba(${glow.r}, ${glow.g}, ${glow.b}, 0)`
   };
 }
@@ -238,10 +250,11 @@ export default class ChinaSpotsOverlay {
     }
 
     const ctx = this._ctx;
+    const zoom = this._map.getZoom();
+
+    this._canvas.style.filter = getCanvasFilterStyle(zoom);
     ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
     ctx.globalCompositeOperation = 'lighter';
-
-    const zoom = this._map.getZoom();
 
     let viewport = null;
     if (typeof this._map.getBounds === 'function') {
