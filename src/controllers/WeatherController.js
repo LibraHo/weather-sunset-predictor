@@ -20,7 +20,7 @@ import i18n from '../i18n.js';
 import toastService from '../services/ToastService.js';
 import ChartRenderController from './ChartRenderController.js';
 import ChinaSpotsOverlay from '../services/ChinaSpotsOverlay.js';
-import { isInMainlandChina } from '../utils/mainlandChinaRegion.js';
+import { isInMainlandChina, MAINLAND_BOUNDS } from '../utils/mainlandChinaRegion.js';
 // 暂时禁用 ChartService 导入，使用内联简化版本
 
 class WeatherController {
@@ -1767,6 +1767,35 @@ class WeatherController {
       : '今日数据';
   }
 
+  _getChinaSpotsMapOptions() {
+    return {
+      center: [35, 105],
+      zoom: 4,
+      minZoom: 4,
+      maxZoom: 4,
+      zoomControl: false,
+      attributionControl: false,
+      dragging: false,
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      boxZoom: false,
+      keyboard: false,
+      touchZoom: false,
+      tap: false
+    };
+  }
+
+  _getChinaMainlandMapBounds() {
+    if (typeof window === 'undefined' || !window.L || typeof window.L.latLngBounds !== 'function') {
+      return null;
+    }
+
+    return window.L.latLngBounds(
+      [MAINLAND_BOUNDS.latMin, MAINLAND_BOUNDS.lonMin],
+      [MAINLAND_BOUNDS.latMax, MAINLAND_BOUNDS.lonMax]
+    );
+  }
+
   /**
    * 初始化并展示中国散点地图（嵌入预测卡片底部）
    * 仅在位置位于中国境内时调用。
@@ -1805,13 +1834,19 @@ class WeatherController {
         return;
       }
 
-      // 初始化 Leaflet 地图（中国中心）
-      const map = window.L.map(mapEl, {
-        center: [35, 105],
-        zoom: 4,
-        zoomControl: true,
-        attributionControl: false
-      });
+      // 初始化 Leaflet 地图（静态中国范围，不可拖拽/缩放）
+      const mapOptions = this._getChinaSpotsMapOptions();
+      const map = window.L.map(mapEl, mapOptions);
+
+      const mainlandBounds = this._getChinaMainlandMapBounds();
+      if (mainlandBounds) {
+        if (typeof map.fitBounds === 'function') {
+          map.fitBounds(mainlandBounds, { animate: false, padding: [8, 8] });
+        }
+        if (typeof map.setMaxBounds === 'function') {
+          map.setMaxBounds(mainlandBounds);
+        }
+      }
 
       // 地图底图：根据设置选择（auto/gaode/osm）
       const mapTileSetting = localStorage.getItem('map_tile_provider') || 'auto';
