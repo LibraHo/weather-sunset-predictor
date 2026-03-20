@@ -178,6 +178,10 @@ export default class ChinaSpotsOverlay {
     this._boundMove = null;
   }
 
+  getSpotCount() {
+    return this._spots.length;
+  }
+
   init(leafletMap) {
     this._map = leafletMap;
     this._initCanvas();
@@ -228,7 +232,8 @@ export default class ChinaSpotsOverlay {
       'cursor: pointer',
       'backdrop-filter: blur(4px)',
       'transition: background 0.2s, border-color 0.2s',
-      'white-space: nowrap'
+      'white-space: nowrap',
+      'display: none'
     ].join(';');
 
     btn.addEventListener('click', () => this.toggle());
@@ -242,6 +247,11 @@ export default class ChinaSpotsOverlay {
       this._animFrame = null;
       this._redrawCanvas();
     });
+  }
+
+  _setButtonVisibility(visible) {
+    if (!this._button) return;
+    this._button.style.display = visible ? 'inline-flex' : 'none';
   }
 
   _updateButtonState() {
@@ -274,9 +284,11 @@ export default class ChinaSpotsOverlay {
       if (this._spots.length === 0) {
         console.log('[ChinaSpotsOverlay] 暂无中国大陆散点数据');
         this.hide();
+        this._setButtonVisibility(false);
         return;
       }
 
+      this._setButtonVisibility(true);
       this.show();
       console.log(`[ChinaSpotsOverlay] 已加载并渲染 ${this._spots.length} 个大陆点位`);
     } catch (err) {
