@@ -10,7 +10,7 @@ const gridService = require('../services/GridScoreService');
 
 /**
  * GET /api/spots/china
- * 从 GridScoreService 缓存中返回所有采样点，前端自行决定渲染逻辑
+ * 从 GridScoreService 缓存中返回评分 >= 60 的散点数据
  */
 router.get('/china', async (req, res, next) => {
   try {
@@ -25,13 +25,14 @@ router.get('/china', async (req, res, next) => {
 
     const today = new Date().toISOString().slice(0, 10);
     const spots = cache.gridPoints
-      .filter(p => p.score != null)
+      .filter(p => typeof p.score === 'number' && p.score >= 60)
       .map(p => ({
         lat: p.lat,
         lon: p.lon,
         score: p.score,
-        quality: p.score >= 80 ? '顶级' : p.score >= 60 ? '优质' : p.score >= 40 ? '良好' : '一般'
-      }));
+        quality: p.score >= 80 ? '顶级' : '优质'
+      }))
+      .sort((a, b) => b.score - a.score);
 
     res.json({
       updatedAt: cache.updatedAt,
