@@ -6,7 +6,8 @@ import ChinaSpotsOverlay, {
   isRenderableMainlandSpot,
   isSpotInViewport,
   getCanvasFilterStyle,
-  getOverlayBlendMode
+  getOverlayBlendMode,
+  getDensityOpacityFactor
 } from '../../../src/services/ChinaSpotsOverlay.js';
 
 function rgbaAlpha(rgba) {
@@ -51,6 +52,23 @@ describe('ChinaSpotsOverlay helpers', () => {
     expect(getOverlayBlendMode(4)).toBe('screen');
     expect(getOverlayBlendMode(6)).toBe('screen');
     expect(getOverlayBlendMode(7)).toBe('lighter');
+  });
+
+  test('getDensityOpacityFactor: 视窗点位越密集，透明度因子越低（防过曝）', () => {
+    const sparse = getDensityOpacityFactor(2, 5);
+    const dense = getDensityOpacityFactor(36, 5);
+
+    expect(sparse).toBeGreaterThan(dense);
+    expect(dense).toBeGreaterThanOrEqual(0.72);
+    expect(sparse).toBeLessThanOrEqual(1.08);
+  });
+
+  test('mapScoreToOverlayStyle: 密集点位下透明度更保守', () => {
+    const sparse = mapScoreToOverlayStyle(88, 5, getDensityOpacityFactor(2, 5));
+    const dense = mapScoreToOverlayStyle(88, 5, getDensityOpacityFactor(40, 5));
+
+    expect(rgbaAlpha(dense.innerColor)).toBeLessThan(rgbaAlpha(sparse.innerColor));
+    expect(rgbaAlpha(dense.haloColor)).toBeLessThan(rgbaAlpha(sparse.haloColor));
   });
 
   test('normalizeOverlayScore: 对低分更保守，映射在 0~1 区间', () => {

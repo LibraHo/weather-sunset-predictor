@@ -1247,6 +1247,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - [x] 2026-03-20 增量：新增 zoom-aware canvas blur+saturate 平滑映射（低缩放更连续、高缩放降模糊），强化中国大陆连续火烧云层视觉贴近参考风格
   - [x] 2026-03-20 增量：连续图层加入“高缩放透明度衰减（zoom-aware alpha ramp）”，避免放大时光晕过曝，更贴近参考火烧云叠加风格
   - [x] 2026-03-20 增量：连续图层混合模式按缩放切换（low zoom=screen / high zoom=lighter），低缩放更接近参考的连续云带质感，高缩放保留局部层次
+  - [x] 2026-03-20 增量：新增视窗密度自适应透明度（density-aware opacity），高密度区域自动降透明，减少过曝并保持连续层次
   - `init(leafletMap)` → 挂载到现有地图实例
   - `loadAndRender()` → 调用 `/api/spots/china`，用 Leaflet marker 渲染
   - 图标：评分≥80 用 🌅，60–79 用 🌄，Leaflet DivIcon 实现
@@ -1270,6 +1271,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - [x] `tests/unit/services/ChinaSpotsOverlay.test.js`：连续图层渲染（halo + 主体双层渐变）、地域检测过滤
   - [x] `tests/unit/services/ChinaSpotsOverlay.test.js`：新增分值平滑归一化（normalizeOverlayScore）与连续色带映射回归用例
   - [x] `tests/unit/services/ChinaSpotsOverlay.test.js`：新增高缩放透明度衰减（zoom-aware alpha）与 zoom-aware canvas filter（blur+saturate）回归用例，防止放大过曝
+  - [x] `tests/unit/services/ChinaSpotsOverlay.test.js`：新增 density-aware opacity 回归用例（视窗点位密度越高透明度越低），防止大陆连续图层局部过曝
   - _关联需求：37_
 
 ---

@@ -32,6 +32,14 @@ function getZoomOpacityFactor(zoom = 5) {
   return clamp(1.04 - (zoom - 5) * 0.09, 0.62, 1.08);
 }
 
+export function getDensityOpacityFactor(spotsInViewCount = 0, zoom = 5) {
+  const count = Number.isFinite(spotsInViewCount) ? spotsInViewCount : 0;
+  const density = clamp(count / 18, 0, 1.8);
+  const base = 1.05 - density * 0.2;
+  const zoomCompensation = zoom <= 5 ? 0.04 : 0;
+  return clamp(base + zoomCompensation, 0.72, 1.08);
+}
+
 export function getCanvasFilterStyle(zoom = 5) {
   const blurPx = clamp(6.2 - (zoom - 4) * 0.55, 2.2, 6.2);
   const warmBoost = clamp(1.08 - (zoom - 5) * 0.025, 0.95, 1.1);
@@ -93,7 +101,7 @@ export function normalizeOverlayScore(score) {
  * @param {number} score
  * @param {number} zoom
  */
-export function mapScoreToOverlayStyle(score, zoom = 4) {
+export function mapScoreToOverlayStyle(score, zoom = 4, opacityFactor = 1) {
   const scoreNorm = normalizeOverlayScore(score);
   const zoomFactor = Math.pow(1.12, Math.max(0, zoom - 5));
 
@@ -102,7 +110,7 @@ export function mapScoreToOverlayStyle(score, zoom = 4) {
 
   const warm = interpolatePalette(scoreNorm);
   const glow = interpolatePalette(clamp(scoreNorm * 0.82, 0, 1));
-  const zoomOpacityFactor = getZoomOpacityFactor(zoom);
+  const zoomOpacityFactor = getZoomOpacityFactor(zoom) * clamp(opacityFactor, 0.72, 1.08);
 
   return {
     radiusPx,
@@ -282,10 +290,11 @@ export default class ChinaSpotsOverlay {
     }
 
     const spotsToDraw = viewport ? this._spots.filter(spot => isSpotInViewport(spot, viewport)) : this._spots;
+    const densityOpacityFactor = getDensityOpacityFactor(spotsToDraw.length, zoom);
 
     spotsToDraw.forEach(spot => {
       const pt = this._map.latLngToContainerPoint(window.L.latLng(spot.lat, spot.lon));
-      const { radiusPx, haloRadiusPx, haloColor, innerColor, midColor, outerColor } = mapScoreToOverlayStyle(spot.score, zoom);
+      const { radiusPx, haloRadiusPx, haloColor, innerColor, midColor, outerColor } = mapScoreToOverlayStyle(spot.score, zoom, densityOpacityFactor);
 
       const haloGrad = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, haloRadiusPx);
       haloGrad.addColorStop(0.0, haloColor);
