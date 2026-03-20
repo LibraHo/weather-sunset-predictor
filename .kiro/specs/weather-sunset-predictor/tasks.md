@@ -66,7 +66,7 @@
 
 ## 代码质量优化任务（Phase 7）
 
-### 任务 27：UX 改进 — alert() 替换为 Toast 通知
+### 任务 27：UX 改进 - alert() 替换为 Toast 通知
 
 - [x] 27.1 创建 ToastService 通知组件
   - 实现 show(message, type, duration) 方法
@@ -566,8 +566,8 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 文件：`server/routes/geocoding.js`（新建）
 
-- [x] GET `/api/geocoding/search` — 正向地理编码，支持 `provider=nominatim|gaode`
-- [x] GET `/api/geocoding/reverse` — 反向地理编码，支持 `provider=nominatim|gaode`
+- [x] GET `/api/geocoding/search` - 正向地理编码，支持 `provider=nominatim|gaode`
+- [x] GET `/api/geocoding/reverse` - 反向地理编码，支持 `provider=nominatim|gaode`
 - [x] Nominatim 处理：代理请求至 `nominatim.openstreetmap.org`
 - [x] 高德地图处理：代理请求至 `restapi.amap.com/v3`
 - [x] 统一响应格式 `{ results: [{name, lat, lon, provider}] }`
@@ -599,22 +599,22 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 文件：`src/services/BackendGeocodingService.js`（新建）
 
-- [x] `geocode(locationName)` — 调用 `/api/geocoding/search`
-- [x] `reverseGeocode(lat, lon)` — 调用 `/api/geocoding/reverse`
-- [x] `getCurrentLocation()` — 浏览器 Geolocation + 反向地理编码
+- [x] `geocode(locationName)` - 调用 `/api/geocoding/search`
+- [x] `reverseGeocode(lat, lon)` - 调用 `/api/geocoding/reverse`
+- [x] `getCurrentLocation()` - 浏览器 Geolocation + 反向地理编码
 - [x] 构造函数接受 `{ proxyURL, provider, apiKey }`
 - _关联需求：24.2_
 
-#### 任务 38.6 前端 GeocodingServiceFactory — 二层架构（✅ 已完成）
+#### 任务 38.6 前端 GeocodingServiceFactory - 二层架构（✅ 已完成）
 
 文件：`src/services/GeocodingServiceFactory.js`（新建）
 
 - [x] `GeocodingServiceFactory.create(proxyURL)` 静态方法
 - [x] 读取 `localStorage.geocoding_mode`（`'backend'` | `'direct'`）
 - [x] 读取 `localStorage.geocoding_provider`（`'nominatim'` | `'gaode'` | `'google'`）
-- [x] `_createDirect(provider, apiKey)` — 前端直连分支
-- [x] `_createBackend(provider, apiKey, proxyURL)` — 后端代理分支（含高德、Google）
-- [x] `GeocodingServiceFactory.getOptions()` — 返回所有选项及其元数据（中国可用标记）
+- [x] `_createDirect(provider, apiKey)` - 前端直连分支
+- [x] `_createBackend(provider, apiKey, proxyURL)` - 后端代理分支（含高德、Google）
+- [x] `GeocodingServiceFactory.getOptions()` - 返回所有选项及其元数据（中国可用标记）
 - _关联需求：24.3_
 
 #### 任务 38.7 设置面板：位置解析服务 UI（✅ 已完成）
@@ -663,10 +663,10 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 #### 任务 38.12 ~ 38.15 测试（✅ 已完成）
 
-- [x] `tests/unit/services/BackendGeocodingService.test.js` — 41 个测试全部通过
-- [x] `tests/unit/services/GeocodingServiceFactory.test.js` — 17 个测试全部通过
-- [x] `tests/unit/server/geocoding.test.js` — 22 个测试全部通过
-- [x] `tests/unit/server/windyService.userApiKey.test.js` — 19 个测试全部通过
+- [x] `tests/unit/services/BackendGeocodingService.test.js` - 41 个测试全部通过
+- [x] `tests/unit/services/GeocodingServiceFactory.test.js` - 17 个测试全部通过
+- [x] `tests/unit/server/geocoding.test.js` - 22 个测试全部通过
+- [x] `tests/unit/server/windyService.userApiKey.test.js` - 19 个测试全部通过
 
 ---
 
@@ -880,7 +880,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - primary/fallback 路由、熔断与重试
   - _关联需求：10, 31_
 
-### 任务 43：数据质量门禁（解决“随机打乱”）
+### 任务 43：数据质量门禁（解决"随机打乱"）
 
 - [x] 43.1 实现 `ForecastSequenceValidator`
   - 升序校验、重复去重、缺口检测
@@ -896,7 +896,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 ### 任务 44：前端兼容与配置改造
 
-- [x] 44.1 设置面板新增“天气数据源状态”只读区
+- [x] 44.1 设置面板新增"天气数据源状态"只读区
   - 显示当前 provider、是否回退、最近更新时间
   - _关联需求：6, 31_
 
@@ -935,7 +935,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 ### 任务 47：功能支持差异与降级策略落地
 
-- [x] 47.1 建立“需求到字段”映射清单
+- [x] 47.1 建立"需求到字段"映射清单
   - 按需求 3/5/7/11/12 列出必需字段与可降级字段
   - 输出 `docs/weather-provider-feature-matrix.md`
   - _关联需求：31_
@@ -956,7 +956,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 - [x] 47.5 可观测性增强
   - API 响应附带 `unsupportedFields[]` 和 `degradedReason[]`
-  - 前端展示“数据降级提示”
+  - 前端展示"数据降级提示"
   - _关联需求：10, 31_
 
 ---
@@ -1212,13 +1212,17 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 | 64.5 | 前端：预测卡片内嵌地图 + 散点标注 | ✅ |
 | 64.6 | 地域检测：非中国区域自动隐藏此功能 | ✅ |
 | 64.7 | 单元测试 | - [ ] |
+| 64.8 | 朝霞/晚霞分离（sunrise/sunset 双图层） | - [ ] |
+| 64.9 | 静态中国地图（不可缩放）+ 空数据占位 | - [ ] |
+| 64.10 | `.kiro` 三文档同步（requirements/design/tasks） | ✅ |
+| 64.11 | UI 精修（截图项）做成单独任务包 | - [ ] |
 
 ### 任务详情
 
 #### 64.2 SunsetSpotsService（后端）
 
 - [ ] 64.2 `server/services/SunsetSpotsService.js`
-  - `CHINA_GRID`：约 80 个采样点（5° 间隔，72–135°E，18–53°N）
+  - `CHINA_GRID`：约 80 个采样点（5° 间隔，72-135°E，18-53°N）
   - `refreshDaily()` → 并发（limit=10）批量评分，过滤评分≥60 的点
   - 缓存结构：`{ updatedAt, date, spots: [{lat, lon, score, quality}] }`
   - 持久化到 `~/.xiake/spots-cache.json`
@@ -1243,26 +1247,26 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 #### 64.5 前端散点地图
 
 - [~] 64.5 `src/services/ChinaSpotsOverlay.js`（新建）
-  - [x] 2026-03-20 增量：连续火烧云 Canvas 图层加入“视窗裁剪渲染”（按当前地图 bounds + 缓冲过滤点位），减少视窗外无效绘制，提升生产性能与稳定性
+  - [x] 2026-03-20 增量：连续火烧云 Canvas 图层加入"视窗裁剪渲染"（按当前地图 bounds + 缓冲过滤点位），减少视窗外无效绘制，提升生产性能与稳定性
   - [x] 2026-03-20 增量：新增 zoom-aware canvas blur+saturate 平滑映射（低缩放更连续、高缩放降模糊），强化中国大陆连续火烧云层视觉贴近参考风格
-  - [x] 2026-03-20 增量：连续图层加入“高缩放透明度衰减（zoom-aware alpha ramp）”，避免放大时光晕过曝，更贴近参考火烧云叠加风格
+  - [x] 2026-03-20 增量：连续图层加入"高缩放透明度衰减（zoom-aware alpha ramp）"，避免放大时光晕过曝，更贴近参考火烧云叠加风格
   - [x] 2026-03-20 增量：连续图层混合模式按缩放切换（low zoom=screen / high zoom=lighter），低缩放更接近参考的连续云带质感，高缩放保留局部层次
   - [x] 2026-03-20 增量：新增视窗密度自适应透明度（density-aware opacity），高密度区域自动降透明，减少过曝并保持连续层次
   - [x] 2026-03-20 增量：新增大陆边缘羽化透明度（edge falloff），靠近大陆渲染边界自动降透明，减轻边缘硬截断感
-  - [x] 2026-03-20 增量：新增顺风漂移 plume 子层（plume + halo + core 三层渐变），降低同心圆痕迹，增强大陆连续云带观感
   - `init(leafletMap)` → 挂载到现有地图实例
   - `loadAndRender()` → 调用 `/api/spots/china`，用 Leaflet marker 渲染
-  - 图标：评分≥80 用 🌅，60–79 用 🌄，Leaflet DivIcon 实现
+  - 图标：评分≥80 用 🌅，60-79 用 🌄，Leaflet DivIcon 实现
   - 点击 marker 显示 tooltip：评分 + 质量标签
   - `show() / hide()` 控制显隐
   - _关联需求：37.2, 37.6, 37.7_
 
 #### 64.6 地域检测 + 预测卡片集成
 
-- [x] 64.6（2026-03-20 增量完成：大陆区域过滤）
-  - 判断当前位置是否在中国大陆渲染区域（使用 `isInMainlandChina`，排除南海远海与台湾区域）
-  - 是：预测卡片底部显示嵌入地图，调用 `ChinaSpotsOverlay`
-  - 否：不显示地图，不请求 API
+- [~] 64.6（2026-03-20 规则调整中）
+  - 旧规则：按设备定位判断是否显示（已验证会引发误隐藏）
+  - 新规则（待落地）：按**当前查询城市**判断是否中国大陆（`country_code=CN` 且排除港澳台）
+  - 是：显示地图模块并请求 spots API
+  - 否：隐藏地图模块，不请求 API
   - 显示"今日数据，更新于 HH:mm"时间戳
   - _关联需求：37.1, 37.7, 37.8_
 
@@ -1274,8 +1278,45 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - [x] `tests/unit/services/ChinaSpotsOverlay.test.js`：新增分值平滑归一化（normalizeOverlayScore）与连续色带映射回归用例
   - [x] `tests/unit/services/ChinaSpotsOverlay.test.js`：新增高缩放透明度衰减（zoom-aware alpha）与 zoom-aware canvas filter（blur+saturate）回归用例，防止放大过曝
   - [x] `tests/unit/services/ChinaSpotsOverlay.test.js`：新增 density-aware opacity 回归用例（视窗点位密度越高透明度越低），防止大陆连续图层局部过曝
-  - [x] `tests/unit/services/ChinaSpotsOverlay.test.js`：新增 plume 偏移与三层渐变渲染回归用例（plume + halo + core），防止回退为同心圆硬边视觉
   - _关联需求：37_
+
+#### 64.8 朝霞/晚霞分离（执行中）
+
+- [ ] 后端 `/api/spots/china` 支持 `period=sunrise|sunset` 的独立缓存与返回
+- [ ] 前端拆分为朝霞/晚霞两套独立状态与渲染容器（不复用同一 overlay）
+- [ ] 交互层提供朝/晚分栏或双卡片并行展示
+- _关联需求：37.2_
+
+#### 64.9 静态中国地图 + 空数据占位（执行中）
+
+- [ ] 将地图改为固定中国范围静态画布（不可拖拽/缩放）
+- [ ] 经纬度统一投影到固定比例，保证县域级可读
+- [ ] `spots=[]` 时不隐藏模块，显示"今日暂无可见火烧云点位"
+- _关联需求：37.4, 37.9_
+
+#### 64.10 规格文档同步（已完成）
+
+- [x] 更新 `requirements.md`：朝/晚分离、静态图、城市门控、空数据占位
+- [x] 更新 `design.md`：新增静态化与分离渲染架构说明
+- [x] 更新 `tasks.md`：新增 64.8/64.9 执行项
+- _关联需求：37_
+
+
+#### 64.11 UI 精修（截图项，单独任务包）
+
+- [x] 64.11.1 视觉一致性：右侧指标容器样式统一（能见度不再"单独异类"）
+- [x] 64.11.2 阴影现代化：主温度/风速大字阴影降强或移除，改弥散阴影
+- [x] 64.11.3 对齐优化：左侧主卡内容组垂直居中，修正上下留白失衡
+- [x] 64.11.4 可读性优化：右侧副标题灰字对比度上调（满足移动端户外可读）
+- [x] 64.11.5 预报卡重排：降水/风速/风向图标化横排 + 温度相对条
+- [x] 64.11.6 过渡优化：7天预报与朝晚霞模块增加渐变/圆角沉浸过渡
+- _关联需求：21, 37_
+
+**完成时间：2026-03-20**
+
+**修改文件：**
+- `styles/main.css` - UI 样式精修
+- `src/controllers/WeatherController.js` - 预报卡渲染逻辑更新
 
 ---
 
@@ -1292,10 +1333,10 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 | 70.5 | 后端：VisitorService + IP GeoIP + /api/visitors 接口 | - [ ] |
 | 70.6 | 后端：POST /api/visitors/track 中间件 | - [ ] |
 | 70.7 | 前端：/gallery 页面骨架 + Leaflet 世界地图 | - [ ] |
-| 70.8 | 前端：PhotoMarkerLayer — 随机挑选缩略图 marker | - [ ] |
-| 70.9 | 前端：VisitorDotLayer — 访客小圆点 | - [ ] |
+| 70.8 | 前端：PhotoMarkerLayer - 随机挑选缩略图 marker | - [ ] |
+| 70.9 | 前端：VisitorDotLayer - 访客小圆点 | - [ ] |
 | 70.10 | 前端：点击照片 Modal + 原图预览 | - [ ] |
-| 70.11 | 前端：主页底部统计“来访者”链接接入 | - [ ] |
+| 70.11 | 前端：主页底部统计"来访者"链接接入 | - [ ] |
 | 70.12 | 前端：顶部竖直菜单栏新增入口 | - [ ] |
 | 70.13 | 后台管理页面：上传表单 + 地图手动指定位置 | - [ ] |
 | 70.14 | 测试：上传流程 + 访客记录 + 地图渲染 | - [ ] |
@@ -1397,12 +1438,12 @@ GeoIP 策略：
 
 ### 任务 70.11：主页底部入口
 
-- 将现有底部统计“来访者”数字改为可点击链接
+- 将现有底部统计"来访者"数字改为可点击链接
 - 点击后跳转 `/gallery`
 
 ### 任务 70.12：顶部菜单入口
 
-- 在竖直菜单栏新增“分享地图/📸 分享”项
+- 在竖直菜单栏新增"分享地图/📸 分享"项
 - 与其他菜单项风格一致
 
 ### 任务 70.13：后台上传页面

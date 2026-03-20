@@ -705,7 +705,8 @@ input[type="text"]::placeholder {
   font-size: clamp(3rem, 7vw, 4.8rem);
   font-weight: 700;
   color: #ffffff;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  /* UI 精修 64.11.2：降低阴影强度，偏现代风格 */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
   display: flex;
   align-items: flex-start;
   line-height: 0.95;
@@ -2162,6 +2163,15 @@ body.theme-dark .prediction-analysis {
   margin-top: var(--spacing-md);
 }
 
+/* UI 精修 64.11.6：预报卡与朝晚霞区域过渡更自然 */
+.weekly-cards-container {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
+  border-radius: 0 0 12px 12px;
+}
+
 .weekly-cards-container .info-message {
   grid-column: 1 / -1;
 }
@@ -2173,6 +2183,10 @@ body.theme-dark .prediction-analysis {
   text-align: center;
   transition: all var(--transition-normal);
   border: 2px solid transparent;
+  /* UI 精修 64.11.5：调整卡片布局以支持新结构 */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .day-card:hover {
@@ -2185,7 +2199,7 @@ body.theme-dark .prediction-analysis {
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--color-text);
-  margin-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
   height: 2.6em;
   line-height: 1.25;
   display: flex;
@@ -2209,22 +2223,79 @@ body.theme-dark .prediction-analysis {
 
 .weather-icon {
   font-size: 2.5rem;
-  margin: var(--spacing-sm) 0;
+  margin: var(--spacing-xs) 0;
 }
 
-.temp-range {
-  font-size: 1.1rem;
+/* UI 精修 64.11.5：温度相对条 */
+.temp-bar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 0;
+}
+
+.temp-bar {
+  width: 80%;
+  height: 8px;
+  background: linear-gradient(90deg, #2196f3, #ff5722);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.temp-bar-labels {
+  display: flex;
+  justify-content: space-between;
+  width: 80%;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-text);
-  margin: var(--spacing-sm) 0;
+}
+
+.min-temp {
+  color: #2196f3;
 }
 
 .max-temp {
   color: #ff5722;
 }
 
-.min-temp {
-  color: #2196f3;
+/* UI 精修 64.11.5：图标化横排 */
+.day-meta-icons-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.day-meta-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.7rem;
+  color: var(--color-text-light);
+}
+
+.day-meta-icon .icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.day-meta-icon .value {
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* 兼容旧样式（过渡期） */
+.temp-range {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: var(--spacing-sm) 0;
+  display: none; /* UI 精修 64.11.5：隐藏旧的温度显示 */
 }
 
 .temp-separator {
@@ -2237,6 +2308,7 @@ body.theme-dark .prediction-analysis {
   font-size: 0.82rem;
   color: var(--color-text-light);
   line-height: 1.25;
+  display: none; /* UI 精修 64.11.5：隐藏旧的元数据显示 */
 }
 
 .day-meta-row-direction {
@@ -3607,4 +3679,6 @@ body.theme-dark {
   --radar-cloud-low: rgba(130,165,210,0.80);
   --radar-cloud-mid: rgba(165,185,215,0.75);
   --radar-cloud-high: rgba(190,200,220,0.70);
+}
+,220,0.70);
 }
