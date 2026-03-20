@@ -33,6 +33,7 @@ export function mapScoreToOverlayStyle(score, zoom = 4) {
   const zoomFactor = Math.pow(1.15, Math.max(0, zoom - 5));
 
   const radiusPx = clamp(lerp(58, 112, scoreNorm) * zoomFactor, 42, 240);
+  const haloRadiusPx = clamp(radiusPx * lerp(1.35, 1.75, scoreNorm), radiusPx + 8, 320);
 
   const warm = {
     r: Math.round(lerp(255, 255, scoreNorm)),
@@ -47,6 +48,8 @@ export function mapScoreToOverlayStyle(score, zoom = 4) {
 
   return {
     radiusPx,
+    haloRadiusPx,
+    haloColor: `rgba(${glow.r}, ${glow.g}, ${glow.b}, ${alpha(0.16, scoreNorm)})`,
     innerColor: `rgba(${warm.r}, ${warm.g}, ${warm.b}, ${alpha(0.72, scoreNorm)})`,
     midColor: `rgba(${glow.r}, ${glow.g}, ${glow.b}, ${alpha(0.34, scoreNorm)})`,
     outerColor: `rgba(${glow.r}, ${glow.g}, ${glow.b}, 0)`
@@ -200,7 +203,15 @@ export default class ChinaSpotsOverlay {
     const zoom = this._map.getZoom();
     this._spots.forEach(spot => {
       const pt = this._map.latLngToContainerPoint(window.L.latLng(spot.lat, spot.lon));
-      const { radiusPx, innerColor, midColor, outerColor } = mapScoreToOverlayStyle(spot.score, zoom);
+      const { radiusPx, haloRadiusPx, haloColor, innerColor, midColor, outerColor } = mapScoreToOverlayStyle(spot.score, zoom);
+
+      const haloGrad = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, haloRadiusPx);
+      haloGrad.addColorStop(0.0, haloColor);
+      haloGrad.addColorStop(1.0, 'rgba(255, 180, 80, 0)');
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, haloRadiusPx, 0, Math.PI * 2);
+      ctx.fillStyle = haloGrad;
+      ctx.fill();
 
       const grad = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, radiusPx);
       grad.addColorStop(0.0, innerColor);
