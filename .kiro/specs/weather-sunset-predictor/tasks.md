@@ -1249,6 +1249,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - [x] 2026-03-20 增量：连续图层混合模式按缩放切换（low zoom=screen / high zoom=lighter），低缩放更接近参考的连续云带质感，高缩放保留局部层次
   - [x] 2026-03-20 增量：新增视窗密度自适应透明度（density-aware opacity），高密度区域自动降透明，减少过曝并保持连续层次
   - [x] 2026-03-20 增量：新增大陆边缘羽化透明度（edge falloff），靠近大陆渲染边界自动降透明，减轻边缘硬截断感
+  - [x] 2026-03-20 增量：新增顺风漂移 plume 子层（plume + halo + core 三层渐变），降低同心圆痕迹，增强大陆连续云带观感
   - `init(leafletMap)` → 挂载到现有地图实例
   - `loadAndRender()` → 调用 `/api/spots/china`，用 Leaflet marker 渲染
   - 图标：评分≥80 用 🌅，60–79 用 🌄，Leaflet DivIcon 实现
@@ -1273,6 +1274,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
   - [x] `tests/unit/services/ChinaSpotsOverlay.test.js`：新增分值平滑归一化（normalizeOverlayScore）与连续色带映射回归用例
   - [x] `tests/unit/services/ChinaSpotsOverlay.test.js`：新增高缩放透明度衰减（zoom-aware alpha）与 zoom-aware canvas filter（blur+saturate）回归用例，防止放大过曝
   - [x] `tests/unit/services/ChinaSpotsOverlay.test.js`：新增 density-aware opacity 回归用例（视窗点位密度越高透明度越低），防止大陆连续图层局部过曝
+  - [x] `tests/unit/services/ChinaSpotsOverlay.test.js`：新增 plume 偏移与三层渐变渲染回归用例（plume + halo + core），防止回退为同心圆硬边视觉
   - _关联需求：37_
 
 ---
