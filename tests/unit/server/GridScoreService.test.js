@@ -45,30 +45,50 @@ describe('GridScoreService', () => {
   describe('getCache()', () => {
     it('无缓存时返回 null', () => {
       const svc = new GridScoreService();
-      svc._cache = null;
-      expect(svc.getCache()).toBeNull();
+      svc._cache = { sunrise: null, sunset: null };
+      expect(svc.getCache('sunset')).toBeNull();
     });
 
     it('缓存新鲜时 stale=false', () => {
       const svc = new GridScoreService();
-      svc._cache = { updatedAt: new Date().toISOString(), gridPoints: [] };
-      expect(svc.getCache().stale).toBe(false);
+      svc._cache = {
+        sunrise: null,
+        sunset: { updatedAt: new Date().toISOString(), gridPoints: [] }
+      };
+      expect(svc.getCache('sunset').stale).toBe(false);
     });
 
     it('缓存超时时 stale=true', () => {
       const svc = new GridScoreService();
       const oldTime = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
-      svc._cache = { updatedAt: oldTime, gridPoints: [] };
-      expect(svc.getCache().stale).toBe(true);
+      svc._cache = {
+        sunrise: null,
+        sunset: { updatedAt: oldTime, gridPoints: [] }
+      };
+      expect(svc.getCache('sunset').stale).toBe(true);
+    });
+
+    it('应支持按 period 读取独立缓存', () => {
+      const svc = new GridScoreService();
+      svc._cache = {
+        sunrise: { updatedAt: new Date().toISOString(), gridPoints: [{ lat: 1, lon: 2, score: 66 }] },
+        sunset: { updatedAt: new Date().toISOString(), gridPoints: [{ lat: 3, lon: 4, score: 88 }] }
+      };
+
+      expect(svc.getCache('sunrise').gridPoints[0].score).toBe(66);
+      expect(svc.getCache('sunset').gridPoints[0].score).toBe(88);
     });
   });
 
   describe('manualRefresh() 频控', () => {
     it('60 分钟内重复调用应被拒绝', async () => {
       const svc = new GridScoreService();
-      svc._lastManualRefresh = Date.now(); // 刚刚刷新过
-      svc._cache = { updatedAt: new Date().toISOString(), gridPoints: [] };
-      const result = await svc.manualRefresh();
+      svc._lastManualRefresh.sunset = Date.now(); // 刚刚刷新过
+      svc._cache = {
+        sunrise: null,
+        sunset: { updatedAt: new Date().toISOString(), gridPoints: [] }
+      };
+      const result = await svc.manualRefresh('sunset');
       expect(result.ok).toBe(false);
       expect(result.message).toContain('频控');
     });
@@ -77,9 +97,12 @@ describe('GridScoreService', () => {
   describe('refreshIfStale()', () => {
     it('缓存新鲜时不触发刷新', async () => {
       const svc = new GridScoreService();
-      svc._cache = { updatedAt: new Date().toISOString(), gridPoints: [{ lat: 30, lon: 120, score: 60 }] };
+      svc._cache = {
+        sunrise: null,
+        sunset: { updatedAt: new Date().toISOString(), gridPoints: [{ lat: 30, lon: 120, score: 60 }] }
+      };
       const spy = jest.spyOn(svc, '_doRefresh');
-      await svc.refreshIfStale();
+      await svc.refreshIfStale(undefined, 'sunset');
       expect(spy).not.toHaveBeenCalled();
     });
   });
