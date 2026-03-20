@@ -258,6 +258,14 @@ describe('ChinaSpotsOverlay integration', () => {
     expect(fetch).toHaveBeenCalledWith('/api/spots/china?period=sunrise');
   });
 
+  test('setButtonVisible: 可由外部控制按钮显隐（支持双 Overlay 切换）', () => {
+    overlay.setButtonVisible(true);
+    expect(overlay._button.style.display).toBe('inline-flex');
+
+    overlay.setButtonVisible(false);
+    expect(overlay._button.style.display).toBe('none');
+  });
+
   test('show 后 _redrawCanvas: 每个点绘制 plume + halo + 主体三层渐变', () => {
     overlay._spots = [{ lat: 39.9, lon: 116.4, score: 85 }];
 

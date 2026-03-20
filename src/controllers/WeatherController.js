@@ -91,8 +91,13 @@ class WeatherController {
     this.selectedParameter = 'temp'; // 'temp', 'precip', 'humidity', 'wind', 'pressure', 'clouds'
     this.isMapInitialized = false; // 任务18：地图初始化状态
 
-    // Phase 16：中国散点地图覆盖层
-    this.chinaSpotsOverlay = new ChinaSpotsOverlay();
+    // Phase 16：中国散点地图覆盖层（64.8：朝/晚双实例，状态隔离）
+    this.chinaSpotsOverlays = {
+      sunrise: new ChinaSpotsOverlay(),
+      sunset: new ChinaSpotsOverlay()
+    };
+    // 兼容旧引用，始终指向当前激活实例
+    this.chinaSpotsOverlay = this._getActiveChinaSpotsOverlay();
   }
 
   /**
@@ -1598,9 +1603,16 @@ class WeatherController {
       await this.updateFireCloudOverlay(this.currentLocation);
     }
 
-    if (this._chinaSpotsMapInstance && this.chinaSpotsOverlay) {
-      this.chinaSpotsOverlay.setPeriod(type);
-      await this.chinaSpotsOverlay.loadAndRender(type);
+    if (this._chinaSpotsMapInstance) {
+      this._syncActiveChinaSpotsOverlayRef();
+      const activeOverlay = this._getActiveChinaSpotsOverlay();
+      if (activeOverlay) {
+        activeOverlay.setPeriod(type);
+        await activeOverlay.loadAndRender(type);
+      }
+      this._hideInactiveChinaSpotsOverlays(type);
+      this._setChinaSpotsEmptyState((activeOverlay?.getSpotCount?.() || 0) === 0);
+      this._renderChinaSpotsTimestamp();
     }
   }
 
@@ -1676,6 +1688,33 @@ class WeatherController {
     return isInMainlandChina(lat, lon);
   }
 
+  _getChinaSpotsOverlay(period = this.currentOverlayType) {
+    const safePeriod = period === 'sunrise' ? 'sunrise' : 'sunset';
+    return this.chinaSpotsOverlays?.[safePeriod] || null;
+  }
+
+  _getActiveChinaSpotsOverlay() {
+    const active = this._getChinaSpotsOverlay(this.currentOverlayType);
+    if (active) return active;
+    return this._getChinaSpotsOverlay('sunset') || null;
+  }
+
+  _syncActiveChinaSpotsOverlayRef() {
+    this.chinaSpotsOverlay = this._getActiveChinaSpotsOverlay();
+  }
+
+  _hideInactiveChinaSpotsOverlays(activePeriod = this.currentOverlayType) {
+    const safeActive = activePeriod === 'sunrise' || activePeriod === 'sunset' ? activePeriod : null;
+    ['sunrise', 'sunset'].forEach(period => {
+      const overlay = this._getChinaSpotsOverlay(period);
+      if (!overlay) return;
+
+      const isActive = safeActive ? period === safeActive : false;
+      if (overlay.setButtonVisible) overlay.setButtonVisible(isActive);
+      if (!isActive && overlay.hide) overlay.hide();
+    });
+  }
+
   /**
    * 根据当前位置更新中国火烧云图层显隐。
    * - 中国大陆：展示并初始化/刷新图层
@@ -1692,7 +1731,7 @@ class WeatherController {
       section.classList.add('hidden');
       if (tsEl) tsEl.textContent = '';
       this._setChinaSpotsEmptyState(false);
-      this.chinaSpotsOverlay.hide();
+      this._hideInactiveChinaSpotsOverlays('none');
       return;
     }
 
@@ -1711,8 +1750,10 @@ class WeatherController {
     const tsEl = document.getElementById('china-spots-timestamp');
     if (!tsEl) return;
 
-    const count = this.chinaSpotsOverlay.getSpotCount();
-    const updatedAt = this.chinaSpotsOverlay.getUpdatedAt();
+    this._syncActiveChinaSpotsOverlayRef();
+    const activeOverlay = this._getActiveChinaSpotsOverlay();
+    const count = activeOverlay?.getSpotCount?.() || 0;
+    const updatedAt = activeOverlay?.getUpdatedAt?.() || null;
 
     if (count === 0) {
       tsEl.textContent = updatedAt
@@ -1742,12 +1783,17 @@ class WeatherController {
     // 显示区域
     section.classList.remove('hidden');
 
-    // 若地图已初始化，直接刷新数据
+    // 若地图已初始化，直接刷新当前时段数据
     if (this._chinaSpotsMapInstance) {
-      this.chinaSpotsOverlay.setPeriod(this.currentOverlayType);
-      await this.chinaSpotsOverlay.loadAndRender();
+      this._syncActiveChinaSpotsOverlayRef();
+      const activeOverlay = this._getActiveChinaSpotsOverlay();
+      if (!activeOverlay) return;
 
-      const count = this.chinaSpotsOverlay.getSpotCount();
+      activeOverlay.setPeriod(this.currentOverlayType);
+      await activeOverlay.loadAndRender();
+      this._hideInactiveChinaSpotsOverlays(this.currentOverlayType);
+
+      const count = activeOverlay.getSpotCount();
       this._setChinaSpotsEmptyState(count === 0);
       this._renderChinaSpotsTimestamp();
       return;
@@ -1790,13 +1836,20 @@ class WeatherController {
       }
 
       this._chinaSpotsMapInstance = map;
-      this.chinaSpotsOverlay.init(map);
 
-      // 加载散点
-      this.chinaSpotsOverlay.setPeriod(this.currentOverlayType);
-      await this.chinaSpotsOverlay.loadAndRender();
+      const sunriseOverlay = this._getChinaSpotsOverlay('sunrise');
+      const sunsetOverlay = this._getChinaSpotsOverlay('sunset');
+      sunriseOverlay?.setPeriod('sunrise');
+      sunsetOverlay?.setPeriod('sunset');
+      sunriseOverlay?.init(map);
+      sunsetOverlay?.init(map);
 
-      const count = this.chinaSpotsOverlay.getSpotCount();
+      this._syncActiveChinaSpotsOverlayRef();
+      const activeOverlay = this._getActiveChinaSpotsOverlay();
+      await activeOverlay?.loadAndRender(this.currentOverlayType);
+      this._hideInactiveChinaSpotsOverlays(this.currentOverlayType);
+
+      const count = activeOverlay?.getSpotCount?.() || 0;
       this._setChinaSpotsEmptyState(count === 0);
       this._renderChinaSpotsTimestamp();
 

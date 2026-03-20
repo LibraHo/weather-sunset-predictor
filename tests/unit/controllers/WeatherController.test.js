@@ -332,4 +332,73 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(controller._getWindDirectionLabel(40)).toBe('东北');
   });
 
+  test('64.8: 朝/晚双 overlay 应独立切换，非激活 overlay 自动隐藏', async () => {
+    controller.currentOverlayType = 'sunset';
+    controller.fireCloudOverlayEnabled = false;
+    controller._chinaSpotsMapInstance = {};
+    controller._setChinaSpotsEmptyState = jest.fn();
+    controller._renderChinaSpotsTimestamp = jest.fn();
+
+    const sunriseOverlay = {
+      setPeriod: jest.fn(),
+      loadAndRender: jest.fn(),
+      hide: jest.fn(),
+      setButtonVisible: jest.fn(),
+      getSpotCount: jest.fn(() => 3)
+    };
+    const sunsetOverlay = {
+      setPeriod: jest.fn(),
+      loadAndRender: jest.fn(),
+      hide: jest.fn(),
+      setButtonVisible: jest.fn(),
+      getSpotCount: jest.fn(() => 0)
+    };
+
+    controller.chinaSpotsOverlays = {
+      sunrise: sunriseOverlay,
+      sunset: sunsetOverlay
+    };
+
+    await controller.setOverlayType('sunrise');
+
+    expect(controller.currentOverlayType).toBe('sunrise');
+    expect(sunriseOverlay.setPeriod).toHaveBeenCalledWith('sunrise');
+    expect(sunriseOverlay.loadAndRender).toHaveBeenCalledWith('sunrise');
+    expect(sunriseOverlay.setButtonVisible).toHaveBeenCalledWith(true);
+
+    expect(sunsetOverlay.hide).toHaveBeenCalled();
+    expect(sunsetOverlay.setButtonVisible).toHaveBeenCalledWith(false);
+
+    expect(controller._setChinaSpotsEmptyState).toHaveBeenCalledWith(false);
+    expect(controller._renderChinaSpotsTimestamp).toHaveBeenCalled();
+  });
+
+  test('64.8: 非中国大陆时应同时隐藏 sunrise/sunset 两层', async () => {
+    document.body.innerHTML = '<section id="china-spots-section"></section><div id="china-spots-timestamp"></div>';
+
+    controller._isInChina = jest.fn(() => false);
+    controller._setChinaSpotsEmptyState = jest.fn();
+
+    const sunriseOverlay = {
+      hide: jest.fn(),
+      setButtonVisible: jest.fn()
+    };
+    const sunsetOverlay = {
+      hide: jest.fn(),
+      setButtonVisible: jest.fn()
+    };
+
+    controller.chinaSpotsOverlays = {
+      sunrise: sunriseOverlay,
+      sunset: sunsetOverlay
+    };
+
+    await controller.updateChinaSpotsForLocation({ lat: 48.8, lon: 2.3 });
+
+    expect(sunriseOverlay.hide).toHaveBeenCalled();
+    expect(sunsetOverlay.hide).toHaveBeenCalled();
+    expect(sunriseOverlay.setButtonVisible).toHaveBeenCalledWith(false);
+    expect(sunsetOverlay.setButtonVisible).toHaveBeenCalledWith(false);
+  });
+
 });

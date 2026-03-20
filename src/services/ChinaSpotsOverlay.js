@@ -261,6 +261,10 @@ export default class ChinaSpotsOverlay {
     this._button.style.display = visible ? 'inline-flex' : 'none';
   }
 
+  setButtonVisible(visible) {
+    this._setButtonVisibility(Boolean(visible));
+  }
+
   _updateButtonState() {
     if (!this._button) return;
     if (this._visible) {
