@@ -240,10 +240,19 @@ describe('WeatherController - 24小时温度连续化', () => {
     ];
 
     const card = controller._createDayCard(dayData, 0);
-    const range = card.querySelector('.temp-range').textContent.replace(/\s+/g, ' ').trim();
-    expect(range).toContain('10°');
-    expect(range).toContain('30°');
-    expect(range.indexOf('10°')).toBeLessThan(range.indexOf('30°'));
+
+    // UI 精修 64.11.5：检查新的温度条结构
+    const tempBarContainer = card.querySelector('.temp-bar-container');
+    expect(tempBarContainer).not.toBeNull();
+
+    const tempBarLabels = card.querySelector('.temp-bar-labels');
+    expect(tempBarLabels).not.toBeNull();
+
+    const minTempEl = tempBarLabels.querySelector('.min-temp');
+    const maxTempEl = tempBarLabels.querySelector('.max-temp');
+
+    expect(minTempEl.textContent).toContain('10°');
+    expect(maxTempEl.textContent).toContain('30°');
 
     dateFormatterSpy.mockRestore();
   });
@@ -278,12 +287,28 @@ describe('WeatherController - 24小时温度连续化', () => {
     ];
 
     const card = controller._createDayCard(dayData, 0);
-    const rows = card.querySelectorAll('.day-meta-row');
 
-    expect(rows[0].textContent.trim()).toBe('降水 50%');
-    expect(rows[1].textContent.trim()).toBe('风速 12 km/h');
-    expect(rows[2].textContent.replace(/\s+/g, ' ').trim()).toContain('风向 东');
-    expect(card.querySelector('.day-wind-direction-icon').style.transform).toBe('rotate(105deg)');
+    // UI 精修 64.11.5：检查新的图标化横排结构
+    const iconsRow = card.querySelector('.day-meta-icons-row');
+    expect(iconsRow).not.toBeNull();
+
+    const iconItems = card.querySelectorAll('.day-meta-icon');
+    expect(iconItems.length).toBe(3); // 降水、风速、风向
+
+    // 检查降水图标项
+    const precipIcon = iconItems[0];
+    expect(precipIcon.querySelector('.icon').textContent).toBe('💧');
+    expect(precipIcon.querySelector('.value').textContent).toBe('50%');
+
+    // 检查风速图标项
+    const windSpeedIcon = iconItems[1];
+    expect(windSpeedIcon.querySelector('.icon').textContent).toBe('💨');
+    expect(windSpeedIcon.querySelector('.value').textContent).toBe('12 km/h');
+
+    // 检查风向图标项
+    const windDirIcon = iconItems[2];
+    expect(windDirIcon.querySelector('.value').textContent).toContain('东');
+    expect(windDirIcon.querySelector('.icon').style.transform).toBe('rotate(105deg)');
 
     dateFormatterSpy.mockRestore();
   });

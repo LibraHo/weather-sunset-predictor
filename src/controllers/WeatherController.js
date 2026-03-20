@@ -430,22 +430,33 @@ class WeatherController {
 
     const directionLabel = this._getWindDirectionLabel(avgWindDirection);
 
+    // UI 精修 64.11.5：预报卡重排（图标化横排 + 温度相对条）
     card.innerHTML = `
       <div class="day-label" aria-label="${dayPrefix} ${dayDateLabel}">
         <span class="day-label-primary">${dayPrefix}</span>
         <span class="day-label-date">${dayDateLabel}</span>
       </div>
       <div class="weather-icon">${weatherIcon}</div>
-      <div class="temp-range">
-        <span class="min-temp">${minTemp.toFixed(0)}°</span>
-        <span class="temp-separator">/</span>
-        <span class="max-temp">${maxTemp.toFixed(0)}°</span>
+      <div class="temp-bar-container">
+        <div class="temp-bar" role="progressbar" aria-label="温度范围：${minTemp.toFixed(0)}°C 至 ${maxTemp.toFixed(0)}°C"></div>
+        <div class="temp-bar-labels">
+          <span class="min-temp">${minTemp.toFixed(0)}°</span>
+          <span class="max-temp">${maxTemp.toFixed(0)}°</span>
+        </div>
       </div>
-      <div class="day-meta-row">${this.i18n.t('weather.precipitation')} ${precipProb}%</div>
-      <div class="day-meta-row">${this.i18n.t('weather.windSpeed')} ${this.formatWindSpeed(maxWindSpeed)}</div>
-      <div class="day-meta-row day-meta-row-direction">
-        <span>${this.i18n.t('weather.windDirection')} ${directionLabel}</span>
-        <span class="day-wind-direction-icon" style="transform: rotate(${avgWindDirection.toFixed(0)}deg);" aria-hidden="true">↑</span>
+      <div class="day-meta-icons-row" role="list" aria-label="天气详细信息">
+        <div class="day-meta-icon" role="listitem" aria-label="降水概率：${precipProb}%">
+          <span class="icon" aria-hidden="true">💧</span>
+          <span class="value">${precipProb}%</span>
+        </div>
+        <div class="day-meta-icon" role="listitem" aria-label="风速：${this.formatWindSpeed(maxWindSpeed)}">
+          <span class="icon" aria-hidden="true">💨</span>
+          <span class="value">${this.formatWindSpeed(maxWindSpeed)}</span>
+        </div>
+        <div class="day-meta-icon" role="listitem" aria-label="风向：${directionLabel}">
+          <span class="icon day-wind-direction-icon" style="transform: rotate(${avgWindDirection.toFixed(0)}deg);" aria-hidden="true">↑</span>
+          <span class="value">${directionLabel}</span>
+        </div>
       </div>
     `;
 
