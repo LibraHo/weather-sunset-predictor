@@ -1285,7 +1285,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 - [x] 2026-03-20 增量：后端 `/api/spots/china` 支持 `period=sunrise|sunset` 参数，接入分时段独立缓存读取/刷新并返回 `period`
 - [x] 2026-03-20 增量：前端拆分为朝霞/晚霞双 Overlay 实例（`sunrise`/`sunset` 独立状态与渲染容器，不复用同一 overlay）
-- [ ] 交互层提供朝/晚分栏或双卡片并行展示
+- [x] 2026-03-21 增量：交互层新增朝/晚双卡片并排面板（`_renderDualPeriodScorePanel`），地图下方同时展示两时段最高分与点位数，点击切换激活时段；各 overlay/manager 新增 `getMaxScore(period)` 接口；测试 94/94 通过（PR #208）
 - _关联需求：37.2_
 
 #### 64.9 静态中国地图 + 空数据占位（已完成）

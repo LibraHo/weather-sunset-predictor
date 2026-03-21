@@ -177,6 +177,26 @@ export default class ChinaRasterOverlay {
 
   getUpdatedAt() { return this._updatedAt; }
 
+  /**
+   * 返回栅格中有效格元的最高评分（用于朝/晚双卡片并排展示）
+   * @returns {number|null} 最高分，或 null（无数据时）
+   */
+  getMaxScore() {
+    if (!this._rasterData) return null;
+    const { values, noData = -1 } = this._rasterData;
+    if (!Array.isArray(values) || values.length === 0) return null;
+    let max = -Infinity;
+    for (const v of values) {
+      if (v !== noData && v >= RASTER_MIN_SCORE && v > max) max = v;
+    }
+    return max === -Infinity ? null : max;
+  }
+
+  /**
+   * 栅格层无散点概念，返回 0（接口与 ChinaSpotsOverlay 对齐）
+   */
+  getSpotCount() { return 0; }
+
   isVisible() { return this._visible; }
 
   /**

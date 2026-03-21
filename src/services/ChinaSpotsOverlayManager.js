@@ -226,6 +226,16 @@ export default class ChinaSpotsOverlayManager {
   }
 
   /**
+   * 获取指定时段的最高评分（用于朝/晚双卡片并排展示）
+   * @param {'sunrise'|'sunset'} period
+   * @returns {number|null}
+   */
+  getMaxScore(period) {
+    const overlay = this.getOverlay(period);
+    return overlay ? overlay.getMaxScore?.() ?? null : null;
+  }
+
+  /**
    * 获取指定时段的更新时间
    * @param {'sunrise'|'sunset'} period
    * @returns {string|null}

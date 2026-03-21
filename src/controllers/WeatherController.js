@@ -1643,6 +1643,7 @@ class WeatherController {
       const count = activeOverlay?.getSpotCount?.() || 0;
       this._setChinaSpotsEmptyState(count === 0);
       this._renderChinaSpotsTimestamp();
+      this._renderDualPeriodScorePanel(); // 任务 64.8：更新双卡片高亮
     }
   }
 
@@ -1743,6 +1744,79 @@ class WeatherController {
     }
 
     await this._initChinaSpotsMap();
+  }
+
+  /**
+   * 任务 64.8：朝/晚霞双时段分数并行展示
+   *
+   * 在地图下方渲染两张并排的评分卡片，分别显示朝霞和晚霞当前位置的
+   * 最高评分及覆盖点位数量，方便用户无需切换 tab 即可对比两段时光。
+   */
+  _renderDualPeriodScorePanel() {
+    const panelEl = document.getElementById('china-spots-dual-score');
+    if (!panelEl || !this.chinaSpotsOverlayManager) return;
+
+    const periods = [
+      { key: 'sunrise', label: '朝霞', emoji: '🌄' },
+      { key: 'sunset',  label: '晚霞', emoji: '🌅' },
+    ];
+
+    const cards = periods.map(({ key, label, emoji }) => {
+      const overlay = this.chinaSpotsOverlayManager.getOverlay(key);
+      const count   = overlay?.getSpotCount?.()   ?? 0;
+      const maxScore = overlay?.getMaxScore?.()    ?? null;
+      const isActive = this.chinaSpotsOverlayManager.getActivePeriod() === key;
+
+      const scoreText = (maxScore !== null && maxScore > 0)
+        ? `${Math.round(maxScore)} 分`
+        : '暂无数据';
+      const countText = count > 0 ? `${count} 个点位` : '—';
+
+      const borderColor = isActive
+        ? (key === 'sunrise' ? '#ff9a5c' : '#ff6b35')
+        : 'rgba(255,255,255,0.12)';
+      const bgGradient = isActive
+        ? (key === 'sunrise'
+            ? 'linear-gradient(135deg,rgba(255,180,80,0.18) 0%,rgba(255,130,50,0.08) 100%)'
+            : 'linear-gradient(135deg,rgba(255,120,40,0.22) 0%,rgba(200,60,20,0.08) 100%)')
+        : 'rgba(0,0,0,0.25)';
+
+      return `
+        <div class="china-spots-score-card${isActive ? ' active' : ''}"
+             data-period="${key}"
+             style="
+               flex:1;
+               padding:10px 12px;
+               border-radius:10px;
+               border:1px solid ${borderColor};
+               background:${bgGradient};
+               backdrop-filter:blur(4px);
+               cursor:pointer;
+               transition:border-color 0.2s, background 0.2s;
+             ">
+          <div style="font-size:20px; margin-bottom:4px;">${emoji}</div>
+          <div style="font-size:12px; color:var(--color-text-light); margin-bottom:2px;">${label}</div>
+          <div style="font-size:18px; font-weight:700; color:${isActive ? '#ffaa55' : 'var(--color-text)'};">
+            ${scoreText}
+          </div>
+          <div style="font-size:11px; color:var(--color-text-light); margin-top:2px;">${countText}</div>
+        </div>`;
+    });
+
+    panelEl.innerHTML = cards.join('');
+    panelEl.style.display = 'grid';
+    panelEl.classList.remove('hidden');
+
+    // 点击卡片切换时段
+    panelEl.querySelectorAll('.china-spots-score-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const period = card.dataset.period;
+        if (period && this.chinaSpotsOverlayManager) {
+          this.chinaSpotsOverlayManager.switchPeriod(period);
+          this._renderDualPeriodScorePanel(); // 重渲染高亮
+        }
+      });
+    });
   }
 
   _setChinaSpotsEmptyState(show, message = '今日暂无可见火烧云点位') {
@@ -1889,6 +1963,7 @@ class WeatherController {
       const count = this.chinaSpotsOverlay.getSpotCount();
       this._setChinaSpotsEmptyState(count === 0);
       this._renderChinaSpotsTimestamp();
+      this._renderDualPeriodScorePanel(); // 任务 64.8：朝/晚双卡片并排展示
 
       console.log('[WeatherController] 中国散点地图初始化完成');
     } catch (err) {

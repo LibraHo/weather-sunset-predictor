@@ -455,6 +455,15 @@ export default class ChinaSpotsOverlay {
     return this._spots.length;
   }
 
+  /**
+   * 返回当前时段所有点位中的最高评分（用于朝/晚双卡片并排展示）
+   * @returns {number|null} 最高分，或 null（无数据时）
+   */
+  getMaxScore() {
+    if (!this._spots || this._spots.length === 0) return null;
+    return this._spots.reduce((max, s) => (s.score > max ? s.score : max), -Infinity);
+  }
+
   getUpdatedAt() {
     return this._updatedAt;
   }

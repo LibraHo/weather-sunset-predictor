@@ -191,6 +191,16 @@ export default class ChinaRasterOverlayManager {
   }
 
   /**
+   * 获取指定时段的最高评分（用于朝/晚双卡片并排展示）
+   * @param {'sunrise'|'sunset'} period
+   * @returns {number|null}
+   */
+  getMaxScore(period) {
+    const overlay = this.getOverlay(period);
+    return overlay ? overlay.getMaxScore?.() ?? null : null;
+  }
+
+  /**
    * 获取点位数量（栅格层无散点，固定返回 0；接口保持对齐）
    */
   getSpotCount() { return 0; }
