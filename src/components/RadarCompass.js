@@ -324,9 +324,9 @@ class RadarCompass {
         <circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}"
           fill="transparent" stroke="${ringStroke}" stroke-width="1"/>
         <rect x="${(tx - bw / 2).toFixed(1)}" y="${(ty - bh / 2 - 1).toFixed(1)}" width="${bw}" height="${bh}" rx="8"
-          fill="rgba(255,255,255,0.94)"/>
+          fill="rgba(15,23,42,0.85)"/>
         <text x="${tx.toFixed(1)}" y="${(ty + 3.5).toFixed(1)}" font-size="11" font-weight="800"
-          fill="#1f2937" text-anchor="middle">${lbl}</text>`;
+          fill="#ffffff" text-anchor="middle">${lbl}</text>`;
     }).join('');
 
     const lowInnerRing = `<circle cx="${cx}" cy="${cy}" r="${R_LOW_INNER.toFixed(1)}"
