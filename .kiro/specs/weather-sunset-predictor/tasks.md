@@ -1420,8 +1420,8 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 
 | 编号 | 任务 | 状态 |
 |------|------|------|
-| 70.1 | 后端：PhotoService + 照片存储目录初始化 | - [ ] |
-| 70.2 | 后端：multer 上传 + sharp 缩略图生成 + EXIF 解析 | - [ ] |
+| 70.1 | 后端：PhotoService + 照片存储目录初始化 | ✅ |
+| 70.2 | 后端：multer 上传 + sharp 缩略图生成 + EXIF 解析 | ✅（PhotoService 核心逻辑完成，HTTP 路由待 70.3）|
 | 70.3 | 后端：/admin 路由 + Basic Auth 密码保护 | - [ ] |
 | 70.4 | 后端：/api/photos 接口 | - [ ] |
 | 70.5 | 后端：VisitorService + IP GeoIP + /api/visitors 接口 | - [ ] |
