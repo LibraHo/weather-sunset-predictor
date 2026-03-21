@@ -1820,6 +1820,10 @@ body.theme-dark .best-time {
 .compact-extra-time .hour-label {
   flex-shrink: 0;
   white-space: nowrap;
+  min-width: 5.5em;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .compact-extra-time .hour-time {
