@@ -62,8 +62,8 @@ class SettingsPanel {
                 <label class="setting-label">${this.i18n.t('settings.themeMode')}</label>
                 <div class="setting-control">
                   <select id="theme-select" class="setting-select">
-                    <option value="dark">${this.i18n.t('settings.themeLight')}</option>
-                    <option value="light">${this.i18n.t('settings.themeDark')}</option>
+                    <option value="light">${this.i18n.t('settings.themeLight')}</option>
+                    <option value="dark">${this.i18n.t('settings.themeDark')}</option>
                     <option value="auto">${this.i18n.t('settings.themeAuto')}</option>
                   </select>
                 </div>
