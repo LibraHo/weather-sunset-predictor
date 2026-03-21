@@ -3064,7 +3064,7 @@ body.theme-dark .sun-azimuth-info {
   }
 }
 
-/* ===== 未来预测横向布局样式 ===== */
+/* ===== 未来预测垂直列表布局样式 ===== */
 #forecast-section {
   overflow: hidden;
 }
@@ -3075,68 +3075,79 @@ body.theme-dark .sun-azimuth-info {
   margin-top: var(--spacing-sm);
 }
 
-#forecast-section .forecast-horizontal-container {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+/* 垂直列表容器：每天一行 */
+#forecast-section .forecast-vertical-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   margin: var(--spacing-md) auto 0;
   width: 100%;
-  padding: 0;
-  align-items: start;
 }
 
-#forecast-section .forecast-day-column {
-  width: 100%;
-  min-width: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.36) 100%);
-  border-radius: 14px;
-  padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  box-shadow: 0 8px 20px rgba(24, 39, 75, 0.08);
-  transition: all 0.24s ease;
-  text-align: left;
+/* 每天一行：左侧日期 + 右侧朝/晚霞横排 */
+#forecast-section .forecast-day-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.28) 100%);
+  border-radius: 12px;
+  padding: 12px 16px;
+  border: 1px solid rgba(255,255,255,0.38);
+  box-shadow: 0 4px 12px rgba(24,39,75,0.06);
+  transition: all 0.2s ease;
 }
 
-#forecast-section .forecast-day-column:hover {
+#forecast-section .forecast-day-row:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 24px rgba(24, 39, 75, 0.12);
 }
 
+/* 左侧日期列：固定宽度 */
 #forecast-section .forecast-day-header {
   text-align: left;
-  margin-bottom: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(76, 93, 122, 0.18);
+  flex-shrink: 0;
+  width: 60px;
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+  border-right: 1px solid rgba(76,93,122,0.15);
+  padding-right: 12px;
 }
 
 #forecast-section .forecast-day-header .day-label {
   display: block;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: #2f3948;
   margin-bottom: 2px;
+  white-space: nowrap;
 }
 
 #forecast-section .forecast-day-header .date-label {
   display: block;
-  font-size: 0.82rem;
-  color: rgba(47, 57, 72, 0.72);
+  font-size: 0.75rem;
+  color: rgba(47,57,72,0.6);
   font-weight: 500;
+  white-space: nowrap;
 }
 
+/* 右侧朝/晚霞横排 */
 #forecast-section .forecast-day-predictions {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 10px;
   align-items: stretch;
+  flex: 1;
+  min-width: 0;
 }
 
 #forecast-section .forecast-item {
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(76, 93, 122, 0.2);
-  background: rgba(255, 255, 255, 0.86);
-  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(76,93,122,0.18);
+  background: rgba(255,255,255,0.82);
+  flex: 1;
+  min-width: 0;
 }
 
 #forecast-section .forecast-item .passed-badge {
@@ -3236,49 +3247,28 @@ body.theme-dark .sun-azimuth-info {
 }
 
 
-@media (max-width: 1200px) {
-  #forecast-section .forecast-horizontal-container {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-/* 移动端响应式 */
-@media (max-width: 768px) {
-  #forecast-section .forecast-horizontal-container {
-    grid-template-columns: minmax(0, 1fr);
-    width: 100%;
-    gap: 10px;
-  }
-
-  #forecast-section .forecast-day-column {
-    width: 100%;
-    padding: 10px;
-  }
-
-  #forecast-section .forecast-item {
-    max-width: none;
-  }
-
-  .type-label {
-    font-size: 0.8125rem;
-  }
-
-  .forecast-score {
-    width: 60px;
-    height: 60px;
-    font-size: 1.4rem;
-  }
-
-  #forecast-section .forecast-type {
-    flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-xs);
-  }
-}
-
+/* 移动端响应式：垂直列表在小屏上朝晚霞改为纵向排列 */
 @media (max-width: 480px) {
-  #forecast-section .forecast-day-column {
-    padding: 9px;
+  #forecast-section .forecast-day-predictions {
+    flex-direction: column;
+  }
+
+  #forecast-section .forecast-day-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  #forecast-section .forecast-day-header {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid rgba(76,93,122,0.15);
+    padding-right: 0;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    align-items: baseline;
   }
 
   #forecast-section .forecast-score {
@@ -3775,4 +3765,27 @@ body.theme-dark {
   --radar-cloud-high: rgba(190,200,220,0.70);
 }
 ,220,0.70);
+}
+
+/* 暗色模式：垂直预测列表 */
+body.theme-dark #forecast-section .forecast-day-row {
+  background: linear-gradient(135deg, rgba(30,41,59,0.85) 0%, rgba(15,23,42,0.65) 100%);
+  border-color: rgba(255,255,255,0.08);
+}
+
+body.theme-dark #forecast-section .forecast-day-header {
+  border-color: rgba(255,255,255,0.1);
+}
+
+body.theme-dark #forecast-section .forecast-day-header .day-label {
+  color: rgba(241,245,249,0.92);
+}
+
+body.theme-dark #forecast-section .forecast-day-header .date-label {
+  color: rgba(148,163,184,0.75);
+}
+
+body.theme-dark #forecast-section .forecast-item {
+  background: rgba(30,41,59,0.75);
+  border-color: rgba(255,255,255,0.1);
 }

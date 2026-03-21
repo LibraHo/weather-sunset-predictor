@@ -1121,8 +1121,8 @@ class PredictionController {
 
     const now = new Date();
 
-    // 构建横向排列的时间线HTML
-    let html = '<div class="forecast-horizontal-container">';
+    // 构建垂直列表排列的时间线HTML（每天一行，朝霞/晚霞横排）
+    let html = '<div class="forecast-vertical-list">';
 
     daysToShow.forEach((dayPredictions, index) => {
       const dateStr = this.formatDate(dayPredictions.date);
@@ -1131,7 +1131,7 @@ class PredictionController {
                         this.i18n.t('time.daysLater', { days: index + 1 });
 
       html += `
-        <div class="forecast-day-column">
+        <div class="forecast-day-row">
           <div class="forecast-day-header">
             <span class="day-label">${dayLabel}</span>
             <span class="date-label">${dateStr}</span>
@@ -1216,7 +1216,7 @@ class PredictionController {
       forecastSection.classList.remove('hidden');
     }
 
-    console.log('[PredictionController] 预测时间线已更新（横向排列）');
+    console.log('[PredictionController] 预测时间线已更新（垂直列表）');
   }
 
   /**
