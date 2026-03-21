@@ -60,8 +60,8 @@ describe('ChinaSpotsOverlay helpers', () => {
   });
 
   test('getCanvasFilterStyle: 低缩放更强平滑，高缩放降低模糊', () => {
-    expect(getCanvasFilterStyle(4)).toContain('blur(6.2px)');
-    expect(getCanvasFilterStyle(10)).toContain('blur(2.9px)');
+    expect(getCanvasFilterStyle(4)).toContain('blur(6.4px)');
+    expect(getCanvasFilterStyle(10)).toContain('blur(3.4px)');
   });
 
   test('getOverlayBlendMode: 低缩放使用 screen 连续混合，高缩放回到 lighter', () => {
