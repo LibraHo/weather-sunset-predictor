@@ -1,0 +1,256 @@
+/**
+ * PhotoService.js - 火烧云照片管理服务（Phase 20 任务 70.1/70.2）
+ *
+ * 功能：
+ * - 初始化存储目录与索引文件
+ * - 上传原图、生成 300x300 缩略图
+ * - 支持 EXIF GPS 解析（由调用方传入）
+ * - 照片 CRUD（列表、删除）
+ *
+ * 存储结构：
+ *   ~/.xiake/photos/
+ *     originals/   原始图片
+ *     thumbs/      缩略图
+ *     photos.json  照片索引
+ */
+
+'use strict';
+
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+const { v4: uuidv4 } = require('uuid');
+
+// ---------------------------------------------------------------------------
+// 路径配置（可通过环境变量覆盖）
+// ---------------------------------------------------------------------------
+const XIAKE_DIR = process.env.XIAKE_DIR
+  ? path.resolve(process.env.XIAKE_DIR)
+  : path.join(os.homedir(), '.xiake');
+
+const PHOTOS_DIR       = path.join(XIAKE_DIR, 'photos');
+const ORIGINALS_DIR    = path.join(PHOTOS_DIR, 'originals');
+const THUMBS_DIR       = path.join(PHOTOS_DIR, 'thumbs');
+const PHOTOS_INDEX     = path.join(PHOTOS_DIR, 'photos.json');
+
+const THUMB_SIZE       = 300; // px，正方形
+const MAX_FILE_SIZE_MB = 20;  // 上传上限（MB）
+const ALLOWED_MIMES    = new Set(['image/jpeg', 'image/png', 'image/heic']);
+
+// ---------------------------------------------------------------------------
+// 内部辅助
+// ---------------------------------------------------------------------------
+
+/**
+ * 确保目录存在，不存在则递归创建。
+ */
+function ensureDir(dir) {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+}
+
+/**
+ * 读取照片索引。
+ * @returns {object[]} 照片元数据数组
+ */
+function readIndex() {
+  try {
+    if (!fs.existsSync(PHOTOS_INDEX)) return [];
+    const raw = fs.readFileSync(PHOTOS_INDEX, 'utf-8');
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * 写入照片索引（原子替换：先写临时文件再 rename）。
+ * @param {object[]} photos
+ */
+function writeIndex(photos) {
+  ensureDir(PHOTOS_DIR);
+  const tmpFile = PHOTOS_INDEX + '.tmp';
+  fs.writeFileSync(tmpFile, JSON.stringify(photos, null, 2), 'utf-8');
+  fs.renameSync(tmpFile, PHOTOS_INDEX);
+}
+
+// ---------------------------------------------------------------------------
+// 导出函数
+// ---------------------------------------------------------------------------
+
+/**
+ * 初始化存储目录与空索引。
+ * 幂等操作，可多次调用。
+ */
+function initDirs() {
+  ensureDir(PHOTOS_DIR);
+  ensureDir(ORIGINALS_DIR);
+  ensureDir(THUMBS_DIR);
+  if (!fs.existsSync(PHOTOS_INDEX)) {
+    writeIndex([]);
+  }
+}
+
+/**
+ * 生成缩略图（300×300 正方形 center-crop）。
+ * 使用 sharp（若 sharp 不可用则跳过缩略图生成，仅记录警告）。
+ *
+ * @param {string} srcPath  原图路径
+ * @param {string} dstPath  缩略图目标路径
+ * @returns {Promise<boolean>} 成功返回 true，失败返回 false
+ */
+async function generateThumbnail(srcPath, dstPath) {
+  try {
+    const sharp = require('sharp');
+    await sharp(srcPath)
+      .resize(THUMB_SIZE, THUMB_SIZE, { fit: 'cover', position: 'center' })
+      .jpeg({ quality: 85 })
+      .toFile(dstPath);
+    return true;
+  } catch (err) {
+    console.warn('[PhotoService] generateThumbnail failed:', err.message);
+    return false;
+  }
+}
+
+/**
+ * 保存照片（原图写盘 + 缩略图生成 + 写入索引）。
+ *
+ * @param {object} opts
+ * @param {Buffer}  opts.buffer     图片 Buffer
+ * @param {string}  opts.mimeType   MIME 类型（image/jpeg 等）
+ * @param {string}  [opts.filename] 原始文件名（仅用于显示，不影响存储路径）
+ * @param {number}  [opts.lat]      纬度（EXIF 或手动指定）
+ * @param {number}  [opts.lon]      经度（EXIF 或手动指定）
+ * @param {string}  [opts.takenAt]  ISO8601 拍摄时间
+ * @param {string}  [opts.desc]     照片描述
+ * @returns {Promise<object>} 已保存的照片元数据
+ * @throws {Error} 若 MIME 不合法或 buffer 超限则抛出
+ */
+async function savePhoto({ buffer, mimeType, filename = '', lat, lon, takenAt, desc = '' }) {
+  // 校验 MIME
+  const normalizedMime = (mimeType || '').toLowerCase();
+  if (!ALLOWED_MIMES.has(normalizedMime)) {
+    throw new Error(`UNSUPPORTED_MIME: ${mimeType}`);
+  }
+
+  // 校验文件大小
+  const sizeMb = buffer.length / (1024 * 1024);
+  if (sizeMb > MAX_FILE_SIZE_MB) {
+    throw new Error(`FILE_TOO_LARGE: ${sizeMb.toFixed(1)}MB > ${MAX_FILE_SIZE_MB}MB`);
+  }
+
+  initDirs();
+
+  const id       = uuidv4();
+  const ext      = normalizedMime === 'image/png' ? '.png' : '.jpg';
+  const origFile = `${id}${ext}`;
+  const thumbFile = `${id}_thumb.jpg`;
+
+  const origPath  = path.join(ORIGINALS_DIR, origFile);
+  const thumbPath = path.join(THUMBS_DIR, thumbFile);
+
+  // 写原图
+  fs.writeFileSync(origPath, buffer);
+
+  // 生成缩略图
+  const thumbOk = await generateThumbnail(origPath, thumbPath);
+
+  const meta = {
+    id,
+    filename: filename || origFile,
+    mimeType: normalizedMime,
+    origFile,
+    thumbFile: thumbOk ? thumbFile : null,
+    lat:     Number.isFinite(lat)  ? lat  : null,
+    lon:     Number.isFinite(lon)  ? lon  : null,
+    takenAt: takenAt || null,
+    desc,
+    uploadedAt: new Date().toISOString(),
+    sizeMb: parseFloat(sizeMb.toFixed(3)),
+  };
+
+  const photos = readIndex();
+  photos.unshift(meta); // 最新在前
+  writeIndex(photos);
+
+  return meta;
+}
+
+/**
+ * 获取所有照片元数据（按 uploadedAt 倒序）。
+ * @returns {object[]}
+ */
+function getPhotos() {
+  initDirs();
+  return readIndex();
+}
+
+/**
+ * 根据 ID 删除照片（原图 + 缩略图 + 索引条目）。
+ * @param {string} id
+ * @returns {boolean} 找到并删除返回 true，否则返回 false
+ */
+function deletePhoto(id) {
+  initDirs();
+  const photos = readIndex();
+  const idx = photos.findIndex(p => p.id === id);
+  if (idx === -1) return false;
+
+  const photo = photos[idx];
+
+  // 删除磁盘文件（容错：文件不存在不报错）
+  const origPath  = path.join(ORIGINALS_DIR, photo.origFile);
+  const thumbPath = photo.thumbFile ? path.join(THUMBS_DIR, photo.thumbFile) : null;
+
+  try { fs.unlinkSync(origPath);  } catch { /* 已不存在 */ }
+  if (thumbPath) {
+    try { fs.unlinkSync(thumbPath); } catch { /* 已不存在 */ }
+  }
+
+  photos.splice(idx, 1);
+  writeIndex(photos);
+  return true;
+}
+
+/**
+ * 按 ID 获取单张照片元数据。
+ * @param {string} id
+ * @returns {object|null}
+ */
+function getPhotoById(id) {
+  return readIndex().find(p => p.id === id) || null;
+}
+
+// ---------------------------------------------------------------------------
+// 路径工具（供路由层使用）
+// ---------------------------------------------------------------------------
+function getOriginalPath(origFile) {
+  return path.join(ORIGINALS_DIR, origFile);
+}
+
+function getThumbPath(thumbFile) {
+  return path.join(THUMBS_DIR, thumbFile);
+}
+
+module.exports = {
+  // 核心操作
+  initDirs,
+  savePhoto,
+  getPhotos,
+  deletePhoto,
+  getPhotoById,
+  generateThumbnail,
+  // 路径工具
+  getOriginalPath,
+  getThumbPath,
+  // 路径常量（供测试用）
+  PHOTOS_DIR,
+  ORIGINALS_DIR,
+  THUMBS_DIR,
+  PHOTOS_INDEX,
+  ALLOWED_MIMES,
+  MAX_FILE_SIZE_MB,
+};
