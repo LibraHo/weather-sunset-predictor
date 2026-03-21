@@ -21,6 +21,37 @@ import toastService from '../services/ToastService.js';
 import ChartRenderController from './ChartRenderController.js';
 import ChinaSpotsOverlay from '../services/ChinaSpotsOverlay.js';
 import ChinaSpotsOverlayManager from '../services/ChinaSpotsOverlayManager.js';
+import ChinaRasterOverlayManager from '../services/ChinaRasterOverlayManager.js';
+
+/**
+ * 任务 64.13：渲染模式 feature flag
+ *
+ * localStorage key: `china_render_mode`
+ * 合法值: `'raster'` | `'spots'`（缺省 → 默认值）
+ * 默认值：`'raster'`（启用像素级 IDW 栅格，视觉更连续）
+ *
+ * 可通过浏览器控制台运行时切换：
+ *   localStorage.setItem('china_render_mode', 'spots'); location.reload();
+ *   localStorage.setItem('china_render_mode', 'raster'); location.reload();
+ */
+export const CHINA_RENDER_MODE_KEY = 'china_render_mode';
+export const CHINA_RENDER_MODE_DEFAULT = 'raster';
+
+/**
+ * 根据 localStorage feature flag 构造对应的叠加层管理器
+ * @returns {ChinaRasterOverlayManager|ChinaSpotsOverlayManager}
+ */
+export function createChinaOverlayManager() {
+  const mode = (typeof localStorage !== 'undefined'
+    ? localStorage.getItem(CHINA_RENDER_MODE_KEY)
+    : null) ?? CHINA_RENDER_MODE_DEFAULT;
+  if (mode === 'spots') {
+    console.log('[WeatherController] china_render_mode=spots → ChinaSpotsOverlayManager');
+    return new ChinaSpotsOverlayManager();
+  }
+  console.log('[WeatherController] china_render_mode=raster → ChinaRasterOverlayManager');
+  return new ChinaRasterOverlayManager();
+}
 import { isInMainlandChina, isMainlandChinaLocation, MAINLAND_BOUNDS } from '../utils/mainlandChinaRegion.js';
 // 暂时禁用 ChartService 导入，使用内联简化版本
 
@@ -92,8 +123,10 @@ class WeatherController {
     this.selectedParameter = 'temp'; // 'temp', 'precip', 'humidity', 'wind', 'pressure', 'clouds'
     this.isMapInitialized = false; // 任务18：地图初始化状态
 
-    // Phase 16：中国散点地图覆盖层（64.8：朝/晚独立管理器）
-    this.chinaSpotsOverlayManager = new ChinaSpotsOverlayManager();
+    // Phase 16：中国散点地图覆盖层（64.13：feature flag 决定 Manager 类型）
+    // 默认使用 ChinaRasterOverlayManager（IDW 像素级栅格），可通过
+    //   localStorage.setItem('china_render_mode', 'spots') 切换为散点版
+    this.chinaSpotsOverlayManager = createChinaOverlayManager();
     // 兼容旧引用，指向管理器当前激活的叠加层
     this.chinaSpotsOverlay = null; // 稍后在 initChinaSpotsMap() 中设置
   }
