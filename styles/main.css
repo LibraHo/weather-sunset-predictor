@@ -108,12 +108,6 @@ body.theme-dark {
   --header-icon-color: #f5c87a;
 }
 
-/* 自动主题（跟随系统）*/
-@media (prefers-color-scheme: dark) {
-  body.theme-auto { }
-
-}
-
 /* ===== 基础样式 ===== */
 * {
   margin: 0;
@@ -939,6 +933,10 @@ input[type="text"]::placeholder {
 }
 
 /* ===== 预测显示 ===== */
+#prediction-section {
+  margin-top: 16px;
+}
+
 #prediction-display {
   text-align: center;
 }
@@ -2423,6 +2421,17 @@ body.theme-dark .prediction-analysis {
   height: auto;
 }
 
+/* 暗色模式图表容器适配 */
+body.theme-dark .chart-container {
+  background-color: var(--color-surface, rgba(30,41,59,0.8));
+  border: 1px solid var(--color-border);
+}
+
+body.theme-dark .chart-container > div > div {
+  background: var(--color-surface, rgba(30,41,59,0.8));
+  border: 1px solid var(--color-border);
+}
+
 /* 移动端优化 */
 @media (max-width: 768px) {
   .weekly-cards-container {
@@ -3068,6 +3077,7 @@ body.theme-dark .sun-azimuth-info {
   margin: var(--spacing-md) auto 0;
   width: 100%;
   padding: 0;
+  align-items: start;
 }
 
 #forecast-section .forecast-day-column {
