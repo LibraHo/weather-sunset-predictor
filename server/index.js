@@ -33,7 +33,7 @@ const apiLimiter = rateLimit({
   max: rateLimitMax,
   standardHeaders: true,  // 在响应头返回 RateLimit-* 字段
   legacyHeaders: false,
-  validate: { trustProxy: false }, // 禁用 X-Forwarded-For 校验（nginx 反代场景）
+
   message: {
     error: {
       code: 'RATE_LIMIT_EXCEEDED',
