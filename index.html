@@ -279,7 +279,16 @@
         </div>
       </section>
 
-      <!-- 加载指示器 -->
+    <!-- 主题调试面板（临时） -->
+    <div id="theme-debug" style="position: fixed; bottom: 80px; left: 10px; background: rgba(255,255,255,0.95); padding: 8px 12px; border-radius: 8px; font-size: 11px; font-family: monospace; z-index: 10000; box-shadow: 0 2px 8px rgba(0,0,0,0.2); color: #333;">
+      <div><strong>🎨 主题调试：</strong></div>
+      <div>body class: <span id="debug-body-class"></span></div>
+      <div>--color-bg: <span id="debug-color-bg"></span></div>
+      <div>系统主题: <span id="debug-system-theme"></span></div>
+      <div>LocalStorage: <span id="debug-storage"></span></div>
+    </div>
+
+    <!-- 加载指示器 -->
       <div id="loading-indicator" class="loading hidden">
         <div class="spinner"></div>
         <p data-i18n="common.loading">加载中...</p>

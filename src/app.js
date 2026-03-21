@@ -193,6 +193,28 @@ async function updateVisitorCount() {
 
 updateVisitorCount();
 
+// 主题调试信息（临时）
+function updateThemeDebug() {
+  try {
+    const bodyClass = document.body.className || '(无)';
+    const colorBg = getComputedStyle(document.body).getPropertyValue('--color-bg').trim() || '(未定义)';
+    const systemTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    const storageTheme = localStorage.getItem('app_theme') || '(未设置)';
+
+    document.getElementById('debug-body-class').textContent = bodyClass;
+    document.getElementById('debug-color-bg').textContent = colorBg;
+    document.getElementById('debug-system-theme').textContent = systemTheme;
+    document.getElementById('debug-storage').textContent = storageTheme;
+
+    // 跟随主题变化
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateThemeDebug);
+    window.addEventListener('themeChanged', updateThemeDebug);
+  } catch (error) {
+    console.warn('[App] 主题调试信息更新失败:', error.message);
+  }
+}
+updateThemeDebug();
+
 // 导出控制器实例供调试使用
 window.appController = appController;
 window.weatherController = weatherController;
