@@ -67,7 +67,14 @@ router.get('/china', async (req, res, next) => {
 module.exports = router;
 module.exports.normalizeSpotsPeriod = normalizeSpotsPeriod;
 module.exports.SUPPORTED_PERIODS = SUPPORTED_PERIODS;
-26-03-21",
+
+/**
+ * GET /api/spots/china/raster
+ * 返回中国区域连续栅格数据（IDW 插值）
+ *
+ * Response 格式：
+ * {
+ *   date: "2026-03-21",
  *   updatedAt: "2026-03-21T00:00:00.000Z",
  *   bbox: { west, south, east, north },
  *   resolution: 0.5,

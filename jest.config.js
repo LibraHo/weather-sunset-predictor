@@ -73,6 +73,7 @@ export default {
   
   // Setup files to run before tests
   setupFilesAfterEnv: ['<rootDir>/tests/__mocks__/canvas.js'],
+  setupFiles: ['<rootDir>/tests/__mocks__/text-encoder-polyfill.js'],
   
   // Verbose output
   verbose: true,

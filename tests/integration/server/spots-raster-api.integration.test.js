@@ -3,9 +3,9 @@
  * 测试 /api/spots/china/raster 端点
  */
 
-const express = require('express');
-const request = require('supertest');
-const spotsRouter = require('../../../server/routes/spots');
+import express from 'express';
+import request from 'supertest';
+import spotsRouter from '../../../server/routes/spots.js';
 
 describe('POST /api/spots/china/raster', () => {
   let app;
