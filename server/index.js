@@ -136,9 +136,8 @@ function _scheduleGridRefresh() {
     console.error('[GridRefresh] 启动刷新失败:', err.message)
   );
 
-  // 定时任务：每天 UTC 0/4/7/9 点（= CST 8/12/15/17）
-  // 用 setInterval 模拟，每小时检查是否到了刷新时间点
-  const REFRESH_HOURS_UTC = [0, 4, 7, 9];
+  // 定时任务：每天 UTC 0/9 点（= CST 8:00/17:00），每天 2 次，节省免费 API 配额
+  const REFRESH_HOURS_UTC = [0, 9];
 
   setInterval(() => {
     const now = new Date();
