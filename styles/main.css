@@ -2186,9 +2186,9 @@ body.theme-dark .prediction-analysis {
 
 /* 7天概览卡片容器 */
 .weekly-cards-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   margin-top: var(--spacing-md);
 }
 
@@ -2208,14 +2208,14 @@ body.theme-dark .prediction-analysis {
 .day-card {
   background-color: var(--color-bg);
   border-radius: var(--radius-md);
-  padding: var(--spacing-md);
+  padding: 10px 14px;
   text-align: center;
   transition: all var(--transition-normal);
-  border: 2px solid transparent;
-  /* UI 精修 64.11.5：调整卡片布局以支持新结构 */
+  border: 1px solid rgba(76,93,122,0.12);
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
 }
 
 .day-card:hover {
@@ -2224,60 +2224,63 @@ body.theme-dark .prediction-analysis {
   border-color: var(--color-primary);
 }
 
+/* 日期列：固定宽度 */
 .day-label {
+  flex-shrink: 0;
+  width: 52px;
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--color-text);
-  margin-bottom: var(--spacing-xs);
-  height: 2.6em;
   line-height: 1.25;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
 }
 
 .day-label-primary,
 .day-label-date {
   display: block;
-  max-width: 100%;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .day-label-date {
-  font-weight: 500;
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--color-text-light);
 }
 
+/* 天气图标：缩小 */
 .weather-icon {
-  font-size: 2.5rem;
-  margin: var(--spacing-xs) 0;
+  font-size: 1.6rem;
+  flex-shrink: 0;
+  width: 32px;
+  text-align: center;
 }
 
-/* UI 精修 64.11.5：温度相对条 */
+/* 温度条：横向拉伸占剩余空间 */
 .temp-bar-container {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: 4px;
-  padding: 6px 0;
+  padding: 0;
+  min-width: 0;
 }
 
 .temp-bar {
-  width: 80%;
-  height: 8px;
+  width: 100%;
+  height: 5px;
   background: linear-gradient(90deg, #2196f3, #ff5722);
-  border-radius: 4px;
-  position: relative;
-  overflow: hidden;
+  border-radius: 3px;
 }
 
 .temp-bar-labels {
   display: flex;
   justify-content: space-between;
-  width: 80%;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 600;
   color: var(--color-text);
 }
@@ -2290,31 +2293,31 @@ body.theme-dark .prediction-analysis {
   color: #ff5722;
 }
 
-/* UI 精修 64.11.5：图标化横排 */
+/* 右侧数据：横排，紧凑 */
 .day-meta-icons-row {
   display: flex;
-  justify-content: center;
+  flex-direction: row;
   align-items: center;
-  gap: 12px;
-  margin-top: 4px;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .day-meta-icon {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 2px;
-  font-size: 0.7rem;
+  gap: 3px;
+  font-size: 0.72rem;
   color: var(--color-text-light);
 }
 
 .day-meta-icon .icon {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   line-height: 1;
 }
 
 .day-meta-icon .value {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 600;
 }
 
