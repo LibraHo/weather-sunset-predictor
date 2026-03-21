@@ -78,6 +78,7 @@ class AppController {
       this.initializeTheme();
       this.setupThemeListener();
       this.setupWeatherModelListener();
+      this.setupChinaRenderModeListener();
 
       // API 模式固定为后端代理：前端不再执行 API 密钥门禁
       console.log('[AppController] API模式: 后端代理（固定），跳过前端 API 密钥检查');
@@ -1441,6 +1442,40 @@ class AppController {
         this.weatherController.renderWeeklyOverview(weatherData);
       } catch (error) {
         console.error('[AppController] 切换天气模型后刷新失败:', error);
+      }
+    });
+  }
+
+  /**
+   * 监听火烧云渲染模式切换（任务 64.14）
+   * 设置面板切换 china_render_mode 后重建 overlay manager 并重渲染
+   */
+  setupChinaRenderModeListener() {
+    window.addEventListener('chinaRenderModeChanged', async (event) => {
+      const mode = event?.detail?.mode || localStorage.getItem('china_render_mode') || 'raster';
+      console.log('[AppController] 火烧云渲染模式已切换:', mode);
+
+      if (!this.weatherController) return;
+
+      try {
+        // 销毁旧 overlay manager（清除地图图层）
+        if (this.weatherController.chinaSpotsOverlayManager) {
+          this.weatherController.chinaSpotsOverlayManager.destroy?.();
+        }
+
+        // 重建 manager（根据新 flag）
+        const { createChinaOverlayManager } = await import('./WeatherController.js');
+        this.weatherController.chinaSpotsOverlayManager = createChinaOverlayManager();
+        this.weatherController.chinaSpotsOverlay = null;
+
+        // 若地图已初始化，重新挂载
+        if (this.weatherController._chinaSpotsMapInstance) {
+          await this.weatherController._initChinaSpotsMap();
+        }
+
+        console.log('[AppController] 火烧云覆盖层已切换为:', mode);
+      } catch (err) {
+        console.error('[AppController] 切换火烧云渲染模式失败:', err);
       }
     });
   }
