@@ -30,14 +30,18 @@ function alpha(base, scoreNorm, zoomOpacityFactor = 1) {
 }
 
 function getZoomOpacityFactor(zoom = 5) {
-  return clamp(1.04 - (zoom - 5) * 0.09, 0.62, 1.08);
+  // 微调高缩放透明度衰减:0.09→0.08,使放大时透明度下降更温和
+  return clamp(1.04 - Math.max(0, zoom - 5) * 0.08, 0.66, 1.08);
 }
 
 export function getDensityOpacityFactor(spotsInViewCount = 0, zoom = 5) {
   const count = Number.isFinite(spotsInViewCount) ? spotsInViewCount : 0;
-  const density = clamp(count / 18, 0, 1.8);
-  const base = 1.05 - density * 0.2;
-  const zoomCompensation = zoom <= 5 ? 0.04 : 0;
+  // 微调密度阈值:18→20,使密度适应更温和
+  const density = clamp(count / 20, 0, 2.0);
+  // 微调透明度衰减斜率:0.2→0.18,使密集区域透明度下降更平缓
+  const base = 1.05 - density * 0.18;
+  // 微调低缩放补偿:0.04→0.05,使低缩放下略亮
+  const zoomCompensation = zoom <= 5 ? 0.05 : 0;
   return clamp(base + zoomCompensation, 0.72, 1.08);
 }
 
@@ -51,14 +55,18 @@ export function getMainlandEdgeOpacityFactor(spot, zoom = 5) {
     MAINLAND_BOUNDS.latMax - spot.lat
   );
 
-  const featherBandDeg = clamp(2.6 - (zoom - 5) * 0.18, 1.4, 2.8);
+  // 微调羽化带宽:低缩放时羽化范围更广(3.2→2.8),高缩放时更窄(1.6→1.4)
+  const featherBandDeg = clamp(3.2 - (zoom - 4) * 0.32, 1.6, 3.2);
   const t = smoothstep01(clamp(distToBorderDeg / featherBandDeg, 0, 1));
-  return clamp(0.66 + t * 0.34, 0.66, 1);
+  // 调整最低透明度因子(0.66→0.72),使边缘过渡更柔和
+  return clamp(0.72 + t * 0.28, 0.72, 1);
 }
 
 export function getCanvasFilterStyle(zoom = 5) {
-  const blurPx = clamp(6.2 - (zoom - 4) * 0.55, 2.2, 6.2);
-  const warmBoost = clamp(1.08 - (zoom - 5) * 0.025, 0.95, 1.1);
+  // 微调模糊范围:6.2→6.4(低缩放),2.2→2.0(高缩放)
+  const blurPx = clamp(6.4 - (zoom - 4) * 0.5, 2.0, 6.4);
+  // 微调饱和度提升:1.08→1.10(低缩放),0.95→0.98(高缩放)
+  const warmBoost = clamp(1.10 - (zoom - 5) * 0.024, 0.98, 1.10);
   return `blur(${blurPx.toFixed(1)}px) saturate(${warmBoost.toFixed(2)})`;
 }
 
@@ -68,7 +76,9 @@ export function getOverlayBlendMode(zoom = 5) {
 }
 
 function getViewportPaddingDeg(zoom = 5) {
-  return clamp(3.2 - (zoom - 4) * 0.35, 1.1, 3.2);
+  // 微调缓冲区宽度:3.2→3.0(低缩放),1.1→1.2(高缩放)
+  // 低缩放时缓冲略小,高缩放时缓冲略大,避免裁剪边缘闪烁
+  return clamp(3.0 - (zoom - 4) * 0.3, 1.2, 3.0);
 }
 
 export function normalizeSpotsPeriod(period = 'sunset') {
@@ -87,9 +97,14 @@ export function isSpotInViewport(spot, viewport) {
 }
 
 const FIRECLOUD_PALETTE = [
+  // 低分：温暖金色（晨曦/黄昏底色）
   { t: 0, rgb: [255, 214, 132] },
+  // 中分：橙红色过渡（火焰主体色）
   { t: 0.45, rgb: [255, 158, 74] },
-  { t: 1, rgb: [255, 82, 18] }
+  // 高分：深红橙色（强烈火烧云核心）
+  { t: 0.85, rgb: [255, 94, 28] },
+  // 极高分：深红紫红（最高温火焰色）
+  { t: 1, rgb: [255, 60, 20] }
 ];
 
 function interpolatePalette(norm) {
