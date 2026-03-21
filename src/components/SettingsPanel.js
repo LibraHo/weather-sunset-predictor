@@ -137,6 +137,15 @@ class SettingsPanel {
                   <option value="osm">${this.i18n.t('settings.mapTileOSM') || 'OpenStreetMap（海外）'}</option>
                 </select>
               </div>
+              <!-- 🔥 火烧云渲染模式（任务 64.14） -->
+              <div class="setting-item">
+                <label class="setting-label">🔥 火烧云渲染模式</label>
+                <select id="china-render-mode-select" class="setting-select">
+                  <option value="raster">IDW 栅格（连续云场，推荐）</option>
+                  <option value="spots">散点（独立光圈）</option>
+                </select>
+                <small class="setting-hint">切换后页面自动重载，仅对中国大陆火烧云地图有效</small>
+              </div>
             </div>
           </div>
 
@@ -365,6 +374,18 @@ class SettingsPanel {
       });
     }
 
+    // 火烧云渲染模式切换（任务 64.14）
+    const chinaRenderModeSelect = document.getElementById('china-render-mode-select');
+    if (chinaRenderModeSelect) {
+      chinaRenderModeSelect.value = localStorage.getItem('china_render_mode') || 'raster';
+      chinaRenderModeSelect.addEventListener('change', (e) => {
+        const mode = e.target.value;
+        localStorage.setItem('china_render_mode', mode);
+        // 通知 WeatherController 重新初始化覆盖层（无需整页刷新）
+        window.dispatchEvent(new CustomEvent('chinaRenderModeChanged', { detail: { mode } }));
+      });
+    }
+
     const weatherModelSelect = document.getElementById('weather-model-select');
     if (weatherModelSelect) {
       weatherModelSelect.value = localStorage.getItem('weather_model') || 'ecmwf_ifs025';
@@ -438,6 +459,12 @@ class SettingsPanel {
     const mapTileSelect = document.getElementById('map-tile-provider-select');
     if (mapTileSelect) {
       mapTileSelect.value = localStorage.getItem('map_tile_provider') || 'auto';
+    }
+
+    // 加载火烧云渲染模式（任务 64.14）
+    const chinaRenderModeSelect = document.getElementById('china-render-mode-select');
+    if (chinaRenderModeSelect) {
+      chinaRenderModeSelect.value = localStorage.getItem('china_render_mode') || 'raster';
     }
 
     // 加载天气模型设置

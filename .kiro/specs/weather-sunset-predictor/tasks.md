@@ -1632,5 +1632,18 @@ localStorage.setItem('china_render_mode', 'raster'); location.reload(); // 栅�
 - `ChinaRasterOverlay.test.js`：19/19 通过
 - `ChinaRasterOverlayManager.test.js`：21/21 通过
 
-**下一步（64.14）：**
-考虑在设置面板（Settings）新增"渲染模式"切换开关，无需打开控制台即可切换散点/栅格视图。
+## Phase 16 补增：设置面板渲染模式切换（任务 64.14）
+
+### 任务 64.14：SettingsPanel 火烧云渲染模式切换开关（已完成 2026-03-21）
+
+目标：在设置面板「地图底图」区块新增「🔥 火烧云渲染模式」下拉菜单，无需打开控制台即可切换散点/栅格视图。
+
+**修改文件：**
+- `src/components/SettingsPanel.js` — 新增下拉 `#china-render-mode-select`，绑定 localStorage 读写 + dispatch `chinaRenderModeChanged` 事件
+- `src/controllers/AppController.js` — 新增 `setupChinaRenderModeListener`，监听事件后重建 overlay manager（无需整页刷新）
+- `tests/unit/components/SettingsPanel.test.js` — 新增 4 个渲染模式专项单测，全部通过（35/35）
+
+**PR：** #205 `feat(64.14): 设置面板新增火烧云渲染模式切换开关`
+
+**下一步（64.7）：**
+补充后端 `SunsetSpotsService.test.js`：网格生成、缓存逻辑、过滤规则单测（后端任务，独立于前端增量）。

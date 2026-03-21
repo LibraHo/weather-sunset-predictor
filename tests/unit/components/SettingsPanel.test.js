@@ -466,3 +466,61 @@ describe('SettingsPanel.applyTheme', () => {
     expect(sp.themeService.setTheme).toHaveBeenCalledWith('light');
   });
 });
+
+describe('SettingsPanel - 火烧云渲染模式切换（任务 64.14）', () => {
+  beforeEach(() => {
+    setupI18nMock();
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    const panel = document.getElementById('settings-panel');
+    if (panel) panel.remove();
+    jest.restoreAllMocks();
+  });
+
+  test('初始打开时渲染模式 select 值来自 localStorage（默认 raster）', () => {
+    const sp = makePanel();
+    sp.open();
+    const sel = document.getElementById('china-render-mode-select');
+    expect(sel).not.toBeNull();
+    expect(sel.value).toBe('raster');
+  });
+
+  test('localStorage 中已有 spots 时 select 初始化为 spots', () => {
+    localStorage.setItem('china_render_mode', 'spots');
+    const sp = makePanel();
+    sp.open();
+    const sel = document.getElementById('china-render-mode-select');
+    expect(sel.value).toBe('spots');
+  });
+
+  test('切换 select 时写入 localStorage 并触发 chinaRenderModeChanged 事件', () => {
+    const sp = makePanel();
+    sp.open();
+
+    const events = [];
+    window.addEventListener('chinaRenderModeChanged', (e) => events.push(e.detail));
+
+    const sel = document.getElementById('china-render-mode-select');
+    sel.value = 'spots';
+    sel.dispatchEvent(new Event('change'));
+
+    expect(localStorage.getItem('china_render_mode')).toBe('spots');
+    expect(events).toHaveLength(1);
+    expect(events[0].mode).toBe('spots');
+
+    window.removeEventListener('chinaRenderModeChanged', events);
+  });
+
+  test('loadSettings 正确同步 select 值与 localStorage', () => {
+    localStorage.setItem('china_render_mode', 'raster');
+    const sp = makePanel();
+    sp.open();
+    // 改变 localStorage 后调用 loadSettings 应同步
+    localStorage.setItem('china_render_mode', 'spots');
+    sp.loadSettings();
+    const sel = document.getElementById('china-render-mode-select');
+    expect(sel.value).toBe('spots');
+  });
+});
