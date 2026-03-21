@@ -2259,7 +2259,7 @@ body.theme-dark .prediction-analysis {
   text-align: center;
 }
 
-/* 温度条：横向拉伸占剩余空间 */
+/* 温度条：固定宽度，避免影响右侧数据对齐 */
 .temp-bar-container {
   flex: 1;
   display: flex;
@@ -2268,6 +2268,7 @@ body.theme-dark .prediction-analysis {
   gap: 4px;
   padding: 0;
   min-width: 0;
+  max-width: 160px;
 }
 
 .temp-bar {
@@ -2293,13 +2294,15 @@ body.theme-dark .prediction-analysis {
   color: #ff5722;
 }
 
-/* 右侧数据：横排，紧凑 */
+/* 右侧数据：固定宽度，始终对齐 */
 .day-meta-icons-row {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
+  width: 140px;
+  justify-content: flex-end;
 }
 
 .day-meta-icon {
@@ -3546,28 +3549,46 @@ body.theme-dark .sun-azimuth-info {
 
 /* ===== 暗色主题背景 — 深邃星空感 ===== */
 body.theme-dark,
+/* auto 模式：亮色系统默认与 light 相同，不设深色背景 */
 body.theme-auto {
-  background-color: #0a0f1e;
-  background-image:
-    radial-gradient(at 20% 10%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
-    radial-gradient(at 80% 5%,  rgba(168, 85, 247, 0.10) 0px, transparent 50%),
-    radial-gradient(at 50% 80%, rgba(251, 146, 60, 0.08) 0px, transparent 50%),
-    radial-gradient(at 10% 90%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
-    radial-gradient(at 90% 90%, rgba(168, 85, 247, 0.06) 0px, transparent 50%);
-  background-attachment: fixed;
+  /* 跟随 light 主题，不强制深色 */
 }
 
-/* auto 模式跟随系统 */
+/* auto 模式跟随系统暗色 */
 @media (prefers-color-scheme: dark) {
   body.theme-auto {
-    background-color: #0a0f1e;
-    background-image:
-      radial-gradient(at 20% 10%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
-      radial-gradient(at 80% 5%,  rgba(168, 85, 247, 0.10) 0px, transparent 50%),
-      radial-gradient(at 50% 80%, rgba(251, 146, 60, 0.08) 0px, transparent 50%),
-      radial-gradient(at 10% 90%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
-      radial-gradient(at 90% 90%, rgba(168, 85, 247, 0.06) 0px, transparent 50%);
-    background-attachment: fixed;
+    /* 复用 theme-dark 的深蓝背景变量 */
+    --color-primary: #64a8f0;
+    --color-secondary: #a78bfa;
+    --color-success: #4ade80;
+    --color-warning: #fbbf24;
+    --color-error: #f87171;
+    --color-excellent: #4ade80;
+    --color-good: #fbbf24;
+    --color-fair: #94a3b8;
+    --color-bg: #0a0f1e;
+    --color-card-bg: rgba(15, 22, 40, 0.85);
+    --color-text: rgba(255, 255, 255, 0.92);
+    --color-text-light: rgba(255, 255, 255, 0.50);
+    --color-border: rgba(255, 255, 255, 0.08);
+    --sunset-time-bg: rgba(251, 146, 60, 0.10);
+    --sunset-time-border: #fb923c;
+    --sunset-time-text: #fdba74;
+    --sunset-time-bg-subtle: rgba(15, 23, 42, 0.85);
+    --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(255,255,255,0.04);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45), 0 0 0 0.5px rgba(255,255,255,0.06);
+    --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 0 0.5px rgba(255,255,255,0.08);
+    --glass-bg: rgba(18, 28, 52, 0.60);
+    --glass-bg-hover: rgba(24, 36, 64, 0.72);
+    --glass-bg-heavy: rgba(12, 20, 40, 0.80);
+    --glass-border: rgba(255, 255, 255, 0.10);
+    --glass-blur: 20px;
+    --glass-blur-heavy: 40px;
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.08);
+    --header-surface: rgba(14, 20, 38, 0.85);
+    --header-border: rgba(255, 200, 120, 0.12);
+    --header-title-color: #f5c87a;
+    --header-icon-color: #f5c87a;
   }
 }
 
