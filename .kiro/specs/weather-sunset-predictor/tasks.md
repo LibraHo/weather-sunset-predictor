@@ -1592,7 +1592,7 @@ ADMIN_PASSWORD=your_admin_password_here
 - `tests/unit/services/ChinaRasterOverlayManager.test.js` — 21 项管理器测试
 
 **设计要点：**
-- `ChinaRasterOverlayManager` 接口与 `ChinaSpotsOverlayManager` 100% 对齐（`init/show/hide/toggle/clear/destroy/switchPeriod/loadAllPeriods/getOverlay/getUpdatedAt`）
+- `ChinaRasterOverlayManager` 接口与 `ChinaSpotsOverlayManager` 100% 对齐
 - `getSpotCount()` 栅格层返回 0，不影响空数据占位判断
 - 渲染路径：IDW 栅格 values[] → ImageData 像素着色 → CSS transform 定位，无散点圆圈
 - 色板：金黄→橙黄→深橙→火红橙（t=0~1 连续 smoothstep 插值）
@@ -1601,6 +1601,36 @@ ADMIN_PASSWORD=your_admin_password_here
 - `ChinaRasterOverlay.test.js`：19/19 通过
 - `ChinaRasterOverlayManager.test.js`：21/21 通过
 
-**下一步（64.13）：**
-WeatherController 增加 feature flag（`localStorage: china_render_mode = raster|spots`），
-在 `_initChinaSpotsMap()` 内按 flag 决定实例化 Manager 类型，实现运行时切换。
+---
+
+## Phase 16 补增：栅格渲染模式 Feature Flag（任务 64.13）
+
+### 任务 64.13：WeatherController 渲染模式 Feature Flag（已完成 2026-03-21）
+
+目标：在 `WeatherController` 构造器中引入 `china_render_mode` localStorage feature flag，
+实现运行时切换 `ChinaRasterOverlayManager`（IDW 栅格）与 `ChinaSpotsOverlayManager`（散点）。
+
+**修改文件：**
+- `src/controllers/WeatherController.js`
+  - 新增 `import ChinaRasterOverlayManager`
+  - 导出常量 `CHINA_RENDER_MODE_KEY = 'china_render_mode'`
+  - 导出常量 `CHINA_RENDER_MODE_DEFAULT = 'raster'`
+  - 导出工厂函数 `createChinaOverlayManager()`
+  - 构造函数中将 `new ChinaSpotsOverlayManager()` 替换为 `createChinaOverlayManager()`
+- `src/services/ChinaRasterOverlay.js`
+- `src/services/ChinaRasterOverlayManager.js`
+- `tests/unit/controllers/ChinaRenderModeFlag.test.js`（新增，11 项测试）
+
+**切换方式（浏览器控制台）：**
+```js
+localStorage.setItem('china_render_mode', 'spots'); location.reload(); // 散点模式
+localStorage.setItem('china_render_mode', 'raster'); location.reload(); // 栅格模式（默认）
+```
+
+**测试结果：**
+- `ChinaRenderModeFlag.test.js`：11/11 通过
+- `ChinaRasterOverlay.test.js`：19/19 通过
+- `ChinaRasterOverlayManager.test.js`：21/21 通过
+
+**下一步（64.14）：**
+考虑在设置面板（Settings）新增"渲染模式"切换开关，无需打开控制台即可切换散点/栅格视图。
