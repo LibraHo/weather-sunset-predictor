@@ -1216,6 +1216,7 @@ node --experimental-vm-modules node_modules/.bin/jest --no-coverage --runInBand 
 | 64.9 | 静态中国地图（不可缩放）+ 空数据占位 | - [ ] |
 | 64.10 | `.kiro` 三文档同步（requirements/design/tasks） | ✅ |
 | 64.11 | UI 精修（截图项）做成单独任务包 | - [ ] |
+| 64.12 | 栅格渲染管理器（ChinaRasterOverlayManager）+ 集成测试 | ✅ |
 
 ### 任务详情
 
@@ -1575,3 +1576,31 @@ ADMIN_PASSWORD=your_admin_password_here
 2. 上传 MIME 白名单：`image/jpeg`, `image/png`, `image/heic`
 3. 单文件大小上限 20MB
 4. 管理员操作全量记录审计日志
+
+---
+
+## Phase 16 补增：栅格火烧云渲染器管理层（任务 64.12）
+
+### 任务 64.12：ChinaRasterOverlayManager（已完成 2026-03-21）
+
+目标：封装 ChinaRasterOverlay（IDW 栅格连续层）的朝/晚霞双时段管理，接口与 ChinaSpotsOverlayManager 对齐，可作即插即用替换方案。
+
+**新增文件：**
+- `src/services/ChinaRasterOverlay.js` — 像素级连续栅格渲染器（从 PR #198 引入）
+- `src/services/ChinaRasterOverlayManager.js` — 朝/晚霞管理器，Tab UI 与散点版一致
+- `tests/unit/services/ChinaRasterOverlay.test.js` — 19 项纯函数测试
+- `tests/unit/services/ChinaRasterOverlayManager.test.js` — 21 项管理器测试
+
+**设计要点：**
+- `ChinaRasterOverlayManager` 接口与 `ChinaSpotsOverlayManager` 100% 对齐（`init/show/hide/toggle/clear/destroy/switchPeriod/loadAllPeriods/getOverlay/getUpdatedAt`）
+- `getSpotCount()` 栅格层返回 0，不影响空数据占位判断
+- 渲染路径：IDW 栅格 values[] → ImageData 像素着色 → CSS transform 定位，无散点圆圈
+- 色板：金黄→橙黄→深橙→火红橙（t=0~1 连续 smoothstep 插值）
+
+**测试结果：**
+- `ChinaRasterOverlay.test.js`：19/19 通过
+- `ChinaRasterOverlayManager.test.js`：21/21 通过
+
+**下一步（64.13）：**
+WeatherController 增加 feature flag（`localStorage: china_render_mode = raster|spots`），
+在 `_initChinaSpotsMap()` 内按 flag 决定实例化 Manager 类型，实现运行时切换。
