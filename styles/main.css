@@ -2259,7 +2259,7 @@ body.theme-dark .prediction-analysis {
   text-align: center;
 }
 
-/* 温度条：横向拉伸占剩余空间 */
+/* 温度条：固定宽度，避免影响右侧数据对齐 */
 .temp-bar-container {
   flex: 1;
   display: flex;
@@ -2268,6 +2268,7 @@ body.theme-dark .prediction-analysis {
   gap: 4px;
   padding: 0;
   min-width: 0;
+  max-width: 160px;
 }
 
 .temp-bar {
@@ -2293,13 +2294,15 @@ body.theme-dark .prediction-analysis {
   color: #ff5722;
 }
 
-/* 右侧数据：横排，紧凑 */
+/* 右侧数据：固定宽度，始终对齐 */
 .day-meta-icons-row {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
+  width: 140px;
+  justify-content: flex-end;
 }
 
 .day-meta-icon {
@@ -3546,30 +3549,14 @@ body.theme-dark .sun-azimuth-info {
 
 /* ===== 暗色主题背景 — 深邃星空感 ===== */
 body.theme-dark,
+/* auto 模式：亮色系统默认与 light 相同，不设深色背景 */
 body.theme-auto {
-  background-color: #0a0f1e;
-  background-image:
-    radial-gradient(at 20% 10%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
-    radial-gradient(at 80% 5%,  rgba(168, 85, 247, 0.10) 0px, transparent 50%),
-    radial-gradient(at 50% 80%, rgba(251, 146, 60, 0.08) 0px, transparent 50%),
-    radial-gradient(at 10% 90%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
-    radial-gradient(at 90% 90%, rgba(168, 85, 247, 0.06) 0px, transparent 50%);
-  background-attachment: fixed;
+  /* 跟随 light 主题，不强制深色 */
 }
 
-/* auto 模式跟随系统 */
+/* auto 模式跟随系统暗色 */
 @media (prefers-color-scheme: dark) {
-  body.theme-auto {
-    background-color: #0a0f1e;
-    background-image:
-      radial-gradient(at 20% 10%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
-      radial-gradient(at 80% 5%,  rgba(168, 85, 247, 0.10) 0px, transparent 50%),
-      radial-gradient(at 50% 80%, rgba(251, 146, 60, 0.08) 0px, transparent 50%),
-      radial-gradient(at 10% 90%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
-      radial-gradient(at 90% 90%, rgba(168, 85, 247, 0.06) 0px, transparent 50%);
-    background-attachment: fixed;
   }
-}
 
 /* 暗色 card 毛玻璃质感升级 */
 body.theme-dark .card {
