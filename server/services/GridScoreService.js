@@ -25,7 +25,7 @@ const CHINA_BOUNDS = {
 };
 
 // 并发限制
-const CONCURRENCY_LIMIT = 10;
+const CONCURRENCY_LIMIT = 3; // 降低并发，防止 104 个网格点同时请求导致内存 OOM
 
 // 缓存最大年龄（1小时）
 const DEFAULT_MAX_AGE_MS = 60 * 60 * 1000;
