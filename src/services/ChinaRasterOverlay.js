@@ -11,6 +11,7 @@
  *  - 渲染路径：raster values[] → ImageData 像素着色 → canvas drawImage → CSS transform 定位
  *  - 事件监听：moveend / zoomend / resize → 重定位 canvas（不重新插值）
  *  - 动态分辨率：高缩放时请求 resolution=0.25，低缩放时 resolution=0.5
+ *  - 分时段色板：sunrise（粉金朝霞）/ sunset（橙红晚霞）独立配色
  */
 
 import { isInMainlandChina, MAINLAND_BOUNDS } from '../utils/mainlandChinaRegion.js';
@@ -21,7 +22,7 @@ const RASTER_MIN_SCORE = 30;   // 低于此分值的格元不渲染（透明）
 const RASTER_FULL_SCORE = 95;  // 色板上限
 
 /**
- * 火烧云色板（t ∈ [0,1] → RGBA）
+ * 晚霞色板（sunset）：橙红暖色系
  * t=0 对应 RASTER_MIN_SCORE，t=1 对应 RASTER_FULL_SCORE
  */
 const FIRECLOUD_PALETTE = [
@@ -32,6 +33,28 @@ const FIRECLOUD_PALETTE = [
   { t: 0.75, r: 255, g:  80, b:  18, a: 0.75 }, // 火红橙
   { t: 1.00, r: 255, g:  55, b:  15, a: 0.85 }, // 极值深红橙
 ];
+
+/**
+ * 朝霞色板（sunrise）：粉紫金色系
+ * 晨光初现的淡粉 → 暖金 → 玫瑰红，与晚霞橙红形成视觉区分
+ */
+const SUNRISE_PALETTE = [
+  { t: 0.00, r: 255, g: 220, b: 200, a: 0.00 }, // 透明起点（淡粉白）
+  { t: 0.10, r: 255, g: 205, b: 175, a: 0.18 }, // 肉桂粉
+  { t: 0.30, r: 255, g: 180, b: 130, a: 0.40 }, // 桃金色
+  { t: 0.55, r: 255, g: 145, b:  90, a: 0.60 }, // 玫瑰金
+  { t: 0.75, r: 240, g: 100, b:  80, a: 0.72 }, // 玫瑰红橙
+  { t: 1.00, r: 215, g:  70, b:  60, a: 0.82 }, // 深玫红
+];
+
+/**
+ * 根据 period 返回对应色板
+ * @param {'sunrise'|'sunset'} period
+ * @returns {Array}
+ */
+export function getPaletteForPeriod(period) {
+  return period === 'sunrise' ? SUNRISE_PALETTE : FIRECLOUD_PALETTE;
+}
 
 // ─── 工具函数 ─────────────────────────────────────────────────────────────────
 
@@ -46,8 +69,11 @@ function smoothstep01(t) {
 /**
  * 将 score 映射到色板颜色（返回 {r,g,b,a}）
  * score < RASTER_MIN_SCORE → 透明
+ * @param {number} score
+ * @param {number} [noDataValue=-1]
+ * @param {Array} [palette=FIRECLOUD_PALETTE] - 色板（支持分时段配色）
  */
-function scoreToRGBA(score, noDataValue = -1) {
+function scoreToRGBA(score, noDataValue = -1, palette = FIRECLOUD_PALETTE) {
   if (score === noDataValue || score < RASTER_MIN_SCORE) {
     return { r: 0, g: 0, b: 0, a: 0 };
   }
@@ -56,9 +82,9 @@ function scoreToRGBA(score, noDataValue = -1) {
   const t = smoothstep01((raw - RASTER_MIN_SCORE) / (RASTER_FULL_SCORE - RASTER_MIN_SCORE));
 
   // 色板插值
-  for (let i = 0; i < FIRECLOUD_PALETTE.length - 1; i++) {
-    const lo = FIRECLOUD_PALETTE[i];
-    const hi = FIRECLOUD_PALETTE[i + 1];
+  for (let i = 0; i < palette.length - 1; i++) {
+    const lo = palette[i];
+    const hi = palette[i + 1];
     if (t >= lo.t && t <= hi.t) {
       const lt = (t - lo.t) / (hi.t - lo.t);
       return {
@@ -70,7 +96,7 @@ function scoreToRGBA(score, noDataValue = -1) {
     }
   }
 
-  const last = FIRECLOUD_PALETTE[FIRECLOUD_PALETTE.length - 1];
+  const last = palette[palette.length - 1];
   return { r: last.r, g: last.g, b: last.b, a: last.a };
 }
 
@@ -236,12 +262,13 @@ export default class ChinaRasterOverlay {
 
     const imgData = this._offCtx.createImageData(width, height);
     const buf = imgData.data; // Uint8ClampedArray, row-major
+    const palette = getPaletteForPeriod(this._period); // 分时段色板
 
     for (let row = 0; row < height; row++) {
       for (let col = 0; col < width; col++) {
         const idx = row * width + col;
         const score = values[idx];
-        const { r, g, b, a } = scoreToRGBA(score, noData);
+        const { r, g, b, a } = scoreToRGBA(score, noData, palette);
         const px = idx * 4;
         buf[px]     = r;
         buf[px + 1] = g;
@@ -251,7 +278,7 @@ export default class ChinaRasterOverlay {
     }
 
     this._offCtx.putImageData(imgData, 0, 0);
-    console.log(`[ChinaRasterOverlay] 离屏栅格已构建 ${width}×${height}，period=${this._period}`);
+    console.log(`[ChinaRasterOverlay] 离屏栅格已构建 ${width}×${height}，period=${this._period}，palette=${this._period}`);
   }
 
   // ── 地图定位（地理坐标 → 屏幕坐标）────────────────────────────────────────
@@ -321,4 +348,4 @@ export default class ChinaRasterOverlay {
 
 // ─── 纯函数导出（方便测试）────────────────────────────────────────────────────
 
-export { scoreToRGBA, FIRECLOUD_PALETTE, RASTER_MIN_SCORE, RASTER_FULL_SCORE };
+export { scoreToRGBA, FIRECLOUD_PALETTE, SUNRISE_PALETTE, RASTER_MIN_SCORE, RASTER_FULL_SCORE };

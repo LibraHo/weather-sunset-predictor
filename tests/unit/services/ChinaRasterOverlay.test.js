@@ -1,5 +1,11 @@
 /**
  * ChinaRasterOverlay 单元测试（Phase 16 / 任务 64 firecloud 栅格渲染）
+ *
+ * 新增覆盖（2026-03-21 / 任务 64.7 增量）：
+ *  - SUNRISE_PALETTE 结构与色调
+ *  - getPaletteForPeriod 分时段色板选择
+ *  - scoreToRGBA 使用自定义色板（sunrise）
+ *  - 朝霞/晚霞视觉区分（颜色差异验证）
  */
 
 import {
@@ -8,6 +14,8 @@ import {
   RASTER_MIN_SCORE,
   RASTER_FULL_SCORE,
   FIRECLOUD_PALETTE,
+  SUNRISE_PALETTE,
+  getPaletteForPeriod,
 } from '../../../src/services/ChinaRasterOverlay.js';
 
 // ─── scoreToRGBA ─────────────────────────────────────────────────────────────
@@ -144,5 +152,109 @@ describe('常量', () => {
   test('RASTER_FULL_SCORE 在合理区间（85~100）', () => {
     expect(RASTER_FULL_SCORE).toBeGreaterThanOrEqual(85);
     expect(RASTER_FULL_SCORE).toBeLessThanOrEqual(100);
+  });
+});
+
+// ─── 朝霞色板 SUNRISE_PALETTE ─────────────────────────────────────────────────
+
+describe('SUNRISE_PALETTE', () => {
+  test('朝霞色板非空，至少 3 个节点', () => {
+    expect(SUNRISE_PALETTE).toBeDefined();
+    expect(SUNRISE_PALETTE.length).toBeGreaterThanOrEqual(3);
+  });
+
+  test('朝霞色板 t 值从 0 到 1', () => {
+    const ts = SUNRISE_PALETTE.map(p => p.t);
+    expect(Math.min(...ts)).toBe(0);
+    expect(Math.max(...ts)).toBe(1);
+  });
+
+  test('朝霞色板 t 值单调递增', () => {
+    for (let i = 1; i < SUNRISE_PALETTE.length; i++) {
+      expect(SUNRISE_PALETTE[i].t).toBeGreaterThan(SUNRISE_PALETTE[i - 1].t);
+    }
+  });
+
+  test('朝霞色板所有节点 rgb 在 [0,255]，a 在 [0,1]', () => {
+    SUNRISE_PALETTE.forEach(p => {
+      expect(p.r).toBeGreaterThanOrEqual(0);
+      expect(p.r).toBeLessThanOrEqual(255);
+      expect(p.g).toBeGreaterThanOrEqual(0);
+      expect(p.g).toBeLessThanOrEqual(255);
+      expect(p.b).toBeGreaterThanOrEqual(0);
+      expect(p.b).toBeLessThanOrEqual(255);
+      expect(p.a).toBeGreaterThanOrEqual(0);
+      expect(p.a).toBeLessThanOrEqual(1);
+    });
+  });
+
+  test('朝霞色板高分值色调应偏粉玫红（非纯橙）', () => {
+    const last = SUNRISE_PALETTE[SUNRISE_PALETTE.length - 1];
+    // 玫瑰红系：r高，g相对低，b>0（区别于晚霞的橙红b≈15）
+    expect(last.r).toBeGreaterThan(180);
+    expect(last.b).toBeGreaterThan(30); // 区分朝霞 vs 晚霞（晚霞b≈15）
+  });
+});
+
+// ─── getPaletteForPeriod ─────────────────────────────────────────────────────
+
+describe('getPaletteForPeriod', () => {
+  test('sunset 返回 FIRECLOUD_PALETTE', () => {
+    const p = getPaletteForPeriod('sunset');
+    expect(p).toBe(FIRECLOUD_PALETTE);
+  });
+
+  test('sunrise 返回 SUNRISE_PALETTE', () => {
+    const p = getPaletteForPeriod('sunrise');
+    expect(p).toBe(SUNRISE_PALETTE);
+  });
+
+  test('未知值默认返回 FIRECLOUD_PALETTE（sunset 兜底）', () => {
+    const p = getPaletteForPeriod('unknown');
+    expect(p).toBe(FIRECLOUD_PALETTE);
+  });
+
+  test('undefined 默认返回 FIRECLOUD_PALETTE', () => {
+    const p = getPaletteForPeriod(undefined);
+    expect(p).toBe(FIRECLOUD_PALETTE);
+  });
+});
+
+// ─── scoreToRGBA 使用自定义色板 ───────────────────────────────────────────────
+
+describe('scoreToRGBA - 分时段色板', () => {
+  test('使用 SUNRISE_PALETTE 时高分值仍有 alpha > 0.7', () => {
+    const color = scoreToRGBA(90, -1, SUNRISE_PALETTE);
+    expect(color.a).toBeGreaterThan(0.6);
+  });
+
+  test('使用 SUNRISE_PALETTE 时低分值透明', () => {
+    const color = scoreToRGBA(RASTER_MIN_SCORE - 1, -1, SUNRISE_PALETTE);
+    expect(color.a).toBe(0);
+  });
+
+  test('朝霞与晚霞高分颜色有视觉差异', () => {
+    const sunset = scoreToRGBA(85, -1, FIRECLOUD_PALETTE);
+    const sunrise = scoreToRGBA(85, -1, SUNRISE_PALETTE);
+    // 两个色板输出颜色应有差异（至少一个通道不同）
+    const diff = Math.abs(sunset.r - sunrise.r) +
+                 Math.abs(sunset.g - sunrise.g) +
+                 Math.abs(sunset.b - sunrise.b);
+    expect(diff).toBeGreaterThan(10);
+  });
+
+  test('朝霞色 b 通道比晚霞色高（粉玫 vs 橙红）', () => {
+    const sunset = scoreToRGBA(80, -1, FIRECLOUD_PALETTE);
+    const sunrise = scoreToRGBA(80, -1, SUNRISE_PALETTE);
+    // 朝霞蓝色分量更高（玫瑰红含蓝）
+    expect(sunrise.b).toBeGreaterThan(sunset.b);
+  });
+
+  test('scoreToRGBA 单调性在 sunrise 色板上也成立', () => {
+    const scores = [RASTER_MIN_SCORE, 50, 65, 80, RASTER_FULL_SCORE];
+    const alphas = scores.map(s => scoreToRGBA(s, -1, SUNRISE_PALETTE).a);
+    for (let i = 1; i < alphas.length; i++) {
+      expect(alphas[i]).toBeGreaterThanOrEqual(alphas[i - 1]);
+    }
   });
 });
