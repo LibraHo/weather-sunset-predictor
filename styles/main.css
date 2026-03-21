@@ -347,6 +347,7 @@ footer {
   padding: var(--spacing-lg);
   box-shadow: var(--shadow-sm);
   transition: box-shadow var(--transition-normal);
+  margin-bottom: 16px;
 }
 
 .card:hover {
