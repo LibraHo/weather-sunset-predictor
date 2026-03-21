@@ -2215,13 +2215,14 @@ body.theme-dark .prediction-analysis {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .day-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-md);
-  border-color: var(--color-primary);
+  border-color: #5da3f0;
+  border-width: 2px;
 }
 
 /* 日期列：固定宽度 */
@@ -2268,7 +2269,7 @@ body.theme-dark .prediction-analysis {
   gap: 4px;
   padding: 0;
   min-width: 0;
-  max-width: 160px;
+  max-width: 110px;
 }
 
 .temp-bar {
@@ -2281,7 +2282,7 @@ body.theme-dark .prediction-analysis {
 .temp-bar-labels {
   display: flex;
   justify-content: space-between;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--color-text);
 }
@@ -2299,9 +2300,9 @@ body.theme-dark .prediction-analysis {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-shrink: 0;
-  width: 140px;
+  width: 150px;
   justify-content: flex-end;
 }
 
@@ -2309,18 +2310,18 @@ body.theme-dark .prediction-analysis {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 3px;
-  font-size: 0.72rem;
+  gap: 4px;
+  font-size: 0.68rem;
   color: var(--color-text-light);
 }
 
 .day-meta-icon .icon {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   line-height: 1;
 }
 
 .day-meta-icon .value {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
 }
 
