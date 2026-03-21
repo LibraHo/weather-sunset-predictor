@@ -1575,3 +1575,45 @@ ADMIN_PASSWORD=your_admin_password_here
 2. 上传 MIME 白名单：`image/jpeg`, `image/png`, `image/heic`
 3. 单文件大小上限 20MB
 4. 管理员操作全量记录审计日志
+
+---
+
+## Phase 16 补增：栅格渲染模式 Feature Flag（任务 64.13）
+
+### 任务 64.13：WeatherController 渲染模式 Feature Flag（已完成 2026-03-21）
+
+目标：在 `WeatherController` 构造器中引入 `china_render_mode` localStorage feature flag，
+实现运行时切换 `ChinaRasterOverlayManager`（IDW 栅格）与 `ChinaSpotsOverlayManager`（散点）。
+
+**修改文件：**
+- `src/controllers/WeatherController.js`
+  - 新增 `import ChinaRasterOverlayManager`
+  - 导出常量 `CHINA_RENDER_MODE_KEY = 'china_render_mode'`
+  - 导出常量 `CHINA_RENDER_MODE_DEFAULT = 'raster'`
+  - 导出工厂函数 `createChinaOverlayManager()`：读取 localStorage，按值返回对应 Manager 实例
+  - 构造函数中将 `new ChinaSpotsOverlayManager()` 替换为 `createChinaOverlayManager()`
+- `src/services/ChinaRasterOverlay.js`（从 PR #198 引入，与 main 对齐）
+- `src/services/ChinaRasterOverlayManager.js`（从 PR 64.12 引入，与 main 对齐）
+- `tests/unit/controllers/ChinaRenderModeFlag.test.js`（新增，11 项测试）
+- `tests/unit/services/ChinaRasterOverlay.test.js`（引入，19 项）
+- `tests/unit/services/ChinaRasterOverlayManager.test.js`（引入，21 项）
+
+**切换方式（浏览器控制台）：**
+```js
+// 切换为散点模式
+localStorage.setItem('china_render_mode', 'spots'); location.reload();
+// 切换回栅格模式（默认）
+localStorage.setItem('china_render_mode', 'raster'); location.reload();
+```
+
+**默认行为：**
+- 无 localStorage 键 → `raster`（像素级 IDW 栅格，视觉更连续）
+- 未知值 → 同上，回退 raster
+
+**测试结果：**
+- `ChinaRenderModeFlag.test.js`：11/11 通过
+- `ChinaRasterOverlay.test.js`：19/19 通过
+- `ChinaRasterOverlayManager.test.js`：21/21 通过
+
+**下一步（64.14）：**
+考虑在设置面板（Settings）新增"渲染模式"切换开关，无需打开控制台即可切换散点/栅格视图。
