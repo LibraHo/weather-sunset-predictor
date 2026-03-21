@@ -486,7 +486,7 @@ class WeatherController {
           <span class="value">${precipProb}%</span>
         </div>
         <div class="day-meta-icon" role="listitem" aria-label="风速：${this.formatWindSpeed(maxWindSpeed)}">
-          <span class="icon" aria-hidden="true">🌬️</span>
+          <span class="icon" aria-hidden="true">💨</span>
           <span class="value">${this.formatWindSpeed(maxWindSpeed)}</span>
         </div>
         <div class="day-meta-icon" role="listitem" aria-label="风向：${directionLabel}">
