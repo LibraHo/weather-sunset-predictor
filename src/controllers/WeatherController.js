@@ -491,7 +491,6 @@ class WeatherController {
         </div>
         <div class="day-meta-icon" role="listitem" aria-label="风向：${directionLabel}">
           <span class="icon day-wind-direction-icon" style="transform: rotate(${avgWindDirection.toFixed(0)}deg);" aria-hidden="true">↑</span>
-          <span class="value">${directionLabel}</span>
         </div>
       </div>
     `;
