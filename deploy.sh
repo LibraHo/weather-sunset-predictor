@@ -61,14 +61,11 @@ scp -i "$SSH_KEY" "$LOCAL/styles/"*.css $REMOTE:~/weather-sunset-predictor/style
 
 echo "🔄 重启后端..."
 ssh -i "$SSH_KEY" $REMOTE "
-  # 杀掉旧进程（ubuntu 用户权限范围内）
-  kill \$(ps aux | grep 'node index' | grep -v grep | awk '{print \$2}') 2>/dev/null || true
-  # root 起的进程用 sudo kill
-  sudo kill \$(sudo ps aux | grep 'node index' | grep -v grep | awk '{print \$2}') 2>/dev/null || true
+  # 杀掉所有 weather-sunset-predictor 后端进程（匹配路径更可靠）
+  sudo pkill -f 'weather-sunset-predictor/server/index.js' 2>/dev/null || true
   sleep 2
-  # 用 root 的 node（v22）启动，sudo 继承环境变量需要 -E
-  cd ~/weather-sunset-predictor/server
-  sudo bash -c 'cd /home/ubuntu/weather-sunset-predictor/server && nohup node index.js > /tmp/ws-backend.log 2>&1 &'
+  # 用 root 的 node（v22）启动
+  sudo bash -c 'cd /home/ubuntu/weather-sunset-predictor/server && nohup /usr/local/bin/node index.js >> /tmp/ws-backend.log 2>&1 &'
   sleep 3
   curl -s http://localhost:3000/health
 "
