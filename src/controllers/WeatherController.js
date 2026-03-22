@@ -1738,13 +1738,13 @@ class WeatherController {
    * @param {{lat:number, lon:number}|null} location
    */
   async updateChinaSpotsForLocation(location) {
-    const section = document.getElementById('china-spots-section');
+    // china-spots-section 已移至独立地图页，用 china-spots-map 判断存在
+    const mapEl = document.getElementById('china-spots-map');
     const tsEl = document.getElementById('china-spots-timestamp');
 
-    if (!section) return;
+    if (!mapEl) return;
 
     if (!location || !this._isMainlandChinaLocation(location)) {
-      section.classList.add('hidden');
       if (tsEl) tsEl.textContent = '';
       this._setChinaSpotsEmptyState(false);
       this.chinaSpotsOverlayManager?.hide();

@@ -2208,7 +2208,7 @@ body.theme-dark .prediction-analysis {
 .day-card {
   background-color: var(--color-bg);
   border-radius: var(--radius-md);
-  padding: 10px 14px;
+  padding: 10px 14px 10px 10px;
   text-align: center;
   transition: all var(--transition-normal);
   border: 1px solid rgba(76,93,122,0.12);
@@ -2228,7 +2228,7 @@ body.theme-dark .prediction-analysis {
 /* 日期列：固定宽度 */
 .day-label {
   flex-shrink: 0;
-  width: 52px;
+  width: 44px;
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--color-text);
@@ -3852,6 +3852,8 @@ body.theme-dark {
 @media (max-width: 640px) {
   .prediction-toggle-bar {
     display: flex;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   /* 手机端：grid 变成单列，隐藏的 panel 不占位 */
