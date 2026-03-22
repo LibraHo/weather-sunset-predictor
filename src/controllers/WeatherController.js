@@ -1195,7 +1195,7 @@ class WeatherController {
     try {
       let dirs;
       let sunAzimuths = {};
-      const radius = 20;
+      const radius = 50;
       const now = new Date();
       const type = predictionType || (now.getHours() < 12 ? 'sunrise' : 'sunset');
 
@@ -1260,7 +1260,18 @@ class WeatherController {
         { signal: AbortSignal.timeout(8000) }
       );
       const json = res.ok ? await res.json() : {};
-      return { dir: d.dir, label: d.label, score: Math.round(json.score||0), dist: radius };
+      const data = json.data || json;
+      return {
+        dir: d.dir,
+        label: d.label,
+        score: Math.round(data.score || json.score || 0),
+        dist: radius,
+        cloudLayers: data.cloudLayers || {
+          low: data.weatherData?.lowClouds ?? data.factors?.cloudCover?.value ?? 0,
+          mid: data.weatherData?.midClouds ?? 0,
+          high: data.weatherData?.highClouds ?? 0,
+        }
+      };
     }));
     return results.map((r,i) =>
       r.status === 'fulfilled' ? r.value : { dir: DIRS[i].dir, label: DIRS[i].label, score: 0, dist: radius }
