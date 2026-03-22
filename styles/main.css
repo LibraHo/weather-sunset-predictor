@@ -2215,7 +2215,7 @@ body.theme-dark .prediction-analysis {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .day-card:hover {
@@ -2295,29 +2295,39 @@ body.theme-dark .prediction-analysis {
   color: #ff5722;
 }
 
-/* 右侧数据：固定宽度，始终对齐 */
+/* 右侧数据：固定宽度，列对齐 */
 .day-meta-icons-row {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 8px;
+  gap: 0;
   flex-shrink: 0;
-  width: 150px;
-  justify-content: flex-end;
+  margin-left: auto; /* 撑到右侧，但不用 flex:1 占位 */
 }
 
 .day-meta-icon {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 4px;
+  justify-content: flex-start;
+  gap: 2px;
   font-size: 0.68rem;
   color: var(--color-text-light);
+  width: 52px; /* 固定列宽，所有行对齐 */
+}
+
+/* 风向图标单独一列，更窄 */
+.day-meta-icon:last-child {
+  width: 24px;
+  justify-content: center;
 }
 
 .day-meta-icon .icon {
   font-size: 0.85rem;
   line-height: 1;
+  flex-shrink: 0;
+  width: 16px;
+  text-align: center;
 }
 
 .day-meta-icon .value {
@@ -3908,6 +3918,8 @@ body.theme-dark {
   font-size: 0.82rem;
   font-weight: 600;
   white-space: nowrap;
+  flex-shrink: 0;
+  width: 76px; /* 固定宽，避免撑开右侧留白 */
 }
 
 .temp-range-sep {
