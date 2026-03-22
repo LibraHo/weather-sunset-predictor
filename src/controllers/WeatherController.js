@@ -1195,7 +1195,7 @@ class WeatherController {
     try {
       let dirs;
       let sunAzimuths = {};
-      const radius = 50;
+      const radius = 20;
       const now = new Date();
       const type = predictionType || (now.getHours() < 12 ? 'sunrise' : 'sunset');
 

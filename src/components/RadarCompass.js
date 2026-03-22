@@ -403,7 +403,7 @@ class RadarCompass {
   background:${T.bg || '#ffffff'};padding:10px 10px 8px;font-family:${zhFont};">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
     <div style="font-size:13px;font-weight:600;color:${T.title || '#333333'};">周边云况雷达</div>
-    <div style="font-size:11px;color:${T.subtitle || '#666666'};">50km · 连续云场</div>
+    <div style="font-size:11px;color:${T.subtitle || '#666666'};">20km · 连续云场</div>
   </div>
   <div style="position:relative;width:${S}px;height:${S}px;max-width:100%;margin:0 auto;">
     <canvas id="radar-cloud-field-${uid}" width="${S}" height="${S}"
