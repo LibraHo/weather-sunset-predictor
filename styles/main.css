@@ -3899,3 +3899,19 @@ body.theme-dark {
   width: 100% !important;
   height: 100% !important;
 }
+
+/* ===== 7天概览：去掉温度条，只显示数字 ===== */
+.temp-range-inline {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.temp-range-sep {
+  color: var(--color-text-light, #9ca3af);
+  font-weight: 400;
+  font-size: 0.75rem;
+}
