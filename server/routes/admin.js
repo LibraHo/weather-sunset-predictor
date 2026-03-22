@@ -338,9 +338,7 @@ router.get('/admin', requireAuth, (req, res) => {
       try {
         const res = await fetch(\`/admin/photos/\${id}\`, {
           method: 'DELETE',
-          headers: {
-            'Authorization': 'Basic ' + btoa('admin:' + prompt('请输入管理员密码'))
-          }
+          credentials: 'include'
         });
 
         if (res.ok) {
@@ -382,9 +380,7 @@ router.get('/admin', requireAuth, (req, res) => {
       try {
         const res = await fetch('/admin/upload', {
           method: 'POST',
-          headers: {
-            'Authorization': 'Basic ' + btoa('admin:' + prompt('请输入管理员密码'))
-          },
+          credentials: 'include',
           body: formData
         });
 

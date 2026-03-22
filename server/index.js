@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 // 触发重启
 require('dotenv').config();
 
@@ -96,7 +97,7 @@ app.use('/api/photos', photosRoutes);
 app.use('/', adminRoutes);
 
 // 静态文件服务（公开分享页面）
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Error logging middleware
 app.use(errorLogger());
