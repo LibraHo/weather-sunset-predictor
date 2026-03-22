@@ -445,6 +445,13 @@ router.get('/', async (req, res) => {
       weatherData, now, lat, lon, type
     );
 
+    // 雷达罗盘依赖 cloudLayers 字段，EnhancedPredictionService 不返回，手动补上
+    prediction.cloudLayers = {
+      low: weatherData.lowClouds,
+      mid: weatherData.midClouds,
+      high: weatherData.highClouds,
+    };
+
     res.json({
       success: true,
       data: prediction
