@@ -137,7 +137,7 @@ if (document.readyState === 'loading') {
 async function initializeApp() {
   try {
     console.log('Initializing application...');
-    initializeHomeTabs(document, () => initFireSkyMapPanel());
+    initializeHomeTabs(document, () => onMapPanelVisible());
     await appController.initialize();
     console.log('Application initialized successfully');
   } catch (error) {
@@ -204,90 +204,11 @@ window.globalErrorBoundary = globalErrorBoundary;
 window.ErrorHandler = ErrorHandler;
 
 /**
- * 初始化火烧云地图专属页面（独立 Leaflet 实例，可拖拽+缩放）
- * 仅在地图 panel 首次激活时初始化一次。
+ * 地图 panel 激活回调：触发 Leaflet invalidateSize 修复 hidden 切换后的尺寸问题
  */
-let _fireSkyMapInitialized = false;
-
-function initFireSkyMapPanel() {
-  if (_fireSkyMapInitialized) return;
-
-  const container = document.getElementById('map-panel-container');
-  if (!container) return;
-
-  if (typeof window === 'undefined' || !window.L) {
-    console.warn('[FireSkyMap] Leaflet 未加载，跳过地图初始化');
-    return;
+function onMapPanelVisible() {
+  const map = weatherController?._chinaSpotsMapInstance;
+  if (map && typeof map.invalidateSize === 'function') {
+    setTimeout(() => map.invalidateSize(), 100);
   }
-
-  _fireSkyMapInitialized = true;
-
-  // 从当前位置获取中心点（如果有的话）
-  const loc = weatherController?.currentLocation;
-  const center = loc ? [loc.lat, loc.lon] : [35, 105];
-  const zoom = loc ? 9 : 5;
-
-  const map = window.L.map(container, {
-    center,
-    zoom,
-    zoomControl: true,
-    dragging: true,
-    scrollWheelZoom: true,
-    doubleClickZoom: true,
-    boxZoom: true,
-    keyboard: true,
-    touchZoom: true,
-    tap: true,
-  });
-
-  // 选择底图
-  const isChina = loc
-    ? (loc.lat >= 18 && loc.lat <= 54 && loc.lon >= 73 && loc.lon <= 135)
-    : true;
-  const mapTileSetting = localStorage.getItem('map_tile_provider') || 'auto';
-  const useGaode = mapTileSetting === 'gaode' || (mapTileSetting === 'auto' && isChina);
-
-  if (useGaode) {
-    window.L.tileLayer('/api/tiles/gaode/{z}/{x}/{y}', {
-      maxZoom: 15,
-      attribution: '© 高德地图',
-    }).addTo(map);
-  } else {
-    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18,
-      subdomains: 'abc',
-      attribution: '© OpenStreetMap contributors',
-    }).addTo(map);
-  }
-
-  // 当前位置标记
-  if (loc) {
-    const marker = window.L.marker([loc.lat, loc.lon]);
-    marker.bindPopup(`<b>📍 ${loc.name || '当前位置'}</b>`).addTo(map);
-  }
-
-  // 绑定定位按钮
-  const locateBtn = document.getElementById('map-panel-locate-btn');
-  if (locateBtn) {
-    locateBtn.addEventListener('click', () => {
-      if (loc) {
-        map.setView([loc.lat, loc.lon], 10, { animate: true });
-      } else if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((pos) => {
-          map.setView([pos.coords.latitude, pos.coords.longitude], 10, { animate: true });
-        });
-      }
-    });
-  }
-
-  // 绑定重置按钮
-  const resetBtn = document.getElementById('map-panel-reset-btn');
-  if (resetBtn) {
-    resetBtn.addEventListener('click', () => {
-      map.setView(center, zoom, { animate: true });
-    });
-  }
-
-  // 强制 Leaflet 重绘（避免 panel 从 hidden 切换来时尺寸错误）
-  setTimeout(() => map.invalidateSize(), 100);
 }

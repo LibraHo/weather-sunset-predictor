@@ -1861,17 +1861,17 @@ class WeatherController {
     return {
       center: [35, 105],
       zoom: 5,
-      minZoom: 5,
-      maxZoom: 5,
-      zoomControl: false,
+      minZoom: 3,
+      maxZoom: 12,
+      zoomControl: true,
       attributionControl: false,
       dragging: true,
-      scrollWheelZoom: false,
-      doubleClickZoom: false,
-      boxZoom: false,
-      keyboard: false,
-      touchZoom: false,
-      tap: false
+      scrollWheelZoom: true,
+      doubleClickZoom: true,
+      boxZoom: true,
+      keyboard: true,
+      touchZoom: true,
+      tap: true
     };
   }
 
@@ -1887,21 +1887,17 @@ class WeatherController {
   }
 
   /**
-   * 初始化并展示中国散点地图（嵌入预测卡片底部）
+   * 初始化并展示中国散点地图（已移至独立地图页面）
    * 仅在位置位于中国境内时调用。
    */
   async _initChinaSpotsMap() {
-    const section = document.getElementById('china-spots-section');
     const mapEl = document.getElementById('china-spots-map');
     const tabsContainer = document.getElementById('china-spots-tabs-container');
 
-    if (!section || !mapEl || !tabsContainer) {
-      console.warn('[WeatherController] 未找到 china-spots-section 元素');
+    if (!mapEl || !tabsContainer) {
+      console.warn('[WeatherController] 未找到 china-spots-map 元素');
       return;
     }
-
-    // 显示区域
-    section.classList.remove('hidden');
 
     // 若地图已初始化，直接刷新当前时段数据
     if (this._chinaSpotsMapInstance) {
@@ -1921,18 +1917,14 @@ class WeatherController {
         return;
       }
 
-      // 初始化 Leaflet 地图（静态中国范围，不可拖拽/缩放）
+      // 初始化 Leaflet 地图（独立地图页，可拖拽/缩放）
       const mapOptions = this._getChinaSpotsMapOptions();
       const map = window.L.map(mapEl, mapOptions);
 
+      // 初始视野适配中国范围，但不锁定边界（用户可自由拖动）
       const mainlandBounds = this._getChinaMainlandMapBounds();
-      if (mainlandBounds) {
-        if (typeof map.fitBounds === 'function') {
-          map.fitBounds(mainlandBounds, { animate: false, padding: [8, 8] });
-        }
-        if (typeof map.setMaxBounds === 'function') {
-          map.setMaxBounds(mainlandBounds);
-        }
+      if (mainlandBounds && typeof map.fitBounds === 'function') {
+        map.fitBounds(mainlandBounds, { animate: false, padding: [8, 8] });
       }
 
       // 地图底图：根据设置选择（auto/gaode/osm）
