@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 // 触发重启
 require('dotenv').config();
 
@@ -13,6 +14,8 @@ const geocodingRoutes = require('./routes/geocoding');
 const heatmapRoutes = require('./routes/heatmap');
 const spotsRoutes = require('./routes/spots');
 const tilesRoutes = require('./routes/tiles');
+const photosRoutes = require('./routes/photos');
+const adminRoutes = require('./routes/admin');
 const { requestLogger, errorLogger } = require('./middleware/logger');
 
 const app = express();
@@ -90,6 +93,11 @@ app.use('/api/geocoding', geocodingRoutes);
 app.use('/api/heatmap', heatmapRoutes);
 app.use('/api/spots', spotsRoutes);
 app.use('/api/tiles', tilesRoutes);
+app.use('/api/photos', photosRoutes);
+app.use('/', adminRoutes);
+
+// 静态文件服务（公开分享页面）
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Error logging middleware
 app.use(errorLogger());

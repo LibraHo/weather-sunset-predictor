@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>霞客火烧云 - 世界照片地图</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0d0d0d;
+      color: #fff;
+      overflow: hidden;
+    }
+    #map {
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+    }
+
+    /* 自定义照片 marker */
+    .photo-marker {
+      position: relative;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid #ff6b35;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .photo-marker:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(255,107,53,0.5);
+    }
+    .photo-marker img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* 自定义弹窗样式 */
+    .leaflet-popup-content-wrapper {
+      background: rgba(26, 26, 46, 0.95);
+      border: 1px solid rgba(255,107,53,0.3);
+      border-radius: 12px;
+      padding: 0;
+      min-width: 200px;
+    }
+    .leaflet-popup-tip {
+      background: rgba(26, 26, 46, 0.95);
+    }
+    .leaflet-popup-content {
+      margin: 0;
+      padding: 16px;
+    }
+
+    .popup-photo {
+      width: 100%;
+      max-width: 300px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+    .popup-desc {
+      font-size: 0.9rem;
+      color: #ccc;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+    .popup-location {
+      font-size: 0.8rem;
+      color: #888;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .popup-location svg {
+      width: 14px;
+      height: 14px;
+      fill: #888;
+    }
+
+    /* 加载提示 */
+    #loading {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1000;
+      text-align: center;
+    }
+    #loading .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255,107,53,0.3);
+      border-top-color: #ff6b35;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 12px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    #loading p {
+      color: #888;
+      font-size: 0.9rem;
+    }
+
+    /* 页头标题 */
+    .page-title {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+      background: rgba(26, 26, 46, 0.9);
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,107,53,0.3);
+      backdrop-filter: blur(10px);
+    }
+    .page-title h1 {
+      font-size: 1.2rem;
+      color: #ff6b35;
+      margin-bottom: 4px;
+    }
+    .page-title p {
+      font-size: 0.85rem;
+      color: #888;
+    }
+
+    /* 图例 */
+    .legend {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+      background: rgba(26, 26, 46, 0.9);
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,107,53,0.3);
+      font-size: 0.85rem;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .legend-item:last-child {
+      margin-bottom: 0;
+    }
+    .legend-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #ff6b35;
+      background: #333;
+    }
+
+    /* 空状态提示 */
+    #empty-state {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 999;
+      text-align: center;
+      background: rgba(26, 26, 46, 0.9);
+      padding: 32px 48px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,107,53,0.3);
+    }
+    #empty-state h2 {
+      font-size: 1.5rem;
+      color: #ff6b35;
+      margin-bottom: 12px;
+    }
+    #empty-state p {
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <!-- 加载提示 -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <p>加载照片中...</p>
+  </div>
+
+  <!-- 页面标题 -->
+  <div class="page-title">
+    <h1>🔥 霞客火烧云</h1>
+    <p>世界照片地图</p>
+  </div>
+
+  <!-- 图例 -->
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-icon"></div>
+      <span>照片位置</span>
+    </div>
+  </div>
+
+  <!-- 空状态 -->
+  <div id="empty-state">
+    <h2>📷 暂无照片</h2>
+    <p>上传第一张火烧云照片吧！</p>
+  </div>
+
+  <!-- 地图容器 -->
+  <div id="map"></div>
+
+  <script>
+    let map;
+    let markers = [];
+
+    // 初始化地图
+    function initMap() {
+      map = L.map('map', {
+        zoomControl: true,
+        attributionControl: true
+      }).setView([20, 0], 2);
+
+      // CartoDB Dark Matter 底图
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 19
+      }).addTo(map);
+    }
+
+    // 创建自定义 marker
+    function createMarker(photo) {
+      const icon = L.divIcon({
+        className: 'custom-div-icon',
+        html: \`
+          <div class="photo-marker">
+            <img src="\${photo.thumbUrl}" alt="\${photo.filename}">
+          </div>
+        \`,
+        iconSize: [48, 48],
+        iconAnchor: [24, 48],
+        popupAnchor: [0, -48]
+      });
+
+      const marker = L.marker([photo.lat, photo.lon], { icon });
+
+      // 创建弹窗内容
+      const popupContent = \`
+        <img src="\${photo.thumbUrl}" class="popup-photo" alt="\${photo.filename}">
+        \${photo.desc ? \`<p class="popup-desc">\${escapeHtml(photo.desc)}</p>\` : ''}
+        <div class="popup-location">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+          </svg>
+          <span>\${photo.lat.toFixed(4)}, \${photo.lon.toFixed(4)}</span>
+        </div>
+      \`;
+
+      marker.bindPopup(popupContent, {
+        maxWidth: 320,
+        closeButton: true,
+        className: 'photo-popup'
+      });
+
+      return marker;
+    }
+
+    // HTML 转义
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // 加载照片
+    async function loadPhotos() {
+      try {
+        const res = await fetch('/api/photos');
+        const data = await res.json();
+        const photos = data.photos || [];
+
+        // 过滤有位置信息的照片
+        const photosWithLocation = photos.filter(p =>
+          p.lat !== null && p.lon !== null &&
+          typeof p.lat === 'number' && typeof p.lon === 'number'
+        );
+
+        // 隐藏加载提示
+        document.getElementById('loading').style.display = 'none';
+
+        if (photosWithLocation.length === 0) {
+          document.getElementById('empty-state').style.display = 'block';
+          return;
+        }
+
+        // 清除旧 markers
+        markers.forEach(m => map.removeLayer(m));
+        markers = [];
+
+        // 添加新 markers
+        photosWithLocation.forEach(photo => {
+          const marker = createMarker(photo);
+          marker.addTo(map);
+          markers.push(marker);
+        });
+
+        // 调整视图以包含所有照片
+        if (markers.length > 0) {
+          const group = L.featureGroup(markers);
+          map.fitBounds(group.getBounds().pad(0.1));
+        }
+
+      } catch (err) {
+        console.error('加载照片失败:', err);
+        document.getElementById('loading').innerHTML = '<p>加载失败，请刷新重试</p>';
+      }
+    }
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      initMap();
+      loadPhotos();
+    });
+  </script>
+</body>
+</html>
