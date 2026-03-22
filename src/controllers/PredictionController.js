@@ -219,7 +219,10 @@ class PredictionController {
           sunrisePrediction.windSpeed = sunriseWeatherData.windSpeed;
           sunrisePrediction.pressure = sunriseWeatherData.pressure;
           sunrisePrediction.visibility = sunriseWeatherData.visibility;
-          sunrisePrediction.sunsetTime = sunriseTime; // 用于显示日出时间
+          // 确保 sunriseTime 字段有值（渲染层用 type===sunrise 时取 sunriseTime）
+          if (!sunrisePrediction.sunriseTime) {
+            sunrisePrediction.sunriseTime = sunriseTime;
+          }
 
           // 为增强版预测添加最佳观看窗口方法和factors属性
           if (this.useEnhancedModel) {
@@ -799,7 +802,7 @@ class PredictionController {
             <span class="score-gauge-label" style="color:${gaugeColor}">${qualityLabel}</span>
           </div>
           <div class="time-display">
-            <div class="main-time">${this.formatTime(prediction.sunsetTime)}</div>
+            <div class="main-time">${this.formatTime(type === 'sunrise' ? (prediction.sunriseTime || prediction.sunsetTime) : prediction.sunsetTime)}</div>
             <div class="viewing-time">${this.i18n.t('prediction.bestViewingTime')}: ${this.formatTime(viewingWindow.start)}–${this.formatTime(viewingWindow.end)}</div>
             ${enhancedInfo}
           </div>
