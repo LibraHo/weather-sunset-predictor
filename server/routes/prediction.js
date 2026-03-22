@@ -18,6 +18,7 @@ const EnhancedPredictionService = require('../services/EnhancedPredictionService
 const SurroundingService = require('../services/SurroundingService.js');
 const CacheService = require('../services/CacheService.js');
 const cacheConfig = require('../config/cacheConfig.js');
+const orchestrator = require('../services/ProviderOrchestrator');
 
 // 创建服务实例（使用统一TTL配置）
 const predictionService = new PredictionService();
@@ -396,6 +397,61 @@ router.post('/surrounding', validateSurroundingRequest, async (req, res) => {
   } catch (error) {
     console.error('[PredictionRoute] Surrounding prediction error:', error);
     errorResponse(res, 500, 'SURROUNDING_PREDICTION_ERROR', error.message);
+  }
+});
+
+/**
+ * GET /api/prediction?lat=&lon=&type=
+ * 快速单点预测（供雷达罗盘前端回退使用）
+ * 内部先取天气数据，再用 EnhancedPredictionService 计算，返回包含 cloudLayers 的完整结果
+ */
+router.get('/', async (req, res) => {
+  try {
+    const lat = parseFloat(req.query.lat);
+    const lon = parseFloat(req.query.lon);
+    const type = req.query.type || 'sunset';
+
+    if (isNaN(lat) || isNaN(lon)) {
+      return errorResponse(res, 400, 'INVALID_PARAMS', 'lat and lon are required');
+    }
+
+    const now = new Date();
+    const weatherResponse = await orchestrator.fetchWeatherData(lat, lon, 24);
+    const hourly = Array.isArray(weatherResponse.data) ? weatherResponse.data : [];
+
+    if (!hourly.length) {
+      return errorResponse(res, 500, 'NO_WEATHER_DATA', 'No weather data available');
+    }
+
+    // 取最接近当前时刻的天气数据
+    const nowTs = now.getTime();
+    const selected = hourly.reduce((closest, current) => {
+      return Math.abs((current.timestamp || 0) - nowTs) < Math.abs((closest.timestamp || 0) - nowTs)
+        ? current : closest;
+    }, hourly[0]);
+
+    const weatherData = {
+      cloudCover: selected.cloudCover || 0,
+      humidity: selected.humidity || 0,
+      visibility: selected.visibility || 10,
+      lowClouds: selected.lowClouds || 0,
+      midClouds: selected.midClouds || 0,
+      highClouds: selected.highClouds || 0,
+      lowCloudCover: selected.lowClouds || 0,
+      precipitation: selected.precipitation || 0,
+    };
+
+    const prediction = EnhancedPredictionService.calculateEnhancedPrediction(
+      weatherData, now, lat, lon, type
+    );
+
+    res.json({
+      success: true,
+      data: prediction
+    });
+  } catch (error) {
+    console.error('[PredictionRoute] GET prediction error:', error);
+    errorResponse(res, 500, 'PREDICTION_ERROR', error.message);
   }
 });
 
