@@ -7,7 +7,8 @@ const translations = {
     "tabs": {
       "ariaLabel": "홈 탭 내비게이션",
       "forecast": "예측 기능",
-      "methodology": "화염구름 점수 계산 방법"
+      "methodology": "화염구름 점수 계산 방법",
+      "map": "노을 지도"
     },
     "menu": {
       "ariaLabel": "페이지 전환",

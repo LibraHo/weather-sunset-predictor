@@ -7,7 +7,8 @@ const translations = {
     "tabs": {
       "ariaLabel": "Navigation par onglets",
       "forecast": "Prévisions",
-      "methodology": "Méthode de calcul"
+      "methodology": "Méthode de calcul",
+      "map": "Carte Lueur"
     },
     "menu": {
       "ariaLabel": "Changer de vue",

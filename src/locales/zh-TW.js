@@ -7,7 +7,8 @@ const translations = {
     "tabs": {
       "ariaLabel": "主頁分頁導航",
       "forecast": "預測功能",
-      "methodology": "火燒雲計算方法"
+      "methodology": "火燒雲計算方法",
+      "map": "火燒雲地圖"
     },
     "menu": {
       "ariaLabel": "切換頁面",

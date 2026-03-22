@@ -28,7 +28,7 @@
  * // Testing with injected jsdom document
  * initializeHomeTabs(document);
  */
-export function initializeHomeTabs(documentRef = document) {
+export function initializeHomeTabs(documentRef = document, onMapVisible = null) {
   const forecastPanel = documentRef.getElementById('tab-panel-forecast');
   const methodologyPanel = documentRef.getElementById('tab-panel-methodology');
 
@@ -36,21 +36,31 @@ export function initializeHomeTabs(documentRef = document) {
     return;
   }
 
+  const mapPanel = documentRef.getElementById('tab-panel-map');
+
   const tabForecast = documentRef.getElementById('tab-forecast');
   const tabMethodology = documentRef.getElementById('tab-methodology');
   const menuButton = documentRef.getElementById('home-view-menu-btn');
   const menuDropdown = documentRef.getElementById('home-view-menu-dropdown');
   const menuOptions = Array.from(documentRef.querySelectorAll('.home-view-option'));
 
+  const allPanels = [
+    { id: 'forecast', el: forecastPanel },
+    { id: 'methodology', el: methodologyPanel },
+    ...(mapPanel ? [{ id: 'map', el: mapPanel }] : []),
+  ];
+
   const setActiveView = (view) => {
-    const showForecast = view === 'forecast';
+    // 显示/隐藏所有已知 panels
+    allPanels.forEach(({ id, el }) => {
+      const show = id === view;
+      el.classList.toggle('hidden', !show);
+      el.hidden = !show;
+    });
 
-    forecastPanel.classList.toggle('hidden', !showForecast);
-    methodologyPanel.classList.toggle('hidden', showForecast);
-    forecastPanel.hidden = !showForecast;
-    methodologyPanel.hidden = showForecast;
-
+    // 兼容旧 tab 按钮
     if (tabForecast && tabMethodology) {
+      const showForecast = view === 'forecast';
       tabForecast.classList.toggle('active', showForecast);
       tabMethodology.classList.toggle('active', !showForecast);
       tabForecast.setAttribute('aria-selected', String(showForecast));
@@ -65,6 +75,11 @@ export function initializeHomeTabs(documentRef = document) {
         option.classList.toggle('active', active);
         option.setAttribute('aria-checked', String(active));
       });
+    }
+
+    // 通知地图页激活
+    if (view === 'map' && typeof onMapVisible === 'function') {
+      onMapVisible();
     }
   };
 

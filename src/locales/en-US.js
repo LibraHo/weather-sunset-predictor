@@ -7,7 +7,8 @@ const translations = {
     "tabs": {
       "ariaLabel": "Home tab navigation",
       "forecast": "Forecast",
-      "methodology": "Methodology"
+      "methodology": "Methodology",
+      "map": "Fire Sky Map"
     },
     "menu": {
       "ariaLabel": "Switch home view",

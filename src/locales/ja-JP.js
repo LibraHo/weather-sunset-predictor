@@ -7,7 +7,8 @@ const translations = {
     "tabs": {
       "ariaLabel": "ホームタブナビゲーション",
       "forecast": "予測機能",
-      "methodology": "焼き雲スコアの計算方法"
+      "methodology": "焼き雲スコアの計算方法",
+      "map": "火焼け空マップ"
     },
     "menu": {
       "ariaLabel": "ページ切り替え",
