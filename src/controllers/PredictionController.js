@@ -516,6 +516,50 @@ class PredictionController {
    * @param {Object} dateInfo - 日期信息 { sunriseIsToday, sunsetIsToday }
    * @private
    */
+  /**
+   * 根据当前时间判断手机版默认显示的卡片
+   * 逻辑：
+   * - 日出之前 → 显示朝霞（今日朝霞 + 今日晚霞，默认朝霞）
+   * - 日出~中午前（<12:00）→ 显示晚霞（已过朝霞）
+   * - 中午（12:00+）→ 显示晚霞
+   * - 日落之后 → 显示明日朝霞
+   * @param {Date|null} sunriseTime - 日出时间
+   * @param {Date|null} sunsetTime - 日落时间
+   * @param {Object|null} sunrisePrediction - 朝霞预测
+   * @param {Object|null} sunsetPrediction - 晚霞预测
+   * @returns {'sunrise'|'sunset'}
+   */
+  _getDefaultMobileTab(sunriseTime, sunsetTime, sunrisePrediction, sunsetPrediction) {
+    const now = new Date();
+    const hour = now.getHours();
+
+    // 如果某一个预测不存在，直接返回另一个
+    if (!sunrisePrediction) return 'sunset';
+    if (!sunsetPrediction) return 'sunrise';
+
+    // 如果日出时间已知
+    if (sunriseTime) {
+      const beforeSunrise = now < sunriseTime;
+      if (beforeSunrise) {
+        // 日出之前，优先显示朝霞
+        return 'sunrise';
+      }
+    }
+
+    // 日落之后或超过中午，显示晚霞（或明日朝霞，但这里 sunrisePrediction 已是明日朝霞）
+    if (hour >= 12) {
+      // 中午后：如果晚霞已过，显示明日朝霞
+      if (sunsetTime) {
+        const sunsetEnd = new Date(sunsetTime.getTime() + 1.5 * 60 * 60 * 1000);
+        if (now > sunsetEnd) return 'sunrise'; // 晚霞已过，显示明日朝霞
+      }
+      return 'sunset';
+    }
+
+    // 上午（日出之后~中午前）：朝霞已过，显示晚霞
+    return 'sunset';
+  }
+
   updateTodayPredictions(sunrisePrediction, sunsetPrediction, sunriseTime, sunsetTime, displayDate = new Date(), dateInfo = null) {
     const predictionSection = document.getElementById('prediction-section');
     const predictionDisplay = document.getElementById('prediction-display');
@@ -554,54 +598,82 @@ class PredictionController {
       return;
     }
 
-    let html = '<div class="today-predictions-container">';
-
     // 确定每个预测的日期标签
     const sunriseDateLabel = sunrisePrediction && sunrisePrediction.date &&
       sunrisePrediction.date.toDateString() === today.toDateString() ? this.i18n.t('date.today') : this.i18n.t('date.tomorrow');
     const sunsetDateLabel = sunsetPrediction && sunsetPrediction.date &&
       sunsetPrediction.date.toDateString() === today.toDateString() ? this.i18n.t('date.today') : this.i18n.t('date.tomorrow');
 
-    // 朝霞预测
-    if (sunrisePrediction) {
-      html += this.renderSinglePrediction(sunrisePrediction, '🌄', this.i18n.t('prediction.sunrise'), this.i18n.t('prediction.sunriseTime'), sunriseDateLabel, 'sunrise');
-    } else {
-      // 朝霞预测未生成
-      html += `
-        <div class="prediction-unavailable-card">
+    // 生成朝霞卡片 HTML
+    const sunriseCardHtml = sunrisePrediction
+      ? this.renderSinglePrediction(sunrisePrediction, '🌄', this.i18n.t('prediction.sunrise'), this.i18n.t('prediction.sunriseTime'), sunriseDateLabel, 'sunrise')
+      : `<div class="prediction-unavailable-card">
           <span class="prediction-date-badge">${sunriseDateLabel}</span>
           <h3>🌄 ${this.i18n.t('prediction.sunrise')}</h3>
           <p class="unavailable-reason">${this.i18n.t('prediction.predictionUnavailable')}</p>
           <p class="hint-text">${this.i18n.t('prediction.viewFutureOrRefresh')}</p>
-        </div>
-      `;
-    }
+        </div>`;
 
-    // 晚霞预测
-    if (sunsetPrediction) {
-      html += this.renderSinglePrediction(sunsetPrediction, '🌅', this.i18n.t('prediction.sunset'), this.i18n.t('prediction.sunsetTime'), sunsetDateLabel, 'sunset');
-    } else {
-      // 晚霞预测未生成
-      html += `
-        <div class="prediction-unavailable-card">
+    // 生成晚霞卡片 HTML
+    const sunsetCardHtml = sunsetPrediction
+      ? this.renderSinglePrediction(sunsetPrediction, '🌅', this.i18n.t('prediction.sunset'), this.i18n.t('prediction.sunsetTime'), sunsetDateLabel, 'sunset')
+      : `<div class="prediction-unavailable-card">
           <span class="prediction-date-badge">${sunsetDateLabel}</span>
           <h3>🌅 ${this.i18n.t('prediction.sunset')}</h3>
           <p class="unavailable-reason">${this.i18n.t('prediction.predictionUnavailable')}</p>
           <p class="hint-text">${this.i18n.t('prediction.viewFutureOrRefresh')}</p>
-        </div>
-      `;
-    }
+        </div>`;
 
-    html += '</div>';
+    // 手机版默认显示哪个
+    const defaultTab = this._getDefaultMobileTab(sunriseTime, sunsetTime, sunrisePrediction, sunsetPrediction);
+
+    // 渲染带切换开关的布局
+    const html = `
+      <div class="prediction-toggle-bar" id="prediction-toggle-bar">
+        <button class="prediction-toggle-btn${defaultTab === 'sunrise' ? ' active' : ''}" data-tab="sunrise">
+          🌄 ${this.i18n.t('prediction.sunrise')}
+        </button>
+        <button class="prediction-toggle-btn${defaultTab === 'sunset' ? ' active' : ''}" data-tab="sunset">
+          🌅 ${this.i18n.t('prediction.sunset')}
+        </button>
+      </div>
+      <div class="today-predictions-container" id="today-predictions-container">
+        <div class="prediction-tab-panel" data-panel="sunrise"${defaultTab !== 'sunrise' ? ' style="display:none"' : ''}>
+          ${sunriseCardHtml}
+        </div>
+        <div class="prediction-tab-panel" data-panel="sunset"${defaultTab !== 'sunset' ? ' style="display:none"' : ''}>
+          ${sunsetCardHtml}
+        </div>
+      </div>
+    `;
 
     predictionDisplay.innerHTML = html;
+
+    // 绑定切换按钮事件
+    const toggleBar = predictionDisplay.querySelector('#prediction-toggle-bar');
+    if (toggleBar) {
+      toggleBar.addEventListener('click', (e) => {
+        const btn = e.target.closest('.prediction-toggle-btn');
+        if (!btn) return;
+        const tab = btn.dataset.tab;
+
+        // 更新按钮状态
+        toggleBar.querySelectorAll('.prediction-toggle-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // 切换面板
+        predictionDisplay.querySelectorAll('.prediction-tab-panel').forEach(panel => {
+          panel.style.display = panel.dataset.panel === tab ? '' : 'none';
+        });
+      });
+    }
 
     // 显示预测部分
     if (predictionSection) {
       predictionSection.classList.remove('hidden');
     }
 
-    console.log(`[PredictionController] ${dateLabel}预测已更新`);
+    console.log(`[PredictionController] ${dateLabel}预测已更新，手机版默认显示: ${defaultTab}`);
   }
 
   /**

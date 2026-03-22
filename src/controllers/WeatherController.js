@@ -473,12 +473,10 @@ class WeatherController {
         <span class="day-label-date">${dayDateLabel}</span>
       </div>
       <div class="weather-icon">${weatherIcon}</div>
-      <div class="temp-bar-container">
-        <div class="temp-bar" role="progressbar" aria-label="温度范围：${minTemp.toFixed(0)}°C 至 ${maxTemp.toFixed(0)}°C"></div>
-        <div class="temp-bar-labels">
-          <span class="min-temp">${minTemp.toFixed(0)}°</span>
-          <span class="max-temp">${maxTemp.toFixed(0)}°</span>
-        </div>
+      <div class="temp-range-inline" aria-label="温度范围：${minTemp.toFixed(0)}°C 至 ${maxTemp.toFixed(0)}°C">
+        <span class="min-temp">${minTemp.toFixed(0)}°</span>
+        <span class="temp-range-sep">~</span>
+        <span class="max-temp">${maxTemp.toFixed(0)}°</span>
       </div>
       <div class="day-meta-icons-row" role="list" aria-label="天气详细信息">
         <div class="day-meta-icon" role="listitem" aria-label="降水概率：${precipProb}%">

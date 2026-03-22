@@ -3801,3 +3801,117 @@ body.theme-dark {
 }
 ,220,0.70);
 }
+
+/* ===== 朝霞/晚霞切换开关（手机/电脑通用，手机生效） ===== */
+.prediction-toggle-bar {
+  display: none; /* 桌面端隐藏 */
+  background: var(--color-surface, #f8f7f4);
+  border-radius: 999px;
+  padding: 4px;
+  margin-bottom: 16px;
+  gap: 4px;
+  border: 1px solid var(--color-border, rgba(0,0,0,0.1));
+  width: fit-content;
+}
+
+.prediction-toggle-btn {
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-secondary, #6b7280);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.prediction-toggle-btn.active {
+  background: var(--color-primary, #f97316);
+  color: white;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+}
+
+.prediction-toggle-btn:not(.active):hover {
+  background: var(--color-surface-hover, rgba(0,0,0,0.05));
+  color: var(--color-text, #111827);
+}
+
+/* 手机端：切换开关可见，卡片单列显示 */
+@media (max-width: 640px) {
+  .prediction-toggle-bar {
+    display: flex;
+  }
+
+  /* 手机端：grid 变成单列，隐藏的 panel 不占位 */
+  #today-predictions-container {
+    grid-template-columns: 1fr !important;
+  }
+
+  .prediction-tab-panel {
+    width: 100%;
+  }
+}
+
+/* 桌面端：两个 panel 都显示，并排布局 */
+@media (min-width: 641px) {
+  .prediction-toggle-bar {
+    display: none !important;
+  }
+
+  .prediction-tab-panel {
+    display: block !important; /* 强制显示，忽略 style="display:none" */
+  }
+}
+
+/* ===== 火烧云地图专属页面 ===== */
+.map-panel {
+  padding: 16px;
+}
+
+.map-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.map-panel-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.map-panel-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.map-panel-hint {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--color-text-secondary, #6b7280);
+  text-align: center;
+}
+
+/* Leaflet 在 hidden panel 中初始时强制尺寸 */
+#map-panel-container .leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ===== 7天概览：去掉温度条，只显示数字 ===== */
+.temp-range-inline {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.temp-range-sep {
+  color: var(--color-text-light, #9ca3af);
+  font-weight: 400;
+  font-size: 0.75rem;
+}

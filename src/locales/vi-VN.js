@@ -7,7 +7,8 @@ const translations = {
     "tabs": {
       "ariaLabel": "Điều hướng tab trang chủ",
       "forecast": "Chức năng dự báo",
-      "methodology": "Phương pháp tính điểm mây đẹp"
+      "methodology": "Phương pháp tính điểm mây đẹp",
+      "map": "Bản đồ Ráng đỏ"
     },
     "menu": {
       "ariaLabel": "Chuyển trang",

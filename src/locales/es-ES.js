@@ -7,7 +7,8 @@ const translations = {
     "tabs": {
       "ariaLabel": "Navegación por pestañas",
       "forecast": "Pronóstico",
-      "methodology": "Metodología de cálculo"
+      "methodology": "Metodología de cálculo",
+      "map": "Mapa de Resplandor"
     },
     "menu": {
       "ariaLabel": "Cambiar vista",
