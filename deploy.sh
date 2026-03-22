@@ -49,6 +49,10 @@ scp -i "$SSH_KEY" "$LOCAL/server/routes/"*.js $REMOTE:~/weather-sunset-predictor
 scp -i "$SSH_KEY" "$LOCAL/server/services/"*.js $REMOTE:~/weather-sunset-predictor/server/services/
 # ⚠️ 注意：不推送 server/.env，敏感配置只在服务器上手动维护
 scp -i "$SSH_KEY" "$LOCAL/server/.env.example" $REMOTE:~/weather-sunset-predictor/server/
+scp -i "$SSH_KEY" "$LOCAL/server/package.json" $REMOTE:~/weather-sunset-predictor/server/
+ssh -i "$SSH_KEY" $REMOTE "cd ~/weather-sunset-predictor/server && sudo /usr/local/bin/npm install --production --silent 2>/dev/null || true"
+ssh -i "$SSH_KEY" $REMOTE "mkdir -p ~/weather-sunset-predictor/public"
+scp -i "$SSH_KEY" "$LOCAL"/public/*.html $REMOTE:~/weather-sunset-predictor/public/ 2>/dev/null || true
 scp -i "$SSH_KEY" "$LOCAL/src/app.js" $REMOTE:~/weather-sunset-predictor/src/
 scp -i "$SSH_KEY" "$LOCAL/src/i18n.js" $REMOTE:~/weather-sunset-predictor/src/ 2>/dev/null || true
 scp -i "$SSH_KEY" "$LOCAL/src/controllers/"*.js $REMOTE:~/weather-sunset-predictor/src/controllers/
