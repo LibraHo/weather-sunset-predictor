@@ -3818,7 +3818,7 @@ body.theme-dark {
   background: var(--color-surface, #f8f7f4);
   border-radius: 999px;
   padding: 4px;
-  margin-bottom: 16px;
+  margin: 0 auto 16px;
   gap: 4px;
   border: 1px solid var(--color-border, rgba(0,0,0,0.1));
   width: fit-content;
