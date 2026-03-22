@@ -1242,40 +1242,30 @@ class WeatherController {
     }));
   }
 
-  async _fetchRadarDirsFrontend(location, radius = 100, type = 'sunset') {
-    const DIRS = [
-      {dir:'N', label:'北', b:0}, {dir:'NE', label:'东北', b:45},
-      {dir:'E', label:'东', b:90}, {dir:'SE', label:'东南', b:135},
-      {dir:'S', label:'南', b:180}, {dir:'SW', label:'西南', b:225},
-      {dir:'W', label:'西', b:270}, {dir:'NW', label:'西北', b:315},
-    ];
-    const R = 6371;
-    const base = window._appConfig?.proxyURL || 'http://localhost:3000';
-    const results = await Promise.allSettled(DIRS.map(async d => {
-      const rad  = d.b * Math.PI / 180;
-      const dLat = (radius / R) * Math.cos(rad) * (180 / Math.PI);
-      const dLon = (radius / R) * Math.sin(rad) / Math.cos(location.lat * Math.PI / 180) * (180 / Math.PI);
-      const res  = await fetch(
-        `${base}/api/prediction?lat=${(location.lat+dLat).toFixed(4)}&lon=${(location.lon+dLon).toFixed(4)}&type=${type}`,
-        { signal: AbortSignal.timeout(8000) }
+  async _fetchRadarDirsFrontend(location, radius = 20, type = 'sunset') {
+    const LABEL = { N:'北', NE:'东北', E:'东', SE:'东南', S:'南', SW:'西南', W:'西', NW:'西北' };
+    const base = window._appConfig?.proxyURL || '';
+    try {
+      // 用后端聚合接口，一次请求返回 8 方向，避免触发 rate limit
+      const res = await fetch(
+        `${base}/api/prediction/directions?lat=${location.lat.toFixed(4)}&lon=${location.lon.toFixed(4)}&type=${type}&radius=${radius}`,
+        { signal: AbortSignal.timeout(15000) }
       );
       const json = res.ok ? await res.json() : {};
-      const data = json.data || json;
-      return {
-        dir: d.dir,
-        label: d.label,
-        score: Math.round(data.score || json.score || 0),
-        dist: radius,
-        cloudLayers: data.cloudLayers || {
-          low: data.weatherData?.lowClouds ?? data.factors?.cloudCover?.value ?? 0,
-          mid: data.weatherData?.midClouds ?? 0,
-          high: data.weatherData?.highClouds ?? 0,
-        }
-      };
-    }));
-    return results.map((r,i) =>
-      r.status === 'fulfilled' ? r.value : { dir: DIRS[i].dir, label: DIRS[i].label, score: 0, dist: radius }
-    );
+      if (json.success && Array.isArray(json.data?.directions)) {
+        return json.data.directions.map(d => ({
+          dir: d.dir,
+          label: LABEL[d.dir] || d.dir,
+          score: d.score || 0,
+          dist: radius,
+          cloudLayers: d.cloudLayers || { low: 0, mid: 0, high: 0 }
+        }));
+      }
+    } catch (err) {
+      console.warn('[WeatherController] /api/prediction/directions 失败:', err.message);
+    }
+    // 全部失败时返回空数据
+    return Object.keys(LABEL).map(dir => ({ dir, label: LABEL[dir], score: 0, dist: radius, cloudLayers: { low: 0, mid: 0, high: 0 } }));
   }
 
   /**

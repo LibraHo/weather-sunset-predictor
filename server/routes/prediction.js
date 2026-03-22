@@ -462,4 +462,87 @@ router.get('/', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/prediction/directions?lat=&lon=&type=&radius=
+ * 一次返回 8 个方向的预测（雷达罗盘专用），避免前端发 8 个请求触发 rate limit
+ */
+router.get('/directions', async (req, res) => {
+  try {
+    const lat = parseFloat(req.query.lat);
+    const lon = parseFloat(req.query.lon);
+    const type = req.query.type || 'sunset';
+    const radius = parseFloat(req.query.radius) || 20;
+
+    if (isNaN(lat) || isNaN(lon)) {
+      return errorResponse(res, 400, 'INVALID_PARAMS', 'lat and lon are required');
+    }
+
+    const DIRS = [
+      { dir: 'N',  angle: 0   },
+      { dir: 'NE', angle: 45  },
+      { dir: 'E',  angle: 90  },
+      { dir: 'SE', angle: 135 },
+      { dir: 'S',  angle: 180 },
+      { dir: 'SW', angle: 225 },
+      { dir: 'W',  angle: 270 },
+      { dir: 'NW', angle: 315 },
+    ];
+    const R = 6371;
+    const now = new Date();
+
+    const results = await Promise.allSettled(DIRS.map(async (d) => {
+      const rad  = d.angle * Math.PI / 180;
+      const dLat = (radius / R) * Math.cos(rad) * (180 / Math.PI);
+      const dLon = (radius / R) * Math.sin(rad) / Math.cos(lat * Math.PI / 180) * (180 / Math.PI);
+      const pLat = lat + dLat;
+      const pLon = lon + dLon;
+
+      const weatherResponse = await orchestrator.fetchWeatherData(pLat, pLon, 24);
+      const hourly = Array.isArray(weatherResponse.data) ? weatherResponse.data : [];
+      if (!hourly.length) throw new Error('no weather data');
+
+      const nowTs = now.getTime();
+      const selected = hourly.reduce((c, x) =>
+        Math.abs((x.timestamp || 0) - nowTs) < Math.abs((c.timestamp || 0) - nowTs) ? x : c
+      , hourly[0]);
+
+      const weatherData = {
+        cloudCover: selected.cloudCover || 0,
+        humidity: selected.humidity || 0,
+        visibility: selected.visibility || 10,
+        lowClouds: selected.lowClouds || 0,
+        midClouds: selected.midClouds || 0,
+        highClouds: selected.highClouds || 0,
+        lowCloudCover: selected.lowClouds || 0,
+        precipitation: selected.precipitation || 0,
+      };
+
+      const prediction = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData, now, pLat, pLon, type
+      );
+
+      return {
+        dir: d.dir,
+        score: Math.round(prediction.score || 0),
+        cloudLayers: {
+          low: weatherData.lowClouds,
+          mid: weatherData.midClouds,
+          high: weatherData.highClouds,
+        }
+      };
+    }));
+
+    const directions = results.map((r, i) =>
+      r.status === 'fulfilled'
+        ? r.value
+        : { dir: DIRS[i].dir, score: 0, cloudLayers: { low: 0, mid: 0, high: 0 } }
+    );
+
+    res.json({ success: true, data: { directions } });
+  } catch (error) {
+    console.error('[PredictionRoute] GET /directions error:', error);
+    errorResponse(res, 500, 'DIRECTIONS_ERROR', error.message);
+  }
+});
+
 module.exports = router;
