@@ -49,9 +49,14 @@ scp -i "$SSH_KEY" "$LOCAL/server/routes/"*.js $REMOTE:~/weather-sunset-predictor
 scp -i "$SSH_KEY" "$LOCAL/server/services/"*.js $REMOTE:~/weather-sunset-predictor/server/services/
 # ⚠️ 注意：不推送 server/.env，敏感配置只在服务器上手动维护
 scp -i "$SSH_KEY" "$LOCAL/server/.env.example" $REMOTE:~/weather-sunset-predictor/server/
+scp -i "$SSH_KEY" "$LOCAL/src/app.js" $REMOTE:~/weather-sunset-predictor/src/
+scp -i "$SSH_KEY" "$LOCAL/src/i18n.js" $REMOTE:~/weather-sunset-predictor/src/ 2>/dev/null || true
 scp -i "$SSH_KEY" "$LOCAL/src/controllers/"*.js $REMOTE:~/weather-sunset-predictor/src/controllers/
 scp -i "$SSH_KEY" "$LOCAL/src/services/"*.js $REMOTE:~/weather-sunset-predictor/src/services/
 scp -i "$SSH_KEY" "$LOCAL/src/components/"*.js $REMOTE:~/weather-sunset-predictor/src/components/
+scp -i "$SSH_KEY" "$LOCAL/src/utils/"*.js $REMOTE:~/weather-sunset-predictor/src/utils/
+scp -i "$SSH_KEY" "$LOCAL/src/models/"*.js $REMOTE:~/weather-sunset-predictor/src/models/
+scp -i "$SSH_KEY" "$LOCAL/src/locales/"*.js $REMOTE:~/weather-sunset-predictor/src/locales/
 scp -i "$SSH_KEY" "$LOCAL/styles/"*.css $REMOTE:~/weather-sunset-predictor/styles/ 2>/dev/null || true
 
 echo "🔄 重启后端..."
