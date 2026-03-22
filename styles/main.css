@@ -2302,7 +2302,6 @@ body.theme-dark .prediction-analysis {
   align-items: center;
   gap: 0;
   flex-shrink: 0;
-  margin-left: auto; /* 撑到右侧，但不用 flex:1 占位 */
 }
 
 .day-meta-icon {
@@ -3850,10 +3849,18 @@ body.theme-dark {
 
 /* 手机端：切换开关可见，卡片单列显示 */
 @media (max-width: 640px) {
+  #prediction-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #today-predictions-container {
+    width: 100%;
+  }
+
   .prediction-toggle-bar {
     display: flex;
-    margin-left: auto;
-    margin-right: auto;
   }
 
   /* 手机端：grid 变成单列，隐藏的 panel 不占位 */
@@ -3920,8 +3927,8 @@ body.theme-dark {
   font-size: 0.82rem;
   font-weight: 600;
   white-space: nowrap;
-  flex-shrink: 0;
-  width: 76px; /* 固定宽，避免撑开右侧留白 */
+  flex: 1; /* 撑满中间空间，数据区自然靠右 */
+  min-width: 0;
 }
 
 .temp-range-sep {
