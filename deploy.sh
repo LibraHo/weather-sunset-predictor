@@ -60,14 +60,12 @@ scp -i "$SSH_KEY" "$LOCAL/src/locales/"*.js $REMOTE:~/weather-sunset-predictor/s
 scp -i "$SSH_KEY" "$LOCAL/styles/"*.css $REMOTE:~/weather-sunset-predictor/styles/ 2>/dev/null || true
 
 echo "🔄 重启后端..."
-ssh -i "$SSH_KEY" $REMOTE "
-  # 杀掉所有 weather-sunset-predictor 后端进程（匹配路径更可靠）
-  sudo pkill -f 'weather-sunset-predictor/server/index.js' 2>/dev/null || true
-  sleep 2
-  # 用 root 的 node（v22）启动
-  sudo bash -c 'cd /home/ubuntu/weather-sunset-predictor/server && nohup /usr/local/bin/node index.js >> /tmp/ws-backend.log 2>&1 &'
-  sleep 3
-  curl -s http://localhost:3000/health
-"
+# 先杀进程（忽略返回码，pkill 找不到进程时返回1）
+ssh -i "$SSH_KEY" $REMOTE "sudo pkill -f 'weather-sunset-predictor/server/index.js'" 2>/dev/null || true
+sleep 3
+# 再启动新进程
+ssh -i "$SSH_KEY" $REMOTE "sudo bash -c 'cd /home/ubuntu/weather-sunset-predictor/server && nohup /usr/local/bin/node index.js >> /tmp/ws-backend.log 2>&1 &'"
+sleep 4
+ssh -i "$SSH_KEY" $REMOTE "curl -s http://localhost:3000/health"
 
 echo "✅ 部署完成"
