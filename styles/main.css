@@ -24,6 +24,11 @@
   --sunset-time-text: #ff9800;
   --sunset-time-bg-subtle: rgba(255, 152, 0, 0.1);
   
+  /* 天气状态主题变量（默认为晴天） */
+  --weather-sunny-gradient: linear-gradient(135deg, #fff9c4 0%, #ffed4e 50%, #ffbe0b 100%);
+  --weather-rainy-gradient: linear-gradient(135deg, #64748b 0%, #7f8c8d 50%, #a8c0ff 100%);
+  --weather-sunset-gradient: linear-gradient(135deg, #ff9a9e 0%, #fd79a8 50%, #f472b6 100%);
+  
   /* 间距 */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
