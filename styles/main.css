@@ -13,6 +13,7 @@
   /* 中性色 */
   --color-bg: #f5f5f5;
   --color-card-bg: #ffffff;
+  --color-surface: rgba(255, 255, 255, 0.97);
   --color-text: #333333;
   --color-text-light: #666666;
   --color-border: #e0e0e0;
@@ -77,6 +78,7 @@ body.theme-dark {
   /* 中性色 — 午夜深蓝底色（非纯黑）*/
   --color-bg: #0a0f1e;
   --color-card-bg: rgba(15, 22, 40, 0.85);
+  --color-surface: rgba(18, 28, 52, 0.97);
   --color-text: rgba(255, 255, 255, 0.92);
   --color-text-light: rgba(255, 255, 255, 0.50);
   --color-border: rgba(255, 255, 255, 0.08);
@@ -226,8 +228,8 @@ main > section {
   min-width: 180px;
   padding: 8px;
   border-radius: 12px;
-  background: var(--glass-bg-heavy, rgba(255, 255, 255, 0.97));
-  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.35));
+  background: var(--color-surface, rgba(30, 30, 50, 0.97));
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.15));
   box-shadow: var(--shadow-md);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -239,7 +241,7 @@ main > section {
   text-align: left;
   border: 1px solid transparent;
   background: transparent;
-  color: #111111;
+  color: var(--color-text, #f0f0f0);
   border-radius: 8px;
   padding: 8px 10px;
   font-size: 0.92rem;
