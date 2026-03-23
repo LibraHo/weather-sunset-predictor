@@ -3165,8 +3165,67 @@ body.theme-dark .sun-azimuth-info {
   margin-bottom: 0;
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
   gap: 12px;
+}
+
+/* 桌面端：左中右3组布局 */
+#forecast-section .forecast-left-group {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#forecast-section .forecast-left-group .day-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #2f3948;
+}
+
+#forecast-section .forecast-left-group .date-label {
+  font-size: 0.8rem;
+  color: rgba(47, 57, 72, 0.72);
+}
+
+#forecast-section .forecast-middle-group {
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+
+#forecast-section .forecast-middle-group .forecast-temp {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2f3948;
+}
+
+#forecast-section .forecast-right-group {
+  display: none;
+  align-items: center;
+  gap: 6px;
+}
+
+#forecast-section .forecast-right-group .forecast-wind {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(47, 57, 72, 0.85);
+}
+
+/* 桌面端 >= 768px 启用3组布局 */
+@media (min-width: 768px) {
+  #forecast-section .forecast-left-group,
+  #forecast-section .forecast-middle-group,
+  #forecast-section .forecast-right-group {
+    display: flex;
+  }
+
+  #forecast-section .forecast-header {
+    justify-content: center;
+  }
+
+  /* 桌面端隐藏评分组，因为布局改为了左中右3组 */
+  #forecast-section .forecast-score-group {
+    display: none;
+  }
 }
 
 #forecast-section .forecast-main-info {
