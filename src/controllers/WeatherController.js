@@ -1189,6 +1189,16 @@ class WeatherController {
 
     if (!container || !location?.lat || !location?.lon) return;
 
+    // 修复：如果特定容器不存在，等待预测卡片渲染完成后再尝试
+    if (predictionType && !document.getElementById(`radar-compass-${predictionType}`)) {
+      await new Promise(resolve => requestAnimationFrame(resolve));
+      const delayedContainer = document.getElementById(`radar-compass-${predictionType}`);
+      if (!delayedContainer) {
+        console.warn(`[WeatherController] 雷达容器不存在: radar-compass-${predictionType}`);
+        return;
+      }
+    }
+
     container.style.display = 'block';
     container.innerHTML = '<p style="text-align:center;color:var(--color-text-light,#aaa);font-size:13px;padding:12px 0;">加载周边数据中…</p>';
 
