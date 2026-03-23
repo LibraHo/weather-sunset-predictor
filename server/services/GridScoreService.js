@@ -14,6 +14,7 @@ const os = require('os');
 
 const orchestrator = require('./ProviderOrchestrator');
 const { calculateEnhancedPrediction } = require('./EnhancedPredictionService');
+const SunCalculator = require('../utils/SunCalculator');
 
 // 中国区域范围（5° 间隔）
 const CHINA_BOUNDS = {
@@ -86,6 +87,7 @@ class GridScoreService {
   async fetchAndScore(gridPoints, date = new Date(), period = DEFAULT_PERIOD) {
     const results = [];
     const queue = [...gridPoints];
+    const safePeriod = this.normalizePeriod(period);
 
     // 并发控制：每次最多 CONCURRENCY_LIMIT 个请求
     const worker = async () => {
@@ -98,7 +100,23 @@ class GridScoreService {
           const weatherData = Array.isArray(weatherRaw) ? weatherRaw[0] : (weatherRaw.data?.[0] || weatherRaw);
           if (!weatherData) throw new Error('no weather data');
 
-          const prediction = calculateEnhancedPrediction(weatherData, date, point.lat, point.lon, this.normalizePeriod(period));
+          // 使用该点的日落/日出时间作为预测目标时间，避免当前时刻几何不可行误判
+          let predictionDate = date;
+          try {
+            if (safePeriod === 'sunset') {
+              predictionDate = SunCalculator.getSunsetTime(date, point.lat, point.lon);
+            } else {
+              // 朝霞预测明天日出
+              const tomorrow = new Date(date);
+              tomorrow.setDate(tomorrow.getDate() + 1);
+              predictionDate = SunCalculator.getSunriseTime(tomorrow, point.lat, point.lon);
+            }
+          } catch (sunErr) {
+            // 日落/日出计算失败时回退到传入时间
+            console.warn(`[GridScoreService] 无法计算 ${point.lat},${point.lon} 日出落时间:`, sunErr.message);
+          }
+
+          const prediction = calculateEnhancedPrediction(weatherData, predictionDate, point.lat, point.lon, safePeriod);
           results.push({
             lat: point.lat,
             lon: point.lon,

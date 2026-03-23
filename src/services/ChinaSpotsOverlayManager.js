@@ -66,9 +66,16 @@ export default class ChinaSpotsOverlayManager {
       'margin-bottom: 8px'
     ].join(';');
 
+    // 计算今天和明天的日期标签
+    const now = new Date();
+    const today = `${now.getMonth() + 1}/${now.getDate()}`;
+    const tomorrowDate = new Date(now);
+    tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+    const tomorrow = `${tomorrowDate.getMonth() + 1}/${tomorrowDate.getDate()}`;
+
     const tabs = [
-      { period: 'sunrise', label: '朝霞 🌄' },
-      { period: 'sunset', label: '晚霞 🌅' }
+      { period: 'sunrise', label: `朝霞 🌄 ${tomorrow}` },
+      { period: 'sunset', label: `晚霞 🌅 ${today}` }
     ];
 
     tabs.forEach(tab => {
