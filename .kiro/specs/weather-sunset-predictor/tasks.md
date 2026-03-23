@@ -107,3 +107,77 @@
 
 **当前分支**：`main`
 **最新 commit**：`dd1a81d`
+---
+
+## 📊 任务分配记录（2026-03-24 00:35 更新）
+
+### 分配给 minicoder（kimi-coding/k2p5）
+
+#### 优先级 1：阶段1 - 中国地图底层（Phase 1）
+
+- [~] 1.1: 下载/嵌入中国 GeoJSON 数据
+  - 描述：下载中国省界 GeoJSON 数据，嵌入到 `src/data/china-provinces-geojson.js`
+  - 文件：`src/data/china-provinces-geojson.js`
+  - 数据：中国省界 MultiPolygon
+  - minicoder: kimi-coding/k2p5
+  - 状态：已分配
+
+- [~] 1.3: 实现地图交互
+  - 描述：实现地图交互（拖拽/缩放/点击）
+  - 文件：`src/components/ChinaMapCanvas.js`
+  - 功能：Leaflet 交互，或直接 Canvas 交互
+  - minicoder: kimi-coding/k2p5
+  - 状态：已分配
+
+#### 优先级 2：阶段2 - 世界地图（Phase 2）
+
+- [ ] 2.1: 下载/嵌入世界 GeoJSON 数据
+  - minicoder: 待分配
+- [ ] 2.2: 扩展后端网格计算到全球
+  - minicoder: 待分配
+- [ ] 2.3: `ChinaMapCanvas` 重命名为 `WorldMapCanvas`
+  - minicoder: 待分配
+- [ ] 2.4: 火烧云数据扩展
+  - minicoder: 待分配
+
+#### 优先级 3：阶段3 - 照片分享（Phase 3）
+
+- [ ] 3.1: 后台管理界面
+  - minicoder: 待分配
+- [ ] 3.2: 后台 API
+  - minicoder: 待分配
+- [ ] 3.3: 分享页面（`/gallery`）
+  - minicoder: 待分配
+- [ ] 3.4: IP 访客记录
+  - minicoder: 待分配
+- [ ] 3.5: 底部"来访者"统计
+  - minicoder: 待分配
+- [ ] 3.6: 顶部竖直菜单栏新增分享页面入口
+  - minicoder: kimi-coding/k2p5
+  - 状态：已分配
+
+---
+
+## 📋 任务状态更新
+
+- [~] 1.1: 下载/嵌入中国 GeoJSON 数据 → kimi-coding/k2p5
+- [~] 1.3: 实现地图交互 → kimi-coding/k2p5
+- [~] 3.6: 顶部竖直菜单栏新增分享页面入口 → kimi-coding/k2p5
+
+---
+
+## 🎯 依赖关系
+
+- 1.2: 创建 `ChinaMapCanvas` 组件 → 依赖 1.1
+- 1.4: 火烧云数据适配 → 依赖 1.2
+- 1.5: 添加开关控制 → 依赖 1.2, 1.4
+- 2.1: 下载/嵌入世界 GeoJSON 数据 → 独立
+- 2.2: 扩展后端网格计算到全球 → 独立
+
+---
+
+## 📝 更新时间
+
+- **2026-03-24 00:35**：首次并行任务分配（3个任务）
+- **2026-03-24 00:35**：记录到 tasks.md
+
