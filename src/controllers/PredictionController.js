@@ -1223,22 +1223,22 @@ class PredictionController {
         const isPassed = sunriseTime ? now > new Date(sunriseTime.getTime() + 2 * 60 * 60 * 1000) : false;
         const passedLabel = isPassed ? `<span class="passed-badge">${this.i18n.t('prediction.passed')}</span>` : '';
 
+        const tempStr = pred.temperature !== undefined && pred.temperature !== null ? `${Math.round(pred.temperature)}°` : '--';
         html += `
           <div class="forecast-item ${this.getQualityClass(pred.quality)} ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
             <div class="forecast-header">
-              <div class="forecast-main-info">
-                <div class="forecast-type">
-                  <span class="type-icon">🌄</span>
-                  <span class="type-label">${this.i18n.t('prediction.sunrise')}</span>
-                  ${passedLabel}
-                </div>
-                <span class="sunset-time-small">🌄 ${this.formatTime(sunriseTime)}</span>
+              <!-- 桌面端：左中右3组 -->
+              <div class="forecast-left-group">
+                <span class="day-label">${dayLabel}</span>
+                <span class="date-label">${dateStr}</span>
               </div>
-              <div class="forecast-score-group">
-                <div class="forecast-score">
-                  <span>${pred.score.toFixed(0)}</span>
-                </div>
-                <span class="quality-badge ${this.getQualityClass(pred.quality)}">${this.getQualityLabel(pred.quality)}</span>
+              <div class="forecast-middle-group">
+                <span class="type-icon">🌄</span>
+                <span class="type-label">${this.i18n.t('prediction.sunrise')}</span>
+                <span class="forecast-temp">${tempStr}</span>
+              </div>
+              <div class="forecast-right-group">
+                <span class="forecast-wind">${pred.windSpeed ? Math.round(pred.windSpeed) + '级' : '--'}</span>
               </div>
             </div>
           </div>
@@ -1254,22 +1254,22 @@ class PredictionController {
         const isPassed = sunsetTime ? now > new Date(sunsetTime.getTime() + 1.5 * 60 * 60 * 1000) : false;
         const passedLabel = isPassed ? `<span class="passed-badge">${this.i18n.t('prediction.passed')}</span>` : '';
 
+        const tempStr = pred.temperature !== undefined && pred.temperature !== null ? `${Math.round(pred.temperature)}°` : '--';
         html += `
           <div class="forecast-item ${this.getQualityClass(pred.quality)} ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
             <div class="forecast-header">
-              <div class="forecast-main-info">
-                <div class="forecast-type">
-                  <span class="type-icon">🌅</span>
-                  <span class="type-label">${this.i18n.t('prediction.sunset')}</span>
-                  ${passedLabel}
-                </div>
-                <span class="sunset-time-small">🌅 ${this.formatTime(sunsetTime)}</span>
+              <!-- 桌面端：左中右3组 -->
+              <div class="forecast-left-group">
+                <span class="day-label">${dayLabel}</span>
+                <span class="date-label">${dateStr}</span>
               </div>
-              <div class="forecast-score-group">
-                <div class="forecast-score">
-                  <span>${pred.score.toFixed(0)}</span>
-                </div>
-                <span class="quality-badge ${this.getQualityClass(pred.quality)}">${this.getQualityLabel(pred.quality)}</span>
+              <div class="forecast-middle-group">
+                <span class="type-icon">🌅</span>
+                <span class="type-label">${this.i18n.t('prediction.sunset')}</span>
+                <span class="forecast-temp">${tempStr}</span>
+              </div>
+              <div class="forecast-right-group">
+                <span class="forecast-wind">${pred.windSpeed ? Math.round(pred.windSpeed) + '级' : '--'}</span>
               </div>
             </div>
           </div>
