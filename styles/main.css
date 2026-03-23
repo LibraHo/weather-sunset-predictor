@@ -3312,7 +3312,42 @@ body.theme-dark .sun-azimuth-info {
   }
 
   #forecast-section .forecast-header {
+    justify-content: space-between;
+  }
+
+  #forecast-section .forecast-left-group {
+    justify-content: flex-start;
+  }
+
+  #forecast-section .forecast-middle-group {
     justify-content: center;
+  }
+
+  #forecast-section .forecast-right-group {
+    justify-content: flex-end;
+  }
+
+  #forecast-section .forecast-type {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  #forecast-section .forecast-type .type-icon {
+    font-size: 1.1rem;
+  }
+
+  #forecast-section .forecast-type .type-label {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  #forecast-section .forecast-right-group .forecast-wind {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--color-text);
   }
 
   /* 桌面端隐藏评分组，因为布局改为了左中右3组 */
