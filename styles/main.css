@@ -482,6 +482,50 @@ input[type="text"]::placeholder {
   background: var(--color-card-bg);
 }
 
+.search-empty-hint {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: var(--glass-bg, rgba(255,255,255,0.85));
+  border: 1px solid rgba(74,144,226,0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 50;
+}
+
+.search-empty-hint.hidden {
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+}
+
+.search-empty-hint .hint-icon {
+  font-size: 1.2rem;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.search-empty-hint .hint-text {
+  font-size: 0.85rem;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.input-icon-btn {
+  height: 40px;
+  padding-right: 44px;
+  border-radius: 10px;
+  border-color: var(--color-border);
+  background: var(--color-card-bg);
+}
+
 .input-icon-btn {
   position: absolute;
   top: 50%;
