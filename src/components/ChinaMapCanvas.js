@@ -41,12 +41,30 @@ class ChinaMapCanvas {
       return;
     }
 
-    // 创建 Leaflet 地图
+    // 创建 Leaflet 地图（启用完整交互功能）
     this._map = window.L.map(this._container, {
       center: this._options.defaultCenter,
       zoom: this._options.defaultZoom,
       zoomControl: true,
-      attributionControl: false
+      attributionControl: false,
+      // 拖拽平移
+      dragging: true,
+      // 滚轮缩放
+      scrollWheelZoom: true,
+      // 双击缩放
+      doubleClickZoom: true,
+      // 框选缩放
+      boxZoom: true,
+      // 触摸缩放（移动端）
+      touchZoom: true,
+      // 键盘控制
+      keyboard: true,
+      // 平滑惯性拖拽
+      inertia: true,
+      // 惯性最大速度
+      inertiaMaxSpeed: 1500,
+      // 惯性减速
+      inertiaDeceleration: 3000
     });
 
     // 添加 GeoJSON 图层
