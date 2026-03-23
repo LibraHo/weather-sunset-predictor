@@ -448,8 +448,8 @@ class PredictionController {
     let displayDate = today;
 
     // 从预测对象中获取日出日落时间
-    if (todaySunrise && todaySunrise.sunsetTime) {
-      sunriseTime = todaySunrise.sunsetTime;
+    if (todaySunrise && todaySunrise.sunriseTime) {
+      sunriseTime = todaySunrise.sunriseTime;
     }
     if (todaySunset && todaySunset.sunsetTime) {
       sunsetTime = todaySunset.sunsetTime;
@@ -472,7 +472,7 @@ class PredictionController {
       if (now > sunriseEndTime) {
         console.log('[PredictionController] 今日朝霞时间已过，切换到明天的朝霞预测');
         displaySunrise = tomorrowSunrise;
-        sunriseTime = tomorrowSunrise ? tomorrowSunrise.sunsetTime : null;
+        sunriseTime = tomorrowSunrise ? tomorrowSunrise.sunriseTime : null;
       }
     }
 
