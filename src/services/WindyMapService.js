@@ -1,11 +1,15 @@
 /**
- * WindyMapService - 地图服务（Leaflet + OpenStreetMap）
+ * WindyMapService - 地图服务（Leaflet + OpenStreetMap / ChinaMapCanvas）
  *
  * Phase 6 重构：使用 Leaflet 替代 iframe 嵌入方式
  * 解决原 iframe 跨域隔离问题，支持火烧云覆盖层同步
  *
+ * Phase 7 更新：集成 ChinaMapCanvas，优先使用原生 GeoJSON 地图
+ *
  * 需求：18.1, 18.4, 20.7（Phase 6 重构）
  */
+
+import ChinaMapCanvas from '../components/ChinaMapCanvas.js';
 
 class WindyMapService {
   constructor(apiKey) {
@@ -18,6 +22,7 @@ class WindyMapService {
     this.markers = [];
     this.overlays = [];
     this._moveCallbacks = [];
+    this._chinaMap = null; // ChinaMapCanvas 实例
   }
 
   /**
@@ -53,6 +58,60 @@ class WindyMapService {
       throw new Error('Leaflet 未加载，请确认 CDN 脚本已引入');
     }
 
+    // 尝试使用 ChinaMapCanvas（优先）
+    try {
+      const useNativeMap = localStorage.getItem('use_native_map') !== 'false';
+      if (useNativeMap) {
+        console.log('[WindyMapService] 尝试使用 ChinaMapCanvas 初始化地图...');
+
+        // 清空容器
+        this.container.innerHTML = '';
+
+        // 创建 ChinaMapCanvas 实例
+        const isDark = document.body.classList.contains('theme-dark');
+        this._chinaMap = new ChinaMapCanvas({
+          style: isDark ? 'dark' : 'light',
+          defaultCenter: [this.currentOptions.lat, this.currentOptions.lon],
+          defaultZoom: this.currentOptions.zoom
+        });
+
+        // 初始化到容器
+        this._chinaMap.init(this.container);
+
+        // 获取 Leaflet map 实例
+        this.map = this._chinaMap.getMap();
+
+        if (this.map) {
+          // 添加中心标记
+          this._addCenterMarker(this.currentOptions.lat, this.currentOptions.lon);
+
+          // 监听地图移动事件（用于通知覆盖层更新）
+          this.map.on('moveend', () => {
+            const center = this.map.getCenter();
+            this.currentOptions.lat = center.lat;
+            this.currentOptions.lon = center.lng;
+            this._moveCallbacks.forEach(cb => cb({ lat: center.lat, lon: center.lng }));
+          });
+
+          this.isInitialized = true;
+
+          console.log('[WindyMapService] 地图初始化成功 (ChinaMapCanvas)');
+
+          // 触发地图初始化完成事件
+          window.dispatchEvent(new CustomEvent('mapInitialized', {
+            detail: { map: this.map, options: this.currentOptions }
+          }));
+
+          return;
+        }
+      }
+    } catch (error) {
+      console.warn('[WindyMapService] ChinaMapCanvas 不可用，回退到 OSM:', error);
+      // 清理失败的 ChinaMapCanvas 状态
+      this._chinaMap = null;
+    }
+
+    // 回退：使用 Leaflet + OpenStreetMap
     try {
       console.log('[WindyMapService] 正在初始化地图 (Leaflet + OSM)...');
 
@@ -86,7 +145,7 @@ class WindyMapService {
 
       this.isInitialized = true;
 
-      console.log('[WindyMapService] 地图初始化成功 (Leaflet)');
+      console.log('[WindyMapService] 地图初始化成功 (Leaflet + OSM)');
 
       // 触发地图初始化完成事件
       window.dispatchEvent(new CustomEvent('mapInitialized', {
@@ -383,6 +442,12 @@ class WindyMapService {
    * 需求：18.1
    */
   destroy() {
+    // 清理 ChinaMapCanvas 实例
+    if (this._chinaMap) {
+      this._chinaMap.destroy();
+      this._chinaMap = null;
+    }
+
     if (this.map) {
       // 移除所有覆盖层
       this.overlays.forEach(o => o.remove());
