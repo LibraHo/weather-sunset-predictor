@@ -45,6 +45,15 @@ const apiLimiter = rateLimit({
   }
 });
 
+// 地图瓦片单独限速：每分钟500张（地图渲染一次可能需要几十张瓦片）
+const tilesLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 500,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: { code: 'TILE_RATE_LIMIT', message: '瓦片请求过于频繁' } }
+});
+
 // Middleware
 app.use(cors({
   origin: corsOrigins.length === 1 ? corsOrigins[0] : corsOrigins
@@ -53,7 +62,10 @@ app.use(express.json());
 app.use(morgan('combined')); // HTTP request logging
 app.use(requestLogger()); // Custom request logging
 
-// 对所有 /api/* 路由启用速率限制
+// 瓦片路由优先挂载（绕过全局 apiLimiter，使用独立宽松限速）
+app.use('/api/tiles', tilesLimiter, tilesRoutes);
+
+// 对其余 /api/* 路由启用速率限制
 app.use('/api/', apiLimiter);
 
 // Routes
@@ -92,7 +104,6 @@ app.use('/api/visitor', visitorRoutes);
 app.use('/api/geocoding', geocodingRoutes);
 app.use('/api/heatmap', heatmapRoutes);
 app.use('/api/spots', spotsRoutes);
-app.use('/api/tiles', tilesRoutes);
 app.use('/api/photos', photosRoutes);
 app.use('/', adminRoutes);
 
