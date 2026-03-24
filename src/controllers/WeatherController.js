@@ -1723,6 +1723,60 @@ class WeatherController {
    * @param {number} lon - 经度
    * @returns {boolean}
    */
+  /**
+   * 初始化地图底图切换按钮（高德 ↔ OSM）
+   * @param {L.Map} map - Leaflet 地图实例
+   * @param {boolean} initialUseGaode - 初始是否使用高德
+   */
+  _initMapTileToggle(map, initialUseGaode) {
+    const btn = document.getElementById('map-tile-toggle-btn');
+    if (!btn || !window.L) return;
+
+    let currentIsGaode = initialUseGaode;
+
+    const updateBtn = (isGaode) => {
+      btn.textContent = isGaode ? '🗺️ 高德' : '🌍 OSM';
+      btn.classList.toggle('active-gaode', isGaode);
+      btn.classList.toggle('active-osm', !isGaode);
+      btn.title = isGaode ? '当前：高德地图，点击切换为 OSM' : '当前：OSM，点击切换为高德';
+    };
+
+    const setTileLayer = (isGaode) => {
+      // 移除旧底图
+      if (this._chinaSpotsActiveTileLayer) {
+        map.removeLayer(this._chinaSpotsActiveTileLayer);
+      }
+      // 添加新底图
+      if (isGaode) {
+        this._chinaSpotsActiveTileLayer = window.L.tileLayer('/api/tiles/gaode/{z}/{x}/{y}', {
+          maxZoom: 10,
+          attribution: '© 高德地图'
+        }).addTo(map);
+      } else {
+        this._chinaSpotsActiveTileLayer = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 10,
+          subdomains: 'abc',
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+      }
+      // 保证热力层在底图上层
+      map.eachLayer((layer) => {
+        if (layer !== this._chinaSpotsActiveTileLayer && typeof layer.bringToFront === 'function') {
+          layer.bringToFront();
+        }
+      });
+    };
+
+    updateBtn(currentIsGaode);
+
+    btn.addEventListener('click', () => {
+      currentIsGaode = !currentIsGaode;
+      localStorage.setItem('map_tile_provider', currentIsGaode ? 'gaode' : 'osm');
+      setTileLayer(currentIsGaode);
+      updateBtn(currentIsGaode);
+    });
+  }
+
   _isInChina(lat, lon) {
     return isInMainlandChina(lat, lon);
   }
@@ -1937,12 +1991,12 @@ class WeatherController {
 
       if (useGaode) {
         // 高德瓦片走后端代理，避免浏览器直连受限
-        window.L.tileLayer('/api/tiles/gaode/{z}/{x}/{y}', {
+        this._chinaSpotsActiveTileLayer = window.L.tileLayer('/api/tiles/gaode/{z}/{x}/{y}', {
           maxZoom: 10,
           attribution: '© 高德地图'
         }).addTo(map);
       } else {
-        window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        this._chinaSpotsActiveTileLayer = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 10,
           subdomains: 'abc',
           attribution: '© OpenStreetMap contributors'
@@ -1950,6 +2004,9 @@ class WeatherController {
       }
 
       this._chinaSpotsMapInstance = map;
+
+      // 底图切换按钮逻辑
+      this._initMapTileToggle(map, useGaode);
 
       // 使用管理器初始化叠加层
       this.chinaSpotsOverlayManager.init(map, tabsContainer);

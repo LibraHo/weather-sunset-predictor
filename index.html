@@ -358,7 +358,10 @@
       <section id="tab-panel-map" class="card map-panel hidden" role="tabpanel" aria-label="map-panel" tabindex="0" hidden>
         <div class="map-panel-header">
           <h2 data-i18n="home.tabs.map">🗺️ 火烧云地图</h2>
-          <span id="china-spots-timestamp" style="font-size:11px; color:var(--color-text-light);"></span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span id="china-spots-timestamp" style="font-size:11px; color:var(--color-text-light);"></span>
+            <button id="map-tile-toggle-btn" class="map-tile-toggle" title="切换底图" aria-label="切换底图"></button>
+          </div>
         </div>
         <!-- 时段切换 tabs -->
         <div id="china-spots-tabs-container"></div>
