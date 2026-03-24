@@ -138,6 +138,15 @@ async function initializeApp() {
   try {
     console.log('Initializing application...');
     initializeHomeTabs(document, () => onMapPanelVisible());
+
+    // 分享地图全屏按钮
+    const galleryFullscreenBtn = document.getElementById('gallery-fullscreen-btn');
+    if (galleryFullscreenBtn) {
+      galleryFullscreenBtn.addEventListener('click', () => {
+        window.open('/gallery', '_blank');
+      });
+    }
+
     await appController.initialize();
     console.log('Application initialized successfully');
   } catch (error) {

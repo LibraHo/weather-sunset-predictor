@@ -37,6 +37,7 @@ export function initializeHomeTabs(documentRef = document, onMapVisible = null) 
   }
 
   const mapPanel = documentRef.getElementById('tab-panel-map');
+  const galleryPanel = documentRef.getElementById('tab-panel-gallery');
 
   const tabForecast = documentRef.getElementById('tab-forecast');
   const tabMethodology = documentRef.getElementById('tab-methodology');
@@ -48,6 +49,7 @@ export function initializeHomeTabs(documentRef = document, onMapVisible = null) 
     { id: 'forecast', el: forecastPanel },
     { id: 'methodology', el: methodologyPanel },
     ...(mapPanel ? [{ id: 'map', el: mapPanel }] : []),
+    ...(galleryPanel ? [{ id: 'gallery', el: galleryPanel }] : []),
   ];
 
   const setActiveView = (view) => {
