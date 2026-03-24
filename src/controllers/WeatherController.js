@@ -1729,24 +1729,19 @@ class WeatherController {
    * @param {boolean} initialUseGaode - 初始是否使用高德
    */
   _initMapTileToggle(map, initialUseGaode) {
-    const btn = document.getElementById('map-tile-toggle-btn');
-    if (!btn || !window.L) return;
+    const btnGaode = document.getElementById('map-tile-btn-gaode');
+    const btnOsm = document.getElementById('map-tile-btn-osm');
+    if (!btnGaode || !btnOsm || !window.L) return;
 
-    let currentIsGaode = initialUseGaode;
-
-    const updateBtn = (isGaode) => {
-      btn.textContent = isGaode ? '🗺️ 高德' : '🌍 OSM';
-      btn.classList.toggle('active-gaode', isGaode);
-      btn.classList.toggle('active-osm', !isGaode);
-      btn.title = isGaode ? '当前：高德地图，点击切换为 OSM' : '当前：OSM，点击切换为高德';
+    const updateBtns = (isGaode) => {
+      btnGaode.classList.toggle('active', isGaode);
+      btnOsm.classList.toggle('active', !isGaode);
     };
 
     const setTileLayer = (isGaode) => {
-      // 移除旧底图
       if (this._chinaSpotsActiveTileLayer) {
         map.removeLayer(this._chinaSpotsActiveTileLayer);
       }
-      // 添加新底图
       if (isGaode) {
         this._chinaSpotsActiveTileLayer = window.L.tileLayer('/api/tiles/gaode/{z}/{x}/{y}', {
           maxZoom: 10,
@@ -1759,7 +1754,6 @@ class WeatherController {
           attribution: '© OpenStreetMap contributors'
         }).addTo(map);
       }
-      // 保证热力层在底图上层
       map.eachLayer((layer) => {
         if (layer !== this._chinaSpotsActiveTileLayer && typeof layer.bringToFront === 'function') {
           layer.bringToFront();
@@ -1767,13 +1761,18 @@ class WeatherController {
       });
     };
 
-    updateBtn(currentIsGaode);
+    updateBtns(initialUseGaode);
 
-    btn.addEventListener('click', () => {
-      currentIsGaode = !currentIsGaode;
-      localStorage.setItem('map_tile_provider', currentIsGaode ? 'gaode' : 'osm');
-      setTileLayer(currentIsGaode);
-      updateBtn(currentIsGaode);
+    btnGaode.addEventListener('click', () => {
+      localStorage.setItem('map_tile_provider', 'gaode');
+      setTileLayer(true);
+      updateBtns(true);
+    });
+
+    btnOsm.addEventListener('click', () => {
+      localStorage.setItem('map_tile_provider', 'osm');
+      setTileLayer(false);
+      updateBtns(false);
     });
   }
 
