@@ -22,6 +22,7 @@ import ChartRenderController from './ChartRenderController.js';
 import ChinaSpotsOverlay from '../services/ChinaSpotsOverlay.js';
 import ChinaSpotsOverlayManager from '../services/ChinaSpotsOverlayManager.js';
 import ChinaRasterOverlayManager from '../services/ChinaRasterOverlayManager.js';
+import ChinaMapCanvas from '../components/ChinaMapCanvas.js';
 
 /**
  * 任务 64.13：渲染模式 feature flag
@@ -1724,18 +1725,19 @@ class WeatherController {
    * @returns {boolean}
    */
   /**
-   * 初始化地图底图切换按钮（高德 ↔ OSM）
+   * 初始化地图底图切换按钮（高德 ↔ 原生）
    * @param {L.Map} map - Leaflet 地图实例
    * @param {boolean} initialUseGaode - 初始是否使用高德
+   * @param {boolean} initialUseNative - 初始是否使用原生地图
    */
-  _initMapTileToggle(map, initialUseGaode) {
+  _initMapTileToggle(map, initialUseGaode, initialUseNative) {
     const btnGaode = document.getElementById('map-tile-btn-gaode');
-    const btnOsm = document.getElementById('map-tile-btn-osm');
-    if (!btnGaode || !btnOsm || !window.L) return;
+    const btnNative = document.getElementById('map-tile-btn-native');
+    if (!btnGaode || !btnNative || !window.L) return;
 
     const updateBtns = (isGaode) => {
       btnGaode.classList.toggle('active', isGaode);
-      btnOsm.classList.toggle('active', !isGaode);
+      btnNative.classList.toggle('active', !isGaode);
     };
 
     const setTileLayer = (isGaode) => {
@@ -1748,11 +1750,30 @@ class WeatherController {
           attribution: '© 高德地图'
         }).addTo(map);
       } else {
-        this._chinaSpotsActiveTileLayer = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 10,
-          subdomains: 'abc',
-          attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+        // 原生模式：使用 ChinaMapCanvas
+        const isDark = document.body.classList.contains('theme-dark');
+        this._chinaSpotsMapCanvas = new ChinaMapCanvas({
+          style: isDark ? 'dark' : 'light',
+          defaultCenter: [35, 105],
+          defaultZoom: 4
+        });
+
+        // 获取容器并清空
+        const mapEl = document.getElementById('china-spots-map');
+        mapEl.innerHTML = '';
+
+        this._chinaSpotsMapCanvas.init(mapEl);
+        const chinaMap = this._chinaSpotsMapCanvas.getMap();
+
+        // 适配中国范围
+        const mainlandBounds = this._getChinaMainlandMapBounds();
+        if (mainlandBounds && typeof chinaMap.fitBounds === 'function') {
+          chinaMap.fitBounds(mainlandBounds, { animate: false, padding: [8, 8] });
+        }
+
+        // 更新地图引用
+        this._chinaSpotsMapInstance = chinaMap;
+        this._chinaSpotsActiveTileLayer = null;
       }
       map.eachLayer((layer) => {
         if (layer !== this._chinaSpotsActiveTileLayer && typeof layer.bringToFront === 'function') {
@@ -1765,14 +1786,12 @@ class WeatherController {
 
     btnGaode.addEventListener('click', () => {
       localStorage.setItem('map_tile_provider', 'gaode');
-      setTileLayer(true);
-      updateBtns(true);
+      location.reload();
     });
 
-    btnOsm.addEventListener('click', () => {
-      localStorage.setItem('map_tile_provider', 'osm');
-      setTileLayer(false);
-      updateBtns(false);
+    btnNative.addEventListener('click', () => {
+      localStorage.setItem('map_tile_provider', 'native');
+      location.reload();
     });
   }
 
@@ -1970,42 +1989,64 @@ class WeatherController {
         return;
       }
 
-      // 初始化 Leaflet 地图（独立地图页，可拖拽/缩放）
-      const mapOptions = this._getChinaSpotsMapOptions();
-      const map = window.L.map(mapEl, mapOptions);
-
-      // 初始视野适配中国范围，但不锁定边界（用户可自由拖动）
-      const mainlandBounds = this._getChinaMainlandMapBounds();
-      if (mainlandBounds && typeof map.fitBounds === 'function') {
-        map.fitBounds(mainlandBounds, { animate: false, padding: [8, 8] });
-      }
-
-      // 地图底图：根据设置选择（auto/gaode/osm）
+      // 地图底图：根据设置选择（auto/gaode/native）
       const mapTileSetting = localStorage.getItem('map_tile_provider') || 'auto';
       const isChina = this._isInChina(
         this.currentLocation?.lat ?? 35,
         this.currentLocation?.lon ?? 105
       );
       const useGaode = mapTileSetting === 'gaode' || (mapTileSetting === 'auto' && isChina);
+      const useNative = mapTileSetting === 'native';
 
-      if (useGaode) {
-        // 高德瓦片走后端代理，避免浏览器直连受限
-        this._chinaSpotsActiveTileLayer = window.L.tileLayer('/api/tiles/gaode/{z}/{x}/{y}', {
-          maxZoom: 10,
-          attribution: '© 高德地图'
-        }).addTo(map);
+      let map;
+      if (useNative) {
+        // 原生模式：使用 ChinaMapCanvas 渲染省界，无瓦片
+        console.log('[WeatherController] 使用原生地图（ChinaMapCanvas）');
+        const isDark = document.body.classList.contains('theme-dark');
+        this._chinaSpotsMapCanvas = new ChinaMapCanvas({
+          style: isDark ? 'dark' : 'light',
+          defaultCenter: [35, 105],
+          defaultZoom: 4
+        });
+        this._chinaSpotsMapCanvas.init(mapEl);
+        map = this._chinaSpotsMapCanvas.getMap();
+        this._chinaSpotsActiveTileLayer = null;
+
+        // 适配中国范围
+        const mainlandBounds = this._getChinaMainlandMapBounds();
+        if (mainlandBounds && typeof map.fitBounds === 'function') {
+          map.fitBounds(mainlandBounds, { animate: false, padding: [8, 8] });
+        }
       } else {
-        this._chinaSpotsActiveTileLayer = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 10,
-          subdomains: 'abc',
-          attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+        // 瓦片模式：使用 Leaflet 地图 + 高德/OSM 瓦片
+        const mapOptions = this._getChinaSpotsMapOptions();
+        map = window.L.map(mapEl, mapOptions);
+
+        // 初始视野适配中国范围，但不锁定边界（用户可自由拖动）
+        const mainlandBounds = this._getChinaMainlandMapBounds();
+        if (mainlandBounds && typeof map.fitBounds === 'function') {
+          map.fitBounds(mainlandBounds, { animate: false, padding: [8, 8] });
+        }
+
+        if (useGaode) {
+          // 高德瓦片走后端代理，避免浏览器直连受限
+          this._chinaSpotsActiveTileLayer = window.L.tileLayer('/api/tiles/gaode/{z}/{x}/{y}', {
+            maxZoom: 10,
+            attribution: '© 高德地图'
+          }).addTo(map);
+        } else {
+          this._chinaSpotsActiveTileLayer = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 10,
+            subdomains: 'abc',
+            attribution: '© OpenStreetMap contributors'
+          }).addTo(map);
+        }
       }
 
       this._chinaSpotsMapInstance = map;
 
       // 底图切换按钮逻辑
-      this._initMapTileToggle(map, useGaode);
+      this._initMapTileToggle(map, useGaode, useNative);
 
       // 使用管理器初始化叠加层
       this.chinaSpotsOverlayManager.init(map, tabsContainer);
