@@ -4162,3 +4162,75 @@ body.theme-dark {
   border: none;
   display: block;
 }
+
+/* ===== 地图底图切换按钮 ===== */
+.map-tile-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--color-border, rgba(255,255,255,0.15));
+  background: var(--color-surface-2, rgba(255,255,255,0.06));
+  color: var(--color-text-secondary, #9ca3af);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.map-tile-toggle:hover {
+  background: var(--color-surface-3, rgba(255,255,255,0.12));
+  color: var(--color-text, #f3f4f6);
+  border-color: var(--color-primary-muted, rgba(251,146,60,0.4));
+}
+
+.map-tile-toggle.active-gaode {
+  color: #fb923c;
+  border-color: rgba(251,146,60,0.5);
+  background: rgba(251,146,60,0.08);
+}
+
+.map-tile-toggle.active-osm {
+  color: #60a5fa;
+  border-color: rgba(96,165,250,0.5);
+  background: rgba(96,165,250,0.08);
+}
+
+/* ===== 地图底图分段切换器 ===== */
+.map-tile-switcher {
+  display: inline-flex;
+  border-radius: 20px;
+  border: 1px solid var(--color-border, rgba(255,255,255,0.15));
+  overflow: hidden;
+  background: var(--color-surface-2, rgba(255,255,255,0.06));
+}
+
+.map-tile-seg {
+  padding: 3px 12px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary, #9ca3af);
+  transition: background 0.15s, color 0.15s;
+  line-height: 1.5;
+}
+
+.map-tile-seg:first-child {
+  border-right: 1px solid var(--color-border, rgba(255,255,255,0.15));
+}
+
+.map-tile-seg:hover {
+  color: var(--color-text, #f3f4f6);
+  background: rgba(255,255,255,0.08);
+}
+
+.map-tile-seg.active {
+  background: rgba(251,146,60,0.15);
+  color: #fb923c;
+  font-weight: 600;
+}

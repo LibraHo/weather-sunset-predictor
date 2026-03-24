@@ -1723,6 +1723,59 @@ class WeatherController {
    * @param {number} lon - 经度
    * @returns {boolean}
    */
+  /**
+   * 初始化地图底图切换按钮（高德 ↔ OSM）
+   * @param {L.Map} map - Leaflet 地图实例
+   * @param {boolean} initialUseGaode - 初始是否使用高德
+   */
+  _initMapTileToggle(map, initialUseGaode) {
+    const btnGaode = document.getElementById('map-tile-btn-gaode');
+    const btnOsm = document.getElementById('map-tile-btn-osm');
+    if (!btnGaode || !btnOsm || !window.L) return;
+
+    const updateBtns = (isGaode) => {
+      btnGaode.classList.toggle('active', isGaode);
+      btnOsm.classList.toggle('active', !isGaode);
+    };
+
+    const setTileLayer = (isGaode) => {
+      if (this._chinaSpotsActiveTileLayer) {
+        map.removeLayer(this._chinaSpotsActiveTileLayer);
+      }
+      if (isGaode) {
+        this._chinaSpotsActiveTileLayer = window.L.tileLayer('/api/tiles/gaode/{z}/{x}/{y}', {
+          maxZoom: 10,
+          attribution: '© 高德地图'
+        }).addTo(map);
+      } else {
+        this._chinaSpotsActiveTileLayer = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 10,
+          subdomains: 'abc',
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+      }
+      map.eachLayer((layer) => {
+        if (layer !== this._chinaSpotsActiveTileLayer && typeof layer.bringToFront === 'function') {
+          layer.bringToFront();
+        }
+      });
+    };
+
+    updateBtns(initialUseGaode);
+
+    btnGaode.addEventListener('click', () => {
+      localStorage.setItem('map_tile_provider', 'gaode');
+      setTileLayer(true);
+      updateBtns(true);
+    });
+
+    btnOsm.addEventListener('click', () => {
+      localStorage.setItem('map_tile_provider', 'osm');
+      setTileLayer(false);
+      updateBtns(false);
+    });
+  }
+
   _isInChina(lat, lon) {
     return isInMainlandChina(lat, lon);
   }
@@ -1937,12 +1990,12 @@ class WeatherController {
 
       if (useGaode) {
         // 高德瓦片走后端代理，避免浏览器直连受限
-        window.L.tileLayer('/api/tiles/gaode/{z}/{x}/{y}', {
+        this._chinaSpotsActiveTileLayer = window.L.tileLayer('/api/tiles/gaode/{z}/{x}/{y}', {
           maxZoom: 10,
           attribution: '© 高德地图'
         }).addTo(map);
       } else {
-        window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        this._chinaSpotsActiveTileLayer = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 10,
           subdomains: 'abc',
           attribution: '© OpenStreetMap contributors'
@@ -1950,6 +2003,9 @@ class WeatherController {
       }
 
       this._chinaSpotsMapInstance = map;
+
+      // 底图切换按钮逻辑
+      this._initMapTileToggle(map, useGaode);
 
       // 使用管理器初始化叠加层
       this.chinaSpotsOverlayManager.init(map, tabsContainer);
