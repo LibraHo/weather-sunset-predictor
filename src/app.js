@@ -216,7 +216,7 @@ window.ErrorHandler = ErrorHandler;
  * 地图 panel 激活回调：触发 Leaflet invalidateSize 修复 hidden 切换后的尺寸问题
  */
 function onMapPanelVisible() {
-  const map = weatherController?._chinaSpotsMapInstance;
+  const map = window.weatherController ? window.weatherController._chinaSpotsMapInstance : null;
   if (map && typeof map.invalidateSize === 'function') {
     setTimeout(() => map.invalidateSize(), 100);
   }
