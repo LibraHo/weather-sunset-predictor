@@ -250,16 +250,16 @@
       const marker = L.marker([photo.lat, photo.lon], { icon });
 
       // 创建弹窗内容
-      const popupContent = \`
+      const popupContent = `
         <img src="${photo.thumbUrl}" class="popup-photo" alt="${photo.filename}">
-        ${photo.desc ? \`<p class="popup-desc">\${escapeHtml(photo.desc)}</p>\` : ''}
+        ${photo.desc ? `<p class="popup-desc">${escapeHtml(photo.desc)}</p>` : ''}
         <div class="popup-location">
           <svg viewBox="0 0 24 24">
             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
           </svg>
           <span>${photo.lat.toFixed(4)}, ${photo.lon.toFixed(4)}</span>
         </div>
-      \`;
+      `;
 
       marker.bindPopup(popupContent, {
         maxWidth: 320,
