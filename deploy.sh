@@ -57,6 +57,7 @@ scp -i "$SSH_KEY" "$LOCAL/src/components/"*.js $REMOTE:~/weather-sunset-predicto
 scp -i "$SSH_KEY" "$LOCAL/src/utils/"*.js $REMOTE:~/weather-sunset-predictor/src/utils/
 scp -i "$SSH_KEY" "$LOCAL/src/models/"*.js $REMOTE:~/weather-sunset-predictor/src/models/
 scp -i "$SSH_KEY" "$LOCAL/src/locales/"*.js $REMOTE:~/weather-sunset-predictor/src/locales/
+scp -i "$SSH_KEY" "$LOCAL/src/data/"*.js $REMOTE:~/weather-sunset-predictor/src/data/
 scp -i "$SSH_KEY" "$LOCAL/styles/"*.css $REMOTE:~/weather-sunset-predictor/styles/ 2>/dev/null || true
 
 echo "🔄 重启后端..."
