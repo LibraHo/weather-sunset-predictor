@@ -292,7 +292,7 @@ main > section {
 
 .methodology-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
   gap: 12px;
   margin: 14px 0;
 }
@@ -4233,4 +4233,29 @@ body.theme-dark {
   background: rgba(251,146,60,0.15);
   color: #fb923c;
   font-weight: 600;
+}
+
+/* ===== 规则卡片横排滚动 ===== */
+.horizontal-scroll {
+  display: flex !important;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 16px;
+  padding-bottom: 12px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.horizontal-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+.horizontal-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 107, 53, 0.5);
+  border-radius: 3px;
+}
+.horizontal-scroll .methodology-item {
+  flex: 0 0 320px;
+  scroll-snap-align: start;
+  height: auto;
+  display: flex;
+  flex-direction: column;
 }

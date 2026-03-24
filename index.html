@@ -242,116 +242,111 @@
         <h2 data-i18n="home.methodology.title">火烧云计算方法</h2>
         <p data-i18n="home.methodology.intro">火烧云指数综合评估天空条件与光学传播路径，判断当日形成火烧云的概率与强度。以下为基于气象数据的完整计算原理。</p>
 
-        <div class="methodology-grid">
+                <div class="methodology-grid horizontal-scroll">
           <!-- 第一部分：云种判别与画布评分 -->
           <article class="methodology-item">
-            <h3 data-i18n="home.methodology.factors.highMidCloudTitle">1. 云种判别与画布评分</h3>
-            <p><strong>画布评分权重：</strong> 中高云 70%，中云 45%，低云 10%</p>
-            <p><strong>云种识别规则：</strong></p>
+            <h3>1. 云种判别与画布评分 <small style="font-weight: 300; font-size: 0.85em; color: var(--color-text-light); display: block; margin-top: 4px;">Cloud ID & Canvas Score</small></h3>
+            <p><strong>画布评分权重 Weights:</strong> 中高云 70%，中云 45%，低云 10% <br><small>(Mid/High Cloud 70%, Mid Cloud 45%, Low Cloud 10%)</small></p>
+            <p><strong>云种识别规则 Cloud Rules:</strong></p>
             <ul class="methodology-detail-list">
-              <li><strong>层云型</strong>：低云 >70% → 画布乘数 0.4，低云遮挡明显</li>
-              <li><strong>层积云型</strong>：40% ≤ 低云 ≤70% → 画布乘数 0.6，部分遮挡</li>
-              <li><strong>晴空型</strong>：总云量 <30% → 画布乘数 0.85，光线通透</li>
-              <li><strong>积云型</strong>：中云为主或云底 <500m → 画布乘数 0.5，中性效果</li>
+              <li><strong>层云型 Stratus:</strong> 低云 &gt;70% → 画布乘数 0.4 <br><small>(Low Cloud &gt;70% → Canvas Multiplier 0.4)</small></li>
+              <li><strong>层积云型 Stratocumulus:</strong> 40% ≤ 低云 ≤70% → 乘数 0.6 <br><small>(40% ≤ Low Cloud ≤70% → Multiplier 0.6)</small></li>
+              <li><strong>晴空型 Clear Sky:</strong> 总云量 &lt;30% → 乘数 0.85 <br><small>(Total Cloud &lt;30% → Multiplier 0.85)</small></li>
+              <li><strong>积云型 Cumulus:</strong> 中云为主/云底&lt;500m → 乘数 0.5 <br><small>(Mid Cloud Dominant/Base&lt;500m → Multiplier 0.5)</small></li>
             </ul>
-            <p class="methodology-formula">画布评分 = (云量评分 × 云种乘数)</p>
+            <p class="methodology-formula">画布评分 = 云量评分 × 云种乘数 <br><small>(Canvas Score = Cover Score × Species Multiplier)</small></p>
           </article>
 
           <!-- 第二部分：光路几何模型 -->
           <article class="methodology-item">
-            <h3>2. 光路几何模型</h3>
-            <p>评估光线路径上空域的云况，计算光线透过概率。</p>
-            <p><strong>双点采样法：</strong></p>
+            <h3>2. 光路几何模型 <small style="font-weight: 300; font-size: 0.85em; color: var(--color-text-light); display: block; margin-top: 4px;">Optical Path Geometric Model</small></h3>
+            <p>评估光线路径上空域的云况。<br><small>Evaluates cloud conditions along the light path.</small></p>
+            <p><strong>双点采样法 Two-point Sampling:</strong></p>
             <ul class="methodology-detail-list">
-              <li><strong>近点（Near）</strong>：距观测点 150km，权重 40%</li>
-              <li><strong>远点（Far）</strong>：距观测点 300km，权重 60%</li>
+              <li><strong>近点 Near Point:</strong> 距观测点 150km, 权重 40% <br><small>(Distance 150km, Weight 40%)</small></li>
+              <li><strong>远点 Far Point:</strong> 距观测点 300km, 权重 60% <br><small>(Distance 300km, Weight 60%)</small></li>
             </ul>
-            <p><strong>光路评分规则：</strong></p>
+            <p><strong>评分规则 Scoring Rules:</strong></p>
             <ul class="methodology-detail-list">
-              <li>近点或远点云量 <20% → 光路评分 100 分</li>
-              <li>近点云量 20-40% 且远点 <20% → 80 分</li>
-              <li>远点云量 20-40% → 60 分</li>
-              <li>任一点云量 >40% → 40 分以下</li>
+              <li>近/远点云量 &lt;20% → 100 分 <small>(Near/Far &lt;20% → 100)</small></li>
+              <li>近点 20-40% 且远点 &lt;20% → 80 分 <small>(Near 20-40%, Far &lt;20% → 80)</small></li>
+              <li>远点云量 20-40% → 60 分 <small>(Far 20-40% → 60)</small></li>
+              <li>任一点云量 &gt;40% → 40分以下 <small>(Any &gt;40% → &lt;40)</small></li>
             </ul>
-            <p class="methodology-formula">光路评分 = 近点×40% + 远点×60%</p>
+            <p class="methodology-formula">光路评分 = 近点×40% + 远点×60% <br><small>(Path Score = Near×40% + Far×60%)</small></p>
           </article>
 
           <!-- 第三部分：AOD 气溶胶修正 -->
           <article class="methodology-item">
-            <h3>3. 气溶胶光学厚度（AOD）修正</h3>
-            <p>AOD 衡量大气气溶胶浓度，高值会显著降低光线透过率。</p>
-            <p><strong>AOD 阈值分级：</strong></p>
+            <h3>3. 气溶胶(AOD)修正 <small style="font-weight: 300; font-size: 0.85em; color: var(--color-text-light); display: block; margin-top: 4px;">Aerosol Optical Depth Correction</small></h3>
+            <p>AOD 衡量大气气溶胶浓度，高值降低透光率。<br><small>High AOD reduces light transmission.</small></p>
+            <p><strong>AOD 阈值 AOD Thresholds:</strong></p>
             <ul class="methodology-detail-list">
-              <li>AOD < 0.3 → 修正系数 1.0（空气质量优良）</li>
-              <li>0.3 ≤ AOD < 0.5 → 修正系数 0.85</li>
-              <li>0.5 ≤ AOD < 0.7 → 修正系数 0.7</li>
-              <li>AOD ≥ 0.7 → 修正系数 0.5（雾霾严重）</li>
+              <li>AOD &lt; 0.3 → 系数 1.0 (空气优 Air Quality Excellent)</li>
+              <li>0.3 ≤ AOD &lt; 0.5 → 系数 0.85 (Good)</li>
+              <li>0.5 ≤ AOD &lt; 0.7 → 系数 0.7 (Fair)</li>
+              <li>AOD ≥ 0.7 → 系数 0.5 (雾霾严重 Heavy Haze)</li>
             </ul>
-            <p class="methodology-formula">AOD修正系数直接降低最终评分</p>
+            <p class="methodology-formula">最终评分 = 基础分 × AOD系数 <br><small>(Final Score = Base Score × AOD Coefficient)</small></p>
           </article>
 
           <!-- 第四部分：渲染系数 -->
           <article class="methodology-item">
-            <h3>4. 渲染系数</h3>
-            <p>综合大气透明度、湿度与降水状况，修正视觉效果。</p>
-            <p><strong>能见度修正：</strong></p>
+            <h3>4. 渲染系数 <small style="font-weight: 300; font-size: 0.85em; color: var(--color-text-light); display: block; margin-top: 4px;">Rendering Coefficient</small></h3>
+            <p>综合大气透明度、湿度与降水。<br><small>Corrects based on transparency, humidity, and precip.</small></p>
+            <p><strong>能见度 Visibility:</strong></p>
             <ul class="methodology-detail-list">
-              <li>能见度 ≥ 30km → 修正系数 1.0</li>
-              <li>20 ≤ 能见度 <30km → 修正系数 0.95</li>
-              <li>10 ≤ 能见度 <20km → 修正系数 0.85</li>
-              <li>能见度 <10km → 修正系数 0.7</li>
+              <li>≥30km → 1.0 | 20-30km → 0.95 | 10-20km → 0.85 | &lt;10km → 0.7</li>
             </ul>
-            <p><strong>湿度修正：</strong></p>
+            <p><strong>湿度 Humidity:</strong></p>
             <ul class="methodology-detail-list">
-              <li>40% ≤ 湿度 ≤ 70% → 修正系数 1.0（最佳渲染）</li>
-              <li>湿度 <40% 或 >80% → 修正系数 0.85</li>
+              <li>40% - 70% → 1.0 (最佳 Best) | &lt;40% 或 &gt;80% → 0.85</li>
             </ul>
-            <p><strong>降水修正：</strong></p>
+            <p><strong>降水 Precipitation:</strong></p>
             <ul class="methodology-detail-list">
-              <li>无降水或微量降水（<1mm/h）→ 修正系数 1.0</li>
-              <li>1 ≤ 降水 <5mm/h → 修正系数 0.7</li>
-              <li>降水 ≥5mm/h → 修正系数 0.4（雨中不宜）</li>
+              <li>&lt;1mm/h → 1.0 | 1-5mm/h → 0.7 | ≥5mm/h → 0.4 (雨中不宜 Rain)</li>
             </ul>
-            <p class="methodology-formula">渲染系数 = 能见度修正 × 湿度修正 × 降水修正</p>
+            <p class="methodology-formula">系数 = 能见度 × 湿度 × 降水 <br><small>(Coef = Vis × Hum × Precip)</small></p>
           </article>
 
           <!-- 第五部分：置信度评级 -->
           <article class="methodology-item">
-            <h3>5. 置信度评级规则</h3>
-            <p>综合评估预测可靠性的多维度判别规则：</p>
+            <h3>5. 置信度评级规则 <small style="font-weight: 300; font-size: 0.85em; color: var(--color-text-light); display: block; margin-top: 4px;">Confidence Level Rules</small></h3>
+            <p>多维度判别预测可靠性。<br><small>Criteria for evaluating prediction reliability.</small></p>
             <ul class="methodology-detail-list">
-              <li><strong>云量边界梯度</strong>：水平方向云量差异大 → 边界清晰度高</li>
-              <li><strong>风速风向一致性</strong>：风速 >15m/s 且风向不一致 → 降低置信度</li>
-              <li><strong>太阳高度角窗口</strong>：太阳在地平线以下 >6° 或以上 >5° 外 → 降低置信度</li>
+              <li><strong>云量边界 Cloud Edge:</strong> 梯度大 → 边界清晰<br><small>(Large gradient → High clarity)</small></li>
+              <li><strong>风速风向 Wind Consistency:</strong> 风速 &gt;15m/s 且风向不一致 → 降低置信度<br><small>(Wind &gt;15m/s &amp; inconsistent → Lower confidence)</small></li>
+              <li><strong>太阳高度角 Solar Altitude:</strong> 在地平线以下 &gt;6° 或以上 &gt;5° 外 → 降低置信度<br><small>(Sun &gt;6° below or &gt;5° above horiz. → Lower confidence)</small></li>
             </ul>
           </article>
         </div>
 
         <div class="methodology-score-guide">
-          <h3 data-i18n="home.methodology.scoreGuideTitle">评分解读</h3>
+          <h3 data-i18n="home.methodology.scoreGuideTitle">评分解读 Score Guide</h3>
           <div class="score-table">
             <div class="score-row score-excellent">
-              <span class="score-range">优秀</span>
-              <span class="score-detail">>70 分</span>
-              <span class="score-desc">强烈推荐出门，火烧云概率极高</span>
+              <span class="score-range">优秀 Excellent</span>
+              <span class="score-detail">&gt;70 分 (&gt;70)</span>
+              <span class="score-desc">强烈推荐出门 Highly Recommended</span>
             </div>
             <div class="score-row score-good">
-              <span class="score-range">良好</span>
-              <span class="score-detail">40-70 分</span>
-              <span class="score-desc">可观赏，条件较好</span>
+              <span class="score-range">良好 Good</span>
+              <span class="score-detail">40-70 分 (40-70)</span>
+              <span class="score-desc">可观赏，条件较好 Viewable, Good Conditions</span>
             </div>
             <div class="score-row score-fair">
-              <span class="score-range">一般</span>
-              <span class="score-detail">20-40 分</span>
-              <span class="score-desc">谨慎期待，可能形成但概率不高</span>
+              <span class="score-range">一般 Fair</span>
+              <span class="score-detail">20-40 分 (20-40)</span>
+              <span class="score-desc">谨慎期待 Cautious, Low Probability</span>
             </div>
             <div class="score-row score-poor">
-              <span class="score-range">不佳</span>
-              <span class="score-detail"><20 分</span>
-              <span class="score-desc">不建议，条件欠佳</span>
+              <span class="score-range">不佳 Poor</span>
+              <span class="score-detail">&lt;20 分 (&lt;20)</span>
+              <span class="score-desc">不建议 Not Recommended</span>
             </div>
           </div>
         </div>
+      </section>
       </section>
 
       <!-- 火烧云地图页面 -->
