@@ -1,71 +1,89 @@
 #!/bin/bash
-# 霞客部署脚本
-# 流程：本地 git pull → scp 推文件到腾讯云 → 重启服务
+# 霞客部署脚本 v2
+# 流程：本地 git pull → 打 ZIP → scp 推到服务器 → 服务器解压 → 重启
 
 set -e
 
 REMOTE="ubuntu@43.143.237.15"
 SSH_KEY="$HOME/.ssh/id_ed25519"
 LOCAL="$(cd "$(dirname "$0")" && pwd)"
+ZIP_TMP="/tmp/weather-sunset-deploy.zip"
+# 确保服务器有 unzip
+
 
 echo "📦 拉取最新代码..."
 git -C "$LOCAL" pull origin main
 
-echo "🔍 检查服务器 .env 配置..."
-MISSING_KEYS=""
-ssh -i "$SSH_KEY" $REMOTE "grep -q 'GAODE_API_KEY=' ~/weather-sunset-predictor/server/.env && grep 'GAODE_API_KEY=' ~/weather-sunset-predictor/server/.env | grep -qv 'your_gaode'" || MISSING_KEYS="GAODE_API_KEY"
+echo "🗜️  打包代码..."
+cd "$LOCAL"
+python3 - <<'PYEOF'
+import zipfile, os, sys
 
-if [ -n "$MISSING_KEYS" ]; then
-  echo "⚠️  警告：服务器 .env 缺少以下 key：$MISSING_KEYS"
-  echo "    地理搜索将无法正常工作，请部署后手动补充："
-  echo "    ssh -i $SSH_KEY $REMOTE 'echo GAODE_API_KEY=<your_key> >> ~/weather-sunset-predictor/server/.env'"
-  echo ""
-fi
+ROOT = os.getcwd()
+OUTPUT = "/tmp/weather-sunset-deploy.zip"
+INCLUDE_DIRS = ["src", "server", "styles", "public"]
+INCLUDE_FILES = ["index.html", "server.py"]
+EXCLUDES = {"server/.env", "__pycache__", "node_modules", ".git"}
 
-# 补充 .env 中新增的 key（不覆盖已有值）
-echo "📝 同步 .env 新增配置项（不覆盖已有值）..."
+def should_exclude(rel_path):
+    parts = rel_path.replace("\\", "/").split("/")
+    for part in parts:
+        if part in EXCLUDES:
+            return True
+    if rel_path == "server/.env":
+        return True
+    return False
+
+with zipfile.ZipFile(OUTPUT, "w", zipfile.ZIP_DEFLATED) as zf:
+    for fname in INCLUDE_FILES:
+        fpath = os.path.join(ROOT, fname)
+        if os.path.exists(fpath):
+            zf.write(fpath, fname)
+    for d in INCLUDE_DIRS:
+        dpath = os.path.join(ROOT, d)
+        if not os.path.isdir(dpath):
+            continue
+        for dirpath, dirnames, filenames in os.walk(dpath):
+            dirnames[:] = [dn for dn in dirnames if dn not in EXCLUDES]
+            for fn in filenames:
+                full = os.path.join(dirpath, fn)
+                rel = os.path.relpath(full, ROOT)
+                if not should_exclude(rel):
+                    zf.write(full, rel)
+
+size = os.path.getsize(OUTPUT)
+print(f"  → {size//1024}K 打包完成（{OUTPUT}）")
+PYEOF
+
+echo "🚀 推送到服务器..."
+scp -i "$SSH_KEY" "$ZIP_TMP" $REMOTE:/tmp/ws-deploy.zip
+
+echo "📂 服务器解压..."
 ssh -i "$SSH_KEY" $REMOTE "
-  ENV_FILE=~/weather-sunset-predictor/server/.env
-  EXAMPLE_FILE=~/weather-sunset-predictor/server/.env.example
-  if [ -f \"\$EXAMPLE_FILE\" ]; then
-    while IFS= read -r line; do
-      # 跳过注释和空行
-      [[ \"\$line\" =~ ^# ]] && continue
-      [[ -z \"\$line\" ]] && continue
-      KEY=\$(echo \"\$line\" | cut -d= -f1)
-      # 只有 .env 里没有这个 key 时才追加
-      if ! grep -q \"^\$KEY=\" \"\$ENV_FILE\" 2>/dev/null; then
-        echo \"\$line\" >> \"\$ENV_FILE\"
-        echo \"  + 追加新 key: \$KEY\"
-      fi
-    done < \"\$EXAMPLE_FILE\"
-  fi
+  set -e
+  DEPLOY_DIR=~/weather-sunset-predictor
+  # 备份 .env（不被覆盖）
+  [ -f \"\$DEPLOY_DIR/server/.env\" ] && cp \"\$DEPLOY_DIR/server/.env\" /tmp/ws-env-backup
+
+  # 解压（覆盖现有文件）
+  unzip -o /tmp/ws-deploy.zip -d \"\$DEPLOY_DIR\" > /dev/null
+
+  # 恢复 .env
+  [ -f /tmp/ws-env-backup ] && mv /tmp/ws-env-backup \"\$DEPLOY_DIR/server/.env\"
+
+  # 清理
+  rm /tmp/ws-deploy.zip
+  echo '  → 解压完成'
 "
 
-echo "🚀 推送文件到服务器..."
-scp -i "$SSH_KEY" "$LOCAL/index.html" $REMOTE:~/weather-sunset-predictor/
-scp -i "$SSH_KEY" "$LOCAL/server/index.js" $REMOTE:~/weather-sunset-predictor/server/
-scp -i "$SSH_KEY" "$LOCAL/server/routes/"*.js $REMOTE:~/weather-sunset-predictor/server/routes/
-scp -i "$SSH_KEY" "$LOCAL/server/services/"*.js $REMOTE:~/weather-sunset-predictor/server/services/
-# ⚠️ 注意：不推送 server/.env，敏感配置只在服务器上手动维护
-scp -i "$SSH_KEY" "$LOCAL/server/.env.example" $REMOTE:~/weather-sunset-predictor/server/
-scp -i "$SSH_KEY" "$LOCAL/src/app.js" $REMOTE:~/weather-sunset-predictor/src/
-scp -i "$SSH_KEY" "$LOCAL/src/i18n.js" $REMOTE:~/weather-sunset-predictor/src/ 2>/dev/null || true
-scp -i "$SSH_KEY" "$LOCAL/src/controllers/"*.js $REMOTE:~/weather-sunset-predictor/src/controllers/
-scp -i "$SSH_KEY" "$LOCAL/src/services/"*.js $REMOTE:~/weather-sunset-predictor/src/services/
-scp -i "$SSH_KEY" "$LOCAL/src/components/"*.js $REMOTE:~/weather-sunset-predictor/src/components/
-scp -i "$SSH_KEY" "$LOCAL/src/utils/"*.js $REMOTE:~/weather-sunset-predictor/src/utils/
-scp -i "$SSH_KEY" "$LOCAL/src/models/"*.js $REMOTE:~/weather-sunset-predictor/src/models/
-scp -i "$SSH_KEY" "$LOCAL/src/locales/"*.js $REMOTE:~/weather-sunset-predictor/src/locales/
-scp -i "$SSH_KEY" "$LOCAL/styles/"*.css $REMOTE:~/weather-sunset-predictor/styles/ 2>/dev/null || true
-
 echo "🔄 重启后端..."
-# 先杀进程（忽略返回码，pkill 找不到进程时返回1）
 ssh -i "$SSH_KEY" $REMOTE "sudo pkill -f 'weather-sunset-predictor/server/index.js'" 2>/dev/null || true
 sleep 3
-# 再启动新进程
 ssh -i "$SSH_KEY" $REMOTE "sudo bash -c 'cd /home/ubuntu/weather-sunset-predictor/server && nohup /usr/local/bin/node index.js >> /tmp/ws-backend.log 2>&1 &'"
 sleep 4
 ssh -i "$SSH_KEY" $REMOTE "curl -s http://localhost:3000/health"
+
+# 清理本地临时文件
+rm -f "$ZIP_TMP"
 
 echo "✅ 部署完成"
