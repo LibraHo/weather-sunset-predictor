@@ -4125,3 +4125,35 @@ body.theme-dark {
   font-weight: 400;
   font-size: 0.75rem;
 }
+
+/* ===== 分享地图 panel ===== */
+.gallery-panel {
+  padding: 0;
+}
+
+.gallery-panel .map-panel-header {
+  padding: 14px 16px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gallery-panel .map-panel-header h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.gallery-iframe-wrap {
+  width: 100%;
+  height: min(70vh, 600px);
+  position: relative;
+  overflow: hidden;
+  border-radius: 0 0 12px 12px;
+}
+
+.gallery-iframe-wrap iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
