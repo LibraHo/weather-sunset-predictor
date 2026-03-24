@@ -6,10 +6,13 @@
  *
  * Phase 7 更新：集成 ChinaMapCanvas，优先使用原生 GeoJSON 地图
  *
+ * Phase 17 更新：集成 HeatmapLayer，支持热力云图层渲染
+ *
  * 需求：18.1, 18.4, 20.7（Phase 6 重构）
  */
 
 import ChinaMapCanvas from '../components/ChinaMapCanvas.js';
+import HeatmapLayer from './HeatmapLayer.js';
 
 class WindyMapService {
   constructor(apiKey) {
@@ -23,6 +26,7 @@ class WindyMapService {
     this.overlays = [];
     this._moveCallbacks = [];
     this._chinaMap = null; // ChinaMapCanvas 实例
+    this.heatmapLayer = null; // HeatmapLayer 实例
   }
 
   /**
@@ -97,6 +101,9 @@ class WindyMapService {
 
           console.log('[WindyMapService] 地图初始化成功 (ChinaMapCanvas)');
 
+          // 初始化 HeatmapLayer
+          this._initHeatmapLayer();
+
           // 触发地图初始化完成事件
           window.dispatchEvent(new CustomEvent('mapInitialized', {
             detail: { map: this.map, options: this.currentOptions }
@@ -147,6 +154,9 @@ class WindyMapService {
 
       console.log('[WindyMapService] 地图初始化成功 (Leaflet + OSM)');
 
+      // 初始化 HeatmapLayer
+      this._initHeatmapLayer();
+
       // 触发地图初始化完成事件
       window.dispatchEvent(new CustomEvent('mapInitialized', {
         detail: { map: this.map, options: this.currentOptions }
@@ -164,6 +174,14 @@ class WindyMapService {
    */
   getMap() {
     return this.map;
+  }
+
+  /**
+   * 获取 HeatmapLayer 实例
+   * @returns {HeatmapLayer|null} HeatmapLayer 实例
+   */
+  getHeatmapLayer() {
+    return this.heatmapLayer;
   }
 
   /**
@@ -420,6 +438,30 @@ class WindyMapService {
   }
 
   /**
+   * 初始化 HeatmapLayer（热力云图层）
+   * @private
+   */
+  _initHeatmapLayer() {
+    if (!this.map) {
+      console.warn('[WindyMapService] 地图未初始化，无法初始化 HeatmapLayer');
+      return;
+    }
+
+    try {
+      // 创建 HeatmapLayer 实例（传入 proxyURL，如果有的话）
+      const proxyURL = window.location.origin;
+      this.heatmapLayer = new HeatmapLayer(proxyURL);
+
+      // 初始化 HeatmapLayer，传入 Leaflet map 实例
+      this.heatmapLayer.init(this.map);
+
+      console.log('[WindyMapService] HeatmapLayer 初始化成功');
+    } catch (error) {
+      console.error('[WindyMapService] HeatmapLayer 初始化失败:', error);
+    }
+  }
+
+  /**
    * 添加中心位置标记
    * @param {number} lat - 纬度
    * @param {number} lon - 经度
@@ -442,6 +484,11 @@ class WindyMapService {
    * 需求：18.1
    */
   destroy() {
+    // 清理 HeatmapLayer
+    if (this.heatmapLayer) {
+      this.heatmapLayer = null;
+    }
+
     // 清理 ChinaMapCanvas 实例
     if (this._chinaMap) {
       this._chinaMap.destroy();
