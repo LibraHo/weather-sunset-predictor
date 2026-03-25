@@ -1762,7 +1762,7 @@ class WeatherController {
         const mapEl = document.getElementById('china-spots-map');
         mapEl.innerHTML = '';
 
-        this._chinaSpotsMapCanvas.init(mapEl);
+        await this._chinaSpotsMapCanvas.init(mapEl);
         const chinaMap = this._chinaSpotsMapCanvas.getMap();
 
         // 适配中国范围
@@ -2008,7 +2008,7 @@ class WeatherController {
           defaultCenter: [35, 105],
           defaultZoom: 4
         });
-        this._chinaSpotsMapCanvas.init(mapEl);
+        await this._chinaSpotsMapCanvas.init(mapEl);
         map = this._chinaSpotsMapCanvas.getMap();
         this._chinaSpotsActiveTileLayer = null;
 

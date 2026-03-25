@@ -15,8 +15,8 @@ const translations = {
       "dropdownAriaLabel": "Home view menu"
     },
     "methodology": {
-      "title": "How Fire Cloud Scoring Works",
-      "intro": "The fire-cloud score combines four key factors to estimate whether sunset watching is worthwhile.",
+      "title": "Fire Cloud Calculation Method",
+      "intro": "The Fire Cloud Index comprehensively evaluates sky conditions and optical propagation paths to determine the probability and intensity of fire cloud formation. Below is the complete calculation principle based on meteorological data.",
       "factors": {
         "highMidCloudTitle": "Mid/High Clouds (Canvas)",
         "highMidCloudDesc": "Balanced mid/high cloud cover provides better orange-red layering; too little or too much hurts the effect.",
@@ -28,9 +28,76 @@ const translations = {
         "visibilityDesc": "Higher visibility usually means cleaner sky background and clearer sunset color transitions."
       },
       "scoreGuideTitle": "Score Guide",
-      "scoreExcellent": "Excellent: >70 (recommended)",
-      "scoreGood": "Good: 40-70 (watchable)",
-      "scoreFair": "Fair: <40 (manage expectations)"
+      "scoreExcellent": "Excellent: >70 (Highly Recommended)",
+      "scoreGood": "Good: 40-70 (Viewable, Good Conditions)",
+      "scoreFair": "Fair: 20-40 (Cautious, Low Probability)",
+      "scorePoor": "Poor: <20 (Not Recommended)",
+      "scoreExcellentRange": "Excellent",
+      "scoreExcellentDesc": "Highly Recommended",
+      "scoreGoodRange": "Good",
+      "scoreGoodDesc": "Viewable, Good Conditions",
+      "scoreFairRange": "Fair",
+      "scoreFairDesc": "Cautious, Low Probability",
+      "scorePoorRange": "Poor",
+      "scorePoorDesc": "Not Recommended",
+      "sections": {
+        "cloudId": {
+          "title": "1. Cloud Type Identification & Canvas Score",
+          "subtitle": "Cloud ID & Canvas Score",
+          "weights": "Canvas Score Weights: Mid/High Cloud 70%, Mid Cloud 45%, Low Cloud 10%",
+          "rules": "Cloud Type Rules:",
+          "stratus": "Stratus: Low Cloud >70% → Canvas Multiplier 0.4",
+          "stratocumulus": "Stratocumulus: 40% ≤ Low Cloud ≤70% → Multiplier 0.6",
+          "clearSky": "Clear Sky: Total Cloud <30% → Multiplier 0.85",
+          "cumulus": "Cumulus: Mid Cloud Dominant/Base<500m → Multiplier 0.5",
+          "formula": "Canvas Score = Cover Score × Species Multiplier"
+        },
+        "lightPath": {
+          "title": "2. Optical Path Geometric Model",
+          "subtitle": "Optical Path Geometric Model",
+          "description": "Evaluates cloud conditions along the light path.",
+          "sampling": "Two-point Sampling:",
+          "nearPoint": "Near Point: Distance 150km, Weight 40%",
+          "farPoint": "Far Point: Distance 300km, Weight 60%",
+          "scoringRules": "Scoring Rules:",
+          "rule1": "Near/Far <20% → 100 pts",
+          "rule2": "Near 20-40%, Far <20% → 80 pts",
+          "rule3": "Far 20-40% → 60 pts",
+          "rule4": "Any >40% → <40 pts",
+          "formula": "Path Score = Near×40% + Far×60%"
+        },
+        "aod": {
+          "title": "3. Aerosol (AOD) Correction",
+          "subtitle": "Aerosol Optical Depth Correction",
+          "description": "AOD measures atmospheric aerosol concentration; high values reduce light transmission.",
+          "thresholds": "AOD Thresholds:",
+          "level1": "AOD < 0.3 → Coefficient 1.0 (Air Quality Excellent)",
+          "level2": "0.3 ≤ AOD < 0.5 → Coefficient 0.85 (Good)",
+          "level3": "0.5 ≤ AOD < 0.7 → Coefficient 0.7 (Fair)",
+          "level4": "AOD ≥ 0.7 → Coefficient 0.5 (Heavy Haze)",
+          "formula": "Final Score = Base Score × AOD Coefficient"
+        },
+        "rendering": {
+          "title": "4. Rendering Coefficient",
+          "subtitle": "Rendering Coefficient",
+          "description": "Corrects based on transparency, humidity, and precipitation.",
+          "visibility": "Visibility:",
+          "visibilityValues": "≥30km → 1.0 | 20-30km → 0.95 | 10-20km → 0.85 | <10km → 0.7",
+          "humidity": "Humidity:",
+          "humidityValues": "40%-70% → 1.0 (Best) | <40% or >80% → 0.85",
+          "precipitation": "Precipitation:",
+          "precipitationValues": "<1mm/h → 1.0 | 1-5mm/h → 0.7 | ≥5mm/h → 0.4 (Rain)",
+          "formula": "Coefficient = Vis × Hum × Precip"
+        },
+        "confidence": {
+          "title": "5. Confidence Level Rules",
+          "subtitle": "Confidence Level Rules",
+          "description": "Criteria for evaluating prediction reliability.",
+          "cloudEdge": "Cloud Edge: Large gradient → High clarity",
+          "wind": "Wind: Wind >15m/s & inconsistent → Lower confidence",
+          "solarAltitude": "Solar Altitude: Sun >6° below or >5° above horizon → Lower confidence"
+        }
+      }
     }
   },
   "buttons": {
