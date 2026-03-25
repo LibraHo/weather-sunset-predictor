@@ -1740,7 +1740,7 @@ class WeatherController {
       btnNative.classList.toggle('active', !isGaode);
     };
 
-    const setTileLayer = (isGaode) => {
+    const setTileLayer = async (isGaode) => {
       if (this._chinaSpotsActiveTileLayer) {
         map.removeLayer(this._chinaSpotsActiveTileLayer);
       }
