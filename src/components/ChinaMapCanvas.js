@@ -175,14 +175,14 @@ class ChinaMapCanvas {
         };
       },
       onEachFeature: (feature, layer) => {
-        // 鼠标交互
-        if (feature.properties && feature.properties.name) {
-          layer.bindTooltip(feature.properties.name, {
-            direction: 'top',
-            offset: [0, -10],
-            className: 'map-tooltip'
-          });
-        }
+        // 鼠标交互（暂时不显示省份 tooltip）
+        // if (feature.properties && feature.properties.name) {
+        //   layer.bindTooltip(feature.properties.name, {
+        //     direction: 'top',
+        //     offset: [0, -10],
+        //     className: 'map-tooltip'
+        //   });
+        // }
       }
     }).addTo(this._map);
 
