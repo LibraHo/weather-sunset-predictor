@@ -1971,8 +1971,18 @@ class WeatherController {
       return;
     }
 
+    // 检查地图容器是否可见（避免在隐藏状态下初始化导致 NaN 错误）
+    const mapPanel = document.getElementById('tab-panel-map');
+    if (mapPanel && mapPanel.classList.contains('hidden')) {
+      console.log('[WeatherController] 地图面板当前隐藏，延迟初始化');
+      // 标记为待初始化，等面板显示时再初始化
+      this._chinaSpotsMapPendingInit = true;
+      return;
+    }
+
     // 若地图已初始化，直接刷新当前时段数据
     if (this._chinaSpotsMapInstance) {
+      this._chinaSpotsMapPendingInit = false;
       const activeOverlay = this.chinaSpotsOverlayManager?.getOverlay(this.chinaSpotsOverlayManager.getActivePeriod());
       if (!activeOverlay) return;
 
@@ -1982,6 +1992,8 @@ class WeatherController {
       this._renderChinaSpotsTimestamp();
       return;
     }
+
+    this._chinaSpotsMapPendingInit = false;
 
     try {
       if (typeof window === 'undefined' || !window.L) {
