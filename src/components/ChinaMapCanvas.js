@@ -2,9 +2,11 @@
  * ChinaMapCanvas.js - 中国地图底层组件（GeoJSON + Canvas）
  *
  * 基于 Leaflet + GeoJSON 渲染中国省界，不依赖外部瓦片 API
+ * GeoJSON 通过 fetch 懒加载，避免首屏阻塞 569KB 的模块解析
  */
 
-import chinaGeoJSON from '../data/china-geojson.js';
+// 模块级缓存，避免重复下载
+let _cachedGeoJSON = null;
 
 class ChinaMapCanvas {
   constructor(options = {}) {
@@ -20,10 +22,11 @@ class ChinaMapCanvas {
   }
 
   /**
-   * 初始化地图到 DOM 容器
+   * 初始化地图到 DOM 容器（async，等待 GeoJSON 懒加载完成）
    * @param {HTMLElement|string} container - DOM 元素或选择器
+   * @returns {Promise<void>}
    */
-  init(container) {
+  async init(container) {
     if (!window.L) {
       console.error('[ChinaMapCanvas] Leaflet 未加载');
       return;
@@ -47,25 +50,23 @@ class ChinaMapCanvas {
       zoom: this._options.defaultZoom,
       zoomControl: true,
       attributionControl: false,
-      // 拖拽平移
       dragging: true,
-      // 滚轮缩放
       scrollWheelZoom: true,
-      // 双击缩放
       doubleClickZoom: true,
-      // 框选缩放
       boxZoom: true,
-      // 触摸缩放（移动端）
       touchZoom: true,
-      // 键盘控制
       keyboard: true,
-      // 平滑惯性拖拽
       inertia: true,
-      // 惯性最大速度
       inertiaMaxSpeed: 1500,
-      // 惯性减速
       inertiaDeceleration: 3000
     });
+
+    // 懒加载 GeoJSON（首次 fetch，之后走缓存）
+    try {
+      await this._loadGeoJSON();
+    } catch (e) {
+      console.error('[ChinaMapCanvas] GeoJSON 加载失败:', e);
+    }
 
     // 添加 GeoJSON 图层
     this._addGeoJsonLayer();
@@ -74,6 +75,16 @@ class ChinaMapCanvas {
     this._applyStyle();
 
     console.log('[ChinaMapCanvas] 地图初始化完成');
+  }
+
+  /**
+   * 懒加载 GeoJSON 数据（带模块级缓存）
+   */
+  async _loadGeoJSON() {
+    if (_cachedGeoJSON) return;
+    const resp = await fetch('/data/china-geojson.json');
+    if (!resp.ok) throw new Error(`GeoJSON fetch failed: ${resp.status}`);
+    _cachedGeoJSON = await resp.json();
   }
 
   /**
@@ -147,6 +158,7 @@ class ChinaMapCanvas {
    * 添加 GeoJSON 省界图层
    */
   _addGeoJsonLayer() {
+    const chinaGeoJSON = _cachedGeoJSON;
     if (!chinaGeoJSON || !chinaGeoJSON.features) {
       console.warn('[ChinaMapCanvas] GeoJSON 数据为空');
       return;

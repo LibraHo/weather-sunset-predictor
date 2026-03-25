@@ -3,6 +3,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const compression = require('compression');
 // 触发重启
 require('dotenv').config();
 
@@ -55,6 +56,7 @@ const tilesLimiter = rateLimit({
 });
 
 // Middleware
+app.use(compression()); // gzip 压缩所有响应
 app.use(cors({
   origin: corsOrigins.length === 1 ? corsOrigins[0] : corsOrigins
 }));
@@ -108,7 +110,14 @@ app.use('/api/photos', photosRoutes);
 app.use('/', adminRoutes);
 
 // 静态文件服务（公开分享页面）
-app.use(express.static(path.join(__dirname, '../public')));
+// /data/ 目录下的 GeoJSON 文件缓存 7 天，其余静态文件缓存 1 小时
+app.use('/data', express.static(path.join(__dirname, '../public/data'), {
+  maxAge: '7d',
+  immutable: false
+}));
+app.use(express.static(path.join(__dirname, '../public'), {
+  maxAge: '1h'
+}));
 
 // Error logging middleware
 app.use(errorLogger());
