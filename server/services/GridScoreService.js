@@ -16,30 +16,27 @@ const orchestrator = require('./ProviderOrchestrator');
 const { calculateEnhancedPrediction } = require('./EnhancedPredictionService');
 const SunCalculator = require('../utils/SunCalculator');
 
-// 中国区域范围（5° 间隔）
-const CHINA_BOUNDS = {
-  lonMin: 73,
-  lonMax: 135,
-  latMin: 18,
-  latMax: 53,
-  step: 5
-};
+const config = require('../config/gridscore.config.js');
+
+// 中国区域范围
+const CHINA_BOUNDS = config.grid.bounds;
 
 // 并发限制
-const CONCURRENCY_LIMIT = 3; // 降低并发，防止 104 个网格点同时请求导致内存 OOM
+const CONCURRENCY_LIMIT = config.concurrency.limit;
 
-// 缓存最大年龄（1小时）
-const DEFAULT_MAX_AGE_MS = 60 * 60 * 1000;
+// 缓存最大年龄
+const DEFAULT_MAX_AGE_MS = config.cache.maxAgeMs;
 
-const SUPPORTED_PERIODS = ['sunrise', 'sunset'];
-const DEFAULT_PERIOD = 'sunset';
-
-// 频控：60分钟内最多触发一次手动刷新
-const MANUAL_REFRESH_COOLDOWN_MS = 60 * 60 * 1000;
+// 频控：手动刷新冷却时间
+const MANUAL_REFRESH_COOLDOWN_MS = config.cache.manualRefreshCooldownMs;
 
 // 持久化路径
-const CACHE_DIR = path.join(os.homedir(), '.xiake');
-const CACHE_FILE = path.join(CACHE_DIR, 'grid-cache.json');
+const CACHE_DIR = config.cache.cacheDir;
+const CACHE_FILE = path.join(CACHE_DIR, config.cache.cacheFile);
+
+// 支持的时段
+const SUPPORTED_PERIODS = ['sunrise', 'sunset'];
+const DEFAULT_PERIOD = 'sunset';
 
 class GridScoreService {
   constructor() {
