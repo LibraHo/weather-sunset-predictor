@@ -18,7 +18,7 @@ import { isInMainlandChina, MAINLAND_BOUNDS } from '../utils/mainlandChinaRegion
 
 // ─── 常量 ────────────────────────────────────────────────────────────────────
 
-const RASTER_MIN_SCORE = 30;   // 低于此分值的格元不渲染（透明）
+const RASTER_MIN_SCORE = 15;   // 低于此分值的格元不渲染（透明）- 降低到15分以显示"微微烧"区域
 const RASTER_FULL_SCORE = 95;  // 色板上限
 
 /**

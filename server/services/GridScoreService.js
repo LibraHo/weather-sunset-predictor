@@ -101,15 +101,32 @@ class GridScoreService {
           if (!weatherData) throw new Error('no weather data');
 
           // 使用该点的日落/日出时间作为预测目标时间，避免当前时刻几何不可行误判
+          // 如果已经过了今天的日出/日落，就预测明天的
           let predictionDate = date;
           try {
+            const now = new Date();
             if (safePeriod === 'sunset') {
-              predictionDate = SunCalculator.getSunsetTime(date, point.lat, point.lon);
+              // 获取今天日落时间
+              const todaySunset = SunCalculator.getSunsetTime(date, point.lat, point.lon);
+              // 如果已经过了今天日落，预测明天日落
+              if (now > todaySunset) {
+                const tomorrow = new Date(date);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                predictionDate = SunCalculator.getSunsetTime(tomorrow, point.lat, point.lon);
+              } else {
+                predictionDate = todaySunset;
+              }
             } else {
-              // 朝霞预测明天日出
-              const tomorrow = new Date(date);
-              tomorrow.setDate(tomorrow.getDate() + 1);
-              predictionDate = SunCalculator.getSunriseTime(tomorrow, point.lat, point.lon);
+              // 获取今天日出时间
+              const todaySunrise = SunCalculator.getSunriseTime(date, point.lat, point.lon);
+              // 如果已经过了今天日出，预测明天日出
+              if (now > todaySunrise) {
+                const tomorrow = new Date(date);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                predictionDate = SunCalculator.getSunriseTime(tomorrow, point.lat, point.lon);
+              } else {
+                predictionDate = todaySunrise;
+              }
             }
           } catch (sunErr) {
             // 日落/日出计算失败时回退到传入时间
