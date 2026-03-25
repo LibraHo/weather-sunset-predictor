@@ -217,7 +217,27 @@ window.ErrorHandler = ErrorHandler;
  */
 function onMapPanelVisible() {
   const map = window.weatherController ? window.weatherController._chinaSpotsMapInstance : null;
-  if (map && typeof map.invalidateSize === 'function') {
-    setTimeout(() => map.invalidateSize(), 100);
+  if (!map || typeof map.invalidateSize !== 'function') return;
+  
+  // 确保地图已正确初始化（有有效的中心点）
+  try {
+    const center = map.getCenter();
+    if (!center || typeof center.lat !== 'number' || typeof center.lng !== 'number' || 
+        isNaN(center.lat) || isNaN(center.lng)) {
+      console.warn('[onMapPanelVisible] 地图中心点无效，跳过 invalidateSize');
+      return;
+    }
+  } catch (e) {
+    console.warn('[onMapPanelVisible] 获取地图中心点失败:', e.message);
+    return;
   }
+  
+  // 延迟执行以确保容器已渲染
+  setTimeout(() => {
+    try {
+      map.invalidateSize({ animate: false });
+    } catch (e) {
+      console.warn('[onMapPanelVisible] invalidateSize 失败:', e.message);
+    }
+  }, 100);
 }
