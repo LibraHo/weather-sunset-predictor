@@ -125,7 +125,11 @@
           <div class="location-input-wrapper">
             <input type="text" id="location-input" placeholder="输入城市名称" aria-label="城市名称输入" data-i18n-placeholder="location.placeholder">
             <button id="current-location-btn" class="input-icon-btn" aria-label="使用当前位置" data-i18n-aria-label="buttons.useCurrentLocation">📍</button>
-            <!-- 需求13：搜索历史下拉列表 -->
+            <!-- 需求13：搜索历史下拉列表 + 空状态引导 -->
+            <div id="search-empty-hint" class="search-empty-hint hidden">
+              <span class="hint-icon">🔍</span>
+              <span class="hint-text">输入城市名称，查看今日火烧云预测</span>
+            </div>
             <div id="city-suggestions-dropdown" class="search-history-dropdown hidden"></div>
             <div id="search-history-dropdown" class="search-history-dropdown hidden">
               <!-- 动态填充搜索历史 -->
