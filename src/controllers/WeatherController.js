@@ -2077,7 +2077,9 @@ class WeatherController {
       console.log('[WeatherController] 中国散点地图初始化完成');
     } catch (err) {
       console.error('[WeatherController] 初始化中国散点地图失败:', err);
-      if (section) section.classList.add('hidden');
+      // 隐藏地图面板
+      const mapPanel = document.getElementById('tab-panel-map');
+      if (mapPanel) mapPanel.classList.add('hidden');
       this._setChinaSpotsEmptyState(false);
     }
   }
