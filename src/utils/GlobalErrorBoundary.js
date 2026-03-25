@@ -37,6 +37,13 @@ class GlobalErrorBoundary {
   initialize() {
     // 捕获全局JavaScript错误
     window.addEventListener('error', (event) => {
+      // 跨域脚本（CDN）抛出的错误浏览器会屏蔽详情，只给 "Script error."
+      // 这类错误无法处理，直接忽略，避免产生无意义的错误日志
+      const msg = event.message || '';
+      if (msg === 'Script error.' || msg === 'Script error') {
+        event.preventDefault();
+        return;
+      }
       this.handleGlobalError(event.error || new Error(event.message), event);
       // 阻止默认的错误处理（防止在控制台显示红色错误）
       event.preventDefault();
