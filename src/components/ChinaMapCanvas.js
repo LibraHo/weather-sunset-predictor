@@ -186,10 +186,92 @@ class ChinaMapCanvas {
       }
     }).addTo(this._map);
 
+    // 添加城市标注
+    this._addCityMarkers();
+
     // 调整视图以适应 GeoJSON 范围
     if (this._geoJsonLayer) {
       this._map.fitBounds(this._geoJsonLayer.getBounds());
     }
+  }
+
+  /**
+   * 添加主要城市标注
+   */
+  _addCityMarkers() {
+    // 中国主要城市数据（省会+重要城市）
+    const cities = [
+      { name: '北京', lat: 39.9042, lon: 116.4074 },
+      { name: '上海', lat: 31.2304, lon: 121.4737 },
+      { name: '广州', lat: 23.1291, lon: 113.2644 },
+      { name: '深圳', lat: 22.5431, lon: 114.0579 },
+      { name: '成都', lat: 30.5728, lon: 104.0668 },
+      { name: '杭州', lat: 30.2741, lon: 120.1551 },
+      { name: '武汉', lat: 30.5928, lon: 114.3055 },
+      { name: '西安', lat: 34.3416, lon: 108.9398 },
+      { name: '重庆', lat: 29.5630, lon: 106.5516 },
+      { name: '南京', lat: 32.0603, lon: 118.7969 },
+      { name: '天津', lat: 39.0842, lon: 117.2010 },
+      { name: '苏州', lat: 31.2989, lon: 120.5853 },
+      { name: '长沙', lat: 28.2280, lon: 112.9388 },
+      { name: '郑州', lat: 34.7466, lon: 113.6253 },
+      { name: '沈阳', lat: 41.8057, lon: 123.4315 },
+      { name: '青岛', lat: 36.0671, lon: 120.3826 },
+      { name: '宁波', lat: 29.8683, lon: 121.5440 },
+      { name: '东莞', lat: 23.0489, lon: 113.7447 },
+      { name: '佛山', lat: 23.0218, lon: 113.1219 },
+      { name: '合肥', lat: 31.8206, lon: 117.2272 },
+      { name: '厦门', lat: 24.4798, lon: 118.0894 },
+      { name: '昆明', lat: 25.0389, lon: 102.7183 },
+      { name: '济南', lat: 36.6512, lon: 117.1201 },
+      { name: '福州', lat: 26.0745, lon: 119.2965 },
+      { name: '大连', lat: 38.9140, lon: 121.6147 },
+      { name: '哈尔滨', lat: 45.8038, lon: 126.5349 },
+      { name: '长春', lat: 43.8171, lon: 125.3235 },
+      { name: '石家庄', lat: 38.0428, lon: 114.5149 },
+      { name: '南宁', lat: 22.8170, lon: 108.3665 },
+      { name: '贵阳', lat: 26.6470, lon: 106.6302 },
+      { name: '南昌', lat: 28.6820, lon: 115.8579 },
+      { name: '乌鲁木齐', lat: 43.8256, lon: 87.6168 },
+      { name: '兰州', lat: 36.0611, lon: 103.8343 },
+      { name: '海口', lat: 20.0440, lon: 110.1999 },
+      { name: '太原', lat: 37.8706, lon: 112.5489 }
+    ];
+
+    const isDark = document.body.classList.contains('theme-dark');
+    const textColor = isDark ? '#fff' : '#333';
+
+    cities.forEach(city => {
+      // 创建城市标记（小圆点+文字）
+      const marker = window.L.circleMarker([city.lat, city.lon], {
+        radius: 3,
+        fillColor: isDark ? 'rgba(255,120,0,0.8)' : 'rgba(0,0,0,0.6)',
+        color: isDark ? 'rgba(255,120,0,1)' : 'rgba(0,0,0,0.8)',
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.8
+      }).addTo(this._map);
+
+      // 添加城市名称标签
+      const icon = window.L.divIcon({
+        className: 'city-label',
+        html: `<span style="
+          font-size: 11px;
+          font-weight: 500;
+          color: ${textColor};
+          text-shadow: ${isDark ? '0 1px 2px rgba(0,0,0,0.8)' : '0 1px 2px rgba(255,255,255,0.8)'};
+          white-space: nowrap;
+          pointer-events: none;
+          margin-left: 6px;
+        ">${city.name}</span>`,
+        iconSize: null,
+        iconAnchor: [0, 5]
+      });
+
+      window.L.marker([city.lat, city.lon], { icon, interactive: false }).addTo(this._map);
+    });
+
+    console.log('[ChinaMapCanvas] 已添加', cities.length, '个城市标注');
   }
 
   /**
