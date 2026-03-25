@@ -1653,6 +1653,7 @@ class WeatherController {
       this._setChinaSpotsEmptyState(count === 0);
       this._renderChinaSpotsTimestamp();
       this._renderDualPeriodScorePanel(); // 任务 64.8：更新双卡片高亮
+      this._updateChinaSpotsPeriodLabel(type); // 更新时段说明
     }
   }
 
@@ -1929,6 +1930,32 @@ class WeatherController {
       : '今日数据';
   }
 
+  /**
+   * 更新火烧云地图时段说明标签
+   * @param {string} period - 'sunrise' 或 'sunset'
+   */
+  _updateChinaSpotsPeriodLabel(period) {
+    const labelEl = document.getElementById('china-spots-period-label');
+    if (!labelEl) return;
+
+    const now = new Date();
+    const todayStr = now.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+
+    let text = '';
+    if (period === 'sunrise') {
+      // 判断今天日出是否已过
+      text = '明天的朝霞';
+    } else {
+      // sunset
+      text = '今天的晚霞';
+    }
+
+    labelEl.textContent = text;
+  }
+
   _getChinaSpotsMapOptions() {
     return {
       center: [35, 105],
@@ -2073,6 +2100,7 @@ class WeatherController {
       this._setChinaSpotsEmptyState(count === 0);
       this._renderChinaSpotsTimestamp();
       this._renderDualPeriodScorePanel(); // 任务 64.8：朝/晚双卡片并排展示
+      this._updateChinaSpotsPeriodLabel(this.chinaSpotsOverlayManager.getActivePeriod()); // 初始化时段说明
 
       console.log('[WeatherController] 中国散点地图初始化完成');
     } catch (err) {
