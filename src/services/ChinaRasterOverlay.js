@@ -13,17 +13,18 @@
 const RASTER_MIN_SCORE = 15;
 const RASTER_FULL_SCORE = 95;
 
-// 视觉显示阈值：低于 60 分几乎不显示
-const VISUAL_MIN_SCORE = 60;
+// 视觉显示阈值：下调到当前数据分布可见区间
+const VISUAL_MIN_SCORE = 30;
 
 // 等值面分级（>=8 档）
-const BAND_LEVELS = [60, 63, 66, 69, 72, 75, 78, 81, 84, 87];
+const BAND_LEVELS = [30, 34, 38, 42, 46, 50, 54, 58, 62, 66, 70];
 
 // 细等值线（更密）
-const CONTOUR_LEVELS = Array.from({ length: 14 }, (_, i) => 60 + i * 2); // 60~86 每 2 分
+const CONTOUR_LEVELS = Array.from({ length: 21 }, (_, i) => 30 + i * 2); // 30~70 每 2 分
 
-// 关键标签
+// 关键标签（高分不足时用次级标签）
 const KEY_LABEL_LEVELS = [70, 80];
+const FALLBACK_LABEL_LEVELS = [50, 60];
 
 // 晚霞（粉紫系）
 const FIRECLOUD_PALETTE = [
@@ -62,8 +63,8 @@ function smoothstep01(t) {
 }
 
 function alphaSoftThreshold(score) {
-  if (score < 58) return 0;          // 低分不显示
-  if (score < VISUAL_MIN_SCORE) return 0.02; // 58~60 极低透明
+  if (score < 26) return 0;                 // 低分不显示
+  if (score < VISUAL_MIN_SCORE) return 0.06; // 26~30 极低透明
   return 1;
 }
 
@@ -430,7 +431,10 @@ export default class ChinaRasterOverlay {
     this._offCtx.putImageData(imgData, 0, 0);
 
     this._contours = buildContours(smoothed, width, height, CONTOUR_LEVELS, noData);
-    this._labelAnchors = buildLabelAnchors(this._contours, KEY_LABEL_LEVELS);
+
+    const maxScore = smoothed.reduce((m, v) => (Number.isFinite(v) && v !== noData && v > m ? v : m), -Infinity);
+    this._activeLabelLevels = maxScore >= 70 ? KEY_LABEL_LEVELS : FALLBACK_LABEL_LEVELS;
+    this._labelAnchors = buildLabelAnchors(this._contours, this._activeLabelLevels);
 
     console.log(`[ChinaRasterOverlay] 等值热力层离屏构建完成 ${width}×${height} period=${this._period}`);
   }
@@ -448,7 +452,8 @@ export default class ChinaRasterOverlay {
       const segments = this._contours.get(level);
       if (!segments || segments.length === 0) continue;
 
-      const isKey = KEY_LABEL_LEVELS.includes(level);
+      const activeLabels = this._activeLabelLevels || KEY_LABEL_LEVELS;
+      const isKey = activeLabels.includes(level);
       ctx.beginPath();
 
       for (const [p1, p2] of segments) {
@@ -474,7 +479,8 @@ export default class ChinaRasterOverlay {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    for (const level of KEY_LABEL_LEVELS) {
+    const activeLabels = this._activeLabelLevels || KEY_LABEL_LEVELS;
+    for (const level of activeLabels) {
       const anchors = this._labelAnchors.get(level) || [];
       for (const a of anchors) {
         const s = this._gridToScreenPoint(a.x, a.y, tl, screenW, screenH, width, height);
