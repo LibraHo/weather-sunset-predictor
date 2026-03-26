@@ -2288,8 +2288,10 @@ body.theme-dark .prediction-analysis {
 /* 7天概览卡片容器 */
 .weekly-cards-container {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-direction: row;
+  gap: 10px;
+  width: 100%;
+  overflow-x: auto;
   margin-top: var(--spacing-md);
 }
 
@@ -2317,6 +2319,8 @@ body.theme-dark .prediction-analysis {
   flex-direction: row;
   align-items: center;
   gap: 8px;
+  flex: 1 1 0;
+  min-width: 90px;
 }
 
 .day-card:hover {
@@ -2555,9 +2559,18 @@ body.theme-dark .chart-container > div > div {
 }
 
 /* 移动端优化 */
+@media (max-width: 640px) {
+  .weekly-cards-container {
+    flex-direction: column;
+    overflow-x: unset;
+  }
+  .day-card {
+    min-width: unset;
+  }
+}
+
 @media (max-width: 768px) {
   .weekly-cards-container {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--spacing-sm);
   }
 
@@ -2599,19 +2612,8 @@ body.theme-dark .chart-container > div > div {
   }
 }
 
-/* 平板优化 */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .weekly-cards-container {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
 /* 桌面优化 */
-@media (min-width: 1025px) {
-  .weekly-cards-container {
-    grid-template-columns: repeat(7, 1fr);
-  }
-
+@media (min-width: 769px) {
   .chart-container canvas {
     width: 100%;
   }
