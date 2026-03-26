@@ -149,7 +149,7 @@ app.listen(PORT, () => {
   console.log(`🌐 CORS 允许源: ${corsOrigins.join(', ')}`);
 
   // Phase16 任务64.3：定时刷新晚霞评分网格
-  // 每天 4 次：UTC 0/4/7/9 = CST 08/12/15/17
+  // 每天 2 次（UTC 2/14 = CST 10:00/22:00）
   _scheduleGridRefresh();
 });
 

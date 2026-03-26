@@ -2,7 +2,7 @@
  * GridScoreService - 晚霞评分热力地图网格服务（Phase 16）
  *
  * 职责：
- * 1. 生成中国区域 5° 间隔网格坐标
+ * 1. 生成中国区域网格坐标（步长来自配置）
  * 2. 批量获取天气数据并运行晚霞预测算法
  * 3. 维护缓存（内存 + 文件持久化）
  * 4. 频控保护，避免重复调用
@@ -23,6 +23,12 @@ const CHINA_BOUNDS = config.grid.bounds;
 
 // 并发限制
 const CONCURRENCY_LIMIT = config.concurrency.limit;
+
+// 批量抓取大小
+const BATCH_SIZE = config.batch?.batchSize || 100;
+
+// 预测时长（小时）
+const FORECAST_HOURS = config.api?.forecastHours || 24;
 
 // 缓存最大年龄
 const DEFAULT_MAX_AGE_MS = config.cache.maxAgeMs;
@@ -82,103 +88,126 @@ class GridScoreService {
    * @returns {Promise<{ lat, lon, score, quality, breakdown }[]>}
    */
   async fetchAndScore(gridPoints, date = new Date(), period = DEFAULT_PERIOD) {
-    const results = [];
-    const queue = [...gridPoints];
     const safePeriod = this.normalizePeriod(period);
+    const batches = [];
 
-    // 并发控制：每次最多 CONCURRENCY_LIMIT 个请求
-    const worker = async () => {
-      while (queue.length > 0) {
-        const point = queue.shift();
-        if (!point) break;
-        try {
-          const weatherRaw = await orchestrator.fetchWeatherData(point.lat, point.lon, 24);
+    for (let i = 0; i < gridPoints.length; i += BATCH_SIZE) {
+      batches.push(gridPoints.slice(i, i + BATCH_SIZE));
+    }
 
-          // 使用该点的日落/日出时间作为预测目标时间，避免当前时刻几何不可行误判
-          // 如果已经过了今天的日出/日落，就预测明天的
-          let predictionDate = date;
+    const allResults = [];
+
+    const processBatch = async (batch, batchIndex) => {
+      const points = batch.map(point => ({ lat: point.lat, lon: point.lon }));
+      const scoredBatch = [];
+
+      try {
+        const weatherMap = await orchestrator.fetchWeatherDataBatch(points, FORECAST_HOURS);
+        console.log(`[GridScoreService] 批量请求完成: batch=${batchIndex + 1}/${batches.length}, points=${points.length}, hours=${FORECAST_HOURS}`);
+
+        for (const point of batch) {
           try {
-            const now = new Date();
-            if (safePeriod === 'sunset') {
-              // 获取今天日落时间
-              const todaySunset = SunCalculator.getSunsetTime(date, point.lat, point.lon);
-              // 如果已经过了今天日落，预测明天日落
-              if (now > todaySunset) {
-                const tomorrow = new Date(date);
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                predictionDate = SunCalculator.getSunsetTime(tomorrow, point.lat, point.lon);
+            const key = `${point.lat},${point.lon}`;
+            const weatherRaw = weatherMap?.[key];
+
+            // 使用该点的日落/日出时间作为预测目标时间，避免当前时刻几何不可行误判
+            // 如果已经过了今天的日出/日落，就预测明天的
+            let predictionDate = date;
+            try {
+              const now = new Date();
+              if (safePeriod === 'sunset') {
+                const todaySunset = SunCalculator.getSunsetTime(date, point.lat, point.lon);
+                if (now > todaySunset) {
+                  const tomorrow = new Date(date);
+                  tomorrow.setDate(tomorrow.getDate() + 1);
+                  predictionDate = SunCalculator.getSunsetTime(tomorrow, point.lat, point.lon);
+                } else {
+                  predictionDate = todaySunset;
+                }
               } else {
-                predictionDate = todaySunset;
+                const todaySunrise = SunCalculator.getSunriseTime(date, point.lat, point.lon);
+                if (now > todaySunrise) {
+                  const tomorrow = new Date(date);
+                  tomorrow.setDate(tomorrow.getDate() + 1);
+                  predictionDate = SunCalculator.getSunriseTime(tomorrow, point.lat, point.lon);
+                } else {
+                  predictionDate = todaySunrise;
+                }
               }
-            } else {
-              // 获取今天日出时间
-              const todaySunrise = SunCalculator.getSunriseTime(date, point.lat, point.lon);
-              // 如果已经过了今天日出，预测明天日出
-              if (now > todaySunrise) {
-                const tomorrow = new Date(date);
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                predictionDate = SunCalculator.getSunriseTime(tomorrow, point.lat, point.lon);
-              } else {
-                predictionDate = todaySunrise;
-              }
+            } catch (sunErr) {
+              console.warn(`[GridScoreService] 无法计算 ${point.lat},${point.lon} 日出落时间:`, sunErr.message);
             }
-          } catch (sunErr) {
-            // 日落/日出计算失败时回退到传入时间
-            console.warn(`[GridScoreService] 无法计算 ${point.lat},${point.lon} 日出落时间:`, sunErr.message);
+
+            const hourly = Array.isArray(weatherRaw?.data)
+              ? weatherRaw.data
+              : (Array.isArray(weatherRaw) ? weatherRaw : []);
+            if (hourly.length === 0) {
+              throw new Error('no weather data');
+            }
+
+            const toTs = (v) => {
+              if (Number.isFinite(v)) return v;
+              const t = new Date(v).getTime();
+              return Number.isFinite(t) ? t : null;
+            };
+
+            let weatherData = hourly[0];
+            const refTs = predictionDate instanceof Date ? predictionDate.getTime() : null;
+            if (Number.isFinite(refTs)) {
+              weatherData = hourly.reduce((closest, current) => {
+                const cTs = toTs(closest?.timestamp ?? closest?.time);
+                const nTs = toTs(current?.timestamp ?? current?.time);
+                const cDiff = Number.isFinite(cTs) ? Math.abs(cTs - refTs) : Number.POSITIVE_INFINITY;
+                const nDiff = Number.isFinite(nTs) ? Math.abs(nTs - refTs) : Number.POSITIVE_INFINITY;
+                return nDiff < cDiff ? current : closest;
+              }, hourly[0]);
+            }
+
+            const prediction = calculateEnhancedPrediction(weatherData, predictionDate, point.lat, point.lon, safePeriod);
+            scoredBatch.push({
+              lat: point.lat,
+              lon: point.lon,
+              score: prediction.score,
+              quality: prediction.quality,
+              breakdown: prediction.breakdown || null
+            });
+          } catch (err) {
+            scoredBatch.push({
+              lat: point.lat,
+              lon: point.lon,
+              score: null,
+              quality: 'error',
+              error: err.message,
+              breakdown: null
+            });
           }
-
-          // 按目标时段（朝霞/晚霞）选择“最接近日出/日落时刻”的小时天气，避免 sunrise/sunset 使用同一 data[0]
-          const hourly = Array.isArray(weatherRaw?.data)
-            ? weatherRaw.data
-            : (Array.isArray(weatherRaw) ? weatherRaw : []);
-          if (hourly.length === 0) {
-            throw new Error('no weather data');
-          }
-
-          const toTs = (v) => {
-            if (Number.isFinite(v)) return v;
-            const t = new Date(v).getTime();
-            return Number.isFinite(t) ? t : null;
-          };
-
-          let weatherData = hourly[0];
-          const refTs = predictionDate instanceof Date ? predictionDate.getTime() : null;
-          if (Number.isFinite(refTs)) {
-            weatherData = hourly.reduce((closest, current) => {
-              const cTs = toTs(closest?.timestamp ?? closest?.time);
-              const nTs = toTs(current?.timestamp ?? current?.time);
-              const cDiff = Number.isFinite(cTs) ? Math.abs(cTs - refTs) : Number.POSITIVE_INFINITY;
-              const nDiff = Number.isFinite(nTs) ? Math.abs(nTs - refTs) : Number.POSITIVE_INFINITY;
-              return nDiff < cDiff ? current : closest;
-            }, hourly[0]);
-          }
-
-          const prediction = calculateEnhancedPrediction(weatherData, predictionDate, point.lat, point.lon, safePeriod);
-          results.push({
-            lat: point.lat,
-            lon: point.lon,
-            score: prediction.score,
-            quality: prediction.quality,
-            breakdown: prediction.breakdown || null
-          });
-        } catch (err) {
-          // 单点失败不影响其他点
-          results.push({
+        }
+      } catch (err) {
+        console.error(`[GridScoreService] 批量请求失败: batch=${batchIndex + 1}/${batches.length}, points=${points.length}`, err.message);
+        for (const point of batch) {
+          scoredBatch.push({
             lat: point.lat,
             lon: point.lon,
             score: null,
             quality: 'error',
-            error: err.message
+            error: err.message,
+            breakdown: null
           });
         }
       }
+
+      return scoredBatch;
     };
 
-    // 启动 CONCURRENCY_LIMIT 个并发 worker
-    const workers = Array.from({ length: Math.min(CONCURRENCY_LIMIT, gridPoints.length) }, worker);
-    await Promise.all(workers);
+    for (let i = 0; i < batches.length; i += CONCURRENCY_LIMIT) {
+      const chunk = batches.slice(i, i + CONCURRENCY_LIMIT);
+      const chunkResults = await Promise.all(chunk.map((batch, idx) => processBatch(batch, i + idx)));
+      for (const result of chunkResults) {
+        allResults.push(...result);
+      }
+    }
 
-    return results;
+    return allResults;
   }
 
   /**
