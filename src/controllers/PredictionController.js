@@ -1205,42 +1205,30 @@ class PredictionController {
                         index === 1 ? this.i18n.t('time.dayAfterTomorrow') :
                         this.i18n.t('time.daysLater', { days: index + 1 });
 
-      html += `
-        <div class="forecast-day-column">
-          <div class="forecast-day-header">
-            <span class="day-label">${dayLabel}</span>
-            <span class="date-label">${dateStr}</span>
-          </div>
-          <div class="forecast-day-predictions">
-      `;
 
       // 朝霞预测
       if (dayPredictions.sunrise) {
         const pred = dayPredictions.sunrise;
-        const sunriseTime = pred.sunsetTime; // 对于朝霞，sunsetTime 实际存储的是日出时间
+        const sunriseTime = pred.sunriseTime || pred.sunsetTime;
 
         // 判断是否已过（日出时间 + 2小时）
         const isPassed = sunriseTime ? now > new Date(sunriseTime.getTime() + 2 * 60 * 60 * 1000) : false;
         const passedLabel = isPassed ? `<span class="passed-badge">${this.i18n.t('prediction.passed')}</span>` : '';
 
         const tempStr = pred.temperature !== undefined && pred.temperature !== null ? `${Math.round(pred.temperature)}°` : '--';
+        const precipStr = pred.factors?.precipitation?.value !== undefined ? `${pred.factors.precipitation.value.toFixed(1)} mm` : '--';
+        const windStr = pred.windSpeed !== undefined ? `${pred.windSpeed.toFixed(1)} km/h` : '--';
+        const cloudStr = pred.cloudCover !== undefined ? `${Math.round(pred.cloudCover)}%` : '--';
         html += `
-          <div class="forecast-item ${this.getQualityClass(pred.quality)} ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
-            <div class="forecast-header">
-              <!-- 桌面端：左中右3组 -->
-              <div class="forecast-left-group">
-                <span class="day-label">${dayLabel}</span>
-                <span class="date-label">${dateStr}</span>
-              </div>
-              <div class="forecast-middle-group">
-                <span class="type-icon">🌄</span>
-                <span class="type-label">${this.i18n.t('prediction.sunrise')}</span>
-                <span class="forecast-temp">${tempStr}</span>
-              </div>
-              <div class="forecast-right-group">
-                <span class="forecast-wind">${pred.windSpeed ? Math.round(pred.windSpeed) + '级' : '--'}</span>
-              </div>
-            </div>
+          <div class="forecast-card-vertical ${this.getQualityClass(pred.quality)} ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
+            <div class="fcard-date">${dayLabel}${passedLabel}</div>
+            <div class="fcard-subdate">${dateStr}</div>
+            <div class="fcard-icon">🌄</div>
+            <div class="fcard-type">${this.i18n.t('prediction.sunrise')}</div>
+            <div class="fcard-temp">${tempStr}</div>
+            <div class="fcard-row"><span class="fcard-label">☁️</span><span>${cloudStr}</span></div>
+            <div class="fcard-row"><span class="fcard-label">🌧</span><span>${precipStr}</span></div>
+            <div class="fcard-row"><span class="fcard-label">💨</span><span>${windStr}</span></div>
           </div>
         `;
       }
@@ -1255,31 +1243,24 @@ class PredictionController {
         const passedLabel = isPassed ? `<span class="passed-badge">${this.i18n.t('prediction.passed')}</span>` : '';
 
         const tempStr = pred.temperature !== undefined && pred.temperature !== null ? `${Math.round(pred.temperature)}°` : '--';
+        const precipStr = pred.factors?.precipitation?.value !== undefined ? `${pred.factors.precipitation.value.toFixed(1)} mm` : '--';
+        const windStr = pred.windSpeed !== undefined ? `${pred.windSpeed.toFixed(1)} km/h` : '--';
+        const cloudStr = pred.cloudCover !== undefined ? `${Math.round(pred.cloudCover)}%` : '--';
         html += `
-          <div class="forecast-item ${this.getQualityClass(pred.quality)} ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
-            <div class="forecast-header">
-              <!-- 桌面端：左中右3组 -->
-              <div class="forecast-left-group">
-                <span class="day-label">${dayLabel}</span>
-                <span class="date-label">${dateStr}</span>
-              </div>
-              <div class="forecast-middle-group">
-                <span class="type-icon">🌅</span>
-                <span class="type-label">${this.i18n.t('prediction.sunset')}</span>
-                <span class="forecast-temp">${tempStr}</span>
-              </div>
-              <div class="forecast-right-group">
-                <span class="forecast-wind">${pred.windSpeed ? Math.round(pred.windSpeed) + '级' : '--'}</span>
-              </div>
-            </div>
+          <div class="forecast-card-vertical ${this.getQualityClass(pred.quality)} ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
+            <div class="fcard-date">${dayLabel}${passedLabel}</div>
+            <div class="fcard-subdate">${dateStr}</div>
+            <div class="fcard-icon">🌅</div>
+            <div class="fcard-type">${this.i18n.t('prediction.sunset')}</div>
+            <div class="fcard-temp">${tempStr}</div>
+            <div class="fcard-row"><span class="fcard-label">☁️</span><span>${cloudStr}</span></div>
+            <div class="fcard-row"><span class="fcard-label">🌧</span><span>${precipStr}</span></div>
+            <div class="fcard-row"><span class="fcard-label">💨</span><span>${windStr}</span></div>
           </div>
         `;
       }
 
-      html += `
-          </div>
-        </div>
-      `;
+
     });
 
     html += '</div>';
