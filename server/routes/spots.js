@@ -1,7 +1,7 @@
 /**
  * Spots Routes - 火烧云散点 API（Phase 16）
  *
- * GET  /api/spots/china          — 返回评分 >= 60 的中国散点数据
+ * GET  /api/spots/china          — 返回评分 >= 40 的中国散点数据
  * GET  /api/spots/china/raster   — 返回 IDW 插值后的连续栅格数据
  */
 
@@ -11,6 +11,7 @@ const gridService = require('../services/GridScoreService');
 const chinaRasterService = require('../services/ChinaRasterService');
 
 const SUPPORTED_PERIODS = ['sunrise', 'sunset'];
+const MIN_SPOT_SCORE = 40;
 
 function normalizeSpotsPeriod(period) {
   const safe = typeof period === 'string' ? period.toLowerCase() : '';
@@ -19,7 +20,7 @@ function normalizeSpotsPeriod(period) {
 
 /**
  * GET /api/spots/china
- * 从 GridScoreService 缓存中返回评分 >= 60 的散点数据
+ * 从 GridScoreService 缓存中返回评分 >= 40 的散点数据
  */
 router.get('/china', async (req, res, next) => {
   try {
@@ -44,12 +45,13 @@ router.get('/china', async (req, res, next) => {
 
     const today = new Date().toISOString().slice(0, 10);
     const spots = cache.gridPoints
-      .filter(p => typeof p.score === 'number' && p.score >= 60)
+      .filter(p => typeof p.score === 'number' && p.score >= MIN_SPOT_SCORE)
       .map(p => ({
+
         lat: p.lat,
         lon: p.lon,
         score: p.score,
-        quality: p.score >= 80 ? '顶级' : '优质'
+        quality: p.score >= 80 ? '顶级' : (p.score >= 60 ? '优质' : '可观赏')
       }))
       .sort((a, b) => b.score - a.score);
 
