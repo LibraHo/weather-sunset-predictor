@@ -1742,18 +1742,21 @@ class WeatherController {
     const periods = [
       { key: 'sunrise', label: '朝霞', emoji: '🌄' },
       { key: 'sunset',  label: '晚霞', emoji: '🌅' },
+      { key: 'test',    label: '测试', emoji: '🧪' },
     ];
 
     const cards = periods.map(({ key, label, emoji }) => {
       const isActive = this.chinaSpotsOverlayManager.getActivePeriod() === key;
 
       const borderColor = isActive
-        ? (key === 'sunrise' ? '#ff9a5c' : '#ff6b35')
+        ? (key === 'sunrise' ? '#ff9a5c' : (key === 'test' ? '#9f7aea' : '#ff6b35'))
         : 'rgba(255,255,255,0.12)';
       const bgGradient = isActive
         ? (key === 'sunrise'
             ? 'linear-gradient(135deg,rgba(255,180,80,0.18) 0%,rgba(255,130,50,0.08) 100%)'
-            : 'linear-gradient(135deg,rgba(255,120,40,0.22) 0%,rgba(200,60,20,0.08) 100%)')
+            : (key === 'test'
+                ? 'linear-gradient(135deg,rgba(149,76,233,0.26) 0%,rgba(95,65,190,0.10) 100%)'
+                : 'linear-gradient(135deg,rgba(255,120,40,0.22) 0%,rgba(200,60,20,0.08) 100%)'))
         : 'rgba(0,0,0,0.25)';
 
       return `
@@ -1845,10 +1848,10 @@ class WeatherController {
 
     let text = '';
     if (period === 'sunrise') {
-      // 判断今天日出是否已过
       text = '明天的朝霞';
+    } else if (period === 'test') {
+      text = '测试图层（模拟数据）';
     } else {
-      // sunset
       text = '今天的晚霞';
     }
 

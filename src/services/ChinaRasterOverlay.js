@@ -347,12 +347,14 @@ export default class ChinaRasterOverlay {
     try {
       const zoom = this._map ? this._map.getZoom() : 5;
       const resolution = resolutionForZoom(zoom);
-      const params = new URLSearchParams({ period: this._period, resolution: String(resolution) });
+      const requestPeriod = this._period === 'test' ? 'sunset' : this._period;
+      const params = new URLSearchParams({ period: requestPeriod, resolution: String(resolution) });
 
       const res = await fetch(`/api/spots/china/raster?${params}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      const data = await res.json();
+      const rawData = await res.json();
+      const data = this._period === 'test' ? this._buildSyntheticTestData(rawData) : rawData;
       this._rasterData = data;
       this._updatedAt = data.updatedAt || null;
 
@@ -363,6 +365,44 @@ export default class ChinaRasterOverlay {
     } finally {
       this._loading = false;
     }
+  }
+
+  _buildSyntheticTestData(data) {
+    if (!data || !Array.isArray(data.values) || !data.width || !data.height) return data;
+
+    const width = data.width;
+    const height = data.height;
+    const noData = data.noData ?? -1;
+    const values = data.values.slice();
+
+    const gaussian = (x, y, cx, cy, sx, sy, amp) => {
+      const dx = (x - cx) / sx;
+      const dy = (y - cy) / sy;
+      return amp * Math.exp(-(dx * dx + dy * dy));
+    };
+
+    // 测试板块：北京附近构造明显可见的模拟云团
+    const bjx = width * 0.69;
+    const bjy = height * 0.37;
+    const blobs = [
+      { cx: bjx - width * 0.04, cy: bjy - height * 0.03, sx: width * 0.10, sy: height * 0.09, amp: 26 },
+      { cx: bjx + width * 0.05, cy: bjy + height * 0.02, sx: width * 0.08, sy: height * 0.08, amp: 22 },
+      { cx: bjx,                cy: bjy + height * 0.06, sx: width * 0.12, sy: height * 0.10, amp: 18 },
+    ];
+
+    for (let row = 0; row < height; row++) {
+      for (let col = 0; col < width; col++) {
+        const idx = row * width + col;
+        const base = Number.isFinite(values[idx]) && values[idx] !== noData ? values[idx] : 0;
+
+        let add = 0;
+        for (const b of blobs) add += gaussian(col, row, b.cx, b.cy, b.sx, b.sy, b.amp);
+
+        values[idx] = Math.max(base, Math.min(68, base * 0.65 + add));
+      }
+    }
+
+    return { ...data, values, synthetic: true, updatedAt: data.updatedAt || new Date().toISOString() };
   }
 
   show() {
