@@ -1128,20 +1128,17 @@ class PredictionController {
         const isPassed = sunriseTime ? now > new Date(sunriseTime.getTime() + 2 * 60 * 60 * 1000) : false;
         const passedLabel = isPassed ? `<span class="passed-badge">${this.i18n.t('prediction.passed')}</span>` : '';
 
-        const tempStr = pred.temperature !== undefined && pred.temperature !== null ? `${Math.round(pred.temperature)}°` : '--';
-        const precipStr = pred.factors?.precipitation?.value !== undefined ? `${pred.factors.precipitation.value.toFixed(1)} mm` : '--';
-        const windStr = pred.windSpeed !== undefined ? `${pred.windSpeed.toFixed(1)} km/h` : '--';
-        const cloudStr = pred.cloudCover !== undefined ? `${Math.round(pred.cloudCover)}%` : '--';
+        const scoreStr = Math.round(pred.score ?? 0);
+        const qualityTextMap = { excellent: '极佳', good: '良好', fair: '一般', poor: '较差' };
+        const qualityText = qualityTextMap[pred.quality] ?? '较差';
         html += `
           <div class="forecast-card-vertical ${this.getQualityClass(pred.quality)} ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
             <div class="fcard-date">${dayLabel}${passedLabel}</div>
             <div class="fcard-subdate">${dateStr}</div>
             <div class="fcard-icon">🌄</div>
             <div class="fcard-type">${this.i18n.t('prediction.sunrise')}</div>
-            <div class="fcard-temp">${tempStr}</div>
-            <div class="fcard-row"><span class="fcard-label">☁️</span><span>${cloudStr}</span></div>
-            <div class="fcard-row"><span class="fcard-label">🌧</span><span>${precipStr}</span></div>
-            <div class="fcard-row"><span class="fcard-label">💨</span><span>${windStr}</span></div>
+            <div class="fcard-score">${scoreStr}</div>
+            <div class="fcard-quality">${qualityText}</div>
           </div>
         `;
       }
@@ -1155,20 +1152,17 @@ class PredictionController {
         const isPassed = sunsetTime ? now > new Date(sunsetTime.getTime() + 1.5 * 60 * 60 * 1000) : false;
         const passedLabel = isPassed ? `<span class="passed-badge">${this.i18n.t('prediction.passed')}</span>` : '';
 
-        const tempStr = pred.temperature !== undefined && pred.temperature !== null ? `${Math.round(pred.temperature)}°` : '--';
-        const precipStr = pred.factors?.precipitation?.value !== undefined ? `${pred.factors.precipitation.value.toFixed(1)} mm` : '--';
-        const windStr = pred.windSpeed !== undefined ? `${pred.windSpeed.toFixed(1)} km/h` : '--';
-        const cloudStr = pred.cloudCover !== undefined ? `${Math.round(pred.cloudCover)}%` : '--';
+        const scoreStr = Math.round(pred.score ?? 0);
+        const qualityTextMap = { excellent: '极佳', good: '良好', fair: '一般', poor: '较差' };
+        const qualityText = qualityTextMap[pred.quality] ?? '较差';
         html += `
           <div class="forecast-card-vertical ${this.getQualityClass(pred.quality)} ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
             <div class="fcard-date">${dayLabel}${passedLabel}</div>
             <div class="fcard-subdate">${dateStr}</div>
             <div class="fcard-icon">🌅</div>
             <div class="fcard-type">${this.i18n.t('prediction.sunset')}</div>
-            <div class="fcard-temp">${tempStr}</div>
-            <div class="fcard-row"><span class="fcard-label">☁️</span><span>${cloudStr}</span></div>
-            <div class="fcard-row"><span class="fcard-label">🌧</span><span>${precipStr}</span></div>
-            <div class="fcard-row"><span class="fcard-label">💨</span><span>${windStr}</span></div>
+            <div class="fcard-score">${scoreStr}</div>
+            <div class="fcard-quality">${qualityText}</div>
           </div>
         `;
       }
