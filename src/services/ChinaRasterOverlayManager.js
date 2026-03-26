@@ -201,9 +201,12 @@ export default class ChinaRasterOverlayManager {
   }
 
   /**
-   * 获取点位数量（栅格层无散点，固定返回 0；接口保持对齐）
+   * 获取当前时段可渲染格元数量（接口与散点模式保持对齐）
    */
-  getSpotCount() { return 0; }
+  getSpotCount() {
+    const active = this._getActiveOverlay();
+    return active?.getSpotCount?.() ?? 0;
+  }
 
   show() { this._getActiveOverlay().show(); }
 
