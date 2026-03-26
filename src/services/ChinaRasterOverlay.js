@@ -26,8 +26,15 @@ const CONTOUR_LEVELS = Array.from({ length: 21 }, (_, i) => 30 + i * 2); // 30~7
 const KEY_LABEL_LEVELS = [70, 80];
 const FALLBACK_LABEL_LEVELS = [50, 60];
 
-// 调试：优先渲染原始采样点，排查坐标映射
-const DEBUG_DRAW_RAW_POINTS = true;
+// 调试：渲染原始采样点（仅 test 时段生效）
+const DEBUG_DRAW_RAW_POINTS = false;
+
+// 测试板块：北京投影链路校验点（十字 + 文本）
+const BEIJING_CHECK = {
+  lat: 39.9042,
+  lon: 116.4074,
+  text: '北京校验点'
+};
 
 // 晚霞（粉紫系）
 const FIRECLOUD_PALETTE = [
@@ -578,6 +585,34 @@ export default class ChinaRasterOverlay {
     }
   }
 
+  _drawBeijingProjectionCheckMark(ctx) {
+    if (!this._map || this._period !== 'test') return;
+
+    const pt = this._map.latLngToContainerPoint(window.L.latLng(BEIJING_CHECK.lat, BEIJING_CHECK.lon));
+    const size = 8;
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 245, 100, 0.95)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(pt.x - size, pt.y);
+    ctx.lineTo(pt.x + size, pt.y);
+    ctx.moveTo(pt.x, pt.y - size);
+    ctx.lineTo(pt.x, pt.y + size);
+    ctx.stroke();
+
+    ctx.font = '12px "PingFang SC", "Microsoft YaHei", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.55)';
+    ctx.fillStyle = 'rgba(255, 245, 180, 0.98)';
+    const label = `${BEIJING_CHECK.text} (${BEIJING_CHECK.lat.toFixed(4)}, ${BEIJING_CHECK.lon.toFixed(4)})`;
+    ctx.strokeText(label, pt.x + 12, pt.y - 12);
+    ctx.fillText(label, pt.x + 12, pt.y - 12);
+    ctx.restore();
+  }
+
   _reprojectCanvas() {
     if (!this._visible || !this._canvas || !this._rasterData || !this._offscreen || !this._map) return;
 
@@ -600,8 +635,10 @@ export default class ChinaRasterOverlay {
     const ctx = this._canvas.getContext('2d');
     ctx.clearRect(0, 0, mapSize.x, mapSize.y);
 
-    if (DEBUG_DRAW_RAW_POINTS) {
+    const shouldDebugDrawRawPoints = this._period === 'test' && DEBUG_DRAW_RAW_POINTS;
+    if (shouldDebugDrawRawPoints) {
       this._drawRawSamplePoints(ctx, tl, screenW, screenH, width, height);
+      this._drawBeijingProjectionCheckMark(ctx);
       return;
     }
 
@@ -621,6 +658,9 @@ export default class ChinaRasterOverlay {
 
     // Pass 3: 关键值标签（70/80）
     this._drawLabels(ctx, tl, screenW, screenH, width, height);
+
+    // 测试板块：北京投影链路校验标记
+    this._drawBeijingProjectionCheckMark(ctx);
   }
 
   _scheduleReproject() {
