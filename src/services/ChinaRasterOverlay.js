@@ -56,46 +56,6 @@ export function getPaletteForPeriod(period) {
 // 测试面板：注入可见的模拟图层（仅渲染层，不影响后端评分）
 const ENABLE_SYNTHETIC_TEST_DATA = true;
 
-function injectSyntheticRaster(data, period = 'sunset') {
-  if (!data || !Array.isArray(data.values) || !data.width || !data.height) return data;
-  const width = data.width;
-  const height = data.height;
-  const noData = data.noData ?? -1;
-  const vals = Array.isArray(data.values) ? data.values.slice() : [];
-
-  const gaussian = (x, y, cx, cy, sx, sy, amp) => {
-    const dx = (x - cx) / sx;
-    const dy = (y - cy) / sy;
-    return amp * Math.exp(-(dx * dx + dy * dy));
-  };
-
-  // 测试重点：北京周围（116.4E,39.9N）
-  const bjx = width * 0.69;
-  const bjy = height * 0.37;
-  const blobs = period === 'sunrise'
-    ? [
-        { cx: bjx - width * 0.05, cy: bjy - height * 0.04, sx: width * 0.10, sy: height * 0.09, amp: 26 },
-        { cx: bjx + width * 0.04, cy: bjy + height * 0.02, sx: width * 0.08, sy: height * 0.08, amp: 20 },
-      ]
-    : [
-        { cx: bjx + width * 0.03, cy: bjy + height * 0.03, sx: width * 0.11, sy: height * 0.10, amp: 27 },
-        { cx: bjx - width * 0.06, cy: bjy + height * 0.01, sx: width * 0.09, sy: height * 0.08, amp: 19 },
-      ];
-
-  for (let row = 0; row < height; row++) {
-    for (let col = 0; col < width; col++) {
-      const i = row * width + col;
-      const base = Number.isFinite(vals[i]) && vals[i] !== noData ? vals[i] : 0;
-      let add = 0;
-      for (const b of blobs) add += gaussian(col, row, b.cx, b.cy, b.sx, b.sy, b.amp);
-      const mixed = Math.max(base, Math.min(68, base * 0.75 + add));
-      vals[i] = mixed;
-    }
-  }
-
-  return { ...data, values: vals, synthetic: true };
-}
-
 // ─── 工具函数 ─────────────────────────────────────────────────────────────────
 
 function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
@@ -391,13 +351,16 @@ export default class ChinaRasterOverlay {
     try {
       const zoom = this._map ? this._map.getZoom() : 5;
       const resolution = resolutionForZoom(zoom);
-      const params = new URLSearchParams({ period: this._period, resolution: String(resolution) });
+      const requestPeriod = this._period === 'test' ? 'sunset' : this._period;
+      const params = new URLSearchParams({ period: requestPeriod, resolution: String(resolution) });
 
       const res = await fetch(`/api/spots/china/raster?${params}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const rawData = await res.json();
-      const data = ENABLE_SYNTHETIC_TEST_DATA ? injectSyntheticRaster(rawData, this._period) : rawData;
+      const data = (ENABLE_SYNTHETIC_TEST_DATA && this._period === 'test')
+        ? this._buildSyntheticTestData(rawData)
+        : rawData;
       this._rasterData = data;
       this._updatedAt = data.updatedAt || null;
 
@@ -408,6 +371,44 @@ export default class ChinaRasterOverlay {
     } finally {
       this._loading = false;
     }
+  }
+
+  _buildSyntheticTestData(data) {
+    if (!data || !Array.isArray(data.values) || !data.width || !data.height) return data;
+
+    const width = data.width;
+    const height = data.height;
+    const noData = data.noData ?? -1;
+    const values = data.values.slice();
+
+    const gaussian = (x, y, cx, cy, sx, sy, amp) => {
+      const dx = (x - cx) / sx;
+      const dy = (y - cy) / sy;
+      return amp * Math.exp(-(dx * dx + dy * dy));
+    };
+
+    // 测试板块：北京附近构造明显可见的模拟云团
+    const bjx = width * 0.69;
+    const bjy = height * 0.37;
+    const blobs = [
+      { cx: bjx - width * 0.04, cy: bjy - height * 0.03, sx: width * 0.10, sy: height * 0.09, amp: 26 },
+      { cx: bjx + width * 0.05, cy: bjy + height * 0.02, sx: width * 0.08, sy: height * 0.08, amp: 22 },
+      { cx: bjx,                cy: bjy + height * 0.06, sx: width * 0.12, sy: height * 0.10, amp: 18 },
+    ];
+
+    for (let row = 0; row < height; row++) {
+      for (let col = 0; col < width; col++) {
+        const idx = row * width + col;
+        const base = Number.isFinite(values[idx]) && values[idx] !== noData ? values[idx] : 0;
+
+        let add = 0;
+        for (const b of blobs) add += gaussian(col, row, b.cx, b.cy, b.sx, b.sy, b.amp);
+
+        values[idx] = Math.max(base, Math.min(68, base * 0.65 + add));
+      }
+    }
+
+    return { ...data, values, synthetic: true, updatedAt: data.updatedAt || new Date().toISOString() };
   }
 
   show() {
