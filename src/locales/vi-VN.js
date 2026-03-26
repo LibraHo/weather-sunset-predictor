@@ -30,7 +30,61 @@ const translations = {
       "scoreGuideTitle": "Hướng dẫn điểm số",
       "scoreExcellent": "Xuất sắc：>70（nên ra ngoài）",
       "scoreGood": "Tốt：40-70（có thể ngắm）",
-      "scoreFair": "Bình thường：<40（kỳ vọng vừa phải）"
+      "scoreFair": "Bình thường：<40（kỳ vọng vừa phải）",
+      "scoreExcellentRange": "Xuất sắc",
+      "scoreExcellentDesc": "Rất nên ra ngoài",
+      "scoreGoodRange": "Tốt",
+      "scoreGoodDesc": "Có thể ngắm, điều kiện tốt",
+      "scoreFairRange": "Bình thường",
+      "scoreFairDesc": "Kỳ vọng vừa phải",
+      "scorePoorRange": "Kém",
+      "scorePoorDesc": "Không nên",
+      "sections": {
+        "cloudStructure": {
+          "title": "1. Cấu trúc tầng mây",
+          "subtitle": "Cấu trúc mây · 60 điểm",
+          "desc": "Mây lửa cần các tầng mây phù hợp làm \"khung vẽ\". Mây cao và mây trung là những vật mang chính.",
+          "highCloud": "Mây cao (>6km): tối ưu 50%, đường cong Gauss, tối đa 25 điểm",
+          "midCloud": "Mây trung (2–6km): tối ưu 35%, đường cong Gauss, tối đa 25 điểm",
+          "lowCloudBonus": "Thưởng mây thấp: càng ít càng tốt, <20% = 10 điểm, giảm tuyến tính",
+          "formula": "Điểm cấu trúc = Mây cao + Mây trung + Thưởng mây thấp (tối đa 60 điểm)"
+        },
+        "transparency": {
+          "title": "2. Độ trong suốt khí quyển",
+          "subtitle": "Độ trong suốt · 25 điểm",
+          "desc": "Khí quyển trong suốt giúp ánh sáng tô màu mây sinh động hơn. Độ ẩm vừa phải tăng cường tán xạ.",
+          "visibility": "Tầm nhìn: 15 × (1 − e^(−v/15)), tối đa 15 điểm",
+          "humidity": "Độ ẩm: tối ưu 55%, đường cong Gauss, tối đa 10 điểm",
+          "formula": "Điểm trong suốt = Tầm nhìn + Độ ẩm (tối đa 25 điểm)"
+        },
+        "layerDiversity": {
+          "title": "3. Độ đa dạng tầng mây",
+          "subtitle": "Đa dạng tầng mây · 15 điểm",
+          "desc": "Khi mây cao, trung và thấp cùng tồn tại, các góc khúc xạ đa dạng tạo ra các lớp màu phong phú hơn.",
+          "threeLayer": "Cả ba tầng >10% → 15 điểm",
+          "twoLayer": "Bất kỳ hai tầng >10% → 8 điểm",
+          "oneLayer": "Chỉ một tầng hoặc không có mây → 0 điểm"
+        },
+        "lowCloudPenalty": {
+          "title": "4. Hệ số phạt mây thấp",
+          "subtitle": "Phạt mây thấp · Hệ số nhân",
+          "desc": "Mây thấp chặn tầm nhìn và là \"kẻ giết tầm nhìn\" của mây lửa. Áp dụng như hình phạt nhân.",
+          "level1": "Mây thấp <20% → ×1.0 (không phạt)",
+          "level2": "Mây thấp 20–40% → ×1.0 đến ×0.8 (tuyến tính)",
+          "level3": "Mây thấp 40–70% → ×0.8 đến ×0.5 (tuyến tính)",
+          "level4": "Mây thấp >70% → ×0.2 (chặn nghiêm trọng)"
+        },
+        "precipPenalty": {
+          "title": "5. Hệ số phạt lượng mưa",
+          "subtitle": "Phạt lượng mưa · Hệ số nhân",
+          "desc": "Lượng mưa trực tiếp giảm tầm nhìn mây lửa. Áp dụng như hình phạt nhân.",
+          "level1": "Lượng mưa <0.1mm/h → ×1.0 (không phạt)",
+          "level2": "0.1–0.5mm/h → ×0.85",
+          "level3": "0.5–2mm/h → ×0.5",
+          "level4": ">2mm/h → ×0.15 (mưa lớn, gần như không thể)",
+          "formula": "Điểm cuối = Điểm cơ bản × Hệ số mây thấp × Hệ số lượng mưa"
+        }
+      }
     }
   },
   "buttons": {

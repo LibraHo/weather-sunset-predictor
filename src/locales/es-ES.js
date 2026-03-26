@@ -30,7 +30,61 @@ const translations = {
       "scoreGuideTitle": "Guía de puntuación",
       "scoreExcellent": "Excelente: >70 (recomendado salir)",
       "scoreGood": "Bueno: 40-70 (vale la pena)",
-      "scoreFair": "Regular: <40 (modera expectativas)"
+      "scoreFair": "Regular: <40 (modera expectativas)",
+      "scoreExcellentRange": "Excelente",
+      "scoreExcellentDesc": "Altamente recomendado",
+      "scoreGoodRange": "Bueno",
+      "scoreGoodDesc": "Observable, buenas condiciones",
+      "scoreFairRange": "Regular",
+      "scoreFairDesc": "Expectativas moderadas",
+      "scorePoorRange": "Malo",
+      "scorePoorDesc": "No recomendado",
+      "sections": {
+        "cloudStructure": {
+          "title": "1. Estructura de nubes",
+          "subtitle": "Estructura de nubes · 60 pts",
+          "desc": "Las nubes rojas necesitan las capas de nubes correctas como \"lienzo\". Las nubes altas y medias son los portadores clave.",
+          "highCloud": "Nubes altas (>6km): óptimo 50%, curva gaussiana, máx 25 pts",
+          "midCloud": "Nubes medias (2–6km): óptimo 35%, curva gaussiana, máx 25 pts",
+          "lowCloudBonus": "Bono nubes bajas: menos es mejor, <20% = 10 pts, decaimiento lineal",
+          "formula": "Puntuación estructura = Altas + Medias + Bono bajas (máx 60 pts)"
+        },
+        "transparency": {
+          "title": "2. Transparencia atmosférica",
+          "subtitle": "Transparencia · 25 pts",
+          "desc": "Una atmósfera clara permite que la luz coloree las nubes más vívidamente. La humedad moderada mejora la dispersión.",
+          "visibility": "Visibilidad: 15 × (1 − e^(−v/15)), máx 15 pts",
+          "humidity": "Humedad: óptimo 55%, curva gaussiana, máx 10 pts",
+          "formula": "Puntuación transparencia = Visibilidad + Humedad (máx 25 pts)"
+        },
+        "layerDiversity": {
+          "title": "3. Diversidad de capas",
+          "subtitle": "Diversidad de capas · 15 pts",
+          "desc": "Cuando coexisten nubes altas, medias y bajas, los ángulos de refracción variados crean capas de colores más ricas.",
+          "threeLayer": "Las tres capas >10% → 15 pts",
+          "twoLayer": "Dos capas cualesquiera >10% → 8 pts",
+          "oneLayer": "Solo una capa o sin nubes → 0 pts"
+        },
+        "lowCloudPenalty": {
+          "title": "4. Penalización nubes bajas",
+          "subtitle": "Penalización nubes bajas · Multiplicador",
+          "desc": "Las nubes bajas bloquean la vista y son el \"asesino de visibilidad\" de las nubes rojas. Aplicado como penalización multiplicativa.",
+          "level1": "Nubes bajas <20% → ×1.0 (sin penalización)",
+          "level2": "Nubes bajas 20–40% → ×1.0 a ×0.8 (lineal)",
+          "level3": "Nubes bajas 40–70% → ×0.8 a ×0.5 (lineal)",
+          "level4": "Nubes bajas >70% → ×0.2 (bloqueo severo)"
+        },
+        "precipPenalty": {
+          "title": "5. Penalización precipitaciones",
+          "subtitle": "Penalización precipitaciones · Multiplicador",
+          "desc": "Las precipitaciones reducen directamente la visibilidad de las nubes rojas. Aplicado como penalización multiplicativa.",
+          "level1": "Precipitaciones <0.1mm/h → ×1.0 (sin penalización)",
+          "level2": "0.1–0.5mm/h → ×0.85",
+          "level3": "0.5–2mm/h → ×0.5",
+          "level4": ">2mm/h → ×0.15 (lluvia intensa, casi imposible)",
+          "formula": "Puntuación final = Base × Penalización nubes bajas × Penalización precipitaciones"
+        }
+      }
     }
   },
   "buttons": {

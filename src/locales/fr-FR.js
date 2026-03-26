@@ -30,7 +30,61 @@ const translations = {
       "scoreGuideTitle": "Interprétation du score",
       "scoreExcellent": "Excellent : >70 (sortir recommandé)",
       "scoreGood": "Bon : 40-70 (vaut le coup)",
-      "scoreFair": "Passable : <40 (tempérez vos attentes)"
+      "scoreFair": "Passable : <40 (tempérez vos attentes)",
+      "scoreExcellentRange": "Excellent",
+      "scoreExcellentDesc": "Fortement recommandé",
+      "scoreGoodRange": "Bon",
+      "scoreGoodDesc": "Observable, bonnes conditions",
+      "scoreFairRange": "Passable",
+      "scoreFairDesc": "Attentes modérées",
+      "scorePoorRange": "Mauvais",
+      "scorePoorDesc": "Non recommandé",
+      "sections": {
+        "cloudStructure": {
+          "title": "1. Structure des nuages",
+          "subtitle": "Structure des nuages · 60 pts",
+          "desc": "Les nuages rouges nécessitent les bonnes couches nuageuses comme \"toile\". Les nuages élevés et moyens sont les vecteurs clés.",
+          "highCloud": "Nuages élevés (>6km) : optimal 50%, courbe gaussienne, max 25 pts",
+          "midCloud": "Nuages moyens (2–6km) : optimal 35%, courbe gaussienne, max 25 pts",
+          "lowCloudBonus": "Bonus nuages bas : moins c'est mieux, <20% = 10 pts, décroissance linéaire",
+          "formula": "Score structure = Nuages élevés + Nuages moyens + Bonus bas (max 60 pts)"
+        },
+        "transparency": {
+          "title": "2. Transparence atmosphérique",
+          "subtitle": "Transparence · 25 pts",
+          "desc": "Une atmosphère claire permet à la lumière de colorer les nuages plus vivement. Une humidité modérée améliore la diffusion.",
+          "visibility": "Visibilité : 15 × (1 − e^(−v/15)), max 15 pts",
+          "humidity": "Humidité : optimal 55%, courbe gaussienne, max 10 pts",
+          "formula": "Score transparence = Visibilité + Humidité (max 25 pts)"
+        },
+        "layerDiversity": {
+          "title": "3. Diversité des couches",
+          "subtitle": "Diversité des couches · 15 pts",
+          "desc": "Quand les nuages élevés, moyens et bas coexistent, les angles de réfraction variés créent des couches de couleurs plus riches.",
+          "threeLayer": "Les trois couches >10% → 15 pts",
+          "twoLayer": "Deux couches quelconques >10% → 8 pts",
+          "oneLayer": "Une seule couche ou pas de nuages → 0 pt"
+        },
+        "lowCloudPenalty": {
+          "title": "4. Pénalité nuages bas",
+          "subtitle": "Pénalité nuages bas · Multiplicateur",
+          "desc": "Les nuages bas bloquent la vue et sont le \"tueur de visibilité\" des nuages rouges. Appliqué comme pénalité multiplicative.",
+          "level1": "Nuages bas <20% → ×1.0 (sans pénalité)",
+          "level2": "Nuages bas 20–40% → ×1.0 à ×0.8 (linéaire)",
+          "level3": "Nuages bas 40–70% → ×0.8 à ×0.5 (linéaire)",
+          "level4": "Nuages bas >70% → ×0.2 (obstruction sévère)"
+        },
+        "precipPenalty": {
+          "title": "5. Pénalité précipitations",
+          "subtitle": "Pénalité précipitations · Multiplicateur",
+          "desc": "Les précipitations réduisent directement la visibilité des nuages rouges. Appliqué comme pénalité multiplicative.",
+          "level1": "Précipitations <0.1mm/h → ×1.0 (sans pénalité)",
+          "level2": "0.1–0.5mm/h → ×0.85",
+          "level3": "0.5–2mm/h → ×0.5",
+          "level4": ">2mm/h → ×0.15 (forte pluie, presque impossible)",
+          "formula": "Score final = Score de base × Pénalité nuages bas × Pénalité précipitations"
+        }
+      }
     }
   },
   "buttons": {

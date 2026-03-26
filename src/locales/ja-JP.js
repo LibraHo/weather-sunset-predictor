@@ -30,7 +30,61 @@ const translations = {
       "scoreGuideTitle": "スコアの解釈",
       "scoreExcellent": "優秀：>70（観賞を推奨）",
       "scoreGood": "良好：40-70（観賞可能）",
-      "scoreFair": "普通：<40（期待は控えめに）"
+      "scoreFair": "普通：<40（期待は控えめに）",
+      "scoreExcellentRange": "優秀 Excellent",
+      "scoreExcellentDesc": "強くお勧め",
+      "scoreGoodRange": "良好 Good",
+      "scoreGoodDesc": "観賞可能、条件良好",
+      "scoreFairRange": "普通 Fair",
+      "scoreFairDesc": "慎重に期待",
+      "scorePoorRange": "不良 Poor",
+      "scorePoorDesc": "お勧めしません",
+      "sections": {
+        "cloudStructure": {
+          "title": "1. 雲層構造",
+          "subtitle": "Cloud Structure · 60点",
+          "desc": "焼け雲には適切な雲層が「キャンバス」として必要で、上層雲と中層雲が主要な担い手です。",
+          "highCloud": "上層雲（>6km）：最適50%、ガウス曲線、最高25点",
+          "midCloud": "中層雲（2–6km）：最適35%、ガウス曲線、最高25点",
+          "lowCloudBonus": "下層雲ボーナス：下層雲<20%で満点10点、線形減少",
+          "formula": "雲層構造スコア = 上層雲 + 中層雲 + 下層雲ボーナス（最高60点）"
+        },
+        "transparency": {
+          "title": "2. 大気透明度",
+          "subtitle": "Transparency · 25点",
+          "desc": "透明な大気は光を純粋に雲に着色し、適度な湿度は散乱を高め色彩を豊かにします。",
+          "visibility": "視程：15 × (1 − e^(−v/15))、最高15点",
+          "humidity": "湿度：最適55%、ガウス曲線、最高10点",
+          "formula": "透明度スコア = 視程スコア + 湿度スコア（最高25点）"
+        },
+        "layerDiversity": {
+          "title": "3. 雲層の立体感",
+          "subtitle": "Layer Diversity · 15点",
+          "desc": "上・中・下層雲が同時に存在すると、光の屈折角が多様になり色彩の層が豊かになります。",
+          "threeLayer": "3層すべて>10% → 15点",
+          "twoLayer": "いずれか2層>10% → 8点",
+          "oneLayer": "1層のみまたは雲なし → 0点"
+        },
+        "lowCloudPenalty": {
+          "title": "4. 下層雲ペナルティ係数",
+          "subtitle": "Low Cloud Penalty · Multiplier",
+          "desc": "下層雲は視線を遮る「視認性の敵」で、乗算係数として総スコアに適用されます。",
+          "level1": "下層雲<20% → ×1.0（ペナルティなし）",
+          "level2": "下層雲20–40% → ×1.0 〜 ×0.8（線形）",
+          "level3": "下層雲40–70% → ×0.8 〜 ×0.5（線形）",
+          "level4": "下層雲>70% → ×0.2（深刻な遮蔽）"
+        },
+        "precipPenalty": {
+          "title": "5. 降水ペナルティ係数",
+          "subtitle": "Precipitation Penalty · Multiplier",
+          "desc": "降水は焼け雲の視認性を直接低下させ、乗算係数として総スコアに適用されます。",
+          "level1": "降水<0.1mm/h → ×1.0（ペナルティなし）",
+          "level2": "0.1–0.5mm/h → ×0.85",
+          "level3": "0.5–2mm/h → ×0.5",
+          "level4": ">2mm/h → ×0.15（大雨、ほぼ絶望的）",
+          "formula": "最終スコア = 基礎スコア × 下層雲係数 × 降水係数"
+        }
+      }
     }
   },
   "buttons": {

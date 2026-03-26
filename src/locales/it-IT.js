@@ -30,7 +30,61 @@ const translations = {
       "scoreGuideTitle": "Guida al punteggio",
       "scoreExcellent": "Eccellente: >70 (uscire consigliato)",
       "scoreGood": "Buono: 40-70 (vale la pena)",
-      "scoreFair": "Sufficiente: <40 (aspettative moderate)"
+      "scoreFair": "Sufficiente: <40 (aspettative moderate)",
+      "scoreExcellentRange": "Eccellente",
+      "scoreExcellentDesc": "Altamente consigliato",
+      "scoreGoodRange": "Buono",
+      "scoreGoodDesc": "Osservabile, buone condizioni",
+      "scoreFairRange": "Sufficiente",
+      "scoreFairDesc": "Aspettative moderate",
+      "scorePoorRange": "Scarso",
+      "scorePoorDesc": "Non consigliato",
+      "sections": {
+        "cloudStructure": {
+          "title": "1. Struttura delle nuvole",
+          "subtitle": "Struttura delle nuvole · 60 pts",
+          "desc": "Le nuvole rosse necessitano dei giusti strati nuvolosi come \"tela\". Le nuvole alte e medie sono i vettori chiave.",
+          "highCloud": "Nuvole alte (>6km): ottimale 50%, curva gaussiana, max 25 pts",
+          "midCloud": "Nuvole medie (2–6km): ottimale 35%, curva gaussiana, max 25 pts",
+          "lowCloudBonus": "Bonus nuvole basse: meno è meglio, <20% = 10 pts, decadimento lineare",
+          "formula": "Punteggio struttura = Alte + Medie + Bonus basse (max 60 pts)"
+        },
+        "transparency": {
+          "title": "2. Trasparenza atmosferica",
+          "subtitle": "Trasparenza · 25 pts",
+          "desc": "Un'atmosfera limpida permette alla luce di colorare le nuvole più vivacemente. L'umidità moderata migliora la diffusione.",
+          "visibility": "Visibilità: 15 × (1 − e^(−v/15)), max 15 pts",
+          "humidity": "Umidità: ottimale 55%, curva gaussiana, max 10 pts",
+          "formula": "Punteggio trasparenza = Visibilità + Umidità (max 25 pts)"
+        },
+        "layerDiversity": {
+          "title": "3. Diversità degli strati",
+          "subtitle": "Diversità degli strati · 15 pts",
+          "desc": "Quando nuvole alte, medie e basse coesistono, gli angoli di rifrazione variati creano strati di colori più ricchi.",
+          "threeLayer": "Tutti e tre gli strati >10% → 15 pts",
+          "twoLayer": "Qualsiasi due strati >10% → 8 pts",
+          "oneLayer": "Solo uno strato o nessuna nuvola → 0 pts"
+        },
+        "lowCloudPenalty": {
+          "title": "4. Penalità nuvole basse",
+          "subtitle": "Penalità nuvole basse · Moltiplicatore",
+          "desc": "Le nuvole basse bloccano la vista e sono il \"killer della visibilità\" delle nuvole rosse. Applicato come penalità moltiplicativa.",
+          "level1": "Nuvole basse <20% → ×1.0 (nessuna penalità)",
+          "level2": "Nuvole basse 20–40% → ×1.0 a ×0.8 (lineare)",
+          "level3": "Nuvole basse 40–70% → ×0.8 a ×0.5 (lineare)",
+          "level4": "Nuvole basse >70% → ×0.2 (ostruzione grave)"
+        },
+        "precipPenalty": {
+          "title": "5. Penalità precipitazioni",
+          "subtitle": "Penalità precipitazioni · Moltiplicatore",
+          "desc": "Le precipitazioni riducono direttamente la visibilità delle nuvole rosse. Applicato come penalità moltiplicativa.",
+          "level1": "Precipitazioni <0.1mm/h → ×1.0 (nessuna penalità)",
+          "level2": "0.1–0.5mm/h → ×0.85",
+          "level3": "0.5–2mm/h → ×0.5",
+          "level4": ">2mm/h → ×0.15 (pioggia intensa, quasi impossibile)",
+          "formula": "Punteggio finale = Base × Penalità nuvole basse × Penalità precipitazioni"
+        }
+      }
     }
   },
   "buttons": {
