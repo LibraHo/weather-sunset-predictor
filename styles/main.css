@@ -2552,13 +2552,16 @@ body.theme-dark .chart-container > div > div {
 /* 移动端优化 */
 @media (max-width: 640px) {
   .weekly-cards-container {
-    flex-direction: column;
-    overflow-x: unset;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
   }
   .day-card {
-    min-width: unset;
-    width: 100%;
+    min-width: 108px;
+    width: auto;
     flex-direction: column;
+    flex: 0 0 auto;
   }
 }
 
