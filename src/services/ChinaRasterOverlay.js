@@ -69,15 +69,17 @@ function injectSyntheticRaster(data, period = 'sunset') {
     return amp * Math.exp(-(dx * dx + dy * dy));
   };
 
-  // 朝霞与晚霞用不同中心，确保切换有明显变化
+  // 测试重点：北京周围（116.4E,39.9N）
+  const bjx = width * 0.69;
+  const bjy = height * 0.37;
   const blobs = period === 'sunrise'
     ? [
-        { cx: width * 0.62, cy: height * 0.28, sx: width * 0.12, sy: height * 0.10, amp: 24 },
-        { cx: width * 0.72, cy: height * 0.42, sx: width * 0.10, sy: height * 0.12, amp: 20 },
+        { cx: bjx - width * 0.05, cy: bjy - height * 0.04, sx: width * 0.10, sy: height * 0.09, amp: 26 },
+        { cx: bjx + width * 0.04, cy: bjy + height * 0.02, sx: width * 0.08, sy: height * 0.08, amp: 20 },
       ]
     : [
-        { cx: width * 0.45, cy: height * 0.35, sx: width * 0.14, sy: height * 0.11, amp: 25 },
-        { cx: width * 0.58, cy: height * 0.48, sx: width * 0.11, sy: height * 0.13, amp: 19 },
+        { cx: bjx + width * 0.03, cy: bjy + height * 0.03, sx: width * 0.11, sy: height * 0.10, amp: 27 },
+        { cx: bjx - width * 0.06, cy: bjy + height * 0.01, sx: width * 0.09, sy: height * 0.08, amp: 19 },
       ];
 
   for (let row = 0; row < height; row++) {
