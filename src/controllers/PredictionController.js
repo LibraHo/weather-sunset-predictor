@@ -11,7 +11,7 @@
 
 import SunsetPredictionService from '../services/SunsetPredictionService.js';
 import EnhancedSunsetPredictionService from '../services/EnhancedSunsetPredictionService.js';
-import UnifiedSunsetScoringService from '../services/UnifiedSunsetScoringService.js';
+// UnifiedSunsetScoringService 已内联进 SunsetPredictionService._calculateUnifiedScore
 import PredictionAPIService from '../services/PredictionAPIService.js';
 import NotificationService from '../services/NotificationService.js';
 import i18n from '../i18n.js';
@@ -40,8 +40,7 @@ class PredictionController {
     this.predictionAPIService = new PredictionAPIService(config.proxy.url);
     console.log('[PredictionController] 功能开关:', this.features);
 
-    // 统一评分服务（供详情页展示 breakdown）
-    this.unifiedScoring = new UnifiedSunsetScoringService();
+    // 统一评分通过 predictionService._calculateUnifiedScore() 调用
   }
 
   /**
@@ -1039,7 +1038,7 @@ class PredictionController {
       precipitation: precipitation
     };
 
-    const result = this.unifiedScoring.calculate(weatherInput);
+    const result = this.predictionService._calculateUnifiedScore(weatherInput);
     const { score, quality, breakdown } = result;
     const finalScore = Math.round(score);
 

@@ -8,12 +8,11 @@
  */
 
 import SunsetPrediction from '../models/SunsetPrediction.js';
-import UnifiedSunsetScoringService from './UnifiedSunsetScoringService.js';
 
 class SunsetPredictionService {
   constructor() {
     /**
-     * 各气象因素的权重配置（保留兼容旧逻辑，实际评分已迁移至 UnifiedSunsetScoringService）
+     * 各气象因素的权重配置（保留兼容旧逻辑，实际评分已迁移至 _calculateUnifiedScore）
      *
      * 需求：5.1, 5.2, 5.3, 5.4 - 分析多个气象参数
      */
@@ -23,9 +22,118 @@ class SunsetPredictionService {
       visibility: 0.20,    // 能见度权重
       lowClouds: 0.20      // 低层云权重
     };
+  }
 
-    // 统一评分服务
-    this.unifiedScoring = new UnifiedSunsetScoringService();
+  /**
+   * 计算火烧云综合评分（内联自原 UnifiedSunsetScoringService）
+   *
+   * @param {Object} weatherData - 天气数据
+   * @returns {{ score: number, quality: string, breakdown: Object }}
+   */
+  _calculateUnifiedScore(weatherData) {
+    const highClouds = weatherData.highClouds ?? 0;
+    const midClouds = weatherData.midClouds ?? 0;
+    const lowClouds = weatherData.lowClouds ?? 0;
+    const visibility = weatherData.visibility ?? 10;
+    const humidity = weatherData.humidity ?? 50;
+    const precipitation = weatherData.precipitation ?? 0;
+
+    // ── 第一步：基础分 ────────────────────────────────────────────────
+
+    // ① 云层结构（60分）
+    const highCloudsScore = 25 * Math.exp(-Math.pow(highClouds - 50, 2) / (2 * 20 * 20));
+    const midCloudsScore  = 25 * Math.exp(-Math.pow(midClouds - 35, 2)  / (2 * 15 * 15));
+    const lowCloudBonus   = 10 * Math.max(0, 1 - lowClouds / 20);
+    const cloudStructureScore = highCloudsScore + midCloudsScore + lowCloudBonus;
+
+    // ② 大气透明度（25分）
+    const visibilityScore = 15 * (1 - Math.exp(-visibility / 15));
+    const humidityScore   = 10 * Math.exp(-Math.pow(humidity - 55, 2) / (2 * 20 * 20));
+    const transparencyScore = visibilityScore + humidityScore;
+
+    // ③ 云层立体感（15分）
+    const layerCount = (highClouds > 10 ? 1 : 0) + (midClouds > 10 ? 1 : 0) + (lowClouds > 10 ? 1 : 0);
+    let layerDiversityScore;
+    if (layerCount >= 3) {
+      layerDiversityScore = 15;
+    } else if (layerCount === 2) {
+      layerDiversityScore = 8;
+    } else {
+      layerDiversityScore = 0;
+    }
+
+    const baseScore = cloudStructureScore + transparencyScore + layerDiversityScore;
+
+    // ── 第二步：乘性惩罚 ──────────────────────────────────────────────
+
+    // 低云惩罚
+    let lowCloudPenalty;
+    if (lowClouds < 20) {
+      lowCloudPenalty = 1.0;
+    } else if (lowClouds < 40) {
+      lowCloudPenalty = 1.0 - 0.2 * (lowClouds - 20) / 20; // 1.0 → 0.8
+    } else if (lowClouds < 70) {
+      lowCloudPenalty = 0.8 - 0.3 * (lowClouds - 40) / 30; // 0.8 → 0.5
+    } else {
+      lowCloudPenalty = 0.2;
+    }
+
+    // 降水惩罚
+    let precipPenalty;
+    if (precipitation < 0.1) {
+      precipPenalty = 1.0;
+    } else if (precipitation < 0.5) {
+      precipPenalty = 0.85;
+    } else if (precipitation < 2.0) {
+      precipPenalty = 0.5;
+    } else {
+      precipPenalty = 0.15;
+    }
+
+    let finalScore = baseScore * lowCloudPenalty * precipPenalty;
+    finalScore = Math.max(0, Math.min(100, finalScore));
+
+    // ── 第三步：quality 等级 ──────────────────────────────────────────
+
+    let quality;
+    if (finalScore >= 80) {
+      quality = 'excellent';
+    } else if (finalScore >= 60) {
+      quality = 'good';
+    } else if (finalScore >= 40) {
+      quality = 'fair';
+    } else {
+      quality = 'poor';
+    }
+
+    // ── 返回结果 ──────────────────────────────────────────────────────
+
+    const breakdown = {
+      cloudStructure: {
+        score: cloudStructureScore,
+        max: 60,
+        highCloudsScore,
+        midCloudsScore,
+        lowCloudBonus
+      },
+      transparency: {
+        score: transparencyScore,
+        max: 25,
+        visibilityScore,
+        humidityScore
+      },
+      layerDiversity: {
+        score: layerDiversityScore,
+        max: 15,
+        layerCount
+      },
+      baseScore,
+      lowCloudPenalty,
+      precipPenalty,
+      finalScore
+    };
+
+    return { score: finalScore, quality, breakdown };
   }
 
   /**
@@ -296,8 +404,8 @@ class SunsetPredictionService {
     const sunsetTime = this.getSunsetTime(date, lat, lon);
     const sunriseTime = this.getSunriseTime(date, lat, lon);
 
-    // 使用统一评分服务计算 score / quality / breakdown
-    const unifiedResult = this.unifiedScoring.calculate({
+    // 使用统一评分算法计算 score / quality / breakdown
+    const unifiedResult = this._calculateUnifiedScore({
       cloudCover:    weatherData.cloudCover    ?? 0,
       highClouds:    weatherData.highClouds    ?? 0,
       midClouds:     weatherData.midClouds     ?? 0,
