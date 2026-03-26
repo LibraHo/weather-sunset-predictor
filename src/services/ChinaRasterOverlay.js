@@ -11,7 +11,7 @@
 
 // 数据有效阈值（用于统计，不等于视觉显示阈值）
 const RASTER_MIN_SCORE = 15;
-const RASTER_FULL_SCORE = 95;
+const RASTER_FULL_SCORE = 70;
 
 // 视觉显示阈值：下调到当前数据分布可见区间
 const VISUAL_MIN_SCORE = 30;
@@ -63,8 +63,8 @@ function smoothstep01(t) {
 }
 
 function alphaSoftThreshold(score) {
-  if (score < 26) return 0;                 // 低分不显示
-  if (score < VISUAL_MIN_SCORE) return 0.06; // 26~30 极低透明
+  if (score < 24) return 0;                  // 低分不显示
+  if (score < VISUAL_MIN_SCORE) return 0.12; // 24~30 低透明保底
   return 1;
 }
 
@@ -523,8 +523,9 @@ export default class ChinaRasterOverlay {
     const zoom = this._map.getZoom();
     const blurPx = clamp(3.0 - (zoom - 5) * 0.25, 1.2, 3.2);
     ctx.save();
-    ctx.filter = `blur(${blurPx.toFixed(1)}px) saturate(1.06)`;
+    ctx.filter = `blur(${blurPx.toFixed(1)}px) saturate(1.18) contrast(1.08)`;
     ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
     ctx.imageSmoothingEnabled = true;
     ctx.drawImage(this._offscreen, 0, 0, width, height, tl.x, tl.y, screenW, screenH);
     ctx.restore();
