@@ -8,12 +8,13 @@
  */
 
 import SunsetPrediction from '../models/SunsetPrediction.js';
+import UnifiedSunsetScoringService from './UnifiedSunsetScoringService.js';
 
 class SunsetPredictionService {
   constructor() {
     /**
-     * 各气象因素的权重配置
-     * 
+     * 各气象因素的权重配置（保留兼容旧逻辑，实际评分已迁移至 UnifiedSunsetScoringService）
+     *
      * 需求：5.1, 5.2, 5.3, 5.4 - 分析多个气象参数
      */
     this.weights = {
@@ -22,6 +23,9 @@ class SunsetPredictionService {
       visibility: 0.20,    // 能见度权重
       lowClouds: 0.20      // 低层云权重
     };
+
+    // 统一评分服务
+    this.unifiedScoring = new UnifiedSunsetScoringService();
   }
 
   /**
@@ -399,65 +403,39 @@ class SunsetPredictionService {
     const sunsetTime = this.getSunsetTime(date, lat, lon);
     const sunriseTime = this.getSunriseTime(date, lat, lon);
 
-    // 计算各因素得分
-    const cloudCoverScore = this.scoreCloudCover(weatherData.cloudCover || 0);
-    const humidityScore = this.scoreHumidity(weatherData.humidity || 0);
-    const visibilityScore = this.scoreVisibility(weatherData.visibility || 0);
-    const lowCloudsScore = this.scoreLowClouds(weatherData.lowCloudCover || weatherData.cloudCover || 0);
+    // 使用统一评分服务计算 score / quality / breakdown
+    const unifiedResult = this.unifiedScoring.calculate({
+      cloudCover:    weatherData.cloudCover    ?? 0,
+      highClouds:    weatherData.highClouds    ?? 0,
+      midClouds:     weatherData.midClouds     ?? 0,
+      lowClouds:     weatherData.lowClouds     ?? weatherData.lowCloudCover ?? 0,
+      visibility:    weatherData.visibility    ?? 10,
+      humidity:      weatherData.humidity      ?? 50,
+      precipitation: weatherData.precipitation ?? 0
+    });
 
-    // 保存各因素得分，用于详细展示
+    const finalScore = Math.round(unifiedResult.score);
+    const quality    = unifiedResult.quality;
+
+    // 保存各因素得分，用于详细展示（兼容旧字段）
     const factors = {
       cloudCover: {
         value: weatherData.cloudCover || 0,
-        score: cloudCoverScore
+        score: this.scoreCloudCover(weatherData.cloudCover || 0)
       },
       humidity: {
         value: weatherData.humidity || 0,
-        score: humidityScore
+        score: this.scoreHumidity(weatherData.humidity || 0)
       },
       visibility: {
         value: weatherData.visibility || 0,
-        score: visibilityScore
+        score: this.scoreVisibility(weatherData.visibility || 0)
       },
       lowClouds: {
-        value: weatherData.lowCloudCover || weatherData.cloudCover || 0,
-        score: lowCloudsScore
+        value: weatherData.lowClouds ?? weatherData.lowCloudCover ?? weatherData.cloudCover ?? 0,
+        score: this.scoreLowClouds(weatherData.lowClouds ?? weatherData.lowCloudCover ?? weatherData.cloudCover ?? 0)
       }
     };
-
-    // 计算加权总分
-    const totalScore = 
-      cloudCoverScore * this.weights.cloudCover +
-      humidityScore * this.weights.humidity +
-      visibilityScore * this.weights.visibility +
-      lowCloudsScore * this.weights.lowClouds;
-
-    // 低云强制惩罚乘数：低云过多时，日落/日出景观被遮挡，评分大幅降低
-    // 需求：5.4 - 低层云少为佳（修复：需要对整体评分施加乘数惩罚）
-    const lowCloudValue = weatherData.lowCloudCover ?? weatherData.cloudCover ?? 0;
-    let lowCloudMultiplier = 1.0;
-    if (lowCloudValue >= 80) {
-      lowCloudMultiplier = 0.20; // 低云≥80%: 严重遮挡，评分×0.2
-    } else if (lowCloudValue >= 60) {
-      lowCloudMultiplier = 0.40; // 低云≥60%: 大幅遮挡，评分×0.4
-    } else if (lowCloudValue >= 40) {
-      lowCloudMultiplier = 0.65; // 低云≥40%: 部分遮挡，评分×0.65
-    } else if (lowCloudValue >= 20) {
-      lowCloudMultiplier = 0.85; // 低云≥20%: 轻微影响，评分×0.85
-    }
-
-    // 确保评分在0-100范围内，并应用低云乘数
-    const finalScore = Math.max(0, Math.min(100, Math.round(totalScore * lowCloudMultiplier)));
-
-    // 根据评分确定质量等级
-    let quality;
-    if (finalScore >= 70) {
-      quality = 'excellent';  // 优秀
-    } else if (finalScore >= 40) {
-      quality = 'good';       // 良好
-    } else {
-      quality = 'fair';       // 一般
-    }
 
     // 需求12：计算黄金时段和蓝调时段
     const referenceTime = type === 'sunrise' ? sunriseTime : sunsetTime;
