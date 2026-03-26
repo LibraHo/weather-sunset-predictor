@@ -120,6 +120,66 @@ class ProviderOrchestrator {
     return annotated;
   }
 
+  async _fetchBatchWithQualityGate(providerKey, points, hours, weatherModel = 'ecmwf_ifs025') {
+    const provider = this.providers[providerKey];
+    if (!provider) {
+      throw new Error(`未知的天气数据源: ${providerKey}`);
+    }
+
+    const pointList = Array.isArray(points) ? points : [];
+    if (pointList.length === 0) {
+      return {};
+    }
+
+    const addByPoint = (target, key, rawData) => {
+      const annotated = this._validateAndAnnotate(rawData, providerKey);
+      target[key] = annotated;
+    };
+
+    if (typeof provider.fetchWeatherDataBatch === 'function') {
+      const rawMap = await provider.fetchWeatherDataBatch(pointList, hours, weatherModel);
+      const result = {};
+
+      for (const point of pointList) {
+        const key = `${point.lat},${point.lon}`;
+        const rawData = rawMap?.[key];
+        if (!rawData) {
+          const missError = new Error(`Batch response missing point ${key}`);
+          missError.isQualityError = true;
+          missError.providerKey = providerKey;
+          throw missError;
+        }
+
+        try {
+          addByPoint(result, key, rawData);
+        } catch (qualityError) {
+          qualityError.isQualityError = true;
+          qualityError.providerKey = providerKey;
+          throw qualityError;
+        }
+      }
+
+      return result;
+    }
+
+    // 兼容不支持批量接口的 provider：串行回退单点调用
+    const fallbackMap = {};
+    for (const point of pointList) {
+      try {
+        const rawData = await provider.fetchWeatherData(point.lat, point.lon, hours, null, weatherModel);
+        addByPoint(fallbackMap, `${point.lat},${point.lon}`, rawData);
+      } catch (error) {
+        if (!error.isQualityError) {
+          error.isQualityError = true;
+        }
+        error.providerKey = providerKey;
+        throw error;
+      }
+    }
+
+    return fallbackMap;
+  }
+
   async fetchWeatherData(lat, lon, hours = 168, weatherModel = 'ecmwf_ifs025') {
     const primaryKey = this.primaryProvider;
     const fallbackKey = this.fallbackProvider;
@@ -170,6 +230,61 @@ class ProviderOrchestrator {
         console.error(`[ProviderOrchestrator] Fallback (${fallbackKey}) 失败:`, fallbackError.message);
         throw new Error(
           `所有数据源均无法获取有效天气数据。Primary: ${primaryError.message}, Fallback: ${fallbackError.message}`
+        );
+      }
+    }
+  }
+
+  async fetchWeatherDataBatch(points, hours = 168, weatherModel = 'ecmwf_ifs025') {
+    const primaryKey = this.primaryProvider;
+    const fallbackKey = this.fallbackProvider;
+    const pointList = Array.isArray(points) ? points : [];
+
+    let primaryError = null;
+
+    try {
+      return await this._fetchBatchWithQualityGate(primaryKey, pointList, hours, weatherModel);
+    } catch (err) {
+      primaryError = err;
+      const isQuality = err.isQualityError;
+
+      if (isQuality) {
+        console.warn(`[ProviderOrchestrator] Batch primary (${primaryKey}) 数据质量门禁失败:`, err.message);
+      } else {
+        console.error(`[ProviderOrchestrator] Batch primary (${primaryKey}) 请求失败:`, err.message);
+      }
+
+      const canFallback = isQuality
+        ? this.qualityGateFallbackEnabled
+        : this.emergencyFallbackEnabled;
+
+      if (!canFallback || fallbackKey === primaryKey || !this.providers[fallbackKey]) {
+        throw primaryError;
+      }
+
+      console.warn(`[ProviderOrchestrator] Batch 触发 fallback (${fallbackKey}), 原因: ${err.message}`);
+
+      try {
+        const fallbackMap = await this._fetchBatchWithQualityGate(fallbackKey, pointList, hours, weatherModel);
+        for (const point of pointList) {
+          const key = `${point.lat},${point.lon}`;
+          const pointData = fallbackMap[key];
+          if (!pointData) continue;
+          pointData.providerMeta = pointData.providerMeta || {};
+          pointData.providerMeta.degradedReason = pointData.providerMeta.degradedReason || [];
+          pointData.providerMeta.degradedReason.push(
+            `Primary Provider (${primaryKey}) failed: ${primaryError.message}`
+          );
+          pointData.providerMeta.usedFallback = true;
+          pointData.providerMeta.fallbackReason = primaryError.isQualityError
+            ? 'quality_gate_failure'
+            : 'primary_provider_error';
+        }
+        return fallbackMap;
+      } catch (fallbackError) {
+        console.error(`[ProviderOrchestrator] Batch fallback (${fallbackKey}) 失败:`, fallbackError.message);
+        throw new Error(
+          `批量天气数据获取失败。Primary: ${primaryError.message}, Fallback: ${fallbackError.message}`
         );
       }
     }

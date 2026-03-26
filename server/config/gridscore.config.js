@@ -29,8 +29,14 @@ module.exports = {
       lonMax: 135,  // 最东经度
       latMin: 18,   // 最南纬度
       latMax: 53,   // 最北纬度
-      step: 5       // 网格步长（度）
+      step: 0.5     // 网格步长（度）
     }
+  },
+
+  // 批量抓取配置
+  batch: {
+    // 每次请求坐标数
+    batchSize: 100
   },
 
   // 并发控制
