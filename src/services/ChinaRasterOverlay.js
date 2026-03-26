@@ -14,10 +14,10 @@ const RASTER_MIN_SCORE = 15;
 const RASTER_FULL_SCORE = 70;
 
 // 视觉显示阈值：下调到当前数据分布可见区间
-const VISUAL_MIN_SCORE = 30;
+const VISUAL_MIN_SCORE = 15;
 
 // 等值面分级（>=8 档）
-const BAND_LEVELS = [30, 34, 38, 42, 46, 50, 54, 58, 62, 66, 70];
+const BAND_LEVELS = [15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70];
 
 // 细等值线（更密）
 const CONTOUR_LEVELS = Array.from({ length: 21 }, (_, i) => 30 + i * 2); // 30~70 每 2 分
@@ -28,24 +28,24 @@ const FALLBACK_LABEL_LEVELS = [50, 60];
 
 // 晚霞（粉紫系）
 const FIRECLOUD_PALETTE = [
-  { t: 0.00, r: 255, g: 228, b: 240, a: 0.05 },
+  { t: 0.00, r: 255, g: 228, b: 240, a: 0.14 },
   { t: 0.12, r: 255, g: 206, b: 232, a: 0.10 },
   { t: 0.28, r: 250, g: 184, b: 228, a: 0.16 },
   { t: 0.46, r: 239, g: 156, b: 223, a: 0.24 },
   { t: 0.64, r: 226, g: 132, b: 219, a: 0.32 },
   { t: 0.82, r: 205, g: 108, b: 210, a: 0.40 },
-  { t: 1.00, r: 182, g: 86,  b: 198, a: 0.48 },
+  { t: 1.00, r: 182, g: 86,  b: 198, a: 0.72 },
 ];
 
 // 朝霞（更浅粉）
 const SUNRISE_PALETTE = [
-  { t: 0.00, r: 255, g: 236, b: 244, a: 0.04 },
+  { t: 0.00, r: 255, g: 236, b: 244, a: 0.12 },
   { t: 0.12, r: 255, g: 220, b: 236, a: 0.08 },
   { t: 0.28, r: 255, g: 198, b: 228, a: 0.14 },
   { t: 0.46, r: 247, g: 172, b: 220, a: 0.21 },
   { t: 0.64, r: 232, g: 146, b: 208, a: 0.29 },
   { t: 0.82, r: 214, g: 122, b: 196, a: 0.37 },
-  { t: 1.00, r: 192, g: 100, b: 182, a: 0.44 },
+  { t: 1.00, r: 192, g: 100, b: 182, a: 0.66 },
 ];
 
 export function getPaletteForPeriod(period) {
@@ -63,8 +63,8 @@ function smoothstep01(t) {
 }
 
 function alphaSoftThreshold(score) {
-  if (score < 24) return 0;                  // 低分不显示
-  if (score < VISUAL_MIN_SCORE) return 0.12; // 24~30 低透明保底
+  if (score < 12) return 0;
+  if (score < VISUAL_MIN_SCORE) return 0.18;
   return 1;
 }
 
@@ -523,7 +523,7 @@ export default class ChinaRasterOverlay {
     const zoom = this._map.getZoom();
     const blurPx = clamp(3.0 - (zoom - 5) * 0.25, 1.2, 3.2);
     ctx.save();
-    ctx.filter = `blur(${blurPx.toFixed(1)}px) saturate(1.18) contrast(1.08)`;
+    ctx.filter = `blur(${blurPx.toFixed(1)}px) saturate(1.28) contrast(1.16)`;
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1;
     ctx.imageSmoothingEnabled = true;
