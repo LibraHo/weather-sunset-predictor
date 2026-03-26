@@ -380,8 +380,8 @@ const translations = {
     "today": "Today",
     "tomorrow": "Tomorrow",
     "yesterday": "Yesterday",
-    "dayAfterTomorrow": "Day After Tomorrow",
-    "daysLater": "{{days}} days later",
+    "dayAfterTomorrow": "In 2 Days",
+    "daysLater": "In {{days}} Days",
     "week": "Week",
     "date": "Date",
     "time": "Time"
@@ -389,7 +389,7 @@ const translations = {
   "date": {
     "today": "Today",
     "tomorrow": "Tomorrow",
-    "dayAfterTomorrow": "Day After Tomorrow",
+    "dayAfterTomorrow": "In 2 Days",
     "format": "{{month}}/{{day}}"
   },
   "dates": {
