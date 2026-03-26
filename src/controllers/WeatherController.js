@@ -1780,11 +1780,20 @@ class WeatherController {
 
     // 点击卡片切换时段
     panelEl.querySelectorAll('.china-spots-score-card').forEach(card => {
-      card.addEventListener('click', () => {
+      card.addEventListener('click', async () => {
         const period = card.dataset.period;
         if (period && this.chinaSpotsOverlayManager) {
+          // 切换时段
           this.chinaSpotsOverlayManager.switchPeriod(period);
-          this._renderDualPeriodScorePanel(); // 重渲染高亮
+
+          // 同步 UI：高亮、时段文案、更新时间、空状态
+          this._renderDualPeriodScorePanel();
+          this._updateChinaSpotsPeriodLabel(period);
+          this._renderChinaSpotsTimestamp();
+
+          const overlay = this.chinaSpotsOverlayManager.getOverlay(period);
+          const count = overlay?.getSpotCount?.() ?? 0;
+          this._setChinaSpotsEmptyState(count === 0);
         }
       });
     });
