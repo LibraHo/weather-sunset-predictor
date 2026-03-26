@@ -479,16 +479,14 @@ class WeatherController {
         <span class="temp-range-sep">~</span>
         <span class="max-temp">${maxTemp.toFixed(0)}°</span>
       </div>
-      <div class="day-meta-icons-row" role="list" aria-label="天气详细信息">
-        <div class="day-meta-icon" role="listitem" aria-label="降水概率：${precipProb}%">
+      <div class="day-meta-lines" role="list" aria-label="天气详细信息">
+        <div class="day-meta-line" role="listitem" aria-label="降水概率：${precipProb}%">
           <span class="icon" aria-hidden="true">💧</span>
           <span class="value">${precipProb}%</span>
         </div>
-        <div class="day-meta-icon" role="listitem" aria-label="风速：${this.formatWindSpeed(maxWindSpeed)}">
+        <div class="day-meta-line" role="listitem" aria-label="风速：${this.formatWindSpeed(maxWindSpeed)}，风向：${directionLabel}">
           <span class="icon" aria-hidden="true">💨</span>
           <span class="value">${this.formatWindSpeed(maxWindSpeed)}</span>
-        </div>
-        <div class="day-meta-icon" role="listitem" aria-label="风向：${directionLabel}">
           <span class="icon day-wind-direction-icon" style="transform: rotate(${avgWindDirection.toFixed(0)}deg);" aria-hidden="true">↑</span>
         </div>
       </div>
