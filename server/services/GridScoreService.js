@@ -93,9 +93,6 @@ class GridScoreService {
         if (!point) break;
         try {
           const weatherRaw = await orchestrator.fetchWeatherData(point.lat, point.lon, 24);
-          // 取最近时刻的天气数据
-          const weatherData = Array.isArray(weatherRaw) ? weatherRaw[0] : (weatherRaw.data?.[0] || weatherRaw);
-          if (!weatherData) throw new Error('no weather data');
 
           // 使用该点的日落/日出时间作为预测目标时间，避免当前时刻几何不可行误判
           // 如果已经过了今天的日出/日落，就预测明天的
@@ -128,6 +125,32 @@ class GridScoreService {
           } catch (sunErr) {
             // 日落/日出计算失败时回退到传入时间
             console.warn(`[GridScoreService] 无法计算 ${point.lat},${point.lon} 日出落时间:`, sunErr.message);
+          }
+
+          // 按目标时段（朝霞/晚霞）选择“最接近日出/日落时刻”的小时天气，避免 sunrise/sunset 使用同一 data[0]
+          const hourly = Array.isArray(weatherRaw?.data)
+            ? weatherRaw.data
+            : (Array.isArray(weatherRaw) ? weatherRaw : []);
+          if (hourly.length === 0) {
+            throw new Error('no weather data');
+          }
+
+          const toTs = (v) => {
+            if (Number.isFinite(v)) return v;
+            const t = new Date(v).getTime();
+            return Number.isFinite(t) ? t : null;
+          };
+
+          let weatherData = hourly[0];
+          const refTs = predictionDate instanceof Date ? predictionDate.getTime() : null;
+          if (Number.isFinite(refTs)) {
+            weatherData = hourly.reduce((closest, current) => {
+              const cTs = toTs(closest?.timestamp ?? closest?.time);
+              const nTs = toTs(current?.timestamp ?? current?.time);
+              const cDiff = Number.isFinite(cTs) ? Math.abs(cTs - refTs) : Number.POSITIVE_INFINITY;
+              const nDiff = Number.isFinite(nTs) ? Math.abs(nTs - refTs) : Number.POSITIVE_INFINITY;
+              return nDiff < cDiff ? current : closest;
+            }, hourly[0]);
           }
 
           const prediction = calculateEnhancedPrediction(weatherData, predictionDate, point.lat, point.lon, safePeriod);
