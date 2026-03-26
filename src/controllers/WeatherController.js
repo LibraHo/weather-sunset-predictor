@@ -1740,8 +1740,8 @@ class WeatherController {
     if (!panelEl || !this.chinaSpotsOverlayManager) return;
 
     const periods = [
-      { key: 'sunrise', label: '朝霞', emoji: '🌄' },
-      { key: 'sunset',  label: '晚霞', emoji: '🌅' },
+      { key: 'sunrise', label: '朝霞测试', emoji: '🌄' },
+      { key: 'sunset',  label: '晚霞测试', emoji: '🌅' },
     ];
 
     const cards = periods.map(({ key, label, emoji }) => {
