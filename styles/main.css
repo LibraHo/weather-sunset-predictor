@@ -3232,6 +3232,9 @@ body.theme-dark .sun-azimuth-info {
   font-weight: 700;
   color: #2f3948;
   margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 #forecast-section .forecast-day-header .date-label {
