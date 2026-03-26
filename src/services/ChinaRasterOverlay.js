@@ -495,10 +495,15 @@ export default class ChinaRasterOverlay {
     console.log(`[ChinaRasterOverlay] 等值热力层离屏构建完成 ${width}×${height} period=${this._period}`);
   }
 
-  _gridToScreenPoint(gx, gy, tl, screenW, screenH, width, height) {
-    const x = tl.x + (gx / Math.max(1, width - 1)) * screenW;
-    const y = tl.y + (gy / Math.max(1, height - 1)) * screenH;
-    return { x, y };
+  _gridToScreenPoint(gx, gy, _tl, _screenW, _screenH, width, height) {
+    if (!this._map || !this._rasterData?.bbox) return { x: 0, y: 0 };
+    const { bbox } = this._rasterData;
+    const lonStep = (bbox.east - bbox.west) / Math.max(1, width);
+    const latStep = (bbox.north - bbox.south) / Math.max(1, height);
+    const lon = bbox.west + (gx + 0.5) * lonStep;
+    const lat = bbox.north - (gy + 0.5) * latStep;
+    const pt = this._map.latLngToContainerPoint(window.L.latLng(lat, lon));
+    return { x: pt.x, y: pt.y };
   }
 
   _drawContourLines(ctx, tl, screenW, screenH, width, height) {
@@ -560,8 +565,8 @@ export default class ChinaRasterOverlay {
     if (!bbox) return;
 
     const pointRadius = 2.2;
-    const lonStep = (bbox.east - bbox.west) / Math.max(1, (width - 1));
-    const latStep = (bbox.north - bbox.south) / Math.max(1, (height - 1));
+    const lonStep = (bbox.east - bbox.west) / Math.max(1, width);
+    const latStep = (bbox.north - bbox.south) / Math.max(1, height);
 
     for (let row = 0; row < height; row++) {
       for (let col = 0; col < width; col++) {
@@ -570,8 +575,8 @@ export default class ChinaRasterOverlay {
         if (!Number.isFinite(score) || score === noData) continue;
 
         // 显式走：网格(row,col) -> 经纬度(lat,lon) -> 地图像素坐标
-        const lat = bbox.north - row * latStep;
-        const lon = bbox.west + col * lonStep;
+        const lat = bbox.north - (row + 0.5) * latStep;
+        const lon = bbox.west + (col + 0.5) * lonStep;
         const pt = this._map.latLngToContainerPoint(window.L.latLng(lat, lon));
 
         const { r, g, b, a } = scoreToRGBA(score, noData, getPaletteForPeriod(this._period));
