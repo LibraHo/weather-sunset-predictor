@@ -1049,18 +1049,95 @@ class PredictionController {
 
     let html = ` 🔥 火烧云指数：${finalScore}/100${levelText}`;
     html += '<div class="fire-cloud-details" style="margin-top: 10px; padding: 10px; background: rgba(255, 243, 224, 0.3); border-radius: 8px;">';
-    html += '<div style="font-weight: 600; margin-bottom: 8px;">🔥 评分依据：</div>';
+    html += '<div style="font-weight: 600; margin-bottom: 8px;">🔥 火烧云形成条件分析：</div>';
 
-    html += `<div style="font-size:14px;margin:4px 0;font-weight:600;">云层结构：${breakdown.cloudStructure.score.toFixed(1)}/60分</div>`;
-    html += `<div style="font-size:13px;margin:2px 0 2px 12px;">高云: ${breakdown.cloudStructure.highCloudsScore.toFixed(1)}/25分</div>`;
-    html += `<div style="font-size:13px;margin:2px 0 2px 12px;">中云: ${breakdown.cloudStructure.midCloudsScore.toFixed(1)}/25分</div>`;
-    html += `<div style="font-size:13px;margin:2px 0 2px 12px;">低云奖励: ${breakdown.cloudStructure.lowCloudBonus.toFixed(1)}/10分</div>`;
-    html += `<div style="font-size:14px;margin:4px 0;font-weight:600;">大气透明度：${breakdown.transparency.score.toFixed(1)}/25分</div>`;
-    html += `<div style="font-size:14px;margin:4px 0;font-weight:600;">云层立体感：${breakdown.layerDiversity.score.toFixed(1)}/15分</div>`;
-    html += `<div style="font-size:14px;margin:6px 0 2px 0;border-top:1px solid rgba(255,255,255,0.2);padding-top:6px;">基础分：${breakdown.baseScore.toFixed(1)}分</div>`;
-    html += `<div style="font-size:13px;margin:2px 0;">× 低云惩罚系数：${breakdown.lowCloudPenalty.toFixed(2)}</div>`;
-    html += `<div style="font-size:13px;margin:2px 0;">× 降水惩罚系数：${breakdown.precipPenalty.toFixed(2)}</div>`;
-    html += `<div style="font-size:14px;margin:4px 0;font-weight:700;color:var(--color-text);">= 最终得分：${finalScore}分</div>`;
+    // 高云
+    const hc = weatherInput.highClouds ?? 0;
+    if (hc >= 40) {
+      html += `<div style="font-size:13px;margin:3px 0;">✅ 高层云充足（${hc.toFixed(0)}%），色彩载体丰富</div>`;
+    } else if (hc >= 20) {
+      html += `<div style="font-size:13px;margin:3px 0;">⚠️ 高层云适中（${hc.toFixed(0)}%），火烧云效果一般</div>`;
+    } else {
+      html += `<div style="font-size:13px;margin:3px 0;">❌ 高层云偏少（${hc.toFixed(0)}%），火烧云色彩载体不足</div>`;
+    }
+
+    // 中云
+    const mc = weatherInput.midClouds ?? 0;
+    if (mc >= 20 && mc <= 50) {
+      html += `<div style="font-size:13px;margin:3px 0;">✅ 中层云适中（${mc.toFixed(0)}%），利于色彩扩散</div>`;
+    } else if ((mc >= 10 && mc < 20) || (mc > 50 && mc <= 70)) {
+      const label = mc < 20 ? '偏少' : '偏多';
+      html += `<div style="font-size:13px;margin:3px 0;">⚠️ 中层云${label}（${mc.toFixed(0)}%）</div>`;
+    } else {
+      const label = mc < 10 ? '不足' : '过厚';
+      html += `<div style="font-size:13px;margin:3px 0;">❌ 中层云${label}（${mc.toFixed(0)}%）</div>`;
+    }
+
+    // 低云
+    const lc = weatherInput.lowClouds ?? 0;
+    if (lc < 20) {
+      html += `<div style="font-size:13px;margin:3px 0;">✅ 低云稀少（${lc.toFixed(0)}%），不会遮挡火烧云</div>`;
+    } else if (lc < 40) {
+      html += `<div style="font-size:13px;margin:3px 0;">⚠️ 低云较多（${lc.toFixed(0)}%），可能部分遮挡</div>`;
+    } else {
+      html += `<div style="font-size:13px;margin:3px 0;">❌ 低云过厚（${lc.toFixed(0)}%），严重影响观赏</div>`;
+    }
+
+    // 能见度
+    const vis = weatherInput.visibility ?? 0;
+    if (vis >= 20) {
+      html += `<div style="font-size:13px;margin:3px 0;">✅ 能见度极佳（${vis.toFixed(0)}km），视野通透</div>`;
+    } else if (vis >= 10) {
+      html += `<div style="font-size:13px;margin:3px 0;">✅ 能见度良好（${vis.toFixed(0)}km）</div>`;
+    } else if (vis >= 5) {
+      html += `<div style="font-size:13px;margin:3px 0;">⚠️ 能见度一般（${vis.toFixed(0)}km）</div>`;
+    } else {
+      html += `<div style="font-size:13px;margin:3px 0;">❌ 能见度差（${vis.toFixed(0)}km），有雾霾影响</div>`;
+    }
+
+    // 湿度
+    const hum = weatherInput.humidity ?? 0;
+    if (hum >= 40 && hum <= 70) {
+      html += `<div style="font-size:13px;margin:3px 0;">✅ 湿度适中（${hum.toFixed(0)}%），利于光线散射</div>`;
+    } else if ((hum >= 30 && hum < 40) || (hum > 70 && hum <= 80)) {
+      const label = hum < 40 ? '略低' : '偏高';
+      html += `<div style="font-size:13px;margin:3px 0;">⚠️ 湿度${label}（${hum.toFixed(0)}%）</div>`;
+    } else {
+      const label = hum < 30 ? '不足' : '过高';
+      html += `<div style="font-size:13px;margin:3px 0;">❌ 湿度${label}（${hum.toFixed(0)}%）</div>`;
+    }
+
+    // 云层立体感
+    const layerCount = breakdown.layerDiversity.layerCount ?? 0;
+    if (layerCount >= 3) {
+      html += `<div style="font-size:13px;margin:3px 0;">✅ 云层立体丰富，多层次火烧云可期</div>`;
+    } else if (layerCount === 2) {
+      html += `<div style="font-size:13px;margin:3px 0;">⚠️ 云层层次一般</div>`;
+    } else {
+      html += `<div style="font-size:13px;margin:3px 0;">❌ 云层单一，缺乏立体层次感</div>`;
+    }
+
+    // 降水
+    const precip = weatherInput.precipitation ?? 0;
+    if (precip >= 2) {
+      html += `<div style="font-size:13px;margin:3px 0;">❌ 降水较强（${precip.toFixed(1)} mm/h），基本无法观赏</div>`;
+    } else if (precip >= 0.5) {
+      html += `<div style="font-size:13px;margin:3px 0;">❌ 有降水（${precip.toFixed(1)} mm/h），火烧云概率降低</div>`;
+    } else if (precip >= 0.1) {
+      html += `<div style="font-size:13px;margin:3px 0;">⚠️ 有轻微降水（${precip.toFixed(1)} mm/h），可能影响观赏</div>`;
+    }
+
+    // 结语
+    if (finalScore >= 80) {
+      html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">✨ 极佳条件，强烈推荐出行观赏！</div>`;
+    } else if (finalScore >= 60) {
+      html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">✨ 有较大概率出现壮观的火烧云景象</div>`;
+    } else if (finalScore >= 40) {
+      html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">💡 条件一般，可以期待但不保证</div>`;
+    } else {
+      html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">😶 今日火烧云概率较低</div>`;
+    }
+
     html += '</div>';
 
     return html;
