@@ -26,6 +26,9 @@ const CONTOUR_LEVELS = Array.from({ length: 21 }, (_, i) => 30 + i * 2); // 30~7
 const KEY_LABEL_LEVELS = [70, 80];
 const FALLBACK_LABEL_LEVELS = [50, 60];
 
+// 调试：优先渲染原始采样点，排查坐标映射
+const DEBUG_DRAW_RAW_POINTS = true;
+
 // 晚霞（粉紫系）
 const FIRECLOUD_PALETTE = [
   { t: 0.00, r: 255, g: 228, b: 240, a: 0.14 },
@@ -543,6 +546,38 @@ export default class ChinaRasterOverlay {
     ctx.restore();
   }
 
+  _drawRawSamplePoints(ctx, tl, screenW, screenH, width, height) {
+    if (!this._rasterData || !Array.isArray(this._rasterData.values) || !this._map) return;
+
+    const { values, noData = -1, bbox } = this._rasterData;
+    if (!bbox) return;
+
+    const pointRadius = 2.2;
+    const lonStep = (bbox.east - bbox.west) / Math.max(1, (width - 1));
+    const latStep = (bbox.north - bbox.south) / Math.max(1, (height - 1));
+
+    for (let row = 0; row < height; row++) {
+      for (let col = 0; col < width; col++) {
+        const idx = row * width + col;
+        const score = values[idx];
+        if (!Number.isFinite(score) || score === noData) continue;
+
+        // 显式走：网格(row,col) -> 经纬度(lat,lon) -> 地图像素坐标
+        const lat = bbox.north - row * latStep;
+        const lon = bbox.west + col * lonStep;
+        const pt = this._map.latLngToContainerPoint(window.L.latLng(lat, lon));
+
+        const { r, g, b, a } = scoreToRGBA(score, noData, getPaletteForPeriod(this._period));
+        if (a <= 0) continue;
+
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, pointRadius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${Math.max(0.22, a)})`;
+        ctx.fill();
+      }
+    }
+  }
+
   _reprojectCanvas() {
     if (!this._visible || !this._canvas || !this._rasterData || !this._offscreen || !this._map) return;
 
@@ -564,6 +599,11 @@ export default class ChinaRasterOverlay {
 
     const ctx = this._canvas.getContext('2d');
     ctx.clearRect(0, 0, mapSize.x, mapSize.y);
+
+    if (DEBUG_DRAW_RAW_POINTS) {
+      this._drawRawSamplePoints(ctx, tl, screenW, screenH, width, height);
+      return;
+    }
 
     // Pass 1: 填色层（柔和）
     const zoom = this._map.getZoom();
