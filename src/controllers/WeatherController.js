@@ -1826,10 +1826,9 @@ class WeatherController {
   }
 
   /**
-   * 任务 64.8：朝/晚霞双时段分数并行展示
+   * 任务 64.8：朝/晚霞双时段切换卡片
    *
-   * 在地图下方渲染两张并排的评分卡片，分别显示朝霞和晚霞当前位置的
-   * 最高评分及覆盖点位数量，方便用户无需切换 tab 即可对比两段时光。
+   * 在地图下方渲染两张并排卡片，仅用于切换朝霞/晚霞，不展示分数。
    */
   _renderDualPeriodScorePanel() {
     const panelEl = document.getElementById('china-spots-dual-score');
@@ -1841,15 +1840,7 @@ class WeatherController {
     ];
 
     const cards = periods.map(({ key, label, emoji }) => {
-      const overlay = this.chinaSpotsOverlayManager.getOverlay(key);
-      const count   = overlay?.getSpotCount?.()   ?? 0;
-      const maxScore = overlay?.getMaxScore?.()    ?? null;
       const isActive = this.chinaSpotsOverlayManager.getActivePeriod() === key;
-
-      const scoreText = (maxScore !== null && maxScore > 0)
-        ? `${Math.round(maxScore)} 分`
-        : '暂无数据';
-      const countText = count > 0 ? `${count} 个点位` : '—';
 
       const borderColor = isActive
         ? (key === 'sunrise' ? '#ff9a5c' : '#ff6b35')
@@ -1874,11 +1865,7 @@ class WeatherController {
                transition:border-color 0.2s, background 0.2s;
              ">
           <div style="font-size:20px; margin-bottom:4px;">${emoji}</div>
-          <div style="font-size:12px; color:var(--color-text-light); margin-bottom:2px;">${label}</div>
-          <div style="font-size:18px; font-weight:700; color:${isActive ? '#ffaa55' : 'var(--color-text)'};">
-            ${scoreText}
-          </div>
-          <div style="font-size:11px; color:var(--color-text-light); margin-top:2px;">${countText}</div>
+          <div style="font-size:14px; font-weight:700; color:${isActive ? '#ffaa55' : 'var(--color-text)'};">${label}</div>
         </div>`;
     });
 
