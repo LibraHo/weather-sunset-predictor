@@ -390,13 +390,19 @@ export default class ChinaRasterOverlay {
       return amp * Math.exp(-(dx * dx + dy * dy));
     };
 
-    // 测试板块：北京附近构造明显可见的模拟云团
-    const bjx = width * 0.69;
-    const bjy = height * 0.37;
+    // 测试板块：严格锚定北京经纬度（116.4E, 39.9N）
+    const bbox = data.bbox || { west: 72, east: 135, south: 18, north: 53 };
+    const lonStep = (bbox.east - bbox.west) / Math.max(1, width);
+    const latStep = (bbox.north - bbox.south) / Math.max(1, height);
+    const bjLon = 116.4;
+    const bjLat = 39.9;
+    const bjx = (bjLon - bbox.west) / lonStep - 0.5;
+    const bjy = (bbox.north - bjLat) / latStep - 0.5;
+
     const blobs = [
-      { cx: bjx - width * 0.04, cy: bjy - height * 0.03, sx: width * 0.10, sy: height * 0.09, amp: 26 },
-      { cx: bjx + width * 0.05, cy: bjy + height * 0.02, sx: width * 0.08, sy: height * 0.08, amp: 22 },
-      { cx: bjx,                cy: bjy + height * 0.06, sx: width * 0.12, sy: height * 0.10, amp: 18 },
+      { cx: bjx - width * 0.03, cy: bjy - height * 0.02, sx: width * 0.08, sy: height * 0.07, amp: 30 },
+      { cx: bjx + width * 0.03, cy: bjy + height * 0.01, sx: width * 0.07, sy: height * 0.07, amp: 24 },
+      { cx: bjx,                cy: bjy + height * 0.05, sx: width * 0.10, sy: height * 0.08, amp: 20 },
     ];
 
     for (let row = 0; row < height; row++) {
