@@ -12,13 +12,14 @@
 
 import ChinaRasterOverlay from './ChinaRasterOverlay.js';
 
-export const SUPPORTED_PERIODS = ['sunrise', 'sunset'];
+export const SUPPORTED_PERIODS = ['sunrise', 'sunset', 'test'];
 
 export default class ChinaRasterOverlayManager {
   constructor() {
     this._map = null;
     this._sunriseOverlay = null;
     this._sunsetOverlay = null;
+    this._testOverlay = null;
     this._activePeriod = 'sunset';
     this._tabContainer = null;
     this._tabButtons = {};
@@ -39,12 +40,15 @@ export default class ChinaRasterOverlayManager {
 
     this._sunriseOverlay = new ChinaRasterOverlay();
     this._sunsetOverlay = new ChinaRasterOverlay();
+    this._testOverlay = new ChinaRasterOverlay();
 
     this._sunriseOverlay.init(leafletMap);
     this._sunsetOverlay.init(leafletMap);
+    this._testOverlay.init(leafletMap);
 
     this._sunriseOverlay.hide();
     this._sunsetOverlay.hide();
+    this._testOverlay.hide();
 
     if (container) {
       this._createTabs(container);
@@ -148,7 +152,7 @@ export default class ChinaRasterOverlayManager {
       return;
     }
 
-    const overlay = period === 'sunrise' ? this._sunriseOverlay : this._sunsetOverlay;
+    const overlay = period === 'sunrise' ? this._sunriseOverlay : (period === 'test' ? this._testOverlay : this._sunsetOverlay);
     overlay.setPeriod(period);
     await overlay.loadAndRender(period);
   }
@@ -160,12 +164,16 @@ export default class ChinaRasterOverlayManager {
     console.log('[ChinaRasterOverlayManager] 开始并行加载所有时段栅格数据...');
     await Promise.all([
       this.loadAndRender('sunrise'),
-      this.loadAndRender('sunset')
+      this.loadAndRender('sunset'),
+      this.loadAndRender('test')
     ]);
     console.log('[ChinaRasterOverlayManager] 所有时段栅格数据加载完成');
 
+    // 三时段下统一收拢显示态，避免并行加载后多层同时可见
+    this._sunriseOverlay?.hide();
+    this._sunsetOverlay?.hide();
+    this._testOverlay?.hide();
     this._getActiveOverlay().show();
-    this._getInactiveOverlay().hide();
   }
 
   getActivePeriod() { return this._activePeriod; }
@@ -176,7 +184,7 @@ export default class ChinaRasterOverlayManager {
    * @returns {ChinaRasterOverlay}
    */
   getOverlay(period) {
-    return period === 'sunrise' ? this._sunriseOverlay : this._sunsetOverlay;
+    return period === 'sunrise' ? this._sunriseOverlay : (period === 'test' ? this._testOverlay : this._sunsetOverlay);
   }
 
   /**
@@ -213,6 +221,7 @@ export default class ChinaRasterOverlayManager {
   hide() {
     this._sunriseOverlay?.hide();
     this._sunsetOverlay?.hide();
+    this._testOverlay?.hide();
   }
 
   toggle() { this._getActiveOverlay().toggle(); }
@@ -220,6 +229,7 @@ export default class ChinaRasterOverlayManager {
   clear() {
     this._sunriseOverlay?.clear();
     this._sunsetOverlay?.clear();
+    this._testOverlay?.clear();
 
     if (this._tabContainer) {
       this._tabContainer.remove();
@@ -232,18 +242,25 @@ export default class ChinaRasterOverlayManager {
     this.clear();
     this._sunriseOverlay?.destroy();
     this._sunsetOverlay?.destroy();
+    this._testOverlay?.destroy();
     this._map = null;
     this._sunriseOverlay = null;
     this._sunsetOverlay = null;
+    this._testOverlay = null;
   }
 
   // ─── 私有辅助 ─────────────────────────────────────────────────────────────
 
   _getActiveOverlay() {
-    return this._activePeriod === 'sunrise' ? this._sunriseOverlay : this._sunsetOverlay;
+    return this._activePeriod === 'sunrise'
+      ? this._sunriseOverlay
+      : (this._activePeriod === 'test' ? this._testOverlay : this._sunsetOverlay);
   }
 
   _getInactiveOverlay() {
-    return this._activePeriod === 'sunrise' ? this._sunsetOverlay : this._sunriseOverlay;
+    // 兼容旧接口：在 3 时段下返回一个“非当前”的 overlay 供隐藏调用
+    if (this._activePeriod === 'sunrise') return this._sunsetOverlay;
+    if (this._activePeriod === 'test') return this._sunsetOverlay;
+    return this._sunriseOverlay;
   }
 }
