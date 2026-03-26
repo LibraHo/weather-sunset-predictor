@@ -390,19 +390,13 @@ export default class ChinaRasterOverlay {
       return amp * Math.exp(-(dx * dx + dy * dy));
     };
 
-    // 测试板块：严格锚定北京经纬度（116.4E, 39.9N）
-    const bbox = data.bbox || { west: 72, east: 135, south: 18, north: 53 };
-    const lonStep = (bbox.east - bbox.west) / Math.max(1, width);
-    const latStep = (bbox.north - bbox.south) / Math.max(1, height);
-    const bjLon = 116.4;
-    const bjLat = 39.9;
-    const bjx = (bjLon - bbox.west) / lonStep - 0.5;
-    const bjy = (bbox.north - bjLat) / latStep - 0.5;
-
+    // 测试板块：北京附近构造明显可见的模拟云团
+    const bjx = width * 0.69;
+    const bjy = height * 0.37;
     const blobs = [
-      { cx: bjx - width * 0.03, cy: bjy - height * 0.02, sx: width * 0.08, sy: height * 0.07, amp: 30 },
-      { cx: bjx + width * 0.03, cy: bjy + height * 0.01, sx: width * 0.07, sy: height * 0.07, amp: 24 },
-      { cx: bjx,                cy: bjy + height * 0.05, sx: width * 0.10, sy: height * 0.08, amp: 20 },
+      { cx: bjx - width * 0.04, cy: bjy - height * 0.03, sx: width * 0.10, sy: height * 0.09, amp: 26 },
+      { cx: bjx + width * 0.05, cy: bjy + height * 0.02, sx: width * 0.08, sy: height * 0.08, amp: 22 },
+      { cx: bjx,                cy: bjy + height * 0.06, sx: width * 0.12, sy: height * 0.10, amp: 18 },
     ];
 
     for (let row = 0; row < height; row++) {
@@ -494,18 +488,10 @@ export default class ChinaRasterOverlay {
     console.log(`[ChinaRasterOverlay] 等值热力层离屏构建完成 ${width}×${height} period=${this._period}`);
   }
 
-  _gridToScreenPoint(gx, gy, _tl, _screenW, _screenH, width, height) {
-    if (!this._map || !this._rasterData?.bbox) return { x: 0, y: 0 };
-
-    const { bbox } = this._rasterData;
-    // 注意：服务端栅格值定义在“格点中心”(row+0.5,col+0.5)
-    const lonStep = (bbox.east - bbox.west) / Math.max(1, width);
-    const latStep = (bbox.north - bbox.south) / Math.max(1, height);
-
-    const lon = bbox.west + (gx + 0.5) * lonStep;
-    const lat = bbox.north - (gy + 0.5) * latStep;
-    const pt = this._map.latLngToContainerPoint(window.L.latLng(lat, lon));
-    return { x: pt.x, y: pt.y };
+  _gridToScreenPoint(gx, gy, tl, screenW, screenH, width, height) {
+    const x = tl.x + (gx / Math.max(1, width - 1)) * screenW;
+    const y = tl.y + (gy / Math.max(1, height - 1)) * screenH;
+    return { x, y };
   }
 
   _drawContourLines(ctx, tl, screenW, screenH, width, height) {
@@ -567,8 +553,8 @@ export default class ChinaRasterOverlay {
     if (!bbox) return;
 
     const pointRadius = 2.2;
-    const lonStep = (bbox.east - bbox.west) / Math.max(1, width);
-    const latStep = (bbox.north - bbox.south) / Math.max(1, height);
+    const lonStep = (bbox.east - bbox.west) / Math.max(1, (width - 1));
+    const latStep = (bbox.north - bbox.south) / Math.max(1, (height - 1));
 
     for (let row = 0; row < height; row++) {
       for (let col = 0; col < width; col++) {
@@ -577,8 +563,8 @@ export default class ChinaRasterOverlay {
         if (!Number.isFinite(score) || score === noData) continue;
 
         // 显式走：网格(row,col) -> 经纬度(lat,lon) -> 地图像素坐标
-        const lat = bbox.north - (row + 0.5) * latStep;
-        const lon = bbox.west + (col + 0.5) * lonStep;
+        const lat = bbox.north - row * latStep;
+        const lon = bbox.west + col * lonStep;
         const pt = this._map.latLngToContainerPoint(window.L.latLng(lat, lon));
 
         const { r, g, b, a } = scoreToRGBA(score, noData, getPaletteForPeriod(this._period));
