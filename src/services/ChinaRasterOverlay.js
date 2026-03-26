@@ -195,7 +195,15 @@ export default class ChinaRasterOverlay {
   /**
    * 栅格层无散点概念，返回 0（接口与 ChinaSpotsOverlay 对齐）
    */
-  getSpotCount() { return 0; }
+  getSpotCount() {
+    if (!this._rasterData || !Array.isArray(this._rasterData.values)) return 0;
+    const noData = this._rasterData.noData ?? -1;
+    let count = 0;
+    for (const v of this._rasterData.values) {
+      if (typeof v === 'number' && v !== noData && v >= RASTER_MIN_SCORE) count += 1;
+    }
+    return count;
+  }
 
   isVisible() { return this._visible; }
 
