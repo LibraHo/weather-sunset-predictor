@@ -249,79 +249,76 @@
                 <div class="methodology-grid">
           <!-- 第一部分：云种判别与画布评分 -->
           <article class="methodology-item">
-            <h3>1. 云种判别与画布评分 <small style="font-weight: 300; font-size: 0.85em; color: var(--color-text-light); display: block; margin-top: 4px;">Cloud ID & Canvas Score</small></h3>
-            <p><strong>画布评分权重 Weights:</strong> 中高云 70%，中云 45%，低云 10% <br><small>(Mid/High Cloud 70%, Mid Cloud 45%, Low Cloud 10%)</small></p>
-            <p><strong>云种识别规则 Cloud Rules:</strong></p>
+            <h3>
+              <span data-i18n="home.methodology.sections.cloudStructure.title">1. 云层结构</span>
+              <small data-i18n="home.methodology.sections.cloudStructure.subtitle">Cloud Structure · 60分</small>
+            </h3>
+            <p data-i18n="home.methodology.sections.cloudStructure.desc">火烧云需要合适的云层作为"画布"，高云和中云是核心载体。</p>
             <ul class="methodology-detail-list">
-              <li><strong>层云型 Stratus:</strong> 低云 &gt;70% → 画布乘数 0.4 <br><small>(Low Cloud &gt;70% → Canvas Multiplier 0.4)</small></li>
-              <li><strong>层积云型 Stratocumulus:</strong> 40% ≤ 低云 ≤70% → 乘数 0.6 <br><small>(40% ≤ Low Cloud ≤70% → Multiplier 0.6)</small></li>
-              <li><strong>晴空型 Clear Sky:</strong> 总云量 &lt;30% → 乘数 0.85 <br><small>(Total Cloud &lt;30% → Multiplier 0.85)</small></li>
-              <li><strong>积云型 Cumulus:</strong> 中云为主/云底&lt;500m → 乘数 0.5 <br><small>(Mid Cloud Dominant/Base&lt;500m → Multiplier 0.5)</small></li>
+              <li data-i18n="home.methodology.sections.cloudStructure.highCloud">高云（>6km）最优50%，高斯曲线，满分25分</li>
+              <li data-i18n="home.methodology.sections.cloudStructure.midCloud">中云（2–6km）最优35%，高斯曲线，满分25分</li>
+              <li data-i18n="home.methodology.sections.cloudStructure.lowCloudBonus">低云奖励：低云&lt;20%满分10分，线性递减</li>
             </ul>
-            <p class="methodology-formula">画布评分 = 云量评分 × 云种乘数 <br><small>(Canvas Score = Cover Score × Species Multiplier)</small></p>
+            <p class="methodology-formula" data-i18n="home.methodology.sections.cloudStructure.formula">云层结构分 = 高云分 + 中云分 + 低云奖励（最高60分）</p>
           </article>
 
           <!-- 第二部分：光路几何模型 -->
           <article class="methodology-item">
-            <h3>2. 光路几何模型 <small style="font-weight: 300; font-size: 0.85em; color: var(--color-text-light); display: block; margin-top: 4px;">Optical Path Geometric Model</small></h3>
-            <p>评估光线路径上空域的云况。<br><small>Evaluates cloud conditions along the light path.</small></p>
-            <p><strong>双点采样法 Two-point Sampling:</strong></p>
+            <h3>
+              <span data-i18n="home.methodology.sections.transparency.title">2. 大气透明度</span>
+              <small data-i18n="home.methodology.sections.transparency.subtitle">Transparency · 25分</small>
+            </h3>
+            <p data-i18n="home.methodology.sections.transparency.desc">透明的大气让光线更纯粹地染色云层，湿度适中有助于散射增强色彩。</p>
             <ul class="methodology-detail-list">
-              <li><strong>近点 Near Point:</strong> 距观测点 150km, 权重 40% <br><small>(Distance 150km, Weight 40%)</small></li>
-              <li><strong>远点 Far Point:</strong> 距观测点 300km, 权重 60% <br><small>(Distance 300km, Weight 60%)</small></li>
+              <li data-i18n="home.methodology.sections.transparency.visibility">能见度：15 × (1 − e^(−v/15))，满分15分</li>
+              <li data-i18n="home.methodology.sections.transparency.humidity">湿度：最优55%，高斯曲线，满分10分</li>
             </ul>
-            <p><strong>评分规则 Scoring Rules:</strong></p>
-            <ul class="methodology-detail-list">
-              <li>近/远点云量 &lt;20% → 100 分 <small>(Near/Far &lt;20% → 100)</small></li>
-              <li>近点 20-40% 且远点 &lt;20% → 80 分 <small>(Near 20-40%, Far &lt;20% → 80)</small></li>
-              <li>远点云量 20-40% → 60 分 <small>(Far 20-40% → 60)</small></li>
-              <li>任一点云量 &gt;40% → 40分以下 <small>(Any &gt;40% → &lt;40)</small></li>
-            </ul>
-            <p class="methodology-formula">光路评分 = 近点×40% + 远点×60% <br><small>(Path Score = Near×40% + Far×60%)</small></p>
+            <p class="methodology-formula" data-i18n="home.methodology.sections.transparency.formula">透明度分 = 能见度分 + 湿度分（最高25分）</p>
           </article>
 
           <!-- 第三部分：AOD 气溶胶修正 -->
           <article class="methodology-item">
-            <h3>3. 气溶胶(AOD)修正 <small style="font-weight: 300; font-size: 0.85em; color: var(--color-text-light); display: block; margin-top: 4px;">Aerosol Optical Depth Correction</small></h3>
-            <p>AOD 衡量大气气溶胶浓度，高值降低透光率。<br><small>High AOD reduces light transmission.</small></p>
-            <p><strong>AOD 阈值 AOD Thresholds:</strong></p>
+            <h3>
+              <span data-i18n="home.methodology.sections.layerDiversity.title">3. 云层立体感</span>
+              <small data-i18n="home.methodology.sections.layerDiversity.subtitle">Layer Diversity · 15分</small>
+            </h3>
+            <p data-i18n="home.methodology.sections.layerDiversity.desc">高中低三层云同时存在时，光线折射角度多样，色彩层次更丰富。</p>
             <ul class="methodology-detail-list">
-              <li>AOD &lt; 0.3 → 系数 1.0 (空气优 Air Quality Excellent)</li>
-              <li>0.3 ≤ AOD &lt; 0.5 → 系数 0.85 (Good)</li>
-              <li>0.5 ≤ AOD &lt; 0.7 → 系数 0.7 (Fair)</li>
-              <li>AOD ≥ 0.7 → 系数 0.5 (雾霾严重 Heavy Haze)</li>
+              <li data-i18n="home.methodology.sections.layerDiversity.threeLayer">三层云均>10% → 15分</li>
+              <li data-i18n="home.methodology.sections.layerDiversity.twoLayer">任意两层>10% → 8分</li>
+              <li data-i18n="home.methodology.sections.layerDiversity.oneLayer">仅一层或无云 → 0分</li>
             </ul>
-            <p class="methodology-formula">最终评分 = 基础分 × AOD系数 <br><small>(Final Score = Base Score × AOD Coefficient)</small></p>
           </article>
 
           <!-- 第四部分：渲染系数 -->
           <article class="methodology-item">
-            <h3>4. 渲染系数 <small style="font-weight: 300; font-size: 0.85em; color: var(--color-text-light); display: block; margin-top: 4px;">Rendering Coefficient</small></h3>
-            <p>综合大气透明度、湿度与降水。<br><small>Corrects based on transparency, humidity, and precip.</small></p>
-            <p><strong>能见度 Visibility:</strong></p>
+            <h3>
+              <span data-i18n="home.methodology.sections.lowCloudPenalty.title">4. 低云惩罚系数</span>
+              <small data-i18n="home.methodology.sections.lowCloudPenalty.subtitle">Low Cloud Penalty · Multiplier</small>
+            </h3>
+            <p data-i18n="home.methodology.sections.lowCloudPenalty.desc">低云挡在视线前方，是火烧云的"视线杀手"，以乘性系数惩罚总分。</p>
             <ul class="methodology-detail-list">
-              <li>≥30km → 1.0 | 20-30km → 0.95 | 10-20km → 0.85 | &lt;10km → 0.7</li>
+              <li data-i18n="home.methodology.sections.lowCloudPenalty.level1">低云&lt;20% → ×1.0（无惩罚）</li>
+              <li data-i18n="home.methodology.sections.lowCloudPenalty.level2">低云20–40% → ×1.0 到 ×0.8（线性）</li>
+              <li data-i18n="home.methodology.sections.lowCloudPenalty.level3">低云40–70% → ×0.8 到 ×0.5（线性）</li>
+              <li data-i18n="home.methodology.sections.lowCloudPenalty.level4">低云>70% → ×0.2（严重遮挡）</li>
             </ul>
-            <p><strong>湿度 Humidity:</strong></p>
-            <ul class="methodology-detail-list">
-              <li>40% - 70% → 1.0 (最佳 Best) | &lt;40% 或 &gt;80% → 0.85</li>
-            </ul>
-            <p><strong>降水 Precipitation:</strong></p>
-            <ul class="methodology-detail-list">
-              <li>&lt;1mm/h → 1.0 | 1-5mm/h → 0.7 | ≥5mm/h → 0.4 (雨中不宜 Rain)</li>
-            </ul>
-            <p class="methodology-formula">系数 = 能见度 × 湿度 × 降水 <br><small>(Coef = Vis × Hum × Precip)</small></p>
           </article>
 
           <!-- 第五部分：置信度评级 -->
           <article class="methodology-item">
-            <h3>5. 置信度评级规则 <small style="font-weight: 300; font-size: 0.85em; color: var(--color-text-light); display: block; margin-top: 4px;">Confidence Level Rules</small></h3>
-            <p>多维度判别预测可靠性。<br><small>Criteria for evaluating prediction reliability.</small></p>
+            <h3>
+              <span data-i18n="home.methodology.sections.precipPenalty.title">5. 降水惩罚系数</span>
+              <small data-i18n="home.methodology.sections.precipPenalty.subtitle">Precipitation Penalty · Multiplier</small>
+            </h3>
+            <p data-i18n="home.methodology.sections.precipPenalty.desc">降水直接削弱火烧云可见性，以乘性系数惩罚总分。</p>
             <ul class="methodology-detail-list">
-              <li><strong>云量边界 Cloud Edge:</strong> 梯度大 → 边界清晰<br><small>(Large gradient → High clarity)</small></li>
-              <li><strong>风速风向 Wind Consistency:</strong> 风速 &gt;15m/s 且风向不一致 → 降低置信度<br><small>(Wind &gt;15m/s &amp; inconsistent → Lower confidence)</small></li>
-              <li><strong>太阳高度角 Solar Altitude:</strong> 在地平线以下 &gt;6° 或以上 &gt;5° 外 → 降低置信度<br><small>(Sun &gt;6° below or &gt;5° above horiz. → Lower confidence)</small></li>
+              <li data-i18n="home.methodology.sections.precipPenalty.level1">降水&lt;0.1mm/h → ×1.0（无惩罚）</li>
+              <li data-i18n="home.methodology.sections.precipPenalty.level2">0.1–0.5mm/h → ×0.85</li>
+              <li data-i18n="home.methodology.sections.precipPenalty.level3">0.5–2mm/h → ×0.5</li>
+              <li data-i18n="home.methodology.sections.precipPenalty.level4">&gt;2mm/h → ×0.15（大雨，基本无望）</li>
             </ul>
+            <p class="methodology-formula" data-i18n="home.methodology.sections.precipPenalty.formula">最终得分 = 基础分 × 低云系数 × 降水系数</p>
           </article>
         </div>
 

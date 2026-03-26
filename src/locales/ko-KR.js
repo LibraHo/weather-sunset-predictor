@@ -30,7 +30,61 @@ const translations = {
       "scoreGuideTitle": "점수 해석",
       "scoreExcellent": "우수：>70（관람 권장）",
       "scoreGood": "양호：40-70（관람 가능）",
-      "scoreFair": "보통：<40（기대치 조정 필요）"
+      "scoreFair": "보통：<40（기대치 조정 필요）",
+      "scoreExcellentRange": "우수 Excellent",
+      "scoreExcellentDesc": "강력 추천",
+      "scoreGoodRange": "양호 Good",
+      "scoreGoodDesc": "관람 가능, 조건 양호",
+      "scoreFairRange": "보통 Fair",
+      "scoreFairDesc": "신중하게 기대",
+      "scorePoorRange": "불량 Poor",
+      "scorePoorDesc": "비추천",
+      "sections": {
+        "cloudStructure": {
+          "title": "1. 구름층 구조",
+          "subtitle": "Cloud Structure · 60점",
+          "desc": "화염구름에는 적절한 구름층이 \"캔버스\"로 필요하며, 상층운과 중층운이 핵심 매개체입니다.",
+          "highCloud": "상층운(>6km): 최적 50%, 가우시안 곡선, 최고 25점",
+          "midCloud": "중층운(2–6km): 최적 35%, 가우시안 곡선, 최고 25점",
+          "lowCloudBonus": "하층운 보너스: 하층운<20% 만점 10점, 선형 감소",
+          "formula": "구름층 구조 점수 = 상층운 + 중층운 + 하층운 보너스 (최고 60점)"
+        },
+        "transparency": {
+          "title": "2. 대기 투명도",
+          "subtitle": "Transparency · 25점",
+          "desc": "투명한 대기는 빛이 구름을 순수하게 채색하게 하며, 적절한 습도는 산란을 강화해 색채를 풍부하게 합니다.",
+          "visibility": "시정: 15 × (1 − e^(−v/15)), 최고 15점",
+          "humidity": "습도: 최적 55%, 가우시안 곡선, 최고 10점",
+          "formula": "투명도 점수 = 시정 점수 + 습도 점수 (최고 25점)"
+        },
+        "layerDiversity": {
+          "title": "3. 구름층 입체감",
+          "subtitle": "Layer Diversity · 15점",
+          "desc": "상·중·하층운이 동시에 존재하면 빛의 굴절 각도가 다양해져 색채 층이 더욱 풍부해집니다.",
+          "threeLayer": "3층 모두 >10% → 15점",
+          "twoLayer": "임의의 2층 >10% → 8점",
+          "oneLayer": "1층만 또는 구름 없음 → 0점"
+        },
+        "lowCloudPenalty": {
+          "title": "4. 하층운 패널티 계수",
+          "subtitle": "Low Cloud Penalty · Multiplier",
+          "desc": "하층운은 시선을 가리는 \"시인성 살인자\"로, 곱셈 계수로 총점에 적용됩니다.",
+          "level1": "하층운<20% → ×1.0 (패널티 없음)",
+          "level2": "하층운 20–40% → ×1.0 ~ ×0.8 (선형)",
+          "level3": "하층운 40–70% → ×0.8 ~ ×0.5 (선형)",
+          "level4": "하층운>70% → ×0.2 (심각한 차단)"
+        },
+        "precipPenalty": {
+          "title": "5. 강수 패널티 계수",
+          "subtitle": "Precipitation Penalty · Multiplier",
+          "desc": "강수는 화염구름의 가시성을 직접 약화시키며, 곱셈 계수로 총점에 적용됩니다.",
+          "level1": "강수<0.1mm/h → ×1.0 (패널티 없음)",
+          "level2": "0.1–0.5mm/h → ×0.85",
+          "level3": "0.5–2mm/h → ×0.5",
+          "level4": ">2mm/h → ×0.15 (폭우, 거의 불가능)",
+          "formula": "최종 점수 = 기초 점수 × 하층운 계수 × 강수 계수"
+        }
+      }
     }
   },
   "buttons": {

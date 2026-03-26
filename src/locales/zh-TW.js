@@ -30,7 +30,61 @@ const translations = {
       "scoreGuideTitle": "評分解讀",
       "scoreExcellent": "優秀：>70（推薦出門）",
       "scoreGood": "良好：40-70（可觀賞）",
-      "scoreFair": "一般：<40（謹慎期待）"
+      "scoreFair": "一般：<40（謹慎期待）",
+      "scoreExcellentRange": "優秀 Excellent",
+      "scoreExcellentDesc": "強烈推薦出門",
+      "scoreGoodRange": "良好 Good",
+      "scoreGoodDesc": "可觀賞，條件較好",
+      "scoreFairRange": "一般 Fair",
+      "scoreFairDesc": "謹慎期待",
+      "scorePoorRange": "不佳 Poor",
+      "scorePoorDesc": "不建議",
+      "sections": {
+        "cloudStructure": {
+          "title": "1. 雲層結構",
+          "subtitle": "Cloud Structure · 60分",
+          "desc": "火燒雲需要合適的雲層作為「畫布」，高雲和中雲是核心載體。",
+          "highCloud": "高雲（>6km）最優50%，高斯曲線，滿分25分",
+          "midCloud": "中雲（2–6km）最優35%，高斯曲線，滿分25分",
+          "lowCloudBonus": "低雲獎勵：低雲<20%滿分10分，線性遞減",
+          "formula": "雲層結構分 = 高雲分 + 中雲分 + 低雲獎勵（最高60分）"
+        },
+        "transparency": {
+          "title": "2. 大氣透明度",
+          "subtitle": "Transparency · 25分",
+          "desc": "透明的大氣讓光線更純粹地染色雲層，濕度適中有助於散射增強色彩。",
+          "visibility": "能見度：15 × (1 − e^(−v/15))，滿分15分",
+          "humidity": "濕度：最優55%，高斯曲線，滿分10分",
+          "formula": "透明度分 = 能見度分 + 濕度分（最高25分）"
+        },
+        "layerDiversity": {
+          "title": "3. 雲層立體感",
+          "subtitle": "Layer Diversity · 15分",
+          "desc": "高中低三層雲同時存在時，光線折射角度多樣，色彩層次更豐富。",
+          "threeLayer": "三層雲均>10% → 15分",
+          "twoLayer": "任意兩層>10% → 8分",
+          "oneLayer": "僅一層或無雲 → 0分"
+        },
+        "lowCloudPenalty": {
+          "title": "4. 低雲懲罰係數",
+          "subtitle": "Low Cloud Penalty · Multiplier",
+          "desc": "低雲擋在視線前方，是火燒雲的「視線殺手」，以乘性係數懲罰總分。",
+          "level1": "低雲<20% → ×1.0（無懲罰）",
+          "level2": "低雲20–40% → ×1.0 到 ×0.8（線性）",
+          "level3": "低雲40–70% → ×0.8 到 ×0.5（線性）",
+          "level4": "低雲>70% → ×0.2（嚴重遮擋）"
+        },
+        "precipPenalty": {
+          "title": "5. 降水懲罰係數",
+          "subtitle": "Precipitation Penalty · Multiplier",
+          "desc": "降水直接削弱火燒雲可見性，以乘性係數懲罰總分。",
+          "level1": "降水<0.1mm/h → ×1.0（無懲罰）",
+          "level2": "0.1–0.5mm/h → ×0.85",
+          "level3": "0.5–2mm/h → ×0.5",
+          "level4": ">2mm/h → ×0.15（大雨，基本無望）",
+          "formula": "最終得分 = 基礎分 × 低雲係數 × 降水係數"
+        }
+      }
     }
   },
   "buttons": {

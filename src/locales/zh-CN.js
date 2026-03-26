@@ -36,7 +36,61 @@ export default {
       scoreGuideTitle: '评分解读',
       scoreExcellent: '优秀：>70（推荐出门）',
       scoreGood: '良好：40-70（可观赏）',
-      scoreFair: '一般：<40（谨慎期待）'
+      scoreFair: '一般：<40（谨慎期待）',
+      scoreExcellentRange: '优秀 Excellent',
+      scoreExcellentDesc: '强烈推荐出门',
+      scoreGoodRange: '良好 Good',
+      scoreGoodDesc: '可观赏，条件较好',
+      scoreFairRange: '一般 Fair',
+      scoreFairDesc: '谨慎期待',
+      scorePoorRange: '不佳 Poor',
+      scorePoorDesc: '不建议',
+      sections: {
+        cloudStructure: {
+          title: '1. 云层结构',
+          subtitle: 'Cloud Structure · 60分',
+          desc: '火烧云需要合适的云层作为"画布"，高云和中云是核心载体。',
+          highCloud: '高云（>6km）最优50%，高斯曲线，满分25分',
+          midCloud: '中云（2–6km）最优35%，高斯曲线，满分25分',
+          lowCloudBonus: '低云奖励：低云<20%满分10分，线性递减',
+          formula: '云层结构分 = 高云分 + 中云分 + 低云奖励（最高60分）'
+        },
+        transparency: {
+          title: '2. 大气透明度',
+          subtitle: 'Transparency · 25分',
+          desc: '透明的大气让光线更纯粹地染色云层，湿度适中有助于散射增强色彩。',
+          visibility: '能见度：15 × (1 − e^(−v/15))，满分15分',
+          humidity: '湿度：最优55%，高斯曲线，满分10分',
+          formula: '透明度分 = 能见度分 + 湿度分（最高25分）'
+        },
+        layerDiversity: {
+          title: '3. 云层立体感',
+          subtitle: 'Layer Diversity · 15分',
+          desc: '高中低三层云同时存在时，光线折射角度多样，色彩层次更丰富。',
+          threeLayer: '三层云均>10% → 15分',
+          twoLayer: '任意两层>10% → 8分',
+          oneLayer: '仅一层或无云 → 0分'
+        },
+        lowCloudPenalty: {
+          title: '4. 低云惩罚系数',
+          subtitle: 'Low Cloud Penalty · Multiplier',
+          desc: '低云挡在视线前方，是火烧云的"视线杀手"，以乘性系数惩罚总分。',
+          level1: '低云<20% → ×1.0（无惩罚）',
+          level2: '低云20–40% → ×1.0 到 ×0.8（线性）',
+          level3: '低云40–70% → ×0.8 到 ×0.5（线性）',
+          level4: '低云>70% → ×0.2（严重遮挡）'
+        },
+        precipPenalty: {
+          title: '5. 降水惩罚系数',
+          subtitle: 'Precipitation Penalty · Multiplier',
+          desc: '降水直接削弱火烧云可见性，以乘性系数惩罚总分。',
+          level1: '降水<0.1mm/h → ×1.0（无惩罚）',
+          level2: '0.1–0.5mm/h → ×0.85',
+          level3: '0.5–2mm/h → ×0.5',
+          level4: '>2mm/h → ×0.15（大雨，基本无望）',
+          formula: '最终得分 = 基础分 × 低云系数 × 降水系数'
+        }
+      }
     }
   },
 

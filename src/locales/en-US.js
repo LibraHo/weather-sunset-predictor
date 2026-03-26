@@ -41,61 +41,49 @@ const translations = {
       "scorePoorRange": "Poor",
       "scorePoorDesc": "Not Recommended",
       "sections": {
-        "cloudId": {
-          "title": "1. Cloud Type Identification & Canvas Score",
-          "subtitle": "Cloud ID & Canvas Score",
-          "weights": "Canvas Score Weights: Mid/High Cloud 70%, Mid Cloud 45%, Low Cloud 10%",
-          "rules": "Cloud Type Rules:",
-          "stratus": "Stratus: Low Cloud >70% → Canvas Multiplier 0.4",
-          "stratocumulus": "Stratocumulus: 40% ≤ Low Cloud ≤70% → Multiplier 0.6",
-          "clearSky": "Clear Sky: Total Cloud <30% → Multiplier 0.85",
-          "cumulus": "Cumulus: Mid Cloud Dominant/Base<500m → Multiplier 0.5",
-          "formula": "Canvas Score = Cover Score × Species Multiplier"
+        "cloudStructure": {
+          "title": "1. Cloud Structure",
+          "subtitle": "Cloud Structure · 60 pts",
+          "desc": "Fire clouds need the right cloud layers as a \"canvas\". High and mid clouds are the key carriers.",
+          "highCloud": "High Cloud (>6km): Optimal 50%, Gaussian curve, max 25 pts",
+          "midCloud": "Mid Cloud (2–6km): Optimal 35%, Gaussian curve, max 25 pts",
+          "lowCloudBonus": "Low Cloud Bonus: Less is better, <20% = 10 pts, linear decay",
+          "formula": "Cloud Structure Score = High + Mid + Low Bonus (max 60 pts)"
         },
-        "lightPath": {
-          "title": "2. Optical Path Geometric Model",
-          "subtitle": "Optical Path Geometric Model",
-          "description": "Evaluates cloud conditions along the light path.",
-          "sampling": "Two-point Sampling:",
-          "nearPoint": "Near Point: Distance 150km, Weight 40%",
-          "farPoint": "Far Point: Distance 300km, Weight 60%",
-          "scoringRules": "Scoring Rules:",
-          "rule1": "Near/Far <20% → 100 pts",
-          "rule2": "Near 20-40%, Far <20% → 80 pts",
-          "rule3": "Far 20-40% → 60 pts",
-          "rule4": "Any >40% → <40 pts",
-          "formula": "Path Score = Near×40% + Far×60%"
+        "transparency": {
+          "title": "2. Atmospheric Transparency",
+          "subtitle": "Transparency · 25 pts",
+          "desc": "Clear atmosphere lets light color clouds more vividly. Moderate humidity enhances scattering.",
+          "visibility": "Visibility: 15 × (1 − e^(−v/15)), max 15 pts",
+          "humidity": "Humidity: Optimal 55%, Gaussian curve, max 10 pts",
+          "formula": "Transparency Score = Visibility + Humidity (max 25 pts)"
         },
-        "aod": {
-          "title": "3. Aerosol (AOD) Correction",
-          "subtitle": "Aerosol Optical Depth Correction",
-          "description": "AOD measures atmospheric aerosol concentration; high values reduce light transmission.",
-          "thresholds": "AOD Thresholds:",
-          "level1": "AOD < 0.3 → Coefficient 1.0 (Air Quality Excellent)",
-          "level2": "0.3 ≤ AOD < 0.5 → Coefficient 0.85 (Good)",
-          "level3": "0.5 ≤ AOD < 0.7 → Coefficient 0.7 (Fair)",
-          "level4": "AOD ≥ 0.7 → Coefficient 0.5 (Heavy Haze)",
-          "formula": "Final Score = Base Score × AOD Coefficient"
+        "layerDiversity": {
+          "title": "3. Layer Diversity",
+          "subtitle": "Layer Diversity · 15 pts",
+          "desc": "When high, mid, and low clouds coexist, diverse refraction angles create richer color layers.",
+          "threeLayer": "All three layers >10% → 15 pts",
+          "twoLayer": "Any two layers >10% → 8 pts",
+          "oneLayer": "Only one layer or no cloud → 0 pts"
         },
-        "rendering": {
-          "title": "4. Rendering Coefficient",
-          "subtitle": "Rendering Coefficient",
-          "description": "Corrects based on transparency, humidity, and precipitation.",
-          "visibility": "Visibility:",
-          "visibilityValues": "≥30km → 1.0 | 20-30km → 0.95 | 10-20km → 0.85 | <10km → 0.7",
-          "humidity": "Humidity:",
-          "humidityValues": "40%-70% → 1.0 (Best) | <40% or >80% → 0.85",
-          "precipitation": "Precipitation:",
-          "precipitationValues": "<1mm/h → 1.0 | 1-5mm/h → 0.7 | ≥5mm/h → 0.4 (Rain)",
-          "formula": "Coefficient = Vis × Hum × Precip"
+        "lowCloudPenalty": {
+          "title": "4. Low Cloud Penalty",
+          "subtitle": "Low Cloud Penalty · Multiplier",
+          "desc": "Low clouds block the view and are the \"visibility killer\" of fire clouds. Applied as a multiplicative penalty.",
+          "level1": "Low Cloud <20% → ×1.0 (no penalty)",
+          "level2": "Low Cloud 20–40% → ×1.0 to ×0.8 (linear)",
+          "level3": "Low Cloud 40–70% → ×0.8 to ×0.5 (linear)",
+          "level4": "Low Cloud >70% → ×0.2 (severe blockage)"
         },
-        "confidence": {
-          "title": "5. Confidence Level Rules",
-          "subtitle": "Confidence Level Rules",
-          "description": "Criteria for evaluating prediction reliability.",
-          "cloudEdge": "Cloud Edge: Large gradient → High clarity",
-          "wind": "Wind: Wind >15m/s & inconsistent → Lower confidence",
-          "solarAltitude": "Solar Altitude: Sun >6° below or >5° above horizon → Lower confidence"
+        "precipPenalty": {
+          "title": "5. Precipitation Penalty",
+          "subtitle": "Precipitation Penalty · Multiplier",
+          "desc": "Precipitation directly reduces fire cloud visibility. Applied as a multiplicative penalty.",
+          "level1": "Precipitation <0.1mm/h → ×1.0 (no penalty)",
+          "level2": "0.1–0.5mm/h → ×0.85",
+          "level3": "0.5–2mm/h → ×0.5",
+          "level4": ">2mm/h → ×0.15 (heavy rain, near zero chance)",
+          "formula": "Final Score = Base Score × Low Cloud Penalty × Precipitation Penalty"
         }
       }
     }
