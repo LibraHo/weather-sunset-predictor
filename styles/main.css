@@ -2397,32 +2397,27 @@ body.theme-dark .prediction-analysis {
 }
 
 /* 底部数据行：横排展示降水+风速+风向 */
-.day-meta-icons-row {
+.day-meta-lines {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  flex-wrap: nowrap;
+  gap: 4px;
   width: 100%;
-  overflow: hidden;
 }
 
-.day-meta-icon {
+.day-meta-line {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 3px;
   font-size: 0.68rem;
   color: var(--color-text-light);
+  width: 100%;
 }
 
-.day-meta-icon:last-child {
-  justify-content: center;
-}
-
-.day-meta-icon .icon {
+.day-meta-line .icon {
   font-size: 0.85rem;
   line-height: 1;
   flex-shrink: 0;
@@ -2430,7 +2425,7 @@ body.theme-dark .prediction-analysis {
   text-align: center;
 }
 
-.day-meta-icon .value {
+.day-meta-line .value {
   font-size: 0.68rem;
   font-weight: 600;
 }
