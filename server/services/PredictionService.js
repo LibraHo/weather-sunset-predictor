@@ -2,14 +2,13 @@
  * PredictionService - 基础火烧云预测服务（后端版）
  *
  * 分析气象数据，计算火烧云（晚霞/朝霞）出现的可能性和质量
- * 复用 SunCalculator 和 GaussianScore 工具类
+ * 复用 SunCalculator 工具类
  *
  * 需求：22 (前后端分离 - Phase 1)
  * @author Backend Migration v1.0
  */
 
 const SunCalculator = require('../utils/SunCalculator.js');
-const GaussianScore = require('../utils/GaussianScore.js');
 
 // ========== 服务类定义 ==========
 
@@ -18,16 +17,137 @@ class PredictionService {
    * 创建预测服务实例
    *
    * @param {Object} options - 配置选项
-   * @param {Object} options.weights - 自定义权重（可选）
+   * @param {Object} options.weights - 兼容旧参数（当前统一评分不使用）
    */
   constructor(options = {}) {
-    this.weights = options.weights || GaussianScore.DEFAULT_WEIGHTS;
+    this.weights = options.weights || null;
+  }
+
+  _toNumber(value, fallback = 0) {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : fallback;
+  }
+
+  _gaussian(value, mean, sigma) {
+    return Math.exp(-Math.pow(value - mean, 2) / (2 * sigma * sigma));
+  }
+
+  _clamp(value, min = 0, max = 100) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  _getQualityLevel(score) {
+    if (score >= 80) return 'excellent';
+    if (score >= 60) return 'good';
+    if (score >= 40) return 'fair';
+    return 'poor';
+  }
+
+  /**
+   * 统一评分算法（与前端 SunsetPredictionService._calculateUnifiedScore 保持一致）
+   *
+   * @param {Object} weatherData
+   * @returns {{ score: number, quality: string, breakdown: Object }}
+   */
+  _calculateUnifiedScore(weatherData) {
+    const highClouds = this._toNumber(weatherData.highClouds ?? 0, 0);
+    const midClouds = this._toNumber(weatherData.midClouds ?? 0, 0);
+    const lowClouds = this._toNumber(weatherData.lowClouds ?? weatherData.lowCloudCover ?? 0, 0);
+    const visibility = this._toNumber(weatherData.visibility ?? 10, 10);
+    const humidity = this._toNumber(weatherData.humidity ?? 50, 50);
+    const precipitation = this._toNumber(weatherData.precipitation ?? 0, 0);
+
+    // ① 云层结构（60分）
+    const highCloudsScore = 25 * this._gaussian(highClouds, 50, 20);
+    const midCloudsScore = 25 * this._gaussian(midClouds, 35, 15);
+    const lowCloudBonus = 10 * Math.max(0, 1 - lowClouds / 20);
+    const cloudStructureScore = highCloudsScore + midCloudsScore + lowCloudBonus;
+
+    // ② 大气透明度（25分）
+    const visibilityScore = 15 * (1 - Math.exp(-visibility / 15));
+    const humidityScore = 10 * this._gaussian(humidity, 55, 20);
+    const transparencyScore = visibilityScore + humidityScore;
+
+    // ③ 云层立体感（15分）
+    const layerCount =
+      (highClouds > 10 ? 1 : 0) +
+      (midClouds > 10 ? 1 : 0) +
+      (lowClouds > 10 ? 1 : 0);
+
+    let layerDiversityScore;
+    if (layerCount >= 3) {
+      layerDiversityScore = 15;
+    } else if (layerCount === 2) {
+      layerDiversityScore = 8;
+    } else {
+      layerDiversityScore = 0;
+    }
+
+    const baseScore = cloudStructureScore + transparencyScore + layerDiversityScore;
+
+    // 低云惩罚
+    let lowCloudPenalty;
+    if (lowClouds < 20) {
+      lowCloudPenalty = 1.0;
+    } else if (lowClouds < 40) {
+      lowCloudPenalty = 1.0 - 0.2 * (lowClouds - 20) / 20;
+    } else if (lowClouds < 70) {
+      lowCloudPenalty = 0.8 - 0.3 * (lowClouds - 40) / 30;
+    } else {
+      lowCloudPenalty = 0.2;
+    }
+
+    // 降水惩罚
+    let precipPenalty;
+    if (precipitation < 0.1) {
+      precipPenalty = 1.0;
+    } else if (precipitation < 0.5) {
+      precipPenalty = 0.85;
+    } else if (precipitation < 2.0) {
+      precipPenalty = 0.5;
+    } else {
+      precipPenalty = 0.15;
+    }
+
+    const finalScore = this._clamp(baseScore * lowCloudPenalty * precipPenalty, 0, 100);
+    const quality = this._getQualityLevel(finalScore);
+
+    const breakdown = {
+      cloudStructure: {
+        score: cloudStructureScore,
+        max: 60,
+        highCloudsScore,
+        midCloudsScore,
+        lowCloudBonus
+      },
+      transparency: {
+        score: transparencyScore,
+        max: 25,
+        visibilityScore,
+        humidityScore
+      },
+      layerDiversity: {
+        score: layerDiversityScore,
+        max: 15,
+        layerCount
+      },
+      baseScore,
+      lowCloudPenalty,
+      precipPenalty,
+      finalScore
+    };
+
+    return {
+      score: finalScore,
+      quality,
+      breakdown
+    };
   }
 
   /**
    * 计算火烧云预测
    *
-   * 整合各气象因素评分，计算加权总分，并确定质量等级
+   * 整合各气象因素评分，计算总分，并确定质量等级
    *
    * @param {Object} weatherData - 天气数据对象
    * @param {Date|string} date - 预测日期
@@ -71,34 +191,30 @@ class PredictionService {
     const sunsetTime = SunCalculator.getSunsetTime(date, lat, lon);
     const sunriseTime = SunCalculator.getSunriseTime(date, lat, lon);
 
-    // ========== 计算各因素得分 ==========
+    // ========== 统一评分 ==========
 
-    const scores = GaussianScore.calculateAllScores(weatherData);
+    const unifiedResult = this._calculateUnifiedScore(weatherData);
+    const lowCloudValue = this._toNumber(weatherData.lowClouds ?? weatherData.lowCloudCover ?? weatherData.cloudCover ?? 0, 0);
 
-    // 构建因素详情对象（包含值和得分）
+    // 构建因素详情对象（兼容前端结构）
     const factors = {
       cloudCover: {
-        value: weatherData.cloudCover || 0,
-        score: scores.cloudCover
+        value: this._toNumber(weatherData.cloudCover ?? 0, 0),
+        score: unifiedResult.breakdown.cloudStructure.score
       },
       humidity: {
-        value: weatherData.humidity || 0,
-        score: scores.humidity
+        value: this._toNumber(weatherData.humidity ?? 0, 0),
+        score: unifiedResult.breakdown.transparency.humidityScore
       },
       visibility: {
-        value: weatherData.visibility || 0,
-        score: scores.visibility
+        value: this._toNumber(weatherData.visibility ?? 0, 0),
+        score: unifiedResult.breakdown.transparency.visibilityScore
       },
       lowClouds: {
-        value: weatherData.lowCloudCover || weatherData.cloudCover || 0,
-        score: scores.lowClouds
+        value: lowCloudValue,
+        score: unifiedResult.breakdown.cloudStructure.lowCloudBonus
       }
     };
-
-    // ========== 计算加权总分和质量等级 ==========
-
-    const totalScore = GaussianScore.calculateWeightedScore(scores, this.weights);
-    const quality = GaussianScore.getQualityLevel(totalScore);
 
     // ========== 计算黄金时段和蓝调时段 ==========
 
@@ -113,18 +229,19 @@ class PredictionService {
     // ========== 分析云层分层 ==========
 
     const cloudLayers = SunCalculator.analyzeCloudLayers(
-      weatherData.highClouds || 0,
-      weatherData.midClouds || 0,
-      weatherData.lowClouds || 0
+      this._toNumber(weatherData.highClouds ?? 0, 0),
+      this._toNumber(weatherData.midClouds ?? 0, 0),
+      this._toNumber(weatherData.lowClouds ?? weatherData.lowCloudCover ?? 0, 0)
     );
 
     // ========== 构建预测结果（对齐前端 SunsetPrediction 模型）==========
 
     return {
       date: date,
-      score: totalScore,
-      quality: quality,
+      score: unifiedResult.score,
+      quality: unifiedResult.quality,
       factors: factors,
+      breakdown: unifiedResult.breakdown,
       sunsetTime: sunsetTime,
       sunriseTime: sunriseTime,
       type: type,
@@ -138,44 +255,43 @@ class PredictionService {
   /**
    * 计算预测评分（不包含时间计算）
    *
-   * 仅计算各因素得分、加权总分和质量等级
+   * 仅计算各因素得分、总分和质量等级
    *
    * @param {Object} weatherData - 天气数据对象
-   * @returns {Object} {factors, score, quality}
+   * @returns {Object} {factors, score, quality, breakdown}
    */
   calculateScore(weatherData) {
     if (!weatherData || typeof weatherData !== 'object') {
       throw new Error('无效的天气数据对象');
     }
 
-    const scores = GaussianScore.calculateAllScores(weatherData);
+    const unifiedResult = this._calculateUnifiedScore(weatherData);
+    const lowCloudValue = this._toNumber(weatherData.lowClouds ?? weatherData.lowCloudCover ?? weatherData.cloudCover ?? 0, 0);
 
     const factors = {
       cloudCover: {
-        value: weatherData.cloudCover || 0,
-        score: scores.cloudCover
+        value: this._toNumber(weatherData.cloudCover ?? 0, 0),
+        score: unifiedResult.breakdown.cloudStructure.score
       },
       humidity: {
-        value: weatherData.humidity || 0,
-        score: scores.humidity
+        value: this._toNumber(weatherData.humidity ?? 0, 0),
+        score: unifiedResult.breakdown.transparency.humidityScore
       },
       visibility: {
-        value: weatherData.visibility || 0,
-        score: scores.visibility
+        value: this._toNumber(weatherData.visibility ?? 0, 0),
+        score: unifiedResult.breakdown.transparency.visibilityScore
       },
       lowClouds: {
-        value: weatherData.lowCloudCover || weatherData.cloudCover || 0,
-        score: scores.lowClouds
+        value: lowCloudValue,
+        score: unifiedResult.breakdown.cloudStructure.lowCloudBonus
       }
     };
 
-    const totalScore = GaussianScore.calculateWeightedScore(scores, this.weights);
-    const quality = GaussianScore.getQualityLevel(totalScore);
-
     return {
       factors,
-      score: totalScore,
-      quality
+      score: unifiedResult.score,
+      quality: unifiedResult.quality,
+      breakdown: unifiedResult.breakdown
     };
   }
 
@@ -186,7 +302,7 @@ class PredictionService {
    * @returns {string} 质量等级
    */
   getQuality(score) {
-    return GaussianScore.getQualityLevel(score);
+    return this._getQualityLevel(this._toNumber(score, 0));
   }
 }
 
