@@ -1881,9 +1881,8 @@ class WeatherController {
    */
   async _initChinaSpotsMap() {
     const mapEl = document.getElementById('china-spots-map');
-    const tabsContainer = document.getElementById('china-spots-tabs-container');
 
-    if (!mapEl || !tabsContainer) {
+    if (!mapEl) {
       console.warn('[WeatherController] 未找到 china-spots-map 元素');
       return;
     }
@@ -1938,8 +1937,8 @@ class WeatherController {
 
       this._chinaSpotsMapInstance = map;
 
-      // 使用管理器初始化叠加层
-      this.chinaSpotsOverlayManager.init(map, tabsContainer);
+      // 使用管理器初始化叠加层（不再渲染顶部 tabs，仅保留底部朝/晚切换卡）
+      this.chinaSpotsOverlayManager.init(map, null);
 
       // 加载所有时段数据
       await this.chinaSpotsOverlayManager.loadAllPeriods();
