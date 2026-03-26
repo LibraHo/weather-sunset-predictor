@@ -3206,11 +3206,10 @@ body.theme-dark .sun-azimuth-info {
   justify-content: flex-start;
 }
 
-/* 竖排卡片：每个朝霞/晚霞各一张，桌面端横排 */
-#forecast-section .forecast-card-vertical {
-  flex: 1 1 120px;
+/* 每天一张卡片，横排 */
+#forecast-section .forecast-day-card {
+  flex: 1 1 0;
   min-width: 100px;
-  max-width: 160px;
   background: linear-gradient(180deg, rgba(255,255,255,0.62) 0%, rgba(255,255,255,0.36) 100%);
   border-radius: 14px;
   padding: 14px 12px;
@@ -3219,60 +3218,56 @@ body.theme-dark .sun-azimuth-info {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  gap: 6px;
   text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
-#forecast-section .forecast-card-vertical:hover {
+#forecast-section .forecast-day-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 24px rgba(24,39,75,0.13);
 }
-#forecast-section .fcard-date {
-  font-size: 0.88rem;
+#forecast-section .fcard-day-label {
+  font-size: 0.9rem;
   font-weight: 700;
   color: #2f3948;
   white-space: nowrap;
 }
-#forecast-section .fcard-subdate {
+#forecast-section .fcard-day-date {
   font-size: 0.75rem;
   color: rgba(47,57,72,0.65);
-  margin-bottom: 2px;
 }
-#forecast-section .fcard-icon {
-  font-size: 1.8rem;
-  line-height: 1;
-  margin: 4px 0;
+#forecast-section .fcard-day-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  margin-top: 4px;
 }
-#forecast-section .fcard-type {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #4a6fa5;
-  margin-bottom: 2px;
-}
-#forecast-section .fcard-temp {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #2f3948;
-  margin: 2px 0 4px;
-}
-#forecast-section .fcard-row {
+#forecast-section .fcard-row-item {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 0.78rem;
-  color: rgba(47,57,72,0.8);
-  width: 100%;
+  gap: 5px;
+  font-size: 0.85rem;
   justify-content: center;
 }
-#forecast-section .fcard-label {
-  font-size: 0.85rem;
+#forecast-section .fcard-row-item.passed {
+  opacity: 0.45;
 }
-/* 质量颜色边框 */
-#forecast-section .forecast-card-vertical.quality-excellent { border-color: rgba(47,158,68,0.35); }
-#forecast-section .forecast-card-vertical.quality-good { border-color: rgba(211,158,0,0.35); }
-#forecast-section .forecast-card-vertical.quality-fair { border-color: rgba(217,119,6,0.35); }
-#forecast-section .forecast-card-vertical.quality-poor { border-color: rgba(220,38,38,0.25); }
+#forecast-section .fcard-row-icon {
+  font-size: 1rem;
+}
+#forecast-section .fcard-row-label {
+  color: rgba(47,57,72,0.75);
+  font-size: 0.8rem;
+}
+#forecast-section .fcard-row-score {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+#forecast-section .fcard-row-score.quality-excellent { color: #2f9e44; }
+#forecast-section .fcard-row-score.quality-good { color: #d39e00; }
+#forecast-section .fcard-row-score.quality-fair { color: #d97706; }
+#forecast-section .fcard-row-score.quality-poor { color: #dc2626; }
 
 #forecast-section .forecast-day-column {
   width: 100%;
@@ -3530,28 +3525,9 @@ body.theme-dark .sun-azimuth-info {
     gap: 10px;
   }
 
-  #forecast-section .forecast-card-vertical {
-    max-width: 100%;
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-    padding: 12px;
-    text-align: left;
-    justify-content: flex-start;
-  }
-
-  #forecast-section .fcard-icon {
-    font-size: 1.4rem;
-    margin: 0;
-    flex-shrink: 0;
-  }
-
-  #forecast-section .fcard-date,
-  #forecast-section .fcard-subdate,
-  #forecast-section .fcard-type,
-  #forecast-section .fcard-temp,
-  #forecast-section .fcard-row {
-    justify-content: flex-start;
+  #forecast-section .forecast-day-card {
+    min-width: unset;
+    width: 100%;
   }
 
   #forecast-section .forecast-day-column {

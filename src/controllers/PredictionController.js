@@ -1195,56 +1195,50 @@ class PredictionController {
                         index === 1 ? this.i18n.t('time.dayAfterTomorrow') :
                         this.i18n.t('time.daysLater', { days: index + 1 });
 
+      const qualityTextMap = { excellent: '极佳', good: '良好', fair: '一般', poor: '较差' };
 
-      // 朝霞预测
+      // 朝霞行
+      let sunriseRow = '';
       if (dayPredictions.sunrise) {
         const pred = dayPredictions.sunrise;
         const sunriseTime = pred.sunriseTime || pred.sunsetTime;
-
-        // 判断是否已过（日出时间 + 2小时）
         const isPassed = sunriseTime ? now > new Date(sunriseTime.getTime() + 2 * 60 * 60 * 1000) : false;
-        const passedLabel = isPassed ? `<span class="passed-badge">${this.i18n.t('prediction.passed')}</span>` : '';
-
-        const scoreStr = Math.round(pred.score ?? 0);
-        const qualityTextMap = { excellent: '极佳', good: '良好', fair: '一般', poor: '较差' };
-        const qualityText = qualityTextMap[pred.quality] ?? '较差';
-        html += `
-          <div class="forecast-card-vertical ${this.getQualityClass(pred.quality)} ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
-            <div class="fcard-date">${dayLabel}${passedLabel}</div>
-            <div class="fcard-subdate">${dateStr}</div>
-            <div class="fcard-icon">🌄</div>
-            <div class="fcard-type">${this.i18n.t('prediction.sunrise')}</div>
-            <div class="fcard-score">${scoreStr}</div>
-            <div class="fcard-quality">${qualityText}</div>
-          </div>
-        `;
+        const score = Math.round(pred.score ?? 0);
+        const quality = qualityTextMap[pred.quality] ?? '较差';
+        sunriseRow = `
+          <div class="fcard-row-item ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
+            <span class="fcard-row-icon">🌄</span>
+            <span class="fcard-row-label">朝霞</span>
+            <span class="fcard-row-score quality-${pred.quality}">${score}分</span>
+          </div>`;
       }
 
-      // 晚霞预测
+      // 晚霞行
+      let sunsetRow = '';
       if (dayPredictions.sunset) {
         const pred = dayPredictions.sunset;
         const sunsetTime = pred.sunsetTime;
-
-        // 判断是否已过（日落时间 + 1.5小时）
         const isPassed = sunsetTime ? now > new Date(sunsetTime.getTime() + 1.5 * 60 * 60 * 1000) : false;
-        const passedLabel = isPassed ? `<span class="passed-badge">${this.i18n.t('prediction.passed')}</span>` : '';
-
-        const scoreStr = Math.round(pred.score ?? 0);
-        const qualityTextMap = { excellent: '极佳', good: '良好', fair: '一般', poor: '较差' };
-        const qualityText = qualityTextMap[pred.quality] ?? '较差';
-        html += `
-          <div class="forecast-card-vertical ${this.getQualityClass(pred.quality)} ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
-            <div class="fcard-date">${dayLabel}${passedLabel}</div>
-            <div class="fcard-subdate">${dateStr}</div>
-            <div class="fcard-icon">🌅</div>
-            <div class="fcard-type">${this.i18n.t('prediction.sunset')}</div>
-            <div class="fcard-score">${scoreStr}</div>
-            <div class="fcard-quality">${qualityText}</div>
-          </div>
-        `;
+        const score = Math.round(pred.score ?? 0);
+        const quality = qualityTextMap[pred.quality] ?? '较差';
+        sunsetRow = `
+          <div class="fcard-row-item ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(dayPredictions.sunset)}">
+            <span class="fcard-row-icon">🌅</span>
+            <span class="fcard-row-label">晚霞</span>
+            <span class="fcard-row-score quality-${pred.quality}">${score}分</span>
+          </div>`;
       }
 
-
+      html += `
+        <div class="forecast-day-card">
+          <div class="fcard-day-label">${dayLabel}</div>
+          <div class="fcard-day-date">${dateStr}</div>
+          <div class="fcard-day-rows">
+            ${sunriseRow}
+            ${sunsetRow}
+          </div>
+        </div>
+      `;
     });
 
     html += '</div>';
