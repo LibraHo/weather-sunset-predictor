@@ -1039,16 +1039,10 @@ class PredictionController {
     };
 
     const result = this.predictionService._calculateUnifiedScore(weatherInput);
-    const { score, quality, breakdown } = result;
+    const { score, breakdown } = result;
     const finalScore = Math.round(score);
 
-    const levelText = quality === 'excellent' ? '（极佳）'
-      : quality === 'good'      ? '（良好）'
-      : quality === 'fair'      ? '（一般）'
-      : '（较差）';
-
-    let html = ` 🔥 火烧云指数：${finalScore}/100${levelText}`;
-    html += '<div class="fire-cloud-details" style="margin-top: 10px; padding: 10px; background: rgba(255, 243, 224, 0.3); border-radius: 8px;">';
+    let html = '<div class="fire-cloud-details" style="margin-top: 10px; padding: 10px; background: rgba(255, 243, 224, 0.3); border-radius: 8px;">';
     html += '<div style="font-weight: 600; margin-bottom: 8px;">🔥 火烧云形成条件分析：</div>';
 
     // 高云
