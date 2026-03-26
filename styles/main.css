@@ -291,8 +291,8 @@ main > section {
 }
 
 .methodology-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 12px;
   margin: 14px 0;
 }
