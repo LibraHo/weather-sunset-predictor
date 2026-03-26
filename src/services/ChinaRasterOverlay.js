@@ -52,6 +52,48 @@ export function getPaletteForPeriod(period) {
   return period === 'sunrise' ? SUNRISE_PALETTE : FIRECLOUD_PALETTE;
 }
 
+
+// 测试面板：注入可见的模拟图层（仅渲染层，不影响后端评分）
+const ENABLE_SYNTHETIC_TEST_DATA = true;
+
+function injectSyntheticRaster(data, period = 'sunset') {
+  if (!data || !Array.isArray(data.values) || !data.width || !data.height) return data;
+  const width = data.width;
+  const height = data.height;
+  const noData = data.noData ?? -1;
+  const vals = Array.isArray(data.values) ? data.values.slice() : [];
+
+  const gaussian = (x, y, cx, cy, sx, sy, amp) => {
+    const dx = (x - cx) / sx;
+    const dy = (y - cy) / sy;
+    return amp * Math.exp(-(dx * dx + dy * dy));
+  };
+
+  // 朝霞与晚霞用不同中心，确保切换有明显变化
+  const blobs = period === 'sunrise'
+    ? [
+        { cx: width * 0.62, cy: height * 0.28, sx: width * 0.12, sy: height * 0.10, amp: 24 },
+        { cx: width * 0.72, cy: height * 0.42, sx: width * 0.10, sy: height * 0.12, amp: 20 },
+      ]
+    : [
+        { cx: width * 0.45, cy: height * 0.35, sx: width * 0.14, sy: height * 0.11, amp: 25 },
+        { cx: width * 0.58, cy: height * 0.48, sx: width * 0.11, sy: height * 0.13, amp: 19 },
+      ];
+
+  for (let row = 0; row < height; row++) {
+    for (let col = 0; col < width; col++) {
+      const i = row * width + col;
+      const base = Number.isFinite(vals[i]) && vals[i] !== noData ? vals[i] : 0;
+      let add = 0;
+      for (const b of blobs) add += gaussian(col, row, b.cx, b.cy, b.sx, b.sy, b.amp);
+      const mixed = Math.max(base, Math.min(68, base * 0.75 + add));
+      vals[i] = mixed;
+    }
+  }
+
+  return { ...data, values: vals, synthetic: true };
+}
+
 // ─── 工具函数 ─────────────────────────────────────────────────────────────────
 
 function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
@@ -352,7 +394,8 @@ export default class ChinaRasterOverlay {
       const res = await fetch(`/api/spots/china/raster?${params}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      const data = await res.json();
+      const rawData = await res.json();
+      const data = ENABLE_SYNTHETIC_TEST_DATA ? injectSyntheticRaster(rawData, this._period) : rawData;
       this._rasterData = data;
       this._updatedAt = data.updatedAt || null;
 
