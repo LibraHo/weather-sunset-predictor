@@ -2311,16 +2311,16 @@ body.theme-dark .prediction-analysis {
 .day-card {
   background-color: var(--color-bg);
   border-radius: var(--radius-md);
-  padding: 10px 14px 10px 10px;
+  padding: 12px 8px;
   text-align: center;
   transition: all var(--transition-normal);
   border: 1px solid rgba(76,93,122,0.12);
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex: 1 1 0;
-  min-width: 90px;
+  min-width: 100px;
 }
 
 .day-card:hover {
@@ -2330,19 +2330,19 @@ body.theme-dark .prediction-analysis {
   border-width: 2px;
 }
 
-/* 日期列：固定宽度 */
+/* 日期列 */
 .day-label {
   flex-shrink: 0;
-  width: 44px;
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--color-text);
   line-height: 1.25;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   gap: 2px;
+  width: auto;
 }
 
 .day-label-primary,
@@ -2357,24 +2357,20 @@ body.theme-dark .prediction-analysis {
   color: var(--color-text-light);
 }
 
-/* 天气图标：缩小 */
+/* 天气图标 */
 .weather-icon {
   font-size: 1.6rem;
-  flex-shrink: 0;
-  width: 32px;
   text-align: center;
 }
 
-/* 温度条：固定宽度，避免影响右侧数据对齐 */
+/* 温度条 */
 .temp-bar-container {
-  flex: 1;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 4px;
-  padding: 0;
-  min-width: 0;
-  max-width: 110px;
+  padding: 0 4px;
 }
 
 .temp-bar {
@@ -2400,29 +2396,27 @@ body.theme-dark .prediction-analysis {
   color: #ff5722;
 }
 
-/* 右侧数据：固定宽度，列对齐 */
+/* 底部数据行：横排展示降水+风速+风向 */
 .day-meta-icons-row {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 0;
-  flex-shrink: 0;
+  justify-content: center;
+  gap: 4px;
+  flex-wrap: wrap;
 }
 
 .day-meta-icon {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   gap: 2px;
   font-size: 0.68rem;
   color: var(--color-text-light);
-  width: 52px; /* 固定列宽，所有行对齐 */
 }
 
-/* 风向图标单独一列，更窄 */
 .day-meta-icon:last-child {
-  width: 24px;
   justify-content: center;
 }
 
@@ -2566,6 +2560,8 @@ body.theme-dark .chart-container > div > div {
   }
   .day-card {
     min-width: unset;
+    width: 100%;
+    flex-direction: column;
   }
 }
 
@@ -4215,8 +4211,7 @@ body.theme-dark {
   font-size: 0.82rem;
   font-weight: 600;
   white-space: nowrap;
-  flex: 1; /* 撑满中间空间，数据区自然靠右 */
-  min-width: 0;
+  justify-content: center;
 }
 
 .temp-range-sep {
