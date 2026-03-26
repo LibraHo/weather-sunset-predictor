@@ -257,113 +257,6 @@ class SunsetPredictionService {
   }
 
   /**
-   * 评估云量因素得分
-   * 
-   * 中高层云量在30-70%范围内最佳，使用正态分布曲线评分
-   * 
-   * @param {number} cloudCover - 云量百分比（0-100）
-   * @returns {number} 评分（0-100）
-   * 
-   * 需求：5.1 - 分析中高层云量（30-70%为最佳）
-   */
-  scoreCloudCover(cloudCover) {
-    // 验证输入
-    if (typeof cloudCover !== 'number' || cloudCover < 0 || cloudCover > 100) {
-      return 0;
-    }
-
-    // 最佳云量范围的中心点
-    const optimal = 50;
-    // 标准差，控制曲线的宽度
-    const sigma = 20;
-
-    // 使用高斯函数计算得分
-    // 在30-70%范围内得分最高，向两边递减
-    const score = 100 * Math.exp(-Math.pow(cloudCover - optimal, 2) / (2 * sigma * sigma));
-
-    return Math.max(0, Math.min(100, score));
-  }
-
-  /**
-   * 评估湿度因素得分
-   * 
-   * 相对湿度在30-70%范围内最佳，使用正态分布曲线评分
-   * 
-   * @param {number} humidity - 相对湿度百分比（0-100）
-   * @returns {number} 评分（0-100）
-   * 
-   * 需求：5.2 - 评估相对湿度（30-70%为最佳范围）
-   */
-  scoreHumidity(humidity) {
-    // 验证输入
-    if (typeof humidity !== 'number' || humidity < 0 || humidity > 100) {
-      return 0;
-    }
-
-    // 最佳湿度范围的中心点
-    const optimal = 50;
-    // 标准差，控制曲线的宽度
-    const sigma = 20;
-
-    // 使用高斯函数计算得分
-    // 在30-70%范围内得分最高，向两边递减
-    const score = 100 * Math.exp(-Math.pow(humidity - optimal, 2) / (2 * sigma * sigma));
-
-    return Math.max(0, Math.min(100, score));
-  }
-
-  /**
-   * 评估能见度因素得分
-   * 
-   * 能见度越高越好，使用对数曲线评分
-   * 
-   * @param {number} visibility - 能见度（公里）
-   * @returns {number} 评分（0-100）
-   * 
-   * 需求：5.3 - 考虑能见度因素（高能见度加分）
-   */
-  scoreVisibility(visibility) {
-    // 验证输入
-    if (typeof visibility !== 'number' || visibility < 0) {
-      return 0;
-    }
-
-    // 能见度为0时得分为0
-    if (visibility === 0) {
-      return 0;
-    }
-
-    // 使用对数曲线，能见度越高得分越高
-    // 10km能见度得到约70分，20km得到约85分，30km以上接近100分
-    const score = 100 * (1 - Math.exp(-visibility / 15));
-
-    return Math.max(0, Math.min(100, score));
-  }
-
-  /**
-   * 评估低层云因素得分
-   * 
-   * 低层云越少越好，使用指数衰减曲线评分
-   * 
-   * @param {number} lowCloudCover - 低层云量百分比（0-100）
-   * @returns {number} 评分（0-100）
-   * 
-   * 需求：5.4 - 检查低层云量（低层云少为佳）
-   */
-  scoreLowClouds(lowCloudCover) {
-    // 验证输入
-    if (typeof lowCloudCover !== 'number' || lowCloudCover < 0 || lowCloudCover > 100) {
-      return 0;
-    }
-
-    // 低层云越少得分越高，使用指数衰减
-    // 0%低层云得100分，50%得约13分，100%得约0分
-    const score = 100 * Math.exp(-lowCloudCover / 20);
-
-    return Math.max(0, Math.min(100, score));
-  }
-
-  /**
    * 计算综合晚霞预测
    * 
    * 整合各气象因素评分，计算加权总分，并确定质量等级
@@ -417,23 +310,24 @@ class SunsetPredictionService {
     const finalScore = Math.round(unifiedResult.score);
     const quality    = unifiedResult.quality;
 
-    // 保存各因素得分，用于详细展示（兼容旧字段）
+    // 保存各因素得分，用于详细展示（基于 UnifiedSunsetScoringService 结果）
+    const bd = unifiedResult.breakdown;
     const factors = {
       cloudCover: {
         value: weatherData.cloudCover || 0,
-        score: this.scoreCloudCover(weatherData.cloudCover || 0)
+        score: bd.cloudStructure.score
       },
       humidity: {
         value: weatherData.humidity || 0,
-        score: this.scoreHumidity(weatherData.humidity || 0)
+        score: bd.transparency.humidityScore
       },
       visibility: {
         value: weatherData.visibility || 0,
-        score: this.scoreVisibility(weatherData.visibility || 0)
+        score: bd.transparency.visibilityScore
       },
       lowClouds: {
         value: weatherData.lowClouds ?? weatherData.lowCloudCover ?? weatherData.cloudCover ?? 0,
-        score: this.scoreLowClouds(weatherData.lowClouds ?? weatherData.lowCloudCover ?? weatherData.cloudCover ?? 0)
+        score: bd.cloudStructure.lowCloudBonus
       }
     };
 
