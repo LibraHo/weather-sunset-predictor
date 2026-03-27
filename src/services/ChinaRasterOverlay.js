@@ -478,8 +478,11 @@ export default class ChinaRasterOverlay {
     this._offscreen.width = width;
     this._offscreen.height = height;
 
-    const smoothed = smoothGrid(values, width, height, noData);
-    this._smoothedValues = smoothed;
+    const useSmoothing = this._period !== 'test';
+    const renderValues = useSmoothing
+      ? smoothGrid(values, width, height, noData)
+      : Float32Array.from(values);
+    this._smoothedValues = renderValues;
 
     const imgData = this._offCtx.createImageData(width, height);
     const buf = imgData.data;
@@ -488,7 +491,7 @@ export default class ChinaRasterOverlay {
     for (let row = 0; row < height; row++) {
       for (let col = 0; col < width; col++) {
         const idx = row * width + col;
-        const score = smoothed[idx];
+        const score = renderValues[idx];
         const { r, g, b, a } = scoreToRGBA(score, noData, palette);
         const px = idx * 4;
         buf[px] = r;
@@ -500,9 +503,9 @@ export default class ChinaRasterOverlay {
 
     this._offCtx.putImageData(imgData, 0, 0);
 
-    this._contours = buildContours(smoothed, width, height, CONTOUR_LEVELS, noData);
+    this._contours = buildContours(renderValues, width, height, CONTOUR_LEVELS, noData);
 
-    const maxScore = smoothed.reduce((m, v) => (Number.isFinite(v) && v !== noData && v > m ? v : m), -Infinity);
+    const maxScore = renderValues.reduce((m, v) => (Number.isFinite(v) && v !== noData && v > m ? v : m), -Infinity);
     this._activeLabelLevels = maxScore >= 70 ? KEY_LABEL_LEVELS : FALLBACK_LABEL_LEVELS;
     this._labelAnchors = buildLabelAnchors(this._contours, this._activeLabelLevels);
 
@@ -661,14 +664,20 @@ export default class ChinaRasterOverlay {
       return;
     }
 
-    // Pass 1: 填色层（柔和）
+    // Pass 1: 填色层（test 模式更锐利，便于映射校验）
     const zoom = this._map.getZoom();
     const blurPx = clamp(3.0 - (zoom - 5) * 0.25, 1.2, 3.2);
+    const sharpTest = this._period === 'test';
     ctx.save();
-    ctx.filter = `blur(${blurPx.toFixed(1)}px) saturate(1.28) contrast(1.16)`;
+    if (sharpTest) {
+      ctx.filter = 'none';
+      ctx.imageSmoothingEnabled = false;
+    } else {
+      ctx.filter = `blur(${blurPx.toFixed(1)}px) saturate(1.28) contrast(1.16)`;
+      ctx.imageSmoothingEnabled = true;
+    }
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1;
-    ctx.imageSmoothingEnabled = true;
     ctx.drawImage(this._offscreen, 0, 0, width, height, tl.x, tl.y, screenW, screenH);
     ctx.restore();
 
