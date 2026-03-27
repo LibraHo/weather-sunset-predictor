@@ -26,6 +26,10 @@ const CONTOUR_LEVELS = Array.from({ length: 21 }, (_, i) => 30 + i * 2); // 30~7
 const KEY_LABEL_LEVELS = [70, 80];
 const FALLBACK_LABEL_LEVELS = [50, 60];
 
+// 视觉风格：默认纯渐变膜层，不叠加等值线/标签
+const SHOW_CONTOURS = false;
+const SHOW_LABELS = false;
+
 // 调试：渲染原始采样点（仅 test 时段生效）
 const DEBUG_DRAW_RAW_POINTS = false;
 
@@ -114,18 +118,9 @@ function scoreToRGBA(score, noDataValue = -1, palette = FIRECLOUD_PALETTE) {
 
   const clamped = clamp(score, VISUAL_MIN_SCORE, RASTER_FULL_SCORE);
 
-  // 基于 band 的离散层级 + 层内平滑（兼顾 contourf 质感与边缘柔和）
-  let bandIndex = 0;
-  while (bandIndex < BAND_LEVELS.length - 1 && clamped >= BAND_LEVELS[bandIndex + 1]) {
-    bandIndex += 1;
-  }
-  const bandLo = BAND_LEVELS[bandIndex];
-  const bandHi = BAND_LEVELS[Math.min(bandIndex + 1, BAND_LEVELS.length - 1)];
-  const localT = bandHi === bandLo ? 1 : smoothstep01((clamped - bandLo) / (bandHi - bandLo));
-
-  const globalLoT = (bandLo - VISUAL_MIN_SCORE) / (RASTER_FULL_SCORE - VISUAL_MIN_SCORE);
-  const globalHiT = (bandHi - VISUAL_MIN_SCORE) / (RASTER_FULL_SCORE - VISUAL_MIN_SCORE);
-  const globalT = lerp(globalLoT, globalHiT, localT);
+  // 纯连续渐变：不做分档量化，避免“粉块感”
+  const t = (clamped - VISUAL_MIN_SCORE) / (RASTER_FULL_SCORE - VISUAL_MIN_SCORE || 1);
+  const globalT = smoothstep01(t);
 
   const base = samplePalette(globalT, palette);
   return { r: base.r, g: base.g, b: base.b, a: base.a * soft };
@@ -666,7 +661,7 @@ export default class ChinaRasterOverlay {
 
     // Pass 1: 填色层（test 模式更锐利，便于映射校验）
     const zoom = this._map.getZoom();
-    const blurPx = clamp(3.0 - (zoom - 5) * 0.25, 1.2, 3.2);
+    const blurPx = clamp(1.8 - (zoom - 5) * 0.18, 0.6, 1.8);
     const sharpTest = this._period === 'test';
     ctx.save();
     if (sharpTest) {
@@ -681,11 +676,15 @@ export default class ChinaRasterOverlay {
     ctx.drawImage(this._offscreen, 0, 0, width, height, tl.x, tl.y, screenW, screenH);
     ctx.restore();
 
-    // Pass 2: 细等值线
-    this._drawContourLines(ctx, tl, screenW, screenH, width, height);
+    // Pass 2: 等值线（可选）
+    if (SHOW_CONTOURS) {
+      this._drawContourLines(ctx, tl, screenW, screenH, width, height);
+    }
 
-    // Pass 3: 关键值标签（70/80）
-    this._drawLabels(ctx, tl, screenW, screenH, width, height);
+    // Pass 3: 关键值标签（可选）
+    if (SHOW_LABELS) {
+      this._drawLabels(ctx, tl, screenW, screenH, width, height);
+    }
 
     // 测试板块：北京投影链路校验标记
     this._drawBeijingProjectionCheckMark(ctx);
