@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Raster Debug Tool</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #141b32;
+      --text: #eaf0ff;
+      --muted: #93a2c7;
+      --accent: #67d8ff;
+      --line: rgba(255,255,255,0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: radial-gradient(1200px 700px at 15% -10%, #1b2752 0%, var(--bg) 45%), var(--bg);
+      color: var(--text);
+    }
+    .wrap { max-width: 1500px; margin: 0 auto; padding: 20px; }
+    h1 { margin: 0 0 8px; font-size: 24px; }
+    .muted { color: var(--muted); font-size: 13px; }
+    .toolbar {
+      margin-top: 16px; padding: 12px; border: 1px solid var(--line); border-radius: 12px;
+      background: rgba(255,255,255,0.03); display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+    }
+    .toolbar label { font-size: 13px; color: var(--muted); }
+    .toolbar input, .toolbar button {
+      background: #0e1733; color: var(--text); border: 1px solid var(--line);
+      border-radius: 8px; padding: 8px 10px; font-size: 13px;
+    }
+    .toolbar button { cursor: pointer; }
+    .toolbar button:hover { border-color: rgba(103,216,255,0.6); }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+    .card {
+      border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+    }
+    .head {
+      padding: 10px 12px; border-bottom: 1px solid var(--line);
+      display: flex; justify-content: space-between; align-items: baseline;
+    }
+    .title { font-size: 16px; font-weight: 600; }
+    .meta { color: var(--muted); font-size: 12px; }
+    .canvas-wrap { position: relative; background: #050814; }
+    canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+    .legend {
+      margin-top: 14px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px;
+      background: rgba(255,255,255,0.03);
+      font-size: 12px; color: var(--muted);
+      line-height: 1.7;
+    }
+    code { color: #b7f0ff; }
+    @media (max-width: 1024px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>中国火烧云 Raster 调试页</h1>
+    <div class="muted">并排渲染朝霞/晚霞，显示有效像元占比、更新时间、北京锚点位置。</div>
+
+    <div class="toolbar">
+      <label>resolution
+        <input id="resolution" type="number" value="0.5" min="0.1" max="2" step="0.1" />
+      </label>
+      <label>alpha
+        <input id="alpha" type="number" value="0.9" min="0.1" max="1" step="0.05" />
+      </label>
+      <button id="reloadBtn">重新拉取并渲染</button>
+      <span id="status" class="muted">ready</span>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <div class="head">
+          <div class="title">朝霞 / sunrise</div>
+          <div class="meta" id="meta-sunrise">-</div>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="cv-sunrise" width="126" height="70"></canvas>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="head">
+          <div class="title">晚霞 / sunset</div>
+          <div class="meta" id="meta-sunset">-</div>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="cv-sunset" width="126" height="70"></canvas>
+        </div>
+      </section>
+    </div>
+
+    <div class="legend">
+      <div>颜色：深紫 → 洋红 → 橙黄（分数低→高）</div>
+      <div>青色十字：北京锚点 <code>(39.9042, 116.4074)</code></div>
+      <div>注意：这里是原始 bbox 渲染，不做中国边界裁剪，所以可用于定位“为何会画到境外”</div>
+    </div>
+  </div>
+
+  <script>
+    const BEIJING = { lat: 39.9042, lon: 116.4074 };
+
+    function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+    function sampleColor(t) {
+      const stops = [
+        [0.00, [15, 8, 30]],
+        [0.35, [95, 30, 125]],
+        [0.65, [210, 70, 150]],
+        [1.00, [255, 180, 70]],
+      ];
+      const tt = clamp(t, 0, 1);
+      for (let i = 0; i < stops.length - 1; i++) {
+        const [a, ca] = stops[i];
+        const [b, cb] = stops[i + 1];
+        if (tt >= a && tt <= b) {
+          const u = (tt - a) / (b - a || 1);
+          return [
+            Math.round(ca[0] + (cb[0] - ca[0]) * u),
+            Math.round(ca[1] + (cb[1] - ca[1]) * u),
+            Math.round(ca[2] + (cb[2] - ca[2]) * u),
+          ];
+        }
+      }
+      return [255, 180, 70];
+    }
+
+    async function fetchRaster(period, resolution) {
+      const res = await fetch(`/api/spots/china/raster?period=${period}&resolution=${resolution}`);
+      if (!res.ok) throw new Error(`${period} HTTP ${res.status}`);
+      return res.json();
+    }
+
+    function drawRaster(canvas, data, alpha = 0.9) {
+      const ctx = canvas.getContext('2d');
+      const { width, height, values, noData = -1, bbox } = data;
+
+      canvas.width = width;
+      canvas.height = height;
+
+      const valid = values.filter(v => Number.isFinite(v) && v !== noData);
+      const min = valid.length ? Math.min(...valid) : 0;
+      const max = valid.length ? Math.max(...valid) : 1;
+
+      const img = ctx.createImageData(width, height);
+      const buf = img.data;
+      for (let i = 0; i < values.length; i++) {
+        const v = values[i];
+        const p = i * 4;
+        if (!Number.isFinite(v) || v === noData) {
+          buf[p + 0] = 12; buf[p + 1] = 12; buf[p + 2] = 14; buf[p + 3] = 255;
+          continue;
+        }
+        const t = (v - min) / ((max - min) || 1);
+        const [r, g, b] = sampleColor(t);
+        buf[p + 0] = r; buf[p + 1] = g; buf[p + 2] = b; buf[p + 3] = Math.round(alpha * 255);
+      }
+      ctx.putImageData(img, 0, 0);
+
+      // 北京锚点
+      const lonStep = (bbox.east - bbox.west) / Math.max(1, width);
+      const latStep = (bbox.north - bbox.south) / Math.max(1, height);
+      const bx = (BEIJING.lon - bbox.west) / lonStep;
+      const by = (bbox.north - BEIJING.lat) / latStep;
+
+      ctx.strokeStyle = 'cyan';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(bx - 2, by); ctx.lineTo(bx + 2, by);
+      ctx.moveTo(bx, by - 2); ctx.lineTo(bx, by + 2);
+      ctx.stroke();
+
+      return {
+        validCount: valid.length,
+        total: values.length,
+        validRatio: valid.length / values.length,
+        min, max,
+      };
+    }
+
+    function setMeta(period, data, stats) {
+      const el = document.getElementById(`meta-${period}`);
+      el.textContent = `updatedAt=${data.updatedAt || '-'} | valid=${stats.validCount}/${stats.total} (${(stats.validRatio * 100).toFixed(2)}%) | min/max=${stats.min.toFixed(1)}/${stats.max.toFixed(1)}`;
+    }
+
+    async function renderAll() {
+      const status = document.getElementById('status');
+      const resolution = parseFloat(document.getElementById('resolution').value || '0.5');
+      const alpha = parseFloat(document.getElementById('alpha').value || '0.9');
+
+      status.textContent = 'loading...';
+      try {
+        const [sunrise, sunset] = await Promise.all([
+          fetchRaster('sunrise', resolution),
+          fetchRaster('sunset', resolution),
+        ]);
+
+        const statsSunrise = drawRaster(document.getElementById('cv-sunrise'), sunrise, alpha);
+        const statsSunset = drawRaster(document.getElementById('cv-sunset'), sunset, alpha);
+
+        setMeta('sunrise', sunrise, statsSunrise);
+        setMeta('sunset', sunset, statsSunset);
+
+        status.textContent = 'ok';
+      } catch (err) {
+        console.error(err);
+        status.textContent = `error: ${err.message}`;
+      }
+    }
+
+    document.getElementById('reloadBtn').addEventListener('click', renderAll);
+    renderAll();
+  </script>
+</body>
+</html>
