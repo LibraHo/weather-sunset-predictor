@@ -19,6 +19,13 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     if (Number.isFinite(seconds) && seconds > 0) {
       return Math.ceil(seconds * 1000);
     }
+
+    // Open-Meteo 常见 429 文案："Please try again in one minute."
+    const reason = String(error?.response?.data?.reason || error?.response?.data?.message || '').toLowerCase();
+    if (reason.includes('one minute') || reason.includes('60')) {
+      return 60 * 1000;
+    }
+
     return null;
   }
 
@@ -36,7 +43,8 @@ class OpenMeteoProvider extends BaseWeatherProvider {
         }
         const retryAfter = this._parseRetryAfterMs(error);
         const backoff = this.RETRY_BASE_MS * Math.pow(2, attempt - 1);
-        const waitMs = retryAfter || backoff;
+        const min429WaitMs = status === 429 ? 60 * 1000 : 0;
+        const waitMs = Math.max(retryAfter || 0, backoff, min429WaitMs);
         console.warn(`[Open-Meteo API] ${label} 第${attempt}次失败(status=${status || error.code}), ${waitMs}ms后重试`);
         await this._sleep(waitMs);
       }
