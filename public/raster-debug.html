@@ -72,7 +72,15 @@
         <input id="alpha" type="number" value="0.9" min="0.1" max="1" step="0.05" />
       </label>
       <button id="reloadBtn">重新拉取并渲染</button>
+      <button id="refreshSunriseBtn">刷新朝霞缓存</button>
+      <button id="refreshSunsetBtn">刷新晚霞缓存</button>
       <span id="status" class="muted">ready</span>
+    </div>
+
+    <div class="legend" id="progressPanel" style="margin-top:12px;">
+      <div><b>拉取进度面板</b></div>
+      <div id="progress-sunrise">sunrise: -</div>
+      <div id="progress-sunset">sunset: -</div>
     </div>
 
     <div class="grid">
@@ -138,6 +146,19 @@
       return res.json();
     }
 
+    async function fetchProgress(period) {
+      const res = await fetch(`/api/heatmap/status?period=${period}`);
+      if (!res.ok) throw new Error(`status ${period} HTTP ${res.status}`);
+      return res.json();
+    }
+
+    async function triggerRefresh(period) {
+      const res = await fetch(`/api/heatmap/refresh?period=${period}`, { method: 'POST' });
+      const payload = await res.json();
+      if (!res.ok) throw new Error(payload?.error?.message || `refresh ${period} failed`);
+      return payload;
+    }
+
     function drawRaster(canvas, data, alpha = 0.9) {
       const ctx = canvas.getContext('2d');
       const { width, height, values, noData = -1, bbox } = data;
@@ -190,6 +211,27 @@
       el.textContent = `updatedAt=${data.updatedAt || '-'} | valid=${stats.validCount}/${stats.total} (${(stats.validRatio * 100).toFixed(2)}%) | min/max=${stats.min.toFixed(1)}/${stats.max.toFixed(1)}`;
     }
 
+    function setProgressLine(period, s) {
+      const el = document.getElementById(`progress-${period}`);
+      if (!el) return;
+      const done = s?.completedPoints || 0;
+      const total = s?.totalPoints || 0;
+      const pct = total > 0 ? ((done / total) * 100).toFixed(1) : '0.0';
+      const eta = Number.isFinite(s?.etaSeconds) ? `${s.etaSeconds}s` : '-';
+      const running = s?.running ? 'running' : 'idle';
+      el.textContent = `${period}: ${running} | ${done}/${total} (${pct}%) | success=${s?.successPoints || 0} error=${s?.errorPoints || 0} | batch=${s?.completedBatches || 0}/${s?.totalBatches || 0} | eta=${eta}`;
+    }
+
+    async function refreshProgressPanel() {
+      try {
+        const [sunrise, sunset] = await Promise.all([fetchProgress('sunrise'), fetchProgress('sunset')]);
+        setProgressLine('sunrise', sunrise);
+        setProgressLine('sunset', sunset);
+      } catch (e) {
+        document.getElementById('status').textContent = `progress error: ${e.message}`;
+      }
+    }
+
     async function renderAll() {
       const status = document.getElementById('status');
       const resolution = parseFloat(document.getElementById('resolution').value || '0.5');
@@ -216,7 +258,34 @@
     }
 
     document.getElementById('reloadBtn').addEventListener('click', renderAll);
+
+    document.getElementById('refreshSunriseBtn').addEventListener('click', async () => {
+      const status = document.getElementById('status');
+      status.textContent = 'trigger sunrise refresh...';
+      try {
+        await triggerRefresh('sunrise');
+        status.textContent = 'sunrise refresh started';
+      } catch (e) {
+        status.textContent = `sunrise refresh failed: ${e.message}`;
+      }
+      await refreshProgressPanel();
+    });
+
+    document.getElementById('refreshSunsetBtn').addEventListener('click', async () => {
+      const status = document.getElementById('status');
+      status.textContent = 'trigger sunset refresh...';
+      try {
+        await triggerRefresh('sunset');
+        status.textContent = 'sunset refresh started';
+      } catch (e) {
+        status.textContent = `sunset refresh failed: ${e.message}`;
+      }
+      await refreshProgressPanel();
+    });
+
     renderAll();
+    refreshProgressPanel();
+    setInterval(refreshProgressPanel, 1000);
   </script>
 </body>
 </html>

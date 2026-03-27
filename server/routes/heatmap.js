@@ -15,10 +15,11 @@ const gridService = require('../services/GridScoreService');
  */
 router.get('/grid', async (req, res, next) => {
   try {
+    const period = req.query.period || 'sunset';
     // 若缓存为空或过期，先刷新
-    await gridService.refreshIfStale();
+    await gridService.refreshIfStale(undefined, period);
 
-    const cache = gridService.getCache();
+    const cache = gridService.getCache(period);
     if (!cache) {
       return res.status(503).json({
         error: { code: 'GRID_NOT_READY', message: '网格数据尚未就绪，请稍后再试' }
@@ -42,12 +43,14 @@ router.get('/grid', async (req, res, next) => {
  */
 router.post('/refresh', async (req, res, next) => {
   try {
-    const result = await gridService.manualRefresh();
+    const period = req.body?.period || req.query?.period || 'sunset';
+    const result = await gridService.manualRefresh(period);
     if (!result.ok) {
       return res.status(429).json({ error: { code: 'RATE_LIMITED', message: result.message } });
     }
-    const cache = gridService.getCache();
+    const cache = gridService.getCache(period);
     res.json({
+      period,
       message: result.message,
       updatedAt: cache?.updatedAt,
       count: cache?.gridPoints?.length
@@ -55,6 +58,15 @@ router.post('/refresh', async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+});
+
+/**
+ * GET /api/heatmap/status
+ * 返回当前刷新任务状态
+ */
+router.get('/status', (req, res) => {
+  const period = req.query.period || 'sunset';
+  res.json(gridService.getJobStatus(period));
 });
 
 module.exports = router;

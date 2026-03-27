@@ -58,12 +58,56 @@ class GridScoreService {
       sunrise: false,
       sunset: false
     };
+    this._jobStatus = {
+      sunrise: this._createIdleStatus('sunrise'),
+      sunset: this._createIdleStatus('sunset')
+    };
     this._loadFromDisk();
   }
 
   normalizePeriod(period = DEFAULT_PERIOD) {
     const safe = typeof period === 'string' ? period.toLowerCase() : DEFAULT_PERIOD;
     return SUPPORTED_PERIODS.includes(safe) ? safe : DEFAULT_PERIOD;
+  }
+
+  _createIdleStatus(period) {
+    return {
+      period,
+      running: false,
+      startedAt: null,
+      finishedAt: null,
+      totalPoints: 0,
+      completedPoints: 0,
+      successPoints: 0,
+      errorPoints: 0,
+      totalBatches: 0,
+      completedBatches: 0,
+      currentBatch: 0,
+      batchSize: BATCH_SIZE,
+      concurrency: CONCURRENCY_LIMIT,
+      gridStep: CHINA_BOUNDS.step,
+      etaSeconds: null,
+      lastError: null,
+      updatedAt: new Date().toISOString()
+    };
+  }
+
+  getJobStatus(period = DEFAULT_PERIOD) {
+    const safePeriod = this.normalizePeriod(period);
+    return {
+      ...(this._jobStatus?.[safePeriod] || this._createIdleStatus(safePeriod))
+    };
+  }
+
+  _setJobStatus(period, patch = {}) {
+    const safePeriod = this.normalizePeriod(period);
+    const prev = this._jobStatus?.[safePeriod] || this._createIdleStatus(safePeriod);
+    this._jobStatus[safePeriod] = {
+      ...prev,
+      ...patch,
+      period: safePeriod,
+      updatedAt: new Date().toISOString()
+    };
   }
 
   /**
@@ -94,6 +138,24 @@ class GridScoreService {
     for (let i = 0; i < gridPoints.length; i += BATCH_SIZE) {
       batches.push(gridPoints.slice(i, i + BATCH_SIZE));
     }
+
+    this._setJobStatus(safePeriod, {
+      running: true,
+      startedAt: new Date().toISOString(),
+      finishedAt: null,
+      totalPoints: gridPoints.length,
+      completedPoints: 0,
+      successPoints: 0,
+      errorPoints: 0,
+      totalBatches: batches.length,
+      completedBatches: 0,
+      currentBatch: 0,
+      batchSize: BATCH_SIZE,
+      concurrency: CONCURRENCY_LIMIT,
+      gridStep: CHINA_BOUNDS.step,
+      etaSeconds: null,
+      lastError: null
+    });
 
     const allResults = [];
 
@@ -184,6 +246,7 @@ class GridScoreService {
         }
       } catch (err) {
         console.error(`[GridScoreService] 批量请求失败: batch=${batchIndex + 1}/${batches.length}, points=${points.length}`, err.message);
+        this._setJobStatus(safePeriod, { lastError: err.message, currentBatch: batchIndex + 1 });
         for (const point of batch) {
           scoredBatch.push({
             lat: point.lat,
@@ -196,6 +259,25 @@ class GridScoreService {
         }
       }
 
+      const successCount = scoredBatch.filter(item => Number.isFinite(item.score)).length;
+      const errorCount = scoredBatch.length - successCount;
+      const status = this.getJobStatus(safePeriod);
+      const completedBatches = status.completedBatches + 1;
+      const completedPoints = status.completedPoints + scoredBatch.length;
+      const elapsedSec = status.startedAt ? Math.max(1, Math.floor((Date.now() - new Date(status.startedAt).getTime()) / 1000)) : null;
+      const pointsPerSec = elapsedSec ? completedPoints / elapsedSec : null;
+      const remainingPoints = Math.max(0, status.totalPoints - completedPoints);
+      const etaSeconds = pointsPerSec ? Math.ceil(remainingPoints / pointsPerSec) : null;
+
+      this._setJobStatus(safePeriod, {
+        currentBatch: batchIndex + 1,
+        completedBatches,
+        completedPoints,
+        successPoints: status.successPoints + successCount,
+        errorPoints: status.errorPoints + errorCount,
+        etaSeconds
+      });
+
       return scoredBatch;
     };
 
@@ -206,6 +288,15 @@ class GridScoreService {
         allResults.push(...result);
       }
     }
+
+    this._setJobStatus(safePeriod, {
+      running: false,
+      finishedAt: new Date().toISOString(),
+      currentBatch: batches.length,
+      completedBatches: batches.length,
+      completedPoints: allResults.length,
+      etaSeconds: 0
+    });
 
     return allResults;
   }
@@ -283,6 +374,11 @@ class GridScoreService {
       console.log(`[GridScoreService] 刷新完成 (${safePeriod})，共 ${scored.length} 个网格点`);
     } catch (err) {
       console.error(`[GridScoreService] 刷新失败 (${safePeriod}):`, err.message);
+      this._setJobStatus(safePeriod, {
+        running: false,
+        finishedAt: new Date().toISOString(),
+        lastError: err.message
+      });
     } finally {
       this._refreshingByPeriod[safePeriod] = false;
     }
