@@ -29,21 +29,20 @@ module.exports = {
       lonMax: 135,  // 最东经度
       latMin: 18,   // 最南纬度
       latMax: 53,   // 最北纬度
-      step: 0.5     // 网格步长（度）
+      step: 1.0     // 网格步长（度），先降采样提高稳定性
     }
   },
 
   // 批量抓取配置
   batch: {
-    // 每次请求坐标数
-    batchSize: 100
+    // 每次请求坐标数（为避免 Open-Meteo 429，降低批次）
+    batchSize: 20
   },
 
   // 并发控制
   concurrency: {
-    // 并发请求限制
-    // 降低并发防止OOM，可根据服务器性能调整
-    limit: 3
+    // 并发请求限制（为避免 Open-Meteo 429，降为串行）
+    limit: 1
   },
 
   // API配置

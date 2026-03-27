@@ -5,6 +5,43 @@ class OpenMeteoProvider extends BaseWeatherProvider {
   constructor() {
     super('openmeteo');
     this.API_URL = 'https://api.open-meteo.com/v1/forecast';
+    this.MAX_RETRIES = 4;
+    this.RETRY_BASE_MS = 1200;
+  }
+
+  _sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  _parseRetryAfterMs(error) {
+    const raw = error?.response?.headers?.['retry-after'];
+    const seconds = Number(raw);
+    if (Number.isFinite(seconds) && seconds > 0) {
+      return Math.ceil(seconds * 1000);
+    }
+    return null;
+  }
+
+  async _getWithRetry(params, timeoutMs = 15000, label = 'request') {
+    let lastError = null;
+    for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
+      try {
+        return await axios.get(this.API_URL, { params, timeout: timeoutMs });
+      } catch (error) {
+        lastError = error;
+        const status = error?.response?.status;
+        const retryable = status === 429 || status === 503 || error?.code === 'ECONNABORTED';
+        if (!retryable || attempt >= this.MAX_RETRIES) {
+          break;
+        }
+        const retryAfter = this._parseRetryAfterMs(error);
+        const backoff = this.RETRY_BASE_MS * Math.pow(2, attempt - 1);
+        const waitMs = retryAfter || backoff;
+        console.warn(`[Open-Meteo API] ${label} 第${attempt}次失败(status=${status || error.code}), ${waitMs}ms后重试`);
+        await this._sleep(waitMs);
+      }
+    }
+    throw lastError;
   }
 
   _normalizeHourlyResult(raw, hours, model, startTime, fallbackName = this.name) {
@@ -86,10 +123,11 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     
     try {
       // 使用 ECMWF IFS 025 模型（与 Windy 同源，精度更高）
-      const response = await axios.get(this.API_URL, {
-        params: { ...BASE_PARAMS, models: model },
-        timeout: 10000
-      });
+      const response = await this._getWithRetry(
+        { ...BASE_PARAMS, models: model },
+        10000,
+        `single(${lat},${lon})`
+      );
       return this._normalizeHourlyResult(response.data, hours, model, startTime, this.name);
     } catch (error) {
       console.error('[Open-Meteo API] 请求失败:', error.message);
@@ -126,10 +164,11 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     };
 
     try {
-      const response = await axios.get(this.API_URL, {
-        params: BASE_PARAMS,
-        timeout: 15000
-      });
+      const response = await this._getWithRetry(
+        BASE_PARAMS,
+        15000,
+        `batch(points=${pointList.length})`
+      );
 
       const payload = Array.isArray(response.data) ? response.data : [response.data];
       if (payload.length !== pointList.length) {
