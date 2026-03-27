@@ -26,6 +26,8 @@ const CONCURRENCY_LIMIT = config.concurrency.limit;
 
 // 批量抓取大小
 const BATCH_SIZE = config.batch?.batchSize || 100;
+// 批次间隔（毫秒）
+const BATCH_DELAY_MS = config.batch?.delayMs || 0;
 
 // 预测时长（小时）
 const FORECAST_HOURS = config.api?.forecastHours || 24;
@@ -68,6 +70,10 @@ class GridScoreService {
   normalizePeriod(period = DEFAULT_PERIOD) {
     const safe = typeof period === 'string' ? period.toLowerCase() : DEFAULT_PERIOD;
     return SUPPORTED_PERIODS.includes(safe) ? safe : DEFAULT_PERIOD;
+  }
+
+  _sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   _createIdleStatus(period) {
@@ -286,6 +292,9 @@ class GridScoreService {
       const chunkResults = await Promise.all(chunk.map((batch, idx) => processBatch(batch, i + idx)));
       for (const result of chunkResults) {
         allResults.push(...result);
+      }
+      if (BATCH_DELAY_MS > 0 && i + CONCURRENCY_LIMIT < batches.length) {
+        await this._sleep(BATCH_DELAY_MS);
       }
     }
 

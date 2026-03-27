@@ -35,8 +35,10 @@ module.exports = {
 
   // 批量抓取配置
   batch: {
-    // 每次请求坐标数（为避免 Open-Meteo 429，降低批次）
-    batchSize: 20
+    // 每次请求坐标数（为避免 Open-Meteo 429，进一步降低批次）
+    batchSize: 10,
+    // 批次间隔（毫秒）
+    delayMs: 2500
   },
 
   // 并发控制
