@@ -324,7 +324,7 @@ export default class ChinaRasterOverlay {
   }
 
   setPeriod(period) {
-    this._period = ['sunrise', 'sunset'].includes(period) ? period : 'sunset';
+    this._period = ['sunrise', 'sunset', 'test'].includes(period) ? period : 'sunset';
   }
 
   getPeriod() { return this._period; }
@@ -384,12 +384,19 @@ export default class ChinaRasterOverlay {
   }
 
   _buildSyntheticTestData(data) {
-    if (!data || !Array.isArray(data.values) || !data.width || !data.height) return data;
+    if (!data || !Array.isArray(data.values) || !data.width || !data.height || !data.bbox) return data;
 
+    const { bbox } = data;
     const width = data.width;
     const height = data.height;
     const noData = data.noData ?? -1;
-    const values = data.values.slice();
+
+    // 测试模式：完全忽略真实数据，只在北京附近生成可控云团
+    // 避免真实热点（如蒙古附近）干扰映射验证
+    const values = new Array(width * height).fill(noData);
+
+    const lonStep = (bbox.east - bbox.west) / Math.max(1, width);
+    const latStep = (bbox.north - bbox.south) / Math.max(1, height);
 
     const gaussian = (x, y, cx, cy, sx, sy, amp) => {
       const dx = (x - cx) / sx;
@@ -397,28 +404,35 @@ export default class ChinaRasterOverlay {
       return amp * Math.exp(-(dx * dx + dy * dy));
     };
 
-    // 测试板块：北京附近构造明显可见的模拟云团
-    const bjx = width * 0.69;
-    const bjy = height * 0.37;
+    // 以真实经纬度锚定北京中心，避免按宽高比例估算带来偏移
+    const beijing = { lat: 39.9042, lon: 116.4074 };
+    const bjx = (beijing.lon - bbox.west) / lonStep - 0.5;
+    const bjy = (bbox.north - beijing.lat) / latStep - 0.5;
+
     const blobs = [
-      { cx: bjx - width * 0.04, cy: bjy - height * 0.03, sx: width * 0.10, sy: height * 0.09, amp: 26 },
-      { cx: bjx + width * 0.05, cy: bjy + height * 0.02, sx: width * 0.08, sy: height * 0.08, amp: 22 },
-      { cx: bjx,                cy: bjy + height * 0.06, sx: width * 0.12, sy: height * 0.10, amp: 18 },
+      { cx: bjx - 4.0, cy: bjy - 2.5, sx: 5.5, sy: 4.8, amp: 28 },
+      { cx: bjx + 5.0, cy: bjy + 1.8, sx: 4.8, sy: 4.2, amp: 24 },
+      { cx: bjx,       cy: bjy + 3.8, sx: 6.5, sy: 5.2, amp: 20 },
     ];
 
     for (let row = 0; row < height; row++) {
       for (let col = 0; col < width; col++) {
-        const idx = row * width + col;
-        const base = Number.isFinite(values[idx]) && values[idx] !== noData ? values[idx] : 0;
+        let score = 0;
+        for (const b of blobs) score += gaussian(col, row, b.cx, b.cy, b.sx, b.sy, b.amp);
 
-        let add = 0;
-        for (const b of blobs) add += gaussian(col, row, b.cx, b.cy, b.sx, b.sy, b.amp);
-
-        values[idx] = Math.max(base, Math.min(68, base * 0.65 + add));
+        if (score >= VISUAL_MIN_SCORE) {
+          values[row * width + col] = Math.min(68, Math.round(score * 10) / 10);
+        }
       }
     }
 
-    return { ...data, values, synthetic: true, updatedAt: data.updatedAt || new Date().toISOString() };
+    return {
+      ...data,
+      values,
+      synthetic: true,
+      syntheticCenter: beijing,
+      updatedAt: data.updatedAt || new Date().toISOString()
+    };
   }
 
   show() {
