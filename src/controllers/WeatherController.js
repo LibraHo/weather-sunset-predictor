@@ -1974,6 +1974,11 @@ class WeatherController {
       this._renderDualPeriodScorePanel(); // 任务 64.8：朝/晚双卡片并排展示
       this._updateChinaSpotsPeriodLabel(this.chinaSpotsOverlayManager.getActivePeriod()); // 初始化时段说明
 
+      // 强制刷新地图尺寸（解决 hidden 面板初始化后尺寸为0问题）
+      setTimeout(() => {
+        try { map.invalidateSize({ animate: false }); } catch (_) {}
+      }, 200);
+
       console.log('[WeatherController] 中国散点地图初始化完成');
     } catch (err) {
       console.error('[WeatherController] 初始化中国散点地图失败:', err);
