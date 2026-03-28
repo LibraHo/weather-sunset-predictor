@@ -1881,6 +1881,9 @@ class WeatherController {
       const map = this._chinaSpotsMapCanvas.getMap();
       this._chinaSpotsActiveTileLayer = null;
 
+      // 将 ChinaMapCanvas 实例挂到地图容器，供 ChinaRasterOverlayManager 同步图例
+      map.getContainer()._chinaMapCanvas = this._chinaSpotsMapCanvas;
+
       // 适配中国范围
       const mainlandBounds = this._getChinaMainlandMapBounds();
       if (mainlandBounds && typeof map.fitBounds === 'function') {
