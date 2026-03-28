@@ -683,7 +683,7 @@ export default class ChinaRasterOverlay {
     const blurPx = clamp(3.0 - (zoom - 5) * 0.25, 1.2, 3.2);
     const sharpTest = this._period === 'test';
 
-    // 建立中国边界 clip path（裁掉 bbox 矩形外溢的颜色）
+    // 建立中国边界 clip path（严格裁剪到中国边界内，消除东北/西藏外溢）
     const geoJSON = _chinaGeoJSONCache;
     if (geoJSON && geoJSON.features) {
       ctx.save();
@@ -704,6 +704,8 @@ export default class ChinaRasterOverlay {
         }
       }
       ctx.clip();
+      // 使用 evenodd 规则确保复杂多边形正确裁剪
+      ctx.clip('evenodd');
     } else {
       ctx.save();
     }

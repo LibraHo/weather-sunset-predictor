@@ -1739,71 +1739,9 @@ class WeatherController {
     // 底部双卡片已由顶部 tab 替代，隐藏此面板
     const panelEl = document.getElementById('china-spots-dual-score');
     if (panelEl) { panelEl.style.display = 'none'; panelEl.classList.add('hidden'); }
-    return;
-    if (!panelEl || !this.chinaSpotsOverlayManager) return;
-
-    const periods = [
-      { key: 'sunrise', label: '朝霞', emoji: '🌄' },
-      { key: 'sunset',  label: '晚霞', emoji: '🌅' },
-      { key: 'test',    label: '测试', emoji: '🧪' },
-    ];
-
-    const cards = periods.map(({ key, label, emoji }) => {
-      const isActive = this.chinaSpotsOverlayManager.getActivePeriod() === key;
-
-      const borderColor = isActive
-        ? (key === 'sunrise' ? '#ff9a5c' : (key === 'test' ? '#9f7aea' : '#ff6b35'))
-        : 'rgba(255,255,255,0.12)';
-      const bgGradient = isActive
-        ? (key === 'sunrise'
-            ? 'linear-gradient(135deg,rgba(255,180,80,0.18) 0%,rgba(255,130,50,0.08) 100%)'
-            : (key === 'test'
-                ? 'linear-gradient(135deg,rgba(149,76,233,0.26) 0%,rgba(95,65,190,0.10) 100%)'
-                : 'linear-gradient(135deg,rgba(255,120,40,0.22) 0%,rgba(200,60,20,0.08) 100%)'))
-        : 'rgba(0,0,0,0.25)';
-
-      return `
-        <div class="china-spots-score-card${isActive ? ' active' : ''}"
-             data-period="${key}"
-             style="
-               flex:1;
-               padding:10px 12px;
-               border-radius:10px;
-               border:1px solid ${borderColor};
-               background:${bgGradient};
-               backdrop-filter:blur(4px);
-               cursor:pointer;
-               transition:border-color 0.2s, background 0.2s;
-             ">
-          <div style="font-size:20px; margin-bottom:4px;">${emoji}</div>
-          <div style="font-size:14px; font-weight:700; color:${isActive ? '#ffaa55' : 'var(--color-text)'};">${label}</div>
-        </div>`;
-    });
-
-    panelEl.innerHTML = cards.join('');
-    panelEl.style.display = 'grid';
-    panelEl.classList.remove('hidden');
-
-    // 点击卡片切换时段
-    panelEl.querySelectorAll('.china-spots-score-card').forEach(card => {
-      card.addEventListener('click', async () => {
-        const period = card.dataset.period;
-        if (period && this.chinaSpotsOverlayManager) {
-          // 切换时段
-          this.chinaSpotsOverlayManager.switchPeriod(period);
-
-          // 同步 UI：高亮、时段文案、更新时间、空状态
-          this._renderDualPeriodScorePanel();
-          this._updateChinaSpotsPeriodLabel(period);
-          this._renderChinaSpotsTimestamp();
-
-          const overlay = this.chinaSpotsOverlayManager.getOverlay(period);
-          const count = overlay?.getSpotCount?.() ?? 0;
-          this._setChinaSpotsEmptyState(count === 0);
-        }
-      });
-    });
+    // 不再渲染任何底部切换控件，所有时段切换通过顶部 tab 完成
   }
+
 
   _setChinaSpotsEmptyState(show, message = '今日暂无可见火烧云点位') {
     const emptyEl = document.getElementById('china-spots-empty');
