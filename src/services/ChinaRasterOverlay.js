@@ -687,8 +687,6 @@ export default class ChinaRasterOverlay {
     // Pass 3: 关键值标签（70/80）
     this._drawLabels(ctx, tl, screenW, screenH, width, height);
 
-    // 测试板块：北京投影链路校验标记
-    this._drawBeijingProjectionCheckMark(ctx);
   }
 
   _scheduleReproject() {

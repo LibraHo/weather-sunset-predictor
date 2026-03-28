@@ -69,13 +69,24 @@ export default class ChinaRasterOverlayManager {
   // ─── Tab UI ───────────────────────────────────────────────────────────────
 
   _createTabs(container) {
+    // 优先复用 HTML 中已有的静态 tab 按钮
+    const existingSunrise = document.getElementById('map-tab-sunrise');
+    const existingSunset = document.getElementById('map-tab-sunset');
+
+    if (existingSunrise && existingSunset) {
+      this._tabButtons['sunrise'] = existingSunrise;
+      this._tabButtons['sunset'] = existingSunset;
+      existingSunrise.addEventListener('click', () => this.switchPeriod('sunrise'));
+      existingSunset.addEventListener('click', () => this.switchPeriod('sunset'));
+      this._tabContainer = container;
+      this._updateTabUI();
+      return;
+    }
+
+    // 降级：动态创建
     this._tabContainer = document.createElement('div');
     this._tabContainer.className = 'china-spots-tabs china-raster-tabs';
-    this._tabContainer.style.cssText = [
-      'display: flex',
-      'gap: 8px',
-      'margin-bottom: 8px'
-    ].join(';');
+    this._tabContainer.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;';
 
     const tabs = [
       { period: 'sunrise', label: '朝霞 🌄' },

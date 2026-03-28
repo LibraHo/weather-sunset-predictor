@@ -359,7 +359,10 @@
           </div>
         </div>
         <!-- 时段切换 tabs -->
-        <div id="china-spots-tabs-container"></div>
+        <div id="china-spots-tabs-container" style="display:flex;gap:8px;margin-bottom:8px;">
+          <button id="map-tab-sunrise" data-period="sunrise" class="china-spots-tab" style="flex:1;padding:8px 12px;border:1px solid rgba(255,120,0,0.5);border-radius:6px;background:rgba(0,0,0,0.4);color:var(--color-text);font-size:13px;cursor:pointer;transition:background 0.2s,border-color 0.2s;white-space:nowrap;">朝霞 🌄</button>
+          <button id="map-tab-sunset" data-period="sunset" class="china-spots-tab" style="flex:1;padding:8px 12px;border:1px solid rgba(255,120,0,0.5);border-radius:6px;background:rgba(255,100,0,0.8);color:var(--color-text);font-size:13px;cursor:pointer;font-weight:bold;border-color:rgba(255,200,50,0.9);transition:background 0.2s,border-color 0.2s;white-space:nowrap;">晚霞 🌅</button>
+        </div>
         <!-- 时段说明 -->
         <div id="china-spots-period-label" style="font-size:12px; color:var(--color-text-light); margin:4px 0; text-align:center;"></div>
         <!-- Leaflet 地图（可拖拽 + 缩放） -->
