@@ -37,7 +37,9 @@ class OpenMeteoProvider extends BaseWeatherProvider {
       } catch (error) {
         lastError = error;
         const status = error?.response?.status;
-        const retryable = status === 429 || status === 503 || error?.code === 'ECONNABORTED';
+        // 429 = 日配额耗尽，重试无意义，直接失败
+        if (status === 429) break;
+        const retryable = status === 503 || error?.code === 'ECONNABORTED';
         if (!retryable || attempt >= this.MAX_RETRIES) {
           break;
         }

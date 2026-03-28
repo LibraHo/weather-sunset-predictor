@@ -167,42 +167,37 @@ class AppController {
         return;
       }
 
-      // 获取天气数据
-      const weatherData = await this.weatherController.fetchWeather(location);
-
-      if (!weatherData || weatherData.length === 0) {
-        throw new Error('未能获取天气数据');
-      }
-
-      // 更新天气显示
-      this.weatherController.updateWeatherDisplay(weatherData, location);
-
-      // 生成晚霞预测
-      let predictions;
+      // 获取天气数据（失败不阻塞地图等功能）
+      let weatherData = null;
       try {
-        console.log('[AppController] 开始生成晚霞预测...');
-        console.log('[AppController] 天气数据:', weatherData);
-        console.log('[AppController] 位置:', location);
-        console.log('[AppController] PredictionController:', this.predictionController);
-        
-        predictions = await this.predictionController.generatePredictions(
-          weatherData,
-          location
-        );
-        console.log('[AppController] 预测生成完成:', predictions);
-      } catch (predictionError) {
-        console.error('[AppController] 生成预测时出错:', predictionError);
-        console.error('[AppController] 错误堆栈:', predictionError.stack);
-        // 不抛出错误，允许应用继续运行
-        this.showError(`晚霞预测功能暂时不可用: ${predictionError.message}`);
-        predictions = [];
+        weatherData = await this.weatherController.fetchWeather(location);
+      } catch (weatherErr) {
+        console.warn('[AppController] 天气数据获取失败，继续加载其他功能:', weatherErr.message);
+        this.showError('天气数据暂时不可用，火烧云地图仍可正常使用');
+        setTimeout(() => this.hideError?.(), 4000);
       }
 
-      if (predictions && predictions.length > 0) {
-        // 更新预测显示
-        this.predictionController.updatePredictionDisplay(predictions);
+      if (weatherData && weatherData.length > 0) {
+        // 更新天气显示
+        this.weatherController.updateWeatherDisplay(weatherData, location);
+
+        // 生成晚霞预测
+        let predictions;
+        try {
+          predictions = await this.predictionController.generatePredictions(weatherData, location);
+        } catch (predictionError) {
+          console.error('[AppController] 生成预测时出错:', predictionError.message);
+          this.showError(`晚霞预测功能暂时不可用: ${predictionError.message}`);
+          predictions = [];
+        }
+
+        if (predictions && predictions.length > 0) {
+          this.predictionController.updatePredictionDisplay(predictions);
+        } else {
+          console.warn('[AppController] 没有生成预测数据，跳过预测显示');
+        }
       } else {
-        console.warn('[AppController] 没有生成预测数据，跳过预测显示');
+        console.warn('[AppController] 无天气数据，跳过天气/预测显示，继续加载地图');
       }
 
       // Phase 18：雷达罗盘（异步，不阻塞主流程）
