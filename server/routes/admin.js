@@ -539,4 +539,10 @@ router.delete('/photos/:id', requireAuth, (req, res) => {
   }
 });
 
+// Open-Meteo 配额统计
+const quota = require('../services/OpenMeteoQuota');
+router.get('/admin/quota', (req, res) => {
+  res.json(quota.getStats());
+});
+
 module.exports = router;

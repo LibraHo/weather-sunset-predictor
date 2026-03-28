@@ -1,5 +1,6 @@
 const axios = require('axios');
 const BaseWeatherProvider = require('./BaseWeatherProvider');
+const quota = require('../OpenMeteoQuota');
 
 class OpenMeteoProvider extends BaseWeatherProvider {
   constructor() {
@@ -30,6 +31,8 @@ class OpenMeteoProvider extends BaseWeatherProvider {
   }
 
   async _getWithRetry(params, timeoutMs = 15000, label = 'request') {
+    // 记录本次调用
+    quota.record(1);
     let lastError = null;
     for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
       try {

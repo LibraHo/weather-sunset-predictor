@@ -13,6 +13,7 @@ const path = require('path');
 const os = require('os');
 
 const orchestrator = require('./ProviderOrchestrator');
+const quota = require('./OpenMeteoQuota');
 const { calculateEnhancedPrediction } = require('./EnhancedPredictionService');
 const SunCalculator = require('../utils/SunCalculator');
 
@@ -378,6 +379,14 @@ class GridScoreService {
   async _doRefresh(period = DEFAULT_PERIOD) {
     const safePeriod = this.normalizePeriod(period);
     if (this._refreshingByPeriod[safePeriod]) return;
+
+    // 检查 API 配额软上限，保护基础天气额度
+    if (!quota.canFetchGrid()) {
+      const stats = quota.getStats();
+      console.warn(`[GridScoreService] API 用量已达软上限 (${stats.count}/${stats.limit})，跳过格点刷新，保留基础天气额度`);
+      return;
+    }
+
     this._refreshingByPeriod[safePeriod] = true;
     try {
       console.log(`[GridScoreService] 开始刷新网格评分 (${safePeriod})...`);
