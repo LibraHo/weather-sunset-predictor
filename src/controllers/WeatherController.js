@@ -245,10 +245,10 @@ class WeatherController {
     };
 
     if (elements.humidity) {
-      elements.humidity.textContent = `${currentWeather.humidity.toFixed(0)}%`;
+      elements.humidity.textContent = currentWeather.humidity != null ? `${currentWeather.humidity.toFixed(0)}%` : '--';
     }
     if (elements.cloudCover) {
-      elements.cloudCover.textContent = `${currentWeather.cloudCover.toFixed(0)}%`;
+      elements.cloudCover.textContent = currentWeather.cloudCover != null ? `${currentWeather.cloudCover.toFixed(0)}%` : '--';
     }
     if (elements.windSpeed) {
       elements.windSpeed.textContent = this.formatWindSpeed(currentWeather.windSpeed);
@@ -261,10 +261,10 @@ class WeatherController {
       elements.windDirectionText.textContent = this._getWindDirectionLabel(normalizedDirection);
     }
     if (elements.pressure) {
-      elements.pressure.textContent = `${currentWeather.pressure.toFixed(0)} hPa`;
+      elements.pressure.textContent = currentWeather.pressure != null ? `${currentWeather.pressure.toFixed(0)} hPa` : '--';
     }
     if (elements.visibility) {
-      elements.visibility.textContent = `${currentWeather.visibility.toFixed(1)} km`;
+      elements.visibility.textContent = currentWeather.visibility != null ? `${currentWeather.visibility.toFixed(1)} km` : '--';
     }
 
     // 显示天气数据容器
