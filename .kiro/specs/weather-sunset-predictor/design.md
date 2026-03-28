@@ -3760,6 +3760,86 @@ P3 完成后  ~83%       ~79%      ~92%      ~83%   （+Canvas/Leaflet mock）
 
 
 
+## 31. 网格抓取队列系统设计（需求39，2026-03-28）
+
+### 31.1 目标
+
+解决 Open-Meteo 429 限流导致的大量 `null/error` 点问题，将“批量抓取”改造为可调度、可观测、可恢复的任务队列。
+
+### 31.2 架构
+
+```
+Refresh API (/api/heatmap/refresh?period=...)
+        │
+        ▼
+QueueManager.enqueue(period)
+        │
+        ▼
+Single Worker (concurrency=1)
+        │
+        ├─ batch job #1 (size=10)
+        ├─ batch job #2 (size=10)
+        └─ ...
+        │
+        ▼
+ProviderOrchestrator/OpenMeteoProvider
+        │
+        ├─ 429 -> Retry-After / fallback 60s 熔断等待
+        └─ 200 -> 计入 success
+```
+
+### 31.3 状态模型
+
+- Job 级：`idle | running | finished | failed`
+- Batch 级：`pending | running | success | failed | retrying`
+- 关键指标：
+  - `totalPoints`
+  - `completedPoints`
+  - `successPoints`
+  - `errorPoints`
+  - `totalBatches`
+  - `completedBatches`
+  - `etaSeconds`
+  - `lastError`
+
+### 31.4 接口设计
+
+- `POST /api/heatmap/refresh?period=sunrise|sunset`
+  - 触发入队（若已运行则返回任务存在）
+- `GET /api/heatmap/status?period=sunrise|sunset`
+  - 返回实时进度状态
+- `GET /api/heatmap/grid?period=...`
+  - 返回缓存数据 + 统计口径（count、valid、error）
+
+### 31.5 限流策略
+
+1. 默认 `batchSize=10`
+2. 默认 `concurrency=1`
+3. 默认 `delayMs=2500`
+4. 429 时优先读取 `Retry-After`
+5. 缺失 `Retry-After` 时固定等待 60 秒
+6. 熔断等待期间状态面板显示 `retrying` 与剩余等待时间（后续补）
+
+### 31.6 断点续跑
+
+- 将批次进度持久化到缓存文件（与 grid cache 同目录）
+- 服务重启后恢复未完成批次
+- 已成功批次跳过，避免重复请求
+
+### 31.7 前端调试面板
+
+在 `public/raster-debug.html` 展示：
+- Sunrise/Sunset 双任务进度
+- 完成率、成功/失败、批次进度、ETA
+- 手动触发刷新按钮
+
+### 31.8 当前落地状态
+
+- 已落地：状态接口、进度面板、批次降频（1°、batch=10、delay=2500ms）
+- 待补：429 熔断 60s 显式等待、批次级持久化断点续跑、队列项状态明细接口
+
+---
+
 ## 29. 设计文档整合优化（2026-02-11）
 
 > 本节用于沉淀近期重构与测试补强后的“稳定设计边界”，避免实现与文档出现二次偏离。
