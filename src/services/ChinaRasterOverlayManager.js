@@ -153,6 +153,13 @@ export default class ChinaRasterOverlayManager {
     }
     if (this._activePeriod === period) return;
 
+    // 地图未初始化时，只更新记录的 activePeriod，不调 overlay 方法
+    if (!this._sunriseOverlay || !this._sunsetOverlay) {
+      this._activePeriod = period;
+      this._updateTabUI();
+      return;
+    }
+
     this._getActiveOverlay().hide();
     this._activePeriod = period;
     this._getActiveOverlay().show();
