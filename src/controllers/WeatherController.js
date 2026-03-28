@@ -1814,22 +1814,21 @@ class WeatherController {
     const tsEl = document.getElementById('china-spots-timestamp');
     if (!tsEl) return;
 
-    const activeOverlay = this.chinaSpotsOverlayManager?.getOverlay(
-      this.chinaSpotsOverlayManager?.getActivePeriod() || 'sunset'
-    );
-    const count = activeOverlay?.getSpotCount?.() || 0;
-    const updatedAt = activeOverlay?.getUpdatedAt?.() || null;
-
-    if (count === 0) {
-      tsEl.textContent = updatedAt
-        ? '今日数据，更新于 ' + new Date(updatedAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-        : '今日数据';
-      return;
+    // 以所有时段数据都抓取完成后的最新时间为准
+    const periods = ['sunrise', 'sunset'];
+    let latestTime = null;
+    for (const p of periods) {
+      const overlay = this.chinaSpotsOverlayManager?.getOverlay(p);
+      const t = overlay?.getUpdatedAt?.() || null;
+      if (t) {
+        const d = new Date(t);
+        if (!latestTime || d > latestTime) latestTime = d;
+      }
     }
 
-    tsEl.textContent = updatedAt
-      ? '今日数据，更新于 ' + new Date(updatedAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-      : '今日数据';
+    tsEl.textContent = latestTime
+      ? '更新于 ' + latestTime.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+      : '';
   }
 
   /**
@@ -1949,8 +1948,19 @@ class WeatherController {
 
       this._chinaSpotsMapInstance = map;
 
-      // 使用管理器初始化叠加层（不再渲染顶部 tabs，仅保留底部朝/晚切换卡）
-      this.chinaSpotsOverlayManager.init(map, null);
+      // 使用管理器初始化叠加层，传入 tab 容器
+      const tabsContainer = document.getElementById('china-spots-tabs-container');
+      this.chinaSpotsOverlayManager.init(map, tabsContainer);
+
+      // 注册时段切换回调：同步时段说明/时间戳/空状态
+      if (typeof this.chinaSpotsOverlayManager.onPeriodChange === 'function') {
+        this.chinaSpotsOverlayManager.onPeriodChange((period) => {
+          this._updateChinaSpotsPeriodLabel(period);
+          this._renderChinaSpotsTimestamp();
+          const overlay = this.chinaSpotsOverlayManager.getOverlay(period);
+          this._setChinaSpotsEmptyState((overlay?.getSpotCount?.() ?? 0) === 0);
+        });
+      }
 
       // 加载所有时段数据
       await this.chinaSpotsOverlayManager.loadAllPeriods();
