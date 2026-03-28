@@ -23,6 +23,15 @@ export default class ChinaRasterOverlayManager {
     this._activePeriod = 'sunset';
     this._tabContainer = null;
     this._tabButtons = {};
+    this._onPeriodChange = null; // 外部回调
+  }
+
+  /**
+   * 注册时段切换回调
+   * @param {Function} fn - fn(period)
+   */
+  onPeriodChange(fn) {
+    this._onPeriodChange = fn;
   }
 
   /**
@@ -140,6 +149,11 @@ export default class ChinaRasterOverlayManager {
     this._updateTabUI();
 
     console.log(`[ChinaRasterOverlayManager] 已切换到 ${period}`);
+
+    // 通知外部（WeatherController 更新时段说明/时间戳/空状态）
+    if (typeof this._onPeriodChange === 'function') {
+      this._onPeriodChange(period);
+    }
   }
 
   /**
