@@ -1736,7 +1736,10 @@ class WeatherController {
    * 地图下方仅保留时段切换，不展示分数与点位数。
    */
   _renderDualPeriodScorePanel() {
+    // 底部双卡片已由顶部 tab 替代，隐藏此面板
     const panelEl = document.getElementById('china-spots-dual-score');
+    if (panelEl) { panelEl.style.display = 'none'; panelEl.classList.add('hidden'); }
+    return;
     if (!panelEl || !this.chinaSpotsOverlayManager) return;
 
     const periods = [

@@ -7,6 +7,17 @@
  * 3) 关键值标签（70 / 80）
  */
 
+// ─── 模块级 GeoJSON 缓存（用于 canvas clip）─────────────────────────────────
+let _chinaGeoJSONCache = null;
+async function _loadChinaGeoJSON() {
+  if (_chinaGeoJSONCache) return _chinaGeoJSONCache;
+  try {
+    const resp = await fetch('/data/china-geojson.json');
+    if (resp.ok) _chinaGeoJSONCache = await resp.json();
+  } catch (_) {}
+  return _chinaGeoJSONCache;
+}
+
 // ─── 常量 ────────────────────────────────────────────────────────────────────
 
 // 数据有效阈值（用于统计，不等于视觉显示阈值）
@@ -297,6 +308,9 @@ export default class ChinaRasterOverlay {
   init(leafletMap) {
     this._map = leafletMap;
     this._createCanvas();
+
+    // 预加载 GeoJSON 用于 clip
+    _loadChinaGeoJSON();
 
     this._boundReproject = () => this._reprojectCanvas();
     this._boundSchedule = () => this._scheduleReproject();
@@ -668,7 +682,32 @@ export default class ChinaRasterOverlay {
     const zoom = this._map.getZoom();
     const blurPx = clamp(3.0 - (zoom - 5) * 0.25, 1.2, 3.2);
     const sharpTest = this._period === 'test';
-    ctx.save();
+
+    // 建立中国边界 clip path（裁掉 bbox 矩形外溢的颜色）
+    const geoJSON = _chinaGeoJSONCache;
+    if (geoJSON && geoJSON.features) {
+      ctx.save();
+      ctx.beginPath();
+      for (const feature of geoJSON.features) {
+        const geom = feature.geometry;
+        const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.coordinates;
+        for (const poly of polys) {
+          for (const ring of poly) {
+            let first = true;
+            for (const [lon, lat] of ring) {
+              const pt = this._map.latLngToContainerPoint(window.L.latLng(lat, lon));
+              if (first) { ctx.moveTo(pt.x, pt.y); first = false; }
+              else ctx.lineTo(pt.x, pt.y);
+            }
+            ctx.closePath();
+          }
+        }
+      }
+      ctx.clip();
+    } else {
+      ctx.save();
+    }
+
     if (sharpTest) {
       ctx.filter = 'none';
       ctx.imageSmoothingEnabled = false;
