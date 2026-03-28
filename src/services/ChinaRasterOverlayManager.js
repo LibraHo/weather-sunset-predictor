@@ -189,8 +189,7 @@ export default class ChinaRasterOverlayManager {
     console.log('[ChinaRasterOverlayManager] 开始并行加载所有时段栅格数据...');
     await Promise.all([
       this.loadAndRender('sunrise'),
-      this.loadAndRender('sunset'),
-      this.loadAndRender('test')
+      this.loadAndRender('sunset')
     ]);
     console.log('[ChinaRasterOverlayManager] 所有时段栅格数据加载完成');
 
