@@ -64,7 +64,7 @@ export function getPaletteForPeriod(period) {
 
 
 // 测试面板：注入可见的模拟图层（仅渲染层，不影响后端评分）
-const ENABLE_SYNTHETIC_TEST_DATA = true;
+const ENABLE_SYNTHETIC_TEST_DATA = false;
 
 // ─── 工具函数 ─────────────────────────────────────────────────────────────────
 
