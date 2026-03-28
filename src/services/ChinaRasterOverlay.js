@@ -722,11 +722,9 @@ export default class ChinaRasterOverlay {
     ctx.drawImage(this._offscreen, 0, 0, width, height, tl.x, tl.y, screenW, screenH);
     ctx.restore();
 
-    // Pass 2: 细等值线
-    this._drawContourLines(ctx, tl, screenW, screenH, width, height);
-
-    // Pass 3: 关键值标签（70/80）
-    this._drawLabels(ctx, tl, screenW, screenH, width, height);
+    // Pass 2/3 已禁用：按产品要求仅保留纯色带渲染，不显示等高线与标签
+    // this._drawContourLines(ctx, tl, screenW, screenH, width, height);
+    // this._drawLabels(ctx, tl, screenW, screenH, width, height);
 
   }
 

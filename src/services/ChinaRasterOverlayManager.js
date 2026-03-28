@@ -165,12 +165,31 @@ export default class ChinaRasterOverlayManager {
     this._getActiveOverlay().show();
     this._updateTabUI();
 
+    // 同步图例色系
+    this._syncLegendPeriod(period);
+
     console.log(`[ChinaRasterOverlayManager] 已切换到 ${period}`);
 
     // 通知外部（WeatherController 更新时段说明/时间戳/空状态）
     if (typeof this._onPeriodChange === 'function') {
       this._onPeriodChange(period);
     }
+  }
+
+  /**
+   * 同步 ChinaMapCanvas 图例色系
+   */
+  _syncLegendPeriod(period) {
+    // 向上查找地图画布实例并更新图例
+    try {
+      const mapEl = this._map?.getContainer?.();
+      if (!mapEl) return;
+      // ChinaMapCanvas 实例挂在地图容器上
+      const canvas = mapEl._chinaMapCanvas;
+      if (canvas && typeof canvas.setPeriod === 'function') {
+        canvas.setPeriod(period);
+      }
+    } catch (_) { /* 静默 */ }
   }
 
   /**
