@@ -77,10 +77,10 @@ ssh -i "$SSH_KEY" $REMOTE "
 "
 
 echo "🔄 重启后端..."
-ssh -i "$SSH_KEY" $REMOTE "sudo pkill -f 'weather-sunset-predictor/server/index.js'" 2>/dev/null || true
+ssh -i "$SSH_KEY" $REMOTE "sudo fuser -k 3000/tcp 2>/dev/null; sudo pkill -9 -f 'weather-sunset-predictor/server/index.js' 2>/dev/null; true"
 sleep 3
 ssh -i "$SSH_KEY" $REMOTE "sudo bash -c 'cd /home/ubuntu/weather-sunset-predictor/server && nohup /usr/local/bin/node index.js >> /tmp/ws-backend.log 2>&1 &'"
-sleep 4
+sleep 5
 ssh -i "$SSH_KEY" $REMOTE "curl -s http://localhost:3000/health"
 
 # 预热 raster 缓存（避免用户首次访问超时）
