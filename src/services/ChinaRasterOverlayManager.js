@@ -74,10 +74,9 @@ export default class ChinaRasterOverlayManager {
     const existingSunset = document.getElementById('map-tab-sunset');
 
     if (existingSunrise && existingSunset) {
+      // 复用已有按钮，不重复绑定 click（app.js 已提前绑定）
       this._tabButtons['sunrise'] = existingSunrise;
       this._tabButtons['sunset'] = existingSunset;
-      existingSunrise.addEventListener('click', () => this.switchPeriod('sunrise'));
-      existingSunset.addEventListener('click', () => this.switchPeriod('sunset'));
       this._tabContainer = container;
       this._updateTabUI();
       return;

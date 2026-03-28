@@ -139,6 +139,14 @@ async function initializeApp() {
     console.log('Initializing application...');
     initializeHomeTabs(document, () => onMapPanelVisible());
 
+    // 朝/晚霞 tab 早期绑定（init 前就可点击）
+    document.getElementById('map-tab-sunrise')?.addEventListener('click', () => {
+      window.weatherController?.chinaSpotsOverlayManager?.switchPeriod('sunrise');
+    });
+    document.getElementById('map-tab-sunset')?.addEventListener('click', () => {
+      window.weatherController?.chinaSpotsOverlayManager?.switchPeriod('sunset');
+    });
+
     // 分享地图全屏按钮
     const galleryFullscreenBtn = document.getElementById('gallery-fullscreen-btn');
     if (galleryFullscreenBtn) {
