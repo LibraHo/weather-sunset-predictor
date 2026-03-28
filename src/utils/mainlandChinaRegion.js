@@ -8,8 +8,8 @@
 
 const MAINLAND_BOUNDS = {
   lonMin: 73,
-  lonMax: 135,
-  latMin: 20,
+  lonMax: 133.5,  // 收紧东边界，减少东北外溢
+  latMin: 21,     // 上移南边界，避免西藏以南溢出
   latMax: 54
 };
 
