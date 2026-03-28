@@ -341,6 +341,14 @@ class GridScoreService {
     if (cache) {
       const age = Date.now() - new Date(cache.updatedAt).getTime();
       if (age <= maxAgeMs) return;
+
+      // 同一自然日内已有数据，不重复抓取（避免重启耗尽 API 额度）
+      const cacheDate = new Date(cache.updatedAt).toDateString();
+      const todayDate = new Date().toDateString();
+      if (cacheDate === todayDate) {
+        console.log(`[GridScoreService] ${safePeriod} 缓存是今天的数据，跳过刷新`);
+        return;
+      }
     }
     await this._doRefresh(safePeriod);
   }
