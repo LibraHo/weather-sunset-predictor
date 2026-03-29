@@ -2579,9 +2579,19 @@ body.theme-dark .chart-container > div > div {
   }
 
   .day-label {
-    min-width: 72px;
+    min-width: 96px;
     align-items: flex-start;
     text-align: left;
+    gap: 0;
+  }
+
+  .day-label-primary,
+  .day-label-date {
+    display: inline;
+  }
+
+  .day-label-date {
+    margin-left: 4px;
   }
 
   .weather-icon {
@@ -2592,15 +2602,17 @@ body.theme-dark .chart-container > div > div {
   }
 
   .temp-range-inline {
-    min-width: 64px;
+    min-width: 72px;
     text-align: center;
     flex-shrink: 0;
+    white-space: nowrap;
   }
 
   .day-meta-lines {
     width: auto;
-    min-width: 110px;
+    min-width: 120px;
     flex-direction: row;
+    flex-wrap: nowrap;
     gap: 8px;
     justify-content: flex-end;
   }
@@ -2608,6 +2620,7 @@ body.theme-dark .chart-container > div > div {
   .day-meta-line {
     width: auto;
     white-space: nowrap;
+    flex: 0 0 auto;
   }
 }
 
