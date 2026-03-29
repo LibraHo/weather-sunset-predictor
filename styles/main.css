@@ -981,20 +981,28 @@ input[type="text"]::placeholder {
   }
 
   .weather-feature-item {
-    padding: 10px 8px;
+    padding: 10px 14px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
   }
 
   .weather-feature-item-compact {
-    min-height: 62px;
+    min-height: 48px;
   }
 
   .weather-label {
-    font-size: 0.7rem;
-    margin-bottom: 4px;
+    font-size: 0.78rem;
+    margin-bottom: 0;
+    width: auto;
+    flex: 1;
   }
 
   .weather-value {
     font-size: 1.15rem;
+    width: auto;
+    text-align: right;
   }
 
   .weather-wind-speed {
