@@ -4064,9 +4064,9 @@ body.theme-dark {
   --radar-subtitle: rgba(148,163,184,0.80);
   --radar-legend-text: rgba(200,212,228,0.85);
   --radar-center: rgba(249,115,22,0.90);
-  --radar-cloud-low: rgba(130,165,210,0.80);
-  --radar-cloud-mid: rgba(165,185,215,0.75);
-  --radar-cloud-high: rgba(190,200,220,0.70);
+  --radar-cloud-low: rgba(160,195,240,0.95);
+  --radar-cloud-mid: rgba(195,210,235,0.90);
+  --radar-cloud-high: rgba(220,228,242,0.85);
 }
 ,220,0.70);
 }
