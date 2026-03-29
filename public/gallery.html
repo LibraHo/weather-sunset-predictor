@@ -225,10 +225,9 @@
         attributionControl: true
       }).setView([20, 0], 2);
 
-      // CartoDB Dark Matter 底图
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
+      // 使用站内代理的高德底图（与主站地图体系一致，避免外部底图访问波动）
+      L.tileLayer('/api/tiles/gaode/{z}/{x}/{y}', {
+        attribution: '&copy; 高德地图',
         maxZoom: 19
       }).addTo(map);
     }
