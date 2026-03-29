@@ -714,7 +714,7 @@ export default class ChinaRasterOverlay {
       ctx.filter = 'none';
       ctx.imageSmoothingEnabled = false;
     } else {
-      ctx.filter = `blur(${blurPx.toFixed(1)}px) saturate(1.28) contrast(1.16)`;
+      ctx.filter = `blur(${blurPx.toFixed(1)}px) saturate(1.15)`;
       ctx.imageSmoothingEnabled = true;
     }
     ctx.globalCompositeOperation = 'source-over';
