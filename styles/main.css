@@ -934,9 +934,34 @@ input[type="text"]::placeholder {
     min-height: 220px;
   }
 
+  /* 手机版/窄屏：右侧指标卡改成长条单列，内容左到右 */
   .weather-feature-stack {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: repeat(3, minmax(0, 1fr));
+    grid-template-columns: 1fr;
+    grid-template-rows: unset;
+    gap: 8px;
+  }
+
+  .weather-feature-item {
+    padding: 10px 14px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+  }
+
+  .weather-feature-item-compact {
+    min-height: 48px;
+  }
+
+  .weather-label {
+    width: auto;
+    flex: 1;
+    margin-bottom: 0;
+  }
+
+  .weather-value {
+    width: auto;
+    text-align: right;
   }
 }
 
