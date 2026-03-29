@@ -203,6 +203,7 @@
       <div class="legend-icon"></div>
       <span>照片位置</span>
     </div>
+
   </div>
 
   <!-- 空状态 -->
@@ -218,19 +219,37 @@
     let map;
     let markers = [];
 
-    // 初始化地图
-    function initMap() {
+    // 初始化地图（中国版底图 + 火烧云图层）
+    async function initMap() {
       map = L.map('map', {
         zoomControl: true,
-        attributionControl: true
-      }).setView([20, 0], 2);
+        attributionControl: false,
+        minZoom: 3,
+        maxZoom: 12
+      }).setView([35, 105], 4);
 
-      // CartoDB Dark Matter 底图
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 19
-      }).addTo(map);
+      // 中国 GeoJSON 底图（自研地图体系，不依赖外部瓦片）
+      try {
+        const resp = await fetch('/data/china-geojson.json');
+        const geo = await resp.json();
+
+        const chinaLayer = L.geoJSON(geo, {
+          style: {
+            color: '#5da3f0',
+            weight: 1.1,
+            opacity: 0.85,
+            fillColor: '#0f1e3a',
+            fillOpacity: 0.82
+          }
+        }).addTo(map);
+
+        const b = chinaLayer.getBounds();
+        if (b && b.isValid()) map.fitBounds(b.pad(0.05));
+      } catch (e) {
+        console.error('加载中国底图失败:', e);
+      }
+
+      // 不叠加火烧云预测图层：仅使用火烧云页面同款中国底图作为分享页底图
     }
 
     // 创建自定义 marker
@@ -309,11 +328,7 @@
           markers.push(marker);
         });
 
-        // 调整视图以包含所有照片
-        if (markers.length > 0) {
-          const group = L.featureGroup(markers);
-          map.fitBounds(group.getBounds().pad(0.1));
-        }
+        // 视图保持在中国范围（当前中国底图版本）
 
       } catch (err) {
         console.error('加载照片失败:', err);
@@ -322,8 +337,8 @@
     }
 
     // 初始化
-    document.addEventListener('DOMContentLoaded', () => {
-      initMap();
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initMap();
       loadPhotos();
     });
   </script>
