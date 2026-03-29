@@ -549,15 +549,15 @@ router.get('/admin', requireAuth, (req, res) => {
         };
 
         document.getElementById('qs-running').textContent = sunset.running ? '🟢 运行中' : '⚪ 空闲';
-        document.getElementById('qs-batch').textContent = `${sunset.completedBatches || 0}/${sunset.totalBatches || 0}`;
-        document.getElementById('qs-progress').textContent = `${sunset.completedPoints || 0}/${sunset.totalPoints || 0} (${fmtPct(sunset.completedPoints || 0, sunset.totalPoints || 0)})`;
+        document.getElementById('qs-batch').textContent = (sunset.completedBatches || 0) + '/' + (sunset.totalBatches || 0);
+        document.getElementById('qs-progress').textContent = (sunset.completedPoints || 0) + '/' + (sunset.totalPoints || 0) + ' (' + fmtPct(sunset.completedPoints || 0, sunset.totalPoints || 0) + ')';
 
         document.getElementById('qr-running').textContent = sunrise.running ? '🟢 运行中' : '⚪ 空闲';
-        document.getElementById('qr-batch').textContent = `${sunrise.completedBatches || 0}/${sunrise.totalBatches || 0}`;
-        document.getElementById('qr-progress').textContent = `${sunrise.completedPoints || 0}/${sunrise.totalPoints || 0} (${fmtPct(sunrise.completedPoints || 0, sunrise.totalPoints || 0)})`;
+        document.getElementById('qr-batch').textContent = (sunrise.completedBatches || 0) + '/' + (sunrise.totalBatches || 0);
+        document.getElementById('qr-progress').textContent = (sunrise.completedPoints || 0) + '/' + (sunrise.totalPoints || 0) + ' (' + fmtPct(sunrise.completedPoints || 0, sunrise.totalPoints || 0) + ')';
 
-        const ts = [sunset.updatedAt, sunrise.updatedAt].filter(Boolean).sort().pop();
-        document.getElementById('queueMeta').textContent = `上次刷新：${ts ? new Date(ts).toLocaleString('zh-CN') : '--'}`;
+        var ts = [sunset.updatedAt, sunrise.updatedAt].filter(Boolean).sort().pop();
+        document.getElementById('queueMeta').textContent = '上次刷新：' + (ts ? new Date(ts).toLocaleString('zh-CN') : '--');
       } catch (err) {
         console.error('加载队列失败:', err);
       }
