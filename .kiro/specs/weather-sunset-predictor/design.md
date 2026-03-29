@@ -179,6 +179,25 @@ Batch Job (size=10, delay=2500ms) → OpenMeteoProvider
 - `GET /api/visitor/count` / `POST /api/visitor/count` - 访客计数
 - `GET /api/photos` / `POST /admin/upload` - 照片管理
 
+### API调用日志（需求41）
+- `GET /api/admin/logs?type=grid|weather|gaode|gaode_tile&limit=50` - 分类日志
+- `GET /api/admin/logs/summary` - 统计摘要（今日/小时/分类）
+
+### 定时更新配置（需求42）
+- `GET /api/admin/schedule` - 获取当前定时配置
+- `POST /api/admin/schedule` - 保存定时配置
+- 配置格式：
+```json
+{
+  "tasks": [
+    { "time": "06:00", "periods": ["sunrise"] },
+    { "time": "14:00", "periods": ["sunset"] },
+    { "time": "22:00", "periods": ["sunrise", "sunset"] }
+  ]
+}
+```
+- 持久化：`~/.xiake/schedule-config.json`
+
 ## 缓存策略
 
 | 数据类型 | TTL | 存储 |
@@ -221,7 +240,13 @@ Batch Job (size=10, delay=2500ms) → OpenMeteoProvider
 ## 变更摘要
 
 ### 2026-03-29
-- 新增Open-Meteo配额统计与保护（需求40）
+- 管理后台增强：API配额面板 + 队列状态面板（PR #319）
+- 分享地图页改为中国GeoJSON自研底图（PR #318）
+- 手机版天气卡片/7天概览长条单列横排优化
+- 去掉云图contrast滤镜消除"等高线"视觉
+- 新增需求41：API调用分类日志（grid/weather/gaode/gaode_tile）
+- 新增需求42：定时更新配置面板（朝霞/晚霞更新时间可自定义）
+- 新增需求40：Open-Meteo配额统计与保护（软上限9000/10000）
 - 网格抓取队列系统限流稳定版（需求39）
 
 ### 2026-03-17

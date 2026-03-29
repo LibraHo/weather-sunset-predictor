@@ -1,6 +1,7 @@
 const axios = require('axios');
 const BaseWeatherProvider = require('./BaseWeatherProvider');
 const quota = require('../OpenMeteoQuota');
+const apiLog = require('../ApiCallLog');
 
 class OpenMeteoProvider extends BaseWeatherProvider {
   constructor() {
@@ -33,17 +34,24 @@ class OpenMeteoProvider extends BaseWeatherProvider {
   async _getWithRetry(params, timeoutMs = 15000, label = 'request') {
     // 记录本次调用
     quota.record(1);
+    const tracker = apiLog.track('grid', label || 'open-meteo', params);
     let lastError = null;
     for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
       try {
-        return await axios.get(this.API_URL, { params, timeout: timeoutMs });
+        const response = await axios.get(this.API_URL, { params, timeout: timeoutMs });
+        tracker.ok(response.status);
+        return response;
       } catch (error) {
         lastError = error;
         const status = error?.response?.status;
         // 429 = 日配额耗尽，重试无意义，直接失败
-        if (status === 429) break;
+        if (status === 429) {
+          tracker.fail(error, status);
+          break;
+        }
         const retryable = status === 503 || error?.code === 'ECONNABORTED';
         if (!retryable || attempt >= this.MAX_RETRIES) {
+          tracker.fail(error, status || 0);
           break;
         }
         const retryAfter = this._parseRetryAfterMs(error);

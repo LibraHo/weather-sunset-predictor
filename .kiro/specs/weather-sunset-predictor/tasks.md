@@ -1,6 +1,6 @@
 # 📋 Weather Sunset Predictor 任务清单
 
-**最后更新**：2026-03-29
+**最后更新**：2026-03-29 18:20
 
 ---
 
@@ -12,8 +12,49 @@
 - [x] 验证重启后计数文件仍可读取
 
 ### 后续可选优化
-- [ ] 调试页面显示quota仪表盘（进度条+剩余额度）
-- [ ] 按调用类型分组统计（基础天气/网格刷新/其他）
+- [x] ~~调试页面显示quota仪表盘（进度条+剩余额度）~~ → 已在PR#319完成
+- [ ] 按调用类型分组统计（基础天气/网格刷新/其他） → 需求41
+
+---
+
+## 🔧 需求41：API调用日志记录（2026-03-29 进行中）
+
+### 目标
+记录所有外部 API 调用，分类展示在管理后台。
+
+### 分类
+- `grid`：火烧云地图网格抓取（GridScoreService 调用 OpenMeteoProvider）
+- `weather`：用户前端触发的天气查询（`/api/weather/forecast`）
+- `gaode`：高德地理编码（BackendGeocodingService）
+- `gaode_tile`：高德瓦片代理（`/api/tiles/gaode/:z/:x/:y`）
+
+### 任务清单
+- [x] 新增 `server/services/ApiCallLog.js` — 日志服务（已完成框架）
+- [ ] 埋点：OpenMeteoProvider._getWithRetry
+- [ ] 埋点：weather路由 forecast 端点
+- [ ] 埋点：高德地理编码、瓦片代理
+- [ ] 新增 `server/routes/api-logs.js` — 日志API路由
+- [ ] admin页面新增日志面板（分Tab展示，自动刷新）
+- [ ] 统计摘要：今日总数/每小时请求数/分类统计
+
+---
+
+## 🔧 需求42：定时更新配置（2026-03-29 进行中）
+
+### 目标
+管理后台可配置火烧云数据更新策略。
+
+### 功能
+- 可设置多个更新时间点（如 06:00, 14:00, 22:00）
+- 每个时间点可选：更新朝霞 / 晚霞 / 都更新
+- 配置持久化到 `~/.xiake/schedule-config.json`
+- 后端定时器按配置触发 gridService._doRefresh()
+
+### 任务清单
+- [ ] 新增配置API（GET/POST `/api/admin/schedule`）
+- [ ] admin页面新增配置面板（时间点+朝霞/晚霞选择）
+- [ ] 后端定时器读取配置按cron触发刷新
+- [ ] 配置持久化与重启恢复
 
 ---
 
@@ -95,5 +136,5 @@
 
 ---
 
-**当前分支**：`main`
-**最新commit**：`5d9eb19`
+**当前分支**：`feat/admin-api-logs`
+**最新commit**：`408488a`（main）

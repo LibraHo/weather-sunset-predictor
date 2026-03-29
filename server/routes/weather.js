@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const orchestrator = require('../services/ProviderOrchestrator');
 const openMeteoProvider = require('../services/providers/OpenMeteoProvider');
+const apiLog = require('../services/ApiCallLog');
 
 function round2(n) {
   return Number.isFinite(n) ? Math.round(n * 100) / 100 : null;
@@ -50,6 +51,7 @@ function buildCompareSummary(primaryData = [], baselineData = []) {
  * - hours: 预测小时数 (可选，默认168)
  */
 router.get('/forecast', async (req, res, next) => {
+  const tracker = apiLog.track('weather', 'forecast', { lat: req.query.lat, lon: req.query.lon });
   try {
     const { lat, lon, hours, model } = req.query;
 
@@ -101,6 +103,7 @@ router.get('/forecast', async (req, res, next) => {
     }
 
     // 返回成功响应
+    tracker.ok(200);
     res.json({
       success: true,
       location: {
@@ -114,6 +117,7 @@ router.get('/forecast', async (req, res, next) => {
     });
 
   } catch (error) {
+    tracker.fail(error, 500);
     // 传递错误给错误处理中间件
     next(error);
   }

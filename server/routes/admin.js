@@ -274,10 +274,137 @@ router.get('/admin', requireAuth, (req, res) => {
       color: #e74c3c;
     }
     .hidden { display: none; }
+
+    /* API 调用日志 */
+    .tab-bar {
+      display: flex;
+      gap: 0;
+      margin-bottom: 12px;
+      border-bottom: 2px solid rgba(255,255,255,0.1);
+    }
+    .tab-btn {
+      padding: 8px 18px;
+      background: none;
+      border: none;
+      color: #9aa4b2;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      color: #4ecdc4;
+      border-bottom-color: #4ecdc4;
+    }
+    .tab-btn:hover {
+      color: #fff;
+    }
+    .log-table-wrap {
+      max-height: 400px;
+      overflow-y: auto;
+      border-radius: 6px;
+    }
+    .log-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    .log-table th {
+      position: sticky;
+      top: 0;
+      background: #1a1a2e;
+      color: #9aa4b2;
+      text-align: left;
+      padding: 6px 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+      white-space: nowrap;
+    }
+    .log-table td {
+      padding: 5px 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      color: #ccc;
+      white-space: nowrap;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .log-table tr:hover td {
+      background: rgba(255,255,255,0.03);
+    }
+    .status-ok { color: #2ecc71; }
+    .status-err { color: #e74c3c; }
+    .status-warn { color: #f39c12; }
+
+    /* 定时配置 */
+    .schedule-jobs {
+      margin-top: 12px;
+    }
+    .schedule-job-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    .schedule-job-row input[type="time"] {
+      padding: 6px 10px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 4px;
+      background: rgba(0,0,0,0.3);
+      color: #fff;
+      font-size: 0.9rem;
+    }
+    .schedule-job-row select {
+      padding: 6px 10px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 4px;
+      background: rgba(0,0,0,0.3);
+      color: #fff;
+      font-size: 0.9rem;
+    }
+    .schedule-job-row input[type="text"] {
+      width: 120px;
+      padding: 6px 10px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 4px;
+      background: rgba(0,0,0,0.3);
+      color: #fff;
+      font-size: 0.9rem;
+    }
+    .btn-sm {
+      padding: 6px 14px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .btn-add { background: #4ecdc4; color: #000; }
+    .btn-add:hover { background: #3dbdb5; }
+    .btn-del { background: #e74c3c; color: #fff; }
+    .btn-del:hover { background: #c0392b; }
+    .btn-save {
+      width: 100%;
+      padding: 10px;
+      background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: transform 0.2s;
+    }
+    .btn-save:hover { transform: translateY(-2px); }
     @media (max-width: 768px) {
       .photo-grid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
       }
+      .schedule-job-row { flex-wrap: wrap; }
     }
   </style>
 </head>
@@ -310,6 +437,40 @@ router.get('/admin', requireAuth, (req, res) => {
         <div class="quota-item"><div class="quota-k">sunrise 进度</div><div class="quota-v" id="qr-progress">--</div></div>
       </div>
       <div class="queue-row" id="queueMeta">上次刷新：--</div>
+    </div>
+
+    <div class="quota-section">
+      <h2>📊 调用统计</h2>
+      <div class="quota-grid">
+        <div class="quota-item"><div class="quota-k">今日 Grid 调用</div><div class="quota-v" id="st-grid-day">--</div></div>
+        <div class="quota-item"><div class="quota-k">今日 Weather 调用</div><div class="quota-v" id="st-weather-day">--</div></div>
+        <div class="quota-item"><div class="quota-k">今日高德调用</div><div class="quota-v" id="st-gaode-day">--</div></div>
+        <div class="quota-item"><div class="quota-k">最近1小时请求</div><div class="quota-v" id="st-last-hour">--</div></div>
+        <div class="quota-item"><div class="quota-k">Grid 平均耗时</div><div class="quota-v" id="st-grid-avg">--</div></div>
+        <div class="quota-item"><div class="quota-k">Grid 错误(1h)</div><div class="quota-v" id="st-grid-err">--</div></div>
+      </div>
+    </div>
+
+    <div class="quota-section">
+      <h2>📋 API 调用日志</h2>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchLogTab('grid')">火烧云网格</button>
+        <button class="tab-btn" onclick="switchLogTab('weather,gaode,gaode_tile')">天气查询 & 高德</button>
+      </div>
+      <div class="log-table-wrap">
+        <table class="log-table">
+          <thead><tr><th>时间</th><th>接口</th><th>参数</th><th>状态</th><th>耗时(ms)</th><th>错误</th></tr></thead>
+          <tbody id="logTableBody"><tr><td colspan="6" style="text-align:center;color:#888">加载中...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="quota-section">
+      <h2>⏰ 定时更新配置</h2>
+      <div id="scheduleJobs" class="schedule-jobs"></div>
+      <button class="btn-sm btn-add" onclick="addScheduleJob()">+ 添加时间点</button>
+      <button class="btn-save" onclick="saveSchedule()">保存配置</button>
+      <div id="scheduleMsg" class="message hidden" style="margin-top:10px"></div>
     </div>
 
     <div class="upload-section">
@@ -511,8 +672,139 @@ router.get('/admin', requireAuth, (req, res) => {
     loadQuota();
     loadQueue();
     loadPhotos();
+    loadLogSummary();
+    loadLogs();
+    loadSchedule();
     setInterval(loadQuota, 30000);
     setInterval(loadQueue, 15000);
+    setInterval(() => { loadLogs(); loadLogSummary(); }, 15000);
+
+    // ---- API 调用日志 ----
+    let currentLogTab = 'grid';
+
+    function switchLogTab(type) {
+      currentLogTab = type;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      loadLogs();
+    }
+
+    async function loadLogs() {
+      try {
+        const res = await fetch('/api/admin/logs?type=' + encodeURIComponent(currentLogTab) + '&limit=50', { credentials: 'include' });
+        const data = await res.json();
+        const tbody = document.getElementById('logTableBody');
+        if (!data.logs || data.logs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#888">暂无日志</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data.logs.map(l => {
+          const time = new Date(l.time).toLocaleString('zh-CN');
+          const statusClass = l.status >= 200 && l.status < 400 ? 'status-ok' : (l.status >= 400 ? 'status-err' : 'status-warn');
+          const params = l.params ? Object.entries(l.params).map(([k,v]) => k + '=' + v).join(', ') : '-';
+          return '<tr>' +
+            '<td>' + time + '</td>' +
+            '<td>' + (l.endpoint || '-') + '</td>' +
+            '<td title="' + (params || '').replace(/"/g, '&quot;') + '">' + (params || '-') + '</td>' +
+            '<td class="' + statusClass + '">' + l.status + '</td>' +
+            '<td>' + l.durationMs + '</td>' +
+            '<td class="status-err">' + (l.error || '-') + '</td>' +
+            '</tr>';
+        }).join('');
+      } catch (err) {
+        console.error('加载日志失败:', err);
+      }
+    }
+
+    async function loadLogSummary() {
+      try {
+        const res = await fetch('/api/admin/logs/summary', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.summary) return;
+        const s = data.summary;
+        document.getElementById('st-grid-day').textContent = s.grid?.lastDay ?? '--';
+        document.getElementById('st-weather-day').textContent = s.weather?.lastDay ?? '--';
+        document.getElementById('st-gaode-day').textContent = (s.gaode?.lastDay ?? 0) + (s.gaodeTile?.lastDay ?? 0);
+        document.getElementById('st-last-hour').textContent = s.lastHourTotal ?? '--';
+        document.getElementById('st-grid-avg').textContent = s.grid?.avgDurationLastHour != null ? s.grid.avgDurationLastHour + 'ms' : '--';
+        document.getElementById('st-grid-err').textContent = s.grid?.errorsLastHour ?? '--';
+      } catch (err) {
+        console.error('加载统计失败:', err);
+      }
+    }
+
+    // ---- 定时更新配置 ----
+    let scheduleJobs = [];
+
+    async function loadSchedule() {
+      try {
+        const res = await fetch('/api/admin/schedule', { credentials: 'include' });
+        const data = await res.json();
+        scheduleJobs = data.config?.jobs || [
+          { time: '10:00', type: 'both', label: '上午刷新' },
+          { time: '22:00', type: 'both', label: '晚间刷新' }
+        ];
+        renderScheduleJobs();
+      } catch (err) {
+        console.error('加载定时配置失败:', err);
+        scheduleJobs = [
+          { time: '10:00', type: 'both', label: '上午刷新' },
+          { time: '22:00', type: 'both', label: '晚间刷新' }
+        ];
+        renderScheduleJobs();
+      }
+    }
+
+    function renderScheduleJobs() {
+      const container = document.getElementById('scheduleJobs');
+      container.innerHTML = scheduleJobs.map((job, i) => {
+        return '<div class="schedule-job-row">' +
+          '<input type="time" value="' + job.time + '" onchange="scheduleJobs[' + i + '].time=this.value">' +
+          '<select onchange="scheduleJobs[' + i + '].type=this.value">' +
+            '<option value="both"' + (job.type === 'both' ? ' selected' : '') + '>朝霞+晚霞</option>' +
+            '<option value="sunrise"' + (job.type === 'sunrise' ? ' selected' : '') + '>仅朝霞</option>' +
+            '<option value="sunset"' + (job.type === 'sunset' ? ' selected' : '') + '>仅晚霞</option>' +
+          '</select>' +
+          '<input type="text" value="' + (job.label || '') + '" placeholder="备注" onchange="scheduleJobs[' + i + '].label=this.value">' +
+          '<button class="btn-sm btn-del" onclick="removeScheduleJob(' + i + ')">删除</button>' +
+          '</div>';
+      }).join('');
+    }
+
+    function addScheduleJob() {
+      scheduleJobs.push({ time: '12:00', type: 'both', label: '' });
+      renderScheduleJobs();
+    }
+
+    function removeScheduleJob(i) {
+      scheduleJobs.splice(i, 1);
+      renderScheduleJobs();
+    }
+
+    async function saveSchedule() {
+      const msgEl = document.getElementById('scheduleMsg');
+      try {
+        const res = await fetch('/api/admin/schedule', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled: true, jobs: scheduleJobs })
+        });
+        const data = await res.json();
+        if (data.success) {
+          msgEl.textContent = '✅ 配置已保存';
+          msgEl.className = 'message success';
+        } else {
+          msgEl.textContent = '❌ 保存失败: ' + (data.error?.message || '未知错误');
+          msgEl.className = 'message error';
+        }
+      } catch (err) {
+        msgEl.textContent = '❌ 保存失败: ' + err.message;
+        msgEl.className = 'message error';
+      }
+      msgEl.classList.remove('hidden');
+      setTimeout(() => msgEl.classList.add('hidden'), 5000);
+    }
   </script>
 </body>
 </html>
