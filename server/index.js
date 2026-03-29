@@ -17,6 +17,8 @@ const spotsRoutes = require('./routes/spots');
 const tilesRoutes = require('./routes/tiles');
 const photosRoutes = require('./routes/photos');
 const adminRoutes = require('./routes/admin');
+const apiLogsRoutes = require('./routes/api-logs');
+const basicAuth = require('basic-auth');
 const { requestLogger, errorLogger } = require('./middleware/logger');
 
 const app = express();
@@ -109,6 +111,18 @@ app.use('/api/spots', spotsRoutes);
 app.use('/api/photos', photosRoutes);
 app.use('/', adminRoutes);
 
+// Admin API routes (protected by Basic Auth)
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'xiake2024';
+const adminApiAuth = (req, res, next) => {
+  const credentials = basicAuth(req);
+  if (!credentials || credentials.pass !== ADMIN_PASSWORD) {
+    res.set('WWW-Authenticate', 'Basic realm="Xiake Admin API"');
+    return res.status(401).json({ error: { code: 'UNAUTHORIZED', message: '认证失败' } });
+  }
+  next();
+};
+app.use('/api/admin', adminApiAuth, apiLogsRoutes);
+
 // 静态文件服务（公开分享页面）
 // /data/ 目录下的 GeoJSON 文件缓存 7 天，其余静态文件缓存 1 小时
 app.use('/data', express.static(path.join(__dirname, '../public/data'), {
@@ -155,24 +169,55 @@ app.listen(PORT, () => {
 
 /**
  * Phase16 任务64.3：定时刷新网格评分
+ * 支持从 schedule-config.json 读取自定义配置
  */
 function _scheduleGridRefresh() {
   const gridService = require('./services/GridScoreService');
+  const fs = require('fs');
+  const os = require('os');
+  const path = require('path');
+
+  const CONFIG_PATH = path.join(os.homedir(), '.xiake', 'schedule-config.json');
 
   // 启动时检查并刷新一次
   gridService.refreshIfStale().catch(err =>
     console.error('[GridRefresh] 启动刷新失败:', err.message)
   );
 
-  // 定时任务：每天 UTC 2/14 点（= CST 10:00/22:00），每天 2 次，节省免费 API 配额
-  const REFRESH_HOURS_UTC = [2, 14];
+  // 读取配置获取刷新时间
+  function _loadScheduleHours() {
+    const DEFAULT_HOURS_CST = [10, 22]; // 默认 CST 10:00 / 22:00
+    try {
+      if (!fs.existsSync(CONFIG_PATH)) return DEFAULT_HOURS_CST;
+      const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'));
+      if (!config.enabled || !Array.isArray(config.jobs)) return DEFAULT_HOURS_CST;
+      const hours = [];
+      for (const job of config.jobs) {
+        const m = job.time && job.time.match(/^(\d{1,2}):(\d{2})$/);
+        if (m) hours.push(parseInt(m[1]));
+      }
+      return hours.length > 0 ? [...new Set(hours)] : DEFAULT_HOURS_CST;
+    } catch (e) {
+      return DEFAULT_HOURS_CST;
+    }
+  }
+
+  let scheduleHoursCST = _loadScheduleHours();
+  console.log(`[GridRefresh] 初始定时刷新时间(CST): ${scheduleHoursCST.map(h => `${String(h).padStart(2,'0')}:00`).join(', ')}`);
+
+  // 支持配置热重载
+  global.__scheduleReload = () => {
+    scheduleHoursCST = _loadScheduleHours();
+    console.log(`[GridRefresh] 配置已重载，定时刷新时间(CST): ${scheduleHoursCST.map(h => `${String(h).padStart(2,'0')}:00`).join(', ')}`);
+  };
 
   setInterval(() => {
     const now = new Date();
-    const hourUTC = now.getUTCHours();
-    const minUTC = now.getUTCMinutes();
-    if (REFRESH_HOURS_UTC.includes(hourUTC) && minUTC < 5) {
-      console.log(`[GridRefresh] 定时触发刷新（UTC ${hourUTC}:${String(minUTC).padStart(2,'0')}）`);
+    // CST = UTC+8
+    const hourCST = (now.getUTCHours() + 8) % 24;
+    const minCST = now.getUTCMinutes();
+    if (scheduleHoursCST.includes(hourCST) && minCST < 5) {
+      console.log(`[GridRefresh] 定时触发刷新（CST ${hourCST}:${String(minCST).padStart(2,'0')}）`);
       gridService.refreshIfStale(0).catch(err =>
         console.error('[GridRefresh] 定时刷新失败:', err.message)
       );

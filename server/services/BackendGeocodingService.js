@@ -8,6 +8,8 @@
  * 需求：24
  */
 
+const apiLog = require('./ApiCallLog');
+
 class BackendGeocodingService {
   /**
    * 创建地理编码服务实例
@@ -72,6 +74,7 @@ class BackendGeocodingService {
 
     // 高德地图 REST API
     const url = `https://restapi.amap.com/v3/geocode/geo?address=${encodeURIComponent(address)}&key=${apiKey}`;
+    const tracker = apiLog.track('gaode', 'geocode/geo', { address });
 
     const response = await fetch(url, {
       headers: {
@@ -81,6 +84,7 @@ class BackendGeocodingService {
     });
 
     if (!response.ok) {
+      tracker.fail(`HTTP ${response.status}`, response.status);
       throw new Error(`高德地理编码 API 请求失败: HTTP ${response.status}`);
     }
 
@@ -90,9 +94,11 @@ class BackendGeocodingService {
     // https://lbs.amap.com/api/webservice/guide/api/search
     // geocodes: [{ formatted_address, location: { lat, lon, level }, ... }]
     if (!data.geocodes || data.geocodes.length === 0) {
+      tracker.fail('no results', response.status);
       throw new Error('高德地理编码未返回结果');
     }
 
+    tracker.ok(response.status);
     const result = data.geocodes[0];
 
     return {
