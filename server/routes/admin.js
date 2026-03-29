@@ -91,6 +91,37 @@ router.get('/admin', requireAuth, (req, res) => {
       color: #ff6b35;
       font-size: 2rem;
     }
+    .quota-section {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+    .quota-section h2 {
+      margin-bottom: 12px;
+      color: #4ecdc4;
+    }
+    .quota-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+    }
+    .quota-item {
+      background: rgba(0,0,0,0.28);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .quota-k {
+      color: #9aa4b2;
+      font-size: 0.78rem;
+      margin-bottom: 4px;
+    }
+    .quota-v {
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+    }
     .upload-section {
       background: rgba(255,255,255,0.05);
       border-radius: 12px;
@@ -251,6 +282,18 @@ router.get('/admin', requireAuth, (req, res) => {
 
     <div id="message" class="message hidden"></div>
 
+    <div class="quota-section">
+      <h2>📊 API 配额统计</h2>
+      <div class="quota-grid" id="quotaGrid">
+        <div class="quota-item"><div class="quota-k">今日调用</div><div class="quota-v" id="q-count">--</div></div>
+        <div class="quota-item"><div class="quota-k">每日上限</div><div class="quota-v" id="q-limit">--</div></div>
+        <div class="quota-item"><div class="quota-k">剩余配额</div><div class="quota-v" id="q-remaining">--</div></div>
+        <div class="quota-item"><div class="quota-k">使用率</div><div class="quota-v" id="q-percent">--</div></div>
+        <div class="quota-item"><div class="quota-k">网格接口可用</div><div class="quota-v" id="q-grid">--</div></div>
+        <div class="quota-item"><div class="quota-k">天气接口可用</div><div class="quota-v" id="q-weather">--</div></div>
+      </div>
+    </div>
+
     <div class="upload-section">
       <h2>📤 上传新照片</h2>
       <form id="uploadForm">
@@ -295,6 +338,21 @@ router.get('/admin', requireAuth, (req, res) => {
       el.className = 'message ' + type;
       el.classList.remove('hidden');
       setTimeout(() => el.classList.add('hidden'), 5000);
+    }
+
+    async function loadQuota() {
+      try {
+        const res = await fetch('/admin/quota');
+        const q = await res.json();
+        document.getElementById('q-count').textContent = q.count ?? '--';
+        document.getElementById('q-limit').textContent = q.limit ?? '--';
+        document.getElementById('q-remaining').textContent = q.remaining ?? '--';
+        document.getElementById('q-percent').textContent = (q.usagePercent != null ? q.usagePercent + '%' : '--');
+        document.getElementById('q-grid').textContent = q.gridAllowed ? '✅ 可用' : '❌ 受限';
+        document.getElementById('q-weather').textContent = q.weatherAllowed ? '✅ 可用' : '❌ 受限';
+      } catch (err) {
+        console.error('加载配额失败:', err);
+      }
     }
 
     async function loadPhotos() {
@@ -403,7 +461,9 @@ router.get('/admin', requireAuth, (req, res) => {
     });
 
     // 初始加载
+    loadQuota();
     loadPhotos();
+    setInterval(loadQuota, 30000);
   </script>
 </body>
 </html>
