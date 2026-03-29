@@ -203,10 +203,7 @@
       <div class="legend-icon"></div>
       <span>照片位置</span>
     </div>
-    <div class="legend-item">
-      <div class="legend-icon" style="border-color:#ff7a45;background:rgba(255,122,69,0.35);"></div>
-      <span>火烧云图层</span>
-    </div>
+
   </div>
 
   <!-- 空状态 -->
@@ -252,12 +249,7 @@
         console.error('加载中国底图失败:', e);
       }
 
-      // 火烧云地图图层（分享页默认开启）
-      L.tileLayer('/api/firecloud/tiles/{z}/{x}/{y}.png?type=sunset', {
-        attribution: '&copy; 霞客火烧云预测',
-        maxZoom: 12,
-        opacity: 0.55
-      }).addTo(map);
+      // 不叠加火烧云预测图层：仅使用火烧云页面同款中国底图作为分享页底图
     }
 
     // 创建自定义 marker
