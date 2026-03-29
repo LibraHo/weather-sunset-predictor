@@ -122,6 +122,11 @@ router.get('/admin', requireAuth, (req, res) => {
       font-size: 1rem;
       font-weight: 600;
     }
+    .queue-row {
+      margin-top: 10px;
+      color: #b8c1cc;
+      font-size: 0.84rem;
+    }
     .upload-section {
       background: rgba(255,255,255,0.05);
       border-radius: 12px;
@@ -294,6 +299,19 @@ router.get('/admin', requireAuth, (req, res) => {
       </div>
     </div>
 
+    <div class="quota-section">
+      <h2>🧵 刷新队列状态</h2>
+      <div class="quota-grid" id="queueGrid">
+        <div class="quota-item"><div class="quota-k">sunset 运行中</div><div class="quota-v" id="qs-running">--</div></div>
+        <div class="quota-item"><div class="quota-k">sunset 批次</div><div class="quota-v" id="qs-batch">--</div></div>
+        <div class="quota-item"><div class="quota-k">sunset 进度</div><div class="quota-v" id="qs-progress">--</div></div>
+        <div class="quota-item"><div class="quota-k">sunrise 运行中</div><div class="quota-v" id="qr-running">--</div></div>
+        <div class="quota-item"><div class="quota-k">sunrise 批次</div><div class="quota-v" id="qr-batch">--</div></div>
+        <div class="quota-item"><div class="quota-k">sunrise 进度</div><div class="quota-v" id="qr-progress">--</div></div>
+      </div>
+      <div class="queue-row" id="queueMeta">上次刷新：--</div>
+    </div>
+
     <div class="upload-section">
       <h2>📤 上传新照片</h2>
       <form id="uploadForm">
@@ -352,6 +370,35 @@ router.get('/admin', requireAuth, (req, res) => {
         document.getElementById('q-weather').textContent = q.weatherAllowed ? '✅ 可用' : '❌ 受限';
       } catch (err) {
         console.error('加载配额失败:', err);
+      }
+    }
+
+    async function loadQueue() {
+      try {
+        const [sunsetRes, sunriseRes] = await Promise.all([
+          fetch('/api/heatmap/status?period=sunset'),
+          fetch('/api/heatmap/status?period=sunrise')
+        ]);
+        const sunset = await sunsetRes.json();
+        const sunrise = await sunriseRes.json();
+
+        const fmtPct = (x, y) => {
+          if (!y) return '--';
+          return ((x / y) * 100).toFixed(1) + '%';
+        };
+
+        document.getElementById('qs-running').textContent = sunset.running ? '🟢 运行中' : '⚪ 空闲';
+        document.getElementById('qs-batch').textContent = `${sunset.completedBatches || 0}/${sunset.totalBatches || 0}`;
+        document.getElementById('qs-progress').textContent = `${sunset.completedPoints || 0}/${sunset.totalPoints || 0} (${fmtPct(sunset.completedPoints || 0, sunset.totalPoints || 0)})`;
+
+        document.getElementById('qr-running').textContent = sunrise.running ? '🟢 运行中' : '⚪ 空闲';
+        document.getElementById('qr-batch').textContent = `${sunrise.completedBatches || 0}/${sunrise.totalBatches || 0}`;
+        document.getElementById('qr-progress').textContent = `${sunrise.completedPoints || 0}/${sunrise.totalPoints || 0} (${fmtPct(sunrise.completedPoints || 0, sunrise.totalPoints || 0)})`;
+
+        const ts = [sunset.updatedAt, sunrise.updatedAt].filter(Boolean).sort().pop();
+        document.getElementById('queueMeta').textContent = `上次刷新：${ts ? new Date(ts).toLocaleString('zh-CN') : '--'}`;
+      } catch (err) {
+        console.error('加载队列失败:', err);
       }
     }
 
@@ -462,8 +509,10 @@ router.get('/admin', requireAuth, (req, res) => {
 
     // 初始加载
     loadQuota();
+    loadQueue();
     loadPhotos();
     setInterval(loadQuota, 30000);
+    setInterval(loadQueue, 15000);
   </script>
 </body>
 </html>
