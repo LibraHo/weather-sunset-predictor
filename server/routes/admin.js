@@ -91,6 +91,42 @@ router.get('/admin', requireAuth, (req, res) => {
       color: #ff6b35;
       font-size: 2rem;
     }
+    .quota-section {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+    .quota-section h2 {
+      margin-bottom: 12px;
+      color: #4ecdc4;
+    }
+    .quota-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+    }
+    .quota-item {
+      background: rgba(0,0,0,0.28);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .quota-k {
+      color: #9aa4b2;
+      font-size: 0.78rem;
+      margin-bottom: 4px;
+    }
+    .quota-v {
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .queue-row {
+      margin-top: 10px;
+      color: #b8c1cc;
+      font-size: 0.84rem;
+    }
     .upload-section {
       background: rgba(255,255,255,0.05);
       border-radius: 12px;
@@ -251,6 +287,31 @@ router.get('/admin', requireAuth, (req, res) => {
 
     <div id="message" class="message hidden"></div>
 
+    <div class="quota-section">
+      <h2>📊 API 配额统计</h2>
+      <div class="quota-grid" id="quotaGrid">
+        <div class="quota-item"><div class="quota-k">今日调用</div><div class="quota-v" id="q-count">--</div></div>
+        <div class="quota-item"><div class="quota-k">每日上限</div><div class="quota-v" id="q-limit">--</div></div>
+        <div class="quota-item"><div class="quota-k">剩余配额</div><div class="quota-v" id="q-remaining">--</div></div>
+        <div class="quota-item"><div class="quota-k">使用率</div><div class="quota-v" id="q-percent">--</div></div>
+        <div class="quota-item"><div class="quota-k">网格接口可用</div><div class="quota-v" id="q-grid">--</div></div>
+        <div class="quota-item"><div class="quota-k">天气接口可用</div><div class="quota-v" id="q-weather">--</div></div>
+      </div>
+    </div>
+
+    <div class="quota-section">
+      <h2>🧵 刷新队列状态</h2>
+      <div class="quota-grid" id="queueGrid">
+        <div class="quota-item"><div class="quota-k">sunset 运行中</div><div class="quota-v" id="qs-running">--</div></div>
+        <div class="quota-item"><div class="quota-k">sunset 批次</div><div class="quota-v" id="qs-batch">--</div></div>
+        <div class="quota-item"><div class="quota-k">sunset 进度</div><div class="quota-v" id="qs-progress">--</div></div>
+        <div class="quota-item"><div class="quota-k">sunrise 运行中</div><div class="quota-v" id="qr-running">--</div></div>
+        <div class="quota-item"><div class="quota-k">sunrise 批次</div><div class="quota-v" id="qr-batch">--</div></div>
+        <div class="quota-item"><div class="quota-k">sunrise 进度</div><div class="quota-v" id="qr-progress">--</div></div>
+      </div>
+      <div class="queue-row" id="queueMeta">上次刷新：--</div>
+    </div>
+
     <div class="upload-section">
       <h2>📤 上传新照片</h2>
       <form id="uploadForm">
@@ -295,6 +356,50 @@ router.get('/admin', requireAuth, (req, res) => {
       el.className = 'message ' + type;
       el.classList.remove('hidden');
       setTimeout(() => el.classList.add('hidden'), 5000);
+    }
+
+    async function loadQuota() {
+      try {
+        const res = await fetch('/admin/quota');
+        const q = await res.json();
+        document.getElementById('q-count').textContent = q.count ?? '--';
+        document.getElementById('q-limit').textContent = q.limit ?? '--';
+        document.getElementById('q-remaining').textContent = q.remaining ?? '--';
+        document.getElementById('q-percent').textContent = (q.usagePercent != null ? q.usagePercent + '%' : '--');
+        document.getElementById('q-grid').textContent = q.gridAllowed ? '✅ 可用' : '❌ 受限';
+        document.getElementById('q-weather').textContent = q.weatherAllowed ? '✅ 可用' : '❌ 受限';
+      } catch (err) {
+        console.error('加载配额失败:', err);
+      }
+    }
+
+    async function loadQueue() {
+      try {
+        const [sunsetRes, sunriseRes] = await Promise.all([
+          fetch('/api/heatmap/status?period=sunset'),
+          fetch('/api/heatmap/status?period=sunrise')
+        ]);
+        const sunset = await sunsetRes.json();
+        const sunrise = await sunriseRes.json();
+
+        const fmtPct = (x, y) => {
+          if (!y) return '--';
+          return ((x / y) * 100).toFixed(1) + '%';
+        };
+
+        document.getElementById('qs-running').textContent = sunset.running ? '🟢 运行中' : '⚪ 空闲';
+        document.getElementById('qs-batch').textContent = `${sunset.completedBatches || 0}/${sunset.totalBatches || 0}`;
+        document.getElementById('qs-progress').textContent = `${sunset.completedPoints || 0}/${sunset.totalPoints || 0} (${fmtPct(sunset.completedPoints || 0, sunset.totalPoints || 0)})`;
+
+        document.getElementById('qr-running').textContent = sunrise.running ? '🟢 运行中' : '⚪ 空闲';
+        document.getElementById('qr-batch').textContent = `${sunrise.completedBatches || 0}/${sunrise.totalBatches || 0}`;
+        document.getElementById('qr-progress').textContent = `${sunrise.completedPoints || 0}/${sunrise.totalPoints || 0} (${fmtPct(sunrise.completedPoints || 0, sunrise.totalPoints || 0)})`;
+
+        const ts = [sunset.updatedAt, sunrise.updatedAt].filter(Boolean).sort().pop();
+        document.getElementById('queueMeta').textContent = `上次刷新：${ts ? new Date(ts).toLocaleString('zh-CN') : '--'}`;
+      } catch (err) {
+        console.error('加载队列失败:', err);
+      }
     }
 
     async function loadPhotos() {
@@ -403,7 +508,11 @@ router.get('/admin', requireAuth, (req, res) => {
     });
 
     // 初始加载
+    loadQuota();
+    loadQueue();
     loadPhotos();
+    setInterval(loadQuota, 30000);
+    setInterval(loadQueue, 15000);
   </script>
 </body>
 </html>
