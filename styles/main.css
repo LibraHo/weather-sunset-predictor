@@ -2560,16 +2560,54 @@ body.theme-dark .chart-container > div > div {
 /* 移动端优化 */
 @media (max-width: 640px) {
   .weekly-cards-container {
-    flex-direction: row;
-    overflow-x: auto;
-    overflow-y: hidden;
+    flex-direction: column;
+    overflow-x: visible;
+    overflow-y: visible;
     -webkit-overflow-scrolling: touch;
+    gap: 8px;
   }
   .day-card {
-    min-width: 108px;
-    width: auto;
-    flex-direction: column;
+    min-width: 100%;
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
     flex: 0 0 auto;
+    padding: 10px 12px;
+    text-align: left;
+    gap: 10px;
+  }
+
+  .day-label {
+    min-width: 72px;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .weather-icon {
+    font-size: 1.35rem;
+    width: 28px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .temp-range-inline {
+    min-width: 64px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .day-meta-lines {
+    width: auto;
+    min-width: 110px;
+    flex-direction: row;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .day-meta-line {
+    width: auto;
+    white-space: nowrap;
   }
 }
 
