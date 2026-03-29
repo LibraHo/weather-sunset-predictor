@@ -229,9 +229,10 @@
         attributionControl: true
       }).setView([20, 0], 2);
 
-      // 底图：站内代理高德
-      L.tileLayer('/api/tiles/gaode/{z}/{x}/{y}', {
-        attribution: '&copy; 高德地图',
+      // 底图：恢复分享页原始 Dark 底图（不使用高德）
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
         maxZoom: 19
       }).addTo(map);
 
