@@ -203,6 +203,10 @@
       <div class="legend-icon"></div>
       <span>照片位置</span>
     </div>
+    <div class="legend-item">
+      <div class="legend-icon" style="border-color:#ff7a45;background:rgba(255,122,69,0.35);"></div>
+      <span>火烧云图层</span>
+    </div>
   </div>
 
   <!-- 空状态 -->
@@ -225,10 +229,17 @@
         attributionControl: true
       }).setView([20, 0], 2);
 
-      // 使用站内代理的高德底图（与主站地图体系一致，避免外部底图访问波动）
+      // 底图：站内代理高德
       L.tileLayer('/api/tiles/gaode/{z}/{x}/{y}', {
         attribution: '&copy; 高德地图',
         maxZoom: 19
+      }).addTo(map);
+
+      // 火烧云地图图层（分享页默认开启）
+      L.tileLayer('/api/firecloud/tiles/{z}/{x}/{y}.png?type=sunset', {
+        attribution: '&copy; 霞客火烧云预测',
+        maxZoom: 19,
+        opacity: 0.55
       }).addTo(map);
     }
 
