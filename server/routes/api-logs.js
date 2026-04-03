@@ -8,6 +8,7 @@
 const express = require('express');
 const router = express.Router();
 const apiLog = require('../services/ApiCallLog');
+const dailyStats = require('../services/ApiDailyStats');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -63,7 +64,17 @@ router.get('/logs', (req, res) => {
 // ---------------------------------------------------------------------------
 router.get('/logs/summary', (req, res) => {
   const summary = apiLog.getSummary();
-  res.json({ success: true, summary });
+  const today = dailyStats.getToday();
+  res.json({ success: true, summary, today });
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/admin/logs/daily — 获取近N天按日聚合统计
+// ---------------------------------------------------------------------------
+router.get('/logs/daily', (req, res) => {
+  const days = Math.min(Math.max(parseInt(req.query.days, 10) || 7, 1), 30);
+  const data = dailyStats.getDaily(days);
+  res.json({ success: true, ...data });
 });
 
 // ---------------------------------------------------------------------------

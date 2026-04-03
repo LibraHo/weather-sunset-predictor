@@ -58,6 +58,7 @@ class OpenMeteoProvider extends BaseWeatherProvider {
         const backoff = this.RETRY_BASE_MS * Math.pow(2, attempt - 1);
         const min429WaitMs = status === 429 ? 60 * 1000 : 0;
         const waitMs = Math.max(retryAfter || 0, backoff, min429WaitMs);
+        tracker.retry({ status: status || 0, waitMs, attempt });
         console.warn(`[Open-Meteo API] ${label} 第${attempt}次失败(status=${status || error.code}), ${waitMs}ms后重试`);
         await this._sleep(waitMs);
       }

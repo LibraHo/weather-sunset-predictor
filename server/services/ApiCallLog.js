@@ -11,6 +11,7 @@
  */
 
 const MAX_LOGS = 500;
+const dailyStats = require('./ApiDailyStats');
 
 class ApiCallLog {
   constructor() {
@@ -27,7 +28,7 @@ class ApiCallLog {
    * @param {number} durationMs
    * @param {string} [error]
    */
-  add(type, endpoint, params, status, durationMs, error) {
+  add(type, endpoint, params, status, durationMs, error, extra = {}) {
     this._counter++;
     const entry = {
       id: this._counter,
@@ -37,12 +38,17 @@ class ApiCallLog {
       params: _summarizeParams(params),
       status,
       durationMs: Math.round(durationMs),
-      error: error || null
+      error: error || null,
+      requestId: extra.requestId || null,
+      retryCount: Number(extra.retryCount) || 0,
+      reconnected: Boolean(extra.reconnected)
     };
     this._logs.push(entry);
     if (this._logs.length > MAX_LOGS) {
       this._logs = this._logs.slice(-MAX_LOGS);
     }
+
+    dailyStats.recordCall(entry);
     return entry;
   }
 
@@ -130,12 +136,56 @@ class ApiCallLog {
    */
   track(type, endpoint, params) {
     const start = Date.now();
+    const requestId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    let retryCount = 0;
+
     return {
+      requestId,
+      retry: ({ status = 0, waitMs = 0, attempt = retryCount + 1 } = {}) => {
+        retryCount += 1;
+        dailyStats.recordRetry({
+          time: new Date().toISOString(),
+          type,
+          endpoint,
+          status,
+          waitMs,
+          attempt,
+          requestId
+        });
+      },
       ok: (status) => {
-        this.add(type, endpoint, params, status, Date.now() - start);
+        if (retryCount > 0) {
+          dailyStats.recordRetryOutcome({
+            time: new Date().toISOString(),
+            type,
+            endpoint,
+            outcome: 'recovered',
+            attempts: retryCount,
+            requestId
+          });
+        }
+        this.add(type, endpoint, params, status, Date.now() - start, null, {
+          requestId,
+          retryCount,
+          reconnected: retryCount > 0
+        });
       },
       fail: (error, status = 0) => {
-        this.add(type, endpoint, params, status, Date.now() - start, typeof error === 'string' ? error : error?.message || 'unknown');
+        if (retryCount > 0) {
+          dailyStats.recordRetryOutcome({
+            time: new Date().toISOString(),
+            type,
+            endpoint,
+            outcome: 'failed',
+            attempts: retryCount,
+            requestId
+          });
+        }
+        this.add(type, endpoint, params, status, Date.now() - start, typeof error === 'string' ? error : error?.message || 'unknown', {
+          requestId,
+          retryCount,
+          reconnected: false
+        });
       }
     };
   }

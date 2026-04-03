@@ -452,6 +452,24 @@ router.get('/admin', requireAuth, (req, res) => {
     </div>
 
     <div class="quota-section">
+      <h2>📅 每日调用 & 重连统计</h2>
+      <div class="quota-grid">
+        <div class="quota-item"><div class="quota-k">今日重试次数</div><div class="quota-v" id="rt-attempts">--</div></div>
+        <div class="quota-item"><div class="quota-k">今日触发重连请求</div><div class="quota-v" id="rt-requests">--</div></div>
+        <div class="quota-item"><div class="quota-k">重连恢复成功</div><div class="quota-v" id="rt-recovered">--</div></div>
+        <div class="quota-item"><div class="quota-k">重连后仍失败</div><div class="quota-v" id="rt-failed">--</div></div>
+        <div class="quota-item"><div class="quota-k">重连恢复率</div><div class="quota-v" id="rt-rate">--</div></div>
+        <div class="quota-item"><div class="quota-k">最近重连时间</div><div class="quota-v" id="rt-last">--</div></div>
+      </div>
+      <div class="log-table-wrap" style="margin-top:12px; max-height:260px;">
+        <table class="log-table">
+          <thead><tr><th>日期</th><th>总调用</th><th>失败</th><th>Grid</th><th>Weather</th><th>高德</th><th>重试</th><th>重连恢复</th><th>重连失败</th></tr></thead>
+          <tbody id="dailyStatsBody"><tr><td colspan="9" style="text-align:center;color:#888">加载中...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="quota-section">
       <h2>📋 API 调用日志</h2>
       <div class="tab-bar">
         <button class="tab-btn active" onclick="switchLogTab('grid')">火烧云网格</button>
@@ -459,8 +477,8 @@ router.get('/admin', requireAuth, (req, res) => {
       </div>
       <div class="log-table-wrap">
         <table class="log-table">
-          <thead><tr><th>时间</th><th>接口</th><th>参数</th><th>状态</th><th>耗时(ms)</th><th>错误</th></tr></thead>
-          <tbody id="logTableBody"><tr><td colspan="6" style="text-align:center;color:#888">加载中...</td></tr></tbody>
+          <thead><tr><th>时间</th><th>接口</th><th>参数</th><th>状态</th><th>耗时(ms)</th><th>重试</th><th>重连</th><th>错误</th></tr></thead>
+          <tbody id="logTableBody"><tr><td colspan="8" style="text-align:center;color:#888">加载中...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -674,10 +692,12 @@ router.get('/admin', requireAuth, (req, res) => {
     loadPhotos();
     loadLogSummary();
     loadLogs();
+    loadDailyStats();
     loadSchedule();
     setInterval(loadQuota, 30000);
     setInterval(loadQueue, 15000);
     setInterval(() => { loadLogs(); loadLogSummary(); }, 15000);
+    setInterval(loadDailyStats, 60000);
 
     // ---- API 调用日志 ----
     let currentLogTab = 'grid';
@@ -695,19 +715,23 @@ router.get('/admin', requireAuth, (req, res) => {
         const data = await res.json();
         const tbody = document.getElementById('logTableBody');
         if (!data.logs || data.logs.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#888">暂无日志</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#888">暂无日志</td></tr>';
           return;
         }
         tbody.innerHTML = data.logs.map(l => {
           const time = new Date(l.time).toLocaleString('zh-CN');
           const statusClass = l.status >= 200 && l.status < 400 ? 'status-ok' : (l.status >= 400 ? 'status-err' : 'status-warn');
           const params = l.params ? Object.entries(l.params).map(([k,v]) => k + '=' + v).join(', ') : '-';
+          const retried = Number(l.retryCount) || 0;
+          const reconnected = l.reconnected ? '✅' : (retried > 0 ? '❌' : '-');
           return '<tr>' +
             '<td>' + time + '</td>' +
             '<td>' + (l.endpoint || '-') + '</td>' +
             '<td title="' + (params || '').replace(/"/g, '&quot;') + '">' + (params || '-') + '</td>' +
             '<td class="' + statusClass + '">' + l.status + '</td>' +
             '<td>' + l.durationMs + '</td>' +
+            '<td>' + retried + '</td>' +
+            '<td>' + reconnected + '</td>' +
             '<td class="status-err">' + (l.error || '-') + '</td>' +
             '</tr>';
         }).join('');
@@ -722,14 +746,73 @@ router.get('/admin', requireAuth, (req, res) => {
         const data = await res.json();
         if (!data.summary) return;
         const s = data.summary;
-        document.getElementById('st-grid-day').textContent = s.grid?.lastDay ?? '--';
-        document.getElementById('st-weather-day').textContent = s.weather?.lastDay ?? '--';
-        document.getElementById('st-gaode-day').textContent = (s.gaode?.lastDay ?? 0) + (s.gaodeTile?.lastDay ?? 0);
+        const today = data.today || {};
+        const tc = today.calls || {};
+        const tr = today.retries || {};
+
+        const gridDay = tc.grid?.total ?? s.grid?.lastDay ?? '--';
+        const weatherDay = tc.weather?.total ?? s.weather?.lastDay ?? '--';
+        const gaodeDay = (tc.gaode?.total ?? s.gaode?.lastDay ?? 0) + (tc.gaode_tile?.total ?? s.gaodeTile?.lastDay ?? 0);
+
+        document.getElementById('st-grid-day').textContent = gridDay;
+        document.getElementById('st-weather-day').textContent = weatherDay;
+        document.getElementById('st-gaode-day').textContent = gaodeDay;
         document.getElementById('st-last-hour').textContent = s.lastHourTotal ?? '--';
         document.getElementById('st-grid-avg').textContent = s.grid?.avgDurationLastHour != null ? s.grid.avgDurationLastHour + 'ms' : '--';
         document.getElementById('st-grid-err').textContent = s.grid?.errorsLastHour ?? '--';
+
+        const rec = tr.recovered || 0;
+        const fail = tr.failedAfterRetry || 0;
+        const totalOutcome = rec + fail;
+        const recRate = totalOutcome > 0 ? ((rec / totalOutcome) * 100).toFixed(1) + '%' : '--';
+        document.getElementById('rt-attempts').textContent = tr.attempts ?? 0;
+        document.getElementById('rt-requests').textContent = tr.requestsWithRetry ?? 0;
+        document.getElementById('rt-recovered').textContent = rec;
+        document.getElementById('rt-failed').textContent = fail;
+        document.getElementById('rt-rate').textContent = recRate;
+        document.getElementById('rt-last').textContent = tr.lastAt ? new Date(tr.lastAt).toLocaleString('zh-CN') : '--';
       } catch (err) {
         console.error('加载统计失败:', err);
+      }
+    }
+
+    async function loadDailyStats() {
+      try {
+        const res = await fetch('/api/admin/logs/daily?days=7', { credentials: 'include' });
+        const data = await res.json();
+        const tbody = document.getElementById('dailyStatsBody');
+        const days = data.days || [];
+
+        if (days.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#888">暂无数据</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = days.map(d => {
+          const c = d.calls || {};
+          const grid = c.grid || { total: 0, fail: 0 };
+          const weather = c.weather || { total: 0, fail: 0 };
+          const gaode = c.gaode || { total: 0, fail: 0 };
+          const gaodeTile = c.gaode_tile || { total: 0, fail: 0 };
+          const retries = d.retries || {};
+
+          const totalCalls = (grid.total || 0) + (weather.total || 0) + (gaode.total || 0) + (gaodeTile.total || 0);
+          const totalFail = (grid.fail || 0) + (weather.fail || 0) + (gaode.fail || 0) + (gaodeTile.fail || 0);
+
+          return '<tr>' +
+            '<td>' + d.day + '</td>' +
+            '<td>' + totalCalls + '</td>' +
+            '<td class="' + (totalFail > 0 ? 'status-err' : 'status-ok') + '">' + totalFail + '</td>' +
+            '<td>' + (grid.total || 0) + '</td>' +
+            '<td>' + (weather.total || 0) + '</td>' +
+            '<td>' + ((gaode.total || 0) + (gaodeTile.total || 0)) + '</td>' +
+            '<td>' + (retries.attempts || 0) + '</td>' +
+            '<td class="status-ok">' + (retries.recovered || 0) + '</td>' +
+            '<td class="' + ((retries.failedAfterRetry || 0) > 0 ? 'status-err' : '') + '">' + (retries.failedAfterRetry || 0) + '</td>' +
+            '</tr>';
+        }).join('');
+      } catch (err) {
+        console.error('加载每日统计失败:', err);
       }
     }
 
