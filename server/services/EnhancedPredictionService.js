@@ -324,19 +324,24 @@ function scoreCloudCanvas(weatherData) {
     penaltyReason = 'low_cloud_amount';
   }
 
-  // 4. 阴天抑制：总云量过高时，强制压低画布得分，避免"阴天高分"
+  // 4. 阴天抑制：惩罚重点放在“低云遮挡”，中高云不做过重惩罚
   let overcastPenalty = 1.0;
 
-  // Bug 2 修复：阴天惩罚阈值从 85% 提前到 65%
-  if (totalCloudCover >= 65) {
-    // 65%-100%线性衰减：1.0 -> 0.05
-    overcastPenalty = 1.0 - ((totalCloudCover - 65) / 35) * 0.95;
-    overcastPenalty = Math.max(0.05, overcastPenalty);
+  // 低云主导惩罚：55%-100%线性衰减 1.0 -> 0.2
+  if (lowClouds >= 55) {
+    overcastPenalty = 1.0 - ((lowClouds - 55) / 45) * 0.8;
+    overcastPenalty = Math.max(0.2, overcastPenalty);
   }
 
-  if (hasOvercastKeyword) {
-    // 文案明确为阴天时，进一步抑制，避免误报
-    overcastPenalty *= 0.2;
+  // 总云量极高且存在一定低云时，给轻惩罚，避免中层云场景被重罚
+  if (totalCloudCover >= 92 && lowClouds >= 20) {
+    const totalCloudPenalty = 1.0 - ((totalCloudCover - 92) / 8) * 0.25; // 1.0 -> 0.75
+    overcastPenalty = Math.min(overcastPenalty, Math.max(0.75, totalCloudPenalty));
+  }
+
+  if (hasOvercastKeyword && lowClouds >= 35) {
+    // 文案明确为阴天且低云明显时，再额外抑制
+    overcastPenalty *= 0.5;
   }
 
   // 最终画布得分
