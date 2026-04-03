@@ -132,8 +132,8 @@ function scoreLightPathV2(params) {
   const isPrecipCode = typeof weatherCode === 'number' && PRECIPITATION_WEATHER_CODES.has(weatherCode);
   const hasPrecipitation = precipitation > 0.5 || convPrecip > 0.5 || isPrecipCode;
 
-  // 任意云层>=85% 或总云量>=85% 均视为 overcast
-  const isOvercast = cloudCover >= 85 || lowClouds >= 85 || midClouds >= 85 || highClouds >= 85;
+  // overcast 判定以低云遮挡为主，中高云不再单独触发强封顶
+  const isOvercast = cloudCover >= 90 || lowClouds >= 75;
 
   // 重度降水（≥1mm）+ 全覆盖（cloudCover=100 或 lowClouds≥90）→ 严重封顶 10
   const HEAVY_PRECIP_CODES = new Set([65, 75, 77, 82, 85, 86, 95, 96, 99]);

@@ -63,9 +63,8 @@ class PredictionController {
         console.log(`[PredictionController] 使用后端 API 计算预测 (${type})`);
         return await this.predictionAPIService.calculate(weatherData, date, lat, lon, type);
       } catch (error) {
-        console.warn(`[PredictionController] 后端 API 调用失败，回退到前端计算:`, error.message);
-        // 回退到前端计算
-        return this.predictionService.calculatePrediction(weatherData, date, lat, lon, type);
+        console.error(`[PredictionController] 后端 API 调用失败（已禁用本地旧算法回退）:`, error.message);
+        throw error;
       }
     } else {
       // 使用前端计算
