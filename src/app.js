@@ -66,7 +66,12 @@ const isE2ETestMode = window.location.search.includes('e2e=true') ||
 
 // 使用 GeocodingServiceFactory 创建地理编码服务（需求 24）
 // E2E 测试模式下使用 Mock 服务
-const proxyURL = localStorage.getItem('api_proxy_url') || API_CONFIG.proxy.url || 'http://localhost:3000';
+const isLocalDevHost = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
+const savedProxyURL = localStorage.getItem('api_proxy_url');
+// 生产域名下忽略 localStorage 里可能残留的 localhost 代理，避免“天气不可用”
+const proxyURL = isLocalDevHost
+  ? (savedProxyURL || API_CONFIG.proxy.url || 'http://localhost:3000')
+  : (API_CONFIG.proxy.url || '/api');
 let geocodingService = isE2ETestMode
   ? new MockGeocodingService()
   : GeocodingServiceFactory.create(proxyURL);
@@ -113,7 +118,10 @@ const appController = new AppController(
 // 需求 24：监听地理编码设置变更，热重建服务实例
 if (!isE2ETestMode) {
   window.addEventListener('geocodingSettingChanged', () => {
-    const newProxyURL = localStorage.getItem('api_proxy_url') || API_CONFIG.proxy.url || 'http://localhost:3000';
+    const nextSavedProxyURL = localStorage.getItem('api_proxy_url');
+    const newProxyURL = isLocalDevHost
+      ? (nextSavedProxyURL || API_CONFIG.proxy.url || 'http://localhost:3000')
+      : (API_CONFIG.proxy.url || '/api');
     geocodingService = GeocodingServiceFactory.create(newProxyURL);
     appController.geocodingService = geocodingService;
     window.geocodingService = geocodingService;
