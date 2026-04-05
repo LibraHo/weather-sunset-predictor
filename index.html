@@ -15,8 +15,8 @@
   <link rel="stylesheet" href="styles/settings-panel.css">
   <link rel="stylesheet" href="/styles/settings-panel.css">
 
-  <!-- Leaflet：多 CDN 兜底，避免单点失败导致 L 未定义 -->
-  <link id="leaflet-css" rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Leaflet：优先本地静态资源，CDN 仅兜底，避免外网波动导致地图打不开 -->
+  <link id="leaflet-css" rel="stylesheet" href="/public/vendor/leaflet/leaflet.css" />
   <script>
     (function () {
       var css = document.getElementById('leaflet-css');
@@ -27,7 +27,7 @@
       }
     })();
   </script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+  <script src="/public/vendor/leaflet/leaflet.js"></script>
   <script>
     if (!window.L) {
       document.write('<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"><\\/script>');
