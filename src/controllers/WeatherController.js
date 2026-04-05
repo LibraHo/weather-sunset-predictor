@@ -1845,6 +1845,19 @@ class WeatherController {
       console.log('[WeatherController] 地图面板当前隐藏，延迟初始化');
       // 标记为待初始化，等面板显示时再初始化
       this._chinaSpotsMapPendingInit = true;
+
+      // 兜底：部分移动端 tab 切换事件可能丢失，定时重试初始化，避免地图长期空白
+      const retryCount = (this._chinaSpotsInitRetryCount || 0) + 1;
+      this._chinaSpotsInitRetryCount = retryCount;
+      if (retryCount <= 10) {
+        setTimeout(() => {
+          this._initChinaSpotsMap().catch(err => {
+            console.warn('[WeatherController] 地图延迟初始化重试失败:', err?.message || err);
+          });
+        }, 500);
+      } else {
+        console.warn('[WeatherController] 地图延迟初始化重试达到上限，等待用户手动切换页面触发');
+      }
       return;
     }
 
@@ -1862,6 +1875,7 @@ class WeatherController {
     }
 
     this._chinaSpotsMapPendingInit = false;
+    this._chinaSpotsInitRetryCount = 0;
 
     try {
       if (typeof window === 'undefined' || !window.L) {

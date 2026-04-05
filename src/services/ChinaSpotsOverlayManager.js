@@ -185,6 +185,17 @@ export default class ChinaSpotsOverlayManager {
     ]);
     console.log('[ChinaSpotsOverlayManager] 所有时段数据加载完成');
 
+    // 若当前时段无点位而另一个时段有点位，自动切换到有数据的时段，避免用户看到空图
+    const activeCount = this.getSpotCount(this._activePeriod);
+    const fallbackPeriod = this._activePeriod === 'sunrise' ? 'sunset' : 'sunrise';
+    const fallbackCount = this.getSpotCount(fallbackPeriod);
+
+    if (activeCount === 0 && fallbackCount > 0) {
+      console.warn(`[ChinaSpotsOverlayManager] ${this._activePeriod} 无可视点位，自动切换到 ${fallbackPeriod}`);
+      this._activePeriod = fallbackPeriod;
+      this._updateTabUI();
+    }
+
     // 确保只显示当前激活的叠加层
     this._getActiveOverlay().show();
     this._getInactiveOverlay().hide();
