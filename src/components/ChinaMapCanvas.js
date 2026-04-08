@@ -683,8 +683,8 @@ class ChinaMapCanvas {
 
       const isDark = document.body.classList.contains('theme-dark');
       const textColor = isDark ? '#fff' : '#333';
-      const fontSize = zoom < 5 ? '10px' : (zoom < 7 ? '9px' : '8px');
-      const dotRadius = zoom < 5 ? 3 : (zoom < 7 ? 2.5 : 2);
+      const fontSize = zoom < 5 ? '10px' : (zoom < 7 ? '11px' : (zoom < 9 ? '12px' : '13px'));
+      const dotRadius = zoom < 5 ? 3 : (zoom < 7 ? 3 : (zoom < 9 ? 3.5 : 4));
 
       citiesToShow.forEach(city => {
         // 城市圆点
@@ -710,7 +710,7 @@ class ChinaMapCanvas {
             margin-left: 3px;
           ">${city.name}</span>`,
           iconSize: null,
-          iconAnchor: [0, zoom < 7 ? 4 : 3]
+          iconAnchor: [0, zoom < 5 ? 4 : (zoom < 7 ? 5 : 6)]
         });
 
         const label = window.L.marker([city.lat, city.lon], { icon, interactive: false });
