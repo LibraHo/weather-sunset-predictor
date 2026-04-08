@@ -659,14 +659,11 @@ class ChinaMapCanvas {
       this._cityMarkersLayer.clearLayers();
 
       let citiesToShow;
-      if (zoom < 5) {
-        // 低缩放：仅省会
+      if (zoom < 6) {
+        // 低缩放：仅省会/直辖市，避免全国视角过密
         citiesToShow = L1;
-      } else if (zoom < 6) {
-        // 中低：省会 + 地级
-        citiesToShow = [...L1, ...L2];
       } else if (zoom < 9) {
-        // 中等：全部地级（不重复省会，去重后合并）
+        // 中等：省会 + 地级（不重复省会，去重后合并）
         const merged = new Map();
         for (const c of [...L1, ...L2]) {
           if (!merged.has(c.name)) merged.set(c.name, c);
