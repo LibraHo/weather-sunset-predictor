@@ -1839,6 +1839,12 @@ class WeatherController {
       return;
     }
 
+    // 防止并发初始化（竞态条件保护）
+    if (this._chinaSpotsMapInitializing) {
+      console.log('[WeatherController] 地图初始化进行中，跳过重复调用');
+      return;
+    }
+
     // 检查地图容器是否可见（避免在隐藏状态下初始化导致 NaN 错误）
     const mapPanel = document.getElementById('tab-panel-map');
     if (mapPanel && mapPanel.classList.contains('hidden')) {
@@ -1864,6 +1870,7 @@ class WeatherController {
     // 若地图已初始化，直接刷新当前时段数据
     if (this._chinaSpotsMapInstance) {
       this._chinaSpotsMapPendingInit = false;
+      this._chinaSpotsInitRetryCount = 0;
       const activeOverlay = this.chinaSpotsOverlayManager?.getOverlay(this.chinaSpotsOverlayManager.getActivePeriod());
       if (!activeOverlay) return;
 
@@ -1874,6 +1881,8 @@ class WeatherController {
       return;
     }
 
+    // 设置初始化锁，防止并发执行
+    this._chinaSpotsMapInitializing = true;
     this._chinaSpotsMapPendingInit = false;
     this._chinaSpotsInitRetryCount = 0;
 
@@ -1944,6 +1953,9 @@ class WeatherController {
       const mapPanel = document.getElementById('tab-panel-map');
       if (mapPanel) mapPanel.classList.add('hidden');
       this._setChinaSpotsEmptyState(false);
+    } finally {
+      // 释放初始化锁
+      this._chinaSpotsMapInitializing = false;
     }
   }
 
