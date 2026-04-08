@@ -10,6 +10,28 @@ const router = express.Router();
 const gridService = require('../services/GridScoreService');
 const chinaRasterService = require('../services/ChinaRasterService');
 
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function sampleRasterScore(raster, lat, lon) {
+  if (!raster || !Array.isArray(raster.values) || !raster.bbox) return null;
+
+  const { bbox, width, height, values, noData = -1 } = raster;
+  const { west, east, south, north } = bbox;
+  if (![lat, lon, width, height].every(Number.isFinite)) return null;
+  if (lon < west || lon > east || lat < south || lat > north) return null;
+
+  const x = ((lon - west) / (east - west)) * (width - 1);
+  const y = ((north - lat) / (north - south)) * (height - 1);
+
+  const col = clamp(Math.round(x), 0, width - 1);
+  const row = clamp(Math.round(y), 0, height - 1);
+  const score = values[row * width + col];
+
+  return (typeof score === 'number' && score !== noData && score >= 0) ? score : null;
+}
+
 const SUPPORTED_PERIODS = ['sunrise', 'sunset'];
 const MIN_SPOT_SCORE = 40;
 
@@ -99,6 +121,19 @@ router.get('/china/raster', async (req, res, next) => {
     const resolution = (!isNaN(rawRes) && rawRes >= 0.1 && rawRes <= 2) ? rawRes : 0.5;
 
     const raster = await chinaRasterService.getRaster(period, resolution);
+
+    const rawLat = parseFloat(req.query?.lat);
+    const rawLon = parseFloat(req.query?.lon);
+    if (Number.isFinite(rawLat) && Number.isFinite(rawLon)) {
+      const score = sampleRasterScore(raster, rawLat, rawLon);
+      return res.json({
+        ...raster,
+        lat: rawLat,
+        lon: rawLon,
+        score
+      });
+    }
+
     res.json(raster);
   } catch (err) {
     if (err.message && err.message.includes('尚未就绪')) {

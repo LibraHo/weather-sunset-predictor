@@ -659,14 +659,11 @@ class ChinaMapCanvas {
       this._cityMarkersLayer.clearLayers();
 
       let citiesToShow;
-      if (zoom < 5) {
-        // 低缩放：仅省会
+      if (zoom < 6) {
+        // 低缩放：仅省会/直辖市，避免全国视角过密
         citiesToShow = L1;
-      } else if (zoom < 6) {
-        // 中低：省会 + 地级
-        citiesToShow = [...L1, ...L2];
       } else if (zoom < 9) {
-        // 中等：全部地级（不重复省会，去重后合并）
+        // 中等：省会 + 地级（不重复省会，去重后合并）
         const merged = new Map();
         for (const c of [...L1, ...L2]) {
           if (!merged.has(c.name)) merged.set(c.name, c);
@@ -683,8 +680,8 @@ class ChinaMapCanvas {
 
       const isDark = document.body.classList.contains('theme-dark');
       const textColor = isDark ? '#fff' : '#333';
-      const fontSize = zoom < 5 ? '10px' : (zoom < 7 ? '9px' : '8px');
-      const dotRadius = zoom < 5 ? 3 : (zoom < 7 ? 2.5 : 2);
+      const fontSize = zoom < 5 ? '10px' : (zoom < 7 ? '11px' : (zoom < 9 ? '12px' : '13px'));
+      const dotRadius = zoom < 5 ? 3 : (zoom < 7 ? 3 : (zoom < 9 ? 3.5 : 4));
 
       citiesToShow.forEach(city => {
         // 城市圆点
@@ -710,7 +707,7 @@ class ChinaMapCanvas {
             margin-left: 3px;
           ">${city.name}</span>`,
           iconSize: null,
-          iconAnchor: [0, zoom < 7 ? 4 : 3]
+          iconAnchor: [0, zoom < 5 ? 4 : (zoom < 7 ? 5 : 6)]
         });
 
         const label = window.L.marker([city.lat, city.lon], { icon, interactive: false });
