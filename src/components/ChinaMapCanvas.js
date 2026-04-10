@@ -936,7 +936,9 @@ class ChinaMapCanvas {
       if (!point) return null;
 
       return {
-        cloud: Number.isFinite(point.cloudCover) ? `${Math.round(point.cloudCover)}%` : '--',
+        highClouds: Number.isFinite(point.highClouds) ? `${Math.round(point.highClouds)}%` : '--',
+        midClouds: Number.isFinite(point.midClouds) ? `${Math.round(point.midClouds)}%` : '--',
+        lowClouds: Number.isFinite(point.lowClouds) ? `${Math.round(point.lowClouds)}%` : '--',
         humidity: Number.isFinite(point.humidity) ? `${Math.round(point.humidity)}%` : '--',
       };
     } catch (_) {
@@ -991,7 +993,7 @@ class ChinaMapCanvas {
       const isHigh = score !== null && score >= 60;
       const scoreColor = isHigh ? '#ff8c00' : (score !== null && score >= 30 ? '#ffc107' : '#aaa');
       const cloudHumidityLine = cloudHumidity
-        ? `☁️ 云量 ${cloudHumidity.cloud} · 💧 湿度 ${cloudHumidity.humidity}`
+        ? `☁️ 高 ${cloudHumidity.highClouds} · 中 ${cloudHumidity.midClouds} · 低 ${cloudHumidity.lowClouds} · 💧 ${cloudHumidity.humidity}`
         : '';
 
       loadingPopup.setContent(`
