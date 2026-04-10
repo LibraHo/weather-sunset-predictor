@@ -919,6 +919,32 @@ class ChinaMapCanvas {
     });
   }
 
+  async _fetchPointWeatherSummary(lat, lon) {
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 5000);
+
+      const res = await fetch(`/api/weather/forecast?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}&hours=1`, {
+        signal: ctrl.signal,
+      });
+
+      clearTimeout(timer);
+      if (!res.ok) return null;
+
+      const json = await res.json();
+      const point = Array.isArray(json?.data) ? json.data[0] : null;
+      if (!point) return null;
+
+      const temp = Number.isFinite(point.temp) ? `${Math.round(point.temp)}°C` : '--';
+      const cloud = Number.isFinite(point.cloudCover) ? `${Math.round(point.cloudCover)}%云量` : '--';
+      const wind = Number.isFinite(point.windSpeed) ? `${Math.round(point.windSpeed)}km/h` : '--';
+
+      return { temp, cloud, wind };
+    } catch (_) {
+      return null;
+    }
+  }
+
   /**
    * 在点击位置显示 popup：地点名 + 分数
    * 尝试反向解析城市名，失败则显示经纬度
@@ -959,15 +985,21 @@ class ChinaMapCanvas {
         // API 不可用时静默
       }
 
+      const weather = await this._fetchPointWeatherSummary(lat, lon);
+
       const locationText = cityName || `${lat.toFixed(2)}°N, ${lon.toFixed(2)}°E`;
       const scoreText = score !== null ? `${Math.round(score)} 分` : '暂无数据';
       const isHigh = score !== null && score >= 60;
       const scoreColor = isHigh ? '#ff8c00' : (score !== null && score >= 30 ? '#ffc107' : '#aaa');
+      const weatherLine = weather
+        ? `🌡 ${weather.temp} · ☁️ ${weather.cloud} · 💨 ${weather.wind}`
+        : '天气数据暂无';
 
       loadingPopup.setContent(`
         <div style="font-size:13px;line-height:1.6;">
           <div style="font-weight:600;margin-bottom:2px;">📍 ${locationText}</div>
           <div style="color:${scoreColor};font-size:15px;font-weight:700;">${scoreText}</div>
+          <div style="color:#b5b5b5;font-size:11px;">${weatherLine}</div>
           <div style="color:#888;font-size:10px;margin-top:2px;">${this._currentPeriod === 'sunrise' ? '朝霞' : '晚霞'} · 当前时段</div>
         </div>
       `);
