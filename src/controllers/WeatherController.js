@@ -1728,6 +1728,14 @@ class WeatherController {
     }
 
     await this._initChinaSpotsMap();
+
+    // 定位在中国大陆时，地图聚焦到定位地点附近
+    if (this._chinaSpotsMapCanvas && typeof this._chinaSpotsMapCanvas.focusOnLocation === 'function') {
+      this._chinaSpotsMapCanvas.focusOnLocation(location.lat, location.lon, {
+        radiusKm: 280,
+        maxZoom: 8,
+      });
+    }
   }
 
   /**
@@ -1800,8 +1808,8 @@ class WeatherController {
 
   _getChinaSpotsMapOptions() {
     return {
-      center: [35, 105],
-      zoom: 5,
+      center: [36, 121],
+      zoom: 4,
       minZoom: 3,
       maxZoom: 12,
       zoomControl: true,
@@ -1897,7 +1905,7 @@ class WeatherController {
       const isDark = document.body.classList.contains('theme-dark');
       this._chinaSpotsMapCanvas = new ChinaMapCanvas({
         style: isDark ? 'dark' : 'light',
-        defaultCenter: [35, 105],
+        defaultCenter: [36, 121],
         defaultZoom: 4
       });
       await this._chinaSpotsMapCanvas.init(mapEl);
