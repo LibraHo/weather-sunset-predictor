@@ -1,7 +1,7 @@
 /**
- * ChinaMapCanvas.js - 中国地图底层组件（GeoJSON + Canvas）
+ * ChinaMapCanvas.js - 东亚地图底层组件（GeoJSON + Canvas）
  *
- * 基于 Leaflet + GeoJSON 渲染中国省界，不依赖外部瓦片 API
+ * 基于 Leaflet + GeoJSON 渲染中国/日本/韩国边界，不依赖外部瓦片 API
  * GeoJSON 通过 fetch 懒加载，避免首屏阻塞 569KB 的模块解析
  *
  * feat: 全量地级行政单位标注 + 图例 + 点击查询 + 缩放分级显示
@@ -25,6 +25,7 @@ class ChinaMapCanvas {
     this._legendControl = null;
     this._clickPopup = null;
     this._currentPeriod = 'sunset'; // 'sunrise' | 'sunset'
+    this._focusMarker = null;
   }
 
   /**
@@ -94,7 +95,7 @@ class ChinaMapCanvas {
    */
   async _loadGeoJSON() {
     if (_cachedGeoJSON) return;
-    const resp = await fetch('/data/china-geojson.json');
+    const resp = await fetch('/data/east-asia-geojson.json');
     if (!resp.ok) throw new Error(`GeoJSON fetch failed: ${resp.status}`);
     _cachedGeoJSON = await resp.json();
   }
@@ -107,6 +108,7 @@ class ChinaMapCanvas {
       this._map.remove();
       this._map = null;
     }
+    this._focusMarker = null;
     this._geoJsonLayer = null;
     this._container = null;
   }
@@ -129,6 +131,55 @@ class ChinaMapCanvas {
     if (this._map) {
       this._map.setView([lat, lon], zoom);
     }
+  }
+
+  /**
+   * 聚焦到定位地点附近（任务：地图只显示定位地点附近）
+   * @param {number} lat
+   * @param {number} lon
+   * @param {Object} options
+   * @param {number} options.radiusKm - 视窗半径（公里）
+   * @param {number} options.maxZoom - 最大缩放
+   */
+  focusOnLocation(lat, lon, options = {}) {
+    if (!this._map || !Number.isFinite(lat) || !Number.isFinite(lon)) return;
+
+    const radiusKm = Number.isFinite(options.radiusKm) ? options.radiusKm : 280;
+    const maxZoom = Number.isFinite(options.maxZoom) ? options.maxZoom : 8;
+
+    const latDelta = radiusKm / 111;
+    const safeCos = Math.max(0.25, Math.cos((lat * Math.PI) / 180));
+    const lonDelta = radiusKm / (111 * safeCos);
+
+    const southWest = window.L.latLng(lat - latDelta, lon - lonDelta);
+    const northEast = window.L.latLng(lat + latDelta, lon + lonDelta);
+    const bounds = window.L.latLngBounds(southWest, northEast);
+
+    this._map.fitBounds(bounds, {
+      animate: false,
+      padding: [24, 24],
+      maxZoom,
+    });
+
+    this._setFocusMarker(lat, lon);
+  }
+
+  _setFocusMarker(lat, lon) {
+    if (!this._map) return;
+
+    if (this._focusMarker) {
+      this._map.removeLayer(this._focusMarker);
+      this._focusMarker = null;
+    }
+
+    this._focusMarker = window.L.circleMarker([lat, lon], {
+      radius: 6,
+      weight: 2,
+      color: 'rgba(255,255,255,0.9)',
+      fillColor: 'rgba(255,140,0,0.95)',
+      fillOpacity: 1,
+      interactive: false,
+    }).addTo(this._map);
   }
 
   /**
