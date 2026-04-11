@@ -214,8 +214,10 @@ class SunsetPredictionService {
     // 计算日落时角（单位：度）
     const hourAngle = Math.acos(cosHourAngle) * 180 / Math.PI;
 
-    // 计算本地子午线（每个时区15度）
-    const timezone = Math.round(lon / 15);
+    // 计算本地子午线（使用浏览器真实时区偏移，而非经度推算）
+    // 很多国家政治时区≠地理时区（如马来西亚 UTC+8 但经度对应 UTC+7）
+    const browserOffsetHours = -(new Date().getTimezoneOffset() / 60);
+    const timezone = browserOffsetHours;
     const localMeridian = timezone * 15;
     const lonOffset = lon - localMeridian;
 
@@ -326,8 +328,9 @@ class SunsetPredictionService {
     // 计算日出时角（单位：度）- 注意：日出用负的时角
     const hourAngle = Math.acos(cosHourAngle) * 180 / Math.PI;
 
-    // 计算本地子午线（每个时区15度）
-    const timezone = Math.round(lon / 15);
+    // 计算本地子午线（使用浏览器真实时区偏移，而非经度推算）
+    const browserOffsetHours = -(new Date().getTimezoneOffset() / 60);
+    const timezone = browserOffsetHours;
     const localMeridian = timezone * 15;
     const lonOffset = lon - localMeridian;
 
