@@ -1058,6 +1058,9 @@ class PredictionController {
     const mc = weatherInput.midClouds ?? 0;
     if (mc >= 20 && mc <= 50) {
       html += `<div style="font-size:13px;margin:3px 0;">✅ 中层云适中（${mc.toFixed(0)}%），利于色彩扩散</div>`;
+    } else if (hc >= 50 && mc < 10) {
+      // 高云充足时，中云少不是问题
+      html += `<div style="font-size:13px;margin:3px 0;">ℹ️ 中层云较少（${mc.toFixed(0)}%），但高层云充足可独立形成火烧云</div>`;
     } else if ((mc >= 10 && mc < 20) || (mc > 50 && mc <= 70)) {
       const label = mc < 20 ? '偏少' : '偏多';
       html += `<div style="font-size:13px;margin:3px 0;">⚠️ 中层云${label}（${mc.toFixed(0)}%）</div>`;
