@@ -99,7 +99,8 @@ class OpenMeteoProvider extends BaseWeatherProvider {
         precipitation: precipitation ?? 0,
         lowClouds: hourly.cloud_cover_low[i] ?? 0,
         midClouds: hourly.cloud_cover_mid[i] ?? 0,
-        highClouds: hourly.cloud_cover_high[i] ?? 0
+        highClouds: hourly.cloud_cover_high[i] ?? 0,
+        pressure: hourly.surface_pressure[i] != null ? hourly.surface_pressure[i] / 100 : null
       });
     }
 
@@ -136,7 +137,7 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     const BASE_PARAMS = {
       latitude: lat,
       longitude: lon,
-      hourly: 'temperature_2m,relative_humidity_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,visibility,precipitation',
+      hourly: 'temperature_2m,relative_humidity_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,visibility,precipitation,surface_pressure',
       wind_speed_unit: 'ms',
       timeformat: 'unixtime',
       timezone: 'auto',
@@ -177,7 +178,7 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     const BASE_PARAMS = {
       latitude: pointList.map(p => p.lat).join(','),
       longitude: pointList.map(p => p.lon).join(','),
-      hourly: 'temperature_2m,relative_humidity_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,visibility,precipitation',
+      hourly: 'temperature_2m,relative_humidity_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,visibility,precipitation,surface_pressure',
       wind_speed_unit: 'ms',
       timeformat: 'unixtime',
       timezone: 'auto',
