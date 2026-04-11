@@ -43,12 +43,12 @@ const translations = {
       "sections": {
         "cloudStructure": {
           "title": "1. Cloud Structure",
-          "subtitle": "Cloud Structure · 60 pts",
-          "desc": "Fire clouds need the right cloud layers as a \"canvas\". High and mid clouds are the key carriers.",
-          "highCloud": "High Cloud (>6km): Optimal 50%, Gaussian curve, max 25 pts",
-          "midCloud": "Mid Cloud (2–6km): Optimal 35%, Gaussian curve, max 25 pts",
-          "lowCloudBonus": "Low Cloud Bonus: Less is better, <20% = 10 pts, linear decay",
-          "formula": "Cloud Structure Score = High + Mid + Low Bonus (max 60 pts)"
+          "subtitle": "Cloud Structure · Canvas Score",
+          "desc": "Fire clouds need the right cloud layers as a \"canvas\". High and mid clouds are key carriers; low clouds mainly block visibility.",
+          "highCloud": "High Cloud (>6km): Best carrier for fire clouds, good light transmission, produces wide red/orange areas",
+          "midCloud": "Mid Cloud (2–6km): Also produces fire clouds, slightly less effective than high clouds",
+          "lowCloudBonus": "Low Cloud (<2km): Mainly blocks visibility, does not contribute positive score",
+          "formula": "Effective cover = max(high×1.15, mid)×0.7 + min(high, mid)×0.2; Low cloud penalty: none below 30%, 0.5 at 80%"
         },
         "transparency": {
           "title": "2. Atmospheric Transparency",

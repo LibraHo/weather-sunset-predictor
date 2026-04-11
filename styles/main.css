@@ -4148,9 +4148,10 @@ body.theme-dark {
   --radar-subtitle: rgba(148,163,184,0.80);
   --radar-legend-text: rgba(200,212,228,0.85);
   --radar-center: rgba(249,115,22,0.90);
-  --radar-cloud-low: rgba(160,195,240,0.95);
-  --radar-cloud-mid: rgba(195,210,235,0.90);
-  --radar-cloud-high: rgba(220,228,242,0.85);
+  /* 增强暗色模式云况可见度：提高亮度和不透明度 */
+  --radar-cloud-low: rgba(180,210,255,0.98);
+  --radar-cloud-mid: rgba(210,225,255,0.95);
+  --radar-cloud-high: rgba(235,242,255,0.90);
 }
 ,220,0.70);
 }

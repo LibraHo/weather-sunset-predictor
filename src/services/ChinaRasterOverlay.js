@@ -12,7 +12,7 @@ let _chinaGeoJSONCache = null;
 async function _loadChinaGeoJSON() {
   if (_chinaGeoJSONCache) return _chinaGeoJSONCache;
   try {
-    const resp = await fetch('/data/china-geojson.json');
+    const resp = await fetch('/data/east-asia-geojson.json');
     if (resp.ok) _chinaGeoJSONCache = await resp.json();
   } catch (_) {}
   return _chinaGeoJSONCache;
