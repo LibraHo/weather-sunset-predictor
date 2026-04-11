@@ -48,12 +48,12 @@ export default {
       sections: {
         cloudStructure: {
           title: '1. 云层结构',
-          subtitle: 'Cloud Structure · 60分',
-          desc: '火烧云需要合适的云层作为"画布"，高云和中云是核心载体。',
-          highCloud: '高云（>6km）最优50%，高斯曲线，满分25分',
-          midCloud: '中云（2–6km）最优35%，高斯曲线，满分25分',
-          lowCloudBonus: '低云奖励：低云<20%满分10分，线性递减',
-          formula: '云层结构分 = 高云分 + 中云分 + 低云奖励（最高60分）'
+          subtitle: 'Cloud Structure · 画布评分',
+          desc: '火烧云需要合适的云层作为"画布"，高云和中云是核心载体，低云起遮挡作用。',
+          highCloud: '高云（>6km）：火烧云的最佳载体，透光性好，能染出大片红橙色',
+          midCloud: '中云（2–6km）：同样能产生火烧云，效果略逊于高云',
+          lowCloudBonus: '低云（<2km）：主要起遮挡作用，不贡献正面分数',
+          formula: '有效云量 = max(高云×1.15, 中云)×0.7 + min(高云, 中云)×0.2；低云30%以下不惩罚，80%时惩罚到0.5'
         },
         transparency: {
           title: '2. 大气透明度',

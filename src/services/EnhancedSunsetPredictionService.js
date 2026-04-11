@@ -24,9 +24,9 @@ class EnhancedSunsetPredictionService {
     };
 
     this.CLOUD_WEIGHTS = {
-      HIGH: 0.3,    // 高云权重
-      MID: 0.5,     // 中云权重（最高）
-      LOW: 0.2       // 低云权重（通常是干扰项）
+      HIGH: 0.45,   // 高云权重（提高：高云是火烧云的关键载体）
+      MID: 0.35,    // 中云权重（降低：避免中云为0时严重拉低分数）
+      LOW: 0.20     // 低云权重（通常遮挡视线）
     };
 
     this.LIGHT_PATH_WEIGHTS = {
@@ -144,11 +144,12 @@ class EnhancedSunsetPredictionService {
     const midClouds = weatherData.midClouds || 0;
     const highClouds = weatherData.highClouds || 0;
 
-    // 1. 计算有效云量（加权）
-    const effectiveCloudCover =
-      (highClouds * this.CLOUD_WEIGHTS.HIGH) +
-      (midClouds * this.CLOUD_WEIGHTS.MID) +
-      (lowClouds * this.CLOUD_WEIGHTS.LOW);
+    // 1. 计算有效云量
+    // 高云和中云都能产生火烧云，取最大值作为主贡献
+    // 低云主要起遮挡作用，不贡献正面分数
+    const bestUpperCloud = Math.max(highClouds * 1.15, midClouds);
+    const effectiveCloudCover = bestUpperCloud * 0.7 +
+      Math.min(highClouds, midClouds) * 0.2;
 
     // 2. 云量区间评分（梯形函数）
     let cloudRangeScore = 0;
@@ -162,12 +163,12 @@ class EnhancedSunsetPredictionService {
       cloudRangeScore = 40 + (effectiveCloudCover - 10) / 20 * 30;
       cloudLevelKey = 'prediction.canvas.fair';
     } else if (effectiveCloudCover <= 70) {
-      // 完美区间：70-100分
-      cloudRangeScore = 70 + (effectiveCloudCover - 30) / 40 * 30;
+      // 完美区间：70-93分
+      cloudRangeScore = 70 + (effectiveCloudCover - 30) / 40 * 23;
       cloudLevelKey = 'prediction.canvas.perfect';
-    } else if (effectiveCloudCover <= 90) {
-      // 线性下降：70% -> 60分, 90% -> 30分
-      cloudRangeScore = 60 - (effectiveCloudCover - 70) / 20 * 30;
+    } else if (effectiveCloudCover <= 100) {
+      // 线性下降：70% -> 100分, 100% -> 60分（平缓下降）
+      cloudRangeScore = 100 - (effectiveCloudCover - 70) / 30 * 40;
       cloudLevelKey = 'prediction.canvas.crowded';
     } else {
       cloudRangeScore = 0;
@@ -176,19 +177,19 @@ class EnhancedSunsetPredictionService {
 
     const cloudLevel = this.i18n.t(cloudLevelKey);
 
-    // 3. 低云惩罚
+    // 3. 低云惩罚（再次降低惩罚强度：30%以下不惩罚，80%降到0.5）
     let lowCloudPenalty = 1.0;
     let penaltyReasonKey = '';
 
-    if (lowClouds < 20) {
+    if (lowClouds < 30) {
       lowCloudPenalty = 1.0;
       penaltyReasonKey = 'prediction.canvas.noLowCloudObstruction';
     } else if (lowClouds > 80) {
-      lowCloudPenalty = 0.1;
+      lowCloudPenalty = 0.5;  // 原来是0.3，现在0.5
       penaltyReasonKey = 'prediction.canvas.tooManyLowClouds';
     } else {
-      // 线性衰减：20% -> 1.0, 80% -> 0.1
-      lowCloudPenalty = 1.0 - (lowClouds - 20) / 60 * 0.9;
+      // 线性衰减：30% -> 1.0, 80% -> 0.5（更平缓）
+      lowCloudPenalty = 1.0 - (lowClouds - 30) / 50 * 0.5;
       penaltyReasonKey = 'prediction.canvas.lowCloudAmount';
     }
 
@@ -319,7 +320,7 @@ class EnhancedSunsetPredictionService {
       visibilityFactor = 1.0;
       visibilityDescKey = 'prediction.rendering.visibilityGood';
     } else {
-      visibilityFactor = 0.8;
+      visibilityFactor = 0.85;
       visibilityDescKey = 'prediction.rendering.visibilityPoor';
     }
 
