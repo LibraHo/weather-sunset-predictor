@@ -83,7 +83,11 @@ ssh -i "$SSH_KEY" $REMOTE "curl -s http://localhost:3000/health"
 
 # 预热 raster 缓存（避免用户首次访问超时）
 echo "🔥 预热缓存..."
-ssh -i "$SSH_KEY" $REMOTE "curl -s -o /dev/null 'http://localhost:3000/api/spots/china/raster?period=sunset&resolution=0.5' & curl -s -o /dev/null 'http://localhost:3000/api/spots/china/raster?period=sunrise&resolution=0.5' & wait"
+ssh -i "$SSH_KEY" $REMOTE "
+  timeout 30s curl -s -o /dev/null 'http://localhost:3000/api/spots/china/raster?period=sunset&resolution=0.5' || true
+  timeout 30s curl -s -o /dev/null 'http://localhost:3000/api/spots/china/raster?period=sunrise&resolution=0.5' || true
+  echo '  → 预热完成（超时自动跳过）'
+"
 
 # 清理本地临时文件
 rm -f "$ZIP_TMP"
