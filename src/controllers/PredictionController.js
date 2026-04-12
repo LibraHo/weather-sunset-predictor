@@ -524,45 +524,55 @@ class PredictionController {
   /**
    * 根据当前时间判断手机版默认显示的卡片
    * 逻辑：
-   * - 日出之前 → 显示朝霞（今日朝霞 + 今日晚霞，默认朝霞）
-   * - 日出~中午前（<12:00）→ 显示晚霞（已过朝霞）
-   * - 中午（12:00+）→ 显示晚霞
-   * - 日落之后 → 显示明日朝霞
+   * - 日出之前（0:00-日出）→ 显示今日朝霞 + 今日晚霞（默认朝霞）
+   * - 中午（12:00-日落前）→ 显示今日晚霞 + 明日朝霞（默认晚霞）
+   * - 日落后 → 显示明日朝霞 + 明日晚霞（默认明日朝霞）
    * @param {Date|null} sunriseTime - 日出时间
    * @param {Date|null} sunsetTime - 日落时间
    * @param {Object|null} sunrisePrediction - 朝霞预测
    * @param {Object|null} sunsetPrediction - 晚霞预测
-   * @returns {'sunrise'|'sunset'}
+   * @param {Object|null} tomorrowSunrisePrediction - 明日朝霞预测
+   * @param {Object|null} tomorrowSunsetPrediction - 明日晚霞预测
+   * @returns {{activeTab: 'sunrise'|'sunset', sunrisePred: Object|null, sunsetPred: Object|null, sunriseLabel: string, sunsetLabel: string}}
    */
-  _getDefaultMobileTab(sunriseTime, sunsetTime, sunrisePrediction, sunsetPrediction) {
+  _getDefaultMobileTab(sunriseTime, sunsetTime, sunrisePrediction, sunsetPrediction, tomorrowSunrisePrediction = null, tomorrowSunsetPrediction = null) {
     const now = new Date();
     const hour = now.getHours();
 
-    // 如果某一个预测不存在，直接返回另一个
-    if (!sunrisePrediction) return 'sunset';
-    if (!sunsetPrediction) return 'sunrise';
+    // 判断当前时段
+    const isBeforeSunrise = sunriseTime && now < sunriseTime;
+    const isAfterSunset = sunsetTime && now > new Date(sunsetTime.getTime() + 1.5 * 60 * 60 * 1000); // 日落后1.5小时
 
-    // 如果日出时间已知
-    if (sunriseTime) {
-      const beforeSunrise = now < sunriseTime;
-      if (beforeSunrise) {
-        // 日出之前，优先显示朝霞
-        return 'sunrise';
-      }
+    // 日落后：显示明日朝霞 + 明日晚霞
+    if (isAfterSunset) {
+      return {
+        activeTab: 'sunrise',
+        sunrisePred: tomorrowSunrisePrediction,
+        sunsetPred: tomorrowSunsetPrediction,
+        sunriseLabel: this.i18n.t('date.tomorrow'),
+        sunsetLabel: this.i18n.t('date.tomorrow')
+      };
     }
 
-    // 日落之后或超过中午，显示晚霞（或明日朝霞，但这里 sunrisePrediction 已是明日朝霞）
-    if (hour >= 12) {
-      // 中午后：如果晚霞已过，显示明日朝霞
-      if (sunsetTime) {
-        const sunsetEnd = new Date(sunsetTime.getTime() + 1.5 * 60 * 60 * 1000);
-        if (now > sunsetEnd) return 'sunrise'; // 晚霞已过，显示明日朝霞
-      }
-      return 'sunset';
+    // 日出之前：显示今日朝霞 + 今日晚霞
+    if (isBeforeSunrise) {
+      return {
+        activeTab: 'sunrise',
+        sunrisePred: sunrisePrediction,
+        sunsetPred: sunsetPrediction,
+        sunriseLabel: this.i18n.t('date.today'),
+        sunsetLabel: this.i18n.t('date.today')
+      };
     }
 
-    // 上午（日出之后~中午前）：朝霞已过，显示晚霞
-    return 'sunset';
+    // 中午（日出后~日落前）：显示今日晚霞 + 明日朝霞
+    return {
+      activeTab: 'sunset',
+      sunrisePred: tomorrowSunrisePrediction,
+      sunsetPred: sunsetPrediction,
+      sunriseLabel: this.i18n.t('date.tomorrow'),
+      sunsetLabel: this.i18n.t('date.today')
+    };
   }
 
   updateTodayPredictions(sunrisePrediction, sunsetPrediction, sunriseTime, sunsetTime, displayDate = new Date(), dateInfo = null) {
@@ -585,11 +595,37 @@ class PredictionController {
     // 用于错误提示的日期标签
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
     const isToday = displayDate.toDateString() === today.toDateString();
     const dateLabel = isToday ? this.i18n.t('date.today') : this.i18n.t('date.tomorrow');
 
+    // 查找明天的预测
+    const tomorrowSunrise = this.predictions.find(p =>
+      p.type === 'sunrise' && p.date && p.date.toDateString() === tomorrow.toDateString()
+    );
+    const tomorrowSunset = this.predictions.find(p =>
+      p.type === 'sunset' && p.date && p.date.toDateString() === tomorrow.toDateString()
+    );
+
+    // 根据当前时段获取默认显示配置
+    const displayConfig = this._getDefaultMobileTab(
+      sunriseTime,
+      sunsetTime,
+      sunrisePrediction,
+      sunsetPrediction,
+      tomorrowSunrise,
+      tomorrowSunset
+    );
+
+    // 使用配置中的预测数据
+    const displaySunrise = displayConfig.sunrisePred;
+    const displaySunset = displayConfig.sunsetPred;
+    const sunriseDateLabel = displayConfig.sunriseLabel;
+    const sunsetDateLabel = displayConfig.sunsetLabel;
+
     // 如果两个预测都缺失，显示错误提示
-    if (!sunrisePrediction && !sunsetPrediction) {
+    if (!displaySunrise && !displaySunset) {
       predictionDisplay.innerHTML = `
         <div class="prediction-unavailable">
           <p>${this.i18n.t('prediction.noPredictionData', { date: dateLabel })}</p>
@@ -603,15 +639,9 @@ class PredictionController {
       return;
     }
 
-    // 确定每个预测的日期标签
-    const sunriseDateLabel = sunrisePrediction && sunrisePrediction.date &&
-      sunrisePrediction.date.toDateString() === today.toDateString() ? this.i18n.t('date.today') : this.i18n.t('date.tomorrow');
-    const sunsetDateLabel = sunsetPrediction && sunsetPrediction.date &&
-      sunsetPrediction.date.toDateString() === today.toDateString() ? this.i18n.t('date.today') : this.i18n.t('date.tomorrow');
-
     // 生成朝霞卡片 HTML
-    const sunriseCardHtml = sunrisePrediction
-      ? this.renderSinglePrediction(sunrisePrediction, '🌄', this.i18n.t('prediction.sunrise'), this.i18n.t('prediction.sunriseTime'), sunriseDateLabel, 'sunrise')
+    const sunriseCardHtml = displaySunrise
+      ? this.renderSinglePrediction(displaySunrise, '🌄', this.i18n.t('prediction.sunrise'), this.i18n.t('prediction.sunriseTime'), sunriseDateLabel, 'sunrise')
       : `<div class="prediction-unavailable-card">
           <span class="prediction-date-badge">${sunriseDateLabel}</span>
           <h3>🌄 ${this.i18n.t('prediction.sunrise')}</h3>
@@ -620,8 +650,8 @@ class PredictionController {
         </div>`;
 
     // 生成晚霞卡片 HTML
-    const sunsetCardHtml = sunsetPrediction
-      ? this.renderSinglePrediction(sunsetPrediction, '🌅', this.i18n.t('prediction.sunset'), this.i18n.t('prediction.sunsetTime'), sunsetDateLabel, 'sunset')
+    const sunsetCardHtml = displaySunset
+      ? this.renderSinglePrediction(displaySunset, '🌅', this.i18n.t('prediction.sunset'), this.i18n.t('prediction.sunsetTime'), sunsetDateLabel, 'sunset')
       : `<div class="prediction-unavailable-card">
           <span class="prediction-date-badge">${sunsetDateLabel}</span>
           <h3>🌅 ${this.i18n.t('prediction.sunset')}</h3>
@@ -630,16 +660,16 @@ class PredictionController {
         </div>`;
 
     // 手机版默认显示哪个
-    const defaultTab = this._getDefaultMobileTab(sunriseTime, sunsetTime, sunrisePrediction, sunsetPrediction);
+    const defaultTab = displayConfig.activeTab;
 
     // 渲染带切换开关的布局
     const html = `
       <div class="prediction-toggle-bar" id="prediction-toggle-bar">
         <button class="prediction-toggle-btn${defaultTab === 'sunrise' ? ' active' : ''}" data-tab="sunrise">
-          🌄 ${this.i18n.t('prediction.sunrise')}
+          🌄 ${sunriseDateLabel}${this.i18n.t('prediction.sunrise')}
         </button>
         <button class="prediction-toggle-btn${defaultTab === 'sunset' ? ' active' : ''}" data-tab="sunset">
-          🌅 ${this.i18n.t('prediction.sunset')}
+          🌅 ${sunsetDateLabel}${this.i18n.t('prediction.sunset')}
         </button>
       </div>
       <div class="today-predictions-container" id="today-predictions-container">
