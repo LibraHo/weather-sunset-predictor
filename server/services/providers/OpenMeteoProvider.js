@@ -44,10 +44,15 @@ class OpenMeteoProvider extends BaseWeatherProvider {
       } catch (error) {
         lastError = error;
         const status = error?.response?.status;
-        // 429 = 日配额耗尽，重试无意义，直接失败
+        // 429 = 频率限制，优先读取 Retry-After header，否则固定等 60s，然后重试
         if (status === 429) {
-          tracker.fail(error, status);
-          break;
+          const retryAfter = this._parseRetryAfterMs(error);
+          const waitMs = retryAfter || 60 * 1000; // 优先 header，否则 60s
+          console.warn(`[Open-Meteo API] ${label} 遇到 429，等待 ${waitMs}ms 后重试 (attempt=${attempt})`);
+          tracker.retry({ status: 429, waitMs, attempt });
+          await this._sleep(waitMs);
+          // 不 break，继续重试
+          continue;
         }
         const retryable = status === 503 || error?.code === 'ECONNABORTED';
         if (!retryable || attempt >= this.MAX_RETRIES) {
@@ -56,8 +61,7 @@ class OpenMeteoProvider extends BaseWeatherProvider {
         }
         const retryAfter = this._parseRetryAfterMs(error);
         const backoff = this.RETRY_BASE_MS * Math.pow(2, attempt - 1);
-        const min429WaitMs = status === 429 ? 60 * 1000 : 0;
-        const waitMs = Math.max(retryAfter || 0, backoff, min429WaitMs);
+        const waitMs = Math.max(retryAfter || 0, backoff);
         tracker.retry({ status: status || 0, waitMs, attempt });
         console.warn(`[Open-Meteo API] ${label} 第${attempt}次失败(status=${status || error.code}), ${waitMs}ms后重试`);
         await this._sleep(waitMs);

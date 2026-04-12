@@ -95,7 +95,8 @@ class GridScoreService {
       gridStep: CHINA_BOUNDS.step,
       etaSeconds: null,
       lastError: null,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      batches: [] // 每个批次的状态详情
     };
   }
 
@@ -146,6 +147,18 @@ class GridScoreService {
       batches.push(gridPoints.slice(i, i + BATCH_SIZE));
     }
 
+    // 初始化批次状态
+    const batchStatuses = batches.map((batch, idx) => ({
+      index: idx + 1,
+      status: 'pending', // pending/running/retrying/success/failed
+      pointsCount: batch.length,
+      successCount: 0,
+      errorCount: 0,
+      startedAt: null,
+      finishedAt: null,
+      errorMessage: null
+    }));
+
     this._setJobStatus(safePeriod, {
       running: true,
       startedAt: new Date().toISOString(),
@@ -161,7 +174,8 @@ class GridScoreService {
       concurrency: CONCURRENCY_LIMIT,
       gridStep: CHINA_BOUNDS.step,
       etaSeconds: null,
-      lastError: null
+      lastError: null,
+      batches: batchStatuses
     });
 
     const allResults = [];
@@ -170,77 +184,144 @@ class GridScoreService {
       const points = batch.map(point => ({ lat: point.lat, lon: point.lon }));
       const scoredBatch = [];
 
-      try {
-        const weatherMap = await orchestrator.fetchWeatherDataBatch(points, FORECAST_HOURS);
-        console.log(`[GridScoreService] 批量请求完成: batch=${batchIndex + 1}/${batches.length}, points=${points.length}, hours=${FORECAST_HOURS}`);
+      // 更新批次状态为 running
+      const updateBatchStatus = (patch) => {
+        const status = this.getJobStatus(safePeriod);
+        const updatedBatches = [...(status.batches || [])];
+        if (updatedBatches[batchIndex]) {
+          updatedBatches[batchIndex] = { ...updatedBatches[batchIndex], ...patch };
+          this._setJobStatus(safePeriod, { batches: updatedBatches });
+        }
+      };
 
-        for (const point of batch) {
-          try {
-            const key = `${point.lat},${point.lon}`;
-            const weatherRaw = weatherMap?.[key];
+      updateBatchStatus({ status: 'running', startedAt: new Date().toISOString() });
 
-            // 使用该点的日落/日出时间作为预测目标时间，避免当前时刻几何不可行误判
-            // 如果已经过了今天的日出/日落，就预测明天的
-            let predictionDate = date;
+      let retryCount = 0;
+      const maxRetries = 3;
+
+      while (retryCount <= maxRetries) {
+        try {
+          const weatherMap = await orchestrator.fetchWeatherDataBatch(points, FORECAST_HOURS);
+          console.log(`[GridScoreService] 批量请求完成: batch=${batchIndex + 1}/${batches.length}, points=${points.length}, hours=${FORECAST_HOURS}`);
+
+          for (const point of batch) {
             try {
-              const now = new Date();
-              if (safePeriod === 'sunset') {
-                const todaySunset = SunCalculator.getSunsetTime(date, point.lat, point.lon);
-                if (now > todaySunset) {
-                  const tomorrow = new Date(date);
-                  tomorrow.setDate(tomorrow.getDate() + 1);
-                  predictionDate = SunCalculator.getSunsetTime(tomorrow, point.lat, point.lon);
+              const key = `${point.lat},${point.lon}`;
+              const weatherRaw = weatherMap?.[key];
+
+              // 使用该点的日落/日出时间作为预测目标时间，避免当前时刻几何不可行误判
+              // 如果已经过了今天的日出/日落，就预测明天的
+              let predictionDate = date;
+              try {
+                const now = new Date();
+                if (safePeriod === 'sunset') {
+                  const todaySunset = SunCalculator.getSunsetTime(date, point.lat, point.lon);
+                  if (now > todaySunset) {
+                    const tomorrow = new Date(date);
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    predictionDate = SunCalculator.getSunsetTime(tomorrow, point.lat, point.lon);
+                  } else {
+                    predictionDate = todaySunset;
+                  }
                 } else {
-                  predictionDate = todaySunset;
+                  const todaySunrise = SunCalculator.getSunriseTime(date, point.lat, point.lon);
+                  if (now > todaySunrise) {
+                    const tomorrow = new Date(date);
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    predictionDate = SunCalculator.getSunriseTime(tomorrow, point.lat, point.lon);
+                  } else {
+                    predictionDate = todaySunrise;
+                  }
                 }
-              } else {
-                const todaySunrise = SunCalculator.getSunriseTime(date, point.lat, point.lon);
-                if (now > todaySunrise) {
-                  const tomorrow = new Date(date);
-                  tomorrow.setDate(tomorrow.getDate() + 1);
-                  predictionDate = SunCalculator.getSunriseTime(tomorrow, point.lat, point.lon);
-                } else {
-                  predictionDate = todaySunrise;
-                }
+              } catch (sunErr) {
+                console.warn(`[GridScoreService] 无法计算 ${point.lat},${point.lon} 日出落时间:`, sunErr.message);
               }
-            } catch (sunErr) {
-              console.warn(`[GridScoreService] 无法计算 ${point.lat},${point.lon} 日出落时间:`, sunErr.message);
+
+              const hourly = Array.isArray(weatherRaw?.data)
+                ? weatherRaw.data
+                : (Array.isArray(weatherRaw) ? weatherRaw : []);
+              if (hourly.length === 0) {
+                throw new Error('no weather data');
+              }
+
+              const toTs = (v) => {
+                if (Number.isFinite(v)) return v;
+                const t = new Date(v).getTime();
+                return Number.isFinite(t) ? t : null;
+              };
+
+              let weatherData = hourly[0];
+              const refTs = predictionDate instanceof Date ? predictionDate.getTime() : null;
+              if (Number.isFinite(refTs)) {
+                weatherData = hourly.reduce((closest, current) => {
+                  const cTs = toTs(closest?.timestamp ?? closest?.time);
+                  const nTs = toTs(current?.timestamp ?? current?.time);
+                  const cDiff = Number.isFinite(cTs) ? Math.abs(cTs - refTs) : Number.POSITIVE_INFINITY;
+                  const nDiff = Number.isFinite(nTs) ? Math.abs(nTs - refTs) : Number.POSITIVE_INFINITY;
+                  return nDiff < cDiff ? current : closest;
+                }, hourly[0]);
+              }
+
+              const prediction = calculateEnhancedPrediction(weatherData, predictionDate, point.lat, point.lon, safePeriod);
+              scoredBatch.push({
+                lat: point.lat,
+                lon: point.lon,
+                score: prediction.score,
+                quality: prediction.quality,
+                breakdown: prediction.breakdown || null
+              });
+            } catch (err) {
+              scoredBatch.push({
+                lat: point.lat,
+                lon: point.lon,
+                score: null,
+                quality: 'error',
+                error: err.message,
+                breakdown: null
+              });
             }
+          }
 
-            const hourly = Array.isArray(weatherRaw?.data)
-              ? weatherRaw.data
-              : (Array.isArray(weatherRaw) ? weatherRaw : []);
-            if (hourly.length === 0) {
-              throw new Error('no weather data');
-            }
+          // 成功完成批次
+          const successCount = scoredBatch.filter(item => Number.isFinite(item.score)).length;
+          const errorCount = scoredBatch.length - successCount;
+          updateBatchStatus({
+            status: 'success',
+            finishedAt: new Date().toISOString(),
+            successCount,
+            errorCount
+          });
 
-            const toTs = (v) => {
-              if (Number.isFinite(v)) return v;
-              const t = new Date(v).getTime();
-              return Number.isFinite(t) ? t : null;
-            };
+          // 跳出重试循环
+          break;
+        } catch (err) {
+          retryCount++;
+          const is429 = err?.response?.status === 429 || err?.message?.includes('429');
 
-            let weatherData = hourly[0];
-            const refTs = predictionDate instanceof Date ? predictionDate.getTime() : null;
-            if (Number.isFinite(refTs)) {
-              weatherData = hourly.reduce((closest, current) => {
-                const cTs = toTs(closest?.timestamp ?? closest?.time);
-                const nTs = toTs(current?.timestamp ?? current?.time);
-                const cDiff = Number.isFinite(cTs) ? Math.abs(cTs - refTs) : Number.POSITIVE_INFINITY;
-                const nDiff = Number.isFinite(nTs) ? Math.abs(nTs - refTs) : Number.POSITIVE_INFINITY;
-                return nDiff < cDiff ? current : closest;
-              }, hourly[0]);
-            }
+          if (is429 && retryCount <= maxRetries) {
+            // 429 错误，进入 retrying 状态
+            const retryAfterMs = err?.response?.headers?.['retry-after']
+              ? parseInt(err.response.headers['retry-after'], 10) * 1000
+              : 60 * 1000;
+            console.warn(`[GridScoreService] batch=${batchIndex + 1} 遇到 429，${retryCount}/${maxRetries} 次重试，等待 ${retryAfterMs}ms`);
+            updateBatchStatus({ status: 'retrying', errorMessage: `429 retry ${retryCount}/${maxRetries}` });
+            await this._sleep(retryAfterMs);
+            continue;
+          }
 
-            const prediction = calculateEnhancedPrediction(weatherData, predictionDate, point.lat, point.lon, safePeriod);
-            scoredBatch.push({
-              lat: point.lat,
-              lon: point.lon,
-              score: prediction.score,
-              quality: prediction.quality,
-              breakdown: prediction.breakdown || null
-            });
-          } catch (err) {
+          // 其他错误或重试耗尽
+          console.error(`[GridScoreService] 批量请求失败: batch=${batchIndex + 1}/${batches.length}, points=${points.length}`, err.message);
+          this._setJobStatus(safePeriod, { lastError: err.message, currentBatch: batchIndex + 1 });
+
+          // 标记批次失败
+          updateBatchStatus({
+            status: 'failed',
+            finishedAt: new Date().toISOString(),
+            errorMessage: err.message
+          });
+
+          // 填充错误结果
+          for (const point of batch) {
             scoredBatch.push({
               lat: point.lat,
               lon: point.lon,
@@ -250,19 +331,7 @@ class GridScoreService {
               breakdown: null
             });
           }
-        }
-      } catch (err) {
-        console.error(`[GridScoreService] 批量请求失败: batch=${batchIndex + 1}/${batches.length}, points=${points.length}`, err.message);
-        this._setJobStatus(safePeriod, { lastError: err.message, currentBatch: batchIndex + 1 });
-        for (const point of batch) {
-          scoredBatch.push({
-            lat: point.lat,
-            lon: point.lon,
-            score: null,
-            quality: 'error',
-            error: err.message,
-            breakdown: null
-          });
+          break;
         }
       }
 
@@ -355,7 +424,7 @@ class GridScoreService {
   }
 
   /**
-   * 手动触发刷新（有频控保护）
+   * 手动触发刷新（有频控保护）- 后台异步执行，立即返回
    * @param {'sunrise'|'sunset'} period
    * @returns {{ ok: boolean, message: string }}
    */
@@ -368,8 +437,11 @@ class GridScoreService {
       return { ok: false, message: `频控保护：请 ${remaining} 分钟后再试` };
     }
     this._lastManualRefresh[safePeriod] = now;
-    await this._doRefresh(safePeriod);
-    return { ok: true, message: `${safePeriod} 刷新成功` };
+    // 后台异步执行，不等待完成
+    this._doRefresh(safePeriod).catch(err => {
+      console.error(`[GridScoreService] 后台刷新失败 (${safePeriod}):`, err.message);
+    });
+    return { ok: true, message: `${safePeriod} 刷新已启动，请通过 /api/heatmap/status 查看进度` };
   }
 
   /**
