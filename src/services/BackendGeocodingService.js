@@ -138,6 +138,53 @@ class BackendGeocodingService {
   }
 
   /**
+   * 搜索城市候选列表
+   *
+   * @param {string} query - 搜索关键词
+   * @param {number} limit - 返回结果数量限制，默认 8
+   * @returns {Promise<Array<{displayName, enName, lat, lon, countryCode}>>}
+   */
+  async searchCities(query, limit = 8) {
+    if (!query || typeof query !== 'string' || !query.trim()) {
+      return [];
+    }
+
+    const url = new URL(`${this.proxyURL}/api/geocoding/search`);
+    url.searchParams.set('q', query.trim());
+    url.searchParams.set('provider', this.provider);
+    url.searchParams.set('limit', limit.toString());
+    if (this.apiKey) {
+      url.searchParams.set('key', this.apiKey);
+    }
+
+    try {
+      const response = await fetch(url.toString(), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!response.ok) {
+        return [];
+      }
+
+      const data = await response.json();
+      if (!data.results || data.results.length === 0) {
+        return [];
+      }
+
+      return data.results.map(item => ({
+        displayName: item.name,
+        enName: item.name,
+        lat: item.lat,
+        lon: item.lon,
+        countryCode: (item.countryCode || '').toUpperCase() || null
+      }));
+    } catch (err) {
+      console.warn('[BackendGeocodingService] searchCities failed:', err.message);
+      return [];
+    }
+  }
+
+  /**
    * 反向地理编码：坐标 → 地名
    *
    * @param {number} lat
