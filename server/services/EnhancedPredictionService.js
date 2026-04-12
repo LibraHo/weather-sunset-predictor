@@ -722,9 +722,16 @@ function checkSolarOcclusion(solarElevation, lightPathCloudData, fallbackCloudBa
 
 /**
  * 恶劣天气硬性封顶，避免雨雪/阴天出现高分
+ * 
+ * 修复：不再仅凭 total cloudCover >= 85 就硬封顶35分
+ * 改为：低云遮挡主导（lowClouds >= 60 且 totalCloudCover >= 85）时才重罚
+ * 高云主导场景（highClouds 高但 lowClouds 低）不再被误伤
  */
 function applySevereWeatherCap(score, weatherData) {
   const cloudCover = weatherData.cloudCover || 0;
+  const lowClouds = weatherData.lowClouds || 0;
+  const midClouds = weatherData.midClouds || 0;
+  const highClouds = weatherData.highClouds || 0;
   const precipitation = weatherData.precipitation || 0;
   const convPrecip = weatherData.convPrecip || 0;
   const weatherCode = weatherData.weatherCode;
@@ -736,12 +743,18 @@ function applySevereWeatherCap(score, weatherData) {
     (weatherCode >= 80 && weatherCode <= 86)
   );
 
-  if (cloudCover >= 85) {
-    return { score: Math.min(score, 35), reason: 'overcast_cap_35' };
-  }
-
+  // 降水/雨雪码封顶逻辑保持不变
   if (precipitation > 0.5 || convPrecip > 0.5 || isRainSnowCode) {
     return { score: Math.min(score, 45), reason: 'precipitation_cap_45' };
+  }
+
+  // 低云遮挡主导才重罚：低云高 + 总云量高
+  // 避免高云主导（如 highClouds=90, lowClouds=10）被误伤
+  const isLowCloudDominant = lowClouds >= 60 && cloudCover >= 85;
+  const isOvercastWithLowCloud = cloudCover >= 85 && lowClouds > Math.max(midClouds, highClouds);
+  
+  if (isLowCloudDominant || isOvercastWithLowCloud) {
+    return { score: Math.min(score, 35), reason: 'overcast_cap_35' };
   }
 
   return { score, reason: null };
