@@ -189,6 +189,42 @@ class ApiCallLog {
       }
     };
   }
+
+  /**
+   * 获取今日每小时统计
+   * @returns {Array<{hour: number, grid: number, weather: number, gaode: number, gaodeTile: number, total: number}>}
+   */
+  getHourlyStats() {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const hours = [];
+
+    for (let h = 0; h < 24; h++) {
+      const hourStart = todayStart + h * 3600 * 1000;
+      const hourEnd = hourStart + 3600 * 1000;
+
+      const inHour = (log) => {
+        const t = new Date(log.time).getTime();
+        return t >= hourStart && t < hourEnd;
+      };
+
+      const grid = this._logs.filter(l => l.type === 'grid' && inHour(l)).length;
+      const weather = this._logs.filter(l => l.type === 'weather' && inHour(l)).length;
+      const gaode = this._logs.filter(l => l.type === 'gaode' && inHour(l)).length;
+      const gaodeTile = this._logs.filter(l => l.type === 'gaode_tile' && inHour(l)).length;
+
+      hours.push({
+        hour: h,
+        grid,
+        weather,
+        gaode,
+        gaodeTile,
+        total: grid + weather + gaode + gaodeTile
+      });
+    }
+
+    return hours;
+  }
 }
 
 function _summarizeParams(params) {
