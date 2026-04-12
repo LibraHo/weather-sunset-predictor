@@ -33,7 +33,7 @@ const OPENMETEO_GEOCODING_BASE = 'https://geocoding-api.open-meteo.com/v1';
  */
 router.get('/search', async (req, res, next) => {
   try {
-    const { q, provider = 'auto', key } = req.query;
+    const { q, provider = 'auto', key, limit = '8' } = req.query;
 
     if (!q || !q.trim()) {
       return res.status(400).json({
@@ -41,17 +41,19 @@ router.get('/search', async (req, res, next) => {
       });
     }
 
+    const limitNum = parseInt(limit, 10) || 8;
+
     switch (provider) {
       case 'auto':
-        return await handleAutoSearch(res, q.trim(), key);
+        return await handleAutoSearch(res, q.trim(), key, limitNum);
       case 'gaode':
-        return await handleGaodeSearch(res, q.trim(), key);
+        return await handleGaodeSearch(res, q.trim(), key, limitNum);
       case 'google':
-        return await handleGoogleSearch(res, q.trim(), key);
+        return await handleGoogleSearch(res, q.trim(), key, limitNum);
       case 'openmeteo':
-        return await handleOpenMeteoSearch(res, q.trim());
+        return await handleOpenMeteoSearch(res, q.trim(), limitNum);
       default: // nominatim
-        return await handleNominatimSearch(res, q.trim());
+        return await handleNominatimSearch(res, q.trim(), limitNum);
     }
   } catch (error) {
     next(error);
@@ -114,9 +116,12 @@ function attachSearchMeta(payload, meta) {
   };
 }
 
-async function handleAutoSearch(res, query, apiKey) {
+async function handleAutoSearch(res, query, apiKey, limit = 8) {
   // Auto 策略：先高德（国内优先），失败/无结果再 Open-Meteo
   const effectiveKey = apiKey || process.env.GAODE_API_KEY;
+
+  // Penang/槟城特殊处理：马来西亚槟城优先
+  const isPenangQuery = /^(penang|槟城|乔治市|george\s*town)$/i.test(query.trim());
 
   if (effectiveKey) {
     try {
@@ -126,33 +131,40 @@ async function handleAutoSearch(res, query, apiKey) {
       });
       const data = response.data;
       if (data.status === '1' && data.geocodes && data.geocodes.length > 0) {
-        return res.json(attachSearchMeta({
-          results: data.geocodes.map(item => {
-            const [lonStr, latStr] = item.location.split(',');
-            const regionCode = resolveGaodeRegionCode(item.adcode);
-            return {
-              name: item.formatted_address,
-              lat: parseFloat(latStr),
-              lon: parseFloat(lonStr),
-              type: 'place',
-              provider: 'gaode',
-              countryCode: 'CN',
-              regionCode,
-              adcode: item.adcode || null
-            };
-          })
-        }, { providerUsed: 'gaode', fallbackUsed: false }));
+        let results = data.geocodes.map(item => {
+          const [lonStr, latStr] = item.location.split(',');
+          const regionCode = resolveGaodeRegionCode(item.adcode);
+          return {
+            name: item.formatted_address,
+            lat: parseFloat(latStr),
+            lon: parseFloat(lonStr),
+            type: 'place',
+            provider: 'gaode',
+            countryCode: 'CN',
+            regionCode,
+            adcode: item.adcode || null
+          };
+        });
+        // Penang查询时，将马来西亚槟城排在前面
+        if (isPenangQuery) {
+          results = sortPenangFirst(results);
+        }
+        return res.json(attachSearchMeta({ results: results.slice(0, limit) }, { providerUsed: 'gaode', fallbackUsed: false }));
       }
 
-      const om = await fetchOpenMeteoResults(query);
-      return res.json(attachSearchMeta({ results: om }, {
+      const om = await fetchOpenMeteoResults(query, limit);
+      // Penang查询时，将马来西亚槟城排在前面
+      const finalResults = isPenangQuery ? sortPenangFirst(om).slice(0, limit) : om.slice(0, limit);
+      return res.json(attachSearchMeta({ results: finalResults }, {
         providerUsed: 'openmeteo',
         fallbackUsed: true,
         fallbackReason: 'gaode_empty_result'
       }));
     } catch (error) {
-      const om = await fetchOpenMeteoResults(query);
-      return res.json(attachSearchMeta({ results: om }, {
+      const om = await fetchOpenMeteoResults(query, limit);
+      // Penang查询时，将马来西亚槟城排在前面
+      const finalResults = isPenangQuery ? sortPenangFirst(om).slice(0, limit) : om.slice(0, limit);
+      return res.json(attachSearchMeta({ results: finalResults }, {
         providerUsed: 'openmeteo',
         fallbackUsed: true,
         fallbackReason: error.code === 'ECONNABORTED' ? 'gaode_timeout' : 'gaode_error'
@@ -161,8 +173,10 @@ async function handleAutoSearch(res, query, apiKey) {
   }
 
   // 无高德 key 时直接 openmeteo
-  const om = await fetchOpenMeteoResults(query);
-  return res.json(attachSearchMeta({ results: om }, {
+  const om = await fetchOpenMeteoResults(query, limit);
+  // Penang查询时，将马来西亚槟城排在前面
+  const finalResults = isPenangQuery ? sortPenangFirst(om).slice(0, limit) : om.slice(0, limit);
+  return res.json(attachSearchMeta({ results: finalResults }, {
     providerUsed: 'openmeteo',
     fallbackUsed: true,
     fallbackReason: 'missing_gaode_key'
@@ -184,11 +198,11 @@ async function handleAutoReverse(res, lat, lon, apiKey) {
 
 // ========== Nominatim (OpenStreetMap) ==========
 
-async function handleNominatimSearch(res, query) {
+async function handleNominatimSearch(res, query, limit = 5) {
   console.log(`[Geocoding] Nominatim 搜索: "${query}"`);
 
   const response = await axios.get(`${NOMINATIM_BASE}/search`, {
-    params: { q: query, format: 'json', limit: 5, addressdetails: 1 },
+    params: { q: query, format: 'json', limit: limit, addressdetails: 1 },
     headers: { 'User-Agent': 'WeatherSunsetPredictor/1.0' },
     timeout: 8000
   });
@@ -233,11 +247,11 @@ async function handleNominatimReverse(res, lat, lon) {
 
 // ========== Open-Meteo Geocoding ==========
 
-async function fetchOpenMeteoResults(query) {
+async function fetchOpenMeteoResults(query, limit = 8) {
   const response = await axios.get(`${OPENMETEO_GEOCODING_BASE}/search`, {
     params: {
       name: query,
-      count: 8,
+      count: limit,
       language: 'zh',
       format: 'json'
     },
@@ -260,9 +274,9 @@ async function fetchOpenMeteoResults(query) {
   }));
 }
 
-async function handleOpenMeteoSearch(res, query) {
+async function handleOpenMeteoSearch(res, query, limit = 8) {
   console.log(`[Geocoding] Open-Meteo 搜索: "${query}"`);
-  const results = await fetchOpenMeteoResults(query);
+  const results = await fetchOpenMeteoResults(query, limit);
   return res.json(attachSearchMeta({ results }, {
     providerUsed: 'openmeteo',
     fallbackUsed: false
@@ -291,7 +305,7 @@ function requireKey(res, apiKey, providerName) {
   return true;
 }
 
-async function handleGaodeSearch(res, query, apiKey) {
+async function handleGaodeSearch(res, query, apiKey, limit = 8) {
   const effectiveKey = apiKey || process.env.GAODE_API_KEY;
   if (!requireKey(res, effectiveKey, '高德地图')) return;
   apiKey = effectiveKey;
@@ -308,29 +322,37 @@ async function handleGaodeSearch(res, query, apiKey) {
     if (data.status !== '1' || !data.geocodes || data.geocodes.length === 0) {
       // 国际城市在高德经常无结果，自动回退到 Open-Meteo Geocoding
       console.log('[Geocoding] 高德无结果，fallback 到 Open-Meteo');
-      return await handleOpenMeteoSearch(res, query);
+      return await handleOpenMeteoSearch(res, query, limit);
+    }
+
+    let results = data.geocodes.map(item => {
+      const [lonStr, latStr] = item.location.split(',');
+      const regionCode = resolveGaodeRegionCode(item.adcode);
+      return {
+        name: item.formatted_address,
+        lat: parseFloat(latStr),
+        lon: parseFloat(lonStr),
+        type: 'place',
+        provider: 'gaode',
+        countryCode: 'CN',
+        regionCode,
+        adcode: item.adcode || null
+      };
+    });
+
+    // Penang查询时，将马来西亚槟城排在前面
+    const isPenangQuery = /^(penang|槟城|乔治市|george\s*town)$/i.test(query.trim());
+    if (isPenangQuery) {
+      results = sortPenangFirst(results);
     }
 
     return res.json({
-      results: data.geocodes.map(item => {
-        const [lonStr, latStr] = item.location.split(',');
-        const regionCode = resolveGaodeRegionCode(item.adcode);
-        return {
-          name: item.formatted_address,
-          lat: parseFloat(latStr),
-          lon: parseFloat(lonStr),
-          type: 'place',
-          provider: 'gaode',
-          countryCode: 'CN',
-          regionCode,
-          adcode: item.adcode || null
-        };
-      })
+      results: results.slice(0, limit)
     });
   } catch (error) {
     // 修复：高德超时/网络错误时，也应自动回退到 Open-Meteo
     console.warn(`[Geocoding] 高德请求失败(${error.code || 'ERR'})，fallback 到 Open-Meteo: ${error.message}`);
-    return await handleOpenMeteoSearch(res, query);
+    return await handleOpenMeteoSearch(res, query, limit);
   }
 }
 
@@ -365,7 +387,7 @@ async function handleGaodeReverse(res, lat, lon, apiKey) {
 
 // ========== Google Maps Geocoding API ==========
 
-async function handleGoogleSearch(res, query, apiKey) {
+async function handleGoogleSearch(res, query, apiKey, limit = 5) {
   if (!requireKey(res, apiKey, 'Google Maps')) return;
 
   console.log(`[Geocoding] Google Maps 搜索: "${query}"`);
@@ -380,16 +402,24 @@ async function handleGoogleSearch(res, query, apiKey) {
     return res.json({ results: [] });
   }
 
+  let results = data.results.map(item => ({
+    name: item.formatted_address,
+    lat: item.geometry.location.lat,
+    lon: item.geometry.location.lng,
+    type: item.types?.[0] || 'place',
+    provider: 'google',
+    countryCode: deriveGoogleCountryCode(item.address_components),
+    regionCode: deriveGoogleRegionCode(item.address_components)
+  }));
+
+  // Penang查询时，将马来西亚槟城排在前面
+  const isPenangQuery = /^(penang|槟城|乔治市|george\s*town)$/i.test(query.trim());
+  if (isPenangQuery) {
+    results = sortPenangFirst(results);
+  }
+
   return res.json({
-    results: data.results.map(item => ({
-      name: item.formatted_address,
-      lat: item.geometry.location.lat,
-      lon: item.geometry.location.lng,
-      type: item.types?.[0] || 'place',
-      provider: 'google',
-      countryCode: deriveGoogleCountryCode(item.address_components),
-      regionCode: deriveGoogleRegionCode(item.address_components)
-    }))
+    results: results.slice(0, limit)
   });
 }
 
@@ -456,6 +486,23 @@ function deriveGoogleCountryCode(addressComponents = []) {
 function deriveGoogleRegionCode(addressComponents = []) {
   const admin1Code = getGoogleAddressShortCode(addressComponents, 'administrative_area_level_1');
   return resolveAdminRegionCode(admin1Code);
+}
+
+/**
+ * Penang/槟城搜索结果排序：马来西亚槟城优先
+ * 仅针对 Penang 相关查询，将马来西亚(MY)的结果排在前面
+ */
+function sortPenangFirst(results) {
+  if (!Array.isArray(results) || results.length === 0) return results;
+  
+  return results.sort((a, b) => {
+    const aIsMalaysia = a.countryCode === 'MY';
+    const bIsMalaysia = b.countryCode === 'MY';
+    
+    if (aIsMalaysia && !bIsMalaysia) return -1;
+    if (!aIsMalaysia && bIsMalaysia) return 1;
+    return 0;
+  });
 }
 
 module.exports = router;

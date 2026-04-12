@@ -1304,15 +1304,38 @@ class AppController {
     this.hideSearchHistory();
 
     dropdown.querySelectorAll('.city-suggestion-item').forEach(item => {
-      item.addEventListener('click', () => {
+      item.addEventListener('click', async () => {
         const locationInput = document.getElementById('location-input');
         const index = parseInt(item.dataset.index, 10);
         const selected = this.citySuggestions[index];
 
         if (locationInput && selected) {
-          locationInput.value = selected.enName;
+          // 优先使用 displayName，并直接使用候选坐标触发天气加载
+          locationInput.value = selected.displayName || selected.enName;
           this.hideCitySuggestions();
-          this.handleLocationSearch();
+
+          // 使用候选坐标直接创建 Location 对象，避免二次 geocode 误匹配
+          try {
+            const { default: Location } = await import('../models/Location.js');
+            const location = new Location(selected.lat, selected.lon, selected.displayName || selected.enName);
+            location.countryCode = selected.countryCode;
+
+            if (location.isValid()) {
+              await this.handleLocationChange(location);
+              // 保存到搜索历史
+              const saved = this.storageService.saveSearchHistory(location);
+              if (saved) {
+                console.log('[AppController] 搜索历史已保存:', location.name);
+                this.loadSearchHistory();
+              }
+              this.showSuccess(`已切换到：${location.name}`);
+            } else {
+              throw new Error('无效的坐标');
+            }
+          } catch (error) {
+            console.error('[AppController] 选择城市失败:', error);
+            this.showError('选择城市失败，请重试');
+          }
         }
       });
     });
