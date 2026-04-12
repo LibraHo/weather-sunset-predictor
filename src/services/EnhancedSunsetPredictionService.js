@@ -196,7 +196,14 @@ class EnhancedSunsetPredictionService {
     const penaltyReason = this.i18n.t(penaltyReasonKey, { value: lowClouds.toFixed(0) });
 
     // 最终画布得分
-    const canvasScore = cloudRangeScore * lowCloudPenalty;
+    let canvasScore = cloudRangeScore * lowCloudPenalty;
+
+    // 高云主导场景加分：当 highClouds > 50% 且 lowClouds < 30% 时，增加 bonus 系数
+    let highCloudBonus = 1.0;
+    if (highClouds > 50 && lowClouds < 30) {
+      highCloudBonus = 1.20; // 1.15~1.2 之间，让画布分达到 75+
+      canvasScore = canvasScore * highCloudBonus;
+    }
 
     return {
       score: canvasScore,
@@ -446,18 +453,18 @@ class EnhancedSunsetPredictionService {
         advice = this.i18n.t('prediction.status.poorViewing');
       }
     }
-    // 根据综合得分判定
-    else if (clampedScore < 50) {
+    // 根据综合得分判定（阈值整体下调约10分）
+    else if (clampedScore < 40) {
       status = this.i18n.t('prediction.status.lightGlow');
       icon = '🌅';
       description = this.i18n.t('prediction.status.conditionsFair');
       advice = this.i18n.t('prediction.status.canWatch');
-    } else if (clampedScore < 70) {
+    } else if (clampedScore < 65) {
       status = this.i18n.t('prediction.status.goodGlow');
       icon = '🌆';
       description = this.i18n.t('prediction.status.conditionsGood');
       advice = this.i18n.t('prediction.status.canWatch');
-    } else if (clampedScore < 85) {
+    } else if (clampedScore < 80) {
       status = this.i18n.t('prediction.status.veryLikely');
       icon = '🌆';
       description = this.i18n.t('prediction.status.excellentConditions');
