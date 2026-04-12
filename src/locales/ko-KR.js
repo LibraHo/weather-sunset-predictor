@@ -28,9 +28,9 @@ const translations = {
         "visibilityDesc": "가시거리가 높을수록 하늘 배경이 더 깨끗하고 노을의 경계와 색채 전환이 더 뚜렷해집니다."
       },
       "scoreGuideTitle": "점수 해석",
-      "scoreExcellent": "우수：>70（관람 권장）",
-      "scoreGood": "양호：40-70（관람 가능）",
-      "scoreFair": "보통：<40（기대치 조정 필요）",
+      "scoreExcellent": "우수：>80（강력 추천）",
+      "scoreGood": "양호：65-80（높은 확률）",
+      "scoreFair": "보통：40-65（관람 가능）",
       "scoreExcellentRange": "우수 Excellent",
       "scoreExcellentDesc": "강력 추천",
       "scoreGoodRange": "양호 Good",
@@ -42,31 +42,40 @@ const translations = {
       "sections": {
         "cloudStructure": {
           "title": "1. 구름층 구조",
-          "subtitle": "Cloud Structure · 60점",
+          "subtitle": "Cloud Structure · 캔버스 평가",
           "desc": "화염구름에는 적절한 구름층이 \"캔버스\"로 필요하며, 상층운과 중층운이 핵심 매개체입니다.",
-          "highCloud": "상층운(>6km): 최적 50%, 가우시안 곡선, 최고 25점",
-          "midCloud": "중층운(2–6km): 최적 35%, 가우시안 곡선, 최고 25점",
-          "lowCloudBonus": "하층운 보너스: 하층운<20% 만점 10점, 선형 감소",
-          "formula": "구름층 구조 점수 = 상층운 + 중층운 + 하층운 보너스 (최고 60점)"
+          "highCloud": "상층운(>6km): 화염구름의 최적 매개체, 광투과성이 좋아 넓은 적색·주황색을 생성",
+          "midCloud": "중층운(2–6km): 화염구름도 형성 가능하나 상층운보다 약간 효과가 떨어짐",
+          "lowCloudBonus": "하층운(<2km): 주로 차단 역할을 하며, 긍정 평가에는 기여하지 않음",
+          "formula": "유효 구름량 = max(상층운×1.15, 중층운)×0.7 + min(상층운, 중층운)×0.2; 하층운 30% 이하 패널티 없음, 80%에서 0.5",
+          "highCloudBonus": "상층운 우위 보너스: 상층운>50%이고 하층운<30%일 때, 캔버스 점수×1.2배"
+        },
+        "lightPath": {
+          "title": "2. 빛 경로 평가",
+          "subtitle": "Light Path · 광로 점수",
+          "desc": "광로 통과도가 빛이 구름층에 도달할 수 있는지 결정. 하층운이 적을수록 광로가 뚫리고 차단 확률이 낮아짐.",
+          "lowCloudEffect": "하층운<30%일 때, 광로 차단 가중치가 0.7~0.85로 낮아져 빛이 통과하기 쉬움",
+          "visibility": "가시거리: 빛 전파 선명도에 영향",
+          "formula": "광로 점수 = 기초 광로 점수 × 하층운 가중 계수"
         },
         "transparency": {
-          "title": "2. 대기 투명도",
-          "subtitle": "Transparency · 25점",
+          "title": "3. 대기 투명도",
+          "subtitle": "Transparency · 렌더링 평가",
           "desc": "투명한 대기는 빛이 구름을 순수하게 채색하게 하며, 적절한 습도는 산란을 강화해 색채를 풍부하게 합니다.",
           "visibility": "시정: 15 × (1 − e^(−v/15)), 최고 15점",
           "humidity": "습도: 최적 55%, 가우시안 곡선, 최고 10점",
           "formula": "투명도 점수 = 시정 점수 + 습도 점수 (최고 25점)"
         },
         "layerDiversity": {
-          "title": "3. 구름층 입체감",
-          "subtitle": "Layer Diversity · 15점",
+          "title": "4. 구름층 입체감",
+          "subtitle": "Layer Diversity · 층 평가",
           "desc": "상·중·하층운이 동시에 존재하면 빛의 굴절 각도가 다양해져 색채 층이 더욱 풍부해집니다.",
           "threeLayer": "3층 모두 >10% → 15점",
           "twoLayer": "임의의 2층 >10% → 8점",
           "oneLayer": "1층만 또는 구름 없음 → 0점"
         },
         "lowCloudPenalty": {
-          "title": "4. 하층운 패널티 계수",
+          "title": "5. 하층운 패널티 계수",
           "subtitle": "Low Cloud Penalty · Multiplier",
           "desc": "하층운은 시선을 가리는 \"시인성 살인자\"로, 곱셈 계수로 총점에 적용됩니다.",
           "level1": "하층운<20% → ×1.0 (패널티 없음)",
@@ -75,7 +84,7 @@ const translations = {
           "level4": "하층운>70% → ×0.2 (심각한 차단)"
         },
         "precipPenalty": {
-          "title": "5. 강수 패널티 계수",
+          "title": "6. 강수 패널티 계수",
           "subtitle": "Precipitation Penalty · Multiplier",
           "desc": "강수는 화염구름의 가시성을 직접 약화시키며, 곱셈 계수로 총점에 적용됩니다.",
           "level1": "강수<0.1mm/h → ×1.0 (패널티 없음)",
@@ -83,6 +92,13 @@ const translations = {
           "level3": "0.5–2mm/h → ×0.5",
           "level4": ">2mm/h → ×0.15 (폭우, 거의 불가능)",
           "formula": "최종 점수 = 기초 점수 × 하층운 계수 × 강수 계수"
+        },
+        "finalFormula": {
+          "title": "7. 종합 계산 공식",
+          "subtitle": "Final Score Formula",
+          "desc": "최종 점수는 캔버스 평가와 광로 평가를 가중 계산하고 패널티 계수를 곱하여 산출.",
+          "formula": "종합 점수 = (캔버스 점수 × 0.8 + 광로 점수 × 0.2) × 하층운 계수 × 강수 계수",
+          "highCloudCap": "상층운 우위로 원거리 데이터 없을 때, 상한을 85점으로 완화(기존 69.9점)"
         }
       }
     }
