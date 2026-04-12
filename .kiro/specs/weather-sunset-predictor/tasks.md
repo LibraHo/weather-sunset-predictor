@@ -1,6 +1,6 @@
 # 📋 Weather Sunset Predictor 任务清单
 
-**最后更新**：2026-04-10 01:36
+**最后更新**：2026-04-12
 
 ---
 
@@ -30,12 +30,12 @@
 
 ### 任务清单
 - [x] 新增 `server/services/ApiCallLog.js` — 日志服务（已完成框架）
-- [ ] 埋点：OpenMeteoProvider._getWithRetry
-- [ ] 埋点：weather路由 forecast 端点
-- [ ] 埋点：高德地理编码、瓦片代理
-- [ ] 新增 `server/routes/api-logs.js` — 日志API路由
-- [ ] admin页面新增日志面板（分Tab展示，自动刷新）
-- [ ] 统计摘要：今日总数/每小时请求数/分类统计
+- [x] 埋点：OpenMeteoProvider._getWithRetry（2026-04-12 已核对）
+- [x] 埋点：weather路由 forecast 端点（2026-04-12 已核对）
+- [x] 埋点：高德地理编码、瓦片代理（2026-04-12 已核对）
+- [x] 新增 `server/routes/api-logs.js` — 日志API路由（2026-04-12 已核对）
+- [x] admin页面新增日志面板（分Tab展示，自动刷新）— 已实现（见 `server/routes/admin.js` 内嵌HTML）
+- [x] 统计摘要：今日总数/每小时请求数/分类统计 — 已实现（`GET /api/admin/logs/summary` + `GET /api/admin/logs/hourly`）
 
 ---
 
