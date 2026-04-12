@@ -34,9 +34,9 @@ export default {
         visibilityDesc: '更高能见度通常意味着更清晰的天空背景，晚霞边界和色彩过渡更明显。'
       },
       scoreGuideTitle: '评分解读',
-      scoreExcellent: '优秀：>70（推荐出门）',
-      scoreGood: '良好：40-70（可观赏）',
-      scoreFair: '一般：<40（谨慎期待）',
+      scoreExcellent: '优秀：>80（强烈推荐）',
+      scoreGood: '良好：65-80（很可能出现）',
+      scoreFair: '一般：40-65（可观赏）',
       scoreExcellentRange: '优秀 Excellent',
       scoreExcellentDesc: '强烈推荐出门',
       scoreGoodRange: '良好 Good',
@@ -53,26 +53,35 @@ export default {
           highCloud: '高云（>6km）：火烧云的最佳载体，透光性好，能染出大片红橙色',
           midCloud: '中云（2–6km）：同样能产生火烧云，效果略逊于高云',
           lowCloudBonus: '低云（<2km）：主要起遮挡作用，不贡献正面分数',
-          formula: '有效云量 = max(高云×1.15, 中云)×0.7 + min(高云, 中云)×0.2；低云30%以下不惩罚，80%时惩罚到0.5'
+          formula: '有效云量 = max(高云×1.15, 中云)×0.7 + min(高云, 中云)×0.2；低云30%以下不惩罚，80%时惩罚到0.5',
+          highCloudBonus: '高云主导加分：当高云>50%且低云<30%时，画布分×1.2倍'
+        },
+        lightPath: {
+          title: '2. 光路评估',
+          subtitle: 'Light Path · 光路评分',
+          desc: '光路通畅度决定光线能否顺利到达云层。低云少时光路更通畅，遮挡概率降低。',
+          lowCloudEffect: '低云<30%时，光路遮挡权重降低至0.7~0.85，光线更易穿透',
+          visibility: '能见度：影响光线传播清晰度',
+          formula: '光路分 = 基础光路分 × 低云权重系数'
         },
         transparency: {
-          title: '2. 大气透明度',
-          subtitle: 'Transparency · 25分',
+          title: '3. 大气透明度',
+          subtitle: 'Transparency · 渲染评分',
           desc: '透明的大气让光线更纯粹地染色云层，湿度适中有助于散射增强色彩。',
           visibility: '能见度：15 × (1 − e^(−v/15))，满分15分',
           humidity: '湿度：最优55%，高斯曲线，满分10分',
           formula: '透明度分 = 能见度分 + 湿度分（最高25分）'
         },
         layerDiversity: {
-          title: '3. 云层立体感',
-          subtitle: 'Layer Diversity · 15分',
+          title: '4. 云层立体感',
+          subtitle: 'Layer Diversity · 层次评分',
           desc: '高中低三层云同时存在时，光线折射角度多样，色彩层次更丰富。',
           threeLayer: '三层云均>10% → 15分',
           twoLayer: '任意两层>10% → 8分',
           oneLayer: '仅一层或无云 → 0分'
         },
         lowCloudPenalty: {
-          title: '4. 低云惩罚系数',
+          title: '5. 低云惩罚系数',
           subtitle: 'Low Cloud Penalty · Multiplier',
           desc: '低云挡在视线前方，是火烧云的"视线杀手"，以乘性系数惩罚总分。',
           level1: '低云<20% → ×1.0（无惩罚）',
@@ -81,7 +90,7 @@ export default {
           level4: '低云>70% → ×0.2（严重遮挡）'
         },
         precipPenalty: {
-          title: '5. 降水惩罚系数',
+          title: '6. 降水惩罚系数',
           subtitle: 'Precipitation Penalty · Multiplier',
           desc: '降水直接削弱火烧云可见性，以乘性系数惩罚总分。',
           level1: '降水<0.1mm/h → ×1.0（无惩罚）',
@@ -89,6 +98,13 @@ export default {
           level3: '0.5–2mm/h → ×0.5',
           level4: '>2mm/h → ×0.15（大雨，基本无望）',
           formula: '最终得分 = 基础分 × 低云系数 × 降水系数'
+        },
+        finalFormula: {
+          title: '7. 综合计算公式',
+          subtitle: 'Final Score Formula',
+          desc: '最终得分由画布评分和光路评分加权计算，再乘以惩罚系数。',
+          formula: '综合得分 = (画布分 × 0.8 + 光路分 × 0.2) × 低云系数 × 降水系数',
+          highCloudCap: '高云主导无远端数据时，上限放宽至85分（原69.9分）'
         }
       }
     }

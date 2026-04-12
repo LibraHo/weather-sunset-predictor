@@ -28,10 +28,10 @@ const translations = {
         "visibilityDesc": "Higher visibility usually means cleaner sky background and clearer sunset color transitions."
       },
       "scoreGuideTitle": "Score Guide",
-      "scoreExcellent": "Excellent: >70 (Highly Recommended)",
-      "scoreGood": "Good: 40-70 (Viewable, Good Conditions)",
-      "scoreFair": "Fair: 20-40 (Cautious, Low Probability)",
-      "scorePoor": "Poor: <20 (Not Recommended)",
+      "scoreExcellent": "Excellent: >80 (Highly Recommended)",
+      "scoreGood": "Good: 65-80 (Very Likely)",
+      "scoreFair": "Fair: 40-65 (Viewable)",
+      "scorePoor": "Poor: <40 (Not Recommended)",
       "scoreExcellentRange": "Excellent",
       "scoreExcellentDesc": "Highly Recommended",
       "scoreGoodRange": "Good",
@@ -48,26 +48,35 @@ const translations = {
           "highCloud": "High Cloud (>6km): Best carrier for fire clouds, good light transmission, produces wide red/orange areas",
           "midCloud": "Mid Cloud (2–6km): Also produces fire clouds, slightly less effective than high clouds",
           "lowCloudBonus": "Low Cloud (<2km): Mainly blocks visibility, does not contribute positive score",
-          "formula": "Effective cover = max(high×1.15, mid)×0.7 + min(high, mid)×0.2; Low cloud penalty: none below 30%, 0.5 at 80%"
+          "formula": "Effective cover = max(high×1.15, mid)×0.7 + min(high, mid)×0.2; Low cloud penalty: none below 30%, 0.5 at 80%",
+          "highCloudBonus": "High Cloud Bonus: When high clouds >50% and low clouds <30%, canvas score ×1.2"
+        },
+        "lightPath": {
+          "title": "2. Light Path Assessment",
+          "subtitle": "Light Path · Light Path Score",
+          "desc": "Light path clarity determines whether sunlight can reach cloud layers. Lower low clouds mean clearer paths with reduced obstruction probability.",
+          "lowCloudEffect": "When low clouds <30%, light path obstruction weight reduced to 0.7~0.85, allowing easier light penetration",
+          "visibility": "Visibility: Affects light transmission clarity",
+          "formula": "Light Path Score = Base Light Path Score × Low Cloud Weight Factor"
         },
         "transparency": {
-          "title": "2. Atmospheric Transparency",
-          "subtitle": "Transparency · 25 pts",
+          "title": "3. Atmospheric Transparency",
+          "subtitle": "Transparency · Rendering Score",
           "desc": "Clear atmosphere lets light color clouds more vividly. Moderate humidity enhances scattering.",
           "visibility": "Visibility: 15 × (1 − e^(−v/15)), max 15 pts",
           "humidity": "Humidity: Optimal 55%, Gaussian curve, max 10 pts",
           "formula": "Transparency Score = Visibility + Humidity (max 25 pts)"
         },
         "layerDiversity": {
-          "title": "3. Layer Diversity",
-          "subtitle": "Layer Diversity · 15 pts",
+          "title": "4. Layer Diversity",
+          "subtitle": "Layer Diversity · Layer Score",
           "desc": "When high, mid, and low clouds coexist, diverse refraction angles create richer color layers.",
           "threeLayer": "All three layers >10% → 15 pts",
           "twoLayer": "Any two layers >10% → 8 pts",
           "oneLayer": "Only one layer or no cloud → 0 pts"
         },
         "lowCloudPenalty": {
-          "title": "4. Low Cloud Penalty",
+          "title": "5. Low Cloud Penalty",
           "subtitle": "Low Cloud Penalty · Multiplier",
           "desc": "Low clouds block the view and are the \"visibility killer\" of fire clouds. Applied as a multiplicative penalty.",
           "level1": "Low Cloud <20% → ×1.0 (no penalty)",
@@ -76,7 +85,7 @@ const translations = {
           "level4": "Low Cloud >70% → ×0.2 (severe blockage)"
         },
         "precipPenalty": {
-          "title": "5. Precipitation Penalty",
+          "title": "6. Precipitation Penalty",
           "subtitle": "Precipitation Penalty · Multiplier",
           "desc": "Precipitation directly reduces fire cloud visibility. Applied as a multiplicative penalty.",
           "level1": "Precipitation <0.1mm/h → ×1.0 (no penalty)",
@@ -84,6 +93,13 @@ const translations = {
           "level3": "0.5–2mm/h → ×0.5",
           "level4": ">2mm/h → ×0.15 (heavy rain, near zero chance)",
           "formula": "Final Score = Base Score × Low Cloud Penalty × Precipitation Penalty"
+        },
+        "finalFormula": {
+          "title": "7. Final Score Formula",
+          "subtitle": "Composite Calculation",
+          "desc": "Final score is calculated by weighting canvas score and light path score, then applying penalty multipliers.",
+          "formula": "Final Score = (Canvas Score × 0.8 + Light Path Score × 0.2) × Low Cloud Factor × Precipitation Factor",
+          "highCloudCap": "When high clouds dominate without distant data, cap relaxed to 85 (was 69.9)"
         }
       }
     }

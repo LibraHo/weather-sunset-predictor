@@ -28,9 +28,9 @@ const translations = {
         "visibilityDesc": "視程が高いほど、空の背景がクリアで夕焼けの輪郭と色彩の移行がより明確になります。"
       },
       "scoreGuideTitle": "スコアの解釈",
-      "scoreExcellent": "優秀：>70（観賞を推奨）",
-      "scoreGood": "良好：40-70（観賞可能）",
-      "scoreFair": "普通：<40（期待は控えめに）",
+      "scoreExcellent": "優秀：>80（強く推奨）",
+      "scoreGood": "良好：65-80（高確率）",
+      "scoreFair": "普通：40-65（観賞可能）",
       "scoreExcellentRange": "優秀 Excellent",
       "scoreExcellentDesc": "強くお勧め",
       "scoreGoodRange": "良好 Good",
@@ -42,31 +42,40 @@ const translations = {
       "sections": {
         "cloudStructure": {
           "title": "1. 雲層構造",
-          "subtitle": "Cloud Structure · 60点",
+          "subtitle": "Cloud Structure · キャンバス評価",
           "desc": "焼け雲には適切な雲層が「キャンバス」として必要で、上層雲と中層雲が主要な担い手です。",
-          "highCloud": "上層雲（>6km）：最適50%、ガウス曲線、最高25点",
-          "midCloud": "中層雲（2–6km）：最適35%、ガウス曲線、最高25点",
-          "lowCloudBonus": "下層雲ボーナス：下層雲<20%で満点10点、線形減少",
-          "formula": "雲層構造スコア = 上層雲 + 中層雲 + 下層雲ボーナス（最高60点）"
+          "highCloud": "上層雲（>6km）：焼け雲の最適な担い手、光透過性が良く、広範囲の赤・橙色を生み出す",
+          "midCloud": "中層雲（2–6km）：焼け雲も形成可能だが、上層雲よりやや効果が劣る",
+          "lowCloudBonus": "下層雲（<2km）：主に遮蔽作用を持ち、プラス評価には寄与しない",
+          "formula": "有効雲量 = max(上層雲×1.15, 中層雲)×0.7 + min(上層雲, 中層雲)×0.2；下層雲30%以下はペナルティなし、80%で0.5",
+          "highCloudBonus": "上層雲優位ボーナス：上層雲>50%かつ下層雲<30%の場合、キャンバススコア×1.2倍"
+        },
+        "lightPath": {
+          "title": "2. 光路評価",
+          "subtitle": "Light Path · 光路スコア",
+          "desc": "光路の通過度が光が雲層に届くかを決定。下層雲が少ないほど光路が通じ、遮蔽確率が低下する。",
+          "lowCloudEffect": "下層雲<30%の場合、光路遮蔽ウェイトが0.7〜0.85に低下し、光が通過しやすくなる",
+          "visibility": "視程：光の伝播鮮明度に影響",
+          "formula": "光路スコア = 基礎光路スコア × 下層雲ウェイト係数"
         },
         "transparency": {
-          "title": "2. 大気透明度",
-          "subtitle": "Transparency · 25点",
+          "title": "3. 大気透明度",
+          "subtitle": "Transparency · レンダリング評価",
           "desc": "透明な大気は光を純粋に雲に着色し、適度な湿度は散乱を高め色彩を豊かにします。",
           "visibility": "視程：15 × (1 − e^(−v/15))、最高15点",
           "humidity": "湿度：最適55%、ガウス曲線、最高10点",
           "formula": "透明度スコア = 視程スコア + 湿度スコア（最高25点）"
         },
         "layerDiversity": {
-          "title": "3. 雲層の立体感",
-          "subtitle": "Layer Diversity · 15点",
+          "title": "4. 雲層の立体感",
+          "subtitle": "Layer Diversity · 層評価",
           "desc": "上・中・下層雲が同時に存在すると、光の屈折角が多様になり色彩の層が豊かになります。",
           "threeLayer": "3層すべて>10% → 15点",
           "twoLayer": "いずれか2層>10% → 8点",
           "oneLayer": "1層のみまたは雲なし → 0点"
         },
         "lowCloudPenalty": {
-          "title": "4. 下層雲ペナルティ係数",
+          "title": "5. 下層雲ペナルティ係数",
           "subtitle": "Low Cloud Penalty · Multiplier",
           "desc": "下層雲は視線を遮る「視認性の敵」で、乗算係数として総スコアに適用されます。",
           "level1": "下層雲<20% → ×1.0（ペナルティなし）",
@@ -75,7 +84,7 @@ const translations = {
           "level4": "下層雲>70% → ×0.2（深刻な遮蔽）"
         },
         "precipPenalty": {
-          "title": "5. 降水ペナルティ係数",
+          "title": "6. 降水ペナルティ係数",
           "subtitle": "Precipitation Penalty · Multiplier",
           "desc": "降水は焼け雲の視認性を直接低下させ、乗算係数として総スコアに適用されます。",
           "level1": "降水<0.1mm/h → ×1.0（ペナルティなし）",
@@ -83,6 +92,13 @@ const translations = {
           "level3": "0.5–2mm/h → ×0.5",
           "level4": ">2mm/h → ×0.15（大雨、ほぼ絶望的）",
           "formula": "最終スコア = 基礎スコア × 下層雲係数 × 降水係数"
+        },
+        "finalFormula": {
+          "title": "7. 総合計算式",
+          "subtitle": "Final Score Formula",
+          "desc": "最終スコアはキャンバス評価と光路評価を加重計算し、ペナルティ係数を乗じて算出。",
+          "formula": "総合スコア = (キャンバススコア × 0.8 + 光路スコア × 0.2) × 下層雲係数 × 降水係数",
+          "highCloudCap": "上層雲優位で遠方データなしの場合、上限を85点に緩和（旧69.9点）"
         }
       }
     }
