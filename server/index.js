@@ -205,6 +205,9 @@ function _scheduleGridRefresh() {
   let scheduleHoursCST = _loadScheduleHours();
   console.log(`[GridRefresh] 初始定时刷新时间(CST): ${scheduleHoursCST.map(h => `${String(h).padStart(2,'0')}:00`).join(', ')}`);
 
+  // 记录已触发的小时，防止同一小时重复触发
+  const triggeredHours = new Set();
+
   // 支持配置热重载
   global.__scheduleReload = () => {
     scheduleHoursCST = _loadScheduleHours();
@@ -216,11 +219,25 @@ function _scheduleGridRefresh() {
     // CST = UTC+8
     const hourCST = (now.getUTCHours() + 8) % 24;
     const minCST = now.getUTCMinutes();
-    if (scheduleHoursCST.includes(hourCST) && minCST < 5) {
+    const dateKey = `${now.toISOString().slice(0, 10)}_${hourCST}`; // 格式: 2024-01-15_10
+
+    // 检查是否在配置的时间点（小时匹配且分钟在0-5之间）且当天该小时未触发过
+    if (scheduleHoursCST.includes(hourCST) && minCST < 5 && !triggeredHours.has(dateKey)) {
+      triggeredHours.add(dateKey);
       console.log(`[GridRefresh] 定时触发刷新（CST ${hourCST}:${String(minCST).padStart(2,'0')}）`);
       gridService.refreshIfStale(0).catch(err =>
         console.error('[GridRefresh] 定时刷新失败:', err.message)
       );
+    }
+
+    // 清理过期的触发记录（保留最近48小时）
+    const cutoffDate = new Date(now);
+    cutoffDate.setHours(cutoffDate.getHours() - 48);
+    const cutoffKey = `${cutoffDate.toISOString().slice(0, 10)}_${cutoffDate.getHours()}`;
+    for (const key of triggeredHours) {
+      if (key < cutoffKey) {
+        triggeredHours.delete(key);
+      }
     }
   }, 5 * 60 * 1000); // 每 5 分钟检查一次
 }
