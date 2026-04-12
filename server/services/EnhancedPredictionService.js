@@ -345,7 +345,14 @@ function scoreCloudCanvas(weatherData) {
   }
 
   // 最终画布得分
-  const canvasScore = cloudRangeScore * lowCloudPenalty * overcastPenalty;
+  let canvasScore = cloudRangeScore * lowCloudPenalty * overcastPenalty;
+
+  // 高云主导场景加分：当 highClouds > 50% 且 lowClouds < 30% 时，增加 bonus 系数
+  let highCloudBonus = 1.0;
+  if (highClouds > 50 && lowClouds < 30) {
+    highCloudBonus = 1.20; // 1.15~1.2 之间，让画布分达到 75+
+    canvasScore = canvasScore * highCloudBonus;
+  }
 
   return {
     score: canvasScore,
@@ -354,6 +361,7 @@ function scoreCloudCanvas(weatherData) {
     cloudLevel,
     lowCloudPenalty: parseFloat(lowCloudPenalty.toFixed(2)),
     overcastPenalty: parseFloat(overcastPenalty.toFixed(2)),
+    highCloudBonus: parseFloat(highCloudBonus.toFixed(2)),
     totalCloudCover: parseFloat(totalCloudCover.toFixed(1)),
     hasOvercastKeyword,
     penaltyReason,
@@ -387,6 +395,13 @@ function estimateCloudBaseHeight(weatherData) {
   }
   const low = weatherData.lowClouds || 0;
   const mid = weatherData.midClouds || 0;
+  const high = weatherData.highClouds || 0;
+
+  // 高云主导场景：高云 > 50% 且低云 < 30%，使用高云高度（6-8km）
+  if (high > 50 && low < 30) {
+    return 7000; // 高云底高度约7km
+  }
+
   if (low > 60) return 700;
   if (low > 30) return 1000;
   if (mid > 50) return 1800;
@@ -523,7 +538,17 @@ function scoreLightPath(weatherData, solarElevation, azimuth, remoteCloudData = 
     return { ...r, weightedBlock: r.block * (distanceWeights[i] || 0.3) };
   });
 
-  const occlusionProbability = 1 - sampleResults.reduce((prod, s) => prod * (1 - s.weightedBlock), 1);
+  // 低云少时降低遮挡概率计算权重（低云少=光路通畅）
+  const lowClouds = weatherData.lowClouds || 0;
+  let occlusionWeight = 1.0;
+  if (lowClouds < 20) {
+    occlusionWeight = 0.7; // 低云极少，光路通畅，降低遮挡影响
+  } else if (lowClouds < 30) {
+    occlusionWeight = 0.85; // 低云较少，光路较通畅
+  }
+
+  const rawOcclusionProbability = 1 - sampleResults.reduce((prod, s) => prod * (1 - s.weightedBlock), 1);
+  const occlusionProbability = rawOcclusionProbability * occlusionWeight;
   let lightPathScore = 100 * (1 - occlusionProbability);
 
   // 恶劣天气硬封顶（作用于光路分本身）
@@ -814,18 +839,18 @@ function calculateFinalScore(canvasScore, lightPathScore, renderingFactor, type 
       advice = 'poor_viewing';
     }
   }
-  // 根据综合得分判定
-  else if (clampedScore < 50) {
+  // 根据综合得分判定（阈值整体下调约10分）
+  else if (clampedScore < 40) {
     status = 'light_glow';
     icon = 'sunset';
     description = 'conditions_fair';
     advice = 'can_watch';
-  } else if (clampedScore < 70) {
+  } else if (clampedScore < 65) {
     status = 'good_glow';
     icon = 'city_sunset';  // 🌆
     description = 'conditions_good';
     advice = 'can_watch';
-  } else if (clampedScore < 85) {
+  } else if (clampedScore < 80) {
     status = 'very_likely';
     icon = 'city_sunset';
     description = 'excellent_conditions';
@@ -851,9 +876,12 @@ function calculateFinalScore(canvasScore, lightPathScore, renderingFactor, type 
     displayScore = Math.min(displayScore, 35);
   }
 
-  // 修复：无远端数据时，光路评分不能抬高上限
+  // 修复：无远端数据时，光路评分不能抬高上限（但高云主导场景放宽限制）
   if (!lightPathScore.hasRemoteData) {
-    displayScore = Math.min(displayScore, 69.9);
+    // 高云主导场景放宽到85分，普通场景保持69.9上限
+    const isHighCloudDominant = canvasScore.breakdown?.highClouds > 50 && canvasScore.breakdown?.lowClouds < 30;
+    const cap = isHighCloudDominant ? 85 : 69.9;
+    displayScore = Math.min(displayScore, cap);
   }
 
   if (status === 'no_fire_cloud') {
