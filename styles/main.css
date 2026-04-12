@@ -3119,6 +3119,7 @@ body.theme-dark .sun-azimuth-info {
 .location-input-wrapper {
   position: relative;
   flex: 1;
+  overflow: visible;
 }
 
 /* 搜索历史下拉列表 */
@@ -3132,7 +3133,7 @@ body.theme-dark .sun-azimuth-info {
   border-top: none;
   border-radius: 0 0 var(--radius-md) var(--radius-md);
   box-shadow: var(--shadow-md);
-  z-index: 100;
+  z-index: 1000;
   max-height: 300px;
   overflow-y: auto;
   margin-top: -1px;
