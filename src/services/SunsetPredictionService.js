@@ -42,7 +42,17 @@ class SunsetPredictionService {
 
     // ① 云层结构（60分）
     const highCloudsScore = 25 * Math.exp(-Math.pow(highClouds - 50, 2) / (2 * 20 * 20));
-    const midCloudsScore  = 25 * Math.exp(-Math.pow(midClouds - 35, 2)  / (2 * 15 * 15));
+    // 中云评分：有高云配合时更宽容（中云也能反射光线，厚中云+高云=多层色彩）
+    let midCloudsScore;
+    if (midClouds >= 20 && highClouds >= 40) {
+      // 高云充足时，中云只要有就算贡献，不会因太厚而扣到0
+      midCloudsScore = 15 * Math.exp(-Math.pow(midClouds - 40, 2) / (2 * 25 * 25));
+      // 额外加成：中云越厚在高云配合下色彩越丰富
+      midCloudsScore += 10 * Math.min(1, midClouds / 60) * Math.min(1, highClouds / 60);
+    } else {
+      // 无高云配合时，中云太厚会遮挡，用原始严格曲线
+      midCloudsScore = 25 * Math.exp(-Math.pow(midClouds - 35, 2) / (2 * 15 * 15));
+    }
     const lowCloudBonus   = 10 * Math.max(0, 1 - lowClouds / 20);
     const cloudStructureScore = highCloudsScore + midCloudsScore + lowCloudBonus;
 
