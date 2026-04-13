@@ -259,7 +259,7 @@
               <li data-i18n="home.methodology.sections.cloudStructure.midCloud">中云（2–6km）：同样能产生火烧云，效果略逊于高云</li>
               <li data-i18n="home.methodology.sections.cloudStructure.lowCloudBonus">低云（&lt;2km）：主要起遮挡作用，不贡献正面分数</li>
             </ul>
-            <p class="methodology-formula" data-i18n="home.methodology.sections.cloudStructure.formula">有效云量 = max(高云×1.15, 中云)×0.7 + min(高云, 中云)×0.2<br>低云惩罚：30%以下不惩罚，80%时惩罚到0.5</p>
+            <p class="methodology-formula" data-i18n="home.methodology.sections.cloudStructure.formula">高云分 = 25 × exp(−(高云−50)²/800)，最优50%，满分25<br>中云分 = 高云≥40%时更宽容（中云也是色彩载体），否则严格高斯<br>低云加分 = 10 × max(0, 1−低云/20)，越低越好，满分10</p>
           </article>
 
           <!-- 第二部分：光路几何模型 -->
@@ -327,23 +327,23 @@
           <div class="score-table">
             <div class="score-row score-excellent">
               <span class="score-range" data-i18n="home.methodology.scoreExcellentRange">优秀 Excellent</span>
-              <span class="score-detail">&gt;70 分 (&gt;70)</span>
-              <span class="score-desc" data-i18n="home.methodology.scoreExcellentDesc">强烈推荐出门 Highly Recommended</span>
+              <span class="score-detail">≥80 分</span>
+              <span class="score-desc" data-i18n="home.methodology.scoreExcellentDesc">强烈推荐出门观赏</span>
             </div>
             <div class="score-row score-good">
               <span class="score-range" data-i18n="home.methodology.scoreGoodRange">良好 Good</span>
-              <span class="score-detail">40-70 分 (40-70)</span>
-              <span class="score-desc" data-i18n="home.methodology.scoreGoodDesc">可观赏，条件较好 Viewable, Good Conditions</span>
+              <span class="score-detail">60-79 分</span>
+              <span class="score-desc" data-i18n="home.methodology.scoreGoodDesc">较大概率出现壮观火烧云</span>
             </div>
             <div class="score-row score-fair">
               <span class="score-range" data-i18n="home.methodology.scoreFairRange">一般 Fair</span>
-              <span class="score-detail">20-40 分 (20-40)</span>
-              <span class="score-desc" data-i18n="home.methodology.scoreFairDesc">谨慎期待 Cautious, Low Probability</span>
+              <span class="score-detail">40-59 分</span>
+              <span class="score-desc" data-i18n="home.methodology.scoreFairDesc">条件一般，可以期待但不保证</span>
             </div>
             <div class="score-row score-poor">
               <span class="score-range" data-i18n="home.methodology.scorePoorRange">不佳 Poor</span>
-              <span class="score-detail">&lt;20 分 (&lt;20)</span>
-              <span class="score-desc" data-i18n="home.methodology.scorePoorDesc">不建议 Not Recommended</span>
+              <span class="score-detail">&lt;40 分</span>
+              <span class="score-desc" data-i18n="home.methodology.scorePoorDesc">火烧云概率较低</span>
             </div>
           </div>
         </div>
