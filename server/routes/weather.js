@@ -77,33 +77,6 @@ router.get('/forecast', async (req, res, next) => {
       : null;
     const result = await orchestrator.fetchWeatherData(latNum, lonNum, hoursNum, modelName);
 
-    // 自动对比：当前站点输出 vs Open-Meteo基线（用于监控偏差）
-    // 异步执行，不阻塞主响应
-    let compareMeta = null;
-    const comparePromise = openMeteoProvider.fetchWeatherData(latNum, lonNum, hoursNum, null, modelName)
-      .then(baseline => {
-        compareMeta = {
-          baselineProvider: 'openmeteo',
-          comparedProvider: result.providerMeta?.name || 'unknown',
-          summary: buildCompareSummary(result.data, baseline.data)
-        };
-        console.log('[Weather Compare]', JSON.stringify({
-          lat: latNum, lon: lonNum, hours: hoursNum,
-          provider: compareMeta.comparedProvider, summary: compareMeta.summary
-        }));
-      })
-      .catch(compareError => {
-        compareMeta = {
-          baselineProvider: 'openmeteo',
-          comparedProvider: result.providerMeta?.name || 'unknown',
-          error: compareError.message
-        };
-        console.warn('[Weather Compare] baseline compare failed:', compareError.message);
-      });
-
-    // 等待对比完成（最多 3 秒）
-    await Promise.race([comparePromise, new Promise(r => setTimeout(r, 3000))]);
-
     // 返回成功响应
     tracker.ok(200);
     res.json({
@@ -114,8 +87,7 @@ router.get('/forecast', async (req, res, next) => {
       },
       hours: result.hours,
       data: result.data,
-      providerMeta: result.providerMeta,
-      compareMeta
+      providerMeta: result.providerMeta
     });
 
   } catch (error) {
