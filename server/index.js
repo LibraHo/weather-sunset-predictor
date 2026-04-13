@@ -131,7 +131,14 @@ app.use('/data', express.static(path.join(__dirname, '../public/data'), {
 }));
 app.use(express.static(path.join(__dirname, '../public'), {
   maxAge: '1h'
-}));
+}))
+app.use('/styles', express.static(path.join(__dirname, '../styles'), { maxAge: '1h' }))
+app.use('/src', express.static(path.join(__dirname, '../src'), { maxAge: '1h' }))
+
+// Serve index.html from project root (not inside public/)
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../index.html'));
+});
 
 // Error logging middleware
 app.use(errorLogger());
