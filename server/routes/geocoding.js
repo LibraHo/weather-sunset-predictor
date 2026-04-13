@@ -24,8 +24,8 @@ const OPENMETEO_GEOCODING_BASE = 'https://geocoding-api.open-meteo.com/v1';
 // 城市名称多语言映射表（非硬编码优先规则，仅用于查询扩展）
 const CITY_NAME_MAPPINGS = {
   // 中文 -> 英文
-  '槟城': ['Penang', 'George Town'],
-  '乔治市': ['George Town', 'Penang'],
+  '槟城': ['George Town', 'Penang Malaysia'],
+  '乔治市': ['George Town'],
   '吉隆坡': ['Kuala Lumpur'],
   '新加坡': ['Singapore'],
   '曼谷': ['Bangkok'],
@@ -41,7 +41,7 @@ const CITY_NAME_MAPPINGS = {
   '温哥华': ['Vancouver'],
   '多伦多': ['Toronto'],
   // 英文 -> 中文（反向映射）
-  'penang': ['槟城'],
+  'penang': ['槟城', 'George Town'],
   'george town': ['乔治市'],
   'kuala lumpur': ['吉隆坡'],
   'singapore': ['新加坡'],
@@ -211,8 +211,11 @@ function attachSearchMeta(payload, meta) {
 }
 
 async function handleAutoSearch(res, query, apiKey, limit = 8) {
-  // Auto 策略：先高德（国内优先），失败/无结果再 Open-Meteo
+  // Auto 策略：高德（国内）+ Open-Meteo（全球）合并，去重后返回
   const effectiveKey = apiKey || process.env.GAODE_API_KEY;
+
+  // 始终获取 Open-Meteo 结果（覆盖全球）
+  const omPromise = fetchOpenMeteoResults(query, limit * 2);
 
   if (effectiveKey) {
     try {
@@ -221,8 +224,10 @@ async function handleAutoSearch(res, query, apiKey, limit = 8) {
         timeout: 8000
       });
       const data = response.data;
+      const omResults = await omPromise;
+
       if (data.status === '1' && data.geocodes && data.geocodes.length > 0) {
-        let results = data.geocodes.map(item => {
+        let gaodeResults = data.geocodes.map(item => {
           const [lonStr, latStr] = item.location.split(',');
           const regionCode = resolveGaodeRegionCode(item.adcode);
           return {
@@ -236,18 +241,28 @@ async function handleAutoSearch(res, query, apiKey, limit = 8) {
             adcode: item.adcode || null
           };
         });
-        return res.json(attachSearchMeta({ results: results.slice(0, limit) }, { providerUsed: 'gaode', fallbackUsed: false }));
+
+        // 合并：高德结果放前面（国内优先），然后 Open-Meteo 结果去重补充
+        const seenKeys = new Set(gaodeResults.map(r => `${r.lat.toFixed(4)},${r.lon.toFixed(4)}`));
+        for (const r of omResults) {
+          const key = `${r.lat.toFixed(4)},${r.lon.toFixed(4)}`;
+          if (!seenKeys.has(key)) {
+            seenKeys.add(key);
+            gaodeResults.push(r);
+          }
+        }
+        return res.json(attachSearchMeta({ results: gaodeResults.slice(0, limit) }, { providerUsed: 'gaode+openmeteo', fallbackUsed: false }));
       }
 
-      const om = await fetchOpenMeteoResults(query, limit);
-      return res.json(attachSearchMeta({ results: om.slice(0, limit) }, {
+      // 高德无结果，直接返回 Open-Meteo
+      return res.json(attachSearchMeta({ results: omResults.slice(0, limit) }, {
         providerUsed: 'openmeteo',
         fallbackUsed: true,
         fallbackReason: 'gaode_empty_result'
       }));
     } catch (error) {
-      const om = await fetchOpenMeteoResults(query, limit);
-      return res.json(attachSearchMeta({ results: om.slice(0, limit) }, {
+      const omResults = await omPromise;
+      return res.json(attachSearchMeta({ results: omResults.slice(0, limit) }, {
         providerUsed: 'openmeteo',
         fallbackUsed: true,
         fallbackReason: error.code === 'ECONNABORTED' ? 'gaode_timeout' : 'gaode_error'
@@ -256,7 +271,7 @@ async function handleAutoSearch(res, query, apiKey, limit = 8) {
   }
 
   // 无高德 key 时直接 openmeteo
-  const om = await fetchOpenMeteoResults(query, limit);
+  const om = await omPromise;
   return res.json(attachSearchMeta({ results: om.slice(0, limit) }, {
     providerUsed: 'openmeteo',
     fallbackUsed: true,
@@ -351,40 +366,44 @@ async function fetchOpenMeteoResults(query, limit = 8) {
   const allResults = [];
   const seenKeys = new Set(); // 用于去重
 
-  for (const variant of variants) {
-    try {
-      const response = await axios.get(`${OPENMETEO_GEOCODING_BASE}/search`, {
-        params: {
-          name: variant,
-          count: limit,
-          language: 'zh',
-          format: 'json'
-        },
-        timeout: 8000
-      });
+  // 对每个变体同时用中英文语言搜索，提高国际城市命中率
+  const languages = ['zh', 'en'];
 
-      const results = response.data?.results || [];
-      if (Array.isArray(results)) {
-        for (const item of results) {
-          // 使用坐标作为唯一键去重
-          const key = `${item.latitude.toFixed(4)},${item.longitude.toFixed(4)}`;
-          if (!seenKeys.has(key)) {
-            seenKeys.add(key);
-            allResults.push({
-              name: [item.name, item.admin1, item.country].filter(Boolean).join(', '),
-              lat: Number(item.latitude),
-              lon: Number(item.longitude),
-              type: item.feature_code || 'place',
-              provider: 'openmeteo',
-              countryCode: (item.country_code || '').toUpperCase() || null,
-              regionCode: resolveAdminRegionCode(item.admin1)
-            });
+  for (const variant of variants) {
+    for (const lang of languages) {
+      try {
+        const response = await axios.get(`${OPENMETEO_GEOCODING_BASE}/search`, {
+          params: {
+            name: variant,
+            count: limit,
+            language: lang,
+            format: 'json'
+          },
+          timeout: 8000
+        });
+
+        const results = response.data?.results || [];
+        if (Array.isArray(results)) {
+          for (const item of results) {
+            // 使用坐标作为唯一键去重
+            const key = `${item.latitude.toFixed(4)},${item.longitude.toFixed(4)}`;
+            if (!seenKeys.has(key)) {
+              seenKeys.add(key);
+              allResults.push({
+                name: [item.name, item.admin1, item.country].filter(Boolean).join(', '),
+                lat: Number(item.latitude),
+                lon: Number(item.longitude),
+                type: item.feature_code || 'place',
+                provider: 'openmeteo',
+                countryCode: (item.country_code || '').toUpperCase() || null,
+                regionCode: resolveAdminRegionCode(item.admin1)
+              });
+            }
           }
         }
+      } catch (error) {
+        console.warn(`[Geocoding] Open-Meteo 搜索变体 "${variant}" (${lang}) 失败:`, error.message);
       }
-    } catch (error) {
-      console.warn(`[Geocoding] Open-Meteo 搜索变体 "${variant}" 失败:`, error.message);
-      // 继续尝试下一个变体
     }
   }
 
