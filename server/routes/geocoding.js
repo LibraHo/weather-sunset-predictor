@@ -24,8 +24,8 @@ const OPENMETEO_GEOCODING_BASE = 'https://geocoding-api.open-meteo.com/v1';
 // 城市名称多语言映射表（非硬编码优先规则，仅用于查询扩展）
 const CITY_NAME_MAPPINGS = {
   // 中文 -> 英文
-  '槟城': ['Penang', 'George Town'],
-  '乔治市': ['George Town', 'Penang'],
+  '槟城': ['George Town', 'Penang Malaysia'],
+  '乔治市': ['George Town'],
   '吉隆坡': ['Kuala Lumpur'],
   '新加坡': ['Singapore'],
   '曼谷': ['Bangkok'],
@@ -41,7 +41,7 @@ const CITY_NAME_MAPPINGS = {
   '温哥华': ['Vancouver'],
   '多伦多': ['Toronto'],
   // 英文 -> 中文（反向映射）
-  'penang': ['槟城'],
+  'penang': ['槟城', 'George Town'],
   'george town': ['乔治市'],
   'kuala lumpur': ['吉隆坡'],
   'singapore': ['新加坡'],

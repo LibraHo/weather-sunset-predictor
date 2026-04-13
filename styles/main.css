@@ -730,6 +730,12 @@ input[type="text"]::placeholder {
   margin-bottom: var(--spacing-sm);
 }
 
+#location-section {
+  position: relative;
+  z-index: 10;
+  overflow: visible;
+}
+
 #weather-section {
   position: relative;
   overflow: hidden;
@@ -3133,7 +3139,7 @@ body.theme-dark .sun-azimuth-info {
   border-top: none;
   border-radius: 0 0 var(--radius-md) var(--radius-md);
   box-shadow: var(--shadow-md);
-  z-index: 1000;
+  z-index: 9999;
   max-height: 300px;
   overflow-y: auto;
   margin-top: -1px;
