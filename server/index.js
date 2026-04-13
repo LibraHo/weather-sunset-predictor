@@ -134,6 +134,10 @@ app.use(express.static(path.join(__dirname, '../public'), {
 }))
 app.use('/styles', express.static(path.join(__dirname, '../styles'), { maxAge: '1h' }))
 app.use('/src', express.static(path.join(__dirname, '../src'), { maxAge: '1h' }))
+// 根目录下的独立 JS 配置文件（被 ES module 引用）
+app.get('/config.api.js', (req, res) => {
+  res.sendFile(path.join(__dirname, '../config.api.js'));
+});
 
 // Serve index.html from project root (not inside public/)
 app.get('/', (req, res) => {
