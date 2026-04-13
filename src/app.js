@@ -232,39 +232,44 @@ window.ErrorHandler = ErrorHandler;
  * 地图 panel 激活回调：触发 Leaflet invalidateSize 修复 hidden 切换后的尺寸问题
  */
 function onMapPanelVisible() {
-  // 如果地图有待初始化，现在执行初始化
-  if (window.weatherController && window.weatherController._chinaSpotsMapPendingInit) {
-    console.log('[onMapPanelVisible] 地图待初始化，现在执行...');
-    window.weatherController._initChinaSpotsMap().then(() => {
-      console.log('[onMapPanelVisible] 地图初始化完成');
-    }).catch(err => {
-      console.error('[onMapPanelVisible] 地图初始化失败:', err);
-    });
-    return;
-  }
+  // 先等浏览器完成布局（classList 移除 hidden 后尺寸可能尚未刷新）
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      // 如果地图有待初始化，现在执行初始化
+      if (window.weatherController && window.weatherController._chinaSpotsMapPendingInit) {
+        console.log('[onMapPanelVisible] 地图待初始化，现在执行...');
+        window.weatherController._initChinaSpotsMap().then(() => {
+          console.log('[onMapPanelVisible] 地图初始化完成');
+        }).catch(err => {
+          console.error('[onMapPanelVisible] 地图初始化失败:', err);
+        });
+        return;
+      }
 
-  const map = window.weatherController ? window.weatherController._chinaSpotsMapInstance : null;
-  if (!map || typeof map.invalidateSize !== 'function') return;
-  
-  // 确保地图已正确初始化（有有效的中心点）
-  try {
-    const center = map.getCenter();
-    if (!center || typeof center.lat !== 'number' || typeof center.lng !== 'number' || 
-        isNaN(center.lat) || isNaN(center.lng)) {
-      console.warn('[onMapPanelVisible] 地图中心点无效，跳过 invalidateSize');
-      return;
-    }
-  } catch (e) {
-    console.warn('[onMapPanelVisible] 获取地图中心点失败:', e.message);
-    return;
-  }
-  
-  // 延迟执行以确保容器已渲染
-  setTimeout(() => {
-    try {
-      map.invalidateSize({ animate: false });
-    } catch (e) {
-      console.warn('[onMapPanelVisible] invalidateSize 失败:', e.message);
-    }
-  }, 100);
+      const map = window.weatherController ? window.weatherController._chinaSpotsMapInstance : null;
+      if (!map || typeof map.invalidateSize !== 'function') return;
+
+      // 确保地图已正确初始化（有有效的中心点）
+      try {
+        const center = map.getCenter();
+        if (!center || typeof center.lat !== 'number' || typeof center.lng !== 'number' ||
+            isNaN(center.lat) || isNaN(center.lng)) {
+          console.warn('[onMapPanelVisible] 地图中心点无效，跳过 invalidateSize');
+          return;
+        }
+      } catch (e) {
+        console.warn('[onMapPanelVisible] 获取地图中心点失败:', e.message);
+        return;
+      }
+
+      // 延迟执行以确保容器已渲染
+      setTimeout(() => {
+        try {
+          map.invalidateSize({ animate: false });
+        } catch (e) {
+          console.warn('[onMapPanelVisible] invalidateSize 失败:', e.message);
+        }
+      }, 100);
+    }, 50);
+  });
 }

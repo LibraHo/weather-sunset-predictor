@@ -1853,14 +1853,16 @@ class WeatherController {
       return;
     }
 
-    // 检查地图容器是否可见（避免在隐藏状态下初始化导致 NaN 错误）
+    // 检查地图容器是否可见且已有实际尺寸（避免在隐藏/未布局状态下初始化导致 NaN 错误）
     const mapPanel = document.getElementById('tab-panel-map');
-    if (mapPanel && mapPanel.classList.contains('hidden')) {
-      console.log('[WeatherController] 地图面板当前隐藏，延迟初始化');
-      // 标记为待初始化，等面板显示时再初始化
+    const panelHidden = mapPanel && mapPanel.classList.contains('hidden');
+    const sizeNotReady = mapEl.offsetWidth <= 0 || mapEl.offsetHeight <= 0;
+    if (panelHidden || sizeNotReady) {
+      console.log('[WeatherController] 地图面板当前隐藏或尺寸未就绪，延迟初始化', { panelHidden, sizeNotReady, w: mapEl.offsetWidth, h: mapEl.offsetHeight });
+      // 标记为待初始化，等面板显示/渲染完成时再初始化
       this._chinaSpotsMapPendingInit = true;
 
-      // 兜底：部分移动端 tab 切换事件可能丢失，定时重试初始化，避免地图长期空白
+      // 兜底：定时重试初始化，避免地图长期空白
       const retryCount = (this._chinaSpotsInitRetryCount || 0) + 1;
       this._chinaSpotsInitRetryCount = retryCount;
       if (retryCount <= 10) {
@@ -1870,7 +1872,14 @@ class WeatherController {
           });
         }, 500);
       } else {
-        console.warn('[WeatherController] 地图延迟初始化重试达到上限，等待用户手动切换页面触发');
+        // 达到上限后降低频率继续重试，确保用户稍后切到地图页时仍能触发
+        console.warn('[WeatherController] 地图延迟初始化重试达到上限，降低频率继续等待');
+        setTimeout(() => {
+          this._chinaSpotsInitRetryCount = 5; // 重置计数，继续温和重试
+          this._initChinaSpotsMap().catch(err => {
+            console.warn('[WeatherController] 地图延迟初始化后续重试失败:', err?.message || err);
+          });
+        }, 2000);
       }
       return;
     }
