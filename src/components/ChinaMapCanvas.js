@@ -97,12 +97,12 @@ class ChinaMapCanvas {
    */
   async _loadGeoJSON() {
     if (!_cachedChinaGeoJSON) {
-      const resp = await fetch('/data/china-geojson.json');
+      const resp = await fetch('/data/china-geojson.json?v=2');
       if (!resp.ok) throw new Error(`China GeoJSON fetch failed: ${resp.status}`);
       _cachedChinaGeoJSON = await resp.json();
     }
     if (!_cachedEastAsiaGeoJSON) {
-      const resp = await fetch('/data/east-asia-geojson.json');
+      const resp = await fetch('/data/east-asia-geojson.json?v=2');
       if (!resp.ok) throw new Error(`EastAsia GeoJSON fetch failed: ${resp.status}`);
       _cachedEastAsiaGeoJSON = await resp.json();
     }
@@ -241,7 +241,7 @@ class ChinaMapCanvas {
       weight: 1.5,
       opacity: 0.6,
       dashArray: '3',
-      fillOpacity: 0.1
+      fillOpacity: 0.05
     };
 
     // 1. 中国完整省级边界（含台湾、港澳、南海诸岛）
@@ -250,7 +250,8 @@ class ChinaMapCanvas {
       onEachFeature: () => {}
     }).addTo(this._map);
 
-    // 2. 日本、韩国边界（从 east-asia 数据中过滤掉不完整的 China）
+    // 2. 日本、韩国、朝鲜边界（从 east-asia 数据中过滤掉不完整的 China）
+    let eastAsiaLayer = null;
     if (eastAsiaGeoJSON && eastAsiaGeoJSON.features) {
       const filtered = {
         ...eastAsiaGeoJSON,
@@ -258,7 +259,7 @@ class ChinaMapCanvas {
           f => f.properties?.name !== 'China'
         )
       };
-      window.L.geoJSON(filtered, {
+      eastAsiaLayer = window.L.geoJSON(filtered, {
         style: () => commonStyle,
         onEachFeature: () => {}
       }).addTo(this._map);
@@ -267,6 +268,7 @@ class ChinaMapCanvas {
     // 合并 bounds 用于 fitBounds
     const bounds = chinaLayer.getBounds();
     this._geoJsonLayer = chinaLayer;
+    this._eastAsiaLayer = eastAsiaLayer;
 
     // 添加城市标注
     this._addCityMarkers();
@@ -820,15 +822,20 @@ class ChinaMapCanvas {
     this._map.getContainer().style.backgroundColor = '#1a1f35';
 
     // GeoJSON 样式
+    const darkStyle = {
+      color: 'rgba(255, 120, 0, 0.4)',  // 边界线：橙色
+      fillColor: 'rgba(255, 120, 0, 0.05)',
+      weight: 1.5,
+      opacity: 0.6,
+      dashArray: '3',
+      fillOpacity: 0.1
+    };
+
     if (this._geoJsonLayer) {
-      this._geoJsonLayer.setStyle({
-        color: 'rgba(255, 120, 0, 0.4)',  // 边界线：橙色
-        fillColor: 'rgba(255, 120, 0, 0.05)',
-        weight: 1.5,
-        opacity: 0.6,
-        dashArray: '3',
-        fillOpacity: 0.1
-      });
+      this._geoJsonLayer.setStyle(darkStyle);
+    }
+    if (this._eastAsiaLayer) {
+      this._eastAsiaLayer.setStyle(darkStyle);
     }
   }
 
@@ -842,15 +849,20 @@ class ChinaMapCanvas {
     this._map.getContainer().style.backgroundColor = '#f0f0f0';
 
     // GeoJSON 样式
+    const lightStyle = {
+      color: 'rgba(0, 0, 0, 0.3)',  // 边界线：深灰色
+      fillColor: 'rgba(0, 0, 0, 0.02)',
+      weight: 1.5,
+      opacity: 0.5,
+      dashArray: '3',
+      fillOpacity: 0.1
+    };
+
     if (this._geoJsonLayer) {
-      this._geoJsonLayer.setStyle({
-        color: 'rgba(0, 0, 0, 0.3)',  // 边界线：深灰色
-        fillColor: 'rgba(0, 0, 0, 0.02)',
-        weight: 1.5,
-        opacity: 0.5,
-        dashArray: '3',
-        fillOpacity: 0.1
-      });
+      this._geoJsonLayer.setStyle(lightStyle);
+    }
+    if (this._eastAsiaLayer) {
+      this._eastAsiaLayer.setStyle(lightStyle);
     }
   }
 
