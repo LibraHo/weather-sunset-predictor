@@ -1169,7 +1169,7 @@ class PredictionController {
     // 高云和中云是火烧云的必要载体，都没有就不可能有火烧云
     const hasCloudCarrier = hc >= 15 || mc >= 15;
     if (!hasCloudCarrier && finalScore < 40) {
-      html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">😶 高云和中云几乎为零，缺少色彩载体，基本不会有火烧云</div>`;
+      html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">😶 高云和中云几乎为零，缺少色彩载体，火烧云概率极低</div>`;
     } else if (finalScore >= 80) {
       html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">✨ 极佳条件，强烈推荐出行观赏！</div>`;
     } else if (finalScore >= 60) {
