@@ -415,6 +415,34 @@ router.get('/admin', requireAuth, (req, res) => {
     <div id="message" class="message hidden"></div>
 
     <div class="quota-section">
+      <h2>🌐 访问统计</h2>
+      <div class="quota-grid">
+        <div class="quota-item"><div class="quota-k">今日 PV</div><div class="quota-v" id="ac-today-pv">--</div></div>
+        <div class="quota-item"><div class="quota-k">今日 UV</div><div class="quota-v" id="ac-today-uv">--</div></div>
+        <div class="quota-item"><div class="quota-k">今日 IP 数</div><div class="quota-v" id="ac-today-ips">--</div></div>
+        <div class="quota-item"><div class="quota-k">昨日 PV</div><div class="quota-v" id="ac-yest-pv">--</div></div>
+        <div class="quota-item"><div class="quota-k">昨日 UV</div><div class="quota-v" id="ac-yest-uv">--</div></div>
+        <div class="quota-item"><div class="quota-k">昨日 IP 数</div><div class="quota-v" id="ac-yest-ips">--</div></div>
+      </div>
+      <div class="log-table-wrap" style="margin-top:12px; max-height:220px;">
+        <table class="log-table">
+          <thead><tr><th>日期</th><th>PV</th><th>UV</th><th>IP 数</th></tr></thead>
+          <tbody id="accessDailyBody"><tr><td colspan="4" style="text-align:center;color:#888">加载中...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="quota-section">
+      <h2>📍 IP 统计（今日 Top 20）</h2>
+      <div class="log-table-wrap" style="max-height:300px;">
+        <table class="log-table">
+          <thead><tr><th>IP</th><th>访问次数</th></tr></thead>
+          <tbody id="ipStatsBody"><tr><td colspan="2" style="text-align:center;color:#888">加载中...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="quota-section">
       <h2>📊 API 配额统计</h2>
       <div class="quota-grid" id="quotaGrid">
         <div class="quota-item"><div class="quota-k">今日调用</div><div class="quota-v" id="q-count">--</div></div>
@@ -535,6 +563,39 @@ router.get('/admin', requireAuth, (req, res) => {
       el.className = 'message ' + type;
       el.classList.remove('hidden');
       setTimeout(() => el.classList.add('hidden'), 5000);
+    }
+
+    async function loadAccessStats() {
+      try {
+        const res = await fetch('/admin/access-stats', { credentials: 'include' });
+        const data = await res.json();
+        document.getElementById('ac-today-pv').textContent = data.today?.pv ?? '--';
+        document.getElementById('ac-today-uv').textContent = data.today?.uv ?? '--';
+        document.getElementById('ac-today-ips').textContent = data.today?.ips ?? '--';
+        document.getElementById('ac-yest-pv').textContent = data.yesterday?.pv ?? '--';
+        document.getElementById('ac-yest-uv').textContent = data.yesterday?.uv ?? '--';
+        document.getElementById('ac-yest-ips').textContent = data.yesterday?.ips ?? '--';
+
+        const dailyBody = document.getElementById('accessDailyBody');
+        if (data.dailyTrend && data.dailyTrend.length) {
+          dailyBody.innerHTML = data.dailyTrend.map(d =>
+            '<tr><td>' + d.day + '</td><td>' + d.pv + '</td><td>' + d.uv + '</td><td>' + d.ips + '</td></tr>'
+          ).join('');
+        } else {
+          dailyBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#888">暂无数据</td></tr>';
+        }
+
+        const ipBody = document.getElementById('ipStatsBody');
+        if (data.topIps && data.topIps.length) {
+          ipBody.innerHTML = data.topIps.map(item =>
+            '<tr><td>' + item.ip + '</td><td>' + item.count + '</td></tr>'
+          ).join('');
+        } else {
+          ipBody.innerHTML = '<tr><td colspan="2" style="text-align:center;color:#888">暂无数据</td></tr>';
+        }
+      } catch (err) {
+        console.error('加载访问统计失败:', err);
+      }
     }
 
     async function loadQuota() {
@@ -690,6 +751,7 @@ router.get('/admin', requireAuth, (req, res) => {
     loadQuota();
     loadQueue();
     loadPhotos();
+    loadAccessStats();
     loadLogSummary();
     loadLogs();
     loadDailyStats();
@@ -698,6 +760,7 @@ router.get('/admin', requireAuth, (req, res) => {
     setInterval(loadQueue, 15000);
     setInterval(() => { loadLogs(); loadLogSummary(); }, 15000);
     setInterval(loadDailyStats, 60000);
+    setInterval(loadAccessStats, 30000);
 
     // ---- API 调用日志 ----
     let currentLogTab = 'grid';
@@ -1027,6 +1090,12 @@ router.delete('/photos/:id', requireAuth, (req, res) => {
 const quota = require('../services/OpenMeteoQuota');
 router.get('/admin/quota', (req, res) => {
   res.json(quota.getStats());
+});
+
+// 访问统计
+const accessLogService = require('../services/AccessLogService');
+router.get('/admin/access-stats', requireAuth, (req, res) => {
+  res.json(accessLogService.getStats());
 });
 
 module.exports = router;
