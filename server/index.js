@@ -127,7 +127,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'xiake2024';
 const adminApiAuth = (req, res, next) => {
   const credentials = basicAuth(req);
   if (!credentials || credentials.pass !== ADMIN_PASSWORD) {
-    res.set('WWW-Authenticate', 'Basic realm="Xiake Admin API"');
+    res.set('WWW-Authenticate', 'Basic realm="Xiake Photo Admin"');
     return res.status(401).json({ error: { code: 'UNAUTHORIZED', message: '认证失败' } });
   }
   next();

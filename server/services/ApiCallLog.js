@@ -7,16 +7,63 @@
  * - gaode: 高德地理编码
  * - gaode_tile: 高德瓦片代理
  *
- * 内存保留最近 500 条，不持久化（重启清空）
+ * 内存保留最近 500 条，同时持久化到 ~/.xiake/api-logs.json（重启可恢复）
  */
+
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
 
 const MAX_LOGS = 500;
 const dailyStats = require('./ApiDailyStats');
+
+const DATA_DIR = path.join(os.homedir(), '.xiake');
+const DATA_FILE = path.join(DATA_DIR, 'api-logs.json');
 
 class ApiCallLog {
   constructor() {
     this._logs = []; // { id, time, type, endpoint, params, status, durationMs, error? }
     this._counter = 0;
+    this._loaded = false;
+    this._ensureDir();
+    this._load();
+    // 定时持久化
+    setInterval(() => this._persist(), 30000);
+  }
+
+  _ensureDir() {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+  }
+
+  _load() {
+    try {
+      if (fs.existsSync(DATA_FILE)) {
+        const raw = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+        if (Array.isArray(raw.logs)) {
+          this._logs = raw.logs.slice(-MAX_LOGS);
+          this._counter = raw.counter || this._logs.length;
+        }
+      }
+    } catch (e) {
+      console.error('[ApiCallLog] load failed:', e.message);
+    }
+    this._loaded = true;
+  }
+
+  _persist() {
+    if (!this._loaded) return;
+    try {
+      const payload = {
+        updatedAt: new Date().toISOString(),
+        counter: this._counter,
+        logs: this._logs.slice(-MAX_LOGS)
+      };
+      fs.writeFileSync(DATA_FILE, JSON.stringify(payload), 'utf8');
+    } catch (e) {
+      console.error('[ApiCallLog] persist failed:', e.message);
+    }
   }
 
   /**
@@ -49,6 +96,7 @@ class ApiCallLog {
     }
 
     dailyStats.recordCall(entry);
+    this._persist();
     return entry;
   }
 
