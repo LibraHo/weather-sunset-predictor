@@ -8,7 +8,8 @@
  */
 
 // 模块级缓存，避免重复下载
-let _cachedGeoJSON = null;
+let _cachedChinaGeoJSON = null;
+let _cachedEastAsiaGeoJSON = null;
 
 class ChinaMapCanvas {
   constructor(options = {}) {
@@ -92,12 +93,19 @@ class ChinaMapCanvas {
 
   /**
    * 懒加载 GeoJSON 数据（带模块级缓存）
+   * 中国用完整省级数据（含台湾/港澳/南海），日韩用 east-asia 数据
    */
   async _loadGeoJSON() {
-    if (_cachedGeoJSON) return;
-    const resp = await fetch('/data/east-asia-geojson.json');
-    if (!resp.ok) throw new Error(`GeoJSON fetch failed: ${resp.status}`);
-    _cachedGeoJSON = await resp.json();
+    if (!_cachedChinaGeoJSON) {
+      const resp = await fetch('/data/china-geojson.json');
+      if (!resp.ok) throw new Error(`China GeoJSON fetch failed: ${resp.status}`);
+      _cachedChinaGeoJSON = await resp.json();
+    }
+    if (!_cachedEastAsiaGeoJSON) {
+      const resp = await fetch('/data/east-asia-geojson.json');
+      if (!resp.ok) throw new Error(`EastAsia GeoJSON fetch failed: ${resp.status}`);
+      _cachedEastAsiaGeoJSON = await resp.json();
+    }
   }
 
   /**
@@ -221,41 +229,50 @@ class ChinaMapCanvas {
    * 添加 GeoJSON 省界图层
    */
   _addGeoJsonLayer() {
-    const chinaGeoJSON = _cachedGeoJSON;
+    const chinaGeoJSON = _cachedChinaGeoJSON;
+    const eastAsiaGeoJSON = _cachedEastAsiaGeoJSON;
+
     if (!chinaGeoJSON || !chinaGeoJSON.features) {
-      console.warn('[ChinaMapCanvas] GeoJSON 数据为空');
+      console.warn('[ChinaMapCanvas] 中国 GeoJSON 数据为空');
       return;
     }
 
-    // 创建 GeoJSON 图层
-    this._geoJsonLayer = window.L.geoJSON(chinaGeoJSON, {
-      style: (feature) => {
-        return {
-          weight: 1.5,
-          opacity: 0.6,
-          dashArray: '3',
-          fillOpacity: 0.1
-        };
-      },
-      onEachFeature: (feature, layer) => {
-        // 鼠标交互（暂时不显示省份 tooltip）
-        // if (feature.properties && feature.properties.name) {
-        //   layer.bindTooltip(feature.properties.name, {
-        //     direction: 'top',
-        //     offset: [0, -10],
-        //     className: 'map-tooltip'
-        //   });
-        // }
-      }
+    const commonStyle = {
+      weight: 1.5,
+      opacity: 0.6,
+      dashArray: '3',
+      fillOpacity: 0.1
+    };
+
+    // 1. 中国完整省级边界（含台湾、港澳、南海诸岛）
+    const chinaLayer = window.L.geoJSON(chinaGeoJSON, {
+      style: () => commonStyle,
+      onEachFeature: () => {}
     }).addTo(this._map);
+
+    // 2. 日本、韩国边界（从 east-asia 数据中过滤掉不完整的 China）
+    if (eastAsiaGeoJSON && eastAsiaGeoJSON.features) {
+      const filtered = {
+        ...eastAsiaGeoJSON,
+        features: eastAsiaGeoJSON.features.filter(
+          f => f.properties?.name !== 'China'
+        )
+      };
+      window.L.geoJSON(filtered, {
+        style: () => commonStyle,
+        onEachFeature: () => {}
+      }).addTo(this._map);
+    }
+
+    // 合并 bounds 用于 fitBounds
+    const bounds = chinaLayer.getBounds();
+    this._geoJsonLayer = chinaLayer;
 
     // 添加城市标注
     this._addCityMarkers();
 
-    // 调整视图以适应 GeoJSON 范围
-    if (this._geoJsonLayer) {
-      this._map.fitBounds(this._geoJsonLayer.getBounds());
-    }
+    // 调整视图以适应完整中国范围
+    this._map.fitBounds(bounds);
   }
 
   /**
