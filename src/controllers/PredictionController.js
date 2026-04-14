@@ -468,6 +468,10 @@ class PredictionController {
       p.type === 'sunset' && p.date && p.date.toDateString() === tomorrow.toDateString()
     );
 
+    // 先保存原始时间用于时段判断，然后再做预测替换
+    const originalSunriseTime = sunriseTime;
+    const originalSunsetTime = sunsetTime;
+
     // 朝霞时间检查 - 独立判断
     if (sunriseTime && todaySunrise) {
       const sunriseEndTime = new Date(sunriseTime.getTime() + 2 * 60 * 60 * 1000);
@@ -478,25 +482,13 @@ class PredictionController {
       }
     }
 
-    // 晚霞时间检查 - 独立判断（保存原始时间用于时段判断）
-    const originalSunsetTime = sunsetTime;
+    // 晚霞时间检查 - 独立判断
     if (sunsetTime && todaySunset) {
       const sunsetEndTime = new Date(sunsetTime.getTime() + 1.5 * 60 * 60 * 1000);
       if (now > sunsetEndTime) {
         console.log('[PredictionController] 今日晚霞时间已过，切换到明天的晚霞预测');
         displaySunset = tomorrowSunset;
         sunsetTime = tomorrowSunset ? tomorrowSunset.sunsetTime : null;
-      }
-    }
-
-    // 朝霞时间检查 - 独立判断（保存原始时间用于时段判断）
-    const originalSunriseTime = sunriseTime;
-    if (sunriseTime && todaySunrise) {
-      const sunriseEndTime = new Date(sunriseTime.getTime() + 2 * 60 * 60 * 1000);
-      if (now > sunriseEndTime) {
-        console.log('[PredictionController] 今日朝霞时间已过，切换到明天的朝霞预测');
-        displaySunrise = tomorrowSunrise;
-        sunriseTime = tomorrowSunrise ? tomorrowSunrise.sunriseTime : null;
       }
     }
 
