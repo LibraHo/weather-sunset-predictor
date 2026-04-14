@@ -1853,24 +1853,28 @@ class WeatherController {
       return;
     }
 
-    // 检查地图容器是否可见（避免在隐藏状态下初始化导致 NaN 错误）
+    // 检查地图容器是否可见且已有实际尺寸（避免在隐藏/未布局状态下初始化导致 NaN 错误）
     const mapPanel = document.getElementById('tab-panel-map');
-    if (mapPanel && mapPanel.classList.contains('hidden')) {
-      console.log('[WeatherController] 地图面板当前隐藏，延迟初始化');
-      // 标记为待初始化，等面板显示时再初始化
-      this._chinaSpotsMapPendingInit = true;
-
-      // 兜底：部分移动端 tab 切换事件可能丢失，定时重试初始化，避免地图长期空白
+    const panelHidden = mapPanel && (mapPanel.classList.contains('hidden') || mapPanel.hidden);
+    const sizeNotReady = mapEl.offsetWidth <= 0 || mapEl.offsetHeight <= 0;
+    if (panelHidden || sizeNotReady) {
+      // 仅在首次和达到上限时打日志，避免刷屏
       const retryCount = (this._chinaSpotsInitRetryCount || 0) + 1;
       this._chinaSpotsInitRetryCount = retryCount;
-      if (retryCount <= 10) {
-        setTimeout(() => {
-          this._initChinaSpotsMap().catch(err => {
-            console.warn('[WeatherController] 地图延迟初始化重试失败:', err?.message || err);
-          });
-        }, 500);
+      if (retryCount === 1 || retryCount === 11) {
+        console.log('[WeatherController] 地图面板未就绪，等待用户切换到地图页触发初始化', { panelHidden, sizeNotReady });
+      }
+      // 标记为待初始化，等面板显示时通过 onMapPanelVisible 回调触发
+      this._chinaSpotsMapPendingInit = true;
+
+      // 兜底：低频重试（每5秒一次），防止 tab 切换事件丢失时地图永久空白
+      if (retryCount <= 3) {
+        setTimeout(() => this._initChinaSpotsMap(), 500);
+      } else if (retryCount <= 6) {
+        setTimeout(() => this._initChinaSpotsMap(), 2000);
       } else {
-        console.warn('[WeatherController] 地图延迟初始化重试达到上限，等待用户手动切换页面触发');
+        // 超过6次后停止重试，完全依赖 onMapPanelVisible 回调
+        // 当用户切到地图 tab 时，HomeTabs.setActiveView 会触发 onMapPanelVisible
       }
       return;
     }

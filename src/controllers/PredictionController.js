@@ -1165,19 +1165,19 @@ class PredictionController {
       html += `<div style="font-size:13px;margin:3px 0;">⚠️ 有轻微降水（${precip.toFixed(1)} mm/h），可能影响观赏</div>`;
     }
 
-    // 结语：综合评分 + 逐条分析的一致性
-    const positiveConditions = [hc >= 40, (mc >= 20 && mc <= 50) || (hc >= 50 && mc < 10), hum >= 40 && hum <= 70, precip < 0.5, vis >= 10];
-    const positiveCount = positiveConditions.filter(Boolean).length;
-    if (finalScore >= 80) {
+    // 结语：综合评分 + 云层条件判断
+    // 高云和中云是火烧云的必要载体，都没有就不可能有火烧云
+    const hasCloudCarrier = hc >= 15 || mc >= 15;
+    if (!hasCloudCarrier && finalScore < 40) {
+      html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">😶 高云和中云几乎为零，缺少色彩载体，基本不会有火烧云</div>`;
+    } else if (finalScore >= 80) {
       html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">✨ 极佳条件，强烈推荐出行观赏！</div>`;
     } else if (finalScore >= 60) {
       html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">✨ 有较大概率出现壮观的火烧云景象</div>`;
     } else if (finalScore >= 40) {
       html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">💡 条件一般，可以期待但不保证</div>`;
-    } else if (positiveCount >= 3) {
-      html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">💡 部分条件不错，但综合评分偏低（${finalScore.toFixed(0)}分），谨慎期待</div>`;
     } else {
-      html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">😶 今日火烧云概率较低</div>`;
+      html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">😶 今日火烧云概率较低（${finalScore.toFixed(0)}分）</div>`;
     }
 
     html += '</div>';
