@@ -66,6 +66,17 @@ app.use(express.json());
 app.use(morgan('combined')); // HTTP request logging
 app.use(requestLogger()); // Custom request logging
 
+// 访问统计中间件（排除 health、静态资源、瓦片）
+const accessLogService = require('./services/AccessLogService');
+app.use((req, res, next) => {
+  const skipPaths = ['/health', '/api/tiles', '/data/', '/styles/', '/src/', '/public/'];
+  const shouldSkip = skipPaths.some(p => req.path.startsWith(p));
+  if (!shouldSkip && req.path !== '/favicon.ico') {
+    accessLogService.log(req);
+  }
+  next();
+});
+
 // 瓦片路由优先挂载（绕过全局 apiLimiter，使用独立宽松限速）
 app.use('/api/tiles', tilesLimiter, tilesRoutes);
 
