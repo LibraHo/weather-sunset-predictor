@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>霞客管理后台</title>
+  <link rel="stylesheet" href="/styles/main.css">
+  <link rel="stylesheet" href="/admin/admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body class="theme-dark">
+  <div id="admin-app">
+    <!-- 顶部导航 -->
+    <header class="admin-header">
+      <div class="admin-header-inner">
+        <div class="app-logo">
+          <svg class="app-logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 76 76" aria-hidden="true">
+            <path d="M12 44 A26 26 0 0 1 64 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+            <line x1="0" y1="44" x2="76" y2="44" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+            <line x1="10" y1="55" x2="66" y2="55" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+            <line x1="22" y1="66" x2="54" y2="66" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+          <span class="app-logo-text">霞客管理后台</span>
+        </div>
+        <div class="admin-header-actions">
+          <button id="theme-toggle" class="icon-btn" aria-label="切换主题">🌓</button>
+          <a href="/" class="btn btn-secondary btn-sm">返回前台</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="admin-main">
+      <div id="message" class="admin-message hidden"></div>
+
+      <!-- KPI 卡片行 -->
+      <section class="admin-section">
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">今日 PV</div>
+            <div class="kpi-value" id="kpi-today-pv">--</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">今日 UV</div>
+            <div class="kpi-value" id="kpi-today-uv">--</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">今日 IP</div>
+            <div class="kpi-value" id="kpi-today-ip">--</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Open-Meteo 今日调用</div>
+            <div class="kpi-value" id="kpi-weather-day">--</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Grid 今日调用</div>
+            <div class="kpi-value" id="kpi-grid-day">--</div>
+          </div>
+          <div class="kpi-card kpi-card-alert" id="kpi-error-card">
+            <div class="kpi-label">今日错误率</div>
+            <div class="kpi-value" id="kpi-error-rate">--</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 图表区 -->
+      <section class="admin-section">
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h3 class="chart-title">7天访问趋势</h3>
+            <div class="chart-wrap"><canvas id="accessTrendChart"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <h3 class="chart-title">24h API 调用分布</h3>
+            <div class="chart-wrap"><canvas id="apiHourlyChart"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 系统健康 + 运维工具箱 -->
+      <section class="admin-section">
+        <div class="two-col">
+          <div class="admin-card">
+            <h3 class="card-title">🖥️ 系统健康</h3>
+            <div class="health-grid" id="healthGrid">
+              <div class="health-item"><span class="health-label">磁盘使用</span><span class="health-value" id="health-disk">--</span></div>
+              <div class="health-item"><span class="health-label">内存使用</span><span class="health-value" id="health-mem">--</span></div>
+              <div class="health-item"><span class="health-label">Node 进程</span><span class="health-value" id="health-node">--</span></div>
+              <div class="health-item"><span class="health-label">后端运行时间</span><span class="health-value" id="health-uptime">--</span></div>
+            </div>
+          </div>
+          <div class="admin-card">
+            <h3 class="card-title">🧰 运维工具箱</h3>
+            <div class="tool-grid">
+              <button class="btn btn-secondary" onclick="clearGridCache()">🗑️ 清空 Grid 缓存</button>
+              <button class="btn btn-secondary" onclick="triggerRefresh('sunset')">🌅 手动刷新晚霞</button>
+              <button class="btn btn-secondary" onclick="triggerRefresh('sunrise')">🌄 手动刷新朝霞</button>
+              <button class="btn btn-danger" onclick="restartBackend()">🔄 重启后端进程</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 表格区：IP统计 + API日志 -->
+      <section class="admin-section">
+        <div class="two-col">
+          <div class="admin-card">
+            <h3 class="card-title">📍 今日 Top IP</h3>
+            <div class="table-wrap">
+              <table class="admin-table">
+                <thead><tr><th>IP</th><th>访问次数</th></tr></thead>
+                <tbody id="ipStatsBody"><tr><td colspan="2" class="empty">加载中...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="admin-card">
+            <h3 class="card-title">📋 API 调用日志</h3>
+            <div class="tab-bar">
+              <button class="tab-btn active" onclick="switchLogTab('grid', this)">Grid</button>
+              <button class="tab-btn" onclick="switchLogTab('weather,gaode,gaode_tile', this)">其他</button>
+            </div>
+            <div class="table-wrap">
+              <table class="admin-table">
+                <thead><tr><th>时间</th><th>接口</th><th>状态</th><th>耗时</th><th>错误</th></tr></thead>
+                <tbody id="logTableBody"><tr><td colspan="5" class="empty">加载中...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 定时配置 -->
+      <section class="admin-section">
+        <div class="admin-card">
+          <h3 class="card-title">⏰ 定时更新配置</h3>
+          <div id="scheduleJobs" class="schedule-jobs"></div>
+          <div class="schedule-actions">
+            <button class="btn btn-secondary" onclick="addScheduleJob()">+ 添加时间点</button>
+            <button class="btn btn-primary" onclick="saveSchedule()">保存配置</button>
+          </div>
+          <div id="scheduleMsg" class="admin-message hidden"></div>
+        </div>
+      </section>
+
+      <!-- 照片管理 -->
+      <section class="admin-section">
+        <div class="admin-card">
+          <h3 class="card-title">📤 上传新照片</h3>
+          <form id="uploadForm" class="upload-form">
+            <div class="form-row">
+              <div class="file-input-wrapper">
+                <input type="file" id="photoFile" accept="image/jpeg,image/png,image/heic" required>
+                <div class="file-input-text">
+                  <span>点击或拖拽照片到此处</span><br>
+                  <small>支持 JPEG、PNG、HEIC（最大 20MB）</small>
+                </div>
+              </div>
+            </div>
+            <div class="form-row">
+              <input type="text" id="description" placeholder="描述">
+            </div>
+            <div class="form-row two-inputs">
+              <input type="number" id="lat" placeholder="纬度" step="any">
+              <input type="number" id="lon" placeholder="经度" step="any">
+            </div>
+            <button type="submit" class="btn btn-primary" id="uploadBtn">上传照片</button>
+          </form>
+        </div>
+
+        <div class="admin-card" style="margin-top: var(--spacing-lg);">
+          <h3 class="card-title">📷 已上传照片</h3>
+          <div id="photoGrid" class="photo-grid"><p class="empty">加载中...</p></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/admin/admin.js"></script>
+</body>
+</html>
