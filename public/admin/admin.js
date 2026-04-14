@@ -297,7 +297,37 @@ async function loadDailyStats() {
   try {
     const res = await fetch('/api/admin/logs/daily?days=7', { credentials: 'include' });
     const data = await res.json();
-    // 已在访问统计图表中展示，此处可扩展
+    const tbody = document.getElementById('dailyStatsBody');
+    const days = data.days || [];
+
+    if (!days.length) {
+      tbody.innerHTML = '<tr><td colspan="9" class="empty">暂无数据</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = days.map(d => {
+      const c = d.calls || {};
+      const grid = c.grid || { total: 0, fail: 0 };
+      const weather = c.weather || { total: 0, fail: 0 };
+      const gaode = c.gaode || { total: 0, fail: 0 };
+      const gaodeTile = c.gaode_tile || { total: 0, fail: 0 };
+      const retries = d.retries || {};
+
+      const totalCalls = (grid.total || 0) + (weather.total || 0) + (gaode.total || 0) + (gaodeTile.total || 0);
+      const totalFail = (grid.fail || 0) + (weather.fail || 0) + (gaode.fail || 0) + (gaodeTile.fail || 0);
+
+      return `<tr>
+        <td>${d.day}</td>
+        <td>${totalCalls}</td>
+        <td class="${totalFail > 0 ? 'status-err' : 'status-ok'}">${totalFail}</td>
+        <td>${grid.total || 0}</td>
+        <td>${weather.total || 0}</td>
+        <td>${(gaode.total || 0) + (gaodeTile.total || 0)}</td>
+        <td>${retries.attempts || 0}</td>
+        <td class="status-ok">${retries.recovered || 0}</td>
+        <td class="${(retries.failedAfterRetry || 0) > 0 ? 'status-err' : ''}">${retries.failedAfterRetry || 0}</td>
+      </tr>`;
+    }).join('');
   } catch (err) {
     console.error('加载每日统计失败:', err);
   }
