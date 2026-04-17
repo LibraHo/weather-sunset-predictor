@@ -11,6 +11,9 @@ ZIP_TMP="/tmp/weather-sunset-deploy.zip"
 # 确保服务器有 unzip
 
 
+echo "📦 部署前备份服务器配置..."
+bash "$(dirname "$0")/scripts/pre-deploy-backup.sh" || { echo '⚠️ 备份失败，中止部署'; exit 1; }
+
 echo "📦 拉取最新代码..."
 git -C "$LOCAL" pull origin main
 
