@@ -4,27 +4,32 @@
 set -e
 
 REMOTE="ubuntu@43.143.237.15"
-DEPLOY_DIR="~/weather-sunset-predictor"
-BACKUP_DIR="~/.xiake-backup/$(date +%Y%m%d-%H%M%S)"
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 
-echo "📦 备份服务器配置到 $BACKUP_DIR ..."
+echo "📦 备份服务器配置..."
 
-ssh "$REMOTE" "
-  set -e
-  mkdir -p $BACKUP_DIR
+ssh "$REMOTE" bash -s <<REMOTE_SCRIPT
+set -e
+DEPLOY_DIR="\$HOME/weather-sunset-predictor"
+BACKUP_DIR="\$HOME/.xiake-backup/${TIMESTAMP}"
 
-  # 备份 .env
-  [ -f \"$DEPLOY_DIR/server/.env\" ] && cp \"$DEPLOY_DIR/server/.env\" \"$BACKUP_DIR/.env\" && echo '  ✅ .env 已备份'
+mkdir -p "\$BACKUP_DIR"
 
-  # 备份 schedule-config
-  [ -f ~/.xiake/schedule-config.json ] && cp ~/.xiake/schedule-config.json \"$BACKUP_DIR/schedule-config.json\" && echo '  ✅ schedule-config 已备份'
+# 备份 .env
+[ -f "\$DEPLOY_DIR/server/.env" ] && cp "\$DEPLOY_DIR/server/.env" "\$BACKUP_DIR/.env" && echo '  ✅ .env 已备份'
 
-  # 备份 grid-cache
-  [ -f ~/.xiake/grid-cache.json ] && cp ~/.xiake/grid-cache.json \"$BACKUP_DIR/grid-cache.json\" && echo '  ✅ grid-cache 已备份'
+# 备份 schedule-config
+[ -f "\$HOME/.xiake/schedule-config.json" ] && cp "\$HOME/.xiake/schedule-config.json" "\$BACKUP_DIR/schedule-config.json" && echo '  ✅ schedule-config 已备份'
 
-  # 保留最近 10 份备份
-  ls -dt ~/.xiake-backup/*/ | tail -n +11 | xargs rm -rf 2>/dev/null || true
+# 备份 grid-cache
+[ -f "\$HOME/.xiake/grid-cache.json" ] && cp "\$HOME/.xiake/grid-cache.json" "\$BACKUP_DIR/grid-cache.json" && echo '  ✅ grid-cache 已备份'
 
-  echo '✅ 备份完成'
-  ls -la \"$BACKUP_DIR/\"
-"
+# 备份 job-state
+[ -f "\$HOME/.xiake/grid-job-state.json" ] && cp "\$HOME/.xiake/grid-job-state.json" "\$BACKUP_DIR/grid-job-state.json" && echo '  ✅ job-state 已备份'
+
+# 保留最近 10 份备份
+ls -dt "\$HOME/.xiake-backup"/*/ 2>/dev/null | tail -n +11 | xargs rm -rf 2>/dev/null || true
+
+echo '✅ 备份完成'
+ls -la "\$BACKUP_DIR/"
+REMOTE_SCRIPT
