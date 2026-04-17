@@ -387,6 +387,16 @@ export default {
     forecast: '未来预测'
   },
 
+  // 分享
+  share: {
+    title: '分享预测',
+    panelTitle: '分享',
+    saveImage: '保存图片',
+    copyLink: '复制链接',
+    nativeShare: '更多分享',
+    copied: '链接已复制'
+  },
+
   // 任务19：周边火烧云
   surrounding: {
     title: '周边火烧云分析',
