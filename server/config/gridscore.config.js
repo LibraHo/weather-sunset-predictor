@@ -18,19 +18,27 @@ module.exports = {
     
     // 持久化文件路径
     cacheDir: require('os').homedir() + '/.xiake',
-    cacheFile: 'grid-cache.json'
+    cacheFile: 'grid-cache.json',
+    // 断点续跑状态文件
+    jobStateFile: 'grid-job-state.json'
   },
 
   // 网格配置
   grid: {
-    // 中国区域范围
+    // 默认中国区域范围（兼容旧配置）
     bounds: {
-      lonMin: 73,   // 最西经度
-      lonMax: 135,  // 最东经度
-      latMin: 18,   // 最南纬度
-      latMax: 53,   // 最北纬度
-      step: 1.0     // 网格步长（度），先降采样提高稳定性
-    }
+      lonMin: 73,
+      lonMax: 135,
+      latMin: 18,
+      latMax: 53,
+      step: 1.0
+    },
+    // 覆盖区域（中国 + 日本 + 韩国）
+    regions: [
+      { name: 'china', lonMin: 73, lonMax: 135, latMin: 18, latMax: 53 },
+      { name: 'japan', lonMin: 129, lonMax: 146, latMin: 31, latMax: 46 },
+      { name: 'korea', lonMin: 124, lonMax: 132, latMin: 33, latMax: 39.5 }
+    ]
   },
 
   // 批量抓取配置
