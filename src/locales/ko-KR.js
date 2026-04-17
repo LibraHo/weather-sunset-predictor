@@ -488,6 +488,14 @@ const translations = {
     "clearAll": "모두 지우기",
     "clearConfirm": "모든 검색 기록을 삭제하시겠습니까?"
   },
+  "share": {
+    "title": "Share Prediction",
+    "panelTitle": "Share",
+    "saveImage": "Save Image",
+    "copyLink": "Copy Link",
+    "nativeShare": "More Share",
+    "copied": "Link Copied"
+  },
   "charts": {
     "temperature": "기온",
     "precipitation": "강수",

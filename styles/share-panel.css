@@ -1,0 +1,249 @@
+/* 分享面板样式 */
+
+.share-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.share-panel.hidden {
+  display: none;
+}
+
+.share-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.share-container {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease-out;
+  overflow: hidden;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 暗色主题 */
+.theme-dark .share-container {
+  background: rgba(30, 41, 59, 0.95);
+  color: #f3f4f6;
+}
+
+/* 分享面板头部 */
+.share-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.theme-dark .share-header {
+  border-bottom-color: rgba(148, 163, 184, 0.2);
+}
+
+.share-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.theme-dark .share-header h3 {
+  color: #f3f4f6;
+}
+
+.share-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.share-close:hover {
+  background: rgba(107, 114, 128, 0.12);
+  color: #1f2937;
+}
+
+.theme-dark .share-close {
+  color: #9ca3af;
+}
+
+.theme-dark .share-close:hover {
+  background: rgba(148, 163, 184, 0.2);
+  color: #f9fafb;
+}
+
+/* 分享面板内容 */
+.share-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 分享按钮 */
+.share-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 15px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.share-btn:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.share-btn:active {
+  transform: translateY(0);
+}
+
+.theme-dark .share-btn {
+  background: rgba(51, 65, 85, 0.8);
+  border-color: rgba(148, 163, 184, 0.15);
+  color: #e5e7eb;
+}
+
+.theme-dark .share-btn:hover {
+  background: rgba(71, 85, 105, 0.9);
+  border-color: rgba(148, 163, 184, 0.25);
+}
+
+.share-btn.hidden {
+  display: none;
+}
+
+.share-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+/* 分享按钮特定样式 */
+.share-btn-save .share-icon {
+  color: #22c55e;
+}
+
+.share-btn-copy .share-icon {
+  color: #3b82f6;
+}
+
+.share-btn-native .share-icon {
+  color: #f59e0b;
+}
+
+/* 预测卡片上的分享按钮 */
+.prediction-share-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  padding: 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.prediction-share-btn:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: scale(1.05);
+}
+
+.prediction-share-btn .share-btn-icon {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+}
+
+/* 预测卡片头部需要相对定位 */
+.prediction-header {
+  position: relative;
+}
+
+/* 提示消息 */
+.share-toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 2200;
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.share-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* 响应式设计 */
+@media (min-width: 640px) {
+  .share-panel {
+    align-items: center;
+    padding: 24px;
+  }
+  
+  .share-container {
+    border-radius: 20px;
+    max-height: calc(100vh - 48px);
+  }
+}
+
+@media (max-width: 639px) {
+  .share-container {
+    max-width: 100%;
+  }
+}

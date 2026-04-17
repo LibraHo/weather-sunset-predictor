@@ -472,6 +472,14 @@ const translations = {
     "clearAll": "Cancella Tutto",
     "clearConfirm": "Sei sicuro di voler cancellare tutta la cronologia delle ricerche?"
   },
+  "share": {
+    "title": "Share Prediction",
+    "panelTitle": "Share",
+    "saveImage": "Save Image",
+    "copyLink": "Copy Link",
+    "nativeShare": "More Share",
+    "copied": "Link Copied"
+  },
   "charts": {
     "temperature": "Temperatura",
     "precipitation": "Precipitazioni",

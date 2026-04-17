@@ -503,6 +503,14 @@ const translations = {
     "clearAll": "Limpiar Todo",
     "clearConfirm": "¿Está seguro de que desea limpiar todo el historial de búsqueda?"
   },
+  "share": {
+    "title": "Share Prediction",
+    "panelTitle": "Share",
+    "saveImage": "Save Image",
+    "copyLink": "Copy Link",
+    "nativeShare": "More Share",
+    "copied": "Link Copied"
+  },
   "charts": {
     "temperature": "Temperatura",
     "precipitation": "Precipitación",
