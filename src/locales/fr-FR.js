@@ -478,6 +478,14 @@ const translations = {
     "clearAll": "Tout Effacer",
     "clearConfirm": "Êtes-vous sûr de vouloir effacer tout l'historique de recherche?"
   },
+  "share": {
+    "title": "Share Prediction",
+    "panelTitle": "Share",
+    "saveImage": "Save Image",
+    "copyLink": "Copy Link",
+    "nativeShare": "More Share",
+    "copied": "Link Copied"
+  },
   "charts": {
     "temperature": "Température",
     "precipitation": "Précipitations",

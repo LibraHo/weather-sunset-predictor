@@ -335,6 +335,16 @@ const translations = {
     "passed": "Passed",
     "forecast": "Future Forecast"
   },
+  // Share
+  "share": {
+    "title": "Share Prediction",
+    "panelTitle": "Share",
+    "saveImage": "Save Image",
+    "copyLink": "Copy Link",
+    "nativeShare": "More Share",
+    "copied": "Link Copied"
+  },
+
   "surrounding": {
     "title": "Surrounding Fire Cloud Analysis",
     "radius": "Detection Radius",

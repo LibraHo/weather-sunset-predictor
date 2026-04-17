@@ -488,6 +488,14 @@ const translations = {
     "clearAll": "清除全部",
     "clearConfirm": "確定要清除所有搜尋歷史嗎？"
   },
+  "share": {
+    "title": "Share Prediction",
+    "panelTitle": "Share",
+    "saveImage": "Save Image",
+    "copyLink": "Copy Link",
+    "nativeShare": "More Share",
+    "copied": "Link Copied"
+  },
   "charts": {
     "temperature": "溫度",
     "precipitation": "降水",

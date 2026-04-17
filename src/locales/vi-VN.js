@@ -461,6 +461,14 @@ const translations = {
     "clearAll": "Xóa Tất Cả",
     "clearConfirm": "Bạn có chắc chắn muốn xóa toàn bộ lịch sử tìm kiếm?"
   },
+  "share": {
+    "title": "Share Prediction",
+    "panelTitle": "Share",
+    "saveImage": "Save Image",
+    "copyLink": "Copy Link",
+    "nativeShare": "More Share",
+    "copied": "Link Copied"
+  },
   "charts": {
     "temperature": "Nhiệt Độ",
     "precipitation": "Mưa",

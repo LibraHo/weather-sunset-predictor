@@ -17,6 +17,276 @@ import NotificationService from '../services/NotificationService.js';
 import i18n from '../i18n.js';
 import { loadConfig } from '../../config.api.js';
 
+// 分享面板状态
+let sharePanelInstance = null;
+
+/**
+ * 创建或获取分享面板实例
+ * @returns {SharePanel}
+ */
+function getSharePanel() {
+  if (!sharePanelInstance) {
+    sharePanelInstance = new SharePanel();
+  }
+  return sharePanelInstance;
+}
+
+/**
+ * 分享面板组件
+ */
+class SharePanel {
+  constructor() {
+    this.panel = null;
+    this.isOpen = false;
+    this.i18n = i18n;
+    this.currentPrediction = null;
+  }
+
+  /**
+   * 创建分享面板 DOM
+   */
+  createPanel() {
+    const panel = document.createElement('div');
+    panel.id = 'share-panel';
+    panel.className = 'share-panel hidden';
+    panel.innerHTML = `
+      <div class="share-overlay"></div>
+      <div class="share-container">
+        <div class="share-header">
+          <h3>${this.i18n.t('share.panelTitle')}</h3>
+          <button class="share-close" aria-label="${this.i18n.t('buttons.close')}">✕</button>
+        </div>
+        <div class="share-content">
+          <button class="share-btn share-btn-save" data-action="save">
+            <svg class="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>${this.i18n.t('share.saveImage')}</span>
+          </button>
+          <button class="share-btn share-btn-copy" data-action="copy">
+            <svg class="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            <span>${this.i18n.t('share.copyLink')}</span>
+          </button>
+          <button class="share-btn share-btn-native hidden" data-action="native">
+            <svg class="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="18" cy="5" r="3"/>
+              <circle cx="6" cy="12" r="3"/>
+              <circle cx="18" cy="19" r="3"/>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+            <span>${this.i18n.t('share.nativeShare')}</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(panel);
+    this.panel = panel;
+    this.attachEventListeners();
+  }
+
+  /**
+   * 绑定事件监听器
+   */
+  attachEventListeners() {
+    // 关闭按钮
+    const closeBtn = this.panel.querySelector('.share-close');
+    closeBtn.addEventListener('click', () => this.close());
+
+    // 点击遮罩关闭
+    const overlay = this.panel.querySelector('.share-overlay');
+    overlay.addEventListener('click', () => this.close());
+
+    // 保存图片按钮
+    const saveBtn = this.panel.querySelector('[data-action="save"]');
+    saveBtn.addEventListener('click', () => this.handleSaveImage());
+
+    // 复制链接按钮
+    const copyBtn = this.panel.querySelector('[data-action="copy"]');
+    copyBtn.addEventListener('click', () => this.handleCopyLink());
+
+    // 原生分享按钮
+    const nativeBtn = this.panel.querySelector('[data-action="native"]');
+    if (nativeBtn && navigator.share) {
+      nativeBtn.classList.remove('hidden');
+      nativeBtn.addEventListener('click', () => this.handleNativeShare());
+    }
+  }
+
+  /**
+   * 打开分享面板
+   * @param {Object} prediction - 预测数据
+   */
+  open(prediction) {
+    if (!this.panel) {
+      this.createPanel();
+    }
+    this.currentPrediction = prediction;
+    this.panel.classList.remove('hidden');
+    this.isOpen = true;
+
+    // 检查原生分享支持
+    const nativeBtn = this.panel.querySelector('[data-action="native"]');
+    if (nativeBtn) {
+      if (navigator.share) {
+        nativeBtn.classList.remove('hidden');
+      } else {
+        nativeBtn.classList.add('hidden');
+      }
+    }
+  }
+
+  /**
+   * 关闭分享面板
+   */
+  close() {
+    if (this.panel) {
+      this.panel.classList.add('hidden');
+    }
+    this.isOpen = false;
+  }
+
+  /**
+   * 处理保存图片
+   */
+  async handleSaveImage() {
+    try {
+      // 获取预测卡片元素
+      const cardType = this.currentPrediction?.type || 'sunset';
+      const card = document.querySelector(`.prediction-card[data-type="${cardType}"]`);
+      
+      if (!card) {
+        this.showToast('未找到预测卡片');
+        return;
+      }
+
+      // 使用 html2canvas 或类似库生成图片
+      // 这里先使用简单的 DOM 转图片方案
+      const canvas = await this.domToCanvas(card);
+      
+      // 下载图片
+      const link = document.createElement('a');
+      link.download = `sunset-prediction-${Date.now()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      
+      this.showToast('图片已保存');
+    } catch (error) {
+      console.error('保存图片失败:', error);
+      this.showToast('保存失败，请重试');
+    }
+    this.close();
+  }
+
+  /**
+   * 将 DOM 元素转换为 Canvas
+   * @param {HTMLElement} element
+   * @returns {Promise<HTMLCanvasElement>}
+   */
+  async domToCanvas(element) {
+    // 使用 dom-to-image 库或 html2canvas
+    // 这里使用简单的实现，实际项目中可能需要引入专门的库
+    return new Promise((resolve, reject) => {
+      // 简化的实现：直接截图（需要引入 html2canvas）
+      if (window.html2canvas) {
+        window.html2canvas(element, {
+          backgroundColor: null,
+          scale: 2
+        }).then(canvas => {
+          resolve(canvas);
+        }).catch(reject);
+      } else {
+        // 如果没有 html2canvas，显示提示
+        reject(new Error('html2canvas not available'));
+      }
+    });
+  }
+
+  /**
+   * 处理复制链接
+   */
+  async handleCopyLink() {
+    try {
+      const url = window.location.href;
+      await navigator.clipboard.writeText(url);
+      this.showToast(this.i18n.t('share.copied'));
+    } catch (error) {
+      console.error('复制链接失败:', error);
+      // 降级方案
+      const textArea = document.createElement('textarea');
+      textArea.value = window.location.href;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      this.showToast(this.i18n.t('share.copied'));
+    }
+    this.close();
+  }
+
+  /**
+   * 处理原生分享
+   */
+  async handleNativeShare() {
+    try {
+      const shareData = {
+        title: this.i18n.t('share.title'),
+        text: this.getShareText(),
+        url: window.location.href
+      };
+      await navigator.share(shareData);
+    } catch (error) {
+      console.error('原生分享失败:', error);
+      if (error.name !== 'AbortError') {
+        this.showToast('分享失败');
+      }
+    }
+    this.close();
+  }
+
+  /**
+   * 获取分享文本
+   * @returns {string}
+   */
+  getShareText() {
+    if (!this.currentPrediction) {
+      return this.i18n.t('share.title');
+    }
+    const type = this.currentPrediction.type === 'sunrise' ? '朝霞' : '晚霞';
+    const score = Math.round(this.currentPrediction.score || 0);
+    const quality = this.i18n.t(`prediction.${this.currentPrediction.quality}`);
+    return `${type}预测：${score}分 (${quality})`;
+  }
+
+  /**
+   * 显示提示消息
+   * @param {string} message
+   */
+  showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'share-toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.classList.add('show');
+    }, 10);
+    
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => {
+        document.body.removeChild(toast);
+      }, 300);
+    }, 2000);
+  }
+}
+
 class PredictionController {
   /**
    * 创建PredictionController实例
@@ -707,6 +977,19 @@ class PredictionController {
       });
     }
 
+    // 绑定分享按钮事件
+    const shareButtons = predictionDisplay.querySelectorAll('.prediction-share-btn');
+    shareButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const type = btn.dataset.type;
+        const prediction = type === 'sunrise' ? displaySunrise : displaySunset;
+        if (prediction) {
+          getSharePanel().open(prediction);
+        }
+      });
+    });
+
     // 显示预测部分
     if (predictionSection) {
       predictionSection.classList.remove('hidden');
@@ -826,11 +1109,23 @@ class PredictionController {
           font-size="9" font-weight="600" fill="rgba(255,255,255,0.45)">/100</text>
       </svg>`;
 
+    // 分享按钮 SVG 图标
+    const shareIconSvg = `
+      <svg class="share-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+        <polyline points="16 6 12 2 8 6"/>
+        <line x1="12" y1="2" x2="12" y2="15"/>
+      </svg>
+    `;
+
     return `
-      <div class="prediction-card ${qualityClass}">
+      <div class="prediction-card ${qualityClass}" data-type="${type}">
         <div class="prediction-header">
           <span class="prediction-date-badge">${dateLabel}</span>
           <h3>${icon} ${title}</h3>
+          <button class="prediction-share-btn" data-type="${type}" aria-label="${this.i18n.t('share.title')}">
+            ${shareIconSvg}
+          </button>
         </div>
         <div class="prediction-dashboard-row">
           <div class="score-gauge-wrap ${qualityClass}">

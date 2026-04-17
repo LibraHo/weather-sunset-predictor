@@ -488,6 +488,14 @@ const translations = {
     "clearAll": "すべてクリア",
     "clearConfirm": "すべての検索履歴をクリアしてもよろしいですか？"
   },
+  "share": {
+    "title": "Share Prediction",
+    "panelTitle": "Share",
+    "saveImage": "Save Image",
+    "copyLink": "Copy Link",
+    "nativeShare": "More Share",
+    "copied": "Link Copied"
+  },
   "charts": {
     "temperature": "気温",
     "precipitation": "降水量",
