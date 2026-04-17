@@ -42,6 +42,7 @@ const MANUAL_REFRESH_COOLDOWN_MS = config.cache.manualRefreshCooldownMs;
 // 持久化路径
 const CACHE_DIR = config.cache.cacheDir;
 const CACHE_FILE = path.join(CACHE_DIR, config.cache.cacheFile);
+const JOB_STATE_FILE = path.join(CACHE_DIR, config.cache.jobStateFile || 'grid-job-state.json');
 
 // 支持的时段
 const SUPPORTED_PERIODS = ['sunrise', 'sunset'];
@@ -123,13 +124,57 @@ class GridScoreService {
    * @returns {{ lat: number, lon: number }[]}
    */
   generateGrid() {
+    const step = CHINA_BOUNDS.step;
+    const regions = Array.isArray(config.grid?.regions) && config.grid.regions.length > 0
+      ? config.grid.regions
+      : [CHINA_BOUNDS];
     const points = [];
-    for (let lat = CHINA_BOUNDS.latMin; lat <= CHINA_BOUNDS.latMax; lat += CHINA_BOUNDS.step) {
-      for (let lon = CHINA_BOUNDS.lonMin; lon <= CHINA_BOUNDS.lonMax; lon += CHINA_BOUNDS.step) {
-        points.push({ lat: parseFloat(lat.toFixed(1)), lon: parseFloat(lon.toFixed(1)) });
+    const seen = new Set();
+
+    for (const region of regions) {
+      for (let lat = region.latMin; lat <= region.latMax; lat += step) {
+        for (let lon = region.lonMin; lon <= region.lonMax; lon += step) {
+          const p = { lat: parseFloat(lat.toFixed(1)), lon: parseFloat(lon.toFixed(1)) };
+          const key = `${p.lat},${p.lon}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            points.push(p);
+          }
+        }
       }
     }
     return points;
+  }
+
+  _loadJobState() {
+    try {
+      if (!fs.existsSync(JOB_STATE_FILE)) return {};
+      const raw = fs.readFileSync(JOB_STATE_FILE, 'utf-8');
+      return JSON.parse(raw) || {};
+    } catch (err) {
+      console.warn('[GridScoreService] 读取断点状态失败:', err.message);
+      return {};
+    }
+  }
+
+  _saveJobState(state = {}) {
+    try {
+      if (!fs.existsSync(CACHE_DIR)) {
+        fs.mkdirSync(CACHE_DIR, { recursive: true });
+      }
+      fs.writeFileSync(JOB_STATE_FILE, JSON.stringify(state), 'utf-8');
+    } catch (err) {
+      console.warn('[GridScoreService] 写入断点状态失败:', err.message);
+    }
+  }
+
+  _clearJobState(period = DEFAULT_PERIOD) {
+    const safePeriod = this.normalizePeriod(period);
+    const state = this._loadJobState();
+    if (state?.[safePeriod]) {
+      delete state[safePeriod];
+      this._saveJobState(state);
+    }
   }
 
   /**
@@ -141,34 +186,55 @@ class GridScoreService {
    */
   async fetchAndScore(gridPoints, date = new Date(), period = DEFAULT_PERIOD) {
     const safePeriod = this.normalizePeriod(period);
+    const dateKey = new Date().toISOString().slice(0, 10);
     const batches = [];
 
     for (let i = 0; i < gridPoints.length; i += BATCH_SIZE) {
       batches.push(gridPoints.slice(i, i + BATCH_SIZE));
     }
 
+    // 尝试断点恢复（同日期 + 同网格规模）
+    const jobState = this._loadJobState();
+    const checkpoint = jobState?.[safePeriod];
+    const canResume = checkpoint
+      && checkpoint.dateKey === dateKey
+      && checkpoint.totalPoints === gridPoints.length
+      && Array.isArray(checkpoint.results)
+      && Array.isArray(checkpoint.completedBatchIndexes);
+
+    const resumedBatchIndexes = new Set(canResume ? checkpoint.completedBatchIndexes : []);
+    const resumedResults = canResume ? checkpoint.results : [];
+
     // 初始化批次状态
     const batchStatuses = batches.map((batch, idx) => ({
       index: idx + 1,
-      status: 'pending', // pending/running/retrying/success/failed
+      status: resumedBatchIndexes.has(idx) ? 'success' : 'pending', // pending/running/retrying/success/failed
       pointsCount: batch.length,
-      successCount: 0,
-      errorCount: 0,
-      startedAt: null,
-      finishedAt: null,
+      successCount: resumedBatchIndexes.has(idx)
+        ? resumedResults.filter(r => r.__batchIndex === idx && Number.isFinite(r.score)).length
+        : 0,
+      errorCount: resumedBatchIndexes.has(idx)
+        ? resumedResults.filter(r => r.__batchIndex === idx && !Number.isFinite(r.score)).length
+        : 0,
+      startedAt: resumedBatchIndexes.has(idx) ? checkpoint.updatedAt : null,
+      finishedAt: resumedBatchIndexes.has(idx) ? checkpoint.updatedAt : null,
       errorMessage: null
     }));
+
+    const resumedCompletedPoints = resumedResults.length;
+    const resumedSuccessPoints = resumedResults.filter(item => Number.isFinite(item.score)).length;
+    const resumedErrorPoints = resumedCompletedPoints - resumedSuccessPoints;
 
     this._setJobStatus(safePeriod, {
       running: true,
       startedAt: new Date().toISOString(),
       finishedAt: null,
       totalPoints: gridPoints.length,
-      completedPoints: 0,
-      successPoints: 0,
-      errorPoints: 0,
+      completedPoints: resumedCompletedPoints,
+      successPoints: resumedSuccessPoints,
+      errorPoints: resumedErrorPoints,
       totalBatches: batches.length,
-      completedBatches: 0,
+      completedBatches: resumedBatchIndexes.size,
       currentBatch: 0,
       batchSize: BATCH_SIZE,
       concurrency: CONCURRENCY_LIMIT,
@@ -178,7 +244,7 @@ class GridScoreService {
       batches: batchStatuses
     });
 
-    const allResults = [];
+    const allResults = resumedResults.map(({ __batchIndex, ...rest }) => rest);
 
     const processBatch = async (batch, batchIndex) => {
       const points = batch.map(point => ({ lat: point.lat, lon: point.lon }));
@@ -354,12 +420,39 @@ class GridScoreService {
         etaSeconds
       });
 
+      // 写入断点状态（批次级）
+      const latestState = this._loadJobState();
+      const prev = latestState[safePeriod] || {
+        dateKey,
+        totalPoints: gridPoints.length,
+        completedBatchIndexes: [],
+        results: []
+      };
+      const completedBatchIndexes = Array.from(new Set([...(prev.completedBatchIndexes || []), batchIndex])).sort((a, b) => a - b);
+      const tagged = scoredBatch.map(item => ({ ...item, __batchIndex: batchIndex }));
+      const filteredPrevResults = (prev.results || []).filter(item => item.__batchIndex !== batchIndex);
+      latestState[safePeriod] = {
+        dateKey,
+        totalPoints: gridPoints.length,
+        completedBatchIndexes,
+        results: [...filteredPrevResults, ...tagged],
+        updatedAt: new Date().toISOString()
+      };
+      this._saveJobState(latestState);
+
       return scoredBatch;
     };
 
     for (let i = 0; i < batches.length; i += CONCURRENCY_LIMIT) {
-      const chunk = batches.slice(i, i + CONCURRENCY_LIMIT);
-      const chunkResults = await Promise.all(chunk.map((batch, idx) => processBatch(batch, i + idx)));
+      const chunk = batches.slice(i, i + CONCURRENCY_LIMIT)
+        .map((batch, idx) => ({ batch, batchIndex: i + idx }))
+        .filter(({ batchIndex }) => !resumedBatchIndexes.has(batchIndex));
+
+      if (chunk.length === 0) {
+        continue;
+      }
+
+      const chunkResults = await Promise.all(chunk.map(({ batch, batchIndex }) => processBatch(batch, batchIndex)));
       for (const result of chunkResults) {
         allResults.push(...result);
       }
@@ -376,6 +469,9 @@ class GridScoreService {
       completedPoints: allResults.length,
       etaSeconds: 0
     });
+
+    // 全量完成后清理断点
+    this._clearJobState(safePeriod);
 
     return allResults;
   }
