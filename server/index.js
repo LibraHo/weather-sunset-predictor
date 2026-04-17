@@ -18,6 +18,7 @@ const tilesRoutes = require('./routes/tiles');
 const photosRoutes = require('./routes/photos');
 const adminRoutes = require('./routes/admin');
 const apiLogsRoutes = require('./routes/api-logs');
+const shareRoutes = require('./routes/share');
 const basicAuth = require('basic-auth');
 const { requestLogger, errorLogger } = require('./middleware/logger');
 
@@ -133,6 +134,7 @@ const adminApiAuth = (req, res, next) => {
   next();
 };
 app.use('/api/admin', adminApiAuth, apiLogsRoutes);
+app.use('/share', shareRoutes);
 
 // 静态文件服务（公开分享页面）
 // /data/ 目录下的 GeoJSON 文件缓存 7 天，其余静态文件缓存 1 小时

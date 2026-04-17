@@ -510,6 +510,16 @@ export default {
     fallbackMessage: 'متصفحك لا يدعم Canvas، عرض الجدول'
   },
 
+  // Share
+  share: {
+    title: 'Share Prediction',
+    panelTitle: 'Share',
+    saveImage: 'Save Image',
+    copyLink: 'Copy Link',
+    nativeShare: 'More Share',
+    copied: 'Link Copied'
+  },
+
   loading: {
     data: 'جاري تحميل البيانات...',
     weather: 'جاري الحصول على بيانات الطقس...',
