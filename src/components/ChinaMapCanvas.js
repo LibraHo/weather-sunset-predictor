@@ -953,7 +953,7 @@ class ChinaMapCanvas {
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 5000);
 
-      const res = await fetch(`/api/weather/forecast?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}&hours=1`, {
+      const res = await fetch(`/api/weather/forecast?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}&hours=24`, {
         signal: ctrl.signal,
       });
 
