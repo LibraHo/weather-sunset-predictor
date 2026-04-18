@@ -1264,7 +1264,7 @@ class PredictionController {
       humidity:      humidityValue,
       precipitation: precipitationValue
     };
-    analysis += this.generateFireCloudAnalysis(cloudValue, humidityValue, visibilityValue, lowCloudsValue, precipitationValue, weatherCodeValue, fullWeatherData);
+    analysis += this.generateFireCloudAnalysis(cloudValue, humidityValue, visibilityValue, lowCloudsValue, precipitationValue, weatherCodeValue, fullWeatherData, prediction.score);
 
     return analysis;
   }
@@ -1359,7 +1359,7 @@ class PredictionController {
    * @returns {string} 火烧云分析 HTML
    * @private
    */
-  generateFireCloudAnalysis(cloudValue, humidityValue, visibilityValue, lowCloudsValue, precipitation = 0, weatherCode = null, fullWeatherData = null) {
+  generateFireCloudAnalysis(cloudValue, humidityValue, visibilityValue, lowCloudsValue, precipitation = 0, weatherCode = null, fullWeatherData = null, predictionScore = null) {
     const weatherInput = fullWeatherData || {
       cloudCover:    cloudValue,
       highClouds:    0,
@@ -1371,112 +1371,125 @@ class PredictionController {
     };
 
     const result = this.predictionService._calculateUnifiedScore(weatherInput);
-    const { score, breakdown } = result;
-    const finalScore = Math.round(score);
+    const { breakdown } = result;
+    // 优先用卡片显示的 prediction.score，避免自己重算跟卡片不一致
+    const finalScore = predictionScore != null ? Math.round(predictionScore) : Math.round(result.score);
 
-    let html = '<div class="fire-cloud-details" style="margin-top: 10px; padding: 10px; background: rgba(255, 243, 224, 0.3); border-radius: 8px;">';
-    html += '<div style="font-weight: 600; margin-bottom: 8px;">🔥 火烧云形成条件分析：</div>';
+    let html = '<div class="fire-cloud-details">';
+    html += '<div class="fca-title">🔥 火烧云形成条件分析：</div>';
 
-    // 高云
+    const r = (icon, text) => `<div class="fca-row">${icon} ${text}</div>`;
+
+    // 高云 — 核心载体，阈值更细
     const hc = weatherInput.highClouds ?? 0;
-    if (hc >= 40) {
-      html += `<div style="font-size:13px;margin:3px 0;">✅ 高层云充足（${hc.toFixed(0)}%），色彩载体丰富</div>`;
+    if (hc >= 60) {
+      html += r('✅', `高层云充沛（${hc.toFixed(0)}%），色彩载体极为丰富，火烧云基础扎实`);
+    } else if (hc >= 40) {
+      html += r('✅', `高层云充足（${hc.toFixed(0)}%），色彩载体丰富`);
     } else if (hc >= 20) {
-      html += `<div style="font-size:13px;margin:3px 0;">⚠️ 高层云适中（${hc.toFixed(0)}%），火烧云效果一般</div>`;
+      html += r('ℹ️', `高层云适中（${hc.toFixed(0)}%），可形成火烧云但色彩可能偏淡`);
+    } else if (hc >= 10) {
+      html += r('⚠️', `高层云偏少（${hc.toFixed(0)}%），色彩载体有限，效果打折扣`);
     } else {
-      html += `<div style="font-size:13px;margin:3px 0;">❌ 高层云偏少（${hc.toFixed(0)}%），火烧云色彩载体不足</div>`;
+      html += r('❌', `高层云极少（${hc.toFixed(0)}%），缺少色彩载体`);
     }
 
-    // 中云
+    // 中云 — 辅助扩散
     const mc = weatherInput.midClouds ?? 0;
-    if (mc >= 20 && mc <= 50) {
-      html += `<div style="font-size:13px;margin:3px 0;">✅ 中层云适中（${mc.toFixed(0)}%），利于色彩扩散</div>`;
-    } else if (hc >= 50 && mc < 10) {
-      // 高云充足时，中云少不是问题
-      html += `<div style="font-size:13px;margin:3px 0;">ℹ️ 中层云较少（${mc.toFixed(0)}%），但高层云充足可独立形成火烧云</div>`;
-    } else if ((mc >= 10 && mc < 20) || (mc > 50 && mc <= 70)) {
-      const label = mc < 20 ? '偏少' : '偏多';
-      html += `<div style="font-size:13px;margin:3px 0;">⚠️ 中层云${label}（${mc.toFixed(0)}%）</div>`;
-    } else {
-      const label = mc < 10 ? '不足' : '过厚';
-      html += `<div style="font-size:13px;margin:3px 0;">❌ 中层云${label}（${mc.toFixed(0)}%）</div>`;
+    if (mc >= 20 && mc <= 60) {
+      html += r('✅', `中层云适中（${mc.toFixed(0)}%），利于色彩扩散和层次感`);
+    } else if (hc >= 40 && mc < 10) {
+      html += r('ℹ️', `中层云较少（${mc.toFixed(0)}%），但高层云充足可独立形成火烧云`);
+    } else if (hc >= 40 && mc > 60) {
+      html += r('⚠️', `中层云偏厚（${mc.toFixed(0)}%），高云充足影响不大，但层次可能偏灰`);
+    } else if (mc >= 10 && mc < 20) {
+      html += r('ℹ️', `中层云偏少（${mc.toFixed(0)}%），色彩扩散有限`);
+    } else if (mc > 60) {
+      html += r('⚠️', `中层云过厚（${mc.toFixed(0)}%），可能遮挡光线`);
+    } else if (mc >= 1) {
+      html += r('⚠️', `中层云不足（${mc.toFixed(0)}%），缺少色彩扩散层`);
     }
+    // mc === 0 时不输出中云行，避免无信息噪音
 
-    // 低云
+    // 低云 — 遮挡因素
     const lc = weatherInput.lowClouds ?? 0;
-    if (lc < 20) {
-      html += `<div style="font-size:13px;margin:3px 0;">✅ 低云稀少（${lc.toFixed(0)}%），不会遮挡火烧云</div>`;
-    } else if (lc < 40) {
-      html += `<div style="font-size:13px;margin:3px 0;">⚠️ 低云较多（${lc.toFixed(0)}%），可能部分遮挡</div>`;
+    if (lc < 15) {
+      html += r('✅', `低云稀少（${lc.toFixed(0)}%），不会遮挡火烧云`);
+    } else if (lc < 30) {
+      html += r('⚠️', `低云较多（${lc.toFixed(0)}%），可能部分遮挡低空色彩`);
+    } else if (lc < 50) {
+      html += r('❌', `低云较厚（${lc.toFixed(0)}%），遮挡风险较大`);
     } else {
-      html += `<div style="font-size:13px;margin:3px 0;">❌ 低云过厚（${lc.toFixed(0)}%），严重影响观赏</div>`;
+      html += r('❌', `低云过厚（${lc.toFixed(0)}%），严重影响观赏`);
     }
 
     // 能见度
     const vis = weatherInput.visibility ?? 0;
     if (vis >= 20) {
-      html += `<div style="font-size:13px;margin:3px 0;">✅ 能见度极佳（${vis.toFixed(0)}km），视野通透</div>`;
+      html += r('✅', `能见度极佳（${vis.toFixed(0)}km），视野通透`);
     } else if (vis >= 10) {
-      html += `<div style="font-size:13px;margin:3px 0;">✅ 能见度良好（${vis.toFixed(0)}km）</div>`;
+      html += r('✅', `能见度良好（${vis.toFixed(0)}km）`);
     } else if (vis >= 5) {
-      html += `<div style="font-size:13px;margin:3px 0;">⚠️ 能见度一般（${vis.toFixed(0)}km）</div>`;
+      html += r('⚠️', `能见度一般（${vis.toFixed(0)}km），色彩饱和度可能降低`);
     } else {
-      html += `<div style="font-size:13px;margin:3px 0;">❌ 能见度差（${vis.toFixed(0)}km），有雾霾影响</div>`;
+      html += r('❌', `能见度差（${vis.toFixed(0)}km），有雾霾影响`);
     }
 
     // 湿度
     const hum = weatherInput.humidity ?? 0;
     if (hum >= 40 && hum <= 70) {
-      html += `<div style="font-size:13px;margin:3px 0;">✅ 湿度适中（${hum.toFixed(0)}%），利于光线散射</div>`;
+      html += r('✅', `湿度适中（${hum.toFixed(0)}%），利于光线散射`);
     } else if ((hum >= 30 && hum < 40) || (hum > 70 && hum <= 80)) {
       const label = hum < 40 ? '略低' : '偏高';
-      html += `<div style="font-size:13px;margin:3px 0;">⚠️ 湿度${label}（${hum.toFixed(0)}%）</div>`;
+      html += r('⚠️', `湿度${label}（${hum.toFixed(0)}%）`);
     } else {
       const label = hum < 30 ? '不足' : '过高';
-      html += `<div style="font-size:13px;margin:3px 0;">❌ 湿度${label}（${hum.toFixed(0)}%）</div>`;
+      html += r('❌', `湿度${label}（${hum.toFixed(0)}%）`);
     }
 
-    // 云层立体感
+    // 云层立体感 — 根据高云是否充足调整语气
     const layerCount = breakdown.layerDiversity.layerCount ?? 0;
     if (layerCount >= 3) {
-      html += `<div style="font-size:13px;margin:3px 0;">✅ 云层立体丰富，多层次火烧云可期</div>`;
+      html += r('✅', '云层立体丰富，多层次火烧云可期');
     } else if (layerCount === 2) {
-      html += `<div style="font-size:13px;margin:3px 0;">⚠️ 云层层次一般</div>`;
+      html += r('ℹ️', '云层层次尚可，双色层搭配');
+    } else if (hc >= 40) {
+      // 单层但高云充足：不算差，只是缺层次
+      html += r('ℹ️', '云层单一，但高云质量好，仍可形成色彩鲜明的火烧云');
     } else {
-      html += `<div style="font-size:13px;margin:3px 0;">❌ 云层单一，缺乏立体层次感</div>`;
+      html += r('⚠️', '云层单一，层次感不足');
     }
 
     // 降水
     const precip = weatherInput.precipitation ?? 0;
     if (precip >= 2) {
-      html += `<div style="font-size:13px;margin:3px 0;">❌ 降水较强（${precip.toFixed(1)} mm/h），基本无法观赏</div>`;
+      html += r('❌', `降水较强（${precip.toFixed(1)}mm/h），基本无法观赏`);
     } else if (precip >= 0.5) {
-      html += `<div style="font-size:13px;margin:3px 0;">❌ 有降水（${precip.toFixed(1)} mm/h），火烧云概率降低</div>`;
+      html += r('⚠️', `有降水（${precip.toFixed(1)}mm/h），火烧云概率降低`);
     } else if (precip >= 0.1) {
-      html += `<div style="font-size:13px;margin:3px 0;">⚠️ 有轻微降水（${precip.toFixed(1)} mm/h），可能影响观赏</div>`;
+      html += r('⚠️', `轻微降水（${precip.toFixed(1)}mm/h），可能影响观赏`);
     }
 
-    // 结语：综合评分 + 云层条件判断
-    // 高云和中云是火烧云的必要载体，都没有就不可能有火烧云
+    // 结语：直接用 predictionScore（卡片显示分），不再自己重算
     const hasCloudCarrier = hc >= 15 || mc >= 15;
     if (!hasCloudCarrier && finalScore < 40) {
-      html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">😶 高云和中云几乎为零，缺少色彩载体，火烧云概率极低</div>`;
+      html += `<div class="fca-summary">😶 高云和中云几乎为零，缺少色彩载体，火烧云概率极低</div>`;
     } else if (finalScore >= 80) {
-      if (layerCount < 2) {
-        html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">✨ 条件优秀，高云充足色彩可期；但云层单一，层次感略有不足</div>`;
+      if (layerCount >= 2) {
+        html += `<div class="fca-summary fca-summary-great">✨ 极佳条件，强烈推荐出行观赏！</div>`;
       } else {
-        html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">✨ 极佳条件，强烈推荐出行观赏！</div>`;
+        html += `<div class="fca-summary fca-summary-great">✨ 条件优秀，色彩可期；云层单一，层次感略有不足</div>`;
       }
     } else if (finalScore >= 60) {
-      if (layerCount < 2) {
-        html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">✨ 条件不错，火烧云概率较高；云层层次稍欠，效果可能偏平面</div>`;
+      if (layerCount >= 2) {
+        html += `<div class="fca-summary fca-summary-good">✨ 条件不错，有较大概率出现壮观的火烧云</div>`;
       } else {
-        html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">✨ 有较大概率出现壮观的火烧云景象</div>`;
+        html += `<div class="fca-summary fca-summary-good">✨ 条件不错，火烧云概率较高；云层层次稍欠，效果可能偏平面</div>`;
       }
     } else if (finalScore >= 40) {
-      html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">💡 条件一般，火烧云概率中等，需看实际演变</div>`;
+      html += `<div class="fca-summary">💡 条件中等，火烧云概率一般，需看实际云层演变</div>`;
     } else {
-      html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">😶 今日火烧云概率较低（${finalScore.toFixed(0)}分）</div>`;
+      html += `<div class="fca-summary">😶 火烧云概率较低（${finalScore}分）</div>`;
     }
 
     html += '</div>';
