@@ -1194,18 +1194,22 @@ class PredictionController {
     const midLabel = this.i18n.t('prediction.cloudLayers.shortMid') || '中云';
     const lowLabel = this.i18n.t('prediction.cloudLayers.shortLow') || '低云';
 
+    const maxCloud = Math.max(high, mid, low, 1);
+    const highEm = high >= 40 ? 'font-weight:700;font-size:14px;' : '';
+    const highIcon = high >= 40 ? '🔥' : '';
+
     return `
       <div class="compact-cloud-info" style="display:flex;align-items:center;flex-wrap:nowrap;gap:4px;width:100%;overflow:hidden;">
         <span class="cloud-icon" style="flex-shrink:0;">☁️</span>
-        <span class="cloud-item" style="flex:1;min-width:0;">${highLabel}: <strong>${high.toFixed(0)}%</strong>
+        <span class="cloud-item" style="flex:${Math.max(high,20)/maxCloud * 1.2 + 0.5};min-width:0;${highEm}">${highIcon}${highLabel}: <strong>${high.toFixed(0)}%</strong>
           <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(high,100)}%;background:#90caf9;"></span></span>
         </span>
         <span class="cloud-sep" style="flex-shrink:0;">|</span>
-        <span class="cloud-item" style="flex:1;min-width:0;">${midLabel}: <strong>${mid.toFixed(0)}%</strong>
+        <span class="cloud-item" style="flex:${Math.max(mid,10)/maxCloud * 1.0 + 0.5};min-width:0;">${midLabel}: <strong>${mid.toFixed(0)}%</strong>
           <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(mid,100)}%;background:#64b5f6;"></span></span>
         </span>
         <span class="cloud-sep" style="flex-shrink:0;">|</span>
-        <span class="cloud-item" style="flex:1;min-width:0;">${lowLabel}: <strong>${low.toFixed(0)}%</strong>
+        <span class="cloud-item" style="flex:${Math.max(low,10)/maxCloud * 1.0 + 0.5};min-width:0;">${lowLabel}: <strong>${low.toFixed(0)}%</strong>
           <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(low,100)}%;background:#42a5f5;"></span></span>
         </span>
       </div>
@@ -1458,11 +1462,19 @@ class PredictionController {
     if (!hasCloudCarrier && finalScore < 40) {
       html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">😶 高云和中云几乎为零，缺少色彩载体，火烧云概率极低</div>`;
     } else if (finalScore >= 80) {
-      html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">✨ 极佳条件，强烈推荐出行观赏！</div>`;
+      if (layerCount < 2) {
+        html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">✨ 条件优秀，高云充足色彩可期；但云层单一，层次感略有不足</div>`;
+      } else {
+        html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">✨ 极佳条件，强烈推荐出行观赏！</div>`;
+      }
     } else if (finalScore >= 60) {
-      html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">✨ 有较大概率出现壮观的火烧云景象</div>`;
+      if (layerCount < 2) {
+        html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">✨ 条件不错，火烧云概率较高；云层层次稍欠，效果可能偏平面</div>`;
+      } else {
+        html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">✨ 有较大概率出现壮观的火烧云景象</div>`;
+      }
     } else if (finalScore >= 40) {
-      html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">💡 条件一般，可以期待但不保证</div>`;
+      html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">💡 条件一般，火烧云概率中等，需看实际演变</div>`;
     } else {
       html += `<div style="font-size:13px;margin:6px 0 0 0;font-weight:600;">😶 今日火烧云概率较低（${finalScore.toFixed(0)}分）</div>`;
     }
