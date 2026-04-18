@@ -2062,6 +2062,42 @@ body.theme-dark .best-time {
   color: var(--color-text);
 }
 
+/* 火烧云条件分析 */
+.fire-cloud-details {
+  margin-top: 10px;
+  padding: 10px;
+  background: rgba(255, 243, 224, 0.3);
+  border-radius: 8px;
+}
+body.theme-dark .fire-cloud-details {
+  background: rgba(255, 183, 77, 0.08);
+}
+.fca-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.fca-row {
+  font-size: 13px;
+  margin: 3px 0;
+}
+.fca-summary {
+  font-size: 13px;
+  margin: 6px 0 0 0;
+  font-weight: 600;
+}
+.fca-summary-great {
+  color: #16a34a;
+}
+.fca-summary-good {
+  color: #2563eb;
+}
+body.theme-dark .fca-summary-great {
+  color: #4ade80;
+}
+body.theme-dark .fca-summary-good {
+  color: #60a5fa;
+}
+
 .prediction-card {
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
