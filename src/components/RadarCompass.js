@@ -393,9 +393,12 @@ class RadarCompass {
       [T.cloudMid || 'rgba(184,198,218,0.88)', '中云'],
       [T.cloudHigh || 'rgba(218,226,238,0.72)', '高云'],
     ];
+    const legendSvgWidth = S * 0.88;
+    const legendContentWidth = 160;
+    const legendOffsetX = Math.max(0, (legendSvgWidth - legendContentWidth) / 2);
     const legend = LEGEND.map(([c, l], i) => `
-      <ellipse cx="${13 + i * 58}" cy="6" rx="9" ry="5.5" fill="${c}"/>
-      <text x="${27 + i * 58}" y="10" font-size="11" font-weight="700" fill="${T.title || '#334155'}">${l}</text>`
+      <ellipse cx="${legendOffsetX + 13 + i * 58}" cy="6" rx="9" ry="5.5" fill="${c}"/>
+      <text x="${legendOffsetX + 27 + i * 58}" y="10" font-size="11" font-weight="700" fill="${T.title || '#334155'}">${l}</text>`
     ).join('');
 
     return `
@@ -418,7 +421,7 @@ class RadarCompass {
       ${labels}
     </svg>
   </div>
-  <svg width="${S * 0.88}" height="18" style="display:block;margin:4px auto 0;font-family:${zhFont};">
+  <svg width="${legendSvgWidth}" height="18" style="display:block;margin:4px auto 0;font-family:${zhFont};">
     ${legend}
   </svg>
 </div>`;
