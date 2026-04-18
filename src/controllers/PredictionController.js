@@ -153,59 +153,40 @@ class SharePanel {
   }
 
   /**
-   * 处理保存图片
+   * 处理保存图片 — 使用 ShareCardGenerator 纯 Canvas 绘制
    */
   async handleSaveImage() {
     try {
-      // 获取预测卡片元素
-      const cardType = this.currentPrediction?.type || 'sunset';
-      const card = document.querySelector(`.prediction-card[data-type="${cardType}"]`);
-      
-      if (!card) {
-        this.showToast('未找到预测卡片');
+      const prediction = this.currentPrediction;
+      if (!prediction) {
+        this.showToast('无预测数据');
         return;
       }
 
-      // 使用 html2canvas 或类似库生成图片
-      // 这里先使用简单的 DOM 转图片方案
-      const canvas = await this.domToCanvas(card);
-      
-      // 下载图片
+      const { generateShareCard } = await import('../services/ShareCardGenerator.js');
+      const period = prediction.type === 'sunrise' ? 'sunrise' : 'sunset';
+
+      // 获取地点名
+      const locationName = document.querySelector('.location-name')?.textContent
+        || document.querySelector('#location-name')?.textContent
+        || '';
+
+      const blob = await generateShareCard(prediction, locationName, period);
+
+      // 下载
+      const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.download = `sunset-prediction-${Date.now()}.png`;
-      link.href = canvas.toDataURL('image/png');
+      link.download = `sunset-${period}-${Date.now()}.png`;
+      link.href = url;
       link.click();
-      
+      URL.revokeObjectURL(url);
+
       this.showToast('图片已保存');
     } catch (error) {
       console.error('保存图片失败:', error);
       this.showToast('保存失败，请重试');
     }
     this.close();
-  }
-
-  /**
-   * 将 DOM 元素转换为 Canvas
-   * @param {HTMLElement} element
-   * @returns {Promise<HTMLCanvasElement>}
-   */
-  async domToCanvas(element) {
-    // 使用 dom-to-image 库或 html2canvas
-    // 这里使用简单的实现，实际项目中可能需要引入专门的库
-    return new Promise((resolve, reject) => {
-      // 简化的实现：直接截图（需要引入 html2canvas）
-      if (window.html2canvas) {
-        window.html2canvas(element, {
-          backgroundColor: null,
-          scale: 2
-        }).then(canvas => {
-          resolve(canvas);
-        }).catch(reject);
-      } else {
-        // 如果没有 html2canvas，显示提示
-        reject(new Error('html2canvas not available'));
-      }
-    });
   }
 
   /**
@@ -231,19 +212,49 @@ class SharePanel {
   }
 
   /**
-   * 处理原生分享
+   * 处理原生分享 — 优先带图片文件
    */
   async handleNativeShare() {
     try {
-      const shareData = {
-        title: this.i18n.t('share.title'),
-        text: this.getShareText(),
-        url: window.location.href
-      };
-      await navigator.share(shareData);
+      const prediction = this.currentPrediction;
+      const period = prediction?.type === 'sunrise' ? 'sunrise' : 'sunset';
+      const shareText = this.getShareText();
+
+      // 尝试生成图片并带图分享
+      const canShareFiles = navigator.canShare && navigator.canShare({ files: [new File([], 'test.png', { type: 'image/png' })] });
+
+      if (canShareFiles) {
+        try {
+          const { generateShareCard } = await import('../services/ShareCardGenerator.js');
+          const locationName = document.querySelector('.location-name')?.textContent
+            || document.querySelector('#location-name')?.textContent
+            || '';
+          const blob = await generateShareCard(prediction, locationName, period);
+          const file = new File([blob], `霞客-${period === 'sunrise' ? '朝霞' : '晚霞'}预测.png`, { type: 'image/png' });
+
+          await navigator.share({
+            title: shareText,
+            text: shareText,
+            files: [file],
+          });
+          this.close();
+          return;
+        } catch (imgErr) {
+          if (imgErr.name === 'AbortError') { this.close(); return; }
+          // 图片分享失败，降级为链接分享
+          console.warn('带图分享失败，降级为链接:', imgErr);
+        }
+      }
+
+      // 降级：分享链接
+      await navigator.share({
+        title: shareText,
+        text: shareText,
+        url: window.location.href,
+      });
     } catch (error) {
-      console.error('原生分享失败:', error);
       if (error.name !== 'AbortError') {
+        console.error('原生分享失败:', error);
         this.showToast('分享失败');
       }
     }

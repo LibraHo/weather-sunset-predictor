@@ -1,448 +1,384 @@
 /**
  * ShareCardGenerator - 分享卡片图片生成器
- * 
- * 使用纯 Canvas API 绘制分享卡片，支持朝霞和晚霞两种配色
- * 尺寸：750x1334 (9:16 竖屏)
- * 
- * 需求：分享功能 - 生成可保存/分享的卡片图片
+ *
+ * 纯 Canvas API 绘制，750×1334（9:16 竖屏）
+ * 内容：品牌 → 分数仪表盘 → 地点日期 → 时间窗口 → 云层概况 → 一句话结语 → 水印
  */
 
 class ShareCardGenerator {
   constructor() {
-    // 卡片尺寸 (9:16 竖屏)
-    this.width = 750;
-    this.height = 1334;
-    
-    // 配色方案
+    this.W = 750;
+    this.H = 1334;
+    this.font = '"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif';
+
     this.themes = {
       sunrise: {
-        // 朝霞：暖橙粉渐变背景
-        background: {
-          top: '#FF9A56',
-          middle: '#FF6B8A',
-          bottom: '#FFC3A0'
-        },
+        bg: ['#FF8C42', '#FF6B8A', '#FFA751'],
         accent: '#FF6B8A',
-        text: '#FFFFFF',
-        textSecondary: 'rgba(255, 255, 255, 0.85)',
-        gauge: {
-          excellent: '#FF6B8A',
-          good: '#FFB347',
-          fair: '#87CEEB'
-        }
+        gaugeColors: ['#FF6B8A', '#FFB347', '#87CEEB'],
       },
       sunset: {
-        // 晚霞：深橙红渐变背景
-        background: {
-          top: '#FF4500',
-          middle: '#FF6347',
-          bottom: '#FF8C00'
-        },
-        accent: '#FF4500',
-        text: '#FFFFFF',
-        textSecondary: 'rgba(255, 255, 255, 0.85)',
-        gauge: {
-          excellent: '#FF4500',
-          good: '#FF8C00',
-          fair: '#87CEEB'
-        }
-      }
+        bg: ['#C62828', '#E65100', '#FF6F00'],
+        accent: '#FF6F00',
+        gaugeColors: ['#FF6F00', '#FFAB40', '#87CEEB'],
+      },
     };
   }
 
   /**
-   * 生成分享卡片图片
-   * 
-   * @param {SunsetPrediction} prediction - 预测对象
-   * @param {string} locationName - 地点名称
-   * @param {string} period - 时段：'sunrise' 或 'sunset'
-   * @returns {Promise<Blob>} PNG 格式的 Blob 对象
+   * @param {Object} prediction - 预测对象
+   * @param {string} locationName - 地点
+   * @param {string} period - 'sunrise' | 'sunset'
+   * @returns {Promise<Blob>} PNG
    */
   async generateShareCard(prediction, locationName, period) {
-    const canvas = this._createCanvas();
+    const canvas = document.createElement('canvas');
+    canvas.width = this.W;
+    canvas.height = this.H;
     const ctx = canvas.getContext('2d');
-    
-    // 确定主题
-    const theme = period === 'sunrise' ? this.themes.sunrise : this.themes.sunset;
-    const typeLabel = period === 'sunrise' ? '朝霞' : '晚霞';
-    
-    // 绘制背景
-    this._drawBackground(ctx, theme);
-    
-    // 绘制顶部品牌区域
-    this._drawHeader(ctx, theme);
-    
-    // 绘制环形仪表盘
-    this._drawGauge(ctx, prediction.score, prediction.getQualityLabel(), theme);
-    
-    // 绘制地点、日期、时段信息
-    this._drawLocationInfo(ctx, locationName, prediction.date, typeLabel, theme);
-    
-    // 绘制云层分析摘要
-    this._drawCloudSummary(ctx, prediction.cloudLayers, theme);
-    
-    // 绘制底部水印
-    this._drawFooter(ctx, theme);
-    
-    // 转换为 Blob
-    return this._canvasToBlob(canvas);
+    const theme = this.themes[period] || this.themes.sunset;
+    const isSunrise = period === 'sunrise';
+
+    // 1. 背景
+    this._bg(ctx, theme);
+
+    // 2. 头部品牌
+    const y = this._header(ctx, isSunrise);
+
+    // 3. 仪表盘
+    const yAfterGauge = this._gauge(ctx, prediction.score, prediction.quality, theme, y);
+
+    // 4. 地点 + 日期 + 时段
+    const yAfterInfo = this._info(ctx, locationName, prediction, period, yAfterGauge);
+
+    // 5. 时间窗口
+    const yAfterTime = this._timeWindow(ctx, prediction, period, yAfterInfo);
+
+    // 6. 云层概况
+    const yAfterCloud = this._cloudSummary(ctx, prediction, theme, yAfterTime);
+
+    // 7. 一句话结语
+    const yAfterVerdict = this._verdict(ctx, prediction, theme, yAfterCloud);
+
+    // 8. 底部水印
+    this._footer(ctx);
+
+    return this._toBlob(canvas);
   }
 
-  /**
-   * 创建 Canvas 元素
-   * @private
-   */
-  _createCanvas() {
-    if (typeof document !== 'undefined') {
-      // 浏览器环境
-      const canvas = document.createElement('canvas');
-      canvas.width = this.width;
-      canvas.height = this.height;
-      return canvas;
-    } else {
-      // Node.js 环境（需要 node-canvas 等库支持）
-      throw new Error('Canvas not available in current environment');
-    }
+  /* ── 背景 ── */
+  _bg(ctx, theme) {
+    const g = ctx.createLinearGradient(0, 0, 0, this.H);
+    g.addColorStop(0, theme.bg[0]);
+    g.addColorStop(0.5, theme.bg[1]);
+    g.addColorStop(1, theme.bg[2]);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, this.W, this.H);
+
+    // 装饰光晕
+    [[0, 0, 300, 'rgba(255,255,255,0.15)'], [this.W, this.H, 250, 'rgba(255,200,150,0.12)']].forEach(([x, y, r, c]) => {
+      const glow = ctx.createRadialGradient(x, y, 0, x, y, r);
+      glow.addColorStop(0, c);
+      glow.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, this.W, this.H);
+    });
   }
 
-  /**
-   * 绘制渐变背景
-   * @private
-   */
-  _drawBackground(ctx, theme) {
-    const { width, height } = this;
-    
-    // 创建三色渐变
-    const gradient = ctx.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, theme.background.top);
-    gradient.addColorStop(0.5, theme.background.middle);
-    gradient.addColorStop(1, theme.background.bottom);
-    
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, width, height);
-    
-    // 添加装饰性圆形光晕
-    this._drawDecorativeGlows(ctx, theme);
-  }
+  /* ── 头部品牌 ── */
+  _header(ctx, isSunrise) {
+    const cx = this.W / 2;
+    const y0 = 70;
 
-  /**
-   * 绘制装饰性光晕
-   * @private
-   */
-  _drawDecorativeGlows(ctx, theme) {
-    // 左上角光晕
-    const glow1 = ctx.createRadialGradient(0, 0, 0, 100, 100, 300);
-    glow1.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
-    glow1.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    ctx.fillStyle = glow1;
-    ctx.fillRect(0, 0, this.width, this.height);
-    
-    // 右下角光晕
-    const glow2 = ctx.createRadialGradient(
-      this.width, this.height, 0,
-      this.width - 100, this.height - 100, 250
-    );
-    glow2.addColorStop(0, 'rgba(255, 200, 150, 0.2)');
-    glow2.addColorStop(1, 'rgba(255, 200, 150, 0)');
-    ctx.fillStyle = glow2;
-    ctx.fillRect(0, 0, this.width, this.height);
-  }
-
-  /**
-   * 绘制顶部品牌区域
-   * @private
-   */
-  _drawHeader(ctx, theme) {
-    const centerX = this.width / 2;
-    const startY = 80;
-    
-    // 品牌图标（简化版太阳）
-    ctx.save();
-    ctx.translate(centerX, startY + 30);
-    
-    // 绘制太阳
-    ctx.beginPath();
-    ctx.arc(0, 0, 25, 0, Math.PI * 2);
-    ctx.fillStyle = theme.text;
-    ctx.fill();
-    
-    // 太阳光芒
-    ctx.strokeStyle = theme.text;
-    ctx.lineWidth = 3;
-    for (let i = 0; i < 8; i++) {
-      const angle = (i * Math.PI) / 4;
-      ctx.beginPath();
-      ctx.moveTo(Math.cos(angle) * 35, Math.sin(angle) * 35);
-      ctx.lineTo(Math.cos(angle) * 45, Math.sin(angle) * 45);
-      ctx.stroke();
-    }
-    ctx.restore();
-    
-    // 品牌名称
-    ctx.fillStyle = theme.text;
-    ctx.font = 'bold 36px "PingFang SC", "Microsoft YaHei", sans-serif';
+    // 太阳 emoji
+    ctx.font = `48px ${this.font}`;
     ctx.textAlign = 'center';
-    ctx.fillText('霞客 Sunset Voyager', centerX, startY + 100);
-    
-    // 副标题
-    ctx.fillStyle = theme.textSecondary;
-    ctx.font = '24px "PingFang SC", "Microsoft YaHei", sans-serif';
-    ctx.fillText('捕捉天空最美的瞬间', centerX, startY + 140);
+    ctx.fillText(isSunrise ? '🌄' : '🌅', cx, y0 + 36);
+
+    // 品牌名
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = `bold 32px ${this.font}`;
+    ctx.fillText('霞客 · Sunset Voyager', cx, y0 + 90);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.font = `20px ${this.font}`;
+    ctx.fillText('捕捉天空最美的瞬间', cx, y0 + 122);
+
+    return y0 + 155;
   }
 
-  /**
-   * 绘制环形仪表盘
-   * @private
-   */
-  _drawGauge(ctx, score, qualityLabel, theme) {
-    const centerX = this.width / 2;
-    const centerY = 450;
-    const radius = 140;
-    const lineWidth = 20;
-    
-    // 确定颜色
-    let color = theme.gauge.fair;
-    if (score >= 70) {
-      color = theme.gauge.excellent;
-    } else if (score >= 40) {
-      color = theme.gauge.good;
-    }
-    
-    // 绘制背景圆环
+  /* ── 仪表盘 ── */
+  _gauge(ctx, score, quality, theme, startY) {
+    const cx = this.W / 2;
+    const cy = startY + 120;
+    const R = 110;
+    const lw = 18;
+
+    const scoreNum = Math.round(score || 0);
+    let color = theme.gaugeColors[2]; // fair
+    if (scoreNum >= 70) color = theme.gaugeColors[0];
+    else if (scoreNum >= 40) color = theme.gaugeColors[1];
+
+    // 背景环
     ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.lineWidth = lineWidth;
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.lineWidth = lw;
     ctx.stroke();
-    
-    // 绘制进度圆环
-    const startAngle = -Math.PI / 2;
-    const endAngle = startAngle + (Math.PI * 2 * score / 100);
-    
+
+    // 进度环
+    const start = -Math.PI / 2;
+    const end = start + Math.PI * 2 * Math.min(scoreNum, 100) / 100;
     ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+    ctx.arc(cx, cy, R, start, end);
     ctx.strokeStyle = color;
-    ctx.lineWidth = lineWidth;
+    ctx.lineWidth = lw;
     ctx.lineCap = 'round';
     ctx.stroke();
-    
-    // 绘制分数
-    ctx.fillStyle = theme.text;
-    ctx.font = 'bold 72px "PingFang SC", "Microsoft YaHei", sans-serif';
+
+    // 分数
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = `bold 64px ${this.font}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(score.toString(), centerX, centerY - 10);
-    
-    // 绘制"分"字
-    ctx.font = '24px "PingFang SC", "Microsoft YaHei", sans-serif';
-    ctx.fillText('分', centerX + 50, centerY + 10);
-    
-    // 绘制质量等级
-    ctx.font = 'bold 32px "PingFang SC", "Microsoft YaHei", sans-serif';
+    ctx.fillText(scoreNum.toString(), cx, cy - 8);
+
+    // "分"
+    ctx.font = `22px ${this.font}`;
+    ctx.textBaseline = 'middle';
+    ctx.fillText('分', cx + 46, cy + 8);
+
+    // 等级
+    const qualityLabels = { excellent: '极佳', good: '良好', fair: '一般', poor: '较差' };
+    const label = qualityLabels[quality] || '—';
+    ctx.font = `bold 28px ${this.font}`;
     ctx.fillStyle = color;
-    ctx.fillText(qualityLabel, centerX, centerY + 60);
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(label, cx, cy + 55);
+
+    return cy + 80;
   }
 
-  /**
-   * 绘制地点、日期、时段信息
-   * @private
-   */
-  _drawLocationInfo(ctx, locationName, date, typeLabel, theme) {
-    const centerX = this.width / 2;
-    const startY = 680;
-    
-    // 地点名称
-    ctx.fillStyle = theme.text;
-    ctx.font = 'bold 48px "PingFang SC", "Microsoft YaHei", sans-serif';
+  /* ── 地点 + 日期 + 时段 ── */
+  _info(ctx, locationName, prediction, period, startY) {
+    const cx = this.W / 2;
+    const typeLabel = period === 'sunrise' ? '朝霞' : '晚霞';
+
+    // 地点
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = `bold 42px ${this.font}`;
     ctx.textAlign = 'center';
-    ctx.fillText(locationName, centerX, startY);
-    
-    // 日期格式化
-    const dateStr = this._formatDate(date);
-    
-    // 日期和时段
-    ctx.fillStyle = theme.textSecondary;
-    ctx.font = '28px "PingFang SC", "Microsoft YaHei", sans-serif';
-    ctx.fillText(`${dateStr} · ${typeLabel}`, centerX, startY + 50);
+    ctx.fillText(locationName || '未知地点', cx, startY + 40);
+
+    // 日期 · 时段
+    const dateStr = this._fmtDate(prediction.date);
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.font = `24px ${this.font}`;
+    ctx.fillText(`${dateStr} · ${typeLabel}`, cx, startY + 78);
+
+    return startY + 105;
   }
 
-  /**
-   * 绘制云层分析摘要
-   * @private
-   */
-  _drawCloudSummary(ctx, cloudLayers, theme) {
-    const centerX = this.width / 2;
-    const startY = 820;
-    const maxWidth = 600;
-    
-    // 摘要卡片背景
-    const cardHeight = 120;
-    const cardY = startY - 30;
-    
+  /* ── 时间窗口 ── */
+  _timeWindow(ctx, prediction, period, startY) {
+    const cx = this.W / 2;
+    const cardW = 620;
+    const cardH = 110;
+    const cardX = (this.W - cardW) / 2;
+    const cardY = startY + 15;
+
+    // 半透明卡片
     ctx.save();
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
     ctx.beginPath();
-    ctx.roundRect(centerX - maxWidth / 2, cardY, maxWidth, cardHeight, 20);
+    ctx.roundRect(cardX, cardY, cardW, cardH, 16);
     ctx.fill();
     ctx.restore();
-    
-    // 标题
-    ctx.fillStyle = theme.text;
-    ctx.font = 'bold 24px "PingFang SC", "Microsoft YaHei", sans-serif';
+
+    // 日出/日落时间
+    const sunTime = period === 'sunrise'
+      ? (prediction.sunriseTime || prediction.sunsetTime)
+      : prediction.sunsetTime;
+    const sunTimeStr = sunTime ? this._fmtTime(sunTime) : '--:--';
+    const sunLabel = period === 'sunrise' ? '日出' : '日落';
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = `bold 36px ${this.font}`;
     ctx.textAlign = 'center';
-    ctx.fillText('云层分析', centerX, startY + 20);
-    
-    // 摘要内容
-    let summary = this._generateCloudSummary(cloudLayers);
-    
-    ctx.fillStyle = theme.textSecondary;
-    ctx.font = '22px "PingFang SC", "Microsoft YaHei", sans-serif';
-    
-    // 自动换行
-    this._wrapText(ctx, summary, centerX, startY + 60, maxWidth - 60, 32);
+    ctx.fillText(`${sunLabel}  ${sunTimeStr}`, cx, cardY + 42);
+
+    // 最佳观赏窗口
+    const window = prediction.getOptimalViewingWindow ? prediction.getOptimalViewingWindow() : null;
+    if (window) {
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.font = `22px ${this.font}`;
+      ctx.fillText(`最佳观赏  ${this._fmtTime(window.start)} – ${this._fmtTime(window.end)}`, cx, cardY + 78);
+    }
+
+    return cardY + cardH + 20;
   }
 
-  /**
-   * 生成云层分析摘要文字
-   * @private
-   */
-  _generateCloudSummary(cloudLayers) {
-    if (!cloudLayers || !cloudLayers.description) {
-      return '云层条件适中，可能出现火烧云效果';
-    }
-    
-    // 优先使用 description，否则根据云层数据生成
-    if (cloudLayers.description.length <= 30) {
-      return cloudLayers.description;
-    }
-    
-    // 截断过长的描述
-    return cloudLayers.description.substring(0, 28) + '...';
+  /* ── 云层概况 ── */
+  _cloudSummary(ctx, prediction, theme, startY) {
+    const cx = this.W / 2;
+    const cardW = 620;
+    const cardH = 90;
+    const cardX = (this.W - cardW) / 2;
+    const cardY = startY;
+
+    // 半透明卡片
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.beginPath();
+    ctx.roundRect(cardX, cardY, cardW, cardH, 16);
+    ctx.fill();
+    ctx.restore();
+
+    const cl = prediction.cloudLayers || {};
+    const high = Math.round(cl.high ?? 0);
+    const mid = Math.round(cl.mid ?? 0);
+    const low = Math.round(cl.low ?? 0);
+
+    // 三栏
+    const cols = [
+      { label: '高云', value: high, color: '#90CAF9' },
+      { label: '中云', value: mid, color: '#64B5F6' },
+      { label: '低云', value: low, color: '#42A5F5' },
+    ];
+    const colW = cardW / 3;
+
+    cols.forEach((c, i) => {
+      const colCx = cardX + colW * i + colW / 2;
+
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.font = `20px ${this.font}`;
+      ctx.textAlign = 'center';
+      ctx.fillText(c.label, colCx, cardY + 28);
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = `bold 28px ${this.font}`;
+      ctx.fillText(`${c.value}%`, colCx, cardY + 60);
+
+      // 小进度条
+      const barW = 60;
+      const barH = 6;
+      const barX = colCx - barW / 2;
+      const barY = cardY + 70;
+      ctx.fillStyle = 'rgba(255,255,255,0.2)';
+      ctx.beginPath();
+      ctx.roundRect(barX, barY, barW, barH, 3);
+      ctx.fill();
+      ctx.fillStyle = c.color;
+      ctx.beginPath();
+      ctx.roundRect(barX, barY, Math.max(barW * Math.min(c.value, 100) / 100, 0), barH, 3);
+      ctx.fill();
+    });
+
+    return cardY + cardH + 20;
   }
 
-  /**
-   * 绘制底部水印
-   * @private
-   */
-  _drawFooter(ctx, theme) {
-    const centerX = this.width / 2;
-    const footerY = this.height - 60;
-    
-    // 分隔线
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+  /* ── 一句话结语 ── */
+  _verdict(ctx, prediction, theme, startY) {
+    const cx = this.W / 2;
+    const score = Math.round(prediction.score || 0);
+    const quality = prediction.quality;
+    const cl = prediction.cloudLayers || {};
+    const high = cl.high ?? 0;
+    const mid = cl.mid ?? 0;
+    const layerCount = (high > 10 ? 1 : 0) + (mid > 10 ? 1 : 0) + ((cl.low ?? 0) > 10 ? 1 : 0);
+    const hasCarrier = high >= 15 || mid >= 15;
+
+    let text;
+    if (!hasCarrier && score < 40) {
+      text = '😶 缺少色彩载体，火烧云概率极低';
+    } else if (score >= 80) {
+      text = layerCount >= 2
+        ? '✨ 极佳条件，强烈推荐出行观赏！'
+        : '✨ 条件优秀，色彩可期';
+    } else if (score >= 60) {
+      text = '✨ 条件不错，火烧云概率较高';
+    } else if (score >= 40) {
+      text = '💡 条件中等，需看实际云层演变';
+    } else {
+      text = '😶 火烧云概率较低';
+    }
+
+    const cardW = 620;
+    const cardH = 60;
+    const cardX = (this.W - cardW) / 2;
+    const cardY = startY;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.beginPath();
+    ctx.roundRect(cardX, cardY, cardW, cardH, 16);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = `bold 24px ${this.font}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, cx, cardY + cardH / 2);
+    ctx.textBaseline = 'alphabetic';
+
+    return cardY + cardH + 30;
+  }
+
+  /* ── 底部水印 ── */
+  _footer(ctx) {
+    const cx = this.W / 2;
+    const y = this.H - 55;
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(100, footerY - 30);
-    ctx.lineTo(this.width - 100, footerY - 30);
+    ctx.moveTo(100, y - 25);
+    ctx.lineTo(this.W - 100, y - 25);
     ctx.stroke();
-    
-    // 品牌水印
-    ctx.fillStyle = theme.textSecondary;
-    ctx.font = '20px "PingFang SC", "Microsoft YaHei", sans-serif';
+
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.font = `20px ${this.font}`;
     ctx.textAlign = 'center';
-    ctx.fillText('sunset.bjhyc.online', centerX, footerY);
-    
-    // 小图标
-    ctx.font = '16px "PingFang SC", "Microsoft YaHei", sans-serif';
-    ctx.fillText('🌅 霞客 · 记录每一次绚丽', centerX, footerY + 25);
+    ctx.fillText('sunset.bjhyc.online', cx, y);
+
+    ctx.font = `16px ${this.font}`;
+    ctx.fillText('🌅 霞客 · 记录每一次绚丽', cx, y + 24);
   }
 
-  /**
-   * 格式化日期
-   * @private
-   */
-  _formatDate(date) {
-    if (!date) return '日期未知';
-    
-    const d = date instanceof Date ? date : new Date(date);
-    const year = d.getFullYear();
-    const month = d.getMonth() + 1;
-    const day = d.getDate();
-    const weekDay = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][d.getDay()];
-    
-    return `${year}年${month}月${day}日 ${weekDay}`;
+  /* ── 工具方法 ── */
+  _fmtDate(d) {
+    if (!d) return '';
+    const dt = d instanceof Date ? d : new Date(d);
+    const wd = ['周日','周一','周二','周三','周四','周五','周六'][dt.getDay()];
+    return `${dt.getFullYear()}年${dt.getMonth()+1}月${dt.getDate()}日 ${wd}`;
   }
 
-  /**
-   * 文本自动换行
-   * @private
-   */
-  _wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-    const chars = text.split('');
-    let line = '';
-    let testLine = '';
-    let lineArray = [];
-    
-    for (let n = 0; n < chars.length; n++) {
-      testLine += chars[n];
-      const metrics = ctx.measureText(testLine);
-      const testWidth = metrics.width;
-      
-      if (testWidth > maxWidth && n > 0) {
-        lineArray.push(line);
-        line = chars[n];
-        testLine = chars[n];
-      } else {
-        line = testLine;
-      }
-    }
-    lineArray.push(line);
-    
-    // 最多显示两行
-    const displayLines = lineArray.slice(0, 2);
-    for (let k = 0; k < displayLines.length; k++) {
-      ctx.fillText(displayLines[k], x, y + k * lineHeight);
-    }
+  _fmtTime(d) {
+    if (!d) return '--:--';
+    const dt = d instanceof Date ? d : new Date(d);
+    return `${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
   }
 
-  /**
-   * 将 Canvas 转换为 PNG Blob
-   * @private
-   */
-  _canvasToBlob(canvas) {
+  _toBlob(canvas) {
     return new Promise((resolve, reject) => {
       if (canvas.toBlob) {
-        canvas.toBlob((blob) => {
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error('Canvas toBlob failed'));
-          }
-        }, 'image/png');
+        canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/png');
       } else {
-        // 降级方案：使用 data URL 转换
         try {
-          const dataURL = canvas.toDataURL('image/png');
-          const byteString = atob(dataURL.split(',')[1]);
-          const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
-          const ab = new ArrayBuffer(byteString.length);
-          const ia = new Uint8Array(ab);
-          
-          for (let i = 0; i < byteString.length; i++) {
-            ia[i] = byteString.charCodeAt(i);
-          }
-          
-          const blob = new Blob([ab], { type: mimeString });
-          resolve(blob);
-        } catch (error) {
-          reject(error);
-        }
+          const url = canvas.toDataURL('image/png');
+          const raw = atob(url.split(',')[1]);
+          const buf = new Uint8Array(raw.length);
+          for (let i = 0; i < raw.length; i++) buf[i] = raw.charCodeAt(i);
+          resolve(new Blob([buf], { type: 'image/png' }));
+        } catch (e) { reject(e); }
       }
     });
   }
 }
 
-// 导出单例实例
 const shareCardGenerator = new ShareCardGenerator();
 
-/**
- * 生成分享卡片图片
- * 
- * @param {SunsetPrediction} prediction - 预测对象
- * @param {string} locationName - 地点名称
- * @param {string} period - 时段：'sunrise' 或 'sunset'
- * @returns {Promise<Blob>} PNG 格式的 Blob 对象
- */
 export function generateShareCard(prediction, locationName, period) {
   return shareCardGenerator.generateShareCard(prediction, locationName, period);
 }
