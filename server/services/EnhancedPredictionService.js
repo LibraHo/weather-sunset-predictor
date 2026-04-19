@@ -569,7 +569,8 @@ function scoreLightPath(weatherData, solarElevation, azimuth, remoteCloudData = 
     lightPathScore = Math.min(lightPathScore, 40);
     capReason = 'overcast_cap_40';
   }
-  if (precipitation > 0.5 || convPrecip > 0.5 || isRainSnowCode) {
+  // 降水封顶：低云高时才封顶（可能在下雨）；低云不高时不封顶（可能是雨后，有利火烧云）
+  if ((precipitation > 1 || convPrecip > 1 || isRainSnowCode) && lowClouds > 40) {
     lightPathScore = Math.min(lightPathScore, 50);
     capReason = capReason || 'precipitation_cap_50';
   }
@@ -770,8 +771,8 @@ function applySevereWeatherCap(score, weatherData) {
     (weatherCode >= 80 && weatherCode <= 86)
   );
 
-  // 降水/雨雪码封顶逻辑保持不变
-  if (precipitation > 0.5 || convPrecip > 0.5 || isRainSnowCode) {
+  // 降水封顶：低云高时才封顶（大概率在下雨），低云不高可能是雨后
+  if ((precipitation > 1 || convPrecip > 1 || isRainSnowCode) && lowClouds > 40) {
     return { score: Math.min(score, 45), reason: 'precipitation_cap_45' };
   }
 
