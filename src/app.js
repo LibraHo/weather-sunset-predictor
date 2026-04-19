@@ -139,6 +139,29 @@ if (document.readyState === 'loading') {
   initializeApp();
 }
 
+function setupLogoBackHome() {
+  const appLogo = document.querySelector('.app-logo');
+  if (!appLogo) return;
+
+  const goHome = () => {
+    document.querySelector('.home-view-option[data-view="forecast"]')?.click();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  appLogo.style.cursor = 'pointer';
+  appLogo.setAttribute('role', 'button');
+  appLogo.setAttribute('tabindex', '0');
+  appLogo.setAttribute('aria-label', '回到首页');
+
+  appLogo.addEventListener('click', goHome);
+  appLogo.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      goHome();
+    }
+  });
+}
+
 /**
  * 初始化应用程序
  */
@@ -146,6 +169,7 @@ async function initializeApp() {
   try {
     console.log('Initializing application...');
     initializeHomeTabs(document, () => onMapPanelVisible());
+    setupLogoBackHome();
 
     // 朝/晚霞 tab 早期绑定（init 前就可点击）
     document.getElementById('map-tab-sunrise')?.addEventListener('click', () => {
