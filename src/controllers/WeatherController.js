@@ -1206,7 +1206,9 @@ class WeatherController {
       this._radarCompass.render(container, { directions: dirs, sunAzimuths, predictionType: type });
     } catch (err) {
       console.error('[WeatherController] 雷达罗盘渲染失败:', err);
-      container.style.display = 'none';
+      // 不要直接隐藏容器，避免用户误认为功能消失
+      container.style.display = 'block';
+      container.innerHTML = `<p style="text-align:center;color:var(--color-text-light,#aaa);font-size:13px;padding:12px 0;">雷达加载超时，稍后自动重试</p>`;
     }
   }
 

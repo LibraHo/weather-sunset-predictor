@@ -393,6 +393,18 @@ class AppController {
     window.addEventListener('languageChanged', (event) => {
       console.log('[AppController] 语言已切换至:', event.detail.language);
       this.refreshUIText();
+
+      // 语言切换会重建预测卡片DOM，需补渲染朝/晚霞云况雷达
+      if (this.currentLocation && this.weatherController?.renderRadarCompass) {
+        requestAnimationFrame(() => {
+          this.weatherController.renderRadarCompass(this.currentLocation, 'sunrise').catch(err => {
+            console.warn('[AppController] 语言切换后朝霞雷达重渲失败:', err?.message || err);
+          });
+          this.weatherController.renderRadarCompass(this.currentLocation, 'sunset').catch(err => {
+            console.warn('[AppController] 语言切换后晚霞雷达重渲失败:', err?.message || err);
+          });
+        });
+      }
     });
 
     // 任务17：监听温度单位切换事件
