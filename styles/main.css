@@ -1848,9 +1848,10 @@ body.theme-dark .best-time {
 /* ===== 朝霞/晚霞预测样式 ===== */
 .today-predictions-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
   gap: var(--spacing-lg);
   margin-bottom: var(--spacing-xl);
+  min-width: 0;
 }
 
 /* ===== 高密度仪表盘预测卡片样式 ===== */
@@ -1861,6 +1862,7 @@ body.theme-dark .best-time {
   align-items: flex-start;
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-xs);
+  min-width: 0;
 }
 
 /* ===== 现代圆形仪表盘评分 ===== */
@@ -1925,6 +1927,7 @@ body.theme-dark .best-time {
 /* 右侧时间信息区 */
 .time-display {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -2109,6 +2112,9 @@ body.theme-dark .fca-summary-good {
   transition: all var(--transition-normal);
   position: relative;
   overflow: hidden;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 /* 顶部彩色指示条 */

@@ -156,27 +156,29 @@ class ShareCardGenerator {
     ctx.textBaseline = 'alphabetic';
     ctx.fillText(label, cx, cy + 55);
 
-    return cy + 80;
+    return cy + 110;
   }
 
   /* ── 地点 + 日期 + 时段 ── */
   _info(ctx, locationName, prediction, period, startY) {
     const cx = this.W / 2;
     const typeLabel = period === 'sunrise' ? '朝霞' : '晚霞';
+    const safeLocation = (locationName || '未知地点').trim();
+    const locationText = safeLocation.length > 18 ? `${safeLocation.slice(0, 18)}…` : safeLocation;
 
     // 地点
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = `bold 42px ${this.font}`;
+    ctx.font = `bold 36px ${this.font}`;
     ctx.textAlign = 'center';
-    ctx.fillText(locationName || '未知地点', cx, startY + 40);
+    ctx.fillText(locationText, cx, startY + 44);
 
     // 日期 · 时段
     const dateStr = this._fmtDate(prediction.date);
     ctx.fillStyle = 'rgba(255,255,255,0.75)';
     ctx.font = `24px ${this.font}`;
-    ctx.fillText(`${dateStr} · ${typeLabel}`, cx, startY + 78);
+    ctx.fillText(`${dateStr} · ${typeLabel}`, cx, startY + 88);
 
-    return startY + 105;
+    return startY + 124;
   }
 
   /* ── 时间窗口 ── */
@@ -185,7 +187,7 @@ class ShareCardGenerator {
     const cardW = 620;
     const cardH = 110;
     const cardX = (this.W - cardW) / 2;
-    const cardY = startY + 15;
+    const cardY = startY + 20;
 
     // 半透明卡片
     ctx.save();
