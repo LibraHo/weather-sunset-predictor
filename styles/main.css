@@ -2030,6 +2030,20 @@ body.theme-dark .best-time {
   align-items: center;
   gap: 3px;
   white-space: nowrap;
+  min-width: 0;
+}
+
+.cloud-label {
+  min-width: 0;
+  max-width: 6.5em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cloud-value {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .cloud-mini-bar-track {
@@ -2040,6 +2054,7 @@ body.theme-dark .best-time {
   border-radius: 2px;
   overflow: hidden;
   vertical-align: middle;
+  flex-shrink: 0;
 }
 
 .cloud-mini-bar-fill {
@@ -4272,6 +4287,10 @@ body.theme-dark {
 
   .prediction-tab-panel {
     width: 100%;
+  }
+
+  .cloud-label {
+    max-width: 3.6em;
   }
 }
 

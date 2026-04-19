@@ -1203,9 +1203,9 @@ class PredictionController {
     const high = cloudLayers.high ?? 0;
     const mid = cloudLayers.mid ?? 0;
     const low = cloudLayers.low ?? 0;
-    const highLabel = this.i18n.t('prediction.cloudLayers.shortHigh') || '高云';
-    const midLabel = this.i18n.t('prediction.cloudLayers.shortMid') || '中云';
-    const lowLabel = this.i18n.t('prediction.cloudLayers.shortLow') || '低云';
+    const highLabel = this.i18n.t('prediction.cloudLayers.shortHigh') || 'High';
+    const midLabel = this.i18n.t('prediction.cloudLayers.shortMid') || 'Mid';
+    const lowLabel = this.i18n.t('prediction.cloudLayers.shortLow') || 'Low';
 
     const highEm = high >= 40 ? 'font-weight:700;font-size:14px;' : '';
     const highIcon = high >= 40 ? '🔥' : '';
@@ -1213,15 +1213,15 @@ class PredictionController {
     return `
       <div class="compact-cloud-info" style="display:flex;align-items:center;flex-wrap:nowrap;gap:4px;width:100%;overflow:hidden;">
         <span class="cloud-icon" style="flex-shrink:0;">☁️</span>
-        <span class="cloud-item" style="flex:1 1 0;min-width:0;${highEm}">${highIcon}${highLabel}: <strong>${high.toFixed(0)}%</strong>
+        <span class="cloud-item" style="flex:1 1 0;min-width:0;${highEm}" title="${highLabel}">${highIcon}<span class="cloud-label">${highLabel}</span>: <strong class="cloud-value">${high.toFixed(0)}%</strong>
           <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(high,100)}%;background:#90caf9;"></span></span>
         </span>
         <span class="cloud-sep" style="flex-shrink:0;">|</span>
-        <span class="cloud-item" style="flex:1 1 0;min-width:0;">${midLabel}: <strong>${mid.toFixed(0)}%</strong>
+        <span class="cloud-item" style="flex:1 1 0;min-width:0;" title="${midLabel}"><span class="cloud-label">${midLabel}</span>: <strong class="cloud-value">${mid.toFixed(0)}%</strong>
           <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(mid,100)}%;background:#64b5f6;"></span></span>
         </span>
         <span class="cloud-sep" style="flex-shrink:0;">|</span>
-        <span class="cloud-item" style="flex:1 1 0;min-width:0;">${lowLabel}: <strong>${low.toFixed(0)}%</strong>
+        <span class="cloud-item" style="flex:1 1 0;min-width:0;" title="${lowLabel}"><span class="cloud-label">${lowLabel}</span>: <strong class="cloud-value">${low.toFixed(0)}%</strong>
           <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(low,100)}%;background:#42a5f5;"></span></span>
         </span>
       </div>
