@@ -298,12 +298,12 @@ function scoreCloudCanvas(weatherData) {
     cloudRangeScore = 70 + (upperCloudCover - 30) / 40 * 30;
     cloudLevel = 'perfect';
   } else if (upperCloudCover <= 100) {
-    // 中高云很充足时缓降：70->90分, 100->60分
-    cloudRangeScore = 90 - (upperCloudCover - 70) / 30 * 30;
+    // 中高云充足时缓降：70->50分
+    cloudRangeScore = 70 - (upperCloudCover - 70) / 30 * 20;
     cloudLevel = 'crowded';
   } else {
-    // 极端值兜底（理论上不会超过）
-    cloudRangeScore = 40;
+    // 中高云极厚（>100加权值）：画布密集但仍有色彩
+    cloudRangeScore = 43;
     cloudLevel = 'crowded';
   }
 
@@ -782,6 +782,12 @@ function applySevereWeatherCap(score, weatherData) {
   
   if (isLowCloudDominant || isOvercastWithLowCloud) {
     return { score: Math.min(score, 35), reason: 'overcast_cap_35' };
+  }
+
+  // 阴天+真雾霾（能见度极差）：远处泛橙水平，最多给15分
+  const visibility = weatherData.visibility ?? 20;
+  if (cloudCover >= 95 && visibility <= 5) {
+    return { score: Math.min(score, 15), reason: 'overcast_fog_cap_15' };
   }
 
   return { score, reason: null };
