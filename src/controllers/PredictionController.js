@@ -1147,7 +1147,7 @@ class PredictionController {
           </div>
           <div class="time-display">
             <div class="main-time">${this.formatTime(type === 'sunrise' ? (prediction.sunriseTime || prediction.sunsetTime) : prediction.sunsetTime)}</div>
-            <div class="viewing-time">${this.i18n.t('prediction.bestViewingTime')}: ${this.formatTime(viewingWindow.start)}–${this.formatTime(viewingWindow.end)}</div>
+            <div class="viewing-time"><span class="viewing-time-label">${this.i18n.t('prediction.bestViewingTime')}</span>: <span class="viewing-time-range">${this.formatTime(viewingWindow.start)}–${this.formatTime(viewingWindow.end)}</span></div>
             ${enhancedInfo}
           </div>
         </div>
@@ -1795,9 +1795,64 @@ class PredictionController {
         }
       });
 
-      // 重新渲染预测显示
-      this.updatePredictionDisplay(this.predictions);
+      // 优先原位更新文案，避免语言切换重建整块 DOM（导致雷达容器丢失）
+      const cards = document.querySelectorAll('.prediction-card[data-type]');
+      if (cards.length > 0) {
+        this._refreshPredictionTextsInPlace();
+      } else {
+        // 回退：无卡片时再全量重渲染
+        this.updatePredictionDisplay(this.predictions);
+      }
     }
+  }
+
+  _refreshPredictionTextsInPlace() {
+    const cards = document.querySelectorAll('.prediction-card[data-type]');
+    cards.forEach((card) => {
+      const type = card.dataset.type;
+      const prediction = this.predictions.find(p => p?.type === type);
+      if (!prediction) return;
+
+      const titleEl = card.querySelector('.prediction-header h3');
+      if (titleEl) {
+        const icon = type === 'sunrise' ? '🌄' : '🌅';
+        const title = type === 'sunrise' ? this.i18n.t('prediction.sunrise') : this.i18n.t('prediction.sunset');
+        titleEl.textContent = `${icon} ${title}`;
+      }
+
+      const viewingLabel = card.querySelector('.viewing-time-label');
+      if (viewingLabel) viewingLabel.textContent = this.i18n.t('prediction.bestViewingTime');
+
+      const golden = card.querySelector('.compact-extra-golden .hour-label');
+      if (golden) golden.textContent = this.i18n.t('prediction.goldenHour');
+
+      const blue = card.querySelector('.compact-extra-blue .hour-label');
+      if (blue) blue.textContent = this.i18n.t('prediction.blueHour');
+
+      const azimuthLabel = card.querySelector('.compact-extra-azimuth .azimuth-line-label');
+      if (azimuthLabel) {
+        azimuthLabel.textContent = type === 'sunrise'
+          ? `${this.i18n.t('prediction.sunriseDirectionLabel')} :`
+          : `${this.i18n.t('prediction.sunsetDirectionLabel')} :`;
+      }
+
+      const qualityLabel = card.querySelector('.score-gauge-label');
+      if (qualityLabel) qualityLabel.textContent = this.getQualityLabel(prediction.quality);
+
+      const analysis = this.generateAnalysisText(prediction, '', prediction.cloudLayers);
+      const firstBr = analysis.indexOf('<br>');
+      const formattedAnalysis = firstBr > -1
+        ? `<strong>${analysis.substring(0, firstBr)}</strong>${analysis.substring(firstBr)}`
+        : `<strong>${analysis}</strong>`;
+      const analysisEl = card.querySelector('.compact-analysis');
+      if (analysisEl) analysisEl.innerHTML = formattedAnalysis;
+    });
+
+    // 顶部切换按钮文本
+    const sunriseBtn = document.querySelector('.prediction-toggle-btn[data-tab="sunrise"]');
+    const sunsetBtn = document.querySelector('.prediction-toggle-btn[data-tab="sunset"]');
+    if (sunriseBtn) sunriseBtn.textContent = `🌄 ${this.i18n.t('prediction.sunrise')}`;
+    if (sunsetBtn) sunsetBtn.textContent = `🌅 ${this.i18n.t('prediction.sunset')}`;
   }
 }
 
