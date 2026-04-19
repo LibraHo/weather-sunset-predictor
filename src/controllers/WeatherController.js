@@ -1157,20 +1157,26 @@ class WeatherController {
    * Phase 18：渲染雷达罗盘（需求19 v2）
    */
   async renderRadarCompass(location, predictionType = null) {
-    const container = predictionType
-      ? document.getElementById(`radar-compass-${predictionType}`)
-      : document.getElementById('radar-compass-container');
+    if (!Number.isFinite(location?.lat) || !Number.isFinite(location?.lon)) return;
 
-    if (!container || !location?.lat || !location?.lon) return;
+    const containerId = predictionType
+      ? `radar-compass-${predictionType}`
+      : 'radar-compass-container';
 
-    // 修复：如果特定容器不存在，等待预测卡片渲染完成后再尝试
-    if (predictionType && !document.getElementById(`radar-compass-${predictionType}`)) {
-      await new Promise(resolve => requestAnimationFrame(resolve));
-      const delayedContainer = document.getElementById(`radar-compass-${predictionType}`);
-      if (!delayedContainer) {
-        console.warn(`[WeatherController] 雷达容器不存在: radar-compass-${predictionType}`);
-        return;
-      }
+    // 语言切换后预测卡片会重建，容器可能稍后才出现，增加容器等待重试
+    let container = null;
+    for (let i = 0; i < 10; i += 1) {
+      container = document.getElementById(containerId);
+      if (container) break;
+      // 指数退避，避免紧循环
+      const waitMs = 80 + i * 40;
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise(resolve => setTimeout(resolve, waitMs));
+    }
+
+    if (!container) {
+      console.warn(`[WeatherController] 雷达容器不存在: ${containerId}`);
+      return;
     }
 
     container.style.display = 'block';
