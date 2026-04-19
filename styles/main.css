@@ -2078,6 +2078,12 @@ body.theme-dark .best-time {
   margin-top: var(--spacing-xs);
   text-align: left;
   flex: 1;
+  min-height: 168px;
+}
+
+.compact-analysis .fire-cloud-details {
+  max-height: 148px;
+  overflow: hidden;
 }
 
 .compact-analysis strong {
