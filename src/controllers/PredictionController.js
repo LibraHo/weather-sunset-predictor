@@ -167,8 +167,9 @@ class SharePanel {
       const period = prediction.type === 'sunrise' ? 'sunrise' : 'sunset';
 
       // 获取地点名
-      const locationName = document.querySelector('.location-name')?.textContent
-        || document.querySelector('#location-name')?.textContent
+      const locationName = document.querySelector('#weather-location')?.textContent?.trim()
+        || document.querySelector('.location-name')?.textContent?.trim()
+        || document.querySelector('#location-name')?.textContent?.trim()
         || '';
 
       const blob = await generateShareCard(prediction, locationName, period);
@@ -226,8 +227,9 @@ class SharePanel {
       if (canShareFiles) {
         try {
           const { generateShareCard } = await import('../services/ShareCardGenerator.js');
-          const locationName = document.querySelector('.location-name')?.textContent
-            || document.querySelector('#location-name')?.textContent
+          const locationName = document.querySelector('#weather-location')?.textContent?.trim()
+            || document.querySelector('.location-name')?.textContent?.trim()
+            || document.querySelector('#location-name')?.textContent?.trim()
             || '';
           const blob = await generateShareCard(prediction, locationName, period);
           const file = new File([blob], `霞客-${period === 'sunrise' ? '朝霞' : '晚霞'}预测.png`, { type: 'image/png' });
