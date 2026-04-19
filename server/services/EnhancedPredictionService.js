@@ -278,34 +278,33 @@ function scoreCloudCanvas(weatherData) {
     .toLowerCase();
   const hasOvercastKeyword = /(overcast|阴天|阴)/.test(weatherConditionText);
 
-  // 1. 计算有效云量（加权）
-  const effectiveCloudCover =
-    (highClouds * CLOUD_WEIGHTS.HIGH) +
-    (midClouds * CLOUD_WEIGHTS.MID) +
-    (lowClouds * CLOUD_WEIGHTS.LOW);
+  // 1. 计算有效云量（只用中高云，低云不算画布）
+  // 气象学依据：中云(高积云/高层云)和高云(卷云)都能散射红橙色光，是火烧云的画布
+  // 低云(层云/积云)主要遮挡视线，不算画布贡献
+  const upperCloudCover = highClouds * CLOUD_WEIGHTS.HIGH + midClouds * CLOUD_WEIGHTS.MID;
+  const effectiveCloudCover = upperCloudCover + lowClouds * CLOUD_WEIGHTS.LOW;
 
-  // 2. 云量区间评分（梯形函数）
+  // 2. 云量区间评分（基于中高云画布，低云单独惩罚）
   let cloudRangeScore = 0;
   let cloudLevel = '';
 
-  if (effectiveCloudCover <= 10) {
+  if (upperCloudCover <= 10) {
     cloudRangeScore = 10;
     cloudLevel = 'space';       // 太空（无云）
-  } else if (effectiveCloudCover <= 30) {
-    // 线性插值：10% -> 40分, 30% -> 70分
-    cloudRangeScore = 40 + (effectiveCloudCover - 10) / 20 * 30;
-    cloudLevel = 'fair';        // 画布稀疏
-  } else if (effectiveCloudCover <= 70) {
-    // 完美区间：70-100分
-    cloudRangeScore = 70 + (effectiveCloudCover - 30) / 40 * 30;
-    cloudLevel = 'perfect';     // 完美画布
-  } else if (effectiveCloudCover <= 90) {
-    // 线性下降：70% -> 60分, 90% -> 30分
-    cloudRangeScore = 60 - (effectiveCloudCover - 70) / 20 * 30;
-    cloudLevel = 'crowded';     // 画布拥挤
+  } else if (upperCloudCover <= 30) {
+    cloudRangeScore = 40 + (upperCloudCover - 10) / 20 * 30;
+    cloudLevel = 'fair';
+  } else if (upperCloudCover <= 70) {
+    cloudRangeScore = 70 + (upperCloudCover - 30) / 40 * 30;
+    cloudLevel = 'perfect';
+  } else if (upperCloudCover <= 100) {
+    // 中高云很充足时缓降：70->90分, 100->60分
+    cloudRangeScore = 90 - (upperCloudCover - 70) / 30 * 30;
+    cloudLevel = 'crowded';
   } else {
-    cloudRangeScore = 0;
-    cloudLevel = 'overcast';    // 阴天
+    // 极端值兜底（理论上不会超过）
+    cloudRangeScore = 40;
+    cloudLevel = 'crowded';
   }
 
   // 3. 低云惩罚
@@ -562,8 +561,11 @@ function scoreLightPath(weatherData, solarElevation, azimuth, remoteCloudData = 
     (weatherCode >= 80 && weatherCode <= 86)
   );
 
+  // 光路封顶：只看低云遮挡和降水，中高云不影响光路
+  // 气象学依据：中高云是光路散射体（产生色彩），不是遮挡体
   let capReason = null;
-  if (cloudCover >= 85) {
+  if (cloudCover >= 85 && lowClouds > Math.max(midClouds, highClouds)) {
+    // 只有低云主导的总云量极高时才封顶
     lightPathScore = Math.min(lightPathScore, 40);
     capReason = 'overcast_cap_40';
   }
