@@ -1147,7 +1147,7 @@ class PredictionController {
           </div>
           <div class="time-display">
             <div class="main-time">${this.formatTime(type === 'sunrise' ? (prediction.sunriseTime || prediction.sunsetTime) : prediction.sunsetTime)}</div>
-            <div class="viewing-time">${this.i18n.t('prediction.bestViewingTime')}: ${this.formatTime(viewingWindow.start)}–${this.formatTime(viewingWindow.end)}</div>
+            <div class="viewing-time"><span class="viewing-time-label">${this.i18n.t('prediction.bestViewingTime')}</span>: <span class="viewing-time-range">${this.formatTime(viewingWindow.start)}–${this.formatTime(viewingWindow.end)}</span></div>
             ${enhancedInfo}
           </div>
         </div>
@@ -1203,9 +1203,9 @@ class PredictionController {
     const high = cloudLayers.high ?? 0;
     const mid = cloudLayers.mid ?? 0;
     const low = cloudLayers.low ?? 0;
-    const highLabel = this.i18n.t('prediction.cloudLayers.shortHigh') || '高云';
-    const midLabel = this.i18n.t('prediction.cloudLayers.shortMid') || '中云';
-    const lowLabel = this.i18n.t('prediction.cloudLayers.shortLow') || '低云';
+    const highLabel = this.i18n.t('prediction.cloudLayers.shortHigh') || 'High';
+    const midLabel = this.i18n.t('prediction.cloudLayers.shortMid') || 'Mid';
+    const lowLabel = this.i18n.t('prediction.cloudLayers.shortLow') || 'Low';
 
     const highEm = high >= 40 ? 'font-weight:700;font-size:14px;' : '';
     const highIcon = high >= 40 ? '🔥' : '';
@@ -1213,15 +1213,15 @@ class PredictionController {
     return `
       <div class="compact-cloud-info" style="display:flex;align-items:center;flex-wrap:nowrap;gap:4px;width:100%;overflow:hidden;">
         <span class="cloud-icon" style="flex-shrink:0;">☁️</span>
-        <span class="cloud-item" style="flex:1 1 0;min-width:0;${highEm}">${highIcon}${highLabel}: <strong>${high.toFixed(0)}%</strong>
+        <span class="cloud-item" style="flex:1 1 0;min-width:0;${highEm}" title="${highLabel}">${highIcon}<span class="cloud-label">${highLabel}</span>: <strong class="cloud-value">${high.toFixed(0)}%</strong>
           <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(high,100)}%;background:#90caf9;"></span></span>
         </span>
         <span class="cloud-sep" style="flex-shrink:0;">|</span>
-        <span class="cloud-item" style="flex:1 1 0;min-width:0;">${midLabel}: <strong>${mid.toFixed(0)}%</strong>
+        <span class="cloud-item" style="flex:1 1 0;min-width:0;" title="${midLabel}"><span class="cloud-label">${midLabel}</span>: <strong class="cloud-value">${mid.toFixed(0)}%</strong>
           <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(mid,100)}%;background:#64b5f6;"></span></span>
         </span>
         <span class="cloud-sep" style="flex-shrink:0;">|</span>
-        <span class="cloud-item" style="flex:1 1 0;min-width:0;">${lowLabel}: <strong>${low.toFixed(0)}%</strong>
+        <span class="cloud-item" style="flex:1 1 0;min-width:0;" title="${lowLabel}"><span class="cloud-label">${lowLabel}</span>: <strong class="cloud-value">${low.toFixed(0)}%</strong>
           <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(low,100)}%;background:#42a5f5;"></span></span>
         </span>
       </div>
@@ -1795,9 +1795,64 @@ class PredictionController {
         }
       });
 
-      // 重新渲染预测显示
-      this.updatePredictionDisplay(this.predictions);
+      // 优先原位更新文案，避免语言切换重建整块 DOM（导致雷达容器丢失）
+      const cards = document.querySelectorAll('.prediction-card[data-type]');
+      if (cards.length > 0) {
+        this._refreshPredictionTextsInPlace();
+      } else {
+        // 回退：无卡片时再全量重渲染
+        this.updatePredictionDisplay(this.predictions);
+      }
     }
+  }
+
+  _refreshPredictionTextsInPlace() {
+    const cards = document.querySelectorAll('.prediction-card[data-type]');
+    cards.forEach((card) => {
+      const type = card.dataset.type;
+      const prediction = this.predictions.find(p => p?.type === type);
+      if (!prediction) return;
+
+      const titleEl = card.querySelector('.prediction-header h3');
+      if (titleEl) {
+        const icon = type === 'sunrise' ? '🌄' : '🌅';
+        const title = type === 'sunrise' ? this.i18n.t('prediction.sunrise') : this.i18n.t('prediction.sunset');
+        titleEl.textContent = `${icon} ${title}`;
+      }
+
+      const viewingLabel = card.querySelector('.viewing-time-label');
+      if (viewingLabel) viewingLabel.textContent = this.i18n.t('prediction.bestViewingTime');
+
+      const golden = card.querySelector('.compact-extra-golden .hour-label');
+      if (golden) golden.textContent = this.i18n.t('prediction.goldenHour');
+
+      const blue = card.querySelector('.compact-extra-blue .hour-label');
+      if (blue) blue.textContent = this.i18n.t('prediction.blueHour');
+
+      const azimuthLabel = card.querySelector('.compact-extra-azimuth .azimuth-line-label');
+      if (azimuthLabel) {
+        azimuthLabel.textContent = type === 'sunrise'
+          ? `${this.i18n.t('prediction.sunriseDirectionLabel')} :`
+          : `${this.i18n.t('prediction.sunsetDirectionLabel')} :`;
+      }
+
+      const qualityLabel = card.querySelector('.score-gauge-label');
+      if (qualityLabel) qualityLabel.textContent = this.getQualityLabel(prediction.quality);
+
+      const analysis = this.generateAnalysisText(prediction, '', prediction.cloudLayers);
+      const firstBr = analysis.indexOf('<br>');
+      const formattedAnalysis = firstBr > -1
+        ? `<strong>${analysis.substring(0, firstBr)}</strong>${analysis.substring(firstBr)}`
+        : `<strong>${analysis}</strong>`;
+      const analysisEl = card.querySelector('.compact-analysis');
+      if (analysisEl) analysisEl.innerHTML = formattedAnalysis;
+    });
+
+    // 顶部切换按钮文本
+    const sunriseBtn = document.querySelector('.prediction-toggle-btn[data-tab="sunrise"]');
+    const sunsetBtn = document.querySelector('.prediction-toggle-btn[data-tab="sunset"]');
+    if (sunriseBtn) sunriseBtn.textContent = `🌄 ${this.i18n.t('prediction.sunrise')}`;
+    if (sunsetBtn) sunsetBtn.textContent = `🌅 ${this.i18n.t('prediction.sunset')}`;
   }
 }
 
