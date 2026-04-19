@@ -1214,8 +1214,8 @@ class PredictionController {
     const midLabel = normalizeLabel(this.i18n.t('prediction.cloudLayers.shortMid'), 'Mid');
     const lowLabel = normalizeLabel(this.i18n.t('prediction.cloudLayers.shortLow'), 'Low');
 
-    const highEm = high >= 40 ? 'font-weight:700;font-size:14px;' : '';
-    const highIcon = high >= 40 ? '🔥' : '';
+    const highEm = '';
+    const highIcon = '';
 
     return `
       <div class="compact-cloud-info" style="display:flex;align-items:center;flex-wrap:nowrap;gap:4px;width:100%;overflow:hidden;">
