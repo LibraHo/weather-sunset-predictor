@@ -90,6 +90,9 @@ class ShareCardGenerator {
     const cx = this.W / 2;
     const y0 = 70;
 
+    // 霞客 logo（Canvas 向量绘制，导出图稳定可用）
+    this._drawBrandLogo(ctx, cx - 170, y0 + 58, isSunrise);
+
     // 太阳 emoji
     ctx.font = `48px ${this.font}`;
     ctx.textAlign = 'center';
@@ -105,6 +108,48 @@ class ShareCardGenerator {
     ctx.fillText('捕捉天空最美的瞬间', cx, y0 + 122);
 
     return y0 + 155;
+  }
+
+  _drawBrandLogo(ctx, x, y, isSunrise) {
+    ctx.save();
+
+    const outerR = 30;
+    const outer = ctx.createRadialGradient(x, y, 4, x, y, outerR);
+    if (isSunrise) {
+      outer.addColorStop(0, 'rgba(255,255,255,0.95)');
+      outer.addColorStop(0.55, 'rgba(255,192,138,0.95)');
+      outer.addColorStop(1, 'rgba(255,120,80,0.92)');
+    } else {
+      outer.addColorStop(0, 'rgba(255,255,255,0.95)');
+      outer.addColorStop(0.55, 'rgba(255,176,96,0.95)');
+      outer.addColorStop(1, 'rgba(255,88,38,0.92)');
+    }
+    ctx.beginPath();
+    ctx.arc(x, y, outerR, 0, Math.PI * 2);
+    ctx.fillStyle = outer;
+    ctx.fill();
+
+    // 内圈
+    ctx.beginPath();
+    ctx.arc(x, y, 20, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.22)';
+    ctx.fill();
+
+    // 品牌字母 XK
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = `bold 18px ${this.font}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('XK', x, y + 0.5);
+
+    // 微光边
+    ctx.beginPath();
+    ctx.arc(x, y, outerR + 1, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.restore();
   }
 
   /* ── 仪表盘 ── */

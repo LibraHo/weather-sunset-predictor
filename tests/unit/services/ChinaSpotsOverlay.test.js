@@ -291,4 +291,22 @@ describe('ChinaSpotsOverlay integration', () => {
     expect(mockCtx.createRadialGradient).toHaveBeenCalledTimes(3);
   });
 
+  test('getRenderHealth: 有点位且已渲染时返回健康', () => {
+    overlay._spots = [{ lat: 39.9, lon: 116.4, score: 85 }];
+    overlay.show();
+
+    const health = overlay.getRenderHealth();
+    expect(health.ok).toBe(true);
+    expect(health.reason).toBe('ok');
+  });
+
+  test('getRenderHealth: 有点位但隐藏时返回异常原因', () => {
+    overlay._spots = [{ lat: 39.9, lon: 116.4, score: 85 }];
+    overlay.hide();
+
+    const health = overlay.getRenderHealth();
+    expect(health.ok).toBe(false);
+    expect(health.reason).toBe('overlay_hidden');
+  });
+
 });

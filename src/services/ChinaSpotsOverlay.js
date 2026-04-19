@@ -8,7 +8,8 @@
 
 import { isInMainlandChina, MAINLAND_BOUNDS } from '../utils/mainlandChinaRegion.js';
 
-export const MAINLAND_RENDER_MIN_SCORE = 40;
+// 业务规则：评分 <=40 不上色，仅 >40 才渲染火烧云颜色
+export const MAINLAND_RENDER_MIN_SCORE = 41;
 const SUPPORTED_SPOT_PERIODS = ['sunrise', 'sunset'];
 
 function clamp(value, min, max) {
@@ -198,6 +199,8 @@ export default class ChinaSpotsOverlay {
     this._boundRedraw = null;
     this._boundMove = null;
     this._period = 'sunset';
+    this._lastRenderAt = 0;
+    this._lastDrawnCount = 0;
   }
 
   getSpotCount() {
@@ -370,6 +373,8 @@ export default class ChinaSpotsOverlay {
     }
 
     const spotsToDraw = viewport ? this._spots.filter(spot => isSpotInViewport(spot, viewport)) : this._spots;
+    this._lastRenderAt = Date.now();
+    this._lastDrawnCount = spotsToDraw.length;
     const densityOpacityFactor = getDensityOpacityFactor(spotsToDraw.length, zoom);
 
     spotsToDraw.forEach(spot => {
@@ -466,5 +471,42 @@ export default class ChinaSpotsOverlay {
 
   getUpdatedAt() {
     return this._updatedAt;
+  }
+
+  /**
+   * 叠加层渲染健康检查
+   * @returns {{ok:boolean,reason:string}}
+   */
+  getRenderHealth() {
+    if (!this._map || !this._canvas) {
+      return { ok: false, reason: 'map_or_canvas_missing' };
+    }
+
+    // 无数据不是渲染故障
+    if (!Array.isArray(this._spots) || this._spots.length === 0) {
+      return { ok: true, reason: 'no_spots' };
+    }
+
+    if (!this._visible) {
+      return { ok: false, reason: 'overlay_hidden' };
+    }
+
+    if (this._canvas.style.display === 'none') {
+      return { ok: false, reason: 'canvas_hidden' };
+    }
+
+    if (!this._canvas.width || !this._canvas.height) {
+      return { ok: false, reason: 'canvas_size_zero' };
+    }
+
+    if (!this._lastRenderAt || (Date.now() - this._lastRenderAt > 120000)) {
+      return { ok: false, reason: 'render_stale' };
+    }
+
+    if (this._lastDrawnCount <= 0) {
+      return { ok: false, reason: 'drawn_count_zero' };
+    }
+
+    return { ok: true, reason: 'ok' };
   }
 }

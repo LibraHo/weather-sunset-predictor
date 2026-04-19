@@ -18,6 +18,9 @@ export default class ChinaSpotsOverlayManager {
     this._activePeriod = 'sunset'; // 默认显示晚霞
     this._tabContainer = null;
     this._tabButtons = {};
+    this._healthTimer = null;
+    this._healthCheckIntervalMs = 45000;
+    this._healthCheckRunning = false;
   }
 
   /**
@@ -199,6 +202,63 @@ export default class ChinaSpotsOverlayManager {
     // 确保只显示当前激活的叠加层
     this._getActiveOverlay().show();
     this._getInactiveOverlay().hide();
+
+    // 启动自检，兜底修复偶发渲染失效
+    this.startHealthMonitor();
+  }
+
+  /**
+   * 执行一次渲染健康检查，必要时自动修复
+   */
+  async runHealthCheck() {
+    if (this._healthCheckRunning) return;
+    if (!this._map || !this._sunriseOverlay || !this._sunsetOverlay) return;
+
+    this._healthCheckRunning = true;
+    try {
+      // 仅在地图容器可见时检查
+      const mapEl = this._map?.getContainer?.();
+      if (!mapEl || mapEl.offsetWidth <= 0 || mapEl.offsetHeight <= 0) return;
+
+      const activePeriod = this._activePeriod;
+      const activeOverlay = this._getActiveOverlay();
+      const health = activeOverlay?.getRenderHealth?.() || { ok: true, reason: 'no_health_api' };
+
+      if (health.ok) return;
+
+      console.warn(`[ChinaSpotsOverlayManager] 检测到渲染异常（${activePeriod}）: ${health.reason}，尝试自动修复`);
+
+      // 自动修复：重新加载并重绘当前时段
+      await this.loadAndRender(activePeriod);
+      this._getActiveOverlay()?.show?.();
+      this._getInactiveOverlay()?.hide?.();
+
+      const after = this._getActiveOverlay()?.getRenderHealth?.() || { ok: true, reason: 'no_health_api' };
+      if (!after.ok) {
+        console.error(`[ChinaSpotsOverlayManager] 自动修复后仍异常（${activePeriod}）: ${after.reason}`);
+      }
+    } catch (err) {
+      console.error('[ChinaSpotsOverlayManager] 渲染健康检查失败:', err);
+    } finally {
+      this._healthCheckRunning = false;
+    }
+  }
+
+  startHealthMonitor() {
+    if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'test') {
+      return;
+    }
+    this.stopHealthMonitor();
+    this._healthTimer = setInterval(() => {
+      this.runHealthCheck().catch(() => {});
+    }, this._healthCheckIntervalMs);
+  }
+
+  stopHealthMonitor() {
+    if (this._healthTimer) {
+      clearInterval(this._healthTimer);
+      this._healthTimer = null;
+    }
   }
 
   /**
@@ -296,6 +356,7 @@ export default class ChinaSpotsOverlayManager {
    * 销毁管理器，释放资源
    */
   destroy() {
+    this.stopHealthMonitor();
     this.clear();
     this._map = null;
     this._sunriseOverlay = null;
