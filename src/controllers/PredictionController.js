@@ -1203,9 +1203,16 @@ class PredictionController {
     const high = cloudLayers.high ?? 0;
     const mid = cloudLayers.mid ?? 0;
     const low = cloudLayers.low ?? 0;
-    const highLabel = this.i18n.t('prediction.cloudLayers.shortHigh') || 'High';
-    const midLabel = this.i18n.t('prediction.cloudLayers.shortMid') || 'Mid';
-    const lowLabel = this.i18n.t('prediction.cloudLayers.shortLow') || 'Low';
+    const normalizeLabel = (raw, fallback) => {
+      const text = String(raw || '').trim();
+      if (!text || /[{}<>]/.test(text)) return fallback;
+      // 过长文案会挤占云况条，统一收敛为短标签
+      return text.length > 10 ? fallback : text;
+    };
+
+    const highLabel = normalizeLabel(this.i18n.t('prediction.cloudLayers.shortHigh'), 'High');
+    const midLabel = normalizeLabel(this.i18n.t('prediction.cloudLayers.shortMid'), 'Mid');
+    const lowLabel = normalizeLabel(this.i18n.t('prediction.cloudLayers.shortLow'), 'Low');
 
     const highEm = high >= 40 ? 'font-weight:700;font-size:14px;' : '';
     const highIcon = high >= 40 ? '🔥' : '';
