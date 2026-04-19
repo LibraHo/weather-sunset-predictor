@@ -241,7 +241,17 @@ class ChinaMapCanvas {
       weight: 1.5,
       opacity: 0.6,
       dashArray: '3',
-      fillOpacity: 0.05
+      fillOpacity: 0.05,
+      lineJoin: 'round',
+      lineCap: 'round'
+    };
+
+    // 东亚（日韩朝）边界使用更细实线，降低“锯齿/粗糙感”
+    const eastAsiaStyle = {
+      ...commonStyle,
+      weight: 1.05,
+      opacity: 0.5,
+      dashArray: null
     };
 
     // 1. 中国完整省级边界（含台湾、港澳、南海诸岛）
@@ -260,7 +270,8 @@ class ChinaMapCanvas {
         )
       };
       eastAsiaLayer = window.L.geoJSON(filtered, {
-        style: () => commonStyle,
+        style: () => eastAsiaStyle,
+        smoothFactor: 1.2,
         onEachFeature: () => {}
       }).addTo(this._map);
     }
@@ -338,6 +349,41 @@ class ChinaMapCanvas {
       { name: '厦门', lat: 24.4798, lon: 118.0894 },
       { name: '东莞', lat: 23.0489, lon: 113.7447 },
       { name: '佛山', lat: 23.0218, lon: 113.1219 },
+      // 台湾（中国台湾省）
+      { name: '台北', lat: 25.0330, lon: 121.5654 },
+      { name: '新北', lat: 25.0120, lon: 121.4657 },
+      { name: '桃园', lat: 24.9937, lon: 121.3010 },
+      { name: '台中', lat: 24.1477, lon: 120.6736 },
+      { name: '台南', lat: 22.9999, lon: 120.2270 },
+      { name: '高雄', lat: 22.6273, lon: 120.3014 },
+      { name: '基隆', lat: 25.1276, lon: 121.7392 },
+      { name: '花莲', lat: 23.9872, lon: 121.6015 },
+      // 韩国
+      { name: '首尔', lat: 37.5665, lon: 126.9780 },
+      { name: '釜山', lat: 35.1796, lon: 129.0756 },
+      { name: '仁川', lat: 37.4563, lon: 126.7052 },
+      { name: '大邱', lat: 35.8714, lon: 128.6014 },
+      { name: '大田', lat: 36.3504, lon: 127.3845 },
+      { name: '光州', lat: 35.1595, lon: 126.8526 },
+      { name: '蔚山', lat: 35.5384, lon: 129.3114 },
+      { name: '济州', lat: 33.4996, lon: 126.5312 },
+      // 朝鲜
+      { name: '平壤', lat: 39.0392, lon: 125.7625 },
+      { name: '咸兴', lat: 39.9144, lon: 127.5364 },
+      { name: '元山', lat: 39.1528, lon: 127.4433 },
+      { name: '清津', lat: 41.7840, lon: 129.7758 },
+      { name: '新义州', lat: 40.1000, lon: 124.4000 },
+      // 日本
+      { name: '东京', lat: 35.6762, lon: 139.6503 },
+      { name: '横滨', lat: 35.4437, lon: 139.6380 },
+      { name: '大阪', lat: 34.6937, lon: 135.5023 },
+      { name: '名古屋', lat: 35.1815, lon: 136.9066 },
+      { name: '京都', lat: 35.0116, lon: 135.7681 },
+      { name: '神户', lat: 34.6901, lon: 135.1955 },
+      { name: '札幌', lat: 43.0618, lon: 141.3545 },
+      { name: '仙台', lat: 38.2682, lon: 140.8694 },
+      { name: '广岛', lat: 34.3853, lon: 132.4553 },
+      { name: '福冈', lat: 33.5902, lon: 130.4017 },
     ];
 
     // ─── level2: 全部地级行政单位 ──────────────────────────────────
@@ -828,14 +874,23 @@ class ChinaMapCanvas {
       weight: 1.5,
       opacity: 0.6,
       dashArray: '3',
-      fillOpacity: 0.1
+      fillOpacity: 0.1,
+      lineJoin: 'round',
+      lineCap: 'round'
+    };
+
+    const eastAsiaDarkStyle = {
+      ...darkStyle,
+      weight: 1.05,
+      opacity: 0.5,
+      dashArray: null
     };
 
     if (this._geoJsonLayer) {
       this._geoJsonLayer.setStyle(darkStyle);
     }
     if (this._eastAsiaLayer) {
-      this._eastAsiaLayer.setStyle(darkStyle);
+      this._eastAsiaLayer.setStyle(eastAsiaDarkStyle);
     }
   }
 
@@ -855,14 +910,23 @@ class ChinaMapCanvas {
       weight: 1.5,
       opacity: 0.5,
       dashArray: '3',
-      fillOpacity: 0.1
+      fillOpacity: 0.1,
+      lineJoin: 'round',
+      lineCap: 'round'
+    };
+
+    const eastAsiaLightStyle = {
+      ...lightStyle,
+      weight: 1.05,
+      opacity: 0.45,
+      dashArray: null
     };
 
     if (this._geoJsonLayer) {
       this._geoJsonLayer.setStyle(lightStyle);
     }
     if (this._eastAsiaLayer) {
-      this._eastAsiaLayer.setStyle(lightStyle);
+      this._eastAsiaLayer.setStyle(eastAsiaLightStyle);
     }
   }
 
