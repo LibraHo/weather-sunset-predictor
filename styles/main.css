@@ -1854,6 +1854,10 @@ body.theme-dark .best-time {
   min-width: 0;
 }
 
+.prediction-tab-panel {
+  display: flex;
+}
+
 /* ===== 高密度仪表盘预测卡片样式 ===== */
 
 /* 分数+时间并排行 */
@@ -2058,6 +2062,7 @@ body.theme-dark .best-time {
   color: var(--color-text);
   margin-top: var(--spacing-xs);
   text-align: left;
+  flex: 1;
 }
 
 .compact-analysis strong {
@@ -2115,6 +2120,9 @@ body.theme-dark .fca-summary-good {
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 /* 顶部彩色指示条 */
