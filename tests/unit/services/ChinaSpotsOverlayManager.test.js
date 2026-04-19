@@ -201,6 +201,25 @@ describe('ChinaSpotsOverlayManager', () => {
 
       expect(toggleSpy).toHaveBeenCalled();
     });
+
+    it('runHealthCheck 检测异常后应触发自动修复', async () => {
+      const activeOverlay = manager._getActiveOverlay();
+      const inactiveOverlay = manager._getInactiveOverlay();
+
+      jest.spyOn(activeOverlay, 'getRenderHealth')
+        .mockReturnValueOnce({ ok: false, reason: 'canvas_hidden' })
+        .mockReturnValueOnce({ ok: true, reason: 'ok' });
+
+      const loadSpy = jest.spyOn(manager, 'loadAndRender').mockResolvedValue();
+      const showSpy = jest.spyOn(activeOverlay, 'show');
+      const hideSpy = jest.spyOn(inactiveOverlay, 'hide');
+
+      await manager.runHealthCheck();
+
+      expect(loadSpy).toHaveBeenCalledWith('sunset');
+      expect(showSpy).toHaveBeenCalled();
+      expect(hideSpy).toHaveBeenCalled();
+    });
   });
 
   describe('清理', () => {
