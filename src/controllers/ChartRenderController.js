@@ -78,8 +78,8 @@ class ChartRenderController {
     const chartWidth = isMobile ? Math.max(containerWidth - 8, 320) : 900;
     const chartHeight = isMobile ? 240 : 280;
     const padding = isMobile
-      ? { top: 36, right: 20, bottom: 52, left: 60 }
-      : { top: 50, right: 50, bottom: 70, left: 90 };
+      ? { top: 36, right: 20, bottom: 52, left: 72 }
+      : { top: 50, right: 50, bottom: 70, left: 122 };
     const contentWidth = chartWidth - padding.left - padding.right;
     const contentHeight = chartHeight - padding.top - padding.bottom;
 
@@ -125,7 +125,7 @@ class ChartRenderController {
     const axisFontSize = isMobile ? 11 : 13;
 
     let html = `<div style="padding: ${chartPadding}; background: var(--color-card-bg); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin: 12px 0;">`;
-    html += `<h3 style="text-align: center; margin-bottom: 16px; color: ${color}; font-size: ${titleFontSize};">${label}${this.i18n.t('charts.trend')}</h3>`;
+    html += `<h3 style="text-align: center; margin-bottom: 16px; color: ${color}; font-size: ${titleFontSize};">${label}${this.i18n.t('charts.trend')} (${unit})</h3>`;
     html += '<div>';
     html += `<svg width="100%" viewBox="0 0 ${chartWidth} ${chartHeight}" style="display: block;">`;
 
@@ -133,7 +133,7 @@ class ChartRenderController {
       const value = min + (range * i) / 5;
       const y = padding.top + contentHeight - (i / 5) * contentHeight;
       html += `<line x1="${padding.left}" y1="${y}" x2="${chartWidth - padding.right}" y2="${y}" stroke="var(--color-text-light)" stroke-width="1.5" stroke-dasharray="5,5" stroke-opacity="0.3"/>`;
-      html += `<text x="${padding.left - 10}" y="${y + 5}" font-size="${axisFontSize}" fill="var(--color-text)" text-anchor="end" font-weight="500">${value.toFixed(1)} ${unit}</text>`;
+      html += `<text x="${padding.left - 10}" y="${y + 5}" font-size="${axisFontSize}" fill="var(--color-text)" text-anchor="end" font-weight="500">${value.toFixed(1)}</text>`;
     }
 
     const tickCandidates = points
@@ -187,7 +187,7 @@ class ChartRenderController {
 
     html += `<text x="${chartWidth / 2}" y="${chartHeight - 15}" font-size="${isMobile ? 12 : 14}" fill="var(--color-text-light)" text-anchor="middle" font-weight="600">${this.i18n.t('charts.time')}</text>`;
     if (!isMobile) {
-      html += `<text x="35" y="${chartHeight / 2}" font-size="14" fill="var(--color-text-light)" text-anchor="middle" transform="rotate(-90, 35, ${chartHeight / 2})" font-weight="600">${label} (${unit})</text>`;
+      html += `<text x="20" y="${chartHeight / 2}" font-size="12" fill="var(--color-text-light)" text-anchor="middle" transform="rotate(-90, 20, ${chartHeight / 2})" font-weight="600">${label} (${unit})</text>`;
     }
 
     html += '</svg>';
