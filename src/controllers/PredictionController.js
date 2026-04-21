@@ -1067,7 +1067,7 @@ class PredictionController {
     // 云层分层信息（需求12.11）- 只显示云层数据，不显示description
     let cloudLayersHtml = '';
     if (prediction.cloudLayers) {
-      cloudLayersHtml = this.renderCloudLayers(prediction.cloudLayers);
+      cloudLayersHtml = this.renderCloudLayers(prediction.cloudLayers, prediction.cloudThickness);
     }
 
     // 分析文本：第一句加粗
@@ -1197,7 +1197,7 @@ class PredictionController {
    *
    * 需求：12.11, 12.12, 12.13 - 显示云层分层信息和影响说明
    */
-  renderCloudLayers(cloudLayers) {
+  renderCloudLayers(cloudLayers, cloudThickness = null) {
     if (!cloudLayers) return '';
 
     const high = cloudLayers.high ?? 0;
@@ -1206,7 +1206,6 @@ class PredictionController {
     const normalizeLabel = (raw, fallback) => {
       const text = String(raw || '').trim();
       if (!text || /[{}<>]/.test(text)) return fallback;
-      // 过长文案会挤占云况条，统一收敛为短标签
       return text.length > 10 ? fallback : text;
     };
 
@@ -1214,14 +1213,21 @@ class PredictionController {
     const midLabel = normalizeLabel(this.i18n.t('prediction.cloudLayers.shortMid'), 'Mid');
     const lowLabel = normalizeLabel(this.i18n.t('prediction.cloudLayers.shortLow'), 'Low');
 
-    const highEm = '';
-    const highIcon = '';
+    // 云厚徽章
+    let thicknessBadge = '';
+    if (cloudThickness && cloudThickness.thickness !== 'unknown') {
+      const badgeColors = { thin: '#4caf50', moderate: '#ff9800', thick: '#f44336' };
+      const badgeColor = badgeColors[cloudThickness.thickness] || '#999';
+      const badgeText = this.i18n.t(`prediction.cloudThickness.${cloudThickness.thickness}`);
+      thicknessBadge = `<span style="display:inline-block;font-size:10px;color:#fff;background:${badgeColor};border-radius:3px;padding:0 4px;margin-left:4px;line-height:16px;">${badgeText}</span>`;
+    }
 
     return `
       <div class="compact-cloud-info" style="display:flex;align-items:center;flex-wrap:nowrap;gap:4px;width:100%;overflow:hidden;">
         <span class="cloud-icon" style="flex-shrink:0;">☁️</span>
-        <span class="cloud-item" style="flex:1 1 0;min-width:0;${highEm}" title="${highLabel}">${highIcon}<span class="cloud-label">${highLabel}</span>: <strong class="cloud-value">${high.toFixed(0)}%</strong>
+        <span class="cloud-item" style="flex:1 1 0;min-width:0;" title="${highLabel}"><span class="cloud-label">${highLabel}</span>: <strong class="cloud-value">${high.toFixed(0)}%</strong>
           <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(high,100)}%;background:#90caf9;"></span></span>
+        </span>
         </span>
         <span class="cloud-sep" style="flex-shrink:0;">|</span>
         <span class="cloud-item" style="flex:1 1 0;min-width:0;" title="${midLabel}"><span class="cloud-label">${midLabel}</span>: <strong class="cloud-value">${mid.toFixed(0)}%</strong>
@@ -1231,6 +1237,7 @@ class PredictionController {
         <span class="cloud-item" style="flex:1 1 0;min-width:0;" title="${lowLabel}"><span class="cloud-label">${lowLabel}</span>: <strong class="cloud-value">${low.toFixed(0)}%</strong>
           <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(low,100)}%;background:#42a5f5;"></span></span>
         </span>
+        ${thicknessBadge}
       </div>
     `;
   }
@@ -1363,13 +1370,22 @@ class PredictionController {
     analysis += `</div>`;
 
     // 云厚评估（Phase 22）
-    if (prediction.cloudThickness && prediction.cloudThickness.thickness !== 'unknown') {
+    if (prediction.cloudThickness) {
       const ct = prediction.cloudThickness;
-      const ctKey = `prediction.cloudThickness.${ct.thickness}Desc`;
-      const ctText = this.i18n.t(ctKey);
-      const ctIcon = ct.thickness === 'thin' ? '🌤' : ct.thickness === 'thick' ? '🌫' : '☁';
+      const ctIcon = ct.thickness === 'thin' ? '🌤' : ct.thickness === 'thick' ? '🌫' : ct.thickness === 'moderate' ? '☁' : '❓';
+      const ctLabel = this.i18n.t(`prediction.cloudThickness.${ct.thickness}`);
+      const ctDesc = this.i18n.t(`prediction.cloudThickness.${ct.thickness}Desc`);
       analysis += `<div style="margin-top:8px;font-size:13px;">`;
-      analysis += `${ctIcon} <strong>${this.i18n.t('prediction.cloudThickness.title')}</strong>: ${ctText}`;
+      analysis += `${ctIcon} <strong>${this.i18n.t('prediction.cloudThickness.title')}</strong>: ${ctLabel}`;
+      if (ct.thickness !== 'unknown') analysis += ` — ${ctDesc}`;
+      // 显示原始数据
+      const canvas = prediction.canvasAnalysis;
+      if (canvas?.breakdown) {
+        const parts = [];
+        if (ct.reasons?.length) parts.push(`判定: ${ct.reasons.join(', ')}`);
+        if (ct.modifier !== 1.0) parts.push(`修正: ×${ct.modifier}`);
+        if (parts.length) analysis += `<br><span style="color:#888;font-size:11px;">${parts.join(' | ')}</span>`;
+      }
       analysis += `</div>`;
     }
 
