@@ -329,6 +329,10 @@ function analyzeCloudLayers(highClouds, midClouds, lowClouds) {
   };
 
   const totalClouds = highClouds + midClouds + lowClouds;
+  const layerBasedCloudCover = Math.min(
+    100,
+    Math.max(highClouds, midClouds, lowClouds, totalClouds / 3)
+  );
 
   if (totalClouds < 20) {
     layers.description = '云量较少，可能缺乏足够的云层来散射光线，晚霞效果一般';
@@ -339,7 +343,11 @@ function analyzeCloudLayers(highClouds, midClouds, lowClouds) {
   } else if (highClouds > 60) {
     layers.description = '高云较多，可能产生卷云效果，适合拍摄';
   } else if (midClouds > 70) {
-    layers.description = '中层云过多，可能影响光线穿透，晚霞颜色可能较暗';
+    if (lowClouds >= 35 || layerBasedCloudCover >= 85) {
+      layers.description = '中层云偏厚，且低云/总云量较高，可能压光导致霞色偏暗';
+    } else {
+      layers.description = '中层云较多但低云不高，仍可能出霞，成色取决于云层透光性';
+    }
   } else {
     layers.description = '云层分布一般，晚霞效果取决于其他气象条件';
   }
