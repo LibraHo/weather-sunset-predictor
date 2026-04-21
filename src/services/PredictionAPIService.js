@@ -56,12 +56,20 @@ class PredictionAPIService {
           precipitation: weatherData.precipitation || 0,
           convPrecip: weatherData.convPrecip || weatherData.precipitation || 0,
           weatherCode: weatherData.weatherCode ?? null,
-          cloudBaseHeight: weatherData.cloudBaseHeight ?? null
+          cloudBaseHeight: weatherData.cloudBaseHeight ?? null,
+          // Phase 22: 云厚评估字段
+          shortwaveRadiation: weatherData.shortwaveRadiation ?? null,
+          directRadiation: weatherData.directRadiation ?? null,
+          diffuseRadiation: weatherData.diffuseRadiation ?? null,
+          waterVapourColumn: weatherData.waterVapourColumn ?? null
         },
         date: dateString,
         lat: lat,
         lon: lon,
-        type: type
+        type: type,
+        options: {
+          prevHourData: weatherData._prevHourData || null
+        }
       };
 
       // 发送请求

@@ -339,11 +339,25 @@ class PredictionController {
    * @returns {Promise<SunsetPrediction>} 预测结果
    * @private
    */
-  async _calculatePredictionWithBackend(weatherData, date, lat, lon, type) {
+  async _calculatePredictionWithBackend(weatherData, date, lat, lon, type, weatherDataArray = null) {
     // 检查是否启用后端基础预测
     if (this.features.USE_BACKEND_PREDICTION) {
       try {
         console.log(`[PredictionController] 使用后端 API 计算预测 (${type})`);
+
+        // 找前 1-2 小时数据用于云厚评估
+        if (weatherDataArray && weatherData.timestamp) {
+          const ts = weatherData.timestamp;
+          for (let offset = 1; offset <= 2; offset++) {
+            const prevTs = ts - offset * 3600000;
+            const prev = weatherDataArray.find(d => d.timestamp === prevTs);
+            if (prev && prev.shortwaveRadiation != null && prev.shortwaveRadiation > 50) {
+              weatherData._prevHourData = prev;
+              break;
+            }
+          }
+        }
+
         return await this.predictionAPIService.calculate(weatherData, date, lat, lon, type);
       } catch (error) {
         console.error(`[PredictionController] 后端 API 调用失败（已禁用本地旧算法回退）:`, error.message);
@@ -616,7 +630,8 @@ class PredictionController {
             sunsetTime,   // 用实际日落时刻，后端才能正确计算太阳高度角
             location.lat,
             location.lon,
-            'sunset'
+            'sunset',
+            weatherDataArray
           );
           console.log(`[PredictionController] 晚霞预测完成，得分: ${sunsetPrediction.score}`);
 
