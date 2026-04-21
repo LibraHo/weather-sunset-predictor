@@ -1067,7 +1067,7 @@ class PredictionController {
     // 云层分层信息（需求12.11）- 只显示云层数据，不显示description
     let cloudLayersHtml = '';
     if (prediction.cloudLayers) {
-      cloudLayersHtml = this.renderCloudLayers(prediction.cloudLayers, prediction.cloudThickness);
+      cloudLayersHtml = this.renderCloudLayers(prediction.cloudLayers);
     }
 
     // 分析文本：第一句加粗
@@ -1197,7 +1197,7 @@ class PredictionController {
    *
    * 需求：12.11, 12.12, 12.13 - 显示云层分层信息和影响说明
    */
-  renderCloudLayers(cloudLayers, cloudThickness = null) {
+  renderCloudLayers(cloudLayers) {
     if (!cloudLayers) return '';
 
     const high = cloudLayers.high ?? 0;
@@ -1212,15 +1212,6 @@ class PredictionController {
     const highLabel = normalizeLabel(this.i18n.t('prediction.cloudLayers.shortHigh'), 'High');
     const midLabel = normalizeLabel(this.i18n.t('prediction.cloudLayers.shortMid'), 'Mid');
     const lowLabel = normalizeLabel(this.i18n.t('prediction.cloudLayers.shortLow'), 'Low');
-
-    // 云厚徽章
-    let thicknessBadge = '';
-    if (cloudThickness && cloudThickness.thickness !== 'unknown') {
-      const badgeColors = { thin: '#4caf50', moderate: '#ff9800', thick: '#f44336' };
-      const badgeColor = badgeColors[cloudThickness.thickness] || '#999';
-      const badgeText = this.i18n.t(`prediction.cloudThickness.${cloudThickness.thickness}`);
-      thicknessBadge = `<span style="display:inline-block;font-size:10px;color:#fff;background:${badgeColor};border-radius:3px;padding:0 4px;margin-left:4px;line-height:16px;">${badgeText}</span>`;
-    }
 
     return `
       <div class="compact-cloud-info" style="display:flex;align-items:center;flex-wrap:nowrap;gap:4px;width:100%;overflow:hidden;">
@@ -1237,7 +1228,6 @@ class PredictionController {
         <span class="cloud-item" style="flex:1 1 0;min-width:0;" title="${lowLabel}"><span class="cloud-label">${lowLabel}</span>: <strong class="cloud-value">${low.toFixed(0)}%</strong>
           <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(low,100)}%;background:#42a5f5;"></span></span>
         </span>
-        ${thicknessBadge}
       </div>
     `;
   }
