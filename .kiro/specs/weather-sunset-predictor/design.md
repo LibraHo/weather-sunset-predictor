@@ -255,6 +255,15 @@ Batch Job (size=10, delay=2500ms) → OpenMeteoProvider
 - 朝霞/晚霞评分散点地图（需求37）
 - 火烧云全球分享地图（需求38）
 
+### 2026-04
+- 云厚评估模块 Phase 22（4月21日）
+  - 新增数据源：`shortwave_radiation`, `direct_radiation`, `diffuse_radiation`, `total_column_integrated_water_vapour`
+  - 算法：辐射法（直射比）+ 水汽法 + 天气码兜底，三信号综合判定
+  - 输出：`assessCloudThickness()` → `{ thickness, modifier, reasons }`
+  - modifier 纳入画布分修正：薄云 1.1x / 适中 1.0x / 偏厚 0.75x / 厚云幕 0.45x
+  - 无数据时优雅降级（modifier=1.0），不影响现有逻辑
+  - 解决问题："高云100%"既可能是绝美薄卷云也可能是死阴天
+
 ### 2026-03
 - 光路评分物理重构（需求35）
 - Windy彻底移除（需求36）
