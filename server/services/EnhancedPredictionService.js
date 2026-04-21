@@ -417,27 +417,44 @@ function estimateCloudBaseHeight(weatherData) {
  * 2. 水汽法：waterVapour × cloudCover / 100（高 = 含水量大 = 厚云）
  * 3. 天气码兜底：WMO 阴天码直接标厚
  *
- * @param {Object} weatherData - 天气数据
+ * @param {Object} weatherData - 天气数据（目标时刻）
+ * @param {Object|null} prevHourData - 目标时刻前1-2小时的数据（用于辐射比，避免日落时辐射自然为0）
  * @returns {{ thickness: 'thin'|'moderate'|'thick'|'unknown', modifier: number, reasons: string[] }}
  */
-function assessCloudThickness(weatherData) {
-  const sw = weatherData.shortwaveRadiation;
-  const dr = weatherData.directRadiation;
-  const df = weatherData.diffuseRadiation;
-  const wv = weatherData.waterVapourColumn;
+function assessCloudThickness(weatherData, prevHourData = null) {
   const cc = weatherData.cloudCover || 0;
   const weatherCode = weatherData.weatherCode;
+  const wv = weatherData.waterVapourColumn;
 
   const signals = []; // 收集判定信号
   let score = 0;      // 正=薄云，负=厚云
 
+  // --- 辐射信号：优先用前1-2小时数据（太阳还有高度），回退用当前时刻 ---
+  // 日落时 direct 自然为 0，不代表厚云
+  const MIN_SHORTWAVE = 50; // 短波辐射最低阈值，低于此值辐射数据不可靠
+  let sw = weatherData.shortwaveRadiation;
+  let dr = weatherData.directRadiation;
+  let df = weatherData.diffuseRadiation;
+  let usedPrevHour = false;
+
+  if ((sw == null || sw < MIN_SHORTWAVE) && prevHourData) {
+    const pSw = prevHourData.shortwaveRadiation;
+    if (pSw != null && pSw >= MIN_SHORTWAVE) {
+      sw = pSw;
+      dr = prevHourData.directRadiation;
+      df = prevHourData.diffuseRadiation;
+      usedPrevHour = true;
+    }
+  }
+
   // --- 信号1：直射比 ---
-  if (sw != null && dr != null && sw > 10) {
+  if (sw != null && dr != null && sw > MIN_SHORTWAVE) {
     const directRatio = dr / sw;
     if (directRatio > 0.6)      { score += 2; signals.push('direct_ratio_high'); }
     else if (directRatio > 0.35) { score += 1; signals.push('direct_ratio_moderate'); }
     else if (directRatio < 0.15) { score -= 2; signals.push('direct_ratio_low'); }
     else                          { score -= 1; signals.push('direct_ratio_low_moderate'); }
+    if (usedPrevHour) signals.push('using_prev_hour_radiation');
   }
 
   // --- 信号2：水汽指数 ---
@@ -450,7 +467,7 @@ function assessCloudThickness(weatherData) {
   }
 
   // --- 信号3：散射比 ---
-  if (sw != null && df != null && sw > 10) {
+  if (sw != null && df != null && sw > MIN_SHORTWAVE) {
     const diffuseRatio = df / sw;
     if (diffuseRatio > 0.7)     { score -= 1; signals.push('diffuse_dominant'); }
     else if (diffuseRatio < 0.3){ score += 1; signals.push('direct_dominant'); }
@@ -1015,7 +1032,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   // 确保 date 是 Date 对象
   const dateObj = date instanceof Date ? date : new Date(date);
 
-  const { remoteCloudData = null, rainedRecently = false } = options;
+  const { remoteCloudData = null, rainedRecently = false, prevHourData = null } = options;
 
   logger.debug('[EnhancedPredictionService]', '开始计算增强版预测...');
 
@@ -1062,7 +1079,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   logger.debug('[EnhancedPredictionService]', '渲染修正:', renderingFactor.factor);
 
   // 5. 云厚评估（Phase 22）
-  const cloudThickness = assessCloudThickness(weatherData);
+  const cloudThickness = assessCloudThickness(weatherData, prevHourData);
   logger.debug('[EnhancedPredictionService]', '云厚评估:', cloudThickness.thickness, 'modifier:', cloudThickness.modifier, 'reasons:', cloudThickness.reasons);
 
   // 5.5 云厚修正画布分

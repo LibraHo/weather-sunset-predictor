@@ -439,10 +439,25 @@ router.get('/', async (req, res) => {
       highClouds: selected.highClouds || 0,
       lowCloudCover: selected.lowClouds || 0,
       precipitation: selected.precipitation || 0,
+      shortwaveRadiation: selected.shortwaveRadiation ?? null,
+      directRadiation: selected.directRadiation ?? null,
+      diffuseRadiation: selected.diffuseRadiation ?? null,
+      waterVapourColumn: selected.waterVapourColumn ?? null,
     };
 
+    // 找到 selected 之前 1-2 小时的数据（用于云厚辐射比）
+    let prevHourData = null;
+    const selectedIdx = hourly.indexOf(selected);
+    for (let offset = 1; offset <= 2 && selectedIdx - offset >= 0; offset++) {
+      const prev = hourly[selectedIdx - offset];
+      if (prev && prev.shortwaveRadiation != null && prev.shortwaveRadiation > 50) {
+        prevHourData = prev;
+        break;
+      }
+    }
+
     const prediction = EnhancedPredictionService.calculateEnhancedPrediction(
-      weatherData, now, lat, lon, type
+      weatherData, now, lat, lon, type, { prevHourData }
     );
 
     // 雷达罗盘依赖 cloudLayers 字段，EnhancedPredictionService 不返回，手动补上
@@ -515,10 +530,25 @@ router.get('/directions', async (req, res) => {
         highClouds: selected.highClouds || 0,
         lowCloudCover: selected.lowClouds || 0,
         precipitation: selected.precipitation || 0,
+        shortwaveRadiation: selected.shortwaveRadiation ?? null,
+        directRadiation: selected.directRadiation ?? null,
+        diffuseRadiation: selected.diffuseRadiation ?? null,
+        waterVapourColumn: selected.waterVapourColumn ?? null,
       };
 
+      // 找到 selected 之前 1-2 小时的数据
+      let prevHourData = null;
+      const selectedIdx = hourly.indexOf(selected);
+      for (let offset = 1; offset <= 2 && selectedIdx - offset >= 0; offset++) {
+        const prev = hourly[selectedIdx - offset];
+        if (prev && prev.shortwaveRadiation != null && prev.shortwaveRadiation > 50) {
+          prevHourData = prev;
+          break;
+        }
+      }
+
       const prediction = EnhancedPredictionService.calculateEnhancedPrediction(
-        weatherData, now, pLat, pLon, type
+        weatherData, now, pLat, pLon, type, { prevHourData }
       );
 
       return {
