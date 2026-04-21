@@ -30,7 +30,11 @@ class BaseWeatherProvider {
    *     precipitation: number|null,
    *     lowClouds: number|null,
    *     midClouds: number|null,
-   *     highClouds: number|null
+   *     highClouds: number|null,
+   *     shortwaveRadiation: number|null,
+   *     directRadiation: number|null,
+   *     diffuseRadiation: number|null,
+   *     waterVapourColumn: number|null
    *   }>,
    *   providerMeta: {
    *     name: string,

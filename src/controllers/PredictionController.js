@@ -1362,6 +1362,17 @@ class PredictionController {
     }
     analysis += `</div>`;
 
+    // 云厚评估（Phase 22）
+    if (prediction.cloudThickness && prediction.cloudThickness.thickness !== 'unknown') {
+      const ct = prediction.cloudThickness;
+      const ctKey = `prediction.cloudThickness.${ct.thickness}Desc`;
+      const ctText = this.i18n.t(ctKey);
+      const ctIcon = ct.thickness === 'thin' ? '🌤' : ct.thickness === 'thick' ? '🌫' : '☁';
+      analysis += `<div style="margin-top:8px;font-size:13px;">`;
+      analysis += `${ctIcon} <strong>${this.i18n.t('prediction.cloudThickness.title')}</strong>: ${ctText}`;
+      analysis += `</div>`;
+    }
+
     return analysis;
   }
 

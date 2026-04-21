@@ -104,7 +104,12 @@ class OpenMeteoProvider extends BaseWeatherProvider {
         lowClouds: hourly.cloud_cover_low[i] ?? 0,
         midClouds: hourly.cloud_cover_mid[i] ?? 0,
         highClouds: hourly.cloud_cover_high[i] ?? 0,
-        pressure: hourly.surface_pressure[i] != null ? hourly.surface_pressure[i] / 100 : null
+        pressure: hourly.surface_pressure[i] != null ? hourly.surface_pressure[i] / 100 : null,
+        // 云厚评估字段（Phase 22）
+        shortwaveRadiation: hourly.shortwave_radiation?.[i] ?? null,
+        directRadiation: hourly.direct_radiation?.[i] ?? null,
+        diffuseRadiation: hourly.diffuse_radiation?.[i] ?? null,
+        waterVapourColumn: hourly.total_column_integrated_water_vapour?.[i] ?? null
       });
     }
 
@@ -141,7 +146,7 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     const BASE_PARAMS = {
       latitude: lat,
       longitude: lon,
-      hourly: 'temperature_2m,relative_humidity_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,visibility,precipitation,surface_pressure',
+      hourly: 'temperature_2m,relative_humidity_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,visibility,precipitation,surface_pressure,shortwave_radiation,direct_radiation,diffuse_radiation,total_column_integrated_water_vapour',
       wind_speed_unit: 'ms',
       timeformat: 'unixtime',
       timezone: 'auto',
@@ -182,7 +187,7 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     const BASE_PARAMS = {
       latitude: pointList.map(p => p.lat).join(','),
       longitude: pointList.map(p => p.lon).join(','),
-      hourly: 'temperature_2m,relative_humidity_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,visibility,precipitation,surface_pressure',
+      hourly: 'temperature_2m,relative_humidity_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,visibility,precipitation,surface_pressure,shortwave_radiation,direct_radiation,diffuse_radiation,total_column_integrated_water_vapour',
       wind_speed_unit: 'ms',
       timeformat: 'unixtime',
       timezone: 'auto',

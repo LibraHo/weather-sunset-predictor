@@ -260,6 +260,19 @@ export default {
       lowCloudAmount: '低云量 {{value}}%'
     },
 
+    // 云厚评估（Phase 22）
+    cloudThickness: {
+      title: '云层厚度',
+      thin: '云层薄透',
+      moderate: '云层适中',
+      thick: '云层偏厚',
+      unknown: '未知',
+      thinDesc: '云层薄透，光线穿透性好，有利于霞光',
+      moderateDesc: '云层厚度适中',
+      thickDesc: '云层偏厚，可能遮挡光线，霞光效果受限',
+      unknownDesc: '云厚数据不可用'
+    },
+
     // 光路评分
     lightPath: {
       title: '光路评分',
@@ -275,6 +288,16 @@ export default {
       humidity: '湿度影响',
       renderingFactor: '🎨 渲染系数: {{factor}} | {{visibility}} | {{aqi}} | {{color}}',
       specialMode: '| {{mode}}',
+
+      // 云厚评估（Phase 22）
+      cloudThickness: {
+        title: '云层厚度',
+        thin: '云层薄透，光线容易穿透',
+        moderate: '云层适中',
+        thick: '云层偏厚，光线穿透受限',
+        unknown: '云厚数据不可用'
+      }
+    },
       // 能见度描述
       visibilityExcellent: '极佳（>20km）',
       visibilityGood: '良好（10-20km）',
