@@ -407,6 +407,86 @@ function estimateCloudBaseHeight(weatherData) {
   return 2200;
 }
 
+// ========== 云厚评估模块（Phase 22）==========
+
+/**
+ * 云厚评估：区分“薄卷云（好幕布）”和“厚云幕（压光）”
+ *
+ * 三维判定：
+ * 1. 辐射法：直射比 = direct / shortwave（低 = 厚云）
+ * 2. 水汽法：waterVapour × cloudCover / 100（高 = 含水量大 = 厚云）
+ * 3. 天气码兜底：WMO 阴天码直接标厚
+ *
+ * @param {Object} weatherData - 天气数据
+ * @returns {{ thickness: 'thin'|'moderate'|'thick'|'unknown', modifier: number, reasons: string[] }}
+ */
+function assessCloudThickness(weatherData) {
+  const sw = weatherData.shortwaveRadiation;
+  const dr = weatherData.directRadiation;
+  const df = weatherData.diffuseRadiation;
+  const wv = weatherData.waterVapourColumn;
+  const cc = weatherData.cloudCover || 0;
+  const weatherCode = weatherData.weatherCode;
+
+  const signals = []; // 收集判定信号
+  let score = 0;      // 正=薄云，负=厚云
+
+  // --- 信号1：直射比 ---
+  if (sw != null && dr != null && sw > 10) {
+    const directRatio = dr / sw;
+    if (directRatio > 0.6)      { score += 2; signals.push('direct_ratio_high'); }
+    else if (directRatio > 0.35) { score += 1; signals.push('direct_ratio_moderate'); }
+    else if (directRatio < 0.15) { score -= 2; signals.push('direct_ratio_low'); }
+    else                          { score -= 1; signals.push('direct_ratio_low_moderate'); }
+  }
+
+  // --- 信号2：水汽指数 ---
+  if (wv != null) {
+    const waterIndex = wv * cc / 100;
+    if (waterIndex < 2.5)      { score += 2; signals.push('water_vapour_low'); }
+    else if (waterIndex < 4.5) { /* 适中，不加减 */ signals.push('water_vapour_moderate'); }
+    else if (waterIndex < 7)   { score -= 1; signals.push('water_vapour_high'); }
+    else                       { score -= 2; signals.push('water_vapour_very_high'); }
+  }
+
+  // --- 信号3：散射比 ---
+  if (sw != null && df != null && sw > 10) {
+    const diffuseRatio = df / sw;
+    if (diffuseRatio > 0.7)     { score -= 1; signals.push('diffuse_dominant'); }
+    else if (diffuseRatio < 0.3){ score += 1; signals.push('direct_dominant'); }
+  }
+
+  // --- 信号4：天气码兜底 ---
+  // WMO code 3 = 阴天
+  if (weatherCode === 3) { score -= 2; signals.push('wmo_overcast'); }
+  // WMO code 45/48 = 雾
+  if (weatherCode === 45 || weatherCode === 48) { score -= 2; signals.push('wmo_fog'); }
+
+  // --- 综合判定 ---
+  const hasAnySignal = signals.length > 0;
+
+  if (!hasAnySignal) {
+    return { thickness: 'unknown', modifier: 1.0, reasons: ['no_cloud_thickness_data'] };
+  }
+
+  let thickness, modifier;
+  if (score >= 2) {
+    thickness = 'thin';
+    modifier = 1.1;    // 薄云加分
+  } else if (score >= 0) {
+    thickness = 'moderate';
+    modifier = 1.0;
+  } else if (score >= -2) {
+    thickness = 'moderate';
+    modifier = 0.75;   // 偏厚，适度压分
+  } else {
+    thickness = 'thick';
+    modifier = 0.45;   // 厚云幕，大幅压分
+  }
+
+  return { thickness, modifier, reasons: signals, score };
+}
+
 // ========== 光路几何模型（需求40，Phase 19 任务67.2）==========
 
 /**
@@ -981,7 +1061,20 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   const renderingFactor = scoreRendering(weatherData, rainedRecently);
   logger.debug('[EnhancedPredictionService]', '渲染修正:', renderingFactor.factor);
 
-  // 5. 综合输出
+  // 5. 云厚评估（Phase 22）
+  const cloudThickness = assessCloudThickness(weatherData);
+  logger.debug('[EnhancedPredictionService]', '云厚评估:', cloudThickness.thickness, 'modifier:', cloudThickness.modifier, 'reasons:', cloudThickness.reasons);
+
+  // 5.5 云厚修正画布分
+  if (cloudThickness.modifier !== 1.0) {
+    const originalCanvasScore = canvasScore.score;
+    canvasScore.score = Math.min(100, parseFloat((canvasScore.score * cloudThickness.modifier).toFixed(1)));
+    canvasScore.cloudThicknessModifier = cloudThickness.modifier;
+    canvasScore.cloudThickness = cloudThickness.thickness;
+    logger.debug('[EnhancedPredictionService]', '云厚修正画布分:', originalCanvasScore, '->', canvasScore.score);
+  }
+
+  // 6. 综合输出
   const finalResult = calculateFinalScore(canvasScore, lightPathScore, renderingFactor, type);
 
   // 6. 太阳遮挡判定（试验版，温和惩罚）
@@ -1047,6 +1140,11 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
       vsun:                geometric.vsun
     },
     ...finalResult,
+    cloudThickness: {
+      thickness: cloudThickness.thickness,
+      modifier: cloudThickness.modifier,
+      reasons: cloudThickness.reasons
+    },
     status: adjustedStatus,
     description: adjustedDescription,
     scoreBeforeOcclusion: finalResult.score,
@@ -1103,6 +1201,9 @@ module.exports = {
   getQualityLevel,
   checkSolarOcclusion,
   applySevereWeatherCap,
+
+  // 云厚评估（Phase 22）
+  assessCloudThickness,
 
   // 主函数
   calculateEnhancedPrediction,

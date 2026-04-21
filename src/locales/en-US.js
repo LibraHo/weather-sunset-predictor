@@ -230,6 +230,17 @@ const translations = {
       "tooManyLowClouds": "Too many low clouds",
       "lowCloudAmount": "Low cloud amount"
     },
+    "cloudThickness": {
+      "title": "Cloud Thickness",
+      "thin": "Thin clouds",
+      "moderate": "Moderate thickness",
+      "thick": "Thick clouds",
+      "unknown": "Unknown",
+      "thinDesc": "Thin & translucent clouds, good light transmission",
+      "moderateDesc": "Moderate cloud thickness",
+      "thickDesc": "Thick clouds may block light, limited glow effect",
+      "unknownDesc": "Cloud thickness data unavailable"
+    },
     "lightPath": {
       "title": "Light Path Score",
       "score": "Light Path Score",
