@@ -1871,11 +1871,19 @@ body.theme-dark .best-time {
 
 /* ===== 现代圆形仪表盘评分 ===== */
 .score-gauge-wrap {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   flex-shrink: 0;
   gap: 4px;
+  cursor: pointer;
+}
+
+.score-gauge-wrap:focus-visible {
+  outline: 2px solid rgba(74, 144, 226, 0.75);
+  outline-offset: 4px;
+  border-radius: 10px;
 }
 
 .score-gauge-svg {
@@ -1895,6 +1903,47 @@ body.theme-dark .best-time {
   letter-spacing: 0.8px;
   text-align: center;
   line-height: 1;
+}
+
+.score-breakdown-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 190px;
+  max-width: 230px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--color-surface, rgba(30, 30, 50, 0.97));
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.15));
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 25;
+}
+
+.score-breakdown-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  padding: 3px 0;
+}
+
+.score-breakdown-row + .score-breakdown-row {
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+.score-breakdown-key {
+  color: var(--color-text-light);
+}
+
+.score-breakdown-val {
+  color: var(--color-text);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 /* 左侧大数字分数区（兼容旧版） */
