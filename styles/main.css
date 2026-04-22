@@ -193,6 +193,18 @@ header h1.app-title {
   background: rgba(255, 255, 255, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.65);
   box-shadow: 0 4px 12px rgba(122, 74, 18, 0.14);
+  /* 统一尺寸 */
+  width: 40px;
+  height: 40px;
+  font-size: 1.25rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+  cursor: pointer;
+  line-height: 1;
 }
 
 .header-right-group .icon-btn:hover {
@@ -250,7 +262,7 @@ main > section {
   color: var(--color-text, #f0f0f0);
   border-radius: 8px;
   padding: 8px 10px;
-  font-size: 0.92rem;
+  font-size: 0.98rem;
   font-weight: 400;
   line-height: 1.35;
   white-space: nowrap;
@@ -2866,17 +2878,7 @@ body.theme-dark .chart-container > div > div {
   align-items: center;
 }
 
-.header-actions .icon-btn {
-  color: white;
-  font-size: 1.5rem;
-  padding: var(--spacing-sm);
-  border-radius: var(--radius-sm);
-  transition: background-color var(--transition-fast);
-}
-
-.header-actions .icon-btn:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-}
+/* .header-actions .icon-btn 已由 .header-right-group .icon-btn 统一覆盖，无需重复定义 */
 
 /* 通知设置模态框 */
 .notification-settings {
@@ -3182,13 +3184,14 @@ body.theme-dark .sun-azimuth-info {
 
 /* 移动端优化 */
 @media (max-width: 768px) {
-  .header-actions {
-    gap: var(--spacing-xs);
+  .header-right-group .icon-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
   }
 
-  .header-actions .icon-btn {
-    font-size: 1.25rem;
-    padding: var(--spacing-xs);
+  .header-actions {
+    gap: var(--spacing-xs);
   }
 
   .favorite-header {
