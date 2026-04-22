@@ -246,26 +246,29 @@
 /* 优化2：电脑版字体与点击区放大 */
 @media (min-width: 1024px) {
   .share-header h3 {
-    font-size: 20px;
+    font-size: 22px;
   }
 
   .share-content {
-    gap: 14px;
+    gap: 16px;
+    padding: 16px;
   }
 
   .share-btn {
-    font-size: 16px;
-    padding: 16px 18px;
-    border-radius: 14px;
+    font-size: 18px;
+    padding: 18px 20px;
+    border-radius: 16px;
+    min-height: 56px;
   }
 
   .share-icon {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
   }
 
   .share-toast {
-    font-size: 15px;
+    font-size: 16px;
+    padding: 14px 28px;
   }
 }
 
