@@ -282,6 +282,19 @@ main > section {
   border-color: rgba(255, 255, 255, 0.25);
 }
 
+@media (min-width: 1024px) {
+  .home-view-option {
+    font-size: 1.15rem;
+    padding: 10px 12px;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .home-view-option {
+    font-size: 1.05rem;
+  }
+}
+
 /* legacy tab buttons (for tests/fallback) */
 .home-tab-btn {
   border: 1px solid rgba(255, 255, 255, 0.45);
