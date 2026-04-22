@@ -1953,6 +1953,19 @@ body.theme-dark .best-time {
   z-index: 2000;
 }
 
+/* 移动端：防止分数明细弹出面板左侧超出屏幕 */
+@media (max-width: 640px) {
+  .score-breakdown-popover {
+    left: 0;
+    right: 0;
+    transform: none;
+    min-width: unset;
+    max-width: none;
+    width: auto;
+    margin: 0 8px;
+  }
+}
+
 .score-breakdown-row {
   display: flex;
   align-items: center;
