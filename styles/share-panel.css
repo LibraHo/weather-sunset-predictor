@@ -2,7 +2,9 @@
 
 /* ===== 分享菜单容器（相对定位，锚定下拉菜单） ===== */
 .prediction-share-menu {
-  position: relative;
+  position: absolute;
+  top: 8px;
+  right: 12px;
   z-index: 2100;
 }
 
