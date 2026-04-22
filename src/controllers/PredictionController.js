@@ -111,10 +111,9 @@ class SharePanel {
     const copyBtn = this.panel.querySelector('[data-action="copy"]');
     copyBtn.addEventListener('click', () => this.handleCopyLink());
 
-    // 原生分享按钮
+    // 原生分享按钮 — 始终绑定监听器，由 open() 控制显隐
     const nativeBtn = this.panel.querySelector('[data-action="native"]');
-    if (nativeBtn && navigator.share) {
-      nativeBtn.classList.remove('hidden');
+    if (nativeBtn) {
       nativeBtn.addEventListener('click', () => this.handleNativeShare());
     }
   }
@@ -254,13 +253,17 @@ class SharePanel {
         text: shareText,
         url: window.location.href,
       });
+      // 降级分享成功后关闭面板
+      this.close();
+      return;
     } catch (error) {
       if (error.name !== 'AbortError') {
         console.error('原生分享失败:', error);
         this.showToast('分享失败');
       }
+      // AbortError 或其他错误也关闭面板
+      this.close();
     }
-    this.close();
   }
 
   /**
