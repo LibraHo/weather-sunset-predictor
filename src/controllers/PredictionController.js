@@ -1018,6 +1018,42 @@ class PredictionController {
       });
     });
 
+    const closeAllScoreBreakdowns = () => {
+      predictionDisplay.querySelectorAll('.score-breakdown-popover').forEach(pop => {
+        pop.hidden = true;
+      });
+      predictionDisplay.querySelectorAll('.score-breakdown-trigger').forEach(trigger => {
+        trigger.setAttribute('aria-expanded', 'false');
+      });
+    };
+
+    predictionDisplay.addEventListener('click', (e) => {
+      const trigger = e.target.closest('.score-breakdown-trigger');
+      if (!trigger) {
+        if (!e.target.closest('.score-breakdown-popover')) {
+          closeAllScoreBreakdowns();
+        }
+        return;
+      }
+      e.stopPropagation();
+
+      const pop = trigger.querySelector('.score-breakdown-popover');
+      if (!pop) return;
+
+      const willOpen = pop.hidden;
+      closeAllScoreBreakdowns();
+      pop.hidden = !willOpen;
+      trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+    });
+
+    predictionDisplay.addEventListener('keydown', (e) => {
+      const trigger = e.target.closest?.('.score-breakdown-trigger');
+      if (!trigger) return;
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      trigger.click();
+    });
+
     // 显示预测部分
     if (predictionSection) {
       predictionSection.classList.remove('hidden');
@@ -1137,6 +1173,8 @@ class PredictionController {
           font-size="9" font-weight="600" fill="rgba(255,255,255,0.45)">/100</text>
       </svg>`;
 
+    const scoreBreakdownHtml = this.renderScoreBreakdownPopover(prediction);
+
     // 分享按钮 SVG 图标
     const shareIconSvg = `
       <svg class="share-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1156,9 +1194,10 @@ class PredictionController {
           </button>
         </div>
         <div class="prediction-dashboard-row">
-          <div class="score-gauge-wrap ${qualityClass}">
+          <div class="score-gauge-wrap ${qualityClass} score-breakdown-trigger" role="button" tabindex="0" aria-expanded="false" aria-label="${this.i18n.t('prediction.composite.finalScore')}">
             ${svgGauge}
             <span class="score-gauge-label" style="color:${gaugeColor}">${qualityLabel}</span>
+            ${scoreBreakdownHtml}
           </div>
           <div class="time-display">
             <div class="main-time">${this.formatTime(type === 'sunrise' ? (prediction.sunriseTime || prediction.sunsetTime) : prediction.sunsetTime)}</div>
@@ -1169,6 +1208,48 @@ class PredictionController {
         ${cloudLayersHtml}
         <div class="compact-analysis">${formattedAnalysis}</div>
         <div id="radar-compass-${type}" style="margin-top:12px;display:none;"></div>
+      </div>
+    `;
+  }
+
+  /**
+   * 渲染分数明细弹出层
+   * @param {Object} prediction - 预测数据
+   * @returns {string}
+   */
+  renderScoreBreakdownPopover(prediction) {
+    const fmt = (v, digits = 0) => {
+      const n = Number(v);
+      return Number.isFinite(n) ? n.toFixed(digits) : '--';
+    };
+
+    const baseScore = prediction?.breakdown?.baseScore;
+    const canvasScore = prediction?.canvasAnalysis?.score ?? prediction?.breakdown?.canvasScore;
+    const lightPathScore = prediction?.lightPathAnalysis?.score ?? prediction?.breakdown?.lightPathScore;
+    const renderingFactor = prediction?.renderingAnalysis?.factor ?? prediction?.breakdown?.renderingFactor;
+
+    return `
+      <div class="score-breakdown-popover" hidden>
+        <div class="score-breakdown-row">
+          <span class="score-breakdown-key">${this.i18n.t('prediction.composite.finalScore')}</span>
+          <span class="score-breakdown-val">${fmt(prediction?.score, 0)}</span>
+        </div>
+        <div class="score-breakdown-row">
+          <span class="score-breakdown-key">${this.i18n.t('prediction.composite.title')}</span>
+          <span class="score-breakdown-val">${fmt(baseScore, 1)}</span>
+        </div>
+        <div class="score-breakdown-row">
+          <span class="score-breakdown-key">${this.i18n.t('prediction.canvas.title')}</span>
+          <span class="score-breakdown-val">${fmt(canvasScore, 1)}</span>
+        </div>
+        <div class="score-breakdown-row">
+          <span class="score-breakdown-key">${this.i18n.t('prediction.lightPath.title')}</span>
+          <span class="score-breakdown-val">${fmt(lightPathScore, 1)}</span>
+        </div>
+        <div class="score-breakdown-row">
+          <span class="score-breakdown-key">${this.i18n.t('prediction.rendering.title')}</span>
+          <span class="score-breakdown-val">×${fmt(renderingFactor, 2)}</span>
+        </div>
       </div>
     `;
   }
