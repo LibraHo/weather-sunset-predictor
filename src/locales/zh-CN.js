@@ -288,16 +288,6 @@ export default {
       humidity: '湿度影响',
       renderingFactor: '🎨 渲染系数: {{factor}} | {{visibility}} | {{aqi}} | {{color}}',
       specialMode: '| {{mode}}',
-
-      // 云厚评估（Phase 22）
-      cloudThickness: {
-        title: '云层厚度',
-        thin: '云层薄透，光线容易穿透',
-        moderate: '云层适中',
-        thick: '云层偏厚，光线穿透受限',
-        unknown: '云厚数据不可用'
-      }
-    },
       // 能见度描述
       visibilityExcellent: '极佳（>20km）',
       visibilityGood: '良好（10-20km）',
@@ -315,7 +305,16 @@ export default {
       colorReddishPurplish: '偏红、紫红色',
       colorDarkRed: '暗红、血色（不美）',
       // 特殊模式
-      postRainMode: '🌟 雨后初晴模式（超级加倍）'
+      postRainMode: '🌟 雨后初晴模式（超级加倍）',
+
+      // 云厚评估（Phase 22）
+      cloudThickness: {
+        title: '云层厚度',
+        thin: '云层薄透，光线容易穿透',
+        moderate: '云层适中',
+        thick: '云层偏厚，光线穿透受限',
+        unknown: '云厚数据不可用'
+      }
     },
 
     // 综合评分
