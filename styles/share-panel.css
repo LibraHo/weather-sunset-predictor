@@ -243,6 +243,32 @@
   }
 }
 
+/* 优化2：电脑版字体与点击区放大 */
+@media (min-width: 1024px) {
+  .share-header h3 {
+    font-size: 20px;
+  }
+
+  .share-content {
+    gap: 14px;
+  }
+
+  .share-btn {
+    font-size: 16px;
+    padding: 16px 18px;
+    border-radius: 14px;
+  }
+
+  .share-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .share-toast {
+    font-size: 15px;
+  }
+}
+
 @media (max-width: 639px) {
   .share-container {
     max-width: 100%;
