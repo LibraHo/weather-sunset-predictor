@@ -32,122 +32,29 @@ function getSharePanel() {
 }
 
 /**
- * 分享面板组件
+ * 分享面板组件 — 改为纯逻辑层，不再管理 DOM 创建/销毁
+ * 下拉菜单 DOM 由 PredictionController 在 renderSinglePrediction 中生成
  */
 class SharePanel {
   constructor() {
-    this.panel = null;
     this.isOpen = false;
     this.i18n = i18n;
     this.currentPrediction = null;
   }
 
   /**
-   * 创建分享面板 DOM
-   */
-  createPanel() {
-    const panel = document.createElement('div');
-    panel.id = 'share-panel';
-    panel.className = 'share-panel hidden';
-    panel.innerHTML = `
-      <div class="share-overlay"></div>
-      <div class="share-container">
-        <div class="share-header">
-          <h3>${this.i18n.t('share.panelTitle')}</h3>
-          <button class="share-close" aria-label="${this.i18n.t('buttons.close')}">✕</button>
-        </div>
-        <div class="share-content">
-          <button class="share-btn share-btn-save" data-action="save">
-            <svg class="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="7 10 12 15 17 10"/>
-              <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            <span>${this.i18n.t('share.saveImage')}</span>
-          </button>
-          <button class="share-btn share-btn-copy" data-action="copy">
-            <svg class="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-            </svg>
-            <span>${this.i18n.t('share.copyLink')}</span>
-          </button>
-          <button class="share-btn share-btn-native hidden" data-action="native">
-            <svg class="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="18" cy="5" r="3"/>
-              <circle cx="6" cy="12" r="3"/>
-              <circle cx="18" cy="19" r="3"/>
-              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-            </svg>
-            <span>${this.i18n.t('share.nativeShare')}</span>
-          </button>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(panel);
-    this.panel = panel;
-    this.attachEventListeners();
-  }
-
-  /**
-   * 绑定事件监听器
-   */
-  attachEventListeners() {
-    // 关闭按钮
-    const closeBtn = this.panel.querySelector('.share-close');
-    closeBtn.addEventListener('click', () => this.close());
-
-    // 点击遮罩关闭
-    const overlay = this.panel.querySelector('.share-overlay');
-    overlay.addEventListener('click', () => this.close());
-
-    // 保存图片按钮
-    const saveBtn = this.panel.querySelector('[data-action="save"]');
-    saveBtn.addEventListener('click', () => this.handleSaveImage());
-
-    // 复制链接按钮
-    const copyBtn = this.panel.querySelector('[data-action="copy"]');
-    copyBtn.addEventListener('click', () => this.handleCopyLink());
-
-    // 原生分享按钮 — 始终绑定监听器，由 open() 控制显隐
-    const nativeBtn = this.panel.querySelector('[data-action="native"]');
-    if (nativeBtn) {
-      nativeBtn.addEventListener('click', () => this.handleNativeShare());
-    }
-  }
-
-  /**
-   * 打开分享面板
+   * 打开分享面板（兼容性保留，实际逻辑已移至 PredictionController 事件绑定）
    * @param {Object} prediction - 预测数据
    */
   open(prediction) {
-    if (!this.panel) {
-      this.createPanel();
-    }
     this.currentPrediction = prediction;
-    this.panel.classList.remove('hidden');
     this.isOpen = true;
-
-    // 检查原生分享支持
-    const nativeBtn = this.panel.querySelector('[data-action="native"]');
-    if (nativeBtn) {
-      if (navigator.share) {
-        nativeBtn.classList.remove('hidden');
-      } else {
-        nativeBtn.classList.add('hidden');
-      }
-    }
   }
 
   /**
    * 关闭分享面板
    */
   close() {
-    if (this.panel) {
-      this.panel.classList.add('hidden');
-    }
     this.isOpen = false;
   }
 
@@ -1008,15 +915,76 @@ class PredictionController {
       });
     }
 
-    // 绑定分享按钮事件
-    const shareButtons = predictionDisplay.querySelectorAll('.prediction-share-btn');
-    shareButtons.forEach(btn => {
+    // 绑定分享按钮事件 — 改为下拉菜单交互（与 home-view-menu 一致）
+    const shareMenus = predictionDisplay.querySelectorAll('.prediction-share-menu');
+    shareMenus.forEach(menu => {
+      const btn = menu.querySelector('.prediction-share-btn');
+      const dropdown = menu.querySelector('.prediction-share-dropdown');
+      if (!btn || !dropdown) return;
+
+      const type = btn.dataset.type;
+      const prediction = type === 'sunrise' ? displaySunrise : displaySunset;
+
+      const closeMenu = () => {
+        dropdown.classList.add('hidden');
+        btn.setAttribute('aria-expanded', 'false');
+      };
+
+      const openMenu = () => {
+        // 关闭其他已打开的分享菜单
+        predictionDisplay.querySelectorAll('.prediction-share-dropdown').forEach(d => d.classList.add('hidden'));
+        predictionDisplay.querySelectorAll('.prediction-share-btn').forEach(b => b.setAttribute('aria-expanded', 'false'));
+
+        // 检查原生分享支持
+        const nativeOption = dropdown.querySelector('[data-action="native"]');
+        if (nativeOption) {
+          if (navigator.share) {
+            nativeOption.classList.remove('hidden');
+          } else {
+            nativeOption.classList.add('hidden');
+          }
+        }
+
+        dropdown.classList.remove('hidden');
+        btn.setAttribute('aria-expanded', 'true');
+      };
+
+      // 点击按钮切换菜单
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const type = btn.dataset.type;
-        const prediction = type === 'sunrise' ? displaySunrise : displaySunset;
-        if (prediction) {
-          getSharePanel().open(prediction);
+        const isHidden = dropdown.classList.contains('hidden');
+        if (isHidden) {
+          getSharePanel().currentPrediction = prediction;
+          openMenu();
+        } else {
+          closeMenu();
+        }
+      });
+
+      // 菜单项点击
+      dropdown.querySelectorAll('[data-action]').forEach(option => {
+        option.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const action = option.dataset.action;
+          getSharePanel().currentPrediction = prediction;
+          if (action === 'save') getSharePanel().handleSaveImage();
+          else if (action === 'copy') getSharePanel().handleCopyLink();
+          else if (action === 'native') getSharePanel().handleNativeShare();
+          closeMenu();
+        });
+      });
+
+      // 点击外部关闭
+      document.addEventListener('click', (event) => {
+        if (!menu.contains(event.target)) {
+          closeMenu();
+        }
+      });
+
+      // Escape 关闭
+      btn.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          closeMenu();
         }
       });
     });
@@ -1187,14 +1155,48 @@ class PredictionController {
       </svg>
     `;
 
+    // 分享菜单项 — 复用 home-view-menu-dropdown 的样式体系
+    const saveLabel = this.i18n.t('share.saveImage');
+    const copyLabel = this.i18n.t('share.copyLink');
+    const nativeLabel = this.i18n.t('share.nativeShare');
+
     return `
       <div class="prediction-card ${qualityClass}" data-type="${type}">
         <div class="prediction-header">
           <span class="prediction-date-badge">${dateLabel}</span>
           <h3>${icon} ${title}</h3>
-          <button class="prediction-share-btn" data-type="${type}" aria-label="${this.i18n.t('share.title')}">
-            ${shareIconSvg}
-          </button>
+          <div class="prediction-share-menu" data-share-type="${type}">
+            <button class="prediction-share-btn" data-type="${type}" aria-label="${this.i18n.t('share.title')}" aria-expanded="false">
+              ${shareIconSvg}
+            </button>
+            <div class="prediction-share-dropdown hidden" role="menu" aria-label="${this.i18n.t('share.title')}">
+              <button class="share-option" role="menuitem" data-action="save">
+                <svg class="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span>${saveLabel}</span>
+              </button>
+              <button class="share-option" role="menuitem" data-action="copy">
+                <svg class="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                <span>${copyLabel}</span>
+              </button>
+              <button class="share-option share-option-native hidden" role="menuitem" data-action="native">
+                <svg class="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="18" cy="5" r="3"/>
+                  <circle cx="6" cy="12" r="3"/>
+                  <circle cx="18" cy="19" r="3"/>
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                </svg>
+                <span>${nativeLabel}</span>
+              </button>
+            </div>
+          </div>
         </div>
         <div class="prediction-dashboard-row">
           <div class="score-gauge-wrap ${qualityClass} score-breakdown-trigger" role="button" tabindex="0" aria-expanded="false" aria-label="${this.i18n.t('prediction.composite.finalScore')}">
