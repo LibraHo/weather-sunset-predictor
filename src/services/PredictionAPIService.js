@@ -163,11 +163,11 @@ class PredictionAPIService {
       : null;
 
     // 创建 SunsetPrediction 对象
-    return new SunsetPrediction(
+    const prediction = new SunsetPrediction(
       date,
       data.score,
       data.quality,
-      data.factors,
+      data.factors || data.breakdown || null,
       sunsetTime,
       sunriseTime,
       data.type,
@@ -176,6 +176,14 @@ class PredictionAPIService {
       data.sunAzimuth,
       data.cloudLayers
     );
+
+    // 保留增强算法明细字段，供前端评分明细弹层使用
+    prediction.breakdown = data.breakdown || null;
+    prediction.canvasAnalysis = data.canvasAnalysis || null;
+    prediction.lightPathAnalysis = data.lightPathAnalysis || null;
+    prediction.renderingAnalysis = data.renderingAnalysis || null;
+
+    return prediction;
   }
 
   /**
