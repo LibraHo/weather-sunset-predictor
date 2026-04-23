@@ -2230,7 +2230,7 @@ body.theme-dark .fca-summary-good {
   box-shadow: var(--glass-shadow);
   transition: all var(--transition-normal);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
@@ -2265,6 +2265,15 @@ body.theme-dark .fca-summary-good {
   padding-bottom: 4px;
   border-bottom: 1px solid var(--color-border);
   position: relative;
+}
+
+/* 分享按钮兜底定位（避免 share-panel.css 加载异常时退化到左侧） */
+.prediction-card .prediction-header .prediction-share-menu {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  left: auto;
+  z-index: 2100;
 }
 
 .prediction-date-badge {
