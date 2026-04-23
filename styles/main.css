@@ -1956,13 +1956,13 @@ body.theme-dark .best-time {
 /* 移动端：防止分数明细弹出面板左侧超出屏幕 */
 @media (max-width: 640px) {
   .score-breakdown-popover {
-    left: 0;
-    right: 0;
-    transform: none;
-    min-width: unset;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: min(280px, calc(100vw - 24px));
+    min-width: 0;
     max-width: none;
-    width: auto;
-    margin: 0 8px;
+    margin: 0;
   }
 }
 
@@ -1982,6 +1982,8 @@ body.theme-dark .best-time {
 
 .score-breakdown-key {
   color: var(--color-text-light);
+  flex: 1;
+  min-width: 0;
 }
 
 .score-breakdown-val {
