@@ -10,6 +10,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      TZ: Asia/Shanghai
+
     strategy:
       matrix:
         node-version: [22]
