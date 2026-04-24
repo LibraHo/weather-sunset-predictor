@@ -1399,12 +1399,20 @@ class PredictionController {
     const rendering = prediction.renderingAnalysis;
 
     const cloudLevelLabel = {
-      space: '太空（无云）',
-      fair: '尚可',
-      perfect: '完美',
-      crowded: '拥挤',
-      overcast: '阴天'
+      space: this.i18n.t('prediction.canvas.space'),
+      fair: this.i18n.t('prediction.canvas.fair'),
+      perfect: this.i18n.t('prediction.canvas.perfect'),
+      crowded: this.i18n.t('prediction.canvas.crowded'),
+      overcast: this.i18n.t('prediction.canvas.overcast')
     }[canvas?.cloudLevel] || canvas?.cloudLevel || '-';
+
+    const lowCloudPenaltyReasonLabel = {
+      no_low_cloud_obstruction: this.i18n.t('prediction.canvas.noLowCloudObstruction'),
+      too_many_low_clouds: this.i18n.t('prediction.canvas.tooManyLowClouds'),
+      low_cloud_amount: this.i18n.t('prediction.canvas.lowCloudAmount', {
+        value: canvas?.penaltyValue ?? canvas?.breakdown?.lowClouds ?? '-'
+      })
+    }[canvas?.penaltyReason] || canvas?.penaltyReason || '-';
 
     const visibilityLabel = {
       excellent: this.i18n.t('prediction.rendering.visibilityExcellent'),
@@ -1423,6 +1431,10 @@ class PredictionController {
       reddish_purple: this.i18n.t('prediction.rendering.colorReddishPurplish'),
       dark_red: this.i18n.t('prediction.rendering.colorDarkRed')
     }[rendering?.breakdown?.colorTendency] || rendering?.breakdown?.colorTendency || '-';
+
+    const specialModeLabel = {
+      post_rain: this.i18n.t('prediction.rendering.postRainMode')
+    }[rendering?.breakdown?.specialMode] || rendering?.breakdown?.specialMode || '';
 
     let analysis = '';
 
@@ -1445,7 +1457,7 @@ class PredictionController {
     })}`;
     if (canvas.lowCloudPenalty < 1.0) {
       analysis += this.i18n.t('prediction.canvas.lowCloudPenalty', {
-        reason: canvas.penaltyReason
+        reason: lowCloudPenaltyReasonLabel
       });
     }
     analysis += `</div>`;
@@ -1481,7 +1493,7 @@ class PredictionController {
     });
     if (rendering.breakdown.specialMode) {
       analysis += this.i18n.t('prediction.rendering.specialMode', {
-        mode: rendering.breakdown.specialMode
+        mode: specialModeLabel
       });
     }
     analysis += `</div>`;
