@@ -272,6 +272,7 @@ class WeatherController {
     // 显示天气数据容器
     const weatherDataContainer = document.getElementById('weather-data');
     if (weatherDataContainer) {
+      weatherDataContainer.classList.remove('hidden');
       weatherDataContainer.style.display = 'block';
     }
 
