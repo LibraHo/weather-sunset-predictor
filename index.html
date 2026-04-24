@@ -7,14 +7,10 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>霞客 SUNSET VOYAGER</title>
-  <!-- 样式资源同时提供相对路径与根路径，兼容不同部署路径 -->
-  <link rel="stylesheet" href="styles/main.css">
+  <!-- 样式资源统一使用绝对路径，避免重复引入 -->
   <link rel="stylesheet" href="/styles/main.css">
-  <link rel="stylesheet" href="styles/rtl.css">
   <link rel="stylesheet" href="/styles/rtl.css">
-  <link rel="stylesheet" href="styles/settings-panel.css">
   <link rel="stylesheet" href="/styles/settings-panel.css">
-  <link rel="stylesheet" href="styles/share-panel.css">
   <link rel="stylesheet" href="/styles/share-panel.css">
 
   <!-- Leaflet：优先本地静态资源，CDN 仅兜底，避免外网波动导致地图打不开 -->
@@ -149,7 +145,7 @@
         <h2 class="weather-panel-title" data-i18n="weather.title">天气信息</h2>
 
         <!-- 当前天气主展示区域 -->
-        <div id="weather-data" style="display: none;">
+        <div id="weather-data" class="hidden">
           <div class="weather-glass-panel">
             <!-- 主体信息（参考线框布局：左大区 + 右侧纵向数据框） -->
             <div class="weather-main-layout">
@@ -193,7 +189,7 @@
         </div>
 
         <!-- 需求11：视图切换按钮 -->
-        <div class="view-toggle" style="margin-top: 30px;">
+        <div class="view-toggle weather-view-toggle">
           <button id="overview-btn" class="btn btn-toggle active" data-i18n="weather.overview">7天概览</button>
           <button id="hourly-btn" class="btn btn-toggle" data-i18n="weather.hourly">详细预报</button>
         </div>
@@ -352,31 +348,30 @@
           </div>
         </div>
       </section>
-      </section>
 
       <!-- 火烧云地图页面 -->
       <section id="tab-panel-map" class="card map-panel hidden" role="tabpanel" aria-label="map-panel" tabindex="0" hidden>
         <div class="map-panel-header">
-          <h2 data-i18n="home.tabs.map">🗺️ 火烧云地图 <span style="font-size:11px;font-weight:normal;color:var(--color-text-light);margin-left:6px;">仅支持中国大陆</span></h2>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span id="china-spots-timestamp" style="font-size:11px; color:var(--color-text-light);"></span>
+          <h2 data-i18n="home.tabs.map">🗺️ 火烧云地图 <span class="map-panel-subtitle">仅支持中国大陆</span></h2>
+          <div class="map-panel-timestamp-wrapper">
+            <span id="china-spots-timestamp"></span>
           </div>
         </div>
         <!-- 时段切换 tabs -->
-        <div id="china-spots-tabs-container" style="display:flex;gap:8px;margin-bottom:8px;position:relative;z-index:1200;pointer-events:auto;">
-          <button id="map-tab-sunrise" data-period="sunrise" class="china-spots-tab" style="flex:1;padding:8px 12px;border:1px solid rgba(255,120,0,0.5);border-radius:6px;background:rgba(0,0,0,0.4);color:var(--color-text);font-size:13px;cursor:pointer;transition:background 0.2s,border-color 0.2s;white-space:nowrap;touch-action:manipulation;pointer-events:auto;">朝霞 🌄</button>
-          <button id="map-tab-sunset" data-period="sunset" class="china-spots-tab" style="flex:1;padding:8px 12px;border:1px solid rgba(255,120,0,0.5);border-radius:6px;background:rgba(255,100,0,0.8);color:var(--color-text);font-size:13px;cursor:pointer;font-weight:bold;border-color:rgba(255,200,50,0.9);transition:background 0.2s,border-color 0.2s;white-space:nowrap;touch-action:manipulation;pointer-events:auto;">晚霞 🌅</button>
+        <div id="china-spots-tabs-container" class="china-spots-tabs-container">
+          <button id="map-tab-sunrise" data-period="sunrise" class="china-spots-tab">朝霞 🌄</button>
+          <button id="map-tab-sunset" data-period="sunset" class="china-spots-tab is-active">晚霞 🌅</button>
         </div>
         <!-- 时段说明 -->
-        <div id="china-spots-period-label" style="font-size:12px; color:var(--color-text-light); margin:4px 0; text-align:center;"></div>
+        <div id="china-spots-period-label" class="china-spots-period-label"></div>
         <!-- Leaflet 地图（可拖拽 + 缩放） -->
-        <div id="china-spots-map" style="width:100%; height: min(65vh, 560px); border-radius:8px; overflow:hidden;"></div>
-        <div id="china-spots-empty" class="hidden" style="margin-top:8px; font-size:12px; color:var(--color-text-light);">今日暂无可见火烧云点位</div>
+        <div id="china-spots-map" class="china-spots-map"></div>
+        <div id="china-spots-empty" class="china-spots-empty hidden">今日暂无可见火烧云点位</div>
         <!-- 任务 64.8：朝/晚霞双时段分数并行展示 -->
-        <div id="china-spots-dual-score" class="hidden" style="margin-top:10px; display:none; gap:8px; grid-template-columns:1fr 1fr;"></div>
+        <div id="china-spots-dual-score" class="china-spots-dual-score hidden"></div>
         <p class="map-panel-hint">💡 可拖拽地图 · 滚轮缩放</p>
         <!-- Phase 18：周边火烧云雷达罗盘 -->
-        <div id="radar-compass-container" style="margin-top:16px;display:none;"></div>
+        <div id="radar-compass-container" class="radar-compass-container"></div>
       </section>
 
       <!-- 分享地图页面 -->
@@ -410,8 +405,8 @@
     </footer>
     
     <!-- 全局消息提示 -->
-    <div id="error-message" class="error-message hidden" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; max-width: 500px;"></div>
-    <div id="success-message" class="success-message hidden" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; max-width: 500px;"></div>
+    <div id="error-message" class="error-message hidden global-toast"></div>
+    <div id="success-message" class="success-message hidden global-toast"></div>
   </div>
   
   <script type="module" src="src/app.js?v=29"></script>

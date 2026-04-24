@@ -108,7 +108,7 @@ describe('ChinaRasterOverlay.getMaxScore', () => {
 
   test('所有值低于阈值时返回 null', () => {
     const o = new ChinaRasterOverlay();
-    o._rasterData = { values: [10, 20, 5], noData: NO_DATA };
+    o._rasterData = { values: [1, 2, 5], noData: NO_DATA };
     expect(o.getMaxScore()).toBeNull();
   });
 
@@ -130,10 +130,10 @@ describe('ChinaRasterOverlay.getMaxScore', () => {
     expect(o.getMaxScore()).toBeNull();
   });
 
-  test('getSpotCount 始终返回 0（接口对齐）', () => {
+  test('getSpotCount 返回 >= RASTER_MIN_SCORE 的有效点数', () => {
     const o = new ChinaRasterOverlay();
     o._rasterData = { values: [50, 80, 90], noData: NO_DATA };
-    expect(o.getSpotCount()).toBe(0);
+    expect(o.getSpotCount()).toBe(3);
   });
 });
 
@@ -245,11 +245,11 @@ describe('WeatherController._renderDualPeriodScorePanel', () => {
     global.document.getElementById = origGet;
   });
 
-  test('管理器有数据时 panel innerHTML 被填充', () => {
+  test('管理器有数据时 panel 被隐藏（功能已迁移到顶部 tab）', () => {
     const panelEl = {
       innerHTML: '',
       style: { display: '' },
-      classList: { remove: jest.fn() },
+      classList: { remove: jest.fn(), add: jest.fn() },
       querySelectorAll: jest.fn(() => []),
     };
     global.document.getElementById = jest.fn(id =>
@@ -267,10 +267,8 @@ describe('WeatherController._renderDualPeriodScorePanel', () => {
 
     ctrl._renderDualPeriodScorePanel();
 
-    expect(panelEl.innerHTML).toContain('🌅');
-    expect(panelEl.innerHTML).toContain('🌄');
-    expect(panelEl.innerHTML).toContain('85');
-    expect(panelEl.innerHTML).toContain('60');
-    expect(panelEl.style.display).toBe('grid');
+    // 功能已迁移到顶部 tab，panel 被隐藏
+    expect(panelEl.style.display).toBe('none');
+    expect(panelEl.classList.add).toHaveBeenCalledWith('hidden');
   });
 });

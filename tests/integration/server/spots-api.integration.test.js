@@ -45,7 +45,7 @@ describe('Spots API Integration', () => {
     }
   });
 
-  test('GET /api/spots/china 仅返回评分>=60 且按分数降序', async () => {
+  test('GET /api/spots/china 返回评分>=40 且按分数降序', async () => {
     const updatedAt = '2026-03-20T00:00:00.000Z';
 
     gridService.refreshIfStale = jest.fn(async () => {});
@@ -63,9 +63,11 @@ describe('Spots API Integration', () => {
 
     expect(gridService.refreshIfStale).toHaveBeenCalled();
     expect(res.body.updatedAt).toBe(updatedAt);
+    // 业务当前阈值 MIN_SPOT_SCORE=40，58 分也应被包含
     expect(res.body.spots).toEqual([
       { lat: 31.2, lon: 121.5, score: 83, quality: '顶级' },
-      { lat: 30.6, lon: 104.1, score: 60, quality: '优质' }
+      { lat: 30.6, lon: 104.1, score: 60, quality: '优质' },
+      { lat: 39.9, lon: 116.4, score: 58, quality: '可观赏' }
     ]);
   });
 

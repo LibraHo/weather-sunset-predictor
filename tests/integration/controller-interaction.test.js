@@ -106,6 +106,9 @@ describe('控制器交互测试 - 数据流', () => {
       expect(weatherController.currentWeatherData).toBeDefined();
       expect(weatherController.currentWeatherData.length).toBeGreaterThan(0);
 
+      // 关闭后端预测开关，使用前端本地计算
+      predictionController.features.USE_BACKEND_PREDICTION = false;
+
       // 生成预测 (generatePredictions is async)
       const predictions = await predictionController.generatePredictions(
         weatherController.currentWeatherData,

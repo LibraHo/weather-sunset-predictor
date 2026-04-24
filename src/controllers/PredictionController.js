@@ -1395,98 +1395,36 @@ class PredictionController {
    */
   generateEnhancedAnalysisText(prediction, dateLabel = '今日') {
     const canvas = prediction.canvasAnalysis;
-    const lightPath = prediction.lightPathAnalysis;
-    const rendering = prediction.renderingAnalysis;
-
-    const cloudLevelLabel = {
-      space: '太空（无云）',
-      fair: '尚可',
-      perfect: '完美',
-      crowded: '拥挤',
-      overcast: '阴天'
-    }[canvas?.cloudLevel] || canvas?.cloudLevel || '-';
-
-    const visibilityLabel = {
-      excellent: this.i18n.t('prediction.rendering.visibilityExcellent'),
-      good: this.i18n.t('prediction.rendering.visibilityGood'),
-      poor: this.i18n.t('prediction.rendering.visibilityPoor')
-    }[rendering?.breakdown?.visibility] || rendering?.breakdown?.visibility || '-';
-
-    const aqiLabel = {
-      excellent: this.i18n.t('prediction.rendering.aqiExcellent'),
-      good: this.i18n.t('prediction.rendering.aqiGood'),
-      poor: this.i18n.t('prediction.rendering.aqiPoor')
-    }[rendering?.breakdown?.aqi] || rendering?.breakdown?.aqi || '-';
-
-    const colorLabel = {
-      golden_orange: this.i18n.t('prediction.rendering.colorGoldenOrange'),
-      reddish_purple: this.i18n.t('prediction.rendering.colorReddishPurplish'),
-      dark_red: this.i18n.t('prediction.rendering.colorDarkRed')
-    }[rendering?.breakdown?.colorTendency] || rendering?.breakdown?.colorTendency || '-';
+    const factors = prediction.factors || {};
+    const highClouds = canvas?.breakdown?.highClouds ?? factors.highClouds?.value ?? prediction.cloudLayers?.high ?? 0;
+    const midClouds = canvas?.breakdown?.midClouds ?? factors.midClouds?.value ?? prediction.cloudLayers?.mid ?? 0;
+    const lowClouds = canvas?.breakdown?.lowClouds ?? factors.lowClouds?.value ?? prediction.cloudLayers?.low ?? 0;
+    const cloudCover = prediction.cloudCover ?? factors.cloudCover?.value ?? (highClouds + midClouds + lowClouds) / 3;
+    const humidity = prediction.humidity ?? factors.humidity?.value ?? 50;
+    const visibility = prediction.visibility ?? factors.visibility?.value ?? 10;
+    const precipitation = factors.precipitation?.value ?? prediction.precipitation ?? 0;
+    const weatherCode = factors.weatherCode?.value ?? prediction.weatherCode ?? null;
 
     let analysis = '';
 
-    // 总体评价（使用增强版的状态描述）
+    // 总体评价（使用增强版状态），详细条目复用 4/18 修好的火烧云分析文案。
     if (prediction.status) {
       analysis += `<strong>${prediction.icon} ${prediction.status}</strong><br><br>`;
       analysis += `${prediction.description}<br>`;
     }
 
-    // 简化版画布评分
-    analysis += `<div style="margin-top:8px;font-size:13px;">`;
-    analysis += this.i18n.t('prediction.canvas.canvasScore', {
-      score: canvas.score.toFixed(0),
-      level: cloudLevelLabel
-    }) + '<br>';
-    analysis += `   ${this.i18n.t('prediction.canvas.cloudBreakdown', {
-      high: canvas.breakdown.highClouds,
-      mid: canvas.breakdown.midClouds,
-      low: canvas.breakdown.lowClouds
-    })}`;
-    if (canvas.lowCloudPenalty < 1.0) {
-      analysis += this.i18n.t('prediction.canvas.lowCloudPenalty', {
-        reason: canvas.penaltyReason
-      });
-    }
-    analysis += `</div>`;
+    analysis += this.generateFireCloudAnalysis(
+      cloudCover,
+      humidity,
+      visibility,
+      lowClouds,
+      precipitation,
+      weatherCode,
+      { cloudCover, highClouds, midClouds, lowClouds, visibility, humidity, precipitation },
+      prediction.score
+    );
 
-    // 简化版光路评分
-    analysis += `<div style="margin-top:8px;font-size:13px;">`;
-    analysis += this.i18n.t('prediction.lightPath.lightPathScore', {
-      score: lightPath.score.toFixed(0)
-    });
-    // 展示封顶原因
-    if (lightPath.capReason) {
-      const capText = lightPath.capReason === 'overcast_cap_40'
-        ? '⛅ 阴天封顶 ≤40'
-        : lightPath.capReason === 'precipitation_cap_50'
-          ? '🌧 降水封顶 ≤50'
-          : lightPath.capReason;
-      analysis += `<br><span style="color:#ff9800;font-size:12px;">${capText}</span>`;
-    } else if (lightPath.explain && lightPath.explain !== '光路通畅') {
-      analysis += `<br><span style="color:#aaa;font-size:12px;">${lightPath.explain}</span>`;
-    }
-    if (prediction.severeWeatherCap?.reason) {
-      analysis += `<br>⛔ ${prediction.severeWeatherCap.reason}`;
-    }
-    analysis += `</div>`;
-
-    // 简化版渲染修正
-    analysis += `<div style="margin-top:8px;font-size:13px;">`;
-    analysis += this.i18n.t('prediction.rendering.renderingFactor', {
-      factor: rendering.factor.toFixed(2),
-      visibility: visibilityLabel,
-      aqi: aqiLabel,
-      color: colorLabel
-    });
-    if (rendering.breakdown.specialMode) {
-      analysis += this.i18n.t('prediction.rendering.specialMode', {
-        mode: rendering.breakdown.specialMode
-      });
-    }
-    analysis += `</div>`;
-
-    // 云厚评估（Phase 22）
+    // 云厚评估（Phase 22）：只追加厚度信息，不替换详细分析文案。
     if (prediction.cloudThickness) {
       const ct = prediction.cloudThickness;
       const ctIcon = ct.thickness === 'thin' ? '🌤' : ct.thickness === 'thick' ? '🌫' : ct.thickness === 'moderate' ? '☁' : '❓';

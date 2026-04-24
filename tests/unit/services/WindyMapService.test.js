@@ -54,6 +54,7 @@ describe('WindyMapService', () => {
 
   beforeEach(() => {
     document.body.innerHTML = '<div id="map"></div>';
+    localStorage.setItem('use_native_map', 'false');
 
     L = {
       map: jest.fn(() => createMapMock()),
@@ -84,6 +85,11 @@ describe('WindyMapService', () => {
 
     global.L = L;
     service = new WindyMapService('dummy-key');
+  });
+
+  afterEach(() => {
+    localStorage.removeItem('use_native_map');
+    delete global.L;
   });
 
   test('initializeMap 应完成 Leaflet 初始化（ChinaMapCanvas 优先路径）', async () => {
