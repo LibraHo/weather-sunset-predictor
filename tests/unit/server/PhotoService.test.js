@@ -15,9 +15,14 @@
  *   - 每个 test 前后清理临时目录，保证无状态
  */
 
-const fs   = require('fs');
-const path = require('path');
-const os   = require('os');
+import { jest } from '@jest/globals';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const photoServicePath = require.resolve('../../../server/services/PhotoService');
 
 // ─── 动态隔离目录 ────────────────────────────────────────────────────────────
 let tmpDir;
@@ -28,13 +33,17 @@ beforeEach(() => {
   tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'xiake-test-'));
   process.env.XIAKE_DIR = tmpDir;
 
-  // 清除模块缓存，使 XIAKE_DIR 被重新读取
-  jest.resetModules();
-  PhotoService = require('../../../server/services/PhotoService');
+  // 清除 CJS 模块缓存，使 XIAKE_DIR 被重新读取
+  delete require.cache[photoServicePath];
+  PhotoService = require(photoServicePath);
+  // Jest 的 CJS 加载缓存可能复用同一个模块实例；确保每个 test 的照片目录干净
+  fs.rmSync(PhotoService.PHOTOS_DIR, { recursive: true, force: true });
+  PhotoService.initDirs();
 });
 
 afterEach(() => {
-  // 清理临时目录
+  // 清理临时目录及当前 PhotoService 指向的目录
+  if (PhotoService) fs.rmSync(PhotoService.PHOTOS_DIR, { recursive: true, force: true });
   fs.rmSync(tmpDir, { recursive: true, force: true });
   delete process.env.XIAKE_DIR;
 });

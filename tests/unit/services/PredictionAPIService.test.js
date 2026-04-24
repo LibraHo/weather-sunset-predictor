@@ -107,7 +107,7 @@ describe('PredictionAPIService', () => {
       // 验证 fetch 调用
       expect(mockFetch).toHaveBeenCalledTimes(1);
       const [url, options] = mockFetch.mock.calls[0];
-      expect(url).toBe('http://localhost:3000/api/prediction/calculate');
+      expect(url).toBe('http://localhost:3000/api/prediction/enhanced');
       expect(options.method).toBe('POST');
       expect(options.headers['Content-Type']).toBe('application/json');
 

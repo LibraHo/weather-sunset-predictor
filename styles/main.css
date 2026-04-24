@@ -299,6 +299,19 @@ main > section {
   border-color: rgba(255, 255, 255, 0.25);
 }
 
+@media (min-width: 1024px) {
+  .home-view-option {
+    font-size: 1.15rem;
+    padding: 10px 12px;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .home-view-option {
+    font-size: 1.05rem;
+  }
+}
+
 /* legacy tab buttons (for tests/fallback) */
 .home-tab-btn {
   border: 1px solid rgba(255, 255, 255, 0.45);
@@ -1957,6 +1970,19 @@ body.theme-dark .best-time {
   z-index: 2000;
 }
 
+/* 移动端：防止分数明细弹出面板左侧超出屏幕 */
+@media (max-width: 640px) {
+  .score-breakdown-popover {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: min(280px, calc(100vw - 24px));
+    min-width: 0;
+    max-width: none;
+    margin: 0;
+  }
+}
+
 .score-breakdown-row {
   display: flex;
   align-items: center;
@@ -1973,6 +1999,8 @@ body.theme-dark .best-time {
 
 .score-breakdown-key {
   color: var(--color-text-light);
+  flex: 1;
+  min-width: 0;
 }
 
 .score-breakdown-val {
@@ -2221,7 +2249,7 @@ body.theme-dark .fca-summary-good {
   box-shadow: var(--glass-shadow);
   transition: all var(--transition-normal);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
@@ -2256,6 +2284,15 @@ body.theme-dark .fca-summary-good {
   padding-bottom: 4px;
   border-bottom: 1px solid var(--color-border);
   position: relative;
+}
+
+/* 分享按钮兜底定位（避免 share-panel.css 加载异常时退化到左侧） */
+.prediction-card .prediction-header .prediction-share-menu {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  left: auto;
+  z-index: 2100;
 }
 
 .prediction-date-badge {
@@ -4565,4 +4602,132 @@ body.theme-dark {
   height: auto;
   display: flex;
   flex-direction: column;
+}
+
+/* ===== 雷达罗盘 ===== */
+.radar-compass-container {
+  margin-top: 16px;
+  display: none;
+}
+
+.weather-view-toggle {
+  margin-top: 30px;
+}
+
+/* ===== 全局消息提示 ===== */
+.global-toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  max-width: 500px;
+}
+
+/* ===== 中国火烧云地图区域 ===== */
+.map-panel-subtitle {
+  font-size: 11px;
+  font-weight: normal;
+  color: var(--color-text-light);
+  margin-left: 6px;
+}
+
+.map-panel-timestamp-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.map-panel-timestamp-wrapper #china-spots-timestamp {
+  font-size: 11px;
+  color: var(--color-text-light);
+}
+
+/* 时段切换 tabs */
+.china-spots-tabs-container {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  position: relative;
+  z-index: 1200;
+  pointer-events: auto;
+}
+
+.china-spots-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.china-spots-tab {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 120, 0, 0.5);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.4);
+  color: var(--color-text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  white-space: nowrap;
+  touch-action: manipulation;
+  pointer-events: auto;
+}
+
+.china-spots-tab.is-active {
+  background: rgba(255, 100, 0, 0.8);
+  border-color: rgba(255, 200, 50, 0.9);
+  font-weight: bold;
+}
+
+/* 时段说明 */
+.china-spots-period-label {
+  font-size: 12px;
+  color: var(--color-text-light);
+  margin: 4px 0;
+  text-align: center;
+}
+
+/* 地图容器 */
+.china-spots-map {
+  width: 100%;
+  height: min(65vh, 560px);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* 空状态 */
+.china-spots-empty {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--color-text-light);
+}
+
+/* 双分数容器 */
+.china-spots-dual-score {
+  margin-top: 10px;
+  display: none;
+  gap: 8px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.china-spots-dual-score.hidden {
+  display: none !important;
+}
+
+/* ===== 中国火烧云地图区域响应式 ===== */
+@media (max-width: 640px) {
+  .china-spots-tabs-container,
+  .china-spots-tabs {
+    gap: 4px;
+  }
+
+  .china-spots-tab {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+
+  .china-spots-map {
+    height: min(55vh, 420px);
+  }
 }

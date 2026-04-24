@@ -38,8 +38,11 @@ describe('SunsetPredictionService', () => {
       const sunsetTime = service.getSunsetTime(date, lat, lon);
 
       expect(sunsetTime).toBeInstanceOf(Date);
-      expect(sunsetTime.getHours()).toBeGreaterThanOrEqual(18);
-      expect(sunsetTime.getHours()).toBeLessThanOrEqual(21);
+      // getSunsetTime 返回 Date 且使用 new Date(year, month, day, hours, minutes)
+      // 因此 getHours() 受运行时时区影响（当前 UTC+8 与北京一致）
+      // UTC 11:46 = 19:46 CST
+      expect(sunsetTime.getUTCHours()).toBeGreaterThanOrEqual(10);
+      expect(sunsetTime.getUTCHours()).toBeLessThanOrEqual(13);
     });
 
     test('应该为纽约计算合理的日落时间', () => {
@@ -51,12 +54,14 @@ describe('SunsetPredictionService', () => {
       const sunsetTime = service.getSunsetTime(date, lat, lon);
 
       expect(sunsetTime).toBeInstanceOf(Date);
-      expect(sunsetTime.getHours()).toBeGreaterThanOrEqual(18);
-      expect(sunsetTime.getHours()).toBeLessThanOrEqual(22);
+      // 纽约夏至日落约 20:30 EDT (UTC-4) = 00:30 UTC 次日
+      expect(sunsetTime.getUTCHours()).toBeGreaterThanOrEqual(0);
+      expect(sunsetTime.getUTCHours()).toBeLessThanOrEqual(4);
     });
 
     test('应该为悉尼计算合理的日落时间', () => {
       // 悉尼坐标：-33.8688°S, 151.2093°E
+      // 南半球夏至（12月），悉尼日落约 19:xx AEDT (UTC+11) = 09:xx UTC
       const date = new Date('2024-12-21'); // 南半球夏至
       const lat = -33.8688;
       const lon = 151.2093;
@@ -64,8 +69,9 @@ describe('SunsetPredictionService', () => {
       const sunsetTime = service.getSunsetTime(date, lat, lon);
 
       expect(sunsetTime).toBeInstanceOf(Date);
-      expect(sunsetTime.getHours()).toBeGreaterThanOrEqual(18);
-      expect(sunsetTime.getHours()).toBeLessThanOrEqual(22);
+      // UTC 大约 09:06
+      expect(sunsetTime.getUTCHours()).toBeGreaterThanOrEqual(7);
+      expect(sunsetTime.getUTCHours()).toBeLessThanOrEqual(11);
     });
 
     test('冬季日落时间应该早于夏季', () => {
@@ -78,7 +84,7 @@ describe('SunsetPredictionService', () => {
       const summerSunset = service.getSunsetTime(summerDate, lat, lon);
       const winterSunset = service.getSunsetTime(winterDate, lat, lon);
 
-      // 冬季日落应该早于夏季
+      // 冬季日落应该早于夏季（运行时时区 UTC+8 与北京一致，getHours 有效）
       expect(winterSunset.getHours()).toBeLessThan(summerSunset.getHours());
     });
 
@@ -91,8 +97,9 @@ describe('SunsetPredictionService', () => {
       const sunsetTime = service.getSunsetTime(date, lat, lon);
 
       expect(sunsetTime).toBeInstanceOf(Date);
-      expect(sunsetTime.getHours()).toBeGreaterThanOrEqual(17);
-      expect(sunsetTime.getHours()).toBeLessThanOrEqual(20);
+      // 新加坡赤道附近日落约 19:12 SGT (UTC+8) = 11:12 UTC
+      expect(sunsetTime.getUTCHours()).toBeGreaterThanOrEqual(10);
+      expect(sunsetTime.getUTCHours()).toBeLessThanOrEqual(13);
     });
 
     test('应该拒绝无效的日期', () => {
@@ -163,149 +170,101 @@ describe('SunsetPredictionService', () => {
     });
   });
 
-  describe('scoreCloudCover', () => {
-    test('应该在30-70%范围内给出高分', () => {
-      // 最佳范围内的云量应该得到高分
-      expect(service.scoreCloudCover(50)).toBeGreaterThan(90);
-      expect(service.scoreCloudCover(40)).toBeGreaterThan(80);
-      expect(service.scoreCloudCover(60)).toBeGreaterThan(80);
+  // ========== 统一评分（_calculateUnifiedScore）测试 ==========
+
+  describe('_calculateUnifiedScore', () => {
+    test('理想火烧云场景应该得到高分 (excellent)', () => {
+      // 高云 50% + 中云 40% + 低云 < 10% + 能见度高 + 湿度适中
+      const weatherData = {
+        highClouds: 50,
+        midClouds: 40,
+        lowClouds: 5,
+        visibility: 25,
+        humidity: 50
+      };
+      const result = service._calculateUnifiedScore(weatherData);
+      expect(result.score).toBeGreaterThanOrEqual(70);
+      expect(result.quality).toBe('excellent');
     });
 
-    test('应该在范围外给出较低分', () => {
-      // 范围外的云量应该得到较低分
-      expect(service.scoreCloudCover(0)).toBeLessThan(50);
-      expect(service.scoreCloudCover(100)).toBeLessThan(50);
-      expect(service.scoreCloudCover(10)).toBeLessThan(70);
-      expect(service.scoreCloudCover(90)).toBeLessThan(70);
+    test('晴天无云应该得中低分', () => {
+      const weatherData = {
+        highClouds: 0,
+        midClouds: 0,
+        lowClouds: 0,
+        visibility: 20,
+        humidity: 50
+      };
+      const result = service._calculateUnifiedScore(weatherData);
+      // 缺少云层载体，分数应 < 50
+      expect(result.score).toBeLessThan(50);
+      expect(result.quality).toBe('poor');
     });
 
-    test('应该返回0-100范围内的分数', () => {
-      const testValues = [0, 25, 50, 75, 100];
-      testValues.forEach(value => {
-        const score = service.scoreCloudCover(value);
-        expect(score).toBeGreaterThanOrEqual(0);
-        expect(score).toBeLessThanOrEqual(100);
+    test('暴雨场景应该得低分', () => {
+      const weatherData = {
+        highClouds: 30,
+        midClouds: 50,
+        lowClouds: 60,
+        visibility: 5,
+        humidity: 90,
+        precipitation: 5
+      };
+      const result = service._calculateUnifiedScore(weatherData);
+      expect(result.score).toBeLessThan(30);
+      expect(result.quality).toBe('poor');
+    });
+
+    test('厚低云场景应该触发惩罚', () => {
+      const weatherData = {
+        highClouds: 30,
+        midClouds: 20,
+        lowClouds: 70,
+        visibility: 10,
+        humidity: 60
+      };
+      const result = service._calculateUnifiedScore(weatherData);
+      // lowClouds=70 >= 40, lowCloudPenalty = 0.5
+      expect(result.breakdown.lowCloudPenalty).toBeLessThan(0.6);
+      expect(result.score).toBeLessThan(40);
+    });
+
+    test('三层云立体分布应该获得层多样性加分', () => {
+      const weatherData = {
+        highClouds: 30,
+        midClouds: 30,
+        lowClouds: 15,
+        visibility: 20,
+        humidity: 50
+      };
+      const result = service._calculateUnifiedScore(weatherData);
+      // layerCount = 3 (all > 10)
+      expect(result.breakdown.layerDiversity.layerCount).toBe(3);
+      expect(result.breakdown.layerDiversity.score).toBe(15);
+    });
+
+    test('应该处理缺失字段（默认值）', () => {
+      const result = service._calculateUnifiedScore({});
+      expect(result.score).toBeGreaterThanOrEqual(0);
+      expect(result.score).toBeLessThanOrEqual(100);
+    });
+
+    test('应该返回正确的 breakdown 结构', () => {
+      const result = service._calculateUnifiedScore({
+        highClouds: 50,
+        midClouds: 30,
+        lowClouds: 10,
+        visibility: 20,
+        humidity: 50,
+        precipitation: 0
       });
-    });
-
-    test('应该处理无效输入', () => {
-      expect(service.scoreCloudCover(-10)).toBe(0);
-      expect(service.scoreCloudCover(110)).toBe(0);
-      expect(service.scoreCloudCover('invalid')).toBe(0);
-      expect(service.scoreCloudCover(null)).toBe(0);
-    });
-
-    test('50%云量应该得到最高分', () => {
-      const score50 = service.scoreCloudCover(50);
-      expect(service.scoreCloudCover(40)).toBeLessThanOrEqual(score50);
-      expect(service.scoreCloudCover(60)).toBeLessThanOrEqual(score50);
-      expect(service.scoreCloudCover(30)).toBeLessThan(score50);
-      expect(service.scoreCloudCover(70)).toBeLessThan(score50);
-    });
-  });
-
-  describe('scoreHumidity', () => {
-    test('应该在30-70%范围内给出高分', () => {
-      // 最佳范围内的湿度应该得到高分
-      expect(service.scoreHumidity(50)).toBeGreaterThan(90);
-      expect(service.scoreHumidity(40)).toBeGreaterThan(80);
-      expect(service.scoreHumidity(60)).toBeGreaterThan(80);
-    });
-
-    test('应该在范围外给出较低分', () => {
-      // 范围外的湿度应该得到较低分
-      expect(service.scoreHumidity(0)).toBeLessThan(50);
-      expect(service.scoreHumidity(100)).toBeLessThan(50);
-      expect(service.scoreHumidity(10)).toBeLessThan(70);
-      expect(service.scoreHumidity(90)).toBeLessThan(70);
-    });
-
-    test('应该返回0-100范围内的分数', () => {
-      const testValues = [0, 25, 50, 75, 100];
-      testValues.forEach(value => {
-        const score = service.scoreHumidity(value);
-        expect(score).toBeGreaterThanOrEqual(0);
-        expect(score).toBeLessThanOrEqual(100);
-      });
-    });
-
-    test('应该处理无效输入', () => {
-      expect(service.scoreHumidity(-10)).toBe(0);
-      expect(service.scoreHumidity(110)).toBe(0);
-      expect(service.scoreHumidity('invalid')).toBe(0);
-      expect(service.scoreHumidity(null)).toBe(0);
-    });
-
-    test('50%湿度应该得到最高分', () => {
-      const score50 = service.scoreHumidity(50);
-      expect(service.scoreHumidity(40)).toBeLessThanOrEqual(score50);
-      expect(service.scoreHumidity(60)).toBeLessThanOrEqual(score50);
-      expect(service.scoreHumidity(30)).toBeLessThan(score50);
-      expect(service.scoreHumidity(70)).toBeLessThan(score50);
-    });
-  });
-
-  describe('scoreVisibility', () => {
-    test('能见度越高分数越高', () => {
-      expect(service.scoreVisibility(20)).toBeGreaterThan(service.scoreVisibility(10));
-      expect(service.scoreVisibility(30)).toBeGreaterThan(service.scoreVisibility(20));
-      expect(service.scoreVisibility(10)).toBeGreaterThan(service.scoreVisibility(5));
-    });
-
-    test('应该返回0-100范围内的分数', () => {
-      const testValues = [0, 5, 10, 20, 30, 50];
-      testValues.forEach(value => {
-        const score = service.scoreVisibility(value);
-        expect(score).toBeGreaterThanOrEqual(0);
-        expect(score).toBeLessThanOrEqual(100);
-      });
-    });
-
-    test('0能见度应该得0分', () => {
-      expect(service.scoreVisibility(0)).toBe(0);
-    });
-
-    test('高能见度应该接近100分', () => {
-      expect(service.scoreVisibility(30)).toBeGreaterThan(85);
-      expect(service.scoreVisibility(50)).toBeGreaterThan(95);
-    });
-
-    test('应该处理无效输入', () => {
-      expect(service.scoreVisibility(-10)).toBe(0);
-      expect(service.scoreVisibility('invalid')).toBe(0);
-      expect(service.scoreVisibility(null)).toBe(0);
-    });
-  });
-
-  describe('scoreLowClouds', () => {
-    test('低层云越少分数越高', () => {
-      expect(service.scoreLowClouds(0)).toBeGreaterThan(service.scoreLowClouds(20));
-      expect(service.scoreLowClouds(20)).toBeGreaterThan(service.scoreLowClouds(40));
-      expect(service.scoreLowClouds(40)).toBeGreaterThan(service.scoreLowClouds(60));
-    });
-
-    test('应该返回0-100范围内的分数', () => {
-      const testValues = [0, 25, 50, 75, 100];
-      testValues.forEach(value => {
-        const score = service.scoreLowClouds(value);
-        expect(score).toBeGreaterThanOrEqual(0);
-        expect(score).toBeLessThanOrEqual(100);
-      });
-    });
-
-    test('0%低层云应该得满分', () => {
-      expect(service.scoreLowClouds(0)).toBe(100);
-    });
-
-    test('100%低层云应该得很低分', () => {
-      expect(service.scoreLowClouds(100)).toBeLessThan(5);
-    });
-
-    test('应该处理无效输入', () => {
-      expect(service.scoreLowClouds(-10)).toBe(0);
-      expect(service.scoreLowClouds(110)).toBe(0);
-      expect(service.scoreLowClouds('invalid')).toBe(0);
-      expect(service.scoreLowClouds(null)).toBe(0);
+      expect(result.breakdown).toHaveProperty('cloudStructure');
+      expect(result.breakdown).toHaveProperty('transparency');
+      expect(result.breakdown).toHaveProperty('layerDiversity');
+      expect(result.breakdown).toHaveProperty('baseScore');
+      expect(result.breakdown).toHaveProperty('lowCloudPenalty');
+      expect(result.breakdown).toHaveProperty('precipPenalty');
+      expect(result.breakdown).toHaveProperty('finalScore');
     });
   });
 
@@ -333,12 +292,14 @@ describe('SunsetPredictionService', () => {
     });
 
     test('应该根据评分正确分类为"优秀"', () => {
-      // 理想天气条件：云量50%，湿度50%，高能见度，低层云少
+      // 理想天气条件：高云适中 + 低云少 + 能见度高 + 湿度适中 + 无降水
       const weatherData = {
+        highClouds: 50,
+        midClouds: 40,
+        lowClouds: 5,
         cloudCover: 50,
         humidity: 50,
-        visibility: 30,
-        lowCloudCover: 5
+        visibility: 30
       };
       const date = new Date('2024-06-21');
       const lat = 39.9042;
@@ -354,10 +315,12 @@ describe('SunsetPredictionService', () => {
     test('应该根据评分正确分类为"良好"', () => {
       // 中等天气条件
       const weatherData = {
+        highClouds: 20,
+        midClouds: 30,
+        lowClouds: 20,
         cloudCover: 35,
-        humidity: 70,
         visibility: 12,
-        lowCloudCover: 25
+        humidity: 70
       };
       const date = new Date('2024-06-21');
       const lat = 39.9042;
@@ -372,12 +335,14 @@ describe('SunsetPredictionService', () => {
     });
 
     test('应该根据评分正确分类为"一般"', () => {
-      // 较差天气条件：云量极端，湿度极端，低能见度，高低层云
+      // 较差天气条件
       const weatherData = {
+        highClouds: 5,
+        midClouds: 10,
+        lowClouds: 80,
         cloudCover: 10,
         humidity: 90,
-        visibility: 3,
-        lowCloudCover: 80
+        visibility: 3
       };
       const date = new Date('2024-06-21');
       const lat = 39.9042;
@@ -386,16 +351,18 @@ describe('SunsetPredictionService', () => {
       const prediction = service.calculatePrediction(weatherData, date, lat, lon);
 
       expect(prediction.score).toBeLessThan(40);
-      expect(prediction.quality).toBe('fair');
+      expect(prediction.quality).toBe('poor');
       expect(prediction.getQualityLabel()).toBe('一般');
     });
 
     test('应该包含所有因素的详细得分', () => {
       const weatherData = {
+        highClouds: 40,
+        midClouds: 30,
+        lowClouds: 10,
         cloudCover: 50,
         humidity: 60,
-        visibility: 20,
-        lowCloudCover: 10
+        visibility: 20
       };
       const date = new Date('2024-06-21');
       const lat = 39.9042;
@@ -420,42 +387,34 @@ describe('SunsetPredictionService', () => {
       expect(prediction.factors.lowClouds.score).toBeGreaterThan(0);
     });
 
-    test('应该正确计算加权总分', () => {
+    test('应该反映统一评分的结果', () => {
       const weatherData = {
+        highClouds: 50,
+        midClouds: 40,
+        lowClouds: 5,
         cloudCover: 50,
         humidity: 50,
-        visibility: 20,
-        lowCloudCover: 10
+        visibility: 20
       };
       const date = new Date('2024-06-21');
       const lat = 39.9042;
       const lon = 116.4074;
 
+      // 验证 calculatePrediction 使用 _calculateUnifiedScore 的结果
+      const unified = service._calculateUnifiedScore(weatherData);
       const prediction = service.calculatePrediction(weatherData, date, lat, lon);
 
-      // 手动计算预期分数
-      const cloudScore = service.scoreCloudCover(50);
-      const humidityScore = service.scoreHumidity(50);
-      const visibilityScore = service.scoreVisibility(20);
-      const lowCloudsScore = service.scoreLowClouds(10);
-
-      const expectedScore = Math.round(
-        cloudScore * 0.35 +
-        humidityScore * 0.25 +
-        visibilityScore * 0.20 +
-        lowCloudsScore * 0.20
-      );
-
-      expect(prediction.score).toBe(expectedScore);
+      // score 和 quality 应与统一评分对齐
+      expect(prediction.quality).toBe(unified.quality);
+      expect(Math.abs(prediction.score - Math.round(unified.score))).toBeLessThanOrEqual(1);
     });
 
     test('应该处理缺失的lowCloudCover字段', () => {
-      // 如果没有lowCloudCover，应该使用cloudCover作为替代
       const weatherData = {
         cloudCover: 50,
         humidity: 60,
         visibility: 20
-        // 没有lowCloudCover
+        // 没有 lowCloudCover
       };
       const date = new Date('2024-06-21');
       const lat = 39.9042;
@@ -464,10 +423,9 @@ describe('SunsetPredictionService', () => {
       const prediction = service.calculatePrediction(weatherData, date, lat, lon);
 
       expect(prediction).toBeDefined();
-      expect(prediction.factors.lowClouds.value).toBe(50); // 应该使用cloudCover
     });
 
-    test('应该处理缺失的气象参数（使用默认值0）', () => {
+    test('应该处理缺失的气象参数（使用默认值）', () => {
       const weatherData = {}; // 空对象
       const date = new Date('2024-06-21');
       const lat = 39.9042;

@@ -49,6 +49,9 @@ describe('FireCloudOverlayService', () => {
   });
 
   test('displayOnMap 应调用 mapService.addImageOverlay 并返回 true', () => {
+    // Force image-overlay mode
+    localStorage.setItem('firecloud_render_mode', 'image-overlay');
+
     const mapService = { addImageOverlay: jest.fn(() => ({ remove: jest.fn() })) };
 
     const ok = service.displayOnMap(

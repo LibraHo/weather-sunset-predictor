@@ -1,156 +1,65 @@
-/* 分享面板样式 */
+/* 分享面板样式 — 改为锚定按钮的下拉弹出菜单，复用 home-view-menu 样式体系 */
 
-.share-panel {
-  position: fixed;
-  inset: 0;
-  z-index: 2100;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-}
-
-.share-panel.hidden {
-  display: none;
-}
-
-.share-overlay {
+/* ===== 分享菜单容器（相对定位，锚定下拉菜单） ===== */
+.prediction-share-menu {
   position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  top: 8px;
+  right: 12px;
+  z-index: 2100;
 }
 
-.share-container {
-  position: relative;
-  width: 100%;
-  max-width: 280px;
+/* ===== 下拉菜单（复用 home-view-menu-dropdown 的视觉体系） ===== */
+.prediction-share-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 180px;
+  padding: 8px;
+  border-radius: 12px;
   background: var(--color-surface, rgba(30, 30, 50, 0.97));
   border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.15));
-  border-radius: 12px;
   box-shadow: var(--shadow-md);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  animation: slideUp 0.3s ease-out;
-  overflow: hidden;
+  z-index: 2000;
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.prediction-share-dropdown.hidden {
+  display: none;
 }
 
-/* 暗色主题 */
-.theme-dark .share-container {
-  background: var(--color-surface, rgba(30, 30, 50, 0.97));
-  color: #f3f4f6;
-}
-
-/* 分享面板头部 */
-.share-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--glass-border, rgba(255, 255, 255, 0.15));
-}
-
-.theme-dark .share-header {
-  border-bottom-color: rgba(148, 163, 184, 0.2);
-}
-
-.share-header h3 {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
+/* ===== 菜单项（复用 home-view-option 的视觉体系） ===== */
+.share-option {
+  width: 100%;
+  min-height: 40px;
+  text-align: left;
+  border: 1px solid transparent;
+  background: transparent;
   color: var(--color-text, #f0f0f0);
-}
-
-.theme-dark .share-header h3 {
-  color: #f3f4f6;
-}
-
-.share-close {
-  background: none;
-  border: none;
-  font-size: 20px;
-  color: #6b7280;
-  cursor: pointer;
-  padding: 4px;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: all 0.2s;
-}
-
-.share-close:hover {
-  background: rgba(107, 114, 128, 0.12);
-  color: #1f2937;
-}
-
-.theme-dark .share-close {
-  color: #9ca3af;
-}
-
-.theme-dark .share-close:hover {
-  background: rgba(148, 163, 184, 0.2);
-  color: #f9fafb;
-}
-
-/* 分享面板内容 */
-.share-content {
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-/* 分享按钮 */
-.share-btn {
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.98rem;
+  font-weight: 400;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   display: flex;
   align-items: center;
   gap: 12px;
-  min-height: 40px;
-  padding: 8px 10px;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
-  font-size: 0.92rem;
-  font-weight: 400;
-  color: var(--color-text, #f0f0f0);
-  text-align: left;
 }
 
-.share-btn:hover {
+.share-option:hover {
   background: rgba(74, 144, 226, 0.2);
 }
 
-.share-btn:active {
+.share-option:active {
   transform: translateY(0);
 }
 
-.theme-dark .share-btn {
-  background: transparent;
-  border-color: transparent;
-  color: var(--color-text, #f0f0f0);
-}
-
-.theme-dark .share-btn:hover {
-  background: rgba(74, 144, 226, 0.2);
-}
-
-.share-btn.hidden {
+.share-option.hidden {
   display: none;
 }
 
@@ -160,24 +69,8 @@
   flex-shrink: 0;
 }
 
-/* 分享按钮特定样式 */
-.share-btn-save .share-icon {
-  color: currentColor;
-}
-
-.share-btn-copy .share-icon {
-  color: currentColor;
-}
-
-.share-btn-native .share-icon {
-  color: currentColor;
-}
-
-/* 预测卡片上的分享按钮 */
+/* ===== 预测卡片上的分享按钮 ===== */
 .prediction-share-btn {
-  position: absolute;
-  top: 12px;
-  right: 12px;
   background: rgba(255, 255, 255, 0.2);
   border: none;
   padding: 6px;
@@ -206,7 +99,7 @@
   position: relative;
 }
 
-/* 提示消息 */
+/* ===== 提示消息 ===== */
 .share-toast {
   position: fixed;
   bottom: 100px;
@@ -230,35 +123,19 @@
   transform: translateX(-50%) translateY(0);
 }
 
-/* 响应式设计 */
-@media (min-width: 640px) {
-  .share-panel {
-    align-items: center;
-    padding: 24px;
-  }
-  
-  .share-container {
-    border-radius: 20px;
-    max-height: calc(100vh - 48px);
-  }
-}
-
-/* 优化2：电脑版字体与点击区放大 */
+/* ===== 响应式：桌面端字体与点击区放大 ===== */
 @media (min-width: 1024px) {
-  .share-header h3 {
-    font-size: 22px;
+  .prediction-share-dropdown {
+    min-width: 220px;
+    padding: 10px;
+    border-radius: 14px;
   }
 
-  .share-content {
-    gap: 16px;
-    padding: 16px;
-  }
-
-  .share-btn {
-    font-size: 18px;
-    padding: 18px 20px;
-    border-radius: 16px;
-    min-height: 56px;
+  .share-option {
+    font-size: 16px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    gap: 14px;
   }
 
   .share-icon {
@@ -272,26 +149,16 @@
   }
 }
 
-/* 640px-1023px 平板/小桌面：字体也适当放大 */
+/* 640px-1023px 平板/小桌面 */
 @media (min-width: 640px) and (max-width: 1023px) {
-  .share-header h3 {
-    font-size: 17px;
-  }
-
-  .share-btn {
+  .share-option {
     font-size: 15px;
     padding: 12px 14px;
-    border-radius: 12px;
+    border-radius: 10px;
   }
 
   .share-icon {
     width: 23px;
     height: 23px;
-  }
-}
-
-@media (max-width: 639px) {
-  .share-container {
-    max-width: 100%;
   }
 }

@@ -81,7 +81,7 @@ describe('ChinaRasterOverlayManager', () => {
     test('包含 sunrise 和 sunset', () => {
       expect(SUPPORTED_PERIODS).toContain('sunrise');
       expect(SUPPORTED_PERIODS).toContain('sunset');
-      expect(SUPPORTED_PERIODS).toHaveLength(2);
+      expect(SUPPORTED_PERIODS).toHaveLength(3);
     });
   });
 
