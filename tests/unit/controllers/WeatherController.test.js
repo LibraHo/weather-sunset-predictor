@@ -483,6 +483,48 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(document.getElementById('china-spots-period-label').textContent).toContain('测试');
   });
 
+
+  test('updateWeatherDisplay: 应移除天气数据容器 hidden 类显示实时天气面板', () => {
+    document.body.innerHTML = `
+      <section id="weather-section" class="card hidden">
+        <div id="weather-data" class="hidden"></div>
+        <div id="weather-location"></div>
+        <span id="current-temp-main"></span>
+        <span id="current-temp-unit"></span>
+        <span id="weather-icon-main"></span>
+        <span id="weather-description"></span>
+        <span id="current-humidity"></span>
+        <span id="current-cloud-cover"></span>
+        <span id="current-wind-speed"></span>
+        <span id="current-wind-direction-icon"></span>
+        <span id="current-wind-direction-text"></span>
+        <span id="current-pressure"></span>
+        <span id="current-visibility"></span>
+        <div id="weekly-cards"></div>
+      </section>
+    `;
+    controller.i18n = { t: jest.fn(key => key) };
+    controller.tempUnit = 'celsius';
+    controller.getConvertedTemp = value => value;
+    controller.formatWindSpeed = value => `${value} km/h`;
+    controller.renderWeeklyOverview = jest.fn();
+
+    controller.updateWeatherDisplay([{
+      temp: 21,
+      humidity: 50,
+      cloudCover: 30,
+      windSpeed: 8,
+      windDirection: 90,
+      pressure: 1012,
+      visibility: 12
+    }], { name: '北京', lat: 39.9, lon: 116.4 });
+
+    const weatherData = document.getElementById('weather-data');
+    expect(weatherData.classList.contains('hidden')).toBe(false);
+    expect(weatherData.style.display).toBe('block');
+    expect(document.getElementById('weather-section').classList.contains('hidden')).toBe(false);
+  });
+
   test('showError: 无 #weather-error 元素时不报错', () => {
     document.body.innerHTML = '';
     expect(() => controller.showError('test error')).not.toThrow();
