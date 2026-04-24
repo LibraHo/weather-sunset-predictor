@@ -1,6 +1,53 @@
 import { jest } from '@jest/globals';
 import WindyMapService from '../../../src/services/WindyMapService.js';
 
+/**
+ * Helper: create a fully-featured Leaflet map mock that satisfies both
+ * WindyMapService (fallback path) and ChinaMapCanvas (native-map path).
+ */
+const createMapMock = () => ({
+  flyTo: jest.fn(),
+  on: jest.fn(),
+  off: jest.fn(),
+  getCenter: jest.fn(() => ({ lat: 35.6, lng: 139.6 })),
+  getBounds: jest.fn(() => ({
+    getNorth: () => 40,
+    getSouth: () => 30,
+    getEast: () => 140,
+    getWest: () => 130
+  })),
+  getZoom: jest.fn(() => 4),
+  getContainer: jest.fn(() => {
+    const el = document.createElement('div');
+    el.style.cssText = 'width:800px;height:600px;';
+    return el;
+  }),
+  setView: jest.fn(),
+  addLayer: jest.fn(),
+  removeLayer: jest.fn(),
+  fitBounds: jest.fn(),
+  remove: jest.fn()
+});
+
+const createGeoJsonLayer = () => ({
+  setStyle: jest.fn(),
+  addTo: jest.fn(function addTo() { return this; }),
+  getBounds: jest.fn(() => ({
+    getNorth: () => 55,
+    getSouth: () => 15,
+    getEast: () => 135,
+    getWest: () => 70
+  })),
+  remove: jest.fn()
+});
+
+const createLayerGroup = () => ({
+  addTo: jest.fn(function addTo() { return this; }),
+  clearLayers: jest.fn(),
+  addLayer: jest.fn(),
+  remove: jest.fn()
+});
+
 describe('WindyMapService', () => {
   let service;
   let L;
@@ -9,36 +56,42 @@ describe('WindyMapService', () => {
     document.body.innerHTML = '<div id="map"></div>';
 
     L = {
-      map: jest.fn(() => ({
-        flyTo: jest.fn(),
-        on: jest.fn(),
-        getCenter: jest.fn(() => ({ lat: 35.6, lng: 139.6 })),
-        getBounds: jest.fn(() => ({
-          getNorth: () => 40,
-          getSouth: () => 30,
-          getEast: () => 140,
-          getWest: () => 130
-        })),
-        remove: jest.fn()
-      })),
+      map: jest.fn(() => createMapMock()),
       tileLayer: jest.fn(() => ({ addTo: jest.fn(function addTo() { return this; }) })),
       marker: jest.fn(() => ({ addTo: jest.fn(function addTo() { return this; }), remove: jest.fn() })),
       latLngBounds: jest.fn((sw, ne) => ({ sw, ne })),
-      imageOverlay: jest.fn(() => ({ addTo: jest.fn(function addTo() { return this; }), remove: jest.fn() }))
+      latLng: jest.fn((lat, lng) => ({ lat, lng })),
+      imageOverlay: jest.fn(() => ({ addTo: jest.fn(function addTo() { return this; }), remove: jest.fn() })),
+      // ChinaMapCanvas dependencies
+      geoJSON: jest.fn(() => createGeoJsonLayer()),
+      layerGroup: jest.fn(() => createLayerGroup()),
+      circleMarker: jest.fn(() => ({
+        addTo: jest.fn(function addTo() { return this; }),
+        setStyle: jest.fn(),
+        remove: jest.fn()
+      })),
+      divIcon: jest.fn(() => ({})),
+      Control: {
+        extend: jest.fn(() => {
+          // Return a constructor whose instances have addTo()
+          return jest.fn().mockImplementation(() => ({
+            addTo: jest.fn(),
+            remove: jest.fn()
+          }));
+        })
+      }
     };
 
     global.L = L;
     service = new WindyMapService('dummy-key');
   });
 
-  test('initializeMap 应完成 Leaflet 初始化与瓦片图层加载', async () => {
+  test('initializeMap 应完成 Leaflet 初始化（ChinaMapCanvas 优先路径）', async () => {
     await service.initializeMap('map', { lat: 31.2, lon: 121.5, zoom: 8 });
 
     expect(L.map).toHaveBeenCalled();
-    expect(L.tileLayer).toHaveBeenCalledWith(
-      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      expect.any(Object)
-    );
+    // ChinaMapCanvas path: tileLayer is NOT called (no OSM fallback)
+    // 地图通过 ChinaMapCanvas 初始化成功
     expect(service.isInitialized).toBe(true);
   });
 

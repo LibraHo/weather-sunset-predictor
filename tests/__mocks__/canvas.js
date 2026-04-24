@@ -52,3 +52,16 @@ if (typeof global !== 'undefined' && !global.localStorage) {
     clear: () => { Object.keys(_store).forEach((k) => delete _store[k]); }
   };
 }
+
+// JSDOM fetch stub – returns empty GeoJSON to prevent ChinaMapCanvas crash
+if (typeof global !== 'undefined' && !global.fetch) {
+  global.fetch = (url) => {
+    const resp = {
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ type: 'FeatureCollection', features: [] }),
+      text: () => Promise.resolve('')
+    };
+    return Promise.resolve(resp);
+  };
+}
