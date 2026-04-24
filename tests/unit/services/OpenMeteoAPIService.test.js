@@ -1,37 +1,57 @@
 import { jest } from '@jest/globals';
 import OpenMeteoAPIService from '@services/OpenMeteoAPIService.js';
 
-global.fetch = jest.fn();
+// 确保 global.fetch 存在（jest 环境可能没有原生 fetch）
+if (!global.fetch) {
+  global.fetch = () => Promise.resolve({ ok: true, json: () => ({}) });
+}
 
 describe('OpenMeteoAPIService', () => {
   let service;
+  let fetchSpy;
 
   beforeEach(() => {
-    service = new OpenMeteoAPIService('ignored');
-    fetch.mockReset();
+    service = new OpenMeteoAPIService('ignored', { proxyURL: 'http://localhost:3000' });
+    fetchSpy = jest.spyOn(global, 'fetch').mockReset();
+  });
+
+  afterEach(() => {
+    if (fetchSpy) fetchSpy.mockRestore();
   });
 
   test('calls backend forecast endpoint with GET', async () => {
-    fetch.mockResolvedValueOnce({
+    fetchSpy.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ windyEnabled: false })
+    });
+    fetchSpy.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ data: [] })
     });
 
     await service.fetchWeatherData(39.9, 116.4, 24);
 
-    expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/weather/forecast?lat=39.9&lon=116.4&hours=24')
-    );
+    const calls = fetchSpy.mock.calls;
+    const forecastCall = calls.find(c => c[0].includes('/api/weather/forecast'));
+    expect(forecastCall[0]).toContain('/api/weather/forecast?lat=39.9&lon=116.4&hours=24');
   });
 
   test('throws backend error when response is not ok', async () => {
-    fetch.mockResolvedValueOnce({ ok: false, status: 503 });
+    fetchSpy.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ windyEnabled: false })
+    });
+    fetchSpy.mockResolvedValueOnce({ ok: false, status: 503 });
 
     await expect(service.fetchWeatherData(39.9, 116.4, 24)).rejects.toThrow('后端请求失败: 503');
   });
 
   test('attaches providerMeta from backend response', async () => {
-    fetch.mockResolvedValueOnce({
+    fetchSpy.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ windyEnabled: false })
+    });
+    fetchSpy.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         data: [{
