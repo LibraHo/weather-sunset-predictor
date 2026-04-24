@@ -1398,6 +1398,32 @@ class PredictionController {
     const lightPath = prediction.lightPathAnalysis;
     const rendering = prediction.renderingAnalysis;
 
+    const cloudLevelLabel = {
+      space: '太空（无云）',
+      fair: '尚可',
+      perfect: '完美',
+      crowded: '拥挤',
+      overcast: '阴天'
+    }[canvas?.cloudLevel] || canvas?.cloudLevel || '-';
+
+    const visibilityLabel = {
+      excellent: this.i18n.t('prediction.rendering.visibilityExcellent'),
+      good: this.i18n.t('prediction.rendering.visibilityGood'),
+      poor: this.i18n.t('prediction.rendering.visibilityPoor')
+    }[rendering?.breakdown?.visibility] || rendering?.breakdown?.visibility || '-';
+
+    const aqiLabel = {
+      excellent: this.i18n.t('prediction.rendering.aqiExcellent'),
+      good: this.i18n.t('prediction.rendering.aqiGood'),
+      poor: this.i18n.t('prediction.rendering.aqiPoor')
+    }[rendering?.breakdown?.aqi] || rendering?.breakdown?.aqi || '-';
+
+    const colorLabel = {
+      golden_orange: this.i18n.t('prediction.rendering.colorGoldenOrange'),
+      reddish_purple: this.i18n.t('prediction.rendering.colorReddishPurplish'),
+      dark_red: this.i18n.t('prediction.rendering.colorDarkRed')
+    }[rendering?.breakdown?.colorTendency] || rendering?.breakdown?.colorTendency || '-';
+
     let analysis = '';
 
     // 总体评价（使用增强版的状态描述）
@@ -1410,7 +1436,7 @@ class PredictionController {
     analysis += `<div style="margin-top:8px;font-size:13px;">`;
     analysis += this.i18n.t('prediction.canvas.canvasScore', {
       score: canvas.score.toFixed(0),
-      level: canvas.cloudLevel
+      level: cloudLevelLabel
     }) + '<br>';
     analysis += `   ${this.i18n.t('prediction.canvas.cloudBreakdown', {
       high: canvas.breakdown.highClouds,
@@ -1449,9 +1475,9 @@ class PredictionController {
     analysis += `<div style="margin-top:8px;font-size:13px;">`;
     analysis += this.i18n.t('prediction.rendering.renderingFactor', {
       factor: rendering.factor.toFixed(2),
-      visibility: rendering.breakdown.visibility,
-      aqi: rendering.breakdown.aqi,
-      color: rendering.breakdown.colorTendency
+      visibility: visibilityLabel,
+      aqi: aqiLabel,
+      color: colorLabel
     });
     if (rendering.breakdown.specialMode) {
       analysis += this.i18n.t('prediction.rendering.specialMode', {
