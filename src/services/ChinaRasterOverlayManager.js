@@ -85,7 +85,6 @@ export default class ChinaRasterOverlayManager {
     // 降级：动态创建
     this._tabContainer = document.createElement('div');
     this._tabContainer.className = 'china-spots-tabs china-raster-tabs';
-    this._tabContainer.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;';
 
     const tabs = [
       { period: 'sunrise', label: '朝霞 🌄' },
@@ -97,20 +96,6 @@ export default class ChinaRasterOverlayManager {
       btn.textContent = tab.label;
       btn.dataset.period = tab.period;
       btn.className = 'china-spots-tab';
-      btn.style.cssText = [
-        'flex: 1',
-        'padding: 8px 12px',
-        'border: 1px solid rgba(255,120,0,0.5)',
-        'border-radius: 6px',
-        'background: rgba(0,0,0,0.4)',
-        'color: var(--color-text)',
-        'font-size: 13px',
-        'cursor: pointer',
-        'transition: background 0.2s, border-color 0.2s',
-        'backdrop-filter: blur(4px)',
-        'white-space: nowrap'
-      ].join(';');
-
       btn.addEventListener('click', () => this.switchPeriod(tab.period));
       this._tabContainer.appendChild(btn);
       this._tabButtons[tab.period] = btn;
@@ -128,15 +113,7 @@ export default class ChinaRasterOverlayManager {
   _updateTabUI() {
     Object.entries(this._tabButtons).forEach(([period, btn]) => {
       const isActive = period === this._activePeriod;
-      if (isActive) {
-        btn.style.background = 'rgba(255, 100, 0, 0.8)';
-        btn.style.borderColor = 'rgba(255, 200, 50, 0.9)';
-        btn.style.fontWeight = 'bold';
-      } else {
-        btn.style.background = 'rgba(0, 0, 0, 0.4)';
-        btn.style.borderColor = 'rgba(255, 120, 0, 0.5)';
-        btn.style.fontWeight = 'normal';
-      }
+      btn.classList.toggle('is-active', isActive);
     });
   }
 

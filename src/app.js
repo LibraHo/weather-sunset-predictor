@@ -174,9 +174,11 @@ async function initializeApp() {
     // 朝/晚霞 tab 早期绑定（init 前就可点击）
     document.getElementById('map-tab-sunrise')?.addEventListener('click', () => {
       window.weatherController?.chinaSpotsOverlayManager?.switchPeriod('sunrise');
+      window.weatherController?.chinaSpotsOverlayManager?._updateTabUI?.();
     });
     document.getElementById('map-tab-sunset')?.addEventListener('click', () => {
       window.weatherController?.chinaSpotsOverlayManager?.switchPeriod('sunset');
+      window.weatherController?.chinaSpotsOverlayManager?._updateTabUI?.();
     });
 
     // 分享地图全屏按钮
