@@ -20,7 +20,7 @@ describe('weather route - remove X-Windy-API-Key passthrough', () => {
     orchestrator.fetchWeatherData = original;
   });
 
-  test('should call orchestrator with 3 args even if X-Windy-API-Key is provided', async () => {
+  test('should call orchestrator with 4 args even if X-Windy-API-Key is provided', async () => {
     const spy = jest.fn(async () => ({
       hours: 24,
       data: [],
@@ -40,7 +40,8 @@ describe('weather route - remove X-Windy-API-Key passthrough', () => {
       .expect(200);
 
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy.mock.calls[0]).toHaveLength(3);
-    expect(spy.mock.calls[0]).toEqual([39.9, 116.4, 24]);
+    // 当前业务逻辑已改为 4 参数（含 model），断言对齐实际行为
+    expect(spy.mock.calls[0]).toHaveLength(4);
+    expect(spy.mock.calls[0].slice(0, 3)).toEqual([39.9, 116.4, 24]);
   });
 });
