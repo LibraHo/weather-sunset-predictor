@@ -4408,7 +4408,10 @@ body.theme-dark {
   }
 
   .cloud-label {
-    max-width: 3.6em;
+    max-width: none;
+    overflow: visible;
+    text-overflow: clip;
+    flex-shrink: 0;
   }
 }
 

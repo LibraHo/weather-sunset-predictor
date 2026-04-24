@@ -283,6 +283,9 @@ describe('PredictionController', () => {
       );
 
       expect(html).toContain('compact-cloud-info');
+      expect(html).toContain('<span class="cloud-label">高云</span>');
+      expect(html).toContain('<span class="cloud-label">中云</span>');
+      expect(html).toContain('<span class="cloud-label">低云</span>');
       expect(html).toContain('40%');
       expect(html).toContain('20%');
       expect(html).toContain('10%');

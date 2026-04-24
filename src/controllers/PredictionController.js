@@ -1310,9 +1310,9 @@ class PredictionController {
       return text.length > 10 ? fallback : text;
     };
 
-    const highLabel = normalizeLabel(this.i18n.t('prediction.cloudLayers.shortHigh'), 'High');
-    const midLabel = normalizeLabel(this.i18n.t('prediction.cloudLayers.shortMid'), 'Mid');
-    const lowLabel = normalizeLabel(this.i18n.t('prediction.cloudLayers.shortLow'), 'Low');
+    const highLabel = normalizeLabel(this.i18n.t('prediction.cloudLayers.shortHigh'), '高云');
+    const midLabel = normalizeLabel(this.i18n.t('prediction.cloudLayers.shortMid'), '中云');
+    const lowLabel = normalizeLabel(this.i18n.t('prediction.cloudLayers.shortLow'), '低云');
 
     return `
       <div class="compact-cloud-info" style="display:flex;align-items:center;flex-wrap:nowrap;gap:4px;width:100%;overflow:hidden;">
