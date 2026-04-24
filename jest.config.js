@@ -47,6 +47,7 @@ export default {
     '!src/services/ChartService.js',             // 纯 Chart.js 适配层，jsdom 无法运行真实 Canvas
     '!src/services/ChartServiceV2.js',           // 同上，Canvas 依赖项需在真实浏览器中运行（E2E 覆盖）
     '!src/services/WindyMapService.js',          // Leaflet 地图服务，jsdom 不支持 Leaflet DOM 渲染（E2E 覆盖）
+    '!src/services/OpenMeteoAPIService.js',       // WindyAPIService 的空继承兼容入口，无独立逻辑
     '!src/controllers/ChartRenderController.js',  // 纯图表渲染编排，依赖 Canvas context（E2E 覆盖）
     '!src/controllers/AppController.js',         // ~1700 行 UI 总编排，DOM 事件/动画密集（E2E 覆盖）
     '!src/controllers/PredictionController.js',  // ~1600 行预测结果渲染，依赖真实 DOM（E2E 覆盖）
