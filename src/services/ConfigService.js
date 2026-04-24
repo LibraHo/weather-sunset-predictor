@@ -67,55 +67,6 @@ class ConfigService {
 
   /**
    * 获取使用Mock API的配置
-   * 支持从 localStorage 读取（用于测试环境）
-   * @returns {boolean|null} 是否使用Mock API，如果未配置则返回null
-   */
-  getUseMockAPI() {
-    // 首先检查 localStorage（用于测试环境）
-    const localStorageMock = localStorage.getItem('use_mock_api');
-    if (localStorageMock === 'true') {
-      console.log('[ConfigService] 从 localStorage 读取 Mock API 配置: true');
-      return true;
-    }
-
-    // 然后检查配置文件
-    if (this.config && typeof this.config.useMockAPI !== 'undefined') {
-      console.log('[ConfigService] 从配置文件读取 Mock API 配置:', this.config.useMockAPI);
-      return this.config.useMockAPI;
-    }
-    return null;
-  }
-
-  /**
-   * 从配置获取API密钥
-   * @returns {string|null} API密钥，如果未配置则返回null
-   */
-  getAPIKey() {
-    if (this.config && this.config.apiKey) {
-      console.log('[ConfigService] 从配置文件读取API密钥');
-      return this.config.apiKey;
-    }
-    return null;
-  }
-
-  /**
-   * 检查配置文件是否存在
-   * @returns {boolean} 配置文件是否存在
-   */
-  hasConfigFile() {
-    return this.config !== null;
-  }
-
-  /**
-   * 获取配置对象
-   * @returns {Object|null} 配置对象
-   */
-  getConfig() {
-    return this.config;
-  }
-
-  /**
-   * 获取使用Mock API的配置
    * @returns {boolean|null} 是否使用Mock API，如果未配置则返回null
    */
   getUseMockAPI() {
