@@ -139,12 +139,13 @@
   }
 
   .share-icon {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
   }
 
   .share-toast {
-    font-size: 15px;
+    font-size: 16px;
+    padding: 14px 28px;
   }
 }
 

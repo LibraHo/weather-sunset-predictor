@@ -272,6 +272,23 @@ main > section {
   align-items: center;
 }
 
+/* 桌面端：顶部菜单字体明显放大 */
+@media (min-width: 1024px) {
+  .home-view-option {
+    font-size: 1.15rem;
+    padding: 10px 14px;
+    min-height: 44px;
+  }
+}
+
+/* 平板/小桌面：字体适当放大 */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .home-view-option {
+    font-size: 1.05rem;
+    padding: 9px 12px;
+  }
+}
+
 .home-view-option:hover {
   background: rgba(74, 144, 226, 0.2);
 }
