@@ -40,7 +40,7 @@ const makeI18n = () => ({
 });
 
 describe('PredictionController.generateEnhancedAnalysisText', () => {
-  test('should render human-readable labels instead of raw enum codes', () => {
+  test('should reuse detailed fire-cloud analysis and avoid raw enum codes', () => {
     const controller = new PredictionController(mockStorageService);
     controller.i18n = makeI18n();
 
@@ -72,12 +72,10 @@ describe('PredictionController.generateEnhancedAnalysisText', () => {
       }
     });
 
-    expect(html).toContain('拥挤');
-    expect(html).toContain('低云量 45%');
-    expect(html).toContain('良好（10-20km）');
-    expect(html).toContain('良');
-    expect(html).toContain('偏红、紫红色');
-    expect(html).toContain('雨后初晴模式');
+    expect(html).toContain('火烧云形成条件分析');
+    expect(html).toContain('高层云充足（44%），色彩载体丰富');
+    expect(html).toContain('中层云适中（27%），利于色彩扩散和层次感');
+    expect(html).toContain('低云较厚（45%），遮挡风险较大');
 
     expect(html).not.toContain('crowded');
     expect(html).not.toContain('low_cloud_amount');
