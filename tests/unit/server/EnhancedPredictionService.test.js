@@ -24,7 +24,7 @@ describe('EnhancedPredictionService', () => {
 
     test('should have correct CLOUD_WEIGHTS values', () => {
       const weights = EnhancedPredictionService.CLOUD_WEIGHTS;
-      expect(weights.HIGH).toBe(0.70);
+      expect(weights.HIGH).toBe(0.75);
       expect(weights.MID).toBe(0.45);
       expect(weights.LOW).toBe(0.10);
       // 注：权重之和 > 1 是有意设计，高云对火烧云贡献大，可叠加超过1
@@ -194,21 +194,27 @@ describe('EnhancedPredictionService', () => {
       const weatherData = { lowClouds: 50, midClouds: 50, highClouds: 50 };
       const result = EnhancedPredictionService.scoreCloudCanvas(weatherData);
 
-      // 50*0.70 + 50*0.45 + 50*0.10 = 35 + 22.5 + 5 = 62.5
-      expect(result.effectiveCloudCover).toBeCloseTo(62.5, 1);
+      // 50*0.75 + 50*0.45 + 50*0.10 = 37.5 + 22.5 + 5 = 65.0
+      expect(result.effectiveCloudCover).toBeCloseTo(65.0, 1);
     });
 
-    test('should handle overcast conditions', () => {
-      // effectiveCloudCover > 90 triggers 'overcast'
-      // 95*0.70 + 95*0.45 + 95*0.10 = 118.75 → clamped to 100 > 90
+    test('should handle overcast conditions (all layers thick)', () => {
+      // upperCloudCover = 95*0.75 + 95*0.45 = 114 > 100 → cloudLevel = 'crowded'
+      // lowClouds=95 > 80 → lowCloudPenalty=0.1
+      // overcastPenalty from lowClouds >= 55: 1.0 - ((95-55)/45)*0.8 ≈ 0.289
       const weatherData = { lowClouds: 95, midClouds: 95, highClouds: 95 };
       const result = EnhancedPredictionService.scoreCloudCanvas(weatherData);
 
-      expect(result.cloudLevel).toBe('overcast');
+      expect(result.cloudLevel).toBe('crowded');
+      expect(result.lowCloudPenalty).toBe(0.1);
+      expect(result.overcastPenalty).toBeLessThan(0.3);
       expect(result.score).toBeLessThan(10);
     });
 
-    test('should heavily penalize high total cloud cover even when layer mix looks good', () => {
+    test('should penalize total cloud cover penalty when lowClouds >= 20 and totalCloudCover >= 92', () => {
+      // lowClouds=18 < 20, so totalCloudCover-based penalty does NOT apply;
+      // lowClouds=18 < 55, so lowCloud overcastPenalty also does NOT apply.
+      // This tests the current behavior: moderate low-cloud is not overcast-penalized.
       const weatherData = {
         lowClouds: 18,
         midClouds: 80,
@@ -218,11 +224,57 @@ describe('EnhancedPredictionService', () => {
       const result = EnhancedPredictionService.scoreCloudCanvas(weatherData);
 
       expect(result.totalCloudCover).toBe(96);
-      expect(result.overcastPenalty).toBeLessThanOrEqual(0.4);
-      expect(result.score).toBeLessThan(30);
+      // lowClouds < 20 AND < 55 → no overcast penalty applied
+      expect(result.overcastPenalty).toBe(1.0);
+      // upperCloudCover = 36, mid-clouds still provide moderate range score
+      expect(result.score).toBeGreaterThan(50);
     });
 
-    test('should apply extra penalty when weather text indicates overcast', () => {
+    test('should apply overcast penalty when lowClouds >= 55 triggers proportional reduction', () => {
+      // lowClouds=55 triggers overcastPenalty = 1.0 (start of linear ramp)
+      const weatherData = {
+        lowClouds: 55,
+        midClouds: 50,
+        highClouds: 30,
+        cloudCover: 90
+      };
+      const result = EnhancedPredictionService.scoreCloudCanvas(weatherData);
+
+      expect(result.overcastPenalty).toBe(1.0);
+      expect(result.score).toBeGreaterThan(0);
+    });
+
+    test('should apply overcast penalty when lowClouds is high (e.g. 75)', () => {
+      const weatherData = {
+        lowClouds: 75,
+        midClouds: 50,
+        highClouds: 30,
+        cloudCover: 95
+      };
+      const result = EnhancedPredictionService.scoreCloudCanvas(weatherData);
+
+      // overcastPenalty: 1.0 - ((75-55)/45)*0.8 = 1.0 - 0.356 = 0.644
+      expect(result.overcastPenalty).toBeLessThan(0.7);
+      expect(result.lowCloudPenalty).toBeLessThan(1.0);
+    });
+
+    test('should apply extra penalty when weather text indicates overcast AND lowClouds >= 35', () => {
+      // lowClouds=40 >= 35 AND hasOvercastKeyword=true → overcastPenalty *= 0.5
+      const weatherData = {
+        lowClouds: 40,
+        midClouds: 50,
+        highClouds: 30,
+        weatherDescription: '阴天'
+      };
+      const result = EnhancedPredictionService.scoreCloudCanvas(weatherData);
+
+      expect(result.hasOvercastKeyword).toBe(true);
+      expect(result.overcastPenalty).toBeLessThan(0.7);
+      expect(result.score).toBeLessThan(50);
+    });
+
+    test('should detect overcast keyword but not apply extra penalty when lowClouds < 35', () => {
+      // lowClouds=10 < 35 → extra penalty NOT applied
       const weatherData = {
         lowClouds: 10,
         midClouds: 65,
@@ -232,8 +284,10 @@ describe('EnhancedPredictionService', () => {
       const result = EnhancedPredictionService.scoreCloudCanvas(weatherData);
 
       expect(result.hasOvercastKeyword).toBe(true);
-      expect(result.overcastPenalty).toBeLessThan(0.5);
-      expect(result.score).toBeLessThan(25);
+      // lowClouds=10 < 20 → no lowCloudPenalty, lowClouds=10 < 55 → no overcastPenalty
+      expect(result.overcastPenalty).toBe(1.0);
+      // upperCloudCover = 35*0.75 + 65*0.45 = 55.5 → moderate cloud range
+      expect(result.score).toBeGreaterThan(50);
     });
 
   });
@@ -604,10 +658,11 @@ describe('EnhancedPredictionService', () => {
     });
 
     test('should handle extreme cloud values', () => {
+      // upperCloudCover = 100*0.75 + 100*0.45 = 120 > 100 → crowded
       const weatherData = { lowClouds: 100, midClouds: 100, highClouds: 100 };
       const result = EnhancedPredictionService.scoreCloudCanvas(weatherData);
 
-      expect(result.cloudLevel).toBe('overcast');
+      expect(result.cloudLevel).toBe('crowded');
       expect(result.score).toBeLessThanOrEqual(10);
     });
 

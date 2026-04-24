@@ -7,18 +7,22 @@
 import { jest } from '@jest/globals';
 
 // 在导入任何 Leaflet 相关模块前，先给 window.L 打桩
-// ChinaRasterOverlay.js 在模块顶层访问 window.L.latLng
 global.window = global.window || {};
 global.window.L = global.window.L || {
   latLng: (lat, lon) => ({ lat, lng: lon }),
   latLngBounds: (a, b) => ({ a, b }),
 };
 
-// 动态导入被测模块
-const wcMod = await import('../../../src/controllers/WeatherController.js');
-const createChinaOverlayManager = wcMod.createChinaOverlayManager;
-const CHINA_RENDER_MODE_KEY = wcMod.CHINA_RENDER_MODE_KEY;
-const CHINA_RENDER_MODE_DEFAULT = wcMod.CHINA_RENDER_MODE_DEFAULT;
+let createChinaOverlayManager;
+let CHINA_RENDER_MODE_KEY;
+let CHINA_RENDER_MODE_DEFAULT;
+
+beforeAll(async () => {
+  const wcMod = await import('../../../src/controllers/WeatherController.js');
+  createChinaOverlayManager = wcMod.createChinaOverlayManager;
+  CHINA_RENDER_MODE_KEY = wcMod.CHINA_RENDER_MODE_KEY;
+  CHINA_RENDER_MODE_DEFAULT = wcMod.CHINA_RENDER_MODE_DEFAULT;
+});
 
 describe('createChinaOverlayManager() - feature flag 工厂', () => {
   beforeEach(() => {
@@ -47,7 +51,6 @@ describe('createChinaOverlayManager() - feature flag 工厂', () => {
   test('china_render_mode=spots → 仍返回有效对象（当前固定实现）', () => {
     global.localStorage.setItem(CHINA_RENDER_MODE_KEY, 'spots');
     const manager = createChinaOverlayManager();
-    // Phase 16 后固定使用栅格模式，不受 localStorage 值影响
     expect(manager).not.toBeNull();
     expect(typeof manager.init).toBe('function');
   });

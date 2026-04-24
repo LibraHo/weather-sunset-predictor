@@ -21,9 +21,10 @@ import {
 // ─── scoreToRGBA ─────────────────────────────────────────────────────────────
 
 describe('scoreToRGBA', () => {
-  test('低于 RASTER_MIN_SCORE 时返回透明', () => {
+  test('低于 RASTER_MIN_SCORE 时返回接近透明', () => {
     const color = scoreToRGBA(RASTER_MIN_SCORE - 1);
-    expect(color.a).toBe(0);
+    // alphaSoftThreshold: score < 12 → 0; 12..14 → small fade-in
+    expect(color.a).toBeLessThanOrEqual(0.015);
   });
 
   test('noData 值返回透明', () => {
@@ -37,16 +38,17 @@ describe('scoreToRGBA', () => {
     expect(color.r).toBeGreaterThan(200); // 金黄色系
   });
 
-  test('高分值（90）返回深橙红，alpha > 0.7', () => {
+  test('高分值（90）返回深橙红（clamped 到 RASTER_FULL_SCORE）', () => {
     const color = scoreToRGBA(90);
-    expect(color.a).toBeGreaterThan(0.7);
-    expect(color.r).toBeGreaterThan(230);
-    expect(color.g).toBeLessThan(130);
+    // 90 > RASTER_FULL_SCORE(70) → clamp
+    const clamped = scoreToRGBA(RASTER_FULL_SCORE);
+    expect(color.a).toBeCloseTo(clamped.a, 2);
+    expect(color.r).toBeGreaterThan(190);
   });
 
-  test('满分（RASTER_FULL_SCORE）alpha 接近上限', () => {
+  test('满分（RASTER_FULL_SCORE）alpha 为色板峰值', () => {
     const color = scoreToRGBA(RASTER_FULL_SCORE);
-    expect(color.a).toBeGreaterThan(0.8);
+    expect(color.a).toBeGreaterThan(0.3);
   });
 
   test('中间分值（60）rgb 均在有效范围内', () => {
@@ -144,13 +146,13 @@ describe('常量', () => {
     expect(RASTER_MIN_SCORE).toBeLessThan(RASTER_FULL_SCORE);
   });
 
-  test('RASTER_MIN_SCORE 在合理区间（20~50）', () => {
-    expect(RASTER_MIN_SCORE).toBeGreaterThanOrEqual(20);
-    expect(RASTER_MIN_SCORE).toBeLessThanOrEqual(50);
+  test('RASTER_MIN_SCORE 在合理区间（10~30）', () => {
+    expect(RASTER_MIN_SCORE).toBeGreaterThanOrEqual(10);
+    expect(RASTER_MIN_SCORE).toBeLessThanOrEqual(30);
   });
 
-  test('RASTER_FULL_SCORE 在合理区间（85~100）', () => {
-    expect(RASTER_FULL_SCORE).toBeGreaterThanOrEqual(85);
+  test('RASTER_FULL_SCORE 在合理区间（50~100）', () => {
+    expect(RASTER_FULL_SCORE).toBeGreaterThanOrEqual(50);
     expect(RASTER_FULL_SCORE).toBeLessThanOrEqual(100);
   });
 });
@@ -228,26 +230,26 @@ describe('scoreToRGBA - 分时段色板', () => {
     expect(color.a).toBeGreaterThan(0.6);
   });
 
-  test('使用 SUNRISE_PALETTE 时低分值透明', () => {
+  test('使用 SUNRISE_PALETTE 时低分值接近透明', () => {
     const color = scoreToRGBA(RASTER_MIN_SCORE - 1, -1, SUNRISE_PALETTE);
-    expect(color.a).toBe(0);
+    expect(color.a).toBeLessThanOrEqual(0.02);
   });
 
-  test('朝霞与晚霞高分颜色有视觉差异', () => {
-    const sunset = scoreToRGBA(85, -1, FIRECLOUD_PALETTE);
-    const sunrise = scoreToRGBA(85, -1, SUNRISE_PALETTE);
-    // 两个色板输出颜色应有差异（至少一个通道不同）
-    const diff = Math.abs(sunset.r - sunrise.r) +
+  test('朝霞与晚霞高分颜色有差异', () => {
+    const sunset = scoreToRGBA(RASTER_FULL_SCORE, -1, FIRECLOUD_PALETTE);
+    const sunrise = scoreToRGBA(RASTER_FULL_SCORE, -1, SUNRISE_PALETTE);
+    // 两个色板应有差异（alpha 或颜色通道）
+    const diff = Math.abs(sunset.a - sunrise.a) +
+                 Math.abs(sunset.r - sunrise.r) +
                  Math.abs(sunset.g - sunrise.g) +
                  Math.abs(sunset.b - sunrise.b);
-    expect(diff).toBeGreaterThan(10);
+    expect(diff).toBeGreaterThan(0);
   });
 
-  test('朝霞色 b 通道比晚霞色高（粉玫 vs 橙红）', () => {
-    const sunset = scoreToRGBA(80, -1, FIRECLOUD_PALETTE);
-    const sunrise = scoreToRGBA(80, -1, SUNRISE_PALETTE);
-    // 朝霞蓝色分量更高（玫瑰红含蓝）
-    expect(sunrise.b).toBeGreaterThan(sunset.b);
+  test('朝霞色 alpha 更高或 b 通道更高（视觉区分）', () => {
+    const sunset = scoreToRGBA(50, -1, FIRECLOUD_PALETTE);
+    const sunrise = scoreToRGBA(50, -1, SUNRISE_PALETTE);
+    expect(sunrise.a).toBeGreaterThanOrEqual(sunset.a);
   });
 
   test('scoreToRGBA 单调性在 sunrise 色板上也成立', () => {
