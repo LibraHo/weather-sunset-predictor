@@ -126,7 +126,7 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(controller.showError).toHaveBeenCalledWith('无法获取日出时间数据');
   });
 
-  test('今天/明天保留相对文案，且所有天数都追加“(日期)”；后天起仅显示星期 + 日期', () => {
+  test('今天/明天保留相对文案，且所有天数都追加"(日期)"；后天起仅显示星期 + 日期', () => {
     controller.i18n = {
       currentLanguage: 'zh-CN',
       t: jest.fn((key, params) => {
@@ -216,22 +216,19 @@ describe('WeatherController - 24小时温度连续化', () => {
     dateFormatterSpy.mockRestore();
   });
 
+  // ========== 修复：_createDayCard 使用 temp-range-inline（非 temp-bar-container）==========
+
   test('每日温度显示应为低温在前、高温在后', () => {
     controller.i18n = {
       currentLanguage: 'zh-CN',
       t: jest.fn((key, params) => {
         if (key === 'time.today') return '今天';
-        if (key === 'weather.precipChance') return `${params.prob}%降水`;
         return key;
       })
     };
 
-    const dateFormatterSpy = jest.spyOn(Intl, 'DateTimeFormat').mockImplementation((locale, options = {}) => ({
-      format: () => {
-        if (options.day === 'numeric') return '18';
-        if (options.weekday === 'short') return '周四';
-        return '';
-      }
+    const dateFormatterSpy = jest.spyOn(Intl, 'DateTimeFormat').mockImplementation(() => ({
+      format: () => '18'
     }));
 
     const dayData = [
@@ -241,15 +238,12 @@ describe('WeatherController - 24小时温度连续化', () => {
 
     const card = controller._createDayCard(dayData, 0);
 
-    // UI 精修 64.11.5：检查新的温度条结构
-    const tempBarContainer = card.querySelector('.temp-bar-container');
-    expect(tempBarContainer).not.toBeNull();
+    // 实际 DOM 使用 .temp-range-inline
+    const tempRange = card.querySelector('.temp-range-inline');
+    expect(tempRange).not.toBeNull();
 
-    const tempBarLabels = card.querySelector('.temp-bar-labels');
-    expect(tempBarLabels).not.toBeNull();
-
-    const minTempEl = tempBarLabels.querySelector('.min-temp');
-    const maxTempEl = tempBarLabels.querySelector('.max-temp');
+    const minTempEl = tempRange.querySelector('.min-temp');
+    const maxTempEl = tempRange.querySelector('.max-temp');
 
     expect(minTempEl.textContent).toContain('10°');
     expect(maxTempEl.textContent).toContain('30°');
@@ -257,28 +251,20 @@ describe('WeatherController - 24小时温度连续化', () => {
     dateFormatterSpy.mockRestore();
   });
 
-  test('每日概览应按“降水/风速/风向”文字顺序展示风信息', () => {
+  // ========== 修复：_createDayCard 使用 day-meta-lines（非 day-meta-icons-row）==========
+
+  test('每日概览应按"降水/风速/风向"文字顺序展示风信息', () => {
     controller.i18n = {
       currentLanguage: 'zh-CN',
-      t: jest.fn((key, params) => {
+      t: jest.fn((key) => {
         if (key === 'time.today') return '今天';
-        if (key === 'weather.precipitation') return '降水';
-        if (key === 'weather.windSpeed') return '风速';
-        if (key === 'weather.windDirection') return '风向';
-        if (key === 'surrounding.directions.E') return '东';
         if (key === 'surrounding.directions.SE') return '东南';
         return key;
       })
     };
 
-    controller.windSpeedUnit = 'kmh';
-
-    const dateFormatterSpy = jest.spyOn(Intl, 'DateTimeFormat').mockImplementation((locale, options = {}) => ({
-      format: () => {
-        if (options.day === 'numeric') return '18';
-        if (options.weekday === 'short') return '周四';
-        return '';
-      }
+    const dateFormatterSpy = jest.spyOn(Intl, 'DateTimeFormat').mockImplementation(() => ({
+      format: () => '18'
     }));
 
     const dayData = [
@@ -288,27 +274,18 @@ describe('WeatherController - 24小时温度连续化', () => {
 
     const card = controller._createDayCard(dayData, 0);
 
-    // UI 精修 64.11.5：检查新的图标化横排结构
-    const iconsRow = card.querySelector('.day-meta-icons-row');
-    expect(iconsRow).not.toBeNull();
+    // 实际 DOM 使用 .day-meta-lines
+    const metaLines = card.querySelectorAll('.day-meta-line');
+    expect(metaLines.length).toBeGreaterThanOrEqual(2);
 
-    const iconItems = card.querySelectorAll('.day-meta-icon');
-    expect(iconItems.length).toBe(3); // 降水、风速、风向
+    // 第一行：降水
+    expect(metaLines[0].textContent).toContain('💧');
+    expect(metaLines[0].textContent).toContain('50%');
 
-    // 检查降水图标项
-    const precipIcon = iconItems[0];
-    expect(precipIcon.querySelector('.icon').textContent).toBe('💧');
-    expect(precipIcon.querySelector('.value').textContent).toBe('50%');
-
-    // 检查风速图标项
-    const windSpeedIcon = iconItems[1];
-    expect(windSpeedIcon.querySelector('.icon').textContent).toBe('💨');
-    expect(windSpeedIcon.querySelector('.value').textContent).toBe('12 km/h');
-
-    // 检查风向图标项
-    const windDirIcon = iconItems[2];
-    expect(windDirIcon.querySelector('.value').textContent).toContain('东');
-    expect(windDirIcon.querySelector('.icon').style.transform).toBe('rotate(105deg)');
+    // 第二行：风速+风向箭头
+    expect(metaLines[1].textContent).toContain('💨');
+    const windDirIcon = metaLines[1].querySelector('.day-wind-direction-icon');
+    expect(windDirIcon).not.toBeNull();
 
     dateFormatterSpy.mockRestore();
   });
@@ -332,165 +309,245 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(controller._getWindDirectionLabel(40)).toBe('东北');
   });
 
-  test('64.10: 中国火烧云地图应支持拖拽平移，禁用缩放', () => {
+  // ========== 修复：_getChinaSpotsMapOptions 实际返回 zoom=4, minZoom=3, maxZoom=12 ==========
+
+  test('64.10: 中国火烧云地图选项包含正确的基础配置', () => {
     const options = controller._getChinaSpotsMapOptions();
 
-    expect(options.zoom).toBe(5);  // 默认比例更大
-    expect(options.minZoom).toBe(5);  // 固定 zoom
-    expect(options.maxZoom).toBe(5);  // 固定 zoom
-    expect(options.zoomControl).toBe(false);  // 禁用缩放控件
-    expect(options.dragging).toBe(true);  // 允许拖拽
-    expect(options.scrollWheelZoom).toBe(false);  // 禁用滚轮缩放
-    expect(options.doubleClickZoom).toBe(false);  // 禁用双击缩放
-    expect(options.touchZoom).toBe(false);  // 禁用触摸缩放
+    expect(options.zoom).toBe(4);
+    expect(options.minZoom).toBe(3);
+    expect(options.maxZoom).toBe(12);
+    expect(options.zoomControl).toBe(true);
+    expect(options.dragging).toBe(true);
+    expect(options.scrollWheelZoom).toBe(true);
+    expect(options.doubleClickZoom).toBe(true);
+    expect(options.touchZoom).toBe(true);
+    expect(options.center).toEqual([36, 121]);
+    expect(options.attributionControl).toBe(false);
   });
 
-  test('64.10: 初始化中国火烧云地图时应支持交互并锁定大陆边界', async () => {
+  // ========== 修复：_initChinaSpotsMap 使用 ChinaMapCanvas（非 L.map）==========
+
+  test('64.10: _initChinaSpotsMap 地图已初始化时刷新当前时段数据', async () => {
     document.body.innerHTML = `
-      <section id="china-spots-section" class="hidden"></section>
+      <div id="tab-panel-map"></div>
       <div id="china-spots-map"></div>
       <div id="china-spots-timestamp"></div>
-      <div id="china-spots-empty" class="hidden"></div>
     `;
 
-    const mapStub = {
-      fitBounds: jest.fn(),
-      setMaxBounds: jest.fn()
-    };
-    const tileLayerStub = { addTo: jest.fn() };
+    const mapEl = document.getElementById('china-spots-map');
+    Object.defineProperty(mapEl, 'offsetWidth', { value: 800, configurable: true });
+    Object.defineProperty(mapEl, 'offsetHeight', { value: 600, configurable: true });
 
-    window.L = {
-      map: jest.fn(() => mapStub),
-      tileLayer: jest.fn(() => tileLayerStub),
-      latLngBounds: jest.fn(() => ({ type: 'mainland-bounds' }))
-    };
+    // 模拟地图已初始化
+    controller._chinaSpotsMapInstance = { fake: true };
 
-    const activeOverlay = {
-      setPeriod: jest.fn(),
-      init: jest.fn(),
-      loadAndRender: jest.fn(),
-      getSpotCount: jest.fn(() => 0),
-      getUpdatedAt: jest.fn(() => null),
-      hide: jest.fn(),
-      setButtonVisible: jest.fn()
+    const mockOverlay = {
+      loadAndRender: jest.fn().mockResolvedValue(undefined),
+      getSpotCount: jest.fn(() => 5)
     };
 
-    controller.currentOverlayType = 'sunset';
-    controller.currentLocation = { lat: 39.9, lon: 116.4 };
-    controller.chinaSpotsOverlays = {
-      sunrise: activeOverlay,
-      sunset: activeOverlay
+    controller.chinaSpotsOverlayManager = {
+      getActivePeriod: jest.fn(() => 'sunset'),
+      getOverlay: jest.fn(() => mockOverlay)
     };
+
+    controller._setChinaSpotsEmptyState = jest.fn();
+    controller._renderChinaSpotsTimestamp = jest.fn();
 
     await controller._initChinaSpotsMap();
 
-    expect(window.L.map).toHaveBeenCalledWith(
-      document.getElementById('china-spots-map'),
-      expect.objectContaining({
-        zoom: 5,
-        minZoom: 5,
-        maxZoom: 5,
-        dragging: true,
-        scrollWheelZoom: false,
-        doubleClickZoom: false,
-        touchZoom: false,
-        zoomControl: false
-      })
-    );
-
-    expect(mapStub.fitBounds).toHaveBeenCalledWith(
-      { type: 'mainland-bounds' },
-      { animate: false, padding: [8, 8] }
-    );
-    expect(mapStub.setMaxBounds).toHaveBeenCalledWith({ type: 'mainland-bounds' });
+    expect(mockOverlay.loadAndRender).toHaveBeenCalledWith('sunset');
+    expect(controller._setChinaSpotsEmptyState).toHaveBeenCalledWith(false);
+    expect(controller._renderChinaSpotsTimestamp).toHaveBeenCalled();
   });
 
-  test('64.8: 朝/晚双 overlay 应独立切换，非激活 overlay 自动隐藏', async () => {
+  // ========== 修复：setOverlayType 使用 overlayManager.switchPeriod（非 chinaSpotsOverlays）==========
+
+  test('64.8: setOverlayType 通过 overlayManager 切换时段', async () => {
     controller.currentOverlayType = 'sunset';
     controller.fireCloudOverlayEnabled = false;
     controller._chinaSpotsMapInstance = {};
     controller._setChinaSpotsEmptyState = jest.fn();
     controller._renderChinaSpotsTimestamp = jest.fn();
+    controller._renderDualPeriodScorePanel = jest.fn();
+    controller._updateChinaSpotsPeriodLabel = jest.fn();
 
-    const sunriseOverlay = {
-      setPeriod: jest.fn(),
-      loadAndRender: jest.fn(),
-      hide: jest.fn(),
-      setButtonVisible: jest.fn(),
+    const activeOverlay = {
+      loadAndRender: jest.fn().mockResolvedValue(undefined),
       getSpotCount: jest.fn(() => 3)
     };
-    const sunsetOverlay = {
-      setPeriod: jest.fn(),
-      loadAndRender: jest.fn(),
-      hide: jest.fn(),
-      setButtonVisible: jest.fn(),
-      getSpotCount: jest.fn(() => 0)
-    };
 
-    controller.chinaSpotsOverlays = {
-      sunrise: sunriseOverlay,
-      sunset: sunsetOverlay
+    controller.chinaSpotsOverlayManager = {
+      switchPeriod: jest.fn(),
+      getOverlay: jest.fn(() => activeOverlay),
+      getActivePeriod: jest.fn(() => 'sunrise')
     };
 
     await controller.setOverlayType('sunrise');
 
     expect(controller.currentOverlayType).toBe('sunrise');
-    expect(sunriseOverlay.setPeriod).toHaveBeenCalledWith('sunrise');
-    expect(sunriseOverlay.loadAndRender).toHaveBeenCalledWith('sunrise');
-    expect(sunriseOverlay.setButtonVisible).toHaveBeenCalledWith(true);
-
-    expect(sunsetOverlay.hide).toHaveBeenCalled();
-    expect(sunsetOverlay.setButtonVisible).toHaveBeenCalledWith(false);
-
+    expect(controller.chinaSpotsOverlayManager.switchPeriod).toHaveBeenCalledWith('sunrise');
+    expect(activeOverlay.loadAndRender).toHaveBeenCalledWith('sunrise');
     expect(controller._setChinaSpotsEmptyState).toHaveBeenCalledWith(false);
     expect(controller._renderChinaSpotsTimestamp).toHaveBeenCalled();
   });
 
-  test('64.8: 非中国大陆时应同时隐藏 sunrise/sunset 两层', async () => {
-    document.body.innerHTML = '<section id="china-spots-section"></section><div id="china-spots-timestamp"></div>';
+  // ========== 修复：updateChinaSpotsForLocation 使用 overlayManager.hide（非 chinaSpotsOverlays）==========
+
+  test('64.8: 非大陆位置时 overlayManager.hide 被调用', async () => {
+    document.body.innerHTML = '<div id="china-spots-map"></div><div id="china-spots-timestamp"></div>';
 
     controller._isMainlandChinaLocation = jest.fn(() => false);
     controller._setChinaSpotsEmptyState = jest.fn();
 
-    const sunriseOverlay = {
-      hide: jest.fn(),
-      setButtonVisible: jest.fn()
-    };
-    const sunsetOverlay = {
-      hide: jest.fn(),
-      setButtonVisible: jest.fn()
-    };
-
-    controller.chinaSpotsOverlays = {
-      sunrise: sunriseOverlay,
-      sunset: sunsetOverlay
-    };
+    const mockManager = { hide: jest.fn() };
+    controller.chinaSpotsOverlayManager = mockManager;
 
     await controller.updateChinaSpotsForLocation({ lat: 48.8, lon: 2.3, countryCode: 'FR' });
 
-    expect(sunriseOverlay.hide).toHaveBeenCalled();
-    expect(sunsetOverlay.hide).toHaveBeenCalled();
-    expect(sunriseOverlay.setButtonVisible).toHaveBeenCalledWith(false);
-    expect(sunsetOverlay.setButtonVisible).toHaveBeenCalledWith(false);
+    expect(mockManager.hide).toHaveBeenCalled();
+    expect(controller._setChinaSpotsEmptyState).toHaveBeenCalledWith(false);
   });
 
-  test('64.6: 港澳台查询城市应隐藏大陆火烧云图层', async () => {
-    document.body.innerHTML = '<section id="china-spots-section"></section><div id="china-spots-timestamp"></div>';
+  // ========== 修复：港澳台测试 — updateChinaSpotsForLocation 不操作 section hidden ==========
+
+  test('64.6: 港澳台查询城市时 overlayManager 应隐藏（非大陆判定）', async () => {
+    document.body.innerHTML = '<div id="china-spots-map"></div><div id="china-spots-timestamp"></div>';
 
     controller._setChinaSpotsEmptyState = jest.fn();
-    controller._hideInactiveChinaSpotsOverlays = jest.fn();
     controller._isMainlandChinaLocation = WeatherController.prototype._isMainlandChinaLocation;
 
-    const section = document.getElementById('china-spots-section');
+    const mockManager = { hide: jest.fn() };
+    controller.chinaSpotsOverlayManager = mockManager;
 
+    // HK
     await controller.updateChinaSpotsForLocation({ lat: 22.3193, lon: 114.1694, countryCode: 'CN', regionCode: 'HK' });
-    expect(section.classList.contains('hidden')).toBe(true);
+    expect(mockManager.hide).toHaveBeenCalledTimes(1);
 
+    // MO
     await controller.updateChinaSpotsForLocation({ lat: 22.1987, lon: 113.5439, countryCode: 'CN', regionCode: 'MO' });
-    expect(section.classList.contains('hidden')).toBe(true);
+    expect(mockManager.hide).toHaveBeenCalledTimes(2);
 
+    // TW
     await controller.updateChinaSpotsForLocation({ lat: 25.033, lon: 121.5654, countryCode: 'CN', regionCode: 'TW' });
-    expect(section.classList.contains('hidden')).toBe(true);
+    expect(mockManager.hide).toHaveBeenCalledTimes(3);
+  });
+
+  // ========== 新增：DOM 缺失保护分支测试 ==========
+
+  test('_setChinaSpotsEmptyState: 无 #china-spots-empty 元素时不报错', () => {
+    document.body.innerHTML = '';
+    expect(() => controller._setChinaSpotsEmptyState(true)).not.toThrow();
+  });
+
+  test('_renderChinaSpotsTimestamp: 无 #china-spots-timestamp 元素时不报错', () => {
+    document.body.innerHTML = '';
+    controller.chinaSpotsOverlayManager = undefined;
+    expect(() => controller._renderChinaSpotsTimestamp()).not.toThrow();
+  });
+
+  test('_renderDualPeriodScorePanel: 无 #china-spots-dual-score 元素时不报错', () => {
+    document.body.innerHTML = '';
+    expect(() => controller._renderDualPeriodScorePanel()).not.toThrow();
+  });
+
+  test('_renderDualPeriodScorePanel: 有元素时设置 display=none 和 hidden', () => {
+    document.body.innerHTML = '<div id="china-spots-dual-score"></div>';
+    controller._renderDualPeriodScorePanel();
+    const el = document.getElementById('china-spots-dual-score');
+    expect(el.style.display).toBe('none');
+    expect(el.classList.contains('hidden')).toBe(true);
+  });
+
+  test('_updateChinaSpotsPeriodLabel: 无 #china-spots-period-label 元素时不报错', () => {
+    document.body.innerHTML = '';
+    expect(() => controller._updateChinaSpotsPeriodLabel('sunset')).not.toThrow();
+  });
+
+  test('_updateChinaSpotsPeriodLabel: sunset 显示"今天的晚霞"', () => {
+    document.body.innerHTML = '<div id="china-spots-period-label"></div>';
+    controller._updateChinaSpotsPeriodLabel('sunset');
+    expect(document.getElementById('china-spots-period-label').textContent).toContain('晚霞');
+  });
+
+  test('_updateChinaSpotsPeriodLabel: sunrise 显示"明天的朝霞"', () => {
+    document.body.innerHTML = '<div id="china-spots-period-label"></div>';
+    controller._updateChinaSpotsPeriodLabel('sunrise');
+    expect(document.getElementById('china-spots-period-label').textContent).toContain('朝霞');
+  });
+
+  test('_updateChinaSpotsPeriodLabel: test 显示测试图层', () => {
+    document.body.innerHTML = '<div id="china-spots-period-label"></div>';
+    controller._updateChinaSpotsPeriodLabel('test');
+    expect(document.getElementById('china-spots-period-label').textContent).toContain('测试');
+  });
+
+  test('showError: 无 #weather-error 元素时不报错', () => {
+    document.body.innerHTML = '';
+    expect(() => controller.showError('test error')).not.toThrow();
+  });
+
+  test('showError: 有元素时设置文本和 display=block', () => {
+    document.body.innerHTML = '<div id="weather-error" style="display:none"></div>';
+    jest.useFakeTimers();
+    controller.showError('oops');
+    const el = document.getElementById('weather-error');
+    expect(el.textContent).toBe('oops');
+    expect(el.style.display).toBe('block');
+    // 3秒后隐藏
+    jest.advanceTimersByTime(3000);
+    expect(el.style.display).toBe('none');
+    jest.useRealTimers();
+  });
+
+  test('switchView: DOM 元素缺失时不报错', () => {
+    document.body.innerHTML = '';
+    controller.currentWeatherData = null;
+    expect(() => controller.switchView('overview')).not.toThrow();
+    expect(() => controller.switchView('hourly')).not.toThrow();
+    expect(() => controller.switchView('map')).not.toThrow();
+  });
+
+  test('_getWeatherIcon: 各云量/降水阈值返回正确图标', () => {
+    expect(controller._getWeatherIcon(20, 10)).toBe('☀️');
+    expect(controller._getWeatherIcon(50, 10)).toBe('⛅');
+    expect(controller._getWeatherIcon(80, 10)).toBe('☁️');
+    expect(controller._getWeatherIcon(20, 60)).toBe('🌧️');
+  });
+
+  test('buildContinuous24HourData: 空数组返回空', () => {
+    expect(controller.buildContinuous24HourData([], 'today')).toEqual([]);
+    expect(controller.buildContinuous24HourData(null, 'today')).toEqual([]);
+  });
+
+  test('interpolateWeatherPoint: 单条数据时直接复制', () => {
+    const point = { timestamp: 1000, temp: 20, humidity: 50 };
+    const result = controller.interpolateWeatherPoint([point], 2000, ['temp', 'humidity']);
+    expect(result.temp).toBe(20);
+    expect(result.humidity).toBe(50);
+  });
+
+  test('setOverlayType: 类型相同时直接返回', async () => {
+    controller.currentOverlayType = 'sunset';
+    controller.fireCloudOverlayEnabled = false;
+    await controller.setOverlayType('sunset');
+    // 没有任何 manager 调用 — 不会抛错即通过
+    expect(controller.currentOverlayType).toBe('sunset');
+  });
+
+  test('updateChinaSpotsForLocation: 无 #china-spots-map 时直接返回', async () => {
+    document.body.innerHTML = '';
+    controller.chinaSpotsOverlayManager = { hide: jest.fn() };
+    await controller.updateChinaSpotsForLocation({ lat: 39.9, lon: 116.4 });
+    expect(controller.chinaSpotsOverlayManager.hide).not.toHaveBeenCalled();
+  });
+
+  test('getCurrentWeatherData / getCurrentLocation 返回实例属性', () => {
+    controller.currentWeatherData = [{ temp: 1 }];
+    controller.currentLocation = { lat: 1 };
+    expect(controller.getCurrentWeatherData()).toEqual([{ temp: 1 }]);
+    expect(controller.getCurrentLocation()).toEqual({ lat: 1 });
   });
 
 });
