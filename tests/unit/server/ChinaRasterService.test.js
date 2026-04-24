@@ -2,27 +2,46 @@
  * ChinaRasterService 单元测试
  *
  * Mock GridScoreService 以隔离外部依赖。
+ * 使用动态 import + 原型替换兼容 ESM 环境。
  */
 
-jest.mock('../../../server/services/GridScoreService', () => ({
-  refreshIfStale: jest.fn().mockResolvedValue(undefined),
-  getCache: jest.fn()
-}));
+import { jest } from '@jest/globals';
 
-const gridService = require('../../../server/services/GridScoreService');
-
-// 重置模块缓存，使 ChinaRasterService 使用 mock 的 gridService
 let chinaRasterService;
+let originalGetCache;
+let originalRefreshIfStale;
 
-beforeEach(() => {
-  jest.resetModules();
+beforeAll(async () => {
+  // 先加载 GridScoreService 模块保存原始方法
+  const gridModule = await import('../../../server/services/GridScoreService.js');
+  const gridService = gridModule.default || gridModule;
+  originalGetCache = gridService.getCache;
+  originalRefreshIfStale = gridService.refreshIfStale;
+});
 
-  jest.mock('../../../server/services/GridScoreService', () => ({
-    refreshIfStale: jest.fn().mockResolvedValue(undefined),
-    getCache: jest.fn()
-  }));
+beforeEach(async () => {
+  // 加载 GridScoreService 并替换方法
+  const gridModule = await import('../../../server/services/GridScoreService.js');
+  const gridService = gridModule.default || gridModule;
 
-  chinaRasterService = require('../../../server/services/ChinaRasterService');
+  gridService.getCache = jest.fn();
+  gridService.refreshIfStale = jest.fn().mockResolvedValue(undefined);
+
+  // 重新加载 ChinaRasterService 以使用新的 mock
+  const rasterModule = await import('../../../server/services/ChinaRasterService.js');
+  chinaRasterService = rasterModule.default || rasterModule;
+  // 清除内部缓存，避免测试间互相污染
+  if (chinaRasterService.invalidateCache) {
+    chinaRasterService.invalidateCache('all');
+  }
+});
+
+afterEach(async () => {
+  // 恢复原始方法
+  const gridModule = await import('../../../server/services/GridScoreService.js');
+  const gridService = gridModule.default || gridModule;
+  gridService.getCache = originalGetCache;
+  gridService.refreshIfStale = originalRefreshIfStale;
 });
 
 // 构造假散点数据（覆盖中国几个典型城市）
@@ -41,9 +60,14 @@ function makeMockCache(overrides = {}) {
   };
 }
 
+async function getMockGridService() {
+  const gridModule = await import('../../../server/services/GridScoreService.js');
+  return gridModule.default || gridModule;
+}
+
 describe('ChinaRasterService.getRaster', () => {
   test('返回正确的顶层字段', async () => {
-    const mockGridService = require('../../../server/services/GridScoreService');
+    const mockGridService = await getMockGridService();
     mockGridService.getCache.mockReturnValue(makeMockCache());
 
     const raster = await chinaRasterService.getRaster('sunset', 0.5);
@@ -63,7 +87,7 @@ describe('ChinaRasterService.getRaster', () => {
   });
 
   test('values 长度等于 width * height', async () => {
-    const mockGridService = require('../../../server/services/GridScoreService');
+    const mockGridService = await getMockGridService();
     mockGridService.getCache.mockReturnValue(makeMockCache());
 
     const raster = await chinaRasterService.getRaster('sunset', 0.5);
@@ -71,7 +95,7 @@ describe('ChinaRasterService.getRaster', () => {
   });
 
   test('width/height 符合预期（0.5° 分辨率，bbox 72-135/18-53）', async () => {
-    const mockGridService = require('../../../server/services/GridScoreService');
+    const mockGridService = await getMockGridService();
     mockGridService.getCache.mockReturnValue(makeMockCache());
 
     const raster = await chinaRasterService.getRaster('sunset', 0.5);
@@ -80,14 +104,14 @@ describe('ChinaRasterService.getRaster', () => {
   });
 
   test('gridPoints 为空时抛出错误', async () => {
-    const mockGridService = require('../../../server/services/GridScoreService');
+    const mockGridService = await getMockGridService();
     mockGridService.getCache.mockReturnValue({ updatedAt: new Date().toISOString(), gridPoints: [] });
 
     await expect(chinaRasterService.getRaster('sunset', 0.5)).rejects.toThrow('尚未就绪');
   });
 
   test('gridPoints 均无有效 score 时抛出错误', async () => {
-    const mockGridService = require('../../../server/services/GridScoreService');
+    const mockGridService = await getMockGridService();
     mockGridService.getCache.mockReturnValue({
       updatedAt: new Date().toISOString(),
       gridPoints: [
@@ -100,14 +124,14 @@ describe('ChinaRasterService.getRaster', () => {
   });
 
   test('缓存未就绪时抛出错误', async () => {
-    const mockGridService = require('../../../server/services/GridScoreService');
+    const mockGridService = await getMockGridService();
     mockGridService.getCache.mockReturnValue(null);
 
     await expect(chinaRasterService.getRaster('sunset', 0.5)).rejects.toThrow('尚未就绪');
   });
 
   test('period 参数异常时降级为 sunset', async () => {
-    const mockGridService = require('../../../server/services/GridScoreService');
+    const mockGridService = await getMockGridService();
     mockGridService.getCache.mockReturnValue(makeMockCache());
 
     const raster = await chinaRasterService.getRaster('invalid', 0.5);
@@ -115,7 +139,7 @@ describe('ChinaRasterService.getRaster', () => {
   });
 
   test('resolution 参数超出范围时使用默认 0.5', async () => {
-    const mockGridService = require('../../../server/services/GridScoreService');
+    const mockGridService = await getMockGridService();
     mockGridService.getCache.mockReturnValue(makeMockCache());
 
     const raster = await chinaRasterService.getRaster('sunset', 999);
@@ -123,7 +147,7 @@ describe('ChinaRasterService.getRaster', () => {
   });
 
   test('缓存命中时不重复调用 gridService.getCache 多次', async () => {
-    const mockGridService = require('../../../server/services/GridScoreService');
+    const mockGridService = await getMockGridService();
     mockGridService.getCache.mockReturnValue(makeMockCache());
 
     // 第一次调用

@@ -90,9 +90,9 @@ describe('FireCloud API Integration', () => {
 
     mockClearCache.mockImplementation(async () => undefined);
 
-    mockGetGrid.mockImplementation(async ({ bbox, zoom, time }) => ({
+    mockGetGrid.mockImplementation(async ({ bbox, zoom, time, type }) => ({
       type: 'FeatureCollection',
-      meta: { bbox, zoom, time },
+      meta: { bbox, zoom, time, type },
       values: [[88, 90], [76, 82]]
     }));
 
@@ -194,7 +194,8 @@ describe('FireCloud API Integration', () => {
       expect(mockGetGrid).toHaveBeenCalledWith({
         bbox: '100,20,120,40',
         zoom: 6,
-        time: 1700000000000
+        time: 1700000000000,
+        type: 'sunset'
       });
     });
 
@@ -215,7 +216,7 @@ describe('FireCloud API Integration', () => {
         .expect(200);
 
       expect(res.headers['content-type']).toContain('image/png');
-      expect(mockGetTilePng).toHaveBeenCalledWith({ z: 6, x: 52, y: 24, time: 1700000000000 });
+      expect(mockGetTilePng).toHaveBeenCalledWith({ z: 6, x: 52, y: 24, time: 1700000000000, type: 'sunset' });
       expect(Buffer.isBuffer(res.body)).toBe(true);
     });
   });
