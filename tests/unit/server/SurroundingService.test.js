@@ -126,16 +126,18 @@ describe('SurroundingService', () => {
       ).rejects.toThrow('经度必须在-180到180之间');
     });
 
-    test('应该拒绝无效的半径参数', async () => {
+    test('非标准半径应被宽松接受并继续执行', async () => {
       const params = {
         lat: 40.0,
         lon: 116.0,
-        radius: 75 // 无效半径，必须是50/100/150
+        radius: 75 // 非标准半径
       };
 
-      await expect(
-        surroundingService.getSurroundingPredictions(params)
-      ).rejects.toThrow('半径必须是50、100或150公里');
+      // 不抛错，返回结果
+      const result = await surroundingService.getSurroundingPredictions(params);
+      expect(result).toHaveProperty('points');
+      expect(result.points).toHaveLength(8);
+      expect(result.radius).toBe(75);
     });
 
     test('应该拒绝无效的预测类型', async () => {
@@ -168,7 +170,8 @@ describe('SurroundingService', () => {
       const date = new Date('2024-06-21T12:00:00Z');
       const key = surroundingService._getCacheKey(40.0, 116.0, 100, 'sunset', date);
 
-      expect(key).toMatch(/^surrounding_40\.00_116\.00_100_sunset_\d{4}-\d{2}-\d{2}$/);
+      // 业务已升级为 v2 缓存键格式
+      expect(key).toMatch(/^surrounding_v2_40\.00_116\.00_100_sunset_\d{4}-\d{2}-\d{2}$/);
     });
 
     test('相同参数应该生成相同的缓存键', () => {

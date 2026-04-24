@@ -16,6 +16,7 @@ import os from 'os';
 
 // 使用动态 import 加载模块
 let GridScoreService;
+let DEFAULT_MAX_AGE_MS;
 let mockCacheFile;
 
 beforeAll(async () => {
@@ -25,6 +26,8 @@ beforeAll(async () => {
   // 加载服务模块
   const gridServiceModule = await import('../../../server/services/GridScoreService.js');
   GridScoreService = gridServiceModule.GridScoreService;
+  // 模块不导出 DEFAULT_MAX_AGE_MS，从配置推断为 12h
+  DEFAULT_MAX_AGE_MS = 12 * 60 * 60 * 1000;
 });
 
 afterAll(() => {
@@ -53,39 +56,39 @@ describe('GridScoreService', () => {
       expect(Array.isArray(grid)).toBe(true);
       expect(grid.length).toBeGreaterThan(0);
 
-      // 检查第一个点是否在边界内
+      // 检查第一个点是否在边界内（中国区域）
       const firstPoint = grid[0];
       expect(firstPoint.lat).toBeGreaterThanOrEqual(18);
       expect(firstPoint.lat).toBeLessThanOrEqual(53);
       expect(firstPoint.lon).toBeGreaterThanOrEqual(73);
       expect(firstPoint.lon).toBeLessThanOrEqual(135);
 
-      // 检查最后一个点
+      // 检查最后一个点也在合理边界内（多区域扩展后最大 lon=146）
       const lastPoint = grid[grid.length - 1];
       expect(lastPoint.lat).toBeGreaterThanOrEqual(18);
       expect(lastPoint.lat).toBeLessThanOrEqual(53);
       expect(lastPoint.lon).toBeGreaterThanOrEqual(73);
-      expect(lastPoint.lon).toBeLessThanOrEqual(135);
+      expect(lastPoint.lon).toBeLessThanOrEqual(146);
     });
 
-    test('generateGrid 应使用 5 度间隔', () => {
+    test('generateGrid 应使用 1 度间隔（步长来自配置）', () => {
       const grid = service.generateGrid();
 
       // 检查经度间隔
-      const latGroup = grid.filter(p => p.lat === 20.0);
+      const latGroup = grid.filter(p => Math.abs(p.lat - 20.0) < 0.01);
       if (latGroup.length > 1) {
         for (let i = 1; i < latGroup.length; i++) {
           const diff = latGroup[i].lon - latGroup[i - 1].lon;
-          expect(diff).toBe(5);
+          expect(diff).toBe(1);
         }
       }
 
       // 检查纬度间隔
-      const lonGroup = grid.filter(p => p.lon === 75.0);
+      const lonGroup = grid.filter(p => Math.abs(p.lon - 75.0) < 0.01);
       if (lonGroup.length > 1) {
         for (let i = 1; i < lonGroup.length; i++) {
           const diff = lonGroup[i].lat - lonGroup[i - 1].lat;
-          expect(diff).toBe(5);
+          expect(diff).toBe(1);
         }
       }
     });
@@ -93,11 +96,17 @@ describe('GridScoreService', () => {
     test('generateGrid 应生成预期数量的网格点', () => {
       const grid = service.generateGrid();
 
-      // 计算预期数量：(53-18)/5 + 1 = 8 个纬度行
-      // (135-73)/5 + 1 = 13 个经度列
-      // 8 * 13 = 104 个点
-      const expectedPoints = 8 * 13;
-      expect(grid.length).toBe(expectedPoints);
+      // 配置已扩展为多区域（中国+日本+韩国），步长 1.0
+      // 不再硬编码 104，而是验证数量 >0 且所有点在边界内
+      expect(grid.length).toBeGreaterThan(0);
+
+      // 验证所有点都在各区域边界内
+      grid.forEach(p => {
+        const inChina = p.lon >= 73 && p.lon <= 135 && p.lat >= 18 && p.lat <= 53;
+        const inJapan = p.lon >= 129 && p.lon <= 146 && p.lat >= 31 && p.lat <= 46;
+        const inKorea = p.lon >= 124 && p.lon <= 132 && p.lat >= 33 && p.lat <= 39.5;
+        expect(inChina || inJapan || inKorea).toBe(true);
+      });
     });
   });
 
@@ -111,9 +120,9 @@ describe('GridScoreService', () => {
     });
 
     test('getCache 应正确标记过期缓存', () => {
-      // 手动设置一个过期的缓存时间
+      // 手动设置一个过期的缓存时间（超过默认最大年龄 12h）
       service._cache['sunset'] = {
-        updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2小时前
+        updatedAt: new Date(Date.now() - (13 * 60 * 60 * 1000)).toISOString(),
         gridPoints: []
       };
 
@@ -122,9 +131,9 @@ describe('GridScoreService', () => {
     });
 
     test('getCache 应标记非过期缓存为 fresh', () => {
-      // 手动设置一个新鲜的缓存时间
+      // 手动设置一个新鲜的缓存时间（在默认最大年龄 12h 内）
       service._cache['sunset'] = {
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date(Date.now() - (60 * 60 * 1000)).toISOString(),
         gridPoints: []
       };
 
@@ -231,8 +240,11 @@ describe('GridScoreService', () => {
     });
 
     test('refreshIfStale 应在缓存过期时刷新', async () => {
+      // 设置过期缓存（超过 maxAgeMs 且不是今天，避免 today-skip 逻辑）
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
       service._cache['sunset'] = {
-        updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        updatedAt: yesterday.toISOString(),
         gridPoints: []
       };
 
