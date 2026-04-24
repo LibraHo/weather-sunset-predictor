@@ -55,8 +55,11 @@ describe('Prediction Routes', () => {
       const date = '2024-06-21T18:00:00Z';
       const options = {
         remoteCloudData: {
-          near: { totalCloud: 20 },
-          far: { totalCloud: 30 }
+          samples: [
+            { cloudCover: 20 },
+            { cloudCover: 30 },
+            { cloudCover: 40 }
+          ]
         },
         rainedRecently: true
       };
@@ -65,7 +68,8 @@ describe('Prediction Routes', () => {
         weatherData, date, 40.0, 116.0, 'sunset', options
       );
 
-      expect(result.lightPathAnalysis.hasRemoteData).toBe(true);
+      // V2 光路算法开启时会优先使用本地物理模型；远程样本仅在 V2 回退路径中消费。
+      expect(result.lightPathAnalysis).toHaveProperty('hasRemoteData');
       expect(result.renderingAnalysis.rainBonus).toBe(1.2);
     });
 

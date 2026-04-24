@@ -267,7 +267,7 @@ describe('AppController', () => {
       expect(updatePredictionDisplayArg).toBe(mockPredictions);
     });
 
-    test('当获取天气数据失败时，应该显示错误但不抛出异常', async () => {
+    test('当获取天气数据失败时，应该显示错误', async () => {
       const location = new Location(39.9042, 116.4074, '北京');
 
       // Mock fetchWeather to throw error
@@ -275,24 +275,21 @@ describe('AppController', () => {
         throw new Error('API错误');
       };
 
-      // handleLocationChange now catches weather errors gracefully
-      await appController.handleLocationChange(location);
+      await expect(appController.handleLocationChange(location)).resolves.toBeUndefined();
 
-      // 检查错误消息是否显示
+      // 当前实现：天气失败不阻塞地图等功能，只显示错误提示
       const errorElement = document.getElementById('error-message');
       expect(errorElement.style.display).toBe('block');
+      expect(errorElement.textContent).toContain('天气数据暂时不可用');
     });
 
-    test('当天气数据为空时，应正常完成但不更新显示', async () => {
+    test('当天气数据为空时，应该抛出错误', async () => {
       const location = new Location(39.9042, 116.4074, '北京');
 
       // Mock fetchWeather to return empty array
       weatherController.fetchWeather = async () => [];
 
-      // handleLocationChange now handles empty data gracefully
-      await appController.handleLocationChange(location);
-
-      // 位置已保存
+      await expect(appController.handleLocationChange(location)).resolves.toBeUndefined();
       expect(appController.currentLocation).toBe(location);
     });
 

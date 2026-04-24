@@ -2,7 +2,7 @@
  * IdwInterpolator 单元测试
  */
 
-const { IdwInterpolator, haversineKm } = require('../../../server/utils/IdwInterpolator');
+import { IdwInterpolator, haversineKm } from '../../../server/utils/IdwInterpolator.js';
 
 describe('haversineKm', () => {
   test('同点距离为 0', () => {
