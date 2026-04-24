@@ -30,6 +30,8 @@ export function createChinaOverlayManager() {
   console.log('[WeatherController] fixed mode=raster → ChinaRasterOverlayManager');
   return new ChinaRasterOverlayManager();
 }
+export const CHINA_RENDER_MODE_KEY = 'china_render_mode';
+export const CHINA_RENDER_MODE_DEFAULT = 'raster';
 import { isInMainlandChina, isMainlandChinaLocation, MAINLAND_BOUNDS } from '../utils/mainlandChinaRegion.js';
 // 暂时禁用 ChartService 导入，使用内联简化版本
 

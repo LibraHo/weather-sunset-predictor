@@ -41,3 +41,14 @@ if (typeof HTMLCanvasElement !== 'undefined') {
     value: jest.fn(() => 'data:image/png;base64,mock-overlay')
   });
 }
+
+// JSDOM localStorage stub
+const _store = {};
+if (typeof global !== 'undefined' && !global.localStorage) {
+  global.localStorage = {
+    getItem: (k) => _store[k] ?? null,
+    setItem: (k, v) => { _store[k] = String(v); },
+    removeItem: (k) => { delete _store[k]; },
+    clear: () => { Object.keys(_store).forEach((k) => delete _store[k]); }
+  };
+}
