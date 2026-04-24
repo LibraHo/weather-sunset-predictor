@@ -133,12 +133,12 @@ describe('SurroundingService', () => {
         radius: 75 // 非标准半径
       };
 
-      // 不抛错，返回结果
+      // 不抛错，返回结果；该路径会执行两批周边点预测，保留宽松超时避免全量测试环境偶发超过 Jest 默认 5s。
       const result = await surroundingService.getSurroundingPredictions(params);
       expect(result).toHaveProperty('points');
       expect(result.points).toHaveLength(8);
       expect(result.radius).toBe(75);
-    });
+    }, 10000);
 
     test('应该拒绝无效的预测类型', async () => {
       const params = {
