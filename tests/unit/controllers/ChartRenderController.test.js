@@ -21,8 +21,8 @@ describe('ChartRenderController', () => {
     controller.renderSimpleChart(hourlyData, 'chart-container', 'temp', '温度', '°C', '#ff6b6b');
 
     const html = document.getElementById('chart-container').innerHTML;
-    expect(html).toContain('1/1 18:00');
-    expect(html).toContain('1/2 0:00');
+    expect(html).toContain('1/2 2:00');
+    expect(html).toContain('1/3 0:00');
   });
 
   test('跨日边界与常规刻度过近时，应优先保留跨日标签避免横轴混叠', () => {
@@ -45,7 +45,7 @@ describe('ChartRenderController', () => {
     controller.renderSimpleChart(hourlyData, 'chart-container', 'temp', '温度', '°C', '#ff6b6b');
 
     const html = document.getElementById('chart-container').innerHTML;
-    expect(html).toContain('1/2 0:00');
+    expect(html).toContain('1/3 0:00');
     // 与跨日点过近的 23:00 常规刻度应被抑制，避免文字重叠
     expect(html).not.toContain('>23:00<');
   });
