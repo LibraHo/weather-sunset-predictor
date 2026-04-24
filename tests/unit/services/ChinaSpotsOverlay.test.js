@@ -118,10 +118,14 @@ describe('ChinaSpotsOverlay helpers', () => {
     expect(s90).toBeGreaterThan(s65);
   });
 
-  test('isRenderableMainlandSpot: 仅保留大陆有效点', () => {
+  test('isRenderableMainlandSpot: 仅保留大陆有效点，40分及以上才上色', () => {
+    expect(MAINLAND_RENDER_MIN_SCORE).toBe(40);
     expect(
-      isRenderableMainlandSpot({ lat: 39.9, lon: 116.4, score: MAINLAND_RENDER_MIN_SCORE })
+      isRenderableMainlandSpot({ lat: 39.9, lon: 116.4, score: 40 })
     ).toBe(true);
+    expect(
+      isRenderableMainlandSpot({ lat: 39.9, lon: 116.4, score: 39 })
+    ).toBe(false);
 
     expect(
       isRenderableMainlandSpot({ lat: 25.03, lon: 121.56, score: 85 })

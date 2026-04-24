@@ -8,8 +8,8 @@
 
 import { isInMainlandChina, MAINLAND_BOUNDS } from '../utils/mainlandChinaRegion.js';
 
-// 业务规则：评分 <=40 不上色，仅 >40 才渲染火烧云颜色
-export const MAINLAND_RENDER_MIN_SCORE = 41;
+// 业务规则：评分 <40 不上色，仅 40 分及以上才渲染火烧云颜色
+export const MAINLAND_RENDER_MIN_SCORE = 40;
 const SUPPORTED_SPOT_PERIODS = ['sunrise', 'sunset'];
 
 function clamp(value, min, max) {
