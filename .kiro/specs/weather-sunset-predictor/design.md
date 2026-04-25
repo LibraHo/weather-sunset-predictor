@@ -266,6 +266,145 @@ rankScore = exactMatch * 100
 ```
 - 持久化：`~/.xiake/schedule-config.json`
 
+### Agent API 与 Token 管理（需求45）
+
+**架构原则**：不另起后端。Agent API 与网站 API 共用同一个 Node 服务、同一套预测算法、同一套天气/地理编码服务，避免分数与解释分叉。差异仅在鉴权、限流、输出格式和审计维度。
+
+**调用方定位**：第一阶段主要给 Alex 自用的大模型/自动化脚本；保留未来邀请制开放给用户且禁止商用的能力，因此从 MVP 开始就要有 Token、scope、额度和吊销。
+
+**Token 格式与存储**：
+- 明文格式：`xiake_live_<random>` / `xiake_test_<random>`。
+- 创建时只展示一次明文；服务端只保存 `tokenHash`、`prefix`、`name`、`scopes`、`enabled`、`minuteLimit`、`dailyLimit`、`createdAt`、`lastUsedAt`、`usageCount`。
+- 推荐持久化：优先 SQLite（如已存在 `~/.xiake/visitor.db` 可扩展表），否则阶段一可使用 `~/.xiake/api-tokens.json`，后续迁移 SQLite。
+- Hash：`sha256(token + serverSecret)`；日志只记录 token id/prefix，不记录明文。
+
+**鉴权方式**：
+```http
+Authorization: Bearer xiake_live_xxx
+```
+也可兼容 `X-Xiake-Token`，但文档推荐 Bearer。
+
+**Agent API 路由**：
+- `GET /api/agent/forecast?location=北京&type=sunset&date=today&detail=simple|full`
+- `GET /api/agent/forecast?lat=39.9042&lon=116.4074&type=sunrise&detail=full`
+- `GET /api/agent/explain?lat=&lon=&type=&date=`（P2）
+- `GET /api/agent/geocode?q=Tokyo, Japan`（P2）
+- `GET /api/agent/map-summary?bbox=&type=&threshold=`（P3）
+- `GET /api/agent/openapi.json`（P2/P3）
+
+**Agent forecast 返回结构**：
+```json
+{
+  "success": true,
+  "data": {
+    "location": { "name": "北京", "lat": 39.9042, "lon": 116.4074, "confidence": 0.98 },
+    "type": "sunset",
+    "score": 68,
+    "quality": "good",
+    "bestViewingWindow": { "start": "2026-04-25T10:40:00.000Z", "end": "2026-04-25T11:40:00.000Z" },
+    "factors": { "highClouds": 72, "midClouds": 45, "lowClouds": 12, "visibility": 18, "aerosolOpticalDepth": 0.42 },
+    "summary": "条件不错，火烧云概率较高",
+    "explanation": "高云和中云提供色彩载体，低云遮挡较少，能见度良好。",
+    "warnings": []
+  },
+  "meta": { "tokenId": "tok_...", "cached": false, "elapsedMs": 420 }
+}
+```
+
+**后台管理接口**：
+- `GET /api/admin/tokens` - Token 列表（不返回明文）
+- `POST /api/admin/tokens` - 创建 Token，返回一次性明文
+- `PATCH /api/admin/tokens/:id` - 修改名称、scope、限流、启停
+- `DELETE /api/admin/tokens/:id` - 吊销/删除 Token
+- `GET /api/admin/tokens/:id/usage` - 使用统计
+
+**Token 数据模型（建议 SQLite 表）**：
+```sql
+CREATE TABLE api_tokens (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  prefix TEXT NOT NULL,
+  token_hash TEXT NOT NULL UNIQUE,
+  scopes TEXT NOT NULL,
+  enabled INTEGER NOT NULL DEFAULT 1,
+  minute_limit INTEGER NOT NULL DEFAULT 60,
+  daily_limit INTEGER NOT NULL DEFAULT 2000,
+  usage_count INTEGER NOT NULL DEFAULT 0,
+  last_used_at TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE api_token_usage (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  token_id TEXT NOT NULL,
+  endpoint TEXT NOT NULL,
+  status_code INTEGER NOT NULL,
+  error_code TEXT,
+  elapsed_ms INTEGER,
+  ip_hash TEXT,
+  user_agent TEXT,
+  created_at TEXT NOT NULL
+);
+```
+
+**错误模型**：
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED | TOKEN_DISABLED | SCOPE_DENIED | RATE_LIMITED | BAD_REQUEST | INTERNAL_SERVER_ERROR",
+    "message": "Human readable message"
+  },
+  "meta": { "requestId": "...", "elapsedMs": 12 }
+}
+```
+
+**实现落点**：
+- `server/services/ApiTokenService.js`：生成、哈希、校验、额度计数、使用日志。
+- `server/middleware/agentAuth.js`：Bearer 解析、scope 校验、401/403/429 统一返回。
+- `server/routes/agent.js`：Agent API 业务路由。
+- `server/routes/admin-tokens.js` 或并入现有 admin 路由：后台 Token 管理。
+**测试文件规划**：
+- `tests/unit/server/apiTokenService.test.js`：Token 生成、hash 校验、明文只返回一次、启停/吊销、额度计数。
+- `tests/unit/server/agentAuth.test.js`：无 token 401、无效 token 401、禁用 token 403、scope 不足 403、minute/day 超限 429、合法 token 通过。
+- `tests/unit/server/agentForecast.test.js`：`location` 输入、`lat/lon` 输入、`type=sunrise|sunset`、`detail=simple|full`、错误参数 400、结构化字段完整。
+- `tests/unit/server/adminTokens.test.js`：后台创建/列表/改名/启停/删除 token，列表不泄露 token 明文。
+- `tests/integration/agentApi.integration.test.js`（可选）：从鉴权到 forecast 的端到端调用，mock 外部天气源，避免真实 API 不稳定。
+
+**限流与审计**：
+- Token 维度：每分钟限制 + 每日额度；默认建议自用 token `60/min, 2000/day`，外部邀请用户（禁止商用） token 可按非商用额度调整。
+- IP 维度：保留粗粒度辅助限流，防止单 token 泄露后瞬间打爆。
+- 429 返回 `RATE_LIMITED`，401 返回 `UNAUTHORIZED`，403 返回 `TOKEN_DISABLED` 或 `SCOPE_DENIED`。
+- 日志字段：tokenId、endpoint、status、elapsedMs、createdAt、ipHash、userAgent 简要，不长期保存完整 IP 明文。
+
+**分期计划**：
+- Phase 1（MVP）：Token 存储/鉴权/后台管理 + `/api/agent/forecast` + 单测/集成测试。
+- Phase 2：`explain`、`geocode`、OpenAPI JSON、用量统计图。
+- Phase 3：`map-summary`、邀请用户额度/非商用规则、MCP/tool schema 示例。
+
+**API接入（前台文档页）**：
+- 新增主页面/菜单入口：`API接入`（建议路径 `#/api-guide` 或独立 section `api-guide-section`）。
+- 页面目标：让开发者/大模型用户不用看源码即可完成接入。
+- 内容结构：
+  1. 快速开始：进入 API申请 → 留邮箱/用途 → 管理员后台审核并创建 Token → 复制 Bearer Token → 调用 forecast。
+  2. 鉴权说明：`Authorization: Bearer xiake_live_xxx`，Token 只展示一次，泄露可后台停用。
+  3. 示例请求：curl、JavaScript fetch、Python requests。
+  4. 核心接口：`/api/agent/forecast` 参数表、返回字段解释、`simple/full` 差异。
+  5. 错误码：401/403/429/400/500 对应处理建议。
+  6. 限流与额度：每分钟、每日额度、未来邀请用户（禁止商用）非商用额度说明。
+  7. 大模型接入建议：OpenAPI/MCP/tool schema 后续位置，提示不要编造结果，必须调用 API。
+- UI 要求：必须在现有霞客主题框架下实现，复用当前主页分页/菜单体系、容器宽度、卡片样式、按钮、字体、明暗主题变量和响应式断点；不得做独立风格页面或跳出当前主题；移动端可读；代码示例可复制；不暴露任何真实 Token。
+
+**API申请（前台申请页）**：
+- 新增主页面/菜单入口：`API申请`（建议路径 `#/api-apply` 或独立 section `api-apply-section`），必须复用现有主题框架、卡片/表单/按钮样式与明暗主题变量。
+- 最小表单字段：邮箱/联系方式（必填）、用途说明（可选）、预计调用量（可选，默认普通额度）；不收集“是否商用”，因为商用默认禁止。
+- 前台只提交申请，不直接生成 Token，避免被自动化刷 token；页面必须明确提示“禁止商用，仅限个人/研究/测试/非商业用途”。
+- 后台新增申请列表：显示邮箱、用途、状态（pending/approved/rejected）、提交时间、处理时间、关联 tokenId；后台审核时默认按非商用额度发放。
+- 管理员可从申请记录一键创建 Token；创建后 token 明文仍只展示一次，申请记录只保存 tokenId/状态，不保存 token 明文。
+- 存储建议与 Token 同库：`api_token_applications` 表，字段含 `id/email/contact/useCase/expectedUsage/status/tokenId/adminNote/createdAt/updatedAt`。
+- 测试覆盖：申请表单提交成功、邮箱必填校验、后台列表可见、审核创建 Token 后申请与 tokenId 关联、前台不能直接获得 Token。
+
 ## 缓存策略
 
 | 数据类型 | TTL | 存储 |
@@ -299,6 +438,7 @@ rankScore = exactMatch * 100
 
 ## 安全
 
+- Agent API 必须鉴权；API Token 明文只在创建时显示，服务端仅保存 hash，支持停用/吊销/额度限制
 - API Key仅存储于后端环境变量
 - 前端不暴露Windy/Open-Meteo Key
 - IP存储前SHA256哈希
@@ -312,6 +452,7 @@ rankScore = exactMatch * 100
 - 分享地图页改为中国GeoJSON自研底图（PR #318）
 - 手机版天气卡片/7天概览长条单列横排优化
 - 去掉云图contrast滤镜消除"等高线"视觉
+- 新增需求45：Agent API 与 API Token 管理（同后端、Bearer Token、独立限流、后台管理）
 - 新增需求41：API调用分类日志（grid/weather/gaode/gaode_tile）
 - 新增需求42：定时更新配置面板（朝霞/晚霞更新时间可自定义）
 - 新增需求40：Open-Meteo配额统计与保护（软上限9000/10000）
