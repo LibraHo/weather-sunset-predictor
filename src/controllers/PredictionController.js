@@ -1014,41 +1014,45 @@ class PredictionController {
       return null;
     };
 
-    const closeAllScoreBreakdowns = () => {
-      predictionDisplay.querySelectorAll('.score-breakdown-popover').forEach(pop => {
-        pop.hidden = true;
-      });
-      predictionDisplay.querySelectorAll('.score-breakdown-trigger').forEach(trigger => {
-        trigger.setAttribute('aria-expanded', 'false');
-      });
-    };
+    if (!document.__scoreBreakdownDelegateBound) {
+      document.__scoreBreakdownDelegateBound = true;
 
-    predictionDisplay.addEventListener('click', (e) => {
-      const trigger = closestElement(e.target, '.score-breakdown-trigger');
-      if (!trigger) {
-        if (!closestElement(e.target, '.score-breakdown-popover')) {
-          closeAllScoreBreakdowns();
+      const closeAllScoreBreakdowns = () => {
+        document.querySelectorAll('.score-breakdown-popover').forEach(pop => {
+          pop.hidden = true;
+        });
+        document.querySelectorAll('.score-breakdown-trigger').forEach(trigger => {
+          trigger.setAttribute('aria-expanded', 'false');
+        });
+      };
+
+      document.addEventListener('click', (e) => {
+        const trigger = closestElement(e.target, '.score-breakdown-trigger');
+        if (!trigger) {
+          if (!closestElement(e.target, '.score-breakdown-popover')) {
+            closeAllScoreBreakdowns();
+          }
+          return;
         }
-        return;
-      }
-      e.stopPropagation();
+        e.stopPropagation();
 
-      const pop = trigger.querySelector('.score-breakdown-popover');
-      if (!pop) return;
+        const pop = trigger.querySelector('.score-breakdown-popover');
+        if (!pop) return;
 
-      const willOpen = pop.hidden;
-      closeAllScoreBreakdowns();
-      pop.hidden = !willOpen;
-      trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
-    });
+        const willOpen = pop.hidden;
+        closeAllScoreBreakdowns();
+        pop.hidden = !willOpen;
+        trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      }, true);
 
-    predictionDisplay.addEventListener('keydown', (e) => {
-      const trigger = closestElement(e.target, '.score-breakdown-trigger');
-      if (!trigger) return;
-      if (e.key !== 'Enter' && e.key !== ' ') return;
-      e.preventDefault();
-      trigger.click();
-    });
+      document.addEventListener('keydown', (e) => {
+        const trigger = closestElement(e.target, '.score-breakdown-trigger');
+        if (!trigger) return;
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
+        trigger.click();
+      }, true);
+    }
 
     // 显示预测部分
     if (predictionSection) {
