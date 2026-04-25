@@ -131,7 +131,7 @@ const translations = {
     "midClouds": "Nubes Medias",
     "lowClouds": "Nubes Bajas",
     "feeling": "Sensación Térmica",
-    "uvIndex": "Índice UV",
+    "uvIndex": "UV estimado",
     "overcast": "Cubierto",
     "cloudy": "Nublado",
     "partlyCloudy": "Parcialmente Nublado",

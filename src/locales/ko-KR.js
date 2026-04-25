@@ -147,7 +147,7 @@ const translations = {
     "midClouds": "중층운",
     "lowClouds": "저층운",
     "feeling": "체감",
-    "uvIndex": "자외선 지수",
+    "uvIndex": "추정 UV",
     "overcast": "흐림",
     "cloudy": "흐림",
     "partlyCloudy": "약간 흐림",
