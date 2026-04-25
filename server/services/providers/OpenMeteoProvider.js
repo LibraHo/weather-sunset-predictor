@@ -7,6 +7,7 @@ class OpenMeteoProvider extends BaseWeatherProvider {
   constructor() {
     super('openmeteo');
     this.API_URL = 'https://api.open-meteo.com/v1/forecast';
+    this.AIR_QUALITY_API_URL = 'https://air-quality-api.open-meteo.com/v1/air-quality';
     this.MAX_RETRIES = 4;
     this.RETRY_BASE_MS = 1200;
   }
@@ -31,14 +32,14 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     return null;
   }
 
-  async _getWithRetry(params, timeoutMs = 15000, label = 'request') {
+  async _getWithRetry(params, timeoutMs = 15000, label = 'request', url = this.API_URL, logType = 'grid') {
     // 记录本次调用
     quota.record(1);
-    const tracker = apiLog.track('grid', label || 'open-meteo', params);
+    const tracker = apiLog.track(logType, label || 'open-meteo', params);
     let lastError = null;
     for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
       try {
-        const response = await axios.get(this.API_URL, { params, timeout: timeoutMs });
+        const response = await axios.get(url, { params, timeout: timeoutMs });
         tracker.ok(response.status);
         return response;
       } catch (error) {
@@ -134,6 +135,55 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     };
   }
 
+  async _fetchAirQualityData(lat, lon, hours = 168, forecastDays = 7) {
+    const params = {
+      latitude: lat,
+      longitude: lon,
+      hourly: 'aerosol_optical_depth,dust,pm2_5,pm10,us_aqi,european_aqi',
+      timeformat: 'unixtime',
+      timezone: 'auto',
+      forecast_days: forecastDays
+    };
+
+    const response = await this._getWithRetry(
+      params,
+      10000,
+      `air-quality(${lat},${lon})`,
+      this.AIR_QUALITY_API_URL,
+      'air_quality'
+    );
+
+    const hourly = response.data?.hourly;
+    if (!hourly?.time) {
+      throw new Error('Open-Meteo Air Quality API 响应格式错误');
+    }
+
+    const totalHours = Math.min(hours, hourly.time.length);
+    const airByTimestamp = new Map();
+    for (let i = 0; i < totalHours; i++) {
+      airByTimestamp.set(hourly.time[i] * 1000, {
+        aerosolOpticalDepth: hourly.aerosol_optical_depth?.[i] ?? null,
+        dust: hourly.dust?.[i] ?? null,
+        pm2_5: hourly.pm2_5?.[i] ?? null,
+        pm10: hourly.pm10?.[i] ?? null,
+        aqi: hourly.us_aqi?.[i] ?? hourly.european_aqi?.[i] ?? null,
+        usAqi: hourly.us_aqi?.[i] ?? null,
+        europeanAqi: hourly.european_aqi?.[i] ?? null
+      });
+    }
+
+    return airByTimestamp;
+  }
+
+  _mergeAirQualityData(weatherResult, airByTimestamp) {
+    if (!weatherResult?.data || !airByTimestamp) return weatherResult;
+    weatherResult.data = weatherResult.data.map(item => ({
+      ...item,
+      ...(airByTimestamp.get(item.timestamp) || {})
+    }));
+    return weatherResult;
+  }
+
   async fetchWeatherData(lat, lon, hours = 168, userApiKey = null, weatherModel = 'ecmwf_ifs025') {
     const startTime = Date.now();
     
@@ -160,7 +210,19 @@ class OpenMeteoProvider extends BaseWeatherProvider {
         10000,
         `single(${lat},${lon})`
       );
-      return this._normalizeHourlyResult(response.data, hours, model, startTime, this.name);
+      const result = this._normalizeHourlyResult(response.data, hours, model, startTime, this.name);
+
+      try {
+        const airByTimestamp = await this._fetchAirQualityData(lat, lon, hours, forecastDays);
+        this._mergeAirQualityData(result, airByTimestamp);
+        result.providerMeta.airQualitySource = 'openmeteo_air_quality';
+      } catch (airError) {
+        console.warn('[Open-Meteo Air Quality API] 请求失败，按无气溶胶数据降级:', airError.message);
+        result.providerMeta.unsupportedFields.push('air_quality');
+        result.providerMeta.degradedReason.push('air_quality_unavailable');
+      }
+
+      return result;
     } catch (error) {
       console.error('[Open-Meteo API] 请求失败:', error.message);
       if (error.response) {
