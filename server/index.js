@@ -9,6 +9,7 @@ require('dotenv').config();
 
 const weatherRoutes = require('./routes/weather');
 const firecloudRoutes = require('./routes/firecloud');
+const agentForecastRoutes = require('./routes/agent-forecast');
 const predictionRoutes = require('./routes/prediction');
 const visitorRoutes = require('./routes/visitor');
 const geocodingRoutes = require('./routes/geocoding');
@@ -128,6 +129,7 @@ app.get('/api/config/features', (req, res) => {
 app.use('/api/agent', agentRoutes);
 app.use('/api/applications', applicationsRoutes);
 app.use('/api/weather', weatherRoutes);
+app.use('/api/agent', agentForecastRoutes);
 app.use('/api/firecloud', firecloudRoutes);
 app.use('/api/prediction', predictionRoutes);
 app.use('/api/visitor', visitorRoutes);
