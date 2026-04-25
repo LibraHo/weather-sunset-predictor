@@ -5894,3 +5894,10 @@ body:not(.theme-dark):not(.theme-auto) .radar-chart-container {
     color: var(--color-text);
   }
 }
+
+/* 需求46 修正：手机端朝霞/晚霞切换开关下方增加呼吸间距 */
+@media (max-width: 640px) {
+  .prediction-toggle-bar {
+    margin-bottom: 22px !important;
+  }
+}
