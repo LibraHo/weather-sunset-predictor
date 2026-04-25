@@ -80,9 +80,81 @@ ssh -i "$SSH_KEY" $REMOTE "
 "
 
 echo "🔄 重启后端..."
-ssh -i "$SSH_KEY" $REMOTE "sudo systemctl restart sunset-backend 2>/dev/null || (sudo fuser -k 3000/tcp 2>/dev/null; sleep 2; sudo bash -c 'cd /home/ubuntu/weather-sunset-predictor/server && nohup /usr/local/bin/node index.js >> /tmp/ws-backend.log 2>&1 &')"
-sleep 6
-ssh -i "$SSH_KEY" $REMOTE "curl -s http://localhost:3000/health"
+ssh -i "$SSH_KEY" $REMOTE <<'RESTART'
+set -e
+
+DEPLOY_DIR=~/weather-sunset-predictor
+NODE_BIN="/root/.nvm/versions/node/v22.22.0/bin/node"
+APP_DIR="$DEPLOY_DIR/server"
+APP_ENTRY="index.js"
+
+get_pids() {
+  local target_pids=""
+  local lines
+
+  for pat in \
+    "/usr/local/bin/node .*${APP_ENTRY}$" \
+    "$NODE_BIN .*${APP_ENTRY}$" \
+    "node .*${APP_DIR}/${APP_ENTRY}$"; do
+    lines="$(pgrep -f "$pat" || true)"
+    if [ -n "$lines" ]; then
+      target_pids="$target_pids\n$lines"
+    fi
+  done
+
+  printf "%s\n" "$target_pids" | tr ' ' '\n' | awk 'NF{print $1}' | sort -n | uniq
+}
+
+echo "  → 查找旧 index.js 进程并安全停止（支持 /usr/local/bin/node 与 nvm node）..."
+PIDS="$(get_pids)"
+
+if [ -n "$PIDS" ]; then
+  echo "  → 已匹配到进程：$(echo "$PIDS" | tr '\n' ' ')"
+  while IFS= read -r pid; do
+    [ -z "$pid" ] && continue
+    if kill -0 "$pid" 2>/dev/null; then
+      kill -TERM "$pid" || true
+    fi
+  done <<< "$PIDS"
+
+  sleep 2
+  REMAIN="$(get_pids)"
+  if [ -n "$REMAIN" ]; then
+    echo "  → 强制杀死残留进程..."
+    while IFS= read -r pid; do
+      [ -z "$pid" ] && continue
+      if kill -0 "$pid" 2>/dev/null; then
+        kill -KILL "$pid" || true
+      fi
+    done <<< "$REMAIN"
+  fi
+else
+  echo "  → 未检测到旧 index.js 进程"
+fi
+
+# 启动后端（固定使用 v22.22.0）
+nohup "$NODE_BIN" "$APP_DIR/$APP_ENTRY" >> /tmp/ws-backend.log 2>&1 &
+sleep 2
+
+echo "  → 验证进程存活..."
+if ! pgrep -af "$NODE_BIN .*${APP_ENTRY}" >/dev/null; then
+  echo "❌ 启动失败：未检测到 $NODE_BIN 进程"
+  exit 1
+fi
+
+echo "  → 健康检查 localhost:3000/health ..."
+if curl -fsS --max-time 5 http://127.0.0.1:3000/health >/dev/null; then
+  echo "✅ 健康检查通过"
+else
+  echo "⚠️ 健康检查失败，尝试端口检查..."
+  if ss -ltnp 2>/dev/null | grep -q ":3000"; then
+    echo "✅ 端口 3000 已监听"
+  else
+    echo "❌ 端口 3000 未监听"
+    exit 1
+  fi
+fi
+RESTART
 
 # 预热 raster 缓存（避免用户首次访问超时）
 echo "🔥 预热缓存..."
