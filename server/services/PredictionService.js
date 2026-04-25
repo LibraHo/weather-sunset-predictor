@@ -36,6 +36,80 @@ class PredictionService {
     return Math.max(min, Math.min(max, value));
   }
 
+  _scoreAerosolScattering(weatherData) {
+    const aodRaw = weatherData.aerosolOpticalDepth ?? weatherData.aod;
+    const aod = Number(aodRaw);
+    if (!Number.isFinite(aod)) {
+      return { factor: 1.0, level: 'unknown', score: 0, reason: 'missing' };
+    }
+
+    const visibility = Number(weatherData.visibility ?? 10);
+    const pm25 = Number(weatherData.pm2_5 ?? weatherData.pm25 ?? 0);
+    const pm10 = Number(weatherData.pm10 ?? 0);
+    const dust = Number(weatherData.dust ?? 0);
+
+    let factor = 1.0;
+    let level = 'moderate';
+    let score = 0;
+    let reason = 'balanced_scattering';
+
+    if (aod < 0.08) {
+      factor = 0.98;
+      level = 'low';
+      score = -2;
+      reason = 'too_clean_color_may_be_pale';
+    } else if (aod <= 0.35) {
+      const boost = 0.03 + Math.min(0.05, (aod - 0.08) / 0.27 * 0.05);
+      factor = 1 + boost;
+      level = 'optimal';
+      score = Math.round(boost * 100);
+      reason = 'good_red_orange_scattering';
+    } else if (aod <= 0.7) {
+      factor = 0.95;
+      level = 'high';
+      score = -5;
+      reason = 'haze_risk';
+    } else {
+      factor = 0.88;
+      level = 'very_high';
+      score = -12;
+      reason = 'heavy_haze_or_dust';
+    }
+
+    const particulateHigh = pm25 > 75 || pm10 > 150 || dust > 100;
+    const particulateModerate = pm25 > 35 || pm10 > 80 || dust > 50;
+    if (particulateHigh) {
+      factor = Math.min(factor, 0.85);
+      level = 'polluted';
+      score = Math.min(score, -15);
+      reason = 'particulate_pollution';
+    } else if (particulateModerate) {
+      factor = Math.min(factor, 0.94);
+      if (level === 'optimal') level = 'moderate_pollution';
+      score = Math.min(score, -6);
+      reason = 'particulate_haze_risk';
+    }
+
+    if (Number.isFinite(visibility) && visibility < 8 && (aod > 0.35 || particulateModerate)) {
+      factor = Math.min(factor, 0.85);
+      level = 'low_visibility_haze';
+      score = Math.min(score, -15);
+      reason = 'low_visibility_with_aerosol';
+    }
+
+    return {
+      factor: Number(factor.toFixed(2)),
+      level,
+      score,
+      reason,
+      aerosolOpticalDepth: aod,
+      pm2_5: Number.isFinite(pm25) ? pm25 : null,
+      pm10: Number.isFinite(pm10) ? pm10 : null,
+      dust: Number.isFinite(dust) ? dust : null
+    };
+  }
+
+
   _getQualityLevel(score) {
     if (score >= 80) return 'excellent';
     if (score >= 60) return 'good';
@@ -109,7 +183,8 @@ class PredictionService {
       precipPenalty = 0.15;
     }
 
-    const finalScore = this._clamp(baseScore * lowCloudPenalty * precipPenalty, 0, 100);
+    const aerosolScattering = this._scoreAerosolScattering(weatherData);
+    const finalScore = this._clamp(baseScore * lowCloudPenalty * precipPenalty * aerosolScattering.factor, 0, 100);
     const quality = this._getQualityLevel(finalScore);
 
     const breakdown = {
@@ -134,6 +209,7 @@ class PredictionService {
       baseScore,
       lowCloudPenalty,
       precipPenalty,
+      aerosolScattering,
       finalScore
     };
 

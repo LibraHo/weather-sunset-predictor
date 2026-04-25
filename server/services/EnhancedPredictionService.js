@@ -712,6 +712,10 @@ function scoreRendering(weatherData, rainedRecently = false) {
   const visibility = weatherData.visibility || 10;
   const humidity = weatherData.humidity || 50;
   const aqi = weatherData.aqi || 50; // AQI如果没有提供，默认50（良）
+  const aerosolOpticalDepth = Number(weatherData.aerosolOpticalDepth ?? weatherData.aod);
+  const pm25 = Number(weatherData.pm2_5 ?? weatherData.pm25 ?? 0);
+  const pm10 = Number(weatherData.pm10 ?? 0);
+  const dust = Number(weatherData.dust ?? 0);
 
   // 1. 能见度修正
   let visibilityFactor = 1.0;
@@ -772,8 +776,40 @@ function scoreRendering(weatherData, rainedRecently = false) {
     aqiFactor = aqi > 150 ? 0.8 : 1.0;
   }
 
-  // 最终渲染系数 = 能见度 × 湿度 × 雨后加成 × AQI 修正
-  const renderingFactor = visibilityFactor * humidityFactor * rainBonus * aqiFactor;
+  let aerosolFactor = 1.0;
+  let aerosolLevel = 'unknown';
+  if (Number.isFinite(aerosolOpticalDepth)) {
+    if (aerosolOpticalDepth < 0.08) {
+      aerosolFactor = 0.98;
+      aerosolLevel = 'low';
+    } else if (aerosolOpticalDepth <= 0.35) {
+      aerosolFactor = 1.06;
+      aerosolLevel = 'optimal';
+    } else if (aerosolOpticalDepth <= 0.7) {
+      aerosolFactor = 0.95;
+      aerosolLevel = 'high';
+    } else {
+      aerosolFactor = 0.88;
+      aerosolLevel = 'very_high';
+    }
+
+    const particulateModerate = pm25 > 35 || pm10 > 80 || dust > 50;
+    const particulateHigh = pm25 > 75 || pm10 > 150 || dust > 100;
+    if (particulateHigh) {
+      aerosolFactor = Math.min(aerosolFactor, 0.85);
+      aerosolLevel = 'polluted';
+    } else if (particulateModerate) {
+      aerosolFactor = Math.min(aerosolFactor, 0.94);
+      aerosolLevel = aerosolLevel === 'optimal' ? 'moderate_pollution' : aerosolLevel;
+    }
+    if (visibility < 8 && (aerosolOpticalDepth > 0.35 || particulateModerate)) {
+      aerosolFactor = Math.min(aerosolFactor, 0.85);
+      aerosolLevel = 'low_visibility_haze';
+    }
+  }
+
+  // 最终渲染系数 = 能见度 × 湿度 × 雨后加成 × AQI 修正 × 气溶胶修正
+  const renderingFactor = visibilityFactor * humidityFactor * rainBonus * aqiFactor * aerosolFactor;
 
   return {
     factor: parseFloat(renderingFactor.toFixed(2)),
@@ -781,10 +817,12 @@ function scoreRendering(weatherData, rainedRecently = false) {
     humidityFactor: parseFloat(humidityFactor.toFixed(2)),
     rainBonus: parseFloat(rainBonus.toFixed(2)),
     aqiFactor: parseFloat(aqiFactor.toFixed(2)),
+    aerosolFactor: parseFloat(aerosolFactor.toFixed(2)),
     breakdown: {
       visibility: visibilityLevel,
       humidity: humidityLevel,
       aqi: aqiLevel,
+      aerosol: aerosolLevel,
       colorTendency,
       specialMode
     }
