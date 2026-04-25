@@ -31,6 +31,7 @@ const CITY_ALIAS_RECORDS = [
   { canonical: 'hongkong', zh: ['香港'], en: ['hong kong', 'hongkong', 'hk'], aliases: ['hk', 'hongkong', 'hong kong', '香港'], regionCode: 'HK', countryCode: 'HK' },
   { canonical: 'macao', zh: ['澳门'], en: ['macau', 'macao'], aliases: ['macao', 'macau', '澳门'], regionCode: 'MO', countryCode: 'MO' },
   { canonical: 'taipei', zh: ['台北'], en: ['taipei'], aliases: ['taipei', '台北'], regionCode: 'TW', countryCode: 'TW' },
+  { canonical: 'tokyo', zh: ['东京', '東京'], en: ['tokyo'], aliases: ['tokyo', '东京', '東京'], regionCode: '13', countryCode: 'JP' },
   { canonical: 'chengdu', zh: ['成都'], en: ['chengdu'], aliases: ['成都', 'chengdu'], regionCode: null, countryCode: 'CN' },
   { canonical: 'chongqing', zh: ['重庆'], en: ['chongqing'], aliases: ['重庆', 'chongqing'], regionCode: null, countryCode: 'CN' },
   { canonical: 'hangzhou', zh: ['杭州'], en: ['hangzhou'], aliases: ['杭州', 'hangzhou'], regionCode: null, countryCode: 'CN' },
@@ -286,7 +287,10 @@ async function handleAutoSearch(res, query, apiKey, limit = 8) {
     errors.push(`openmeteo:${error.message}`);
   }
 
-  if (effectiveKey) {
+  const aliasRecord = getAliasRecordForQuery(query);
+  const shouldQueryGaode = effectiveKey && (!aliasRecord || aliasRecord.countryCode === 'CN' || isLikelyChinaQuery(query));
+
+  if (shouldQueryGaode) {
     try {
       const response = await axios.get(`${GAODE_BASE}/geocode/geo`, {
         params: { address: query, key: effectiveKey, output: 'JSON' },
@@ -319,9 +323,9 @@ async function handleAutoSearch(res, query, apiKey, limit = 8) {
     results: ranked,
     rankDebug: ranked.map(r => ({ name: r.name, provider: r.provider, score: r.rankScore, reason: r.rankReason }))
   }, {
-    providerUsed: effectiveKey ? 'ranked(openmeteo+gaode)' : 'ranked(openmeteo)',
-    fallbackUsed: errors.length > 0 || !effectiveKey,
-    fallbackReason: errors.length ? errors.join(';') : (!effectiveKey ? 'missing_gaode_key' : null)
+    providerUsed: shouldQueryGaode ? 'ranked(openmeteo+gaode)' : 'ranked(openmeteo)',
+    fallbackUsed: errors.length > 0 || !effectiveKey || Boolean(aliasRecord && !shouldQueryGaode),
+    fallbackReason: errors.length ? errors.join(';') : (!effectiveKey ? 'missing_gaode_key' : (aliasRecord && !shouldQueryGaode ? 'international_alias_skip_gaode' : null))
   }));
 }
 
@@ -672,6 +676,10 @@ function isLikelyChinaQuery(query = '') {
     || /^(bj|sh|gz|sz|hk)$/.test(q);
 }
 
+function getAliasRecordForQuery(query = '') {
+  return getCityAliasDataForQuery(query);
+}
+
 function getQueryAliases(query = '') {
   const aliases = new Set();
   getAliasTokensForQuery(query).forEach(token => aliases.add(normalizeSearchText(token)));
@@ -693,6 +701,8 @@ function rankGeocodingResults(queryOrResults, maybeResults = []) {
   const results = Array.isArray(queryOrResults) ? queryOrResults : maybeResults;
 
   const aliases = getQueryAliases(query);
+  const aliasRecord = getAliasRecordForQuery(query);
+  const targetCountry = String(aliasRecord?.countryCode || '').toUpperCase();
   const queryNorm = normalizeSearchText(query);
   const chinaQuery = isLikelyChinaQuery(query);
   const seen = new Map();
@@ -730,6 +740,14 @@ function rankGeocodingResults(queryOrResults, maybeResults = []) {
     if (/PPLC|PPLA|PPLA2|PPLA3|PPLA4/.test(feature)) {
       score += 20;
       reasons.push('admin_city');
+    }
+
+    if (targetCountry && country === targetCountry) {
+      score += 80;
+      reasons.push('alias_country_match');
+    } else if (targetCountry && country && country !== targetCountry) {
+      score -= 45;
+      reasons.push('alias_country_mismatch');
     }
 
     if (item.provider === 'openmeteo') {
@@ -776,5 +794,6 @@ module.exports._private = {
   isLikelyChinaQuery,
   getQueryVariants,
   getAliasTokensForQuery,
-  normalizeAliasToken
+  normalizeAliasToken,
+  getAliasRecordForQuery
 };
