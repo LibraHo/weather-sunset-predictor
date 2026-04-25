@@ -1225,10 +1225,9 @@ class PredictionController {
 
   getScoreTheme(quality, score) {
     const value = Number(score) || 0;
-    if (value >= 85) return ['#FF9A3D', '#FF6B1A', '#E11D48'];
-    if (value >= 70) return ['#FFD08A', '#F59E0B', '#EA580C'];
-    if (value >= 50) return ['#E5E7EB', '#FBBF24', '#F97316'];
-    return ['#E5E7EB', '#B8C0CC', '#8B95A5'];
+    if (value >= 80) return ['#FF9A3D', '#FF6B1A', '#E11D48'];
+    if (value >= 50) return ['#F59E0B', '#F59E0B', '#F59E0B'];
+    return ['#9CA3AF', '#9CA3AF', '#9CA3AF'];
   }
 
   renderLargeScoreGauge(forecast, type) {
