@@ -203,12 +203,14 @@ describe('PredictionController', () => {
       );
 
       expect(html).toContain('75');
-      expect(html).toContain('score-gauge');
-      expect(html).toContain('prediction-concept-hero');
+      expect(html).toContain('score-gauge-large');
+      expect(html).toContain('prediction-app-card');
+      expect(html).toContain('phenomenon-title-card');
+      expect(html).toContain('score-summary-card');
       expect(html).toContain('event-time-label');
       expect(html).toContain('日落时间');
       expect(html).toContain('19:45');
-      expect(html).toContain('viewing-time-label');
+      expect(html).toContain('app-info-row');
       expect(html).toContain('19:15–20:15');
       expect(html).toContain('score-breakdown-trigger');
       expect(html).toContain('查看评分明细');
@@ -251,8 +253,8 @@ describe('PredictionController', () => {
 
       expect(html).toContain('北京');
       expect(html).toContain('西北偏西');
-      expect(html).toContain('azimuth-direction-icon');
-      expect(html).toContain('rotate(296deg)');
+      expect(html).toContain('app-info-row');
+      expect(html).toContain('西北偏西 ↑');
     });
 
     test('增强分析应显示后端透传的气溶胶 AOD 文案', () => {
@@ -295,9 +297,10 @@ describe('PredictionController', () => {
 
       expect(html).toContain('气溶胶');
       expect(html).toContain('AOD 0.73');
-      expect(html).toContain('fire-cloud-details-concept');
-      expect(html).toContain('fca-metric-grid');
-      expect(html).toContain('fca-verdict');
+      expect(html).toContain('app-analysis-card');
+      expect(html).toContain('analysis-group-positive');
+      expect(html).toContain('analysis-group-warning');
+      expect(html).toContain('conclusion-banner');
       expect(html).not.toContain('undefined');
       expect(html).not.toContain('null');
     });
@@ -347,10 +350,10 @@ describe('PredictionController', () => {
         prediction, '🌅', '晚霞', '日落时间', '今日', 'sunset'
       );
 
-      expect(html).toContain('compact-cloud-info');
-      expect(html).toContain('<span class="cloud-label">高云</span>');
-      expect(html).toContain('<span class="cloud-label">中云</span>');
-      expect(html).toContain('<span class="cloud-label">低云</span>');
+      expect(html).toContain('cloud-condition-card');
+      expect(html).toContain('☁️ 高云');
+      expect(html).toContain('☁️ 中云');
+      expect(html).toContain('☁️ 低云');
       expect(html).toContain('40%');
       expect(html).toContain('20%');
       expect(html).toContain('10%');
@@ -404,10 +407,10 @@ describe('PredictionController', () => {
       expect(popover).toBeTruthy();
       expect(popover.hidden).toBe(true);
 
-      const scoreText = trigger.querySelector('text');
-      Object.defineProperty(scoreText, 'closest', { value: undefined, configurable: true });
+      const scoreNumber = trigger.querySelector('.score-gauge-number');
+      Object.defineProperty(scoreNumber, 'closest', { value: undefined, configurable: true });
 
-      scoreText.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      scoreNumber.dispatchEvent(new MouseEvent('click', { bubbles: true }));
       expect(popover.hidden).toBe(false);
       expect(trigger.getAttribute('aria-expanded')).toBe('true');
 
@@ -520,8 +523,7 @@ describe('PredictionController', () => {
       );
 
       expect(html).toContain('北京');
-      expect(html).toContain('西北偏西');
-      expect(html).toContain('rotate(296deg)');
+      expect(html).toContain('西北偏西 ↑');
     });
   });
 

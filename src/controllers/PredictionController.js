@@ -1079,119 +1079,9 @@ class PredictionController {
    * @private
    */
   renderSinglePrediction(prediction, icon, title, timeLabel, dateLabel = '今日', type = 'sunset') {
-    const viewingWindow = prediction.getOptimalViewingWindow();
-    const analysis = this.generateAnalysisText(prediction, dateLabel, prediction.cloudLayers);
     const targetTimezone = prediction.timezone || null;
-
-    // 任务 13.5：添加黄金时段、蓝调时段、太阳方位角、云层分层显示
-    // 需求12.2/12.3：顺序逻辑 — 日出：蓝调先→黄金后；日落：黄金先→蓝调后
-    let enhancedInfo = '';
-
-    const goldenLabel = this.i18n.t('prediction.goldenHour');
-    const blueLabel = this.i18n.t('prediction.blueHour');
-
-    const goldenRow = prediction.goldenHour
-      ? `<div class="compact-extra-time compact-extra-golden"><span class="hour-label">${goldenLabel}</span><span class="hour-time">${this.formatTime(prediction.goldenHour.start, targetTimezone)}–${this.formatTime(prediction.goldenHour.end, targetTimezone)}</span></div>`
-      : '';
-    const blueRow = prediction.blueHour
-      ? `<div class="compact-extra-time compact-extra-blue"><span class="hour-label">${blueLabel}</span><span class="hour-time">${this.formatTime(prediction.blueHour.start, targetTimezone)}–${this.formatTime(prediction.blueHour.end, targetTimezone)}</span></div>`
-      : '';
-
-    // 日出：蓝调 → 黄金（时间升序）；日落：黄金 → 蓝调（时间升序）
-    if (type === 'sunrise') {
-      enhancedInfo = blueRow + goldenRow;
-    } else {
-      enhancedInfo = goldenRow + blueRow;
-    }
-
-    // 太阳方位角（需求12.5：有方位角就显示）
-    const shouldShowAzimuth = prediction.shouldShowAzimuth
-      ? prediction.shouldShowAzimuth()
-      : prediction.sunAzimuth !== null && prediction.sunAzimuth !== undefined;
-
-    if (shouldShowAzimuth) {
-      const direction = this.getLocalizedAzimuthDirection(prediction);
-      const directionLabel = type === 'sunrise'
-        ? this.i18n.t('prediction.sunriseDirectionLabel')
-        : this.i18n.t('prediction.sunsetDirectionLabel');
-      enhancedInfo += `
-        <div class="compact-extra-time compact-extra-azimuth">
-          <span class="azimuth-line-label">${directionLabel} :</span>
-          <span class="azimuth-line-value">${direction}</span>
-          <span class="azimuth-direction-icon" style="transform: rotate(${prediction.sunAzimuth}deg);" aria-hidden="true">↑</span>
-        </div>
-      `;
-    }
-
-    // 云层分层信息（需求12.11）- 只显示云层数据，不显示description
-    let cloudLayersHtml = '';
-    if (prediction.cloudLayers) {
-      cloudLayersHtml = this.renderCloudLayers(prediction.cloudLayers);
-    }
-
-    // 分析文本：第一句加粗；晴天等无分析场景保持空白，避免废话。
-    const firstBr = analysis.indexOf('<br>');
-    const formattedAnalysis = analysis
-      ? (firstBr > -1
-        ? `<strong>${analysis.substring(0, firstBr)}</strong>${analysis.substring(firstBr)}`
-        : `<strong>${analysis}</strong>`)
-      : '';
-
-    // 现代圆形仪表盘评分：SVG 圆弧 + 渐变色
-    const score = prediction.score;
+    const forecast = this.buildForecastViewModel(prediction, icon, title, timeLabel, dateLabel, type, targetTimezone);
     const qualityClass = this.getQualityClass(prediction.quality);
-    const qualityLabel = this.getQualityLabel(prediction.quality);
-
-    // SVG 圆弧参数
-    const radius = 36;
-    const circumference = 2 * Math.PI * radius;
-    const arcLength = circumference * 0.75; // 仪表盘 270° 弧度
-    const scoreFill = arcLength * (score / 100);
-    const scoreGap = arcLength - scoreFill;
-    // 颜色：poor→红, fair→橙, good→黄绿, excellent→绿
-    const gaugeColor = prediction.quality === 'excellent' ? '#d946ef'
-      : prediction.quality === 'good' ? '#f59e0b'
-      : prediction.quality === 'fair' ? '#f97316'
-      : '#ef4444';
-    const gaugeStartColor = prediction.quality === 'excellent' ? '#38bdf8'
-      : prediction.quality === 'good' ? '#facc15'
-      : prediction.quality === 'fair' ? '#fb923c'
-      : '#f87171';
-    const gaugeEndColor = prediction.quality === 'excellent' ? '#f97316'
-      : prediction.quality === 'good' ? '#22c55e'
-      : prediction.quality === 'fair' ? '#ef4444'
-      : '#b91c1c';
-
-    const svgGauge = `
-      <svg class="score-gauge-svg" viewBox="0 0 96 96" width="96" height="96">
-        <defs>
-          <linearGradient id="gauge-grad-${type}" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="${gaugeStartColor}" stop-opacity="0.95"/>
-            <stop offset="55%" stop-color="${gaugeColor}" stop-opacity="1"/>
-            <stop offset="100%" stop-color="${gaugeEndColor}" stop-opacity="1"/>
-          </linearGradient>
-        </defs>
-        <!-- 轨道背景 -->
-        <circle cx="48" cy="48" r="${radius}"
-          fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="8"
-          stroke-dasharray="${arcLength} ${circumference - arcLength}"
-          stroke-dashoffset="${circumference * 0.125}"
-          stroke-linecap="butt"/>
-        <!-- 进度弧 -->
-        <circle cx="48" cy="48" r="${radius}"
-          fill="none" stroke="url(#gauge-grad-${type})" stroke-width="8"
-          stroke-dasharray="${scoreFill.toFixed(2)} ${(scoreGap + circumference * 0.25).toFixed(2)}"
-          stroke-dashoffset="${circumference * 0.125}"
-          stroke-linecap="butt"
-          style="filter:drop-shadow(0 0 10px ${gaugeColor}aa)"/>
-        <!-- 分数数字 -->
-        <text x="48" y="46" text-anchor="middle" dominant-baseline="middle"
-          font-size="20" font-weight="800" fill="${gaugeColor}">${score.toFixed(0)}</text>
-        <!-- 满分标注 -->
-        <text x="48" y="63" text-anchor="middle"
-          font-size="9" font-weight="600" fill="rgba(255,255,255,0.45)">/100</text>
-      </svg>`;
-
     const scoreBreakdownHtml = this.renderScoreBreakdownPopover(prediction);
 
     // 分享按钮 SVG 图标
@@ -1203,66 +1093,279 @@ class PredictionController {
       </svg>
     `;
 
-    // 分享菜单项 — 复用 home-view-menu-dropdown 的样式体系
     const saveLabel = this.i18n.t('share.saveImage');
     const copyLabel = this.i18n.t('share.copyLink');
     const nativeLabel = this.i18n.t('share.nativeShare');
 
     return `
-      <div class="prediction-card ${qualityClass}" data-type="${type}">
-        <div class="prediction-header">
-          <span class="prediction-date-badge">${dateLabel}</span>
-          <h3>${icon} ${title}</h3>
-          <div class="prediction-share-menu" data-share-type="${type}">
-            <button class="prediction-share-btn" data-type="${type}" aria-label="${this.i18n.t('share.title')}" aria-expanded="false">
-              ${shareIconSvg}
-            </button>
-            <div class="prediction-share-dropdown hidden" role="menu" aria-label="${this.i18n.t('share.title')}">
-              <button class="share-option" role="menuitem" data-action="save">
-                <svg class="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="7 10 12 15 17 10"/>
-                  <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                <span>${saveLabel}</span>
+      <div class="prediction-card prediction-app-card ${qualityClass}" data-type="${type}">
+        <div class="prediction-app-shell">
+          <div class="prediction-app-nav" aria-label="${forecast.type}预测操作">
+            <button class="prediction-nav-dot" type="button" aria-label="更多">•••</button>
+            <span class="prediction-date-pill">📅 ${forecast.dateLabel}</span>
+            <div class="prediction-share-menu" data-share-type="${type}">
+              <button class="prediction-share-btn prediction-nav-share" data-type="${type}" aria-label="${this.i18n.t('share.title')}" aria-expanded="false">
+                ${shareIconSvg}
               </button>
-              <button class="share-option" role="menuitem" data-action="copy">
-                <svg class="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                </svg>
-                <span>${copyLabel}</span>
-              </button>
-              <button class="share-option share-option-native hidden" role="menuitem" data-action="native">
-                <svg class="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="18" cy="5" r="3"/>
-                  <circle cx="6" cy="12" r="3"/>
-                  <circle cx="18" cy="19" r="3"/>
-                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-                </svg>
-                <span>${nativeLabel}</span>
-              </button>
+              <div class="prediction-share-dropdown hidden" role="menu" aria-label="${this.i18n.t('share.title')}">
+                <button class="share-option" role="menuitem" data-action="save">
+                  <svg class="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  <span>${saveLabel}</span>
+                </button>
+                <button class="share-option" role="menuitem" data-action="copy">
+                  <svg class="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                  <span>${copyLabel}</span>
+                </button>
+                <button class="share-option share-option-native hidden" role="menuitem" data-action="native">
+                  <svg class="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="18" cy="5" r="3"/>
+                    <circle cx="6" cy="12" r="3"/>
+                    <circle cx="18" cy="19" r="3"/>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                  </svg>
+                  <span>${nativeLabel}</span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="prediction-dashboard-row prediction-concept-hero">
-          <div class="score-gauge-wrap ${qualityClass} score-breakdown-trigger prediction-score-entry" role="button" tabindex="0" aria-expanded="false" aria-label="${this.i18n.t('prediction.composite.finalScore')}">
-            ${svgGauge}
-            <span class="score-gauge-label" style="color:${gaugeColor}">${qualityLabel}</span>
-            <span class="score-breakdown-hint-trigger">查看评分明细</span>
-            ${scoreBreakdownHtml}
+
+          <div class="phenomenon-title-card">
+            <div class="phenomenon-icon-tile" aria-hidden="true">${forecast.icon}</div>
+            <h3>${forecast.type}</h3>
           </div>
-          <div class="time-display prediction-event-time">
-            <div class="event-time-label">${timeLabel}</div>
-            <div class="main-time">${this.formatTime(type === 'sunrise' ? (prediction.sunriseTime || prediction.sunsetTime) : prediction.sunsetTime, targetTimezone)}</div>
-            <div class="viewing-time"><span class="viewing-time-label">${this.i18n.t('prediction.bestViewingTime')}</span>: <span class="viewing-time-range">${this.formatTime(viewingWindow.start, targetTimezone)}–${this.formatTime(viewingWindow.end, targetTimezone)}</span></div>
-            ${enhancedInfo}
+
+          <div class="score-summary-card">
+            <div class="score-summary-left score-breakdown-trigger" role="button" tabindex="0" aria-expanded="false" aria-label="${this.i18n.t('prediction.composite.finalScore')}">
+              ${this.renderLargeScoreGauge(forecast, type)}
+              ${scoreBreakdownHtml}
+            </div>
+            <div class="score-summary-divider" aria-hidden="true"></div>
+            <div class="score-summary-right">
+              <div class="event-time-label">${forecast.timeLabel}</div>
+              <div class="main-time app-main-time">${forecast.mainTime}</div>
+              ${this.renderInfoRow('⏱️', this.i18n.t('prediction.bestViewingTime'), forecast.bestViewingTime)}
+              ${forecast.direction ? this.renderInfoRow('🧭', forecast.directionLabel, forecast.direction) : ''}
+            </div>
           </div>
+
+          ${this.renderCloudConditionCard(forecast.clouds)}
+          ${this.renderAnalysisCard(forecast.analysis, forecast.conclusion)}
+          <div id="radar-compass-${type}" style="margin-top:12px;display:none;"></div>
+          <div class="prediction-app-footer">观天有时 · 收获美景</div>
         </div>
-        ${cloudLayersHtml}
-        <div class="compact-analysis${formattedAnalysis ? '' : ' compact-analysis-empty'}">${formattedAnalysis}</div>
-        <div id="radar-compass-${type}" style="margin-top:12px;display:none;"></div>
+      </div>
+    `;
+  }
+
+  buildForecastViewModel(prediction, icon, title, timeLabel, dateLabel, type, targetTimezone) {
+    const viewingWindow = prediction.getOptimalViewingWindow();
+    const direction = this.getPredictionDirectionText(prediction, type);
+    const clouds = prediction.cloudLayers || {
+      high: prediction.factors?.highClouds?.value ?? prediction.highClouds ?? 0,
+      mid: prediction.factors?.midClouds?.value ?? prediction.midClouds ?? 0,
+      low: prediction.factors?.lowClouds?.value ?? prediction.lowClouds ?? 0
+    };
+    const score = Number(prediction.score || 0);
+    const scoreLabel = this.getQualityLabel(prediction.quality);
+
+    return {
+      dateLabel,
+      icon,
+      type: title,
+      timeLabel,
+      score,
+      scoreLabel,
+      scoreDesc: this.getScoreDescription(score),
+      mainTime: this.formatTime(type === 'sunrise' ? (prediction.sunriseTime || prediction.sunsetTime) : prediction.sunsetTime, targetTimezone),
+      bestViewingTime: `${this.formatTime(viewingWindow.start, targetTimezone)}–${this.formatTime(viewingWindow.end, targetTimezone)}`,
+      direction,
+      directionLabel: type === 'sunrise' ? this.i18n.t('prediction.sunriseDirectionLabel') : this.i18n.t('prediction.sunsetDirectionLabel'),
+      clouds: [
+        { label: '高云', value: Number(clouds.high ?? 0), color: '#4EA3FF' },
+        { label: '中云', value: Number(clouds.mid ?? 0), color: '#8B9DFF' },
+        { label: '低云', value: Number(clouds.low ?? 0), color: '#B7C0CF' }
+      ],
+      analysis: this.buildAnalysisGroups(prediction),
+      conclusion: this.buildAnalysisConclusion(prediction, score, clouds)
+    };
+  }
+
+  getPredictionDirectionText(prediction, type) {
+    const shouldShowAzimuth = prediction.shouldShowAzimuth
+      ? prediction.shouldShowAzimuth()
+      : prediction.sunAzimuth !== null && prediction.sunAzimuth !== undefined;
+    if (!shouldShowAzimuth) return '';
+    const direction = this.getLocalizedAzimuthDirection(prediction);
+    return direction ? `${direction} ↑` : '';
+  }
+
+  getScoreDescription(score) {
+    if (score >= 80) return '观赏条件很好';
+    if (score >= 60) return '观赏条件不错';
+    if (score >= 40) return '有一定机会';
+    return '观赏条件偏弱';
+  }
+
+  renderLargeScoreGauge(forecast, type) {
+    const radius = 68;
+    const circumference = 2 * Math.PI * radius;
+    const progress = Math.max(0, Math.min(100, forecast.score));
+    const scoreFill = circumference * (progress / 100);
+    const scoreGap = circumference - scoreFill;
+    return `
+      <div class="score-gauge-large-wrap">
+        <svg class="score-gauge-large" viewBox="0 0 180 180" width="160" height="160" aria-hidden="true">
+          <defs>
+            <linearGradient id="app-gauge-grad-${type}" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#6C63FF"/>
+              <stop offset="55%" stop-color="#D946EF"/>
+              <stop offset="100%" stop-color="#FF6B6B"/>
+            </linearGradient>
+          </defs>
+          <circle cx="90" cy="90" r="${radius}" fill="none" stroke="#EEF1F7" stroke-width="12"/>
+          <circle cx="90" cy="90" r="${radius}" fill="none" stroke="url(#app-gauge-grad-${type})" stroke-width="12"
+            stroke-dasharray="${scoreFill.toFixed(2)} ${scoreGap.toFixed(2)}" stroke-dashoffset="${(circumference * 0.25).toFixed(2)}" stroke-linecap="round"/>
+        </svg>
+        <div class="score-gauge-center">
+          <div><span class="score-gauge-number">${forecast.score.toFixed(0)}</span><span class="score-gauge-total">/100</span></div>
+          <div class="score-gauge-grade">${forecast.scoreLabel}</div>
+          <div class="score-gauge-desc">${forecast.scoreDesc}</div>
+          <div class="score-breakdown-hint-trigger">查看评分明细</div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderInfoRow(icon, label, value) {
+    return `
+      <div class="app-info-row">
+        <span class="app-info-icon" aria-hidden="true">${icon}</span>
+        <span class="app-info-label">${label}</span>
+        <strong class="app-info-value">${value}</strong>
+      </div>
+    `;
+  }
+
+  renderCloudConditionCard(clouds) {
+    const rows = clouds.map(cloud => {
+      const value = Math.max(0, Math.min(100, cloud.value));
+      return `
+        <div class="cloud-condition-item">
+          <div class="cloud-condition-top"><span class="cloud-condition-label">☁️ ${cloud.label}</span><strong>${value.toFixed(0)}%</strong></div>
+          <div class="cloud-condition-track"><span class="cloud-condition-fill" style="width:${value}%;background:${cloud.color};"></span></div>
+        </div>
+      `;
+    }).join('');
+    return `<div class="cloud-condition-card">${rows}</div>`;
+  }
+
+  buildAnalysisGroups(prediction) {
+    const weather = this.extractAnalysisWeather(prediction);
+    const groups = [
+      { title: '有利条件', type: 'positive', icon: '✅', items: [] },
+      { title: '一般因素', type: 'neutral', icon: 'ℹ️', items: [] },
+      { title: '注意因素', type: 'warning', icon: '⚠️', items: [] }
+    ];
+    const add = (groupType, title, desc) => {
+      const group = groups.find(g => g.type === groupType);
+      group.items.push({ title, desc });
+    };
+
+    if (weather.high >= 60) add('positive', `高层云充沛（${weather.high.toFixed(0)}%）`, '色彩载体丰富，火烧云基础扎实');
+    else if (weather.high >= 35) add('positive', `高层云充足（${weather.high.toFixed(0)}%）`, '具备较好的霞光染色载体');
+    else if (weather.high >= 15) add('neutral', `高层云适中（${weather.high.toFixed(0)}%）`, '可形成火烧云，但色彩可能偏淡');
+    else add('warning', `高层云偏少（${weather.high.toFixed(0)}%）`, '缺少主要色彩载体');
+
+    if (weather.mid >= 20 && weather.mid <= 60) add('positive', `中层云适中（${weather.mid.toFixed(0)}%）`, '利于色彩扩散和层次感');
+    else if (weather.mid < 20) add('neutral', `中层云较少（${weather.mid.toFixed(0)}%）`, weather.high >= 35 ? '但高层云充足，可独立形成火烧云' : '层次感可能不足');
+    else add('warning', `中层云偏厚（${weather.mid.toFixed(0)}%）`, '可能让画面偏灰，削弱霞光通透感');
+
+    if (weather.low < 15) add('positive', `低云稀少（${weather.low.toFixed(0)}%）`, '不会遮挡火烧云');
+    else if (weather.low < 35) add('neutral', `低云较多（${weather.low.toFixed(0)}%）`, '可能部分遮挡低空色彩');
+    else add('warning', `低云偏厚（${weather.low.toFixed(0)}%）`, '遮挡风险较大');
+
+    if (weather.visibility >= 15) add('positive', `能见度良好（${weather.visibility.toFixed(0)}km）`, '空气通透，观赏视野好');
+    else if (weather.visibility >= 8) add('neutral', `能见度一般（${weather.visibility.toFixed(0)}km）`, '色彩饱和度可能略受影响');
+    else add('warning', `能见度偏低（${weather.visibility.toFixed(0)}km）`, '雾霾或水汽可能影响观赏');
+
+    if (weather.humidity >= 40 && weather.humidity <= 70) add('positive', `湿度适中（${weather.humidity.toFixed(0)}%）`, '利于光线散射');
+    else if (weather.humidity > 70) add('warning', `湿度偏高（${weather.humidity.toFixed(0)}%）`, '可能略影响通透感');
+    else add('neutral', `湿度偏低（${weather.humidity.toFixed(0)}%）`, '空气较干，色彩可能偏淡');
+
+    if (weather.aod != null) {
+      if (weather.aod >= 0.08 && weather.aod <= 0.35) add('positive', `气溶胶适中（AOD ${weather.aod.toFixed(2)}）`, '有利于增强红橙色散射');
+      else if (weather.aod > 0.35) add('warning', `气溶胶偏高（AOD ${weather.aod.toFixed(2)}）`, '可能灰霾发暗');
+      else add('neutral', `空气过于通透（AOD ${weather.aod.toFixed(2)}）`, '颜色可能偏淡');
+    }
+
+    if (weather.layerCount <= 1 && weather.high >= 35) {
+      add('warning', '云层单一', '但高云质量好，仍可形成色彩鲜明的火烧云');
+    }
+
+    return groups.filter(group => group.items.length > 0);
+  }
+
+  extractAnalysisWeather(prediction) {
+    const breakdown = prediction?.canvasAnalysis?.breakdown || prediction?.breakdown || {};
+    const aerosol = prediction?.breakdown?.aerosolScattering;
+    const high = prediction.cloudLayers?.high ?? prediction.factors?.highClouds?.value ?? breakdown.highClouds ?? prediction.highClouds ?? 0;
+    const mid = prediction.cloudLayers?.mid ?? prediction.factors?.midClouds?.value ?? breakdown.midClouds ?? prediction.midClouds ?? 0;
+    const low = prediction.cloudLayers?.low ?? prediction.factors?.lowClouds?.value ?? breakdown.lowClouds ?? prediction.lowClouds ?? 0;
+    const layerCount = prediction.breakdown?.layerDiversity?.layerCount ?? [high, mid, low].filter(v => Number(v) >= 10).length;
+    return {
+      high: Number(high) || 0,
+      mid: Number(mid) || 0,
+      low: Number(low) || 0,
+      visibility: Number(prediction.visibility ?? prediction.factors?.visibility?.value ?? 0) || 0,
+      humidity: Number(prediction.humidity ?? prediction.factors?.humidity?.value ?? 0) || 0,
+      aod: prediction.aerosolOpticalDepth ?? prediction.factors?.aerosolOpticalDepth?.value ?? aerosol?.aerosolOpticalDepth ?? null,
+      layerCount
+    };
+  }
+
+  buildAnalysisConclusion(prediction, score, clouds) {
+    const layerCount = prediction.breakdown?.layerDiversity?.layerCount ?? [clouds.high, clouds.mid, clouds.low].filter(v => Number(v) >= 10).length;
+    if (score >= 80) return layerCount >= 2 ? '条件优秀，强烈推荐出行观赏' : '条件优秀，色彩可期；云层单一，层次感略有不足';
+    if (score >= 60) return layerCount >= 2 ? '条件不错，有较大概率出现壮观的火烧云' : '条件不错，火烧云概率较高；云层层次稍欠';
+    if (score >= 40) return '条件中等，需看实际云层演变';
+    return '关键条件不足，火烧云概率偏低';
+  }
+
+  renderAnalysisCard(groups, conclusion) {
+    const groupHtml = groups.map(group => this.renderAnalysisGroup(group)).join('');
+    return `
+      <div class="analysis-card app-analysis-card">
+        <div class="analysis-card-title"><span aria-hidden="true">🔥</span><span>火烧云形成条件分析</span></div>
+        ${groupHtml}
+        <div class="conclusion-banner"><span aria-hidden="true">🌿</span><strong>${conclusion}</strong></div>
+      </div>
+    `;
+  }
+
+  renderAnalysisGroup(group) {
+    const items = group.items.map(item => this.renderAnalysisItem(item, group.type)).join('');
+    return `
+      <section class="analysis-group analysis-group-${group.type}">
+        <div class="analysis-group-label"><span aria-hidden="true">${group.icon}</span>${group.title}</div>
+        <div class="analysis-items">${items}</div>
+      </section>
+    `;
+  }
+
+  renderAnalysisItem(item, type) {
+    const icon = type === 'positive' ? '✓' : (type === 'warning' ? '!' : 'i');
+    return `
+      <div class="analysis-item analysis-item-${type}">
+        <span class="analysis-item-icon" aria-hidden="true">${icon}</span>
+        <span class="analysis-item-copy"><strong>${item.title}</strong><small>${item.desc}</small></span>
       </div>
     `;
   }
