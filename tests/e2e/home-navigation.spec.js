@@ -136,8 +136,9 @@ test.describe('主页分页导航 (Phase 10 需求26)', () => {
     await expect(scoreGuide).toBeVisible();
   });
 
-  test('首页有 API 接入入口并可跳转', async ({ page }) => {
-    const apiLink = page.locator('a:has-text("API接入")').first();
+  test('首页菜单有 API 接入入口并可跳转', async ({ page }) => {
+    await page.locator('#home-view-menu-btn').click();
+    const apiLink = page.locator('#home-view-menu-dropdown a:has-text("API接入")').first();
     await expect(apiLink).toBeVisible();
     await apiLink.click();
     await expect(page).toHaveURL(/\/api-apply\.html$/);

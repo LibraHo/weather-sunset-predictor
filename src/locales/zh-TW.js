@@ -8,7 +8,8 @@ const translations = {
       "ariaLabel": "主頁分頁導航",
       "forecast": "預測功能",
       "methodology": "火燒雲計算方法",
-      "map": "火燒雲地圖"
+      "map": "火燒雲地圖",
+      apiAccess: 'API接入'
     },
     "menu": {
       "ariaLabel": "切換頁面",
