@@ -6285,3 +6285,44 @@ html[data-actual-theme="light"] .prediction-app-card {
   text-align: right !important;
   justify-self: flex-end !important;
 }
+
+/* 高/中/低云条压缩高度，减少上下臃肿 */
+.cloud-condition-card {
+  min-height: unset !important;
+  max-height: none !important;
+  padding: 10px 12px !important;
+  gap: 6px !important;
+}
+.cloud-condition-item {
+  padding: 0 !important;
+}
+.cloud-condition-item + .cloud-condition-item {
+  padding-top: 6px !important;
+}
+.cloud-condition-top {
+  min-height: 20px !important;
+  line-height: 1.15 !important;
+}
+.cloud-condition-label {
+  font-size: 0.9rem !important;
+  line-height: 1.15 !important;
+}
+.cloud-condition-top strong {
+  font-size: 0.95rem !important;
+  line-height: 1.15 !important;
+}
+.cloud-condition-svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+.cloud-condition-track {
+  margin-top: 5px !important;
+  height: 5px !important;
+}
+@media (max-width: 390px) {
+  .cloud-condition-card { padding: 8px 10px !important; gap: 5px !important; }
+  .cloud-condition-item + .cloud-condition-item { padding-top: 5px !important; }
+  .cloud-condition-label { font-size: 0.82rem !important; }
+  .cloud-condition-top strong { font-size: 0.88rem !important; }
+  .cloud-condition-track { margin-top: 4px !important; height: 4px !important; }
+}
