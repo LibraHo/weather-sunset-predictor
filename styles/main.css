@@ -5222,3 +5222,173 @@ body.theme-dark .prediction-app-card {
   .score-summary-divider { width: 100%; height: 1px; }
   .score-summary-left { justify-content: center; }
 }
+
+/* 需求46 修正：去掉外侧白框，修复评分文字穿模 */
+.prediction-app-card {
+  border: none !important;
+  box-shadow: none;
+  padding: 0;
+  background: transparent;
+}
+.prediction-app-shell {
+  padding: 16px;
+  border-radius: 32px;
+  background:
+    radial-gradient(circle at 88% 8%, rgba(255, 183, 77, 0.36), transparent 28%),
+    linear-gradient(180deg, #DCEAFF 0%, #F5DDF4 34%, #FFF7EE 58%, #FBFCFF 100%);
+  box-shadow: 0 18px 45px rgba(91, 103, 145, 0.16);
+}
+.score-gauge-large-wrap {
+  height: 158px;
+  align-items: center;
+}
+.score-gauge-center {
+  justify-content: center;
+  padding-top: 0;
+}
+.score-gauge-grade {
+  margin-top: 4px;
+}
+.score-gauge-desc {
+  margin-top: 2px;
+}
+.score-gauge-center .score-breakdown-hint-trigger {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+@media (max-width: 430px) {
+  .prediction-app-card { padding: 0; }
+  .prediction-app-shell { padding: 14px; border-radius: 28px; }
+  .score-gauge-large-wrap { height: 136px; }
+  .score-gauge-center { padding-top: 0; }
+  .score-gauge-grade { margin-top: 3px; }
+}
+
+/* 需求46 修正：云量三项保持一排 */
+.cloud-condition-card {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  min-height: 92px;
+  max-height: 118px;
+  gap: 10px;
+  align-items: stretch;
+}
+.cloud-condition-item {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.cloud-condition-item + .cloud-condition-item {
+  padding-top: 0;
+  padding-left: 10px;
+  border-top: 0;
+  border-left: 1px solid #EEF0F5;
+}
+.cloud-condition-top {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  font-size: 0.92rem;
+}
+.cloud-condition-label {
+  white-space: nowrap;
+  font-size: 0.86rem;
+}
+.cloud-condition-top strong {
+  font-size: 1.02rem;
+}
+.cloud-condition-track {
+  margin-top: 8px;
+}
+@media (max-width: 360px) {
+  .cloud-condition-card { gap: 6px; padding: 12px; }
+  .cloud-condition-item + .cloud-condition-item { padding-left: 6px; }
+  .cloud-condition-label { font-size: 0.78rem; }
+  .cloud-condition-top strong { font-size: 0.95rem; }
+}
+
+/* 需求46 修正：分析条目改为一行，左标题右解释 */
+.analysis-item {
+  grid-template-columns: 22px minmax(6.5em, 0.9fr) minmax(0, 1.4fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 9px 11px;
+}
+.analysis-item-icon {
+  width: 20px;
+  height: 20px;
+  font-size: 0.72rem;
+  margin-top: 0;
+}
+.analysis-item-copy {
+  display: contents;
+}
+.analysis-item-copy strong {
+  font-size: 0.92rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.analysis-item-copy small {
+  font-size: 0.8rem;
+  line-height: 1.3;
+  text-align: right;
+  color: var(--app-muted);
+}
+.analysis-card-title { margin-bottom: 12px; }
+.analysis-group + .analysis-group { margin-top: 12px; }
+.analysis-group-label { margin-bottom: 7px; }
+@media (max-width: 360px) {
+  .analysis-item {
+    grid-template-columns: 20px minmax(5.8em, 0.9fr) minmax(0, 1.2fr);
+    gap: 6px;
+    padding: 8px 9px;
+  }
+  .analysis-item-copy strong { font-size: 0.84rem; }
+  .analysis-item-copy small { font-size: 0.74rem; }
+}
+
+/* 需求46 修正：朝霞/晚霞标题不需要背景板，文字居中 */
+.phenomenon-title-card {
+  min-height: 54px;
+  padding: 4px 0 0;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  justify-content: center;
+  text-align: center;
+}
+.phenomenon-icon-tile {
+  display: none;
+}
+.phenomenon-title-card h3 {
+  width: 100%;
+  text-align: center;
+  font-size: clamp(2rem, 8vw, 2.35rem);
+}
+
+/* 需求46 修正：去掉预测卡片内部日期胶囊 */
+.prediction-app-nav-compact {
+  grid-template-columns: 1fr auto;
+  min-height: 0;
+  margin-bottom: -6px;
+}
+.prediction-app-nav-compact > div:first-child,
+.prediction-app-nav-compact > div:nth-child(2) {
+  display: none;
+}
+
+/* 需求46 修正：顶部只保留右上角分享 */
+.prediction-app-nav-compact {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+.prediction-app-nav-compact > div:first-child {
+  display: block;
+}

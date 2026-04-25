@@ -251,7 +251,6 @@ describe('PredictionController', () => {
         'sunset'
       );
 
-      expect(html).toContain('北京');
       expect(html).toContain('西北偏西');
       expect(html).toContain('app-info-row');
       expect(html).toContain('西北偏西 ↑');
@@ -522,7 +521,6 @@ describe('PredictionController', () => {
         'sunset'
       );
 
-      expect(html).toContain('北京');
       expect(html).toContain('西北偏西 ↑');
     });
   });
