@@ -68,6 +68,15 @@ describe('PredictionController', () => {
     });
   });
 
+
+  describe('formatTime', () => {
+    test('应该按目标地点时区格式化时间，而不是浏览器/用户时区', () => {
+      const beijingSunriseInstant = new Date('2026-04-24T21:22:00.000Z');
+      expect(predictionController.formatTime(beijingSunriseInstant, 'Asia/Shanghai')).toBe('05:22');
+      expect(predictionController.formatTime(beijingSunriseInstant, 'Asia/Qatar')).toBe('00:22');
+    });
+  });
+
   describe('formatSunsetTime', () => {
     test('应该正确格式化日期对象', () => {
       const date = new Date('2024-01-01T18:30:00');

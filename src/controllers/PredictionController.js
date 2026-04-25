@@ -275,7 +275,9 @@ class PredictionController {
       }
     } else {
       // 使用前端计算
-      return this.predictionService.calculatePrediction(weatherData, date, lat, lon, type);
+      return this.predictionService.calculatePrediction(weatherData, date, lat, lon, type, {
+        timezone: weatherData?.timezone || null
+      });
     }
   }
 
@@ -333,6 +335,7 @@ class PredictionController {
     console.log('[PredictionController] 生成朝霞和晚霞预测...');
     console.log('[PredictionController] 天气数据条数:', weatherDataArray.length);
     console.log('[PredictionController] 位置:', location);
+    const targetTimezone = weatherDataArray.find(item => item?.timezone)?.timezone || null;
 
     // 输出天气数据范围信息
     if (weatherDataArray.length > 0) {
@@ -357,7 +360,8 @@ class PredictionController {
         const sunriseTime = this.predictionService.getSunriseTime(
           targetDate,
           location.lat,
-          location.lon
+          location.lon,
+          { timezone: targetTimezone }
         );
 
         console.log(`[PredictionController] 日出时间:`, sunriseTime);
@@ -434,6 +438,7 @@ class PredictionController {
           if (!sunrisePrediction.sunriseTime) {
             sunrisePrediction.sunriseTime = sunriseTime;
           }
+          sunrisePrediction.timezone = sunriseWeatherData.timezone || targetTimezone;
 
           // 为增强版预测添加最佳观看窗口方法和factors属性
           if (this.useEnhancedModel) {
@@ -490,7 +495,8 @@ class PredictionController {
         const sunsetTime = this.predictionService.getSunsetTime(
           targetDate,
           location.lat,
-          location.lon
+          location.lon,
+          { timezone: targetTimezone }
         );
 
         console.log(`[PredictionController] 第${i}天 日落时间:`, sunsetTime, `时间戳: ${sunsetTime?.getTime()}`);
@@ -563,6 +569,7 @@ class PredictionController {
           sunsetPrediction.precipitation = sunsetWeatherData.precipitation ?? 0;
           sunsetPrediction.weatherCode = sunsetWeatherData.weatherCode ?? sunsetWeatherData.weathercode ?? null;
           sunsetPrediction.sunsetTime = sunsetTime; // 用于显示日落时间
+          sunsetPrediction.timezone = sunsetWeatherData.timezone || targetTimezone;
 
           // 为增强版预测添加最佳观看窗口方法和factors属性
           if (this.useEnhancedModel) {
@@ -1074,6 +1081,7 @@ class PredictionController {
   renderSinglePrediction(prediction, icon, title, timeLabel, dateLabel = '今日', type = 'sunset') {
     const viewingWindow = prediction.getOptimalViewingWindow();
     const analysis = this.generateAnalysisText(prediction, dateLabel, prediction.cloudLayers);
+    const targetTimezone = prediction.timezone || null;
 
     // 任务 13.5：添加黄金时段、蓝调时段、太阳方位角、云层分层显示
     // 需求12.2/12.3：顺序逻辑 — 日出：蓝调先→黄金后；日落：黄金先→蓝调后
@@ -1083,10 +1091,10 @@ class PredictionController {
     const blueLabel = this.i18n.t('prediction.blueHour');
 
     const goldenRow = prediction.goldenHour
-      ? `<div class="compact-extra-time compact-extra-golden"><span class="hour-label">${goldenLabel}</span><span class="hour-time">${this.formatTime(prediction.goldenHour.start)}–${this.formatTime(prediction.goldenHour.end)}</span></div>`
+      ? `<div class="compact-extra-time compact-extra-golden"><span class="hour-label">${goldenLabel}</span><span class="hour-time">${this.formatTime(prediction.goldenHour.start, targetTimezone)}–${this.formatTime(prediction.goldenHour.end, targetTimezone)}</span></div>`
       : '';
     const blueRow = prediction.blueHour
-      ? `<div class="compact-extra-time compact-extra-blue"><span class="hour-label">${blueLabel}</span><span class="hour-time">${this.formatTime(prediction.blueHour.start)}–${this.formatTime(prediction.blueHour.end)}</span></div>`
+      ? `<div class="compact-extra-time compact-extra-blue"><span class="hour-label">${blueLabel}</span><span class="hour-time">${this.formatTime(prediction.blueHour.start, targetTimezone)}–${this.formatTime(prediction.blueHour.end, targetTimezone)}</span></div>`
       : '';
 
     // 日出：蓝调 → 黄金（时间升序）；日落：黄金 → 蓝调（时间升序）
@@ -1245,8 +1253,8 @@ class PredictionController {
             ${scoreBreakdownHtml}
           </div>
           <div class="time-display">
-            <div class="main-time">${this.formatTime(type === 'sunrise' ? (prediction.sunriseTime || prediction.sunsetTime) : prediction.sunsetTime)}</div>
-            <div class="viewing-time"><span class="viewing-time-label">${this.i18n.t('prediction.bestViewingTime')}</span>: <span class="viewing-time-range">${this.formatTime(viewingWindow.start)}–${this.formatTime(viewingWindow.end)}</span></div>
+            <div class="main-time">${this.formatTime(type === 'sunrise' ? (prediction.sunriseTime || prediction.sunsetTime) : prediction.sunsetTime, targetTimezone)}</div>
+            <div class="viewing-time"><span class="viewing-time-label">${this.i18n.t('prediction.bestViewingTime')}</span>: <span class="viewing-time-range">${this.formatTime(viewingWindow.start, targetTimezone)}–${this.formatTime(viewingWindow.end, targetTimezone)}</span></div>
             ${enhancedInfo}
           </div>
         </div>
@@ -1905,14 +1913,22 @@ class PredictionController {
    * @returns {string} 格式化后的时间字符串
    * @private
    */
-  formatTime(time) {
+  formatTime(time, timeZone = null) {
     try {
       if (time === null || time === undefined) return '--:--';
       const date = typeof time === 'string' ? new Date(time) : time;
       if (!date || isNaN(date.getTime())) {
         return '--:--';
       }
-      // 使用本地时间方法获取小时和分钟（天文学计算已经返回本地时间）
+      if (timeZone) {
+        return new Intl.DateTimeFormat(this.i18n.getLanguage(), {
+          timeZone,
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        }).format(date);
+      }
+      // 兼容无目标时区的旧数据
       const hours = date.getHours().toString().padStart(2, '0');
       const minutes = date.getMinutes().toString().padStart(2, '0');
       return `${hours}:${minutes}`;
