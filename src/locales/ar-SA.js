@@ -134,7 +134,7 @@ export default {
     midClouds: 'سحب متوسطة',
     lowClouds: 'سحب منخفضة',
     feeling: 'شعور',
-    uvIndex: 'مؤشر الأشعة فوق البنفسجية',
+    uvIndex: 'مؤشر UV تقديري',
     overcast: 'غائم جزئيا',
     cloudy: 'غائم',
     partlyCloudy: 'غائم جزئيا',

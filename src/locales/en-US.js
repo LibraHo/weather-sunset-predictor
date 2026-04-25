@@ -148,7 +148,7 @@ const translations = {
     "midClouds": "Mid Clouds",
     "lowClouds": "Low Clouds",
     "feeling": "Feels Like",
-    "uvIndex": "UV Index",
+    "uvIndex": "Estimated UV",
     "overcast": "Overcast",
     "cloudy": "Cloudy",
     "partlyCloudy": "Partly Cloudy",

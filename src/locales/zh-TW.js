@@ -147,7 +147,7 @@ const translations = {
     "midClouds": "中雲",
     "lowClouds": "低雲",
     "feeling": "體感",
-    "uvIndex": "紫外線指數",
+    "uvIndex": "估算紫外線",
     "overcast": "陰天",
     "cloudy": "多雲",
     "partlyCloudy": "少雲",

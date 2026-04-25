@@ -131,7 +131,7 @@ const translations = {
     "midClouds": "Mây Trung Bình",
     "lowClouds": "Mây Thấp",
     "feeling": "Cảm Thực",
-    "uvIndex": "Chỉ Số UV",
+    "uvIndex": "UV ước tính",
     "overcast": "Âm U",
     "cloudy": "Nhiều Mây",
     "partlyCloudy": "Mây Một Phần",

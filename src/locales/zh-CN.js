@@ -159,7 +159,7 @@ export default {
     midClouds: '中云',
     lowClouds: '低云',
     feeling: '体感',
-    uvIndex: '紫外线指数',
+    uvIndex: '估算紫外线',
 
     // 天气描述
     overcast: '阴天',
