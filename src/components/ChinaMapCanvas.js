@@ -11,6 +11,42 @@
 let _cachedChinaGeoJSON = null;
 let _cachedEastAsiaGeoJSON = null;
 
+const MOBILE_CORE_CITY_NAMES = new Set([
+  '北京', '上海', '广州', '深圳', '成都', '重庆', '武汉', '西安', '杭州', '南京'
+]);
+
+function mergeUniqueCities(...groups) {
+  const merged = new Map();
+  for (const group of groups) {
+    for (const city of group || []) {
+      if (city?.name && !merged.has(city.name)) merged.set(city.name, city);
+    }
+  }
+  return [...merged.values()];
+}
+
+function selectCitiesForZoom(levels, zoom, isMobile = false) {
+  const L1 = levels.level1 || [];
+  const L2 = levels.level2 || [];
+  const L3 = levels.level3 || [];
+
+  if (isMobile) {
+    if (zoom < 6) return L1.filter(city => MOBILE_CORE_CITY_NAMES.has(city.name));
+    if (zoom < 8) return L1;
+    if (zoom < 10) return mergeUniqueCities(L1, L2);
+    return mergeUniqueCities(L1, L2, L3);
+  }
+
+  if (zoom < 6) return L1;
+  if (zoom < 9) return mergeUniqueCities(L1, L2);
+  return mergeUniqueCities(L1, L2, L3);
+}
+
+function isMobileMapViewport() {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia?.('(max-width: 640px)').matches || window.innerWidth <= 640;
+}
+
 class ChinaMapCanvas {
   constructor(options = {}) {
     this._options = {
@@ -774,30 +810,17 @@ class ChinaMapCanvas {
       const zoom = this._map.getZoom();
       this._cityMarkersLayer.clearLayers();
 
-      let citiesToShow;
-      if (zoom < 6) {
-        // 低缩放：仅省会/直辖市，避免全国视角过密
-        citiesToShow = L1;
-      } else if (zoom < 9) {
-        // 中等：省会 + 地级（不重复省会，去重后合并）
-        const merged = new Map();
-        for (const c of [...L1, ...L2]) {
-          if (!merged.has(c.name)) merged.set(c.name, c);
-        }
-        citiesToShow = [...merged.values()];
-      } else {
-        // 高缩放：全量
-        const merged = new Map();
-        for (const c of [...L1, ...L2, ...L3]) {
-          if (!merged.has(c.name)) merged.set(c.name, c);
-        }
-        citiesToShow = [...merged.values()];
-      }
+      const isMobile = isMobileMapViewport();
+      const citiesToShow = selectCitiesForZoom({ level1: L1, level2: L2, level3: L3 }, zoom, isMobile);
 
       const isDark = document.body.classList.contains('theme-dark');
       const textColor = isDark ? '#fff' : '#333';
-      const fontSize = zoom < 5 ? '10px' : (zoom < 7 ? '11px' : (zoom < 9 ? '12px' : '13px'));
-      const dotRadius = zoom < 5 ? 3 : (zoom < 7 ? 3 : (zoom < 9 ? 3.5 : 4));
+      const fontSize = isMobile
+        ? (zoom < 6 ? '9px' : (zoom < 8 ? '10px' : (zoom < 10 ? '11px' : '12px')))
+        : (zoom < 5 ? '10px' : (zoom < 7 ? '11px' : (zoom < 9 ? '12px' : '13px')));
+      const dotRadius = isMobile
+        ? (zoom < 6 ? 2.2 : (zoom < 8 ? 2.6 : (zoom < 10 ? 3 : 3.5)))
+        : (zoom < 5 ? 3 : (zoom < 7 ? 3 : (zoom < 9 ? 3.5 : 4)));
 
       citiesToShow.forEach(city => {
         // 城市圆点
@@ -1140,3 +1163,4 @@ class ChinaMapCanvas {
 }
 
 export default ChinaMapCanvas;
+export { selectCitiesForZoom, mergeUniqueCities, isMobileMapViewport };

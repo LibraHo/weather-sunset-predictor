@@ -8,8 +8,8 @@
 const COLOR_THRESHOLDS = [
   { min: 80, color: [255, 69, 0],   alpha: 0.75 },  // #FF4500 深橙红：顶级
   { min: 65, color: [255, 140, 0],  alpha: 0.65 },  // #FF8C00 橙色：优质
-  { min: 50, color: [255, 209, 102], alpha: 0.5  },  // #FFD166 金黄：还行
-  // < 50：透明不渲染
+  { min: 40, color: [255, 209, 102], alpha: 0.5  },  // #FFD166 金黄：还行
+  // < 40：透明不渲染
 ];
 
 /**
@@ -24,7 +24,7 @@ function scoreToColor(score) {
       return [r, g, b, Math.round(threshold.alpha * 255)];
     }
   }
-  return null; // < 50，不渲染
+  return null; // < 40，不渲染
 }
 
 /**
@@ -214,7 +214,7 @@ class HeatmapLayer {
         if (score === null) continue;
 
         const rgba = scoreToColor(score);
-        if (!rgba) continue; // < 50，跳过
+        if (!rgba) continue; // < 40，跳过
 
         const [r, g, b, a] = rgba;
         const pt = map.latLngToContainerPoint([lat, lon]);

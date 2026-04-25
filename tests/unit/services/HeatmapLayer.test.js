@@ -20,24 +20,24 @@ describe('HeatmapLayer 工具函数', () => {
       expect(color[1]).toBe(140);
     });
 
-    it('50-64 应返回金黄', () => {
-      const color = scoreToColor(55);
+    it('40-64 应返回金黄', () => {
+      const color = scoreToColor(45);
       expect(color).not.toBeNull();
       expect(color[1]).toBe(209);
     });
 
-    it('<50 应返回 null（不渲染）', () => {
-      expect(scoreToColor(49)).toBeNull();
+    it('<40 应返回 null（不渲染）', () => {
+      expect(scoreToColor(39)).toBeNull();
       expect(scoreToColor(30)).toBeNull();
       expect(scoreToColor(0)).toBeNull();
     });
 
-    it('边界值 50 应渲染', () => {
-      expect(scoreToColor(50)).not.toBeNull();
+    it('边界值 40 应渲染', () => {
+      expect(scoreToColor(40)).not.toBeNull();
     });
 
-    it('边界值 49 不应渲染', () => {
-      expect(scoreToColor(49)).toBeNull();
+    it('边界值 39 不应渲染', () => {
+      expect(scoreToColor(39)).toBeNull();
     });
   });
 
