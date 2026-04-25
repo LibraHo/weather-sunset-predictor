@@ -1341,7 +1341,7 @@ class PredictionController {
     const groupHtml = groups.map(group => this.renderAnalysisGroup(group)).join('');
     return `
       <div class="analysis-card app-analysis-card">
-        <div class="analysis-card-title"><span aria-hidden="true">🔥</span><span>火烧云形成条件分析</span></div>
+        <div class="analysis-card-title"><span>火烧云形成条件分析</span></div>
         ${groupHtml}
         <div class="conclusion-banner"><span aria-hidden="true">🌿</span><strong>${conclusion}</strong></div>
       </div>

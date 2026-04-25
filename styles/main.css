@@ -5392,3 +5392,212 @@ body.theme-dark .prediction-app-card {
 .prediction-app-nav-compact > div:first-child {
   display: block;
 }
+
+/* 需求46 修正：评分/时间比例与信息行上下结构 */
+.score-gauge-number {
+  font-size: 2.45rem;
+  letter-spacing: -0.045em;
+}
+.score-gauge-total {
+  font-size: 0.9rem;
+}
+.score-gauge-grade {
+  margin-top: 2px;
+  font-size: 1rem;
+}
+.score-gauge-desc {
+  font-size: 0.76rem;
+}
+.score-gauge-center .score-breakdown-hint-trigger {
+  top: calc(100% + 2px);
+  font-size: 0.62rem;
+}
+.app-main-time {
+  font-size: clamp(2.15rem, 10.5vw, 3rem);
+}
+.app-info-row {
+  min-height: 48px;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: center;
+  row-gap: 2px;
+}
+.app-info-icon {
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+.app-info-label {
+  grid-column: 2;
+  font-size: 0.75rem;
+  line-height: 1.15;
+}
+.app-info-value {
+  grid-column: 2;
+  justify-self: start;
+  font-size: 0.92rem;
+  line-height: 1.15;
+}
+@media (max-width: 430px) {
+  .score-gauge-number { font-size: 2.18rem; }
+  .score-gauge-total { font-size: 0.78rem; }
+  .score-gauge-grade { font-size: 0.92rem; }
+  .score-gauge-desc { font-size: 0.72rem; }
+  .app-main-time { font-size: clamp(2rem, 10vw, 2.65rem); }
+  .app-info-icon { display: inline-flex; }
+  .app-info-row { min-height: 44px; }
+  .app-info-label { font-size: 0.7rem; }
+  .app-info-value { font-size: 0.84rem; }
+}
+
+/* 需求46 修正：云量标题和百分比同排，进度条第二行，多语言防穿模 */
+.cloud-condition-card {
+  gap: 8px;
+}
+.cloud-condition-item {
+  justify-content: center;
+}
+.cloud-condition-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 4px;
+  width: 100%;
+  font-size: 0.78rem;
+}
+.cloud-condition-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.76rem;
+}
+.cloud-condition-top strong {
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+.cloud-condition-track {
+  width: 100%;
+  margin-top: 7px;
+  height: 6px;
+}
+@media (max-width: 360px) {
+  .cloud-condition-top { font-size: 0.7rem; gap: 3px; }
+  .cloud-condition-label { font-size: 0.68rem; }
+  .cloud-condition-top strong { font-size: 0.74rem; }
+}
+
+/* 需求46 修正：分析条目进一步压缩，优先一行显示 */
+.analysis-item {
+  grid-template-columns: 18px minmax(5.2em, 0.78fr) minmax(0, 1.65fr);
+  gap: 6px;
+  min-height: 38px;
+  padding: 7px 9px;
+}
+.analysis-item-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 0.62rem;
+}
+.analysis-item-copy strong {
+  font-size: 0.78rem;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.analysis-item-copy small {
+  font-size: 0.7rem;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.analysis-items { gap: 6px; }
+.analysis-group + .analysis-group { margin-top: 10px; }
+.analysis-group-label { font-size: 0.78rem; padding: 3px 8px; margin-bottom: 6px; }
+@media (max-width: 360px) {
+  .analysis-item {
+    grid-template-columns: 16px minmax(4.8em, 0.74fr) minmax(0, 1.7fr);
+    gap: 5px;
+    padding: 7px 8px;
+  }
+  .analysis-item-icon { width: 16px; height: 16px; font-size: 0.58rem; }
+  .analysis-item-copy strong { font-size: 0.72rem; }
+  .analysis-item-copy small { font-size: 0.66rem; }
+}
+
+/* 需求46 修正：背景回归霞客/云况雷达一致的暗色玻璃风格 */
+.prediction-app-shell {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(251, 146, 60, 0.16), transparent 34%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.96) 0%, rgba(17, 24, 39, 0.94) 100%);
+  box-shadow: var(--glass-shadow);
+  border: 1px solid var(--glass-border);
+}
+.prediction-app-card {
+  --app-card-bg: var(--glass-bg);
+  --app-text: var(--color-text);
+  --app-muted: var(--color-text-light);
+  --app-border: var(--color-border);
+}
+body.theme-dark .prediction-app-card {
+  --app-card-bg: var(--glass-bg);
+  --app-text: var(--color-text);
+  --app-muted: var(--color-text-light);
+  --app-border: var(--color-border);
+}
+.phenomenon-title-card h3,
+.app-main-time,
+.cloud-condition-top,
+.analysis-card-title,
+.analysis-item-copy strong {
+  color: var(--color-text);
+}
+.app-info-row,
+.analysis-item,
+.cloud-condition-card,
+.app-analysis-card,
+.score-summary-card {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.10);
+}
+.app-info-label,
+.analysis-item-copy small,
+.cloud-condition-label,
+.score-gauge-desc {
+  color: var(--color-text-light);
+}
+.cloud-condition-track {
+  background: rgba(255,255,255,0.16);
+}
+.conclusion-banner {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.20);
+}
+
+/* 需求46 修正：分析标题无 emoji，字号对齐云况雷达 */
+.analysis-card-title {
+  font-size: 1rem;
+  line-height: 1.35;
+  gap: 0;
+}
+
+/* 需求46 修正：分数明细面板置顶，避免被其他卡片遮挡 */
+.prediction-app-card,
+.prediction-app-shell,
+.score-summary-card,
+.score-summary-left,
+.score-breakdown-trigger {
+  overflow: visible;
+}
+.score-summary-card {
+  position: relative;
+  z-index: 20;
+}
+.score-breakdown-trigger {
+  position: relative;
+  z-index: 40;
+}
+.score-breakdown-popover {
+  z-index: 9999;
+}
