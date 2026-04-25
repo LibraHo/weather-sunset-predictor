@@ -6571,3 +6571,63 @@ html[data-actual-theme="light"] .prediction-app-card {
     font-size: 0.72rem;
   }
 }
+
+/* 火烧云条件分析：进一步压缩整体上下留白 */
+.app-analysis-card {
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
+.analysis-card-title {
+  margin-bottom: 7px !important;
+  line-height: 1.12 !important;
+}
+.analysis-group {
+  margin-top: 6px !important;
+}
+.analysis-group + .analysis-group {
+  margin-top: 7px !important;
+}
+.analysis-group-label {
+  margin-bottom: 4px !important;
+  line-height: 1.08 !important;
+}
+.analysis-items {
+  gap: 3px !important;
+}
+.analysis-item {
+  padding-top: 5px !important;
+  padding-bottom: 5px !important;
+  min-height: 0 !important;
+}
+.analysis-item-copy {
+  gap: 1px !important;
+}
+.analysis-item-copy strong,
+.analysis-item-copy small {
+  line-height: 1.12 !important;
+}
+.conclusion-banner {
+  margin-top: 7px !important;
+  padding-top: 7px !important;
+  padding-bottom: 7px !important;
+  line-height: 1.18 !important;
+}
+.fca-metric-grid {
+  gap: 3px !important;
+}
+.fca-row,
+.fca-metric {
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+@media (max-width: 390px) {
+  .app-analysis-card {
+    padding-top: 9px !important;
+    padding-bottom: 9px !important;
+  }
+  .analysis-items { gap: 2px !important; }
+  .analysis-item {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+  }
+}
