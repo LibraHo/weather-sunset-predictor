@@ -5448,3 +5448,40 @@ body.theme-dark .prediction-app-card {
   .app-info-label { font-size: 0.7rem; }
   .app-info-value { font-size: 0.84rem; }
 }
+
+/* 需求46 修正：云量标题和百分比同排，进度条第二行，多语言防穿模 */
+.cloud-condition-card {
+  gap: 8px;
+}
+.cloud-condition-item {
+  justify-content: center;
+}
+.cloud-condition-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 4px;
+  width: 100%;
+  font-size: 0.78rem;
+}
+.cloud-condition-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.76rem;
+}
+.cloud-condition-top strong {
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+.cloud-condition-track {
+  width: 100%;
+  margin-top: 7px;
+  height: 6px;
+}
+@media (max-width: 360px) {
+  .cloud-condition-top { font-size: 0.7rem; gap: 3px; }
+  .cloud-condition-label { font-size: 0.68rem; }
+  .cloud-condition-top strong { font-size: 0.74rem; }
+}
