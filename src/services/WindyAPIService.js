@@ -130,6 +130,9 @@ class WindyAPIService {
       wd.pm2_5 = item.pm2_5 ?? null;
       wd.pm10 = item.pm10 ?? null;
       wd.aqi = item.aqi ?? null;
+      wd.shortwaveRadiation = item.shortwaveRadiation ?? null;
+      wd.directRadiation = item.directRadiation ?? null;
+      wd.diffuseRadiation = item.diffuseRadiation ?? null;
       return wd;
     });
 
