@@ -5763,3 +5763,11 @@ body:not(.theme-dark):not(.theme-auto) .prediction-app-shell {
   color: var(--color-text);
   letter-spacing: -0.01em;
 }
+
+/* 需求46 修正：最佳时间/方向去掉前置 emoji 后保持两行对齐 */
+.app-info-row {
+  grid-template-columns: minmax(0, 1fr);
+  padding-left: 10px;
+}
+.app-info-label,
+.app-info-value { grid-column: 1; }
