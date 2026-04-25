@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadLogs();
     loadAuditLogs();
     loadHealth();
+    loadAgentUsageStats();
   }, 15000);
   setInterval(loadQueue, 15000);
   setInterval(loadDailyStats, 60000);
@@ -55,6 +56,7 @@ async function loadAll() {
     loadTokens(),
     loadApplications(),
     loadAuditLogs(),
+    loadAgentUsageStats(),
     loadPhotos(),
     loadHealth()
   ]);
@@ -745,6 +747,42 @@ async function rejectApplication(id) {
 }
 
 // =================== Agent 审计日志 ===================
+
+async function loadAgentUsageStats() {
+  try {
+    const res = await fetch('/api/admin/agent-usage', { credentials: 'include' });
+    const data = await res.json();
+    const tbody = document.getElementById('agentUsageTableBody');
+    const rows = Array.isArray(data.tokens) ? data.tokens : [];
+
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty">暂无数据</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = rows.map((item) => {
+      const recent = Array.isArray(item.recentCalls) && item.recentCalls.length
+        ? item.recentCalls
+            .map((r) => `${new Date(r.at).toLocaleString('zh-CN')} ${r.endpoint} ${r.status} ${r.errorCode || ''}`)
+            .join('<br/>')
+        : '暂无';
+
+      return `<tr>
+        <td>${escapeHtml(item.name || '-')}</td>
+        <td>${Number(item.todayCalls || 0)}</td>
+        <td>${escapeHtml(item.todayErrorRate || '0%')}</td>
+        <td>${item.dailyRemaining == null ? '-' : Number(item.dailyRemaining)}</td>
+        <td>${recent}</td>
+      </tr>`;
+    }).join('');
+  } catch (err) {
+    const tbody = document.getElementById('agentUsageTableBody');
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty">加载失败</td></tr>';
+    }
+  }
+}
+
 async function loadAuditLogs() {
   try {
     const res = await fetch('/api/admin/audit-logs?limit=20', { credentials: 'include' });

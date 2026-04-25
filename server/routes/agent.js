@@ -15,10 +15,72 @@ const orchestrator = require('../services/ProviderOrchestrator');
 const ApiTokenService = require('../services/ApiTokenService');
 const createAgentAuth = require('../middleware/agentAuth');
 const apiAuditLog = require('../services/ApiAgentAuditLog');
+const geocodingRoute = require('./geocoding');
+const geocodingPrivate = geocodingRoute._private || {};
 
 const VALID_TYPES = new Set(['sunrise', 'sunset']);
 const VALID_DETAILS = new Set(['simple', 'full']);
 const apiTokenService = new ApiTokenService();
+
+const OPENAPI_DOC = {
+  openapi: '3.0.3',
+  info: {
+    title: 'Xiake Agent API',
+    version: '1.0.0',
+    description: '霞客 Agent 接口：forecast / explain / geocode（需 token 鉴权），用于火烧云预报与地理位置解析。'
+  },
+  servers: [{ url: '/api' }],
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'Token'
+      }
+    }
+  },
+  security: [{ bearerAuth: [] }],
+  paths: {
+    '/api/agent/forecast': {
+      get: {
+        summary: '火烧云预测',
+        parameters: [
+          { in: 'query', name: 'lat', required: false, schema: { type: 'number', minimum: -90, maximum: 90 } },
+          { in: 'query', name: 'lon', required: false, schema: { type: 'number', minimum: -180, maximum: 180 } },
+          { in: 'query', name: 'location', required: false, schema: { type: 'string' } },
+          { in: 'query', name: 'type', required: false, schema: { type: 'string', enum: ['sunrise', 'sunset'] } },
+          { in: 'query', name: 'date', required: false, schema: { type: 'string' } },
+          { in: 'query', name: 'detail', required: false, schema: { type: 'string', enum: ['simple', 'full'] } }
+        ],
+        responses: { 200: { description: 'OK' }, 400: { description: '请求参数错误' }, 401: { description: '鉴权失败' }, 403: { description: '权限不足/配额' }, 429: { description: '配额超限' }, 500: { description: '服务错误' } }
+      }
+    },
+    '/api/agent/explain': {
+      get: {
+        summary: '解释性预测',
+        parameters: [
+          { in: 'query', name: 'lat', required: false, schema: { type: 'number', minimum: -90, maximum: 90 } },
+          { in: 'query', name: 'lon', required: false, schema: { type: 'number', minimum: -180, maximum: 180 } },
+          { in: 'query', name: 'location', required: false, schema: { type: 'string' } },
+          { in: 'query', name: 'type', required: false, schema: { type: 'string', enum: ['sunrise', 'sunset'] } },
+          { in: 'query', name: 'date', required: false, schema: { type: 'string' } }
+        ],
+        responses: { 200: { description: 'OK' }, 400: { description: '请求参数错误' }, 401: { description: '鉴权失败' }, 403: { description: '权限不足/配额' }, 429: { description: '配额超限' }, 500: { description: '服务错误' } }
+      }
+    },
+    '/api/agent/geocode': {
+      get: {
+        summary: '地理编码',
+        parameters: [
+          { in: 'query', name: 'q', required: true, schema: { type: 'string' } },
+          { in: 'query', name: 'limit', required: false, schema: { type: 'integer', minimum: 1, maximum: 20 } }
+        ],
+        responses: { 200: { description: 'OK' }, 400: { description: '请求参数错误' }, 401: { description: '鉴权失败' }, 403: { description: '权限不足/配额' }, 404: { description: '未找到地点' }, 429: { description: '配额超限' }, 500: { description: '服务错误' } }
+      }
+    }
+  }
+};
+
 
 function errorResponse(res, status, code, message, extra = null) {
   return res.status(status).json({
@@ -184,6 +246,145 @@ async function geocodeLocation(query) {
   };
 }
 
+
+function toExplainFactorRelations(prediction) {
+  const breakdown = prediction?.breakdown || {};
+  return [
+    { name: 'canvasScore', weight: 0.4, value: Number(breakdown.canvasScore ?? prediction?.canvasAnalysis?.score ?? 0), reason: '近地面云况（高/中/低云）' },
+    { name: 'lightPathScore', weight: 0.6, value: Number(breakdown.lightPathScore ?? prediction?.lightPathAnalysis?.score ?? 0), reason: '光路路径几何与透射特征' },
+    { name: 'renderingFactor', weight: 1, value: Number(breakdown.renderingFactor ?? prediction?.renderingAnalysis?.factor ?? 1), reason: '颗粒物与降水后的视觉修正系数' }
+  ];
+}
+
+function buildAgentExplainResponse({ location, prediction, weatherData, type, date, forecastDate }) {
+  const factorRelations = toExplainFactorRelations(prediction);
+  const constraints = [];
+  if (!prediction) {
+    constraints.push({ code: 'UNKNOWN', reason: '缺少预测底层数据' });
+  }
+  if (prediction?.geometricModel && prediction.geometricModel.feasible === false) {
+    constraints.push({ code: 'GEOMETRIC_BLOCK', reason: prediction.geometricModel.reason || '当前日照角度/太阳高度导致观测几何受限' });
+  }
+  if (prediction?.cloudThickness?.reasons?.length) {
+    constraints.push({ code: 'CLOUD_THICKNESS', reason: prediction.cloudThickness.reasons.join('; ') });
+  }
+  if (prediction?.occlusion && prediction.occlusion.ratio != null && prediction.occlusion.ratio > 0) {
+    constraints.push({ code: 'SOLAR_OCCLUSION', reason: `遮挡系数 ${(prediction.occlusion.ratio * 100).toFixed(1)}%` });
+  }
+
+  const maxScore = factorRelations.reduce((sum, item) => sum + (Number(item.value) || 0) * (item.weight > 1 ? 1 : item.weight), 0);
+  const naturalLanguage = buildSummary(prediction, type);
+
+  return {
+    success: true,
+    data: {
+      location,
+      type,
+      date: forecastDate.toISOString().slice(0, 10),
+      score: Number(prediction?.score || 0),
+      quality: prediction?.quality,
+      scoreComposition: {
+        baseScore: Number(prediction?.breakdown?.baseScore || 0),
+        renderedScore: Number(prediction?.breakdown?.unclampedFinalScore || 0),
+        finalCap: 100,
+        estimatedMax: Number((maxScore || 0).toFixed(1))
+      },
+      factorRelations,
+      constraints,
+      explanation: {
+        status: prediction?.status,
+        description: prediction?.description,
+        narrative: naturalLanguage,
+        cloudType: prediction?.cloudType,
+        geometricModel: prediction?.geometricModel,
+        cloudThickness: prediction?.cloudThickness,
+        weatherSnapshot: {
+          cloudCover: weatherData.cloudCover,
+          humidity: weatherData.humidity,
+          visibility: weatherData.visibility,
+          lowClouds: weatherData.lowClouds,
+          midClouds: weatherData.midClouds,
+          highClouds: weatherData.highClouds
+        }
+      }
+    }
+  };
+}
+
+function normalizeOpenMeteoItem(item = {}, fallbackName = '') {
+  if (!item || typeof item !== 'object') return null;
+  const lat = Number(item.latitude);
+  const lon = Number(item.longitude);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  return {
+    name: item.name || fallbackName,
+    standardized: item.name || fallbackName,
+    country: item.country || null,
+    countryCode: item.country_code || item.countryCode || null,
+    admin1: item.admin1 || null,
+    lat,
+    lon,
+    provider: 'openmeteo',
+    type: item.type || null,
+    population: item.population || 0
+  };
+}
+
+async function geocodeQueryCandidates(query, limit = 10) {
+  const url = new URL('https://geocoding-api.open-meteo.com/v1/search');
+  url.searchParams.set('name', query);
+  url.searchParams.set('count', String(Math.max(1, Math.min(20, Number(limit) || 10))));
+  url.searchParams.set('language', 'zh');
+  url.searchParams.set('format', 'json');
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`geocoding upstream failed: ${response.status}`);
+  }
+  const payload = await response.json();
+  return Array.isArray(payload?.results)
+    ? payload.results.map((item, index) => normalizeOpenMeteoItem(item, `result-${index + 1}`)).filter(Boolean)
+    : [];
+}
+
+function buildGeocodeConfidence(rankScore) {
+  const normalized = Number(rankScore);
+  if (!Number.isFinite(normalized) || normalized <= 0) return 0.01;
+  return Number(Math.min(1, normalized / 500).toFixed(3));
+}
+
+async function searchAgentGeocode(query, limit = 10) {
+  const rawQuery = String(query || '').trim();
+  const limitNum = Math.max(1, Math.min(20, Number(limit) || 10));
+  if (!rawQuery) return [];
+
+  const variants = Array.isArray(geocodingPrivate.getQueryVariants)
+    ? geocodingPrivate.getQueryVariants(rawQuery)
+    : [rawQuery];
+  const rawResults = [];
+  const seen = new Set();
+  for (const v of variants) {
+    const normalizedVariant = String(v || '').trim();
+    if (!normalizedVariant) continue;
+    const results = await geocodeQueryCandidates(normalizedVariant, limitNum);
+    for (const result of results) {
+      const key = `${result.lat.toFixed(5)},${result.lon.toFixed(5)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      rawResults.push(result);
+    }
+  }
+
+  const ranked = Array.isArray(geocodingPrivate.rankGeocodingResults)
+    ? geocodingPrivate.rankGeocodingResults(rawQuery, rawResults)
+    : rawResults;
+  return ranked.slice(0, limitNum).map((item) => ({
+    ...item,
+    confidence: buildGeocodeConfidence(item.rankScore),
+    rankReason: item.rankReason || 'default'
+  }));
+}
+
+
 function getClientIp(req) {
   const forwarded = req.headers && (req.headers['x-forwarded-for'] || req.headers['x-real-ip']);
   if (forwarded) {
@@ -192,10 +393,10 @@ function getClientIp(req) {
   return req.ip || req.connection?.remoteAddress || 'unknown';
 }
 
-function logAudit(req, status, elapsedMs, errorCode = null) {
+function logAudit(req, endpoint, status, elapsedMs, errorCode = null) {
   apiAuditLog.add({
     tokenId: req.agentToken?.id || null,
-    endpoint: '/api/agent/forecast',
+    endpoint,
     status,
     elapsedMs,
     ip: getClientIp(req),
@@ -255,7 +456,7 @@ router.get('/forecast', createAgentAuth({ scope: 'forecast:read', apiTokenServic
     const weatherData = normalizeWeatherData(selected);
     const prediction = EnhancedPredictionService.calculateEnhancedPrediction(weatherData, forecastDate, lat, lon, type);
     const elapsedMs = Date.now() - startedAt;
-    logAudit(req, 200, elapsedMs, null);
+    logAudit(req, '/api/agent/forecast', 200, elapsedMs, null);
 
     return res.json(buildAgentForecastResponse({ location, prediction, weatherData, type, detail, forecastDate }));
   } catch (error) {
@@ -263,12 +464,104 @@ router.get('/forecast', createAgentAuth({ scope: 'forecast:read', apiTokenServic
     const code = error?.code || 'AGENT_FORECAST_ERROR';
     const elapsedMs = Date.now() - startedAt;
     const errMessage = error?.message || 'forecast failed';
-    logAudit(req, status, elapsedMs, code);
+    logAudit(req, '/api/agent/forecast', status, elapsedMs, code);
 
     console.error('[AgentRoute] forecast error:', code, errMessage);
 
     return errorResponse(res, status, code, errMessage);
   }
+});
+
+
+router.get('/explain', createAgentAuth({ scopeAny: ['explain:read', 'forecast:read'], apiTokenService, auditLogger: apiAuditLog }), async (req, res) => {
+  const startedAt = Date.now();
+  let location;
+  try {
+    const type = (req.query.type || 'sunset').toString();
+    let lat = parseCoordinate(req.query.lat);
+    let lon = parseCoordinate(req.query.lon);
+
+    if (!VALID_TYPES.has(type)) {
+      throw { status: 400, code: 'INVALID_TYPE', message: 'type must be sunrise or sunset' };
+    }
+
+    const forecastDate = parseForecastDate(req.query.date);
+    if (!forecastDate) {
+      throw { status: 400, code: 'INVALID_DATE', message: 'date must be today, tomorrow, or YYYY-MM-DD' };
+    }
+
+    if (lat !== null || lon !== null) {
+      if (!Number.isFinite(lat) || lat < -90 || lat > 90 || !Number.isFinite(lon) || lon < -180 || lon > 180) {
+        throw { status: 400, code: 'INVALID_COORDINATES', message: 'lat/lon are invalid' };
+      }
+      location = { name: req.query.location || `${lat},${lon}`, lat, lon, provider: 'coordinates' };
+    } else if (req.query.location) {
+      const searched = await geocodeLocation(req.query.location.toString());
+      if (!searched) {
+        throw { status: 404, code: 'LOCATION_NOT_FOUND', message: 'location not found' };
+      }
+      location = searched;
+      lat = searched.lat;
+      lon = searched.lon;
+    } else {
+      throw { status: 400, code: 'MISSING_LOCATION', message: 'location or lat/lon is required' };
+    }
+
+    const weatherResponse = await orchestrator.fetchWeatherData(lat, lon, 168);
+    const hourly = Array.isArray(weatherResponse.data) ? weatherResponse.data : [];
+    const selected = selectWeatherForDate(hourly, forecastDate, type);
+    if (!selected) {
+      throw { status: 502, code: 'WEATHER_UNAVAILABLE', message: 'weather data unavailable' };
+    }
+
+    const weatherData = normalizeWeatherData(selected);
+    const prediction = EnhancedPredictionService.calculateEnhancedPrediction(weatherData, forecastDate, lat, lon, type);
+    const elapsedMs = Date.now() - startedAt;
+    logAudit(req, '/api/agent/explain', 200, elapsedMs, null);
+    return res.json(buildAgentExplainResponse({ location, prediction, weatherData, type, forecastDate, date: forecastDate.toISOString() }));
+  } catch (error) {
+    const status = Number.isFinite(error?.status) ? error.status : 500;
+    const code = error?.code || 'AGENT_EXPLAIN_ERROR';
+    const errMessage = error?.message || 'explain failed';
+    const elapsedMs = Date.now() - startedAt;
+    logAudit(req, '/api/agent/explain', status, elapsedMs, code);
+    console.error('[AgentRoute] explain error:', code, errMessage);
+    return errorResponse(res, status, code, errMessage);
+  }
+});
+
+router.get('/geocode', createAgentAuth({ scope: 'geocode:read', apiTokenService, auditLogger: apiAuditLog }), async (req, res) => {
+  const startedAt = Date.now();
+  try {
+    const q = req.query.q ? req.query.q.toString().trim() : '';
+    if (!q) {
+      throw { status: 400, code: 'INVALID_PARAMS', message: 'q is required' };
+    }
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const candidates = await searchAgentGeocode(q, limit);
+    if (!candidates.length) {
+      const elapsedMs = Date.now() - startedAt;
+      logAudit(req, '/api/agent/geocode', 404, elapsedMs, 'LOCATION_NOT_FOUND');
+      return errorResponse(res, 404, 'LOCATION_NOT_FOUND', 'location not found');
+    }
+    const top = candidates[0];
+    const elapsedMs = Date.now() - startedAt;
+    logAudit(req, '/api/agent/geocode', 200, elapsedMs, null);
+    return res.json({ success: true, data: { query: q, top, results: candidates } });
+  } catch (error) {
+    const status = Number.isFinite(error?.status) ? error.status : 500;
+    const code = error?.code || 'AGENT_GEOCODE_ERROR';
+    const errMessage = error?.message || 'geocode failed';
+    const elapsedMs = Date.now() - startedAt;
+    logAudit(req, '/api/agent/geocode', status, elapsedMs, code);
+    console.error('[AgentRoute] geocode error:', code, errMessage);
+    return errorResponse(res, status, code, errMessage);
+  }
+});
+
+router.get('/openapi.json', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  return res.json(OPENAPI_DOC);
 });
 
 module.exports = router;
@@ -277,5 +570,12 @@ module.exports._private = {
   selectWeatherForDate,
   normalizeWeatherData,
   buildAgentForecastResponse,
-  geocodeLocation
+  geocodeLocation,
+  buildAgentExplainResponse,
+  toExplainFactorRelations,
+  normalizeOpenMeteoItem,
+  buildGeocodeConfidence,
+  geocodeQueryCandidates,
+  searchAgentGeocode,
+  OPENAPI_DOC
 };

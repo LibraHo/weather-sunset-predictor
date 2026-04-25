@@ -45,6 +45,8 @@ tags:
     description: 火烧云（晚霞/朝霞）预测算法 API，包括基础预测、增强预测、批量预测和周边聚合
   - name: 火烧云覆盖层
     description: 基于 GFS 气象数据的火烧云地图覆盖层生成，使用 Python 脚本处理
+  - name: Agent API
+    description: Agent 接口（forecast / explain / geocode）
 
 paths:
   # ==================== 系统端点 ====================
@@ -973,9 +975,270 @@ paths:
                   - success
                   - message
 
+  /api/agent/openapi.json:
+    get:
+      tags:
+        - Agent API
+      summary: 获取 Agent OpenAPI 规格
+      description: 获取 Agent 相关接口文档（公开访问，受速率限制）。
+      responses:
+        '200':
+          description: 成功返回 OpenAPI JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenApiSpec'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /api/agent/forecast:
+    get:
+      tags:
+        - Agent API
+      summary: 火烧云预测
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: lat
+          schema:
+            type: number
+          required: false
+          description: 纬度（-90 到 90）
+        - in: query
+          name: lon
+          schema:
+            type: number
+          required: false
+          description: 经度（-180 到 180）
+        - in: query
+          name: location
+          schema:
+            type: string
+          required: false
+          description: 地点名称，lat/lon 与其二选一
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [sunrise, sunset]
+          required: false
+          description: 预测时段
+        - in: query
+          name: date
+          schema:
+            type: string
+          required: false
+          description: today / tomorrow / YYYY-MM-DD
+        - in: query
+          name: detail
+          schema:
+            type: string
+            enum: [simple, full]
+          required: false
+          description: 响应详细度
+      responses:
+        '200':
+          description: 预测结果
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentForecastResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/agent/explain:
+    get:
+      tags:
+        - Agent API
+      summary: 预测解释
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: lat
+          required: false
+          schema:
+            type: number
+          description: 纬度
+        - in: query
+          name: lon
+          required: false
+          schema:
+            type: number
+          description: 经度
+        - in: query
+          name: location
+          required: false
+          schema:
+            type: string
+          description: 地点名称，lat/lon 与其二选一
+        - in: query
+          name: type
+          required: false
+          schema:
+            type: string
+            enum: [sunrise, sunset]
+          description: 预测时段
+        - in: query
+          name: date
+          required: false
+          schema:
+            type: string
+          description: today / tomorrow / YYYY-MM-DD
+      responses:
+        '200':
+          description: 解释结果
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentExplainResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/agent/geocode:
+    get:
+      tags:
+        - Agent API
+      summary: 地理编码
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema:
+            type: string
+          description: 查询关键词
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
+          description: 返回条数
+      responses:
+        '200':
+          description: 地理编码结果
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentGeocodeResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+
 # ==================== 数据模型定义 ====================
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Token
   schemas:
+    AgentForecastResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            location:
+              type: object
+            type:
+              type: string
+            date:
+              type: string
+            score:
+              type: number
+            quality:
+              type: string
+            bestViewingWindow:
+              type: object
+      required:
+        - success
+        - data
+
+    AgentExplainResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            location:
+              type: object
+            factorRelations:
+              type: array
+              items:
+                type: object
+            constraints:
+              type: array
+              items:
+                type: object
+            scoreComposition:
+              type: object
+            explanation:
+              type: object
+      required:
+        - success
+        - data
+
+    AgentGeocodeResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            query:
+              type: string
+            top:
+              type: object
+            results:
+              type: array
+              items:
+                type: object
+      required:
+        - success
+        - data
+
+    OpenApiSpec:
+      type: object
+      description: Agent OpenAPI 文档 JSON
+
     # ---------- 通用响应 ----------
     HealthCheckResponse:
       type: object
@@ -992,6 +1255,43 @@ components:
       required:
         - status
         - timestamp
+
+    BadRequest:
+      description: 请求参数不合法
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: 未授权
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: 权限不足
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: 资源不存在
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    RateLimitExceeded:
+      description: 请求过于频繁
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalError:
+      description: 服务器内部错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
 
     ErrorResponse:
       type: object

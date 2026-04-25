@@ -97,6 +97,12 @@ class ApiAgentAuditLog {
     return record;
   }
 
+  getAll() {
+    return this._records
+      .slice()
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
   fromRequest(req, result = {}) {
     const ip = this._getClientIP(req);
     const tokenId = result?.token?.id || null;
@@ -113,10 +119,7 @@ class ApiAgentAuditLog {
 
   list(limit = 50) {
     const n = Math.min(Math.max(parseInt(limit, 10) || 50, 1), 200);
-    return this._records
-      .slice()
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, n);
+    return this.getAll().slice(0, n);
   }
 }
 

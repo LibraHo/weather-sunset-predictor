@@ -79,6 +79,85 @@ function normalizeScopeStatus(body) {
   return body.status || 'pending';
 }
 
+
+
+// ---------------------------------------------------------------------------
+// GET /api/admin/agent-usage — 按 token 汇总当日调用与错误率（用量统计）
+// ---------------------------------------------------------------------------
+router.get('/agent-usage', (req, res) => {
+  try {
+    const logs = apiAuditLog.getAll();
+    const nowDay = new Date().toISOString().slice(0, 10);
+    const tokenRecords = apiTokenService.listInternalTokens();
+    const tokenMap = new Map();
+
+    tokenRecords.forEach((item) => {
+      tokenMap.set(item.id, {
+        id: item.id,
+        name: item.name,
+        prefix: item.prefix,
+        minuteLimit: item.minuteLimit,
+        dailyLimit: item.dailyLimit,
+        todayCalls: 0,
+        todayErrors: 0,
+        dailyRemaining: Math.max(0, item.dailyLimit - (item._dailyUsage || 0)),
+        dailyUsage: item._dailyUsage || 0,
+        recentCalls: []
+      });
+    });
+
+    for (const log of logs) {
+      const tokenId = log.tokenId;
+      if (!tokenId) continue;
+      const row = tokenMap.get(tokenId) || {
+        id: tokenId,
+        name: 'Unknown',
+        prefix: '-',
+        minuteLimit: null,
+        dailyLimit: null,
+        todayCalls: 0,
+        todayErrors: 0,
+        dailyRemaining: null,
+        dailyUsage: 0,
+        recentCalls: []
+      };
+      const isToday = typeof log.createdAt === 'string' && log.createdAt.startsWith(nowDay);
+      if (isToday) {
+        row.todayCalls += 1;
+        if (log.status >= 400) {
+          row.todayErrors += 1;
+        }
+      }
+      tokenMap.set(tokenId, row);
+    }
+
+    const tokens = Array.from(tokenMap.values()).map((item) => {
+      const errorRate = item.todayCalls > 0 ? Number(((item.todayErrors / item.todayCalls) * 100).toFixed(2)) : 0;
+      const recentCalls = logs
+        .filter((log) => log.tokenId === item.id)
+        .slice(0, 5)
+        .map((log) => ({
+          at: log.createdAt,
+          endpoint: log.endpoint,
+          status: log.status,
+          elapsedMs: log.elapsedMs,
+          errorCode: log.errorCode
+        }));
+
+      return {
+        ...item,
+        todayErrorRate: `${errorRate}%`,
+        recentCalls
+      };
+    });
+
+    res.json({ success: true, date: nowDay, tokens });
+  } catch (err) {
+    res.status(500).json({
+      error: { code: 'AGENT_USAGE_STATS_FAILED', message: err.message || 'failed to aggregate agent usage' }
+    });
+  }
+});
 // ---------------------------------------------------------------------------
 // GET /api/admin/logs — 获取最近日志
 // ---------------------------------------------------------------------------
