@@ -2258,6 +2258,30 @@ body.theme-dark .best-time {
   color: var(--color-text);
 }
 
+
+/* 朝霞/晚霞并排时：分析区域同高，避免文字长短导致卡片高度视觉错位 */
+@media (min-width: 760px) {
+  .today-predictions-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .prediction-card {
+    min-height: 100%;
+  }
+
+  .compact-analysis {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .compact-analysis .fire-cloud-details,
+  .compact-analysis .fire-cloud-details-compact {
+    flex: 1 1 auto;
+    min-height: 112px;
+  }
+}
+
 /* 火烧云条件分析 */
 .fire-cloud-details {
   margin-top: 10px;
@@ -3842,17 +3866,45 @@ body.theme-dark .sun-azimuth-info {
 }
 
 
-/* 移动端响应式 */
+/* 移动端：未来预测三张卡片也保持一排，压缩信息密度但不折成三行 */
 @media (max-width: 768px) {
   #forecast-section .forecast-horizontal-container {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     width: 100%;
-    gap: 10px;
+    gap: 8px;
   }
 
   #forecast-section .forecast-day-card {
-    min-width: unset;
+    min-width: 0;
     width: 100%;
+    padding: 10px 6px;
+    border-radius: 12px;
+  }
+
+  #forecast-section .fcard-day-label {
+    font-size: 0.82rem;
+  }
+
+  #forecast-section .fcard-day-date {
+    font-size: 0.68rem;
+  }
+
+  #forecast-section .fcard-day-rows {
+    gap: 5px;
+  }
+
+  #forecast-section .fcard-row-item {
+    gap: 3px;
+    font-size: 0.76rem;
+  }
+
+  #forecast-section .fcard-row-label {
+    font-size: 0.72rem;
+  }
+
+  #forecast-section .fcard-row-score {
+    font-size: 0.78rem;
   }
 
   #forecast-section .forecast-day-column {
