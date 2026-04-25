@@ -1,98 +1,129 @@
-#!/bin/bash
-# 霞客部署脚本 v2
-# 流程：本地 git pull → 打 ZIP → scp 推到服务器 → 服务器解压 → 重启
+#!/usr/bin/env bash
+# 霞客部署脚本 v4
+# 流程：本地 git pull → rsync 同步 → 重启服务 → 健康检查
 
-set -e
+set -euo pipefail
 
 REMOTE="ubuntu@43.143.237.15"
 SSH_KEY="$HOME/.ssh/id_ed25519"
 LOCAL="$(cd "$(dirname "$0")" && pwd)"
-ZIP_TMP="/tmp/weather-sunset-deploy.zip"
-# 确保服务器有 unzip
+DRY_RUN=false
 
+log() {
+  echo "[$(date '+%F %T')] $*"
+}
 
-echo "📦 部署前备份服务器配置..."
-bash "$(dirname "$0")/scripts/pre-deploy-backup.sh" || { echo '⚠️ 备份失败，中止部署'; exit 1; }
+require_cmd() {
+  command -v "$1" >/dev/null || { echo "❌ 缺少依赖: $1"; exit 1; }
+}
 
-echo "📦 拉取最新代码..."
-git -C "$LOCAL" pull origin main
+require_non_empty() {
+  local name="$1" value="$2"
+  if [[ -z "$value" ]]; then
+    echo "❌ 变量为空: $name"
+    exit 1
+  fi
+}
 
-echo "🗜️  打包代码..."
-cd "$LOCAL"
-python3 - <<'PYEOF'
-import zipfile, os, sys
+for arg in "$@"; do
+  if [[ "$arg" == "--dry-run" ]]; then
+    DRY_RUN=true
+  fi
+done
 
-ROOT = os.getcwd()
-OUTPUT = "/tmp/weather-sunset-deploy.zip"
-INCLUDE_DIRS = ["src", "server", "styles", "public"]
-INCLUDE_FILES = ["index.html", "server.py"]
-EXCLUDES = {"server/.env", "__pycache__", "node_modules", ".git"}
+if [[ "$DRY_RUN" != "true" ]]; then
+  require_cmd rsync
+  require_cmd ssh
+fi
 
-def should_exclude(rel_path):
-    parts = rel_path.replace("\\", "/").split("/")
-    for part in parts:
-        if part in EXCLUDES:
-            return True
-    if rel_path == "server/.env":
-        return True
-    return False
+require_non_empty "LOCAL" "$LOCAL"
+require_non_empty "REMOTE" "$REMOTE"
 
-with zipfile.ZipFile(OUTPUT, "w", zipfile.ZIP_DEFLATED) as zf:
-    for fname in INCLUDE_FILES:
-        fpath = os.path.join(ROOT, fname)
-        if os.path.exists(fpath):
-            zf.write(fpath, fname)
-    for d in INCLUDE_DIRS:
-        dpath = os.path.join(ROOT, d)
-        if not os.path.isdir(dpath):
-            continue
-        for dirpath, dirnames, filenames in os.walk(dpath):
-            dirnames[:] = [dn for dn in dirnames if dn not in EXCLUDES]
-            for fn in filenames:
-                full = os.path.join(dirpath, fn)
-                rel = os.path.relpath(full, ROOT)
-                if not should_exclude(rel):
-                    zf.write(full, rel)
+if [[ "$DRY_RUN" == "true" ]]; then
+  log "🔎 进入 dry-run 模式（不执行远端写操作，仅预览）"
+fi
 
-size = os.path.getsize(OUTPUT)
-print(f"  → {size//1024}K 打包完成（{OUTPUT}）")
-PYEOF
+log "🧩 部署前自检..."
+[[ -d "$LOCAL/server" ]] || { echo "❌ 未找到 server 目录"; exit 1; }
+[[ -f "$LOCAL/server/index.js" ]] || { echo "❌ 未找到 server/index.js"; exit 1; }
+log "  ✅ 本地路径: $LOCAL"
 
-echo "🚀 推送到服务器..."
-scp -i "$SSH_KEY" "$ZIP_TMP" $REMOTE:/tmp/ws-deploy.zip
+log "📦 部署前备份服务器配置..."
+if [[ "$DRY_RUN" == "true" ]]; then
+  log "  [dry-run] 跳过备份（仅演练）"
+else
+  bash "$(dirname "$0")/scripts/pre-deploy-backup.sh" || { echo '⚠️ 备份失败，中止部署'; exit 1; }
+fi
 
-echo "📂 服务器解压..."
-ssh -i "$SSH_KEY" $REMOTE "
-  set -e
-  DEPLOY_DIR=~/weather-sunset-predictor
-  # 备份 .env（不被覆盖）
-  [ -f \"\$DEPLOY_DIR/server/.env\" ] && cp \"\$DEPLOY_DIR/server/.env\" /tmp/ws-env-backup
+log "📦 拉取最新代码..."
+if [[ "$DRY_RUN" == "true" ]]; then
+  log "  [dry-run] 跳过 git pull"
+else
+  git -C "$LOCAL" pull origin main
+fi
 
-  # 解压（覆盖现有文件）
-  unzip -o /tmp/ws-deploy.zip -d \"\$DEPLOY_DIR\" > /dev/null
+log "🚀 同步到服务器（排除 node_modules/.env/.xiake）..."
+RSYNC_EXCLUDES=(
+  --exclude='.git/'
+  --exclude='node_modules/'
+  --exclude='server/node_modules/'
+  --exclude='.env'
+  --exclude='server/.env'
+  --exclude='.xiake/'
+  --exclude='__pycache__/'
+)
+RSYNC_OPTS=(
+  -az
+  --progress
+  --delete
+  --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r
+  "${RSYNC_EXCLUDES[@]}"
+)
 
-  # 恢复 .env
-  [ -f /tmp/ws-env-backup ] && mv /tmp/ws-env-backup \"\$DEPLOY_DIR/server/.env\"
+if [[ "$DRY_RUN" == "true" ]]; then
+  log "  [dry-run] 传输预览："
+  echo "  rsync -e \"ssh -i $SSH_KEY -o StrictHostKeyChecking=no\" ${RSYNC_OPTS[*]} --dry-run \"$LOCAL/\" \"$REMOTE:~/weather-sunset-predictor/\""
+else
+  rsync -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
+    "${RSYNC_OPTS[@]}" "$LOCAL/" "$REMOTE:~/weather-sunset-predictor/"
+fi
 
-  # 清理
-  rm /tmp/ws-deploy.zip
-  echo '  → 解压完成'
-"
+log "🔄 重启服务并健康检查..."
+if [[ "$DRY_RUN" == "true" ]]; then
+  log "  [dry-run] 跳过重启与线上检查"
+else
+  ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$REMOTE" '
+set -euo pipefail
+DEPLOY_DIR="$HOME/weather-sunset-predictor"
 
-echo "🔄 重启后端..."
-ssh -i "$SSH_KEY" $REMOTE "sudo systemctl restart sunset-backend 2>/dev/null || (sudo fuser -k 3000/tcp 2>/dev/null; sleep 2; sudo bash -c 'cd /home/ubuntu/weather-sunset-predictor/server && nohup /usr/local/bin/node index.js >> /tmp/ws-backend.log 2>&1 &')"
+if [ -z "$DEPLOY_DIR" ]; then
+  echo "错误: DEPLOY_DIR 不能为空"
+  exit 1
+fi
+
+systemctl restart sunset-backend 2>/dev/null || {
+  pkill -f "weather-sunset-predictor/server/index.js" 2>/dev/null || true
+  sleep 2
+  cd "$DEPLOY_DIR/server"
+  nohup /usr/local/bin/node index.js >> /tmp/ws-backend.log 2>&1 &
+}
+
 sleep 6
-ssh -i "$SSH_KEY" $REMOTE "curl -s http://localhost:3000/health"
+HTTP_CODE="$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/health)"
+if [ "$HTTP_CODE" != "200" ]; then
+  echo "⚠️ 本地健康检查返回 $HTTP_CODE"
+  exit 1
+fi
+' 
 
-# 预热 raster 缓存（避免用户首次访问超时）
-echo "🔥 预热缓存..."
-ssh -i "$SSH_KEY" $REMOTE "
-  timeout 30s curl -s -o /dev/null 'http://localhost:3000/api/spots/china/raster?period=sunset&resolution=0.5' || true
-  timeout 30s curl -s -o /dev/null 'http://localhost:3000/api/spots/china/raster?period=sunrise&resolution=0.5' || true
-  echo '  → 预热完成（超时自动跳过）'
-"
+  log "🌐 外部站点健康检查..."
+  HTTP=$(ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$REMOTE" "curl -s -o /dev/null -w '%{http_code}' https://sunset.bjhyc.online")
+  if [ "$HTTP" != "200" ]; then
+    echo "⚠️ 外部域名返回 $HTTP"
+    exit 1
+  fi
 
-# 清理本地临时文件
-rm -f "$ZIP_TMP"
+  log "  ✅ 健康检查通过（$HTTP）"
+fi
 
-echo "✅ 部署完成"
+log "✅ 部署完成"
