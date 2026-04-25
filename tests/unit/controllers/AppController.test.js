@@ -4,6 +4,7 @@
  * 测试应用主控制器的核心功能
  */
 
+import { jest } from '@jest/globals';
 import AppController from '../../../src/controllers/AppController.js';
 import StorageService from '../../../src/services/StorageService.js';
 import WeatherController from '../../../src/controllers/WeatherController.js';
@@ -1221,5 +1222,67 @@ describe('AppController', () => {
       // Restore
       appController.handleRefresh = originalHandleRefresh;
     });
+
+  describe('城市候选搜索', () => {
+    beforeEach(() => {
+      const dropdown = document.createElement('div');
+      dropdown.id = 'city-suggestions-dropdown';
+      dropdown.className = 'search-history-dropdown hidden';
+      document.body.appendChild(dropdown);
+    });
+
+    test('旧的慢请求不应覆盖新的城市候选结果，避免下拉菜单闪退', async () => {
+      const input = document.getElementById('location-input');
+      let resolveOld;
+      geocodingService.searchCities = jest.fn((query) => {
+        if (query === '伊') {
+          return new Promise(resolve => { resolveOld = resolve; });
+        }
+        if (query === '伊瓜苏') {
+          return Promise.resolve([
+            { displayName: '伊瓜苏, 巴拉那州, 巴西', lat: -25.54778, lon: -54.58806, countryCode: 'BR' }
+          ]);
+        }
+        return Promise.resolve([]);
+      });
+
+      input.value = '伊';
+      const oldPromise = appController.updateCitySuggestions('伊');
+      input.value = '伊瓜苏';
+      await appController.updateCitySuggestions('伊瓜苏');
+
+      const dropdown = document.getElementById('city-suggestions-dropdown');
+      expect(dropdown.classList.contains('hidden')).toBe(false);
+      expect(dropdown.textContent).toContain('伊瓜苏');
+
+      resolveOld([]);
+      await oldPromise;
+
+      expect(dropdown.classList.contains('hidden')).toBe(false);
+      expect(dropdown.textContent).toContain('伊瓜苏');
+    });
+
+    test('输入候选搜索应防抖，避免每个字符都打接口', async () => {
+      jest.useFakeTimers();
+      geocodingService.searchCities = jest.fn().mockResolvedValue([
+        { displayName: '伊瓜苏, 巴拉那州, 巴西', lat: -25.54778, lon: -54.58806, countryCode: 'BR' }
+      ]);
+      document.getElementById('location-input').value = '伊瓜苏';
+
+      appController.scheduleCitySuggestionsUpdate('伊');
+      appController.scheduleCitySuggestionsUpdate('伊瓜');
+      appController.scheduleCitySuggestionsUpdate('伊瓜苏');
+
+      expect(geocodingService.searchCities).not.toHaveBeenCalled();
+      jest.advanceTimersByTime(300);
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(geocodingService.searchCities).toHaveBeenCalledTimes(1);
+      expect(geocodingService.searchCities).toHaveBeenCalledWith('伊瓜苏', 8);
+      jest.useRealTimers();
+    });
+  });
+
   });
 });

@@ -34,6 +34,8 @@ class AppController {
     this.currentLocation = null;
     this.isInitialized = false;
     this.citySuggestions = [];
+    this.citySuggestionTimer = null;
+    this.citySuggestionRequestId = 0;
 
     // 需求14：初始化I18n系统
     this.i18n = i18n;
@@ -484,10 +486,10 @@ class AppController {
         }
       });
 
-      // 输入时清除错误消息
-      newLocationInput.addEventListener('input', async () => {
+      // 输入时清除错误消息；候选搜索做防抖，避免慢请求竞态导致下拉菜单闪退
+      newLocationInput.addEventListener('input', () => {
         this.clearLocationError();
-        await this.updateCitySuggestions(newLocationInput.value);
+        this.scheduleCitySuggestionsUpdate(newLocationInput.value);
       });
 
       // 需求13：点击输入框时显示搜索历史
@@ -1286,6 +1288,22 @@ class AppController {
     }
   }
 
+  scheduleCitySuggestionsUpdate(query, delay = 300) {
+    if (this.citySuggestionTimer) {
+      clearTimeout(this.citySuggestionTimer);
+    }
+
+    const keyword = (query || '').trim();
+    if (!keyword) {
+      this.hideCitySuggestions();
+      return;
+    }
+
+    this.citySuggestionTimer = setTimeout(() => {
+      this.updateCitySuggestions(keyword);
+    }, delay);
+  }
+
   async updateCitySuggestions(query) {
     const dropdown = document.getElementById('city-suggestions-dropdown');
     if (!dropdown) {
@@ -1298,7 +1316,22 @@ class AppController {
       return;
     }
 
-    const suggestions = await this.geocodingService.searchCities(keyword, 8);
+    const requestId = ++this.citySuggestionRequestId;
+    let suggestions = [];
+    try {
+      suggestions = await this.geocodingService.searchCities(keyword, 8);
+    } catch (error) {
+      console.warn('[AppController] 城市候选搜索失败:', error.message);
+      suggestions = [];
+    }
+
+    // 只允许最后一次请求更新 UI，避免慢请求回包覆盖新输入导致菜单闪退
+    const locationInput = document.getElementById('location-input');
+    const latestKeyword = locationInput?.value?.trim() || '';
+    if (requestId !== this.citySuggestionRequestId || latestKeyword !== keyword) {
+      return;
+    }
+
     this.citySuggestions = suggestions;
 
     if (!suggestions.length) {
@@ -1355,6 +1388,11 @@ class AppController {
 
   hideCitySuggestions() {
     const dropdown = document.getElementById('city-suggestions-dropdown');
+    if (this.citySuggestionTimer) {
+      clearTimeout(this.citySuggestionTimer);
+      this.citySuggestionTimer = null;
+    }
+    this.citySuggestionRequestId += 1;
     if (dropdown) {
       dropdown.classList.add('hidden');
       dropdown.innerHTML = '';
