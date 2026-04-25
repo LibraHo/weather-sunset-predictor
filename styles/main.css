@@ -5382,3 +5382,13 @@ body.theme-dark .prediction-app-card {
 .prediction-app-nav-compact > div:nth-child(2) {
   display: none;
 }
+
+/* 需求46 修正：顶部只保留右上角分享 */
+.prediction-app-nav-compact {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+.prediction-app-nav-compact > div:first-child {
+  display: block;
+}
