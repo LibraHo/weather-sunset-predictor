@@ -149,16 +149,16 @@ describe('PredictionController', () => {
       expect(dir).toBe('西北偏西');
     });
 
-    test('90° 应返回 东', () => {
+    test('90° 应返回 正东', () => {
       predictionController.i18n = { currentLanguage: 'zh-CN' };
       const dir = predictionController.getLocalizedAzimuthDirection({ sunAzimuth: 90 });
-      expect(dir).toBe('东');
+      expect(dir).toBe('正东');
     });
 
-    test('0° 应返回 北', () => {
+    test('0° 应返回 正北', () => {
       predictionController.i18n = { currentLanguage: 'zh-CN' };
       const dir = predictionController.getLocalizedAzimuthDirection({ sunAzimuth: 0 });
-      expect(dir).toBe('北');
+      expect(dir).toBe('正北');
     });
 
     test('英文环境 296° 应返回 WNW', () => {
