@@ -20,98 +20,191 @@ const GAODE_BASE     = 'https://restapi.amap.com/v3';
 const GOOGLE_BASE    = 'https://maps.googleapis.com/maps/api/geocode';
 const OPENMETEO_GEOCODING_BASE = 'https://geocoding-api.open-meteo.com/v1';
 
-// ========== 通用查询标准化 ==========
-// 城市名称多语言映射表（非硬编码优先规则，仅用于查询扩展）
-const CITY_NAME_MAPPINGS = {
-  // 中文 -> 英文
-  '槟城': ['George Town', 'Penang Malaysia'],
-  '乔治市': ['George Town'],
-  '吉隆坡': ['Kuala Lumpur'],
-  '新加坡': ['Singapore'],
-  '曼谷': ['Bangkok'],
-  '东京': ['Tokyo'],
-  '首尔': ['Seoul'],
-  '纽约': ['New York'],
-  '伦敦': ['London'],
-  '巴黎': ['Paris'],
-  '悉尼': ['Sydney'],
-  '墨尔本': ['Melbourne'],
-  '洛杉矶': ['Los Angeles'],
-  '旧金山': ['San Francisco'],
-  '温哥华': ['Vancouver'],
-  '多伦多': ['Toronto'],
-  // 英文 -> 中文（反向映射）
-  'penang': ['槟城', 'George Town'],
-  'george town': ['乔治市'],
-  'kuala lumpur': ['吉隆坡'],
-  'singapore': ['新加坡'],
-  'bangkok': ['曼谷'],
-  'tokyo': ['东京'],
-  'seoul': ['首尔'],
-  'new york': ['纽约'],
-  'london': ['伦敦'],
-  'paris': ['巴黎'],
-  'sydney': ['悉尼'],
-  'melbourne': ['墨尔本'],
-  'los angeles': ['洛杉矶'],
-  'san francisco': ['旧金山'],
-  'vancouver': ['温哥华'],
-  'toronto': ['多伦多'],
-};
+// ========== 高频城市别名映射 ==========
+// 需求44：覆盖中美欧主要城市的常用别名，便于搜索补全与结果排序
+const CITY_ALIAS_RECORDS = [
+  // 中国
+  { canonical: 'beijing', zh: ['北京'], en: ['beijing'], aliases: ['bj', '北京', 'beijing'], regionCode: null, countryCode: 'CN' },
+  { canonical: 'shanghai', zh: ['上海'], en: ['shanghai'], aliases: ['sh', '上海', 'shanghai'], regionCode: null, countryCode: 'CN' },
+  { canonical: 'guangzhou', zh: ['广州'], en: ['guangzhou'], aliases: ['gz', '广州', 'guangzhou'], regionCode: null, countryCode: 'CN' },
+  { canonical: 'shenzhen', zh: ['深圳'], en: ['shenzhen'], aliases: ['sz', '深圳', 'shenzhen'], regionCode: null, countryCode: 'CN' },
+  { canonical: 'hongkong', zh: ['香港'], en: ['hong kong', 'hongkong', 'hk'], aliases: ['hk', 'hongkong', 'hong kong', '香港'], regionCode: 'HK', countryCode: 'HK' },
+  { canonical: 'macao', zh: ['澳门'], en: ['macau', 'macao'], aliases: ['macao', 'macau', '澳门'], regionCode: 'MO', countryCode: 'MO' },
+  { canonical: 'taipei', zh: ['台北'], en: ['taipei'], aliases: ['taipei', '台北'], regionCode: 'TW', countryCode: 'TW' },
+  { canonical: 'chengdu', zh: ['成都'], en: ['chengdu'], aliases: ['成都', 'chengdu'], regionCode: null, countryCode: 'CN' },
+  { canonical: 'chongqing', zh: ['重庆'], en: ['chongqing'], aliases: ['重庆', 'chongqing'], regionCode: null, countryCode: 'CN' },
+  { canonical: 'hangzhou', zh: ['杭州'], en: ['hangzhou'], aliases: ['杭州', 'hangzhou'], regionCode: null, countryCode: 'CN' },
+  { canonical: 'nanjing', zh: ['南京'], en: ['nanjing'], aliases: ['南京', 'nanjing'], regionCode: null, countryCode: 'CN' },
+  { canonical: 'xian', zh: ['西安'], en: ['xian', 'xi an', 'xi-an'], aliases: ['西安', 'xian', 'xi an', 'xi-an'], regionCode: null, countryCode: 'CN' },
+  { canonical: 'wuhan', zh: ['武汉'], en: ['wuhan'], aliases: ['武汉', 'wuhan'], regionCode: null, countryCode: 'CN' },
+  { canonical: 'xiamen', zh: ['厦门'], en: ['xiamen'], aliases: ['厦门', 'xiamen'], regionCode: null, countryCode: 'CN' },
+  { canonical: 'qingdao', zh: ['青岛'], en: ['qingdao'], aliases: ['青岛', 'qingdao'], regionCode: null, countryCode: 'CN' },
 
-/**
- * 标准化查询：将中文城市名转换为英文，以提高 Open-Meteo 等服务的搜索成功率
- * 这不是硬编码优先规则，只是查询扩展以提高可检索性
- * @param {string} query - 原始查询
- * @returns {string} - 标准化后的查询
- */
+  // 美国
+  { canonical: 'losangeles', zh: ['洛杉矶'], en: ['los angeles', 'la'], aliases: ['la', 'los angeles', '洛杉矶'], regionCode: 'CA', countryCode: 'US' },
+  { canonical: 'newyork', zh: ['纽约'], en: ['new york', 'ny', 'nyc'], aliases: ['nyc', 'new york', 'newyork', 'ny', '纽约'], regionCode: 'NY', countryCode: 'US' },
+  { canonical: 'sanfrancisco', zh: ['旧金山'], en: ['san francisco', 'sf'], aliases: ['sf', 'san francisco', '旧金山'], regionCode: 'CA', countryCode: 'US' },
+  { canonical: 'washingtondc', zh: ['华盛顿', '华盛顿特区'], en: ['washington dc', 'dc'], aliases: ['dc', 'washington dc', 'washington, dc', '华盛顿'], regionCode: 'DC', countryCode: 'US' },
+  { canonical: 'seattle', zh: ['西雅图'], en: ['seattle'], aliases: ['西雅图', 'seattle'], regionCode: 'WA', countryCode: 'US' },
+  { canonical: 'chicago', zh: ['芝加哥'], en: ['chicago'], aliases: ['芝加哥', 'chicago'], regionCode: 'IL', countryCode: 'US' },
+  { canonical: 'boston', zh: ['波士顿'], en: ['boston'], aliases: ['波士顿', 'boston'], regionCode: 'MA', countryCode: 'US' },
+  { canonical: 'lasvegas', zh: ['拉斯维加斯'], en: ['las vegas'], aliases: ['拉斯维加斯', 'las vegas', 'lasvegas'], regionCode: 'NV', countryCode: 'US' },
+  { canonical: 'miami', zh: ['迈阿密'], en: ['miami'], aliases: ['迈阿密', 'miami'], regionCode: 'FL', countryCode: 'US' },
+
+  // 欧洲
+  { canonical: 'london', zh: ['伦敦'], en: ['london'], aliases: ['伦敦', 'london'], regionCode: 'LND', countryCode: 'GB' },
+  { canonical: 'paris', zh: ['巴黎'], en: ['paris'], aliases: ['巴黎', 'paris'], regionCode: 'PAR', countryCode: 'FR' },
+  { canonical: 'berlin', zh: ['柏林'], en: ['berlin'], aliases: ['柏林', 'berlin'], regionCode: 'BE', countryCode: 'DE' },
+  { canonical: 'rome', zh: ['罗马'], en: ['rome'], aliases: ['罗马', 'rome'], regionCode: 'RM', countryCode: 'IT' },
+  { canonical: 'madrid', zh: ['马德里'], en: ['madrid'], aliases: ['马德里', 'madrid'], regionCode: 'MD', countryCode: 'ES' },
+  { canonical: 'barcelona', zh: ['巴塞罗那'], en: ['barcelona'], aliases: ['巴塞罗那', 'barcelona'], regionCode: 'B', countryCode: 'ES' },
+  { canonical: 'amsterdam', zh: ['阿姆斯特丹'], en: ['amsterdam'], aliases: ['阿姆斯特丹', 'amsterdam'], regionCode: 'NH', countryCode: 'NL' },
+  { canonical: 'milan', zh: ['米兰'], en: ['milan'], aliases: ['米兰', 'milan'], regionCode: '25', countryCode: 'IT' },
+  { canonical: 'zurich', zh: ['苏黎世'], en: ['zurich'], aliases: ['苏黎世', 'zurich'], regionCode: 'ZH', countryCode: 'CH' },
+  { canonical: 'vienna', zh: ['维也纳'], en: ['vienna'], aliases: ['维也纳', 'vienna'], regionCode: '9', countryCode: 'AT' },
+  { canonical: 'prague', zh: ['布拉格'], en: ['prague'], aliases: ['布拉格', 'prague'], regionCode: 'PR', countryCode: 'CZ' },
+  { canonical: 'athens', zh: ['雅典'], en: ['athens'], aliases: ['雅典', 'athens'], regionCode: 'A', countryCode: 'GR' },
+  { canonical: 'istanbul', zh: ['伊斯坦布尔'], en: ['istanbul'], aliases: ['伊斯坦布尔', 'istanbul'], regionCode: '34', countryCode: 'TR' }
+];
+
+const CITY_ALIAS_INDEX = (() => {
+  const index = new Map();
+  CITY_ALIAS_RECORDS.forEach(record => {
+    const aliases = new Set(record.aliases || []);
+    aliases.add(record.canonical);
+    for (const alias of aliases) {
+      index.set(alias.toLowerCase(), record);
+    }
+  });
+  return index;
+})();
+
+function normalizeAliasToken(input = '') {
+  return String(input)
+    .trim()
+    .toLowerCase()
+    .replace(/[\p{P}\p{S}]+/gu, ' ')
+    .replace(/[\s_\-+,]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function dedupeStrings(values = []) {
+  const result = [];
+  const seen = new Set();
+  for (const value of values) {
+    if (!value) continue;
+    const normalized = normalizeAliasToken(value);
+    if (!normalized) continue;
+    if (seen.has(normalized)) continue;
+    seen.add(normalized);
+    result.push(value.trim());
+  }
+  return result;
+}
+
+function getCityAliasDataForQuery(query) {
+  const normalized = normalizeAliasToken(query);
+  if (!normalized) return null;
+  const direct = CITY_ALIAS_INDEX.get(normalized);
+  if (direct) return direct;
+
+  const partial = CITY_ALIAS_RECORDS.find(record =>
+    (record.aliases || []).some(alias => normalizeAliasToken(alias) === normalized)
+  );
+  if (partial) return partial;
+
+  return null;
+}
+
+function getAliasTokensForQuery(query) {
+  const data = getCityAliasDataForQuery(query);
+  if (!data) return [query.trim()];
+
+  return dedupeStrings([
+    query,
+    ...(data.aliases || []),
+    ...(data.zh || []),
+    ...(data.en || []),
+    data.canonical
+  ]);
+}
+
 function normalizeQuery(query) {
   if (!query || typeof query !== 'string') return query;
-  
-  const normalizedQuery = query.trim().toLowerCase();
-  const mapping = CITY_NAME_MAPPINGS[normalizedQuery];
-  
-  // 如果找到映射，返回英文名称（第一个）用于搜索
-  if (mapping && mapping.length > 0) {
-    // 检查原始查询是否已经是英文
-    if (/^[a-zA-Z\s]+$/.test(normalizedQuery)) {
-      return query.trim(); // 已经是英文，保持原样
-    }
-    // 返回英文映射，同时保留原始查询用于后续合并结果
-    return mapping[0];
-  }
-  
-  return query.trim();
+  return normalizeAliasToken(getAliasTokensForQuery(query)[0] || query).trim();
 }
 
 /**
- * 获取查询的所有可能变体（用于合并搜索结果）
+ * 给定查询返回所有可用别名与变体（用于合并搜索结果）
  * @param {string} query - 原始查询
  * @returns {string[]} - 所有可能的查询变体
  */
 function getQueryVariants(query) {
-  if (!query || typeof query !== 'string') return [query];
-  
-  const normalizedQuery = query.trim().toLowerCase();
-  const mapping = CITY_NAME_MAPPINGS[normalizedQuery];
-  
-  if (mapping) {
-    // 返回原始查询 + 映射的变体
-    return [query.trim(), ...mapping];
-  }
-  
-  // 检查是否有反向映射（英文查中文）
-  for (const [key, values] of Object.entries(CITY_NAME_MAPPINGS)) {
-    if (values.some(v => v.toLowerCase() === normalizedQuery)) {
-      // 找到反向映射，返回原始查询 + 中文名
-      const chineseName = key;
-      if (chineseName !== normalizedQuery) {
-        return [query.trim(), chineseName];
-      }
+  if (!query || typeof query !== 'string') return [];
+  return dedupeStrings(getAliasTokensForQuery(query));
+}
+
+/**
+ * 简单别名打分：用于对搜索结果进行重排，提升中文简称/缩写命中的优先级
+ * @param {string} resultName
+ * @param {string[]} aliases
+ * @returns {number}
+ */
+function scoreResultByAlias(resultName, aliases) {
+  const normalizedName = normalizeAliasToken(resultName || '');
+  let bestScore = 0;
+
+  aliases.forEach((aliasRaw, aliasIndex) => {
+    const alias = normalizeAliasToken(aliasRaw);
+    if (!alias) {
+      return;
     }
-  }
-  
-  return [query.trim()];
+
+    let score = 0;
+    if (normalizedName === alias) {
+      score = 100;
+    } else if (normalizedName.startsWith(`${alias} `) || normalizedName.includes(` ${alias} `)) {
+      score = 90;
+    } else if (normalizedName.startsWith(alias) || normalizedName.endsWith(alias) || normalizedName.includes(alias)) {
+      score = 70;
+    }
+
+    if (score > 0) {
+      const weightedScore = score * 1000 + (aliases.length - aliasIndex);
+      bestScore = Math.max(bestScore, weightedScore);
+    }
+  });
+
+  return bestScore;
+}
+
+/**
+ * 对地理编码结果按别名命中度重排序
+ * @param {Array<{name:string}>} results
+ * @param {string} query
+ */
+function rankGeocodingResults(results = [], query = '') {
+  const aliases = getAliasTokensForQuery(query);
+  const withScore = results.map((item, index) => ({
+    ...item,
+    __geoAliasMatchScore: scoreResultByAlias(item?.name, aliases),
+    __geoAliasIndex: index
+  }));
+
+  return withScore
+    .sort((a, b) => {
+      if (b.__geoAliasMatchScore !== a.__geoAliasMatchScore) {
+        return b.__geoAliasMatchScore - a.__geoAliasMatchScore;
+      }
+      return a.__geoAliasIndex - b.__geoAliasIndex;
+    })
+    .map(item => {
+      const copy = { ...item };
+      delete copy.__geoAliasMatchScore;
+      delete copy.__geoAliasIndex;
+      return copy;
+    });
 }
 
 // ========== 路由 ==========
@@ -407,7 +500,7 @@ async function fetchOpenMeteoResults(query, limit = 8) {
     }
   }
 
-  return allResults;
+  return rankGeocodingResults(allResults, query);
 }
 
 async function handleOpenMeteoSearch(res, query, limit = 8) {
@@ -613,3 +706,13 @@ function deriveGoogleRegionCode(addressComponents = []) {
 }
 
 module.exports = router;
+module.exports._test = {
+  CITY_ALIAS_RECORDS,
+  CITY_ALIAS_INDEX,
+  normalizeAliasToken,
+  getCityAliasDataForQuery,
+  getQueryVariants,
+  getAliasTokensForQuery,
+  scoreResultByAlias,
+  rankGeocodingResults
+};

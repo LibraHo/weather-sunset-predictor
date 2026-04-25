@@ -219,4 +219,74 @@ describe('Geocoding Route — 数据转换逻辑', () => {
       expect(`${GOOGLE_BASE}/json`).toContain('maps.googleapis.com');
     });
   });
+
+  // ========== 需求44：别名映射与检索排序 ==========
+  describe('别名映射与检索排序', () => {
+    let helpers;
+
+    beforeAll(async () => {
+      const routeModule = await import('../../../server/routes/geocoding.js');
+      const route = routeModule.default || routeModule;
+      helpers = route._test;
+    });
+
+    test('LA/NYC/SF 应能映射到目标候选库', () => {
+      const laVariants = helpers.getQueryVariants('LA');
+      expect(laVariants).toEqual(expect.arrayContaining(['LA', '洛杉矶', 'los angeles']));
+
+      const nycVariants = helpers.getQueryVariants('NYC');
+      expect(nycVariants).toEqual(expect.arrayContaining(['NYC', 'new york', 'newyork', '纽约']));
+
+      const sfVariants = helpers.getQueryVariants('SF');
+      expect(sfVariants).toEqual(expect.arrayContaining(['SF', 'san francisco', '旧金山', 'sanfrancisco']));
+    });
+
+    test('London/Paris/北京/上海/香港 的别名变体应可用', () => {
+      const london = helpers.getQueryVariants('London');
+      const paris = helpers.getQueryVariants('Paris');
+      const beijing = helpers.getQueryVariants('北京');
+      const shanghai = helpers.getQueryVariants('Shanghai');
+      const hk = helpers.getQueryVariants('HK');
+
+      expect(london).toEqual(expect.arrayContaining(['London', '伦敦']));
+      expect(paris).toEqual(expect.arrayContaining(['Paris', '巴黎']));
+      expect(beijing).toEqual(expect.arrayContaining(['北京', 'beijing']));
+      expect(shanghai).toEqual(expect.arrayContaining(['Shanghai', '上海']));
+      expect(hk).toEqual(expect.arrayContaining(['HK', 'hongkong', '香港', 'hong kong']));
+    });
+
+    test('地理编码排序应优先命中别名最高匹配', () => {
+      const results = [
+        { name: 'New York, United States' },
+        { name: 'New York City, New York, United States' },
+        { name: 'NYC, United States' }
+      ];
+
+      const ranked = helpers.rankGeocodingResults(results, 'NYC');
+      expect(ranked[0].name).toBe('NYC, United States');
+    });
+
+    test('北京/上海/香港 搜索样例应各自触发高优先级排序', () => {
+      const beijing = [
+        { name: 'Shanghai, China' },
+        { name: '北京市, China' },
+        { name: 'Beijing, China' }
+      ];
+
+      const shanghai = [
+        { name: '上海, China' },
+        { name: 'Beijing, China' }
+      ];
+
+      const hk = [
+        { name: 'Hong Kong, Hong Kong' },
+        { name: 'Taipei, Taiwan' }
+      ];
+
+      expect(['北京市, China', 'Beijing, China']).toContain(helpers.rankGeocodingResults(beijing, '北京')[0].name);
+      expect(helpers.rankGeocodingResults(shanghai, '上海')[0].name).toBe('上海, China');
+      expect(helpers.rankGeocodingResults(hk, '香港')[0].name).toBe('Hong Kong, Hong Kong');
+    });
+  });
+
 });
