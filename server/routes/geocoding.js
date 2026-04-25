@@ -211,11 +211,15 @@ function attachSearchMeta(payload, meta) {
 }
 
 async function handleAutoSearch(res, query, apiKey, limit = 8) {
-  // Auto 策略：高德（国内）+ Open-Meteo（全球）合并，去重后返回
   const effectiveKey = apiKey || process.env.GAODE_API_KEY;
+  const resultSets = [];
+  const errors = [];
 
-  // 始终获取 Open-Meteo 结果（覆盖全球）
-  const omPromise = fetchOpenMeteoResults(query, limit * 2);
+  try {
+    resultSets.push(...await fetchOpenMeteoResults(query, limit * 3));
+  } catch (error) {
+    errors.push(`openmeteo:${error.message}`);
+  }
 
   if (effectiveKey) {
     try {
@@ -224,10 +228,8 @@ async function handleAutoSearch(res, query, apiKey, limit = 8) {
         timeout: 8000
       });
       const data = response.data;
-      const omResults = await omPromise;
-
       if (data.status === '1' && data.geocodes && data.geocodes.length > 0) {
-        let gaodeResults = data.geocodes.map(item => {
+        resultSets.push(...data.geocodes.map(item => {
           const [lonStr, latStr] = item.location.split(',');
           const regionCode = resolveGaodeRegionCode(item.adcode);
           return {
@@ -240,42 +242,21 @@ async function handleAutoSearch(res, query, apiKey, limit = 8) {
             regionCode,
             adcode: item.adcode || null
           };
-        });
-
-        // 合并：高德结果放前面（国内优先），然后 Open-Meteo 结果去重补充
-        const seenKeys = new Set(gaodeResults.map(r => `${r.lat.toFixed(4)},${r.lon.toFixed(4)}`));
-        for (const r of omResults) {
-          const key = `${r.lat.toFixed(4)},${r.lon.toFixed(4)}`;
-          if (!seenKeys.has(key)) {
-            seenKeys.add(key);
-            gaodeResults.push(r);
-          }
-        }
-        return res.json(attachSearchMeta({ results: gaodeResults.slice(0, limit) }, { providerUsed: 'gaode+openmeteo', fallbackUsed: false }));
+        }));
       }
-
-      // 高德无结果，直接返回 Open-Meteo
-      return res.json(attachSearchMeta({ results: omResults.slice(0, limit) }, {
-        providerUsed: 'openmeteo',
-        fallbackUsed: true,
-        fallbackReason: 'gaode_empty_result'
-      }));
     } catch (error) {
-      const omResults = await omPromise;
-      return res.json(attachSearchMeta({ results: omResults.slice(0, limit) }, {
-        providerUsed: 'openmeteo',
-        fallbackUsed: true,
-        fallbackReason: error.code === 'ECONNABORTED' ? 'gaode_timeout' : 'gaode_error'
-      }));
+      errors.push(`gaode:${error.code || error.message}`);
     }
   }
 
-  // 无高德 key 时直接 openmeteo
-  const om = await omPromise;
-  return res.json(attachSearchMeta({ results: om.slice(0, limit) }, {
-    providerUsed: 'openmeteo',
-    fallbackUsed: true,
-    fallbackReason: 'missing_gaode_key'
+  const ranked = rankGeocodingResults(query, resultSets).slice(0, limit);
+  return res.json(attachSearchMeta({
+    results: ranked,
+    rankDebug: ranked.map(r => ({ name: r.name, provider: r.provider, score: r.rankScore, reason: r.rankReason }))
+  }, {
+    providerUsed: effectiveKey ? 'ranked(openmeteo+gaode)' : 'ranked(openmeteo)',
+    fallbackUsed: errors.length > 0 || !effectiveKey,
+    fallbackReason: errors.length ? errors.join(';') : (!effectiveKey ? 'missing_gaode_key' : null)
   }));
 }
 
@@ -396,7 +377,10 @@ async function fetchOpenMeteoResults(query, limit = 8) {
                 type: item.feature_code || 'place',
                 provider: 'openmeteo',
                 countryCode: (item.country_code || '').toUpperCase() || null,
-                regionCode: resolveAdminRegionCode(item.admin1)
+                regionCode: resolveAdminRegionCode(item.admin1),
+                population: item.population ?? null,
+                admin1: item.admin1 ?? null,
+                country: item.country ?? null
               });
             }
           }
@@ -612,4 +596,103 @@ function deriveGoogleRegionCode(addressComponents = []) {
   return resolveAdminRegionCode(admin1Code);
 }
 
+
+function normalizeSearchText(text = '') {
+  return String(text || '').trim().toLowerCase().replace(/[\s,，·・._-]+/g, '');
+}
+
+function isLikelyChinaQuery(query = '') {
+  const q = String(query || '').trim().toLowerCase();
+  return /中国|北京|上海|广州|深圳|香港|澳门|台湾|台北|成都|重庆|杭州|南京|西安|武汉|厦门|青岛|天津|苏州|长沙|郑州|昆明|大连/.test(q)
+    || /^(bj|sh|gz|sz|hk)$/.test(q);
+}
+
+function getQueryAliases(query = '') {
+  const q = normalizeSearchText(query);
+  const aliases = new Set([q]);
+  const groups = [
+    ['tokyo', '东京', '東京'],
+    ['losangeles', 'la', '洛杉矶', '洛杉磯'],
+    ['newyork', 'nyc', '纽约', '紐約'],
+    ['sanfrancisco', 'sf', '旧金山', '舊金山'],
+    ['london', '伦敦', '倫敦'],
+    ['paris', '巴黎'],
+    ['beijing', 'bj', '北京'],
+    ['shanghai', 'sh', '上海'],
+    ['hongkong', 'hk', '香港']
+  ];
+  for (const group of groups) {
+    if (group.includes(q)) group.forEach(v => aliases.add(v));
+  }
+  return aliases;
+}
+
+function populationScore(population) {
+  const n = Number(population);
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return Math.min(35, Math.log10(n) * 5);
+}
+
+function rankGeocodingResults(query, results = []) {
+  const aliases = getQueryAliases(query);
+  const chinaQuery = isLikelyChinaQuery(query);
+  const seen = new Map();
+
+  for (const item of results) {
+    if (!item || !Number.isFinite(Number(item.lat)) || !Number.isFinite(Number(item.lon))) continue;
+    const key = `${Number(item.lat).toFixed(4)},${Number(item.lon).toFixed(4)}`;
+    if (!seen.has(key)) seen.set(key, item);
+  }
+
+  return Array.from(seen.values()).map(item => {
+    const nameNorm = normalizeSearchText(item.name);
+    const country = String(item.countryCode || '').toUpperCase();
+    const feature = String(item.type || '').toUpperCase();
+    const reasons = [];
+    let score = 0;
+
+    if ([...aliases].some(a => nameNorm === a || nameNorm.startsWith(a))) {
+      score += 100;
+      reasons.push('exact_or_prefix');
+    } else if ([...aliases].some(a => nameNorm.includes(a))) {
+      score += 55;
+      reasons.push('contains_alias');
+    }
+
+    const pop = populationScore(item.population);
+    if (pop) { score += pop; reasons.push('population'); }
+
+    if (/PPLC|PPLA|PPLA2|PPLA3|PPLA4/.test(feature)) {
+      score += 20;
+      reasons.push('admin_city');
+    }
+
+    if (item.provider === 'openmeteo') {
+      score += 15;
+      reasons.push('global_provider');
+    }
+    if (item.provider === 'gaode') {
+      if (chinaQuery) {
+        score += 25;
+        reasons.push('china_query_gaode_bonus');
+      } else {
+        score -= 30;
+        reasons.push('non_china_gaode_penalty');
+      }
+    }
+
+    if (!chinaQuery && country === 'CN') {
+      score -= 25;
+      reasons.push('non_china_query_cn_penalty');
+    }
+
+    return {
+      ...item,
+      rankScore: Number(score.toFixed(2)),
+      rankReason: reasons.join('|') || 'default'
+    };
+  }).sort((a, b) => b.rankScore - a.rankScore);
+}
+
 module.exports = router;
+module.exports._private = { rankGeocodingResults, getQueryAliases, isLikelyChinaQuery };
