@@ -994,14 +994,26 @@ class ChinaMapCanvas {
     const isSunrise = this._currentPeriod === 'sunrise';
     const title = isSunrise ? '朝霞分数' : '晚霞分数';
 
+    const colorMode = (() => {
+      try { return localStorage.getItem('firecloud_raster_color_mode') || 'compact'; } catch (_) { return 'compact'; }
+    })();
+
     // 使用与 ChinaRasterOverlay 一致的色阶采样
-    const legendItems = [
+    const compactItems = [
       { score: 0, label: '<40', color: 'rgba(255,255,255,0.08)' },
       { score: 40, label: '40', color: isSunrise ? 'rgba(255,230,210,0.18)' : 'rgba(255,230,210,0.14)' },
       { score: 50, label: '50', color: isSunrise ? 'rgba(255,185,150,0.30)' : 'rgba(255,185,150,0.22)' },
-      { score: 60, label: '60', color: isSunrise ? 'rgba(238,120,90,0.46)' : 'rgba(238,120,90,0.36)' },
-      { score: 70, label: '70+', color: isSunrise ? 'rgba(198,55,35,0.65)' : 'rgba(198,55,35,0.55)' },
+      { score: 60, label: '60', color: isSunrise ? 'rgba(248,132,82,0.46)' : 'rgba(248,132,54,0.36)' },
+      { score: 70, label: '70+', color: isSunrise ? 'rgba(218,78,28,0.65)' : 'rgba(218,78,28,0.55)' },
     ];
+    const fullItems = [
+      { score: 0, label: '0', color: isSunrise ? 'rgba(255,230,210,0.06)' : 'rgba(255,230,210,0.05)' },
+      { score: 20, label: '20', color: isSunrise ? 'rgba(255,205,175,0.16)' : 'rgba(255,205,175,0.13)' },
+      { score: 40, label: '40', color: isSunrise ? 'rgba(255,184,126,0.28)' : 'rgba(255,184,126,0.22)' },
+      { score: 55, label: '55', color: isSunrise ? 'rgba(238,120,90,0.44)' : 'rgba(238,120,90,0.34)' },
+      { score: 70, label: '70+', color: isSunrise ? 'rgba(218,78,28,0.65)' : 'rgba(218,78,28,0.55)' },
+    ];
+    const legendItems = colorMode === 'full' ? fullItems : compactItems;
 
     const rows = legendItems.map(item => {
       const fg = isSunrise ? 'left' : 'left';

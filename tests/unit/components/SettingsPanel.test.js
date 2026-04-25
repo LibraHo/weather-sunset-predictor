@@ -467,7 +467,7 @@ describe('SettingsPanel.applyTheme', () => {
   });
 });
 
-describe('SettingsPanel - 火烧云渲染模式（固定栅格）', () => {
+describe('SettingsPanel - 火烧云涂层颜色模式', () => {
   beforeEach(() => {
     setupI18nMock();
     localStorage.clear();
@@ -479,22 +479,15 @@ describe('SettingsPanel - 火烧云渲染模式（固定栅格）', () => {
     jest.restoreAllMocks();
   });
 
-  test('渲染模式显示为只读信息“等值栅格（固定）”', () => {
+  test('默认显示精简模式，并可切换到完整模式', () => {
     const sp = makePanel();
     sp.open();
-    //china-render-mode-select 已移除，改为只读文本
-    const sel = document.getElementById('china-render-mode-select');
-    expect(sel).toBeNull();
-    // 确认只读信息存在
-    const infoItems = sp.panel.querySelectorAll('.info-value');
-    const hasRaster = Array.from(infoItems).some(el => el.textContent.includes('等值栅格'));
-    expect(hasRaster).toBe(true);
-  });
+    const select = sp.panel.querySelector('#firecloud-raster-color-mode-select');
+    expect(select).not.toBeNull();
+    expect(select.value).toBe('compact');
 
-  test('设置面板不包含渲染模式选择器', () => {
-    const sp = makePanel();
-    sp.open();
-    const select = sp.panel.querySelector('#china-render-mode-select');
-    expect(select).toBeNull();
+    select.value = 'full';
+    select.dispatchEvent(new Event('change'));
+    expect(localStorage.getItem('firecloud_raster_color_mode')).toBe('full');
   });
 });
