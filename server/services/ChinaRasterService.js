@@ -1,5 +1,5 @@
 /**
- * ChinaRasterService - 中国大陆火烧云连续栅格服务
+ * ChinaRasterService - 东亚火烧云连续栅格服务
  *
  * 职责：
  * 1. 从 GridScoreService 拿到缓存散点（score >= 0 的所有点）
@@ -18,10 +18,10 @@
 const { IdwInterpolator } = require('../utils/IdwInterpolator');
 const gridService = require('./GridScoreService');
 
-// 中国大陆覆盖范围（与 GridScoreService 相同但更宽）
-const CHINA_BBOX = {
+// 东亚渲染覆盖范围：包含中国大陆、台湾、韩国、日本
+const EAST_ASIA_BBOX = {
   west: 72,
-  east: 135,
+  east: 146,
   south: 18,
   north: 53
 };
@@ -85,7 +85,7 @@ class ChinaRasterService {
     // IDW 插值
     const idw = new IdwInterpolator(IDW_OPTIONS);
     const { width, height, values } = idw.interpolateGrid(points, {
-      ...CHINA_BBOX,
+      ...EAST_ASIA_BBOX,
       resolution: safeRes
     });
 
@@ -94,7 +94,7 @@ class ChinaRasterService {
       date: today,
       updatedAt: spotsCache.updatedAt,
       period: safePeriod,
-      bbox: CHINA_BBOX,
+      bbox: EAST_ASIA_BBOX,
       resolution: safeRes,
       width,
       height,
@@ -108,7 +108,7 @@ class ChinaRasterService {
         maxRadiusKm: IDW_OPTIONS.maxRadiusKm,
         minNeighbors: IDW_OPTIONS.minNeighbors,
         sourcePoints: points.length,
-        source: 'china-spots-cache'
+        source: 'east-asia-spots-cache'
       }
     };
 

@@ -1,5 +1,5 @@
 /**
- * ChinaRasterOverlay.js - 中国大陆火烧云连续栅格渲染器（等值热力层）
+ * ChinaRasterOverlay.js - 东亚火烧云连续栅格渲染器（等值热力层）
  *
  * 基于 /api/spots/china/raster 数据渲染：
  * 1) 等值面（contourf 风格填色）
