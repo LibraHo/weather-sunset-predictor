@@ -5485,3 +5485,43 @@ body.theme-dark .prediction-app-card {
   .cloud-condition-label { font-size: 0.68rem; }
   .cloud-condition-top strong { font-size: 0.74rem; }
 }
+
+/* 需求46 修正：分析条目进一步压缩，优先一行显示 */
+.analysis-item {
+  grid-template-columns: 18px minmax(5.2em, 0.78fr) minmax(0, 1.65fr);
+  gap: 6px;
+  min-height: 38px;
+  padding: 7px 9px;
+}
+.analysis-item-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 0.62rem;
+}
+.analysis-item-copy strong {
+  font-size: 0.78rem;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.analysis-item-copy small {
+  font-size: 0.7rem;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.analysis-items { gap: 6px; }
+.analysis-group + .analysis-group { margin-top: 10px; }
+.analysis-group-label { font-size: 0.78rem; padding: 3px 8px; margin-bottom: 6px; }
+@media (max-width: 360px) {
+  .analysis-item {
+    grid-template-columns: 16px minmax(4.8em, 0.74fr) minmax(0, 1.7fr);
+    gap: 5px;
+    padding: 7px 8px;
+  }
+  .analysis-item-icon { width: 16px; height: 16px; font-size: 0.58rem; }
+  .analysis-item-copy strong { font-size: 0.72rem; }
+  .analysis-item-copy small { font-size: 0.66rem; }
+}
