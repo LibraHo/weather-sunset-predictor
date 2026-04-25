@@ -24,14 +24,14 @@ async function _loadChinaGeoJSON() {
 const RASTER_MIN_SCORE = 15;
 const RASTER_FULL_SCORE = 70;
 
-// 视觉显示阈值：下调到当前数据分布可见区间
-const VISUAL_MIN_SCORE = 15;
+// 视觉显示阈值：40 分以下不染色，避免低分区域铺满地图
+const VISUAL_MIN_SCORE = 40;
 
-// 等值面分级（>=8 档）
-const BAND_LEVELS = [15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70];
+// 等值面分级：从 40 起染色
+const BAND_LEVELS = [40, 45, 50, 55, 60, 65, 70];
 
-// 细等值线（更密）
-const CONTOUR_LEVELS = Array.from({ length: 21 }, (_, i) => 30 + i * 2); // 30~70 每 2 分
+// 细等值线（更密）：从 40 起
+const CONTOUR_LEVELS = Array.from({ length: 16 }, (_, i) => 40 + i * 2); // 40~70 每 2 分
 
 // 关键标签（高分不足时用次级标签）
 const KEY_LABEL_LEVELS = [70, 80];
@@ -88,8 +88,7 @@ function smoothstep01(t) {
 }
 
 function alphaSoftThreshold(score) {
-  if (score < 12) return 0;
-  if (score < VISUAL_MIN_SCORE) return 0.18;
+  if (score < VISUAL_MIN_SCORE) return 0;
   return 1;
 }
 

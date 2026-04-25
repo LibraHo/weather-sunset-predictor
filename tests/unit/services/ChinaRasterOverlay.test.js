@@ -21,10 +21,10 @@ import {
 // ─── scoreToRGBA ─────────────────────────────────────────────────────────────
 
 describe('scoreToRGBA', () => {
-  test('低于 RASTER_MIN_SCORE 时返回接近透明', () => {
-    const color = scoreToRGBA(RASTER_MIN_SCORE - 1);
-    // alphaSoftThreshold: score < 12 → 0; 12..14 → small fade-in
-    expect(color.a).toBeLessThanOrEqual(0.015);
+  test('40 分以下返回透明，不染色', () => {
+    expect(scoreToRGBA(0).a).toBe(0);
+    expect(scoreToRGBA(20).a).toBe(0);
+    expect(scoreToRGBA(39).a).toBe(0);
   });
 
   test('noData 值返回透明', () => {
@@ -32,10 +32,10 @@ describe('scoreToRGBA', () => {
     expect(color.a).toBe(0);
   });
 
-  test('最低可见分值（RASTER_MIN_SCORE）alpha 接近 0（淡入起点）', () => {
-    const color = scoreToRGBA(RASTER_MIN_SCORE);
-    expect(color.a).toBeLessThanOrEqual(0.2);
-    expect(color.r).toBeGreaterThan(200); // 金黄色系
+  test('40 分是最低可见分值', () => {
+    const color = scoreToRGBA(40);
+    expect(color.a).toBeGreaterThan(0);
+    expect(color.r).toBeGreaterThan(200);
   });
 
   test('高分值（90）返回深橙红（clamped 到 RASTER_FULL_SCORE）', () => {
@@ -64,7 +64,7 @@ describe('scoreToRGBA', () => {
   });
 
   test('颜色单调性：分值越高 alpha 越大（大体趋势）', () => {
-    const scores = [RASTER_MIN_SCORE, 50, 60, 70, 80, 90, RASTER_FULL_SCORE];
+    const scores = [40, 50, 60, 70, 80, 90, RASTER_FULL_SCORE];
     const alphas = scores.map(s => scoreToRGBA(s).a);
     for (let i = 1; i < alphas.length; i++) {
       expect(alphas[i]).toBeGreaterThanOrEqual(alphas[i - 1]);
@@ -231,7 +231,7 @@ describe('scoreToRGBA - 分时段色板', () => {
   });
 
   test('使用 SUNRISE_PALETTE 时低分值接近透明', () => {
-    const color = scoreToRGBA(RASTER_MIN_SCORE - 1, -1, SUNRISE_PALETTE);
+    const color = scoreToRGBA(39, -1, SUNRISE_PALETTE);
     expect(color.a).toBeLessThanOrEqual(0.02);
   });
 
