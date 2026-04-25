@@ -213,12 +213,59 @@
             <button id="tomorrow-btn" class="btn btn-toggle" data-i18n="dates.tomorrow">明天</button>
           </div>
           <div class="parameter-selector">
-            <button data-param="temp" class="btn btn-param active" data-i18n="weather.temperature">温度</button>
-            <button data-param="precip" class="btn btn-param" data-i18n="weather.precipitation">降水</button>
-            <button data-param="humidity" class="btn btn-param" data-i18n="weather.humidity">湿度</button>
-            <button data-param="wind" class="btn btn-param" data-i18n="weather.windSpeed">风速</button>
-            <button data-param="pressure" class="btn btn-param" data-i18n="weather.pressure">气压</button>
-            <button data-param="clouds" class="btn btn-param" data-i18n="weather.cloudCover">云量</button>
+            <button data-param="temp" class="btn btn-param active" aria-label="温度">
+              <span class="param-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2C9.24 2 7 4.24 7 7v10a5 5 0 0 0 10 0V7c0-2.76-2.24-5-5-5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                  <path d="M12 7v10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  <path d="M9 10h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+              </span>
+              <span class="param-label" data-i18n="weather.temperature">温度</span>
+            </button>
+            <button data-param="precip" class="btn btn-param" aria-label="降水">
+              <span class="param-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 18s2.5-4 4.5-4 4.5 4 6.5 4 4.5-4 6.5-4 4.5 4 4.5 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M5 18c.8-1.5 2.6-2.5 4.1-1.7 1.7.9 2.7 3 4.6 3 1.8 0 2.8-2 4.1-3 .7-.6 1.5-.8 2.3-.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+              </span>
+              <span class="param-label" data-i18n="weather.precipitation">降水</span>
+            </button>
+            <button data-param="humidity" class="btn btn-param" aria-label="湿度">
+              <span class="param-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 3.5 5 12c2.2 3.6 3.6 5.7 7 9 3.4-3.3 4.8-5.4 7-9L12 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <span class="param-label" data-i18n="weather.humidity">湿度</span>
+            </button>
+            <button data-param="wind" class="btn btn-param" aria-label="风速">
+              <span class="param-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M2.5 12H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  <path d="m14 8.5-3.5 3.5 3.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="18" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
+                </svg>
+              </span>
+              <span class="param-label" data-i18n="weather.windSpeed">风速</span>
+            </button>
+            <button data-param="pressure" class="btn btn-param" aria-label="气压">
+              <span class="param-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5 17h14M5 9h14M7 13h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <span class="param-label" data-i18n="weather.pressure">气压</span>
+            </button>
+            <button data-param="clouds" class="btn btn-param" aria-label="云量">
+              <span class="param-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7 18h10a4 4 0 0 0 0-8 6 6 0 0 0-11.5-1A4.5 4.5 0 0 0 7 18Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <span class="param-label" data-i18n="weather.cloudCover">云量</span>
+            </button>
           </div>
           <div id="chart-container" class="chart-container">
             <canvas id="weather-chart"></canvas>

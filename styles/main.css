@@ -17,6 +17,7 @@
   --color-text: #333333;
   --color-text-light: #666666;
   --color-border: #e0e0e0;
+  --chart-grid-color: rgba(51, 51, 51, 0.16);
 
   /* 日出日落时间颜色 */
   --sunset-time-bg: #fff3e0;
@@ -87,6 +88,7 @@ body.theme-dark {
   --color-text: rgba(255, 255, 255, 0.92);
   --color-text-light: rgba(255, 255, 255, 0.50);
   --color-border: rgba(255, 255, 255, 0.08);
+  --chart-grid-color: rgba(255, 255, 255, 0.22);
 
   /* 日落色调 */
   --sunset-time-bg: rgba(251, 146, 60, 0.10);
@@ -2903,6 +2905,10 @@ body.theme-dark .prediction-analysis {
   font-weight: 500;
   transition: all var(--transition-fast);
   min-width: 80px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .btn-param:hover {
@@ -2910,12 +2916,37 @@ body.theme-dark .prediction-analysis {
   border-color: var(--color-primary);
 }
 
+.btn-param:hover .param-icon { color: inherit; }
+
 .btn-param.active {
   background-color: var(--color-primary);
   color: white;
   border-color: var(--color-primary);
 }
 
+.btn-param .param-icon {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  color: currentColor;
+}
+
+.btn-param .param-icon svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+.btn-param .param-label {
+  line-height: 1;
+}
+
+.weather-chart-panel {
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
 /* 图表容器 */
 .chart-container {
   width: 100%;
@@ -2944,6 +2975,11 @@ body.theme-dark .chart-container {
 body.theme-dark .chart-container > div > div {
   background: var(--color-surface, rgba(30,41,59,0.8));
   border: 1px solid var(--color-border);
+}
+
+body.theme-dark .btn-param:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: var(--color-primary);
 }
 
 /* 移动端优化 */
