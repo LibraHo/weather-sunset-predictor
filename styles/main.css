@@ -6571,3 +6571,34 @@ html[data-actual-theme="light"] .prediction-app-card {
     font-size: 0.72rem;
   }
 }
+
+/* 天气指标卡：避免百分比/单位数字被挤到第二行 */
+.weather-metric-card .weather-value {
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 420px) {
+  .weather-metric-grid {
+    gap: 6px !important;
+  }
+  .weather-metric-card {
+    min-width: 0;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+  }
+  .weather-metric-card .weather-label {
+    font-size: 0.62rem !important;
+    letter-spacing: -0.03em;
+  }
+  .weather-metric-card .weather-value {
+    font-size: clamp(0.72rem, 5.2vw, 0.96rem) !important;
+    letter-spacing: -0.04em;
+  }
+  .weather-metric-aerosol .weather-value,
+  .weather-metric-pressure .weather-value,
+  .weather-metric-visibility .weather-value {
+    font-size: clamp(0.62rem, 4vw, 0.78rem) !important;
+  }
+}
