@@ -19,6 +19,7 @@ const photosRoutes = require('./routes/photos');
 const adminRoutes = require('./routes/admin');
 const apiLogsRoutes = require('./routes/api-logs');
 const agentRoutes = require('./routes/agent');
+const applicationsRoutes = require('./routes/applications');
 const shareRoutes = require('./routes/share');
 const basicAuth = require('basic-auth');
 const { requestLogger, errorLogger } = require('./middleware/logger');
@@ -125,6 +126,7 @@ app.get('/api/config/features', (req, res) => {
 });
 
 app.use('/api/agent', agentRoutes);
+app.use('/api/applications', applicationsRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/firecloud', firecloudRoutes);
 app.use('/api/prediction', predictionRoutes);

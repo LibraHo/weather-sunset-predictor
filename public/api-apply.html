@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>申请 API 接入 - 霞客</title>
+  <link rel="stylesheet" href="/styles/main.css" />
+  <style>
+    .apply-card {
+      max-width: 680px;
+      margin: 32px auto;
+      padding: 20px;
+      border-radius: 12px;
+      background: rgba(17, 28, 43, 0.85);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #fff;
+    }
+    .apply-title { margin-top: 0; }
+    .apply-grid { display: grid; gap: 12px; }
+    .apply-grid input, .apply-grid textarea {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 8px;
+      padding: 10px;
+      background: rgba(15,24,35,.8);
+      color: #fff;
+    }
+    .apply-tip {
+      background: rgba(255, 193, 7, 0.12);
+      border: 1px solid rgba(255,193,7,0.35);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin: 12px 0;
+      color: #ffd56a;
+    }
+    .apply-msg { margin-top: 12px; min-height: 20px; }
+    .apply-msg.success { color: #4caf50; }
+    .apply-msg.error { color: #ef5350; }
+    .btn { padding: 10px 14px; border-radius: 8px; border: none; background: #4a90e2; color: #fff; cursor: pointer; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  </style>
+</head>
+<body style="background:#0b1320;color:#eaf0ff;">
+  <main class="apply-card">
+    <h1 class="apply-title">API 接口申请</h1>
+    <p>请先提交申请，待后台审核通过后我们将为你开通 Token。</p>
+    <div class="apply-tip">仅限个人/研究/测试/非商业用途</div>
+
+    <form id="applyForm" class="apply-grid">
+      <label>
+        邮箱（必填）
+        <input name="email" type="email" required placeholder="yourname@example.com" />
+      </label>
+      <label>
+        联系方式（必填）
+        <input name="contact" type="text" required placeholder="微信 / 电话 / Telegram" />
+      </label>
+      <label>
+        用途说明（选填）
+        <textarea name="purpose" rows="4" placeholder="用于个人学习/研究/测试用途"></textarea>
+      </label>
+      <label>
+        预计调用量（选填）
+        <input name="expectedCallVolume" type="number" min="1" placeholder="预计每日调用次数" />
+      </label>
+      <button class="btn" type="submit">提交申请</button>
+    </form>
+
+    <div id="applyMsg" class="apply-msg"></div>
+    <p><a href="/" style="color:#7ec7ff;">返回首页</a></p>
+  </main>
+
+  <script>
+    const form = document.getElementById('applyForm');
+    const msg = document.getElementById('applyMsg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.textContent = '';
+      msg.className = 'apply-msg';
+
+      const body = {
+        email: form.email.value.trim(),
+        contact: form.contact.value.trim(),
+        purpose: form.purpose.value.trim(),
+        expectedCallVolume: form.expectedCallVolume.value ? Number(form.expectedCallVolume.value) : undefined
+      };
+
+      try {
+        const res = await fetch('/api/applications', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          msg.textContent = data?.error?.message || '提交失败';
+          msg.className = 'apply-msg error';
+          return;
+        }
+        msg.textContent = '提交成功，后台审核通过后会与管理员联系；申请接口不直接返回 Token。';
+        msg.className = 'apply-msg success';
+        form.reset();
+      } catch (err) {
+        msg.textContent = '提交失败，请稍后重试';
+        msg.className = 'apply-msg error';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -153,6 +153,54 @@
         </div>
       </section>
 
+      <section class="admin-section">
+        <div class="admin-card">
+          <h3 class="card-title">🔑 API Token 管理</h3>
+          <form id="tokenCreateForm" class="upload-form">
+            <div class="form-row two-inputs">
+              <input id="tokenName" type="text" placeholder="名称（必填）">
+              <input id="tokenMinuteLimit" type="number" min="1" placeholder="每分钟额度（默认120）">
+            </div>
+            <div class="form-row two-inputs">
+              <input id="tokenDailyLimit" type="number" min="1" placeholder="每日额度（默认5000）">
+              <label class="admin-inline-switch" style="display:flex;align-items:center;gap:6px;color:var(--color-text-light)">
+                <input id="tokenEnabled" type="checkbox" checked>
+                <span>启用</span>
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary" id="createTokenBtn">创建 Token</button>
+          </form>
+          <div id="tokenMsg" class="admin-message hidden"></div>
+
+          <div class="table-wrap" style="margin-top: var(--spacing-md)">
+            <table class="admin-table">
+              <thead><tr><th>名称</th><th>状态</th><th>前缀</th><th>分钟限流</th><th>每日限流</th><th>用量</th><th>操作</th></tr></thead>
+              <tbody id="tokenTableBody"><tr><td colspan="7" class="empty">加载中...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="admin-card" style="margin-top: var(--spacing-lg);">
+          <h3 class="card-title">🛡️ API申请审核</h3>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>邮箱</th><th>联系方式</th><th>用途</th><th>预估调用量</th><th>状态</th><th>备注</th><th>关联Token</th><th>操作</th></tr></thead>
+              <tbody id="applicationTableBody"><tr><td colspan="8" class="empty">加载中...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="admin-card" style="margin-top: var(--spacing-lg);">
+          <h3 class="card-title">🧾 Agent 审计日志</h3>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>时间</th><th>TokenId</th><th>Endpoint</th><th>状态</th><th>耗时(ms)</th><th>错误码</th></tr></thead>
+              <tbody id="auditLogTableBody"><tr><td colspan="6" class="empty">加载中...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <!-- 照片管理 -->
       <section class="admin-section">
         <div class="admin-card">

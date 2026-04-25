@@ -1,17 +1,26 @@
 /**
- * server/routes/api-logs.js - API 调用日志 & 定时更新配置 API
+ * server/routes/api-logs.js - API 调用日志 & 定时更新配置 & 管理后台工具 API
  *
- * 所有路由需要 Basic Auth
+ * 包含：
+ * - 外部 API 调用日志（既有）
+ * - 日志摘要/统计（既有）
+ * - 定时配置（既有）
+ * - API Token 管理 + API 申请管理（需求45）
  */
 'use strict';
 
 const express = require('express');
 const router = express.Router();
 const apiLog = require('../services/ApiCallLog');
+const apiAuditLog = require('../services/ApiAgentAuditLog');
+const apiTokenService = new (require('../services/ApiTokenService'))();
+const ApiApplicationService = require('../services/ApiApplicationService');
 const dailyStats = require('../services/ApiDailyStats');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+
+const apiApplications = new ApiApplicationService();
 
 // ---------------------------------------------------------------------------
 // 定时更新配置
@@ -45,6 +54,29 @@ function _writeScheduleConfig(config) {
     fs.mkdirSync(SCHEDULE_CONFIG_DIR, { recursive: true });
   }
   fs.writeFileSync(SCHEDULE_CONFIG_PATH, JSON.stringify(config, null, 2), 'utf-8');
+}
+
+function parseIntSafe(value, fallback = 0) {
+  const n = parseInt(value, 10);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function findTokenById(id) {
+  return apiTokenService.getInternalTokenById(id);
+}
+
+function normalizeTokenMeta(reqBody = {}) {
+  return {
+    name: typeof reqBody.name === 'string' ? reqBody.name.trim() : '',
+    minuteLimit: parseIntSafe(reqBody.minuteLimit, apiTokenService._blankTokenRecord().minuteLimit),
+    dailyLimit: parseIntSafe(reqBody.dailyLimit, apiTokenService._blankTokenRecord().dailyLimit),
+    enabled: reqBody.enabled !== false
+  };
+}
+
+function normalizeScopeStatus(body) {
+  if (!body) return 'unknown';
+  return body.status || 'pending';
 }
 
 // ---------------------------------------------------------------------------
@@ -83,6 +115,144 @@ router.get('/logs/daily', (req, res) => {
 router.get('/logs/hourly', (req, res) => {
   const hourly = apiLog.getHourlyStats();
   res.json({ success: true, hourly });
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/admin/tokens — Token 列表
+// ---------------------------------------------------------------------------
+router.get('/tokens', (req, res) => {
+  const tokens = apiTokenService.listTokens();
+  res.json({ success: true, tokens });
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/admin/tokens — 创建 token
+// ---------------------------------------------------------------------------
+router.post('/tokens', (req, res) => {
+  try {
+    const payload = normalizeTokenMeta(req.body);
+    if (!payload.name) {
+      return res.status(400).json({ error: { code: 'INVALID_PARAMS', message: 'name is required' } });
+    }
+
+    const { token, tokenMeta } = apiTokenService.createToken({
+      name: payload.name,
+      minuteLimit: payload.minuteLimit,
+      dailyLimit: payload.dailyLimit,
+      enabled: payload.enabled
+    });
+
+    res.status(201).json({ success: true, token, tokenMeta });
+  } catch (err) {
+    res.status(500).json({ error: { code: err.code || 'CREATE_TOKEN_FAILED', message: err.message || 'create token failed' } });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// PATCH /api/admin/tokens/:id — 更新 token（改名/启停/改限流）
+// ---------------------------------------------------------------------------
+router.patch('/tokens/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const patch = {
+      name: req.body?.name,
+      enabled: req.body?.enabled,
+      minuteLimit: parseIntSafe(req.body?.minuteLimit, NaN),
+      dailyLimit: parseIntSafe(req.body?.dailyLimit, NaN)
+    };
+
+    if (!Number.isFinite(patch.minuteLimit)) {
+      delete patch.minuteLimit;
+    }
+    if (!Number.isFinite(patch.dailyLimit)) {
+      delete patch.dailyLimit;
+    }
+
+    const tokenMeta = apiTokenService.updateToken(id, patch);
+    if (!tokenMeta) {
+      return res.status(404).json({ error: { code: 'TOKEN_NOT_FOUND', message: 'token not found' } });
+    }
+
+    return res.json({ success: true, token: tokenMeta });
+  } catch (err) {
+    return res.status(500).json({ error: { code: err.code || 'UPDATE_TOKEN_FAILED', message: err.message || 'update token failed' } });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// DELETE /api/admin/tokens/:id — 删除（吊销） token
+// ---------------------------------------------------------------------------
+router.delete('/tokens/:id', (req, res) => {
+  const ok = apiTokenService.deleteToken(req.params.id);
+  if (!ok) {
+    return res.status(404).json({ error: { code: 'TOKEN_NOT_FOUND', message: 'token not found' } });
+  }
+  return res.json({ success: true });
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/admin/applications — 申请列表
+// ---------------------------------------------------------------------------
+router.get('/applications', (req, res) => {
+  const status = req.query.status;
+  const list = apiApplications.listApplications().filter((item) => !status || item.status === status);
+  res.json({ success: true, applications: list });
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/admin/applications/:id/review — 审批申请
+//  body: { status, remarks, createToken, tokenName, minuteLimit, dailyLimit }
+// ---------------------------------------------------------------------------
+router.post('/applications/:id/review', (req, res) => {
+  try {
+    const { id } = req.params;
+    const status = normalizeScopeStatus(req.body);
+    if (!['pending', 'approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ error: { code: 'INVALID_STATUS', message: 'status must be pending/approved/rejected' } });
+    }
+
+    const existing = apiApplications.getApplicationById(id);
+    if (!existing) {
+      return res.status(404).json({ error: { code: 'APPLICATION_NOT_FOUND', message: 'application not found' } });
+    }
+
+    const patch = {
+      status,
+      remarks: req.body?.remarks,
+    };
+
+    const app = apiApplications.updateApplication(id, patch);
+    if (!app) {
+      return res.status(404).json({ error: { code: 'APPLICATION_NOT_FOUND', message: 'application not found' } });
+    }
+
+    let createdToken = null;
+    if (status === 'approved' && req.body?.createToken) {
+      if (!existing.tokenId) {
+        const { token, tokenMeta } = apiTokenService.createToken({
+          name: (req.body?.tokenName || `api-${existing.email}`).slice(0, 60),
+          minuteLimit: parseIntSafe(req.body?.minuteLimit, 120),
+          dailyLimit: parseIntSafe(req.body?.dailyLimit, 5000)
+        });
+        app.tokenId = tokenMeta.id;
+        apiApplications.linkToken(id, tokenMeta.id);
+        createdToken = token;
+      }
+    }
+
+    return res.json({ success: true, application: app, token: createdToken });
+  } catch (err) {
+    return res.status(500).json({ error: { code: err.code || 'REVIEW_FAILED', message: err.message || 'review failed' } });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/admin/audit-logs — 查询审计日志
+// ---------------------------------------------------------------------------
+router.get('/audit-logs', (req, res) => {
+  const limit = parseInt(req.query.limit, 10) || 50;
+  const logs = apiAuditLog.list(limit);
+  res.json({ success: true, logs });
 });
 
 // ---------------------------------------------------------------------------

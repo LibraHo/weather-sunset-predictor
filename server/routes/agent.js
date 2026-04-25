@@ -1,14 +1,31 @@
+/**
+ * Agent API Routes
+ *
+ * 受控接口说明：
+ * - 当前仅提供 forecast 能力
+ * - 所有接口均要求有效 token（除文档/健康类接口外）
+ */
+
+'use strict';
+
 const express = require('express');
 const router = express.Router();
 const EnhancedPredictionService = require('../services/EnhancedPredictionService');
 const orchestrator = require('../services/ProviderOrchestrator');
+const ApiTokenService = require('../services/ApiTokenService');
 const createAgentAuth = require('../middleware/agentAuth');
+const apiAuditLog = require('../services/ApiAgentAuditLog');
 
 const VALID_TYPES = new Set(['sunrise', 'sunset']);
 const VALID_DETAILS = new Set(['simple', 'full']);
+const apiTokenService = new ApiTokenService();
 
-function errorResponse(res, status, code, message) {
-  return res.status(status).json({ success: false, error: { code, message } });
+function errorResponse(res, status, code, message, extra = null) {
+  return res.status(status).json({
+    success: false,
+    error: { code, message },
+    ...(extra ? { ...(extra || {}) } : {})
+  });
 }
 
 function parseCoordinate(value) {
@@ -167,53 +184,90 @@ async function geocodeLocation(query) {
   };
 }
 
-router.get('/forecast', createAgentAuth({ scope: 'forecast:read' }), async (req, res) => {
+function getClientIp(req) {
+  const forwarded = req.headers && (req.headers['x-forwarded-for'] || req.headers['x-real-ip']);
+  if (forwarded) {
+    return String(forwarded).split(',')[0].trim();
+  }
+  return req.ip || req.connection?.remoteAddress || 'unknown';
+}
+
+function logAudit(req, status, elapsedMs, errorCode = null) {
+  apiAuditLog.add({
+    tokenId: req.agentToken?.id || null,
+    endpoint: '/api/agent/forecast',
+    status,
+    elapsedMs,
+    ip: getClientIp(req),
+    userAgent: req.headers['user-agent'],
+    errorCode
+  });
+}
+
+router.get('/forecast', createAgentAuth({ scope: 'forecast:read', apiTokenService, auditLogger: apiAuditLog }), async (req, res) => {
+  const startedAt = Date.now();
+  let location;
+  let type;
+  let detail;
+  let forecastDate;
   try {
-    const type = (req.query.type || 'sunset').toString();
-    const detail = (req.query.detail || 'simple').toString();
+    type = (req.query.type || 'sunset').toString();
+    detail = (req.query.detail || 'simple').toString();
 
     if (!VALID_TYPES.has(type)) {
-      return errorResponse(res, 400, 'INVALID_TYPE', 'type must be sunrise or sunset');
+      throw { status: 400, code: 'INVALID_TYPE', message: 'type must be sunrise or sunset' };
     }
     if (!VALID_DETAILS.has(detail)) {
-      return errorResponse(res, 400, 'INVALID_DETAIL', 'detail must be simple or full');
+      throw { status: 400, code: 'INVALID_DETAIL', message: 'detail must be simple or full' };
     }
 
-    const forecastDate = parseForecastDate(req.query.date);
+    forecastDate = parseForecastDate(req.query.date);
     if (!forecastDate) {
-      return errorResponse(res, 400, 'INVALID_DATE', 'date must be today, tomorrow, or YYYY-MM-DD');
+      throw { status: 400, code: 'INVALID_DATE', message: 'date must be today, tomorrow, or YYYY-MM-DD' };
     }
 
     let lat = parseCoordinate(req.query.lat);
     let lon = parseCoordinate(req.query.lon);
-    let location;
 
     if (lat !== null || lon !== null) {
       if (!Number.isFinite(lat) || lat < -90 || lat > 90 || !Number.isFinite(lon) || lon < -180 || lon > 180) {
-        return errorResponse(res, 400, 'INVALID_COORDINATES', 'lat/lon are invalid');
+        throw { status: 400, code: 'INVALID_COORDINATES', message: 'lat/lon are invalid' };
       }
       location = { name: req.query.location || `${lat},${lon}`, lat, lon, provider: 'coordinates' };
     } else if (req.query.location) {
       location = await geocodeLocation(req.query.location.toString());
-      if (!location) return errorResponse(res, 404, 'LOCATION_NOT_FOUND', 'location not found');
+      if (!location) {
+        throw { status: 404, code: 'LOCATION_NOT_FOUND', message: 'location not found' };
+      }
       lat = location.lat;
       lon = location.lon;
     } else {
-      return errorResponse(res, 400, 'MISSING_LOCATION', 'location or lat/lon is required');
+      throw { status: 400, code: 'MISSING_LOCATION', message: 'location or lat/lon is required' };
     }
 
     const weatherResponse = await orchestrator.fetchWeatherData(lat, lon, 168);
     const hourly = Array.isArray(weatherResponse.data) ? weatherResponse.data : [];
     const selected = selectWeatherForDate(hourly, forecastDate, type);
-    if (!selected) return errorResponse(res, 502, 'WEATHER_UNAVAILABLE', 'weather data unavailable');
+    if (!selected) {
+      throw { status: 502, code: 'WEATHER_UNAVAILABLE', message: 'weather data unavailable' };
+    }
 
     const weatherData = normalizeWeatherData(selected);
     const prediction = EnhancedPredictionService.calculateEnhancedPrediction(weatherData, forecastDate, lat, lon, type);
+    const elapsedMs = Date.now() - startedAt;
+    logAudit(req, 200, elapsedMs, null);
 
     return res.json(buildAgentForecastResponse({ location, prediction, weatherData, type, detail, forecastDate }));
   } catch (error) {
-    console.error('[AgentRoute] forecast error:', error);
-    return errorResponse(res, 500, 'AGENT_FORECAST_ERROR', error.message);
+    const status = Number.isFinite(error?.status) ? error.status : 500;
+    const code = error?.code || 'AGENT_FORECAST_ERROR';
+    const elapsedMs = Date.now() - startedAt;
+    const errMessage = error?.message || 'forecast failed';
+    logAudit(req, status, elapsedMs, code);
+
+    console.error('[AgentRoute] forecast error:', code, errMessage);
+
+    return errorResponse(res, status, code, errMessage);
   }
 });
 
