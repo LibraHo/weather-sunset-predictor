@@ -1225,7 +1225,7 @@ class PredictionController {
 
   getScoreTheme(quality, score) {
     const value = Math.max(0, Math.min(100, Number(score) || 0));
-    if (value >= 80) return ['#FF9A3D', '#FF6B1A', '#E11D48'];
+    if (value >= 80) return ['#F97316', '#FACC15', '#E11D48'];
 
     // 0–80 使用单色：从灰逐步过渡到更深橙色，但圆环本身不做渐变。
     const stops = [
