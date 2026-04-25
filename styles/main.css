@@ -2258,6 +2258,30 @@ body.theme-dark .best-time {
   color: var(--color-text);
 }
 
+
+/* 朝霞/晚霞并排时：分析区域同高，避免文字长短导致卡片高度视觉错位 */
+@media (min-width: 760px) {
+  .today-predictions-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .prediction-card {
+    min-height: 100%;
+  }
+
+  .compact-analysis {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .compact-analysis .fire-cloud-details,
+  .compact-analysis .fire-cloud-details-compact {
+    flex: 1 1 auto;
+    min-height: 112px;
+  }
+}
+
 /* 火烧云条件分析 */
 .fire-cloud-details {
   margin-top: 10px;
