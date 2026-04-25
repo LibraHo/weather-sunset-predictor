@@ -5771,3 +5771,45 @@ body:not(.theme-dark):not(.theme-auto) .prediction-app-shell {
 }
 .app-info-label,
 .app-info-value { grid-column: 1; }
+
+/* 需求46 修正：恢复完整分析文案，仅通过字号/间距适配 */
+.analysis-item {
+  grid-template-columns: 14px minmax(0, 0.98fr) minmax(0, 1.45fr) !important;
+  gap: 4px !important;
+  min-height: 31px !important;
+  padding: 5px 6px !important;
+}
+.analysis-item-icon {
+  width: 14px !important;
+  height: 14px !important;
+  font-size: 0.5rem !important;
+}
+.analysis-item-copy strong,
+.analysis-item-copy small {
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+.analysis-item-copy strong {
+  font-size: 0.56rem !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.035em;
+}
+.analysis-item-copy small {
+  font-size: 0.52rem !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.04em;
+  text-align: right;
+}
+.analysis-items { gap: 4px !important; }
+.analysis-group-label { font-size: 0.68rem !important; margin-bottom: 4px !important; }
+.analysis-group + .analysis-group { margin-top: 7px !important; }
+@media (max-width: 430px) {
+  .analysis-item {
+    grid-template-columns: 13px minmax(0, 0.95fr) minmax(0, 1.5fr) !important;
+    gap: 3px !important;
+    padding: 5px 5px !important;
+  }
+  .analysis-item-copy strong { font-size: 0.5rem !important; letter-spacing: -0.05em; }
+  .analysis-item-copy small { font-size: 0.46rem !important; letter-spacing: -0.055em; }
+}
