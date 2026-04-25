@@ -400,9 +400,10 @@ describe('PredictionController', () => {
       );
 
       expect(html).toContain('cloud-condition-card');
-      expect(html).toContain('☁️ 高云');
-      expect(html).toContain('☁️ 中云');
-      expect(html).toContain('☁️ 低云');
+      expect(html).toContain('cloud-condition-svg');
+      expect(html).toContain('>高云<');
+      expect(html).toContain('>中云<');
+      expect(html).toContain('>低云<');
       expect(html).toContain('40%');
       expect(html).toContain('20%');
       expect(html).toContain('10%');

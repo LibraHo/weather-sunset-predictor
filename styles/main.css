@@ -6195,3 +6195,187 @@ html[data-actual-theme="light"] .prediction-app-card {
   pointer-events: none;
   z-index: -1;
 }
+
+/* 需求：分析区图标 SVG 化 + 放大文字 */
+.inline-svg-icon {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  vertical-align: -0.14em;
+  color: currentColor;
+}
+.cloud-condition-label {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  font-size: 0.96rem !important;
+}
+.cloud-condition-svg {
+  width: 18px !important;
+  height: 18px !important;
+  color: #4EA3FF;
+  flex: 0 0 auto;
+}
+.analysis-group-label {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+}
+.analysis-group-icon,
+.conclusion-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+  flex: 0 0 auto;
+}
+.analysis-group-icon .inline-svg-icon,
+.conclusion-icon .inline-svg-icon {
+  width: 18px !important;
+  height: 18px !important;
+}
+.analysis-item-icon .inline-svg-icon,
+.fca-icon .inline-svg-icon {
+  width: 14px !important;
+  height: 14px !important;
+}
+.analysis-item-copy strong {
+  font-size: clamp(0.86rem, 2.7vw, 1.06rem) !important;
+  line-height: 1.28 !important;
+  letter-spacing: -0.015em !important;
+}
+.analysis-item-copy small {
+  font-size: clamp(0.78rem, 2.35vw, 0.94rem) !important;
+  line-height: 1.42 !important;
+  letter-spacing: -0.01em !important;
+}
+.analysis-item {
+  grid-template-columns: 24px minmax(0, 1fr) !important;
+  gap: 10px !important;
+  align-items: start !important;
+}
+.fca-text {
+  font-size: clamp(0.84rem, 2.45vw, 0.98rem) !important;
+  line-height: 1.48 !important;
+}
+@media (max-width: 390px) {
+  .analysis-item-copy strong { font-size: 0.82rem !important; }
+  .analysis-item-copy small { font-size: 0.74rem !important; }
+  .fca-text { font-size: 0.78rem !important; }
+}
+
+/* 高/中/低云子卡片：左侧云层名称，右侧百分比 */
+.cloud-condition-top {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  gap: 12px !important;
+  text-align: left !important;
+}
+.cloud-condition-label {
+  justify-content: flex-start !important;
+  text-align: left !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+.cloud-condition-top strong {
+  margin-left: auto !important;
+  flex: 0 0 auto !important;
+  text-align: right !important;
+  justify-self: flex-end !important;
+}
+
+/* 高/中/低云条压缩高度，减少上下臃肿 */
+.cloud-condition-card {
+  min-height: unset !important;
+  max-height: none !important;
+  padding: 10px 12px !important;
+  gap: 6px !important;
+}
+.cloud-condition-item {
+  padding: 0 !important;
+}
+.cloud-condition-item + .cloud-condition-item {
+  padding-top: 6px !important;
+}
+.cloud-condition-top {
+  min-height: 20px !important;
+  line-height: 1.15 !important;
+}
+.cloud-condition-label {
+  font-size: 0.9rem !important;
+  line-height: 1.15 !important;
+}
+.cloud-condition-top strong {
+  font-size: 0.95rem !important;
+  line-height: 1.15 !important;
+}
+.cloud-condition-svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+.cloud-condition-track {
+  margin-top: 5px !important;
+  height: 5px !important;
+}
+@media (max-width: 390px) {
+  .cloud-condition-card { padding: 8px 10px !important; gap: 5px !important; }
+  .cloud-condition-item + .cloud-condition-item { padding-top: 5px !important; }
+  .cloud-condition-label { font-size: 0.82rem !important; }
+  .cloud-condition-top strong { font-size: 0.88rem !important; }
+  .cloud-condition-track { margin-top: 4px !important; height: 4px !important; }
+}
+
+/* 火烧云文字分析条目：压缩条目上下间距 */
+.app-analysis-card {
+  padding: 14px !important;
+}
+.analysis-card-title {
+  margin-bottom: 10px !important;
+}
+.analysis-group {
+  margin-top: 8px !important;
+}
+.analysis-group + .analysis-group {
+  margin-top: 10px !important;
+}
+.analysis-group-label {
+  margin-bottom: 6px !important;
+  line-height: 1.15 !important;
+}
+.analysis-items {
+  gap: 5px !important;
+}
+.analysis-item {
+  padding: 7px 9px !important;
+  min-height: unset !important;
+  gap: 8px !important;
+}
+.analysis-item-copy {
+  gap: 2px !important;
+}
+.analysis-item-copy strong {
+  line-height: 1.16 !important;
+}
+.analysis-item-copy small {
+  line-height: 1.28 !important;
+}
+.conclusion-banner {
+  margin-top: 10px !important;
+  padding: 9px 10px !important;
+}
+.fca-metric-grid {
+  gap: 5px !important;
+}
+.fca-row,
+.fca-metric {
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+}
+@media (max-width: 390px) {
+  .app-analysis-card { padding: 12px !important; }
+  .analysis-items { gap: 4px !important; }
+  .analysis-item { padding: 6px 8px !important; gap: 7px !important; }
+  .analysis-group + .analysis-group { margin-top: 8px !important; }
+}
