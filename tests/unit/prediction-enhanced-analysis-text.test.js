@@ -66,8 +66,7 @@ describe('PredictionController.generateEnhancedAnalysisText', () => {
         breakdown: {
           visibility: 'good',
           aqi: 'good',
-          colorTendency: 'reddish_purple',
-          specialMode: 'post_rain'
+          colorTendency: 'reddish_purple'
         }
       }
     });
@@ -109,10 +108,54 @@ describe('PredictionController.generateEnhancedAnalysisText', () => {
       }
     });
 
-    expect(html).toContain('今天大雨');
-    expect(html).toContain('如果晚霞时段还不停');
+    expect(html).toContain('下大雨，基本看不到');
     expect(html).not.toContain('高层云充沛');
     expect(html).not.toContain('中层云适中');
+  });
+
+  test('should omit weather analysis for clear sky', () => {
+    const controller = new PredictionController(mockStorageService);
+    controller.i18n = makeI18n();
+
+    const html = controller.generateEnhancedAnalysisText({
+      icon: '☀️',
+      status: '一般',
+      description: '测试描述',
+      score: 35,
+      precipitation: 0,
+      weatherCode: 0,
+      canvasAnalysis: {
+        score: 35,
+        breakdown: { highClouds: 0, midClouds: 0, lowClouds: 0 }
+      }
+    });
+
+    expect(html).not.toContain('火烧云形成条件分析');
+    expect(html).not.toContain('天气：晴');
+  });
+
+  test('should simplify post-rain weather analysis', () => {
+    const controller = new PredictionController(mockStorageService);
+    controller.i18n = makeI18n();
+
+    const html = controller.generateEnhancedAnalysisText({
+      icon: '🌦️',
+      status: '有机会',
+      description: '测试描述',
+      score: 70,
+      precipitation: 0,
+      weatherCode: 2,
+      canvasAnalysis: {
+        score: 70,
+        breakdown: { highClouds: 50, midClouds: 30, lowClouds: 10 }
+      },
+      renderingAnalysis: {
+        breakdown: { specialMode: 'post_rain' }
+      }
+    });
+
+    expect(html).toContain('雨后晴');
+    expect(html).not.toContain('高层云充足');
   });
 
   test('should keep cloud and atmosphere analysis for moderate rain window', () => {

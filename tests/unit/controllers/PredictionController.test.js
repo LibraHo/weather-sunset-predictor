@@ -290,6 +290,65 @@ describe('PredictionController', () => {
       expect(html).toContain('20%');
       expect(html).toContain('10%');
     });
+
+    test('点击分数仪表盘应打开/关闭分数明细面板', () => {
+      document.body.innerHTML = `
+        <section id="prediction-section" class="hidden">
+          <h2 id="prediction-section-title"></h2>
+          <div id="prediction-display"></div>
+        </section>
+      `;
+
+      const displayDate = new Date();
+      const sunsetTime = new Date(displayDate);
+      sunsetTime.setHours(19, 45, 0, 0);
+      const sunriseTime = new Date(displayDate);
+      sunriseTime.setHours(5, 0, 0, 0);
+
+      const basePrediction = {
+        date: displayDate,
+        score: 64,
+        quality: 'good',
+        type: 'sunset',
+        sunriseTime,
+        sunsetTime,
+        goldenHour: null,
+        blueHour: null,
+        sunAzimuth: null,
+        cloudLayers: null,
+        factors: {},
+        breakdown: { baseScore: 70, canvasScore: 65, lightPathScore: 80, renderingFactor: 0.9 },
+        canvasAnalysis: { score: 65 },
+        lightPathAnalysis: { score: 80 },
+        renderingAnalysis: { factor: 0.9 },
+        getOptimalViewingWindow: () => ({
+          start: new Date('2024-06-21T19:15:00+08:00'),
+          end: new Date('2024-06-21T20:15:00+08:00')
+        }),
+        shouldShowAzimuth: () => false
+      };
+
+      predictionController.predictions = [basePrediction];
+      predictionController.updateTodayPredictions(basePrediction, basePrediction, sunriseTime, sunsetTime, displayDate);
+
+      const trigger = document.querySelector('.score-breakdown-trigger');
+      const popover = document.querySelector('.score-breakdown-popover');
+
+      expect(trigger).toBeTruthy();
+      expect(popover).toBeTruthy();
+      expect(popover.hidden).toBe(true);
+
+      const scoreText = trigger.querySelector('text');
+      Object.defineProperty(scoreText, 'closest', { value: undefined, configurable: true });
+
+      scoreText.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      expect(popover.hidden).toBe(false);
+      expect(trigger.getAttribute('aria-expanded')).toBe('true');
+
+      trigger.click();
+      expect(popover.hidden).toBe(true);
+      expect(trigger.getAttribute('aria-expanded')).toBe('false');
+    });
   });
 
   describe('renderCloudLayers', () => {

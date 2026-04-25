@@ -1900,10 +1900,12 @@ body.theme-dark .best-time {
   gap: var(--spacing-lg);
   margin-bottom: var(--spacing-xl);
   min-width: 0;
+  align-items: stretch;
 }
 
 .prediction-tab-panel {
   display: flex;
+  min-width: 0;
 }
 
 /* ===== 高密度仪表盘预测卡片样式 ===== */
@@ -2198,6 +2200,12 @@ body.theme-dark .best-time {
   overflow: hidden;
 }
 
+.compact-analysis .fire-cloud-details-compact {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+}
+
 .compact-analysis strong {
   font-weight: 700;
   color: var(--color-text);
@@ -2268,7 +2276,7 @@ body.theme-dark .fca-summary-good {
   background: rgba(255,255,255,0.15);
   transition: background 0.3s;
 }
-.prediction-card.quality-excellent::before { background: linear-gradient(90deg,#22c55e,#4ade80); }
+.prediction-card.quality-excellent::before { background: linear-gradient(90deg,#38bdf8,#d946ef,#f97316,#facc15); height: 4px; }
 .prediction-card.quality-good::before     { background: linear-gradient(90deg,#f59e0b,#fcd34d); }
 .prediction-card.quality-fair::before     { background: linear-gradient(90deg,#f97316,#fb923c); }
 .prediction-card.quality-poor::before     { background: linear-gradient(90deg,#ef4444,#f87171); }
@@ -4422,7 +4430,8 @@ body.theme-dark {
   }
 
   .prediction-tab-panel {
-    display: block !important; /* 强制显示，忽略 style="display:none" */
+    display: flex !important; /* 强制显示，忽略 style="display:none" */
+    align-items: stretch;
   }
 }
 
