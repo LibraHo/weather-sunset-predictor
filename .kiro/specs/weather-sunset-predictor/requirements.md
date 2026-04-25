@@ -81,6 +81,12 @@
 41. **API调用日志记录** - 分类记录所有外部API调用（火烧云网格grid/天气查询weather/高德地理编码gaode/高德瓦片gaode_tile），管理后台分Tab展示，含时间/接口/参数/状态/耗时/错误
 42. **定时更新配置** - 管理后台可配置火烧云数据更新策略（多个时间点，每个可选朝霞/晚霞/都更新），配置持久化到 `~/.xiake/schedule-config.json`
 
+### 需求 43：气溶胶/空气颗粒纳入评分与 UI
+43. **气溶胶散射评分** - 接入 Open-Meteo Air Quality API，将 `aerosol_optical_depth`、`dust`、`pm2_5`、`pm10`、`us_aqi/european_aqi` 按小时合并进天气数据。评分上将能见度作为“通透度结果”，气溶胶作为“散射/灰霾原因修正”，避免重复计权。UI 需在实时天气、分数明细、文字分析、算法说明中展示气溶胶/颗粒物影响。无气溶胶数据时必须降级到现有逻辑。
+
+### 需求 44：国际城市搜索排序优化
+44. **全球地理编码重排** - 城市搜索不能靠维护全世界城市表。Auto 搜索应统一合并 Open-Meteo/Nominatim/Gaode 结果后重排：全球源作为国际主源，高德只对明显中国查询加权；排序考虑 exact/alias/contains、人口、首都/行政中心、国家/行政区、用户语言、provider 置信度。保留中国、美国、欧洲主要城市的高频中文名、英文名、常见缩写/别名（如 LA/NYC/SF/DC/HK/洛杉矶/纽约/伦敦/巴黎/柏林/罗马/马德里/阿姆斯特丹等），并覆盖中文、英文国际城市测试。
+
 ## 附录：火烧云预测算法原理
 
 ### 评分公式
@@ -99,10 +105,22 @@ extinctionFactor = exp(-AOD / sin(sunElevation))
 lightPathScore = geometryScore × extinctionFactor × 100
 ```
 
+**气溶胶散射修正（需求43）**：
+```
+// AOD 表示气溶胶光学厚度，影响红橙色散射潜力；PM/Dust 用于灰霾/沙尘风险
+if (AOD is missing) aerosolFactor = 1.0
+else if (AOD < 0.08) aerosolFactor = 0.98        // 空气过净，颜色可能偏淡
+else if (0.08 <= AOD <= 0.35) aerosolFactor = 1.03~1.08  // 适中，增强红橙散射
+else aerosolFactor = 0.85~0.95                  // 过高，灰霾/沙尘压低观感
+
+if (visibility < 8km && (AOD high || PM high || dust high)) aerosolFactor = min(aerosolFactor, 0.85)
+```
+
 **最终融合**：
 ```
 FINAL_WEIGHTS = { CLOUD_CANVAS: 0.8, LIGHT_PATH: 0.2 }
 finalScore = canvasScore × 0.8 + lightPathScore × 0.2
+finalScore = finalScore × aerosolFactor  // 仅在有气溶胶数据时启用；默认 1.0
 ```
 
 ### 质量等级
