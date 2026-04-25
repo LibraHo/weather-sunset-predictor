@@ -122,6 +122,7 @@ const translations = {
     "windDirection": "Direzione del Vento",
     "pressure": "Pressione",
     "visibility": "Visibilità",
+    aerosol: 'Aerosol',
     "clouds": "Nuvole",
     "cloudCover": "Copertura Nuvolosa",
     "precipitation": "Precipitazioni",
@@ -197,6 +198,7 @@ const translations = {
     "canvas": {
       "title": "Punteggio Tela",
       "score": "Punteggio Tela",
+      aerosol: 'Aerosol',
       "cloudLevel": "Livello Nuvoloso",
       "breakdown": "Distribuzione Nuvole",
       "canvasScore": "📊 Tela: {{score}}pt | {{level}}",

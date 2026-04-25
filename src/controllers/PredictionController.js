@@ -1268,6 +1268,8 @@ class PredictionController {
     const canvasScore = prediction?.canvasAnalysis?.score ?? prediction?.breakdown?.canvasScore;
     const lightPathScore = prediction?.lightPathAnalysis?.score ?? prediction?.breakdown?.lightPathScore;
     const renderingFactor = prediction?.renderingAnalysis?.factor ?? prediction?.breakdown?.renderingFactor;
+    const aerosol = prediction?.breakdown?.aerosolScattering;
+    const aerosolFactor = prediction?.renderingAnalysis?.aerosolFactor ?? aerosol?.factor;
 
     return `
       <div class="score-breakdown-popover" hidden>
@@ -1291,6 +1293,10 @@ class PredictionController {
           <span class="score-breakdown-key">${this.i18n.t('prediction.rendering.title')}</span>
           <span class="score-breakdown-val">×${fmt(renderingFactor, 2)}</span>
         </div>
+        ${aerosolFactor != null ? `<div class="score-breakdown-row">
+          <span class="score-breakdown-key">${this.i18n.t('prediction.rendering.aerosol')}</span>
+          <span class="score-breakdown-val">×${fmt(aerosolFactor, 2)}</span>
+        </div>` : ''}
       </div>
     `;
   }
@@ -1440,6 +1446,10 @@ class PredictionController {
     const visibility = prediction.visibility ?? factors.visibility?.value ?? 10;
     const precipitation = factors.precipitation?.value ?? prediction.precipitation ?? 0;
     const weatherCode = factors.weatherCode?.value ?? prediction.weatherCode ?? null;
+    const aerosolOpticalDepth = prediction.aerosolOpticalDepth ?? factors.aerosolOpticalDepth?.value ?? prediction.breakdown?.aerosolScattering?.aerosolOpticalDepth;
+    const pm2_5 = prediction.pm2_5 ?? factors.pm2_5?.value ?? prediction.breakdown?.aerosolScattering?.pm2_5;
+    const pm10 = prediction.pm10 ?? factors.pm10?.value ?? prediction.breakdown?.aerosolScattering?.pm10;
+    const dust = prediction.dust ?? factors.dust?.value ?? prediction.breakdown?.aerosolScattering?.dust;
 
     let analysis = '';
 
@@ -1464,6 +1474,10 @@ class PredictionController {
         visibility,
         humidity,
         precipitation,
+        aerosolOpticalDepth,
+        pm2_5,
+        pm10,
+        dust,
         specialMode: prediction.renderingAnalysis?.breakdown?.specialMode
       },
       prediction.score
@@ -1663,6 +1677,19 @@ class PredictionController {
     } else {
       const label = hum < 30 ? '不足' : '过高';
       html += r('❌', `湿度${label}（${hum.toFixed(0)}%）`);
+    }
+
+    // 气溶胶 — 散射潜力与灰霾风险
+    const aerosol = breakdown.aerosolScattering;
+    if (aerosol && aerosol.level !== 'unknown') {
+      const aodText = aerosol.aerosolOpticalDepth != null ? `（AOD ${Number(aerosol.aerosolOpticalDepth).toFixed(2)}）` : '';
+      if (aerosol.level === 'optimal') {
+        html += r('🌈', `气溶胶适中${aodText}，有利于增强红橙色散射`);
+      } else if (['high', 'very_high', 'polluted', 'low_visibility_haze', 'moderate_pollution'].includes(aerosol.level)) {
+        html += r('⚠️', `颗粒物/气溶胶偏高${aodText}，可能灰霾发暗`);
+      } else if (aerosol.level === 'low') {
+        html += r('ℹ️', `空气过于通透${aodText}，颜色可能偏淡`);
+      }
     }
 
     // 云层立体感 — 根据高云是否充足调整语气

@@ -139,6 +139,7 @@ const translations = {
     "windDirection": "Wind Direction",
     "pressure": "Pressure",
     "visibility": "Visibility",
+    "aerosol": "Aerosol",
     "clouds": "Clouds",
     "cloudCover": "Cloud Cover",
     "precipitation": "Precipitation",
@@ -250,6 +251,7 @@ const translations = {
     "rendering": {
       "title": "Rendering Score",
       "score": "Rendering Score",
+      "aerosol": "Aerosol scattering",
       "humidity": "Humidity Effect",
       "renderingFactor": "🎨 Rendering factor: {{factor}} | {{visibility}} | {{aqi}} | {{color}}",
       "specialMode": "| {{mode}}",

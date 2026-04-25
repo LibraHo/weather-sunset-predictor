@@ -138,6 +138,7 @@ const translations = {
     "windDirection": "풍향",
     "pressure": "기압",
     "visibility": "가시거리",
+    aerosol: '에어로졸',
     "clouds": "구름",
     "cloudCover": "전운량",
     "precipitation": "강수",
@@ -213,6 +214,7 @@ const translations = {
     "canvas": {
       "title": "캔버스 점수",
       "score": "캔버스 점수",
+      aerosol: '에어로졸',
       "cloudLevel": "구름 레벨",
       "breakdown": "구름 분포",
       "canvasScore": "📊 캔버스: {{score}}점 | {{level}}",

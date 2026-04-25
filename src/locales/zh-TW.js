@@ -138,6 +138,7 @@ const translations = {
     "windDirection": "風向",
     "pressure": "氣壓",
     "visibility": "能見度",
+    "aerosol": "氣溶膠",
     "clouds": "雲量",
     "cloudCover": "雲量",
     "precipitation": "降水",
@@ -213,6 +214,7 @@ const translations = {
     "canvas": {
       "title": "畫布評分",
       "score": "畫布得分",
+      aerosol: '氣溶膠',
       "cloudLevel": "雲層等級",
       "breakdown": "雲層分佈",
       "canvasScore": "📊 畫布: {{score}}分 | {{level}}",

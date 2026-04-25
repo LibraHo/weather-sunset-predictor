@@ -122,6 +122,7 @@ const translations = {
     "windDirection": "Dirección del Viento",
     "pressure": "Presión",
     "visibility": "Visibilidad",
+    aerosol: 'Aerosol',
     "clouds": "Nubes",
     "cloudCover": "Cobertura de Nubes",
     "precipitation": "Precipitación",
@@ -197,6 +198,7 @@ const translations = {
     "canvas": {
       "title": "Puntuación del Lienzo",
       "score": "Puntuación del Lienzo",
+      aerosol: 'Aerosol',
       "cloudLevel": "Nivel de Nubes",
       "breakdown": "Distribución de Nubes",
       "canvasScore": "📊 Lienzo: {{score}}pts | {{level}}",
