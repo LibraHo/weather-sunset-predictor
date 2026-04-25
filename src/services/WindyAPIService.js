@@ -125,6 +125,11 @@ class WindyAPIService {
       );
       // 非侵入式附加，用于图表按目标城市时区显示
       if (timezone) wd.timezone = timezone;
+      wd.aerosolOpticalDepth = item.aerosolOpticalDepth ?? null;
+      wd.dust = item.dust ?? null;
+      wd.pm2_5 = item.pm2_5 ?? null;
+      wd.pm10 = item.pm10 ?? null;
+      wd.aqi = item.aqi ?? null;
       return wd;
     });
 
