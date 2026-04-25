@@ -5525,3 +5525,52 @@ body.theme-dark .prediction-app-card {
   .analysis-item-copy strong { font-size: 0.72rem; }
   .analysis-item-copy small { font-size: 0.66rem; }
 }
+
+/* 需求46 修正：背景回归霞客/云况雷达一致的暗色玻璃风格 */
+.prediction-app-shell {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(251, 146, 60, 0.16), transparent 34%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.96) 0%, rgba(17, 24, 39, 0.94) 100%);
+  box-shadow: var(--glass-shadow);
+  border: 1px solid var(--glass-border);
+}
+.prediction-app-card {
+  --app-card-bg: var(--glass-bg);
+  --app-text: var(--color-text);
+  --app-muted: var(--color-text-light);
+  --app-border: var(--color-border);
+}
+body.theme-dark .prediction-app-card {
+  --app-card-bg: var(--glass-bg);
+  --app-text: var(--color-text);
+  --app-muted: var(--color-text-light);
+  --app-border: var(--color-border);
+}
+.phenomenon-title-card h3,
+.app-main-time,
+.cloud-condition-top,
+.analysis-card-title,
+.analysis-item-copy strong {
+  color: var(--color-text);
+}
+.app-info-row,
+.analysis-item,
+.cloud-condition-card,
+.app-analysis-card,
+.score-summary-card {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.10);
+}
+.app-info-label,
+.analysis-item-copy small,
+.cloud-condition-label,
+.score-gauge-desc {
+  color: var(--color-text-light);
+}
+.cloud-condition-track {
+  background: rgba(255,255,255,0.16);
+}
+.conclusion-banner {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.20);
+}
