@@ -6263,3 +6263,25 @@ html[data-actual-theme="light"] .prediction-app-card {
   .analysis-item-copy small { font-size: 0.74rem !important; }
   .fca-text { font-size: 0.78rem !important; }
 }
+
+/* 高/中/低云子卡片：左侧云层名称，右侧百分比 */
+.cloud-condition-top {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  gap: 12px !important;
+  text-align: left !important;
+}
+.cloud-condition-label {
+  justify-content: flex-start !important;
+  text-align: left !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+.cloud-condition-top strong {
+  margin-left: auto !important;
+  flex: 0 0 auto !important;
+  text-align: right !important;
+  justify-self: flex-end !important;
+}
