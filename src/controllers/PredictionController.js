@@ -1224,14 +1224,11 @@ class PredictionController {
   }
 
   getScoreTheme(quality, score) {
-    const normalized = quality || this.getQualityFromScore(score);
-    const themes = {
-      excellent: ['#22C55E', '#84CC16', '#FACC15'],
-      good: ['#F59E0B', '#F97316', '#FB7185'],
-      fair: ['#38BDF8', '#818CF8', '#A78BFA'],
-      poor: ['#94A3B8', '#64748B', '#475569']
-    };
-    return themes[normalized] || themes.poor;
+    const value = Number(score) || 0;
+    if (value >= 85) return ['#FF9A3D', '#FF6B1A', '#E11D48'];
+    if (value >= 70) return ['#FFD08A', '#F59E0B', '#EA580C'];
+    if (value >= 50) return ['#E5E7EB', '#FBBF24', '#F97316'];
+    return ['#E5E7EB', '#B8C0CC', '#8B95A5'];
   }
 
   renderLargeScoreGauge(forecast, type) {
