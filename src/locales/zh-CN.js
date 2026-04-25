@@ -150,6 +150,7 @@ export default {
     windDirection: '风向',
     pressure: '气压',
     visibility: '能见度',
+    aerosol: '气溶胶',
     clouds: '云量',
     cloudCover: '云量',
     precipitation: '降水',
@@ -285,6 +286,7 @@ export default {
     rendering: {
       title: '渲染评分',
       score: '渲染得分',
+      aerosol: '气溶胶散射',
       humidity: '湿度影响',
       renderingFactor: '🎨 渲染系数: {{factor}} | {{visibility}} | {{aqi}} | {{color}}',
       specialMode: '| {{mode}}',

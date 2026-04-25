@@ -243,7 +243,8 @@ class WeatherController {
       windDirectionIcon: document.getElementById('current-wind-direction-icon'),
       windDirectionText: document.getElementById('current-wind-direction-text'),
       pressure: document.getElementById('current-pressure'),
-      visibility: document.getElementById('current-visibility')
+      visibility: document.getElementById('current-visibility'),
+      aerosol: document.getElementById('current-aerosol')
     };
 
     if (elements.humidity) {
@@ -267,6 +268,11 @@ class WeatherController {
     }
     if (elements.visibility) {
       elements.visibility.textContent = currentWeather.visibility != null ? `${currentWeather.visibility.toFixed(1)} km` : '--';
+    }
+    if (elements.aerosol) {
+      elements.aerosol.textContent = currentWeather.aerosolOpticalDepth != null
+        ? `AOD ${Number(currentWeather.aerosolOpticalDepth).toFixed(2)}`
+        : '--';
     }
 
     // 显示天气数据容器

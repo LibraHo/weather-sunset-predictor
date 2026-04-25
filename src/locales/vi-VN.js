@@ -122,6 +122,7 @@ const translations = {
     "windDirection": "Hướng Gió",
     "pressure": "Áp Suất",
     "visibility": "Tầm Nhìn",
+    aerosol: 'Aerosol',
     "clouds": "Mây",
     "cloudCover": "Độ Mây Che Phủ",
     "precipitation": "Mưa",
@@ -197,6 +198,7 @@ const translations = {
     "canvas": {
       "title": "Điểm Khung Trời",
       "score": "Điểm Khung Trời",
+      aerosol: 'Aerosol',
       "cloudLevel": "Mức Độ Mây",
       "breakdown": "Phân Bố Mây",
       "canvasScore": "📊 Khung trời: {{score}}đ | {{level}}",

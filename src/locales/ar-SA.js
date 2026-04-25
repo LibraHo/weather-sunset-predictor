@@ -124,6 +124,7 @@ export default {
     windDirection: 'اتجاه الرياح',
     pressure: 'الضغط',
     visibility: 'الرؤية',
+    aerosol: 'الهباء الجوي',
     clouds: 'السحب',
     cloudCover: 'غطاء السحب',
     precipitation: 'الهطول',
@@ -198,6 +199,7 @@ export default {
     canvas: {
       title: 'درجة اللوحة',
       score: 'درجة اللوحة',
+      aerosol: 'الهباء الجوي',
       cloudLevel: 'مستوى السحب',
       breakdown: 'توزيع السحب',
       canvasScore: '📊 اللوحة: {{score}} نقطة | {{level}}',

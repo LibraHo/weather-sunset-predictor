@@ -23,6 +23,7 @@ const makeI18n = () => ({
       'prediction.canvas.lowCloudAmount': `低云量 ${params.value}%`,
       'prediction.lightPath.lightPathScore': `🌅 光路: ${params.score}分`,
       'prediction.rendering.renderingFactor': `🎨 渲染系数: ${params.factor} | ${params.visibility} | ${params.aqi} | ${params.color}`,
+      'prediction.rendering.aerosol': '气溶胶散射',
       'prediction.rendering.specialMode': `| ${params.mode}`,
       'prediction.rendering.visibilityExcellent': '极佳（>20km）',
       'prediction.rendering.visibilityGood': '良好（10-20km）',
@@ -156,6 +157,40 @@ describe('PredictionController.generateEnhancedAnalysisText', () => {
 
     expect(html).toContain('雨后晴');
     expect(html).not.toContain('高层云充足');
+  });
+
+  test('should include aerosol scattering analysis when available', () => {
+    const controller = new PredictionController(mockStorageService);
+    controller.i18n = makeI18n();
+
+    const html = controller.generateEnhancedAnalysisText({
+      icon: '🔥',
+      status: '不错',
+      description: '测试描述',
+      score: 72,
+      visibility: 18,
+      humidity: 58,
+      precipitation: 0,
+      weatherCode: 2,
+      canvasAnalysis: {
+        score: 72,
+        breakdown: { highClouds: 50, midClouds: 30, lowClouds: 10 }
+      },
+      breakdown: {
+        aerosolScattering: {
+          factor: 1.06,
+          level: 'optimal',
+          aerosolOpticalDepth: 0.22,
+          pm2_5: 12,
+          pm10: 24,
+          dust: 2
+        }
+      }
+    });
+
+    expect(html).toContain('气溶胶适中');
+    expect(html).toContain('AOD 0.22');
+    expect(html).toContain('有利于增强红橙色散射');
   });
 
   test('should keep cloud and atmosphere analysis for moderate rain window', () => {

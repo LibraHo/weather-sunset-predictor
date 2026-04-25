@@ -138,6 +138,7 @@ const translations = {
     "windDirection": "風向",
     "pressure": "気圧",
     "visibility": "視程",
+    aerosol: 'エアロゾル',
     "clouds": "雲量",
     "cloudCover": "雲量",
     "precipitation": "降水量",
@@ -213,6 +214,7 @@ const translations = {
     "canvas": {
       "title": "キャンバススコア",
       "score": "キャンバススコア",
+      aerosol: 'エアロゾル',
       "cloudLevel": "雲レベル",
       "breakdown": "雲分布",
       "canvasScore": "📊 キャンバス：{{score}}点 | {{level}}",
