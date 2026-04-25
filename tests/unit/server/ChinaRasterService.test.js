@@ -53,7 +53,10 @@ function makeMockCache(overrides = {}) {
       { lat: 31.2, lon: 121.5, score: 60 },
       { lat: 23.1, lon: 113.3, score: 50 },
       { lat: 30.6, lon: 104.1, score: 65 },
-      { lat: 43.8, lon: 87.6,  score: 40 }
+      { lat: 43.8, lon: 87.6,  score: 40 },
+      { lat: 25.0, lon: 121.5, score: 58 },
+      { lat: 37.6, lon: 127.0, score: 55 },
+      { lat: 35.7, lon: 139.7, score: 52 }
     ],
     stale: false,
     ...overrides
@@ -82,8 +85,8 @@ describe('ChinaRasterService.getRaster', () => {
     expect(raster).toHaveProperty('values');
     expect(raster).toHaveProperty('meta');
     expect(raster.meta.interpolation).toBe('idw');
-    expect(raster.meta.source).toBe('china-spots-cache');
-    expect(raster.meta.sourcePoints).toBe(5);
+    expect(raster.meta.source).toBe('east-asia-spots-cache');
+    expect(raster.meta.sourcePoints).toBe(8);
   });
 
   test('values 长度等于 width * height', async () => {
@@ -94,12 +97,12 @@ describe('ChinaRasterService.getRaster', () => {
     expect(raster.values.length).toBe(raster.width * raster.height);
   });
 
-  test('width/height 符合预期（0.5° 分辨率，bbox 72-135/18-53）', async () => {
+  test('width/height 符合预期（0.5° 分辨率，bbox 72-146/18-53）', async () => {
     const mockGridService = await getMockGridService();
     mockGridService.getCache.mockReturnValue(makeMockCache());
 
     const raster = await chinaRasterService.getRaster('sunset', 0.5);
-    expect(raster.width).toBe(Math.round((135 - 72) / 0.5));   // 126
+    expect(raster.width).toBe(Math.round((146 - 72) / 0.5));   // 148
     expect(raster.height).toBe(Math.round((53 - 18) / 0.5));   // 70
   });
 
