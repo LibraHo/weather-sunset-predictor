@@ -301,7 +301,7 @@ class PredictionService {
 
     // ========== 计算太阳方位角（与评分无关）==========
 
-    const sunAzimuth = SunCalculator.getSunAzimuth(date, referenceTime, lat, lon);
+    const sunAzimuth = SunCalculator.getSunAzimuth(date, referenceTime, lat, lon, timezoneOptions);
 
     // ========== 分析云层分层 ==========
 

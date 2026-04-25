@@ -208,6 +208,15 @@ describe('SunCalculator', () => {
       // In morning, sun is in the east (0-180)
       expect(azimuth).toBeLessThan(180);
     });
+
+    it('should calculate Beijing sunset azimuth from UTC instant using target timezone', () => {
+      const date = new Date('2026-04-26T00:00:00.000Z');
+      const time = new Date('2026-04-26T10:58:00.000Z'); // 18:58 Asia/Shanghai
+      const azimuth = SunCalculator.getSunAzimuth(date, time, 39.9, 116.4, { timezone: 'Asia/Shanghai' });
+
+      expect(azimuth).toBeGreaterThan(240);
+      expect(azimuth).toBeLessThan(330);
+    });
   });
 
   describe('analyzeCloudLayers', () => {

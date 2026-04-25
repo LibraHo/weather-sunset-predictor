@@ -292,7 +292,7 @@ class PredictionController {
    */
   _ensureAzimuthCompatibility(prediction, referenceTime, baseDate, lat, lon) {
     if ((prediction.sunAzimuth === null || prediction.sunAzimuth === undefined) && referenceTime) {
-      prediction.sunAzimuth = this.predictionService.getSunAzimuth(baseDate, referenceTime, lat, lon);
+      prediction.sunAzimuth = this.predictionService.getSunAzimuth(baseDate, referenceTime, lat, lon, { timezone: prediction.timezone || prediction.timeZone || null });
     }
 
     if (!prediction.getAzimuthDirection) {

@@ -365,13 +365,17 @@ function getBlueHour(referenceTime, type) {
  * @param {number} lon - 经度
  * @returns {number} 太阳方位角（0-360 度，0 度为正北）
  */
-function getSunAzimuth(date, time, lat, lon) {
-  const dayOfYear = getDayOfYear(date);
+function getSunAzimuth(date, time, lat, lon, options = {}) {
+  const timezone = options.timezone || options.timeZone || null;
+  const timezoneOffset = getTargetTimezoneOffsetHours(time, lon, timezone);
+  const targetLocalTime = new Date(time.getTime() + timezoneOffset * 60 * 60 * 1000);
+  const targetLocalDate = new Date(date.getTime() + timezoneOffset * 60 * 60 * 1000);
+  const dayOfYear = getDayOfYear(targetLocalDate);
   const fractionalYear = getFractionalYear(dayOfYear);
   const declination = getSolarDeclination(fractionalYear);
 
   // 计算时角（基于当地时间）
-  const hours = time.getHours() + time.getMinutes() / 60 + time.getSeconds() / 3600;
+  const hours = targetLocalTime.getUTCHours() + targetLocalTime.getUTCMinutes() / 60 + targetLocalTime.getUTCSeconds() / 3600;
   const hourAngle = (hours - 12) * 15; // 每小时 15 度
 
   // 转换为弧度
