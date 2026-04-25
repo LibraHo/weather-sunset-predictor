@@ -5371,3 +5371,14 @@ body.theme-dark .prediction-app-card {
   text-align: center;
   font-size: clamp(2rem, 8vw, 2.35rem);
 }
+
+/* 需求46 修正：去掉预测卡片内部日期胶囊 */
+.prediction-app-nav-compact {
+  grid-template-columns: 1fr auto;
+  min-height: 0;
+  margin-bottom: -6px;
+}
+.prediction-app-nav-compact > div:first-child,
+.prediction-app-nav-compact > div:nth-child(2) {
+  display: none;
+}

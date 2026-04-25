@@ -1100,9 +1100,9 @@ class PredictionController {
     return `
       <div class="prediction-card prediction-app-card ${qualityClass}" data-type="${type}">
         <div class="prediction-app-shell">
-          <div class="prediction-app-nav" aria-label="${forecast.type}预测操作">
-            <button class="prediction-nav-dot" type="button" aria-label="更多">•••</button>
-            <span class="prediction-date-pill">📅 ${forecast.dateLabel}</span>
+          <div class="prediction-app-nav prediction-app-nav-compact" aria-label="${forecast.type}预测操作">
+            <div></div>
+            <div></div>
             <div class="prediction-share-menu" data-share-type="${type}">
               <button class="prediction-share-btn prediction-nav-share" data-type="${type}" aria-label="${this.i18n.t('share.title')}" aria-expanded="false">
                 ${shareIconSvg}
