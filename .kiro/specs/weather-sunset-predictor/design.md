@@ -67,9 +67,39 @@ lightPathScore = geometryScore × extinctionFactor × 100
 // 封顶策略
 if (cloudCover >= 85% || precipitation > 0) lightPathScore = min(lightPathScore, 40-50)
 
+// 气溶胶修正（需求43）
+aerosolFactor = scoreAerosolScattering(AOD, PM2_5, PM10, dust, visibility)
+
 // 最终评分
-finalScore = canvasScore × 0.8 + lightPathScore × 0.2
+finalScore = (canvasScore × 0.8 + lightPathScore × 0.2) × aerosolFactor
 ```
+
+### 气溶胶/空气颗粒链路（需求43）
+
+**数据源**：Open-Meteo Air Quality API `https://air-quality-api.open-meteo.com/v1/air-quality`
+
+**字段**：
+- `aerosol_optical_depth`：主指标，衡量整层大气气溶胶光学厚度，用于判断红橙散射潜力与灰霾风险。
+- `dust`：沙尘风险，过高时直接压低观感。
+- `pm2_5` / `pm10`：颗粒物风险，辅助判断雾霾发暗。
+- `us_aqi` / `european_aqi`：展示和兜底用，不能替代 AOD。
+
+**合并策略**：
+1. `OpenMeteoProvider` 获取天气小时数据后，并行/串行补充 Air Quality 小时数据。
+2. 按 `hourly.time` 对齐，合并到每小时 `weatherData`：`aerosolOpticalDepth`、`dust`、`pm2_5`、`pm10`、`aqi`。
+3. Air Quality 失败时记录 `providerMeta.degradedReason`，但预测不能失败，按无气溶胶数据处理。
+4. 配额统计要区分 `air_quality` 调用，避免和普通天气/网格调用混淆。
+
+**评分原则**：
+- 能见度表示“看得清不清”，气溶胶表示“为什么清/不清以及颜色是否容易艳”。
+- AOD 适中小幅加分，AOD/PM/Dust 过高扣分。
+- 能见度差且颗粒物高时只扣分，不允许因 AOD 高获得色彩加成。
+
+**UI 展示**：
+- 实时天气面板新增「气溶胶/颗粒物」指标。
+- 分数明细弹窗新增「气溶胶散射」行，显示分数/修正系数。
+- 文字分析新增短句：适中=有利红橙散射，过高=灰霾发暗，很低=空气过净颜色可能偏淡。
+- 算法说明页新增“气溶胶 vs 能见度”的解释，避免用户认为重复计权。
 
 ### 网格抓取队列（需求39）
 
@@ -98,6 +128,42 @@ Batch Job (size=10, delay=2500ms) → OpenMeteoProvider
 **阈值**：
 - DAILY_LIMIT = 10000
 - SOFT_LIMIT = 9000（≥此值暂停网格抓取）
+
+### 国际城市搜索排序（需求44）
+
+**当前问题**：Auto 搜索把高德结果放前面，导致 `Tokyo/东京/洛杉矶` 等国际城市可能被中国同名小地名抢占第一。
+
+**设计原则**：
+- 不维护全世界城市库；只维护中国、美国、欧洲主要城市的高频别名/缩写，作为搜索增强而不是唯一数据源。
+- 全球搜索以 Open-Meteo/Nominatim 为主，高德作为中国境内增强。
+- 所有 provider 结果进入统一 ranking，不再简单“高德在前”。
+
+**排序特征**：
+```javascript
+rankScore = exactMatch * 100
+  + aliasMatch * 80
+  + populationScore
+  + capitalOrAdminBonus
+  + languageMatchBonus
+  + providerConfidence
+  + chinaQueryGaodeBonus
+  - smallPlacePenalty
+```
+
+**别名表范围**：
+- 中国：北京/BJ、上海/SH、广州/GZ、深圳/SZ、香港/HK、澳门、台北、成都、重庆、杭州、南京、西安、武汉、厦门、青岛等。
+- 美国：洛杉矶/LA/Los Angeles、纽约/NYC/New York、旧金山/SF/San Francisco、华盛顿/DC/Washington DC、西雅图、芝加哥、波士顿、拉斯维加斯、迈阿密等。
+- 欧洲：伦敦/London、巴黎/Paris、柏林/Berlin、罗马/Rome、马德里/Madrid、巴塞罗那/Barcelona、阿姆斯特丹/Amsterdam、米兰/Milan、苏黎世/Zurich、维也纳/Vienna、布拉格/Prague、雅典/Athens、伊斯坦布尔/Istanbul 等。
+
+**明显中国查询判断**：
+- 查询包含中国省/市/县/区行政名，或结果 countryCode=CN 且名称 exact/alias 命中。
+- 对 `LA`、`Tokyo`、`东京`、`洛杉矶` 这类国际别名，不给高德全局优先权。
+
+**最低验收样例**：
+- `洛杉矶` / `LA` / `Los Angeles` → Los Angeles, US
+- `Tokyo` / `东京` → Tokyo, JP
+- `London` / `伦敦` → London, GB
+- `北京` / `上海` → China
 
 ### 地图覆盖层（需求20/33/37）
 
