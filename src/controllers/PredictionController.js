@@ -348,8 +348,8 @@ class PredictionController {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // 为未来5天生成预测
-    for (let i = 0; i < 5; i++) {
+    // 仅生成 UI 会展示的今天 + 未来3天，避免额外第5天白跑朝/晚霞预测请求
+    for (let i = 0; i < 4; i++) {
       const targetDate = new Date(today);
       targetDate.setDate(today.getDate() + i);
 
