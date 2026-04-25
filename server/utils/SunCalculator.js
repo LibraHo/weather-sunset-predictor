@@ -57,6 +57,97 @@ function getSolarDeclination(fractionalYear) {
     0.00148 * Math.sin(3 * fractionalYear);
 }
 
+
+/**
+ * 解析预测地点实际使用的法定时区偏移。
+ *
+ * 时间系统规则：
+ * 1. 首选 IANA timezone（如 Asia/Shanghai / Asia/Kuala_Lumpur），它代表当地实际法定时间，含 DST。
+ * 2. 禁止使用用户浏览器/服务器时区。
+ * 3. 只有缺少 IANA timezone 时，才按经度粗略兜底。
+ *
+ * @param {Date} date - 目标日期/instant
+ * @param {number} lon - 经度
+ * @param {string|null} timeZone - IANA timezone
+ * @returns {number} UTC offset hours
+ */
+function getTargetTimezoneOffsetHours(date, lon, timeZone = null) {
+  if (timeZone && typeof Intl !== 'undefined' && Intl.DateTimeFormat) {
+    try {
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }).formatToParts(date);
+
+      const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+      const asUtc = Date.UTC(
+        Number(values.year),
+        Number(values.month) - 1,
+        Number(values.day),
+        Number(values.hour),
+        Number(values.minute),
+        Number(values.second)
+      );
+
+      return (asUtc - date.getTime()) / 3600000;
+    } catch (error) {
+      console.warn('[SunCalculator] 无法解析目标时区，回退到经度估算:', timeZone, error.message);
+    }
+  }
+
+  return Math.round(lon / 15);
+}
+
+/**
+ * 用目标地点本地日期/时间构造真实 UTC instant。
+ * @param {Date} date - 目标日期
+ * @param {number} dayOffset - 跨日偏移
+ * @param {number} hours - 目标地点本地小时
+ * @param {number} minutes - 目标地点本地分钟
+ * @param {number} timezoneOffsetHours - 目标地点 UTC offset hours
+ * @returns {Date}
+ */
+function createDateFromTargetLocalTime(date, dayOffset, hours, minutes, timezoneOffsetHours) {
+  return new Date(Date.UTC(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate() + dayOffset,
+    hours - timezoneOffsetHours,
+    minutes,
+    0,
+    0
+  ));
+}
+
+/**
+ * 按目标地点 IANA timezone 格式化 HH:mm。
+ * @param {Date|string|number} time - 时间
+ * @param {string|null} timeZone - IANA timezone
+ * @param {string} locale - locale
+ * @returns {string}
+ */
+function formatTimeForZone(time, timeZone = null, locale = 'zh-CN') {
+  const date = time instanceof Date ? time : new Date(time);
+  if (!date || Number.isNaN(date.getTime())) return '--:--';
+
+  if (timeZone) {
+    return new Intl.DateTimeFormat(locale, {
+      timeZone,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).format(date);
+  }
+
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
 /**
  * 计算日落时间
  *
@@ -68,7 +159,7 @@ function getSolarDeclination(fractionalYear) {
  * @returns {Date} 日落时间
  * @throws {Error} 参数无效时抛出错误
  */
-function getSunsetTime(date, lat, lon) {
+function getSunsetTime(date, lat, lon, options = {}) {
   // 验证输入
   if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
     throw new Error('无效的日期对象');
@@ -111,8 +202,8 @@ function getSunsetTime(date, lat, lon) {
   // 计算日落时角（度）
   const hourAngle = Math.acos(cosHourAngle) * 180 / Math.PI;
 
-  // 计算本地子午线
-  const timezone = Math.round(lon / 15);
+  // 计算目标地点法定时区对应的本地子午线
+  const timezone = getTargetTimezoneOffsetHours(date, lon, options.timezone || options.timeZone || null);
   const localMeridian = timezone * 15;
   const lonOffset = lon - localMeridian;
 
@@ -135,10 +226,7 @@ function getSunsetTime(date, lat, lon) {
   const hours = Math.floor(sunsetMinutesAdjusted / 60);
   const minutes = Math.round(sunsetMinutesAdjusted % 60);
 
-  // 创建本地时间
-  const sunsetDate = new Date(date);
-  sunsetDate.setDate(sunsetDate.getDate() + dayOffset);
-  return new Date(sunsetDate.getFullYear(), sunsetDate.getMonth(), sunsetDate.getDate(), hours, minutes, 0, 0);
+  return createDateFromTargetLocalTime(date, dayOffset, hours, minutes, timezone);
 }
 
 /**
@@ -152,7 +240,7 @@ function getSunsetTime(date, lat, lon) {
  * @returns {Date} 日出时间
  * @throws {Error} 参数无效时抛出错误
  */
-function getSunriseTime(date, lat, lon) {
+function getSunriseTime(date, lat, lon, options = {}) {
   // 验证输入
   if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
     throw new Error('无效的日期对象');
@@ -195,8 +283,8 @@ function getSunriseTime(date, lat, lon) {
   // 计算日出时角（度）
   const hourAngle = Math.acos(cosHourAngle) * 180 / Math.PI;
 
-  // 计算本地子午线
-  const timezone = Math.round(lon / 15);
+  // 计算目标地点法定时区对应的本地子午线
+  const timezone = getTargetTimezoneOffsetHours(date, lon, options.timezone || options.timeZone || null);
   const localMeridian = timezone * 15;
   const lonOffset = lon - localMeridian;
 
@@ -219,10 +307,7 @@ function getSunriseTime(date, lat, lon) {
   const hours = Math.floor(sunriseMinutesAdjusted / 60);
   const minutes = Math.round(sunriseMinutesAdjusted % 60);
 
-  // 创建本地时间
-  const sunriseDate = new Date(date);
-  sunriseDate.setDate(sunriseDate.getDate() + dayOffset);
-  return new Date(sunriseDate.getFullYear(), sunriseDate.getMonth(), sunriseDate.getDate(), hours, minutes, 0, 0);
+  return createDateFromTargetLocalTime(date, dayOffset, hours, minutes, timezone);
 }
 
 /**
@@ -356,6 +441,9 @@ function analyzeCloudLayers(highClouds, midClouds, lowClouds) {
 }
 
 module.exports = {
+  getTargetTimezoneOffsetHours,
+  createDateFromTargetLocalTime,
+  formatTimeForZone,
   getSunsetTime,
   getSunriseTime,
   getGoldenHour,

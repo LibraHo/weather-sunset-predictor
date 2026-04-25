@@ -71,7 +71,7 @@ function pickClosestWeather(hourly = [], targetTs) {
   }, entries[0]).item;
 }
 
-function normalizeWeatherForPrediction(weather = {}) {
+function normalizeWeatherForPrediction(weather = {}, providerMeta = {}) {
   return {
     cloudCover: weather.cloudCover ?? 0,
     humidity: weather.humidity ?? 0,
@@ -98,7 +98,9 @@ function normalizeWeatherForPrediction(weather = {}) {
     condition: weather.condition ?? null,
     windSpeed: weather.windSpeed ?? 0,
     windDirection: weather.windDirection ?? 0,
-    pressure: weather.pressure ?? 1013
+    pressure: weather.pressure ?? 1013,
+    timezone: weather.timezone || providerMeta.timezone || null,
+    utcOffsetSeconds: weather.utcOffsetSeconds ?? providerMeta.utcOffsetSeconds ?? null
   };
 }
 
@@ -193,11 +195,6 @@ router.get('/forecast', async (req, res) => {
       return errorResponse(res, 400, 'INVALID_COORDINATES', 'lat must be between -90 and 90, lon between -180 and 180');
     }
 
-    const referenceTime = type === 'sunrise'
-      ? SunCalculator.getSunriseTime(targetDate, resolved.lat, resolved.lon)
-      : SunCalculator.getSunsetTime(targetDate, resolved.lat, resolved.lon);
-    const bestWindow = SunCalculator.getGoldenHour(referenceTime, type);
-
     let weatherResponse;
     try {
       weatherResponse = await orchestrator.fetchWeatherData(resolved.lat, resolved.lon, 24);
@@ -207,6 +204,13 @@ router.get('/forecast', async (req, res) => {
       });
     }
 
+    const targetTimezone = weatherResponse?.providerMeta?.timezone || null;
+    const timezoneOptions = { timezone: targetTimezone };
+    const referenceTime = type === 'sunrise'
+      ? SunCalculator.getSunriseTime(targetDate, resolved.lat, resolved.lon, timezoneOptions)
+      : SunCalculator.getSunsetTime(targetDate, resolved.lat, resolved.lon, timezoneOptions);
+    const bestWindow = SunCalculator.getGoldenHour(referenceTime, type);
+
     const hourly = Array.isArray(weatherResponse?.data) ? weatherResponse.data : [];
     const referenceTs = referenceTime.getTime();
     const selectedWeatherRaw = pickClosestWeather(hourly, referenceTs);
@@ -215,7 +219,7 @@ router.get('/forecast', async (req, res) => {
       return errorResponse(res, 502, 'NO_WEATHER_DATA', 'No weather data available for forecast calculation');
     }
 
-    const weatherData = normalizeWeatherForPrediction(selectedWeatherRaw);
+    const weatherData = normalizeWeatherForPrediction(selectedWeatherRaw, weatherResponse?.providerMeta || {});
 
     let prediction;
     try {
@@ -295,6 +299,7 @@ router.get('/forecast', async (req, res) => {
           requestedAt: new Date().toISOString()
         },
         forecastDate: targetDate.toISOString(),
+        timezone: targetTimezone,
         providerMeta: weatherResponse?.providerMeta || null,
         providerName: weatherResponse?.providerMeta?.name || null,
         source: resolved.source,

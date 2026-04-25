@@ -234,3 +234,45 @@ describe('SunCalculator', () => {
     });
   });
 });
+
+describe('SunCalculator target timezone system', () => {
+  it('uses the queried place IANA timezone instead of browser/server timezone for display', () => {
+    const date = new Date('2026-04-25T00:00:00Z');
+    const sunrise = SunCalculator.getSunriseTime(date, 39.9042, 116.4074, {
+      timezone: 'Asia/Shanghai'
+    });
+
+    expect(SunCalculator.formatTimeForZone(sunrise, 'Asia/Shanghai')).toMatch(/^05:/);
+    expect(SunCalculator.formatTimeForZone(sunrise, 'Asia/Qatar')).toMatch(/^00:/);
+  });
+
+  it('covers legal timezone overriding longitude fallback for Penang', () => {
+    const date = new Date('2026-04-25T00:00:00Z');
+    const penangLon = 100.3288;
+
+    expect(SunCalculator.getTargetTimezoneOffsetHours(date, penangLon, 'Asia/Kuala_Lumpur')).toBe(8);
+    expect(SunCalculator.getTargetTimezoneOffsetHours(date, penangLon)).toBe(7);
+
+    const sunrise = SunCalculator.getSunriseTime(date, 5.4164, penangLon, {
+      timezone: 'Asia/Kuala_Lumpur'
+    });
+
+    expect(SunCalculator.formatTimeForZone(sunrise, 'Asia/Kuala_Lumpur'))
+      .not.toBe(SunCalculator.formatTimeForZone(sunrise, 'Asia/Bangkok'));
+  });
+
+  it('covers China legal timezone for Xinjiang instead of longitude fallback', () => {
+    const date = new Date('2026-04-25T00:00:00Z');
+    const urumqiLon = 87.6168;
+
+    expect(SunCalculator.getTargetTimezoneOffsetHours(date, urumqiLon, 'Asia/Shanghai')).toBe(8);
+    expect(SunCalculator.getTargetTimezoneOffsetHours(date, urumqiLon)).toBe(6);
+
+    const sunrise = SunCalculator.getSunriseTime(date, 43.8256, urumqiLon, {
+      timezone: 'Asia/Shanghai'
+    });
+
+    expect(SunCalculator.formatTimeForZone(sunrise, 'Asia/Shanghai'))
+      .not.toBe(SunCalculator.formatTimeForZone(sunrise, 'Etc/GMT-6'));
+  });
+});
