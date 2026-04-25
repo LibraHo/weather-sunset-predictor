@@ -272,6 +272,10 @@ main > section {
   align-items: center;
 }
 
+.home-view-link {
+  text-decoration: none;
+}
+
 /* 桌面端：顶部菜单字体明显放大 */
 @media (min-width: 1024px) {
   .home-view-option {

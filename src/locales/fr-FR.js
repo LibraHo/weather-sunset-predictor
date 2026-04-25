@@ -8,7 +8,8 @@ const translations = {
       "ariaLabel": "Navigation par onglets",
       "forecast": "Prévisions",
       "methodology": "Méthode de calcul",
-      "map": "Carte Lueur"
+      "map": "Carte Lueur",
+      apiAccess: 'Accès API'
     },
     "menu": {
       "ariaLabel": "Changer de vue",

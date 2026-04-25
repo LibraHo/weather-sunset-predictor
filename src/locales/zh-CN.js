@@ -14,7 +14,8 @@ export default {
       ariaLabel: '主页分页导航',
       forecast: '预测功能',
       methodology: '火烧云计算方法',
-      map: '火烧云地图'
+      map: '火烧云地图',
+      apiAccess: 'API接入'
     },
     menu: {
       ariaLabel: '页面切换',

@@ -11,7 +11,9 @@ export default {
     tabs: {
       ariaLabel: 'تنقل تبويبات الصفحة الرئيسية',
       forecast: 'التنبؤ',
-      methodology: 'طريقة حساب النقاط'
+      methodology: 'طريقة حساب النقاط',
+      map: 'خريطة السحب الحمراء',
+      apiAccess: 'الوصول إلى API'
     },
     menu: {
       ariaLabel: 'تبديل العرض',

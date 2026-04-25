@@ -8,7 +8,8 @@ const translations = {
       "ariaLabel": "Home tab navigation",
       "forecast": "Forecast",
       "methodology": "Methodology",
-      "map": "Fire Sky Map"
+      "map": "Fire Sky Map",
+      "apiAccess": "API Access"
     },
     "menu": {
       "ariaLabel": "Switch home view",

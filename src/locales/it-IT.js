@@ -8,7 +8,8 @@ const translations = {
       "ariaLabel": "Navigazione a schede",
       "forecast": "Previsioni",
       "methodology": "Metodologia di calcolo",
-      "map": "Mappa Luminosità"
+      "map": "Mappa Luminosità",
+      apiAccess: 'Accesso API'
     },
     "menu": {
       "ariaLabel": "Cambia vista",

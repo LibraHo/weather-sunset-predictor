@@ -43,7 +43,7 @@ export function initializeHomeTabs(documentRef = document, onMapVisible = null) 
   const tabMethodology = documentRef.getElementById('tab-methodology');
   const menuButton = documentRef.getElementById('home-view-menu-btn');
   const menuDropdown = documentRef.getElementById('home-view-menu-dropdown');
-  const menuOptions = Array.from(documentRef.querySelectorAll('.home-view-option'));
+  const menuOptions = Array.from(documentRef.querySelectorAll('.home-view-option[data-view]'));
 
   const allPanels = [
     { id: 'forecast', el: forecastPanel },
