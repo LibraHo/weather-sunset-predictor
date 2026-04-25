@@ -5581,3 +5581,23 @@ body.theme-dark .prediction-app-card {
   line-height: 1.35;
   gap: 0;
 }
+
+/* 需求46 修正：分数明细面板置顶，避免被其他卡片遮挡 */
+.prediction-app-card,
+.prediction-app-shell,
+.score-summary-card,
+.score-summary-left,
+.score-breakdown-trigger {
+  overflow: visible;
+}
+.score-summary-card {
+  position: relative;
+  z-index: 20;
+}
+.score-breakdown-trigger {
+  position: relative;
+  z-index: 40;
+}
+.score-breakdown-popover {
+  z-index: 9999;
+}
