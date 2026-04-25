@@ -1206,7 +1206,7 @@ class PredictionController {
       : prediction.sunAzimuth !== null && prediction.sunAzimuth !== undefined;
     if (!shouldShowAzimuth) return '';
     const direction = this.getLocalizedAzimuthDirection(prediction);
-    return direction ? `${direction} ↑` : '';
+    return direction || '';
   }
 
   getScoreDescription(score) {

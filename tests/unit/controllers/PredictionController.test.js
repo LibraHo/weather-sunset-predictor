@@ -167,6 +167,17 @@ describe('PredictionController', () => {
       expect(dir).toBe('WNW');
     });
 
+
+    test('日出/日落方向展示不应附加误导性的箭头', () => {
+      const prediction = {
+        sunAzimuth: 74,
+        shouldShowAzimuth: () => true
+      };
+      const direction = predictionController.getPredictionDirectionText(prediction, 'sunrise');
+      expect(direction).toBe('东北偏东');
+      expect(direction).not.toContain('↑');
+    });
+
     test('null azimuth 应返回空字符串', () => {
       const dir = predictionController.getLocalizedAzimuthDirection({ sunAzimuth: null });
       expect(dir).toBe('');
@@ -253,7 +264,8 @@ describe('PredictionController', () => {
 
       expect(html).toContain('西北偏西');
       expect(html).toContain('app-info-row');
-      expect(html).toContain('西北偏西 ↑');
+      expect(html).toContain('西北偏西');
+      expect(html).not.toContain('西北偏西 ↑');
     });
 
     test('增强分析应显示后端透传的气溶胶 AOD 文案', () => {
@@ -520,7 +532,8 @@ describe('PredictionController', () => {
         'sunset'
       );
 
-      expect(html).toContain('西北偏西 ↑');
+      expect(html).toContain('西北偏西');
+      expect(html).not.toContain('西北偏西 ↑');
     });
   });
 
