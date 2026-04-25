@@ -266,6 +266,33 @@ rankScore = exactMatch * 100
 ```
 - 持久化：`~/.xiake/schedule-config.json`
 
+
+### 时间计算系统（太阳事件 / 查询地点法定时区）
+
+**核心原则**：所有日出、日落、黄金时段、蓝调时段、最佳观赏窗口，以及 Agent API 返回的太阳事件时间，都必须以“查询地点实际使用的法定时区”为准，而不是用户所在地、浏览器、服务器或经度推算时区。
+
+**为什么必须系统化**：
+- 用户所在地不一定等于查询地点。例如用户人在卡塔尔查北京，页面必须显示北京当地时间，而不是卡塔尔时间。
+- 查询地点的经度标准时间不一定等于该地区实际使用的法定时区。例如槟城经度接近 UTC+7，但马来西亚实际使用 `Asia/Kuala_Lumpur` / UTC+8；新疆经度接近 UTC+6，但中国统一使用 `Asia/Shanghai` / UTC+8。
+- 因此不能用 `new Date().getTimezoneOffset()` 或 `Math.round(lon / 15)` 作为主逻辑；经度推算只能作为缺少 IANA timezone 时的最后兜底。
+
+**统一规则**：
+1. 地理编码/天气源若返回 IANA timezone，必须沿链路传递到预测对象和 API meta，例如 `Asia/Shanghai`、`Asia/Kuala_Lumpur`、`Asia/Qatar`。
+2. 太阳事件计算先用查询地点 IANA timezone 解析该日期的实际 UTC offset（包含 DST），再构造真实 UTC instant。
+3. UI/API 展示或格式化时，必须传入同一个查询地点 timezone；禁止默认使用用户浏览器/服务器 timezone。
+4. 只有 timezone 缺失或不可解析时，才允许按 `Math.round(lon / 15)` 兜底，并在 meta/日志中保留可观测信息。
+
+**实现落点**：
+- 前端：`src/services/SunsetPredictionService.js` 负责按目标 timezone 计算 sunrise/sunset；`src/controllers/PredictionController.js` 在渲染主时间、最佳观赏窗口、黄金时段、蓝调时段时传入 `prediction.timezone`。
+- 后端：`server/utils/SunCalculator.js` 提供统一工具：`getTargetTimezoneOffsetHours()`、`createDateFromTargetLocalTime()`、`formatTimeForZone()`；`server/services/PredictionService.js`、`server/routes/agent-forecast.js` 必须使用 provider/weather meta 中的 timezone。
+- 数据源：Open-Meteo 请求使用 `timezone=auto`，其 `providerMeta.timezone` 是首选时区来源。
+
+**必须覆盖的回归测试**：
+- 用户在 `Asia/Qatar` 查北京：北京日出显示 `Asia/Shanghai` 时间，不显示卡塔尔时间。
+- 槟城：使用 `Asia/Kuala_Lumpur` / UTC+8，不按经度 fallback 成 UTC+7。
+- 新疆/乌鲁木齐：使用 `Asia/Shanghai` / UTC+8，不按经度 fallback 成 UTC+6。
+- 前端服务和后端 `SunCalculator` 都要覆盖，避免 Web UI 与 Agent API 结果分叉。
+
 ### Agent API 与 Token 管理（需求45）
 
 **架构原则**：不另起后端。Agent API 与网站 API 共用同一个 Node 服务、同一套预测算法、同一套天气/地理编码服务，避免分数与解释分叉。差异仅在鉴权、限流、输出格式和审计维度。
