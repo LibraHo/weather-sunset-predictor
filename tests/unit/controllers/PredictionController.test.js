@@ -349,6 +349,25 @@ describe('PredictionController', () => {
       expect(popover.hidden).toBe(true);
       expect(trigger.getAttribute('aria-expanded')).toBe('false');
     });
+
+    test('动态插入的新分数仪表盘也应响应点击', () => {
+      predictionController.updatePredictionDisplay();
+      const dynamic = document.createElement('div');
+      dynamic.innerHTML = `
+        <div class="score-breakdown-trigger" role="button" aria-expanded="false">
+          <svg><text>88</text></svg>
+          <div class="score-breakdown-popover" hidden>明细</div>
+        </div>
+      `;
+      document.body.appendChild(dynamic);
+
+      const trigger = dynamic.querySelector('.score-breakdown-trigger');
+      const popover = dynamic.querySelector('.score-breakdown-popover');
+      trigger.querySelector('text').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+      expect(popover.hidden).toBe(false);
+      expect(trigger.getAttribute('aria-expanded')).toBe('true');
+    });
   });
 
   describe('renderCloudLayers', () => {
