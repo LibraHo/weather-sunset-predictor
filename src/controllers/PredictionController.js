@@ -893,10 +893,10 @@ class PredictionController {
     const html = `
       <div class="prediction-toggle-bar" id="prediction-toggle-bar">
         <button class="prediction-toggle-btn${defaultTab === 'sunrise' ? ' active' : ''}" data-tab="sunrise">
-          🌄 ${sunriseDateLabel}${this.i18n.t('prediction.sunrise')}
+          ${this.i18n.t('prediction.sunrise')}
         </button>
         <button class="prediction-toggle-btn${defaultTab === 'sunset' ? ' active' : ''}" data-tab="sunset">
-          🌅 ${sunsetDateLabel}${this.i18n.t('prediction.sunset')}
+          ${this.i18n.t('prediction.sunset')}
         </button>
       </div>
       <div class="today-predictions-container" id="today-predictions-container">
@@ -1137,7 +1137,10 @@ class PredictionController {
 
           <div class="phenomenon-title-card">
             <div class="phenomenon-icon-tile" aria-hidden="true">${forecast.icon}</div>
-            <h3>${forecast.type}</h3>
+            <div class="phenomenon-title-copy">
+              <span class="phenomenon-date-tag">${dateLabel}</span>
+              <h3>${forecast.type}</h3>
+            </div>
           </div>
 
           <div class="score-summary-card">

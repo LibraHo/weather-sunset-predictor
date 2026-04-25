@@ -5930,3 +5930,29 @@ body.theme-auto .score-breakdown-popover {
 .score-breakdown-row + .score-breakdown-row {
   border-top-color: var(--glass-border) !important;
 }
+
+/* 需求46 修正：手机切换仅显示朝霞/晚霞，日期回到卡片标题上方 */
+.phenomenon-title-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  align-content: center;
+}
+.phenomenon-date-tag {
+  width: fit-content;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--glass-bg-heavy);
+  border: 1px solid var(--glass-border);
+  color: var(--color-text-light);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.phenomenon-title-copy h3 { margin: 0; }
+@media (max-width: 640px) {
+  .prediction-toggle-btn {
+    min-width: 88px;
+    text-align: center;
+  }
+}
