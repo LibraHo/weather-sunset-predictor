@@ -1959,6 +1959,19 @@ body.theme-dark .best-time {
   line-height: 1;
 }
 
+.score-breakdown-hint-trigger {
+  font-size: 0.66rem;
+  color: var(--color-text-light);
+  opacity: 0.78;
+  line-height: 1;
+}
+
+.score-gauge-wrap:hover .score-breakdown-hint-trigger,
+.score-gauge-wrap:focus-visible .score-breakdown-hint-trigger {
+  color: var(--color-primary);
+  opacity: 1;
+}
+
 .score-breakdown-popover {
   position: absolute;
   top: calc(100% + 8px);
@@ -2097,12 +2110,30 @@ body.theme-dark .best-time {
   overflow: hidden;
 }
 
+.prediction-concept-hero {
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(249, 115, 22, 0.16), transparent 36%),
+    linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(217, 70, 239, 0.06));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.event-time-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--color-text-light);
+  letter-spacing: 0.04em;
+}
+
 .main-time {
   font-size: 1.6rem;
   font-weight: 700;
   color: var(--color-text);
   line-height: 1.15;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .viewing-time {
@@ -2292,18 +2323,63 @@ body.theme-dark .best-time {
 body.theme-dark .fire-cloud-details {
   background: rgba(255, 183, 77, 0.08);
 }
+.fire-cloud-details-concept {
+  padding: 12px;
+  border-radius: 14px;
+  background:
+    linear-gradient(145deg, rgba(255, 183, 77, 0.10), rgba(74, 144, 226, 0.07)),
+    var(--glass-bg);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
 .fca-title {
-  font-weight: 600;
+  font-weight: 800;
   margin-bottom: 8px;
+  letter-spacing: 0.01em;
+}
+.fca-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 10px;
 }
 .fca-row {
   font-size: 13px;
   margin: 3px 0;
 }
+.fca-metric {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px;
+  align-items: baseline;
+  min-width: 0;
+  margin: 0;
+  padding: 7px 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.fca-icon {
+  line-height: 1;
+}
+.fca-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.fca-notes {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
 .fca-summary {
   font-size: 13px;
   margin: 6px 0 0 0;
   font-weight: 600;
+}
+.fca-verdict {
+  margin-top: 0;
+  padding: 7px 9px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
 }
 .fca-summary-great {
   color: #16a34a;
@@ -2316,6 +2392,17 @@ body.theme-dark .fca-summary-great {
 }
 body.theme-dark .fca-summary-good {
   color: #60a5fa;
+}
+
+@media (max-width: 420px) {
+  .prediction-concept-hero {
+    gap: 10px;
+    padding: 8px;
+  }
+
+  .fca-metric-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .prediction-card {

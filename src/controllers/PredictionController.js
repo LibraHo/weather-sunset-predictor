@@ -1180,7 +1180,7 @@ class PredictionController {
         <!-- 进度弧 -->
         <circle cx="48" cy="48" r="${radius}"
           fill="none" stroke="url(#gauge-grad-${type})" stroke-width="8"
-          stroke-dasharray="${scoreFill.toFixed(2)} ${scoreGap.toFixed(2) + circumference * 0.25}"
+          stroke-dasharray="${scoreFill.toFixed(2)} ${(scoreGap + circumference * 0.25).toFixed(2)}"
           stroke-dashoffset="${circumference * 0.125}"
           stroke-linecap="butt"
           style="filter:drop-shadow(0 0 10px ${gaugeColor}aa)"/>
@@ -1246,13 +1246,15 @@ class PredictionController {
             </div>
           </div>
         </div>
-        <div class="prediction-dashboard-row">
-          <div class="score-gauge-wrap ${qualityClass} score-breakdown-trigger" role="button" tabindex="0" aria-expanded="false" aria-label="${this.i18n.t('prediction.composite.finalScore')}">
+        <div class="prediction-dashboard-row prediction-concept-hero">
+          <div class="score-gauge-wrap ${qualityClass} score-breakdown-trigger prediction-score-entry" role="button" tabindex="0" aria-expanded="false" aria-label="${this.i18n.t('prediction.composite.finalScore')}">
             ${svgGauge}
             <span class="score-gauge-label" style="color:${gaugeColor}">${qualityLabel}</span>
+            <span class="score-breakdown-hint-trigger">查看评分明细</span>
             ${scoreBreakdownHtml}
           </div>
-          <div class="time-display">
+          <div class="time-display prediction-event-time">
+            <div class="event-time-label">${timeLabel}</div>
             <div class="main-time">${this.formatTime(type === 'sunrise' ? (prediction.sunriseTime || prediction.sunsetTime) : prediction.sunsetTime, targetTimezone)}</div>
             <div class="viewing-time"><span class="viewing-time-label">${this.i18n.t('prediction.bestViewingTime')}</span>: <span class="viewing-time-range">${this.formatTime(viewingWindow.start, targetTimezone)}–${this.formatTime(viewingWindow.end, targetTimezone)}</span></div>
             ${enhancedInfo}
@@ -1606,18 +1608,28 @@ class PredictionController {
     // 优先用卡片显示的 prediction.score，避免自己重算跟卡片不一致
     const finalScore = predictionScore != null ? Math.round(predictionScore) : Math.round(result.score);
 
-    let html = '<div class="fire-cloud-details">';
-    html += '<div class="fca-title">🔥 火烧云形成条件分析：</div>';
+    let html = '<div class="fire-cloud-details fire-cloud-details-concept">';
+    html += '<div class="fca-title">火烧云形成条件分析</div>';
 
-    const r = (icon, text) => `<div class="fca-row">${icon} ${text}</div>`;
+    const verdictClass = finalScore >= 70 ? 'fca-summary-great' : (finalScore >= 50 ? 'fca-summary-good' : '');
+    const verdictText = finalScore >= 70
+      ? '值得期待，重点看云层开口和低云遮挡'
+      : finalScore >= 50
+        ? '有机会，条件仍需临场观察'
+        : '不太推荐，关键条件不足';
+    html += `<div class="fca-summary fca-verdict ${verdictClass}">${verdictText}</div>`;
+    html += '<div class="fca-metric-grid">';
+
+    const r = (icon, text) => `<div class="fca-row fca-metric"><span class="fca-icon">${icon}</span><span class="fca-text">${text}</span></div>`;
     const priorityMessage = this._getPrecipPriorityMessage(weatherInput, weatherCode);
 
     if (weatherText) {
-      html += r('🌦️', `天气：${weatherText}${precip >= 0.1 ? `（降水 ${precip.toFixed(1)}mm/h）` : ''}`);
+      html += r(precip >= 0.5 ? '⚠️' : '✅', `天气：${weatherText}${precip >= 0.1 ? `（降水 ${precip.toFixed(1)}mm/h）` : ''}`);
     }
 
     if (priorityMessage) {
-      html += `<div class="fca-summary">${priorityMessage}</div>`;
+      html += '</div>';
+      html += `<div class="fca-notes"><div class="fca-summary">${priorityMessage}</div></div>`;
       html += '</div>';
       return html;
     }
@@ -1629,7 +1641,7 @@ class PredictionController {
     } else if (hc >= 40) {
       html += r('✅', `高层云充足（${hc.toFixed(0)}%），色彩载体丰富`);
     } else if (hc >= 20) {
-      html += r('ℹ️', `高层云适中（${hc.toFixed(0)}%），可形成火烧云但色彩可能偏淡`);
+      html += r('⚠️', `高层云适中（${hc.toFixed(0)}%），可形成火烧云但色彩可能偏淡`);
     } else if (hc >= 10) {
       html += r('⚠️', `高层云偏少（${hc.toFixed(0)}%），色彩载体有限，效果打折扣`);
     } else {
@@ -1641,11 +1653,11 @@ class PredictionController {
     if (mc >= 20 && mc <= 60) {
       html += r('✅', `中层云适中（${mc.toFixed(0)}%），利于色彩扩散和层次感`);
     } else if (hc >= 40 && mc < 10) {
-      html += r('ℹ️', `中层云较少（${mc.toFixed(0)}%），但高层云充足可独立形成火烧云`);
+      html += r('⚠️', `中层云较少（${mc.toFixed(0)}%），但高层云充足可独立形成火烧云`);
     } else if (hc >= 40 && mc > 60) {
       html += r('⚠️', `中层云偏厚（${mc.toFixed(0)}%），高云充足影响不大，但层次可能偏灰`);
     } else if (mc >= 10 && mc < 20) {
-      html += r('ℹ️', `中层云偏少（${mc.toFixed(0)}%），色彩扩散有限`);
+      html += r('⚠️', `中层云偏少（${mc.toFixed(0)}%），色彩扩散有限`);
     } else if (mc > 60) {
       html += r('⚠️', `中层云过厚（${mc.toFixed(0)}%），可能遮挡光线`);
     } else if (mc >= 1) {
@@ -1694,11 +1706,11 @@ class PredictionController {
     if (aerosol && aerosol.level !== 'unknown') {
       const aodText = aerosol.aerosolOpticalDepth != null ? `（AOD ${Number(aerosol.aerosolOpticalDepth).toFixed(2)}）` : '';
       if (aerosol.level === 'optimal') {
-        html += r('🌈', `气溶胶适中${aodText}，有利于增强红橙色散射`);
+        html += r('✅', `气溶胶适中${aodText}，有利于增强红橙色散射`);
       } else if (['high', 'very_high', 'polluted', 'low_visibility_haze', 'moderate_pollution'].includes(aerosol.level)) {
         html += r('⚠️', `颗粒物/气溶胶偏高${aodText}，可能灰霾发暗`);
       } else if (aerosol.level === 'low') {
-        html += r('ℹ️', `空气过于通透${aodText}，颜色可能偏淡`);
+        html += r('⚠️', `空气过于通透${aodText}，颜色可能偏淡`);
       }
     }
 
@@ -1707,10 +1719,10 @@ class PredictionController {
     if (layerCount >= 3) {
       html += r('✅', '云层立体丰富，多层次火烧云可期');
     } else if (layerCount === 2) {
-      html += r('ℹ️', '云层层次尚可，双色层搭配');
+      html += r('✅', '云层层次尚可，双色层搭配');
     } else if (hc >= 40) {
       // 单层但高云充足：不算差，只是缺层次
-      html += r('ℹ️', '云层单一，但高云质量好，仍可形成色彩鲜明的火烧云');
+      html += r('⚠️', '云层单一，但高云质量好，仍可形成色彩鲜明的火烧云');
     } else {
       html += r('⚠️', '云层单一，层次感不足');
     }
@@ -1724,27 +1736,31 @@ class PredictionController {
       html += r('⚠️', `轻微降水（${precip.toFixed(1)}mm/h），可能影响观赏；若刚停雨且能见度转好，有雨后初晴机会`);
     }
 
-    // 结语：直接用 predictionScore（卡片显示分），不再自己重算
+    html += '</div>';
+
+    // 结语：直接用 predictionScore（卡片显示分），不再自己重算。底部只保留短解释，避免日志式堆叠。
+    html += '<div class="fca-notes">';
     const hasCloudCarrier = hc >= 15 || mc >= 15;
     if (!hasCloudCarrier && finalScore < 40) {
-      html += `<div class="fca-summary">😶 高云和中云几乎为零，缺少色彩载体，火烧云概率极低</div>`;
+      html += `<div class="fca-summary">高云和中云几乎为零，缺少色彩载体，火烧云概率极低</div>`;
     } else if (finalScore >= 80) {
       if (layerCount >= 2) {
-        html += `<div class="fca-summary fca-summary-great">✨ 极佳条件，强烈推荐出行观赏！</div>`;
+        html += `<div class="fca-summary fca-summary-great">极佳条件，强烈推荐出行观赏</div>`;
       } else {
-        html += `<div class="fca-summary fca-summary-great">✨ 条件优秀，色彩可期；云层单一，层次感略有不足</div>`;
+        html += `<div class="fca-summary fca-summary-great">条件优秀，色彩可期；云层单一，层次感略有不足</div>`;
       }
     } else if (finalScore >= 60) {
       if (layerCount >= 2) {
-        html += `<div class="fca-summary fca-summary-good">✨ 条件不错，有较大概率出现壮观的火烧云</div>`;
+        html += `<div class="fca-summary fca-summary-good">条件不错，有较大概率出现壮观的火烧云</div>`;
       } else {
-        html += `<div class="fca-summary fca-summary-good">✨ 条件不错，火烧云概率较高；云层层次稍欠，效果可能偏平面</div>`;
+        html += `<div class="fca-summary fca-summary-good">条件不错，火烧云概率较高；云层层次稍欠，效果可能偏平面</div>`;
       }
     } else if (finalScore >= 40) {
-      html += `<div class="fca-summary">💡 条件中等，火烧云概率一般，需看实际云层演变</div>`;
+      html += `<div class="fca-summary">条件中等，火烧云概率一般，需看实际云层演变</div>`;
     } else {
-      html += `<div class="fca-summary">😶 火烧云概率较低（${finalScore}分）</div>`;
+      html += `<div class="fca-summary">火烧云概率较低（${finalScore}分）</div>`;
     }
+    html += '</div>';
 
     html += '</div>';
 
