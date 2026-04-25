@@ -5222,3 +5222,47 @@ body.theme-dark .prediction-app-card {
   .score-summary-divider { width: 100%; height: 1px; }
   .score-summary-left { justify-content: center; }
 }
+
+/* 需求46 修正：去掉外侧白框，修复评分文字穿模 */
+.prediction-app-card {
+  border: none !important;
+  box-shadow: none;
+  padding: 0;
+  background: transparent;
+}
+.prediction-app-shell {
+  padding: 16px;
+  border-radius: 32px;
+  background:
+    radial-gradient(circle at 88% 8%, rgba(255, 183, 77, 0.36), transparent 28%),
+    linear-gradient(180deg, #DCEAFF 0%, #F5DDF4 34%, #FFF7EE 58%, #FBFCFF 100%);
+  box-shadow: 0 18px 45px rgba(91, 103, 145, 0.16);
+}
+.score-gauge-large-wrap {
+  height: 158px;
+  align-items: center;
+}
+.score-gauge-center {
+  justify-content: center;
+  padding-top: 0;
+}
+.score-gauge-grade {
+  margin-top: 4px;
+}
+.score-gauge-desc {
+  margin-top: 2px;
+}
+.score-gauge-center .score-breakdown-hint-trigger {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+@media (max-width: 430px) {
+  .prediction-app-card { padding: 0; }
+  .prediction-app-shell { padding: 14px; border-radius: 28px; }
+  .score-gauge-large-wrap { height: 136px; }
+  .score-gauge-center { padding-top: 0; }
+  .score-gauge-grade { margin-top: 3px; }
+}
