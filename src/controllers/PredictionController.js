@@ -997,6 +997,23 @@ class PredictionController {
       });
     });
 
+    const closestElement = (target, selector) => {
+      if (!target) return null;
+      if (typeof target.closest === 'function') {
+        return target.closest(selector);
+      }
+
+      // 兼容部分微信/WebView 内核：SVGElement 可能没有 closest()
+      let node = target.nodeType === Node.ELEMENT_NODE ? target : target.parentElement;
+      while (node) {
+        if (typeof node.matches === 'function' && node.matches(selector)) {
+          return node;
+        }
+        node = node.parentElement || node.parentNode;
+      }
+      return null;
+    };
+
     const closeAllScoreBreakdowns = () => {
       predictionDisplay.querySelectorAll('.score-breakdown-popover').forEach(pop => {
         pop.hidden = true;
@@ -1007,9 +1024,9 @@ class PredictionController {
     };
 
     predictionDisplay.addEventListener('click', (e) => {
-      const trigger = e.target.closest('.score-breakdown-trigger');
+      const trigger = closestElement(e.target, '.score-breakdown-trigger');
       if (!trigger) {
-        if (!e.target.closest('.score-breakdown-popover')) {
+        if (!closestElement(e.target, '.score-breakdown-popover')) {
           closeAllScoreBreakdowns();
         }
         return;
@@ -1026,7 +1043,7 @@ class PredictionController {
     });
 
     predictionDisplay.addEventListener('keydown', (e) => {
-      const trigger = e.target.closest?.('.score-breakdown-trigger');
+      const trigger = closestElement(e.target, '.score-breakdown-trigger');
       if (!trigger) return;
       if (e.key !== 'Enter' && e.key !== ' ') return;
       e.preventDefault();
@@ -1100,11 +1117,13 @@ class PredictionController {
       cloudLayersHtml = this.renderCloudLayers(prediction.cloudLayers);
     }
 
-    // 分析文本：第一句加粗
+    // 分析文本：第一句加粗；晴天等无分析场景保持空白，避免废话。
     const firstBr = analysis.indexOf('<br>');
-    const formattedAnalysis = firstBr > -1
-      ? `<strong>${analysis.substring(0, firstBr)}</strong>${analysis.substring(firstBr)}`
-      : `<strong>${analysis}</strong>`;
+    const formattedAnalysis = analysis
+      ? (firstBr > -1
+        ? `<strong>${analysis.substring(0, firstBr)}</strong>${analysis.substring(firstBr)}`
+        : `<strong>${analysis}</strong>`)
+      : '';
 
     // 现代圆形仪表盘评分：SVG 圆弧 + 渐变色
     const score = prediction.score;
@@ -1118,17 +1137,26 @@ class PredictionController {
     const scoreFill = arcLength * (score / 100);
     const scoreGap = arcLength - scoreFill;
     // 颜色：poor→红, fair→橙, good→黄绿, excellent→绿
-    const gaugeColor = prediction.quality === 'excellent' ? '#22c55e'
+    const gaugeColor = prediction.quality === 'excellent' ? '#d946ef'
       : prediction.quality === 'good' ? '#f59e0b'
       : prediction.quality === 'fair' ? '#f97316'
       : '#ef4444';
+    const gaugeStartColor = prediction.quality === 'excellent' ? '#38bdf8'
+      : prediction.quality === 'good' ? '#facc15'
+      : prediction.quality === 'fair' ? '#fb923c'
+      : '#f87171';
+    const gaugeEndColor = prediction.quality === 'excellent' ? '#f97316'
+      : prediction.quality === 'good' ? '#22c55e'
+      : prediction.quality === 'fair' ? '#ef4444'
+      : '#b91c1c';
 
     const svgGauge = `
       <svg class="score-gauge-svg" viewBox="0 0 96 96" width="96" height="96">
         <defs>
           <linearGradient id="gauge-grad-${type}" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="${gaugeColor}" stop-opacity="0.7"/>
-            <stop offset="100%" stop-color="${gaugeColor}" stop-opacity="1"/>
+            <stop offset="0%" stop-color="${gaugeStartColor}" stop-opacity="0.95"/>
+            <stop offset="55%" stop-color="${gaugeColor}" stop-opacity="1"/>
+            <stop offset="100%" stop-color="${gaugeEndColor}" stop-opacity="1"/>
           </linearGradient>
         </defs>
         <!-- 轨道背景 -->
@@ -1143,7 +1171,7 @@ class PredictionController {
           stroke-dasharray="${scoreFill.toFixed(2)} ${scoreGap.toFixed(2) + circumference * 0.25}"
           stroke-dashoffset="${circumference * 0.125}"
           stroke-linecap="butt"
-          style="filter:drop-shadow(0 0 6px ${gaugeColor}88)"/>
+          style="filter:drop-shadow(0 0 10px ${gaugeColor}aa)"/>
         <!-- 分数数字 -->
         <text x="48" y="46" text-anchor="middle" dominant-baseline="middle"
           font-size="20" font-weight="800" fill="${gaugeColor}">${score.toFixed(0)}</text>
@@ -1219,7 +1247,7 @@ class PredictionController {
           </div>
         </div>
         ${cloudLayersHtml}
-        <div class="compact-analysis">${formattedAnalysis}</div>
+        <div class="compact-analysis${formattedAnalysis ? '' : ' compact-analysis-empty'}">${formattedAnalysis}</div>
         <div id="radar-compass-${type}" style="margin-top:12px;display:none;"></div>
       </div>
     `;
@@ -1428,7 +1456,16 @@ class PredictionController {
       lowClouds,
       precipitation,
       weatherCode,
-      { cloudCover, highClouds, midClouds, lowClouds, visibility, humidity, precipitation },
+      {
+        cloudCover,
+        highClouds,
+        midClouds,
+        lowClouds,
+        visibility,
+        humidity,
+        precipitation,
+        specialMode: prediction.renderingAnalysis?.breakdown?.specialMode
+      },
       prediction.score
     );
 
@@ -1522,6 +1559,24 @@ class PredictionController {
       precipitation: precipitation
     };
 
+    const precip = weatherInput.precipitation ?? 0;
+    const weatherText = this._getWeatherText(weatherCode, precip);
+    const hasWeatherCode = weatherCode !== null && weatherCode !== undefined && weatherCode !== '';
+    const isClearSky = hasWeatherCode && Number(weatherCode) === 0 && precip < 0.1;
+    const isPostRain = weatherInput.specialMode === 'post_rain' || weatherInput.postRain === true;
+
+    if (precip >= 4) {
+      return '<div class="fire-cloud-details fire-cloud-details-compact"><div class="fca-summary">下大雨，基本看不到</div></div>';
+    }
+
+    if (isPostRain) {
+      return '<div class="fire-cloud-details fire-cloud-details-compact"><div class="fca-summary fca-summary-good">雨后晴</div></div>';
+    }
+
+    if (isClearSky) {
+      return '';
+    }
+
     const result = this.predictionService._calculateUnifiedScore(weatherInput);
     const { breakdown } = result;
     // 优先用卡片显示的 prediction.score，避免自己重算跟卡片不一致
@@ -1531,8 +1586,6 @@ class PredictionController {
     html += '<div class="fca-title">🔥 火烧云形成条件分析：</div>';
 
     const r = (icon, text) => `<div class="fca-row">${icon} ${text}</div>`;
-    const precip = weatherInput.precipitation ?? 0;
-    const weatherText = this._getWeatherText(weatherCode, precip);
     const priorityMessage = this._getPrecipPriorityMessage(weatherInput, weatherCode);
 
     if (weatherText) {
@@ -1993,11 +2046,16 @@ class PredictionController {
 
       const analysis = this.generateAnalysisText(prediction, '', prediction.cloudLayers);
       const firstBr = analysis.indexOf('<br>');
-      const formattedAnalysis = firstBr > -1
-        ? `<strong>${analysis.substring(0, firstBr)}</strong>${analysis.substring(firstBr)}`
-        : `<strong>${analysis}</strong>`;
+      const formattedAnalysis = analysis
+        ? (firstBr > -1
+          ? `<strong>${analysis.substring(0, firstBr)}</strong>${analysis.substring(firstBr)}`
+          : `<strong>${analysis}</strong>`)
+        : '';
       const analysisEl = card.querySelector('.compact-analysis');
-      if (analysisEl) analysisEl.innerHTML = formattedAnalysis;
+      if (analysisEl) {
+        analysisEl.innerHTML = formattedAnalysis;
+        analysisEl.classList.toggle('compact-analysis-empty', !formattedAnalysis);
+      }
     });
 
     // 顶部切换按钮文本
