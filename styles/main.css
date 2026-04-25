@@ -6140,3 +6140,58 @@ html[data-actual-theme="light"] .prediction-app-card {
   --app-muted: var(--color-text-light);
   --app-border: var(--color-border);
 }
+
+/* 需求46 修正：标题标签/分享按钮居中，菜单与分数明细统一磨砂 glass */
+.phenomenon-title-card {
+  justify-content: center !important;
+  text-align: center;
+}
+.phenomenon-title-copy {
+  justify-items: center;
+  text-align: center;
+}
+.phenomenon-date-tag {
+  justify-self: center;
+}
+.prediction-nav-share,
+.prediction-share-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+}
+.prediction-nav-share .share-btn-icon,
+.prediction-share-btn .share-btn-icon {
+  display: block;
+  margin: auto;
+}
+.home-view-menu-dropdown,
+.prediction-share-dropdown,
+.score-breakdown-popover {
+  background: color-mix(in srgb, var(--glass-bg-heavy) 88%, transparent) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+  color: var(--color-text) !important;
+  backdrop-filter: blur(var(--glass-blur-heavy)) saturate(1.25) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy)) saturate(1.25) !important;
+}
+.home-view-option,
+.share-option {
+  color: var(--color-text) !important;
+}
+.home-view-option:hover,
+.share-option:hover {
+  background: var(--glass-bg-hover) !important;
+}
+.score-breakdown-popover {
+  isolation: isolate;
+}
+.score-breakdown-popover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--glass-bg-heavy) 52%, transparent);
+  pointer-events: none;
+  z-index: -1;
+}
