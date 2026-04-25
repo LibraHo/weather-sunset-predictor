@@ -135,6 +135,29 @@ describe('PredictionController.generateEnhancedAnalysisText', () => {
     expect(html).not.toContain('天气：晴');
   });
 
+  test('should omit cloud analysis for clear-like sky even without weatherCode', () => {
+    const controller = new PredictionController(mockStorageService);
+    controller.i18n = makeI18n();
+
+    const html = controller.generateEnhancedAnalysisText({
+      icon: '☀️',
+      status: '',
+      description: '',
+      score: 20,
+      precipitation: 0,
+      humidity: 67,
+      visibility: 20,
+      canvasAnalysis: {
+        score: 20,
+        breakdown: { highClouds: 0, midClouds: 0, lowClouds: 0 }
+      }
+    });
+
+    expect(html).not.toContain('火烧云形成条件分析');
+    expect(html).not.toContain('高层云极少');
+    expect(html).not.toContain('低云稀少');
+  });
+
   test('should simplify post-rain weather analysis', () => {
     const controller = new PredictionController(mockStorageService);
     controller.i18n = makeI18n();

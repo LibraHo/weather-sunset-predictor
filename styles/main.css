@@ -2191,13 +2191,15 @@ body.theme-dark .best-time {
   color: var(--color-text);
   margin-top: var(--spacing-xs);
   text-align: left;
-  flex: 1;
-  min-height: 168px;
+}
+
+.compact-analysis-empty {
+  display: none;
 }
 
 .compact-analysis .fire-cloud-details {
-  max-height: 148px;
-  overflow: hidden;
+  max-height: none;
+  overflow: visible;
 }
 
 .compact-analysis .fire-cloud-details-compact {
