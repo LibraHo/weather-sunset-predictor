@@ -6415,3 +6415,83 @@ html[data-actual-theme="light"] .prediction-app-card {
   .analysis-item { padding: 6px 8px !important; gap: 7px !important; }
   .analysis-group + .analysis-group { margin-top: 8px !important; }
 }
+
+/* 通用分段切换模板：与朝霞/晚霞切换统一 */
+.xiake-toggle {
+  --toggle-bg: color-mix(in srgb, var(--glass-bg-heavy, var(--color-surface, #f8f7f4)) 86%, transparent);
+  --toggle-border: var(--glass-border, var(--color-border, rgba(0,0,0,0.1)));
+  --toggle-active: var(--color-primary, #f97316);
+  --toggle-muted: var(--color-text-secondary, #6b7280);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 4px;
+  gap: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--toggle-border);
+  background: var(--toggle-bg);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(var(--glass-blur, 14px)) saturate(1.15);
+  -webkit-backdrop-filter: blur(var(--glass-blur, 14px)) saturate(1.15);
+}
+.xiake-toggle-wrap {
+  flex-wrap: wrap;
+  border-radius: 22px;
+  width: min(100%, 560px);
+}
+.xiake-toggle-compact {
+  margin-bottom: 12px !important;
+}
+.xiake-toggle-btn,
+.prediction-toggle-btn,
+.btn-param.xiake-toggle-btn {
+  appearance: none;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  color: var(--toggle-muted) !important;
+  padding: 8px 18px !important;
+  min-width: auto !important;
+  font-size: 0.9rem !important;
+  line-height: 1.15 !important;
+  font-weight: 650 !important;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  box-shadow: none !important;
+  transition: background-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.xiake-toggle-btn.active,
+.prediction-toggle-btn.active,
+.btn-param.xiake-toggle-btn.active {
+  background: var(--toggle-active) !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--toggle-active) 42%, transparent) !important;
+}
+.xiake-toggle-btn:not(.active):hover,
+.prediction-toggle-btn:not(.active):hover,
+.btn-param.xiake-toggle-btn:not(.active):hover {
+  background: var(--glass-bg-hover, rgba(0,0,0,0.05)) !important;
+  color: var(--color-text, #111827) !important;
+  transform: translateY(-1px);
+}
+.weather-view-toggle {
+  margin-bottom: 16px !important;
+}
+.parameter-selector.xiake-toggle {
+  margin-bottom: 16px !important;
+}
+@media (max-width: 640px) {
+  .xiake-toggle { width: min(100%, 360px); }
+  .xiake-toggle-btn,
+  .prediction-toggle-btn,
+  .btn-param.xiake-toggle-btn {
+    flex: 1 1 auto;
+    padding: 8px 12px !important;
+    font-size: 0.84rem !important;
+  }
+  .xiake-toggle-wrap .xiake-toggle-btn { flex: 1 1 calc(33.333% - 6px); }
+}
