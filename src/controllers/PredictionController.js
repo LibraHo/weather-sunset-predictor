@@ -1224,10 +1224,18 @@ class PredictionController {
   }
 
   getScoreTheme(quality, score) {
-    const value = Number(score) || 0;
+    const value = Math.max(0, Math.min(100, Number(score) || 0));
     if (value >= 80) return ['#FF9A3D', '#FF6B1A', '#E11D48'];
-    if (value >= 50) return ['#F59E0B', '#F59E0B', '#F59E0B'];
-    return ['#9CA3AF', '#9CA3AF', '#9CA3AF'];
+
+    // 0–80 使用单色：从灰逐步过渡到更深橙色，但圆环本身不做渐变。
+    const stops = [
+      { max: 20, color: '#9CA3AF' },
+      { max: 40, color: '#C4A173' },
+      { max: 60, color: '#E6A23C' },
+      { max: 80, color: '#EA580C' }
+    ];
+    const color = stops.find(stop => value < stop.max)?.color || '#EA580C';
+    return [color, color, color];
   }
 
   renderLargeScoreGauge(forecast, type) {
