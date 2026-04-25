@@ -71,8 +71,8 @@ describe('ChartRenderController', () => {
     const svg = document.querySelector('#chart-container svg');
     const circles = svg.querySelectorAll('circle');
 
-    expect(svg.innerHTML).toContain('var(--color-text)');
-    expect(svg.innerHTML).toContain('var(--chart-grid-color)');
+    expect(svg.innerHTML).toContain('fill="#333333"');
+    expect(svg.innerHTML).toContain('stroke="rgba(51,51,51,0.18)"');
     expect(circles.length).toBeLessThan(24);
     expect(circles.length).toBeGreaterThanOrEqual(4);
   });
