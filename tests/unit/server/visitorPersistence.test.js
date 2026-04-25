@@ -41,4 +41,13 @@ describe('visitor counter persistence', () => {
     expect(route._test.parseCount('{"visitorCount": 9}')).toBe(9);
     expect(route._test.parseCount('{"count": -1}')).toBe(0);
   });
+
+  test('isBotUserAgent filters crawlers and keeps normal browsers', () => {
+    const route = require('../../../server/routes/visitor.js');
+    expect(route._test.isBotUserAgent('Mozilla/5.0 HeadlessChrome/138.0')).toBe(true);
+    expect(route._test.isBotUserAgent('Mozilla/5.0 (compatible; CensysInspect/1.1)')).toBe(true);
+    expect(route._test.isBotUserAgent('Go-http-client/1.1')).toBe(true);
+    expect(route._test.isBotUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) Safari/604.1')).toBe(false);
+    expect(route._test.isBotUserAgent('MicroMessenger/8.0.60 Mobile Safari/537.36')).toBe(false);
+  });
 });

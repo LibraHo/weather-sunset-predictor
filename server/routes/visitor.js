@@ -37,6 +37,15 @@ function loadCount() {
   return 0;
 }
 
+function isBotUserAgent(userAgent = '') {
+  return /bot|spider|crawler|crawl|headless|censys|mj12|semrush|ahrefs|bytespider|petalbot|bingpreview|facebookexternalhit|python|curl|wget|go-http|scrapy|httpclient|zgrab|nmap|scan/i.test(String(userAgent));
+}
+
+function isCountableVisit(req) {
+  const userAgent = req.get?.('user-agent') || req.headers?.['user-agent'] || '';
+  return !isBotUserAgent(userAgent);
+}
+
 function saveCount(count) {
   try {
     ensureDataDir();
@@ -60,10 +69,14 @@ router.get('/count', (req, res) => {
  * POST /api/visitor/count
  */
 router.post('/count', (req, res) => {
+  if (!isCountableVisit(req)) {
+    return res.json({ count: memCount, ignored: true, reason: 'bot_user_agent' });
+  }
+
   memCount += 1;
   saveCount(memCount);
   res.json({ count: memCount });
 });
 
 module.exports = router;
-module.exports._test = { parseCount, loadCount, saveCount, VISITOR_COUNT_FILE };
+module.exports._test = { parseCount, loadCount, saveCount, isBotUserAgent, isCountableVisit, VISITOR_COUNT_FILE };
