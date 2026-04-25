@@ -5574,3 +5574,10 @@ body.theme-dark .prediction-app-card {
   background: rgba(34, 197, 94, 0.12);
   border: 1px solid rgba(34, 197, 94, 0.20);
 }
+
+/* 需求46 修正：分析标题无 emoji，字号对齐云况雷达 */
+.analysis-card-title {
+  font-size: 1rem;
+  line-height: 1.35;
+  gap: 0;
+}
