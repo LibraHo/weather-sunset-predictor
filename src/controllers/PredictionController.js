@@ -1230,9 +1230,9 @@ class PredictionController {
     // 0–80 使用单色：从灰逐步过渡到更深橙色，但圆环本身不做渐变。
     const stops = [
       { max: 20, color: '#9CA3AF' },
-      { max: 40, color: '#C4A173' },
-      { max: 60, color: '#E6A23C' },
-      { max: 80, color: '#EA580C' }
+      { max: 40, color: '#FDBA74' },
+      { max: 60, color: '#FB923C' },
+      { max: 80, color: '#F97316' }
     ];
     const color = stops.find(stop => value < stop.max)?.color || '#EA580C';
     return [color, color, color];
