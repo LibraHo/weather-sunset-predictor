@@ -5744,3 +5744,22 @@ body:not(.theme-dark):not(.theme-auto) .prediction-app-shell {
   .analysis-item-copy strong { font-size: 0.64rem; }
   .analysis-item-copy small { font-size: 0.58rem; }
 }
+
+/* 需求46 修正：去掉信息行 emoji，值强化居中 */
+.app-info-row {
+  grid-template-columns: minmax(0, 1fr) !important;
+  justify-items: center;
+  text-align: center;
+}
+.app-info-icon { display: none !important; }
+.app-info-label,
+.app-info-value {
+  grid-column: 1 !important;
+  justify-self: center !important;
+  text-align: center;
+}
+.app-info-value {
+  font-weight: 800;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
