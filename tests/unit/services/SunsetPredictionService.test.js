@@ -570,4 +570,49 @@ describe('SunsetPredictionService timezone display invariants', () => {
     expect(beijingTime).toMatch(/^05:/);
     expect(qatarTime).toMatch(/^00:/);
   });
+
+
+  test('槟城应使用马来西亚法定时区 UTC+8，而不是经度推算 UTC+7', () => {
+    const service = new SunsetPredictionService();
+    const date = new Date('2026-04-25T00:00:00Z');
+    const penangLon = 100.3288;
+
+    expect(service._getTargetTimezoneOffsetHours(date, penangLon, 'Asia/Kuala_Lumpur')).toBe(8);
+    expect(service._getTargetTimezoneOffsetHours(date, penangLon)).toBe(7);
+
+    const sunrise = service.getSunriseTime(date, 5.4164, penangLon, {
+      timezone: 'Asia/Kuala_Lumpur'
+    });
+
+    const legalDisplay = new Intl.DateTimeFormat('zh-CN', {
+      timeZone: 'Asia/Kuala_Lumpur', hour: '2-digit', minute: '2-digit', hour12: false
+    }).format(sunrise);
+    const longitudeFallbackDisplay = new Intl.DateTimeFormat('zh-CN', {
+      timeZone: 'Asia/Bangkok', hour: '2-digit', minute: '2-digit', hour12: false
+    }).format(sunrise);
+
+    expect(legalDisplay).not.toBe(longitudeFallbackDisplay);
+  });
+
+  test('新疆城市应使用中国法定时区 Asia/Shanghai，而不是按经度推算', () => {
+    const service = new SunsetPredictionService();
+    const date = new Date('2026-04-25T00:00:00Z');
+    const urumqiLon = 87.6168;
+
+    expect(service._getTargetTimezoneOffsetHours(date, urumqiLon, 'Asia/Shanghai')).toBe(8);
+    expect(service._getTargetTimezoneOffsetHours(date, urumqiLon)).toBe(6);
+
+    const sunrise = service.getSunriseTime(date, 43.8256, urumqiLon, {
+      timezone: 'Asia/Shanghai'
+    });
+
+    const legalDisplay = new Intl.DateTimeFormat('zh-CN', {
+      timeZone: 'Asia/Shanghai', hour: '2-digit', minute: '2-digit', hour12: false
+    }).format(sunrise);
+    const longitudeFallbackDisplay = new Intl.DateTimeFormat('zh-CN', {
+      timeZone: 'Etc/GMT-6', hour: '2-digit', minute: '2-digit', hour12: false
+    }).format(sunrise);
+
+    expect(legalDisplay).not.toBe(longitudeFallbackDisplay);
+  });
 });
