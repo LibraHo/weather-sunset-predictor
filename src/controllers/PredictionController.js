@@ -428,6 +428,8 @@ class PredictionController {
           sunrisePrediction.windSpeed = sunriseWeatherData.windSpeed;
           sunrisePrediction.pressure = sunriseWeatherData.pressure;
           sunrisePrediction.visibility = sunriseWeatherData.visibility;
+          sunrisePrediction.precipitation = sunriseWeatherData.precipitation ?? 0;
+          sunrisePrediction.weatherCode = sunriseWeatherData.weatherCode ?? sunriseWeatherData.weathercode ?? null;
           // 确保 sunriseTime 字段有值（渲染层用 type===sunrise 时取 sunriseTime）
           if (!sunrisePrediction.sunriseTime) {
             sunrisePrediction.sunriseTime = sunriseTime;
@@ -458,7 +460,9 @@ class PredictionController {
                 pressure: { value: sunriseWeatherData.pressure, name: '气压', unit: 'hPa' },
                 lowClouds: { value: sunriseWeatherData.lowClouds, name: '低云量', unit: '%' },
                 midClouds: { value: sunriseWeatherData.midClouds, name: '中云量', unit: '%' },
-                highClouds: { value: sunriseWeatherData.highClouds, name: '高云量', unit: '%' }
+                highClouds: { value: sunriseWeatherData.highClouds, name: '高云量', unit: '%' },
+                precipitation: { value: sunriseWeatherData.precipitation ?? 0, name: '降水', unit: 'mm/h' },
+                weatherCode: { value: sunriseWeatherData.weatherCode ?? sunriseWeatherData.weathercode ?? null, name: '天气', unit: '' }
               };
             }
 
@@ -556,6 +560,8 @@ class PredictionController {
           sunsetPrediction.windSpeed = sunsetWeatherData.windSpeed;
           sunsetPrediction.pressure = sunsetWeatherData.pressure;
           sunsetPrediction.visibility = sunsetWeatherData.visibility;
+          sunsetPrediction.precipitation = sunsetWeatherData.precipitation ?? 0;
+          sunsetPrediction.weatherCode = sunsetWeatherData.weatherCode ?? sunsetWeatherData.weathercode ?? null;
           sunsetPrediction.sunsetTime = sunsetTime; // 用于显示日落时间
 
           // 为增强版预测添加最佳观看窗口方法和factors属性
@@ -583,7 +589,9 @@ class PredictionController {
                 pressure: { value: sunsetWeatherData.pressure, name: '气压', unit: 'hPa' },
                 lowClouds: { value: sunsetWeatherData.lowClouds, name: '低云量', unit: '%' },
                 midClouds: { value: sunsetWeatherData.midClouds, name: '中云量', unit: '%' },
-                highClouds: { value: sunsetWeatherData.highClouds, name: '高云量', unit: '%' }
+                highClouds: { value: sunsetWeatherData.highClouds, name: '高云量', unit: '%' },
+                precipitation: { value: sunsetWeatherData.precipitation ?? 0, name: '降水', unit: 'mm/h' },
+                weatherCode: { value: sunsetWeatherData.weatherCode ?? sunsetWeatherData.weathercode ?? null, name: '天气', unit: '' }
               };
             }
 
@@ -1447,6 +1455,49 @@ class PredictionController {
     return analysis;
   }
 
+  _getWeatherText(weatherCode, precipitation = 0) {
+    if (precipitation >= 8) return '暴雨';
+    if (precipitation >= 4) return '大雨';
+    if (precipitation >= 1) return '下雨';
+    if (precipitation >= 0.1) return '小雨';
+
+    const code = Number(weatherCode);
+    if ([95, 96, 99].includes(code)) return '雷雨';
+    if ([80, 81, 82, 61, 63, 65, 66, 67].includes(code)) return '下雨';
+    if ([51, 53, 55, 56, 57].includes(code)) return '毛毛雨';
+    if ([71, 73, 75, 77, 85, 86].includes(code)) return '降雪';
+    if ([45, 48].includes(code)) return '有雾';
+    if (code === 0) return '晴';
+    if ([1, 2].includes(code)) return '少云';
+    if (code === 3) return '阴天';
+    return null;
+  }
+
+  _getPrecipPriorityMessage(weatherInput, weatherCode) {
+    const precip = weatherInput.precipitation ?? 0;
+    const lowClouds = weatherInput.lowClouds ?? 0;
+    const visibility = weatherInput.visibility ?? 0;
+    const humidity = weatherInput.humidity ?? 0;
+    const weatherText = this._getWeatherText(weatherCode, precip);
+
+    if (precip >= 4) {
+      return `今天${weatherText || '下雨'}（${precip.toFixed(1)}mm/h），如果晚霞时段还不停，基本不用看云层结构；重点是降水会直接挡住视野。`;
+    }
+    if (precip >= 1) {
+      return `今天${weatherText || '下雨'}（${precip.toFixed(1)}mm/h），需要先看晚霞时段是否停雨；如果刚好雨停且西边开缝，反而可能很漂亮。`;
+    }
+    if (precip >= 0.5 || ([61, 63, 65, 80, 81, 82, 95, 96, 99].includes(Number(weatherCode)))) {
+      return null;
+    }
+    if (visibility > 0 && visibility < 5) {
+      return `今天能见度较差（${visibility.toFixed(0)}km），即使云型合适，颜色也容易被雾霾/水汽削弱。`;
+    }
+    if (humidity >= 90 && lowClouds >= 50) {
+      return `今天湿度很高（${humidity.toFixed(0)}%）且低云厚，容易灰蒙蒙，火烧云观赏条件较差。`;
+    }
+    return null;
+  }
+
   /**
    * 生成火烧云专项分析（使用统一评分服务）
    *
@@ -1480,6 +1531,19 @@ class PredictionController {
     html += '<div class="fca-title">🔥 火烧云形成条件分析：</div>';
 
     const r = (icon, text) => `<div class="fca-row">${icon} ${text}</div>`;
+    const precip = weatherInput.precipitation ?? 0;
+    const weatherText = this._getWeatherText(weatherCode, precip);
+    const priorityMessage = this._getPrecipPriorityMessage(weatherInput, weatherCode);
+
+    if (weatherText) {
+      html += r('🌦️', `天气：${weatherText}${precip >= 0.1 ? `（降水 ${precip.toFixed(1)}mm/h）` : ''}`);
+    }
+
+    if (priorityMessage) {
+      html += `<div class="fca-summary">${priorityMessage}</div>`;
+      html += '</div>';
+      return html;
+    }
 
     // 高云 — 核心载体，阈值更细
     const hc = weatherInput.highClouds ?? 0;
@@ -1562,13 +1626,12 @@ class PredictionController {
     }
 
     // 降水
-    const precip = weatherInput.precipitation ?? 0;
     if (precip >= 2) {
-      html += r('❌', `降水较强（${precip.toFixed(1)}mm/h），基本无法观赏`);
+      html += r('❌', `降水较强（${precip.toFixed(1)}mm/h），若观赏时段仍在下，基本无法观赏`);
     } else if (precip >= 0.5) {
-      html += r('⚠️', `有降水（${precip.toFixed(1)}mm/h），火烧云概率降低`);
+      html += r('⚠️', `有降水（${precip.toFixed(1)}mm/h），需关注是否在日出/日落前后停雨；雨后开缝反而可能出大片颜色`);
     } else if (precip >= 0.1) {
-      html += r('⚠️', `轻微降水（${precip.toFixed(1)}mm/h），可能影响观赏`);
+      html += r('⚠️', `轻微降水（${precip.toFixed(1)}mm/h），可能影响观赏；若刚停雨且能见度转好，有雨后初晴机会`);
     }
 
     // 结语：直接用 predictionScore（卡片显示分），不再自己重算

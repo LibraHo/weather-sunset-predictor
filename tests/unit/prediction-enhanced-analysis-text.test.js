@@ -83,4 +83,83 @@ describe('PredictionController.generateEnhancedAnalysisText', () => {
     expect(html).not.toContain('post_rain');
     expect(html).not.toContain('| good | good |');
   });
+
+  test('should prioritize rain summary over verbose cloud-layer details', () => {
+    const controller = new PredictionController(mockStorageService);
+    controller.i18n = makeI18n();
+
+    const html = controller.generateEnhancedAnalysisText({
+      icon: '🌧️',
+      status: '不适合',
+      description: '测试描述',
+      score: 20,
+      precipitation: 6.2,
+      weatherCode: 63,
+      humidity: 92,
+      visibility: 3,
+      canvasAnalysis: {
+        score: 20,
+        breakdown: { highClouds: 70, midClouds: 50, lowClouds: 80 }
+      },
+      factors: {
+        precipitation: { value: 6.2 },
+        weatherCode: { value: 63 },
+        humidity: { value: 92 },
+        visibility: { value: 3 }
+      }
+    });
+
+    expect(html).toContain('今天大雨');
+    expect(html).toContain('如果晚霞时段还不停');
+    expect(html).not.toContain('高层云充沛');
+    expect(html).not.toContain('中层云适中');
+  });
+
+  test('should keep cloud and atmosphere analysis for moderate rain window', () => {
+    const controller = new PredictionController(mockStorageService);
+    controller.i18n = makeI18n();
+
+    const html = controller.generateEnhancedAnalysisText({
+      icon: '🌦️',
+      status: '有机会',
+      description: '测试描述',
+      score: 55,
+      precipitation: 0.8,
+      weatherCode: 61,
+      humidity: 78,
+      visibility: 12,
+      canvasAnalysis: {
+        score: 55,
+        breakdown: { highClouds: 50, midClouds: 35, lowClouds: 25 }
+      }
+    });
+
+    expect(html).toContain('天气：小雨');
+    expect(html).toContain('高层云充足');
+    expect(html).toContain('雨后开缝反而可能出大片颜色');
+  });
+
+  test('should include humidity and visibility details when not raining heavily', () => {
+    const controller = new PredictionController(mockStorageService);
+    controller.i18n = makeI18n();
+
+    const html = controller.generateEnhancedAnalysisText({
+      icon: '🔥',
+      status: '可看',
+      description: '测试描述',
+      score: 65,
+      humidity: 62,
+      visibility: 18,
+      precipitation: 0,
+      weatherCode: 1,
+      canvasAnalysis: {
+        score: 65,
+        breakdown: { highClouds: 45, midClouds: 35, lowClouds: 10 }
+      }
+    });
+
+    expect(html).toContain('天气：少云');
+    expect(html).toContain('能见度良好（18km）');
+    expect(html).toContain('湿度适中（62%）');
+  });
 });
