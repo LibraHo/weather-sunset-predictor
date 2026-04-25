@@ -13,6 +13,22 @@ describe('geocoding ranking', () => {
     expect(ranked[0].name).toContain('Tokyo');
   });
 
+  test('东京 alias also prefers Tokyo JP over Dongjing CN', () => {
+    const ranked = _private.rankGeocodingResults('东京', [
+      { name: 'Dongjing, Jiangxi, China', lat: 28.7, lon: 115.9, provider: 'openmeteo', countryCode: 'CN', type: 'PPL' },
+      { name: 'Tokyo, Japan', lat: 35.68, lon: 139.76, provider: 'openmeteo', countryCode: 'JP', population: 9733276, type: 'PPLC' }
+    ]);
+    expect(ranked[0].countryCode).toBe('JP');
+  });
+
+  test('洛杉矶 alias prefers Los Angeles US', () => {
+    const ranked = _private.rankGeocodingResults('洛杉矶', [
+      { name: 'Los Ángeles, Chile', lat: -37.47, lon: -72.35, provider: 'openmeteo', countryCode: 'CL', population: 125430, type: 'PPLA2' },
+      { name: 'Los Angeles, California, United States', lat: 34.05, lon: -118.24, provider: 'openmeteo', countryCode: 'US', population: 3820914, type: 'PPLA2' }
+    ]);
+    expect(ranked[0].countryCode).toBe('US');
+  });
+
   test('Chinese city query keeps CN result priority', () => {
     const ranked = _private.rankGeocodingResults('北京', [
       { name: 'Beijing, China', lat: 39.9, lon: 116.4, provider: 'openmeteo', countryCode: 'CN', population: 18960744, type: 'PPLC' },
