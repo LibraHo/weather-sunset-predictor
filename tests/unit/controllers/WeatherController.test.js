@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals';
+import { readFileSync } from 'fs';
 import WeatherController from '../../../src/controllers/WeatherController.js';
 
 describe('WeatherController - 24小时温度连续化', () => {
@@ -484,6 +485,26 @@ describe('WeatherController - 24小时温度连续化', () => {
   });
 
 
+  test('天气指标区应使用 2x3 模板并包含 6 个 SVG 指标卡', () => {
+    const html = readFileSync('index.html', 'utf8');
+    document.body.innerHTML = html;
+
+    const grid = document.querySelector('.weather-feature-stack.weather-metric-grid');
+    expect(grid).not.toBeNull();
+
+    const cards = [...grid.querySelectorAll('.weather-metric-card')];
+    expect(cards).toHaveLength(6);
+    expect(grid.querySelector('#current-uv-index')).not.toBeNull();
+    expect(grid.querySelector('[data-i18n="weather.uvIndex"]')).not.toBeNull();
+
+    cards.forEach(card => {
+      expect(card.querySelector('.weather-metric-icon svg')).not.toBeNull();
+      expect(card.querySelector('.weather-label')).not.toBeNull();
+      expect(card.querySelector('.weather-value')).not.toBeNull();
+    });
+  });
+
+
   test('updateWeatherDisplay: 应移除天气数据容器 hidden 类显示实时天气面板', () => {
     document.body.innerHTML = `
       <section id="weather-section" class="card hidden">
@@ -500,6 +521,8 @@ describe('WeatherController - 24小时温度连续化', () => {
         <span id="current-wind-direction-text"></span>
         <span id="current-pressure"></span>
         <span id="current-visibility"></span>
+        <span id="current-aerosol"></span>
+        <span id="current-uv-index"></span>
         <div id="weekly-cards"></div>
       </section>
     `;
@@ -516,13 +539,17 @@ describe('WeatherController - 24小时温度连续化', () => {
       windSpeed: 8,
       windDirection: 90,
       pressure: 1012,
-      visibility: 12
+      visibility: 12,
+      aerosolOpticalDepth: 0.12,
+      shortwaveRadiation: 620
     }], { name: '北京', lat: 39.9, lon: 116.4 });
 
     const weatherData = document.getElementById('weather-data');
     expect(weatherData.classList.contains('hidden')).toBe(false);
     expect(weatherData.style.display).toBe('block');
     expect(document.getElementById('weather-section').classList.contains('hidden')).toBe(false);
+    expect(document.getElementById('current-aerosol').textContent).toBe('AOD 0.12');
+    expect(document.getElementById('current-uv-index').textContent).toBe('6.2');
   });
 
   test('showError: 无 #weather-error 元素时不报错', () => {
