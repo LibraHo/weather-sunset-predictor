@@ -5601,3 +5601,146 @@ body.theme-dark .prediction-app-card {
 .score-breakdown-popover {
   z-index: 9999;
 }
+
+/* 需求46 最终修正：比例、文案、主题、弹层 */
+.score-gauge-large-wrap {
+  height: 154px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+.score-gauge-center {
+  height: 126px;
+  inset: 0 0 auto 0;
+  justify-content: center;
+  padding-top: 0;
+}
+.score-gauge-caption {
+  position: absolute;
+  top: 118px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  text-align: center;
+}
+.score-gauge-number { font-size: 2.05rem; letter-spacing: -0.045em; }
+.score-gauge-total { font-size: 0.72rem; }
+.score-gauge-grade { margin-top: 0; font-size: 0.82rem; line-height: 1; }
+.score-gauge-desc { font-size: 0.66rem; line-height: 1.1; }
+.score-gauge-caption .score-breakdown-hint-trigger {
+  position: static;
+  transform: none;
+  font-size: 0.58rem;
+  line-height: 1;
+  margin-top: 1px;
+}
+.app-main-time { font-size: clamp(2.15rem, 10.5vw, 3rem); }
+.app-info-row {
+  min-height: 48px;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: center;
+  row-gap: 2px;
+}
+.app-info-icon { grid-row: 1 / span 2; align-self: center; }
+.app-info-label { grid-column: 2; font-size: 0.75rem; line-height: 1.15; }
+.app-info-value { grid-column: 2; justify-self: start; font-size: 0.92rem; line-height: 1.15; }
+.cloud-condition-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 4px;
+  width: 100%;
+  font-size: 0.78rem;
+}
+.cloud-condition-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.76rem;
+}
+.cloud-condition-top strong { font-size: 0.82rem; white-space: nowrap; }
+.cloud-condition-track { width: 100%; margin-top: 7px; height: 6px; }
+.prediction-app-shell {
+  background: var(--glass-bg) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+.prediction-app-card,
+body.theme-light .prediction-app-card,
+body.theme-dark .prediction-app-card,
+body.theme-auto .prediction-app-card {
+  --app-card-bg: var(--glass-bg-heavy);
+  --app-text: var(--color-text);
+  --app-muted: var(--color-text-light);
+  --app-border: var(--color-border);
+}
+.score-summary-card,
+.cloud-condition-card,
+.app-analysis-card,
+.app-info-row,
+.analysis-item {
+  background: var(--glass-bg-heavy) !important;
+  border-color: var(--glass-border) !important;
+}
+.analysis-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  margin-bottom: 10px;
+}
+.analysis-item {
+  grid-template-columns: 16px minmax(3.9em, 0.58fr) minmax(0, 1.9fr);
+  gap: 5px;
+  min-height: 34px;
+  padding: 6px 7px;
+}
+.analysis-item-icon { width: 16px; height: 16px; font-size: 0.56rem; }
+.analysis-item-copy strong,
+.analysis-item-copy small {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+.analysis-item-copy strong { font-size: 0.68rem; line-height: 1.1; }
+.analysis-item-copy small { font-size: 0.62rem; line-height: 1.1; text-align: right; }
+.analysis-group-label { font-size: 0.72rem; padding: 2px 7px; margin-bottom: 5px; }
+.analysis-items { gap: 5px; }
+.analysis-group + .analysis-group { margin-top: 9px; }
+.prediction-app-card,
+.prediction-app-shell,
+.score-summary-card,
+.score-summary-left,
+.score-breakdown-trigger { overflow: visible; }
+.score-summary-card { position: relative; z-index: 20; }
+.score-breakdown-trigger { position: relative; z-index: 40; }
+.score-breakdown-popover { z-index: 9999; }
+body.theme-light .prediction-app-shell,
+body:not(.theme-dark):not(.theme-auto) .prediction-app-shell {
+  background: var(--glass-bg) !important;
+}
+@media (prefers-color-scheme: light) {
+  body.theme-auto .prediction-app-shell { background: var(--glass-bg) !important; }
+}
+@media (max-width: 430px) {
+  .score-gauge-large-wrap { width: 122px; height: 148px; }
+  .score-gauge-large { width: 122px; height: 122px; }
+  .score-gauge-center { height: 122px; }
+  .score-gauge-caption { top: 112px; }
+  .score-gauge-number { font-size: 1.92rem; }
+  .app-main-time { font-size: clamp(2rem, 10vw, 2.65rem); }
+  .app-info-icon { display: inline-flex; }
+  .app-info-row { min-height: 44px; }
+  .app-info-label { font-size: 0.7rem; }
+  .app-info-value { font-size: 0.84rem; }
+  .cloud-condition-top { font-size: 0.7rem; gap: 3px; }
+  .cloud-condition-label { font-size: 0.68rem; }
+  .cloud-condition-top strong { font-size: 0.74rem; }
+  .analysis-item { grid-template-columns: 15px minmax(3.7em, 0.55fr) minmax(0, 1.95fr); }
+  .analysis-item-copy strong { font-size: 0.64rem; }
+  .analysis-item-copy small { font-size: 0.58rem; }
+}
