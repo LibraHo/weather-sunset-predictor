@@ -13,14 +13,20 @@ class ShareCardGenerator {
 
     this.themes = {
       sunrise: {
-        bg: ['#FF8C42', '#FF6B8A', '#FFA751'],
-        accent: '#FF6B8A',
-        gaugeColors: ['#FF6B8A', '#FFB347', '#87CEEB'],
+        bg: ['#111827', '#2A1748', '#5B2C64'],
+        accent: '#FFB35C',
+        accent2: '#FF7A5A',
+        card: 'rgba(17,24,39,0.68)',
+        cardStroke: 'rgba(255,255,255,0.16)',
+        gaugeColors: ['#FFB35C', '#F59E0B', '#93C5FD'],
       },
       sunset: {
-        bg: ['#C62828', '#E65100', '#FF6F00'],
-        accent: '#FF6F00',
-        gaugeColors: ['#FF6F00', '#FFAB40', '#87CEEB'],
+        bg: ['#0B1020', '#191336', '#321736'],
+        accent: '#FF9F45',
+        accent2: '#F97316',
+        card: 'rgba(15,23,42,0.72)',
+        cardStroke: 'rgba(255,255,255,0.14)',
+        gaugeColors: ['#FF9F45', '#F59E0B', '#93C5FD'],
       },
     };
   }
@@ -45,14 +51,14 @@ class ShareCardGenerator {
     // 2. 头部品牌
     const y = this._header(ctx, isSunrise);
 
-    // 3. 仪表盘
+    // 3. 核心结论区（替代旧大圆环，降低装饰噪音）
     const yAfterGauge = this._gauge(ctx, prediction.score, prediction.quality, theme, y);
 
     // 4. 地点 + 日期 + 时段
     const yAfterInfo = this._info(ctx, locationName, prediction, period, yAfterGauge);
 
     // 5. 时间窗口
-    const yAfterTime = this._timeWindow(ctx, prediction, period, yAfterInfo);
+    const yAfterTime = this._timeWindow(ctx, prediction, period, yAfterInfo, theme);
 
     // 6. 云层概况
     const yAfterCloud = this._cloudSummary(ctx, prediction, theme, yAfterTime);
@@ -70,44 +76,69 @@ class ShareCardGenerator {
   _bg(ctx, theme) {
     const g = ctx.createLinearGradient(0, 0, 0, this.H);
     g.addColorStop(0, theme.bg[0]);
-    g.addColorStop(0.5, theme.bg[1]);
+    g.addColorStop(0.54, theme.bg[1]);
     g.addColorStop(1, theme.bg[2]);
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, this.W, this.H);
 
-    // 装饰光晕
-    [[0, 0, 300, 'rgba(255,255,255,0.15)'], [this.W, this.H, 250, 'rgba(255,200,150,0.12)']].forEach(([x, y, r, c]) => {
-      const glow = ctx.createRadialGradient(x, y, 0, x, y, r);
-      glow.addColorStop(0, c);
-      glow.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = glow;
-      ctx.fillRect(0, 0, this.W, this.H);
-    });
+    // 远处霞光：只做点睛，不再整张糊成橙红
+    const horizon = ctx.createRadialGradient(this.W * 0.72, this.H * 0.18, 0, this.W * 0.72, this.H * 0.18, 420);
+    horizon.addColorStop(0, 'rgba(255,158,76,0.28)');
+    horizon.addColorStop(0.45, 'rgba(244,114,72,0.13)');
+    horizon.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = horizon;
+    ctx.fillRect(0, 0, this.W, this.H);
+
+    const coolGlow = ctx.createRadialGradient(30, this.H * 0.72, 0, 30, this.H * 0.72, 520);
+    coolGlow.addColorStop(0, 'rgba(59,130,246,0.16)');
+    coolGlow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = coolGlow;
+    ctx.fillRect(0, 0, this.W, this.H);
+
+    // 细微颗粒，避免纯渐变塑料感
+    ctx.fillStyle = 'rgba(255,255,255,0.018)';
+    for (let i = 0; i < 180; i++) {
+      const x = (i * 97) % this.W;
+      const y = (i * 193) % this.H;
+      ctx.fillRect(x, y, 1, 1);
+    }
+  }
+
+  _glassCard(ctx, x, y, w, h, theme, radius = 26) {
+    ctx.save();
+    ctx.fillStyle = theme.card;
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, radius);
+    ctx.fill();
+    ctx.strokeStyle = theme.cardStroke;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
   }
 
   /* ── 头部品牌 ── */
   _header(ctx, isSunrise) {
-    const cx = this.W / 2;
-    const y0 = 70;
+    const y0 = 62;
+    const x0 = 70;
 
-    // 霞客 logo（Canvas 向量绘制，导出图稳定可用）
-    this._drawBrandLogo(ctx, cx - 170, y0 + 58, isSunrise);
+    this._drawBrandLogo(ctx, x0 + 28, y0 + 28, isSunrise);
 
-    // 太阳 emoji
-    ctx.font = `48px ${this.font}`;
-    ctx.textAlign = 'center';
-    ctx.fillText(isSunrise ? '🌄' : '🌅', cx, y0 + 36);
-
-    // 品牌名
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = `bold 32px ${this.font}`;
-    ctx.fillText('霞客 · Sunset Voyager', cx, y0 + 90);
+    ctx.font = `bold 30px ${this.font}`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText('霞客', x0 + 76, y0 + 26);
 
-    ctx.fillStyle = 'rgba(255,255,255,0.7)';
-    ctx.font = `20px ${this.font}`;
-    ctx.fillText('捕捉天空最美的瞬间', cx, y0 + 122);
+    ctx.fillStyle = 'rgba(255,255,255,0.58)';
+    ctx.font = `18px ${this.font}`;
+    ctx.fillText('Sunset Voyager', x0 + 76, y0 + 54);
 
-    return y0 + 155;
+    ctx.textAlign = 'right';
+    ctx.fillStyle = 'rgba(255,255,255,0.62)';
+    ctx.font = `18px ${this.font}`;
+    ctx.fillText('火烧云预测分享', this.W - 70, y0 + 42);
+
+    return y0 + 104;
   }
 
   _drawBrandLogo(ctx, x, y, isSunrise) {
@@ -152,56 +183,72 @@ class ShareCardGenerator {
     ctx.restore();
   }
 
-  /* ── 仪表盘 ── */
+  /* ── 核心结论 ── */
   _gauge(ctx, score, quality, theme, startY) {
-    const cx = this.W / 2;
-    const cy = startY + 120;
-    const R = 110;
-    const lw = 18;
+    const cardW = 620;
+    const cardH = 245;
+    const cardX = (this.W - cardW) / 2;
+    const cardY = startY;
+    const scoreNum = Math.max(0, Math.min(100, Math.round(score || 0)));
 
-    const scoreNum = Math.round(score || 0);
-    let color = theme.gaugeColors[2]; // fair
+    let color = theme.gaugeColors[2];
     if (scoreNum >= 70) color = theme.gaugeColors[0];
     else if (scoreNum >= 40) color = theme.gaugeColors[1];
 
-    // 背景环
-    ctx.beginPath();
-    ctx.arc(cx, cy, R, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-    ctx.lineWidth = lw;
-    ctx.stroke();
-
-    // 进度环
-    const start = -Math.PI / 2;
-    const end = start + Math.PI * 2 * Math.min(scoreNum, 100) / 100;
-    ctx.beginPath();
-    ctx.arc(cx, cy, R, start, end);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = lw;
-    ctx.lineCap = 'round';
-    ctx.stroke();
-
-    // 分数
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = `bold 64px ${this.font}`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(scoreNum.toString(), cx, cy - 8);
-
-    // "分"
-    ctx.font = `22px ${this.font}`;
-    ctx.textBaseline = 'middle';
-    ctx.fillText('分', cx + 46, cy + 8);
-
-    // 等级
     const qualityLabels = { excellent: '极佳', good: '良好', fair: '一般', poor: '较差' };
-    const label = qualityLabels[quality] || '—';
-    ctx.font = `bold 28px ${this.font}`;
-    ctx.fillStyle = color;
-    ctx.textBaseline = 'alphabetic';
-    ctx.fillText(label, cx, cy + 55);
+    const label = qualityLabels[quality] || (scoreNum >= 70 ? '极佳' : scoreNum >= 40 ? '良好' : '一般');
 
-    return cy + 110;
+    this._glassCard(ctx, cardX, cardY, cardW, cardH, theme, 30);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.62)';
+    ctx.font = `22px ${this.font}`;
+    ctx.textAlign = 'left';
+    ctx.fillText('火烧云概率', cardX + 42, cardY + 55);
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = `bold 86px ${this.font}`;
+    ctx.fillText(String(scoreNum), cardX + 40, cardY + 138);
+
+    ctx.font = `bold 30px ${this.font}`;
+    ctx.fillStyle = 'rgba(255,255,255,0.88)';
+    ctx.fillText('分', cardX + 150, cardY + 130);
+
+    ctx.fillStyle = color;
+    ctx.font = `bold 34px ${this.font}`;
+    ctx.textAlign = 'right';
+    ctx.fillText(label, cardX + cardW - 42, cardY + 84);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.54)';
+    ctx.font = `20px ${this.font}`;
+    ctx.fillText(scoreNum >= 70 ? '值得专门等一等' : scoreNum >= 40 ? '可以顺路观察' : '不必专门出门', cardX + cardW - 42, cardY + 118);
+
+    const barX = cardX + 42;
+    const barY = cardY + 174;
+    const barW = cardW - 84;
+    const barH = 12;
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, barW, barH, 8);
+    ctx.fill();
+    const pg = ctx.createLinearGradient(barX, barY, barX + barW, barY);
+    pg.addColorStop(0, '#FBBF24');
+    pg.addColorStop(0.55, theme.accent);
+    pg.addColorStop(1, theme.accent2 || theme.accent);
+    ctx.fillStyle = pg;
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, Math.max(8, barW * scoreNum / 100), barH, 8);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(255,255,255,0.44)';
+    ctx.font = `16px ${this.font}`;
+    ctx.textAlign = 'left';
+    ctx.fillText('0', barX, barY + 38);
+    ctx.textAlign = 'center';
+    ctx.fillText('50', barX + barW / 2, barY + 38);
+    ctx.textAlign = 'right';
+    ctx.fillText('100', barX + barW, barY + 38);
+
+    return cardY + cardH + 26;
   }
 
   /* ── 地点 + 日期 + 时段 ── */
@@ -227,20 +274,14 @@ class ShareCardGenerator {
   }
 
   /* ── 时间窗口 ── */
-  _timeWindow(ctx, prediction, period, startY) {
+  _timeWindow(ctx, prediction, period, startY, theme = this.themes.sunset) {
     const cx = this.W / 2;
     const cardW = 620;
     const cardH = 110;
     const cardX = (this.W - cardW) / 2;
     const cardY = startY + 20;
 
-    // 半透明卡片
-    ctx.save();
-    ctx.fillStyle = 'rgba(255,255,255,0.12)';
-    ctx.beginPath();
-    ctx.roundRect(cardX, cardY, cardW, cardH, 16);
-    ctx.fill();
-    ctx.restore();
+    this._glassCard(ctx, cardX, cardY, cardW, cardH, { ...theme, card: 'rgba(15,23,42,0.52)' }, 22);
 
     // 日出/日落时间
     const sunTime = period === 'sunrise'
@@ -273,13 +314,7 @@ class ShareCardGenerator {
     const cardX = (this.W - cardW) / 2;
     const cardY = startY;
 
-    // 半透明卡片
-    ctx.save();
-    ctx.fillStyle = 'rgba(255,255,255,0.12)';
-    ctx.beginPath();
-    ctx.roundRect(cardX, cardY, cardW, cardH, 16);
-    ctx.fill();
-    ctx.restore();
+    this._glassCard(ctx, cardX, cardY, cardW, cardH, theme, 22);
 
     const cl = prediction.cloudLayers || {};
     const high = Math.round(cl.high ?? 0);
@@ -288,9 +323,9 @@ class ShareCardGenerator {
 
     // 三栏
     const cols = [
-      { label: '高云', value: high, color: '#90CAF9' },
-      { label: '中云', value: mid, color: '#64B5F6' },
-      { label: '低云', value: low, color: '#42A5F5' },
+      { label: '高云', value: high, color: '#FDE68A' },
+      { label: '中云', value: mid, color: '#FDBA74' },
+      { label: '低云', value: low, color: low >= 50 ? '#FB7185' : '#93C5FD' },
     ];
     const colW = cardW / 3;
 
@@ -355,12 +390,7 @@ class ShareCardGenerator {
     const cardX = (this.W - cardW) / 2;
     const cardY = startY;
 
-    ctx.save();
-    ctx.fillStyle = 'rgba(255,255,255,0.15)';
-    ctx.beginPath();
-    ctx.roundRect(cardX, cardY, cardW, cardH, 16);
-    ctx.fill();
-    ctx.restore();
+    this._glassCard(ctx, cardX, cardY, cardW, cardH, { ...theme, card: 'rgba(255,255,255,0.10)' }, 22);
 
     ctx.fillStyle = '#FFFFFF';
     ctx.font = `bold 24px ${this.font}`;
@@ -390,7 +420,7 @@ class ShareCardGenerator {
     ctx.fillText('sunset.bjhyc.online', cx, y);
 
     ctx.font = `16px ${this.font}`;
-    ctx.fillText('🌅 霞客 · 记录每一次绚丽', cx, y + 24);
+    ctx.fillText('霞客 · 记录每一次绚丽', cx, y + 24);
   }
 
   /* ── 工具方法 ── */

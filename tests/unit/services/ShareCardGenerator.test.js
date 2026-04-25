@@ -39,8 +39,8 @@ describe('ShareCardGenerator', () => {
   test('constructor initializes fixed 9:16 canvas size and themes', () => {
     expect(generator.W).toBe(750);
     expect(generator.H).toBe(1334);
-    expect(generator.themes.sunrise.accent).toBe('#FF6B8A');
-    expect(generator.themes.sunset.accent).toBe('#FF6F00');
+    expect(generator.themes.sunrise.accent).toBe('#FFB35C');
+    expect(generator.themes.sunset.accent).toBe('#FF9F45');
   });
 
   test('_fmtDate and _fmtTime handle empty and date-like values', () => {
@@ -63,7 +63,7 @@ describe('ShareCardGenerator', () => {
     expect(texts).toContain('20');
     expect(texts).toContain('极佳');
     expect(texts).toContain('良好');
-    expect(texts).toContain('—');
+    expect(texts).toContain('一般');
   });
 
   test('_info truncates long locations and switches period label', () => {
