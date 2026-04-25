@@ -1194,6 +1194,7 @@ class PredictionController {
         { label: '中云', value: Number(clouds.mid ?? 0), color: '#8B9DFF' },
         { label: '低云', value: Number(clouds.low ?? 0), color: '#B7C0CF' }
       ],
+      quality: prediction.quality || this.getQualityFromScore(score),
       analysis: this.buildAnalysisGroups(prediction),
       conclusion: this.buildAnalysisConclusion(prediction, score, clouds)
     };
@@ -1215,31 +1216,50 @@ class PredictionController {
     return '观赏条件偏弱';
   }
 
+  getQualityFromScore(score) {
+    if (score >= 80) return 'excellent';
+    if (score >= 60) return 'good';
+    if (score >= 40) return 'fair';
+    return 'poor';
+  }
+
+  getScoreTheme(quality, score) {
+    const normalized = quality || this.getQualityFromScore(score);
+    const themes = {
+      excellent: ['#22C55E', '#84CC16', '#FACC15'],
+      good: ['#F59E0B', '#F97316', '#FB7185'],
+      fair: ['#38BDF8', '#818CF8', '#A78BFA'],
+      poor: ['#94A3B8', '#64748B', '#475569']
+    };
+    return themes[normalized] || themes.poor;
+  }
+
   renderLargeScoreGauge(forecast, type) {
     const radius = 68;
     const circumference = 2 * Math.PI * radius;
     const progress = Math.max(0, Math.min(100, forecast.score));
     const scoreFill = circumference * (progress / 100);
     const scoreGap = circumference - scoreFill;
+    const scoreTheme = this.getScoreTheme(forecast.quality, forecast.score);
     return `
       <div class="score-gauge-large-wrap">
         <svg class="score-gauge-large" viewBox="0 0 180 180" width="160" height="160" aria-hidden="true">
           <defs>
-            <linearGradient id="app-gauge-grad-${type}" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#6C63FF"/>
-              <stop offset="55%" stop-color="#D946EF"/>
-              <stop offset="100%" stop-color="#FF6B6B"/>
+            <linearGradient id="app-gauge-grad-${type}-${forecast.quality}" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="${scoreTheme[0]}"/>
+              <stop offset="55%" stop-color="${scoreTheme[1]}"/>
+              <stop offset="100%" stop-color="${scoreTheme[2]}"/>
             </linearGradient>
           </defs>
           <circle cx="90" cy="90" r="${radius}" fill="none" stroke="#EEF1F7" stroke-width="12"/>
-          <circle cx="90" cy="90" r="${radius}" fill="none" stroke="url(#app-gauge-grad-${type})" stroke-width="12"
+          <circle cx="90" cy="90" r="${radius}" fill="none" stroke="url(#app-gauge-grad-${type}-${forecast.quality})" stroke-width="12"
             stroke-dasharray="${scoreFill.toFixed(2)} ${scoreGap.toFixed(2)}" stroke-dashoffset="${(circumference * 0.25).toFixed(2)}" stroke-linecap="round"/>
         </svg>
         <div class="score-gauge-center">
-          <div><span class="score-gauge-number">${forecast.score.toFixed(0)}</span><span class="score-gauge-total">/100</span></div>
+          <div><span class="score-gauge-number" style="color:${scoreTheme[1]}">${forecast.score.toFixed(0)}</span><span class="score-gauge-total">/100</span></div>
         </div>
         <div class="score-gauge-caption">
-          <div class="score-gauge-grade">${forecast.scoreLabel}</div>
+          <div class="score-gauge-grade" style="color:${scoreTheme[1]}">${forecast.scoreLabel}</div>
           <div class="score-gauge-desc">${forecast.scoreDesc}</div>
           <div class="score-breakdown-hint-trigger">查看评分明细</div>
         </div>
