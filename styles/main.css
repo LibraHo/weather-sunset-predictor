@@ -5392,3 +5392,59 @@ body.theme-dark .prediction-app-card {
 .prediction-app-nav-compact > div:first-child {
   display: block;
 }
+
+/* 需求46 修正：评分/时间比例与信息行上下结构 */
+.score-gauge-number {
+  font-size: 2.45rem;
+  letter-spacing: -0.045em;
+}
+.score-gauge-total {
+  font-size: 0.9rem;
+}
+.score-gauge-grade {
+  margin-top: 2px;
+  font-size: 1rem;
+}
+.score-gauge-desc {
+  font-size: 0.76rem;
+}
+.score-gauge-center .score-breakdown-hint-trigger {
+  top: calc(100% + 2px);
+  font-size: 0.62rem;
+}
+.app-main-time {
+  font-size: clamp(2.15rem, 10.5vw, 3rem);
+}
+.app-info-row {
+  min-height: 48px;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: center;
+  row-gap: 2px;
+}
+.app-info-icon {
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+.app-info-label {
+  grid-column: 2;
+  font-size: 0.75rem;
+  line-height: 1.15;
+}
+.app-info-value {
+  grid-column: 2;
+  justify-self: start;
+  font-size: 0.92rem;
+  line-height: 1.15;
+}
+@media (max-width: 430px) {
+  .score-gauge-number { font-size: 2.18rem; }
+  .score-gauge-total { font-size: 0.78rem; }
+  .score-gauge-grade { font-size: 0.92rem; }
+  .score-gauge-desc { font-size: 0.72rem; }
+  .app-main-time { font-size: clamp(2rem, 10vw, 2.65rem); }
+  .app-info-icon { display: inline-flex; }
+  .app-info-row { min-height: 44px; }
+  .app-info-label { font-size: 0.7rem; }
+  .app-info-value { font-size: 0.84rem; }
+}
