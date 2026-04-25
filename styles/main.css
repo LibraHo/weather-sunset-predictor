@@ -6065,3 +6065,133 @@ html[data-theme="light"] .phenomenon-date-tag {
   .analysis-item-copy strong { font-size: 0.54rem !important; letter-spacing: -0.055em; }
   .analysis-item-copy small { font-size: 0.50rem !important; letter-spacing: -0.06em; }
 }
+
+/* Safari 手动亮色最终兜底：按实际主题类覆盖所有残留深色/渐变状态 */
+html.theme-actual-light,
+body.theme-actual-light,
+html[data-actual-theme="light"],
+body[data-actual-theme="light"] {
+  color-scheme: light !important;
+  --color-bg: #f5f5f5;
+  --color-card-bg: #ffffff;
+  --color-surface: rgba(255,255,255,0.97);
+  --color-text: #333333;
+  --color-text-light: #666666;
+  --color-border: #e0e0e0;
+  --glass-bg: rgba(255,255,255,0.70);
+  --glass-bg-hover: rgba(255,255,255,0.80);
+  --glass-bg-heavy: rgba(255,255,255,0.85);
+  --glass-border: rgba(255,255,255,0.42);
+  --glass-shadow: 0 4px 30px rgba(0,0,0,0.10);
+  --radar-bg: var(--glass-bg-heavy);
+  --radar-border: var(--glass-border);
+  --radar-title: var(--color-text);
+  --radar-subtitle: var(--color-text-light);
+  --radar-legend-text: var(--color-text);
+}
+html.theme-actual-light body,
+html[data-actual-theme="light"] body,
+body.theme-actual-light,
+body[data-actual-theme="light"] {
+  background: var(--color-bg) !important;
+  color: var(--color-text) !important;
+}
+html.theme-actual-light header,
+html.theme-actual-light .card,
+html.theme-actual-light .weather-glass-panel,
+html.theme-actual-light .weather-visual-panel,
+html.theme-actual-light .weather-feature-item,
+html.theme-actual-light .radar-chart-container,
+html.theme-actual-light .radar-compass-container,
+html.theme-actual-light .prediction-app-shell,
+html.theme-actual-light .prediction-app-card,
+html.theme-actual-light .phenomenon-title-card,
+html.theme-actual-light .score-summary-card,
+html.theme-actual-light .cloud-condition-card,
+html.theme-actual-light .app-analysis-card,
+html.theme-actual-light .app-info-row,
+html.theme-actual-light .analysis-item,
+html.theme-actual-light .score-breakdown-popover,
+html[data-actual-theme="light"] header,
+html[data-actual-theme="light"] .card,
+html[data-actual-theme="light"] .weather-glass-panel,
+html[data-actual-theme="light"] .weather-visual-panel,
+html[data-actual-theme="light"] .weather-feature-item,
+html[data-actual-theme="light"] .radar-chart-container,
+html[data-actual-theme="light"] .radar-compass-container,
+html[data-actual-theme="light"] .prediction-app-shell,
+html[data-actual-theme="light"] .prediction-app-card,
+html[data-actual-theme="light"] .phenomenon-title-card,
+html[data-actual-theme="light"] .score-summary-card,
+html[data-actual-theme="light"] .cloud-condition-card,
+html[data-actual-theme="light"] .app-analysis-card,
+html[data-actual-theme="light"] .app-info-row,
+html[data-actual-theme="light"] .analysis-item,
+html[data-actual-theme="light"] .score-breakdown-popover {
+  background: var(--glass-bg-heavy) !important;
+  border-color: var(--glass-border) !important;
+  color: var(--color-text) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+html.theme-actual-light .prediction-app-card,
+html[data-actual-theme="light"] .prediction-app-card {
+  --app-card-bg: var(--glass-bg-heavy);
+  --app-text: var(--color-text);
+  --app-muted: var(--color-text-light);
+  --app-border: var(--color-border);
+}
+
+/* 需求46 修正：标题标签/分享按钮居中，菜单与分数明细统一磨砂 glass */
+.phenomenon-title-card {
+  justify-content: center !important;
+  text-align: center;
+}
+.phenomenon-title-copy {
+  justify-items: center;
+  text-align: center;
+}
+.phenomenon-date-tag {
+  justify-self: center;
+}
+.prediction-nav-share,
+.prediction-share-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+}
+.prediction-nav-share .share-btn-icon,
+.prediction-share-btn .share-btn-icon {
+  display: block;
+  margin: auto;
+}
+.home-view-menu-dropdown,
+.prediction-share-dropdown,
+.score-breakdown-popover {
+  background: color-mix(in srgb, var(--glass-bg-heavy) 88%, transparent) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+  color: var(--color-text) !important;
+  backdrop-filter: blur(var(--glass-blur-heavy)) saturate(1.25) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy)) saturate(1.25) !important;
+}
+.home-view-option,
+.share-option {
+  color: var(--color-text) !important;
+}
+.home-view-option:hover,
+.share-option:hover {
+  background: var(--glass-bg-hover) !important;
+}
+.score-breakdown-popover {
+  isolation: isolate;
+}
+.score-breakdown-popover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--glass-bg-heavy) 52%, transparent);
+  pointer-events: none;
+  z-index: -1;
+}

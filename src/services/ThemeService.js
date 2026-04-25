@@ -64,7 +64,7 @@ class ThemeService {
   applyTheme(theme) {
     const root = document.documentElement;
     const body = document.body;
-    const themeClasses = ['theme-light', 'theme-dark', 'theme-auto'];
+    const themeClasses = ['theme-light', 'theme-dark', 'theme-auto', 'theme-actual-light', 'theme-actual-dark'];
 
     // Safari 对 prefers-color-scheme 与表单/滚动条渲染更激进：
     // 主题类同时挂到 html/body，并显式设置 colorScheme，确保手动 light 能压过系统暗色。
@@ -72,21 +72,28 @@ class ThemeService {
     body.classList.remove(...themeClasses);
 
     let themeClass = 'theme-light';
+    let actualTheme = this.THEMES.LIGHT;
     if (theme === this.THEMES.AUTO) {
       themeClass = 'theme-auto';
-      root.style.colorScheme = this.getSystemTheme();
+      actualTheme = this.getSystemTheme();
+      root.style.colorScheme = actualTheme;
     } else if (theme === this.THEMES.DARK) {
       themeClass = 'theme-dark';
+      actualTheme = this.THEMES.DARK;
       root.style.colorScheme = 'dark';
     } else {
       themeClass = 'theme-light';
+      actualTheme = this.THEMES.LIGHT;
       root.style.colorScheme = 'light';
     }
 
-    root.classList.add(themeClass);
-    body.classList.add(themeClass);
+    const actualThemeClass = actualTheme === this.THEMES.DARK ? 'theme-actual-dark' : 'theme-actual-light';
+    root.classList.add(themeClass, actualThemeClass);
+    body.classList.add(themeClass, actualThemeClass);
     root.setAttribute('data-theme', theme);
+    root.setAttribute('data-actual-theme', actualTheme);
     body.setAttribute('data-theme', theme);
+    body.setAttribute('data-actual-theme', actualTheme);
 
     // 保存主题
     this.currentTheme = theme;
@@ -141,6 +148,13 @@ class ThemeService {
           console.log(`[ThemeService] 系统主题已变化为: ${newTheme}`);
 
           document.documentElement.style.colorScheme = newTheme;
+          document.documentElement.classList.remove('theme-actual-light', 'theme-actual-dark');
+          document.body.classList.remove('theme-actual-light', 'theme-actual-dark');
+          const actualClass = newTheme === this.THEMES.DARK ? 'theme-actual-dark' : 'theme-actual-light';
+          document.documentElement.classList.add(actualClass);
+          document.body.classList.add(actualClass);
+          document.documentElement.setAttribute('data-actual-theme', newTheme);
+          document.body.setAttribute('data-actual-theme', newTheme);
 
           // 触发主题变化事件
           this.dispatchThemeChangeEvent(newTheme);

@@ -162,3 +162,25 @@
     height: 23px;
   }
 }
+
+/* 需求46 修正：分享小菜单与全站 glass 样式统一 */
+.prediction-share-dropdown {
+  background: color-mix(in srgb, var(--glass-bg-heavy) 88%, transparent) !important;
+  border-color: var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+  color: var(--color-text) !important;
+  backdrop-filter: blur(var(--glass-blur-heavy)) saturate(1.25) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy)) saturate(1.25) !important;
+}
+.prediction-share-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+}
+.prediction-share-btn .share-btn-icon {
+  display: block;
+  margin: auto;
+}
+.share-option { color: var(--color-text) !important; }
+.share-option:hover { background: var(--glass-bg-hover) !important; }
