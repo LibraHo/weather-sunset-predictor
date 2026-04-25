@@ -378,6 +378,14 @@ CREATE TABLE api_token_usage (
 - 429 返回 `RATE_LIMITED`，401 返回 `UNAUTHORIZED`，403 返回 `TOKEN_DISABLED` 或 `SCOPE_DENIED`。
 - 日志字段：tokenId、endpoint、status、elapsedMs、createdAt、ipHash、userAgent 简要，不长期保存完整 IP 明文。
 
+
+**测试覆盖要求（需求45 必须重点覆盖）**：
+- Token/鉴权：无 Token、格式错误、hash 不匹配、禁用、scope 不足、分钟/日额度超限、明文只返回一次、列表和日志不泄露明文。
+- Agent API：城市名、经纬度、sunrise/sunset、simple/full、无效参数、上游失败降级、字段 schema 稳定。
+- API申请：邮箱/联系方式必填、用途可选、提交入库、后台列表、审核通过创建 Token、拒绝申请、申请-token 关联、前台不直接返回 Token。
+- API接入/API申请 UI：入口存在、禁止商用文案存在、复用现有主题样式、移动端不溢出、示例代码可复制且不含真实 Token。
+- OpenAPI：JSON 可解析、鉴权 scheme 正确、schema 与实际返回一致。
+
 **分期计划**：
 - Phase 1（MVP）：Token 存储/鉴权/后台管理 + `/api/agent/forecast` + 单测/集成测试。
 - Phase 2：`explain`、`geocode`、OpenAPI JSON、用量统计图。
