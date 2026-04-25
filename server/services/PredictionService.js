@@ -264,8 +264,9 @@ class PredictionService {
 
     // ========== 计算日出/日落时间 ==========
 
-    const sunsetTime = SunCalculator.getSunsetTime(date, lat, lon);
-    const sunriseTime = SunCalculator.getSunriseTime(date, lat, lon);
+    const timezoneOptions = { timezone: weatherData.timezone || weatherData.timeZone || null };
+    const sunsetTime = SunCalculator.getSunsetTime(date, lat, lon, timezoneOptions);
+    const sunriseTime = SunCalculator.getSunriseTime(date, lat, lon, timezoneOptions);
 
     // ========== 统一评分 ==========
 
@@ -320,6 +321,7 @@ class PredictionService {
       breakdown: unifiedResult.breakdown,
       sunsetTime: sunsetTime,
       sunriseTime: sunriseTime,
+      timezone: timezoneOptions.timezone,
       type: type,
       goldenHour: goldenHour,
       blueHour: blueHour,
