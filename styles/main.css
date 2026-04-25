@@ -6326,3 +6326,56 @@ html[data-actual-theme="light"] .prediction-app-card {
   .cloud-condition-top strong { font-size: 0.88rem !important; }
   .cloud-condition-track { margin-top: 4px !important; height: 4px !important; }
 }
+
+/* 火烧云文字分析条目：压缩条目上下间距 */
+.app-analysis-card {
+  padding: 14px !important;
+}
+.analysis-card-title {
+  margin-bottom: 10px !important;
+}
+.analysis-group {
+  margin-top: 8px !important;
+}
+.analysis-group + .analysis-group {
+  margin-top: 10px !important;
+}
+.analysis-group-label {
+  margin-bottom: 6px !important;
+  line-height: 1.15 !important;
+}
+.analysis-items {
+  gap: 5px !important;
+}
+.analysis-item {
+  padding: 7px 9px !important;
+  min-height: unset !important;
+  gap: 8px !important;
+}
+.analysis-item-copy {
+  gap: 2px !important;
+}
+.analysis-item-copy strong {
+  line-height: 1.16 !important;
+}
+.analysis-item-copy small {
+  line-height: 1.28 !important;
+}
+.conclusion-banner {
+  margin-top: 10px !important;
+  padding: 9px 10px !important;
+}
+.fca-metric-grid {
+  gap: 5px !important;
+}
+.fca-row,
+.fca-metric {
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+}
+@media (max-width: 390px) {
+  .app-analysis-card { padding: 12px !important; }
+  .analysis-items { gap: 4px !important; }
+  .analysis-item { padding: 6px 8px !important; gap: 7px !important; }
+  .analysis-group + .analysis-group { margin-top: 8px !important; }
+}
