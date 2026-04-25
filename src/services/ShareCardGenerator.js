@@ -1,14 +1,14 @@
 /**
  * ShareCardGenerator - 分享卡片图片生成器
  *
- * 纯 Canvas API 绘制，750×1334（9:16 竖屏）
+ * 纯 Canvas API 绘制，750×1080（社交分享竖图，减少底部空白）
  * 内容：品牌 → 分数仪表盘 → 地点日期 → 时间窗口 → 云层概况 → 一句话结语 → 水印
  */
 
 class ShareCardGenerator {
   constructor() {
     this.W = 750;
-    this.H = 1334;
+    this.H = 1080;
     this.font = '"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif';
 
     this.themes = {
