@@ -1275,32 +1275,24 @@ class PredictionController {
     const aerosol = prediction?.breakdown?.aerosolScattering;
     const aerosolFactor = prediction?.renderingAnalysis?.aerosolFactor ?? aerosol?.factor;
 
+    const row = (label, value, hint, className = '') => `
+      <div class="score-breakdown-row ${className}">
+        <span class="score-breakdown-key">${label}</span>
+        <span class="score-breakdown-val">${value}</span>
+        <span class="score-breakdown-hint">${hint}</span>
+      </div>`;
+
     return `
       <div class="score-breakdown-popover" hidden>
-        <div class="score-breakdown-row">
-          <span class="score-breakdown-key">${this.i18n.t('prediction.composite.finalScore')}</span>
-          <span class="score-breakdown-val">${fmt(prediction?.score, 0)}</span>
-        </div>
-        <div class="score-breakdown-row">
-          <span class="score-breakdown-key">${this.i18n.t('prediction.composite.title')}</span>
-          <span class="score-breakdown-val">${fmt(baseScore, 1)}</span>
-        </div>
-        <div class="score-breakdown-row">
-          <span class="score-breakdown-key">${this.i18n.t('prediction.canvas.title')}</span>
-          <span class="score-breakdown-val">${fmt(canvasScore, 1)}</span>
-        </div>
-        <div class="score-breakdown-row">
-          <span class="score-breakdown-key">${this.i18n.t('prediction.lightPath.title')}</span>
-          <span class="score-breakdown-val">${fmt(lightPathScore, 1)}</span>
-        </div>
-        <div class="score-breakdown-row">
-          <span class="score-breakdown-key">${this.i18n.t('prediction.rendering.title')}</span>
-          <span class="score-breakdown-val">×${fmt(renderingFactor, 2)}</span>
-        </div>
-        ${aerosolFactor != null ? `<div class="score-breakdown-row">
-          <span class="score-breakdown-key">${this.i18n.t('prediction.rendering.aerosol')}</span>
-          <span class="score-breakdown-val">×${fmt(aerosolFactor, 2)}</span>
-        </div>` : ''}
+        <div class="score-breakdown-title">分数明细</div>
+        ${row(this.i18n.t('prediction.composite.finalScore'), fmt(prediction?.score, 0), '最终展示分', 'score-breakdown-row-total')}
+        <div class="score-breakdown-formula">基础分 = 画布 ×0.8 + 光路 ×0.2</div>
+        ${row(this.i18n.t('prediction.composite.title'), fmt(baseScore, 1), '云层与光路融合后的基础分')}
+        ${row(this.i18n.t('prediction.canvas.title'), fmt(canvasScore, 1), '高云/中云提供色彩载体，低云会遮挡')}
+        ${row(this.i18n.t('prediction.lightPath.title'), fmt(lightPathScore, 1), '太阳光是否能照到云层')}
+        <div class="score-breakdown-formula">最终分 = 基础分 × 修正系数</div>
+        ${row(this.i18n.t('prediction.rendering.title'), `×${fmt(renderingFactor, 2)}`, '湿度、能见度影响颜色表现')}
+        ${aerosolFactor != null ? row(this.i18n.t('prediction.rendering.aerosol'), `×${fmt(aerosolFactor, 2)}`, '适中增强红橙散射，过高会发灰') : ''}
       </div>
     `;
   }

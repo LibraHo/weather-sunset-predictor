@@ -1960,9 +1960,10 @@ body.theme-dark .best-time {
   top: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  min-width: 190px;
-  max-width: 230px;
-  padding: 8px;
+  width: min(320px, calc(100vw - 32px));
+  min-width: 260px;
+  max-width: 320px;
+  padding: 10px;
   border-radius: 12px;
   background: var(--color-surface, rgba(30, 30, 50, 0.97));
   border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.15));
@@ -1972,27 +1973,55 @@ body.theme-dark .best-time {
   z-index: 2000;
 }
 
-/* 移动端：防止分数明细弹出面板左侧超出屏幕 */
+/* 移动端：用 fixed 居中，避免卡片内相对定位导致左侧超出屏幕 */
 @media (max-width: 640px) {
   .score-breakdown-popover {
+    position: fixed;
+    top: 88px;
     left: 50%;
     right: auto;
     transform: translateX(-50%);
-    width: min(280px, calc(100vw - 24px));
+    width: calc(100vw - 28px);
     min-width: 0;
-    max-width: none;
-    margin: 0;
+    max-width: 360px;
+    max-height: min(72vh, 520px);
+    overflow-y: auto;
+    z-index: 5000;
   }
 }
 
+.score-breakdown-title {
+  font-size: 0.82rem;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.score-breakdown-formula {
+  margin: 6px 0 4px;
+  padding: 5px 7px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-text-light);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
 .score-breakdown-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: minmax(82px, 0.85fr) minmax(54px, auto);
+  grid-template-areas:
+    "key val"
+    "hint hint";
+  column-gap: 10px;
+  row-gap: 2px;
+  align-items: baseline;
   font-size: 0.78rem;
   line-height: 1.35;
-  padding: 3px 0;
+  padding: 5px 0;
+}
+
+.score-breakdown-row-total {
+  padding-top: 2px;
 }
 
 .score-breakdown-row + .score-breakdown-row {
@@ -2000,15 +2029,27 @@ body.theme-dark .best-time {
 }
 
 .score-breakdown-key {
+  grid-area: key;
   color: var(--color-text-light);
-  flex: 1;
   min-width: 0;
+  text-align: left;
 }
 
 .score-breakdown-val {
+  grid-area: val;
   color: var(--color-text);
-  font-weight: 700;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.score-breakdown-hint {
+  grid-area: hint;
+  color: var(--color-text-light);
+  opacity: 0.82;
+  font-size: 0.69rem;
+  line-height: 1.35;
 }
 
 /* 左侧大数字分数区（兼容旧版） */
