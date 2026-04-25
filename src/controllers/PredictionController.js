@@ -1425,7 +1425,11 @@ class PredictionController {
       lowClouds:     lowCloudsValue,
       visibility:    visibilityValue,
       humidity:      humidityValue,
-      precipitation: precipitationValue
+      precipitation: precipitationValue,
+      aerosolOpticalDepth: prediction.aerosolOpticalDepth ?? factors.aerosolOpticalDepth?.value ?? null,
+      pm2_5: prediction.pm2_5 ?? factors.pm2_5?.value ?? null,
+      pm10: prediction.pm10 ?? factors.pm10?.value ?? null,
+      dust: prediction.dust ?? factors.dust?.value ?? null
     };
     analysis += this.generateFireCloudAnalysis(cloudValue, humidityValue, visibilityValue, lowCloudsValue, precipitationValue, weatherCodeValue, fullWeatherData, prediction.score);
 
