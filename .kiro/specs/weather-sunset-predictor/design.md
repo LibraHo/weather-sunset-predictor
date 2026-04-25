@@ -290,7 +290,7 @@ rankScore = exactMatch * 100
 **必须覆盖的回归测试**：
 - 用户在 `Asia/Qatar` 查北京：北京日出显示 `Asia/Shanghai` 时间，不显示卡塔尔时间。
 - 槟城：使用 `Asia/Kuala_Lumpur` / UTC+8，不按经度 fallback 成 UTC+7。
-- 新疆/乌鲁木齐：使用 `Asia/Shanghai` / UTC+8，不按经度 fallback 成 UTC+6。
+- 新疆/乌鲁木齐、拉萨等中国西部城市：使用 `Asia/Shanghai` / UTC+8，不按经度 fallback 成 UTC+6。
 - 前端服务和后端 `SunCalculator` 都要覆盖，避免 Web UI 与 Agent API 结果分叉。
 
 ### Agent API 与 Token 管理（需求45）

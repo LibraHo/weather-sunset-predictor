@@ -615,4 +615,27 @@ describe('SunsetPredictionService timezone display invariants', () => {
 
     expect(legalDisplay).not.toBe(longitudeFallbackDisplay);
   });
+
+
+  test('拉萨也应使用中国法定时区 Asia/Shanghai，而不是按经度推算', () => {
+    const service = new SunsetPredictionService();
+    const date = new Date('2026-04-25T00:00:00Z');
+    const lhasaLon = 91.1322;
+
+    expect(service._getTargetTimezoneOffsetHours(date, lhasaLon, 'Asia/Shanghai')).toBe(8);
+    expect(service._getTargetTimezoneOffsetHours(date, lhasaLon)).toBe(6);
+
+    const sunrise = service.getSunriseTime(date, 29.65, lhasaLon, {
+      timezone: 'Asia/Shanghai'
+    });
+
+    const legalDisplay = new Intl.DateTimeFormat('zh-CN', {
+      timeZone: 'Asia/Shanghai', hour: '2-digit', minute: '2-digit', hour12: false
+    }).format(sunrise);
+    const longitudeFallbackDisplay = new Intl.DateTimeFormat('zh-CN', {
+      timeZone: 'Etc/GMT-6', hour: '2-digit', minute: '2-digit', hour12: false
+    }).format(sunrise);
+
+    expect(legalDisplay).not.toBe(longitudeFallbackDisplay);
+  });
 });

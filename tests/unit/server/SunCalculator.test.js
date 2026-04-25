@@ -275,4 +275,20 @@ describe('SunCalculator target timezone system', () => {
     expect(SunCalculator.formatTimeForZone(sunrise, 'Asia/Shanghai'))
       .not.toBe(SunCalculator.formatTimeForZone(sunrise, 'Etc/GMT-6'));
   });
+
+
+  it('covers Lhasa using China legal timezone instead of longitude fallback', () => {
+    const date = new Date('2026-04-25T00:00:00Z');
+    const lhasaLon = 91.1322;
+
+    expect(SunCalculator.getTargetTimezoneOffsetHours(date, lhasaLon, 'Asia/Shanghai')).toBe(8);
+    expect(SunCalculator.getTargetTimezoneOffsetHours(date, lhasaLon)).toBe(6);
+
+    const sunrise = SunCalculator.getSunriseTime(date, 29.65, lhasaLon, {
+      timezone: 'Asia/Shanghai'
+    });
+
+    expect(SunCalculator.formatTimeForZone(sunrise, 'Asia/Shanghai'))
+      .not.toBe(SunCalculator.formatTimeForZone(sunrise, 'Etc/GMT-6'));
+  });
 });
