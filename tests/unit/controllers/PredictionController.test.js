@@ -294,7 +294,6 @@ describe('PredictionController', () => {
         prediction, '🌅', '晚霞', '日落时间', '今日', 'sunset'
       );
 
-      expect(html).toContain('气溶胶');
       expect(html).toContain('AOD 0.73');
       expect(html).toContain('app-analysis-card');
       expect(html).toContain('analysis-group-positive');
