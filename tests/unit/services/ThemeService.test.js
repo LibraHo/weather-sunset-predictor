@@ -32,6 +32,9 @@ describe('ThemeService - 初始化', () => {
   beforeEach(() => {
     localStorage.clear();
     document.body.className = '';
+    document.documentElement.className = '';
+    document.documentElement.removeAttribute('data-theme');
+    document.documentElement.style.colorScheme = '';
     setupMatchMedia(false);
   });
 
@@ -71,9 +74,15 @@ describe('ThemeService.applyTheme', () => {
   beforeEach(() => {
     localStorage.clear();
     document.body.className = '';
+    document.documentElement.className = '';
+    document.documentElement.removeAttribute('data-theme');
+    document.documentElement.style.colorScheme = '';
     setupMatchMedia(false);
     service = new ThemeService();
     document.body.className = '';
+    document.documentElement.className = '';
+    document.documentElement.removeAttribute('data-theme');
+    document.documentElement.style.colorScheme = '';
   });
 
   test('applyTheme("light") 添加 theme-light 类，移除其他', () => {
@@ -103,6 +112,15 @@ describe('ThemeService.applyTheme', () => {
     service.applyTheme('dark');
     expect(localStorage.getItem('app_theme')).toBe('dark');
   });
+
+
+  test('applyTheme("light") 同步 html 主题类与 color-scheme，确保 Safari 手动亮色生效', () => {
+    service.applyTheme('light');
+    expect(document.documentElement.classList.contains('theme-light')).toBe(true);
+    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+    expect(document.body.getAttribute('data-theme')).toBe('light');
+    expect(document.documentElement.style.colorScheme).toBe('light');
+  });
 });
 
 describe('ThemeService.setTheme', () => {
@@ -111,6 +129,9 @@ describe('ThemeService.setTheme', () => {
   beforeEach(() => {
     localStorage.clear();
     document.body.className = '';
+    document.documentElement.className = '';
+    document.documentElement.removeAttribute('data-theme');
+    document.documentElement.style.colorScheme = '';
     setupMatchMedia(false);
     service = new ThemeService();
   });
@@ -140,6 +161,9 @@ describe('ThemeService.getTheme & getActualTheme', () => {
   beforeEach(() => {
     localStorage.clear();
     document.body.className = '';
+    document.documentElement.className = '';
+    document.documentElement.removeAttribute('data-theme');
+    document.documentElement.style.colorScheme = '';
   });
 
   test('light 模式：getActualTheme 返回 light', () => {
@@ -175,6 +199,9 @@ describe('ThemeService.getSystemTheme', () => {
   beforeEach(() => {
     localStorage.clear();
     document.body.className = '';
+    document.documentElement.className = '';
+    document.documentElement.removeAttribute('data-theme');
+    document.documentElement.style.colorScheme = '';
   });
 
   test('系统为暗色模式时返回 dark', () => {
@@ -202,6 +229,9 @@ describe('ThemeService.dispatchThemeChangeEvent', () => {
   beforeEach(() => {
     localStorage.clear();
     document.body.className = '';
+    document.documentElement.className = '';
+    document.documentElement.removeAttribute('data-theme');
+    document.documentElement.style.colorScheme = '';
     setupMatchMedia(false);
   });
 
@@ -224,6 +254,9 @@ describe('ThemeService - 系统主题变化监听', () => {
   beforeEach(() => {
     localStorage.clear();
     document.body.className = '';
+    document.documentElement.className = '';
+    document.documentElement.removeAttribute('data-theme');
+    document.documentElement.style.colorScheme = '';
   });
 
   test('auto 模式时系统主题变化触发 themeChanged 事件', () => {
@@ -280,6 +313,9 @@ describe('ThemeService.saveTheme', () => {
   beforeEach(() => {
     localStorage.clear();
     document.body.className = '';
+    document.documentElement.className = '';
+    document.documentElement.removeAttribute('data-theme');
+    document.documentElement.style.colorScheme = '';
     setupMatchMedia(false);
   });
 

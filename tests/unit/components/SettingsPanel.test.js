@@ -284,14 +284,14 @@ describe('SettingsPanel - 事件处理', () => {
     expect(saved.threshold).toBe(85);
   });
 
-  test('handleThemeChange 调用 themeService.setTheme 并分发事件', () => {
+  test('handleThemeChange 调用 themeService.setTheme，不重复分发 themeChanged 事件', () => {
     const handler = jest.fn();
     window.addEventListener('themeChanged', handler);
 
     sp.handleThemeChange('dark');
 
     expect(sp.themeService.setTheme).toHaveBeenCalledWith('dark');
-    expect(handler).toHaveBeenCalledTimes(1);
+    expect(handler).not.toHaveBeenCalled();
 
     window.removeEventListener('themeChanged', handler);
   });

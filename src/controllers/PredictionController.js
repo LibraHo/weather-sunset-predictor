@@ -893,10 +893,10 @@ class PredictionController {
     const html = `
       <div class="prediction-toggle-bar" id="prediction-toggle-bar">
         <button class="prediction-toggle-btn${defaultTab === 'sunrise' ? ' active' : ''}" data-tab="sunrise">
-          🌄 ${sunriseDateLabel}${this.i18n.t('prediction.sunrise')}
+          ${this.i18n.t('prediction.sunrise')}
         </button>
         <button class="prediction-toggle-btn${defaultTab === 'sunset' ? ' active' : ''}" data-tab="sunset">
-          🌅 ${sunsetDateLabel}${this.i18n.t('prediction.sunset')}
+          ${this.i18n.t('prediction.sunset')}
         </button>
       </div>
       <div class="today-predictions-container" id="today-predictions-container">
@@ -1137,7 +1137,10 @@ class PredictionController {
 
           <div class="phenomenon-title-card">
             <div class="phenomenon-icon-tile" aria-hidden="true">${forecast.icon}</div>
-            <h3>${forecast.type}</h3>
+            <div class="phenomenon-title-copy">
+              <span class="phenomenon-date-tag">${dateLabel}</span>
+              <h3>${forecast.type}</h3>
+            </div>
           </div>
 
           <div class="score-summary-card">
@@ -1279,35 +1282,35 @@ class PredictionController {
       group.items.push({ title, desc });
     };
 
-    if (weather.high >= 60) add('positive', `高云 ${weather.high.toFixed(0)}%`, '色彩载体充足');
-    else if (weather.high >= 35) add('positive', `高云 ${weather.high.toFixed(0)}%`, '霞光载体较好');
-    else if (weather.high >= 15) add('neutral', `高云 ${weather.high.toFixed(0)}%`, '色彩可能偏淡');
-    else add('warning', `高云 ${weather.high.toFixed(0)}%`, '色彩载体不足');
+    if (weather.high >= 60) add('positive', `高层云充沛（${weather.high.toFixed(0)}%）`, '色彩载体丰富，火烧云基础扎实');
+    else if (weather.high >= 35) add('positive', `高层云充足（${weather.high.toFixed(0)}%）`, '具备较好的霞光染色载体');
+    else if (weather.high >= 15) add('neutral', `高层云适中（${weather.high.toFixed(0)}%）`, '可形成火烧云，但色彩可能偏淡');
+    else add('warning', `高层云偏少（${weather.high.toFixed(0)}%）`, '缺少主要色彩载体');
 
-    if (weather.mid >= 20 && weather.mid <= 60) add('positive', `中云 ${weather.mid.toFixed(0)}%`, '层次感较好');
-    else if (weather.mid < 20) add('neutral', `中云 ${weather.mid.toFixed(0)}%`, weather.high >= 35 ? '高云可独立成霞' : '层次感不足');
-    else add('warning', `中云 ${weather.mid.toFixed(0)}%`, '可能偏灰');
+    if (weather.mid >= 20 && weather.mid <= 60) add('positive', `中层云适中（${weather.mid.toFixed(0)}%）`, '利于色彩扩散和层次感');
+    else if (weather.mid < 20) add('neutral', `中层云较少（${weather.mid.toFixed(0)}%）`, weather.high >= 35 ? '但高层云充足，可独立形成火烧云' : '层次感可能不足');
+    else add('warning', `中层云偏厚（${weather.mid.toFixed(0)}%）`, '可能让画面偏灰，削弱霞光通透感');
 
-    if (weather.low < 15) add('positive', `低云 ${weather.low.toFixed(0)}%`, '无遮挡');
-    else if (weather.low < 35) add('neutral', `低云 ${weather.low.toFixed(0)}%`, '可能遮挡');
-    else add('warning', `低云 ${weather.low.toFixed(0)}%`, '遮挡风险大');
+    if (weather.low < 15) add('positive', `低云稀少（${weather.low.toFixed(0)}%）`, '不会遮挡火烧云');
+    else if (weather.low < 35) add('neutral', `低云较多（${weather.low.toFixed(0)}%）`, '可能部分遮挡低空色彩');
+    else add('warning', `低云偏厚（${weather.low.toFixed(0)}%）`, '遮挡风险较大');
 
-    if (weather.visibility >= 15) add('positive', `能见度 ${weather.visibility.toFixed(0)}km`, '视野通透');
-    else if (weather.visibility >= 8) add('neutral', `能见度 ${weather.visibility.toFixed(0)}km`, '色彩略受影响');
-    else add('warning', `能见度 ${weather.visibility.toFixed(0)}km`, '通透感偏弱');
+    if (weather.visibility >= 15) add('positive', `能见度良好（${weather.visibility.toFixed(0)}km）`, '空气通透，观赏视野好');
+    else if (weather.visibility >= 8) add('neutral', `能见度一般（${weather.visibility.toFixed(0)}km）`, '色彩饱和度可能略受影响');
+    else add('warning', `能见度偏低（${weather.visibility.toFixed(0)}km）`, '雾霾或水汽可能影响观赏');
 
-    if (weather.humidity >= 40 && weather.humidity <= 70) add('positive', `湿度 ${weather.humidity.toFixed(0)}%`, '利于散射');
-    else if (weather.humidity > 70) add('warning', `湿度 ${weather.humidity.toFixed(0)}%`, '通透感略降');
-    else add('neutral', `湿度 ${weather.humidity.toFixed(0)}%`, '颜色可能偏淡');
+    if (weather.humidity >= 40 && weather.humidity <= 70) add('positive', `湿度适中（${weather.humidity.toFixed(0)}%）`, '利于光线散射');
+    else if (weather.humidity > 70) add('warning', `湿度偏高（${weather.humidity.toFixed(0)}%）`, '可能略影响通透感');
+    else add('neutral', `湿度偏低（${weather.humidity.toFixed(0)}%）`, '空气较干，色彩可能偏淡');
 
     if (weather.aod != null) {
-      if (weather.aod >= 0.08 && weather.aod <= 0.35) add('positive', `AOD ${weather.aod.toFixed(2)}`, '增强红橙散射');
-      else if (weather.aod > 0.35) add('warning', `AOD ${weather.aod.toFixed(2)}`, '可能发灰');
-      else add('neutral', `AOD ${weather.aod.toFixed(2)}`, '颜色可能偏淡');
+      if (weather.aod >= 0.08 && weather.aod <= 0.35) add('positive', `气溶胶适中（AOD ${weather.aod.toFixed(2)}）`, '有利于增强红橙色散射');
+      else if (weather.aod > 0.35) add('warning', `气溶胶偏高（AOD ${weather.aod.toFixed(2)}）`, '可能灰霾发暗');
+      else add('neutral', `空气过于通透（AOD ${weather.aod.toFixed(2)}）`, '颜色可能偏淡');
     }
 
     if (weather.layerCount <= 1 && weather.high >= 35) {
-      add('warning', '云层单一', '高云仍可成霞');
+      add('warning', '云层单一', '但高云质量好，仍可形成色彩鲜明的火烧云');
     }
 
     return groups.filter(group => group.items.length > 0);
