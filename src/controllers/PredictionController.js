@@ -1264,7 +1264,6 @@ class PredictionController {
         </div>
         <div class="score-gauge-caption">
           <div class="score-gauge-grade" style="color:${scoreTheme[1]}">${forecast.scoreLabel}</div>
-          <div class="score-gauge-desc">${forecast.scoreDesc}</div>
           <div class="score-breakdown-hint-trigger">查看评分明细</div>
         </div>
       </div>
