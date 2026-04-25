@@ -1577,6 +1577,8 @@ class PredictionController {
     const weatherText = this._getWeatherText(weatherCode, precip);
     const hasWeatherCode = weatherCode !== null && weatherCode !== undefined && weatherCode !== '';
     const isClearSky = hasWeatherCode && Number(weatherCode) === 0 && precip < 0.1;
+    const hasMeaningfulClouds = (weatherInput.highClouds ?? 0) >= 10 || (weatherInput.midClouds ?? 0) >= 10 || (weatherInput.lowClouds ?? 0) >= 15;
+    const isClearLike = precip < 0.1 && !hasMeaningfulClouds && (!hasWeatherCode || Number(weatherCode) === 0);
     const isPostRain = weatherInput.specialMode === 'post_rain' || weatherInput.postRain === true;
 
     if (precip >= 4) {
@@ -1587,7 +1589,7 @@ class PredictionController {
       return '<div class="fire-cloud-details fire-cloud-details-compact"><div class="fca-summary fca-summary-good">雨后晴</div></div>';
     }
 
-    if (isClearSky) {
+    if (isClearSky || isClearLike) {
       return '';
     }
 
