@@ -5309,3 +5309,44 @@ body.theme-dark .prediction-app-card {
   .cloud-condition-label { font-size: 0.78rem; }
   .cloud-condition-top strong { font-size: 0.95rem; }
 }
+
+/* 需求46 修正：分析条目改为一行，左标题右解释 */
+.analysis-item {
+  grid-template-columns: 22px minmax(6.5em, 0.9fr) minmax(0, 1.4fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 9px 11px;
+}
+.analysis-item-icon {
+  width: 20px;
+  height: 20px;
+  font-size: 0.72rem;
+  margin-top: 0;
+}
+.analysis-item-copy {
+  display: contents;
+}
+.analysis-item-copy strong {
+  font-size: 0.92rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.analysis-item-copy small {
+  font-size: 0.8rem;
+  line-height: 1.3;
+  text-align: right;
+  color: var(--app-muted);
+}
+.analysis-card-title { margin-bottom: 12px; }
+.analysis-group + .analysis-group { margin-top: 12px; }
+.analysis-group-label { margin-bottom: 7px; }
+@media (max-width: 360px) {
+  .analysis-item {
+    grid-template-columns: 20px minmax(5.8em, 0.9fr) minmax(0, 1.2fr);
+    gap: 6px;
+    padding: 8px 9px;
+  }
+  .analysis-item-copy strong { font-size: 0.84rem; }
+  .analysis-item-copy small { font-size: 0.74rem; }
+}
