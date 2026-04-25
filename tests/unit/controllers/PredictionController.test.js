@@ -246,6 +246,48 @@ describe('PredictionController', () => {
       expect(html).toContain('rotate(296deg)');
     });
 
+    test('增强分析应显示后端透传的气溶胶 AOD 文案', () => {
+      const prediction = {
+        score: 62,
+        quality: 'good',
+        type: 'sunset',
+        sunsetTime: new Date('2024-06-21T19:45:00+08:00'),
+        sunAzimuth: null,
+        cloudLayers: { high: 45, mid: 25, low: 8 },
+        cloudCover: 30,
+        humidity: 58,
+        visibility: 18,
+        aerosolOpticalDepth: 0.73,
+        pm2_5: 139.7,
+        pm10: 163.9,
+        dust: 41,
+        factors: {
+          cloudCover: { value: 30 },
+          highClouds: { value: 45 },
+          midClouds: { value: 25 },
+          lowClouds: { value: 8 },
+          humidity: { value: 58 },
+          visibility: { value: 18 },
+          aerosolOpticalDepth: { value: 0.73 },
+          pm2_5: { value: 139.7 },
+          pm10: { value: 163.9 },
+          dust: { value: 41 }
+        },
+        getOptimalViewingWindow: () => ({
+          start: new Date('2024-06-21T19:15:00+08:00'),
+          end: new Date('2024-06-21T20:15:00+08:00')
+        }),
+        shouldShowAzimuth: () => false
+      };
+
+      const html = predictionController.renderSinglePrediction(
+        prediction, '🌅', '晚霞', '日落时间', '今日', 'sunset'
+      );
+
+      expect(html).toContain('气溶胶');
+      expect(html).toContain('AOD 0.73');
+    });
+
     test('无方位角时不渲染方位角区块', () => {
       const prediction = {
         score: 60,

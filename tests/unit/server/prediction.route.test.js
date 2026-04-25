@@ -55,7 +55,8 @@ describe('Prediction Routes', () => {
           aerosolOpticalDepth: 0.22,
           pm2_5: 12,
           pm10: 24,
-          dust: 2
+          dust: 2,
+          aqi: 55
         },
         '2024-06-21T18:00:00Z',
         40.0,
@@ -65,6 +66,18 @@ describe('Prediction Routes', () => {
 
       expect(result.renderingAnalysis.aerosolFactor).toBeGreaterThan(1);
       expect(result.renderingAnalysis.breakdown.aerosol).toBe('optimal');
+      expect(result.aerosolOpticalDepth).toBe(0.22);
+      expect(result.pm2_5).toBe(12);
+      expect(result.pm10).toBe(24);
+      expect(result.dust).toBe(2);
+      expect(result.aqi).toBe(55);
+      expect(result.breakdown.aerosolScattering).toMatchObject({
+        level: 'optimal',
+        aerosolOpticalDepth: 0.22,
+        pm2_5: 12,
+        pm10: 24,
+        dust: 2
+      });
     });
 
     test('calculateEnhancedPrediction with options should apply correctly', () => {

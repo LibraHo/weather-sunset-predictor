@@ -1167,6 +1167,19 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
 
   logger.debug('[EnhancedPredictionService]', '最终得分:', adjustedScore, 'occlusion:', occlusion, 'severeCap:', severeCap.reason);
 
+  const aerosolScattering = {
+    factor: renderingFactor.aerosolFactor,
+    level: renderingFactor.breakdown?.aerosol || 'unknown',
+    aerosolOpticalDepth: Number.isFinite(Number(weatherData.aerosolOpticalDepth ?? weatherData.aod))
+      ? Number(weatherData.aerosolOpticalDepth ?? weatherData.aod)
+      : null,
+    pm2_5: Number.isFinite(Number(weatherData.pm2_5 ?? weatherData.pm25))
+      ? Number(weatherData.pm2_5 ?? weatherData.pm25)
+      : null,
+    pm10: Number.isFinite(Number(weatherData.pm10)) ? Number(weatherData.pm10) : null,
+    dust: Number.isFinite(Number(weatherData.dust)) ? Number(weatherData.dust) : null
+  };
+
   // 返回完整结果
   return {
     date: dateObj.toISOString(),
@@ -1195,6 +1208,15 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
       vsun:                geometric.vsun
     },
     ...finalResult,
+    breakdown: {
+      ...finalResult.breakdown,
+      aerosolScattering
+    },
+    aerosolOpticalDepth: aerosolScattering.aerosolOpticalDepth,
+    dust: aerosolScattering.dust,
+    pm2_5: aerosolScattering.pm2_5,
+    pm10: aerosolScattering.pm10,
+    aqi: weatherData.aqi ?? null,
     cloudThickness: {
       thickness: cloudThickness.thickness,
       modifier: cloudThickness.modifier,
