@@ -261,9 +261,10 @@ function onMapPanelVisible() {
   // 先等浏览器完成布局（classList 移除 hidden 后尺寸可能尚未刷新）
   requestAnimationFrame(() => {
     setTimeout(() => {
-      // 如果地图有待初始化，现在执行初始化
-      if (window.weatherController && window.weatherController._chinaSpotsMapPendingInit) {
-        console.log('[onMapPanelVisible] 地图待初始化，现在执行...');
+      // 如果地图尚未初始化，地图页显示时直接初始化。
+      // 不能只依赖 _chinaSpotsMapPendingInit：用户可能未先定位中国大陆，或直接打开地图页。
+      if (window.weatherController && !window.weatherController._chinaSpotsMapInstance) {
+        console.log('[onMapPanelVisible] 地图尚未初始化，现在执行...');
         window.weatherController._initChinaSpotsMap().then(() => {
           console.log('[onMapPanelVisible] 地图初始化完成');
         }).catch(err => {
