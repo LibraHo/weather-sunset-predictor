@@ -179,34 +179,6 @@ function scoreResultByAlias(resultName, aliases) {
   return bestScore;
 }
 
-/**
- * 对地理编码结果按别名命中度重排序
- * @param {Array<{name:string}>} results
- * @param {string} query
- */
-function rankGeocodingResults(results = [], query = '') {
-  const aliases = getAliasTokensForQuery(query);
-  const withScore = results.map((item, index) => ({
-    ...item,
-    __geoAliasMatchScore: scoreResultByAlias(item?.name, aliases),
-    __geoAliasIndex: index
-  }));
-
-  return withScore
-    .sort((a, b) => {
-      if (b.__geoAliasMatchScore !== a.__geoAliasMatchScore) {
-        return b.__geoAliasMatchScore - a.__geoAliasMatchScore;
-      }
-      return a.__geoAliasIndex - b.__geoAliasIndex;
-    })
-    .map(item => {
-      const copy = { ...item };
-      delete copy.__geoAliasMatchScore;
-      delete copy.__geoAliasIndex;
-      return copy;
-    });
-}
-
 // ========== 路由 ==========
 
 /**
@@ -304,11 +276,15 @@ function attachSearchMeta(payload, meta) {
 }
 
 async function handleAutoSearch(res, query, apiKey, limit = 8) {
-  // Auto 策略：高德（国内）+ Open-Meteo（全球）合并，去重后返回
   const effectiveKey = apiKey || process.env.GAODE_API_KEY;
+  const resultSets = [];
+  const errors = [];
 
-  // 始终获取 Open-Meteo 结果（覆盖全球）
-  const omPromise = fetchOpenMeteoResults(query, limit * 2);
+  try {
+    resultSets.push(...await fetchOpenMeteoResults(query, limit * 3));
+  } catch (error) {
+    errors.push(`openmeteo:${error.message}`);
+  }
 
   if (effectiveKey) {
     try {
@@ -317,10 +293,8 @@ async function handleAutoSearch(res, query, apiKey, limit = 8) {
         timeout: 8000
       });
       const data = response.data;
-      const omResults = await omPromise;
-
       if (data.status === '1' && data.geocodes && data.geocodes.length > 0) {
-        let gaodeResults = data.geocodes.map(item => {
+        resultSets.push(...data.geocodes.map(item => {
           const [lonStr, latStr] = item.location.split(',');
           const regionCode = resolveGaodeRegionCode(item.adcode);
           return {
@@ -333,42 +307,21 @@ async function handleAutoSearch(res, query, apiKey, limit = 8) {
             regionCode,
             adcode: item.adcode || null
           };
-        });
-
-        // 合并：高德结果放前面（国内优先），然后 Open-Meteo 结果去重补充
-        const seenKeys = new Set(gaodeResults.map(r => `${r.lat.toFixed(4)},${r.lon.toFixed(4)}`));
-        for (const r of omResults) {
-          const key = `${r.lat.toFixed(4)},${r.lon.toFixed(4)}`;
-          if (!seenKeys.has(key)) {
-            seenKeys.add(key);
-            gaodeResults.push(r);
-          }
-        }
-        return res.json(attachSearchMeta({ results: gaodeResults.slice(0, limit) }, { providerUsed: 'gaode+openmeteo', fallbackUsed: false }));
+        }));
       }
-
-      // 高德无结果，直接返回 Open-Meteo
-      return res.json(attachSearchMeta({ results: omResults.slice(0, limit) }, {
-        providerUsed: 'openmeteo',
-        fallbackUsed: true,
-        fallbackReason: 'gaode_empty_result'
-      }));
     } catch (error) {
-      const omResults = await omPromise;
-      return res.json(attachSearchMeta({ results: omResults.slice(0, limit) }, {
-        providerUsed: 'openmeteo',
-        fallbackUsed: true,
-        fallbackReason: error.code === 'ECONNABORTED' ? 'gaode_timeout' : 'gaode_error'
-      }));
+      errors.push(`gaode:${error.code || error.message}`);
     }
   }
 
-  // 无高德 key 时直接 openmeteo
-  const om = await omPromise;
-  return res.json(attachSearchMeta({ results: om.slice(0, limit) }, {
-    providerUsed: 'openmeteo',
-    fallbackUsed: true,
-    fallbackReason: 'missing_gaode_key'
+  const ranked = rankGeocodingResults(query, resultSets).slice(0, limit);
+  return res.json(attachSearchMeta({
+    results: ranked,
+    rankDebug: ranked.map(r => ({ name: r.name, provider: r.provider, score: r.rankScore, reason: r.rankReason }))
+  }, {
+    providerUsed: effectiveKey ? 'ranked(openmeteo+gaode)' : 'ranked(openmeteo)',
+    fallbackUsed: errors.length > 0 || !effectiveKey,
+    fallbackReason: errors.length ? errors.join(';') : (!effectiveKey ? 'missing_gaode_key' : null)
   }));
 }
 
@@ -489,7 +442,10 @@ async function fetchOpenMeteoResults(query, limit = 8) {
                 type: item.feature_code || 'place',
                 provider: 'openmeteo',
                 countryCode: (item.country_code || '').toUpperCase() || null,
-                regionCode: resolveAdminRegionCode(item.admin1)
+                regionCode: resolveAdminRegionCode(item.admin1),
+                population: item.population ?? null,
+                admin1: item.admin1 ?? null,
+                country: item.country ?? null
               });
             }
           }
@@ -500,7 +456,7 @@ async function fetchOpenMeteoResults(query, limit = 8) {
     }
   }
 
-  return rankGeocodingResults(allResults, query);
+  return rankGeocodingResults(query, allResults);
 }
 
 async function handleOpenMeteoSearch(res, query, limit = 8) {
@@ -705,6 +661,104 @@ function deriveGoogleRegionCode(addressComponents = []) {
   return resolveAdminRegionCode(admin1Code);
 }
 
+
+function normalizeSearchText(text = '') {
+  return String(text || '').trim().toLowerCase().replace(/[\s,，·・._-]+/g, '');
+}
+
+function isLikelyChinaQuery(query = '') {
+  const q = String(query || '').trim().toLowerCase();
+  return /中国|北京|上海|广州|深圳|香港|澳门|台湾|台北|成都|重庆|杭州|南京|西安|武汉|厦门|青岛|天津|苏州|长沙|郑州|昆明|大连/.test(q)
+    || /^(bj|sh|gz|sz|hk)$/.test(q);
+}
+
+function getQueryAliases(query = '') {
+  const aliases = new Set();
+  getAliasTokensForQuery(query).forEach(token => aliases.add(normalizeSearchText(token)));
+  aliases.add(normalizeSearchText(query));
+  return aliases;
+}
+
+function populationScore(population) {
+  const n = Number(population);
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return Math.min(35, Math.log10(n) * 5);
+}
+
+function rankGeocodingResults(queryOrResults, maybeResults = []) {
+  // 兼容两种调用方式：
+  // 1) rankGeocodingResults(query, results)
+  // 2) rankGeocodingResults(results, query)
+  const query = Array.isArray(queryOrResults) ? String(maybeResults || '') : String(queryOrResults || '');
+  const results = Array.isArray(queryOrResults) ? queryOrResults : maybeResults;
+
+  const aliases = getQueryAliases(query);
+  const queryNorm = normalizeSearchText(query);
+  const chinaQuery = isLikelyChinaQuery(query);
+  const seen = new Map();
+
+  (results || []).forEach((item, index) => {
+    if (!item) return;
+    const hasCoords = Number.isFinite(Number(item.lat)) && Number.isFinite(Number(item.lon));
+    const key = hasCoords
+      ? `${Number(item.lat).toFixed(4)},${Number(item.lon).toFixed(4)}`
+      : `${normalizeSearchText(item.name || '')}#${index}`;
+    if (!seen.has(key)) seen.set(key, item);
+  });
+
+  return Array.from(seen.values()).map(item => {
+    const nameNorm = normalizeSearchText(item.name);
+    const country = String(item.countryCode || '').toUpperCase();
+    const feature = String(item.type || '').toUpperCase();
+    const reasons = [];
+    let score = 0;
+
+    if (queryNorm && (nameNorm === queryNorm || nameNorm.startsWith(queryNorm))) {
+      score += 130;
+      reasons.push('query_exact_or_prefix');
+    } else if ([...aliases].some(a => nameNorm === a || nameNorm.startsWith(a))) {
+      score += 100;
+      reasons.push('exact_or_prefix');
+    } else if ([...aliases].some(a => nameNorm.includes(a))) {
+      score += 55;
+      reasons.push('contains_alias');
+    }
+
+    const pop = populationScore(item.population);
+    if (pop) { score += pop; reasons.push('population'); }
+
+    if (/PPLC|PPLA|PPLA2|PPLA3|PPLA4/.test(feature)) {
+      score += 20;
+      reasons.push('admin_city');
+    }
+
+    if (item.provider === 'openmeteo') {
+      score += 15;
+      reasons.push('global_provider');
+    }
+    if (item.provider === 'gaode') {
+      if (chinaQuery) {
+        score += 25;
+        reasons.push('china_query_gaode_bonus');
+      } else {
+        score -= 30;
+        reasons.push('non_china_gaode_penalty');
+      }
+    }
+
+    if (!chinaQuery && country === 'CN') {
+      score -= 25;
+      reasons.push('non_china_query_cn_penalty');
+    }
+
+    return {
+      ...item,
+      rankScore: Number(score.toFixed(2)),
+      rankReason: reasons.join('|') || 'default'
+    };
+  }).sort((a, b) => b.rankScore - a.rankScore);
+}
+
 module.exports = router;
 module.exports._test = {
   CITY_ALIAS_RECORDS,
@@ -715,4 +769,12 @@ module.exports._test = {
   getAliasTokensForQuery,
   scoreResultByAlias,
   rankGeocodingResults
+};
+module.exports._private = {
+  rankGeocodingResults,
+  getQueryAliases,
+  isLikelyChinaQuery,
+  getQueryVariants,
+  getAliasTokensForQuery,
+  normalizeAliasToken
 };
