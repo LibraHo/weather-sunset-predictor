@@ -50,4 +50,31 @@ describe('ChartRenderController', () => {
     expect(html).not.toContain('>23:00<');
   });
 
+  test('移动端渲染应降采样并使用统一颜色变量', () => {
+    document.body.innerHTML = '<div id="chart-container" style="width: 320px"></div>';
+    window.matchMedia = jest.fn().mockReturnValue({ matches: true });
+
+    const controller = new ChartRenderController({
+      i18n: { t: jest.fn((key) => (key === 'charts.trend' ? '变化趋势' : key === 'charts.time' ? '时间' : '温度')) },
+      getConvertedTemp: (v) => v,
+      getConvertedWindSpeed: (v) => v
+    });
+
+    const base = new Date('2026-01-01T00:00:00Z').getTime();
+    const hourlyData = Array.from({ length: 24 }, (_, i) => ({
+      timestamp: base + i * 60 * 60 * 1000,
+      temp: 20 + i
+    }));
+
+    controller.renderSimpleChart(hourlyData, 'chart-container', 'temp', '温度', '°C', '#ff6b6b');
+
+    const svg = document.querySelector('#chart-container svg');
+    const circles = svg.querySelectorAll('circle');
+
+    expect(svg.innerHTML).toContain('var(--color-text)');
+    expect(svg.innerHTML).toContain('var(--chart-grid-color)');
+    expect(circles.length).toBeLessThan(24);
+    expect(circles.length).toBeGreaterThanOrEqual(4);
+  });
+
 });
