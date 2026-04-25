@@ -5901,3 +5901,32 @@ body:not(.theme-dark):not(.theme-auto) .radar-chart-container {
     margin-bottom: 22px !important;
   }
 }
+
+/* 需求46 修正：分数明细面板跟随亮/暗主题统一 glass 背景 */
+.score-breakdown-popover,
+body.theme-light .score-breakdown-popover,
+body.theme-dark .score-breakdown-popover,
+body.theme-auto .score-breakdown-popover {
+  background: var(--glass-bg-heavy) !important;
+  border-color: var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+  color: var(--color-text) !important;
+  backdrop-filter: blur(var(--glass-blur-heavy));
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+}
+.score-breakdown-title,
+.score-breakdown-val {
+  color: var(--color-text) !important;
+}
+.score-breakdown-key,
+.score-breakdown-hint,
+.score-breakdown-formula {
+  color: var(--color-text-light) !important;
+}
+.score-breakdown-formula {
+  background: color-mix(in srgb, var(--glass-bg-hover) 82%, transparent) !important;
+  border: 1px solid var(--glass-border);
+}
+.score-breakdown-row + .score-breakdown-row {
+  border-top-color: var(--glass-border) !important;
+}
