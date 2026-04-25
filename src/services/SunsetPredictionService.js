@@ -24,6 +24,39 @@ class SunsetPredictionService {
     };
   }
 
+  /**
+   * 计算目标地点时区偏移。优先使用 IANA timezone，缺失时按经度近似。
+   * 不能使用浏览器时区，否则用户人在卡塔尔查北京时会显示成卡塔尔时间。
+   * @private
+   */
+  _getTargetTimezoneOffsetHours(date, lon, timeZone = null) {
+    if (timeZone && typeof Intl !== 'undefined' && Intl.DateTimeFormat) {
+      try {
+        const parts = new Intl.DateTimeFormat('en-US', {
+          timeZone, year: 'numeric', month: '2-digit', day: '2-digit',
+          hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+        }).formatToParts(date);
+        const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+        const asUtc = Date.UTC(
+          Number(values.year), Number(values.month) - 1, Number(values.day),
+          Number(values.hour), Number(values.minute), Number(values.second)
+        );
+        return (asUtc - date.getTime()) / 3600000;
+      } catch (error) {
+        console.warn('[SunsetPredictionService] 无法解析目标时区，回退到经度估算:', timeZone, error.message);
+      }
+    }
+    return Math.round(lon / 15);
+  }
+
+  /** @private */
+  _createDateFromTargetLocalTime(date, dayOffset, hours, minutes, timezoneOffsetHours) {
+    return new Date(Date.UTC(
+      date.getFullYear(), date.getMonth(), date.getDate() + dayOffset,
+      hours - timezoneOffsetHours, minutes, 0, 0
+    ));
+  }
+
 
   _scoreAerosolScattering(weatherData) {
     const aodRaw = weatherData.aerosolOpticalDepth ?? weatherData.aod;
@@ -235,7 +268,7 @@ class SunsetPredictionService {
    * 
    * 需求：6.4 - 计算日落时间以确定最佳观赏时间
    */
-  getSunsetTime(date, lat, lon) {
+  getSunsetTime(date, lat, lon, options = {}) {
     // 验证输入
     if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
       throw new Error('无效的日期对象');
@@ -300,10 +333,8 @@ class SunsetPredictionService {
     // 计算日落时角（单位：度）
     const hourAngle = Math.acos(cosHourAngle) * 180 / Math.PI;
 
-    // 计算本地子午线（使用浏览器真实时区偏移，而非经度推算）
-    // 很多国家政治时区≠地理时区（如马来西亚 UTC+8 但经度对应 UTC+7）
-    const browserOffsetHours = -(new Date().getTimezoneOffset() / 60);
-    const timezone = browserOffsetHours;
+    // 使用目标地点时区，而不是浏览器/用户当前所在时区。
+    const timezone = this._getTargetTimezoneOffsetHours(date, lon, options.timezone || options.timeZone || null);
     const localMeridian = timezone * 15;
     const lonOffset = lon - localMeridian;
 
@@ -332,12 +363,7 @@ class SunsetPredictionService {
     const hours = Math.floor(sunsetMinutesAdjusted / 60);
     const minutes = Math.round(sunsetMinutesAdjusted % 60);
 
-    // 创建本地时间（天文学计算已经考虑了经度和时区偏移）
-    const sunsetDate = new Date(date);
-    sunsetDate.setDate(sunsetDate.getDate() + dayOffset);
-    const sunsetLocal = new Date(sunsetDate.getFullYear(), sunsetDate.getMonth(), sunsetDate.getDate(), hours, minutes, 0, 0);
-
-    return sunsetLocal;
+    return this._createDateFromTargetLocalTime(date, dayOffset, hours, minutes, timezone);
   }
 
   /**
@@ -351,7 +377,7 @@ class SunsetPredictionService {
    * @param {number} lon - 经度（-180到180）
    * @returns {Date} 日出时间
    */
-  getSunriseTime(date, lat, lon) {
+  getSunriseTime(date, lat, lon, options = {}) {
     // 验证输入
     if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
       throw new Error('无效的日期对象');
@@ -414,9 +440,8 @@ class SunsetPredictionService {
     // 计算日出时角（单位：度）- 注意：日出用负的时角
     const hourAngle = Math.acos(cosHourAngle) * 180 / Math.PI;
 
-    // 计算本地子午线（使用浏览器真实时区偏移，而非经度推算）
-    const browserOffsetHours = -(new Date().getTimezoneOffset() / 60);
-    const timezone = browserOffsetHours;
+    // 使用目标地点时区，而不是浏览器/用户当前所在时区。
+    const timezone = this._getTargetTimezoneOffsetHours(date, lon, options.timezone || options.timeZone || null);
     const localMeridian = timezone * 15;
     const lonOffset = lon - localMeridian;
 
@@ -445,12 +470,7 @@ class SunsetPredictionService {
     const hours = Math.floor(sunriseMinutesAdjusted / 60);
     const minutes = Math.round(sunriseMinutesAdjusted % 60);
 
-    // 创建本地时间（天文学计算已经考虑了经度和时区偏移）
-    const sunriseDate = new Date(date);
-    sunriseDate.setDate(sunriseDate.getDate() + dayOffset);
-    const sunriseLocal = new Date(sunriseDate.getFullYear(), sunriseDate.getMonth(), sunriseDate.getDate(), hours, minutes, 0, 0);
-
-    return sunriseLocal;
+    return this._createDateFromTargetLocalTime(date, dayOffset, hours, minutes, timezone);
   }
 
   /**
@@ -471,7 +491,7 @@ class SunsetPredictionService {
    * 需求：5.8 - 评分低于40时标记为"一般"
    * 需求：12.1, 12.2, 12.3, 12.4, 12.5, 12.11 - 朝霞晚霞预测增强功能
    */
-  calculatePrediction(weatherData, date, lat, lon, type = 'sunset') {
+  calculatePrediction(weatherData, date, lat, lon, type = 'sunset', options = {}) {
     // 验证输入
     if (!weatherData || typeof weatherData !== 'object') {
       throw new Error('无效的天气数据对象');
@@ -490,8 +510,9 @@ class SunsetPredictionService {
     }
 
     // 计算日落和日出时间
-    const sunsetTime = this.getSunsetTime(date, lat, lon);
-    const sunriseTime = this.getSunriseTime(date, lat, lon);
+    const timezoneOptions = { timezone: options.timezone || options.timeZone || weatherData.timezone || null };
+    const sunsetTime = this.getSunsetTime(date, lat, lon, timezoneOptions);
+    const sunriseTime = this.getSunriseTime(date, lat, lon, timezoneOptions);
 
     // 使用统一评分算法计算 score / quality / breakdown
     const unifiedResult = this._calculateUnifiedScore({

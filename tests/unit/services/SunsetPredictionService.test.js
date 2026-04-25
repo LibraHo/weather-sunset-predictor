@@ -543,3 +543,31 @@ describe('SunsetPredictionService', () => {
     });
   });
 });
+
+describe('SunsetPredictionService timezone display invariants', () => {
+  test('北京日出应按目标地点 Asia/Shanghai 显示，而不是用户所在时区', () => {
+    const service = new SunsetPredictionService();
+    const sunrise = service.getSunriseTime(
+      new Date('2026-04-25T00:00:00Z'),
+      39.9042,
+      116.4074,
+      { timezone: 'Asia/Shanghai' }
+    );
+
+    const beijingTime = new Intl.DateTimeFormat('zh-CN', {
+      timeZone: 'Asia/Shanghai',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).format(sunrise);
+    const qatarTime = new Intl.DateTimeFormat('zh-CN', {
+      timeZone: 'Asia/Qatar',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).format(sunrise);
+
+    expect(beijingTime).toMatch(/^05:/);
+    expect(qatarTime).toMatch(/^00:/);
+  });
+});
