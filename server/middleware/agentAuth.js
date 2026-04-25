@@ -98,6 +98,7 @@ function logAuthError(auditLogger, req, status, code, start) {
 module.exports = function createAgentAuth(options = {}) {
   const service = options.apiTokenService || DEFAULT_SERVICE;
   const requiredScopes = normalizeScopes(options.requiredScopes || options.scope || []);
+  const requiredScopesAny = normalizeScopes(options.requiredScopesAny || options.scopeAny || []);
   const auditLogger = options.auditLogger;
 
   return function agentAuthMiddleware(req, res, next) {
@@ -105,7 +106,16 @@ module.exports = function createAgentAuth(options = {}) {
 
     try {
       const token = getTokenFromRequest(req);
-      const result = service.authenticateToken(token, requiredScopes);
+      let result = service.authenticateToken(token, requiredScopes);
+      if (!result.ok && requiredScopesAny.length > 0) {
+        // 支持 OR 鉴权：只要满足任一 scope 即可，例如 explain:read 或 forecast:read。
+        for (const scope of requiredScopesAny) {
+          result = service.authenticateToken(token, [scope]);
+          if (result.ok) {
+            break;
+          }
+        }
+      }
 
       if (!result.ok) {
         logAuthFailure(auditLogger, req, result, start);

@@ -328,6 +328,19 @@ class ApiTokenService {
     return this._toPublic(tokenRecord);
   }
 
+  listInternalTokens() {
+    return this.tokens
+      .slice()
+      .map((tokenRecord) => ({
+        ...tokenRecord,
+        tokenHash: undefined,
+        _minuteWindow: tokenRecord._minuteWindow,
+        _minuteUsage: tokenRecord._minuteUsage,
+        _dailyWindow: tokenRecord._dailyWindow,
+        _dailyUsage: tokenRecord._dailyUsage
+      }));
+  }
+
   deleteToken(id) {
     const idx = this.tokens.findIndex((t) => t.id === id);
     if (idx < 0) {

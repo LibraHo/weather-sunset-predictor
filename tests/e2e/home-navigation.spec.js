@@ -136,9 +136,20 @@ test.describe('主页分页导航 (Phase 10 需求26)', () => {
     await expect(scoreGuide).toBeVisible();
   });
 
-  // ──────────────────────────────────────────────
-  // 响应式测试
-  // ──────────────────────────────────────────────
+  test('首页有 API 接入入口并可跳转', async ({ page }) => {
+    const apiLink = page.locator('a:has-text("API接入")').first();
+    await expect(apiLink).toBeVisible();
+    await apiLink.click();
+    await expect(page).toHaveURL(/\/api-apply\.html$/);
+    await expect(page.getByText('API 接入')).toBeVisible();
+    await expect(page.getByText('禁止商用')).toBeVisible();
+
+    const codeText = await page.locator('.code-box').first().textContent();
+    expect(codeText).not.toContain('xiake_');
+  });
+
+
+  // ──────────────────────────────────────────────\n  // 响应式测试\n  // ──────────────────────────────────────────────
 
   test('移动端视口下导航菜单正常工作', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });

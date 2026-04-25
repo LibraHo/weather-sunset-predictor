@@ -3,110 +3,202 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>申请 API 接入 - 霞客</title>
+  <title>API接入 - 霞客</title>
   <link rel="stylesheet" href="/styles/main.css" />
   <style>
-    .apply-card {
-      max-width: 680px;
-      margin: 32px auto;
-      padding: 20px;
-      border-radius: 12px;
-      background: rgba(17, 28, 43, 0.85);
-      border: 1px solid rgba(255,255,255,0.1);
-      color: #fff;
+    .api-page {
+      max-width: 980px;
+      margin: 24px auto;
+      padding: 0 12px;
+      display: grid;
+      gap: 14px;
     }
-    .apply-title { margin-top: 0; }
-    .apply-grid { display: grid; gap: 12px; }
-    .apply-grid input, .apply-grid textarea {
+
+    .code-box {
+      position: relative;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 12px;
+      background: var(--color-bg-soft, rgba(255, 255, 255, 0.05));
+      white-space: pre-wrap;
+      overflow: auto;
+      font-family: Consolas, 'Courier New', monospace;
+      font-size: 0.92rem;
+      line-height: 1.45;
+      color: var(--color-text);
+    }
+
+    .mono {
+      font-family: Consolas, 'Courier New', monospace;
+      font-size: 0.92rem;
+      color: var(--color-text);
+    }
+
+    .muted {
+      color: var(--color-text-light);
+      margin-top: 4px;
+    }
+
+    .api-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 10px;
+    }
+
+    .tag {
+      display: inline-block;
+      border: 1px solid var(--color-border);
+      border-radius: 999px;
+      padding: 4px 8px;
+      margin: 2px;
+      font-size: 0.82rem;
+      color: var(--color-text-light);
+    }
+
+    .warning {
+      color: #d28f00;
+      border-left: 3px solid #d28f00;
+      padding-left: 10px;
+    }
+
+    .api-table {
       width: 100%;
-      box-sizing: border-box;
-      border: 1px solid rgba(255,255,255,.2);
-      border-radius: 8px;
-      padding: 10px;
-      background: rgba(15,24,35,.8);
-      color: #fff;
+      border-collapse: collapse;
     }
-    .apply-tip {
-      background: rgba(255, 193, 7, 0.12);
-      border: 1px solid rgba(255,193,7,0.35);
-      border-radius: 8px;
-      padding: 10px 12px;
-      margin: 12px 0;
-      color: #ffd56a;
+
+    .api-table th,
+    .api-table td {
+      text-align: left;
+      border-bottom: 1px solid var(--color-border);
+      padding: 8px 6px;
+      vertical-align: top;
+      font-size: 0.9rem;
     }
-    .apply-msg { margin-top: 12px; min-height: 20px; }
-    .apply-msg.success { color: #4caf50; }
-    .apply-msg.error { color: #ef5350; }
-    .btn { padding: 10px 14px; border-radius: 8px; border: none; background: #4a90e2; color: #fff; cursor: pointer; }
-    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    @media (max-width: 720px) {
+      .api-page {
+        margin: 12px auto;
+      }
+
+      .api-table th,
+      .api-table td {
+        font-size: 0.84rem;
+      }
+    }
   </style>
 </head>
-<body style="background:#0b1320;color:#eaf0ff;">
-  <main class="apply-card">
-    <h1 class="apply-title">API 接口申请</h1>
-    <p>请先提交申请，待后台审核通过后我们将为你开通 Token。</p>
-    <div class="apply-tip">仅限个人/研究/测试/非商业用途</div>
+<body>
+  <main class="api-page">
+    <section class="card">
+      <h1>API 接入</h1>
+      <p>本页说明霞客 Agent API 的接入方式，含鉴权、参数、返回值与示例。</p>
+      <p class="warning">仅限个人/学习/研究用途，禁止商用。任何公开展示请脱敏并标明来源。</p>
+      <div class="api-grid">
+        <a href="/api-apply.html" class="btn btn-secondary" style="justify-self:start; text-decoration:none;">申请 API 账号</a>
+        <a href="/api/agent/openapi.json" class="btn btn-secondary" style="justify-self:start; text-decoration:none;">下载 OpenAPI 规格</a>
+        <a href="/admin" class="btn btn-secondary" style="justify-self:start; text-decoration:none;">前往管理后台</a>
+      </div>
+    </section>
 
-    <form id="applyForm" class="apply-grid">
-      <label>
-        邮箱（必填）
-        <input name="email" type="email" required placeholder="yourname@example.com" />
-      </label>
-      <label>
-        联系方式（必填）
-        <input name="contact" type="text" required placeholder="微信 / 电话 / Telegram" />
-      </label>
-      <label>
-        用途说明（选填）
-        <textarea name="purpose" rows="4" placeholder="用于个人学习/研究/测试用途"></textarea>
-      </label>
-      <label>
-        预计调用量（选填）
-        <input name="expectedCallVolume" type="number" min="1" placeholder="预计每日调用次数" />
-      </label>
-      <button class="btn" type="submit">提交申请</button>
-    </form>
+    <section class="card">
+      <h2>快速开始</h2>
+      <ol>
+        <li>申请并获取 Token（管理员审核后返回明文 token）。</li>
+        <li>请求时在 <span class="mono">Authorization: Bearer &lt;token&gt;</span> 中传入。</li>
+        <li>支持请求：<span class="mono">/api/agent/forecast</span>、<span class="mono">/api/agent/explain</span>、<span class="mono">/api/agent/geocode</span>。</li>
+      </ol>
+    </section>
 
-    <div id="applyMsg" class="apply-msg"></div>
-    <p><a href="/" style="color:#7ec7ff;">返回首页</a></p>
+    <section class="card">
+      <h2>Token 使用</h2>
+      <p>鉴权头示例：</p>
+      <div class="code-box">Authorization: Bearer YOUR_TOKEN_HERE</div>
+      <p class="muted">注意：不要在代码里硬编码真实 Token，可在环境变量/配置文件注入。</p>
+    </section>
+
+    <section class="card">
+      <h2>示例调用</h2>
+      <h3>curl</h3>
+      <div class="code-box">curl -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  "https://your-host/api/agent/explain?location=%E5%8C%97%E4%BA%AC&amp;type=sunset&amp;date=today"</div>
+
+      <h3>JavaScript</h3>
+      <div class="code-box">const res = await fetch('/api/agent/geocode?q=%E5%8C%97%E4%BA%AC', {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+const body = await res.json();
+console.log(body.data.top.name, body.data.top.countryCode);
+</div>
+
+      <h3>Python</h3>
+      <div class="code-box">import requests
+url = 'https://your-host/api/agent/forecast'
+resp = requests.get(
+  url,
+  params={'location': '北京', 'type': 'sunset', 'date': 'today'},
+  headers={'Authorization': 'Bearer YOUR_TOKEN_HERE'}
+)
+print(resp.json())</div>
+    </section>
+
+    <section class="card">
+      <h2>参数表（核心）</h2>
+      <table class="api-table">
+        <thead><tr><th>接口</th><th>参数</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="mono">/forecast</span></td>
+            <td><span class="tag">lat</span> <span class="tag">lon</span> <span class="tag">location</span> <span class="tag">type</span> <span class="tag">date</span> <span class="tag">detail</span></td>
+            <td>日落/朝霞预测，返回评分与窗口。</td>
+          </tr>
+          <tr>
+            <td><span class="mono">/explain</span></td>
+            <td><span class="tag">lat/lon 或 location</span>，<span class="tag">type</span>，<span class="tag">date</span></td>
+            <td>输出评分构成、因子关系、关键限制与自然语言解释。</td>
+          </tr>
+          <tr>
+            <td><span class="mono">/geocode</span></td>
+            <td><span class="tag">q</span>(必填)、<span class="tag">limit</span>(选填)</td>
+            <td>返回标准地点列表，包含坐标和置信度。</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>返回字段（示例）</h2>
+      <ul>
+        <li><span class="mono">/forecast</span>：location, score, quality, bestViewingWindow, meta.algorithm, etc.</li>
+        <li><span class="mono">/explain</span>：factorRelations, scoreComposition, constraints, explanation.narrative。</li>
+        <li><span class="mono">/geocode</span>：results[].name, country, countryCode, lat, lon, confidence, rankReason, provider。</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>错误码</h2>
+      <table class="api-table">
+        <thead><tr><th>状态码</th><th>错误码</th><th>含义</th></tr></thead>
+        <tbody>
+          <tr><td>400</td><td>INVALID_PARAMS</td><td>参数缺失或不合法</td></tr>
+          <tr><td>401</td><td>UNAUTHORIZED</td><td>缺少/无效 token</td></tr>
+          <tr><td>403</td><td>SCOPE_DENIED / TOKEN_DISABLED</td><td>权限不足或 token 禁用</td></tr>
+          <tr><td>404</td><td>LOCATION_NOT_FOUND</td><td>未找到地名</td></tr>
+          <tr><td>429</td><td>RATE_LIMITED / RATE_LIMIT_EXCEEDED</td><td>请求过于频繁</td></tr>
+          <tr><td>500</td><td>AGENT_*_ERROR</td><td>内部异常</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>限流与安全</h2>
+      <ul>
+        <li>Token 具备分钟/日两级限流，超限返回 429。</li>
+        <li><span class="mono">/api/agent/openapi.json</span> 同样受全局限流保护。</li>
+        <li>鉴权头只支持 <span class="mono">Authorization: Bearer &lt;token&gt;</span> 与兼容头 <span class="mono">X-Xiake-Token</span>。</li>
+      </ul>
+      <p class="warning">禁止商用；若需商业合作请联系管理员开通其它渠道。</p>
+      <p><a href="/" class="mono">返回首页</a></p>
+    </section>
   </main>
-
-  <script>
-    const form = document.getElementById('applyForm');
-    const msg = document.getElementById('applyMsg');
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      msg.textContent = '';
-      msg.className = 'apply-msg';
-
-      const body = {
-        email: form.email.value.trim(),
-        contact: form.contact.value.trim(),
-        purpose: form.purpose.value.trim(),
-        expectedCallVolume: form.expectedCallVolume.value ? Number(form.expectedCallVolume.value) : undefined
-      };
-
-      try {
-        const res = await fetch('/api/applications', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          msg.textContent = data?.error?.message || '提交失败';
-          msg.className = 'apply-msg error';
-          return;
-        }
-        msg.textContent = '提交成功，后台审核通过后会与管理员联系；申请接口不直接返回 Token。';
-        msg.className = 'apply-msg success';
-        form.reset();
-      } catch (err) {
-        msg.textContent = '提交失败，请稍后重试';
-        msg.className = 'apply-msg error';
-      }
-    });
-  </script>
 </body>
 </html>
