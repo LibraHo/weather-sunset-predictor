@@ -351,10 +351,8 @@ describe('PredictionController', () => {
       `;
 
       const displayDate = new Date();
-      const sunsetTime = new Date(displayDate);
-      sunsetTime.setHours(19, 45, 0, 0);
-      const sunriseTime = new Date(displayDate);
-      sunriseTime.setHours(5, 0, 0, 0);
+      const sunsetTime = new Date(Date.now() + 2 * 60 * 60 * 1000);
+      const sunriseTime = new Date(Date.now() - 8 * 60 * 60 * 1000);
 
       const basePrediction = {
         date: displayDate,
@@ -379,8 +377,10 @@ describe('PredictionController', () => {
         shouldShowAzimuth: () => false
       };
 
-      predictionController.predictions = [basePrediction];
-      predictionController.updateTodayPredictions(basePrediction, basePrediction, sunriseTime, sunsetTime, displayDate);
+      const sunrisePrediction = { ...basePrediction, type: 'sunrise', sunriseTime, sunsetTime };
+      const sunsetPrediction = { ...basePrediction, type: 'sunset', sunriseTime, sunsetTime };
+      predictionController.predictions = [sunrisePrediction, sunsetPrediction];
+      predictionController.updateTodayPredictions(sunrisePrediction, sunsetPrediction, sunriseTime, sunsetTime, displayDate);
 
       const trigger = document.querySelector('.score-breakdown-trigger');
       const popover = document.querySelector('.score-breakdown-popover');
@@ -402,7 +402,38 @@ describe('PredictionController', () => {
     });
 
     test('动态插入的新分数仪表盘也应响应点击', () => {
-      predictionController.updatePredictionDisplay();
+      document.body.innerHTML = `
+        <section id="prediction-section" class="hidden">
+          <h2 id="prediction-section-title"></h2>
+          <div id="prediction-display"></div>
+        </section>
+      `;
+      const displayDate = new Date();
+      const sunsetTime = new Date(Date.now() + 2 * 60 * 60 * 1000);
+      const sunriseTime = new Date(Date.now() - 8 * 60 * 60 * 1000);
+      const basePrediction = {
+        date: displayDate,
+        score: 64,
+        quality: 'good',
+        type: 'sunset',
+        sunriseTime,
+        sunsetTime,
+        goldenHour: null,
+        blueHour: null,
+        sunAzimuth: null,
+        cloudLayers: null,
+        factors: {},
+        breakdown: { baseScore: 70, canvasScore: 65, lightPathScore: 80, renderingFactor: 0.9 },
+        canvasAnalysis: { score: 65 },
+        lightPathAnalysis: { score: 80 },
+        renderingAnalysis: { factor: 0.9 },
+        getOptimalViewingWindow: () => ({ start: sunriseTime, end: sunsetTime }),
+        shouldShowAzimuth: () => false
+      };
+      const sunrisePrediction = { ...basePrediction, type: 'sunrise' };
+      const sunsetPrediction = { ...basePrediction, type: 'sunset' };
+      predictionController.predictions = [sunrisePrediction, sunsetPrediction];
+      predictionController.updateTodayPredictions(sunrisePrediction, sunsetPrediction, sunriseTime, sunsetTime, displayDate);
       const dynamic = document.createElement('div');
       dynamic.innerHTML = `
         <div class="score-breakdown-trigger" role="button" aria-expanded="false">
