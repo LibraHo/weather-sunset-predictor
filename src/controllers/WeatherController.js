@@ -245,7 +245,7 @@ class WeatherController {
       pressure: document.getElementById('current-pressure'),
       visibility: document.getElementById('current-visibility'),
       aerosol: document.getElementById('current-aerosol'),
-      uvIndex: document.getElementById('current-uv-index')
+      precipitation: document.getElementById('current-precipitation')
     };
 
     if (elements.humidity) {
@@ -275,9 +275,10 @@ class WeatherController {
         ? `AOD ${Number(currentWeather.aerosolOpticalDepth).toFixed(2)}`
         : '--';
     }
-    if (elements.uvIndex) {
-      const uvIndex = this._getCurrentUvIndex(currentWeather);
-      elements.uvIndex.textContent = uvIndex != null ? uvIndex.toFixed(1) : '--';
+    if (elements.precipitation) {
+      elements.precipitation.textContent = currentWeather.precipitation != null
+        ? `${Number(currentWeather.precipitation).toFixed(1)} mm`
+        : '--';
     }
 
     // 显示天气数据容器
@@ -1408,21 +1409,6 @@ class WeatherController {
     );
   }
 
-
-  _getCurrentUvIndex(weatherData) {
-    if (!weatherData) return null;
-    const directUv = Number(weatherData.uvIndex ?? weatherData.uv_index);
-    if (Number.isFinite(directUv)) {
-      return Math.max(0, Math.min(11, directUv));
-    }
-
-    const shortwave = Number(weatherData.shortwaveRadiation);
-    if (Number.isFinite(shortwave) && shortwave > 0) {
-      return Math.max(0, Math.min(11, shortwave / 100));
-    }
-
-    return null;
-  }
 
   /**
    * 获取指定位置的天气数据，不修改 this.currentWeatherData / this.currentLocation 全局状态。

@@ -6571,3 +6571,13 @@ html[data-actual-theme="light"] .prediction-app-card {
     font-size: 0.72rem;
   }
 }
+
+/* 天气指标：降水单位较长，保持单行 */
+.weather-metric-precipitation .weather-value {
+  font-size: 0.92rem;
+}
+@media (max-width: 768px) {
+  .weather-metric-precipitation .weather-value {
+    font-size: 0.72rem;
+  }
+}
