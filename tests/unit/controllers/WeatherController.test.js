@@ -494,8 +494,8 @@ describe('WeatherController - 24小时温度连续化', () => {
 
     const cards = [...grid.querySelectorAll('.weather-metric-card')];
     expect(cards).toHaveLength(6);
-    expect(grid.querySelector('#current-uv-index')).not.toBeNull();
-    expect(grid.querySelector('[data-i18n="weather.uvIndex"]')).not.toBeNull();
+    expect(grid.querySelector('#current-precipitation')).not.toBeNull();
+    expect(grid.querySelector('[data-i18n="weather.precipitation"]')).not.toBeNull();
 
     cards.forEach(card => {
       expect(card.querySelector('.weather-metric-icon svg')).not.toBeNull();
@@ -522,7 +522,7 @@ describe('WeatherController - 24小时温度连续化', () => {
         <span id="current-pressure"></span>
         <span id="current-visibility"></span>
         <span id="current-aerosol"></span>
-        <span id="current-uv-index"></span>
+        <span id="current-precipitation"></span>
         <div id="weekly-cards"></div>
       </section>
     `;
@@ -541,7 +541,7 @@ describe('WeatherController - 24小时温度连续化', () => {
       pressure: 1012,
       visibility: 12,
       aerosolOpticalDepth: 0.12,
-      shortwaveRadiation: 620
+      precipitation: 1.6
     }], { name: '北京', lat: 39.9, lon: 116.4 });
 
     const weatherData = document.getElementById('weather-data');
@@ -549,7 +549,7 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(weatherData.style.display).toBe('block');
     expect(document.getElementById('weather-section').classList.contains('hidden')).toBe(false);
     expect(document.getElementById('current-aerosol').textContent).toBe('AOD 0.12');
-    expect(document.getElementById('current-uv-index').textContent).toBe('6.2');
+    expect(document.getElementById('current-precipitation').textContent).toBe('1.6 mm');
   });
 
   test('showError: 无 #weather-error 元素时不报错', () => {
