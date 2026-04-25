@@ -4,43 +4,99 @@
 
 ---
 
-## 🔬 需求43：气溶胶/空气颗粒纳入评分与 UI（待分配，2026-04-25）
+## 🔐 需求45：Agent API 与 API Token 管理（待分批实施，2026-04-25）
+
+### 背景
+Alex 希望让大模型/自动化工具直接调用霞客火烧云信息。结论：不必先做 CLI；核心应是同一后端上的受控 Agent API。第一阶段自用，未来可邀请制开放给用户且禁止商用，因此从一开始要有 Token、限流、审计和后台管理。
+
+### Phase 1：MVP（优先，建议 3 个 PR 拆分）
+- [ ] 45.1 Token 数据模型：新增 token 存储（优先 SQLite；如短期用 JSON，必须预留迁移边界），字段含 `id/name/prefix/tokenHash/scopes/enabled/minuteLimit/dailyLimit/createdAt/lastUsedAt/usageCount`。
+- [ ] 45.2 Token 生成与哈希：生成 `xiake_live_` / `xiake_test_` 前缀 token；明文仅创建时返回；服务端只存 hash。
+- [ ] 45.3 鉴权中间件：支持 `Authorization: Bearer <token>`，校验 hash、enabled、scope、minute/day quota。
+- [ ] 45.4 后台 Token 管理：在 admin 增加 API Tokens 区域，支持创建、列表、启停、改名、改限流、吊销；列表不显示明文。
+- [ ] 45.5 Agent Forecast API：新增 `GET /api/agent/forecast`，支持 `location` 或 `lat/lon`、`type=sunrise|sunset`、`date=today|tomorrow|ISO`、`detail=simple|full`。
+- [ ] 45.6 结构化返回：返回 `location/score/quality/bestViewingWindow/factors/summary/explanation/warnings/meta`，适合 LLM 直接消费。
+- [ ] 45.7 审计日志：记录 tokenId、endpoint、status、elapsedMs、ipHash、userAgent 摘要、错误码；不记录 token 明文。
+- [ ] 45.8 测试：新增/更新 `apiTokenService.test.js`、`agentAuth.test.js`、`agentForecast.test.js`、`adminTokens.test.js`；覆盖无 token 401、禁用 token 403、scope 不足 403、超限 429、forecast 成功、token 明文只返回一次。
+
+### Phase 2：工具化增强
+- [ ] 45.9 Agent Explain API：`GET /api/agent/explain`，输出分数构成、因子关系、关键限制和自然语言解释。
+- [ ] 45.10 Agent Geocode API：`GET /api/agent/geocode?q=`，返回标准地点、国家、经纬度、confidence、rankReason。
+- [ ] 45.11 OpenAPI 文档：新增 `GET /api/agent/openapi.json`，描述鉴权、参数、返回和错误码，便于大模型/工具接入。
+- [ ] 45.12 API接入：新增「API接入」主页面/菜单入口，必须在现有霞客主题框架下实现并复用当前菜单、卡片、按钮、字体、明暗主题和移动端布局；内容包含快速开始、Token 使用、curl/JS/Python 示例、参数表、返回字段、错误码、限流规则和安全说明。
+- [ ] 45.13 API申请：新增「API申请」前台入口，必须在现有霞客主题框架下实现并复用当前表单/按钮/卡片/明暗主题；最小表单字段为邮箱/联系方式（必填）和用途说明（可选），页面明确提示禁止商用、仅限个人/研究/测试/非商业用途；提交后后台可查看申请、标记状态，并从申请一键创建 Token；申请与 tokenId 持久化关联保存。
+- [ ] 45.14 用量统计后台：按 token 展示今日调用量、错误率、最近调用、日额度剩余。
+
+### Phase 3：开放与生态
+- [ ] 45.15 Map Summary API：`GET /api/agent/map-summary?bbox=&type=&threshold=`，返回区域火烧云概览/高分点摘要，避免直接暴露大体积图层。
+- [ ] 45.16 邀请用户（禁止商用）能力：支持 token 备注、非商用额度、到期时间、批量禁用；后台和 API接入文档均需明确禁止商用。
+- [ ] 45.17 MCP/tool schema 示例：提供 Claude/OpenAI/OpenClaw 可直接使用的 tool schema 示例；CLI 暂不作为必需项。
+
+### 验收标准
+- [ ] Agent API 与网站 API 共用同一后端和算法，不出现两套评分逻辑。
+- [ ] 所有 `/api/agent/*` 默认必须鉴权；公开文档接口除外也要限流。
+- [ ] Token 泄露时可在后台立即停用，并且停用后请求返回 403。
+- [ ] Agent forecast 返回 JSON 字段稳定，适合大模型无网页解析地调用。
+- [ ] 需求45 所有实现 PR 必须补充分层测试，不能只测 happy path；若某项暂无法自动化测试，PR 内必须说明原因。
+- [ ] Token/鉴权测试必须覆盖：无 Token 401、格式错误 401、hash 不匹配 401、禁用 Token 403、scope 不足 403、分钟/日额度超限 429、Token 明文只返回一次、列表/日志不泄露明文。
+- [ ] Agent API 测试必须覆盖：城市名输入、经纬度输入、`sunrise/sunset`、`simple/full`、无效参数 400、上游失败降级、返回字段 schema 稳定、解释/时间窗口不为空。
+- [ ] API申请测试必须覆盖：邮箱/联系方式必填校验、用途可选、提交成功入库、后台列表可见、审核通过创建 Token、拒绝申请、申请与 tokenId 关联、前台永不直接返回 Token。
+- [ ] API接入/API申请 UI 测试必须覆盖：页面入口存在、禁止商用文案存在、复用现有主题/卡片/按钮类名或变量、移动端不溢出、代码示例可复制且不包含真实 Token。
+- [ ] OpenAPI/工具化测试必须覆盖：`openapi.json` 可解析、鉴权 scheme 正确、forecast/explain/geocode schema 与实际返回一致。
+
+### 建议 PR 拆分
+- PR A（基础安全）：45.1-45.3 + 45.8 部分。Token 存储、生成、鉴权中间件；必须包含 `apiTokenService.test.js`、`agentAuth.test.js`。
+- PR B（Forecast MVP）：45.5-45.6 + forecast 成功测试。只做 `/api/agent/forecast`，复用现有 geocoding/weather/prediction 服务；必须包含 `agentForecast.test.js`。
+- PR C（后台与审计）：45.4 + 45.7 + 45.13。后台管理 UI/API、API申请列表、使用日志、最近使用与调用次数；必须包含 `adminTokens.test.js` 和申请流程测试。
+- PR D（文档工具）：45.9-45.12 + 45.14。explain/geocode/OpenAPI/API接入/用量统计；必须补对应 route/schema/UI 测试。
+
+### 建议分配
+- minicoder A：PR A 的 Token 存储、生成、鉴权中间件与测试。
+- minicoder B：PR B 的 Agent forecast 路由与结构化返回测试。
+- coder：PR C 后台管理整合、审计、最终验收；PR D 视节奏拆分。
+
+---
+
+## ✅ 需求43：气溶胶/空气颗粒纳入评分与 UI（已完成，2026-04-25）
 
 ### 背景
 粉丝建议把气溶胶指数纳入火烧云判断。结论：气溶胶与能见度高度相关但不重合；能见度是通透度结果，气溶胶/AOD/PM/Dust 是散射与灰霾原因，应作为独立修正项而不是替代能见度。
 
 ### 任务拆分
-- [ ] 43.1 数据接入：新增 Open-Meteo Air Quality API 客户端/方法，拉取 `aerosol_optical_depth,dust,pm2_5,pm10,us_aqi/european_aqi`。
-- [ ] 43.2 数据合并：按小时把 Air Quality 数据并入 `weatherData`，字段为 `aerosolOpticalDepth,dust,pm2_5,pm10,aqi`；失败时降级不影响天气预测。
-- [ ] 43.3 评分算法：新增 `scoreAerosolScattering()` 或等价逻辑；AOD 适中小幅加分，过高/PM高/沙尘高扣分；能见度差且颗粒物高时禁止加分。
-- [ ] 43.4 UI 展示：实时天气面板、分数明细弹窗、文字分析、算法说明页同步展示气溶胶/颗粒物影响。
-- [ ] 43.5 测试：覆盖 AOD 适中加分、AOD高+低能见度扣分、无气溶胶数据降级、UI显示气溶胶分析。
+- [x] 43.1 数据接入：新增 Open-Meteo Air Quality API 客户端/方法，拉取 `aerosol_optical_depth,dust,pm2_5,pm10,us_aqi/european_aqi`。
+- [x] 43.2 数据合并：按小时把 Air Quality 数据并入 `weatherData`，字段为 `aerosolOpticalDepth,dust,pm2_5,pm10,aqi`；失败时降级不影响天气预测。
+- [x] 43.3 评分算法：新增 `scoreAerosolScattering()` 或等价逻辑；AOD 适中小幅加分，过高/PM高/沙尘高扣分；能见度差且颗粒物高时禁止加分。
+- [x] 43.4 UI 展示：实时天气面板、分数明细弹窗、文字分析、算法说明页同步展示气溶胶/颗粒物影响。
+- [x] 43.5 测试：覆盖 AOD 适中加分、AOD高+低能见度扣分、无气溶胶数据降级、UI显示气溶胶分析。
 
-### 建议分配
-- minicoder A：43.1 + 43.2 数据接入与降级。
-- minicoder B：43.3 算法与单测。
-- coder：43.4 UI整合、最终验收、PR。
+### 完成记录
+- PR #419：气溶胶散射评分。
+- PR #420：气溶胶 UI 展示。
+- PR #425：气溶胶数据进入 prediction response。
+- PR #432：天气面板气溶胶字段修复。
 
-## 🌍 需求44：国际城市搜索排序优化（待分配，2026-04-25）
+## 🟡 需求44：国际城市搜索排序优化（主体已完成，PR #431 待合并，2026-04-25）
 
 ### 背景
 粉丝反馈“洛杉矶”不能要求用户写 LA；同时 `Tokyo/东京` 可能被高德匹配到国内同名小地名。世界城市不能靠全量手工维护，必须优化 geocoding provider 合并与排序。
 
 ### 任务拆分
-- [ ] 44.1 Provider 策略：Auto 搜索统一合并 Open-Meteo/Nominatim/Gaode 结果，不再简单高德置顶；全球城市以 Open-Meteo/Nominatim 为主。
-- [ ] 44.2 Ranking：实现 exact/alias/contains、population、capital/admin、language、country/provider 置信度、中国查询识别等重排。
-- [ ] 44.3 高频别名表：只维护中国、美国、欧洲主要城市的常见中文名/英文名/缩写，作为查询扩展和 ranking 特征；不维护全世界完整城市库。
+- [x] 44.1 Provider 策略：Auto 搜索统一合并 Open-Meteo/Nominatim/Gaode 结果，不再简单高德置顶；全球城市以 Open-Meteo/Nominatim 为主。
+- [x] 44.2 Ranking：实现 exact/alias/contains、population、capital/admin、language、country/provider 置信度、中国查询识别等重排。
+- [x] 44.3 高频别名表：只维护中国、美国、欧洲主要城市的常见中文名/英文名/缩写，作为查询扩展和 ranking 特征；不维护全世界完整城市库。
 - [ ] 44.4 别名范围：
   - 中国主要城市：北京/BJ、上海/SH、广州/GZ、深圳/SZ、香港/HK、澳门、台北、成都、重庆、杭州、南京、西安、武汉、厦门、青岛等。
   - 美国主要城市：洛杉矶/LA/Los Angeles、纽约/NYC/New York、旧金山/SF/San Francisco、华盛顿/DC/Washington DC、西雅图、芝加哥、波士顿、拉斯维加斯、迈阿密等。
   - 欧洲主要城市：伦敦/London、巴黎/Paris、柏林/Berlin、罗马/Rome、马德里/Madrid、巴塞罗那/Barcelona、阿姆斯特丹/Amsterdam、米兰/Milan、苏黎世/Zurich、维也纳/Vienna、布拉格/Prague、雅典/Athens、伊斯坦布尔/Istanbul 等。
-- [ ] 44.5 API 元信息：返回 `providerUsed/fallbackUsed/rankReason` 或调试字段，便于排查搜索排序。
-- [ ] 44.6 测试：`洛杉矶/LA/Los Angeles -> Los Angeles US`，`NYC -> New York US`，`SF -> San Francisco US`，`Tokyo/东京 -> Tokyo JP`，`London/伦敦 -> London GB`，`巴黎/Paris -> Paris FR`，`北京/上海/香港 -> CN/HK`。
+- [x] 44.5 API 元信息：返回 `providerUsed/fallbackUsed/rankReason` 或调试字段，便于排查搜索排序。
+- [x] 44.6 测试：`洛杉矶/LA/Los Angeles -> Los Angeles US`，`NYC -> New York US`，`SF -> San Francisco US`，`Tokyo/东京 -> Tokyo JP`，`London/伦敦 -> London GB`，`巴黎/Paris -> Paris FR`，`北京/上海/香港 -> CN/HK`。
 
-### 建议分配
-- minicoder A：44.1 + 44.2 ranking 纯函数与单测。
-- minicoder B：44.3 + 44.4 + 44.6 alias/样例测试。
-- coder：整合 geocoding 路由、线上验证、PR。
+### 完成/待处理记录
+- 已合并 PR #421：全球 geocoding ranking。
+- 已合并 PR #422：主要城市 alias map + ranking。
+- 已合并 PR #426：优先国际城市 alias。
+- 已合并 PR #429：国际城市 alias/ranking 测试。
+- 待处理 PR #431：扩展更多城市 alias，当前仍 OPEN，等 Alex 明确授权后合并。
 
 ---
 
