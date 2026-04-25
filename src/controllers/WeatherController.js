@@ -244,7 +244,8 @@ class WeatherController {
       windDirectionText: document.getElementById('current-wind-direction-text'),
       pressure: document.getElementById('current-pressure'),
       visibility: document.getElementById('current-visibility'),
-      aerosol: document.getElementById('current-aerosol')
+      aerosol: document.getElementById('current-aerosol'),
+      uvIndex: document.getElementById('current-uv-index')
     };
 
     if (elements.humidity) {
@@ -273,6 +274,10 @@ class WeatherController {
       elements.aerosol.textContent = currentWeather.aerosolOpticalDepth != null
         ? `AOD ${Number(currentWeather.aerosolOpticalDepth).toFixed(2)}`
         : '--';
+    }
+    if (elements.uvIndex) {
+      const uvIndex = this._getCurrentUvIndex(currentWeather);
+      elements.uvIndex.textContent = uvIndex != null ? uvIndex.toFixed(1) : '--';
     }
 
     // 显示天气数据容器
@@ -1401,6 +1406,22 @@ class WeatherController {
         );
       }
     );
+  }
+
+
+  _getCurrentUvIndex(weatherData) {
+    if (!weatherData) return null;
+    const directUv = Number(weatherData.uvIndex ?? weatherData.uv_index);
+    if (Number.isFinite(directUv)) {
+      return Math.max(0, Math.min(11, directUv));
+    }
+
+    const shortwave = Number(weatherData.shortwaveRadiation);
+    if (Number.isFinite(shortwave) && shortwave > 0) {
+      return Math.max(0, Math.min(11, shortwave / 100));
+    }
+
+    return null;
   }
 
   /**

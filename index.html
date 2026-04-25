@@ -167,26 +167,36 @@
                 </div>
               </div>
 
-              <div class="weather-feature-stack">
-                <div class="weather-feature-item">
+              <div class="weather-feature-stack weather-metric-grid">
+                <div class="weather-feature-item weather-metric-card weather-metric-humidity">
+                  <span class="weather-metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3.5 5 12c2.2 3.6 3.6 5.7 7 9 3.4-3.3 4.8-5.4 7-9L12 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                   <span class="weather-label" data-i18n="weather.humidity">湿度</span>
                   <span id="current-humidity" class="weather-value">--</span>
                 </div>
-                <div class="weather-feature-item">
+                <div class="weather-feature-item weather-metric-card weather-metric-cloud">
+                  <span class="weather-metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 18h10a4 4 0 0 0 0-8 6 6 0 0 0-11.5-1A4.5 4.5 0 0 0 7 18Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                   <span class="weather-label" data-i18n="weather.cloudCover">云量</span>
                   <span id="current-cloud-cover" class="weather-value">--</span>
                 </div>
-                <div class="weather-feature-item weather-feature-item-compact">
+                <div class="weather-feature-item weather-metric-card weather-metric-pressure">
+                  <span class="weather-metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 17h14M5 9h14M7 13h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                   <span class="weather-label" data-i18n="weather.pressure">气压</span>
                   <span id="current-pressure" class="weather-value">--</span>
                 </div>
-                <div class="weather-feature-item weather-feature-item-compact weather-item-highlight">
+                <div class="weather-feature-item weather-metric-card weather-metric-visibility">
+                  <span class="weather-metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 12s3.5-5 9-5 9 5 9 5-3.5 5-9 5-9-5-9-5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.4" stroke="currentColor" stroke-width="1.8"/></svg></span>
                   <span class="weather-label" data-i18n="weather.visibility">能见度</span>
                   <span id="current-visibility" class="weather-value">--</span>
                 </div>
-                <div class="weather-feature-item weather-feature-item-compact">
+                <div class="weather-feature-item weather-metric-card weather-metric-aerosol">
+                  <span class="weather-metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 9h7M7 13h10M13 17h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="1.6"/><circle cx="6" cy="17" r="1.2" stroke="currentColor" stroke-width="1.5"/></svg></span>
                   <span class="weather-label" data-i18n="weather.aerosol">气溶胶</span>
                   <span id="current-aerosol" class="weather-value">--</span>
+                </div>
+                <div class="weather-feature-item weather-metric-card weather-metric-uv">
+                  <span class="weather-metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="3.4" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M18.5 5.5l-1.7 1.7M7.2 16.8l-1.7 1.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+                  <span class="weather-label" data-i18n="weather.uvIndex">紫外线指数</span>
+                  <span id="current-uv-index" class="weather-value">--</span>
                 </div>
               </div>
             </div>

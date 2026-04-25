@@ -6495,3 +6495,79 @@ html[data-actual-theme="light"] .prediction-app-card {
   }
   .xiake-toggle-wrap .xiake-toggle-btn { flex: 1 1 calc(33.333% - 6px); }
 }
+
+/* 天气信息指标卡：两行三列统一 SVG 模板 */
+.weather-metric-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+.weather-metric-card {
+  min-height: 92px;
+  padding: 10px 8px !important;
+  gap: 4px;
+}
+.weather-metric-icon {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary, #f97316);
+  opacity: 0.92;
+  margin-bottom: 2px;
+}
+.weather-metric-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.weather-metric-card .weather-label {
+  margin-bottom: 0 !important;
+  font-size: 0.72rem;
+  line-height: 1.12;
+}
+.weather-metric-card .weather-value {
+  font-size: 1.08rem;
+  line-height: 1.15;
+}
+.weather-metric-aerosol .weather-value,
+.weather-metric-pressure .weather-value,
+.weather-metric-visibility .weather-value {
+  font-size: 0.92rem;
+}
+@media (max-width: 768px) {
+  .weather-metric-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+  .weather-metric-card {
+    min-height: 76px;
+    padding: 8px 5px !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+  .weather-metric-icon {
+    width: 18px;
+    height: 18px;
+    margin-bottom: 1px;
+  }
+  .weather-metric-card .weather-label {
+    width: 100% !important;
+    flex: none !important;
+    font-size: 0.66rem;
+  }
+  .weather-metric-card .weather-value {
+    width: 100% !important;
+    text-align: center !important;
+    font-size: 0.9rem;
+  }
+  .weather-metric-aerosol .weather-value,
+  .weather-metric-pressure .weather-value,
+  .weather-metric-visibility .weather-value {
+    font-size: 0.72rem;
+  }
+}
