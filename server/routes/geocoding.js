@@ -51,6 +51,9 @@ const CITY_ALIAS_RECORDS = [
   { canonical: 'boston', zh: ['波士顿'], en: ['boston'], aliases: ['波士顿', 'boston'], regionCode: 'MA', countryCode: 'US' },
   { canonical: 'lasvegas', zh: ['拉斯维加斯'], en: ['las vegas'], aliases: ['拉斯维加斯', 'las vegas', 'lasvegas'], regionCode: 'NV', countryCode: 'US' },
   { canonical: 'miami', zh: ['迈阿密'], en: ['miami'], aliases: ['迈阿密', 'miami'], regionCode: 'FL', countryCode: 'US' },
+  { canonical: 'honolulu', zh: ['檀香山', '火奴鲁鲁'], en: ['honolulu'], aliases: ['檀香山', '火奴鲁鲁', 'honolulu'], regionCode: 'HI', countryCode: 'US' },
+  { canonical: 'sandiego', zh: ['圣迭戈', '圣地亚哥'], en: ['san diego'], aliases: ['圣迭戈', '圣地亚哥', 'san diego', 'sandiego'], regionCode: 'CA', countryCode: 'US' },
+  { canonical: 'denver', zh: ['丹佛'], en: ['denver'], aliases: ['丹佛', 'denver'], regionCode: 'CO', countryCode: 'US' },
 
   // 欧洲
   { canonical: 'london', zh: ['伦敦'], en: ['london'], aliases: ['伦敦', 'london'], regionCode: 'LND', countryCode: 'GB' },
@@ -65,7 +68,12 @@ const CITY_ALIAS_RECORDS = [
   { canonical: 'vienna', zh: ['维也纳'], en: ['vienna'], aliases: ['维也纳', 'vienna'], regionCode: '9', countryCode: 'AT' },
   { canonical: 'prague', zh: ['布拉格'], en: ['prague'], aliases: ['布拉格', 'prague'], regionCode: 'PR', countryCode: 'CZ' },
   { canonical: 'athens', zh: ['雅典'], en: ['athens'], aliases: ['雅典', 'athens'], regionCode: 'A', countryCode: 'GR' },
-  { canonical: 'istanbul', zh: ['伊斯坦布尔'], en: ['istanbul'], aliases: ['伊斯坦布尔', 'istanbul'], regionCode: '34', countryCode: 'TR' }
+  { canonical: 'istanbul', zh: ['伊斯坦布尔'], en: ['istanbul'], aliases: ['伊斯坦布尔', 'istanbul'], regionCode: '34', countryCode: 'TR' },
+  { canonical: 'lisbon', zh: ['里斯本'], en: ['lisbon'], aliases: ['里斯本', 'lisbon'], regionCode: '11', countryCode: 'PT' },
+  { canonical: 'munich', zh: ['慕尼黑'], en: ['munich'], aliases: ['慕尼黑', 'munich'], regionCode: 'BY', countryCode: 'DE' },
+  { canonical: 'dublin', zh: ['都柏林'], en: ['dublin'], aliases: ['都柏林', 'dublin'], regionCode: 'L', countryCode: 'IE' },
+  { canonical: 'oslo', zh: ['奥斯陆'], en: ['oslo'], aliases: ['奥斯陆', 'oslo'], regionCode: '03', countryCode: 'NO' },
+  { canonical: 'stockholm', zh: ['斯德哥尔摩'], en: ['stockholm'], aliases: ['斯德哥尔摩', 'stockholm'], regionCode: 'AB', countryCode: 'SE' }
 ];
 
 const CITY_ALIAS_INDEX = (() => {

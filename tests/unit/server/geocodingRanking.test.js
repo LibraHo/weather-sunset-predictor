@@ -111,6 +111,26 @@ describe('geocoding ranking', () => {
     expect(ranked[0].rankScore).toBeGreaterThan(0);
   });
 
+  test('additional US and Europe aliases prioritize target countries', () => {
+    const cases = [
+      ['檀香山', 'US', 'Honolulu, Hawaii, United States'],
+      ['圣迭戈', 'US', 'San Diego, California, United States'],
+      ['慕尼黑', 'DE', 'Munich, Bavaria, Germany'],
+      ['里斯本', 'PT', 'Lisbon, Portugal'],
+      ['都柏林', 'IE', 'Dublin, Ireland'],
+      ['奥斯陆', 'NO', 'Oslo, Norway'],
+      ['斯德哥尔摩', 'SE', 'Stockholm, Sweden']
+    ];
+
+    for (const [query, countryCode, targetName] of cases) {
+      const ranked = _private.rankGeocodingResults(query, [
+        { name: 'Same Name Other Place', lat: 1, lon: 1, provider: 'openmeteo', countryCode: 'CN', type: 'PPL' },
+        { name: targetName, lat: 2, lon: 2, provider: 'openmeteo', countryCode, population: 1000000, type: 'PPLA' }
+      ]);
+      expect(ranked[0].countryCode).toBe(countryCode);
+    }
+  });
+
   test('LA alias matches Los Angeles', () => {
     const ranked = _private.rankGeocodingResults('LA', [
       { name: 'Louisiana, United States', lat: 31, lon: -92, provider: 'openmeteo', countryCode: 'US', population: 4600000, type: 'ADM1' },
