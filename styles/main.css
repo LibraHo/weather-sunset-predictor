@@ -5126,3 +5126,99 @@ body.theme-dark .prediction-app-card {
   .app-info-row { grid-template-columns: auto minmax(0, 1fr); }
   .app-info-value { grid-column: 2; justify-self: start; }
 }
+
+/* 需求46 修正：只压缩 layout，不改色彩系统 */
+.prediction-app-shell { gap: 14px; padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
+.phenomenon-title-card {
+  min-height: 92px;
+  padding: 20px 22px;
+  border-radius: 24px;
+  gap: 14px;
+}
+.phenomenon-icon-tile { width: 46px; height: 46px; font-size: 1.65rem; }
+.phenomenon-title-card h3 { font-size: clamp(2rem, 7vw, 2.2rem); }
+.score-summary-card {
+  min-height: 0;
+  max-height: 320px;
+  padding: 20px;
+  grid-template-columns: minmax(130px, 0.9fr) 1px minmax(0, 1.1fr);
+  gap: 16px;
+}
+.score-gauge-large-wrap { width: 148px; height: 190px; }
+.score-gauge-large { width: 148px; height: 148px; }
+.score-gauge-center { padding-top: 42px; }
+.score-gauge-number { font-size: 3rem; }
+.score-gauge-total { font-size: 1.1rem; }
+.score-gauge-grade { margin-top: 26px; font-size: 1.2rem; }
+.score-gauge-desc { font-size: 0.86rem; }
+.score-gauge-center .score-breakdown-hint-trigger { font-size: 0.68rem; }
+.score-summary-right { gap: 8px; align-content: center; }
+.app-main-time { font-size: clamp(2.9rem, 12vw, 3.55rem); line-height: 1; }
+.app-info-row { min-height: 48px; padding: 0 12px; border-radius: 13px; }
+.app-info-label { font-size: 0.82rem; }
+.app-info-value { font-size: 0.9rem; }
+.cloud-condition-card { min-height: 128px; max-height: 160px; padding: 14px 16px; gap: 9px; }
+.cloud-condition-item + .cloud-condition-item { padding-top: 9px; }
+.cloud-condition-top { font-size: 0.98rem; }
+.cloud-condition-track { margin-top: 6px; height: 7px; }
+.app-analysis-card { padding: 18px; }
+.analysis-card-title { margin-bottom: 16px; font-size: 1.25rem; }
+.analysis-group { text-align: left; }
+.analysis-group + .analysis-group { margin-top: 16px; }
+.analysis-group-label {
+  display: inline-flex;
+  justify-self: start;
+  margin-bottom: 8px;
+  padding: 4px 10px;
+  font-size: 0.86rem;
+  border-radius: 9px;
+}
+.analysis-item {
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: start;
+  gap: 9px;
+  padding: 12px 14px;
+  min-height: 68px;
+  text-align: left;
+}
+.analysis-item-icon { width: 24px; height: 24px; margin-top: 1px; }
+.analysis-item-copy { text-align: left; justify-items: start; }
+.analysis-item-copy strong { font-size: 1rem; font-weight: 650; line-height: 1.25; }
+.analysis-item-copy small { font-size: 0.84rem; line-height: 1.45; }
+.conclusion-banner {
+  margin-top: 16px;
+  padding: 14px 16px;
+  align-items: start;
+  text-align: left;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+.prediction-app-footer { margin: 12px 0 0; padding-bottom: env(safe-area-inset-bottom); }
+
+@media (max-width: 430px) {
+  .prediction-app-card { padding: 16px; }
+  .score-summary-card {
+    grid-template-columns: minmax(118px, 0.88fr) 1px minmax(0, 1.12fr);
+    gap: 12px;
+    padding: 18px 16px;
+  }
+  .score-summary-divider { width: 1px; height: auto; }
+  .score-gauge-large-wrap { width: 126px; height: 170px; }
+  .score-gauge-large { width: 126px; height: 126px; }
+  .score-gauge-center { padding-top: 35px; }
+  .score-gauge-number { font-size: 2.55rem; }
+  .score-gauge-total { font-size: 0.95rem; }
+  .score-gauge-grade { margin-top: 24px; font-size: 1.05rem; }
+  .score-gauge-desc { font-size: 0.78rem; }
+  .app-main-time { font-size: clamp(2.35rem, 12vw, 3.1rem); }
+  .app-info-row { min-height: 44px; padding: 0 10px; gap: 6px; }
+  .app-info-icon { display: none; }
+  .app-info-label { font-size: 0.76rem; }
+  .app-info-value { font-size: 0.84rem; }
+}
+
+@media (max-width: 359px) {
+  .score-summary-card { grid-template-columns: 1fr; max-height: none; }
+  .score-summary-divider { width: 100%; height: 1px; }
+  .score-summary-left { justify-content: center; }
+}
