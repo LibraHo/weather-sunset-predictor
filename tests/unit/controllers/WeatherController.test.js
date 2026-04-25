@@ -552,6 +552,11 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(document.getElementById('current-uv-index').textContent).toBe('6.2');
   });
 
+  test('_getCurrentUvIndex: 短波辐射为 0 时应显示 0 而不是无数据', () => {
+    expect(controller._getCurrentUvIndex({ shortwaveRadiation: 0 })).toBe(0);
+    expect(controller._getCurrentUvIndex({ shortwaveRadiation: 620 })).toBeCloseTo(6.2);
+  });
+
   test('showError: 无 #weather-error 元素时不报错', () => {
     document.body.innerHTML = '';
     expect(() => controller.showError('test error')).not.toThrow();

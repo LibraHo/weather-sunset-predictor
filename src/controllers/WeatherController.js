@@ -1417,7 +1417,7 @@ class WeatherController {
     }
 
     const shortwave = Number(weatherData.shortwaveRadiation);
-    if (Number.isFinite(shortwave) && shortwave > 0) {
+    if (Number.isFinite(shortwave) && shortwave >= 0) {
       return Math.max(0, Math.min(11, shortwave / 100));
     }
 
