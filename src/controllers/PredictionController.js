@@ -1281,12 +1281,35 @@ class PredictionController {
     `;
   }
 
+  renderInlineSvgIcon(name, className = '') {
+    const icons = {
+      highCloud: '<path d="M5.2 13.2h12.4a4.2 4.2 0 0 0 .2-8.4 5.8 5.8 0 0 0-10.9 1.4 3.6 3.6 0 0 0-1.7 7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.4 17.4h8.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".45"/>',
+      midCloud: '<path d="M4.4 14.1h13.4a4.1 4.1 0 0 0 .1-8.2 5.3 5.3 0 0 0-10.2 1.2 3.8 3.8 0 0 0-3.3 7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 18h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".4"/>',
+      lowCloud: '<path d="M4 13.5h13.2a3.8 3.8 0 0 0 .1-7.6A5 5 0 0 0 7.7 7a3.5 3.5 0 0 0-3.7 6.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.4 17h13.2M7.2 20h8.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".45"/>',
+      ok: '<path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
+      info: '<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M12 10.5v5.2M12 7.5h.01" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
+      warn: '<path d="M12 3.5 21 19H3L12 3.5z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M12 9v4.5M12 16.7h.01" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
+      leaf: '<path d="M19.5 4.5C11 4.8 5.5 8.8 5 16.8c7.9.4 12.3-4.5 14.5-12.3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 16.5c3.8-3.8 7-5.7 11.2-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+      cloud: '<path d="M5.2 14h12.4a4.2 4.2 0 0 0 .2-8.4 5.8 5.8 0 0 0-10.9 1.4 3.6 3.6 0 0 0-1.7 7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'
+    };
+    const body = icons[name] || icons.cloud;
+    const cls = className ? ` ${className}` : '';
+    return `<svg class="inline-svg-icon${cls}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${body}</svg>`;
+  }
+
+  getCloudIconName(label) {
+    if (/高|High/i.test(label)) return 'highCloud';
+    if (/中|Mid/i.test(label)) return 'midCloud';
+    if (/低|Low/i.test(label)) return 'lowCloud';
+    return 'cloud';
+  }
+
   renderCloudConditionCard(clouds) {
     const rows = clouds.map(cloud => {
       const value = Math.max(0, Math.min(100, cloud.value));
       return `
         <div class="cloud-condition-item">
-          <div class="cloud-condition-top"><span class="cloud-condition-label">☁️ ${cloud.label}</span><strong>${value.toFixed(0)}%</strong></div>
+          <div class="cloud-condition-top"><span class="cloud-condition-label">${this.renderInlineSvgIcon(this.getCloudIconName(cloud.label), 'cloud-condition-svg')}${cloud.label}</span><strong>${value.toFixed(0)}%</strong></div>
           <div class="cloud-condition-track"><span class="cloud-condition-fill" style="width:${value}%;background:${cloud.color};"></span></div>
         </div>
       `;
@@ -1297,9 +1320,9 @@ class PredictionController {
   buildAnalysisGroups(prediction) {
     const weather = this.extractAnalysisWeather(prediction);
     const groups = [
-      { title: '有利条件', type: 'positive', icon: '✅', items: [] },
-      { title: '一般因素', type: 'neutral', icon: 'ℹ️', items: [] },
-      { title: '注意因素', type: 'warning', icon: '⚠️', items: [] }
+      { title: '有利条件', type: 'positive', icon: 'ok', items: [] },
+      { title: '一般因素', type: 'neutral', icon: 'info', items: [] },
+      { title: '注意因素', type: 'warning', icon: 'warn', items: [] }
     ];
     const add = (groupType, title, desc) => {
       const group = groups.find(g => g.type === groupType);
@@ -1372,7 +1395,7 @@ class PredictionController {
       <div class="analysis-card app-analysis-card">
         <div class="analysis-card-title"><span>火烧云形成条件分析</span></div>
         ${groupHtml}
-        <div class="conclusion-banner"><span aria-hidden="true">🌿</span><strong>${conclusion}</strong></div>
+        <div class="conclusion-banner"><span class="conclusion-icon">${this.renderInlineSvgIcon('leaf')}</span><strong>${conclusion}</strong></div>
       </div>
     `;
   }
@@ -1381,17 +1404,17 @@ class PredictionController {
     const items = group.items.map(item => this.renderAnalysisItem(item, group.type)).join('');
     return `
       <section class="analysis-group analysis-group-${group.type}">
-        <div class="analysis-group-label"><span aria-hidden="true">${group.icon}</span>${group.title}</div>
+        <div class="analysis-group-label"><span class="analysis-group-icon">${this.renderInlineSvgIcon(group.icon)}</span>${group.title}</div>
         <div class="analysis-items">${items}</div>
       </section>
     `;
   }
 
   renderAnalysisItem(item, type) {
-    const icon = type === 'positive' ? '✓' : (type === 'warning' ? '!' : 'i');
+    const icon = type === 'positive' ? 'ok' : (type === 'warning' ? 'warn' : 'info');
     return `
       <div class="analysis-item analysis-item-${type}">
-        <span class="analysis-item-icon" aria-hidden="true">${icon}</span>
+        <span class="analysis-item-icon" aria-hidden="true">${this.renderInlineSvgIcon(icon)}</span>
         <span class="analysis-item-copy"><strong>${item.title}</strong><small>${item.desc}</small></span>
       </div>
     `;
@@ -1626,7 +1649,13 @@ class PredictionController {
     // 云厚评估（Phase 22）：只追加厚度信息，不替换详细分析文案。
     if (prediction.cloudThickness) {
       const ct = prediction.cloudThickness;
-      const ctIcon = ct.thickness === 'thin' ? '🌤' : ct.thickness === 'thick' ? '🌫' : ct.thickness === 'moderate' ? '☁' : '❓';
+      const ctIcon = ct.thickness === 'thin'
+        ? this.renderInlineSvgIcon('highCloud')
+        : ct.thickness === 'thick'
+          ? this.renderInlineSvgIcon('lowCloud')
+          : ct.thickness === 'moderate'
+            ? this.renderInlineSvgIcon('midCloud')
+            : this.renderInlineSvgIcon('info');
       const ctLabel = this.i18n.t(`prediction.cloudThickness.${ct.thickness}`);
       const ctDesc = this.i18n.t(`prediction.cloudThickness.${ct.thickness}Desc`);
       analysis += `<div style="margin-top:8px;font-size:13px;">`;
@@ -1750,7 +1779,8 @@ class PredictionController {
     html += `<div class="fca-summary fca-verdict ${verdictClass}">${verdictText}</div>`;
     html += '<div class="fca-metric-grid">';
 
-    const r = (icon, text) => `<div class="fca-row fca-metric"><span class="fca-icon">${icon}</span><span class="fca-text">${text}</span></div>`;
+    const iconMap = { '✅': 'ok', '⚠️': 'warn', '❌': 'warn' };
+    const r = (icon, text) => `<div class="fca-row fca-metric"><span class="fca-icon">${this.renderInlineSvgIcon(iconMap[icon] || 'info')}</span><span class="fca-text">${text}</span></div>`;
     const priorityMessage = this._getPrecipPriorityMessage(weatherInput, weatherCode);
 
     if (weatherText) {

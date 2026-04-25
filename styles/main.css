@@ -6195,3 +6195,71 @@ html[data-actual-theme="light"] .prediction-app-card {
   pointer-events: none;
   z-index: -1;
 }
+
+/* 需求：分析区图标 SVG 化 + 放大文字 */
+.inline-svg-icon {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  vertical-align: -0.14em;
+  color: currentColor;
+}
+.cloud-condition-label {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  font-size: 0.96rem !important;
+}
+.cloud-condition-svg {
+  width: 18px !important;
+  height: 18px !important;
+  color: #4EA3FF;
+  flex: 0 0 auto;
+}
+.analysis-group-label {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+}
+.analysis-group-icon,
+.conclusion-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+  flex: 0 0 auto;
+}
+.analysis-group-icon .inline-svg-icon,
+.conclusion-icon .inline-svg-icon {
+  width: 18px !important;
+  height: 18px !important;
+}
+.analysis-item-icon .inline-svg-icon,
+.fca-icon .inline-svg-icon {
+  width: 14px !important;
+  height: 14px !important;
+}
+.analysis-item-copy strong {
+  font-size: clamp(0.86rem, 2.7vw, 1.06rem) !important;
+  line-height: 1.28 !important;
+  letter-spacing: -0.015em !important;
+}
+.analysis-item-copy small {
+  font-size: clamp(0.78rem, 2.35vw, 0.94rem) !important;
+  line-height: 1.42 !important;
+  letter-spacing: -0.01em !important;
+}
+.analysis-item {
+  grid-template-columns: 24px minmax(0, 1fr) !important;
+  gap: 10px !important;
+  align-items: start !important;
+}
+.fca-text {
+  font-size: clamp(0.84rem, 2.45vw, 0.98rem) !important;
+  line-height: 1.48 !important;
+}
+@media (max-width: 390px) {
+  .analysis-item-copy strong { font-size: 0.82rem !important; }
+  .analysis-item-copy small { font-size: 0.74rem !important; }
+  .fca-text { font-size: 0.78rem !important; }
+}
