@@ -5350,3 +5350,24 @@ body.theme-dark .prediction-app-card {
   .analysis-item-copy strong { font-size: 0.84rem; }
   .analysis-item-copy small { font-size: 0.74rem; }
 }
+
+/* 需求46 修正：朝霞/晚霞标题不需要背景板，文字居中 */
+.phenomenon-title-card {
+  min-height: 54px;
+  padding: 4px 0 0;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  justify-content: center;
+  text-align: center;
+}
+.phenomenon-icon-tile {
+  display: none;
+}
+.phenomenon-title-card h3 {
+  width: 100%;
+  text-align: center;
+  font-size: clamp(2rem, 8vw, 2.35rem);
+}
