@@ -14,12 +14,14 @@ document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   loadAll();
   initUploadForm();
+  initTokenForm();
 
   // 自动刷新
   setInterval(() => {
     loadAccessStats();
     loadLogSummary();
     loadLogs();
+    loadAuditLogs();
     loadHealth();
   }, 15000);
   setInterval(loadQueue, 15000);
@@ -50,9 +52,16 @@ async function loadAll() {
     loadQueue(),
     loadDailyStats(),
     loadSchedule(),
+    loadTokens(),
+    loadApplications(),
+    loadAuditLogs(),
     loadPhotos(),
     loadHealth()
   ]);
+}
+
+function formatStatus(v) {
+  return v ? '<span class="status-ok">启用</span>' : '<span class="status-err">禁用</span>';
 }
 
 function showMessage(msg, type = 'success') {
@@ -485,7 +494,281 @@ function initUploadForm() {
   });
 }
 
+// =================== API Token 管理 ===================
+async function loadTokens() {
+  try {
+    const res = await fetch('/api/admin/tokens', { credentials: 'include' });
+    const data = await res.json();
+    const tbody = document.getElementById('tokenTableBody');
+
+    const tokens = data.tokens || [];
+    if (!tokens.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty">暂无 Token</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = tokens.map((t) => {
+      const usage = t.usageCount || 0;
+      return `<tr>\n        <td>${escapeHtml(t.name || '-')}</td>\n        <td>${formatStatus(t.enabled)}</td>\n        <td>${escapeHtml(t.prefix || '-')}</td>\n        <td>${escapeHtml(String(t.minuteLimit || 0))}</td>\n        <td>${escapeHtml(String(t.dailyLimit || 0))}</td>\n        <td>${escapeHtml(String(usage))}</td>\n        <td>\n          <button class="btn btn-secondary" onclick="editToken('${t.id}')">编辑</button>\n          <button class="btn btn-secondary" onclick="toggleToken('${t.id}', ${t.enabled ? 'false' : 'true'})">${t.enabled ? '停用' : '启用'}</button>\n          <button class="btn btn-secondary" onclick="deleteToken('${t.id}')">删除</button>\n        </td>\n      </tr>`;
+    }).join('');
+  } catch (err) {
+    const tbody = document.getElementById('tokenTableBody');
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">加载失败</td></tr>';
+  }
+}
+
+async function toggleToken(id, enabled) {
+  try {
+    const res = await fetch(`/api/admin/tokens/${id}`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showMessage(data?.error?.message || '更新失败', 'error');
+      return;
+    }
+    await loadTokens();
+  } catch (err) {
+    showMessage(err.message, 'error');
+  }
+}
+
+async function deleteToken(id) {
+  if (!confirm('确定删除该 Token？')) return;
+  try {
+    const res = await fetch(`/api/admin/tokens/${id}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showMessage(data?.error?.message || '删除失败', 'error');
+      return;
+    }
+    await loadTokens();
+    showMessage('删除成功', 'success');
+  } catch (err) {
+    showMessage(err.message, 'error');
+  }
+}
+
+function initTokenForm() {
+  const form = document.getElementById('tokenCreateForm');
+  const btn = document.getElementById('createTokenBtn');
+  const msg = document.getElementById('tokenMsg');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = String(document.getElementById('tokenName').value || '').trim();
+    const minuteLimit = parseInt(document.getElementById('tokenMinuteLimit').value || '', 10);
+    const dailyLimit = parseInt(document.getElementById('tokenDailyLimit').value || '', 10);
+    const enabled = document.getElementById('tokenEnabled').checked;
+
+    if (!name) {
+      msg.textContent = '名称不能为空';
+      msg.className = 'admin-message error';
+      msg.classList.remove('hidden');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '创建中...';
+    try {
+      const body = { name, enabled };
+      if (Number.isFinite(minuteLimit)) body.minuteLimit = minuteLimit;
+      if (Number.isFinite(dailyLimit)) body.dailyLimit = dailyLimit;
+
+      const res = await fetch('/api/admin/tokens', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        msg.textContent = data?.error?.message || '创建失败';
+        msg.className = 'admin-message error';
+        msg.classList.remove('hidden');
+        return;
+      }
+
+      msg.textContent = `创建成功，明文 Token: ${data.token}`;
+      msg.className = 'admin-message success';
+      msg.classList.remove('hidden');
+      form.reset();
+      loadTokens();
+      setTimeout(() => {
+        msg.classList.add('hidden');
+      }, 12000);
+    } catch (err) {
+      msg.textContent = err.message;
+      msg.className = 'admin-message error';
+      msg.classList.remove('hidden');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '创建 Token';
+    }
+  });
+}
+
+
+async function editToken(id) {
+  try {
+    const listRes = await fetch('/api/admin/tokens', { credentials: 'include' });
+    const listData = await listRes.json();
+    const token = (listData.tokens || []).find((item) => item.id === id);
+    if (!token) {
+      showMessage('未找到 Token', 'error');
+      return;
+    }
+
+    const name = prompt('修改名称', token.name || '');
+    if (name === null) return;
+
+    const minuteInput = prompt('修改每分钟额度', String(token.minuteLimit));
+    const dailyInput = prompt('修改每日额度', String(token.dailyLimit));
+
+    const patch = { name };
+    const minuteLimit = parseInt(minuteInput, 10);
+    const dailyLimit = parseInt(dailyInput, 10);
+    if (Number.isFinite(minuteLimit)) patch.minuteLimit = minuteLimit;
+    if (Number.isFinite(dailyLimit)) patch.dailyLimit = dailyLimit;
+
+    const updateRes = await fetch('/api/admin/tokens/' + id, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch)
+    });
+    const updateData = await updateRes.json();
+    if (!updateRes.ok) {
+      showMessage(updateData?.error?.message || '更新失败', 'error');
+      return;
+    }
+    await loadTokens();
+    showMessage('更新成功', 'success');
+  } catch (err) {
+    showMessage(err.message, 'error');
+  }
+}
+
+// =================== API 申请管理 ===================
+function _statusOptions(selected = 'pending') {
+  const options = [
+    ['pending', '待审核'],
+    ['approved', '已通过'],
+    ['rejected', '已拒绝']
+  ];
+  return options
+    .map(([value, label]) => `<option value="${value}" ${selected === value ? 'selected' : ''}>${label}</option>`)
+    .join('');
+}
+
+async function loadApplications() {
+  try {
+    const res = await fetch('/api/admin/applications', { credentials: 'include' });
+    const data = await res.json();
+    const apps = data.applications || [];
+    const tbody = document.getElementById('applicationTableBody');
+
+    if (!apps.length) {
+      tbody.innerHTML = '<tr><td colspan="8" class="empty">暂无申请</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = apps.map(app => {
+      const remark = escapeHtml(app.remarks || '');
+      const status = escapeHtml(app.status || 'pending');
+      const tokenId = escapeHtml(app.tokenId || '-');
+      return `<tr>\n        <td>${escapeHtml(app.email || '-')}</td>\n        <td>${escapeHtml(app.contact || '-')}</td>\n        <td>${escapeHtml(app.purpose || '-')}</td>\n        <td>${app.expectedCallVolume == null ? '-' : escapeHtml(String(app.expectedCallVolume))}</td>\n        <td>\n          <select onchange="setApplicationStatus('${app.id}', this.value)">\n            ${_statusOptions(status)}\n          </select>\n        </td>\n        <td><input id="remark-${app.id}" value="${remark}" style="width: 140px;" /></td>\n        <td>${tokenId}</td>\n        <td>\n          <button class="btn btn-secondary" onclick="approveApplication('${app.id}')">审批通过并建Token</button>\n          <button class="btn btn-secondary" onclick="rejectApplication('${app.id}')">拒绝</button>\n        </td>\n      </tr>`;
+    }).join('');
+  } catch (err) {
+    const tbody = document.getElementById('applicationTableBody');
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">加载失败</td></tr>';
+  }
+}
+
+async function setApplicationStatus(id, status) {
+  const remarks = document.getElementById(`remark-${id}`)?.value || '';
+  try {
+    const res = await fetch(`/api/admin/applications/${id}/review`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status, remarks })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showMessage(data?.error?.message || '更新失败', 'error');
+      return;
+    }
+    loadApplications();
+  } catch (err) {
+    showMessage(err.message, 'error');
+  }
+}
+
+async function approveApplication(id) {
+  const remarks = document.getElementById(`remark-${id}`)?.value || '';
+  try {
+    const res = await fetch(`/api/admin/applications/${id}/review`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'approved', remarks, createToken: true })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showMessage(data?.error?.message || '审批失败', 'error');
+      return;
+    }
+
+    if (data.token) {
+      showMessage(`已通过并创建 Token: ${data.token}`, 'success');
+    } else {
+      showMessage('已更新审核状态', 'success');
+    }
+
+    await Promise.all([loadApplications(), loadTokens()]);
+  } catch (err) {
+    showMessage(err.message, 'error');
+  }
+}
+
+async function rejectApplication(id) {
+  const remarks = document.getElementById(`remark-${id}`)?.value || '';
+  await setApplicationStatus(id, 'rejected');
+}
+
+// =================== Agent 审计日志 ===================
+async function loadAuditLogs() {
+  try {
+    const res = await fetch('/api/admin/audit-logs?limit=20', { credentials: 'include' });
+    const data = await res.json();
+    const logs = data.logs || [];
+    const tbody = document.getElementById('auditLogTableBody');
+
+    if (!logs.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty">暂无日志</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = logs.map((log) => {
+      const t = new Date(log.createdAt).toLocaleString('zh-CN');
+      return `<tr>\n        <td>${t}</td>\n        <td>${escapeHtml(log.tokenId || '-')}</td>\n        <td>${escapeHtml(log.endpoint || '-')}</td>\n        <td>${escapeHtml(String(log.status || 0))}</td>\n        <td>${escapeHtml(String(log.elapsedMs || 0))}</td>\n        <td>${escapeHtml(log.errorCode || '-')}</td>\n      </tr>`;
+    }).join('');
+  } catch (err) {
+    const tbody = document.getElementById('auditLogTableBody');
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">加载失败</td></tr>';
+  }
+}
+
 // =================== 工具函数 ===================
+
 function escapeHtml(str) {
   if (str == null) return '';
   return String(str)

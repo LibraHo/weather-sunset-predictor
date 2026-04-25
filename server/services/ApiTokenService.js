@@ -177,7 +177,7 @@ class ApiTokenService {
 
   // ---- 公共能力 ----
 
-  createToken({ name = 'untitled', scopes = [], minuteLimit, dailyLimit, enabled = true } = {}) {
+  createToken({ name = 'untitled', scopes = ['forecast:read'], minuteLimit, dailyLimit, enabled = true } = {}) {
     this._ensureFeatureEnabled();
 
     const prefix = process.env.NODE_ENV === 'production' ? 'xiake_live_' : 'xiake_test_';
@@ -211,7 +211,12 @@ class ApiTokenService {
     return tokenRecord ? this._toPublic(tokenRecord) : null;
   }
 
+  getInternalTokenById(id) {
+    return this._findById(id);
+  }
+
   getTokenByHash(token) {
+    this._load();
     const hashed = this._hashToken(token);
     return this._findByHash(hashed);
   }
@@ -291,6 +296,61 @@ class ApiTokenService {
       token: this._toPublic(found),
       status: 200
     };
+  }
+
+  updateToken(id, patch = {}) {
+    const tokenRecord = this._findById(id);
+    if (!tokenRecord) {
+      return null;
+    }
+
+    if (typeof patch.name === 'string' && patch.name.trim()) {
+      tokenRecord.name = patch.name.trim();
+    }
+
+    if (typeof patch.enabled === 'boolean') {
+      tokenRecord.enabled = patch.enabled;
+    }
+
+    if (Number.isFinite(patch.minuteLimit) && patch.minuteLimit > 0) {
+      tokenRecord.minuteLimit = Math.floor(patch.minuteLimit);
+    }
+
+    if (Number.isFinite(patch.dailyLimit) && patch.dailyLimit > 0) {
+      tokenRecord.dailyLimit = Math.floor(patch.dailyLimit);
+    }
+
+    if (Array.isArray(patch.scopes)) {
+      tokenRecord.scopes = this._normalizeScopes(patch.scopes);
+    }
+
+    this._persist();
+    return this._toPublic(tokenRecord);
+  }
+
+  deleteToken(id) {
+    const idx = this.tokens.findIndex((t) => t.id === id);
+    if (idx < 0) {
+      return false;
+    }
+
+    this.tokens.splice(idx, 1);
+    this._persist();
+    return true;
+  }
+
+  resetUsage(id) {
+    const tokenRecord = this._findById(id);
+    if (!tokenRecord) return null;
+
+    tokenRecord._minuteWindow = this._nowMinuteWindow();
+    tokenRecord._minuteUsage = 0;
+    tokenRecord._dailyWindow = this._nowDayWindow();
+    tokenRecord._dailyUsage = 0;
+    tokenRecord.usageCount = 0;
+    tokenRecord.lastUsedAt = null;
+    this._persist();
+    return this._toPublic(tokenRecord);
   }
 }
 
