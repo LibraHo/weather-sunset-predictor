@@ -555,7 +555,7 @@ class SunsetPredictionService {
     const blueHour = this.getBlueHour(referenceTime, type);
 
     // 需求12：计算太阳方位角（与评分无关）
-    const sunAzimuth = this.getSunAzimuth(date, referenceTime, lat, lon);
+    const sunAzimuth = this.getSunAzimuth(date, referenceTime, lat, lon, timezoneOptions);
 
     // 需求12：分析云层分层
     const cloudLayers = this.analyzeCloudLayers(
@@ -641,10 +641,15 @@ class SunsetPredictionService {
    * 
    * 需求：12.5 - 显示太阳方位角信息（仅当评分>70时）
    */
-  getSunAzimuth(date, time, lat, lon) {
-    // 获取年份中的第几天
-    const startOfYear = new Date(date.getFullYear(), 0, 1);
-    const dayOfYear = Math.floor((date - startOfYear) / (24 * 60 * 60 * 1000)) + 1;
+  getSunAzimuth(date, time, lat, lon, options = {}) {
+    const timezone = options.timezone || options.timeZone || null;
+    const timezoneOffset = this._getTargetTimezoneOffsetHours(time, lon, timezone);
+    const targetLocalTime = new Date(time.getTime() + timezoneOffset * 60 * 60 * 1000);
+    const targetLocalDate = new Date(date.getTime() + timezoneOffset * 60 * 60 * 1000);
+
+    // 获取目标地点当地日期对应的年份第几天
+    const startOfYear = new Date(Date.UTC(targetLocalDate.getUTCFullYear(), 0, 1));
+    const dayOfYear = Math.floor((targetLocalDate - startOfYear) / (24 * 60 * 60 * 1000)) + 1;
 
     // 计算分数年
     const fractionalYear = (2 * Math.PI / 365) * (dayOfYear - 1);
@@ -659,7 +664,7 @@ class SunsetPredictionService {
       0.00148 * Math.sin(3 * fractionalYear);
 
     // 计算时角（基于当地时间）
-    const hours = time.getHours() + time.getMinutes() / 60 + time.getSeconds() / 3600;
+    const hours = targetLocalTime.getUTCHours() + targetLocalTime.getUTCMinutes() / 60 + targetLocalTime.getUTCSeconds() / 3600;
     const hourAngle = (hours - 12) * 15; // 每小时15度
 
     // 转换为弧度

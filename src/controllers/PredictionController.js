@@ -292,7 +292,7 @@ class PredictionController {
    */
   _ensureAzimuthCompatibility(prediction, referenceTime, baseDate, lat, lon) {
     if ((prediction.sunAzimuth === null || prediction.sunAzimuth === undefined) && referenceTime) {
-      prediction.sunAzimuth = this.predictionService.getSunAzimuth(baseDate, referenceTime, lat, lon);
+      prediction.sunAzimuth = this.predictionService.getSunAzimuth(baseDate, referenceTime, lat, lon, { timezone: prediction.timezone || prediction.timeZone || null });
     }
 
     if (!prediction.getAzimuthDirection) {
@@ -1206,7 +1206,7 @@ class PredictionController {
       : prediction.sunAzimuth !== null && prediction.sunAzimuth !== undefined;
     if (!shouldShowAzimuth) return '';
     const direction = this.getLocalizedAzimuthDirection(prediction);
-    return direction ? `${direction} ↑` : '';
+    return direction || '';
   }
 
   getScoreDescription(score) {
@@ -1458,10 +1458,10 @@ class PredictionController {
         'W', 'WNW', 'NW', 'NNW'
       ]
       : [
-        '北', '东北偏北', '东北', '东北偏东',
-        '东', '东南偏东', '东南', '东南偏南',
-        '南', '西南偏南', '西南', '西南偏西',
-        '西', '西北偏西', '西北', '西北偏北'
+        '正北', '东北偏北', '东北', '东北偏东',
+        '正东', '东南偏东', '东南', '东南偏南',
+        '正南', '西南偏南', '西南', '西南偏西',
+        '正西', '西北偏西', '西北', '西北偏北'
       ];
 
     const index = Math.round(prediction.sunAzimuth / 22.5) % 16;
