@@ -204,6 +204,15 @@ describe('PredictionController', () => {
 
       expect(html).toContain('75');
       expect(html).toContain('score-gauge');
+      expect(html).toContain('prediction-concept-hero');
+      expect(html).toContain('event-time-label');
+      expect(html).toContain('日落时间');
+      expect(html).toContain('19:45');
+      expect(html).toContain('viewing-time-label');
+      expect(html).toContain('19:15–20:15');
+      expect(html).toContain('score-breakdown-trigger');
+      expect(html).toContain('查看评分明细');
+      expect(html).not.toContain('倒计时');
     });
 
     test('北京晚霞场景应显示太阳方位角方向', () => {
@@ -286,6 +295,11 @@ describe('PredictionController', () => {
 
       expect(html).toContain('气溶胶');
       expect(html).toContain('AOD 0.73');
+      expect(html).toContain('fire-cloud-details-concept');
+      expect(html).toContain('fca-metric-grid');
+      expect(html).toContain('fca-verdict');
+      expect(html).not.toContain('undefined');
+      expect(html).not.toContain('null');
     });
 
     test('无方位角时不渲染方位角区块', () => {
@@ -340,6 +354,7 @@ describe('PredictionController', () => {
       expect(html).toContain('40%');
       expect(html).toContain('20%');
       expect(html).toContain('10%');
+      expect(html).toContain('radar-compass-sunset');
     });
 
     test('点击分数仪表盘应打开/关闭分数明细面板', () => {
