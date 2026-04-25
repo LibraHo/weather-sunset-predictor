@@ -62,19 +62,31 @@ class ThemeService {
    * @param {string} theme - 主题模式 ('light' | 'dark' | 'auto')
    */
   applyTheme(theme) {
-    // 移除所有主题类
-    document.body.classList.remove('theme-light', 'theme-dark', 'theme-auto');
+    const root = document.documentElement;
+    const body = document.body;
+    const themeClasses = ['theme-light', 'theme-dark', 'theme-auto'];
 
-    // 添加新主题类
+    // Safari 对 prefers-color-scheme 与表单/滚动条渲染更激进：
+    // 主题类同时挂到 html/body，并显式设置 colorScheme，确保手动 light 能压过系统暗色。
+    root.classList.remove(...themeClasses);
+    body.classList.remove(...themeClasses);
+
+    let themeClass = 'theme-light';
     if (theme === this.THEMES.AUTO) {
-      document.body.classList.add('theme-auto');
+      themeClass = 'theme-auto';
+      root.style.colorScheme = this.getSystemTheme();
     } else if (theme === this.THEMES.DARK) {
-      document.body.classList.add('theme-dark');
+      themeClass = 'theme-dark';
+      root.style.colorScheme = 'dark';
     } else {
-      // light 主题是默认的，不需要添加类
-      // 但为了统一，我们还是添加
-      document.body.classList.add('theme-light');
+      themeClass = 'theme-light';
+      root.style.colorScheme = 'light';
     }
+
+    root.classList.add(themeClass);
+    body.classList.add(themeClass);
+    root.setAttribute('data-theme', theme);
+    body.setAttribute('data-theme', theme);
 
     // 保存主题
     this.currentTheme = theme;
@@ -127,6 +139,8 @@ class ThemeService {
         if (this.currentTheme === this.THEMES.AUTO) {
           const newTheme = e.matches ? this.THEMES.DARK : this.THEMES.LIGHT;
           console.log(`[ThemeService] 系统主题已变化为: ${newTheme}`);
+
+          document.documentElement.style.colorScheme = newTheme;
 
           // 触发主题变化事件
           this.dispatchThemeChangeEvent(newTheme);

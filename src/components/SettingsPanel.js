@@ -704,11 +704,9 @@ class SettingsPanel {
    * 处理主题变更
    */
   handleThemeChange(theme) {
-    // 使用ThemeService设置主题
+    // 使用ThemeService设置主题；ThemeService 会负责派发包含 actualTheme 的 themeChanged 事件。
+    // 不要在这里重复派发事件，否则 Safari 下可能出现第二个缺少 actualTheme 的事件覆盖状态。
     this.themeService.setTheme(theme);
-
-    // 触发自定义事件，通知 AppController 主题已更改
-    window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme } }));
 
     console.log('[SettingsPanel] 主题已切换为:', theme);
   }
