@@ -247,12 +247,16 @@ describe('Geocoding Route — 数据转换逻辑', () => {
       const beijing = helpers.getQueryVariants('北京');
       const shanghai = helpers.getQueryVariants('Shanghai');
       const hk = helpers.getQueryVariants('HK');
+      const nyc = helpers.getQueryVariants('NYC');
+      const sf = helpers.getQueryVariants('SF');
 
       expect(london).toEqual(expect.arrayContaining(['London', '伦敦']));
       expect(paris).toEqual(expect.arrayContaining(['Paris', '巴黎']));
       expect(beijing).toEqual(expect.arrayContaining(['北京', 'beijing']));
       expect(shanghai).toEqual(expect.arrayContaining(['Shanghai', '上海']));
       expect(hk).toEqual(expect.arrayContaining(['HK', 'hongkong', '香港', 'hong kong']));
+      expect(nyc).toEqual(expect.arrayContaining(['NYC', 'new york', 'newyork', '纽约']));
+      expect(sf).toEqual(expect.arrayContaining(['SF', 'san francisco', '旧金山', 'sanfrancisco']));
     });
 
     test('地理编码排序应优先命中别名最高匹配', () => {
