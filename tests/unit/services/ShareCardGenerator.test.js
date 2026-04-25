@@ -36,9 +36,9 @@ describe('ShareCardGenerator', () => {
     ctx = createMockContext();
   });
 
-  test('constructor initializes fixed 9:16 canvas size and themes', () => {
+  test('constructor initializes compact share canvas size and themes', () => {
     expect(generator.W).toBe(750);
-    expect(generator.H).toBe(1334);
+    expect(generator.H).toBe(1080);
     expect(generator.themes.sunrise.accent).toBe('#FFB35C');
     expect(generator.themes.sunset.accent).toBe('#FF9F45');
   });
@@ -152,7 +152,7 @@ describe('ShareCardGenerator', () => {
     await expect(generator.generateShareCard(prediction, '北京', 'sunset')).resolves.toBe(blob);
     await expect(generateShareCard(prediction, '北京', 'sunrise')).resolves.toBe(blob);
     expect(canvas.width).toBe(750);
-    expect(canvas.height).toBe(1334);
+    expect(canvas.height).toBe(1080);
     expect(ctx.fillText).toHaveBeenCalled();
 
     createElementSpy.mockRestore();
