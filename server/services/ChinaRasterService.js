@@ -56,10 +56,11 @@ class ChinaRasterService {
       ? resolution
       : DEFAULT_RESOLUTION;
 
-    // 先检查本地缓存
+    // 先检查本地缓存：TTL 必须基于服务端生成时间，而不是天气数据 updatedAt
+    // updatedAt 是预报数据时间，可能来自昨晚；若用它计算 age，会导致缓存永远过期，接口每次重新 IDW 插值。
     const cached = this._cache[safePeriod];
-    if (cached && cached.resolution === safeRes) {
-      const age = Date.now() - new Date(cached.updatedAt).getTime();
+    if (cached && cached.resolution === safeRes && cached._cachedAt) {
+      const age = Date.now() - cached._cachedAt;
       if (age < CACHE_TTL_MS) {
         return cached;
       }
@@ -100,6 +101,7 @@ class ChinaRasterService {
       valueRange: [0, 100],
       noData: NO_DATA_VALUE,
       values,
+      _cachedAt: Date.now(),
       meta: {
         interpolation: 'idw',
         idwPower: IDW_OPTIONS.power,

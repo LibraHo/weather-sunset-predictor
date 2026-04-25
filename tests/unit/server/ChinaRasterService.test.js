@@ -146,6 +146,22 @@ describe('ChinaRasterService.getRaster', () => {
     expect(raster.resolution).toBe(0.5);
   });
 
+
+
+  test('缓存 TTL 基于生成时间而不是天气数据 updatedAt', async () => {
+    const mockGridService = await getMockGridService();
+    mockGridService.getCache.mockReturnValue(makeMockCache({ updatedAt: '2000-01-01T00:00:00.000Z' }));
+
+    const first = await chinaRasterService.getRaster('sunset', 0.5);
+    const second = await chinaRasterService.getRaster('sunset', 0.5);
+
+    expect(second).toBe(first);
+    expect(first.updatedAt).toBe('2000-01-01T00:00:00.000Z');
+    expect(first._cachedAt).toEqual(expect.any(Number));
+    expect(mockGridService.refreshIfStale).toHaveBeenCalledTimes(1);
+    expect(mockGridService.getCache).toHaveBeenCalledTimes(1);
+  });
+
   test('缓存命中时不重复调用 gridService.getCache 多次', async () => {
     const mockGridService = await getMockGridService();
     mockGridService.getCache.mockReturnValue(makeMockCache());
