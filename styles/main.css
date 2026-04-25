@@ -4537,8 +4537,6 @@ body.theme-dark {
   --radar-cloud-mid: rgba(210,225,255,0.95);
   --radar-cloud-high: rgba(235,242,255,0.90);
 }
-,220,0.70);
-}
 
 /* ===== 朝霞/晚霞切换开关（手机/电脑通用，手机生效） ===== */
 .prediction-toggle-bar {
@@ -5812,4 +5810,87 @@ body:not(.theme-dark):not(.theme-auto) .prediction-app-shell {
   }
   .analysis-item-copy strong { font-size: 0.5rem !important; letter-spacing: -0.05em; }
   .analysis-item-copy small { font-size: 0.46rem !important; letter-spacing: -0.055em; }
+}
+
+/* 需求46 修正：亮色模式下统一云况雷达/天气模块/新预测 UI 色彩 */
+:root,
+body.theme-light,
+body:not(.theme-dark):not(.theme-auto) {
+  --radar-bg: var(--glass-bg-heavy);
+  --radar-border: var(--glass-border);
+  --radar-label-bg: rgba(255,255,255,0.72);
+  --radar-title: var(--color-text);
+  --radar-subtitle: var(--color-text-light);
+  --radar-legend-text: var(--color-text);
+}
+body.theme-light .weather-glass-panel,
+body.theme-light .weather-visual-panel,
+body.theme-light .weather-feature-item,
+body.theme-light .radar-chart-container,
+body.theme-light .radar-compass-container,
+body.theme-light .prediction-app-shell,
+body.theme-light .prediction-app-card,
+body.theme-light .phenomenon-title-card,
+body.theme-light .score-summary-card,
+body.theme-light .cloud-condition-card,
+body.theme-light .app-analysis-card,
+body.theme-light .app-info-row,
+body.theme-light .analysis-item,
+body:not(.theme-dark):not(.theme-auto) .weather-glass-panel,
+body:not(.theme-dark):not(.theme-auto) .weather-visual-panel,
+body:not(.theme-dark):not(.theme-auto) .weather-feature-item,
+body:not(.theme-dark):not(.theme-auto) .radar-chart-container,
+body:not(.theme-dark):not(.theme-auto) .radar-compass-container,
+body:not(.theme-dark):not(.theme-auto) .prediction-app-shell,
+body:not(.theme-dark):not(.theme-auto) .prediction-app-card,
+body:not(.theme-dark):not(.theme-auto) .phenomenon-title-card,
+body:not(.theme-dark):not(.theme-auto) .score-summary-card,
+body:not(.theme-dark):not(.theme-auto) .cloud-condition-card,
+body:not(.theme-dark):not(.theme-auto) .app-analysis-card,
+body:not(.theme-dark):not(.theme-auto) .app-info-row,
+body:not(.theme-dark):not(.theme-auto) .analysis-item {
+  background: var(--glass-bg-heavy) !important;
+  border-color: var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+  color: var(--color-text);
+}
+body.theme-light .prediction-app-card,
+body:not(.theme-dark):not(.theme-auto) .prediction-app-card {
+  --app-card-bg: var(--glass-bg-heavy);
+  --app-text: var(--color-text);
+  --app-muted: var(--color-text-light);
+  --app-border: var(--color-border);
+}
+body.theme-light .radar-chart-container,
+body:not(.theme-dark):not(.theme-auto) .radar-chart-container {
+  background: var(--radar-bg) !important;
+  border-color: var(--radar-border) !important;
+}
+@media (prefers-color-scheme: light) {
+  body.theme-auto {
+    --radar-bg: var(--glass-bg-heavy);
+    --radar-border: var(--glass-border);
+    --radar-label-bg: rgba(255,255,255,0.72);
+    --radar-title: var(--color-text);
+    --radar-subtitle: var(--color-text-light);
+    --radar-legend-text: var(--color-text);
+  }
+  body.theme-auto .weather-glass-panel,
+  body.theme-auto .weather-visual-panel,
+  body.theme-auto .weather-feature-item,
+  body.theme-auto .radar-chart-container,
+  body.theme-auto .radar-compass-container,
+  body.theme-auto .prediction-app-shell,
+  body.theme-auto .prediction-app-card,
+  body.theme-auto .phenomenon-title-card,
+  body.theme-auto .score-summary-card,
+  body.theme-auto .cloud-condition-card,
+  body.theme-auto .app-analysis-card,
+  body.theme-auto .app-info-row,
+  body.theme-auto .analysis-item {
+    background: var(--glass-bg-heavy) !important;
+    border-color: var(--glass-border) !important;
+    box-shadow: var(--glass-shadow) !important;
+    color: var(--color-text);
+  }
 }
