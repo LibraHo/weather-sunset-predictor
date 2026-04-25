@@ -443,6 +443,11 @@ router.get('/', async (req, res) => {
       directRadiation: selected.directRadiation ?? null,
       diffuseRadiation: selected.diffuseRadiation ?? null,
       waterVapourColumn: selected.waterVapourColumn ?? null,
+      aerosolOpticalDepth: selected.aerosolOpticalDepth ?? null,
+      dust: selected.dust ?? null,
+      pm2_5: selected.pm2_5 ?? null,
+      pm10: selected.pm10 ?? null,
+      aqi: selected.aqi ?? null,
     };
 
     // 找到 selected 之前 1-2 小时的数据（用于云厚辐射比）
@@ -466,6 +471,11 @@ router.get('/', async (req, res) => {
       mid: weatherData.midClouds,
       high: weatherData.highClouds,
     };
+    prediction.aerosolOpticalDepth = weatherData.aerosolOpticalDepth;
+    prediction.dust = weatherData.dust;
+    prediction.pm2_5 = weatherData.pm2_5;
+    prediction.pm10 = weatherData.pm10;
+    prediction.aqi = weatherData.aqi;
 
     res.json({
       success: true,
@@ -534,6 +544,11 @@ router.get('/directions', async (req, res) => {
         directRadiation: selected.directRadiation ?? null,
         diffuseRadiation: selected.diffuseRadiation ?? null,
         waterVapourColumn: selected.waterVapourColumn ?? null,
+        aerosolOpticalDepth: selected.aerosolOpticalDepth ?? null,
+        dust: selected.dust ?? null,
+        pm2_5: selected.pm2_5 ?? null,
+        pm10: selected.pm10 ?? null,
+        aqi: selected.aqi ?? null,
       };
 
       // 找到 selected 之前 1-2 小时的数据
@@ -558,7 +573,12 @@ router.get('/directions', async (req, res) => {
           low: weatherData.lowClouds,
           mid: weatherData.midClouds,
           high: weatherData.highClouds,
-        }
+        },
+        aerosolOpticalDepth: weatherData.aerosolOpticalDepth,
+        dust: weatherData.dust,
+        pm2_5: weatherData.pm2_5,
+        pm10: weatherData.pm10,
+        aqi: weatherData.aqi
       };
     }));
 

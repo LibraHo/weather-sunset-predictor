@@ -44,6 +44,29 @@ describe('Prediction Routes', () => {
       expect(result).toHaveProperty('renderingAnalysis');
     });
 
+    test('calculateEnhancedPrediction should expose aerosol rendering breakdown when air-quality fields exist', () => {
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        {
+          lowClouds: 10,
+          midClouds: 35,
+          highClouds: 50,
+          visibility: 20,
+          humidity: 55,
+          aerosolOpticalDepth: 0.22,
+          pm2_5: 12,
+          pm10: 24,
+          dust: 2
+        },
+        '2024-06-21T18:00:00Z',
+        40.0,
+        116.0,
+        'sunset'
+      );
+
+      expect(result.renderingAnalysis.aerosolFactor).toBeGreaterThan(1);
+      expect(result.renderingAnalysis.breakdown.aerosol).toBe('optimal');
+    });
+
     test('calculateEnhancedPrediction with options should apply correctly', () => {
       const weatherData = {
         lowClouds: 20,
