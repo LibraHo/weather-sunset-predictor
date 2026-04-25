@@ -58,6 +58,15 @@ const tilesLimiter = rateLimit({
   message: { error: { code: 'TILE_RATE_LIMIT', message: '瓦片请求过于频繁' } }
 });
 
+// 地理搜索单独限速：搜索框输入会触发多次请求，不能和天气/预测 API 共用 15 分钟全局额度
+const geocodingLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: parseInt(process.env.GEOCODING_RATE_LIMIT_MAX_REQUESTS) || 240,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: { code: 'GEOCODING_RATE_LIMIT', message: '地名搜索过于频繁，请稍后再试' } }
+});
+
 // Middleware
 app.use(compression()); // gzip 压缩所有响应
 app.use(cors({
@@ -78,8 +87,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// 瓦片路由优先挂载（绕过全局 apiLimiter，使用独立宽松限速）
+// 瓦片/地理搜索路由优先挂载（绕过全局 apiLimiter，使用各自限速）
 app.use('/api/tiles', tilesLimiter, tilesRoutes);
+app.use('/api/geocoding', geocodingLimiter, geocodingRoutes);
 
 // 对其余 /api/* 路由启用速率限制
 app.use('/api/', apiLimiter);
@@ -117,7 +127,6 @@ app.use('/api/weather', weatherRoutes);
 app.use('/api/firecloud', firecloudRoutes);
 app.use('/api/prediction', predictionRoutes);
 app.use('/api/visitor', visitorRoutes);
-app.use('/api/geocoding', geocodingRoutes);
 app.use('/api/heatmap', heatmapRoutes);
 app.use('/api/spots', spotsRoutes);
 app.use('/api/photos', photosRoutes);

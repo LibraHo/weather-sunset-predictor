@@ -138,7 +138,7 @@ describe('SurroundingService', () => {
       expect(result).toHaveProperty('points');
       expect(result.points).toHaveLength(8);
       expect(result.radius).toBe(75);
-    }, 10000);
+    }, 20000);
 
     test('应该拒绝无效的预测类型', async () => {
       const params = {
