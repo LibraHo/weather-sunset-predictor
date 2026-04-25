@@ -6,10 +6,8 @@
  */
 
 function scoreToRGBA(score) {
-  if (score < 20) return [80, 80, 80, 18];
-  if (score < 35) return [150, 120, 80, 55];
-  if (score < 50) return [255, 200, 50, 110];
-  if (score < 65) return [255, 140, 20, 140];
+  if (score < 40) return null;
+  if (score < 65) return [255, 200, 50, 110];
   if (score < 80) return [230, 60, 10, 180];
   return [180, 10, 10, 210];
 }
@@ -141,7 +139,7 @@ class NativeFireCloudRenderer {
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const score = values[r][c];
-        if (score < 20) continue;
+        if (score < 40) continue;
 
         const cellLon0 = west  + (c / cols) * (east  - west);
         const cellLat0 = north - (r / rows) * (north - south);
@@ -156,7 +154,10 @@ class NativeFireCloudRenderer {
         const pw = Math.ceil(Math.abs(pt1.x - pt0.x)) || 1;
         const ph = Math.ceil(Math.abs(pt1.y - pt0.y)) || 1;
 
-        const [r_, g, b, a] = scoreToRGBA(score);
+        const rgba = scoreToRGBA(score);
+        if (!rgba) continue;
+
+        const [r_, g, b, a] = rgba;
         ctx.fillStyle = `rgba(${r_},${g},${b},${(a / 255 * this.opacity).toFixed(2)})`;
         ctx.fillRect(px, py, pw, ph);
       }
@@ -220,3 +221,4 @@ class NativeFireCloudRenderer {
 }
 
 export default NativeFireCloudRenderer;
+export { scoreToRGBA };
