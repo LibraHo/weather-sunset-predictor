@@ -5956,3 +5956,112 @@ body.theme-auto .score-breakdown-popover {
     text-align: center;
   }
 }
+
+/* 需求46 修正：Safari 手选明亮模式必须整页统一为亮色体系 */
+html.theme-light,
+html[data-theme="light"],
+body.theme-light,
+body[data-theme="light"] {
+  color-scheme: light;
+  --color-bg: #f5f5f5;
+  --color-card-bg: #ffffff;
+  --color-surface: rgba(255,255,255,0.97);
+  --color-text: #333333;
+  --color-text-light: #666666;
+  --color-border: #e0e0e0;
+  --glass-bg: rgba(255,255,255,0.70);
+  --glass-bg-hover: rgba(255,255,255,0.80);
+  --glass-bg-heavy: rgba(255,255,255,0.85);
+  --glass-border: rgba(255,255,255,0.42);
+  --glass-shadow: 0 4px 30px rgba(0,0,0,0.10);
+  --radar-bg: var(--glass-bg-heavy);
+  --radar-border: var(--glass-border);
+  --radar-title: var(--color-text);
+  --radar-subtitle: var(--color-text-light);
+  --radar-legend-text: var(--color-text);
+}
+html.theme-light body,
+html[data-theme="light"] body,
+body.theme-light,
+body[data-theme="light"] {
+  background: var(--color-bg) !important;
+  color: var(--color-text) !important;
+}
+html.theme-light header,
+html[data-theme="light"] header,
+body.theme-light header,
+body[data-theme="light"] header {
+  background: var(--header-surface) !important;
+  border-bottom-color: var(--header-border) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+html.theme-light .card,
+html.theme-light .weather-glass-panel,
+html.theme-light .weather-visual-panel,
+html.theme-light .weather-feature-item,
+html.theme-light .radar-chart-container,
+html.theme-light .radar-compass-container,
+html.theme-light .prediction-app-shell,
+html.theme-light .prediction-app-card,
+html.theme-light .phenomenon-title-card,
+html.theme-light .score-summary-card,
+html.theme-light .cloud-condition-card,
+html.theme-light .app-analysis-card,
+html.theme-light .app-info-row,
+html.theme-light .analysis-item,
+html.theme-light .score-breakdown-popover,
+html[data-theme="light"] .card,
+html[data-theme="light"] .weather-glass-panel,
+html[data-theme="light"] .weather-visual-panel,
+html[data-theme="light"] .weather-feature-item,
+html[data-theme="light"] .radar-chart-container,
+html[data-theme="light"] .radar-compass-container,
+html[data-theme="light"] .prediction-app-shell,
+html[data-theme="light"] .prediction-app-card,
+html[data-theme="light"] .phenomenon-title-card,
+html[data-theme="light"] .score-summary-card,
+html[data-theme="light"] .cloud-condition-card,
+html[data-theme="light"] .app-analysis-card,
+html[data-theme="light"] .app-info-row,
+html[data-theme="light"] .analysis-item,
+html[data-theme="light"] .score-breakdown-popover {
+  background: var(--glass-bg-heavy) !important;
+  border-color: var(--glass-border) !important;
+  color: var(--color-text) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+html.theme-light .prediction-app-card,
+html[data-theme="light"] .prediction-app-card {
+  --app-card-bg: var(--glass-bg-heavy);
+  --app-text: var(--color-text);
+  --app-muted: var(--color-text-light);
+  --app-border: var(--color-border);
+}
+html.theme-light .prediction-toggle-btn.active,
+html[data-theme="light"] .prediction-toggle-btn.active {
+  background: var(--sunset-time-border, #ff9800) !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px rgba(255,152,0,0.28) !important;
+}
+html.theme-light .phenomenon-date-tag,
+html[data-theme="light"] .phenomenon-date-tag {
+  background: rgba(255,255,255,0.72) !important;
+  color: var(--color-text-light) !important;
+  border-color: var(--glass-border) !important;
+}
+
+/* 需求46 修正：文字分析恢复完整文案后，字号略放大但保持紧凑 */
+.analysis-item-copy strong {
+  font-size: 0.61rem !important;
+  line-height: 1.08 !important;
+  letter-spacing: -0.04em;
+}
+.analysis-item-copy small {
+  font-size: 0.57rem !important;
+  line-height: 1.08 !important;
+  letter-spacing: -0.045em;
+}
+@media (max-width: 430px) {
+  .analysis-item-copy strong { font-size: 0.54rem !important; letter-spacing: -0.055em; }
+  .analysis-item-copy small { font-size: 0.50rem !important; letter-spacing: -0.06em; }
+}
