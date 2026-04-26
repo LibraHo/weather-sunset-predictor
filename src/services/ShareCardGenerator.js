@@ -21,6 +21,9 @@ class ShareCardGenerator {
         scoreGradient: ['#FFB35C', '#F59E0B', '#93C5FD'],
         scoreAccent: '#FFB35C',
         scoreAccentSecondary: '#FF7A5A',
+        // Backward-compatible aliases used by existing tests/callers.
+        accent: '#FFB35C',
+        accent2: '#FF7A5A',
       },
       sunset: {
         backgroundStops: ['#0B1020', '#191336', '#321736'],
@@ -29,8 +32,14 @@ class ShareCardGenerator {
         scoreGradient: ['#FF9F45', '#F59E0B', '#93C5FD'],
         scoreAccent: '#FF9F45',
         scoreAccentSecondary: '#F97316',
+        // Backward-compatible aliases used by existing tests/callers.
+        accent: '#FF9F45',
+        accent2: '#F97316',
       },
     };
+
+    // Preserve the historical public property while the implementation uses semantic names.
+    this.themes = this.shareThemes;
   }
 
   /**
