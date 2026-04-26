@@ -143,10 +143,17 @@ class WeatherController {
     if (!forceRefresh) {
       const cachedData = this.storageService.getCachedWeatherData(location);
       if (cachedData) {
-        console.log('[WeatherController] 使用缓存的天气数据');
-        this.currentWeatherData = cachedData;
-        this.currentLocation = location;
-        return cachedData;
+        const cacheHasAerosolData = Array.isArray(cachedData)
+          && cachedData.some(item => item?.aerosolOpticalDepth != null);
+
+        if (cacheHasAerosolData) {
+          console.log('[WeatherController] 使用缓存的天气数据');
+          this.currentWeatherData = cachedData;
+          this.currentLocation = location;
+          return cachedData;
+        }
+
+        console.log('[WeatherController] 缓存缺少气溶胶数据，刷新天气数据');
       }
     }
 
@@ -272,8 +279,11 @@ class WeatherController {
     }
     if (elements.aerosol) {
       elements.aerosol.textContent = currentWeather.aerosolOpticalDepth != null
-        ? `AOD ${Number(currentWeather.aerosolOpticalDepth).toFixed(2)}`
+        ? Number(currentWeather.aerosolOpticalDepth).toFixed(2)
         : '--';
+      elements.aerosol.title = currentWeather.aerosolOpticalDepth != null
+        ? `AOD ${Number(currentWeather.aerosolOpticalDepth).toFixed(2)}`
+        : '';
     }
     if (elements.precipitation) {
       elements.precipitation.textContent = currentWeather.precipitation != null
