@@ -275,17 +275,18 @@ describe('WeatherController - 24小时温度连续化', () => {
 
     const card = controller._createDayCard(dayData, 0);
 
-    // 实际 DOM 使用 .day-meta-lines
-    const metaLines = card.querySelectorAll('.day-meta-line');
-    expect(metaLines.length).toBeGreaterThanOrEqual(2);
+    const metaInline = card.querySelector('.day-meta-inline');
+    expect(metaInline).not.toBeNull();
 
-    // 第一行：降水
-    expect(metaLines[0].querySelector('.day-meta-svg-icon svg')).not.toBeNull();
-    expect(metaLines[0].textContent).toContain('50%');
+    const chips = card.querySelectorAll('.day-meta-chip');
+    expect(chips).toHaveLength(2);
 
-    // 第二行：风速+风向箭头
-    expect(metaLines[1].querySelector('.day-meta-svg-icon svg')).not.toBeNull();
-    const windDirIcon = metaLines[1].querySelector('.day-wind-direction-icon');
+    // 单行两组：降水 + 风速/风向
+    expect(chips[0].querySelector('.day-meta-svg-icon svg')).not.toBeNull();
+    expect(chips[0].textContent).toContain('50%');
+    expect(chips[1].querySelector('.day-meta-svg-icon svg')).not.toBeNull();
+    expect(chips[1].textContent).toContain('12 km/h');
+    const windDirIcon = chips[1].querySelector('.day-wind-direction-icon');
     expect(windDirIcon).not.toBeNull();
 
     dateFormatterSpy.mockRestore();

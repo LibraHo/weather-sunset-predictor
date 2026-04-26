@@ -6747,3 +6747,60 @@ html[data-actual-theme="light"] .prediction-app-card {
     gap: 2px !important;
   }
 }
+
+/* 7天预测卡片：底部天气细节改为单行两组，不再上下两排 */
+.day-meta-inline {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  width: 100%;
+  transform: translateX(-3px);
+  margin-top: 0 !important;
+  line-height: 1 !important;
+}
+.day-meta-chip {
+  display: inline-grid !important;
+  align-items: center !important;
+  column-gap: 2px !important;
+  color: var(--color-text-light);
+  font-size: 0.64rem;
+  line-height: 1 !important;
+  white-space: nowrap;
+}
+.day-meta-precip {
+  grid-template-columns: 13px auto !important;
+}
+.day-meta-wind {
+  grid-template-columns: 13px auto 12px !important;
+}
+.day-meta-chip .icon {
+  width: 13px !important;
+  height: 13px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.day-meta-chip .day-meta-svg-icon svg {
+  width: 12px !important;
+  height: 12px !important;
+}
+.day-meta-chip .value {
+  font-size: 0.64rem;
+  font-weight: 650;
+  line-height: 1 !important;
+}
+.day-meta-chip .day-wind-direction-icon {
+  width: 12px !important;
+  height: 12px !important;
+  font-size: 0.72rem !important;
+}
+@media (max-width: 640px) {
+  .day-meta-inline {
+    gap: 5px !important;
+  }
+  .day-meta-chip,
+  .day-meta-chip .value {
+    font-size: 0.6rem;
+  }
+}
