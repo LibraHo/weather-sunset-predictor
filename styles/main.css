@@ -6225,6 +6225,56 @@ html[data-theme="light"] .phenomenon-date-tag {
   .analysis-item-copy small { font-size: 0.50rem !important; letter-spacing: -0.06em; }
 }
 
+
+/* 暗色模式最终兜底：避免亮色兜底规则把云况雷达背景覆盖成浅灰 */
+html.theme-dark,
+html[data-theme="dark"],
+html.theme-actual-dark,
+html[data-actual-theme="dark"],
+body.theme-dark,
+body[data-theme="dark"],
+body.theme-actual-dark,
+body[data-actual-theme="dark"] {
+  color-scheme: dark;
+  --radar-bg: linear-gradient(180deg, rgba(15,23,42,0.88), rgba(10,15,35,0.72));
+  --radar-border: rgba(148,163,184,0.18);
+  --radar-ring: rgba(180,200,230,0.22);
+  --radar-axis-main: rgba(180,200,230,0.28);
+  --radar-axis-sub: rgba(180,200,230,0.12);
+  --radar-label-fill: rgba(220,230,245,0.92);
+  --radar-label-bg: rgba(10,18,35,0.70);
+  --radar-title: rgba(241,245,249,0.95);
+  --radar-subtitle: rgba(148,163,184,0.84);
+  --radar-legend-text: rgba(200,212,228,0.88);
+  --radar-legend-bg: rgba(10,18,35,0.78);
+  --radar-center: rgba(249,115,22,0.92);
+  --radar-center-stroke: rgba(0,0,0,0.28);
+  --radar-cloud-low: rgba(180,210,255,0.98);
+  --radar-cloud-mid: rgba(210,225,255,0.95);
+  --radar-cloud-high: rgba(235,242,255,0.90);
+}
+
+html.theme-dark .radar-chart-container,
+html.theme-dark .radar-compass-container,
+html[data-theme="dark"] .radar-chart-container,
+html[data-theme="dark"] .radar-compass-container,
+html.theme-actual-dark .radar-chart-container,
+html.theme-actual-dark .radar-compass-container,
+html[data-actual-theme="dark"] .radar-chart-container,
+html[data-actual-theme="dark"] .radar-compass-container,
+body.theme-dark .radar-chart-container,
+body.theme-dark .radar-compass-container,
+body[data-theme="dark"] .radar-chart-container,
+body[data-theme="dark"] .radar-compass-container,
+body.theme-actual-dark .radar-chart-container,
+body.theme-actual-dark .radar-compass-container,
+body[data-actual-theme="dark"] .radar-chart-container,
+body[data-actual-theme="dark"] .radar-compass-container {
+  background: var(--radar-bg) !important;
+  border-color: var(--radar-border) !important;
+  color: var(--radar-title) !important;
+}
+
 /* Safari 手动亮色最终兜底：按实际主题类覆盖所有残留深色/渐变状态 */
 html.theme-actual-light,
 body.theme-actual-light,
@@ -6655,6 +6705,7 @@ html[data-actual-theme="light"] .prediction-app-card {
 .weather-metric-pressure .weather-value,
 .weather-metric-visibility .weather-value {
   font-size: 0.92rem;
+  white-space: nowrap;
 }
 @media (max-width: 768px) {
   .weather-metric-grid {
@@ -6688,7 +6739,8 @@ html[data-actual-theme="light"] .prediction-app-card {
   .weather-metric-aerosol .weather-value,
   .weather-metric-pressure .weather-value,
   .weather-metric-visibility .weather-value {
-    font-size: 0.72rem;
+    font-size: 0.82rem;
+    white-space: nowrap;
   }
 }
 

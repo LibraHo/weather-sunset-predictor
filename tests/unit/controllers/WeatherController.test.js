@@ -549,7 +549,8 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(weatherData.classList.contains('hidden')).toBe(false);
     expect(weatherData.style.display).toBe('block');
     expect(document.getElementById('weather-section').classList.contains('hidden')).toBe(false);
-    expect(document.getElementById('current-aerosol').textContent).toBe('AOD 0.12');
+    expect(document.getElementById('current-aerosol').textContent).toBe('0.12');
+    expect(document.getElementById('current-aerosol').title).toBe('AOD 0.12');
     expect(document.getElementById('current-precipitation').textContent).toBe('1.6 mm');
   });
 
