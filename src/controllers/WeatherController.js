@@ -1195,7 +1195,7 @@ class WeatherController {
     }
 
     container.style.display = 'block';
-    container.innerHTML = '<p style="text-align:center;color:var(--color-text-light,#aaa);font-size:13px;padding:12px 0;">加载周边数据中…</p>';
+    container.innerHTML = '<p style="text-align:center;color:var(--color-text-light);font-size:13px;padding:12px 0;">加载周边数据中…</p>';
 
     try {
       let dirs;
@@ -1229,7 +1229,7 @@ class WeatherController {
       console.error('[WeatherController] 雷达罗盘渲染失败:', err);
       // 不要直接隐藏容器，避免用户误认为功能消失
       container.style.display = 'block';
-      container.innerHTML = `<p style="text-align:center;color:var(--color-text-light,#aaa);font-size:13px;padding:12px 0;">雷达加载超时，稍后自动重试</p>`;
+      container.innerHTML = `<p style="text-align:center;color:var(--color-text-light);font-size:13px;padding:12px 0;">雷达加载超时，稍后自动重试</p>`;
     }
   }
 
@@ -1499,15 +1499,15 @@ class WeatherController {
       let qualityText = '';
 
       if (p.score >= 80) {
-        qualityClass = 'color: #4caf50;';
+        qualityClass = 'color: var(--color-excellent, var(--color-success));';
         qualityText = this.i18n.t('surrounding.legend.excellent') || '优秀';
       } else if (p.score >= 60) {
-        qualityClass = 'color: #ffc107;';
+        qualityClass = 'color: var(--color-good, var(--color-warning));';
         qualityText = this.i18n.t('surrounding.legend.good') || '良好';
       }
 
       return `
-        <div class="direction-item" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border-color, #e0e0e0); cursor: pointer;" data-index="${index}">
+        <div class="direction-item" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--color-border); cursor: pointer;" data-index="${index}">
           <span>${p.name} (${p.label})</span>
           <span style="${qualityClass} font-weight: 600;">${p.score}分 - ${qualityText}</span>
         </div>
@@ -1699,9 +1699,9 @@ class WeatherController {
 
     if (statusEl) {
       if (success) {
-        statusEl.innerHTML = `<span style="color: var(--color-success, #4caf50);">✓ ${this.i18n.t('overlay.active') || '覆盖层已显示'}</span>`;
+        statusEl.innerHTML = `<span style="color: var(--color-success);">✓ ${this.i18n.t('overlay.active') || '覆盖层已显示'}</span>`;
       } else {
-        statusEl.innerHTML = `<span style="color: var(--color-error, #f44336);">✗ ${error || (this.i18n.t('overlay.error') || '覆盖层生成失败')}</span>`;
+        statusEl.innerHTML = `<span style="color: var(--color-error);">✗ ${error || (this.i18n.t('overlay.error') || '覆盖层生成失败')}</span>`;
       }
     }
   }
