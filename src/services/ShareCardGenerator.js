@@ -11,22 +11,24 @@ class ShareCardGenerator {
     this.H = 1080;
     this.font = '"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif';
 
-    this.themes = {
+    // 分享卡输出主题（允许独立配色），但仅用于卡片输出画布本身，不干预站内主题。
+    // 与主站亮/暗视觉对齐：亮卡保持暖白字重高对比，暗卡保持高对比暖色强调。
+    this.shareThemes = {
       sunrise: {
-        bg: ['#111827', '#2A1748', '#5B2C64'],
-        accent: '#FFB35C',
-        accent2: '#FF7A5A',
-        card: 'rgba(17,24,39,0.68)',
-        cardStroke: 'rgba(255,255,255,0.16)',
-        gaugeColors: ['#FFB35C', '#F59E0B', '#93C5FD'],
+        backgroundStops: ['#111827', '#2A1748', '#5B2C64'],
+        surfaceFill: 'rgba(17,24,39,0.68)',
+        surfaceBorder: 'rgba(255,255,255,0.16)',
+        scoreGradient: ['#FFB35C', '#F59E0B', '#93C5FD'],
+        scoreAccent: '#FFB35C',
+        scoreAccentSecondary: '#FF7A5A',
       },
       sunset: {
-        bg: ['#0B1020', '#191336', '#321736'],
-        accent: '#FF9F45',
-        accent2: '#F97316',
-        card: 'rgba(15,23,42,0.72)',
-        cardStroke: 'rgba(255,255,255,0.14)',
-        gaugeColors: ['#FF9F45', '#F59E0B', '#93C5FD'],
+        backgroundStops: ['#0B1020', '#191336', '#321736'],
+        surfaceFill: 'rgba(15,23,42,0.72)',
+        surfaceBorder: 'rgba(255,255,255,0.14)',
+        scoreGradient: ['#FF9F45', '#F59E0B', '#93C5FD'],
+        scoreAccent: '#FF9F45',
+        scoreAccentSecondary: '#F97316',
       },
     };
   }
@@ -42,7 +44,7 @@ class ShareCardGenerator {
     canvas.width = this.W;
     canvas.height = this.H;
     const ctx = canvas.getContext('2d');
-    const theme = this.themes[period] || this.themes.sunset;
+    const theme = this.shareThemes[period] || this.shareThemes.sunset;
     const isSunrise = period === 'sunrise';
 
     // 1. 背景
@@ -75,9 +77,9 @@ class ShareCardGenerator {
   /* ── 背景 ── */
   _bg(ctx, theme) {
     const g = ctx.createLinearGradient(0, 0, 0, this.H);
-    g.addColorStop(0, theme.bg[0]);
-    g.addColorStop(0.54, theme.bg[1]);
-    g.addColorStop(1, theme.bg[2]);
+    g.addColorStop(0, theme.backgroundStops[0]);
+    g.addColorStop(0.54, theme.backgroundStops[1]);
+    g.addColorStop(1, theme.backgroundStops[2]);
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, this.W, this.H);
 
@@ -106,11 +108,11 @@ class ShareCardGenerator {
 
   _glassCard(ctx, x, y, w, h, theme, radius = 26) {
     ctx.save();
-    ctx.fillStyle = theme.card;
+    ctx.fillStyle = theme.surfaceFill;
     ctx.beginPath();
     ctx.roundRect(x, y, w, h, radius);
     ctx.fill();
-    ctx.strokeStyle = theme.cardStroke;
+    ctx.strokeStyle = theme.surfaceBorder;
     ctx.lineWidth = 1;
     ctx.stroke();
     ctx.restore();
@@ -191,9 +193,9 @@ class ShareCardGenerator {
     const cardY = startY;
     const scoreNum = Math.max(0, Math.min(100, Math.round(score || 0)));
 
-    let color = theme.gaugeColors[2];
-    if (scoreNum >= 70) color = theme.gaugeColors[0];
-    else if (scoreNum >= 40) color = theme.gaugeColors[1];
+    let color = theme.scoreGradient[2];
+    if (scoreNum >= 70) color = theme.scoreGradient[0];
+    else if (scoreNum >= 40) color = theme.scoreGradient[1];
 
     const qualityLabels = { excellent: '极佳', good: '良好', fair: '一般', poor: '较差' };
     const label = qualityLabels[quality] || (scoreNum >= 70 ? '极佳' : scoreNum >= 40 ? '良好' : '一般');
@@ -232,8 +234,8 @@ class ShareCardGenerator {
     ctx.fill();
     const pg = ctx.createLinearGradient(barX, barY, barX + barW, barY);
     pg.addColorStop(0, '#FBBF24');
-    pg.addColorStop(0.55, theme.accent);
-    pg.addColorStop(1, theme.accent2 || theme.accent);
+    pg.addColorStop(0.55, theme.scoreAccent);
+    pg.addColorStop(1, theme.scoreAccentSecondary || theme.scoreAccent);
     ctx.fillStyle = pg;
     ctx.beginPath();
     ctx.roundRect(barX, barY, Math.max(8, barW * scoreNum / 100), barH, 8);
@@ -274,14 +276,14 @@ class ShareCardGenerator {
   }
 
   /* ── 时间窗口 ── */
-  _timeWindow(ctx, prediction, period, startY, theme = this.themes.sunset) {
+  _timeWindow(ctx, prediction, period, startY, theme = this.shareThemes.sunset) {
     const cx = this.W / 2;
     const cardW = 620;
     const cardH = 110;
     const cardX = (this.W - cardW) / 2;
     const cardY = startY + 20;
 
-    this._glassCard(ctx, cardX, cardY, cardW, cardH, { ...theme, card: 'rgba(15,23,42,0.52)' }, 22);
+    this._glassCard(ctx, cardX, cardY, cardW, cardH, { ...theme, surfaceFill: 'rgba(15,23,42,0.52)' }, 22);
 
     // 日出/日落时间
     const sunTime = period === 'sunrise'
@@ -390,7 +392,7 @@ class ShareCardGenerator {
     const cardX = (this.W - cardW) / 2;
     const cardY = startY;
 
-    this._glassCard(ctx, cardX, cardY, cardW, cardH, { ...theme, card: 'rgba(255,255,255,0.10)' }, 22);
+    this._glassCard(ctx, cardX, cardY, cardW, cardH, { ...theme, surfaceFill: 'rgba(255,255,255,0.10)' }, 22);
 
     ctx.fillStyle = '#FFFFFF';
     ctx.font = `bold 24px ${this.font}`;
