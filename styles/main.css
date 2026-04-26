@@ -7054,6 +7054,10 @@ body:not(.theme-dark):not(.theme-auto) .day-card {
   --theme-accent-strong: #f59e0b;
   --theme-accent-soft: rgba(217, 119, 6, 0.12);
   --theme-panel-soft: rgba(255, 248, 238, 0.78);
+  --theme-share-bg: rgba(255, 248, 238, 0.86);
+  --theme-share-bg-hover: rgba(255, 239, 214, 0.96);
+  --theme-share-border: rgba(217, 119, 6, 0.20);
+  --theme-share-shadow: 0 10px 24px rgba(139, 92, 43, 0.14);
 
   --status-success-soft: rgba(34, 197, 94, 0.12);
   --status-success-border: rgba(34, 197, 94, 0.20);
@@ -7097,6 +7101,10 @@ body:not(.theme-dark):not(.theme-auto) {
   --theme-accent-strong: #f59e0b;
   --theme-accent-soft: rgba(217, 119, 6, 0.12);
   --theme-panel-soft: rgba(255, 248, 238, 0.78);
+  --theme-share-bg: rgba(255, 248, 238, 0.86);
+  --theme-share-bg-hover: rgba(255, 239, 214, 0.96);
+  --theme-share-border: rgba(217, 119, 6, 0.20);
+  --theme-share-shadow: 0 10px 24px rgba(139, 92, 43, 0.14);
 }
 
 body.theme-dark {
@@ -7109,6 +7117,10 @@ body.theme-dark {
   --theme-accent-strong: #fbbf24;
   --theme-accent-soft: rgba(251, 146, 60, 0.14);
   --theme-panel-soft: rgba(255, 255, 255, 0.06);
+  --theme-share-bg: rgba(18, 28, 52, 0.72);
+  --theme-share-bg-hover: rgba(251, 146, 60, 0.18);
+  --theme-share-border: rgba(251, 146, 60, 0.24);
+  --theme-share-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
   --score-track-color: rgba(255, 255, 255, 0.10);
   --score-poor-color: #94a3b8;
   --score-fair-color: #fdba74;
@@ -7140,6 +7152,10 @@ body.theme-dark {
     --theme-accent-strong: #fbbf24;
     --theme-accent-soft: rgba(251, 146, 60, 0.14);
     --theme-panel-soft: rgba(255, 255, 255, 0.06);
+    --theme-share-bg: rgba(18, 28, 52, 0.72);
+    --theme-share-bg-hover: rgba(251, 146, 60, 0.18);
+    --theme-share-border: rgba(251, 146, 60, 0.24);
+    --theme-share-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
     --score-track-color: rgba(255, 255, 255, 0.10);
     --score-poor-color: #94a3b8;
     --score-fair-color: #fdba74;
@@ -7196,4 +7212,24 @@ body.theme-dark {
   background: var(--status-success-soft) !important;
   border-color: var(--status-success-border) !important;
   color: var(--color-success) !important;
+}
+
+/* Prediction share action follows the Xiake light/dark theme instead of the old white pill. */
+.prediction-nav-share,
+.prediction-share-btn {
+  background: var(--theme-share-bg) !important;
+  color: var(--theme-accent) !important;
+  border: 1px solid var(--theme-share-border) !important;
+  box-shadow: var(--theme-share-shadow) !important;
+}
+.prediction-nav-share:hover,
+.prediction-share-btn:hover,
+.prediction-share-btn[aria-expanded="true"] {
+  background: var(--theme-share-bg-hover) !important;
+  color: var(--theme-accent-strong) !important;
+  border-color: color-mix(in srgb, var(--theme-accent) 42%, transparent) !important;
+}
+.prediction-share-dropdown {
+  background: color-mix(in srgb, var(--theme-card-bg) 90%, transparent) !important;
+  border-color: var(--theme-card-border) !important;
 }
