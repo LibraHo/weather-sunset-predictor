@@ -120,6 +120,59 @@
 --map-score-high-color
 ```
 
+
+## 当前落地 token（2026-04-26）
+
+### 全局主题 token
+
+```css
+--theme-bg
+--theme-card-bg
+--theme-card-border
+--theme-text
+--theme-text-muted
+--theme-accent
+--theme-accent-strong
+--theme-accent-soft
+--theme-panel-soft
+```
+
+### 语义与业务 token
+
+```css
+--status-success-soft
+--status-success-border
+--status-info-soft
+--status-warning-soft
+--score-track-color
+--score-poor-color
+--score-fair-color
+--score-good-color
+--score-excellent-start
+--score-excellent-mid
+--score-excellent-end
+--cloud-high-color
+--cloud-mid-color
+--cloud-low-color
+--cloud-track-color
+--chart-temp-color
+--chart-precipitation-color
+--chart-humidity-color
+--chart-wind-color
+--chart-pressure-color
+--chart-cloud-color
+--chart-point-stroke
+--map-score-low-color
+--map-score-mid-color
+--map-score-high-color
+```
+
+### 允许保留但必须归档的颜色
+
+- 地图热力、云层等级、评分等级、图表折线属于业务语义色，可以保留色相差异，但必须通过上述 token 进入组件。
+- Canvas/SVG 无法完全使用 CSS cascade 时，也应先从 CSS variable 读取，fallback 只作为兜底。
+- `white/black/rgba` 用于阴影、透明遮罩、可访问性文字时允许存在，但新增前必须说明用途。
+
 ## 模块规范
 
 ### 朝霞/晚霞预测
