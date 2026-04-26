@@ -6618,3 +6618,70 @@ html[data-actual-theme="light"] .prediction-app-card {
   width: 16px;
   height: 16px;
 }
+
+/* 7天卡片：天气图标及后续内容整体略向左，底部两行固定三列对齐 */
+.day-card {
+  padding-top: 9px !important;
+  padding-bottom: 9px !important;
+  gap: 4px !important;
+}
+.day-card .weather-icon,
+.day-card .temp-range-inline,
+.day-card .day-meta-lines {
+  transform: translateX(-3px);
+}
+.day-card .weather-icon {
+  font-size: 1.45rem !important;
+  line-height: 1 !important;
+}
+.temp-range-inline {
+  line-height: 1.1 !important;
+}
+.day-meta-lines {
+  display: grid !important;
+  gap: 2px !important;
+  justify-content: center !important;
+}
+.day-meta-line {
+  display: grid !important;
+  grid-template-columns: 16px 42px 14px !important;
+  width: 76px !important;
+  min-height: 16px;
+  align-items: center !important;
+  justify-content: start !important;
+  column-gap: 3px !important;
+  line-height: 1.05 !important;
+}
+.day-meta-line .icon {
+  width: 16px !important;
+  height: 16px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.day-meta-svg-icon svg {
+  width: 15px;
+  height: 15px;
+  display: block;
+}
+.day-meta-line .value {
+  justify-self: start !important;
+  white-space: nowrap;
+}
+.day-meta-spacer {
+  opacity: 0;
+}
+.day-wind-direction-icon {
+  justify-self: center !important;
+}
+@media (max-width: 640px) {
+  .day-card {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    gap: 3px !important;
+  }
+  .day-meta-line {
+    grid-template-columns: 15px 40px 13px !important;
+    width: 72px !important;
+  }
+}
