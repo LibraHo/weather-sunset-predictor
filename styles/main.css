@@ -6619,18 +6619,16 @@ html[data-actual-theme="light"] .prediction-app-card {
   height: 16px;
 }
 
-/* 7天卡片：天气图标及后续内容整体略向左对齐 */
-.day-card .weather-icon,
-.day-card .temp-range-inline,
-.day-card .day-meta-lines {
-  transform: translateX(-3px);
-}
-
-/* 7天预测卡片：收窄上下维度，减少臃肿感 */
+/* 7天卡片：天气图标及后续内容整体略向左，底部两行固定三列对齐 */
 .day-card {
   padding-top: 9px !important;
   padding-bottom: 9px !important;
   gap: 4px !important;
+}
+.day-card .weather-icon,
+.day-card .temp-range-inline,
+.day-card .day-meta-lines {
+  transform: translateX(-3px);
 }
 .day-card .weather-icon {
   font-size: 1.45rem !important;
@@ -6640,11 +6638,41 @@ html[data-actual-theme="light"] .prediction-app-card {
   line-height: 1.1 !important;
 }
 .day-meta-lines {
+  display: grid !important;
   gap: 2px !important;
+  justify-content: center !important;
 }
 .day-meta-line {
+  display: grid !important;
+  grid-template-columns: 16px 42px 14px !important;
+  width: 76px !important;
   min-height: 16px;
+  align-items: center !important;
+  justify-content: start !important;
+  column-gap: 3px !important;
   line-height: 1.05 !important;
+}
+.day-meta-line .icon {
+  width: 16px !important;
+  height: 16px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.day-meta-svg-icon svg {
+  width: 15px;
+  height: 15px;
+  display: block;
+}
+.day-meta-line .value {
+  justify-self: start !important;
+  white-space: nowrap;
+}
+.day-meta-spacer {
+  opacity: 0;
+}
+.day-wind-direction-icon {
+  justify-self: center !important;
 }
 @media (max-width: 640px) {
   .day-card {
@@ -6652,33 +6680,8 @@ html[data-actual-theme="light"] .prediction-app-card {
     padding-bottom: 8px !important;
     gap: 3px !important;
   }
-}
-
-/* 7天卡片：跨行固定列宽，确保降水/风速图标纵向对齐 */
-.day-meta-lines {
-  display: grid !important;
-  grid-template-columns: minmax(64px, max-content) !important;
-  justify-content: center !important;
-  align-items: center !important;
-}
-.day-meta-line {
-  width: 72px !important;
-  grid-template-columns: 16px minmax(38px, 1fr) 16px !important;
-  justify-content: start !important;
-}
-.day-meta-line .icon:first-child {
-  grid-column: 1;
-}
-.day-meta-line .value {
-  grid-column: 2;
-  justify-self: start !important;
-}
-.day-meta-line:not(:has(.day-wind-direction-icon))::after {
-  grid-column: 3;
-}
-@media (max-width: 640px) {
   .day-meta-line {
-    width: 68px !important;
-    grid-template-columns: 15px minmax(36px, 1fr) 15px !important;
+    grid-template-columns: 15px 40px 13px !important;
+    width: 72px !important;
   }
 }
