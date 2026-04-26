@@ -6679,6 +6679,8 @@ html[data-actual-theme="light"] .prediction-app-card {
   .day-meta-line {
     grid-template-columns: 15px 40px 13px !important;
     width: 72px !important;
+  }
+}
 /* 朝霞/晚霞切换：直接复用通用 xiake-toggle 分段开关 */
 .prediction-toggle-bar.xiake-toggle {
   display: none;
