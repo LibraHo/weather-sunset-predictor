@@ -6618,3 +6618,10 @@ html[data-actual-theme="light"] .prediction-app-card {
   width: 16px;
   height: 16px;
 }
+
+/* 7天卡片：天气图标及后续内容整体略向左对齐 */
+.day-card .weather-icon,
+.day-card .temp-range-inline,
+.day-card .day-meta-lines {
+  transform: translateX(-3px);
+}
