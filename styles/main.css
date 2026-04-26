@@ -6456,7 +6456,8 @@ html[data-actual-theme="light"] .prediction-app-card {
   padding: 0 !important;
 }
 .cloud-condition-item + .cloud-condition-item {
-  padding-top: 6px !important;
+  padding-top: 0 !important;
+  padding-left: 10px !important;
 }
 .cloud-condition-top {
   min-height: 20px !important;
@@ -6480,7 +6481,7 @@ html[data-actual-theme="light"] .prediction-app-card {
 }
 @media (max-width: 390px) {
   .cloud-condition-card { padding: 8px 10px !important; gap: 5px !important; }
-  .cloud-condition-item + .cloud-condition-item { padding-top: 5px !important; }
+  .cloud-condition-item + .cloud-condition-item { padding-top: 0 !important; padding-left: 8px !important; }
   .cloud-condition-label { font-size: 0.82rem !important; }
   .cloud-condition-top strong { font-size: 0.88rem !important; }
   .cloud-condition-track { margin-top: 4px !important; height: 4px !important; }
