@@ -1226,16 +1226,22 @@ class PredictionController {
 
   getScoreTheme(quality, score) {
     const value = Math.max(0, Math.min(100, Number(score) || 0));
-    if (value >= 80) return ['var(--score-excellent-start)', 'var(--score-excellent-mid)', 'var(--score-excellent-end)'];
+    if (value >= 80) {
+      return [
+        'var(--score-excellent-start, #fb923c)',
+        'var(--score-excellent-mid, #fbbf24)',
+        'var(--score-excellent-end, #f43f5e)'
+      ];
+    }
 
     // 0–80 使用单色：从灰逐步过渡到更深橙色，但圆环本身不做渐变。
     const stops = [
-      { max: 20, color: 'var(--score-poor-color)' },
-      { max: 40, color: 'var(--score-fair-color)' },
-      { max: 60, color: 'var(--score-good-color)' },
-      { max: 80, color: 'var(--score-excellent-mid)' }
+      { max: 20, color: 'var(--score-poor-color, #94a3b8)' },
+      { max: 40, color: 'var(--score-fair-color, #fdba74)' },
+      { max: 60, color: 'var(--score-good-color, #fb923c)' },
+      { max: 80, color: 'var(--score-excellent-mid, #fbbf24)' }
     ];
-    const color = stops.find(stop => value < stop.max)?.color || 'var(--score-excellent-mid)';
+    const color = stops.find(stop => value < stop.max)?.color || 'var(--score-excellent-mid, #fbbf24)';
     return [color, color, color];
   }
 
@@ -1256,7 +1262,7 @@ class PredictionController {
               <stop offset="100%" stop-color="${scoreTheme[2]}"/>
             </linearGradient>
           </defs>
-          <circle cx="90" cy="90" r="${radius}" fill="none" stroke="var(--score-track-color)" stroke-width="12"/>
+          <circle cx="90" cy="90" r="${radius}" fill="none" stroke="var(--score-track-color, rgba(255,255,255,0.14))" stroke-width="12"/>
           <circle cx="90" cy="90" r="${radius}" fill="none" stroke="url(#app-gauge-grad-${type}-${forecast.quality})" stroke-width="12"
             stroke-dasharray="${scoreFill.toFixed(2)} ${scoreGap.toFixed(2)}" stroke-dashoffset="${(circumference * 0.25).toFixed(2)}" stroke-linecap="round"/>
         </svg>
