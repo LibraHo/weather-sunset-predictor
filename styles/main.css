@@ -6581,3 +6581,40 @@ html[data-actual-theme="light"] .prediction-app-card {
     font-size: 0.72rem;
   }
 }
+
+/* 7天卡片：SVG 指标图标对齐，天气图标略向左收 */
+.day-card .weather-icon {
+  transform: translateX(-3px);
+}
+.day-meta-line {
+  display: grid !important;
+  grid-template-columns: 16px minmax(0, auto) 16px;
+  column-gap: 4px;
+  justify-content: center;
+  align-items: center;
+}
+.day-meta-line .icon {
+  width: 16px !important;
+  height: 16px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+}
+.day-meta-svg-icon svg {
+  width: 15px;
+  height: 15px;
+  display: block;
+}
+.day-meta-line .value {
+  justify-self: center;
+  white-space: nowrap;
+}
+.day-wind-direction-icon {
+  grid-column: 3;
+}
+.day-meta-line:not(:has(.day-wind-direction-icon))::after {
+  content: '';
+  width: 16px;
+  height: 16px;
+}
