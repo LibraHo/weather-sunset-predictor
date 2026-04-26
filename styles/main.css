@@ -6914,6 +6914,41 @@ body:not(.theme-dark):not(.theme-auto) .cloud-condition-track {
   background: rgba(169, 121, 70, 0.14) !important;
 }
 
+/* Light theme weather hero: avoid low-contrast white text on warm glass. */
+body.theme-light .weather-visual-panel,
+body:not(.theme-dark):not(.theme-auto) .weather-visual-panel {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255, 196, 104, 0.30), transparent 42%),
+    linear-gradient(145deg, rgba(255, 252, 246, 0.94) 0%, rgba(255, 239, 218, 0.88) 100%) !important;
+  border-color: rgba(186, 132, 72, 0.20) !important;
+  box-shadow: 0 10px 24px rgba(139, 92, 43, 0.12) !important;
+}
+body.theme-light .weather-temp-large,
+body:not(.theme-dark):not(.theme-auto) .weather-temp-large,
+body.theme-light .weather-wind-main,
+body:not(.theme-dark):not(.theme-auto) .weather-wind-main,
+body.theme-light .weather-wind-direction-icon,
+body:not(.theme-dark):not(.theme-auto) .weather-wind-direction-icon {
+  color: #3d2b1f !important;
+  text-shadow: none !important;
+}
+body.theme-light .weather-desc,
+body:not(.theme-dark):not(.theme-auto) .weather-desc {
+  color: #7a6554 !important;
+  text-shadow: none !important;
+}
+body.theme-light .weather-feature-item,
+body:not(.theme-dark):not(.theme-auto) .weather-feature-item {
+  background: rgba(255, 248, 238, 0.76) !important;
+  border-color: rgba(186, 132, 72, 0.18) !important;
+  box-shadow: 0 6px 16px rgba(139, 92, 43, 0.08) !important;
+}
+body.theme-light .weather-feature-item:hover,
+body:not(.theme-dark):not(.theme-auto) .weather-feature-item:hover {
+  background: rgba(255, 239, 214, 0.90) !important;
+  border-color: rgba(217, 119, 6, 0.24) !important;
+}
+
 body.theme-light .xiake-toggle,
 body:not(.theme-dark):not(.theme-auto) .xiake-toggle {
   --toggle-bg: rgba(255, 248, 238, 0.88);
