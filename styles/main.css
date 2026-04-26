@@ -6976,3 +6976,69 @@ body:not(.theme-dark):not(.theme-auto) .day-card {
     border-color: rgba(186, 132, 72, 0.16) !important;
   }
 }
+
+/* 朝晚霞预测：方向值恢复方位箭头；云量卡片强制标签与百分比同排 */
+.app-info-row-direction .app-info-value {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  min-width: 0;
+}
+.azimuth-direction-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.azimuth-direction-inline .azimuth-direction-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.9em;
+  height: 0.9em;
+  color: var(--color-primary, #d97706);
+  font-size: 0.9em;
+  line-height: 1;
+  transform-origin: center;
+}
+.cloud-condition-card .cloud-condition-top {
+  display: grid !important;
+  grid-template-columns: minmax(34px, 1fr) max-content !important;
+  align-items: center !important;
+  gap: 4px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.cloud-condition-card .cloud-condition-label {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.cloud-condition-card .cloud-condition-top strong {
+  justify-self: end !important;
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+  line-height: 1 !important;
+}
+.cloud-condition-card .cloud-condition-svg {
+  flex: 0 0 auto !important;
+  width: 13px !important;
+  height: 13px !important;
+}
+@media (max-width: 380px) {
+  .cloud-condition-card .cloud-condition-top {
+    grid-template-columns: minmax(30px, 1fr) max-content !important;
+    gap: 3px !important;
+  }
+  .cloud-condition-card .cloud-condition-label {
+    font-size: 0.68rem !important;
+  }
+  .cloud-condition-card .cloud-condition-top strong {
+    font-size: 0.76rem !important;
+  }
+}
