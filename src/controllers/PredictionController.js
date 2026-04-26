@@ -891,11 +891,11 @@ class PredictionController {
 
     // 渲染带切换开关的布局
     const html = `
-      <div class="prediction-toggle-bar" id="prediction-toggle-bar">
-        <button class="prediction-toggle-btn${defaultTab === 'sunrise' ? ' active' : ''}" data-tab="sunrise">
+      <div class="prediction-toggle-bar xiake-toggle" id="prediction-toggle-bar" data-toggle-template="segmented">
+        <button class="prediction-toggle-btn xiake-toggle-btn${defaultTab === 'sunrise' ? ' active' : ''}" data-tab="sunrise">
           ${this.i18n.t('prediction.sunrise')}
         </button>
-        <button class="prediction-toggle-btn${defaultTab === 'sunset' ? ' active' : ''}" data-tab="sunset">
+        <button class="prediction-toggle-btn xiake-toggle-btn${defaultTab === 'sunset' ? ' active' : ''}" data-tab="sunset">
           ${this.i18n.t('prediction.sunset')}
         </button>
       </div>
