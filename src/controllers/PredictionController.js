@@ -1191,9 +1191,9 @@ class PredictionController {
       azimuth: prediction.sunAzimuth,
       directionLabel: type === 'sunrise' ? this.i18n.t('prediction.sunriseDirectionLabel') : this.i18n.t('prediction.sunsetDirectionLabel'),
       clouds: [
-        { label: '高云', value: Number(clouds.high ?? 0), color: '#4EA3FF' },
-        { label: '中云', value: Number(clouds.mid ?? 0), color: '#8B9DFF' },
-        { label: '低云', value: Number(clouds.low ?? 0), color: '#B7C0CF' }
+        { label: '高云', value: Number(clouds.high ?? 0), color: 'var(--cloud-high-color)' },
+        { label: '中云', value: Number(clouds.mid ?? 0), color: 'var(--cloud-mid-color)' },
+        { label: '低云', value: Number(clouds.low ?? 0), color: 'var(--cloud-low-color)' }
       ],
       quality: prediction.quality || this.getQualityFromScore(score),
       analysis: this.buildAnalysisGroups(prediction),
@@ -1226,16 +1226,16 @@ class PredictionController {
 
   getScoreTheme(quality, score) {
     const value = Math.max(0, Math.min(100, Number(score) || 0));
-    if (value >= 80) return ['#F97316', '#FACC15', '#E11D48'];
+    if (value >= 80) return ['var(--score-excellent-start)', 'var(--score-excellent-mid)', 'var(--score-excellent-end)'];
 
     // 0–80 使用单色：从灰逐步过渡到更深橙色，但圆环本身不做渐变。
     const stops = [
-      { max: 20, color: '#9CA3AF' },
-      { max: 40, color: '#FDBA74' },
-      { max: 60, color: '#FB923C' },
-      { max: 80, color: '#F97316' }
+      { max: 20, color: 'var(--score-poor-color)' },
+      { max: 40, color: 'var(--score-fair-color)' },
+      { max: 60, color: 'var(--score-good-color)' },
+      { max: 80, color: 'var(--score-excellent-mid)' }
     ];
-    const color = stops.find(stop => value < stop.max)?.color || '#EA580C';
+    const color = stops.find(stop => value < stop.max)?.color || 'var(--score-excellent-mid)';
     return [color, color, color];
   }
 
@@ -1256,7 +1256,7 @@ class PredictionController {
               <stop offset="100%" stop-color="${scoreTheme[2]}"/>
             </linearGradient>
           </defs>
-          <circle cx="90" cy="90" r="${radius}" fill="none" stroke="#EEF1F7" stroke-width="12"/>
+          <circle cx="90" cy="90" r="${radius}" fill="none" stroke="var(--score-track-color)" stroke-width="12"/>
           <circle cx="90" cy="90" r="${radius}" fill="none" stroke="url(#app-gauge-grad-${type}-${forecast.quality})" stroke-width="12"
             stroke-dasharray="${scoreFill.toFixed(2)} ${scoreGap.toFixed(2)}" stroke-dashoffset="${(circumference * 0.25).toFixed(2)}" stroke-linecap="round"/>
         </svg>
@@ -1525,16 +1525,16 @@ class PredictionController {
       <div class="compact-cloud-info" style="display:flex;align-items:center;flex-wrap:nowrap;gap:4px;width:100%;overflow:hidden;">
         <span class="cloud-icon" style="flex-shrink:0;">☁️</span>
         <span class="cloud-item" style="flex:1 1 0;min-width:0;" title="${highLabel}"><span class="cloud-label">${highLabel}</span>: <strong class="cloud-value">${high.toFixed(0)}%</strong>
-          <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(high,100)}%;background:#90caf9;"></span></span>
+          <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(high,100)}%;background:var(--cloud-high-color);"></span></span>
         </span>
         </span>
         <span class="cloud-sep" style="flex-shrink:0;">|</span>
         <span class="cloud-item" style="flex:1 1 0;min-width:0;" title="${midLabel}"><span class="cloud-label">${midLabel}</span>: <strong class="cloud-value">${mid.toFixed(0)}%</strong>
-          <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(mid,100)}%;background:#64b5f6;"></span></span>
+          <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(mid,100)}%;background:var(--cloud-mid-color);"></span></span>
         </span>
         <span class="cloud-sep" style="flex-shrink:0;">|</span>
         <span class="cloud-item" style="flex:1 1 0;min-width:0;" title="${lowLabel}"><span class="cloud-label">${lowLabel}</span>: <strong class="cloud-value">${low.toFixed(0)}%</strong>
-          <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(low,100)}%;background:#42a5f5;"></span></span>
+          <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(low,100)}%;background:var(--cloud-low-color);"></span></span>
         </span>
       </div>
     `;
@@ -1673,7 +1673,7 @@ class PredictionController {
         const parts = [];
         if (ct.reasons?.length) parts.push(`判定: ${ct.reasons.join(', ')}`);
         if (ct.modifier !== 1.0) parts.push(`修正: ×${ct.modifier}`);
-        if (parts.length) analysis += `<br><span style="color:#888;font-size:11px;">${parts.join(' | ')}</span>`;
+        if (parts.length) analysis += `<br><span style="color:var(--color-text-light);font-size:11px;">${parts.join(' | ')}</span>`;
       }
       analysis += `</div>`;
     }

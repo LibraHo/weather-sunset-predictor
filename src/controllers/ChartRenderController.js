@@ -9,16 +9,16 @@ class ChartRenderController {
     return {
       renderTemperatureChart: (data, id) => {
         const unit = tempUnit === 'fahrenheit' ? '°F' : '°C';
-        return this.renderSimpleChart(data, id, 'temp', this.i18n.t('weather.temperature'), unit, '#ff6b6b');
+        return this.renderSimpleChart(data, id, 'temp', this.i18n.t('weather.temperature'), unit, '--chart-temp-color');
       },
-      renderPrecipitationChart: (data, id) => this.renderSimpleChart(data, id, 'precipitation', this.i18n.t('weather.precipitation'), 'mm', '#4dabf7'),
-      renderHumidityChart: (data, id) => this.renderSimpleChart(data, id, 'humidity', this.i18n.t('weather.humidity'), '%', '#51cf66'),
+      renderPrecipitationChart: (data, id) => this.renderSimpleChart(data, id, 'precipitation', this.i18n.t('weather.precipitation'), 'mm', '--chart-precipitation-color'),
+      renderHumidityChart: (data, id) => this.renderSimpleChart(data, id, 'humidity', this.i18n.t('weather.humidity'), '%', '--chart-humidity-color'),
       renderWindChart: (data, id) => {
         const unit = windUnit === 'ms' ? 'm/s' : 'km/h';
-        return this.renderSimpleChart(data, id, 'windSpeed', this.i18n.t('weather.windSpeed'), unit, '#748ffc');
+        return this.renderSimpleChart(data, id, 'windSpeed', this.i18n.t('weather.windSpeed'), unit, '--chart-wind-color');
       },
-      renderPressureChart: (data, id) => this.renderSimpleChart(data, id, 'pressure', this.i18n.t('weather.pressure'), 'hPa', '#ffa94d'),
-      renderCloudChart: (data, id) => this.renderSimpleChart(data, id, 'cloudCover', this.i18n.t('weather.cloudCover'), '%', '#868e96')
+      renderPressureChart: (data, id) => this.renderSimpleChart(data, id, 'pressure', this.i18n.t('weather.pressure'), 'hPa', '--chart-pressure-color'),
+      renderCloudChart: (data, id) => this.renderSimpleChart(data, id, 'cloudCover', this.i18n.t('weather.cloudCover'), '%', '--chart-cloud-color')
     };
   }
 
@@ -147,7 +147,8 @@ class ChartRenderController {
     const gridColor = resolveCssVar('--chart-grid-color', isDarkTheme ? 'rgba(255,255,255,0.38)' : 'rgba(51,51,51,0.18)');
     const textColor = resolveCssVar('--color-text', isDarkTheme ? 'rgba(255,255,255,0.92)' : '#333333');
     const cardBg = resolveCssVar('--color-card-bg', isDarkTheme ? 'rgba(15,22,40,0.85)' : '#ffffff');
-    const pointStroke = isDarkTheme ? 'rgba(15,22,40,0.95)' : cardBg;
+    const pointStroke = resolveCssVar('--chart-point-stroke', isDarkTheme ? 'rgba(15,22,40,0.95)' : cardBg);
+    const lineColor = String(color).startsWith('--') ? resolveCssVar(color, isDarkTheme ? '#fb923c' : '#d97706') : color;
 
     let html = `<div class="weather-chart-panel" style="padding: ${chartPadding}; background: var(--color-card-bg); border-radius: 12px; margin: 12px 0;">`;
     html += `<h3 style="text-align: center; margin-bottom: 16px; color: var(--color-text); font-size: ${titleFontSize};">${label}${this.i18n.t('charts.trend')} (${unit})</h3>`;
@@ -201,10 +202,10 @@ class ChartRenderController {
       html += `<text x="${tick.x}" y="${chartHeight - padding.bottom + 25}" font-size="${axisFontSize}" fill="${textColor}" text-anchor="middle" font-weight="500">${tick.label}</text>`;
     });
 
-    html += `<path d="${pathData}" fill="none" stroke="${color}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>`;
+    html += `<path d="${pathData}" fill="none" stroke="${lineColor}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>`;
 
     renderPoints.forEach((p, i) => {
-      html += `<circle cx="${p.x}" cy="${p.y}" r="${isMobile ? 2.8 : 3.2}" fill="${color}" stroke="${pointStroke}" stroke-width="${isMobile ? 1.1 : 1.4}"/>`;
+      html += `<circle cx="${p.x}" cy="${p.y}" r="${isMobile ? 2.8 : 3.2}" fill="${lineColor}" stroke="${pointStroke}" stroke-width="${isMobile ? 1.1 : 1.4}"/>`;
       if (i % (isMobile ? 2 : 1) === 0) {
         html += `<text x="${p.x}" y="${p.y - 10}" font-size="${isMobile ? 10 : 12}" fill="${textColor}" text-anchor="middle" font-weight="600">${p.value.toFixed(1)}</text>`;
       }

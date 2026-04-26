@@ -7042,3 +7042,158 @@ body:not(.theme-dark):not(.theme-auto) .day-card {
     font-size: 0.76rem !important;
   }
 }
+
+/* Theme token consolidation: semantic tokens used by charts, prediction cards, clouds, and maps. */
+:root {
+  --theme-bg: #f7f1e7;
+  --theme-card-bg: rgba(255, 252, 246, 0.92);
+  --theme-card-border: rgba(186, 132, 72, 0.20);
+  --theme-text: #3d2b1f;
+  --theme-text-muted: #7a6554;
+  --theme-accent: #d97706;
+  --theme-accent-strong: #f59e0b;
+  --theme-accent-soft: rgba(217, 119, 6, 0.12);
+  --theme-panel-soft: rgba(255, 248, 238, 0.78);
+
+  --status-success-soft: rgba(34, 197, 94, 0.12);
+  --status-success-border: rgba(34, 197, 94, 0.20);
+  --status-info-soft: rgba(217, 119, 6, 0.10);
+  --status-warning-soft: rgba(245, 158, 11, 0.12);
+
+  --score-track-color: rgba(186, 132, 72, 0.16);
+  --score-poor-color: #9a8a7a;
+  --score-fair-color: #d89a5f;
+  --score-good-color: #e8893f;
+  --score-excellent-start: #f97316;
+  --score-excellent-mid: #f59e0b;
+  --score-excellent-end: #dc2626;
+
+  --cloud-high-color: #5b9bd5;
+  --cloud-mid-color: #8aa4d6;
+  --cloud-low-color: #aeb8c5;
+  --cloud-track-color: rgba(169, 121, 70, 0.14);
+
+  --chart-temp-color: #d95b45;
+  --chart-precipitation-color: #3d8fc7;
+  --chart-humidity-color: #3c9f6f;
+  --chart-wind-color: #7b8fc8;
+  --chart-pressure-color: #d97706;
+  --chart-cloud-color: #8792a2;
+  --chart-point-stroke: var(--theme-card-bg);
+
+  --map-score-low-color: rgba(255, 230, 210, 0.10);
+  --map-score-mid-color: rgba(255, 184, 126, 0.28);
+  --map-score-high-color: rgba(218, 78, 28, 0.62);
+}
+
+body.theme-light,
+body:not(.theme-dark):not(.theme-auto) {
+  --theme-bg: #f7f1e7;
+  --theme-card-bg: rgba(255, 252, 246, 0.92);
+  --theme-card-border: rgba(186, 132, 72, 0.20);
+  --theme-text: #3d2b1f;
+  --theme-text-muted: #7a6554;
+  --theme-accent: #d97706;
+  --theme-accent-strong: #f59e0b;
+  --theme-accent-soft: rgba(217, 119, 6, 0.12);
+  --theme-panel-soft: rgba(255, 248, 238, 0.78);
+}
+
+body.theme-dark {
+  --theme-bg: #0a0f1e;
+  --theme-card-bg: rgba(18, 28, 52, 0.72);
+  --theme-card-border: rgba(255, 255, 255, 0.10);
+  --theme-text: rgba(255, 255, 255, 0.92);
+  --theme-text-muted: rgba(255, 255, 255, 0.58);
+  --theme-accent: #fb923c;
+  --theme-accent-strong: #fbbf24;
+  --theme-accent-soft: rgba(251, 146, 60, 0.14);
+  --theme-panel-soft: rgba(255, 255, 255, 0.06);
+  --score-track-color: rgba(255, 255, 255, 0.10);
+  --score-poor-color: #94a3b8;
+  --score-fair-color: #fdba74;
+  --score-good-color: #fb923c;
+  --score-excellent-start: #fb923c;
+  --score-excellent-mid: #fbbf24;
+  --score-excellent-end: #f43f5e;
+  --cloud-high-color: #dbeafe;
+  --cloud-mid-color: #b9c8ea;
+  --cloud-low-color: #8fa0bf;
+  --cloud-track-color: rgba(255, 255, 255, 0.16);
+  --chart-temp-color: #fb7185;
+  --chart-precipitation-color: #60a5fa;
+  --chart-humidity-color: #4ade80;
+  --chart-wind-color: #a78bfa;
+  --chart-pressure-color: #fbbf24;
+  --chart-cloud-color: #cbd5e1;
+  --chart-point-stroke: rgba(15, 22, 40, 0.95);
+}
+
+@media (prefers-color-scheme: dark) {
+  body.theme-auto {
+    --theme-bg: #0a0f1e;
+    --theme-card-bg: rgba(18, 28, 52, 0.72);
+    --theme-card-border: rgba(255, 255, 255, 0.10);
+    --theme-text: rgba(255, 255, 255, 0.92);
+    --theme-text-muted: rgba(255, 255, 255, 0.58);
+    --theme-accent: #fb923c;
+    --theme-accent-strong: #fbbf24;
+    --theme-accent-soft: rgba(251, 146, 60, 0.14);
+    --theme-panel-soft: rgba(255, 255, 255, 0.06);
+    --score-track-color: rgba(255, 255, 255, 0.10);
+    --score-poor-color: #94a3b8;
+    --score-fair-color: #fdba74;
+    --score-good-color: #fb923c;
+    --score-excellent-start: #fb923c;
+    --score-excellent-mid: #fbbf24;
+    --score-excellent-end: #f43f5e;
+    --cloud-high-color: #dbeafe;
+    --cloud-mid-color: #b9c8ea;
+    --cloud-low-color: #8fa0bf;
+    --cloud-track-color: rgba(255, 255, 255, 0.16);
+    --chart-temp-color: #fb7185;
+    --chart-precipitation-color: #60a5fa;
+    --chart-humidity-color: #4ade80;
+    --chart-wind-color: #a78bfa;
+    --chart-pressure-color: #fbbf24;
+    --chart-cloud-color: #cbd5e1;
+    --chart-point-stroke: rgba(15, 22, 40, 0.95);
+  }
+}
+
+/* High-impact token remapping for prediction surfaces. */
+.score-gauge-number,
+.score-gauge-grade,
+.score-gauge-center .score-breakdown-hint-trigger {
+  color: var(--score-excellent-mid) !important;
+}
+.score-gauge-total,
+.prediction-app-footer {
+  color: var(--theme-text-muted) !important;
+}
+.cloud-condition-top strong {
+  color: var(--cloud-high-color);
+}
+.cloud-condition-track {
+  background: var(--cloud-track-color) !important;
+}
+.analysis-group-positive .analysis-group-label,
+.analysis-item-positive .analysis-item-icon {
+  background: var(--status-success-soft) !important;
+  color: var(--color-success) !important;
+}
+.analysis-group-neutral .analysis-group-label,
+.analysis-item-neutral .analysis-item-icon {
+  background: var(--theme-accent-soft) !important;
+  color: var(--theme-accent) !important;
+}
+.analysis-group-warning .analysis-group-label,
+.analysis-item-warning .analysis-item-icon {
+  background: var(--status-warning-soft) !important;
+  color: var(--color-warning) !important;
+}
+.conclusion-banner {
+  background: var(--status-success-soft) !important;
+  border-color: var(--status-success-border) !important;
+  color: var(--color-success) !important;
+}
