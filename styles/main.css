@@ -6625,3 +6625,31 @@ html[data-actual-theme="light"] .prediction-app-card {
 .day-card .day-meta-lines {
   transform: translateX(-3px);
 }
+
+/* 7天预测卡片：收窄上下维度，减少臃肿感 */
+.day-card {
+  padding-top: 9px !important;
+  padding-bottom: 9px !important;
+  gap: 4px !important;
+}
+.day-card .weather-icon {
+  font-size: 1.45rem !important;
+  line-height: 1 !important;
+}
+.temp-range-inline {
+  line-height: 1.1 !important;
+}
+.day-meta-lines {
+  gap: 2px !important;
+}
+.day-meta-line {
+  min-height: 16px;
+  line-height: 1.05 !important;
+}
+@media (max-width: 640px) {
+  .day-card {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    gap: 3px !important;
+  }
+}
