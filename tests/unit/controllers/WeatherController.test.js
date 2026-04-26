@@ -280,11 +280,11 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(metaLines.length).toBeGreaterThanOrEqual(2);
 
     // 第一行：降水
-    expect(metaLines[0].textContent).toContain('💧');
+    expect(metaLines[0].querySelector('.day-meta-svg-icon svg')).not.toBeNull();
     expect(metaLines[0].textContent).toContain('50%');
 
     // 第二行：风速+风向箭头
-    expect(metaLines[1].textContent).toContain('💨');
+    expect(metaLines[1].querySelector('.day-meta-svg-icon svg')).not.toBeNull();
     const windDirIcon = metaLines[1].querySelector('.day-wind-direction-icon');
     expect(windDirIcon).not.toBeNull();
 

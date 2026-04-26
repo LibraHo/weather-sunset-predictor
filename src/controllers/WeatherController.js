@@ -471,11 +471,11 @@ class WeatherController {
       </div>
       <div class="day-meta-lines" role="list" aria-label="天气详细信息">
         <div class="day-meta-line" role="listitem" aria-label="降水概率：${precipProb}%">
-          <span class="icon" aria-hidden="true">💧</span>
+          <span class="icon day-meta-svg-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 18s2.5-4 4.5-4 4.5 4 6.5 4 4.5-4 6.5-4 4.5 4 4.5 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 18c.8-1.5 2.6-2.5 4.1-1.7 1.7.9 2.7 3 4.6 3 1.8 0 2.8-2 4.1-3 .7-.6 1.5-.8 2.3-.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
           <span class="value">${precipProb}%</span>
         </div>
         <div class="day-meta-line" role="listitem" aria-label="风速：${this.formatWindSpeed(maxWindSpeed)}，风向：${directionLabel}">
-          <span class="icon" aria-hidden="true">💨</span>
+          <span class="icon day-meta-svg-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 12H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="m14 8.5-3.5 3.5 3.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg></span>
           <span class="value">${this.formatWindSpeed(maxWindSpeed)}</span>
           <span class="icon day-wind-direction-icon" style="transform: rotate(${avgWindDirection.toFixed(0)}deg);" aria-hidden="true">↑</span>
         </div>
