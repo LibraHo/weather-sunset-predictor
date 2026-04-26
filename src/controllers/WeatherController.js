@@ -469,13 +469,12 @@ class WeatherController {
         <span class="temp-range-sep">~</span>
         <span class="max-temp">${maxTemp.toFixed(0)}°</span>
       </div>
-      <div class="day-meta-lines" role="list" aria-label="天气详细信息">
-        <div class="day-meta-line" role="listitem" aria-label="降水概率：${precipProb}%">
+      <div class="day-meta-inline" role="list" aria-label="天气详细信息">
+        <div class="day-meta-chip day-meta-precip" role="listitem" aria-label="降水概率：${precipProb}%">
           <span class="icon day-meta-svg-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3.5 6.8 10.2a6.4 6.4 0 1 0 10.4 0L12 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.2 16.2c.65 1.15 1.58 1.78 2.8 1.78" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
           <span class="value">${precipProb}%</span>
-          <span class="icon day-meta-spacer" aria-hidden="true"></span>
         </div>
-        <div class="day-meta-line" role="listitem" aria-label="风速：${this.formatWindSpeed(maxWindSpeed)}，风向：${directionLabel}">
+        <div class="day-meta-chip day-meta-wind" role="listitem" aria-label="风速：${this.formatWindSpeed(maxWindSpeed)}，风向：${directionLabel}">
           <span class="icon day-meta-svg-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 8h11.5a2.5 2.5 0 1 0-2.5-2.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M3 12h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M3 16h12.5a2.5 2.5 0 1 1-2.5 2.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
           <span class="value">${this.formatWindSpeed(maxWindSpeed)}</span>
           <span class="icon day-wind-direction-icon" style="transform: rotate(${avgWindDirection.toFixed(0)}deg);" aria-hidden="true">↑</span>
