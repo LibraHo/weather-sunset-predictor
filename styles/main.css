@@ -6447,7 +6447,6 @@ html[data-actual-theme="light"] .prediction-app-card {
   margin-bottom: 12px !important;
 }
 .xiake-toggle-btn,
-.prediction-toggle-btn,
 .btn-param.xiake-toggle-btn {
   appearance: none;
   border: 0 !important;
@@ -6465,14 +6464,12 @@ html[data-actual-theme="light"] .prediction-app-card {
   transition: background-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
 }
 .xiake-toggle-btn.active,
-.prediction-toggle-btn.active,
 .btn-param.xiake-toggle-btn.active {
   background: var(--toggle-active) !important;
   color: #fff !important;
   box-shadow: 0 2px 8px color-mix(in srgb, var(--toggle-active) 42%, transparent) !important;
 }
 .xiake-toggle-btn:not(.active):hover,
-.prediction-toggle-btn:not(.active):hover,
 .btn-param.xiake-toggle-btn:not(.active):hover {
   background: var(--glass-bg-hover, rgba(0,0,0,0.05)) !important;
   color: var(--color-text, #111827) !important;
@@ -6487,7 +6484,6 @@ html[data-actual-theme="light"] .prediction-app-card {
 @media (max-width: 640px) {
   .xiake-toggle { width: min(100%, 360px); }
   .xiake-toggle-btn,
-  .prediction-toggle-btn,
   .btn-param.xiake-toggle-btn {
     flex: 1 1 auto;
     padding: 8px 12px !important;
@@ -6683,5 +6679,22 @@ html[data-actual-theme="light"] .prediction-app-card {
   .day-meta-line {
     grid-template-columns: 15px 40px 13px !important;
     width: 72px !important;
+/* 朝霞/晚霞切换：直接复用通用 xiake-toggle 分段开关 */
+.prediction-toggle-bar.xiake-toggle {
+  display: none;
+  margin-bottom: 22px !important;
+}
+.prediction-toggle-bar.xiake-toggle .prediction-toggle-btn {
+  min-width: 88px;
+  text-align: center;
+}
+@media (max-width: 640px) {
+  .prediction-toggle-bar.xiake-toggle {
+    display: flex;
+  }
+}
+@media (min-width: 641px) {
+  .prediction-toggle-bar.xiake-toggle {
+    display: none !important;
   }
 }
