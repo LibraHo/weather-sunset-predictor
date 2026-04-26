@@ -165,7 +165,66 @@
 --map-score-low-color
 --map-score-mid-color
 --map-score-high-color
+
+/* 雷达 UI token */
+--radar-bg
+--radar-border
+--radar-ring
+--radar-axis-main
+--radar-axis-sub
+--radar-label-fill
+--radar-label-bg
+--radar-title
+--radar-subtitle
+--radar-legend-text
+--radar-legend-bg
+--radar-center
+--radar-center-stroke
+--radar-ring-low
+--radar-ring-mid
+--radar-ring-high
+--radar-cloud-low
+--radar-cloud-mid
+--radar-cloud-high
+
+/* 地图 UI token */
+--map-bg
+--map-bg-dark
+--map-boundary-stroke
+--map-boundary-fill
+--map-boundary-stroke-dark
+--map-boundary-fill-dark
+--map-city-fill
+--map-city-stroke
+--map-city-text
+--map-city-text-shadow
+--map-city-fill-dark
+--map-city-stroke-dark
+--map-city-text-dark
+--map-city-text-shadow-dark
+--map-legend-bg
+--map-legend-text
+--map-legend-border
+--map-focus-fill
+--map-focus-stroke
+--map-score-text-high
+--map-score-text-mid
+--map-score-text-low
+--map-score-text-error
+--map-popup-bg
+--map-popup-text
+--map-popup-muted-text
+--map-popup-hint-text
+--map-popup-loading-text
+--map-popup-border
 ```
+
+### 雷达/地图 token 收口 v2（2026-04-26）
+
+- `RadarCompass.js`：补齐 radar token fallback，保留云层业务语义色值不变。
+- `ChinaMapCanvas.js`：城市标注、边界、legend、点击 popup 的 UI 颜色从 map token 读取。
+- `styles/main.css`：新增 radar/map 相关 token 与 `.china-map-legend` / `.china-click-popup` 主题样式。
+- 业务色阶（40/50/60/70+）不改，仅做 token 化承载。
 
 ### 允许保留但必须归档的颜色
 

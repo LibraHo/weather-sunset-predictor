@@ -4550,7 +4550,12 @@ body.theme-dark .weather-item-highlight {
   --radar-title: rgba(30,50,90,0.95);
   --radar-subtitle: rgba(80,100,160,0.75);
   --radar-legend-text: rgba(40,60,100,0.85);
+  --radar-legend-bg: rgba(255,255,255,0.86);
   --radar-center: rgba(220,80,20,0.90);
+  --radar-center-stroke: rgba(0,0,0,0.20);
+  --radar-ring-low: rgba(100,150,220,0.08);
+  --radar-ring-mid: rgba(130,160,200,0.06);
+  --radar-ring-high: rgba(160,170,200,0.05);
   --radar-cloud-low: rgba(80,110,155,0.85);
   --radar-cloud-mid: rgba(110,130,165,0.82);
   --radar-cloud-high: rgba(145,155,175,0.80);
@@ -4567,11 +4572,72 @@ body.theme-dark {
   --radar-title: rgba(241,245,249,0.95);
   --radar-subtitle: rgba(148,163,184,0.80);
   --radar-legend-text: rgba(200,212,228,0.85);
+  --radar-legend-bg: rgba(10,18,35,0.72);
   --radar-center: rgba(249,115,22,0.90);
+  --radar-center-stroke: rgba(0,0,0,0.20);
+  --radar-ring-low: rgba(100,150,220,0.08);
+  --radar-ring-mid: rgba(130,160,200,0.06);
+  --radar-ring-high: rgba(160,170,200,0.05);
   /* 增强暗色模式云况可见度：提高亮度和不透明度 */
   --radar-cloud-low: rgba(180,210,255,0.98);
   --radar-cloud-mid: rgba(210,225,255,0.95);
   --radar-cloud-high: rgba(235,242,255,0.90);
+
+  --map-bg-dark: #1a1f35;
+  --map-boundary-stroke-dark: rgba(255, 120, 0, 0.4);
+  --map-boundary-fill-dark: rgba(255, 120, 0, 0.05);
+  --map-city-fill-dark: rgba(255, 120, 0, 0.8);
+  --map-city-stroke-dark: rgba(255, 120, 0, 1);
+  --map-city-text-dark: #ffffff;
+  --map-city-text-shadow-dark: 0 1px 2px rgba(0, 0, 0, 0.8);
+
+  --map-legend-bg: rgba(30, 30, 40, 0.88);
+  --map-legend-text: #eee;
+  --map-legend-border: rgba(255, 255, 255, 0.15);
+
+  --map-focus-fill: rgba(255, 140, 0, 0.95);
+  --map-focus-stroke: rgba(255, 255, 255, 0.9);
+
+  --map-score-text-high: #ff8c00;
+  --map-score-text-mid: #ffc107;
+  --map-score-text-low: #aaa;
+  --map-score-text-error: #f66;
+
+  --map-popup-bg: rgba(20, 24, 36, 0.9);
+  --map-popup-text: #ffffff;
+  --map-popup-muted-text: #b5b5b5;
+  --map-popup-hint-text: #888;
+  --map-popup-loading-text: #aaa;
+  --map-popup-border: rgba(255, 255, 255, 0.2);
+}
+
+:root {
+  --map-bg: #f0f0f0;
+  --map-boundary-stroke: rgba(0, 0, 0, 0.3);
+  --map-boundary-fill: rgba(0, 0, 0, 0.02);
+  --map-city-fill: rgba(0, 0, 0, 0.6);
+  --map-city-stroke: rgba(0, 0, 0, 0.8);
+  --map-city-text: #333;
+  --map-city-text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+
+  --map-legend-bg: rgba(30,30,40,0.88);
+  --map-legend-text: #eee;
+  --map-legend-border: rgba(255,255,255,0.15);
+
+  --map-focus-fill: rgba(255,140,0,0.95);
+  --map-focus-stroke: rgba(255,255,255,0.9);
+
+  --map-score-text-high: #ff8c00;
+  --map-score-text-mid: #ffc107;
+  --map-score-text-low: #aaa;
+  --map-score-text-error: #f66;
+
+  --map-popup-bg: rgba(20,24,36,0.9);
+  --map-popup-text: #fff;
+  --map-popup-muted-text: #b5b5b5;
+  --map-popup-hint-text: #888;
+  --map-popup-loading-text: #aaa;
+  --map-popup-border: rgba(255,255,255,0.2);
 }
 
 /* ===== 朝霞/晚霞切换开关（手机/电脑通用，手机生效） ===== */
@@ -4873,6 +4939,54 @@ body.theme-dark {
 .map-panel-timestamp-wrapper #china-spots-timestamp {
   font-size: 11px;
   color: var(--color-text-light);
+}
+
+/* 地图 legend / popup UI token */
+.china-map-legend {
+  background: var(--map-legend-bg);
+  color: var(--map-legend-text);
+  border: 1px solid var(--map-legend-border);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  line-height: 1.6;
+  backdrop-filter: blur(4px);
+  pointer-events: auto;
+  max-width: 200px;
+}
+
+.china-map-legend-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.china-map-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.china-map-legend-swatch {
+  display: inline-block;
+  width: 18px;
+  height: 12px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.china-map-legend-value {
+  min-width: 24px;
+  text-align: right;
+}
+
+.china-click-popup .leaflet-popup-content-wrapper {
+  background: var(--map-popup-bg);
+  color: var(--map-popup-text);
+  border: 1px solid var(--map-popup-border, var(--map-legend-border));
+}
+
+.china-click-popup .leaflet-popup-tip {
+  background: var(--map-popup-bg);
 }
 
 /* 时段切换 tabs */
