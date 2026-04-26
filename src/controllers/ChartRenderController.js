@@ -137,6 +137,17 @@ class ChartRenderController {
     const titleFontSize = isMobile ? '1.1rem' : '1.5rem';
     const chartPadding = isMobile ? '12px' : '25px';
     const axisFontSize = isMobile ? 11 : 13;
+    const rootStyle = getComputedStyle(document.documentElement);
+    const bodyStyle = getComputedStyle(document.body);
+    const resolveCssVar = (name, fallback) => (rootStyle.getPropertyValue(name) || bodyStyle.getPropertyValue(name) || fallback).trim();
+    const actualTheme = document.documentElement.dataset.actualTheme || document.documentElement.dataset.theme || '';
+    const isDarkTheme = document.body.classList.contains('theme-dark')
+      || document.documentElement.classList.contains('theme-dark')
+      || actualTheme === 'dark';
+    const gridColor = resolveCssVar('--chart-grid-color', isDarkTheme ? 'rgba(255,255,255,0.38)' : 'rgba(51,51,51,0.18)');
+    const textColor = resolveCssVar('--color-text', isDarkTheme ? 'rgba(255,255,255,0.92)' : '#333333');
+    const cardBg = resolveCssVar('--color-card-bg', isDarkTheme ? 'rgba(15,22,40,0.85)' : '#ffffff');
+    const pointStroke = isDarkTheme ? 'rgba(15,22,40,0.95)' : cardBg;
 
     let html = `<div class="weather-chart-panel" style="padding: ${chartPadding}; background: var(--color-card-bg); border-radius: 12px; margin: 12px 0;">`;
     html += `<h3 style="text-align: center; margin-bottom: 16px; color: var(--color-text); font-size: ${titleFontSize};">${label}${this.i18n.t('charts.trend')} (${unit})</h3>`;
@@ -146,8 +157,8 @@ class ChartRenderController {
     for (let i = 0; i <= 5; i++) {
       const value = min + (range * i) / 5;
       const y = padding.top + contentHeight - (i / 5) * contentHeight;
-      html += `<line x1="${padding.left}" y1="${y}" x2="${chartWidth - padding.right}" y2="${y}" stroke="var(--chart-grid-color)" stroke-width="1" stroke-dasharray="4 6" />`;
-      html += `<text x="${padding.left - 10}" y="${y + 4}" font-size="${axisFontSize}" fill="var(--color-text)" text-anchor="end" font-weight="500">${value.toFixed(1)}</text>`;
+      html += `<line x1="${padding.left}" y1="${y}" x2="${chartWidth - padding.right}" y2="${y}" stroke="${gridColor}" stroke-width="${isDarkTheme ? 1.35 : 1}" stroke-dasharray="4 6" />`;
+      html += `<text x="${padding.left - 10}" y="${y + 4}" font-size="${axisFontSize}" fill="${textColor}" text-anchor="end" font-weight="500">${value.toFixed(1)}</text>`;
     }
 
     const tickCandidates = points
@@ -187,21 +198,21 @@ class ChartRenderController {
     });
 
     selectedTicks.forEach((tick) => {
-      html += `<text x="${tick.x}" y="${chartHeight - padding.bottom + 25}" font-size="${axisFontSize}" fill="var(--color-text)" text-anchor="middle" font-weight="500">${tick.label}</text>`;
+      html += `<text x="${tick.x}" y="${chartHeight - padding.bottom + 25}" font-size="${axisFontSize}" fill="${textColor}" text-anchor="middle" font-weight="500">${tick.label}</text>`;
     });
 
     html += `<path d="${pathData}" fill="none" stroke="${color}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>`;
 
     renderPoints.forEach((p, i) => {
-      html += `<circle cx="${p.x}" cy="${p.y}" r="${isMobile ? 2.8 : 3.2}" fill="${color}" stroke="var(--color-card-bg)" stroke-width="${isMobile ? 1.1 : 1.4}"/>`;
+      html += `<circle cx="${p.x}" cy="${p.y}" r="${isMobile ? 2.8 : 3.2}" fill="${color}" stroke="${pointStroke}" stroke-width="${isMobile ? 1.1 : 1.4}"/>`;
       if (i % (isMobile ? 2 : 1) === 0) {
-        html += `<text x="${p.x}" y="${p.y - 10}" font-size="${isMobile ? 10 : 12}" fill="var(--color-text)" text-anchor="middle" font-weight="600">${p.value.toFixed(1)}</text>`;
+        html += `<text x="${p.x}" y="${p.y - 10}" font-size="${isMobile ? 10 : 12}" fill="${textColor}" text-anchor="middle" font-weight="600">${p.value.toFixed(1)}</text>`;
       }
     });
 
-    html += `<text x="${chartWidth / 2}" y="${chartHeight - 15}" font-size="${isMobile ? 12 : 14}" fill="var(--color-text)" text-anchor="middle" font-weight="600">${this.i18n.t('charts.time')}</text>`;
+    html += `<text x="${chartWidth / 2}" y="${chartHeight - 15}" font-size="${isMobile ? 12 : 14}" fill="${textColor}" text-anchor="middle" font-weight="600">${this.i18n.t('charts.time')}</text>`;
     if (!isMobile) {
-      html += `<text x="20" y="${chartHeight / 2}" font-size="12" fill="var(--color-text)" text-anchor="middle" transform="rotate(-90, 20, ${chartHeight / 2})" font-weight="600">${label} (${unit})</text>`;
+      html += `<text x="20" y="${chartHeight / 2}" font-size="12" fill="${textColor}" text-anchor="middle" transform="rotate(-90, 20, ${chartHeight / 2})" font-weight="600">${label} (${unit})</text>`;
     }
 
     html += '</svg>';
