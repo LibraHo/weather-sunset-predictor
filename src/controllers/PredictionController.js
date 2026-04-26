@@ -1153,7 +1153,7 @@ class PredictionController {
               <div class="event-time-label">${forecast.timeLabel}</div>
               <div class="main-time app-main-time">${forecast.mainTime}</div>
               ${this.renderInfoRow('⏱️', this.i18n.t('prediction.bestViewingTime'), forecast.bestViewingTime)}
-              ${forecast.direction ? this.renderInfoRow('🧭', forecast.directionLabel, forecast.direction) : ''}
+              ${forecast.direction ? this.renderInfoRow('🧭', forecast.directionLabel, this.renderDirectionValue(forecast.direction, forecast.azimuth), 'app-info-row-direction') : ''}
             </div>
           </div>
 
@@ -1188,6 +1188,7 @@ class PredictionController {
       mainTime: this.formatTime(type === 'sunrise' ? (prediction.sunriseTime || prediction.sunsetTime) : prediction.sunsetTime, targetTimezone),
       bestViewingTime: `${this.formatTime(viewingWindow.start, targetTimezone)}–${this.formatTime(viewingWindow.end, targetTimezone)}`,
       direction,
+      azimuth: prediction.sunAzimuth,
       directionLabel: type === 'sunrise' ? this.i18n.t('prediction.sunriseDirectionLabel') : this.i18n.t('prediction.sunsetDirectionLabel'),
       clouds: [
         { label: '高云', value: Number(clouds.high ?? 0), color: '#4EA3FF' },
@@ -1270,14 +1271,20 @@ class PredictionController {
     `;
   }
 
-  renderInfoRow(icon, label, value) {
+  renderInfoRow(icon, label, value, extraClass = '') {
+    const cls = extraClass ? ` ${extraClass}` : '';
     return `
-      <div class="app-info-row">
+      <div class="app-info-row${cls}">
         <span class="app-info-icon" aria-hidden="true">${icon}</span>
         <span class="app-info-label">${label}</span>
         <strong class="app-info-value">${value}</strong>
       </div>
     `;
+  }
+
+  renderDirectionValue(direction, azimuth) {
+    const angle = Number.isFinite(Number(azimuth)) ? Number(azimuth) : 0;
+    return `<span class="azimuth-direction-inline"><span class="azimuth-direction-icon" style="transform: rotate(${angle.toFixed(0)}deg);" aria-hidden="true">↑</span><span>${direction}</span></span>`;
   }
 
   renderInlineSvgIcon(name, className = '') {
