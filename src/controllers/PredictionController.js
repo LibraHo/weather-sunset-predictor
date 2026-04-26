@@ -1100,7 +1100,7 @@ class PredictionController {
     return `
       <div class="prediction-card prediction-app-card ${qualityClass}" data-type="${type}">
         <div class="prediction-app-shell">
-          <div class="prediction-app-nav prediction-app-nav-compact" aria-label="${forecast.type}预测操作">
+          <div class="prediction-app-nav prediction-app-nav-compact" aria-label="${forecast.type} ${this.i18n.t('share.panelTitle')}">
             <div class="prediction-share-menu" data-share-type="${type}">
               <button class="prediction-share-btn prediction-nav-share" data-type="${type}" aria-label="${this.i18n.t('share.title')}" aria-expanded="false">
                 ${shareIconSvg}
@@ -1160,7 +1160,7 @@ class PredictionController {
           ${this.renderCloudConditionCard(forecast.clouds)}
           ${this.renderAnalysisCard(forecast.analysis, forecast.conclusion)}
           <div id="radar-compass-${type}" style="margin-top:12px;display:none;"></div>
-          <div class="prediction-app-footer">观天有时 · 收获美景</div>
+          <div class="prediction-app-footer">${this._uiText('Observe the sky · Catch the beauty', '观天有时 · 收获美景')}</div>
         </div>
       </div>
     `;
@@ -1191,9 +1191,9 @@ class PredictionController {
       azimuth: prediction.sunAzimuth,
       directionLabel: type === 'sunrise' ? this.i18n.t('prediction.sunriseDirectionLabel') : this.i18n.t('prediction.sunsetDirectionLabel'),
       clouds: [
-        { label: '高云', value: Number(clouds.high ?? 0), color: 'var(--cloud-high-color)' },
-        { label: '中云', value: Number(clouds.mid ?? 0), color: 'var(--cloud-mid-color)' },
-        { label: '低云', value: Number(clouds.low ?? 0), color: 'var(--cloud-low-color)' }
+        { label: this._uiText('High', '高云'), value: Number(clouds.high ?? 0), color: 'var(--cloud-high-color)' },
+        { label: this._uiText('Mid', '中云'), value: Number(clouds.mid ?? 0), color: 'var(--cloud-mid-color)' },
+        { label: this._uiText('Low', '低云'), value: Number(clouds.low ?? 0), color: 'var(--cloud-low-color)' }
       ],
       quality: prediction.quality || this.getQualityFromScore(score),
       analysis: this.buildAnalysisGroups(prediction),
@@ -1210,11 +1210,20 @@ class PredictionController {
     return direction || '';
   }
 
+  _isEnglishUI() {
+    const lang = this.i18n?.getCurrentLanguage ? this.i18n.getCurrentLanguage() : this.i18n?.currentLanguage;
+    return String(lang || '').toLowerCase().startsWith('en');
+  }
+
+  _uiText(en, zh) {
+    return this._isEnglishUI() ? en : zh;
+  }
+
   getScoreDescription(score) {
-    if (score >= 80) return '观赏条件很好';
-    if (score >= 60) return '观赏条件不错';
-    if (score >= 40) return '有一定机会';
-    return '观赏条件偏弱';
+    if (score >= 80) return this._uiText('Excellent viewing conditions', '观赏条件很好');
+    if (score >= 60) return this._uiText('Good viewing conditions', '观赏条件不错');
+    if (score >= 40) return this._uiText('Some chance', '有一定机会');
+    return this._uiText('Weak viewing conditions', '观赏条件偏弱');
   }
 
   getQualityFromScore(score) {
@@ -1265,7 +1274,7 @@ class PredictionController {
         </div>
         <div class="score-gauge-caption">
           <div class="score-gauge-grade" style="color:${scoreTheme[1]}">${forecast.scoreLabel}</div>
-          <div class="score-breakdown-hint-trigger">查看评分明细</div>
+          <div class="score-breakdown-hint-trigger">${this._uiText('View score details', '查看评分明细')}</div>
         </div>
       </div>
     `;

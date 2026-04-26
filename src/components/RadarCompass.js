@@ -21,6 +21,14 @@ class RadarCompass {
 
     const cs = getComputedStyle(document.body);
     const v = k => cs.getPropertyValue(k).trim();
+    const isEnglish = (document.documentElement.lang || '').toLowerCase().startsWith('en');
+    const text = {
+      N: isEnglish ? 'N' : '北', NE: isEnglish ? 'NE' : '东北', E: isEnglish ? 'E' : '东', SE: isEnglish ? 'SE' : '东南',
+      S: isEnglish ? 'S' : '南', SW: isEnglish ? 'SW' : '西南', W: isEnglish ? 'W' : '西', NW: isEnglish ? 'NW' : '西北',
+      low: isEnglish ? 'Low' : '低云', mid: isEnglish ? 'Mid' : '中云', high: isEnglish ? 'High' : '高云',
+      sunrise: isEnglish ? 'Sunrise' : '日出', sunset: isEnglish ? 'Sunset' : '日落',
+      title: isEnglish ? 'Surrounding Cloud Radar' : '周边云况雷达', subtitle: isEnglish ? '20km · Continuous cloud field' : '20km · 连续云场'
+    };
     const theme = {
       // 视觉 token（无 UI token 则回退默认）
       bg:             v('--radar-bg')            || v('--color-card-bg') || '#ffffff',
@@ -47,7 +55,7 @@ class RadarCompass {
 
     const predictionType = data?.predictionType || null;
     const uid = Math.random().toString(36).slice(2, 9);
-    container.innerHTML = this._build(dirs, data?.sunAzimuths || {}, theme, predictionType, uid);
+    container.innerHTML = this._build(dirs, data?.sunAzimuths || {}, theme, predictionType, uid, text);
 
     const canvas = container.querySelector(`#radar-cloud-field-${uid}`);
     if (canvas) {
@@ -302,7 +310,7 @@ class RadarCompass {
     ctx.filter = 'none';
   }
 
-  _build(dirs, sun, theme = {}, predictionType = null, uid = 'x') {
+  _build(dirs, sun, theme = {}, predictionType = null, uid = 'x', text = {}) {
     const S = this.size;
     const cx = S / 2;
     const cy = S / 2;
@@ -315,9 +323,9 @@ class RadarCompass {
 
     const ringStroke = T.ring || 'rgba(100,130,180,0.25)';
     const rings = [
-      [R_LOW, '低云'],
-      [R_MID, '中云'],
-      [R_HIGH, '高云'],
+      [R_LOW, text.low || '低云'],
+      [R_MID, text.mid || '中云'],
+      [R_HIGH, text.high || '高云'],
     ].map(([r, lbl], i) => {
       const innerR = i === 0 ? R_LOW_INNER : [R_LOW, R_MID][i - 1];
       const [tx, ty] = this._pt(cx, cy, r - (r - innerR) / 2, 340);
@@ -346,7 +354,7 @@ class RadarCompass {
 
     const labelR = R_HIGH * 1.15;
     const labels = DIR_ORDER.map(d => {
-      const lbl = { N: '北', NE: '东北', E: '东', SE: '东南', S: '南', SW: '西南', W: '西', NW: '西北' }[d];
+      const lbl = text[d] || { N: '北', NE: '东北', E: '东', SE: '东南', S: '南', SW: '西南', W: '西', NW: '西北' }[d];
       const [x, y] = this._pt(cx, cy, labelR, this._dirAz(d));
       return `<text x="${x.toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="middle"
           font-size="12" font-weight="800" fill="${T.labelFill || '#334155'}">${lbl}</text>`;
@@ -370,21 +378,21 @@ class RadarCompass {
       sunIcons = `
         <text x="${ix.toFixed(1)}" y="${(iy + 4).toFixed(1)}" text-anchor="middle" font-size="15">🌅</text>
         <text x="${ix.toFixed(1)}" y="${(iy + 17).toFixed(1)}" text-anchor="middle" font-size="9"
-          fill="${T.subtitle || '#666666'}">日出</text>`;
+          fill="${T.subtitle || '#666666'}">${text.sunrise || '日出'}</text>`;
     } else if (!isDawn && sun.sunset != null) {
       const iconR = getSunRadius(sun.sunset);
       const [ix, iy] = this._pt(cx, cy, iconR, sun.sunset);
       sunIcons = `
         <text x="${ix.toFixed(1)}" y="${(iy + 4).toFixed(1)}" text-anchor="middle" font-size="15">🌇</text>
         <text x="${ix.toFixed(1)}" y="${(iy + 17).toFixed(1)}" text-anchor="middle" font-size="9"
-          fill="${T.subtitle || '#666666'}">日落</text>`;
+          fill="${T.subtitle || '#666666'}">${text.sunset || '日落'}</text>`;
     } else if (sun.sunset != null) {
       const iconR = getSunRadius(sun.sunset);
       const [ix, iy] = this._pt(cx, cy, iconR, sun.sunset);
       sunIcons = `
         <text x="${ix.toFixed(1)}" y="${(iy + 4).toFixed(1)}" text-anchor="middle" font-size="15">🌇</text>
         <text x="${ix.toFixed(1)}" y="${(iy + 17).toFixed(1)}" text-anchor="middle" font-size="9"
-          fill="${T.subtitle || '#666666'}">日落</text>`;
+          fill="${T.subtitle || '#666666'}">${text.sunset || '日落'}</text>`;
     }
 
     const center = `<circle cx="${cx}" cy="${cy}" r="4" fill="${T.center || 'rgba(249,115,22,0.9)'}" stroke="${T.centerStroke || 'rgba(0,0,0,0.20)'}" stroke-width="1.5"/>`;
@@ -392,9 +400,9 @@ class RadarCompass {
     const zhFont = "'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans CJK SC','Source Han Sans SC','WenQuanYi Micro Hei',sans-serif";
 
     const LEGEND = [
-      [T.cloudLow || 'rgba(138,156,186,0.95)', '低云'],
-      [T.cloudMid || 'rgba(184,198,218,0.88)', '中云'],
-      [T.cloudHigh || 'rgba(218,226,238,0.72)', '高云'],
+      [T.cloudLow || 'rgba(138,156,186,0.95)', text.low || '低云'],
+      [T.cloudMid || 'rgba(184,198,218,0.88)', text.mid || '中云'],
+      [T.cloudHigh || 'rgba(218,226,238,0.72)', text.high || '高云'],
     ];
     const legendSvgWidth = S * 0.88;
     const legendContentWidth = 160;
@@ -408,8 +416,8 @@ class RadarCompass {
 <div style="border:1px solid ${T.border || 'rgba(0,0,0,0.1)'};border-radius:12px;
   background:${T.bg || '#ffffff'};padding:10px 10px 8px;font-family:${zhFont};">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-    <div style="font-size:13px;font-weight:600;color:${T.title || '#333333'};">周边云况雷达</div>
-    <div style="font-size:11px;color:${T.subtitle || '#666666'};">20km · 连续云场</div>
+    <div style="font-size:13px;font-weight:600;color:${T.title || '#333333'};">${text.title || '周边云况雷达'}</div>
+    <div style="font-size:11px;color:${T.subtitle || '#666666'};">${text.subtitle || '20km · 连续云场'}</div>
   </div>
   <div style="position:relative;width:${S}px;height:${S}px;max-width:100%;margin:0 auto;">
     <canvas id="radar-cloud-field-${uid}" width="${S}" height="${S}"
