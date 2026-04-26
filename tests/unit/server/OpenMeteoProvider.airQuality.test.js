@@ -19,7 +19,7 @@ const makeWeatherPayload = () => ({
     wind_direction_10m: [90, 100],
     visibility: [20000, 18000],
     precipitation: [0, 0],
-    surface_pressure: [101300, 101200],
+    surface_pressure: [1013, 1012],
     shortwave_radiation: [100, 110],
     direct_radiation: [70, 80],
     diffuse_radiation: [30, 30],
@@ -58,6 +58,7 @@ describe('OpenMeteoProvider air quality merge', () => {
       usAqi: 42,
       europeanAqi: 30
     });
+    expect(result.data[0].pressure).toBe(1013);
     expect(result.providerMeta.airQualitySource).toBe('openmeteo_air_quality');
   });
 

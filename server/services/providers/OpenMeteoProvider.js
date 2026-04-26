@@ -105,7 +105,7 @@ class OpenMeteoProvider extends BaseWeatherProvider {
         lowClouds: hourly.cloud_cover_low[i] ?? 0,
         midClouds: hourly.cloud_cover_mid[i] ?? 0,
         highClouds: hourly.cloud_cover_high[i] ?? 0,
-        pressure: hourly.surface_pressure[i] != null ? hourly.surface_pressure[i] / 100 : null,
+        pressure: hourly.surface_pressure[i] != null ? hourly.surface_pressure[i] : null,
         // 云厚评估字段（Phase 22）
         shortwaveRadiation: hourly.shortwave_radiation?.[i] ?? null,
         directRadiation: hourly.direct_radiation?.[i] ?? null,
