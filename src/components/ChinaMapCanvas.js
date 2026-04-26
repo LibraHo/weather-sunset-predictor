@@ -47,6 +47,80 @@ function isMobileMapViewport() {
   return window.matchMedia?.('(max-width: 640px)').matches || window.innerWidth <= 640;
 }
 
+function getMapUiTokens() {
+  if (typeof window === 'undefined') {
+    return {
+      mapBg: '#f0f0f0',
+      mapBgDark: '#1a1f35',
+      boundaryStroke: 'rgba(0, 0, 0, 0.30)',
+      boundaryFill: 'rgba(0, 0, 0, 0.02)',
+      boundaryStrokeDark: 'rgba(255, 120, 0, 0.4)',
+      boundaryFillDark: 'rgba(255, 120, 0, 0.05)',
+      cityFill: 'rgba(0, 0, 0, 0.6)',
+      cityFillDark: 'rgba(255, 120, 0, 0.8)',
+      cityStroke: 'rgba(0, 0, 0, 0.8)',
+      cityStrokeDark: 'rgba(255, 120, 0, 1)',
+      cityText: '#333',
+      cityTextDark: '#fff',
+      textShadowLight: '0 1px 2px rgba(255,255,255,0.8)',
+      textShadowDark: '0 1px 2px rgba(0,0,0,0.8)',
+      legendBg: 'rgba(30,30,40,0.88)',
+      legendText: '#eee',
+      legendBorder: 'rgba(255,255,255,0.15)',
+      legendTitle: '🎨 晚霞分数',
+      focusFill: 'rgba(255,140,0,0.95)',
+      focusStroke: 'rgba(255,255,255,0.9)',
+      scoreTextHigh: '#ff8c00',
+      scoreTextMid: '#ffc107',
+      scoreTextLow: '#aaa',
+      scoreTextError: '#f66',
+      popupBg: 'rgba(20,24,36,0.9)',
+      popupText: '#fff',
+      popupMutedText: '#b5b5b5',
+      popupHintText: '#888',
+      popupLoadingText: '#aaa',
+      popupPeriodText: '#ddd',
+      popupBorder: 'rgba(255,255,255,0.2)',
+    };
+  }
+
+  const cs = getComputedStyle(document.body);
+  const token = (name, fallback) => (cs.getPropertyValue(name).trim() || fallback);
+  return {
+    mapBg: token('--map-bg', '#f0f0f0'),
+    mapBgDark: token('--map-bg-dark', '#1a1f35'),
+    boundaryStroke: token('--map-boundary-stroke', 'rgba(0, 0, 0, 0.30)'),
+    boundaryFill: token('--map-boundary-fill', 'rgba(0, 0, 0, 0.02)'),
+    boundaryStrokeDark: token('--map-boundary-stroke-dark', 'rgba(255, 120, 0, 0.4)'),
+    boundaryFillDark: token('--map-boundary-fill-dark', 'rgba(255, 120, 0, 0.05)'),
+    cityFill: token('--map-city-fill', 'rgba(0, 0, 0, 0.6)'),
+    cityFillDark: token('--map-city-fill-dark', 'rgba(255, 120, 0, 0.8)'),
+    cityStroke: token('--map-city-stroke', 'rgba(0, 0, 0, 0.8)'),
+    cityStrokeDark: token('--map-city-stroke-dark', 'rgba(255, 120, 0, 1)'),
+    cityText: token('--map-city-text', '#333'),
+    cityTextDark: token('--map-city-text-dark', '#fff'),
+    textShadowLight: token('--map-city-text-shadow', '0 1px 2px rgba(255,255,255,0.8)'),
+    textShadowDark: token('--map-city-text-shadow-dark', '0 1px 2px rgba(0,0,0,0.8)'),
+    legendBg: token('--map-legend-bg', 'rgba(30,30,40,0.88)'),
+    legendText: token('--map-legend-text', '#eee'),
+    legendBorder: token('--map-legend-border', 'rgba(255,255,255,0.15)'),
+    legendTitle: token('--map-legend-title', '🎨 晚霞分数'),
+    focusFill: token('--map-focus-fill', 'rgba(255,140,0,0.95)'),
+    focusStroke: token('--map-focus-stroke', 'rgba(255,255,255,0.9)'),
+    scoreTextHigh: token('--map-score-text-high', '#ff8c00'),
+    scoreTextMid: token('--map-score-text-mid', '#ffc107'),
+    scoreTextLow: token('--map-score-text-low', '#aaa'),
+    scoreTextError: token('--map-score-text-error', '#f66'),
+    popupBg: token('--map-popup-bg', 'rgba(20,24,36,0.9)'),
+    popupText: token('--map-popup-text', '#fff'),
+    popupMutedText: token('--map-popup-muted-text', '#b5b5b5'),
+    popupHintText: token('--map-popup-hint-text', '#888'),
+    popupLoadingText: token('--map-popup-loading-text', '#aaa'),
+    popupPeriodText: token('--map-popup-period-text', '#ddd'),
+    popupBorder: token('--map-popup-border', 'rgba(255,255,255,0.2)'),
+  };
+}
+
 class ChinaMapCanvas {
   constructor(options = {}) {
     this._options = {
@@ -211,6 +285,9 @@ class ChinaMapCanvas {
   _setFocusMarker(lat, lon) {
     if (!this._map) return;
 
+    const theme = getMapUiTokens();
+    const isDark = document.body.classList.contains('theme-dark');
+
     if (this._focusMarker) {
       this._map.removeLayer(this._focusMarker);
       this._focusMarker = null;
@@ -219,8 +296,8 @@ class ChinaMapCanvas {
     this._focusMarker = window.L.circleMarker([lat, lon], {
       radius: 6,
       weight: 2,
-      color: 'rgba(255,255,255,0.9)',
-      fillColor: 'rgba(255,140,0,0.95)',
+      color: isDark ? theme.focusStroke : theme.focusStroke,
+      fillColor: isDark ? theme.focusFill : theme.focusFill,
       fillOpacity: 1,
       interactive: false,
     }).addTo(this._map);
@@ -813,8 +890,9 @@ class ChinaMapCanvas {
       const isMobile = isMobileMapViewport();
       const citiesToShow = selectCitiesForZoom({ level1: L1, level2: L2, level3: L3 }, zoom, isMobile);
 
+      const mapTheme = getMapUiTokens();
       const isDark = document.body.classList.contains('theme-dark');
-      const textColor = isDark ? '#fff' : '#333';
+      const textColor = isDark ? mapTheme.cityTextDark : mapTheme.cityText;
       const fontSize = isMobile
         ? (zoom < 6 ? '9px' : (zoom < 8 ? '10px' : (zoom < 10 ? '11px' : '12px')))
         : (zoom < 5 ? '10px' : (zoom < 7 ? '11px' : (zoom < 9 ? '12px' : '13px')));
@@ -826,8 +904,8 @@ class ChinaMapCanvas {
         // 城市圆点
         const marker = window.L.circleMarker([city.lat, city.lon], {
           radius: dotRadius,
-          fillColor: isDark ? 'rgba(255,120,0,0.8)' : 'rgba(0,0,0,0.6)',
-          color: isDark ? 'rgba(255,120,0,1)' : 'rgba(0,0,0,0.8)',
+          fillColor: isDark ? mapTheme.cityFillDark : mapTheme.cityFill,
+          color: isDark ? mapTheme.cityStrokeDark : mapTheme.cityStroke,
           weight: 1,
           opacity: 1,
           fillOpacity: 0.8
@@ -840,7 +918,7 @@ class ChinaMapCanvas {
             font-size: ${fontSize};
             font-weight: 500;
             color: ${textColor};
-            text-shadow: ${isDark ? '0 1px 2px rgba(0,0,0,0.8)' : '0 1px 2px rgba(255,255,255,0.8)'};
+            text-shadow: ${isDark ? mapTheme.textShadowDark : mapTheme.textShadowLight};
             white-space: nowrap;
             pointer-events: none;
             margin-left: 3px;
@@ -887,13 +965,15 @@ class ChinaMapCanvas {
   _applyDarkTheme() {
     if (!this._map) return;
 
+    const theme = getMapUiTokens();
+
     // 地图容器背景
-    this._map.getContainer().style.backgroundColor = '#1a1f35';
+    this._map.getContainer().style.backgroundColor = theme.mapBgDark;
 
     // GeoJSON 样式
     const darkStyle = {
-      color: 'rgba(255, 120, 0, 0.4)',  // 边界线：橙色
-      fillColor: 'rgba(255, 120, 0, 0.05)',
+      color: theme.boundaryStrokeDark,  // 边界线：橙色
+      fillColor: theme.boundaryFillDark,
       weight: 1.5,
       opacity: 0.6,
       dashArray: '3',
@@ -923,13 +1003,15 @@ class ChinaMapCanvas {
   _applyLightTheme() {
     if (!this._map) return;
 
+    const theme = getMapUiTokens();
+
     // 地图容器背景
-    this._map.getContainer().style.backgroundColor = '#f0f0f0';
+    this._map.getContainer().style.backgroundColor = theme.mapBg;
 
     // GeoJSON 样式
     const lightStyle = {
-      color: 'rgba(0, 0, 0, 0.3)',  // 边界线：深灰色
-      fillColor: 'rgba(0, 0, 0, 0.02)',
+      color: theme.boundaryStroke,  // 边界线：深灰色
+      fillColor: theme.boundaryFill,
       weight: 1.5,
       opacity: 0.5,
       dashArray: '3',
@@ -959,22 +1041,16 @@ class ChinaMapCanvas {
   _addLegend() {
     if (!this._map) return;
 
+    const theme = getMapUiTokens();
     const Legend = window.L.Control.extend({
       options: { position: 'bottomright' },
       onAdd: () => {
         const div = document.createElement('div');
         div.id = 'china-map-legend';
-        div.style.cssText = [
-          'background:rgba(30,30,40,0.88)',
-          'color:#eee',
-          'padding:8px 12px',
-          'border-radius:6px',
-          'font-size:11px',
-          'line-height:1.6',
-          'backdrop-filter:blur(4px)',
-          'pointer-events:auto',
-          'max-width:200px'
-        ].join(';');
+        div.className = 'china-map-legend';
+        div.style.setProperty('--map-legend-bg', theme.legendBg);
+        div.style.setProperty('--map-legend-text', theme.legendText);
+        div.style.setProperty('--map-legend-border', theme.legendBorder);
         return div;
       }
     });
@@ -992,7 +1068,6 @@ class ChinaMapCanvas {
     if (!el) return;
 
     const isSunrise = this._currentPeriod === 'sunrise';
-    const title = isSunrise ? '朝霞分数' : '晚霞分数';
 
     const colorMode = (() => {
       try { return localStorage.getItem('firecloud_raster_color_mode') || 'compact'; } catch (_) { return 'compact'; }
@@ -1015,15 +1090,14 @@ class ChinaMapCanvas {
     ];
     const legendItems = colorMode === 'full' ? fullItems : compactItems;
 
+    const theme = getMapUiTokens();
     const rows = legendItems.map(item => {
-      const fg = isSunrise ? 'left' : 'left';
-      return `<div style="display:flex;align-items:center;gap:6px;">
-        <span style="display:inline-block;width:18px;height:12px;background:${item.color};border-radius:2px;flex-shrink:0;"></span>
-        <span style="min-width:24px;text-align:right;">${item.label}</span>
-      </div>`;
+      return `<div class="china-map-legend-row"><span class="china-map-legend-swatch" style="background:${item.color};"></span><span class="china-map-legend-value">${item.label}</span></div>`;
     }).join('');
 
-    el.innerHTML = `<div style="font-weight:600;margin-bottom:4px;">🎨 ${title}</div>${rows}`;
+    const titleText = isSunrise ? '朝霞分数' : '晚霞分数';
+    el.innerHTML = `<div class="china-map-legend-title">🎨 ${titleText}</div>${rows}`;
+    el.style.setProperty('--map-legend-title-text', theme.legendText);
   }
 
   /**
@@ -1085,6 +1159,7 @@ class ChinaMapCanvas {
       this._map.closePopup(this._clickPopup);
     }
 
+    const popupTheme = getMapUiTokens();
     // 临时 loading popup
     const loadingPopup = window.L.popup({
       closeButton: true,
@@ -1092,7 +1167,7 @@ class ChinaMapCanvas {
       maxWidth: 220,
     })
       .setLatLng([lat, lon])
-      .setContent('<span style="color:#aaa;">查询中…</span>')
+      .setContent(`<span style="color:${popupTheme.popupLoadingText};">查询中…</span>`)
       .openOn(this._map);
 
     this._clickPopup = loadingPopup;
@@ -1118,22 +1193,23 @@ class ChinaMapCanvas {
       const locationText = cityName || `${lat.toFixed(2)}°N, ${lon.toFixed(2)}°E`;
       const scoreText = score !== null ? `${Math.round(score)} 分` : '暂无数据';
       const isHigh = score !== null && score >= 60;
-      const scoreColor = isHigh ? '#ff8c00' : (score !== null && score >= 30 ? '#ffc107' : '#aaa');
+      const scoreColor = isHigh ? popupTheme.scoreTextHigh : (score !== null && score >= 30 ? popupTheme.scoreTextMid : popupTheme.scoreTextLow);
       const cloudHumidityLine = cloudHumidity
         ? `☁️ 高 ${cloudHumidity.highClouds} · 中 ${cloudHumidity.midClouds} · 低 ${cloudHumidity.lowClouds} · 💧 ${cloudHumidity.humidity}`
         : '';
 
       loadingPopup.setContent(`
-        <div style="font-size:13px;line-height:1.6;">
+        <div style="font-size:13px;line-height:1.6;color:${popupTheme.popupText};">
           <div style="font-weight:600;margin-bottom:2px;">📍 ${locationText}</div>
           <div style="color:${scoreColor};font-size:15px;font-weight:700;">${scoreText}</div>
-          ${cloudHumidityLine ? `<div style="color:#b5b5b5;font-size:11px;">${cloudHumidityLine}</div>` : ''}
-          <div style="color:#888;font-size:10px;margin-top:2px;">${this._currentPeriod === 'sunrise' ? '朝霞' : '晚霞'} · 当前时段</div>
+          ${cloudHumidityLine ? `<div style="color:${popupTheme.popupMutedText};font-size:11px;">${cloudHumidityLine}</div>` : ''}
+          <div style="color:${popupTheme.popupHintText};font-size:10px;margin-top:2px;">${this._currentPeriod === 'sunrise' ? '朝霞' : '晚霞'} · 当前时段</div>
         </div>
       `);
     } catch (err) {
-      loadingPopup.setContent(`<span style="color:#f66;">查询失败: ${err.message}</span>`);
+      loadingPopup.setContent(`<span style="color:${popupTheme.scoreTextError};">查询失败: ${err.message}</span>`);
     }
+
   }
 
   /**

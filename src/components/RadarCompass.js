@@ -22,24 +22,27 @@ class RadarCompass {
     const cs = getComputedStyle(document.body);
     const v = k => cs.getPropertyValue(k).trim();
     const theme = {
-      bg:         v('--color-card-bg')     || '#ffffff',
-      border:     v('--color-border')      || 'rgba(0,0,0,0.10)',
-      ring:       v('--radar-ring')        || 'rgba(100,130,180,0.25)',
-      axisMain:   v('--radar-axis-main')   || 'rgba(100,130,180,0.30)',
-      axisSub:    v('--radar-axis-sub')    || 'rgba(100,130,180,0.12)',
-      labelFill:  v('--color-text')        || '#333333',
-      labelBg:    v('--color-bg')          || 'rgba(255,255,255,0.75)',
-      title:      v('--color-text')        || '#333333',
-      subtitle:   v('--color-text-light')  || '#666666',
-      legendText: v('--color-text-light')  || '#666666',
-      center:     v('--radar-center')      || 'rgba(249,115,22,0.9)',
-      // 更接近你确认“有感觉”的强化版冷灰蓝层次
-      cloudLow:   v('--radar-cloud-low')   || 'rgba(138,156,186,0.95)',
-      cloudMid:   v('--radar-cloud-mid')   || 'rgba(184,198,218,0.88)',
-      cloudHigh:  v('--radar-cloud-high')  || 'rgba(218,226,238,0.72)',
-      ringLow:    'rgba(100,150,220,0.08)',
-      ringMid:    'rgba(130,160,200,0.06)',
-      ringHigh:   'rgba(160,170,200,0.05)',
+      // 视觉 token（无 UI token 则回退默认）
+      bg:             v('--radar-bg')            || v('--color-card-bg') || '#ffffff',
+      border:         v('--radar-border')        || v('--color-border')  || 'rgba(0,0,0,0.10)',
+      ring:           v('--radar-ring')          || 'rgba(100,130,180,0.25)',
+      axisMain:       v('--radar-axis-main')     || 'rgba(100,130,180,0.30)',
+      axisSub:        v('--radar-axis-sub')      || 'rgba(100,130,180,0.12)',
+      labelFill:      v('--radar-label-fill')    || v('--color-text') || '#333333',
+      labelBg:        v('--radar-label-bg')      || 'rgba(15,23,42,0.85)',
+      title:          v('--radar-title')         || v('--color-text') || '#333333',
+      subtitle:       v('--radar-subtitle')      || v('--color-text-light') || '#666666',
+      legendText:     v('--radar-legend-text')   || v('--color-text-light') || '#666666',
+      legendBg:       v('--radar-legend-bg')     || 'rgba(255,255,255,0.86)',
+      center:         v('--radar-center')        || 'rgba(249,115,22,0.9)',
+      centerStroke:   v('--radar-center-stroke') || 'rgba(0,0,0,0.20)',
+      // 业务语义色：仅归档为 token，视觉值保持不变
+      cloudLow:       v('--radar-cloud-low')     || 'rgba(138,156,186,0.95)',
+      cloudMid:       v('--radar-cloud-mid')     || 'rgba(184,198,218,0.88)',
+      cloudHigh:      v('--radar-cloud-high')    || 'rgba(218,226,238,0.72)',
+      ringLow:        v('--radar-ring-low')      || 'rgba(100,150,220,0.08)',
+      ringMid:        v('--radar-ring-mid')      || 'rgba(130,160,200,0.06)',
+      ringHigh:       v('--radar-ring-high')     || 'rgba(160,170,200,0.05)',
     };
 
     const predictionType = data?.predictionType || null;
@@ -324,9 +327,9 @@ class RadarCompass {
         <circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}"
           fill="transparent" stroke="${ringStroke}" stroke-width="1"/>
         <rect x="${(tx - bw / 2).toFixed(1)}" y="${(ty - bh / 2 - 1).toFixed(1)}" width="${bw}" height="${bh}" rx="8"
-          fill="rgba(15,23,42,0.85)"/>
+          fill="${T.labelBg}"/>
         <text x="${tx.toFixed(1)}" y="${(ty + 3.5).toFixed(1)}" font-size="11" font-weight="800"
-          fill="#ffffff" text-anchor="middle">${lbl}</text>`;
+          fill="${T.labelFill}" text-anchor="middle">${lbl}</text>`;
     }).join('');
 
     const lowInnerRing = `<circle cx="${cx}" cy="${cy}" r="${R_LOW_INNER.toFixed(1)}"
@@ -384,7 +387,7 @@ class RadarCompass {
           fill="${T.subtitle || '#666666'}">日落</text>`;
     }
 
-    const center = `<circle cx="${cx}" cy="${cy}" r="4" fill="${T.center || 'rgba(249,115,22,0.9)'}" stroke="rgba(0,0,0,0.2)" stroke-width="1.5"/>`;
+    const center = `<circle cx="${cx}" cy="${cy}" r="4" fill="${T.center || 'rgba(249,115,22,0.9)'}" stroke="${T.centerStroke || 'rgba(0,0,0,0.20)'}" stroke-width="1.5"/>`;
 
     const zhFont = "'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans CJK SC','Source Han Sans SC','WenQuanYi Micro Hei',sans-serif";
 
@@ -398,7 +401,7 @@ class RadarCompass {
     const legendOffsetX = Math.max(0, (legendSvgWidth - legendContentWidth) / 2);
     const legend = LEGEND.map(([c, l], i) => `
       <ellipse cx="${legendOffsetX + 13 + i * 58}" cy="6" rx="9" ry="5.5" fill="${c}"/>
-      <text x="${legendOffsetX + 27 + i * 58}" y="10" font-size="11" font-weight="700" fill="${T.title || '#334155'}">${l}</text>`
+      <text x="${legendOffsetX + 27 + i * 58}" y="10" font-size="11" font-weight="700" fill="${T.legendText || '#334155'}">${l}</text>`
     ).join('');
 
     return `
@@ -421,7 +424,7 @@ class RadarCompass {
       ${labels}
     </svg>
   </div>
-  <svg width="${legendSvgWidth}" height="18" style="display:block;margin:4px auto 0;font-family:${zhFont};">
+  <svg width="${legendSvgWidth}" height="18" style="display:block;margin:4px auto 0;font-family:${zhFont};background:${T.legendBg};border-radius:8px;padding:0 4px;">
     ${legend}
   </svg>
 </div>`;
