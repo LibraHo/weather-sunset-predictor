@@ -7388,6 +7388,25 @@ body.theme-dark {
   }
 }
 
+
+/* 暗色实际主题兜底：评分条 token 不能被亮色/默认规则覆盖成黑灰 */
+html.theme-dark,
+html[data-theme="dark"],
+html.theme-actual-dark,
+html[data-actual-theme="dark"],
+body.theme-dark,
+body[data-theme="dark"],
+body.theme-actual-dark,
+body[data-actual-theme="dark"] {
+  --score-track-color: rgba(255, 255, 255, 0.10);
+  --score-poor-color: #94a3b8;
+  --score-fair-color: #fdba74;
+  --score-good-color: #fb923c;
+  --score-excellent-start: #fb923c;
+  --score-excellent-mid: #fbbf24;
+  --score-excellent-end: #f43f5e;
+}
+
 /* High-impact token remapping for prediction surfaces. */
 .score-gauge-number,
 .score-gauge-grade,
