@@ -11,6 +11,11 @@
 
 import { jest } from '@jest/globals';
 import PredictionController from '../../../src/controllers/PredictionController.js';
+import zhCNLocale from '../../../src/locales/zh-CN.js';
+import zhTWLocale from '../../../src/locales/zh-TW.js';
+import enUSLocale from '../../../src/locales/en-US.js';
+import jaJPLocale from '../../../src/locales/ja-JP.js';
+import koKRLocale from '../../../src/locales/ko-KR.js';
 
 // Mock StorageService
 const mockStorageService = {
@@ -30,6 +35,48 @@ const mockStorageService = {
 
 describe('PredictionController', () => {
   let predictionController;
+
+  const setControllerLanguage = (lang) => {
+    const unwrapLocale = (locale) => locale?.default || locale?.translations || locale;
+    predictionController.i18n.translations = {
+      ...predictionController.i18n.translations,
+      'zh-CN': unwrapLocale(zhCNLocale),
+      'zh-TW': unwrapLocale(zhTWLocale),
+      'en-US': unwrapLocale(enUSLocale),
+      'ja-JP': unwrapLocale(jaJPLocale),
+      'ko-KR': unwrapLocale(koKRLocale)
+    };
+    predictionController.i18n.currentLanguage = lang;
+    predictionController.i18n.getLanguage = () => predictionController.i18n.currentLanguage;
+  };
+
+  const createSamplePrediction = ({ score = 74, quality = 'good', type = 'sunset' }) => ({
+    score,
+    quality,
+    type,
+    sunsetTime: new Date('2024-06-21T19:45:00+08:00'),
+    sunriseTime: new Date('2024-06-21T06:45:00+08:00'),
+    sunAzimuth: null,
+    cloudLayers: { high: 45, mid: 25, low: 8 },
+    cloudCover: 30,
+    humidity: 58,
+    visibility: 18,
+    aerosolOpticalDepth: 0.73,
+    factors: {
+      cloudCover: { value: 30 },
+      highClouds: { value: 45 },
+      midClouds: { value: 25 },
+      lowClouds: { value: 8 },
+      humidity: { value: 58 },
+      visibility: { value: 18 },
+      aerosolOpticalDepth: { value: 0.73 }
+    },
+    getOptimalViewingWindow: () => ({
+      start: new Date('2024-06-21T19:15:00+08:00'),
+      end: new Date('2024-06-21T20:15:00+08:00')
+    }),
+    shouldShowAzimuth: () => false
+  });
 
   beforeEach(() => {
     // 设置 DOM 环境
@@ -53,6 +100,7 @@ describe('PredictionController', () => {
 
     // 创建控制器实例
     predictionController = new PredictionController(mockStorageService);
+    setControllerLanguage('zh-CN');
   });
 
   afterEach(() => {
@@ -144,25 +192,25 @@ describe('PredictionController', () => {
 
   describe('getLocalizedAzimuthDirection', () => {
     test('296° 应返回 西北偏西', () => {
-      predictionController.i18n = { currentLanguage: 'zh-CN' };
+      setControllerLanguage('zh-CN');
       const dir = predictionController.getLocalizedAzimuthDirection({ sunAzimuth: 296 });
       expect(dir).toBe('西北偏西');
     });
 
     test('90° 应返回 正东', () => {
-      predictionController.i18n = { currentLanguage: 'zh-CN' };
+      setControllerLanguage('zh-CN');
       const dir = predictionController.getLocalizedAzimuthDirection({ sunAzimuth: 90 });
       expect(dir).toBe('正东');
     });
 
     test('0° 应返回 正北', () => {
-      predictionController.i18n = { currentLanguage: 'zh-CN' };
+      setControllerLanguage('zh-CN');
       const dir = predictionController.getLocalizedAzimuthDirection({ sunAzimuth: 0 });
       expect(dir).toBe('正北');
     });
 
     test('英文环境 296° 应返回 WNW', () => {
-      predictionController.i18n = { currentLanguage: 'en-US' };
+      setControllerLanguage('en-US');
       const dir = predictionController.getLocalizedAzimuthDirection({ sunAzimuth: 296 });
       expect(dir).toBe('WNW');
     });
@@ -226,6 +274,156 @@ describe('PredictionController', () => {
       expect(html).toContain('score-breakdown-trigger');
       expect(html).toContain('查看评分明细');
       expect(html).not.toContain('倒计时');
+    });
+
+    test('zh-TW 下不会出现简体关键词且显示繁体文案', () => {
+      setControllerLanguage('zh-TW');
+
+      const html = predictionController.renderSinglePrediction(
+        {
+          score: 88,
+          quality: 'excellent',
+          type: 'sunset',
+          sunsetTime: new Date('2024-06-21T19:45:00+08:00'),
+          sunAzimuth: null,
+          cloudLayers: { high: 72, mid: 44, low: 16 },
+          cloudCover: 32,
+          humidity: 56,
+          visibility: 20,
+          aerosolOpticalDepth: 0.16,
+          factors: {
+            highClouds: { value: 72 },
+            midClouds: { value: 44 },
+            lowClouds: { value: 16 },
+            humidity: { value: 56 },
+            visibility: { value: 20 },
+            aerosolOpticalDepth: { value: 0.16 }
+          },
+          getOptimalViewingWindow: () => ({
+            start: new Date('2024-06-21T19:15:00+08:00'),
+            end: new Date('2024-06-21T20:15:00+08:00')
+          }),
+          shouldShowAzimuth: () => false,
+          breakdown: {
+            baseScore: 85,
+            layerDiversity: { layerCount: 2 }
+          },
+          canvasAnalysis: { score: 85 },
+          lightPathAnalysis: { score: 88 },
+          renderingAnalysis: { factor: 0.94 }
+        },
+        '🌅',
+        '晚霞',
+        '日落時間',
+        '今日',
+        'sunset'
+      );
+
+      const simplifiedWords = ['条件', '强烈', '较', '云层', '观赏'];
+      expect(html).toContain('評分明細');
+      expect(html).toContain('火燒雲形成條件分析');
+      expect(html).toContain('有利條件');
+      expect(html).toContain('最佳觀賞時間');
+      for (const word of simplifiedWords) {
+        expect(html).not.toContain(word);
+      }
+    });
+
+    test('ja-JP 下当前预测卡与分数明细不出现中文 fallback', () => {
+      setControllerLanguage('ja-JP');
+
+      const html = predictionController.renderSinglePrediction(
+        {
+          score: 88,
+          quality: 'good',
+          type: 'sunset',
+          sunsetTime: new Date('2024-06-21T19:45:00+08:00'),
+          sunAzimuth: null,
+          cloudLayers: { high: 72, mid: 44, low: 16 },
+          cloudCover: 32,
+          humidity: 56,
+          visibility: 20,
+          aerosolOpticalDepth: 0.16,
+          factors: {
+            highClouds: { value: 72 },
+            midClouds: { value: 44 },
+            lowClouds: { value: 16 },
+            humidity: { value: 56 },
+            visibility: { value: 20 },
+            aerosolOpticalDepth: { value: 0.16 }
+          },
+          getOptimalViewingWindow: () => ({
+            start: new Date('2024-06-21T19:15:00+08:00'),
+            end: new Date('2024-06-21T20:15:00+08:00')
+          }),
+          shouldShowAzimuth: () => false,
+          breakdown: { baseScore: 85, layerDiversity: { layerCount: 2 } },
+          canvasAnalysis: { score: 85 },
+          lightPathAnalysis: { score: 88 },
+          renderingAnalysis: { factor: 0.94 }
+        },
+        '🌅',
+        '夕焼け',
+        '日没時間',
+        '今日',
+        'sunset'
+      );
+
+      const badWords = ['火烧云形成条件分析', '有利条件', '注意因素', '高层云', '分数明细'];
+      for (const word of badWords) {
+        expect(html).not.toContain(word);
+      }
+      expect(html).toContain('スコア明細');
+      expect(html).toContain('有利要素');
+      expect(html).toContain('火焼雲形成条件を確認');
+    });
+
+    test('ko-KR 下当前预测卡与分数明细不出现中文 fallback', () => {
+      setControllerLanguage('ko-KR');
+
+      const html = predictionController.renderSinglePrediction(
+        {
+          score: 88,
+          quality: 'good',
+          type: 'sunset',
+          sunsetTime: new Date('2024-06-21T19:45:00+08:00'),
+          sunAzimuth: null,
+          cloudLayers: { high: 72, mid: 44, low: 16 },
+          cloudCover: 32,
+          humidity: 56,
+          visibility: 20,
+          aerosolOpticalDepth: 0.16,
+          factors: {
+            highClouds: { value: 72 },
+            midClouds: { value: 44 },
+            lowClouds: { value: 16 },
+            humidity: { value: 56 },
+            visibility: { value: 20 },
+            aerosolOpticalDepth: { value: 0.16 }
+          },
+          getOptimalViewingWindow: () => ({
+            start: new Date('2024-06-21T19:15:00+08:00'),
+            end: new Date('2024-06-21T20:15:00+08:00')
+          }),
+          shouldShowAzimuth: () => false,
+          breakdown: { baseScore: 85, layerDiversity: { layerCount: 2 } },
+          canvasAnalysis: { score: 85 },
+          lightPathAnalysis: { score: 88 },
+          renderingAnalysis: { factor: 0.94 }
+        },
+        '🌅',
+        '저녁 노을',
+        '일몰 시간',
+        '오늘',
+        'sunset'
+      );
+
+      const badWords = ['火烧云形成条件分析', '有利条件', '注意因素', '高层云', '分数明细', '分'];
+      for (const word of badWords) {
+        expect(html).not.toContain(word);
+      }
+      expect(html).toContain('점수 상세');
+      expect(html).toContain('화염구름 형성 조건 분석');
     });
 
     test('北京晚霞场景应显示太阳方位角方向', () => {
@@ -617,6 +815,62 @@ describe('PredictionController', () => {
       // 验证预测数据已存储
       expect(predictionController.predictions).toEqual(mockPredictions);
       expect(predictionController.predictions).not.toBe(initialPredictions);
+    });
+  });
+
+  describe('未来预测 i18n fallback 回归', () => {
+    test('ja-JP 未来预测不出现中文关键词', () => {
+      setControllerLanguage('ja-JP');
+      document.body.innerHTML = `
+        <section id="forecast-section" class="hidden">
+          <div id="forecast-timeline"></div>
+        </section>
+      `;
+
+      const base = new Date('2024-06-01T00:00:00+08:00');
+      const predictions = [
+        { date: base, type: 'sunrise', quality: 'good', score: 75, sunriseTime: new Date(base.getTime() + 7 * 60 * 60 * 1000), shouldShowAzimuth: () => false, qualityLabel: 'good' },
+        { date: base, type: 'sunset', quality: 'good', score: 72, sunsetTime: new Date(base.getTime() + 17 * 60 * 60 * 1000), shouldShowAzimuth: () => false, qualityLabel: 'good' },
+        { date: new Date(base.getTime() + 24 * 60 * 60 * 1000), type: 'sunrise', quality: 'fair', score: 55, sunriseTime: new Date(base.getTime() + 24 * 60 * 60 * 1000 + 7 * 60 * 60 * 1000), shouldShowAzimuth: () => false, qualityLabel: 'fair' },
+        { date: new Date(base.getTime() + 24 * 60 * 60 * 1000), type: 'sunset', quality: 'poor', score: 40, sunsetTime: new Date(base.getTime() + 24 * 60 * 60 * 1000 + 17 * 60 * 60 * 1000), shouldShowAzimuth: () => false, qualityLabel: 'poor' },
+        { date: new Date(base.getTime() + 48 * 60 * 60 * 1000), type: 'sunset', quality: 'good', score: 63, sunsetTime: new Date(base.getTime() + 48 * 60 * 60 * 1000 + 17 * 60 * 60 * 1000), shouldShowAzimuth: () => false, qualityLabel: 'good' }
+      ];
+
+      predictionController.updateForecastTimeline(predictions);
+
+      const timeline = document.querySelector('#forecast-timeline').innerHTML;
+      expect(timeline).toContain('点');
+      expect(timeline).not.toContain('分');
+      ['火烧云形成条件分析', '有利条件', '注意因素', '高层云'].forEach((word) => {
+        expect(timeline).not.toContain(word);
+      });
+    });
+
+    test('ko-KR 未来预测不出现中文关键词', () => {
+      setControllerLanguage('ko-KR');
+      document.body.innerHTML = `
+        <section id="forecast-section" class="hidden">
+          <div id="forecast-timeline"></div>
+        </section>
+      `;
+
+      const base = new Date('2024-06-01T00:00:00+08:00');
+      const predictions = [
+        { date: base, type: 'sunrise', quality: 'good', score: 75, sunriseTime: new Date(base.getTime() + 7 * 60 * 60 * 1000), shouldShowAzimuth: () => false, qualityLabel: 'good' },
+        { date: base, type: 'sunset', quality: 'good', score: 72, sunsetTime: new Date(base.getTime() + 17 * 60 * 60 * 1000), shouldShowAzimuth: () => false, qualityLabel: 'good' },
+        { date: new Date(base.getTime() + 24 * 60 * 60 * 1000), type: 'sunrise', quality: 'fair', score: 55, sunriseTime: new Date(base.getTime() + 24 * 60 * 60 * 1000 + 7 * 60 * 60 * 1000), shouldShowAzimuth: () => false, qualityLabel: 'fair' },
+        { date: new Date(base.getTime() + 24 * 60 * 60 * 1000), type: 'sunset', quality: 'poor', score: 40, sunsetTime: new Date(base.getTime() + 24 * 60 * 60 * 1000 + 17 * 60 * 60 * 1000), shouldShowAzimuth: () => false, qualityLabel: 'poor' },
+        { date: new Date(base.getTime() + 48 * 60 * 60 * 1000), type: 'sunset', quality: 'good', score: 63, sunsetTime: new Date(base.getTime() + 48 * 60 * 60 * 1000 + 17 * 60 * 60 * 1000), shouldShowAzimuth: () => false, qualityLabel: 'good' }
+      ];
+
+      predictionController.updateForecastTimeline(predictions);
+
+      const timeline = document.querySelector('#forecast-timeline').innerHTML;
+      expect(timeline).toContain('점');
+      expect(timeline).not.toContain('分');
+      ['火烧云形成条件分析', '有利条件', '注意因素', '高层云'].forEach((word) => {
+        expect(timeline).not.toContain(word);
+      });
     });
   });
 

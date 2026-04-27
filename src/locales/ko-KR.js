@@ -181,6 +181,151 @@ apiAccess: 'API 연동'
     "bestViewingTime": "최적 관람 시간",
     "analysis": "분석",
     "analysisTitle": "📊 분석 이유",
+    "analysisText": {
+      "footer": "하늘을 확인해 아름다운 장면을 만나보세요",
+      "scoreBreakdownHint": "점수 상세",
+      "cardTitle": "화염구름 형성 조건 분석",
+      "scoreDescription": {
+        "excellent": "관측 조건이 매우 좋음",
+        "good": "관측 조건이 좋음",
+        "someChance": "일부 확률이 있습니다",
+        "weak": "관측 조건이 다소 약함"
+      },
+      "groups": {
+        "favorable": "유리한 조건",
+        "neutral": "중립 요인",
+        "warnings": "주의 요소"
+      },
+      "clouds": {
+        "high": "상층",
+        "mid": "중층",
+        "low": "하층"
+      },
+      "factors": {
+        "high": {
+          "abundant": {
+            "title": "상층구름 매우 풍부({{value}}%)",
+            "description": "색을 실어 나르는 기반이 충분해 화염구름 형성에 유리합니다"
+          },
+          "sufficient": {
+            "title": "상층구름 충분({{value}}%)",
+            "description": "노을 색 재현이 비교적 잘 됩니다"
+          },
+          "moderate": {
+            "title": "상층구름 적정({{value}}%)",
+            "description": "화염구름이 생길 수 있지만 색이 약간 옅어질 수 있습니다"
+          },
+          "low": {
+            "title": "상층구름 부족({{value}}%)",
+            "description": "주요 색상 캐리어가 부족합니다"
+          }
+        },
+        "mid": {
+          "balanced": {
+            "title": "중층구름 적정({{value}}%)",
+            "description": "색 확산과 입체감에 도움을 줍니다"
+          },
+          "few": {
+            "title": "중층구름 적음({{value}}%)",
+            "highSufficientDescription": "상층구름이 충분하면 단독으로도 색을 만들 수 있습니다",
+            "limitedDescription": "층 구조가 단조로울 수 있습니다"
+          },
+          "thick": {
+            "title": "중층구름 과다({{value}}%)",
+            "description": "하늘이 흐려져 선명도가 떨어질 수 있습니다"
+          }
+        },
+        "low": {
+          "few": {
+            "title": "저층구름 희박({{value}}%)",
+            "description": "시야를 크게 가리지는 않습니다"
+          },
+          "some": {
+            "title": "저층구름 다소 있음({{value}}%)",
+            "description": "지평선 근처 색을 일부 가릴 수 있습니다"
+          },
+          "thick": {
+            "title": "저층구름 과다({{value}}%)",
+            "description": "가림 위험이 큽니다"
+          }
+        },
+        "visibility": {
+          "good": {
+            "title": "시정 양호({{value}}km)",
+            "description": "공기가 맑아 관측 거리가 좋습니다"
+          },
+          "moderate": {
+            "title": "시정 보통({{value}}km)",
+            "description": "색의 채도가 약간 감소할 수 있습니다"
+          },
+          "poor": {
+            "title": "시정 낮음({{value}}km)",
+            "description": "안개나 수분으로 관측이 영향을 받을 수 있습니다"
+          }
+        },
+        "humidity": {
+          "optimal": {
+            "title": "습도 적정({{value}}%)",
+            "description": "빛 산란에 유리합니다"
+          },
+          "high": {
+            "title": "습도 높음({{value}}%)",
+            "description": "투명도가 떨어질 수 있습니다"
+          },
+          "low": {
+            "title": "습도 낮음({{value}}%)",
+            "description": "공기가 건조해 색이 옅어질 수 있습니다"
+          }
+        },
+        "aod": {
+          "moderate": {
+            "title": "적당한 에어로졸(AOD {{value}})",
+            "description": "적절한 에어로졸은 적색 계열 산란을 돕습니다"
+          },
+          "high": {
+            "title": "에어로졸 과다(AOD {{value}})",
+            "description": "과하면 흐려 보여요"
+          },
+          "low": {
+            "title": "공기가 너무 맑음(AOD {{value}})",
+            "description": "색이 약하게 보일 수 있습니다"
+          }
+        },
+        "layers": {
+          "single": {
+            "title": "단일 구름층",
+            "description": "상층구름만으로도 선명한 색을 만들 수 있습니다"
+          }
+        }
+      },
+      "conclusion": {
+        "excellent": {
+          "recommended": "조건이 매우 좋아 관찰을 강력히 추천합니다.",
+          "limitedLayers": "조건은 매우 좋지만 구름이 단일이라면 입체감이 부족할 수 있습니다."
+        },
+        "good": {
+          "recommended": "조건이 좋아 화려한 화염구름을 볼 확률이 높습니다.",
+          "limitedLayers": "화염구름 확률은 높지만 구름 층 구성이 다소 제한적입니다."
+        },
+        "fair": "조건이 중간 수준입니다. 구름 변화를 주의 깊게 보세요.",
+        "poor": "핵심 조건이 부족해 화염구름 가능성이 낮습니다."
+      },
+      "scoreBreakdown": {
+        "title": "점수 상세",
+        "hints": {
+          "finalDisplayedScore": "최종 표시 점수",
+          "combinedBase": "구름과 빛 경로를 합친 기본 점수",
+          "canvas": "고층/중층구름이 색을 만들고 저층구름은 가릴 수 있습니다",
+          "lightPath": "햇빛이 구름층에 도달하는지",
+          "rendering": "습도와 가시거리가 색 재현에 영향을 줍니다",
+          "aerosol": "적절한 에어로졸은 붉은 계열 산란을 돕고, 과하면 흐려집니다"
+        },
+        "formula": {
+          "base": "기본 점수 = 캔버스×0.8 + 광로×0.2",
+          "final": "최종 점수 = 기본 점수 × 보정 계수"
+        }
+      }
+    },
     "details": "세부 정보",
     "detailedWeatherData": "상세 날씨 데이터",
     "noPredictionData": "⚠️ {{date}} 예측 데이터 없음",
@@ -240,6 +385,7 @@ apiAccess: 'API 연동'
     "rendering": {
       "title": "렌더링 점수",
       "score": "렌더링 점수",
+      "aerosol": "에어로졸 산란",
       "humidity": "습도 영향",
       "renderingFactor": "🎨 렌더링 계수: {{factor}} | {{visibility}} | {{aqi}} | {{color}}",
       "specialMode": "| {{mode}}",
@@ -438,6 +584,10 @@ apiAccess: 'API 연동'
     "geocodingApiKeyHint": "Get free Amap key at: lbs.amap.com",
     "geocodingApiKeyRequired": "Please enter an API Key in Settings first",
     "geocodingChinaTag": "🇨🇳 Available in China",
+    "mapTileProvider": "지도 베이스맵",
+    "windyApiKey": "Windy API 키",
+    "windyApiKeyPlaceholder": "Windy API 키 입력",
+    "windyApiKeyHint": "Windy 데이터 소스를 사용하려면 설정하세요. 비워 두면 시스템 기본값을 사용합니다",
     "windyApiKeyMode": "Windy API Source",
     "windyApiKeyModeSystem": "Use System API (Recommended)",
     "windyApiKeyModeCustom": "Use My API Key",

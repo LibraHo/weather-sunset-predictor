@@ -171,6 +171,151 @@ apiAccess: 'API接入'
     "bestTime": "最佳觀賞時間",
     "analysis": "分析",
     "analysisTitle": "📊 分析原因",
+    "analysisText": {
+      "footer": "觀天有時 · 收穫美景",
+      "scoreBreakdownHint": "查看評分明細",
+      "cardTitle": "火燒雲形成條件分析",
+      "scoreDescription": {
+        "excellent": "觀賞條件很好",
+        "good": "觀賞條件不錯",
+        "someChance": "有一定機會",
+        "weak": "觀賞條件偏弱"
+      },
+      "groups": {
+        "favorable": "有利條件",
+        "neutral": "一般因素",
+        "warnings": "注意因素"
+      },
+      "clouds": {
+        "high": "高雲",
+        "mid": "中雲",
+        "low": "低雲"
+      },
+      "factors": {
+        "high": {
+          "abundant": {
+            "title": "高層雲充沛（{{value}}%）",
+            "description": "色彩載體豐富，火燒雲基礎紮實"
+          },
+          "sufficient": {
+            "title": "高層雲充足（{{value}}%）",
+            "description": "具備較好的霞光染色載體"
+          },
+          "moderate": {
+            "title": "高層雲適中（{{value}}%）",
+            "description": "可形成火燒雲，但色彩可能偏淡"
+          },
+          "low": {
+            "title": "高層雲偏少（{{value}}%）",
+            "description": "缺少主要色彩載體"
+          }
+        },
+        "mid": {
+          "balanced": {
+            "title": "中層雲適中（{{value}}%）",
+            "description": "有助於色彩擴散與層次形成"
+          },
+          "few": {
+            "title": "中層雲偏少（{{value}}%）",
+            "highSufficientDescription": "高層雲充足時可獨立形成色彩",
+            "limitedDescription": "層次可能受限"
+          },
+          "thick": {
+            "title": "中層雲偏多（{{value}}%）",
+            "description": "可能使天空發白，降低透明度"
+          }
+        },
+        "low": {
+          "few": {
+            "title": "低層雲較少（{{value}}%）",
+            "description": "低層雲不會嚴重遮擋視線"
+          },
+          "some": {
+            "title": "低層雲一般（{{value}}%）",
+            "description": "可能略微遮擋地平線附近色彩"
+          },
+          "thick": {
+            "title": "低層雲偏多（{{value}}%）",
+            "description": "將增加較高的遮擋風險"
+          }
+        },
+        "visibility": {
+          "good": {
+            "title": "能見度良好（{{value}}km）",
+            "description": "空氣清新，視距更佳"
+          },
+          "moderate": {
+            "title": "能見度一般（{{value}}km）",
+            "description": "色彩飽和度可能稍降"
+          },
+          "poor": {
+            "title": "能見度較低（{{value}}km）",
+            "description": "有霧或潮濕可能影響觀測"
+          }
+        },
+        "humidity": {
+          "optimal": {
+            "title": "濕度適中（{{value}}%）",
+            "description": "有利光線散射"
+          },
+          "high": {
+            "title": "濕度偏高（{{value}}%）",
+            "description": "透明度可能下降"
+          },
+          "low": {
+            "title": "濕度偏低（{{value}}%）",
+            "description": "空氣偏乾，顏色可能偏淡"
+          }
+        },
+        "aod": {
+          "moderate": {
+            "title": "適度氣溶膠（AOD {{value}}）",
+            "description": "可增強橙紅色散射"
+          },
+          "high": {
+            "title": "氣溶膠偏高（AOD {{value}}）",
+            "description": "可能較霧濁"
+          },
+          "low": {
+            "title": "空氣極清（AOD {{value}}）",
+            "description": "顏色可能偏淡"
+          }
+        },
+        "layers": {
+          "single": {
+            "title": "單一雲層",
+            "description": "高層雲足夠時仍可形成明顯色彩"
+          }
+        }
+      },
+      "conclusion": {
+        "excellent": {
+          "recommended": "條件很好，強烈建議觀賞。",
+          "limitedLayers": "條件非常好，但單層雲會降低立體感。"
+        },
+        "good": {
+          "recommended": "條件不錯，較高機率出現火燒雲。",
+          "limitedLayers": "火燒雲機率較高，但層次可能受限。"
+        },
+        "fair": "條件中等，建議關注雲層變化。",
+        "poor": "關鍵條件不足，火燒雲機率較低。"
+      },
+      "scoreBreakdown": {
+        "title": "評分明細",
+        "hints": {
+          "finalDisplayedScore": "最終顯示分數",
+          "combinedBase": "雲層與光路整合後的基礎分",
+          "canvas": "中高雲是色彩載體，低雲可能遮擋",
+          "lightPath": "陽光是否能穿透到雲層",
+          "rendering": "濕度與能見度影響顏色呈現",
+          "aerosol": "適度氣溶膠有利，過高會變霧"
+        },
+        "formula": {
+          "base": "基礎分 = 畫布×0.8 + 光路×0.2",
+          "final": "最終分 = 基礎分 × 修正係數"
+        }
+      }
+    },
     "details": "詳情",
     "detailedWeatherData": "詳細氣象資料",
     "noPredictionData": "⚠️ 暫無{{date}}預測資料",
@@ -240,6 +385,7 @@ apiAccess: 'API接入'
     "rendering": {
       "title": "渲染評分",
       "score": "渲染得分",
+      "aerosol": "氣溶膠散射",
       "humidity": "濕度影響",
       "renderingFactor": "🎨 渲染係數: {{factor}} | {{visibility}} | {{aqi}} | {{color}}",
       "specialMode": "| {{mode}}",
@@ -438,6 +584,10 @@ apiAccess: 'API接入'
     "geocodingApiKeyHint": "Get free Amap key at: lbs.amap.com",
     "geocodingApiKeyRequired": "Please enter an API Key in Settings first",
     "geocodingChinaTag": "🇨🇳 Available in China",
+    "mapTileProvider": "地圖底圖",
+    "windyApiKey": "Windy API 金鑰",
+    "windyApiKeyPlaceholder": "輸入你的 Windy API 金鑰",
+    "windyApiKeyHint": "用於啟用 Windy 資料來源；留空使用系統預設",
     "windyApiKeyMode": "Windy API Source",
     "windyApiKeyModeSystem": "Use System API (Recommended)",
     "windyApiKeyModeCustom": "Use My API Key",

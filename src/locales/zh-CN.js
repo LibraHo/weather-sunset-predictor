@@ -189,6 +189,151 @@ export default {
     bestTime: '最佳观赏时间',
     analysis: '分析',
     analysisTitle: '📊 分析原因',
+    analysisText: {
+      footer: '观天有时 · 收获美景',
+      scoreBreakdownHint: '查看评分明细',
+      cardTitle: '火烧云形成条件分析',
+      scoreDescription: {
+        excellent: '观赏条件很好',
+        good: '观赏条件不错',
+        someChance: '有一定机会',
+        weak: '观赏条件偏弱'
+      },
+      groups: {
+        favorable: '有利条件',
+        neutral: '一般因素',
+        warnings: '注意因素'
+      },
+      clouds: {
+        high: '高云',
+        mid: '中云',
+        low: '低云'
+      },
+      factors: {
+        high: {
+          abundant: {
+            title: '高层云充沛（{{value}}%）',
+            description: '色彩载体丰富，火烧云基础扎实'
+          },
+          sufficient: {
+            title: '高层云充足（{{value}}%）',
+            description: '具备较好的霞光染色载体'
+          },
+          moderate: {
+            title: '高层云适中（{{value}}%）',
+            description: '可形成火烧云，但色彩可能偏淡'
+          },
+          low: {
+            title: '高层云偏少（{{value}}%）',
+            description: '缺少主要色彩载体'
+          }
+        },
+        mid: {
+          balanced: {
+            title: '中层云适中（{{value}}%）',
+            description: '有助于色彩扩散和层次形成'
+          },
+          few: {
+            title: '中层云偏少（{{value}}%）',
+            highSufficientDescription: '高层云充足时可独立形成色彩',
+            limitedDescription: '层次可能受限'
+          },
+          thick: {
+            title: '中层云偏多（{{value}}%）',
+            description: '可能使天幕显得发白，降低透明度'
+          }
+        },
+        low: {
+          few: {
+            title: '低层云较少（{{value}}%）',
+            description: '低层云不至于严重遮挡视线'
+          },
+          some: {
+            title: '低层云一般（{{value}}%）',
+            description: '可能会略微遮挡地平线附近色彩'
+          },
+          thick: {
+            title: '低层云偏多（{{value}}%）',
+            description: '会有较高的遮挡风险'
+          }
+        },
+        visibility: {
+          good: {
+            title: '能见度良好（{{value}}km）',
+            description: '空气清新，视距更佳'
+          },
+          moderate: {
+            title: '能见度一般（{{value}}km）',
+            description: '色彩饱和度可能略降'
+          },
+          poor: {
+            title: '能见度较低（{{value}}km）',
+            description: '有雾或湿度会影响观测'
+          }
+        },
+        humidity: {
+          optimal: {
+            title: '湿度适中（{{value}}%）',
+            description: '有利于光线散射'
+          },
+          high: {
+            title: '湿度偏高（{{value}}%）',
+            description: '透明度可能下降'
+          },
+          low: {
+            title: '湿度偏低（{{value}}%）',
+            description: '空气偏干，颜色可能偏淡'
+          }
+        },
+        aod: {
+          moderate: {
+            title: '适度气溶胶（AOD {{value}}）',
+            description: '可增强橙红色散射'
+          },
+          high: {
+            title: '气溶胶偏高（AOD {{value}}）',
+            description: '可能偏雾霾'
+          },
+          low: {
+            title: '空气非常清澈（AOD {{value}}）',
+            description: '颜色可能偏浅'
+          }
+        },
+        layers: {
+          single: {
+            title: '单云层',
+            description: '高层云足够时仍可形成明显色彩'
+          }
+        }
+      },
+      conclusion: {
+        excellent: {
+          recommended: '条件很棒，强烈建议观赏。',
+          limitedLayers: '条件非常好，但单层云会降低立体感。'
+        },
+        good: {
+          recommended: '条件较好，较大概率出现火烧云。',
+          limitedLayers: '火烧云概率较高，但层次可能受限。'
+        },
+        fair: '条件中等，建议关注云层变化。',
+        poor: '关键条件不足，火烧云概率较低。'
+      },
+      scoreBreakdown: {
+        title: '评分明细',
+        hints: {
+          finalDisplayedScore: '最终显示分数',
+          combinedBase: '云层与光路综合后的基础分',
+          canvas: '中高云是色彩载体，低云可能遮挡',
+          lightPath: '阳光是否穿透到云层',
+          rendering: '湿度和能见度影响颜色再现',
+          aerosol: '适度气溶胶有利，过高易雾'
+        },
+        formula: {
+          base: '基础分 = 画布×0.8 + 光路×0.2',
+          final: '最终分 = 基础分 × 修正系数'
+        }
+      }
+    },
     details: '详情',
     detailedWeatherData: '详细气象数据',
     noPredictionData: '⚠️ 暂无{{date}}预测数据',

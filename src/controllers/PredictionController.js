@@ -1160,7 +1160,7 @@ class PredictionController {
           ${this.renderCloudConditionCard(forecast.clouds)}
           ${this.renderAnalysisCard(forecast.analysis, forecast.conclusion)}
           <div id="radar-compass-${type}" style="margin-top:12px;display:none;"></div>
-          <div class="prediction-app-footer">${this._uiText('Observe the sky · Catch the beauty', '观天有时 · 收获美景')}</div>
+          <div class="prediction-app-footer">${this.i18n.t('prediction.analysisText.footer')}</div>
         </div>
       </div>
     `;
@@ -1191,9 +1191,9 @@ class PredictionController {
       azimuth: prediction.sunAzimuth,
       directionLabel: type === 'sunrise' ? this.i18n.t('prediction.sunriseDirectionLabel') : this.i18n.t('prediction.sunsetDirectionLabel'),
       clouds: [
-        { label: this._uiText('High', '高云'), value: Number(clouds.high ?? 0), color: 'var(--cloud-high-color)' },
-        { label: this._uiText('Mid', '中云'), value: Number(clouds.mid ?? 0), color: 'var(--cloud-mid-color)' },
-        { label: this._uiText('Low', '低云'), value: Number(clouds.low ?? 0), color: 'var(--cloud-low-color)' }
+        { label: this.i18n.t('prediction.analysisText.clouds.high'), value: Number(clouds.high ?? 0), color: 'var(--cloud-high-color)' },
+        { label: this.i18n.t('prediction.analysisText.clouds.mid'), value: Number(clouds.mid ?? 0), color: 'var(--cloud-mid-color)' },
+        { label: this.i18n.t('prediction.analysisText.clouds.low'), value: Number(clouds.low ?? 0), color: 'var(--cloud-low-color)' }
       ],
       quality: prediction.quality || this.getQualityFromScore(score),
       analysis: this.buildAnalysisGroups(prediction),
@@ -1220,10 +1220,10 @@ class PredictionController {
   }
 
   getScoreDescription(score) {
-    if (score >= 80) return this._uiText('Excellent viewing conditions', '观赏条件很好');
-    if (score >= 60) return this._uiText('Good viewing conditions', '观赏条件不错');
-    if (score >= 40) return this._uiText('Some chance', '有一定机会');
-    return this._uiText('Weak viewing conditions', '观赏条件偏弱');
+    if (score >= 80) return this.i18n.t('prediction.analysisText.scoreDescription.excellent');
+    if (score >= 60) return this.i18n.t('prediction.analysisText.scoreDescription.good');
+    if (score >= 40) return this.i18n.t('prediction.analysisText.scoreDescription.someChance');
+    return this.i18n.t('prediction.analysisText.scoreDescription.weak');
   }
 
   getQualityFromScore(score) {
@@ -1280,7 +1280,7 @@ class PredictionController {
         </div>
         <div class="score-gauge-caption">
           <div class="score-gauge-grade" style="color:${scoreTheme[1]}">${forecast.scoreLabel}</div>
-          <div class="score-breakdown-hint-trigger">${this._uiText('View score details', '查看评分明细')}</div>
+          <div class="score-breakdown-hint-trigger">${this.i18n.t('prediction.analysisText.scoreBreakdownHint')}</div>
         </div>
       </div>
     `;
@@ -1341,44 +1341,44 @@ class PredictionController {
   buildAnalysisGroups(prediction) {
     const weather = this.extractAnalysisWeather(prediction);
     const groups = [
-      { title: this._uiText('Favorable', '有利条件'), type: 'positive', icon: 'ok', items: [] },
-      { title: this._uiText('Neutral', '一般因素'), type: 'neutral', icon: 'info', items: [] },
-      { title: this._uiText('Watch-outs', '注意因素'), type: 'warning', icon: 'warn', items: [] }
+      { title: this.i18n.t('prediction.analysisText.groups.favorable'), type: 'positive', icon: 'ok', items: [] },
+      { title: this.i18n.t('prediction.analysisText.groups.neutral'), type: 'neutral', icon: 'info', items: [] },
+      { title: this.i18n.t('prediction.analysisText.groups.warnings'), type: 'warning', icon: 'warn', items: [] }
     ];
     const add = (groupType, title, desc) => {
       const group = groups.find(g => g.type === groupType);
       group.items.push({ title, desc });
     };
 
-    if (weather.high >= 60) add('positive', this._uiText(`Abundant high clouds (${weather.high.toFixed(0)}%)`, `高层云充沛（${weather.high.toFixed(0)}%）`), this._uiText('Rich color canvas; strong basis for fire clouds', '色彩载体丰富，火烧云基础扎实'));
-    else if (weather.high >= 35) add('positive', this._uiText(`Sufficient high clouds (${weather.high.toFixed(0)}%)`, `高层云充足（${weather.high.toFixed(0)}%）`), this._uiText('Good carrier for sunset color', '具备较好的霞光染色载体'));
-    else if (weather.high >= 15) add('neutral', this._uiText(`Moderate high clouds (${weather.high.toFixed(0)}%)`, `高层云适中（${weather.high.toFixed(0)}%）`), this._uiText('Can form fire clouds, but colors may be lighter', '可形成火烧云，但色彩可能偏淡'));
-    else add('warning', this._uiText(`Too few high clouds (${weather.high.toFixed(0)}%)`, `高层云偏少（${weather.high.toFixed(0)}%）`), this._uiText('Main color carrier is lacking', '缺少主要色彩载体'));
+    if (weather.high >= 60) add('positive', this.i18n.t('prediction.analysisText.factors.high.abundant.title', { value: weather.high.toFixed(0) }), this.i18n.t('prediction.analysisText.factors.high.abundant.description', { value: weather.high.toFixed(0) }));
+    else if (weather.high >= 35) add('positive', this.i18n.t('prediction.analysisText.factors.high.sufficient.title', { value: weather.high.toFixed(0) }), this.i18n.t('prediction.analysisText.factors.high.sufficient.description', { value: weather.high.toFixed(0) }));
+    else if (weather.high >= 15) add('neutral', this.i18n.t('prediction.analysisText.factors.high.moderate.title', { value: weather.high.toFixed(0) }), this.i18n.t('prediction.analysisText.factors.high.moderate.description', { value: weather.high.toFixed(0) }));
+    else add('warning', this.i18n.t('prediction.analysisText.factors.high.low.title', { value: weather.high.toFixed(0) }), this.i18n.t('prediction.analysisText.factors.high.low.description', { value: weather.high.toFixed(0) }));
 
-    if (weather.mid >= 20 && weather.mid <= 60) add('positive', this._uiText(`Balanced mid clouds (${weather.mid.toFixed(0)}%)`, `中层云适中（${weather.mid.toFixed(0)}%）`), this._uiText('Helps color spread and layering', '利于色彩扩散和层次感'));
-    else if (weather.mid < 20) add('neutral', this._uiText(`Few mid clouds (${weather.mid.toFixed(0)}%)`, `中层云较少（${weather.mid.toFixed(0)}%）`), weather.high >= 35 ? this._uiText('High clouds are enough to carry the color on their own', '但高层云充足，可独立形成火烧云') : this._uiText('Layering may be limited', '层次感可能不足'));
-    else add('warning', this._uiText(`Thick mid clouds (${weather.mid.toFixed(0)}%)`, `中层云偏厚（${weather.mid.toFixed(0)}%）`), this._uiText('May make the sky gray and reduce clarity', '可能让画面偏灰，削弱霞光通透感'));
+    if (weather.mid >= 20 && weather.mid <= 60) add('positive', this.i18n.t('prediction.analysisText.factors.mid.balanced.title', { value: weather.mid.toFixed(0) }), this.i18n.t('prediction.analysisText.factors.mid.balanced.description', { value: weather.mid.toFixed(0) }));
+    else if (weather.mid < 20) add('neutral', this.i18n.t('prediction.analysisText.factors.mid.few.title', { value: weather.mid.toFixed(0) }), weather.high >= 35 ? this.i18n.t('prediction.analysisText.factors.mid.few.highSufficientDescription', { value: weather.mid.toFixed(0) }) : this.i18n.t('prediction.analysisText.factors.mid.few.limitedDescription', { value: weather.mid.toFixed(0) }));
+    else add('warning', this.i18n.t('prediction.analysisText.factors.mid.thick.title', { value: weather.mid.toFixed(0) }), this.i18n.t('prediction.analysisText.factors.mid.thick.description', { value: weather.mid.toFixed(0) }));
 
-    if (weather.low < 15) add('positive', this._uiText(`Few low clouds (${weather.low.toFixed(0)}%)`, `低云稀少（${weather.low.toFixed(0)}%）`), this._uiText('Low clouds should not block the view', '不会遮挡火烧云'));
-    else if (weather.low < 35) add('neutral', this._uiText(`Some low clouds (${weather.low.toFixed(0)}%)`, `低云较多（${weather.low.toFixed(0)}%）`), this._uiText('May partly block low-horizon color', '可能部分遮挡低空色彩'));
-    else add('warning', this._uiText(`Thick low clouds (${weather.low.toFixed(0)}%)`, `低云偏厚（${weather.low.toFixed(0)}%）`), this._uiText('High blocking risk', '遮挡风险较大'));
+    if (weather.low < 15) add('positive', this.i18n.t('prediction.analysisText.factors.low.few.title', { value: weather.low.toFixed(0) }), this.i18n.t('prediction.analysisText.factors.low.few.description', { value: weather.low.toFixed(0) }));
+    else if (weather.low < 35) add('neutral', this.i18n.t('prediction.analysisText.factors.low.some.title', { value: weather.low.toFixed(0) }), this.i18n.t('prediction.analysisText.factors.low.some.description', { value: weather.low.toFixed(0) }));
+    else add('warning', this.i18n.t('prediction.analysisText.factors.low.thick.title', { value: weather.low.toFixed(0) }), this.i18n.t('prediction.analysisText.factors.low.thick.description', { value: weather.low.toFixed(0) }));
 
-    if (weather.visibility >= 15) add('positive', this._uiText(`Good visibility (${weather.visibility.toFixed(0)}km)`, `能见度良好（${weather.visibility.toFixed(0)}km）`), this._uiText('Clear air and good viewing distance', '空气通透，观赏视野好'));
-    else if (weather.visibility >= 8) add('neutral', this._uiText(`Moderate visibility (${weather.visibility.toFixed(0)}km)`, `能见度一般（${weather.visibility.toFixed(0)}km）`), this._uiText('Color saturation may be slightly reduced', '色彩饱和度可能略受影响'));
-    else add('warning', this._uiText(`Low visibility (${weather.visibility.toFixed(0)}km)`, `能见度偏低（${weather.visibility.toFixed(0)}km）`), this._uiText('Haze or moisture may affect viewing', '雾霾或水汽可能影响观赏'));
+    if (weather.visibility >= 15) add('positive', this.i18n.t('prediction.analysisText.factors.visibility.good.title', { value: weather.visibility.toFixed(0) }), this.i18n.t('prediction.analysisText.factors.visibility.good.description', { value: weather.visibility.toFixed(0) }));
+    else if (weather.visibility >= 8) add('neutral', this.i18n.t('prediction.analysisText.factors.visibility.moderate.title', { value: weather.visibility.toFixed(0) }), this.i18n.t('prediction.analysisText.factors.visibility.moderate.description', { value: weather.visibility.toFixed(0) }));
+    else add('warning', this.i18n.t('prediction.analysisText.factors.visibility.poor.title', { value: weather.visibility.toFixed(0) }), this.i18n.t('prediction.analysisText.factors.visibility.poor.description', { value: weather.visibility.toFixed(0) }));
 
-    if (weather.humidity >= 40 && weather.humidity <= 70) add('positive', this._uiText(`Moderate humidity (${weather.humidity.toFixed(0)}%)`, `湿度适中（${weather.humidity.toFixed(0)}%）`), this._uiText('Helpful for light scattering', '利于光线散射'));
-    else if (weather.humidity > 70) add('warning', this._uiText(`High humidity (${weather.humidity.toFixed(0)}%)`, `湿度偏高（${weather.humidity.toFixed(0)}%）`), this._uiText('May reduce transparency', '可能略影响通透感'));
-    else add('neutral', this._uiText(`Low humidity (${weather.humidity.toFixed(0)}%)`, `湿度偏低（${weather.humidity.toFixed(0)}%）`), this._uiText('Dry air may make colors lighter', '空气较干，色彩可能偏淡'));
+    if (weather.humidity >= 40 && weather.humidity <= 70) add('positive', this.i18n.t('prediction.analysisText.factors.humidity.optimal.title', { value: weather.humidity.toFixed(0) }), this.i18n.t('prediction.analysisText.factors.humidity.optimal.description', { value: weather.humidity.toFixed(0) }));
+    else if (weather.humidity > 70) add('warning', this.i18n.t('prediction.analysisText.factors.humidity.high.title', { value: weather.humidity.toFixed(0) }), this.i18n.t('prediction.analysisText.factors.humidity.high.description', { value: weather.humidity.toFixed(0) }));
+    else add('neutral', this.i18n.t('prediction.analysisText.factors.humidity.low.title', { value: weather.humidity.toFixed(0) }), this.i18n.t('prediction.analysisText.factors.humidity.low.description', { value: weather.humidity.toFixed(0) }));
 
     if (weather.aod != null) {
-      if (weather.aod >= 0.08 && weather.aod <= 0.35) add('positive', this._uiText(`Moderate aerosol (AOD ${weather.aod.toFixed(2)})`, `气溶胶适中（AOD ${weather.aod.toFixed(2)}）`), this._uiText('Can enhance orange-red scattering', '有利于增强红橙色散射'));
-      else if (weather.aod > 0.35) add('warning', this._uiText(`High aerosol (AOD ${weather.aod.toFixed(2)})`, `气溶胶偏高（AOD ${weather.aod.toFixed(2)}）`), this._uiText('May look hazy or dull', '可能灰霾发暗'));
-      else add('neutral', this._uiText(`Very clear air (AOD ${weather.aod.toFixed(2)})`, `空气过于通透（AOD ${weather.aod.toFixed(2)}）`), this._uiText('Colors may be lighter', '颜色可能偏淡'));
+      if (weather.aod >= 0.08 && weather.aod <= 0.35) add('positive', this.i18n.t('prediction.analysisText.factors.aod.moderate.title', { value: weather.aod.toFixed(2) }), this.i18n.t('prediction.analysisText.factors.aod.moderate.description', { value: weather.aod.toFixed(2) }));
+      else if (weather.aod > 0.35) add('warning', this.i18n.t('prediction.analysisText.factors.aod.high.title', { value: weather.aod.toFixed(2) }), this.i18n.t('prediction.analysisText.factors.aod.high.description', { value: weather.aod.toFixed(2) }));
+      else add('neutral', this.i18n.t('prediction.analysisText.factors.aod.low.title', { value: weather.aod.toFixed(2) }), this.i18n.t('prediction.analysisText.factors.aod.low.description', { value: weather.aod.toFixed(2) }));
     }
 
     if (weather.layerCount <= 1 && weather.high >= 35) {
-      add('warning', this._uiText('Single cloud layer', '云层单一'), this._uiText('High clouds are good enough to still produce vivid colors', '但高云质量好，仍可形成色彩鲜明的火烧云'));
+      add('warning', this.i18n.t('prediction.analysisText.factors.layers.single.title'), this.i18n.t('prediction.analysisText.factors.layers.single.description'));
     }
 
     return groups.filter(group => group.items.length > 0);
@@ -1404,17 +1404,17 @@ class PredictionController {
 
   buildAnalysisConclusion(prediction, score, clouds) {
     const layerCount = prediction.breakdown?.layerDiversity?.layerCount ?? [clouds.high, clouds.mid, clouds.low].filter(v => Number(v) >= 10).length;
-    if (score >= 80) return layerCount >= 2 ? this._uiText('Excellent conditions. Strongly recommended.', '条件优秀，强烈推荐出行观赏') : this._uiText('Excellent color potential, but single-layer clouds may reduce depth.', '条件优秀，色彩可期；云层单一，层次感略有不足');
-    if (score >= 60) return layerCount >= 2 ? this._uiText('Good conditions with a solid chance of dramatic fire clouds.', '条件不错，有较大概率出现壮观的火烧云') : this._uiText('Good chance of fire clouds, but layering is limited.', '条件不错，火烧云概率较高；云层层次稍欠');
-    if (score >= 40) return this._uiText('Moderate conditions. Watch how the clouds evolve.', '条件中等，需看实际云层演变');
-    return this._uiText('Key conditions are missing; fire-cloud probability is low.', '关键条件不足，火烧云概率偏低');
+    if (score >= 80) return layerCount >= 2 ? this.i18n.t('prediction.analysisText.conclusion.excellent.recommended') : this.i18n.t('prediction.analysisText.conclusion.excellent.limitedLayers');
+    if (score >= 60) return layerCount >= 2 ? this.i18n.t('prediction.analysisText.conclusion.good.recommended') : this.i18n.t('prediction.analysisText.conclusion.good.limitedLayers');
+    if (score >= 40) return this.i18n.t('prediction.analysisText.conclusion.fair');
+    return this.i18n.t('prediction.analysisText.conclusion.poor');
   }
 
   renderAnalysisCard(groups, conclusion) {
     const groupHtml = groups.map(group => this.renderAnalysisGroup(group)).join('');
     return `
       <div class="analysis-card app-analysis-card">
-        <div class="analysis-card-title"><span>${this._uiText('Fire cloud formation analysis', '火烧云形成条件分析')}</span></div>
+        <div class="analysis-card-title"><span>${this.i18n.t('prediction.analysisText.cardTitle')}</span></div>
         ${groupHtml}
         <div class="conclusion-banner"><span class="conclusion-icon">${this.renderInlineSvgIcon('leaf')}</span><strong>${conclusion}</strong></div>
       </div>
@@ -1468,15 +1468,15 @@ class PredictionController {
 
     return `
       <div class="score-breakdown-popover" hidden>
-        <div class="score-breakdown-title">${this._uiText('Score details', '分数明细')}</div>
-        ${row(this.i18n.t('prediction.composite.finalScore'), fmt(prediction?.score, 0), this._uiText('Final displayed score', '最终展示分'), 'score-breakdown-row-total')}
-        <div class="score-breakdown-formula">${this._uiText('Base score = canvas ×0.8 + light path ×0.2', '基础分 = 画布 ×0.8 + 光路 ×0.2')}</div>
-        ${row(this.i18n.t('prediction.composite.title'), fmt(baseScore, 1), this._uiText('Base score after combining clouds and light path', '云层与光路融合后的基础分'))}
-        ${row(this.i18n.t('prediction.canvas.title'), fmt(canvasScore, 1), this._uiText('High/mid clouds carry color; low clouds can block it', '高云/中云提供色彩载体，低云会遮挡'))}
-        ${row(this.i18n.t('prediction.lightPath.title'), fmt(lightPathScore, 1), this._uiText('Whether sunlight can reach the clouds', '太阳光是否能照到云层'))}
-        <div class="score-breakdown-formula">${this._uiText('Final score = base score × correction factors', '最终分 = 基础分 × 修正系数')}</div>
-        ${row(this.i18n.t('prediction.rendering.title'), `×${fmt(renderingFactor, 2)}`, this._uiText('Humidity and visibility affect color rendering', '湿度、能见度影响颜色表现'))}
-        ${aerosolFactor != null ? row(this.i18n.t('prediction.rendering.aerosol'), `×${fmt(aerosolFactor, 2)}`, this._uiText('Moderate aerosol boosts orange-red scattering; too much turns gray', '适中增强红橙散射，过高会发灰')) : ''}
+        <div class="score-breakdown-title">${this.i18n.t('prediction.analysisText.scoreBreakdown.title')}</div>
+        ${row(this.i18n.t('prediction.composite.finalScore'), fmt(prediction?.score, 0), this.i18n.t('prediction.analysisText.scoreBreakdown.hints.finalDisplayedScore'), 'score-breakdown-row-total')}
+        <div class="score-breakdown-formula">${this.i18n.t('prediction.analysisText.scoreBreakdown.formula.base')}</div>
+        ${row(this.i18n.t('prediction.composite.title'), fmt(baseScore, 1), this.i18n.t('prediction.analysisText.scoreBreakdown.hints.combinedBase'))}
+        ${row(this.i18n.t('prediction.canvas.title'), fmt(canvasScore, 1), this.i18n.t('prediction.analysisText.scoreBreakdown.hints.canvas'))}
+        ${row(this.i18n.t('prediction.lightPath.title'), fmt(lightPathScore, 1), this.i18n.t('prediction.analysisText.scoreBreakdown.hints.lightPath'))}
+        <div class="score-breakdown-formula">${this.i18n.t('prediction.analysisText.scoreBreakdown.formula.final')}</div>
+        ${row(this.i18n.t('prediction.rendering.title'), `×${fmt(renderingFactor, 2)}`, this.i18n.t('prediction.analysisText.scoreBreakdown.hints.rendering'))}
+        ${aerosolFactor != null ? row(this.i18n.t('prediction.rendering.aerosol'), `×${fmt(aerosolFactor, 2)}`, this.i18n.t('prediction.analysisText.scoreBreakdown.hints.aerosol')) : ''}
       </div>
     `;
   }
@@ -1607,10 +1607,13 @@ class PredictionController {
                         index === 1 ? this.i18n.t('time.dayAfterTomorrow') :
                         this.i18n.t('time.daysLater', { days: index + 1 });
 
-      const qualityTextMap = this._isEnglishUI()
-        ? { excellent: 'Excellent', good: 'Good', fair: 'Fair', poor: 'Poor' }
-        : { excellent: '极佳', good: '良好', fair: '一般', poor: '较差' };
-      const scoreSuffix = this._uiText(' pts', '分');
+      const qualityTextMap = {
+        excellent: this.i18n.t('prediction.excellent'),
+        good: this.i18n.t('prediction.good'),
+        fair: this.i18n.t('prediction.fair'),
+        poor: this.i18n.t('prediction.poor')
+      };
+      const scoreSuffix = this.i18n.t('prediction.points');
 
       // 朝霞行
       let sunriseRow = '';
@@ -1619,7 +1622,7 @@ class PredictionController {
         const sunriseTime = pred.sunriseTime || pred.sunsetTime;
         const isPassed = sunriseTime ? now > new Date(sunriseTime.getTime() + 2 * 60 * 60 * 1000) : false;
         const score = Math.round(pred.score ?? 0);
-        const quality = qualityTextMap[pred.quality] ?? '较差';
+        const quality = qualityTextMap[pred.quality] ?? this.i18n.t('prediction.poor');
         sunriseRow = `
           <div class="fcard-row-item ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
             <span class="fcard-row-icon">🌄</span>
@@ -1635,7 +1638,7 @@ class PredictionController {
         const sunsetTime = pred.sunsetTime;
         const isPassed = sunsetTime ? now > new Date(sunsetTime.getTime() + 1.5 * 60 * 60 * 1000) : false;
         const score = Math.round(pred.score ?? 0);
-        const quality = qualityTextMap[pred.quality] ?? '较差';
+        const quality = qualityTextMap[pred.quality] ?? this.i18n.t('prediction.poor');
         sunsetRow = `
           <div class="fcard-row-item ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(dayPredictions.sunset)}">
             <span class="fcard-row-icon">🌅</span>

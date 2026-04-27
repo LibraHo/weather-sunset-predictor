@@ -171,6 +171,151 @@ apiAccess: 'API接続'
     "bestTime": "最適鑑賞時間",
     "analysis": "分析",
     "analysisTitle": "📊 分析",
+    "analysisText": {
+      "footer": "空を見上げると美しい景色を見つけやすくなります",
+      "scoreBreakdownHint": "スコア明細",
+      "cardTitle": "火焼雲形成条件を確認",
+      "scoreDescription": {
+        "excellent": "観覧条件が非常に良い",
+        "good": "観覧条件が良い",
+        "someChance": "観覧の可能性があります",
+        "weak": "観覧条件はやや弱い"
+      },
+      "groups": {
+        "favorable": "有利要素",
+        "neutral": "中立要素",
+        "warnings": "警告事項"
+      },
+      "clouds": {
+        "high": "高雲",
+        "mid": "中雲",
+        "low": "低雲"
+      },
+      "factors": {
+        "high": {
+          "abundant": {
+            "title": "高雲が非常に豊富（{{value}}%）",
+            "description": "色彩を運ぶ土台として十分で、火焼雲形成に有利です"
+          },
+          "sufficient": {
+            "title": "高雲が十分（{{value}}%）",
+            "description": "夕焼け色がよく現れます"
+          },
+          "moderate": {
+            "title": "高雲は普通（{{value}}%）",
+            "description": "火焼雲形成は可能ですが、色がやや薄いことがあります"
+          },
+          "low": {
+            "title": "高雲不足（{{value}}%）",
+            "description": "主要な色の基盤が不足しています"
+          }
+        },
+        "mid": {
+          "balanced": {
+            "title": "中雲が適正（{{value}}%）",
+            "description": "色の拡散と立体感形成に役立ちます"
+          },
+          "few": {
+            "title": "中雲が少なめ（{{value}}%）",
+            "highSufficientDescription": "高雲が十分なら、単独で色作りを行えます",
+            "limitedDescription": "奥行き感が限られる可能性があります"
+          },
+          "thick": {
+            "title": "中雲が多い（{{value}}%）",
+            "description": "空を曇らせて透明度を下げることがあります"
+          }
+        },
+        "low": {
+          "few": {
+            "title": "低雲が少ない（{{value}}%）",
+            "description": "視界を大きく遮りません"
+          },
+          "some": {
+            "title": "低雲ややあり（{{value}}%）",
+            "description": "地平線付近の色を一部隠すことがあります"
+          },
+          "thick": {
+            "title": "低雲が多い（{{value}}%）",
+            "description": "遮蔽リスクが高まります"
+          }
+        },
+        "visibility": {
+          "good": {
+            "title": "視程良好（{{value}}km）",
+            "description": "空気が澄んで、視距離が保たれます"
+          },
+          "moderate": {
+            "title": "視程普通（{{value}}km）",
+            "description": "色の鮮やかさがやや落ちることがあります"
+          },
+          "poor": {
+            "title": "視程低い（{{value}}km）",
+            "description": "霧や湿度で見えにくくなる可能性があります"
+          }
+        },
+        "humidity": {
+          "optimal": {
+            "title": "適正湿度（{{value}}%）",
+            "description": "光の散乱に有利です"
+          },
+          "high": {
+            "title": "湿度高め（{{value}}%）",
+            "description": "透明度が少し下がる可能性があります"
+          },
+          "low": {
+            "title": "湿度低め（{{value}}%）",
+            "description": "空気が乾燥し、色が薄く見えやすいです"
+          }
+        },
+        "aod": {
+          "moderate": {
+            "title": "適度なエアロゾル（AOD {{value}}）",
+            "description": "赤～橙色の散乱を高めます"
+          },
+          "high": {
+            "title": "エアロゾル高め（AOD {{value}}）",
+            "description": "霞んで見えやすくなります"
+          },
+          "low": {
+            "title": "空気がやや澄みすぎ（AOD {{value}}）",
+            "description": "色が淡く見えやすいです"
+          }
+        },
+        "layers": {
+          "single": {
+            "title": "雲層が単層",
+            "description": "高雲が良ければ、鮮やかな色を作れます"
+          }
+        }
+      },
+      "conclusion": {
+        "excellent": {
+          "recommended": "条件がとても良く、観賞を強くおすすめします。",
+          "limitedLayers": "条件はとても良いですが、雲が単層だと奥行きがやや不足します。"
+        },
+        "good": {
+          "recommended": "条件は良く、火焼雲を楽しめる確率が高いです。",
+          "limitedLayers": "火焼雲の確率は高いですが、レイヤー構成はやや限られます。"
+        },
+        "fair": "条件は中程度です。実際の雲の変化を見て判断してください。",
+        "poor": "主要条件が不足しており、火焼雲を確認しにくいです。"
+      },
+      "scoreBreakdown": {
+        "title": "スコア明細",
+        "hints": {
+          "finalDisplayedScore": "最終表示スコア",
+          "combinedBase": "雲と光路を統合した基礎スコア",
+          "canvas": "高雲と中雲が色を運び、低雲は遮蔽することがあります",
+          "lightPath": "日光が雲に到達するか",
+          "rendering": "湿度と視程が色再現に影響します",
+          "aerosol": "適度なエアロゾルは赤橙散乱を高めます。多すぎると霞みます"
+        },
+        "formula": {
+          "base": "基礎スコア = キャンバス×0.8 + 光路×0.2",
+          "final": "最終スコア = 基礎スコア × 補正係数"
+        }
+      }
+    },
     "details": "詳細",
     "detailedWeatherData": "詳細な天気データ",
     "noPredictionData": "⚠️ {{date}}の予測データがありません",
@@ -240,6 +385,7 @@ apiAccess: 'API接続'
     "rendering": {
       "title": "レンダリングスコア",
       "score": "レンダリングスコア",
+      "aerosol": "エアロゾル散乱",
       "humidity": "湿度の影響",
       "renderingFactor": "🎨 レンダリング係数：{{factor}} | {{visibility}} | {{aqi}} | {{color}}",
       "specialMode": "| {{mode}}",
@@ -438,6 +584,10 @@ apiAccess: 'API接続'
     "geocodingApiKeyHint": "Get free Amap key at: lbs.amap.com",
     "geocodingApiKeyRequired": "Please enter an API Key in Settings first",
     "geocodingChinaTag": "🇨🇳 Available in China",
+    "mapTileProvider": "地図ベースマップ",
+    "windyApiKey": "Windy API キー",
+    "windyApiKeyPlaceholder": "Windy API キーを入力",
+    "windyApiKeyHint": "Windyデータソースを有効にするために使用します。空欄のままにするとシステム既定値を使用します",
     "windyApiKeyMode": "Windy API Source",
     "windyApiKeyModeSystem": "Use System API (Recommended)",
     "windyApiKeyModeCustom": "Use My API Key",
