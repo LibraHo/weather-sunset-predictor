@@ -16,6 +16,16 @@ class SettingsPanel {
     this.themeService = themeService;
   }
 
+
+  _isEnglishUI() {
+    const lang = this.i18n?.getCurrentLanguage ? this.i18n.getCurrentLanguage() : this.i18n?.currentLanguage;
+    return String(lang || '').toLowerCase().startsWith('en');
+  }
+
+  _uiText(en, zh) {
+    return this._isEnglishUI() ? en : zh;
+  }
+
   /**
    * 初始化设置面板
    */
@@ -127,15 +137,15 @@ class SettingsPanel {
 
           <!-- 🗺️ 地图底图 -->
           <div class="settings-section">
-            <h3 class="settings-section-title">🗺️ ${this.i18n.t('settings.mapTileProvider') || '地图底图'}</h3>
+            <h3 class="settings-section-title">🗺️ ${this.i18n.t('settings.mapTileProvider') || this._uiText('Map Basemap', '地图底图')}</h3>
             <div class="settings-section-content">
               <div class="setting-item">
-                <label class="setting-label" for="firecloud-raster-color-mode-select">🔥 火烧云涂层颜色模式</label>
+                <label class="setting-label" for="firecloud-raster-color-mode-select">🔥 ${this._uiText('Fire cloud overlay color mode', '火烧云涂层颜色模式')}</label>
                 <select id="firecloud-raster-color-mode-select" class="setting-select">
-                  <option value="compact">精简：40 分以上开始染色</option>
-                  <option value="full">完整：0 分起完整渲染</option>
+                  <option value="compact">${this._uiText('Compact: color starts above 40 pts', '精简：40 分以上开始染色')}</option>
+                  <option value="full">${this._uiText('Full: render from 0 pts', '完整：0 分起完整渲染')}</option>
                 </select>
-                <small class="setting-hint">切换后会刷新火烧云地图涂层和图例</small>
+                <small class="setting-hint">${this._uiText('Changing this refreshes the fire-cloud map overlay and legend', '切换后会刷新火烧云地图涂层和图例')}</small>
               </div>
             </div>
           </div>
@@ -147,13 +157,13 @@ class SettingsPanel {
             <h3 class="settings-section-title">☁️ ${this.i18n.t('settings.weatherProvider')}</h3>
             <div class="settings-section-content">
               <div class="setting-item">
-                <label class="setting-label" for="weather-model-select">天气模型</label>
+                <label class="setting-label" for="weather-model-select">${this._uiText('Weather model', '天气模型')}</label>
                 <select id="weather-model-select" class="setting-select">
-                  <option value="ecmwf_ifs025">ECMWF IFS 025（推荐）</option>
+                  <option value="ecmwf_ifs025">ECMWF IFS 025 ${this._uiText('(Recommended)', '（推荐）')}</option>
                   <option value="gfs_seamless">GFS Seamless</option>
-                  <option value="best_match">Best Match（自动）</option>
+                  <option value="best_match">Best Match ${this._uiText('(Auto)', '（自动）')}</option>
                 </select>
-                <small class="setting-hint">切换后会自动刷新天气数据</small>
+                <small class="setting-hint">${this._uiText('Changing this refreshes weather data automatically', '切换后会自动刷新天气数据')}</small>
               </div>
               <div class="setting-item readonly-info">
                 <div class="info-row">
@@ -184,9 +194,9 @@ class SettingsPanel {
                 <div class="setting-item">
                   <label class="setting-label" for="windy-api-key-input">${this.i18n.t('settings.windyApiKey') || 'Windy API Key'}</label>
                   <input type="password" id="windy-api-key-input" class="setting-input"
-                    placeholder="${this.i18n.t('settings.windyApiKeyPlaceholder') || '输入你的 Windy API Key'}"
+                    placeholder="${this.i18n.t('settings.windyApiKeyPlaceholder') || this._uiText('Enter your Windy API Key', '输入你的 Windy API Key')}"
                     value="${localStorage.getItem('user_windy_api_key') || ''}" />
-                  <small class="setting-hint">${this.i18n.t('settings.windyApiKeyHint') || '用于启用 Windy 数据源，留空使用系统默认'}</small>
+                  <small class="setting-hint">${this.i18n.t('settings.windyApiKeyHint') || this._uiText('Used to enable Windy data source. Leave empty to use the system default.', '用于启用 Windy 数据源，留空使用系统默认')}</small>
                 </div>
               </div>
             </div>
@@ -434,7 +444,7 @@ class SettingsPanel {
       windUnitSelect.value = windUnit;
     }
 
-    // 加载天气模型设置
+    // 加载${this._uiText('Weather model', '天气模型')}设置
     const weatherModelSelect = document.getElementById('weather-model-select');
     if (weatherModelSelect) {
       weatherModelSelect.value = localStorage.getItem('weather_model') || 'ecmwf_ifs025';

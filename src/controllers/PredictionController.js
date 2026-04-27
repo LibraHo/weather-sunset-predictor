@@ -1607,7 +1607,10 @@ class PredictionController {
                         index === 1 ? this.i18n.t('time.dayAfterTomorrow') :
                         this.i18n.t('time.daysLater', { days: index + 1 });
 
-      const qualityTextMap = { excellent: '极佳', good: '良好', fair: '一般', poor: '较差' };
+      const qualityTextMap = this._isEnglishUI()
+        ? { excellent: 'Excellent', good: 'Good', fair: 'Fair', poor: 'Poor' }
+        : { excellent: '极佳', good: '良好', fair: '一般', poor: '较差' };
+      const scoreSuffix = this._uiText(' pts', '分');
 
       // 朝霞行
       let sunriseRow = '';
@@ -1620,8 +1623,8 @@ class PredictionController {
         sunriseRow = `
           <div class="fcard-row-item ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
             <span class="fcard-row-icon">🌄</span>
-            <span class="fcard-row-label">朝霞</span>
-            <span class="fcard-row-score quality-${pred.quality}">${score}分</span>
+            <span class="fcard-row-label">${this.i18n.t('prediction.sunrise')}</span>
+            <span class="fcard-row-score quality-${pred.quality}" title="${quality}">${score}${scoreSuffix}</span>
           </div>`;
       }
 
@@ -1636,8 +1639,8 @@ class PredictionController {
         sunsetRow = `
           <div class="fcard-row-item ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(dayPredictions.sunset)}">
             <span class="fcard-row-icon">🌅</span>
-            <span class="fcard-row-label">晚霞</span>
-            <span class="fcard-row-score quality-${pred.quality}">${score}分</span>
+            <span class="fcard-row-label">${this.i18n.t('prediction.sunset')}</span>
+            <span class="fcard-row-score quality-${pred.quality}" title="${quality}">${score}${scoreSuffix}</span>
           </div>`;
       }
 
