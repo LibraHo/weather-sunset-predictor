@@ -502,7 +502,45 @@ const translations = {
     "saveImage": "Save Image",
     "copyLink": "Copy Link",
     "nativeShare": "More Share",
-    "copied": "Link Copied"
+    "copied": "Link Copied",
+    "cardPredictionFileSuffix": " forecast"
+  },
+  "shareCard": {
+    "brandName": "Xiake",
+    "brandSubtitle": "Sunset Voyager",
+    "shareTitle": "Fire Cloud Sharing Card",
+    "labels": {
+      "probability": "Fire Cloud Probability",
+      "excellent": "Excellent",
+      "good": "Good",
+      "fair": "Fair",
+      "poor": "Poor",
+    },
+    "gauge": {
+      "hintExcellent": "Worth waiting for",
+      "hintGood": "Worth checking while nearby",
+      "hintFair": "No need to go out just for it"
+    },
+    "timeLabels": {
+      "sunrise": "Sunrise",
+      "sunset": "Sunset"
+    },
+    "bestWindow": "Best viewing window {{start}} – {{end}}",
+    "cloud": {
+      "high": "High Cloud",
+      "mid": "Mid Cloud",
+      "low": "Low Cloud"
+    },
+    "verdict": {
+      "noCarrier": "😶 Color carrier is lacking and fire-cloud probability is very low",
+      "excellent": "✨ Excellent conditions, colorful sky is promising",
+      "excellentMultiLayer": "✨ Excellent conditions, strongly recommended to watch",
+      "good": "✨ Good conditions, fire-cloud probability is high",
+      "fair": "💡 Moderate conditions, please check cloud changes in real time",
+      "poor": "😶 Low chance of fire clouds"
+    },
+    "watermark": "Xiake · Capture every colorful moment",
+    "unknownLocation": "Unknown location"
   },
 
   "surrounding": {
@@ -587,7 +625,9 @@ const translations = {
     "timeout": "Request timeout, please retry",
     "unknownError": "Unknown error occurred, please retry",
     "locationError": "Location resolution failed, please try a different name",
-    "mapInitFailed": "Map initialization failed"
+    "mapInitFailed": "Map initialization failed",
+    "mapLoadFailed": "Map load failed: {{error}}",
+    "mapInitNotReady": "Map feature is only available in real API mode"
   },
   "settings": {
     "title": "Settings",
@@ -744,6 +784,24 @@ const translations = {
     "loading": "Loading map...",
     "error": "Failed to load map",
     "mockNotSupported": "Map functionality is only available in real API mode"
+  },
+  "mapPage": {
+    "errors": {
+      "sunsetTimeMissing": "Unable to get sunset time",
+      "sunriseTimeMissing": "Unable to get sunrise time"
+    },
+    "noDataState": "No surrounding fire-cloud viewing conditions available",
+    "scoreLabel": "Score",
+    "distanceLabel": "Distance",
+    "distanceUnit": "km",
+    "directionLabelSuffix": " direction",
+    "lastUpdated": "Updated at",
+    "emptyState": "No visible fire-cloud points today",
+    "periodLabels": {
+      "sunriseSuffix": " sunrise",
+      "sunsetSuffix": " sunset",
+      "testLayer": "Test layer (simulated data)"
+    }
   },
   "loading": {
     "data": "Loading data...",

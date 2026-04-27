@@ -521,7 +521,9 @@ apiAccess: 'API接続'
     "timeout": "リクエストがタイムアウトしました。再試行してください",
     "unknownError": "不明なエラーが発生しました。再試行してください",
     "locationError": "位置情報の解決に失敗しました。別の名前でお試しください",
-    "mapInitFailed": "地図の初期化に失敗しました"
+    "mapInitFailed": "地図の初期化に失敗しました",
+    "mapLoadFailed": "地図の読み込みに失敗しました: {{error}}",
+    "mapInitNotReady": "地図機能は実際のAPIモードでのみ使用可能です"
   },
   "settings": {
     "title": "設定",
@@ -648,7 +650,45 @@ apiAccess: 'API接続'
     "saveImage": "Save Image",
     "copyLink": "Copy Link",
     "nativeShare": "More Share",
-    "copied": "Link Copied"
+    "copied": "Link Copied",
+    "cardPredictionFileSuffix": "予測"
+  },
+  "shareCard": {
+    "brandName": "霞客",
+    "brandSubtitle": "Sunset Voyager",
+    "shareTitle": "ファイアクラウド予測共有",
+    "labels": {
+      "probability": "ファイアクラウド確率",
+      "excellent": "最高",
+      "good": "良い",
+      "fair": "普通",
+      "poor": "やや低い"
+    },
+    "gauge": {
+      "hintExcellent": "少し待つ価値あり",
+      "hintGood": "ついでに見る価値あり",
+      "hintFair": "無理して行く必要はない"
+    },
+    "timeLabels": {
+      "sunrise": "日の出",
+      "sunset": "日の入り"
+    },
+    "bestWindow": "ベスト観賞時間 {{start}} – {{end}}",
+    "cloud": {
+      "high": "高層雲",
+      "mid": "中層雲",
+      "low": "低層雲"
+    },
+    "verdict": {
+      "noCarrier": "😶 色のキャリアが不足しており、ファイアクラウドの確率は非常に低いです",
+      "excellent": "✨ 条件が良く、色彩の期待値が高い",
+      "excellentMultiLayer": "✨ 非常に良い条件で、観賞に行くことを強くおすすめします",
+      "good": "✨ 条件は良好で、ファイアクラウド確率が高い",
+      "fair": "💡 条件は普通で、雲の変化を確認してください",
+      "poor": "😶 ファイアクラウド確率は低い"
+    },
+    "watermark": "霞客 · 各色の輝きを記録",
+    "unknownLocation": "場所不明"
   },
   "charts": {
     "temperature": "気温",
@@ -682,6 +722,24 @@ apiAccess: 'API接続'
     "loading": "地図読み込み中...",
     "error": "地図の読み込みに失敗しました",
     "mockNotSupported": "地図機能は実際のAPIモードでのみ使用可能です"
+  },
+  "mapPage": {
+    "errors": {
+      "sunsetTimeMissing": "日没時刻を取得できません",
+      "sunriseTimeMissing": "日の出時刻を取得できません"
+    },
+    "noDataState": "周辺エリアに有効な観測データがありません",
+    "scoreLabel": "スコア",
+    "distanceLabel": "距離",
+    "distanceUnit": "km",
+    "directionLabelSuffix": "方向",
+    "lastUpdated": "更新時刻",
+    "emptyState": "今日、表示可能な火焼雲ポイントはありません",
+    "periodLabels": {
+      "sunriseSuffix": "朝焼け",
+      "sunsetSuffix": "夕焼け",
+      "testLayer": "テストレイヤー（シミュレーション）"
+    }
   },
   "surrounding": {
     "title": "周辺焼き雲分析",

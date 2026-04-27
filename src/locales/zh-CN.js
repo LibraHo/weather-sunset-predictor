@@ -565,7 +565,45 @@ export default {
     saveImage: '保存图片',
     copyLink: '复制链接',
     nativeShare: '更多分享',
-    copied: '链接已复制'
+    copied: '链接已复制',
+    cardPredictionFileSuffix: '预测'
+  },
+  shareCard: {
+    brandName: '霞客',
+    brandSubtitle: 'Sunset Voyager',
+    shareTitle: '火烧云预测分享',
+    labels: {
+      probability: '火烧云概率',
+      excellent: '极佳',
+      good: '良好',
+      fair: '一般',
+      poor: '较差'
+    },
+    gauge: {
+      hintExcellent: '值得专门等一等',
+      hintGood: '可以顺路观察',
+      hintFair: '不必专门出门'
+    },
+    timeLabels: {
+      sunrise: '日出',
+      sunset: '日落'
+    },
+    bestWindow: '最佳观赏 {{start}} – {{end}}',
+    cloud: {
+      high: '高云',
+      mid: '中云',
+      low: '低云'
+    },
+    verdict: {
+      noCarrier: '😶 缺少色彩载体，火烧云概率极低',
+      excellent: '✨ 条件优秀，色彩可期',
+      excellentMultiLayer: '✨ 极佳条件，强烈推荐出行观赏！',
+      good: '✨ 条件不错，火烧云概率较高',
+      fair: '💡 条件中等，需看实际云层演变',
+      poor: '😶 火烧云概率较低'
+    },
+    watermark: '霞客 · 记录每一次绚丽',
+    unknownLocation: '未知地点'
   },
 
   // 任务19：周边火烧云
@@ -665,7 +703,9 @@ export default {
     timeout: '请求超时，请重试',
     unknownError: '发生未知错误，请重试',
     locationError: '位置解析失败，请尝试其他位置名称',
-    mapInitFailed: '地图初始化失败'
+    mapInitFailed: '地图初始化失败',
+    mapLoadFailed: '地图加载失败: {{error}}',
+    mapInitNotReady: '地图功能仅在真实API模式下可用'
   },
 
   // 设置
@@ -847,6 +887,25 @@ export default {
     loading: '地图加载中...',
     error: '地图加载失败',
     mockNotSupported: '地图功能仅在真实API模式下可用'
+  },
+
+  mapPage: {
+    errors: {
+      sunsetTimeMissing: '无法获取日落时间数据',
+      sunriseTimeMissing: '无法获取日出时间数据'
+    },
+    noDataState: '当前周边区域暂无火烧云观赏推荐',
+    scoreLabel: '评分',
+    distanceLabel: '距离',
+    distanceUnit: '公里',
+    directionLabelSuffix: '方向',
+    lastUpdated: '更新于',
+    emptyState: '今日暂无可见火烧云点位',
+    periodLabels: {
+      sunriseSuffix: '的朝霞',
+      sunsetSuffix: '的晚霞',
+      testLayer: '测试图层（模拟数据）'
+    }
   },
 
   // 加载状态

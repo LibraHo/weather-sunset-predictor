@@ -390,7 +390,9 @@ apiAccess: 'Acceso API'
     "timeout": "Tiempo de espera agotado, reintente",
     "unknownError": "Ocurrió un error desconocido, reintente",
     "locationError": "Falló la resolución de ubicación, pruebe con un nombre diferente",
-    "mapInitFailed": "Fallo en la inicialización del mapa"
+    "mapInitFailed": "Fallo en la inicialización del mapa",
+    "mapLoadFailed": "Error al cargar el mapa: {{error}}",
+    "mapInitNotReady": "La función de mapa solo está disponible en el modo API real"
   },
   "settings": {
     "title": "Configuración",
@@ -513,7 +515,45 @@ apiAccess: 'Acceso API'
     "saveImage": "Save Image",
     "copyLink": "Copy Link",
     "nativeShare": "More Share",
-    "copied": "Link Copied"
+    "copied": "Link Copied",
+    "cardPredictionFileSuffix": "pronóstico"
+  },
+  "shareCard": {
+    "brandName": "霞客",
+    "brandSubtitle": "Sunset Voyager",
+    "shareTitle": "Compartir pronóstico de nube de fuego",
+    "labels": {
+      "probability": "Probabilidad de nube de fuego",
+      "excellent": "Excelente",
+      "good": "Bueno",
+      "fair": "Regular",
+      "poor": "Bajo"
+    },
+    "gauge": {
+      "hintExcellent": "Vale la pena esperar",
+      "hintGood": "Puedes aprovechar el camino",
+      "hintFair": "No es necesario salir especialmente"
+    },
+    "timeLabels": {
+      "sunrise": "Amanecer",
+      "sunset": "Atardecer"
+    },
+    "bestWindow": "Ventana de observación ideal {{start}} – {{end}}",
+    "cloud": {
+      "high": "Nube alta",
+      "mid": "Nube media",
+      "low": "Nube baja"
+    },
+    "verdict": {
+      "noCarrier": "😶 Falta portador de color, probabilidad de nube de fuego muy baja",
+      "excellent": "✨ Condiciones excelentes, se espera buena coloración",
+      "excellentMultiLayer": "✨ Condiciones excelentes, se recomienda fuertemente observar",
+      "good": "✨ Condiciones buenas, alta probabilidad de nube de fuego",
+      "fair": "💡 Condiciones medias, observa la evolución real de las nubes",
+      "poor": "😶 Baja probabilidad de nube de fuego"
+    },
+    "watermark": "霞客 · Registra cada instante vibrante",
+    "unknownLocation": "Ubicación desconocida"
   },
   "charts": {
     "temperature": "Temperatura",
@@ -547,6 +587,24 @@ apiAccess: 'Acceso API'
     "loading": "Cargando mapa...",
     "error": "Error al cargar el mapa",
     "mockNotSupported": "La funcionalidad del mapa solo está disponible en modo API real"
+  },
+  "mapPage": {
+    "errors": {
+      "sunsetTimeMissing": "No se puede obtener la hora del atardecer",
+      "sunriseTimeMissing": "No se puede obtener la hora del amanecer"
+    },
+    "noDataState": "No hay puntos visibles de nubes de fuego en el entorno",
+    "scoreLabel": "Puntuación",
+    "distanceLabel": "Distancia",
+    "distanceUnit": "km",
+    "directionLabelSuffix": " dirección",
+    "lastUpdated": "Actualizado a las",
+    "emptyState": "Hoy no hay puntos visibles de nubes de fuego",
+    "periodLabels": {
+      "sunriseSuffix": " del amanecer",
+      "sunsetSuffix": " del atardecer",
+      "testLayer": "Capa de prueba (datos simulados)"
+    }
   },
   "loading": {
     "data": "Cargando datos...",

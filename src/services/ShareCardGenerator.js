@@ -10,6 +10,7 @@ class ShareCardGenerator {
     this.W = 750;
     this.H = 1080;
     this.font = '"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif';
+    this.i18n = null;
 
     // 分享卡输出主题（允许独立配色），但仅用于卡片输出画布本身，不干预站内主题。
     // 与主站亮/暗视觉对齐：亮卡保持暖白字重高对比，暗卡保持高对比暖色强调。
@@ -42,13 +43,26 @@ class ShareCardGenerator {
     this.themes = this.shareThemes;
   }
 
+  setI18n(i18n) {
+    this.i18n = i18n || null;
+  }
+
+  t(key, fallback = '') {
+    if (this.i18n && typeof this.i18n.t === 'function') {
+      const translated = this.i18n.t(key);
+      if (translated !== key) return translated;
+    }
+    return fallback;
+  }
+
   /**
    * @param {Object} prediction - 预测对象
    * @param {string} locationName - 地点
    * @param {string} period - 'sunrise' | 'sunset'
    * @returns {Promise<Blob>} PNG
    */
-  async generateShareCard(prediction, locationName, period) {
+  async generateShareCard(prediction, locationName, period, i18n) {
+    this.setI18n(i18n || this.i18n);
     const canvas = document.createElement('canvas');
     canvas.width = this.W;
     canvas.height = this.H;
@@ -138,16 +152,16 @@ class ShareCardGenerator {
     ctx.font = `bold 30px ${this.font}`;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillText('霞客', x0 + 76, y0 + 26);
+    ctx.fillText(this.t('shareCard.brandName', '霞客'), x0 + 76, y0 + 26);
 
     ctx.fillStyle = 'rgba(255,255,255,0.58)';
     ctx.font = `18px ${this.font}`;
-    ctx.fillText('Sunset Voyager', x0 + 76, y0 + 54);
+    ctx.fillText(this.t('shareCard.brandSubtitle', 'Sunset Voyager'), x0 + 76, y0 + 54);
 
     ctx.textAlign = 'right';
     ctx.fillStyle = 'rgba(255,255,255,0.62)';
     ctx.font = `18px ${this.font}`;
-    ctx.fillText('火烧云预测分享', this.W - 70, y0 + 42);
+    ctx.fillText(this.t('shareCard.shareTitle', '火烧云预测分享'), this.W - 70, y0 + 42);
 
     return y0 + 104;
   }
@@ -206,7 +220,12 @@ class ShareCardGenerator {
     if (scoreNum >= 70) color = theme.scoreGradient[0];
     else if (scoreNum >= 40) color = theme.scoreGradient[1];
 
-    const qualityLabels = { excellent: '极佳', good: '良好', fair: '一般', poor: '较差' };
+    const qualityLabels = {
+      excellent: this.t('shareCard.labels.excellent', '极佳'),
+      good: this.t('shareCard.labels.good', '良好'),
+      fair: this.t('shareCard.labels.fair', '一般'),
+      poor: this.t('shareCard.labels.poor', '较差')
+    };
     const label = qualityLabels[quality] || (scoreNum >= 70 ? '极佳' : scoreNum >= 40 ? '良好' : '一般');
 
     this._glassCard(ctx, cardX, cardY, cardW, cardH, theme, 30);
@@ -214,7 +233,7 @@ class ShareCardGenerator {
     ctx.fillStyle = 'rgba(255,255,255,0.62)';
     ctx.font = `22px ${this.font}`;
     ctx.textAlign = 'left';
-    ctx.fillText('火烧云概率', cardX + 42, cardY + 55);
+    ctx.fillText(this.t('shareCard.labels.probability', '火烧云概率'), cardX + 42, cardY + 55);
 
     ctx.fillStyle = '#FFFFFF';
     ctx.font = `bold 86px ${this.font}`;
@@ -222,7 +241,7 @@ class ShareCardGenerator {
 
     ctx.font = `bold 30px ${this.font}`;
     ctx.fillStyle = 'rgba(255,255,255,0.88)';
-    ctx.fillText('分', cardX + 150, cardY + 130);
+    ctx.fillText(this.t('prediction.points', '分'), cardX + 150, cardY + 130);
 
     ctx.fillStyle = color;
     ctx.font = `bold 34px ${this.font}`;
@@ -231,7 +250,12 @@ class ShareCardGenerator {
 
     ctx.fillStyle = 'rgba(255,255,255,0.54)';
     ctx.font = `20px ${this.font}`;
-    ctx.fillText(scoreNum >= 70 ? '值得专门等一等' : scoreNum >= 40 ? '可以顺路观察' : '不必专门出门', cardX + cardW - 42, cardY + 118);
+    const hint = scoreNum >= 70
+      ? this.t('shareCard.gauge.hintExcellent', '值得专门等一等')
+      : scoreNum >= 40
+        ? this.t('shareCard.gauge.hintGood', '可以顺路观察')
+        : this.t('shareCard.gauge.hintFair', '不必专门出门');
+    ctx.fillText(hint, cardX + cardW - 42, cardY + 118);
 
     const barX = cardX + 42;
     const barY = cardY + 174;
@@ -265,8 +289,10 @@ class ShareCardGenerator {
   /* ── 地点 + 日期 + 时段 ── */
   _info(ctx, locationName, prediction, period, startY) {
     const cx = this.W / 2;
-    const typeLabel = period === 'sunrise' ? '朝霞' : '晚霞';
-    const safeLocation = (locationName || '未知地点').trim();
+    const typeLabel = period === 'sunrise'
+      ? this.t('prediction.sunrise', '朝霞')
+      : this.t('prediction.sunset', '晚霞');
+    const safeLocation = (locationName || this.t('shareCard.unknownLocation', '未知地点')).trim();
     const locationText = safeLocation.length > 18 ? `${safeLocation.slice(0, 18)}…` : safeLocation;
 
     // 地点
@@ -299,7 +325,9 @@ class ShareCardGenerator {
       ? (prediction.sunriseTime || prediction.sunsetTime)
       : prediction.sunsetTime;
     const sunTimeStr = sunTime ? this._fmtTime(sunTime) : '--:--';
-    const sunLabel = period === 'sunrise' ? '日出' : '日落';
+    const sunLabel = period === 'sunrise'
+      ? this.t('shareCard.timeLabels.sunrise', '日出')
+      : this.t('shareCard.timeLabels.sunset', '日落');
 
     ctx.fillStyle = '#FFFFFF';
     ctx.font = `bold 36px ${this.font}`;
@@ -311,7 +339,13 @@ class ShareCardGenerator {
     if (window) {
       ctx.fillStyle = 'rgba(255,255,255,0.7)';
       ctx.font = `22px ${this.font}`;
-      ctx.fillText(`最佳观赏  ${this._fmtTime(window.start)} – ${this._fmtTime(window.end)}`, cx, cardY + 78);
+      ctx.fillText(
+        this.t('shareCard.bestWindow', '最佳观赏 {{start}} – {{end}}')
+          .replace('{{start}}', this._fmtTime(window.start))
+          .replace('{{end}}', this._fmtTime(window.end)),
+        cx,
+        cardY + 78
+      );
     }
 
     return cardY + cardH + 20;
@@ -334,9 +368,9 @@ class ShareCardGenerator {
 
     // 三栏
     const cols = [
-      { label: '高云', value: high, color: '#FDE68A' },
-      { label: '中云', value: mid, color: '#FDBA74' },
-      { label: '低云', value: low, color: low >= 50 ? '#FB7185' : '#93C5FD' },
+      { label: this.t('shareCard.cloud.high', '高云'), value: high, color: '#FDE68A' },
+      { label: this.t('shareCard.cloud.mid', '中云'), value: mid, color: '#FDBA74' },
+      { label: this.t('shareCard.cloud.low', '低云'), value: low, color: low >= 50 ? '#FB7185' : '#93C5FD' },
     ];
     const colW = cardW / 3;
 
@@ -383,17 +417,17 @@ class ShareCardGenerator {
 
     let text;
     if (!hasCarrier && score < 40) {
-      text = '😶 缺少色彩载体，火烧云概率极低';
+      text = this.t('shareCard.verdict.noCarrier', '😶 缺少色彩载体，火烧云概率极低');
     } else if (score >= 80) {
       text = layerCount >= 2
-        ? '✨ 极佳条件，强烈推荐出行观赏！'
-        : '✨ 条件优秀，色彩可期';
+        ? this.t('shareCard.verdict.excellentMultiLayer', '✨ 极佳条件，强烈推荐出行观赏！')
+        : this.t('shareCard.verdict.excellent', '✨ 条件优秀，色彩可期');
     } else if (score >= 60) {
-      text = '✨ 条件不错，火烧云概率较高';
+      text = this.t('shareCard.verdict.good', '✨ 条件不错，火烧云概率较高');
     } else if (score >= 40) {
-      text = '💡 条件中等，需看实际云层演变';
+      text = this.t('shareCard.verdict.fair', '💡 条件中等，需看实际云层演变');
     } else {
-      text = '😶 火烧云概率较低';
+      text = this.t('shareCard.verdict.poor', '😶 火烧云概率较低');
     }
 
     const cardW = 620;
@@ -431,7 +465,7 @@ class ShareCardGenerator {
     ctx.fillText('sunset.bjhyc.online', cx, y);
 
     ctx.font = `16px ${this.font}`;
-    ctx.fillText('霞客 · 记录每一次绚丽', cx, y + 24);
+    ctx.fillText(this.t('shareCard.watermark', '霞客 · 记录每一次绚丽'), cx, y + 24);
   }
 
   /* ── 工具方法 ── */
@@ -467,8 +501,8 @@ class ShareCardGenerator {
 
 const shareCardGenerator = new ShareCardGenerator();
 
-export function generateShareCard(prediction, locationName, period) {
-  return shareCardGenerator.generateShareCard(prediction, locationName, period);
+export function generateShareCard(prediction, locationName, period, i18n) {
+  return shareCardGenerator.generateShareCard(prediction, locationName, period, i18n);
 }
 
 export default ShareCardGenerator;

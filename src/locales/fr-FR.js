@@ -331,7 +331,9 @@ apiAccess: 'Accès API'
     "timeout": "Délai d'attente de la requête, veuillez réessayer",
     "unknownError": "Erreur inconnue, veuillez réessayer",
     "locationError": "Échec de la résolution de l'emplacement, essayez un autre nom",
-    "mapInitFailed": "Échec de l'initialisation de la carte"
+    "mapInitFailed": "Échec de l'initialisation de la carte",
+    "mapLoadFailed": "Échec du chargement de la carte: {{error}}",
+    "mapInitNotReady": "La fonction de carte n'est disponible qu'en mode API réel"
   },
   "settings": {
     "title": "Paramètres",
@@ -488,7 +490,45 @@ apiAccess: 'Accès API'
     "saveImage": "Save Image",
     "copyLink": "Copy Link",
     "nativeShare": "More Share",
-    "copied": "Link Copied"
+    "copied": "Link Copied",
+    "cardPredictionFileSuffix": "prévision"
+  },
+  "shareCard": {
+    "brandName": "霞客",
+    "brandSubtitle": "Sunset Voyager",
+    "shareTitle": "Partager la prévision des nuages de feu",
+    "labels": {
+      "probability": "Probabilité de nuages de feu",
+      "excellent": "Excellent",
+      "good": "Bien",
+      "fair": "Moyen",
+      "poor": "Faible"
+    },
+    "gauge": {
+      "hintExcellent": "Ça vaut la peine d'attendre",
+      "hintGood": "Regarder si vous passez par là",
+      "hintFair": "Pas besoin d'y aller exprès"
+    },
+    "timeLabels": {
+      "sunrise": "Levé du soleil",
+      "sunset": "Coucher du soleil"
+    },
+    "bestWindow": "Fenêtre d'observation optimale {{start}} – {{end}}",
+    "cloud": {
+      "high": "Nuages hauts",
+      "mid": "Nuages moyens",
+      "low": "Nuages bas"
+    },
+    "verdict": {
+      "noCarrier": "😶 Porteur de couleurs insuffisant, probabilité très faible",
+      "excellent": "✨ Les conditions sont excellentes, la couleur attendue est bonne",
+      "excellentMultiLayer": "✨ Conditions excellentes, fortement recommandé d'aller voir",
+      "good": "✨ Conditions bonnes, bonne probabilité de nuages de feu",
+      "fair": "💡 Conditions moyennes, vérifiez l'évolution réelle des nuages",
+      "poor": "😶 Probabilité de nuages de feu faible"
+    },
+    "watermark": "霞客 · Enregistrer chaque belle teinte",
+    "unknownLocation": "Lieu inconnu"
   },
   "charts": {
     "temperature": "Température",
@@ -522,6 +562,24 @@ apiAccess: 'Accès API'
     "loading": "Chargement de la carte...",
     "error": "Échec du chargement de la carte",
     "mockNotSupported": "La fonction de carte n'est disponible qu'en mode API réel"
+  },
+  "mapPage": {
+    "errors": {
+      "sunsetTimeMissing": "Impossible d'obtenir l'heure du coucher du soleil",
+      "sunriseTimeMissing": "Impossible d'obtenir l'heure du lever du soleil"
+    },
+    "noDataState": "Aucune zone visible de prévision de nuages rouges pour l'instant",
+    "scoreLabel": "Score",
+    "distanceLabel": "Distance",
+    "distanceUnit": "km",
+    "directionLabelSuffix": " direction",
+    "lastUpdated": "Mis à jour à",
+    "emptyState": "Aucun point de nuages rouges visible aujourd'hui",
+    "periodLabels": {
+      "sunriseSuffix": " du matin",
+      "sunsetSuffix": " du soir",
+      "testLayer": "Couche de test (données simulées)"
+    }
   },
   "surrounding": {
     "title": "Analyse des nuages rouges environnants",

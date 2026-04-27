@@ -521,7 +521,9 @@ apiAccess: 'API接入'
     "timeout": "請求逾時，請重試",
     "unknownError": "發生未知錯誤，請重試",
     "locationError": "位置解析失敗，請嘗試其他位置名稱",
-    "mapInitFailed": "地圖初始化失敗"
+    "mapInitFailed": "地圖初始化失敗",
+    "mapLoadFailed": "地圖加載失敗: {{error}}",
+    "mapInitNotReady": "地圖功能僅在真實API模式下可用"
   },
   "settings": {
     "title": "設定",
@@ -648,7 +650,45 @@ apiAccess: 'API接入'
     "saveImage": "Save Image",
     "copyLink": "Copy Link",
     "nativeShare": "More Share",
-    "copied": "Link Copied"
+    "copied": "Link Copied",
+    "cardPredictionFileSuffix": "預測"
+  },
+  "shareCard": {
+    "brandName": "霞客",
+    "brandSubtitle": "Sunset Voyager",
+    "shareTitle": "火燒雲預測分享",
+    "labels": {
+      "probability": "火燒雲機率",
+      "excellent": "極佳",
+      "good": "良好",
+      "fair": "一般",
+      "poor": "較差"
+    },
+    "gauge": {
+      "hintExcellent": "值得特地等一下",
+      "hintGood": "可以順便去看看",
+      "hintFair": "不必專門出門"
+    },
+    "timeLabels": {
+      "sunrise": "日出",
+      "sunset": "日落"
+    },
+    "bestWindow": "最佳觀賞 {{start}} – {{end}}",
+    "cloud": {
+      "high": "高雲",
+      "mid": "中雲",
+      "low": "低雲"
+    },
+    "verdict": {
+      "noCarrier": "😶 缺少色彩載體，火燒雲機率極低",
+      "excellent": "✨ 條件不錯，色彩可期",
+      "excellentMultiLayer": "✨ 極佳條件，強烈推薦出門觀賞！",
+      "good": "✨ 條件不錯，火燒雲機率較高",
+      "fair": "💡 條件一般，需看實際雲層演變",
+      "poor": "😶 火燒雲機率偏低"
+    },
+    "watermark": "霞客 · 紀錄每一次絢爛時刻",
+    "unknownLocation": "未知地點"
   },
   "charts": {
     "temperature": "溫度",
@@ -682,6 +722,24 @@ apiAccess: 'API接入'
     "loading": "地圖加載中...",
     "error": "地圖加載失敗",
     "mockNotSupported": "地圖功能僅在真實API模式下可用"
+  },
+  "mapPage": {
+    "errors": {
+      "sunsetTimeMissing": "無法取得日落時間",
+      "sunriseTimeMissing": "無法取得日出時間"
+    },
+    "noDataState": "目前周邊區域暫無火燒雲觀賞建議",
+    "scoreLabel": "分數",
+    "distanceLabel": "距離",
+    "distanceUnit": "公里",
+    "directionLabelSuffix": "方向",
+    "lastUpdated": "更新於",
+    "emptyState": "今日暫無可見火燒雲點位",
+    "periodLabels": {
+      "sunriseSuffix": "的朝霞",
+      "sunsetSuffix": "的晚霞",
+      "testLayer": "測試圖層（模擬數據）"
+    }
   },
   "surrounding": {
     "title": "周邊火燒雲分析",

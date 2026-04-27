@@ -78,7 +78,7 @@ class SharePanel {
         || document.querySelector('#location-name')?.textContent?.trim()
         || '';
 
-      const blob = await generateShareCard(prediction, locationName, period);
+      const blob = await generateShareCard(prediction, locationName, period, this.i18n);
 
       // 下载
       const url = URL.createObjectURL(blob);
@@ -137,8 +137,11 @@ class SharePanel {
             || document.querySelector('.location-name')?.textContent?.trim()
             || document.querySelector('#location-name')?.textContent?.trim()
             || '';
-          const blob = await generateShareCard(prediction, locationName, period);
-          const file = new File([blob], `霞客-${period === 'sunrise' ? '朝霞' : '晚霞'}预测.png`, { type: 'image/png' });
+          const blob = await generateShareCard(prediction, locationName, period, this.i18n);
+      const periodLabel = period === 'sunrise'
+        ? this.i18n.t('prediction.sunrise')
+        : this.i18n.t('prediction.sunset');
+      const file = new File([blob], `${this.i18n.t('shareCard.brandName', '霞客')}-${periodLabel}${this.i18n.t('share.cardPredictionFileSuffix', '预测')}.png`, { type: 'image/png' });
 
           await navigator.share({
             title: shareText,

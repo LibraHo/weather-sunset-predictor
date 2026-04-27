@@ -471,7 +471,45 @@ apiAccess: 'Truy cập API'
     "saveImage": "Save Image",
     "copyLink": "Copy Link",
     "nativeShare": "More Share",
-    "copied": "Link Copied"
+    "copied": "Link Copied",
+    "cardPredictionFileSuffix": "Dự báo"
+  },
+  "shareCard": {
+    "brandName": "霞客",
+    "brandSubtitle": "Sunset Voyager",
+    "shareTitle": "Chia sẻ dự đoán mây đỏ",
+    "labels": {
+      "probability": "Xác suất mây đỏ",
+      "excellent": "Rất tốt",
+      "good": "Tốt",
+      "fair": "Trung bình",
+      "poor": "Kém"
+    },
+    "gauge": {
+      "hintExcellent": "Nên chờ đợi đặc biệt",
+      "hintGood": "Có thể ghé xem nhanh",
+      "hintFair": "Không cần đi riêng cho việc này"
+    },
+    "timeLabels": {
+      "sunrise": "Bình minh",
+      "sunset": "Hoàng hôn"
+    },
+    "bestWindow": "Khung quan sát tốt nhất {{start}} – {{end}}",
+    "cloud": {
+      "high": "Mây cao",
+      "mid": "Mây trung tầng",
+      "low": "Mây thấp"
+    },
+    "verdict": {
+      "noCarrier": "😶 Thiếu lớp mây mang màu, xác suất mây đỏ rất thấp",
+      "excellent": "✨ Điều kiện rất tốt, màu sắc sẽ nổi bật",
+      "excellentMultiLayer": "✨ Điều kiện xuất sắc, khuyến nghị đi quan sát",
+      "good": "✨ Điều kiện tốt, xác suất mây đỏ khá cao",
+      "fair": "💡 Điều kiện trung bình, theo dõi diễn biến thực tế của mây",
+      "poor": "😶 Xác suất mây đỏ thấp"
+    },
+    "watermark": "霞客 · Ghi lại những khoảnh khắc đẹp",
+    "unknownLocation": "Không rõ địa điểm"
   },
   "charts": {
     "temperature": "Nhiệt Độ",
@@ -505,6 +543,24 @@ apiAccess: 'Truy cập API'
     "loading": "Đang tải bản đồ...",
     "error": "Không thể tải bản đồ",
     "mockNotSupported": "Chức năng bản đồ chỉ khả dụng trong chế độ API thực"
+  },
+  "mapPage": {
+    "errors": {
+      "sunsetTimeMissing": "Không thể lấy thời gian Hoàng hôn",
+      "sunriseTimeMissing": "Không thể lấy thời gian Bình minh"
+    },
+    "noDataState": "Khu vực lân cận hiện tại chưa có điểm xem mây đỏ",
+    "scoreLabel": "Điểm",
+    "distanceLabel": "Khoảng cách",
+    "distanceUnit": "km",
+    "directionLabelSuffix": " hướng",
+    "lastUpdated": "Cập nhật lúc",
+    "emptyState": "Hôm nay chưa có điểm mây đỏ hiển thị",
+    "periodLabels": {
+      "sunriseSuffix": " Bình minh",
+      "sunsetSuffix": " Hoàng hôn",
+      "testLayer": "Lớp thử nghiệm (dữ liệu mô phỏng)"
+    }
   },
   "surrounding": {
     "title": "Phân tích mây đỏ lân cận",
@@ -546,7 +602,9 @@ apiAccess: 'Truy cập API'
     "timeout": "Yêu cầu quá hạn, vui lòng thử lại",
     "unknownError": "Lỗi không xác định, vui lòng thử lại",
     "locationError": "Giải quyết vị trí thất bại, vui lòng thử tên khác",
-    "mapInitFailed": "Khởi tạo bản đồ thất bại"
+    "mapInitFailed": "Khởi tạo bản đồ thất bại",
+    "mapLoadFailed": "Không tải được bản đồ: {{error}}",
+    "mapInitNotReady": "Tính năng bản đồ chỉ khả dụng trong chế độ API thực"
   },
   "loading": {
     "data": "Đang tải dữ liệu...",

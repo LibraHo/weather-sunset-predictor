@@ -359,7 +359,9 @@ apiAccess: 'Accesso API'
     "timeout": "Timeout della richiesta, riprova",
     "unknownError": "Errore sconosciuto, riprova",
     "locationError": "Risoluzione posizione fallita, prova con un nome diverso",
-    "mapInitFailed": "Inizializzazione della mappa non riuscita"
+    "mapInitFailed": "Inizializzazione della mappa non riuscita",
+    "mapLoadFailed": "Errore durante il caricamento della mappa: {{error}}",
+    "mapInitNotReady": "La funzione mappa è disponibile solo in modalità API reale"
   },
   "settings": {
     "title": "Impostazioni",
@@ -482,7 +484,45 @@ apiAccess: 'Accesso API'
     "saveImage": "Save Image",
     "copyLink": "Copy Link",
     "nativeShare": "More Share",
-    "copied": "Link Copied"
+    "copied": "Link Copied",
+    "cardPredictionFileSuffix": "previsione"
+  },
+  "shareCard": {
+    "brandName": "霞客",
+    "brandSubtitle": "Sunset Voyager",
+    "shareTitle": "Condividi previsione di fuoco nei cieli",
+    "labels": {
+      "probability": "Probabilità di fuochi nel cielo",
+      "excellent": "Eccellente",
+      "good": "Buono",
+      "fair": "Discreto",
+      "poor": "Scarso"
+    },
+    "gauge": {
+      "hintExcellent": "Vale la pena aspettare",
+      "hintGood": "Puoi controllare al volo",
+      "hintFair": "Non serve andare apposta"
+    },
+    "timeLabels": {
+      "sunrise": "Alba",
+      "sunset": "Tramonto"
+    },
+    "bestWindow": "Finestra di osservazione migliore {{start}} – {{end}}",
+    "cloud": {
+      "high": "Nubi alte",
+      "mid": "Nubi medie",
+      "low": "Nubi basse"
+    },
+    "verdict": {
+      "noCarrier": "😶 Manca il supporto cromatico, probabilità di fuoco nel cielo molto bassa",
+      "excellent": "✨ Condizioni ottime, colori promettenti",
+      "excellentMultiLayer": "✨ Condizioni eccellenti, consigliato osservare",
+      "good": "✨ Buone condizioni, buona probabilità di fuoco nel cielo",
+      "fair": "💡 Condizioni medie, guarda come evolvono le nuvole",
+      "poor": "😶 Bassa probabilità di fuoco nel cielo"
+    },
+    "watermark": "霞客 · Registra ogni bel momento",
+    "unknownLocation": "Posizione sconosciuta"
   },
   "charts": {
     "temperature": "Temperatura",
@@ -516,6 +556,24 @@ apiAccess: 'Accesso API'
     "loading": "Caricamento mappa...",
     "error": "Errore nel caricamento della mappa",
     "mockNotSupported": "La funzione mappa è disponibile solo in modalità API reale"
+  },
+  "mapPage": {
+    "errors": {
+      "sunsetTimeMissing": "Impossibile ottenere l'ora del tramonto",
+      "sunriseTimeMissing": "Impossibile ottenere l'ora dell'alba"
+    },
+    "noDataState": "Nessun punto di osservazione del fuoco nelle vicinanze al momento",
+    "scoreLabel": "Punteggio",
+    "distanceLabel": "Distanza",
+    "distanceUnit": "km",
+    "directionLabelSuffix": " direzione",
+    "lastUpdated": "Aggiornato alle",
+    "emptyState": "Nessun punto visibile oggi",
+    "periodLabels": {
+      "sunriseSuffix": " dell'alba",
+      "sunsetSuffix": " del tramonto",
+      "testLayer": "Livello di prova (dati simulati)"
+    }
   },
   "surrounding": {
     "title": "Analisi nuvole rosse circostanti",

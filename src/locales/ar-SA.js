@@ -336,7 +336,9 @@ apiAccess: 'الوصول إلى API'
     timeout: 'انتهت مهلة الطلب، يرجى إعادة المحاولة',
     unknownError: 'حدث خطأ غير معروف، يرجى إعادة المحاولة',
     locationError: 'فشل تحديد الموقع، جرب اسمًا آخر',
-    mapInitFailed: 'فشل تهيئة الخريطة'
+    mapInitFailed: 'فشل تهيئة الخريطة',
+    mapLoadFailed: 'فشل تحميل الخريطة: {{error}}',
+    mapInitNotReady: 'ميزة الخريطة متاحة فقط في وضع API الحقيقي'
   },
   settings: {
     title: 'الإعدادات',
@@ -482,6 +484,25 @@ apiAccess: 'الوصول إلى API'
     mockNotSupported: 'وظيفة الخريطة متاحة فقط في وضع API الحقيقي'
   },
 
+  mapPage: {
+    errors: {
+      sunsetTimeMissing: 'غير قادر على جلب وقت الغروب',
+      sunriseTimeMissing: 'غير قادر على جلب وقت الشروق'
+    },
+    noDataState: 'لا توجد بيانات مرئية لنقاط السحب الحمراء حاليا',
+    scoreLabel: 'النقاط',
+    distanceLabel: 'المسافة',
+    distanceUnit: 'كم',
+    directionLabelSuffix: 'اتجاه',
+    lastUpdated: 'آخر تحديث',
+    emptyState: 'لا توجد نقاط سحب أحمر مرئية اليوم',
+    periodLabels: {
+      sunriseSuffix: 'الشروق',
+      sunsetSuffix: 'الغروب',
+      testLayer: 'طبقة اختبار (بيانات وهمية)'
+    }
+  },
+
   // 任务19：周边火烧云
   surrounding: {
     title: 'تحليل السحب الحمراء المحيطة',
@@ -522,7 +543,46 @@ apiAccess: 'الوصول إلى API'
     saveImage: 'Save Image',
     copyLink: 'Copy Link',
     nativeShare: 'More Share',
-    copied: 'Link Copied'
+    copied: 'Link Copied',
+    cardPredictionFileSuffix: 'تنبؤ'
+  },
+
+  shareCard: {
+    brandName: '霞客',
+    brandSubtitle: 'Sunset Voyager',
+    shareTitle: 'مشاركة تنبؤ سحابة النار',
+    labels: {
+      probability: 'احتمالية سحابة النار',
+      excellent: 'ممتاز',
+      good: 'جيد',
+      fair: 'متوسط',
+      poor: 'ضعيف'
+    },
+    gauge: {
+      hintExcellent: 'جدير بالانتظار',
+      hintGood: 'توقف إذا مررت بالقرب',
+      hintFair: 'لا حاجة للخروج خصيصاً'
+    },
+    timeLabels: {
+      sunrise: 'شروق الشمس',
+      sunset: 'غروب الشمس'
+    },
+    bestWindow: 'أفضل نافذة مشاهدة {{start}} – {{end}}',
+    cloud: {
+      high: 'غيمة عالية',
+      mid: 'غيمة متوسطة',
+      low: 'غيمة منخفضة'
+    },
+    verdict: {
+      noCarrier: '😶 نقص حامل اللون، احتمال ظهور سحابة النار منخفض جداً',
+      excellent: '✨ الشروط ممتازة، ومن المتوقع ألوان رائعة',
+      excellentMultiLayer: '✨ شروط ممتازة للغاية، يُنصح بالمشاهدة',
+      good: '✨ الشروط جيدة، واحتمال سحابة النار مرتفع',
+      fair: '💡 الشروط متوسطة، راقب تطور السحب فعلياً',
+      poor: '😶 احتمال سحابة النار منخفض'
+    },
+    watermark: '霞客 · حفظ لحظة سحرية',
+    unknownLocation: 'موقع غير معروف'
   },
 
   loading: {

@@ -124,6 +124,16 @@ class WeatherController {
     }
   }
 
+  _i18nText(key, fallback = '') {
+    if (!key) return fallback;
+    if (!this.i18n || typeof this.i18n.t !== 'function') return fallback;
+
+    const translated = this.i18n.t(key);
+    if (translated === key) return fallback;
+    if (typeof translated === 'string') return translated;
+    return fallback;
+  }
+
   /**
    * 获取天气数据
    * @param {Location} location - 位置对象
@@ -747,7 +757,7 @@ class WeatherController {
       if (mapLoading) mapLoading.classList.add('hidden');
 
       if (mapError) {
-        mapError.textContent = this.i18n.t('errors.mockModeMapNotSupported') || '地图功能仅在真实API模式下可用。请配置有效的Windy API密钥。';
+        mapError.textContent = this._i18nText('errors.mockModeMapNotSupported', this._i18nText('errors.mapInitNotReady', '地图功能仅在真实API模式下可用。请配置有效的Windy API密钥。'));
         mapError.classList.remove('hidden');
       }
       console.warn('[WeatherController] Windy地图服务未初始化（mock模式）');
@@ -822,7 +832,7 @@ class WeatherController {
       // 隐藏加载指示器，显示错误
       if (mapLoading) mapLoading.classList.add('hidden');
       if (mapError) {
-        mapError.textContent = this.i18n.t('errors.mapInitFailed', { error: error.message }) || `地图加载失败: ${error.message}`;
+        mapError.textContent = this._i18nText('errors.mapInitFailed', this._i18nText('errors.mapLoadFailed', `地图加载失败: ${error.message}`));
         mapError.classList.remove('hidden');
       }
     }
@@ -993,7 +1003,7 @@ class WeatherController {
 
     // 从当前天气数据中获取日落时间
     if (!this.currentWeatherData || !this.currentWeatherData.sunset) {
-      this.showError('无法获取日落时间数据');
+      this.showError(this._i18nText('mapPage.errors.sunsetTimeMissing', '无法获取日落时间数据'));
       return;
     }
 
@@ -1014,7 +1024,7 @@ class WeatherController {
 
     // 从当前天气数据中获取日出时间
     if (!this.currentWeatherData || !this.currentWeatherData.sunrise) {
-      this.showError('无法获取日出时间数据');
+      this.showError(this._i18nText('mapPage.errors.sunriseTimeMissing', '无法获取日出时间数据'));
       return;
     }
 
@@ -1500,7 +1510,7 @@ class WeatherController {
     const bestPoints = points.filter(p => p.score >= 60).sort((a, b) => b.score - a.score);
 
     if (bestPoints.length === 0) {
-      container.innerHTML = `<p style="color: var(--color-text-light);">${this.i18n.t('surrounding.noData') || '当前周边区域火烧云观赏条件一般'}</p>`;
+      container.innerHTML = `<p style="color: var(--color-text-light);">${this._i18nText('mapPage.noDataState', '当前周边区域暂无火烧云观赏条件一般')}</p>`;
       return;
     }
 
@@ -1519,7 +1529,7 @@ class WeatherController {
       return `
         <div class="direction-item" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--color-border); cursor: pointer;" data-index="${index}">
           <span>${p.name} (${p.label})</span>
-          <span style="${qualityClass} font-weight: 600;">${p.score}分 - ${qualityText}</span>
+          <span style="${qualityClass} font-weight: 600;">${p.score}${this._i18nText('prediction.points', '分')} - ${qualityText}</span>
         </div>
       `;
     }).join('');
@@ -1542,7 +1552,11 @@ class WeatherController {
 
     // 可以在这里添加显示详细信息的功能
     // 例如：显示该方向的详细气象数据、观赏建议等
-    toastService.show(`${point.name}方向｜评分: ${point.score}分｜距离: ${point.distance}公里`, 'info', 5000);
+    toastService.show(
+      `${point.name}${this._i18nText('mapPage.directionLabelSuffix', '方向')}｜${this._i18nText('mapPage.scoreLabel', '评分')}: ${point.score}${this._i18nText('prediction.points', '分')}｜${this._i18nText('mapPage.distanceLabel', '距离')}: ${point.distance}${this._i18nText('mapPage.distanceUnit', '公里')}`,
+      'info',
+      5000
+    );
   }
 
   /**
@@ -1785,11 +1799,11 @@ class WeatherController {
   }
 
 
-  _setChinaSpotsEmptyState(show, message = '今日暂无可见火烧云点位') {
+  _setChinaSpotsEmptyState(show, message = null) {
     const emptyEl = document.getElementById('china-spots-empty');
     if (!emptyEl) return;
 
-    emptyEl.textContent = message;
+    emptyEl.textContent = message || this._i18nText('mapPage.emptyState', '今日暂无可见火烧云点位');
     emptyEl.classList.toggle('hidden', !show);
   }
 
@@ -1809,8 +1823,9 @@ class WeatherController {
       }
     }
 
+    const locale = this.i18n?.getLanguage?.() || this.i18n?.currentLanguage || 'zh-CN';
     tsEl.textContent = latestTime
-      ? '更新于 ' + latestTime.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+      ? `${this._i18nText('mapPage.lastUpdated', '更新于')} ${latestTime.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}`
       : '';
   }
 
@@ -1823,18 +1838,19 @@ class WeatherController {
     if (!labelEl) return;
 
     const now = new Date();
-    const todayStr = now.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+    const locale = this.i18n?.getLanguage?.() || this.i18n?.currentLanguage || 'zh-CN';
+    const todayStr = now.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = tomorrow.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+    const tomorrowStr = tomorrow.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
 
     let text = '';
     if (period === 'sunrise') {
-      text = '明天的朝霞';
+      text = `${tomorrowStr}${this._i18nText('mapPage.periodLabels.sunriseSuffix', '朝霞')}`;
     } else if (period === 'test') {
-      text = '测试图层（模拟数据）';
+      text = this._i18nText('mapPage.periodLabels.testLayer', '测试图层（模拟数据）');
     } else {
-      text = '今天的晚霞';
+      text = `${todayStr}${this._i18nText('mapPage.periodLabels.sunsetSuffix', '晚霞')}`;
     }
 
     labelEl.textContent = text;

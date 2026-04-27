@@ -521,7 +521,9 @@ apiAccess: 'API 연동'
     "timeout": "요청 시간 초과, 다시 시도하세요",
     "unknownError": "알 수 없는 오류 발생, 다시 시도하세요",
     "locationError": "위치 확인 실패, 다른 이름을 시도하세요",
-    "mapInitFailed": "지도 초기화 실패"
+    "mapInitFailed": "지도 초기화 실패",
+    "mapLoadFailed": "지도 로드 실패: {{error}}",
+    "mapInitNotReady": "지도 기능은 실제 API 모드에서만 사용 가능합니다"
   },
   "settings": {
     "title": "설정",
@@ -648,7 +650,45 @@ apiAccess: 'API 연동'
     "saveImage": "Save Image",
     "copyLink": "Copy Link",
     "nativeShare": "More Share",
-    "copied": "Link Copied"
+    "copied": "Link Copied",
+    "cardPredictionFileSuffix": "예보"
+  },
+  "shareCard": {
+    "brandName": "霞客",
+    "brandSubtitle": "Sunset Voyager",
+    "shareTitle": "섬광 구름 예측 공유",
+    "labels": {
+      "probability": "섬광 구름 확률",
+      "excellent": "매우 좋음",
+      "good": "좋음",
+      "fair": "보통",
+      "poor": "낮음"
+    },
+    "gauge": {
+      "hintExcellent": "조금만 기다려도 좋아요",
+      "hintGood": "옆길로 가는 김에 보세요",
+      "hintFair": "굳이 나갈 필요는 없어요"
+    },
+    "timeLabels": {
+      "sunrise": "일출",
+      "sunset": "일몰"
+    },
+    "bestWindow": "최적 관측 시간 {{start}} – {{end}}",
+    "cloud": {
+      "high": "고층 구름",
+      "mid": "중층 구름",
+      "low": "저층 구름"
+    },
+    "verdict": {
+      "noCarrier": "😶 색을 띄워줄 구름이 부족해 섬광 구름 확률이 매우 낮습니다",
+      "excellent": "✨ 조건이 매우 좋고 색감도 훌륭합니다",
+      "excellentMultiLayer": "✨ 조건이 최고입니다. 꼭 가서 보는 것을 추천합니다",
+      "good": "✨ 조건이 좋고 섬광 구름 확률이 높습니다",
+      "fair": "💡 조건이 보통입니다. 실제 구름 변화를 확인하세요",
+      "poor": "😶 섬광 구름 확률이 낮습니다"
+    },
+    "watermark": "霞客 · 아름다운 순간을 기록하다",
+    "unknownLocation": "알 수 없는 위치"
   },
   "charts": {
     "temperature": "기온",
@@ -682,6 +722,24 @@ apiAccess: 'API 연동'
     "loading": "지도 로딩 중...",
     "error": "지도 로딩 실패",
     "mockNotSupported": "지도 기능은 실제 API 모드에서만 사용 가능합니다"
+  },
+  "mapPage": {
+    "errors": {
+      "sunsetTimeMissing": "일몰 시간 데이터를 가져올 수 없습니다",
+      "sunriseTimeMissing": "일출 시간 데이터를 가져올 수 없습니다"
+    },
+    "noDataState": "현재 주변 지역에 관측 포인트가 없습니다",
+    "scoreLabel": "점수",
+    "distanceLabel": "거리",
+    "distanceUnit": "km",
+    "directionLabelSuffix": " 방향",
+    "lastUpdated": "업데이트 시간",
+    "emptyState": "오늘은 표시 가능한 화염 구름 포인트가 없습니다",
+    "periodLabels": {
+      "sunriseSuffix": "의 아침노을",
+      "sunsetSuffix": "의 저녁노을",
+      "testLayer": "테스트 레이어(시뮬레이션 데이터)"
+    }
   },
   "surrounding": {
     "title": "주변 노을 분석",
