@@ -11,7 +11,8 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
-    "test:e2e:report": "playwright show-report"
+    "test:e2e:report": "playwright show-report",
+    "test:i18n-hardcoded-zh": "node --experimental-vm-modules node_modules/jest/bin/jest.js tests/unit/i18n-hardcoded-zh.test.js"
   },
   "keywords": [
     "weather",
