@@ -488,7 +488,28 @@ apiAccess: 'Accès API'
     "saveImage": "Save Image",
     "copyLink": "Copy Link",
     "nativeShare": "More Share",
-    "copied": "Link Copied"
+    "copied": "Link Copied",    "cardPredictionFileSuffix": " forecast"
+
+  },
+  "shareCard": {
+    "brandName": "Xiake",
+    "brandSubtitle": "Sunset Voyager",
+    "shareTitle": "Fire Cloud Forecast Share",
+    "unknownLocation": "Unknown location",
+    "labels": { "probability": "Fire Cloud Probability", "excellent": "Excellent", "good": "Good", "fair": "Fair", "poor": "Poor" },
+    "gauge": { "hintExcellent": "Worth waiting for", "hintGood": "Worth checking nearby", "hintFair": "No need to go out just for it" },
+    "timeLabels": { "sunrise": "Sunrise", "sunset": "Sunset" },
+    "bestWindow": "Best viewing  {{start}} – {{end}}",
+    "cloud": { "high": "High Cloud", "mid": "Mid Cloud", "low": "Low Cloud" },
+    "verdict": {
+      "noCarrier": "😶 Not enough color carrier clouds; fire-cloud chance is very low",
+      "excellent": "✨ Excellent conditions; colorful sky is promising",
+      "excellentMultiLayer": "✨ Excellent conditions; strongly recommended for viewing!",
+      "good": "✨ Good conditions; fire-cloud chance is high",
+      "fair": "💡 Moderate conditions; watch real-time cloud changes",
+      "poor": "😶 Fire-cloud chance is low"
+    },
+    "watermark": "Xiake · Capture every brilliant sky"
   },
   "charts": {
     "temperature": "Température",

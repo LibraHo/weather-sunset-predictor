@@ -498,7 +498,28 @@ apiAccess: 'API接入'
     "saveImage": "Save Image",
     "copyLink": "Copy Link",
     "nativeShare": "More Share",
-    "copied": "Link Copied"
+    "copied": "Link Copied",    "cardPredictionFileSuffix": "預測"
+
+  },
+  "shareCard": {
+    "brandName": "霞客",
+    "brandSubtitle": "Sunset Voyager",
+    "shareTitle": "火燒雲預測分享",
+    "unknownLocation": "未知地點",
+    "labels": { "probability": "火燒雲機率", "excellent": "極佳", "good": "良好", "fair": "普通", "poor": "偏低" },
+    "gauge": { "hintExcellent": "值得特地等一等", "hintGood": "可以順路觀察", "hintFair": "不用特地出門" },
+    "timeLabels": { "sunrise": "日出", "sunset": "日落" },
+    "bestWindow": "最佳觀賞  {{start}} – {{end}}",
+    "cloud": { "high": "高雲", "mid": "中雲", "low": "低雲" },
+    "verdict": {
+      "noCarrier": "😶 缺少色彩載體，火燒雲機率很低",
+      "excellent": "✨ 條件很棒，天空色彩值得期待",
+      "excellentMultiLayer": "✨ 條件極佳，強烈推薦出門觀賞！",
+      "good": "✨ 條件不錯，火燒雲機率偏高",
+      "fair": "💡 條件普通，建議留意雲層即時變化",
+      "poor": "😶 火燒雲機率偏低"
+    },
+    "watermark": "霞客 · 記錄每一次絢麗"
   },
   "charts": {
     "temperature": "溫度",

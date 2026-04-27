@@ -498,7 +498,28 @@ apiAccess: 'API接続'
     "saveImage": "Save Image",
     "copyLink": "Copy Link",
     "nativeShare": "More Share",
-    "copied": "Link Copied"
+    "copied": "Link Copied",    "cardPredictionFileSuffix": "予報"
+
+  },
+  "shareCard": {
+    "brandName": "霞客",
+    "brandSubtitle": "Sunset Voyager",
+    "shareTitle": "焼け雲予報シェア",
+    "unknownLocation": "不明な地点",
+    "labels": { "probability": "焼け雲の可能性", "excellent": "非常に良い", "good": "良い", "fair": "普通", "poor": "低め" },
+    "gauge": { "hintExcellent": "待つ価値あり", "hintGood": "近くなら確認したい", "hintFair": "このためだけの外出は不要" },
+    "timeLabels": { "sunrise": "日の出", "sunset": "日の入り" },
+    "bestWindow": "見頃  {{start}} – {{end}}",
+    "cloud": { "high": "上層雲", "mid": "中層雲", "low": "下層雲" },
+    "verdict": {
+      "noCarrier": "😶 色を映す雲が少なく、焼け雲の可能性はかなり低め",
+      "excellent": "✨ 条件は良好、鮮やかな空が期待できます",
+      "excellentMultiLayer": "✨ 条件は非常に良好、観賞を強くおすすめします！",
+      "good": "✨ 条件は良く、焼け雲の可能性は高め",
+      "fair": "💡 条件は普通、雲の変化をリアルタイムで確認してください",
+      "poor": "😶 焼け雲の可能性は低め"
+    },
+    "watermark": "霞客 · 鮮やかな空の一瞬を記録"
   },
   "charts": {
     "temperature": "気温",

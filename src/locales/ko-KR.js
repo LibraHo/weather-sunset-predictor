@@ -498,7 +498,28 @@ apiAccess: 'API 연동'
     "saveImage": "Save Image",
     "copyLink": "Copy Link",
     "nativeShare": "More Share",
-    "copied": "Link Copied"
+    "copied": "Link Copied",    "cardPredictionFileSuffix": "예보"
+
+  },
+  "shareCard": {
+    "brandName": "하객",
+    "brandSubtitle": "Sunset Voyager",
+    "shareTitle": "노을구름 예보 공유",
+    "unknownLocation": "알 수 없는 위치",
+    "labels": { "probability": "노을구름 가능성", "excellent": "매우 좋음", "good": "좋음", "fair": "보통", "poor": "낮음" },
+    "gauge": { "hintExcellent": "기다려볼 만해요", "hintGood": "근처라면 확인해보세요", "hintFair": "일부러 나갈 필요는 낮아요" },
+    "timeLabels": { "sunrise": "일출", "sunset": "일몰" },
+    "bestWindow": "추천 관측 시간  {{start}} – {{end}}",
+    "cloud": { "high": "상층운", "mid": "중층운", "low": "하층운" },
+    "verdict": {
+      "noCarrier": "😶 색을 받을 구름이 부족해 노을구름 가능성이 매우 낮아요",
+      "excellent": "✨ 조건이 좋아 선명한 하늘빛을 기대할 수 있어요",
+      "excellentMultiLayer": "✨ 조건이 매우 좋아 관측을 강력 추천해요!",
+      "good": "✨ 조건이 괜찮고 노을구름 가능성이 높아요",
+      "fair": "💡 조건은 보통이며 실시간 구름 변화를 확인하세요",
+      "poor": "😶 노을구름 가능성이 낮아요"
+    },
+    "watermark": "하객 · 빛나는 하늘의 순간을 기록"
   },
   "charts": {
     "temperature": "기온",
