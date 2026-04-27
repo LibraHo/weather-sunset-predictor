@@ -9,6 +9,7 @@ const translations = {
       "forecast": "Chức năng dự báo",
       "methodology": "Phương pháp tính điểm mây đẹp",
       "map": "Bản đồ Ráng đỏ",
+      "shareMap": "Chia sẻ bản đồ",
       apiAccess: 'Truy cập API'
     },
     "menu": {

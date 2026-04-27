@@ -9,6 +9,7 @@ const translations = {
       "forecast": "Forecast",
       "methodology": "Methodology",
       "map": "Fire Sky Map",
+      "shareMap": "Share Map",
       "apiAccess": "API Access"
     },
     "menu": {
@@ -171,6 +172,151 @@ const translations = {
     "bestTime": "Best Viewing Time",
     "analysis": "Analysis",
     "analysisTitle": "📊 Analysis",
+    "analysisText": {
+      "footer": "Observe the sky · Catch the beauty",
+      "scoreBreakdownHint": "View score details",
+      "cardTitle": "Fire cloud formation analysis",
+      "scoreDescription": {
+        "excellent": "Excellent viewing conditions",
+        "good": "Good viewing conditions",
+        "someChance": "Some chance",
+        "weak": "Weak viewing conditions"
+      },
+      "groups": {
+        "favorable": "Favorable",
+        "neutral": "Neutral",
+        "warnings": "Watch-outs"
+      },
+      "clouds": {
+        "high": "High",
+        "mid": "Mid",
+        "low": "Low"
+      },
+      "factors": {
+        "high": {
+          "abundant": {
+            "title": "Abundant high clouds ({{value}}%)",
+            "description": "Rich color canvas; strong basis for fire clouds"
+          },
+          "sufficient": {
+            "title": "Sufficient high clouds ({{value}}%)",
+            "description": "Good carrier for sunset color"
+          },
+          "moderate": {
+            "title": "Moderate high clouds ({{value}}%)",
+            "description": "Can form fire clouds, but colors may be lighter"
+          },
+          "low": {
+            "title": "Too few high clouds ({{value}}%)",
+            "description": "Main color carrier is lacking"
+          }
+        },
+        "mid": {
+          "balanced": {
+            "title": "Balanced mid clouds ({{value}}%)",
+            "description": "Helps color spread and layering"
+          },
+          "few": {
+            "title": "Few mid clouds ({{value}}%)",
+            "highSufficientDescription": "High clouds are enough to carry the color on their own",
+            "limitedDescription": "Layering may be limited"
+          },
+          "thick": {
+            "title": "Thick mid clouds ({{value}}%)",
+            "description": "May make the sky gray and reduce clarity"
+          }
+        },
+        "low": {
+          "few": {
+            "title": "Few low clouds ({{value}}%)",
+            "description": "Low clouds should not block the view"
+          },
+          "some": {
+            "title": "Some low clouds ({{value}}%)",
+            "description": "May partly block low-horizon color"
+          },
+          "thick": {
+            "title": "Thick low clouds ({{value}}%)",
+            "description": "High blocking risk"
+          }
+        },
+        "visibility": {
+          "good": {
+            "title": "Good visibility ({{value}}km)",
+            "description": "Clear air and good viewing distance"
+          },
+          "moderate": {
+            "title": "Moderate visibility ({{value}}km)",
+            "description": "Color saturation may be slightly reduced"
+          },
+          "poor": {
+            "title": "Low visibility ({{value}}km)",
+            "description": "Haze or moisture may affect viewing"
+          }
+        },
+        "humidity": {
+          "optimal": {
+            "title": "Moderate humidity ({{value}}%)",
+            "description": "Helpful for light scattering"
+          },
+          "high": {
+            "title": "High humidity ({{value}}%)",
+            "description": "May reduce transparency"
+          },
+          "low": {
+            "title": "Low humidity ({{value}}%)",
+            "description": "Dry air may make colors lighter"
+          }
+        },
+        "aod": {
+          "moderate": {
+            "title": "Moderate aerosol (AOD {{value}})",
+            "description": "Can enhance orange-red scattering"
+          },
+          "high": {
+            "title": "High aerosol (AOD {{value}})",
+            "description": "May look hazy or dull"
+          },
+          "low": {
+            "title": "Very clear air (AOD {{value}})",
+            "description": "Colors may be lighter"
+          }
+        },
+        "layers": {
+          "single": {
+            "title": "Single cloud layer",
+            "description": "High clouds are good enough to still produce vivid colors"
+          }
+        }
+      },
+      "conclusion": {
+        "excellent": {
+          "recommended": "Excellent conditions. Strongly recommended.",
+          "limitedLayers": "Excellent color potential, but single-layer clouds may reduce depth."
+        },
+        "good": {
+          "recommended": "Good conditions with a solid chance of dramatic fire clouds.",
+          "limitedLayers": "Good chance of fire clouds, but layering is limited."
+        },
+        "fair": "Moderate conditions. Watch how the clouds evolve.",
+        "poor": "Key conditions are missing; fire-cloud probability is low."
+      },
+      "scoreBreakdown": {
+        "title": "Score details",
+        "hints": {
+          "finalDisplayedScore": "Final displayed score",
+          "combinedBase": "Base score after combining clouds and light path",
+          "canvas": "High/mid clouds carry color; low clouds can block it",
+          "lightPath": "Whether sunlight can reach the clouds",
+          "rendering": "Humidity and visibility affect color rendering",
+          "aerosol": "Moderate aerosol boosts orange-red scattering; too much turns gray"
+        },
+        "formula": {
+          "base": "Base score = canvas ×0.8 + light path ×0.2",
+          "final": "Final score = base score × correction factors"
+        }
+      }
+    },
     "details": "Details",
     "detailedWeatherData": "Detailed Weather Data",
     "noPredictionData": "⚠️ No {{date}} prediction data available",

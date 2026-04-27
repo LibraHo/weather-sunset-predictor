@@ -9,6 +9,7 @@ const translations = {
       "forecast": "Prévisions",
       "methodology": "Méthode de calcul",
       "map": "Carte Lueur",
+      "shareMap": "Partager la carte",
       apiAccess: 'Accès API'
     },
     "menu": {

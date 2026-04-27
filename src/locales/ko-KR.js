@@ -9,6 +9,7 @@ const translations = {
       "forecast": "예측 기능",
       "methodology": "화염구름 점수 계산 방법",
       "map": "노을 지도",
+      "shareMap": "지도 공유",
       apiAccess: 'API 연동'
     },
     "menu": {

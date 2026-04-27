@@ -13,6 +13,7 @@ export default {
       forecast: 'التنبؤ',
       methodology: 'طريقة حساب النقاط',
       map: 'خريطة السحب الحمراء',
+      shareMap: 'مشاركة الخريطة',
       apiAccess: 'الوصول إلى API'
     },
     menu: {

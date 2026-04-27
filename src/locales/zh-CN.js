@@ -15,6 +15,7 @@ export default {
       forecast: '预测功能',
       methodology: '火烧云计算方法',
       map: '火烧云地图',
+      shareMap: '分享地图',
       apiAccess: 'API接入'
     },
     menu: {
@@ -188,6 +189,151 @@ export default {
     bestTime: '最佳观赏时间',
     analysis: '分析',
     analysisTitle: '📊 分析原因',
+    analysisText: {
+      footer: '观天有时 · 收获美景',
+      scoreBreakdownHint: '查看评分明细',
+      cardTitle: '火烧云形成条件分析',
+      scoreDescription: {
+        excellent: '观赏条件很好',
+        good: '观赏条件不错',
+        someChance: '有一定机会',
+        weak: '观赏条件偏弱'
+      },
+      groups: {
+        favorable: '有利条件',
+        neutral: '一般因素',
+        warnings: '注意因素'
+      },
+      clouds: {
+        high: '高云',
+        mid: '中云',
+        low: '低云'
+      },
+      factors: {
+        high: {
+          abundant: {
+            title: '高层云充沛（{{value}}%）',
+            description: '色彩载体丰富，火烧云基础扎实'
+          },
+          sufficient: {
+            title: '高层云充足（{{value}}%）',
+            description: '具备较好的霞光染色载体'
+          },
+          moderate: {
+            title: '高层云适中（{{value}}%）',
+            description: '可形成火烧云，但色彩可能偏淡'
+          },
+          low: {
+            title: '高层云偏少（{{value}}%）',
+            description: '缺少主要色彩载体'
+          }
+        },
+        mid: {
+          balanced: {
+            title: '中层云适中（{{value}}%）',
+            description: '利于色彩扩散和层次感'
+          },
+          few: {
+            title: '中层云较少（{{value}}%）',
+            highSufficientDescription: '但高层云充足，可独立形成火烧云',
+            limitedDescription: '层次感可能不足'
+          },
+          thick: {
+            title: '中层云偏厚（{{value}}%）',
+            description: '可能让画面偏灰，削弱霞光通透感'
+          }
+        },
+        low: {
+          few: {
+            title: '低云稀少（{{value}}%）',
+            description: '不会遮挡火烧云'
+          },
+          some: {
+            title: '低云较多（{{value}}%）',
+            description: '可能部分遮挡低空色彩'
+          },
+          thick: {
+            title: '低云偏厚（{{value}}%）',
+            description: '遮挡风险较大'
+          }
+        },
+        visibility: {
+          good: {
+            title: '能见度良好（{{value}}km）',
+            description: '空气通透，观赏视野好'
+          },
+          moderate: {
+            title: '能见度一般（{{value}}km）',
+            description: '色彩饱和度可能略受影响'
+          },
+          poor: {
+            title: '能见度偏低（{{value}}km）',
+            description: '雾霾或水汽可能影响观赏'
+          }
+        },
+        humidity: {
+          optimal: {
+            title: '湿度适中（{{value}}%）',
+            description: '利于光线散射'
+          },
+          high: {
+            title: '湿度偏高（{{value}}%）',
+            description: '可能略影响通透感'
+          },
+          low: {
+            title: '湿度偏低（{{value}}%）',
+            description: '空气较干，色彩可能偏淡'
+          }
+        },
+        aod: {
+          moderate: {
+            title: '气溶胶适中（AOD {{value}}）',
+            description: '有利于增强红橙色散射'
+          },
+          high: {
+            title: '气溶胶偏高（AOD {{value}}）',
+            description: '可能灰霾发暗'
+          },
+          low: {
+            title: '空气过于通透（AOD {{value}}）',
+            description: '颜色可能偏淡'
+          }
+        },
+        layers: {
+          single: {
+            title: '云层单一',
+            description: '但高云质量好，仍可形成色彩鲜明的火烧云'
+          }
+        }
+      },
+      conclusion: {
+        excellent: {
+          recommended: '条件优秀，很适合外出观赏晚霞。',
+          limitedLayers: '条件优秀，色彩可期；云层单一，层次感略有不足'
+        },
+        good: {
+          recommended: '条件不错，有较大概率出现壮观的火烧云。',
+          limitedLayers: '条件不错，火烧云概率较高；云层层次稍欠'
+        },
+        fair: '条件中等，需看实际云层演变。',
+        poor: '关键条件不足，火烧云概率偏低。'
+      },
+      scoreBreakdown: {
+        title: '分数明细',
+        hints: {
+          finalDisplayedScore: '最终展示分',
+          combinedBase: '云层与光路融合后的基础分',
+          canvas: '高云/中云提供色彩载体，低云会遮挡',
+          lightPath: '太阳光是否能照到云层',
+          rendering: '湿度、能见度影响颜色表现',
+          aerosol: '适中增强红橙散射，过高会发灰'
+        },
+        formula: {
+          base: '基础分 = 画布 ×0.8 + 光路 ×0.2',
+          final: '最终分 = 基础分 × 修正系数'
+        }
+      }
+    },
     details: '详情',
     detailedWeatherData: '详细气象数据',
     noPredictionData: '⚠️ 暂无{{date}}预测数据',

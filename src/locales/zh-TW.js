@@ -9,6 +9,7 @@ const translations = {
       "forecast": "預測功能",
       "methodology": "火燒雲計算方法",
       "map": "火燒雲地圖",
+      "shareMap": "分享地圖",
       apiAccess: 'API接入'
     },
     "menu": {
@@ -170,6 +171,151 @@ const translations = {
     "bestTime": "最佳觀賞時間",
     "analysis": "分析",
     "analysisTitle": "📊 分析原因",
+    "analysisText": {
+      "footer": "觀察天空 · 收穫美景",
+      "scoreBreakdownHint": "查看分數明細",
+      "cardTitle": "火燒雲形成條件分析",
+      "scoreDescription": {
+        "excellent": "觀賞條件很好",
+        "good": "觀賞條件不錯",
+        "someChance": "有一定機會",
+        "weak": "觀賞條件偏弱"
+      },
+      "groups": {
+        "favorable": "有利條件",
+        "neutral": "一般因素",
+        "warnings": "注意因素"
+      },
+      "clouds": {
+        "high": "高雲",
+        "mid": "中雲",
+        "low": "低雲"
+      },
+      "factors": {
+        "high": {
+          "abundant": {
+            "title": "高層雲充沛（{{value}}%）",
+            "description": "色彩載體豐富，火燒雲基礎扎實"
+          },
+          "sufficient": {
+            "title": "高層雲充足（{{value}}%）",
+            "description": "具備不錯的霞光染色載體"
+          },
+          "moderate": {
+            "title": "高層雲適中（{{value}}%）",
+            "description": "可形成火燒雲，但色彩可能偏淡"
+          },
+          "low": {
+            "title": "高層雲偏少（{{value}}%）",
+            "description": "缺少主要色彩載體"
+          }
+        },
+        "mid": {
+          "balanced": {
+            "title": "中層雲適中（{{value}}%）",
+            "description": "有助於色彩擴散與層次感"
+          },
+          "few": {
+            "title": "中層雲較少（{{value}}%）",
+            "highSufficientDescription": "但高層雲充足，可獨立形成色彩鮮明的火燒雲",
+            "limitedDescription": "層次感可能不足"
+          },
+          "thick": {
+            "title": "中層雲偏厚（{{value}}%）",
+            "description": "可能讓畫面偏灰，削弱霞光通透感"
+          }
+        },
+        "low": {
+          "few": {
+            "title": "低雲稀少（{{value}}%）",
+            "description": "不太會遮擋火燒雲"
+          },
+          "some": {
+            "title": "低雲較多（{{value}}%）",
+            "description": "可能部分遮擋低空色彩"
+          },
+          "thick": {
+            "title": "低雲偏厚（{{value}}%）",
+            "description": "有較高遮擋風險"
+          }
+        },
+        "visibility": {
+          "good": {
+            "title": "能見度良好（{{value}}km）",
+            "description": "空氣通透，觀賞視野好"
+          },
+          "moderate": {
+            "title": "能見度一般（{{value}}km）",
+            "description": "色彩飽和度可能略受影響"
+          },
+          "poor": {
+            "title": "能見度偏低（{{value}}km）",
+            "description": "霧霾或水汽可能影響觀賞"
+          }
+        },
+        "humidity": {
+          "optimal": {
+            "title": "濕度適中（{{value}}%）",
+            "description": "有利於光線散射"
+          },
+          "high": {
+            "title": "濕度偏高（{{value}}%）",
+            "description": "可能略影響通透感"
+          },
+          "low": {
+            "title": "濕度偏低（{{value}}%）",
+            "description": "空氣較乾，色彩可能偏淡"
+          }
+        },
+        "aod": {
+          "moderate": {
+            "title": "氣膠適中（AOD {{value}}）",
+            "description": "有助於增強紅橙色散射"
+          },
+          "high": {
+            "title": "氣膠偏高（AOD {{value}}）",
+            "description": "可能偏霧暗且發灰"
+          },
+          "low": {
+            "title": "空氣過於通透（AOD {{value}}）",
+            "description": "色彩可能偏淡"
+          }
+        },
+        "layers": {
+          "single": {
+            "title": "雲層單一",
+            "description": "但高雲品質好，仍可形成色彩鮮明的火燒雲"
+          }
+        }
+      },
+      "conclusion": {
+        "excellent": {
+          "recommended": "條件優秀，很適合外出觀賞晚霞。",
+          "limitedLayers": "條件優秀，色彩可期；雲層單一，層次感略有不足"
+        },
+        "good": {
+          "recommended": "條件不錯，火燒雲機率較高。",
+          "limitedLayers": "條件不錯，火燒雲可能性高；雲層層次稍欠"
+        },
+        "fair": "條件中等，建議再觀察雲層演變。",
+        "poor": "關鍵條件不足，火燒雲機率較低。"
+      },
+      "scoreBreakdown": {
+        "title": "分數明細",
+        "hints": {
+          "finalDisplayedScore": "最終顯示分",
+          "combinedBase": "雲層與光路融合後的基礎分",
+          "canvas": "高雲/中雲提供色彩載體，低雲會遮擋",
+          "lightPath": "太陽光是否能照到雲層",
+          "rendering": "濕度、能見度影響顏色呈現",
+          "aerosol": "適中可增強紅橙散射，過高會發灰"
+        },
+        "formula": {
+          "base": "基礎分 = 畫布 ×0.8 + 光路 ×0.2",
+          "final": "最終分 = 基礎分 × 修正係數"
+        }
+      }
+    },
     "details": "詳情",
     "detailedWeatherData": "詳細氣象資料",
     "noPredictionData": "⚠️ 暫無{{date}}預測資料",

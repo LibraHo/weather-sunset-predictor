@@ -9,6 +9,7 @@ const translations = {
       "forecast": "予測機能",
       "methodology": "焼き雲スコアの計算方法",
       "map": "火焼け空マップ",
+      "shareMap": "地図を共有",
       apiAccess: 'API接続'
     },
     "menu": {
