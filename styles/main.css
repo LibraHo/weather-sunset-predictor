@@ -7463,3 +7463,62 @@ body[data-actual-theme="dark"] {
   background: color-mix(in srgb, var(--theme-card-bg) 90%, transparent) !important;
   border-color: var(--theme-card-border) !important;
 }
+
+/* English/i18n layout resilience: prevent longer labels from breaking compact cards. */
+html[lang^="en"] .phenomenon-title-copy h3,
+html[lang^="en"] .phenomenon-date-tag,
+html[lang^="en"] .score-gauge-grade,
+html[lang^="en"] .score-breakdown-hint-trigger,
+html[lang^="en"] .cloud-condition-label,
+html[lang^="en"] .cloud-condition-top strong,
+html[lang^="en"] .app-info-label,
+html[lang^="en"] .app-info-value,
+html[lang^="en"] .prediction-app-footer {
+  overflow-wrap: anywhere;
+  word-break: normal;
+  hyphens: auto;
+}
+
+html[lang^="en"] .phenomenon-title-card {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+html[lang^="en"] .phenomenon-title-copy,
+html[lang^="en"] .score-gauge-caption,
+html[lang^="en"] .app-info-row,
+html[lang^="en"] .cloud-condition-top {
+  min-width: 0;
+}
+
+html[lang^="en"] .phenomenon-title-copy h3,
+html[lang^="en"] .score-gauge-grade,
+html[lang^="en"] .score-breakdown-hint-trigger,
+html[lang^="en"] .cloud-condition-label,
+html[lang^="en"] .app-info-label {
+  line-height: 1.12;
+}
+
+html[lang^="en"] .score-breakdown-hint-trigger {
+  max-width: 100%;
+  text-align: center;
+}
+
+@media (max-width: 430px) {
+  html[lang^="en"] .phenomenon-title-copy h3 {
+    font-size: clamp(1rem, 5vw, 1.28rem);
+  }
+
+  html[lang^="en"] .score-gauge-grade {
+    font-size: clamp(0.7rem, 3.4vw, 0.86rem);
+  }
+
+  html[lang^="en"] .score-breakdown-hint-trigger,
+  html[lang^="en"] .prediction-app-footer {
+    font-size: clamp(0.62rem, 3vw, 0.76rem);
+  }
+
+  html[lang^="en"] .app-info-row {
+    grid-template-columns: auto minmax(0, 0.9fr) minmax(0, 1.1fr);
+    column-gap: 6px;
+  }
+}
