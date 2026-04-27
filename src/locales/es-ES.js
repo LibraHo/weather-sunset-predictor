@@ -9,7 +9,8 @@ const translations = {
       "forecast": "Pronóstico",
       "methodology": "Metodología de cálculo",
       "map": "Mapa de Resplandor",
-      apiAccess: 'Acceso API'
+            "shareMap": "Mapa compartido",
+apiAccess: 'Acceso API'
     },
     "menu": {
       "ariaLabel": "Cambiar vista",

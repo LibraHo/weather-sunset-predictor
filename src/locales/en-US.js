@@ -9,6 +9,7 @@ const translations = {
       "forecast": "Forecast",
       "methodology": "Methodology",
       "map": "Fire Sky Map",
+      "shareMap": "Share Map",
       "apiAccess": "API Access"
     },
     "menu": {

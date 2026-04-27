@@ -9,7 +9,8 @@ const translations = {
       "forecast": "Chức năng dự báo",
       "methodology": "Phương pháp tính điểm mây đẹp",
       "map": "Bản đồ Ráng đỏ",
-      apiAccess: 'Truy cập API'
+            "shareMap": "Bản đồ chia sẻ",
+apiAccess: 'Truy cập API'
     },
     "menu": {
       "ariaLabel": "Chuyển trang",

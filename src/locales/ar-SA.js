@@ -13,7 +13,8 @@ export default {
       forecast: 'التنبؤ',
       methodology: 'طريقة حساب النقاط',
       map: 'خريطة السحب الحمراء',
-      apiAccess: 'الوصول إلى API'
+            shareMap: 'خريطة المشاركة',
+apiAccess: 'الوصول إلى API'
     },
     menu: {
       ariaLabel: 'تبديل العرض',
