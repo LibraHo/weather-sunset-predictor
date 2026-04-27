@@ -540,6 +540,18 @@ class WeatherController {
     return this.i18n?.t ? this.i18n.t(key) : directionCode;
   }
 
+  _t(key, fallback = '') {
+    if (this.i18n?.t) {
+      const translated = this.i18n.t(key);
+      if (translated && translated !== key) return translated;
+    }
+    return fallback;
+  }
+
+  _formatTemplate(template, values = {}) {
+    return String(template).replace(/\{\{(\w+)\}\}/g, (_, key) => values[key] ?? '');
+  }
+
   /**
    * 获取天气图标
    * @param {number} cloudCover - 云量百分比
@@ -1500,7 +1512,7 @@ class WeatherController {
     const bestPoints = points.filter(p => p.score >= 60).sort((a, b) => b.score - a.score);
 
     if (bestPoints.length === 0) {
-      container.innerHTML = `<p style="color: var(--color-text-light);">${this.i18n.t('surrounding.noData') || '当前周边区域火烧云观赏条件一般'}</p>`;
+      container.innerHTML = `<p style="color: var(--color-text-light);">${this._t('weatherMap.surroundingFair', '当前周边区域火烧云观赏条件一般')}</p>`;
       return;
     }
 
@@ -1510,16 +1522,21 @@ class WeatherController {
 
       if (p.score >= 80) {
         qualityClass = 'color: var(--color-excellent, var(--color-success));';
-        qualityText = this.i18n.t('surrounding.legend.excellent') || '优秀';
+        qualityText = this._t('weatherMap.quality.excellent', '优秀');
       } else if (p.score >= 60) {
         qualityClass = 'color: var(--color-good, var(--color-warning));';
-        qualityText = this.i18n.t('surrounding.legend.good') || '良好';
+        qualityText = this._t('weatherMap.quality.good', '良好');
       }
+
+      const scoreLabel = this._formatTemplate(this._t('weatherMap.scoreWithQuality', '{{score}}分 - {{quality}}'), {
+        score: p.score,
+        quality: qualityText
+      });
 
       return `
         <div class="direction-item" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--color-border); cursor: pointer;" data-index="${index}">
           <span>${p.name} (${p.label})</span>
-          <span style="${qualityClass} font-weight: 600;">${p.score}分 - ${qualityText}</span>
+          <span style="${qualityClass} font-weight: 600;">${scoreLabel}</span>
         </div>
       `;
     }).join('');
@@ -1542,7 +1559,11 @@ class WeatherController {
 
     // 可以在这里添加显示详细信息的功能
     // 例如：显示该方向的详细气象数据、观赏建议等
-    toastService.show(`${point.name}方向｜评分: ${point.score}分｜距离: ${point.distance}公里`, 'info', 5000);
+    toastService.show(this._formatTemplate(this._t('weatherMap.pointToast', '{{name}}方向｜评分: {{score}}分｜距离: {{distance}}公里'), {
+      name: point.name,
+      score: point.score,
+      distance: point.distance
+    }), 'info', 5000);
   }
 
   /**
@@ -1709,9 +1730,9 @@ class WeatherController {
 
     if (statusEl) {
       if (success) {
-        statusEl.innerHTML = `<span style="color: var(--color-success);">✓ ${this.i18n.t('overlay.active') || '覆盖层已显示'}</span>`;
+        statusEl.innerHTML = `<span style="color: var(--color-success);">✓ ${this._t('overlay.active', '覆盖层已显示')}</span>`;
       } else {
-        statusEl.innerHTML = `<span style="color: var(--color-error);">✗ ${error || (this.i18n.t('overlay.error') || '覆盖层生成失败')}</span>`;
+        statusEl.innerHTML = `<span style="color: var(--color-error);">✗ ${error || this._t('overlay.error', '覆盖层生成失败')}</span>`;
       }
     }
   }
@@ -1785,11 +1806,11 @@ class WeatherController {
   }
 
 
-  _setChinaSpotsEmptyState(show, message = '今日暂无可见火烧云点位') {
+  _setChinaSpotsEmptyState(show, message = null) {
     const emptyEl = document.getElementById('china-spots-empty');
     if (!emptyEl) return;
 
-    emptyEl.textContent = message;
+    emptyEl.textContent = message || this._t('weatherMap.emptyChinaSpots', '今日暂无可见火烧云点位');
     emptyEl.classList.toggle('hidden', !show);
   }
 
@@ -1809,8 +1830,11 @@ class WeatherController {
       }
     }
 
+    const timeLocale = this.i18n?.getLanguage?.() || 'zh-CN';
     tsEl.textContent = latestTime
-      ? '更新于 ' + latestTime.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+      ? this._formatTemplate(this._t('weatherMap.updatedAt', '更新于 {{time}}'), {
+          time: latestTime.toLocaleTimeString(timeLocale, { hour: '2-digit', minute: '2-digit' })
+        })
       : '';
   }
 
@@ -1823,18 +1847,19 @@ class WeatherController {
     if (!labelEl) return;
 
     const now = new Date();
-    const todayStr = now.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+    const timeLocale = this.i18n?.getLanguage?.() || 'zh-CN';
+    const todayStr = now.toLocaleDateString(timeLocale, { month: 'short', day: 'numeric' });
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = tomorrow.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+    const tomorrowStr = tomorrow.toLocaleDateString(timeLocale, { month: 'short', day: 'numeric' });
 
     let text = '';
     if (period === 'sunrise') {
-      text = '明天的朝霞';
+      text = this._formatTemplate(this._t('weatherMap.period.sunriseTomorrow', '明天的朝霞'), { date: tomorrowStr });
     } else if (period === 'test') {
-      text = '测试图层（模拟数据）';
+      text = this._t('weatherMap.period.testLayer', '测试图层（模拟数据）');
     } else {
-      text = '今天的晚霞';
+      text = this._formatTemplate(this._t('weatherMap.period.sunsetToday', '今天的晚霞'), { date: todayStr });
     }
 
     labelEl.textContent = text;

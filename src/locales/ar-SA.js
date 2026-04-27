@@ -547,6 +547,16 @@ apiAccess: 'الوصول إلى API'
     watermark: 'Xiake · Capture every brilliant sky'
   },
 
+  weatherMap: {
+    surroundingFair: 'Nearby fire-cloud viewing conditions are average',
+    scoreWithQuality: '{{score}} pts - {{quality}}',
+    pointToast: '{{name}} direction | Score: {{score}} pts | Distance: {{distance}} km',
+    emptyChinaSpots: 'No visible fire-cloud spots today',
+    updatedAt: 'Updated at {{time}}',
+    quality: { excellent: 'Excellent', good: 'Good' },
+    period: { sunriseTomorrow: "Tomorrow's sunrise glow", sunsetToday: "Today's sunset glow", testLayer: 'Test layer (mock data)' }
+  },
+
   loading: {
     data: 'جاري تحميل البيانات...',
     weather: 'جاري الحصول على بيانات الطقس...',

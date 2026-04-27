@@ -494,6 +494,16 @@ export default {
     notAvailable: '覆盖层功能不可用（需要先获取周边数据）'
   },
 
+  weatherMap: {
+    surroundingFair: '当前周边区域火烧云观赏条件一般',
+    scoreWithQuality: '{{score}}分 - {{quality}}',
+    pointToast: '{{name}}方向｜评分: {{score}}分｜距离: {{distance}}公里',
+    emptyChinaSpots: '今日暂无可见火烧云点位',
+    updatedAt: '更新于 {{time}}',
+    quality: { excellent: '优秀', good: '良好' },
+    period: { sunriseTomorrow: '明天的朝霞', sunsetToday: '今天的晚霞', testLayer: '测试图层（模拟数据）' }
+  },
+
   // 时间
   time: {
     today: '今天',
