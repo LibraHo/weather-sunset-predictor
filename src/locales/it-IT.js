@@ -9,7 +9,8 @@ const translations = {
       "forecast": "Previsioni",
       "methodology": "Metodologia di calcolo",
       "map": "Mappa Luminosità",
-      apiAccess: 'Accesso API'
+            "shareMap": "Mappa condivisa",
+apiAccess: 'Accesso API'
     },
     "menu": {
       "ariaLabel": "Cambia vista",

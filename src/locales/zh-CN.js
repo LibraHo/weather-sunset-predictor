@@ -15,6 +15,7 @@ export default {
       forecast: '预测功能',
       methodology: '火烧云计算方法',
       map: '火烧云地图',
+      shareMap: '分享地图',
       apiAccess: 'API接入'
     },
     menu: {

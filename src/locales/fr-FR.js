@@ -9,7 +9,8 @@ const translations = {
       "forecast": "Prévisions",
       "methodology": "Méthode de calcul",
       "map": "Carte Lueur",
-      apiAccess: 'Accès API'
+            "shareMap": "Carte partagée",
+apiAccess: 'Accès API'
     },
     "menu": {
       "ariaLabel": "Changer de vue",
