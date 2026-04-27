@@ -6350,6 +6350,30 @@ html[data-actual-theme="light"] .prediction-app-card {
   --app-border: var(--color-border);
 }
 
+/* Fix: actual-light theme fallback must not leave the weather hero with dark-hero white text. */
+html.theme-actual-light .weather-visual-panel,
+html[data-actual-theme="light"] .weather-visual-panel {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255, 196, 104, 0.30), transparent 42%),
+    linear-gradient(145deg, rgba(255, 252, 246, 0.94) 0%, rgba(255, 239, 218, 0.88) 100%) !important;
+  border-color: rgba(186, 132, 72, 0.20) !important;
+  box-shadow: 0 10px 24px rgba(139, 92, 43, 0.12) !important;
+}
+html.theme-actual-light .weather-temp-large,
+html.theme-actual-light .weather-wind-main,
+html.theme-actual-light .weather-wind-direction-icon,
+html[data-actual-theme="light"] .weather-temp-large,
+html[data-actual-theme="light"] .weather-wind-main,
+html[data-actual-theme="light"] .weather-wind-direction-icon {
+  color: #3d2b1f !important;
+  text-shadow: none !important;
+}
+html.theme-actual-light .weather-desc,
+html[data-actual-theme="light"] .weather-desc {
+  color: #7a6554 !important;
+  text-shadow: none !important;
+}
+
 /* 需求46 修正：标题标签/分享按钮居中，菜单与分数明细统一磨砂 glass */
 .phenomenon-title-card {
   justify-content: center !important;
