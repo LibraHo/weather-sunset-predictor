@@ -45,7 +45,6 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ "$DRY_RUN" != "true" ]]; then
-  require_cmd rsync
   require_cmd ssh
   require_cmd git
 fi
@@ -77,7 +76,7 @@ else
   git -C "$LOCAL" pull origin main
 fi
 
-log "🚀 同步到服务器（排除运行时文件）..."
+log "🚀 同步到服务器（优先 rsync；缺失时 tar/scp fallback）..."
 RSYNC_EXCLUDES=(
   --exclude='.git/'
   --exclude='node_modules/'
@@ -102,12 +101,64 @@ RSYNC_OPTS=(
   "${RSYNC_EXCLUDES[@]}"
 )
 
+sync_with_rsync() {
+  rsync -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
+    "${RSYNC_OPTS[@]}" "$LOCAL/" "$REMOTE:~/weather-sunset-predictor/"
+}
+
+sync_with_tar_fallback() {
+  local archive manifest remote_archive remote_manifest
+  archive="/tmp/weather-sunset-deploy.tar.gz"
+  manifest="/tmp/weather-sunset-deploy.manifest"
+  remote_archive="/tmp/weather-sunset-deploy.tar.gz"
+  remote_manifest="/tmp/weather-sunset-deploy.manifest"
+
+  git -C "$LOCAL" archive --format=tar.gz --output="$archive" HEAD
+  git -C "$LOCAL" ls-files | sort > "$manifest"
+
+  scp -i "$SSH_KEY" -o StrictHostKeyChecking=no "$archive" "$manifest" "$REMOTE:/tmp/"
+  ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$REMOTE" <<'TAR_SYNC'
+set -euo pipefail
+DEPLOY_DIR="$HOME/weather-sunset-predictor"
+REMOTE_ARCHIVE="/tmp/weather-sunset-deploy.tar.gz"
+REMOTE_MANIFEST="/tmp/weather-sunset-deploy.manifest"
+OLD_MANIFEST="$DEPLOY_DIR/.deploy-manifest"
+[ -n "$DEPLOY_DIR" ] || { echo "ERROR: DEPLOY_DIR empty"; exit 1; }
+mkdir -p "$DEPLOY_DIR"
+
+# Delete files that existed in the previous fallback manifest but no longer exist in the new one.
+# Protected runtime paths are never removed here.
+if [ -f "$OLD_MANIFEST" ]; then
+  comm -23 "$OLD_MANIFEST" "$REMOTE_MANIFEST" | while IFS= read -r rel; do
+    case "$rel" in
+      ""|/*|*".."*|.env|server/.env|node_modules/*|server/node_modules/*|.xiake/*|uploads/*|server/uploads/*|log/*|server/log/*|cache/*|server/cache/*)
+        continue
+        ;;
+    esac
+    if [ -f "$DEPLOY_DIR/$rel" ]; then
+      rm -f "$DEPLOY_DIR/$rel"
+    fi
+  done
+fi
+
+tar -xzf "$REMOTE_ARCHIVE" -C "$DEPLOY_DIR"
+cp "$REMOTE_MANIFEST" "$OLD_MANIFEST"
+TAR_SYNC
+}
+
 if [[ "$DRY_RUN" == "true" ]]; then
   log "  [dry-run] 传输预览："
   echo "  rsync -e \"ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no\" --dry-run ${RSYNC_OPTS[*]} \"${LOCAL}/\" \"${REMOTE}:~/weather-sunset-predictor/\""
+  echo "  [fallback if rsync missing] git archive HEAD -> scp tar + manifest -> remote extract"
 else
-  rsync -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
-    "${RSYNC_OPTS[@]}" "$LOCAL/" "$REMOTE:~/weather-sunset-predictor/"
+  if command -v rsync >/dev/null; then
+    sync_with_rsync
+  else
+    require_cmd scp
+    require_cmd tar
+    log "  ⚠️ 本地缺少 rsync，自动改用 tar/scp fallback"
+    sync_with_tar_fallback
+  fi
 fi
 
 log "🔄 重启服务并健康检查..."
