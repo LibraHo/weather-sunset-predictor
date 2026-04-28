@@ -5,7 +5,7 @@
 set -euo pipefail
 
 REMOTE="ubuntu@43.143.237.15"
-SSH_KEY="$HOME/.ssh/id_ed25519"
+SSH_KEY="${SSH_KEY:-$HOME/.ssh/id_ed25519}"
 LOCAL="$(cd "$(dirname "$0")" && pwd)"
 DRY_RUN=false
 
@@ -25,10 +25,23 @@ require_non_empty() {
   fi
 }
 
-for arg in "$@"; do
-  if [[ "$arg" == "--dry-run" ]]; then
-    DRY_RUN=true
-  fi
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --dry-run)
+      DRY_RUN=true
+      ;;
+    --ssh-key)
+      if [[ -z "${2-}" ]]; then
+        echo "❌ --ssh-key 缺少参数"
+        exit 1
+      fi
+      SSH_KEY="$2"
+      shift
+      ;;
+    *)
+      ;;
+  esac
+  shift
 done
 
 if [[ "$DRY_RUN" != "true" ]]; then
@@ -54,7 +67,7 @@ log "📦 部署前备份服务器配置..."
 if [[ "$DRY_RUN" == "true" ]]; then
   log "  [dry-run] 跳过备份（仅演练）"
 else
-  bash "$LOCAL/scripts/pre-deploy-backup.sh" || { echo '⚠️ 备份失败，中止部署'; exit 1; }
+  bash "$LOCAL/scripts/pre-deploy-backup.sh" --ssh-key "$SSH_KEY" || { echo '⚠️ 备份失败，中止部署'; exit 1; }
 fi
 
 log "📦 拉取最新代码..."
@@ -72,8 +85,15 @@ RSYNC_EXCLUDES=(
   --exclude='.env'
   --exclude='server/.env'
   --exclude='.xiake/'
+  --exclude='.xiake/**'
   --exclude='__pycache__/'
   --exclude='coverage/'
+  --exclude='uploads/'
+  --exclude='server/uploads/'
+  --exclude='log/'
+  --exclude='server/log/'
+  --exclude='cache/'
+  --exclude='server/cache/'
 )
 RSYNC_OPTS=(
   -az
@@ -85,7 +105,7 @@ RSYNC_OPTS=(
 
 if [[ "$DRY_RUN" == "true" ]]; then
   log "  [dry-run] 传输预览："
-  echo "  rsync -e \"ssh -i $SSH_KEY -o StrictHostKeyChecking=no\" ${RSYNC_OPTS[*]} --dry-run \"$LOCAL/\" \"$REMOTE:~/weather-sunset-predictor/\""
+  echo "  rsync -e \"ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no\" --dry-run ${RSYNC_OPTS[*]} \"${LOCAL}/\" \"${REMOTE}:~/weather-sunset-predictor/\""
 else
   rsync -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
     "${RSYNC_OPTS[@]}" "$LOCAL/" "$REMOTE:~/weather-sunset-predictor/"
@@ -99,23 +119,74 @@ else
 set -euo pipefail
 
 DEPLOY_DIR="$HOME/weather-sunset-predictor"
-NODE_BIN="/root/.nvm/versions/node/v22.22.0/bin/node"
 APP_DIR="$DEPLOY_DIR/server"
 APP_ENTRY="index.js"
+NODE_BIN=""
+
+resolve_node() {
+  local candidates=(
+    "/usr/local/bin/node"
+    "$(command -v node 2>/dev/null || true)"
+    "$HOME/.nvm/versions/node/v22.22.0/bin/node"
+    "$(command ls -dt /root/.nvm/versions/node/*/bin/node 2>/dev/null | head -n 1 || true)"
+  )
+
+  local candidate=""
+  for candidate in "${candidates[@]}"; do
+    if [ -n "$candidate" ] && [ -x "$candidate" ]; then
+      NODE_BIN="$candidate"
+      return 0
+    fi
+  done
+
+  echo "❌ 未找到可执行 Node 二进制"
+  return 1
+}
+
+resolve_node
+
+APP_ENV_FILE="$APP_DIR/.env"
+
+resolve_port() {
+  local port=""
+  if [ -f "$APP_ENV_FILE" ]; then
+    port="$(awk -F= '/^PORT=/{gsub(/^[ \t\"\x27]+|[ \t\"\x27]+$/, "", $2); print $2}' "$APP_ENV_FILE" | tail -n 1)"
+  fi
+  if [ -n "$port" ] && [ "$port" -eq "$port" ] 2>/dev/null; then
+    echo "$port"
+  else
+    echo 3000
+  fi
+}
+
+stop_with_sudo() {
+  local signal="$1"
+  local pid="$2"
+
+  if kill -0 "$pid" 2>/dev/null; then
+    if sudo kill -s "$signal" "$pid" 2>/dev/null; then
+      return 0
+    fi
+    kill -s "$signal" "$pid" || true
+  fi
+}
 
 if [ -z "$DEPLOY_DIR" ] || [ -z "$APP_DIR" ] || [ -z "$APP_ENTRY" ]; then
   echo "❌ 重启变量不能为空"
   exit 1
 fi
 
+APP_PORT="$(resolve_port)"
+echo "  → 健康检查端口: ${APP_PORT}"
+
 get_pids() {
   local target_pids=""
   local lines
 
   for pat in \
-    "/usr/local/bin/node .*${APP_ENTRY}$" \
     "$NODE_BIN .*${APP_ENTRY}$" \
-    "node .*${APP_DIR}/${APP_ENTRY}$" \
+    "/usr/local/bin/node .*${APP_ENTRY}$" \
+    "node .*${APP_ENTRY}$" \
     "node .*weather-sunset-predictor/server/${APP_ENTRY}$"; do
     lines="$(pgrep -f "$pat" || true)"
     if [ -n "$lines" ]; then
@@ -135,7 +206,7 @@ if [ -n "$PIDS" ]; then
   while IFS= read -r pid; do
     [ -z "$pid" ] && continue
     if kill -0 "$pid" 2>/dev/null; then
-      kill -TERM "$pid" || true
+      stop_with_sudo TERM "$pid"
     fi
   done <<< "$PIDS"
 
@@ -146,7 +217,7 @@ if [ -n "$PIDS" ]; then
     while IFS= read -r pid; do
       [ -z "$pid" ] && continue
       if kill -0 "$pid" 2>/dev/null; then
-        kill -KILL "$pid" || true
+        stop_with_sudo KILL "$pid"
       fi
     done <<< "$REMAIN"
   fi
@@ -164,15 +235,15 @@ if ! pgrep -af "$NODE_BIN .*${APP_ENTRY}" >/dev/null; then
   exit 1
 fi
 
-echo "  → 健康检查 localhost:3000/health ..."
-if curl -fsS --max-time 5 http://127.0.0.1:3000/health >/dev/null; then
+echo "  → 健康检查 localhost:${APP_PORT}/health ..."
+if curl -fsS --max-time 5 "http://127.0.0.1:${APP_PORT}/health" >/dev/null; then
   echo "✅ 本地健康检查通过"
 else
   echo "⚠️ 健康检查失败，尝试端口检查..."
-  if ss -ltnp 2>/dev/null | grep -q ':3000'; then
-    echo "✅ 端口 3000 已监听"
+  if ss -ltnp 2>/dev/null | grep -q ":${APP_PORT}"; then
+    echo "✅ 端口 ${APP_PORT} 已监听"
   else
-    echo "❌ 端口 3000 未监听"
+    echo "❌ 端口 ${APP_PORT} 未监听"
     exit 1
   fi
 fi

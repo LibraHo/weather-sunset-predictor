@@ -1,14 +1,42 @@
 #!/bin/bash
 # 部署前自动备份服务器关键配置
-# 用法：bash scripts/pre-deploy-backup.sh
+# 用法：bash scripts/pre-deploy-backup.sh [--ssh-key <path>] [--dry-run]
 set -e
 
 REMOTE="ubuntu@43.143.237.15"
+SSH_KEY="${SSH_KEY:-$HOME/.ssh/id_ed25519}"
+DRY_RUN=false
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --dry-run)
+      DRY_RUN=true
+      ;;
+    --ssh-key)
+      if [[ -z "${2-}" ]]; then
+        echo "❌ --ssh-key 缺少参数"
+        exit 1
+      fi
+      SSH_KEY="$2"
+      shift
+      ;;
+    *)
+      ;;
+  esac
+  shift
+done
+
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 
 echo "📦 备份服务器配置..."
 
-ssh "$REMOTE" bash -s <<REMOTE_SCRIPT
+if [[ "$DRY_RUN" == "true" ]]; then
+  echo "  [dry-run] 跳过 SSH 执行，仅预览："
+  echo "  ssh -i ${SSH_KEY} ${REMOTE} bash -s <<'REMOTE_SCRIPT'"
+  exit 0
+fi
+
+ssh -i "$SSH_KEY" "$REMOTE" bash -s <<REMOTE_SCRIPT
 set -e
 DEPLOY_DIR="\$HOME/weather-sunset-predictor"
 BACKUP_DIR="\$HOME/.xiake-backup/${TIMESTAMP}"
