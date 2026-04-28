@@ -614,7 +614,17 @@ apiAccess: 'API接入'
     "active": "已啟用",
     "error": "錯誤",
     "notAvailable": "不可用"
-  }
+  },
+  "weatherMap": {
+    "surroundingFair": "目前周邊區域的火燒雲觀賞條件普通",
+    "scoreWithQuality": "{{score}}分 - {{quality}}",
+    "pointToast": "{{name}}方向｜評分: {{score}}分｜距離: {{distance}}公里",
+    "emptyChinaSpots": "今日暫無可見火燒雲點位",
+    "updatedAt": "更新於 {{time}}",
+    "quality": { "excellent": "優秀", "good": "良好" },
+    "period": { "sunriseTomorrow": "明天的朝霞", "sunsetToday": "今天的晚霞", "testLayer": "測試圖層（模擬資料）" }
+  },
+
 };
 
 export default translations;

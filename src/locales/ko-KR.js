@@ -614,7 +614,17 @@ apiAccess: 'API 연동'
     "active": "활성화",
     "error": "오류",
     "notAvailable": "이용 불가"
-  }
+  },
+  "weatherMap": {
+    "surroundingFair": "주변 지역의 노을구름 관측 조건은 보통입니다",
+    "scoreWithQuality": "{{score}}점 - {{quality}}",
+    "pointToast": "{{name}} 방향 | 점수: {{score}}점 | 거리: {{distance}}km",
+    "emptyChinaSpots": "오늘 표시할 수 있는 노을구름 지점이 없습니다",
+    "updatedAt": "{{time}} 업데이트",
+    "quality": { "excellent": "매우 좋음", "good": "좋음" },
+    "period": { "sunriseTomorrow": "내일 아침노을", "sunsetToday": "오늘 저녁노을", "testLayer": "테스트 레이어(모의 데이터)" }
+  },
+
 };
 
 export default translations;

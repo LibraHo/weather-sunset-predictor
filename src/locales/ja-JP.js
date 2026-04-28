@@ -614,7 +614,17 @@ apiAccess: 'API接続'
     "active": "有効",
     "error": "エラー",
     "notAvailable": "利用不可"
-  }
+  },
+  "weatherMap": {
+    "surroundingFair": "周辺エリアの焼け雲観賞条件は普通です",
+    "scoreWithQuality": "{{score}}点 - {{quality}}",
+    "pointToast": "{{name}}方向｜スコア: {{score}}点｜距離: {{distance}}km",
+    "emptyChinaSpots": "本日表示できる焼け雲スポットはありません",
+    "updatedAt": "{{time}} 更新",
+    "quality": { "excellent": "優秀", "good": "良好" },
+    "period": { "sunriseTomorrow": "明日の朝焼け", "sunsetToday": "今日の夕焼け", "testLayer": "テストレイヤー（モックデータ）" }
+  },
+
 };
 
 export default translations;
