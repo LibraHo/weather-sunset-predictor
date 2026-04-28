@@ -173,23 +173,37 @@ APP_DIR="$DEPLOY_DIR/server"
 APP_ENTRY="index.js"
 NODE_BIN=""
 
+node_major_version() {
+  local node_bin="$1"
+  sudo "$node_bin" -p 'Number(process.versions.node.split(".")[0])' 2>/dev/null || true
+}
+
 resolve_node() {
   local candidates=(
     "/usr/local/bin/node"
-    "$(command -v node 2>/dev/null || true)"
     "$HOME/.nvm/versions/node/v22.22.0/bin/node"
     "$(ls -dt /root/.nvm/versions/node/*/bin/node 2>/dev/null | head -n 1 || true)"
+    "$(command -v node 2>/dev/null || true)"
   )
 
-  local candidate=""
+  local candidate="" major=""
   for candidate in "${candidates[@]}"; do
-    if [ -n "$candidate" ] && [ -x "$candidate" ]; then
-      NODE_BIN="$candidate"
-      return 0
+    [ -n "$candidate" ] || continue
+
+    # /usr/local/bin/node points into /root/.nvm on this server; ubuntu cannot execute it
+    # directly, but sudo can. Check with sudo because deployment starts node with sudo.
+    if sudo test -x "$candidate" 2>/dev/null; then
+      major="$(node_major_version "$candidate")"
+      if [ -n "$major" ] && [ "$major" -ge 18 ] 2>/dev/null; then
+        NODE_BIN="$candidate"
+        echo "  → 使用 Node: $NODE_BIN (major=$major)"
+        return 0
+      fi
+      echo "  → 跳过 Node: $candidate (major=${major:-unknown}, 需要 >=18)"
     fi
   done
 
-  echo "❌ 未找到可执行 Node 二进制"
+  echo "❌ 未找到可执行且版本 >=18 的 Node 二进制"
   return 1
 }
 
@@ -284,8 +298,8 @@ nohup sudo "$NODE_BIN" "$APP_DIR/$APP_ENTRY" >> /home/ubuntu/ws-backend.log 2>&1
 sleep 5
 
 echo "  → 验证进程存活..."
-if ! pgrep -af "$NODE_BIN .*${APP_ENTRY}" >/dev/null; then
-  echo "❌ 启动失败：未检测到 $NODE_BIN 进程"
+if ! pgrep -af "${NODE_BIN} .*${APP_ENTRY}|node .*weather-sunset-predictor/server/${APP_ENTRY}" >/dev/null; then
+  echo "❌ 启动失败：未检测到目标 Node 进程"
   exit 1
 fi
 
