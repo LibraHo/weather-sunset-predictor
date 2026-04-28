@@ -1810,7 +1810,7 @@ class WeatherController {
     const emptyEl = document.getElementById('china-spots-empty');
     if (!emptyEl) return;
 
-    emptyEl.textContent = message || this._t('weatherMap.emptyChinaSpots', '今日暂无可见火烧云点位');
+    emptyEl.textContent = message || this._t('weatherMap.emptyChinaSpots');
     emptyEl.classList.toggle('hidden', !show);
   }
 
