@@ -1381,7 +1381,7 @@ class PredictionController {
     }
 
     if (weather.layerCount <= 1 && weather.high >= 35) {
-      add('warning', this._uiText('Single cloud layer', '云层单一'), this._uiText('High clouds are good enough to still produce vivid colors', '但高云质量好，仍可形成色彩鲜明的火烧云'));
+      add('warning', this._uiText('Single cloud layer', '云层单一'), this._uiText('High clouds can still create vivid colors', '高云质量好，仍可形成鲜明火烧云'));
     }
 
     return groups.filter(group => group.items.length > 0);
