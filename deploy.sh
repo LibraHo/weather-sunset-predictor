@@ -77,6 +77,20 @@ else
 fi
 
 log "🚀 同步到服务器（优先 rsync；缺失时 tar/scp fallback）..."
+if [[ "$DRY_RUN" == "true" ]]; then
+  log "  [dry-run] 跳过远端运行时目录权限修复"
+else
+  log "  → 修复远端运行时目录权限（避免 root-owned node_modules 阻塞同步）..."
+  ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$REMOTE" <<'PREP_REMOTE'
+set -euo pipefail
+DEPLOY_DIR="$HOME/weather-sunset-predictor"
+[ -n "$DEPLOY_DIR" ] || { echo "ERROR: DEPLOY_DIR empty"; exit 1; }
+if [ -d "$DEPLOY_DIR" ]; then
+  sudo chown -R "$USER:$USER" "$DEPLOY_DIR/server/node_modules" 2>/dev/null || true
+  sudo chown "$USER:$USER" "$DEPLOY_DIR" "$DEPLOY_DIR/server" 2>/dev/null || true
+fi
+PREP_REMOTE
+fi
 RSYNC_EXCLUDES=(
   --exclude='.git/'
   --exclude='node_modules/'
@@ -294,6 +308,19 @@ else
 fi
 
 cd "$APP_DIR"
+if [ ! -d "$APP_DIR/node_modules/express" ]; then
+  echo "  → 依赖缺失，安装生产依赖..."
+  NPM_BIN="$(dirname "$NODE_BIN")/npm"
+  if ! sudo test -x "$NPM_BIN" 2>/dev/null; then
+    NPM_BIN="$(command -v npm 2>/dev/null || true)"
+  fi
+  if [ -z "$NPM_BIN" ]; then
+    echo "❌ 未找到 npm，无法安装后端依赖"
+    exit 1
+  fi
+  sudo "$NPM_BIN" install --omit=dev
+  sudo chown -R "$USER:$USER" "$APP_DIR/node_modules" 2>/dev/null || true
+fi
 nohup sudo "$NODE_BIN" "$APP_DIR/$APP_ENTRY" >> /home/ubuntu/ws-backend.log 2>&1 &
 sleep 5
 
