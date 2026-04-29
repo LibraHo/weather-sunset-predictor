@@ -7546,3 +7546,16 @@ html[lang^="en"] .score-breakdown-hint-trigger {
     column-gap: 6px;
   }
 }
+
+/* Fix: keep compact analysis rows equal-height; copy should fit one line, ellipsis is only a fallback. */
+.analysis-item {
+  overflow: hidden !important;
+}
+.analysis-item-copy strong,
+.analysis-item-copy small {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
