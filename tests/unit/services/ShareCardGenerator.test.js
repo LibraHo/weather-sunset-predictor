@@ -116,6 +116,34 @@ describe('ShareCardGenerator', () => {
     }
   });
 
+
+  test('uses provided i18n translations for share card text', () => {
+    const i18n = {
+      t: jest.fn(key => ({
+        'shareCard.brandName': 'Xiake',
+        'shareCard.shareTitle': 'Fire Cloud Forecast Share',
+        'shareCard.labels.probability': 'Fire Cloud Probability',
+        'shareCard.cloud.high': 'High Cloud',
+        'shareCard.verdict.good': 'Good conditions translated',
+        'prediction.points': 'pts'
+      }[key] || key))
+    };
+
+    generator.setI18n(i18n);
+    generator._header(ctx, false);
+    generator._gauge(ctx, 65, 'good', generator.themes.sunset, 100);
+    generator._cloudSummary(ctx, { cloudLayers: { high: 20, mid: 10, low: 5 } }, generator.themes.sunset, 300);
+    generator._verdict(ctx, { score: 65, cloudLayers: { high: 20, mid: 0, low: 0 } }, generator.themes.sunset, 400);
+
+    const texts = ctx.fillText.mock.calls.map(call => String(call[0]));
+    expect(texts).toContain('Xiake');
+    expect(texts).toContain('Fire Cloud Forecast Share');
+    expect(texts).toContain('Fire Cloud Probability');
+    expect(texts).toContain('pts');
+    expect(texts).toContain('High Cloud');
+    expect(texts).toContain('Good conditions translated');
+  });
+
   test('_toBlob uses toBlob success path and rejects null blob', async () => {
     const blob = new Blob(['x'], { type: 'image/png' });
     await expect(generator._toBlob({ toBlob: cb => cb(blob) })).resolves.toBe(blob);
