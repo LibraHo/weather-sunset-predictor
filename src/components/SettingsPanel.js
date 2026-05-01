@@ -143,7 +143,7 @@ class SettingsPanel {
                 <label class="setting-label" for="firecloud-raster-color-mode-select">🔥 ${this._uiText('Fire cloud overlay color mode', '火烧云涂层颜色模式')}</label>
                 <select id="firecloud-raster-color-mode-select" class="setting-select">
                   <option value="compact">${this._uiText('Compact: color starts above 40 pts', '精简：40 分以上开始染色')}</option>
-                  <option value="full">${this._uiText('Full: render from 0 pts', '完整：0 分起完整渲染')}</option>
+                  <option value="full">${this._uiText('Full: color starts above 30 pts', '完整：30 分以上开始染色')}</option>
                 </select>
                 <small class="setting-hint">${this._uiText('Changing this refreshes the fire-cloud map overlay and legend', '切换后会刷新火烧云地图涂层和图例')}</small>
               </div>

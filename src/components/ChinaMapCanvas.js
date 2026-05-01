@@ -1082,8 +1082,8 @@ class ChinaMapCanvas {
       { score: 70, label: '70+', color: isSunrise ? 'rgba(218,78,28,0.65)' : 'rgba(218,78,28,0.55)' },
     ];
     const fullItems = [
-      { score: 0, label: '0', color: isSunrise ? 'rgba(255,230,210,0.06)' : 'rgba(255,230,210,0.05)' },
-      { score: 20, label: '20', color: isSunrise ? 'rgba(255,205,175,0.16)' : 'rgba(255,205,175,0.13)' },
+      { score: 0, label: '<30', color: 'rgba(255,255,255,0.08)' },
+      { score: 30, label: '30', color: isSunrise ? 'rgba(255,230,210,0.14)' : 'rgba(255,230,210,0.11)' },
       { score: 40, label: '40', color: isSunrise ? 'rgba(255,184,126,0.28)' : 'rgba(255,184,126,0.22)' },
       { score: 55, label: '55', color: isSunrise ? 'rgba(238,120,90,0.44)' : 'rgba(238,120,90,0.34)' },
       { score: 70, label: '70+', color: isSunrise ? 'rgba(218,78,28,0.65)' : 'rgba(218,78,28,0.55)' },
