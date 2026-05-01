@@ -1161,7 +1161,7 @@ class PredictionController {
           </div>
 
           ${this.renderCloudConditionCard(forecast.clouds)}
-          ${this.renderAnalysisCard(forecast.analysis, forecast.conclusion)}
+          ${this.renderAnalysisCard(forecast.analysis, forecast.conclusion, forecast.analysisSummary)}
           <div id="radar-compass-${type}" style="margin-top:12px;display:none;"></div>
           <div class="prediction-app-footer">${this._uiText('Observe the sky · Catch the beauty', '观天有时 · 收获美景')}</div>
         </div>
@@ -1200,6 +1200,7 @@ class PredictionController {
       ],
       quality: prediction.quality || this.getQualityFromScore(score),
       analysis: this.buildAnalysisGroups(prediction),
+      analysisSummary: this.buildAnalysisSummary(prediction),
       conclusion: this.buildAnalysisConclusion(prediction, score, clouds)
     };
   }
@@ -1413,11 +1414,27 @@ class PredictionController {
     return this._uiText('Key conditions are missing; fire-cloud probability is low.', '关键条件不足，火烧云概率偏低');
   }
 
-  renderAnalysisCard(groups, conclusion) {
+  buildAnalysisSummary(prediction) {
+    const weather = this.extractAnalysisWeather(prediction);
+    const visibilityText = weather.visibility > 0 ? `${weather.visibility.toFixed(0)}km` : this._uiText('unknown', '未知');
+    const humidityText = weather.humidity > 0 ? `${weather.humidity.toFixed(0)}%` : this._uiText('unknown', '未知');
+    const cloudText = this._uiText(
+      `High ${weather.high.toFixed(0)}%, mid ${weather.mid.toFixed(0)}%, low ${weather.low.toFixed(0)}%`,
+      `高云 ${weather.high.toFixed(0)}%、中云 ${weather.mid.toFixed(0)}%、低云 ${weather.low.toFixed(0)}%`
+    );
+    return this._uiText(
+      `Cloud canvas: ${cloudText}. Air rendering: visibility ${visibilityText}, humidity ${humidityText}. These jointly determine whether sunset light can reach the cloud layer and stay saturated.`,
+      `云层画布：${cloudText}；空气渲染：能见度 ${visibilityText}、湿度 ${humidityText}。这两部分共同决定霞光能否照到云层，以及颜色是否通透饱和。`
+    );
+  }
+
+  renderAnalysisCard(groups, conclusion, summary = '') {
     const groupHtml = groups.map(group => this.renderAnalysisGroup(group)).join('');
+    const summaryHtml = summary ? `<p class="analysis-summary-copy">${summary}</p>` : '';
     return `
       <div class="analysis-card app-analysis-card">
         <div class="analysis-card-title"><span>${this._uiText('Fire cloud formation analysis', '火烧云形成条件分析')}</span></div>
+        ${summaryHtml}
         ${groupHtml}
         <div class="conclusion-banner"><span class="conclusion-icon">${this.renderInlineSvgIcon('leaf')}</span><strong>${conclusion}</strong></div>
       </div>
