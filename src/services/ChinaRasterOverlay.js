@@ -29,6 +29,8 @@ const RASTER_COLOR_MODES = Object.freeze({
   FULL: 'full',
   COMPACT: 'compact'
 });
+const FULL_VISUAL_MIN_SCORE = 30;
+const COMPACT_VISUAL_MIN_SCORE = 40;
 
 function getRasterColorMode() {
   try {
@@ -40,12 +42,12 @@ function getRasterColorMode() {
 }
 
 function getVisualMinScore(mode = getRasterColorMode()) {
-  return mode === RASTER_COLOR_MODES.FULL ? 0 : 40;
+  return mode === RASTER_COLOR_MODES.FULL ? FULL_VISUAL_MIN_SCORE : COMPACT_VISUAL_MIN_SCORE;
 }
 
 function getBandLevels(mode = getRasterColorMode()) {
   return mode === RASTER_COLOR_MODES.FULL
-    ? [0, 10, 20, 30, 40, 45, 50, 55, 60, 65, 70]
+    ? [30, 35, 40, 45, 50, 55, 60, 65, 70]
     : [40, 45, 50, 55, 60, 65, 70];
 }
 
