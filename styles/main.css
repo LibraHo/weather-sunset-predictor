@@ -3741,6 +3741,25 @@ body.theme-dark .sun-azimuth-info {
 #forecast-section .fcard-row-score.quality-fair { color: #d97706; }
 #forecast-section .fcard-row-score.quality-poor { color: #dc2626; }
 
+body.theme-dark #forecast-section .forecast-day-card {
+  background: linear-gradient(180deg, rgba(18, 28, 52, 0.88) 0%, rgba(12, 20, 40, 0.72) 100%);
+  border-color: rgba(255, 255, 255, 0.10);
+  box-shadow: var(--glass-shadow);
+}
+
+body.theme-dark #forecast-section .forecast-day-card:hover {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+body.theme-dark #forecast-section .fcard-day-label,
+body.theme-dark #forecast-section .fcard-row-label {
+  color: var(--color-text);
+}
+
+body.theme-dark #forecast-section .fcard-day-date {
+  color: var(--color-text-light);
+}
+
 #forecast-section .forecast-day-column {
   width: 100%;
   min-width: 0;
@@ -3756,6 +3775,16 @@ body.theme-dark .sun-azimuth-info {
 #forecast-section .forecast-day-column:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 24px rgba(24, 39, 75, 0.12);
+}
+
+body.theme-dark #forecast-section .forecast-day-column {
+  background: linear-gradient(180deg, rgba(18, 28, 52, 0.88) 0%, rgba(12, 20, 40, 0.72) 100%);
+  border-color: rgba(255, 255, 255, 0.10);
+  box-shadow: var(--glass-shadow);
+}
+
+body.theme-dark #forecast-section .forecast-day-column:hover {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 #forecast-section .forecast-day-header {
@@ -3798,6 +3827,11 @@ body.theme-dark .sun-azimuth-info {
   width: 100%;
 }
 
+body.theme-dark #forecast-section .forecast-item {
+  background: rgba(15, 23, 42, 0.66);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
 #forecast-section .forecast-item .passed-badge {
   margin-left: 4px;
 }
@@ -3825,6 +3859,18 @@ body.theme-dark .sun-azimuth-info {
 #forecast-section .forecast-left-group .date-label {
   font-size: 0.8rem;
   color: rgba(47, 57, 72, 0.72);
+}
+
+body.theme-dark #forecast-section .forecast-left-group .day-label,
+body.theme-dark #forecast-section .forecast-middle-group .forecast-temp,
+body.theme-dark #forecast-section .forecast-type .type-label,
+body.theme-dark #forecast-section .forecast-right-group .forecast-wind {
+  color: var(--color-text);
+}
+
+body.theme-dark #forecast-section .forecast-left-group .date-label,
+body.theme-dark #forecast-section .sunset-time-small {
+  color: var(--color-text-light);
 }
 
 #forecast-section .forecast-middle-group {
