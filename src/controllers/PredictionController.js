@@ -1540,18 +1540,17 @@ class PredictionController {
     const lowLabel = normalizeLabel(this.i18n.t('prediction.cloudLayers.shortLow'), '低云');
 
     return `
-      <div class="compact-cloud-info" style="display:flex;align-items:center;flex-wrap:nowrap;gap:4px;width:100%;overflow:hidden;">
+      <div class="compact-cloud-info">
         <span class="cloud-icon" style="flex-shrink:0;">☁️</span>
-        <span class="cloud-item" style="flex:1 1 0;min-width:0;" title="${highLabel}"><span class="cloud-label">${highLabel}</span>: <strong class="cloud-value">${high.toFixed(0)}%</strong>
+        <span class="cloud-item" title="${highLabel}"><span class="cloud-label">${highLabel}</span>: <strong class="cloud-value">${high.toFixed(0)}%</strong>
           <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(high,100)}%;background:var(--cloud-high-color);"></span></span>
         </span>
-        </span>
         <span class="cloud-sep" style="flex-shrink:0;">|</span>
-        <span class="cloud-item" style="flex:1 1 0;min-width:0;" title="${midLabel}"><span class="cloud-label">${midLabel}</span>: <strong class="cloud-value">${mid.toFixed(0)}%</strong>
+        <span class="cloud-item" title="${midLabel}"><span class="cloud-label">${midLabel}</span>: <strong class="cloud-value">${mid.toFixed(0)}%</strong>
           <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(mid,100)}%;background:var(--cloud-mid-color);"></span></span>
         </span>
         <span class="cloud-sep" style="flex-shrink:0;">|</span>
-        <span class="cloud-item" style="flex:1 1 0;min-width:0;" title="${lowLabel}"><span class="cloud-label">${lowLabel}</span>: <strong class="cloud-value">${low.toFixed(0)}%</strong>
+        <span class="cloud-item" title="${lowLabel}"><span class="cloud-label">${lowLabel}</span>: <strong class="cloud-value">${low.toFixed(0)}%</strong>
           <span class="cloud-mini-bar-track"><span class="cloud-mini-bar-fill" style="width:${Math.min(low,100)}%;background:var(--cloud-low-color);"></span></span>
         </span>
       </div>

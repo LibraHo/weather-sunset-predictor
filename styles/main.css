@@ -2222,14 +2222,13 @@ body.theme-dark .best-time {
   align-items: center;
   gap: 3px;
   white-space: nowrap;
-  min-width: 0;
+  flex: 0 1 auto;
+  min-width: max-content;
 }
 
 .cloud-label {
-  min-width: 0;
-  max-width: 6.5em;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex-shrink: 0;
+  min-width: max-content;
   white-space: nowrap;
 }
 
