@@ -228,7 +228,7 @@ APP_ENV_FILE="$APP_DIR/.env"
 resolve_port() {
   local port=""
   if [ -f "$APP_ENV_FILE" ]; then
-    port="$(awk -F= '/^PORT=/{print $2}' "$APP_ENV_FILE" | tail -n 1 | tr -d '[:space:]"'')"
+    port="$(awk -F= '/^PORT=/{print $2}' "$APP_ENV_FILE" | tail -n 1 | tr -d "[:space:]\"'")"
   fi
   if [ -n "$port" ] && [ "$port" -eq "$port" ] 2>/dev/null; then
     echo "$port"
