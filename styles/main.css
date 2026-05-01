@@ -6613,6 +6613,15 @@ html[data-actual-theme="light"] .weather-desc {
 .analysis-card-title {
   margin-bottom: 10px !important;
 }
+.analysis-summary-copy {
+  margin: 0 0 10px 0 !important;
+  padding: 8px 10px !important;
+  border-radius: 12px !important;
+  background: var(--theme-panel-soft, rgba(255, 183, 77, 0.10)) !important;
+  color: var(--color-text) !important;
+  font-size: 0.9rem !important;
+  line-height: 1.45 !important;
+}
 .analysis-group {
   margin-top: 8px !important;
 }
