@@ -10,39 +10,39 @@
 Alex 希望让大模型/自动化工具直接调用霞客火烧云信息。结论：不必先做 CLI；核心应是同一后端上的受控 Agent API。第一阶段自用，未来可邀请制开放给用户且禁止商用，因此从一开始要有 Token、限流、审计和后台管理。
 
 ### Phase 1：MVP（优先，建议 3 个 PR 拆分）
-- [ ] 45.1 Token 数据模型：新增 token 存储（优先 SQLite；如短期用 JSON，必须预留迁移边界），字段含 `id/name/prefix/tokenHash/scopes/enabled/minuteLimit/dailyLimit/createdAt/lastUsedAt/usageCount`。
-- [ ] 45.2 Token 生成与哈希：生成 `xiake_live_` / `xiake_test_` 前缀 token；明文仅创建时返回；服务端只存 hash。
-- [ ] 45.3 鉴权中间件：支持 `Authorization: Bearer <token>`，校验 hash、enabled、scope、minute/day quota。
-- [ ] 45.4 后台 Token 管理：在 admin 增加 API Tokens 区域，支持创建、列表、启停、改名、改限流、吊销；列表不显示明文。
-- [ ] 45.5 Agent Forecast API：新增 `GET /api/agent/forecast`，支持 `location` 或 `lat/lon`、`type=sunrise|sunset`、`date=today|tomorrow|ISO`、`detail=simple|full`。
-- [ ] 45.6 结构化返回：返回 `location/score/quality/bestViewingWindow/factors/summary/explanation/warnings/meta`，适合 LLM 直接消费。
-- [ ] 45.7 审计日志：记录 tokenId、endpoint、status、elapsedMs、ipHash、userAgent 摘要、错误码；不记录 token 明文。
-- [ ] 45.8 测试：新增/更新 `apiTokenService.test.js`、`agentAuth.test.js`、`agentForecast.test.js`、`adminTokens.test.js`；覆盖无 token 401、禁用 token 403、scope 不足 403、超限 429、forecast 成功、token 明文只返回一次。
+- [x] 45.1 Token 数据模型：新增 token 存储（优先 SQLite；如短期用 JSON，必须预留迁移边界），字段含 `id/name/prefix/tokenHash/scopes/enabled/minuteLimit/dailyLimit/createdAt/lastUsedAt/usageCount`。
+- [x] 45.2 Token 生成与哈希：生成 `xiake_live_` / `xiake_test_` 前缀 token；明文仅创建时返回；服务端只存 hash。
+- [x] 45.3 鉴权中间件：支持 `Authorization: Bearer <token>`，校验 hash、enabled、scope、minute/day quota。
+- [x] 45.4 后台 Token 管理：在 admin 增加 API Tokens 区域，支持创建、列表、启停、改名、改限流、吊销；列表不显示明文。
+- [x] 45.5 Agent Forecast API：新增 `GET /api/agent/forecast`，支持 `location` 或 `lat/lon`、`type=sunrise|sunset`、`date=today|tomorrow|ISO`、`detail=simple|full`。
+- [x] 45.6 结构化返回：返回 `location/score/quality/bestViewingWindow/factors/summary/explanation/warnings/meta`，适合 LLM 直接消费。
+- [x] 45.7 审计日志：记录 tokenId、endpoint、status、elapsedMs、ipHash、userAgent 摘要、错误码；不记录 token 明文。
+- [x] 45.8 测试：新增/更新 `apiTokenService.test.js`、`agentAuth.test.js`、`agentForecast.test.js`、`adminTokens.test.js`；覆盖无 token 401、禁用 token 403、scope 不足 403、超限 429、forecast 成功、token 明文只返回一次。
 
 ### Phase 2：工具化增强
-- [ ] 45.9 Agent Explain API：`GET /api/agent/explain`，输出分数构成、因子关系、关键限制和自然语言解释。
-- [ ] 45.10 Agent Geocode API：`GET /api/agent/geocode?q=`，返回标准地点、国家、经纬度、confidence、rankReason。
-- [ ] 45.11 OpenAPI 文档：新增 `GET /api/agent/openapi.json`，描述鉴权、参数、返回和错误码，便于大模型/工具接入。
-- [ ] 45.12 API接入：新增「API接入」主页面/菜单入口，必须在现有霞客主题框架下实现并复用当前菜单、卡片、按钮、字体、明暗主题和移动端布局；内容包含快速开始、Token 使用、curl/JS/Python 示例、参数表、返回字段、错误码、限流规则和安全说明。
-- [ ] 45.13 API申请：新增「API申请」前台入口，必须在现有霞客主题框架下实现并复用当前表单/按钮/卡片/明暗主题；最小表单字段为邮箱/联系方式（必填）和用途说明（可选），页面明确提示禁止商用、仅限个人/研究/测试/非商业用途；提交后后台可查看申请、标记状态，并从申请一键创建 Token；申请与 tokenId 持久化关联保存。
-- [ ] 45.14 用量统计后台：按 token 展示今日调用量、错误率、最近调用、日额度剩余。
+- [x] 45.9 Agent Explain API：`GET /api/agent/explain`，输出分数构成、因子关系、关键限制和自然语言解释。
+- [x] 45.10 Agent Geocode API：`GET /api/agent/geocode?q=`，返回标准地点、国家、经纬度、confidence、rankReason。
+- [x] 45.11 OpenAPI 文档：新增 `GET /api/agent/openapi.json`，描述鉴权、参数、返回和错误码，便于大模型/工具接入。
+- [x] 45.12 API接入：新增「API接入」主页面/菜单入口，必须在现有霞客主题框架下实现并复用当前菜单、卡片、按钮、字体、明暗主题和移动端布局；内容包含快速开始、Token 使用、curl/JS/Python 示例、参数表、返回字段、错误码、限流规则和安全说明。
+- [x] 45.13 API申请：新增「API申请」前台入口，必须在现有霞客主题框架下实现并复用当前表单/按钮/卡片/明暗主题；最小表单字段为邮箱/联系方式（必填）和用途说明（可选），页面明确提示禁止商用、仅限个人/研究/测试/非商业用途；提交后后台可查看申请、标记状态，并从申请一键创建 Token；申请与 tokenId 持久化关联保存。
+- [x] 45.14 用量统计后台：按 token 展示今日调用量、错误率、最近调用、日额度剩余。
 
 ### Phase 3：开放与生态
-- [ ] 45.15 Map Summary API：`GET /api/agent/map-summary?bbox=&type=&threshold=`，返回区域火烧云概览/高分点摘要，避免直接暴露大体积图层。
+- [x] 45.15 Map Summary API：`GET /api/agent/map-summary?bbox=&type=&threshold=`，返回区域火烧云概览/高分点摘要，避免直接暴露大体积图层。
 - [ ] 45.16 邀请用户（禁止商用）能力：支持 token 备注、非商用额度、到期时间、批量禁用；后台和 API接入文档均需明确禁止商用。
-- [ ] 45.17 MCP/tool schema 示例：提供 Claude/OpenAI/OpenClaw 可直接使用的 tool schema 示例；CLI 暂不作为必需项。
+- [x] 45.17 MCP/tool schema 示例：提供 Claude/OpenAI/OpenClaw 可直接使用的 tool schema 示例；CLI 暂不作为必需项。
 
 ### 验收标准
-- [ ] Agent API 与网站 API 共用同一后端和算法，不出现两套评分逻辑。
-- [ ] 所有 `/api/agent/*` 默认必须鉴权；公开文档接口除外也要限流。
-- [ ] Token 泄露时可在后台立即停用，并且停用后请求返回 403。
-- [ ] Agent forecast 返回 JSON 字段稳定，适合大模型无网页解析地调用。
-- [ ] 需求45 所有实现 PR 必须补充分层测试，不能只测 happy path；若某项暂无法自动化测试，PR 内必须说明原因。
-- [ ] Token/鉴权测试必须覆盖：无 Token 401、格式错误 401、hash 不匹配 401、禁用 Token 403、scope 不足 403、分钟/日额度超限 429、Token 明文只返回一次、列表/日志不泄露明文。
-- [ ] Agent API 测试必须覆盖：城市名输入、经纬度输入、`sunrise/sunset`、`simple/full`、无效参数 400、上游失败降级、返回字段 schema 稳定、解释/时间窗口不为空。
-- [ ] API申请测试必须覆盖：邮箱/联系方式必填校验、用途可选、提交成功入库、后台列表可见、审核通过创建 Token、拒绝申请、申请与 tokenId 关联、前台永不直接返回 Token。
-- [ ] API接入/API申请 UI 测试必须覆盖：页面入口存在、禁止商用文案存在、复用现有主题/卡片/按钮类名或变量、移动端不溢出、代码示例可复制且不包含真实 Token。
-- [ ] OpenAPI/工具化测试必须覆盖：`openapi.json` 可解析、鉴权 scheme 正确、forecast/explain/geocode schema 与实际返回一致。
+- [x] Agent API 与网站 API 共用同一后端和算法，不出现两套评分逻辑。
+- [x] 所有 `/api/agent/*` 默认必须鉴权；公开文档接口除外也要限流。
+- [x] Token 泄露时可在后台立即停用，并且停用后请求返回 403。
+- [x] Agent forecast 返回 JSON 字段稳定，适合大模型无网页解析地调用。
+- [x] 需求45 所有实现 PR 必须补充分层测试，不能只测 happy path；若某项暂无法自动化测试，PR 内必须说明原因。
+- [x] Token/鉴权测试必须覆盖：无 Token 401、格式错误 401、hash 不匹配 401、禁用 Token 403、scope 不足 403、分钟/日额度超限 429、Token 明文只返回一次、列表/日志不泄露明文。
+- [x] Agent API 测试必须覆盖：城市名输入、经纬度输入、`sunrise/sunset`、`simple/full`、无效参数 400、上游失败降级、返回字段 schema 稳定、解释/时间窗口不为空。
+- [x] API申请测试必须覆盖：邮箱/联系方式必填校验、用途可选、提交成功入库、后台列表可见、审核通过创建 Token、拒绝申请、申请与 tokenId 关联、前台永不直接返回 Token。
+- [x] API接入/API申请 UI 测试必须覆盖：页面入口存在、禁止商用文案存在、复用现有主题/卡片/按钮类名或变量、移动端不溢出、代码示例可复制且不包含真实 Token。
+- [x] OpenAPI/工具化测试必须覆盖：`openapi.json` 可解析、鉴权 scheme 正确、forecast/explain/geocode schema 与实际返回一致。
 
 ### 建议 PR 拆分
 - PR A（基础安全）：45.1-45.3 + 45.8 部分。Token 存储、生成、鉴权中间件；必须包含 `apiTokenService.test.js`、`agentAuth.test.js`。
