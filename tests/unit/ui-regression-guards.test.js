@@ -31,4 +31,17 @@ describe('recent user-reported UI regression guards', () => {
     expect(source).toContain('const COMPACT_VISUAL_MIN_SCORE = 40');
     expect(source).toContain('mode === RASTER_COLOR_MODES.FULL ? FULL_VISUAL_MIN_SCORE : COMPACT_VISUAL_MIN_SCORE');
   });
+
+  test('dark mode share icon uses muted night color instead of orange accent', () => {
+    const source = css();
+    const darkThemeBlocks = source.match(/body\.theme-dark \{[\s\S]*?\n\}/g) || [];
+    const themeTokenBlock = darkThemeBlocks.find((block) => block.includes('--theme-share-icon')) || '';
+    const shareButtonBlocks = source.match(/\.prediction-nav-share,\n\.prediction-share-btn \{[\s\S]*?\n\}/g) || [];
+    const shareButtonBlock = shareButtonBlocks.find((block) => block.includes('--theme-share-icon')) || '';
+
+    expect(themeTokenBlock).toContain('--theme-share-icon: rgba(255, 255, 255, 0.78)');
+    expect(themeTokenBlock).toContain('--theme-share-border: rgba(255, 255, 255, 0.14)');
+    expect(shareButtonBlock).toContain('color: var(--theme-share-icon) !important');
+    expect(shareButtonBlock).not.toContain('color: var(--theme-accent) !important');
+  });
 });
