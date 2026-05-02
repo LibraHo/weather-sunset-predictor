@@ -44,7 +44,6 @@ const translations = {
       "scoreExcellent": "Excellent: >80 (Highly Recommended)",
       "scoreGood": "Good: 65-80 (Very Likely)",
       "scoreFair": "Fair: 40-65 (Viewable)",
-      "scorePoor": "Poor: <40 (Not Recommended)",
       "scoreExcellentRange": "Excellent",
       "scoreExcellentDesc": "Highly Recommended",
       "scoreGoodRange": "Good",
@@ -230,6 +229,7 @@ const translations = {
     "canvas": {
       "title": "Canvas Score",
       "score": "Canvas Score",
+      "aerosol": "Aerosol",
       "cloudLevel": "Cloud Level",
       "breakdown": "Cloud Distribution",
       "canvasScore": "📊 Canvas: {{score}}pts | {{level}}",

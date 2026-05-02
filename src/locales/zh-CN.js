@@ -257,6 +257,7 @@ export default {
     canvas: {
       title: '画布评分',
       score: '画布得分',
+      aerosol: '气溶胶',
       cloudLevel: '云层等级',
       breakdown: '云层分布',
       canvasScore: '📊 画布: {{score}}分 | {{level}}',

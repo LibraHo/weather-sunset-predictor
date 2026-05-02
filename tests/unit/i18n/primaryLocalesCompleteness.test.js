@@ -20,8 +20,11 @@ describe('primary locale completeness', () => {
     for (const locale of PRIMARY_LOCALES) {
       const mod = await import(`../../../src/locales/${locale}.js`);
       const keys = new Set(flattenKeys(mod.default));
+      const localeKeys = flattenKeys(mod.default).sort();
       const missing = requiredKeys.filter((key) => !keys.has(key));
+      const extra = localeKeys.filter((key) => !requiredKeys.includes(key));
       expect(missing).toEqual([]);
+      expect(extra).toEqual([]);
     }
   });
 });
