@@ -1156,6 +1156,67 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /api/agent/map-summary:
+    get:
+      tags:
+        - Agent API
+      summary: 区域火烧云地图摘要
+      description: 基于服务端地图评分缓存返回区域概览和高分点摘要，不返回完整栅格或散点图层。
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: bbox
+          required: false
+          schema:
+            type: string
+            example: "110,20,125,42"
+          description: west,south,east,north；不传则汇总全部缓存范围
+        - in: query
+          name: type
+          required: false
+          schema:
+            type: string
+            enum: [sunrise, sunset]
+          description: 朝霞/晚霞
+        - in: query
+          name: threshold
+          required: false
+          schema:
+            type: number
+            minimum: 0
+            maximum: 100
+            default: 40
+          description: 只统计不低于该分数的点
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+          description: 返回 topPoints 数量
+      responses:
+        '200':
+          description: 区域摘要
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentMapSummaryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '503':
+          description: 地图评分缓存未就绪
+        '500':
+          $ref: '#/components/responses/InternalError'
+
 
 # ==================== 数据模型定义 ====================
 components:
@@ -1231,6 +1292,51 @@ components:
               type: array
               items:
                 type: object
+      required:
+        - success
+        - data
+
+    AgentMapSummaryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            type:
+              type: string
+            bbox:
+              type: object
+              nullable: true
+            threshold:
+              type: number
+            updatedAt:
+              type: string
+            summary:
+              type: object
+              properties:
+                matchingPoints:
+                  type: integer
+                averageScore:
+                  type: number
+                maxScore:
+                  type: number
+                quality:
+                  type: string
+            topPoints:
+              type: array
+              items:
+                type: object
+                properties:
+                  lat:
+                    type: number
+                  lon:
+                    type: number
+                  score:
+                    type: number
+                  quality:
+                    type: string
       required:
         - success
         - data

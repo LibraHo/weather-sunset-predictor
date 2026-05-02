@@ -106,15 +106,24 @@ module.exports = function createAgentAuth(options = {}) {
 
     try {
       const token = getTokenFromRequest(req);
-      let result = service.authenticateToken(token, requiredScopes);
-      if (!result.ok && requiredScopesAny.length > 0) {
+      let result = null;
+
+      if (requiredScopesAny.length > 0) {
         // 支持 OR 鉴权：只要满足任一 scope 即可，例如 explain:read 或 forecast:read。
+        // 注意：不能先用空 scope 鉴权，否则任意有效 token 都会绕过 scopeAny。
         for (const scope of requiredScopesAny) {
           result = service.authenticateToken(token, [scope]);
-          if (result.ok) {
-            break;
-          }
+          if (result.ok) break;
+          if (result.status === 401) break;
         }
+      }
+
+      if ((!result || !result.ok) && requiredScopes.length > 0) {
+        result = service.authenticateToken(token, requiredScopes);
+      }
+
+      if (!result) {
+        result = service.authenticateToken(token, []);
       }
 
       if (!result.ok) {
