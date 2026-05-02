@@ -143,7 +143,11 @@ mkdir -p "$DEPLOY_DIR"
 # Delete files that existed in the previous fallback manifest but no longer exist in the new one.
 # Protected runtime paths are never removed here.
 if [ -f "$OLD_MANIFEST" ]; then
-  comm -23 "$OLD_MANIFEST" "$REMOTE_MANIFEST" | while IFS= read -r rel; do
+  SORTED_OLD_MANIFEST="/tmp/weather-sunset-deploy.old.manifest.sorted"
+  SORTED_REMOTE_MANIFEST="/tmp/weather-sunset-deploy.manifest.sorted"
+  LC_ALL=C sort -u "$OLD_MANIFEST" > "$SORTED_OLD_MANIFEST"
+  LC_ALL=C sort -u "$REMOTE_MANIFEST" > "$SORTED_REMOTE_MANIFEST"
+  comm -23 "$SORTED_OLD_MANIFEST" "$SORTED_REMOTE_MANIFEST" | while IFS= read -r rel; do
     case "$rel" in
       ""|/*|*".."*|.env|server/.env|node_modules/*|server/node_modules/*|.xiake/*|uploads/*|server/uploads/*|log/*|server/log/*|cache/*|server/cache/*)
         continue
