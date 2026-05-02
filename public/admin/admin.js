@@ -505,17 +505,18 @@ async function loadTokens() {
 
     const tokens = data.tokens || [];
     if (!tokens.length) {
-      tbody.innerHTML = '<tr><td colspan="7" class="empty">暂无 Token</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="11" class="empty">暂无 Token</td></tr>';
       return;
     }
 
     tbody.innerHTML = tokens.map((t) => {
       const usage = t.usageCount || 0;
-      return `<tr>\n        <td>${escapeHtml(t.name || '-')}</td>\n        <td>${formatStatus(t.enabled)}</td>\n        <td>${escapeHtml(t.prefix || '-')}</td>\n        <td>${escapeHtml(String(t.minuteLimit || 0))}</td>\n        <td>${escapeHtml(String(t.dailyLimit || 0))}</td>\n        <td>${escapeHtml(String(usage))}</td>\n        <td>\n          <button class="btn btn-secondary" onclick="editToken('${t.id}')">编辑</button>\n          <button class="btn btn-secondary" onclick="toggleToken('${t.id}', ${t.enabled ? 'false' : 'true'})">${t.enabled ? '停用' : '启用'}</button>\n          <button class="btn btn-secondary" onclick="deleteToken('${t.id}')">删除</button>\n        </td>\n      </tr>`;
+      const expiresAt = t.expiresAt ? new Date(t.expiresAt).toLocaleString('zh-CN') : '长期';
+      return `<tr>\n        <td><input type="checkbox" class="token-select" value="${escapeHtml(t.id)}"></td>\n        <td>${escapeHtml(t.name || '-')}</td>\n        <td>${formatStatus(t.enabled)}</td>\n        <td>${escapeHtml(t.trustedUser || '-')}</td>\n        <td>${t.nonCommercial === false ? '否' : '是'}</td>\n        <td>${escapeHtml(expiresAt)}</td>\n        <td>${escapeHtml(String(t.minuteLimit || 0))}</td>\n        <td>${escapeHtml(String(t.dailyLimit || 0))}</td>\n        <td>${escapeHtml(String(usage))}</td>\n        <td>${escapeHtml(t.note || '-')}</td>\n        <td>\n          <button class="btn btn-secondary" onclick="editToken('${t.id}')">编辑</button>\n          <button class="btn btn-secondary" onclick="toggleToken('${t.id}', ${t.enabled ? 'false' : 'true'})">${t.enabled ? '停用' : '启用'}</button>\n          <button class="btn btn-secondary" onclick="deleteToken('${t.id}')">删除</button>\n        </td>\n      </tr>`;
     }).join('');
   } catch (err) {
     const tbody = document.getElementById('tokenTableBody');
-    tbody.innerHTML = '<tr><td colspan="7" class="empty">加载失败</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" class="empty">加载失败</td></tr>';
   }
 }
 
@@ -569,6 +570,10 @@ function initTokenForm() {
     const minuteLimit = parseInt(document.getElementById('tokenMinuteLimit').value || '', 10);
     const dailyLimit = parseInt(document.getElementById('tokenDailyLimit').value || '', 10);
     const enabled = document.getElementById('tokenEnabled').checked;
+    const trustedUser = String(document.getElementById('tokenTrustedUser')?.value || '').trim();
+    const note = String(document.getElementById('tokenNote')?.value || '').trim();
+    const expiresAtInput = String(document.getElementById('tokenExpiresAt')?.value || '').trim();
+    const nonCommercial = document.getElementById('tokenNonCommercial')?.checked !== false;
 
     if (!name) {
       msg.textContent = '名称不能为空';
@@ -583,6 +588,10 @@ function initTokenForm() {
       const body = { name, enabled };
       if (Number.isFinite(minuteLimit)) body.minuteLimit = minuteLimit;
       if (Number.isFinite(dailyLimit)) body.dailyLimit = dailyLimit;
+      if (trustedUser) body.trustedUser = trustedUser;
+      if (note) body.note = note;
+      if (expiresAtInput) body.expiresAt = new Date(expiresAtInput).toISOString();
+      body.nonCommercial = nonCommercial;
 
       const res = await fetch('/api/admin/tokens', {
         method: 'POST',
@@ -633,8 +642,22 @@ async function editToken(id) {
 
     const minuteInput = prompt('修改每分钟额度', String(token.minuteLimit));
     const dailyInput = prompt('修改每日额度', String(token.dailyLimit));
+    const trustedUser = prompt('受邀用户/联系方式', token.trustedUser || '');
+    if (trustedUser === null) return;
+    const note = prompt('备注', token.note || '');
+    if (note === null) return;
+    const expiresAt = prompt('到期时间（ISO，留空表示长期）', token.expiresAt || '');
+    if (expiresAt === null) return;
+    const nonCommercialInput = prompt('是否仅限非商用？输入 yes/no', token.nonCommercial === false ? 'no' : 'yes');
+    if (nonCommercialInput === null) return;
 
-    const patch = { name };
+    const patch = {
+      name,
+      trustedUser,
+      note,
+      expiresAt: expiresAt.trim() || null,
+      nonCommercial: !/^no|false|否$/i.test(nonCommercialInput.trim())
+    };
     const minuteLimit = parseInt(minuteInput, 10);
     const dailyLimit = parseInt(dailyInput, 10);
     if (Number.isFinite(minuteLimit)) patch.minuteLimit = minuteLimit;
@@ -653,6 +676,33 @@ async function editToken(id) {
     }
     await loadTokens();
     showMessage('更新成功', 'success');
+  } catch (err) {
+    showMessage(err.message, 'error');
+  }
+}
+
+async function batchDisableSelectedTokens() {
+  const ids = Array.from(document.querySelectorAll('.token-select:checked')).map((el) => el.value).filter(Boolean);
+  if (!ids.length) {
+    showMessage('请先选择要批量禁用的 Token', 'error');
+    return;
+  }
+  const note = prompt('批量禁用备注', 'invited user access disabled') || 'batch disabled';
+  if (!confirm(`确定禁用 ${ids.length} 个 Token？`)) return;
+  try {
+    const res = await fetch('/api/admin/tokens/batch-disable', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids, note })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showMessage(data?.error?.message || '批量禁用失败', 'error');
+      return;
+    }
+    await loadTokens();
+    showMessage(`已禁用 ${data.disabledCount || 0} 个 Token`, 'success');
   } catch (err) {
     showMessage(err.message, 'error');
   }

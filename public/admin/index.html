@@ -163,19 +163,31 @@
             </div>
             <div class="form-row two-inputs">
               <input id="tokenDailyLimit" type="number" min="1" placeholder="每日额度（默认5000）">
+              <input id="tokenTrustedUser" type="text" placeholder="受邀用户/联系方式（可选）">
+            </div>
+            <div class="form-row two-inputs">
+              <input id="tokenExpiresAt" type="datetime-local" placeholder="到期时间（可选）">
+              <input id="tokenNote" type="text" placeholder="备注（可选）">
+            </div>
+            <div class="form-row two-inputs">
               <label class="admin-inline-switch" style="display:flex;align-items:center;gap:6px;color:var(--color-text-light)">
                 <input id="tokenEnabled" type="checkbox" checked>
                 <span>启用</span>
               </label>
+              <label class="admin-inline-switch" style="display:flex;align-items:center;gap:6px;color:var(--color-text-light)">
+                <input id="tokenNonCommercial" type="checkbox" checked>
+                <span>仅限非商用</span>
+              </label>
             </div>
             <button type="submit" class="btn btn-primary" id="createTokenBtn">创建 Token</button>
+            <button type="button" class="btn btn-secondary" onclick="batchDisableSelectedTokens()">批量禁用选中 Token</button>
           </form>
           <div id="tokenMsg" class="admin-message hidden"></div>
 
           <div class="table-wrap" style="margin-top: var(--spacing-md)">
             <table class="admin-table">
-              <thead><tr><th>名称</th><th>状态</th><th>前缀</th><th>分钟限流</th><th>每日限流</th><th>用量</th><th>操作</th></tr></thead>
-              <tbody id="tokenTableBody"><tr><td colspan="7" class="empty">加载中...</td></tr></tbody>
+              <thead><tr><th>选择</th><th>名称</th><th>状态</th><th>受邀用户</th><th>非商用</th><th>到期时间</th><th>分钟限流</th><th>每日限流</th><th>用量</th><th>备注</th><th>操作</th></tr></thead>
+              <tbody id="tokenTableBody"><tr><td colspan="11" class="empty">加载中...</td></tr></tbody>
             </table>
           </div>
         </div>

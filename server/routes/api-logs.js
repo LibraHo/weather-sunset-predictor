@@ -340,7 +340,11 @@ router.post('/applications/:id/review', (req, res) => {
         const { token, tokenMeta } = apiTokenService.createToken({
           name: (req.body?.tokenName || `api-${existing.email}`).slice(0, 60),
           minuteLimit: parseIntSafe(req.body?.minuteLimit, 120),
-          dailyLimit: parseIntSafe(req.body?.dailyLimit, 5000)
+          dailyLimit: parseIntSafe(req.body?.dailyLimit, 5000),
+          trustedUser: existing.contact || existing.email || '',
+          note: existing.purpose ? `申请用途：${existing.purpose}` : 'API 申请审批创建',
+          nonCommercial: true,
+          expiresAt: typeof req.body?.expiresAt === 'string' && req.body.expiresAt.trim() ? req.body.expiresAt.trim() : null
         });
         app.tokenId = tokenMeta.id;
         apiApplications.linkToken(id, tokenMeta.id);

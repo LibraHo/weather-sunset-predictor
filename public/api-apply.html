@@ -193,6 +193,8 @@ print(resp.json())</div>
       <h2>限流与安全</h2>
       <ul>
         <li>Token 具备分钟/日两级限流，超限返回 429。</li>
+        <li>受邀用户 Token 会记录用途备注、非商用标记和可选到期时间，后台可随时单个停用或批量禁用。</li>
+        <li>默认额度仅面向个人、学习、研究、测试等非商业场景；不得转卖、转租或用于商业产品。</li>
         <li><span class="mono">/api/agent/openapi.json</span> 同样受全局限流保护。</li>
         <li>鉴权头只支持 <span class="mono">Authorization: Bearer &lt;token&gt;</span> 与兼容头 <span class="mono">X-Xiake-Token</span>。</li>
       </ul>
