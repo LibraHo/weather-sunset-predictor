@@ -269,7 +269,15 @@ const translations = {
       "colorGoldenOrange": "Golden orange hues",
       "colorReddishPurplish": "Reddish purple hues",
       "colorDarkRed": "Dark red hues",
-      "postRainMode": "Post-rain mode"
+      "postRainMode": "Post-rain mode",
+
+      "cloudThickness": {
+        "title": "Cloud Thickness",
+        "thin": "Thin clouds, light passes through easily",
+        "moderate": "Moderate cloud thickness",
+        "thick": "Thick clouds, limited light transmission",
+        "unknown": "Cloud thickness data unavailable"
+      },
     },
     "composite": {
       "title": "Composite Score",

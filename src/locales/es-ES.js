@@ -239,7 +239,15 @@ apiAccess: 'Acceso API'
       "colorGoldenOrange": "Tonos dorado-naranja",
       "colorReddishPurplish": "Tonos rojo-violáceo",
       "colorDarkRed": "Tonos rojo oscuro",
-      "postRainMode": "Modo post-lluvia"
+      "postRainMode": "Modo post-lluvia",
+
+      cloudThickness: {
+        title: 'Grosor de las nubes',
+        thin: 'Nubes finas, la luz atraviesa con facilidad',
+        moderate: 'Grosor de nubes moderado',
+        thick: 'Nubes gruesas, transmisión de luz limitada',
+        unknown: 'Datos de grosor de nubes no disponibles'
+      },
     },
     "composite": {
       "title": "Puntuación Compuesta",
@@ -609,6 +617,50 @@ apiAccess: 'Acceso API'
     "period": { "sunriseTomorrow": "Tomorrow's sunrise glow", "sunsetToday": "Today's sunset glow", "testLayer": "Test layer (mock data)" }
   },
 
+};
+
+
+translations.prediction.cloudThickness = translations.prediction.cloudThickness || {
+  title: 'Grosor de las nubes',
+  thin: 'Nubes finas',
+  moderate: 'Grosor moderado',
+  thick: 'Nubes gruesas',
+  unknown: 'Desconocido',
+  thinDesc: 'Nubes finas y translúcidas, con buena transmisión de luz',
+  moderateDesc: 'Grosor de nubes moderado',
+  thickDesc: 'Nubes gruesas que pueden limitar el paso de la luz',
+  unknownDesc: 'Datos de grosor de nubes no disponibles'
+};
+translations.prediction.rendering.aerosol = translations.prediction.rendering.aerosol || 'Dispersión de aerosoles';
+Object.assign(translations.settings, {
+  mapTileProvider: 'Mapa base',
+  mapTileSource: 'Fuente del mapa base',
+  mapTileAuto: 'Automático (Gaode en China / OSM en el extranjero)',
+  mapTileGaode: 'Mapa Gaode (China)',
+  mapTileOSM: 'OpenStreetMap (extranjero)',
+  windyApiKey: 'Windy API Key',
+  windyApiKeyPlaceholder: 'Introduce tu Windy API Key',
+  windyApiKeyHint: 'Activa la fuente de datos Windy; si se deja vacío se usa el valor predeterminado del sistema'
+});
+
+
+Object.assign(translations.home.methodology.sections.cloudStructure, {
+  highCloudBonus: 'Bonificación por nubes altas: si las nubes altas superan el 50% y las nubes bajas están por debajo del 30%, la puntuación del lienzo se multiplica por 1,2'
+});
+translations.home.methodology.sections.lightPath = translations.home.methodology.sections.lightPath || {
+  title: '2. Evaluación del trayecto de luz',
+  subtitle: 'Light Path · Puntuación del trayecto de luz',
+  desc: 'La claridad del trayecto de luz determina si la luz solar puede alcanzar las capas de nubes. Con menos nubes bajas, el trayecto es más despejado y hay menos obstrucción.',
+  formula: 'Puntuación de trayecto = visibilidad × geometría solar × obstrucción por nubes bajas',
+  visibility: 'La visibilidad alta mejora la transmisión de luz y la saturación del color',
+  lowCloudEffect: 'Las nubes bajas pueden bloquear la luz antes de que llegue a las nubes medias y altas'
+};
+translations.home.methodology.sections.finalFormula = translations.home.methodology.sections.finalFormula || {
+  title: '7. Fórmula de puntuación final',
+  subtitle: 'Cálculo compuesto',
+  desc: 'La puntuación final pondera la puntuación del lienzo y la del trayecto de luz, y después aplica multiplicadores de penalización.',
+  formula: 'Puntuación final = (Lienzo × 0,4 + Trayecto de luz × 0,6) × penalizaciones',
+  highCloudCap: 'Cuando dominan las nubes altas y las nubes bajas son escasas, se permite una puntuación máxima más alta'
 };
 
 export default translations;

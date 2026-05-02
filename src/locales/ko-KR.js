@@ -255,7 +255,15 @@ apiAccess: 'API 연동'
       "colorGoldenOrange": "금색, 밝은 주황색",
       "colorReddishPurplish": "붉은빛 자주빛",
       "colorDarkRed": "진한 빨간색, 피 빨간색 (아름답지 않음)",
-      "postRainMode": "🌟 비 후 청명 모드 (슈퍼 보너스)"
+      "postRainMode": "🌟 비 후 청명 모드 (슈퍼 보너스)",
+
+      cloudThickness: {
+        title: '구름 두께',
+        thin: '얇은 구름으로 빛이 통과하기 쉬움',
+        moderate: '구름 두께가 적당함',
+        thick: '구름이 두꺼워 빛 투과가 제한됨',
+        unknown: '구름 두께 데이터를 사용할 수 없음'
+      },
     },
     "composite": {
       "title": "종합 점수",
@@ -626,5 +634,29 @@ apiAccess: 'API 연동'
   },
 
 };
+
+
+translations.prediction.cloudThickness = translations.prediction.cloudThickness || {
+  title: '구름 두께',
+  thin: '얇은 구름',
+  moderate: '적당한 두께',
+  thick: '두꺼운 구름',
+  unknown: '알 수 없음',
+  thinDesc: '구름이 얇고 투명해 빛이 잘 통과합니다',
+  moderateDesc: '구름 두께가 적당합니다',
+  thickDesc: '구름이 두꺼워 빛 투과가 제한될 수 있습니다',
+  unknownDesc: '구름 두께 데이터를 사용할 수 없습니다'
+};
+translations.prediction.rendering.aerosol = translations.prediction.rendering.aerosol || '에어로졸 산란';
+Object.assign(translations.settings, {
+  mapTileProvider: '지도 배경',
+  mapTileSource: '배경 지도 소스',
+  mapTileAuto: '자동(중국은 Gaode / 해외는 OSM)',
+  mapTileGaode: 'Gaode 지도(중국)',
+  mapTileOSM: 'OpenStreetMap(해외)',
+  windyApiKey: 'Windy API Key',
+  windyApiKeyPlaceholder: 'Windy API Key 입력',
+  windyApiKeyHint: 'Windy 데이터 소스를 활성화합니다. 비워두면 시스템 기본값을 사용합니다'
+});
 
 export default translations;

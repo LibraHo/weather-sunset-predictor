@@ -255,7 +255,15 @@ apiAccess: 'API接続'
       "colorGoldenOrange": "金橙色",
       "colorReddishPurplish": "赤紫色",
       "colorDarkRed": "暗赤色",
-      "postRainMode": "雨後モード"
+      "postRainMode": "雨後モード",
+
+      cloudThickness: {
+        title: '雲の厚さ',
+        thin: '薄い雲で光が通りやすい',
+        moderate: '雲の厚さは適度',
+        thick: '雲が厚く、光が通りにくい',
+        unknown: '雲の厚さデータは利用できません'
+      },
     },
     "composite": {
       "title": "総合スコア",
@@ -626,5 +634,29 @@ apiAccess: 'API接続'
   },
 
 };
+
+
+translations.prediction.cloudThickness = translations.prediction.cloudThickness || {
+  title: '雲の厚さ',
+  thin: '薄い雲',
+  moderate: '適度な厚さ',
+  thick: '厚い雲',
+  unknown: '不明',
+  thinDesc: '薄く透ける雲で、光が通りやすい状態です',
+  moderateDesc: '雲の厚さは適度です',
+  thickDesc: '雲が厚く、光の通過が制限される可能性があります',
+  unknownDesc: '雲の厚さデータは利用できません'
+};
+translations.prediction.rendering.aerosol = translations.prediction.rendering.aerosol || 'エアロゾル散乱';
+Object.assign(translations.settings, {
+  mapTileProvider: '地図ベースマップ',
+  mapTileSource: 'ベースマップの提供元',
+  mapTileAuto: '自動（中国は高徳 / 海外は OSM）',
+  mapTileGaode: '高徳地図（中国）',
+  mapTileOSM: 'OpenStreetMap（海外）',
+  windyApiKey: 'Windy API Key',
+  windyApiKeyPlaceholder: 'Windy API Key を入力',
+  windyApiKeyHint: 'Windy データソースを有効にします。空欄の場合はシステム既定を使用します'
+});
 
 export default translations;
