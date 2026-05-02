@@ -1,6 +1,17 @@
 const translations = {
   "app": {
     "title": "Sunset Voyager",
+    "apiKeyRequired": "Please enter an API key",
+    "apiKeyTooShort": "API key is too short",
+    "saving": "Saving...",
+    "apiKeySaved": "API key saved",
+    "selectLocationFirst": "Please select a location first",
+    "refreshSuccess": "Data refreshed",
+    "refreshFailed": "Refresh failed: {{message}}",
+    "locationRequired": "Please enter a location",
+    "geocodingNotReady": "Geocoding service is not ready",
+    "switchedToLocation": "Switched to: {{name}}",
+    "locatedAt": "Located at: {{name}}",
     "subtitle": "Predict the best time for fire clouds"
   },
   "home": {

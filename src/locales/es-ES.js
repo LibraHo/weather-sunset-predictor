@@ -1,6 +1,17 @@
 const translations = {
   "app": {
     "title": "Sunset Voyager",
+    "apiKeyRequired": "Introduce la clave API",
+    "apiKeyTooShort": "La clave API es demasiado corta",
+    "saving": "Guardando...",
+    "apiKeySaved": "Clave API guardada",
+    "selectLocationFirst": "Selecciona primero una ubicación",
+    "refreshSuccess": "Datos actualizados",
+    "refreshFailed": "Error al actualizar: {{message}}",
+    "locationRequired": "Introduce una ubicación",
+    "geocodingNotReady": "El servicio de geocodificación no está listo",
+    "switchedToLocation": "Cambiado a: {{name}}",
+    "locatedAt": "Ubicación detectada: {{name}}",
     "subtitle": "Predecir el mejor momento para nubes rojas"
   },
   "home": {
