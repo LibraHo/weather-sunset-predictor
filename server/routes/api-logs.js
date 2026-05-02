@@ -70,7 +70,11 @@ function normalizeTokenMeta(reqBody = {}) {
     name: typeof reqBody.name === 'string' ? reqBody.name.trim() : '',
     minuteLimit: parseIntSafe(reqBody.minuteLimit, apiTokenService._blankTokenRecord().minuteLimit),
     dailyLimit: parseIntSafe(reqBody.dailyLimit, apiTokenService._blankTokenRecord().dailyLimit),
-    enabled: reqBody.enabled !== false
+    enabled: reqBody.enabled !== false,
+    note: typeof reqBody.note === 'string' ? reqBody.note.trim() : '',
+    nonCommercial: reqBody.nonCommercial !== false,
+    expiresAt: typeof reqBody.expiresAt === 'string' && reqBody.expiresAt.trim() ? reqBody.expiresAt.trim() : null,
+    trustedUser: typeof reqBody.trustedUser === 'string' ? reqBody.trustedUser.trim() : ''
   };
 }
 
@@ -102,6 +106,9 @@ router.get('/agent-usage', (req, res) => {
         todayErrors: 0,
         dailyRemaining: Math.max(0, item.dailyLimit - (item._dailyUsage || 0)),
         dailyUsage: item._dailyUsage || 0,
+        nonCommercial: item.nonCommercial !== false,
+        expiresAt: item.expiresAt || null,
+        trustedUser: item.trustedUser || '',
         recentCalls: []
       });
     });
@@ -218,7 +225,11 @@ router.post('/tokens', (req, res) => {
       name: payload.name,
       minuteLimit: payload.minuteLimit,
       dailyLimit: payload.dailyLimit,
-      enabled: payload.enabled
+      enabled: payload.enabled,
+      note: payload.note,
+      nonCommercial: payload.nonCommercial,
+      expiresAt: payload.expiresAt,
+      trustedUser: payload.trustedUser
     });
 
     res.status(201).json({ success: true, token, tokenMeta });
@@ -237,7 +248,11 @@ router.patch('/tokens/:id', (req, res) => {
       name: req.body?.name,
       enabled: req.body?.enabled,
       minuteLimit: parseIntSafe(req.body?.minuteLimit, NaN),
-      dailyLimit: parseIntSafe(req.body?.dailyLimit, NaN)
+      dailyLimit: parseIntSafe(req.body?.dailyLimit, NaN),
+      note: req.body?.note,
+      nonCommercial: req.body?.nonCommercial,
+      expiresAt: req.body?.expiresAt,
+      trustedUser: req.body?.trustedUser
     };
 
     if (!Number.isFinite(patch.minuteLimit)) {
@@ -256,6 +271,20 @@ router.patch('/tokens/:id', (req, res) => {
   } catch (err) {
     return res.status(500).json({ error: { code: err.code || 'UPDATE_TOKEN_FAILED', message: err.message || 'update token failed' } });
   }
+});
+
+
+// ---------------------------------------------------------------------------
+// POST /api/admin/tokens/batch-disable — 批量禁用受邀/信任用户 token
+// ---------------------------------------------------------------------------
+router.post('/tokens/batch-disable', (req, res) => {
+  const ids = Array.isArray(req.body?.ids) ? req.body.ids : [];
+  if (ids.length === 0) {
+    return res.status(400).json({ error: { code: 'INVALID_PARAMS', message: 'ids is required' } });
+  }
+
+  const disabled = apiTokenService.batchDisableTokens(ids, req.body?.note || 'batch disabled');
+  return res.json({ success: true, disabledCount: disabled.length, tokens: disabled });
 });
 
 // ---------------------------------------------------------------------------

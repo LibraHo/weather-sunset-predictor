@@ -159,6 +159,49 @@ describe('需求45 PR C - Token 管理 / API 申请 / 审计日志', () => {
     expect(listRes.body.tokens.some((t) => t.id === tokenId)).toBe(false);
   });
 
+
+  test('admin 支持受信任用户 token 备注、非商用、到期时间和批量禁用', async () => {
+    const createRes = await request(app)
+      .post('/api/admin/tokens')
+      .set('Authorization', makeAdminHeader(adminPassword))
+      .send({
+        name: 'trusted-user',
+        trustedUser: 'alice@example.com',
+        note: 'research invite',
+        nonCommercial: true,
+        expiresAt: '2999-01-01T00:00:00.000Z',
+        minuteLimit: 20,
+        dailyLimit: 500
+      });
+
+    expect(createRes.status).toBe(201);
+    const tokenId = createRes.body.tokenMeta.id;
+    expect(createRes.body.tokenMeta).toMatchObject({
+      trustedUser: 'alice@example.com',
+      note: 'research invite',
+      nonCommercial: true,
+      expiresAt: '2999-01-01T00:00:00.000Z'
+    });
+
+    const patchRes = await request(app)
+      .patch(`/api/admin/tokens/${tokenId}`)
+      .set('Authorization', makeAdminHeader(adminPassword))
+      .send({ note: 'updated note', expiresAt: null });
+    expect(patchRes.status).toBe(200);
+    expect(patchRes.body.token.note).toBe('updated note');
+    expect(patchRes.body.token.expiresAt).toBeNull();
+
+    const batchRes = await request(app)
+      .post('/api/admin/tokens/batch-disable')
+      .set('Authorization', makeAdminHeader(adminPassword))
+      .send({ ids: [tokenId], note: 'trust task disabled' });
+    expect(batchRes.status).toBe(200);
+    expect(batchRes.body.disabledCount).toBe(1);
+    expect(batchRes.body.tokens[0].enabled).toBe(false);
+    expect(batchRes.body.tokens[0].note).toContain('trust task disabled');
+  });
+
+
   test('API 申请邮箱/联系方式必填校验 + 提交入库 + 前台不返回 Token', async () => {
     const badRes = await request(app)
       .post('/api/applications')

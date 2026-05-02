@@ -118,4 +118,29 @@ describe('ApiTokenService.createToken', () => {
     expect(service.authenticateToken(created.token, []).ok).toBe(true);
     expect(service.authenticateToken(created.token, []).code).toBe('RATE_LIMITED');
   });
+  test('受信任用户 token 支持备注、非商用、到期和批量禁用', () => {
+    const expired = service.createToken({
+      name: 'trusted-expired',
+      trustedUser: 'alice@example.com',
+      note: 'invited research user',
+      nonCommercial: true,
+      expiresAt: '2000-01-01T00:00:00.000Z'
+    });
+
+    expect(expired.tokenMeta).toMatchObject({
+      trustedUser: 'alice@example.com',
+      note: 'invited research user',
+      nonCommercial: true,
+      expiresAt: '2000-01-01T00:00:00.000Z'
+    });
+    expect(service.authenticateToken(expired.token).code).toBe('TOKEN_EXPIRED');
+
+    const active = service.createToken({ name: 'trusted-active', expiresAt: '2999-01-01T00:00:00.000Z' });
+    const disabled = service.batchDisableTokens([active.tokenMeta.id], 'trust revoked');
+    expect(disabled).toHaveLength(1);
+    expect(disabled[0].enabled).toBe(false);
+    expect(disabled[0].note).toContain('trust revoked');
+    expect(service.authenticateToken(active.token).code).toBe('TOKEN_DISABLED');
+  });
+
 });
