@@ -8,6 +8,7 @@
  *
  * 字段（持久化）：
  * - id/name/prefix/tokenHash/scopes/enabled/minuteLimit/dailyLimit
+ * - note/nonCommercial/expiresAt/trustedUser
  * - createdAt/lastUsedAt/usageCount
  * - _minuteWindow/_minuteUsage /_dailyWindow/_dailyUsage（内部字段，便于限流）
  */
@@ -73,6 +74,10 @@ class ApiTokenService {
       enabled: overrides.enabled !== false,
       minuteLimit: Number.isFinite(overrides.minuteLimit) && overrides.minuteLimit > 0 ? Math.floor(overrides.minuteLimit) : DEFAULT_MINUTE_LIMIT,
       dailyLimit: Number.isFinite(overrides.dailyLimit) && overrides.dailyLimit > 0 ? Math.floor(overrides.dailyLimit) : DEFAULT_DAILY_LIMIT,
+      note: typeof overrides.note === 'string' ? overrides.note : '',
+      nonCommercial: overrides.nonCommercial !== false,
+      expiresAt: typeof overrides.expiresAt === 'string' && overrides.expiresAt.trim() ? overrides.expiresAt.trim() : null,
+      trustedUser: typeof overrides.trustedUser === 'string' ? overrides.trustedUser : '',
       createdAt: now,
       lastUsedAt: null,
       usageCount: 0,
@@ -177,7 +182,7 @@ class ApiTokenService {
 
   // ---- 公共能力 ----
 
-  createToken({ name = 'untitled', scopes = ['forecast:read'], minuteLimit, dailyLimit, enabled = true } = {}) {
+  createToken({ name = 'untitled', scopes = ['forecast:read'], minuteLimit, dailyLimit, enabled = true, note = '', nonCommercial = true, expiresAt = null, trustedUser = '' } = {}) {
     this._ensureFeatureEnabled();
 
     const prefix = process.env.NODE_ENV === 'production' ? 'xiake_live_' : 'xiake_test_';
@@ -189,6 +194,10 @@ class ApiTokenService {
       enabled,
       minuteLimit,
       dailyLimit,
+      note,
+      nonCommercial,
+      expiresAt,
+      trustedUser,
       prefix,
       tokenHash: this._hashToken(token, this.secret)
     });
@@ -247,6 +256,13 @@ class ApiTokenService {
 
     if (!found.enabled) {
       return { ok: false, code: 'TOKEN_DISABLED', status: 403, message: 'token disabled' };
+    }
+
+    if (found.expiresAt) {
+      const expiresAt = new Date(found.expiresAt).getTime();
+      if (Number.isFinite(expiresAt) && expiresAt <= Date.now()) {
+        return { ok: false, code: 'TOKEN_EXPIRED', status: 403, message: 'token expired' };
+      }
     }
 
     const required = this._normalizeScopes(requiredScopes);
@@ -324,6 +340,22 @@ class ApiTokenService {
       tokenRecord.scopes = this._normalizeScopes(patch.scopes);
     }
 
+    if (typeof patch.note === 'string') {
+      tokenRecord.note = patch.note.trim();
+    }
+
+    if (typeof patch.nonCommercial === 'boolean') {
+      tokenRecord.nonCommercial = patch.nonCommercial;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(patch, 'expiresAt')) {
+      tokenRecord.expiresAt = typeof patch.expiresAt === 'string' && patch.expiresAt.trim() ? patch.expiresAt.trim() : null;
+    }
+
+    if (typeof patch.trustedUser === 'string') {
+      tokenRecord.trustedUser = patch.trustedUser.trim();
+    }
+
     this._persist();
     return this._toPublic(tokenRecord);
   }
@@ -339,6 +371,23 @@ class ApiTokenService {
         _dailyWindow: tokenRecord._dailyWindow,
         _dailyUsage: tokenRecord._dailyUsage
       }));
+  }
+
+  batchDisableTokens(ids = [], note = '') {
+    const idSet = new Set(Array.isArray(ids) ? ids.filter(Boolean) : []);
+    const disabled = [];
+    for (const tokenRecord of this.tokens) {
+      if (!idSet.has(tokenRecord.id)) continue;
+      tokenRecord.enabled = false;
+      if (typeof note === 'string' && note.trim()) {
+        tokenRecord.note = tokenRecord.note ? `${tokenRecord.note}; ${note.trim()}` : note.trim();
+      }
+      disabled.push(this._toPublic(tokenRecord));
+    }
+    if (disabled.length > 0) {
+      this._persist();
+    }
+    return disabled;
   }
 
   deleteToken(id) {
