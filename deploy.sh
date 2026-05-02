@@ -147,7 +147,7 @@ if [ -f "$OLD_MANIFEST" ]; then
   SORTED_REMOTE_MANIFEST="/tmp/weather-sunset-deploy.manifest.sorted"
   LC_ALL=C sort -u "$OLD_MANIFEST" > "$SORTED_OLD_MANIFEST"
   LC_ALL=C sort -u "$REMOTE_MANIFEST" > "$SORTED_REMOTE_MANIFEST"
-  comm -23 "$SORTED_OLD_MANIFEST" "$SORTED_REMOTE_MANIFEST" | while IFS= read -r rel; do
+  LC_ALL=C comm -23 "$SORTED_OLD_MANIFEST" "$SORTED_REMOTE_MANIFEST" | while IFS= read -r rel; do
     case "$rel" in
       ""|/*|*".."*|.env|server/.env|node_modules/*|server/node_modules/*|.xiake/*|uploads/*|server/uploads/*|log/*|server/log/*|cache/*|server/cache/*)
         continue
