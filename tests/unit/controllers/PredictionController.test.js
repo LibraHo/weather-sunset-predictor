@@ -346,10 +346,10 @@ describe('PredictionController', () => {
       );
 
       expect(html).toContain('AOD 0.73');
-      expect(html).toContain('analysis-summary-copy');
-      expect(html).toContain('能见度 18km');
-      expect(html).toContain('湿度 58%');
-      expect(html).toContain('高云 45%');
+      expect(html).not.toContain('analysis-summary-copy');
+      expect(html).not.toContain('云层画布');
+      expect(html).not.toContain('空气渲染');
+      expect(html).toContain('高层云充足');
       expect(html).toContain('app-analysis-card');
       expect(html).toContain('analysis-group-positive');
       expect(html).toContain('analysis-group-warning');
