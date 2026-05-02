@@ -1161,7 +1161,7 @@ class PredictionController {
           </div>
 
           ${this.renderCloudConditionCard(forecast.clouds)}
-          ${this.renderAnalysisCard(forecast.analysis, forecast.conclusion, forecast.analysisSummary)}
+          ${this.renderAnalysisCard(forecast.analysis, forecast.conclusion)}
           <div id="radar-compass-${type}" style="margin-top:12px;display:none;"></div>
           <div class="prediction-app-footer">${this._uiText('Observe the sky · Catch the beauty', '观天有时 · 收获美景')}</div>
         </div>
@@ -1200,7 +1200,6 @@ class PredictionController {
       ],
       quality: prediction.quality || this.getQualityFromScore(score),
       analysis: this.buildAnalysisGroups(prediction),
-      analysisSummary: this.buildAnalysisSummary(prediction),
       conclusion: this.buildAnalysisConclusion(prediction, score, clouds)
     };
   }
@@ -1428,13 +1427,11 @@ class PredictionController {
     );
   }
 
-  renderAnalysisCard(groups, conclusion, summary = '') {
+  renderAnalysisCard(groups, conclusion) {
     const groupHtml = groups.map(group => this.renderAnalysisGroup(group)).join('');
-    const summaryHtml = summary ? `<p class="analysis-summary-copy">${summary}</p>` : '';
     return `
       <div class="analysis-card app-analysis-card">
         <div class="analysis-card-title"><span>${this._uiText('Fire cloud formation analysis', '火烧云形成条件分析')}</span></div>
-        ${summaryHtml}
         ${groupHtml}
         <div class="conclusion-banner"><span class="conclusion-icon">${this.renderInlineSvgIcon('leaf')}</span><strong>${conclusion}</strong></div>
       </div>
