@@ -54,6 +54,7 @@ describe('Agent API 扩展接口', () => {
   let ApiTokenService;
   let orchestrator;
   let EnhancedPredictionService;
+  let gridScoreService;
 
   beforeEach(() => {
     jest.resetModules();
@@ -86,10 +87,27 @@ describe('Agent API 扩展接口', () => {
       dailyLimit: 1000
     }).token;
 
+    const mapToken = tokenService.createToken({
+      name: 'map-token',
+      scopes: ['map:read'],
+      minuteLimit: 100,
+      dailyLimit: 1000
+    }).token;
+
+    tokenService.createToken({
+      name: 'unused-token',
+      scopes: ['forecast:read'],
+      minuteLimit: 100,
+      dailyLimit: 1000
+    });
+
+    global.__agentMapToken = mapToken;
+
     adminToken = geocodeToken;
 
     orchestrator = require('../../../server/services/ProviderOrchestrator');
     EnhancedPredictionService = require('../../../server/services/EnhancedPredictionService');
+    gridScoreService = require('../../../server/services/GridScoreService');
     orchestrator.fetchWeatherData = jest.fn().mockResolvedValue({ data: mockWeather() });
     EnhancedPredictionService.calculateEnhancedPrediction = jest.fn(() => ({
       date: '2026-04-25T00:00:00.000Z',
@@ -103,6 +121,16 @@ describe('Agent API 扩展接口', () => {
       cloudThickness: { thickness: 'normal', modifier: 1.0, reasons: ['clouds are suitable'] },
       scoreBeforeOcclusion: 82.1,
       breakdown: { baseScore: 52, canvasScore: 20, lightPathScore: 24, renderingFactor: 1, unclampedFinalScore: 77.2 }
+    }));
+    gridScoreService.getCache = jest.fn((period) => ({
+      period,
+      updatedAt: '2026-04-25T08:00:00.000Z',
+      gridPoints: [
+        { lat: 39.9, lon: 116.4, score: 88.2 },
+        { lat: 31.2, lon: 121.5, score: 62.6 },
+        { lat: 22.5, lon: 114.1, score: 35.4 },
+        { lat: 43.8, lon: 87.6, score: 72.1 }
+      ]
     }));
 
     global.fetch = jest.fn().mockResolvedValue({
@@ -162,6 +190,7 @@ describe('Agent API 扩展接口', () => {
     delete process.env.SERVER_TOKEN_SECRET;
     delete process.env.NODE_ENV;
     delete global.fetch;
+    delete global.__agentMapToken;
   });
 
   test('explain: 兼容 forecast:read，返回 scoreComposition / factorRelations / constraints / narrative', async () => {
@@ -200,7 +229,41 @@ describe('Agent API 扩展接口', () => {
     expect(res.body.paths['/api/agent/explain']).toBeDefined();
     expect(res.body.paths['/api/agent/geocode']).toBeDefined();
     expect(res.body.paths['/api/agent/forecast']).toBeDefined();
+    expect(res.body.paths['/api/agent/map-summary']).toBeDefined();
     expect(res.body.components?.securitySchemes).toHaveProperty('bearerAuth');
+  });
+
+  test('map-summary: 返回区域摘要和高分点，不暴露完整图层', async () => {
+    const res = await request(app)
+      .get('/api/agent/map-summary')
+      .set('Authorization', `Bearer ${global.__agentMapToken}`)
+      .query({ bbox: '110,20,125,42', type: 'sunset', threshold: 60, limit: 2 })
+      .expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.type).toBe('sunset');
+    expect(res.body.data.summary.matchingPoints).toBe(2);
+    expect(res.body.data.summary.maxScore).toBe(88.2);
+    expect(res.body.data.topPoints).toHaveLength(2);
+    expect(res.body.data.topPoints[0]).toMatchObject({ lat: 39.9, lon: 116.4, score: 88.2, quality: 'excellent' });
+    expect(res.body.data).not.toHaveProperty('gridPoints');
+    expect(res.body.data).not.toHaveProperty('values');
+  });
+
+  test('map-summary: 参数错误与权限不足有稳定错误码', async () => {
+    const denied = await request(app)
+      .get('/api/agent/map-summary')
+      .set('Authorization', `Bearer ${geocodeToken}`)
+      .query({ bbox: '110,20,125,42' })
+      .expect(403);
+    expect(denied.body.error.code).toBe('SCOPE_DENIED');
+
+    const badBbox = await request(app)
+      .get('/api/agent/map-summary')
+      .set('Authorization', `Bearer ${global.__agentMapToken}`)
+      .query({ bbox: 'bad' })
+      .expect(400);
+    expect(badBbox.body.error.code).toBe('INVALID_BBOX');
   });
 
   test('无 token 访问 explain 返回 401，geocode 权限不足返回 403', async () => {

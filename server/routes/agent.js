@@ -2,7 +2,7 @@
  * Agent API Routes
  *
  * 受控接口说明：
- * - 当前仅提供 forecast 能力
+ * - 提供 forecast / explain / geocode / map-summary 能力
  * - 所有接口均要求有效 token（除文档/健康类接口外）
  */
 
@@ -16,6 +16,7 @@ const ApiTokenService = require('../services/ApiTokenService');
 const createAgentAuth = require('../middleware/agentAuth');
 const apiAuditLog = require('../services/ApiAgentAuditLog');
 const geocodingRoute = require('./geocoding');
+const gridScoreService = require('../services/GridScoreService');
 const geocodingPrivate = geocodingRoute._private || {};
 
 const VALID_TYPES = new Set(['sunrise', 'sunset']);
@@ -77,6 +78,18 @@ const OPENAPI_DOC = {
         ],
         responses: { 200: { description: 'OK' }, 400: { description: '请求参数错误' }, 401: { description: '鉴权失败' }, 403: { description: '权限不足/配额' }, 404: { description: '未找到地点' }, 429: { description: '配额超限' }, 500: { description: '服务错误' } }
       }
+    },
+    '/api/agent/map-summary': {
+      get: {
+        summary: '区域火烧云地图摘要',
+        parameters: [
+          { in: 'query', name: 'bbox', required: false, schema: { type: 'string', description: 'west,south,east,north' } },
+          { in: 'query', name: 'type', required: false, schema: { type: 'string', enum: ['sunrise', 'sunset'] } },
+          { in: 'query', name: 'threshold', required: false, schema: { type: 'number', minimum: 0, maximum: 100 } },
+          { in: 'query', name: 'limit', required: false, schema: { type: 'integer', minimum: 1, maximum: 50 } }
+        ],
+        responses: { 200: { description: 'OK' }, 400: { description: '请求参数错误' }, 401: { description: '鉴权失败' }, 403: { description: '权限不足/配额' }, 429: { description: '配额超限' }, 503: { description: '地图缓存未就绪' }, 500: { description: '服务错误' } }
+      }
     }
   }
 };
@@ -94,6 +107,68 @@ function parseCoordinate(value) {
   if (value === undefined || value === null || value === '') return null;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : NaN;
+}
+
+function parseBbox(value) {
+  if (!value) return null;
+  const parts = String(value).split(',').map((item) => Number(item.trim()));
+  if (parts.length !== 4 || parts.some((item) => !Number.isFinite(item))) return NaN;
+  const [west, south, east, north] = parts;
+  if (west < -180 || east > 180 || south < -90 || north > 90 || west >= east || south >= north) return NaN;
+  return { west, south, east, north };
+}
+
+function pointInBbox(point, bbox) {
+  if (!bbox) return true;
+  return point.lon >= bbox.west && point.lon <= bbox.east && point.lat >= bbox.south && point.lat <= bbox.north;
+}
+
+function scoreQuality(score) {
+  if (score >= 80) return 'excellent';
+  if (score >= 60) return 'good';
+  if (score >= 40) return 'fair';
+  return 'poor';
+}
+
+function buildMapSummary({ cache, type, bbox, threshold, limit }) {
+  const points = (Array.isArray(cache?.gridPoints) ? cache.gridPoints : [])
+    .filter((point) => Number.isFinite(point.score) && point.score >= threshold && pointInBbox(point, bbox))
+    .sort((a, b) => b.score - a.score);
+
+  const scores = points.map((point) => point.score);
+  const averageScore = scores.length
+    ? Number((scores.reduce((sum, score) => sum + score, 0) / scores.length).toFixed(1))
+    : 0;
+  const maxScore = scores.length ? Number(Math.max(...scores).toFixed(1)) : 0;
+  const topPoints = points.slice(0, limit).map((point) => ({
+    lat: Number(point.lat),
+    lon: Number(point.lon),
+    score: Number(Number(point.score).toFixed(1)),
+    quality: point.quality || scoreQuality(point.score)
+  }));
+
+  return {
+    success: true,
+    data: {
+      type,
+      bbox,
+      threshold,
+      updatedAt: cache.updatedAt,
+      summary: {
+        matchingPoints: points.length,
+        averageScore,
+        maxScore,
+        quality: scoreQuality(maxScore)
+      },
+      topPoints,
+      meta: {
+        source: 'GridScoreService cache',
+        limited: points.length > limit,
+        limit,
+        generatedAt: new Date().toISOString()
+      }
+    }
+  };
 }
 
 function parseForecastDate(input, now = new Date()) {
@@ -559,6 +634,50 @@ router.get('/geocode', createAgentAuth({ scope: 'geocode:read', apiTokenService,
   }
 });
 
+router.get('/map-summary', createAgentAuth({ scopeAny: ['map:read', 'forecast:read'], apiTokenService, auditLogger: apiAuditLog }), async (req, res) => {
+  const startedAt = Date.now();
+  try {
+    const type = (req.query.type || 'sunset').toString();
+    if (!VALID_TYPES.has(type)) {
+      throw { status: 400, code: 'INVALID_TYPE', message: 'type must be sunrise or sunset' };
+    }
+
+    const bbox = parseBbox(req.query.bbox);
+    if (Number.isNaN(bbox)) {
+      throw { status: 400, code: 'INVALID_BBOX', message: 'bbox must be west,south,east,north' };
+    }
+
+    const rawThreshold = req.query.threshold === undefined ? 40 : Number(req.query.threshold);
+    if (!Number.isFinite(rawThreshold) || rawThreshold < 0 || rawThreshold > 100) {
+      throw { status: 400, code: 'INVALID_THRESHOLD', message: 'threshold must be 0-100' };
+    }
+    const threshold = Number(rawThreshold.toFixed(1));
+
+    const rawLimit = req.query.limit === undefined ? 10 : Number(req.query.limit);
+    if (!Number.isFinite(rawLimit) || rawLimit < 1 || rawLimit > 50) {
+      throw { status: 400, code: 'INVALID_LIMIT', message: 'limit must be 1-50' };
+    }
+    const limit = Math.floor(rawLimit);
+
+    const cache = gridScoreService.getCache(type);
+    if (!cache || !Array.isArray(cache.gridPoints)) {
+      throw { status: 503, code: 'MAP_CACHE_NOT_READY', message: 'map score cache is not ready' };
+    }
+
+    const elapsedMs = Date.now() - startedAt;
+    logAudit(req, '/api/agent/map-summary', 200, elapsedMs, null);
+    return res.json(buildMapSummary({ cache, type, bbox, threshold, limit }));
+  } catch (error) {
+    const status = Number.isFinite(error?.status) ? error.status : 500;
+    const code = error?.code || 'AGENT_MAP_SUMMARY_ERROR';
+    const errMessage = error?.message || 'map summary failed';
+    const elapsedMs = Date.now() - startedAt;
+    logAudit(req, '/api/agent/map-summary', status, elapsedMs, code);
+    console.error('[AgentRoute] map-summary error:', code, errMessage);
+    return errorResponse(res, status, code, errMessage);
+  }
+});
+
 router.get('/openapi.json', (req, res) => {
   res.set('Cache-Control', 'no-store');
   return res.json(OPENAPI_DOC);
@@ -577,5 +696,7 @@ module.exports._private = {
   buildGeocodeConfidence,
   geocodeQueryCandidates,
   searchAgentGeocode,
+  parseBbox,
+  buildMapSummary,
   OPENAPI_DOC
 };
