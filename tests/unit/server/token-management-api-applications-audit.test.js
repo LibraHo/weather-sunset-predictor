@@ -291,6 +291,16 @@ describe('需求45 PR C - Token 管理 / API 申请 / 审计日志', () => {
     expect(reviewedRes.body.application.status).toBe('approved');
     expect(reviewedRes.body.application.tokenId).toBeTruthy();
 
+    const tokensRes = await request(app)
+      .get('/api/admin/tokens')
+      .set('Authorization', makeAdminHeader(adminPassword));
+    const createdMeta = tokensRes.body.tokens.find((t) => t.id === reviewedRes.body.application.tokenId);
+    expect(createdMeta).toMatchObject({
+      trustedUser: 'wx:456',
+      nonCommercial: true,
+      note: '申请用途：科研用途'
+    });
+
     const listAfter = await request(app)
       .get('/api/admin/applications')
       .set('Authorization', makeAdminHeader(adminPassword));
