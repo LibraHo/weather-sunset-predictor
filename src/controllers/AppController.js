@@ -744,13 +744,13 @@ class AppController {
 
     // 验证API密钥不为空
     if (!apiKey) {
-      this.showAPIKeyError('请输入API密钥');
+      this.showAPIKeyError(this.i18n.t('app.apiKeyRequired'));
       return;
     }
 
     // 基本格式验证：API密钥应该是一个合理长度的字符串
     if (apiKey.length < 10) {
-      this.showAPIKeyError('API密钥格式不正确，长度过短');
+      this.showAPIKeyError(this.i18n.t('app.apiKeyTooShort'));
       return;
     }
 
@@ -762,7 +762,7 @@ class AppController {
       const saveButton = document.getElementById('save-api-key');
       if (saveButton) {
         saveButton.disabled = true;
-        saveButton.textContent = '保存中...';
+        saveButton.textContent = this.i18n.t('app.saving');
       }
 
       // 保存API密钥到本地存储（需求 1.2）
@@ -786,7 +786,7 @@ class AppController {
       // 恢复按钮状态
       if (saveButton) {
         saveButton.disabled = false;
-        saveButton.textContent = '保存';
+        saveButton.textContent = this.i18n.t('buttons.save');
       }
 
       // 隐藏模态框
@@ -799,7 +799,7 @@ class AppController {
       }
 
       // 显示成功消息
-      this.showSuccess('API密钥保存成功');
+      this.showSuccess(this.i18n.t('app.apiKeySaved'));
 
     } catch (error) {
       // 需求 1.4：显示错误消息
@@ -813,7 +813,7 @@ class AppController {
       const saveButton = document.getElementById('save-api-key');
       if (saveButton) {
         saveButton.disabled = false;
-        saveButton.textContent = '保存';
+        saveButton.textContent = this.i18n.t('buttons.save');
       }
     }
   }
@@ -824,7 +824,7 @@ class AppController {
    */
   async handleRefresh() {
     if (!this.currentLocation) {
-      this.showError('请先选择位置');
+      this.showError(this.i18n.t('app.selectLocationFirst'));
       return;
     }
 
@@ -835,12 +835,12 @@ class AppController {
       // 重新加载数据
       await this.handleLocationChange(this.currentLocation);
 
-      this.showSuccess('数据刷新成功');
+      this.showSuccess(this.i18n.t('app.refreshSuccess'));
 
     } catch (error) {
       // 使用ErrorHandler处理错误
       const errorInfo = ErrorHandler.handleError(error, 'Data Refresh');
-      this.showError(`刷新失败: ${errorInfo.message}`);
+      this.showError(this.i18n.t('app.refreshFailed', { message: errorInfo.message }));
     }
   }
 
@@ -868,7 +868,7 @@ class AppController {
 
     // 验证输入不为空
     if (!locationName) {
-      this.showLocationError('请输入位置名称');
+      this.showLocationError(this.i18n.t('app.locationRequired'));
       return;
     }
 
@@ -883,13 +883,13 @@ class AppController {
       const searchBtn = document.getElementById('search-btn');
       if (searchBtn) {
         searchBtn.disabled = true;
-        searchBtn.textContent = '搜索中...';
+        searchBtn.textContent = this.i18n.t('location.searching');
       }
 
       // 调用地理编码服务（需求 2.2）
       // 注意：GeocodingService 需要在构造函数中注入
       if (!this.geocodingService) {
-        throw new Error('地理编码服务未初始化');
+        throw new Error(this.i18n.t('app.geocodingNotReady'));
       }
 
       const location = await this.geocodingService.geocode(locationName);
@@ -911,7 +911,7 @@ class AppController {
       locationInput.value = '';
 
       // 显示成功消息
-      this.showSuccess(`已切换到：${location.name}`);
+      this.showSuccess(this.i18n.t('app.switchedToLocation', { name: location.name }));
 
     } catch (error) {
       // 需求 2.5：显示友好的错误提示
@@ -927,7 +927,7 @@ class AppController {
       const searchBtn = document.getElementById('search-btn');
       if (searchBtn) {
         searchBtn.disabled = false;
-        searchBtn.textContent = '搜索';
+        searchBtn.textContent = this.i18n.t('buttons.search');
       }
 
       // 隐藏加载状态
@@ -960,12 +960,12 @@ class AppController {
       const currentLocationBtn = document.getElementById('current-location-btn');
       if (currentLocationBtn) {
         currentLocationBtn.disabled = true;
-        currentLocationBtn.setAttribute('aria-label', '获取位置中...');
+        currentLocationBtn.setAttribute('aria-label', this.i18n.t('location.loading'));
       }
 
       // 检查地理编码服务是否已初始化
       if (!this.geocodingService) {
-        throw new Error('地理编码服务未初始化');
+        throw new Error(this.i18n.t('app.geocodingNotReady'));
       }
 
       // 需求 2.3：请求浏览器地理位置权限并获取当前位置
@@ -975,7 +975,7 @@ class AppController {
       await this.handleLocationChange(location);
 
       // 显示成功消息
-      this.showSuccess(`已定位到：${location.name}`);
+      this.showSuccess(this.i18n.t('app.locatedAt', { name: location.name }));
 
     } catch (error) {
       // 需求 2.4：处理权限拒绝情况和其他错误
@@ -1373,7 +1373,7 @@ class AppController {
                 console.log('[AppController] 搜索历史已保存:', location.name);
                 this.loadSearchHistory();
               }
-              this.showSuccess(`已切换到：${location.name}`);
+              this.showSuccess(this.i18n.t('app.switchedToLocation', { name: location.name }));
             } else {
               throw new Error('无效的坐标');
             }

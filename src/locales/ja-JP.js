@@ -1,6 +1,17 @@
 const translations = {
   "app": {
     "title": "霞客",
+    "apiKeyRequired": "APIキーを入力してください",
+    "apiKeyTooShort": "APIキーが短すぎます",
+    "saving": "保存中...",
+    "apiKeySaved": "APIキーを保存しました",
+    "selectLocationFirst": "先に場所を選択してください",
+    "refreshSuccess": "データを更新しました",
+    "refreshFailed": "更新に失敗しました: {{message}}",
+    "locationRequired": "場所名を入力してください",
+    "geocodingNotReady": "ジオコーディングサービスの準備ができていません",
+    "switchedToLocation": "切り替え先: {{name}}",
+    "locatedAt": "現在地: {{name}}",
     "subtitle": "焼き雲の最佳タイミングを予測"
   },
   "home": {

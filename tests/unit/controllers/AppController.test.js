@@ -11,6 +11,7 @@ import WeatherController from '../../../src/controllers/WeatherController.js';
 import PredictionController from '../../../src/controllers/PredictionController.js';
 import GeocodingService from '../../../src/services/GeocodingService.js';
 import Location from '../../../src/models/Location.js';
+import i18n from '../../../src/i18n.js';
 
 // Mock DOM elements
 const setupDOM = () => {
@@ -40,7 +41,9 @@ describe('AppController', () => {
   let predictionController;
   let geocodingService;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    localStorage.setItem('language', 'zh-CN');
+    await i18n.changeLanguage('zh-CN');
     // 设置DOM
     setupDOM();
 
@@ -58,8 +61,7 @@ describe('AppController', () => {
       geocodingService
     );
 
-    // 清除localStorage
-    localStorage.clear();
+    // 保持测试默认中文；afterEach 统一清理 localStorage
   });
 
   afterEach(() => {
@@ -725,7 +727,7 @@ describe('AppController', () => {
 
       // Button should be re-enabled after search
       expect(searchBtn.disabled).toBe(false);
-      expect(searchBtn.textContent).toBe('搜索');
+      expect(searchBtn.textContent).toBe('查询');
     });
 
     test('搜索失败后应该恢复搜索按钮状态', async () => {
@@ -742,7 +744,7 @@ describe('AppController', () => {
 
       // Button should be re-enabled after error
       expect(searchBtn.disabled).toBe(false);
-      expect(searchBtn.textContent).toBe('搜索');
+      expect(searchBtn.textContent).toBe('查询');
     });
 
     test('当地理编码服务未初始化时，应该显示错误', async () => {

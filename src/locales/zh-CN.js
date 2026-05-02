@@ -5,6 +5,17 @@ export default {
   // 应用
   app: {
     title: '霞客',
+    apiKeyRequired: '请输入API密钥',
+    apiKeyTooShort: 'API密钥格式不正确，长度过短',
+    saving: '保存中...',
+    apiKeySaved: 'API密钥保存成功',
+    selectLocationFirst: '请先选择位置',
+    refreshSuccess: '数据刷新成功',
+    refreshFailed: '刷新失败: {{message}}',
+    locationRequired: '请输入位置名称',
+    geocodingNotReady: '地理编码服务未初始化',
+    switchedToLocation: '已切换到：{{name}}',
+    locatedAt: '已定位到：{{name}}',
     subtitle: '预测火烧云出现的最佳时机'
   },
 

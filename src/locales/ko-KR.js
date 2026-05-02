@@ -1,6 +1,17 @@
 const translations = {
   "app": {
     "title": "하객(霞客)",
+    "apiKeyRequired": "API 키를 입력하세요",
+    "apiKeyTooShort": "API 키가 너무 짧습니다",
+    "saving": "저장 중...",
+    "apiKeySaved": "API 키가 저장되었습니다",
+    "selectLocationFirst": "먼저 위치를 선택하세요",
+    "refreshSuccess": "데이터를 새로고침했습니다",
+    "refreshFailed": "새로고침 실패: {{message}}",
+    "locationRequired": "위치 이름을 입력하세요",
+    "geocodingNotReady": "지오코딩 서비스를 사용할 준비가 되지 않았습니다",
+    "switchedToLocation": "다음 위치로 전환됨: {{name}}",
+    "locatedAt": "현재 위치: {{name}}",
     "subtitle": "화염구름이 나타나는 최적의 시간 예측"
   },
   "home": {
