@@ -5388,6 +5388,57 @@ body.theme-dark .prediction-app-card {
 .analysis-key-point span:last-child { display: grid; gap: 3px; min-width: 0; }
 .analysis-key-point strong { color: var(--app-text); font-size: 0.96rem; line-height: 1.25; }
 .analysis-key-point small { color: var(--app-muted); font-size: 0.82rem; line-height: 1.4; }
+
+/* 需求46.5：新版分析模块只贴合霞客现有视觉，不重排整体布局 */
+.app-analysis-card,
+.analysis-metric,
+.analysis-key-point {
+  min-width: 0;
+}
+
+.analysis-metric,
+.analysis-key-point {
+  background: color-mix(in srgb, var(--glass-bg-heavy, rgba(255,255,255,0.72)) 88%, transparent);
+  border-color: var(--glass-border, #EEF0F5);
+}
+
+.analysis-metric-grid {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.analysis-metric-label,
+.analysis-metric-value,
+.analysis-key-point strong,
+.analysis-key-point small {
+  overflow-wrap: anywhere;
+}
+
+.conclusion-banner {
+  color: var(--sunset-time-text, #F97316);
+  background: linear-gradient(135deg, var(--sunset-time-bg-subtle, rgba(255, 152, 0, 0.10)) 0%, rgba(251, 191, 36, 0.08) 100%);
+  border: 1px solid color-mix(in srgb, var(--sunset-time-border, #ff9800) 28%, transparent);
+}
+
+.analysis-metric-positive .analysis-metric-icon,
+.analysis-group-positive .analysis-key-icon { color: var(--color-success); }
+.analysis-metric-neutral .analysis-metric-icon,
+.analysis-group-neutral .analysis-key-icon { color: var(--color-primary); }
+.analysis-metric-warning .analysis-metric-icon,
+.analysis-group-warning .analysis-key-icon { color: var(--color-warning); }
+
+@media (max-width: 430px) {
+  .analysis-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .analysis-metric { padding: 9px 10px; }
+  .analysis-metric-label { white-space: normal; }
+  .analysis-key-point { padding: 10px 11px; }
+}
+
+@media (max-width: 340px) {
+  .analysis-metric-grid { grid-template-columns: 1fr; }
+}
+
 .prediction-app-footer { text-align: center; color: #A0A7B8; font-size: 0.88rem; margin: 4px 0 2px; }
 
 @media (max-width: 430px) {
