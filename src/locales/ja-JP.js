@@ -12,7 +12,7 @@ const translations = {
     "geocodingNotReady": "ジオコーディングサービスの準備ができていません",
     "switchedToLocation": "切り替え先: {{name}}",
     "locatedAt": "現在地: {{name}}",
-    "subtitle": "焼き雲の最佳タイミングを予測"
+    "subtitle": "夕焼け雲のベストタイミングを予測"
   },
   "home": {
     "tabs": {
@@ -512,12 +512,12 @@ apiAccess: 'API接続'
     "clearConfirm": "すべての検索履歴をクリアしてもよろしいですか？"
   },
   "share": {
-    "title": "Share Prediction",
-    "panelTitle": "Share",
-    "saveImage": "Save Image",
-    "copyLink": "Copy Link",
-    "nativeShare": "More Share",
-    "copied": "Link Copied",    "cardPredictionFileSuffix": "予報"
+    "title": "予測を共有",
+    "panelTitle": "共有",
+    "saveImage": "画像を保存",
+    "copyLink": "リンクをコピー",
+    "nativeShare": "その他の共有方法",
+    "copied": "リンクをコピーしました",    "cardPredictionFileSuffix": "予報"
 
   },
   "shareCard": {
