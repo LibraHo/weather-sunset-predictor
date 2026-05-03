@@ -71,7 +71,7 @@ Alex 要求把当前网站所有功能都纳入英语、日语、韩语、西班
 - [x] 47.5 日语补齐与质量检查：日语不能混中文；避免机器直译式生硬表达；长文案不挤压移动端。（2026-05-03：Japanese quality audit + fallback residue guard）
 - [x] 47.6 韩语补齐与质量检查：韩语不能混中文；按钮/菜单/表单/错误状态完整；长文案不挤压移动端。（2026-05-03：Korean quality audit + fallback residue guard）
 - [x] 47.7 西班牙语补齐与质量检查：西语不能混中文；按钮/菜单/表单/错误状态完整；长文案不挤压移动端。（2026-05-03：Spanish quality audit + fallback residue guard）
-- [ ] 47.8 自动化防回归：新增/扩展测试，至少覆盖 key completeness、关键页面无中文残留、API接入/申请页四语言切换、分享卡片/预测卡片动态文案 i18n。
+- [x] 47.8 自动化防回归：新增/扩展测试，至少覆盖 key completeness、关键页面无中文残留、API接入/申请页四语言切换、分享卡片/预测卡片动态文案 i18n。（2026-05-03：i18n regression suite coverage guard）
 - [ ] 47.9 真实页面验收：至少用 Playwright 或截图验证 `en-US/ja-JP/ko-KR/es-ES` 关键路径：首页搜索、预测结果、地图、设置、API接入/申请。
 
 ### 验收标准
