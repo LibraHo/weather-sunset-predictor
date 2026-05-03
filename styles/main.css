@@ -6154,9 +6154,47 @@ body.theme-auto .score-breakdown-popover {
   line-height: 1.2;
 }
 .phenomenon-title-copy h3 { margin: 0; }
+.prediction-header-meta {
+  width: min(100%, 520px);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+.prediction-header-pill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  max-width: 100%;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: color-mix(in srgb, var(--glass-bg-heavy) 78%, transparent);
+  color: var(--color-text-light);
+  font-size: 0.76rem;
+  font-weight: 750;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+.prediction-header-pill-score {
+  color: var(--color-text);
+}
+.prediction-header-pill-score strong {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: var(--theme-accent, #f97316);
+}
 @media (max-width: 640px) {
   .prediction-toggle-btn {
     min-width: 88px;
+    text-align: center;
+  }
+  .prediction-header-meta {
+    gap: 5px;
+  }
+  .prediction-header-pill {
+    white-space: normal;
     text-align: center;
   }
 }
