@@ -19,7 +19,8 @@ describe('requirement 47.9 real page validation coverage', () => {
     expect(spec).toContain('/api-apply.html?lang=${locale}');
 
     expect(doc).toContain('npx playwright test tests/e2e/primary-locale-layout.spec.js --project=chromium');
-    expect(doc).toContain('missing system library `libnspr4.so`');
-    expect(doc).toContain('47.9 should only be marked fully complete after the command above runs');
+    expect(doc).toContain('system library `libnspr4.so`');
+    expect(doc).toContain('CI runs `npx playwright test tests/e2e/primary-locale-layout.spec.js --project=chromium`');
+    expect(doc).toContain('Requirement 47.9 is complete when the CI gate above passes');
   });
 });
