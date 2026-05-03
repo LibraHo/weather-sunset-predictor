@@ -527,12 +527,12 @@ apiAccess: 'Acceso API'
     "clearConfirm": "¿Está seguro de que desea limpiar todo el historial de búsqueda?"
   },
   "share": {
-    "title": "Share Prediction",
-    "panelTitle": "Share",
-    "saveImage": "Save Image",
-    "copyLink": "Copy Link",
-    "nativeShare": "More Share",
-    "copied": "Link Copied",    "cardPredictionFileSuffix": " forecast"
+    "title": "Compartir predicción",
+    "panelTitle": "Compartir",
+    "saveImage": "Guardar imagen",
+    "copyLink": "Copiar enlace",
+    "nativeShare": "Más opciones para compartir",
+    "copied": "Enlace copiado",    "cardPredictionFileSuffix": " forecast"
 
   },
   "shareCard": {
