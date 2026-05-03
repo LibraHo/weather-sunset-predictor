@@ -213,6 +213,24 @@ header h1.app-title {
   background: rgba(255, 255, 255, 0.7);
   transform: translateY(-1px);
 }
+.header-right-group .header-svg-btn {
+  font-size: 0;
+}
+
+.header-action-icon {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.header-action-icon-bell {
+  color: var(--header-icon-color);
+}
+
+.header-action-icon-settings {
+  color: var(--color-text-light);
+}
+
 
 main {
   flex: 1;
