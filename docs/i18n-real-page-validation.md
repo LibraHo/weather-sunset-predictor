@@ -20,11 +20,11 @@ Validation command for real browser acceptance:
 npx playwright test tests/e2e/primary-locale-layout.spec.js --project=chromium
 ```
 
-Current local container result:
-- `npx playwright install chromium` completed.
-- `npx playwright test tests/e2e/primary-locale-layout.spec.js --project=chromium` is blocked in this container because Chromium cannot launch: missing system library `libnspr4.so`.
-- `npx playwright install-deps chromium` also failed because the container user cannot elevate to install Debian packages.
+Current validation path:
+- Local container execution is still blocked because Chromium cannot launch without system library `libnspr4.so`, and this container cannot install Debian packages.
+- CI now installs Chromium system dependencies with `npx playwright install --with-deps chromium`.
+- CI runs `npx playwright test tests/e2e/primary-locale-layout.spec.js --project=chromium` as the real-page acceptance gate.
 
-## Remaining notes
+## Completion notes
 
-This PR preserves and documents the Playwright real-page validation harness, but 47.9 should only be marked fully complete after the command above runs in an environment with Chromium system dependencies installed (CI runner or a browser-capable host). Further visual screenshot approval can be added when static API/gallery/admin pages are fully locale-driven rather than documented conversion debt.
+Requirement 47.9 is complete when the CI gate above passes on the PR/main branch. The same command remains the manual reproduction command for any browser-capable host.
