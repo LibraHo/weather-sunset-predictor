@@ -1162,7 +1162,7 @@ class PredictionController {
           </div>
 
           ${this.renderCloudConditionCard(forecast.clouds)}
-          ${this.renderAnalysisCard(forecast.analysis, forecast.conclusion)}
+          ${this.renderAnalysisCard(forecast.analysis, forecast.conclusion, forecast.analysisWeather)}
           <div id="radar-compass-${type}" style="margin-top:12px;display:none;"></div>
           <div class="prediction-app-footer">${this._uiText('Observe the sky · Catch the beauty', '观天有时 · 收获美景')}</div>
         </div>
@@ -1201,6 +1201,7 @@ class PredictionController {
       ],
       quality: prediction.quality || this.getQualityFromScore(score),
       analysis: this.buildAnalysisGroups(prediction),
+      analysisWeather: this.extractAnalysisWeather(prediction),
       conclusion: this.buildAnalysisConclusion(prediction, score, clouds)
     };
   }
@@ -1452,13 +1453,71 @@ class PredictionController {
     );
   }
 
-  renderAnalysisCard(groups, conclusion) {
-    const groupHtml = groups.map(group => this.renderAnalysisGroup(group)).join('');
+  getAnalysisMetricStatus(metric, value) {
+    const numeric = Number(value) || 0;
+    if (metric === 'high') return numeric >= 35 ? 'positive' : (numeric >= 15 ? 'neutral' : 'warning');
+    if (metric === 'mid') return numeric >= 20 && numeric <= 60 ? 'positive' : 'neutral';
+    if (metric === 'low') return numeric < 15 ? 'positive' : (numeric < 35 ? 'neutral' : 'warning');
+    if (metric === 'visibility') return numeric >= 15 ? 'positive' : (numeric >= 8 ? 'neutral' : 'warning');
+    if (metric === 'humidity') return numeric >= 35 && numeric <= 75 ? 'positive' : (numeric > 0 ? 'neutral' : 'warning');
+    if (metric === 'aod') return numeric > 0 && numeric <= 0.45 ? 'positive' : (numeric > 0 && numeric <= 0.9 ? 'neutral' : 'warning');
+    return 'neutral';
+  }
+
+  getAnalysisStatusIcon(status) {
+    if (status === 'positive') return '✅';
+    if (status === 'warning') return '❌';
+    return '⚠️';
+  }
+
+  renderAnalysisMetricGrid(weather) {
+    const metric = (key, label, value, unit = '') => {
+      const status = this.getAnalysisMetricStatus(key, value);
+      const display = value === null || value === undefined || Number.isNaN(Number(value))
+        ? this._uiText('N/A', '暂无')
+        : `${Number(value).toFixed(key === 'aod' ? 2 : 0)}${unit}`;
+      return `
+        <div class="analysis-metric analysis-metric-${key} analysis-metric-${status}">
+          <span class="analysis-metric-icon" aria-hidden="true">${this.getAnalysisStatusIcon(status)}</span>
+          <span class="analysis-metric-label">${label}</span>
+          <strong class="analysis-metric-value">${display}</strong>
+        </div>
+      `;
+    };
+
+    return `
+      <div class="analysis-metric-grid">
+        ${metric('high', this.i18n.t('prediction.cloudLayers.shortHigh'), weather.high, '%')}
+        ${metric('mid', this.i18n.t('prediction.cloudLayers.shortMid'), weather.mid, '%')}
+        ${metric('low', this.i18n.t('prediction.cloudLayers.shortLow'), weather.low, '%')}
+        ${metric('visibility', this.i18n.t('prediction.factors.visibility'), weather.visibility, 'km')}
+        ${metric('humidity', this.i18n.t('prediction.factors.humidity'), weather.humidity, '%')}
+        ${metric('aod', this.i18n.t('prediction.canvas.aerosol'), weather.aod, '')}
+      </div>
+    `;
+  }
+
+  renderAnalysisKeyPoints(groups) {
+    const items = groups.flatMap(group => group.items.map(item => ({ ...item, type: group.type }))).slice(0, 3);
+    return `
+      <div class="analysis-key-points">
+        ${items.map(item => `
+          <div class="analysis-key-point analysis-group-${item.type}">
+            <span class="analysis-key-icon" aria-hidden="true">${this.getAnalysisStatusIcon(item.type)}</span>
+            <span><strong>${item.title}</strong><small>${item.desc}</small></span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  renderAnalysisCard(groups, conclusion, weather) {
     return `
       <div class="analysis-card app-analysis-card">
         <div class="analysis-card-title"><span>${this._uiText('Fire cloud formation analysis', '火烧云形成条件分析')}</span></div>
-        ${groupHtml}
         <div class="conclusion-banner"><span class="conclusion-icon">${this.renderInlineSvgIcon('leaf')}</span><strong>${conclusion}</strong></div>
+        ${this.renderAnalysisMetricGrid(weather)}
+        ${this.renderAnalysisKeyPoints(groups)}
       </div>
     `;
   }
