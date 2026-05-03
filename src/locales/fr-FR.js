@@ -1,7 +1,18 @@
 const translations = {
   "app": {
     "title": "Sunset Voyager",
-    "subtitle": "Prédire le meilleur moment pour les nuages rouges"
+    "subtitle": "Prédire le meilleur moment pour les nuages rouges",
+    "apiKeyRequired": "Veuillez saisir une clé API",
+    "apiKeyTooShort": "La clé API est trop courte",
+    "saving": "Enregistrement...",
+    "apiKeySaved": "Clé API enregistrée",
+    "selectLocationFirst": "Sélectionnez d’abord un lieu",
+    "refreshSuccess": "Données mises à jour",
+    "refreshFailed": "Échec de la mise à jour, réessayez plus tard",
+    "locationRequired": "Saisissez ou choisissez un lieu",
+    "geocodingNotReady": "Le service de géocodage n’est pas encore prêt",
+    "switchedToLocation": "Lieu changé pour {{location}}",
+    "locatedAt": "Position définie sur {{location}}"
   },
   "home": {
     "tabs": {
@@ -9,8 +20,8 @@ const translations = {
       "forecast": "Prévisions",
       "methodology": "Méthode de calcul",
       "map": "Carte Lueur",
-            "shareMap": "Carte partagée",
-apiAccess: 'Accès API'
+      "shareMap": "Carte partagée",
+      "apiAccess": "Accès API"
     },
     "menu": {
       "ariaLabel": "Changer de vue",
@@ -49,7 +60,8 @@ apiAccess: 'Accès API'
           "highCloud": "Nuages élevés (>6km) : optimal 50%, courbe gaussienne, max 25 pts",
           "midCloud": "Nuages moyens (2–6km) : optimal 35%, courbe gaussienne, max 25 pts",
           "lowCloudBonus": "Bonus nuages bas : moins c'est mieux, <20% = 10 pts, décroissance linéaire",
-          "formula": "Score structure = Nuages élevés + Nuages moyens + Bonus bas (max 60 pts)"
+          "formula": "Score structure = Nuages élevés + Nuages moyens + Bonus bas (max 60 pts)",
+          "highCloudBonus": "Une couverture de nuages hauts bien dosée offre une toile plus complète pour les couleurs du coucher."
         },
         "transparency": {
           "title": "2. Transparence atmosphérique",
@@ -85,6 +97,21 @@ apiAccess: 'Accès API'
           "level3": "0.5–2mm/h → ×0.5",
           "level4": ">2mm/h → ×0.15 (forte pluie, presque impossible)",
           "formula": "Score final = Score de base × Pénalité nuages bas × Pénalité précipitations"
+        },
+        "lightPath": {
+          "title": "Trajet de la lumière",
+          "subtitle": "La lumière atteint-elle les nuages ?",
+          "desc": "Les nuages bas, la visibilité et les obstacles à l’horizon influencent la capacité du soleil à éclairer les nuages moyens et hauts.",
+          "lowCloudEffect": "Plus les nuages bas sont nombreux, plus ils risquent de bloquer la lumière près de l’horizon.",
+          "visibility": "Une meilleure visibilité rend le trajet lumineux plus net et les couleurs plus lisibles.",
+          "formula": "Score du trajet lumineux = correction de visibilité × correction d’obstruction des nuages bas"
+        },
+        "finalFormula": {
+          "title": "Score final",
+          "subtitle": "Combiner toile, trajet lumineux et rendu",
+          "desc": "Le score final combine la structure nuageuse, le trajet lumineux et le potentiel de rendu de l’air, avec des limites pour les cas extrêmes.",
+          "formula": "Score total = score de toile × facteur de trajet lumineux × facteur de rendu",
+          "highCloudCap": "Si les nuages hauts sont insuffisants, le score maximal reste limité même avec de bonnes autres conditions."
         }
       }
     }
@@ -124,7 +151,7 @@ apiAccess: 'Accès API'
     "windDirection": "Direction du Vent",
     "pressure": "Pression",
     "visibility": "Visibilité",
-    aerosol: 'Aérosols',
+    "aerosol": "Aérosols",
     "clouds": "Nuages",
     "cloudCover": "Couverture Nuageuse",
     "precipitation": "Précipitations",
@@ -200,7 +227,7 @@ apiAccess: 'Accès API'
     "canvas": {
       "title": "Score de Toile",
       "score": "Score de Toile",
-      aerosol: 'Aérosols',
+      "aerosol": "Aérosols",
       "cloudLevel": "Niveau de Nuages",
       "breakdown": "Répartition des Nuages",
       "canvasScore": "📊 Toile: {{score}}pts | {{level}}",
@@ -239,7 +266,15 @@ apiAccess: 'Accès API'
       "colorGoldenOrange": "Teintes dorées-orangées",
       "colorReddishPurplish": "Teintes rouge-violacées",
       "colorDarkRed": "Teintes rouge foncé",
-      "postRainMode": "Mode après-pluie"
+      "postRainMode": "Mode après-pluie",
+      "aerosol": "Aérosols",
+      "cloudThickness": {
+        "title": "Épaisseur des nuages",
+        "thin": "Fine",
+        "moderate": "Modérée",
+        "thick": "Épaisse",
+        "unknown": "Inconnue"
+      }
     },
     "composite": {
       "title": "Score Composite",
@@ -320,7 +355,18 @@ apiAccess: 'Accès API'
     "passed": "Passé",
     "forecast": "Prévisions Futures",
     "sunriseDirectionLabel": "Direction",
-    "sunsetDirectionLabel": "Direction"
+    "sunsetDirectionLabel": "Direction",
+    "cloudThickness": {
+      "title": "Épaisseur des nuages",
+      "thin": "Fine",
+      "moderate": "Modérée",
+      "thick": "Épaisse",
+      "unknown": "Inconnue",
+      "thinDesc": "Nuages plutôt fins ; les couleurs peuvent être plus discrètes.",
+      "moderateDesc": "Épaisseur équilibrée, favorable aux dégradés.",
+      "thickDesc": "Nuages trop épais, pouvant bloquer la lumière.",
+      "unknownDesc": "Données insuffisantes pour estimer l’épaisseur."
+    }
   },
   "errors": {
     "title": "Erreur",
@@ -414,7 +460,15 @@ apiAccess: 'Accès API'
     "currentDefaultLocation": "Lieu par défaut actuel",
     "defaultLocationHint": "Chargement auto au démarrage après définition",
     "geocodingBackendAuto": "Auto",
-    "geocodingBackendOpenMeteo": "Open-Meteo"
+    "geocodingBackendOpenMeteo": "Open-Meteo",
+    "mapTileProvider": "Fond de carte",
+    "mapTileSource": "Source du fond de carte",
+    "mapTileAuto": "Auto",
+    "mapTileGaode": "Gaode",
+    "mapTileOSM": "OpenStreetMap",
+    "windyApiKey": "Clé API Windy",
+    "windyApiKeyPlaceholder": "Saisissez votre clé API Windy",
+    "windyApiKeyHint": "Utilisée pour obtenir les données de prévision météo."
   },
   "languageSelector": {
     "title": "Choisir la Langue",
@@ -488,19 +542,36 @@ apiAccess: 'Accès API'
     "saveImage": "Save Image",
     "copyLink": "Copy Link",
     "nativeShare": "More Share",
-    "copied": "Link Copied",    "cardPredictionFileSuffix": " forecast"
-
+    "copied": "Link Copied",
+    "cardPredictionFileSuffix": " forecast"
   },
   "shareCard": {
     "brandName": "Xiake",
     "brandSubtitle": "Sunset Voyager",
     "shareTitle": "Fire Cloud Forecast Share",
     "unknownLocation": "Unknown location",
-    "labels": { "probability": "Fire Cloud Probability", "excellent": "Excellent", "good": "Good", "fair": "Fair", "poor": "Poor" },
-    "gauge": { "hintExcellent": "Worth waiting for", "hintGood": "Worth checking nearby", "hintFair": "No need to go out just for it" },
-    "timeLabels": { "sunrise": "Sunrise", "sunset": "Sunset" },
+    "labels": {
+      "probability": "Fire Cloud Probability",
+      "excellent": "Excellent",
+      "good": "Good",
+      "fair": "Fair",
+      "poor": "Poor"
+    },
+    "gauge": {
+      "hintExcellent": "Worth waiting for",
+      "hintGood": "Worth checking nearby",
+      "hintFair": "No need to go out just for it"
+    },
+    "timeLabels": {
+      "sunrise": "Sunrise",
+      "sunset": "Sunset"
+    },
     "bestWindow": "Best viewing  {{start}} – {{end}}",
-    "cloud": { "high": "High Cloud", "mid": "Mid Cloud", "low": "Low Cloud" },
+    "cloud": {
+      "high": "High Cloud",
+      "mid": "Mid Cloud",
+      "low": "Low Cloud"
+    },
     "verdict": {
       "noCarrier": "😶 Not enough color carrier clouds; fire-cloud chance is very low",
       "excellent": "✨ Excellent conditions; colorful sky is promising",
@@ -605,10 +676,16 @@ apiAccess: 'Accès API'
     "pointToast": "{{name}} direction | Score: {{score}} pts | Distance: {{distance}} km",
     "emptyChinaSpots": "No visible fire-cloud spots today",
     "updatedAt": "Updated at {{time}}",
-    "quality": { "excellent": "Excellent", "good": "Good" },
-    "period": { "sunriseTomorrow": "Tomorrow's sunrise glow", "sunsetToday": "Today's sunset glow", "testLayer": "Test layer (mock data)" }
-  },
-
+    "quality": {
+      "excellent": "Excellent",
+      "good": "Good"
+    },
+    "period": {
+      "sunriseTomorrow": "Tomorrow's sunrise glow",
+      "sunsetToday": "Today's sunset glow",
+      "testLayer": "Test layer (mock data)"
+    }
+  }
 };
 
 export default translations;

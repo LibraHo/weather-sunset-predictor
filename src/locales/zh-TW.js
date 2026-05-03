@@ -1,7 +1,18 @@
 const translations = {
   "app": {
     "title": "霞客",
-    "subtitle": "預測火燒雲出現的最佳時機"
+    "subtitle": "預測火燒雲出現的最佳時機",
+    "apiKeyRequired": "請輸入 API 金鑰",
+    "apiKeyTooShort": "API 金鑰長度太短",
+    "saving": "儲存中...",
+    "apiKeySaved": "API 金鑰已儲存",
+    "selectLocationFirst": "請先選擇地點",
+    "refreshSuccess": "資料已更新",
+    "refreshFailed": "更新失敗，請稍後再試",
+    "locationRequired": "請輸入或選擇地點",
+    "geocodingNotReady": "地理編碼服務尚未就緒",
+    "switchedToLocation": "已切換到 {{location}}",
+    "locatedAt": "已定位到 {{location}}"
   },
   "home": {
     "tabs": {
@@ -9,8 +20,8 @@ const translations = {
       "forecast": "預測功能",
       "methodology": "火燒雲計算方法",
       "map": "火燒雲地圖",
-            shareMap: '分享地圖',
-apiAccess: 'API接入'
+      "shareMap": "分享地圖",
+      "apiAccess": "API接入"
     },
     "menu": {
       "ariaLabel": "切換頁面",
@@ -50,15 +61,15 @@ apiAccess: 'API接入'
           "midCloud": "中雲（2–6km）：同樣能產生火燒雲，效果略遜於高雲",
           "lowCloudBonus": "低雲（<2km）：主要起遮擋作用，不貢獻正面分數",
           "formula": "有效雲量 = max(高雲×1.15, 中雲)×0.7 + min(高雲, 中雲)×0.2；低雲30%以下不懲罰，80%時懲罰到0.5",
-          "highCloudBonus": "高雲主導加分：當高雲>50%且低雲<30%時，畫布分×1.2倍"
+          "highCloudBonus": "高雲量適中時，晚霞畫布更完整，色彩更容易鋪開。"
         },
         "lightPath": {
-          "title": "2. 光路評估",
-          "subtitle": "Light Path · 光路評分",
-          "desc": "光路通暢度決定光線能否順利到達雲層。低雲少時光路更通暢，遮擋概率降低。",
-          "lowCloudEffect": "低雲<30%時，光路遮擋權重降低至0.7~0.85，光線更易穿透",
-          "visibility": "能見度：影響光線傳播清晰度",
-          "formula": "光路分 = 基礎光路分 × 低雲權重係數"
+          "title": "光路條件",
+          "subtitle": "夕陽是否能照到雲層",
+          "desc": "低雲、能見度與地平線遮擋會影響陽光抵達中高雲的機率。",
+          "lowCloudEffect": "低雲越多，越容易遮住接近地平線的光線。",
+          "visibility": "能見度越高，光路越乾淨，色彩越清楚。",
+          "formula": "光路分 = 能見度修正 × 低雲遮擋修正"
         },
         "transparency": {
           "title": "3. 大氣透明度",
@@ -96,11 +107,11 @@ apiAccess: 'API接入'
           "formula": "最終得分 = 基礎分 × 低雲係數 × 降水係數"
         },
         "finalFormula": {
-          "title": "7. 綜合計算公式",
-          "subtitle": "Final Score Formula",
-          "desc": "最終得分由畫布評分和光路評分加權計算，再乘以懲罰係數。",
-          "formula": "綜合得分 = (畫布分 × 0.8 + 光路分 × 0.2) × 低雲係數 × 降水係數",
-          "highCloudCap": "高雲主導無遠端數據時，上限放寬至85分（原69.9分）"
+          "title": "最終分數",
+          "subtitle": "綜合畫布、光路與渲染",
+          "desc": "最終分數會把雲層畫布、光路條件與空氣渲染能力合併，並限制極端情況。",
+          "formula": "總分 = 畫布分 × 光路因子 × 渲染因子",
+          "highCloudCap": "高雲不足時，即使其他條件很好，也會限制最高得分。"
         }
       }
     }
@@ -216,7 +227,7 @@ apiAccess: 'API接入'
     "canvas": {
       "title": "畫布評分",
       "score": "畫布得分",
-      aerosol: '氣溶膠',
+      "aerosol": "氣溶膠",
       "cloudLevel": "雲層等級",
       "breakdown": "雲層分佈",
       "canvasScore": "📊 畫布: {{score}}分 | {{level}}",
@@ -255,7 +266,15 @@ apiAccess: 'API接入'
       "colorGoldenOrange": "金橙色調",
       "colorReddishPurplish": "紅紫色調",
       "colorDarkRed": "暗紅色調",
-      "postRainMode": "雨後模式"
+      "postRainMode": "雨後模式",
+      "aerosol": "氣溶膠",
+      "cloudThickness": {
+        "title": "雲層厚度",
+        "thin": "薄",
+        "moderate": "適中",
+        "thick": "厚",
+        "unknown": "未知"
+      }
     },
     "composite": {
       "title": "綜合評分",
@@ -336,7 +355,18 @@ apiAccess: 'API接入'
     "passed": "已過",
     "forecast": "未來預測",
     "sunriseDirectionLabel": "朝向",
-    "sunsetDirectionLabel": "朝向"
+    "sunsetDirectionLabel": "朝向",
+    "cloudThickness": {
+      "title": "雲層厚度",
+      "thin": "偏薄",
+      "moderate": "適中",
+      "thick": "偏厚",
+      "unknown": "未知",
+      "thinDesc": "雲層偏薄，色彩可能較淡。",
+      "moderateDesc": "雲層厚度適中，有利於呈現層次。",
+      "thickDesc": "雲層偏厚，可能遮擋光線。",
+      "unknownDesc": "暫無足夠資料判斷雲層厚度。"
+    }
   },
   "time": {
     "today": "今天",
@@ -458,7 +488,15 @@ apiAccess: 'API接入'
     "currentDefaultLocation": "目前預設位置",
     "defaultLocationHint": "設定預設位置後，每次開啟自動載入",
     "geocodingBackendAuto": "自動",
-    "geocodingBackendOpenMeteo": "Open-Meteo"
+    "geocodingBackendOpenMeteo": "Open-Meteo",
+    "mapTileProvider": "地圖底圖",
+    "mapTileSource": "底圖來源",
+    "mapTileAuto": "自動",
+    "mapTileGaode": "高德",
+    "mapTileOSM": "OpenStreetMap",
+    "windyApiKey": "Windy API 金鑰",
+    "windyApiKeyPlaceholder": "請輸入 Windy API 金鑰",
+    "windyApiKeyHint": "用於取得天氣預測資料。"
   },
   "languageSelector": {
     "title": "選擇語言",
@@ -498,19 +536,36 @@ apiAccess: 'API接入'
     "saveImage": "Save Image",
     "copyLink": "Copy Link",
     "nativeShare": "More Share",
-    "copied": "Link Copied",    "cardPredictionFileSuffix": "預測"
-
+    "copied": "Link Copied",
+    "cardPredictionFileSuffix": "預測"
   },
   "shareCard": {
     "brandName": "霞客",
     "brandSubtitle": "Sunset Voyager",
     "shareTitle": "火燒雲預測分享",
     "unknownLocation": "未知地點",
-    "labels": { "probability": "火燒雲機率", "excellent": "極佳", "good": "良好", "fair": "普通", "poor": "偏低" },
-    "gauge": { "hintExcellent": "值得特地等一等", "hintGood": "可以順路觀察", "hintFair": "不用特地出門" },
-    "timeLabels": { "sunrise": "日出", "sunset": "日落" },
+    "labels": {
+      "probability": "火燒雲機率",
+      "excellent": "極佳",
+      "good": "良好",
+      "fair": "普通",
+      "poor": "偏低"
+    },
+    "gauge": {
+      "hintExcellent": "值得特地等一等",
+      "hintGood": "可以順路觀察",
+      "hintFair": "不用特地出門"
+    },
+    "timeLabels": {
+      "sunrise": "日出",
+      "sunset": "日落"
+    },
     "bestWindow": "最佳觀賞  {{start}} – {{end}}",
-    "cloud": { "high": "高雲", "mid": "中雲", "low": "低雲" },
+    "cloud": {
+      "high": "高雲",
+      "mid": "中雲",
+      "low": "低雲"
+    },
     "verdict": {
       "noCarrier": "😶 缺少色彩載體，火燒雲機率很低",
       "excellent": "✨ 條件很棒，天空色彩值得期待",
@@ -621,10 +676,16 @@ apiAccess: 'API接入'
     "pointToast": "{{name}}方向｜評分: {{score}}分｜距離: {{distance}}公里",
     "emptyChinaSpots": "今日暫無可見火燒雲點位",
     "updatedAt": "更新於 {{time}}",
-    "quality": { "excellent": "優秀", "good": "良好" },
-    "period": { "sunriseTomorrow": "明天的朝霞", "sunsetToday": "今天的晚霞", "testLayer": "測試圖層（模擬資料）" }
-  },
-
+    "quality": {
+      "excellent": "優秀",
+      "good": "良好"
+    },
+    "period": {
+      "sunriseTomorrow": "明天的朝霞",
+      "sunsetToday": "今天的晚霞",
+      "testLayer": "測試圖層（模擬資料）"
+    }
+  }
 };
 
 export default translations;

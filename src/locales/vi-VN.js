@@ -1,7 +1,18 @@
 const translations = {
   "app": {
     "title": "Sunset Voyager",
-    "subtitle": "Dự đoán thời điểm tốt nhất để thấy mây đẹp"
+    "subtitle": "Dự đoán thời điểm tốt nhất để thấy mây đẹp",
+    "apiKeyRequired": "Vui lòng nhập khóa API",
+    "apiKeyTooShort": "Khóa API quá ngắn",
+    "saving": "Đang lưu...",
+    "apiKeySaved": "Đã lưu khóa API",
+    "selectLocationFirst": "Vui lòng chọn địa điểm trước",
+    "refreshSuccess": "Dữ liệu đã được cập nhật",
+    "refreshFailed": "Cập nhật thất bại, vui lòng thử lại sau",
+    "locationRequired": "Vui lòng nhập hoặc chọn địa điểm",
+    "geocodingNotReady": "Dịch vụ mã hóa địa lý chưa sẵn sàng",
+    "switchedToLocation": "Đã chuyển sang {{location}}",
+    "locatedAt": "Đã định vị tại {{location}}"
   },
   "home": {
     "tabs": {
@@ -9,8 +20,8 @@ const translations = {
       "forecast": "Chức năng dự báo",
       "methodology": "Phương pháp tính điểm mây đẹp",
       "map": "Bản đồ Ráng đỏ",
-            "shareMap": "Bản đồ chia sẻ",
-apiAccess: 'Truy cập API'
+      "shareMap": "Bản đồ chia sẻ",
+      "apiAccess": "Truy cập API"
     },
     "menu": {
       "ariaLabel": "Chuyển trang",
@@ -49,7 +60,8 @@ apiAccess: 'Truy cập API'
           "highCloud": "Mây cao (>6km): tối ưu 50%, đường cong Gauss, tối đa 25 điểm",
           "midCloud": "Mây trung (2–6km): tối ưu 35%, đường cong Gauss, tối đa 25 điểm",
           "lowCloudBonus": "Thưởng mây thấp: càng ít càng tốt, <20% = 10 điểm, giảm tuyến tính",
-          "formula": "Điểm cấu trúc = Mây cao + Mây trung + Thưởng mây thấp (tối đa 60 điểm)"
+          "formula": "Điểm cấu trúc = Mây cao + Mây trung + Thưởng mây thấp (tối đa 60 điểm)",
+          "highCloudBonus": "Lượng mây cao vừa phải tạo nền trời đầy đủ hơn để màu hoàng hôn lan rộng."
         },
         "transparency": {
           "title": "2. Độ trong suốt khí quyển",
@@ -85,6 +97,21 @@ apiAccess: 'Truy cập API'
           "level3": "0.5–2mm/h → ×0.5",
           "level4": ">2mm/h → ×0.15 (mưa lớn, gần như không thể)",
           "formula": "Điểm cuối = Điểm cơ bản × Hệ số mây thấp × Hệ số lượng mưa"
+        },
+        "lightPath": {
+          "title": "Đường truyền ánh sáng",
+          "subtitle": "Ánh nắng có chiếu tới tầng mây không?",
+          "desc": "Mây thấp, tầm nhìn và vật cản gần đường chân trời ảnh hưởng đến khả năng ánh nắng chiếu tới mây trung và cao.",
+          "lowCloudEffect": "Mây thấp càng nhiều thì càng dễ chặn ánh sáng gần đường chân trời.",
+          "visibility": "Tầm nhìn càng cao, đường truyền ánh sáng càng sạch và màu sắc càng rõ.",
+          "formula": "Điểm đường sáng = hiệu chỉnh tầm nhìn × hiệu chỉnh che khuất do mây thấp"
+        },
+        "finalFormula": {
+          "title": "Điểm cuối cùng",
+          "subtitle": "Kết hợp nền mây, đường sáng và khả năng lên màu",
+          "desc": "Điểm cuối cùng kết hợp cấu trúc mây, điều kiện đường sáng và khả năng tán xạ của không khí, đồng thời giới hạn các trường hợp cực đoan.",
+          "formula": "Tổng điểm = điểm nền mây × hệ số đường sáng × hệ số lên màu",
+          "highCloudCap": "Khi thiếu mây cao, điểm tối đa sẽ bị giới hạn ngay cả khi các điều kiện khác tốt."
         }
       }
     }
@@ -124,7 +151,7 @@ apiAccess: 'Truy cập API'
     "windDirection": "Hướng Gió",
     "pressure": "Áp Suất",
     "visibility": "Tầm Nhìn",
-    aerosol: 'Aerosol',
+    "aerosol": "Aerosol",
     "clouds": "Mây",
     "cloudCover": "Độ Mây Che Phủ",
     "precipitation": "Mưa",
@@ -200,7 +227,7 @@ apiAccess: 'Truy cập API'
     "canvas": {
       "title": "Điểm Khung Trời",
       "score": "Điểm Khung Trời",
-      aerosol: 'Aerosol',
+      "aerosol": "Aerosol",
       "cloudLevel": "Mức Độ Mây",
       "breakdown": "Phân Bố Mây",
       "canvasScore": "📊 Khung trời: {{score}}đ | {{level}}",
@@ -239,7 +266,15 @@ apiAccess: 'Truy cập API'
       "colorGoldenOrange": "Màu vàng cam",
       "colorReddishPurplish": "Màu đỏ tím",
       "colorDarkRed": "Màu đỏ sẫm",
-      "postRainMode": "Chế độ sau mưa"
+      "postRainMode": "Chế độ sau mưa",
+      "aerosol": "Khí dung",
+      "cloudThickness": {
+        "title": "Độ dày mây",
+        "thin": "Mỏng",
+        "moderate": "Vừa phải",
+        "thick": "Dày",
+        "unknown": "Chưa rõ"
+      }
     },
     "composite": {
       "title": "Điểm Tổng Hợp",
@@ -320,7 +355,18 @@ apiAccess: 'Truy cập API'
     "passed": "Đã Qua",
     "forecast": "Dự Báo Tương Lai",
     "sunriseDirectionLabel": "Hướng",
-    "sunsetDirectionLabel": "Hướng"
+    "sunsetDirectionLabel": "Hướng",
+    "cloudThickness": {
+      "title": "Độ dày mây",
+      "thin": "Mỏng",
+      "moderate": "Vừa phải",
+      "thick": "Dày",
+      "unknown": "Chưa rõ",
+      "thinDesc": "Mây khá mỏng, màu sắc có thể nhạt hơn.",
+      "moderateDesc": "Độ dày cân bằng, thuận lợi cho các lớp màu.",
+      "thickDesc": "Mây quá dày, có thể che ánh sáng.",
+      "unknownDesc": "Chưa đủ dữ liệu để đánh giá độ dày mây."
+    }
   },
   "settings": {
     "title": "Cài Đặt",
@@ -403,7 +449,15 @@ apiAccess: 'Truy cập API'
     "currentDefaultLocation": "Vị trí mặc định hiện tại",
     "defaultLocationHint": "Tự động tải khi khởi động sau khi đặt",
     "geocodingBackendAuto": "Tự động",
-    "geocodingBackendOpenMeteo": "Open-Meteo"
+    "geocodingBackendOpenMeteo": "Open-Meteo",
+    "mapTileProvider": "Nền bản đồ",
+    "mapTileSource": "Nguồn nền bản đồ",
+    "mapTileAuto": "Tự động",
+    "mapTileGaode": "Gaode",
+    "mapTileOSM": "OpenStreetMap",
+    "windyApiKey": "Khóa API Windy",
+    "windyApiKeyPlaceholder": "Nhập khóa API Windy",
+    "windyApiKeyHint": "Dùng để lấy dữ liệu dự báo thời tiết."
   },
   "languageSelector": {
     "title": "Chọn Ngôn Ngữ",
@@ -471,19 +525,36 @@ apiAccess: 'Truy cập API'
     "saveImage": "Save Image",
     "copyLink": "Copy Link",
     "nativeShare": "More Share",
-    "copied": "Link Copied",    "cardPredictionFileSuffix": " forecast"
-
+    "copied": "Link Copied",
+    "cardPredictionFileSuffix": " forecast"
   },
   "shareCard": {
     "brandName": "Xiake",
     "brandSubtitle": "Sunset Voyager",
     "shareTitle": "Fire Cloud Forecast Share",
     "unknownLocation": "Unknown location",
-    "labels": { "probability": "Fire Cloud Probability", "excellent": "Excellent", "good": "Good", "fair": "Fair", "poor": "Poor" },
-    "gauge": { "hintExcellent": "Worth waiting for", "hintGood": "Worth checking nearby", "hintFair": "No need to go out just for it" },
-    "timeLabels": { "sunrise": "Sunrise", "sunset": "Sunset" },
+    "labels": {
+      "probability": "Fire Cloud Probability",
+      "excellent": "Excellent",
+      "good": "Good",
+      "fair": "Fair",
+      "poor": "Poor"
+    },
+    "gauge": {
+      "hintExcellent": "Worth waiting for",
+      "hintGood": "Worth checking nearby",
+      "hintFair": "No need to go out just for it"
+    },
+    "timeLabels": {
+      "sunrise": "Sunrise",
+      "sunset": "Sunset"
+    },
     "bestWindow": "Best viewing  {{start}} – {{end}}",
-    "cloud": { "high": "High Cloud", "mid": "Mid Cloud", "low": "Low Cloud" },
+    "cloud": {
+      "high": "High Cloud",
+      "mid": "Mid Cloud",
+      "low": "Low Cloud"
+    },
     "verdict": {
       "noCarrier": "😶 Not enough color carrier clouds; fire-cloud chance is very low",
       "excellent": "✨ Excellent conditions; colorful sky is promising",
@@ -605,10 +676,16 @@ apiAccess: 'Truy cập API'
     "pointToast": "{{name}} direction | Score: {{score}} pts | Distance: {{distance}} km",
     "emptyChinaSpots": "No visible fire-cloud spots today",
     "updatedAt": "Updated at {{time}}",
-    "quality": { "excellent": "Excellent", "good": "Good" },
-    "period": { "sunriseTomorrow": "Tomorrow's sunrise glow", "sunsetToday": "Today's sunset glow", "testLayer": "Test layer (mock data)" }
-  },
-
+    "quality": {
+      "excellent": "Excellent",
+      "good": "Good"
+    },
+    "period": {
+      "sunriseTomorrow": "Tomorrow's sunrise glow",
+      "sunsetToday": "Today's sunset glow",
+      "testLayer": "Test layer (mock data)"
+    }
+  }
 };
 
 export default translations;
