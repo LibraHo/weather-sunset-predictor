@@ -32,6 +32,50 @@ class PredictionAPIService {
    *
    * 需求：22.4 - 前端改为调用后端 API
    */
+
+  _buildEnhancedRequestItem(weatherData, date, type = 'sunset') {
+    const dateString = date instanceof Date ? date.toISOString() : date;
+
+    return {
+      weatherData: {
+        cloudCover: weatherData.cloudCover,
+        humidity: weatherData.humidity,
+        visibility: weatherData.visibility,
+        lowCloudCover: weatherData.lowCloudCover,
+        highClouds: weatherData.highClouds || 0,
+        midClouds: weatherData.midClouds || 0,
+        lowClouds: weatherData.lowClouds || 0,
+        precipitation: weatherData.precipitation || 0,
+        convPrecip: weatherData.convPrecip || weatherData.precipitation || 0,
+        weatherCode: weatherData.weatherCode ?? null,
+        cloudBaseHeight: weatherData.cloudBaseHeight ?? null,
+        shortwaveRadiation: weatherData.shortwaveRadiation ?? null,
+        directRadiation: weatherData.directRadiation ?? null,
+        diffuseRadiation: weatherData.diffuseRadiation ?? null,
+        waterVapourColumn: weatherData.waterVapourColumn ?? null,
+        _prevHourData: weatherData._prevHourData || null
+      },
+      date: dateString,
+      type
+    };
+  }
+
+  _buildEnhancedRequestBody(weatherData, date, lat, lon, type = 'sunset') {
+    const item = this._buildEnhancedRequestItem(weatherData, date, type);
+    const { _prevHourData, ...weatherPayload } = item.weatherData;
+
+    return {
+      weatherData: weatherPayload,
+      date: item.date,
+      lat,
+      lon,
+      type: item.type,
+      options: {
+        prevHourData: _prevHourData || null
+      }
+    };
+  }
+
   async calculate(weatherData, date, lat, lon, type = 'sunset') {
     const startTime = Date.now();
     console.log(`[PredictionAPIService] 调用后端预测 API: lat=${lat}, lon=${lon}, type=${type}`);
@@ -40,37 +84,8 @@ class PredictionAPIService {
       // 构建请求 URL（使用增强算法）
       const url = `${this.baseURL}/api/prediction/enhanced`;
 
-      // 格式化日期为 ISO 字符串
-      const dateString = date instanceof Date ? date.toISOString() : date;
-
       // 构建请求体
-      const requestBody = {
-        weatherData: {
-          cloudCover: weatherData.cloudCover,
-          humidity: weatherData.humidity,
-          visibility: weatherData.visibility,
-          lowCloudCover: weatherData.lowCloudCover,
-          highClouds: weatherData.highClouds || 0,
-          midClouds: weatherData.midClouds || 0,
-          lowClouds: weatherData.lowClouds || 0,
-          precipitation: weatherData.precipitation || 0,
-          convPrecip: weatherData.convPrecip || weatherData.precipitation || 0,
-          weatherCode: weatherData.weatherCode ?? null,
-          cloudBaseHeight: weatherData.cloudBaseHeight ?? null,
-          // Phase 22: 云厚评估字段
-          shortwaveRadiation: weatherData.shortwaveRadiation ?? null,
-          directRadiation: weatherData.directRadiation ?? null,
-          diffuseRadiation: weatherData.diffuseRadiation ?? null,
-          waterVapourColumn: weatherData.waterVapourColumn ?? null
-        },
-        date: dateString,
-        lat: lat,
-        lon: lon,
-        type: type,
-        options: {
-          prevHourData: weatherData._prevHourData || null
-        }
-      };
+      const requestBody = this._buildEnhancedRequestBody(weatherData, date, lat, lon, type);
 
       // 发送请求
       const response = await this._fetchWithTimeout(url, {
@@ -189,6 +204,41 @@ class PredictionAPIService {
     prediction.aqi = data.aqi ?? null;
 
     return prediction;
+  }
+
+  /**
+   * 并行调用后端增强预测 API。
+   * 当前后端 batch 路由只支持同一种 type；前端朝霞/晚霞混合场景保留逐项并发，
+   * 避免原来 4 天 × 朝/晚霞的串行等待。
+   *
+   * @param {Array<{weatherData:Object,date:Date|string,lat:number,lon:number,type:string}>} items
+   * @returns {Promise<SunsetPrediction[]>}
+   */
+  async calculateMany(items) {
+    if (!Array.isArray(items) || items.length === 0) return [];
+
+    const startTime = Date.now();
+    console.log(`[PredictionAPIService] 并行调用后端预测 API: ${items.length} items`);
+
+    const settled = await Promise.allSettled(items.map((item) => this.calculate(
+      item.weatherData,
+      item.date,
+      item.lat,
+      item.lon,
+      item.type
+    )));
+
+    const predictions = settled.map((result, index) => {
+      if (result.status === 'fulfilled') return result.value;
+      console.warn(`[PredictionAPIService] 并行预测第 ${index} 项失败:`, result.reason?.message || result.reason);
+      return null;
+    });
+
+    const elapsed = Date.now() - startTime;
+    const successCount = predictions.filter(Boolean).length;
+    console.log(`[PredictionAPIService] 并行预测完成: ${elapsed}ms, success=${successCount}/${predictions.length}`);
+
+    return predictions;
   }
 
   /**

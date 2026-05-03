@@ -189,6 +189,77 @@ describe('PredictionController', () => {
     });
   });
 
+  describe('generatePredictions performance', () => {
+    test('使用后端预测时应批量并发提交朝霞/晚霞预测任务', async () => {
+      const base = new Date();
+      base.setHours(0, 0, 0, 0);
+      const weatherData = [];
+      for (let day = 0; day < 4; day++) {
+        const morning = new Date(base);
+        morning.setDate(base.getDate() + day);
+        morning.setHours(6, 0, 0, 0);
+        const evening = new Date(base);
+        evening.setDate(base.getDate() + day);
+        evening.setHours(18, 0, 0, 0);
+        for (const timestamp of [morning.getTime(), evening.getTime()]) {
+          weatherData.push({
+            timestamp,
+            timezone: 'Asia/Shanghai',
+            cloudCover: 45,
+            highClouds: 55,
+            midClouds: 20,
+            lowClouds: 5,
+            humidity: 55,
+            visibility: 18,
+            windSpeed: 8,
+            pressure: 1010,
+            temp: 22
+          });
+        }
+      }
+
+      predictionController.predictionAPIService.calculateMany = jest.fn(async (items) => items.map((item, index) => ({
+        score: 60 + index,
+        quality: 'good',
+        type: item.type,
+        getOptimalViewingWindow: () => ({
+          start: new Date(item.date.getTime() - 30 * 60 * 1000),
+          end: new Date(item.date.getTime() + 30 * 60 * 1000)
+        }),
+        shouldShowAzimuth: () => false
+      })));
+      predictionController.predictionAPIService.calculate = jest.fn();
+      predictionController.predictionService.getSunriseTime = jest.fn((date) => {
+        const result = new Date(date);
+        result.setHours(6, 0, 0, 0);
+        return result;
+      });
+      predictionController.predictionService.getSunsetTime = jest.fn((date) => {
+        const result = new Date(date);
+        result.setHours(18, 0, 0, 0);
+        return result;
+      });
+      predictionController.predictionService.getSunAzimuth = jest.fn(() => 270);
+
+      const location = { name: '北京', lat: 39.9, lon: 116.4, isValid: () => true };
+      const predictions = await predictionController.generatePredictions(weatherData, location);
+
+      expect(predictionController.predictionAPIService.calculateMany).toHaveBeenCalledTimes(1);
+      expect(predictionController.predictionAPIService.calculate).not.toHaveBeenCalled();
+      const [jobs] = predictionController.predictionAPIService.calculateMany.mock.calls[0];
+      expect(jobs).toHaveLength(8);
+      expect(jobs.map(job => job.type)).toEqual([
+        'sunrise', 'sunset',
+        'sunrise', 'sunset',
+        'sunrise', 'sunset',
+        'sunrise', 'sunset'
+      ]);
+      expect(predictions).toHaveLength(8);
+      expect(predictions[0].type).toBe('sunrise');
+      expect(predictions[1].type).toBe('sunset');
+    });
+  });
+
   describe('renderSinglePrediction', () => {
     test('应包含评分 SVG 仪表盘', () => {
       const prediction = {
