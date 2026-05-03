@@ -75,11 +75,11 @@ Alex 要求把当前网站所有功能都纳入英语、日语、韩语、西班
 - [ ] 47.9 真实页面验收：至少用 Playwright 或截图验证 `en-US/ja-JP/ko-KR/es-ES` 关键路径：首页搜索、预测结果、地图、设置、API接入/申请。
 
 ### 验收标准
-- [ ] `en-US/ja-JP/ko-KR/es-ES` 与 `zh-CN` 的用户可见 key 结构一致，无 `Translation key not found`。
-- [ ] 四种语言下核心页面不出现中文残留（城市名/地名数据、品牌名和明确允许项除外）。
-- [ ] 所有新用户可见文案必须同步四种语言；PR 缺任一语言视为不完整。
-- [ ] 移动端英文/日文/韩文/西文长文案不横向溢出、不遮挡主要操作。
-- [ ] 自动化测试真实通过；`No tests found` 不算通过。
+- [x] `en-US/ja-JP/ko-KR/es-ES` 与 `zh-CN` 的用户可见 key 结构一致，无 `Translation key not found`。（2026-05-03：`primaryLocalesCompleteness.test.js`）
+- [x] 四种语言下核心页面不出现中文残留（城市名/地名数据、品牌名和明确允许项除外）。（2026-05-03：static/dynamic audits + locale quality guards）
+- [x] 所有新用户可见文案必须同步四种语言；PR 缺任一语言视为不完整。（2026-05-03：key completeness guard）
+- [ ] 移动端英文/日文/韩文/西文长文案不横向溢出、不遮挡主要操作。（Playwright harness 已记录；本容器缺 Chromium system deps，需浏览器环境跑通）
+- [x] 自动化测试真实通过；`No tests found` 不算通过。（2026-05-03：regression suite meta guard + concrete test commands）
 
 ### 并行分工
 - minicoder EN：英语覆盖审计与修复建议。
