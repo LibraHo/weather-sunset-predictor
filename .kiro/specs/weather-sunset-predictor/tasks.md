@@ -69,7 +69,7 @@ Alex 要求把当前网站所有功能都纳入英语、日语、韩语、西班
 - [x] 47.3 控制器/组件/服务动态文案审计：覆盖 `src/controllers`、`src/components`、`src/services`、`src/utils` 中 toast、按钮、空状态、错误、分享卡片、地图、预测卡片、设置、API接入/申请等动态文案。（2026-05-03：动态文案审计报告 + CJK source inventory guard）
 - [x] 47.4 英语补齐与质量检查：英文不能 fallback 中文；功能路径文案自然、可读；代码示例/错误码说明准确。（2026-05-03：English quality audit + no-CJK fallback guard）
 - [x] 47.5 日语补齐与质量检查：日语不能混中文；避免机器直译式生硬表达；长文案不挤压移动端。（2026-05-03：Japanese quality audit + fallback residue guard）
-- [ ] 47.6 韩语补齐与质量检查：韩语不能混中文；按钮/菜单/表单/错误状态完整；长文案不挤压移动端。
+- [x] 47.6 韩语补齐与质量检查：韩语不能混中文；按钮/菜单/表单/错误状态完整；长文案不挤压移动端。（2026-05-03：Korean quality audit + fallback residue guard）
 - [ ] 47.7 西班牙语补齐与质量检查：西语不能混中文；按钮/菜单/表单/错误状态完整；长文案不挤压移动端。
 - [ ] 47.8 自动化防回归：新增/扩展测试，至少覆盖 key completeness、关键页面无中文残留、API接入/申请页四语言切换、分享卡片/预测卡片动态文案 i18n。
 - [ ] 47.9 真实页面验收：至少用 Playwright 或截图验证 `en-US/ja-JP/ko-KR/es-ES` 关键路径：首页搜索、预测结果、地图、设置、API接入/申请。

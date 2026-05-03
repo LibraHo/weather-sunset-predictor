@@ -512,12 +512,12 @@ apiAccess: 'API 연동'
     "clearConfirm": "모든 검색 기록을 삭제하시겠습니까?"
   },
   "share": {
-    "title": "Share Prediction",
-    "panelTitle": "Share",
-    "saveImage": "Save Image",
-    "copyLink": "Copy Link",
-    "nativeShare": "More Share",
-    "copied": "Link Copied",    "cardPredictionFileSuffix": "예보"
+    "title": "예보 공유",
+    "panelTitle": "공유",
+    "saveImage": "이미지 저장",
+    "copyLink": "링크 복사",
+    "nativeShare": "다른 공유 방법",
+    "copied": "링크가 복사되었습니다",    "cardPredictionFileSuffix": "예보"
 
   },
   "shareCard": {
