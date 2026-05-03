@@ -384,15 +384,23 @@ describe('PredictionController', () => {
         prediction, '🌅', '晚霞', '日落时间', '今日', 'sunset'
       );
 
-      expect(html).toContain('AOD 0.73');
+      expect(html).toContain('analysis-metric-aod');
+      expect(html).toContain('0.73');
       expect(html).not.toContain('analysis-summary-copy');
       expect(html).not.toContain('云层画布');
       expect(html).not.toContain('空气渲染');
       expect(html).toContain('高层云充足');
       expect(html).toContain('app-analysis-card');
-      expect(html).toContain('analysis-group-positive');
-      expect(html).toContain('analysis-group-warning');
       expect(html).toContain('conclusion-banner');
+      expect(html).toContain('analysis-metric-grid');
+      expect(html).toContain('analysis-metric-high');
+      expect(html).toContain('analysis-metric-visibility');
+      expect(html).toContain('analysis-metric-aod');
+      expect(html).toContain('analysis-key-points');
+      expect(html).toContain('analysis-group-positive');
+      expect(html).toContain('analysis-metric-neutral');
+      expect(html).toContain('✅');
+      expect(html).toContain('⚠️');
       expect(html).not.toContain('undefined');
       expect(html).not.toContain('null');
     });
@@ -454,7 +462,7 @@ describe('PredictionController', () => {
       expect(html).toContain('20%');
       expect(html).toContain('10%');
       expect(html).toContain('cloud-condition-status-favorable');
-      expect(html).toContain('有利');
+      expect(html).toContain('prediction.cloudLayers.favorable');
       expect(html).toContain('radar-compass-sunset');
     });
 
