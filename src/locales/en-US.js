@@ -375,7 +375,7 @@ const translations = {
     "panelTitle": "Share",
     "saveImage": "Save Image",
     "copyLink": "Copy Link",
-    "nativeShare": "More Share",
+    "nativeShare": "More sharing options",
     "copied": "Link Copied",    "cardPredictionFileSuffix": " forecast"
 
   },
