@@ -1195,9 +1195,9 @@ class PredictionController {
       azimuth: prediction.sunAzimuth,
       directionLabel: type === 'sunrise' ? this.i18n.t('prediction.sunriseDirectionLabel') : this.i18n.t('prediction.sunsetDirectionLabel'),
       clouds: [
-        { label: this._uiText('High', '高云'), value: Number(clouds.high ?? 0), color: 'var(--cloud-high-color)' },
-        { label: this._uiText('Mid', '中云'), value: Number(clouds.mid ?? 0), color: 'var(--cloud-mid-color)' },
-        { label: this._uiText('Low', '低云'), value: Number(clouds.low ?? 0), color: 'var(--cloud-low-color)' }
+        { key: 'high', label: this.i18n.t('prediction.cloudLayers.shortHigh'), value: Number(clouds.high ?? 0), color: 'var(--cloud-high-color)' },
+        { key: 'mid', label: this.i18n.t('prediction.cloudLayers.shortMid'), value: Number(clouds.mid ?? 0), color: 'var(--cloud-mid-color)' },
+        { key: 'low', label: this.i18n.t('prediction.cloudLayers.shortLow'), value: Number(clouds.low ?? 0), color: 'var(--cloud-low-color)' }
       ],
       quality: prediction.quality || this.getQualityFromScore(score),
       analysis: this.buildAnalysisGroups(prediction),
@@ -1340,17 +1340,30 @@ class PredictionController {
     return 'cloud';
   }
 
+  getCloudStatus(key, value) {
+    const numeric = Number(value) || 0;
+    if (key === 'high') return numeric >= 35 ? 'favorable' : 'unfavorable';
+    if (key === 'mid') return numeric >= 20 && numeric <= 60 ? 'favorable' : 'unfavorable';
+    if (key === 'low') return numeric < 35 ? 'favorable' : 'unfavorable';
+    return 'unfavorable';
+  }
+
   renderCloudConditionCard(clouds) {
     const rows = clouds.map(cloud => {
       const value = Math.max(0, Math.min(100, cloud.value));
+      const status = this.getCloudStatus(cloud.key, value);
+      const statusLabel = this.i18n.t(`prediction.cloudLayers.${status}`);
       return `
-        <div class="cloud-condition-item">
-          <div class="cloud-condition-top"><span class="cloud-condition-label">${this.renderInlineSvgIcon(this.getCloudIconName(cloud.label), 'cloud-condition-svg')}${cloud.label}</span><strong>${value.toFixed(0)}%</strong></div>
+        <div class="cloud-condition-item cloud-condition-${cloud.key}" data-status="${status}">
+          <div class="cloud-condition-top">
+            <span class="cloud-condition-label">${this.renderInlineSvgIcon(this.getCloudIconName(cloud.label), 'cloud-condition-svg')}${cloud.label}</span>
+            <span class="cloud-condition-value-wrap"><strong>${value.toFixed(0)}%</strong><span class="cloud-condition-status cloud-condition-status-${status}">${statusLabel}</span></span>
+          </div>
           <div class="cloud-condition-track"><span class="cloud-condition-fill" style="width:${value}%;background:${cloud.color};"></span></div>
         </div>
       `;
     }).join('');
-    return `<div class="cloud-condition-card">${rows}</div>`;
+    return `<div class="cloud-condition-card" aria-label="${this.i18n.t('prediction.cloudLayers.title')}">${rows}</div>`;
   }
 
   buildAnalysisGroups(prediction) {

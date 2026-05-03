@@ -444,12 +444,17 @@ describe('PredictionController', () => {
 
       expect(html).toContain('cloud-condition-card');
       expect(html).toContain('cloud-condition-svg');
-      expect(html).toContain('>高云<');
-      expect(html).toContain('>中云<');
-      expect(html).toContain('>低云<');
+      expect(html).toContain('cloud-condition-high');
+      expect(html).toContain('cloud-condition-mid');
+      expect(html).toContain('cloud-condition-low');
+      expect(html).toContain('高云');
+      expect(html).toContain('中云');
+      expect(html).toContain('低云');
       expect(html).toContain('40%');
       expect(html).toContain('20%');
       expect(html).toContain('10%');
+      expect(html).toContain('cloud-condition-status-favorable');
+      expect(html).toContain('有利');
       expect(html).toContain('radar-compass-sunset');
     });
 
