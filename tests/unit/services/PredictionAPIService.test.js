@@ -145,6 +145,33 @@ describe('PredictionAPIService', () => {
       expect(body.date).toBe('2024-06-21T18:00:00Z');
     });
 
+    test('calculateMany should run prediction calls in parallel', async () => {
+      const delayedResponse = (score) => new Promise((resolve) => {
+        setTimeout(() => resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            data: { ...mockSuccessResponse.data, score }
+          })
+        }), 25);
+      });
+
+      mockFetch
+        .mockImplementationOnce(() => delayedResponse(71))
+        .mockImplementationOnce(() => delayedResponse(82));
+
+      const start = Date.now();
+      const results = await predictionAPI.calculateMany([
+        { weatherData: mockWeatherData, date: mockDate, lat: mockLat, lon: mockLon, type: 'sunrise' },
+        { weatherData: mockWeatherData, date: mockDate, lat: mockLat, lon: mockLon, type: 'sunset' }
+      ]);
+      const elapsed = Date.now() - start;
+
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(results.map(result => result.score)).toEqual([71, 82]);
+      expect(elapsed).toBeLessThan(75);
+    });
+
     test('should use default type as sunset', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
