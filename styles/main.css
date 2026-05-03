@@ -5262,6 +5262,31 @@ body.theme-dark .prediction-app-card {
 .cloud-condition-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 1.05rem; color: var(--app-text); }
 .cloud-condition-label { color: #3F4655; font-weight: 700; }
 .cloud-condition-top strong { font-weight: 800; }
+.cloud-condition-value-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+.cloud-condition-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.cloud-condition-status-favorable {
+  background: color-mix(in srgb, #22c55e 14%, transparent);
+  color: #16a34a;
+}
+.cloud-condition-status-unfavorable {
+  background: color-mix(in srgb, #f97316 14%, transparent);
+  color: #ea580c;
+}
 .cloud-condition-track { margin-top: 9px; height: 8px; border-radius: 999px; background: #E5E7EB; overflow: hidden; }
 .cloud-condition-fill { display: block; height: 100%; border-radius: inherit; }
 
