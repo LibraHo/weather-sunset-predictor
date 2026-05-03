@@ -217,6 +217,13 @@ describe('PredictionController', () => {
       expect(html).toContain('score-gauge-large');
       expect(html).toContain('prediction-app-card');
       expect(html).toContain('phenomenon-title-card');
+      expect(html).toContain('prediction-header-summary');
+      expect(html).toContain('prediction-header-meta');
+      expect(html).toContain('prediction-header-pill-score');
+      expect(html).toContain('/100');
+      expect(html).toContain('prediction.quality');
+      expect(html).toContain('日落时间 · 19:45');
+      expect(html).toContain('prediction.bestViewingTime · 19:15–20:15');
       expect(html).toContain('score-summary-card');
       expect(html).toContain('event-time-label');
       expect(html).toContain('日落时间');
@@ -226,6 +233,38 @@ describe('PredictionController', () => {
       expect(html).toContain('score-breakdown-trigger');
       expect(html).toContain('查看评分明细');
       expect(html).not.toContain('倒计时');
+    });
+
+    test('头部摘要使用目标地点 IANA 时区格式化日出/日落与最佳窗口', () => {
+      const prediction = {
+        score: 82,
+        quality: 'excellent',
+        type: 'sunrise',
+        timezone: 'Asia/Shanghai',
+        sunriseTime: new Date('2026-04-24T21:22:00.000Z'),
+        sunsetTime: new Date('2026-04-25T10:50:00.000Z'),
+        sunAzimuth: null,
+        cloudLayers: { high: 70, mid: 30, low: 8 },
+        factors: {},
+        getOptimalViewingWindow: () => ({
+          start: new Date('2026-04-24T20:52:00.000Z'),
+          end: new Date('2026-04-24T21:52:00.000Z')
+        }),
+        shouldShowAzimuth: () => false
+      };
+
+      const html = predictionController.renderSinglePrediction(
+        prediction, '🌄', '朝霞', '日出时间', '明日', 'sunrise'
+      );
+
+      expect(html).toContain('phenomenon-date-tag">明日</span>');
+      expect(html).toContain('<h3>朝霞</h3>');
+      expect(html).toContain('日出时间 · 05:22');
+      expect(html).toContain('prediction.bestViewingTime');
+      expect(html).toContain('04:52');
+      expect(html).toContain('05:52');
+      expect(html).not.toContain('倒计时');
+      expect(html).not.toContain('21:22');
     });
 
     test('北京晚霞场景应显示太阳方位角方向', () => {

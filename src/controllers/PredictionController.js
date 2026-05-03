@@ -1138,11 +1138,12 @@ class PredictionController {
             </div>
           </div>
 
-          <div class="phenomenon-title-card">
+          <div class="phenomenon-title-card prediction-header-summary">
             <div class="phenomenon-icon-tile" aria-hidden="true">${forecast.icon}</div>
             <div class="phenomenon-title-copy">
-              <span class="phenomenon-date-tag">${dateLabel}</span>
+              <span class="phenomenon-date-tag">${forecast.dateLabel}</span>
               <h3>${forecast.type}</h3>
+              ${this.renderHeaderSummaryMeta(forecast)}
             </div>
           </div>
 
@@ -1202,6 +1203,17 @@ class PredictionController {
       analysis: this.buildAnalysisGroups(prediction),
       conclusion: this.buildAnalysisConclusion(prediction, score, clouds)
     };
+  }
+
+  renderHeaderSummaryMeta(forecast) {
+    return `
+      <div class="prediction-header-meta" aria-label="${forecast.type} ${forecast.dateLabel}">
+        <span class="prediction-header-pill prediction-header-pill-score"><strong>${forecast.score.toFixed(0)}</strong><span>/100</span></span>
+        <span class="prediction-header-pill">${this.i18n.t('prediction.quality')} · ${forecast.scoreLabel}</span>
+        <span class="prediction-header-pill">${forecast.timeLabel} · ${forecast.mainTime}</span>
+        <span class="prediction-header-pill">${this.i18n.t('prediction.bestViewingTime')} · ${forecast.bestViewingTime}</span>
+      </div>
+    `;
   }
 
   getPredictionDirectionText(prediction, type) {
