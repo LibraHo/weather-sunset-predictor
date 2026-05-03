@@ -66,7 +66,7 @@ Alex 要求把当前网站所有功能都纳入英语、日语、韩语、西班
 ### 任务拆分
 - [x] 47.1 全站 i18n key 完整性审计：以 `zh-CN` 为基准，对比 `en-US/ja-JP/ko-KR/es-ES`，列出缺失 key、多余 key、结构不一致 key。（2026-05-03：主语言 key 结构防回归）
 - [ ] 47.2 页面入口与静态页面审计：覆盖 `index.html`、`public/api-apply.html`、gallery/debug/算法说明等用户可见页面；所有用户可见文字必须走 i18n 或有明确不可翻译理由。
-- [ ] 47.3 控制器/组件/服务动态文案审计：覆盖 `src/controllers`、`src/components`、`src/services`、`src/utils` 中 toast、按钮、空状态、错误、分享卡片、地图、预测卡片、设置、API接入/申请等动态文案。
+- [x] 47.3 控制器/组件/服务动态文案审计：覆盖 `src/controllers`、`src/components`、`src/services`、`src/utils` 中 toast、按钮、空状态、错误、分享卡片、地图、预测卡片、设置、API接入/申请等动态文案。（2026-05-03：动态文案审计报告 + CJK source inventory guard）
 - [ ] 47.4 英语补齐与质量检查：英文不能 fallback 中文；功能路径文案自然、可读；代码示例/错误码说明准确。
 - [ ] 47.5 日语补齐与质量检查：日语不能混中文；避免机器直译式生硬表达；长文案不挤压移动端。
 - [ ] 47.6 韩语补齐与质量检查：韩语不能混中文；按钮/菜单/表单/错误状态完整；长文案不挤压移动端。
