@@ -25,6 +25,6 @@ Current validation path:
 - CI now installs Chromium system dependencies with `npx playwright install --with-deps chromium`.
 - CI runs `npx playwright test tests/e2e/primary-locale-layout.spec.js --project=chromium` as the real-page acceptance gate.
 
-## Completion notes
+## Deferred local/screenshot validation
 
-Requirement 47.9 is complete when the CI gate above passes on the PR/main branch. The same command remains the manual reproduction command for any browser-capable host.
+CI now provides the browser gate, but local/screenshot validation remains deferred because this container cannot launch Chromium. Alex asked to leave this part marked for later and revisit it after returning to Beijing. The same command remains the manual reproduction command for any browser-capable host.
