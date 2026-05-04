@@ -217,13 +217,6 @@ describe('PredictionController', () => {
       expect(html).toContain('score-gauge-large');
       expect(html).toContain('prediction-app-card');
       expect(html).toContain('phenomenon-title-card');
-      expect(html).toContain('prediction-header-summary');
-      expect(html).toContain('prediction-header-meta');
-      expect(html).toContain('prediction-header-pill-score');
-      expect(html).toContain('/100');
-      expect(html).toContain('prediction.quality');
-      expect(html).toContain('日落时间 · 19:45');
-      expect(html).toContain('prediction.bestViewingTime · 19:15–20:15');
       expect(html).toContain('score-summary-card');
       expect(html).toContain('event-time-label');
       expect(html).toContain('日落时间');
@@ -233,38 +226,6 @@ describe('PredictionController', () => {
       expect(html).toContain('score-breakdown-trigger');
       expect(html).toContain('查看评分明细');
       expect(html).not.toContain('倒计时');
-    });
-
-    test('头部摘要使用目标地点 IANA 时区格式化日出/日落与最佳窗口', () => {
-      const prediction = {
-        score: 82,
-        quality: 'excellent',
-        type: 'sunrise',
-        timezone: 'Asia/Shanghai',
-        sunriseTime: new Date('2026-04-24T21:22:00.000Z'),
-        sunsetTime: new Date('2026-04-25T10:50:00.000Z'),
-        sunAzimuth: null,
-        cloudLayers: { high: 70, mid: 30, low: 8 },
-        factors: {},
-        getOptimalViewingWindow: () => ({
-          start: new Date('2026-04-24T20:52:00.000Z'),
-          end: new Date('2026-04-24T21:52:00.000Z')
-        }),
-        shouldShowAzimuth: () => false
-      };
-
-      const html = predictionController.renderSinglePrediction(
-        prediction, '🌄', '朝霞', '日出时间', '明日', 'sunrise'
-      );
-
-      expect(html).toContain('phenomenon-date-tag">明日</span>');
-      expect(html).toContain('<h3>朝霞</h3>');
-      expect(html).toContain('日出时间 · 05:22');
-      expect(html).toContain('prediction.bestViewingTime');
-      expect(html).toContain('04:52');
-      expect(html).toContain('05:52');
-      expect(html).not.toContain('倒计时');
-      expect(html).not.toContain('21:22');
     });
 
     test('北京晚霞场景应显示太阳方位角方向', () => {
@@ -384,23 +345,15 @@ describe('PredictionController', () => {
         prediction, '🌅', '晚霞', '日落时间', '今日', 'sunset'
       );
 
-      expect(html).toContain('analysis-metric-aod');
-      expect(html).toContain('0.73');
+      expect(html).toContain('AOD 0.73');
       expect(html).not.toContain('analysis-summary-copy');
       expect(html).not.toContain('云层画布');
       expect(html).not.toContain('空气渲染');
       expect(html).toContain('高层云充足');
       expect(html).toContain('app-analysis-card');
-      expect(html).toContain('conclusion-banner');
-      expect(html).toContain('analysis-metric-grid');
-      expect(html).toContain('analysis-metric-high');
-      expect(html).toContain('analysis-metric-visibility');
-      expect(html).toContain('analysis-metric-aod');
-      expect(html).toContain('analysis-key-points');
       expect(html).toContain('analysis-group-positive');
-      expect(html).toContain('analysis-metric-neutral');
-      expect(html).toContain('✅');
-      expect(html).toContain('⚠️');
+      expect(html).toContain('analysis-group-warning');
+      expect(html).toContain('conclusion-banner');
       expect(html).not.toContain('undefined');
       expect(html).not.toContain('null');
     });
@@ -452,105 +405,13 @@ describe('PredictionController', () => {
 
       expect(html).toContain('cloud-condition-card');
       expect(html).toContain('cloud-condition-svg');
-      expect(html).toContain('cloud-condition-high');
-      expect(html).toContain('cloud-condition-mid');
-      expect(html).toContain('cloud-condition-low');
-      expect(html).toContain('高云');
-      expect(html).toContain('中云');
-      expect(html).toContain('低云');
+      expect(html).toContain('>高云<');
+      expect(html).toContain('>中云<');
+      expect(html).toContain('>低云<');
       expect(html).toContain('40%');
       expect(html).toContain('20%');
       expect(html).toContain('10%');
-      expect(html).toContain('cloud-condition-status-favorable');
-      expect(html).toContain('prediction.cloudLayers.favorable');
       expect(html).toContain('radar-compass-sunset');
-    });
-
-    test('需求46.6：新版卡片保留头部、指标网格、分数明细和云况雷达锚点', () => {
-      const prediction = {
-        score: 88,
-        quality: 'excellent',
-        type: 'sunset',
-        timezone: 'Asia/Shanghai',
-        sunsetTime: new Date('2026-05-04T10:55:00.000Z'),
-        sunAzimuth: 296,
-        cloudLayers: { high: 66, mid: 24, low: 6 },
-        humidity: 52,
-        visibility: 19,
-        aerosolOpticalDepth: 0.28,
-        factors: {
-          highClouds: { value: 66 },
-          midClouds: { value: 24 },
-          lowClouds: { value: 6 },
-          humidity: { value: 52 },
-          visibility: { value: 19 },
-          aerosolOpticalDepth: { value: 0.28 }
-        },
-        breakdown: { baseScore: 80, canvasScore: 90, lightPathScore: 85, renderingFactor: 1.1 },
-        canvasAnalysis: { score: 90 },
-        lightPathAnalysis: { score: 85 },
-        renderingAnalysis: { factor: 1.1 },
-        getOptimalViewingWindow: () => ({
-          start: new Date('2026-05-04T10:25:00.000Z'),
-          end: new Date('2026-05-04T11:25:00.000Z')
-        }),
-        shouldShowAzimuth: () => true,
-        getAzimuthDirection: () => '西北偏西'
-      };
-
-      const html = predictionController.renderSinglePrediction(
-        prediction, '🌅', '晚霞', '日落时间', '今日', 'sunset'
-      );
-
-      expect(html).toContain('prediction-header-summary');
-      expect(html).toContain('日落时间 · 18:55');
-      expect(html).toContain('prediction.bestViewingTime · 18:25–19:25');
-      expect(html).toContain('score-breakdown-trigger');
-      expect(html).toContain('score-breakdown-popover');
-      expect(html).toContain('analysis-metric-grid');
-      expect(html).toContain('analysis-metric-high');
-      expect(html).toContain('analysis-metric-mid');
-      expect(html).toContain('analysis-metric-low');
-      expect(html).toContain('analysis-metric-visibility');
-      expect(html).toContain('analysis-metric-humidity');
-      expect(html).toContain('analysis-metric-aod');
-      expect(html).toContain('radar-compass-sunset');
-      expect(html).not.toContain('倒计时');
-      expect(html).not.toContain('undefined');
-      expect(html).not.toContain('null');
-    });
-
-    test('需求46.6：缺失云层和气溶胶数据时降级为0或暂无，不破坏指标网格和雷达锚点', () => {
-      const prediction = {
-        score: 48,
-        quality: 'fair',
-        type: 'sunrise',
-        timezone: 'Asia/Shanghai',
-        sunriseTime: new Date('2026-05-04T21:15:00.000Z'),
-        sunAzimuth: null,
-        cloudLayers: null,
-        factors: {},
-        getOptimalViewingWindow: () => ({
-          start: new Date('2026-05-04T20:45:00.000Z'),
-          end: new Date('2026-05-04T21:45:00.000Z')
-        }),
-        shouldShowAzimuth: () => false
-      };
-
-      const html = predictionController.renderSinglePrediction(
-        prediction, '🌄', '朝霞', '日出时间', '明日', 'sunrise'
-      );
-
-      expect(html).toContain('prediction-header-summary');
-      expect(html).toContain('cloud-condition-card');
-      expect(html).toContain('analysis-metric-grid');
-      expect(html).toContain('analysis-metric-high');
-      expect(html).toContain('analysis-metric-aod');
-      expect(html).toContain('暂无');
-      expect(html).toContain('radar-compass-sunrise');
-      expect(html).not.toContain('NaN');
-      expect(html).not.toContain('undefined');
-      expect(html).not.toContain('null');
     });
 
     test('点击分数仪表盘应打开/关闭分数明细面板', () => {
