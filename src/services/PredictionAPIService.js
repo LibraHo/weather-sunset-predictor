@@ -206,43 +206,6 @@ class PredictionAPIService {
     return prediction;
   }
 
-  async calculateBatch(items, lat, lon, type) {
-    if (!Array.isArray(items) || items.length === 0) return [];
-
-    const startTime = Date.now();
-    console.log(`[PredictionAPIService] 调用后端 batch 预测 API: type=${type}, count=${items.length}`);
-    const url = `${this.baseURL}/api/prediction/enhanced/batch`;
-    const requestBody = {
-      lat,
-      lon,
-      type,
-      weatherDataArray: items.map((item) => {
-        const payload = this._buildEnhancedRequestItem(item.weatherData, item.date, type);
-        return {
-          weather: payload.weatherData,
-          date: payload.date,
-          rainedRecently: item.rainedRecently || false
-        };
-      })
-    };
-
-    const response = await this._fetchWithTimeout(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody)
-    });
-
-    const result = await response.json();
-    if (!result.success) {
-      throw new Error(result.error?.message || '批量预测计算失败');
-    }
-
-    const predictions = (result.data || []).map(data => this._convertToPrediction({ ...data, type }));
-    const elapsed = Date.now() - startTime;
-    console.log(`[PredictionAPIService] batch 预测完成: ${elapsed}ms, type=${type}, count=${predictions.length}`);
-    return predictions;
-  }
-
   /**
    * 并行调用后端增强预测 API。
    * 当前后端 batch 路由只支持同一种 type；前端朝霞/晚霞混合场景保留逐项并发，
@@ -257,42 +220,13 @@ class PredictionAPIService {
     const startTime = Date.now();
     console.log(`[PredictionAPIService] 并行调用后端预测 API: ${items.length} items`);
 
-    const canBatch = items.every(item => item.lat === items[0].lat && item.lon === items[0].lon);
-    let settled;
-
-    if (canBatch) {
-      const groups = new Map();
-      items.forEach((item, index) => {
-        const group = groups.get(item.type) || [];
-        group.push({ ...item, index });
-        groups.set(item.type, group);
-      });
-
-      const groupResults = await Promise.allSettled(Array.from(groups.entries()).map(async ([type, groupItems]) => {
-        const predictions = await this.calculateBatch(groupItems, items[0].lat, items[0].lon, type);
-        return groupItems.map((item, localIndex) => ({ index: item.index, prediction: predictions[localIndex] || null }));
-      }));
-
-      const predictionsByIndex = new Array(items.length).fill(null);
-      groupResults.forEach((result) => {
-        if (result.status !== 'fulfilled') {
-          console.warn('[PredictionAPIService] batch 预测分组失败:', result.reason?.message || result.reason);
-          return;
-        }
-        result.value.forEach(({ index, prediction }) => {
-          predictionsByIndex[index] = prediction;
-        });
-      });
-      settled = predictionsByIndex.map(value => ({ status: 'fulfilled', value }));
-    } else {
-      settled = await Promise.allSettled(items.map((item) => this.calculate(
-        item.weatherData,
-        item.date,
-        item.lat,
-        item.lon,
-        item.type
-      )));
-    }
+    const settled = await Promise.allSettled(items.map((item) => this.calculate(
+      item.weatherData,
+      item.date,
+      item.lat,
+      item.lon,
+      item.type
+    )));
 
     const predictions = settled.map((result, index) => {
       if (result.status === 'fulfilled') return result.value;
