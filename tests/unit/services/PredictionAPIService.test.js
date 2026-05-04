@@ -145,31 +145,35 @@ describe('PredictionAPIService', () => {
       expect(body.date).toBe('2024-06-21T18:00:00Z');
     });
 
-    test('calculateMany should run prediction calls in parallel', async () => {
-      const delayedResponse = (score) => new Promise((resolve) => {
-        setTimeout(() => resolve({
+    test('calculateMany should group same-location prediction calls into sunrise/sunset batches', async () => {
+      mockFetch
+        .mockResolvedValueOnce({
           ok: true,
           json: async () => ({
             success: true,
-            data: { ...mockSuccessResponse.data, score }
+            data: [{ ...mockSuccessResponse.data, score: 71, type: 'sunrise' }]
           })
-        }), 25);
-      });
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            success: true,
+            data: [{ ...mockSuccessResponse.data, score: 82, type: 'sunset' }]
+          })
+        });
 
-      mockFetch
-        .mockImplementationOnce(() => delayedResponse(71))
-        .mockImplementationOnce(() => delayedResponse(82));
-
-      const start = Date.now();
       const results = await predictionAPI.calculateMany([
         { weatherData: mockWeatherData, date: mockDate, lat: mockLat, lon: mockLon, type: 'sunrise' },
         { weatherData: mockWeatherData, date: mockDate, lat: mockLat, lon: mockLon, type: 'sunset' }
       ]);
-      const elapsed = Date.now() - start;
 
       expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(mockFetch.mock.calls[0][0]).toBe('http://localhost:3000/api/prediction/enhanced/batch');
+      expect(mockFetch.mock.calls[1][0]).toBe('http://localhost:3000/api/prediction/enhanced/batch');
+      const firstBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+      const secondBody = JSON.parse(mockFetch.mock.calls[1][1].body);
+      expect([firstBody.type, secondBody.type].sort()).toEqual(['sunrise', 'sunset']);
       expect(results.map(result => result.score)).toEqual([71, 82]);
-      expect(elapsed).toBeLessThan(75);
     });
 
     test('should use default type as sunset', async () => {
