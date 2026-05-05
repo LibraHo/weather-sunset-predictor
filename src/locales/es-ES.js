@@ -397,7 +397,7 @@ apiAccess: 'Acceso API'
   },
   "common": {
     "loading": "Cargando...",
-    "dataSource": "Fuente de datos: Windy API",
+    "dataSource": "Fuente de datos: Open-Meteo (GFS + ECMWF)",
     "visitorCount": "Visitantes: "
   },
   "errors": {
