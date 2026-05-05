@@ -393,7 +393,7 @@ const translations = {
   },
   "common": {
     "loading": "載入中...",
-    "dataSource": "資料來源：Windy API",
+    "dataSource": "資料來源：Open-Meteo（GFS + ECMWF）",
     "visitorCount": "訪問人數："
   },
   "errors": {

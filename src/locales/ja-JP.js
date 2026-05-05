@@ -382,7 +382,7 @@ apiAccess: 'API接続'
   },
   "common": {
     "loading": "読み込み中...",
-    "dataSource": "データソース：Windy API",
+    "dataSource": "データソース：Open-Meteo（GFS + ECMWF）",
     "visitorCount": "訪問者数："
   },
   "errors": {

@@ -382,7 +382,7 @@ apiAccess: 'API 연동'
   },
   "common": {
     "loading": "로드 중...",
-    "dataSource": "데이터 출처: Windy API",
+    "dataSource": "데이터 출처: Open-Meteo (GFS + ECMWF)",
     "visitorCount": "방문자 수: "
   },
   "errors": {
