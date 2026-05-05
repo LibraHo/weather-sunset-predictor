@@ -186,6 +186,7 @@ apiAccess: 'Acceso API'
       "low": "Faltan condiciones clave; la probabilidad de nubes encendidas es baja."
     },
         "scoreBreakdown": {
+      "title": "Detalle de la puntuación",
       "viewDetails": "Ver detalle de la puntuación",
       "finalDisplayed": "Puntuación final mostrada",
       "baseFormula": "Puntuación base = lienzo ×0,8 + trayecto de luz ×0,2",
