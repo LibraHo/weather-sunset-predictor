@@ -6022,10 +6022,12 @@ body.theme-light,
 body:not(.theme-dark):not(.theme-auto) {
   --radar-bg: var(--glass-bg-heavy);
   --radar-border: var(--glass-border);
-  --radar-label-bg: rgba(255,255,255,0.72);
+  --radar-label-fill: var(--color-text);
+  --radar-label-bg: transparent;
   --radar-title: var(--color-text);
   --radar-subtitle: var(--color-text-light);
   --radar-legend-text: var(--color-text);
+  --radar-legend-bg: transparent;
 }
 body.theme-light .weather-glass-panel,
 body.theme-light .weather-visual-panel,
@@ -6074,10 +6076,12 @@ body:not(.theme-dark):not(.theme-auto) .radar-chart-container {
   body.theme-auto {
     --radar-bg: var(--glass-bg-heavy);
     --radar-border: var(--glass-border);
-    --radar-label-bg: rgba(255,255,255,0.72);
+    --radar-label-fill: var(--color-text);
+    --radar-label-bg: transparent;
     --radar-title: var(--color-text);
     --radar-subtitle: var(--color-text-light);
     --radar-legend-text: var(--color-text);
+    --radar-legend-bg: transparent;
   }
   body.theme-auto .weather-glass-panel,
   body.theme-auto .weather-visual-panel,
@@ -6339,9 +6343,12 @@ body[data-actual-theme="light"] {
   --glass-shadow: 0 4px 30px rgba(0,0,0,0.10);
   --radar-bg: var(--glass-bg-heavy);
   --radar-border: var(--glass-border);
+  --radar-label-fill: var(--color-text);
+  --radar-label-bg: transparent;
   --radar-title: var(--color-text);
   --radar-subtitle: var(--color-text-light);
   --radar-legend-text: var(--color-text);
+  --radar-legend-bg: transparent;
 }
 html.theme-actual-light body,
 html[data-actual-theme="light"] body,
