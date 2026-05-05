@@ -7669,3 +7669,26 @@ html[data-actual-theme="light"] .prediction-app-card .phenomenon-title-card {
     align-self: stretch;
   }
 }
+
+/* 修复：桌面主页顶栏图标统一为轻量线性 SVG 风格 */
+.header-svg-btn .header-action-icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+  flex: 0 0 auto;
+}
+
+.header-svg-btn {
+  font-size: 0;
+}
+
+@media (min-width: 769px) {
+  .header-right-group .icon-btn {
+    border-radius: 14px;
+  }
+
+  .header-svg-btn .header-action-icon {
+    width: 21px;
+    height: 21px;
+  }
+}
