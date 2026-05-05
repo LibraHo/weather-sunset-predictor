@@ -21,13 +21,21 @@ class RadarCompass {
 
     const cs = getComputedStyle(document.body);
     const v = k => cs.getPropertyValue(k).trim();
-    const isEnglish = (document.documentElement.lang || '').toLowerCase().startsWith('en');
+    const i18n = window.i18n;
+    const t = (key, fallback, params = {}) => {
+      if (!i18n?.t) return fallback;
+      const translated = i18n.t(key, params);
+      return translated === key ? fallback : translated;
+    };
     const text = {
-      N: isEnglish ? 'N' : '北', NE: isEnglish ? 'NE' : '东北', E: isEnglish ? 'E' : '东', SE: isEnglish ? 'SE' : '东南',
-      S: isEnglish ? 'S' : '南', SW: isEnglish ? 'SW' : '西南', W: isEnglish ? 'W' : '西', NW: isEnglish ? 'NW' : '西北',
-      low: isEnglish ? 'Low' : '低云', mid: isEnglish ? 'Mid' : '中云', high: isEnglish ? 'High' : '高云',
-      sunrise: isEnglish ? 'Sunrise' : '日出', sunset: isEnglish ? 'Sunset' : '日落',
-      title: isEnglish ? 'Surrounding Cloud Radar' : '周边云况雷达', subtitle: isEnglish ? '20km · Continuous cloud field' : '20km · 连续云场'
+      N: t('surrounding.directions.N', 'N'), NE: t('surrounding.directions.NE', 'NE'),
+      E: t('surrounding.directions.E', 'E'), SE: t('surrounding.directions.SE', 'SE'),
+      S: t('surrounding.directions.S', 'S'), SW: t('surrounding.directions.SW', 'SW'),
+      W: t('surrounding.directions.W', 'W'), NW: t('surrounding.directions.NW', 'NW'),
+      low: t('prediction.cloud.low', 'Low'), mid: t('prediction.cloud.mid', 'Mid'), high: t('prediction.cloud.high', 'High'),
+      sunrise: t('prediction.tabs.sunrise', 'Sunrise'), sunset: t('prediction.tabs.sunset', 'Sunset'),
+      title: t('surrounding.radarTitle', t('surrounding.title', 'Surrounding Cloud Radar')),
+      subtitle: t('surrounding.radarSubtitle', '20km · Continuous cloud field')
     };
     const theme = {
       // 视觉 token（无 UI token 则回退默认）
@@ -65,7 +73,7 @@ class RadarCompass {
 
   _parse(directions) {
     const ORDER = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-    const LABEL = { N: '北', NE: '东北', E: '东', SE: '东南', S: '南', SW: '西南', W: '西', NW: '西北' };
+    const LABEL = { N: 'N', NE: 'NE', E: 'E', SE: 'SE', S: 'S', SW: 'SW', W: 'W', NW: 'NW' };
     const map = new Map();
 
     directions.forEach(item => {

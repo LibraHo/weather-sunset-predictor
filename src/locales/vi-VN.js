@@ -192,6 +192,37 @@ const translations = {
     "good": "Tốt",
     "fair": "Bình Thường",
     "poor": "Kém",
+
+    "analysisConclusion": {
+      "excellent": "Điều kiện rất tốt, rất nên ra ngoài quan sát.",
+      "excellentSingleLayer": "Tiềm năng màu sắc cao, nhưng mây một tầng có thể làm giảm chiều sâu.",
+      "good": "Điều kiện tốt, có khả năng khá cao xuất hiện mây hoàng hôn rực rỡ.",
+      "goodSingleLayer": "Khả năng xuất hiện mây đẹp khá tốt, nhưng độ phân tầng còn hạn chế.",
+      "fair": "Điều kiện trung bình; cần theo dõi diễn biến mây thực tế.",
+      "low": "Thiếu điều kiện then chốt, khả năng xuất hiện mây đẹp thấp."
+    },
+        "scoreBreakdown": {
+      "viewDetails": "Xem chi tiết điểm",
+      "finalDisplayed": "Điểm cuối hiển thị",
+      "baseFormula": "Điểm cơ sở = nền mây ×0,8 + đường sáng ×0,2",
+      "baseHint": "Điểm cơ sở sau khi kết hợp mây và đường sáng",
+      "canvasHint": "Mây cao/trung tầng mang màu; mây thấp có thể che khuất",
+      "lightPathHint": "Ánh nắng có chiếu tới lớp mây hay không",
+      "finalFormula": "Điểm cuối = điểm cơ sở × hệ số hiệu chỉnh",
+      "renderingHint": "Độ ẩm và tầm nhìn ảnh hưởng đến màu sắc",
+      "aerosolHint": "Aerosol vừa phải tăng tán xạ cam đỏ; quá nhiều sẽ làm xám màu"
+    },
+"formationAnalysis": {
+      "title": "Phân tích điều kiện hình thành mây đẹp",
+      "groups": { "positive": "Điều kiện thuận lợi", "neutral": "Yếu tố trung tính", "warning": "Điểm cần chú ý" },
+      "high": { "abundant": "Mây cao dồi dào ({{value}}%)", "abundantDesc": "Nền mây mang màu rất tốt", "sufficient": "Mây cao đủ ({{value}}%)", "sufficientDesc": "Có lớp mây tốt để bắt màu hoàng hôn", "moderate": "Mây cao vừa phải ({{value}}%)", "moderateDesc": "Có khả năng xuất hiện nhưng màu có thể nhạt", "few": "Mây cao hơi ít ({{value}}%)", "fewDesc": "Thiếu lớp mây chính để mang màu" },
+      "mid": { "balanced": "Mây trung tầng cân bằng ({{value}}%)", "balancedDesc": "Tăng độ lan màu và chiều sâu", "few": "Mây trung tầng ít ({{value}}%)", "fewHighCloudDesc": "Mây cao đủ vẫn có thể tự bắt màu", "fewDesc": "Độ phân tầng có thể hạn chế", "thick": "Mây trung tầng dày ({{value}}%)", "thickDesc": "Có thể làm cảnh xám hơn và giảm độ trong của ánh hoàng hôn" },
+      "low": { "few": "Mây thấp ít ({{value}}%)", "fewDesc": "Tầm nhìn khá thoáng", "some": "Mây thấp hơi nhiều ({{value}}%)", "someDesc": "Có thể che một phần màu gần đường chân trời", "thick": "Mây thấp dày ({{value}}%)", "thickDesc": "Nguy cơ che khuất cao" },
+      "visibility": { "good": "Tầm nhìn tốt ({{value}}km)", "goodDesc": "Không khí trong, tầm nhìn tốt", "moderate": "Tầm nhìn trung bình ({{value}}km)", "moderateDesc": "Độ bão hòa màu có thể giảm nhẹ", "low": "Tầm nhìn thấp ({{value}}km)", "lowDesc": "Bụi mờ hoặc hơi nước có thể ảnh hưởng quan sát" },
+      "humidity": { "moderate": "Độ ẩm vừa phải ({{value}}%)", "moderateDesc": "Có lợi cho tán xạ ánh sáng", "high": "Độ ẩm cao ({{value}}%)", "highDesc": "Có thể giảm độ trong", "low": "Độ ẩm thấp ({{value}}%)", "lowDesc": "Không khí khô có thể làm màu nhạt hơn" },
+      "aerosol": { "moderate": "Aerosol vừa phải (AOD {{value}})", "moderateDesc": "Tăng tán xạ cam đỏ", "high": "Aerosol cao (AOD {{value}})", "highDesc": "Có thể trông mờ hoặc tối", "low": "Không khí quá trong (AOD {{value}})", "lowDesc": "Màu có thể nhạt hơn" },
+      "layer": { "single": "Một lớp mây", "singleDesc": "Nếu mây cao tốt, vẫn có thể tạo màu hoàng hôn rõ" }
+    },
     "status": {
       "noFireCloud": "Không Có Mây Đẹp",
       "lightGlow": "Ánh Hoàng Hôn Nhẹ",
@@ -330,7 +361,7 @@ const translations = {
       "someLowCloud": "⚠️ Một số mây thấp ({{value}}%), có thể che một phần",
       "denseLowCloud": "❌ Mây thấp dày đặc ({{value}}%), ảnh hưởng nghiêm trọng",
       "excellentConditions": "🌟 Tất cả điều kiện cho mây đẹp tuyệt vời đều đáp ứng!",
-      "highProbability": "✨ Khả năng cao có cảnh mây đẹp ngoạn mục",
+      "highProbability": "Khả năng cao có cảnh mây đẹp ngoạn mục",
       "moderateProbability": "💫 Có thể có hiệu ứng mây đẹp nhẹ",
       "lowProbability": "⛅ Khả năng thấp có mây đẹp đáng kể",
       "noCloudNoFireCloud": "❌ Độ mây thiếu hụt nghiêm trọng, không thể tạo mây đẹp"
@@ -490,7 +521,7 @@ const translations = {
   },
   "common": {
     "loading": "Đang tải...",
-    "dataSource": "Nguồn dữ liệu: Windy API",
+    "dataSource": "Nguồn dữ liệu: Open-Meteo (GFS + ECMWF)",
     "visitorCount": "Lượt truy cập: "
   },
   "notifications": {
@@ -551,19 +582,19 @@ const translations = {
     },
     "bestWindow": "Best viewing  {{start}} – {{end}}",
     "cloud": {
-      "high": "High Cloud",
-      "mid": "Mid Cloud",
-      "low": "Low Cloud"
+      "high": "Mây cao",
+      "mid": "Mây trung tầng",
+      "low": "Mây thấp"
     },
     "verdict": {
-      "noCarrier": "😶 Not enough color carrier clouds; fire-cloud chance is very low",
-      "excellent": "✨ Excellent conditions; colorful sky is promising",
-      "excellentMultiLayer": "✨ Excellent conditions; strongly recommended for viewing!",
-      "good": "✨ Good conditions; fire-cloud chance is high",
-      "fair": "💡 Moderate conditions; watch real-time cloud changes",
-      "poor": "😶 Fire-cloud chance is low"
+      "noCarrier": "Thiếu lớp mây bắt màu; khả năng xuất hiện mây đẹp rất thấp",
+      "excellent": "Điều kiện rất tốt; bầu trời rực màu rất đáng kỳ vọng",
+      "excellentMultiLayer": "Điều kiện rất tốt; rất nên ra ngoài quan sát",
+      "good": "Điều kiện tốt; khả năng xuất hiện mây đẹp cao",
+      "fair": "Điều kiện trung bình; cần theo dõi diễn biến mây thực tế",
+      "poor": "Khả năng xuất hiện mây đẹp thấp"
     },
-    "watermark": "Xiake · Capture every brilliant sky"
+    "watermark": "Xiake · Ghi lại mọi bầu trời rực rỡ"
   },
   "charts": {
     "temperature": "Nhiệt Độ",
@@ -593,13 +624,15 @@ const translations = {
     "timeNow": "Bây giờ",
     "timeSunset": "Hoàng hôn",
     "timeSunrise": "Bình minh",
-    "timeHint": "💡 Mẹo: Bạn cũng có thể kéo thanh thời gian dự báo dưới bản đồ để điều chỉnh thời gian",
+    "timeHint": "Mẹo: Bạn cũng có thể kéo thanh thời gian dự báo dưới bản đồ để điều chỉnh thời gian",
     "loading": "Đang tải bản đồ...",
     "error": "Không thể tải bản đồ",
     "mockNotSupported": "Chức năng bản đồ chỉ khả dụng trong chế độ API thực"
   },
   "surrounding": {
     "title": "Phân tích mây đỏ lân cận",
+    "radarTitle": "Radar mây xung quanh",
+    "radarSubtitle": "20km · Trường mây liên tục",
     "radius": "Bán kính thăm dò",
     "radiusUnit": "km",
     "directions": {

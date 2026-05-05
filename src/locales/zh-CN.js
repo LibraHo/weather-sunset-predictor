@@ -214,6 +214,62 @@ export default {
     poor: '较差',
 
     // 状态描述
+
+    analysisConclusion: {
+      excellent: '条件优秀，强烈推荐出行观赏',
+      excellentSingleLayer: '条件优秀，色彩可期；云层单一，层次感略有不足',
+      good: '条件不错，有较大概率出现壮观的火烧云',
+      goodSingleLayer: '条件不错，火烧云概率较高；云层层次稍欠',
+      fair: '条件中等，需看实际云层演变',
+      low: '关键条件不足，火烧云概率偏低'
+    },
+        scoreBreakdown: {
+      viewDetails: '查看评分明细',
+      finalDisplayed: '最终展示分',
+      baseFormula: '基础分 = 画布 ×0.8 + 光路 ×0.2',
+      baseHint: '云层与光路融合后的基础分',
+      canvasHint: '高云/中云提供色彩载体，低云会遮挡',
+      lightPathHint: '太阳光是否能照到云层',
+      finalFormula: '最终分 = 基础分 × 修正系数',
+      renderingHint: '湿度、能见度影响颜色表现',
+      aerosolHint: '适中增强红橙散射，过高会发灰'
+    },
+formationAnalysis: {
+      title: '火烧云形成条件分析',
+      groups: { positive: '有利条件', neutral: '一般因素', warning: '注意因素' },
+      high: {
+        abundant: '高层云充沛（{{value}}%）', abundantDesc: '色彩载体丰富，火烧云基础扎实',
+        sufficient: '高层云充足（{{value}}%）', sufficientDesc: '具备较好的霞光染色载体',
+        moderate: '高层云适中（{{value}}%）', moderateDesc: '可形成火烧云，但色彩可能偏淡',
+        few: '高层云偏少（{{value}}%）', fewDesc: '缺少主要色彩载体'
+      },
+      mid: {
+        balanced: '中层云适中（{{value}}%）', balancedDesc: '利于色彩扩散和层次感',
+        few: '中层云较少（{{value}}%）', fewHighCloudDesc: '但高层云充足，可独立形成火烧云', fewDesc: '层次感可能不足',
+        thick: '中层云偏厚（{{value}}%）', thickDesc: '可能让画面偏灰，削弱霞光通透感'
+      },
+      low: {
+        few: '低云稀少（{{value}}%）', fewDesc: '不会遮挡火烧云',
+        some: '低云较多（{{value}}%）', someDesc: '可能部分遮挡低空色彩',
+        thick: '低云偏厚（{{value}}%）', thickDesc: '遮挡风险较大'
+      },
+      visibility: {
+        good: '能见度良好（{{value}}km）', goodDesc: '空气通透，观赏视野好',
+        moderate: '能见度一般（{{value}}km）', moderateDesc: '色彩饱和度可能略受影响',
+        low: '能见度偏低（{{value}}km）', lowDesc: '雾霾或水汽可能影响观赏'
+      },
+      humidity: {
+        moderate: '湿度适中（{{value}}%）', moderateDesc: '利于光线散射',
+        high: '湿度偏高（{{value}}%）', highDesc: '可能略影响通透感',
+        low: '湿度偏低（{{value}}%）', lowDesc: '空气较干，色彩可能偏淡'
+      },
+      aerosol: {
+        moderate: '气溶胶适中（AOD {{value}}）', moderateDesc: '有利于增强红橙色散射',
+        high: '气溶胶偏高（AOD {{value}}）', highDesc: '可能灰霾发暗',
+        low: '空气过于通透（AOD {{value}}）', lowDesc: '颜色可能偏淡'
+      },
+      layer: { single: '云层单一', singleDesc: '高云质量好，仍可形成鲜明火烧云' }
+    },
     status: {
       noFireCloud: '无火烧云',
       lightGlow: '轻微晚霞',
@@ -394,7 +450,7 @@ export default {
       someLowCloud: '⚠️ 低云较多（{{value}}%），可能部分遮挡',
       denseLowCloud: '❌ 低云密集（{{value}}%），严重影响观赏',
       excellentConditions: '🌟 具备出现绚烂火烧云的所有条件！',
-      highProbability: '✨ 有较大概率出现壮观的火烧云景象',
+      highProbability: '有较大概率出现壮观的火烧云景象',
       moderateProbability: '💫 可能出现轻微的火烧云效果',
       lowProbability: '⛅ 形成明显火烧云的可能性较低',
       noCloudNoFireCloud: '❌ 云量严重不足，无法形成火烧云',
@@ -447,12 +503,12 @@ export default {
     bestWindow: '最佳观赏  {{start}} – {{end}}',
     cloud: { high: '高云', mid: '中云', low: '低云' },
     verdict: {
-      noCarrier: '😶 缺少色彩载体，火烧云概率极低',
-      excellent: '✨ 条件优秀，色彩可期',
-      excellentMultiLayer: '✨ 极佳条件，强烈推荐出行观赏！',
-      good: '✨ 条件不错，火烧云概率较高',
-      fair: '💡 条件中等，需看实际云层演变',
-      poor: '😶 火烧云概率较低'
+      noCarrier: '缺少色彩载体，火烧云概率极低',
+      excellent: '条件优秀，色彩可期',
+      excellentMultiLayer: '极佳条件，强烈推荐出行观赏！',
+      good: '条件不错，火烧云概率较高',
+      fair: '条件中等，需看实际云层演变',
+      poor: '火烧云概率较低'
     },
     watermark: '霞客 · 记录每一次绚丽'
   },
@@ -460,6 +516,8 @@ export default {
   // 任务19：周边火烧云
   surrounding: {
     title: '周边火烧云分析',
+    radarTitle: '周边云况雷达',
+    radarSubtitle: '20km · 连续云场',
     radius: '探测半径',
     radiusUnit: '公里',
     directions: {
@@ -499,7 +557,7 @@ export default {
     legendLow: '低',
     legendMedium: '中',
     legendHigh: '高',
-    hint: '💡 提示：启用覆盖层后，地图上将显示火烧云预测的地理分布热力图',
+    hint: '提示：启用覆盖层后，地图上将显示火烧云预测的地理分布热力图',
     loading: '正在生成覆盖层...',
     active: '覆盖层已显示',
     error: '覆盖层生成失败',
@@ -742,7 +800,7 @@ export default {
     timeNow: '现在',
     timeSunset: '日落',
     timeSunrise: '日出',
-    timeHint: '💡 提示：也可以使用地图下方的预测时间轴拖动时间',
+    timeHint: '提示：也可以使用地图下方的预测时间轴拖动时间',
     loading: '地图加载中...',
     error: '地图加载失败',
     mockNotSupported: '地图功能仅在真实API模式下可用'

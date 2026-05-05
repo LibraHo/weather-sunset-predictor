@@ -88,7 +88,11 @@
         </div>
         <div class="header-right-group">
           <div class="home-view-menu">
-            <button id="home-view-menu-btn" class="icon-btn" aria-label="页面切换" data-i18n-aria-label="home.menu.ariaLabel" aria-expanded="false" aria-controls="home-view-menu-dropdown">☰</button>
+            <button id="home-view-menu-btn" class="icon-btn header-svg-btn" aria-label="页面切换" data-i18n-aria-label="home.menu.ariaLabel" aria-expanded="false" aria-controls="home-view-menu-dropdown">
+              <svg class="header-action-icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+                <path d="M5 7.5h14M5 12h14M5 16.5h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </button>
             <div id="home-view-menu-dropdown" class="home-view-menu-dropdown hidden" role="menu" aria-label="页面切换菜单" data-i18n-aria-label="home.menu.dropdownAriaLabel">
               <button class="home-view-option active" role="menuitemradio" aria-checked="true" data-view="forecast" data-i18n="home.tabs.forecast">预测功能</button>
               <button class="home-view-option" role="menuitemradio" aria-checked="false" data-view="methodology" data-i18n="home.tabs.methodology">火烧云计算方法</button>
@@ -100,15 +104,15 @@
           <div class="header-actions">
             <button id="notification-settings-btn" class="icon-btn header-svg-btn" aria-label="通知设置" data-i18n-aria-label="settings.notificationsLabel">
               <svg class="header-action-icon header-action-icon-bell" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
-                <path d="M18 8.6a6 6 0 0 0-12 0c0 5.2-2 6.9-2 6.9h16s-2-1.7-2-6.9Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M10 18.4a2.2 2.2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
-                <path d="M9.1 4.2a3.7 3.7 0 0 1 5.8 0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".55"/>
+                <path d="M8 10.3a4 4 0 0 1 8 0v2.8l1.45 2.15H6.55L8 13.1v-2.8Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10.25 18h3.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                <path d="M11 20h2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" opacity=".72"/>
               </svg>
             </button>
             <button id="settings-btn" class="icon-btn header-svg-btn" aria-label="设置" data-i18n-aria-label="settings.title">
               <svg class="header-action-icon header-action-icon-settings" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
-                <path d="M12 8.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Z" fill="none" stroke="currentColor" stroke-width="1.8"/>
-                <path d="m19.1 13.5 1.1.9-1.7 3-1.4-.5a7.6 7.6 0 0 1-1.7 1l-.3 1.5h-3.4l-.3-1.5a7.5 7.5 0 0 1-1.7-1l-1.4.5-1.7-3 1.1-.9a8 8 0 0 1 0-2l-1.1-.9 1.7-3 1.4.5a7.5 7.5 0 0 1 1.7-1l.3-1.5h3.4l.3 1.5a7.6 7.6 0 0 1 1.7 1l1.4-.5 1.7 3-1.1.9a8 8 0 0 1 0 2Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 8.75a3.25 3.25 0 1 0 0 6.5 3.25 3.25 0 0 0 0-6.5Z" fill="none" stroke="currentColor" stroke-width="1.7"/>
+                <path d="M12 4.75v2M12 17.25v2M5.75 12h2M16.25 12h2M7.6 7.6l1.4 1.4M15 15l1.4 1.4M16.4 7.6 15 9M9 15l-1.4 1.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
               </svg>
             </button>
           </div>

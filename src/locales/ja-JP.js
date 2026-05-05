@@ -192,6 +192,37 @@ apiAccess: 'API接続'
     "good": "良好",
     "fair": "普通",
     "poor": "やや悪い",
+
+    "analysisConclusion": {
+      "excellent": "条件は優秀です。観賞を強くおすすめします。",
+      "excellentSingleLayer": "色づきの可能性は高いですが、雲層が単一で奥行きはやや弱めです。",
+      "good": "条件は良好で、鮮やかな焼け雲が出る可能性があります。",
+      "goodSingleLayer": "焼け雲の可能性はありますが、雲の層はやや限られます。",
+      "fair": "条件は中程度です。実際の雲の変化を見ながら判断してください。",
+      "low": "重要な条件が不足しており、焼け雲の可能性は低めです。"
+    },
+        "scoreBreakdown": {
+      "viewDetails": "スコア詳細を見る",
+      "finalDisplayed": "最終表示スコア",
+      "baseFormula": "基礎点 = キャンバス ×0.8 + 光路 ×0.2",
+      "baseHint": "雲と光路を組み合わせた基礎点",
+      "canvasHint": "高層/中層雲は色を受け、低層雲は遮ることがあります",
+      "lightPathHint": "日光が雲まで届くかどうか",
+      "finalFormula": "最終点 = 基礎点 × 補正係数",
+      "renderingHint": "湿度と視程が色の見え方に影響します",
+      "aerosolHint": "適度なエアロゾルは橙赤色を強め、多すぎると灰色っぽくなります"
+    },
+"formationAnalysis": {
+      "title": "焼け雲の形成条件分析",
+      "groups": { "positive": "有利な条件", "neutral": "中立要因", "warning": "注意点" },
+      "high": { "abundant": "高層雲が豊富（{{value}}%）", "abundantDesc": "色づきの土台が十分です", "sufficient": "高層雲が十分（{{value}}%）", "sufficientDesc": "夕焼け色を受ける雲があります", "moderate": "高層雲が適度（{{value}}%）", "moderateDesc": "可能性はありますが色は淡めかもしれません", "few": "高層雲が少なめ（{{value}}%）", "fewDesc": "主な色づきの担い手が不足しています" },
+      "mid": { "balanced": "中層雲が適度（{{value}}%）", "balancedDesc": "色の広がりと奥行きを加えます", "few": "中層雲が少ない（{{value}}%）", "fewHighCloudDesc": "高層雲が十分なら単独でも色づきます", "fewDesc": "雲の層の立体感は限られます", "thick": "中層雲が厚い（{{value}}%）", "thickDesc": "画面が灰色っぽくなり透明感が落ちる可能性があります" },
+      "low": { "few": "低層雲が少ない（{{value}}%）", "fewDesc": "視界は開けています", "some": "低層雲がやや多い（{{value}}%）", "someDesc": "地平線付近の色を一部遮る可能性があります", "thick": "低層雲が厚い（{{value}}%）", "thickDesc": "遮蔽リスクが高めです" },
+      "visibility": { "good": "視程良好（{{value}}km）", "goodDesc": "空気が澄み、見通しが良好です", "moderate": "視程は普通（{{value}}km）", "moderateDesc": "彩度が少し落ちる可能性があります", "low": "視程が低い（{{value}}km）", "lowDesc": "霞や水蒸気が観賞に影響する可能性があります" },
+      "humidity": { "moderate": "湿度は適度（{{value}}%）", "moderateDesc": "光の散乱に役立ちます", "high": "湿度が高い（{{value}}%）", "highDesc": "透明感が落ちる可能性があります", "low": "湿度が低い（{{value}}%）", "lowDesc": "乾いた空気で色が淡くなる可能性があります" },
+      "aerosol": { "moderate": "エアロゾル適度（AOD {{value}}）", "moderateDesc": "橙赤色の散乱を強めます", "high": "エアロゾル多め（AOD {{value}}）", "highDesc": "霞んだり暗く見える可能性があります", "low": "空気が澄みすぎ（AOD {{value}}）", "lowDesc": "色が淡くなる可能性があります" },
+      "layer": { "single": "雲層が単一", "singleDesc": "高層雲の質が良ければ鮮やかな夕焼けは期待できます" }
+    },
     "status": {
       "noFireCloud": "焼き雲なし",
       "lightGlow": "薄い夕焼け",
@@ -274,7 +305,7 @@ apiAccess: 'API接続'
         moderate: '雲の厚さは適度',
         thick: '雲が厚く、光が通りにくい',
         unknown: '雲の厚さデータは利用できません'
-      },
+      }
     },
     "composite": {
       "title": "総合スコア",
@@ -330,7 +361,7 @@ apiAccess: 'API接続'
       "someLowCloud": "⚠️ 下層雲が若干ある（{{value}}%）、視界の一部を遮る可能性があります",
       "denseLowCloud": "❌ 下層雲が濃密（{{value}}%）、鑑賞に深刻な影響があります",
       "excellentConditions": "🌟 素晴らしい焼き雲のすべての条件が整っています！",
-      "highProbability": "✨ 壮大な焼き雲の見られる可能性が高い",
+      "highProbability": "壮大な焼き雲の見られる可能性が高い",
       "moderateProbability": "💫 穏やかな焼き雲効果の可能性あり",
       "lowProbability": "⛅ 顕著な焼き雲の可能性は低い",
       "noCloudNoFireCloud": "❌ 雲量が著しく不足しており、焼き雲を形成できません"
@@ -382,7 +413,7 @@ apiAccess: 'API接続'
   },
   "common": {
     "loading": "読み込み中...",
-    "dataSource": "データソース：Windy API",
+    "dataSource": "データソース：Open-Meteo（GFS + ECMWF）",
     "visitorCount": "訪問者数："
   },
   "errors": {
@@ -531,12 +562,12 @@ apiAccess: 'API接続'
     "bestWindow": "見頃  {{start}} – {{end}}",
     "cloud": { "high": "上層雲", "mid": "中層雲", "low": "下層雲" },
     "verdict": {
-      "noCarrier": "😶 色を映す雲が少なく、焼け雲の可能性はかなり低め",
-      "excellent": "✨ 条件は良好、鮮やかな空が期待できます",
-      "excellentMultiLayer": "✨ 条件は非常に良好、観賞を強くおすすめします！",
-      "good": "✨ 条件は良く、焼け雲の可能性は高め",
-      "fair": "💡 条件は普通、雲の変化をリアルタイムで確認してください",
-      "poor": "😶 焼け雲の可能性は低め"
+      "noCarrier": "色を映す雲が少なく、焼け雲の可能性はかなり低め",
+      "excellent": "条件は良好、鮮やかな空が期待できます",
+      "excellentMultiLayer": "条件は非常に良好、観賞を強くおすすめします！",
+      "good": "条件は良く、焼け雲の可能性は高め",
+      "fair": "条件は普通、雲の変化をリアルタイムで確認してください",
+      "poor": "焼け雲の可能性は低め"
     },
     "watermark": "霞客 · 鮮やかな空の一瞬を記録"
   },
@@ -568,13 +599,15 @@ apiAccess: 'API接続'
     "timeNow": "現在",
     "timeSunset": "日没",
     "timeSunrise": "日出",
-    "timeHint": "💡 ヒント: 地図下の予測タイムラインをドラッグして時間を調整することもできます",
+    "timeHint": "ヒント: 地図下の予測タイムラインをドラッグして時間を調整することもできます",
     "loading": "地図読み込み中...",
     "error": "地図の読み込みに失敗しました",
     "mockNotSupported": "地図機能は実際のAPIモードでのみ使用可能です"
   },
   "surrounding": {
     "title": "周辺焼き雲分析",
+    "radarTitle": "周辺雲況レーダー",
+    "radarSubtitle": "20km · 連続した雲場",
     "radius": "探知半径",
     "radiusUnit": "キロメートル",
     "directions": {

@@ -198,6 +198,62 @@ apiAccess: 'API 연동'
     "insufficientData": "날씨 데이터가 부족하여 예측을 생성할 수 없습니다. 잠시 후 데이터를 새로고침하세요.",
     "viewFutureOrRefresh": "미래 예측을 보거나 잠시 후 데이터를 새로고침하세요",
     "predictionUnavailable": "⚠️ 날씨 데이터 부족",
+
+    "analysisConclusion": {
+      "excellent": "조건이 매우 좋습니다. 관측을 강력히 추천합니다.",
+      "excellentSingleLayer": "색이 날 가능성은 높지만 구름층이 단순해 입체감은 조금 약할 수 있습니다.",
+      "good": "조건이 좋고 선명한 노을구름 가능성이 있습니다.",
+      "goodSingleLayer": "노을구름 가능성은 높지만 구름층의 깊이는 다소 부족합니다.",
+      "fair": "조건은 보통입니다. 실제 구름 변화를 함께 확인하세요.",
+      "low": "핵심 조건이 부족해 노을구름 가능성이 낮습니다."
+    },
+        "scoreBreakdown": {
+      "viewDetails": "점수 상세 보기",
+      "finalDisplayed": "최종 표시 점수",
+      "baseFormula": "기초 점수 = 캔버스 ×0.8 + 광로 ×0.2",
+      "baseHint": "구름층과 광로를 합산한 기초 점수",
+      "canvasHint": "고층/중층운은 색을 받고 저층운은 가릴 수 있습니다",
+      "lightPathHint": "햇빛이 구름층까지 도달하는지 여부",
+      "finalFormula": "최종 점수 = 기초 점수 × 보정 계수",
+      "renderingHint": "습도와 가시거리가 색 표현에 영향을 줍니다",
+      "aerosolHint": "적절한 에어로졸은 주황·붉은 산란을 강화하고 과하면 회색빛이 됩니다"
+    },
+"formationAnalysis": {
+      "title": "화염구름 형성 조건 분석",
+      "groups": { "positive": "유리한 조건", "neutral": "보통 요인", "warning": "주의 요인" },
+      "high": {
+        "abundant": "고층운 풍부 ({{value}}%)", "abundantDesc": "색을 받을 구름층이 충분합니다",
+        "sufficient": "고층운 충분 ({{value}}%)", "sufficientDesc": "노을빛을 담을 조건이 좋습니다",
+        "moderate": "고층운 보통 ({{value}}%)", "moderateDesc": "가능성은 있지만 색이 옅을 수 있습니다",
+        "few": "고층운 부족 ({{value}}%)", "fewDesc": "주요 색상 운반층이 부족합니다"
+      },
+      "mid": {
+        "balanced": "중층운 적절 ({{value}}%)", "balancedDesc": "색 확산과 입체감에 도움이 됩니다",
+        "few": "중층운 적음 ({{value}}%)", "fewHighCloudDesc": "고층운이 충분해 단독으로도 발색할 수 있습니다", "fewDesc": "구름층 입체감이 부족할 수 있습니다",
+        "thick": "중층운 두꺼움 ({{value}}%)", "thickDesc": "화면이 흐리고 노을빛 투명감이 약해질 수 있습니다"
+      },
+      "low": {
+        "few": "저층운 적음 ({{value}}%)", "fewDesc": "시야가 비교적 열려 있습니다",
+        "some": "저층운 다소 많음 ({{value}}%)", "someDesc": "지평선 근처 색을 일부 가릴 수 있습니다",
+        "thick": "저층운 두꺼움 ({{value}}%)", "thickDesc": "가림 위험이 큽니다"
+      },
+      "visibility": {
+        "good": "가시거리 양호 ({{value}}km)", "goodDesc": "공기가 맑고 시야가 좋습니다",
+        "moderate": "가시거리 보통 ({{value}}km)", "moderateDesc": "채도가 조금 낮아질 수 있습니다",
+        "low": "가시거리 낮음 ({{value}}km)", "lowDesc": "먼지나 수증기가 관측에 영향을 줄 수 있습니다"
+      },
+      "humidity": {
+        "moderate": "습도 적절 ({{value}}%)", "moderateDesc": "빛 산란에 도움이 됩니다",
+        "high": "습도 높음 ({{value}}%)", "highDesc": "투명감이 약해질 수 있습니다",
+        "low": "습도 낮음 ({{value}}%)", "lowDesc": "건조한 공기로 색이 옅을 수 있습니다"
+      },
+      "aerosol": {
+        "moderate": "에어로졸 적절 (AOD {{value}})", "moderateDesc": "주황·붉은 산란을 강화합니다",
+        "high": "에어로졸 높음 (AOD {{value}})", "highDesc": "흐리거나 어둡게 보일 수 있습니다",
+        "low": "공기가 너무 맑음 (AOD {{value}})", "lowDesc": "색이 옅을 수 있습니다"
+      },
+      "layer": { "single": "단일 구름층", "singleDesc": "고층운 상태가 좋으면 선명한 노을은 가능합니다" }
+    },
     "status": {
       "noFireCloud": "불구름 없음",
       "lightGlow": "가벼운 노을",
@@ -274,7 +330,7 @@ apiAccess: 'API 연동'
         moderate: '구름 두께가 적당함',
         thick: '구름이 두꺼워 빛 투과가 제한됨',
         unknown: '구름 두께 데이터를 사용할 수 없음'
-      },
+      }
     },
     "composite": {
       "title": "종합 점수",
@@ -330,7 +386,7 @@ apiAccess: 'API 연동'
       "someLowCloud": "⚠️ 약간의 저층구름 ({{value}}%), 전망 부분 차단 가능",
       "denseLowCloud": "❌ 조밀한 저층구름 ({{value}}%), 관람에 심각한 영향",
       "excellentConditions": "🌟 화려한 화염구름의 모든 조건이 충족됨!",
-      "highProbability": "✨ 화려한 화염구름 경관의 높은 확률",
+      "highProbability": "화려한 화염구름 경관의 높은 확률",
       "moderateProbability": "💫 가능한 약한 화염구름 효과",
       "lowProbability": "⛅ 눈에 띄는 화염구름의 낮은 확률",
       "noCloudNoFireCloud": "❌ 구름이 심각하게 부족하여 화염구름 형성 불가"
@@ -382,7 +438,7 @@ apiAccess: 'API 연동'
   },
   "common": {
     "loading": "로드 중...",
-    "dataSource": "데이터 출처: Windy API",
+    "dataSource": "데이터 출처: Open-Meteo (GFS + ECMWF)",
     "visitorCount": "방문자 수: "
   },
   "errors": {
@@ -531,12 +587,12 @@ apiAccess: 'API 연동'
     "bestWindow": "추천 관측 시간  {{start}} – {{end}}",
     "cloud": { "high": "상층운", "mid": "중층운", "low": "하층운" },
     "verdict": {
-      "noCarrier": "😶 색을 받을 구름이 부족해 노을구름 가능성이 매우 낮아요",
-      "excellent": "✨ 조건이 좋아 선명한 하늘빛을 기대할 수 있어요",
-      "excellentMultiLayer": "✨ 조건이 매우 좋아 관측을 강력 추천해요!",
-      "good": "✨ 조건이 괜찮고 노을구름 가능성이 높아요",
-      "fair": "💡 조건은 보통이며 실시간 구름 변화를 확인하세요",
-      "poor": "😶 노을구름 가능성이 낮아요"
+      "noCarrier": "색을 받을 구름이 부족해 노을구름 가능성이 매우 낮아요",
+      "excellent": "조건이 좋아 선명한 하늘빛을 기대할 수 있어요",
+      "excellentMultiLayer": "조건이 매우 좋아 관측을 강력 추천해요!",
+      "good": "조건이 괜찮고 노을구름 가능성이 높아요",
+      "fair": "조건은 보통이며 실시간 구름 변화를 확인하세요",
+      "poor": "노을구름 가능성이 낮아요"
     },
     "watermark": "하객 · 빛나는 하늘의 순간을 기록"
   },
@@ -568,13 +624,15 @@ apiAccess: 'API 연동'
     "timeNow": "현재",
     "timeSunset": "일몰",
     "timeSunrise": "일출",
-    "timeHint": "💡 팁: 지도 아래의 예측 시간축을 드래그하여 시간을 조정할 수도 있습니다",
+    "timeHint": "팁: 지도 아래의 예측 시간축을 드래그하여 시간을 조정할 수도 있습니다",
     "loading": "지도 로딩 중...",
     "error": "지도 로딩 실패",
     "mockNotSupported": "지도 기능은 실제 API 모드에서만 사용 가능합니다"
   },
   "surrounding": {
     "title": "주변 노을 분석",
+    "radarTitle": "주변 구름 레이더",
+    "radarSubtitle": "20km · 연속 구름장",
     "radius": "탐지 반경",
     "radiusUnit": "킬로미터",
     "directions": {

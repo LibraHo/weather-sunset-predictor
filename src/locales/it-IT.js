@@ -165,6 +165,37 @@ apiAccess: 'Accesso API'
     "good": "Buono",
     "fair": "Discreto",
     "poor": "Scarso",
+
+    "analysisConclusion": {
+      "excellent": "Condizioni eccellenti. Uscita fortemente consigliata.",
+      "excellentSingleLayer": "Ottimo potenziale di colore, ma un solo strato di nubi può ridurre la profondità.",
+      "good": "Buone condizioni, con una concreta possibilità di nubi infuocate spettacolari.",
+      "goodSingleLayer": "Buona probabilità di nubi infuocate, ma gli strati sono limitati.",
+      "fair": "Condizioni medie; osserva l’evoluzione reale delle nubi.",
+      "low": "Mancano condizioni chiave; la probabilità di nubi infuocate è bassa."
+    },
+        "scoreBreakdown": {
+      "viewDetails": "Vedi dettagli punteggio",
+      "finalDisplayed": "Punteggio finale mostrato",
+      "baseFormula": "Punteggio base = tela ×0,8 + percorso luce ×0,2",
+      "baseHint": "Punteggio base dopo combinazione di nubi e percorso luminoso",
+      "canvasHint": "Le nubi alte/medie portano colore; le basse possono bloccarlo",
+      "lightPathHint": "Se la luce solare può raggiungere le nubi",
+      "finalFormula": "Punteggio finale = punteggio base × fattori correttivi",
+      "renderingHint": "Umidità e visibilità influenzano il colore",
+      "aerosolHint": "Aerosol moderato rafforza arancio-rosso; troppo alto rende grigio"
+    },
+"formationAnalysis": {
+      "title": "Analisi delle condizioni per le nubi infuocate",
+      "groups": { "positive": "Condizioni favorevoli", "neutral": "Fattori neutri", "warning": "Aspetti da osservare" },
+      "high": { "abundant": "Nubi alte abbondanti ({{value}}%)", "abundantDesc": "Buona base per catturare il colore", "sufficient": "Nubi alte sufficienti ({{value}}%)", "sufficientDesc": "Buon supporto per i colori del tramonto", "moderate": "Nubi alte moderate ({{value}}%)", "moderateDesc": "Possibile, ma con colori più leggeri", "few": "Poche nubi alte ({{value}}%)", "fewDesc": "Manca il principale supporto del colore" },
+      "mid": { "balanced": "Nubi medie equilibrate ({{value}}%)", "balancedDesc": "Aggiungono diffusione del colore e profondità", "few": "Poche nubi medie ({{value}}%)", "fewHighCloudDesc": "Le nubi alte possono ancora portare colore", "fewDesc": "La stratificazione può essere limitata", "thick": "Nubi medie spesse ({{value}}%)", "thickDesc": "Può rendere la scena più grigia e meno trasparente" },
+      "low": { "few": "Poche nubi basse ({{value}}%)", "fewDesc": "La vista dovrebbe restare aperta", "some": "Alcune nubi basse ({{value}}%)", "someDesc": "Possono coprire parte del colore vicino all’orizzonte", "thick": "Nubi basse spesse ({{value}}%)", "thickDesc": "Alto rischio di ostruzione" },
+      "visibility": { "good": "Buona visibilità ({{value}}km)", "goodDesc": "Aria limpida e buona distanza visiva", "moderate": "Visibilità moderata ({{value}}km)", "moderateDesc": "La saturazione può diminuire leggermente", "low": "Bassa visibilità ({{value}}km)", "lowDesc": "Foschia o umidità possono influire sull’osservazione" },
+      "humidity": { "moderate": "Umidità moderata ({{value}}%)", "moderateDesc": "Aiuta la diffusione della luce", "high": "Umidità alta ({{value}}%)", "highDesc": "Può ridurre la trasparenza", "low": "Umidità bassa ({{value}}%)", "lowDesc": "L’aria secca può rendere i colori più pallidi" },
+      "aerosol": { "moderate": "Aerosol moderato (AOD {{value}})", "moderateDesc": "Rafforza la diffusione arancio-rossa", "high": "Aerosol alto (AOD {{value}})", "highDesc": "Può apparire velato o spento", "low": "Aria molto limpida (AOD {{value}})", "lowDesc": "I colori possono essere più tenui" },
+      "layer": { "single": "Singolo strato nuvoloso", "singleDesc": "Buone nubi alte possono comunque colorarsi bene" }
+    },
     "status": {
       "noFireCloud": "Nessuna Nuvola Rossa",
       "lightGlow": "Luce Leggera",
@@ -295,7 +326,7 @@ apiAccess: 'Accesso API'
       "someLowCloud": "⚠️ Alcune nuvole basse ({{value}}%), potrebbero bloccare parzialmente la vista",
       "denseLowCloud": "❌ Nuvole basse dense ({{value}}%), influenzano seriamente l'osservazione",
       "excellentConditions": "🌟 Tutte le condizioni per magnifiche nuvole rosse sono soddisfatte!",
-      "highProbability": "✨ Alta probabilità di spettacolare scenario di nuvole rosse",
+      "highProbability": "Alta probabilità di spettacolare scenario di nuvole rosse",
       "moderateProbability": "💫 Possibili lievi effetti di nuvole rosse",
       "lowProbability": "⛅ Bassa probabilità di nuvole rosse significative",
       "noCloudNoFireCloud": "❌ Copertura nuvolosa gravemente insufficiente, non può formare nuvole rosse"
@@ -347,7 +378,7 @@ apiAccess: 'Accesso API'
   },
   "common": {
     "loading": "Caricamento...",
-    "dataSource": "Fonte dati: Windy API",
+    "dataSource": "Fonte dati: Open-Meteo (GFS + ECMWF)",
     "visitorCount": "Visitatori: "
   },
   "errors": {
@@ -494,16 +525,16 @@ apiAccess: 'Accesso API'
     "gauge": { "hintExcellent": "Worth waiting for", "hintGood": "Worth checking nearby", "hintFair": "No need to go out just for it" },
     "timeLabels": { "sunrise": "Sunrise", "sunset": "Sunset" },
     "bestWindow": "Best viewing  {{start}} – {{end}}",
-    "cloud": { "high": "High Cloud", "mid": "Mid Cloud", "low": "Low Cloud" },
+    "cloud": { "high": "Nubi alte", "mid": "Nubi medie", "low": "Nubi basse" },
     "verdict": {
-      "noCarrier": "😶 Not enough color carrier clouds; fire-cloud chance is very low",
-      "excellent": "✨ Excellent conditions; colorful sky is promising",
-      "excellentMultiLayer": "✨ Excellent conditions; strongly recommended for viewing!",
-      "good": "✨ Good conditions; fire-cloud chance is high",
-      "fair": "💡 Moderate conditions; watch real-time cloud changes",
-      "poor": "😶 Fire-cloud chance is low"
+      "noCarrier": "Non ci sono abbastanza nubi per catturare il colore; probabilità molto bassa",
+      "excellent": "Condizioni eccellenti; cielo colorato promettente",
+      "excellentMultiLayer": "Condizioni eccellenti; osservazione fortemente consigliata",
+      "good": "Buone condizioni; alta probabilità di nubi infuocate",
+      "fair": "Condizioni medie; osserva l’evoluzione reale delle nubi",
+      "poor": "La probabilità di nubi infuocate è bassa"
     },
-    "watermark": "Xiake · Capture every brilliant sky"
+    "watermark": "Xiake · Cattura ogni cielo brillante"
   },
   "charts": {
     "temperature": "Temperatura",
@@ -533,13 +564,15 @@ apiAccess: 'Accesso API'
     "timeNow": "Ora",
     "timeSunset": "Tramonto",
     "timeSunrise": "Alba",
-    "timeHint": "💡 Suggerimento: Puoi anche trascinare la linea temporale sotto la mappa per regolare l'ora",
+    "timeHint": "Suggerimento: Puoi anche trascinare la linea temporale sotto la mappa per regolare l'ora",
     "loading": "Caricamento mappa...",
     "error": "Errore nel caricamento della mappa",
     "mockNotSupported": "La funzione mappa è disponibile solo in modalità API reale"
   },
   "surrounding": {
     "title": "Analisi nuvole rosse circostanti",
+    "radarTitle": "Radar delle nubi circostanti",
+    "radarSubtitle": "20 km · Campo nuvoloso continuo",
     "radius": "Raggio di rilevamento",
     "radiusUnit": "km",
     "directions": {

@@ -192,6 +192,37 @@ const translations = {
     "good": "Bon",
     "fair": "Moyen",
     "poor": "Médiocre",
+
+    "analysisConclusion": {
+      "excellent": "Conditions excellentes. Sortie fortement recommandée.",
+      "excellentSingleLayer": "Fort potentiel de couleur, mais une seule couche de nuages peut réduire la profondeur.",
+      "good": "Bonnes conditions, avec une vraie chance de nuages flamboyants spectaculaires.",
+      "goodSingleLayer": "Bonne chance de nuages flamboyants, mais les couches restent limitées.",
+      "fair": "Conditions moyennes ; surveillez l’évolution réelle des nuages.",
+      "low": "Des conditions clés manquent ; la probabilité reste faible."
+    },
+        "scoreBreakdown": {
+      "viewDetails": "Voir le détail du score",
+      "finalDisplayed": "Score final affiché",
+      "baseFormula": "Score de base = toile ×0,8 + trajet lumineux ×0,2",
+      "baseHint": "Score de base après combinaison des nuages et du trajet lumineux",
+      "canvasHint": "Les nuages hauts/moyens portent la couleur ; les nuages bas peuvent la bloquer",
+      "lightPathHint": "La lumière du soleil peut-elle atteindre les nuages ?",
+      "finalFormula": "Score final = score de base × facteurs de correction",
+      "renderingHint": "Humidité et visibilité influencent le rendu des couleurs",
+      "aerosolHint": "Un aérosol modéré renforce l’orange-rouge ; trop élevé, il grise la scène"
+    },
+"formationAnalysis": {
+      "title": "Analyse des conditions de formation des nuages flamboyants",
+      "groups": { "positive": "Conditions favorables", "neutral": "Facteurs neutres", "warning": "Points à surveiller" },
+      "high": { "abundant": "Nuages hauts abondants ({{value}}%)", "abundantDesc": "Bonne base pour capter la couleur", "sufficient": "Nuages hauts suffisants ({{value}}%)", "sufficientDesc": "Bon support pour les teintes du coucher", "moderate": "Nuages hauts modérés ({{value}}%)", "moderateDesc": "Possible, mais les couleurs peuvent être plus légères", "few": "Peu de nuages hauts ({{value}}%)", "fewDesc": "Le principal support de couleur manque" },
+      "mid": { "balanced": "Nuages moyens équilibrés ({{value}}%)", "balancedDesc": "Ajoute diffusion des couleurs et profondeur", "few": "Peu de nuages moyens ({{value}}%)", "fewHighCloudDesc": "Les nuages hauts peuvent encore porter la couleur", "fewDesc": "Le relief des couches peut être limité", "thick": "Nuages moyens épais ({{value}}%)", "thickDesc": "Peut rendre l’image plus grise et moins transparente" },
+      "low": { "few": "Peu de nuages bas ({{value}}%)", "fewDesc": "La vue devrait rester dégagée", "some": "Quelques nuages bas ({{value}}%)", "someDesc": "Peut masquer une partie des couleurs près de l’horizon", "thick": "Nuages bas épais ({{value}}%)", "thickDesc": "Risque d’obstruction élevé" },
+      "visibility": { "good": "Bonne visibilité ({{value}}km)", "goodDesc": "Air clair et bonne portée visuelle", "moderate": "Visibilité moyenne ({{value}}km)", "moderateDesc": "La saturation peut baisser légèrement", "low": "Faible visibilité ({{value}}km)", "lowDesc": "Brume ou humidité peuvent gêner l’observation" },
+      "humidity": { "moderate": "Humidité modérée ({{value}}%)", "moderateDesc": "Aide la diffusion de la lumière", "high": "Humidité élevée ({{value}}%)", "highDesc": "Peut réduire la transparence", "low": "Humidité basse ({{value}}%)", "lowDesc": "L’air sec peut rendre les couleurs plus pâles" },
+      "aerosol": { "moderate": "Aérosols modérés (AOD {{value}})", "moderateDesc": "Renforce la diffusion orange-rouge", "high": "Aérosols élevés (AOD {{value}})", "highDesc": "Peut paraître brumeux ou terne", "low": "Air très clair (AOD {{value}})", "lowDesc": "Les couleurs peuvent être plus pâles" },
+      "layer": { "single": "Couche nuageuse unique", "singleDesc": "De bons nuages hauts peuvent encore bien se colorer" }
+    },
     "status": {
       "noFireCloud": "Pas de Nuages Rouges",
       "lightGlow": "Légère Lueur",
@@ -330,7 +361,7 @@ const translations = {
       "someLowCloud": "⚠️ Certains nuages bas ({{value}}%), peuvent bloquer partiellement la vue",
       "denseLowCloud": "❌ Nuages bas denses ({{value}}%), affectant sérieusement l'observation",
       "excellentConditions": "🌟 Toutes les conditions pour des nuages rouges magnifiques sont réunies!",
-      "highProbability": "✨ Forte probabilité de paysages de nuages rouges spectaculaires",
+      "highProbability": "Forte probabilité de paysages de nuages rouges spectaculaires",
       "moderateProbability": "💫 Possibles effets légers de nuages rouges",
       "lowProbability": "⛅ Faible probabilité de nuages rouges significatifs",
       "noCloudNoFireCloud": "❌ Couverture nuageuse sévèrement insuffisante, ne peut pas former de nuages rouges"
@@ -485,7 +516,7 @@ const translations = {
   },
   "common": {
     "loading": "Chargement...",
-    "dataSource": "Source de données: API Windy",
+    "dataSource": "Source de données : Open-Meteo (GFS + ECMWF)",
     "visitorCount": "Visiteurs : "
   },
   "notifications": {
@@ -568,19 +599,19 @@ const translations = {
     },
     "bestWindow": "Best viewing  {{start}} – {{end}}",
     "cloud": {
-      "high": "High Cloud",
-      "mid": "Mid Cloud",
-      "low": "Low Cloud"
+      "high": "Nuages hauts",
+      "mid": "Nuages moyens",
+      "low": "Nuages bas"
     },
     "verdict": {
-      "noCarrier": "😶 Not enough color carrier clouds; fire-cloud chance is very low",
-      "excellent": "✨ Excellent conditions; colorful sky is promising",
-      "excellentMultiLayer": "✨ Excellent conditions; strongly recommended for viewing!",
-      "good": "✨ Good conditions; fire-cloud chance is high",
-      "fair": "💡 Moderate conditions; watch real-time cloud changes",
-      "poor": "😶 Fire-cloud chance is low"
+      "noCarrier": "Pas assez de nuages porteurs de couleur ; la probabilité reste très faible",
+      "excellent": "Conditions excellentes ; un ciel coloré est probable",
+      "excellentMultiLayer": "Conditions excellentes ; observation fortement recommandée !",
+      "good": "Bonnes conditions ; la probabilité de nuages flamboyants est élevée",
+      "fair": "Conditions moyennes ; surveillez l’évolution réelle des nuages",
+      "poor": "La probabilité de nuages flamboyants est faible"
     },
-    "watermark": "Xiake · Capture every brilliant sky"
+    "watermark": "Xiake · Capturer chaque ciel éclatant"
   },
   "charts": {
     "temperature": "Température",
@@ -610,13 +641,15 @@ const translations = {
     "timeNow": "Maintenant",
     "timeSunset": "Coucher du soleil",
     "timeSunrise": "Lever du soleil",
-    "timeHint": "💡 Astuce : Vous pouvez également faire glisser la ligne temporelle sous la carte pour ajuster l'heure",
+    "timeHint": "Astuce : Vous pouvez également faire glisser la ligne temporelle sous la carte pour ajuster l'heure",
     "loading": "Chargement de la carte...",
     "error": "Échec du chargement de la carte",
     "mockNotSupported": "La fonction de carte n'est disponible qu'en mode API réel"
   },
   "surrounding": {
     "title": "Analyse des nuages rouges environnants",
+    "radarTitle": "Radar des nuages environnants",
+    "radarSubtitle": "20 km · Champ nuageux continu",
     "radius": "Rayon de détection",
     "radiusUnit": "km",
     "directions": {
