@@ -215,16 +215,41 @@ export default {
 
     // 状态描述
 
-    "formationAnalysis": {
-      "title": "火烧云形成条件分析",
-      "groups": { "positive": "有利条件", "neutral": "一般因素", "warning": "注意因素" },
-      "high": { "abundant": "Abundant high clouds ({{value}}%)", "abundantDesc": "Strong color base", "sufficient": "Sufficient high clouds ({{value}}%)", "sufficientDesc": "Good color carrier", "moderate": "Moderate high clouds ({{value}}%)", "moderateDesc": "Possible, but colors may be lighter", "few": "Too few high clouds ({{value}}%)", "fewDesc": "Main color carrier is lacking" },
-      "mid": { "balanced": "Balanced mid clouds ({{value}}%)", "balancedDesc": "Adds color spread and depth", "few": "Few mid clouds ({{value}}%)", "fewHighCloudDesc": "High clouds can still carry color", "fewDesc": "Layering may be limited", "thick": "Thick mid clouds ({{value}}%)", "thickDesc": "May reduce clarity" },
-      "low": { "few": "Few low clouds ({{value}}%)", "fewDesc": "View should stay open", "some": "Some low clouds ({{value}}%)", "someDesc": "May block horizon color", "thick": "Thick low clouds ({{value}}%)", "thickDesc": "High blocking risk" },
-      "visibility": { "good": "Good visibility ({{value}}km)", "goodDesc": "Clear air, good distance", "moderate": "Moderate visibility ({{value}}km)", "moderateDesc": "Saturation may drop", "low": "Low visibility ({{value}}km)", "lowDesc": "Haze or moisture may affect the view" },
-      "humidity": { "moderate": "Moderate humidity ({{value}}%)", "moderateDesc": "Helps light scattering", "high": "High humidity ({{value}}%)", "highDesc": "May reduce transparency", "low": "Low humidity ({{value}}%)", "lowDesc": "Dry air may lighten colors" },
-      "aerosol": { "moderate": "Moderate aerosol (AOD {{value}})", "moderateDesc": "Boosts orange-red scattering", "high": "High aerosol (AOD {{value}})", "highDesc": "May look hazy or dull", "low": "Very clear air (AOD {{value}})", "lowDesc": "Colors may be lighter" },
-      "layer": { "single": "Single cloud layer", "singleDesc": "High clouds can still color well" }
+    formationAnalysis: {
+      title: '火烧云形成条件分析',
+      groups: { positive: '有利条件', neutral: '一般因素', warning: '注意因素' },
+      high: {
+        abundant: '高层云充沛（{{value}}%）', abundantDesc: '色彩载体丰富，火烧云基础扎实',
+        sufficient: '高层云充足（{{value}}%）', sufficientDesc: '具备较好的霞光染色载体',
+        moderate: '高层云适中（{{value}}%）', moderateDesc: '可形成火烧云，但色彩可能偏淡',
+        few: '高层云偏少（{{value}}%）', fewDesc: '缺少主要色彩载体'
+      },
+      mid: {
+        balanced: '中层云适中（{{value}}%）', balancedDesc: '利于色彩扩散和层次感',
+        few: '中层云较少（{{value}}%）', fewHighCloudDesc: '但高层云充足，可独立形成火烧云', fewDesc: '层次感可能不足',
+        thick: '中层云偏厚（{{value}}%）', thickDesc: '可能让画面偏灰，削弱霞光通透感'
+      },
+      low: {
+        few: '低云稀少（{{value}}%）', fewDesc: '不会遮挡火烧云',
+        some: '低云较多（{{value}}%）', someDesc: '可能部分遮挡低空色彩',
+        thick: '低云偏厚（{{value}}%）', thickDesc: '遮挡风险较大'
+      },
+      visibility: {
+        good: '能见度良好（{{value}}km）', goodDesc: '空气通透，观赏视野好',
+        moderate: '能见度一般（{{value}}km）', moderateDesc: '色彩饱和度可能略受影响',
+        low: '能见度偏低（{{value}}km）', lowDesc: '雾霾或水汽可能影响观赏'
+      },
+      humidity: {
+        moderate: '湿度适中（{{value}}%）', moderateDesc: '利于光线散射',
+        high: '湿度偏高（{{value}}%）', highDesc: '可能略影响通透感',
+        low: '湿度偏低（{{value}}%）', lowDesc: '空气较干，色彩可能偏淡'
+      },
+      aerosol: {
+        moderate: '气溶胶适中（AOD {{value}}）', moderateDesc: '有利于增强红橙色散射',
+        high: '气溶胶偏高（AOD {{value}}）', highDesc: '可能灰霾发暗',
+        low: '空气过于通透（AOD {{value}}）', lowDesc: '颜色可能偏淡'
+      },
+      layer: { single: '云层单一', singleDesc: '高云质量好，仍可形成鲜明火烧云' }
     },
     status: {
       noFireCloud: '无火烧云',

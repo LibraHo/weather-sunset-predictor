@@ -202,13 +202,38 @@ apiAccess: 'API 연동'
     "formationAnalysis": {
       "title": "화염구름 형성 조건 분석",
       "groups": { "positive": "유리한 조건", "neutral": "보통 요인", "warning": "주의 요인" },
-      "high": { "abundant": "고층운 풍부 ({{value}}%)", "abundantDesc": "색을 받을 구름층이 충분합니다", "sufficient": "고층운 충분 ({{value}}%)", "sufficientDesc": "노을빛을 담을 조건이 좋습니다", "moderate": "고층운 보통 ({{value}}%)", "moderateDesc": "가능성은 있지만 색이 옅을 수 있습니다", "few": "고층운 부족 ({{value}}%)", "fewDesc": "주요 색상 운반층이 부족합니다" },
-      "mid": { "balanced": "Balanced mid clouds ({{value}}%)", "balancedDesc": "Adds color spread and depth", "few": "Few mid clouds ({{value}}%)", "fewHighCloudDesc": "High clouds can still carry color", "fewDesc": "Layering may be limited", "thick": "Thick mid clouds ({{value}}%)", "thickDesc": "May reduce clarity" },
-      "low": { "few": "Few low clouds ({{value}}%)", "fewDesc": "View should stay open", "some": "Some low clouds ({{value}}%)", "someDesc": "May block horizon color", "thick": "Thick low clouds ({{value}}%)", "thickDesc": "High blocking risk" },
-      "visibility": { "good": "Good visibility ({{value}}km)", "goodDesc": "Clear air, good distance", "moderate": "Moderate visibility ({{value}}km)", "moderateDesc": "Saturation may drop", "low": "Low visibility ({{value}}km)", "lowDesc": "Haze or moisture may affect the view" },
-      "humidity": { "moderate": "Moderate humidity ({{value}}%)", "moderateDesc": "Helps light scattering", "high": "High humidity ({{value}}%)", "highDesc": "May reduce transparency", "low": "Low humidity ({{value}}%)", "lowDesc": "Dry air may lighten colors" },
-      "aerosol": { "moderate": "Moderate aerosol (AOD {{value}})", "moderateDesc": "Boosts orange-red scattering", "high": "High aerosol (AOD {{value}})", "highDesc": "May look hazy or dull", "low": "Very clear air (AOD {{value}})", "lowDesc": "Colors may be lighter" },
-      "layer": { "single": "Single cloud layer", "singleDesc": "High clouds can still color well" }
+      "high": {
+        "abundant": "고층운 풍부 ({{value}}%)", "abundantDesc": "색을 받을 구름층이 충분합니다",
+        "sufficient": "고층운 충분 ({{value}}%)", "sufficientDesc": "노을빛을 담을 조건이 좋습니다",
+        "moderate": "고층운 보통 ({{value}}%)", "moderateDesc": "가능성은 있지만 색이 옅을 수 있습니다",
+        "few": "고층운 부족 ({{value}}%)", "fewDesc": "주요 색상 운반층이 부족합니다"
+      },
+      "mid": {
+        "balanced": "중층운 적절 ({{value}}%)", "balancedDesc": "색 확산과 입체감에 도움이 됩니다",
+        "few": "중층운 적음 ({{value}}%)", "fewHighCloudDesc": "고층운이 충분해 단독으로도 발색할 수 있습니다", "fewDesc": "구름층 입체감이 부족할 수 있습니다",
+        "thick": "중층운 두꺼움 ({{value}}%)", "thickDesc": "화면이 흐리고 노을빛 투명감이 약해질 수 있습니다"
+      },
+      "low": {
+        "few": "저층운 적음 ({{value}}%)", "fewDesc": "시야가 비교적 열려 있습니다",
+        "some": "저층운 다소 많음 ({{value}}%)", "someDesc": "지평선 근처 색을 일부 가릴 수 있습니다",
+        "thick": "저층운 두꺼움 ({{value}}%)", "thickDesc": "가림 위험이 큽니다"
+      },
+      "visibility": {
+        "good": "가시거리 양호 ({{value}}km)", "goodDesc": "공기가 맑고 시야가 좋습니다",
+        "moderate": "가시거리 보통 ({{value}}km)", "moderateDesc": "채도가 조금 낮아질 수 있습니다",
+        "low": "가시거리 낮음 ({{value}}km)", "lowDesc": "먼지나 수증기가 관측에 영향을 줄 수 있습니다"
+      },
+      "humidity": {
+        "moderate": "습도 적절 ({{value}}%)", "moderateDesc": "빛 산란에 도움이 됩니다",
+        "high": "습도 높음 ({{value}}%)", "highDesc": "투명감이 약해질 수 있습니다",
+        "low": "습도 낮음 ({{value}}%)", "lowDesc": "건조한 공기로 색이 옅을 수 있습니다"
+      },
+      "aerosol": {
+        "moderate": "에어로졸 적절 (AOD {{value}})", "moderateDesc": "주황·붉은 산란을 강화합니다",
+        "high": "에어로졸 높음 (AOD {{value}})", "highDesc": "흐리거나 어둡게 보일 수 있습니다",
+        "low": "공기가 너무 맑음 (AOD {{value}})", "lowDesc": "색이 옅을 수 있습니다"
+      },
+      "layer": { "single": "단일 구름층", "singleDesc": "고층운 상태가 좋으면 선명한 노을은 가능합니다" }
     },
     "status": {
       "noFireCloud": "불구름 없음",

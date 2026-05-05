@@ -194,15 +194,15 @@ apiAccess: 'API接続'
     "poor": "やや悪い",
 
     "formationAnalysis": {
-      "title": "Fire cloud formation analysis",
-      "groups": { "positive": "Favorable", "neutral": "Neutral", "warning": "Watch-outs" },
-      "high": { "abundant": "Abundant high clouds ({{value}}%)", "abundantDesc": "Strong color base", "sufficient": "Sufficient high clouds ({{value}}%)", "sufficientDesc": "Good color carrier", "moderate": "Moderate high clouds ({{value}}%)", "moderateDesc": "Possible, but colors may be lighter", "few": "Too few high clouds ({{value}}%)", "fewDesc": "Main color carrier is lacking" },
-      "mid": { "balanced": "Balanced mid clouds ({{value}}%)", "balancedDesc": "Adds color spread and depth", "few": "Few mid clouds ({{value}}%)", "fewHighCloudDesc": "High clouds can still carry color", "fewDesc": "Layering may be limited", "thick": "Thick mid clouds ({{value}}%)", "thickDesc": "May reduce clarity" },
-      "low": { "few": "Few low clouds ({{value}}%)", "fewDesc": "View should stay open", "some": "Some low clouds ({{value}}%)", "someDesc": "May block horizon color", "thick": "Thick low clouds ({{value}}%)", "thickDesc": "High blocking risk" },
-      "visibility": { "good": "Good visibility ({{value}}km)", "goodDesc": "Clear air, good distance", "moderate": "Moderate visibility ({{value}}km)", "moderateDesc": "Saturation may drop", "low": "Low visibility ({{value}}km)", "lowDesc": "Haze or moisture may affect the view" },
-      "humidity": { "moderate": "Moderate humidity ({{value}}%)", "moderateDesc": "Helps light scattering", "high": "High humidity ({{value}}%)", "highDesc": "May reduce transparency", "low": "Low humidity ({{value}}%)", "lowDesc": "Dry air may lighten colors" },
-      "aerosol": { "moderate": "Moderate aerosol (AOD {{value}})", "moderateDesc": "Boosts orange-red scattering", "high": "High aerosol (AOD {{value}})", "highDesc": "May look hazy or dull", "low": "Very clear air (AOD {{value}})", "lowDesc": "Colors may be lighter" },
-      "layer": { "single": "Single cloud layer", "singleDesc": "High clouds can still color well" }
+      "title": "焼け雲の形成条件分析",
+      "groups": { "positive": "有利な条件", "neutral": "中立要因", "warning": "注意点" },
+      "high": { "abundant": "高層雲が豊富（{{value}}%）", "abundantDesc": "色づきの土台が十分です", "sufficient": "高層雲が十分（{{value}}%）", "sufficientDesc": "夕焼け色を受ける雲があります", "moderate": "高層雲が適度（{{value}}%）", "moderateDesc": "可能性はありますが色は淡めかもしれません", "few": "高層雲が少なめ（{{value}}%）", "fewDesc": "主な色づきの担い手が不足しています" },
+      "mid": { "balanced": "中層雲が適度（{{value}}%）", "balancedDesc": "色の広がりと奥行きを加えます", "few": "中層雲が少ない（{{value}}%）", "fewHighCloudDesc": "高層雲が十分なら単独でも色づきます", "fewDesc": "雲の層の立体感は限られます", "thick": "中層雲が厚い（{{value}}%）", "thickDesc": "画面が灰色っぽくなり透明感が落ちる可能性があります" },
+      "low": { "few": "低層雲が少ない（{{value}}%）", "fewDesc": "視界は開けています", "some": "低層雲がやや多い（{{value}}%）", "someDesc": "地平線付近の色を一部遮る可能性があります", "thick": "低層雲が厚い（{{value}}%）", "thickDesc": "遮蔽リスクが高めです" },
+      "visibility": { "good": "視程良好（{{value}}km）", "goodDesc": "空気が澄み、見通しが良好です", "moderate": "視程は普通（{{value}}km）", "moderateDesc": "彩度が少し落ちる可能性があります", "low": "視程が低い（{{value}}km）", "lowDesc": "霞や水蒸気が観賞に影響する可能性があります" },
+      "humidity": { "moderate": "湿度は適度（{{value}}%）", "moderateDesc": "光の散乱に役立ちます", "high": "湿度が高い（{{value}}%）", "highDesc": "透明感が落ちる可能性があります", "low": "湿度が低い（{{value}}%）", "lowDesc": "乾いた空気で色が淡くなる可能性があります" },
+      "aerosol": { "moderate": "エアロゾル適度（AOD {{value}}）", "moderateDesc": "橙赤色の散乱を強めます", "high": "エアロゾル多め（AOD {{value}}）", "highDesc": "霞んだり暗く見える可能性があります", "low": "空気が澄みすぎ（AOD {{value}}）", "lowDesc": "色が淡くなる可能性があります" },
+      "layer": { "single": "雲層が単一", "singleDesc": "高層雲の質が良ければ鮮やかな夕焼けは期待できます" }
     },
     "status": {
       "noFireCloud": "焼き雲なし",
