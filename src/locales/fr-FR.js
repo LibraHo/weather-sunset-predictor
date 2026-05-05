@@ -497,7 +497,7 @@ const translations = {
   },
   "common": {
     "loading": "Chargement...",
-    "dataSource": "Source de données: API Windy",
+    "dataSource": "Source de données : Open-Meteo (GFS + ECMWF)",
     "visitorCount": "Visiteurs : "
   },
   "notifications": {

@@ -336,7 +336,7 @@ apiAccess: 'الوصول إلى API'
   },
   common: {
     loading: 'جاري التحميل...',
-    dataSource: 'مصدر البيانات: Windy API',
+    dataSource: 'مصدر البيانات: Open-Meteo (GFS + ECMWF)',
     visitorCount: 'عدد الزوار: '
   },
   errors: {

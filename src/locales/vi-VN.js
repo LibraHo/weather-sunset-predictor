@@ -502,7 +502,7 @@ const translations = {
   },
   "common": {
     "loading": "Đang tải...",
-    "dataSource": "Nguồn dữ liệu: Windy API",
+    "dataSource": "Nguồn dữ liệu: Open-Meteo (GFS + ECMWF)",
     "visitorCount": "Lượt truy cập: "
   },
   "notifications": {
