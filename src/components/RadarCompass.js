@@ -22,20 +22,23 @@ class RadarCompass {
     const cs = getComputedStyle(document.body);
     const v = k => cs.getPropertyValue(k).trim();
     const i18n = window.i18n;
+    const lang = (document.documentElement.lang || i18n?.currentLanguage || '').toLowerCase();
+    const isChinese = !lang || lang.startsWith('zh');
+    const pick = (zh, en) => (isChinese ? zh : en);
     const t = (key, fallback, params = {}) => {
       if (!i18n?.t) return fallback;
       const translated = i18n.t(key, params);
       return translated === key ? fallback : translated;
     };
     const text = {
-      N: t('surrounding.directions.N', 'N'), NE: t('surrounding.directions.NE', 'NE'),
-      E: t('surrounding.directions.E', 'E'), SE: t('surrounding.directions.SE', 'SE'),
-      S: t('surrounding.directions.S', 'S'), SW: t('surrounding.directions.SW', 'SW'),
-      W: t('surrounding.directions.W', 'W'), NW: t('surrounding.directions.NW', 'NW'),
-      low: t('prediction.cloud.low', 'Low'), mid: t('prediction.cloud.mid', 'Mid'), high: t('prediction.cloud.high', 'High'),
-      sunrise: t('prediction.tabs.sunrise', 'Sunrise'), sunset: t('prediction.tabs.sunset', 'Sunset'),
-      title: t('surrounding.radarTitle', t('surrounding.title', 'Surrounding Cloud Radar')),
-      subtitle: t('surrounding.radarSubtitle', '20km · Continuous cloud field')
+      N: t('surrounding.directions.N', pick('北', 'N')), NE: t('surrounding.directions.NE', pick('东北', 'NE')),
+      E: t('surrounding.directions.E', pick('东', 'E')), SE: t('surrounding.directions.SE', pick('东南', 'SE')),
+      S: t('surrounding.directions.S', pick('南', 'S')), SW: t('surrounding.directions.SW', pick('西南', 'SW')),
+      W: t('surrounding.directions.W', pick('西', 'W')), NW: t('surrounding.directions.NW', pick('西北', 'NW')),
+      low: t('prediction.cloudLayers.shortLow', pick('低云', 'Low')), mid: t('prediction.cloudLayers.shortMid', pick('中云', 'Mid')), high: t('prediction.cloudLayers.shortHigh', pick('高云', 'High')),
+      sunrise: t('prediction.tabs.sunrise', pick('日出', 'Sunrise')), sunset: t('prediction.tabs.sunset', pick('日落', 'Sunset')),
+      title: t('surrounding.radarTitle', pick('周边云况雷达', 'Surrounding Cloud Radar')),
+      subtitle: t('surrounding.radarSubtitle', pick('20km · 连续云场', '20km · Continuous cloud field'))
     };
     const theme = {
       // 视觉 token（无 UI token 则回退默认）
