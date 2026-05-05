@@ -1217,7 +1217,10 @@ class WeatherController {
     }
 
     container.style.display = 'block';
-    container.innerHTML = '<p style="text-align:center;color:var(--color-text-light);font-size:13px;padding:12px 0;">加载周边数据中…</p>';
+    {
+      const loadingText = this.i18n?.t?.('surrounding.loading') || 'Loading surrounding weather data...';
+      container.innerHTML = `<p style="text-align:center;color:var(--color-text-light);font-size:13px;padding:12px 0;">${loadingText}</p>`;
+    }
 
     try {
       let dirs;

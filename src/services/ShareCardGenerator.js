@@ -417,17 +417,17 @@ class ShareCardGenerator {
 
     let text;
     if (!hasCarrier && score < 40) {
-      text = this.t('shareCard.verdict.noCarrier', '😶 缺少色彩载体，火烧云概率极低');
+      text = this.t('shareCard.verdict.noCarrier', '缺少色彩载体，火烧云概率极低');
     } else if (score >= 80) {
       text = layerCount >= 2
-        ? this.t('shareCard.verdict.excellentMultiLayer', '✨ 极佳条件，强烈推荐出行观赏！')
-        : this.t('shareCard.verdict.excellent', '✨ 条件优秀，色彩可期');
+        ? this.t('shareCard.verdict.excellentMultiLayer', '极佳条件，强烈推荐出行观赏！')
+        : this.t('shareCard.verdict.excellent', '条件优秀，色彩可期');
     } else if (score >= 60) {
-      text = this.t('shareCard.verdict.good', '✨ 条件不错，火烧云概率较高');
+      text = this.t('shareCard.verdict.good', '条件不错，火烧云概率较高');
     } else if (score >= 40) {
-      text = this.t('shareCard.verdict.fair', '💡 条件中等，需看实际云层演变');
+      text = this.t('shareCard.verdict.fair', '条件中等，需看实际云层演变');
     } else {
-      text = this.t('shareCard.verdict.poor', '😶 火烧云概率较低');
+      text = this.t('shareCard.verdict.poor', '火烧云概率较低');
     }
 
     const cardW = 620;
