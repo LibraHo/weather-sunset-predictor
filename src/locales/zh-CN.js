@@ -224,6 +224,7 @@ export default {
       low: '关键条件不足，火烧云概率偏低'
     },
         scoreBreakdown: {
+      title: '分数明细',
       viewDetails: '查看评分明细',
       finalDisplayed: '最终展示分',
       baseFormula: '基础分 = 画布 ×0.8 + 光路 ×0.2',

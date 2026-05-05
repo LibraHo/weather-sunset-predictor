@@ -202,6 +202,7 @@ const translations = {
       "low": "關鍵條件不足，火燒雲機率偏低"
     },
         "scoreBreakdown": {
+      "title": "評分明細",
       "viewDetails": "查看評分明細",
       "finalDisplayed": "最終顯示分",
       "baseFormula": "基礎分 = 畫布 ×0.8 + 光路 ×0.2",

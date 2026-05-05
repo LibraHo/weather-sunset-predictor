@@ -208,6 +208,7 @@ apiAccess: 'API 연동'
       "low": "핵심 조건이 부족해 노을구름 가능성이 낮습니다."
     },
         "scoreBreakdown": {
+      "title": "점수 상세",
       "viewDetails": "점수 상세 보기",
       "finalDisplayed": "최종 표시 점수",
       "baseFormula": "기초 점수 = 캔버스 ×0.8 + 광로 ×0.2",
