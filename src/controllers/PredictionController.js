@@ -1376,6 +1376,11 @@ class PredictionController {
     else if (weather.humidity > 70) add('warning', this._uiText(`High humidity (${weather.humidity.toFixed(0)}%)`, `湿度偏高（${weather.humidity.toFixed(0)}%）`), this._uiText('May reduce transparency', '可能略影响通透感'));
     else add('neutral', this._uiText(`Low humidity (${weather.humidity.toFixed(0)}%)`, `湿度偏低（${weather.humidity.toFixed(0)}%）`), this._uiText('Dry air may lighten colors', '空气较干，色彩可能偏淡'));
 
+    const thickHighCloudPenalty = prediction?.thickHighCloudPenalty || prediction?.lightPathAnalysis?.thickHighCloudPenalty;
+    if (thickHighCloudPenalty?.applied) {
+      add('warning', this.i18n.t('prediction.thickHighCloud.analysisTitle'), this.i18n.t('prediction.thickHighCloud.analysisDesc'));
+    }
+
     if (weather.aod != null) {
       if (weather.aod >= 0.08 && weather.aod <= 0.35) add('positive', this._uiText(`Moderate aerosol (AOD ${weather.aod.toFixed(2)})`, `气溶胶适中（AOD ${weather.aod.toFixed(2)}）`), this._uiText('Boosts orange-red scattering', '有利于增强红橙色散射'));
       else if (weather.aod > 0.35) add('warning', this._uiText(`High aerosol (AOD ${weather.aod.toFixed(2)})`, `气溶胶偏高（AOD ${weather.aod.toFixed(2)}）`), this._uiText('May look hazy or dull', '可能灰霾发暗'));
@@ -1480,6 +1485,7 @@ class PredictionController {
     const renderingFactor = prediction?.renderingAnalysis?.factor ?? prediction?.breakdown?.renderingFactor;
     const aerosol = prediction?.breakdown?.aerosolScattering;
     const aerosolFactor = prediction?.renderingAnalysis?.aerosolFactor ?? aerosol?.factor;
+    const thickHighCloudPenalty = prediction?.thickHighCloudPenalty || prediction?.lightPathAnalysis?.thickHighCloudPenalty;
 
     const row = (label, value, hint, className = '') => `
       <div class="score-breakdown-row ${className}">
@@ -1496,6 +1502,7 @@ class PredictionController {
         ${row(this.i18n.t('prediction.composite.title'), fmt(baseScore, 1), this._uiText('Base score after combining clouds and light path', '云层与光路融合后的基础分'))}
         ${row(this.i18n.t('prediction.canvas.title'), fmt(canvasScore, 1), this._uiText('High/mid clouds carry color; low clouds can block it', '高云/中云提供色彩载体，低云会遮挡'))}
         ${row(this.i18n.t('prediction.lightPath.title'), fmt(lightPathScore, 1), this._uiText('Whether sunlight can reach the clouds', '太阳光是否能照到云层'))}
+        ${thickHighCloudPenalty?.applied ? row(this.i18n.t('prediction.thickHighCloud.title'), `≤${fmt(thickHighCloudPenalty.cap, 0)}`, this.i18n.t('prediction.thickHighCloud.scoreHint'), 'score-breakdown-row-warning') : ''}
         <div class="score-breakdown-formula">${this._uiText('Final score = base score × correction factors', '最终分 = 基础分 × 修正系数')}</div>
         ${row(this.i18n.t('prediction.rendering.title'), `×${fmt(renderingFactor, 2)}`, this._uiText('Humidity and visibility affect color rendering', '湿度、能见度影响颜色表现'))}
         ${aerosolFactor != null ? row(this.i18n.t('prediction.rendering.aerosol'), `×${fmt(aerosolFactor, 2)}`, this._uiText('Moderate aerosol boosts orange-red scattering; too much turns gray', '适中增强红橙散射，过高会发灰')) : ''}

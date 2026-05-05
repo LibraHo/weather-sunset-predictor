@@ -610,6 +610,46 @@ describe('EnhancedPredictionService', () => {
 
       expect(result.type).toBe('sunrise');
     });
+
+    test('should cap thick high-cloud curtain scenes around 40 points', () => {
+      const weatherData = {
+        cloudCover: 64,
+        lowClouds: 0,
+        midClouds: 0,
+        highClouds: 83,
+        humidity: 30,
+        visibility: 20,
+        precipitation: 0,
+        shortwaveRadiation: 59,
+        directRadiation: 11.9,
+        diffuseRadiation: 47.1,
+        waterVapourColumn: 20.8,
+        aerosolOpticalDepth: 0.35,
+        pm2_5: 22.4,
+        pm10: 25.3,
+        dust: 6,
+        aqi: 109
+      };
+      const prevHourData = {
+        shortwaveRadiation: 177,
+        directRadiation: 60.9,
+        diffuseRadiation: 116.1
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData, new Date('2026-05-05T11:00:00.000Z'), 39.9042, 116.4074, 'sunset', { prevHourData }
+      );
+
+      expect(result.thickHighCloudPenalty).toMatchObject({
+        applied: true,
+        cap: 42,
+        reason: 'thick_high_cloud_diffuse_cap_42'
+      });
+      expect(result.lightPathAnalysis.scoreBeforeThickHighCloudPenalty).toBeGreaterThan(80);
+      expect(result.lightPathAnalysis.score).toBeLessThanOrEqual(55);
+      expect(result.score).toBeLessThanOrEqual(42);
+      expect(result.description).toBe('weak_local_colors');
+    });
   });
 
   // ========== 批量预测测试 ==========

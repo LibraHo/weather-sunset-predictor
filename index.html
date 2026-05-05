@@ -395,6 +395,21 @@
             </ul>
             <p class="methodology-formula" data-i18n="home.methodology.sections.precipPenalty.formula">最终得分 = 基础分 × 低云系数 × 降水系数</p>
           </article>
+
+          <!-- 第六部分：厚高云惩罚 -->
+          <article class="methodology-item">
+            <h3>
+              <span data-i18n="home.methodology.sections.thickHighCloudPenalty.title">6. 厚高云惩罚</span>
+              <small data-i18n="home.methodology.sections.thickHighCloudPenalty.subtitle">Thick High Cloud · Cap</small>
+            </h3>
+            <p data-i18n="home.methodology.sections.thickHighCloudPenalty.desc">高云多不一定代表高分；当高云形成厚云幕、直射光弱且漫射占主导时，只能出现日落方向局部透光。</p>
+            <ul class="methodology-detail-list">
+              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level1">高云≥80% 且总云量≥60%：进入厚高云风险判定</li>
+              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level2">若直射比低、漫射主导或水汽很高：压低光路分</li>
+              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level3">厚云幕场景最终分封顶约42–48分，避免误判为优秀</li>
+            </ul>
+            <p class="methodology-formula" data-i18n="home.methodology.sections.thickHighCloudPenalty.formula">厚高云修正 = min(最终分, 42–48)，用于“整片厚云，仅局部透光”的场景</p>
+          </article>
         </div>
 
         <div class="methodology-score-guide">

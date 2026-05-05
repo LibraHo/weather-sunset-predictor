@@ -96,6 +96,15 @@ const translations = {
           "level3": "Low Cloud 40–70% → ×0.8 to ×0.5 (linear)",
           "level4": "Low Cloud >70% → ×0.2 (severe blockage)"
         },
+        "thickHighCloudPenalty": {
+          "title": "6. Thick High-Cloud Penalty",
+          "subtitle": "Thick High Cloud · Cap",
+          "desc": "More high clouds do not always mean a higher score. When they form a thick curtain with weak direct light and dominant diffuse light, only local glow near the sun is likely.",
+          "level1": "High clouds ≥80% and total cloud cover ≥60% trigger the thick high-cloud risk check",
+          "level2": "Low direct-light ratio, diffuse dominance, or very high water vapour lowers the light-path score",
+          "level3": "Thick curtain scenes are capped around 42–48 to avoid false excellent ratings",
+          "formula": "Thick high-cloud correction = min(final score, 42–48), for broad thick cloud decks with only local light leaks"
+        },
         "precipPenalty": {
           "title": "6. Precipitation Penalty",
           "subtitle": "Precipitation Penalty · Multiplier",
@@ -254,6 +263,13 @@ const translations = {
       "moderateDesc": "Moderate cloud thickness",
       "thickDesc": "Thick clouds may block light, limited glow effect",
       "unknownDesc": "Cloud thickness data unavailable"
+    },
+
+    "thickHighCloud": {
+      "title": "Thick high-cloud penalty",
+      "scoreHint": "Thick high-cloud curtain with weak direct light; only local glow is likely, so the final score is capped",
+      "analysisTitle": "Thick high-cloud curtain",
+      "analysisDesc": "High clouds are abundant, but they are thick and direct light is weak, so glow is usually limited near the sunset direction"
     },
     "lightPath": {
       "title": "Light Path Score",

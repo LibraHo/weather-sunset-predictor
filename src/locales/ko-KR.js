@@ -96,6 +96,15 @@ apiAccess: 'API 연동'
           "level3": "하층운 40–70% → ×0.8 ~ ×0.5 (선형)",
           "level4": "하층운>70% → ×0.2 (심각한 차단)"
         },
+        "thickHighCloudPenalty": {
+          "title": "6. 두꺼운 상층운 감점",
+          "subtitle": "Thick High Cloud · 상한",
+          "desc": "상층운이 많다고 항상 고득점은 아닙니다. 두꺼운 구름막이 되고 직사광이 약하며 산란광이 우세하면 해 지는 방향의 일부 빛만 기대할 수 있습니다.",
+          "level1": "상층운≥80% 및 전체 운량≥60%이면 위험 판정",
+          "level2": "직사광 비율이 낮거나 산란광 우세, 수증기가 매우 많으면 광로 점수를 낮춥니다",
+          "level3": "두꺼운 구름막 장면은 최종 점수를 약 42–48로 제한합니다",
+          "formula": "두꺼운 상층운 보정 = min(최종 점수, 42–48), 넓은 두꺼운 구름과 국지적 빛샘에 적용"
+        },
         "precipPenalty": {
           "title": "6. 강수 패널티 계수",
           "subtitle": "Precipitation Penalty · Multiplier",
@@ -241,6 +250,13 @@ apiAccess: 'API 연동'
       "noLowCloudObstruction": "저층구름 장애 없음",
       "tooManyLowClouds": "저층구름 너무 많음 (거의 흐림)",
       "lowCloudAmount": "저층구름 {{value}}%"
+    },
+
+    "thickHighCloud": {
+      "title": "두꺼운 상층운 감점",
+      "scoreHint": "두꺼운 상층운과 약한 직사광으로 국지적 빛만 가능해 최종 점수를 제한",
+      "analysisTitle": "두꺼운 상층운 막",
+      "analysisDesc": "상층운은 많지만 구름이 두껍고 직사광이 약해 노을 방향의 일부 빛만 기대됩니다"
     },
     "lightPath": {
       "title": "빛 경로 점수",

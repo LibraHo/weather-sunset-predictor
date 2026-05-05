@@ -96,6 +96,15 @@ apiAccess: 'API接続'
           "level3": "下層雲40–70% → ×0.8 〜 ×0.5（線形）",
           "level4": "下層雲>70% → ×0.2（深刻な遮蔽）"
         },
+        "thickHighCloudPenalty": {
+          "title": "6. 厚い高層雲の減点",
+          "subtitle": "Thick High Cloud · 上限",
+          "desc": "高層雲が多くても必ず高得点ではありません。厚い雲幕になり直達光が弱く散乱光が支配的な場合、太陽付近の局所的な色づきに留まります。",
+          "level1": "高層雲≥80%かつ総雲量≥60%でリスク判定",
+          "level2": "直達光比が低い、散乱光優勢、水蒸気が多い場合は光路点を下げます",
+          "level3": "厚い雲幕では最終点を約42–48に制限し、過大評価を防ぎます",
+          "formula": "厚い高層雲補正 = min(最終点, 42–48)。広い厚雲で局所的にしか光が漏れない場面に適用"
+        },
         "precipPenalty": {
           "title": "6. 降水ペナルティ係数",
           "subtitle": "Precipitation Penalty · Multiplier",
@@ -241,6 +250,13 @@ apiAccess: 'API接続'
       "noLowCloudObstruction": "低雲なし",
       "tooManyLowClouds": "低雲が多すぎ",
       "lowCloudAmount": "低雲量"
+    },
+
+    "thickHighCloud": {
+      "title": "厚い高層雲の減点",
+      "scoreHint": "厚い高層雲で直達光が弱く、局所的な光のみのため最終点を制限",
+      "analysisTitle": "厚い高層雲の幕",
+      "analysisDesc": "高層雲は多いものの雲が厚く直達光が弱いため、色づきは日没方向付近に限られやすいです"
     },
     "lightPath": {
       "title": "光路スコア",

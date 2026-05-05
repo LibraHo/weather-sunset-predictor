@@ -96,6 +96,15 @@ const translations = {
           "level3": "低雲40–70% → ×0.8 到 ×0.5（線性）",
           "level4": "低雲>70% → ×0.2（嚴重遮擋）"
         },
+        thickHighCloudPenalty: {
+          title: '6. 厚高雲懲罰',
+          subtitle: 'Thick High Cloud · 封頂',
+          desc: '高雲多不一定代表高分；當高雲形成厚雲幕、直射光弱且漫射占主導時，通常只剩日落方向局部透光。',
+          level1: '高雲≥80% 且總雲量≥60%：進入厚高雲風險判定',
+          level2: '若直射比低、漫射主導或水氣很高：壓低光路分',
+          level3: '厚雲幕場景最終分封頂約42–48分，避免誤判為優秀',
+          formula: '厚高雲修正 = min(最終分, 42–48)，用於「整片厚雲，僅局部透光」的場景'
+        },
         "precipPenalty": {
           "title": "6. 降水懲罰係數",
           "subtitle": "Precipitation Penalty · Multiplier",
@@ -241,6 +250,13 @@ const translations = {
       "noLowCloudObstruction": "無低雲遮擋",
       "tooManyLowClouds": "低雲過多",
       "lowCloudAmount": "低雲量"
+    },
+
+    thickHighCloud: {
+      title: '厚高雲懲罰',
+      scoreHint: '厚高雲幕、直射光弱，僅局部透光，最終分封頂',
+      analysisTitle: '厚高雲幕',
+      analysisDesc: '高雲雖多，但雲層偏厚、直射光弱，通常只會在日落方向出現局部霞光'
     },
     "lightPath": {
       "title": "光路評分",
