@@ -80,6 +80,17 @@ describe('BackendGeocodingService', () => {
       expect(result.regionCode).toBe('110000');
     });
 
+    test('仅完整手动输入 test 时返回测试城市且不请求后端', async () => {
+      const result = await service.geocode('test');
+
+      expect(fetch).not.toHaveBeenCalled();
+      expect(result).toBeInstanceOf(Location);
+      expect(result.name).toBe('test');
+      expect(result.lat).toBeCloseTo(39.9042);
+      expect(result.lon).toBeCloseTo(116.4074);
+      expect(result.countryCode).toBe('CN');
+    });
+
     test('结果为空时应抛出错误', async () => {
       fetch.mockResolvedValueOnce({
         ok: true,
@@ -97,7 +108,7 @@ describe('BackendGeocodingService', () => {
         json: async () => ({ error: { message: '缺少搜索关键词 q' } })
       });
 
-      await expect(service.geocode('test')).rejects.toThrow('缺少搜索关键词 q');
+      await expect(service.geocode('Zurich')).rejects.toThrow('缺少搜索关键词 q');
     });
 
     test('非 ok 状态时应抛出服务不可用错误', async () => {
@@ -107,13 +118,13 @@ describe('BackendGeocodingService', () => {
         json: async () => ({})
       });
 
-      await expect(service.geocode('test')).rejects.toThrow('503');
+      await expect(service.geocode('Zurich')).rejects.toThrow('503');
     });
 
     test('fetch 网络错误时应抛出连接错误', async () => {
       fetch.mockRejectedValueOnce(new TypeError('Failed to fetch'));
 
-      await expect(service.geocode('test')).rejects.toThrow('无法连接到后端服务器');
+      await expect(service.geocode('Zurich')).rejects.toThrow('无法连接到后端服务器');
     });
 
     test('应向 URL 附加 provider 参数', async () => {
@@ -136,6 +147,26 @@ describe('BackendGeocodingService', () => {
       const calledUrl = fetch.mock.calls[0][0];
       expect(calledUrl).toContain('provider=gaode');
       expect(calledUrl).toContain('key=test-key');
+    });
+  });
+
+  // ========== searchCities() ==========
+
+  describe('searchCities()', () => {
+    test('仅完整手动输入 test 时返回测试城市且不请求后端', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ results: [] })
+      });
+
+      const partial = await service.searchCities('tes', 5);
+      const exact = await service.searchCities('test', 5);
+
+      expect(partial).toEqual([]);
+      expect(exact).toHaveLength(1);
+      expect(exact[0]).toMatchObject({ displayName: 'test', lat: 39.9042, lon: 116.4074, provider: 'manual-test' });
+      expect(fetch).toHaveBeenCalledTimes(1);
     });
   });
 
