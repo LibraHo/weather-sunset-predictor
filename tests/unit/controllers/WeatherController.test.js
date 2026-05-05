@@ -30,6 +30,25 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(data[0].isValid()).toBe(true);
   });
 
+  test('renderRadarCompass: test 城市应使用随机周边云况数据且不调用周边 API', async () => {
+    document.body.innerHTML = '<div id="radar-compass-sunset"></div>';
+    controller.i18n = { t: (key) => key };
+    controller.predictionAPIService = {
+      getSurrounding: jest.fn(() => Promise.reject(new Error('API should not be called')))
+    };
+    controller._radarCompass = { render: jest.fn() };
+
+    await controller.renderRadarCompass({ name: 'test', lat: 0, lon: 0, isValid: () => true }, 'sunset');
+
+    expect(controller.predictionAPIService.getSurrounding).not.toHaveBeenCalled();
+    expect(controller._radarCompass.render).toHaveBeenCalledTimes(1);
+    const payload = controller._radarCompass.render.mock.calls[0][1];
+    expect(payload.predictionType).toBe('sunset');
+    expect(payload.directions).toHaveLength(8);
+    expect(payload.directions[0].cloudLayers).toEqual(expect.objectContaining({ low: expect.any(Number), mid: expect.any(Number), high: expect.any(Number) }));
+    expect(payload.sunAzimuths).toHaveProperty('sunset');
+  });
+
   test.skip('应该将3小时间隔数据插值为连续24小时，避免温度折线异常跳变', () => {
     const baseTs = new Date('2026-01-01T00:00:00Z').getTime();
 

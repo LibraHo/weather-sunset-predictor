@@ -64,6 +64,33 @@ function generateManualTestWeatherData(hours = 168) {
   return data;
 }
 
+function generateManualTestRadarData(type = 'sunset') {
+  const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'].map((dir, index) => {
+    const phase = index / 8 * Math.PI * 2;
+    const high = Math.round(35 + Math.random() * 45 + Math.max(0, Math.sin(phase)) * 18);
+    const mid = Math.round(22 + Math.random() * 42 + Math.max(0, Math.cos(phase)) * 14);
+    const low = Math.round(5 + Math.random() * 34);
+    const score = Math.max(0, Math.min(100, Math.round(high * 0.55 + mid * 0.35 - low * 0.28 + 18 + Math.random() * 10)));
+    return {
+      dir,
+      score,
+      dist: 50,
+      cloudLayers: {
+        low: Math.max(0, Math.min(100, low)),
+        mid: Math.max(0, Math.min(100, mid)),
+        high: Math.max(0, Math.min(100, high))
+      }
+    };
+  });
+
+  return {
+    dirs,
+    sunAzimuths: type === 'sunrise'
+      ? { sunrise: 72 + Math.random() * 26 }
+      : { sunset: 250 + Math.random() * 38 }
+  };
+}
+
 /**
  * 中国火烧云地图固定使用栅格等值渲染
  */
@@ -1276,6 +1303,12 @@ class WeatherController {
       const radius = 50; // 后端仅接受 50/100/150
       const now = new Date();
       const type = predictionType || (now.getHours() < 12 ? 'sunrise' : 'sunset');
+
+      if (isManualTestLocation(location)) {
+        const manualRadar = generateManualTestRadarData(type);
+        this._radarCompass.render(container, { directions: manualRadar.dirs, sunAzimuths: manualRadar.sunAzimuths, predictionType: type });
+        return;
+      }
 
       // 优先后端聚合 API（POST /api/prediction/surrounding）
       if (this.predictionAPIService) {
