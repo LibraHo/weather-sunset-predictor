@@ -177,7 +177,26 @@ apiAccess: 'Acceso API'
     "fair": "Regular",
     "poor": "Pobre",
 
-    "formationAnalysis": {
+    "analysisConclusion": {
+      "excellent": "Condiciones excelentes. Muy recomendable salir a observar.",
+      "excellentSingleLayer": "Alto potencial de color, pero una sola capa de nubes puede reducir la profundidad.",
+      "good": "Buenas condiciones, con una posibilidad sólida de nubes encendidas espectaculares.",
+      "goodSingleLayer": "Buena probabilidad de nubes encendidas, aunque las capas son limitadas.",
+      "fair": "Condiciones medias; conviene observar cómo evolucionan las nubes.",
+      "low": "Faltan condiciones clave; la probabilidad de nubes encendidas es baja."
+    },
+        "scoreBreakdown": {
+      "viewDetails": "Ver detalle de la puntuación",
+      "finalDisplayed": "Puntuación final mostrada",
+      "baseFormula": "Puntuación base = lienzo ×0,8 + trayecto de luz ×0,2",
+      "baseHint": "Puntuación base tras combinar nubes y trayecto de luz",
+      "canvasHint": "Las nubes altas/medias captan color; las bajas pueden bloquearlo",
+      "lightPathHint": "Si la luz solar puede llegar a las nubes",
+      "finalFormula": "Puntuación final = puntuación base × factores de corrección",
+      "renderingHint": "Humedad y visibilidad afectan el color",
+      "aerosolHint": "Un aerosol moderado refuerza naranja-rojo; demasiado lo vuelve gris"
+    },
+"formationAnalysis": {
       "title": "Análisis de condiciones para nubes encendidas",
       "groups": { "positive": "Condiciones favorables", "neutral": "Factores neutros", "warning": "Puntos a vigilar" },
       "high": { "abundant": "Nubes altas abundantes ({{value}}%)", "abundantDesc": "Buena base para captar color", "sufficient": "Nubes altas suficientes ({{value}}%)", "sufficientDesc": "Buen soporte para el color del atardecer", "moderate": "Nubes altas moderadas ({{value}}%)", "moderateDesc": "Posible, pero con colores más suaves", "few": "Pocas nubes altas ({{value}}%)", "fewDesc": "Falta el principal soporte de color" },
@@ -270,7 +289,7 @@ apiAccess: 'Acceso API'
         moderate: 'Grosor de nubes moderado',
         thick: 'Nubes gruesas, transmisión de luz limitada',
         unknown: 'Datos de grosor de nubes no disponibles'
-      },
+      }
     },
     "composite": {
       "title": "Puntuación Compuesta",
@@ -326,7 +345,7 @@ apiAccess: 'Acceso API'
       "someLowCloud": "⚠️ Algunas nubes bajas ({{value}}%), pueden bloquear parcialmente la vista",
       "denseLowCloud": "❌ Nubes bajas densas ({{value}}%), afectando seriamente la visualización",
       "excellentConditions": "🌟 ¡Se cumplen todas las condiciones para magníficas nubes rojas!",
-      "highProbability": "✨ Alta probabilidad de paisajes espectaculares de nubes rojas",
+      "highProbability": "Alta probabilidad de paisajes espectaculares de nubes rojas",
       "moderateProbability": "💫 Posibles efectos leves de nubes rojas",
       "lowProbability": "⛅ Baja probabilidad de nubes rojas significativas",
       "noCloudNoFireCloud": "❌ Cobertura de nubes severamente insuficiente, no puede formar nubes rojas"
@@ -355,6 +374,8 @@ apiAccess: 'Acceso API'
   },
   "surrounding": {
     "title": "Análisis de Nubes de Fuego Circundantes",
+    "radarTitle": "Radar de nubes cercanas",
+    "radarSubtitle": "20 km · Campo nuboso continuo",
     "radius": "Radio de Detección",
     "radiusUnit": "km",
     "directions": {
@@ -556,16 +577,16 @@ apiAccess: 'Acceso API'
     "gauge": { "hintExcellent": "Worth waiting for", "hintGood": "Worth checking nearby", "hintFair": "No need to go out just for it" },
     "timeLabels": { "sunrise": "Sunrise", "sunset": "Sunset" },
     "bestWindow": "Best viewing  {{start}} – {{end}}",
-    "cloud": { "high": "High Cloud", "mid": "Mid Cloud", "low": "Low Cloud" },
+    "cloud": { "high": "Nubes altas", "mid": "Nubes medias", "low": "Nubes bajas" },
     "verdict": {
-      "noCarrier": "😶 Not enough color carrier clouds; fire-cloud chance is very low",
-      "excellent": "✨ Excellent conditions; colorful sky is promising",
-      "excellentMultiLayer": "✨ Excellent conditions; strongly recommended for viewing!",
-      "good": "✨ Good conditions; fire-cloud chance is high",
-      "fair": "💡 Moderate conditions; watch real-time cloud changes",
-      "poor": "😶 Fire-cloud chance is low"
+      "noCarrier": "No hay suficientes nubes para captar color; la probabilidad es muy baja",
+      "excellent": "Condiciones excelentes; el cielo colorido es prometedor",
+      "excellentMultiLayer": "Condiciones excelentes; muy recomendable observar",
+      "good": "Buenas condiciones; la probabilidad de nubes encendidas es alta",
+      "fair": "Condiciones medias; observa la evolución real de las nubes",
+      "poor": "La probabilidad de nubes encendidas es baja"
     },
-    "watermark": "Xiake · Capture every brilliant sky"
+    "watermark": "Xiake · Captura cada cielo brillante"
   },
   "charts": {
     "temperature": "Temperatura",
@@ -595,7 +616,7 @@ apiAccess: 'Acceso API'
     "timeNow": "Ahora",
     "timeSunset": "Atardecer",
     "timeSunrise": "Amanecer",
-    "timeHint": "💡 Consejo: También puedes usar la línea de tiempo de pronóstico en la parte inferior del mapa",
+    "timeHint": "Consejo: También puedes usar la línea de tiempo de pronóstico en la parte inferior del mapa",
     "loading": "Cargando mapa...",
     "error": "Error al cargar el mapa",
     "mockNotSupported": "La funcionalidad del mapa solo está disponible en modo API real"
