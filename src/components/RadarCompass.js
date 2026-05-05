@@ -340,14 +340,14 @@ class RadarCompass {
     ].map(([r, lbl], i) => {
       const innerR = i === 0 ? R_LOW_INNER : [R_LOW, R_MID][i - 1];
       const [tx, ty] = this._pt(cx, cy, r - (r - innerR) / 2, 340);
-      const bw = 30;
-      const bh = 16;
+      const bw = 44;
+      const bh = 18;
       return `
         <circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}"
           fill="transparent" stroke="${ringStroke}" stroke-width="1"/>
         <rect x="${(tx - bw / 2).toFixed(1)}" y="${(ty - bh / 2 - 1).toFixed(1)}" width="${bw}" height="${bh}" rx="8"
           fill="${T.labelBg}"/>
-        <text x="${tx.toFixed(1)}" y="${(ty + 3.5).toFixed(1)}" font-size="11" font-weight="800"
+        <text x="${tx.toFixed(1)}" y="${(ty + 4).toFixed(1)}" font-size="13" font-weight="800"
           fill="${T.labelFill}" text-anchor="middle">${lbl}</text>`;
     }).join('');
 
@@ -367,8 +367,14 @@ class RadarCompass {
     const labels = DIR_ORDER.map(d => {
       const lbl = text[d] || { N: '北', NE: '东北', E: '东', SE: '东南', S: '南', SW: '西南', W: '西', NW: '西北' }[d];
       const [x, y] = this._pt(cx, cy, labelR, this._dirAz(d));
-      return `<text x="${x.toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="middle"
-          font-size="12" font-weight="800" fill="${T.labelFill || '#334155'}">${lbl}</text>`;
+      const bw = 36;
+      const bh = 20;
+      return `<g>
+        <rect x="${(x - bw / 2).toFixed(1)}" y="${(y - bh / 2 - 2).toFixed(1)}" width="${bw}" height="${bh}" rx="6"
+          fill="${T.labelBg}" opacity="0.92"/>
+        <text x="${x.toFixed(1)}" y="${(y + 5).toFixed(1)}" text-anchor="middle"
+          font-size="14" font-weight="800" fill="${T.labelFill || '#334155'}">${lbl}</text>
+      </g>`;
     }).join('');
 
     const getSunRadius = az => {
