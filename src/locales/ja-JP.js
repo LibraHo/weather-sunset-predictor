@@ -192,6 +192,18 @@ apiAccess: 'API接続'
     "good": "良好",
     "fair": "普通",
     "poor": "やや悪い",
+
+    "formationAnalysis": {
+      "title": "Fire cloud formation analysis",
+      "groups": { "positive": "Favorable", "neutral": "Neutral", "warning": "Watch-outs" },
+      "high": { "abundant": "Abundant high clouds ({{value}}%)", "abundantDesc": "Strong color base", "sufficient": "Sufficient high clouds ({{value}}%)", "sufficientDesc": "Good color carrier", "moderate": "Moderate high clouds ({{value}}%)", "moderateDesc": "Possible, but colors may be lighter", "few": "Too few high clouds ({{value}}%)", "fewDesc": "Main color carrier is lacking" },
+      "mid": { "balanced": "Balanced mid clouds ({{value}}%)", "balancedDesc": "Adds color spread and depth", "few": "Few mid clouds ({{value}}%)", "fewHighCloudDesc": "High clouds can still carry color", "fewDesc": "Layering may be limited", "thick": "Thick mid clouds ({{value}}%)", "thickDesc": "May reduce clarity" },
+      "low": { "few": "Few low clouds ({{value}}%)", "fewDesc": "View should stay open", "some": "Some low clouds ({{value}}%)", "someDesc": "May block horizon color", "thick": "Thick low clouds ({{value}}%)", "thickDesc": "High blocking risk" },
+      "visibility": { "good": "Good visibility ({{value}}km)", "goodDesc": "Clear air, good distance", "moderate": "Moderate visibility ({{value}}km)", "moderateDesc": "Saturation may drop", "low": "Low visibility ({{value}}km)", "lowDesc": "Haze or moisture may affect the view" },
+      "humidity": { "moderate": "Moderate humidity ({{value}}%)", "moderateDesc": "Helps light scattering", "high": "High humidity ({{value}}%)", "highDesc": "May reduce transparency", "low": "Low humidity ({{value}}%)", "lowDesc": "Dry air may lighten colors" },
+      "aerosol": { "moderate": "Moderate aerosol (AOD {{value}})", "moderateDesc": "Boosts orange-red scattering", "high": "High aerosol (AOD {{value}})", "highDesc": "May look hazy or dull", "low": "Very clear air (AOD {{value}})", "lowDesc": "Colors may be lighter" },
+      "layer": { "single": "Single cloud layer", "singleDesc": "High clouds can still color well" }
+    },
     "status": {
       "noFireCloud": "焼き雲なし",
       "lightGlow": "薄い夕焼け",

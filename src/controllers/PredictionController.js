@@ -1224,6 +1224,39 @@ class PredictionController {
     return this._isEnglishUI() ? en : zh;
   }
 
+  _analysisText(key, params = {}) {
+    const fullKey = `prediction.formationAnalysis.${key}`;
+    const translated = this.i18n.t(fullKey, params);
+    if (translated !== fullKey) return translated;
+
+    const fallback = {
+      'title': '火烧云形成条件分析',
+      'groups.positive': '有利条件', 'groups.neutral': '一般因素', 'groups.warning': '注意因素',
+      'high.abundant': '高层云充沛（{{value}}%）', 'high.abundantDesc': '色彩载体丰富，火烧云基础扎实',
+      'high.sufficient': '高层云充足（{{value}}%）', 'high.sufficientDesc': '具备较好的霞光染色载体',
+      'high.moderate': '高层云适中（{{value}}%）', 'high.moderateDesc': '可形成火烧云，但色彩可能偏淡',
+      'high.few': '高层云偏少（{{value}}%）', 'high.fewDesc': '缺少主要色彩载体',
+      'mid.balanced': '中层云适中（{{value}}%）', 'mid.balancedDesc': '利于色彩扩散和层次感',
+      'mid.few': '中层云较少（{{value}}%）', 'mid.fewHighCloudDesc': '但高层云充足，可独立形成火烧云', 'mid.fewDesc': '层次感可能不足',
+      'mid.thick': '中层云偏厚（{{value}}%）', 'mid.thickDesc': '可能让画面偏灰，削弱霞光通透感',
+      'low.few': '低云稀少（{{value}}%）', 'low.fewDesc': '不会遮挡火烧云',
+      'low.some': '低云较多（{{value}}%）', 'low.someDesc': '可能部分遮挡低空色彩',
+      'low.thick': '低云偏厚（{{value}}%）', 'low.thickDesc': '遮挡风险较大',
+      'visibility.good': '能见度良好（{{value}}km）', 'visibility.goodDesc': '空气通透，观赏视野好',
+      'visibility.moderate': '能见度一般（{{value}}km）', 'visibility.moderateDesc': '色彩饱和度可能略受影响',
+      'visibility.low': '能见度偏低（{{value}}km）', 'visibility.lowDesc': '雾霾或水汽可能影响观赏',
+      'humidity.moderate': '湿度适中（{{value}}%）', 'humidity.moderateDesc': '利于光线散射',
+      'humidity.high': '湿度偏高（{{value}}%）', 'humidity.highDesc': '可能略影响通透感',
+      'humidity.low': '湿度偏低（{{value}}%）', 'humidity.lowDesc': '空气较干，色彩可能偏淡',
+      'aerosol.moderate': '气溶胶适中（AOD {{value}}）', 'aerosol.moderateDesc': '有利于增强红橙色散射',
+      'aerosol.high': '气溶胶偏高（AOD {{value}}）', 'aerosol.highDesc': '可能灰霾发暗',
+      'aerosol.low': '空气过于通透（AOD {{value}}）', 'aerosol.lowDesc': '颜色可能偏淡',
+      'layer.single': '云层单一', 'layer.singleDesc': '高云质量好，仍可形成鲜明火烧云'
+    }[key] || fullKey;
+
+    return fallback.replace(/\{\{(\w+)\}\}/g, (match, paramKey) => (params[paramKey] !== undefined ? params[paramKey] : match));
+  }
+
   getScoreDescription(score) {
     if (score >= 80) return this._uiText('Excellent viewing conditions', '观赏条件很好');
     if (score >= 60) return this._uiText('Good viewing conditions', '观赏条件不错');
@@ -1346,44 +1379,44 @@ class PredictionController {
   buildAnalysisGroups(prediction) {
     const weather = this.extractAnalysisWeather(prediction);
     const groups = [
-      { title: this._uiText('Favorable', '有利条件'), type: 'positive', icon: 'ok', items: [] },
-      { title: this._uiText('Neutral', '一般因素'), type: 'neutral', icon: 'info', items: [] },
-      { title: this._uiText('Watch-outs', '注意因素'), type: 'warning', icon: 'warn', items: [] }
+      { title: this._analysisText('groups.positive'), type: 'positive', icon: 'ok', items: [] },
+      { title: this._analysisText('groups.neutral'), type: 'neutral', icon: 'info', items: [] },
+      { title: this._analysisText('groups.warning'), type: 'warning', icon: 'warn', items: [] }
     ];
     const add = (groupType, title, desc) => {
       const group = groups.find(g => g.type === groupType);
       group.items.push({ title, desc });
     };
 
-    if (weather.high >= 60) add('positive', this._uiText(`Abundant high clouds (${weather.high.toFixed(0)}%)`, `高层云充沛（${weather.high.toFixed(0)}%）`), this._uiText('Strong color base', '色彩载体丰富，火烧云基础扎实'));
-    else if (weather.high >= 35) add('positive', this._uiText(`Sufficient high clouds (${weather.high.toFixed(0)}%)`, `高层云充足（${weather.high.toFixed(0)}%）`), this._uiText('Good color carrier', '具备较好的霞光染色载体'));
-    else if (weather.high >= 15) add('neutral', this._uiText(`Moderate high clouds (${weather.high.toFixed(0)}%)`, `高层云适中（${weather.high.toFixed(0)}%）`), this._uiText('Possible, but lighter colors', '可形成火烧云，但色彩可能偏淡'));
-    else add('warning', this._uiText(`Too few high clouds (${weather.high.toFixed(0)}%)`, `高层云偏少（${weather.high.toFixed(0)}%）`), this._uiText('Main color carrier lacking', '缺少主要色彩载体'));
+    if (weather.high >= 60) add('positive', this._analysisText('high.abundant', { value: weather.high.toFixed(0) }), this._analysisText('high.abundantDesc'));
+    else if (weather.high >= 35) add('positive', this._analysisText('high.sufficient', { value: weather.high.toFixed(0) }), this._analysisText('high.sufficientDesc'));
+    else if (weather.high >= 15) add('neutral', this._analysisText('high.moderate', { value: weather.high.toFixed(0) }), this._analysisText('high.moderateDesc'));
+    else add('warning', this._analysisText('high.few', { value: weather.high.toFixed(0) }), this._analysisText('high.fewDesc'));
 
-    if (weather.mid >= 20 && weather.mid <= 60) add('positive', this._uiText(`Balanced mid clouds (${weather.mid.toFixed(0)}%)`, `中层云适中（${weather.mid.toFixed(0)}%）`), this._uiText('Adds color spread and depth', '利于色彩扩散和层次感'));
-    else if (weather.mid < 20) add('neutral', this._uiText(`Few mid clouds (${weather.mid.toFixed(0)}%)`, `中层云较少（${weather.mid.toFixed(0)}%）`), weather.high >= 35 ? this._uiText('High clouds can carry color', '但高层云充足，可独立形成火烧云') : this._uiText('Limited layering', '层次感可能不足'));
-    else add('warning', this._uiText(`Thick mid clouds (${weather.mid.toFixed(0)}%)`, `中层云偏厚（${weather.mid.toFixed(0)}%）`), this._uiText('May reduce clarity', '可能让画面偏灰，削弱霞光通透感'));
+    if (weather.mid >= 20 && weather.mid <= 60) add('positive', this._analysisText('mid.balanced', { value: weather.mid.toFixed(0) }), this._analysisText('mid.balancedDesc'));
+    else if (weather.mid < 20) add('neutral', this._analysisText('mid.few', { value: weather.mid.toFixed(0) }), weather.high >= 35 ? this._analysisText('mid.fewHighCloudDesc') : this._analysisText('mid.fewDesc'));
+    else add('warning', this._analysisText('mid.thick', { value: weather.mid.toFixed(0) }), this._analysisText('mid.thickDesc'));
 
-    if (weather.low < 15) add('positive', this._uiText(`Few low clouds (${weather.low.toFixed(0)}%)`, `低云稀少（${weather.low.toFixed(0)}%）`), this._uiText('View should stay open', '不会遮挡火烧云'));
-    else if (weather.low < 35) add('neutral', this._uiText(`Some low clouds (${weather.low.toFixed(0)}%)`, `低云较多（${weather.low.toFixed(0)}%）`), this._uiText('May block horizon color', '可能部分遮挡低空色彩'));
-    else add('warning', this._uiText(`Thick low clouds (${weather.low.toFixed(0)}%)`, `低云偏厚（${weather.low.toFixed(0)}%）`), this._uiText('High blocking risk', '遮挡风险较大'));
+    if (weather.low < 15) add('positive', this._analysisText('low.few', { value: weather.low.toFixed(0) }), this._analysisText('low.fewDesc'));
+    else if (weather.low < 35) add('neutral', this._analysisText('low.some', { value: weather.low.toFixed(0) }), this._analysisText('low.someDesc'));
+    else add('warning', this._analysisText('low.thick', { value: weather.low.toFixed(0) }), this._analysisText('low.thickDesc'));
 
-    if (weather.visibility >= 15) add('positive', this._uiText(`Good visibility (${weather.visibility.toFixed(0)}km)`, `能见度良好（${weather.visibility.toFixed(0)}km）`), this._uiText('Clear air, good distance', '空气通透，观赏视野好'));
-    else if (weather.visibility >= 8) add('neutral', this._uiText(`Moderate visibility (${weather.visibility.toFixed(0)}km)`, `能见度一般（${weather.visibility.toFixed(0)}km）`), this._uiText('Saturation may drop', '色彩饱和度可能略受影响'));
-    else add('warning', this._uiText(`Low visibility (${weather.visibility.toFixed(0)}km)`, `能见度偏低（${weather.visibility.toFixed(0)}km）`), this._uiText('Haze/moisture may affect view', '雾霾或水汽可能影响观赏'));
+    if (weather.visibility >= 15) add('positive', this._analysisText('visibility.good', { value: weather.visibility.toFixed(0) }), this._analysisText('visibility.goodDesc'));
+    else if (weather.visibility >= 8) add('neutral', this._analysisText('visibility.moderate', { value: weather.visibility.toFixed(0) }), this._analysisText('visibility.moderateDesc'));
+    else add('warning', this._analysisText('visibility.low', { value: weather.visibility.toFixed(0) }), this._analysisText('visibility.lowDesc'));
 
-    if (weather.humidity >= 40 && weather.humidity <= 70) add('positive', this._uiText(`Moderate humidity (${weather.humidity.toFixed(0)}%)`, `湿度适中（${weather.humidity.toFixed(0)}%）`), this._uiText('Helps light scattering', '利于光线散射'));
-    else if (weather.humidity > 70) add('warning', this._uiText(`High humidity (${weather.humidity.toFixed(0)}%)`, `湿度偏高（${weather.humidity.toFixed(0)}%）`), this._uiText('May reduce transparency', '可能略影响通透感'));
-    else add('neutral', this._uiText(`Low humidity (${weather.humidity.toFixed(0)}%)`, `湿度偏低（${weather.humidity.toFixed(0)}%）`), this._uiText('Dry air may lighten colors', '空气较干，色彩可能偏淡'));
+    if (weather.humidity >= 40 && weather.humidity <= 70) add('positive', this._analysisText('humidity.moderate', { value: weather.humidity.toFixed(0) }), this._analysisText('humidity.moderateDesc'));
+    else if (weather.humidity > 70) add('warning', this._analysisText('humidity.high', { value: weather.humidity.toFixed(0) }), this._analysisText('humidity.highDesc'));
+    else add('neutral', this._analysisText('humidity.low', { value: weather.humidity.toFixed(0) }), this._analysisText('humidity.lowDesc'));
 
     if (weather.aod != null) {
-      if (weather.aod >= 0.08 && weather.aod <= 0.35) add('positive', this._uiText(`Moderate aerosol (AOD ${weather.aod.toFixed(2)})`, `气溶胶适中（AOD ${weather.aod.toFixed(2)}）`), this._uiText('Boosts orange-red scattering', '有利于增强红橙色散射'));
-      else if (weather.aod > 0.35) add('warning', this._uiText(`High aerosol (AOD ${weather.aod.toFixed(2)})`, `气溶胶偏高（AOD ${weather.aod.toFixed(2)}）`), this._uiText('May look hazy or dull', '可能灰霾发暗'));
-      else add('neutral', this._uiText(`Very clear air (AOD ${weather.aod.toFixed(2)})`, `空气过于通透（AOD ${weather.aod.toFixed(2)}）`), this._uiText('Colors may be lighter', '颜色可能偏淡'));
+      if (weather.aod >= 0.08 && weather.aod <= 0.35) add('positive', this._analysisText('aerosol.moderate', { value: weather.aod.toFixed(2) }), this._analysisText('aerosol.moderateDesc'));
+      else if (weather.aod > 0.35) add('warning', this._analysisText('aerosol.high', { value: weather.aod.toFixed(2) }), this._analysisText('aerosol.highDesc'));
+      else add('neutral', this._analysisText('aerosol.low', { value: weather.aod.toFixed(2) }), this._analysisText('aerosol.lowDesc'));
     }
 
     if (weather.layerCount <= 1 && weather.high >= 35) {
-      add('warning', this._uiText('Single cloud layer', '云层单一'), this._uiText('High clouds can still color well', '高云质量好，仍可形成鲜明火烧云'));
+      add('warning', this._analysisText('layer.single'), this._analysisText('layer.singleDesc'));
     }
 
     return groups.filter(group => group.items.length > 0);
@@ -1433,7 +1466,7 @@ class PredictionController {
     const groupHtml = groups.map(group => this.renderAnalysisGroup(group)).join('');
     return `
       <div class="analysis-card app-analysis-card">
-        <div class="analysis-card-title"><span>${this._uiText('Fire cloud formation analysis', '火烧云形成条件分析')}</span></div>
+        <div class="analysis-card-title"><span>${this._analysisText('title')}</span></div>
         ${groupHtml}
       </div>
     `;
