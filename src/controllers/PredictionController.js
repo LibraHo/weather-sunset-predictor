@@ -1146,6 +1146,8 @@ class PredictionController {
             </div>
           </div>
 
+          ${this.renderConclusionBanner(forecast.conclusion)}
+
           <div class="score-summary-card">
             <div class="score-summary-left score-breakdown-trigger" role="button" tabindex="0" aria-expanded="false" aria-label="${this.i18n.t('prediction.composite.finalScore')}">
               ${this.renderLargeScoreGauge(forecast, type)}
@@ -1433,9 +1435,12 @@ class PredictionController {
       <div class="analysis-card app-analysis-card">
         <div class="analysis-card-title"><span>${this._uiText('Fire cloud formation analysis', '火烧云形成条件分析')}</span></div>
         ${groupHtml}
-        <div class="conclusion-banner"><span class="conclusion-icon">${this.renderInlineSvgIcon('leaf')}</span><strong>${conclusion}</strong></div>
       </div>
     `;
+  }
+
+  renderConclusionBanner(conclusion) {
+    return `<div class="conclusion-banner"><span class="conclusion-icon">${this.renderInlineSvgIcon('leaf')}</span><strong>${conclusion}</strong></div>`;
   }
 
   renderAnalysisGroup(group) {

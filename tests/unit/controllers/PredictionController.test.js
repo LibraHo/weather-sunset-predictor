@@ -228,6 +228,40 @@ describe('PredictionController', () => {
       expect(html).not.toContain('倒计时');
     });
 
+    test('总结论应显示在评分和分析明细之前', () => {
+      const prediction = {
+        score: 75,
+        quality: 'good',
+        type: 'sunset',
+        sunsetTime: new Date('2024-06-21T19:45:00+08:00'),
+        sunAzimuth: null,
+        cloudLayers: null,
+        factors: {
+          cloudCover: { value: 50 },
+          humidity: { value: 60 }
+        },
+        getOptimalViewingWindow: () => ({
+          start: new Date('2024-06-21T19:15:00+08:00'),
+          end: new Date('2024-06-21T20:15:00+08:00')
+        }),
+        shouldShowAzimuth: () => false
+      };
+
+      const html = predictionController.renderSinglePrediction(
+        prediction, '🌅', '晚霞', '日落时间', '今日', 'sunset'
+      );
+
+      const conclusionIndex = html.indexOf('conclusion-banner');
+      const scoreIndex = html.indexOf('score-summary-card');
+      const analysisIndex = html.indexOf('analysis-card app-analysis-card');
+
+      expect(conclusionIndex).toBeGreaterThan(-1);
+      expect(scoreIndex).toBeGreaterThan(-1);
+      expect(analysisIndex).toBeGreaterThan(-1);
+      expect(conclusionIndex).toBeLessThan(scoreIndex);
+      expect(conclusionIndex).toBeLessThan(analysisIndex);
+    });
+
     test('北京晚霞场景应显示太阳方位角方向', () => {
       const sunsetTime = new Date('2024-06-21T19:45:00+08:00');
       const prediction = {
