@@ -1224,6 +1224,11 @@ class PredictionController {
     return this._isEnglishUI() ? en : zh;
   }
 
+  _translateOrFallback(key, fallback, params = {}) {
+    const translated = this.i18n?.t?.(key, params);
+    return translated && translated !== key ? translated : fallback;
+  }
+
   _analysisText(key, params = {}) {
     const fullKey = `prediction.formationAnalysis.${key}`;
     const translated = this.i18n.t(fullKey, params);
@@ -1318,7 +1323,7 @@ class PredictionController {
         </div>
         <div class="score-gauge-caption">
           <div class="score-gauge-grade" style="color:${scoreTheme[1]}">${forecast.scoreLabel}</div>
-          <div class="score-breakdown-hint-trigger">${this._uiText('View score details', '查看评分明细')}</div>
+          <div class="score-breakdown-hint-trigger">${this._translateOrFallback('prediction.scoreBreakdown.viewDetails', '查看评分明细')}</div>
         </div>
       </div>
     `;
@@ -1442,10 +1447,10 @@ class PredictionController {
 
   buildAnalysisConclusion(prediction, score, clouds) {
     const layerCount = prediction.breakdown?.layerDiversity?.layerCount ?? [clouds.high, clouds.mid, clouds.low].filter(v => Number(v) >= 10).length;
-    if (score >= 80) return layerCount >= 2 ? this._uiText('Excellent conditions. Strongly recommended.', '条件优秀，强烈推荐出行观赏') : this._uiText('Excellent color potential, but single-layer clouds may reduce depth.', '条件优秀，色彩可期；云层单一，层次感略有不足');
-    if (score >= 60) return layerCount >= 2 ? this._uiText('Good conditions with a solid chance of dramatic fire clouds.', '条件不错，有较大概率出现壮观的火烧云') : this._uiText('Good chance of fire clouds, but layering is limited.', '条件不错，火烧云概率较高；云层层次稍欠');
-    if (score >= 40) return this._uiText('Moderate conditions. Watch how the clouds evolve.', '条件中等，需看实际云层演变');
-    return this._uiText('Key conditions are missing; fire-cloud probability is low.', '关键条件不足，火烧云概率偏低');
+    if (score >= 80) return layerCount >= 2 ? this.i18n.t('prediction.analysisConclusion.excellent') : this.i18n.t('prediction.analysisConclusion.excellentSingleLayer');
+    if (score >= 60) return layerCount >= 2 ? this.i18n.t('prediction.analysisConclusion.good') : this.i18n.t('prediction.analysisConclusion.goodSingleLayer');
+    if (score >= 40) return this.i18n.t('prediction.analysisConclusion.fair');
+    return this.i18n.t('prediction.analysisConclusion.low');
   }
 
   buildAnalysisSummary(prediction) {
@@ -1523,15 +1528,15 @@ class PredictionController {
 
     return `
       <div class="score-breakdown-popover" hidden>
-        <div class="score-breakdown-title">${this._uiText('Score details', '分数明细')}</div>
-        ${row(this.i18n.t('prediction.composite.finalScore'), fmt(prediction?.score, 0), this._uiText('Final displayed score', '最终展示分'), 'score-breakdown-row-total')}
-        <div class="score-breakdown-formula">${this._uiText('Base score = canvas ×0.8 + light path ×0.2', '基础分 = 画布 ×0.8 + 光路 ×0.2')}</div>
-        ${row(this.i18n.t('prediction.composite.title'), fmt(baseScore, 1), this._uiText('Base score after combining clouds and light path', '云层与光路融合后的基础分'))}
-        ${row(this.i18n.t('prediction.canvas.title'), fmt(canvasScore, 1), this._uiText('High/mid clouds carry color; low clouds can block it', '高云/中云提供色彩载体，低云会遮挡'))}
-        ${row(this.i18n.t('prediction.lightPath.title'), fmt(lightPathScore, 1), this._uiText('Whether sunlight can reach the clouds', '太阳光是否能照到云层'))}
-        <div class="score-breakdown-formula">${this._uiText('Final score = base score × correction factors', '最终分 = 基础分 × 修正系数')}</div>
-        ${row(this.i18n.t('prediction.rendering.title'), `×${fmt(renderingFactor, 2)}`, this._uiText('Humidity and visibility affect color rendering', '湿度、能见度影响颜色表现'))}
-        ${aerosolFactor != null ? row(this.i18n.t('prediction.rendering.aerosol'), `×${fmt(aerosolFactor, 2)}`, this._uiText('Moderate aerosol boosts orange-red scattering; too much turns gray', '适中增强红橙散射，过高会发灰')) : ''}
+        <div class="score-breakdown-title">${this.i18n.t('prediction.scoreBreakdown.title')}</div>
+        ${row(this.i18n.t('prediction.composite.finalScore'), fmt(prediction?.score, 0), this.i18n.t('prediction.scoreBreakdown.finalDisplayed'), 'score-breakdown-row-total')}
+        <div class="score-breakdown-formula">${this.i18n.t('prediction.scoreBreakdown.baseFormula')}</div>
+        ${row(this.i18n.t('prediction.composite.title'), fmt(baseScore, 1), this.i18n.t('prediction.scoreBreakdown.baseHint'))}
+        ${row(this.i18n.t('prediction.canvas.title'), fmt(canvasScore, 1), this.i18n.t('prediction.scoreBreakdown.canvasHint'))}
+        ${row(this.i18n.t('prediction.lightPath.title'), fmt(lightPathScore, 1), this.i18n.t('prediction.scoreBreakdown.lightPathHint'))}
+        <div class="score-breakdown-formula">${this.i18n.t('prediction.scoreBreakdown.finalFormula')}</div>
+        ${row(this.i18n.t('prediction.rendering.title'), `×${fmt(renderingFactor, 2)}`, this.i18n.t('prediction.scoreBreakdown.renderingHint'))}
+        ${aerosolFactor != null ? row(this.i18n.t('prediction.rendering.aerosol'), `×${fmt(aerosolFactor, 2)}`, this.i18n.t('prediction.scoreBreakdown.aerosolHint')) : ''}
       </div>
     `;
   }

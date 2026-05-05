@@ -4595,7 +4595,7 @@ body.theme-dark .weather-item-highlight {
   --radar-title: rgba(30,50,90,0.95);
   --radar-subtitle: rgba(80,100,160,0.75);
   --radar-legend-text: rgba(40,60,100,0.85);
-  --radar-legend-bg: rgba(255,255,255,0.86);
+  --radar-legend-bg: var(--radar-bg);
   --radar-center: rgba(220,80,20,0.90);
   --radar-center-stroke: rgba(0,0,0,0.20);
   --radar-ring-low: rgba(100,150,220,0.08);
@@ -4617,7 +4617,7 @@ body.theme-dark {
   --radar-title: rgba(241,245,249,0.95);
   --radar-subtitle: rgba(148,163,184,0.80);
   --radar-legend-text: rgba(200,212,228,0.85);
-  --radar-legend-bg: rgba(10,18,35,0.72);
+  --radar-legend-bg: var(--radar-bg);
   --radar-center: rgba(249,115,22,0.90);
   --radar-center-stroke: rgba(0,0,0,0.20);
   --radar-ring-low: rgba(100,150,220,0.08);
@@ -6291,7 +6291,7 @@ body[data-actual-theme="dark"] {
   --radar-title: rgba(241,245,249,0.95);
   --radar-subtitle: rgba(148,163,184,0.84);
   --radar-legend-text: rgba(200,212,228,0.88);
-  --radar-legend-bg: rgba(10,18,35,0.78);
+  --radar-legend-bg: var(--radar-bg);
   --radar-center: rgba(249,115,22,0.92);
   --radar-center-stroke: rgba(0,0,0,0.28);
   --radar-cloud-low: rgba(180,210,255,0.98);
@@ -7706,5 +7706,60 @@ html[data-actual-theme="light"] .prediction-app-card .phenomenon-title-card {
   .score-gauge-caption {
     top: 144px;
     gap: 4px;
+  }
+}
+
+/* 修复：电脑版预测信息区可读性，天气/时间/湿度/风向等指标一项一行 */
+@media (min-width: 431px) {
+  .score-summary-right {
+    gap: 12px;
+    align-content: stretch;
+  }
+
+  .score-summary-right .event-time-label {
+    font-size: 1rem;
+    line-height: 1.25;
+  }
+
+  .score-summary-right .app-main-time {
+    font-size: clamp(3.25rem, 5vw, 4.15rem);
+    line-height: 0.95;
+  }
+
+  .score-summary-right .app-info-row {
+    min-height: 64px;
+    grid-template-columns: 34px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-content: center;
+    row-gap: 4px;
+    column-gap: 12px;
+    padding: 10px 16px;
+    border-radius: 16px;
+  }
+
+  .score-summary-right .app-info-icon {
+    grid-row: 1 / span 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.45rem;
+  }
+
+  .score-summary-right .app-info-label {
+    grid-column: 2;
+    font-size: 0.98rem;
+    line-height: 1.2;
+  }
+
+  .score-summary-right .app-info-value {
+    grid-column: 2;
+    justify-self: start;
+    font-size: 1.18rem;
+    line-height: 1.25;
+    white-space: normal;
+  }
+
+  .score-summary-right .app-info-row-direction .app-info-value {
+    justify-content: flex-start !important;
   }
 }
