@@ -192,6 +192,18 @@ const translations = {
     "good": "Bon",
     "fair": "Moyen",
     "poor": "Médiocre",
+
+    "formationAnalysis": {
+      "title": "Analyse des conditions de formation des nuages flamboyants",
+      "groups": { "positive": "Conditions favorables", "neutral": "Facteurs neutres", "warning": "Points à surveiller" },
+      "high": { "abundant": "Nuages hauts abondants ({{value}}%)", "abundantDesc": "Bonne base pour capter la couleur", "sufficient": "Nuages hauts suffisants ({{value}}%)", "sufficientDesc": "Bon support pour les teintes du coucher", "moderate": "Nuages hauts modérés ({{value}}%)", "moderateDesc": "Possible, mais les couleurs peuvent être plus légères", "few": "Peu de nuages hauts ({{value}}%)", "fewDesc": "Le principal support de couleur manque" },
+      "mid": { "balanced": "Nuages moyens équilibrés ({{value}}%)", "balancedDesc": "Ajoute diffusion des couleurs et profondeur", "few": "Peu de nuages moyens ({{value}}%)", "fewHighCloudDesc": "Les nuages hauts peuvent encore porter la couleur", "fewDesc": "Le relief des couches peut être limité", "thick": "Nuages moyens épais ({{value}}%)", "thickDesc": "Peut rendre l’image plus grise et moins transparente" },
+      "low": { "few": "Peu de nuages bas ({{value}}%)", "fewDesc": "La vue devrait rester dégagée", "some": "Quelques nuages bas ({{value}}%)", "someDesc": "Peut masquer une partie des couleurs près de l’horizon", "thick": "Nuages bas épais ({{value}}%)", "thickDesc": "Risque d’obstruction élevé" },
+      "visibility": { "good": "Bonne visibilité ({{value}}km)", "goodDesc": "Air clair et bonne portée visuelle", "moderate": "Visibilité moyenne ({{value}}km)", "moderateDesc": "La saturation peut baisser légèrement", "low": "Faible visibilité ({{value}}km)", "lowDesc": "Brume ou humidité peuvent gêner l’observation" },
+      "humidity": { "moderate": "Humidité modérée ({{value}}%)", "moderateDesc": "Aide la diffusion de la lumière", "high": "Humidité élevée ({{value}}%)", "highDesc": "Peut réduire la transparence", "low": "Humidité basse ({{value}}%)", "lowDesc": "L’air sec peut rendre les couleurs plus pâles" },
+      "aerosol": { "moderate": "Aérosols modérés (AOD {{value}})", "moderateDesc": "Renforce la diffusion orange-rouge", "high": "Aérosols élevés (AOD {{value}})", "highDesc": "Peut paraître brumeux ou terne", "low": "Air très clair (AOD {{value}})", "lowDesc": "Les couleurs peuvent être plus pâles" },
+      "layer": { "single": "Couche nuageuse unique", "singleDesc": "De bons nuages hauts peuvent encore bien se colorer" }
+    },
     "status": {
       "noFireCloud": "Pas de Nuages Rouges",
       "lightGlow": "Légère Lueur",

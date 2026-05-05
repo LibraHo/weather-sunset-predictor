@@ -165,6 +165,18 @@ apiAccess: 'Accesso API'
     "good": "Buono",
     "fair": "Discreto",
     "poor": "Scarso",
+
+    "formationAnalysis": {
+      "title": "Analisi delle condizioni per le nubi infuocate",
+      "groups": { "positive": "Condizioni favorevoli", "neutral": "Fattori neutri", "warning": "Aspetti da osservare" },
+      "high": { "abundant": "Nubi alte abbondanti ({{value}}%)", "abundantDesc": "Buona base per catturare il colore", "sufficient": "Nubi alte sufficienti ({{value}}%)", "sufficientDesc": "Buon supporto per i colori del tramonto", "moderate": "Nubi alte moderate ({{value}}%)", "moderateDesc": "Possibile, ma con colori più leggeri", "few": "Poche nubi alte ({{value}}%)", "fewDesc": "Manca il principale supporto del colore" },
+      "mid": { "balanced": "Nubi medie equilibrate ({{value}}%)", "balancedDesc": "Aggiungono diffusione del colore e profondità", "few": "Poche nubi medie ({{value}}%)", "fewHighCloudDesc": "Le nubi alte possono ancora portare colore", "fewDesc": "La stratificazione può essere limitata", "thick": "Nubi medie spesse ({{value}}%)", "thickDesc": "Può rendere la scena più grigia e meno trasparente" },
+      "low": { "few": "Poche nubi basse ({{value}}%)", "fewDesc": "La vista dovrebbe restare aperta", "some": "Alcune nubi basse ({{value}}%)", "someDesc": "Possono coprire parte del colore vicino all’orizzonte", "thick": "Nubi basse spesse ({{value}}%)", "thickDesc": "Alto rischio di ostruzione" },
+      "visibility": { "good": "Buona visibilità ({{value}}km)", "goodDesc": "Aria limpida e buona distanza visiva", "moderate": "Visibilità moderata ({{value}}km)", "moderateDesc": "La saturazione può diminuire leggermente", "low": "Bassa visibilità ({{value}}km)", "lowDesc": "Foschia o umidità possono influire sull’osservazione" },
+      "humidity": { "moderate": "Umidità moderata ({{value}}%)", "moderateDesc": "Aiuta la diffusione della luce", "high": "Umidità alta ({{value}}%)", "highDesc": "Può ridurre la trasparenza", "low": "Umidità bassa ({{value}}%)", "lowDesc": "L’aria secca può rendere i colori più pallidi" },
+      "aerosol": { "moderate": "Aerosol moderato (AOD {{value}})", "moderateDesc": "Rafforza la diffusione arancio-rossa", "high": "Aerosol alto (AOD {{value}})", "highDesc": "Può apparire velato o spento", "low": "Aria molto limpida (AOD {{value}})", "lowDesc": "I colori possono essere più tenui" },
+      "layer": { "single": "Singolo strato nuvoloso", "singleDesc": "Buone nubi alte possono comunque colorarsi bene" }
+    },
     "status": {
       "noFireCloud": "Nessuna Nuvola Rossa",
       "lightGlow": "Luce Leggera",

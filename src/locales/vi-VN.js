@@ -192,6 +192,18 @@ const translations = {
     "good": "Tốt",
     "fair": "Bình Thường",
     "poor": "Kém",
+
+    "formationAnalysis": {
+      "title": "Phân tích điều kiện hình thành mây đẹp",
+      "groups": { "positive": "Điều kiện thuận lợi", "neutral": "Yếu tố trung tính", "warning": "Điểm cần chú ý" },
+      "high": { "abundant": "Mây cao dồi dào ({{value}}%)", "abundantDesc": "Nền mây mang màu rất tốt", "sufficient": "Mây cao đủ ({{value}}%)", "sufficientDesc": "Có lớp mây tốt để bắt màu hoàng hôn", "moderate": "Mây cao vừa phải ({{value}}%)", "moderateDesc": "Có khả năng xuất hiện nhưng màu có thể nhạt", "few": "Mây cao hơi ít ({{value}}%)", "fewDesc": "Thiếu lớp mây chính để mang màu" },
+      "mid": { "balanced": "Mây trung tầng cân bằng ({{value}}%)", "balancedDesc": "Tăng độ lan màu và chiều sâu", "few": "Mây trung tầng ít ({{value}}%)", "fewHighCloudDesc": "Mây cao đủ vẫn có thể tự bắt màu", "fewDesc": "Độ phân tầng có thể hạn chế", "thick": "Mây trung tầng dày ({{value}}%)", "thickDesc": "Có thể làm cảnh xám hơn và giảm độ trong của ánh hoàng hôn" },
+      "low": { "few": "Mây thấp ít ({{value}}%)", "fewDesc": "Tầm nhìn khá thoáng", "some": "Mây thấp hơi nhiều ({{value}}%)", "someDesc": "Có thể che một phần màu gần đường chân trời", "thick": "Mây thấp dày ({{value}}%)", "thickDesc": "Nguy cơ che khuất cao" },
+      "visibility": { "good": "Tầm nhìn tốt ({{value}}km)", "goodDesc": "Không khí trong, tầm nhìn tốt", "moderate": "Tầm nhìn trung bình ({{value}}km)", "moderateDesc": "Độ bão hòa màu có thể giảm nhẹ", "low": "Tầm nhìn thấp ({{value}}km)", "lowDesc": "Bụi mờ hoặc hơi nước có thể ảnh hưởng quan sát" },
+      "humidity": { "moderate": "Độ ẩm vừa phải ({{value}}%)", "moderateDesc": "Có lợi cho tán xạ ánh sáng", "high": "Độ ẩm cao ({{value}}%)", "highDesc": "Có thể giảm độ trong", "low": "Độ ẩm thấp ({{value}}%)", "lowDesc": "Không khí khô có thể làm màu nhạt hơn" },
+      "aerosol": { "moderate": "Aerosol vừa phải (AOD {{value}})", "moderateDesc": "Tăng tán xạ cam đỏ", "high": "Aerosol cao (AOD {{value}})", "highDesc": "Có thể trông mờ hoặc tối", "low": "Không khí quá trong (AOD {{value}})", "lowDesc": "Màu có thể nhạt hơn" },
+      "layer": { "single": "Một lớp mây", "singleDesc": "Nếu mây cao tốt, vẫn có thể tạo màu hoàng hôn rõ" }
+    },
     "status": {
       "noFireCloud": "Không Có Mây Đẹp",
       "lightGlow": "Ánh Hoàng Hôn Nhẹ",

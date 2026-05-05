@@ -176,6 +176,18 @@ apiAccess: 'Acceso API'
     "good": "Bueno",
     "fair": "Regular",
     "poor": "Pobre",
+
+    "formationAnalysis": {
+      "title": "Análisis de condiciones para nubes encendidas",
+      "groups": { "positive": "Condiciones favorables", "neutral": "Factores neutros", "warning": "Puntos a vigilar" },
+      "high": { "abundant": "Nubes altas abundantes ({{value}}%)", "abundantDesc": "Buena base para captar color", "sufficient": "Nubes altas suficientes ({{value}}%)", "sufficientDesc": "Buen soporte para el color del atardecer", "moderate": "Nubes altas moderadas ({{value}}%)", "moderateDesc": "Posible, pero con colores más suaves", "few": "Pocas nubes altas ({{value}}%)", "fewDesc": "Falta el principal soporte de color" },
+      "mid": { "balanced": "Nubes medias equilibradas ({{value}}%)", "balancedDesc": "Añaden expansión de color y profundidad", "few": "Pocas nubes medias ({{value}}%)", "fewHighCloudDesc": "Las nubes altas aún pueden portar color", "fewDesc": "La estratificación puede ser limitada", "thick": "Nubes medias gruesas ({{value}}%)", "thickDesc": "Puede volver la escena más gris y menos transparente" },
+      "low": { "few": "Pocas nubes bajas ({{value}}%)", "fewDesc": "La vista debería quedar despejada", "some": "Algunas nubes bajas ({{value}}%)", "someDesc": "Pueden tapar parte del color cerca del horizonte", "thick": "Nubes bajas gruesas ({{value}}%)", "thickDesc": "Alto riesgo de bloqueo" },
+      "visibility": { "good": "Buena visibilidad ({{value}}km)", "goodDesc": "Aire claro y buena distancia de visión", "moderate": "Visibilidad moderada ({{value}}km)", "moderateDesc": "La saturación puede bajar un poco", "low": "Baja visibilidad ({{value}}km)", "lowDesc": "Bruma o humedad pueden afectar la observación" },
+      "humidity": { "moderate": "Humedad moderada ({{value}}%)", "moderateDesc": "Ayuda a la dispersión de la luz", "high": "Humedad alta ({{value}}%)", "highDesc": "Puede reducir la transparencia", "low": "Humedad baja ({{value}}%)", "lowDesc": "El aire seco puede aclarar los colores" },
+      "aerosol": { "moderate": "Aerosol moderado (AOD {{value}})", "moderateDesc": "Refuerza la dispersión naranja-roja", "high": "Aerosol alto (AOD {{value}})", "highDesc": "Puede verse brumoso u opaco", "low": "Aire muy limpio (AOD {{value}})", "lowDesc": "Los colores pueden ser más suaves" },
+      "layer": { "single": "Una sola capa de nubes", "singleDesc": "Buenas nubes altas aún pueden colorearse bien" }
+    },
     "status": {
       "noFireCloud": "Sin Nubes Rojas",
       "lightGlow": "Resplandor Ligero",
