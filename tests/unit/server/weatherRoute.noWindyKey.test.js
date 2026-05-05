@@ -20,6 +20,30 @@ describe('weather route - remove X-Windy-API-Key passthrough', () => {
     orchestrator.fetchWeatherData = original;
   });
 
+  test('manual test coordinates should return generated data without calling orchestrator', async () => {
+    const spy = jest.fn(async () => {
+      throw new Error('orchestrator should not be called');
+    });
+    orchestrator.fetchWeatherData = spy;
+
+    const app = express();
+    app.use('/api/weather', weatherRouter);
+
+    const supertestModule = await import('supertest');
+    const request = supertestModule.default || supertestModule;
+
+    const res = await request(app)
+      .get('/api/weather/forecast?lat=0&lon=0&hours=24')
+      .expect(200);
+
+    expect(spy).not.toHaveBeenCalled();
+    expect(res.body.providerMeta).toMatchObject({ name: 'manual-test', weatherModel: 'random-ui-test' });
+    expect(res.body.data).toHaveLength(24);
+    expect(res.body.data[0]).toHaveProperty('highClouds');
+    expect(res.body.data[0]).toHaveProperty('midClouds');
+    expect(res.body.data[0]).toHaveProperty('lowClouds');
+  });
+
   test('should call orchestrator with 4 args even if X-Windy-API-Key is provided', async () => {
     const spy = jest.fn(async () => ({
       hours: 24,
