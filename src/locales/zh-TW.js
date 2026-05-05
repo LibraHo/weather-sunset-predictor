@@ -193,7 +193,25 @@ const translations = {
     "fair": "一般",
     "poor": "較差",
 
-    "formationAnalysis": {
+    "analysisConclusion": {
+      "excellent": "條件優秀，很適合外出觀賞",
+      "excellentSingleLayer": "條件優秀，色彩可期；雲層單一，層次感略有不足",
+      "good": "條件不錯，有較高機會出現壯觀火燒雲",
+      "goodSingleLayer": "條件不錯，火燒雲機率較高；雲層層次稍弱",
+      "fair": "條件中等，仍需觀察實際雲層變化",
+      "low": "關鍵條件不足，火燒雲機率偏低"
+    },
+        "scoreBreakdown": {
+      "viewDetails": "查看評分明細",
+      "finalDisplayed": "最終顯示分",
+      "baseFormula": "基礎分 = 畫布 ×0.8 + 光路 ×0.2",
+      "baseHint": "雲層與光路融合後的基礎分",
+      "canvasHint": "高雲/中雲提供色彩載體，低雲可能遮擋",
+      "lightPathHint": "太陽光是否能照到雲層",
+      "renderingHint": "濕度與能見度影響色彩表現",
+      "aerosolHint": "適中可增強紅橙散射，過高會偏灰"
+    },
+"formationAnalysis": {
       "title": "火燒雲形成條件分析",
       "groups": { "positive": "有利條件", "neutral": "一般因素", "warning": "注意因素" },
       "high": { "abundant": "高層雲充沛（{{value}}%）", "abundantDesc": "色彩載體豐富，火燒雲基礎紮實", "sufficient": "高層雲充足（{{value}}%）", "sufficientDesc": "具備不錯的霞光染色載體", "moderate": "高層雲適中（{{value}}%）", "moderateDesc": "可形成火燒雲，但色彩可能偏淡", "few": "高層雲偏少（{{value}}%）", "fewDesc": "缺少主要色彩載體" },
@@ -342,7 +360,7 @@ const translations = {
       "someLowCloud": "⚠️ 低雲較多（{{value}}%），可能部分遮擋",
       "denseLowCloud": "❌ 低雲密集（{{value}}%），嚴重影響觀賞",
       "excellentConditions": "🌟 具備出現絢爛火燒雲的所有條件！",
-      "highProbability": "✨ 有較大概率出現壯觀的火燒雲景象",
+      "highProbability": "有較大概率出現壯觀的火燒雲景象",
       "moderateProbability": "💫 可能出現輕微的火燒雲效果",
       "lowProbability": "⛅ 形成明顯火燒雲的可能性較低",
       "noCloudNoFireCloud": "❌ 雲量嚴重不足，無法形成火燒雲"
@@ -579,12 +597,12 @@ const translations = {
       "low": "低雲"
     },
     "verdict": {
-      "noCarrier": "😶 缺少色彩載體，火燒雲機率很低",
-      "excellent": "✨ 條件很棒，天空色彩值得期待",
-      "excellentMultiLayer": "✨ 條件極佳，強烈推薦出門觀賞！",
-      "good": "✨ 條件不錯，火燒雲機率偏高",
-      "fair": "💡 條件普通，建議留意雲層即時變化",
-      "poor": "😶 火燒雲機率偏低"
+      "noCarrier": "缺少色彩載體，火燒雲機率很低",
+      "excellent": "條件很棒，天空色彩值得期待",
+      "excellentMultiLayer": "條件極佳，強烈推薦出門觀賞！",
+      "good": "條件不錯，火燒雲機率偏高",
+      "fair": "條件普通，建議留意雲層即時變化",
+      "poor": "火燒雲機率偏低"
     },
     "watermark": "霞客 · 記錄每一次絢麗"
   },
@@ -616,13 +634,15 @@ const translations = {
     "timeNow": "現在",
     "timeSunset": "日落",
     "timeSunrise": "日出",
-    "timeHint": "💡 提示：也可以使用地圖下方的預測時間軸拖動時間",
+    "timeHint": "提示：也可以使用地圖下方的預測時間軸拖動時間",
     "loading": "地圖加載中...",
     "error": "地圖加載失敗",
     "mockNotSupported": "地圖功能僅在真實API模式下可用"
   },
   "surrounding": {
     "title": "周邊火燒雲分析",
+    "radarTitle": "周邊雲況雷達",
+    "radarSubtitle": "20km · 連續雲場",
     "radius": "探測半徑",
     "radiusUnit": "公里",
     "directions": {
