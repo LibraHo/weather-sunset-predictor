@@ -176,6 +176,37 @@ apiAccess: 'الوصول إلى API'
     good: 'جيد',
     fair: 'متوسط',
     poor: 'ضعيف',
+
+    analysisConclusion: {
+      excellent: 'الظروف ممتازة، ويوصى بالخروج للمشاهدة بقوة.',
+      excellentSingleLayer: 'إمكانات اللون ممتازة، لكن طبقة سحاب واحدة قد تقلل العمق.',
+      good: 'الظروف جيدة مع فرصة واضحة لظهور غيوم ملتهبة جميلة.',
+      goodSingleLayer: 'فرصة الغيوم الملتهبة جيدة، لكن طبقات السحب محدودة.',
+      fair: 'الظروف متوسطة؛ راقب تطور السحب الفعلي.',
+      low: 'بعض الشروط الأساسية غير متوفرة، واحتمال الغيوم الملتهبة منخفض.'
+    },
+        scoreBreakdown: {
+      viewDetails: 'عرض تفاصيل الدرجة',
+      finalDisplayed: 'الدرجة النهائية المعروضة',
+      baseFormula: 'درجة الأساس = لوحة السحب ×0.8 + مسار الضوء ×0.2',
+      baseHint: 'درجة الأساس بعد دمج السحب ومسار الضوء',
+      canvasHint: 'السحب العالية/المتوسطة تحمل اللون، والسحب المنخفضة قد تحجبه',
+      lightPathHint: 'هل يمكن لضوء الشمس الوصول إلى السحب',
+      finalFormula: 'الدرجة النهائية = درجة الأساس × معاملات التصحيح',
+      renderingHint: 'الرطوبة والرؤية تؤثران في ظهور اللون',
+      aerosolHint: 'الهباء المعتدل يعزز الأحمر البرتقالي، والكثير منه يجعل المشهد رمادياً'
+    },
+"formationAnalysis": {
+      "title": "Fire cloud formation analysis",
+      "groups": { "positive": "Favorable", "neutral": "Neutral", "warning": "Watch-outs" },
+      "high": { "abundant": "Abundant high clouds ({{value}}%)", "abundantDesc": "Strong color base", "sufficient": "Sufficient high clouds ({{value}}%)", "sufficientDesc": "Good color carrier", "moderate": "Moderate high clouds ({{value}}%)", "moderateDesc": "Possible, but colors may be lighter", "few": "Too few high clouds ({{value}}%)", "fewDesc": "Main color carrier is lacking" },
+      "mid": { "balanced": "Balanced mid clouds ({{value}}%)", "balancedDesc": "Adds color spread and depth", "few": "Few mid clouds ({{value}}%)", "fewHighCloudDesc": "High clouds can still carry color", "fewDesc": "Layering may be limited", "thick": "Thick mid clouds ({{value}}%)", "thickDesc": "May reduce clarity" },
+      "low": { "few": "Few low clouds ({{value}}%)", "fewDesc": "View should stay open", "some": "Some low clouds ({{value}}%)", "someDesc": "May block horizon color", "thick": "Thick low clouds ({{value}}%)", "thickDesc": "High blocking risk" },
+      "visibility": { "good": "Good visibility ({{value}}km)", "goodDesc": "Clear air, good distance", "moderate": "Moderate visibility ({{value}}km)", "moderateDesc": "Saturation may drop", "low": "Low visibility ({{value}}km)", "lowDesc": "Haze or moisture may affect the view" },
+      "humidity": { "moderate": "Moderate humidity ({{value}}%)", "moderateDesc": "Helps light scattering", "high": "High humidity ({{value}}%)", "highDesc": "May reduce transparency", "low": "Low humidity ({{value}}%)", "lowDesc": "Dry air may lighten colors" },
+      "aerosol": { "moderate": "Moderate aerosol (AOD {{value}})", "moderateDesc": "Boosts orange-red scattering", "high": "High aerosol (AOD {{value}})", "highDesc": "May look hazy or dull", "low": "Very clear air (AOD {{value}})", "lowDesc": "Colors may be lighter" },
+      "layer": { "single": "Single cloud layer", "singleDesc": "High clouds can still color well" }
+    },
     status: {
       noFireCloud: 'لا توجد سحب حمراء',
       lightGlow: 'توهج خفيف',
@@ -289,7 +320,7 @@ apiAccess: 'الوصول إلى API'
       someLowCloud: '⚠️ بعض السحب المنخفضة ({{value}}%)، قد تحجب الرؤية جزئيا',
       denseLowCloud: '❌ سحب منخفضة كثيفة ({{value}}%)، تؤثر بشكل خطير على المشاهدة',
       excellentConditions: '🌟 جميع الظروف لسحب حمراء رائعة متوفرة!',
-      highProbability: '✨ احتمالية عالية لمنظر سحب حمراء رائع',
+      highProbability: 'احتمالية عالية لمنظر سحب حمراء رائع',
       moderateProbability: '💫 تأثيرات سحب حمراء خفيفة محتملة',
       lowProbability: '⛅ احتمالية منخفضة لسحب حمراء كبيرة',
       noCloudNoFireCloud: '❌ غطاء سحب غير كاف بشكل خطير، لا يمكن تشكيل سحب حمراء',
@@ -340,7 +371,7 @@ apiAccess: 'الوصول إلى API'
   },
   common: {
     loading: 'جاري التحميل...',
-    dataSource: 'مصدر البيانات: Windy API',
+    dataSource: 'مصدر البيانات: Open-Meteo (GFS + ECMWF)',
     visitorCount: 'عدد الزوار: '
   },
   errors: {
@@ -492,7 +523,7 @@ apiAccess: 'الوصول إلى API'
     timeNow: 'الآن',
     timeSunset: 'الغروب',
     timeSunrise: 'الشروق',
-    timeHint: '💡 تلميح: يمكنك أيضًا سحب الخط الزمني أسفل الخريطة لضبط الوقت',
+    timeHint: 'تلميح: يمكنك أيضًا سحب الخط الزمني أسفل الخريطة لضبط الوقت',
     loading: 'جاري تحميل الخريطة...',
     error: 'فشل تحميل الخريطة',
     mockNotSupported: 'وظيفة الخريطة متاحة فقط في وضع API الحقيقي'
@@ -501,6 +532,8 @@ apiAccess: 'الوصول إلى API'
   // 任务19：周边火烧云
   surrounding: {
     title: 'تحليل السحب الحمراء المحيطة',
+    radarTitle: 'رادار السحب المحيطة',
+    radarSubtitle: '20 كم · حقل سحب مستمر',
     radius: 'نطاق الكشف',
     radiusUnit: 'كم',
     directions: {
@@ -553,12 +586,12 @@ apiAccess: 'الوصول إلى API'
     bestWindow: 'Best viewing  {{start}} – {{end}}',
     cloud: { high: 'High Cloud', mid: 'Mid Cloud', low: 'Low Cloud' },
     verdict: {
-      noCarrier: '😶 Not enough color carrier clouds; fire-cloud chance is very low',
-      excellent: '✨ Excellent conditions; colorful sky is promising',
-      excellentMultiLayer: '✨ Excellent conditions; strongly recommended for viewing!',
-      good: '✨ Good conditions; fire-cloud chance is high',
-      fair: '💡 Moderate conditions; watch real-time cloud changes',
-      poor: '😶 Fire-cloud chance is low'
+      noCarrier: 'Not enough color carrier clouds; fire-cloud chance is very low',
+      excellent: 'Excellent conditions; colorful sky is promising',
+      excellentMultiLayer: 'Excellent conditions; strongly recommended for viewing!',
+      good: 'Good conditions; fire-cloud chance is high',
+      fair: 'Moderate conditions; watch real-time cloud changes',
+      poor: 'Fire-cloud chance is low'
     },
     watermark: 'Xiake · Capture every brilliant sky'
   },

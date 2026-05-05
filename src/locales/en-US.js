@@ -201,6 +201,37 @@ const translations = {
     "good": "Good",
     "fair": "Fair",
     "poor": "Poor",
+
+    "analysisConclusion": {
+      "excellent": "Excellent conditions. Strongly recommended.",
+      "excellentSingleLayer": "Excellent color potential, but single-layer clouds may reduce depth.",
+      "good": "Good conditions with a solid chance of dramatic fire clouds.",
+      "goodSingleLayer": "Good chance of fire clouds, but layering is limited.",
+      "fair": "Moderate conditions. Watch how the clouds evolve.",
+      "low": "Key conditions are missing; fire-cloud probability is low."
+    },
+        "scoreBreakdown": {
+      "viewDetails": "View score details",
+      "finalDisplayed": "Final displayed score",
+      "baseFormula": "Base score = canvas ×0.8 + light path ×0.2",
+      "baseHint": "Base score after combining clouds and light path",
+      "canvasHint": "High/mid clouds carry color; low clouds can block it",
+      "lightPathHint": "Whether sunlight can reach the clouds",
+      "finalFormula": "Final score = base score × correction factors",
+      "renderingHint": "Humidity and visibility affect color rendering",
+      "aerosolHint": "Moderate aerosol boosts orange-red scattering; too much turns gray"
+    },
+"formationAnalysis": {
+      "title": "Fire cloud formation analysis",
+      "groups": { "positive": "Favorable", "neutral": "Neutral", "warning": "Watch-outs" },
+      "high": { "abundant": "Abundant high clouds ({{value}}%)", "abundantDesc": "Strong color base", "sufficient": "Sufficient high clouds ({{value}}%)", "sufficientDesc": "Good color carrier", "moderate": "Moderate high clouds ({{value}}%)", "moderateDesc": "Possible, but colors may be lighter", "few": "Too few high clouds ({{value}}%)", "fewDesc": "Main color carrier is lacking" },
+      "mid": { "balanced": "Balanced mid clouds ({{value}}%)", "balancedDesc": "Adds color spread and depth", "few": "Few mid clouds ({{value}}%)", "fewHighCloudDesc": "High clouds can still carry color", "fewDesc": "Layering may be limited", "thick": "Thick mid clouds ({{value}}%)", "thickDesc": "May reduce clarity" },
+      "low": { "few": "Few low clouds ({{value}}%)", "fewDesc": "View should stay open", "some": "Some low clouds ({{value}}%)", "someDesc": "May block horizon color", "thick": "Thick low clouds ({{value}}%)", "thickDesc": "High blocking risk" },
+      "visibility": { "good": "Good visibility ({{value}}km)", "goodDesc": "Clear air, good distance", "moderate": "Moderate visibility ({{value}}km)", "moderateDesc": "Saturation may drop", "low": "Low visibility ({{value}}km)", "lowDesc": "Haze or moisture may affect the view" },
+      "humidity": { "moderate": "Moderate humidity ({{value}}%)", "moderateDesc": "Helps light scattering", "high": "High humidity ({{value}}%)", "highDesc": "May reduce transparency", "low": "Low humidity ({{value}}%)", "lowDesc": "Dry air may lighten colors" },
+      "aerosol": { "moderate": "Moderate aerosol (AOD {{value}})", "moderateDesc": "Boosts orange-red scattering", "high": "High aerosol (AOD {{value}})", "highDesc": "May look hazy or dull", "low": "Very clear air (AOD {{value}})", "lowDesc": "Colors may be lighter" },
+      "layer": { "single": "Single cloud layer", "singleDesc": "High clouds can still color well" }
+    },
     "status": {
       "noFireCloud": "No Fire Cloud",
       "lightGlow": "Light Glow",
@@ -304,7 +335,7 @@ const translations = {
         "moderate": "Moderate cloud thickness",
         "thick": "Thick clouds, limited light transmission",
         "unknown": "Cloud thickness data unavailable"
-      },
+      }
     },
     "composite": {
       "title": "Composite Score",
@@ -360,7 +391,7 @@ const translations = {
       "someLowCloud": "⚠️ Some low clouds ({{value}}%), may partially block view",
       "denseLowCloud": "❌ Dense low clouds ({{value}}%), seriously affecting viewing",
       "excellentConditions": "🌟 All conditions for magnificent fire clouds are met!",
-      "highProbability": "✨ High probability of spectacular fire cloud scenery",
+      "highProbability": "High probability of spectacular fire cloud scenery",
       "moderateProbability": "💫 Possible mild fire cloud effects",
       "lowProbability": "⛅ Low probability of significant fire clouds",
       "noCloudNoFireCloud": "❌ Severely insufficient cloud cover, cannot form fire clouds"
@@ -406,18 +437,20 @@ const translations = {
     "bestWindow": "Best viewing  {{start}} – {{end}}",
     "cloud": { "high": "High Cloud", "mid": "Mid Cloud", "low": "Low Cloud" },
     "verdict": {
-      "noCarrier": "😶 Not enough color carrier clouds; fire-cloud chance is very low",
-      "excellent": "✨ Excellent conditions; colorful sky is promising",
-      "excellentMultiLayer": "✨ Excellent conditions; strongly recommended for viewing!",
-      "good": "✨ Good conditions; fire-cloud chance is high",
-      "fair": "💡 Moderate conditions; watch real-time cloud changes",
-      "poor": "😶 Fire-cloud chance is low"
+      "noCarrier": "Not enough color carrier clouds; fire-cloud chance is very low",
+      "excellent": "Excellent conditions; colorful sky is promising",
+      "excellentMultiLayer": "Excellent conditions; strongly recommended for viewing!",
+      "good": "Good conditions; fire-cloud chance is high",
+      "fair": "Moderate conditions; watch real-time cloud changes",
+      "poor": "Fire-cloud chance is low"
     },
     "watermark": "Xiake · Capture every brilliant sky"
   },
 
   "surrounding": {
     "title": "Surrounding Fire Cloud Analysis",
+    "radarTitle": "Surrounding Cloud Radar",
+    "radarSubtitle": "20km · Continuous cloud field",
     "radius": "Detection Radius",
     "radiusUnit": "km",
     "directions": {
@@ -660,7 +693,7 @@ const translations = {
     "timeNow": "Now",
     "timeSunset": "Sunset",
     "timeSunrise": "Sunrise",
-    "timeHint": "💡 Tip: You can also use the forecast timeline at the bottom of the map",
+    "timeHint": "Tip: You can also use the forecast timeline at the bottom of the map",
     "loading": "Loading map...",
     "error": "Failed to load map",
     "mockNotSupported": "Map functionality is only available in real API mode"

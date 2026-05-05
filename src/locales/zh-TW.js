@@ -201,6 +201,37 @@ const translations = {
     "good": "良好",
     "fair": "一般",
     "poor": "較差",
+
+    "analysisConclusion": {
+      "excellent": "條件優秀，很適合外出觀賞",
+      "excellentSingleLayer": "條件優秀，色彩可期；雲層單一，層次感略有不足",
+      "good": "條件不錯，有較高機會出現壯觀火燒雲",
+      "goodSingleLayer": "條件不錯，火燒雲機率較高；雲層層次稍弱",
+      "fair": "條件中等，仍需觀察實際雲層變化",
+      "low": "關鍵條件不足，火燒雲機率偏低"
+    },
+        "scoreBreakdown": {
+      "viewDetails": "查看評分明細",
+      "finalDisplayed": "最終顯示分",
+      "baseFormula": "基礎分 = 畫布 ×0.8 + 光路 ×0.2",
+      "baseHint": "雲層與光路融合後的基礎分",
+      "canvasHint": "高雲/中雲提供色彩載體，低雲可能遮擋",
+      "lightPathHint": "太陽光是否能照到雲層",
+      "finalFormula": "最終分 = 基礎分 × 修正係數",
+      "renderingHint": "濕度與能見度影響色彩表現",
+      "aerosolHint": "適中可增強紅橙散射，過高會偏灰"
+    },
+"formationAnalysis": {
+      "title": "火燒雲形成條件分析",
+      "groups": { "positive": "有利條件", "neutral": "一般因素", "warning": "注意因素" },
+      "high": { "abundant": "高層雲充沛（{{value}}%）", "abundantDesc": "色彩載體豐富，火燒雲基礎紮實", "sufficient": "高層雲充足（{{value}}%）", "sufficientDesc": "具備不錯的霞光染色載體", "moderate": "高層雲適中（{{value}}%）", "moderateDesc": "可形成火燒雲，但色彩可能偏淡", "few": "高層雲偏少（{{value}}%）", "fewDesc": "缺少主要色彩載體" },
+      "mid": { "balanced": "中層雲適中（{{value}}%）", "balancedDesc": "有利於色彩擴散和層次感", "few": "中層雲較少（{{value}}%）", "fewHighCloudDesc": "但高層雲充足，仍可獨立形成火燒雲", "fewDesc": "層次感可能不足", "thick": "中層雲偏厚（{{value}}%）", "thickDesc": "可能讓畫面偏灰，削弱霞光通透感" },
+      "low": { "few": "低雲稀少（{{value}}%）", "fewDesc": "不會遮擋火燒雲", "some": "低雲較多（{{value}}%）", "someDesc": "可能部分遮擋低空色彩", "thick": "低雲偏厚（{{value}}%）", "thickDesc": "遮擋風險較大" },
+      "visibility": { "good": "能見度良好（{{value}}km）", "goodDesc": "空氣通透，觀賞視野好", "moderate": "能見度一般（{{value}}km）", "moderateDesc": "色彩飽和度可能略受影響", "low": "能見度偏低（{{value}}km）", "lowDesc": "霧霾或水氣可能影響觀賞" },
+      "humidity": { "moderate": "濕度適中（{{value}}%）", "moderateDesc": "有利於光線散射", "high": "濕度偏高（{{value}}%）", "highDesc": "可能略影響通透感", "low": "濕度偏低（{{value}}%）", "lowDesc": "空氣較乾，色彩可能偏淡" },
+      "aerosol": { "moderate": "氣溶膠適中（AOD {{value}}）", "moderateDesc": "有利於增強紅橙色散射", "high": "氣溶膠偏高（AOD {{value}}）", "highDesc": "可能灰霾發暗", "low": "空氣過於通透（AOD {{value}}）", "lowDesc": "顏色可能偏淡" },
+      "layer": { "single": "雲層單一", "singleDesc": "高層雲品質好，仍可形成鮮明火燒雲" }
+    },
     "status": {
       "noFireCloud": "無火燒雲",
       "lightGlow": "輕微晚霞",
@@ -346,7 +377,7 @@ const translations = {
       "someLowCloud": "⚠️ 低雲較多（{{value}}%），可能部分遮擋",
       "denseLowCloud": "❌ 低雲密集（{{value}}%），嚴重影響觀賞",
       "excellentConditions": "🌟 具備出現絢爛火燒雲的所有條件！",
-      "highProbability": "✨ 有較大概率出現壯觀的火燒雲景象",
+      "highProbability": "有較大概率出現壯觀的火燒雲景象",
       "moderateProbability": "💫 可能出現輕微的火燒雲效果",
       "lowProbability": "⛅ 形成明顯火燒雲的可能性較低",
       "noCloudNoFireCloud": "❌ 雲量嚴重不足，無法形成火燒雲"
@@ -409,7 +440,7 @@ const translations = {
   },
   "common": {
     "loading": "載入中...",
-    "dataSource": "資料來源：Windy API",
+    "dataSource": "資料來源：Open-Meteo（GFS + ECMWF）",
     "visitorCount": "訪問人數："
   },
   "errors": {
@@ -583,12 +614,12 @@ const translations = {
       "low": "低雲"
     },
     "verdict": {
-      "noCarrier": "😶 缺少色彩載體，火燒雲機率很低",
-      "excellent": "✨ 條件很棒，天空色彩值得期待",
-      "excellentMultiLayer": "✨ 條件極佳，強烈推薦出門觀賞！",
-      "good": "✨ 條件不錯，火燒雲機率偏高",
-      "fair": "💡 條件普通，建議留意雲層即時變化",
-      "poor": "😶 火燒雲機率偏低"
+      "noCarrier": "缺少色彩載體，火燒雲機率很低",
+      "excellent": "條件很棒，天空色彩值得期待",
+      "excellentMultiLayer": "條件極佳，強烈推薦出門觀賞！",
+      "good": "條件不錯，火燒雲機率偏高",
+      "fair": "條件普通，建議留意雲層即時變化",
+      "poor": "火燒雲機率偏低"
     },
     "watermark": "霞客 · 記錄每一次絢麗"
   },
@@ -620,13 +651,15 @@ const translations = {
     "timeNow": "現在",
     "timeSunset": "日落",
     "timeSunrise": "日出",
-    "timeHint": "💡 提示：也可以使用地圖下方的預測時間軸拖動時間",
+    "timeHint": "提示：也可以使用地圖下方的預測時間軸拖動時間",
     "loading": "地圖加載中...",
     "error": "地圖加載失敗",
     "mockNotSupported": "地圖功能僅在真實API模式下可用"
   },
   "surrounding": {
     "title": "周邊火燒雲分析",
+    "radarTitle": "周邊雲況雷達",
+    "radarSubtitle": "20km · 連續雲場",
     "radius": "探測半徑",
     "radiusUnit": "公里",
     "directions": {
