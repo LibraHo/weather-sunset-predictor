@@ -7692,3 +7692,19 @@ html[data-actual-theme="light"] .prediction-app-card .phenomenon-title-card {
     height: 21px;
   }
 }
+
+/* 修复：桌面端评分等级/明细文字继续下移，避免贴住圆环底部 */
+@media (min-width: 431px) {
+  .score-summary-left {
+    min-height: 196px;
+  }
+
+  .score-gauge-large-wrap {
+    height: 196px;
+  }
+
+  .score-gauge-caption {
+    top: 144px;
+    gap: 4px;
+  }
+}
