@@ -214,6 +214,7 @@ apiAccess: 'API 연동'
       "baseHint": "구름층과 광로를 합산한 기초 점수",
       "canvasHint": "고층/중층운은 색을 받고 저층운은 가릴 수 있습니다",
       "lightPathHint": "햇빛이 구름층까지 도달하는지 여부",
+      "finalFormula": "최종 점수 = 기초 점수 × 보정 계수",
       "renderingHint": "습도와 가시거리가 색 표현에 영향을 줍니다",
       "aerosolHint": "적절한 에어로졸은 주황·붉은 산란을 강화하고 과하면 회색빛이 됩니다"
     },

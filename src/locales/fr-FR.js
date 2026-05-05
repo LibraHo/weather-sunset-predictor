@@ -208,6 +208,7 @@ const translations = {
       "baseHint": "Score de base après combinaison des nuages et du trajet lumineux",
       "canvasHint": "Les nuages hauts/moyens portent la couleur ; les nuages bas peuvent la bloquer",
       "lightPathHint": "La lumière du soleil peut-elle atteindre les nuages ?",
+      "finalFormula": "Score final = score de base × facteurs de correction",
       "renderingHint": "Humidité et visibilité influencent le rendu des couleurs",
       "aerosolHint": "Un aérosol modéré renforce l’orange-rouge ; trop élevé, il grise la scène"
     },

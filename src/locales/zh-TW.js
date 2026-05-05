@@ -208,6 +208,7 @@ const translations = {
       "baseHint": "雲層與光路融合後的基礎分",
       "canvasHint": "高雲/中雲提供色彩載體，低雲可能遮擋",
       "lightPathHint": "太陽光是否能照到雲層",
+      "finalFormula": "最終分 = 基礎分 × 修正係數",
       "renderingHint": "濕度與能見度影響色彩表現",
       "aerosolHint": "適中可增強紅橙散射，過高會偏灰"
     },

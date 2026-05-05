@@ -208,6 +208,7 @@ const translations = {
       "baseHint": "Base score after combining clouds and light path",
       "canvasHint": "High/mid clouds carry color; low clouds can block it",
       "lightPathHint": "Whether sunlight can reach the clouds",
+      "finalFormula": "Final score = base score × correction factors",
       "renderingHint": "Humidity and visibility affect color rendering",
       "aerosolHint": "Moderate aerosol boosts orange-red scattering; too much turns gray"
     },

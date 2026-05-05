@@ -208,6 +208,7 @@ apiAccess: 'API接続'
       "baseHint": "雲と光路を組み合わせた基礎点",
       "canvasHint": "高層/中層雲は色を受け、低層雲は遮ることがあります",
       "lightPathHint": "日光が雲まで届くかどうか",
+      "finalFormula": "最終点 = 基礎点 × 補正係数",
       "renderingHint": "湿度と視程が色の見え方に影響します",
       "aerosolHint": "適度なエアロゾルは橙赤色を強め、多すぎると灰色っぽくなります"
     },

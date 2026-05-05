@@ -230,6 +230,7 @@ export default {
       baseHint: '云层与光路融合后的基础分',
       canvasHint: '高云/中云提供色彩载体，低云会遮挡',
       lightPathHint: '太阳光是否能照到云层',
+      finalFormula: '最终分 = 基础分 × 修正系数',
       renderingHint: '湿度、能见度影响颜色表现',
       aerosolHint: '适中增强红橙散射，过高会发灰'
     },

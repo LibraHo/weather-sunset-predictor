@@ -208,6 +208,7 @@ const translations = {
       "baseHint": "Điểm cơ sở sau khi kết hợp mây và đường sáng",
       "canvasHint": "Mây cao/trung tầng mang màu; mây thấp có thể che khuất",
       "lightPathHint": "Ánh nắng có chiếu tới lớp mây hay không",
+      "finalFormula": "Điểm cuối = điểm cơ sở × hệ số hiệu chỉnh",
       "renderingHint": "Độ ẩm và tầm nhìn ảnh hưởng đến màu sắc",
       "aerosolHint": "Aerosol vừa phải tăng tán xạ cam đỏ; quá nhiều sẽ làm xám màu"
     },
