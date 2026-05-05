@@ -15,8 +15,8 @@ import Location from '../models/Location.js';
 const MANUAL_TEST_CITY = {
   displayName: 'test',
   enName: 'test',
-  lat: 39.9042,
-  lon: 116.4074,
+  lat: 0,
+  lon: 0,
   countryCode: 'CN',
   provider: 'manual-test'
 };

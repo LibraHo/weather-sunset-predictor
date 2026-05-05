@@ -22,8 +22,8 @@ const OPENMETEO_GEOCODING_BASE = 'https://geocoding-api.open-meteo.com/v1';
 
 const MANUAL_TEST_CITY_RESULT = {
   name: 'test',
-  lat: 39.9042,
-  lon: 116.4074,
+  lat: 0,
+  lon: 0,
   type: 'test',
   provider: 'manual-test',
   countryCode: 'CN',
