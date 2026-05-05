@@ -253,6 +253,12 @@ class PredictionController {
    * @private
    */
   async _calculatePredictionWithBackend(weatherData, date, lat, lon, type, weatherDataArray = null) {
+    if (weatherData?.isManualTestCity || weatherData?.providerMeta?.name === 'manual-test' || weatherDataArray?.providerMeta?.name === 'manual-test') {
+      return this.predictionService.calculatePrediction(weatherData, date, lat, lon, type, {
+        timezone: weatherData?.timezone || weatherDataArray?.providerMeta?.timezone || null
+      });
+    }
+
     // 检查是否启用后端基础预测
     if (this.features.USE_BACKEND_PREDICTION) {
       try {

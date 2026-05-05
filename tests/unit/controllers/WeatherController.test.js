@@ -9,6 +9,27 @@ describe('WeatherController - 24小时温度连续化', () => {
     controller = Object.create(WeatherController.prototype);
   });
 
+  test('fetchWeather: test 城市应生成随机 UI 测试数据且不调用天气 API', async () => {
+    controller.windyAPIService = {
+      fetchWeatherData: jest.fn(() => Promise.reject(new Error('API should not be called')))
+    };
+    controller.storageService = {
+      getCachedWeatherData: jest.fn(),
+      cacheWeatherData: jest.fn()
+    };
+
+    const data = await controller.fetchWeather({ name: 'test', lat: 0, lon: 0, isValid: () => true });
+
+    expect(controller.windyAPIService.fetchWeatherData).not.toHaveBeenCalled();
+    expect(controller.storageService.getCachedWeatherData).not.toHaveBeenCalled();
+    expect(controller.storageService.cacheWeatherData).not.toHaveBeenCalled();
+    expect(data).toHaveLength(168);
+    expect(data.providerMeta).toMatchObject({ name: 'manual-test', weatherModel: 'random-ui-test' });
+    expect(data[0].isManualTestCity).toBe(true);
+    expect(data[0].providerMeta).toMatchObject({ name: 'manual-test' });
+    expect(data[0].isValid()).toBe(true);
+  });
+
   test.skip('应该将3小时间隔数据插值为连续24小时，避免温度折线异常跳变', () => {
     const baseTs = new Date('2026-01-01T00:00:00Z').getTime();
 

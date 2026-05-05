@@ -86,8 +86,8 @@ describe('BackendGeocodingService', () => {
       expect(fetch).not.toHaveBeenCalled();
       expect(result).toBeInstanceOf(Location);
       expect(result.name).toBe('test');
-      expect(result.lat).toBeCloseTo(39.9042);
-      expect(result.lon).toBeCloseTo(116.4074);
+      expect(result.lat).toBeCloseTo(0);
+      expect(result.lon).toBeCloseTo(0);
       expect(result.countryCode).toBe('CN');
     });
 
@@ -165,7 +165,7 @@ describe('BackendGeocodingService', () => {
 
       expect(partial).toEqual([]);
       expect(exact).toHaveLength(1);
-      expect(exact[0]).toMatchObject({ displayName: 'test', lat: 39.9042, lon: 116.4074, provider: 'manual-test' });
+      expect(exact[0]).toMatchObject({ displayName: 'test', lat: 0, lon: 0, provider: 'manual-test' });
       expect(fetch).toHaveBeenCalledTimes(1);
     });
   });

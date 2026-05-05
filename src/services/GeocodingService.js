@@ -12,8 +12,8 @@ import { CITY_DATABASE, getCityDisplayName } from '../data/cityDatabase.js';
 const MANUAL_TEST_CITY = {
   zhName: 'test',
   enName: 'test',
-  lat: 39.9042,
-  lon: 116.4074,
+  lat: 0,
+  lon: 0,
   countryZh: '测试',
   countryEn: 'Test',
   aliases: ['test'],

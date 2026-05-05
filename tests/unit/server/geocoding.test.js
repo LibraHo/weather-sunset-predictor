@@ -274,8 +274,8 @@ describe('Geocoding Route — 数据转换逻辑', () => {
       expect(helpers.getManualTestCityResult('tes')).toBeNull();
       expect(helpers.getManualTestCityResult('test')).toMatchObject({
         name: 'test',
-        lat: 39.9042,
-        lon: 116.4074,
+        lat: 0,
+        lon: 0,
         provider: 'manual-test'
       });
       expect(helpers.getManualTestCityResult('  TEST  ')).toMatchObject({ name: 'test' });

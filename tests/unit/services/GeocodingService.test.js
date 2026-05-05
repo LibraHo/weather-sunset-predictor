@@ -68,8 +68,8 @@ describe('GeocodingService', () => {
       const location = await service.geocode('test');
       expect(location).toBeInstanceOf(Location);
       expect(location.name).toBe('test');
-      expect(location.lat).toBeCloseTo(39.9042);
-      expect(location.lon).toBeCloseTo(116.4074);
+      expect(location.lat).toBeCloseTo(0);
+      expect(location.lon).toBeCloseTo(0);
     });
 
     test('应该为无效位置名称抛出友好错误', async () => {
@@ -141,7 +141,7 @@ describe('GeocodingService', () => {
 
       expect(partial.some(city => city.displayName === 'test')).toBe(false);
       expect(exact).toHaveLength(1);
-      expect(exact[0]).toMatchObject({ displayName: 'test', lat: 39.9042, lon: 116.4074 });
+      expect(exact[0]).toMatchObject({ displayName: 'test', lat: 0, lon: 0 });
     });
 
     test('空关键字应返回空数组', async () => {

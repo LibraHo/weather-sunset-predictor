@@ -6,6 +6,7 @@
  * 需求：14 - 多语言支持
  */
 
+import WeatherData from '../models/WeatherData.js';
 import WindyAPIService from '../services/WindyAPIService.js';
 import MockWindyAPIService from '../services/MockWindyAPIService.js';
 import UnitConverter from '../utils/UnitConverter.js';
@@ -22,6 +23,46 @@ import ChartRenderController from './ChartRenderController.js';
 import ChinaSpotsOverlay from '../services/ChinaSpotsOverlay.js';
 import ChinaRasterOverlayManager from '../services/ChinaRasterOverlayManager.js';
 import ChinaMapCanvas from '../components/ChinaMapCanvas.js';
+
+function isManualTestLocation(location) {
+  return (location?.name || '').trim().toLowerCase() === 'test';
+}
+
+function generateManualTestWeatherData(hours = 168) {
+  const start = Date.now() - (Date.now() % 3600000);
+  const data = Array.from({ length: hours }, (_, i) => {
+    const hour = new Date(start + i * 3600000).getHours();
+    const daylight = Math.max(0, Math.sin(((hour - 6) / 12) * Math.PI));
+    const wave = Math.sin(i / 5);
+    const highClouds = Math.round(25 + Math.random() * 60);
+    const midClouds = Math.round(15 + Math.random() * 55);
+    const lowClouds = Math.round(Math.random() * 45);
+    const cloudCover = Math.max(highClouds, midClouds, lowClouds);
+    const item = new WeatherData(
+      start + i * 3600000,
+      18 + daylight * 10 + wave * 3 + Math.random() * 2,
+      Math.round(45 + Math.random() * 40),
+      cloudCover,
+      Math.round(4 + Math.random() * 18),
+      Math.round(1002 + Math.random() * 16),
+      12 + Math.random() * 28,
+      lowClouds,
+      Math.random() < 0.12 ? Math.random() * 2 : 0,
+      Math.round(Math.random() * 360),
+      highClouds,
+      midClouds
+    );
+    item.weatherCode = cloudCover > 70 ? 3 : (cloudCover > 35 ? 2 : 1);
+    item.shortwaveRadiation = Math.round(daylight * (350 + Math.random() * 450));
+    item.aerosolOpticalDepth = Number((0.08 + Math.random() * 0.18).toFixed(3));
+    item.timezone = 'Asia/Shanghai';
+    item.providerMeta = { name: 'manual-test', weatherModel: 'random-ui-test', timezone: 'Asia/Shanghai' };
+    item.isManualTestCity = true;
+    return item;
+  });
+  data.providerMeta = { name: 'manual-test', weatherModel: 'random-ui-test', timezone: 'Asia/Shanghai', dataQuality: 'mock' };
+  return data;
+}
 
 /**
  * 中国火烧云地图固定使用栅格等值渲染
@@ -137,6 +178,13 @@ class WeatherController {
 
     if (!location || !location.isValid()) {
       throw new Error('无效的位置信息');
+    }
+
+    if (isManualTestLocation(location)) {
+      const weatherData = generateManualTestWeatherData();
+      this.currentWeatherData = weatherData;
+      this.currentLocation = location;
+      return weatherData;
     }
 
     // 检查缓存（如果不是强制刷新）
