@@ -148,14 +148,17 @@ class ShareCardGenerator {
 
     this._drawBrandLogo(ctx, x0 + 26, y0 + 28, isSunrise);
 
-    ctx.fillStyle = 'rgba(255, 250, 242, 0.96)';
-    ctx.font = `700 32px ${this.font}`;
+    // 与网站顶栏一致的字体栈（Cormorant Garamond 为首，衬线优雅）
+    const brandFont = "'Cormorant Garamond', 'PingFang SC', 'Hiragino Sans GB', Georgia, serif";
+
+    ctx.fillStyle = '#C49A3C';
+    ctx.font = `300 32px ${brandFont}`;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
     ctx.fillText(this.t('shareCard.brandName', '霞客'), x0 + 72, y0 + 26);
 
-    ctx.fillStyle = 'rgba(255, 237, 213, 0.72)';
-    ctx.font = `600 17px ${this.font}`;
+    ctx.fillStyle = 'rgba(196,154,60,0.72)';
+    ctx.font = `300 17px ${brandFont}`;
     ctx.fillText(this.t('shareCard.brandSubtitle', 'Sunset Voyager'), x0 + 72, y0 + 52);
 
     ctx.textAlign = 'right';
@@ -169,10 +172,9 @@ class ShareCardGenerator {
   _drawBrandLogo(ctx, x, y, isSunrise) {
     ctx.save();
 
-    // 与网站顶栏一致：克制线性 SVG 风格，不再使用发光球形 Logo
-    const accent = isSunrise ? '#FDBA74' : '#F97316';
-    const soft = 'rgba(255, 237, 213, 0.92)';
-    ctx.strokeStyle = accent;
+    // 与网站顶栏一致：克制线性 SVG 风格，统一金色 #C49A3C
+    const gold = '#C49A3C';
+    ctx.strokeStyle = gold;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
@@ -187,14 +189,12 @@ class ShareCardGenerator {
     ctx.lineTo(x + 22, y + 4);
     ctx.stroke();
 
-    ctx.strokeStyle = soft;
     ctx.lineWidth = 2.4;
     ctx.beginPath();
     ctx.moveTo(x - 18, y + 12);
     ctx.lineTo(x + 18, y + 12);
     ctx.stroke();
 
-    ctx.globalAlpha = 0.78;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(x - 10, y + 20);
