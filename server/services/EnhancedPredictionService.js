@@ -504,6 +504,38 @@ function assessCloudThickness(weatherData, prevHourData = null) {
   return { thickness, modifier, reasons: signals, score };
 }
 
+/**
+ * 厚高云惩罚：高云虽是火烧云画布，但当高云覆盖很高且云厚信号明确时，
+ * 实际常表现为整片云幕遮光，仅日落方向局部透光，不能给优秀分。
+ */
+function assessThickHighCloudPenalty(weatherData, cloudThickness) {
+  const cloudCover = weatherData.cloudCover || 0;
+  const lowClouds = weatherData.lowClouds || 0;
+  const highClouds = weatherData.highClouds || 0;
+  const reasons = cloudThickness?.reasons || [];
+
+  const isHighCloudCurtain = highClouds >= 80 && cloudCover >= 60 && lowClouds < 20;
+  const isThick = cloudThickness?.thickness === 'thick' || cloudThickness?.modifier <= 0.5;
+  const directWeak = reasons.includes('direct_ratio_low') || reasons.includes('direct_ratio_low_moderate');
+  const diffuseDominant = reasons.includes('diffuse_dominant');
+  const waterHeavy = reasons.includes('water_vapour_very_high');
+
+  if (!isHighCloudCurtain || !isThick || !(directWeak || diffuseDominant || waterHeavy)) {
+    return { applied: false, cap: null, reason: null };
+  }
+
+  // 直射很弱 + 漫射主导：整片厚云幕，只能期待局部边缘光，接近现场 35–45 分。
+  const cap = (directWeak && diffuseDominant) ? 42 : 48;
+
+  return {
+    applied: true,
+    cap,
+    reason: directWeak && diffuseDominant
+      ? 'thick_high_cloud_diffuse_cap_42'
+      : 'thick_high_cloud_cap_48'
+  };
+}
+
 // ========== 光路几何模型（需求40，Phase 19 任务67.2）==========
 
 /**
@@ -1129,6 +1161,16 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     logger.debug('[EnhancedPredictionService]', '云厚修正画布分:', originalCanvasScore, '->', canvasScore.score);
   }
 
+  // 5.6 厚高云惩罚：厚高云不再被简单视为理想画布
+  const thickHighCloudPenalty = assessThickHighCloudPenalty(weatherData, cloudThickness);
+  if (thickHighCloudPenalty.applied) {
+    const originalLightPathScore = lightPathScore.score;
+    lightPathScore.score = Math.min(lightPathScore.score, 55);
+    lightPathScore.thickHighCloudPenalty = thickHighCloudPenalty;
+    lightPathScore.scoreBeforeThickHighCloudPenalty = originalLightPathScore;
+    logger.debug('[EnhancedPredictionService]', '厚高云修正光路分:', originalLightPathScore, '->', lightPathScore.score, thickHighCloudPenalty.reason);
+  }
+
   // 6. 综合输出
   const finalResult = calculateFinalScore(canvasScore, lightPathScore, renderingFactor, type);
 
@@ -1155,6 +1197,12 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
       adjustedStatus = 'no_fire_cloud';
       adjustedDescription = 'light_path_blocked';
     }
+  }
+
+  if (thickHighCloudPenalty.applied) {
+    adjustedScore = Math.min(adjustedScore, thickHighCloudPenalty.cap);
+    adjustedStatus = adjustedScore < 40 ? 'light_glow' : 'good_glow';
+    adjustedDescription = 'weak_local_colors';
   }
 
   // 7. 恶劣天气硬性封顶
@@ -1222,6 +1270,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
       modifier: cloudThickness.modifier,
       reasons: cloudThickness.reasons
     },
+    thickHighCloudPenalty,
     status: adjustedStatus,
     description: adjustedDescription,
     scoreBeforeOcclusion: finalResult.score,

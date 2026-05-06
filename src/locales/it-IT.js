@@ -76,6 +76,15 @@ apiAccess: 'Accesso API'
           "level3": "Nuvole basse 40–70% → ×0.8 a ×0.5 (lineare)",
           "level4": "Nuvole basse >70% → ×0.2 (ostruzione grave)"
         },
+        "thickHighCloudPenalty": {
+          "title": "6. Penalità per nubi alte spesse",
+          "subtitle": "Thick High Cloud · Limite",
+          "desc": "Molte nubi alte non significano sempre un punteggio migliore: se formano un velo spesso con poca luce diretta e diffusione dominante, di solito resta solo un bagliore locale vicino al sole.",
+          "level1": "Nubi alte ≥80% e copertura totale ≥60% attivano il controllo di rischio",
+          "level2": "Basso rapporto di luce diretta, diffusione dominante o molto vapore acqueo riducono il punteggio del percorso luminoso",
+          "level3": "I veli spessi sono limitati a circa 42–48 punti per evitare falsi eccellenti",
+          "formula": "Correzione nubi alte spesse = min(punteggio finale, 42–48), per strati spessi con luce solo locale"
+        },
         "precipPenalty": {
           "title": "5. Penalità precipitazioni",
           "subtitle": "Penalità precipitazioni · Moltiplicatore",
@@ -246,6 +255,13 @@ apiAccess: 'Accesso API'
       "noLowCloudObstruction": "Nessuna nube bassa",
       "tooManyLowClouds": "Troppe nubi basse",
       "lowCloudAmount": "Nubi basse"
+    },
+
+    "thickHighCloud": {
+      "title": "Penalità nubi alte spesse",
+      "scoreHint": "Velo di nubi alte spesse con poca luce diretta: bagliore locale, punteggio finale limitato",
+      "analysisTitle": "Velo di nubi alte spesse",
+      "analysisDesc": "Le nubi alte sono molte ma spesse e la luce diretta è debole; il colore tende a restare locale vicino al tramonto"
     },
     "lightPath": {
       "title": "Punteggio Percorso Luminoso",

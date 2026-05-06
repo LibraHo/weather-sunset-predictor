@@ -102,6 +102,15 @@ export default {
           level3: '低云40–70% → ×0.8 到 ×0.5（线性）',
           level4: '低云>70% → ×0.2（严重遮挡）'
         },
+        thickHighCloudPenalty: {
+          title: '6. 厚高云惩罚',
+          subtitle: 'Thick High Cloud · 封顶',
+          desc: '高云多不一定代表高分；当高云形成厚云幕、直射光弱且漫射占主导时，只能出现日落方向局部透光。',
+          level1: '高云≥80% 且总云量≥60%：进入厚高云风险判定',
+          level2: '若直射比低、漫射主导或水汽很高：压低光路分',
+          level3: '厚云幕场景最终分封顶约42–48分，避免误判为优秀',
+          formula: '厚高云修正 = min(最终分, 42–48)，用于“整片厚云，仅局部透光”的场景'
+        },
         precipPenalty: {
           title: '6. 降水惩罚系数',
           subtitle: 'Precipitation Penalty · Multiplier',
@@ -343,6 +352,13 @@ formationAnalysis: {
       moderateDesc: '云层厚度适中',
       thickDesc: '云层偏厚，可能遮挡光线，霞光效果受限',
       unknownDesc: '云厚数据不可用'
+    },
+
+    thickHighCloud: {
+      title: '厚高云惩罚',
+      scoreHint: '厚高云幕，直射光弱，仅局部透光，最终分封顶',
+      analysisTitle: '厚高云幕',
+      analysisDesc: '高云虽多，但云层偏厚、直射光弱，通常只能在日落方向出现局部霞光'
     },
 
     // 光路评分

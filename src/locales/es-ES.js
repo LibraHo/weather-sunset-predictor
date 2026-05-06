@@ -87,6 +87,15 @@ apiAccess: 'Acceso API'
           "level3": "Nubes bajas 40–70% → ×0.8 a ×0.5 (lineal)",
           "level4": "Nubes bajas >70% → ×0.2 (bloqueo severo)"
         },
+        "thickHighCloudPenalty": {
+          "title": "6. Penalización por nubes altas gruesas",
+          "subtitle": "Thick High Cloud · Tope",
+          "desc": "Muchas nubes altas no siempre significan mejor puntuación: si forman una cortina gruesa con poca luz directa y difusión dominante, solo suele haber brillo local junto al sol.",
+          "level1": "Nubes altas ≥80% y nubosidad total ≥60% activan la revisión de riesgo",
+          "level2": "Baja luz directa, difusión dominante o vapor de agua muy alto reducen la puntuación del trayecto de luz",
+          "level3": "Las cortinas gruesas se limitan a unos 42–48 puntos para evitar falsos excelentes",
+          "formula": "Corrección de nube alta gruesa = min(puntuación final, 42–48), para capas gruesas con luz solo local"
+        },
         "precipPenalty": {
           "title": "5. Penalización precipitaciones",
           "subtitle": "Penalización precipitaciones · Multiplicador",
@@ -257,6 +266,13 @@ apiAccess: 'Acceso API'
       "noLowCloudObstruction": "Sin nubes bajas",
       "tooManyLowClouds": "Demasiadas nubes bajas",
       "lowCloudAmount": "Nubes bajas"
+    },
+
+    "thickHighCloud": {
+      "title": "Penalización por nubes altas gruesas",
+      "scoreHint": "Cortina alta gruesa con poca luz directa; solo brillo local, puntuación final limitada",
+      "analysisTitle": "Cortina de nubes altas gruesas",
+      "analysisDesc": "Hay muchas nubes altas, pero son gruesas y la luz directa es débil; el color suele limitarse a la zona del atardecer"
     },
     "lightPath": {
       "title": "Puntuación del Trayecto de Luz",

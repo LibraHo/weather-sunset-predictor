@@ -88,6 +88,15 @@ const translations = {
           "level3": "Nuages bas 40–70% → ×0.8 à ×0.5 (linéaire)",
           "level4": "Nuages bas >70% → ×0.2 (obstruction sévère)"
         },
+        "thickHighCloudPenalty": {
+          "title": "6. Pénalité des nuages hauts épais",
+          "subtitle": "Thick High Cloud · Plafond",
+          "desc": "Beaucoup de nuages hauts ne signifie pas toujours un bon score : s’ils forment un voile épais avec peu de lumière directe et une diffusion dominante, seule une lueur locale près du soleil est probable.",
+          "level1": "Nuages hauts ≥80% et couverture totale ≥60% déclenchent le contrôle de risque",
+          "level2": "Un faible ratio de lumière directe, une diffusion dominante ou beaucoup de vapeur d’eau abaissent le score de trajet lumineux",
+          "level3": "Les voiles épais sont plafonnés vers 42–48 pour éviter un faux excellent score",
+          "formula": "Correction nuages hauts épais = min(score final, 42–48), pour un voile épais avec seulement des percées locales"
+        },
         "precipPenalty": {
           "title": "5. Pénalité précipitations",
           "subtitle": "Pénalité précipitations · Multiplicateur",
@@ -273,6 +282,13 @@ const translations = {
       "noLowCloudObstruction": "Pas de nuages bas",
       "tooManyLowClouds": "Trop de nuages bas",
       "lowCloudAmount": "Nuages bas"
+    },
+
+    "thickHighCloud": {
+      "title": "Pénalité nuages hauts épais",
+      "scoreHint": "Voile de nuages hauts épais avec peu de lumière directe : lueur locale seulement, score final plafonné",
+      "analysisTitle": "Voile de nuages hauts épais",
+      "analysisDesc": "Les nuages hauts sont nombreux mais épais, avec une lumière directe faible ; la lueur reste souvent locale près du coucher du soleil"
     },
     "lightPath": {
       "title": "Score du Chemin Lumineux",

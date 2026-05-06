@@ -88,6 +88,15 @@ const translations = {
           "level3": "Mây thấp 40–70% → ×0.8 đến ×0.5 (tuyến tính)",
           "level4": "Mây thấp >70% → ×0.2 (chặn nghiêm trọng)"
         },
+        "thickHighCloudPenalty": {
+          "title": "6. Phạt mây cao dày",
+          "subtitle": "Thick High Cloud · Giới hạn",
+          "desc": "Nhiều mây cao không luôn đồng nghĩa điểm cao. Khi mây cao tạo thành màn dày, ánh sáng trực tiếp yếu và ánh sáng tán xạ chiếm ưu thế, thường chỉ có vệt sáng cục bộ gần hoàng hôn.",
+          "level1": "Mây cao ≥80% và tổng mây ≥60% sẽ kích hoạt kiểm tra rủi ro",
+          "level2": "Tỉ lệ ánh sáng trực tiếp thấp, tán xạ trội hoặc hơi nước rất cao sẽ hạ điểm đường sáng",
+          "level3": "Màn mây dày bị giới hạn khoảng 42–48 điểm để tránh báo quá tốt",
+          "formula": "Hiệu chỉnh mây cao dày = min(điểm cuối, 42–48), dùng cho lớp mây dày chỉ hở sáng cục bộ"
+        },
         "precipPenalty": {
           "title": "5. Hệ số phạt lượng mưa",
           "subtitle": "Phạt lượng mưa · Hệ số nhân",
@@ -273,6 +282,13 @@ const translations = {
       "noLowCloudObstruction": "Không có mây thấp",
       "tooManyLowClouds": "Quá nhiều mây thấp",
       "lowCloudAmount": "Lượng mây thấp"
+    },
+
+    "thickHighCloud": {
+      "title": "Phạt mây cao dày",
+      "scoreHint": "Màn mây cao dày, ánh sáng trực tiếp yếu; chỉ có sáng cục bộ nên điểm cuối bị giới hạn",
+      "analysisTitle": "Màn mây cao dày",
+      "analysisDesc": "Mây cao nhiều nhưng dày và ánh sáng trực tiếp yếu, thường chỉ còn vệt sáng cục bộ gần hướng hoàng hôn"
     },
     "lightPath": {
       "title": "Điểm Đường Ánh Sáng",

@@ -1420,6 +1420,11 @@ class PredictionController {
     else if (weather.humidity > 70) add('warning', this._analysisText('humidity.high', { value: weather.humidity.toFixed(0) }), this._analysisText('humidity.highDesc'));
     else add('neutral', this._analysisText('humidity.low', { value: weather.humidity.toFixed(0) }), this._analysisText('humidity.lowDesc'));
 
+    const thickHighCloudPenalty = prediction?.thickHighCloudPenalty || prediction?.lightPathAnalysis?.thickHighCloudPenalty;
+    if (thickHighCloudPenalty?.applied) {
+      add('warning', this.i18n.t('prediction.thickHighCloud.analysisTitle'), this.i18n.t('prediction.thickHighCloud.analysisDesc'));
+    }
+
     if (weather.aod != null) {
       if (weather.aod >= 0.08 && weather.aod <= 0.35) add('positive', this._analysisText('aerosol.moderate', { value: weather.aod.toFixed(2) }), this._analysisText('aerosol.moderateDesc'));
       else if (weather.aod > 0.35) add('warning', this._analysisText('aerosol.high', { value: weather.aod.toFixed(2) }), this._analysisText('aerosol.highDesc'));
@@ -1524,6 +1529,7 @@ class PredictionController {
     const renderingFactor = prediction?.renderingAnalysis?.factor ?? prediction?.breakdown?.renderingFactor;
     const aerosol = prediction?.breakdown?.aerosolScattering;
     const aerosolFactor = prediction?.renderingAnalysis?.aerosolFactor ?? aerosol?.factor;
+    const thickHighCloudPenalty = prediction?.thickHighCloudPenalty || prediction?.lightPathAnalysis?.thickHighCloudPenalty;
 
     const row = (label, value, hint, className = '') => `
       <div class="score-breakdown-row ${className}">
@@ -1540,6 +1546,7 @@ class PredictionController {
         ${row(this.i18n.t('prediction.composite.title'), fmt(baseScore, 1), this.i18n.t('prediction.scoreBreakdown.baseHint'))}
         ${row(this.i18n.t('prediction.canvas.title'), fmt(canvasScore, 1), this.i18n.t('prediction.scoreBreakdown.canvasHint'))}
         ${row(this.i18n.t('prediction.lightPath.title'), fmt(lightPathScore, 1), this.i18n.t('prediction.scoreBreakdown.lightPathHint'))}
+        ${thickHighCloudPenalty?.applied ? row(this.i18n.t('prediction.thickHighCloud.title'), `≤${fmt(thickHighCloudPenalty.cap, 0)}`, this.i18n.t('prediction.thickHighCloud.scoreHint'), 'score-breakdown-row-warning') : ''}
         <div class="score-breakdown-formula">${this.i18n.t('prediction.scoreBreakdown.finalFormula')}</div>
         ${row(this.i18n.t('prediction.rendering.title'), `×${fmt(renderingFactor, 2)}`, this.i18n.t('prediction.scoreBreakdown.renderingHint'))}
         ${aerosolFactor != null ? row(this.i18n.t('prediction.rendering.aerosol'), `×${fmt(aerosolFactor, 2)}`, this.i18n.t('prediction.scoreBreakdown.aerosolHint')) : ''}
