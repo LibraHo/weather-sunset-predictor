@@ -580,6 +580,38 @@ describe('PredictionController', () => {
       expect(popover.hidden).toBe(false);
       expect(trigger.getAttribute('aria-expanded')).toBe('true');
     });
+
+    test('分数明细应按真实计算链路展示渲染后分和最终修正', () => {
+      const html = predictionController.renderScoreBreakdownPopover({
+        score: 28,
+        visibility: 5,
+        humidity: 88,
+        precipitation: 0.4,
+        breakdown: {
+          baseScore: 71.1,
+          canvasScore: 70.7,
+          lightPathScore: 72.5,
+          renderingFactor: 0.85,
+          unclampedFinalScore: 60.4,
+          aerosolScattering: { factor: 0.85 }
+        },
+        canvasAnalysis: { score: 70.7 },
+        lightPathAnalysis: { score: 72.5 },
+        renderingAnalysis: { factor: 0.85, aerosolFactor: 0.85 },
+        aerosolHazeCap: { applied: true, cap: 28, level: 'extreme', reason: 'extreme_dust_haze_cap_28' }
+      });
+
+      expect(html).toContain('实际链路');
+      expect(html).toContain('原始云量');
+      expect(html).toContain('空气 / 降水');
+      expect(html).toContain('能见度 5km');
+      expect(html).toContain('70.7');
+      expect(html).toContain('72.5');
+      expect(html).toContain('71.1');
+      expect(html).toContain('60.4');
+      expect(html).toContain('≤28');
+      expect(html).toContain('所有修正后的真实展示结果');
+    });
   });
 
   describe('renderCloudLayers', () => {

@@ -18,23 +18,6 @@ const translations = {
     "tabs": {
       "ariaLabel": "Navegación por pestañas",
       "forecast": "Pronóstico",
-      apiAccess: {
-      kicker: 'Sunset Voyager API',
-      intro: 'La API Agent de Sunset Voyager ofrece geocodificación, puntuaciones de amanecer/atardecer y explicaciones para uso personal, educativo y de investigación.',
-      openApiSpec: 'Especificación OpenAPI',
-      admin: 'Panel de administración',
-      quickStart: 'Inicio rápido',
-      step1: 'Solicita y recibe un token.',
-      step2: 'Envíalo en Authorization: Bearer <token>.',
-      step3: 'Llama a /api/agent/forecast, /api/agent/explain o /api/agent/geocode.',
-      restrictions: 'Límites de uso',
-      restrictionText: 'Solo para uso personal, educativo y de investigación. Prohibido el uso comercial. En exhibiciones públicas, elimina datos sensibles y cita la fuente.',
-      exampleCall: 'Ejemplo de llamada',
-      endpoints: 'Endpoints principales',
-      forecastDesc: 'Devuelve puntuación, nivel de calidad y mejor ventana de observación.',
-      explainDesc: 'Devuelve composición de puntuación, restricciones clave y explicación en lenguaje natural.',
-      geocodeDesc: 'Devuelve candidatos de ubicación, coordenadas y confianza.'
-    },
     "methodology": "Metodología de cálculo",
       "map": "Mapa de Resplandor",
             "shareMap": "Mapa compartido",
@@ -43,6 +26,23 @@ apiAccess: 'Acceso API'
     "menu": {
       "ariaLabel": "Cambiar vista",
       "dropdownAriaLabel": "Menú de navegación"
+    },
+    apiAccess: {
+      kicker: 'Sunset Voyager API',
+      intro: 'The Sunset Voyager Agent API provides geocoding, sunrise/sunset glow scores, and score explanations for personal, learning, and research use.',
+      openApiSpec: 'OpenAPI spec',
+      admin: 'Admin console',
+      quickStart: 'Quick start',
+      step1: 'Apply for and receive a token.',
+      step2: 'Send it in Authorization: Bearer <token>.',
+      step3: 'Call /api/agent/forecast, /api/agent/explain, or /api/agent/geocode.',
+      restrictions: 'Usage limits',
+      restrictionText: 'Personal, learning, and research use only. Commercial use is prohibited. Public displays must remove sensitive data and cite the source.',
+      exampleCall: 'Example call',
+      endpoints: 'Core endpoints',
+      forecastDesc: 'Returns score, quality level, and best viewing window.',
+      explainDesc: 'Returns score composition, key constraints, and natural-language explanation.',
+      geocodeDesc: 'Returns location candidates, coordinates, and confidence.'
     },
     "methodology": {
       "title": "Cómo se calcula la puntuación",

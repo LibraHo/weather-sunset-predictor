@@ -39,7 +39,6 @@ describe('requirement 47.2 static page i18n audit', () => {
     expect(pagesWithCjk).toEqual([
       'index.html',
       'public/admin/index.html',
-      'public/api-apply.html',
       'public/gallery.html',
       'public/raster-debug.html'
     ]);

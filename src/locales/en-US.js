@@ -18,7 +18,16 @@ const translations = {
     "tabs": {
       "ariaLabel": "Home tab navigation",
       "forecast": "Forecast",
-      apiAccess: {
+    "methodology": "Methodology",
+      "map": "Fire Sky Map",
+      "shareMap": "Share Map",
+      "apiAccess": "API Access"
+    },
+    "menu": {
+      "ariaLabel": "Switch home view",
+      "dropdownAriaLabel": "Home view menu"
+    },
+    apiAccess: {
       kicker: 'Sunset Voyager API',
       intro: 'The Sunset Voyager Agent API provides geocoding, sunrise/sunset glow scores, and score explanations for personal, learning, and research use.',
       openApiSpec: 'OpenAPI spec',
@@ -34,15 +43,6 @@ const translations = {
       forecastDesc: 'Returns score, quality level, and best viewing window.',
       explainDesc: 'Returns score composition, key constraints, and natural-language explanation.',
       geocodeDesc: 'Returns location candidates, coordinates, and confidence.'
-    },
-    "methodology": "Methodology",
-      "map": "Fire Sky Map",
-      "shareMap": "Share Map",
-      "apiAccess": "API Access"
-    },
-    "menu": {
-      "ariaLabel": "Switch home view",
-      "dropdownAriaLabel": "Home view menu"
     },
     "methodology": {
       "title": "Fire Cloud Calculation Method",

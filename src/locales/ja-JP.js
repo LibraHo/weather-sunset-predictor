@@ -18,23 +18,6 @@ const translations = {
     "tabs": {
       "ariaLabel": "ホームタブナビゲーション",
       "forecast": "予測機能",
-      apiAccess: {
-      kicker: 'Sunset Voyager API',
-      intro: '霞客 Agent API は地点解析、朝焼け/夕焼けスコア、スコア説明を提供し、個人・学習・研究用途に適しています。',
-      openApiSpec: 'OpenAPI 仕様',
-      admin: '管理画面',
-      quickStart: 'クイックスタート',
-      step1: '申請して Token を取得します。',
-      step2: 'リクエスト時に Authorization: Bearer <token> を渡します。',
-      step3: '/api/agent/forecast、/api/agent/explain、または /api/agent/geocode を呼び出します。',
-      restrictions: '利用制限',
-      restrictionText: '個人・学習・研究用途のみ。商用利用は禁止です。公開表示では秘匿化し、出典を明記してください。',
-      exampleCall: '呼び出し例',
-      endpoints: '主要 API',
-      forecastDesc: 'スコア、品質レベル、最適な観賞時間を返します。',
-      explainDesc: 'スコア構成、主要な制約、自然言語の説明を返します。',
-      geocodeDesc: '地点候補、座標、信頼度を返します。'
-    },
     "methodology": "焼き雲スコアの計算方法",
       "map": "火焼け空マップ",
             shareMap: '共有マップ',
@@ -43,6 +26,23 @@ apiAccess: 'API接続'
     "menu": {
       "ariaLabel": "ページ切り替え",
       "dropdownAriaLabel": "ページ切り替えメニュー"
+    },
+    apiAccess: {
+      kicker: 'Sunset Voyager API',
+      intro: 'The Sunset Voyager Agent API provides geocoding, sunrise/sunset glow scores, and score explanations for personal, learning, and research use.',
+      openApiSpec: 'OpenAPI spec',
+      admin: 'Admin console',
+      quickStart: 'Quick start',
+      step1: 'Apply for and receive a token.',
+      step2: 'Send it in Authorization: Bearer <token>.',
+      step3: 'Call /api/agent/forecast, /api/agent/explain, or /api/agent/geocode.',
+      restrictions: 'Usage limits',
+      restrictionText: 'Personal, learning, and research use only. Commercial use is prohibited. Public displays must remove sensitive data and cite the source.',
+      exampleCall: 'Example call',
+      endpoints: 'Core endpoints',
+      forecastDesc: 'Returns score, quality level, and best viewing window.',
+      explainDesc: 'Returns score composition, key constraints, and natural-language explanation.',
+      geocodeDesc: 'Returns location candidates, coordinates, and confidence.'
     },
     "methodology": {
       "title": "焼き雲スコアの計算方法",

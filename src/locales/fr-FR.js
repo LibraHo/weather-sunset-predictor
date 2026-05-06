@@ -18,23 +18,6 @@ const translations = {
     "tabs": {
       "ariaLabel": "Navigation par onglets",
       "forecast": "Prévisions",
-      apiAccess: {
-      kicker: 'Sunset Voyager API',
-      intro: 'L’API Agent de Sunset Voyager fournit le géocodage, les scores d’aube/crépuscule et les explications pour un usage personnel, pédagogique et de recherche.',
-      openApiSpec: 'Spécification OpenAPI',
-      admin: 'Console admin',
-      quickStart: 'Démarrage rapide',
-      step1: 'Demandez puis recevez un token.',
-      step2: 'Envoyez-le dans Authorization: Bearer <token>.',
-      step3: 'Appelez /api/agent/forecast, /api/agent/explain ou /api/agent/geocode.',
-      restrictions: 'Limites d’usage',
-      restrictionText: 'Usage personnel, pédagogique et de recherche uniquement. Usage commercial interdit. Toute publication doit anonymiser les données et citer la source.',
-      exampleCall: 'Exemple d’appel',
-      endpoints: 'Endpoints principaux',
-      forecastDesc: 'Retourne le score, le niveau de qualité et la meilleure fenêtre d’observation.',
-      explainDesc: 'Retourne la composition du score, les contraintes clés et une explication en langage naturel.',
-      geocodeDesc: 'Retourne des lieux candidats, coordonnées et niveau de confiance.'
-    },
     "methodology": "Méthode de calcul",
       "map": "Carte Lueur",
       "shareMap": "Carte partagée",
@@ -43,6 +26,23 @@ const translations = {
     "menu": {
       "ariaLabel": "Changer de vue",
       "dropdownAriaLabel": "Menu de navigation"
+    },
+    apiAccess: {
+      kicker: 'Sunset Voyager API',
+      intro: 'The Sunset Voyager Agent API provides geocoding, sunrise/sunset glow scores, and score explanations for personal, learning, and research use.',
+      openApiSpec: 'OpenAPI spec',
+      admin: 'Admin console',
+      quickStart: 'Quick start',
+      step1: 'Apply for and receive a token.',
+      step2: 'Send it in Authorization: Bearer <token>.',
+      step3: 'Call /api/agent/forecast, /api/agent/explain, or /api/agent/geocode.',
+      restrictions: 'Usage limits',
+      restrictionText: 'Personal, learning, and research use only. Commercial use is prohibited. Public displays must remove sensitive data and cite the source.',
+      exampleCall: 'Example call',
+      endpoints: 'Core endpoints',
+      forecastDesc: 'Returns score, quality level, and best viewing window.',
+      explainDesc: 'Returns score composition, key constraints, and natural-language explanation.',
+      geocodeDesc: 'Returns location candidates, coordinates, and confidence.'
     },
     "methodology": {
       "title": "Comment le score est calculé",
