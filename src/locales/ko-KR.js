@@ -315,6 +315,14 @@ apiAccess: 'API 연동'
       "analysisTitle": "두꺼운 상층운 막",
       "analysisDesc": "상층운은 많지만 구름이 두껍고 직사광이 약해 노을 방향의 일부 빛만 기대됩니다"
     },
+    "highCloudCarrier": {
+      "title": "상층운 캐리어 하한 보정",
+      "scoreHint": "상층운이 많고 저층운이 적으며 공기가 충분히 맑을 때 과도한 감점을 피합니다"
+    },
+    "aerosolHaze": {
+      "title": "먼지/연무 상한",
+      "scoreHint": "AOD, 먼지 또는 PM10이 매우 높으면 상층운이 많아도 색이 약해질 수 있습니다"
+    },
     "lightPath": {
       "title": "빛 경로 점수",
       "score": "빛 경로 점수",

@@ -274,6 +274,14 @@ apiAccess: 'Acceso API'
       "analysisTitle": "Cortina de nubes altas gruesas",
       "analysisDesc": "Hay muchas nubes altas, pero son gruesas y la luz directa es débil; el color suele limitarse a la zona del atardecer"
     },
+    "highCloudCarrier": {
+      "title": "Piso por nubes altas",
+      "scoreHint": "Con muchas nubes altas, pocas nubes bajas y aire suficientemente claro, se evita penalizar en exceso"
+    },
+    "aerosolHaze": {
+      "title": "Límite por polvo/bruma",
+      "scoreHint": "AOD, polvo o PM10 muy altos pueden apagar el color aunque haya muchas nubes altas"
+    },
     "lightPath": {
       "title": "Puntuación del Trayecto de Luz",
       "score": "Puntuación del Trayecto de Luz",
