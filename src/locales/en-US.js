@@ -211,6 +211,7 @@ const translations = {
       "low": "Key conditions are missing; fire-cloud probability is low."
     },
         "scoreBreakdown": {
+      "title": "Score details",
       "viewDetails": "View score details",
       "finalDisplayed": "Final displayed score",
       "baseFormula": "Base score = canvas ×0.8 + light path ×0.2",

@@ -12,6 +12,19 @@
 
 import Location from '../models/Location.js';
 
+const MANUAL_TEST_CITY = {
+  displayName: 'test',
+  enName: 'test',
+  lat: 0,
+  lon: 0,
+  countryCode: 'CN',
+  provider: 'manual-test'
+};
+
+function isManualTestQuery(query) {
+  return typeof query === 'string' && query.trim().toLowerCase() === 'test';
+}
+
 class BackendGeocodingService {
   /**
    * @param {Object} options
@@ -39,6 +52,13 @@ class BackendGeocodingService {
   async geocode(locationName) {
     if (!locationName || typeof locationName !== 'string' || !locationName.trim()) {
       throw new Error('位置名称不能为空');
+    }
+
+    if (isManualTestQuery(locationName)) {
+      const location = new Location(MANUAL_TEST_CITY.lat, MANUAL_TEST_CITY.lon, MANUAL_TEST_CITY.displayName);
+      location.countryCode = MANUAL_TEST_CITY.countryCode;
+      location.regionCode = null;
+      return location;
     }
 
     const url = new URL(`${this.proxyURL}/api/geocoding/search`);
@@ -147,6 +167,10 @@ class BackendGeocodingService {
   async searchCities(query, limit = 8) {
     if (!query || typeof query !== 'string' || !query.trim()) {
       return [];
+    }
+
+    if (isManualTestQuery(query)) {
+      return [{ ...MANUAL_TEST_CITY }].slice(0, limit);
     }
 
     const url = new URL(`${this.proxyURL}/api/geocoding/search`);

@@ -64,6 +64,14 @@ describe('GeocodingService', () => {
       global.fetch = originalFetch;
     });
 
+    test('应该能够解析手动测试城市 test', async () => {
+      const location = await service.geocode('test');
+      expect(location).toBeInstanceOf(Location);
+      expect(location.name).toBe('test');
+      expect(location.lat).toBeCloseTo(0);
+      expect(location.lon).toBeCloseTo(0);
+    });
+
     test('应该为无效位置名称抛出友好错误', async () => {
       // Mock fetch to return empty results
       const originalFetch = global.fetch;
@@ -125,6 +133,15 @@ describe('GeocodingService', () => {
       const results = await service.searchCities('bei', 5);
       expect(results.length).toBeGreaterThan(0);
       expect(results.some(city => city.enName === 'Beijing' || city.zhName.includes('北京'))).toBe(true);
+    });
+
+    test('仅完整手动输入 test 时返回测试城市', async () => {
+      const partial = await service.searchCities('tes', 5);
+      const exact = await service.searchCities('test', 5);
+
+      expect(partial.some(city => city.displayName === 'test')).toBe(false);
+      expect(exact).toHaveLength(1);
+      expect(exact[0]).toMatchObject({ displayName: 'test', lat: 0, lon: 0 });
     });
 
     test('空关键字应返回空数组', async () => {

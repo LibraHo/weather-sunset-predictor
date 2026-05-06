@@ -211,6 +211,7 @@ const translations = {
       "low": "Des conditions clés manquent ; la probabilité reste faible."
     },
         "scoreBreakdown": {
+      "title": "Détail du score",
       "viewDetails": "Voir le détail du score",
       "finalDisplayed": "Score final affiché",
       "baseFormula": "Score de base = toile ×0,8 + trajet lumineux ×0,2",

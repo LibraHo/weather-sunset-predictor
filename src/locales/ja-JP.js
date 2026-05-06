@@ -211,6 +211,7 @@ apiAccess: 'API接続'
       "low": "重要な条件が不足しており、焼け雲の可能性は低めです。"
     },
         "scoreBreakdown": {
+      "title": "スコア詳細",
       "viewDetails": "スコア詳細を見る",
       "finalDisplayed": "最終表示スコア",
       "baseFormula": "基礎点 = キャンバス ×0.8 + 光路 ×0.2",

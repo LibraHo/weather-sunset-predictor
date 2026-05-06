@@ -68,6 +68,30 @@ describe('PredictionController', () => {
     });
   });
 
+  describe('_calculatePredictionWithBackend', () => {
+    test('manual-test 天气数据应走前端本地预测，不调用后端 API', async () => {
+      const localResult = { score: 66, quality: 'good' };
+      predictionController.predictionService = {
+        calculatePrediction: jest.fn(() => localResult)
+      };
+      predictionController.predictionAPIService = {
+        calculate: jest.fn(() => Promise.reject(new Error('backend should not be called')))
+      };
+      predictionController.features = { USE_BACKEND_PREDICTION: true };
+
+      const weatherData = {
+        timestamp: Date.now(),
+        timezone: 'Asia/Shanghai',
+        providerMeta: { name: 'manual-test' }
+      };
+      const result = await predictionController._calculatePredictionWithBackend(weatherData, new Date(), 0, 0, 'sunset');
+
+      expect(result).toBe(localResult);
+      expect(predictionController.predictionService.calculatePrediction).toHaveBeenCalled();
+      expect(predictionController.predictionAPIService.calculate).not.toHaveBeenCalled();
+    });
+  });
+
 
   describe('formatTime', () => {
     test('应该按目标地点时区格式化时间，而不是浏览器/用户时区', () => {

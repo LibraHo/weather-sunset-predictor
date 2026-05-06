@@ -184,6 +184,7 @@ apiAccess: 'Accesso API'
       "low": "Mancano condizioni chiave; la probabilità di nubi infuocate è bassa."
     },
         "scoreBreakdown": {
+      "title": "Dettaglio punteggio",
       "viewDetails": "Vedi dettagli punteggio",
       "finalDisplayed": "Punteggio finale mostrato",
       "baseFormula": "Punteggio base = tela ×0,8 + percorso luce ×0,2",

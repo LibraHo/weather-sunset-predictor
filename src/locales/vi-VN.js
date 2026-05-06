@@ -211,6 +211,7 @@ const translations = {
       "low": "Thiếu điều kiện then chốt, khả năng xuất hiện mây đẹp thấp."
     },
         "scoreBreakdown": {
+      "title": "Chi tiết điểm",
       "viewDetails": "Xem chi tiết điểm",
       "finalDisplayed": "Điểm cuối hiển thị",
       "baseFormula": "Điểm cơ sở = nền mây ×0,8 + đường sáng ×0,2",

@@ -22,20 +22,23 @@ class RadarCompass {
     const cs = getComputedStyle(document.body);
     const v = k => cs.getPropertyValue(k).trim();
     const i18n = window.i18n;
+    const lang = (document.documentElement.lang || i18n?.currentLanguage || '').toLowerCase();
+    const isChinese = !lang || lang.startsWith('zh');
+    const pick = (zh, en) => (isChinese ? zh : en);
     const t = (key, fallback, params = {}) => {
       if (!i18n?.t) return fallback;
       const translated = i18n.t(key, params);
       return translated === key ? fallback : translated;
     };
     const text = {
-      N: t('surrounding.directions.N', 'N'), NE: t('surrounding.directions.NE', 'NE'),
-      E: t('surrounding.directions.E', 'E'), SE: t('surrounding.directions.SE', 'SE'),
-      S: t('surrounding.directions.S', 'S'), SW: t('surrounding.directions.SW', 'SW'),
-      W: t('surrounding.directions.W', 'W'), NW: t('surrounding.directions.NW', 'NW'),
-      low: t('prediction.cloud.low', 'Low'), mid: t('prediction.cloud.mid', 'Mid'), high: t('prediction.cloud.high', 'High'),
-      sunrise: t('prediction.tabs.sunrise', 'Sunrise'), sunset: t('prediction.tabs.sunset', 'Sunset'),
-      title: t('surrounding.radarTitle', t('surrounding.title', 'Surrounding Cloud Radar')),
-      subtitle: t('surrounding.radarSubtitle', '20km · Continuous cloud field')
+      N: t('surrounding.directions.N', pick('北', 'N')), NE: t('surrounding.directions.NE', pick('东北', 'NE')),
+      E: t('surrounding.directions.E', pick('东', 'E')), SE: t('surrounding.directions.SE', pick('东南', 'SE')),
+      S: t('surrounding.directions.S', pick('南', 'S')), SW: t('surrounding.directions.SW', pick('西南', 'SW')),
+      W: t('surrounding.directions.W', pick('西', 'W')), NW: t('surrounding.directions.NW', pick('西北', 'NW')),
+      low: t('prediction.cloudLayers.shortLow', pick('低云', 'Low')), mid: t('prediction.cloudLayers.shortMid', pick('中云', 'Mid')), high: t('prediction.cloudLayers.shortHigh', pick('高云', 'High')),
+      sunrise: t('prediction.tabs.sunrise', pick('日出', 'Sunrise')), sunset: t('prediction.tabs.sunset', pick('日落', 'Sunset')),
+      title: t('surrounding.radarTitle', pick('周边云况雷达', 'Surrounding Cloud Radar')),
+      subtitle: t('surrounding.radarSubtitle', pick('20km · 连续云场', '20km · Continuous cloud field'))
     };
     const theme = {
       // 视觉 token（无 UI token 则回退默认）
@@ -337,14 +340,10 @@ class RadarCompass {
     ].map(([r, lbl], i) => {
       const innerR = i === 0 ? R_LOW_INNER : [R_LOW, R_MID][i - 1];
       const [tx, ty] = this._pt(cx, cy, r - (r - innerR) / 2, 340);
-      const bw = 30;
-      const bh = 16;
       return `
         <circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}"
           fill="transparent" stroke="${ringStroke}" stroke-width="1"/>
-        <rect x="${(tx - bw / 2).toFixed(1)}" y="${(ty - bh / 2 - 1).toFixed(1)}" width="${bw}" height="${bh}" rx="8"
-          fill="${T.labelBg}"/>
-        <text x="${tx.toFixed(1)}" y="${(ty + 3.5).toFixed(1)}" font-size="11" font-weight="800"
+        <text x="${tx.toFixed(1)}" y="${(ty + 4).toFixed(1)}" font-size="12" font-weight="700"
           fill="${T.labelFill}" text-anchor="middle">${lbl}</text>`;
     }).join('');
 
@@ -364,8 +363,8 @@ class RadarCompass {
     const labels = DIR_ORDER.map(d => {
       const lbl = text[d] || { N: '北', NE: '东北', E: '东', SE: '东南', S: '南', SW: '西南', W: '西', NW: '西北' }[d];
       const [x, y] = this._pt(cx, cy, labelR, this._dirAz(d));
-      return `<text x="${x.toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="middle"
-          font-size="12" font-weight="800" fill="${T.labelFill || '#334155'}">${lbl}</text>`;
+      return `<text x="${x.toFixed(1)}" y="${(y + 5).toFixed(1)}" text-anchor="middle"
+          font-size="13" font-weight="700" fill="${T.labelFill || '#334155'}">${lbl}</text>`;
     }).join('');
 
     const getSunRadius = az => {
