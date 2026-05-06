@@ -11,23 +11,6 @@ export default {
     tabs: {
       ariaLabel: 'تنقل تبويبات الصفحة الرئيسية',
       forecast: 'التنبؤ',
-      apiAccess: {
-      kicker: 'Sunset Voyager API',
-      intro: 'توفر واجهة Sunset Voyager Agent API تحديد المواقع ودرجات الشروق/الغروب وشرح الدرجات للاستخدام الشخصي والتعليمي والبحثي.',
-      openApiSpec: 'مواصفة OpenAPI',
-      admin: 'لوحة الإدارة',
-      quickStart: 'بدء سريع',
-      step1: 'قدّم طلباً واحصل على Token.',
-      step2: 'أرسله ضمن Authorization: Bearer <token>.',
-      step3: 'استدعِ /api/agent/forecast أو /api/agent/explain أو /api/agent/geocode.',
-      restrictions: 'قيود الاستخدام',
-      restrictionText: 'للاستخدام الشخصي/التعليمي/البحثي فقط، ويُحظر الاستخدام التجاري. عند العرض العام يجب إخفاء البيانات الحساسة وذكر المصدر.',
-      exampleCall: 'مثال طلب',
-      endpoints: 'واجهات أساسية',
-      forecastDesc: 'يعيد الدرجة ومستوى الجودة وأفضل نافذة مشاهدة.',
-      explainDesc: 'يعيد مكونات الدرجة والقيود الرئيسية وشرحاً نصياً.',
-      geocodeDesc: 'يعيد مواقع مرشحة وإحداثيات ومستوى ثقة.'
-    },
     methodology: 'طريقة حساب النقاط',
       map: 'خريطة السحب الحمراء',
             shareMap: 'خريطة المشاركة',
@@ -36,6 +19,23 @@ apiAccess: 'الوصول إلى API'
     menu: {
       ariaLabel: 'تبديل العرض',
       dropdownAriaLabel: 'قائمة التنقل'
+    },
+    apiAccess: {
+      kicker: 'Sunset Voyager API',
+      intro: 'The Sunset Voyager Agent API provides geocoding, sunrise/sunset glow scores, and score explanations for personal, learning, and research use.',
+      openApiSpec: 'OpenAPI spec',
+      admin: 'Admin console',
+      quickStart: 'Quick start',
+      step1: 'Apply for and receive a token.',
+      step2: 'Send it in Authorization: Bearer <token>.',
+      step3: 'Call /api/agent/forecast, /api/agent/explain, or /api/agent/geocode.',
+      restrictions: 'Usage limits',
+      restrictionText: 'Personal, learning, and research use only. Commercial use is prohibited. Public displays must remove sensitive data and cite the source.',
+      exampleCall: 'Example call',
+      endpoints: 'Core endpoints',
+      forecastDesc: 'Returns score, quality level, and best viewing window.',
+      explainDesc: 'Returns score composition, key constraints, and natural-language explanation.',
+      geocodeDesc: 'Returns location candidates, coordinates, and confidence.'
     },
     methodology: {
       title: 'كيف يتم حساب النقاط',

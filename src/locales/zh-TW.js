@@ -18,7 +18,16 @@ const translations = {
     "tabs": {
       "ariaLabel": "主頁分頁導航",
       "forecast": "預測功能",
-      apiAccess: {
+    "methodology": "火燒雲計算方法",
+      "map": "火燒雲地圖",
+      "shareMap": "分享地圖",
+      "apiAccess": "API接入"
+    },
+    "menu": {
+      "ariaLabel": "切換頁面",
+      "dropdownAriaLabel": "頁面切換選單"
+    },
+    apiAccess: {
       kicker: 'Sunset Voyager API',
       intro: '霞客 Agent API 提供地點解析、朝霞/晚霞評分與評分解釋，適合個人、學習與研究場景。',
       openApiSpec: 'OpenAPI 規格',
@@ -34,15 +43,6 @@ const translations = {
       forecastDesc: '返回評分、品質等級和最佳觀賞窗口。',
       explainDesc: '返回評分構成、關鍵限制和自然語言解釋。',
       geocodeDesc: '返回地點候選、座標和信賴度。'
-    },
-    "methodology": "火燒雲計算方法",
-      "map": "火燒雲地圖",
-      "shareMap": "分享地圖",
-      "apiAccess": "API接入"
-    },
-    "menu": {
-      "ariaLabel": "切換頁面",
-      "dropdownAriaLabel": "頁面切換選單"
     },
     "methodology": {
       "title": "火燒雲計算方法",

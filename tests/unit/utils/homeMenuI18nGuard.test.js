@@ -30,4 +30,19 @@ describe('home menu i18n guard', () => {
       }
     }
   });
+
+  test('new API access page copy is maintained in zh-CN/zh-TW/en-US and falls back to English elsewhere', async () => {
+    const en = (await import('../../../src/locales/en-US.js')).default.home.apiAccess;
+    const zhCN = (await import('../../../src/locales/zh-CN.js')).default.home.apiAccess;
+    const zhTW = (await import('../../../src/locales/zh-TW.js')).default.home.apiAccess;
+
+    expect(zhCN.intro).toContain('霞客 Agent API');
+    expect(zhTW.intro).toContain('霞客 Agent API');
+    expect(en.intro).toContain('Sunset Voyager Agent API');
+
+    for (const locale of ['ja-JP', 'ko-KR', 'es-ES', 'fr-FR', 'vi-VN', 'it-IT', 'ar-SA']) {
+      const mod = await import(`../../../src/locales/${locale}.js`);
+      expect(mod.default.home.apiAccess).toEqual(en);
+    }
+  });
 });
