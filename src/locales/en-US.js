@@ -99,11 +99,11 @@ const translations = {
         "thickHighCloudPenalty": {
           "title": "6. Thick High-Cloud Penalty",
           "subtitle": "Thick High Cloud · Cap",
-          "desc": "More high clouds do not always mean a higher score. When they form a thick curtain with weak direct light and dominant diffuse light, only local glow near the sun is likely.",
-          "level1": "High clouds ≥80% and total cloud cover ≥60% trigger the thick high-cloud risk check",
-          "level2": "Low direct-light ratio, diffuse dominance, or very high water vapour lowers the light-path score",
-          "level3": "Thick curtain scenes are capped around 42–48 to avoid false excellent ratings",
-          "formula": "Thick high-cloud correction = min(final score, 42–48), for broad thick cloud decks with only local light leaks"
+          "desc": "More high clouds do not always mean a higher score. The model now checks both cloud-curtain thickness and air transparency: clear high-cloud carriers can be protected, while thick curtains or dust haze are capped.",
+          "level1": "High clouds ≥80% with scarce low clouds trigger a two-way carrier/curtain assessment",
+          "level2": "If the air is clear and dust is not heavy, thickness signals are not allowed to over-penalize the score; the result can floor around 64–68",
+          "level3": "Low direct ratio, diffuse dominance, or very high water vapour caps thick-curtain scenes around 42–48; extreme dust/PM10/AOD caps around 28",
+          "formula": "Final correction = high-cloud carrier floor or min(final score, curtain/haze cap), separating colorable high clouds from gray-yellow light suppression"
         },
         "precipPenalty": {
           "title": "6. Precipitation Penalty",
@@ -302,6 +302,14 @@ const translations = {
       "scoreHint": "Thick high-cloud curtain with weak direct light; only local glow is likely, so the final score is capped",
       "analysisTitle": "Thick high-cloud curtain",
       "analysisDesc": "High clouds are abundant, but they are thick and direct light is weak, so glow is usually limited near the sunset direction"
+    },
+    "highCloudCarrier": {
+      "title": "High-cloud carrier floor",
+      "scoreHint": "When high clouds are abundant, low clouds are scarce, and air is clear enough, avoid over-penalizing the score"
+    },
+    "aerosolHaze": {
+      "title": "Dust/haze cap",
+      "scoreHint": "Very high AOD, dust, or PM10 can suppress color even when high clouds are abundant"
     },
     "lightPath": {
       "title": "Light Path Score",

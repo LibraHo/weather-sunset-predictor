@@ -1262,6 +1262,9 @@ class PredictionController {
       'aerosol.moderate': '气溶胶适中（AOD {{value}}）', 'aerosol.moderateDesc': '有利于增强红橙色散射',
       'aerosol.high': '气溶胶偏高（AOD {{value}}）', 'aerosol.highDesc': '可能灰霾发暗',
       'aerosol.low': '空气过于通透（AOD {{value}}）', 'aerosol.lowDesc': '颜色可能偏淡',
+      'aerosol.extremeHaze': '沙尘/灰幕很重', 'aerosol.extremeHazeDesc': '高云虽多，但空气光学条件失效，霞光容易被压成灰黄色',
+      'aerosol.hazeCap': '灰幕风险明显', 'aerosol.hazeCapDesc': '颗粒物或气溶胶偏高，会削弱红橙色染色',
+      'carrier.strong': '高云载体清晰', 'carrier.strongDesc': '高云充足、低云稀少且空气较通透，具备中高分基础',
       'layer.single': '云层单一', 'layer.singleDesc': '高云质量好，仍可形成鲜明火烧云'
     }[key] || fullKey;
 
@@ -1425,6 +1428,20 @@ class PredictionController {
       add('warning', this.i18n.t('prediction.thickHighCloud.analysisTitle'), this.i18n.t('prediction.thickHighCloud.analysisDesc'));
     }
 
+    const aerosolHazeCap = prediction?.aerosolHazeCap;
+    if (aerosolHazeCap?.applied) {
+      const isExtreme = aerosolHazeCap.level === 'extreme';
+      add('warning',
+        this._analysisText(isExtreme ? 'aerosol.extremeHaze' : 'aerosol.hazeCap'),
+        this._analysisText(isExtreme ? 'aerosol.extremeHazeDesc' : 'aerosol.hazeCapDesc')
+      );
+    }
+
+    const carrierAdjustment = prediction?.highCloudCarrierAdjustment;
+    if (carrierAdjustment?.applied) {
+      add('positive', this._analysisText('carrier.strong'), this._analysisText('carrier.strongDesc'));
+    }
+
     if (weather.aod != null) {
       if (weather.aod >= 0.08 && weather.aod <= 0.35) add('positive', this._analysisText('aerosol.moderate', { value: weather.aod.toFixed(2) }), this._analysisText('aerosol.moderateDesc'));
       else if (weather.aod > 0.35) add('warning', this._analysisText('aerosol.high', { value: weather.aod.toFixed(2) }), this._analysisText('aerosol.highDesc'));
@@ -1452,6 +1469,8 @@ class PredictionController {
       visibility: Number(prediction.visibility ?? prediction.factors?.visibility?.value ?? 0) || 0,
       humidity: Number(prediction.humidity ?? prediction.factors?.humidity?.value ?? 0) || 0,
       aod: prediction.aerosolOpticalDepth ?? prediction.factors?.aerosolOpticalDepth?.value ?? aerosol?.aerosolOpticalDepth ?? null,
+      dust: prediction.dust ?? aerosol?.dust ?? null,
+      pm10: prediction.pm10 ?? aerosol?.pm10 ?? null,
       layerCount
     };
   }
@@ -1530,6 +1549,8 @@ class PredictionController {
     const aerosol = prediction?.breakdown?.aerosolScattering;
     const aerosolFactor = prediction?.renderingAnalysis?.aerosolFactor ?? aerosol?.factor;
     const thickHighCloudPenalty = prediction?.thickHighCloudPenalty || prediction?.lightPathAnalysis?.thickHighCloudPenalty;
+    const aerosolHazeCap = prediction?.aerosolHazeCap;
+    const carrierAdjustment = prediction?.highCloudCarrierAdjustment;
 
     const row = (label, value, hint, className = '') => `
       <div class="score-breakdown-row ${className}">
@@ -1547,6 +1568,8 @@ class PredictionController {
         ${row(this.i18n.t('prediction.canvas.title'), fmt(canvasScore, 1), this.i18n.t('prediction.scoreBreakdown.canvasHint'))}
         ${row(this.i18n.t('prediction.lightPath.title'), fmt(lightPathScore, 1), this.i18n.t('prediction.scoreBreakdown.lightPathHint'))}
         ${thickHighCloudPenalty?.applied ? row(this.i18n.t('prediction.thickHighCloud.title'), `≤${fmt(thickHighCloudPenalty.cap, 0)}`, this.i18n.t('prediction.thickHighCloud.scoreHint'), 'score-breakdown-row-warning') : ''}
+        ${carrierAdjustment?.applied ? row(this._translateOrFallback('prediction.highCloudCarrier.title', '高云载体保底'), `≥${fmt(carrierAdjustment.floor, 0)}`, this._translateOrFallback('prediction.highCloudCarrier.scoreHint', '高云充足、低云少且空气较通透时，避免云厚信号误伤'), 'score-breakdown-row-positive') : ''}
+        ${aerosolHazeCap?.applied ? row(this._translateOrFallback('prediction.aerosolHaze.title', '沙尘灰幕封顶'), `≤${fmt(aerosolHazeCap.cap, 0)}`, this._translateOrFallback('prediction.aerosolHaze.scoreHint', 'AOD、沙尘或 PM10 过高时，高云多也不代表能烧起来'), 'score-breakdown-row-warning') : ''}
         <div class="score-breakdown-formula">${this.i18n.t('prediction.scoreBreakdown.finalFormula')}</div>
         ${row(this.i18n.t('prediction.rendering.title'), `×${fmt(renderingFactor, 2)}`, this.i18n.t('prediction.scoreBreakdown.renderingHint'))}
         ${aerosolFactor != null ? row(this.i18n.t('prediction.rendering.aerosol'), `×${fmt(aerosolFactor, 2)}`, this.i18n.t('prediction.scoreBreakdown.aerosolHint')) : ''}

@@ -290,6 +290,14 @@ const translations = {
       "analysisTitle": "Màn mây cao dày",
       "analysisDesc": "Mây cao nhiều nhưng dày và ánh sáng trực tiếp yếu, thường chỉ còn vệt sáng cục bộ gần hướng hoàng hôn"
     },
+    "highCloudCarrier": {
+      "title": "Sàn điểm mây cao",
+      "scoreHint": "Mây cao nhiều, ít mây thấp và không khí đủ trong: tránh phạt quá mức do tín hiệu mây dày"
+    },
+    "aerosolHaze": {
+      "title": "Giới hạn bụi/mù",
+      "scoreHint": "AOD, bụi hoặc PM10 rất cao có thể làm màu bị xám dù có nhiều mây cao"
+    },
     "lightPath": {
       "title": "Điểm Đường Ánh Sáng",
       "score": "Điểm Đường Ánh Sáng",

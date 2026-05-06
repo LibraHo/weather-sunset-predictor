@@ -243,6 +243,9 @@ function buildViewingWindow(prediction, type) {
 function buildSummary(prediction, type) {
   const score = Math.round(Number(prediction.score) || 0);
   const label = type === 'sunrise' ? '朝霞' : '晚霞';
+  if (prediction?.aerosolHazeCap?.level === 'extreme') return `${label}受沙尘/灰幕严重压制，虽然可能有高云，但不建议专门等待。`;
+  if (prediction?.aerosolHazeCap?.applied) return `${label}有灰幕风险，高云多也可能只呈现暗淡局部色彩。`;
+  if (prediction?.highCloudCarrierAdjustment?.applied && score >= 60) return `${label}高云载体清晰、低云遮挡少，有较好观赏机会。`;
   if (score >= 75) return `${label}条件很好，值得重点关注。`;
   if (score >= 55) return `${label}有一定机会，建议到时观察云层和通透度。`;
   if (score >= 35) return `${label}机会一般，条件存在明显限制。`;
@@ -290,6 +293,9 @@ function buildAgentForecastResponse({ location, prediction, weatherData, type, d
       cloudType: prediction.cloudType,
       geometricModel: prediction.geometricModel,
       cloudThickness: prediction.cloudThickness,
+      thickHighCloudPenalty: prediction.thickHighCloudPenalty,
+      aerosolHazeCap: prediction.aerosolHazeCap,
+      highCloudCarrierAdjustment: prediction.highCloudCarrierAdjustment,
       scoreBeforeOcclusion: prediction.scoreBeforeOcclusion
     };
   }
@@ -343,6 +349,12 @@ function buildAgentExplainResponse({ location, prediction, weatherData, type, da
   if (prediction?.cloudThickness?.reasons?.length) {
     constraints.push({ code: 'CLOUD_THICKNESS', reason: prediction.cloudThickness.reasons.join('; ') });
   }
+  if (prediction?.aerosolHazeCap?.applied) {
+    constraints.push({ code: 'AEROSOL_HAZE_CAP', reason: prediction.aerosolHazeCap.reason });
+  }
+  if (prediction?.highCloudCarrierAdjustment?.applied) {
+    constraints.push({ code: 'HIGH_CLOUD_CARRIER_FLOOR', reason: prediction.highCloudCarrierAdjustment.reason });
+  }
   if (prediction?.occlusion && prediction.occlusion.ratio != null && prediction.occlusion.ratio > 0) {
     constraints.push({ code: 'SOLAR_OCCLUSION', reason: `遮挡系数 ${(prediction.occlusion.ratio * 100).toFixed(1)}%` });
   }
@@ -373,6 +385,9 @@ function buildAgentExplainResponse({ location, prediction, weatherData, type, da
         cloudType: prediction?.cloudType,
         geometricModel: prediction?.geometricModel,
         cloudThickness: prediction?.cloudThickness,
+        thickHighCloudPenalty: prediction?.thickHighCloudPenalty,
+        aerosolHazeCap: prediction?.aerosolHazeCap,
+        highCloudCarrierAdjustment: prediction?.highCloudCarrierAdjustment,
         weatherSnapshot: {
           cloudCover: weatherData.cloudCover,
           humidity: weatherData.humidity,
