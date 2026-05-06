@@ -536,6 +536,77 @@ function assessThickHighCloudPenalty(weatherData, cloudThickness) {
   };
 }
 
+function getAerosolMetrics(weatherData) {
+  const aod = Number(weatherData.aerosolOpticalDepth ?? weatherData.aod);
+  const pm25 = Number(weatherData.pm2_5 ?? weatherData.pm25);
+  const pm10 = Number(weatherData.pm10);
+  const dust = Number(weatherData.dust);
+  return {
+    aod: Number.isFinite(aod) ? aod : null,
+    pm25: Number.isFinite(pm25) ? pm25 : null,
+    pm10: Number.isFinite(pm10) ? pm10 : null,
+    dust: Number.isFinite(dust) ? dust : null
+  };
+}
+
+/**
+ * 灰幕/沙尘封顶：高云存在但空气光学条件失效时，不能按“高云画布”给乐观分。
+ */
+function assessAerosolHazeCap(weatherData) {
+  const lowClouds = weatherData.lowClouds || 0;
+  const highClouds = weatherData.highClouds || 0;
+  const visibility = weatherData.visibility ?? 20;
+  const { aod, pm25, pm10, dust } = getAerosolMetrics(weatherData);
+
+  const hasUpperCloudCarrier = highClouds >= 65 && lowClouds <= 20;
+  const extremeHaze = (aod != null && aod >= 0.8) || (dust != null && dust >= 300) || (pm10 != null && pm10 >= 250);
+  const severeHaze = (aod != null && aod >= 0.55) || (dust != null && dust >= 150) || (pm10 != null && pm10 >= 180) || (pm25 != null && pm25 >= 90) || visibility < 6;
+  const moderateHaze = (aod != null && aod >= 0.45) || (dust != null && dust >= 80) || (pm10 != null && pm10 >= 120) || visibility < 8;
+
+  if (hasUpperCloudCarrier && extremeHaze) {
+    return { applied: true, cap: 28, level: 'extreme', reason: 'extreme_dust_haze_cap_28', metrics: { aod, pm25, pm10, dust, visibility } };
+  }
+
+  if (hasUpperCloudCarrier && severeHaze) {
+    return { applied: true, cap: 35, level: 'severe', reason: 'severe_haze_cap_35', metrics: { aod, pm25, pm10, dust, visibility } };
+  }
+
+  if (hasUpperCloudCarrier && moderateHaze) {
+    return { applied: true, cap: 45, level: 'moderate', reason: 'moderate_haze_cap_45', metrics: { aod, pm25, pm10, dust, visibility } };
+  }
+
+  return { applied: false, cap: null, level: null, reason: null, metrics: { aod, pm25, pm10, dust, visibility } };
+}
+
+/**
+ * 高云载体保底：高云充足、低云稀少、空气不灰时，避免日落低辐射或水汽信号把分数打穿。
+ */
+function assessHighCloudCarrierAdjustment(weatherData, aerosolHazeCap) {
+  const lowClouds = weatherData.lowClouds || 0;
+  const midClouds = weatherData.midClouds || 0;
+  const highClouds = weatherData.highClouds || 0;
+  const visibility = weatherData.visibility ?? 20;
+  const precipitation = weatherData.precipitation || 0;
+
+  if (aerosolHazeCap?.applied || precipitation > 0.2) {
+    return { applied: false, floor: null, reason: null };
+  }
+
+  const { aod, pm10, dust } = getAerosolMetrics(weatherData);
+  const airClearEnough = visibility >= 15 && (aod == null || aod <= 0.45) && (pm10 == null || pm10 < 120) && (dust == null || dust < 80);
+  const carrierStrong = highClouds >= 85 && lowClouds <= 10 && airClearEnough;
+
+  if (!carrierStrong) {
+    return { applied: false, floor: null, reason: null };
+  }
+
+  if (midClouds >= 45 || highClouds >= 95) {
+    return { applied: true, floor: 68, reason: 'clear_upper_cloud_carrier_floor_68' };
+  }
+
+  return { applied: true, floor: 64, reason: 'clear_high_cloud_carrier_floor_64' };
+}
+
 // ========== 光路几何模型（需求40，Phase 19 任务67.2）==========
 
 /**
@@ -1205,6 +1276,24 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     adjustedDescription = 'weak_local_colors';
   }
 
+  // 6.8 气溶胶/沙尘灰幕封顶 + 清透高云载体保底（2026-05-06 北京/喀什反例）
+  const aerosolHazeCap = assessAerosolHazeCap(weatherData);
+  const highCloudCarrierAdjustment = assessHighCloudCarrierAdjustment(weatherData, aerosolHazeCap);
+
+  if (highCloudCarrierAdjustment.applied) {
+    adjustedScore = Math.max(adjustedScore, highCloudCarrierAdjustment.floor);
+    if (adjustedScore >= 65) {
+      adjustedStatus = 'very_likely';
+      adjustedDescription = 'excellent_conditions';
+    }
+  }
+
+  if (aerosolHazeCap.applied) {
+    adjustedScore = Math.min(adjustedScore, aerosolHazeCap.cap);
+    adjustedStatus = adjustedScore < 40 ? 'no_fire_cloud' : 'light_glow';
+    adjustedDescription = aerosolHazeCap.level === 'extreme' ? 'haze_light_suppressed' : 'weak_local_colors';
+  }
+
   // 7. 恶劣天气硬性封顶
   const severeCap = applySevereWeatherCap(adjustedScore, weatherData);
   adjustedScore = severeCap.score;
@@ -1271,6 +1360,8 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
       reasons: cloudThickness.reasons
     },
     thickHighCloudPenalty,
+    aerosolHazeCap,
+    highCloudCarrierAdjustment,
     status: adjustedStatus,
     description: adjustedDescription,
     scoreBeforeOcclusion: finalResult.score,
@@ -1327,12 +1418,14 @@ module.exports = {
   getQualityLevel,
   checkSolarOcclusion,
   applySevereWeatherCap,
+  assessAerosolHazeCap,
+  assessHighCloudCarrierAdjustment,
 
   // 云厚评估（Phase 22）
   assessCloudThickness,
+  assessThickHighCloudPenalty,
 
   // 主函数
   calculateEnhancedPrediction,
   calculateBatchEnhancedPredictions
 };
-

@@ -290,6 +290,14 @@ apiAccess: 'API接続'
       "analysisTitle": "厚い高層雲の幕",
       "analysisDesc": "高層雲は多いものの雲が厚く直達光が弱いため、色づきは日没方向付近に限られやすいです"
     },
+    "highCloudCarrier": {
+      "title": "高層雲キャリアの下限補正",
+      "scoreHint": "高層雲が多く低雲が少なく、空気が十分に澄んでいる場合は過度な減点を避けます"
+    },
+    "aerosolHaze": {
+      "title": "砂じん・もやの上限制限",
+      "scoreHint": "AOD、砂じん、PM10 が非常に高いと、高層雲が多くても色づきが抑えられます"
+    },
     "lightPath": {
       "title": "光路スコア",
       "score": "光路スコア",

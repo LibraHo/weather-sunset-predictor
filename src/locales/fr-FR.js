@@ -290,6 +290,14 @@ const translations = {
       "analysisTitle": "Voile de nuages hauts épais",
       "analysisDesc": "Les nuages hauts sont nombreux mais épais, avec une lumière directe faible ; la lueur reste souvent locale près du coucher du soleil"
     },
+    "highCloudCarrier": {
+      "title": "Plancher des nuages hauts",
+      "scoreHint": "Nuages hauts abondants, peu de nuages bas et air assez transparent : éviter une pénalité excessive"
+    },
+    "aerosolHaze": {
+      "title": "Plafond poussière/brume",
+      "scoreHint": "AOD, poussière ou PM10 très élevés peuvent étouffer les couleurs même avec beaucoup de nuages hauts"
+    },
     "lightPath": {
       "title": "Score du Chemin Lumineux",
       "score": "Score du Chemin Lumineux",

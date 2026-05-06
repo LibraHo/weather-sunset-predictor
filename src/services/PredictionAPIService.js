@@ -182,6 +182,10 @@ class PredictionAPIService {
     prediction.canvasAnalysis = data.canvasAnalysis || null;
     prediction.lightPathAnalysis = data.lightPathAnalysis || null;
     prediction.renderingAnalysis = data.renderingAnalysis || null;
+    prediction.aerosolHazeCap = data.aerosolHazeCap || null;
+    prediction.highCloudCarrierAdjustment = data.highCloudCarrierAdjustment || null;
+    prediction.thickHighCloudPenalty = data.thickHighCloudPenalty || null;
+    prediction.cloudThickness = data.cloudThickness || null;
     prediction.aerosolOpticalDepth = data.aerosolOpticalDepth ?? data.breakdown?.aerosolScattering?.aerosolOpticalDepth ?? null;
     prediction.dust = data.dust ?? data.breakdown?.aerosolScattering?.dust ?? null;
     prediction.pm2_5 = data.pm2_5 ?? data.breakdown?.aerosolScattering?.pm2_5 ?? null;

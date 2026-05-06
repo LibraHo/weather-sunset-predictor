@@ -650,6 +650,72 @@ describe('EnhancedPredictionService', () => {
       expect(result.score).toBeLessThanOrEqual(42);
       expect(result.description).toBe('weak_local_colors');
     });
+
+    test('should keep clear upper-cloud carrier scenes above 60 points', () => {
+      const weatherData = {
+        cloudCover: 100,
+        lowClouds: 0,
+        midClouds: 67,
+        highClouds: 99,
+        humidity: 54,
+        visibility: 20,
+        precipitation: 0,
+        shortwaveRadiation: 23,
+        directRadiation: 0.1,
+        diffuseRadiation: 22.9,
+        waterVapourColumn: 19.1,
+        aerosolOpticalDepth: 0.41,
+        dust: 36,
+        pm10: 66.8
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData, new Date('2026-05-06T11:12:00.000Z'), 39.9042, 116.4074, 'sunset'
+      );
+
+      expect(result.highCloudCarrierAdjustment).toMatchObject({
+        applied: true,
+        floor: 68,
+        reason: 'clear_upper_cloud_carrier_floor_68'
+      });
+      expect(result.aerosolHazeCap.applied).toBe(false);
+      expect(result.score).toBeGreaterThanOrEqual(65);
+      expect(result.status).toBe('very_likely');
+    });
+
+    test('should cap extreme dust haze high-cloud scenes below 30 points', () => {
+      const weatherData = {
+        cloudCover: 83,
+        lowClouds: 0,
+        midClouds: 24,
+        highClouds: 88,
+        humidity: 19,
+        visibility: 20,
+        precipitation: 0,
+        shortwaveRadiation: 35,
+        directRadiation: 4.9,
+        diffuseRadiation: 30.1,
+        waterVapourColumn: 13.1,
+        aerosolOpticalDepth: 1.3,
+        dust: 1088,
+        pm10: 543.9
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData, new Date('2026-05-06T13:53:00.000Z'), 39.4704, 75.9898, 'sunset'
+      );
+
+      expect(result.aerosolHazeCap).toMatchObject({
+        applied: true,
+        cap: 28,
+        level: 'extreme',
+        reason: 'extreme_dust_haze_cap_28'
+      });
+      expect(result.highCloudCarrierAdjustment.applied).toBe(false);
+      expect(result.score).toBeLessThan(30);
+      expect(result.status).toBe('no_fire_cloud');
+      expect(result.description).toBe('haze_light_suppressed');
+    });
   });
 
   // ========== 批量预测测试 ==========

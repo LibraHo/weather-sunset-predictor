@@ -2043,6 +2043,14 @@ body.theme-dark .best-time {
   padding-top: 2px;
 }
 
+.score-breakdown-row-positive .score-breakdown-val {
+  color: var(--color-success, var(--theme-accent-strong));
+}
+
+.score-breakdown-row-warning .score-breakdown-val {
+  color: var(--color-warning, var(--theme-accent));
+}
+
 .score-breakdown-row + .score-breakdown-row {
   border-top: 1px dashed rgba(255, 255, 255, 0.12);
 }
