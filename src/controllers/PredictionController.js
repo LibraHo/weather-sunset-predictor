@@ -1541,16 +1541,24 @@ class PredictionController {
       const n = Number(v);
       return Number.isFinite(n) ? n.toFixed(digits) : '--';
     };
+    const localized = (en, zh) => {
+      const lang = String(this.i18n?.getCurrentLanguage?.() || this.i18n?.currentLanguage || '').toLowerCase();
+      return lang.startsWith('zh') ? zh : en;
+    };
 
     const baseScore = prediction?.breakdown?.baseScore;
     const canvasScore = prediction?.canvasAnalysis?.score ?? prediction?.breakdown?.canvasScore;
     const lightPathScore = prediction?.lightPathAnalysis?.score ?? prediction?.breakdown?.lightPathScore;
     const renderingFactor = prediction?.renderingAnalysis?.factor ?? prediction?.breakdown?.renderingFactor;
+    const renderedScore = prediction?.breakdown?.unclampedFinalScore;
     const aerosol = prediction?.breakdown?.aerosolScattering;
     const aerosolFactor = prediction?.renderingAnalysis?.aerosolFactor ?? aerosol?.factor;
     const thickHighCloudPenalty = prediction?.thickHighCloudPenalty || prediction?.lightPathAnalysis?.thickHighCloudPenalty;
     const aerosolHazeCap = prediction?.aerosolHazeCap;
     const carrierAdjustment = prediction?.highCloudCarrierAdjustment;
+    const severeWeatherCap = prediction?.severeWeatherCap;
+    const occlusionAnalysis = prediction?.occlusionAnalysis;
+    const geometricModel = prediction?.geometricModel;
 
     const row = (label, value, hint, className = '') => `
       <div class="score-breakdown-row ${className}">
@@ -1559,20 +1567,38 @@ class PredictionController {
         <span class="score-breakdown-hint">${hint}</span>
       </div>`;
 
+    const adjustmentRows = [
+      geometricModel?.feasible === false
+        ? row(localized('Geometry cap', '几何条件封顶'), '≤30', geometricModel.reason || localized('Sun/cloud geometry is not feasible', '太阳与云层几何条件不足'), 'score-breakdown-row-warning')
+        : '',
+      occlusionAnalysis?.occluded
+        ? row(localized('Solar occlusion', '太阳遮挡修正'), '×0.75', localized('Distant obstruction reduces the final score', '远端遮挡会按真实链路压低最终分'), 'score-breakdown-row-warning')
+        : '',
+      thickHighCloudPenalty?.applied
+        ? row(this.i18n.t('prediction.thickHighCloud.title'), `≤${fmt(thickHighCloudPenalty.cap, 0)}`, this.i18n.t('prediction.thickHighCloud.scoreHint'), 'score-breakdown-row-warning')
+        : '',
+      carrierAdjustment?.applied
+        ? row(this._translateOrFallback('prediction.highCloudCarrier.title', localized('High-cloud carrier floor', '高云载体保底')), `≥${fmt(carrierAdjustment.floor, 0)}`, this._translateOrFallback('prediction.highCloudCarrier.scoreHint', localized('Clear high-cloud carrier prevents over-penalizing the score', '高云充足、低云少且空气较通透时，避免云厚信号误伤')), 'score-breakdown-row-positive')
+        : '',
+      aerosolHazeCap?.applied
+        ? row(this._translateOrFallback('prediction.aerosolHaze.title', localized('Dust/haze cap', '沙尘灰幕封顶')), `≤${fmt(aerosolHazeCap.cap, 0)}`, this._translateOrFallback('prediction.aerosolHaze.scoreHint', localized('Very high AOD, dust, or PM10 suppresses color even with high clouds', 'AOD、沙尘或 PM10 过高时，高云多也不代表能烧起来')), 'score-breakdown-row-warning')
+        : '',
+      severeWeatherCap?.reason
+        ? row(localized('Severe-weather cap', '恶劣天气封顶'), `≤${fmt(severeWeatherCap.score, 0)}`, severeWeatherCap.reason, 'score-breakdown-row-warning')
+        : ''
+    ].join('');
+
     return `
       <div class="score-breakdown-popover" hidden>
         <div class="score-breakdown-title">${this.i18n.t('prediction.scoreBreakdown.title')}</div>
-        ${row(this.i18n.t('prediction.composite.finalScore'), fmt(prediction?.score, 0), this.i18n.t('prediction.scoreBreakdown.finalDisplayed'), 'score-breakdown-row-total')}
-        <div class="score-breakdown-formula">${this.i18n.t('prediction.scoreBreakdown.baseFormula')}</div>
-        ${row(this.i18n.t('prediction.composite.title'), fmt(baseScore, 1), this.i18n.t('prediction.scoreBreakdown.baseHint'))}
+        <div class="score-breakdown-formula">${localized('Actual chain: canvas/light path → base → rendering factor → caps/floors → final displayed score', '实际链路：画布/光路 → 基础分 → 渲染系数 → 封顶/保底 → 最终展示分')}</div>
         ${row(this.i18n.t('prediction.canvas.title'), fmt(canvasScore, 1), this.i18n.t('prediction.scoreBreakdown.canvasHint'))}
         ${row(this.i18n.t('prediction.lightPath.title'), fmt(lightPathScore, 1), this.i18n.t('prediction.scoreBreakdown.lightPathHint'))}
-        ${thickHighCloudPenalty?.applied ? row(this.i18n.t('prediction.thickHighCloud.title'), `≤${fmt(thickHighCloudPenalty.cap, 0)}`, this.i18n.t('prediction.thickHighCloud.scoreHint'), 'score-breakdown-row-warning') : ''}
-        ${carrierAdjustment?.applied ? row(this._translateOrFallback('prediction.highCloudCarrier.title', '高云载体保底'), `≥${fmt(carrierAdjustment.floor, 0)}`, this._translateOrFallback('prediction.highCloudCarrier.scoreHint', '高云充足、低云少且空气较通透时，避免云厚信号误伤'), 'score-breakdown-row-positive') : ''}
-        ${aerosolHazeCap?.applied ? row(this._translateOrFallback('prediction.aerosolHaze.title', '沙尘灰幕封顶'), `≤${fmt(aerosolHazeCap.cap, 0)}`, this._translateOrFallback('prediction.aerosolHaze.scoreHint', 'AOD、沙尘或 PM10 过高时，高云多也不代表能烧起来'), 'score-breakdown-row-warning') : ''}
-        <div class="score-breakdown-formula">${this.i18n.t('prediction.scoreBreakdown.finalFormula')}</div>
-        ${row(this.i18n.t('prediction.rendering.title'), `×${fmt(renderingFactor, 2)}`, this.i18n.t('prediction.scoreBreakdown.renderingHint'))}
-        ${aerosolFactor != null ? row(this.i18n.t('prediction.rendering.aerosol'), `×${fmt(aerosolFactor, 2)}`, this.i18n.t('prediction.scoreBreakdown.aerosolHint')) : ''}
+        ${row(this.i18n.t('prediction.composite.title'), fmt(baseScore, 1), localized('canvas ×0.8 + light path ×0.2', '画布 ×0.8 + 光路 ×0.2'))}
+        ${row(this.i18n.t('prediction.rendering.title'), `×${fmt(renderingFactor, 2)}`, aerosolFactor != null ? localized(`includes aerosol ×${fmt(aerosolFactor, 2)}`, `包含气溶胶 ×${fmt(aerosolFactor, 2)}`) : this.i18n.t('prediction.scoreBreakdown.renderingHint'))}
+        ${row(localized('Rendered score', '渲染后分'), fmt(renderedScore, 1), localized('base score × rendering factor, before caps/floors', '基础分 × 渲染系数，尚未应用封顶/保底'))}
+        ${adjustmentRows}
+        ${row(this.i18n.t('prediction.composite.finalScore'), fmt(prediction?.score, 0), localized('actual displayed result after all adjustments', '所有修正后的真实展示结果'), 'score-breakdown-row-total')}
       </div>
     `;
   }

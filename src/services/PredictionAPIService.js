@@ -185,6 +185,9 @@ class PredictionAPIService {
     prediction.aerosolHazeCap = data.aerosolHazeCap || null;
     prediction.highCloudCarrierAdjustment = data.highCloudCarrierAdjustment || null;
     prediction.thickHighCloudPenalty = data.thickHighCloudPenalty || null;
+    prediction.severeWeatherCap = data.severeWeatherCap || null;
+    prediction.occlusionAnalysis = data.occlusionAnalysis || null;
+    prediction.geometricModel = data.geometricModel || null;
     prediction.cloudThickness = data.cloudThickness || null;
     prediction.aerosolOpticalDepth = data.aerosolOpticalDepth ?? data.breakdown?.aerosolScattering?.aerosolOpticalDepth ?? null;
     prediction.dust = data.dust ?? data.breakdown?.aerosolScattering?.dust ?? null;
