@@ -6,6 +6,39 @@
   <title>API接入 - 霞客</title>
   <link rel="stylesheet" href="/styles/main.css" />
   <style>
+    .api-apply-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .api-apply-logo {
+      text-decoration: none;
+    }
+
+    .api-apply-top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .api-apply-top-nav .home-view-option {
+      width: auto;
+      min-height: 36px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .api-apply-top-nav .home-view-option.active {
+      background: var(--color-primary, #f97316);
+      color: white;
+      border-color: transparent;
+    }
+
     .api-page {
       max-width: 980px;
       margin: 24px auto;
@@ -76,6 +109,20 @@
     }
 
     @media (max-width: 720px) {
+      .api-apply-header .header-top-row {
+        align-items: flex-start;
+      }
+
+      .api-apply-top-nav {
+        flex-wrap: wrap;
+      }
+
+      .api-apply-top-nav .home-view-option {
+        min-height: 32px;
+        padding: 6px 10px;
+        font-size: 0.84rem;
+      }
+
       .api-page {
         margin: 12px auto;
       }
@@ -88,6 +135,25 @@
   </style>
 </head>
 <body>
+  <header class="api-apply-header">
+    <div class="header-top-row">
+      <a class="app-logo api-apply-logo" href="/" aria-label="霞客首页">
+        <svg class="app-logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 76 76" aria-hidden="true">
+          <path d="M12 44 A26 26 0 0 1 64 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+          <line x1="0" y1="44" x2="76" y2="44" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+          <line x1="10" y1="55" x2="66" y2="55" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="22" y1="66" x2="54" y2="66" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <span class="app-logo-text">霞客</span>
+      </a>
+      <nav class="api-apply-top-nav" aria-label="API 接入页面导航">
+        <a class="home-view-option home-view-link" href="/">预测功能</a>
+        <a class="home-view-option home-view-link active" href="/api-apply.html" aria-current="page">API接入</a>
+        <a class="home-view-option home-view-link" href="/api/agent/openapi.json">OpenAPI</a>
+      </nav>
+    </div>
+  </header>
+
   <main class="api-page">
     <section class="card">
       <h1>API 接入</h1>
