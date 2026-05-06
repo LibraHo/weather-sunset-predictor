@@ -584,6 +584,9 @@ describe('PredictionController', () => {
     test('分数明细应按真实计算链路展示渲染后分和最终修正', () => {
       const html = predictionController.renderScoreBreakdownPopover({
         score: 28,
+        visibility: 5,
+        humidity: 88,
+        precipitation: 0.4,
         breakdown: {
           baseScore: 71.1,
           canvasScore: 70.7,
@@ -599,6 +602,9 @@ describe('PredictionController', () => {
       });
 
       expect(html).toContain('实际链路');
+      expect(html).toContain('原始云量');
+      expect(html).toContain('空气 / 降水');
+      expect(html).toContain('能见度 5km');
       expect(html).toContain('70.7');
       expect(html).toContain('72.5');
       expect(html).toContain('71.1');

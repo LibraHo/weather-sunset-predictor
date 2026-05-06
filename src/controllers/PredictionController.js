@@ -1567,6 +1567,23 @@ class PredictionController {
         <span class="score-breakdown-hint">${hint}</span>
       </div>`;
 
+    const factors = prediction?.factors || {};
+    const clouds = prediction?.canvasAnalysis?.breakdown || prediction?.cloudLayers || {};
+    const metric = (keys, fallback = null) => {
+      for (const key of keys) {
+        const value = factors[key]?.value ?? prediction?.[key];
+        if (value != null && Number.isFinite(Number(value))) return Number(value);
+      }
+      return fallback;
+    };
+    const rawRows = [
+      row(localized('Raw clouds', '原始云量'), localized(`H ${fmt(clouds.highClouds ?? clouds.high, 0)} / M ${fmt(clouds.midClouds ?? clouds.mid, 0)} / L ${fmt(clouds.lowClouds ?? clouds.low, 0)}`, `高 ${fmt(clouds.highClouds ?? clouds.high, 0)} / 中 ${fmt(clouds.midClouds ?? clouds.mid, 0)} / 低 ${fmt(clouds.lowClouds ?? clouds.low, 0)}`), localized(`low-cloud penalty ×${fmt(prediction?.canvasAnalysis?.lowCloudPenalty, 2)}, overcast ×${fmt(prediction?.canvasAnalysis?.overcastPenalty, 2)}`, `低云惩罚 ×${fmt(prediction?.canvasAnalysis?.lowCloudPenalty, 2)}，阴天惩罚 ×${fmt(prediction?.canvasAnalysis?.overcastPenalty, 2)}`)),
+      row(localized('Air / rain', '空气 / 降水'), localized(`visibility ${fmt(metric(['visibility']), 0)}km · humidity ${fmt(metric(['humidity']), 0)}% · rain ${fmt(metric(['precipitation', 'convPrecip']), 1)}mm/h`, `能见度 ${fmt(metric(['visibility']), 0)}km · 湿度 ${fmt(metric(['humidity']), 0)}% · 降水 ${fmt(metric(['precipitation', 'convPrecip']), 1)}mm/h`), localized(`visibility ×${fmt(prediction?.renderingAnalysis?.visibilityFactor, 2)}, humidity ×${fmt(prediction?.renderingAnalysis?.humidityFactor, 2)}, rain ×${fmt(prediction?.renderingAnalysis?.rainBonus, 2)}`, `能见度 ×${fmt(prediction?.renderingAnalysis?.visibilityFactor, 2)}，湿度 ×${fmt(prediction?.renderingAnalysis?.humidityFactor, 2)}，降水 ×${fmt(prediction?.renderingAnalysis?.rainBonus, 2)}`)),
+      aerosol?.aerosolOpticalDepth != null || aerosol?.pm10 != null || aerosol?.dust != null
+        ? row(localized('Aerosol / haze', '气溶胶 / 灰幕'), `AOD ${fmt(aerosol?.aerosolOpticalDepth, 2)} · PM10 ${fmt(aerosol?.pm10, 0)} · dust ${fmt(aerosol?.dust, 0)}`, localized(`aerosol ×${fmt(aerosolFactor, 2)}`, `气溶胶 ×${fmt(aerosolFactor, 2)}`))
+        : ''
+    ].join('');
+
     const adjustmentRows = [
       geometricModel?.feasible === false
         ? row(localized('Geometry cap', '几何条件封顶'), '≤30', geometricModel.reason || localized('Sun/cloud geometry is not feasible', '太阳与云层几何条件不足'), 'score-breakdown-row-warning')
@@ -1591,7 +1608,8 @@ class PredictionController {
     return `
       <div class="score-breakdown-popover" hidden>
         <div class="score-breakdown-title">${this.i18n.t('prediction.scoreBreakdown.title')}</div>
-        <div class="score-breakdown-formula">${localized('Actual chain: canvas/light path → base → rendering factor → caps/floors → final displayed score', '实际链路：画布/光路 → 基础分 → 渲染系数 → 封顶/保底 → 最终展示分')}</div>
+        <div class="score-breakdown-formula">${localized('Actual chain: raw weather values → canvas/light path → base → rendering factor → caps/floors → final displayed score', '实际链路：原始气象值 → 画布/光路 → 基础分 → 渲染系数 → 封顶/保底 → 最终展示分')}</div>
+        ${rawRows}
         ${row(this.i18n.t('prediction.canvas.title'), fmt(canvasScore, 1), this.i18n.t('prediction.scoreBreakdown.canvasHint'))}
         ${row(this.i18n.t('prediction.lightPath.title'), fmt(lightPathScore, 1), this.i18n.t('prediction.scoreBreakdown.lightPathHint'))}
         ${row(this.i18n.t('prediction.composite.title'), fmt(baseScore, 1), localized('canvas ×0.8 + light path ×0.2', '画布 ×0.8 + 光路 ×0.2'))}
