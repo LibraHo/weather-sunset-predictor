@@ -1545,12 +1545,19 @@ class PredictionController {
       const lang = String(this.i18n?.getCurrentLanguage?.() || this.i18n?.currentLanguage || '').toLowerCase();
       return lang.startsWith('zh') ? zh : en;
     };
+    const escape = (value) => String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
 
     const baseScore = prediction?.breakdown?.baseScore;
     const canvasScore = prediction?.canvasAnalysis?.score ?? prediction?.breakdown?.canvasScore;
     const lightPathScore = prediction?.lightPathAnalysis?.score ?? prediction?.breakdown?.lightPathScore;
     const renderingFactor = prediction?.renderingAnalysis?.factor ?? prediction?.breakdown?.renderingFactor;
     const renderedScore = prediction?.breakdown?.unclampedFinalScore;
+    const finalScore = prediction?.score;
     const aerosol = prediction?.breakdown?.aerosolScattering;
     const aerosolFactor = prediction?.renderingAnalysis?.aerosolFactor ?? aerosol?.factor;
     const thickHighCloudPenalty = prediction?.thickHighCloudPenalty || prediction?.lightPathAnalysis?.thickHighCloudPenalty;
@@ -1559,16 +1566,9 @@ class PredictionController {
     const severeWeatherCap = prediction?.severeWeatherCap;
     const occlusionAnalysis = prediction?.occlusionAnalysis;
     const geometricModel = prediction?.geometricModel;
-
-    const row = (label, value, hint, className = '') => `
-      <div class="score-breakdown-row ${className}">
-        <span class="score-breakdown-key">${label}</span>
-        <span class="score-breakdown-val">${value}</span>
-        <span class="score-breakdown-hint">${hint}</span>
-      </div>`;
-
     const factors = prediction?.factors || {};
     const clouds = prediction?.canvasAnalysis?.breakdown || prediction?.cloudLayers || {};
+
     const metric = (keys, fallback = null) => {
       for (const key of keys) {
         const value = factors[key]?.value ?? prediction?.[key];
@@ -1576,51 +1576,133 @@ class PredictionController {
       }
       return fallback;
     };
-    const rawRows = [
-      row(localized('Raw clouds', '原始云量'), localized(`H ${fmt(clouds.highClouds ?? clouds.high, 0)} / M ${fmt(clouds.midClouds ?? clouds.mid, 0)} / L ${fmt(clouds.lowClouds ?? clouds.low, 0)}`, `高 ${fmt(clouds.highClouds ?? clouds.high, 0)} / 中 ${fmt(clouds.midClouds ?? clouds.mid, 0)} / 低 ${fmt(clouds.lowClouds ?? clouds.low, 0)}`), localized(`low-cloud penalty ×${fmt(prediction?.canvasAnalysis?.lowCloudPenalty, 2)}, overcast ×${fmt(prediction?.canvasAnalysis?.overcastPenalty, 2)}`, `低云惩罚 ×${fmt(prediction?.canvasAnalysis?.lowCloudPenalty, 2)}，阴天惩罚 ×${fmt(prediction?.canvasAnalysis?.overcastPenalty, 2)}`)),
-      row(localized('Air / rain', '空气 / 降水'), localized(`visibility ${fmt(metric(['visibility']), 0)}km · humidity ${fmt(metric(['humidity']), 0)}% · rain ${fmt(metric(['precipitation', 'convPrecip']), 1)}mm/h`, `能见度 ${fmt(metric(['visibility']), 0)}km · 湿度 ${fmt(metric(['humidity']), 0)}% · 降水 ${fmt(metric(['precipitation', 'convPrecip']), 1)}mm/h`), localized(`visibility ×${fmt(prediction?.renderingAnalysis?.visibilityFactor, 2)}, humidity ×${fmt(prediction?.renderingAnalysis?.humidityFactor, 2)}, rain ×${fmt(prediction?.renderingAnalysis?.rainBonus, 2)}`, `能见度 ×${fmt(prediction?.renderingAnalysis?.visibilityFactor, 2)}，湿度 ×${fmt(prediction?.renderingAnalysis?.humidityFactor, 2)}，降水 ×${fmt(prediction?.renderingAnalysis?.rainBonus, 2)}`)),
-      aerosol?.aerosolOpticalDepth != null || aerosol?.pm10 != null || aerosol?.dust != null
-        ? row(localized('Aerosol / haze', '气溶胶 / 灰幕'), `AOD ${fmt(aerosol?.aerosolOpticalDepth, 2)} · PM10 ${fmt(aerosol?.pm10, 0)} · dust ${fmt(aerosol?.dust, 0)}`, localized(`aerosol ×${fmt(aerosolFactor, 2)}`, `气溶胶 ×${fmt(aerosolFactor, 2)}`))
-        : ''
-    ].join('');
 
-    const adjustmentRows = [
-      geometricModel?.feasible === false
-        ? row(localized('Geometry cap', '几何条件封顶'), '≤30', geometricModel.reason || localized('Sun/cloud geometry is not feasible', '太阳与云层几何条件不足'), 'score-breakdown-row-warning')
-        : '',
-      occlusionAnalysis?.occluded
-        ? row(localized('Solar occlusion', '太阳遮挡修正'), '×0.75', localized('Distant obstruction reduces the final score', '远端遮挡会按真实链路压低最终分'), 'score-breakdown-row-warning')
-        : '',
-      thickHighCloudPenalty?.applied
-        ? row(this.i18n.t('prediction.thickHighCloud.title'), `≤${fmt(thickHighCloudPenalty.cap, 0)}`, this.i18n.t('prediction.thickHighCloud.scoreHint'), 'score-breakdown-row-warning')
-        : '',
-      carrierAdjustment?.applied
-        ? row(this._translateOrFallback('prediction.highCloudCarrier.title', localized('High-cloud carrier floor', '高云载体保底')), `≥${fmt(carrierAdjustment.floor, 0)}`, this._translateOrFallback('prediction.highCloudCarrier.scoreHint', localized('Clear high-cloud carrier prevents over-penalizing the score', '高云充足、低云少且空气较通透时，避免云厚信号误伤')), 'score-breakdown-row-positive')
-        : '',
-      aerosolHazeCap?.applied
-        ? row(this._translateOrFallback('prediction.aerosolHaze.title', localized('Dust/haze cap', '沙尘灰幕封顶')), `≤${fmt(aerosolHazeCap.cap, 0)}`, this._translateOrFallback('prediction.aerosolHaze.scoreHint', localized('Very high AOD, dust, or PM10 suppresses color even with high clouds', 'AOD、沙尘或 PM10 过高时，高云多也不代表能烧起来')), 'score-breakdown-row-warning')
-        : '',
-      severeWeatherCap?.reason
-        ? row(localized('Severe-weather cap', '恶劣天气封顶'), `≤${fmt(severeWeatherCap.score, 0)}`, severeWeatherCap.reason, 'score-breakdown-row-warning')
-        : ''
-    ].join('');
+    const highClouds = clouds.highClouds ?? clouds.high;
+    const midClouds = clouds.midClouds ?? clouds.mid;
+    const lowClouds = clouds.lowClouds ?? clouds.low;
+    const visibility = metric(['visibility']);
+    const humidity = metric(['humidity']);
+    const precipitation = metric(['precipitation', 'convPrecip'], 0);
+
+    const reasonText = (reason) => ({
+      precipitation_cap_45: localized('rain with low clouds capped the score at 45', '降水叠加低云，分数封顶到 45'),
+      overcast_cap_35: localized('low-cloud overcast capped the score at 35', '低云阴天遮挡，分数封顶到 35'),
+      overcast_fog_cap_15: localized('overcast sky plus visibility ≤5km capped the score at 15', '阴天且能见度≤5km，分数硬封顶到 15'),
+      extreme_dust_haze_cap_28: localized('severe dust/haze capped the score at 28', '强沙尘/灰幕压制，分数封顶到 28'),
+      severe_haze_cap_35: localized('heavy haze capped the score at 35', '重度灰霾压制，分数封顶到 35'),
+      moderate_haze_cap_45: localized('moderate haze capped the score at 45', '中度灰霾压制，分数封顶到 45')
+    }[reason] || reason || localized('cap/floor adjustment applied', '应用封顶/保底修正'));
+
+    const capEvents = [
+      severeWeatherCap?.reason ? {
+        label: localized('Hard cap', '硬封顶'),
+        value: `≤${fmt(severeWeatherCap.score, 0)}`,
+        detail: reasonText(severeWeatherCap.reason),
+        tone: 'bad'
+      } : null,
+      aerosolHazeCap?.applied ? {
+        label: localized('Haze cap', '灰幕封顶'),
+        value: `≤${fmt(aerosolHazeCap.cap, 0)}`,
+        detail: reasonText(aerosolHazeCap.reason),
+        tone: 'bad'
+      } : null,
+      thickHighCloudPenalty?.applied ? {
+        label: localized('Thick-cloud cap', '厚云封顶'),
+        value: `≤${fmt(thickHighCloudPenalty.cap, 0)}`,
+        detail: localized('thick high cloud reduces usable color rendering', '高云过厚，真实可染色效果下降'),
+        tone: 'bad'
+      } : null,
+      geometricModel?.feasible === false ? {
+        label: localized('Geometry cap', '几何封顶'),
+        value: '≤30',
+        detail: geometricModel.reason || localized('sun/cloud geometry is not feasible', '太阳与云层几何条件不足'),
+        tone: 'bad'
+      } : null,
+      occlusionAnalysis?.occluded ? {
+        label: localized('Occlusion', '遮挡修正'),
+        value: '×0.75',
+        detail: localized('distant obstruction reduces the score', '远端遮挡压低最终分'),
+        tone: 'bad'
+      } : null,
+      carrierAdjustment?.applied ? {
+        label: localized('Carrier floor', '载体保底'),
+        value: `≥${fmt(carrierAdjustment.floor, 0)}`,
+        detail: localized('clear high-cloud carrier prevents over-penalty', '高云载体清透，避免误伤低估'),
+        tone: 'good'
+      } : null
+    ].filter(Boolean);
+
+    const primaryEvent = capEvents.find(event => event.tone === 'bad') || capEvents[0];
+    const summary = primaryEvent
+      ? localized(
+        `${fmt(finalScore, 0)} points: ${primaryEvent.detail}`,
+        `${fmt(finalScore, 0)} 分：${primaryEvent.detail}`
+      )
+      : localized(
+        `${fmt(finalScore, 0)} points: no hard cap; calculated from canvas, light path, and rendering factor`,
+        `${fmt(finalScore, 0)} 分：无硬封顶，由画布、光路和渲染系数算出`
+      );
+
+    const weatherContext = [
+      localized(`clouds H/M/L ${fmt(highClouds, 0)}/${fmt(midClouds, 0)}/${fmt(lowClouds, 0)}%`, `云量 高/中/低 ${fmt(highClouds, 0)}/${fmt(midClouds, 0)}/${fmt(lowClouds, 0)}%`),
+      visibility != null ? localized(`visibility ${fmt(visibility, 0)}km`, `能见度 ${fmt(visibility, 0)}km`) : '',
+      humidity != null ? localized(`humidity ${fmt(humidity, 0)}%`, `湿度 ${fmt(humidity, 0)}%`) : '',
+      precipitation != null ? localized(`rain ${fmt(precipitation, 1)}mm/h`, `降水 ${fmt(precipitation, 1)}mm/h`) : ''
+    ].filter(Boolean).join(' · ');
+
+    const step = (index, label, expression, result, detail = '', tone = '') => `
+      <div class="score-ledger-step ${tone ? `score-ledger-step-${tone}` : ''}">
+        <span class="score-ledger-index">${index}</span>
+        <div class="score-ledger-body">
+          <div class="score-ledger-line">
+            <span class="score-ledger-label">${escape(label)}</span>
+            <span class="score-ledger-result">${escape(result)}</span>
+          </div>
+          ${expression ? `<div class="score-ledger-expression">${escape(expression)}</div>` : ''}
+          ${detail ? `<div class="score-ledger-detail">${escape(detail)}</div>` : ''}
+        </div>
+      </div>`;
+
+    const weightedExpression = Number.isFinite(Number(canvasScore)) && Number.isFinite(Number(lightPathScore))
+      ? `${fmt(canvasScore, 1)} × 0.8 + ${fmt(lightPathScore, 1)} × 0.2`
+      : localized('canvas × 0.8 + light path × 0.2', '画布 × 0.8 + 光路 × 0.2');
+    const renderingExpression = Number.isFinite(Number(baseScore)) && Number.isFinite(Number(renderingFactor))
+      ? `${fmt(baseScore, 1)} × ${fmt(renderingFactor, 2)}`
+      : localized('base × rendering factor', '基础分 × 渲染系数');
+
+    const adjustmentHtml = capEvents.length
+      ? capEvents.map((event, idx) => step(
+        idx + 5,
+        event.label,
+        event.detail,
+        event.value,
+        '',
+        event.tone === 'good' ? 'good' : 'cap'
+      )).join('')
+      : step(5, localized('Adjustment', '修正'), localized('no cap/floor triggered', '未触发封顶/保底'), localized('unchanged', '不变'));
 
     return `
-      <div class="score-breakdown-popover" hidden>
-        <div class="score-breakdown-title">${this.i18n.t('prediction.scoreBreakdown.title')}</div>
-        <div class="score-breakdown-formula">${localized('Actual chain: raw weather values → canvas/light path → base → rendering factor → caps/floors → final displayed score', '实际链路：原始气象值 → 画布/光路 → 基础分 → 渲染系数 → 封顶/保底 → 最终展示分')}</div>
-        ${rawRows}
-        ${row(this.i18n.t('prediction.canvas.title'), fmt(canvasScore, 1), this.i18n.t('prediction.scoreBreakdown.canvasHint'))}
-        ${row(this.i18n.t('prediction.lightPath.title'), fmt(lightPathScore, 1), this.i18n.t('prediction.scoreBreakdown.lightPathHint'))}
-        ${row(this.i18n.t('prediction.composite.title'), fmt(baseScore, 1), localized('canvas ×0.8 + light path ×0.2', '画布 ×0.8 + 光路 ×0.2'))}
-        ${row(this.i18n.t('prediction.rendering.title'), `×${fmt(renderingFactor, 2)}`, aerosolFactor != null ? localized(`includes aerosol ×${fmt(aerosolFactor, 2)}`, `包含气溶胶 ×${fmt(aerosolFactor, 2)}`) : this.i18n.t('prediction.scoreBreakdown.renderingHint'))}
-        ${row(localized('Rendered score', '渲染后分'), fmt(renderedScore, 1), localized('base score × rendering factor, before caps/floors', '基础分 × 渲染系数，尚未应用封顶/保底'))}
-        ${adjustmentRows}
-        ${row(this.i18n.t('prediction.composite.finalScore'), fmt(prediction?.score, 0), localized('actual displayed result after all adjustments', '所有修正后的真实展示结果'), 'score-breakdown-row-total')}
+      <div class="score-breakdown-popover score-breakdown-ledger" hidden>
+        <div class="score-ledger-header">
+          <div>
+            <div class="score-breakdown-title">${escape(this.i18n.t('prediction.scoreBreakdown.title'))}</div>
+            <div class="score-ledger-subtitle">${escape(localized('Score ledger, not a text analysis', '分数流水，不是文字分析'))}</div>
+          </div>
+          <div class="score-ledger-final">${escape(fmt(finalScore, 0))}</div>
+        </div>
+        <div class="score-ledger-summary">${escape(summary)}</div>
+        ${weatherContext ? `<div class="score-ledger-context">${escape(weatherContext)}</div>` : ''}
+        <div class="score-ledger-steps">
+          ${step(1, localized('Canvas', '画布'), localized('cloud carrier quality', '云层载体质量'), fmt(canvasScore, 1), localized(`low cloud ×${fmt(prediction?.canvasAnalysis?.lowCloudPenalty, 2)}, overcast ×${fmt(prediction?.canvasAnalysis?.overcastPenalty, 2)}`, `低云 ×${fmt(prediction?.canvasAnalysis?.lowCloudPenalty, 2)}，阴天 ×${fmt(prediction?.canvasAnalysis?.overcastPenalty, 2)}`))}
+          ${step(2, localized('Light path', '光路'), localized('sunlight can reach the cloud layer', '阳光能否打到云层'), fmt(lightPathScore, 1))}
+          ${step(3, localized('Weighted base', '加权基础分'), weightedExpression, fmt(baseScore, 1))}
+          ${step(4, localized('Render factor', '渲染修正'), renderingExpression, fmt(renderedScore, 1), localized(`visibility ×${fmt(prediction?.renderingAnalysis?.visibilityFactor, 2)}, humidity ×${fmt(prediction?.renderingAnalysis?.humidityFactor, 2)}, aerosol ×${fmt(aerosolFactor, 2)}`, `能见度 ×${fmt(prediction?.renderingAnalysis?.visibilityFactor, 2)}，湿度 ×${fmt(prediction?.renderingAnalysis?.humidityFactor, 2)}，气溶胶 ×${fmt(aerosolFactor, 2)}`))}
+          ${adjustmentHtml}
+          ${step(capEvents.length ? capEvents.length + 5 : 6, localized('Displayed score', '最终展示'), localized('after all caps/floors', '应用所有封顶/保底后'), fmt(finalScore, 0), '', 'final')}
+        </div>
       </div>
     `;
   }
-
 
   /**
    * 根据当前语言返回方位角方向描述
