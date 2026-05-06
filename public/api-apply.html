@@ -6,37 +6,12 @@
   <title>API接入 - 霞客</title>
   <link rel="stylesheet" href="/styles/main.css" />
   <style>
-    .api-apply-header {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
     .api-apply-logo {
       text-decoration: none;
     }
 
-    .api-apply-top-nav {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 8px;
-      min-width: 0;
-    }
-
-    .api-apply-top-nav .home-view-option {
-      width: auto;
-      min-height: 36px;
-      padding: 8px 12px;
-      border-radius: 999px;
+    .api-apply-menu-link {
       text-decoration: none;
-      white-space: nowrap;
-    }
-
-    .api-apply-top-nav .home-view-option.active {
-      background: var(--color-primary, #f97316);
-      color: white;
-      border-color: transparent;
     }
 
     .api-page {
@@ -109,18 +84,8 @@
     }
 
     @media (max-width: 720px) {
-      .api-apply-header .header-top-row {
-        align-items: flex-start;
-      }
-
-      .api-apply-top-nav {
-        flex-wrap: wrap;
-      }
-
-      .api-apply-top-nav .home-view-option {
-        min-height: 32px;
-        padding: 6px 10px;
-        font-size: 0.84rem;
+      .api-apply-logo {
+        text-decoration: none;
       }
 
       .api-page {
@@ -135,7 +100,7 @@
   </style>
 </head>
 <body>
-  <header class="api-apply-header">
+  <header>
     <div class="header-top-row">
       <a class="app-logo api-apply-logo" href="/" aria-label="霞客首页">
         <svg class="app-logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 76 76" aria-hidden="true">
@@ -146,11 +111,20 @@
         </svg>
         <span class="app-logo-text">霞客</span>
       </a>
-      <nav class="api-apply-top-nav" aria-label="API 接入页面导航">
-        <a class="home-view-option home-view-link" href="/">预测功能</a>
-        <a class="home-view-option home-view-link active" href="/api-apply.html" aria-current="page">API接入</a>
-        <a class="home-view-option home-view-link" href="/api/agent/openapi.json">OpenAPI</a>
-      </nav>
+      <div class="header-right-group">
+        <div class="home-view-menu">
+          <button id="home-view-menu-btn" class="icon-btn header-svg-btn" aria-label="页面切换" aria-expanded="false" aria-controls="home-view-menu-dropdown">
+            <svg class="header-action-icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+              <path d="M5 7.5h14M5 12h14M5 16.5h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <div id="home-view-menu-dropdown" class="home-view-menu-dropdown hidden" role="menu" aria-label="页面切换菜单">
+            <a class="home-view-option home-view-link api-apply-menu-link" role="menuitem" href="/">预测功能</a>
+            <a class="home-view-option home-view-link api-apply-menu-link active" role="menuitem" href="/api-apply.html" aria-current="page">API接入</a>
+            <a class="home-view-option home-view-link api-apply-menu-link" role="menuitem" href="/api/agent/openapi.json">OpenAPI</a>
+          </div>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -268,5 +242,35 @@ print(resp.json())</div>
       <p><a href="/" class="mono">返回首页</a></p>
     </section>
   </main>
+  <script>
+    (() => {
+      const menuButton = document.getElementById('home-view-menu-btn');
+      const menuDropdown = document.getElementById('home-view-menu-dropdown');
+      if (!menuButton || !menuDropdown) return;
+
+      const closeMenu = () => {
+        menuDropdown.classList.add('hidden');
+        menuButton.setAttribute('aria-expanded', 'false');
+      };
+      const toggleMenu = () => {
+        const isHidden = menuDropdown.classList.contains('hidden');
+        menuDropdown.classList.toggle('hidden', !isHidden);
+        menuButton.setAttribute('aria-expanded', String(isHidden));
+      };
+
+      menuButton.addEventListener('click', (event) => {
+        event.stopPropagation();
+        toggleMenu();
+      });
+      document.addEventListener('click', (event) => {
+        if (!menuDropdown.contains(event.target) && !menuButton.contains(event.target)) {
+          closeMenu();
+        }
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeMenu();
+      });
+    })();
+  </script>
 </body>
 </html>
