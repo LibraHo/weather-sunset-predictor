@@ -4812,6 +4812,129 @@ body.theme-dark {
   }
 }
 
+/* ===== API 接入页面：复用主站 card / glass 语言 ===== */
+.api-access-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.api-access-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 18px;
+  border-radius: 18px;
+  background: var(--glass-bg-heavy);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.api-access-kicker {
+  margin: 0 0 4px;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--theme-accent, var(--color-primary));
+  font-weight: 700;
+}
+
+.api-access-hero h2 {
+  margin: 0 0 6px;
+}
+
+.api-access-hero p {
+  margin: 0;
+  color: var(--color-text-light);
+}
+
+.api-access-actions,
+.api-access-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.api-access-grid {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.api-access-card {
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.api-access-card h3 {
+  margin-bottom: 10px;
+}
+
+.api-access-card ol,
+.api-access-card ul {
+  padding-left: 1.25rem;
+  color: var(--color-text-light);
+}
+
+.api-access-warning {
+  color: var(--color-text);
+  border-left: 3px solid var(--theme-accent, var(--color-warning));
+  padding-left: 10px;
+}
+
+.code-box {
+  position: relative;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(15, 23, 42, 0.08);
+  white-space: pre-wrap;
+  overflow: auto;
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--color-text);
+}
+
+.mono {
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 0.92rem;
+  color: var(--color-text);
+}
+
+.api-endpoint-list {
+  display: grid;
+  gap: 8px;
+}
+
+.api-endpoint-list > div {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--glass-bg-heavy);
+  border: 1px solid var(--glass-border);
+}
+
+.api-endpoint-list small {
+  color: var(--color-text-light);
+}
+
+body.theme-dark .code-box {
+  background: rgba(2, 6, 23, 0.24);
+}
+
+@media (max-width: 640px) {
+  .api-access-hero {
+    grid-template-columns: 1fr;
+    padding: 14px;
+  }
+
+  .api-access-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ===== 火烧云地图专属页面 ===== */
 .map-panel {
   padding: 16px;
@@ -7751,6 +7874,66 @@ html[data-actual-theme="light"] .prediction-app-card .phenomenon-title-card {
     width: 18px;
     height: 18px;
   }
+}
+
+/* 统一“朝霞/晚霞预测”与实时天气信息的设计语言：暖白玻璃 / 夜空玻璃，不再保留独立糖果渐变卡片。 */
+body.theme-dark .prediction-app-card {
+  background: var(--glass-bg) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+
+body.theme-dark .prediction-app-shell {
+  background:
+    radial-gradient(circle at top left, rgba(251, 146, 60, 0.15), transparent 45%),
+    radial-gradient(circle at bottom right, rgba(139, 92, 246, 0.12), transparent 40%),
+    linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)) !important;
+  border-color: rgba(255,255,255,0.08) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+}
+
+body.theme-dark .phenomenon-title-card,
+body.theme-dark .score-summary-card,
+body.theme-dark .cloud-condition-card,
+body.theme-dark .app-analysis-card,
+body.theme-dark .app-info-row,
+body.theme-dark .analysis-item {
+  background: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255,255,255,0.08) !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.05) !important;
+}
+
+body.theme-light .prediction-app-card,
+body:not(.theme-dark):not(.theme-auto) .prediction-app-card {
+  background: var(--glass-bg-heavy) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+
+body.theme-light .prediction-app-shell,
+body:not(.theme-dark):not(.theme-auto) .prediction-app-shell {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255, 196, 104, 0.24), transparent 42%),
+    linear-gradient(145deg, rgba(255, 252, 246, 0.94) 0%, rgba(255, 239, 218, 0.88) 100%) !important;
+  border-color: rgba(186, 132, 72, 0.20) !important;
+  box-shadow: 0 10px 24px rgba(139, 92, 43, 0.12) !important;
+}
+
+body.theme-light .phenomenon-title-card,
+body.theme-light .score-summary-card,
+body.theme-light .cloud-condition-card,
+body.theme-light .app-analysis-card,
+body.theme-light .app-info-row,
+body.theme-light .analysis-item,
+body:not(.theme-dark):not(.theme-auto) .phenomenon-title-card,
+body:not(.theme-dark):not(.theme-auto) .score-summary-card,
+body:not(.theme-dark):not(.theme-auto) .cloud-condition-card,
+body:not(.theme-dark):not(.theme-auto) .app-analysis-card,
+body:not(.theme-dark):not(.theme-auto) .app-info-row,
+body:not(.theme-dark):not(.theme-auto) .analysis-item {
+  background: rgba(255, 248, 238, 0.76) !important;
+  border-color: rgba(186, 132, 72, 0.18) !important;
+  box-shadow: 0 6px 16px rgba(139, 92, 43, 0.08) !important;
 }
 
 /* 修复：桌面端评分等级/明细文字继续下移，避免贴住圆环底部 */
