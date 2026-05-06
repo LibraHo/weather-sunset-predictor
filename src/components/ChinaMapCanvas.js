@@ -1,7 +1,7 @@
 /**
- * ChinaMapCanvas.js - 东亚地图底层组件（GeoJSON + Canvas）
+ * ChinaMapCanvas.js - 东亚 + 中南半岛地图底层组件（GeoJSON + Canvas）
  *
- * 基于 Leaflet + GeoJSON 渲染中国/日本/韩国边界，不依赖外部瓦片 API
+ * 基于 Leaflet + GeoJSON 渲染中国/日韩朝/中南半岛边界，不依赖外部瓦片 API
  * GeoJSON 通过 fetch 懒加载，避免首屏阻塞 569KB 的模块解析
  *
  * feat: 全量地级行政单位标注 + 图例 + 点击查询 + 缩放分级显示
@@ -203,7 +203,7 @@ class ChinaMapCanvas {
 
   /**
    * 懒加载 GeoJSON 数据（带模块级缓存）
-   * 中国用完整省级数据（含台湾/港澳/南海），日韩用 east-asia 数据
+   * 中国用完整省级数据（含台湾/港澳/南海），日韩朝与中南半岛用 east-asia 数据
    */
   async _loadGeoJSON() {
     if (!_cachedChinaGeoJSON) {
@@ -212,7 +212,7 @@ class ChinaMapCanvas {
       _cachedChinaGeoJSON = await resp.json();
     }
     if (!_cachedEastAsiaGeoJSON) {
-      const resp = await fetch('/data/east-asia-geojson.json?v=2');
+      const resp = await fetch('/data/east-asia-basemap-geojson.json?v=1');
       if (!resp.ok) throw new Error(`EastAsia GeoJSON fetch failed: ${resp.status}`);
       _cachedEastAsiaGeoJSON = await resp.json();
     }
@@ -359,7 +359,7 @@ class ChinaMapCanvas {
       lineCap: 'round'
     };
 
-    // 东亚（日韩朝）边界使用更细实线，降低“锯齿/粗糙感”
+    // 东亚（日韩朝）+ 中南半岛边界使用更细实线，降低“锯齿/粗糙感”
     const eastAsiaStyle = {
       ...commonStyle,
       weight: 1.05,
@@ -373,7 +373,7 @@ class ChinaMapCanvas {
       onEachFeature: () => {}
     }).addTo(this._map);
 
-    // 2. 日本、韩国、朝鲜边界（从 east-asia 数据中过滤掉不完整的 China）
+    // 2. 日本、韩国、朝鲜及中南半岛边界（从 east-asia 数据中过滤掉不完整的 China）
     let eastAsiaLayer = null;
     if (eastAsiaGeoJSON && eastAsiaGeoJSON.features) {
       const filtered = {
