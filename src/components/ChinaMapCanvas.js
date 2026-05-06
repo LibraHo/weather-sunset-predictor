@@ -8,8 +8,72 @@
  */
 
 // 模块级缓存，避免重复下载
+import i18n from '../i18n.js';
+import { getLocalizedMapCityName } from '../data/mapCityNames.js';
+
 let _cachedChinaGeoJSON = null;
 let _cachedEastAsiaGeoJSON = null;
+
+const MAP_UI_TEXT = {
+  'zh-CN': {
+    sunriseScore: '朝霞分数', sunsetScore: '晚霞分数', loading: '查询中…', noData: '暂无数据', scoreUnit: '分',
+    highCloud: '高', midCloud: '中', lowCloud: '低', humidity: '湿度', currentPeriod: '当前时段', queryFailed: '查询失败'
+  },
+  'zh-TW': {
+    sunriseScore: '朝霞分數', sunsetScore: '晚霞分數', loading: '查詢中…', noData: '暫無資料', scoreUnit: '分',
+    highCloud: '高', midCloud: '中', lowCloud: '低', humidity: '濕度', currentPeriod: '目前時段', queryFailed: '查詢失敗'
+  },
+  'en-US': {
+    sunriseScore: 'Sunrise glow score', sunsetScore: 'Sunset glow score', loading: 'Querying…', noData: 'No data', scoreUnit: 'pts',
+    highCloud: 'High', midCloud: 'Mid', lowCloud: 'Low', humidity: 'Humidity', currentPeriod: 'Current period', queryFailed: 'Query failed'
+  },
+  'ja-JP': {
+    sunriseScore: '朝焼けスコア', sunsetScore: '夕焼けスコア', loading: '検索中…', noData: 'データなし', scoreUnit: '点',
+    highCloud: '高', midCloud: '中', lowCloud: '低', humidity: '湿度', currentPeriod: '現在の時間帯', queryFailed: '検索失敗'
+  },
+  'ko-KR': {
+    sunriseScore: '일출 노을 점수', sunsetScore: '일몰 노을 점수', loading: '조회 중…', noData: '데이터 없음', scoreUnit: '점',
+    highCloud: '상층', midCloud: '중층', lowCloud: '하층', humidity: '습도', currentPeriod: '현재 시간대', queryFailed: '조회 실패'
+  },
+  'es-ES': {
+    sunriseScore: 'Puntuación del amanecer', sunsetScore: 'Puntuación del atardecer', loading: 'Consultando…', noData: 'Sin datos', scoreUnit: 'pts',
+    highCloud: 'Alta', midCloud: 'Media', lowCloud: 'Baja', humidity: 'Humedad', currentPeriod: 'Periodo actual', queryFailed: 'Error de consulta'
+  },
+  'fr-FR': {
+    sunriseScore: 'Score de l’aube', sunsetScore: 'Score du coucher', loading: 'Recherche…', noData: 'Aucune donnée', scoreUnit: 'pts',
+    highCloud: 'Haut', midCloud: 'Moyen', lowCloud: 'Bas', humidity: 'Humidité', currentPeriod: 'Période actuelle', queryFailed: 'Échec de la requête'
+  },
+  'vi-VN': {
+    sunriseScore: 'Điểm ráng bình minh', sunsetScore: 'Điểm ráng hoàng hôn', loading: 'Đang tra cứu…', noData: 'Không có dữ liệu', scoreUnit: 'điểm',
+    highCloud: 'Cao', midCloud: 'Trung', lowCloud: 'Thấp', humidity: 'Độ ẩm', currentPeriod: 'Khung giờ hiện tại', queryFailed: 'Tra cứu thất bại'
+  },
+  'it-IT': {
+    sunriseScore: 'Punteggio alba', sunsetScore: 'Punteggio tramonto', loading: 'Ricerca…', noData: 'Nessun dato', scoreUnit: 'pti',
+    highCloud: 'Alte', midCloud: 'Medie', lowCloud: 'Basse', humidity: 'Umidità', currentPeriod: 'Periodo attuale', queryFailed: 'Ricerca non riuscita'
+  },
+  'ar-SA': {
+    sunriseScore: 'درجة شفق الشروق', sunsetScore: 'درجة شفق الغروب', loading: 'جارٍ الاستعلام…', noData: 'لا توجد بيانات', scoreUnit: 'نقطة',
+    highCloud: 'عالية', midCloud: 'متوسطة', lowCloud: 'منخفضة', humidity: 'الرطوبة', currentPeriod: 'الفترة الحالية', queryFailed: 'فشل الاستعلام'
+  }
+};
+
+function getCurrentMapLanguage() {
+  return i18n?.getCurrentLanguage?.() || i18n?.currentLanguage || 'zh-CN';
+}
+
+function mapUiText(key) {
+  const lang = getCurrentMapLanguage();
+  return MAP_UI_TEXT[lang]?.[key] || MAP_UI_TEXT['en-US'][key] || key;
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 const MOBILE_CORE_CITY_NAMES = new Set([
   '北京', '上海', '广州', '深圳', '成都', '重庆', '武汉', '西安', '杭州', '南京'
@@ -149,6 +213,8 @@ class ChinaMapCanvas {
     this._clickPopup = null;
     this._currentPeriod = 'sunset'; // 'sunrise' | 'sunset'
     this._focusMarker = null;
+    this._cityVisibilityUpdater = null;
+    this._languageChangeHandler = () => this.refreshLanguage();
   }
 
   /**
@@ -210,6 +276,8 @@ class ChinaMapCanvas {
     // 添加点击查询
     this._addClickHandler();
 
+    window.addEventListener?.('languageChanged', this._languageChangeHandler);
+
     console.log('[ChinaMapCanvas] 地图初始化完成');
   }
 
@@ -234,6 +302,9 @@ class ChinaMapCanvas {
    * 清理资源
    */
   destroy() {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener?.('languageChanged', this._languageChangeHandler);
+    }
     if (this._map) {
       this._map.remove();
       this._map = null;
@@ -241,6 +312,19 @@ class ChinaMapCanvas {
     this._focusMarker = null;
     this._geoJsonLayer = null;
     this._container = null;
+    this._cityVisibilityUpdater = null;
+  }
+
+  refreshLanguage() {
+    this._updateLegend();
+    if (typeof this._cityVisibilityUpdater === 'function') {
+      this._cityVisibilityUpdater();
+    }
+  }
+
+  _getLocalizedCityName(cityOrName) {
+    const name = typeof cityOrName === 'string' ? cityOrName : cityOrName?.name;
+    return getLocalizedMapCityName(name, getCurrentMapLanguage());
   }
 
   /**
@@ -938,6 +1022,7 @@ class ChinaMapCanvas {
         : (zoom < 5 ? 3 : (zoom < 7 ? 3 : (zoom < 9 ? 3.5 : 4)));
 
       citiesToShow.forEach(city => {
+        const cityLabel = escapeHtml(this._getLocalizedCityName(city));
         // 城市圆点
         const marker = window.L.circleMarker([city.lat, city.lon], {
           radius: dotRadius,
@@ -959,7 +1044,7 @@ class ChinaMapCanvas {
             white-space: nowrap;
             pointer-events: none;
             margin-left: 3px;
-          ">${city.name}</span>`,
+          ">${cityLabel}</span>`,
           iconSize: null,
           iconAnchor: [0, zoom < 5 ? 4 : (zoom < 7 ? 5 : 6)]
         });
@@ -974,6 +1059,7 @@ class ChinaMapCanvas {
     };
 
     // 初始显示
+    this._cityVisibilityUpdater = updateCityVisibility;
     updateCityVisibility();
 
     // 监听缩放事件
@@ -1132,8 +1218,8 @@ class ChinaMapCanvas {
       return `<div class="china-map-legend-row"><span class="china-map-legend-swatch" style="background:${item.color};"></span><span class="china-map-legend-value">${item.label}</span></div>`;
     }).join('');
 
-    const titleText = isSunrise ? '朝霞分数' : '晚霞分数';
-    el.innerHTML = `<div class="china-map-legend-title">🎨 ${titleText}</div>${rows}`;
+    const titleText = isSunrise ? mapUiText('sunriseScore') : mapUiText('sunsetScore');
+    el.innerHTML = `<div class="china-map-legend-title">${escapeHtml(titleText)}</div>${rows}`;
     el.style.setProperty('--map-legend-title-text', theme.legendText);
   }
 
@@ -1204,7 +1290,7 @@ class ChinaMapCanvas {
       maxWidth: 220,
     })
       .setLatLng([lat, lon])
-      .setContent(`<span style="color:${popupTheme.popupLoadingText};">查询中…</span>`)
+      .setContent(`<span style="color:${popupTheme.popupLoadingText};">${escapeHtml(mapUiText('loading'))}</span>`)
       .openOn(this._map);
 
     this._clickPopup = loadingPopup;
@@ -1228,23 +1314,24 @@ class ChinaMapCanvas {
       const cloudHumidity = await this._fetchPointCloudHumidity(lat, lon);
 
       const locationText = cityName || `${lat.toFixed(2)}°N, ${lon.toFixed(2)}°E`;
-      const scoreText = score !== null ? `${Math.round(score)} 分` : '暂无数据';
+      const scoreText = score !== null ? `${Math.round(score)} ${mapUiText('scoreUnit')}` : mapUiText('noData');
       const isHigh = score !== null && score >= 60;
       const scoreColor = isHigh ? popupTheme.scoreTextHigh : (score !== null && score >= 30 ? popupTheme.scoreTextMid : popupTheme.scoreTextLow);
       const cloudHumidityLine = cloudHumidity
-        ? `☁️ 高 ${cloudHumidity.highClouds} · 中 ${cloudHumidity.midClouds} · 低 ${cloudHumidity.lowClouds} · 💧 ${cloudHumidity.humidity}`
+        ? `${mapUiText('highCloud')} ${cloudHumidity.highClouds} · ${mapUiText('midCloud')} ${cloudHumidity.midClouds} · ${mapUiText('lowCloud')} ${cloudHumidity.lowClouds} · ${mapUiText('humidity')} ${cloudHumidity.humidity}`
         : '';
+      const periodText = this._currentPeriod === 'sunrise' ? mapUiText('sunriseScore') : mapUiText('sunsetScore');
 
       loadingPopup.setContent(`
         <div style="font-size:13px;line-height:1.6;color:${popupTheme.popupText};">
-          <div style="font-weight:600;margin-bottom:2px;">📍 ${locationText}</div>
-          <div style="color:${scoreColor};font-size:15px;font-weight:700;">${scoreText}</div>
-          ${cloudHumidityLine ? `<div style="color:${popupTheme.popupMutedText};font-size:11px;">${cloudHumidityLine}</div>` : ''}
-          <div style="color:${popupTheme.popupHintText};font-size:10px;margin-top:2px;">${this._currentPeriod === 'sunrise' ? '朝霞' : '晚霞'} · 当前时段</div>
+          <div style="font-weight:600;margin-bottom:2px;">${escapeHtml(locationText)}</div>
+          <div style="color:${scoreColor};font-size:15px;font-weight:700;">${escapeHtml(scoreText)}</div>
+          ${cloudHumidityLine ? `<div style="color:${popupTheme.popupMutedText};font-size:11px;">${escapeHtml(cloudHumidityLine)}</div>` : ''}
+          <div style="color:${popupTheme.popupHintText};font-size:10px;margin-top:2px;">${escapeHtml(periodText)} · ${escapeHtml(mapUiText('currentPeriod'))}</div>
         </div>
       `);
     } catch (err) {
-      loadingPopup.setContent(`<span style="color:${popupTheme.scoreTextError};">查询失败: ${err.message}</span>`);
+      loadingPopup.setContent(`<span style="color:${popupTheme.scoreTextError};">${escapeHtml(mapUiText('queryFailed'))}: ${escapeHtml(err.message)}</span>`);
     }
 
   }
@@ -1271,7 +1358,7 @@ class ChinaMapCanvas {
 
     // 仅在 0.5 度（约 50km）内认为"附近"
     if (nearest && minDist < 0.25) {
-      return nearest.name;
+      return this._getLocalizedCityName(nearest);
     }
     return null;
   }
