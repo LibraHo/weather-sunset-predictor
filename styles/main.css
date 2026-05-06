@@ -65,6 +65,10 @@
   --header-border: rgba(255, 255, 255, 0.62);
   --header-title-color: #7a4a12;
   --header-icon-color: #5d3b11;
+  --header-icon-bg: rgba(255, 255, 255, 0.45);
+  --header-icon-border: rgba(255, 255, 255, 0.65);
+  --header-icon-shadow: 0 4px 12px rgba(122, 74, 18, 0.14);
+  --header-icon-bg-hover: rgba(255, 255, 255, 0.7);
 }
 
 /* ===== 暗色主题 ===== */
@@ -114,7 +118,11 @@ body.theme-dark {
   --header-surface: rgba(14, 20, 38, 0.85);
   --header-border: rgba(255, 200, 120, 0.12);
   --header-title-color: #f5c87a;
-  --header-icon-color: #f5c87a;
+  --header-icon-color: #f7c46a;
+  --header-icon-bg: rgba(251, 146, 60, 0.10);
+  --header-icon-border: rgba(251, 191, 36, 0.18);
+  --header-icon-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 18px rgba(0,0,0,0.24);
+  --header-icon-bg-hover: rgba(251, 146, 60, 0.16);
 }
 
 /* ===== 基础样式 ===== */
@@ -156,7 +164,7 @@ header {
   position: relative;
   z-index: 1000;
   overflow: visible;
-  padding: var(--spacing-lg) calc(var(--spacing-md) + var(--spacing-lg));
+  padding: 14px calc(var(--spacing-md) + var(--spacing-lg));
   background: linear-gradient(120deg, var(--header-surface) 0%, rgba(255, 237, 205, 0.72) 100%);
   color: var(--header-title-color);
   box-shadow: var(--shadow-md);
@@ -192,9 +200,9 @@ header h1.app-title {
 
 .header-right-group .icon-btn {
   color: var(--header-icon-color);
-  background: rgba(255, 255, 255, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.65);
-  box-shadow: 0 4px 12px rgba(122, 74, 18, 0.14);
+  background: var(--header-icon-bg);
+  border: 1px solid var(--header-icon-border);
+  box-shadow: var(--header-icon-shadow);
   /* 统一尺寸 */
   width: 40px;
   height: 40px;
@@ -210,7 +218,7 @@ header h1.app-title {
 }
 
 .header-right-group .icon-btn:hover {
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--header-icon-bg-hover);
   transform: translateY(-1px);
 }
 
@@ -1306,22 +1314,26 @@ input[type="text"]::placeholder {
 /* ===== 响应式设计 - 移动端 ===== */
 @media (max-width: 768px) {
   header {
-    padding: var(--spacing-md) calc(var(--spacing-sm) + var(--spacing-md));
+    padding: 10px calc(var(--spacing-sm) + var(--spacing-md));
   }
 
   .header-top-row {
-    align-items: flex-start;
-    flex-direction: column;
+    align-items: center;
+    flex-direction: row;
+    gap: var(--spacing-sm);
   }
 
   .header-right-group {
-    width: 100%;
-    justify-content: space-between;
+    width: auto;
+    margin-left: auto;
+    justify-content: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
   }
 
   .home-view-menu-dropdown {
-    right: auto;
-    left: 0;
+    right: 0;
+    left: auto;
   }
 
   header h1 {
@@ -3448,13 +3460,14 @@ body.theme-dark .sun-azimuth-info {
 /* 移动端优化 */
 @media (max-width: 768px) {
   .header-right-group .icon-btn {
-    width: 36px;
-    height: 36px;
-    font-size: 1.1rem;
+    width: 34px;
+    height: 34px;
+    font-size: 1rem;
+    border-radius: 12px;
   }
 
   .header-actions {
-    gap: var(--spacing-xs);
+    gap: 6px;
   }
 
   .favorite-header {
@@ -4325,20 +4338,21 @@ body.theme-dark #forecast-section .sunset-time-small {
   display: flex;
   align-items: center;
   gap: 12px;
-  color: #C49A3C;
+  color: var(--header-title-color);
+  min-width: 0;
 }
 .app-logo-icon {
   height: 36px;
   width: auto;
   flex-shrink: 0;
-  color: #C49A3C;
+  color: var(--header-title-color);
 }
 .app-logo-text {
   font-family: 'Cormorant Garamond', 'PingFang SC', 'Hiragino Sans GB', Georgia, serif;
   font-size: 1.5rem;
   font-weight: 300;
   letter-spacing: 0.06em;
-  color: #C49A3C;
+  color: var(--header-title-color);
   line-height: 1;
   white-space: nowrap;
 }
@@ -4350,11 +4364,26 @@ body.theme-dark #forecast-section .sunset-time-small {
     gap: 16px;
   }
   .app-logo-icon {
-    height: 48px;
+    height: 40px;
   }
   .app-logo-text {
-    font-size: 2rem;
+    font-size: 1.78rem;
     letter-spacing: 0.08em;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-logo {
+    gap: 10px;
+  }
+
+  .app-logo-icon {
+    height: 32px;
+  }
+
+  .app-logo-text {
+    font-size: 1.34rem;
+    letter-spacing: 0.05em;
   }
 }
 
@@ -4415,7 +4444,11 @@ body.theme-auto {
     --header-surface: rgba(14, 20, 38, 0.85);
     --header-border: rgba(255, 200, 120, 0.12);
     --header-title-color: #f5c87a;
-    --header-icon-color: #f5c87a;
+    --header-icon-color: #f7c46a;
+    --header-icon-bg: rgba(251, 146, 60, 0.10);
+    --header-icon-border: rgba(251, 191, 36, 0.18);
+    --header-icon-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 18px rgba(0,0,0,0.24);
+    --header-icon-bg-hover: rgba(251, 146, 60, 0.16);
   }
 }
 
@@ -4455,6 +4488,11 @@ body.theme-dark header {
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border-bottom: 0.5px solid rgba(255, 200, 120, 0.15);
+    --header-icon-color: #f7c46a;
+    --header-icon-bg: rgba(251, 146, 60, 0.10);
+    --header-icon-border: rgba(251, 191, 36, 0.18);
+    --header-icon-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 18px rgba(0,0,0,0.24);
+    --header-icon-bg-hover: rgba(251, 146, 60, 0.16);
     box-shadow: 0 1px 0 rgba(255,200,120,0.08), 0 4px 20px rgba(0,0,0,0.4);
   }
 }
@@ -4771,6 +4809,129 @@ body.theme-dark {
   .prediction-tab-panel {
     display: flex !important; /* 强制显示，忽略 style="display:none" */
     align-items: stretch;
+  }
+}
+
+/* ===== API 接入页面：复用主站 card / glass 语言 ===== */
+.api-access-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.api-access-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 18px;
+  border-radius: 18px;
+  background: var(--glass-bg-heavy);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.api-access-kicker {
+  margin: 0 0 4px;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--theme-accent, var(--color-primary));
+  font-weight: 700;
+}
+
+.api-access-hero h2 {
+  margin: 0 0 6px;
+}
+
+.api-access-hero p {
+  margin: 0;
+  color: var(--color-text-light);
+}
+
+.api-access-actions,
+.api-access-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.api-access-grid {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.api-access-card {
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.api-access-card h3 {
+  margin-bottom: 10px;
+}
+
+.api-access-card ol,
+.api-access-card ul {
+  padding-left: 1.25rem;
+  color: var(--color-text-light);
+}
+
+.api-access-warning {
+  color: var(--color-text);
+  border-left: 3px solid var(--theme-accent, var(--color-warning));
+  padding-left: 10px;
+}
+
+.code-box {
+  position: relative;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(15, 23, 42, 0.08);
+  white-space: pre-wrap;
+  overflow: auto;
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--color-text);
+}
+
+.mono {
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 0.92rem;
+  color: var(--color-text);
+}
+
+.api-endpoint-list {
+  display: grid;
+  gap: 8px;
+}
+
+.api-endpoint-list > div {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--glass-bg-heavy);
+  border: 1px solid var(--glass-border);
+}
+
+.api-endpoint-list small {
+  color: var(--color-text-light);
+}
+
+body.theme-dark .code-box {
+  background: rgba(2, 6, 23, 0.24);
+}
+
+@media (max-width: 640px) {
+  .api-access-hero {
+    grid-template-columns: 1fr;
+    padding: 14px;
+  }
+
+  .api-access-actions {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -7706,6 +7867,73 @@ html[data-actual-theme="light"] .prediction-app-card .phenomenon-title-card {
     width: 21px;
     height: 21px;
   }
+}
+
+@media (max-width: 768px) {
+  .header-svg-btn .header-action-icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* 统一“朝霞/晚霞预测”与实时天气信息的设计语言：暖白玻璃 / 夜空玻璃，不再保留独立糖果渐变卡片。 */
+body.theme-dark .prediction-app-card {
+  background: var(--glass-bg) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+
+body.theme-dark .prediction-app-shell {
+  background:
+    radial-gradient(circle at top left, rgba(251, 146, 60, 0.15), transparent 45%),
+    radial-gradient(circle at bottom right, rgba(139, 92, 246, 0.12), transparent 40%),
+    linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)) !important;
+  border-color: rgba(255,255,255,0.08) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+}
+
+body.theme-dark .phenomenon-title-card,
+body.theme-dark .score-summary-card,
+body.theme-dark .cloud-condition-card,
+body.theme-dark .app-analysis-card,
+body.theme-dark .app-info-row,
+body.theme-dark .analysis-item {
+  background: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255,255,255,0.08) !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.05) !important;
+}
+
+body.theme-light .prediction-app-card,
+body:not(.theme-dark):not(.theme-auto) .prediction-app-card {
+  background: var(--glass-bg-heavy) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+
+body.theme-light .prediction-app-shell,
+body:not(.theme-dark):not(.theme-auto) .prediction-app-shell {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255, 196, 104, 0.24), transparent 42%),
+    linear-gradient(145deg, rgba(255, 252, 246, 0.94) 0%, rgba(255, 239, 218, 0.88) 100%) !important;
+  border-color: rgba(186, 132, 72, 0.20) !important;
+  box-shadow: 0 10px 24px rgba(139, 92, 43, 0.12) !important;
+}
+
+body.theme-light .phenomenon-title-card,
+body.theme-light .score-summary-card,
+body.theme-light .cloud-condition-card,
+body.theme-light .app-analysis-card,
+body.theme-light .app-info-row,
+body.theme-light .analysis-item,
+body:not(.theme-dark):not(.theme-auto) .phenomenon-title-card,
+body:not(.theme-dark):not(.theme-auto) .score-summary-card,
+body:not(.theme-dark):not(.theme-auto) .cloud-condition-card,
+body:not(.theme-dark):not(.theme-auto) .app-analysis-card,
+body:not(.theme-dark):not(.theme-auto) .app-info-row,
+body:not(.theme-dark):not(.theme-auto) .analysis-item {
+  background: rgba(255, 248, 238, 0.76) !important;
+  border-color: rgba(186, 132, 72, 0.18) !important;
+  box-shadow: 0 6px 16px rgba(139, 92, 43, 0.08) !important;
 }
 
 /* 修复：桌面端评分等级/明细文字继续下移，避免贴住圆环底部 */

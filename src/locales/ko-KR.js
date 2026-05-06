@@ -18,7 +18,24 @@ const translations = {
     "tabs": {
       "ariaLabel": "홈 탭 내비게이션",
       "forecast": "예측 기능",
-      "methodology": "화염구름 점수 계산 방법",
+      apiAccess: {
+      kicker: 'Sunset Voyager API',
+      intro: '샤커 Agent API는 위치 해석, 아침/저녁 노을 점수와 점수 설명을 제공하며 개인·학습·연구 용도에 적합합니다.',
+      openApiSpec: 'OpenAPI 사양',
+      admin: '관리 콘솔',
+      quickStart: '빠른 시작',
+      step1: '신청 후 Token을 받습니다.',
+      step2: '요청 시 Authorization: Bearer <token>에 넣어 전송합니다.',
+      step3: '/api/agent/forecast, /api/agent/explain 또는 /api/agent/geocode를 호출합니다.',
+      restrictions: '사용 제한',
+      restrictionText: '개인/학습/연구 용도만 허용되며 상업적 사용은 금지됩니다. 공개 표시 시 민감 정보를 제거하고 출처를 표시하세요.',
+      exampleCall: '호출 예시',
+      endpoints: '핵심 API',
+      forecastDesc: '점수, 품질 등급, 최적 관측 시간을 반환합니다.',
+      explainDesc: '점수 구성, 주요 제약, 자연어 설명을 반환합니다.',
+      geocodeDesc: '위치 후보, 좌표, 신뢰도를 반환합니다。'
+    },
+    "methodology": "화염구름 점수 계산 방법",
       "map": "노을 지도",
             shareMap: '공유 지도',
 apiAccess: 'API 연동'

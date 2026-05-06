@@ -18,7 +18,24 @@ const translations = {
     "tabs": {
       "ariaLabel": "Navigation par onglets",
       "forecast": "Prévisions",
-      "methodology": "Méthode de calcul",
+      apiAccess: {
+      kicker: 'Sunset Voyager API',
+      intro: 'L’API Agent de Sunset Voyager fournit le géocodage, les scores d’aube/crépuscule et les explications pour un usage personnel, pédagogique et de recherche.',
+      openApiSpec: 'Spécification OpenAPI',
+      admin: 'Console admin',
+      quickStart: 'Démarrage rapide',
+      step1: 'Demandez puis recevez un token.',
+      step2: 'Envoyez-le dans Authorization: Bearer <token>.',
+      step3: 'Appelez /api/agent/forecast, /api/agent/explain ou /api/agent/geocode.',
+      restrictions: 'Limites d’usage',
+      restrictionText: 'Usage personnel, pédagogique et de recherche uniquement. Usage commercial interdit. Toute publication doit anonymiser les données et citer la source.',
+      exampleCall: 'Exemple d’appel',
+      endpoints: 'Endpoints principaux',
+      forecastDesc: 'Retourne le score, le niveau de qualité et la meilleure fenêtre d’observation.',
+      explainDesc: 'Retourne la composition du score, les contraintes clés et une explication en langage naturel.',
+      geocodeDesc: 'Retourne des lieux candidats, coordonnées et niveau de confiance.'
+    },
+    "methodology": "Méthode de calcul",
       "map": "Carte Lueur",
       "shareMap": "Carte partagée",
       "apiAccess": "Accès API"

@@ -7,7 +7,24 @@ const translations = {
     "tabs": {
       "ariaLabel": "Navigazione a schede",
       "forecast": "Previsioni",
-      "methodology": "Metodologia di calcolo",
+      apiAccess: {
+      kicker: 'Sunset Voyager API',
+      intro: 'L’API Agent di Sunset Voyager offre geocodifica, punteggi per alba/tramonto e spiegazioni per uso personale, didattico e di ricerca.',
+      openApiSpec: 'Specifica OpenAPI',
+      admin: 'Console admin',
+      quickStart: 'Avvio rapido',
+      step1: 'Richiedi e ricevi un token.',
+      step2: 'Invialo in Authorization: Bearer <token>.',
+      step3: 'Chiama /api/agent/forecast, /api/agent/explain o /api/agent/geocode.',
+      restrictions: 'Limiti di utilizzo',
+      restrictionText: 'Solo uso personale, didattico e di ricerca. Uso commerciale vietato. Nelle esposizioni pubbliche rimuovere dati sensibili e citare la fonte.',
+      exampleCall: 'Esempio di chiamata',
+      endpoints: 'Endpoint principali',
+      forecastDesc: 'Restituisce punteggio, livello di qualità e finestra migliore di osservazione.',
+      explainDesc: 'Restituisce composizione del punteggio, vincoli chiave e spiegazione testuale.',
+      geocodeDesc: 'Restituisce località candidate, coordinate e confidenza.'
+    },
+    "methodology": "Metodologia di calcolo",
       "map": "Mappa Luminosità",
             "shareMap": "Mappa condivisa",
 apiAccess: 'Accesso API'

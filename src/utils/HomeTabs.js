@@ -12,9 +12,10 @@
  * - `#tab-forecast` / `#tab-methodology` — tab buttons
  * - Keyboard: ← → to move focus, Enter/Space to activate
  *
- * Both modes control two panels:
+ * Both modes control shared home panels:
  * - `#tab-panel-forecast`    — default visible panel
  * - `#tab-panel-methodology` — hidden by default
+ * - `#tab-panel-map` / `#tab-panel-gallery` / `#tab-panel-api` when present
  *
  * @param {Document} [documentRef=document] - Document reference (injectable for testing)
  * @returns {void}
@@ -38,6 +39,7 @@ export function initializeHomeTabs(documentRef = document, onMapVisible = null) 
 
   const mapPanel = documentRef.getElementById('tab-panel-map');
   const galleryPanel = documentRef.getElementById('tab-panel-gallery');
+  const apiPanel = documentRef.getElementById('tab-panel-api');
 
   const tabForecast = documentRef.getElementById('tab-forecast');
   const tabMethodology = documentRef.getElementById('tab-methodology');
@@ -50,7 +52,21 @@ export function initializeHomeTabs(documentRef = document, onMapVisible = null) 
     { id: 'methodology', el: methodologyPanel },
     ...(mapPanel ? [{ id: 'map', el: mapPanel }] : []),
     ...(galleryPanel ? [{ id: 'gallery', el: galleryPanel }] : []),
+    ...(apiPanel ? [{ id: 'api', el: apiPanel }] : []),
   ];
+
+  const getInitialView = () => {
+    const viewIds = new Set(allPanels.map(panel => panel.id));
+    const win = documentRef.defaultView;
+    const hash = win?.location?.hash ? win.location.hash.replace(/^#/, '') : '';
+    const queryView = (() => {
+      try { return new URLSearchParams(win?.location?.search || '').get('view'); }
+      catch (_) { return null; }
+    })();
+    if (viewIds.has(hash)) return hash;
+    if (viewIds.has(queryView)) return queryView;
+    return 'forecast';
+  };
 
   const setActiveView = (view) => {
     // 显示/隐藏所有已知 panels
@@ -85,7 +101,7 @@ export function initializeHomeTabs(documentRef = document, onMapVisible = null) 
     }
   };
 
-  setActiveView('forecast');
+  setActiveView(getInitialView());
 
   if (tabForecast && tabMethodology) {
     const tabs = [tabForecast, tabMethodology];
