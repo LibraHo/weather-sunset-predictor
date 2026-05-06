@@ -15,6 +15,12 @@ const MOBILE_CORE_CITY_NAMES = new Set([
   '北京', '上海', '广州', '深圳', '成都', '重庆', '武汉', '西安', '杭州', '南京'
 ]);
 
+const LOW_ZOOM_REGIONAL_CITY_NAMES = new Set([
+  ...MOBILE_CORE_CITY_NAMES,
+  '台北', '首尔', '东京', '大阪',
+  '曼谷', '河内', '胡志明市', '金边', '万象', '仰光', '吉隆坡', '雅加达'
+]);
+
 function mergeUniqueCities(...groups) {
   const merged = new Map();
   for (const group of groups) {
@@ -25,20 +31,26 @@ function mergeUniqueCities(...groups) {
   return [...merged.values()];
 }
 
+function filterCitiesByName(cities, names) {
+  return (cities || []).filter(city => names.has(city.name));
+}
+
 function selectCitiesForZoom(levels, zoom, isMobile = false) {
   const L1 = levels.level1 || [];
   const L2 = levels.level2 || [];
   const L3 = levels.level3 || [];
 
   if (isMobile) {
-    if (zoom < 6) return L1.filter(city => MOBILE_CORE_CITY_NAMES.has(city.name));
-    if (zoom < 8) return L1;
-    if (zoom < 10) return mergeUniqueCities(L1, L2);
+    if (zoom < 5) return filterCitiesByName(L1, MOBILE_CORE_CITY_NAMES);
+    if (zoom < 6.5) return filterCitiesByName(L1, LOW_ZOOM_REGIONAL_CITY_NAMES);
+    if (zoom < 8.5) return L1;
+    if (zoom < 10.5) return mergeUniqueCities(L1, L2);
     return mergeUniqueCities(L1, L2, L3);
   }
 
-  if (zoom < 6) return L1;
-  if (zoom < 9) return mergeUniqueCities(L1, L2);
+  if (zoom < 5) return filterCitiesByName(L1, LOW_ZOOM_REGIONAL_CITY_NAMES);
+  if (zoom < 7) return L1;
+  if (zoom < 9.5) return mergeUniqueCities(L1, L2);
   return mergeUniqueCities(L1, L2, L3);
 }
 
