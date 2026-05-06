@@ -620,6 +620,9 @@ apiAccess: 'الوصول إلى API'
     pointToast: '{{name}} direction | Score: {{score}} pts | Distance: {{distance}} km',
     emptyChinaSpots: 'No visible fire-cloud spots today',
     updatedAt: 'Updated at {{time}}',
+    supportedRegions: 'مدعوم حاليًا: بر الصين الرئيسي، هونغ كونغ، ماكاو، تايوان، اليابان، كوريا الجنوبية، كوريا الشمالية، والمدن الرئيسية في جنوب شرق آسيا القاري. تركز شبكة الخريطة الحرارية حاليًا على الصين.',
+    interactionHint: 'Drag the map · scroll to zoom',
+    tabs: { sunrise: 'Sunrise', sunset: 'Sunset' },
     quality: { excellent: 'Excellent', good: 'Good' },
     period: { sunriseTomorrow: "Tomorrow's sunrise glow", sunsetToday: "Today's sunset glow", testLayer: 'Test layer (mock data)' }
   },

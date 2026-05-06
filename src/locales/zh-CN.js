@@ -614,6 +614,9 @@ formationAnalysis: {
     pointToast: '{{name}}方向｜评分: {{score}}分｜距离: {{distance}}公里',
     emptyChinaSpots: '今日暂无可见火烧云点位',
     updatedAt: '更新于 {{time}}',
+    supportedRegions: '目前支持：中国大陆、港澳台、日本、韩国、朝鲜及中南半岛主要城市；热力栅格当前以中国区域为主。',
+    interactionHint: '可拖拽地图 · 滚轮缩放',
+    tabs: { sunrise: '朝霞', sunset: '晚霞' },
     quality: { excellent: '优秀', good: '良好' },
     period: { sunriseTomorrow: '明天的朝霞', sunsetToday: '今天的晚霞', testLayer: '测试图层（模拟数据）' }
   },

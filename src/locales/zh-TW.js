@@ -751,6 +751,9 @@ const translations = {
     "pointToast": "{{name}}方向｜評分: {{score}}分｜距離: {{distance}}公里",
     "emptyChinaSpots": "今日暫無可見火燒雲點位",
     "updatedAt": "更新於 {{time}}",
+    "supportedRegions": "目前支援：中國大陸、港澳臺、日本、韓國、朝鮮及中南半島主要城市；熱力柵格目前以中國區域為主。",
+    "interactionHint": "可拖曳地圖 · 滾輪縮放",
+    "tabs": { "sunrise": "朝霞", "sunset": "晚霞" },
     "quality": {
       "excellent": "優秀",
       "good": "良好"

@@ -715,6 +715,9 @@ apiAccess: 'API接続'
     "pointToast": "{{name}}方向｜スコア: {{score}}点｜距離: {{distance}}km",
     "emptyChinaSpots": "本日表示できる焼け雲スポットはありません",
     "updatedAt": "{{time}} 更新",
+    "supportedRegions": "現在対応：中国大陸、香港、マカオ、台湾、日本、韓国、北朝鮮、インドシナ半島の主要都市。ヒートマップ格子は現在中国エリアが中心です。",
+    "interactionHint": "地図をドラッグ · スクロールでズーム",
+    "tabs": { "sunrise": "朝焼け", "sunset": "夕焼け" },
     "quality": { "excellent": "優秀", "good": "良好" },
     "period": { "sunriseTomorrow": "明日の朝焼け", "sunsetToday": "今日の夕焼け", "testLayer": "テストレイヤー（モックデータ）" }
   },

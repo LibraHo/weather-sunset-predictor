@@ -751,6 +751,9 @@ const translations = {
     "pointToast": "{{name}} direction | Score: {{score}} pts | Distance: {{distance}} km",
     "emptyChinaSpots": "No visible fire-cloud spots today",
     "updatedAt": "Updated at {{time}}",
+    "supportedRegions": "Hiện hỗ trợ: Trung Quốc đại lục, Hồng Kông, Ma Cao, Đài Loan, Nhật Bản, Hàn Quốc, Triều Tiên và các thành phố lớn ở Đông Nam Á lục địa. Lưới heatmap hiện tập trung vào khu vực Trung Quốc.",
+    "interactionHint": "Drag the map · scroll to zoom",
+    "tabs": { "sunrise": "Sunrise", "sunset": "Sunset" },
     "quality": {
       "excellent": "Excellent",
       "good": "Good"

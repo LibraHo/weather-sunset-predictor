@@ -446,24 +446,25 @@
       <!-- 火烧云地图页面 -->
       <section id="tab-panel-map" class="card map-panel hidden" role="tabpanel" aria-label="map-panel" tabindex="0" hidden>
         <div class="map-panel-header">
-          <h2 data-i18n="home.tabs.map">🗺️ 火烧云地图 <span class="map-panel-subtitle">仅支持中国大陆</span></h2>
+          <h2 data-i18n="home.tabs.map">火烧云地图</h2>
           <div class="map-panel-timestamp-wrapper">
             <span id="china-spots-timestamp"></span>
           </div>
         </div>
+        <div class="map-supported-regions" data-i18n="weatherMap.supportedRegions">目前支持：中国大陆、港澳台、日本、韩国、朝鲜及中南半岛主要城市；热力栅格当前以中国区域为主。</div>
         <!-- 时段切换 tabs -->
         <div id="china-spots-tabs-container" class="china-spots-tabs-container">
-          <button id="map-tab-sunrise" data-period="sunrise" class="china-spots-tab">朝霞 🌄</button>
-          <button id="map-tab-sunset" data-period="sunset" class="china-spots-tab is-active">晚霞 🌅</button>
+          <button id="map-tab-sunrise" data-period="sunrise" class="china-spots-tab" data-i18n="weatherMap.tabs.sunrise">朝霞</button>
+          <button id="map-tab-sunset" data-period="sunset" class="china-spots-tab is-active" data-i18n="weatherMap.tabs.sunset">晚霞</button>
         </div>
         <!-- 时段说明 -->
         <div id="china-spots-period-label" class="china-spots-period-label"></div>
         <!-- Leaflet 地图（可拖拽 + 缩放） -->
         <div id="china-spots-map" class="china-spots-map"></div>
-        <div id="china-spots-empty" class="china-spots-empty hidden">今日暂无可见火烧云点位</div>
+        <div id="china-spots-empty" class="china-spots-empty hidden" data-i18n="weatherMap.emptyChinaSpots">今日暂无可见火烧云点位</div>
         <!-- 任务 64.8：朝/晚霞双时段分数并行展示 -->
         <div id="china-spots-dual-score" class="china-spots-dual-score hidden"></div>
-        <p class="map-panel-hint">💡 可拖拽地图 · 滚轮缩放</p>
+        <p class="map-panel-hint" data-i18n="weatherMap.interactionHint">可拖拽地图 · 滚轮缩放</p>
         <!-- Phase 18：周边火烧云雷达罗盘 -->
         <div id="radar-compass-container" class="radar-compass-container"></div>
       </section>

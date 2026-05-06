@@ -751,6 +751,9 @@ const translations = {
     "pointToast": "{{name}} direction | Score: {{score}} pts | Distance: {{distance}} km",
     "emptyChinaSpots": "No visible fire-cloud spots today",
     "updatedAt": "Updated at {{time}}",
+    "supportedRegions": "Actuellement pris en charge : Chine continentale, Hong Kong, Macao, Taïwan, Japon, Corée du Sud, Corée du Nord et principales villes de l’Asie du Sud-Est continentale. La grille thermique est actuellement centrée sur la Chine.",
+    "interactionHint": "Drag the map · scroll to zoom",
+    "tabs": { "sunrise": "Sunrise", "sunset": "Sunset" },
     "quality": {
       "excellent": "Excellent",
       "good": "Good"

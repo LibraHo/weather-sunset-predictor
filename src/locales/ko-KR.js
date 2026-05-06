@@ -740,6 +740,9 @@ apiAccess: 'API 연동'
     "pointToast": "{{name}} 방향 | 점수: {{score}}점 | 거리: {{distance}}km",
     "emptyChinaSpots": "오늘 표시할 수 있는 노을구름 지점이 없습니다",
     "updatedAt": "{{time}} 업데이트",
+    "supportedRegions": "현재 지원: 중국 본토, 홍콩, 마카오, 대만, 일본, 대한민국, 북한 및 인도차이나반도 주요 도시. 히트맵 격자는 현재 중국 지역 중심입니다.",
+    "interactionHint": "지도를 드래그 · 스크롤로 확대/축소",
+    "tabs": { "sunrise": "아침노을", "sunset": "저녁노을" },
     "quality": { "excellent": "매우 좋음", "good": "좋음" },
     "period": { "sunriseTomorrow": "내일 아침노을", "sunsetToday": "오늘 저녁노을", "testLayer": "테스트 레이어(모의 데이터)" }
   },
