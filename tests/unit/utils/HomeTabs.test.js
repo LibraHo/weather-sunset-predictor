@@ -85,6 +85,32 @@ describe('initializeHomeTabs - dropdown menu mode', () => {
     expect(document.getElementById('tab-panel-methodology').hidden).toBe(true);
   });
 
+  test('supports API panel from the shared Home Menu and initial #api hash', () => {
+    document.body.innerHTML = `
+      <div class="home-view-menu">
+        <button id="home-view-menu-btn" aria-expanded="false"></button>
+        <div id="home-view-menu-dropdown" class="hidden" role="menu">
+          <button class="home-view-option active" data-view="forecast" aria-checked="true"></button>
+          <button class="home-view-option" data-view="methodology" aria-checked="false"></button>
+          <button class="home-view-option" data-view="api" aria-checked="false"></button>
+        </div>
+      </div>
+      <div id="tab-panel-forecast" role="tabpanel"></div>
+      <section id="tab-panel-methodology" role="tabpanel" class="hidden" hidden></section>
+      <section id="tab-panel-api" role="tabpanel" class="hidden" hidden></section>
+    `;
+    window.history.replaceState(null, '', '#api');
+
+    initializeHomeTabs(document);
+
+    expect(document.getElementById('tab-panel-forecast').hidden).toBe(true);
+    expect(document.getElementById('tab-panel-methodology').hidden).toBe(true);
+    expect(document.getElementById('tab-panel-api').hidden).toBe(false);
+    expect(document.querySelector('.home-view-option[data-view="api"]').getAttribute('aria-checked')).toBe('true');
+
+    window.history.replaceState(null, '', '/');
+  });
+
   test('aria-checked is updated on menu options', () => {
     initializeHomeTabs(document);
     document.getElementById('home-view-menu-btn').click();

@@ -24,7 +24,24 @@ export default {
     tabs: {
       ariaLabel: '主页分页导航',
       forecast: '预测功能',
-      methodology: '火烧云计算方法',
+      apiAccess: {
+      kicker: 'Sunset Voyager API',
+      intro: '霞客 Agent API 提供地点解析、朝霞/晚霞评分和评分解释，适合个人、学习与研究场景。',
+      openApiSpec: 'OpenAPI 规格',
+      admin: '管理后台',
+      quickStart: '快速开始',
+      step1: '申请并获取 Token。',
+      step2: '请求时在 Authorization: Bearer <token> 中传入。',
+      step3: '调用 /api/agent/forecast、/api/agent/explain 或 /api/agent/geocode。',
+      restrictions: '使用限制',
+      restrictionText: '仅限个人/学习/研究用途，禁止商用。公开展示请脱敏并标明来源。',
+      exampleCall: '示例调用',
+      endpoints: '核心接口',
+      forecastDesc: '返回评分、质量等级和最佳观赏窗口。',
+      explainDesc: '返回评分构成、关键限制和自然语言解释。',
+      geocodeDesc: '返回地点候选、坐标和置信度。'
+    },
+    methodology: '火烧云计算方法',
       map: '火烧云地图',
       shareMap: '分享地图',
       apiAccess: 'API接入'

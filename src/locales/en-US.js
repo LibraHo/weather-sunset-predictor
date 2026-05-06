@@ -18,7 +18,24 @@ const translations = {
     "tabs": {
       "ariaLabel": "Home tab navigation",
       "forecast": "Forecast",
-      "methodology": "Methodology",
+      apiAccess: {
+      kicker: 'Sunset Voyager API',
+      intro: 'The Sunset Voyager Agent API provides geocoding, sunrise/sunset glow scores, and score explanations for personal, learning, and research use.',
+      openApiSpec: 'OpenAPI spec',
+      admin: 'Admin console',
+      quickStart: 'Quick start',
+      step1: 'Apply for and receive a token.',
+      step2: 'Send it in Authorization: Bearer <token>.',
+      step3: 'Call /api/agent/forecast, /api/agent/explain, or /api/agent/geocode.',
+      restrictions: 'Usage limits',
+      restrictionText: 'Personal, learning, and research use only. Commercial use is prohibited. Public displays must remove sensitive data and cite the source.',
+      exampleCall: 'Example call',
+      endpoints: 'Core endpoints',
+      forecastDesc: 'Returns score, quality level, and best viewing window.',
+      explainDesc: 'Returns score composition, key constraints, and natural-language explanation.',
+      geocodeDesc: 'Returns location candidates, coordinates, and confidence.'
+    },
+    "methodology": "Methodology",
       "map": "Fire Sky Map",
       "shareMap": "Share Map",
       "apiAccess": "API Access"

@@ -253,6 +253,7 @@
 ### Home Menu 页面
 
 - Home Menu 下的预测、计算方法、地图、分享地图、API 接入都必须复用同一个主站 header、主题变量、footer 与 card 框架。
+- 所有 Home Menu panel 必须受同一套系统设置控制：主题切换、语言切换、RTL/LTR、按钮状态和全局 toast 都要覆盖到；禁止出现设置无法影响的孤立页面。
 - 禁止为了新增子页面单独复制一套“相似但不一致”的顶栏、菜单或主题样式。
 - 若需要保留旧路径（如 `/api-apply.html`），只能作为跳转入口，最终落到主站 HomeTabs panel 内。
 

@@ -18,7 +18,24 @@ const translations = {
     "tabs": {
       "ariaLabel": "Điều hướng tab trang chủ",
       "forecast": "Chức năng dự báo",
-      "methodology": "Phương pháp tính điểm mây đẹp",
+      apiAccess: {
+      kicker: 'Sunset Voyager API',
+      intro: 'API Agent của Sunset Voyager cung cấp phân giải địa điểm, điểm mây đẹp lúc bình minh/hoàng hôn và giải thích điểm cho mục đích cá nhân, học tập và nghiên cứu.',
+      openApiSpec: 'Đặc tả OpenAPI',
+      admin: 'Trang quản trị',
+      quickStart: 'Bắt đầu nhanh',
+      step1: 'Đăng ký và nhận Token.',
+      step2: 'Gửi trong Authorization: Bearer <token>.',
+      step3: 'Gọi /api/agent/forecast, /api/agent/explain hoặc /api/agent/geocode.',
+      restrictions: 'Giới hạn sử dụng',
+      restrictionText: 'Chỉ dùng cho cá nhân/học tập/nghiên cứu, không dùng thương mại. Khi công khai cần ẩn dữ liệu nhạy cảm và ghi nguồn.',
+      exampleCall: 'Ví dụ gọi API',
+      endpoints: 'API chính',
+      forecastDesc: 'Trả về điểm, mức chất lượng và khung giờ xem tốt nhất.',
+      explainDesc: 'Trả về cấu thành điểm, giới hạn chính và giải thích bằng ngôn ngữ tự nhiên.',
+      geocodeDesc: 'Trả về các địa điểm gợi ý, tọa độ và độ tin cậy.'
+    },
+    "methodology": "Phương pháp tính điểm mây đẹp",
       "map": "Bản đồ Ráng đỏ",
       "shareMap": "Bản đồ chia sẻ",
       "apiAccess": "Truy cập API"

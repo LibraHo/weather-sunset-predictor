@@ -11,7 +11,24 @@ export default {
     tabs: {
       ariaLabel: 'تنقل تبويبات الصفحة الرئيسية',
       forecast: 'التنبؤ',
-      methodology: 'طريقة حساب النقاط',
+      apiAccess: {
+      kicker: 'Sunset Voyager API',
+      intro: 'توفر واجهة Sunset Voyager Agent API تحديد المواقع ودرجات الشروق/الغروب وشرح الدرجات للاستخدام الشخصي والتعليمي والبحثي.',
+      openApiSpec: 'مواصفة OpenAPI',
+      admin: 'لوحة الإدارة',
+      quickStart: 'بدء سريع',
+      step1: 'قدّم طلباً واحصل على Token.',
+      step2: 'أرسله ضمن Authorization: Bearer <token>.',
+      step3: 'استدعِ /api/agent/forecast أو /api/agent/explain أو /api/agent/geocode.',
+      restrictions: 'قيود الاستخدام',
+      restrictionText: 'للاستخدام الشخصي/التعليمي/البحثي فقط، ويُحظر الاستخدام التجاري. عند العرض العام يجب إخفاء البيانات الحساسة وذكر المصدر.',
+      exampleCall: 'مثال طلب',
+      endpoints: 'واجهات أساسية',
+      forecastDesc: 'يعيد الدرجة ومستوى الجودة وأفضل نافذة مشاهدة.',
+      explainDesc: 'يعيد مكونات الدرجة والقيود الرئيسية وشرحاً نصياً.',
+      geocodeDesc: 'يعيد مواقع مرشحة وإحداثيات ومستوى ثقة.'
+    },
+    methodology: 'طريقة حساب النقاط',
       map: 'خريطة السحب الحمراء',
             shareMap: 'خريطة المشاركة',
 apiAccess: 'الوصول إلى API'

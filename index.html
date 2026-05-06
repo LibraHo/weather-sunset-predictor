@@ -483,43 +483,43 @@
       <section id="tab-panel-api" class="card api-access-panel hidden" role="tabpanel" aria-label="api-panel" tabindex="0" hidden>
         <div class="api-access-hero">
           <div>
-            <p class="api-access-kicker">Sunset Voyager API</p>
+            <p class="api-access-kicker" data-i18n="home.apiAccess.kicker">Sunset Voyager API</p>
             <h2 data-i18n="home.tabs.apiAccess">API接入</h2>
-            <p>霞客 Agent API 提供地点解析、朝霞/晚霞评分和评分解释，适合个人、学习与研究场景。</p>
+            <p data-i18n="home.apiAccess.intro">霞客 Agent API 提供地点解析、朝霞/晚霞评分和评分解释，适合个人、学习与研究场景。</p>
           </div>
           <div class="api-access-actions">
-            <a href="/api/agent/openapi.json" class="btn btn-secondary">OpenAPI 规格</a>
-            <a href="/admin" class="btn btn-secondary">管理后台</a>
+            <a href="/api/agent/openapi.json" class="btn btn-secondary" data-i18n="home.apiAccess.openApiSpec">OpenAPI 规格</a>
+            <a href="/admin" class="btn btn-secondary" data-i18n="home.apiAccess.admin">管理后台</a>
           </div>
         </div>
 
         <div class="api-access-grid">
           <article class="api-access-card">
-            <h3>快速开始</h3>
+            <h3 data-i18n="home.apiAccess.quickStart">快速开始</h3>
             <ol>
-              <li>申请并获取 Token。</li>
-              <li>请求时在 <span class="mono">Authorization: Bearer &lt;token&gt;</span> 中传入。</li>
-              <li>调用 <span class="mono">/api/agent/forecast</span>、<span class="mono">/api/agent/explain</span> 或 <span class="mono">/api/agent/geocode</span>。</li>
+              <li data-i18n="home.apiAccess.step1">申请并获取 Token。</li>
+              <li data-i18n="home.apiAccess.step2">请求时在 Authorization: Bearer &lt;token&gt; 中传入。</li>
+              <li data-i18n="home.apiAccess.step3">调用 /api/agent/forecast、/api/agent/explain 或 /api/agent/geocode。</li>
             </ol>
           </article>
           <article class="api-access-card">
-            <h3>使用限制</h3>
-            <p class="api-access-warning">仅限个人/学习/研究用途，禁止商用。公开展示请脱敏并标明来源。</p>
+            <h3 data-i18n="home.apiAccess.restrictions">使用限制</h3>
+            <p class="api-access-warning" data-i18n="home.apiAccess.restrictionText">仅限个人/学习/研究用途，禁止商用。公开展示请脱敏并标明来源。</p>
           </article>
         </div>
 
         <div class="api-access-card">
-          <h3>示例调用</h3>
+          <h3 data-i18n="home.apiAccess.exampleCall">示例调用</h3>
           <pre class="code-box">curl -H "Authorization: Bearer YOUR_TOKEN_HERE" \
   "https://sunset.bjhyc.online/api/agent/explain?location=%E5%8C%97%E4%BA%AC&amp;type=sunset&amp;date=today"</pre>
         </div>
 
         <div class="api-access-card">
-          <h3>核心接口</h3>
+          <h3 data-i18n="home.apiAccess.endpoints">核心接口</h3>
           <div class="api-endpoint-list">
-            <div><span class="mono">/forecast</span><small>返回评分、质量等级和最佳观赏窗口。</small></div>
-            <div><span class="mono">/explain</span><small>返回评分构成、关键限制和自然语言解释。</small></div>
-            <div><span class="mono">/geocode</span><small>返回地点候选、坐标和置信度。</small></div>
+            <div><span class="mono">/forecast</span><small data-i18n="home.apiAccess.forecastDesc">返回评分、质量等级和最佳观赏窗口。</small></div>
+            <div><span class="mono">/explain</span><small data-i18n="home.apiAccess.explainDesc">返回评分构成、关键限制和自然语言解释。</small></div>
+            <div><span class="mono">/geocode</span><small data-i18n="home.apiAccess.geocodeDesc">返回地点候选、坐标和置信度。</small></div>
           </div>
         </div>
       </section>
