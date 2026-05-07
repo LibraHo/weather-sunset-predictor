@@ -160,10 +160,12 @@ body {
 }
 
 header {
-  /* 与首个搜索卡片的内容区域保持同一水平对齐 */
   position: relative;
   z-index: 1000;
   overflow: visible;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
   padding: 14px calc(var(--spacing-md) + var(--spacing-lg));
   background: linear-gradient(120deg, var(--header-surface) 0%, rgba(255, 237, 205, 0.72) 100%);
   color: var(--header-title-color);
@@ -172,7 +174,8 @@ header {
 }
 
 .header-top-row {
-  width: 100%;
+  width: min(100%, 1400px);
+  margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -465,6 +468,9 @@ main > section {
 }
 
 footer {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
   padding: var(--spacing-lg) var(--spacing-md);
   background-color: var(--color-card-bg);
   border-top: 1px solid var(--color-border);
@@ -5247,41 +5253,29 @@ body.theme-dark .code-box {
   background: var(--map-popup-bg);
 }
 
-/* 时段切换 tabs */
-.china-spots-tabs-container {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
+/* 时段切换：复用霞客通用分段开关 */
+.china-spots-tabs-container,
+.china-spots-tabs {
   position: relative;
   z-index: 1200;
   pointer-events: auto;
-}
-
-.china-spots-tabs {
-  display: flex;
-  gap: 8px;
   margin-bottom: 8px;
 }
 
+.china-spots-tabs-container.xiake-toggle,
+.china-spots-tabs.xiake-toggle {
+  justify-content: center;
+  width: fit-content;
+}
+
 .china-spots-tab {
-  flex: 1;
-  padding: 8px 12px;
-  border: 1px solid rgba(255, 120, 0, 0.5);
-  border-radius: 6px;
-  background: rgba(0, 0, 0, 0.4);
-  color: var(--color-text);
-  font-size: 13px;
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
-  white-space: nowrap;
   touch-action: manipulation;
   pointer-events: auto;
 }
 
 .china-spots-tab.is-active {
-  background: rgba(255, 100, 0, 0.8);
-  border-color: rgba(255, 200, 50, 0.9);
-  font-weight: bold;
+  font-weight: 700;
 }
 
 /* 时段说明 */
@@ -5321,14 +5315,9 @@ body.theme-dark .code-box {
 
 /* ===== 中国火烧云地图区域响应式 ===== */
 @media (max-width: 640px) {
-  .china-spots-tabs-container,
-  .china-spots-tabs {
-    gap: 4px;
-  }
-
-  .china-spots-tab {
-    padding: 6px 8px;
-    font-size: 12px;
+  .china-spots-tabs-container.xiake-toggle,
+  .china-spots-tabs.xiake-toggle {
+    width: min(100%, 320px);
   }
 
   .china-spots-map {
@@ -6924,8 +6913,8 @@ html[data-actual-theme="light"] .weather-desc {
 .xiake-toggle {
   --toggle-bg: color-mix(in srgb, var(--glass-bg-heavy, var(--color-surface, #f8f7f4)) 86%, transparent);
   --toggle-border: var(--glass-border, var(--color-border, rgba(0,0,0,0.1)));
-  --toggle-active: var(--color-primary, #f97316);
-  --toggle-muted: var(--color-text-secondary, #6b7280);
+  --toggle-active: var(--theme-accent, var(--color-warning, #f97316));
+  --toggle-muted: var(--theme-text-muted, var(--color-text-secondary, #6b7280));
   display: flex;
   align-items: center;
   justify-content: center;

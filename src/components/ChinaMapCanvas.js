@@ -85,6 +85,13 @@ const LOW_ZOOM_REGIONAL_CITY_NAMES = new Set([
   '曼谷', '河内', '胡志明市', '金边', '万象', '仰光', '吉隆坡', '雅加达'
 ]);
 
+const DENSE_REGION_SECONDARY_CITY_NAMES = new Set([
+  // 岛屿 / 半岛 / 都市圈面积小，低 zoom 下先只留区域锚点，避免文字混叠
+  '新北', '桃园', '台中', '台南', '高雄', '基隆', '花莲',
+  '釜山', '仁川', '大邱', '大田', '光州', '蔚山', '济州',
+  '横滨', '名古屋', '京都', '神户', '札幌', '仙台', '广岛', '福冈'
+]);
+
 function mergeUniqueCities(...groups) {
   const merged = new Map();
   for (const group of groups) {
@@ -99,6 +106,10 @@ function filterCitiesByName(cities, names) {
   return (cities || []).filter(city => names.has(city.name));
 }
 
+function filterLowZoomCityDensity(cities) {
+  return (cities || []).filter(city => !DENSE_REGION_SECONDARY_CITY_NAMES.has(city.name));
+}
+
 function selectCitiesForZoom(levels, zoom, isMobile = false) {
   const L1 = levels.level1 || [];
   const L2 = levels.level2 || [];
@@ -107,13 +118,13 @@ function selectCitiesForZoom(levels, zoom, isMobile = false) {
   if (isMobile) {
     if (zoom < 5) return filterCitiesByName(L1, MOBILE_CORE_CITY_NAMES);
     if (zoom < 6.5) return filterCitiesByName(L1, LOW_ZOOM_REGIONAL_CITY_NAMES);
-    if (zoom < 8.5) return L1;
+    if (zoom < 8.5) return filterLowZoomCityDensity(L1);
     if (zoom < 10.5) return mergeUniqueCities(L1, L2);
     return mergeUniqueCities(L1, L2, L3);
   }
 
   if (zoom < 5) return filterCitiesByName(L1, LOW_ZOOM_REGIONAL_CITY_NAMES);
-  if (zoom < 7) return L1;
+  if (zoom < 7.8) return filterLowZoomCityDensity(L1);
   if (zoom < 9.5) return mergeUniqueCities(L1, L2);
   return mergeUniqueCities(L1, L2, L3);
 }
