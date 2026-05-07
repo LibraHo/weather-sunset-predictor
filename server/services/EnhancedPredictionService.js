@@ -787,6 +787,8 @@ function scoreLightPath(weatherData, solarElevation, azimuth, remoteCloudData = 
 
   // 低云少时降低遮挡概率计算权重（低云少=光路通畅）
   const lowClouds = weatherData.lowClouds || 0;
+  const midClouds = weatherData.midClouds || 0;
+  const highClouds = weatherData.highClouds || 0;
   let occlusionWeight = 1.0;
   if (lowClouds < 20) {
     occlusionWeight = 0.7; // 低云极少，光路通畅，降低遮挡影响
