@@ -499,6 +499,11 @@ apiAccess: 'الوصول إلى API'
     proxyUrl: 'رابط خادم الوكيل',
     proxyUrlPlaceholder: 'http://localhost:3000',
     proxyUrlHint: 'عنوان رابط خادم الوكيل الخلفي',
+    weatherFetchMode: 'وضع جلب بيانات الطقس',
+    weatherFetchModeHint: 'الوضع الافتراضي حلقة مغلقة عبر الخلفية؛ إذا تعرّضت الخلفية للتقييد أو انتهاء المهلة، يمكن للمتصفح جلب طقس عام ثم إرساله للخلفية لحساب الدرجة',
+    weatherFetchModeBackend: 'حلقة خلفية مغلقة (الافتراضي الموصى به)',
+    weatherFetchModeClientFallback: 'الخلفية أولاً، والمتصفح كخطة طوارئ',
+    weatherFetchModeClient: 'جلب الطقس عبر المتصفح (تصحيح/طوارئ)',
     // الإشعارات والتنبيهات
     notificationAndAlerts: 'الإشعارات والتنبيهات',
     enableSunsetNotification: 'تفعيل إشعارات الغروب',

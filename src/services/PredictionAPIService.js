@@ -32,7 +32,7 @@ class PredictionAPIService {
    *
    * 需求：22.4 - 前端改为调用后端 API
    */
-  async calculate(weatherData, date, lat, lon, type = 'sunset') {
+  async calculate(weatherData, date, lat, lon, type = 'sunset', options = {}) {
     const startTime = Date.now();
     console.log(`[PredictionAPIService] 调用后端预测 API: lat=${lat}, lon=${lon}, type=${type}`);
 
@@ -43,7 +43,9 @@ class PredictionAPIService {
       // 格式化日期为 ISO 字符串
       const dateString = date instanceof Date ? date.toISOString() : date;
 
-      // 构建请求体：主预测闭环由后端取天气和光路数据，前端只传地点/时刻/类型。
+      // 构建请求体：主预测保持后端闭环，前端只传地点/时刻/type。
+      // 仅当 WEATHER_FETCH_MODE 进入 client/client-fallback 应急路径时，才携带天气数据让后端只负责算分。
+      const useClientWeather = options.weatherFetchMode === 'client' || options.clientWeatherFallback === true;
       const requestBody = {
         date: dateString,
         lat: lat,
@@ -51,6 +53,16 @@ class PredictionAPIService {
         type: type,
         referenceTime: dateString
       };
+
+      if (useClientWeather) {
+        requestBody.weatherData = weatherData;
+        requestBody.options = {
+          prevHourData: options.prevHourData || weatherData?._prevHourData || null,
+          rainedRecently: Boolean(options.rainedRecently),
+          remoteCloudData: options.remoteCloudData || null,
+          clientWeatherFallback: options.clientWeatherFallback === true
+        };
+      }
 
       // 发送请求
       const response = await this._fetchWithTimeout(url, {
@@ -79,7 +91,10 @@ class PredictionAPIService {
 
     } catch (error) {
       console.error(`[PredictionAPIService] API 调用失败:`, error);
-      throw new Error(`后端预测 API 调用失败: ${error.message}`);
+      const wrappedError = new Error(`后端预测 API 调用失败: ${error.message}`);
+      wrappedError.code = error.code || null;
+      wrappedError.status = error.status || null;
+      throw wrappedError;
     }
   }
 
@@ -104,7 +119,10 @@ class PredictionAPIService {
       // 检查 HTTP 状态码
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+        const apiError = new Error(errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+        apiError.code = errorData.error?.code || null;
+        apiError.status = response.status;
+        throw apiError;
       }
 
       return response;
@@ -177,6 +195,7 @@ class PredictionAPIService {
     prediction.aqi = data.aqi ?? null;
     prediction.remoteCloudData = data.remoteCloudData || null;
     prediction.weatherDataSource = data.weatherDataSource || null;
+    prediction.clientWeatherFallback = data.clientWeatherFallback === true;
     prediction.providerMeta = data.providerMeta || null;
 
     return prediction;

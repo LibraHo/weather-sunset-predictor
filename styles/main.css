@@ -6364,12 +6364,17 @@ body:not(.theme-dark):not(.theme-auto) .radar-chart-container {
 body.theme-light .score-breakdown-popover,
 body.theme-dark .score-breakdown-popover,
 body.theme-auto .score-breakdown-popover {
-  background: var(--glass-bg-heavy) !important;
-  border-color: var(--glass-border) !important;
-  box-shadow: var(--glass-shadow) !important;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04)),
+    color-mix(in srgb, var(--glass-bg-heavy) 72%, transparent) !important;
+  border-color: color-mix(in srgb, var(--glass-border) 82%, rgba(255, 255, 255, 0.28)) !important;
+  box-shadow:
+    0 18px 48px rgba(31, 24, 16, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.30),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.08) !important;
   color: var(--color-text) !important;
-  backdrop-filter: blur(var(--glass-blur-heavy));
-  -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+  backdrop-filter: blur(var(--glass-blur-heavy)) saturate(1.24);
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy)) saturate(1.24);
 }
 .score-breakdown-title,
 .score-breakdown-val {
@@ -6386,6 +6391,36 @@ body.theme-auto .score-breakdown-popover {
 }
 .score-breakdown-row + .score-breakdown-row {
   border-top-color: var(--glass-border) !important;
+}
+
+/* 桌面端在同色玻璃卡片上弹出，单独增强透明层次，避免看起来像实色面板 */
+@media (min-width: 641px) {
+  .score-breakdown-popover {
+    overflow: hidden;
+    isolation: isolate;
+    background:
+      radial-gradient(circle at 16% 0%, rgba(255, 224, 178, 0.32), transparent 38%),
+      linear-gradient(152deg, rgba(255, 255, 255, 0.30), rgba(255, 255, 255, 0.08) 45%, rgba(255, 255, 255, 0.16)),
+      color-mix(in srgb, var(--glass-bg-heavy) 42%, transparent) !important;
+    border-color: color-mix(in srgb, var(--glass-border) 55%, rgba(255, 255, 255, 0.58)) !important;
+    box-shadow:
+      0 24px 64px rgba(31, 24, 16, 0.24),
+      0 0 0 1px rgba(255, 255, 255, 0.16),
+      inset 0 1px 0 rgba(255, 255, 255, 0.56),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.14) !important;
+  }
+
+  .score-breakdown-popover::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      linear-gradient(115deg, rgba(255, 255, 255, 0.32), transparent 32%),
+      radial-gradient(circle at 82% 12%, rgba(255, 255, 255, 0.20), transparent 28%);
+    opacity: 0.9;
+  }
 }
 
 /* 需求46 修正：手机切换仅显示朝霞/晚霞，日期回到卡片标题上方 */

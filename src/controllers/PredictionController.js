@@ -250,6 +250,7 @@ class PredictionController {
     const config = loadConfig();
     this.features = config.features;
     this.apiConfig = config;
+    this.weatherFetchMode = config.weatherFetchMode || 'backend';
 
     // 初始化后端 API 服务
     this.predictionAPIService = new PredictionAPIService(config.proxy.url);
@@ -283,20 +284,30 @@ class PredictionController {
       try {
         console.log(`[PredictionController] 使用后端 API 计算预测 (${type})`);
 
-        // 找前 1-2 小时数据用于云厚评估
-        if (weatherDataArray && weatherData.timestamp) {
-          const ts = weatherData.timestamp;
-          for (let offset = 1; offset <= 2; offset++) {
-            const prevTs = ts - offset * 3600000;
-            const prev = weatherDataArray.find(d => d.timestamp === prevTs);
-            if (prev && prev.shortwaveRadiation != null && prev.shortwaveRadiation > 50) {
-              weatherData._prevHourData = prev;
-              break;
-            }
-          }
+        const clientWeatherOptions = this._buildClientWeatherOptions(weatherData, weatherDataArray);
+        const mode = loadConfig().weatherFetchMode || this.weatherFetchMode || 'backend';
+
+        if (mode === 'client') {
+          console.warn('[PredictionController] WEATHER_FETCH_MODE=client，使用浏览器天气数据 + 后端算分');
+          return await this.predictionAPIService.calculate(weatherData, date, lat, lon, type, {
+            ...clientWeatherOptions,
+            weatherFetchMode: 'client',
+            clientWeatherFallback: true
+          });
         }
 
-        return await this.predictionAPIService.calculate(weatherData, date, lat, lon, type);
+        try {
+          return await this.predictionAPIService.calculate(weatherData, date, lat, lon, type);
+        } catch (error) {
+          if (mode === 'client-fallback' && this._isWeatherFallbackEligible(error)) {
+            console.warn('[PredictionController] 后端闭环天气不可用，使用浏览器天气数据 + 后端算分 fallback:', error.message);
+            return await this.predictionAPIService.calculate(weatherData, date, lat, lon, type, {
+              ...clientWeatherOptions,
+              clientWeatherFallback: true
+            });
+          }
+          throw error;
+        }
       } catch (error) {
         console.error(`[PredictionController] 后端 API 调用失败（已禁用本地旧算法回退）:`, error.message);
         throw error;
@@ -307,6 +318,55 @@ class PredictionController {
         timezone: weatherData?.timezone || null
       });
     }
+  }
+
+
+  _buildClientWeatherOptions(weatherData, weatherDataArray = null) {
+    const options = { prevHourData: null, rainedRecently: false };
+    if (!weatherData || !Array.isArray(weatherDataArray)) {
+      return options;
+    }
+
+    const ts = weatherData.timestamp;
+    if (ts) {
+      for (let offset = 1; offset <= 2; offset += 1) {
+        const prevTs = ts - offset * 3600000;
+        const prev = weatherDataArray.find(d => d.timestamp === prevTs);
+        if (prev && prev.shortwaveRadiation != null && prev.shortwaveRadiation > 50) {
+          weatherData._prevHourData = prev;
+          options.prevHourData = prev;
+          break;
+        }
+      }
+
+      let recentPrecipitation6h = 0;
+      for (const row of weatherDataArray) {
+        if (row.timestamp <= ts && row.timestamp >= ts - 6 * 3600000) {
+          recentPrecipitation6h += Number(row.precipitation || 0);
+        }
+      }
+      options.rainedRecently = recentPrecipitation6h >= 0.2;
+    }
+    return options;
+  }
+
+  _isWeatherFallbackEligible(error) {
+    const code = String(error?.code || '').toLowerCase();
+    const message = String(error?.message || '').toLowerCase();
+    return code === 'weather_rate_limited'
+      || code === 'weather_quota_exceeded'
+      || code === 'weather_upstream_timeout'
+      || code === 'weather_provider_unavailable'
+      || message.includes('weather_rate_limited')
+      || message.includes('weather_quota_exceeded')
+      || message.includes('weather_upstream_timeout')
+      || message.includes('weather_provider_unavailable')
+      || message.includes('429')
+      || message.includes('quota')
+      || message.includes('rate')
+      || message.includes('timeout')
+      || message.includes('超时')
+      || message.includes('频繁');
   }
 
   /**
@@ -445,7 +505,8 @@ class PredictionController {
             sunriseTime,  // 用实际日出时刻，后端才能正确计算太阳高度角
             location.lat,
             location.lon,
-            'sunrise'
+            'sunrise',
+            weatherDataArray
           );
           console.log(`[PredictionController] 朝霞预测完成，得分: ${sunrisePrediction.score}`);
 

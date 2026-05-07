@@ -16,6 +16,7 @@ describe('OpenMeteoAPIService', () => {
   });
 
   afterEach(() => {
+    localStorage.clear();
     if (fetchSpy) fetchSpy.mockRestore();
   });
 
@@ -41,9 +42,29 @@ describe('OpenMeteoAPIService', () => {
       ok: true,
       json: async () => ({ windyEnabled: false })
     });
-    fetchSpy.mockResolvedValueOnce({ ok: false, status: 503 });
+    fetchSpy.mockResolvedValueOnce({ ok: false, status: 503, json: async () => ({}) });
 
     await expect(service.fetchWeatherData(39.9, 116.4, 24)).rejects.toThrow('后端请求失败: 503');
+  });
+
+  test('preserves structured backend weather error code/status for fallback decisions', async () => {
+    fetchSpy.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ windyEnabled: false })
+    });
+    fetchSpy.mockResolvedValueOnce({
+      ok: false,
+      status: 504,
+      json: async () => ({
+        error: { code: 'WEATHER_UPSTREAM_TIMEOUT', message: 'Open-Meteo timeout' }
+      })
+    });
+
+    await expect(service.fetchWeatherData(39.9, 116.4, 24)).rejects.toMatchObject({
+      code: 'WEATHER_UPSTREAM_TIMEOUT',
+      status: 504,
+      message: 'Open-Meteo timeout'
+    });
   });
 
   test('preserves air quality fields for weather panel display', async () => {
@@ -101,5 +122,43 @@ describe('OpenMeteoAPIService', () => {
 
     const data = await service.fetchWeatherData(39.9, 116.4, 24);
     expect(data.providerMeta).toEqual({ name: 'openmeteo', dataQuality: 'excellent' });
+  });
+
+  test('client mode bypasses backend and uses browser weather fetcher', async () => {
+    localStorage.setItem('weather_fetch_mode', 'client');
+    localStorage.setItem('weather_model', 'gfs_seamless');
+    const fallbackData = [];
+    service.clientWeatherService.fetchWeatherData = jest.fn().mockResolvedValue(fallbackData);
+
+    const data = await service.fetchWeatherData(39.9, 116.4, 24);
+
+    expect(data).toBe(fallbackData);
+    expect(service.clientWeatherService.fetchWeatherData).toHaveBeenCalledWith(39.9, 116.4, 24, 'gfs_seamless');
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  test('client-fallback mode uses browser fetcher only for eligible backend weather errors', async () => {
+    localStorage.setItem('weather_fetch_mode', 'client-fallback');
+    const fallbackData = [];
+    service.clientWeatherService.fetchWeatherData = jest.fn().mockResolvedValue(fallbackData);
+    const backendError = new Error('Backend provider unavailable');
+    backendError.code = 'WEATHER_PROVIDER_UNAVAILABLE';
+    backendError.status = 503;
+    service.fetchFromProxy = jest.fn().mockRejectedValue(backendError);
+
+    const data = await service.fetchWeatherData(39.9, 116.4, 24);
+
+    expect(data).toBe(fallbackData);
+    expect(service.fetchFromProxy).toHaveBeenCalledWith(39.9, 116.4, 24);
+    expect(service.clientWeatherService.fetchWeatherData).toHaveBeenCalledWith(39.9, 116.4, 24, 'ecmwf_ifs025');
+  });
+
+  test('client-fallback mode does not hide non-weather backend errors', async () => {
+    localStorage.setItem('weather_fetch_mode', 'client-fallback');
+    service.clientWeatherService.fetchWeatherData = jest.fn();
+    service.fetchFromProxy = jest.fn().mockRejectedValue(new Error('后端返回数据格式错误'));
+
+    await expect(service.fetchWeatherData(39.9, 116.4, 24)).rejects.toThrow('后端返回数据格式错误');
+    expect(service.clientWeatherService.fetchWeatherData).not.toHaveBeenCalled();
   });
 });

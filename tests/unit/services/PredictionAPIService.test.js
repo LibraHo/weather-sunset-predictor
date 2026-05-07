@@ -186,6 +186,25 @@ describe('PredictionAPIService', () => {
       ).rejects.toThrow('后端预测 API 调用失败');
     });
 
+    test('should preserve structured backend weather error code/status', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 503,
+        statusText: 'Service Unavailable',
+        json: async () => ({
+          error: { code: 'WEATHER_PROVIDER_UNAVAILABLE', message: 'No weather data available' }
+        })
+      });
+
+      await expect(
+        predictionAPI.calculate(mockWeatherData, mockDate, mockLat, mockLon)
+      ).rejects.toMatchObject({
+        code: 'WEATHER_PROVIDER_UNAVAILABLE',
+        status: 503,
+        message: '后端预测 API 调用失败: No weather data available'
+      });
+    });
+
     test('should throw error on network failure', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
@@ -210,8 +229,42 @@ describe('PredictionAPIService', () => {
       const [, options] = mockFetch.mock.calls[0];
       const body = JSON.parse(options.body);
       expect(body.weatherData).toBeUndefined();
+      expect(body.options).toBeUndefined();
       expect(body.lat).toBe(mockLat);
       expect(body.lon).toBe(mockLon);
+    });
+
+    test('should include weather data only for client fallback scoring mode', async () => {
+      const prevHourData = { shortwaveRadiation: 120 };
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          ...mockSuccessResponse,
+          data: {
+            ...mockSuccessResponse.data,
+            weatherDataSource: 'client_weather_fallback',
+            clientWeatherFallback: true
+          }
+        })
+      });
+
+      const result = await predictionAPI.calculate(
+        mockWeatherData,
+        mockDate,
+        mockLat,
+        mockLon,
+        'sunset',
+        { clientWeatherFallback: true, prevHourData, rainedRecently: true }
+      );
+
+      const [, options] = mockFetch.mock.calls[0];
+      const body = JSON.parse(options.body);
+      expect(body.weatherData).toEqual(mockWeatherData);
+      expect(body.options.clientWeatherFallback).toBe(true);
+      expect(body.options.prevHourData).toEqual(prevHourData);
+      expect(body.options.rainedRecently).toBe(true);
+      expect(result.weatherDataSource).toBe('client_weather_fallback');
+      expect(result.clientWeatherFallback).toBe(true);
     });
   });
 
