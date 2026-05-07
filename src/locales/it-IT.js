@@ -284,7 +284,7 @@ apiAccess: 'Accesso API'
       "title": "Punteggio Percorso Luminoso",
       "score": "Punteggio Percorso Luminoso",
       "visibility": "Visibilità",
-      "lightPathScore": "🌅 Percorso luminoso: {{score}}pt "
+      "lightPathScore": "Percorso luminoso: {{score}}pt "
     },
     "rendering": {
       "title": "Punteggio Resa",

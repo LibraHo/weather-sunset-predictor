@@ -65,8 +65,8 @@ export default class ChinaSpotsOverlayManager {
     this._tabContainer.className = 'china-spots-tabs';
 
     const tabs = [
-      { period: 'sunrise', label: '🌄 明天朝霞' },
-      { period: 'sunset', label: '🌅 今天晚霞' }
+      { period: 'sunrise', label: '明天朝霞' },
+      { period: 'sunset', label: '今天晚霞' }
     ];
 
     tabs.forEach(tab => {

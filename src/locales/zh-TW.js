@@ -319,7 +319,7 @@ const translations = {
       "title": "光路評分",
       "score": "光路得分",
       "visibility": "能見度",
-      "lightPathScore": "🌅 光路: {{score}}分 "
+      "lightPathScore": "光路: {{score}}分 "
     },
     "rendering": {
       "title": "渲染評分",
