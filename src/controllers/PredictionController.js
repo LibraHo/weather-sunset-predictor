@@ -58,6 +58,20 @@ class SharePanel {
     this.isOpen = false;
   }
 
+  async recordShareEvent(action, prediction = this.currentPrediction) {
+    try {
+      const period = prediction?.type === 'sunrise' ? 'sunrise' : (prediction?.type === 'sunset' ? 'sunset' : 'unknown');
+      await fetch('/api/share/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, period, source: 'prediction-card' }),
+        keepalive: true
+      });
+    } catch (error) {
+      console.warn('分享统计上报失败:', error);
+    }
+  }
+
   /**
    * 处理保存图片 — 使用 ShareCardGenerator 纯 Canvas 绘制
    */
@@ -89,6 +103,7 @@ class SharePanel {
       URL.revokeObjectURL(url);
 
       this.showToast('图片已保存');
+      this.recordShareEvent('save', prediction);
     } catch (error) {
       console.error('保存图片失败:', error);
       this.showToast('保存失败，请重试');
@@ -104,6 +119,7 @@ class SharePanel {
       const url = window.location.href;
       await navigator.clipboard.writeText(url);
       this.showToast(this.i18n.t('share.copied'));
+      this.recordShareEvent('copy');
     } catch (error) {
       console.error('复制链接失败:', error);
       // 降级方案
@@ -114,6 +130,7 @@ class SharePanel {
       document.execCommand('copy');
       document.body.removeChild(textArea);
       this.showToast(this.i18n.t('share.copied'));
+      this.recordShareEvent('copy');
     }
     this.close();
   }
@@ -148,6 +165,7 @@ class SharePanel {
             text: shareText,
             files: [file],
           });
+          this.recordShareEvent('native', prediction);
           this.close();
           return;
         } catch (imgErr) {
@@ -163,6 +181,7 @@ class SharePanel {
         text: shareText,
         url: window.location.href,
       });
+      this.recordShareEvent('native', prediction);
       // 降级分享成功后关闭面板
       this.close();
       return;

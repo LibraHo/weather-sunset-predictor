@@ -177,6 +177,12 @@
   color: var(--color-text);
 }
 
+.kpi-sub {
+  margin-top: 4px;
+  color: var(--color-text-light);
+  font-size: 0.82rem;
+}
+
 .kpi-card-alert .kpi-value {
   color: var(--color-error);
 }
