@@ -197,7 +197,15 @@ function buildWeatherDataFromHourly(selected, hourly, selectedIdx) {
   };
 }
 
-async function buildClosedLoopPredictionInput({ lat, lon, date, type, referenceTime }) {
+async function buildClosedLoopPredictionInput({
+  lat,
+  lon,
+  date,
+  type,
+  referenceTime,
+  weatherResponseOverride = null,
+  includeRemoteCloudData = true
+}) {
   const targetDate = date ? new Date(date) : new Date();
   if (!(targetDate instanceof Date) || isNaN(targetDate.getTime())) {
     throw new Error('Invalid date');
@@ -210,7 +218,7 @@ async function buildClosedLoopPredictionInput({ lat, lon, date, type, referenceT
       : SunCalculator.getSunsetTime(targetDate, lat, lon);
   }
 
-  const weatherResponse = await fetchClosedLoopWeatherData(lat, lon, 168);
+  const weatherResponse = weatherResponseOverride || await fetchClosedLoopWeatherData(lat, lon, 168);
   const hourly = Array.isArray(weatherResponse.data) ? weatherResponse.data : [];
   if (!hourly.length) {
     const error = new Error('No weather data available');
@@ -221,16 +229,54 @@ async function buildClosedLoopPredictionInput({ lat, lon, date, type, referenceT
   const { selected, selectedIdx } = selectHourlyAt(hourly, refTime);
   const built = buildWeatherDataFromHourly(selected, hourly, selectedIdx);
   const azimuth = EnhancedPredictionService.calculateSolarAzimuth(refTime, lat, lon);
-  const remoteCloudData = await surroundingService.getSolarDirectionLightPathSamples({
-    lat, lon, date: targetDate, type, azimuth, referenceTime: refTime
-  });
+  const remoteCloudData = includeRemoteCloudData
+    ? await surroundingService.getSolarDirectionLightPathSamples({
+        lat, lon, date: targetDate, type, azimuth, referenceTime: refTime
+      })
+    : null;
 
   return {
     ...built,
     referenceTime: refTime,
     providerMeta: weatherResponse.providerMeta || null,
     remoteCloudData,
-    source: 'backend_closed_loop'
+    source: includeRemoteCloudData ? 'backend_closed_loop' : 'backend_closed_loop_fast'
+  };
+}
+
+function buildEnhancedPredictionResponse({ closedLoop, lat, lon, type, options = {} }) {
+  const result = EnhancedPredictionService.calculateEnhancedPrediction(
+    closedLoop.weatherData,
+    closedLoop.referenceTime,
+    lat,
+    lon,
+    type,
+    {
+      ...options,
+      prevHourData: closedLoop.prevHourData,
+      rainedRecently: closedLoop.rainedRecently,
+      remoteCloudData: closedLoop.remoteCloudData
+    }
+  );
+
+  return {
+    ...result,
+    // @deprecated - 使用 lightPathAnalysis.score 替代
+    lightPathScore: result.lightPathAnalysis?.score ?? null,
+    // @deprecated - 使用 canvasAnalysis.score 替代
+    canvasScore: result.canvasAnalysis?.score ?? null,
+    // @deprecated - 使用 breakdown.baseScore 替代
+    baseScore: result.breakdown?.baseScore ?? null,
+    cloudLayers: {
+      low: closedLoop.weatherData.lowClouds,
+      mid: closedLoop.weatherData.midClouds,
+      high: closedLoop.weatherData.highClouds,
+    },
+    providerMeta: closedLoop.providerMeta,
+    weatherDataSource: closedLoop.source || 'backend_closed_loop',
+    clientWeatherFallback: closedLoop.clientWeatherFallback === true,
+    referenceTime: closedLoop.referenceTime.toISOString(),
+    remoteCloudData: closedLoop.remoteCloudData,
   };
 }
 
@@ -294,6 +340,38 @@ function validateBatchRequest(req, res, next) {
 
   if (!type || !['sunrise', 'sunset'].includes(type)) {
     return errorResponse(res, 400, 'INVALID_TYPE', 'type must be "sunrise" or "sunset"');
+  }
+
+  next();
+}
+
+function validateClosedLoopBatchRequest(req, res, next) {
+  const { items, lat, lon } = req.body;
+
+  if (!Array.isArray(items) || items.length === 0) {
+    return errorResponse(res, 400, 'INVALID_ITEMS', 'items must be a non-empty array');
+  }
+
+  if (items.length > 12) {
+    return errorResponse(res, 400, 'TOO_MANY_ITEMS', 'Maximum 12 closed-loop prediction items allowed');
+  }
+
+  if (typeof lat !== 'number' || lat < -90 || lat > 90) {
+    return errorResponse(res, 400, 'INVALID_LATITUDE', 'lat must be a number between -90 and 90');
+  }
+
+  if (typeof lon !== 'number' || lon < -180 || lon > 180) {
+    return errorResponse(res, 400, 'INVALID_LONGITUDE', 'lon must be a number between -180 and 180');
+  }
+
+  for (let i = 0; i < items.length; i += 1) {
+    const item = items[i] || {};
+    if (!item.date) {
+      return errorResponse(res, 400, 'MISSING_DATE', `items[${i}].date is required`);
+    }
+    if (!item.type || !['sunrise', 'sunset'].includes(item.type)) {
+      return errorResponse(res, 400, 'INVALID_TYPE', `items[${i}].type must be "sunrise" or "sunset"`);
+    }
   }
 
   next();
@@ -395,40 +473,7 @@ router.post('/enhanced', validatePredictionRequest, async (req, res) => {
         }
       : await buildClosedLoopPredictionInput({ lat, lon, date, type, referenceTime });
 
-    const result = EnhancedPredictionService.calculateEnhancedPrediction(
-      closedLoop.weatherData,
-      closedLoop.referenceTime,
-      lat,
-      lon,
-      type,
-      {
-        ...options,
-        prevHourData: closedLoop.prevHourData,
-        rainedRecently: closedLoop.rainedRecently,
-        remoteCloudData: closedLoop.remoteCloudData
-      }
-    );
-
-    // 任务 56.2：旧字段兼容窗口（deprecated 标注，保留兼容字段供旧客户端使用）
-    const compatResult = {
-      ...result,
-      // @deprecated - 使用 lightPathAnalysis.score 替代
-      lightPathScore: result.lightPathAnalysis?.score ?? null,
-      // @deprecated - 使用 canvasAnalysis.score 替代
-      canvasScore: result.canvasAnalysis?.score ?? null,
-      // @deprecated - 使用 breakdown.baseScore 替代
-      baseScore: result.breakdown?.baseScore ?? null,
-      cloudLayers: {
-        low: closedLoop.weatherData.lowClouds,
-        mid: closedLoop.weatherData.midClouds,
-        high: closedLoop.weatherData.highClouds,
-      },
-      providerMeta: closedLoop.providerMeta,
-      weatherDataSource: closedLoop.source || 'backend_closed_loop',
-      clientWeatherFallback: closedLoop.clientWeatherFallback === true,
-      referenceTime: closedLoop.referenceTime.toISOString(),
-      remoteCloudData: closedLoop.remoteCloudData,
-    };
+    const compatResult = buildEnhancedPredictionResponse({ closedLoop, lat, lon, type, options });
 
     res.json({
       success: true,
@@ -442,6 +487,62 @@ router.post('/enhanced', validatePredictionRequest, async (req, res) => {
       return errorResponse(res, providerError.status, providerError.code, providerError.message);
     }
     errorResponse(res, 500, 'PREDICTION_ERROR', error.message);
+  }
+});
+
+/**
+ * POST /api/prediction/enhanced/closed-loop/batch
+ * 后端闭环批量预测：前端只提交地点 + 多个 date/type/referenceTime，后端只拉一次天气并复用。
+ */
+router.post('/enhanced/closed-loop/batch', validateClosedLoopBatchRequest, async (req, res) => {
+  try {
+    const { items, lat, lon, options = {} } = req.body;
+    const includeRemoteCloudData = options.includeRemoteCloudData === true;
+    console.log(`[PredictionRoute] Closed-loop batch prediction request: ${items.length} items, lat=${lat}, lon=${lon}`);
+
+    const weatherResponse = await fetchClosedLoopWeatherData(lat, lon, 168);
+    const data = new Array(items.length);
+    const calculateItem = async (item, index) => {
+      const closedLoop = await buildClosedLoopPredictionInput({
+        lat,
+        lon,
+        date: item.date,
+        type: item.type,
+        referenceTime: item.referenceTime || item.date,
+        weatherResponseOverride: weatherResponse,
+        includeRemoteCloudData
+      });
+      return {
+        id: item.id ?? index,
+        ...buildEnhancedPredictionResponse({
+          closedLoop,
+          lat,
+          lon,
+          type: item.type,
+          options: item.options || options
+        })
+      };
+    };
+
+    // 小批量并发：同一地点 8 条朝/晚霞预测通常会触发光路采样。
+    // 2 条一批能降低冷启动等待，同时避免一次性放大远端天气请求压力。
+    const BATCH_SIZE = 2;
+    for (let i = 0; i < items.length; i += BATCH_SIZE) {
+      const batch = items.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.all(batch.map((item, offset) => calculateItem(item, i + offset)));
+      batchResults.forEach((result, offset) => {
+        data[i + offset] = result;
+      });
+    }
+
+    res.json({ success: true, data, count: data.length });
+  } catch (error) {
+    console.error('[PredictionRoute] Closed-loop batch prediction error:', error);
+    const providerError = normalizeWeatherProviderError(error);
+    if (providerError) {
+      return errorResponse(res, providerError.status, providerError.code, providerError.message);
+    }
+    errorResponse(res, 500, 'BATCH_CLOSED_LOOP_PREDICTION_ERROR', error.message);
   }
 });
 

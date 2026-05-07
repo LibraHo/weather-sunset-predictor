@@ -35,15 +35,41 @@ class UIStateController {
     }
   }
 
-  showLoading(show = true) {
+  showLoading(show = true, state = {}) {
     const loadingElement = document.getElementById('loading-indicator');
     if (loadingElement) {
       loadingElement.style.display = show ? 'block' : 'none';
     }
 
+    if (show) {
+      this.updateLoadingProgress(state);
+    }
+
     const refreshBtn = document.getElementById('refresh-btn');
     if (refreshBtn) {
       refreshBtn.disabled = show;
+    }
+  }
+
+  updateLoadingProgress(state = {}) {
+    const rawProgress = Number(state.progress ?? 0);
+    const progress = Math.max(0, Math.min(100, Number.isFinite(rawProgress) ? rawProgress : 0));
+    const progressBar = document.querySelector('#loading-indicator .loading-progress');
+    const progressFill = document.getElementById('loading-progress-fill');
+    const detailElement = document.getElementById('loading-progress-detail');
+    const textElement = document.getElementById('loading-text');
+
+    if (progressBar) {
+      progressBar.setAttribute('aria-valuenow', String(Math.round(progress)));
+    }
+    if (progressFill) {
+      progressFill.style.width = `${progress}%`;
+    }
+    if (detailElement) {
+      detailElement.textContent = state.detail || (progress > 0 ? `${Math.round(progress)}%` : '');
+    }
+    if (textElement && state.message) {
+      textElement.textContent = state.message;
     }
   }
 

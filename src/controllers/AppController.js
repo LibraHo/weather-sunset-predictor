@@ -155,7 +155,7 @@ class AppController {
 
     try {
       // 显示加载状态
-      this.showLoading(true);
+      this.showLoading(true, { progress: 8, message: this.i18n.t('loading.data') });
 
       // 保存当前位置
       this.currentLocation = location;
@@ -169,6 +169,8 @@ class AppController {
         return;
       }
 
+      this.updateLoadingProgress({ progress: 18, message: this.i18n.t('loading.weather') });
+
       // 获取天气数据（失败不阻塞地图等功能）
       let weatherData = null;
       try {
@@ -180,6 +182,8 @@ class AppController {
       }
 
       if (weatherData && weatherData.length > 0) {
+        this.updateLoadingProgress({ progress: 48, message: this.i18n.t('loading.prediction') });
+
         // 更新天气显示
         this.weatherController.updateWeatherDisplay(weatherData, location);
 
@@ -194,6 +198,7 @@ class AppController {
         }
 
         if (predictions && predictions.length > 0) {
+          this.updateLoadingProgress({ progress: 88, message: this.i18n.t('loading.pleaseWait') });
           this.predictionController.updatePredictionDisplay(predictions);
         } else {
           console.warn('[AppController] 没有生成预测数据，跳过预测显示');
@@ -219,6 +224,8 @@ class AppController {
           console.warn('[AppController] 更新中国散点地图失败:', err.message);
         });
       }
+
+      this.updateLoadingProgress({ progress: 100, message: this.i18n.t('loading.pleaseWait') });
 
       // 隐藏加载状态
       this.showLoading(false);
@@ -1021,8 +1028,12 @@ class AppController {
    * @param {boolean} show - 是否显示加载状态
    * @private
    */
-  showLoading(show = true) {
-    this.uiStateController.showLoading(show);
+  showLoading(show = true, state = {}) {
+    this.uiStateController.showLoading(show, state);
+  }
+
+  updateLoadingProgress(state = {}) {
+    this.uiStateController.updateLoadingProgress(state);
   }
 
   /**

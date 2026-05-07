@@ -528,7 +528,11 @@
     <!-- 加载指示器 -->
       <div id="loading-indicator" class="loading hidden">
         <div class="spinner"></div>
-        <p data-i18n="common.loading">加载中...</p>
+        <p id="loading-text" data-i18n="common.loading">加载中...</p>
+        <div class="loading-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div id="loading-progress-fill" class="loading-progress-fill"></div>
+        </div>
+        <p id="loading-progress-detail" class="loading-progress-detail" aria-live="polite"></p>
       </div>
     </main>
 

@@ -270,6 +270,44 @@ describe('PredictionAPIService', () => {
 
   // ========== getSurrounding() 方法测试 ==========
 
+  describe('calculateBatchClosedLoop()', () => {
+    test('should call closed-loop batch endpoint and convert predictions', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          data: [{
+            id: 'sunset:1718992800000',
+            date: '2024-06-21T18:00:00Z',
+            score: 72,
+            quality: 'excellent',
+            type: 'sunset',
+            weatherDataSource: 'backend_closed_loop',
+            referenceTime: '2024-06-21T18:00:00Z'
+          }],
+          count: 1
+        })
+      });
+
+      const result = await predictionAPI.calculateBatchClosedLoop([
+        { id: 'sunset:1718992800000', date: new Date('2024-06-21T18:00:00Z'), type: 'sunset' }
+      ], 39.9, 116.4);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toBeInstanceOf(SunsetPrediction);
+      expect(result[0].id).toBe('sunset:1718992800000');
+      expect(result[0].weatherDataSource).toBe('backend_closed_loop');
+
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe('http://localhost:3000/api/prediction/enhanced/closed-loop/batch');
+      const body = JSON.parse(options.body);
+      expect(body.lat).toBe(39.9);
+      expect(body.lon).toBe(116.4);
+      expect(body.items[0].date).toBe('2024-06-21T18:00:00.000Z');
+      expect(body.items[0].type).toBe('sunset');
+    });
+  });
+
   describe('getSurrounding()', () => {
     const mockLat = 39.9;
     const mockLon = 116.4;

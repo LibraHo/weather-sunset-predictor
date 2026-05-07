@@ -166,4 +166,28 @@ describe('Prediction API Integration', () => {
       expect(res.body.error).toHaveProperty('code', 'INVALID_WEATHER_DATA_ARRAY');
     });
   });
+
+  describe('POST /api/prediction/enhanced/closed-loop/batch', () => {
+    test('rejects empty items with 400', async () => {
+      const res = await request(app)
+        .post('/api/prediction/enhanced/closed-loop/batch')
+        .send({ items: [], lat: 39.9, lon: 116.4 })
+        .expect(400);
+
+      expect(res.body.error).toHaveProperty('code', 'INVALID_ITEMS');
+    });
+
+    test('rejects invalid item type with 400', async () => {
+      const res = await request(app)
+        .post('/api/prediction/enhanced/closed-loop/batch')
+        .send({
+          items: [{ date: '2024-06-21T18:00:00Z', type: 'midnight' }],
+          lat: 39.9,
+          lon: 116.4
+        })
+        .expect(400);
+
+      expect(res.body.error).toHaveProperty('code', 'INVALID_TYPE');
+    });
+  });
 });
