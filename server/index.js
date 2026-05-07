@@ -22,6 +22,7 @@ const apiLogsRoutes = require('./routes/api-logs');
 const agentRoutes = require('./routes/agent');
 const applicationsRoutes = require('./routes/applications');
 const shareRoutes = require('./routes/share');
+const shareStatsRoutes = require('./routes/share-stats');
 const basicAuth = require('basic-auth');
 const { requestLogger, errorLogger } = require('./middleware/logger');
 
@@ -133,6 +134,7 @@ app.use('/api/agent', agentForecastRoutes);
 app.use('/api/firecloud', firecloudRoutes);
 app.use('/api/prediction', predictionRoutes);
 app.use('/api/visitor', visitorRoutes);
+app.use('/api/share', shareStatsRoutes);
 app.use('/api/heatmap', heatmapRoutes);
 app.use('/api/spots', spotsRoutes);
 app.use('/api/photos', photosRoutes);
@@ -149,6 +151,7 @@ const adminApiAuth = (req, res, next) => {
   next();
 };
 app.use('/api/admin', adminApiAuth, apiLogsRoutes);
+app.use('/api/admin/share', adminApiAuth, shareStatsRoutes);
 app.use('/share', shareRoutes);
 
 // 静态文件服务（公开分享页面）

@@ -22,6 +22,8 @@ describe('admin page structure', () => {
     });
 
     expect(html).toContain('admin-entry-grid');
+    expect(html).toContain('id="kpi-share-today"');
+    expect(html).toContain('id="kpi-share-total"');
   });
 
   test('dangerous operations live in ops panel, not dashboard', () => {
