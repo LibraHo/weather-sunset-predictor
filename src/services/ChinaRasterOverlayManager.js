@@ -87,8 +87,8 @@ export default class ChinaRasterOverlayManager {
     this._tabContainer.className = 'china-spots-tabs china-raster-tabs xiake-toggle';
 
     const tabs = [
-      { period: 'sunrise', label: '朝霞 🌄' },
-      { period: 'sunset',  label: '晚霞 🌅' }
+      { period: 'sunrise', label: '朝霞' },
+      { period: 'sunset',  label: '晚霞' }
     ];
 
     tabs.forEach(tab => {

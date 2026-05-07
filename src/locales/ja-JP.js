@@ -237,8 +237,60 @@ apiAccess: 'API接続'
       "lightPathHint": "日光が雲まで届くかどうか",
       "finalFormula": "最終点 = 基礎点 × 補正係数",
       "renderingHint": "湿度と視程が色の見え方に影響します",
-      "aerosolHint": "適度なエアロゾルは橙赤色を強め、多すぎると灰色っぽくなります"
-    },
+      "aerosolHint": "適度なエアロゾルは橙赤色を強め、多すぎると灰色っぽくなります",
+      "ledger": {
+        "pts": "点",
+        "whyThisScore": "このスコアの理由",
+        "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
+        "canvasPlusLightPath": "雲のキャンバス + 光路",
+        "renderingFormula": "{{base}} × 発色係数 {{factor}} = {{rendered}}",
+        "weatherTransparency": "大気の透明度係数",
+        "summary": {
+          "event": "{{score}}点：{{detail}}",
+          "rendered": "{{base}}点が発色条件で補正され {{rendered}}点になりました",
+          "default": "{{score}}点：雲の載体、光路、発色条件から総合計算"
+        },
+        "weather": {
+          "clouds": "高/中/低層雲 {{high}}/{{mid}}/{{low}}%",
+          "visibility": "視程 {{value}}km",
+          "humidity": "湿度 {{value}}%",
+          "rain": "降水 {{value}}mm/h"
+        },
+        "labels": {
+          "cloudCarrier": "雲の載体",
+          "lightPath": "光路",
+          "baseScore": "基礎点",
+          "rendering": "発色補正",
+          "final": "最終スコア",
+          "hardCap": "上限補正",
+          "hazeCap": "霞・灰幕上限",
+          "thickCloudCap": "厚い雲の上限",
+          "geometryCap": "幾何条件の上限",
+          "occlusion": "遮蔽補正",
+          "carrierFloor": "載体による下支え"
+        },
+        "details": {
+          "cloudCarrier": "色づきに使える雲面の質",
+          "cloudPenalty": "低層雲 ×{{low}}、曇天 ×{{overcast}}",
+          "lightPath": "日光が雲層へ届くか",
+          "renderingFactors": "視程 ×{{visibility}}、湿度 ×{{humidity}}、エアロゾル ×{{aerosol}}",
+          "afterAdjustments": "すべての上限・下限補正後",
+          "finalDisplayed": "最終表示結果",
+          "thickCloudCap": "高層雲が厚く、実際の発色が弱くなります",
+          "geometryCap": "太陽と雲層の幾何条件が不足しています",
+          "occlusion": "遠方の遮蔽により最終スコアが下がります",
+          "carrierFloor": "澄んだ高層雲の載体により過小評価を抑えます"
+        },
+        "reasons": {
+          "precipitationCap45": "降水と低層雲によりスコア上限は45",
+          "overcastCap35": "低層雲の曇天遮蔽によりスコア上限は35",
+          "overcastFogCap15": "曇天かつ視程5km以下のためスコア上限は15",
+          "extremeDustHazeCap28": "強い黄砂・霞によりスコア上限は28",
+          "severeHazeCap35": "濃い霞によりスコア上限は35",
+          "moderateHazeCap45": "中程度の霞によりスコア上限は45",
+          "adjustmentApplied": "上限/下限補正を適用"
+        }
+      }},
 "formationAnalysis": {
       "title": "焼け雲の形成条件分析",
       "groups": { "positive": "有利な条件", "neutral": "中立要因", "warning": "注意点" },
@@ -319,7 +371,7 @@ apiAccess: 'API接続'
       "title": "光路スコア",
       "score": "光路スコア",
       "visibility": "視程",
-      "lightPathScore": "🌅 光路：{{score}}点 "
+      "lightPathScore": "光路：{{score}}点 "
     },
     "rendering": {
       "title": "レンダリングスコア",

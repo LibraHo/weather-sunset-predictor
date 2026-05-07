@@ -448,7 +448,7 @@ class EnhancedSunsetPredictionService {
         advice = this.i18n.t('prediction.status.lightPathObstructed');
       } else {
         status = this.i18n.t('prediction.status.lightGlow');
-        icon = '🌅';
+        icon = 'sunset';
         description = 'Light path obstructed, may have weak local colors';
         advice = this.i18n.t('prediction.status.poorViewing');
       }
@@ -456,17 +456,17 @@ class EnhancedSunsetPredictionService {
     // 根据综合得分判定（阈值整体下调约10分）
     else if (clampedScore < 40) {
       status = this.i18n.t('prediction.status.lightGlow');
-      icon = '🌅';
+      icon = 'sunset';
       description = this.i18n.t('prediction.status.conditionsFair');
       advice = this.i18n.t('prediction.status.canWatch');
     } else if (clampedScore < 65) {
       status = this.i18n.t('prediction.status.goodGlow');
-      icon = '🌆';
+      icon = 'sunset-glow';
       description = this.i18n.t('prediction.status.conditionsGood');
       advice = this.i18n.t('prediction.status.canWatch');
     } else if (clampedScore < 80) {
       status = this.i18n.t('prediction.status.veryLikely');
-      icon = '🌆';
+      icon = 'sunset-glow';
       description = this.i18n.t('prediction.status.excellentConditions');
       advice = 'Worth watching';
     } else {

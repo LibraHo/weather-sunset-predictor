@@ -1273,8 +1273,8 @@ class AppController {
         this.predictionController.notificationService.sendNotification(
           '测试通知',
           {
-            body: '通知功能正常工作！🌅',
-            icon: '🌅',
+            body: '通知功能正常工作！',
+            icon: '/favicon.ico',
             tag: 'test-notification'
           }
         );

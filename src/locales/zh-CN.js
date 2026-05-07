@@ -259,8 +259,60 @@ export default {
       lightPathHint: '太阳光是否能照到云层',
       finalFormula: '最终分 = 基础分 × 修正系数',
       renderingHint: '湿度、能见度影响颜色表现',
-      aerosolHint: '适中增强红橙散射，过高会发灰'
-    },
+      aerosolHint: '适度气溶胶增强橙红散射，过多则发灰',
+      ledger: {
+        pts: '分',
+        whyThisScore: '为什么是这个分数',
+        weightedFormula: '{{canvas}}×80% + {{light}}×20% = {{base}}',
+        canvasPlusLightPath: '画布 + 光路',
+        renderingFormula: '{{base}} × 显色系数 {{factor}} = {{rendered}}',
+        weatherTransparency: '天气通透度',
+        summary: {
+          event: '{{score}} 分：{{detail}}',
+          rendered: '{{base}} 分经显色条件修正为 {{rendered}} 分',
+          default: '{{score}} 分：由云层、光路和显色条件综合计算'
+        },
+        weather: {
+          clouds: '高/中/低云 {{high}}/{{mid}}/{{low}}%',
+          visibility: '能见度 {{value}}km',
+          humidity: '湿度 {{value}}%',
+          rain: '降水 {{value}}mm/h'
+        },
+        labels: {
+          cloudCarrier: '云层载体',
+          lightPath: '光路',
+          baseScore: '基础分',
+          rendering: '显色修正',
+          final: '最终分',
+          hardCap: '硬封顶',
+          hazeCap: '灰幕封顶',
+          thickCloudCap: '厚云封顶',
+          geometryCap: '几何封顶',
+          occlusion: '遮挡修正',
+          carrierFloor: '载体保底'
+        },
+        details: {
+          cloudCarrier: '可被染色的云面质量',
+          cloudPenalty: '低云 ×{{low}}，阴天 ×{{overcast}}',
+          lightPath: '阳光是否能打到云层',
+          renderingFactors: '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}',
+          afterAdjustments: '应用所有封顶/保底后',
+          finalDisplayed: '最终展示结果',
+          thickCloudCap: '高云过厚，真实可染色效果下降',
+          geometryCap: '太阳与云层几何条件不足',
+          occlusion: '远端遮挡压低最终分',
+          carrierFloor: '高云载体清透，避免误伤低估'
+        },
+        reasons: {
+          precipitationCap45: '降水叠加低云，分数封顶到 45',
+          overcastCap35: '低云阴天遮挡，分数封顶到 35',
+          overcastFogCap15: '阴天且能见度≤5km，分数硬封顶到 15',
+          extremeDustHazeCap28: '强沙尘/灰幕压制，分数封顶到 28',
+          severeHazeCap35: '重度灰霾压制，分数封顶到 35',
+          moderateHazeCap45: '中度灰霾压制，分数封顶到 45',
+          adjustmentApplied: '应用封顶/保底修正'
+        }
+      }},
 formationAnalysis: {
       title: '火烧云形成条件分析',
       groups: { positive: '有利条件', neutral: '一般因素', warning: '注意因素' },
@@ -393,7 +445,7 @@ formationAnalysis: {
       title: '光路评分',
       score: '光路得分',
       visibility: '能见度',
-      lightPathScore: '🌅 光路: {{score}}分'
+      lightPathScore: '光路: {{score}}分'
     },
 
     // 渲染评分
