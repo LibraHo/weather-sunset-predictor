@@ -3,313 +3,245 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>霞客火烧云 - 世界照片地图</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <title>霞客分享地图</title>
+  <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="/styles/main.css">
+  <script src="/vendor/leaflet/leaflet.js"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #0d0d0d;
-      color: #fff;
-      overflow: hidden;
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body.gallery-body {
+      color: var(--theme-text, var(--color-text));
+      background:
+        radial-gradient(circle at 14% 12%, color-mix(in srgb, var(--theme-accent-soft, rgba(251,146,60,0.18)) 72%, transparent), transparent 36%),
+        radial-gradient(circle at 84% 18%, rgba(96, 165, 250, 0.16), transparent 34%),
+        var(--theme-bg, var(--color-bg));
     }
-    #map {
+    #gallery-map {
       width: 100vw;
       height: 100vh;
       z-index: 1;
+      background: var(--map-bg-dark, #121a2f);
     }
-
-    /* 自定义照片 marker */
-    .photo-marker {
-      position: relative;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      overflow: hidden;
-      border: 3px solid #ff6b35;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
+    .gallery-glass {
+      position: fixed;
+      z-index: 1000;
+      border: 1px solid var(--theme-card-border, var(--glass-border));
+      background: color-mix(in srgb, var(--theme-card-bg, var(--glass-bg-heavy)) 88%, transparent);
+      box-shadow: var(--glass-shadow, var(--shadow-md));
+      backdrop-filter: blur(var(--glass-blur-heavy, 24px)) saturate(1.1);
+      -webkit-backdrop-filter: blur(var(--glass-blur-heavy, 24px)) saturate(1.1);
     }
-    .photo-marker:hover {
-      transform: scale(1.1);
-      box-shadow: 0 4px 12px rgba(255,107,53,0.5);
-    }
-    .photo-marker img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    /* 自定义弹窗样式 */
-    .leaflet-popup-content-wrapper {
-      background: rgba(26, 26, 46, 0.95);
-      border: 1px solid rgba(255,107,53,0.3);
-      border-radius: 12px;
-      padding: 0;
-      min-width: 200px;
-    }
-    .leaflet-popup-tip {
-      background: rgba(26, 26, 46, 0.95);
-    }
-    .leaflet-popup-content {
-      margin: 0;
-      padding: 16px;
-    }
-
-    .popup-photo {
-      width: 100%;
-      max-width: 300px;
-      border-radius: 8px;
-      margin-bottom: 12px;
-    }
-    .popup-desc {
-      font-size: 0.9rem;
-      color: #ccc;
-      margin-bottom: 8px;
-      line-height: 1.4;
-    }
-    .popup-location {
-      font-size: 0.8rem;
-      color: #888;
+    .gallery-title {
+      top: 16px;
+      left: 16px;
+      max-width: min(360px, calc(100vw - 32px));
+      padding: 14px 16px;
+      border-radius: 18px;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 12px;
     }
-    .popup-location svg {
-      width: 14px;
-      height: 14px;
-      fill: #888;
+    .gallery-logo-icon {
+      width: 34px;
+      height: 34px;
+      color: var(--theme-accent-strong, var(--header-icon-color));
+      flex: 0 0 auto;
     }
-
-    /* 加载提示 */
-    #loading {
-      position: fixed;
-      top: 50%;
+    .gallery-title h1 {
+      margin: 0;
+      color: var(--theme-text, var(--color-text));
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+    .gallery-title p {
+      margin: 3px 0 0;
+      color: var(--theme-text-muted, var(--color-text-light));
+      font-size: 0.82rem;
+      line-height: 1.35;
+    }
+    .gallery-legend {
+      right: 16px;
+      bottom: 16px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--theme-text-muted, var(--color-text-light));
+      font-size: 0.84rem;
+      pointer-events: none;
+    }
+    .legend-photo-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--theme-accent-strong, #f59e0b);
+      background: var(--theme-accent-soft, rgba(251,146,60,0.18));
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--theme-accent-soft, rgba(251,146,60,0.18)) 50%, transparent);
+    }
+    #loading, #empty-state {
       left: 50%;
+      top: 50%;
       transform: translate(-50%, -50%);
-      z-index: 1000;
+      padding: 24px 28px;
+      border-radius: 22px;
       text-align: center;
+      min-width: min(320px, calc(100vw - 40px));
     }
-    #loading .spinner {
+    #empty-state { display: none; }
+    .spinner {
       width: 40px;
       height: 40px;
-      border: 3px solid rgba(255,107,53,0.3);
-      border-top-color: #ff6b35;
+      border: 3px solid color-mix(in srgb, var(--theme-accent-soft, rgba(251,146,60,0.18)) 58%, transparent);
+      border-top-color: var(--theme-accent-strong, #f59e0b);
       border-radius: 50%;
       animation: spin 1s linear infinite;
       margin: 0 auto 12px;
     }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    #loading p {
-      color: #888;
-      font-size: 0.9rem;
-    }
-
-    /* 页头标题 */
-    .page-title {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      z-index: 1000;
-      background: rgba(26, 26, 46, 0.9);
-      padding: 12px 20px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,107,53,0.3);
-      backdrop-filter: blur(10px);
-    }
-    .page-title h1 {
-      font-size: 1.2rem;
-      color: #ff6b35;
-      margin-bottom: 4px;
-    }
-    .page-title p {
-      font-size: 0.85rem;
-      color: #888;
-    }
-
-    /* 图例 */
-    .legend {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 1000;
-      background: rgba(26, 26, 46, 0.9);
-      padding: 12px 16px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,107,53,0.3);
-      font-size: 0.85rem;
-    }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 6px;
-    }
-    .legend-item:last-child {
-      margin-bottom: 0;
-    }
-    .legend-icon {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      border: 2px solid #ff6b35;
-      background: #333;
-    }
-
-    /* 空状态提示 */
-    #empty-state {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 999;
-      text-align: center;
-      background: rgba(26, 26, 46, 0.9);
-      padding: 32px 48px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,107,53,0.3);
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loading p, #empty-state p {
+      margin: 0;
+      color: var(--theme-text-muted, var(--color-text-light));
+      font-size: 0.92rem;
     }
     #empty-state h2 {
-      font-size: 1.5rem;
-      color: #ff6b35;
-      margin-bottom: 12px;
+      margin: 0 0 8px;
+      color: var(--theme-text, var(--color-text));
+      font-size: 1.2rem;
     }
-    #empty-state p {
-      color: #888;
+    .photo-marker {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid var(--theme-accent-strong, #f59e0b);
+      background: var(--theme-card-bg, #111827);
+      box-shadow:
+        0 0 0 4px color-mix(in srgb, var(--theme-accent-soft, rgba(251,146,60,0.18)) 68%, transparent),
+        0 10px 22px rgba(0,0,0,0.32);
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+    .photo-marker:hover {
+      transform: translateY(-2px) scale(1.06);
+      box-shadow:
+        0 0 0 5px color-mix(in srgb, var(--theme-accent-soft, rgba(251,146,60,0.18)) 80%, transparent),
+        0 14px 28px rgba(0,0,0,0.4);
+    }
+    .photo-marker img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-popup .leaflet-popup-content-wrapper {
+      background: color-mix(in srgb, var(--theme-card-bg, #111827) 94%, transparent);
+      color: var(--theme-text, #fff);
+      border: 1px solid var(--theme-card-border, var(--glass-border));
+      border-radius: 16px;
+      box-shadow: var(--glass-shadow, 0 16px 36px rgba(0,0,0,0.35));
+      backdrop-filter: blur(var(--glass-blur, 14px));
+      -webkit-backdrop-filter: blur(var(--glass-blur, 14px));
+      padding: 0;
+    }
+    .photo-popup .leaflet-popup-tip { background: var(--theme-card-bg, #111827); }
+    .photo-popup .leaflet-popup-content { margin: 0; padding: 14px; }
+    .popup-photo { width: 100%; max-width: 300px; border-radius: 12px; margin-bottom: 10px; display: block; }
+    .popup-desc { margin: 0 0 8px; color: var(--theme-text, #fff); font-size: 0.9rem; line-height: 1.45; }
+    .popup-location { display: flex; align-items: center; gap: 6px; color: var(--theme-text-muted, #aaa); font-size: 0.78rem; }
+    .popup-location svg { width: 14px; height: 14px; color: var(--theme-accent-strong, #f59e0b); }
+    @media (max-width: 640px) {
+      .gallery-title { top: 12px; left: 12px; padding: 12px 14px; }
+      .gallery-legend { right: 12px; bottom: 12px; }
     }
   </style>
 </head>
-<body>
-  <!-- 加载提示 -->
-  <div id="loading">
-    <div class="spinner"></div>
+<body class="theme-dark gallery-body">
+  <div id="loading" class="gallery-glass" role="status" aria-live="polite">
+    <div class="spinner" aria-hidden="true"></div>
     <p>加载照片中...</p>
   </div>
 
-  <!-- 页面标题 -->
-  <div class="page-title">
-    <h1>🔥 霞客火烧云</h1>
-    <p>世界照片地图</p>
-  </div>
-
-  <!-- 图例 -->
-  <div class="legend">
-    <div class="legend-item">
-      <div class="legend-icon"></div>
-      <span>照片位置</span>
+  <div class="gallery-title gallery-glass">
+    <svg class="gallery-logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 76 76" aria-hidden="true">
+      <path d="M12 44 A26 26 0 0 1 64 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+      <line x1="0" y1="44" x2="76" y2="44" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+      <line x1="10" y1="55" x2="66" y2="55" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+      <line x1="22" y1="66" x2="54" y2="66" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <h1>霞客分享地图</h1>
+      <p>使用火烧云地图同款地理底图</p>
     </div>
-
   </div>
 
-  <!-- 空状态 -->
-  <div id="empty-state">
-    <h2>📷 暂无照片</h2>
-    <p>上传第一张火烧云照片吧！</p>
+  <div class="gallery-legend gallery-glass" aria-label="图例">
+    <span class="legend-photo-dot" aria-hidden="true"></span>
+    <span>照片位置</span>
   </div>
 
-  <!-- 地图容器 -->
-  <div id="map"></div>
+  <div id="empty-state" class="gallery-glass">
+    <h2>暂无照片</h2>
+    <p>上传第一张火烧云照片吧。</p>
+  </div>
 
-  <script>
+  <div id="gallery-map"></div>
+
+  <script type="module">
+    import ChinaMapCanvas from '/src/components/ChinaMapCanvas.js';
+
+    let mapCanvas;
     let map;
     let markers = [];
 
-    // 初始化地图（中国版底图 + 火烧云图层）
     async function initMap() {
-      map = L.map('map', {
-        zoomControl: true,
-        attributionControl: false,
-        minZoom: 3,
-        maxZoom: 12
-      }).setView([35, 105], 4);
-
-      // 中国 GeoJSON 底图（自研地图体系，不依赖外部瓦片）
-      try {
-        const resp = await fetch('/data/china-geojson.json');
-        const geo = await resp.json();
-
-        const chinaLayer = L.geoJSON(geo, {
-          style: {
-            color: '#5da3f0',
-            weight: 1.1,
-            opacity: 0.85,
-            fillColor: '#0f1e3a',
-            fillOpacity: 0.82
-          }
-        }).addTo(map);
-
-        const b = chinaLayer.getBounds();
-        if (b && b.isValid()) map.fitBounds(b.pad(0.05));
-      } catch (e) {
-        console.error('加载中国底图失败:', e);
-      }
-
-      // 不叠加火烧云预测图层：仅使用火烧云页面同款中国底图作为分享页底图
+      mapCanvas = new ChinaMapCanvas({
+        style: 'dark',
+        defaultCenter: [35, 105],
+        defaultZoom: 4
+      });
+      await mapCanvas.init(document.getElementById('gallery-map'));
+      map = mapCanvas.getMap();
     }
 
-    // 创建自定义 marker
+    function safeText(value) {
+      return String(value ?? '');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = safeText(text);
+      return div.innerHTML;
+    }
+
     function createMarker(photo) {
+      const filename = escapeHtml(photo.filename || 'firecloud photo');
       const icon = L.divIcon({
         className: 'custom-div-icon',
-        html: `
-          <div class="photo-marker">
-            <img src="${photo.thumbUrl}" alt="${photo.filename}">
-          </div>
-        `,
+        html: `<div class="photo-marker"><img src="${escapeHtml(photo.thumbUrl)}" alt="${filename}"></div>`,
         iconSize: [48, 48],
         iconAnchor: [24, 48],
         popupAnchor: [0, -48]
       });
 
       const marker = L.marker([photo.lat, photo.lon], { icon });
-
-      // 创建弹窗内容
       const popupContent = `
-        <img src="${photo.thumbUrl}" class="popup-photo" alt="${photo.filename}">
+        <img src="${escapeHtml(photo.thumbUrl)}" class="popup-photo" alt="${filename}">
         ${photo.desc ? `<p class="popup-desc">${escapeHtml(photo.desc)}</p>` : ''}
         <div class="popup-location">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-          </svg>
-          <span>${photo.lat.toFixed(4)}, ${photo.lon.toFixed(4)}</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/></svg>
+          <span>${Number(photo.lat).toFixed(4)}, ${Number(photo.lon).toFixed(4)}</span>
         </div>
       `;
-
-      marker.bindPopup(popupContent, {
-        maxWidth: 320,
-        closeButton: true,
-        className: 'photo-popup'
-      });
-
+      marker.bindPopup(popupContent, { maxWidth: 320, closeButton: true, className: 'photo-popup' });
       return marker;
     }
 
-    // HTML 转义
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    // 加载照片
     async function loadPhotos() {
       try {
         const res = await fetch('/api/photos');
         const data = await res.json();
-        const photos = data.photos || [];
-
-        // 过滤有位置信息的照片
-        const photosWithLocation = photos.filter(p =>
-          p.lat !== null && p.lon !== null &&
+        const photosWithLocation = (data.photos || []).filter(p => (
           typeof p.lat === 'number' && typeof p.lon === 'number'
-        );
+        ));
 
-        // 隐藏加载提示
         document.getElementById('loading').style.display = 'none';
 
         if (photosWithLocation.length === 0) {
@@ -317,29 +249,24 @@
           return;
         }
 
-        // 清除旧 markers
-        markers.forEach(m => map.removeLayer(m));
-        markers = [];
+        markers.forEach(marker => map.removeLayer(marker));
+        markers = photosWithLocation.map(createMarker);
+        markers.forEach(marker => mapCanvas.addLayer(marker));
 
-        // 添加新 markers
-        photosWithLocation.forEach(photo => {
-          const marker = createMarker(photo);
-          marker.addTo(map);
-          markers.push(marker);
-        });
-
-        // 视图保持在中国范围（当前中国底图版本）
-
+        const group = L.featureGroup(markers);
+        const bounds = group.getBounds();
+        if (bounds && bounds.isValid()) {
+          map.fitBounds(bounds.pad(0.28), { maxZoom: 7 });
+        }
       } catch (err) {
         console.error('加载照片失败:', err);
         document.getElementById('loading').innerHTML = '<p>加载失败，请刷新重试</p>';
       }
     }
 
-    // 初始化
     document.addEventListener('DOMContentLoaded', async () => {
       await initMap();
-      loadPhotos();
+      await loadPhotos();
     });
   </script>
 </body>
