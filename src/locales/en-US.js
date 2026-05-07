@@ -384,7 +384,7 @@ const translations = {
       "title": "Light Path Score",
       "score": "Light Path Score",
       "visibility": "Visibility",
-      "lightPathScore": "🌅 Light path: {{score}}pts "
+      "lightPathScore": "Light path: {{score}}pts "
     },
     "rendering": {
       "title": "Rendering Score",

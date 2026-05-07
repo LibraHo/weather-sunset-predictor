@@ -371,7 +371,7 @@ apiAccess: 'API接続'
       "title": "光路スコア",
       "score": "光路スコア",
       "visibility": "視程",
-      "lightPathScore": "🌅 光路：{{score}}点 "
+      "lightPathScore": "光路：{{score}}点 "
     },
     "rendering": {
       "title": "レンダリングスコア",

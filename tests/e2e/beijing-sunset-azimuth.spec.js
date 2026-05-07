@@ -17,12 +17,12 @@ test.describe('北京日出日落方向显示', () => {
 
     const sunriseCard = page
       .locator('.prediction-card')
-      .filter({ has: page.locator('h3', { hasText: /🌄\s*(Sunrise|朝霞)/ }) })
+      .filter({ has: page.locator('h3', { hasText: /(Sunrise|朝霞)/ }) })
       .first();
 
     const sunsetCard = page
       .locator('.prediction-card')
-      .filter({ has: page.locator('h3', { hasText: /🌅\s*(Sunset|晚霞)/ }) })
+      .filter({ has: page.locator('h3', { hasText: /(Sunset|晚霞)/ }) })
       .first();
 
     await expect(sunriseCard).toBeVisible({ timeout: 45000 });

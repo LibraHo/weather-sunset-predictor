@@ -374,7 +374,7 @@ const translations = {
       "title": "Score du Chemin Lumineux",
       "score": "Score du Chemin Lumineux",
       "visibility": "Visibilité",
-      "lightPathScore": "🌅 chemin lumineux: {{score}}pts "
+      "lightPathScore": "chemin lumineux: {{score}}pts "
     },
     "rendering": {
       "title": "Score de Rendu",

@@ -399,7 +399,7 @@ apiAccess: 'API 연동'
       "title": "빛 경로 점수",
       "score": "빛 경로 점수",
       "visibility": "가시거리",
-      "lightPathScore": "🌅 빛 경로: {{score}}점 "
+      "lightPathScore": "빛 경로: {{score}}점 "
     },
     "rendering": {
       "title": "렌더링 점수",

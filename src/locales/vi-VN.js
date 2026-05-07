@@ -374,7 +374,7 @@ const translations = {
       "title": "Điểm Đường Ánh Sáng",
       "score": "Điểm Đường Ánh Sáng",
       "visibility": "Tầm Nhìn",
-      "lightPathScore": "🌅 Đường ánh sáng: {{score}}đ "
+      "lightPathScore": "Đường ánh sáng: {{score}}đ "
     },
     "rendering": {
       "title": "Điểm Hiển Thị",
