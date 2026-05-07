@@ -276,6 +276,7 @@ apiAccess: 'API 연동'
           "geometryCap": "Geometry cap",
           "occlusion": "Occlusion",
           "carrierFloor": "Carrier floor",
+          "postRainCap": "Post-rain cap",
           "displayCalibration": "Display calibration"
         },
         "details": {
@@ -289,12 +290,15 @@ apiAccess: 'API 연동'
           "geometryCap": "sun/cloud geometry is not feasible",
           "occlusion": "distant obstruction reduces the score",
           "carrierFloor": "clear high-cloud carrier prevents over-penalty",
+          "directionalSamples": "solar-azimuth samples at 15/30/50/100km are included",
+          "postRainCap": "post-rain moisture or haze turns the glow into a gray curtain",
           "displayCalibration": "final display score is aligned with the prediction status band"
         },
         "reasons": {
           "precipitationCap45": "rain with low clouds capped the score at 45",
           "overcastCap35": "low-cloud overcast capped the score at 35",
           "overcastFogCap15": "overcast sky plus visibility ≤5km capped the score at 15",
+          "rainyMidCloudOvercastCap35": "rainy gray mid-cloud overcast capped the score at 35",
           "extremeDustHazeCap28": "severe dust/haze capped the score at 28",
           "severeHazeCap35": "heavy haze capped the score at 35",
           "moderateHazeCap45": "moderate haze capped the score at 45",
@@ -339,6 +343,8 @@ apiAccess: 'API 연동'
         "high": "에어로졸 높음 (AOD {{value}})", "highDesc": "흐리거나 어둡게 보일 수 있습니다",
         "low": "공기가 너무 맑음 (AOD {{value}})", "lowDesc": "색이 옅을 수 있습니다"
       },
+      "lightPath": { "opening": "Opening toward the sun", "openingDesc": "Backend samples 15/30/50/100km along the solar azimuth; the low/mid-cloud corridor is relatively open", "wall": "Cloud wall toward the sun", "wallDesc": "Low or mid clouds along the solar direction suppress the main score" },
+      "postRain": { "clear": "Clear post-rain air", "clearDesc": "Rain in the last 6h is kept as a bonus because visibility and particles are acceptable", "gray": "Post-rain gray-curtain risk", "grayDesc": "Moisture, particles, or weak direct light after rain cap the score conservatively" },
       "layer": { "single": "단일 구름층", "singleDesc": "고층운 상태가 좋으면 선명한 노을은 가능합니다" }
     },
     "status": {

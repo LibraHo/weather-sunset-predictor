@@ -95,6 +95,91 @@ class SurroundingService {
     return points;
   }
 
+  calculatePointByBearing(centerLat, centerLon, distanceKm, bearingDeg) {
+    const R = 6371;
+    const brng = (bearingDeg * Math.PI) / 180;
+    const lat1 = (centerLat * Math.PI) / 180;
+    const lon1 = (centerLon * Math.PI) / 180;
+    const d = distanceKm / R;
+
+    const lat2 = Math.asin(
+      Math.sin(lat1) * Math.cos(d) +
+      Math.cos(lat1) * Math.sin(d) * Math.cos(brng)
+    );
+    const lon2 = lon1 + Math.atan2(
+      Math.sin(brng) * Math.sin(d) * Math.cos(lat1),
+      Math.cos(d) - Math.sin(lat1) * Math.sin(lat2)
+    );
+
+    return {
+      lat: Math.max(-90, Math.min(90, lat2 * 180 / Math.PI)),
+      lon: (((lon2 * 180 / Math.PI) + 540) % 360) - 180,
+      distanceKm,
+      bearing: bearingDeg
+    };
+  }
+
+  async getSolarDirectionLightPathSamples(params) {
+    const { lat, lon, date, type = 'sunset', azimuth = null, referenceTime = null } = params;
+    const targetDate = date instanceof Date ? date : new Date(date);
+    const sunTime = referenceTime instanceof Date && !isNaN(referenceTime.getTime())
+      ? referenceTime
+      : (type === 'sunrise'
+        ? SunCalculator.getSunriseTime(targetDate, lat, lon)
+        : SunCalculator.getSunsetTime(targetDate, lat, lon));
+    const solarAzimuth = Number.isFinite(Number(azimuth))
+      ? Number(azimuth)
+      : SunCalculator.getSunAzimuth(targetDate, sunTime, lat, lon);
+
+    const distances = [15, 30, 50, 100];
+    const points = distances.map(distanceKm => this.calculatePointByBearing(lat, lon, distanceKm, solarAzimuth));
+    const samples = [];
+
+    // 串行 + 小间隔：主预测最多 4 个额外点，近场权重更高，避免 Open-Meteo 429。
+    for (let i = 0; i < points.length; i += 1) {
+      const point = points[i];
+      try {
+        const weatherResponse = await orchestrator.fetchWeatherData(point.lat, point.lon, 72);
+        const hourly = Array.isArray(weatherResponse.data) ? weatherResponse.data : [];
+        if (!hourly.length) throw new Error('天气数据为空');
+
+        const refTs = sunTime?.getTime?.() || targetDate.getTime();
+        const selected = hourly.reduce((closest, current) => {
+          const cDiff = Math.abs((closest.timestamp || 0) - refTs);
+          const nDiff = Math.abs((current.timestamp || 0) - refTs);
+          return nDiff < cDiff ? current : closest;
+        }, hourly[0]);
+
+        samples.push({
+          ...point,
+          cloudBaseHeight: selected.cloudBaseHeight ?? null,
+          lowCloud: selected.lowClouds || 0,
+          midCloud: selected.midClouds || 0,
+          highCloud: selected.highClouds || 0,
+          totalCloud: selected.cloudCover || 0,
+          humidity: selected.humidity ?? null,
+          precipitation: selected.precipitation ?? 0,
+          weatherCode: selected.weatherCode ?? null,
+          provider: weatherResponse.providerMeta?.name || weatherResponse.provider || null,
+          error: null
+        });
+      } catch (error) {
+        console.warn(`[SurroundingService] 太阳方向 ${point.distanceKm}km 采样失败:`, error.message);
+        samples.push({ ...point, error: error.message });
+      }
+      if (i < points.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 350));
+      }
+    }
+
+    return {
+      source: 'solar_direction_openmeteo',
+      azimuth: parseFloat(solarAzimuth.toFixed(1)),
+      samples: samples.filter(sample => !sample.error),
+      errors: samples.filter(sample => sample.error)
+    };
+  }
+
   /**
    * 获取周边点的火烧云预测数据（带缓存）
    *
