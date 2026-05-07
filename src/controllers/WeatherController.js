@@ -307,7 +307,7 @@ class WeatherController {
     const iconMainEl = document.getElementById('weather-icon-main');
     if (iconMainEl) {
       const icon = this._getWeatherIcon(currentWeather.cloudCover, 0);
-      iconMainEl.textContent = icon;
+      iconMainEl.innerHTML = icon;
     }
 
     // 更新天气描述
@@ -634,10 +634,30 @@ class WeatherController {
    * @returns {string} 图标emoji
    */
   _getWeatherIcon(cloudCover, precipProb) {
-    if (precipProb > 50) return '🌧️';
-    if (cloudCover > 70) return '☁️';
-    if (cloudCover > 30) return '⛅';
-    return '☀️';
+    const type = precipProb > 50
+      ? 'rain'
+      : cloudCover > 70
+        ? 'cloud'
+        : cloudCover > 30
+          ? 'partly-cloudy'
+          : 'sunny';
+    return this._renderWeatherSvgIcon(type);
+  }
+
+  _renderWeatherSvgIcon(type) {
+    const sun = '<circle class="weather-svg-sun" cx="12" cy="12" r="4.4"/><path class="weather-svg-ray" d="M12 2.6v2.1M12 19.3v2.1M4.9 4.9l1.5 1.5M17.6 17.6l1.5 1.5M2.6 12h2.1M19.3 12h2.1M4.9 19.1l1.5-1.5M17.6 6.4l1.5-1.5"/>';
+    const cloud = '<path class="weather-svg-cloud" d="M7.2 17.4h9.2a4.1 4.1 0 0 0 .4-8.2 5.3 5.3 0 0 0-10.1 1.5 3.4 3.4 0 0 0 .5 6.7Z"/>';
+    const rain = '<path class="weather-svg-rain" d="M8.2 20.4l1.1-2.1M12 21l1.1-2.1M15.8 20.4l1.1-2.1"/>';
+
+    const body = type === 'sunny'
+      ? sun
+      : type === 'cloud'
+        ? cloud
+        : type === 'rain'
+          ? `${cloud}${rain}`
+          : `<g transform="translate(-2 -2) scale(.82)">${sun}</g><g transform="translate(2 1)">${cloud}</g>`;
+
+    return `<svg class="weather-icon-svg weather-icon-${type}" viewBox="0 0 24 24" role="img" aria-label="weather icon" xmlns="http://www.w3.org/2000/svg">${body}</svg>`;
   }
 
   /**
