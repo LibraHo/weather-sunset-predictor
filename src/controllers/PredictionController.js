@@ -1687,13 +1687,6 @@ class PredictionController {
         ? ledgerText('summary.rendered', { base: fmt(baseScore, 0), rendered: fmt(renderedScore, 0) }, '{{base}} points adjusted by rendering conditions to {{rendered}}', '{{base}} 分经显色条件修正为 {{rendered}} 分')
         : ledgerText('summary.default', { score: fmt(finalScore, 0) }, '{{score}} points: calculated from cloud carrier, light path, and rendering conditions', '{{score}} 分：由云层、光路和显色条件综合计算');
 
-    const weatherPills = [
-      ledgerText('weather.clouds', { high: fmt(highClouds, 0), mid: fmt(midClouds, 0), low: fmt(lowClouds, 0) }, 'Cloud H/M/L {{high}}/{{mid}}/{{low}}%', '高/中/低云 {{high}}/{{mid}}/{{low}}%'),
-      visibility != null ? ledgerText('weather.visibility', { value: fmt(visibility, 0) }, 'Visibility {{value}}km', '能见度 {{value}}km') : '',
-      humidity != null ? ledgerText('weather.humidity', { value: fmt(humidity, 0) }, 'Humidity {{value}}%', '湿度 {{value}}%') : '',
-      precipitation != null ? ledgerText('weather.rain', { value: fmt(precipitation, 1) }, 'Rain {{value}}mm/h', '降水 {{value}}mm/h') : ''
-    ].filter(Boolean);
-
     const step = (index, label, description, result, detail = '', tone = '') => `
       <div class="score-ledger-step ${tone ? `score-ledger-step-${tone}` : ''}">
         <span class="score-ledger-index">${index}</span>
@@ -1728,17 +1721,10 @@ class PredictionController {
     return `
       <div class="score-breakdown-popover score-breakdown-ledger" hidden>
         <div class="score-ledger-hero">
-          <div class="score-ledger-score-block">
-            <div class="score-ledger-score-number">${escape(fmt(finalScore, 0))}</div>
-            <div class="score-ledger-score-unit">${escape(ledgerText('pts', {}, 'pts', '分'))}</div>
-          </div>
-          <div class="score-ledger-hero-copy">
-            <div class="score-breakdown-title">${escape(this.i18n.t('prediction.scoreBreakdown.title'))}</div>
-            <div class="score-ledger-subtitle">${escape(ledgerText('whyThisScore', {}, 'Why this score', '为什么是这个分数'))}</div>
-          </div>
+          <div class="score-breakdown-title">${escape(this.i18n.t('prediction.scoreBreakdown.title'))}</div>
+          <div class="score-ledger-subtitle">${escape(ledgerText('whyThisScore', {}, 'Why this score', '为什么是这个分数'))}</div>
         </div>
         <div class="score-ledger-summary">${escape(summary)}</div>
-        ${weatherPills.length ? `<div class="score-ledger-context">${weatherPills.map(pill => `<span>${escape(pill)}</span>`).join('')}</div>` : ''}
         <div class="score-ledger-steps">
           ${step(1, ledgerText('labels.cloudCarrier', {}, 'Cloud carrier', '云层载体'), ledgerText('details.cloudCarrier', {}, 'usable colored cloud surface', '可被染色的云面质量'), fmt(canvasScore, 1), ledgerText('details.cloudPenalty', { low: fmt(prediction?.canvasAnalysis?.lowCloudPenalty, 2), overcast: fmt(prediction?.canvasAnalysis?.overcastPenalty, 2) }, 'low cloud ×{{low}}, overcast ×{{overcast}}', '低云 ×{{low}}，阴天 ×{{overcast}}'))}
           ${step(2, ledgerText('labels.lightPath', {}, 'Light path', '光路'), ledgerText('details.lightPath', {}, 'sunlight reaches the cloud layer', '阳光是否能打到云层'), fmt(lightPathScore, 1))}

@@ -616,7 +616,8 @@ describe('PredictionController', () => {
 
       expect(html).toContain('为什么是这个分数');
       expect(html).toContain('28 分：强沙尘/灰幕压制，分数封顶到 28');
-      expect(html).toContain('能见度 5km');
+      expect(html).not.toContain('score-ledger-context');
+      expect(html).not.toContain('能见度 5km');
       expect(html).toContain('70.7');
       expect(html).toContain('72.5');
       expect(html).toContain('71.1');
