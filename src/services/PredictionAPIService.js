@@ -43,33 +43,13 @@ class PredictionAPIService {
       // 格式化日期为 ISO 字符串
       const dateString = date instanceof Date ? date.toISOString() : date;
 
-      // 构建请求体
+      // 构建请求体：主预测闭环由后端取天气和光路数据，前端只传地点/时刻/类型。
       const requestBody = {
-        weatherData: {
-          cloudCover: weatherData.cloudCover,
-          humidity: weatherData.humidity,
-          visibility: weatherData.visibility,
-          lowCloudCover: weatherData.lowCloudCover,
-          highClouds: weatherData.highClouds || 0,
-          midClouds: weatherData.midClouds || 0,
-          lowClouds: weatherData.lowClouds || 0,
-          precipitation: weatherData.precipitation || 0,
-          convPrecip: weatherData.convPrecip || weatherData.precipitation || 0,
-          weatherCode: weatherData.weatherCode ?? null,
-          cloudBaseHeight: weatherData.cloudBaseHeight ?? null,
-          // Phase 22: 云厚评估字段
-          shortwaveRadiation: weatherData.shortwaveRadiation ?? null,
-          directRadiation: weatherData.directRadiation ?? null,
-          diffuseRadiation: weatherData.diffuseRadiation ?? null,
-          waterVapourColumn: weatherData.waterVapourColumn ?? null
-        },
         date: dateString,
         lat: lat,
         lon: lon,
         type: type,
-        options: {
-          prevHourData: weatherData._prevHourData || null
-        }
+        referenceTime: dateString
       };
 
       // 发送请求
@@ -184,6 +164,7 @@ class PredictionAPIService {
     prediction.renderingAnalysis = data.renderingAnalysis || null;
     prediction.aerosolHazeCap = data.aerosolHazeCap || null;
     prediction.highCloudCarrierAdjustment = data.highCloudCarrierAdjustment || null;
+    prediction.postRainAdjustment = data.postRainAdjustment || null;
     prediction.thickHighCloudPenalty = data.thickHighCloudPenalty || null;
     prediction.severeWeatherCap = data.severeWeatherCap || null;
     prediction.occlusionAnalysis = data.occlusionAnalysis || null;
@@ -194,6 +175,9 @@ class PredictionAPIService {
     prediction.pm2_5 = data.pm2_5 ?? data.breakdown?.aerosolScattering?.pm2_5 ?? null;
     prediction.pm10 = data.pm10 ?? data.breakdown?.aerosolScattering?.pm10 ?? null;
     prediction.aqi = data.aqi ?? null;
+    prediction.remoteCloudData = data.remoteCloudData || null;
+    prediction.weatherDataSource = data.weatherDataSource || null;
+    prediction.providerMeta = data.providerMeta || null;
 
     return prediction;
   }

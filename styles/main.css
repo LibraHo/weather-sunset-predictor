@@ -8093,40 +8093,7 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
   padding: 14px;
 }
 .score-ledger-hero {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 12px;
-  align-items: center;
   margin-bottom: 10px;
-}
-.score-ledger-score-block {
-  width: 64px;
-  height: 64px;
-  display: grid;
-  place-items: center;
-  align-content: center;
-  border-radius: 20px;
-  background:
-    radial-gradient(circle at 35% 22%, color-mix(in srgb, var(--theme-accent-soft, #ffb347) 72%, transparent), transparent 62%),
-    linear-gradient(145deg, color-mix(in srgb, var(--theme-accent, #ff8c00) 18%, transparent), color-mix(in srgb, var(--glass-bg-hover) 90%, transparent));
-  border: 1px solid color-mix(in srgb, var(--theme-accent, #ff8c00) 42%, var(--glass-border));
-  box-shadow: 0 10px 26px color-mix(in srgb, var(--theme-accent, #ff8c00) 13%, transparent);
-}
-.score-ledger-score-number {
-  color: var(--theme-accent-strong, var(--color-text));
-  font-size: 1.72rem;
-  font-weight: 950;
-  line-height: 0.94;
-  letter-spacing: -0.05em;
-  font-variant-numeric: tabular-nums;
-}
-.score-ledger-score-unit {
-  margin-top: 2px;
-  color: var(--color-text-light);
-  font-size: 0.62rem;
-  font-weight: 850;
-}
-.score-ledger-hero-copy {
   min-width: 0;
 }
 .score-ledger-subtitle {
@@ -8146,23 +8113,6 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
   font-size: 0.8rem;
   font-weight: 820;
   line-height: 1.45;
-}
-.score-ledger-context {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-.score-ledger-context span {
-  max-width: 100%;
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--glass-bg-hover) 84%, transparent);
-  border: 1px solid color-mix(in srgb, var(--glass-border) 78%, transparent);
-  color: var(--color-text-light);
-  font-size: 0.66rem;
-  font-weight: 750;
-  line-height: 1.2;
 }
 .score-ledger-steps {
   display: grid;
@@ -8254,15 +8204,5 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
     top: 70px;
     max-height: min(76vh, 560px);
     padding: 12px;
-  }
-
-  .score-ledger-score-block {
-    width: 58px;
-    height: 58px;
-    border-radius: 18px;
-  }
-
-  .score-ledger-score-number {
-    font-size: 1.58rem;
   }
 }

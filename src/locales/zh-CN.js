@@ -89,10 +89,10 @@ export default {
         lightPath: {
           title: '2. 光路评估',
           subtitle: 'Light Path · 光路评分',
-          desc: '光路通畅度决定光线能否顺利到达云层。低云少时光路更通畅，遮挡概率降低。',
-          lowCloudEffect: '低云<30%时，光路遮挡权重降低至0.7~0.85，光线更易穿透',
+          desc: '光路通畅度决定光线能否顺利到达云层。后端会沿太阳方位采样 15/30/50/100km，识别透光开口或云墙遮挡。',
+          lowCloudEffect: '低云<30%时降低遮挡权重；若太阳方向低/中云成墙，则保守压低光路分',
           visibility: '能见度：影响光线传播清晰度',
-          formula: '光路分 = 基础光路分 × 低云权重系数'
+          formula: '光路分 = 几何/本地光路分 × 低云系数 × 太阳方向走廊修正'
         },
         transparency: {
           title: '3. 大气透明度',
@@ -289,7 +289,9 @@ export default {
           thickCloudCap: '厚云封顶',
           geometryCap: '几何封顶',
           occlusion: '遮挡修正',
-          carrierFloor: '载体保底'
+          carrierFloor: '载体保底',
+          postRainCap: '雨后灰幕封顶',
+          displayCalibration: '展示分校准'
         },
         details: {
           cloudCarrier: '可被染色的云面质量',
@@ -301,16 +303,23 @@ export default {
           thickCloudCap: '高云过厚，真实可染色效果下降',
           geometryCap: '太阳与云层几何条件不足',
           occlusion: '远端遮挡压低最终分',
-          carrierFloor: '高云载体清透，避免误伤低估'
+          carrierFloor: '高云载体清透，避免误伤低估',
+          directionalSamples: '已接入太阳方位 15/30/50/100km 周边采样',
+          postRainCap: '雨后水汽/灰幕压光，霞光按低上限处理',
+          displayCalibration: '最终展示分按预测状态档位校准'
         },
         reasons: {
           precipitationCap45: '降水叠加低云，分数封顶到 45',
           overcastCap35: '低云阴天遮挡，分数封顶到 35',
           overcastFogCap15: '阴天且能见度≤5km，分数硬封顶到 15',
+          rainyMidCloudOvercastCap35: '雨后灰幕中云阴天，分数封顶到 35',
           extremeDustHazeCap28: '强沙尘/灰幕压制，分数封顶到 28',
           severeHazeCap35: '重度灰霾压制，分数封顶到 35',
           moderateHazeCap45: '中度灰霾压制，分数封顶到 45',
-          adjustmentApplied: '应用封顶/保底修正'
+          adjustmentApplied: '应用封顶/保底修正',
+          displayCalibration: '最终展示分按预测状态档位校准',
+          lightPathStatusCap60: '光路只有 {{light}}，归入轻微霞光档，最终展示分封顶到 60',
+          canvasStatusCap40: '云层载体只有 {{canvas}}，归入无火烧云档，最终展示分封顶到 40 以下'
         }
       }},
 formationAnalysis: {
@@ -346,6 +355,14 @@ formationAnalysis: {
         moderate: '气溶胶适中（AOD {{value}}）', moderateDesc: '有利于增强红橙色散射',
         high: '气溶胶偏高（AOD {{value}}）', highDesc: '可能灰霾发暗',
         low: '空气过于通透（AOD {{value}}）', lowDesc: '颜色可能偏淡'
+      },
+      lightPath: {
+        opening: '太阳方向有透光开口', openingDesc: '后端沿太阳方位采样 15/30/50/100km，低中云走廊较通畅，光线更容易打到云层',
+        wall: '太阳方向有云墙遮挡', wallDesc: '太阳方位周边低/中云偏厚，远端光路会压低主评分'
+      },
+      postRain: {
+        clear: '雨后空气清透', clearDesc: '近6小时有降水，但能见度和颗粒物条件较好，雨后加成保留',
+        gray: '雨后灰幕风险', grayDesc: '降水后水汽/颗粒物/直射比不理想，算法按灰幕场景封顶'
       },
       layer: { single: '云层单一', singleDesc: '高云质量好，仍可形成鲜明火烧云' }
     },

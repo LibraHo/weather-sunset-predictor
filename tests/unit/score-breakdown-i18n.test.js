@@ -71,9 +71,11 @@ describe('score breakdown i18n', () => {
     expect(html).toContain('光路');
     expect(html).toContain('発色補正');
     expect(html).toContain('最終スコア');
-    expect(html).toContain('視程 4km');
     expect(html).toContain('曇天かつ視程5km以下のためスコア上限は15');
 
+    expect(html).not.toContain('score-ledger-score-block');
+    expect(html).not.toContain('score-ledger-context');
+    expect(html).not.toContain('視程 4km');
     expect(html).not.toContain('Why this score');
     expect(html).not.toContain('Cloud carrier');
     expect(html).not.toContain('Rendering');

@@ -113,11 +113,10 @@ describe('Prediction API Integration', () => {
       expect(res.body.data).toHaveProperty('icon');
     });
 
-    test('rejects missing weatherData with 400', async () => {
-      const { weatherData, ...invalidPayload } = validEnhancedPayload;
+    test('rejects malformed weatherData with 400', async () => {
       const res = await request(app)
         .post('/api/prediction/enhanced')
-        .send(invalidPayload)
+        .send({ ...validEnhancedPayload, weatherData: null })
         .expect(400);
 
       expect(res.body.error).toHaveProperty('code', 'INVALID_WEATHER_DATA');
