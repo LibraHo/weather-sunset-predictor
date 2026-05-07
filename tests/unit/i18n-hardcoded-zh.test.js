@@ -27,7 +27,7 @@ const LEGACY_WHITELIST = {
       /覆盖层已显示/,
       /覆盖层生成失败/,
     ],
-    'src/services/ChinaSpotsOverlay.js': [/🌅 火烧云/],
+    'src/services/ChinaSpotsOverlay.js': [/火烧云/],
     'src/services/MockWindyMapService.js': [/地图预测（模拟模式）/],
     'index.html': [
       /霞客\s*SUNSET\s*VOYAGER/,
@@ -43,7 +43,6 @@ const LEGACY_WHITELIST = {
       /60-79 分/,
       /40-59 分/,
       /&lt;40 分/,
-      /朝霞\s*🌄/, /晚霞\s*🌅/,
       /今日暂无可见火烧云点位/,
       /可拖拽地图 · 滚轮缩放/,
       /📷 分享地图/,

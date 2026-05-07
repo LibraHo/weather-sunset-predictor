@@ -278,7 +278,7 @@ apiAccess: 'الوصول إلى API'
       title: 'درجة مسار الضوء',
       score: 'درجة مسار الضوء',
       visibility: 'الرؤية',
-      lightPathScore: '🌅 مسار الضوء: {{score}} نقطة (150 كم:{{near}} 300 كم:{{far}})'
+      lightPathScore: 'مسار الضوء: {{score}} نقطة (150 كم:{{near}} 300 كم:{{far}})'
     },
     rendering: {
       title: 'درجة العرض',

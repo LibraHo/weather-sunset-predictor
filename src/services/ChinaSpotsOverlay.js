@@ -241,7 +241,7 @@ export default class ChinaSpotsOverlay {
 
   _initButton() {
     const btn = document.createElement('button');
-    btn.textContent = '🌅 火烧云';
+    btn.textContent = '火烧云';
     btn.className = 'china-spots-toggle-btn';
     btn.style.cssText = [
       'position: absolute',

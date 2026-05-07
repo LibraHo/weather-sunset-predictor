@@ -303,7 +303,7 @@ apiAccess: 'Acceso API'
       "title": "Puntuación del Trayecto de Luz",
       "score": "Puntuación del Trayecto de Luz",
       "visibility": "Visibilidad",
-      "lightPathScore": "🌅 Trayecto de luz: {{score}}pts "
+      "lightPathScore": "Trayecto de luz: {{score}}pts "
     },
     "rendering": {
       "title": "Puntuación de Renderizado",

@@ -876,21 +876,24 @@ class PredictionController {
     }
 
     // 生成朝霞卡片 HTML
+    const sunriseIcon = this.renderSunEventIcon('sunrise', 'sun-event-icon inline-sun-event-icon');
+    const sunsetIcon = this.renderSunEventIcon('sunset', 'sun-event-icon inline-sun-event-icon');
+
     const sunriseCardHtml = displaySunrise
-      ? this.renderSinglePrediction(displaySunrise, '🌄', this.i18n.t('prediction.sunrise'), this.i18n.t('prediction.sunriseTime'), sunriseDateLabel, 'sunrise')
+      ? this.renderSinglePrediction(displaySunrise, 'sunrise', this.i18n.t('prediction.sunrise'), this.i18n.t('prediction.sunriseTime'), sunriseDateLabel, 'sunrise')
       : `<div class="prediction-unavailable-card">
           <span class="prediction-date-badge">${sunriseDateLabel}</span>
-          <h3>🌄 ${this.i18n.t('prediction.sunrise')}</h3>
+          <h3>${sunriseIcon} ${this.i18n.t('prediction.sunrise')}</h3>
           <p class="unavailable-reason">${this.i18n.t('prediction.predictionUnavailable')}</p>
           <p class="hint-text">${this.i18n.t('prediction.viewFutureOrRefresh')}</p>
         </div>`;
 
     // 生成晚霞卡片 HTML
     const sunsetCardHtml = displaySunset
-      ? this.renderSinglePrediction(displaySunset, '🌅', this.i18n.t('prediction.sunset'), this.i18n.t('prediction.sunsetTime'), sunsetDateLabel, 'sunset')
+      ? this.renderSinglePrediction(displaySunset, 'sunset', this.i18n.t('prediction.sunset'), this.i18n.t('prediction.sunsetTime'), sunsetDateLabel, 'sunset')
       : `<div class="prediction-unavailable-card">
           <span class="prediction-date-badge">${sunsetDateLabel}</span>
-          <h3>🌅 ${this.i18n.t('prediction.sunset')}</h3>
+          <h3>${sunsetIcon} ${this.i18n.t('prediction.sunset')}</h3>
           <p class="unavailable-reason">${this.i18n.t('prediction.predictionUnavailable')}</p>
           <p class="hint-text">${this.i18n.t('prediction.viewFutureOrRefresh')}</p>
         </div>`;
@@ -1087,9 +1090,25 @@ class PredictionController {
    * @returns {string} HTML字符串
    * @private
    */
+  renderSunEventIcon(type = 'sunset', className = 'sun-event-icon') {
+    const isSunrise = type === 'sunrise';
+    const arrow = isSunrise
+      ? '<path class="sun-event-arrow" d="M18 18V7m0 0-4 4m4-4 4 4"/>'
+      : '<path class="sun-event-arrow" d="M18 6v11m0 0-4-4m4 4 4-4"/>';
+    const label = isSunrise ? this.i18n.t('prediction.sunrise') : this.i18n.t('prediction.sunset');
+    return `
+      <svg class="${className} sun-event-icon-${isSunrise ? 'sunrise' : 'sunset'}" viewBox="0 0 32 32" role="img" aria-label="${label}">
+        <path class="sun-event-horizon" d="M5 21h16"/>
+        <path class="sun-event-sun" d="M8 21a5 5 0 0 1 10 0"/>
+        ${arrow}
+      </svg>
+    `;
+  }
+
   renderSinglePrediction(prediction, icon, title, timeLabel, dateLabel = '今日', type = 'sunset') {
     const targetTimezone = prediction.timezone || null;
-    const forecast = this.buildForecastViewModel(prediction, icon, title, timeLabel, dateLabel, type, targetTimezone);
+    const eventIcon = this.renderSunEventIcon(type, 'sun-event-icon phenomenon-sun-event-icon');
+    const forecast = this.buildForecastViewModel(prediction, eventIcon, title, timeLabel, dateLabel, type, targetTimezone);
     const qualityClass = this.getQualityClass(prediction.quality);
     const scoreBreakdownHtml = this.renderScoreBreakdownPopover(prediction);
 
@@ -1857,7 +1876,7 @@ class PredictionController {
         const quality = qualityTextMap[pred.quality] ?? '较差';
         sunriseRow = `
           <div class="fcard-row-item ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
-            <span class="fcard-row-icon">🌄</span>
+            <span class="fcard-row-icon">${this.renderSunEventIcon('sunrise', 'sun-event-icon fcard-sun-event-icon')}</span>
             <span class="fcard-row-label">${this.i18n.t('prediction.sunrise')}</span>
             <span class="fcard-row-score quality-${pred.quality}" title="${quality}">${score}${scoreSuffix}</span>
           </div>`;
@@ -1873,7 +1892,7 @@ class PredictionController {
         const quality = qualityTextMap[pred.quality] ?? '较差';
         sunsetRow = `
           <div class="fcard-row-item ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(dayPredictions.sunset)}">
-            <span class="fcard-row-icon">🌅</span>
+            <span class="fcard-row-icon">${this.renderSunEventIcon('sunset', 'sun-event-icon fcard-sun-event-icon')}</span>
             <span class="fcard-row-label">${this.i18n.t('prediction.sunset')}</span>
             <span class="fcard-row-score quality-${pred.quality}" title="${quality}">${score}${scoreSuffix}</span>
           </div>`;

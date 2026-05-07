@@ -5422,6 +5422,38 @@ body.theme-dark .prediction-app-card {
   background: linear-gradient(135deg, #8CC8FF 0%, #F2A0DF 52%, #FFB86B 100%);
   box-shadow: inset 0 0 18px rgba(255,255,255,0.42);
 }
+.sun-event-icon {
+  display: inline-block;
+  width: 1.25em;
+  height: 1.25em;
+  color: currentColor;
+  vertical-align: -0.2em;
+}
+.sun-event-icon .sun-event-horizon,
+.sun-event-icon .sun-event-sun,
+.sun-event-icon .sun-event-arrow {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.sun-event-icon .sun-event-sun {
+  fill: color-mix(in srgb, var(--theme-accent-soft, rgba(251,146,60,0.18)) 72%, transparent);
+}
+.phenomenon-sun-event-icon {
+  width: 32px;
+  height: 32px;
+  color: #fff;
+}
+.inline-sun-event-icon {
+  color: var(--theme-accent-strong, var(--color-warning));
+}
+.fcard-sun-event-icon {
+  width: 1.05rem;
+  height: 1.05rem;
+  color: currentColor;
+}
 .phenomenon-title-card h3 {
   margin: 0;
   font-size: clamp(2rem, 8vw, 2.25rem);
