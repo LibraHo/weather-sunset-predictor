@@ -98,6 +98,56 @@ class PredictionAPIService {
     }
   }
 
+  async calculateBatchClosedLoop(items, lat, lon, options = {}) {
+    const startTime = Date.now();
+    const url = `${this.baseURL}/api/prediction/enhanced/closed-loop/batch`;
+    console.log(`[PredictionAPIService] 调用后端闭环批量预测 API: count=${items.length}, lat=${lat}, lon=${lon}`);
+
+    try {
+      const requestBody = {
+        lat,
+        lon,
+        items: items.map((item, index) => ({
+          id: item.id ?? index,
+          date: item.date instanceof Date ? item.date.toISOString() : item.date,
+          referenceTime: item.referenceTime instanceof Date ? item.referenceTime.toISOString() : (item.referenceTime || item.date),
+          type: item.type,
+          options: item.options || undefined
+        })),
+        options: {
+          ...options,
+          includeRemoteCloudData: options.includeRemoteCloudData === true
+        }
+      };
+
+      const response = await this._fetchWithTimeout(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      });
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error?.message || '批量预测计算失败');
+      }
+
+      const predictions = (result.data || []).map((data) => {
+        const prediction = this._convertToPrediction(data);
+        prediction.id = data.id;
+        return prediction;
+      });
+
+      const elapsed = Date.now() - startTime;
+      console.log(`[PredictionAPIService] 闭环批量预测 API 调用成功: ${elapsed}ms, count=${predictions.length}`);
+      return predictions;
+    } catch (error) {
+      console.error('[PredictionAPIService] 闭环批量预测 API 调用失败:', error);
+      const wrappedError = new Error(`后端闭环批量预测 API 调用失败: ${error.message}`);
+      wrappedError.code = error.code || null;
+      wrappedError.status = error.status || null;
+      throw wrappedError;
+    }
+  }
+
   /**
    * 带超时的 fetch 请求
    *

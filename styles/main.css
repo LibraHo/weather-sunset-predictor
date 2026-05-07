@@ -772,6 +772,7 @@ input[type="text"]::placeholder {
   box-shadow: var(--shadow-lg);
   text-align: center;
   z-index: 999;
+  width: min(320px, calc(100vw - 48px));
 }
 
 .loading.hidden {
@@ -792,6 +793,30 @@ input[type="text"]::placeholder {
   to {
     transform: rotate(360deg);
   }
+}
+
+.loading-progress {
+  width: 100%;
+  height: 8px;
+  margin-top: var(--spacing-md);
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-border) 72%, transparent);
+}
+
+.loading-progress-fill {
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--color-primary), #ff9800, #fd79a8);
+  transition: width 420ms ease;
+}
+
+.loading-progress-detail {
+  min-height: 1.25em;
+  margin: var(--spacing-sm) 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
 }
 
 /* ===== 天气显示 ===== */

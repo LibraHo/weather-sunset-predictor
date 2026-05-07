@@ -131,6 +131,17 @@ class SurroundingService {
       ? Number(azimuth)
       : SunCalculator.getSunAzimuth(targetDate, sunTime, lat, lon);
 
+    const cacheKey = this._getLightPathCacheKey(lat, lon, type, sunTime || targetDate, solarAzimuth);
+    if (this.cacheService) {
+      const cached = await this.cacheService.get(cacheKey);
+      if (cached) {
+        return {
+          ...cached,
+          cache: { hit: true, key: cacheKey }
+        };
+      }
+    }
+
     const distances = [15, 30, 50, 100];
     const points = distances.map(distanceKm => this.calculatePointByBearing(lat, lon, distanceKm, solarAzimuth));
     const samples = [];
@@ -179,12 +190,29 @@ class SurroundingService {
       }
     }
 
-    return {
+    const payload = {
       source: 'solar_direction_openmeteo',
       azimuth: parseFloat(solarAzimuth.toFixed(1)),
       samples: samples.filter(sample => !sample.error),
       errors: samples.filter(sample => sample.error)
     };
+
+    if (this.cacheService) {
+      await this.cacheService.set(cacheKey, payload, 30 * 60);
+    }
+
+    return {
+      ...payload,
+      cache: { hit: false, key: cacheKey }
+    };
+  }
+
+  _getLightPathCacheKey(lat, lon, type, referenceTime, azimuth) {
+    const ref = referenceTime instanceof Date && !isNaN(referenceTime.getTime())
+      ? referenceTime.toISOString().slice(0, 13)
+      : new Date(referenceTime).toISOString().slice(0, 13);
+    const az = Number.isFinite(Number(azimuth)) ? Math.round(Number(azimuth)) : 'na';
+    return `light_path_v1_${Number(lat).toFixed(3)}_${Number(lon).toFixed(3)}_${type}_${ref}_${az}`;
   }
 
   /**

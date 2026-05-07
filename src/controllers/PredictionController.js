@@ -296,6 +296,15 @@ class PredictionController {
           });
         }
 
+        if (mode === 'backend') {
+          const batchKey = this._predictionBatchKey(type, date);
+          const batchPrediction = this._closedLoopBatchPredictionMap?.get(batchKey);
+          if (batchPrediction) {
+            console.log(`[PredictionController] 使用后端闭环批量预测缓存 (${type})`);
+            return batchPrediction;
+          }
+        }
+
         try {
           return await this.predictionAPIService.calculate(weatherData, date, lat, lon, type);
         } catch (error) {
@@ -369,6 +378,47 @@ class PredictionController {
       || message.includes('频繁');
   }
 
+  _predictionBatchKey(type, date) {
+    const ts = date instanceof Date ? date.getTime() : new Date(date).getTime();
+    return `${type}:${ts}`;
+  }
+
+  async _prepareClosedLoopBatchPredictions({ today, location, targetTimezone }) {
+    const mode = loadConfig().weatherFetchMode || this.weatherFetchMode || 'backend';
+    if (!this.features.USE_BACKEND_PREDICTION || mode !== 'backend') {
+      this._closedLoopBatchPredictionMap = null;
+      return;
+    }
+
+    const items = [];
+    for (let i = 0; i < 4; i += 1) {
+      const targetDate = new Date(today);
+      targetDate.setDate(today.getDate() + i);
+      const sunriseTime = this.predictionService.getSunriseTime(targetDate, location.lat, location.lon, { timezone: targetTimezone });
+      const sunsetTime = this.predictionService.getSunsetTime(targetDate, location.lat, location.lon, { timezone: targetTimezone });
+      if (sunriseTime) {
+        items.push({ id: this._predictionBatchKey('sunrise', sunriseTime), date: sunriseTime, referenceTime: sunriseTime, type: 'sunrise' });
+      }
+      if (sunsetTime) {
+        items.push({ id: this._predictionBatchKey('sunset', sunsetTime), date: sunsetTime, referenceTime: sunsetTime, type: 'sunset' });
+      }
+    }
+
+    if (!items.length) return;
+
+    try {
+      const predictions = await this.predictionAPIService.calculateBatchClosedLoop(items, location.lat, location.lon);
+      this._closedLoopBatchPredictionMap = new Map();
+      predictions.forEach((prediction) => {
+        if (prediction?.id) this._closedLoopBatchPredictionMap.set(prediction.id, prediction);
+      });
+      console.log(`[PredictionController] 后端闭环批量预测预取完成: ${this._closedLoopBatchPredictionMap.size}/${items.length}`);
+    } catch (error) {
+      console.warn('[PredictionController] 后端闭环批量预测失败，回退到单条预测:', error.message);
+      this._closedLoopBatchPredictionMap = null;
+    }
+  }
+
   /**
    * 为增强模型结果补齐太阳方位角相关字段，兼容统一渲染逻辑
    * @param {Object} prediction - 预测对象
@@ -435,6 +485,8 @@ class PredictionController {
     const predictions = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+
+    await this._prepareClosedLoopBatchPredictions({ today, location, targetTimezone });
 
     // 仅生成 UI 会展示的今天 + 未来3天，避免额外第5天白跑朝/晚霞预测请求
     for (let i = 0; i < 4; i++) {
