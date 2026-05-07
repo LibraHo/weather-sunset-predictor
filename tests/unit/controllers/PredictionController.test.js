@@ -191,6 +191,19 @@ describe('PredictionController', () => {
       expect(dir).toBe('WNW');
     });
 
+    test('日语环境 296° 应返回西北西，不应残留中文“西北偏西”', () => {
+      predictionController.i18n = { currentLanguage: 'ja-JP' };
+      const dir = predictionController.getLocalizedAzimuthDirection({ sunAzimuth: 296 });
+      expect(dir).toBe('西北西');
+      expect(dir).not.toBe('西北偏西');
+    });
+
+    test('繁中环境 74° 应返回東北偏東', () => {
+      predictionController.i18n = { currentLanguage: 'zh-TW' };
+      const dir = predictionController.getLocalizedAzimuthDirection({ sunAzimuth: 74 });
+      expect(dir).toBe('東北偏東');
+    });
+
 
     test('日出/日落方向展示不应附加误导性的箭头', () => {
       const prediction = {
