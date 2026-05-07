@@ -6,12 +6,16 @@
 /* 基础重置与变量继承 */
 .admin-header {
   position: sticky;
-  top: 0;
+  top: var(--spacing-md);
   z-index: 100;
+  max-width: 1400px;
+  margin: var(--spacing-lg) auto 0;
   backdrop-filter: blur(var(--glass-blur-heavy));
   -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
   background: var(--header-surface);
-  border-bottom: 1px solid var(--header-border);
+  border: 1px solid var(--header-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .admin-header-inner {
