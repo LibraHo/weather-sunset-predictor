@@ -216,18 +216,6 @@ rankScore = exactMatch * 100
 
 **24 小时温度图天气标签**：由 `ChartRenderController.renderSimpleChart()` 在 `param === 'temp'` 时追加天气 chips。标签从小时数据推导：降水优先，其次按云量判断阴天/多云/少云/晴天。桌面端与移动端分别降采样，避免图表下方标签拥挤。
 
-### 管理后台信息架构（需求50）
-
-后台入口仍为 `/admin`，但前端从单页长滚动改为主页模板同款 menu + panel：
-- `dashboard`：KPI、访问趋势、系统健康、Top IP。
-- `ops`：Grid 队列状态、手动刷新、清缓存、重启后端。
-- `logs`：API 调用日志、24h 调用分布、每日统计。
-- `schedule`：定时刷新配置。
-- `agent`：Token、申请审核、Agent 用量、审计日志。
-- `photos`：照片上传与管理。
-
-刷新策略按激活页面收敛：Dashboard/Ops/Logs 可定时刷新，Schedule/Agent/Photos 以用户操作触发为主。高风险动作集中在 Ops 的 danger zone，并保留确认框。
-
 ## 数据模型
 
 ### Location

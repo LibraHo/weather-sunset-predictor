@@ -4,26 +4,47 @@
    ======================================== */
 
 /* 基础重置与变量继承 */
-.admin-body {
-  background: var(--theme-bg, var(--color-bg));
-  color: var(--theme-text, var(--color-text));
+.admin-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(var(--glass-blur-heavy));
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+  background: var(--header-surface);
+  border-bottom: 1px solid var(--header-border);
 }
 
-.admin-logo {
-  text-decoration: none;
-}
-
-.admin-logo-badge {
-  display: inline-flex;
+.admin-header-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--spacing-md) var(--spacing-lg);
+  display: flex;
   align-items: center;
-  min-height: 24px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--theme-card-border, var(--color-border));
-  background: var(--theme-panel-soft, var(--color-card-bg));
-  color: var(--theme-text-muted, var(--color-text-light));
-  font-size: 0.78rem;
-  font-weight: 800;
+  justify-content: space-between;
+}
+
+.admin-header .app-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--header-title-color);
+}
+
+.admin-header .app-logo-icon {
+  width: 32px;
+  height: 32px;
+  color: var(--header-icon-color);
+}
+
+.admin-header .app-logo-text {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.admin-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
 }
 
 /* 主体布局 */
@@ -38,91 +59,6 @@
 
 .admin-section {
   width: 100%;
-}
-
-.admin-entry-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: var(--spacing-md);
-}
-
-.admin-entry-card {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-  min-height: 92px;
-  padding: var(--spacing-md);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--theme-card-border, var(--color-border));
-  background: var(--theme-card-bg, var(--color-card-bg));
-  color: var(--theme-text, var(--color-text));
-  box-shadow: var(--shadow-sm);
-  cursor: pointer;
-  text-align: left;
-}
-
-.admin-entry-card strong {
-  color: var(--theme-accent-strong, var(--theme-accent));
-  font-size: 1rem;
-}
-
-.admin-entry-card span {
-  color: var(--theme-text-muted, var(--color-text-light));
-  font-size: 0.82rem;
-  line-height: 1.4;
-}
-
-.admin-entry-card:hover {
-  border-color: color-mix(in srgb, var(--theme-accent, #ff9800) 45%, var(--color-border));
-  transform: translateY(-1px);
-}
-
-.admin-panel {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
-}
-
-.admin-panel.hidden,
-.admin-modal.hidden {
-  display: none !important;
-}
-
-.admin-page-hero {
-  padding: clamp(18px, 3vw, 28px);
-  border-radius: var(--radius-lg);
-  background: var(--theme-card-bg, var(--color-card-bg));
-  border: 1px solid var(--theme-card-border, var(--color-border));
-  box-shadow: var(--shadow-sm);
-}
-
-.admin-page-hero h1 {
-  margin: 4px 0 8px;
-  color: var(--theme-text, var(--color-text));
-  font-size: clamp(1.45rem, 2.8vw, 2.2rem);
-  letter-spacing: -0.03em;
-}
-
-.admin-page-hero p {
-  margin: 0;
-  max-width: 760px;
-  color: var(--theme-text-muted, var(--color-text-light));
-  line-height: 1.6;
-}
-
-.admin-eyebrow {
-  margin: 0 !important;
-  color: var(--theme-accent-strong, var(--theme-accent));
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.admin-muted {
-  color: var(--theme-text-muted, var(--color-text-light));
-  line-height: 1.55;
 }
 
 /* 消息提示 */
@@ -177,12 +113,6 @@
   color: var(--color-text);
 }
 
-.kpi-sub {
-  margin-top: 4px;
-  color: var(--color-text-light);
-  font-size: 0.82rem;
-}
-
 .kpi-card-alert .kpi-value {
   color: var(--color-error);
 }
@@ -230,10 +160,6 @@
   border: 1px solid var(--color-border);
 }
 
-.danger-zone {
-  border-color: color-mix(in srgb, var(--color-error) 36%, var(--color-border));
-}
-
 .card-title {
   font-size: 1rem;
   font-weight: 600;
@@ -273,54 +199,6 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: var(--spacing-sm);
-}
-
-.queue-status-grid {
-  display: grid;
-  gap: var(--spacing-md);
-}
-
-.queue-card {
-  padding: var(--spacing-md);
-  border-radius: var(--radius-md);
-  background: var(--theme-panel-soft, var(--color-bg));
-  border: 1px solid var(--theme-card-border, var(--color-border));
-}
-
-.queue-head,
-.queue-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.queue-progress {
-  margin-top: 10px;
-  height: 9px;
-  border-radius: 999px;
-  overflow: hidden;
-  background: color-mix(in srgb, var(--theme-card-border, var(--color-border)) 56%, transparent);
-}
-
-.queue-progress span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, var(--theme-accent), var(--theme-accent-strong));
-}
-
-.queue-meta {
-  margin-top: 8px;
-  color: var(--theme-text-muted, var(--color-text-light));
-  font-size: 0.82rem;
-}
-
-.queue-error {
-  margin-top: 8px;
-  color: var(--color-error);
-  font-size: 0.82rem;
 }
 
 /* 表格 */
@@ -453,51 +331,6 @@ body.theme-dark .admin-table tr:hover td {
   flex: 1;
 }
 
-.admin-inline-switch {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--color-text-light);
-}
-
-.admin-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: grid;
-  place-items: center;
-  padding: var(--spacing-lg);
-}
-
-.admin-modal-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.46);
-  backdrop-filter: blur(10px);
-}
-
-.admin-modal-card {
-  position: relative;
-  width: min(720px, 100%);
-  padding: var(--spacing-lg);
-  border-radius: var(--radius-lg);
-  background: var(--theme-card-bg, var(--color-card-bg));
-  border: 1px solid var(--theme-card-border, var(--color-border));
-  box-shadow: var(--shadow-lg);
-}
-
-.admin-modal-card h3 {
-  margin: 0 0 var(--spacing-md);
-  color: var(--theme-text, var(--color-text));
-}
-
-.admin-modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-md);
-}
-
 .file-input-wrapper {
   position: relative;
   border: 2px dashed var(--color-border);
@@ -575,6 +408,10 @@ body.theme-dark .admin-table tr:hover td {
 
 /* 移动端适配 */
 @media (max-width: 768px) {
+  .admin-header-inner {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
   .admin-main {
     padding: var(--spacing-md);
     gap: var(--spacing-md);

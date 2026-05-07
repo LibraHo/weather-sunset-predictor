@@ -29,17 +29,6 @@
 - 不把已废弃或已完成很久的内容标成“待执行”。
 - 新增内容不引入未授权开发任务；只整理文档与近期已完成事实。
 
-
-## ✅ 需求50：管理后台信息架构重构（2026-05-07）
-
-### 任务拆分
-- [x] 50.1 调研现有后台实现：`public/admin/index.html`、`admin.js`、`admin.css`、`server/routes/admin.js`、`server/routes/api-logs.js`。
-- [x] 50.2 使用主页同款 menu/panel 模板拆分后台页面：总览、运维、日志、定时任务、Agent/API、照片。
-- [x] 50.3 收敛自动刷新：仅 Dashboard/Ops/Logs 高频刷新，其他页按需加载。
-- [x] 50.4 运维页增加 Grid 队列状态可视化，高风险动作集中到 danger zone。
-- [x] 50.5 Token 编辑从 `prompt` 改为弹窗表单。
-- [x] 50.6 补充后台结构单测与静态页面/i18n 相关回归。
-
 ## ✅ 需求45：Agent API 与 API Token 管理（已完成，2026-05-03 核对）
 
 ### 背景
