@@ -58,7 +58,8 @@ async function loadAll() {
     loadAuditLogs(),
     loadAgentUsageStats(),
     loadPhotos(),
-    loadHealth()
+    loadHealth(),
+    loadShareStats()
   ]);
 }
 
@@ -126,7 +127,7 @@ function initAdminNavigation() {
 async function loadActiveView() {
   switch (activeAdminView) {
     case 'dashboard':
-      await Promise.all([loadAccessStats(), loadLogSummary(), loadHealth()]);
+      await Promise.all([loadAccessStats(), loadLogSummary(), loadHealth(), loadShareStats()]);
       break;
     case 'ops':
       await Promise.all([loadQueue(), loadHealth()]);
@@ -150,7 +151,7 @@ async function loadActiveView() {
 
 function refreshActiveView() {
   if (activeAdminView === 'dashboard') {
-    Promise.all([loadAccessStats(), loadLogSummary(), loadHealth()]);
+    Promise.all([loadAccessStats(), loadLogSummary(), loadHealth(), loadShareStats()]);
   } else if (activeAdminView === 'ops') {
     Promise.all([loadQueue(), loadHealth()]);
   } else if (activeAdminView === 'logs') {
@@ -230,6 +231,18 @@ function renderAccessTrendChart(dailyTrend) {
       }
     }
   });
+}
+
+// =================== 分享统计 ===================
+async function loadShareStats() {
+  try {
+    const res = await fetch('/api/admin/share/summary?days=7', { credentials: 'include' });
+    const data = await res.json();
+    document.getElementById('kpi-share-today').textContent = data.today?.total ?? '--';
+    document.getElementById('kpi-share-total').textContent = `累计 ${data.total?.total ?? '--'}`;
+  } catch (err) {
+    console.error('加载分享统计失败:', err);
+  }
 }
 
 // =================== 系统健康 ===================

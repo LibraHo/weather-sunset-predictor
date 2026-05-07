@@ -247,7 +247,7 @@ describe('PredictionController', () => {
       };
 
       const html = predictionController.renderSinglePrediction(
-        prediction, '🌅', '晚霞', '日落时间', '今日', 'sunset'
+        prediction, 'sunset', '晚霞', '日落时间', '今日', 'sunset'
       );
 
       expect(html).toContain('75');
@@ -285,7 +285,7 @@ describe('PredictionController', () => {
       };
 
       const html = predictionController.renderSinglePrediction(
-        prediction, '🌅', '晚霞', '日落时间', '今日', 'sunset'
+        prediction, 'sunset', '晚霞', '日落时间', '今日', 'sunset'
       );
 
       const conclusionIndex = html.indexOf('conclusion-banner');
@@ -326,7 +326,7 @@ describe('PredictionController', () => {
 
       const html = predictionController.renderSinglePrediction(
         prediction,
-        '🌅',
+        'sunset',
         '晚霞',
         '日落时间',
         '北京',
@@ -366,7 +366,7 @@ describe('PredictionController', () => {
 
       const html = predictionController.renderSinglePrediction(
         prediction,
-        '🌄',
+        'sunrise',
         '朝霞',
         '日出时间',
         '北京',
@@ -413,7 +413,7 @@ describe('PredictionController', () => {
       };
 
       const html = predictionController.renderSinglePrediction(
-        prediction, '🌅', '晚霞', '日落时间', '今日', 'sunset'
+        prediction, 'sunset', '晚霞', '日落时间', '今日', 'sunset'
       );
 
       expect(html).toContain('AOD 0.73');
@@ -445,7 +445,7 @@ describe('PredictionController', () => {
       };
 
       const html = predictionController.renderSinglePrediction(
-        prediction, '🌅', '晚霞', '日落时间', '今日', 'sunset'
+        prediction, 'sunset', '晚霞', '日落时间', '今日', 'sunset'
       );
 
       expect(html).not.toContain('compact-extra-azimuth');
@@ -471,7 +471,7 @@ describe('PredictionController', () => {
       };
 
       const html = predictionController.renderSinglePrediction(
-        prediction, '🌅', '晚霞', '日落时间', '今日', 'sunset'
+        prediction, 'sunset', '晚霞', '日落时间', '今日', 'sunset'
       );
 
       expect(html).toContain('cloud-condition-card');
@@ -671,7 +671,7 @@ describe('PredictionController', () => {
 
       const html = predictionController.renderSinglePrediction(
         prediction,
-        '🌅',
+        'sunset',
         '晚霞',
         '日落时间',
         '北京',
