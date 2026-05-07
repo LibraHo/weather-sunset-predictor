@@ -63,9 +63,9 @@ async function loadAll() {
 }
 
 function initAdminNavigation() {
-  const btn = document.getElementById('admin-view-menu-btn');
-  const dropdown = document.getElementById('admin-view-menu-dropdown');
-  const options = Array.from(document.querySelectorAll('.admin-view-option[data-view]'));
+  const btn = document.getElementById('home-view-menu-btn');
+  const dropdown = document.getElementById('home-view-menu-dropdown');
+  const options = Array.from(document.querySelectorAll('.admin-view-option[data-view], .admin-entry-card[data-view]'));
 
   const getViewFromHash = () => {
     const view = window.location.hash.replace(/^#/, '') || 'dashboard';
@@ -95,6 +95,7 @@ function initAdminNavigation() {
       const active = option.dataset.view === activeAdminView;
       option.classList.toggle('active', active);
       option.setAttribute('aria-checked', String(active));
+      option.setAttribute('aria-pressed', String(active));
     });
     if (window.location.hash.replace(/^#/, '') !== activeAdminView) {
       history.replaceState(null, '', `#${activeAdminView}`);

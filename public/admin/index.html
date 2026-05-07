@@ -10,23 +10,26 @@
 </head>
 <body class="theme-dark admin-body">
   <div id="admin-app">
-    <header class="app-header admin-header">
-      <div class="header-main admin-header-inner">
-        <a class="app-logo" href="/admin#dashboard" aria-label="霞客管理后台">
+    <header>
+      <div class="header-top-row">
+        <a class="app-logo admin-logo" href="/admin#dashboard" aria-label="霞客管理后台">
           <svg class="app-logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 76 76" aria-hidden="true">
             <path d="M12 44 A26 26 0 0 1 64 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
             <line x1="0" y1="44" x2="76" y2="44" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
             <line x1="10" y1="55" x2="66" y2="55" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
             <line x1="22" y1="66" x2="54" y2="66" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
           </svg>
-          <span class="app-logo-text">霞客管理后台</span>
+          <span class="app-logo-text">霞客</span>
+          <span class="admin-logo-badge">管理后台</span>
         </a>
-        <div class="admin-header-center">
-          <div class="home-view-menu admin-view-menu">
-            <button id="admin-view-menu-btn" class="icon-btn header-svg-btn" aria-label="后台页面切换" aria-expanded="false" aria-controls="admin-view-menu-dropdown">
-              <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <div class="header-right-group">
+          <div class="home-view-menu">
+            <button id="home-view-menu-btn" class="icon-btn header-svg-btn" aria-label="后台页面切换" aria-expanded="false" aria-controls="home-view-menu-dropdown">
+              <svg class="header-action-icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+                <path d="M5 7.5h14M5 12h14M5 16.5h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
             </button>
-            <div id="admin-view-menu-dropdown" class="home-view-menu-dropdown hidden" role="menu" aria-label="后台页面菜单">
+            <div id="home-view-menu-dropdown" class="home-view-menu-dropdown hidden" role="menu" aria-label="后台页面菜单">
               <button class="home-view-option admin-view-option active" role="menuitemradio" aria-checked="true" data-view="dashboard">总览</button>
               <button class="home-view-option admin-view-option" role="menuitemradio" aria-checked="false" data-view="ops">运维</button>
               <button class="home-view-option admin-view-option" role="menuitemradio" aria-checked="false" data-view="logs">日志</button>
@@ -35,12 +38,12 @@
               <button class="home-view-option admin-view-option" role="menuitemradio" aria-checked="false" data-view="photos">照片</button>
             </div>
           </div>
-        </div>
-        <div class="admin-header-actions">
-          <button id="theme-toggle" class="icon-btn header-svg-btn" aria-label="切换主题">
-            <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A8.4 8.4 0 1 1 11.2 3 6.8 6.8 0 0 0 21 12.8Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
-          </button>
-          <a href="/" class="btn btn-secondary btn-sm">返回前台</a>
+          <div class="header-actions">
+            <button id="theme-toggle" class="icon-btn header-svg-btn" aria-label="切换主题">
+              <svg class="header-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A8.4 8.4 0 1 1 11.2 3 6.8 6.8 0 0 0 21 12.8Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+            </button>
+            <a href="/" class="btn btn-secondary btn-sm">返回前台</a>
+          </div>
         </div>
       </div>
     </header>
@@ -54,6 +57,15 @@
           <h1>运行总览</h1>
           <p>把访问、接口、错误和系统健康收拢到一屏，快速判断霞客当前状态。</p>
         </div>
+        <section class="admin-section">
+          <div class="admin-entry-grid" aria-label="后台功能入口">
+            <button class="admin-entry-card" data-view="ops"><strong>运维</strong><span>Grid 队列、刷新、缓存、重启</span></button>
+            <button class="admin-entry-card" data-view="logs"><strong>日志</strong><span>API 调用、错误、每日统计</span></button>
+            <button class="admin-entry-card" data-view="schedule"><strong>定时任务</strong><span>朝霞/晚霞自动刷新配置</span></button>
+            <button class="admin-entry-card" data-view="agent"><strong>Agent / API</strong><span>Token、申请、用量、审计</span></button>
+            <button class="admin-entry-card" data-view="photos"><strong>照片</strong><span>上传与分享地图照片管理</span></button>
+          </div>
+        </section>
         <section class="admin-section">
           <div class="kpi-grid">
             <div class="kpi-card"><div class="kpi-label">今日 PV</div><div class="kpi-value" id="kpi-today-pv">--</div></div>
