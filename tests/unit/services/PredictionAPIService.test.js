@@ -116,7 +116,8 @@ describe('PredictionAPIService', () => {
       expect(body.lat).toBe(mockLat);
       expect(body.lon).toBe(mockLon);
       expect(body.type).toBe('sunset');
-      expect(body.weatherData.cloudCover).toBe(50);
+      expect(body.referenceTime).toBe(mockDate.toISOString());
+      expect(body.weatherData).toBeUndefined();
     });
 
     test('should handle date as Date object', async () => {
@@ -193,7 +194,7 @@ describe('PredictionAPIService', () => {
       ).rejects.toThrow('后端预测 API 调用失败');
     });
 
-    test('should handle missing optional weather data fields', async () => {
+    test('should omit frontend weather data for backend closed-loop prediction', async () => {
       const minimalWeatherData = {
         cloudCover: 50,
         humidity: 60
@@ -208,9 +209,9 @@ describe('PredictionAPIService', () => {
 
       const [, options] = mockFetch.mock.calls[0];
       const body = JSON.parse(options.body);
-      expect(body.weatherData.highClouds).toBe(0);
-      expect(body.weatherData.midClouds).toBe(0);
-      expect(body.weatherData.lowClouds).toBe(0);
+      expect(body.weatherData).toBeUndefined();
+      expect(body.lat).toBe(mockLat);
+      expect(body.lon).toBe(mockLon);
     });
   });
 
