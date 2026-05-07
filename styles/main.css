@@ -5176,6 +5176,18 @@ body.theme-dark .code-box {
   margin-left: 6px;
 }
 
+
+.map-supported-regions {
+  margin: 2px 0 12px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--glass-bg-heavy);
+  border: 1px solid var(--glass-border);
+  color: var(--color-text-light);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
 .map-panel-timestamp-wrapper {
   display: flex;
   align-items: center;

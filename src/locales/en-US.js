@@ -526,6 +526,9 @@ const translations = {
     "pointToast": "{{name}} direction | Score: {{score}} pts | Distance: {{distance}} km",
     "emptyChinaSpots": "No visible fire-cloud spots today",
     "updatedAt": "Updated at {{time}}",
+    "supportedRegions": "Currently supported: Mainland China, Hong Kong, Macao, Taiwan, Japan, South Korea, North Korea, and major cities in mainland Southeast Asia. The heatmap grid is currently focused on China.",
+    "interactionHint": "Drag the map · scroll to zoom",
+    "tabs": { "sunrise": "Sunrise", "sunset": "Sunset" },
     "quality": { "excellent": "Excellent", "good": "Good" },
     "period": { "sunriseTomorrow": "Tomorrow's sunrise glow", "sunsetToday": "Today's sunset glow", "testLayer": "Test layer (mock data)" }
   },

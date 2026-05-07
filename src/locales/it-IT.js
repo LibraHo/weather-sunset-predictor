@@ -672,6 +672,9 @@ apiAccess: 'Accesso API'
     "pointToast": "{{name}} direction | Score: {{score}} pts | Distance: {{distance}} km",
     "emptyChinaSpots": "No visible fire-cloud spots today",
     "updatedAt": "Updated at {{time}}",
+    "supportedRegions": "Attualmente supportati: Cina continentale, Hong Kong, Macao, Taiwan, Giappone, Corea del Sud, Corea del Nord e principali città del Sud-est asiatico continentale. La griglia heatmap è attualmente centrata sulla Cina.",
+    "interactionHint": "Drag the map · scroll to zoom",
+    "tabs": { "sunrise": "Sunrise", "sunset": "Sunset" },
     "quality": { "excellent": "Excellent", "good": "Good" },
     "period": { "sunriseTomorrow": "Tomorrow's sunrise glow", "sunsetToday": "Today's sunset glow", "testLayer": "Test layer (mock data)" }
   },

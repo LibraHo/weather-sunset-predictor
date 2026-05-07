@@ -699,6 +699,9 @@ apiAccess: 'Acceso API'
     "pointToast": "{{name}} direction | Score: {{score}} pts | Distance: {{distance}} km",
     "emptyChinaSpots": "No visible fire-cloud spots today",
     "updatedAt": "Updated at {{time}}",
+    "supportedRegions": "Actualmente compatible con: China continental, Hong Kong, Macao, Taiwán, Japón, Corea del Sur, Corea del Norte y principales ciudades del Sudeste Asiático continental. La cuadrícula de calor se centra actualmente en China.",
+    "interactionHint": "Drag the map · scroll to zoom",
+    "tabs": { "sunrise": "Sunrise", "sunset": "Sunset" },
     "quality": { "excellent": "Excellent", "good": "Good" },
     "period": { "sunriseTomorrow": "Tomorrow's sunrise glow", "sunsetToday": "Today's sunset glow", "testLayer": "Test layer (mock data)" }
   },
