@@ -237,8 +237,60 @@ const translations = {
       "lightPathHint": "太陽光是否能照到雲層",
       "finalFormula": "最終分 = 基礎分 × 修正係數",
       "renderingHint": "濕度與能見度影響色彩表現",
-      "aerosolHint": "適中可增強紅橙散射，過高會偏灰"
-    },
+      "aerosolHint": "適度氣溶膠增強橙紅散射，過多則發灰",
+      "ledger": {
+        "pts": "分",
+        "whyThisScore": "為什麼是這個分數",
+        "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
+        "canvasPlusLightPath": "畫布 + 光路",
+        "renderingFormula": "{{base}} × 顯色係數 {{factor}} = {{rendered}}",
+        "weatherTransparency": "天氣通透度",
+        "summary": {
+          "event": "{{score}} 分：{{detail}}",
+          "rendered": "{{base}} 分經顯色條件修正為 {{rendered}} 分",
+          "default": "{{score}} 分：由雲層、光路和顯色條件綜合計算"
+        },
+        "weather": {
+          "clouds": "高/中/低雲 {{high}}/{{mid}}/{{low}}%",
+          "visibility": "能見度 {{value}}km",
+          "humidity": "濕度 {{value}}%",
+          "rain": "降水 {{value}}mm/h"
+        },
+        "labels": {
+          "cloudCarrier": "雲層載體",
+          "lightPath": "光路",
+          "baseScore": "基礎分",
+          "rendering": "顯色修正",
+          "final": "最終分",
+          "hardCap": "硬封頂",
+          "hazeCap": "灰幕封頂",
+          "thickCloudCap": "厚雲封頂",
+          "geometryCap": "幾何封頂",
+          "occlusion": "遮擋修正",
+          "carrierFloor": "載體保底"
+        },
+        "details": {
+          "cloudCarrier": "可被染色的雲面品質",
+          "cloudPenalty": "低雲 ×{{low}}，陰天 ×{{overcast}}",
+          "lightPath": "陽光是否能照到雲層",
+          "renderingFactors": "能見度 ×{{visibility}}，濕度 ×{{humidity}}，氣溶膠 ×{{aerosol}}",
+          "afterAdjustments": "套用所有封頂/保底後",
+          "finalDisplayed": "最終顯示結果",
+          "thickCloudCap": "高雲過厚，真實可染色效果下降",
+          "geometryCap": "太陽與雲層幾何條件不足",
+          "occlusion": "遠端遮擋壓低最終分",
+          "carrierFloor": "高雲載體清透，避免誤傷低估"
+        },
+        "reasons": {
+          "precipitationCap45": "降水疊加低雲，分數封頂到 45",
+          "overcastCap35": "低雲陰天遮擋，分數封頂到 35",
+          "overcastFogCap15": "陰天且能見度≤5km，分數硬封頂到 15",
+          "extremeDustHazeCap28": "強沙塵/灰幕壓制，分數封頂到 28",
+          "severeHazeCap35": "重度灰霾壓制，分數封頂到 35",
+          "moderateHazeCap45": "中度灰霾壓制，分數封頂到 45",
+          "adjustmentApplied": "套用封頂/保底修正"
+        }
+      }},
 "formationAnalysis": {
       "title": "火燒雲形成條件分析",
       "groups": { "positive": "有利條件", "neutral": "一般因素", "warning": "注意因素" },
