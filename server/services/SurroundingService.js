@@ -135,9 +135,7 @@ class SurroundingService {
     const points = distances.map(distanceKm => this.calculatePointByBearing(lat, lon, distanceKm, solarAzimuth));
     const samples = [];
 
-    // 串行 + 小间隔：主预测最多 4 个额外点，近场权重更高，避免 Open-Meteo 429。
-    for (let i = 0; i < points.length; i += 1) {
-      const point = points[i];
+    const fetchSample = async (point) => {
       try {
         const weatherResponse = await orchestrator.fetchWeatherData(point.lat, point.lon, 72);
         const hourly = Array.isArray(weatherResponse.data) ? weatherResponse.data : [];
@@ -150,7 +148,7 @@ class SurroundingService {
           return nDiff < cDiff ? current : closest;
         }, hourly[0]);
 
-        samples.push({
+        return {
           ...point,
           cloudBaseHeight: selected.cloudBaseHeight ?? null,
           lowCloud: selected.lowClouds || 0,
@@ -162,13 +160,22 @@ class SurroundingService {
           weatherCode: selected.weatherCode ?? null,
           provider: weatherResponse.providerMeta?.name || weatherResponse.provider || null,
           error: null
-        });
+        };
       } catch (error) {
         console.warn(`[SurroundingService] 太阳方向 ${point.distanceKm}km 采样失败:`, error.message);
-        samples.push({ ...point, error: error.message });
+        return { ...point, error: error.message };
       }
-      if (i < points.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 350));
+    };
+
+    // 小批量并发：4 个光路点分 2 批，每批 2 个。
+    // 比全串行更快，又避免主预测一次性打满 4 个远端天气请求。
+    const BATCH_SIZE = 2;
+    for (let i = 0; i < points.length; i += BATCH_SIZE) {
+      const batch = points.slice(i, i + BATCH_SIZE);
+      const batchSamples = await Promise.all(batch.map(fetchSample));
+      samples.push(...batchSamples);
+      if (i + BATCH_SIZE < points.length) {
+        await new Promise(resolve => setTimeout(resolve, 250));
       }
     }
 
