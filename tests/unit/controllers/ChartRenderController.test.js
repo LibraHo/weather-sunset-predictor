@@ -50,6 +50,43 @@ describe('ChartRenderController', () => {
     expect(html).not.toContain('>23:00<');
   });
 
+  test('温度图应附带逐小时天气标签', () => {
+    document.body.innerHTML = '<div id="chart-container" style="width: 900px"></div>';
+    window.matchMedia = jest.fn().mockReturnValue({ matches: false });
+
+    const translations = {
+      'charts.trend': '变化趋势',
+      'charts.time': '时间',
+      'weather.clear': '晴天',
+      'weather.partlyCloudy': '少云',
+      'weather.cloudy': '多云',
+      'weather.overcast': '阴天',
+      'weather.precipitation': '降水'
+    };
+    const controller = new ChartRenderController({
+      i18n: { t: jest.fn((key) => translations[key] || key) },
+      getConvertedTemp: (v) => v,
+      getConvertedWindSpeed: (v) => v
+    });
+
+    const base = new Date('2026-01-01T00:00:00Z').getTime();
+    const hourlyData = Array.from({ length: 24 }, (_, i) => ({
+      timestamp: base + i * 60 * 60 * 1000,
+      temp: 20 + i,
+      cloudCover: i < 3 ? 5 : 80,
+      precipitation: i === 6 ? 0.3 : 0
+    }));
+
+    controller.renderSimpleChart(hourlyData, 'chart-container', 'temp', '温度', '°C', '#ff6b6b');
+
+    const strip = document.querySelector('.hourly-weather-strip');
+    expect(strip).toBeTruthy();
+    expect(strip.textContent).toContain('0:00');
+    expect(strip.textContent).toContain('晴天');
+    expect(strip.textContent).toContain('阴天');
+    expect(strip.textContent).toContain('降水');
+  });
+
   test('移动端渲染应降采样并使用统一颜色变量', () => {
     document.body.innerHTML = '<div id="chart-container" style="width: 320px"></div>';
     window.matchMedia = jest.fn().mockReturnValue({ matches: true });
