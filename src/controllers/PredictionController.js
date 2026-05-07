@@ -1112,13 +1112,13 @@ class PredictionController {
   renderSunEventIcon(type = 'sunset', className = 'sun-event-icon') {
     const isSunrise = type === 'sunrise';
     const arrow = isSunrise
-      ? '<path class="sun-event-arrow" d="M18 18V7m0 0-4 4m4-4 4 4"/>'
-      : '<path class="sun-event-arrow" d="M18 6v11m0 0-4-4m4 4 4-4"/>';
+      ? '<path class="sun-event-arrow" d="M30 20V7m0 0-4 4m4-4 4 4"/>'
+      : '<path class="sun-event-arrow" d="M30 6v13m0 0-4-4m4 4 4-4"/>';
     const label = isSunrise ? this.i18n.t('prediction.sunrise') : this.i18n.t('prediction.sunset');
     return `
-      <svg class="${className} sun-event-icon-${isSunrise ? 'sunrise' : 'sunset'}" viewBox="0 0 32 32" role="img" aria-label="${label}">
-        <path class="sun-event-horizon" d="M5 21h16"/>
-        <path class="sun-event-sun" d="M8 21a5 5 0 0 1 10 0"/>
+      <svg class="${className} sun-event-icon-${isSunrise ? 'sunrise' : 'sunset'}" viewBox="0 0 40 32" role="img" aria-label="${label}">
+        <path class="sun-event-horizon" d="M4 22h20"/>
+        <path class="sun-event-sun" d="M7 22a7 7 0 0 1 14 0"/>
         ${arrow}
       </svg>
     `;

@@ -3785,6 +3785,12 @@ body.theme-dark .sun-azimuth-info {
   opacity: 0.45;
 }
 #forecast-section .fcard-row-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 1.75rem;
+  height: 1.4rem;
   font-size: 1rem;
 }
 #forecast-section .fcard-row-label {
@@ -5440,9 +5446,17 @@ body.theme-dark .prediction-app-card {
   color: var(--theme-accent-strong, var(--color-warning));
 }
 .fcard-sun-event-icon {
-  width: 1.05rem;
-  height: 1.05rem;
+  width: 1.65rem;
+  height: 1.35rem;
   color: currentColor;
+}
+.fcard-sun-event-icon .sun-event-horizon,
+.fcard-sun-event-icon .sun-event-sun,
+.fcard-sun-event-icon .sun-event-arrow {
+  stroke-width: 2.4;
+}
+.fcard-sun-event-icon .sun-event-sun {
+  fill: color-mix(in srgb, var(--theme-accent-soft, rgba(251,146,60,0.2)) 86%, transparent);
 }
 .phenomenon-title-card h3 {
   margin: 0;
