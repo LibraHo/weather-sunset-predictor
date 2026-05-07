@@ -163,19 +163,19 @@ header {
   position: relative;
   z-index: 1000;
   overflow: visible;
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  margin-right: calc(50% - 50vw);
-  padding: 14px calc(var(--spacing-md) + var(--spacing-lg));
+  width: auto;
+  margin: 0 0 16px;
+  padding: var(--spacing-lg);
   background: linear-gradient(120deg, var(--header-surface) 0%, rgba(255, 237, 205, 0.72) 100%);
   color: var(--header-title-color);
-  box-shadow: var(--shadow-md);
-  border-bottom: 1px solid var(--header-border);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--header-border);
+  border-radius: var(--radius-lg);
 }
 
 .header-top-row {
-  width: min(100%, 1400px);
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -468,12 +468,13 @@ main > section {
 }
 
 footer {
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  margin-right: calc(50% - 50vw);
-  padding: var(--spacing-lg) var(--spacing-md);
+  width: auto;
+  margin: 0;
+  padding: var(--spacing-lg);
   background-color: var(--color-card-bg);
-  border-top: 1px solid var(--color-border);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1320,7 +1321,7 @@ input[type="text"]::placeholder {
 /* ===== 响应式设计 - 移动端 ===== */
 @media (max-width: 768px) {
   header {
-    padding: 10px calc(var(--spacing-sm) + var(--spacing-md));
+    padding: var(--spacing-md);
   }
 
   .header-top-row {
@@ -4223,7 +4224,7 @@ body.theme-dark #forecast-section .sunset-time-small {
     background: linear-gradient(120deg, var(--header-surface) 0%, rgba(255, 237, 205, 0.72) 100%);
     backdrop-filter: blur(var(--glass-blur-heavy));
     -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
-    border-bottom: 1px solid var(--header-border);
+    border: 1px solid var(--header-border);
     box-shadow: var(--glass-shadow);
   }
 
@@ -4232,8 +4233,8 @@ body.theme-dark #forecast-section .sunset-time-small {
     background: var(--glass-bg-heavy);
     backdrop-filter: blur(var(--glass-blur-heavy));
     -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
-    border-top: 1px solid var(--glass-border);
-    box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-sm);
   }
 
   /* 重度毛玻璃效果 - 模态框 */

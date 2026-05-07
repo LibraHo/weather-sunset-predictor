@@ -33,18 +33,23 @@ describe('recent user-reported UI regression guards', () => {
     expect(source).toContain('mode === RASTER_COLOR_MODES.FULL ? FULL_VISUAL_MIN_SCORE : COMPACT_VISUAL_MIN_SCORE');
   });
 
-  test('front header and footer are full-bleed while header content stays centered', () => {
+  test('front header and footer use the same card width language as other panels', () => {
     const source = css();
     const headerBlock = source.match(/header \{[\s\S]*?\n\}/)?.[0] || '';
     const rowBlock = source.match(/\.header-top-row \{[\s\S]*?\n\}/)?.[0] || '';
     const footerBlock = source.match(/footer \{[\s\S]*?\n\}/)?.[0] || '';
 
-    expect(headerBlock).toContain('width: 100vw');
-    expect(headerBlock).toContain('margin-left: calc(50% - 50vw)');
-    expect(rowBlock).toContain('width: min(100%, 1400px)');
-    expect(rowBlock).toContain('margin: 0 auto');
-    expect(footerBlock).toContain('width: 100vw');
-    expect(footerBlock).toContain('margin-left: calc(50% - 50vw)');
+    expect(headerBlock).toContain('width: auto');
+    expect(headerBlock).toContain('margin: 0 0 16px');
+    expect(headerBlock).toContain('border-radius: var(--radius-lg)');
+    expect(headerBlock).not.toContain('width: 100vw');
+    expect(headerBlock).not.toContain('margin-left: calc(50% - 50vw)');
+    expect(rowBlock).toContain('width: 100%');
+    expect(rowBlock).toContain('margin: 0');
+    expect(footerBlock).toContain('width: auto');
+    expect(footerBlock).toContain('border-radius: var(--radius-lg)');
+    expect(footerBlock).not.toContain('width: 100vw');
+    expect(footerBlock).not.toContain('margin-left: calc(50% - 50vw)');
   });
 
   test('firecloud map period switch uses xiake segmented toggle styling', () => {
