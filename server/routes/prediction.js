@@ -26,6 +26,37 @@ const predictionService = new PredictionService();
 const cacheService = new CacheService({ defaultTTL: cacheConfig.ttl.DEFAULT });
 const surroundingService = new SurroundingService({ cacheService });
 
+const CLOSED_LOOP_WEATHER_CACHE_TTL_SECONDS = 120;
+const inFlightWeatherFetches = new Map();
+
+function closedLoopWeatherCacheKey(lat, lon, hours = 168) {
+  return `closed-loop-weather:${Number(lat).toFixed(4)}:${Number(lon).toFixed(4)}:${hours}`;
+}
+
+async function fetchClosedLoopWeatherData(lat, lon, hours = 168) {
+  const key = closedLoopWeatherCacheKey(lat, lon, hours);
+  const cached = await cacheService.get(key);
+  if (cached) {
+    return cached;
+  }
+
+  if (inFlightWeatherFetches.has(key)) {
+    return inFlightWeatherFetches.get(key);
+  }
+
+  const pending = orchestrator.fetchWeatherData(lat, lon, hours)
+    .then(async (weatherResponse) => {
+      await cacheService.set(key, weatherResponse, CLOSED_LOOP_WEATHER_CACHE_TTL_SECONDS);
+      return weatherResponse;
+    })
+    .finally(() => {
+      inFlightWeatherFetches.delete(key);
+    });
+
+  inFlightWeatherFetches.set(key, pending);
+  return pending;
+}
+
 // 服务器退出时释放定时器，避免 Node.js 进程无法正常退出
 process.once('exit', () => cacheService.destroy());
 process.once('SIGINT', () => { cacheService.destroy(); process.exit(0); });
@@ -157,7 +188,7 @@ async function buildClosedLoopPredictionInput({ lat, lon, date, type, referenceT
       : SunCalculator.getSunsetTime(targetDate, lat, lon);
   }
 
-  const weatherResponse = await orchestrator.fetchWeatherData(lat, lon, 168);
+  const weatherResponse = await fetchClosedLoopWeatherData(lat, lon, 168);
   const hourly = Array.isArray(weatherResponse.data) ? weatherResponse.data : [];
   if (!hourly.length) {
     const error = new Error('No weather data available');

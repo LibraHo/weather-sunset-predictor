@@ -210,6 +210,7 @@ describe('PredictionAPIService', () => {
       const [, options] = mockFetch.mock.calls[0];
       const body = JSON.parse(options.body);
       expect(body.weatherData).toBeUndefined();
+      expect(body.options).toBeUndefined();
       expect(body.lat).toBe(mockLat);
       expect(body.lon).toBe(mockLon);
     });

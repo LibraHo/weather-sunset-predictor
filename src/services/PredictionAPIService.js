@@ -43,7 +43,8 @@ class PredictionAPIService {
       // 格式化日期为 ISO 字符串
       const dateString = date instanceof Date ? date.toISOString() : date;
 
-      // 构建请求体：主预测闭环由后端取天气和光路数据，前端只传地点/时刻/类型。
+      // 构建请求体：主预测保持后端闭环，前端只传地点/时刻/type。
+      // 后端内部负责天气数据拉取与复用，避免前端参与评分数据闭环。
       const requestBody = {
         date: dateString,
         lat: lat,

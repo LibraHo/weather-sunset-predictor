@@ -76,4 +76,18 @@ describe('recent user-reported UI regression guards', () => {
     expect(shareButtonBlock).toContain('color: var(--theme-share-icon) !important');
     expect(shareButtonBlock).not.toContain('color: var(--theme-accent) !important');
   });
+
+  test('score breakdown popover keeps translucent glass effect', () => {
+    const source = css();
+    const block = source.match(/\.score-breakdown-popover,\nbody\.theme-light \.score-breakdown-popover,[\s\S]*?\n\}/)?.[0] || '';
+
+    expect(block).toContain('color-mix(in srgb, var(--glass-bg-heavy) 72%, transparent)');
+    expect(block).toContain('backdrop-filter: blur(var(--glass-blur-heavy)) saturate(1.24)');
+    expect(block).toContain('inset 0 1px 0 rgba(255, 255, 255, 0.30)');
+    expect(source).toContain('@media (min-width: 641px)');
+    expect(source).toContain('color-mix(in srgb, var(--glass-bg-heavy) 42%, transparent)');
+    expect(source).toContain('radial-gradient(circle at 16% 0%, rgba(255, 224, 178, 0.32), transparent 38%)');
+    expect(source).toContain('.score-breakdown-popover::before');
+    expect(block).not.toContain('background: var(--glass-bg-heavy) !important');
+  });
 });
