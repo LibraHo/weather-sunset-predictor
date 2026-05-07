@@ -5,6 +5,7 @@ describe('recent user-reported UI regression guards', () => {
   const css = () => fs.readFileSync(path.resolve('styles/main.css'), 'utf8');
   const predictionController = () => fs.readFileSync(path.resolve('src/controllers/PredictionController.js'), 'utf8');
   const rasterOverlay = () => fs.readFileSync(path.resolve('src/services/ChinaRasterOverlay.js'), 'utf8');
+  const html = () => fs.readFileSync(path.resolve('index.html'), 'utf8');
 
   test('dark mode forecast cards have explicit dark backgrounds', () => {
     const source = css();
@@ -30,6 +31,31 @@ describe('recent user-reported UI regression guards', () => {
     expect(source).toContain('const FULL_VISUAL_MIN_SCORE = 30');
     expect(source).toContain('const COMPACT_VISUAL_MIN_SCORE = 40');
     expect(source).toContain('mode === RASTER_COLOR_MODES.FULL ? FULL_VISUAL_MIN_SCORE : COMPACT_VISUAL_MIN_SCORE');
+  });
+
+  test('front header and footer are full-bleed while header content stays centered', () => {
+    const source = css();
+    const headerBlock = source.match(/header \{[\s\S]*?\n\}/)?.[0] || '';
+    const rowBlock = source.match(/\.header-top-row \{[\s\S]*?\n\}/)?.[0] || '';
+    const footerBlock = source.match(/footer \{[\s\S]*?\n\}/)?.[0] || '';
+
+    expect(headerBlock).toContain('width: 100vw');
+    expect(headerBlock).toContain('margin-left: calc(50% - 50vw)');
+    expect(rowBlock).toContain('width: min(100%, 1400px)');
+    expect(rowBlock).toContain('margin: 0 auto');
+    expect(footerBlock).toContain('width: 100vw');
+    expect(footerBlock).toContain('margin-left: calc(50% - 50vw)');
+  });
+
+  test('firecloud map period switch uses xiake segmented toggle styling', () => {
+    const page = html();
+    const source = css();
+    const tabsMarkup = page.match(/id="china-spots-tabs-container"[\s\S]*?<\/div>/)?.[0] || '';
+
+    expect(tabsMarkup).toContain('xiake-toggle');
+    expect(tabsMarkup).toContain('xiake-toggle-btn');
+    expect(source).not.toContain('border: 1px solid rgba(255, 120, 0, 0.5)');
+    expect(source).not.toContain('background: rgba(0, 0, 0, 0.4)');
   });
 
   test('dark mode share icon uses muted night color instead of orange accent', () => {
