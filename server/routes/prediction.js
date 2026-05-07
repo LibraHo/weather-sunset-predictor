@@ -19,6 +19,7 @@ const SurroundingService = require('../services/SurroundingService.js');
 const CacheService = require('../services/CacheService.js');
 const cacheConfig = require('../config/cacheConfig.js');
 const orchestrator = require('../services/ProviderOrchestrator');
+const SunCalculator = require('../utils/SunCalculator.js');
 
 // 创建服务实例（使用统一TTL配置）
 const predictionService = new PredictionService();
@@ -51,8 +52,8 @@ function errorResponse(res, status, code, message) {
 function validatePredictionRequest(req, res, next) {
   const { weatherData, date, lat, lon, type } = req.body;
 
-  if (!weatherData || typeof weatherData !== 'object') {
-    return errorResponse(res, 400, 'INVALID_WEATHER_DATA', 'weatherData is required and must be an object');
+  if (weatherData !== undefined && (!weatherData || typeof weatherData !== 'object')) {
+    return errorResponse(res, 400, 'INVALID_WEATHER_DATA', 'weatherData must be an object when provided');
   }
 
   if (!date) {
@@ -72,6 +73,112 @@ function validatePredictionRequest(req, res, next) {
   }
 
   next();
+}
+
+function selectHourlyAt(hourly, referenceTime) {
+  const rows = Array.isArray(hourly) ? hourly : [];
+  if (!rows.length) return { selected: null, selectedIdx: -1 };
+  const refTs = referenceTime instanceof Date && !isNaN(referenceTime.getTime())
+    ? referenceTime.getTime()
+    : Date.now();
+  let selectedIdx = 0;
+  let selected = rows[0];
+  rows.forEach((row, idx) => {
+    if (Math.abs((row.timestamp || 0) - refTs) < Math.abs((selected.timestamp || 0) - refTs)) {
+      selected = row;
+      selectedIdx = idx;
+    }
+  });
+  return { selected, selectedIdx };
+}
+
+function buildWeatherDataFromHourly(selected, hourly, selectedIdx) {
+  let recentPrecipitation6h = 0;
+  let recentRainHours = 0;
+  for (let i = Math.max(0, selectedIdx - 6); i <= selectedIdx; i += 1) {
+    const precipitation = Number(hourly[i]?.precipitation || 0);
+    recentPrecipitation6h += precipitation;
+    if (precipitation > 0) recentRainHours += 1;
+  }
+
+  let prevHourData = null;
+  for (let offset = 1; offset <= 2 && selectedIdx - offset >= 0; offset += 1) {
+    const prev = hourly[selectedIdx - offset];
+    if (prev && prev.shortwaveRadiation != null && prev.shortwaveRadiation > 50) {
+      prevHourData = prev;
+      break;
+    }
+  }
+
+  return {
+    weatherData: {
+      cloudCover: selected.cloudCover || 0,
+      humidity: selected.humidity || 0,
+      visibility: selected.visibility || 10,
+      lowCloudCover: selected.lowClouds || selected.cloudCover || 0,
+      temp: selected.temp || 0,
+      windSpeed: selected.windSpeed || 0,
+      windDirection: selected.windDirection || 0,
+      pressure: selected.pressure || 1013,
+      precipitation: selected.precipitation || 0,
+      recentPrecipitation6h,
+      recentRainHours,
+      lowClouds: selected.lowClouds || 0,
+      midClouds: selected.midClouds || 0,
+      highClouds: selected.highClouds || 0,
+      cloudBaseHeight: selected.cloudBaseHeight ?? null,
+      cape: selected.cape ?? null,
+      weatherCode: selected.weatherCode ?? null,
+      shortwaveRadiation: selected.shortwaveRadiation ?? null,
+      directRadiation: selected.directRadiation ?? null,
+      diffuseRadiation: selected.diffuseRadiation ?? null,
+      waterVapourColumn: selected.waterVapourColumn ?? null,
+      aerosolOpticalDepth: selected.aerosolOpticalDepth ?? null,
+      dust: selected.dust ?? null,
+      pm2_5: selected.pm2_5 ?? null,
+      pm10: selected.pm10 ?? null,
+      aqi: selected.aqi ?? null,
+    },
+    prevHourData,
+    rainedRecently: recentPrecipitation6h >= 0.2
+  };
+}
+
+async function buildClosedLoopPredictionInput({ lat, lon, date, type, referenceTime }) {
+  const targetDate = date ? new Date(date) : new Date();
+  if (!(targetDate instanceof Date) || isNaN(targetDate.getTime())) {
+    throw new Error('Invalid date');
+  }
+
+  let refTime = referenceTime ? new Date(referenceTime) : null;
+  if (!(refTime instanceof Date) || isNaN(refTime.getTime())) {
+    refTime = type === 'sunrise'
+      ? SunCalculator.getSunriseTime(targetDate, lat, lon)
+      : SunCalculator.getSunsetTime(targetDate, lat, lon);
+  }
+
+  const weatherResponse = await orchestrator.fetchWeatherData(lat, lon, 168);
+  const hourly = Array.isArray(weatherResponse.data) ? weatherResponse.data : [];
+  if (!hourly.length) {
+    const error = new Error('No weather data available');
+    error.code = 'NO_WEATHER_DATA';
+    throw error;
+  }
+
+  const { selected, selectedIdx } = selectHourlyAt(hourly, refTime);
+  const built = buildWeatherDataFromHourly(selected, hourly, selectedIdx);
+  const azimuth = EnhancedPredictionService.calculateSolarAzimuth(refTime, lat, lon);
+  const remoteCloudData = await surroundingService.getSolarDirectionLightPathSamples({
+    lat, lon, date: targetDate, type, azimuth, referenceTime: refTime
+  });
+
+  return {
+    ...built,
+    referenceTime: refTime,
+    providerMeta: weatherResponse.providerMeta || null,
+    remoteCloudData,
+    source: 'backend_closed_loop'
+  };
 }
 
 /**
@@ -216,19 +323,36 @@ router.post('/calculate', validatePredictionRequest, (req, res) => {
  *   data: { score, quality, status, icon, ... }
  * }
  */
-router.post('/enhanced', validatePredictionRequest, (req, res) => {
+router.post('/enhanced', validatePredictionRequest, async (req, res) => {
   try {
-    const { weatherData, date, lat, lon, type, options = {} } = req.body;
+    const { weatherData, date, lat, lon, type, options = {}, referenceTime } = req.body;
 
-    console.log(`[PredictionRoute] Enhanced prediction request: lat=${lat}, lon=${lon}, type=${type}`);
+    console.log(`[PredictionRoute] Enhanced ${weatherData ? 'legacy-weather' : 'closed-loop'} prediction request: lat=${lat}, lon=${lon}, type=${type}`);
+
+    const closedLoop = weatherData
+      ? {
+          weatherData,
+          referenceTime: new Date(date),
+          providerMeta: null,
+          prevHourData: options.prevHourData || null,
+          rainedRecently: Boolean(options.rainedRecently),
+          remoteCloudData: options.remoteCloudData || null,
+          source: 'client_weather_legacy'
+        }
+      : await buildClosedLoopPredictionInput({ lat, lon, date, type, referenceTime });
 
     const result = EnhancedPredictionService.calculateEnhancedPrediction(
-      weatherData,
-      date,
+      closedLoop.weatherData,
+      closedLoop.referenceTime,
       lat,
       lon,
       type,
-      options
+      {
+        ...options,
+        prevHourData: closedLoop.prevHourData,
+        rainedRecently: closedLoop.rainedRecently,
+        remoteCloudData: closedLoop.remoteCloudData
+      }
     );
 
     // 任务 56.2：旧字段兼容窗口（deprecated 标注，保留兼容字段供旧客户端使用）
@@ -240,6 +364,15 @@ router.post('/enhanced', validatePredictionRequest, (req, res) => {
       canvasScore: result.canvasAnalysis?.score ?? null,
       // @deprecated - 使用 breakdown.baseScore 替代
       baseScore: result.breakdown?.baseScore ?? null,
+      cloudLayers: {
+        low: closedLoop.weatherData.lowClouds,
+        mid: closedLoop.weatherData.midClouds,
+        high: closedLoop.weatherData.highClouds,
+      },
+      providerMeta: closedLoop.providerMeta,
+      weatherDataSource: closedLoop.source || 'backend_closed_loop',
+      referenceTime: closedLoop.referenceTime.toISOString(),
+      remoteCloudData: closedLoop.remoteCloudData,
     };
 
     res.json({
