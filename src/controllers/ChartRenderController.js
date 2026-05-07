@@ -58,6 +58,13 @@ class ChartRenderController {
     const container = document.getElementById(containerId);
     if (!container) return;
 
+    const escapeHtml = (value) => String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+
     const getConvertedValue = (value, chartParam) => {
       if (chartParam === 'temp') {
         return this.getConvertedTemp(value);
@@ -112,6 +119,17 @@ class ChartRenderController {
       };
     };
 
+    const getWeatherLabel = (point) => {
+      const precipitation = Number(point?.precipitation ?? 0);
+      const cloudCover = Number(point?.cloudCover ?? 0);
+
+      if (precipitation >= 0.1) return this.i18n.t('weather.precipitation');
+      if (cloudCover > 70) return this.i18n.t('weather.overcast');
+      if (cloudCover > 30) return this.i18n.t('weather.cloudy');
+      if (cloudCover > 10) return this.i18n.t('weather.partlyCloudy');
+      return this.i18n.t('weather.clear');
+    };
+
     const points = hourlyData.map((d, i) => {
       const value = getConvertedValue(d[param], param);
       const x = padding.left + (i / (hourlyData.length - 1)) * contentWidth;
@@ -121,6 +139,7 @@ class ChartRenderController {
         x,
         y,
         value,
+        weather: getWeatherLabel(d),
         hour: t.hour,
         month: t.month,
         day: t.day,
@@ -218,6 +237,20 @@ class ChartRenderController {
 
     html += '</svg>';
     html += '</div>';
+
+    if (param === 'temp') {
+      const weatherStep = isMobile ? 4 : 3;
+      const weatherItems = points.filter((p) => p.idx % weatherStep === 0 || p.idx === points.length - 1);
+      html += '<div class="hourly-weather-strip">';
+      weatherItems.forEach((p) => {
+        html += '<div class="hourly-weather-chip">';
+        html += `<span class="hourly-weather-time">${escapeHtml(`${p.hour}:00`)}</span>`;
+        html += `<span class="hourly-weather-text">${escapeHtml(p.weather)}</span>`;
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
     html += '</div>';
 
     container.innerHTML = html;

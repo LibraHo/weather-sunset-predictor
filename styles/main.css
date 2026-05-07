@@ -2966,6 +2966,38 @@ body.theme-dark .prediction-analysis {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
 }
+
+.hourly-weather-strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.hourly-weather-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: var(--theme-panel-soft, var(--color-card-bg));
+  border: 1px solid var(--theme-card-border, var(--color-border));
+  color: var(--theme-text, var(--color-text));
+  font-size: 0.78rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.hourly-weather-time {
+  color: var(--theme-text-muted, var(--color-text-light));
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.hourly-weather-text {
+  font-weight: 850;
+}
 /* 图表容器 */
 .chart-container {
   width: 100%;
