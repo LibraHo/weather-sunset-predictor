@@ -50,6 +50,22 @@ describe('ShareCardGenerator', () => {
     expect(generator._fmtTime('2026-04-24T06:05:00Z')).toMatch(/^\d{2}:05$/);
   });
 
+  test('_fmtDate localizes share card date and weekday', () => {
+    generator.setI18n({ currentLanguage: 'en-US', t: jest.fn(key => key) });
+    const enDate = generator._fmtDate('2026-04-24T10:30:00Z');
+
+    expect(enDate).toMatch(/2026/);
+    expect(enDate).toMatch(/Apr|April|Fri|Friday/);
+    expect(enDate).not.toContain('年');
+    expect(enDate).not.toContain('周');
+
+    generator.setI18n({ currentLanguage: 'ja-JP', t: jest.fn(key => key) });
+    const jaDate = generator._fmtDate('2026-04-24T10:30:00Z');
+
+    expect(jaDate).toContain('2026');
+    expect(jaDate).not.toContain('周五');
+  });
+
   test('_gauge chooses quality labels and score colors across thresholds', () => {
     const theme = generator.themes.sunset;
 

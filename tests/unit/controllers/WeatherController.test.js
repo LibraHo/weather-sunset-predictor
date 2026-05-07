@@ -294,7 +294,7 @@ describe('WeatherController - 24小时温度连续化', () => {
 
   // ========== 修复：_createDayCard 使用 day-meta-lines（非 day-meta-icons-row）==========
 
-  test('每日概览应按"降水/风速/风向"文字顺序展示风信息', () => {
+  test('每日概览应按"降水概率/风速风向"顺序展示天气信息', () => {
     controller.i18n = {
       currentLanguage: 'zh-CN',
       t: jest.fn((key) => {
@@ -309,8 +309,8 @@ describe('WeatherController - 24小时温度连续化', () => {
     }));
 
     const dayData = [
-      { timestamp: new Date('2026-06-18T00:00:00Z').getTime(), temp: 30, cloudCover: 20, precipitation: 0.2, windSpeed: 8, windDirection: 90, pressure: 1008 },
-      { timestamp: new Date('2026-06-18T03:00:00Z').getTime(), temp: 10, cloudCover: 20, precipitation: 0, windSpeed: 12, windDirection: 120, pressure: 1008 }
+      { timestamp: new Date('2026-06-18T00:00:00Z').getTime(), temp: 30, humidity: 60, cloudCover: 20, precipitation: 0.2, windSpeed: 8, windDirection: 90, pressure: 1008 },
+      { timestamp: new Date('2026-06-18T03:00:00Z').getTime(), temp: 10, humidity: 80, cloudCover: 20, precipitation: 0, windSpeed: 12, windDirection: 120, pressure: 1008 }
     ];
 
     const card = controller._createDayCard(dayData, 0);
@@ -320,8 +320,9 @@ describe('WeatherController - 24小时温度连续化', () => {
 
     const chips = card.querySelectorAll('.day-meta-chip');
     expect(chips).toHaveLength(2);
+    expect(card.querySelector('.day-meta-humidity')).toBeNull();
 
-    // 单行两组：降水 + 风速/风向
+    // 纵向信息：降水概率 + 风速/风向
     expect(chips[0].querySelector('.day-meta-svg-icon svg')).not.toBeNull();
     expect(chips[0].textContent).toContain('50%');
     expect(chips[1].querySelector('.day-meta-svg-icon svg')).not.toBeNull();
@@ -620,11 +621,12 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(() => controller.switchView('map')).not.toThrow();
   });
 
-  test('_getWeatherIcon: 各云量/降水阈值返回正确图标', () => {
-    expect(controller._getWeatherIcon(20, 10)).toBe('☀️');
-    expect(controller._getWeatherIcon(50, 10)).toBe('⛅');
-    expect(controller._getWeatherIcon(80, 10)).toBe('☁️');
-    expect(controller._getWeatherIcon(20, 60)).toBe('🌧️');
+  test('_getWeatherIcon: 各云量/降水阈值返回稳定 SVG 图标', () => {
+    expect(controller._getWeatherIcon(20, 10)).toContain('weather-icon-sunny');
+    expect(controller._getWeatherIcon(50, 10)).toContain('weather-icon-partly-cloudy');
+    expect(controller._getWeatherIcon(80, 10)).toContain('weather-icon-cloud');
+    expect(controller._getWeatherIcon(20, 60)).toContain('weather-icon-rain');
+    expect(controller._getWeatherIcon(20, 60)).not.toMatch(/[🌧️☁️⛅☀️]/u);
   });
 
   test('buildContinuous24HourData: 空数组返回空', () => {

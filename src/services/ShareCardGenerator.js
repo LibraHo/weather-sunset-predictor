@@ -468,8 +468,19 @@ class ShareCardGenerator {
   _fmtDate(d) {
     if (!d) return '';
     const dt = d instanceof Date ? d : new Date(d);
-    const wd = ['周日','周一','周二','周三','周四','周五','周六'][dt.getDay()];
-    return `${dt.getFullYear()}年${dt.getMonth()+1}月${dt.getDate()}日 ${wd}`;
+    const locale = this.i18n?.currentLanguage || 'zh-CN';
+
+    try {
+      return new Intl.DateTimeFormat(locale, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'short'
+      }).format(dt);
+    } catch (error) {
+      console.warn('[ShareCardGenerator] date formatting failed:', error);
+      return dt.toLocaleDateString(locale);
+    }
   }
 
   _fmtTime(d) {

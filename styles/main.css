@@ -8207,3 +8207,140 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
     padding: 12px;
   }
 }
+
+/* Desktop 7-day forecast cards: larger vertical four-line layout */
+@media (min-width: 900px) {
+  .weekly-cards-container {
+    gap: 14px;
+    padding-bottom: 18px;
+    overflow-x: visible;
+  }
+
+  .day-card {
+    min-width: 0;
+    min-height: 154px;
+    padding: 16px 14px 14px !important;
+    gap: 8px !important;
+    justify-content: flex-start;
+    border-radius: 14px;
+  }
+
+  .day-label {
+    font-size: 1.04rem !important;
+    line-height: 1.12 !important;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+  }
+
+  .day-label-date {
+    font-size: 0.86rem !important;
+    line-height: 1.1 !important;
+    font-weight: 600;
+  }
+
+  .day-card .weather-icon {
+    font-size: 2.05rem !important;
+    line-height: 1 !important;
+    margin: 2px 0 0 !important;
+    transform: none;
+  }
+
+  .day-card .temp-range-inline {
+    display: block !important;
+    font-size: 1.08rem !important;
+    line-height: 1.1 !important;
+    font-weight: 850;
+    transform: none;
+    margin: 0 !important;
+  }
+
+  .day-meta-inline {
+    display: grid !important;
+    grid-template-rows: auto auto;
+    gap: 7px !important;
+    width: 100%;
+    transform: none;
+    margin-top: 0 !important;
+    justify-items: center !important;
+  }
+
+  .day-meta-chip {
+    display: inline-grid !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: var(--color-text-light);
+    font-size: 0.9rem !important;
+    line-height: 1.12 !important;
+    font-weight: 760;
+    white-space: nowrap;
+  }
+
+  .day-meta-chip .value {
+    font-size: 0.9rem !important;
+    line-height: 1.12 !important;
+    font-weight: 800;
+  }
+
+  .day-meta-precip {
+    grid-template-columns: 18px auto !important;
+    column-gap: 5px !important;
+  }
+
+  .day-meta-wind {
+    grid-template-columns: 18px auto 16px !important;
+    column-gap: 5px !important;
+  }
+
+  .day-meta-chip .icon {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .day-meta-chip .day-meta-svg-icon svg {
+    width: 17px !important;
+    height: 17px !important;
+  }
+
+  .day-meta-chip .day-wind-direction-icon {
+    width: 16px !important;
+    height: 16px !important;
+    font-size: 0.95rem !important;
+  }
+}
+
+/* 7天卡片天气图标改用内联 SVG，避免 emoji 字体缺失导致截图/设备空白 */
+.weather-icon-svg {
+  width: 1.15em;
+  height: 1.15em;
+  display: inline-block;
+  vertical-align: middle;
+  overflow: visible;
+}
+.weather-icon-svg .weather-svg-sun {
+  fill: #fbbf24;
+  stroke: #f59e0b;
+  stroke-width: 1.4;
+}
+.weather-icon-svg .weather-svg-ray,
+.weather-icon-svg .weather-svg-rain {
+  fill: none;
+  stroke: #f59e0b;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.weather-icon-svg .weather-svg-cloud {
+  fill: #eef2ff;
+  stroke: #64748b;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.weather-icon-rain .weather-svg-rain {
+  stroke: #2563eb;
+}
+.day-card .weather-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
