@@ -1730,19 +1730,33 @@ class PredictionController {
     }
 
     const language = this.i18n?.currentLanguage || 'zh-CN';
-    const directions = language === 'en-US'
-      ? [
+    const directionSets = {
+      'zh-CN': [
+        '正北', '东北偏北', '东北', '东北偏东',
+        '正东', '东南偏东', '东南', '东南偏南',
+        '正南', '西南偏南', '西南', '西南偏西',
+        '正西', '西北偏西', '西北', '西北偏北'
+      ],
+      'zh-TW': [
+        '正北', '東北偏北', '東北', '東北偏東',
+        '正東', '東南偏東', '東南', '東南偏南',
+        '正南', '西南偏南', '西南', '西南偏西',
+        '正西', '西北偏西', '西北', '西北偏北'
+      ],
+      'ja-JP': [
+        '北', '北北東', '北東', '東北東',
+        '東', '東南東', '南東', '南南東',
+        '南', '南南西', '南西', '西南西',
+        '西', '西北西', '北西', '北北西'
+      ],
+      'en-US': [
         'N', 'NNE', 'NE', 'ENE',
         'E', 'ESE', 'SE', 'SSE',
         'S', 'SSW', 'SW', 'WSW',
         'W', 'WNW', 'NW', 'NNW'
       ]
-      : [
-        '正北', '东北偏北', '东北', '东北偏东',
-        '正东', '东南偏东', '东南', '东南偏南',
-        '正南', '西南偏南', '西南', '西南偏西',
-        '正西', '西北偏西', '西北', '西北偏北'
-      ];
+    };
+    const directions = directionSets[language] || directionSets['en-US'];
 
     const index = Math.round(prediction.sunAzimuth / 22.5) % 16;
     return directions[index];
