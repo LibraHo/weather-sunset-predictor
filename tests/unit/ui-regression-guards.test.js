@@ -40,13 +40,14 @@ describe('recent user-reported UI regression guards', () => {
     const footerBlock = source.match(/footer \{[\s\S]*?\n\}/)?.[0] || '';
 
     expect(headerBlock).toContain('width: auto');
-    expect(headerBlock).toContain('margin: 0 0 16px');
+    expect(headerBlock).toContain('margin: 0 var(--spacing-md) 16px');
     expect(headerBlock).toContain('border-radius: var(--radius-lg)');
     expect(headerBlock).not.toContain('width: 100vw');
     expect(headerBlock).not.toContain('margin-left: calc(50% - 50vw)');
     expect(rowBlock).toContain('width: 100%');
     expect(rowBlock).toContain('margin: 0');
     expect(footerBlock).toContain('width: auto');
+    expect(footerBlock).toContain('margin: 0 var(--spacing-md)');
     expect(footerBlock).toContain('border-radius: var(--radius-lg)');
     expect(footerBlock).not.toContain('width: 100vw');
     expect(footerBlock).not.toContain('margin-left: calc(50% - 50vw)');
