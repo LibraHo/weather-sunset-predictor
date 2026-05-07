@@ -84,18 +84,18 @@ export default class ChinaRasterOverlayManager {
 
     // 降级：动态创建
     this._tabContainer = document.createElement('div');
-    this._tabContainer.className = 'china-spots-tabs china-raster-tabs';
+    this._tabContainer.className = 'china-spots-tabs china-raster-tabs xiake-toggle';
 
     const tabs = [
-      { period: 'sunrise', label: '朝霞 🌄' },
-      { period: 'sunset',  label: '晚霞 🌅' }
+      { period: 'sunrise', label: '朝霞' },
+      { period: 'sunset',  label: '晚霞' }
     ];
 
     tabs.forEach(tab => {
       const btn = document.createElement('button');
       btn.textContent = tab.label;
       btn.dataset.period = tab.period;
-      btn.className = 'china-spots-tab';
+      btn.className = 'china-spots-tab xiake-toggle-btn';
       btn.addEventListener('click', () => this.switchPeriod(tab.period));
       this._tabContainer.appendChild(btn);
       this._tabButtons[tab.period] = btn;
@@ -114,6 +114,7 @@ export default class ChinaRasterOverlayManager {
     Object.entries(this._tabButtons).forEach(([period, btn]) => {
       const isActive = period === this._activePeriod;
       btn.classList.toggle('is-active', isActive);
+      btn.classList.toggle('active', isActive);
     });
   }
 

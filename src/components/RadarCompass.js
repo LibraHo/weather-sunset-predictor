@@ -377,27 +377,38 @@ class RadarCompass {
       return nearCardinal ? (R_HIGH * 0.82) : (R_HIGH * 0.92);
     };
 
+    const sunEventIconSvg = (x, y, type) => {
+      const arrow = type === 'sunrise'
+        ? '<path d="M17 13V4m0 0-3 3m3-3 3 3"/>'
+        : '<path d="M17 4v9m0 0-3-3m3 3 3-3"/>';
+      return `<g class="radar-sun-event-icon" transform="translate(${(x - 11).toFixed(1)} ${(y - 8).toFixed(1)})" fill="none" stroke="${T.accent || '#f97316'}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 14h14"/>
+        <path d="M4.5 14a4 4 0 0 1 8 0"/>
+        ${arrow}
+      </g>`;
+    };
+
     let sunIcons = '';
     const isDawn = predictionType === 'sunrise';
     if (isDawn && sun.sunrise != null) {
       const iconR = getSunRadius(sun.sunrise);
       const [ix, iy] = this._pt(cx, cy, iconR, sun.sunrise);
       sunIcons = `
-        <text x="${ix.toFixed(1)}" y="${(iy + 4).toFixed(1)}" text-anchor="middle" font-size="15">🌅</text>
+        ${sunEventIconSvg(ix, iy, 'sunrise')}
         <text x="${ix.toFixed(1)}" y="${(iy + 17).toFixed(1)}" text-anchor="middle" font-size="9"
           fill="${T.subtitle || '#666666'}">${text.sunrise || '日出'}</text>`;
     } else if (!isDawn && sun.sunset != null) {
       const iconR = getSunRadius(sun.sunset);
       const [ix, iy] = this._pt(cx, cy, iconR, sun.sunset);
       sunIcons = `
-        <text x="${ix.toFixed(1)}" y="${(iy + 4).toFixed(1)}" text-anchor="middle" font-size="15">🌇</text>
+        ${sunEventIconSvg(ix, iy, 'sunset')}
         <text x="${ix.toFixed(1)}" y="${(iy + 17).toFixed(1)}" text-anchor="middle" font-size="9"
           fill="${T.subtitle || '#666666'}">${text.sunset || '日落'}</text>`;
     } else if (sun.sunset != null) {
       const iconR = getSunRadius(sun.sunset);
       const [ix, iy] = this._pt(cx, cy, iconR, sun.sunset);
       sunIcons = `
-        <text x="${ix.toFixed(1)}" y="${(iy + 4).toFixed(1)}" text-anchor="middle" font-size="15">🌇</text>
+        ${sunEventIconSvg(ix, iy, 'sunset')}
         <text x="${ix.toFixed(1)}" y="${(iy + 17).toFixed(1)}" text-anchor="middle" font-size="9"
           fill="${T.subtitle || '#666666'}">${text.sunset || '日落'}</text>`;
     }

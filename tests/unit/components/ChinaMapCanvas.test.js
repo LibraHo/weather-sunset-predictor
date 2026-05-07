@@ -68,13 +68,31 @@ describe('ChinaMapCanvas mobile city label selection', () => {
     expect(selectCitiesForZoom({ level1, level2, level3 }, 4.5, false)).toHaveLength(22);
   });
 
+  it('thins dense island and peninsula labels at low zoom', () => {
+    const denseLevel1 = [
+      { name: '北京' }, { name: '台北' }, { name: '新北' }, { name: '桃园' },
+      { name: '台中' }, { name: '台南' }, { name: '高雄' }, { name: '基隆' },
+      { name: '首尔' }, { name: '釜山' }, { name: '东京' }, { name: '横滨' }, { name: '大阪' }, { name: '京都' }
+    ];
+
+    const lowZoomNames = selectCitiesForZoom({ level1: denseLevel1 }, 6.8, false).map(city => city.name);
+    expect(lowZoomNames).toEqual(['北京', '台北', '首尔', '东京', '大阪']);
+
+    const higherZoomNames = selectCitiesForZoom({ level1: denseLevel1 }, 8.2, false).map(city => city.name);
+    expect(higherZoomNames).toContain('新北');
+    expect(higherZoomNames).toContain('高雄');
+    expect(higherZoomNames).toContain('釜山');
+    expect(higherZoomNames).toContain('横滨');
+  });
+
   it('delays dense mobile labels until higher zoom than desktop', () => {
     expect(selectCitiesForZoom({ level1, level2, level3 }, 8, true)).toHaveLength(level1.length);
     expect(selectCitiesForZoom({ level1, level2, level3 }, 9, true)).toHaveLength(level1.length + level2.length);
     expect(selectCitiesForZoom({ level1, level2, level3 }, 10, true)).toHaveLength(level1.length + level2.length);
     expect(selectCitiesForZoom({ level1, level2, level3 }, 11, true)).toHaveLength(level1.length + level2.length + level3.length);
 
-    expect(selectCitiesForZoom({ level1, level2, level3 }, 7.5, false)).toHaveLength(level1.length + level2.length);
+    expect(selectCitiesForZoom({ level1, level2, level3 }, 7.5, false)).toHaveLength(level1.length);
+    expect(selectCitiesForZoom({ level1, level2, level3 }, 8.2, false)).toHaveLength(level1.length + level2.length);
     expect(selectCitiesForZoom({ level1, level2, level3 }, 10, false)).toHaveLength(level1.length + level2.length + level3.length);
   });
 });
