@@ -715,6 +715,52 @@ function calcSampleBlock(sample, solarElevation) {
   };
 }
 
+function analyzeRemoteLightPath(samples) {
+  const valid = Array.isArray(samples) ? samples.filter(s => !s.error) : [];
+  if (valid.length === 0) return { available: false, modifier: 1, cap: null, reason: 'no_remote_samples' };
+
+  const avg = (key) => valid.reduce((sum, s) => sum + Number(s[key] || 0), 0) / valid.length;
+  const near = valid[0] || {};
+  const far = valid[valid.length - 1] || {};
+  const lowMid = avg('lowCloud') * 0.65 + avg('midCloud') * 0.35;
+  const high = avg('highCloud');
+  const farWall = (Number(far.lowCloud || 0) * 0.7 + Number(far.midCloud || 0) * 0.3) >= 68;
+  const nearWall = (Number(near.lowCloud || 0) * 0.7 + Number(near.midCloud || 0) * 0.3) >= 72;
+  const opening = lowMid <= 28 && high >= 25;
+  const clearCorridor = lowMid <= 22;
+
+  if (farWall || nearWall) {
+    return {
+      available: true,
+      modifier: nearWall ? 0.72 : 0.82,
+      cap: nearWall ? 48 : 56,
+      reason: nearWall ? 'solar_direction_near_cloud_wall' : 'solar_direction_far_cloud_wall',
+      lowMid: parseFloat(lowMid.toFixed(1)),
+      high: parseFloat(high.toFixed(1))
+    };
+  }
+
+  if (opening) {
+    return {
+      available: true,
+      modifier: clearCorridor ? 1.12 : 1.06,
+      cap: null,
+      reason: clearCorridor ? 'solar_direction_clear_opening' : 'solar_direction_partial_opening',
+      lowMid: parseFloat(lowMid.toFixed(1)),
+      high: parseFloat(high.toFixed(1))
+    };
+  }
+
+  return {
+    available: true,
+    modifier: lowMid >= 55 ? 0.92 : 1.0,
+    cap: lowMid >= 55 ? 64 : null,
+    reason: lowMid >= 55 ? 'solar_direction_cloudy_corridor' : 'solar_direction_neutral',
+    lowMid: parseFloat(lowMid.toFixed(1)),
+    high: parseFloat(high.toFixed(1))
+  };
+}
+
 /**
  * 第三模块：光路逻辑（物理重构版）
  * 基于太阳高度角 + 云底高度 + 多点采样估算光路遮挡概率。
@@ -739,6 +785,8 @@ function scoreLightPath(weatherData, solarElevation, azimuth, remoteCloudData = 
 
   // 低云少时降低遮挡概率计算权重（低云少=光路通畅）
   const lowClouds = weatherData.lowClouds || 0;
+  const midClouds = weatherData.midClouds || 0;
+  const highClouds = weatherData.highClouds || 0;
   let occlusionWeight = 1.0;
   if (lowClouds < 20) {
     occlusionWeight = 0.7; // 低云极少，光路通畅，降低遮挡影响
@@ -749,6 +797,13 @@ function scoreLightPath(weatherData, solarElevation, azimuth, remoteCloudData = 
   const rawOcclusionProbability = 1 - sampleResults.reduce((prod, s) => prod * (1 - s.weightedBlock), 1);
   const occlusionProbability = rawOcclusionProbability * occlusionWeight;
   let lightPathScore = 100 * (1 - occlusionProbability);
+  const directionalAnalysis = hasRemoteData ? analyzeRemoteLightPath(samples) : null;
+  if (directionalAnalysis?.available) {
+    lightPathScore *= directionalAnalysis.modifier;
+    if (directionalAnalysis.cap != null) {
+      lightPathScore = Math.min(lightPathScore, directionalAnalysis.cap);
+    }
+  }
 
   // 恶劣天气硬封顶（作用于光路分本身）
   const cloudCover = weatherData.cloudCover || 0;
@@ -782,12 +837,15 @@ function scoreLightPath(weatherData, solarElevation, azimuth, remoteCloudData = 
   return {
     score: parseFloat(lightPathScore.toFixed(1)),
     occlusionProbability: parseFloat(occlusionProbability.toFixed(3)),
+    azimuth,
+    source: hasRemoteData ? (remoteCloudData.source || 'remote_samples') : 'local_estimate',
     samples: sampleResults.map(({ distanceKm, cloudBaseHeight, criticalElevation, block }) => ({
       distanceKm,
       cloudBaseHeight,
       criticalElevation,
       block
     })),
+    directionalAnalysis,
     capReason,
     explain: capReason ? '恶劣天气触发光路分封顶' : '基于太阳几何与分层云量的光路估算',
     // --- deprecated fields (Phase 13 兼容窗口，Phase 14 移除) ---
@@ -855,8 +913,29 @@ function scoreRendering(weatherData, rainedRecently = false) {
   let specialMode = null;
 
   if (rainedRecently) {
-    rainBonus = 1.2;
-    specialMode = 'post_rain';      // 雨后初晴模式
+    const recentRain = Number(weatherData.recentPrecipitation6h || 0);
+    const direct = Number(weatherData.directRadiation);
+    const shortwave = Number(weatherData.shortwaveRadiation);
+    const directRatio = Number.isFinite(direct) && Number.isFinite(shortwave) && shortwave > 50 ? direct / shortwave : null;
+    const waterVapour = Number(weatherData.waterVapourColumn);
+    const aerosolBad = (Number.isFinite(aerosolOpticalDepth) && aerosolOpticalDepth > 0.45) || pm25 > 75 || pm10 > 120 || dust > 80;
+    const grayCurtain = aerosolBad || visibility < 8 || humidity > 92 || (Number.isFinite(waterVapour) && waterVapour > 7) || (directRatio != null && directRatio < 0.18);
+    const cleanAfterRain = visibility >= 12 && !aerosolBad && humidity <= 90 && (directRatio == null || directRatio >= 0.25);
+    const hasPostRainDiscriminators = recentRain > 0 || Number.isFinite(aerosolOpticalDepth) || pm25 > 0 || pm10 > 0 || dust > 0 || Number.isFinite(waterVapour) || directRatio != null;
+
+    if (!hasPostRainDiscriminators) {
+      rainBonus = 1.2;
+      specialMode = 'post_rain';
+    } else if (grayCurtain) {
+      rainBonus = recentRain >= 2 ? 0.78 : 0.88;
+      specialMode = 'post_rain_gray_curtain';
+    } else if (cleanAfterRain) {
+      rainBonus = 1.15;
+      specialMode = 'post_rain_clear';
+    } else {
+      rainBonus = 1.0;
+      specialMode = 'post_rain_neutral';
+    }
   }
 
   // 4. AQI修正（色彩倾向 + 独立惩罚系数）
@@ -1206,7 +1285,8 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   const azimuth = calculateSolarAzimuth(dateObj, lat, lon);
   // 优先使用 V2 物理重构算法（回滚开关：LIGHT_PATH_V2_ENABLED=false）
   const v2Result = LightPathV2Service.scoreFromWeatherData(weatherData, timeCheck.elevation, azimuth);
-  const lightPathScoreRaw = v2Result !== null
+  const hasDirectionalRemoteSamples = remoteCloudData && Array.isArray(remoteCloudData.samples) && remoteCloudData.samples.length >= 3;
+  const lightPathScoreRaw = (v2Result !== null && !hasDirectionalRemoteSamples)
     ? { ...v2Result, hasRemoteData: false, nearPointScore: v2Result.score, farPointScore: v2Result.score, breakdown: { nearPointCloudCover: weatherData.cloudCover || 0, farPointCloudCover: weatherData.cloudCover || 0 } }
     : scoreLightPath(weatherData, timeCheck.elevation, azimuth, remoteCloudData);
   const lightPathScore = {
@@ -1294,6 +1374,20 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     adjustedDescription = aerosolHazeCap.level === 'extreme' ? 'haze_light_suppressed' : 'weak_local_colors';
   }
 
+  const postRainMode = renderingFactor.breakdown?.specialMode || null;
+  let postRainAdjustment = { applied: false, mode: postRainMode, cap: null, reason: null };
+  if (postRainMode === 'post_rain_gray_curtain') {
+    const lowMid = (weatherData.lowClouds || 0) * 0.6 + (weatherData.midClouds || 0) * 0.4;
+    const directionalWall = lightPathScore.directionalAnalysis?.reason?.includes('cloud_wall');
+    const cap = directionalWall || lowMid >= 55 ? 42 : 50;
+    adjustedScore = Math.min(adjustedScore, cap);
+    adjustedStatus = adjustedScore < 40 ? 'no_fire_cloud' : 'light_glow';
+    adjustedDescription = 'haze_light_suppressed';
+    postRainAdjustment = { applied: true, mode: postRainMode, cap, reason: directionalWall ? 'post_rain_gray_curtain_direction_wall' : 'post_rain_gray_curtain_cap' };
+  } else if (postRainMode === 'post_rain_clear') {
+    postRainAdjustment = { applied: true, mode: postRainMode, cap: null, reason: 'post_rain_clear_bonus' };
+  }
+
   // 7. 恶劣天气硬性封顶
   const severeCap = applySevereWeatherCap(adjustedScore, weatherData);
   adjustedScore = severeCap.score;
@@ -1362,6 +1456,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     thickHighCloudPenalty,
     aerosolHazeCap,
     highCloudCarrierAdjustment,
+    postRainAdjustment,
     status: adjustedStatus,
     description: adjustedDescription,
     scoreBeforeOcclusion: finalResult.score,

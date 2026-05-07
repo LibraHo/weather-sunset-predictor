@@ -12,16 +12,53 @@ if (!global.TextDecoder) {
 describe('Prediction API Integration', () => {
   let app;
   let request;
+  let orchestrator;
+  let originalFetchWeatherData;
+
+  const mockWeatherResponse = {
+    provider: 'mock',
+    providerMeta: { name: 'mock', cloudSource: 'mock_hourly', airQualitySource: 'mock_air' },
+    data: Array.from({ length: 12 }, (_, idx) => ({
+      timestamp: new Date(`2024-06-21T${String(12 + idx).padStart(2, '0')}:00:00Z`).getTime(),
+      cloudCover: 55,
+      lowClouds: idx % 3 === 0 ? 18 : 22,
+      midClouds: 35,
+      highClouds: 45,
+      humidity: 58,
+      visibility: 16,
+      precipitation: idx < 3 ? 0.1 : 0,
+      shortwaveRadiation: 320,
+      directRadiation: 170,
+      diffuseRadiation: 80,
+      waterVapourColumn: 3.2,
+      aerosolOpticalDepth: 0.18,
+      pm2_5: 18,
+      pm10: 35,
+      dust: 10,
+      aqi: 45
+    }))
+  };
 
   beforeAll(async () => {
     const predictionRouterModule = await import('../../../server/routes/prediction.js');
     const supertestModule = await import('supertest');
+    const orchestratorModule = await import('../../../server/services/ProviderOrchestrator.js');
     const predictionRouter = predictionRouterModule.default || predictionRouterModule;
+    orchestrator = orchestratorModule.default || orchestratorModule;
+    originalFetchWeatherData = orchestrator.fetchWeatherData;
     request = supertestModule.default || supertestModule;
 
     app = express();
     app.use(express.json());
     app.use('/api/prediction', predictionRouter);
+  });
+
+  beforeEach(() => {
+    orchestrator.fetchWeatherData = async () => mockWeatherResponse;
+  });
+
+  afterEach(() => {
+    orchestrator.fetchWeatherData = originalFetchWeatherData;
   });
 
   describe('POST /api/prediction/calculate', () => {
@@ -113,14 +150,16 @@ describe('Prediction API Integration', () => {
       expect(res.body.data).toHaveProperty('icon');
     });
 
-    test('rejects missing weatherData with 400', async () => {
+    test('runs closed-loop prediction without frontend weatherData', async () => {
       const { weatherData, ...invalidPayload } = validEnhancedPayload;
       const res = await request(app)
         .post('/api/prediction/enhanced')
         .send(invalidPayload)
-        .expect(400);
+        .expect(200);
 
-      expect(res.body.error).toHaveProperty('code', 'INVALID_WEATHER_DATA');
+      expect(res.body.success).toBe(true);
+      expect(res.body.data).toHaveProperty('weatherDataSource', 'backend_closed_loop');
+      expect(res.body.data).toHaveProperty('remoteCloudData');
     });
   });
 

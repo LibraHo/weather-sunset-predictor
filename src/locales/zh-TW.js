@@ -83,10 +83,10 @@ const translations = {
         "lightPath": {
           "title": "光路條件",
           "subtitle": "夕陽是否能照到雲層",
-          "desc": "低雲、能見度與地平線遮擋會影響陽光抵達中高雲的機率。",
-          "lowCloudEffect": "低雲越多，越容易遮住接近地平線的光線。",
+          "desc": "低雲、能見度與地平線遮擋會影響陽光抵達中高雲的機率。後端會沿太陽方位採樣 50/100/150km，識別透光開口或雲牆遮擋。",
+          "lowCloudEffect": "低雲越多越容易遮光；若太陽方向低/中雲成牆，則保守壓低光路分。",
           "visibility": "能見度越高，光路越乾淨，色彩越清楚。",
-          "formula": "光路分 = 能見度修正 × 低雲遮擋修正"
+          "formula": "光路分 = 幾何/本地光路分 × 低雲係數 × 太陽方向走廊修正"
         },
         "transparency": {
           "title": "3. 大氣透明度",
@@ -268,6 +268,7 @@ const translations = {
           "geometryCap": "幾何封頂",
           "occlusion": "遮擋修正",
           "carrierFloor": "載體保底",
+          "postRainCap": "雨後灰幕封頂",
           "displayCalibration": "展示分校準"
         },
         "details": {
@@ -281,6 +282,8 @@ const translations = {
           "geometryCap": "太陽與雲層幾何條件不足",
           "occlusion": "遠端遮擋壓低最終分",
           "carrierFloor": "高雲載體清透，避免誤傷低估",
+          "directionalSamples": "已接入太陽方位 50/100/150km 周邊採樣",
+          "postRainCap": "雨後水氣/灰幕壓光，霞光按低上限處理",
           "displayCalibration": "最終展示分按預測狀態檔位校準"
         },
         "reasons": {
@@ -305,6 +308,8 @@ const translations = {
       "visibility": { "good": "能見度良好（{{value}}km）", "goodDesc": "空氣通透，觀賞視野好", "moderate": "能見度一般（{{value}}km）", "moderateDesc": "色彩飽和度可能略受影響", "low": "能見度偏低（{{value}}km）", "lowDesc": "霧霾或水氣可能影響觀賞" },
       "humidity": { "moderate": "濕度適中（{{value}}%）", "moderateDesc": "有利於光線散射", "high": "濕度偏高（{{value}}%）", "highDesc": "可能略影響通透感", "low": "濕度偏低（{{value}}%）", "lowDesc": "空氣較乾，色彩可能偏淡" },
       "aerosol": { "moderate": "氣溶膠適中（AOD {{value}}）", "moderateDesc": "有利於增強紅橙色散射", "high": "氣溶膠偏高（AOD {{value}}）", "highDesc": "可能灰霾發暗", "low": "空氣過於通透（AOD {{value}}）", "lowDesc": "顏色可能偏淡" },
+      "lightPath": { "opening": "太陽方向有透光開口", "openingDesc": "後端沿太陽方位採樣 50/100/150km，低中雲走廊較通暢，光線更容易打到雲層", "wall": "太陽方向有雲牆遮擋", "wallDesc": "太陽方位周邊低/中雲偏厚，遠端光路會壓低主評分" },
+      "postRain": { "clear": "雨後空氣清透", "clearDesc": "近6小時有降水，但能見度和顆粒物條件較好，雨後加成保留", "gray": "雨後灰幕風險", "grayDesc": "降水後水氣/顆粒物/直射比不理想，算法按灰幕場景封頂" },
       "layer": { "single": "雲層單一", "singleDesc": "高層雲品質好，仍可形成鮮明火燒雲" }
     },
     "status": {

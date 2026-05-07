@@ -276,6 +276,7 @@ apiAccess: 'API 연동'
           "geometryCap": "Geometry cap",
           "occlusion": "Occlusion",
           "carrierFloor": "Carrier floor",
+          "postRainCap": "비 온 뒤 회색 장막 상한",
           "displayCalibration": "Display calibration"
         },
         "details": {
@@ -289,6 +290,8 @@ apiAccess: 'API 연동'
           "geometryCap": "sun/cloud geometry is not feasible",
           "occlusion": "distant obstruction reduces the score",
           "carrierFloor": "clear high-cloud carrier prevents over-penalty",
+          "directionalSamples": "태양 방위각 50/100/150km 샘플을 반영",
+          "postRainCap": "비 온 뒤 습기나 연무가 노을을 회색 장막으로 바꿈",
           "displayCalibration": "final display score is aligned with the prediction status band"
         },
         "reasons": {
@@ -339,6 +342,8 @@ apiAccess: 'API 연동'
         "high": "에어로졸 높음 (AOD {{value}})", "highDesc": "흐리거나 어둡게 보일 수 있습니다",
         "low": "공기가 너무 맑음 (AOD {{value}})", "lowDesc": "색이 옅을 수 있습니다"
       },
+      "lightPath": { "opening": "태양 방향 광로 열림", "openingDesc": "백엔드가 태양 방위각 50/100/150km를 샘플링하며 저층/중층 구름 통로가 비교적 열려 있습니다", "wall": "태양 방향 구름 벽", "wallDesc": "태양 방향의 저층 또는 중층 구름이 주 점수를 낮춥니다" },
+      "postRain": { "clear": "비 온 뒤 맑은 공기", "clearDesc": "최근 6시간 강수 뒤에도 가시거리와 입자가 양호해 보너스로 유지됩니다", "gray": "비 온 뒤 회색 장막 위험", "grayDesc": "습기, 입자 또는 약한 직사광 때문에 점수를 보수적으로 제한합니다" },
       "layer": { "single": "단일 구름층", "singleDesc": "고층운 상태가 좋으면 선명한 노을은 가능합니다" }
     },
     "status": {

@@ -1302,6 +1302,10 @@ class PredictionController {
       'aerosol.low': '空气过于通透（AOD {{value}}）', 'aerosol.lowDesc': '颜色可能偏淡',
       'aerosol.extremeHaze': '沙尘/灰幕很重', 'aerosol.extremeHazeDesc': '高云虽多，但空气光学条件失效，霞光容易被压成灰黄色',
       'aerosol.hazeCap': '灰幕风险明显', 'aerosol.hazeCapDesc': '颗粒物或气溶胶偏高，会削弱红橙色染色',
+      'lightPath.opening': '太阳方向有透光开口', 'lightPath.openingDesc': '后端沿太阳方位采样 50/100/150km，低中云走廊较通畅，光线更容易打到云层',
+      'lightPath.wall': '太阳方向有云墙遮挡', 'lightPath.wallDesc': '太阳方位周边低/中云偏厚，远端光路会压低主评分',
+      'postRain.clear': '雨后空气清透', 'postRain.clearDesc': '近6小时有降水，但能见度和颗粒物条件较好，雨后加成保留',
+      'postRain.gray': '雨后灰幕风险', 'postRain.grayDesc': '降水后水汽/颗粒物/直射比不理想，算法按灰幕场景封顶',
       'carrier.strong': '高云载体清晰', 'carrier.strongDesc': '高云充足、低云稀少且空气较通透，具备中高分基础',
       'layer.single': '云层单一', 'layer.singleDesc': '高云质量好，仍可形成鲜明火烧云'
     }[key] || fullKey;
@@ -1476,8 +1480,22 @@ class PredictionController {
     }
 
     const carrierAdjustment = prediction?.highCloudCarrierAdjustment;
+    const postRainAdjustment = prediction?.postRainAdjustment;
     if (carrierAdjustment?.applied) {
       add('positive', this._analysisText('carrier.strong'), this._analysisText('carrier.strongDesc'));
+    }
+
+    const directional = prediction?.lightPathAnalysis?.directionalAnalysis;
+    if (directional?.reason?.includes('opening')) {
+      add('positive', this._analysisText('lightPath.opening'), this._analysisText('lightPath.openingDesc'));
+    } else if (directional?.reason?.includes('cloud_wall') || directional?.reason?.includes('cloudy_corridor')) {
+      add('warning', this._analysisText('lightPath.wall'), this._analysisText('lightPath.wallDesc'));
+    }
+
+    if (postRainAdjustment?.mode === 'post_rain_clear') {
+      add('positive', this._analysisText('postRain.clear'), this._analysisText('postRain.clearDesc'));
+    } else if (postRainAdjustment?.mode === 'post_rain_gray_curtain') {
+      add('warning', this._analysisText('postRain.gray'), this._analysisText('postRain.grayDesc'));
     }
 
     if (weather.aod != null) {
@@ -1611,6 +1629,7 @@ class PredictionController {
     const thickHighCloudPenalty = prediction?.thickHighCloudPenalty || prediction?.lightPathAnalysis?.thickHighCloudPenalty;
     const aerosolHazeCap = prediction?.aerosolHazeCap;
     const carrierAdjustment = prediction?.highCloudCarrierAdjustment;
+    const postRainAdjustment = prediction?.postRainAdjustment;
     const severeWeatherCap = prediction?.severeWeatherCap;
     const occlusionAnalysis = prediction?.occlusionAnalysis;
     const geometricModel = prediction?.geometricModel;
@@ -1677,6 +1696,12 @@ class PredictionController {
         value: `≥${fmt(carrierAdjustment.floor, 0)}`,
         detail: ledgerText('details.carrierFloor', {}, 'clear high-cloud carrier prevents over-penalty', '高云载体清透，避免误伤低估'),
         tone: 'good'
+      } : null,
+      postRainAdjustment?.applied && postRainAdjustment.cap ? {
+        label: ledgerText('labels.postRainCap', {}, 'Post-rain cap', '雨后灰幕封顶'),
+        value: `≤${fmt(postRainAdjustment.cap, 0)}`,
+        detail: ledgerText('details.postRainCap', {}, 'post-rain moisture or haze turns the glow into a gray curtain', '雨后水汽/灰幕压光，霞光按低上限处理'),
+        tone: 'bad'
       } : null
     ].filter(Boolean);
 
@@ -1756,7 +1781,7 @@ class PredictionController {
         <div class="score-ledger-summary">${escape(summary)}</div>
         <div class="score-ledger-steps">
           ${step(1, ledgerText('labels.cloudCarrier', {}, 'Cloud carrier', '云层载体'), ledgerText('details.cloudCarrier', {}, 'usable colored cloud surface', '可被染色的云面质量'), fmt(canvasScore, 1), ledgerText('details.cloudPenalty', { low: fmt(prediction?.canvasAnalysis?.lowCloudPenalty, 2), overcast: fmt(prediction?.canvasAnalysis?.overcastPenalty, 2) }, 'low cloud ×{{low}}, overcast ×{{overcast}}', '低云 ×{{low}}，阴天 ×{{overcast}}'))}
-          ${step(2, ledgerText('labels.lightPath', {}, 'Light path', '光路'), ledgerText('details.lightPath', {}, 'sunlight reaches the cloud layer', '阳光是否能打到云层'), fmt(lightPathScore, 1))}
+          ${step(2, ledgerText('labels.lightPath', {}, 'Light path', '光路'), ledgerText('details.lightPath', {}, 'sunlight reaches the cloud layer', '阳光是否能打到云层'), fmt(lightPathScore, 1), prediction?.lightPathAnalysis?.source === 'solar_direction_openmeteo' ? ledgerText('details.directionalSamples', {}, 'solar-azimuth samples at 50/100/150km are included', '已接入太阳方位 50/100/150km 周边采样') : '')}
           ${step(3, ledgerText('labels.baseScore', {}, 'Base score', '基础分'), weightedDescription, fmt(baseScore, 1))}
           ${step(4, ledgerText('labels.rendering', {}, 'Rendering', '显色修正'), renderingDescription, fmt(renderedScore, 1), ledgerText('details.renderingFactors', { visibility: fmt(prediction?.renderingAnalysis?.visibilityFactor, 2), humidity: fmt(prediction?.renderingAnalysis?.humidityFactor, 2), aerosol: fmt(aerosolFactor, 2) }, 'visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}', '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}'))}
           ${adjustmentHtml}

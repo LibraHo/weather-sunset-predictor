@@ -254,6 +254,7 @@ apiAccess: 'Acceso API'
           "geometryCap": "Geometry cap",
           "occlusion": "Occlusion",
           "carrierFloor": "Carrier floor",
+          "postRainCap": "Tope poslluvia",
           "displayCalibration": "Display calibration"
         },
         "details": {
@@ -267,6 +268,8 @@ apiAccess: 'Acceso API'
           "geometryCap": "sun/cloud geometry is not feasible",
           "occlusion": "distant obstruction reduces the score",
           "carrierFloor": "clear high-cloud carrier prevents over-penalty",
+          "directionalSamples": "se incluyen muestras a 50/100/150km según el acimut solar",
+          "postRainCap": "la humedad o bruma tras la lluvia vuelve el resplandor una cortina gris",
           "displayCalibration": "final display score is aligned with the prediction status band"
         },
         "reasons": {
@@ -292,6 +295,8 @@ apiAccess: 'Acceso API'
       "visibility": { "good": "Buena visibilidad ({{value}}km)", "goodDesc": "Aire claro y buena distancia de visión", "moderate": "Visibilidad moderada ({{value}}km)", "moderateDesc": "La saturación puede bajar un poco", "low": "Baja visibilidad ({{value}}km)", "lowDesc": "Bruma o humedad pueden afectar la observación" },
       "humidity": { "moderate": "Humedad moderada ({{value}}%)", "moderateDesc": "Ayuda a la dispersión de la luz", "high": "Humedad alta ({{value}}%)", "highDesc": "Puede reducir la transparencia", "low": "Humedad baja ({{value}}%)", "lowDesc": "El aire seco puede aclarar los colores" },
       "aerosol": { "moderate": "Aerosol moderado (AOD {{value}})", "moderateDesc": "Refuerza la dispersión naranja-roja", "high": "Aerosol alto (AOD {{value}})", "highDesc": "Puede verse brumoso u opaco", "low": "Aire muy limpio (AOD {{value}})", "lowDesc": "Los colores pueden ser más suaves" },
+      "lightPath": { "opening": "Apertura hacia el sol", "openingDesc": "El backend muestrea 50/100/150km según el acimut solar; el corredor de nubes bajas/medias queda relativamente abierto", "wall": "Muro de nubes hacia el sol", "wallDesc": "Las nubes bajas o medias en la dirección solar reducen la puntuación principal" },
+      "postRain": { "clear": "Aire claro después de la lluvia", "clearDesc": "La lluvia de las últimas 6h sigue sumando porque visibilidad y partículas son aceptables", "gray": "Riesgo de cortina gris tras lluvia", "grayDesc": "Humedad, partículas o luz directa débil tras la lluvia limitan la puntuación de forma conservadora" },
       "layer": { "single": "Una sola capa de nubes", "singleDesc": "Buenas nubes altas aún pueden colorearse bien" }
     },
     "status": {

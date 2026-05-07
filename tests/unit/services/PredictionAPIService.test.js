@@ -116,7 +116,8 @@ describe('PredictionAPIService', () => {
       expect(body.lat).toBe(mockLat);
       expect(body.lon).toBe(mockLon);
       expect(body.type).toBe('sunset');
-      expect(body.weatherData.cloudCover).toBe(50);
+      expect(body.weatherData).toBeUndefined();
+      expect(body.referenceTime).toBe(mockDate.toISOString());
     });
 
     test('should handle date as Date object', async () => {
@@ -208,9 +209,9 @@ describe('PredictionAPIService', () => {
 
       const [, options] = mockFetch.mock.calls[0];
       const body = JSON.parse(options.body);
-      expect(body.weatherData.highClouds).toBe(0);
-      expect(body.weatherData.midClouds).toBe(0);
-      expect(body.weatherData.lowClouds).toBe(0);
+      expect(body.weatherData).toBeUndefined();
+      expect(body.lat).toBe(mockLat);
+      expect(body.lon).toBe(mockLon);
     });
   });
 

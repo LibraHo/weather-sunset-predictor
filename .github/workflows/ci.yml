@@ -27,13 +27,15 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm install
+          npm install --prefix server
 
       # This is the required gate for merging: tests must pass.
       # Keep coverage non-blocking for now because current global thresholds
       # are intentionally higher than the current project baseline.
       - name: Run tests
-        run: npm test -- --runInBand --silent
+        run: NODE_PATH=server/node_modules npm test -- --runInBand --silent
 
       - name: Install Chromium for real-page i18n validation
         run: npx playwright install --with-deps chromium
@@ -42,7 +44,7 @@ jobs:
         run: npx playwright test tests/e2e/primary-locale-layout.spec.js --project=chromium
 
       - name: Generate coverage report (non-blocking)
-        run: npm run test:coverage -- --runInBand || true
+        run: NODE_PATH=server/node_modules npm run test:coverage -- --runInBand || true
 
       - name: Upload coverage report
         if: always()

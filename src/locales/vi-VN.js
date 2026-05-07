@@ -270,6 +270,7 @@ const translations = {
           "geometryCap": "Geometry cap",
           "occlusion": "Occlusion",
           "carrierFloor": "Carrier floor",
+          "postRainCap": "Post-rain cap",
           "displayCalibration": "Display calibration"
         },
         "details": {
@@ -283,6 +284,8 @@ const translations = {
           "geometryCap": "sun/cloud geometry is not feasible",
           "occlusion": "distant obstruction reduces the score",
           "carrierFloor": "clear high-cloud carrier prevents over-penalty",
+          "directionalSamples": "solar-azimuth samples at 50/100/150km are included",
+          "postRainCap": "post-rain moisture or haze turns the glow into a gray curtain",
           "displayCalibration": "final display score is aligned with the prediction status band"
         },
         "reasons": {
@@ -308,6 +311,8 @@ const translations = {
       "visibility": { "good": "Tầm nhìn tốt ({{value}}km)", "goodDesc": "Không khí trong, tầm nhìn tốt", "moderate": "Tầm nhìn trung bình ({{value}}km)", "moderateDesc": "Độ bão hòa màu có thể giảm nhẹ", "low": "Tầm nhìn thấp ({{value}}km)", "lowDesc": "Bụi mờ hoặc hơi nước có thể ảnh hưởng quan sát" },
       "humidity": { "moderate": "Độ ẩm vừa phải ({{value}}%)", "moderateDesc": "Có lợi cho tán xạ ánh sáng", "high": "Độ ẩm cao ({{value}}%)", "highDesc": "Có thể giảm độ trong", "low": "Độ ẩm thấp ({{value}}%)", "lowDesc": "Không khí khô có thể làm màu nhạt hơn" },
       "aerosol": { "moderate": "Aerosol vừa phải (AOD {{value}})", "moderateDesc": "Tăng tán xạ cam đỏ", "high": "Aerosol cao (AOD {{value}})", "highDesc": "Có thể trông mờ hoặc tối", "low": "Không khí quá trong (AOD {{value}})", "lowDesc": "Màu có thể nhạt hơn" },
+      "lightPath": { "opening": "Có khe sáng theo hướng mặt trời", "openingDesc": "Backend lấy mẫu 50/100/150km theo phương vị mặt trời; hành lang mây thấp/trung tương đối thoáng", "wall": "Có tường mây theo hướng mặt trời", "wallDesc": "Mây thấp hoặc trung tầng theo hướng mặt trời làm giảm điểm chính" },
+      "postRain": { "clear": "Không khí trong sau mưa", "clearDesc": "Mưa trong 6 giờ gần đây vẫn được cộng điểm vì tầm nhìn và hạt bụi ở mức chấp nhận", "gray": "Rủi ro màn xám sau mưa", "grayDesc": "Hơi ẩm, hạt bụi hoặc ánh sáng trực tiếp yếu sau mưa khiến điểm bị giới hạn thận trọng" },
       "layer": { "single": "Một lớp mây", "singleDesc": "Nếu mây cao tốt, vẫn có thể tạo màu hoàng hôn rõ" }
     },
     "status": {

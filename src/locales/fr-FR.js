@@ -270,6 +270,7 @@ const translations = {
           "geometryCap": "Geometry cap",
           "occlusion": "Occlusion",
           "carrierFloor": "Carrier floor",
+          "postRainCap": "Post-rain cap",
           "displayCalibration": "Display calibration"
         },
         "details": {
@@ -283,6 +284,8 @@ const translations = {
           "geometryCap": "sun/cloud geometry is not feasible",
           "occlusion": "distant obstruction reduces the score",
           "carrierFloor": "clear high-cloud carrier prevents over-penalty",
+          "directionalSamples": "solar-azimuth samples at 50/100/150km are included",
+          "postRainCap": "post-rain moisture or haze turns the glow into a gray curtain",
           "displayCalibration": "final display score is aligned with the prediction status band"
         },
         "reasons": {
@@ -308,6 +311,8 @@ const translations = {
       "visibility": { "good": "Bonne visibilité ({{value}}km)", "goodDesc": "Air clair et bonne portée visuelle", "moderate": "Visibilité moyenne ({{value}}km)", "moderateDesc": "La saturation peut baisser légèrement", "low": "Faible visibilité ({{value}}km)", "lowDesc": "Brume ou humidité peuvent gêner l’observation" },
       "humidity": { "moderate": "Humidité modérée ({{value}}%)", "moderateDesc": "Aide la diffusion de la lumière", "high": "Humidité élevée ({{value}}%)", "highDesc": "Peut réduire la transparence", "low": "Humidité basse ({{value}}%)", "lowDesc": "L’air sec peut rendre les couleurs plus pâles" },
       "aerosol": { "moderate": "Aérosols modérés (AOD {{value}})", "moderateDesc": "Renforce la diffusion orange-rouge", "high": "Aérosols élevés (AOD {{value}})", "highDesc": "Peut paraître brumeux ou terne", "low": "Air très clair (AOD {{value}})", "lowDesc": "Les couleurs peuvent être plus pâles" },
+      "lightPath": { "opening": "Ouverture vers le soleil", "openingDesc": "Le backend échantillonne 50/100/150km sur l’azimut solaire; le couloir de nuages bas/moyens reste relativement ouvert", "wall": "Mur nuageux vers le soleil", "wallDesc": "Les nuages bas ou moyens dans la direction solaire réduisent le score principal" },
+      "postRain": { "clear": "Air clair après la pluie", "clearDesc": "La pluie des 6 dernières heures reste un bonus car visibilité et particules sont acceptables", "gray": "Risque de rideau gris après la pluie", "grayDesc": "Humidité, particules ou faible lumière directe après la pluie plafonnent prudemment le score" },
       "layer": { "single": "Couche nuageuse unique", "singleDesc": "De bons nuages hauts peuvent encore bien se colorer" }
     },
     "status": {

@@ -16,6 +16,9 @@ if (!global.TextDecoder) {
 describe('LightPath V2 集成测试 - /api/prediction/enhanced', () => {
   let app;
   let request;
+  let orchestrator;
+  let originalFetchWeatherData;
+  let mockWeatherData;
 
   const basePayload = {
     date: '2024-06-21T11:00:00Z', // UTC 11:00 = 北京 19:00，日落时间
@@ -27,13 +30,36 @@ describe('LightPath V2 集成测试 - /api/prediction/enhanced', () => {
   beforeAll(async () => {
     const predictionRouterModule = await import('../../../server/routes/prediction.js');
     const supertestModule = await import('supertest');
+    const orchestratorModule = await import('../../../server/services/ProviderOrchestrator.js');
     const predictionRouter = predictionRouterModule.default || predictionRouterModule;
+    orchestrator = orchestratorModule.default || orchestratorModule;
+    originalFetchWeatherData = orchestrator.fetchWeatherData;
     request = supertestModule.default || supertestModule;
 
     app = express();
     app.use(express.json());
     app.use('/api/prediction', predictionRouter);
   });
+
+  beforeEach(() => {
+    mockWeatherData = { cloudCover: 40, lowClouds: 10, midClouds: 20, highClouds: 30, cloudBaseHeight: 2000, humidity: 60, visibility: 20, precipitation: 0, convPrecip: 0 };
+    orchestrator.fetchWeatherData = async () => ({
+      provider: 'mock',
+      providerMeta: { name: 'mock', cloudSource: 'mock_hourly', airQualitySource: 'mock_air' },
+      data: Array.from({ length: 6 }, (_, idx) => ({
+        timestamp: new Date(`2024-06-21T${String(9 + idx).padStart(2, '0')}:00:00Z`).getTime(),
+        ...mockWeatherData
+      }))
+    });
+  });
+
+  afterEach(() => {
+    orchestrator.fetchWeatherData = originalFetchWeatherData;
+  });
+
+  const setWeather = (weatherData) => {
+    mockWeatherData = { humidity: 60, visibility: 20, ...weatherData };
+  };
 
   // 1. 返回结构中 lightPathAnalysis 包含必要字段
   test('lightPathAnalysis 包含 score、occlusionProbability、samples、capReason、explain', async () => {
@@ -99,22 +125,22 @@ describe('LightPath V2 集成测试 - /api/prediction/enhanced', () => {
 
   // 3. cloudCover=100 → score <= 40，capReason 不为 null
   test('cloudCover=100 时 lightPathAnalysis.score <= 40，capReason 不为 null', async () => {
+    setWeather({
+      cloudCover: 100,
+      lowClouds: 100,
+      midClouds: 80,
+      highClouds: 60,
+      cloudBaseHeight: 700,
+      humidity: 90,
+      visibility: 5,
+      precipitation: 0,
+      convPrecip: 0,
+      weatherCode: 3
+    });
     const res = await request(app)
       .post('/api/prediction/enhanced')
       .send({
-        ...basePayload,
-        weatherData: {
-          cloudCover: 100,
-          lowClouds: 100,
-          midClouds: 80,
-          highClouds: 60,
-          cloudBaseHeight: 700,
-          humidity: 90,
-          visibility: 5,
-          precipitation: 0,
-          convPrecip: 0,
-          weatherCode: 3
-        }
+        ...basePayload
       })
       .expect(200);
 
@@ -125,21 +151,21 @@ describe('LightPath V2 集成测试 - /api/prediction/enhanced', () => {
 
   // 4. cloudCover=0 → 晴天高分 >= 60
   test('cloudCover=0 时 lightPathAnalysis.score >= 60（晴天高分）', async () => {
+    setWeather({
+      cloudCover: 0,
+      lowClouds: 0,
+      midClouds: 0,
+      highClouds: 0,
+      cloudBaseHeight: 5000,
+      humidity: 30,
+      visibility: 30,
+      precipitation: 0,
+      convPrecip: 0
+    });
     const res = await request(app)
       .post('/api/prediction/enhanced')
       .send({
-        ...basePayload,
-        weatherData: {
-          cloudCover: 0,
-          lowClouds: 0,
-          midClouds: 0,
-          highClouds: 0,
-          cloudBaseHeight: 5000,
-          humidity: 30,
-          visibility: 30,
-          precipitation: 0,
-          convPrecip: 0
-        }
+        ...basePayload
       })
       .expect(200);
 
@@ -156,9 +182,10 @@ describe('LightPath V2 集成测试 - /api/prediction/enhanced', () => {
     ];
 
     for (const weatherData of testCases) {
+      setWeather(weatherData);
       const res = await request(app)
         .post('/api/prediction/enhanced')
-        .send({ ...basePayload, weatherData })
+        .send({ ...basePayload })
         .expect(200);
 
       const score = res.body.data.lightPathAnalysis.score;
