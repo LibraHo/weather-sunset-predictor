@@ -752,6 +752,43 @@ describe('EnhancedPredictionService', () => {
     });
   });
 
+  describe('Wuhan gray/rainy overcast regression', () => {
+    test('should cap rainy gray mid-cloud overcast below the 60-point band', () => {
+      const weatherData = {
+        cloudCover: 100,
+        lowClouds: 0,
+        midClouds: 67,
+        highClouds: 0,
+        humidity: 65,
+        visibility: 20,
+        precipitation: 0,
+        recentPrecipitation6h: 0.6,
+        recentRainHours: 3,
+        shortwaveRadiation: 18,
+        directRadiation: 0,
+        diffuseRadiation: 18,
+        waterVapourColumn: 33.7,
+        aerosolOpticalDepth: 0.42,
+        pm2_5: 35,
+        pm10: 43,
+        dust: 15,
+        aqi: 133
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData,
+        new Date('2026-05-07T11:04:00.000Z'),
+        30.5928,
+        114.3055,
+        'sunset'
+      );
+
+      expect(result.score).toBeLessThanOrEqual(35);
+      expect(result.severeWeatherCap.reason).toBe('rainy_mid_cloud_overcast_cap_35');
+      expect(result.status).toBe('no_fire_cloud');
+    });
+  });
+
   // ========== 边界条件测试 ==========
   describe('Edge Cases', () => {
     test('should handle missing weather data gracefully', () => {

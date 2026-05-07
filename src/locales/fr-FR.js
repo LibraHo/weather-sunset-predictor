@@ -289,6 +289,7 @@ const translations = {
           "precipitationCap45": "rain with low clouds capped the score at 45",
           "overcastCap35": "low-cloud overcast capped the score at 35",
           "overcastFogCap15": "overcast sky plus visibility ≤5km capped the score at 15",
+          "rainyMidCloudOvercastCap35": "rainy gray mid-cloud overcast capped the score at 35",
           "extremeDustHazeCap28": "severe dust/haze capped the score at 28",
           "severeHazeCap35": "heavy haze capped the score at 35",
           "moderateHazeCap45": "moderate haze capped the score at 45",

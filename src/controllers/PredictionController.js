@@ -286,6 +286,8 @@ class PredictionController {
         // 找前 1-2 小时数据用于云厚评估
         if (weatherDataArray && weatherData.timestamp) {
           const ts = weatherData.timestamp;
+          let recentPrecipitation6h = 0;
+          let recentRainHours = 0;
           for (let offset = 1; offset <= 2; offset++) {
             const prevTs = ts - offset * 3600000;
             const prev = weatherDataArray.find(d => d.timestamp === prevTs);
@@ -294,6 +296,17 @@ class PredictionController {
               break;
             }
           }
+          for (let offset = 0; offset <= 6; offset++) {
+            const recentTs = ts - offset * 3600000;
+            const recent = weatherDataArray.find(d => d.timestamp === recentTs);
+            const precipitation = Number(recent?.precipitation ?? 0);
+            if (Number.isFinite(precipitation) && precipitation > 0) {
+              recentPrecipitation6h += precipitation;
+              recentRainHours += 1;
+            }
+          }
+          weatherData._recentPrecipitation6h = parseFloat(recentPrecipitation6h.toFixed(2));
+          weatherData._recentRainHours = recentRainHours;
         }
 
         return await this.predictionAPIService.calculate(weatherData, date, lat, lon, type);
@@ -1636,6 +1649,7 @@ class PredictionController {
       precipitation_cap_45: ledgerText('reasons.precipitationCap45', {}, 'rain with low clouds capped the score at 45', '降水叠加低云，分数封顶到 45'),
       overcast_cap_35: ledgerText('reasons.overcastCap35', {}, 'low-cloud overcast capped the score at 35', '低云阴天遮挡，分数封顶到 35'),
       overcast_fog_cap_15: ledgerText('reasons.overcastFogCap15', {}, 'overcast sky plus visibility ≤5km capped the score at 15', '阴天且能见度≤5km，分数硬封顶到 15'),
+      rainy_mid_cloud_overcast_cap_35: ledgerText('reasons.rainyMidCloudOvercastCap35', {}, 'rainy gray mid-cloud overcast capped the score at 35', '雨后灰幕中云阴天，分数封顶到 35'),
       extreme_dust_haze_cap_28: ledgerText('reasons.extremeDustHazeCap28', {}, 'severe dust/haze capped the score at 28', '强沙尘/灰幕压制，分数封顶到 28'),
       severe_haze_cap_35: ledgerText('reasons.severeHazeCap35', {}, 'heavy haze capped the score at 35', '重度灰霾压制，分数封顶到 35'),
       moderate_haze_cap_45: ledgerText('reasons.moderateHazeCap45', {}, 'moderate haze capped the score at 45', '中度灰霾压制，分数封顶到 45')

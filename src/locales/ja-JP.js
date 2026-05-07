@@ -287,6 +287,7 @@ apiAccess: 'API接続'
           "precipitationCap45": "降水と低層雲によりスコア上限は45",
           "overcastCap35": "低層雲の曇天遮蔽によりスコア上限は35",
           "overcastFogCap15": "曇天かつ視程5km以下のためスコア上限は15",
+          "rainyMidCloudOvercastCap35": "雨上がりの灰色の中層雲の曇天により、スコアを35で上限調整",
           "extremeDustHazeCap28": "強い黄砂・霞によりスコア上限は28",
           "severeHazeCap35": "濃い霞によりスコア上限は35",
           "moderateHazeCap45": "中程度の霞によりスコア上限は45",

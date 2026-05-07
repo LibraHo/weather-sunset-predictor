@@ -309,6 +309,7 @@ export default {
           precipitationCap45: '降水叠加低云，分数封顶到 45',
           overcastCap35: '低云阴天遮挡，分数封顶到 35',
           overcastFogCap15: '阴天且能见度≤5km，分数硬封顶到 15',
+          rainyMidCloudOvercastCap35: '雨后灰幕中云阴天，分数封顶到 35',
           extremeDustHazeCap28: '强沙尘/灰幕压制，分数封顶到 28',
           severeHazeCap35: '重度灰霾压制，分数封顶到 35',
           moderateHazeCap45: '中度灰霾压制，分数封顶到 45',

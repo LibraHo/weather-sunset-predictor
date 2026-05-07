@@ -1000,6 +1000,8 @@ function applySevereWeatherCap(score, weatherData) {
   const highClouds = weatherData.highClouds || 0;
   const precipitation = weatherData.precipitation || 0;
   const convPrecip = weatherData.convPrecip || 0;
+  const recentPrecipitation6h = Number(weatherData.recentPrecipitation6h || 0);
+  const recentRainHours = Number(weatherData.recentRainHours || 0);
   const weatherCode = weatherData.weatherCode;
 
   // Open-Meteo WMO weather codes: 51-67 雨/冻雨, 71-77 雪, 80-86 阵雨/阵雪
@@ -1027,6 +1029,14 @@ function applySevereWeatherCap(score, weatherData) {
   const visibility = weatherData.visibility ?? 20;
   if (cloudCover >= 95 && visibility <= 5) {
     return { score: Math.min(score, 15), reason: 'overcast_fog_cap_15' };
+  }
+
+  // 灰蒙蒙雨后阴天：低云字段有时会被模式报成0，但总云量满天、纯中云幕、无高云，
+  // 且近6小时有降水/小雨残留时，现场通常是灰幕而非可染色云面，不能给到60分档。
+  const isMidCloudOvercastCurtain = cloudCover >= 95 && midClouds >= 60 && highClouds < 20 && lowClouds < 20;
+  const hasRecentRainSignal = precipitation > 0 || convPrecip > 0 || recentPrecipitation6h >= 0.3 || recentRainHours >= 2 || isRainSnowCode;
+  if (isMidCloudOvercastCurtain && hasRecentRainSignal) {
+    return { score: Math.min(score, 35), reason: 'rainy_mid_cloud_overcast_cap_35' };
   }
 
   return { score, reason: null };

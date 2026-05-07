@@ -119,6 +119,40 @@ describe('PredictionAPIService', () => {
       expect(body.weatherData.cloudCover).toBe(50);
     });
 
+    test('should pass aerosol and recent-rain fields to backend scoring', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockSuccessResponse
+      });
+
+      await predictionAPI.calculate(
+        {
+          ...mockWeatherData,
+          aerosolOpticalDepth: 0.42,
+          dust: 15,
+          pm2_5: 35,
+          pm10: 43,
+          aqi: 133,
+          _recentPrecipitation6h: 0.6,
+          _recentRainHours: 3
+        },
+        mockDate,
+        mockLat,
+        mockLon,
+        'sunset'
+      );
+
+      const [, options] = mockFetch.mock.calls[0];
+      const body = JSON.parse(options.body);
+      expect(body.weatherData.aerosolOpticalDepth).toBe(0.42);
+      expect(body.weatherData.dust).toBe(15);
+      expect(body.weatherData.pm2_5).toBe(35);
+      expect(body.weatherData.pm10).toBe(43);
+      expect(body.weatherData.aqi).toBe(133);
+      expect(body.weatherData.recentPrecipitation6h).toBe(0.6);
+      expect(body.weatherData.recentRainHours).toBe(3);
+    });
+
     test('should handle date as Date object', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,

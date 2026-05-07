@@ -287,6 +287,7 @@ const translations = {
           "precipitationCap45": "降水疊加低雲，分數封頂到 45",
           "overcastCap35": "低雲陰天遮擋，分數封頂到 35",
           "overcastFogCap15": "陰天且能見度≤5km，分數硬封頂到 15",
+          "rainyMidCloudOvercastCap35": "雨後灰幕中雲陰天，分數封頂到 35",
           "extremeDustHazeCap28": "強沙塵/灰幕壓制，分數封頂到 28",
           "severeHazeCap35": "重度灰霾壓制，分數封頂到 35",
           "moderateHazeCap45": "中度灰霾壓制，分數封頂到 45",

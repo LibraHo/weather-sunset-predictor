@@ -61,7 +61,15 @@ class PredictionAPIService {
           shortwaveRadiation: weatherData.shortwaveRadiation ?? null,
           directRadiation: weatherData.directRadiation ?? null,
           diffuseRadiation: weatherData.diffuseRadiation ?? null,
-          waterVapourColumn: weatherData.waterVapourColumn ?? null
+          waterVapourColumn: weatherData.waterVapourColumn ?? null,
+          // 空气质量/灰幕字段：用于避免灰蒙蒙、霾幕场景误判高分
+          aerosolOpticalDepth: weatherData.aerosolOpticalDepth ?? weatherData.aod ?? null,
+          dust: weatherData.dust ?? null,
+          pm2_5: weatherData.pm2_5 ?? weatherData.pm25 ?? null,
+          pm10: weatherData.pm10 ?? null,
+          aqi: weatherData.aqi ?? null,
+          recentPrecipitation6h: weatherData._recentPrecipitation6h ?? null,
+          recentRainHours: weatherData._recentRainHours ?? null
         },
         date: dateString,
         lat: lat,
