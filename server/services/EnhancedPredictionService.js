@@ -1131,7 +1131,13 @@ function applySevereWeatherCap(score, weatherData) {
     (Number.isFinite(waterVapour) && waterVapour > 30) ||
     visibility < 10;
   if (isMidCloudOvercastCurtain && hasRecentRainSignal && hasGrayCurtainEvidence) {
-    return { score: Math.min(score, 35), reason: 'rainy_mid_cloud_overcast_cap_35' };
+    const noHighCloudCarrier = highClouds < 10;
+    const stronglyBlockedLightPath = (directRatio != null && directRatio < 0.12) || visibility < 8;
+    const cap = noHighCloudCarrier && stronglyBlockedLightPath ? 5 : 15;
+    return {
+      score: Math.min(score, cap),
+      reason: cap <= 5 ? 'no_visible_sunset_path_cap_5' : 'no_visible_sunset_path_cap_15'
+    };
   }
 
   return { score, reason: null };

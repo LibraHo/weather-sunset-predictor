@@ -803,3 +803,57 @@ describe('EnhancedPredictionService', () => {
     });
   });
 });
+
+describe('applySevereWeatherCap - no visible sunset path', () => {
+  let EnhancedPredictionService;
+
+  beforeAll(async () => {
+    EnhancedPredictionService = await import('../../../server/services/EnhancedPredictionService.js');
+  });
+
+  test('caps rainy mid-cloud overcast gray curtain to very low score when high-cloud carrier is missing', () => {
+    const result = EnhancedPredictionService.applySevereWeatherCap(72, {
+      cloudCover: 100,
+      lowClouds: 0,
+      midClouds: 72,
+      highClouds: 0,
+      precipitation: 0,
+      recentPrecipitation6h: 1.8,
+      recentRainHours: 3,
+      visibility: 7,
+      directRadiation: 8,
+      shortwaveRadiation: 120,
+      aerosolOpticalDepth: 0.42,
+      pm2_5: 48,
+      pm10: 92,
+      dust: 12,
+      waterVapourColumn: 34
+    });
+
+    expect(result.score).toBeLessThanOrEqual(5);
+    expect(result.reason).toBe('no_visible_sunset_path_cap_5');
+  });
+
+  test('caps uncertain gray rainy overcast to low score instead of medium score', () => {
+    const result = EnhancedPredictionService.applySevereWeatherCap(72, {
+      cloudCover: 100,
+      lowClouds: 5,
+      midClouds: 68,
+      highClouds: 15,
+      precipitation: 0,
+      recentPrecipitation6h: 0.8,
+      recentRainHours: 2,
+      visibility: 12,
+      directRadiation: 20,
+      shortwaveRadiation: 130,
+      aerosolOpticalDepth: 0.38,
+      pm2_5: 40,
+      pm10: 86,
+      dust: 8,
+      waterVapourColumn: 31
+    });
+
+    expect(result.score).toBeLessThanOrEqual(15);
+    expect(result.reason).toBe('no_visible_sunset_path_cap_15');
+  });
+});
