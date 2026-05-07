@@ -267,7 +267,8 @@ const translations = {
           "thickCloudCap": "厚雲封頂",
           "geometryCap": "幾何封頂",
           "occlusion": "遮擋修正",
-          "carrierFloor": "載體保底"
+          "carrierFloor": "載體保底",
+          "displayCalibration": "展示分校準"
         },
         "details": {
           "cloudCarrier": "可被染色的雲面品質",
@@ -279,7 +280,8 @@ const translations = {
           "thickCloudCap": "高雲過厚，真實可染色效果下降",
           "geometryCap": "太陽與雲層幾何條件不足",
           "occlusion": "遠端遮擋壓低最終分",
-          "carrierFloor": "高雲載體清透，避免誤傷低估"
+          "carrierFloor": "高雲載體清透，避免誤傷低估",
+          "displayCalibration": "最終展示分按預測狀態檔位校準"
         },
         "reasons": {
           "precipitationCap45": "降水疊加低雲，分數封頂到 45",
@@ -288,7 +290,10 @@ const translations = {
           "extremeDustHazeCap28": "強沙塵/灰幕壓制，分數封頂到 28",
           "severeHazeCap35": "重度灰霾壓制，分數封頂到 35",
           "moderateHazeCap45": "中度灰霾壓制，分數封頂到 45",
-          "adjustmentApplied": "套用封頂/保底修正"
+          "adjustmentApplied": "套用封頂/保底修正",
+          "displayCalibration": "最終展示分按預測狀態檔位校準",
+          "lightPathStatusCap60": "光路只有 {{light}}，歸入輕微霞光檔，最終展示分封頂到 60",
+          "canvasStatusCap40": "雲層載體只有 {{canvas}}，歸入無火燒雲檔，最終展示分封頂到 40 以下"
         }
       }},
 "formationAnalysis": {

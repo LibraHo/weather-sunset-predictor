@@ -1680,6 +1680,35 @@ class PredictionController {
       } : null
     ].filter(Boolean);
 
+    const renderedNumber = Number(renderedScore);
+    const finalNumber = Number(finalScore);
+    const hasExplicitCap = capEvents.some(event => event.tone === 'bad');
+    if (Number.isFinite(renderedNumber) && Number.isFinite(finalNumber) && renderedNumber - finalNumber > 0.4 && !hasExplicitCap) {
+      let detail = ledgerText('reasons.displayCalibration', {}, 'final display score is aligned with the prediction status band', '最终展示分按预测状态档位校准');
+      if (Number(lightPathScore) < 50 && finalNumber <= 60) {
+        detail = ledgerText(
+          'reasons.lightPathStatusCap60',
+          { light: fmt(lightPathScore, 1) },
+          'light path is only {{light}}, so the result is capped to the light-glow band around 60',
+          '光路只有 {{light}}，归入轻微霞光档，最终展示分封顶到 60'
+        );
+      } else if (Number(canvasScore) < 30 && finalNumber <= 40) {
+        detail = ledgerText(
+          'reasons.canvasStatusCap40',
+          { canvas: fmt(canvasScore, 1) },
+          'cloud carrier is only {{canvas}}, so the result is capped to the no-fire-cloud band below 40',
+          '云层载体只有 {{canvas}}，归入无火烧云档，最终展示分封顶到 40 以下'
+        );
+      }
+
+      capEvents.push({
+        label: ledgerText('labels.displayCalibration', {}, 'Display calibration', '展示分校准'),
+        value: `${fmt(renderedScore, 1)}→${fmt(finalScore, 0)}`,
+        detail,
+        tone: 'cap'
+      });
+    }
+
     const primaryEvent = capEvents.find(event => event.tone === 'bad') || capEvents[0];
     const summary = primaryEvent
       ? ledgerText('summary.event', { score: fmt(finalScore, 0), detail: primaryEvent.detail }, '{{score}} points: {{detail}}', '{{score}} 分：{{detail}}')
