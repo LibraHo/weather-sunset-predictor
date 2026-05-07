@@ -164,7 +164,7 @@ header {
   z-index: 1000;
   overflow: visible;
   width: auto;
-  margin: 0 0 16px;
+  margin: 0 var(--spacing-md) 16px;
   padding: var(--spacing-lg);
   background: linear-gradient(120deg, var(--header-surface) 0%, rgba(255, 237, 205, 0.72) 100%);
   color: var(--header-title-color);
@@ -469,7 +469,7 @@ main > section {
 
 footer {
   width: auto;
-  margin: 0;
+  margin: 0 var(--spacing-md);
   padding: var(--spacing-lg);
   background-color: var(--color-card-bg);
   border: 1px solid var(--color-border);
