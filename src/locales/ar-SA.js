@@ -499,6 +499,11 @@ apiAccess: 'الوصول إلى API'
     proxyUrl: 'رابط خادم الوكيل',
     proxyUrlPlaceholder: 'http://localhost:3000',
     proxyUrlHint: 'عنوان رابط خادم الوكيل الخلفي',
+    weatherFetchMode: 'Weather fetch mode',
+    weatherFetchModeHint: 'Backend closed loop by default; if the backend is rate-limited or times out, the browser may fetch public weather and send it back for backend scoring',
+    weatherFetchModeBackend: 'Backend closed loop (recommended default)',
+    weatherFetchModeClientFallback: 'Backend first, browser emergency fallback',
+    weatherFetchModeClient: 'Browser weather fetch (debug/emergency)',
     // الإشعارات والتنبيهات
     notificationAndAlerts: 'الإشعارات والتنبيهات',
     enableSunsetNotification: 'تفعيل إشعارات الغروب',

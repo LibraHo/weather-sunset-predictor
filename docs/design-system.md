@@ -295,3 +295,52 @@ PY
 # JS / SVG / Canvas 硬编码颜色
 grep -RIn --include='*.js' -E "#[0-9a-fA-F]{3,8}|rgba?\(|linear-gradient|color:" src
 ```
+
+## 天气数据出口与预测闭环
+
+### 默认原则
+
+霞客预测默认采用 **后端闭环**：
+
+```text
+前端只提交地点 / 时间 / 朝晚霞类型
+  ↓
+后端拉取天气数据、复用缓存、选择目标小时
+  ↓
+后端完成评分算法与光路采样
+```
+
+这个路径用于保证：
+
+- 算法和数据质量在后端统一控制。
+- Open-Meteo / Windy 等外部源的 quota、限流、日志、缓存由后端统一治理。
+- 前端不会把展示用数据误当成主预测闭环输入。
+
+### WEATHER_FETCH_MODE
+
+天气数据出口模式是独立设置，不等同于 `USE_BACKEND_PREDICTION` 等算法迁移开关。
+
+- `backend`：默认模式。后端闭环拉天气并算分。
+- `client-fallback`：推荐生产应急模式。优先后端闭环；仅当后端天气源返回 429、quota、timeout 或 provider unavailable 时，浏览器拉取公开天气数据，再交给后端算分。
+- `client`：强制浏览器拉天气，仅用于调试或临时应急。
+
+### fallback 约束
+
+浏览器 fallback 不是“前端算法回退”。即使由浏览器拉天气，评分仍必须提交给后端 `/api/prediction/enhanced` 计算，并标记：
+
+```text
+weatherDataSource = client_weather_fallback
+```
+
+前端只允许对以下后端错误码触发 fallback：
+
+- `WEATHER_RATE_LIMITED`
+- `WEATHER_QUOTA_EXCEEDED`
+- `WEATHER_UPSTREAM_TIMEOUT`
+- `WEATHER_PROVIDER_UNAVAILABLE`
+
+参数错误、算法错误、数据格式错误不得 fallback，避免掩盖真实 bug。
+
+### 地图与格点保护
+
+首页单点朝霞/晚霞预测优先级高于地图格点刷新。格点任务达到 Open-Meteo 软阈值后应降级到缓存或暂停刷新，不能和首页预测抢基础天气额度。地图批量格点默认不启用浏览器 fallback，避免把限流压力转移到用户浏览器。

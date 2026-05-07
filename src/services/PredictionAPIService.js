@@ -32,7 +32,7 @@ class PredictionAPIService {
    *
    * 需求：22.4 - 前端改为调用后端 API
    */
-  async calculate(weatherData, date, lat, lon, type = 'sunset') {
+  async calculate(weatherData, date, lat, lon, type = 'sunset', options = {}) {
     const startTime = Date.now();
     console.log(`[PredictionAPIService] 调用后端预测 API: lat=${lat}, lon=${lon}, type=${type}`);
 
@@ -44,7 +44,8 @@ class PredictionAPIService {
       const dateString = date instanceof Date ? date.toISOString() : date;
 
       // 构建请求体：主预测保持后端闭环，前端只传地点/时刻/type。
-      // 后端内部负责天气数据拉取与复用，避免前端参与评分数据闭环。
+      // 仅当 WEATHER_FETCH_MODE 进入 client/client-fallback 应急路径时，才携带天气数据让后端只负责算分。
+      const useClientWeather = options.weatherFetchMode === 'client' || options.clientWeatherFallback === true;
       const requestBody = {
         date: dateString,
         lat: lat,
@@ -52,6 +53,16 @@ class PredictionAPIService {
         type: type,
         referenceTime: dateString
       };
+
+      if (useClientWeather) {
+        requestBody.weatherData = weatherData;
+        requestBody.options = {
+          prevHourData: options.prevHourData || weatherData?._prevHourData || null,
+          rainedRecently: Boolean(options.rainedRecently),
+          remoteCloudData: options.remoteCloudData || null,
+          clientWeatherFallback: options.clientWeatherFallback === true
+        };
+      }
 
       // 发送请求
       const response = await this._fetchWithTimeout(url, {
@@ -178,6 +189,7 @@ class PredictionAPIService {
     prediction.aqi = data.aqi ?? null;
     prediction.remoteCloudData = data.remoteCloudData || null;
     prediction.weatherDataSource = data.weatherDataSource || null;
+    prediction.clientWeatherFallback = data.clientWeatherFallback === true;
     prediction.providerMeta = data.providerMeta || null;
 
     return prediction;

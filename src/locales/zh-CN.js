@@ -779,6 +779,11 @@ formationAnalysis: {
     proxyUrl: '后端服务器地址',
     proxyUrlPlaceholder: 'http://localhost:3000',
     proxyUrlHint: '后端代理服务器的 URL 地址',
+    weatherFetchMode: '天气数据出口模式',
+    weatherFetchModeHint: '默认后端闭环；后端限流或超时时可让浏览器取公开天气，再交后端算分',
+    weatherFetchModeBackend: '后端闭环（推荐默认）',
+    weatherFetchModeClientFallback: '后端优先，失败时前端应急',
+    weatherFetchModeClient: '前端取天气（调试/应急）',
     // 通知与提醒
     notificationAndAlerts: '通知与提醒',
     enableSunsetNotification: '启用晚霞预测通知',

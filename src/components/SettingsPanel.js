@@ -238,6 +238,18 @@ class SettingsPanel {
             <summary class="settings-section-title settings-advanced-toggle">⚙️ ${this.i18n.t('settings.dataSource')}</summary>
             <div class="settings-section-content">
               <div class="setting-item">
+                <label class="setting-label setting-label-title" for="weather-fetch-mode-select">${this.i18n.t('settings.weatherFetchMode')}</label>
+                <small class="setting-subtitle">${this.i18n.t('settings.weatherFetchModeHint')}</small>
+                <div class="setting-control setting-control-full">
+                  <select id="weather-fetch-mode-select" class="setting-select">
+                    <option value="backend">${this.i18n.t('settings.weatherFetchModeBackend')}</option>
+                    <option value="client-fallback">${this.i18n.t('settings.weatherFetchModeClientFallback')}</option>
+                    <option value="client">${this.i18n.t('settings.weatherFetchModeClient')}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="setting-item">
                 <label class="setting-label setting-label-title" for="proxy-url-input">${this.i18n.t('settings.proxyUrl')}</label>
                 <small class="setting-subtitle">${this.i18n.t('settings.proxyUrlHint')}</small>
                 <div class="setting-control setting-control-full">
@@ -301,6 +313,13 @@ class SettingsPanel {
     if (proxyUrlInput) {
       proxyUrlInput.addEventListener('change', (e) => {
         this.handleProxyUrlChange(e.target.value);
+      });
+    }
+
+    const weatherFetchModeSelect = document.getElementById('weather-fetch-mode-select');
+    if (weatherFetchModeSelect) {
+      weatherFetchModeSelect.addEventListener('change', (e) => {
+        this.handleWeatherFetchModeChange(e.target.value);
       });
     }
 
@@ -398,6 +417,11 @@ class SettingsPanel {
     const proxyUrlInput = document.getElementById('proxy-url-input');
     if (proxyUrlInput) {
       proxyUrlInput.value = proxyUrl;
+    }
+
+    const weatherFetchModeSelect = document.getElementById('weather-fetch-mode-select');
+    if (weatherFetchModeSelect) {
+      weatherFetchModeSelect.value = localStorage.getItem('weather_fetch_mode') || 'backend';
     }
 
     // 加载通知设置
@@ -664,6 +688,15 @@ class SettingsPanel {
   handleProxyUrlChange(url) {
     localStorage.setItem('api_proxy_url', url);
     console.log('[SettingsPanel] 代理 URL 已更新:', url);
+  }
+
+  /**
+   * 处理天气数据出口模式变更
+   */
+  handleWeatherFetchModeChange(mode) {
+    const nextMode = ['backend', 'client-fallback', 'client'].includes(mode) ? mode : 'backend';
+    localStorage.setItem('weather_fetch_mode', nextMode);
+    console.log('[SettingsPanel] 天气数据出口模式已更新:', nextMode);
   }
 
   /**

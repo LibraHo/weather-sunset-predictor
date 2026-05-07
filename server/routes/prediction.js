@@ -72,8 +72,30 @@ process.once('SIGTERM', () => { cacheService.destroy(); process.exit(0); });
  * @param {string} message - 错误信息
  */
 function errorResponse(res, status, code, message) {
-  return res.status(status).json({ error: { code, message } });
+  return res.status(status).json({ success: false, error: { code, message } });
 }
+
+function normalizeWeatherProviderError(error) {
+  const message = String(error?.message || 'Weather provider unavailable');
+  const lower = message.toLowerCase();
+  if (error?.code === 'NO_WEATHER_DATA') {
+    return { status: 503, code: 'WEATHER_PROVIDER_UNAVAILABLE', message };
+  }
+  if (lower.includes('429') || lower.includes('rate') || lower.includes('频繁')) {
+    return { status: 429, code: 'WEATHER_RATE_LIMITED', message };
+  }
+  if (lower.includes('quota') || lower.includes('daily limit') || lower.includes('配额')) {
+    return { status: 429, code: 'WEATHER_QUOTA_EXCEEDED', message };
+  }
+  if (lower.includes('timeout') || lower.includes('超时') || lower.includes('econnaborted')) {
+    return { status: 504, code: 'WEATHER_UPSTREAM_TIMEOUT', message };
+  }
+  if (lower.includes('open-meteo') || lower.includes('weather') || lower.includes('provider')) {
+    return { status: 503, code: 'WEATHER_PROVIDER_UNAVAILABLE', message };
+  }
+  return null;
+}
+
 
 // ========== 请求验证中间件 ==========
 
@@ -368,7 +390,8 @@ router.post('/enhanced', validatePredictionRequest, async (req, res) => {
           prevHourData: options.prevHourData || null,
           rainedRecently: Boolean(options.rainedRecently),
           remoteCloudData: options.remoteCloudData || null,
-          source: 'client_weather_legacy'
+          source: options.clientWeatherFallback ? 'client_weather_fallback' : 'client_weather_legacy',
+          clientWeatherFallback: options.clientWeatherFallback === true
         }
       : await buildClosedLoopPredictionInput({ lat, lon, date, type, referenceTime });
 
@@ -402,6 +425,7 @@ router.post('/enhanced', validatePredictionRequest, async (req, res) => {
       },
       providerMeta: closedLoop.providerMeta,
       weatherDataSource: closedLoop.source || 'backend_closed_loop',
+      clientWeatherFallback: closedLoop.clientWeatherFallback === true,
       referenceTime: closedLoop.referenceTime.toISOString(),
       remoteCloudData: closedLoop.remoteCloudData,
     };
@@ -413,6 +437,10 @@ router.post('/enhanced', validatePredictionRequest, async (req, res) => {
 
   } catch (error) {
     console.error('[PredictionRoute] Enhanced prediction error:', error);
+    const providerError = normalizeWeatherProviderError(error);
+    if (providerError) {
+      return errorResponse(res, providerError.status, providerError.code, providerError.message);
+    }
     errorResponse(res, 500, 'PREDICTION_ERROR', error.message);
   }
 });

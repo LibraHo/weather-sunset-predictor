@@ -214,6 +214,39 @@ describe('PredictionAPIService', () => {
       expect(body.lat).toBe(mockLat);
       expect(body.lon).toBe(mockLon);
     });
+
+    test('should include weather data only for client fallback scoring mode', async () => {
+      const prevHourData = { shortwaveRadiation: 120 };
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          ...mockSuccessResponse,
+          data: {
+            ...mockSuccessResponse.data,
+            weatherDataSource: 'client_weather_fallback',
+            clientWeatherFallback: true
+          }
+        })
+      });
+
+      const result = await predictionAPI.calculate(
+        mockWeatherData,
+        mockDate,
+        mockLat,
+        mockLon,
+        'sunset',
+        { clientWeatherFallback: true, prevHourData, rainedRecently: true }
+      );
+
+      const [, options] = mockFetch.mock.calls[0];
+      const body = JSON.parse(options.body);
+      expect(body.weatherData).toEqual(mockWeatherData);
+      expect(body.options.clientWeatherFallback).toBe(true);
+      expect(body.options.prevHourData).toEqual(prevHourData);
+      expect(body.options.rainedRecently).toBe(true);
+      expect(result.weatherDataSource).toBe('client_weather_fallback');
+      expect(result.clientWeatherFallback).toBe(true);
+    });
   });
 
   // ========== getSurrounding() 方法测试 ==========

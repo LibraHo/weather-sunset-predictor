@@ -8,6 +8,28 @@ function round2(n) {
   return Number.isFinite(n) ? Math.round(n * 100) / 100 : null;
 }
 
+
+function normalizeWeatherProviderError(error) {
+  if (error?.status && error?.code) {
+    return { status: error.status, code: error.code, message: error.message || 'Weather provider unavailable' };
+  }
+  const message = String(error?.message || 'Weather provider unavailable');
+  const lower = message.toLowerCase();
+  if (lower.includes('429') || lower.includes('rate') || lower.includes('频繁')) {
+    return { status: 429, code: 'WEATHER_RATE_LIMITED', message };
+  }
+  if (lower.includes('quota') || lower.includes('daily limit') || lower.includes('配额')) {
+    return { status: 429, code: 'WEATHER_QUOTA_EXCEEDED', message };
+  }
+  if (lower.includes('timeout') || lower.includes('超时') || lower.includes('econnaborted')) {
+    return { status: 504, code: 'WEATHER_UPSTREAM_TIMEOUT', message };
+  }
+  if (lower.includes('open-meteo') || lower.includes('weather') || lower.includes('provider')) {
+    return { status: 503, code: 'WEATHER_PROVIDER_UNAVAILABLE', message };
+  }
+  return null;
+}
+
 function isManualTestCoordinates(lat, lon) {
   return Math.abs(lat) < 0.0001 && Math.abs(lon) < 0.0001;
 }
@@ -143,7 +165,14 @@ router.get('/forecast', async (req, res, next) => {
     });
 
   } catch (error) {
-    tracker.fail(error, 500);
+    const providerError = normalizeWeatherProviderError(error);
+    tracker.fail(error, providerError?.status || 500);
+    if (providerError) {
+      return res.status(providerError.status).json({
+        success: false,
+        error: { code: providerError.code, message: providerError.message }
+      });
+    }
     // 传递错误给错误处理中间件
     next(error);
   }

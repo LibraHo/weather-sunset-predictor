@@ -6,10 +6,13 @@
  */
 
 import WeatherData from '../models/WeatherData.js';
+import { loadConfig } from '../../config.api.js';
+import OpenMeteoClientWeatherService from './OpenMeteoClientWeatherService.js';
 
 class WindyAPIService {
   constructor(_apiKey, options = {}) {
     this.proxyURL = options.proxyURL || 'http://localhost:3000'; // 后端代理URL
+    this.clientWeatherService = new OpenMeteoClientWeatherService();
 
     console.log(`[WindyAPIService] 初始化后端代理模式`);
     console.log(`[WindyAPIService] 后端代理地址: ${this.proxyURL}`);
@@ -33,7 +36,39 @@ class WindyAPIService {
       throw new Error('预测小时数必须在1到168之间');
     }
 
-    return this.fetchFromProxy(lat, lon, hours);
+    const config = loadConfig();
+    const mode = config.weatherFetchMode || 'backend';
+    const weatherModel = localStorage.getItem('weather_model') || 'ecmwf_ifs025';
+
+    if (mode === 'client') {
+      console.warn('[WindyAPIService] WEATHER_FETCH_MODE=client，浏览器直接获取天气数据');
+      return this.clientWeatherService.fetchWeatherData(lat, lon, hours, weatherModel);
+    }
+
+    try {
+      return await this.fetchFromProxy(lat, lon, hours);
+    } catch (error) {
+      if (mode === 'client-fallback' && this._isWeatherFallbackEligible(error)) {
+        console.warn('[WindyAPIService] 后端天气数据不可用，切换到浏览器 fallback:', error.message);
+        return this.clientWeatherService.fetchWeatherData(lat, lon, hours, weatherModel);
+      }
+      throw error;
+    }
+  }
+
+
+  _isWeatherFallbackEligible(error) {
+    const message = String(error?.message || '').toLowerCase();
+    return message.includes('429')
+      || message.includes('rate')
+      || message.includes('quota')
+      || message.includes('timeout')
+      || message.includes('超时')
+      || message.includes('频繁')
+      || message.includes('weather_rate_limited')
+      || message.includes('weather_quota_exceeded')
+      || message.includes('weather_upstream_timeout')
+      || message.includes('weather_provider_unavailable');
   }
 
   /**

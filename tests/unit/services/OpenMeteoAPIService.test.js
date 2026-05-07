@@ -16,6 +16,7 @@ describe('OpenMeteoAPIService', () => {
   });
 
   afterEach(() => {
+    localStorage.clear();
     if (fetchSpy) fetchSpy.mockRestore();
   });
 
@@ -101,5 +102,40 @@ describe('OpenMeteoAPIService', () => {
 
     const data = await service.fetchWeatherData(39.9, 116.4, 24);
     expect(data.providerMeta).toEqual({ name: 'openmeteo', dataQuality: 'excellent' });
+  });
+
+  test('client mode bypasses backend and uses browser weather fetcher', async () => {
+    localStorage.setItem('weather_fetch_mode', 'client');
+    localStorage.setItem('weather_model', 'gfs_seamless');
+    const fallbackData = [];
+    service.clientWeatherService.fetchWeatherData = jest.fn().mockResolvedValue(fallbackData);
+
+    const data = await service.fetchWeatherData(39.9, 116.4, 24);
+
+    expect(data).toBe(fallbackData);
+    expect(service.clientWeatherService.fetchWeatherData).toHaveBeenCalledWith(39.9, 116.4, 24, 'gfs_seamless');
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  test('client-fallback mode uses browser fetcher only for eligible backend weather errors', async () => {
+    localStorage.setItem('weather_fetch_mode', 'client-fallback');
+    const fallbackData = [];
+    service.clientWeatherService.fetchWeatherData = jest.fn().mockResolvedValue(fallbackData);
+    service.fetchFromProxy = jest.fn().mockRejectedValue(new Error('WEATHER_RATE_LIMITED: backend quota'));
+
+    const data = await service.fetchWeatherData(39.9, 116.4, 24);
+
+    expect(data).toBe(fallbackData);
+    expect(service.fetchFromProxy).toHaveBeenCalledWith(39.9, 116.4, 24);
+    expect(service.clientWeatherService.fetchWeatherData).toHaveBeenCalledWith(39.9, 116.4, 24, 'ecmwf_ifs025');
+  });
+
+  test('client-fallback mode does not hide non-weather backend errors', async () => {
+    localStorage.setItem('weather_fetch_mode', 'client-fallback');
+    service.clientWeatherService.fetchWeatherData = jest.fn();
+    service.fetchFromProxy = jest.fn().mockRejectedValue(new Error('后端返回数据格式错误'));
+
+    await expect(service.fetchWeatherData(39.9, 116.4, 24)).rejects.toThrow('后端返回数据格式错误');
+    expect(service.clientWeatherService.fetchWeatherData).not.toHaveBeenCalled();
   });
 });
