@@ -42,9 +42,29 @@ describe('OpenMeteoAPIService', () => {
       ok: true,
       json: async () => ({ windyEnabled: false })
     });
-    fetchSpy.mockResolvedValueOnce({ ok: false, status: 503 });
+    fetchSpy.mockResolvedValueOnce({ ok: false, status: 503, json: async () => ({}) });
 
     await expect(service.fetchWeatherData(39.9, 116.4, 24)).rejects.toThrow('后端请求失败: 503');
+  });
+
+  test('preserves structured backend weather error code/status for fallback decisions', async () => {
+    fetchSpy.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ windyEnabled: false })
+    });
+    fetchSpy.mockResolvedValueOnce({
+      ok: false,
+      status: 504,
+      json: async () => ({
+        error: { code: 'WEATHER_UPSTREAM_TIMEOUT', message: 'Open-Meteo timeout' }
+      })
+    });
+
+    await expect(service.fetchWeatherData(39.9, 116.4, 24)).rejects.toMatchObject({
+      code: 'WEATHER_UPSTREAM_TIMEOUT',
+      status: 504,
+      message: 'Open-Meteo timeout'
+    });
   });
 
   test('preserves air quality fields for weather panel display', async () => {
@@ -121,7 +141,10 @@ describe('OpenMeteoAPIService', () => {
     localStorage.setItem('weather_fetch_mode', 'client-fallback');
     const fallbackData = [];
     service.clientWeatherService.fetchWeatherData = jest.fn().mockResolvedValue(fallbackData);
-    service.fetchFromProxy = jest.fn().mockRejectedValue(new Error('WEATHER_RATE_LIMITED: backend quota'));
+    const backendError = new Error('Backend provider unavailable');
+    backendError.code = 'WEATHER_PROVIDER_UNAVAILABLE';
+    backendError.status = 503;
+    service.fetchFromProxy = jest.fn().mockRejectedValue(backendError);
 
     const data = await service.fetchWeatherData(39.9, 116.4, 24);
 

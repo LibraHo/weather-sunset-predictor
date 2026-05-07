@@ -91,7 +91,10 @@ class PredictionAPIService {
 
     } catch (error) {
       console.error(`[PredictionAPIService] API 调用失败:`, error);
-      throw new Error(`后端预测 API 调用失败: ${error.message}`);
+      const wrappedError = new Error(`后端预测 API 调用失败: ${error.message}`);
+      wrappedError.code = error.code || null;
+      wrappedError.status = error.status || null;
+      throw wrappedError;
     }
   }
 
@@ -116,7 +119,10 @@ class PredictionAPIService {
       // 检查 HTTP 状态码
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+        const apiError = new Error(errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+        apiError.code = errorData.error?.code || null;
+        apiError.status = response.status;
+        throw apiError;
       }
 
       return response;

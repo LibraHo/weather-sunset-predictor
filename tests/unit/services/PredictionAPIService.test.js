@@ -186,6 +186,25 @@ describe('PredictionAPIService', () => {
       ).rejects.toThrow('后端预测 API 调用失败');
     });
 
+    test('should preserve structured backend weather error code/status', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 503,
+        statusText: 'Service Unavailable',
+        json: async () => ({
+          error: { code: 'WEATHER_PROVIDER_UNAVAILABLE', message: 'No weather data available' }
+        })
+      });
+
+      await expect(
+        predictionAPI.calculate(mockWeatherData, mockDate, mockLat, mockLon)
+      ).rejects.toMatchObject({
+        code: 'WEATHER_PROVIDER_UNAVAILABLE',
+        status: 503,
+        message: '后端预测 API 调用失败: No weather data available'
+      });
+    });
+
     test('should throw error on network failure', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 

@@ -58,8 +58,13 @@ class WindyAPIService {
 
 
   _isWeatherFallbackEligible(error) {
+    const code = String(error?.code || '').toLowerCase();
     const message = String(error?.message || '').toLowerCase();
-    return message.includes('429')
+    return code === 'weather_rate_limited'
+      || code === 'weather_quota_exceeded'
+      || code === 'weather_upstream_timeout'
+      || code === 'weather_provider_unavailable'
+      || message.includes('429')
       || message.includes('rate')
       || message.includes('quota')
       || message.includes('timeout')
@@ -107,7 +112,11 @@ class WindyAPIService {
       const response = await fetch(url, { headers });
 
       if (!response.ok) {
-        throw new Error(`后端请求失败: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        const backendError = new Error(errorData.error?.message || `后端请求失败: ${response.status}`);
+        backendError.code = errorData.error?.code || null;
+        backendError.status = response.status;
+        throw backendError;
       }
 
       const result = await response.json();
@@ -121,7 +130,8 @@ class WindyAPIService {
       }
       return dataArray;
     } catch (error) {
-      if (error.message.includes('后端') ||
+      if (error.code ||
+          error.message.includes('后端') ||
           error.message.includes('参数') ||
           error.message.includes('频繁')) {
         throw error;

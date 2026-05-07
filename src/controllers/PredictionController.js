@@ -351,8 +351,13 @@ class PredictionController {
   }
 
   _isWeatherFallbackEligible(error) {
+    const code = String(error?.code || '').toLowerCase();
     const message = String(error?.message || '').toLowerCase();
-    return message.includes('weather_rate_limited')
+    return code === 'weather_rate_limited'
+      || code === 'weather_quota_exceeded'
+      || code === 'weather_upstream_timeout'
+      || code === 'weather_provider_unavailable'
+      || message.includes('weather_rate_limited')
       || message.includes('weather_quota_exceeded')
       || message.includes('weather_upstream_timeout')
       || message.includes('weather_provider_unavailable')
