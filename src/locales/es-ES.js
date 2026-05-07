@@ -253,7 +253,8 @@ apiAccess: 'Acceso API'
           "thickCloudCap": "Thick-cloud cap",
           "geometryCap": "Geometry cap",
           "occlusion": "Occlusion",
-          "carrierFloor": "Carrier floor"
+          "carrierFloor": "Carrier floor",
+          "displayCalibration": "Display calibration"
         },
         "details": {
           "cloudCarrier": "usable colored cloud surface",
@@ -265,7 +266,8 @@ apiAccess: 'Acceso API'
           "thickCloudCap": "thick high cloud reduces usable color rendering",
           "geometryCap": "sun/cloud geometry is not feasible",
           "occlusion": "distant obstruction reduces the score",
-          "carrierFloor": "clear high-cloud carrier prevents over-penalty"
+          "carrierFloor": "clear high-cloud carrier prevents over-penalty",
+          "displayCalibration": "final display score is aligned with the prediction status band"
         },
         "reasons": {
           "precipitationCap45": "rain with low clouds capped the score at 45",
@@ -274,7 +276,10 @@ apiAccess: 'Acceso API'
           "extremeDustHazeCap28": "severe dust/haze capped the score at 28",
           "severeHazeCap35": "heavy haze capped the score at 35",
           "moderateHazeCap45": "moderate haze capped the score at 45",
-          "adjustmentApplied": "cap/floor adjustment applied"
+          "adjustmentApplied": "cap/floor adjustment applied",
+          "displayCalibration": "final display score is aligned with the prediction status band",
+          "lightPathStatusCap60": "light path is only {{light}}, so the result is capped to the light-glow band around 60",
+          "canvasStatusCap40": "cloud carrier is only {{canvas}}, so the result is capped to the no-fire-cloud band below 40"
         }
       }
     },

@@ -616,13 +616,35 @@ describe('PredictionController', () => {
 
       expect(html).toContain('为什么是这个分数');
       expect(html).toContain('28 分：强沙尘/灰幕压制，分数封顶到 28');
-      expect(html).toContain('能见度 5km');
+      expect(html).not.toContain('score-ledger-context');
+      expect(html).not.toContain('能见度 5km');
       expect(html).toContain('70.7');
       expect(html).toContain('72.5');
       expect(html).toContain('71.1');
       expect(html).toContain('60.4');
       expect(html).toContain('≤28');
       expect(html).toContain('最终分');
+    });
+
+    test('分数明细应解释渲染后分到展示分的状态档位校准', () => {
+      const html = predictionController.renderScoreBreakdownPopover({
+        score: 60,
+        breakdown: {
+          baseScore: 79.4,
+          canvasScore: 99.1,
+          lightPathScore: 40,
+          renderingFactor: 1,
+          unclampedFinalScore: 79.4
+        },
+        canvasAnalysis: { score: 99.1 },
+        lightPathAnalysis: { score: 40 },
+        renderingAnalysis: { factor: 1, visibilityFactor: 1, humidityFactor: 1, aerosolFactor: 1 }
+      });
+
+      expect(html).toContain('展示分校准');
+      expect(html).toContain('79.4→60');
+      expect(html).toContain('光路只有 40.0，归入轻微霞光档，最终展示分封顶到 60');
+      expect(html).toContain('60 分：光路只有 40.0，归入轻微霞光档，最终展示分封顶到 60');
     });
   });
 

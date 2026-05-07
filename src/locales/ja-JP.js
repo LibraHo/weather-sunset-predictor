@@ -267,7 +267,8 @@ apiAccess: 'API接続'
           "thickCloudCap": "厚い雲の上限",
           "geometryCap": "幾何条件の上限",
           "occlusion": "遮蔽補正",
-          "carrierFloor": "載体による下支え"
+          "carrierFloor": "載体による下支え",
+          "displayCalibration": "表示スコア調整"
         },
         "details": {
           "cloudCarrier": "色づきに使える雲面の質",
@@ -279,7 +280,8 @@ apiAccess: 'API接続'
           "thickCloudCap": "高層雲が厚く、実際の発色が弱くなります",
           "geometryCap": "太陽と雲層の幾何条件が不足しています",
           "occlusion": "遠方の遮蔽により最終スコアが下がります",
-          "carrierFloor": "澄んだ高層雲の載体により過小評価を抑えます"
+          "carrierFloor": "澄んだ高層雲の載体により過小評価を抑えます",
+          "displayCalibration": "最終表示スコアを予測ステータスの帯に合わせます"
         },
         "reasons": {
           "precipitationCap45": "降水と低層雲によりスコア上限は45",
@@ -288,7 +290,10 @@ apiAccess: 'API接続'
           "extremeDustHazeCap28": "強い黄砂・霞によりスコア上限は28",
           "severeHazeCap35": "濃い霞によりスコア上限は35",
           "moderateHazeCap45": "中程度の霞によりスコア上限は45",
-          "adjustmentApplied": "上限/下限補正を適用"
+          "adjustmentApplied": "上限/下限補正を適用",
+          "displayCalibration": "最終表示スコアを予測ステータスの帯に合わせます",
+          "lightPathStatusCap60": "光路は {{light}} のため、薄い霞光の帯として最終表示スコアを60付近で上限調整します",
+          "canvasStatusCap40": "雲の載体は {{canvas}} のため、焼け雲なしの帯として最終表示スコアを40未満に上限調整します"
         }
       }},
 "formationAnalysis": {

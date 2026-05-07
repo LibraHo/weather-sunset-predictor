@@ -289,7 +289,8 @@ export default {
           thickCloudCap: '厚云封顶',
           geometryCap: '几何封顶',
           occlusion: '遮挡修正',
-          carrierFloor: '载体保底'
+          carrierFloor: '载体保底',
+          displayCalibration: '展示分校准'
         },
         details: {
           cloudCarrier: '可被染色的云面质量',
@@ -301,7 +302,8 @@ export default {
           thickCloudCap: '高云过厚，真实可染色效果下降',
           geometryCap: '太阳与云层几何条件不足',
           occlusion: '远端遮挡压低最终分',
-          carrierFloor: '高云载体清透，避免误伤低估'
+          carrierFloor: '高云载体清透，避免误伤低估',
+          displayCalibration: '最终展示分按预测状态档位校准'
         },
         reasons: {
           precipitationCap45: '降水叠加低云，分数封顶到 45',
@@ -310,7 +312,10 @@ export default {
           extremeDustHazeCap28: '强沙尘/灰幕压制，分数封顶到 28',
           severeHazeCap35: '重度灰霾压制，分数封顶到 35',
           moderateHazeCap45: '中度灰霾压制，分数封顶到 45',
-          adjustmentApplied: '应用封顶/保底修正'
+          adjustmentApplied: '应用封顶/保底修正',
+          displayCalibration: '最终展示分按预测状态档位校准',
+          lightPathStatusCap60: '光路只有 {{light}}，归入轻微霞光档，最终展示分封顶到 60',
+          canvasStatusCap40: '云层载体只有 {{canvas}}，归入无火烧云档，最终展示分封顶到 40 以下'
         }
       }},
 formationAnalysis: {
