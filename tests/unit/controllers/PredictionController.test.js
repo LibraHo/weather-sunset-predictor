@@ -601,7 +601,7 @@ describe('PredictionController', () => {
         aerosolHazeCap: { applied: true, cap: 28, level: 'extreme', reason: 'extreme_dust_haze_cap_28' }
       });
 
-      expect(html).toContain('分数流水，不是文字分析');
+      expect(html).toContain('为什么是这个分数');
       expect(html).toContain('28 分：强沙尘/灰幕压制，分数封顶到 28');
       expect(html).toContain('能见度 5km');
       expect(html).toContain('70.7');
@@ -609,7 +609,7 @@ describe('PredictionController', () => {
       expect(html).toContain('71.1');
       expect(html).toContain('60.4');
       expect(html).toContain('≤28');
-      expect(html).toContain('最终展示');
+      expect(html).toContain('最终分');
     });
   });
 

@@ -1638,19 +1638,24 @@ class PredictionController {
         `${fmt(finalScore, 0)} points: ${primaryEvent.detail}`,
         `${fmt(finalScore, 0)} 分：${primaryEvent.detail}`
       )
-      : localized(
-        `${fmt(finalScore, 0)} points: no hard cap; calculated from canvas, light path, and rendering factor`,
-        `${fmt(finalScore, 0)} 分：无硬封顶，由画布、光路和渲染系数算出`
-      );
+      : Number.isFinite(Number(baseScore)) && Number.isFinite(Number(renderedScore))
+        ? localized(
+          `${fmt(baseScore, 0)} points adjusted by rendering conditions to ${fmt(renderedScore, 0)}`,
+          `${fmt(baseScore, 0)} 分经显色条件修正为 ${fmt(renderedScore, 0)} 分`
+        )
+        : localized(
+          `${fmt(finalScore, 0)} points: calculated from cloud carrier, light path, and rendering conditions`,
+          `${fmt(finalScore, 0)} 分：由云层、光路和显色条件综合计算`
+        );
 
-    const weatherContext = [
-      localized(`clouds H/M/L ${fmt(highClouds, 0)}/${fmt(midClouds, 0)}/${fmt(lowClouds, 0)}%`, `云量 高/中/低 ${fmt(highClouds, 0)}/${fmt(midClouds, 0)}/${fmt(lowClouds, 0)}%`),
-      visibility != null ? localized(`visibility ${fmt(visibility, 0)}km`, `能见度 ${fmt(visibility, 0)}km`) : '',
-      humidity != null ? localized(`humidity ${fmt(humidity, 0)}%`, `湿度 ${fmt(humidity, 0)}%`) : '',
-      precipitation != null ? localized(`rain ${fmt(precipitation, 1)}mm/h`, `降水 ${fmt(precipitation, 1)}mm/h`) : ''
-    ].filter(Boolean).join(' · ');
+    const weatherPills = [
+      localized(`Cloud H/M/L ${fmt(highClouds, 0)}/${fmt(midClouds, 0)}/${fmt(lowClouds, 0)}%`, `高/中/低云 ${fmt(highClouds, 0)}/${fmt(midClouds, 0)}/${fmt(lowClouds, 0)}%`),
+      visibility != null ? localized(`Visibility ${fmt(visibility, 0)}km`, `能见度 ${fmt(visibility, 0)}km`) : '',
+      humidity != null ? localized(`Humidity ${fmt(humidity, 0)}%`, `湿度 ${fmt(humidity, 0)}%`) : '',
+      precipitation != null ? localized(`Rain ${fmt(precipitation, 1)}mm/h`, `降水 ${fmt(precipitation, 1)}mm/h`) : ''
+    ].filter(Boolean);
 
-    const step = (index, label, expression, result, detail = '', tone = '') => `
+    const step = (index, label, description, result, detail = '', tone = '') => `
       <div class="score-ledger-step ${tone ? `score-ledger-step-${tone}` : ''}">
         <span class="score-ledger-index">${index}</span>
         <div class="score-ledger-body">
@@ -1658,17 +1663,23 @@ class PredictionController {
             <span class="score-ledger-label">${escape(label)}</span>
             <span class="score-ledger-result">${escape(result)}</span>
           </div>
-          ${expression ? `<div class="score-ledger-expression">${escape(expression)}</div>` : ''}
+          ${description ? `<div class="score-ledger-expression">${escape(description)}</div>` : ''}
           ${detail ? `<div class="score-ledger-detail">${escape(detail)}</div>` : ''}
         </div>
       </div>`;
 
-    const weightedExpression = Number.isFinite(Number(canvasScore)) && Number.isFinite(Number(lightPathScore))
-      ? `${fmt(canvasScore, 1)} × 0.8 + ${fmt(lightPathScore, 1)} × 0.2`
-      : localized('canvas × 0.8 + light path × 0.2', '画布 × 0.8 + 光路 × 0.2');
-    const renderingExpression = Number.isFinite(Number(baseScore)) && Number.isFinite(Number(renderingFactor))
-      ? `${fmt(baseScore, 1)} × ${fmt(renderingFactor, 2)}`
-      : localized('base × rendering factor', '基础分 × 渲染系数');
+    const weightedDescription = Number.isFinite(Number(canvasScore)) && Number.isFinite(Number(lightPathScore)) && Number.isFinite(Number(baseScore))
+      ? localized(
+        `${fmt(canvasScore, 1)}×80% + ${fmt(lightPathScore, 1)}×20% = ${fmt(baseScore, 1)}`,
+        `${fmt(canvasScore, 1)}×80% + ${fmt(lightPathScore, 1)}×20% = ${fmt(baseScore, 1)}`
+      )
+      : localized('canvas + light path', '画布 + 光路');
+    const renderingDescription = Number.isFinite(Number(baseScore)) && Number.isFinite(Number(renderingFactor)) && Number.isFinite(Number(renderedScore))
+      ? localized(
+        `${fmt(baseScore, 1)} × rendering ${fmt(renderingFactor, 2)} = ${fmt(renderedScore, 1)}`,
+        `${fmt(baseScore, 1)} × 显色系数 ${fmt(renderingFactor, 2)} = ${fmt(renderedScore, 1)}`
+      )
+      : localized('weather transparency factor', '天气通透度');
 
     const adjustmentHtml = capEvents.length
       ? capEvents.map((event, idx) => step(
@@ -1679,26 +1690,29 @@ class PredictionController {
         '',
         event.tone === 'good' ? 'good' : 'cap'
       )).join('')
-      : step(5, localized('Adjustment', '修正'), localized('no cap/floor triggered', '未触发封顶/保底'), localized('unchanged', '不变'));
+      : '';
 
     return `
       <div class="score-breakdown-popover score-breakdown-ledger" hidden>
-        <div class="score-ledger-header">
-          <div>
-            <div class="score-breakdown-title">${escape(this.i18n.t('prediction.scoreBreakdown.title'))}</div>
-            <div class="score-ledger-subtitle">${escape(localized('Score ledger, not a text analysis', '分数流水，不是文字分析'))}</div>
+        <div class="score-ledger-hero">
+          <div class="score-ledger-score-block">
+            <div class="score-ledger-score-number">${escape(fmt(finalScore, 0))}</div>
+            <div class="score-ledger-score-unit">${escape(localized('pts', '分'))}</div>
           </div>
-          <div class="score-ledger-final">${escape(fmt(finalScore, 0))}</div>
+          <div class="score-ledger-hero-copy">
+            <div class="score-breakdown-title">${escape(this.i18n.t('prediction.scoreBreakdown.title'))}</div>
+            <div class="score-ledger-subtitle">${escape(localized('Why this score', '为什么是这个分数'))}</div>
+          </div>
         </div>
         <div class="score-ledger-summary">${escape(summary)}</div>
-        ${weatherContext ? `<div class="score-ledger-context">${escape(weatherContext)}</div>` : ''}
+        ${weatherPills.length ? `<div class="score-ledger-context">${weatherPills.map(pill => `<span>${escape(pill)}</span>`).join('')}</div>` : ''}
         <div class="score-ledger-steps">
-          ${step(1, localized('Canvas', '画布'), localized('cloud carrier quality', '云层载体质量'), fmt(canvasScore, 1), localized(`low cloud ×${fmt(prediction?.canvasAnalysis?.lowCloudPenalty, 2)}, overcast ×${fmt(prediction?.canvasAnalysis?.overcastPenalty, 2)}`, `低云 ×${fmt(prediction?.canvasAnalysis?.lowCloudPenalty, 2)}，阴天 ×${fmt(prediction?.canvasAnalysis?.overcastPenalty, 2)}`))}
-          ${step(2, localized('Light path', '光路'), localized('sunlight can reach the cloud layer', '阳光能否打到云层'), fmt(lightPathScore, 1))}
-          ${step(3, localized('Weighted base', '加权基础分'), weightedExpression, fmt(baseScore, 1))}
-          ${step(4, localized('Render factor', '渲染修正'), renderingExpression, fmt(renderedScore, 1), localized(`visibility ×${fmt(prediction?.renderingAnalysis?.visibilityFactor, 2)}, humidity ×${fmt(prediction?.renderingAnalysis?.humidityFactor, 2)}, aerosol ×${fmt(aerosolFactor, 2)}`, `能见度 ×${fmt(prediction?.renderingAnalysis?.visibilityFactor, 2)}，湿度 ×${fmt(prediction?.renderingAnalysis?.humidityFactor, 2)}，气溶胶 ×${fmt(aerosolFactor, 2)}`))}
+          ${step(1, localized('Cloud carrier', '云层载体'), localized('usable colored cloud surface', '可被染色的云面质量'), fmt(canvasScore, 1), localized(`low cloud ×${fmt(prediction?.canvasAnalysis?.lowCloudPenalty, 2)}, overcast ×${fmt(prediction?.canvasAnalysis?.overcastPenalty, 2)}`, `低云 ×${fmt(prediction?.canvasAnalysis?.lowCloudPenalty, 2)}，阴天 ×${fmt(prediction?.canvasAnalysis?.overcastPenalty, 2)}`))}
+          ${step(2, localized('Light path', '光路'), localized('sunlight reaches the cloud layer', '阳光是否能打到云层'), fmt(lightPathScore, 1))}
+          ${step(3, localized('Base score', '基础分'), weightedDescription, fmt(baseScore, 1))}
+          ${step(4, localized('Rendering', '显色修正'), renderingDescription, fmt(renderedScore, 1), localized(`visibility ×${fmt(prediction?.renderingAnalysis?.visibilityFactor, 2)}, humidity ×${fmt(prediction?.renderingAnalysis?.humidityFactor, 2)}, aerosol ×${fmt(aerosolFactor, 2)}`, `能见度 ×${fmt(prediction?.renderingAnalysis?.visibilityFactor, 2)}，湿度 ×${fmt(prediction?.renderingAnalysis?.humidityFactor, 2)}，气溶胶 ×${fmt(aerosolFactor, 2)}`))}
           ${adjustmentHtml}
-          ${step(capEvents.length ? capEvents.length + 5 : 6, localized('Displayed score', '最终展示'), localized('after all caps/floors', '应用所有封顶/保底后'), fmt(finalScore, 0), '', 'final')}
+          ${step(capEvents.length ? capEvents.length + 5 : 5, localized('Final', '最终分'), capEvents.length ? localized('after all caps and floors', '应用所有封顶/保底后') : localized('final displayed result', '最终展示结果'), fmt(finalScore, 0), '', 'final')}
         </div>
       </div>
     `;
