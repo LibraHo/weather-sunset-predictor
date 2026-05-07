@@ -1656,6 +1656,8 @@ class PredictionController {
       overcast_cap_35: ledgerText('reasons.overcastCap35', {}, 'low-cloud overcast capped the score at 35', '低云阴天遮挡，分数封顶到 35'),
       overcast_fog_cap_15: ledgerText('reasons.overcastFogCap15', {}, 'overcast sky plus visibility ≤5km capped the score at 15', '阴天且能见度≤5km，分数硬封顶到 15'),
       rainy_mid_cloud_overcast_cap_35: ledgerText('reasons.rainyMidCloudOvercastCap35', {}, 'rainy gray mid-cloud overcast capped the score at 35', '雨后灰幕中云阴天，分数封顶到 35'),
+      no_visible_sunset_path_cap_5: ledgerText('reasons.noVisibleSunsetPathCap5', {}, 'no visible sunset light path; score capped at 5', '无可见日落光路，分数封顶到 5'),
+      no_visible_sunset_path_cap_15: ledgerText('reasons.noVisibleSunsetPathCap15', {}, 'gray rainy overcast likely blocks sunset light; score capped at 15', '雨后灰幕阴天大概率遮断日落光路，分数封顶到 15'),
       extreme_dust_haze_cap_28: ledgerText('reasons.extremeDustHazeCap28', {}, 'severe dust/haze capped the score at 28', '强沙尘/灰幕压制，分数封顶到 28'),
       severe_haze_cap_35: ledgerText('reasons.severeHazeCap35', {}, 'heavy haze capped the score at 35', '重度灰霾压制，分数封顶到 35'),
       moderate_haze_cap_45: ledgerText('reasons.moderateHazeCap45', {}, 'moderate haze capped the score at 45', '中度灰霾压制，分数封顶到 45')
