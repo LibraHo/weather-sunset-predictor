@@ -1564,6 +1564,16 @@ class PredictionController {
       const lang = String(this.i18n?.getCurrentLanguage?.() || this.i18n?.currentLanguage || '').toLowerCase();
       return lang.startsWith('zh') ? zh : en;
     };
+    const ledgerText = (key, params = {}, fallbackEn = '', fallbackZh = '') => {
+      const fullKey = `prediction.scoreBreakdown.ledger.${key}`;
+      const translated = this.i18n?.t?.(fullKey, params);
+      if (translated && translated !== fullKey) return translated;
+      const fallback = localized(fallbackEn, fallbackZh || fallbackEn);
+      return Object.entries(params || {}).reduce(
+        (text, [paramKey, value]) => String(text).replaceAll(`{{${paramKey}}}`, value),
+        fallback
+      );
+    };
     const escape = (value) => String(value ?? '')
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -1604,74 +1614,65 @@ class PredictionController {
     const precipitation = metric(['precipitation', 'convPrecip'], 0);
 
     const reasonText = (reason) => ({
-      precipitation_cap_45: localized('rain with low clouds capped the score at 45', '降水叠加低云，分数封顶到 45'),
-      overcast_cap_35: localized('low-cloud overcast capped the score at 35', '低云阴天遮挡，分数封顶到 35'),
-      overcast_fog_cap_15: localized('overcast sky plus visibility ≤5km capped the score at 15', '阴天且能见度≤5km，分数硬封顶到 15'),
-      extreme_dust_haze_cap_28: localized('severe dust/haze capped the score at 28', '强沙尘/灰幕压制，分数封顶到 28'),
-      severe_haze_cap_35: localized('heavy haze capped the score at 35', '重度灰霾压制，分数封顶到 35'),
-      moderate_haze_cap_45: localized('moderate haze capped the score at 45', '中度灰霾压制，分数封顶到 45')
-    }[reason] || reason || localized('cap/floor adjustment applied', '应用封顶/保底修正'));
+      precipitation_cap_45: ledgerText('reasons.precipitationCap45', {}, 'rain with low clouds capped the score at 45', '降水叠加低云，分数封顶到 45'),
+      overcast_cap_35: ledgerText('reasons.overcastCap35', {}, 'low-cloud overcast capped the score at 35', '低云阴天遮挡，分数封顶到 35'),
+      overcast_fog_cap_15: ledgerText('reasons.overcastFogCap15', {}, 'overcast sky plus visibility ≤5km capped the score at 15', '阴天且能见度≤5km，分数硬封顶到 15'),
+      extreme_dust_haze_cap_28: ledgerText('reasons.extremeDustHazeCap28', {}, 'severe dust/haze capped the score at 28', '强沙尘/灰幕压制，分数封顶到 28'),
+      severe_haze_cap_35: ledgerText('reasons.severeHazeCap35', {}, 'heavy haze capped the score at 35', '重度灰霾压制，分数封顶到 35'),
+      moderate_haze_cap_45: ledgerText('reasons.moderateHazeCap45', {}, 'moderate haze capped the score at 45', '中度灰霾压制，分数封顶到 45')
+    }[reason] || reason || ledgerText('reasons.adjustmentApplied', {}, 'cap/floor adjustment applied', '应用封顶/保底修正'));
 
     const capEvents = [
       severeWeatherCap?.reason ? {
-        label: localized('Hard cap', '硬封顶'),
+        label: ledgerText('labels.hardCap', {}, 'Hard cap', '硬封顶'),
         value: `≤${fmt(severeWeatherCap.score, 0)}`,
         detail: reasonText(severeWeatherCap.reason),
         tone: 'bad'
       } : null,
       aerosolHazeCap?.applied ? {
-        label: localized('Haze cap', '灰幕封顶'),
+        label: ledgerText('labels.hazeCap', {}, 'Haze cap', '灰幕封顶'),
         value: `≤${fmt(aerosolHazeCap.cap, 0)}`,
         detail: reasonText(aerosolHazeCap.reason),
         tone: 'bad'
       } : null,
       thickHighCloudPenalty?.applied ? {
-        label: localized('Thick-cloud cap', '厚云封顶'),
+        label: ledgerText('labels.thickCloudCap', {}, 'Thick-cloud cap', '厚云封顶'),
         value: `≤${fmt(thickHighCloudPenalty.cap, 0)}`,
-        detail: localized('thick high cloud reduces usable color rendering', '高云过厚，真实可染色效果下降'),
+        detail: ledgerText('details.thickCloudCap', {}, 'thick high cloud reduces usable color rendering', '高云过厚，真实可染色效果下降'),
         tone: 'bad'
       } : null,
       geometricModel?.feasible === false ? {
-        label: localized('Geometry cap', '几何封顶'),
+        label: ledgerText('labels.geometryCap', {}, 'Geometry cap', '几何封顶'),
         value: '≤30',
-        detail: geometricModel.reason || localized('sun/cloud geometry is not feasible', '太阳与云层几何条件不足'),
+        detail: geometricModel.reason || ledgerText('details.geometryCap', {}, 'sun/cloud geometry is not feasible', '太阳与云层几何条件不足'),
         tone: 'bad'
       } : null,
       occlusionAnalysis?.occluded ? {
-        label: localized('Occlusion', '遮挡修正'),
+        label: ledgerText('labels.occlusion', {}, 'Occlusion', '遮挡修正'),
         value: '×0.75',
-        detail: localized('distant obstruction reduces the score', '远端遮挡压低最终分'),
+        detail: ledgerText('details.occlusion', {}, 'distant obstruction reduces the score', '远端遮挡压低最终分'),
         tone: 'bad'
       } : null,
       carrierAdjustment?.applied ? {
-        label: localized('Carrier floor', '载体保底'),
+        label: ledgerText('labels.carrierFloor', {}, 'Carrier floor', '载体保底'),
         value: `≥${fmt(carrierAdjustment.floor, 0)}`,
-        detail: localized('clear high-cloud carrier prevents over-penalty', '高云载体清透，避免误伤低估'),
+        detail: ledgerText('details.carrierFloor', {}, 'clear high-cloud carrier prevents over-penalty', '高云载体清透，避免误伤低估'),
         tone: 'good'
       } : null
     ].filter(Boolean);
 
     const primaryEvent = capEvents.find(event => event.tone === 'bad') || capEvents[0];
     const summary = primaryEvent
-      ? localized(
-        `${fmt(finalScore, 0)} points: ${primaryEvent.detail}`,
-        `${fmt(finalScore, 0)} 分：${primaryEvent.detail}`
-      )
+      ? ledgerText('summary.event', { score: fmt(finalScore, 0), detail: primaryEvent.detail }, '{{score}} points: {{detail}}', '{{score}} 分：{{detail}}')
       : Number.isFinite(Number(baseScore)) && Number.isFinite(Number(renderedScore))
-        ? localized(
-          `${fmt(baseScore, 0)} points adjusted by rendering conditions to ${fmt(renderedScore, 0)}`,
-          `${fmt(baseScore, 0)} 分经显色条件修正为 ${fmt(renderedScore, 0)} 分`
-        )
-        : localized(
-          `${fmt(finalScore, 0)} points: calculated from cloud carrier, light path, and rendering conditions`,
-          `${fmt(finalScore, 0)} 分：由云层、光路和显色条件综合计算`
-        );
+        ? ledgerText('summary.rendered', { base: fmt(baseScore, 0), rendered: fmt(renderedScore, 0) }, '{{base}} points adjusted by rendering conditions to {{rendered}}', '{{base}} 分经显色条件修正为 {{rendered}} 分')
+        : ledgerText('summary.default', { score: fmt(finalScore, 0) }, '{{score}} points: calculated from cloud carrier, light path, and rendering conditions', '{{score}} 分：由云层、光路和显色条件综合计算');
 
     const weatherPills = [
-      localized(`Cloud H/M/L ${fmt(highClouds, 0)}/${fmt(midClouds, 0)}/${fmt(lowClouds, 0)}%`, `高/中/低云 ${fmt(highClouds, 0)}/${fmt(midClouds, 0)}/${fmt(lowClouds, 0)}%`),
-      visibility != null ? localized(`Visibility ${fmt(visibility, 0)}km`, `能见度 ${fmt(visibility, 0)}km`) : '',
-      humidity != null ? localized(`Humidity ${fmt(humidity, 0)}%`, `湿度 ${fmt(humidity, 0)}%`) : '',
-      precipitation != null ? localized(`Rain ${fmt(precipitation, 1)}mm/h`, `降水 ${fmt(precipitation, 1)}mm/h`) : ''
+      ledgerText('weather.clouds', { high: fmt(highClouds, 0), mid: fmt(midClouds, 0), low: fmt(lowClouds, 0) }, 'Cloud H/M/L {{high}}/{{mid}}/{{low}}%', '高/中/低云 {{high}}/{{mid}}/{{low}}%'),
+      visibility != null ? ledgerText('weather.visibility', { value: fmt(visibility, 0) }, 'Visibility {{value}}km', '能见度 {{value}}km') : '',
+      humidity != null ? ledgerText('weather.humidity', { value: fmt(humidity, 0) }, 'Humidity {{value}}%', '湿度 {{value}}%') : '',
+      precipitation != null ? ledgerText('weather.rain', { value: fmt(precipitation, 1) }, 'Rain {{value}}mm/h', '降水 {{value}}mm/h') : ''
     ].filter(Boolean);
 
     const step = (index, label, description, result, detail = '', tone = '') => `
@@ -1688,17 +1689,11 @@ class PredictionController {
       </div>`;
 
     const weightedDescription = Number.isFinite(Number(canvasScore)) && Number.isFinite(Number(lightPathScore)) && Number.isFinite(Number(baseScore))
-      ? localized(
-        `${fmt(canvasScore, 1)}×80% + ${fmt(lightPathScore, 1)}×20% = ${fmt(baseScore, 1)}`,
-        `${fmt(canvasScore, 1)}×80% + ${fmt(lightPathScore, 1)}×20% = ${fmt(baseScore, 1)}`
-      )
-      : localized('canvas + light path', '画布 + 光路');
+      ? ledgerText('weightedFormula', { canvas: fmt(canvasScore, 1), light: fmt(lightPathScore, 1), base: fmt(baseScore, 1) }, '{{canvas}}×80% + {{light}}×20% = {{base}}', '{{canvas}}×80% + {{light}}×20% = {{base}}')
+      : ledgerText('canvasPlusLightPath', {}, 'canvas + light path', '画布 + 光路');
     const renderingDescription = Number.isFinite(Number(baseScore)) && Number.isFinite(Number(renderingFactor)) && Number.isFinite(Number(renderedScore))
-      ? localized(
-        `${fmt(baseScore, 1)} × rendering ${fmt(renderingFactor, 2)} = ${fmt(renderedScore, 1)}`,
-        `${fmt(baseScore, 1)} × 显色系数 ${fmt(renderingFactor, 2)} = ${fmt(renderedScore, 1)}`
-      )
-      : localized('weather transparency factor', '天气通透度');
+      ? ledgerText('renderingFormula', { base: fmt(baseScore, 1), factor: fmt(renderingFactor, 2), rendered: fmt(renderedScore, 1) }, '{{base}} × rendering {{factor}} = {{rendered}}', '{{base}} × 显色系数 {{factor}} = {{rendered}}')
+      : ledgerText('weatherTransparency', {}, 'weather transparency factor', '天气通透度');
 
     const adjustmentHtml = capEvents.length
       ? capEvents.map((event, idx) => step(
@@ -1716,22 +1711,22 @@ class PredictionController {
         <div class="score-ledger-hero">
           <div class="score-ledger-score-block">
             <div class="score-ledger-score-number">${escape(fmt(finalScore, 0))}</div>
-            <div class="score-ledger-score-unit">${escape(localized('pts', '分'))}</div>
+            <div class="score-ledger-score-unit">${escape(ledgerText('pts', {}, 'pts', '分'))}</div>
           </div>
           <div class="score-ledger-hero-copy">
             <div class="score-breakdown-title">${escape(this.i18n.t('prediction.scoreBreakdown.title'))}</div>
-            <div class="score-ledger-subtitle">${escape(localized('Why this score', '为什么是这个分数'))}</div>
+            <div class="score-ledger-subtitle">${escape(ledgerText('whyThisScore', {}, 'Why this score', '为什么是这个分数'))}</div>
           </div>
         </div>
         <div class="score-ledger-summary">${escape(summary)}</div>
         ${weatherPills.length ? `<div class="score-ledger-context">${weatherPills.map(pill => `<span>${escape(pill)}</span>`).join('')}</div>` : ''}
         <div class="score-ledger-steps">
-          ${step(1, localized('Cloud carrier', '云层载体'), localized('usable colored cloud surface', '可被染色的云面质量'), fmt(canvasScore, 1), localized(`low cloud ×${fmt(prediction?.canvasAnalysis?.lowCloudPenalty, 2)}, overcast ×${fmt(prediction?.canvasAnalysis?.overcastPenalty, 2)}`, `低云 ×${fmt(prediction?.canvasAnalysis?.lowCloudPenalty, 2)}，阴天 ×${fmt(prediction?.canvasAnalysis?.overcastPenalty, 2)}`))}
-          ${step(2, localized('Light path', '光路'), localized('sunlight reaches the cloud layer', '阳光是否能打到云层'), fmt(lightPathScore, 1))}
-          ${step(3, localized('Base score', '基础分'), weightedDescription, fmt(baseScore, 1))}
-          ${step(4, localized('Rendering', '显色修正'), renderingDescription, fmt(renderedScore, 1), localized(`visibility ×${fmt(prediction?.renderingAnalysis?.visibilityFactor, 2)}, humidity ×${fmt(prediction?.renderingAnalysis?.humidityFactor, 2)}, aerosol ×${fmt(aerosolFactor, 2)}`, `能见度 ×${fmt(prediction?.renderingAnalysis?.visibilityFactor, 2)}，湿度 ×${fmt(prediction?.renderingAnalysis?.humidityFactor, 2)}，气溶胶 ×${fmt(aerosolFactor, 2)}`))}
+          ${step(1, ledgerText('labels.cloudCarrier', {}, 'Cloud carrier', '云层载体'), ledgerText('details.cloudCarrier', {}, 'usable colored cloud surface', '可被染色的云面质量'), fmt(canvasScore, 1), ledgerText('details.cloudPenalty', { low: fmt(prediction?.canvasAnalysis?.lowCloudPenalty, 2), overcast: fmt(prediction?.canvasAnalysis?.overcastPenalty, 2) }, 'low cloud ×{{low}}, overcast ×{{overcast}}', '低云 ×{{low}}，阴天 ×{{overcast}}'))}
+          ${step(2, ledgerText('labels.lightPath', {}, 'Light path', '光路'), ledgerText('details.lightPath', {}, 'sunlight reaches the cloud layer', '阳光是否能打到云层'), fmt(lightPathScore, 1))}
+          ${step(3, ledgerText('labels.baseScore', {}, 'Base score', '基础分'), weightedDescription, fmt(baseScore, 1))}
+          ${step(4, ledgerText('labels.rendering', {}, 'Rendering', '显色修正'), renderingDescription, fmt(renderedScore, 1), ledgerText('details.renderingFactors', { visibility: fmt(prediction?.renderingAnalysis?.visibilityFactor, 2), humidity: fmt(prediction?.renderingAnalysis?.humidityFactor, 2), aerosol: fmt(aerosolFactor, 2) }, 'visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}', '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}'))}
           ${adjustmentHtml}
-          ${step(capEvents.length ? capEvents.length + 5 : 5, localized('Final', '最终分'), capEvents.length ? localized('after all caps and floors', '应用所有封顶/保底后') : localized('final displayed result', '最终展示结果'), fmt(finalScore, 0), '', 'final')}
+          ${step(capEvents.length ? capEvents.length + 5 : 5, ledgerText('labels.final', {}, 'Final', '最终分'), capEvents.length ? ledgerText('details.afterAdjustments', {}, 'after all caps and floors', '应用所有封顶/保底后') : ledgerText('details.finalDisplayed', {}, 'final displayed result', '最终展示结果'), fmt(finalScore, 0), '', 'final')}
         </div>
       </div>
     `;
