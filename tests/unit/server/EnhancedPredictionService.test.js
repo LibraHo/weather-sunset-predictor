@@ -442,6 +442,48 @@ describe('EnhancedPredictionService', () => {
       expect(result.description).toBe('sky_clear');
     });
 
+    test('clear transparent sunset advice should not raise the fire-cloud score', () => {
+      const canvasScore = { score: 10, cloudLevel: 'space', effectiveCloudCover: 5 };
+      const lightPathScore = { score: 70, hasRemoteData: true };
+      const renderingFactor = { factor: 1.0 };
+
+      const result = EnhancedPredictionService.calculateFinalScore(
+        canvasScore, lightPathScore, renderingFactor, 'sunset'
+      );
+      const advice = EnhancedPredictionService.assessClearSunsetViewingAdvice(
+        { highClouds: 1, midClouds: 2, lowClouds: 3, visibility: 25, precipitation: 0 },
+        canvasScore,
+        lightPathScore
+      );
+
+      expect(result.status).toBe('no_fire_cloud');
+      expect(result.score).toBeLessThan(40);
+      expect(result.breakdown.unclampedFinalScore).toBe(22);
+      expect(advice).toMatchObject({ applied: true, reason: 'clear_sunset_transparent' });
+    });
+
+    test('clear transparent sunset advice should not trigger when blocked by low cloud, haze, rain, or light path', () => {
+      const canvasScore = { score: 10, cloudLevel: 'space', effectiveCloudCover: 5 };
+      const goodLightPath = { score: 70, hasRemoteData: true };
+      const baseWeather = { highClouds: 1, midClouds: 2, lowClouds: 3, visibility: 25, precipitation: 0 };
+
+      expect(EnhancedPredictionService.assessClearSunsetViewingAdvice(
+        { ...baseWeather, lowClouds: 70 }, canvasScore, goodLightPath
+      ).applied).toBe(false);
+      expect(EnhancedPredictionService.assessClearSunsetViewingAdvice(
+        { ...baseWeather, precipitation: 0.8 }, canvasScore, goodLightPath
+      ).applied).toBe(false);
+      expect(EnhancedPredictionService.assessClearSunsetViewingAdvice(
+        { ...baseWeather, visibility: 8 }, canvasScore, goodLightPath
+      ).applied).toBe(false);
+      expect(EnhancedPredictionService.assessClearSunsetViewingAdvice(
+        baseWeather, canvasScore, { score: 40, hasRemoteData: true }
+      ).applied).toBe(false);
+      expect(EnhancedPredictionService.assessClearSunsetViewingAdvice(
+        baseWeather, canvasScore, goodLightPath, { aerosolHazeCap: { applied: true } }
+      ).applied).toBe(false);
+    });
+
     test('should identify light_glow when light path blocked but canvas ok', () => {
       const canvasScore = { score: 70, cloudLevel: 'perfect' };
       const lightPathScore = { score: 40 };
@@ -649,6 +691,28 @@ describe('EnhancedPredictionService', () => {
       expect(result.lightPathAnalysis.score).toBeLessThanOrEqual(55);
       expect(result.score).toBeLessThanOrEqual(42);
       expect(result.description).toBe('weak_local_colors');
+    });
+
+    test('should mark clear transparent sunset as casual viewing while keeping fire-cloud score low', () => {
+      const weatherData = {
+        lowClouds: 3,
+        midClouds: 2,
+        highClouds: 1,
+        cloudCover: 6,
+        visibility: 25,
+        humidity: 45,
+        precipitation: 0
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData, new Date('2024-06-21T11:00:00Z'), 40.0, 116.0, 'sunset'
+      );
+
+      expect(result.status).toBe('no_fire_cloud');
+      expect(result.score).toBeLessThan(40);
+      expect(result.description).toBe('clear_sunset_transparent');
+      expect(result.advice).toBe('casual_viewing_ok');
+      expect(result.clearSunsetAdvice.applied).toBe(true);
     });
 
     test('should keep clear upper-cloud carrier scenes above 60 points', () => {

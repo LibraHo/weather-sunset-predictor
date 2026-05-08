@@ -249,6 +249,7 @@ export default {
       good: '条件不错，有较大概率出现壮观的火烧云',
       goodSingleLayer: '条件不错，火烧云概率较高；云层层次稍欠',
       fair: '条件中等，需看实际云层演变',
+      clearSunset: '火烧云不明显，日落通透。',
       low: '关键条件不足，火烧云概率偏低'
     },
         scoreBreakdown: {
@@ -386,6 +387,8 @@ formationAnalysis: {
       conditionsFair: '条件一般，可能零星色彩',
       canWatch: '可以观赏',
       conditionsGood: '条件尚可，有一定观赏价值',
+      clearSunsetTransparent: '火烧云不明显，日落通透。',
+      casualViewingOk: '可以出门看看',
       veryLikely: '大概率出现漂亮晚霞',
       excellentConditions: '云量适中，光路通畅',
       legendaryEruption: '传说级爆发',

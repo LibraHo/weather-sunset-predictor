@@ -227,6 +227,7 @@ const translations = {
       "good": "條件不錯，有較高機會出現壯觀火燒雲",
       "goodSingleLayer": "條件不錯，火燒雲機率較高；雲層層次稍弱",
       "fair": "條件中等，仍需觀察實際雲層變化",
+      "clearSunset": "火燒雲不明顯，日落通透。",
       "low": "關鍵條件不足，火燒雲機率偏低"
     },
         "scoreBreakdown": {
@@ -333,6 +334,8 @@ const translations = {
       "conditionsFair": "條件一般，可能零星色彩",
       "canWatch": "可以觀賞",
       "conditionsGood": "條件尚可，有一定觀賞價值",
+      "clearSunsetTransparent": "火燒雲不明顯，日落通透。",
+      "casualViewingOk": "可以出門看看",
       "veryLikely": "大概率出現漂亮晚霞",
       "excellentConditions": "雲量適中，光路通暢",
       "legendaryEruption": "傳說級爆發",

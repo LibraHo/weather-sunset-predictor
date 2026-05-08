@@ -227,6 +227,7 @@ const translations = {
       "good": "Good conditions with a solid chance of dramatic fire clouds.",
       "goodSingleLayer": "Good chance of fire clouds, but layering is limited.",
       "fair": "Moderate conditions. Watch how the clouds evolve.",
+      "clearSunset": "Fire clouds are subtle, but the sunset is clear.",
       "low": "Key conditions are missing; fire-cloud probability is low."
     },
         "scoreBreakdown": {
@@ -333,6 +334,8 @@ const translations = {
       "conditionsFair": "Fair conditions, possibly scattered colors",
       "canWatch": "Can watch",
       "conditionsGood": "Good conditions with some viewing value",
+      "clearSunsetTransparent": "Fire clouds are subtle, but the sunset is clear.",
+      "casualViewingOk": "Worth a casual look",
       "veryLikely": "High probability of beautiful sunset",
       "excellentConditions": "Moderate clouds with clear light path",
       "legendaryEruption": "Legendary eruption",

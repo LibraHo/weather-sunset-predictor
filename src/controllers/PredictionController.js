@@ -1420,7 +1420,7 @@ class PredictionController {
       timeLabel,
       score,
       scoreLabel,
-      scoreDesc: this.getScoreDescription(score),
+      scoreDesc: this.getScoreDescription(score, prediction),
       mainTime: this.formatTime(type === 'sunrise' ? (prediction.sunriseTime || prediction.sunsetTime) : prediction.sunsetTime, targetTimezone),
       bestViewingTime: `${this.formatTime(viewingWindow.start, targetTimezone)}–${this.formatTime(viewingWindow.end, targetTimezone)}`,
       direction,
@@ -1500,7 +1500,10 @@ class PredictionController {
     return fallback.replace(/\{\{(\w+)\}\}/g, (match, paramKey) => (params[paramKey] !== undefined ? params[paramKey] : match));
   }
 
-  getScoreDescription(score) {
+  getScoreDescription(score, prediction = null) {
+    if (prediction?.advice === 'casual_viewing_ok') {
+      return this._translateOrFallback('prediction.status.casualViewingOk', this._uiText('Worth a casual look', '可以出门看看'));
+    }
     if (score >= 80) return this._uiText('Excellent viewing conditions', '观赏条件很好');
     if (score >= 60) return this._uiText('Good viewing conditions', '观赏条件不错');
     if (score >= 40) return this._uiText('Some chance', '有一定机会');
@@ -1561,6 +1564,7 @@ class PredictionController {
         </div>
         <div class="score-gauge-caption">
           <div class="score-gauge-grade" style="color:${scoreTheme[1]}">${forecast.scoreLabel}</div>
+          <div class="score-gauge-desc">${forecast.scoreDesc}</div>
           <div class="score-breakdown-hint-trigger">${this._translateOrFallback('prediction.scoreBreakdown.viewDetails', '查看评分明细')}</div>
         </div>
       </div>
@@ -1719,6 +1723,9 @@ class PredictionController {
   }
 
   buildAnalysisConclusion(prediction, score, clouds) {
+    if (prediction?.description === 'clear_sunset_transparent') {
+      return this._translateOrFallback('prediction.analysisConclusion.clearSunset', this._uiText('Fire clouds are subtle, but the sunset is clear.', '火烧云不明显，日落通透。'));
+    }
     const layerCount = prediction.breakdown?.layerDiversity?.layerCount ?? [clouds.high, clouds.mid, clouds.low].filter(v => Number(v) >= 10).length;
     if (score >= 80) return layerCount >= 2 ? this.i18n.t('prediction.analysisConclusion.excellent') : this.i18n.t('prediction.analysisConclusion.excellentSingleLayer');
     if (score >= 60) return layerCount >= 2 ? this.i18n.t('prediction.analysisConclusion.good') : this.i18n.t('prediction.analysisConclusion.goodSingleLayer');

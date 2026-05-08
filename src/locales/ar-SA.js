@@ -202,6 +202,7 @@ apiAccess: 'الوصول إلى API'
       good: 'الظروف جيدة مع فرصة واضحة لظهور غيوم ملتهبة جميلة.',
       goodSingleLayer: 'فرصة الغيوم الملتهبة جيدة، لكن طبقات السحب محدودة.',
       fair: 'الظروف متوسطة؛ راقب تطور السحب الفعلي.',
+      clearSunset: 'Fire clouds are subtle, but the sunset is clear.',
       low: 'بعض الشروط الأساسية غير متوفرة، واحتمال الغيوم الملتهبة منخفض.'
     },
         scoreBreakdown: {
@@ -311,6 +312,8 @@ apiAccess: 'الوصول إلى API'
       conditionsFair: 'ظروف معتدلة، ألوان متفرقة ممكنة',
       canWatch: 'يمكن مشاهدته',
       conditionsGood: 'ظروف جيدة مع قيمة مشاهدة معينة',
+      clearSunsetTransparent: 'Fire clouds are subtle, but the sunset is clear.',
+      casualViewingOk: 'Worth a casual look',
       veryLikely: 'احتمالية عالية لغروب جميل',
       excellentConditions: 'سحب معتدلة مع مسار ضوء واضح',
       legendaryEruption: 'ثوران أسطوري',
