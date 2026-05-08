@@ -1918,7 +1918,14 @@ class PredictionController {
       return '';
     }
 
-    const language = this.i18n?.currentLanguage || 'zh-CN';
+    const rawLanguage = this.i18n?.currentLanguage || this.i18n?.getCurrentLanguage?.() || 'zh-CN';
+    const normalizedLanguage = String(rawLanguage).toLowerCase();
+    const language = normalizedLanguage.startsWith('ko') ? 'ko-KR'
+      : normalizedLanguage.startsWith('ja') ? 'ja-JP'
+        : normalizedLanguage.startsWith('zh-tw') || normalizedLanguage.startsWith('zh-hk') ? 'zh-TW'
+          : normalizedLanguage.startsWith('zh') ? 'zh-CN'
+            : normalizedLanguage.startsWith('en') ? 'en-US'
+              : rawLanguage;
     const directionSets = {
       'zh-CN': [
         '正北', '东北偏北', '东北', '东北偏东',
@@ -1937,6 +1944,12 @@ class PredictionController {
         '東', '東南東', '南東', '南南東',
         '南', '南南西', '南西', '西南西',
         '西', '西北西', '北西', '北北西'
+      ],
+      'ko-KR': [
+        '북', '북북동', '북동', '동북동',
+        '동', '동남동', '남동', '남남동',
+        '남', '남남서', '남서', '서남서',
+        '서', '서북서', '북서', '북북서'
       ],
       'en-US': [
         'N', 'NNE', 'NE', 'ENE',
