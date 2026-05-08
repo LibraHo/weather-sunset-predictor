@@ -123,3 +123,16 @@ describe('prediction title plate regression guards', () => {
     expect(titlePlateBlock).toContain('box-shadow: none !important');
   });
 });
+
+describe('prediction date label regression guards', () => {
+  test('main prediction date label is plain text without a competing plate', () => {
+    const source = fs.readFileSync(path.resolve('styles/main.css'), 'utf8');
+    const dateTagBlock = source.match(/\.prediction-app-card \.phenomenon-date-tag,[\s\S]*?\n\}/)?.[0] || '';
+
+    expect(dateTagBlock).toContain('body.theme-dark .prediction-app-card .phenomenon-date-tag');
+    expect(dateTagBlock).toContain('padding: 0 !important');
+    expect(dateTagBlock).toContain('background: transparent !important');
+    expect(dateTagBlock).toContain('border-color: transparent !important');
+    expect(dateTagBlock).toContain('box-shadow: none !important');
+  });
+});

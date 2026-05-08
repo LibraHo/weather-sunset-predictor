@@ -9019,3 +9019,19 @@ html[data-actual-theme="dark"] #three-day-glow .fcard-day-date {
     padding: var(--spacing-md);
   }
 }
+
+/* Fix: the date label in the sunrise/sunset title should read as plain text, not a separate plate that competes with the share button. */
+.prediction-app-card .phenomenon-date-tag,
+body.theme-dark .prediction-app-card .phenomenon-date-tag,
+html.theme-dark .prediction-app-card .phenomenon-date-tag,
+html[data-theme="dark"] .prediction-app-card .phenomenon-date-tag,
+html[data-actual-theme="dark"] .prediction-app-card .phenomenon-date-tag,
+body.theme-light .prediction-app-card .phenomenon-date-tag,
+html.theme-light .prediction-app-card .phenomenon-date-tag,
+html[data-theme="light"] .prediction-app-card .phenomenon-date-tag,
+html[data-actual-theme="light"] .prediction-app-card .phenomenon-date-tag {
+  padding: 0 !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
