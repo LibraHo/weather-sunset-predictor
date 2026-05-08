@@ -8951,10 +8951,12 @@ html[data-actual-theme="dark"] #three-day-glow .fcard-day-date {
 
 @media (max-width: 768px) {
   .weather-view-toggle.xiake-toggle {
-    width: 100%;
+    width: min(100%, 360px);
     max-width: 100%;
-    justify-content: flex-start;
-    overflow-x: auto;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    justify-content: center;
+    overflow-x: visible;
     overflow-y: visible;
     padding: 4px;
     scrollbar-width: none;
@@ -8966,52 +8968,67 @@ html[data-actual-theme="dark"] #three-day-glow .fcard-day-date {
   }
 
   .weather-view-toggle .xiake-toggle-btn {
-    flex: 0 0 auto;
+    flex: 1 1 0;
+    min-width: 0;
     white-space: nowrap;
   }
 
   #three-day-glow .forecast-horizontal-container {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     width: 100%;
-    gap: 10px;
+    gap: 8px;
   }
 
   #three-day-glow .forecast-day-card {
     width: 100%;
-    padding: 12px;
+    min-height: 0;
+    padding: 10px 8px;
     border-radius: 16px;
-    grid-template-columns: minmax(78px, 0.42fr) 1fr;
-    grid-template-rows: auto;
-    align-items: center;
-    gap: 12px;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr;
+    align-items: stretch;
+    justify-items: center;
+    gap: 6px;
+    text-align: center;
   }
 
   #three-day-glow .fcard-day-label {
-    font-size: 0.88rem;
+    font-size: 0.82rem;
+    width: 100%;
   }
 
   #three-day-glow .fcard-day-date {
-    font-size: 0.72rem;
+    font-size: 0.68rem;
+    margin-top: -3px;
   }
 
   #three-day-glow .fcard-day-rows {
-    gap: 7px;
+    gap: 6px;
   }
 
   #three-day-glow .fcard-row-item {
-    gap: 7px;
-    padding: 7px 8px;
+    grid-template-columns: auto auto;
+    justify-content: center;
+    gap: 5px;
+    padding: 6px 4px;
+    width: 100%;
+    min-width: 0;
   }
 
   #three-day-glow .fcard-row-label {
-    font-size: 0.8rem;
+    display: none;
+  }
+
+  #three-day-glow .fcard-row-icon {
+    width: 1.2rem;
+    height: 1.2rem;
   }
 
   #three-day-glow .fcard-row-score {
-    min-width: 2.8rem;
-    padding: 4px 7px;
-    font-size: 0.82rem;
+    min-width: 2.3rem;
+    padding: 4px 6px;
+    font-size: 0.78rem;
   }
 
   .three-day-glow-loading {

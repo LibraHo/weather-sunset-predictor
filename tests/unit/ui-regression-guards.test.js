@@ -56,9 +56,12 @@ describe('recent user-reported UI regression guards', () => {
     expect(source).toContain('#three-day-glow #forecast-timeline');
     expect(source).toMatch(/#three-day-glow #forecast-timeline \{[\s\S]*?width: 100%/);
     expect(desktopGridBlock).toContain('grid-template-columns: repeat(3, minmax(0, 1fr))');
-    expect(mobileBlock).toContain('grid-template-columns: 1fr');
+    expect(mobileBlock).toContain('grid-template-columns: repeat(3, minmax(0, 1fr))');
+    expect(mobileBlock).toContain('justify-content: center');
+    expect(mobileBlock).toContain('margin-left: auto !important');
+    expect(mobileBlock).toContain('#three-day-glow .fcard-row-label');
+    expect(mobileBlock).toContain('display: none');
     expect(source).toContain('.weather-view-toggle.xiake-toggle');
-    expect(source).toContain('overflow-x: auto');
   });
 
   test('compact cloud labels are allowed to wrap and do not force ellipsis', () => {
