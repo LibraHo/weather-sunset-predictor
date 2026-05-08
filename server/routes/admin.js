@@ -13,12 +13,12 @@
 
 const express = require('express');
 const multer = require('multer');
-const basicAuth = require('basic-auth');
 const exifr = require('exifr');
 const path = require('path');
 const { exec } = require('child_process');
 const util = require('util');
 const photoService = require('../services/PhotoService');
+const { requireAdminAuth } = require('../utils/adminAuth');
 
 const execAsync = util.promisify(exec);
 
@@ -27,7 +27,6 @@ const router = express.Router();
 // ---------------------------------------------------------------------------
 // 配置
 // ---------------------------------------------------------------------------
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'xiake2024';
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
 const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/heic'];
 
@@ -48,39 +47,16 @@ const upload = multer({
 });
 
 // ---------------------------------------------------------------------------
-// Basic Auth 中间件
-// ---------------------------------------------------------------------------
-function requireAuth(req, res, next) {
-  const credentials = basicAuth(req);
-
-  if (!credentials || credentials.pass !== ADMIN_PASSWORD) {
-    res.set('WWW-Authenticate', 'Basic realm="Xiake Photo Admin"');
-    return res.status(401).json({
-      error: {
-        code: 'UNAUTHORIZED',
-        message: '认证失败'
-      }
-    });
-  }
-
-  next();
-}
-
-// ---------------------------------------------------------------------------
 // GET /admin - 后台管理页面
 // ---------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------
-// GET /admin - 后台管理页面
-// ---------------------------------------------------------------------------
-router.get('/admin', requireAuth, (req, res) => {
+router.get('/admin', requireAdminAuth, (req, res) => {
   res.sendFile(path.join(__dirname, '../../public/admin/index.html'));
 });
 
 // ---------------------------------------------------------------------------
 // 运维 API
 // ---------------------------------------------------------------------------
-router.get('/admin/health-detailed', requireAuth, async (req, res) => {
+router.get('/admin/health-detailed', requireAdminAuth, async (req, res) => {
   try {
     const { stdout: diskOut } = await execAsync("df -h / | awk 'NR==2{print $5}'");
     const { stdout: memOut } = await execAsync("free -h | awk 'NR==2{printf \"%s/%s\",$3,$2}'");
@@ -99,7 +75,7 @@ router.get('/admin/health-detailed', requireAuth, async (req, res) => {
   }
 });
 
-router.post('/admin/clear-cache', requireAuth, async (req, res) => {
+router.post('/admin/clear-cache', requireAdminAuth, async (req, res) => {
   try {
     const fs = require('fs').promises;
     const cachePath = path.join(process.env.HOME || '/home/ubuntu', '.xiake', 'grid-cache.json');
@@ -111,7 +87,7 @@ router.post('/admin/clear-cache', requireAuth, async (req, res) => {
   }
 });
 
-router.post('/admin/trigger-refresh', requireAuth, async (req, res) => {
+router.post('/admin/trigger-refresh', requireAdminAuth, async (req, res) => {
   try {
     const { period = 'sunset' } = req.body;
     const axios = require('axios');
@@ -124,7 +100,7 @@ router.post('/admin/trigger-refresh', requireAuth, async (req, res) => {
   }
 });
 
-router.post('/admin/restart', requireAuth, async (req, res) => {
+router.post('/admin/restart', requireAdminAuth, async (req, res) => {
   try {
     const { stdout } = await execAsync('pm2 restart weather-sunset-predictor-backend || sudo systemctl restart weather-sunset || true');
     res.json({ success: true, output: stdout });
@@ -139,7 +115,7 @@ router.post('/admin/restart', requireAuth, async (req, res) => {
 // ---------------------------------------------------------------------------
 // POST /admin/upload - 上传照片
 // ---------------------------------------------------------------------------
-router.post('/upload', requireAuth, upload.single('photo'), async (req, res) => {
+router.post('/upload', requireAdminAuth, upload.single('photo'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -234,7 +210,7 @@ router.post('/upload', requireAuth, upload.single('photo'), async (req, res) => 
 // ---------------------------------------------------------------------------
 // DELETE /admin/photos/:id - 删除照片
 // ---------------------------------------------------------------------------
-router.delete('/photos/:id', requireAuth, (req, res) => {
+router.delete('/photos/:id', requireAdminAuth, (req, res) => {
   try {
     const { id } = req.params;
     const deleted = photoService.deletePhoto(id);
@@ -271,7 +247,7 @@ router.get('/admin/quota', (req, res) => {
 
 // 访问统计
 const accessLogService = require('../services/AccessLogService');
-router.get('/admin/access-stats', requireAuth, (req, res) => {
+router.get('/admin/access-stats', requireAdminAuth, (req, res) => {
   res.json(accessLogService.getStats());
 });
 

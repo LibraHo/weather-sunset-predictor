@@ -18,12 +18,12 @@ const spotsRoutes = require('./routes/spots');
 const tilesRoutes = require('./routes/tiles');
 const photosRoutes = require('./routes/photos');
 const adminRoutes = require('./routes/admin');
+const { requireAdminAuth } = require('./utils/adminAuth');
 const apiLogsRoutes = require('./routes/api-logs');
 const agentRoutes = require('./routes/agent');
 const applicationsRoutes = require('./routes/applications');
 const shareRoutes = require('./routes/share');
 const shareStatsRoutes = require('./routes/share-stats');
-const basicAuth = require('basic-auth');
 const { requestLogger, errorLogger } = require('./middleware/logger');
 
 const app = express();
@@ -141,17 +141,8 @@ app.use('/api/photos', photosRoutes);
 app.use('/', adminRoutes);
 
 // Admin API routes (protected by Basic Auth)
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'xiake2024';
-const adminApiAuth = (req, res, next) => {
-  const credentials = basicAuth(req);
-  if (!credentials || credentials.pass !== ADMIN_PASSWORD) {
-    res.set('WWW-Authenticate', 'Basic realm="Xiake Photo Admin"');
-    return res.status(401).json({ error: { code: 'UNAUTHORIZED', message: '认证失败' } });
-  }
-  next();
-};
-app.use('/api/admin', adminApiAuth, apiLogsRoutes);
-app.use('/api/admin/share', adminApiAuth, shareStatsRoutes);
+app.use('/api/admin', requireAdminAuth, apiLogsRoutes);
+app.use('/api/admin/share', requireAdminAuth, shareStatsRoutes);
 app.use('/share', shareRoutes);
 
 // 静态文件服务（公开分享页面）
