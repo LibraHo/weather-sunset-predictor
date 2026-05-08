@@ -1,13 +1,31 @@
 'use strict';
 
-const basicAuth = require('basic-auth');
-
 const ADMIN_REALM = 'Xiake Admin Console';
 
 function getAdminCredentials() {
   return {
     username: process.env.ADMIN_USERNAME || 'admin',
     password: process.env.ADMIN_PASSWORD || 'xiake2024',
+  };
+}
+
+function parseBasicAuthHeader(header = '') {
+  const match = /^Basic\s+(.+)$/i.exec(header);
+  if (!match) return null;
+
+  let decoded;
+  try {
+    decoded = Buffer.from(match[1], 'base64').toString('utf8');
+  } catch {
+    return null;
+  }
+
+  const idx = decoded.indexOf(':');
+  if (idx === -1) return null;
+
+  return {
+    name: decoded.slice(0, idx),
+    pass: decoded.slice(idx + 1),
   };
 }
 
@@ -25,7 +43,7 @@ function isValidAdminCredentials(credentials) {
 }
 
 function requireAdminAuth(req, res, next) {
-  const credentials = basicAuth(req);
+  const credentials = parseBasicAuthHeader(req.get('Authorization'));
 
   if (!isValidAdminCredentials(credentials)) {
     setAdminAuthChallenge(res);
@@ -44,6 +62,7 @@ module.exports = {
   ADMIN_REALM,
   getAdminCredentials,
   isValidAdminCredentials,
+  parseBasicAuthHeader,
   requireAdminAuth,
   setAdminAuthChallenge,
 };
