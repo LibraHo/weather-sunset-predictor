@@ -33,6 +33,10 @@ describe('recent user-reported UI regression guards', () => {
     expect(darkDayBlock).toContain('rgba(18, 28, 52, 0.82)');
     expect(darkCloudBlock).toContain('rgba(18, 28, 52, 0.80)');
     expect(xiakeFixBlock).toContain('@media (prefers-color-scheme: dark)');
+    expect(xiakeFixBlock).toContain('#weather-section #weekly-cards.weekly-cards-container .day-card');
+    expect(xiakeFixBlock).toContain('Mobile weather weekly rows must use the same night-sky glass layer as the weather panel.');
+    expect(xiakeFixBlock).toContain('rgba(18, 28, 52, 0.72)');
+    expect(xiakeFixBlock).toContain('color-mix(in srgb, var(--theme-accent) 72%, transparent)');
 
     expect(dayCardBlock).not.toMatch(/background(?:-color)?:\s*(?:#fff\b|#ffffff\b|#f5f5f5\b|var\(--color-bg\))/i);
     expect(cloudBlock).not.toMatch(/background(?:-color)?:\s*(?:#fff\b|#ffffff\b|#f5f5f5\b|#e5e7eb\b|var\(--color-bg\))/i);
