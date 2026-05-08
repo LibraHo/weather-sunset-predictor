@@ -8679,3 +8679,65 @@ html[data-actual-theme="dark"] .weather-wind-main {
     height: 20px;
   }
 }
+
+/* 24-hour forecast chart: align panel with Sunset Voyager glass design language. */
+.chart-container {
+  background:
+    radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--theme-accent-soft) 42%, transparent), transparent 42%),
+    var(--theme-card-bg, var(--color-card-bg));
+  border: 1px solid var(--theme-card-border, var(--color-border));
+  box-shadow: var(--theme-shadow, var(--shadow-sm));
+}
+.weather-chart-panel {
+  border: 1px solid var(--theme-card-border, var(--color-border));
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--theme-card-bg, var(--color-card-bg)) 96%, transparent),
+      color-mix(in srgb, var(--theme-panel-soft, var(--color-card-bg)) 84%, transparent));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 46%, transparent);
+  backdrop-filter: blur(10px);
+}
+body.theme-dark .chart-container,
+body.theme-actual-dark .chart-container,
+body[data-theme="dark"] .chart-container,
+body[data-actual-theme="dark"] .chart-container,
+html.theme-dark .chart-container,
+html.theme-actual-dark .chart-container,
+html[data-theme="dark"] .chart-container,
+html[data-actual-theme="dark"] .chart-container {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(251, 146, 60, 0.10), transparent 42%),
+    rgba(18, 28, 52, 0.62);
+  border-color: rgba(255, 255, 255, 0.10);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+body.theme-dark .weather-chart-panel,
+body.theme-actual-dark .weather-chart-panel,
+body[data-theme="dark"] .weather-chart-panel,
+body[data-actual-theme="dark"] .weather-chart-panel,
+html.theme-dark .weather-chart-panel,
+html.theme-actual-dark .weather-chart-panel,
+html[data-theme="dark"] .weather-chart-panel,
+html[data-actual-theme="dark"] .weather-chart-panel {
+  border-color: rgba(255, 255, 255, 0.10);
+  background:
+    linear-gradient(180deg, rgba(21, 32, 58, 0.78), rgba(10, 15, 30, 0.58));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+@media (prefers-color-scheme: dark) {
+  body.theme-auto .chart-container,
+  html.theme-auto .chart-container {
+    background:
+      radial-gradient(circle at 18% 0%, rgba(251, 146, 60, 0.10), transparent 42%),
+      rgba(18, 28, 52, 0.62);
+    border-color: rgba(255, 255, 255, 0.10);
+    box-shadow: 0 16px 38px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+  body.theme-auto .weather-chart-panel,
+  html.theme-auto .weather-chart-panel {
+    border-color: rgba(255, 255, 255, 0.10);
+    background:
+      linear-gradient(180deg, rgba(21, 32, 58, 0.78), rgba(10, 15, 30, 0.58));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+}
