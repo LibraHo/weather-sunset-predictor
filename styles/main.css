@@ -8444,3 +8444,28 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
   margin: 0;
   border-width: 2px;
 }
+
+/* Prediction conclusion banner: keep icon/text aligned for wrapped CJK copy. */
+.conclusion-banner {
+  grid-template-columns: 20px minmax(0, 1fr) !important;
+  column-gap: 10px !important;
+  align-items: start !important;
+  text-align: left !important;
+}
+.conclusion-banner .conclusion-icon {
+  width: 20px !important;
+  height: 20px !important;
+  margin-top: 0.08em !important;
+  align-self: start !important;
+}
+.conclusion-banner .conclusion-icon .inline-svg-icon {
+  width: 18px !important;
+  height: 18px !important;
+}
+.conclusion-banner strong {
+  display: block;
+  min-width: 0;
+  line-height: 1.45;
+  text-align: left;
+}
+}
