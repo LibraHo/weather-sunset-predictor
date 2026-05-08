@@ -21,4 +21,13 @@ describe('gallery share map page', () => {
     expect(html).not.toContain('🔥');
     expect(html).not.toContain('📷');
   });
+
+  test('hero copy explains the gallery value instead of restating basemap implementation', () => {
+    expect(html).toContain('晚霞照片分享');
+    expect(html).toContain('看看世界各地分享的晚霞照片');
+    expect(html).not.toContain('火烧云照片地图');
+    expect(html).not.toContain('照片分享地图');
+    expect(html).not.toContain('评分');
+    expect(html).not.toContain('使用火烧云地图同款地理底图');
+  });
 });
