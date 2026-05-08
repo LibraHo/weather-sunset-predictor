@@ -166,7 +166,7 @@ class WeatherController {
     this.currentLocation = null;
 
     // 需求11：视图状态管理
-    this.currentView = 'overview'; // 'overview', 'hourly' 或 'map'
+    this.currentView = 'overview'; // 'overview', 'hourly', 'glow' 或 'map'
     this.selectedDay = 'today'; // 'today' 或 'tomorrow'
     this.selectedParameter = 'temp'; // 'temp', 'precip', 'humidity', 'wind', 'pressure', 'clouds'
     this.isMapInitialized = false; // 任务18：地图初始化状态
@@ -793,8 +793,8 @@ class WeatherController {
   }
 
   /**
-   * 切换视图（概览/详细/地图）
-   * @param {string} view - 'overview', 'hourly' 或 'map'
+   * 切换视图（概览/详细/3天朝晚霞/地图）
+   * @param {string} view - 'overview', 'hourly', 'glow' 或 'map'
    */
   switchView(view) {
     this.currentView = view;
@@ -802,18 +802,22 @@ class WeatherController {
     const overviewView = document.getElementById('weekly-overview');
     const hourlyView = document.getElementById('hourly-forecast');
     const mapView = document.getElementById('map-forecast');
+    const glowView = document.getElementById('three-day-glow');
     const overviewBtn = document.getElementById('overview-btn');
     const hourlyBtn = document.getElementById('hourly-btn');
+    const glowBtn = document.getElementById('three-day-glow-btn');
     const mapBtn = document.getElementById('map-btn');
 
     // 隐藏所有视图
     if (overviewView) overviewView.classList.add('hidden');
     if (hourlyView) hourlyView.classList.add('hidden');
     if (mapView) mapView.classList.add('hidden');
+    if (glowView) glowView.classList.add('hidden');
 
     // 移除所有按钮的active状态
     if (overviewBtn) overviewBtn.classList.remove('active');
     if (hourlyBtn) hourlyBtn.classList.remove('active');
+    if (glowBtn) glowBtn.classList.remove('active');
     if (mapBtn) mapBtn.classList.remove('active');
 
     if (view === 'overview') {
@@ -831,6 +835,15 @@ class WeatherController {
       // 渲染详细预报
       if (this.currentWeatherData) {
         this.renderHourlyForecast(this.currentWeatherData, this.selectedDay);
+      }
+    } else if (view === 'glow') {
+      if (glowView) glowView.classList.remove('hidden');
+      if (glowBtn) glowBtn.classList.add('active');
+
+      const forecastTimeline = document.getElementById('forecast-timeline');
+      const forecastLoading = document.getElementById('forecast-loading');
+      if (forecastTimeline?.dataset.loaded !== 'true' && forecastLoading) {
+        forecastLoading.classList.remove('hidden');
       }
     } else if (view === 'map') {
       // 任务18：切换到地图视图
@@ -1188,6 +1201,11 @@ class WeatherController {
       hourlyBtn.textContent = this.i18n.t('charts.hourly');
     }
 
+    const glowBtn = document.getElementById('three-day-glow-btn');
+    if (glowBtn) {
+      glowBtn.textContent = this.i18n.t('weather.threeDayGlow');
+    }
+
     this.chartService = this.chartRenderController.createChartService(this.tempUnit, this.windUnit);
 
     // 如果有当前天气数据，重新渲染以更新格式化的日期/时间
@@ -1196,6 +1214,8 @@ class WeatherController {
       if (this.currentView === 'hourly') {
         // 重新渲染24小时图表
         this.renderHourlyForecast(this.currentWeatherData, this.selectedDay);
+      } else if (this.currentView === 'glow') {
+        this.switchView('glow');
       } else {
         // 重新渲染概览
         this.renderWeeklyOverview(this.currentWeatherData);

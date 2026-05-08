@@ -208,6 +208,8 @@ export default {
     // 天气概览
     overview: '概览',
     hourly: '详细预报',
+    threeDayGlow: '3天朝晚霞',
+    threeDayGlowLoading: '正在读取3天朝晚霞...',
     mapView: '地图预测',
     daysOverview: '{{days}}天概览',
     precipChance: '{{prob}}%降水',

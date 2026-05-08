@@ -165,6 +165,8 @@ apiAccess: 'Accesso API'
     "clear": "Limpido",
     "overview": "Panoramica",
     "hourly": "Previsione Oraria",
+    "threeDayGlow": "Bagliori 3 giorni",
+    "threeDayGlowLoading": "Caricamento dei bagliori di alba e tramonto per 3 giorni...",
     "daysOverview": "Panoramica {{days}} Giorni",
     "precipChance": "{{prob}}% precip",
     "dataInfo": "ℹ️ La fonte dati fornisce {{hours}} ore di dati di previsione (~{{days}} giorni). Considera l'uso di altre fonti dati meteo per più giorni.",

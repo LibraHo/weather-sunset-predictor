@@ -192,6 +192,8 @@ const translations = {
     "clear": "Dégagé",
     "overview": "Aperçu",
     "hourly": "Prévisions Horaires",
+    "threeDayGlow": "Lueurs sur 3 jours",
+    "threeDayGlowLoading": "Chargement des lueurs d’aube et de crépuscule sur 3 jours...",
     "daysOverview": "Aperçu sur {{days}} jours",
     "precipChance": "{{prob}}% précip",
     "dataInfo": "ℹ️ La source de données fournit {{hours}} heures de prévisions (~{{days}} jours). Envisagez d'utiliser d'autres sources pour plus de jours.",

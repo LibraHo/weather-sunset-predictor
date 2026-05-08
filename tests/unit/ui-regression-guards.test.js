@@ -12,7 +12,20 @@ describe('recent user-reported UI regression guards', () => {
     expect(source).toContain('body.theme-dark #forecast-section .forecast-day-card');
     expect(source).toContain('body.theme-dark #forecast-section .forecast-day-column');
     expect(source).toContain('body.theme-dark #forecast-section .forecast-item');
+    expect(source).toContain('body.theme-dark #three-day-glow .forecast-day-card');
     expect(source).toMatch(/forecast-day-card[\s\S]*rgba\(18, 28, 52, 0\.88\)/);
+  });
+
+  test('3-day glow forecast is a weather tab with a loading state', () => {
+    const page = html();
+    const source = css();
+
+    expect(page).toContain('id="three-day-glow-btn"');
+    expect(page).toContain('data-i18n="weather.threeDayGlow"');
+    expect(page).toContain('id="forecast-loading"');
+    expect(page).not.toContain('id="forecast-section" class="card hidden"');
+    expect(source).toContain('#three-day-glow .forecast-horizontal-container');
+    expect(source).toContain('.three-day-glow-loading');
   });
 
   test('compact cloud labels are allowed to wrap and do not force ellipsis', () => {

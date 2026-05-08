@@ -668,3 +668,46 @@ describe('WeatherController - 24小时温度连续化', () => {
   });
 
 });
+
+describe('WeatherController - 3天朝晚霞标签', () => {
+  let controller;
+
+  beforeEach(() => {
+    controller = Object.create(WeatherController.prototype);
+    controller.currentWeatherData = null;
+    controller.currentView = 'overview';
+    document.body.innerHTML = `
+      <div id="weekly-overview"></div>
+      <div id="hourly-forecast"></div>
+      <div id="three-day-glow" class="hidden"></div>
+      <div id="map-forecast"></div>
+      <button id="overview-btn" class="active"></button>
+      <button id="hourly-btn"></button>
+      <button id="three-day-glow-btn"></button>
+      <button id="map-btn"></button>
+      <div id="forecast-loading" class="hidden"></div>
+      <div id="forecast-timeline" data-loaded="false"></div>
+    `;
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  test('点击3天朝晚霞但数据未完成时显示读取条', () => {
+    controller.switchView('glow');
+
+    expect(document.getElementById('three-day-glow').classList.contains('hidden')).toBe(false);
+    expect(document.getElementById('three-day-glow-btn').classList.contains('active')).toBe(true);
+    expect(document.getElementById('forecast-loading').classList.contains('hidden')).toBe(false);
+    expect(controller.currentView).toBe('glow');
+  });
+
+  test('3天朝晚霞已加载时不再显示读取条', () => {
+    document.getElementById('forecast-timeline').dataset.loaded = 'true';
+
+    controller.switchView('glow');
+
+    expect(document.getElementById('forecast-loading').classList.contains('hidden')).toBe(true);
+  });
+});
