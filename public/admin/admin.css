@@ -550,6 +550,24 @@ body.theme-dark .admin-table tr:hover td {
   word-break: break-all;
 }
 
+.photo-gps-status {
+  color: var(--theme-text-muted, var(--color-text-light));
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.photo-gps-status.success {
+  color: var(--color-success);
+}
+
+.photo-gps-status.warning {
+  color: var(--theme-accent-strong, var(--color-primary));
+}
+
+.photo-gps-status.error {
+  color: var(--color-error);
+}
+
 .upload-progress {
   display: flex;
   flex-direction: column;

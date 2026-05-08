@@ -70,6 +70,7 @@ describe('admin page structure', () => {
       'uploadProgressBar',
       'uploadProgressText',
       'uploadFeedback',
+      'photoGpsStatus',
       'photoGrid',
     ].forEach((id) => expect(html).toContain(`id="${id}"`));
 
@@ -88,12 +89,25 @@ describe('admin page structure', () => {
       'clearGridCache',
       'triggerRefresh',
       'restartBackend',
+      'isValidPhotoCoordinate',
+      'setPhotoCoordinate',
+      'autofillPhotoGpsFromExif',
       'uploadPhotoWithProgress',
     ].forEach((fn) => expect(js).toContain(`function ${fn}`));
 
     expect(js).toContain("fileInput.addEventListener('change'");
     expect(js).toContain('已选择：${file.name}');
     expect(js).toContain("selectedName.textContent = '尚未选择照片'");
+    expect(html).toContain('地理位置必填');
+    expect(html).toContain('纬度（必填）');
+    expect(html).toContain('经度（必填）');
+    expect(html).not.toContain('在地图上选择位置');
+    expect(html).not.toContain('leaflet@1.9.4');
+    expect(js).toContain('window.exifr.gps(file)');
+    expect(js).toContain('位置是必填项');
+    expect(js).toContain("showMessage(message, 'error', 'uploadFeedback')");
+    expect(js).not.toContain('window.L.map');
+    expect(js).toContain("浏览器端 EXIF 读取库未加载");
     expect(js).toContain("xhr.upload.addEventListener('progress'");
     expect(js).toContain("showMessage('上传成功', 'success', 'uploadFeedback')");
     expect(js).toContain("showMessage('上传失败: ' + message, 'error', 'uploadFeedback')");
