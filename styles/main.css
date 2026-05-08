@@ -8468,4 +8468,214 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
   line-height: 1.45;
   text-align: left;
 }
+
+/* Weather hero concept refresh: warm translucent weather card + wind capsule. */
+.weather-visual-panel {
+  position: relative;
+  overflow: hidden;
+  justify-content: center;
+  gap: 12px;
+  min-height: 300px;
+  border-color: var(--theme-card-border);
+  background:
+    radial-gradient(circle at 50% 14%, color-mix(in srgb, var(--theme-accent-soft) 70%, transparent) 0 18%, transparent 42%),
+    linear-gradient(180deg, color-mix(in srgb, var(--theme-card-bg) 94%, transparent), color-mix(in srgb, var(--theme-panel-soft) 86%, transparent));
+  color: var(--theme-text);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 62%, transparent), 0 18px 42px color-mix(in srgb, var(--theme-text) 12%, transparent);
+  backdrop-filter: blur(14px);
+}
+.weather-visual-panel::before {
+  content: "";
+  position: absolute;
+  inset: auto -8% -18% -8%;
+  height: 44%;
+  pointer-events: none;
+  background:
+    radial-gradient(90% 80% at 22% 100%, color-mix(in srgb, var(--theme-accent-soft) 74%, transparent), transparent 64%),
+    radial-gradient(90% 80% at 80% 100%, color-mix(in srgb, var(--theme-accent-soft) 52%, transparent), transparent 60%);
+  opacity: 0.9;
+}
+.weather-visual-panel > * {
+  position: relative;
+  z-index: 1;
+}
+.weather-location-hero {
+  display: inline-grid;
+  grid-template-columns: 20px minmax(0, max-content);
+  align-items: center;
+  justify-content: center;
+  column-gap: 8px;
+  max-width: min(100%, 720px);
+  margin-bottom: 4px;
+  color: var(--theme-text);
+  font-size: clamp(1.05rem, 2.1vw, 1.55rem);
+  line-height: 1.25;
+}
+.weather-location-hero #weather-location {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.weather-location-pin {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  color: color-mix(in srgb, var(--theme-accent) 82%, var(--theme-text));
+}
+.weather-location-pin svg,
+.weather-wind-glyph svg,
+.weather-wind-direction-icon svg {
+  width: 100%;
+  height: 100%;
+}
+.weather-icon-large {
+  width: clamp(70px, 12vw, 104px);
+  height: clamp(58px, 10vw, 90px);
+  display: grid;
+  place-items: center;
+  font-size: clamp(3.3rem, 7vw, 5.2rem);
+  filter: drop-shadow(0 12px 18px color-mix(in srgb, var(--theme-text) 16%, transparent));
+}
+.weather-icon-large svg {
+  width: 100%;
+  height: 100%;
+}
+.weather-desc {
+  color: var(--theme-text-muted);
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  font-weight: 650;
+  text-shadow: none;
+}
+.weather-temp-large {
+  color: var(--theme-text);
+  font-size: clamp(4.2rem, 10vw, 7.8rem);
+  font-weight: 760;
+  letter-spacing: -0.075em;
+  text-shadow: none;
+}
+.weather-temp-large .temp-unit {
+  margin-top: 0.15em;
+  margin-left: 0.18em;
+  color: var(--theme-text-muted);
+  font-size: clamp(1.35rem, 3vw, 2.35rem);
+  letter-spacing: -0.03em;
+}
+.weather-wind-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 100%;
+  margin-top: 2px;
+  padding: 9px 17px;
+  color: var(--theme-text);
+  border: 1px solid var(--theme-card-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-panel-soft) 78%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 54%, transparent), 0 8px 22px color-mix(in srgb, var(--theme-text) 8%, transparent);
+  text-shadow: none;
+  backdrop-filter: blur(10px);
+}
+.weather-wind-glyph {
+  width: 22px;
+  height: 22px;
+  color: color-mix(in srgb, var(--chart-wind-color) 70%, var(--theme-accent));
+}
+.weather-wind-speed {
+  font-size: clamp(1rem, 2.1vw, 1.22rem);
+  font-weight: 760;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.weather-wind-divider {
+  width: 1px;
+  height: 22px;
+  background: var(--theme-card-border);
+}
+.weather-wind-direction-text {
+  color: var(--theme-text);
+  font-size: clamp(0.98rem, 2vw, 1.18rem);
+  font-weight: 680;
+  line-height: 1;
+  opacity: 1;
+}
+.weather-wind-direction-icon {
+  width: 18px;
+  height: 18px;
+  color: color-mix(in srgb, var(--theme-accent) 80%, var(--theme-text));
+}
+body.theme-dark .weather-visual-panel,
+html.theme-dark .weather-visual-panel,
+html[data-theme="dark"] .weather-visual-panel,
+html[data-actual-theme="dark"] .weather-visual-panel {
+  border-color: rgba(255, 255, 255, 0.10);
+  background:
+    radial-gradient(circle at 50% 12%, rgba(251, 146, 60, 0.14) 0 16%, transparent 42%),
+    radial-gradient(circle at 16% 92%, rgba(251, 191, 36, 0.10), transparent 44%),
+    linear-gradient(180deg, rgba(21, 32, 58, 0.88), rgba(10, 15, 30, 0.72));
+  color: rgba(255, 255, 255, 0.92);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 18px 46px rgba(0, 0, 0, 0.30);
+}
+body.theme-dark .weather-visual-panel::before,
+html.theme-dark .weather-visual-panel::before,
+html[data-theme="dark"] .weather-visual-panel::before,
+html[data-actual-theme="dark"] .weather-visual-panel::before {
+  background:
+    radial-gradient(90% 80% at 22% 100%, rgba(251, 146, 60, 0.16), transparent 64%),
+    radial-gradient(90% 80% at 80% 100%, rgba(251, 191, 36, 0.08), transparent 60%);
+  opacity: 1;
+}
+body.theme-dark .weather-location-hero,
+html.theme-dark .weather-location-hero,
+html[data-theme="dark"] .weather-location-hero,
+html[data-actual-theme="dark"] .weather-location-hero,
+body.theme-dark .weather-temp-large,
+html.theme-dark .weather-temp-large,
+html[data-theme="dark"] .weather-temp-large,
+html[data-actual-theme="dark"] .weather-temp-large,
+body.theme-dark .weather-wind-direction-text,
+html.theme-dark .weather-wind-direction-text,
+html[data-theme="dark"] .weather-wind-direction-text,
+html[data-actual-theme="dark"] .weather-wind-direction-text {
+  color: rgba(255, 255, 255, 0.92);
+}
+body.theme-dark .weather-desc,
+html.theme-dark .weather-desc,
+html[data-theme="dark"] .weather-desc,
+html[data-actual-theme="dark"] .weather-desc,
+body.theme-dark .weather-temp-large .temp-unit,
+html.theme-dark .weather-temp-large .temp-unit,
+html[data-theme="dark"] .weather-temp-large .temp-unit,
+html[data-actual-theme="dark"] .weather-temp-large .temp-unit {
+  color: rgba(255, 255, 255, 0.66);
+}
+body.theme-dark .weather-wind-main,
+html.theme-dark .weather-wind-main,
+html[data-theme="dark"] .weather-wind-main,
+html[data-actual-theme="dark"] .weather-wind-main {
+  color: rgba(255, 255, 255, 0.92);
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(22, 34, 62, 0.62);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 10px 28px rgba(0, 0, 0, 0.26);
+}
+@media (max-width: 640px) {
+  .weather-visual-panel {
+    min-height: 250px;
+    gap: 9px;
+    padding: 14px 12px 13px;
+  }
+  .weather-location-hero {
+    grid-template-columns: 18px minmax(0, 1fr);
+    font-size: 1rem;
+  }
+  .weather-location-pin {
+    width: 18px;
+    height: 18px;
+  }
+  .weather-wind-main {
+    gap: 9px;
+    padding: 8px 12px;
+  }
+  .weather-wind-glyph {
+    width: 20px;
+    height: 20px;
+  }
 }
