@@ -38,6 +38,7 @@ class UIStateController {
   showLoading(show = true, state = {}) {
     const loadingElement = document.getElementById('loading-indicator');
     if (loadingElement) {
+      loadingElement.classList.toggle('hidden', !show);
       loadingElement.style.display = show ? 'block' : 'none';
     }
 
