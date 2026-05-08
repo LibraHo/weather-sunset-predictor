@@ -38,7 +38,11 @@ describe('WeatherController - 24小时温度连续化', () => {
     };
     controller._radarCompass = { render: jest.fn() };
 
-    await controller.renderRadarCompass({ name: 'test', lat: 0, lon: 0, isValid: () => true }, 'sunset');
+    const renderPromise = controller.renderRadarCompass({ name: 'test', lat: 0, lon: 0, isValid: () => true }, 'sunset');
+    expect(document.querySelector('.radar-compass-loading')).not.toBeNull();
+    expect(document.querySelector('.radar-compass-loading-spinner')).not.toBeNull();
+
+    await renderPromise;
 
     expect(controller.predictionAPIService.getSurrounding).not.toHaveBeenCalled();
     expect(controller._radarCompass.render).toHaveBeenCalledTimes(1);

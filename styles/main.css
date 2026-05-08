@@ -8405,6 +8405,46 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
   justify-content: center;
 }
 
+/* Prediction loading lives in the prediction card so weather can render first. */
+#prediction-section .loading {
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  z-index: 1;
+  width: min(360px, 100%);
+  margin: 12px auto 2px;
+}
+#prediction-section.prediction-loading #prediction-display {
+  display: none;
+}
+
+/* Keep cloud-radar fetching feedback visually grouped inside each prediction card. */
+.radar-compass-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 58px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  color: var(--color-text-light);
+  font-size: 13px;
+  border: 1px solid var(--glass-border, var(--color-border));
+  border-radius: 14px;
+  background: var(--glass-bg-light, color-mix(in srgb, var(--color-card-bg) 86%, transparent));
+}
+.radar-compass-loading p {
+  margin: 0;
+}
+.radar-compass-loading-spinner {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border-width: 2px;
+}
+
 /* Prediction conclusion banner: keep icon/text aligned for wrapped CJK copy. */
 .conclusion-banner {
   grid-template-columns: 20px minmax(0, 1fr) !important;
@@ -8427,4 +8467,5 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
   min-width: 0;
   line-height: 1.45;
   text-align: left;
+}
 }

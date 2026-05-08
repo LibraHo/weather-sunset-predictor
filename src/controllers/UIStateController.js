@@ -38,8 +38,16 @@ class UIStateController {
   showLoading(show = true, state = {}) {
     const loadingElement = document.getElementById('loading-indicator');
     if (loadingElement) {
+      const hostSection = loadingElement.closest('#prediction-section');
       loadingElement.classList.toggle('hidden', !show);
       loadingElement.style.display = show ? 'block' : 'none';
+      if (hostSection) {
+        hostSection.classList.toggle('prediction-loading', show);
+        if (show) {
+          hostSection.classList.remove('hidden');
+          hostSection.removeAttribute('hidden');
+        }
+      }
     }
 
     if (show) {

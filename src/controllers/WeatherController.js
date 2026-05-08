@@ -1314,7 +1314,12 @@ class WeatherController {
     container.style.display = 'block';
     {
       const loadingText = this.i18n?.t?.('surrounding.loading') || 'Loading surrounding weather data...';
-      container.innerHTML = `<p style="text-align:center;color:var(--color-text-light);font-size:13px;padding:12px 0;">${loadingText}</p>`;
+      container.innerHTML = `
+        <div class="radar-compass-loading" role="status" aria-live="polite">
+          <div class="spinner radar-compass-loading-spinner" aria-hidden="true"></div>
+          <p>${loadingText}</p>
+        </div>
+      `;
     }
 
     try {

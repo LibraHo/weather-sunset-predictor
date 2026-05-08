@@ -154,9 +154,6 @@ class AppController {
     }
 
     try {
-      // 显示加载状态
-      this.showLoading(true, { progress: 8, message: this.i18n.t('loading.data') });
-
       // 保存当前位置
       this.currentLocation = location;
       this.storageService.saveLastLocation(location);
@@ -169,7 +166,11 @@ class AppController {
         return;
       }
 
-      this.updateLoadingProgress({ progress: 18, message: this.i18n.t('loading.weather') });
+      const predictionSection = document.getElementById('prediction-section');
+      if (predictionSection) {
+        predictionSection.classList.add('hidden');
+        predictionSection.classList.remove('prediction-loading');
+      }
 
       // 获取天气数据（失败不阻塞地图等功能）
       let weatherData = null;
@@ -182,10 +183,9 @@ class AppController {
       }
 
       if (weatherData && weatherData.length > 0) {
-        this.updateLoadingProgress({ progress: 48, message: this.i18n.t('loading.prediction') });
-
-        // 更新天气显示
+        // 更新天气显示：天气信息先展示，再在朝霞/晚霞预测区域显示加载状态
         this.weatherController.updateWeatherDisplay(weatherData, location);
+        this.showLoading(true, { progress: 48, message: this.i18n.t('loading.prediction') });
 
         // 生成晚霞预测
         let predictions;
