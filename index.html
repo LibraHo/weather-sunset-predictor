@@ -305,6 +305,14 @@
       <!-- 晚霞预测 -->
       <section id="prediction-section" class="card hidden">
         <h2 id="prediction-section-title" data-i18n="prediction.title">朝霞/晚霞预测</h2>
+        <div id="loading-indicator" class="loading hidden">
+          <div class="spinner"></div>
+          <p id="loading-text" data-i18n="common.loading">加载中...</p>
+          <div class="loading-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div id="loading-progress-fill" class="loading-progress-fill"></div>
+          </div>
+          <p id="loading-progress-detail" class="loading-progress-detail" aria-live="polite"></p>
+        </div>
         <div id="prediction-display">
           <!-- 动态填充预测信息 -->
         </div>
@@ -525,15 +533,6 @@
         </div>
       </section>
 
-    <!-- 加载指示器 -->
-      <div id="loading-indicator" class="loading hidden">
-        <div class="spinner"></div>
-        <p id="loading-text" data-i18n="common.loading">加载中...</p>
-        <div class="loading-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-          <div id="loading-progress-fill" class="loading-progress-fill"></div>
-        </div>
-        <p id="loading-progress-detail" class="loading-progress-detail" aria-live="polite"></p>
-      </div>
     </main>
 
     <footer>

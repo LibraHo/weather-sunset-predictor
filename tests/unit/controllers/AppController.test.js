@@ -28,13 +28,16 @@ const setupDOM = () => {
     <input id="location-input" type="text" />
     <button id="search-btn">搜索</button>
     <div id="location-error" class="error-message hidden" style="display: none;"></div>
-    <div id="loading-indicator" class="loading hidden" style="display: none;">
-      <p id="loading-text">加载中...</p>
-      <div class="loading-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-        <div id="loading-progress-fill"></div>
+    <section id="prediction-section" class="card hidden">
+      <div id="loading-indicator" class="loading hidden" style="display: none;">
+        <p id="loading-text">加载中...</p>
+        <div class="loading-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div id="loading-progress-fill"></div>
+        </div>
+        <p id="loading-progress-detail"></p>
       </div>
-      <p id="loading-progress-detail"></p>
-    </div>
+      <div id="prediction-display"></div>
+    </section>
     <div id="error-message" style="display: none;"></div>
     <div id="success-message" style="display: none;"></div>
   `;
@@ -516,16 +519,21 @@ describe('AppController', () => {
       appController.showLoading(true);
 
       const loadingElement = document.getElementById('loading-indicator');
+      const predictionSection = document.getElementById('prediction-section');
       expect(loadingElement.style.display).toBe('block');
       expect(loadingElement.classList.contains('hidden')).toBe(false);
+      expect(predictionSection.classList.contains('hidden')).toBe(false);
+      expect(predictionSection.classList.contains('prediction-loading')).toBe(true);
     });
 
     test('应该隐藏加载指示器', () => {
       appController.showLoading(false);
 
       const loadingElement = document.getElementById('loading-indicator');
+      const predictionSection = document.getElementById('prediction-section');
       expect(loadingElement.style.display).toBe('none');
       expect(loadingElement.classList.contains('hidden')).toBe(true);
+      expect(predictionSection.classList.contains('prediction-loading')).toBe(false);
     });
 
     test('应该禁用/启用刷新按钮', () => {
@@ -1182,14 +1190,16 @@ describe('AppController', () => {
       };
 
       // Mock controller methods
-      weatherController.fetchWeather = async () => {
-        // During fetch, loading should be shown
+      weatherController.fetchWeather = async () => [{}];
+      weatherController.updateWeatherDisplay = () => {};
+      predictionController.generatePredictions = async () => {
+        // 天气显示完成后，预测区域才显示加载状态
         const loadingElement = document.getElementById('loading-indicator');
+        const predictionSection = document.getElementById('prediction-section');
         expect(loadingElement.style.display).toBe('block');
+        expect(predictionSection.classList.contains('prediction-loading')).toBe(true);
         return [{}];
       };
-      weatherController.updateWeatherDisplay = () => {};
-      predictionController.generatePredictions = async () => [{}];
       predictionController.updatePredictionDisplay = () => {};
 
       await appController.handleRefresh();
