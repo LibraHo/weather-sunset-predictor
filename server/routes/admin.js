@@ -74,6 +74,9 @@ function requireAuth(req, res, next) {
 // GET /admin - 后台管理页面
 // ---------------------------------------------------------------------------
 router.get('/admin', requireAuth, (req, res) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
   res.sendFile(path.join(__dirname, '../../public/admin/index.html'));
 });
 
