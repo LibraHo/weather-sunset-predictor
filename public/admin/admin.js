@@ -163,8 +163,9 @@ function formatStatus(v) {
   return v ? '<span class="status-ok">启用</span>' : '<span class="status-err">禁用</span>';
 }
 
-function showMessage(msg, type = 'success') {
-  const el = document.getElementById('message');
+function showMessage(msg, type = 'success', targetId = 'message') {
+  const el = document.getElementById(targetId);
+  if (!el) return;
   el.textContent = msg;
   el.className = 'admin-message ' + type;
   el.classList.remove('hidden');
@@ -598,9 +599,39 @@ async function deletePhoto(id) {
 }
 
 function initUploadForm() {
-  document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  const form = document.getElementById('uploadForm');
+  const fileInput = document.getElementById('photoFile');
+  const selectedName = document.getElementById('selectedPhotoName');
+  const progress = document.getElementById('uploadProgress');
+  const progressBar = document.getElementById('uploadProgressBar');
+  const progressText = document.getElementById('uploadProgressText');
+  const feedback = document.getElementById('uploadFeedback');
+
+  if (!form || !fileInput) return;
+
+  const setProgress = (percent, text) => {
+    if (progress) progress.classList.remove('hidden');
+    if (progressBar) progressBar.style.width = `${Math.max(0, Math.min(100, percent))}%`;
+    if (progressText) progressText.textContent = text;
+  };
+
+  const resetProgress = () => {
+    if (progress) progress.classList.add('hidden');
+    if (progressBar) progressBar.style.width = '0%';
+    if (progressText) progressText.textContent = '等待上传';
+  };
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    if (selectedName) {
+      selectedName.textContent = file ? `已选择：${file.name}` : '尚未选择照片';
+    }
+    resetProgress();
+    if (feedback) feedback.classList.add('hidden');
+  });
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const fileInput = document.getElementById('photoFile');
     if (!fileInput.files[0]) {
       showMessage('请选择照片', 'error');
       return;
@@ -619,22 +650,64 @@ function initUploadForm() {
     btn.disabled = true;
     btn.textContent = '上传中...';
 
+    setProgress(0, '准备上传...');
+    if (feedback) feedback.classList.add('hidden');
+
     try {
-      const res = await fetch('/upload', { method: 'POST', credentials: 'include', body: formData });
-      const data = await res.json();
-      if (res.ok) {
-        showMessage('上传成功');
-        document.getElementById('uploadForm').reset();
-        loadPhotos();
-      } else {
-        showMessage('上传失败: ' + (data.error?.message || '未知错误'), 'error');
-      }
+      const data = await uploadPhotoWithProgress(formData, (percent) => {
+        setProgress(percent, `上传中 ${percent}%`);
+      });
+
+      setProgress(100, '上传完成');
+      showMessage('上传成功', 'success', 'uploadFeedback');
+      form.reset();
+      if (selectedName) selectedName.textContent = '尚未选择照片';
+      loadPhotos();
+      setTimeout(resetProgress, 1200);
     } catch (err) {
-      showMessage('上传失败', 'error');
+      const message = err?.message || '未知错误';
+      setProgress(100, '上传失败');
+      showMessage('上传失败: ' + message, 'error', 'uploadFeedback');
     } finally {
       btn.disabled = false;
       btn.textContent = '上传照片';
     }
+  });
+}
+
+function uploadPhotoWithProgress(formData, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/upload');
+    xhr.withCredentials = true;
+
+    xhr.upload.addEventListener('progress', (event) => {
+      if (!event.lengthComputable) {
+        onProgress(15);
+        return;
+      }
+      const percent = Math.max(1, Math.min(99, Math.round((event.loaded / event.total) * 100)));
+      onProgress(percent);
+    });
+
+    xhr.addEventListener('load', () => {
+      let data = {};
+      try {
+        data = xhr.responseText ? JSON.parse(xhr.responseText) : {};
+      } catch {
+        data = {};
+      }
+
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(data);
+      } else {
+        reject(new Error(data.error?.message || `HTTP ${xhr.status}`));
+      }
+    });
+
+    xhr.addEventListener('error', () => reject(new Error('网络错误')));
+    xhr.addEventListener('abort', () => reject(new Error('上传已取消')));
+    xhr.send(formData);
   });
 }
 
