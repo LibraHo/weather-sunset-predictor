@@ -227,6 +227,7 @@ const translations = {
       "good": "Bonnes conditions, avec une vraie chance de nuages flamboyants spectaculaires.",
       "goodSingleLayer": "Bonne chance de nuages flamboyants, mais les couches restent limitées.",
       "fair": "Conditions moyennes ; surveillez l’évolution réelle des nuages.",
+      "clearSunset": "Fire clouds are subtle, but the sunset is clear.",
       "low": "Des conditions clés manquent ; la probabilité reste faible."
     },
         "scoreBreakdown": {
@@ -336,6 +337,8 @@ const translations = {
       "conditionsFair": "Conditions moyennes, couleurs possibles éparses",
       "canWatch": "Peut être observé",
       "conditionsGood": "Conditions bonnes avec une certaine valeur d'observation",
+      "clearSunsetTransparent": "Fire clouds are subtle, but the sunset is clear.",
+      "casualViewingOk": "Worth a casual look",
       "veryLikely": "Forte probabilité de magnifique coucher de soleil",
       "excellentConditions": "Nuages modérés avec trajet lumineux clair",
       "legendaryEruption": "Éruption légendaire",

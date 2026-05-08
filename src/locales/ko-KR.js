@@ -233,6 +233,7 @@ apiAccess: 'API 연동'
       "good": "조건이 좋고 선명한 노을구름 가능성이 있습니다.",
       "goodSingleLayer": "노을구름 가능성은 높지만 구름층의 깊이는 다소 부족합니다.",
       "fair": "조건은 보통입니다. 실제 구름 변화를 함께 확인하세요.",
+      "clearSunset": "Fire clouds are subtle, but the sunset is clear.",
       "low": "핵심 조건이 부족해 노을구름 가능성이 낮습니다."
     },
         "scoreBreakdown": {
@@ -367,6 +368,8 @@ apiAccess: 'API 연동'
       "conditionsFair": "조건 보통, 약간의 색채 가능",
       "canWatch": "관람 가능",
       "conditionsGood": "조건 양호, 약간의 관람 가치",
+      "clearSunsetTransparent": "Fire clouds are subtle, but the sunset is clear.",
+      "casualViewingOk": "Worth a casual look",
       "veryLikely": "아름다운 노을 나타날 확률 높음",
       "excellentConditions": "적당한 구름과 맑은 빛 경로",
       "legendaryEruption": "전설적 분화",

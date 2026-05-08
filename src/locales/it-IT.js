@@ -200,6 +200,7 @@ apiAccess: 'Accesso API'
       "good": "Buone condizioni, con una concreta possibilità di nubi infuocate spettacolari.",
       "goodSingleLayer": "Buona probabilità di nubi infuocate, ma gli strati sono limitati.",
       "fair": "Condizioni medie; osserva l’evoluzione reale delle nubi.",
+      "clearSunset": "Fire clouds are subtle, but the sunset is clear.",
       "low": "Mancano condizioni chiave; la probabilità di nubi infuocate è bassa."
     },
         "scoreBreakdown": {
@@ -309,6 +310,8 @@ apiAccess: 'Accesso API'
       "conditionsFair": "Condizioni discrete, possibili colori sparsi",
       "canWatch": "Può essere osservato",
       "conditionsGood": "Buone condizioni con un certo valore di osservazione",
+      "clearSunsetTransparent": "Fire clouds are subtle, but the sunset is clear.",
+      "casualViewingOk": "Worth a casual look",
       "veryLikely": "Alta probabilità di bellissimo tramonto",
       "excellentConditions": "Nubi moderate con percorso della luce chiaro",
       "legendaryEruption": "Eruzione leggendaria",

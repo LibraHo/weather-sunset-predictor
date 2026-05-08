@@ -166,6 +166,26 @@ describe('PredictionController', () => {
     });
   });
 
+  describe('clear-sunset advice copy', () => {
+    test('晴空通透场景应显示可以出门看看，而不是低分弱观赏判断', () => {
+      predictionController.i18n = {
+        currentLanguage: 'zh-CN',
+        getCurrentLanguage: () => 'zh-CN',
+        t: (key) => ({
+          'prediction.status.casualViewingOk': '可以出门看看',
+          'prediction.analysisConclusion.clearSunset': '火烧云不明显，日落通透。'
+        }[key] || key)
+      };
+
+      expect(predictionController.getScoreDescription(25, { advice: 'casual_viewing_ok' })).toBe('可以出门看看');
+      expect(predictionController.buildAnalysisConclusion(
+        { description: 'clear_sunset_transparent', breakdown: {} },
+        25,
+        { high: 1, mid: 1, low: 1 }
+      )).toBe('火烧云不明显，日落通透。');
+    });
+  });
+
   describe('getLocalizedAzimuthDirection', () => {
     test('296° 应返回 西北偏西', () => {
       predictionController.i18n = { currentLanguage: 'zh-CN' };

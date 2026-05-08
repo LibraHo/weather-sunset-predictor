@@ -227,6 +227,7 @@ apiAccess: 'API接続'
       "good": "条件は良好で、鮮やかな焼け雲が出る可能性があります。",
       "goodSingleLayer": "焼け雲の可能性はありますが、雲の層はやや限られます。",
       "fair": "条件は中程度です。実際の雲の変化を見ながら判断してください。",
+      "clearSunset": "Fire clouds are subtle, but the sunset is clear.",
       "low": "重要な条件が不足しており、焼け雲の可能性は低めです。"
     },
         "scoreBreakdown": {
@@ -333,6 +334,8 @@ apiAccess: 'API接続'
       "conditionsFair": "条件普通、散発的な色の可能性",
       "canWatch": "観賞可能",
       "conditionsGood": "条件良好、ある程度の鑑賞価値",
+      "clearSunsetTransparent": "Fire clouds are subtle, but the sunset is clear.",
+      "casualViewingOk": "Worth a casual look",
       "veryLikely": "美しい夕焼けの可能性が高い",
       "excellentConditions": "適度な雲と明確な光路",
       "legendaryEruption": "伝説的な噴火",

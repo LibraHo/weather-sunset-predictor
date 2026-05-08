@@ -211,6 +211,7 @@ apiAccess: 'Acceso API'
       "good": "Buenas condiciones, con una posibilidad sólida de nubes encendidas espectaculares.",
       "goodSingleLayer": "Buena probabilidad de nubes encendidas, aunque las capas son limitadas.",
       "fair": "Condiciones medias; conviene observar cómo evolucionan las nubes.",
+      "clearSunset": "Fire clouds are subtle, but the sunset is clear.",
       "low": "Faltan condiciones clave; la probabilidad de nubes encendidas es baja."
     },
         "scoreBreakdown": {
@@ -320,6 +321,8 @@ apiAccess: 'Acceso API'
       "conditionsFair": "Condiciones regulares, posiblemente colores dispersos",
       "canWatch": "Se puede observar",
       "conditionsGood": "Buenas condiciones con cierto valor de observación",
+      "clearSunsetTransparent": "Fire clouds are subtle, but the sunset is clear.",
+      "casualViewingOk": "Worth a casual look",
       "veryLikely": "Alta probabilidad de hermoso atardecer",
       "excellentConditions": "Nubes moderadas con camino de luz claro",
       "legendaryEruption": "Erupción legendaria",

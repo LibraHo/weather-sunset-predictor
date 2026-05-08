@@ -607,6 +607,59 @@ function assessHighCloudCarrierAdjustment(weatherData, aerosolHazeCap) {
   return { applied: true, floor: 64, reason: 'clear_high_cloud_carrier_floor_64' };
 }
 
+/**
+ * 晴空通透提示：不改变火烧云指数，只在“无云但日落本身通透”的场景调整结论/出门建议。
+ */
+function assessClearSunsetViewingAdvice(weatherData, canvasScore, lightPathScore, context = {}) {
+  const lowClouds = Number(weatherData.lowClouds || 0);
+  const midClouds = Number(weatherData.midClouds || 0);
+  const highClouds = Number(weatherData.highClouds || 0);
+  const upperCloudCover = Number.isFinite(Number(canvasScore?.effectiveCloudCover))
+    ? Number(canvasScore.effectiveCloudCover)
+    : highClouds * CLOUD_WEIGHTS.HIGH + midClouds * CLOUD_WEIGHTS.MID;
+  const visibility = Number(weatherData.visibility ?? 20);
+  const precipitation = Number(weatherData.precipitation ?? weatherData.rain ?? weatherData.precipitationProbability ?? 0);
+  const lightPath = Number(lightPathScore?.score ?? 0);
+  const weatherConditionText = [
+    weatherData.weatherMain,
+    weatherData.weather,
+    weatherData.weatherText,
+    weatherData.weatherDescription,
+    weatherData.condition
+  ].filter(Boolean).join(' ').toLowerCase();
+  const overcastText = /(overcast|阴天|陰天|阴|陰)/.test(weatherConditionText);
+
+  const clearSkyCarrierMissing = canvasScore?.cloudLevel === 'space' || upperCloudCover < 12;
+  const hardBlocked =
+    context.aerosolHazeCap?.applied ||
+    context.severeCap?.reason ||
+    context.occlusion?.occluded ||
+    context.geometric?.feasible === false ||
+    context.postRainAdjustment?.cap != null ||
+    overcastText;
+
+  const applied = Boolean(
+    clearSkyCarrierMissing &&
+    lowClouds <= 20 &&
+    precipitation <= 0.2 &&
+    visibility >= 15 &&
+    lightPath >= 50 &&
+    !hardBlocked
+  );
+
+  return {
+    applied,
+    reason: applied ? 'clear_sunset_transparent' : null,
+    metrics: {
+      upperCloudCover: parseFloat(upperCloudCover.toFixed(1)),
+      lowClouds: parseFloat(lowClouds.toFixed(1)),
+      visibility: parseFloat(visibility.toFixed(1)),
+      precipitation: parseFloat(precipitation.toFixed(2)),
+      lightPath: Number.isFinite(lightPath) ? parseFloat(lightPath.toFixed(1)) : null
+    }
+  };
+}
+
 // ========== 光路几何模型（需求40，Phase 19 任务67.2）==========
 
 /**
@@ -1432,6 +1485,21 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     adjustedDescription = 'cloud_too_thick';
   }
 
+  const clearSunsetAdvice = type === 'sunset'
+    ? assessClearSunsetViewingAdvice(weatherData, canvasScore, lightPathScore, {
+      aerosolHazeCap,
+      severeCap,
+      occlusion,
+      geometric,
+      postRainAdjustment
+    })
+    : { applied: false, reason: null, metrics: null };
+  let adjustedAdvice = finalResult.advice;
+  if (clearSunsetAdvice.applied) {
+    adjustedDescription = 'clear_sunset_transparent';
+    adjustedAdvice = 'casual_viewing_ok';
+  }
+
   logger.debug('[EnhancedPredictionService]', '最终得分:', adjustedScore, 'occlusion:', occlusion, 'severeCap:', severeCap.reason);
 
   const aerosolScattering = {
@@ -1493,8 +1561,10 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     aerosolHazeCap,
     highCloudCarrierAdjustment,
     postRainAdjustment,
+    clearSunsetAdvice,
     status: adjustedStatus,
     description: adjustedDescription,
+    advice: adjustedAdvice,
     scoreBeforeOcclusion: finalResult.score,
     score: adjustedScore
   };
@@ -1551,6 +1621,7 @@ module.exports = {
   applySevereWeatherCap,
   assessAerosolHazeCap,
   assessHighCloudCarrierAdjustment,
+  assessClearSunsetViewingAdvice,
 
   // 云厚评估（Phase 22）
   assessCloudThickness,

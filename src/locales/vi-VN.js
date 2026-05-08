@@ -227,6 +227,7 @@ const translations = {
       "good": "Điều kiện tốt, có khả năng khá cao xuất hiện mây hoàng hôn rực rỡ.",
       "goodSingleLayer": "Khả năng xuất hiện mây đẹp khá tốt, nhưng độ phân tầng còn hạn chế.",
       "fair": "Điều kiện trung bình; cần theo dõi diễn biến mây thực tế.",
+      "clearSunset": "Fire clouds are subtle, but the sunset is clear.",
       "low": "Thiếu điều kiện then chốt, khả năng xuất hiện mây đẹp thấp."
     },
         "scoreBreakdown": {
@@ -336,6 +337,8 @@ const translations = {
       "conditionsFair": "Điều kiện bình thường, có thể có màu sắc rải rác",
       "canWatch": "Có thể quan sát",
       "conditionsGood": "Điều kiện tốt, có giá trị quan sát nhất định",
+      "clearSunsetTransparent": "Fire clouds are subtle, but the sunset is clear.",
+      "casualViewingOk": "Worth a casual look",
       "veryLikely": "Khả năng cao có ánh hoàng hôn đẹp",
       "excellentConditions": "Mây vừa phải với đường ánh sáng rõ ràng",
       "legendaryEruption": "Sự bùng nổ huyền thoại",
