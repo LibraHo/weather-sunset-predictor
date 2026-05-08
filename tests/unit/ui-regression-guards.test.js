@@ -19,13 +19,18 @@ describe('recent user-reported UI regression guards', () => {
   test('3-day glow forecast is a weather tab with a loading state', () => {
     const page = html();
     const source = css();
+    const desktopGridBlock = source.match(/#three-day-glow \.forecast-horizontal-container \{[\s\S]*?\n\}/)?.[0] || '';
+    const mobileBlock = source.match(/@media \(max-width: 768px\) \{[\s\S]*?#three-day-glow \.forecast-horizontal-container \{[\s\S]*?\n  \}[\s\S]*?\n\}/)?.[0] || '';
 
     expect(page).toContain('id="three-day-glow-btn"');
     expect(page).toContain('data-i18n="weather.threeDayGlow"');
     expect(page).toContain('id="forecast-loading"');
     expect(page).not.toContain('id="forecast-section" class="card hidden"');
-    expect(source).toContain('#three-day-glow .forecast-horizontal-container');
     expect(source).toContain('.three-day-glow-loading');
+    expect(desktopGridBlock).toContain('grid-template-columns: repeat(3, minmax(0, 1fr))');
+    expect(mobileBlock).toContain('grid-template-columns: 1fr');
+    expect(source).toContain('.weather-view-toggle.xiake-toggle');
+    expect(source).toContain('overflow-x: auto');
   });
 
   test('compact cloud labels are allowed to wrap and do not force ellipsis', () => {
