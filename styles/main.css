@@ -2877,7 +2877,7 @@ body.theme-dark .prediction-analysis {
 
 .day-meta-line .value {
   font-size: 0.68rem;
-  font-weight: 600;
+  font-weight: 400;
 }
 
 /* 兼容旧样式（过渡期） */
@@ -7359,7 +7359,7 @@ html[data-actual-theme="light"] .weather-desc {
 }
 .day-meta-chip .value {
   font-size: 0.64rem;
-  font-weight: 650;
+  font-weight: 400;
   line-height: 1 !important;
 }
 .day-meta-chip .day-wind-direction-icon {
@@ -8331,14 +8331,14 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
     color: var(--color-text-light);
     font-size: 0.9rem !important;
     line-height: 1.12 !important;
-    font-weight: 760;
+    font-weight: 400;
     white-space: nowrap;
   }
 
   .day-meta-chip .value {
     font-size: 0.9rem !important;
     line-height: 1.12 !important;
-    font-weight: 800;
+    font-weight: 400;
   }
 
   .day-meta-precip {
