@@ -204,6 +204,13 @@ describe('PredictionController', () => {
       expect(dir).toBe('東北偏東');
     });
 
+    test('韩语环境 296° 应返回서북서，不应 fallback 到 WNW', () => {
+      predictionController.i18n = { currentLanguage: 'ko-KR' };
+      const dir = predictionController.getLocalizedAzimuthDirection({ sunAzimuth: 296 });
+      expect(dir).toBe('서북서');
+      expect(dir).not.toBe('WNW');
+    });
+
 
     test('日出/日落方向展示不应附加误导性的箭头', () => {
       const prediction = {
