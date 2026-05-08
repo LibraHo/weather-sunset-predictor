@@ -8784,68 +8784,67 @@ html[data-actual-theme="dark"] .weather-chart-panel {
 }
 
 #three-day-glow .forecast-horizontal-container {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
   margin: var(--spacing-md) auto 0;
   width: 100%;
   padding: 0;
   align-items: stretch;
-  justify-content: flex-start;
 }
 
 #three-day-glow .forecast-day-card {
-  flex: 1 1 0;
-  min-width: 100px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.62) 0%, rgba(255,255,255,0.36) 100%);
-  border-radius: 14px;
-  padding: 14px 12px;
-  border: 1px solid rgba(255,255,255,0.45);
-  box-shadow: 0 8px 20px rgba(24,39,75,0.08);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  text-align: center;
+  min-width: 0;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--theme-card-bg) 82%, transparent) 0%, color-mix(in srgb, var(--theme-accent-soft) 38%, transparent) 100%);
+  border-radius: 18px;
+  padding: 16px;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 12px;
+  text-align: left;
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
 #three-day-glow .forecast-day-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(24,39,75,0.13);
+  box-shadow: var(--glass-shadow-heavy, 0 16px 36px rgba(24,39,75,0.14));
 }
 
 #three-day-glow .fcard-day-label {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: #2f3948;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--color-text);
   white-space: nowrap;
 }
 
 #three-day-glow .fcard-day-date {
-  font-size: 0.75rem;
-  color: rgba(47,57,72,0.65);
+  font-size: 0.78rem;
+  color: var(--color-text-light);
+  margin-top: 2px;
 }
 
 #three-day-glow .fcard-day-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: grid;
+  gap: 8px;
   width: 100%;
-  margin-top: 4px;
 }
 
 #three-day-glow .fcard-row-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 5px;
-  font-size: 0.85rem;
-  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--theme-card-bg) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--glass-border) 78%, transparent);
 }
 
 #three-day-glow .fcard-row-item.passed {
-  opacity: 0.45;
+  opacity: 0.5;
 }
 
 #three-day-glow .fcard-row-icon {
@@ -8853,19 +8852,33 @@ html[data-actual-theme="dark"] .weather-chart-panel {
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  width: 1.75rem;
-  height: 1.4rem;
-  font-size: 1rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--theme-accent, #f59e0b);
 }
 
 #three-day-glow .fcard-row-label {
-  color: rgba(47,57,72,0.75);
-  font-size: 0.8rem;
+  color: var(--color-text);
+  font-size: 0.88rem;
+  font-weight: 650;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 #three-day-glow .fcard-row-score {
-  font-weight: 700;
-  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  min-width: 3.2rem;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-accent) 13%, transparent);
+  font-weight: 800;
+  font-size: 0.92rem;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 #three-day-glow .fcard-row-score.quality-excellent { color: #2f9e44; }
@@ -8925,43 +8938,68 @@ html[data-actual-theme="dark"] #three-day-glow .fcard-day-date {
 }
 
 @media (max-width: 768px) {
+  .weather-view-toggle.xiake-toggle {
+    width: 100%;
+    max-width: 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: visible;
+    padding: 4px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .weather-view-toggle.xiake-toggle::-webkit-scrollbar {
+    display: none;
+  }
+
+  .weather-view-toggle .xiake-toggle-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
   #three-day-glow .forecast-horizontal-container {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: 1fr;
     width: 100%;
-    gap: 8px;
+    gap: 10px;
   }
 
   #three-day-glow .forecast-day-card {
-    min-width: 0;
     width: 100%;
-    padding: 10px 6px;
-    border-radius: 12px;
+    padding: 12px;
+    border-radius: 16px;
+    grid-template-columns: minmax(78px, 0.42fr) 1fr;
+    grid-template-rows: auto;
+    align-items: center;
+    gap: 12px;
   }
 
   #three-day-glow .fcard-day-label {
-    font-size: 0.82rem;
+    font-size: 0.88rem;
   }
 
   #three-day-glow .fcard-day-date {
-    font-size: 0.68rem;
-  }
-
-  #three-day-glow .fcard-day-rows {
-    gap: 5px;
-  }
-
-  #three-day-glow .fcard-row-item {
-    gap: 3px;
-    font-size: 0.76rem;
-  }
-
-  #three-day-glow .fcard-row-label {
     font-size: 0.72rem;
   }
 
+  #three-day-glow .fcard-day-rows {
+    gap: 7px;
+  }
+
+  #three-day-glow .fcard-row-item {
+    gap: 7px;
+    padding: 7px 8px;
+  }
+
+  #three-day-glow .fcard-row-label {
+    font-size: 0.8rem;
+  }
+
   #three-day-glow .fcard-row-score {
-    font-size: 0.78rem;
+    min-width: 2.8rem;
+    padding: 4px 7px;
+    font-size: 0.82rem;
   }
 
   .three-day-glow-loading {
