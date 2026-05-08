@@ -755,6 +755,61 @@ describe('PredictionController', () => {
     });
   });
 
+  describe('syncPairedPredictionCardRows', () => {
+    const mockMatchMedia = (matches) => jest.fn(() => ({
+      matches,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn()
+    }));
+
+    test('桌面端应按同名区域同步朝霞/晚霞卡片高度，适配不同语言换行', () => {
+      window.matchMedia = mockMatchMedia(true);
+      document.body.innerHTML = `
+        <div id="today-predictions-container">
+          <div class="prediction-tab-panel"><div class="prediction-app-card">
+            <div class="phenomenon-title-card" data-height="40"></div>
+            <div class="conclusion-banner" data-height="72"></div>
+            <div class="score-summary-card" data-height="120"></div>
+            <div class="cloud-condition-card" data-height="86"></div>
+            <div class="app-analysis-card" data-height="180"></div>
+          </div></div>
+          <div class="prediction-tab-panel"><div class="prediction-app-card">
+            <div class="phenomenon-title-card" data-height="58"></div>
+            <div class="conclusion-banner" data-height="36"></div>
+            <div class="score-summary-card" data-height="140"></div>
+            <div class="cloud-condition-card" data-height="92"></div>
+            <div class="app-analysis-card" data-height="150"></div>
+          </div></div>
+        </div>
+      `;
+      document.querySelectorAll('[data-height]').forEach(element => {
+        element.getBoundingClientRect = () => ({ height: Number(element.dataset.height) });
+      });
+
+      predictionController.syncPairedPredictionCardRows(document);
+
+      expect([...document.querySelectorAll('.phenomenon-title-card')].map(el => el.style.minHeight)).toEqual(['58px', '58px']);
+      expect([...document.querySelectorAll('.conclusion-banner')].map(el => el.style.minHeight)).toEqual(['72px', '72px']);
+      expect([...document.querySelectorAll('.score-summary-card')].map(el => el.style.minHeight)).toEqual(['140px', '140px']);
+      expect([...document.querySelectorAll('.cloud-condition-card')].map(el => el.style.minHeight)).toEqual(['92px', '92px']);
+      expect([...document.querySelectorAll('.app-analysis-card')].map(el => el.style.minHeight)).toEqual(['180px', '180px']);
+    });
+
+    test('手机端应清除同步高度，保持单列自然流式布局', () => {
+      window.matchMedia = mockMatchMedia(false);
+      document.body.innerHTML = `
+        <div id="today-predictions-container">
+          <div class="prediction-tab-panel"><div class="prediction-app-card"><div class="conclusion-banner" style="min-height:72px"></div></div></div>
+          <div class="prediction-tab-panel"><div class="prediction-app-card"><div class="conclusion-banner" style="min-height:72px"></div></div></div>
+        </div>
+      `;
+
+      predictionController.syncPairedPredictionCardRows(document);
+
+      expect([...document.querySelectorAll('.conclusion-banner')].map(el => el.style.minHeight)).toEqual(['', '']);
+    });
+  });
+
   describe('_ensureAzimuthCompatibility', () => {
     test('为无方位角的预测补齐字段', () => {
       const prediction = { sunAzimuth: null };

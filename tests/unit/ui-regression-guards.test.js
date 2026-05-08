@@ -123,3 +123,20 @@ describe('prediction title plate regression guards', () => {
     expect(titlePlateBlock).toContain('box-shadow: none !important');
   });
 });
+
+describe('prediction paired-card alignment guards', () => {
+  test('desktop prediction cards use generic paired row sync instead of one-off fixed heights', () => {
+    const source = fs.readFileSync(path.resolve('src/controllers/PredictionController.js'), 'utf8');
+
+    expect(source).toContain('syncPairedPredictionCardRows');
+    expect(source).toContain('getPredictionAlignmentSelectors');
+    expect(source).toContain('.phenomenon-title-card');
+    expect(source).toContain('.conclusion-banner');
+    expect(source).toContain('.score-summary-card');
+    expect(source).toContain('.cloud-condition-card');
+    expect(source).toContain('.app-analysis-card');
+    expect(source).toContain('getBoundingClientRect().height');
+    expect(source).toContain('element.style.minHeight');
+    expect(source).toContain("matchMedia?.('(min-width: 641px)')");
+  });
+});

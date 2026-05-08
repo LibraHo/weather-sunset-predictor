@@ -251,12 +251,84 @@ class PredictionController {
     this.features = config.features;
     this.apiConfig = config;
     this.weatherFetchMode = config.weatherFetchMode || 'backend';
+    this.predictionPanelAlignmentRaf = null;
+    this.predictionPanelAlignmentRoot = null;
+    this.predictionPanelResizeHandler = null;
 
     // 初始化后端 API 服务
     this.predictionAPIService = new PredictionAPIService(config.proxy.url);
     console.log('[PredictionController] 功能开关:', this.features);
 
     // 统一评分通过 predictionService._calculateUnifiedScore() 调用
+  }
+
+  getPredictionAlignmentSelectors() {
+    return [
+      '.phenomenon-title-card',
+      '.conclusion-banner',
+      '.score-summary-card',
+      '.cloud-condition-card',
+      '.app-analysis-card',
+      '[id^="radar-compass-"]'
+    ];
+  }
+
+  syncPairedPredictionCardRows(root = document) {
+    const container = root.querySelector?.('#today-predictions-container');
+    if (!container) return;
+
+    const panels = Array.from(container.querySelectorAll('.prediction-tab-panel'));
+    const cards = panels
+      .map(panel => panel.querySelector('.prediction-app-card'))
+      .filter(Boolean);
+    const selectors = this.getPredictionAlignmentSelectors();
+
+    selectors.forEach(selector => {
+      cards.forEach(card => {
+        const element = card.querySelector(selector);
+        if (element) element.style.minHeight = '';
+      });
+    });
+
+    const isDesktop = window.matchMedia?.('(min-width: 641px)').matches ?? window.innerWidth >= 641;
+    if (!isDesktop || cards.length < 2) return;
+
+    selectors.forEach(selector => {
+      const elements = cards
+        .map(card => card.querySelector(selector))
+        .filter(Boolean);
+      if (elements.length < 2) return;
+
+      const maxHeight = Math.ceil(Math.max(...elements.map(element => element.getBoundingClientRect().height)));
+      if (maxHeight <= 0) return;
+
+      elements.forEach(element => {
+        element.style.minHeight = `${maxHeight}px`;
+      });
+    });
+  }
+
+  schedulePairedPredictionCardAlignment(root = document) {
+    this.predictionPanelAlignmentRoot = root;
+
+    const run = () => this.syncPairedPredictionCardRows(this.predictionPanelAlignmentRoot || document);
+    if (this.predictionPanelAlignmentRaf && typeof cancelAnimationFrame === 'function') {
+      cancelAnimationFrame(this.predictionPanelAlignmentRaf);
+    }
+
+    const scheduleFrame = typeof requestAnimationFrame === 'function'
+      ? requestAnimationFrame
+      : (callback) => setTimeout(callback, 0);
+
+    this.predictionPanelAlignmentRaf = scheduleFrame(() => {
+      run();
+      setTimeout(run, 80);
+    });
+
+    if (!this.predictionPanelResizeHandler) {
+      this.predictionPanelResizeHandler = () => this.schedulePairedPredictionCardAlignment(this.predictionPanelAlignmentRoot || document);
+      window.addEventListener('resize', this.predictionPanelResizeHandler, { passive: true });
+    }
   }
 
   /**
@@ -1209,6 +1281,8 @@ class PredictionController {
     if (predictionSection) {
       predictionSection.classList.remove('hidden');
     }
+
+    this.schedulePairedPredictionCardAlignment(predictionDisplay);
 
     console.log(`[PredictionController] ${dateLabel}预测已更新，手机版默认显示: ${defaultTab}`);
   }
