@@ -28,7 +28,13 @@ const setupDOM = () => {
     <input id="location-input" type="text" />
     <button id="search-btn">搜索</button>
     <div id="location-error" class="error-message hidden" style="display: none;"></div>
-    <div id="loading-indicator" style="display: none;"></div>
+    <div id="loading-indicator" class="loading hidden" style="display: none;">
+      <p id="loading-text">加载中...</p>
+      <div class="loading-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div id="loading-progress-fill"></div>
+      </div>
+      <p id="loading-progress-detail"></p>
+    </div>
     <div id="error-message" style="display: none;"></div>
     <div id="success-message" style="display: none;"></div>
   `;
@@ -511,6 +517,7 @@ describe('AppController', () => {
 
       const loadingElement = document.getElementById('loading-indicator');
       expect(loadingElement.style.display).toBe('block');
+      expect(loadingElement.classList.contains('hidden')).toBe(false);
     });
 
     test('应该隐藏加载指示器', () => {
@@ -518,6 +525,7 @@ describe('AppController', () => {
 
       const loadingElement = document.getElementById('loading-indicator');
       expect(loadingElement.style.display).toBe('none');
+      expect(loadingElement.classList.contains('hidden')).toBe(true);
     });
 
     test('应该禁用/启用刷新按钮', () => {
