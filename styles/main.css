@@ -7921,14 +7921,18 @@ html[lang^="en"] .score-breakdown-hint-trigger {
   }
 }
 
-/* Fix: the main sunrise/sunset title sits on the sunset card background; remove the extra glass plate so it does not compete with the share button. */
+/* Fix: the main sunrise/sunset title sits on the prediction card background; remove the extra glass plate so it does not compete with the share button in any theme. */
 .prediction-app-card .phenomenon-title-card,
 body.theme-light .prediction-app-card .phenomenon-title-card,
 body:not(.theme-dark):not(.theme-auto) .prediction-app-card .phenomenon-title-card,
+body.theme-dark .prediction-app-card .phenomenon-title-card,
 html.theme-light .prediction-app-card .phenomenon-title-card,
 html[data-theme="light"] .prediction-app-card .phenomenon-title-card,
 html.theme-actual-light .prediction-app-card .phenomenon-title-card,
-html[data-actual-theme="light"] .prediction-app-card .phenomenon-title-card {
+html[data-actual-theme="light"] .prediction-app-card .phenomenon-title-card,
+html.theme-dark .prediction-app-card .phenomenon-title-card,
+html[data-theme="dark"] .prediction-app-card .phenomenon-title-card,
+html[data-actual-theme="dark"] .prediction-app-card .phenomenon-title-card {
   background: transparent !important;
   border-color: transparent !important;
   box-shadow: none !important;

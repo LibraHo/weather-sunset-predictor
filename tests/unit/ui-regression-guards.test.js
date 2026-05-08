@@ -111,3 +111,15 @@ describe('recent user-reported UI regression guards', () => {
     expect(block).not.toContain('background: var(--glass-bg-heavy) !important');
   });
 });
+
+describe('prediction title plate regression guards', () => {
+  test('main prediction title plate stays transparent in dark mode too', () => {
+    const source = fs.readFileSync(path.resolve('styles/main.css'), 'utf8');
+    const titlePlateBlock = source.match(/\.prediction-app-card \.phenomenon-title-card,[\s\S]*?\n\}/)?.[0] || '';
+
+    expect(titlePlateBlock).toContain('body.theme-dark .prediction-app-card .phenomenon-title-card');
+    expect(titlePlateBlock).toContain('html[data-theme="dark"] .prediction-app-card .phenomenon-title-card');
+    expect(titlePlateBlock).toContain('background: transparent !important');
+    expect(titlePlateBlock).toContain('box-shadow: none !important');
+  });
+});
