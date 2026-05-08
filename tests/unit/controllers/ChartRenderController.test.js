@@ -87,6 +87,59 @@ describe('ChartRenderController', () => {
     expect(strip.textContent).toContain('降水');
   });
 
+  test('图表面板不应写死白底，亮色也应交给设计 token 控制', () => {
+    document.body.innerHTML = '<div id="chart-container" style="width: 900px"></div>';
+    window.matchMedia = jest.fn().mockReturnValue({ matches: false });
+
+    const controller = new ChartRenderController({
+      i18n: { t: jest.fn((key) => (key === 'charts.trend' ? '变化趋势' : key === 'charts.time' ? '时间' : '温度')) },
+      getConvertedTemp: (v) => v,
+      getConvertedWindSpeed: (v) => v
+    });
+
+    const base = new Date('2026-01-01T00:00:00Z').getTime();
+    const hourlyData = Array.from({ length: 24 }, (_, i) => ({
+      timestamp: base + i * 60 * 60 * 1000,
+      temp: 20 + i
+    }));
+
+    controller.renderSimpleChart(hourlyData, 'chart-container', 'temp', '温度', '°C', '#ff6b6b');
+
+    const panel = document.querySelector('.weather-chart-panel');
+    expect(panel.getAttribute('style')).not.toContain('background: var(--color-card-bg)');
+    expect(panel.getAttribute('style')).not.toContain('#ffffff');
+    expect(panel.querySelector('h3').getAttribute('style')).toContain('var(--theme-text, var(--color-text))');
+  });
+
+  test('暗色主题图表应使用暗色网格和深色点描边，不 fallback 到亮色白底', () => {
+    document.documentElement.dataset.theme = 'dark';
+    document.body.dataset.theme = 'dark';
+    document.body.innerHTML = '<div id="chart-container" style="width: 900px"></div>';
+    window.matchMedia = jest.fn().mockReturnValue({ matches: false });
+
+    const controller = new ChartRenderController({
+      i18n: { t: jest.fn((key) => (key === 'charts.trend' ? '变化趋势' : key === 'charts.time' ? '时间' : '温度')) },
+      getConvertedTemp: (v) => v,
+      getConvertedWindSpeed: (v) => v
+    });
+
+    const base = new Date('2026-01-01T00:00:00Z').getTime();
+    const hourlyData = Array.from({ length: 24 }, (_, i) => ({
+      timestamp: base + i * 60 * 60 * 1000,
+      temp: 20 + i
+    }));
+
+    controller.renderSimpleChart(hourlyData, 'chart-container', 'temp', '温度', '°C', '#ff6b6b');
+
+    const svg = document.querySelector('#chart-container svg');
+    expect(svg.innerHTML).toContain('stroke="rgba(255,255,255,0.26)"');
+    expect(svg.innerHTML).toContain('stroke="rgba(18,28,52,0.95)"');
+    expect(svg.innerHTML).not.toContain('#ffffff');
+
+    delete document.documentElement.dataset.theme;
+    delete document.body.dataset.theme;
+  });
+
   test('移动端渲染应降采样并使用统一颜色变量', () => {
     document.body.innerHTML = '<div id="chart-container" style="width: 320px"></div>';
     window.matchMedia = jest.fn().mockReturnValue({ matches: true });
@@ -109,7 +162,7 @@ describe('ChartRenderController', () => {
     const circles = svg.querySelectorAll('circle');
 
     expect(svg.innerHTML).toContain('fill="#333333"');
-    expect(svg.innerHTML).toContain('stroke="rgba(51,51,51,0.18)"');
+    expect(svg.innerHTML).toContain('stroke="rgba(122,101,84,0.18)"');
     expect(circles.length).toBeLessThan(24);
     expect(circles.length).toBeGreaterThanOrEqual(4);
   });

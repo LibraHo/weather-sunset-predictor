@@ -160,17 +160,21 @@ class ChartRenderController {
     const bodyStyle = getComputedStyle(document.body);
     const resolveCssVar = (name, fallback) => (rootStyle.getPropertyValue(name) || bodyStyle.getPropertyValue(name) || fallback).trim();
     const actualTheme = document.documentElement.dataset.actualTheme || document.documentElement.dataset.theme || '';
+    const bodyTheme = document.body.dataset.theme || document.body.dataset.actualTheme || '';
     const isDarkTheme = document.body.classList.contains('theme-dark')
+      || document.body.classList.contains('theme-actual-dark')
       || document.documentElement.classList.contains('theme-dark')
-      || actualTheme === 'dark';
-    const gridColor = resolveCssVar('--chart-grid-color', isDarkTheme ? 'rgba(255,255,255,0.38)' : 'rgba(51,51,51,0.18)');
-    const textColor = resolveCssVar('--color-text', isDarkTheme ? 'rgba(255,255,255,0.92)' : '#333333');
-    const cardBg = resolveCssVar('--color-card-bg', isDarkTheme ? 'rgba(15,22,40,0.85)' : '#ffffff');
-    const pointStroke = resolveCssVar('--chart-point-stroke', isDarkTheme ? 'rgba(15,22,40,0.95)' : cardBg);
+      || document.documentElement.classList.contains('theme-actual-dark')
+      || actualTheme === 'dark'
+      || bodyTheme === 'dark';
+    const gridColor = resolveCssVar('--chart-grid-color', isDarkTheme ? 'rgba(255,255,255,0.26)' : 'rgba(122,101,84,0.18)');
+    const textColor = resolveCssVar('--theme-text', resolveCssVar('--color-text', isDarkTheme ? 'rgba(255,255,255,0.92)' : '#333333'));
+    const cardBg = resolveCssVar('--theme-card-bg', resolveCssVar('--color-card-bg', isDarkTheme ? 'rgba(18,28,52,0.78)' : 'rgba(255,252,246,0.92)'));
+    const pointStroke = resolveCssVar('--chart-point-stroke', isDarkTheme ? 'rgba(18,28,52,0.95)' : cardBg);
     const lineColor = String(color).startsWith('--') ? resolveCssVar(color, isDarkTheme ? '#fb923c' : '#d97706') : color;
 
-    let html = `<div class="weather-chart-panel" style="padding: ${chartPadding}; background: var(--color-card-bg); border-radius: 12px; margin: 12px 0;">`;
-    html += `<h3 style="text-align: center; margin-bottom: 16px; color: var(--color-text); font-size: ${titleFontSize};">${label}${this.i18n.t('charts.trend')} (${unit})</h3>`;
+    let html = `<div class="weather-chart-panel" style="padding: ${chartPadding}; border-radius: 12px; margin: 12px 0;">`;
+    html += `<h3 style="text-align: center; margin-bottom: 16px; color: var(--theme-text, var(--color-text)); font-size: ${titleFontSize};">${label}${this.i18n.t('charts.trend')} (${unit})</h3>`;
     html += '<div>';
     html += `<svg width="100%" viewBox="0 0 ${chartWidth} ${chartHeight}" style="display: block;">`;
 
