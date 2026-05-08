@@ -518,8 +518,8 @@ apiAccess: 'API 연동'
     },
     "passed": "지남",
     "forecast": "미래 예측",
-    "sunriseDirectionLabel": "방향",
-    "sunsetDirectionLabel": "방향"
+    "sunriseDirectionLabel": "일출 방향",
+    "sunsetDirectionLabel": "일몰 방향"
   },
   "time": {
     "today": "오늘",
