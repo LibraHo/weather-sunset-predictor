@@ -64,6 +64,12 @@ describe('admin page structure', () => {
       'agentUsageTableBody',
       'auditLogTableBody',
       'uploadForm',
+      'photoFile',
+      'selectedPhotoName',
+      'uploadProgress',
+      'uploadProgressBar',
+      'uploadProgressText',
+      'uploadFeedback',
       'photoGrid',
     ].forEach((id) => expect(html).toContain(`id="${id}"`));
 
@@ -82,7 +88,15 @@ describe('admin page structure', () => {
       'clearGridCache',
       'triggerRefresh',
       'restartBackend',
+      'uploadPhotoWithProgress',
     ].forEach((fn) => expect(js).toContain(`function ${fn}`));
+
+    expect(js).toContain("fileInput.addEventListener('change'");
+    expect(js).toContain('已选择：${file.name}');
+    expect(js).toContain("selectedName.textContent = '尚未选择照片'");
+    expect(js).toContain("xhr.upload.addEventListener('progress'");
+    expect(js).toContain("showMessage('上传成功', 'success', 'uploadFeedback')");
+    expect(js).toContain("showMessage('上传失败: ' + message, 'error', 'uploadFeedback')");
   });
 
   test('does not fall back to the old emoji long-page admin shell', () => {
