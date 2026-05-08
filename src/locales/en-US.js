@@ -192,6 +192,8 @@ const translations = {
     "clear": "Clear",
     "overview": "Overview",
     "hourly": "Hourly Forecast",
+    "threeDayGlow": "3-Day Glow",
+    "threeDayGlowLoading": "Loading 3-day sunrise and sunset glow...",
     "mapView": "",
     "daysOverview": "{{days}}-Day Overview",
     "precipChance": "{{prob}}% precip",

@@ -2014,6 +2014,7 @@ class PredictionController {
   updateForecastTimeline(predictions) {
     const forecastSection = document.getElementById('forecast-section');
     const forecastTimeline = document.getElementById('forecast-timeline');
+    const forecastLoading = document.getElementById('forecast-loading');
 
     if (!forecastTimeline) {
       console.error('未找到预测时间线元素');
@@ -2043,7 +2044,9 @@ class PredictionController {
 
     // 如果没有未来预测，隐藏整个区域
     if (daysToShow.length === 0) {
-      forecastSection.classList.add('hidden');
+      forecastTimeline.dataset.loaded = 'true';
+      if (forecastLoading) forecastLoading.classList.add('hidden');
+      if (forecastSection) forecastSection.classList.add('hidden');
       return;
     }
 
@@ -2110,8 +2113,10 @@ class PredictionController {
     html += '</div>';
 
     forecastTimeline.innerHTML = html;
+    forecastTimeline.dataset.loaded = 'true';
+    if (forecastLoading) forecastLoading.classList.add('hidden');
 
-    // 显示预测时间线部分
+    // 旧版独立未来预测区仍存在时才显示；新版已合入天气信息 tab，不主动切走当前视图。
     if (forecastSection) {
       forecastSection.classList.remove('hidden');
     }

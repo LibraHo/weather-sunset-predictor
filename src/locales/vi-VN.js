@@ -192,6 +192,8 @@ const translations = {
     "clear": "Trời Quang",
     "overview": "Tổng Quan",
     "hourly": "Dự Báo Theo Giờ",
+    "threeDayGlow": "Ráng trời 3 ngày",
+    "threeDayGlowLoading": "Đang tải ráng bình minh và hoàng hôn trong 3 ngày...",
     "daysOverview": "Tổng Quan {{days}} Ngày",
     "precipChance": "{{prob}}% khả năng mưa",
     "dataInfo": "ℹ️ Nguồn dữ liệu cung cấp dữ liệu dự báo {{hours}} giờ (~{{days}} ngày). Cân nhắc sử dụng nguồn dữ liệu thời tiết khác để có nhiều ngày hơn.",

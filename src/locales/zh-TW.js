@@ -192,6 +192,8 @@ const translations = {
     "clear": "晴天",
     "overview": "概覽",
     "hourly": "詳細預報",
+    "threeDayGlow": "3天朝晚霞",
+    "threeDayGlowLoading": "正在讀取3天朝晚霞...",
     "daysOverview": "{{days}}天概覽",
     "precipChance": "{{prob}}%降水",
     "dataInfo": "ℹ️ 資料來源提供 {{hours}} 小時預測資料（約 {{days}} 天）。若需要更多天數，請考慮使用其他天氣資料來源。",

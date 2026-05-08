@@ -176,6 +176,8 @@ apiAccess: 'Acceso API'
     "clear": "Despejado",
     "overview": "Resumen",
     "hourly": "Pronóstico por Hora",
+    "threeDayGlow": "Resplandor de 3 días",
+    "threeDayGlowLoading": "Cargando el resplandor de amanecer y atardecer de 3 días...",
     "mapView": "Pronóstico en Mapa",
     "daysOverview": "Resumen de {{days}} Días",
     "precipChance": "{{prob}}% precip",

@@ -192,6 +192,8 @@ apiAccess: 'API 연동'
     "clear": "맑음",
     "overview": "개요",
     "hourly": "시간별 예보",
+    "threeDayGlow": "3일 아침·저녁 노을",
+    "threeDayGlowLoading": "3일 아침·저녁 노을을 불러오는 중...",
     "daysOverview": "{{days}}일 개요",
     "precipChance": "{{prob}}% 강수",
     "dataInfo": "ℹ️ 데이터 출처는 {{hours}}시간 예측 데이터를 제공합니다 (약 {{days}}일). 더 많은 일수가 필요한 경우 다른 날씨 데이터 소스를 고려하세요.",

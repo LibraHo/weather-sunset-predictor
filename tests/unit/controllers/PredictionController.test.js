@@ -789,3 +789,50 @@ describe('PredictionController', () => {
     });
   });
 });
+
+describe('PredictionController - 3天朝晚霞时间线加载态', () => {
+  let predictionController;
+
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <div id="forecast-loading"></div>
+      <div id="forecast-timeline" data-loaded="false"></div>
+    `;
+    predictionController = new PredictionController(mockStorageService);
+    predictionController.i18n = {
+      t: (key, values = {}) => {
+        const map = {
+          'time.tomorrow': '明天',
+          'time.dayAfterTomorrow': '后天',
+          'time.daysLater': `${values.days}天后`,
+          'prediction.sunrise': '朝霞',
+          'prediction.sunset': '晚霞'
+        };
+        return map[key] || key;
+      },
+      currentLanguage: 'zh-CN'
+    };
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  test('未来预测数据渲染完成后隐藏读取条并标记已加载', () => {
+    const base = new Date('2026-05-08T00:00:00+08:00');
+    const predictions = Array.from({ length: 8 }, (_, i) => ({
+      date: new Date(base.getTime() + Math.floor(i / 2) * 24 * 60 * 60 * 1000),
+      type: i % 2 === 0 ? 'sunrise' : 'sunset',
+      score: 70 + i,
+      quality: 'good',
+      sunriseTime: new Date(base.getTime() + Math.floor(i / 2) * 24 * 60 * 60 * 1000 + 6 * 60 * 60 * 1000),
+      sunsetTime: new Date(base.getTime() + Math.floor(i / 2) * 24 * 60 * 60 * 1000 + 18 * 60 * 60 * 1000)
+    }));
+
+    predictionController.updateForecastTimeline(predictions);
+
+    expect(document.getElementById('forecast-timeline').dataset.loaded).toBe('true');
+    expect(document.getElementById('forecast-loading').classList.contains('hidden')).toBe(true);
+    expect(document.querySelectorAll('#forecast-timeline .forecast-day-card')).toHaveLength(3);
+  });
+});

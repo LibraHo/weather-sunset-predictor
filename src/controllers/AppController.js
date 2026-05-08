@@ -185,6 +185,7 @@ class AppController {
       if (weatherData && weatherData.length > 0) {
         // 更新天气显示：天气信息先展示，再在朝霞/晚霞预测区域显示加载状态
         this.weatherController.updateWeatherDisplay(weatherData, location);
+        this._setThreeDayGlowLoading(true);
         this.showLoading(true, { progress: 48, message: this.i18n.t('loading.prediction') });
 
         // 生成晚霞预测
@@ -195,6 +196,7 @@ class AppController {
           console.error('[AppController] 生成预测时出错:', predictionError.message);
           this.showError(`晚霞预测功能暂时不可用: ${predictionError.message}`);
           predictions = [];
+          this._setThreeDayGlowLoading(false);
         }
 
         if (predictions && predictions.length > 0) {
@@ -627,6 +629,15 @@ class AppController {
       });
     }
 
+    const threeDayGlowBtn = document.getElementById('three-day-glow-btn');
+    if (threeDayGlowBtn) {
+      threeDayGlowBtn.addEventListener('click', () => {
+        if (this.weatherController) {
+          this.weatherController.switchView('glow');
+        }
+      });
+    }
+
     // 需求11：设置日期切换按钮事件
     const todayBtn = document.getElementById('today-btn');
     if (todayBtn) {
@@ -1034,6 +1045,20 @@ class AppController {
 
   updateLoadingProgress(state = {}) {
     this.uiStateController.updateLoadingProgress(state);
+  }
+
+  _setThreeDayGlowLoading(show = true) {
+    const forecastTimeline = document.getElementById('forecast-timeline');
+    const forecastLoading = document.getElementById('forecast-loading');
+
+    if (forecastTimeline && show) {
+      forecastTimeline.dataset.loaded = 'false';
+      forecastTimeline.innerHTML = '';
+    }
+
+    if (forecastLoading) {
+      forecastLoading.classList.toggle('hidden', !show);
+    }
   }
 
   /**

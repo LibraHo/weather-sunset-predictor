@@ -243,6 +243,7 @@
         <div class="view-toggle weather-view-toggle xiake-toggle" data-toggle-template="segmented">
           <button id="overview-btn" class="btn btn-toggle xiake-toggle-btn active" data-i18n="weather.overview">7天概览</button>
           <button id="hourly-btn" class="btn btn-toggle xiake-toggle-btn" data-i18n="weather.hourly">详细预报</button>
+          <button id="three-day-glow-btn" class="btn btn-toggle xiake-toggle-btn" data-i18n="weather.threeDayGlow">3天朝晚霞</button>
         </div>
 
         <!-- 7天概览视图 -->
@@ -320,6 +321,22 @@
           </div>
         </div>
 
+        <!-- 3天朝晚霞 -->
+        <div id="three-day-glow" class="weather-view hidden">
+          <div id="forecast-loading" class="three-day-glow-loading" role="status" aria-live="polite">
+            <div class="spinner three-day-glow-spinner" aria-hidden="true"></div>
+            <div class="three-day-glow-loading-copy">
+              <p data-i18n="weather.threeDayGlowLoading">正在读取3天朝晚霞...</p>
+              <div class="loading-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="64">
+                <div class="loading-progress-fill three-day-glow-progress-fill"></div>
+              </div>
+            </div>
+          </div>
+          <div id="forecast-timeline" data-loaded="false">
+            <!-- 动态填充未来朝晚霞 -->
+          </div>
+        </div>
+
         <div id="weather-error" class="error-message hidden"></div>
       </section>
       
@@ -338,14 +355,6 @@
           <!-- 动态填充预测信息 -->
         </div>
         <!-- 火烧云地图和雷达已移至独立地图页面 -->
-      </section>
-
-      <!-- 未来预测 -->
-      <section id="forecast-section" class="card hidden">
-        <h2 data-i18n="forecast.title">未来预测</h2>
-        <div id="forecast-timeline">
-          <!-- 动态填充时间线 -->
-        </div>
       </section>
 
       </div>
