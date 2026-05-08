@@ -33,6 +33,10 @@ describe('recent user-reported UI regression guards', () => {
     expect(darkDayBlock).toContain('rgba(18, 28, 52, 0.82)');
     expect(darkCloudBlock).toContain('rgba(18, 28, 52, 0.80)');
     expect(xiakeFixBlock).toContain('@media (prefers-color-scheme: dark)');
+    expect(xiakeFixBlock).toContain('#weather-section #weekly-cards.weekly-cards-container .day-card');
+    expect(xiakeFixBlock).toContain('Mobile weather weekly rows must use the same night-sky glass layer as the weather panel.');
+    expect(xiakeFixBlock).toContain('rgba(18, 28, 52, 0.72)');
+    expect(xiakeFixBlock).toContain('color-mix(in srgb, var(--theme-accent) 72%, transparent)');
 
     expect(dayCardBlock).not.toMatch(/background(?:-color)?:\s*(?:#fff\b|#ffffff\b|#f5f5f5\b|var\(--color-bg\))/i);
     expect(cloudBlock).not.toMatch(/background(?:-color)?:\s*(?:#fff\b|#ffffff\b|#f5f5f5\b|#e5e7eb\b|var\(--color-bg\))/i);
@@ -52,9 +56,12 @@ describe('recent user-reported UI regression guards', () => {
     expect(source).toContain('#three-day-glow #forecast-timeline');
     expect(source).toMatch(/#three-day-glow #forecast-timeline \{[\s\S]*?width: 100%/);
     expect(desktopGridBlock).toContain('grid-template-columns: repeat(3, minmax(0, 1fr))');
-    expect(mobileBlock).toContain('grid-template-columns: 1fr');
+    expect(mobileBlock).toContain('grid-template-columns: repeat(3, minmax(0, 1fr))');
+    expect(mobileBlock).toContain('justify-content: center');
+    expect(mobileBlock).toContain('margin-left: auto !important');
+    expect(mobileBlock).toContain('#three-day-glow .fcard-row-label');
+    expect(mobileBlock).toContain('display: none');
     expect(source).toContain('.weather-view-toggle.xiake-toggle');
-    expect(source).toContain('overflow-x: auto');
   });
 
   test('compact cloud labels are allowed to wrap and do not force ellipsis', () => {
