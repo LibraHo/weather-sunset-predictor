@@ -8745,6 +8745,14 @@ html[data-actual-theme="dark"] .weather-chart-panel {
 /* 3-day sunrise/sunset glow tab: keep the migrated forecast timeline inside weather information. */
 #three-day-glow {
   margin-top: var(--spacing-md);
+  width: 100%;
+  min-width: 0;
+}
+
+#three-day-glow #forecast-timeline {
+  display: block;
+  width: 100%;
+  min-width: 0;
 }
 
 .three-day-glow-loading {

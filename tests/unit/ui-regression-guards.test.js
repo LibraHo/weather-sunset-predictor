@@ -27,6 +27,8 @@ describe('recent user-reported UI regression guards', () => {
     expect(page).toContain('id="forecast-loading"');
     expect(page).not.toContain('id="forecast-section" class="card hidden"');
     expect(source).toContain('.three-day-glow-loading');
+    expect(source).toContain('#three-day-glow #forecast-timeline');
+    expect(source).toMatch(/#three-day-glow #forecast-timeline \{[\s\S]*?width: 100%/);
     expect(desktopGridBlock).toContain('grid-template-columns: repeat(3, minmax(0, 1fr))');
     expect(mobileBlock).toContain('grid-template-columns: 1fr');
     expect(source).toContain('.weather-view-toggle.xiake-toggle');
