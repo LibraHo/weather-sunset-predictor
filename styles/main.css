@@ -9020,3 +9020,124 @@ html[data-actual-theme="dark"] #three-day-glow .fcard-day-date {
   }
 }
 
+
+/* UI regression: 7-day weather and cloud-condition panels follow Xiake glass language. */
+.weekly-cards-container {
+  background:
+    radial-gradient(circle at 14% 0%, color-mix(in srgb, var(--theme-accent-soft) 46%, transparent), transparent 44%),
+    linear-gradient(180deg, color-mix(in srgb, var(--theme-card-bg) 42%, transparent), transparent 100%) !important;
+  border-bottom-color: color-mix(in srgb, var(--theme-card-border) 82%, transparent) !important;
+}
+
+.day-card,
+#forecast-section .forecast-day-card,
+#forecast-section .forecast-day-column {
+  background:
+    linear-gradient(145deg,
+      color-mix(in srgb, var(--theme-card-bg) 92%, transparent) 0%,
+      color-mix(in srgb, var(--theme-accent-soft) 34%, var(--theme-card-bg)) 100%) !important;
+  border-color: var(--theme-card-border) !important;
+  box-shadow: 0 8px 22px rgba(139, 92, 43, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.08);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.08);
+}
+
+.day-card:hover,
+#forecast-section .forecast-day-card:hover,
+#forecast-section .forecast-day-column:hover {
+  border-color: color-mix(in srgb, var(--theme-accent) 36%, var(--theme-card-border)) !important;
+  box-shadow: 0 12px 28px rgba(139, 92, 43, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.44) !important;
+}
+
+.cloud-condition-card,
+.fire-cloud-details,
+.fire-cloud-details-concept,
+.fca-metric,
+.fca-verdict {
+  background:
+    linear-gradient(145deg,
+      color-mix(in srgb, var(--theme-card-bg) 90%, transparent) 0%,
+      color-mix(in srgb, var(--theme-accent-soft) 30%, var(--theme-card-bg)) 100%) !important;
+  border-color: var(--theme-card-border) !important;
+  box-shadow: 0 8px 20px rgba(139, 92, 43, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.32) !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.08);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.08);
+}
+
+.cloud-condition-item + .cloud-condition-item {
+  border-top-color: color-mix(in srgb, var(--theme-card-border) 72%, transparent) !important;
+}
+
+.cloud-condition-track {
+  background: var(--cloud-track-color) !important;
+}
+
+body.theme-dark .weekly-cards-container,
+html.theme-dark .weekly-cards-container,
+html[data-theme="dark"] .weekly-cards-container,
+html[data-actual-theme="dark"] .weekly-cards-container {
+  background:
+    radial-gradient(circle at 16% 0%, rgba(251, 146, 60, 0.16), transparent 42%),
+    linear-gradient(180deg, rgba(18, 28, 52, 0.30), transparent 100%) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+body.theme-dark .day-card,
+body.theme-dark #forecast-section .forecast-day-card,
+body.theme-dark #forecast-section .forecast-day-column,
+html.theme-dark .day-card,
+html.theme-dark #forecast-section .forecast-day-card,
+html.theme-dark #forecast-section .forecast-day-column,
+html[data-theme="dark"] .day-card,
+html[data-theme="dark"] #forecast-section .forecast-day-card,
+html[data-theme="dark"] #forecast-section .forecast-day-column,
+html[data-actual-theme="dark"] .day-card,
+html[data-actual-theme="dark"] #forecast-section .forecast-day-card,
+html[data-actual-theme="dark"] #forecast-section .forecast-day-column {
+  background:
+    linear-gradient(145deg, rgba(18, 28, 52, 0.82) 0%, rgba(12, 20, 40, 0.72) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+
+body.theme-dark .cloud-condition-card,
+body.theme-dark .fire-cloud-details,
+body.theme-dark .fire-cloud-details-concept,
+body.theme-dark .fca-metric,
+body.theme-dark .fca-verdict,
+html.theme-dark .cloud-condition-card,
+html.theme-dark .fire-cloud-details,
+html.theme-dark .fire-cloud-details-concept,
+html.theme-dark .fca-metric,
+html.theme-dark .fca-verdict,
+html[data-theme="dark"] .cloud-condition-card,
+html[data-theme="dark"] .fire-cloud-details,
+html[data-theme="dark"] .fire-cloud-details-concept,
+html[data-theme="dark"] .fca-metric,
+html[data-theme="dark"] .fca-verdict,
+html[data-actual-theme="dark"] .cloud-condition-card,
+html[data-actual-theme="dark"] .fire-cloud-details,
+html[data-actual-theme="dark"] .fire-cloud-details-concept,
+html[data-actual-theme="dark"] .fca-metric,
+html[data-actual-theme="dark"] .fca-verdict {
+  background:
+    linear-gradient(145deg, rgba(18, 28, 52, 0.80) 0%, rgba(251, 146, 60, 0.08) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  body.theme-auto .day-card,
+  body.theme-auto #forecast-section .forecast-day-card,
+  body.theme-auto #forecast-section .forecast-day-column,
+  body.theme-auto .cloud-condition-card,
+  body.theme-auto .fire-cloud-details,
+  body.theme-auto .fire-cloud-details-concept,
+  body.theme-auto .fca-metric,
+  body.theme-auto .fca-verdict {
+    background:
+      linear-gradient(145deg, rgba(18, 28, 52, 0.80) 0%, rgba(12, 20, 40, 0.72) 100%) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+    box-shadow: var(--glass-shadow) !important;
+  }
+}
