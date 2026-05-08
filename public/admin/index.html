@@ -8,23 +8,42 @@
   <link rel="stylesheet" href="/admin/admin.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
-<body class="theme-dark">
+<body class="theme-dark admin-body">
   <div id="admin-app">
-    <!-- 顶部导航 -->
-    <header class="admin-header">
-      <div class="admin-header-inner">
-        <div class="app-logo">
+    <header>
+      <div class="header-top-row">
+        <a class="app-logo admin-logo" href="/admin#dashboard" aria-label="霞客管理后台">
           <svg class="app-logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 76 76" aria-hidden="true">
             <path d="M12 44 A26 26 0 0 1 64 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
             <line x1="0" y1="44" x2="76" y2="44" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
             <line x1="10" y1="55" x2="66" y2="55" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
             <line x1="22" y1="66" x2="54" y2="66" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
           </svg>
-          <span class="app-logo-text">霞客管理后台</span>
-        </div>
-        <div class="admin-header-actions">
-          <button id="theme-toggle" class="icon-btn" aria-label="切换主题">🌓</button>
-          <a href="/" class="btn btn-secondary btn-sm">返回前台</a>
+          <span class="app-logo-text">霞客</span>
+          <span class="admin-logo-badge">管理后台</span>
+        </a>
+        <div class="header-right-group">
+          <div class="home-view-menu">
+            <button id="home-view-menu-btn" class="icon-btn header-svg-btn" aria-label="后台页面切换" aria-expanded="false" aria-controls="home-view-menu-dropdown">
+              <svg class="header-action-icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+                <path d="M5 7.5h14M5 12h14M5 16.5h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <div id="home-view-menu-dropdown" class="home-view-menu-dropdown hidden" role="menu" aria-label="后台页面菜单">
+              <button class="home-view-option admin-view-option active" role="menuitemradio" aria-checked="true" data-view="dashboard">总览</button>
+              <button class="home-view-option admin-view-option" role="menuitemradio" aria-checked="false" data-view="ops">运维</button>
+              <button class="home-view-option admin-view-option" role="menuitemradio" aria-checked="false" data-view="logs">日志</button>
+              <button class="home-view-option admin-view-option" role="menuitemradio" aria-checked="false" data-view="schedule">定时任务</button>
+              <button class="home-view-option admin-view-option" role="menuitemradio" aria-checked="false" data-view="agent">Agent / API</button>
+              <button class="home-view-option admin-view-option" role="menuitemradio" aria-checked="false" data-view="photos">照片</button>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button id="theme-toggle" class="icon-btn header-svg-btn" aria-label="切换主题">
+              <svg class="header-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A8.4 8.4 0 1 1 11.2 3 6.8 6.8 0 0 0 21 12.8Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+            </button>
+            <a href="/" class="btn btn-secondary btn-sm">返回前台</a>
+          </div>
         </div>
       </div>
     </header>
@@ -32,228 +51,89 @@
     <main class="admin-main">
       <div id="message" class="admin-message hidden"></div>
 
-      <!-- KPI 卡片行 -->
-      <section class="admin-section">
-        <div class="kpi-grid">
-          <div class="kpi-card">
-            <div class="kpi-label">今日 PV</div>
-            <div class="kpi-value" id="kpi-today-pv">--</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">今日 UV</div>
-            <div class="kpi-value" id="kpi-today-uv">--</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">今日 IP</div>
-            <div class="kpi-value" id="kpi-today-ip">--</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Open-Meteo 今日调用</div>
-            <div class="kpi-value" id="kpi-weather-day">--</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Grid 今日调用</div>
-            <div class="kpi-value" id="kpi-grid-day">--</div>
-          </div>
-          <div class="kpi-card kpi-card-alert" id="kpi-error-card">
-            <div class="kpi-label">今日错误率</div>
-            <div class="kpi-value" id="kpi-error-rate">--</div>
-          </div>
+      <section id="admin-panel-dashboard" class="admin-panel" data-admin-panel="dashboard" role="tabpanel" aria-label="总览">
+        <div class="admin-page-hero card">
+          <p class="admin-eyebrow">Dashboard</p>
+          <h1>运行总览</h1>
+          <p>把访问、接口、错误和系统健康收拢到一屏，快速判断霞客当前状态。</p>
         </div>
+        <section class="admin-section">
+          <div class="admin-entry-grid" aria-label="后台功能入口">
+            <button class="admin-entry-card" data-view="ops"><strong>运维</strong><span>Grid 队列、刷新、缓存、重启</span></button>
+            <button class="admin-entry-card" data-view="logs"><strong>日志</strong><span>API 调用、错误、每日统计</span></button>
+            <button class="admin-entry-card" data-view="schedule"><strong>定时任务</strong><span>朝霞/晚霞自动刷新配置</span></button>
+            <button class="admin-entry-card" data-view="agent"><strong>Agent / API</strong><span>Token、申请、用量、审计</span></button>
+            <button class="admin-entry-card" data-view="photos"><strong>照片</strong><span>上传与分享地图照片管理</span></button>
+          </div>
+        </section>
+        <section class="admin-section">
+          <div class="kpi-grid">
+            <div class="kpi-card"><div class="kpi-label">今日 PV</div><div class="kpi-value" id="kpi-today-pv">--</div></div>
+            <div class="kpi-card"><div class="kpi-label">今日 UV</div><div class="kpi-value" id="kpi-today-uv">--</div></div>
+            <div class="kpi-card"><div class="kpi-label">今日 IP</div><div class="kpi-value" id="kpi-today-ip">--</div></div>
+            <div class="kpi-card"><div class="kpi-label">Open-Meteo 今日调用</div><div class="kpi-value" id="kpi-weather-day">--</div></div>
+            <div class="kpi-card"><div class="kpi-label">Grid 今日调用</div><div class="kpi-value" id="kpi-grid-day">--</div></div>
+            <div class="kpi-card"><div class="kpi-label">今日分享</div><div class="kpi-value" id="kpi-share-today">--</div><div class="kpi-sub" id="kpi-share-total">累计 --</div></div>
+            <div class="kpi-card kpi-card-alert" id="kpi-error-card"><div class="kpi-label">今日错误率</div><div class="kpi-value" id="kpi-error-rate">--</div></div>
+          </div>
+        </section>
+        <section class="admin-section">
+          <div class="two-col">
+            <div class="chart-card"><h3 class="chart-title">7天访问趋势</h3><div class="chart-wrap"><canvas id="accessTrendChart"></canvas></div></div>
+            <div class="admin-card"><h3 class="card-title">系统健康</h3><div class="health-grid" id="healthGrid"><div class="health-item"><span class="health-label">磁盘使用</span><span class="health-value" id="health-disk">--</span></div><div class="health-item"><span class="health-label">内存使用</span><span class="health-value" id="health-mem">--</span></div><div class="health-item"><span class="health-label">Node 进程</span><span class="health-value" id="health-node">--</span></div><div class="health-item"><span class="health-label">后端运行时间</span><span class="health-value" id="health-uptime">--</span></div></div></div>
+          </div>
+        </section>
+        <section class="admin-section">
+          <div class="admin-card"><h3 class="card-title">今日 Top IP</h3><div class="table-wrap"><table class="admin-table"><thead><tr><th>IP</th><th>访问次数</th></tr></thead><tbody id="ipStatsBody"><tr><td colspan="2" class="empty">加载中...</td></tr></tbody></table></div></div>
+        </section>
       </section>
 
-      <!-- 图表区 -->
-      <section class="admin-section">
-        <div class="chart-grid">
-          <div class="chart-card">
-            <h3 class="chart-title">7天访问趋势</h3>
-            <div class="chart-wrap"><canvas id="accessTrendChart"></canvas></div>
+      <section id="admin-panel-ops" class="admin-panel hidden" data-admin-panel="ops" role="tabpanel" aria-label="运维">
+        <div class="admin-page-hero card"><p class="admin-eyebrow">Operations</p><h1>运维控制台</h1><p>高风险动作独立管理，Grid 队列状态可视化，避免和普通数据查看混在一起。</p></div>
+        <section class="admin-section">
+          <div class="two-col">
+            <div class="admin-card"><h3 class="card-title">Grid 队列状态</h3><div id="queueStatusGrid" class="queue-status-grid"><p class="empty">加载中...</p></div></div>
+            <div class="admin-card danger-zone"><h3 class="card-title">运维工具箱</h3><p class="admin-muted">以下操作会影响线上数据或服务，请确认后执行。</p><div class="tool-grid"><button class="btn btn-secondary" onclick="triggerRefresh('sunset')">手动刷新晚霞</button><button class="btn btn-secondary" onclick="triggerRefresh('sunrise')">手动刷新朝霞</button><button class="btn btn-secondary" onclick="clearGridCache()">清空 Grid 缓存</button><button class="btn btn-danger" onclick="restartBackend()">重启后端进程</button></div></div>
           </div>
-          <div class="chart-card">
-            <h3 class="chart-title">24h API 调用分布</h3>
-            <div class="chart-wrap"><canvas id="apiHourlyChart"></canvas></div>
-          </div>
-        </div>
+        </section>
       </section>
 
-      <!-- 系统健康 + 运维工具箱 -->
-      <section class="admin-section">
-        <div class="two-col">
-          <div class="admin-card">
-            <h3 class="card-title">🖥️ 系统健康</h3>
-            <div class="health-grid" id="healthGrid">
-              <div class="health-item"><span class="health-label">磁盘使用</span><span class="health-value" id="health-disk">--</span></div>
-              <div class="health-item"><span class="health-label">内存使用</span><span class="health-value" id="health-mem">--</span></div>
-              <div class="health-item"><span class="health-label">Node 进程</span><span class="health-value" id="health-node">--</span></div>
-              <div class="health-item"><span class="health-label">后端运行时间</span><span class="health-value" id="health-uptime">--</span></div>
-            </div>
-          </div>
-          <div class="admin-card">
-            <h3 class="card-title">🧰 运维工具箱</h3>
-            <div class="tool-grid">
-              <button class="btn btn-secondary" onclick="clearGridCache()">🗑️ 清空 Grid 缓存</button>
-              <button class="btn btn-secondary" onclick="triggerRefresh('sunset')">🌅 手动刷新晚霞</button>
-              <button class="btn btn-secondary" onclick="triggerRefresh('sunrise')">🌄 手动刷新朝霞</button>
-              <button class="btn btn-danger" onclick="restartBackend()">🔄 重启后端进程</button>
-            </div>
-          </div>
-        </div>
+      <section id="admin-panel-logs" class="admin-panel hidden" data-admin-panel="logs" role="tabpanel" aria-label="日志">
+        <div class="admin-page-hero card"><p class="admin-eyebrow">Logs</p><h1>调用日志</h1><p>集中查看外部 API 调用、错误率、每日统计和重连恢复情况。</p></div>
+        <section class="admin-section"><div class="chart-card"><h3 class="chart-title">24h API 调用分布</h3><div class="chart-wrap"><canvas id="apiHourlyChart"></canvas></div></div></section>
+        <section class="admin-section"><div class="two-col"><div class="admin-card"><h3 class="card-title">API 调用日志</h3><div class="tab-bar"><button class="tab-btn active" onclick="switchLogTab('grid', this)">Grid</button><button class="tab-btn" onclick="switchLogTab('weather', this)">Weather</button><button class="tab-btn" onclick="switchLogTab('gaode,gaode_tile', this)">高德</button><button class="tab-btn" onclick="switchLogTab('errors', this)">Errors</button></div><div class="table-wrap"><table class="admin-table"><thead><tr><th>时间</th><th>接口</th><th>状态</th><th>耗时</th><th>错误</th></tr></thead><tbody id="logTableBody"><tr><td colspan="5" class="empty">加载中...</td></tr></tbody></table></div></div><div class="admin-card"><h3 class="card-title">每日 API 调用 & 重连统计（近7天）</h3><div class="table-wrap"><table class="admin-table"><thead><tr><th>日期</th><th>总调用</th><th>失败</th><th>Grid</th><th>Weather</th><th>高德</th><th>重试</th><th>重连恢复</th><th>重连失败</th></tr></thead><tbody id="dailyStatsBody"><tr><td colspan="9" class="empty">加载中...</td></tr></tbody></table></div></div></div></section>
       </section>
 
-      <!-- 表格区：IP统计 + API日志 -->
-      <section class="admin-section">
-        <div class="two-col">
-          <div class="admin-card">
-            <h3 class="card-title">📍 今日 Top IP</h3>
-            <div class="table-wrap">
-              <table class="admin-table">
-                <thead><tr><th>IP</th><th>访问次数</th></tr></thead>
-                <tbody id="ipStatsBody"><tr><td colspan="2" class="empty">加载中...</td></tr></tbody>
-              </table>
-            </div>
-          </div>
-          <div class="admin-card">
-            <h3 class="card-title">📋 API 调用日志</h3>
-            <div class="tab-bar">
-              <button class="tab-btn active" onclick="switchLogTab('grid', this)">Grid</button>
-              <button class="tab-btn" onclick="switchLogTab('weather,gaode,gaode_tile', this)">其他</button>
-            </div>
-            <div class="table-wrap">
-              <table class="admin-table">
-                <thead><tr><th>时间</th><th>接口</th><th>状态</th><th>耗时</th><th>错误</th></tr></thead>
-                <tbody id="logTableBody"><tr><td colspan="5" class="empty">加载中...</td></tr></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+      <section id="admin-panel-schedule" class="admin-panel hidden" data-admin-panel="schedule" role="tabpanel" aria-label="定时任务">
+        <div class="admin-page-hero card"><p class="admin-eyebrow">Schedule</p><h1>定时更新配置</h1><p>管理火烧云数据更新节奏，保存前会校验时间格式和重复配置。</p></div>
+        <section class="admin-section"><div class="admin-card"><h3 class="card-title">刷新时间点</h3><div id="scheduleJobs" class="schedule-jobs"></div><div class="schedule-actions"><button class="btn btn-secondary" onclick="addScheduleJob()">+ 添加时间点</button><button class="btn btn-primary" onclick="saveSchedule()">保存配置</button></div><div id="scheduleMsg" class="admin-message hidden"></div></div></section>
       </section>
 
-      <section class="admin-section">
-        <div class="admin-card">
-          <h3 class="card-title">📅 每日 API 调用 & 重连统计（近7天）</h3>
-          <div class="table-wrap">
-            <table class="admin-table">
-              <thead><tr><th>日期</th><th>总调用</th><th>失败</th><th>Grid</th><th>Weather</th><th>高德</th><th>重试</th><th>重连恢复</th><th>重连失败</th></tr></thead>
-              <tbody id="dailyStatsBody"><tr><td colspan="9" class="empty">加载中...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
+      <section id="admin-panel-agent" class="admin-panel hidden" data-admin-panel="agent" role="tabpanel" aria-label="Agent API">
+        <div class="admin-page-hero card"><p class="admin-eyebrow">Agent / API</p><h1>API Token 与申请审核</h1><p>Token 创建、编辑、申请审核、用量和审计日志统一归档。</p></div>
+        <section class="admin-section"><div class="admin-card"><h3 class="card-title">API Token 管理</h3><form id="tokenCreateForm" class="upload-form"><div class="form-row two-inputs"><input id="tokenName" type="text" placeholder="名称（必填）"><input id="tokenMinuteLimit" type="number" min="1" placeholder="每分钟额度（默认120）"></div><div class="form-row two-inputs"><input id="tokenDailyLimit" type="number" min="1" placeholder="每日额度（默认5000）"><input id="tokenTrustedUser" type="text" placeholder="受邀用户/联系方式（可选）"></div><div class="form-row two-inputs"><input id="tokenExpiresAt" type="datetime-local" placeholder="到期时间（可选）"><input id="tokenNote" type="text" placeholder="备注（可选）"></div><div class="form-row two-inputs"><label class="admin-inline-switch"><input id="tokenEnabled" type="checkbox" checked><span>启用</span></label><label class="admin-inline-switch"><input id="tokenNonCommercial" type="checkbox" checked><span>仅限非商用</span></label></div><button type="submit" class="btn btn-primary" id="createTokenBtn">创建 Token</button><button type="button" class="btn btn-secondary" onclick="batchDisableSelectedTokens()">批量禁用选中 Token</button></form><div id="tokenMsg" class="admin-message hidden"></div><div class="table-wrap" style="margin-top: var(--spacing-md)"><table class="admin-table"><thead><tr><th>选择</th><th>名称</th><th>状态</th><th>受邀用户</th><th>非商用</th><th>到期时间</th><th>分钟限流</th><th>每日限流</th><th>用量</th><th>备注</th><th>操作</th></tr></thead><tbody id="tokenTableBody"><tr><td colspan="11" class="empty">加载中...</td></tr></tbody></table></div></div></section>
+        <section class="admin-section"><div class="two-col"><div class="admin-card"><h3 class="card-title">API 申请审核</h3><div class="table-wrap"><table class="admin-table"><thead><tr><th>邮箱</th><th>联系方式</th><th>用途</th><th>预估调用量</th><th>状态</th><th>备注</th><th>关联Token</th><th>操作</th></tr></thead><tbody id="applicationTableBody"><tr><td colspan="8" class="empty">加载中...</td></tr></tbody></table></div></div><div class="admin-card"><h3 class="card-title">Agent 用量统计</h3><div class="table-wrap"><table class="admin-table"><thead><tr><th>Token</th><th>今日调用</th><th>今日错误率</th><th>日额度剩余</th><th>最近调用</th></tr></thead><tbody id="agentUsageTableBody"><tr><td colspan="5" class="empty">加载中...</td></tr></tbody></table></div></div></div></section>
+        <section class="admin-section"><div class="admin-card"><h3 class="card-title">Agent 审计日志</h3><div class="table-wrap"><table class="admin-table"><thead><tr><th>时间</th><th>TokenId</th><th>Endpoint</th><th>状态</th><th>耗时(ms)</th><th>错误码</th></tr></thead><tbody id="auditLogTableBody"><tr><td colspan="6" class="empty">加载中...</td></tr></tbody></table></div></div></section>
       </section>
 
-      <!-- 定时配置 -->
-      <section class="admin-section">
-        <div class="admin-card">
-          <h3 class="card-title">⏰ 定时更新配置</h3>
-          <div id="scheduleJobs" class="schedule-jobs"></div>
-          <div class="schedule-actions">
-            <button class="btn btn-secondary" onclick="addScheduleJob()">+ 添加时间点</button>
-            <button class="btn btn-primary" onclick="saveSchedule()">保存配置</button>
-          </div>
-          <div id="scheduleMsg" class="admin-message hidden"></div>
-        </div>
-      </section>
-
-      <section class="admin-section">
-        <div class="admin-card">
-          <h3 class="card-title">🔑 API Token 管理</h3>
-          <form id="tokenCreateForm" class="upload-form">
-            <div class="form-row two-inputs">
-              <input id="tokenName" type="text" placeholder="名称（必填）">
-              <input id="tokenMinuteLimit" type="number" min="1" placeholder="每分钟额度（默认120）">
-            </div>
-            <div class="form-row two-inputs">
-              <input id="tokenDailyLimit" type="number" min="1" placeholder="每日额度（默认5000）">
-              <input id="tokenTrustedUser" type="text" placeholder="受邀用户/联系方式（可选）">
-            </div>
-            <div class="form-row two-inputs">
-              <input id="tokenExpiresAt" type="datetime-local" placeholder="到期时间（可选）">
-              <input id="tokenNote" type="text" placeholder="备注（可选）">
-            </div>
-            <div class="form-row two-inputs">
-              <label class="admin-inline-switch" style="display:flex;align-items:center;gap:6px;color:var(--color-text-light)">
-                <input id="tokenEnabled" type="checkbox" checked>
-                <span>启用</span>
-              </label>
-              <label class="admin-inline-switch" style="display:flex;align-items:center;gap:6px;color:var(--color-text-light)">
-                <input id="tokenNonCommercial" type="checkbox" checked>
-                <span>仅限非商用</span>
-              </label>
-            </div>
-            <button type="submit" class="btn btn-primary" id="createTokenBtn">创建 Token</button>
-            <button type="button" class="btn btn-secondary" onclick="batchDisableSelectedTokens()">批量禁用选中 Token</button>
-          </form>
-          <div id="tokenMsg" class="admin-message hidden"></div>
-
-          <div class="table-wrap" style="margin-top: var(--spacing-md)">
-            <table class="admin-table">
-              <thead><tr><th>选择</th><th>名称</th><th>状态</th><th>受邀用户</th><th>非商用</th><th>到期时间</th><th>分钟限流</th><th>每日限流</th><th>用量</th><th>备注</th><th>操作</th></tr></thead>
-              <tbody id="tokenTableBody"><tr><td colspan="11" class="empty">加载中...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="admin-card" style="margin-top: var(--spacing-lg);">
-          <h3 class="card-title">🛡️ API申请审核</h3>
-          <div class="table-wrap">
-            <table class="admin-table">
-              <thead><tr><th>邮箱</th><th>联系方式</th><th>用途</th><th>预估调用量</th><th>状态</th><th>备注</th><th>关联Token</th><th>操作</th></tr></thead>
-              <tbody id="applicationTableBody"><tr><td colspan="8" class="empty">加载中...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="admin-card" style="margin-top: var(--spacing-lg);">
-          <h3 class="card-title">📊 Agent 用量统计</h3>
-          <div class="table-wrap">
-            <table class="admin-table">
-              <thead><tr><th>Token</th><th>今日调用</th><th>今日错误率</th><th>日额度剩余</th><th>最近调用</th></tr></thead>
-              <tbody id="agentUsageTableBody"><tr><td colspan="5" class="empty">加载中...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="admin-card" style="margin-top: var(--spacing-lg);">
-          <h3 class="card-title">🧾 Agent 审计日志</h3>
-          <div class="table-wrap">
-            <table class="admin-table">
-              <thead><tr><th>时间</th><th>TokenId</th><th>Endpoint</th><th>状态</th><th>耗时(ms)</th><th>错误码</th></tr></thead>
-              <tbody id="auditLogTableBody"><tr><td colspan="6" class="empty">加载中...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- 照片管理 -->
-      <section class="admin-section">
-        <div class="admin-card">
-          <h3 class="card-title">📤 上传新照片</h3>
-          <form id="uploadForm" class="upload-form">
-            <div class="form-row">
-              <div class="file-input-wrapper">
-                <input type="file" id="photoFile" accept="image/jpeg,image/png,image/heic" required>
-                <div class="file-input-text">
-                  <span>点击或拖拽照片到此处</span><br>
-                  <small>支持 JPEG、PNG、HEIC（最大 20MB）</small>
-                </div>
-              </div>
-            </div>
-            <div class="form-row">
-              <input type="text" id="description" placeholder="描述">
-            </div>
-            <div class="form-row two-inputs">
-              <input type="number" id="lat" placeholder="纬度" step="any">
-              <input type="number" id="lon" placeholder="经度" step="any">
-            </div>
-            <button type="submit" class="btn btn-primary" id="uploadBtn">上传照片</button>
-          </form>
-        </div>
-
-        <div class="admin-card" style="margin-top: var(--spacing-lg);">
-          <h3 class="card-title">📷 已上传照片</h3>
-          <div id="photoGrid" class="photo-grid"><p class="empty">加载中...</p></div>
-        </div>
+      <section id="admin-panel-photos" class="admin-panel hidden" data-admin-panel="photos" role="tabpanel" aria-label="照片">
+        <div class="admin-page-hero card"><p class="admin-eyebrow">Photos</p><h1>分享地图照片</h1><p>上传、校验和管理分享地图照片，删除操作需要确认。</p></div>
+        <section class="admin-section"><div class="two-col"><div class="admin-card"><h3 class="card-title">上传新照片</h3><form id="uploadForm" class="upload-form"><div class="form-row"><div class="file-input-wrapper"><input type="file" id="photoFile" accept="image/jpeg,image/png,image/heic" required><div class="file-input-text"><span>点击或拖拽照片到此处</span><br><small>支持 JPEG、PNG、HEIC（最大 20MB）</small></div></div></div><div class="form-row"><input type="text" id="description" placeholder="描述"></div><div class="form-row two-inputs"><input type="number" id="lat" placeholder="纬度" step="any"><input type="number" id="lon" placeholder="经度" step="any"></div><button type="submit" class="btn btn-primary" id="uploadBtn">上传照片</button></form></div><div class="admin-card"><h3 class="card-title">已上传照片</h3><div id="photoGrid" class="photo-grid"><p class="empty">加载中...</p></div></div></div></section>
       </section>
     </main>
+  </div>
+
+  <div id="tokenEditModal" class="admin-modal hidden" role="dialog" aria-modal="true" aria-labelledby="tokenEditTitle">
+    <div class="admin-modal-backdrop" onclick="closeTokenEditor()"></div>
+    <form class="admin-modal-card" id="tokenEditForm">
+      <h3 id="tokenEditTitle">编辑 Token</h3>
+      <input type="hidden" id="editTokenId">
+      <div class="form-row two-inputs"><input id="editTokenName" type="text" placeholder="名称"><input id="editTokenTrustedUser" type="text" placeholder="受邀用户/联系方式"></div>
+      <div class="form-row two-inputs"><input id="editTokenMinuteLimit" type="number" min="1" placeholder="每分钟额度"><input id="editTokenDailyLimit" type="number" min="1" placeholder="每日额度"></div>
+      <div class="form-row two-inputs"><input id="editTokenExpiresAt" type="datetime-local"><input id="editTokenNote" type="text" placeholder="备注"></div>
+      <div class="form-row two-inputs"><label class="admin-inline-switch"><input id="editTokenEnabled" type="checkbox"><span>启用</span></label><label class="admin-inline-switch"><input id="editTokenNonCommercial" type="checkbox"><span>仅限非商用</span></label></div>
+      <div class="admin-modal-actions"><button type="button" class="btn btn-secondary" onclick="closeTokenEditor()">取消</button><button type="submit" class="btn btn-primary">保存</button></div>
+    </form>
   </div>
 
   <script src="/admin/admin.js"></script>
