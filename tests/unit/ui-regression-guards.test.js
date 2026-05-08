@@ -16,6 +16,28 @@ describe('recent user-reported UI regression guards', () => {
     expect(source).toMatch(/forecast-day-card[\s\S]*rgba\(18, 28, 52, 0\.88\)/);
   });
 
+  test('7-day weather and cloud-condition cards use Xiake glass backgrounds in light and dark themes', () => {
+    const source = css();
+    const xiakeFixBlock = source.match(/\/\* UI regression: 7-day weather and cloud-condition panels follow Xiake glass language\. \*\/[\s\S]*$/)?.[0] || '';
+    const dayCardBlock = xiakeFixBlock.match(/\.day-card,\n#forecast-section \.forecast-day-card,[\s\S]*?\n\}/)?.[0] || '';
+    const cloudBlock = xiakeFixBlock.match(/\.cloud-condition-card,\n\.fire-cloud-details,[\s\S]*?\n\}/)?.[0] || '';
+    const darkDayBlock = xiakeFixBlock.match(/body\.theme-dark \.day-card,[\s\S]*?\n\}/)?.[0] || '';
+    const darkCloudBlock = xiakeFixBlock.match(/body\.theme-dark \.cloud-condition-card,[\s\S]*?\n\}/)?.[0] || '';
+
+    expect(dayCardBlock).toContain('var(--theme-card-bg)');
+    expect(dayCardBlock).toContain('var(--theme-accent-soft)');
+    expect(dayCardBlock).toContain('backdrop-filter: blur(var(--glass-blur))');
+    expect(cloudBlock).toContain('var(--theme-card-bg)');
+    expect(cloudBlock).toContain('var(--theme-accent-soft)');
+    expect(source).toContain('.cloud-condition-track {\n  background: var(--cloud-track-color) !important;');
+    expect(darkDayBlock).toContain('rgba(18, 28, 52, 0.82)');
+    expect(darkCloudBlock).toContain('rgba(18, 28, 52, 0.80)');
+    expect(xiakeFixBlock).toContain('@media (prefers-color-scheme: dark)');
+
+    expect(dayCardBlock).not.toMatch(/background(?:-color)?:\s*(?:#fff\b|#ffffff\b|#f5f5f5\b|var\(--color-bg\))/i);
+    expect(cloudBlock).not.toMatch(/background(?:-color)?:\s*(?:#fff\b|#ffffff\b|#f5f5f5\b|#e5e7eb\b|var\(--color-bg\))/i);
+  });
+
   test('3-day glow forecast is a weather tab with a loading state', () => {
     const page = html();
     const source = css();
