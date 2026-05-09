@@ -6958,12 +6958,24 @@ html[data-actual-theme="light"] .weather-desc {
 }
 .analysis-item-copy {
   gap: 2px !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
 }
 .analysis-item-copy strong {
   line-height: 1.16 !important;
 }
 .analysis-item-copy small {
   line-height: 1.28 !important;
+}
+.analysis-card-title,
+.analysis-group-label,
+.analysis-item-copy strong,
+.analysis-item-copy small {
+  max-width: 100% !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  hyphens: auto;
 }
 .conclusion-banner {
   margin-top: 10px !important;
