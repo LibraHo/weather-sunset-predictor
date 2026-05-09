@@ -3,7 +3,7 @@
  *
  * 覆盖：
  *   - initDirs() 目录与索引初始化（幂等）
- *   - savePhoto() 正常上传、MIME 拒绝、超大文件拒绝
+ *   - savePhoto() 正常上传、octet-stream 图片兜底识别、MIME 拒绝、超大文件拒绝
  *   - getPhotos() 返回列表
  *   - deletePhoto() 删除条目
  *   - getPhotoById() 按 ID 查询
@@ -55,6 +55,12 @@ function makeJpegBuffer(sizeBytes = 256) {
   // JPEG SOI 魔数
   buf[0] = 0xff;
   buf[1] = 0xd8;
+  return buf;
+}
+
+function makePngBuffer(sizeBytes = 256) {
+  const buf = Buffer.alloc(sizeBytes);
+  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(buf, 0);
   return buf;
 }
 
@@ -128,11 +134,41 @@ describe('savePhoto()', () => {
   });
 
   test('accepts image/png', async () => {
-    const buffer = Buffer.alloc(256);
-    buffer[0] = 0x89; buffer[1] = 0x50; // PNG 魔数
+    const buffer = makePngBuffer(256);
     const meta = await PhotoService.savePhoto({ buffer, mimeType: 'image/png' });
     expect(meta.mimeType).toBe('image/png');
     expect(meta.origFile.endsWith('.png')).toBe(true);
+  });
+
+  test('accepts JPEG uploaded as application/octet-stream when file signature is valid', async () => {
+    const buffer = makeJpegBuffer(256);
+    const meta = await PhotoService.savePhoto({
+      buffer,
+      mimeType: 'application/octet-stream',
+      filename: 'phone-upload.bin',
+    });
+
+    expect(meta.mimeType).toBe('image/jpeg');
+    expect(meta.origFile.endsWith('.jpg')).toBe(true);
+  });
+
+  test('accepts PNG uploaded as application/octet-stream when file signature is valid', async () => {
+    const buffer = makePngBuffer(256);
+    const meta = await PhotoService.savePhoto({
+      buffer,
+      mimeType: 'application/octet-stream',
+      filename: 'phone-upload.bin',
+    });
+
+    expect(meta.mimeType).toBe('image/png');
+    expect(meta.origFile.endsWith('.png')).toBe(true);
+  });
+
+  test('rejects application/octet-stream when it is not an image', async () => {
+    const buffer = Buffer.from('not an image payload');
+    await expect(
+      PhotoService.savePhoto({ buffer, mimeType: 'application/octet-stream', filename: 'payload.bin' })
+    ).rejects.toThrow('UNSUPPORTED_MIME');
   });
 
   test('rejects unsupported MIME type', async () => {

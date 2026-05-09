@@ -36,7 +36,8 @@ const PHOTOS_INDEX     = path.join(PHOTOS_DIR, 'photos.json');
 
 const THUMB_SIZE       = 300; // px，正方形
 const MAX_FILE_SIZE_MB = 20;  // 上传上限（MB）
-const ALLOWED_MIMES    = new Set(['image/jpeg', 'image/png', 'image/heic']);
+const ALLOWED_MIMES    = new Set(['image/jpeg', 'image/png', 'image/heic', 'image/heif']);
+const OCTET_STREAM_MIME = 'application/octet-stream';
 const DAILY_UPLOAD_LIMIT_PER_IP = Math.max(
   0,
   parseInt(process.env.PHOTO_UPLOAD_DAILY_IP_LIMIT || '3', 10) || 0
@@ -154,6 +155,39 @@ function assertDailyUploadLimit(clientIp, now = new Date()) {
   return stats;
 }
 
+function detectImageMimeFromBuffer(buffer) {
+  if (!Buffer.isBuffer(buffer) || buffer.length < 4) return null;
+
+  if (buffer[0] === 0xff && buffer[1] === 0xd8) return 'image/jpeg';
+
+  if (
+    buffer.length >= 8 &&
+    buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47 &&
+    buffer[4] === 0x0d && buffer[5] === 0x0a && buffer[6] === 0x1a && buffer[7] === 0x0a
+  ) {
+    return 'image/png';
+  }
+
+  if (buffer.length >= 12 && buffer.toString('ascii', 4, 8) === 'ftyp') {
+    const brand = buffer.toString('ascii', 8, Math.min(buffer.length, 28));
+    if (/hei[cfx]|mif1|msf1/i.test(brand)) return 'image/heic';
+  }
+
+  return null;
+}
+
+function normalizeImageMime({ buffer, mimeType = '' }) {
+  const normalizedMime = String(mimeType || '').toLowerCase();
+  if (ALLOWED_MIMES.has(normalizedMime)) return normalizedMime;
+
+  if (normalizedMime === OCTET_STREAM_MIME || !normalizedMime) {
+    const detectedMime = detectImageMimeFromBuffer(buffer);
+    if (detectedMime) return detectedMime;
+  }
+
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // 导出函数
 // ---------------------------------------------------------------------------
@@ -212,9 +246,9 @@ async function savePhoto({ buffer, mimeType, filename = '', lat, lon, takenAt, d
   const now = new Date();
   const uploadStats = assertDailyUploadLimit(clientIp, now);
 
-  // 校验 MIME
-  const normalizedMime = (mimeType || '').toLowerCase();
-  if (!ALLOWED_MIMES.has(normalizedMime)) {
+  // 校验/修正 MIME：部分浏览器或相册来源会把图片上传成 application/octet-stream
+  const normalizedMime = normalizeImageMime({ buffer, mimeType, filename });
+  if (!normalizedMime) {
     throw new Error(`UNSUPPORTED_MIME: ${mimeType}`);
   }
 
@@ -227,7 +261,9 @@ async function savePhoto({ buffer, mimeType, filename = '', lat, lon, takenAt, d
   initDirs();
 
   const id       = uuidv4();
-  const ext      = normalizedMime === 'image/png' ? '.png' : '.jpg';
+  const ext      = normalizedMime === 'image/png'
+    ? '.png'
+    : (normalizedMime === 'image/heic' || normalizedMime === 'image/heif') ? '.heic' : '.jpg';
   const origFile = `${id}${ext}`;
   const thumbFile = `${id}_thumb.jpg`;
 
@@ -341,6 +377,8 @@ module.exports = {
   THUMBS_DIR,
   PHOTOS_INDEX,
   ALLOWED_MIMES,
+  detectImageMimeFromBuffer,
+  normalizeImageMime,
   MAX_FILE_SIZE_MB,
   DAILY_UPLOAD_LIMIT_PER_IP,
   UPLOAD_DAY_TIME_ZONE,

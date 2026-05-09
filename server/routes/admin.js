@@ -29,7 +29,8 @@ const router = express.Router();
 // ---------------------------------------------------------------------------
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'xiake2024';
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
-const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/heic'];
+const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/heic', 'image/heif'];
+const FALLBACK_UPLOAD_MIMES = ['application/octet-stream'];
 
 // Memory storage（上传到内存，由 PhotoService 处理写入）
 const upload = multer({
@@ -38,7 +39,7 @@ const upload = multer({
     fileSize: MAX_FILE_SIZE,
   },
   fileFilter: (req, file, cb) => {
-    if (!ALLOWED_MIMES.includes(file.mimetype)) {
+    if (![...ALLOWED_MIMES, ...FALLBACK_UPLOAD_MIMES].includes(file.mimetype)) {
       const err = new Error(`不支持的文件类型: ${file.mimetype}`);
       err.code = 'UNSUPPORTED_MIME';
       return cb(err, false);
@@ -46,6 +47,36 @@ const upload = multer({
     cb(null, true);
   },
 });
+
+function sendUploadValidationError(res, err) {
+  if (err?.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({
+      error: {
+        code: 'FILE_TOO_LARGE',
+        message: '文件过大，最大支持 20MB'
+      }
+    });
+  }
+
+  if (err?.code === 'UNSUPPORTED_MIME') {
+    return res.status(400).json({
+      error: {
+        code: 'UNSUPPORTED_MIME',
+        message: '不支持的文件类型，仅支持 JPEG、PNG、HEIC'
+      }
+    });
+  }
+
+  return null;
+}
+
+function handlePhotoUpload(req, res, next) {
+  upload.single('photo')(req, res, (err) => {
+    if (!err) return next();
+    if (sendUploadValidationError(res, err)) return;
+    next(err);
+  });
+}
 
 // ---------------------------------------------------------------------------
 // Basic Auth 中间件
@@ -152,7 +183,7 @@ router.post('/admin/restart', requireAuth, async (req, res) => {
 // ---------------------------------------------------------------------------
 // POST /admin/upload - 上传照片
 // ---------------------------------------------------------------------------
-router.post('/upload', requireAuth, upload.single('photo'), async (req, res) => {
+router.post('/upload', requireAuth, handlePhotoUpload, async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
