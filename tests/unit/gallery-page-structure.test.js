@@ -30,4 +30,10 @@ describe('gallery share map page', () => {
     expect(html).not.toContain('评分');
     expect(html).not.toContain('使用火烧云地图同款地理底图');
   });
+
+  test('title card leaves the Leaflet zoom control unobstructed', () => {
+    expect(html).toContain('.gallery-title {\n      top: 16px;\n      left: 72px;');
+    expect(html).toContain('.gallery-title { top: 12px; left: 64px;');
+    expect(html).not.toContain('.gallery-title { top: 12px; left: 12px;');
+  });
 });

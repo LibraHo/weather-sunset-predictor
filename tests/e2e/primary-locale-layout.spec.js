@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const PRIMARY_LOCALES = ['en-US', 'ja-JP', 'ko-KR', 'es-ES'];
+const SUPPORTED_LOCALES = ['zh-CN', 'zh-TW', 'en-US', 'ja-JP', 'ko-KR', 'es-ES', 'fr-FR', 'vi-VN', 'it-IT', 'ar-SA'];
 const MOBILE = { width: 390, height: 844 };
 
 async function setLocaleEnvironment(page, locale) {
@@ -45,8 +45,8 @@ async function collectClippedText(page) {
   });
 }
 
-test.describe('primary locale layout guard', () => {
-  for (const locale of PRIMARY_LOCALES) {
+test.describe('supported locale layout guard', () => {
+  for (const locale of SUPPORTED_LOCALES) {
     test(`${locale} mobile menu/methodology/api pages do not overflow or clip text`, async ({ page }) => {
       await page.setViewportSize(MOBILE);
       await setLocaleEnvironment(page, locale);
