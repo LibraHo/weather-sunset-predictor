@@ -9,6 +9,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const ipLocationService = require('./IpLocationService');
 
 const DATA_DIR = path.join(require('os').homedir(), '.xiake');
 const DATA_FILE = path.join(DATA_DIR, 'access-stats.json');
@@ -165,7 +166,11 @@ class AccessLogService {
     const topIps = Object.entries(todayData.ips || {})
       .sort((a, b) => b[1] - a[1])
       .slice(0, 20)
-      .map(([ip, count]) => ({ ip, count }));
+      .map(([ip, count]) => ({
+        ip,
+        count,
+        location: ipLocationService.getDisplayLocation(ip)
+      }));
 
     // Top Path（今日，基于内存记录）
     const pathMap = {};

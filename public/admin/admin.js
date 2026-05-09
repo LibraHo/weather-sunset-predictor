@@ -88,10 +88,10 @@ async function loadAccessStats() {
     const ipBody = document.getElementById('ipStatsBody');
     if (data.topIps?.length) {
       ipBody.innerHTML = data.topIps.map(item =>
-        `<tr><td>${escapeHtml(item.ip)}</td><td>${item.count}</td></tr>`
+        `<tr><td>${escapeHtml(item.ip)}</td><td>${escapeHtml(item.location || '--')}</td><td>${item.count}</td></tr>`
       ).join('');
     } else {
-      ipBody.innerHTML = '<tr><td colspan="2" class="empty">暂无数据</td></tr>';
+      ipBody.innerHTML = '<tr><td colspan="3" class="empty">暂无数据</td></tr>';
     }
 
     // 7天趋势图
