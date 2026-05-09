@@ -18,7 +18,7 @@ const translations = {
     "tabs": {
       "ariaLabel": "Navigation par onglets",
       "forecast": "Prévisions",
-      "methodology": "Méthode de calcul",
+    "methodology": "Méthode de calcul",
       "map": "Carte Lueur",
       "shareMap": "Carte partagée",
       "apiAccess": "Accès API"
@@ -26,6 +26,23 @@ const translations = {
     "menu": {
       "ariaLabel": "Changer de vue",
       "dropdownAriaLabel": "Menu de navigation"
+    },
+    apiAccess: {
+      kicker: 'Sunset Voyager API',
+      intro: 'The Sunset Voyager Agent API provides geocoding, sunrise/sunset glow scores, and score explanations for personal, learning, and research use.',
+      openApiSpec: 'OpenAPI spec',
+      admin: 'Admin console',
+      quickStart: 'Quick start',
+      step1: 'Apply for and receive a token.',
+      step2: 'Send it in Authorization: Bearer <token>.',
+      step3: 'Call /api/agent/forecast, /api/agent/explain, or /api/agent/geocode.',
+      restrictions: 'Usage limits',
+      restrictionText: 'Personal, learning, and research use only. Commercial use is prohibited. Public displays must remove sensitive data and cite the source.',
+      exampleCall: 'Example call',
+      endpoints: 'Core endpoints',
+      forecastDesc: 'Returns score, quality level, and best viewing window.',
+      explainDesc: 'Returns score composition, key constraints, and natural-language explanation.',
+      geocodeDesc: 'Returns location candidates, coordinates, and confidence.'
     },
     "methodology": {
       "title": "Comment le score est calculé",
@@ -87,6 +104,15 @@ const translations = {
           "level2": "Nuages bas 20–40% → ×1.0 à ×0.8 (linéaire)",
           "level3": "Nuages bas 40–70% → ×0.8 à ×0.5 (linéaire)",
           "level4": "Nuages bas >70% → ×0.2 (obstruction sévère)"
+        },
+        "thickHighCloudPenalty": {
+          "title": "6. Pénalité des nuages hauts épais",
+          "subtitle": "Thick High Cloud · Plafond",
+          "desc": "Beaucoup de nuages hauts ne signifie pas toujours un bon score : s’ils forment un voile épais avec peu de lumière directe et une diffusion dominante, seule une lueur locale près du soleil est probable.",
+          "level1": "Nuages hauts ≥80% et couverture totale ≥60% déclenchent le contrôle de risque",
+          "level2": "Un faible ratio de lumière directe, une diffusion dominante ou beaucoup de vapeur d’eau abaissent le score de trajet lumineux",
+          "level3": "Les voiles épais sont plafonnés vers 42–48 pour éviter un faux excellent score",
+          "formula": "Correction nuages hauts épais = min(score final, 42–48), pour un voile épais avec seulement des percées locales"
         },
         "precipPenalty": {
           "title": "5. Pénalité précipitations",
@@ -166,6 +192,8 @@ const translations = {
     "clear": "Dégagé",
     "overview": "Aperçu",
     "hourly": "Prévisions Horaires",
+    "threeDayGlow": "Lueurs sur 3 jours",
+    "threeDayGlowLoading": "Chargement des lueurs d’aube et de crépuscule sur 3 jours...",
     "daysOverview": "Aperçu sur {{days}} jours",
     "precipChance": "{{prob}}% précip",
     "dataInfo": "ℹ️ La source de données fournit {{hours}} heures de prévisions (~{{days}} jours). Envisagez d'utiliser d'autres sources pour plus de jours.",
@@ -193,7 +221,92 @@ const translations = {
     "fair": "Moyen",
     "poor": "Médiocre",
 
-    "formationAnalysis": {
+    "analysisConclusion": {
+      "excellent": "Conditions excellentes. Sortie fortement recommandée.",
+      "excellentSingleLayer": "Fort potentiel de couleur, mais une seule couche de nuages peut réduire la profondeur.",
+      "good": "Bonnes conditions, avec une vraie chance de nuages flamboyants spectaculaires.",
+      "goodSingleLayer": "Bonne chance de nuages flamboyants, mais les couches restent limitées.",
+      "fair": "Conditions moyennes ; surveillez l’évolution réelle des nuages.",
+      "clearSunset": "Fire clouds are subtle, but the sunset is clear.",
+      "low": "Des conditions clés manquent ; la probabilité reste faible."
+    },
+        "scoreBreakdown": {
+      "title": "Détail du score",
+      "viewDetails": "Voir le détail du score",
+      "finalDisplayed": "Score final affiché",
+      "baseFormula": "Score de base = toile ×0,8 + trajet lumineux ×0,2",
+      "baseHint": "Score de base après combinaison des nuages et du trajet lumineux",
+      "canvasHint": "Les nuages hauts/moyens portent la couleur ; les nuages bas peuvent la bloquer",
+      "lightPathHint": "La lumière du soleil peut-elle atteindre les nuages ?",
+      "finalFormula": "Score final = score de base × facteurs de correction",
+      "renderingHint": "Humidité et visibilité influencent le rendu des couleurs",
+      "aerosolHint": "Un aérosol modéré renforce l’orange-rouge ; trop élevé, il grise la scène"
+,
+
+      "ledger": {
+        "pts": "pts",
+        "whyThisScore": "Why this score",
+        "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
+        "canvasPlusLightPath": "canvas + light path",
+        "renderingFormula": "{{base}} × rendering {{factor}} = {{rendered}}",
+        "weatherTransparency": "weather transparency factor",
+        "summary": {
+          "event": "{{score}} points: {{detail}}",
+          "rendered": "{{base}} points adjusted by rendering conditions to {{rendered}}",
+          "default": "{{score}} points: calculated from cloud carrier, light path, and rendering conditions"
+        },
+        "weather": {
+          "clouds": "Cloud H/M/L {{high}}/{{mid}}/{{low}}%",
+          "visibility": "Visibility {{value}}km",
+          "humidity": "Humidity {{value}}%",
+          "rain": "Rain {{value}}mm/h"
+        },
+        "labels": {
+          "cloudCarrier": "Cloud carrier",
+          "lightPath": "Light path",
+          "baseScore": "Base score",
+          "rendering": "Rendering",
+          "final": "Final",
+          "hardCap": "Hard cap",
+          "hazeCap": "Haze cap",
+          "thickCloudCap": "Thick-cloud cap",
+          "geometryCap": "Geometry cap",
+          "occlusion": "Occlusion",
+          "carrierFloor": "Carrier floor",
+          "postRainCap": "Post-rain cap",
+          "displayCalibration": "Display calibration"
+        },
+        "details": {
+          "cloudCarrier": "usable colored cloud surface",
+          "cloudPenalty": "low cloud ×{{low}}, overcast ×{{overcast}}",
+          "lightPath": "sunlight reaches the cloud layer",
+          "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
+          "afterAdjustments": "after all caps and floors",
+          "finalDisplayed": "final displayed result",
+          "thickCloudCap": "thick high cloud reduces usable color rendering",
+          "geometryCap": "sun/cloud geometry is not feasible",
+          "occlusion": "distant obstruction reduces the score",
+          "carrierFloor": "clear high-cloud carrier prevents over-penalty",
+          "directionalSamples": "solar-azimuth samples at 15/30/50/100km are included",
+          "postRainCap": "post-rain moisture or haze turns the glow into a gray curtain",
+          "displayCalibration": "final display score is aligned with the prediction status band"
+        },
+        "reasons": {
+          "precipitationCap45": "rain with low clouds capped the score at 45",
+          "overcastCap35": "low-cloud overcast capped the score at 35",
+          "overcastFogCap15": "overcast sky plus visibility ≤5km capped the score at 15",
+          "rainyMidCloudOvercastCap35": "rainy gray mid-cloud overcast capped the score at 35",
+          "extremeDustHazeCap28": "severe dust/haze capped the score at 28",
+          "severeHazeCap35": "heavy haze capped the score at 35",
+          "moderateHazeCap45": "moderate haze capped the score at 45",
+          "adjustmentApplied": "cap/floor adjustment applied",
+          "displayCalibration": "final display score is aligned with the prediction status band",
+          "lightPathStatusCap60": "light path is only {{light}}, so the result is capped to the light-glow band around 60",
+          "canvasStatusCap40": "cloud carrier is only {{canvas}}, so the result is capped to the no-fire-cloud band below 40"
+        }
+      }
+    },
+"formationAnalysis": {
       "title": "Analyse des conditions de formation des nuages flamboyants",
       "groups": { "positive": "Conditions favorables", "neutral": "Facteurs neutres", "warning": "Points à surveiller" },
       "high": { "abundant": "Nuages hauts abondants ({{value}}%)", "abundantDesc": "Bonne base pour capter la couleur", "sufficient": "Nuages hauts suffisants ({{value}}%)", "sufficientDesc": "Bon support pour les teintes du coucher", "moderate": "Nuages hauts modérés ({{value}}%)", "moderateDesc": "Possible, mais les couleurs peuvent être plus légères", "few": "Peu de nuages hauts ({{value}}%)", "fewDesc": "Le principal support de couleur manque" },
@@ -201,6 +314,8 @@ const translations = {
       "low": { "few": "Peu de nuages bas ({{value}}%)", "fewDesc": "La vue devrait rester dégagée", "some": "Quelques nuages bas ({{value}}%)", "someDesc": "Peut masquer une partie des couleurs près de l’horizon", "thick": "Nuages bas épais ({{value}}%)", "thickDesc": "Risque d’obstruction élevé" },
       "visibility": { "good": "Bonne visibilité ({{value}}km)", "goodDesc": "Air clair et bonne portée visuelle", "moderate": "Visibilité moyenne ({{value}}km)", "moderateDesc": "La saturation peut baisser légèrement", "low": "Faible visibilité ({{value}}km)", "lowDesc": "Brume ou humidité peuvent gêner l’observation" },
       "humidity": { "moderate": "Humidité modérée ({{value}}%)", "moderateDesc": "Aide la diffusion de la lumière", "high": "Humidité élevée ({{value}}%)", "highDesc": "Peut réduire la transparence", "low": "Humidité basse ({{value}}%)", "lowDesc": "L’air sec peut rendre les couleurs plus pâles" },
+      "lightPath": { "opening": "Opening toward the sun", "openingDesc": "Backend samples 15/30/50/100km along the solar azimuth; the low/mid-cloud corridor is relatively open", "wall": "Cloud wall toward the sun", "wallDesc": "Low or mid clouds along the solar direction suppress the main score" },
+      "postRain": { "clear": "Clear post-rain air", "clearDesc": "Rain in the last 6h is kept as a bonus because visibility and particles are acceptable", "gray": "Post-rain gray-curtain risk", "grayDesc": "Moisture, particles, or weak direct light after rain cap the score conservatively" },
       "aerosol": { "moderate": "Aérosols modérés (AOD {{value}})", "moderateDesc": "Renforce la diffusion orange-rouge", "high": "Aérosols élevés (AOD {{value}})", "highDesc": "Peut paraître brumeux ou terne", "low": "Air très clair (AOD {{value}})", "lowDesc": "Les couleurs peuvent être plus pâles" },
       "layer": { "single": "Couche nuageuse unique", "singleDesc": "De bons nuages hauts peuvent encore bien se colorer" }
     },
@@ -222,6 +337,8 @@ const translations = {
       "conditionsFair": "Conditions moyennes, couleurs possibles éparses",
       "canWatch": "Peut être observé",
       "conditionsGood": "Conditions bonnes avec une certaine valeur d'observation",
+      "clearSunsetTransparent": "Fire clouds are subtle, but the sunset is clear.",
+      "casualViewingOk": "Worth a casual look",
       "veryLikely": "Forte probabilité de magnifique coucher de soleil",
       "excellentConditions": "Nuages modérés avec trajet lumineux clair",
       "legendaryEruption": "Éruption légendaire",
@@ -254,11 +371,26 @@ const translations = {
       "tooManyLowClouds": "Trop de nuages bas",
       "lowCloudAmount": "Nuages bas"
     },
+
+    "thickHighCloud": {
+      "title": "Pénalité nuages hauts épais",
+      "scoreHint": "Voile de nuages hauts épais avec peu de lumière directe : lueur locale seulement, score final plafonné",
+      "analysisTitle": "Voile de nuages hauts épais",
+      "analysisDesc": "Les nuages hauts sont nombreux mais épais, avec une lumière directe faible ; la lueur reste souvent locale près du coucher du soleil"
+    },
+    "highCloudCarrier": {
+      "title": "Plancher des nuages hauts",
+      "scoreHint": "Nuages hauts abondants, peu de nuages bas et air assez transparent : éviter une pénalité excessive"
+    },
+    "aerosolHaze": {
+      "title": "Plafond poussière/brume",
+      "scoreHint": "AOD, poussière ou PM10 très élevés peuvent étouffer les couleurs même avec beaucoup de nuages hauts"
+    },
     "lightPath": {
       "title": "Score du Chemin Lumineux",
       "score": "Score du Chemin Lumineux",
       "visibility": "Visibilité",
-      "lightPathScore": "🌅 chemin lumineux: {{score}}pts "
+      "lightPathScore": "chemin lumineux: {{score}}pts "
     },
     "rendering": {
       "title": "Score de Rendu",
@@ -342,7 +474,7 @@ const translations = {
       "someLowCloud": "⚠️ Certains nuages bas ({{value}}%), peuvent bloquer partiellement la vue",
       "denseLowCloud": "❌ Nuages bas denses ({{value}}%), affectant sérieusement l'observation",
       "excellentConditions": "🌟 Toutes les conditions pour des nuages rouges magnifiques sont réunies!",
-      "highProbability": "✨ Forte probabilité de paysages de nuages rouges spectaculaires",
+      "highProbability": "Forte probabilité de paysages de nuages rouges spectaculaires",
       "moderateProbability": "💫 Possibles effets légers de nuages rouges",
       "lowProbability": "⛅ Faible probabilité de nuages rouges significatifs",
       "noCloudNoFireCloud": "❌ Couverture nuageuse sévèrement insuffisante, ne peut pas former de nuages rouges"
@@ -419,6 +551,11 @@ const translations = {
     "proxyUrl": "URL du Serveur Proxy",
     "proxyUrlPlaceholder": "http://localhost:3000",
     "proxyUrlHint": "Adresse URL du serveur proxy backend",
+    "weatherFetchMode": "Mode de récupération météo",
+    "weatherFetchModeHint": "Boucle fermée backend par défaut ; si le backend est limité ou expire, le navigateur peut récupérer la météo publique puis la renvoyer au backend pour le score",
+    "weatherFetchModeBackend": "Boucle fermée backend (par défaut recommandé)",
+    "weatherFetchModeClientFallback": "Backend d’abord, navigateur en secours",
+    "weatherFetchModeClient": "Récupération météo par le navigateur (debug/secours)",
     "notificationAndAlerts": "Notifications & Alertes",
     "enableSunsetNotification": "Activer les notifications de coucher de soleil",
     "notificationHint": "Envoyer une notification du navigateur lorsque la qualité de prévision atteint le seuil",
@@ -580,19 +717,19 @@ const translations = {
     },
     "bestWindow": "Best viewing  {{start}} – {{end}}",
     "cloud": {
-      "high": "High Cloud",
-      "mid": "Mid Cloud",
-      "low": "Low Cloud"
+      "high": "Nuages hauts",
+      "mid": "Nuages moyens",
+      "low": "Nuages bas"
     },
     "verdict": {
-      "noCarrier": "😶 Not enough color carrier clouds; fire-cloud chance is very low",
-      "excellent": "✨ Excellent conditions; colorful sky is promising",
-      "excellentMultiLayer": "✨ Excellent conditions; strongly recommended for viewing!",
-      "good": "✨ Good conditions; fire-cloud chance is high",
-      "fair": "💡 Moderate conditions; watch real-time cloud changes",
-      "poor": "😶 Fire-cloud chance is low"
+      "noCarrier": "Pas assez de nuages porteurs de couleur ; la probabilité reste très faible",
+      "excellent": "Conditions excellentes ; un ciel coloré est probable",
+      "excellentMultiLayer": "Conditions excellentes ; observation fortement recommandée !",
+      "good": "Bonnes conditions ; la probabilité de nuages flamboyants est élevée",
+      "fair": "Conditions moyennes ; surveillez l’évolution réelle des nuages",
+      "poor": "La probabilité de nuages flamboyants est faible"
     },
-    "watermark": "Xiake · Capture every brilliant sky"
+    "watermark": "Xiake · Capturer chaque ciel éclatant"
   },
   "charts": {
     "temperature": "Température",
@@ -622,13 +759,15 @@ const translations = {
     "timeNow": "Maintenant",
     "timeSunset": "Coucher du soleil",
     "timeSunrise": "Lever du soleil",
-    "timeHint": "💡 Astuce : Vous pouvez également faire glisser la ligne temporelle sous la carte pour ajuster l'heure",
+    "timeHint": "Astuce : Vous pouvez également faire glisser la ligne temporelle sous la carte pour ajuster l'heure",
     "loading": "Chargement de la carte...",
     "error": "Échec du chargement de la carte",
     "mockNotSupported": "La fonction de carte n'est disponible qu'en mode API réel"
   },
   "surrounding": {
     "title": "Analyse des nuages rouges environnants",
+    "radarTitle": "Radar des nuages environnants",
+    "radarSubtitle": "20 km · Champ nuageux continu",
     "radius": "Rayon de détection",
     "radiusUnit": "km",
     "directions": {
@@ -688,6 +827,9 @@ const translations = {
     "pointToast": "{{name}} direction | Score: {{score}} pts | Distance: {{distance}} km",
     "emptyChinaSpots": "No visible fire-cloud spots today",
     "updatedAt": "Updated at {{time}}",
+    "supportedRegions": "Actuellement pris en charge : Chine continentale, Hong Kong, Macao, Taïwan, Japon, Corée du Sud, Corée du Nord et principales villes de l’Asie du Sud-Est continentale. La grille thermique est actuellement centrée sur la Chine.",
+    "interactionHint": "Drag the map · scroll to zoom",
+    "tabs": { "sunrise": "Sunrise", "sunset": "Sunset" },
     "quality": {
       "excellent": "Excellent",
       "good": "Good"

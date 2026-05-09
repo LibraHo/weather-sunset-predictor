@@ -270,6 +270,17 @@ describe('Geocoding Route — 数据转换逻辑', () => {
       expect(ranked[0].name).toBe('NYC, United States');
     });
 
+    test('仅完整手动输入 test 时返回测试城市', () => {
+      expect(helpers.getManualTestCityResult('tes')).toBeNull();
+      expect(helpers.getManualTestCityResult('test')).toMatchObject({
+        name: 'test',
+        lat: 0,
+        lon: 0,
+        provider: 'manual-test'
+      });
+      expect(helpers.getManualTestCityResult('  TEST  ')).toMatchObject({ name: 'test' });
+    });
+
     test('北京/上海/香港 搜索样例应各自触发高优先级排序', () => {
       const beijing = [
         { name: 'Shanghai, China' },

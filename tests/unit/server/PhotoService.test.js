@@ -3,7 +3,7 @@
  *
  * 覆盖：
  *   - initDirs() 目录与索引初始化（幂等）
- *   - savePhoto() 正常上传、MIME 拒绝、超大文件拒绝
+ *   - savePhoto() 正常上传、octet-stream 图片兜底识别、MIME 拒绝、超大文件拒绝
  *   - getPhotos() 返回列表
  *   - deletePhoto() 删除条目
  *   - getPhotoById() 按 ID 查询
@@ -55,6 +55,12 @@ function makeJpegBuffer(sizeBytes = 256) {
   // JPEG SOI 魔数
   buf[0] = 0xff;
   buf[1] = 0xd8;
+  return buf;
+}
+
+function makePngBuffer(sizeBytes = 256) {
+  const buf = Buffer.alloc(sizeBytes);
+  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(buf, 0);
   return buf;
 }
 
@@ -128,11 +134,41 @@ describe('savePhoto()', () => {
   });
 
   test('accepts image/png', async () => {
-    const buffer = Buffer.alloc(256);
-    buffer[0] = 0x89; buffer[1] = 0x50; // PNG 魔数
+    const buffer = makePngBuffer(256);
     const meta = await PhotoService.savePhoto({ buffer, mimeType: 'image/png' });
     expect(meta.mimeType).toBe('image/png');
     expect(meta.origFile.endsWith('.png')).toBe(true);
+  });
+
+  test('accepts JPEG uploaded as application/octet-stream when file signature is valid', async () => {
+    const buffer = makeJpegBuffer(256);
+    const meta = await PhotoService.savePhoto({
+      buffer,
+      mimeType: 'application/octet-stream',
+      filename: 'phone-upload.bin',
+    });
+
+    expect(meta.mimeType).toBe('image/jpeg');
+    expect(meta.origFile.endsWith('.jpg')).toBe(true);
+  });
+
+  test('accepts PNG uploaded as application/octet-stream when file signature is valid', async () => {
+    const buffer = makePngBuffer(256);
+    const meta = await PhotoService.savePhoto({
+      buffer,
+      mimeType: 'application/octet-stream',
+      filename: 'phone-upload.bin',
+    });
+
+    expect(meta.mimeType).toBe('image/png');
+    expect(meta.origFile.endsWith('.png')).toBe(true);
+  });
+
+  test('rejects application/octet-stream when it is not an image', async () => {
+    const buffer = Buffer.from('not an image payload');
+    await expect(
+      PhotoService.savePhoto({ buffer, mimeType: 'application/octet-stream', filename: 'payload.bin' })
+    ).rejects.toThrow('UNSUPPORTED_MIME');
   });
 
   test('rejects unsupported MIME type', async () => {
@@ -158,6 +194,50 @@ describe('savePhoto()', () => {
     });
     expect(meta.lat).toBeNull();
     expect(meta.lon).toBeNull();
+  });
+
+  test('limits the same client IP to three uploads per Beijing day', async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-05-09T01:30:00Z')); // 2026-05-09 Asia/Shanghai
+
+    try {
+      const clientIp = '203.0.113.8';
+      await PhotoService.savePhoto({ buffer: makeJpegBuffer(256), mimeType: 'image/jpeg', clientIp });
+      await PhotoService.savePhoto({ buffer: makeJpegBuffer(256), mimeType: 'image/jpeg', clientIp });
+      await PhotoService.savePhoto({ buffer: makeJpegBuffer(256), mimeType: 'image/jpeg', clientIp });
+
+      const stats = PhotoService.getDailyUploadStatsForIp(clientIp);
+      expect(stats).toMatchObject({ limit: 3, used: 3, remaining: 0, uploadDay: '2026-05-09' });
+
+      await expect(
+        PhotoService.savePhoto({ buffer: makeJpegBuffer(256), mimeType: 'image/jpeg', clientIp })
+      ).rejects.toMatchObject({ code: 'DAILY_UPLOAD_LIMIT_EXCEEDED', limit: 3, used: 3 });
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  test('does not store raw client IP and resets the quota on a new Beijing day', async () => {
+    jest.useFakeTimers();
+    const clientIp = '198.51.100.9';
+
+    try {
+      jest.setSystemTime(new Date('2026-05-09T15:55:00Z')); // 2026-05-09 23:55 +08
+      await PhotoService.savePhoto({ buffer: makeJpegBuffer(256), mimeType: 'image/jpeg', clientIp });
+      await PhotoService.savePhoto({ buffer: makeJpegBuffer(256), mimeType: 'image/jpeg', clientIp });
+      await PhotoService.savePhoto({ buffer: makeJpegBuffer(256), mimeType: 'image/jpeg', clientIp });
+
+      const stored = PhotoService.getPhotos()[0];
+      expect(stored.uploadIpHash).toBe(PhotoService.hashClientIp(clientIp));
+      expect(JSON.stringify(stored)).not.toContain(clientIp);
+
+      jest.setSystemTime(new Date('2026-05-09T16:05:00Z')); // 2026-05-10 00:05 +08
+      const nextDay = await PhotoService.savePhoto({ buffer: makeJpegBuffer(256), mimeType: 'image/jpeg', clientIp });
+      expect(nextDay.uploadDay).toBe('2026-05-10');
+      expect(PhotoService.getDailyUploadStatsForIp(clientIp)).toMatchObject({ used: 1, remaining: 2 });
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });
 

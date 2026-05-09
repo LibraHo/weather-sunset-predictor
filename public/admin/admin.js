@@ -8,36 +8,36 @@ let apiHourlyChart = null;
 
 // 当前日志Tab
 let currentLogTab = 'grid';
+let activeAdminView = 'dashboard';
+let refreshTimer = null;
+let slowRefreshTimer = null;
+
+const ADMIN_VIEWS = new Set(['dashboard', 'ops', 'logs', 'schedule', 'agent', 'photos']);
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
-  loadAll();
+  initAdminNavigation();
   initUploadForm();
   initTokenForm();
+  initTokenEditForm();
+  loadActiveView();
 
-  // 自动刷新
-  setInterval(() => {
-    loadAccessStats();
-    loadLogSummary();
-    loadLogs();
-    loadAuditLogs();
-    loadHealth();
-    loadAgentUsageStats();
-  }, 15000);
-  setInterval(loadQueue, 15000);
-  setInterval(loadDailyStats, 60000);
+  refreshTimer = setInterval(refreshActiveView, 15000);
+  slowRefreshTimer = setInterval(() => {
+    if (activeAdminView === 'logs') loadDailyStats();
+  }, 60000);
 });
 
 function initTheme() {
   const toggle = document.getElementById('theme-toggle');
   const saved = localStorage.getItem('admin-theme') || 'theme-dark';
-  document.body.className = saved;
+  document.body.className = `admin-body ${saved}`;
 
   toggle.addEventListener('click', () => {
     const isDark = document.body.classList.contains('theme-dark');
     const next = isDark ? 'theme-light' : 'theme-dark';
-    document.body.className = next;
+    document.body.className = `admin-body ${next}`;
     localStorage.setItem('admin-theme', next);
     // 重绘图表以适配新主题
     loadAccessStats();
@@ -58,16 +58,114 @@ async function loadAll() {
     loadAuditLogs(),
     loadAgentUsageStats(),
     loadPhotos(),
-    loadHealth()
+    loadHealth(),
+    loadShareStats()
   ]);
+}
+
+function initAdminNavigation() {
+  const btn = document.getElementById('home-view-menu-btn');
+  const dropdown = document.getElementById('home-view-menu-dropdown');
+  const options = Array.from(document.querySelectorAll('.admin-view-option[data-view], .admin-entry-card[data-view]'));
+
+  const getViewFromHash = () => {
+    const view = window.location.hash.replace(/^#/, '') || 'dashboard';
+    return ADMIN_VIEWS.has(view) ? view : 'dashboard';
+  };
+
+  const closeMenu = () => {
+    if (!dropdown || !btn) return;
+    dropdown.classList.add('hidden');
+    btn.setAttribute('aria-expanded', 'false');
+  };
+
+  const openMenu = () => {
+    if (!dropdown || !btn) return;
+    dropdown.classList.remove('hidden');
+    btn.setAttribute('aria-expanded', 'true');
+  };
+
+  window.setAdminView = (view) => {
+    activeAdminView = ADMIN_VIEWS.has(view) ? view : 'dashboard';
+    document.querySelectorAll('[data-admin-panel]').forEach((panel) => {
+      const show = panel.dataset.adminPanel === activeAdminView;
+      panel.classList.toggle('hidden', !show);
+      panel.hidden = !show;
+    });
+    options.forEach((option) => {
+      const active = option.dataset.view === activeAdminView;
+      option.classList.toggle('active', active);
+      option.setAttribute('aria-checked', String(active));
+      option.setAttribute('aria-pressed', String(active));
+    });
+    if (window.location.hash.replace(/^#/, '') !== activeAdminView) {
+      history.replaceState(null, '', `#${activeAdminView}`);
+    }
+    loadActiveView();
+  };
+
+  if (btn && dropdown) {
+    btn.addEventListener('click', () => {
+      dropdown.classList.contains('hidden') ? openMenu() : closeMenu();
+    });
+    document.addEventListener('click', (event) => {
+      if (!dropdown.contains(event.target) && !btn.contains(event.target)) closeMenu();
+    });
+  }
+
+  options.forEach((option) => {
+    option.addEventListener('click', () => {
+      window.setAdminView(option.dataset.view);
+      closeMenu();
+    });
+  });
+
+  window.addEventListener('hashchange', () => window.setAdminView(getViewFromHash()));
+  window.setAdminView(getViewFromHash());
+}
+
+async function loadActiveView() {
+  switch (activeAdminView) {
+    case 'dashboard':
+      await Promise.all([loadAccessStats(), loadLogSummary(), loadHealth(), loadShareStats()]);
+      break;
+    case 'ops':
+      await Promise.all([loadQueue(), loadHealth()]);
+      break;
+    case 'logs':
+      await Promise.all([loadLogSummary(), loadLogs(), loadDailyStats()]);
+      break;
+    case 'schedule':
+      await loadSchedule();
+      break;
+    case 'agent':
+      await Promise.all([loadTokens(), loadApplications(), loadAgentUsageStats(), loadAuditLogs()]);
+      break;
+    case 'photos':
+      await loadPhotos();
+      break;
+    default:
+      break;
+  }
+}
+
+function refreshActiveView() {
+  if (activeAdminView === 'dashboard') {
+    Promise.all([loadAccessStats(), loadLogSummary(), loadHealth(), loadShareStats()]);
+  } else if (activeAdminView === 'ops') {
+    Promise.all([loadQueue(), loadHealth()]);
+  } else if (activeAdminView === 'logs') {
+    Promise.all([loadLogSummary(), loadLogs()]);
+  }
 }
 
 function formatStatus(v) {
   return v ? '<span class="status-ok">启用</span>' : '<span class="status-err">禁用</span>';
 }
 
-function showMessage(msg, type = 'success') {
-  const el = document.getElementById('message');
+function showMessage(msg, type = 'success', targetId = 'message') {
+  const el = document.getElementById(targetId);
+  if (!el) return;
   el.textContent = msg;
   el.className = 'admin-message ' + type;
   el.classList.remove('hidden');
@@ -134,6 +232,18 @@ function renderAccessTrendChart(dailyTrend) {
       }
     }
   });
+}
+
+// =================== 分享统计 ===================
+async function loadShareStats() {
+  try {
+    const res = await fetch('/api/admin/share/summary?days=7', { credentials: 'include' });
+    const data = await res.json();
+    document.getElementById('kpi-share-today').textContent = data.today?.total ?? '--';
+    document.getElementById('kpi-share-total').textContent = `累计 ${data.total?.total ?? '--'}`;
+  } catch (err) {
+    console.error('加载分享统计失败:', err);
+  }
 }
 
 // =================== 系统健康 ===================
@@ -260,14 +370,19 @@ function renderApiHourlyChart(hourly) {
 
 async function loadLogs() {
   try {
-    const res = await fetch('/api/admin/logs?type=' + encodeURIComponent(currentLogTab) + '&limit=50', { credentials: 'include' });
+    const typeParam = currentLogTab === 'errors' ? '' : currentLogTab;
+    const res = await fetch('/api/admin/logs?type=' + encodeURIComponent(typeParam) + '&limit=80', { credentials: 'include' });
     const data = await res.json();
     const tbody = document.getElementById('logTableBody');
-    if (!data.logs?.length) {
+    const rawLogs = data.logs || [];
+    const logs = currentLogTab === 'errors'
+      ? rawLogs.filter((l) => Number(l.status) >= 400 || l.error)
+      : rawLogs;
+    if (!logs.length) {
       tbody.innerHTML = '<tr><td colspan="5" class="empty">暂无日志</td></tr>';
       return;
     }
-    tbody.innerHTML = data.logs.map(l => {
+    tbody.innerHTML = logs.map(l => {
       const time = new Date(l.time).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
       const statusClass = l.status >= 200 && l.status < 400 ? 'status-ok' : 'status-err';
       return `<tr>
@@ -297,10 +412,38 @@ async function loadQueue() {
       fetch('/api/heatmap/status?period=sunset'),
       fetch('/api/heatmap/status?period=sunrise')
     ]);
-    // 队列状态目前不展示在UI上，可扩展
+    const [sunset, sunrise] = await Promise.all([sunsetRes.json(), sunriseRes.json()]);
+    renderQueueStatus([sunset, sunrise]);
   } catch (err) {
     console.error('加载队列失败:', err);
+    const el = document.getElementById('queueStatusGrid');
+    if (el) el.innerHTML = '<p class="empty">队列状态加载失败</p>';
   }
+}
+
+function renderQueueStatus(items) {
+  const el = document.getElementById('queueStatusGrid');
+  if (!el) return;
+  el.innerHTML = items.map((item) => {
+    const total = Number(item.totalPoints || 0);
+    const completed = Number(item.completedPoints || 0);
+    const progress = total > 0 ? Math.min(100, Math.round((completed / total) * 100)) : 0;
+    const title = item.period === 'sunrise' ? '朝霞' : '晚霞';
+    const state = item.running ? '运行中' : '空闲';
+    const eta = item.etaSeconds == null ? '-' : `${Math.ceil(Number(item.etaSeconds) / 60)} 分钟`;
+    const error = item.lastError ? `<div class="queue-error">${escapeHtml(item.lastError)}</div>` : '';
+    return `<div class="queue-card">
+      <div class="queue-head"><strong>${title}</strong><span class="${item.running ? 'status-ok' : ''}">${state}</span></div>
+      <div class="queue-progress"><span style="width:${progress}%"></span></div>
+      <div class="queue-meta">
+        <span>${completed}/${total || '-'}</span>
+        <span>成功 ${Number(item.successPoints || 0)}</span>
+        <span>失败 ${Number(item.errorPoints || 0)}</span>
+        <span>ETA ${eta}</span>
+      </div>
+      ${error}
+    </div>`;
+  }).join('');
 }
 
 // =================== 每日统计 ===================
@@ -443,7 +586,7 @@ function renderPhotos(photos) {
 async function deletePhoto(id) {
   if (!confirm('确定删除这张照片吗？')) return;
   try {
-    const res = await fetch(`/admin/photos/${id}`, { method: 'DELETE', credentials: 'include' });
+    const res = await fetch(`/photos/${id}`, { method: 'DELETE', credentials: 'include' });
     if (res.ok) {
       showMessage('删除成功');
       loadPhotos();
@@ -456,9 +599,43 @@ async function deletePhoto(id) {
 }
 
 function initUploadForm() {
-  document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  const form = document.getElementById('uploadForm');
+  const fileInput = document.getElementById('photoFile');
+  const selectedName = document.getElementById('selectedPhotoName');
+  const progress = document.getElementById('uploadProgress');
+  const progressBar = document.getElementById('uploadProgressBar');
+  const progressText = document.getElementById('uploadProgressText');
+  const feedback = document.getElementById('uploadFeedback');
+  const gpsStatus = document.getElementById('photoGpsStatus');
+  const latInput = document.getElementById('lat');
+  const lonInput = document.getElementById('lon');
+
+  if (!form || !fileInput) return;
+
+  const setProgress = (percent, text) => {
+    if (progress) progress.classList.remove('hidden');
+    if (progressBar) progressBar.style.width = `${Math.max(0, Math.min(100, percent))}%`;
+    if (progressText) progressText.textContent = text;
+  };
+
+  const resetProgress = () => {
+    if (progress) progress.classList.add('hidden');
+    if (progressBar) progressBar.style.width = '0%';
+    if (progressText) progressText.textContent = '等待上传';
+  };
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    if (selectedName) {
+      selectedName.textContent = file ? `已选择：${file.name}` : '尚未选择照片';
+    }
+    resetProgress();
+    if (feedback) feedback.classList.add('hidden');
+    await autofillPhotoGpsFromExif(file, gpsStatus);
+  });
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const fileInput = document.getElementById('photoFile');
     if (!fileInput.files[0]) {
       showMessage('请选择照片', 'error');
       return;
@@ -467,32 +644,129 @@ function initUploadForm() {
     const formData = new FormData();
     formData.append('photo', fileInput.files[0]);
     const desc = document.getElementById('description').value;
-    const lat = parseFloat(document.getElementById('lat').value);
-    const lon = parseFloat(document.getElementById('lon').value);
+    const lat = parseFloat(latInput?.value || '');
+    const lon = parseFloat(lonInput?.value || '');
+    if (!isValidPhotoCoordinate(lat, lon)) {
+      const message = '照片位置是必填项：请手动填写有效经纬度。';
+      showMessage(message, 'error', 'uploadFeedback');
+      updateGpsStatus(gpsStatus, message, 'error');
+      return;
+    }
     if (desc) formData.append('description', desc);
-    if (!isNaN(lat)) formData.append('lat', lat);
-    if (!isNaN(lon)) formData.append('lon', lon);
+    formData.append('lat', lat);
+    formData.append('lon', lon);
 
     const btn = document.getElementById('uploadBtn');
     btn.disabled = true;
     btn.textContent = '上传中...';
 
+    setProgress(0, '准备上传...');
+    if (feedback) feedback.classList.add('hidden');
+
     try {
-      const res = await fetch('/admin/upload', { method: 'POST', credentials: 'include', body: formData });
-      const data = await res.json();
-      if (res.ok) {
-        showMessage('上传成功');
-        document.getElementById('uploadForm').reset();
-        loadPhotos();
-      } else {
-        showMessage('上传失败: ' + (data.error?.message || '未知错误'), 'error');
-      }
+      const data = await uploadPhotoWithProgress(formData, (percent) => {
+        setProgress(percent, `上传中 ${percent}%`);
+      });
+
+      setProgress(100, '上传完成');
+      showMessage('上传成功', 'success', 'uploadFeedback');
+      form.reset();
+      if (selectedName) selectedName.textContent = '尚未选择照片';
+      loadPhotos();
+      setTimeout(resetProgress, 1200);
     } catch (err) {
-      showMessage('上传失败', 'error');
+      const message = err?.message || '未知错误';
+      setProgress(100, '上传失败');
+      showMessage('上传失败: ' + message, 'error', 'uploadFeedback');
     } finally {
       btn.disabled = false;
       btn.textContent = '上传照片';
     }
+  });
+}
+
+function updateGpsStatus(statusEl, text, type = '') {
+  if (!statusEl) return;
+  statusEl.textContent = text;
+  statusEl.className = `photo-gps-status ${type}`.trim();
+}
+
+function isValidPhotoCoordinate(lat, lon) {
+  return Number.isFinite(lat) && Number.isFinite(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
+}
+
+function setPhotoCoordinate(lat, lon, statusEl, source = '已设置位置') {
+  const latInput = document.getElementById('lat');
+  const lonInput = document.getElementById('lon');
+  if (!isValidPhotoCoordinate(lat, lon)) return false;
+  if (latInput) latInput.value = lat.toFixed(6);
+  if (lonInput) lonInput.value = lon.toFixed(6);
+  updateGpsStatus(statusEl, `${source}：${lat.toFixed(6)}, ${lon.toFixed(6)}`, 'success');
+  return true;
+}
+
+async function autofillPhotoGpsFromExif(file, statusEl) {
+  if (!file) {
+    updateGpsStatus(statusEl, '地理位置必填：选择照片后会尝试读取 EXIF；没有位置请手动填写经纬度。');
+    return;
+  }
+
+  if (!window.exifr?.gps) {
+    updateGpsStatus(statusEl, '浏览器端 EXIF 读取库未加载；位置仍然必填，请手动填写经纬度。', 'warning');
+    return;
+  }
+
+  updateGpsStatus(statusEl, '正在读取照片位置信息...');
+
+  try {
+    const gps = await window.exifr.gps(file);
+    const lat = Number(gps?.latitude);
+    const lon = Number(gps?.longitude);
+
+    if (!isValidPhotoCoordinate(lat, lon)) {
+      updateGpsStatus(statusEl, '这张照片没有可用地理位置信息；位置是必填项，请手动填写经纬度。', 'warning');
+      return;
+    }
+
+    setPhotoCoordinate(lat, lon, statusEl, '已读取位置');
+  } catch (err) {
+    updateGpsStatus(statusEl, '读取照片位置信息失败；位置是必填项，请手动填写经纬度。', 'error');
+  }
+}
+
+function uploadPhotoWithProgress(formData, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/upload');
+    xhr.withCredentials = true;
+
+    xhr.upload.addEventListener('progress', (event) => {
+      if (!event.lengthComputable) {
+        onProgress(15);
+        return;
+      }
+      const percent = Math.max(1, Math.min(99, Math.round((event.loaded / event.total) * 100)));
+      onProgress(percent);
+    });
+
+    xhr.addEventListener('load', () => {
+      let data = {};
+      try {
+        data = xhr.responseText ? JSON.parse(xhr.responseText) : {};
+      } catch {
+        data = {};
+      }
+
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(data);
+      } else {
+        reject(new Error(data.error?.message || `HTTP ${xhr.status}`));
+      }
+    });
+
+    xhr.addEventListener('error', () => reject(new Error('网络错误')));
+    xhr.addEventListener('abort', () => reject(new Error('上传已取消')));
+    xhr.send(formData);
   });
 }
 
@@ -636,49 +910,75 @@ async function editToken(id) {
       showMessage('未找到 Token', 'error');
       return;
     }
-
-    const name = prompt('修改名称', token.name || '');
-    if (name === null) return;
-
-    const minuteInput = prompt('修改每分钟额度', String(token.minuteLimit));
-    const dailyInput = prompt('修改每日额度', String(token.dailyLimit));
-    const trustedUser = prompt('受邀用户/联系方式', token.trustedUser || '');
-    if (trustedUser === null) return;
-    const note = prompt('备注', token.note || '');
-    if (note === null) return;
-    const expiresAt = prompt('到期时间（ISO，留空表示长期）', token.expiresAt || '');
-    if (expiresAt === null) return;
-    const nonCommercialInput = prompt('是否仅限非商用？输入 yes/no', token.nonCommercial === false ? 'no' : 'yes');
-    if (nonCommercialInput === null) return;
-
-    const patch = {
-      name,
-      trustedUser,
-      note,
-      expiresAt: expiresAt.trim() || null,
-      nonCommercial: !/^no|false|否$/i.test(nonCommercialInput.trim())
-    };
-    const minuteLimit = parseInt(minuteInput, 10);
-    const dailyLimit = parseInt(dailyInput, 10);
-    if (Number.isFinite(minuteLimit)) patch.minuteLimit = minuteLimit;
-    if (Number.isFinite(dailyLimit)) patch.dailyLimit = dailyLimit;
-
-    const updateRes = await fetch('/api/admin/tokens/' + id, {
-      method: 'PATCH',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(patch)
-    });
-    const updateData = await updateRes.json();
-    if (!updateRes.ok) {
-      showMessage(updateData?.error?.message || '更新失败', 'error');
-      return;
-    }
-    await loadTokens();
-    showMessage('更新成功', 'success');
+    openTokenEditor(token);
   } catch (err) {
     showMessage(err.message, 'error');
   }
+}
+
+function toDatetimeLocal(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const tzOffset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
+}
+
+function openTokenEditor(token) {
+  document.getElementById('editTokenId').value = token.id || '';
+  document.getElementById('editTokenName').value = token.name || '';
+  document.getElementById('editTokenTrustedUser').value = token.trustedUser || '';
+  document.getElementById('editTokenMinuteLimit').value = token.minuteLimit || '';
+  document.getElementById('editTokenDailyLimit').value = token.dailyLimit || '';
+  document.getElementById('editTokenExpiresAt').value = toDatetimeLocal(token.expiresAt);
+  document.getElementById('editTokenNote').value = token.note || '';
+  document.getElementById('editTokenEnabled').checked = token.enabled !== false;
+  document.getElementById('editTokenNonCommercial').checked = token.nonCommercial !== false;
+  document.getElementById('tokenEditModal').classList.remove('hidden');
+}
+
+function closeTokenEditor() {
+  document.getElementById('tokenEditModal')?.classList.add('hidden');
+}
+
+function initTokenEditForm() {
+  const form = document.getElementById('tokenEditForm');
+  if (!form) return;
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const id = document.getElementById('editTokenId').value;
+    const expiresAtInput = document.getElementById('editTokenExpiresAt').value;
+    const patch = {
+      name: document.getElementById('editTokenName').value.trim(),
+      trustedUser: document.getElementById('editTokenTrustedUser').value.trim(),
+      minuteLimit: parseInt(document.getElementById('editTokenMinuteLimit').value, 10),
+      dailyLimit: parseInt(document.getElementById('editTokenDailyLimit').value, 10),
+      expiresAt: expiresAtInput ? new Date(expiresAtInput).toISOString() : null,
+      note: document.getElementById('editTokenNote').value.trim(),
+      enabled: document.getElementById('editTokenEnabled').checked,
+      nonCommercial: document.getElementById('editTokenNonCommercial').checked
+    };
+    if (!Number.isFinite(patch.minuteLimit)) delete patch.minuteLimit;
+    if (!Number.isFinite(patch.dailyLimit)) delete patch.dailyLimit;
+    try {
+      const updateRes = await fetch('/api/admin/tokens/' + id, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch)
+      });
+      const updateData = await updateRes.json();
+      if (!updateRes.ok) {
+        showMessage(updateData?.error?.message || '更新失败', 'error');
+        return;
+      }
+      closeTokenEditor();
+      await loadTokens();
+      showMessage('更新成功', 'success');
+    } catch (err) {
+      showMessage(err.message, 'error');
+    }
+  });
 }
 
 async function batchDisableSelectedTokens() {

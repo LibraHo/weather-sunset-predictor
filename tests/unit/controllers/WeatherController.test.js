@@ -9,6 +9,50 @@ describe('WeatherController - 24小时温度连续化', () => {
     controller = Object.create(WeatherController.prototype);
   });
 
+  test('fetchWeather: test 城市应生成随机 UI 测试数据且不调用天气 API', async () => {
+    controller.windyAPIService = {
+      fetchWeatherData: jest.fn(() => Promise.reject(new Error('API should not be called')))
+    };
+    controller.storageService = {
+      getCachedWeatherData: jest.fn(),
+      cacheWeatherData: jest.fn()
+    };
+
+    const data = await controller.fetchWeather({ name: 'test', lat: 0, lon: 0, isValid: () => true });
+
+    expect(controller.windyAPIService.fetchWeatherData).not.toHaveBeenCalled();
+    expect(controller.storageService.getCachedWeatherData).not.toHaveBeenCalled();
+    expect(controller.storageService.cacheWeatherData).not.toHaveBeenCalled();
+    expect(data).toHaveLength(168);
+    expect(data.providerMeta).toMatchObject({ name: 'manual-test', weatherModel: 'random-ui-test' });
+    expect(data[0].isManualTestCity).toBe(true);
+    expect(data[0].providerMeta).toMatchObject({ name: 'manual-test' });
+    expect(data[0].isValid()).toBe(true);
+  });
+
+  test('renderRadarCompass: test 城市应使用随机周边云况数据且不调用周边 API', async () => {
+    document.body.innerHTML = '<div id="radar-compass-sunset"></div>';
+    controller.i18n = { t: (key) => key };
+    controller.predictionAPIService = {
+      getSurrounding: jest.fn(() => Promise.reject(new Error('API should not be called')))
+    };
+    controller._radarCompass = { render: jest.fn() };
+
+    const renderPromise = controller.renderRadarCompass({ name: 'test', lat: 0, lon: 0, isValid: () => true }, 'sunset');
+    expect(document.querySelector('.radar-compass-loading')).not.toBeNull();
+    expect(document.querySelector('.radar-compass-loading-spinner')).not.toBeNull();
+
+    await renderPromise;
+
+    expect(controller.predictionAPIService.getSurrounding).not.toHaveBeenCalled();
+    expect(controller._radarCompass.render).toHaveBeenCalledTimes(1);
+    const payload = controller._radarCompass.render.mock.calls[0][1];
+    expect(payload.predictionType).toBe('sunset');
+    expect(payload.directions).toHaveLength(8);
+    expect(payload.directions[0].cloudLayers).toEqual(expect.objectContaining({ low: expect.any(Number), mid: expect.any(Number), high: expect.any(Number) }));
+    expect(payload.sunAzimuths).toHaveProperty('sunset');
+  });
+
   test.skip('应该将3小时间隔数据插值为连续24小时，避免温度折线异常跳变', () => {
     const baseTs = new Date('2026-01-01T00:00:00Z').getTime();
 
@@ -254,7 +298,7 @@ describe('WeatherController - 24小时温度连续化', () => {
 
   // ========== 修复：_createDayCard 使用 day-meta-lines（非 day-meta-icons-row）==========
 
-  test('每日概览应按"降水/风速/风向"文字顺序展示风信息', () => {
+  test('每日概览应按"降水概率/风速风向"顺序展示天气信息', () => {
     controller.i18n = {
       currentLanguage: 'zh-CN',
       t: jest.fn((key) => {
@@ -269,8 +313,8 @@ describe('WeatherController - 24小时温度连续化', () => {
     }));
 
     const dayData = [
-      { timestamp: new Date('2026-06-18T00:00:00Z').getTime(), temp: 30, cloudCover: 20, precipitation: 0.2, windSpeed: 8, windDirection: 90, pressure: 1008 },
-      { timestamp: new Date('2026-06-18T03:00:00Z').getTime(), temp: 10, cloudCover: 20, precipitation: 0, windSpeed: 12, windDirection: 120, pressure: 1008 }
+      { timestamp: new Date('2026-06-18T00:00:00Z').getTime(), temp: 30, humidity: 60, cloudCover: 20, precipitation: 0.2, windSpeed: 8, windDirection: 90, pressure: 1008 },
+      { timestamp: new Date('2026-06-18T03:00:00Z').getTime(), temp: 10, humidity: 80, cloudCover: 20, precipitation: 0, windSpeed: 12, windDirection: 120, pressure: 1008 }
     ];
 
     const card = controller._createDayCard(dayData, 0);
@@ -280,8 +324,9 @@ describe('WeatherController - 24小时温度连续化', () => {
 
     const chips = card.querySelectorAll('.day-meta-chip');
     expect(chips).toHaveLength(2);
+    expect(card.querySelector('.day-meta-humidity')).toBeNull();
 
-    // 单行两组：降水 + 风速/风向
+    // 纵向信息：降水概率 + 风速/风向
     expect(chips[0].querySelector('.day-meta-svg-icon svg')).not.toBeNull();
     expect(chips[0].textContent).toContain('50%');
     expect(chips[1].querySelector('.day-meta-svg-icon svg')).not.toBeNull();
@@ -580,11 +625,12 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(() => controller.switchView('map')).not.toThrow();
   });
 
-  test('_getWeatherIcon: 各云量/降水阈值返回正确图标', () => {
-    expect(controller._getWeatherIcon(20, 10)).toBe('☀️');
-    expect(controller._getWeatherIcon(50, 10)).toBe('⛅');
-    expect(controller._getWeatherIcon(80, 10)).toBe('☁️');
-    expect(controller._getWeatherIcon(20, 60)).toBe('🌧️');
+  test('_getWeatherIcon: 各云量/降水阈值返回稳定 SVG 图标', () => {
+    expect(controller._getWeatherIcon(20, 10)).toContain('weather-icon-sunny');
+    expect(controller._getWeatherIcon(50, 10)).toContain('weather-icon-partly-cloudy');
+    expect(controller._getWeatherIcon(80, 10)).toContain('weather-icon-cloud');
+    expect(controller._getWeatherIcon(20, 60)).toContain('weather-icon-rain');
+    expect(controller._getWeatherIcon(20, 60)).not.toMatch(/[🌧️☁️⛅☀️]/u);
   });
 
   test('buildContinuous24HourData: 空数组返回空', () => {
@@ -621,4 +667,47 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(controller.getCurrentLocation()).toEqual({ lat: 1 });
   });
 
+});
+
+describe('WeatherController - 3天朝晚霞标签', () => {
+  let controller;
+
+  beforeEach(() => {
+    controller = Object.create(WeatherController.prototype);
+    controller.currentWeatherData = null;
+    controller.currentView = 'overview';
+    document.body.innerHTML = `
+      <div id="weekly-overview"></div>
+      <div id="hourly-forecast"></div>
+      <div id="three-day-glow" class="hidden"></div>
+      <div id="map-forecast"></div>
+      <button id="overview-btn" class="active"></button>
+      <button id="hourly-btn"></button>
+      <button id="three-day-glow-btn"></button>
+      <button id="map-btn"></button>
+      <div id="forecast-loading" class="hidden"></div>
+      <div id="forecast-timeline" data-loaded="false"></div>
+    `;
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  test('点击3天朝晚霞但数据未完成时显示读取条', () => {
+    controller.switchView('glow');
+
+    expect(document.getElementById('three-day-glow').classList.contains('hidden')).toBe(false);
+    expect(document.getElementById('three-day-glow-btn').classList.contains('active')).toBe(true);
+    expect(document.getElementById('forecast-loading').classList.contains('hidden')).toBe(false);
+    expect(controller.currentView).toBe('glow');
+  });
+
+  test('3天朝晚霞已加载时不再显示读取条', () => {
+    document.getElementById('forecast-timeline').dataset.loaded = 'true';
+
+    controller.switchView('glow');
+
+    expect(document.getElementById('forecast-loading').classList.contains('hidden')).toBe(true);
+  });
 });

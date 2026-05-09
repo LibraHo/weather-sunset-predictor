@@ -68,6 +68,30 @@ describe('PredictionController', () => {
     });
   });
 
+  describe('_calculatePredictionWithBackend', () => {
+    test('manual-test 天气数据应走前端本地预测，不调用后端 API', async () => {
+      const localResult = { score: 66, quality: 'good' };
+      predictionController.predictionService = {
+        calculatePrediction: jest.fn(() => localResult)
+      };
+      predictionController.predictionAPIService = {
+        calculate: jest.fn(() => Promise.reject(new Error('backend should not be called')))
+      };
+      predictionController.features = { USE_BACKEND_PREDICTION: true };
+
+      const weatherData = {
+        timestamp: Date.now(),
+        timezone: 'Asia/Shanghai',
+        providerMeta: { name: 'manual-test' }
+      };
+      const result = await predictionController._calculatePredictionWithBackend(weatherData, new Date(), 0, 0, 'sunset');
+
+      expect(result).toBe(localResult);
+      expect(predictionController.predictionService.calculatePrediction).toHaveBeenCalled();
+      expect(predictionController.predictionAPIService.calculate).not.toHaveBeenCalled();
+    });
+  });
+
 
   describe('formatTime', () => {
     test('应该按目标地点时区格式化时间，而不是浏览器/用户时区', () => {
@@ -142,6 +166,26 @@ describe('PredictionController', () => {
     });
   });
 
+  describe('clear-sunset advice copy', () => {
+    test('晴空通透场景应显示可以出门看看，而不是低分弱观赏判断', () => {
+      predictionController.i18n = {
+        currentLanguage: 'zh-CN',
+        getCurrentLanguage: () => 'zh-CN',
+        t: (key) => ({
+          'prediction.status.casualViewingOk': '可以出门看看',
+          'prediction.analysisConclusion.clearSunset': '火烧云不明显，日落通透。'
+        }[key] || key)
+      };
+
+      expect(predictionController.getScoreDescription(25, { advice: 'casual_viewing_ok' })).toBe('可以出门看看');
+      expect(predictionController.buildAnalysisConclusion(
+        { description: 'clear_sunset_transparent', breakdown: {} },
+        25,
+        { high: 1, mid: 1, low: 1 }
+      )).toBe('火烧云不明显，日落通透。');
+    });
+  });
+
   describe('getLocalizedAzimuthDirection', () => {
     test('296° 应返回 西北偏西', () => {
       predictionController.i18n = { currentLanguage: 'zh-CN' };
@@ -165,6 +209,26 @@ describe('PredictionController', () => {
       predictionController.i18n = { currentLanguage: 'en-US' };
       const dir = predictionController.getLocalizedAzimuthDirection({ sunAzimuth: 296 });
       expect(dir).toBe('WNW');
+    });
+
+    test('日语环境 296° 应返回西北西，不应残留中文“西北偏西”', () => {
+      predictionController.i18n = { currentLanguage: 'ja-JP' };
+      const dir = predictionController.getLocalizedAzimuthDirection({ sunAzimuth: 296 });
+      expect(dir).toBe('西北西');
+      expect(dir).not.toBe('西北偏西');
+    });
+
+    test('繁中环境 74° 应返回東北偏東', () => {
+      predictionController.i18n = { currentLanguage: 'zh-TW' };
+      const dir = predictionController.getLocalizedAzimuthDirection({ sunAzimuth: 74 });
+      expect(dir).toBe('東北偏東');
+    });
+
+    test('韩语环境 296° 应返回서북서，不应 fallback 到 WNW', () => {
+      predictionController.i18n = { currentLanguage: 'ko-KR' };
+      const dir = predictionController.getLocalizedAzimuthDirection({ sunAzimuth: 296 });
+      expect(dir).toBe('서북서');
+      expect(dir).not.toBe('WNW');
     });
 
 
@@ -210,7 +274,7 @@ describe('PredictionController', () => {
       };
 
       const html = predictionController.renderSinglePrediction(
-        prediction, '🌅', '晚霞', '日落时间', '今日', 'sunset'
+        prediction, 'sunset', '晚霞', '日落时间', '今日', 'sunset'
       );
 
       expect(html).toContain('75');
@@ -248,7 +312,7 @@ describe('PredictionController', () => {
       };
 
       const html = predictionController.renderSinglePrediction(
-        prediction, '🌅', '晚霞', '日落时间', '今日', 'sunset'
+        prediction, 'sunset', '晚霞', '日落时间', '今日', 'sunset'
       );
 
       const conclusionIndex = html.indexOf('conclusion-banner');
@@ -289,7 +353,7 @@ describe('PredictionController', () => {
 
       const html = predictionController.renderSinglePrediction(
         prediction,
-        '🌅',
+        'sunset',
         '晚霞',
         '日落时间',
         '北京',
@@ -329,7 +393,7 @@ describe('PredictionController', () => {
 
       const html = predictionController.renderSinglePrediction(
         prediction,
-        '🌄',
+        'sunrise',
         '朝霞',
         '日出时间',
         '北京',
@@ -376,7 +440,7 @@ describe('PredictionController', () => {
       };
 
       const html = predictionController.renderSinglePrediction(
-        prediction, '🌅', '晚霞', '日落时间', '今日', 'sunset'
+        prediction, 'sunset', '晚霞', '日落时间', '今日', 'sunset'
       );
 
       expect(html).toContain('AOD 0.73');
@@ -408,7 +472,7 @@ describe('PredictionController', () => {
       };
 
       const html = predictionController.renderSinglePrediction(
-        prediction, '🌅', '晚霞', '日落时间', '今日', 'sunset'
+        prediction, 'sunset', '晚霞', '日落时间', '今日', 'sunset'
       );
 
       expect(html).not.toContain('compact-extra-azimuth');
@@ -434,7 +498,7 @@ describe('PredictionController', () => {
       };
 
       const html = predictionController.renderSinglePrediction(
-        prediction, '🌅', '晚霞', '日落时间', '今日', 'sunset'
+        prediction, 'sunset', '晚霞', '日落时间', '今日', 'sunset'
       );
 
       expect(html).toContain('cloud-condition-card');
@@ -556,6 +620,59 @@ describe('PredictionController', () => {
       expect(popover.hidden).toBe(false);
       expect(trigger.getAttribute('aria-expanded')).toBe('true');
     });
+
+    test('分数明细应按真实计算链路展示渲染后分和最终修正', () => {
+      const html = predictionController.renderScoreBreakdownPopover({
+        score: 28,
+        visibility: 5,
+        humidity: 88,
+        precipitation: 0.4,
+        breakdown: {
+          baseScore: 71.1,
+          canvasScore: 70.7,
+          lightPathScore: 72.5,
+          renderingFactor: 0.85,
+          unclampedFinalScore: 60.4,
+          aerosolScattering: { factor: 0.85 }
+        },
+        canvasAnalysis: { score: 70.7 },
+        lightPathAnalysis: { score: 72.5 },
+        renderingAnalysis: { factor: 0.85, aerosolFactor: 0.85 },
+        aerosolHazeCap: { applied: true, cap: 28, level: 'extreme', reason: 'extreme_dust_haze_cap_28' }
+      });
+
+      expect(html).toContain('为什么是这个分数');
+      expect(html).toContain('28 分：强沙尘/灰幕压制，分数封顶到 28');
+      expect(html).not.toContain('score-ledger-context');
+      expect(html).not.toContain('能见度 5km');
+      expect(html).toContain('70.7');
+      expect(html).toContain('72.5');
+      expect(html).toContain('71.1');
+      expect(html).toContain('60.4');
+      expect(html).toContain('≤28');
+      expect(html).toContain('最终分');
+    });
+
+    test('分数明细应解释渲染后分到展示分的状态档位校准', () => {
+      const html = predictionController.renderScoreBreakdownPopover({
+        score: 60,
+        breakdown: {
+          baseScore: 79.4,
+          canvasScore: 99.1,
+          lightPathScore: 40,
+          renderingFactor: 1,
+          unclampedFinalScore: 79.4
+        },
+        canvasAnalysis: { score: 99.1 },
+        lightPathAnalysis: { score: 40 },
+        renderingAnalysis: { factor: 1, visibilityFactor: 1, humidityFactor: 1, aerosolFactor: 1 }
+      });
+
+      expect(html).toContain('展示分校准');
+      expect(html).toContain('79.4→60');
+      expect(html).toContain('光路只有 40.0，归入轻微霞光档，最终展示分封顶到 60');
+      expect(html).toContain('60 分：光路只有 40.0，归入轻微霞光档，最终展示分封顶到 60');
+    });
   });
 
   describe('renderCloudLayers', () => {
@@ -603,7 +720,7 @@ describe('PredictionController', () => {
 
       const html = predictionController.renderSinglePrediction(
         prediction,
-        '🌅',
+        'sunset',
         '晚霞',
         '日落时间',
         '北京',
@@ -658,6 +775,61 @@ describe('PredictionController', () => {
     });
   });
 
+  describe('syncPairedPredictionCardRows', () => {
+    const mockMatchMedia = (matches) => jest.fn(() => ({
+      matches,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn()
+    }));
+
+    test('桌面端应按同名区域同步朝霞/晚霞卡片高度，适配不同语言换行', () => {
+      window.matchMedia = mockMatchMedia(true);
+      document.body.innerHTML = `
+        <div id="today-predictions-container">
+          <div class="prediction-tab-panel"><div class="prediction-app-card">
+            <div class="phenomenon-title-card" data-height="40"></div>
+            <div class="conclusion-banner" data-height="72"></div>
+            <div class="score-summary-card" data-height="120"></div>
+            <div class="cloud-condition-card" data-height="86"></div>
+            <div class="app-analysis-card" data-height="180"></div>
+          </div></div>
+          <div class="prediction-tab-panel"><div class="prediction-app-card">
+            <div class="phenomenon-title-card" data-height="58"></div>
+            <div class="conclusion-banner" data-height="36"></div>
+            <div class="score-summary-card" data-height="140"></div>
+            <div class="cloud-condition-card" data-height="92"></div>
+            <div class="app-analysis-card" data-height="150"></div>
+          </div></div>
+        </div>
+      `;
+      document.querySelectorAll('[data-height]').forEach(element => {
+        element.getBoundingClientRect = () => ({ height: Number(element.dataset.height) });
+      });
+
+      predictionController.syncPairedPredictionCardRows(document);
+
+      expect([...document.querySelectorAll('.phenomenon-title-card')].map(el => el.style.minHeight)).toEqual(['58px', '58px']);
+      expect([...document.querySelectorAll('.conclusion-banner')].map(el => el.style.minHeight)).toEqual(['72px', '72px']);
+      expect([...document.querySelectorAll('.score-summary-card')].map(el => el.style.minHeight)).toEqual(['140px', '140px']);
+      expect([...document.querySelectorAll('.cloud-condition-card')].map(el => el.style.minHeight)).toEqual(['92px', '92px']);
+      expect([...document.querySelectorAll('.app-analysis-card')].map(el => el.style.minHeight)).toEqual(['180px', '180px']);
+    });
+
+    test('手机端应清除同步高度，保持单列自然流式布局', () => {
+      window.matchMedia = mockMatchMedia(false);
+      document.body.innerHTML = `
+        <div id="today-predictions-container">
+          <div class="prediction-tab-panel"><div class="prediction-app-card"><div class="conclusion-banner" style="min-height:72px"></div></div></div>
+          <div class="prediction-tab-panel"><div class="prediction-app-card"><div class="conclusion-banner" style="min-height:72px"></div></div></div>
+        </div>
+      `;
+
+      predictionController.syncPairedPredictionCardRows(document);
+
+      expect([...document.querySelectorAll('.conclusion-banner')].map(el => el.style.minHeight)).toEqual(['', '']);
+    });
+  });
+
   describe('_ensureAzimuthCompatibility', () => {
     test('为无方位角的预测补齐字段', () => {
       const prediction = { sunAzimuth: null };
@@ -690,5 +862,52 @@ describe('PredictionController', () => {
         predictionController.generatePredictions([{ temp: 20 }], { isValid: () => false })
       ).rejects.toThrow();
     });
+  });
+});
+
+describe('PredictionController - 3天朝晚霞时间线加载态', () => {
+  let predictionController;
+
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <div id="forecast-loading"></div>
+      <div id="forecast-timeline" data-loaded="false"></div>
+    `;
+    predictionController = new PredictionController(mockStorageService);
+    predictionController.i18n = {
+      t: (key, values = {}) => {
+        const map = {
+          'time.tomorrow': '明天',
+          'time.dayAfterTomorrow': '后天',
+          'time.daysLater': `${values.days}天后`,
+          'prediction.sunrise': '朝霞',
+          'prediction.sunset': '晚霞'
+        };
+        return map[key] || key;
+      },
+      currentLanguage: 'zh-CN'
+    };
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  test('未来预测数据渲染完成后隐藏读取条并标记已加载', () => {
+    const base = new Date('2026-05-08T00:00:00+08:00');
+    const predictions = Array.from({ length: 8 }, (_, i) => ({
+      date: new Date(base.getTime() + Math.floor(i / 2) * 24 * 60 * 60 * 1000),
+      type: i % 2 === 0 ? 'sunrise' : 'sunset',
+      score: 70 + i,
+      quality: 'good',
+      sunriseTime: new Date(base.getTime() + Math.floor(i / 2) * 24 * 60 * 60 * 1000 + 6 * 60 * 60 * 1000),
+      sunsetTime: new Date(base.getTime() + Math.floor(i / 2) * 24 * 60 * 60 * 1000 + 18 * 60 * 60 * 1000)
+    }));
+
+    predictionController.updateForecastTimeline(predictions);
+
+    expect(document.getElementById('forecast-timeline').dataset.loaded).toBe('true');
+    expect(document.getElementById('forecast-loading').classList.contains('hidden')).toBe(true);
+    expect(document.querySelectorAll('#forecast-timeline .forecast-day-card')).toHaveLength(3);
   });
 });

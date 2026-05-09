@@ -137,7 +137,10 @@ function buildResponse(detail, payload) {
       canvasAnalysis: payload.canvasAnalysis,
       lightPathAnalysis: payload.lightPathAnalysis,
       renderingAnalysis: payload.renderingAnalysis,
-      cloudThickness: payload.cloudThickness
+      cloudThickness: payload.cloudThickness,
+      thickHighCloudPenalty: payload.thickHighCloudPenalty,
+      aerosolHazeCap: payload.aerosolHazeCap,
+      highCloudCarrierAdjustment: payload.highCloudCarrierAdjustment
     };
   }
 
@@ -309,6 +312,9 @@ router.get('/forecast', async (req, res) => {
       lightPathAnalysis: prediction.lightPathAnalysis,
       renderingAnalysis: prediction.renderingAnalysis,
       cloudThickness: prediction.cloudThickness,
+      thickHighCloudPenalty: prediction.thickHighCloudPenalty,
+      aerosolHazeCap: prediction.aerosolHazeCap,
+      highCloudCarrierAdjustment: prediction.highCloudCarrierAdjustment,
       timeAnalysis: prediction.timeAnalysis,
       geometricModel: prediction.geometricModel,
       severeWeatherCap: prediction.severeWeatherCap,

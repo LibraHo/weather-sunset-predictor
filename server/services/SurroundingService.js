@@ -95,6 +95,126 @@ class SurroundingService {
     return points;
   }
 
+  calculatePointByBearing(centerLat, centerLon, distanceKm, bearingDeg) {
+    const R = 6371;
+    const brng = (bearingDeg * Math.PI) / 180;
+    const lat1 = (centerLat * Math.PI) / 180;
+    const lon1 = (centerLon * Math.PI) / 180;
+    const d = distanceKm / R;
+
+    const lat2 = Math.asin(
+      Math.sin(lat1) * Math.cos(d) +
+      Math.cos(lat1) * Math.sin(d) * Math.cos(brng)
+    );
+    const lon2 = lon1 + Math.atan2(
+      Math.sin(brng) * Math.sin(d) * Math.cos(lat1),
+      Math.cos(d) - Math.sin(lat1) * Math.sin(lat2)
+    );
+
+    return {
+      lat: Math.max(-90, Math.min(90, lat2 * 180 / Math.PI)),
+      lon: (((lon2 * 180 / Math.PI) + 540) % 360) - 180,
+      distanceKm,
+      bearing: bearingDeg
+    };
+  }
+
+  async getSolarDirectionLightPathSamples(params) {
+    const { lat, lon, date, type = 'sunset', azimuth = null, referenceTime = null } = params;
+    const targetDate = date instanceof Date ? date : new Date(date);
+    const sunTime = referenceTime instanceof Date && !isNaN(referenceTime.getTime())
+      ? referenceTime
+      : (type === 'sunrise'
+        ? SunCalculator.getSunriseTime(targetDate, lat, lon)
+        : SunCalculator.getSunsetTime(targetDate, lat, lon));
+    const solarAzimuth = Number.isFinite(Number(azimuth))
+      ? Number(azimuth)
+      : SunCalculator.getSunAzimuth(targetDate, sunTime, lat, lon);
+
+    const cacheKey = this._getLightPathCacheKey(lat, lon, type, sunTime || targetDate, solarAzimuth);
+    if (this.cacheService) {
+      const cached = await this.cacheService.get(cacheKey);
+      if (cached) {
+        return {
+          ...cached,
+          cache: { hit: true, key: cacheKey }
+        };
+      }
+    }
+
+    const distances = [15, 30, 50, 100];
+    const points = distances.map(distanceKm => this.calculatePointByBearing(lat, lon, distanceKm, solarAzimuth));
+    const samples = [];
+
+    const fetchSample = async (point) => {
+      try {
+        const weatherResponse = await orchestrator.fetchWeatherData(point.lat, point.lon, 72);
+        const hourly = Array.isArray(weatherResponse.data) ? weatherResponse.data : [];
+        if (!hourly.length) throw new Error('天气数据为空');
+
+        const refTs = sunTime?.getTime?.() || targetDate.getTime();
+        const selected = hourly.reduce((closest, current) => {
+          const cDiff = Math.abs((closest.timestamp || 0) - refTs);
+          const nDiff = Math.abs((current.timestamp || 0) - refTs);
+          return nDiff < cDiff ? current : closest;
+        }, hourly[0]);
+
+        return {
+          ...point,
+          cloudBaseHeight: selected.cloudBaseHeight ?? null,
+          lowCloud: selected.lowClouds || 0,
+          midCloud: selected.midClouds || 0,
+          highCloud: selected.highClouds || 0,
+          totalCloud: selected.cloudCover || 0,
+          humidity: selected.humidity ?? null,
+          precipitation: selected.precipitation ?? 0,
+          weatherCode: selected.weatherCode ?? null,
+          provider: weatherResponse.providerMeta?.name || weatherResponse.provider || null,
+          error: null
+        };
+      } catch (error) {
+        console.warn(`[SurroundingService] 太阳方向 ${point.distanceKm}km 采样失败:`, error.message);
+        return { ...point, error: error.message };
+      }
+    };
+
+    // 小批量并发：4 个光路点分 2 批，每批 2 个。
+    // 比全串行更快，又避免主预测一次性打满 4 个远端天气请求。
+    const BATCH_SIZE = 2;
+    for (let i = 0; i < points.length; i += BATCH_SIZE) {
+      const batch = points.slice(i, i + BATCH_SIZE);
+      const batchSamples = await Promise.all(batch.map(fetchSample));
+      samples.push(...batchSamples);
+      if (i + BATCH_SIZE < points.length) {
+        await new Promise(resolve => setTimeout(resolve, 250));
+      }
+    }
+
+    const payload = {
+      source: 'solar_direction_openmeteo',
+      azimuth: parseFloat(solarAzimuth.toFixed(1)),
+      samples: samples.filter(sample => !sample.error),
+      errors: samples.filter(sample => sample.error)
+    };
+
+    if (this.cacheService) {
+      await this.cacheService.set(cacheKey, payload, 30 * 60);
+    }
+
+    return {
+      ...payload,
+      cache: { hit: false, key: cacheKey }
+    };
+  }
+
+  _getLightPathCacheKey(lat, lon, type, referenceTime, azimuth) {
+    const ref = referenceTime instanceof Date && !isNaN(referenceTime.getTime())
+      ? referenceTime.toISOString().slice(0, 13)
+      : new Date(referenceTime).toISOString().slice(0, 13);
+    const az = Number.isFinite(Number(azimuth)) ? Math.round(Number(azimuth)) : 'na';
+    return `light_path_v1_${Number(lat).toFixed(3)}_${Number(lon).toFixed(3)}_${type}_${ref}_${az}`;
+  }
+
   /**
    * 获取周边点的火烧云预测数据（带缓存）
    *

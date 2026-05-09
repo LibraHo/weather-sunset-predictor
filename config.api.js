@@ -11,8 +11,11 @@ const DEFAULT_PROXY_URL = isLocalHostname
   : (isBrowser ? window.location.origin : 'http://localhost:3000');
 
 const API_CONFIG = {
-  // API 访问模式已固定为后端代理（直连模式已移除）
+  // API 访问模式已固定为后端代理；天气源可在紧急情况下启用浏览器 fallback
   mode: 'proxy',
+
+  // 天气数据出口策略：backend=后端闭环；client-fallback=后端异常时浏览器取数再交后端算分；client=强制浏览器取数（调试/应急）
+  weatherFetchMode: 'backend',
 
   // 后端服务器配置（当 mode='proxy' 时使用）
   proxy: {
@@ -52,6 +55,11 @@ function loadConfig() {
     }
   }
 
+  const savedWeatherFetchMode = localStorage.getItem('weather_fetch_mode');
+  if (['backend', 'client-fallback', 'client'].includes(savedWeatherFetchMode)) {
+    API_CONFIG.weatherFetchMode = savedWeatherFetchMode;
+  }
+
   // 读取功能开关配置
   const savedFeatures = localStorage.getItem('api_features');
   if (savedFeatures) {
@@ -74,6 +82,11 @@ function saveConfig(config) {
   if (config.proxyUrl) {
     localStorage.setItem('api_proxy_url', config.proxyUrl);
     API_CONFIG.proxy.url = config.proxyUrl;
+  }
+
+  if (config.weatherFetchMode && ['backend', 'client-fallback', 'client'].includes(config.weatherFetchMode)) {
+    localStorage.setItem('weather_fetch_mode', config.weatherFetchMode);
+    API_CONFIG.weatherFetchMode = config.weatherFetchMode;
   }
 
   // 保存功能开关配置

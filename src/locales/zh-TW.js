@@ -18,7 +18,7 @@ const translations = {
     "tabs": {
       "ariaLabel": "主頁分頁導航",
       "forecast": "預測功能",
-      "methodology": "火燒雲計算方法",
+    "methodology": "火燒雲計算方法",
       "map": "火燒雲地圖",
       "shareMap": "分享地圖",
       "apiAccess": "API接入"
@@ -26,6 +26,23 @@ const translations = {
     "menu": {
       "ariaLabel": "切換頁面",
       "dropdownAriaLabel": "頁面切換選單"
+    },
+    apiAccess: {
+      kicker: 'Sunset Voyager API',
+      intro: '霞客 Agent API 提供地點解析、朝霞/晚霞評分與評分解釋，適合個人、學習與研究場景。',
+      openApiSpec: 'OpenAPI 規格',
+      admin: '管理後台',
+      quickStart: '快速開始',
+      step1: '申請並取得 Token。',
+      step2: '請求時在 Authorization: Bearer <token> 中傳入。',
+      step3: '呼叫 /api/agent/forecast、/api/agent/explain 或 /api/agent/geocode。',
+      restrictions: '使用限制',
+      restrictionText: '僅限個人/學習/研究用途，禁止商用。公開展示請脫敏並標明來源。',
+      exampleCall: '範例呼叫',
+      endpoints: '核心介面',
+      forecastDesc: '返回評分、品質等級和最佳觀賞窗口。',
+      explainDesc: '返回評分構成、關鍵限制和自然語言解釋。',
+      geocodeDesc: '返回地點候選、座標和信賴度。'
     },
     "methodology": {
       "title": "火燒雲計算方法",
@@ -66,10 +83,10 @@ const translations = {
         "lightPath": {
           "title": "光路條件",
           "subtitle": "夕陽是否能照到雲層",
-          "desc": "低雲、能見度與地平線遮擋會影響陽光抵達中高雲的機率。",
-          "lowCloudEffect": "低雲越多，越容易遮住接近地平線的光線。",
+          "desc": "低雲、能見度與地平線遮擋會影響陽光抵達中高雲的機率。後端會沿太陽方位採樣 15/30/50/100km，識別透光開口或雲牆遮擋。",
+          "lowCloudEffect": "低雲越多越容易遮光；若太陽方向低/中雲成牆，則保守壓低光路分。",
           "visibility": "能見度越高，光路越乾淨，色彩越清楚。",
-          "formula": "光路分 = 能見度修正 × 低雲遮擋修正"
+          "formula": "光路分 = 幾何/本地光路分 × 低雲係數 × 太陽方向走廊修正"
         },
         "transparency": {
           "title": "3. 大氣透明度",
@@ -95,6 +112,15 @@ const translations = {
           "level2": "低雲20–40% → ×1.0 到 ×0.8（線性）",
           "level3": "低雲40–70% → ×0.8 到 ×0.5（線性）",
           "level4": "低雲>70% → ×0.2（嚴重遮擋）"
+        },
+        thickHighCloudPenalty: {
+          title: '6. 厚高雲懲罰',
+          subtitle: 'Thick High Cloud · 封頂',
+          desc: '高雲多不一定代表高分；需要同時判斷雲幕厚度與空氣透明度。清透高雲可保底，厚雲幕或沙塵灰幕會封頂。',
+          level1: '高雲≥80% 且低雲很少：先進入高雲載體／厚雲幕雙向判定',
+          level2: '空氣通透、沙塵不重時：避免雲厚訊號誤傷，可保底到約64–68分',
+          level3: '直射比低、漫射主導或水氣很高：厚雲幕封頂約42–48分；沙塵/PM10/AOD 極高時封頂約28分',
+          formula: '最終修正 = 高雲載體保底 或 min(最終分, 厚雲幕/灰幕封頂)，用於區分「能染色的高雲」和「灰黃遮光的雲幕」'
         },
         "precipPenalty": {
           "title": "6. 降水懲罰係數",
@@ -166,6 +192,8 @@ const translations = {
     "clear": "晴天",
     "overview": "概覽",
     "hourly": "詳細預報",
+    "threeDayGlow": "3天朝晚霞",
+    "threeDayGlowLoading": "正在讀取3天朝晚霞...",
     "daysOverview": "{{days}}天概覽",
     "precipChance": "{{prob}}%降水",
     "dataInfo": "ℹ️ 資料來源提供 {{hours}} 小時預測資料（約 {{days}} 天）。若需要更多天數，請考慮使用其他天氣資料來源。",
@@ -193,7 +221,89 @@ const translations = {
     "fair": "一般",
     "poor": "較差",
 
-    "formationAnalysis": {
+    "analysisConclusion": {
+      "excellent": "條件優秀，很適合外出觀賞",
+      "excellentSingleLayer": "條件優秀，色彩可期；雲層單一，層次感略有不足",
+      "good": "條件不錯，有較高機會出現壯觀火燒雲",
+      "goodSingleLayer": "條件不錯，火燒雲機率較高；雲層層次稍弱",
+      "fair": "條件中等，仍需觀察實際雲層變化",
+      "clearSunset": "火燒雲不明顯，日落通透。",
+      "low": "關鍵條件不足，火燒雲機率偏低"
+    },
+        "scoreBreakdown": {
+      "title": "評分明細",
+      "viewDetails": "查看評分明細",
+      "finalDisplayed": "最終顯示分",
+      "baseFormula": "基礎分 = 畫布 ×0.8 + 光路 ×0.2",
+      "baseHint": "雲層與光路融合後的基礎分",
+      "canvasHint": "高雲/中雲提供色彩載體，低雲可能遮擋",
+      "lightPathHint": "太陽光是否能照到雲層",
+      "finalFormula": "最終分 = 基礎分 × 修正係數",
+      "renderingHint": "濕度與能見度影響色彩表現",
+      "aerosolHint": "適度氣溶膠增強橙紅散射，過多則發灰",
+      "ledger": {
+        "pts": "分",
+        "whyThisScore": "為什麼是這個分數",
+        "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
+        "canvasPlusLightPath": "畫布 + 光路",
+        "renderingFormula": "{{base}} × 顯色係數 {{factor}} = {{rendered}}",
+        "weatherTransparency": "天氣通透度",
+        "summary": {
+          "event": "{{score}} 分：{{detail}}",
+          "rendered": "{{base}} 分經顯色條件修正為 {{rendered}} 分",
+          "default": "{{score}} 分：由雲層、光路和顯色條件綜合計算"
+        },
+        "weather": {
+          "clouds": "高/中/低雲 {{high}}/{{mid}}/{{low}}%",
+          "visibility": "能見度 {{value}}km",
+          "humidity": "濕度 {{value}}%",
+          "rain": "降水 {{value}}mm/h"
+        },
+        "labels": {
+          "cloudCarrier": "雲層載體",
+          "lightPath": "光路",
+          "baseScore": "基礎分",
+          "rendering": "顯色修正",
+          "final": "最終分",
+          "hardCap": "硬封頂",
+          "hazeCap": "灰幕封頂",
+          "thickCloudCap": "厚雲封頂",
+          "geometryCap": "幾何封頂",
+          "occlusion": "遮擋修正",
+          "carrierFloor": "載體保底",
+          "postRainCap": "雨後灰幕封頂",
+          "displayCalibration": "展示分校準"
+        },
+        "details": {
+          "cloudCarrier": "可被染色的雲面品質",
+          "cloudPenalty": "低雲 ×{{low}}，陰天 ×{{overcast}}",
+          "lightPath": "陽光是否能照到雲層",
+          "renderingFactors": "能見度 ×{{visibility}}，濕度 ×{{humidity}}，氣溶膠 ×{{aerosol}}",
+          "afterAdjustments": "套用所有封頂/保底後",
+          "finalDisplayed": "最終顯示結果",
+          "thickCloudCap": "高雲過厚，真實可染色效果下降",
+          "geometryCap": "太陽與雲層幾何條件不足",
+          "occlusion": "遠端遮擋壓低最終分",
+          "carrierFloor": "高雲載體清透，避免誤傷低估",
+          "directionalSamples": "已接入太陽方位 15/30/50/100km 周邊採樣",
+          "postRainCap": "雨後水氣/灰幕壓光，霞光按低上限處理",
+          "displayCalibration": "最終展示分按預測狀態檔位校準"
+        },
+        "reasons": {
+          "precipitationCap45": "降水疊加低雲，分數封頂到 45",
+          "overcastCap35": "低雲陰天遮擋，分數封頂到 35",
+          "overcastFogCap15": "陰天且能見度≤5km，分數硬封頂到 15",
+          "rainyMidCloudOvercastCap35": "雨後灰幕中雲陰天，分數封頂到 35",
+          "extremeDustHazeCap28": "強沙塵/灰幕壓制，分數封頂到 28",
+          "severeHazeCap35": "重度灰霾壓制，分數封頂到 35",
+          "moderateHazeCap45": "中度灰霾壓制，分數封頂到 45",
+          "adjustmentApplied": "套用封頂/保底修正",
+          "displayCalibration": "最終展示分按預測狀態檔位校準",
+          "lightPathStatusCap60": "光路只有 {{light}}，歸入輕微霞光檔，最終展示分封頂到 60",
+          "canvasStatusCap40": "雲層載體只有 {{canvas}}，歸入無火燒雲檔，最終展示分封頂到 40 以下"
+        }
+      }},
+"formationAnalysis": {
       "title": "火燒雲形成條件分析",
       "groups": { "positive": "有利條件", "neutral": "一般因素", "warning": "注意因素" },
       "high": { "abundant": "高層雲充沛（{{value}}%）", "abundantDesc": "色彩載體豐富，火燒雲基礎紮實", "sufficient": "高層雲充足（{{value}}%）", "sufficientDesc": "具備不錯的霞光染色載體", "moderate": "高層雲適中（{{value}}%）", "moderateDesc": "可形成火燒雲，但色彩可能偏淡", "few": "高層雲偏少（{{value}}%）", "fewDesc": "缺少主要色彩載體" },
@@ -202,6 +312,8 @@ const translations = {
       "visibility": { "good": "能見度良好（{{value}}km）", "goodDesc": "空氣通透，觀賞視野好", "moderate": "能見度一般（{{value}}km）", "moderateDesc": "色彩飽和度可能略受影響", "low": "能見度偏低（{{value}}km）", "lowDesc": "霧霾或水氣可能影響觀賞" },
       "humidity": { "moderate": "濕度適中（{{value}}%）", "moderateDesc": "有利於光線散射", "high": "濕度偏高（{{value}}%）", "highDesc": "可能略影響通透感", "low": "濕度偏低（{{value}}%）", "lowDesc": "空氣較乾，色彩可能偏淡" },
       "aerosol": { "moderate": "氣溶膠適中（AOD {{value}}）", "moderateDesc": "有利於增強紅橙色散射", "high": "氣溶膠偏高（AOD {{value}}）", "highDesc": "可能灰霾發暗", "low": "空氣過於通透（AOD {{value}}）", "lowDesc": "顏色可能偏淡" },
+      "lightPath": { "opening": "太陽方向有透光開口", "openingDesc": "後端沿太陽方位採樣 15/30/50/100km，低中雲走廊較通暢，光線更容易打到雲層", "wall": "太陽方向有雲牆遮擋", "wallDesc": "太陽方位周邊低/中雲偏厚，遠端光路會壓低主評分" },
+      "postRain": { "clear": "雨後空氣清透", "clearDesc": "近6小時有降水，但能見度和顆粒物條件較好，雨後加成保留", "gray": "雨後灰幕風險", "grayDesc": "降水後水氣/顆粒物/直射比不理想，算法按灰幕場景封頂" },
       "layer": { "single": "雲層單一", "singleDesc": "高層雲品質好，仍可形成鮮明火燒雲" }
     },
     "status": {
@@ -222,6 +334,8 @@ const translations = {
       "conditionsFair": "條件一般，可能零星色彩",
       "canWatch": "可以觀賞",
       "conditionsGood": "條件尚可，有一定觀賞價值",
+      "clearSunsetTransparent": "火燒雲不明顯，日落通透。",
+      "casualViewingOk": "可以出門看看",
       "veryLikely": "大概率出現漂亮晚霞",
       "excellentConditions": "雲量適中，光路通暢",
       "legendaryEruption": "傳說級爆發",
@@ -254,11 +368,26 @@ const translations = {
       "tooManyLowClouds": "低雲過多",
       "lowCloudAmount": "低雲量"
     },
+
+    thickHighCloud: {
+      title: '厚高雲懲罰',
+      scoreHint: '厚高雲幕、直射光弱，僅局部透光，最終分封頂',
+      analysisTitle: '厚高雲幕',
+      analysisDesc: '高雲雖多，但雲層偏厚、直射光弱，通常只會在日落方向出現局部霞光'
+    },
+    highCloudCarrier: {
+      title: '高雲載體保底',
+      scoreHint: '高雲充足、低雲少且空氣較通透時，避免雲厚訊號誤傷'
+    },
+    aerosolHaze: {
+      title: '沙塵灰幕封頂',
+      scoreHint: 'AOD、沙塵或 PM10 過高時，高雲多也不代表會燒起來'
+    },
     "lightPath": {
       "title": "光路評分",
       "score": "光路得分",
       "visibility": "能見度",
-      "lightPathScore": "🌅 光路: {{score}}分 "
+      "lightPathScore": "光路: {{score}}分 "
     },
     "rendering": {
       "title": "渲染評分",
@@ -342,7 +471,7 @@ const translations = {
       "someLowCloud": "⚠️ 低雲較多（{{value}}%），可能部分遮擋",
       "denseLowCloud": "❌ 低雲密集（{{value}}%），嚴重影響觀賞",
       "excellentConditions": "🌟 具備出現絢爛火燒雲的所有條件！",
-      "highProbability": "✨ 有較大概率出現壯觀的火燒雲景象",
+      "highProbability": "有較大概率出現壯觀的火燒雲景象",
       "moderateProbability": "💫 可能出現輕微的火燒雲效果",
       "lowProbability": "⛅ 形成明顯火燒雲的可能性較低",
       "noCloudNoFireCloud": "❌ 雲量嚴重不足，無法形成火燒雲"
@@ -447,6 +576,11 @@ const translations = {
     "proxyUrl": "後端伺服器位址",
     "proxyUrlPlaceholder": "http://localhost:3000",
     "proxyUrlHint": "後端代理伺服器的 URL 位址",
+    "weatherFetchMode": "天氣資料出口模式",
+    "weatherFetchModeHint": "預設後端閉環；後端限流或逾時時可讓瀏覽器取得公開天氣，再交後端算分",
+    "weatherFetchModeBackend": "後端閉環（建議預設）",
+    "weatherFetchModeClientFallback": "後端優先，失敗時前端應急",
+    "weatherFetchModeClient": "前端取天氣（除錯/應急）",
     "notificationAndAlerts": "通知與提醒",
     "enableSunsetNotification": "啟用晚霞預測通知",
     "notificationHint": "當預測品質達到閾值時發送瀏覽器通知",
@@ -579,12 +713,12 @@ const translations = {
       "low": "低雲"
     },
     "verdict": {
-      "noCarrier": "😶 缺少色彩載體，火燒雲機率很低",
-      "excellent": "✨ 條件很棒，天空色彩值得期待",
-      "excellentMultiLayer": "✨ 條件極佳，強烈推薦出門觀賞！",
-      "good": "✨ 條件不錯，火燒雲機率偏高",
-      "fair": "💡 條件普通，建議留意雲層即時變化",
-      "poor": "😶 火燒雲機率偏低"
+      "noCarrier": "缺少色彩載體，火燒雲機率很低",
+      "excellent": "條件很棒，天空色彩值得期待",
+      "excellentMultiLayer": "條件極佳，強烈推薦出門觀賞！",
+      "good": "條件不錯，火燒雲機率偏高",
+      "fair": "條件普通，建議留意雲層即時變化",
+      "poor": "火燒雲機率偏低"
     },
     "watermark": "霞客 · 記錄每一次絢麗"
   },
@@ -616,13 +750,15 @@ const translations = {
     "timeNow": "現在",
     "timeSunset": "日落",
     "timeSunrise": "日出",
-    "timeHint": "💡 提示：也可以使用地圖下方的預測時間軸拖動時間",
+    "timeHint": "提示：也可以使用地圖下方的預測時間軸拖動時間",
     "loading": "地圖加載中...",
     "error": "地圖加載失敗",
     "mockNotSupported": "地圖功能僅在真實API模式下可用"
   },
   "surrounding": {
     "title": "周邊火燒雲分析",
+    "radarTitle": "周邊雲況雷達",
+    "radarSubtitle": "20km · 連續雲場",
     "radius": "探測半徑",
     "radiusUnit": "公里",
     "directions": {
@@ -688,6 +824,9 @@ const translations = {
     "pointToast": "{{name}}方向｜評分: {{score}}分｜距離: {{distance}}公里",
     "emptyChinaSpots": "今日暫無可見火燒雲點位",
     "updatedAt": "更新於 {{time}}",
+    "supportedRegions": "目前支援：中國大陸、港澳臺、日本、韓國、朝鮮及中南半島主要城市；熱力柵格目前以中國區域為主。",
+    "interactionHint": "可拖曳地圖 · 滾輪縮放",
+    "tabs": { "sunrise": "朝霞", "sunset": "晚霞" },
     "quality": {
       "excellent": "優秀",
       "good": "良好"

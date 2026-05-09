@@ -9,6 +9,13 @@
 - 后端：Node.js Express + Python（GFS数据处理）
 - 数据源：Open-Meteo API（主）、NOAA GFS（地图覆盖层）
 
+## 文档维护原则
+
+- `requirements.md` 只记录用户目标、范围、验收口径；避免塞实现流水账。
+- `design.md` 只记录当前架构、关键设计决策、数据/API/安全/测试策略；过期方案必须标注废弃或移除。
+- `tasks.md` 只记录可执行任务、状态、PR/验证证据和明确待办；已完成大项保留摘要，避免重复展开。
+- 新增需求时三文档同步：需求编号、设计影响、任务拆分、验收标准必须能互相追溯。
+
 ## 架构
 
 ### 系统架构
@@ -17,7 +24,7 @@
 浏览器（前端）
 ├── UI层：位置输入、天气显示、预测卡片、地图
 ├── 控制层：AppController、WeatherController、PredictionController
-├── 服务层：WindyAPIService、GeocodingService、StorageService、ChartService
+├── 服务层：OpenMeteo/Geocoding/Storage/Chart/Prediction 相关服务
 └── 数据层：WeatherData、Location、SunsetPrediction
 
 后端（Node.js + Python）
@@ -194,6 +201,32 @@ rankScore = exactMatch * 100
 **数据**：
 - 照片：`photos.json`（id、lat、lon、takenAt、thumbnail）
 - 访客：`visitors.json`（ip_hash、lat、lon、country、city）
+
+### 预测解释与图表可读性（需求48）
+
+**分数明细 Ledger**：由 `PredictionController.renderScoreBreakdownPopover()` 渲染，目标是解释“最终分为什么是这个数”。信息层级固定为：
+1. 最终分 hero + 简短摘要。
+2. 天气上下文 chips（高/中/低云、能见度、湿度、降水）。
+3. 计算步骤卡片：云层载体、光路、基础分、显色修正、实际触发的封顶/保底、最终分。
+
+**文案原则**：
+- 展示用户关心的计算变化，如 `87.5×80% + 40.0×20% = 78.0`、`78.0 × 显色系数 0.77 = 60.0`。
+- 不展示 UI 自我解释（例如“分数流水，不是文字分析”）。
+- 未触发的规则不占位，避免出现“未触发封顶/无修正”等无效信息。
+
+**24 小时温度图天气标签**：由 `ChartRenderController.renderSimpleChart()` 在 `param === 'temp'` 时追加天气 chips。标签从小时数据推导：降水优先，其次按云量判断阴天/多云/少云/晴天。桌面端与移动端分别降采样，避免图表下方标签拥挤。
+
+### 管理后台信息架构（需求50）
+
+后台入口仍为 `/admin`，但前端从单页长滚动改为主页模板同款 menu + panel：
+- `dashboard`：KPI、访问趋势、系统健康、Top IP。
+- `ops`：Grid 队列状态、手动刷新、清缓存、重启后端。
+- `logs`：API 调用日志、24h 调用分布、每日统计。
+- `schedule`：定时刷新配置。
+- `agent`：Token、申请审核、Agent 用量、审计日志。
+- `photos`：照片上传与管理。
+
+刷新策略按激活页面收敛：Dashboard/Ops/Logs 可定时刷新，Schedule/Agent/Photos 以用户操作触发为主。高风险动作集中在 Ops 的 danger zone，并保留确认框。
 
 ## 数据模型
 
@@ -519,6 +552,10 @@ CREATE TABLE api_token_usage (
 - 管理接口Basic Auth
 
 ## 变更摘要
+
+### 2026-05-07
+- 增加需求48设计：分数明细 ledger 解释链路、24 小时温度图天气标签。
+- 增加三文档维护原则，明确 requirements/design/tasks 的边界与同步要求。
 
 ### 2026-03-29
 - 管理后台增强：API配额面板 + 队列状态面板（PR #319）

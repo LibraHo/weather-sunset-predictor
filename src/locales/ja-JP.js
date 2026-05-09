@@ -18,7 +18,7 @@ const translations = {
     "tabs": {
       "ariaLabel": "ホームタブナビゲーション",
       "forecast": "予測機能",
-      "methodology": "焼き雲スコアの計算方法",
+    "methodology": "焼き雲スコアの計算方法",
       "map": "火焼け空マップ",
             shareMap: '共有マップ',
 apiAccess: 'API接続'
@@ -26,6 +26,23 @@ apiAccess: 'API接続'
     "menu": {
       "ariaLabel": "ページ切り替え",
       "dropdownAriaLabel": "ページ切り替えメニュー"
+    },
+    apiAccess: {
+      kicker: 'Sunset Voyager API',
+      intro: 'The Sunset Voyager Agent API provides geocoding, sunrise/sunset glow scores, and score explanations for personal, learning, and research use.',
+      openApiSpec: 'OpenAPI spec',
+      admin: 'Admin console',
+      quickStart: 'Quick start',
+      step1: 'Apply for and receive a token.',
+      step2: 'Send it in Authorization: Bearer <token>.',
+      step3: 'Call /api/agent/forecast, /api/agent/explain, or /api/agent/geocode.',
+      restrictions: 'Usage limits',
+      restrictionText: 'Personal, learning, and research use only. Commercial use is prohibited. Public displays must remove sensitive data and cite the source.',
+      exampleCall: 'Example call',
+      endpoints: 'Core endpoints',
+      forecastDesc: 'Returns score, quality level, and best viewing window.',
+      explainDesc: 'Returns score composition, key constraints, and natural-language explanation.',
+      geocodeDesc: 'Returns location candidates, coordinates, and confidence.'
     },
     "methodology": {
       "title": "焼き雲スコアの計算方法",
@@ -66,10 +83,10 @@ apiAccess: 'API接続'
         "lightPath": {
           "title": "2. 光路評価",
           "subtitle": "Light Path · 光路スコア",
-          "desc": "光路の通過度が光が雲層に届くかを決定。下層雲が少ないほど光路が通じ、遮蔽確率が低下する。",
-          "lowCloudEffect": "下層雲<30%の場合、光路遮蔽ウェイトが0.7〜0.85に低下し、光が通過しやすくなる",
+          "desc": "光路の通過度が光が雲層に届くかを決定します。バックエンドは太陽方位の15/30/50/100km地点も採取し、抜けや雲の壁を判定します。",
+          "lowCloudEffect": "下層雲<30%では遮蔽重みを下げます。太陽方向に低・中層雲の壁がある場合は保守的に光路点を抑えます",
           "visibility": "視程：光の伝播鮮明度に影響",
-          "formula": "光路スコア = 基礎光路スコア × 下層雲ウェイト係数"
+          "formula": "光路スコア = 幾何/局地光路スコア × 下層雲係数 × 太陽方向コリドー補正"
         },
         "transparency": {
           "title": "3. 大気透明度",
@@ -95,6 +112,15 @@ apiAccess: 'API接続'
           "level2": "下層雲20–40% → ×1.0 〜 ×0.8（線形）",
           "level3": "下層雲40–70% → ×0.8 〜 ×0.5（線形）",
           "level4": "下層雲>70% → ×0.2（深刻な遮蔽）"
+        },
+        "thickHighCloudPenalty": {
+          "title": "6. 厚い高層雲の減点",
+          "subtitle": "Thick High Cloud · 上限",
+          "desc": "高層雲が多くても必ず高得点ではありません。厚い雲幕になり直達光が弱く散乱光が支配的な場合、太陽付近の局所的な色づきに留まります。",
+          "level1": "高層雲≥80%かつ総雲量≥60%でリスク判定",
+          "level2": "直達光比が低い、散乱光優勢、水蒸気が多い場合は光路点を下げます",
+          "level3": "厚い雲幕では最終点を約42–48に制限し、過大評価を防ぎます",
+          "formula": "厚い高層雲補正 = min(最終点, 42–48)。広い厚雲で局所的にしか光が漏れない場面に適用"
         },
         "precipPenalty": {
           "title": "6. 降水ペナルティ係数",
@@ -166,16 +192,18 @@ apiAccess: 'API接続'
     "clear": "晴れ",
     "overview": "概要",
     "hourly": "時間別予報",
+    "threeDayGlow": "3日朝夕焼け",
+    "threeDayGlowLoading": "3日分を読み込み中...",
     "daysOverview": "{{days}}日間の概要",
     "precipChance": "{{prob}}%の降水確率",
     "dataInfo": "ℹ️ データソースは{{hours}}時間分の予報データを提供しています（約{{days}}日分）。それ以上の日数については、他の天気データソースの利用をご検討ください。",
     "mapView": ""
   },
   "prediction": {
-    "title": "夕焼け予測",
+    "title": "朝夕焼け予報",
     "sunrise": "朝焼け",
     "sunset": "夕焼け",
-    "sunriseAndSunset": "朝焼け・夕焼け予測",
+    "sunriseAndSunset": "朝夕焼け予報",
     "score": "予測スコア",
     "points": "点",
     "quality": "品質レベル",
@@ -193,7 +221,89 @@ apiAccess: 'API接続'
     "fair": "普通",
     "poor": "やや悪い",
 
-    "formationAnalysis": {
+    "analysisConclusion": {
+      "excellent": "条件は優秀です。観賞を強くおすすめします。",
+      "excellentSingleLayer": "色づきの可能性は高いですが、雲層が単一で奥行きはやや弱めです。",
+      "good": "条件は良好で、鮮やかな焼け雲が出る可能性があります。",
+      "goodSingleLayer": "焼け雲の可能性はありますが、雲の層はやや限られます。",
+      "fair": "条件は中程度です。実際の雲の変化を見ながら判断してください。",
+      "clearSunset": "Fire clouds are subtle, but the sunset is clear.",
+      "low": "重要な条件が不足しており、焼け雲の可能性は低めです。"
+    },
+        "scoreBreakdown": {
+      "title": "スコア詳細",
+      "viewDetails": "スコア詳細を見る",
+      "finalDisplayed": "最終表示スコア",
+      "baseFormula": "基礎点 = キャンバス ×0.8 + 光路 ×0.2",
+      "baseHint": "雲と光路を組み合わせた基礎点",
+      "canvasHint": "高層/中層雲は色を受け、低層雲は遮ることがあります",
+      "lightPathHint": "日光が雲まで届くかどうか",
+      "finalFormula": "最終点 = 基礎点 × 補正係数",
+      "renderingHint": "湿度と視程が色の見え方に影響します",
+      "aerosolHint": "適度なエアロゾルは橙赤色を強め、多すぎると灰色っぽくなります",
+      "ledger": {
+        "pts": "点",
+        "whyThisScore": "このスコアの理由",
+        "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
+        "canvasPlusLightPath": "雲のキャンバス + 光路",
+        "renderingFormula": "{{base}} × 発色係数 {{factor}} = {{rendered}}",
+        "weatherTransparency": "大気の透明度係数",
+        "summary": {
+          "event": "{{score}}点：{{detail}}",
+          "rendered": "{{base}}点が発色条件で補正され {{rendered}}点になりました",
+          "default": "{{score}}点：雲の載体、光路、発色条件から総合計算"
+        },
+        "weather": {
+          "clouds": "高/中/低層雲 {{high}}/{{mid}}/{{low}}%",
+          "visibility": "視程 {{value}}km",
+          "humidity": "湿度 {{value}}%",
+          "rain": "降水 {{value}}mm/h"
+        },
+        "labels": {
+          "cloudCarrier": "雲の載体",
+          "lightPath": "光路",
+          "baseScore": "基礎点",
+          "rendering": "発色補正",
+          "final": "最終スコア",
+          "hardCap": "上限補正",
+          "hazeCap": "霞・灰幕上限",
+          "thickCloudCap": "厚い雲の上限",
+          "geometryCap": "幾何条件の上限",
+          "occlusion": "遮蔽補正",
+          "carrierFloor": "載体による下支え",
+          "postRainCap": "雨上がり灰幕上限",
+          "displayCalibration": "表示スコア調整"
+        },
+        "details": {
+          "cloudCarrier": "色づきに使える雲面の質",
+          "cloudPenalty": "低層雲 ×{{low}}、曇天 ×{{overcast}}",
+          "lightPath": "日光が雲層へ届くか",
+          "renderingFactors": "視程 ×{{visibility}}、湿度 ×{{humidity}}、エアロゾル ×{{aerosol}}",
+          "afterAdjustments": "すべての上限・下限補正後",
+          "finalDisplayed": "最終表示結果",
+          "thickCloudCap": "高層雲が厚く、実際の発色が弱くなります",
+          "geometryCap": "太陽と雲層の幾何条件が不足しています",
+          "occlusion": "遠方の遮蔽により最終スコアが下がります",
+          "carrierFloor": "澄んだ高層雲の載体により過小評価を抑えます",
+          "directionalSamples": "太陽方位15/30/50/100kmの周辺採取を反映済み",
+          "postRainCap": "雨後の水蒸気や霞で光が弱まり、低めの上限を適用します",
+          "displayCalibration": "最終表示スコアを予測ステータスの帯に合わせます"
+        },
+        "reasons": {
+          "precipitationCap45": "降水と低層雲によりスコア上限は45",
+          "overcastCap35": "低層雲の曇天遮蔽によりスコア上限は35",
+          "overcastFogCap15": "曇天かつ視程5km以下のためスコア上限は15",
+          "rainyMidCloudOvercastCap35": "雨上がりの灰色の中層雲の曇天により、スコアを35で上限調整",
+          "extremeDustHazeCap28": "強い黄砂・霞によりスコア上限は28",
+          "severeHazeCap35": "濃い霞によりスコア上限は35",
+          "moderateHazeCap45": "中程度の霞によりスコア上限は45",
+          "adjustmentApplied": "上限/下限補正を適用",
+          "displayCalibration": "最終表示スコアを予測ステータスの帯に合わせます",
+          "lightPathStatusCap60": "光路は {{light}} のため、薄い霞光の帯として最終表示スコアを60付近で上限調整します",
+          "canvasStatusCap40": "雲の載体は {{canvas}} のため、焼け雲なしの帯として最終表示スコアを40未満に上限調整します"
+        }
+      }},
+"formationAnalysis": {
       "title": "焼け雲の形成条件分析",
       "groups": { "positive": "有利な条件", "neutral": "中立要因", "warning": "注意点" },
       "high": { "abundant": "高層雲が豊富（{{value}}%）", "abundantDesc": "色づきの土台が十分です", "sufficient": "高層雲が十分（{{value}}%）", "sufficientDesc": "夕焼け色を受ける雲があります", "moderate": "高層雲が適度（{{value}}%）", "moderateDesc": "可能性はありますが色は淡めかもしれません", "few": "高層雲が少なめ（{{value}}%）", "fewDesc": "主な色づきの担い手が不足しています" },
@@ -202,6 +312,8 @@ apiAccess: 'API接続'
       "visibility": { "good": "視程良好（{{value}}km）", "goodDesc": "空気が澄み、見通しが良好です", "moderate": "視程は普通（{{value}}km）", "moderateDesc": "彩度が少し落ちる可能性があります", "low": "視程が低い（{{value}}km）", "lowDesc": "霞や水蒸気が観賞に影響する可能性があります" },
       "humidity": { "moderate": "湿度は適度（{{value}}%）", "moderateDesc": "光の散乱に役立ちます", "high": "湿度が高い（{{value}}%）", "highDesc": "透明感が落ちる可能性があります", "low": "湿度が低い（{{value}}%）", "lowDesc": "乾いた空気で色が淡くなる可能性があります" },
       "aerosol": { "moderate": "エアロゾル適度（AOD {{value}}）", "moderateDesc": "橙赤色の散乱を強めます", "high": "エアロゾル多め（AOD {{value}}）", "highDesc": "霞んだり暗く見える可能性があります", "low": "空気が澄みすぎ（AOD {{value}}）", "lowDesc": "色が淡くなる可能性があります" },
+      "lightPath": { "opening": "太陽方向に光の抜けがあります", "openingDesc": "バックエンドが太陽方位の15/30/50/100km地点を採取し、低・中層雲の通路が比較的開いていると判定します", "wall": "太陽方向に雲の壁があります", "wallDesc": "太陽方位の低・中層雲が厚く、遠方の光路が主スコアを押し下げます" },
+      "postRain": { "clear": "雨上がりの空気が澄んでいます", "clearDesc": "過去6時間に降水がありますが、視程と粒子条件が良いため雨上がり加点を残します", "gray": "雨上がりの灰色カーテンリスク", "grayDesc": "雨後の水蒸気・粒子・直達光の弱さを考慮し、保守的にスコア上限をかけます" },
       "layer": { "single": "雲層が単一", "singleDesc": "高層雲の質が良ければ鮮やかな夕焼けは期待できます" }
     },
     "status": {
@@ -222,6 +334,8 @@ apiAccess: 'API接続'
       "conditionsFair": "条件普通、散発的な色の可能性",
       "canWatch": "観賞可能",
       "conditionsGood": "条件良好、ある程度の鑑賞価値",
+      "clearSunsetTransparent": "Fire clouds are subtle, but the sunset is clear.",
+      "casualViewingOk": "Worth a casual look",
       "veryLikely": "美しい夕焼けの可能性が高い",
       "excellentConditions": "適度な雲と明確な光路",
       "legendaryEruption": "伝説的な噴火",
@@ -254,11 +368,26 @@ apiAccess: 'API接続'
       "tooManyLowClouds": "低雲が多すぎ",
       "lowCloudAmount": "低雲量"
     },
+
+    "thickHighCloud": {
+      "title": "厚い高層雲の減点",
+      "scoreHint": "厚い高層雲で直達光が弱く、局所的な光のみのため最終点を制限",
+      "analysisTitle": "厚い高層雲の幕",
+      "analysisDesc": "高層雲は多いものの雲が厚く直達光が弱いため、色づきは日没方向付近に限られやすいです"
+    },
+    "highCloudCarrier": {
+      "title": "高層雲キャリアの下限補正",
+      "scoreHint": "高層雲が多く低雲が少なく、空気が十分に澄んでいる場合は過度な減点を避けます"
+    },
+    "aerosolHaze": {
+      "title": "砂じん・もやの上限制限",
+      "scoreHint": "AOD、砂じん、PM10 が非常に高いと、高層雲が多くても色づきが抑えられます"
+    },
     "lightPath": {
       "title": "光路スコア",
       "score": "光路スコア",
       "visibility": "視程",
-      "lightPathScore": "🌅 光路：{{score}}点 "
+      "lightPathScore": "光路：{{score}}点 "
     },
     "rendering": {
       "title": "レンダリングスコア",
@@ -286,7 +415,7 @@ apiAccess: 'API接続'
         moderate: '雲の厚さは適度',
         thick: '雲が厚く、光が通りにくい',
         unknown: '雲の厚さデータは利用できません'
-      },
+      }
     },
     "composite": {
       "title": "総合スコア",
@@ -342,7 +471,7 @@ apiAccess: 'API接続'
       "someLowCloud": "⚠️ 下層雲が若干ある（{{value}}%）、視界の一部を遮る可能性があります",
       "denseLowCloud": "❌ 下層雲が濃密（{{value}}%）、鑑賞に深刻な影響があります",
       "excellentConditions": "🌟 素晴らしい焼き雲のすべての条件が整っています！",
-      "highProbability": "✨ 壮大な焼き雲の見られる可能性が高い",
+      "highProbability": "壮大な焼き雲の見られる可能性が高い",
       "moderateProbability": "💫 穏やかな焼き雲効果の可能性あり",
       "lowProbability": "⛅ 顕著な焼き雲の可能性は低い",
       "noCloudNoFireCloud": "❌ 雲量が著しく不足しており、焼き雲を形成できません"
@@ -418,7 +547,7 @@ apiAccess: 'API接続'
     "languageLabel": "インターフェース言語",
     "notifications": "通知",
     "notificationsTitle": "通知設定",
-    "notificationsLabel": "夕焼け予測通知",
+    "notificationsLabel": "朝夕焼け通知",
     "notificationsDescription": "高品質予測アラートを設定",
     "notificationsHelp": "予測品質が閾値以上の場合に通知を送信",
     "enableNotifications": "通知アラートを有効にする",
@@ -436,8 +565,13 @@ apiAccess: 'API接続'
     "proxyUrl": "バックエンドサーバーのURL",
     "proxyUrlPlaceholder": "http://localhost:3000",
     "proxyUrlHint": "バックエンドプロキシサーバーのURLアドレス",
+    "weatherFetchMode": "気象データ取得モード",
+    "weatherFetchModeHint": "既定ではバックエンド閉ループです。バックエンドが制限またはタイムアウトした場合のみ、ブラウザが公開気象データを取得してバックエンドで採点します",
+    "weatherFetchModeBackend": "バックエンド閉ループ（推奨既定）",
+    "weatherFetchModeClientFallback": "バックエンド優先、失敗時はブラウザで緊急取得",
+    "weatherFetchModeClient": "ブラウザで気象取得（デバッグ/緊急）",
     "notificationAndAlerts": "通知とアラート",
-    "enableSunsetNotification": "夕焼け予測通知を有効にする",
+    "enableSunsetNotification": "朝夕焼け通知を有効化",
     "notificationHint": "予測品質が閾値に達したときにブラウザ通知を送信",
     "notificationThresholdLabel": "通知閾値",
     "notificationThresholdHint": "予測スコアがこの値を超えたときに通知を送信",
@@ -498,9 +632,9 @@ apiAccess: 'API接続'
     "selectLanguage": "インターフェース言語を選択してください"
   },
   "notifications": {
-    "title": "夕焼けアラート",
-    "excellentForecast": "今夜の夕焼け予測スコア：{{score}}点、絶好の鑑賞日和です！",
-    "goodForecast": "今夜の夕焼け予測スコア：{{score}}点、期待できます！",
+    "title": "朝夕焼け通知",
+    "excellentForecast": "今夜の夕焼けスコア：{{score}}点、絶好の鑑賞日和です！",
+    "goodForecast": "今夜の夕焼けスコア：{{score}}点、期待できます！",
     "time": "時間：{{time}}",
     "location": "場所：{{location}}",
     "enable": "通知を有効にする",
@@ -543,12 +677,12 @@ apiAccess: 'API接続'
     "bestWindow": "見頃  {{start}} – {{end}}",
     "cloud": { "high": "上層雲", "mid": "中層雲", "low": "下層雲" },
     "verdict": {
-      "noCarrier": "😶 色を映す雲が少なく、焼け雲の可能性はかなり低め",
-      "excellent": "✨ 条件は良好、鮮やかな空が期待できます",
-      "excellentMultiLayer": "✨ 条件は非常に良好、観賞を強くおすすめします！",
-      "good": "✨ 条件は良く、焼け雲の可能性は高め",
-      "fair": "💡 条件は普通、雲の変化をリアルタイムで確認してください",
-      "poor": "😶 焼け雲の可能性は低め"
+      "noCarrier": "色を映す雲が少なく、焼け雲の可能性はかなり低め",
+      "excellent": "条件は良好、鮮やかな空が期待できます",
+      "excellentMultiLayer": "条件は非常に良好、観賞を強くおすすめします！",
+      "good": "条件は良く、焼け雲の可能性は高め",
+      "fair": "条件は普通、雲の変化をリアルタイムで確認してください",
+      "poor": "焼け雲の可能性は低め"
     },
     "watermark": "霞客 · 鮮やかな空の一瞬を記録"
   },
@@ -580,13 +714,15 @@ apiAccess: 'API接続'
     "timeNow": "現在",
     "timeSunset": "日没",
     "timeSunrise": "日出",
-    "timeHint": "💡 ヒント: 地図下の予測タイムラインをドラッグして時間を調整することもできます",
+    "timeHint": "ヒント: 地図下の予測タイムラインをドラッグして時間を調整することもできます",
     "loading": "地図読み込み中...",
     "error": "地図の読み込みに失敗しました",
     "mockNotSupported": "地図機能は実際のAPIモードでのみ使用可能です"
   },
   "surrounding": {
     "title": "周辺焼き雲分析",
+    "radarTitle": "周辺雲況レーダー",
+    "radarSubtitle": "20km · 連続した雲場",
     "radius": "探知半径",
     "radiusUnit": "キロメートル",
     "directions": {
@@ -652,6 +788,9 @@ apiAccess: 'API接続'
     "pointToast": "{{name}}方向｜スコア: {{score}}点｜距離: {{distance}}km",
     "emptyChinaSpots": "本日表示できる焼け雲スポットはありません",
     "updatedAt": "{{time}} 更新",
+    "supportedRegions": "現在対応：中国大陸、香港、マカオ、台湾、日本、韓国、北朝鮮、インドシナ半島の主要都市。ヒートマップ格子は現在中国エリアが中心です。",
+    "interactionHint": "地図をドラッグ · スクロールでズーム",
+    "tabs": { "sunrise": "朝焼け", "sunset": "夕焼け" },
     "quality": { "excellent": "優秀", "good": "良好" },
     "period": { "sunriseTomorrow": "明日の朝焼け", "sunsetToday": "今日の夕焼け", "testLayer": "テストレイヤー（モックデータ）" }
   },

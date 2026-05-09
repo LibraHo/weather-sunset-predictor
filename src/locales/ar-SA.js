@@ -11,7 +11,7 @@ export default {
     tabs: {
       ariaLabel: 'تنقل تبويبات الصفحة الرئيسية',
       forecast: 'التنبؤ',
-      methodology: 'طريقة حساب النقاط',
+    methodology: 'طريقة حساب النقاط',
       map: 'خريطة السحب الحمراء',
             shareMap: 'خريطة المشاركة',
 apiAccess: 'الوصول إلى API'
@@ -19,6 +19,23 @@ apiAccess: 'الوصول إلى API'
     menu: {
       ariaLabel: 'تبديل العرض',
       dropdownAriaLabel: 'قائمة التنقل'
+    },
+    apiAccess: {
+      kicker: 'Sunset Voyager API',
+      intro: 'The Sunset Voyager Agent API provides geocoding, sunrise/sunset glow scores, and score explanations for personal, learning, and research use.',
+      openApiSpec: 'OpenAPI spec',
+      admin: 'Admin console',
+      quickStart: 'Quick start',
+      step1: 'Apply for and receive a token.',
+      step2: 'Send it in Authorization: Bearer <token>.',
+      step3: 'Call /api/agent/forecast, /api/agent/explain, or /api/agent/geocode.',
+      restrictions: 'Usage limits',
+      restrictionText: 'Personal, learning, and research use only. Commercial use is prohibited. Public displays must remove sensitive data and cite the source.',
+      exampleCall: 'Example call',
+      endpoints: 'Core endpoints',
+      forecastDesc: 'Returns score, quality level, and best viewing window.',
+      explainDesc: 'Returns score composition, key constraints, and natural-language explanation.',
+      geocodeDesc: 'Returns location candidates, coordinates, and confidence.'
     },
     methodology: {
       title: 'كيف يتم حساب النقاط',
@@ -79,6 +96,15 @@ apiAccess: 'الوصول إلى API'
           level2: 'سحب منخفضة 20–40% ← ×1.0 إلى ×0.8 (خطي)',
           level3: 'سحب منخفضة 40–70% ← ×0.8 إلى ×0.5 (خطي)',
           level4: 'سحب منخفضة >70% ← ×0.2 (حجب شديد)'
+        },
+        thickHighCloudPenalty: {
+          title: '6. عقوبة السحب العالية السميكة',
+          subtitle: 'Thick High Cloud · حد أعلى',
+          desc: 'كثرة السحب العالية لا تعني دائماً نتيجة أعلى؛ عندما تصبح ستاراً سميكاً مع ضوء مباشر ضعيف وانتشار غالب، يظهر الضوء غالباً محلياً قرب الغروب فقط.',
+          level1: 'سحب عالية ≥80% وغطاء كلي ≥60%: تفعيل فحص الخطر',
+          level2: 'انخفاض الضوء المباشر أو هيمنة الانتشار أو بخار ماء عالٍ يخفض درجة مسار الضوء',
+          level3: 'مشاهد الستار السميك تُحد بنحو 42–48 نقطة لتجنب تقييم ممتاز كاذب',
+          formula: 'تصحيح السحب العالية السميكة = min(الدرجة النهائية, 42–48) للمشاهد ذات السحب السميكة والتسرب الضوئي المحلي'
         },
         precipPenalty: {
           title: '5. معامل عقوبة الهطول',
@@ -142,6 +168,8 @@ apiAccess: 'الوصول إلى API'
     clear: 'صافي',
     overview: 'نظرة عامة',
     hourly: 'التوقعات الساعية',
+    threeDayGlow: 'توهج 3 أيام',
+    threeDayGlowLoading: 'جارٍ تحميل توهج الشروق والغروب لثلاثة أيام...',
     daysOverview: 'نظرة عامة لـ {{days}} أيام',
     precipChance: '{{prob}}% هطول',
     dataInfo: 'ℹ️ مصدر البيانات يوفر بيانات التنبؤ لـ {{hours}} ساعة (~{{days}} أيام). فكر في استخدام مصادر بيانات طقس أخرى لمزيد من الأيام.'
@@ -168,7 +196,92 @@ apiAccess: 'الوصول إلى API'
     fair: 'متوسط',
     poor: 'ضعيف',
 
-    "formationAnalysis": {
+    analysisConclusion: {
+      excellent: 'الظروف ممتازة، ويوصى بالخروج للمشاهدة بقوة.',
+      excellentSingleLayer: 'إمكانات اللون ممتازة، لكن طبقة سحاب واحدة قد تقلل العمق.',
+      good: 'الظروف جيدة مع فرصة واضحة لظهور غيوم ملتهبة جميلة.',
+      goodSingleLayer: 'فرصة الغيوم الملتهبة جيدة، لكن طبقات السحب محدودة.',
+      fair: 'الظروف متوسطة؛ راقب تطور السحب الفعلي.',
+      clearSunset: 'Fire clouds are subtle, but the sunset is clear.',
+      low: 'بعض الشروط الأساسية غير متوفرة، واحتمال الغيوم الملتهبة منخفض.'
+    },
+        scoreBreakdown: {
+      title: 'تفاصيل الدرجة',
+      viewDetails: 'عرض تفاصيل الدرجة',
+      finalDisplayed: 'الدرجة النهائية المعروضة',
+      baseFormula: 'درجة الأساس = لوحة السحب ×0.8 + مسار الضوء ×0.2',
+      baseHint: 'درجة الأساس بعد دمج السحب ومسار الضوء',
+      canvasHint: 'السحب العالية/المتوسطة تحمل اللون، والسحب المنخفضة قد تحجبه',
+      lightPathHint: 'هل يمكن لضوء الشمس الوصول إلى السحب',
+      finalFormula: 'الدرجة النهائية = درجة الأساس × معاملات التصحيح',
+      renderingHint: 'الرطوبة والرؤية تؤثران في ظهور اللون',
+      aerosolHint: 'الهباء المعتدل يعزز الأحمر البرتقالي، والكثير منه يجعل المشهد رمادياً'
+,
+
+      "ledger": {
+        "pts": "pts",
+        "whyThisScore": "Why this score",
+        "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
+        "canvasPlusLightPath": "canvas + light path",
+        "renderingFormula": "{{base}} × rendering {{factor}} = {{rendered}}",
+        "weatherTransparency": "weather transparency factor",
+        "summary": {
+          "event": "{{score}} points: {{detail}}",
+          "rendered": "{{base}} points adjusted by rendering conditions to {{rendered}}",
+          "default": "{{score}} points: calculated from cloud carrier, light path, and rendering conditions"
+        },
+        "weather": {
+          "clouds": "Cloud H/M/L {{high}}/{{mid}}/{{low}}%",
+          "visibility": "Visibility {{value}}km",
+          "humidity": "Humidity {{value}}%",
+          "rain": "Rain {{value}}mm/h"
+        },
+        "labels": {
+          "cloudCarrier": "Cloud carrier",
+          "lightPath": "Light path",
+          "baseScore": "Base score",
+          "rendering": "Rendering",
+          "final": "Final",
+          "hardCap": "Hard cap",
+          "hazeCap": "Haze cap",
+          "thickCloudCap": "Thick-cloud cap",
+          "geometryCap": "Geometry cap",
+          "occlusion": "Occlusion",
+          "carrierFloor": "Carrier floor",
+          "postRainCap": "Post-rain cap",
+          "displayCalibration": "Display calibration"
+        },
+        "details": {
+          "cloudCarrier": "usable colored cloud surface",
+          "cloudPenalty": "low cloud ×{{low}}, overcast ×{{overcast}}",
+          "lightPath": "sunlight reaches the cloud layer",
+          "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
+          "afterAdjustments": "after all caps and floors",
+          "finalDisplayed": "final displayed result",
+          "thickCloudCap": "thick high cloud reduces usable color rendering",
+          "geometryCap": "sun/cloud geometry is not feasible",
+          "occlusion": "distant obstruction reduces the score",
+          "carrierFloor": "clear high-cloud carrier prevents over-penalty",
+          "directionalSamples": "solar-azimuth samples at 15/30/50/100km are included",
+          "postRainCap": "post-rain moisture or haze turns the glow into a gray curtain",
+          "displayCalibration": "final display score is aligned with the prediction status band"
+        },
+        "reasons": {
+          "precipitationCap45": "rain with low clouds capped the score at 45",
+          "overcastCap35": "low-cloud overcast capped the score at 35",
+          "overcastFogCap15": "overcast sky plus visibility ≤5km capped the score at 15",
+          "rainyMidCloudOvercastCap35": "rainy gray mid-cloud overcast capped the score at 35",
+          "extremeDustHazeCap28": "severe dust/haze capped the score at 28",
+          "severeHazeCap35": "heavy haze capped the score at 35",
+          "moderateHazeCap45": "moderate haze capped the score at 45",
+          "adjustmentApplied": "cap/floor adjustment applied",
+          "displayCalibration": "final display score is aligned with the prediction status band",
+          "lightPathStatusCap60": "light path is only {{light}}, so the result is capped to the light-glow band around 60",
+          "canvasStatusCap40": "cloud carrier is only {{canvas}}, so the result is capped to the no-fire-cloud band below 40"
+        }
+      }
+    },
+"formationAnalysis": {
       "title": "Fire cloud formation analysis",
       "groups": { "positive": "Favorable", "neutral": "Neutral", "warning": "Watch-outs" },
       "high": { "abundant": "Abundant high clouds ({{value}}%)", "abundantDesc": "Strong color base", "sufficient": "Sufficient high clouds ({{value}}%)", "sufficientDesc": "Good color carrier", "moderate": "Moderate high clouds ({{value}}%)", "moderateDesc": "Possible, but colors may be lighter", "few": "Too few high clouds ({{value}}%)", "fewDesc": "Main color carrier is lacking" },
@@ -176,6 +289,8 @@ apiAccess: 'الوصول إلى API'
       "low": { "few": "Few low clouds ({{value}}%)", "fewDesc": "View should stay open", "some": "Some low clouds ({{value}}%)", "someDesc": "May block horizon color", "thick": "Thick low clouds ({{value}}%)", "thickDesc": "High blocking risk" },
       "visibility": { "good": "Good visibility ({{value}}km)", "goodDesc": "Clear air, good distance", "moderate": "Moderate visibility ({{value}}km)", "moderateDesc": "Saturation may drop", "low": "Low visibility ({{value}}km)", "lowDesc": "Haze or moisture may affect the view" },
       "humidity": { "moderate": "Moderate humidity ({{value}}%)", "moderateDesc": "Helps light scattering", "high": "High humidity ({{value}}%)", "highDesc": "May reduce transparency", "low": "Low humidity ({{value}}%)", "lowDesc": "Dry air may lighten colors" },
+      "lightPath": { "opening": "Opening toward the sun", "openingDesc": "Backend samples 15/30/50/100km along the solar azimuth; the low/mid-cloud corridor is relatively open", "wall": "Cloud wall toward the sun", "wallDesc": "Low or mid clouds along the solar direction suppress the main score" },
+      "postRain": { "clear": "Clear post-rain air", "clearDesc": "Rain in the last 6h is kept as a bonus because visibility and particles are acceptable", "gray": "Post-rain gray-curtain risk", "grayDesc": "Moisture, particles, or weak direct light after rain cap the score conservatively" },
       "aerosol": { "moderate": "Moderate aerosol (AOD {{value}})", "moderateDesc": "Boosts orange-red scattering", "high": "High aerosol (AOD {{value}})", "highDesc": "May look hazy or dull", "low": "Very clear air (AOD {{value}})", "lowDesc": "Colors may be lighter" },
       "layer": { "single": "Single cloud layer", "singleDesc": "High clouds can still color well" }
     },
@@ -197,6 +312,8 @@ apiAccess: 'الوصول إلى API'
       conditionsFair: 'ظروف معتدلة، ألوان متفرقة ممكنة',
       canWatch: 'يمكن مشاهدته',
       conditionsGood: 'ظروف جيدة مع قيمة مشاهدة معينة',
+      clearSunsetTransparent: 'Fire clouds are subtle, but the sunset is clear.',
+      casualViewingOk: 'Worth a casual look',
       veryLikely: 'احتمالية عالية لغروب جميل',
       excellentConditions: 'سحب معتدلة مع مسار ضوء واضح',
       legendaryEruption: 'ثوران أسطوري',
@@ -221,11 +338,18 @@ apiAccess: 'الوصول إلى API'
       cloudBreakdown: 'عالي {{high}}% متوسط {{mid}}% منخفض {{low}}%',
       lowCloudPenalty: '| عقوبة السحب المنخفضة: {{reason}}'
     },
+
+    thickHighCloud: {
+      title: 'عقوبة السحب العالية السميكة',
+      scoreHint: 'ستار سحب عالٍ سميك مع ضوء مباشر ضعيف؛ غالباً ضوء محلي فقط لذلك تُحد الدرجة النهائية',
+      analysisTitle: 'ستار سحب عالٍ سميك',
+      analysisDesc: 'السحب العالية كثيرة لكنها سميكة والضوء المباشر ضعيف، لذلك غالباً يظهر التوهج محلياً قرب اتجاه الغروب'
+    },
     lightPath: {
       title: 'درجة مسار الضوء',
       score: 'درجة مسار الضوء',
       visibility: 'الرؤية',
-      lightPathScore: '🌅 مسار الضوء: {{score}} نقطة (150 كم:{{near}} 300 كم:{{far}})'
+      lightPathScore: 'مسار الضوء: {{score}} نقطة (150 كم:{{near}} 300 كم:{{far}})'
     },
     rendering: {
       title: 'درجة العرض',
@@ -285,7 +409,7 @@ apiAccess: 'الوصول إلى API'
       someLowCloud: '⚠️ بعض السحب المنخفضة ({{value}}%)، قد تحجب الرؤية جزئيا',
       denseLowCloud: '❌ سحب منخفضة كثيفة ({{value}}%)، تؤثر بشكل خطير على المشاهدة',
       excellentConditions: '🌟 جميع الظروف لسحب حمراء رائعة متوفرة!',
-      highProbability: '✨ احتمالية عالية لمنظر سحب حمراء رائع',
+      highProbability: 'احتمالية عالية لمنظر سحب حمراء رائع',
       moderateProbability: '💫 تأثيرات سحب حمراء خفيفة محتملة',
       lowProbability: '⛅ احتمالية منخفضة لسحب حمراء كبيرة',
       noCloudNoFireCloud: '❌ غطاء سحب غير كاف بشكل خطير، لا يمكن تشكيل سحب حمراء',
@@ -380,6 +504,11 @@ apiAccess: 'الوصول إلى API'
     proxyUrl: 'رابط خادم الوكيل',
     proxyUrlPlaceholder: 'http://localhost:3000',
     proxyUrlHint: 'عنوان رابط خادم الوكيل الخلفي',
+    weatherFetchMode: 'وضع جلب بيانات الطقس',
+    weatherFetchModeHint: 'الوضع الافتراضي حلقة مغلقة عبر الخلفية؛ إذا تعرّضت الخلفية للتقييد أو انتهاء المهلة، يمكن للمتصفح جلب طقس عام ثم إرساله للخلفية لحساب الدرجة',
+    weatherFetchModeBackend: 'حلقة خلفية مغلقة (الافتراضي الموصى به)',
+    weatherFetchModeClientFallback: 'الخلفية أولاً، والمتصفح كخطة طوارئ',
+    weatherFetchModeClient: 'جلب الطقس عبر المتصفح (تصحيح/طوارئ)',
     // الإشعارات والتنبيهات
     notificationAndAlerts: 'الإشعارات والتنبيهات',
     enableSunsetNotification: 'تفعيل إشعارات الغروب',
@@ -488,7 +617,7 @@ apiAccess: 'الوصول إلى API'
     timeNow: 'الآن',
     timeSunset: 'الغروب',
     timeSunrise: 'الشروق',
-    timeHint: '💡 تلميح: يمكنك أيضًا سحب الخط الزمني أسفل الخريطة لضبط الوقت',
+    timeHint: 'تلميح: يمكنك أيضًا سحب الخط الزمني أسفل الخريطة لضبط الوقت',
     loading: 'جاري تحميل الخريطة...',
     error: 'فشل تحميل الخريطة',
     mockNotSupported: 'وظيفة الخريطة متاحة فقط في وضع API الحقيقي'
@@ -497,6 +626,8 @@ apiAccess: 'الوصول إلى API'
   // 任务19：周边火烧云
   surrounding: {
     title: 'تحليل السحب الحمراء المحيطة',
+    radarTitle: 'رادار السحب المحيطة',
+    radarSubtitle: '20 كم · حقل سحب مستمر',
     radius: 'نطاق الكشف',
     radiusUnit: 'كم',
     directions: {
@@ -549,12 +680,12 @@ apiAccess: 'الوصول إلى API'
     bestWindow: 'Best viewing  {{start}} – {{end}}',
     cloud: { high: 'High Cloud', mid: 'Mid Cloud', low: 'Low Cloud' },
     verdict: {
-      noCarrier: '😶 Not enough color carrier clouds; fire-cloud chance is very low',
-      excellent: '✨ Excellent conditions; colorful sky is promising',
-      excellentMultiLayer: '✨ Excellent conditions; strongly recommended for viewing!',
-      good: '✨ Good conditions; fire-cloud chance is high',
-      fair: '💡 Moderate conditions; watch real-time cloud changes',
-      poor: '😶 Fire-cloud chance is low'
+      noCarrier: 'Not enough color carrier clouds; fire-cloud chance is very low',
+      excellent: 'Excellent conditions; colorful sky is promising',
+      excellentMultiLayer: 'Excellent conditions; strongly recommended for viewing!',
+      good: 'Good conditions; fire-cloud chance is high',
+      fair: 'Moderate conditions; watch real-time cloud changes',
+      poor: 'Fire-cloud chance is low'
     },
     watermark: 'Xiake · Capture every brilliant sky'
   },
@@ -565,6 +696,9 @@ apiAccess: 'الوصول إلى API'
     pointToast: '{{name}} direction | Score: {{score}} pts | Distance: {{distance}} km',
     emptyChinaSpots: 'No visible fire-cloud spots today',
     updatedAt: 'Updated at {{time}}',
+    supportedRegions: 'مدعوم حاليًا: بر الصين الرئيسي، هونغ كونغ، ماكاو، تايوان، اليابان، كوريا الجنوبية، كوريا الشمالية، والمدن الرئيسية في جنوب شرق آسيا القاري. تركز شبكة الخريطة الحرارية حاليًا على الصين.',
+    interactionHint: 'Drag the map · scroll to zoom',
+    tabs: { sunrise: 'Sunrise', sunset: 'Sunset' },
     quality: { excellent: 'Excellent', good: 'Good' },
     period: { sunriseTomorrow: "Tomorrow's sunrise glow", sunsetToday: "Today's sunset glow", testLayer: 'Test layer (mock data)' }
   },

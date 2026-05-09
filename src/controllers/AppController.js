@@ -154,9 +154,6 @@ class AppController {
     }
 
     try {
-      // 显示加载状态
-      this.showLoading(true);
-
       // 保存当前位置
       this.currentLocation = location;
       this.storageService.saveLastLocation(location);
@@ -167,6 +164,12 @@ class AppController {
         this.showLoading(false);
         this.showSuccess(`位置已保存：${location.name || '未知位置'}`);
         return;
+      }
+
+      const predictionSection = document.getElementById('prediction-section');
+      if (predictionSection) {
+        predictionSection.classList.add('hidden');
+        predictionSection.classList.remove('prediction-loading');
       }
 
       // 获取天气数据（失败不阻塞地图等功能）
@@ -180,8 +183,10 @@ class AppController {
       }
 
       if (weatherData && weatherData.length > 0) {
-        // 更新天气显示
+        // 更新天气显示：天气信息先展示，再在朝霞/晚霞预测区域显示加载状态
         this.weatherController.updateWeatherDisplay(weatherData, location);
+        this._setThreeDayGlowLoading(true);
+        this.showLoading(true, { progress: 48, message: this.i18n.t('loading.prediction') });
 
         // 生成晚霞预测
         let predictions;
@@ -191,9 +196,11 @@ class AppController {
           console.error('[AppController] 生成预测时出错:', predictionError.message);
           this.showError(`晚霞预测功能暂时不可用: ${predictionError.message}`);
           predictions = [];
+          this._setThreeDayGlowLoading(false);
         }
 
         if (predictions && predictions.length > 0) {
+          this.updateLoadingProgress({ progress: 88, message: this.i18n.t('loading.pleaseWait') });
           this.predictionController.updatePredictionDisplay(predictions);
         } else {
           console.warn('[AppController] 没有生成预测数据，跳过预测显示');
@@ -219,6 +226,8 @@ class AppController {
           console.warn('[AppController] 更新中国散点地图失败:', err.message);
         });
       }
+
+      this.updateLoadingProgress({ progress: 100, message: this.i18n.t('loading.pleaseWait') });
 
       // 隐藏加载状态
       this.showLoading(false);
@@ -616,6 +625,15 @@ class AppController {
       hourlyBtn.addEventListener('click', () => {
         if (this.weatherController) {
           this.weatherController.switchView('hourly');
+        }
+      });
+    }
+
+    const threeDayGlowBtn = document.getElementById('three-day-glow-btn');
+    if (threeDayGlowBtn) {
+      threeDayGlowBtn.addEventListener('click', () => {
+        if (this.weatherController) {
+          this.weatherController.switchView('glow');
         }
       });
     }
@@ -1021,8 +1039,26 @@ class AppController {
    * @param {boolean} show - 是否显示加载状态
    * @private
    */
-  showLoading(show = true) {
-    this.uiStateController.showLoading(show);
+  showLoading(show = true, state = {}) {
+    this.uiStateController.showLoading(show, state);
+  }
+
+  updateLoadingProgress(state = {}) {
+    this.uiStateController.updateLoadingProgress(state);
+  }
+
+  _setThreeDayGlowLoading(show = true) {
+    const forecastTimeline = document.getElementById('forecast-timeline');
+    const forecastLoading = document.getElementById('forecast-loading');
+
+    if (forecastTimeline && show) {
+      forecastTimeline.dataset.loaded = 'false';
+      forecastTimeline.innerHTML = '';
+    }
+
+    if (forecastLoading) {
+      forecastLoading.classList.toggle('hidden', !show);
+    }
   }
 
   /**
@@ -1273,8 +1309,8 @@ class AppController {
         this.predictionController.notificationService.sendNotification(
           '测试通知',
           {
-            body: '通知功能正常工作！🌅',
-            icon: '🌅',
+            body: '通知功能正常工作！',
+            icon: '/favicon.ico',
             tag: 'test-notification'
           }
         );

@@ -116,7 +116,8 @@ describe('PredictionAPIService', () => {
       expect(body.lat).toBe(mockLat);
       expect(body.lon).toBe(mockLon);
       expect(body.type).toBe('sunset');
-      expect(body.weatherData.cloudCover).toBe(50);
+      expect(body.referenceTime).toBe(mockDate.toISOString());
+      expect(body.weatherData).toBeUndefined();
     });
 
     test('should handle date as Date object', async () => {
@@ -185,6 +186,25 @@ describe('PredictionAPIService', () => {
       ).rejects.toThrow('后端预测 API 调用失败');
     });
 
+    test('should preserve structured backend weather error code/status', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 503,
+        statusText: 'Service Unavailable',
+        json: async () => ({
+          error: { code: 'WEATHER_PROVIDER_UNAVAILABLE', message: 'No weather data available' }
+        })
+      });
+
+      await expect(
+        predictionAPI.calculate(mockWeatherData, mockDate, mockLat, mockLon)
+      ).rejects.toMatchObject({
+        code: 'WEATHER_PROVIDER_UNAVAILABLE',
+        status: 503,
+        message: '后端预测 API 调用失败: No weather data available'
+      });
+    });
+
     test('should throw error on network failure', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
@@ -193,7 +213,7 @@ describe('PredictionAPIService', () => {
       ).rejects.toThrow('后端预测 API 调用失败');
     });
 
-    test('should handle missing optional weather data fields', async () => {
+    test('should omit frontend weather data for backend closed-loop prediction', async () => {
       const minimalWeatherData = {
         cloudCover: 50,
         humidity: 60
@@ -208,13 +228,85 @@ describe('PredictionAPIService', () => {
 
       const [, options] = mockFetch.mock.calls[0];
       const body = JSON.parse(options.body);
-      expect(body.weatherData.highClouds).toBe(0);
-      expect(body.weatherData.midClouds).toBe(0);
-      expect(body.weatherData.lowClouds).toBe(0);
+      expect(body.weatherData).toBeUndefined();
+      expect(body.options).toBeUndefined();
+      expect(body.lat).toBe(mockLat);
+      expect(body.lon).toBe(mockLon);
+    });
+
+    test('should include weather data only for client fallback scoring mode', async () => {
+      const prevHourData = { shortwaveRadiation: 120 };
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          ...mockSuccessResponse,
+          data: {
+            ...mockSuccessResponse.data,
+            weatherDataSource: 'client_weather_fallback',
+            clientWeatherFallback: true
+          }
+        })
+      });
+
+      const result = await predictionAPI.calculate(
+        mockWeatherData,
+        mockDate,
+        mockLat,
+        mockLon,
+        'sunset',
+        { clientWeatherFallback: true, prevHourData, rainedRecently: true }
+      );
+
+      const [, options] = mockFetch.mock.calls[0];
+      const body = JSON.parse(options.body);
+      expect(body.weatherData).toEqual(mockWeatherData);
+      expect(body.options.clientWeatherFallback).toBe(true);
+      expect(body.options.prevHourData).toEqual(prevHourData);
+      expect(body.options.rainedRecently).toBe(true);
+      expect(result.weatherDataSource).toBe('client_weather_fallback');
+      expect(result.clientWeatherFallback).toBe(true);
     });
   });
 
   // ========== getSurrounding() 方法测试 ==========
+
+  describe('calculateBatchClosedLoop()', () => {
+    test('should call closed-loop batch endpoint and convert predictions', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          data: [{
+            id: 'sunset:1718992800000',
+            date: '2024-06-21T18:00:00Z',
+            score: 72,
+            quality: 'excellent',
+            type: 'sunset',
+            weatherDataSource: 'backend_closed_loop',
+            referenceTime: '2024-06-21T18:00:00Z'
+          }],
+          count: 1
+        })
+      });
+
+      const result = await predictionAPI.calculateBatchClosedLoop([
+        { id: 'sunset:1718992800000', date: new Date('2024-06-21T18:00:00Z'), type: 'sunset' }
+      ], 39.9, 116.4);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toBeInstanceOf(SunsetPrediction);
+      expect(result[0].id).toBe('sunset:1718992800000');
+      expect(result[0].weatherDataSource).toBe('backend_closed_loop');
+
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe('http://localhost:3000/api/prediction/enhanced/closed-loop/batch');
+      const body = JSON.parse(options.body);
+      expect(body.lat).toBe(39.9);
+      expect(body.lon).toBe(116.4);
+      expect(body.items[0].date).toBe('2024-06-21T18:00:00.000Z');
+      expect(body.items[0].type).toBe('sunset');
+    });
+  });
 
   describe('getSurrounding()', () => {
     const mockLat = 39.9;

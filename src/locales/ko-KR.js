@@ -18,7 +18,7 @@ const translations = {
     "tabs": {
       "ariaLabel": "홈 탭 내비게이션",
       "forecast": "예측 기능",
-      "methodology": "화염구름 점수 계산 방법",
+    "methodology": "화염구름 점수 계산 방법",
       "map": "노을 지도",
             shareMap: '공유 지도',
 apiAccess: 'API 연동'
@@ -26,6 +26,23 @@ apiAccess: 'API 연동'
     "menu": {
       "ariaLabel": "페이지 전환",
       "dropdownAriaLabel": "페이지 전환 메뉴"
+    },
+    apiAccess: {
+      kicker: 'Sunset Voyager API',
+      intro: 'The Sunset Voyager Agent API provides geocoding, sunrise/sunset glow scores, and score explanations for personal, learning, and research use.',
+      openApiSpec: 'OpenAPI spec',
+      admin: 'Admin console',
+      quickStart: 'Quick start',
+      step1: 'Apply for and receive a token.',
+      step2: 'Send it in Authorization: Bearer <token>.',
+      step3: 'Call /api/agent/forecast, /api/agent/explain, or /api/agent/geocode.',
+      restrictions: 'Usage limits',
+      restrictionText: 'Personal, learning, and research use only. Commercial use is prohibited. Public displays must remove sensitive data and cite the source.',
+      exampleCall: 'Example call',
+      endpoints: 'Core endpoints',
+      forecastDesc: 'Returns score, quality level, and best viewing window.',
+      explainDesc: 'Returns score composition, key constraints, and natural-language explanation.',
+      geocodeDesc: 'Returns location candidates, coordinates, and confidence.'
     },
     "methodology": {
       "title": "화염구름 점수 계산 방법",
@@ -95,6 +112,15 @@ apiAccess: 'API 연동'
           "level2": "하층운 20–40% → ×1.0 ~ ×0.8 (선형)",
           "level3": "하층운 40–70% → ×0.8 ~ ×0.5 (선형)",
           "level4": "하층운>70% → ×0.2 (심각한 차단)"
+        },
+        "thickHighCloudPenalty": {
+          "title": "6. 두꺼운 상층운 감점",
+          "subtitle": "Thick High Cloud · 상한",
+          "desc": "상층운이 많다고 항상 고득점은 아닙니다. 두꺼운 구름막이 되고 직사광이 약하며 산란광이 우세하면 해 지는 방향의 일부 빛만 기대할 수 있습니다.",
+          "level1": "상층운≥80% 및 전체 운량≥60%이면 위험 판정",
+          "level2": "직사광 비율이 낮거나 산란광 우세, 수증기가 매우 많으면 광로 점수를 낮춥니다",
+          "level3": "두꺼운 구름막 장면은 최종 점수를 약 42–48로 제한합니다",
+          "formula": "두꺼운 상층운 보정 = min(최종 점수, 42–48), 넓은 두꺼운 구름과 국지적 빛샘에 적용"
         },
         "precipPenalty": {
           "title": "6. 강수 패널티 계수",
@@ -166,16 +192,18 @@ apiAccess: 'API 연동'
     "clear": "맑음",
     "overview": "개요",
     "hourly": "시간별 예보",
+    "threeDayGlow": "3일 노을",
+    "threeDayGlowLoading": "3일치 로딩 중...",
     "daysOverview": "{{days}}일 개요",
     "precipChance": "{{prob}}% 강수",
     "dataInfo": "ℹ️ 데이터 출처는 {{hours}}시간 예측 데이터를 제공합니다 (약 {{days}}일). 더 많은 일수가 필요한 경우 다른 날씨 데이터 소스를 고려하세요.",
     "mapView": ""
   },
   "prediction": {
-    "title": "노을 예측",
+    "title": "노을 예보",
     "sunrise": "아침 노을",
     "sunset": "저녁 노을",
-    "sunriseAndSunset": "일출 및 일몰 노을 예측",
+    "sunriseAndSunset": "노을 예보",
     "score": "예측 점수",
     "points": "점",
     "quality": "품질 등급",
@@ -199,7 +227,92 @@ apiAccess: 'API 연동'
     "viewFutureOrRefresh": "미래 예측을 보거나 잠시 후 데이터를 새로고침하세요",
     "predictionUnavailable": "⚠️ 날씨 데이터 부족",
 
-    "formationAnalysis": {
+    "analysisConclusion": {
+      "excellent": "조건이 매우 좋습니다. 관측을 강력히 추천합니다.",
+      "excellentSingleLayer": "색이 날 가능성은 높지만 구름층이 단순해 입체감은 조금 약할 수 있습니다.",
+      "good": "조건이 좋고 선명한 노을구름 가능성이 있습니다.",
+      "goodSingleLayer": "노을구름 가능성은 높지만 구름층의 깊이는 다소 부족합니다.",
+      "fair": "조건은 보통입니다. 실제 구름 변화를 함께 확인하세요.",
+      "clearSunset": "Fire clouds are subtle, but the sunset is clear.",
+      "low": "핵심 조건이 부족해 노을구름 가능성이 낮습니다."
+    },
+        "scoreBreakdown": {
+      "title": "점수 상세",
+      "viewDetails": "점수 상세 보기",
+      "finalDisplayed": "최종 표시 점수",
+      "baseFormula": "기초 점수 = 캔버스 ×0.8 + 광로 ×0.2",
+      "baseHint": "구름층과 광로를 합산한 기초 점수",
+      "canvasHint": "고층/중층운은 색을 받고 저층운은 가릴 수 있습니다",
+      "lightPathHint": "햇빛이 구름층까지 도달하는지 여부",
+      "finalFormula": "최종 점수 = 기초 점수 × 보정 계수",
+      "renderingHint": "습도와 가시거리가 색 표현에 영향을 줍니다",
+      "aerosolHint": "적절한 에어로졸은 주황·붉은 산란을 강화하고 과하면 회색빛이 됩니다"
+,
+
+      "ledger": {
+        "pts": "pts",
+        "whyThisScore": "Why this score",
+        "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
+        "canvasPlusLightPath": "canvas + light path",
+        "renderingFormula": "{{base}} × rendering {{factor}} = {{rendered}}",
+        "weatherTransparency": "weather transparency factor",
+        "summary": {
+          "event": "{{score}} points: {{detail}}",
+          "rendered": "{{base}} points adjusted by rendering conditions to {{rendered}}",
+          "default": "{{score}} points: calculated from cloud carrier, light path, and rendering conditions"
+        },
+        "weather": {
+          "clouds": "Cloud H/M/L {{high}}/{{mid}}/{{low}}%",
+          "visibility": "Visibility {{value}}km",
+          "humidity": "Humidity {{value}}%",
+          "rain": "Rain {{value}}mm/h"
+        },
+        "labels": {
+          "cloudCarrier": "Cloud carrier",
+          "lightPath": "Light path",
+          "baseScore": "Base score",
+          "rendering": "Rendering",
+          "final": "Final",
+          "hardCap": "Hard cap",
+          "hazeCap": "Haze cap",
+          "thickCloudCap": "Thick-cloud cap",
+          "geometryCap": "Geometry cap",
+          "occlusion": "Occlusion",
+          "carrierFloor": "Carrier floor",
+          "postRainCap": "Post-rain cap",
+          "displayCalibration": "Display calibration"
+        },
+        "details": {
+          "cloudCarrier": "usable colored cloud surface",
+          "cloudPenalty": "low cloud ×{{low}}, overcast ×{{overcast}}",
+          "lightPath": "sunlight reaches the cloud layer",
+          "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
+          "afterAdjustments": "after all caps and floors",
+          "finalDisplayed": "final displayed result",
+          "thickCloudCap": "thick high cloud reduces usable color rendering",
+          "geometryCap": "sun/cloud geometry is not feasible",
+          "occlusion": "distant obstruction reduces the score",
+          "carrierFloor": "clear high-cloud carrier prevents over-penalty",
+          "directionalSamples": "solar-azimuth samples at 15/30/50/100km are included",
+          "postRainCap": "post-rain moisture or haze turns the glow into a gray curtain",
+          "displayCalibration": "final display score is aligned with the prediction status band"
+        },
+        "reasons": {
+          "precipitationCap45": "rain with low clouds capped the score at 45",
+          "overcastCap35": "low-cloud overcast capped the score at 35",
+          "overcastFogCap15": "overcast sky plus visibility ≤5km capped the score at 15",
+          "rainyMidCloudOvercastCap35": "rainy gray mid-cloud overcast capped the score at 35",
+          "extremeDustHazeCap28": "severe dust/haze capped the score at 28",
+          "severeHazeCap35": "heavy haze capped the score at 35",
+          "moderateHazeCap45": "moderate haze capped the score at 45",
+          "adjustmentApplied": "cap/floor adjustment applied",
+          "displayCalibration": "final display score is aligned with the prediction status band",
+          "lightPathStatusCap60": "light path is only {{light}}, so the result is capped to the light-glow band around 60",
+          "canvasStatusCap40": "cloud carrier is only {{canvas}}, so the result is capped to the no-fire-cloud band below 40"
+        }
+      }
+    },
+"formationAnalysis": {
       "title": "화염구름 형성 조건 분석",
       "groups": { "positive": "유리한 조건", "neutral": "보통 요인", "warning": "주의 요인" },
       "high": {
@@ -233,6 +346,8 @@ apiAccess: 'API 연동'
         "high": "에어로졸 높음 (AOD {{value}})", "highDesc": "흐리거나 어둡게 보일 수 있습니다",
         "low": "공기가 너무 맑음 (AOD {{value}})", "lowDesc": "색이 옅을 수 있습니다"
       },
+      "lightPath": { "opening": "Opening toward the sun", "openingDesc": "Backend samples 15/30/50/100km along the solar azimuth; the low/mid-cloud corridor is relatively open", "wall": "Cloud wall toward the sun", "wallDesc": "Low or mid clouds along the solar direction suppress the main score" },
+      "postRain": { "clear": "Clear post-rain air", "clearDesc": "Rain in the last 6h is kept as a bonus because visibility and particles are acceptable", "gray": "Post-rain gray-curtain risk", "grayDesc": "Moisture, particles, or weak direct light after rain cap the score conservatively" },
       "layer": { "single": "단일 구름층", "singleDesc": "고층운 상태가 좋으면 선명한 노을은 가능합니다" }
     },
     "status": {
@@ -253,6 +368,8 @@ apiAccess: 'API 연동'
       "conditionsFair": "조건 보통, 약간의 색채 가능",
       "canWatch": "관람 가능",
       "conditionsGood": "조건 양호, 약간의 관람 가치",
+      "clearSunsetTransparent": "Fire clouds are subtle, but the sunset is clear.",
+      "casualViewingOk": "Worth a casual look",
       "veryLikely": "아름다운 노을 나타날 확률 높음",
       "excellentConditions": "적당한 구름과 맑은 빛 경로",
       "legendaryEruption": "전설적 분화",
@@ -279,11 +396,26 @@ apiAccess: 'API 연동'
       "tooManyLowClouds": "저층구름 너무 많음 (거의 흐림)",
       "lowCloudAmount": "저층구름 {{value}}%"
     },
+
+    "thickHighCloud": {
+      "title": "두꺼운 상층운 감점",
+      "scoreHint": "두꺼운 상층운과 약한 직사광으로 국지적 빛만 가능해 최종 점수를 제한",
+      "analysisTitle": "두꺼운 상층운 막",
+      "analysisDesc": "상층운은 많지만 구름이 두껍고 직사광이 약해 노을 방향의 일부 빛만 기대됩니다"
+    },
+    "highCloudCarrier": {
+      "title": "상층운 캐리어 하한 보정",
+      "scoreHint": "상층운이 많고 저층운이 적으며 공기가 충분히 맑을 때 과도한 감점을 피합니다"
+    },
+    "aerosolHaze": {
+      "title": "먼지/연무 상한",
+      "scoreHint": "AOD, 먼지 또는 PM10이 매우 높으면 상층운이 많아도 색이 약해질 수 있습니다"
+    },
     "lightPath": {
       "title": "빛 경로 점수",
       "score": "빛 경로 점수",
       "visibility": "가시거리",
-      "lightPathScore": "🌅 빛 경로: {{score}}점 "
+      "lightPathScore": "빛 경로: {{score}}점 "
     },
     "rendering": {
       "title": "렌더링 점수",
@@ -311,7 +443,7 @@ apiAccess: 'API 연동'
         moderate: '구름 두께가 적당함',
         thick: '구름이 두꺼워 빛 투과가 제한됨',
         unknown: '구름 두께 데이터를 사용할 수 없음'
-      },
+      }
     },
     "composite": {
       "title": "종합 점수",
@@ -367,7 +499,7 @@ apiAccess: 'API 연동'
       "someLowCloud": "⚠️ 약간의 저층구름 ({{value}}%), 전망 부분 차단 가능",
       "denseLowCloud": "❌ 조밀한 저층구름 ({{value}}%), 관람에 심각한 영향",
       "excellentConditions": "🌟 화려한 화염구름의 모든 조건이 충족됨!",
-      "highProbability": "✨ 화려한 화염구름 경관의 높은 확률",
+      "highProbability": "화려한 화염구름 경관의 높은 확률",
       "moderateProbability": "💫 가능한 약한 화염구름 효과",
       "lowProbability": "⛅ 눈에 띄는 화염구름의 낮은 확률",
       "noCloudNoFireCloud": "❌ 구름이 심각하게 부족하여 화염구름 형성 불가"
@@ -391,8 +523,8 @@ apiAccess: 'API 연동'
     },
     "passed": "지남",
     "forecast": "미래 예측",
-    "sunriseDirectionLabel": "방향",
-    "sunsetDirectionLabel": "방향"
+    "sunriseDirectionLabel": "일출 방향",
+    "sunsetDirectionLabel": "일몰 방향"
   },
   "time": {
     "today": "오늘",
@@ -443,7 +575,7 @@ apiAccess: 'API 연동'
     "languageLabel": "인터페이스 언어",
     "notifications": "알림",
     "notificationsTitle": "알림 설정",
-    "notificationsLabel": "노을 예측 알림",
+    "notificationsLabel": "노을 알림",
     "notificationsDescription": "고품질 예측 알림 설정",
     "notificationsHelp": "예측 품질이 임계값 이상일 때 알림 보내기",
     "enableNotifications": "알림 활성화",
@@ -461,8 +593,13 @@ apiAccess: 'API 연동'
     "proxyUrl": "백엔드 서버 URL",
     "proxyUrlPlaceholder": "http://localhost:3000",
     "proxyUrlHint": "백엔드 프록시 서버 URL 주소",
+    "weatherFetchMode": "날씨 데이터 가져오기 모드",
+    "weatherFetchModeHint": "기본값은 백엔드 폐쇄 루프입니다. 백엔드가 제한되거나 시간 초과되면 브라우저가 공개 날씨 데이터를 가져와 백엔드에서 점수 계산에 사용합니다",
+    "weatherFetchModeBackend": "백엔드 폐쇄 루프(권장 기본값)",
+    "weatherFetchModeClientFallback": "백엔드 우선, 실패 시 브라우저 긴급 대체",
+    "weatherFetchModeClient": "브라우저 날씨 가져오기(디버그/긴급)",
     "notificationAndAlerts": "알림",
-    "enableSunsetNotification": "노을 예측 알림 활성화",
+    "enableSunsetNotification": "노을 알림 켜기",
     "notificationHint": "예측 품질이 임계값에 도달하면 브라우저 알림 전송",
     "notificationThresholdLabel": "알림 임계값",
     "notificationThresholdHint": "예측 점수가 이 값보다 높으면 알림 전송",
@@ -523,9 +660,9 @@ apiAccess: 'API 연동'
     "selectLanguage": "인터페이스 언어를 선택하세요"
   },
   "notifications": {
-    "title": "노을 예측 알림",
-    "excellentForecast": "오늘 저녁 노을 예측 점수: {{score}}점, 관람하기에 최적입니다!",
-    "goodForecast": "오늘 저녁 노을 예측 점수: {{score}}점, 기대할 만합니다!",
+    "title": "노을 알림",
+    "excellentForecast": "오늘 노을 점수: {{score}}점, 관람하기에 최적입니다!",
+    "goodForecast": "오늘 노을 점수: {{score}}점, 기대할 만합니다!",
     "time": "시간: {{time}}",
     "location": "위치: {{location}}",
     "enable": "알림 활성화",
@@ -568,12 +705,12 @@ apiAccess: 'API 연동'
     "bestWindow": "추천 관측 시간  {{start}} – {{end}}",
     "cloud": { "high": "상층운", "mid": "중층운", "low": "하층운" },
     "verdict": {
-      "noCarrier": "😶 색을 받을 구름이 부족해 노을구름 가능성이 매우 낮아요",
-      "excellent": "✨ 조건이 좋아 선명한 하늘빛을 기대할 수 있어요",
-      "excellentMultiLayer": "✨ 조건이 매우 좋아 관측을 강력 추천해요!",
-      "good": "✨ 조건이 괜찮고 노을구름 가능성이 높아요",
-      "fair": "💡 조건은 보통이며 실시간 구름 변화를 확인하세요",
-      "poor": "😶 노을구름 가능성이 낮아요"
+      "noCarrier": "색을 받을 구름이 부족해 노을구름 가능성이 매우 낮아요",
+      "excellent": "조건이 좋아 선명한 하늘빛을 기대할 수 있어요",
+      "excellentMultiLayer": "조건이 매우 좋아 관측을 강력 추천해요!",
+      "good": "조건이 괜찮고 노을구름 가능성이 높아요",
+      "fair": "조건은 보통이며 실시간 구름 변화를 확인하세요",
+      "poor": "노을구름 가능성이 낮아요"
     },
     "watermark": "하객 · 빛나는 하늘의 순간을 기록"
   },
@@ -605,13 +742,15 @@ apiAccess: 'API 연동'
     "timeNow": "현재",
     "timeSunset": "일몰",
     "timeSunrise": "일출",
-    "timeHint": "💡 팁: 지도 아래의 예측 시간축을 드래그하여 시간을 조정할 수도 있습니다",
+    "timeHint": "팁: 지도 아래의 예측 시간축을 드래그하여 시간을 조정할 수도 있습니다",
     "loading": "지도 로딩 중...",
     "error": "지도 로딩 실패",
     "mockNotSupported": "지도 기능은 실제 API 모드에서만 사용 가능합니다"
   },
   "surrounding": {
     "title": "주변 노을 분석",
+    "radarTitle": "주변 구름 레이더",
+    "radarSubtitle": "20km · 연속 구름장",
     "radius": "탐지 반경",
     "radiusUnit": "킬로미터",
     "directions": {
@@ -677,6 +816,9 @@ apiAccess: 'API 연동'
     "pointToast": "{{name}} 방향 | 점수: {{score}}점 | 거리: {{distance}}km",
     "emptyChinaSpots": "오늘 표시할 수 있는 노을구름 지점이 없습니다",
     "updatedAt": "{{time}} 업데이트",
+    "supportedRegions": "현재 지원: 중국 본토, 홍콩, 마카오, 대만, 일본, 대한민국, 북한 및 인도차이나반도 주요 도시. 히트맵 격자는 현재 중국 지역 중심입니다.",
+    "interactionHint": "지도를 드래그 · 스크롤로 확대/축소",
+    "tabs": { "sunrise": "아침노을", "sunset": "저녁노을" },
     "quality": { "excellent": "매우 좋음", "good": "좋음" },
     "period": { "sunriseTomorrow": "내일 아침노을", "sunsetToday": "오늘 저녁노을", "testLayer": "테스트 레이어(모의 데이터)" }
   },

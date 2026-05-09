@@ -21,8 +21,8 @@ router.get('/', (req, res) => {
   try {
     const photos = photoService.getPhotos();
 
-    // 为每张照片生成缩略图 URL
-    const withThumbUrls = photos.map(p => ({
+    // 为每张照片生成缩略图 URL；内部限额字段不对外暴露
+    const withThumbUrls = photos.map(({ uploadIpHash, uploadDay, ...p }) => ({
       ...p,
       thumbUrl: p.thumbFile ? `/api/photos/${p.id}/thumb` : null
     }));

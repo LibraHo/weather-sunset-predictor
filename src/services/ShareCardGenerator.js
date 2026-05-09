@@ -146,17 +146,20 @@ class ShareCardGenerator {
     const y0 = 62;
     const x0 = 70;
 
-    this._drawBrandLogo(ctx, x0 + 28, y0 + 28, isSunrise);
+    this._drawBrandLogo(ctx, x0 + 26, y0 + 28, isSunrise);
 
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = `bold 30px ${this.font}`;
+    // 与网站顶栏一致的字体栈（Cormorant Garamond 为首，衬线优雅）
+    const brandFont = "'Cormorant Garamond', 'PingFang SC', 'Hiragino Sans GB', Georgia, serif";
+
+    ctx.fillStyle = '#C49A3C';
+    ctx.font = `300 32px ${brandFont}`;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillText(this.t('shareCard.brandName', '霞客'), x0 + 76, y0 + 26);
+    ctx.fillText(this.t('shareCard.brandName', '霞客'), x0 + 72, y0 + 26);
 
-    ctx.fillStyle = 'rgba(255,255,255,0.58)';
-    ctx.font = `18px ${this.font}`;
-    ctx.fillText(this.t('shareCard.brandSubtitle', 'Sunset Voyager'), x0 + 76, y0 + 54);
+    ctx.fillStyle = 'rgba(196,154,60,0.72)';
+    ctx.font = `300 17px ${brandFont}`;
+    ctx.fillText(this.t('shareCard.brandSubtitle', 'Sunset Voyager'), x0 + 72, y0 + 52);
 
     ctx.textAlign = 'right';
     ctx.fillStyle = 'rgba(255,255,255,0.62)';
@@ -169,40 +172,33 @@ class ShareCardGenerator {
   _drawBrandLogo(ctx, x, y, isSunrise) {
     ctx.save();
 
-    const outerR = 30;
-    const outer = ctx.createRadialGradient(x, y, 4, x, y, outerR);
-    if (isSunrise) {
-      outer.addColorStop(0, 'rgba(255,255,255,0.95)');
-      outer.addColorStop(0.55, 'rgba(255,192,138,0.95)');
-      outer.addColorStop(1, 'rgba(255,120,80,0.92)');
-    } else {
-      outer.addColorStop(0, 'rgba(255,255,255,0.95)');
-      outer.addColorStop(0.55, 'rgba(255,176,96,0.95)');
-      outer.addColorStop(1, 'rgba(255,88,38,0.92)');
-    }
-    ctx.beginPath();
-    ctx.arc(x, y, outerR, 0, Math.PI * 2);
-    ctx.fillStyle = outer;
-    ctx.fill();
+    // 与网站顶栏一致：克制线性 SVG 风格，统一金色 #C49A3C
+    const gold = '#C49A3C';
+    ctx.strokeStyle = gold;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
 
-    // 内圈
+    ctx.lineWidth = 2.8;
     ctx.beginPath();
-    ctx.arc(x, y, 20, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255,255,255,0.22)';
-    ctx.fill();
+    ctx.arc(x, y + 4, 15.5, Math.PI, Math.PI * 2);
+    ctx.stroke();
 
-    // 品牌字母 XK
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = `bold 18px ${this.font}`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('XK', x, y + 0.5);
-
-    // 微光边
+    ctx.lineWidth = 2.8;
     ctx.beginPath();
-    ctx.arc(x, y, outerR + 1, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(255,255,255,0.45)';
-    ctx.lineWidth = 1;
+    ctx.moveTo(x - 22, y + 4);
+    ctx.lineTo(x + 22, y + 4);
+    ctx.stroke();
+
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.moveTo(x - 18, y + 12);
+    ctx.lineTo(x + 18, y + 12);
+    ctx.stroke();
+
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x - 10, y + 20);
+    ctx.lineTo(x + 10, y + 20);
     ctx.stroke();
 
     ctx.restore();
@@ -417,17 +413,17 @@ class ShareCardGenerator {
 
     let text;
     if (!hasCarrier && score < 40) {
-      text = this.t('shareCard.verdict.noCarrier', '😶 缺少色彩载体，火烧云概率极低');
+      text = this.t('shareCard.verdict.noCarrier', '缺少色彩载体，火烧云概率极低');
     } else if (score >= 80) {
       text = layerCount >= 2
-        ? this.t('shareCard.verdict.excellentMultiLayer', '✨ 极佳条件，强烈推荐出行观赏！')
-        : this.t('shareCard.verdict.excellent', '✨ 条件优秀，色彩可期');
+        ? this.t('shareCard.verdict.excellentMultiLayer', '极佳条件，强烈推荐出行观赏！')
+        : this.t('shareCard.verdict.excellent', '条件优秀，色彩可期');
     } else if (score >= 60) {
-      text = this.t('shareCard.verdict.good', '✨ 条件不错，火烧云概率较高');
+      text = this.t('shareCard.verdict.good', '条件不错，火烧云概率较高');
     } else if (score >= 40) {
-      text = this.t('shareCard.verdict.fair', '💡 条件中等，需看实际云层演变');
+      text = this.t('shareCard.verdict.fair', '条件中等，需看实际云层演变');
     } else {
-      text = this.t('shareCard.verdict.poor', '😶 火烧云概率较低');
+      text = this.t('shareCard.verdict.poor', '火烧云概率较低');
     }
 
     const cardW = 620;
@@ -472,8 +468,19 @@ class ShareCardGenerator {
   _fmtDate(d) {
     if (!d) return '';
     const dt = d instanceof Date ? d : new Date(d);
-    const wd = ['周日','周一','周二','周三','周四','周五','周六'][dt.getDay()];
-    return `${dt.getFullYear()}年${dt.getMonth()+1}月${dt.getDate()}日 ${wd}`;
+    const locale = this.i18n?.currentLanguage || 'zh-CN';
+
+    try {
+      return new Intl.DateTimeFormat(locale, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'short'
+      }).format(dt);
+    } catch (error) {
+      console.warn('[ShareCardGenerator] date formatting failed:', error);
+      return dt.toLocaleDateString(locale);
+    }
   }
 
   _fmtTime(d) {

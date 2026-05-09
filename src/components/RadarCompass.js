@@ -21,13 +21,24 @@ class RadarCompass {
 
     const cs = getComputedStyle(document.body);
     const v = k => cs.getPropertyValue(k).trim();
-    const isEnglish = (document.documentElement.lang || '').toLowerCase().startsWith('en');
+    const i18n = window.i18n;
+    const lang = (document.documentElement.lang || i18n?.currentLanguage || '').toLowerCase();
+    const isChinese = !lang || lang.startsWith('zh');
+    const pick = (zh, en) => (isChinese ? zh : en);
+    const t = (key, fallback, params = {}) => {
+      if (!i18n?.t) return fallback;
+      const translated = i18n.t(key, params);
+      return translated === key ? fallback : translated;
+    };
     const text = {
-      N: isEnglish ? 'N' : '北', NE: isEnglish ? 'NE' : '东北', E: isEnglish ? 'E' : '东', SE: isEnglish ? 'SE' : '东南',
-      S: isEnglish ? 'S' : '南', SW: isEnglish ? 'SW' : '西南', W: isEnglish ? 'W' : '西', NW: isEnglish ? 'NW' : '西北',
-      low: isEnglish ? 'Low' : '低云', mid: isEnglish ? 'Mid' : '中云', high: isEnglish ? 'High' : '高云',
-      sunrise: isEnglish ? 'Sunrise' : '日出', sunset: isEnglish ? 'Sunset' : '日落',
-      title: isEnglish ? 'Surrounding Cloud Radar' : '周边云况雷达', subtitle: isEnglish ? '20km · Continuous cloud field' : '20km · 连续云场'
+      N: t('surrounding.directions.N', pick('北', 'N')), NE: t('surrounding.directions.NE', pick('东北', 'NE')),
+      E: t('surrounding.directions.E', pick('东', 'E')), SE: t('surrounding.directions.SE', pick('东南', 'SE')),
+      S: t('surrounding.directions.S', pick('南', 'S')), SW: t('surrounding.directions.SW', pick('西南', 'SW')),
+      W: t('surrounding.directions.W', pick('西', 'W')), NW: t('surrounding.directions.NW', pick('西北', 'NW')),
+      low: t('prediction.cloudLayers.shortLow', pick('低云', 'Low')), mid: t('prediction.cloudLayers.shortMid', pick('中云', 'Mid')), high: t('prediction.cloudLayers.shortHigh', pick('高云', 'High')),
+      sunrise: t('prediction.tabs.sunrise', pick('日出', 'Sunrise')), sunset: t('prediction.tabs.sunset', pick('日落', 'Sunset')),
+      title: t('surrounding.radarTitle', pick('周边云况雷达', 'Surrounding Cloud Radar')),
+      subtitle: t('surrounding.radarSubtitle', pick('20km · 连续云场', '20km · Continuous cloud field'))
     };
     const theme = {
       // 视觉 token（无 UI token 则回退默认）
@@ -65,7 +76,7 @@ class RadarCompass {
 
   _parse(directions) {
     const ORDER = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-    const LABEL = { N: '北', NE: '东北', E: '东', SE: '东南', S: '南', SW: '西南', W: '西', NW: '西北' };
+    const LABEL = { N: 'N', NE: 'NE', E: 'E', SE: 'SE', S: 'S', SW: 'SW', W: 'W', NW: 'NW' };
     const map = new Map();
 
     directions.forEach(item => {
@@ -329,14 +340,10 @@ class RadarCompass {
     ].map(([r, lbl], i) => {
       const innerR = i === 0 ? R_LOW_INNER : [R_LOW, R_MID][i - 1];
       const [tx, ty] = this._pt(cx, cy, r - (r - innerR) / 2, 340);
-      const bw = 30;
-      const bh = 16;
       return `
         <circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}"
           fill="transparent" stroke="${ringStroke}" stroke-width="1"/>
-        <rect x="${(tx - bw / 2).toFixed(1)}" y="${(ty - bh / 2 - 1).toFixed(1)}" width="${bw}" height="${bh}" rx="8"
-          fill="${T.labelBg}"/>
-        <text x="${tx.toFixed(1)}" y="${(ty + 3.5).toFixed(1)}" font-size="11" font-weight="800"
+        <text x="${tx.toFixed(1)}" y="${(ty + 4).toFixed(1)}" font-size="12" font-weight="700"
           fill="${T.labelFill}" text-anchor="middle">${lbl}</text>`;
     }).join('');
 
@@ -356,8 +363,8 @@ class RadarCompass {
     const labels = DIR_ORDER.map(d => {
       const lbl = text[d] || { N: '北', NE: '东北', E: '东', SE: '东南', S: '南', SW: '西南', W: '西', NW: '西北' }[d];
       const [x, y] = this._pt(cx, cy, labelR, this._dirAz(d));
-      return `<text x="${x.toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="middle"
-          font-size="12" font-weight="800" fill="${T.labelFill || '#334155'}">${lbl}</text>`;
+      return `<text x="${x.toFixed(1)}" y="${(y + 5).toFixed(1)}" text-anchor="middle"
+          font-size="13" font-weight="700" fill="${T.labelFill || '#334155'}">${lbl}</text>`;
     }).join('');
 
     const getSunRadius = az => {
@@ -370,27 +377,38 @@ class RadarCompass {
       return nearCardinal ? (R_HIGH * 0.82) : (R_HIGH * 0.92);
     };
 
+    const sunEventIconSvg = (x, y, type) => {
+      const arrow = type === 'sunrise'
+        ? '<path d="M17 13V4m0 0-3 3m3-3 3 3"/>'
+        : '<path d="M17 4v9m0 0-3-3m3 3 3-3"/>';
+      return `<g class="radar-sun-event-icon" transform="translate(${(x - 11).toFixed(1)} ${(y - 8).toFixed(1)})" fill="none" stroke="${T.accent || '#f97316'}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 14h14"/>
+        <path d="M4.5 14a4 4 0 0 1 8 0"/>
+        ${arrow}
+      </g>`;
+    };
+
     let sunIcons = '';
     const isDawn = predictionType === 'sunrise';
     if (isDawn && sun.sunrise != null) {
       const iconR = getSunRadius(sun.sunrise);
       const [ix, iy] = this._pt(cx, cy, iconR, sun.sunrise);
       sunIcons = `
-        <text x="${ix.toFixed(1)}" y="${(iy + 4).toFixed(1)}" text-anchor="middle" font-size="15">🌅</text>
+        ${sunEventIconSvg(ix, iy, 'sunrise')}
         <text x="${ix.toFixed(1)}" y="${(iy + 17).toFixed(1)}" text-anchor="middle" font-size="9"
           fill="${T.subtitle || '#666666'}">${text.sunrise || '日出'}</text>`;
     } else if (!isDawn && sun.sunset != null) {
       const iconR = getSunRadius(sun.sunset);
       const [ix, iy] = this._pt(cx, cy, iconR, sun.sunset);
       sunIcons = `
-        <text x="${ix.toFixed(1)}" y="${(iy + 4).toFixed(1)}" text-anchor="middle" font-size="15">🌇</text>
+        ${sunEventIconSvg(ix, iy, 'sunset')}
         <text x="${ix.toFixed(1)}" y="${(iy + 17).toFixed(1)}" text-anchor="middle" font-size="9"
           fill="${T.subtitle || '#666666'}">${text.sunset || '日落'}</text>`;
     } else if (sun.sunset != null) {
       const iconR = getSunRadius(sun.sunset);
       const [ix, iy] = this._pt(cx, cy, iconR, sun.sunset);
       sunIcons = `
-        <text x="${ix.toFixed(1)}" y="${(iy + 4).toFixed(1)}" text-anchor="middle" font-size="15">🌇</text>
+        ${sunEventIconSvg(ix, iy, 'sunset')}
         <text x="${ix.toFixed(1)}" y="${(iy + 17).toFixed(1)}" text-anchor="middle" font-size="9"
           fill="${T.subtitle || '#666666'}">${text.sunset || '日落'}</text>`;
     }

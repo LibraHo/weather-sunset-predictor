@@ -9,6 +9,21 @@
 import Location from '../models/Location.js';
 import { CITY_DATABASE, getCityDisplayName } from '../data/cityDatabase.js';
 
+const MANUAL_TEST_CITY = {
+  zhName: 'test',
+  enName: 'test',
+  lat: 0,
+  lon: 0,
+  countryZh: '测试',
+  countryEn: 'Test',
+  aliases: ['test'],
+  displayName: 'test'
+};
+
+function isManualTestQuery(query) {
+  return typeof query === 'string' && query.trim().toLowerCase() === 'test';
+}
+
 class GeocodingService {
   constructor() {
     // 使用OpenStreetMap的Nominatim API作为地理编码服务
@@ -25,6 +40,10 @@ class GeocodingService {
     const normalized = this.normalizeQuery(query);
     if (!normalized) {
       return [];
+    }
+
+    if (isManualTestQuery(query)) {
+      return [{ ...MANUAL_TEST_CITY }].slice(0, limit);
     }
 
     const scored = this.offlineCities.map(city => {

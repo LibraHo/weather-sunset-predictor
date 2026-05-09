@@ -20,6 +20,24 @@ const GAODE_BASE     = 'https://restapi.amap.com/v3';
 const GOOGLE_BASE    = 'https://maps.googleapis.com/maps/api/geocode';
 const OPENMETEO_GEOCODING_BASE = 'https://geocoding-api.open-meteo.com/v1';
 
+const MANUAL_TEST_CITY_RESULT = {
+  name: 'test',
+  lat: 0,
+  lon: 0,
+  type: 'test',
+  provider: 'manual-test',
+  countryCode: 'CN',
+  regionCode: null
+};
+
+function isManualTestQuery(query) {
+  return typeof query === 'string' && query.trim().toLowerCase() === 'test';
+}
+
+function getManualTestCityResult(query) {
+  return isManualTestQuery(query) ? { ...MANUAL_TEST_CITY_RESULT } : null;
+}
+
 // ========== 高频城市别名映射 ==========
 // 需求44：覆盖中美欧主要城市的常用别名，便于搜索补全与结果排序
 const CITY_ALIAS_RECORDS = [
@@ -210,6 +228,15 @@ router.get('/search', async (req, res, next) => {
     }
 
     const limitNum = parseInt(limit, 10) || 8;
+    const manualTestCity = getManualTestCityResult(q);
+    if (manualTestCity) {
+      return res.json(attachSearchMeta({
+        results: [manualTestCity].slice(0, limitNum)
+      }, {
+        providerUsed: 'manual-test',
+        fallbackUsed: false
+      }));
+    }
 
     switch (provider) {
       case 'auto':
@@ -794,7 +821,9 @@ module.exports._test = {
   getQueryVariants,
   getAliasTokensForQuery,
   scoreResultByAlias,
-  rankGeocodingResults
+  rankGeocodingResults,
+  isManualTestQuery,
+  getManualTestCityResult
 };
 module.exports._private = {
   rankGeocodingResults,
@@ -803,5 +832,7 @@ module.exports._private = {
   getQueryVariants,
   getAliasTokensForQuery,
   normalizeAliasToken,
-  getAliasRecordForQuery
+  getAliasRecordForQuery,
+  isManualTestQuery,
+  getManualTestCityResult
 };

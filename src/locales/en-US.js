@@ -18,7 +18,7 @@ const translations = {
     "tabs": {
       "ariaLabel": "Home tab navigation",
       "forecast": "Forecast",
-      "methodology": "Methodology",
+    "methodology": "Methodology",
       "map": "Fire Sky Map",
       "shareMap": "Share Map",
       "apiAccess": "API Access"
@@ -26,6 +26,23 @@ const translations = {
     "menu": {
       "ariaLabel": "Switch home view",
       "dropdownAriaLabel": "Home view menu"
+    },
+    apiAccess: {
+      kicker: 'Sunset Voyager API',
+      intro: 'The Sunset Voyager Agent API provides geocoding, sunrise/sunset glow scores, and score explanations for personal, learning, and research use.',
+      openApiSpec: 'OpenAPI spec',
+      admin: 'Admin console',
+      quickStart: 'Quick start',
+      step1: 'Apply for and receive a token.',
+      step2: 'Send it in Authorization: Bearer <token>.',
+      step3: 'Call /api/agent/forecast, /api/agent/explain, or /api/agent/geocode.',
+      restrictions: 'Usage limits',
+      restrictionText: 'Personal, learning, and research use only. Commercial use is prohibited. Public displays must remove sensitive data and cite the source.',
+      exampleCall: 'Example call',
+      endpoints: 'Core endpoints',
+      forecastDesc: 'Returns score, quality level, and best viewing window.',
+      explainDesc: 'Returns score composition, key constraints, and natural-language explanation.',
+      geocodeDesc: 'Returns location candidates, coordinates, and confidence.'
     },
     "methodology": {
       "title": "Fire Cloud Calculation Method",
@@ -66,10 +83,10 @@ const translations = {
         "lightPath": {
           "title": "2. Light Path Assessment",
           "subtitle": "Light Path · Light Path Score",
-          "desc": "Light path clarity determines whether sunlight can reach cloud layers. Lower low clouds mean clearer paths with reduced obstruction probability.",
-          "lowCloudEffect": "When low clouds <30%, light path obstruction weight reduced to 0.7~0.85, allowing easier light penetration",
+          "desc": "Light path clarity determines whether sunlight can reach cloud layers. The backend now also samples 15/30/50/100km along the solar azimuth to detect openings or cloud walls.",
+          "lowCloudEffect": "When low clouds <30%, obstruction weight is reduced; if the solar-direction corridor is blocked, the light-path score is capped conservatively",
           "visibility": "Visibility: Affects light transmission clarity",
-          "formula": "Light Path Score = Base Light Path Score × Low Cloud Weight Factor"
+          "formula": "Light Path Score = geometric/local score × low-cloud factor × solar-direction corridor modifier"
         },
         "transparency": {
           "title": "3. Atmospheric Transparency",
@@ -95,6 +112,15 @@ const translations = {
           "level2": "Low Cloud 20–40% → ×1.0 to ×0.8 (linear)",
           "level3": "Low Cloud 40–70% → ×0.8 to ×0.5 (linear)",
           "level4": "Low Cloud >70% → ×0.2 (severe blockage)"
+        },
+        "thickHighCloudPenalty": {
+          "title": "6. Thick High-Cloud Penalty",
+          "subtitle": "Thick High Cloud · Cap",
+          "desc": "More high clouds do not always mean a higher score. The model now checks both cloud-curtain thickness and air transparency: clear high-cloud carriers can be protected, while thick curtains or dust haze are capped.",
+          "level1": "High clouds ≥80% with scarce low clouds trigger a two-way carrier/curtain assessment",
+          "level2": "If the air is clear and dust is not heavy, thickness signals are not allowed to over-penalize the score; the result can floor around 64–68",
+          "level3": "Low direct ratio, diffuse dominance, or very high water vapour caps thick-curtain scenes around 42–48; extreme dust/PM10/AOD caps around 28",
+          "formula": "Final correction = high-cloud carrier floor or min(final score, curtain/haze cap), separating colorable high clouds from gray-yellow light suppression"
         },
         "precipPenalty": {
           "title": "6. Precipitation Penalty",
@@ -166,6 +192,8 @@ const translations = {
     "clear": "Clear",
     "overview": "Overview",
     "hourly": "Hourly Forecast",
+    "threeDayGlow": "3-Day Glow",
+    "threeDayGlowLoading": "Loading 3-day sunrise and sunset glow...",
     "mapView": "",
     "daysOverview": "{{days}}-Day Overview",
     "precipChance": "{{prob}}% precip",
@@ -193,7 +221,89 @@ const translations = {
     "fair": "Fair",
     "poor": "Poor",
 
-    "formationAnalysis": {
+    "analysisConclusion": {
+      "excellent": "Excellent conditions. Strongly recommended.",
+      "excellentSingleLayer": "Excellent color potential, but single-layer clouds may reduce depth.",
+      "good": "Good conditions with a solid chance of dramatic fire clouds.",
+      "goodSingleLayer": "Good chance of fire clouds, but layering is limited.",
+      "fair": "Moderate conditions. Watch how the clouds evolve.",
+      "clearSunset": "Fire clouds are subtle, but the sunset is clear.",
+      "low": "Key conditions are missing; fire-cloud probability is low."
+    },
+        "scoreBreakdown": {
+      "title": "Score details",
+      "viewDetails": "View score details",
+      "finalDisplayed": "Final displayed score",
+      "baseFormula": "Base score = canvas ×0.8 + light path ×0.2",
+      "baseHint": "Base score after combining clouds and light path",
+      "canvasHint": "High/mid clouds carry color; low clouds can block it",
+      "lightPathHint": "Whether sunlight can reach the clouds",
+      "finalFormula": "Final score = base score × correction factors",
+      "renderingHint": "Humidity and visibility affect color rendering",
+      "aerosolHint": "Moderate aerosol boosts orange-red scattering; too much turns gray",
+      "ledger": {
+        "pts": "pts",
+        "whyThisScore": "Why this score",
+        "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
+        "canvasPlusLightPath": "canvas + light path",
+        "renderingFormula": "{{base}} × rendering {{factor}} = {{rendered}}",
+        "weatherTransparency": "weather transparency factor",
+        "summary": {
+          "event": "{{score}} points: {{detail}}",
+          "rendered": "{{base}} points adjusted by rendering conditions to {{rendered}}",
+          "default": "{{score}} points: calculated from cloud carrier, light path, and rendering conditions"
+        },
+        "weather": {
+          "clouds": "Cloud H/M/L {{high}}/{{mid}}/{{low}}%",
+          "visibility": "Visibility {{value}}km",
+          "humidity": "Humidity {{value}}%",
+          "rain": "Rain {{value}}mm/h"
+        },
+        "labels": {
+          "cloudCarrier": "Cloud carrier",
+          "lightPath": "Light path",
+          "baseScore": "Base score",
+          "rendering": "Rendering",
+          "final": "Final",
+          "hardCap": "Hard cap",
+          "hazeCap": "Haze cap",
+          "thickCloudCap": "Thick-cloud cap",
+          "geometryCap": "Geometry cap",
+          "occlusion": "Occlusion",
+          "carrierFloor": "Carrier floor",
+          "postRainCap": "Post-rain cap",
+          "displayCalibration": "Display calibration"
+        },
+        "details": {
+          "cloudCarrier": "usable colored cloud surface",
+          "cloudPenalty": "low cloud ×{{low}}, overcast ×{{overcast}}",
+          "lightPath": "sunlight reaches the cloud layer",
+          "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
+          "afterAdjustments": "after all caps and floors",
+          "finalDisplayed": "final displayed result",
+          "thickCloudCap": "thick high cloud reduces usable color rendering",
+          "geometryCap": "sun/cloud geometry is not feasible",
+          "occlusion": "distant obstruction reduces the score",
+          "carrierFloor": "clear high-cloud carrier prevents over-penalty",
+          "directionalSamples": "solar-azimuth samples at 15/30/50/100km are included",
+          "postRainCap": "post-rain moisture or haze turns the glow into a gray curtain",
+          "displayCalibration": "final display score is aligned with the prediction status band"
+        },
+        "reasons": {
+          "precipitationCap45": "rain with low clouds capped the score at 45",
+          "overcastCap35": "low-cloud overcast capped the score at 35",
+          "overcastFogCap15": "overcast sky plus visibility ≤5km capped the score at 15",
+          "rainyMidCloudOvercastCap35": "rainy gray mid-cloud overcast capped the score at 35",
+          "extremeDustHazeCap28": "severe dust/haze capped the score at 28",
+          "severeHazeCap35": "heavy haze capped the score at 35",
+          "moderateHazeCap45": "moderate haze capped the score at 45",
+          "adjustmentApplied": "cap/floor adjustment applied",
+          "displayCalibration": "final display score is aligned with the prediction status band",
+          "lightPathStatusCap60": "light path is only {{light}}, so the result is capped to the light-glow band around 60",
+          "canvasStatusCap40": "cloud carrier is only {{canvas}}, so the result is capped to the no-fire-cloud band below 40"
+        }
+      }},
+"formationAnalysis": {
       "title": "Fire cloud formation analysis",
       "groups": { "positive": "Favorable", "neutral": "Neutral", "warning": "Watch-outs" },
       "high": { "abundant": "Abundant high clouds ({{value}}%)", "abundantDesc": "Strong color base", "sufficient": "Sufficient high clouds ({{value}}%)", "sufficientDesc": "Good color carrier", "moderate": "Moderate high clouds ({{value}}%)", "moderateDesc": "Possible, but colors may be lighter", "few": "Too few high clouds ({{value}}%)", "fewDesc": "Main color carrier is lacking" },
@@ -202,6 +312,8 @@ const translations = {
       "visibility": { "good": "Good visibility ({{value}}km)", "goodDesc": "Clear air, good distance", "moderate": "Moderate visibility ({{value}}km)", "moderateDesc": "Saturation may drop", "low": "Low visibility ({{value}}km)", "lowDesc": "Haze or moisture may affect the view" },
       "humidity": { "moderate": "Moderate humidity ({{value}}%)", "moderateDesc": "Helps light scattering", "high": "High humidity ({{value}}%)", "highDesc": "May reduce transparency", "low": "Low humidity ({{value}}%)", "lowDesc": "Dry air may lighten colors" },
       "aerosol": { "moderate": "Moderate aerosol (AOD {{value}})", "moderateDesc": "Boosts orange-red scattering", "high": "High aerosol (AOD {{value}})", "highDesc": "May look hazy or dull", "low": "Very clear air (AOD {{value}})", "lowDesc": "Colors may be lighter" },
+      "lightPath": { "opening": "Opening toward the sun", "openingDesc": "Backend samples 15/30/50/100km along the solar azimuth; the low/mid-cloud corridor is relatively open", "wall": "Cloud wall toward the sun", "wallDesc": "Low or mid clouds along the solar direction suppress the main score" },
+      "postRain": { "clear": "Clear post-rain air", "clearDesc": "Rain in the last 6h is kept as a bonus because visibility and particles are acceptable", "gray": "Post-rain gray-curtain risk", "grayDesc": "Moisture, particles, or weak direct light after rain cap the score conservatively" },
       "layer": { "single": "Single cloud layer", "singleDesc": "High clouds can still color well" }
     },
     "status": {
@@ -222,6 +334,8 @@ const translations = {
       "conditionsFair": "Fair conditions, possibly scattered colors",
       "canWatch": "Can watch",
       "conditionsGood": "Good conditions with some viewing value",
+      "clearSunsetTransparent": "Fire clouds are subtle, but the sunset is clear.",
+      "casualViewingOk": "Worth a casual look",
       "veryLikely": "High probability of beautiful sunset",
       "excellentConditions": "Moderate clouds with clear light path",
       "legendaryEruption": "Legendary eruption",
@@ -267,11 +381,26 @@ const translations = {
       "thickDesc": "Thick clouds may block light, limited glow effect",
       "unknownDesc": "Cloud thickness data unavailable"
     },
+
+    "thickHighCloud": {
+      "title": "Thick high-cloud penalty",
+      "scoreHint": "Thick high-cloud curtain with weak direct light; only local glow is likely, so the final score is capped",
+      "analysisTitle": "Thick high-cloud curtain",
+      "analysisDesc": "High clouds are abundant, but they are thick and direct light is weak, so glow is usually limited near the sunset direction"
+    },
+    "highCloudCarrier": {
+      "title": "High-cloud carrier floor",
+      "scoreHint": "When high clouds are abundant, low clouds are scarce, and air is clear enough, avoid over-penalizing the score"
+    },
+    "aerosolHaze": {
+      "title": "Dust/haze cap",
+      "scoreHint": "Very high AOD, dust, or PM10 can suppress color even when high clouds are abundant"
+    },
     "lightPath": {
       "title": "Light Path Score",
       "score": "Light Path Score",
       "visibility": "Visibility",
-      "lightPathScore": "🌅 Light path: {{score}}pts "
+      "lightPathScore": "Light path: {{score}}pts "
     },
     "rendering": {
       "title": "Rendering Score",
@@ -300,7 +429,7 @@ const translations = {
         "moderate": "Moderate cloud thickness",
         "thick": "Thick clouds, limited light transmission",
         "unknown": "Cloud thickness data unavailable"
-      },
+      }
     },
     "composite": {
       "title": "Composite Score",
@@ -356,7 +485,7 @@ const translations = {
       "someLowCloud": "⚠️ Some low clouds ({{value}}%), may partially block view",
       "denseLowCloud": "❌ Dense low clouds ({{value}}%), seriously affecting viewing",
       "excellentConditions": "🌟 All conditions for magnificent fire clouds are met!",
-      "highProbability": "✨ High probability of spectacular fire cloud scenery",
+      "highProbability": "High probability of spectacular fire cloud scenery",
       "moderateProbability": "💫 Possible mild fire cloud effects",
       "lowProbability": "⛅ Low probability of significant fire clouds",
       "noCloudNoFireCloud": "❌ Severely insufficient cloud cover, cannot form fire clouds"
@@ -402,18 +531,20 @@ const translations = {
     "bestWindow": "Best viewing  {{start}} – {{end}}",
     "cloud": { "high": "High Cloud", "mid": "Mid Cloud", "low": "Low Cloud" },
     "verdict": {
-      "noCarrier": "😶 Not enough color carrier clouds; fire-cloud chance is very low",
-      "excellent": "✨ Excellent conditions; colorful sky is promising",
-      "excellentMultiLayer": "✨ Excellent conditions; strongly recommended for viewing!",
-      "good": "✨ Good conditions; fire-cloud chance is high",
-      "fair": "💡 Moderate conditions; watch real-time cloud changes",
-      "poor": "😶 Fire-cloud chance is low"
+      "noCarrier": "Not enough color carrier clouds; fire-cloud chance is very low",
+      "excellent": "Excellent conditions; colorful sky is promising",
+      "excellentMultiLayer": "Excellent conditions; strongly recommended for viewing!",
+      "good": "Good conditions; fire-cloud chance is high",
+      "fair": "Moderate conditions; watch real-time cloud changes",
+      "poor": "Fire-cloud chance is low"
     },
     "watermark": "Xiake · Capture every brilliant sky"
   },
 
   "surrounding": {
     "title": "Surrounding Fire Cloud Analysis",
+    "radarTitle": "Surrounding Cloud Radar",
+    "radarSubtitle": "20km · Continuous cloud field",
     "radius": "Detection Radius",
     "radiusUnit": "km",
     "directions": {
@@ -463,6 +594,9 @@ const translations = {
     "pointToast": "{{name}} direction | Score: {{score}} pts | Distance: {{distance}} km",
     "emptyChinaSpots": "No visible fire-cloud spots today",
     "updatedAt": "Updated at {{time}}",
+    "supportedRegions": "Currently supported: Mainland China, Hong Kong, Macao, Taiwan, Japan, South Korea, North Korea, and major cities in mainland Southeast Asia. The heatmap grid is currently focused on China.",
+    "interactionHint": "Drag the map · scroll to zoom",
+    "tabs": { "sunrise": "Sunrise", "sunset": "Sunset" },
     "quality": { "excellent": "Excellent", "good": "Good" },
     "period": { "sunriseTomorrow": "Tomorrow's sunrise glow", "sunsetToday": "Today's sunset glow", "testLayer": "Test layer (mock data)" }
   },
@@ -540,6 +674,11 @@ const translations = {
     "proxyUrl": "Backend Server URL",
     "proxyUrlPlaceholder": "http://localhost:3000",
     "proxyUrlHint": "Backend proxy server URL address",
+    "weatherFetchMode": "Weather fetch mode",
+    "weatherFetchModeHint": "Backend closed loop by default; if the backend is rate-limited or times out, the browser may fetch public weather and send it back for backend scoring",
+    "weatherFetchModeBackend": "Backend closed loop (recommended default)",
+    "weatherFetchModeClientFallback": "Backend first, browser emergency fallback",
+    "weatherFetchModeClient": "Browser weather fetch (debug/emergency)",
     "notificationAndAlerts": "Notifications & Alerts",
     "enableSunsetNotification": "Enable sunset glow notifications",
     "notificationHint": "Send browser notification when prediction quality reaches threshold",
@@ -656,7 +795,7 @@ const translations = {
     "timeNow": "Now",
     "timeSunset": "Sunset",
     "timeSunrise": "Sunrise",
-    "timeHint": "💡 Tip: You can also use the forecast timeline at the bottom of the map",
+    "timeHint": "Tip: You can also use the forecast timeline at the bottom of the map",
     "loading": "Loading map...",
     "error": "Failed to load map",
     "mockNotSupported": "Map functionality is only available in real API mode"

@@ -98,7 +98,7 @@
               <button class="home-view-option" role="menuitemradio" aria-checked="false" data-view="methodology" data-i18n="home.tabs.methodology">火烧云计算方法</button>
               <button class="home-view-option" role="menuitemradio" aria-checked="false" data-view="map" data-i18n="home.tabs.map">火烧云地图</button>
               <button class="home-view-option" role="menuitemradio" aria-checked="false" data-view="gallery" data-i18n="home.tabs.shareMap">分享地图</button>
-              <a href="/api-apply.html" class="home-view-option home-view-link" role="menuitem" data-i18n="home.tabs.apiAccess">API接入</a>
+              <button class="home-view-option" role="menuitemradio" aria-checked="false" data-view="api" data-i18n="home.tabs.apiAccess">API接入</button>
             </div>
           </div>
           <div class="header-actions">
@@ -167,7 +167,15 @@
             <div class="weather-main-layout">
               <div class="weather-visual-panel">
                 <!-- 位置（移至左主卡顶部） -->
-                <div id="weather-location" class="weather-location-inline" data-i18n="weather.currentLocation">--</div>
+                <div class="weather-location-inline weather-location-hero">
+                  <span class="weather-location-pin" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 21s6-5.3 6-11a6 6 0 1 0-12 0c0 5.7 6 11 6 11Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                      <circle cx="12" cy="10" r="2.1" stroke="currentColor" stroke-width="1.8"/>
+                    </svg>
+                  </span>
+                  <span id="weather-location" data-i18n="weather.currentLocation">--</span>
+                </div>
 
                 <div class="weather-icon-large" id="weather-icon-main">☀️</div>
                 <div class="weather-desc" id="weather-description">--</div>
@@ -176,9 +184,22 @@
                   <span id="current-temp-unit" class="temp-unit">°C</span>
                 </div>
                 <div class="weather-wind-main">
+                  <span class="weather-wind-glyph" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M3.5 8.5h9.2c1.7 0 2.8-.9 2.8-2.1 0-1-.8-1.8-1.9-1.8-.8 0-1.5.4-1.9 1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M3.5 13h14.7c1.9 0 3.1 1 3.1 2.5 0 1.3-1 2.4-2.4 2.4-1 0-1.9-.5-2.4-1.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M3.5 17.5h7.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                  </span>
                   <span id="current-wind-speed" class="weather-wind-speed">--</span>
+                  <span class="weather-wind-divider" aria-hidden="true"></span>
                   <span id="current-wind-direction-text" class="weather-wind-direction-text">--</span>
-                  <span id="current-wind-direction-icon" class="weather-wind-direction-icon" aria-hidden="true">↑</span>
+                  <span id="current-wind-direction-icon" class="weather-wind-direction-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 19V5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      <path d="m6.5 10.5 5.5-5.5 5.5 5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </span>
                 </div>
               </div>
 
@@ -222,6 +243,7 @@
         <div class="view-toggle weather-view-toggle xiake-toggle" data-toggle-template="segmented">
           <button id="overview-btn" class="btn btn-toggle xiake-toggle-btn active" data-i18n="weather.overview">7天概览</button>
           <button id="hourly-btn" class="btn btn-toggle xiake-toggle-btn" data-i18n="weather.hourly">详细预报</button>
+          <button id="three-day-glow-btn" class="btn btn-toggle xiake-toggle-btn" data-i18n="weather.threeDayGlow">3天朝晚霞</button>
         </div>
 
         <!-- 7天概览视图 -->
@@ -299,24 +321,40 @@
           </div>
         </div>
 
+        <!-- 3天朝晚霞 -->
+        <div id="three-day-glow" class="weather-view hidden">
+          <div id="forecast-loading" class="three-day-glow-loading" role="status" aria-live="polite">
+            <div class="spinner three-day-glow-spinner" aria-hidden="true"></div>
+            <div class="three-day-glow-loading-copy">
+              <p data-i18n="weather.threeDayGlowLoading">正在读取3天朝晚霞...</p>
+              <div class="loading-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="64">
+                <div class="loading-progress-fill three-day-glow-progress-fill"></div>
+              </div>
+            </div>
+          </div>
+          <div id="forecast-timeline" data-loaded="false">
+            <!-- 动态填充未来朝晚霞 -->
+          </div>
+        </div>
+
         <div id="weather-error" class="error-message hidden"></div>
       </section>
       
       <!-- 晚霞预测 -->
       <section id="prediction-section" class="card hidden">
         <h2 id="prediction-section-title" data-i18n="prediction.title">朝霞/晚霞预测</h2>
+        <div id="loading-indicator" class="loading hidden">
+          <div class="spinner"></div>
+          <p id="loading-text" data-i18n="common.loading">加载中...</p>
+          <div class="loading-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div id="loading-progress-fill" class="loading-progress-fill"></div>
+          </div>
+          <p id="loading-progress-detail" class="loading-progress-detail" aria-live="polite"></p>
+        </div>
         <div id="prediction-display">
           <!-- 动态填充预测信息 -->
         </div>
         <!-- 火烧云地图和雷达已移至独立地图页面 -->
-      </section>
-
-      <!-- 未来预测 -->
-      <section id="forecast-section" class="card hidden">
-        <h2 data-i18n="forecast.title">未来预测</h2>
-        <div id="forecast-timeline">
-          <!-- 动态填充时间线 -->
-        </div>
       </section>
 
       </div>
@@ -399,6 +437,21 @@
             </ul>
             <p class="methodology-formula" data-i18n="home.methodology.sections.precipPenalty.formula">最终得分 = 基础分 × 低云系数 × 降水系数</p>
           </article>
+
+          <!-- 第六部分：厚高云惩罚 -->
+          <article class="methodology-item">
+            <h3>
+              <span data-i18n="home.methodology.sections.thickHighCloudPenalty.title">6. 厚高云惩罚</span>
+              <small data-i18n="home.methodology.sections.thickHighCloudPenalty.subtitle">Thick High Cloud · Cap</small>
+            </h3>
+            <p data-i18n="home.methodology.sections.thickHighCloudPenalty.desc">高云多不一定代表高分；需要同时判断云幕厚度与空气透明度。清透高云可保底，厚云幕或沙尘灰幕会封顶。</p>
+            <ul class="methodology-detail-list">
+              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level1">高云≥80% 且低云很少：先进入高云载体/厚云幕双向判定</li>
+              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level2">空气通透、沙尘不重时：避免云厚信号误伤，可保底到约64–68分</li>
+              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level3">直射比低、漫射主导或水汽很高：厚云幕封顶约42–48分；沙尘/PM10/AOD 极高时封顶约28分</li>
+            </ul>
+            <p class="methodology-formula" data-i18n="home.methodology.sections.thickHighCloudPenalty.formula">最终修正 = 高云载体保底 或 min(最终分, 厚云幕/灰幕封顶)，用于区分“能染色的高云”和“灰黄遮光的云幕”</p>
+          </article>
         </div>
 
         <div class="methodology-score-guide">
@@ -431,24 +484,25 @@
       <!-- 火烧云地图页面 -->
       <section id="tab-panel-map" class="card map-panel hidden" role="tabpanel" aria-label="map-panel" tabindex="0" hidden>
         <div class="map-panel-header">
-          <h2 data-i18n="home.tabs.map">🗺️ 火烧云地图 <span class="map-panel-subtitle">仅支持中国大陆</span></h2>
+          <h2 data-i18n="home.tabs.map">火烧云地图</h2>
           <div class="map-panel-timestamp-wrapper">
             <span id="china-spots-timestamp"></span>
           </div>
         </div>
+        <div class="map-supported-regions" data-i18n="weatherMap.supportedRegions">目前支持：中国大陆、港澳台、日本、韩国、朝鲜及中南半岛主要城市；热力栅格当前以中国区域为主。</div>
         <!-- 时段切换 tabs -->
-        <div id="china-spots-tabs-container" class="china-spots-tabs-container">
-          <button id="map-tab-sunrise" data-period="sunrise" class="china-spots-tab">朝霞 🌄</button>
-          <button id="map-tab-sunset" data-period="sunset" class="china-spots-tab is-active">晚霞 🌅</button>
+        <div id="china-spots-tabs-container" class="china-spots-tabs-container xiake-toggle" data-toggle-template="segmented">
+          <button id="map-tab-sunrise" data-period="sunrise" class="china-spots-tab xiake-toggle-btn" data-i18n="weatherMap.tabs.sunrise">朝霞</button>
+          <button id="map-tab-sunset" data-period="sunset" class="china-spots-tab xiake-toggle-btn is-active active" data-i18n="weatherMap.tabs.sunset">晚霞</button>
         </div>
         <!-- 时段说明 -->
         <div id="china-spots-period-label" class="china-spots-period-label"></div>
         <!-- Leaflet 地图（可拖拽 + 缩放） -->
         <div id="china-spots-map" class="china-spots-map"></div>
-        <div id="china-spots-empty" class="china-spots-empty hidden">今日暂无可见火烧云点位</div>
+        <div id="china-spots-empty" class="china-spots-empty hidden" data-i18n="weatherMap.emptyChinaSpots">今日暂无可见火烧云点位</div>
         <!-- 任务 64.8：朝/晚霞双时段分数并行展示 -->
         <div id="china-spots-dual-score" class="china-spots-dual-score hidden"></div>
-        <p class="map-panel-hint">💡 可拖拽地图 · 滚轮缩放</p>
+        <p class="map-panel-hint" data-i18n="weatherMap.interactionHint">可拖拽地图 · 滚轮缩放</p>
         <!-- Phase 18：周边火烧云雷达罗盘 -->
         <div id="radar-compass-container" class="radar-compass-container"></div>
       </section>
@@ -464,11 +518,51 @@
         </div>
       </section>
 
-    <!-- 加载指示器 -->
-      <div id="loading-indicator" class="loading hidden">
-        <div class="spinner"></div>
-        <p data-i18n="common.loading">加载中...</p>
-      </div>
+      <!-- API 接入页面：复用主站框架与 Home Menu，不再使用独立顶栏 -->
+      <section id="tab-panel-api" class="card api-access-panel hidden" role="tabpanel" aria-label="api-panel" tabindex="0" hidden>
+        <div class="api-access-hero">
+          <div>
+            <p class="api-access-kicker" data-i18n="home.apiAccess.kicker">Sunset Voyager API</p>
+            <h2 data-i18n="home.tabs.apiAccess">API接入</h2>
+            <p data-i18n="home.apiAccess.intro">霞客 Agent API 提供地点解析、朝霞/晚霞评分和评分解释，适合个人、学习与研究场景。</p>
+          </div>
+          <div class="api-access-actions">
+            <a href="/api/agent/openapi.json" class="btn btn-secondary" data-i18n="home.apiAccess.openApiSpec">OpenAPI 规格</a>
+            <a href="/admin" class="btn btn-secondary" data-i18n="home.apiAccess.admin">管理后台</a>
+          </div>
+        </div>
+
+        <div class="api-access-grid">
+          <article class="api-access-card">
+            <h3 data-i18n="home.apiAccess.quickStart">快速开始</h3>
+            <ol>
+              <li data-i18n="home.apiAccess.step1">申请并获取 Token。</li>
+              <li data-i18n="home.apiAccess.step2">请求时在 Authorization: Bearer &lt;token&gt; 中传入。</li>
+              <li data-i18n="home.apiAccess.step3">调用 /api/agent/forecast、/api/agent/explain 或 /api/agent/geocode。</li>
+            </ol>
+          </article>
+          <article class="api-access-card">
+            <h3 data-i18n="home.apiAccess.restrictions">使用限制</h3>
+            <p class="api-access-warning" data-i18n="home.apiAccess.restrictionText">仅限个人/学习/研究用途，禁止商用。公开展示请脱敏并标明来源。</p>
+          </article>
+        </div>
+
+        <div class="api-access-card">
+          <h3 data-i18n="home.apiAccess.exampleCall">示例调用</h3>
+          <pre class="code-box">curl -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  "https://sunset.bjhyc.online/api/agent/explain?location=%E5%8C%97%E4%BA%AC&amp;type=sunset&amp;date=today"</pre>
+        </div>
+
+        <div class="api-access-card">
+          <h3 data-i18n="home.apiAccess.endpoints">核心接口</h3>
+          <div class="api-endpoint-list">
+            <div><span class="mono">/forecast</span><small data-i18n="home.apiAccess.forecastDesc">返回评分、质量等级和最佳观赏窗口。</small></div>
+            <div><span class="mono">/explain</span><small data-i18n="home.apiAccess.explainDesc">返回评分构成、关键限制和自然语言解释。</small></div>
+            <div><span class="mono">/geocode</span><small data-i18n="home.apiAccess.geocodeDesc">返回地点候选、坐标和置信度。</small></div>
+          </div>
+        </div>
+      </section>
+
     </main>
 
     <footer>

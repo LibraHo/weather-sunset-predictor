@@ -18,7 +18,7 @@ const translations = {
     "tabs": {
       "ariaLabel": "Điều hướng tab trang chủ",
       "forecast": "Chức năng dự báo",
-      "methodology": "Phương pháp tính điểm mây đẹp",
+    "methodology": "Phương pháp tính điểm mây đẹp",
       "map": "Bản đồ Ráng đỏ",
       "shareMap": "Bản đồ chia sẻ",
       "apiAccess": "Truy cập API"
@@ -26,6 +26,23 @@ const translations = {
     "menu": {
       "ariaLabel": "Chuyển trang",
       "dropdownAriaLabel": "Menu chuyển trang"
+    },
+    apiAccess: {
+      kicker: 'Sunset Voyager API',
+      intro: 'The Sunset Voyager Agent API provides geocoding, sunrise/sunset glow scores, and score explanations for personal, learning, and research use.',
+      openApiSpec: 'OpenAPI spec',
+      admin: 'Admin console',
+      quickStart: 'Quick start',
+      step1: 'Apply for and receive a token.',
+      step2: 'Send it in Authorization: Bearer <token>.',
+      step3: 'Call /api/agent/forecast, /api/agent/explain, or /api/agent/geocode.',
+      restrictions: 'Usage limits',
+      restrictionText: 'Personal, learning, and research use only. Commercial use is prohibited. Public displays must remove sensitive data and cite the source.',
+      exampleCall: 'Example call',
+      endpoints: 'Core endpoints',
+      forecastDesc: 'Returns score, quality level, and best viewing window.',
+      explainDesc: 'Returns score composition, key constraints, and natural-language explanation.',
+      geocodeDesc: 'Returns location candidates, coordinates, and confidence.'
     },
     "methodology": {
       "title": "Phương pháp tính điểm mây đẹp",
@@ -87,6 +104,15 @@ const translations = {
           "level2": "Mây thấp 20–40% → ×1.0 đến ×0.8 (tuyến tính)",
           "level3": "Mây thấp 40–70% → ×0.8 đến ×0.5 (tuyến tính)",
           "level4": "Mây thấp >70% → ×0.2 (chặn nghiêm trọng)"
+        },
+        "thickHighCloudPenalty": {
+          "title": "6. Phạt mây cao dày",
+          "subtitle": "Thick High Cloud · Giới hạn",
+          "desc": "Nhiều mây cao không luôn đồng nghĩa điểm cao. Khi mây cao tạo thành màn dày, ánh sáng trực tiếp yếu và ánh sáng tán xạ chiếm ưu thế, thường chỉ có vệt sáng cục bộ gần hoàng hôn.",
+          "level1": "Mây cao ≥80% và tổng mây ≥60% sẽ kích hoạt kiểm tra rủi ro",
+          "level2": "Tỉ lệ ánh sáng trực tiếp thấp, tán xạ trội hoặc hơi nước rất cao sẽ hạ điểm đường sáng",
+          "level3": "Màn mây dày bị giới hạn khoảng 42–48 điểm để tránh báo quá tốt",
+          "formula": "Hiệu chỉnh mây cao dày = min(điểm cuối, 42–48), dùng cho lớp mây dày chỉ hở sáng cục bộ"
         },
         "precipPenalty": {
           "title": "5. Hệ số phạt lượng mưa",
@@ -166,6 +192,8 @@ const translations = {
     "clear": "Trời Quang",
     "overview": "Tổng Quan",
     "hourly": "Dự Báo Theo Giờ",
+    "threeDayGlow": "Ráng trời 3 ngày",
+    "threeDayGlowLoading": "Đang tải ráng bình minh và hoàng hôn trong 3 ngày...",
     "daysOverview": "Tổng Quan {{days}} Ngày",
     "precipChance": "{{prob}}% khả năng mưa",
     "dataInfo": "ℹ️ Nguồn dữ liệu cung cấp dữ liệu dự báo {{hours}} giờ (~{{days}} ngày). Cân nhắc sử dụng nguồn dữ liệu thời tiết khác để có nhiều ngày hơn.",
@@ -193,7 +221,92 @@ const translations = {
     "fair": "Bình Thường",
     "poor": "Kém",
 
-    "formationAnalysis": {
+    "analysisConclusion": {
+      "excellent": "Điều kiện rất tốt, rất nên ra ngoài quan sát.",
+      "excellentSingleLayer": "Tiềm năng màu sắc cao, nhưng mây một tầng có thể làm giảm chiều sâu.",
+      "good": "Điều kiện tốt, có khả năng khá cao xuất hiện mây hoàng hôn rực rỡ.",
+      "goodSingleLayer": "Khả năng xuất hiện mây đẹp khá tốt, nhưng độ phân tầng còn hạn chế.",
+      "fair": "Điều kiện trung bình; cần theo dõi diễn biến mây thực tế.",
+      "clearSunset": "Fire clouds are subtle, but the sunset is clear.",
+      "low": "Thiếu điều kiện then chốt, khả năng xuất hiện mây đẹp thấp."
+    },
+        "scoreBreakdown": {
+      "title": "Chi tiết điểm",
+      "viewDetails": "Xem chi tiết điểm",
+      "finalDisplayed": "Điểm cuối hiển thị",
+      "baseFormula": "Điểm cơ sở = nền mây ×0,8 + đường sáng ×0,2",
+      "baseHint": "Điểm cơ sở sau khi kết hợp mây và đường sáng",
+      "canvasHint": "Mây cao/trung tầng mang màu; mây thấp có thể che khuất",
+      "lightPathHint": "Ánh nắng có chiếu tới lớp mây hay không",
+      "finalFormula": "Điểm cuối = điểm cơ sở × hệ số hiệu chỉnh",
+      "renderingHint": "Độ ẩm và tầm nhìn ảnh hưởng đến màu sắc",
+      "aerosolHint": "Aerosol vừa phải tăng tán xạ cam đỏ; quá nhiều sẽ làm xám màu"
+,
+
+      "ledger": {
+        "pts": "pts",
+        "whyThisScore": "Why this score",
+        "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
+        "canvasPlusLightPath": "canvas + light path",
+        "renderingFormula": "{{base}} × rendering {{factor}} = {{rendered}}",
+        "weatherTransparency": "weather transparency factor",
+        "summary": {
+          "event": "{{score}} points: {{detail}}",
+          "rendered": "{{base}} points adjusted by rendering conditions to {{rendered}}",
+          "default": "{{score}} points: calculated from cloud carrier, light path, and rendering conditions"
+        },
+        "weather": {
+          "clouds": "Cloud H/M/L {{high}}/{{mid}}/{{low}}%",
+          "visibility": "Visibility {{value}}km",
+          "humidity": "Humidity {{value}}%",
+          "rain": "Rain {{value}}mm/h"
+        },
+        "labels": {
+          "cloudCarrier": "Cloud carrier",
+          "lightPath": "Light path",
+          "baseScore": "Base score",
+          "rendering": "Rendering",
+          "final": "Final",
+          "hardCap": "Hard cap",
+          "hazeCap": "Haze cap",
+          "thickCloudCap": "Thick-cloud cap",
+          "geometryCap": "Geometry cap",
+          "occlusion": "Occlusion",
+          "carrierFloor": "Carrier floor",
+          "postRainCap": "Post-rain cap",
+          "displayCalibration": "Display calibration"
+        },
+        "details": {
+          "cloudCarrier": "usable colored cloud surface",
+          "cloudPenalty": "low cloud ×{{low}}, overcast ×{{overcast}}",
+          "lightPath": "sunlight reaches the cloud layer",
+          "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
+          "afterAdjustments": "after all caps and floors",
+          "finalDisplayed": "final displayed result",
+          "thickCloudCap": "thick high cloud reduces usable color rendering",
+          "geometryCap": "sun/cloud geometry is not feasible",
+          "occlusion": "distant obstruction reduces the score",
+          "carrierFloor": "clear high-cloud carrier prevents over-penalty",
+          "directionalSamples": "solar-azimuth samples at 15/30/50/100km are included",
+          "postRainCap": "post-rain moisture or haze turns the glow into a gray curtain",
+          "displayCalibration": "final display score is aligned with the prediction status band"
+        },
+        "reasons": {
+          "precipitationCap45": "rain with low clouds capped the score at 45",
+          "overcastCap35": "low-cloud overcast capped the score at 35",
+          "overcastFogCap15": "overcast sky plus visibility ≤5km capped the score at 15",
+          "rainyMidCloudOvercastCap35": "rainy gray mid-cloud overcast capped the score at 35",
+          "extremeDustHazeCap28": "severe dust/haze capped the score at 28",
+          "severeHazeCap35": "heavy haze capped the score at 35",
+          "moderateHazeCap45": "moderate haze capped the score at 45",
+          "adjustmentApplied": "cap/floor adjustment applied",
+          "displayCalibration": "final display score is aligned with the prediction status band",
+          "lightPathStatusCap60": "light path is only {{light}}, so the result is capped to the light-glow band around 60",
+          "canvasStatusCap40": "cloud carrier is only {{canvas}}, so the result is capped to the no-fire-cloud band below 40"
+        }
+      }
+    },
+"formationAnalysis": {
       "title": "Phân tích điều kiện hình thành mây đẹp",
       "groups": { "positive": "Điều kiện thuận lợi", "neutral": "Yếu tố trung tính", "warning": "Điểm cần chú ý" },
       "high": { "abundant": "Mây cao dồi dào ({{value}}%)", "abundantDesc": "Nền mây mang màu rất tốt", "sufficient": "Mây cao đủ ({{value}}%)", "sufficientDesc": "Có lớp mây tốt để bắt màu hoàng hôn", "moderate": "Mây cao vừa phải ({{value}}%)", "moderateDesc": "Có khả năng xuất hiện nhưng màu có thể nhạt", "few": "Mây cao hơi ít ({{value}}%)", "fewDesc": "Thiếu lớp mây chính để mang màu" },
@@ -201,6 +314,8 @@ const translations = {
       "low": { "few": "Mây thấp ít ({{value}}%)", "fewDesc": "Tầm nhìn khá thoáng", "some": "Mây thấp hơi nhiều ({{value}}%)", "someDesc": "Có thể che một phần màu gần đường chân trời", "thick": "Mây thấp dày ({{value}}%)", "thickDesc": "Nguy cơ che khuất cao" },
       "visibility": { "good": "Tầm nhìn tốt ({{value}}km)", "goodDesc": "Không khí trong, tầm nhìn tốt", "moderate": "Tầm nhìn trung bình ({{value}}km)", "moderateDesc": "Độ bão hòa màu có thể giảm nhẹ", "low": "Tầm nhìn thấp ({{value}}km)", "lowDesc": "Bụi mờ hoặc hơi nước có thể ảnh hưởng quan sát" },
       "humidity": { "moderate": "Độ ẩm vừa phải ({{value}}%)", "moderateDesc": "Có lợi cho tán xạ ánh sáng", "high": "Độ ẩm cao ({{value}}%)", "highDesc": "Có thể giảm độ trong", "low": "Độ ẩm thấp ({{value}}%)", "lowDesc": "Không khí khô có thể làm màu nhạt hơn" },
+      "lightPath": { "opening": "Opening toward the sun", "openingDesc": "Backend samples 15/30/50/100km along the solar azimuth; the low/mid-cloud corridor is relatively open", "wall": "Cloud wall toward the sun", "wallDesc": "Low or mid clouds along the solar direction suppress the main score" },
+      "postRain": { "clear": "Clear post-rain air", "clearDesc": "Rain in the last 6h is kept as a bonus because visibility and particles are acceptable", "gray": "Post-rain gray-curtain risk", "grayDesc": "Moisture, particles, or weak direct light after rain cap the score conservatively" },
       "aerosol": { "moderate": "Aerosol vừa phải (AOD {{value}})", "moderateDesc": "Tăng tán xạ cam đỏ", "high": "Aerosol cao (AOD {{value}})", "highDesc": "Có thể trông mờ hoặc tối", "low": "Không khí quá trong (AOD {{value}})", "lowDesc": "Màu có thể nhạt hơn" },
       "layer": { "single": "Một lớp mây", "singleDesc": "Nếu mây cao tốt, vẫn có thể tạo màu hoàng hôn rõ" }
     },
@@ -222,6 +337,8 @@ const translations = {
       "conditionsFair": "Điều kiện bình thường, có thể có màu sắc rải rác",
       "canWatch": "Có thể quan sát",
       "conditionsGood": "Điều kiện tốt, có giá trị quan sát nhất định",
+      "clearSunsetTransparent": "Fire clouds are subtle, but the sunset is clear.",
+      "casualViewingOk": "Worth a casual look",
       "veryLikely": "Khả năng cao có ánh hoàng hôn đẹp",
       "excellentConditions": "Mây vừa phải với đường ánh sáng rõ ràng",
       "legendaryEruption": "Sự bùng nổ huyền thoại",
@@ -254,11 +371,26 @@ const translations = {
       "tooManyLowClouds": "Quá nhiều mây thấp",
       "lowCloudAmount": "Lượng mây thấp"
     },
+
+    "thickHighCloud": {
+      "title": "Phạt mây cao dày",
+      "scoreHint": "Màn mây cao dày, ánh sáng trực tiếp yếu; chỉ có sáng cục bộ nên điểm cuối bị giới hạn",
+      "analysisTitle": "Màn mây cao dày",
+      "analysisDesc": "Mây cao nhiều nhưng dày và ánh sáng trực tiếp yếu, thường chỉ còn vệt sáng cục bộ gần hướng hoàng hôn"
+    },
+    "highCloudCarrier": {
+      "title": "Sàn điểm mây cao",
+      "scoreHint": "Mây cao nhiều, ít mây thấp và không khí đủ trong: tránh phạt quá mức do tín hiệu mây dày"
+    },
+    "aerosolHaze": {
+      "title": "Giới hạn bụi/mù",
+      "scoreHint": "AOD, bụi hoặc PM10 rất cao có thể làm màu bị xám dù có nhiều mây cao"
+    },
     "lightPath": {
       "title": "Điểm Đường Ánh Sáng",
       "score": "Điểm Đường Ánh Sáng",
       "visibility": "Tầm Nhìn",
-      "lightPathScore": "🌅 Đường ánh sáng: {{score}}đ "
+      "lightPathScore": "Đường ánh sáng: {{score}}đ "
     },
     "rendering": {
       "title": "Điểm Hiển Thị",
@@ -342,7 +474,7 @@ const translations = {
       "someLowCloud": "⚠️ Một số mây thấp ({{value}}%), có thể che một phần",
       "denseLowCloud": "❌ Mây thấp dày đặc ({{value}}%), ảnh hưởng nghiêm trọng",
       "excellentConditions": "🌟 Tất cả điều kiện cho mây đẹp tuyệt vời đều đáp ứng!",
-      "highProbability": "✨ Khả năng cao có cảnh mây đẹp ngoạn mục",
+      "highProbability": "Khả năng cao có cảnh mây đẹp ngoạn mục",
       "moderateProbability": "💫 Có thể có hiệu ứng mây đẹp nhẹ",
       "lowProbability": "⛅ Khả năng thấp có mây đẹp đáng kể",
       "noCloudNoFireCloud": "❌ Độ mây thiếu hụt nghiêm trọng, không thể tạo mây đẹp"
@@ -408,6 +540,11 @@ const translations = {
     "proxyUrl": "URL Máy Chủ Proxy",
     "proxyUrlPlaceholder": "http://localhost:3000",
     "proxyUrlHint": "Địa chỉ URL của máy chủ proxy backend",
+    "weatherFetchMode": "Chế độ lấy dữ liệu thời tiết",
+    "weatherFetchModeHint": "Mặc định là vòng khép kín ở backend; nếu backend bị giới hạn hoặc quá thời gian, trình duyệt có thể lấy thời tiết công khai rồi gửi lại backend để chấm điểm",
+    "weatherFetchModeBackend": "Vòng khép kín backend (mặc định khuyến nghị)",
+    "weatherFetchModeClientFallback": "Ưu tiên backend, trình duyệt dự phòng khẩn cấp",
+    "weatherFetchModeClient": "Trình duyệt lấy thời tiết (gỡ lỗi/khẩn cấp)",
     "notificationAndAlerts": "Thông Báo & Cảnh Báo",
     "enableSunsetNotification": "Bật thông báo hoàng hôn",
     "notificationHint": "Gửi thông báo trình duyệt khi chất lượng dự báo đạt ngưỡng",
@@ -563,19 +700,19 @@ const translations = {
     },
     "bestWindow": "Best viewing  {{start}} – {{end}}",
     "cloud": {
-      "high": "High Cloud",
-      "mid": "Mid Cloud",
-      "low": "Low Cloud"
+      "high": "Mây cao",
+      "mid": "Mây trung tầng",
+      "low": "Mây thấp"
     },
     "verdict": {
-      "noCarrier": "😶 Not enough color carrier clouds; fire-cloud chance is very low",
-      "excellent": "✨ Excellent conditions; colorful sky is promising",
-      "excellentMultiLayer": "✨ Excellent conditions; strongly recommended for viewing!",
-      "good": "✨ Good conditions; fire-cloud chance is high",
-      "fair": "💡 Moderate conditions; watch real-time cloud changes",
-      "poor": "😶 Fire-cloud chance is low"
+      "noCarrier": "Thiếu lớp mây bắt màu; khả năng xuất hiện mây đẹp rất thấp",
+      "excellent": "Điều kiện rất tốt; bầu trời rực màu rất đáng kỳ vọng",
+      "excellentMultiLayer": "Điều kiện rất tốt; rất nên ra ngoài quan sát",
+      "good": "Điều kiện tốt; khả năng xuất hiện mây đẹp cao",
+      "fair": "Điều kiện trung bình; cần theo dõi diễn biến mây thực tế",
+      "poor": "Khả năng xuất hiện mây đẹp thấp"
     },
-    "watermark": "Xiake · Capture every brilliant sky"
+    "watermark": "Xiake · Ghi lại mọi bầu trời rực rỡ"
   },
   "charts": {
     "temperature": "Nhiệt Độ",
@@ -605,13 +742,15 @@ const translations = {
     "timeNow": "Bây giờ",
     "timeSunset": "Hoàng hôn",
     "timeSunrise": "Bình minh",
-    "timeHint": "💡 Mẹo: Bạn cũng có thể kéo thanh thời gian dự báo dưới bản đồ để điều chỉnh thời gian",
+    "timeHint": "Mẹo: Bạn cũng có thể kéo thanh thời gian dự báo dưới bản đồ để điều chỉnh thời gian",
     "loading": "Đang tải bản đồ...",
     "error": "Không thể tải bản đồ",
     "mockNotSupported": "Chức năng bản đồ chỉ khả dụng trong chế độ API thực"
   },
   "surrounding": {
     "title": "Phân tích mây đỏ lân cận",
+    "radarTitle": "Radar mây xung quanh",
+    "radarSubtitle": "20km · Trường mây liên tục",
     "radius": "Bán kính thăm dò",
     "radiusUnit": "km",
     "directions": {
@@ -688,6 +827,9 @@ const translations = {
     "pointToast": "{{name}} direction | Score: {{score}} pts | Distance: {{distance}} km",
     "emptyChinaSpots": "No visible fire-cloud spots today",
     "updatedAt": "Updated at {{time}}",
+    "supportedRegions": "Hiện hỗ trợ: Trung Quốc đại lục, Hồng Kông, Ma Cao, Đài Loan, Nhật Bản, Hàn Quốc, Triều Tiên và các thành phố lớn ở Đông Nam Á lục địa. Lưới heatmap hiện tập trung vào khu vực Trung Quốc.",
+    "interactionHint": "Drag the map · scroll to zoom",
+    "tabs": { "sunrise": "Sunrise", "sunset": "Sunset" },
     "quality": {
       "excellent": "Excellent",
       "good": "Good"

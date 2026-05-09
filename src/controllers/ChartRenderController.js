@@ -58,6 +58,13 @@ class ChartRenderController {
     const container = document.getElementById(containerId);
     if (!container) return;
 
+    const escapeHtml = (value) => String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+
     const getConvertedValue = (value, chartParam) => {
       if (chartParam === 'temp') {
         return this.getConvertedTemp(value);
@@ -112,6 +119,17 @@ class ChartRenderController {
       };
     };
 
+    const getWeatherLabel = (point) => {
+      const precipitation = Number(point?.precipitation ?? 0);
+      const cloudCover = Number(point?.cloudCover ?? 0);
+
+      if (precipitation >= 0.1) return this.i18n.t('weather.precipitation');
+      if (cloudCover > 70) return this.i18n.t('weather.overcast');
+      if (cloudCover > 30) return this.i18n.t('weather.cloudy');
+      if (cloudCover > 10) return this.i18n.t('weather.partlyCloudy');
+      return this.i18n.t('weather.clear');
+    };
+
     const points = hourlyData.map((d, i) => {
       const value = getConvertedValue(d[param], param);
       const x = padding.left + (i / (hourlyData.length - 1)) * contentWidth;
@@ -121,6 +139,7 @@ class ChartRenderController {
         x,
         y,
         value,
+        weather: getWeatherLabel(d),
         hour: t.hour,
         month: t.month,
         day: t.day,
@@ -141,17 +160,21 @@ class ChartRenderController {
     const bodyStyle = getComputedStyle(document.body);
     const resolveCssVar = (name, fallback) => (rootStyle.getPropertyValue(name) || bodyStyle.getPropertyValue(name) || fallback).trim();
     const actualTheme = document.documentElement.dataset.actualTheme || document.documentElement.dataset.theme || '';
+    const bodyTheme = document.body.dataset.theme || document.body.dataset.actualTheme || '';
     const isDarkTheme = document.body.classList.contains('theme-dark')
+      || document.body.classList.contains('theme-actual-dark')
       || document.documentElement.classList.contains('theme-dark')
-      || actualTheme === 'dark';
-    const gridColor = resolveCssVar('--chart-grid-color', isDarkTheme ? 'rgba(255,255,255,0.38)' : 'rgba(51,51,51,0.18)');
-    const textColor = resolveCssVar('--color-text', isDarkTheme ? 'rgba(255,255,255,0.92)' : '#333333');
-    const cardBg = resolveCssVar('--color-card-bg', isDarkTheme ? 'rgba(15,22,40,0.85)' : '#ffffff');
-    const pointStroke = resolveCssVar('--chart-point-stroke', isDarkTheme ? 'rgba(15,22,40,0.95)' : cardBg);
+      || document.documentElement.classList.contains('theme-actual-dark')
+      || actualTheme === 'dark'
+      || bodyTheme === 'dark';
+    const gridColor = resolveCssVar('--chart-grid-color', isDarkTheme ? 'rgba(255,255,255,0.26)' : 'rgba(122,101,84,0.18)');
+    const textColor = resolveCssVar('--theme-text', resolveCssVar('--color-text', isDarkTheme ? 'rgba(255,255,255,0.92)' : '#333333'));
+    const cardBg = resolveCssVar('--theme-card-bg', resolveCssVar('--color-card-bg', isDarkTheme ? 'rgba(18,28,52,0.78)' : 'rgba(255,252,246,0.92)'));
+    const pointStroke = resolveCssVar('--chart-point-stroke', isDarkTheme ? 'rgba(18,28,52,0.95)' : cardBg);
     const lineColor = String(color).startsWith('--') ? resolveCssVar(color, isDarkTheme ? '#fb923c' : '#d97706') : color;
 
-    let html = `<div class="weather-chart-panel" style="padding: ${chartPadding}; background: var(--color-card-bg); border-radius: 12px; margin: 12px 0;">`;
-    html += `<h3 style="text-align: center; margin-bottom: 16px; color: var(--color-text); font-size: ${titleFontSize};">${label}${this.i18n.t('charts.trend')} (${unit})</h3>`;
+    let html = `<div class="weather-chart-panel" style="padding: ${chartPadding}; border-radius: 12px; margin: 12px 0;">`;
+    html += `<h3 style="text-align: center; margin-bottom: 16px; color: var(--theme-text, var(--color-text)); font-size: ${titleFontSize};">${label}${this.i18n.t('charts.trend')} (${unit})</h3>`;
     html += '<div>';
     html += `<svg width="100%" viewBox="0 0 ${chartWidth} ${chartHeight}" style="display: block;">`;
 
@@ -218,6 +241,20 @@ class ChartRenderController {
 
     html += '</svg>';
     html += '</div>';
+
+    if (param === 'temp') {
+      const weatherStep = isMobile ? 4 : 3;
+      const weatherItems = points.filter((p) => p.idx % weatherStep === 0 || p.idx === points.length - 1);
+      html += '<div class="hourly-weather-strip">';
+      weatherItems.forEach((p) => {
+        html += '<div class="hourly-weather-chip">';
+        html += `<span class="hourly-weather-time">${escapeHtml(`${p.hour}:00`)}</span>`;
+        html += `<span class="hourly-weather-text">${escapeHtml(p.weather)}</span>`;
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
     html += '</div>';
 
     container.innerHTML = html;

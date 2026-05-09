@@ -6,10 +6,13 @@
  */
 
 import WeatherData from '../models/WeatherData.js';
+import { loadConfig } from '../../config.api.js';
+import OpenMeteoClientWeatherService from './OpenMeteoClientWeatherService.js';
 
 class WindyAPIService {
   constructor(_apiKey, options = {}) {
     this.proxyURL = options.proxyURL || 'http://localhost:3000'; // 后端代理URL
+    this.clientWeatherService = new OpenMeteoClientWeatherService();
 
     console.log(`[WindyAPIService] 初始化后端代理模式`);
     console.log(`[WindyAPIService] 后端代理地址: ${this.proxyURL}`);
@@ -33,7 +36,44 @@ class WindyAPIService {
       throw new Error('预测小时数必须在1到168之间');
     }
 
-    return this.fetchFromProxy(lat, lon, hours);
+    const config = loadConfig();
+    const mode = config.weatherFetchMode || 'backend';
+    const weatherModel = localStorage.getItem('weather_model') || 'ecmwf_ifs025';
+
+    if (mode === 'client') {
+      console.warn('[WindyAPIService] WEATHER_FETCH_MODE=client，浏览器直接获取天气数据');
+      return this.clientWeatherService.fetchWeatherData(lat, lon, hours, weatherModel);
+    }
+
+    try {
+      return await this.fetchFromProxy(lat, lon, hours);
+    } catch (error) {
+      if (mode === 'client-fallback' && this._isWeatherFallbackEligible(error)) {
+        console.warn('[WindyAPIService] 后端天气数据不可用，切换到浏览器 fallback:', error.message);
+        return this.clientWeatherService.fetchWeatherData(lat, lon, hours, weatherModel);
+      }
+      throw error;
+    }
+  }
+
+
+  _isWeatherFallbackEligible(error) {
+    const code = String(error?.code || '').toLowerCase();
+    const message = String(error?.message || '').toLowerCase();
+    return code === 'weather_rate_limited'
+      || code === 'weather_quota_exceeded'
+      || code === 'weather_upstream_timeout'
+      || code === 'weather_provider_unavailable'
+      || message.includes('429')
+      || message.includes('rate')
+      || message.includes('quota')
+      || message.includes('timeout')
+      || message.includes('超时')
+      || message.includes('频繁')
+      || message.includes('weather_rate_limited')
+      || message.includes('weather_quota_exceeded')
+      || message.includes('weather_upstream_timeout')
+      || message.includes('weather_provider_unavailable');
   }
 
   /**
@@ -72,7 +112,11 @@ class WindyAPIService {
       const response = await fetch(url, { headers });
 
       if (!response.ok) {
-        throw new Error(`后端请求失败: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        const backendError = new Error(errorData.error?.message || `后端请求失败: ${response.status}`);
+        backendError.code = errorData.error?.code || null;
+        backendError.status = response.status;
+        throw backendError;
       }
 
       const result = await response.json();
@@ -86,7 +130,8 @@ class WindyAPIService {
       }
       return dataArray;
     } catch (error) {
-      if (error.message.includes('后端') ||
+      if (error.code ||
+          error.message.includes('后端') ||
           error.message.includes('参数') ||
           error.message.includes('频繁')) {
         throw error;

@@ -24,7 +24,7 @@ export default {
     tabs: {
       ariaLabel: '主页分页导航',
       forecast: '预测功能',
-      methodology: '火烧云计算方法',
+    methodology: '火烧云计算方法',
       map: '火烧云地图',
       shareMap: '分享地图',
       apiAccess: 'API接入'
@@ -32,6 +32,23 @@ export default {
     menu: {
       ariaLabel: '页面切换',
       dropdownAriaLabel: '页面切换菜单'
+    },
+    apiAccess: {
+      kicker: 'Sunset Voyager API',
+      intro: '霞客 Agent API 提供地点解析、朝霞/晚霞评分和评分解释，适合个人、学习与研究场景。',
+      openApiSpec: 'OpenAPI 规格',
+      admin: '管理后台',
+      quickStart: '快速开始',
+      step1: '申请并获取 Token。',
+      step2: '请求时在 Authorization: Bearer <token> 中传入。',
+      step3: '调用 /api/agent/forecast、/api/agent/explain 或 /api/agent/geocode。',
+      restrictions: '使用限制',
+      restrictionText: '仅限个人/学习/研究用途，禁止商用。公开展示请脱敏并标明来源。',
+      exampleCall: '示例调用',
+      endpoints: '核心接口',
+      forecastDesc: '返回评分、质量等级和最佳观赏窗口。',
+      explainDesc: '返回评分构成、关键限制和自然语言解释。',
+      geocodeDesc: '返回地点候选、坐标和置信度。'
     },
     methodology: {
       title: '火烧云计算方法',
@@ -72,10 +89,10 @@ export default {
         lightPath: {
           title: '2. 光路评估',
           subtitle: 'Light Path · 光路评分',
-          desc: '光路通畅度决定光线能否顺利到达云层。低云少时光路更通畅，遮挡概率降低。',
-          lowCloudEffect: '低云<30%时，光路遮挡权重降低至0.7~0.85，光线更易穿透',
+          desc: '光路通畅度决定光线能否顺利到达云层。后端会沿太阳方位采样 15/30/50/100km，识别透光开口或云墙遮挡。',
+          lowCloudEffect: '低云<30%时降低遮挡权重；若太阳方向低/中云成墙，则保守压低光路分',
           visibility: '能见度：影响光线传播清晰度',
-          formula: '光路分 = 基础光路分 × 低云权重系数'
+          formula: '光路分 = 几何/本地光路分 × 低云系数 × 太阳方向走廊修正'
         },
         transparency: {
           title: '3. 大气透明度',
@@ -101,6 +118,15 @@ export default {
           level2: '低云20–40% → ×1.0 到 ×0.8（线性）',
           level3: '低云40–70% → ×0.8 到 ×0.5（线性）',
           level4: '低云>70% → ×0.2（严重遮挡）'
+        },
+        thickHighCloudPenalty: {
+          title: '6. 厚高云惩罚',
+          subtitle: 'Thick High Cloud · 封顶',
+          desc: '高云多不一定代表高分；需要同时判断云幕厚度与空气透明度。清透高云可保底，厚云幕或沙尘灰幕会封顶。',
+          level1: '高云≥80% 且低云很少：先进入高云载体/厚云幕双向判定',
+          level2: '空气通透、沙尘不重时：避免云厚信号误伤，可保底到约64–68分',
+          level3: '直射比低、漫射主导或水汽很高：厚云幕封顶约42–48分；沙尘/PM10/AOD 极高时封顶约28分',
+          formula: '最终修正 = 高云载体保底 或 min(最终分, 厚云幕/灰幕封顶)，用于区分“能染色的高云”和“灰黄遮光的云幕”'
         },
         precipPenalty: {
           title: '6. 降水惩罚系数',
@@ -182,6 +208,8 @@ export default {
     // 天气概览
     overview: '概览',
     hourly: '详细预报',
+    threeDayGlow: '3天朝晚霞',
+    threeDayGlowLoading: '正在读取3天朝晚霞...',
     mapView: '地图预测',
     daysOverview: '{{days}}天概览',
     precipChance: '{{prob}}%降水',
@@ -215,7 +243,89 @@ export default {
 
     // 状态描述
 
-    formationAnalysis: {
+    analysisConclusion: {
+      excellent: '条件优秀，强烈推荐出行观赏',
+      excellentSingleLayer: '条件优秀，色彩可期；云层单一，层次感略有不足',
+      good: '条件不错，有较大概率出现壮观的火烧云',
+      goodSingleLayer: '条件不错，火烧云概率较高；云层层次稍欠',
+      fair: '条件中等，需看实际云层演变',
+      clearSunset: '火烧云不明显，日落通透。',
+      low: '关键条件不足，火烧云概率偏低'
+    },
+        scoreBreakdown: {
+      title: '分数明细',
+      viewDetails: '查看评分明细',
+      finalDisplayed: '最终展示分',
+      baseFormula: '基础分 = 画布 ×0.8 + 光路 ×0.2',
+      baseHint: '云层与光路融合后的基础分',
+      canvasHint: '高云/中云提供色彩载体，低云会遮挡',
+      lightPathHint: '太阳光是否能照到云层',
+      finalFormula: '最终分 = 基础分 × 修正系数',
+      renderingHint: '湿度、能见度影响颜色表现',
+      aerosolHint: '适度气溶胶增强橙红散射，过多则发灰',
+      ledger: {
+        pts: '分',
+        whyThisScore: '为什么是这个分数',
+        weightedFormula: '{{canvas}}×80% + {{light}}×20% = {{base}}',
+        canvasPlusLightPath: '画布 + 光路',
+        renderingFormula: '{{base}} × 显色系数 {{factor}} = {{rendered}}',
+        weatherTransparency: '天气通透度',
+        summary: {
+          event: '{{score}} 分：{{detail}}',
+          rendered: '{{base}} 分经显色条件修正为 {{rendered}} 分',
+          default: '{{score}} 分：由云层、光路和显色条件综合计算'
+        },
+        weather: {
+          clouds: '高/中/低云 {{high}}/{{mid}}/{{low}}%',
+          visibility: '能见度 {{value}}km',
+          humidity: '湿度 {{value}}%',
+          rain: '降水 {{value}}mm/h'
+        },
+        labels: {
+          cloudCarrier: '云层载体',
+          lightPath: '光路',
+          baseScore: '基础分',
+          rendering: '显色修正',
+          final: '最终分',
+          hardCap: '硬封顶',
+          hazeCap: '灰幕封顶',
+          thickCloudCap: '厚云封顶',
+          geometryCap: '几何封顶',
+          occlusion: '遮挡修正',
+          carrierFloor: '载体保底',
+          postRainCap: '雨后灰幕封顶',
+          displayCalibration: '展示分校准'
+        },
+        details: {
+          cloudCarrier: '可被染色的云面质量',
+          cloudPenalty: '低云 ×{{low}}，阴天 ×{{overcast}}',
+          lightPath: '阳光是否能打到云层',
+          renderingFactors: '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}',
+          afterAdjustments: '应用所有封顶/保底后',
+          finalDisplayed: '最终展示结果',
+          thickCloudCap: '高云过厚，真实可染色效果下降',
+          geometryCap: '太阳与云层几何条件不足',
+          occlusion: '远端遮挡压低最终分',
+          carrierFloor: '高云载体清透，避免误伤低估',
+          directionalSamples: '已接入太阳方位 15/30/50/100km 周边采样',
+          postRainCap: '雨后水汽/灰幕压光，霞光按低上限处理',
+          displayCalibration: '最终展示分按预测状态档位校准'
+        },
+        reasons: {
+          precipitationCap45: '降水叠加低云，分数封顶到 45',
+          overcastCap35: '低云阴天遮挡，分数封顶到 35',
+          overcastFogCap15: '阴天且能见度≤5km，分数硬封顶到 15',
+          rainyMidCloudOvercastCap35: '雨后灰幕中云阴天，分数封顶到 35',
+          extremeDustHazeCap28: '强沙尘/灰幕压制，分数封顶到 28',
+          severeHazeCap35: '重度灰霾压制，分数封顶到 35',
+          moderateHazeCap45: '中度灰霾压制，分数封顶到 45',
+          adjustmentApplied: '应用封顶/保底修正',
+          displayCalibration: '最终展示分按预测状态档位校准',
+          lightPathStatusCap60: '光路只有 {{light}}，归入轻微霞光档，最终展示分封顶到 60',
+          canvasStatusCap40: '云层载体只有 {{canvas}}，归入无火烧云档，最终展示分封顶到 40 以下'
+        }
+      }},
+formationAnalysis: {
       title: '火烧云形成条件分析',
       groups: { positive: '有利条件', neutral: '一般因素', warning: '注意因素' },
       high: {
@@ -249,6 +359,14 @@ export default {
         high: '气溶胶偏高（AOD {{value}}）', highDesc: '可能灰霾发暗',
         low: '空气过于通透（AOD {{value}}）', lowDesc: '颜色可能偏淡'
       },
+      lightPath: {
+        opening: '太阳方向有透光开口', openingDesc: '后端沿太阳方位采样 15/30/50/100km，低中云走廊较通畅，光线更容易打到云层',
+        wall: '太阳方向有云墙遮挡', wallDesc: '太阳方位周边低/中云偏厚，远端光路会压低主评分'
+      },
+      postRain: {
+        clear: '雨后空气清透', clearDesc: '近6小时有降水，但能见度和颗粒物条件较好，雨后加成保留',
+        gray: '雨后灰幕风险', grayDesc: '降水后水汽/颗粒物/直射比不理想，算法按灰幕场景封顶'
+      },
       layer: { single: '云层单一', singleDesc: '高云质量好，仍可形成鲜明火烧云' }
     },
     status: {
@@ -269,6 +387,8 @@ export default {
       conditionsFair: '条件一般，可能零星色彩',
       canWatch: '可以观赏',
       conditionsGood: '条件尚可，有一定观赏价值',
+      clearSunsetTransparent: '火烧云不明显，日落通透。',
+      casualViewingOk: '可以出门看看',
       veryLikely: '大概率出现漂亮晚霞',
       excellentConditions: '云量适中，光路通畅',
       legendaryEruption: '传说级爆发',
@@ -325,12 +445,29 @@ export default {
       unknownDesc: '云厚数据不可用'
     },
 
+    thickHighCloud: {
+      title: '厚高云惩罚',
+      scoreHint: '厚高云幕，直射光弱，仅局部透光，最终分封顶',
+      analysisTitle: '厚高云幕',
+      analysisDesc: '高云虽多，但云层偏厚、直射光弱，通常只能在日落方向出现局部霞光'
+    },
+
+    highCloudCarrier: {
+      title: '高云载体保底',
+      scoreHint: '高云充足、低云少且空气较通透时，避免云厚信号误伤'
+    },
+
+    aerosolHaze: {
+      title: '沙尘灰幕封顶',
+      scoreHint: 'AOD、沙尘或 PM10 过高时，高云多也不代表能烧起来'
+    },
+
     // 光路评分
     lightPath: {
       title: '光路评分',
       score: '光路得分',
       visibility: '能见度',
-      lightPathScore: '🌅 光路: {{score}}分'
+      lightPathScore: '光路: {{score}}分'
     },
 
     // 渲染评分
@@ -431,7 +568,7 @@ export default {
       someLowCloud: '⚠️ 低云较多（{{value}}%），可能部分遮挡',
       denseLowCloud: '❌ 低云密集（{{value}}%），严重影响观赏',
       excellentConditions: '🌟 具备出现绚烂火烧云的所有条件！',
-      highProbability: '✨ 有较大概率出现壮观的火烧云景象',
+      highProbability: '有较大概率出现壮观的火烧云景象',
       moderateProbability: '💫 可能出现轻微的火烧云效果',
       lowProbability: '⛅ 形成明显火烧云的可能性较低',
       noCloudNoFireCloud: '❌ 云量严重不足，无法形成火烧云',
@@ -484,12 +621,12 @@ export default {
     bestWindow: '最佳观赏  {{start}} – {{end}}',
     cloud: { high: '高云', mid: '中云', low: '低云' },
     verdict: {
-      noCarrier: '😶 缺少色彩载体，火烧云概率极低',
-      excellent: '✨ 条件优秀，色彩可期',
-      excellentMultiLayer: '✨ 极佳条件，强烈推荐出行观赏！',
-      good: '✨ 条件不错，火烧云概率较高',
-      fair: '💡 条件中等，需看实际云层演变',
-      poor: '😶 火烧云概率较低'
+      noCarrier: '缺少色彩载体，火烧云概率极低',
+      excellent: '条件优秀，色彩可期',
+      excellentMultiLayer: '极佳条件，强烈推荐出行观赏！',
+      good: '条件不错，火烧云概率较高',
+      fair: '条件中等，需看实际云层演变',
+      poor: '火烧云概率较低'
     },
     watermark: '霞客 · 记录每一次绚丽'
   },
@@ -497,6 +634,8 @@ export default {
   // 任务19：周边火烧云
   surrounding: {
     title: '周边火烧云分析',
+    radarTitle: '周边云况雷达',
+    radarSubtitle: '20km · 连续云场',
     radius: '探测半径',
     radiusUnit: '公里',
     directions: {
@@ -536,7 +675,7 @@ export default {
     legendLow: '低',
     legendMedium: '中',
     legendHigh: '高',
-    hint: '💡 提示：启用覆盖层后，地图上将显示火烧云预测的地理分布热力图',
+    hint: '提示：启用覆盖层后，地图上将显示火烧云预测的地理分布热力图',
     loading: '正在生成覆盖层...',
     active: '覆盖层已显示',
     error: '覆盖层生成失败',
@@ -549,6 +688,9 @@ export default {
     pointToast: '{{name}}方向｜评分: {{score}}分｜距离: {{distance}}公里',
     emptyChinaSpots: '今日暂无可见火烧云点位',
     updatedAt: '更新于 {{time}}',
+    supportedRegions: '目前支持：中国大陆、港澳台、日本、韩国、朝鲜及中南半岛主要城市；热力栅格当前以中国区域为主。',
+    interactionHint: '可拖拽地图 · 滚轮缩放',
+    tabs: { sunrise: '朝霞', sunset: '晚霞' },
     quality: { excellent: '优秀', good: '良好' },
     period: { sunriseTomorrow: '明天的朝霞', sunsetToday: '今天的晚霞', testLayer: '测试图层（模拟数据）' }
   },
@@ -642,6 +784,11 @@ export default {
     proxyUrl: '后端服务器地址',
     proxyUrlPlaceholder: 'http://localhost:3000',
     proxyUrlHint: '后端代理服务器的 URL 地址',
+    weatherFetchMode: '天气数据出口模式',
+    weatherFetchModeHint: '默认后端闭环；后端限流或超时时可让浏览器取公开天气，再交后端算分',
+    weatherFetchModeBackend: '后端闭环（推荐默认）',
+    weatherFetchModeClientFallback: '后端优先，失败时前端应急',
+    weatherFetchModeClient: '前端取天气（调试/应急）',
     // 通知与提醒
     notificationAndAlerts: '通知与提醒',
     enableSunsetNotification: '启用晚霞预测通知',
@@ -779,7 +926,7 @@ export default {
     timeNow: '现在',
     timeSunset: '日落',
     timeSunrise: '日出',
-    timeHint: '💡 提示：也可以使用地图下方的预测时间轴拖动时间',
+    timeHint: '提示：也可以使用地图下方的预测时间轴拖动时间',
     loading: '地图加载中...',
     error: '地图加载失败',
     mockNotSupported: '地图功能仅在真实API模式下可用'

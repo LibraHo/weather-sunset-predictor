@@ -6,6 +6,7 @@
  * 需求：14 - 多语言支持
  */
 
+import WeatherData from '../models/WeatherData.js';
 import WindyAPIService from '../services/WindyAPIService.js';
 import MockWindyAPIService from '../services/MockWindyAPIService.js';
 import UnitConverter from '../utils/UnitConverter.js';
@@ -22,6 +23,73 @@ import ChartRenderController from './ChartRenderController.js';
 import ChinaSpotsOverlay from '../services/ChinaSpotsOverlay.js';
 import ChinaRasterOverlayManager from '../services/ChinaRasterOverlayManager.js';
 import ChinaMapCanvas from '../components/ChinaMapCanvas.js';
+
+function isManualTestLocation(location) {
+  return (location?.name || '').trim().toLowerCase() === 'test';
+}
+
+function generateManualTestWeatherData(hours = 168) {
+  const start = Date.now() - (Date.now() % 3600000);
+  const data = Array.from({ length: hours }, (_, i) => {
+    const hour = new Date(start + i * 3600000).getHours();
+    const daylight = Math.max(0, Math.sin(((hour - 6) / 12) * Math.PI));
+    const wave = Math.sin(i / 5);
+    const highClouds = Math.round(25 + Math.random() * 60);
+    const midClouds = Math.round(15 + Math.random() * 55);
+    const lowClouds = Math.round(Math.random() * 45);
+    const cloudCover = Math.max(highClouds, midClouds, lowClouds);
+    const item = new WeatherData(
+      start + i * 3600000,
+      18 + daylight * 10 + wave * 3 + Math.random() * 2,
+      Math.round(45 + Math.random() * 40),
+      cloudCover,
+      Math.round(4 + Math.random() * 18),
+      Math.round(1002 + Math.random() * 16),
+      12 + Math.random() * 28,
+      lowClouds,
+      Math.random() < 0.12 ? Math.random() * 2 : 0,
+      Math.round(Math.random() * 360),
+      highClouds,
+      midClouds
+    );
+    item.weatherCode = cloudCover > 70 ? 3 : (cloudCover > 35 ? 2 : 1);
+    item.shortwaveRadiation = Math.round(daylight * (350 + Math.random() * 450));
+    item.aerosolOpticalDepth = Number((0.08 + Math.random() * 0.18).toFixed(3));
+    item.timezone = 'Asia/Shanghai';
+    item.providerMeta = { name: 'manual-test', weatherModel: 'random-ui-test', timezone: 'Asia/Shanghai' };
+    item.isManualTestCity = true;
+    return item;
+  });
+  data.providerMeta = { name: 'manual-test', weatherModel: 'random-ui-test', timezone: 'Asia/Shanghai', dataQuality: 'mock' };
+  return data;
+}
+
+function generateManualTestRadarData(type = 'sunset') {
+  const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'].map((dir, index) => {
+    const phase = index / 8 * Math.PI * 2;
+    const high = Math.round(35 + Math.random() * 45 + Math.max(0, Math.sin(phase)) * 18);
+    const mid = Math.round(22 + Math.random() * 42 + Math.max(0, Math.cos(phase)) * 14);
+    const low = Math.round(5 + Math.random() * 34);
+    const score = Math.max(0, Math.min(100, Math.round(high * 0.55 + mid * 0.35 - low * 0.28 + 18 + Math.random() * 10)));
+    return {
+      dir,
+      score,
+      dist: 50,
+      cloudLayers: {
+        low: Math.max(0, Math.min(100, low)),
+        mid: Math.max(0, Math.min(100, mid)),
+        high: Math.max(0, Math.min(100, high))
+      }
+    };
+  });
+
+  return {
+    dirs,
+    sunAzimuths: type === 'sunrise'
+      ? { sunrise: 72 + Math.random() * 26 }
+      : { sunset: 250 + Math.random() * 38 }
+  };
+}
 
 /**
  * 中国火烧云地图固定使用栅格等值渲染
@@ -98,7 +166,7 @@ class WeatherController {
     this.currentLocation = null;
 
     // 需求11：视图状态管理
-    this.currentView = 'overview'; // 'overview', 'hourly' 或 'map'
+    this.currentView = 'overview'; // 'overview', 'hourly', 'glow' 或 'map'
     this.selectedDay = 'today'; // 'today' 或 'tomorrow'
     this.selectedParameter = 'temp'; // 'temp', 'precip', 'humidity', 'wind', 'pressure', 'clouds'
     this.isMapInitialized = false; // 任务18：地图初始化状态
@@ -137,6 +205,13 @@ class WeatherController {
 
     if (!location || !location.isValid()) {
       throw new Error('无效的位置信息');
+    }
+
+    if (isManualTestLocation(location)) {
+      const weatherData = generateManualTestWeatherData();
+      this.currentWeatherData = weatherData;
+      this.currentLocation = location;
+      return weatherData;
     }
 
     // 检查缓存（如果不是强制刷新）
@@ -232,7 +307,7 @@ class WeatherController {
     const iconMainEl = document.getElementById('weather-icon-main');
     if (iconMainEl) {
       const icon = this._getWeatherIcon(currentWeather.cloudCover, 0);
-      iconMainEl.textContent = icon;
+      iconMainEl.innerHTML = icon;
     }
 
     // 更新天气描述
@@ -559,10 +634,30 @@ class WeatherController {
    * @returns {string} 图标emoji
    */
   _getWeatherIcon(cloudCover, precipProb) {
-    if (precipProb > 50) return '🌧️';
-    if (cloudCover > 70) return '☁️';
-    if (cloudCover > 30) return '⛅';
-    return '☀️';
+    const type = precipProb > 50
+      ? 'rain'
+      : cloudCover > 70
+        ? 'cloud'
+        : cloudCover > 30
+          ? 'partly-cloudy'
+          : 'sunny';
+    return this._renderWeatherSvgIcon(type);
+  }
+
+  _renderWeatherSvgIcon(type) {
+    const sun = '<circle class="weather-svg-sun" cx="12" cy="12" r="4.4"/><path class="weather-svg-ray" d="M12 2.6v2.1M12 19.3v2.1M4.9 4.9l1.5 1.5M17.6 17.6l1.5 1.5M2.6 12h2.1M19.3 12h2.1M4.9 19.1l1.5-1.5M17.6 6.4l1.5-1.5"/>';
+    const cloud = '<path class="weather-svg-cloud" d="M7.2 17.4h9.2a4.1 4.1 0 0 0 .4-8.2 5.3 5.3 0 0 0-10.1 1.5 3.4 3.4 0 0 0 .5 6.7Z"/>';
+    const rain = '<path class="weather-svg-rain" d="M8.2 20.4l1.1-2.1M12 21l1.1-2.1M15.8 20.4l1.1-2.1"/>';
+
+    const body = type === 'sunny'
+      ? sun
+      : type === 'cloud'
+        ? cloud
+        : type === 'rain'
+          ? `${cloud}${rain}`
+          : `<g transform="translate(-2 -2) scale(.82)">${sun}</g><g transform="translate(2 1)">${cloud}</g>`;
+
+    return `<svg class="weather-icon-svg weather-icon-${type}" viewBox="0 0 24 24" role="img" aria-label="weather icon" xmlns="http://www.w3.org/2000/svg">${body}</svg>`;
   }
 
   /**
@@ -698,8 +793,8 @@ class WeatherController {
   }
 
   /**
-   * 切换视图（概览/详细/地图）
-   * @param {string} view - 'overview', 'hourly' 或 'map'
+   * 切换视图（概览/详细/3天朝晚霞/地图）
+   * @param {string} view - 'overview', 'hourly', 'glow' 或 'map'
    */
   switchView(view) {
     this.currentView = view;
@@ -707,18 +802,22 @@ class WeatherController {
     const overviewView = document.getElementById('weekly-overview');
     const hourlyView = document.getElementById('hourly-forecast');
     const mapView = document.getElementById('map-forecast');
+    const glowView = document.getElementById('three-day-glow');
     const overviewBtn = document.getElementById('overview-btn');
     const hourlyBtn = document.getElementById('hourly-btn');
+    const glowBtn = document.getElementById('three-day-glow-btn');
     const mapBtn = document.getElementById('map-btn');
 
     // 隐藏所有视图
     if (overviewView) overviewView.classList.add('hidden');
     if (hourlyView) hourlyView.classList.add('hidden');
     if (mapView) mapView.classList.add('hidden');
+    if (glowView) glowView.classList.add('hidden');
 
     // 移除所有按钮的active状态
     if (overviewBtn) overviewBtn.classList.remove('active');
     if (hourlyBtn) hourlyBtn.classList.remove('active');
+    if (glowBtn) glowBtn.classList.remove('active');
     if (mapBtn) mapBtn.classList.remove('active');
 
     if (view === 'overview') {
@@ -736,6 +835,15 @@ class WeatherController {
       // 渲染详细预报
       if (this.currentWeatherData) {
         this.renderHourlyForecast(this.currentWeatherData, this.selectedDay);
+      }
+    } else if (view === 'glow') {
+      if (glowView) glowView.classList.remove('hidden');
+      if (glowBtn) glowBtn.classList.add('active');
+
+      const forecastTimeline = document.getElementById('forecast-timeline');
+      const forecastLoading = document.getElementById('forecast-loading');
+      if (forecastTimeline?.dataset.loaded !== 'true' && forecastLoading) {
+        forecastLoading.classList.remove('hidden');
       }
     } else if (view === 'map') {
       // 任务18：切换到地图视图
@@ -1093,6 +1201,11 @@ class WeatherController {
       hourlyBtn.textContent = this.i18n.t('charts.hourly');
     }
 
+    const glowBtn = document.getElementById('three-day-glow-btn');
+    if (glowBtn) {
+      glowBtn.textContent = this.i18n.t('weather.threeDayGlow');
+    }
+
     this.chartService = this.chartRenderController.createChartService(this.tempUnit, this.windUnit);
 
     // 如果有当前天气数据，重新渲染以更新格式化的日期/时间
@@ -1101,6 +1214,8 @@ class WeatherController {
       if (this.currentView === 'hourly') {
         // 重新渲染24小时图表
         this.renderHourlyForecast(this.currentWeatherData, this.selectedDay);
+      } else if (this.currentView === 'glow') {
+        this.switchView('glow');
       } else {
         // 重新渲染概览
         this.renderWeeklyOverview(this.currentWeatherData);
@@ -1217,7 +1332,15 @@ class WeatherController {
     }
 
     container.style.display = 'block';
-    container.innerHTML = '<p style="text-align:center;color:var(--color-text-light);font-size:13px;padding:12px 0;">加载周边数据中…</p>';
+    {
+      const loadingText = this.i18n?.t?.('surrounding.loading') || 'Loading surrounding weather data...';
+      container.innerHTML = `
+        <div class="radar-compass-loading" role="status" aria-live="polite">
+          <div class="spinner radar-compass-loading-spinner" aria-hidden="true"></div>
+          <p>${loadingText}</p>
+        </div>
+      `;
+    }
 
     try {
       let dirs;
@@ -1225,6 +1348,12 @@ class WeatherController {
       const radius = 50; // 后端仅接受 50/100/150
       const now = new Date();
       const type = predictionType || (now.getHours() < 12 ? 'sunrise' : 'sunset');
+
+      if (isManualTestLocation(location)) {
+        const manualRadar = generateManualTestRadarData(type);
+        this._radarCompass.render(container, { directions: manualRadar.dirs, sunAzimuths: manualRadar.sunAzimuths, predictionType: type });
+        return;
+      }
 
       // 优先后端聚合 API（POST /api/prediction/surrounding）
       if (this.predictionAPIService) {

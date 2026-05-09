@@ -442,6 +442,48 @@ describe('EnhancedPredictionService', () => {
       expect(result.description).toBe('sky_clear');
     });
 
+    test('clear transparent sunset advice should not raise the fire-cloud score', () => {
+      const canvasScore = { score: 10, cloudLevel: 'space', effectiveCloudCover: 5 };
+      const lightPathScore = { score: 70, hasRemoteData: true };
+      const renderingFactor = { factor: 1.0 };
+
+      const result = EnhancedPredictionService.calculateFinalScore(
+        canvasScore, lightPathScore, renderingFactor, 'sunset'
+      );
+      const advice = EnhancedPredictionService.assessClearSunsetViewingAdvice(
+        { highClouds: 1, midClouds: 2, lowClouds: 3, visibility: 25, precipitation: 0 },
+        canvasScore,
+        lightPathScore
+      );
+
+      expect(result.status).toBe('no_fire_cloud');
+      expect(result.score).toBeLessThan(40);
+      expect(result.breakdown.unclampedFinalScore).toBe(22);
+      expect(advice).toMatchObject({ applied: true, reason: 'clear_sunset_transparent' });
+    });
+
+    test('clear transparent sunset advice should not trigger when blocked by low cloud, haze, rain, or light path', () => {
+      const canvasScore = { score: 10, cloudLevel: 'space', effectiveCloudCover: 5 };
+      const goodLightPath = { score: 70, hasRemoteData: true };
+      const baseWeather = { highClouds: 1, midClouds: 2, lowClouds: 3, visibility: 25, precipitation: 0 };
+
+      expect(EnhancedPredictionService.assessClearSunsetViewingAdvice(
+        { ...baseWeather, lowClouds: 70 }, canvasScore, goodLightPath
+      ).applied).toBe(false);
+      expect(EnhancedPredictionService.assessClearSunsetViewingAdvice(
+        { ...baseWeather, precipitation: 0.8 }, canvasScore, goodLightPath
+      ).applied).toBe(false);
+      expect(EnhancedPredictionService.assessClearSunsetViewingAdvice(
+        { ...baseWeather, visibility: 8 }, canvasScore, goodLightPath
+      ).applied).toBe(false);
+      expect(EnhancedPredictionService.assessClearSunsetViewingAdvice(
+        baseWeather, canvasScore, { score: 40, hasRemoteData: true }
+      ).applied).toBe(false);
+      expect(EnhancedPredictionService.assessClearSunsetViewingAdvice(
+        baseWeather, canvasScore, goodLightPath, { aerosolHazeCap: { applied: true } }
+      ).applied).toBe(false);
+    });
+
     test('should identify light_glow when light path blocked but canvas ok', () => {
       const canvasScore = { score: 70, cloudLevel: 'perfect' };
       const lightPathScore = { score: 40 };
@@ -610,6 +652,134 @@ describe('EnhancedPredictionService', () => {
 
       expect(result.type).toBe('sunrise');
     });
+
+    test('should cap thick high-cloud curtain scenes around 40 points', () => {
+      const weatherData = {
+        cloudCover: 64,
+        lowClouds: 0,
+        midClouds: 0,
+        highClouds: 83,
+        humidity: 30,
+        visibility: 20,
+        precipitation: 0,
+        shortwaveRadiation: 59,
+        directRadiation: 11.9,
+        diffuseRadiation: 47.1,
+        waterVapourColumn: 20.8,
+        aerosolOpticalDepth: 0.35,
+        pm2_5: 22.4,
+        pm10: 25.3,
+        dust: 6,
+        aqi: 109
+      };
+      const prevHourData = {
+        shortwaveRadiation: 177,
+        directRadiation: 60.9,
+        diffuseRadiation: 116.1
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData, new Date('2026-05-05T11:00:00.000Z'), 39.9042, 116.4074, 'sunset', { prevHourData }
+      );
+
+      expect(result.thickHighCloudPenalty).toMatchObject({
+        applied: true,
+        cap: 42,
+        reason: 'thick_high_cloud_diffuse_cap_42'
+      });
+      expect(result.lightPathAnalysis.scoreBeforeThickHighCloudPenalty).toBeGreaterThan(80);
+      expect(result.lightPathAnalysis.score).toBeLessThanOrEqual(55);
+      expect(result.score).toBeLessThanOrEqual(42);
+      expect(result.description).toBe('weak_local_colors');
+    });
+
+    test('should mark clear transparent sunset as casual viewing while keeping fire-cloud score low', () => {
+      const weatherData = {
+        lowClouds: 3,
+        midClouds: 2,
+        highClouds: 1,
+        cloudCover: 6,
+        visibility: 25,
+        humidity: 45,
+        precipitation: 0
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData, new Date('2024-06-21T11:00:00Z'), 40.0, 116.0, 'sunset'
+      );
+
+      expect(result.status).toBe('no_fire_cloud');
+      expect(result.score).toBeLessThan(40);
+      expect(result.description).toBe('clear_sunset_transparent');
+      expect(result.advice).toBe('casual_viewing_ok');
+      expect(result.clearSunsetAdvice.applied).toBe(true);
+    });
+
+    test('should keep clear upper-cloud carrier scenes above 60 points', () => {
+      const weatherData = {
+        cloudCover: 100,
+        lowClouds: 0,
+        midClouds: 67,
+        highClouds: 99,
+        humidity: 54,
+        visibility: 20,
+        precipitation: 0,
+        shortwaveRadiation: 23,
+        directRadiation: 0.1,
+        diffuseRadiation: 22.9,
+        waterVapourColumn: 19.1,
+        aerosolOpticalDepth: 0.41,
+        dust: 36,
+        pm10: 66.8
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData, new Date('2026-05-06T11:12:00.000Z'), 39.9042, 116.4074, 'sunset'
+      );
+
+      expect(result.highCloudCarrierAdjustment).toMatchObject({
+        applied: true,
+        floor: 68,
+        reason: 'clear_upper_cloud_carrier_floor_68'
+      });
+      expect(result.aerosolHazeCap.applied).toBe(false);
+      expect(result.score).toBeGreaterThanOrEqual(65);
+      expect(result.status).toBe('very_likely');
+    });
+
+    test('should cap extreme dust haze high-cloud scenes below 30 points', () => {
+      const weatherData = {
+        cloudCover: 83,
+        lowClouds: 0,
+        midClouds: 24,
+        highClouds: 88,
+        humidity: 19,
+        visibility: 20,
+        precipitation: 0,
+        shortwaveRadiation: 35,
+        directRadiation: 4.9,
+        diffuseRadiation: 30.1,
+        waterVapourColumn: 13.1,
+        aerosolOpticalDepth: 1.3,
+        dust: 1088,
+        pm10: 543.9
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData, new Date('2026-05-06T13:53:00.000Z'), 39.4704, 75.9898, 'sunset'
+      );
+
+      expect(result.aerosolHazeCap).toMatchObject({
+        applied: true,
+        cap: 28,
+        level: 'extreme',
+        reason: 'extreme_dust_haze_cap_28'
+      });
+      expect(result.highCloudCarrierAdjustment.applied).toBe(false);
+      expect(result.score).toBeLessThan(30);
+      expect(result.status).toBe('no_fire_cloud');
+      expect(result.description).toBe('haze_light_suppressed');
+    });
   });
 
   // ========== 批量预测测试 ==========
@@ -695,5 +865,59 @@ describe('EnhancedPredictionService', () => {
       );
       expect(antarcticResult).toHaveProperty('score');
     });
+  });
+});
+
+describe('applySevereWeatherCap - no visible sunset path', () => {
+  let EnhancedPredictionService;
+
+  beforeAll(async () => {
+    EnhancedPredictionService = await import('../../../server/services/EnhancedPredictionService.js');
+  });
+
+  test('caps rainy mid-cloud overcast gray curtain to very low score when high-cloud carrier is missing', () => {
+    const result = EnhancedPredictionService.applySevereWeatherCap(72, {
+      cloudCover: 100,
+      lowClouds: 0,
+      midClouds: 72,
+      highClouds: 0,
+      precipitation: 0,
+      recentPrecipitation6h: 1.8,
+      recentRainHours: 3,
+      visibility: 7,
+      directRadiation: 8,
+      shortwaveRadiation: 120,
+      aerosolOpticalDepth: 0.42,
+      pm2_5: 48,
+      pm10: 92,
+      dust: 12,
+      waterVapourColumn: 34
+    });
+
+    expect(result.score).toBeLessThanOrEqual(5);
+    expect(result.reason).toBe('no_visible_sunset_path_cap_5');
+  });
+
+  test('caps uncertain gray rainy overcast to low score instead of medium score', () => {
+    const result = EnhancedPredictionService.applySevereWeatherCap(72, {
+      cloudCover: 100,
+      lowClouds: 5,
+      midClouds: 68,
+      highClouds: 15,
+      precipitation: 0,
+      recentPrecipitation6h: 0.8,
+      recentRainHours: 2,
+      visibility: 12,
+      directRadiation: 20,
+      shortwaveRadiation: 130,
+      aerosolOpticalDepth: 0.38,
+      pm2_5: 40,
+      pm10: 86,
+      dust: 8,
+      waterVapourColumn: 31
+    });
+
+    expect(result.score).toBeLessThanOrEqual(15);
+    expect(result.reason).toBe('no_visible_sunset_path_cap_15');
   });
 });

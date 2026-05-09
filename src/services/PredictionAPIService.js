@@ -32,7 +32,7 @@ class PredictionAPIService {
    *
    * 需求：22.4 - 前端改为调用后端 API
    */
-  async calculate(weatherData, date, lat, lon, type = 'sunset') {
+  async calculate(weatherData, date, lat, lon, type = 'sunset', options = {}) {
     const startTime = Date.now();
     console.log(`[PredictionAPIService] 调用后端预测 API: lat=${lat}, lon=${lon}, type=${type}`);
 
@@ -43,34 +43,26 @@ class PredictionAPIService {
       // 格式化日期为 ISO 字符串
       const dateString = date instanceof Date ? date.toISOString() : date;
 
-      // 构建请求体
+      // 构建请求体：主预测保持后端闭环，前端只传地点/时刻/type。
+      // 仅当 WEATHER_FETCH_MODE 进入 client/client-fallback 应急路径时，才携带天气数据让后端只负责算分。
+      const useClientWeather = options.weatherFetchMode === 'client' || options.clientWeatherFallback === true;
       const requestBody = {
-        weatherData: {
-          cloudCover: weatherData.cloudCover,
-          humidity: weatherData.humidity,
-          visibility: weatherData.visibility,
-          lowCloudCover: weatherData.lowCloudCover,
-          highClouds: weatherData.highClouds || 0,
-          midClouds: weatherData.midClouds || 0,
-          lowClouds: weatherData.lowClouds || 0,
-          precipitation: weatherData.precipitation || 0,
-          convPrecip: weatherData.convPrecip || weatherData.precipitation || 0,
-          weatherCode: weatherData.weatherCode ?? null,
-          cloudBaseHeight: weatherData.cloudBaseHeight ?? null,
-          // Phase 22: 云厚评估字段
-          shortwaveRadiation: weatherData.shortwaveRadiation ?? null,
-          directRadiation: weatherData.directRadiation ?? null,
-          diffuseRadiation: weatherData.diffuseRadiation ?? null,
-          waterVapourColumn: weatherData.waterVapourColumn ?? null
-        },
         date: dateString,
         lat: lat,
         lon: lon,
         type: type,
-        options: {
-          prevHourData: weatherData._prevHourData || null
-        }
+        referenceTime: dateString
       };
+
+      if (useClientWeather) {
+        requestBody.weatherData = weatherData;
+        requestBody.options = {
+          prevHourData: options.prevHourData || weatherData?._prevHourData || null,
+          rainedRecently: Boolean(options.rainedRecently),
+          remoteCloudData: options.remoteCloudData || null,
+          clientWeatherFallback: options.clientWeatherFallback === true
+        };
+      }
 
       // 发送请求
       const response = await this._fetchWithTimeout(url, {
@@ -99,7 +91,60 @@ class PredictionAPIService {
 
     } catch (error) {
       console.error(`[PredictionAPIService] API 调用失败:`, error);
-      throw new Error(`后端预测 API 调用失败: ${error.message}`);
+      const wrappedError = new Error(`后端预测 API 调用失败: ${error.message}`);
+      wrappedError.code = error.code || null;
+      wrappedError.status = error.status || null;
+      throw wrappedError;
+    }
+  }
+
+  async calculateBatchClosedLoop(items, lat, lon, options = {}) {
+    const startTime = Date.now();
+    const url = `${this.baseURL}/api/prediction/enhanced/closed-loop/batch`;
+    console.log(`[PredictionAPIService] 调用后端闭环批量预测 API: count=${items.length}, lat=${lat}, lon=${lon}`);
+
+    try {
+      const requestBody = {
+        lat,
+        lon,
+        items: items.map((item, index) => ({
+          id: item.id ?? index,
+          date: item.date instanceof Date ? item.date.toISOString() : item.date,
+          referenceTime: item.referenceTime instanceof Date ? item.referenceTime.toISOString() : (item.referenceTime || item.date),
+          type: item.type,
+          options: item.options || undefined
+        })),
+        options: {
+          ...options,
+          includeRemoteCloudData: options.includeRemoteCloudData === true
+        }
+      };
+
+      const response = await this._fetchWithTimeout(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      });
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error?.message || '批量预测计算失败');
+      }
+
+      const predictions = (result.data || []).map((data) => {
+        const prediction = this._convertToPrediction(data);
+        prediction.id = data.id;
+        return prediction;
+      });
+
+      const elapsed = Date.now() - startTime;
+      console.log(`[PredictionAPIService] 闭环批量预测 API 调用成功: ${elapsed}ms, count=${predictions.length}`);
+      return predictions;
+    } catch (error) {
+      console.error('[PredictionAPIService] 闭环批量预测 API 调用失败:', error);
+      const wrappedError = new Error(`后端闭环批量预测 API 调用失败: ${error.message}`);
+      wrappedError.code = error.code || null;
+      wrappedError.status = error.status || null;
+      throw wrappedError;
     }
   }
 
@@ -124,7 +169,10 @@ class PredictionAPIService {
       // 检查 HTTP 状态码
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+        const apiError = new Error(errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+        apiError.code = errorData.error?.code || null;
+        apiError.status = response.status;
+        throw apiError;
       }
 
       return response;
@@ -182,11 +230,23 @@ class PredictionAPIService {
     prediction.canvasAnalysis = data.canvasAnalysis || null;
     prediction.lightPathAnalysis = data.lightPathAnalysis || null;
     prediction.renderingAnalysis = data.renderingAnalysis || null;
+    prediction.aerosolHazeCap = data.aerosolHazeCap || null;
+    prediction.highCloudCarrierAdjustment = data.highCloudCarrierAdjustment || null;
+    prediction.postRainAdjustment = data.postRainAdjustment || null;
+    prediction.thickHighCloudPenalty = data.thickHighCloudPenalty || null;
+    prediction.severeWeatherCap = data.severeWeatherCap || null;
+    prediction.occlusionAnalysis = data.occlusionAnalysis || null;
+    prediction.geometricModel = data.geometricModel || null;
+    prediction.cloudThickness = data.cloudThickness || null;
     prediction.aerosolOpticalDepth = data.aerosolOpticalDepth ?? data.breakdown?.aerosolScattering?.aerosolOpticalDepth ?? null;
     prediction.dust = data.dust ?? data.breakdown?.aerosolScattering?.dust ?? null;
     prediction.pm2_5 = data.pm2_5 ?? data.breakdown?.aerosolScattering?.pm2_5 ?? null;
     prediction.pm10 = data.pm10 ?? data.breakdown?.aerosolScattering?.pm10 ?? null;
     prediction.aqi = data.aqi ?? null;
+    prediction.remoteCloudData = data.remoteCloudData || null;
+    prediction.weatherDataSource = data.weatherDataSource || null;
+    prediction.clientWeatherFallback = data.clientWeatherFallback === true;
+    prediction.providerMeta = data.providerMeta || null;
 
     return prediction;
   }
