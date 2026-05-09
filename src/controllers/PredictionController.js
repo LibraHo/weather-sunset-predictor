@@ -506,19 +506,7 @@ class PredictionController {
     }
 
     if (!prediction.getAzimuthDirection) {
-      prediction.getAzimuthDirection = () => {
-        if (prediction.sunAzimuth === null || prediction.sunAzimuth === undefined) return '';
-
-        const directions = [
-          '北', '东北偏北', '东北', '东北偏东',
-          '东', '东南偏东', '东南', '东南偏南',
-          '南', '西南偏南', '西南', '西南偏西',
-          '西', '西北偏西', '西北', '西北偏北'
-        ];
-
-        const index = Math.round(prediction.sunAzimuth / 22.5) % 16;
-        return directions[index];
-      };
+      prediction.getAzimuthDirection = () => this.formatChineseRelativeAzimuth(prediction.sunAzimuth, 'zh-CN');
     }
 
     if (!prediction.shouldShowAzimuth) {
@@ -1988,6 +1976,32 @@ class PredictionController {
     `;
   }
 
+  formatChineseRelativeAzimuth(azimuth, language = 'zh-CN') {
+    const angle = Number(azimuth);
+    if (!Number.isFinite(angle)) return '';
+
+    const normalized = ((angle % 360) + 360) % 360;
+    const nearestQuarter = Math.round(normalized / 90);
+    const cardinalAngle = nearestQuarter * 90;
+    const cardinalIndex = nearestQuarter % 4;
+    let offset = Math.round(normalized - cardinalAngle);
+    if (offset === -0) offset = 0;
+
+    const chars = language === 'zh-TW'
+      ? { n: '北', e: '東', s: '南', w: '西', straight: '正', lean: '偏' }
+      : { n: '北', e: '东', s: '南', w: '西', straight: '正', lean: '偏' };
+    const cardinals = [chars.n, chars.e, chars.s, chars.w];
+    const sideByCardinal = [
+      offset >= 0 ? chars.e : chars.w,
+      offset >= 0 ? chars.s : chars.n,
+      offset >= 0 ? chars.w : chars.e,
+      offset >= 0 ? chars.n : chars.s,
+    ];
+
+    if (offset === 0) return `${chars.straight}${cardinals[cardinalIndex]}`;
+    return `${cardinals[cardinalIndex]}${chars.lean}${sideByCardinal[cardinalIndex]} ${Math.abs(offset)}°`;
+  }
+
   /**
    * 根据当前语言返回方位角方向描述
    * @param {Object} prediction - 预测对象
@@ -2007,19 +2021,11 @@ class PredictionController {
           : normalizedLanguage.startsWith('zh') ? 'zh-CN'
             : normalizedLanguage.startsWith('en') ? 'en-US'
               : rawLanguage;
+    if (language === 'zh-CN' || language === 'zh-TW') {
+      return this.formatChineseRelativeAzimuth(prediction.sunAzimuth, language);
+    }
+
     const directionSets = {
-      'zh-CN': [
-        '正北', '东北偏北', '东北', '东北偏东',
-        '正东', '东南偏东', '东南', '东南偏南',
-        '正南', '西南偏南', '西南', '西南偏西',
-        '正西', '西北偏西', '西北', '西北偏北'
-      ],
-      'zh-TW': [
-        '正北', '東北偏北', '東北', '東北偏東',
-        '正東', '東南偏東', '東南', '東南偏南',
-        '正南', '西南偏南', '西南', '西南偏西',
-        '正西', '西北偏西', '西北', '西北偏北'
-      ],
       'ja-JP': [
         '北', '北北東', '北東', '東北東',
         '東', '東南東', '南東', '南南東',

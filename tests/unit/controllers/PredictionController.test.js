@@ -187,10 +187,11 @@ describe('PredictionController', () => {
   });
 
   describe('getLocalizedAzimuthDirection', () => {
-    test('296° 应返回 西北偏西', () => {
+    test('296° 应返回 西偏北 26°，避免“西北偏西”这类不自然表述', () => {
       predictionController.i18n = { currentLanguage: 'zh-CN' };
       const dir = predictionController.getLocalizedAzimuthDirection({ sunAzimuth: 296 });
-      expect(dir).toBe('西北偏西');
+      expect(dir).toBe('西偏北 26°');
+      expect(dir).not.toBe('西北偏西');
     });
 
     test('90° 应返回 正东', () => {
@@ -218,10 +219,10 @@ describe('PredictionController', () => {
       expect(dir).not.toBe('西北偏西');
     });
 
-    test('繁中环境 74° 应返回東北偏東', () => {
+    test('繁中环境 74° 应返回東偏北 16°', () => {
       predictionController.i18n = { currentLanguage: 'zh-TW' };
       const dir = predictionController.getLocalizedAzimuthDirection({ sunAzimuth: 74 });
-      expect(dir).toBe('東北偏東');
+      expect(dir).toBe('東偏北 16°');
     });
 
     test('韩语环境 296° 应返回서북서，不应 fallback 到 WNW', () => {
@@ -238,7 +239,7 @@ describe('PredictionController', () => {
         shouldShowAzimuth: () => true
       };
       const direction = predictionController.getPredictionDirectionText(prediction, 'sunrise');
-      expect(direction).toBe('东北偏东');
+      expect(direction).toBe('东偏北 16°');
       expect(direction).not.toContain('↑');
     });
 
@@ -348,7 +349,7 @@ describe('PredictionController', () => {
           end: new Date(sunsetTime.getTime() + 30 * 60 * 1000)
         }),
         shouldShowAzimuth: () => true,
-        getAzimuthDirection: () => '西北偏西'
+        getAzimuthDirection: () => '西偏北 26°'
       };
 
       const html = predictionController.renderSinglePrediction(
@@ -360,10 +361,10 @@ describe('PredictionController', () => {
         'sunset'
       );
 
-      expect(html).toContain('西北偏西');
+      expect(html).toContain('西偏北 26°');
       expect(html).toContain('app-info-row');
-      expect(html).toContain('西北偏西');
-      expect(html).not.toContain('西北偏西 ↑');
+      expect(html).not.toContain('西北偏西');
+      expect(html).not.toContain('西偏北 26° ↑');
     });
 
     test('北京朝霞场景日出方向不应显示为正北', () => {
@@ -388,7 +389,7 @@ describe('PredictionController', () => {
           end: new Date(sunriseTime.getTime() + 30 * 60 * 1000)
         }),
         shouldShowAzimuth: () => true,
-        getAzimuthDirection: () => '东北偏东'
+        getAzimuthDirection: () => '东偏北 16°'
       };
 
       const html = predictionController.renderSinglePrediction(
@@ -400,9 +401,9 @@ describe('PredictionController', () => {
         'sunrise'
       );
 
-      expect(html).toContain('东北偏东');
+      expect(html).toContain('东偏北 16°');
+      expect(html).not.toContain('东北偏东');
       expect(html).not.toContain('正北');
-      expect(html).not.toContain('北</span>');
     });
 
     test('增强分析应显示后端透传的气溶胶 AOD 文案', () => {
@@ -715,7 +716,7 @@ describe('PredictionController', () => {
           end: new Date(sunsetTime.getTime() + 30 * 60 * 1000)
         }),
         shouldShowAzimuth: () => true,
-        getAzimuthDirection: () => '西北偏西'
+        getAzimuthDirection: () => '西偏北 26°'
       };
 
       const html = predictionController.renderSinglePrediction(
@@ -727,8 +728,9 @@ describe('PredictionController', () => {
         'sunset'
       );
 
-      expect(html).toContain('西北偏西');
-      expect(html).not.toContain('西北偏西 ↑');
+      expect(html).toContain('西偏北 26°');
+      expect(html).not.toContain('西北偏西');
+      expect(html).not.toContain('西偏北 26° ↑');
     });
   });
 
