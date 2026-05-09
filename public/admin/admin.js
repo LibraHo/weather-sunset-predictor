@@ -606,6 +606,9 @@ function initUploadForm() {
   const progressBar = document.getElementById('uploadProgressBar');
   const progressText = document.getElementById('uploadProgressText');
   const feedback = document.getElementById('uploadFeedback');
+  const gpsStatus = document.getElementById('photoGpsStatus');
+  const latInput = document.getElementById('lat');
+  const lonInput = document.getElementById('lon');
 
   if (!form || !fileInput) return;
 
@@ -621,13 +624,14 @@ function initUploadForm() {
     if (progressText) progressText.textContent = '等待上传';
   };
 
-  fileInput.addEventListener('change', () => {
+  fileInput.addEventListener('change', async () => {
     const file = fileInput.files?.[0];
     if (selectedName) {
       selectedName.textContent = file ? `已选择：${file.name}` : '尚未选择照片';
     }
     resetProgress();
     if (feedback) feedback.classList.add('hidden');
+    await autofillPhotoGpsFromExif(file, gpsStatus);
   });
 
   form.addEventListener('submit', async (e) => {
@@ -640,11 +644,17 @@ function initUploadForm() {
     const formData = new FormData();
     formData.append('photo', fileInput.files[0]);
     const desc = document.getElementById('description').value;
-    const lat = parseFloat(document.getElementById('lat').value);
-    const lon = parseFloat(document.getElementById('lon').value);
+    const lat = parseFloat(latInput?.value || '');
+    const lon = parseFloat(lonInput?.value || '');
+    if (!isValidPhotoCoordinate(lat, lon)) {
+      const message = '照片位置是必填项：请手动填写有效经纬度。';
+      showMessage(message, 'error', 'uploadFeedback');
+      updateGpsStatus(gpsStatus, message, 'error');
+      return;
+    }
     if (desc) formData.append('description', desc);
-    if (!isNaN(lat)) formData.append('lat', lat);
-    if (!isNaN(lon)) formData.append('lon', lon);
+    formData.append('lat', lat);
+    formData.append('lon', lon);
 
     const btn = document.getElementById('uploadBtn');
     btn.disabled = true;
@@ -673,6 +683,55 @@ function initUploadForm() {
       btn.textContent = '上传照片';
     }
   });
+}
+
+function updateGpsStatus(statusEl, text, type = '') {
+  if (!statusEl) return;
+  statusEl.textContent = text;
+  statusEl.className = `photo-gps-status ${type}`.trim();
+}
+
+function isValidPhotoCoordinate(lat, lon) {
+  return Number.isFinite(lat) && Number.isFinite(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
+}
+
+function setPhotoCoordinate(lat, lon, statusEl, source = '已设置位置') {
+  const latInput = document.getElementById('lat');
+  const lonInput = document.getElementById('lon');
+  if (!isValidPhotoCoordinate(lat, lon)) return false;
+  if (latInput) latInput.value = lat.toFixed(6);
+  if (lonInput) lonInput.value = lon.toFixed(6);
+  updateGpsStatus(statusEl, `${source}：${lat.toFixed(6)}, ${lon.toFixed(6)}`, 'success');
+  return true;
+}
+
+async function autofillPhotoGpsFromExif(file, statusEl) {
+  if (!file) {
+    updateGpsStatus(statusEl, '地理位置必填：选择照片后会尝试读取 EXIF；没有位置请手动填写经纬度。');
+    return;
+  }
+
+  if (!window.exifr?.gps) {
+    updateGpsStatus(statusEl, '浏览器端 EXIF 读取库未加载；位置仍然必填，请手动填写经纬度。', 'warning');
+    return;
+  }
+
+  updateGpsStatus(statusEl, '正在读取照片位置信息...');
+
+  try {
+    const gps = await window.exifr.gps(file);
+    const lat = Number(gps?.latitude);
+    const lon = Number(gps?.longitude);
+
+    if (!isValidPhotoCoordinate(lat, lon)) {
+      updateGpsStatus(statusEl, '这张照片没有可用地理位置信息；位置是必填项，请手动填写经纬度。', 'warning');
+      return;
+    }
+
+    setPhotoCoordinate(lat, lon, statusEl, '已读取位置');
+  } catch (err) {
+    updateGpsStatus(statusEl, '读取照片位置信息失败；位置是必填项，请手动填写经纬度。', 'error');
+  }
 }
 
 function uploadPhotoWithProgress(formData, onProgress) {
