@@ -19,6 +19,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 
 // ---------------------------------------------------------------------------
@@ -36,6 +37,12 @@ const PHOTOS_INDEX     = path.join(PHOTOS_DIR, 'photos.json');
 const THUMB_SIZE       = 300; // px，正方形
 const MAX_FILE_SIZE_MB = 20;  // 上传上限（MB）
 const ALLOWED_MIMES    = new Set(['image/jpeg', 'image/png', 'image/heic']);
+const DAILY_UPLOAD_LIMIT_PER_IP = Math.max(
+  0,
+  parseInt(process.env.PHOTO_UPLOAD_DAILY_IP_LIMIT || '3', 10) || 0
+);
+const UPLOAD_DAY_TIME_ZONE = process.env.PHOTO_UPLOAD_DAY_TIME_ZONE || 'Asia/Shanghai';
+const IP_HASH_SALT = process.env.PHOTO_UPLOAD_IP_HASH_SALT || process.env.ADMIN_PASSWORD || 'xiake-photo-upload';
 
 // ---------------------------------------------------------------------------
 // 内部辅助
@@ -74,6 +81,77 @@ function writeIndex(photos) {
   const tmpFile = PHOTOS_INDEX + '.tmp';
   fs.writeFileSync(tmpFile, JSON.stringify(photos, null, 2), 'utf-8');
   fs.renameSync(tmpFile, PHOTOS_INDEX);
+}
+
+function getUploadDay(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: UPLOAD_DAY_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function normalizeClientIp(clientIp = '') {
+  return String(clientIp)
+    .split(',')[0]
+    .trim()
+    .replace(/^::ffff:/, '');
+}
+
+function hashClientIp(clientIp = '') {
+  const normalizedIp = normalizeClientIp(clientIp);
+  if (!normalizedIp) return null;
+  return crypto
+    .createHash('sha256')
+    .update(`${IP_HASH_SALT}:${normalizedIp}`)
+    .digest('hex');
+}
+
+function getDailyUploadStatsForIp(clientIp, now = new Date()) {
+  const uploadIpHash = hashClientIp(clientIp);
+  const uploadDay = getUploadDay(now);
+
+  if (!uploadIpHash) {
+    return {
+      uploadDay,
+      uploadIpHash: null,
+      limit: DAILY_UPLOAD_LIMIT_PER_IP,
+      used: 0,
+      remaining: DAILY_UPLOAD_LIMIT_PER_IP,
+    };
+  }
+
+  const photos = readIndex();
+  const used = photos.filter(photo =>
+    photo.uploadIpHash === uploadIpHash && photo.uploadDay === uploadDay
+  ).length;
+
+  return {
+    uploadDay,
+    uploadIpHash,
+    limit: DAILY_UPLOAD_LIMIT_PER_IP,
+    used,
+    remaining: Math.max(DAILY_UPLOAD_LIMIT_PER_IP - used, 0),
+  };
+}
+
+function assertDailyUploadLimit(clientIp, now = new Date()) {
+  if (DAILY_UPLOAD_LIMIT_PER_IP <= 0) return null;
+
+  const stats = getDailyUploadStatsForIp(clientIp, now);
+  if (stats.uploadIpHash && stats.used >= DAILY_UPLOAD_LIMIT_PER_IP) {
+    const err = new Error(`DAILY_UPLOAD_LIMIT_EXCEEDED: ${stats.used}/${DAILY_UPLOAD_LIMIT_PER_IP}`);
+    err.code = 'DAILY_UPLOAD_LIMIT_EXCEEDED';
+    err.limit = DAILY_UPLOAD_LIMIT_PER_IP;
+    err.used = stats.used;
+    err.uploadDay = stats.uploadDay;
+    throw err;
+  }
+
+  return stats;
 }
 
 // ---------------------------------------------------------------------------
@@ -126,10 +204,14 @@ async function generateThumbnail(srcPath, dstPath) {
  * @param {number}  [opts.lon]      经度（EXIF 或手动指定）
  * @param {string}  [opts.takenAt]  ISO8601 拍摄时间
  * @param {string}  [opts.desc]     照片描述
+ * @param {string}  [opts.clientIp] 上传客户端 IP（用于每日限额，不落明文）
  * @returns {Promise<object>} 已保存的照片元数据
  * @throws {Error} 若 MIME 不合法或 buffer 超限则抛出
  */
-async function savePhoto({ buffer, mimeType, filename = '', lat, lon, takenAt, desc = '' }) {
+async function savePhoto({ buffer, mimeType, filename = '', lat, lon, takenAt, desc = '', clientIp = '' }) {
+  const now = new Date();
+  const uploadStats = assertDailyUploadLimit(clientIp, now);
+
   // 校验 MIME
   const normalizedMime = (mimeType || '').toLowerCase();
   if (!ALLOWED_MIMES.has(normalizedMime)) {
@@ -168,7 +250,9 @@ async function savePhoto({ buffer, mimeType, filename = '', lat, lon, takenAt, d
     lon:     Number.isFinite(lon)  ? lon  : null,
     takenAt: takenAt || null,
     desc,
-    uploadedAt: new Date().toISOString(),
+    uploadedAt: now.toISOString(),
+    uploadDay: uploadStats?.uploadDay || getUploadDay(now),
+    uploadIpHash: uploadStats?.uploadIpHash || hashClientIp(clientIp),
     sizeMb: parseFloat(sizeMb.toFixed(3)),
   };
 
@@ -243,6 +327,11 @@ module.exports = {
   deletePhoto,
   getPhotoById,
   generateThumbnail,
+  getUploadDay,
+  normalizeClientIp,
+  hashClientIp,
+  getDailyUploadStatsForIp,
+  assertDailyUploadLimit,
   // 路径工具
   getOriginalPath,
   getThumbPath,
@@ -253,4 +342,6 @@ module.exports = {
   PHOTOS_INDEX,
   ALLOWED_MIMES,
   MAX_FILE_SIZE_MB,
+  DAILY_UPLOAD_LIMIT_PER_IP,
+  UPLOAD_DAY_TIME_ZONE,
 };
