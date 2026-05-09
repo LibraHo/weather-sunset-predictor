@@ -7079,18 +7079,18 @@ html[data-actual-theme="light"] .weather-desc {
   gap: 10px !important;
 }
 .weather-metric-card {
-  min-height: 92px;
-  padding: 10px 8px !important;
-  gap: 4px;
+  min-height: 102px;
+  padding: 13px 10px !important;
+  gap: 6px;
 }
 .weather-metric-icon {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-primary, #f97316);
-  opacity: 0.92;
+  color: var(--theme-accent-strong, var(--color-warning, #f59e0b));
+  opacity: 0.95;
   margin-bottom: 2px;
 }
 .weather-metric-icon svg {
@@ -7100,17 +7100,21 @@ html[data-actual-theme="light"] .weather-desc {
 }
 .weather-metric-card .weather-label {
   margin-bottom: 0 !important;
-  font-size: 0.72rem;
-  line-height: 1.12;
+  font-size: 0.82rem;
+  line-height: 1.16;
+  color: var(--theme-text-muted, var(--color-text-light));
+  letter-spacing: 0.01em;
 }
 .weather-metric-card .weather-value {
-  font-size: 1.08rem;
+  font-size: 1.22rem;
   line-height: 1.15;
+  color: var(--theme-text, var(--color-text));
+  font-weight: 750;
 }
 .weather-metric-aerosol .weather-value,
 .weather-metric-pressure .weather-value,
 .weather-metric-visibility .weather-value {
-  font-size: 0.92rem;
+  font-size: 1.02rem;
   white-space: nowrap;
 }
 @media (max-width: 768px) {
@@ -7152,7 +7156,7 @@ html[data-actual-theme="light"] .weather-desc {
 
 /* 天气指标：降水单位较长，保持单行 */
 .weather-metric-precipitation .weather-value {
-  font-size: 0.92rem;
+  font-size: 1.02rem;
 }
 @media (max-width: 768px) {
   .weather-metric-precipitation .weather-value {
@@ -7548,6 +7552,22 @@ body:not(.theme-dark):not(.theme-auto) .day-card {
   border-color: rgba(186, 132, 72, 0.16) !important;
 }
 
+body.theme-dark .weather-metric-card {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(251, 146, 60, 0.10), transparent 56%),
+    rgba(18, 28, 52, 0.72) !important;
+  border-color: rgba(251, 146, 60, 0.18) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 24px rgba(0, 0, 0, 0.16) !important;
+}
+
+body.theme-dark .weather-metric-card .weather-label {
+  color: rgba(255, 244, 230, 0.70);
+}
+
+body.theme-dark .weather-metric-card .weather-value {
+  color: rgba(255, 250, 242, 0.94);
+}
+
 @media (prefers-color-scheme: light) {
   body.theme-auto .card,
   body.theme-auto .weather-card,
@@ -7591,6 +7611,24 @@ body:not(.theme-dark):not(.theme-auto) .day-card {
   body.theme-auto .day-card {
     background: rgba(255, 252, 246, 0.74) !important;
     border-color: rgba(186, 132, 72, 0.16) !important;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  body.theme-auto .weather-metric-card {
+    background:
+      radial-gradient(circle at 50% 0%, rgba(251, 146, 60, 0.10), transparent 56%),
+      rgba(18, 28, 52, 0.72) !important;
+    border-color: rgba(251, 146, 60, 0.18) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 24px rgba(0, 0, 0, 0.16) !important;
+  }
+
+  body.theme-auto .weather-metric-card .weather-label {
+    color: rgba(255, 244, 230, 0.70);
+  }
+
+  body.theme-auto .weather-metric-card .weather-value {
+    color: rgba(255, 250, 242, 0.94);
   }
 }
 
