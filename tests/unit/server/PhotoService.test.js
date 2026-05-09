@@ -159,6 +159,50 @@ describe('savePhoto()', () => {
     expect(meta.lat).toBeNull();
     expect(meta.lon).toBeNull();
   });
+
+  test('limits the same client IP to three uploads per Beijing day', async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-05-09T01:30:00Z')); // 2026-05-09 Asia/Shanghai
+
+    try {
+      const clientIp = '203.0.113.8';
+      await PhotoService.savePhoto({ buffer: makeJpegBuffer(256), mimeType: 'image/jpeg', clientIp });
+      await PhotoService.savePhoto({ buffer: makeJpegBuffer(256), mimeType: 'image/jpeg', clientIp });
+      await PhotoService.savePhoto({ buffer: makeJpegBuffer(256), mimeType: 'image/jpeg', clientIp });
+
+      const stats = PhotoService.getDailyUploadStatsForIp(clientIp);
+      expect(stats).toMatchObject({ limit: 3, used: 3, remaining: 0, uploadDay: '2026-05-09' });
+
+      await expect(
+        PhotoService.savePhoto({ buffer: makeJpegBuffer(256), mimeType: 'image/jpeg', clientIp })
+      ).rejects.toMatchObject({ code: 'DAILY_UPLOAD_LIMIT_EXCEEDED', limit: 3, used: 3 });
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  test('does not store raw client IP and resets the quota on a new Beijing day', async () => {
+    jest.useFakeTimers();
+    const clientIp = '198.51.100.9';
+
+    try {
+      jest.setSystemTime(new Date('2026-05-09T15:55:00Z')); // 2026-05-09 23:55 +08
+      await PhotoService.savePhoto({ buffer: makeJpegBuffer(256), mimeType: 'image/jpeg', clientIp });
+      await PhotoService.savePhoto({ buffer: makeJpegBuffer(256), mimeType: 'image/jpeg', clientIp });
+      await PhotoService.savePhoto({ buffer: makeJpegBuffer(256), mimeType: 'image/jpeg', clientIp });
+
+      const stored = PhotoService.getPhotos()[0];
+      expect(stored.uploadIpHash).toBe(PhotoService.hashClientIp(clientIp));
+      expect(JSON.stringify(stored)).not.toContain(clientIp);
+
+      jest.setSystemTime(new Date('2026-05-09T16:05:00Z')); // 2026-05-10 00:05 +08
+      const nextDay = await PhotoService.savePhoto({ buffer: makeJpegBuffer(256), mimeType: 'image/jpeg', clientIp });
+      expect(nextDay.uploadDay).toBe('2026-05-10');
+      expect(PhotoService.getDailyUploadStatsForIp(clientIp)).toMatchObject({ used: 1, remaining: 2 });
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 });
 
 // ─── getPhotos ────────────────────────────────────────────────────────────

@@ -66,6 +66,19 @@ function requireAuth(req, res, next) {
   next();
 }
 
+function getClientIp(req) {
+  const forwardedFor = req.headers['x-forwarded-for'];
+  const candidate = Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor;
+  return photoService.normalizeClientIp(
+    req.headers['cf-connecting-ip'] ||
+    req.headers['x-real-ip'] ||
+    candidate ||
+    req.ip ||
+    req.socket?.remoteAddress ||
+    ''
+  );
+}
+
 // ---------------------------------------------------------------------------
 // GET /admin - 后台管理页面
 // ---------------------------------------------------------------------------
@@ -177,6 +190,7 @@ router.post('/upload', requireAuth, upload.single('photo'), async (req, res) => 
       lat,
       lon,
       desc: req.body.description || '',
+      clientIp: getClientIp(req),
     });
 
     res.status(201).json({
@@ -218,6 +232,18 @@ router.post('/upload', requireAuth, upload.single('photo'), async (req, res) => 
         error: {
           code: 'UNSUPPORTED_MIME',
           message: '不支持的文件类型，仅支持 JPEG、PNG、HEIC'
+        }
+      });
+    }
+
+    if (err.code === 'DAILY_UPLOAD_LIMIT_EXCEEDED') {
+      return res.status(429).json({
+        error: {
+          code: 'DAILY_UPLOAD_LIMIT_EXCEEDED',
+          message: `同一 IP 每天最多上传 ${err.limit || 3} 张照片`,
+          limit: err.limit,
+          used: err.used,
+          uploadDay: err.uploadDay,
         }
       });
     }
