@@ -723,10 +723,11 @@ describe('EnhancedPredictionService', () => {
       );
 
       expect(result.thickHighCloudPenalty).toMatchObject({
-        applied: true,
-        cap: 60,
-        reason: 'dense_upper_cloud_carrier_soft_cap_60'
+        applied: false,
+        cap: null,
+        reason: 'dense_upper_cloud_carrier_canvas_only'
       });
+      expect(result.lightPathAnalysis.thickHighCloudPenalty).toBeUndefined();
       expect(result.cloudThickness).toMatchObject({
         thickness: 'moderate',
         modifier: 0.75
@@ -734,7 +735,7 @@ describe('EnhancedPredictionService', () => {
       expect(result.cloudThickness.reasons).toContain('dense_upper_cloud_carrier_softened');
       expect(result.score).toBeGreaterThanOrEqual(50);
       expect(result.score).toBeLessThanOrEqual(60);
-      expect(result.status).toBe('good_glow');
+      expect(result.status).toBe('light_glow');
     });
 
     test('should mark clear transparent sunset as casual viewing while keeping fire-cloud score low', () => {

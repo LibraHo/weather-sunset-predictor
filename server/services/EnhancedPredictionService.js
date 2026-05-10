@@ -546,9 +546,9 @@ function assessThickHighCloudPenalty(weatherData, cloudThickness) {
 
   if (softenedCarrier) {
     return {
-      applied: true,
-      cap: 60,
-      reason: 'dense_upper_cloud_carrier_soft_cap_60'
+      applied: false,
+      cap: null,
+      reason: 'dense_upper_cloud_carrier_canvas_only'
     };
   }
 
