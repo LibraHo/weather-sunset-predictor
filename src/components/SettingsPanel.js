@@ -421,7 +421,7 @@ class SettingsPanel {
 
     const weatherFetchModeSelect = document.getElementById('weather-fetch-mode-select');
     if (weatherFetchModeSelect) {
-      weatherFetchModeSelect.value = localStorage.getItem('weather_fetch_mode') || 'backend';
+      weatherFetchModeSelect.value = localStorage.getItem('weather_fetch_mode') || 'client-fallback';
     }
 
     // 加载通知设置

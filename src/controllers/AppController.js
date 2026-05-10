@@ -191,7 +191,9 @@ class AppController {
         // 生成晚霞预测
         let predictions;
         try {
-          predictions = await this.predictionController.generatePredictions(weatherData, location);
+          predictions = await this._runPredictionWithTimeout(
+            this.predictionController.generatePredictions(weatherData, location)
+          );
         } catch (predictionError) {
           console.error('[AppController] 生成预测时出错:', predictionError.message);
           this.showError(`晚霞预测功能暂时不可用: ${predictionError.message}`);
@@ -860,6 +862,18 @@ class AppController {
       const errorInfo = ErrorHandler.handleError(error, 'Data Refresh');
       this.showError(this.i18n.t('app.refreshFailed', { message: errorInfo.message }));
     }
+  }
+
+  _runPredictionWithTimeout(predictionPromise, timeoutMs = 25000) {
+    let timeoutId;
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => {
+        reject(new Error(this.i18n?.t?.('errors.timeout') || 'Request timeout, please retry'));
+      }, timeoutMs);
+    });
+
+    return Promise.race([predictionPromise, timeoutPromise])
+      .finally(() => clearTimeout(timeoutId));
   }
 
   /**

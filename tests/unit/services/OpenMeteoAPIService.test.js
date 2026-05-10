@@ -48,6 +48,7 @@ describe('OpenMeteoAPIService', () => {
   });
 
   test('preserves structured backend weather error code/status for fallback decisions', async () => {
+    localStorage.setItem('weather_fetch_mode', 'backend');
     fetchSpy.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ windyEnabled: false })

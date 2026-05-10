@@ -250,7 +250,7 @@ class PredictionController {
     const config = loadConfig();
     this.features = config.features;
     this.apiConfig = config;
-    this.weatherFetchMode = config.weatherFetchMode || 'backend';
+    this.weatherFetchMode = config.weatherFetchMode || 'client-fallback';
     this.predictionPanelAlignmentRaf = null;
     this.predictionPanelAlignmentRoot = null;
     this.predictionPanelResizeHandler = null;
@@ -368,7 +368,7 @@ class PredictionController {
           });
         }
 
-        if (mode === 'backend') {
+        if (mode !== 'client') {
           const batchKey = this._predictionBatchKey(type, date);
           const batchPrediction = this._closedLoopBatchPredictionMap?.get(batchKey);
           if (batchPrediction) {
@@ -382,10 +382,15 @@ class PredictionController {
         } catch (error) {
           if (mode === 'client-fallback' && this._isWeatherFallbackEligible(error)) {
             console.warn('[PredictionController] 后端闭环天气不可用，使用浏览器天气数据 + 后端算分 fallback:', error.message);
-            return await this.predictionAPIService.calculate(weatherData, date, lat, lon, type, {
-              ...clientWeatherOptions,
-              clientWeatherFallback: true
-            });
+            try {
+              return await this.predictionAPIService.calculate(weatherData, date, lat, lon, type, {
+                ...clientWeatherOptions,
+                clientWeatherFallback: true
+              });
+            } catch (fallbackError) {
+              console.warn('[PredictionController] 后端应急算分仍不可用，改用前端本地预测:', fallbackError.message);
+              return this._calculateLocalPredictionFallback(weatherData, date, lat, lon, type, weatherDataArray);
+            }
           }
           throw error;
         }
@@ -395,10 +400,14 @@ class PredictionController {
       }
     } else {
       // 使用前端计算
-      return this.predictionService.calculatePrediction(weatherData, date, lat, lon, type, {
-        timezone: weatherData?.timezone || null
-      });
+      return this._calculateLocalPredictionFallback(weatherData, date, lat, lon, type, weatherDataArray);
     }
+  }
+
+  _calculateLocalPredictionFallback(weatherData, date, lat, lon, type, weatherDataArray = null) {
+    return this.predictionService.calculatePrediction(weatherData, date, lat, lon, type, {
+      timezone: weatherData?.timezone || weatherDataArray?.providerMeta?.timezone || null
+    });
   }
 
 
@@ -457,7 +466,7 @@ class PredictionController {
 
   async _prepareClosedLoopBatchPredictions({ today, location, targetTimezone }) {
     const mode = loadConfig().weatherFetchMode || this.weatherFetchMode || 'backend';
-    if (!this.features.USE_BACKEND_PREDICTION || mode !== 'backend') {
+    if (!this.features.USE_BACKEND_PREDICTION || mode === 'client') {
       this._closedLoopBatchPredictionMap = null;
       return;
     }
