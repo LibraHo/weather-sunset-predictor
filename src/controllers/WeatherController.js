@@ -282,8 +282,7 @@ class WeatherController {
       }
     }
 
-    // 获取当前天气（第一个数据点）
-    const currentWeather = weatherData[0];
+    const currentWeather = this._getCurrentWeatherPoint(weatherData);
 
     // 更新位置
     const locationEl = document.getElementById('weather-location');
@@ -414,6 +413,35 @@ class WeatherController {
    */
   getCurrentWeatherData() {
     return this.currentWeatherData;
+  }
+
+  _getCurrentWeatherPoint(weatherData, now = Date.now()) {
+    if (!Array.isArray(weatherData) || weatherData.length === 0) {
+      return null;
+    }
+
+    const nowMs = Number(now);
+    if (!Number.isFinite(nowMs)) {
+      return weatherData[0];
+    }
+
+    return weatherData.reduce((best, item) => {
+      const timestamp = Number(item?.timestamp);
+      if (!Number.isFinite(timestamp)) {
+        return best;
+      }
+
+      const bestTimestamp = Number(best?.timestamp);
+      if (!Number.isFinite(bestTimestamp)) {
+        return item;
+      }
+
+      const diff = Math.abs(timestamp - nowMs);
+      const bestDiff = Math.abs(bestTimestamp - nowMs);
+      if (diff < bestDiff) return item;
+      if (diff === bestDiff && timestamp <= nowMs && bestTimestamp > nowMs) return item;
+      return best;
+    }, weatherData[0]);
   }
 
   /**
@@ -1546,7 +1574,7 @@ class WeatherController {
       async (loc) => {
         // 使用不修改全局状态的私有方法，避免周边请求覆盖当前位置/天气数据
         const weatherData = await this._fetchWeatherWithoutMutation(loc);
-        return weatherData[0]; // 返回当前天气数据
+        return this._getCurrentWeatherPoint(weatherData); // 返回当前天气数据
       },
       (weatherData) => {
         if (!weatherData) return null;
