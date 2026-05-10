@@ -409,6 +409,24 @@ function estimateCloudBaseHeight(weatherData) {
 
 // ========== 云厚评估模块（Phase 22）==========
 
+function isFavorableDenseUpperCloudCarrier(weatherData) {
+  const lowClouds = Number(weatherData.lowClouds || 0);
+  const midClouds = Number(weatherData.midClouds || 0);
+  const highClouds = Number(weatherData.highClouds || 0);
+  const visibility = Number(weatherData.visibility ?? 20);
+  const precipitation = Number(weatherData.precipitation || 0);
+  const { aod, pm10, dust } = getAerosolMetrics(weatherData);
+
+  return highClouds >= 80
+    && midClouds >= 30
+    && lowClouds <= 10
+    && precipitation <= 0.2
+    && visibility >= 15
+    && (aod == null || aod <= 0.45)
+    && (pm10 == null || pm10 < 120)
+    && (dust == null || dust < 80);
+}
+
 /**
  * 云厚评估：区分“薄卷云（好幕布）”和“厚云幕（压光）”
  *
@@ -501,6 +519,11 @@ function assessCloudThickness(weatherData, prevHourData = null) {
     modifier = 0.45;   // 厚云幕，大幅压分
   }
 
+  if (thickness === 'thick' && isFavorableDenseUpperCloudCarrier(weatherData)) {
+    signals.push('dense_upper_cloud_carrier_softened');
+    return { thickness: 'moderate', modifier: 0.75, reasons: signals, score };
+  }
+
   return { thickness, modifier, reasons: signals, score };
 }
 
@@ -519,6 +542,15 @@ function assessThickHighCloudPenalty(weatherData, cloudThickness) {
   const directWeak = reasons.includes('direct_ratio_low') || reasons.includes('direct_ratio_low_moderate');
   const diffuseDominant = reasons.includes('diffuse_dominant');
   const waterHeavy = reasons.includes('water_vapour_very_high');
+  const softenedCarrier = reasons.includes('dense_upper_cloud_carrier_softened');
+
+  if (softenedCarrier) {
+    return {
+      applied: true,
+      cap: 60,
+      reason: 'dense_upper_cloud_carrier_soft_cap_60'
+    };
+  }
 
   if (!isHighCloudCurtain || !isThick || !(directWeak || diffuseDominant || waterHeavy)) {
     return { applied: false, cap: null, reason: null };
