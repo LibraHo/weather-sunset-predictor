@@ -242,8 +242,8 @@ class SettingsPanel {
                 <small class="setting-subtitle">${this.i18n.t('settings.weatherFetchModeHint')}</small>
                 <div class="setting-control setting-control-full">
                   <select id="weather-fetch-mode-select" class="setting-select">
-                    <option value="backend">${this.i18n.t('settings.weatherFetchModeBackend')}</option>
                     <option value="client-fallback">${this.i18n.t('settings.weatherFetchModeClientFallback')}</option>
+                    <option value="backend">${this.i18n.t('settings.weatherFetchModeBackend')}</option>
                     <option value="client">${this.i18n.t('settings.weatherFetchModeClient')}</option>
                   </select>
                 </div>
