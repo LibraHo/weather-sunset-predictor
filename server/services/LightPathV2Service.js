@@ -132,8 +132,9 @@ function scoreLightPathV2(params) {
   const isPrecipCode = typeof weatherCode === 'number' && PRECIPITATION_WEATHER_CODES.has(weatherCode);
   const hasPrecipitation = precipitation > 0.5 || convPrecip > 0.5 || isPrecipCode;
 
-  // overcast 判定以低云遮挡为主，中高云不再单独触发强封顶
-  const isOvercast = cloudCover >= 90 || lowClouds >= 75;
+  // 光路遮挡以低云为主。中高云通常是火烧云的色彩画布，不能只因为总云量高就当作低云阴天。
+  const isLowCloudDominant = lowClouds > Math.max(midClouds, highClouds);
+  const isLowCloudOvercast = lowClouds >= 75 || (cloudCover >= 90 && lowClouds >= 50 && isLowCloudDominant);
 
   // 重度降水（≥1mm）+ 全覆盖（cloudCover=100 或 lowClouds≥90）→ 严重封顶 10
   const HEAVY_PRECIP_CODES = new Set([65, 75, 77, 82, 85, 86, 95, 96, 99]);
@@ -144,11 +145,11 @@ function scoreLightPathV2(params) {
   if (isFullOvercast && isHeavyPrecip) {
     lightPathScore = Math.min(lightPathScore, 10);
     capReason = 'overcast_cap_40'; // 保持与现有 capReason 一致（已有测试依赖此字符串）
-  } else if (isOvercast && hasPrecipitation) {
+  } else if (isLowCloudOvercast && hasPrecipitation) {
     // 同时命中取更严格上限（overcast_cap_40 < precipitation_cap_50）
     lightPathScore = Math.min(lightPathScore, 40);
     capReason = 'overcast_cap_40';
-  } else if (isOvercast) {
+  } else if (isLowCloudOvercast) {
     lightPathScore = Math.min(lightPathScore, 40);
     capReason = 'overcast_cap_40';
   } else if (hasPrecipitation) {
@@ -157,7 +158,7 @@ function scoreLightPathV2(params) {
   }
 
   // 5. 任务59：异常告警
-  if (isOvercast && lightPathScore > 60) {
+  if (isLowCloudOvercast && lightPathScore > 60) {
     console.warn(`[LightPathV2] ANOMALY: cloudCover=${cloudCover} lowClouds=${lowClouds} but lightPathScore=${lightPathScore.toFixed(1)} > 60`);
   }
 

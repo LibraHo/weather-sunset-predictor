@@ -53,6 +53,18 @@ export default {
     methodology: {
       title: '火烧云计算方法',
       intro: '火烧云指数由四个关键因子综合计算，帮助你快速判断当天是否值得蹲守晚霞。',
+      versionLabel: '算法版本：2026.05.10-low-cloud-lightpath-v3',
+      versionDesc: '本版优化光路判断：低云会遮住太阳光，中高云更多作为晚霞画布，不再只因为总云量高就压低光路。',
+      changelogTitle: "版本更新记录",
+      changelogHint: "用于回溯每次算法调整的原因、影响和验证方式",
+      changelog: {
+              "current": {
+                      "date": "2026-05-10",
+                      "title": "低云主导光路 v3",
+                      "summary": "光路主要看低云和太阳方向是否挡光；高云、中云丰富时优先当作晚霞画布处理。",
+                      "validation": "验证：高云满天但低云很少的样本不再被当作阴天；低云主导、降水样本仍保持低分。"
+              }
+      },
       factors: {
         highMidCloudTitle: '中高云（画布条件）',
         highMidCloudDesc: '中高云越理想，越容易形成丰富的橙红色层次；过少或过厚都会降低效果。',
@@ -89,10 +101,10 @@ export default {
         lightPath: {
           title: '2. 光路评估',
           subtitle: 'Light Path · 光路评分',
-          desc: '光路通畅度决定光线能否顺利到达云层。后端会沿太阳方位采样 15/30/50/100km，识别透光开口或云墙遮挡。',
-          lowCloudEffect: '低云<30%时降低遮挡权重；若太阳方向低/中云成墙，则保守压低光路分',
+          desc: '光路通畅度决定阳光能否照到可染色的中高云。低云挡在太阳方向时会明显拉低光路；中高云多时通常先看作晚霞画布。',
+          lowCloudEffect: '低云少时光路更容易打开；低云主导或太阳方向有低云墙时，光线更难照到云层',
           visibility: '能见度：影响光线传播清晰度',
-          formula: '光路分 = 几何/本地光路分 × 低云系数 × 太阳方向走廊修正'
+          formula: '光路分 = 太阳角度与云底高度估算 + 低云遮挡 + 太阳方向走廊修正'
         },
         transparency: {
           title: '3. 大气透明度',
@@ -120,13 +132,13 @@ export default {
           level4: '低云>70% → ×0.2（严重遮挡）'
         },
         thickHighCloudPenalty: {
-          title: '6. 厚高云惩罚',
-          subtitle: 'Thick High Cloud · 封顶',
-          desc: '高云多不一定代表高分；需要同时判断云幕厚度与空气透明度。清透高云可保底，厚云幕或沙尘灰幕会封顶。',
-          level1: '高云≥80% 且低云很少：先进入高云载体/厚云幕双向判定',
-          level2: '空气通透、沙尘不重时：避免云厚信号误伤，可保底到约64–68分',
-          level3: '直射比低、漫射主导或水汽很高：厚云幕封顶约42–48分；沙尘/PM10/AOD 极高时封顶约28分',
-          formula: '最终修正 = 高云载体保底 或 min(最终分, 厚云幕/灰幕封顶)，用于区分“能染色的高云”和“灰黄遮光的云幕”'
+          title: '6. 厚高云与灰幕修正',
+          subtitle: 'Cloud Thickness · 画布与空气修正',
+          desc: '高云多不一定代表高分；算法会区分“可被染色的中高云载体”和“遮光灰幕”。前者按云面质量修正，后者结合空气质量判断。',
+          level1: '中高云载体明确：高云≥80%、中云≥30%、低云≤10%、无降水且空气不灰',
+          level2: '这类场景按可染色云面质量修正画布分，光路判断保持独立',
+          level3: '如果云幕很厚或空气发灰，颜色会变暗、变淡',
+          formula: '最终修正 = 云面质量修正 + 灰幕/沙尘/降水/几何限制等独立条件'
         },
         precipPenalty: {
           title: '6. 降水惩罚系数',
@@ -143,7 +155,7 @@ export default {
           subtitle: 'Final Score Formula',
           desc: '最终得分由画布评分和光路评分加权计算，再乘以惩罚系数。',
           formula: '综合得分 = (画布分 × 0.8 + 光路分 × 0.2) × 低云系数 × 降水系数',
-          highCloudCap: '高云主导无远端数据时，上限放宽至85分（原69.9分）'
+          highCloudCap: '高云主导且低云少时，避免把好画布误判为低分'
         }
       }
     }
@@ -287,13 +299,14 @@ export default {
           baseScore: '基础分',
           rendering: '显色修正',
           final: '最终分',
-          hardCap: '硬封顶',
-          hazeCap: '灰幕封顶',
-          thickCloudCap: '厚云封顶',
-          geometryCap: '几何封顶',
+          hardCap: '天气限制',
+          hazeCap: '灰幕影响',
+          thickCloudCap: '厚云影响',
+          cloudThicknessModifier: '云厚修正',
+          geometryCap: '太阳角度',
           occlusion: '遮挡修正',
           carrierFloor: '载体保底',
-          postRainCap: '雨后灰幕封顶',
+          postRainCap: '雨后灰幕',
           displayCalibration: '展示分校准'
         },
         details: {
@@ -301,28 +314,32 @@ export default {
           cloudPenalty: '低云 ×{{low}}，阴天 ×{{overcast}}',
           lightPath: '阳光是否能打到云层',
           renderingFactors: '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}',
-          afterAdjustments: '应用所有封顶/保底后',
+          afterAdjustments: '结合天气和能见度后',
           finalDisplayed: '最终展示结果',
           thickCloudCap: '高云过厚，真实可染色效果下降',
+          cloudThicknessModifier: '中高云载体明确时，仅按可染色云面质量做修正',
           geometryCap: '太阳与云层几何条件不足',
           occlusion: '远端遮挡压低最终分',
           carrierFloor: '高云载体清透，避免误伤低估',
-          directionalSamples: '已接入太阳方位 15/30/50/100km 周边采样',
-          postRainCap: '雨后水汽/灰幕压光，霞光按低上限处理',
+          directionalSamples: '已参考太阳方向周边云况',
+          lightPathLowCloudBlock: '低云遮住太阳方向，光线不容易照到中高云',
+          lightPathRain: '降水会削弱日落直射光',
+          postRainCap: '雨后水汽或灰幕偏重，霞光容易发灰',
           displayCalibration: '最终展示分按预测状态档位校准'
         },
         reasons: {
-          precipitationCap45: '降水叠加低云，分数封顶到 45',
-          overcastCap35: '低云阴天遮挡，分数封顶到 35',
-          overcastFogCap15: '阴天且能见度≤5km，分数硬封顶到 15',
-          rainyMidCloudOvercastCap35: '雨后灰幕中云阴天，分数封顶到 35',
-          extremeDustHazeCap28: '强沙尘/灰幕压制，分数封顶到 28',
-          severeHazeCap35: '重度灰霾压制，分数封顶到 35',
-          moderateHazeCap45: '中度灰霾压制，分数封顶到 45',
-          adjustmentApplied: '应用封顶/保底修正',
+          precipitationCap45: '降水叠加低云，观赏条件明显变差',
+          overcastCap35: '低云遮住太阳方向，光线不容易照到云层',
+          overcastFogCap15: '低云叠加低能见度，天空容易发灰',
+          rainyMidCloudOvercastCap35: '雨后水汽偏重，霞光不容易显色',
+          extremeDustHazeCap28: '强沙尘或灰幕会压住霞光',
+          severeHazeCap35: '重度灰霾让颜色不容易出来',
+          moderateHazeCap45: '灰霾会削弱红橙色',
+          denseCarrierCanvasOnly: '中高云载体明确，仅应用画布云厚修正',
+          adjustmentApplied: '已按限制条件修正',
           displayCalibration: '最终展示分按预测状态档位校准',
-          lightPathStatusCap60: '光路只有 {{light}}，归入轻微霞光档，最终展示分封顶到 60',
-          canvasStatusCap40: '云层载体只有 {{canvas}}，归入无火烧云档，最终展示分封顶到 40 以下'
+          lightPathStatusCap60: '光路约 {{light}}，更像轻微霞光机会',
+          canvasStatusCap40: '云层载体约 {{canvas}}，火烧云机会偏弱'
         }
       }},
 formationAnalysis: {
@@ -360,12 +377,17 @@ formationAnalysis: {
         low: '空气过于通透（AOD {{value}}）', lowDesc: '颜色可能偏淡'
       },
       lightPath: {
-        opening: '太阳方向有透光开口', openingDesc: '后端沿太阳方位采样 15/30/50/100km，低中云走廊较通畅，光线更容易打到云层',
-        wall: '太阳方向有云墙遮挡', wallDesc: '太阳方位周边低/中云偏厚，远端光路会压低主评分'
+        opening: '太阳方向有透光开口', openingDesc: '太阳方向的低云较少，光线更容易打到云层',
+        wall: '太阳方向有云墙遮挡', wallDesc: '太阳方位周边低/中云偏厚，远端光路会压低主评分',
+        lowCloudBlock: '低云遮住光线', lowCloudBlockDesc: '低云挡在太阳方向，阳光不容易照到中高云'
       },
       postRain: {
         clear: '雨后空气清透', clearDesc: '近6小时有降水，但能见度和颗粒物条件较好，雨后加成保留',
-        gray: '雨后灰幕风险', grayDesc: '降水后水汽/颗粒物/直射比不理想，算法按灰幕场景封顶'
+        gray: '雨后灰幕风险', grayDesc: '降水后水汽或颗粒物偏重，霞光容易发灰'
+      },
+      carrier: {
+        strong: '高云载体清晰', strongDesc: '高云充足、低云稀少且空气较通透，具备中高分基础',
+        dense: '中高云载体明确', denseDesc: '高云和中云共同提供画布，色彩载体更稳定'
       },
       layer: { single: '云层单一', singleDesc: '高云质量好，仍可形成鲜明火烧云' }
     },
@@ -447,7 +469,7 @@ formationAnalysis: {
 
     thickHighCloud: {
       title: '厚高云惩罚',
-      scoreHint: '厚高云幕，直射光弱，仅局部透光，最终分封顶',
+      scoreHint: '厚高云幕，直射光弱，仅局部透光，分数会偏低',
       analysisTitle: '厚高云幕',
       analysisDesc: '高云虽多，但云层偏厚、直射光弱，通常只能在日落方向出现局部霞光'
     },
@@ -458,7 +480,7 @@ formationAnalysis: {
     },
 
     aerosolHaze: {
-      title: '沙尘灰幕封顶',
+      title: '沙尘灰幕影响',
       scoreHint: 'AOD、沙尘或 PM10 过高时，高云多也不代表能烧起来'
     },
 
