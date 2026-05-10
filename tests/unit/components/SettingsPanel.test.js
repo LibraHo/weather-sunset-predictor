@@ -8,6 +8,9 @@
 import { jest } from '@jest/globals';
 import SettingsPanel from '@components/SettingsPanel.js';
 import i18n from '@/i18n.js';
+import zhCN from '@/locales/zh-CN.js';
+import zhTW from '@/locales/zh-TW.js';
+import enUS from '@/locales/en-US.js';
 
 // ---- Mock i18n 单例 ----
 
@@ -231,6 +234,40 @@ describe('SettingsPanel - API 配置入口', () => {
     sp.open();
     const select = document.getElementById('api-mode-select');
     expect(select).toBeNull();
+  });
+
+  test('天气计算模式默认自适应，并显示三个模式', () => {
+    const sp = makePanel();
+    sp.open();
+
+    const select = document.getElementById('weather-fetch-mode-select');
+    expect(select).not.toBeNull();
+    expect(select.value).toBe('client-fallback');
+    expect(Array.from(select.options).map(option => option.value)).toEqual([
+      'client-fallback',
+      'backend',
+      'client'
+    ]);
+  });
+
+  test('天气计算模式中英繁文案使用用户可理解的三模式名称', () => {
+    expect(zhCN.settings.weatherFetchModeClientFallback).toBe('自适应模式（默认）');
+    expect(zhCN.settings.weatherFetchModeBackend).toBe('后端模式');
+    expect(zhCN.settings.weatherFetchModeClient).toBe('前端模式');
+
+    expect(zhTW.settings.weatherFetchModeClientFallback).toBe('自適應模式（預設）');
+    expect(zhTW.settings.weatherFetchModeBackend).toBe('後端模式');
+    expect(zhTW.settings.weatherFetchModeClient).toBe('前端模式');
+
+    expect(enUS.settings.weatherFetchModeClientFallback).toBe('Adaptive mode (default)');
+    expect(enUS.settings.weatherFetchModeBackend).toBe('Backend mode');
+    expect(enUS.settings.weatherFetchModeClient).toBe('Frontend mode');
+  });
+
+  test('天气计算模式收到非法值时回到自适应模式', () => {
+    const sp = makePanel();
+    sp.handleWeatherFetchModeChange('unknown-mode');
+    expect(localStorage.getItem('weather_fetch_mode')).toBe('client-fallback');
   });
 });
 
