@@ -9358,3 +9358,72 @@ html[data-actual-theme="dark"] #weather-section #weekly-cards.weekly-cards-conta
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
   }
 }
+
+/* 2026-05-10: formation analysis cards must read like compact notes, not split ledgers. */
+.app-analysis-card .analysis-item {
+  grid-template-columns: 22px minmax(0, 1fr) !important;
+  align-items: start !important;
+  gap: 10px !important;
+  min-height: 0 !important;
+  padding: 10px 12px !important;
+  text-align: left !important;
+}
+
+.app-analysis-card .analysis-item-icon {
+  width: 22px !important;
+  height: 22px !important;
+  margin-top: 1px !important;
+}
+
+.app-analysis-card .analysis-item-copy {
+  display: grid !important;
+  gap: 3px !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  text-align: left !important;
+  justify-items: start !important;
+}
+
+.app-analysis-card .analysis-item-copy strong,
+.app-analysis-card .analysis-item-copy small {
+  display: block !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  overflow-wrap: anywhere !important;
+  word-break: normal !important;
+  letter-spacing: 0 !important;
+  text-align: left !important;
+}
+
+.app-analysis-card .analysis-item-copy strong {
+  font-size: 0.94rem !important;
+  line-height: 1.24 !important;
+}
+
+.app-analysis-card .analysis-item-copy small {
+  font-size: 0.82rem !important;
+  line-height: 1.36 !important;
+}
+
+@media (max-width: 430px) {
+  .app-analysis-card .analysis-item {
+    grid-template-columns: 20px minmax(0, 1fr) !important;
+    gap: 8px !important;
+    padding: 9px 10px !important;
+  }
+
+  .app-analysis-card .analysis-item-icon {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .app-analysis-card .analysis-item-copy strong {
+    font-size: 0.88rem !important;
+  }
+
+  .app-analysis-card .analysis-item-copy small {
+    font-size: 0.76rem !important;
+  }
+}

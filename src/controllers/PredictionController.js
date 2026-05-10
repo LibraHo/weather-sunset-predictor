@@ -1494,7 +1494,7 @@ class PredictionController {
       'postRain.clear': '雨后空气清透', 'postRain.clearDesc': '近6小时有降水，但能见度和颗粒物条件较好，雨后加成保留',
       'postRain.gray': '雨后灰幕风险', 'postRain.grayDesc': '降水后水汽/颗粒物/直射比不理想，算法按灰幕场景封顶',
       'carrier.strong': '高云载体清晰', 'carrier.strongDesc': '高云充足、低云稀少且空气较通透，具备中高分基础',
-      'carrier.dense': '中高云载体明确', 'carrier.denseDesc': '高云和中云共同提供画布，云厚只温和降分，不再重复封顶',
+      'carrier.dense': '中高云载体明确', 'carrier.denseDesc': '高云和中云共同提供画布，色彩载体更稳定',
       'layer.single': '云层单一', 'layer.singleDesc': '高云质量好，仍可形成鲜明火烧云'
     }[key] || fullKey;
 
@@ -1890,7 +1890,7 @@ class PredictionController {
       denseCarrierCanvasOnly ? {
         label: ledgerText('labels.cloudThicknessModifier', {}, 'Cloud-thickness modifier', '云厚修正'),
         value: `×${fmt(cloudThickness?.modifier ?? 0.75, 2)}`,
-        detail: ledgerText('details.cloudThicknessModifier', {}, 'when mid/high-cloud carriers are clear, thickness only softens the canvas and does not add another hard cap', '中高云载体明确时，云厚只温和降低画布分，不再额外封顶'),
+        detail: ledgerText('details.cloudThicknessModifier', {}, 'mid/high-cloud carriers are clear, so only colorable cloud quality is adjusted', '中高云载体明确时，仅按可染色云面质量做修正'),
         tone: 'cap'
       } : null,
       geometricModel?.feasible === false ? {
