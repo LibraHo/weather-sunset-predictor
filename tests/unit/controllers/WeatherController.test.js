@@ -599,6 +599,68 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(document.getElementById('current-precipitation').textContent).toBe('1.6 mm');
   });
 
+  test('updateWeatherDisplay: 当前天气应选择接近当前时间的小时点，而不是当天第一条', () => {
+    document.body.innerHTML = `
+      <section id="weather-section" class="card hidden">
+        <div id="weather-data" class="hidden"></div>
+        <div id="weather-location"></div>
+        <span id="current-temp-main"></span>
+        <span id="current-temp-unit"></span>
+        <span id="weather-icon-main"></span>
+        <span id="weather-description"></span>
+        <span id="current-humidity"></span>
+        <span id="current-cloud-cover"></span>
+        <span id="current-wind-speed"></span>
+        <span id="current-wind-direction-icon"></span>
+        <span id="current-wind-direction-text"></span>
+        <span id="current-pressure"></span>
+        <span id="current-visibility"></span>
+        <span id="current-aerosol"></span>
+        <span id="current-precipitation"></span>
+        <div id="weekly-cards"></div>
+      </section>
+    `;
+    controller.i18n = { t: jest.fn(key => key) };
+    controller.tempUnit = 'celsius';
+    controller.getConvertedTemp = value => value;
+    controller.formatWindSpeed = value => `${value} km/h`;
+    controller.renderWeeklyOverview = jest.fn();
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(new Date('2026-05-10T10:15:00Z').getTime());
+
+    controller.updateWeatherDisplay([
+      {
+        timestamp: new Date('2026-05-09T16:00:00Z').getTime(),
+        temp: 16.4,
+        humidity: 73,
+        cloudCover: 1,
+        windSpeed: 1,
+        windDirection: 0,
+        pressure: 1001,
+        visibility: 15,
+        aerosolOpticalDepth: 0.9,
+        precipitation: 0
+      },
+      {
+        timestamp: new Date('2026-05-10T10:00:00Z').getTime(),
+        temp: 31.8,
+        humidity: 28,
+        cloudCover: 100,
+        windSpeed: 2,
+        windDirection: 180,
+        pressure: 997,
+        visibility: 12,
+        aerosolOpticalDepth: 0.12,
+        precipitation: 0
+      }
+    ], { name: '北京', lat: 39.9, lon: 116.4 });
+
+    expect(document.getElementById('current-temp-main').textContent).toBe('31.8');
+    expect(document.getElementById('current-cloud-cover').textContent).toBe('100%');
+    expect(document.getElementById('current-humidity').textContent).toBe('28%');
+
+    nowSpy.mockRestore();
+  });
+
   test('showError: 无 #weather-error 元素时不报错', () => {
     document.body.innerHTML = '';
     expect(() => controller.showError('test error')).not.toThrow();

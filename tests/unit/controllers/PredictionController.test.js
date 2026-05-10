@@ -93,6 +93,80 @@ describe('PredictionController', () => {
       expect(predictionController.predictionService.calculatePrediction).toHaveBeenCalled();
       expect(predictionController.predictionAPIService.calculate).not.toHaveBeenCalled();
     });
+
+    test('client-fallback 模式下后端预测超时应回退到前端本地预测', async () => {
+      localStorage.setItem('weather_fetch_mode', 'client-fallback');
+      const localResult = { score: 52, quality: 'good', type: 'sunset' };
+      predictionController.weatherFetchMode = 'client-fallback';
+      predictionController.features = { USE_BACKEND_PREDICTION: true };
+      predictionController.predictionService = {
+        calculatePrediction: jest.fn(() => localResult)
+      };
+      const timeoutError = new Error('timeout');
+      timeoutError.code = 'WEATHER_UPSTREAM_TIMEOUT';
+      predictionController.predictionAPIService = {
+        calculate: jest.fn(() => Promise.reject(timeoutError))
+      };
+
+      const weatherData = {
+        timestamp: Date.now(),
+        timezone: 'Asia/Shanghai',
+        temp: 20,
+        humidity: 60,
+        cloudCover: 80,
+        lowClouds: 5,
+        midClouds: 60,
+        highClouds: 80
+      };
+      const result = await predictionController._calculatePredictionWithBackend(
+        weatherData,
+        new Date('2026-05-10T10:00:00Z'),
+        39.9,
+        116.4,
+        'sunset',
+        [weatherData]
+      );
+
+      expect(result).toBe(localResult);
+      expect(predictionController.predictionAPIService.calculate).toHaveBeenCalledTimes(2);
+      expect(predictionController.predictionAPIService.calculate.mock.calls[1][5]).toEqual(
+        expect.objectContaining({ clientWeatherFallback: true })
+      );
+      expect(predictionController.predictionService.calculatePrediction).toHaveBeenCalledWith(
+        weatherData,
+        expect.any(Date),
+        39.9,
+        116.4,
+        'sunset',
+        expect.objectContaining({ timezone: 'Asia/Shanghai' })
+      );
+    });
+
+    test('client-fallback 模式也应复用后端闭环批量预测缓存，避免再发单条请求', async () => {
+      localStorage.setItem('weather_fetch_mode', 'client-fallback');
+      const date = new Date('2026-05-10T10:00:00Z');
+      const cachedPrediction = { score: 80, quality: 'excellent', type: 'sunset' };
+      predictionController.weatherFetchMode = 'client-fallback';
+      predictionController.features = { USE_BACKEND_PREDICTION: true };
+      predictionController._closedLoopBatchPredictionMap = new Map([
+        [predictionController._predictionBatchKey('sunset', date), cachedPrediction]
+      ]);
+      predictionController.predictionAPIService = {
+        calculate: jest.fn(() => Promise.reject(new Error('single request should not be called')))
+      };
+
+      const result = await predictionController._calculatePredictionWithBackend(
+        { timestamp: date.getTime(), timezone: 'Asia/Shanghai' },
+        date,
+        39.9,
+        116.4,
+        'sunset',
+        []
+      );
+
+      expect(result).toBe(cachedPrediction);
+      expect(predictionController.predictionAPIService.calculate).not.toHaveBeenCalled();
+    });
   });
 
 
