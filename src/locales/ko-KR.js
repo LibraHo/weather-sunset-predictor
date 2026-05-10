@@ -49,6 +49,16 @@ apiAccess: 'API 연동'
       "intro": "화염구름 지수는 4가지 주요 요인을 종합하여 계산되며, 해당 날의 노을 관람이 가치 있는지 빠르게 판단하는 데 도움을 줍니다.",
       "versionLabel": "Algorithm version: 2026.05.10-upper-cloud-carrier-v2",
       "versionDesc": "This version treats clear dense upper-cloud carrier scenes as a canvas-thickness modifier instead of also applying a thick high-cloud hard cap; haze, dust, rain, and geometry caps remain independent.",
+      changelogTitle: "Version update history",
+      changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
+      changelog: {
+              "current": {
+                      "date": "2026-05-10",
+                      "title": "Dense mid/high-cloud carrier protection v2",
+                      "summary": "Fixes duplicate punishment when high and mid clouds are sufficient, low clouds are scarce, and air is not hazy. Thickness now only softens the canvas; true haze/dust still applies independent caps.",
+                      "validation": "Validation: Beijing replay lands around 53–60, while thick-curtain and dust cases stay low."
+              }
+      },
       "factors": {
         "highMidCloudTitle": "중고층 구름 (캔버스 조건)",
         "highMidCloudDesc": "중고층 구름이 이상적일수록 풍부한 오렌지·빨간 층이 형성되기 쉽습니다. 너무 적거나 너무 두꺼우면 효과가 낮아집니다.",

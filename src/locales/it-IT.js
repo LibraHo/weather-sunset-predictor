@@ -38,6 +38,16 @@ apiAccess: 'Accesso API'
       "intro": "L'indice nuvole rosse combina quattro fattori chiave per stimare se vale la pena osservare il tramonto.",
       "versionLabel": "Algorithm version: 2026.05.10-upper-cloud-carrier-v2",
       "versionDesc": "This version treats clear dense upper-cloud carrier scenes as a canvas-thickness modifier instead of also applying a thick high-cloud hard cap; haze, dust, rain, and geometry caps remain independent.",
+      changelogTitle: "Version update history",
+      changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
+      changelog: {
+              "current": {
+                      "date": "2026-05-10",
+                      "title": "Dense mid/high-cloud carrier protection v2",
+                      "summary": "Fixes duplicate punishment when high and mid clouds are sufficient, low clouds are scarce, and air is not hazy. Thickness now only softens the canvas; true haze/dust still applies independent caps.",
+                      "validation": "Validation: Beijing replay lands around 53–60, while thick-curtain and dust cases stay low."
+              }
+      },
       "factors": {
         "highMidCloudTitle": "Nuvole medie/alte (tela)",
         "highMidCloudDesc": "Una copertura equilibrata di nuvole medie e alte favorisce ricche sfumature arancio-rosse; troppo poche o spesse penalizzano l'effetto.",

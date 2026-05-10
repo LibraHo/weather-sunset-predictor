@@ -49,6 +49,16 @@ const translations = {
       "intro": "火燒雲指數由四個關鍵因子綜合計算，幫助你快速判斷當天是否值得守候晚霞。",
       "versionLabel": "算法版本：2026.05.10-upper-cloud-carrier-v2",
       "versionDesc": "本版將「中高雲載體明確」的厚雲訊號改為溫和降低畫布分，不再重複觸發厚高雲封頂；灰幕、沙塵、降水和幾何封頂仍獨立保留。",
+      changelogTitle: "版本更新記錄",
+      changelogHint: "用於回溯每次算法調整的原因、影響和驗證方式",
+      changelog: {
+              "current": {
+                      "date": "2026-05-10",
+                      "title": "中高雲載體保護 v2",
+                      "summary": "修正「高雲+中雲充足、低雲少、空氣不灰」場景被厚雲訊號重複懲罰的問題；雲厚只溫和降低畫布分，真正灰幕/沙塵仍獨立封頂。",
+                      "validation": "驗證：北京樣本回放約 53–60 分，厚雲幕和沙塵樣本仍保持低分。"
+              }
+      },
       "factors": {
         "highMidCloudTitle": "中高雲（畫布條件）",
         "highMidCloudDesc": "中高雲越理想，越容易形成豐富的橙紅色層次；過少或過厚都會降低效果。",

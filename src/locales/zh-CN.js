@@ -55,6 +55,16 @@ export default {
       intro: '火烧云指数由四个关键因子综合计算，帮助你快速判断当天是否值得蹲守晚霞。',
       versionLabel: '算法版本：2026.05.10-upper-cloud-carrier-v2',
       versionDesc: '本版将“中高云载体明确”的厚云信号改为温和降低画布分，不再重复触发厚高云封顶；灰幕、沙尘、降水和几何封顶仍独立保留。',
+      changelogTitle: "版本更新记录",
+      changelogHint: "用于回溯每次算法调整的原因、影响和验证方式",
+      changelog: {
+              "current": {
+                      "date": "2026-05-10",
+                      "title": "中高云载体保护 v2",
+                      "summary": "修正“高云+中云充足、低云少、空气不灰”场景被厚云信号重复惩罚的问题；云厚只温和降低画布分，真正灰幕/沙尘仍独立封顶。",
+                      "validation": "验证：北京样本回放约 53–60 分，厚云幕和沙尘样本仍保持低分。"
+              }
+      },
       factors: {
         highMidCloudTitle: '中高云（画布条件）',
         highMidCloudDesc: '中高云越理想，越容易形成丰富的橙红色层次；过少或过厚都会降低效果。',

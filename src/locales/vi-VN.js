@@ -49,6 +49,16 @@ const translations = {
       "intro": "Chỉ số mây đẹp được tính toán tổng hợp từ bốn yếu tố chính, giúp bạn nhanh chóng đánh giá liệu ngày hôm đó có đáng để chờ đợi hoàng hôn hay không.",
       "versionLabel": "Algorithm version: 2026.05.10-upper-cloud-carrier-v2",
       "versionDesc": "This version treats clear dense upper-cloud carrier scenes as a canvas-thickness modifier instead of also applying a thick high-cloud hard cap; haze, dust, rain, and geometry caps remain independent.",
+      changelogTitle: "Version update history",
+      changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
+      changelog: {
+              "current": {
+                      "date": "2026-05-10",
+                      "title": "Dense mid/high-cloud carrier protection v2",
+                      "summary": "Fixes duplicate punishment when high and mid clouds are sufficient, low clouds are scarce, and air is not hazy. Thickness now only softens the canvas; true haze/dust still applies independent caps.",
+                      "validation": "Validation: Beijing replay lands around 53–60, while thick-curtain and dust cases stay low."
+              }
+      },
       "factors": {
         "highMidCloudTitle": "Mây trung cao (điều kiện khung trời)",
         "highMidCloudDesc": "Mây trung cao càng lý tưởng thì càng dễ tạo ra các lớp cam đỏ phong phú; quá ít hoặc quá dày đều làm giảm hiệu quả.",

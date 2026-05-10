@@ -49,6 +49,16 @@ apiAccess: 'API接続'
       "intro": "焼き雲指数は4つの主要因子を組み合わせて計算され、その日の夕焼け観賞が価値あるかどうかを素早く判断するのに役立ちます。",
       "versionLabel": "Algorithm version: 2026.05.10-upper-cloud-carrier-v2",
       "versionDesc": "This version treats clear dense upper-cloud carrier scenes as a canvas-thickness modifier instead of also applying a thick high-cloud hard cap; haze, dust, rain, and geometry caps remain independent.",
+      changelogTitle: "Version update history",
+      changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
+      changelog: {
+              "current": {
+                      "date": "2026-05-10",
+                      "title": "Dense mid/high-cloud carrier protection v2",
+                      "summary": "Fixes duplicate punishment when high and mid clouds are sufficient, low clouds are scarce, and air is not hazy. Thickness now only softens the canvas; true haze/dust still applies independent caps.",
+                      "validation": "Validation: Beijing replay lands around 53–60, while thick-curtain and dust cases stay low."
+              }
+      },
       "factors": {
         "highMidCloudTitle": "中高層雲（キャンバス条件）",
         "highMidCloudDesc": "中高層雲が理想的であればあるほど、豊かなオレンジ・赤の階調が生まれやすくなります。少なすぎても多すぎても効果は低下します。",
