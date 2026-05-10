@@ -9427,3 +9427,35 @@ html[data-actual-theme="dark"] #weather-section #weekly-cards.weekly-cards-conta
     font-size: 0.76rem !important;
   }
 }
+
+/* 2026-05-10: narrow phones must not let prediction-card content widen the card. */
+#today-predictions-container,
+.prediction-tab-panel,
+.prediction-app-card,
+.prediction-app-shell,
+.prediction-app-shell > * {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.prediction-app-shell,
+.prediction-app-nav-compact {
+  width: 100%;
+}
+
+.prediction-app-nav-compact {
+  min-width: 0;
+  max-width: 100%;
+  justify-self: stretch;
+}
+
+.prediction-app-nav-compact .prediction-share-menu {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.conclusion-banner > strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
