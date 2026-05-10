@@ -213,7 +213,9 @@ class ChinaMapCanvas {
     this._options = {
       style: options.style || 'dark',
       defaultZoom: options.defaultZoom || 4,
-      defaultCenter: options.defaultCenter || [35, 105]
+      defaultCenter: options.defaultCenter || [35, 105],
+      showScoreLegend: options.showScoreLegend !== false,
+      enableScoreQuery: options.enableScoreQuery !== false
     };
     
     this._map = null;
@@ -281,11 +283,15 @@ class ChinaMapCanvas {
     // 应用初始样式
     this._applyStyle();
 
-    // 添加图例
-    this._addLegend();
+    // 添加评分图例
+    if (this._options.showScoreLegend) {
+      this._addLegend();
+    }
 
-    // 添加点击查询
-    this._addClickHandler();
+    // 添加点击查分
+    if (this._options.enableScoreQuery) {
+      this._addClickHandler();
+    }
 
     window.addEventListener?.('languageChanged', this._languageChangeHandler);
 

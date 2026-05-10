@@ -13,6 +13,19 @@ const level2 = [{ name: '苏州' }, { name: '宁波' }];
 const level3 = [{ name: '义乌' }];
 
 describe('ChinaMapCanvas city data coverage', () => {
+  it('keeps score controls enabled by default but allows gallery pages to disable them', () => {
+    const defaultMap = new ChinaMapCanvas();
+    expect(defaultMap._options.showScoreLegend).toBe(true);
+    expect(defaultMap._options.enableScoreQuery).toBe(true);
+
+    const galleryMap = new ChinaMapCanvas({
+      showScoreLegend: false,
+      enableScoreQuery: false
+    });
+    expect(galleryMap._options.showScoreLegend).toBe(false);
+    expect(galleryMap._options.enableScoreQuery).toBe(false);
+  });
+
   it('includes major Southeast Asia city labels for basemap only', () => {
     const data = new ChinaMapCanvas()._getCityData();
     const names = new Set([...data.level1, ...data.level2, ...data.level3].map(city => city.name));

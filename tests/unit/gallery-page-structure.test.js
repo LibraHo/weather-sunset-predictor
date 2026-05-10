@@ -13,6 +13,11 @@ describe('gallery share map page', () => {
     expect(html).not.toContain("fetch('/data/china-geojson.json')");
   });
 
+  test('disables firecloud score controls on the photo sharing map', () => {
+    expect(html).toContain('showScoreLegend: false');
+    expect(html).toContain('enableScoreQuery: false');
+  });
+
   test('uses Xiake design language tokens and no emoji title markers', () => {
     expect(html).toContain('class="theme-dark gallery-body"');
     expect(html).toContain('var(--theme-card-bg');

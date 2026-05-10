@@ -195,7 +195,9 @@
       mapCanvas = new ChinaMapCanvas({
         style: 'dark',
         defaultCenter: [35, 105],
-        defaultZoom: 4
+        defaultZoom: 4,
+        showScoreLegend: false,
+        enableScoreQuery: false
       });
       await mapCanvas.init(document.getElementById('gallery-map'));
       map = mapCanvas.getMap();
