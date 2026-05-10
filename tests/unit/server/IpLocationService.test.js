@@ -1,6 +1,9 @@
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
 const { IpLocationService } = require('../../../server/services/IpLocationService');
 
 describe('IpLocationService', () => {
