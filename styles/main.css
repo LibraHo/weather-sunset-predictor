@@ -355,6 +355,107 @@ main > section {
   margin-bottom: 8px;
 }
 
+.methodology-version-card {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-primary, #ff7a1a) 10%, var(--color-bg));
+  color: var(--color-text);
+}
+
+.methodology-version-card span {
+  color: var(--color-text-light);
+  line-height: 1.5;
+}
+
+.methodology-changelog-card {
+  margin: 0 0 16px;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--color-primary, #ff7a1a) 28%, var(--color-border));
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--color-primary, #ff7a1a) 18%, transparent) 0, transparent 34%),
+    var(--color-bg);
+}
+
+.methodology-changelog-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.methodology-changelog-head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.methodology-changelog-head span {
+  max-width: 360px;
+  color: var(--color-text-light);
+  font-size: 0.88rem;
+  line-height: 1.45;
+  text-align: right;
+}
+
+.methodology-changelog-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.methodology-changelog-list li {
+  display: grid;
+  grid-template-columns: minmax(96px, 120px) 1fr;
+  gap: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--color-border);
+}
+
+.methodology-changelog-list time {
+  color: var(--color-primary);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.methodology-changelog-list strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.methodology-changelog-list p {
+  margin: 0 0 6px;
+  color: var(--color-text);
+  line-height: 1.55;
+}
+
+.methodology-changelog-list small {
+  color: var(--color-text-light);
+  line-height: 1.45;
+}
+
+@media (max-width: 640px) {
+  .methodology-changelog-head {
+    display: grid;
+  }
+
+  .methodology-changelog-head span {
+    max-width: none;
+    text-align: left;
+  }
+
+  .methodology-changelog-list li {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+
 .methodology-grid {
   display: flex;
   flex-direction: column;
@@ -6957,13 +7058,26 @@ html[data-actual-theme="light"] .weather-desc {
   gap: 8px !important;
 }
 .analysis-item-copy {
+  display: grid !important;
   gap: 2px !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
 }
 .analysis-item-copy strong {
   line-height: 1.16 !important;
 }
 .analysis-item-copy small {
   line-height: 1.28 !important;
+}
+.analysis-card-title,
+.analysis-group-label,
+.analysis-item-copy strong,
+.analysis-item-copy small {
+  max-width: 100% !important;
+  white-space: normal !important;
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
+  hyphens: auto;
 }
 .conclusion-banner {
   margin-top: 10px !important;
@@ -7067,18 +7181,18 @@ html[data-actual-theme="light"] .weather-desc {
   gap: 10px !important;
 }
 .weather-metric-card {
-  min-height: 92px;
-  padding: 10px 8px !important;
-  gap: 4px;
+  min-height: 102px;
+  padding: 13px 10px !important;
+  gap: 6px;
 }
 .weather-metric-icon {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-primary, #f97316);
-  opacity: 0.92;
+  color: var(--theme-accent-strong, var(--color-warning, #f59e0b));
+  opacity: 0.95;
   margin-bottom: 2px;
 }
 .weather-metric-icon svg {
@@ -7088,17 +7202,21 @@ html[data-actual-theme="light"] .weather-desc {
 }
 .weather-metric-card .weather-label {
   margin-bottom: 0 !important;
-  font-size: 0.72rem;
-  line-height: 1.12;
+  font-size: 0.82rem;
+  line-height: 1.16;
+  color: var(--theme-text-muted, var(--color-text-light));
+  letter-spacing: 0.01em;
 }
 .weather-metric-card .weather-value {
-  font-size: 1.08rem;
+  font-size: 1.22rem;
   line-height: 1.15;
+  color: var(--theme-text, var(--color-text));
+  font-weight: 750;
 }
 .weather-metric-aerosol .weather-value,
 .weather-metric-pressure .weather-value,
 .weather-metric-visibility .weather-value {
-  font-size: 0.92rem;
+  font-size: 1.02rem;
   white-space: nowrap;
 }
 @media (max-width: 768px) {
@@ -7140,7 +7258,7 @@ html[data-actual-theme="light"] .weather-desc {
 
 /* 天气指标：降水单位较长，保持单行 */
 .weather-metric-precipitation .weather-value {
-  font-size: 0.92rem;
+  font-size: 1.02rem;
 }
 @media (max-width: 768px) {
   .weather-metric-precipitation .weather-value {
@@ -7536,6 +7654,22 @@ body:not(.theme-dark):not(.theme-auto) .day-card {
   border-color: rgba(186, 132, 72, 0.16) !important;
 }
 
+body.theme-dark .weather-metric-card {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(251, 146, 60, 0.10), transparent 56%),
+    rgba(18, 28, 52, 0.72) !important;
+  border-color: rgba(251, 146, 60, 0.18) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 24px rgba(0, 0, 0, 0.16) !important;
+}
+
+body.theme-dark .weather-metric-card .weather-label {
+  color: rgba(255, 244, 230, 0.70);
+}
+
+body.theme-dark .weather-metric-card .weather-value {
+  color: rgba(255, 250, 242, 0.94);
+}
+
 @media (prefers-color-scheme: light) {
   body.theme-auto .card,
   body.theme-auto .weather-card,
@@ -7579,6 +7713,24 @@ body:not(.theme-dark):not(.theme-auto) .day-card {
   body.theme-auto .day-card {
     background: rgba(255, 252, 246, 0.74) !important;
     border-color: rgba(186, 132, 72, 0.16) !important;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  body.theme-auto .weather-metric-card {
+    background:
+      radial-gradient(circle at 50% 0%, rgba(251, 146, 60, 0.10), transparent 56%),
+      rgba(18, 28, 52, 0.72) !important;
+    border-color: rgba(251, 146, 60, 0.18) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 24px rgba(0, 0, 0, 0.16) !important;
+  }
+
+  body.theme-auto .weather-metric-card .weather-label {
+    color: rgba(255, 244, 230, 0.70);
+  }
+
+  body.theme-auto .weather-metric-card .weather-value {
+    color: rgba(255, 250, 242, 0.94);
   }
 }
 
