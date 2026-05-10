@@ -99,6 +99,8 @@ describe('savePhoto()', () => {
       lat: 39.9,
       lon: 116.4,
       takenAt: '2026-03-21T12:00:00Z',
+      locationName: '颐和园',
+      uploaderName: 'Alex',
       desc: '北京火烧云',
     });
 
@@ -107,6 +109,8 @@ describe('savePhoto()', () => {
       lat: 39.9,
       lon: 116.4,
       takenAt: '2026-03-21T12:00:00Z',
+      locationName: '颐和园',
+      uploaderName: 'Alex',
       desc: '北京火烧云',
     });
     expect(typeof meta.id).toBe('string');

@@ -18,6 +18,16 @@ describe('gallery share map page', () => {
     expect(html).toContain('enableScoreQuery: false');
   });
 
+  test('photo popup shows capture and upload metadata', () => {
+    expect(html).toContain('拍摄时间');
+    expect(html).toContain('拍摄地点');
+    expect(html).toContain('上传时间');
+    expect(html).toContain('上传者');
+    expect(html).toContain('photo.uploaderName');
+    expect(html).toContain('photo.takenAt');
+    expect(html).toContain('photo.uploadedAt');
+  });
+
   test('uses Xiake design language tokens and no emoji title markers', () => {
     expect(html).toContain('class="theme-dark gallery-body"');
     expect(html).toContain('var(--theme-card-bg');
