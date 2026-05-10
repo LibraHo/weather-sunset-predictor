@@ -1491,8 +1491,9 @@ class PredictionController {
       'aerosol.hazeCap': '灰幕风险明显', 'aerosol.hazeCapDesc': '颗粒物或气溶胶偏高，会削弱红橙色染色',
       'lightPath.opening': '太阳方向有透光开口', 'lightPath.openingDesc': '后端沿太阳方位采样 15/30/50/100km，低中云走廊较通畅，光线更容易打到云层',
       'lightPath.wall': '太阳方向有云墙遮挡', 'lightPath.wallDesc': '太阳方位周边低/中云偏厚，远端光路会压低主评分',
+      'lightPath.lowCloudBlock': '低云遮住光线', 'lightPath.lowCloudBlockDesc': '低云挡在太阳方向，阳光不容易照到中高云',
       'postRain.clear': '雨后空气清透', 'postRain.clearDesc': '近6小时有降水，但能见度和颗粒物条件较好，雨后加成保留',
-      'postRain.gray': '雨后灰幕风险', 'postRain.grayDesc': '降水后水汽/颗粒物/直射比不理想，算法按灰幕场景封顶',
+      'postRain.gray': '雨后灰幕风险', 'postRain.grayDesc': '降水后水汽或颗粒物偏重，霞光容易发灰',
       'carrier.strong': '高云载体清晰', 'carrier.strongDesc': '高云充足、低云稀少且空气较通透，具备中高分基础',
       'carrier.dense': '中高云载体明确', 'carrier.denseDesc': '高云和中云共同提供画布，色彩载体更稳定',
       'layer.single': '云层单一', 'layer.singleDesc': '高云质量好，仍可形成鲜明火烧云'
@@ -1684,7 +1685,12 @@ class PredictionController {
       add('positive', this._analysisText('carrier.strong'), this._analysisText('carrier.strongDesc'));
     }
 
-    const directional = prediction?.lightPathAnalysis?.directionalAnalysis;
+    const lightPathAnalysis = prediction?.lightPathAnalysis || {};
+    if (lightPathAnalysis.capReason === 'overcast_cap_40') {
+      add('warning', this._analysisText('lightPath.lowCloudBlock'), this._analysisText('lightPath.lowCloudBlockDesc'));
+    }
+
+    const directional = lightPathAnalysis.directionalAnalysis;
     if (directional?.reason?.includes('opening')) {
       add('positive', this._analysisText('lightPath.opening'), this._analysisText('lightPath.openingDesc'));
     } else if (directional?.reason?.includes('cloud_wall') || directional?.reason?.includes('cloudy_corridor')) {
@@ -1857,32 +1863,32 @@ class PredictionController {
     const precipitation = metric(['precipitation', 'convPrecip'], 0);
 
     const reasonText = (reason) => ({
-      precipitation_cap_45: ledgerText('reasons.precipitationCap45', {}, 'rain with low clouds capped the score at 45', '降水叠加低云，分数封顶到 45'),
-      overcast_cap_35: ledgerText('reasons.overcastCap35', {}, 'low-cloud overcast capped the score at 35', '低云阴天遮挡，分数封顶到 35'),
-      overcast_fog_cap_15: ledgerText('reasons.overcastFogCap15', {}, 'overcast sky plus visibility ≤5km capped the score at 15', '阴天且能见度≤5km，分数硬封顶到 15'),
-      rainy_mid_cloud_overcast_cap_35: ledgerText('reasons.rainyMidCloudOvercastCap35', {}, 'rainy gray mid-cloud overcast capped the score at 35', '雨后灰幕中云阴天，分数封顶到 35'),
-      no_visible_sunset_path_cap_5: ledgerText('reasons.noVisibleSunsetPathCap5', {}, 'no visible sunset light path; score capped at 5', '无可见日落光路，分数封顶到 5'),
-      no_visible_sunset_path_cap_15: ledgerText('reasons.noVisibleSunsetPathCap15', {}, 'gray rainy overcast likely blocks sunset light; score capped at 15', '雨后灰幕阴天大概率遮断日落光路，分数封顶到 15'),
-      extreme_dust_haze_cap_28: ledgerText('reasons.extremeDustHazeCap28', {}, 'severe dust/haze capped the score at 28', '强沙尘/灰幕压制，分数封顶到 28'),
-      severe_haze_cap_35: ledgerText('reasons.severeHazeCap35', {}, 'heavy haze capped the score at 35', '重度灰霾压制，分数封顶到 35'),
-      moderate_haze_cap_45: ledgerText('reasons.moderateHazeCap45', {}, 'moderate haze capped the score at 45', '中度灰霾压制，分数封顶到 45')
-    }[reason] || reason || ledgerText('reasons.adjustmentApplied', {}, 'cap/floor adjustment applied', '应用封顶/保底修正'));
+      precipitation_cap_45: ledgerText('reasons.precipitationCap45', {}, 'rain plus low clouds keeps the score low', '降水叠加低云，观赏条件明显变差'),
+      overcast_cap_35: ledgerText('reasons.overcastCap35', {}, 'low clouds block the sunlight path', '低云遮住太阳方向，光线不容易照到云层'),
+      overcast_fog_cap_15: ledgerText('reasons.overcastFogCap15', {}, 'low cloud and low visibility make the sky too gray', '低云叠加低能见度，天空容易发灰'),
+      rainy_mid_cloud_overcast_cap_35: ledgerText('reasons.rainyMidCloudOvercastCap35', {}, 'post-rain moisture makes the glow hard to show', '雨后水汽偏重，霞光不容易显色'),
+      no_visible_sunset_path_cap_5: ledgerText('reasons.noVisibleSunsetPathCap5', {}, 'sunset light is unlikely to reach the clouds', '日落光线很难照到云层'),
+      no_visible_sunset_path_cap_15: ledgerText('reasons.noVisibleSunsetPathCap15', {}, 'rainy gray sky likely blocks sunset light', '雨后灰幕偏重，日落光线大概率被挡住'),
+      extreme_dust_haze_cap_28: ledgerText('reasons.extremeDustHazeCap28', {}, 'heavy dust or haze suppresses the glow', '强沙尘或灰幕会压住霞光'),
+      severe_haze_cap_35: ledgerText('reasons.severeHazeCap35', {}, 'heavy haze makes colors hard to show', '重度灰霾让颜色不容易出来'),
+      moderate_haze_cap_45: ledgerText('reasons.moderateHazeCap45', {}, 'haze weakens orange-red color', '灰霾会削弱红橙色')
+    }[reason] || reason || ledgerText('reasons.adjustmentApplied', {}, 'score adjusted for limiting conditions', '已按限制条件修正'));
 
     const capEvents = [
       severeWeatherCap?.reason ? {
-        label: ledgerText('labels.hardCap', {}, 'Hard cap', '硬封顶'),
+        label: ledgerText('labels.hardCap', {}, 'Limiting weather', '天气限制'),
         value: `≤${fmt(severeWeatherCap.score, 0)}`,
         detail: reasonText(severeWeatherCap.reason),
         tone: 'bad'
       } : null,
       aerosolHazeCap?.applied ? {
-        label: ledgerText('labels.hazeCap', {}, 'Haze cap', '灰幕封顶'),
+        label: ledgerText('labels.hazeCap', {}, 'Haze limit', '灰幕影响'),
         value: `≤${fmt(aerosolHazeCap.cap, 0)}`,
         detail: reasonText(aerosolHazeCap.reason),
         tone: 'bad'
       } : null,
       thickHighCloudPenalty?.applied ? {
-        label: ledgerText('labels.thickCloudCap', {}, 'Thick-cloud cap', '厚云封顶'),
+        label: ledgerText('labels.thickCloudCap', {}, 'Thick cloud', '厚云影响'),
         value: `≤${fmt(thickHighCloudPenalty.cap, 0)}`,
         detail: ledgerText('details.thickCloudCap', {}, 'thick high cloud reduces usable color rendering', '高云过厚，真实可染色效果下降'),
         tone: 'bad'
@@ -1894,7 +1900,7 @@ class PredictionController {
         tone: 'cap'
       } : null,
       geometricModel?.feasible === false ? {
-        label: ledgerText('labels.geometryCap', {}, 'Geometry cap', '几何封顶'),
+        label: ledgerText('labels.geometryCap', {}, 'Sun angle', '太阳角度'),
         value: '≤30',
         detail: geometricModel.reason || ledgerText('details.geometryCap', {}, 'sun/cloud geometry is not feasible', '太阳与云层几何条件不足'),
         tone: 'bad'
@@ -1912,9 +1918,9 @@ class PredictionController {
         tone: 'good'
       } : null,
       postRainAdjustment?.applied && postRainAdjustment.cap ? {
-        label: ledgerText('labels.postRainCap', {}, 'Post-rain cap', '雨后灰幕封顶'),
+        label: ledgerText('labels.postRainCap', {}, 'Post-rain haze', '雨后灰幕'),
         value: `≤${fmt(postRainAdjustment.cap, 0)}`,
-        detail: ledgerText('details.postRainCap', {}, 'post-rain moisture or haze turns the glow into a gray curtain', '雨后水汽/灰幕压光，霞光按低上限处理'),
+        detail: ledgerText('details.postRainCap', {}, 'post-rain moisture or haze turns the glow gray', '雨后水汽或灰幕偏重，霞光容易发灰'),
         tone: 'bad'
       } : null
     ].filter(Boolean);
@@ -1928,15 +1934,15 @@ class PredictionController {
         detail = ledgerText(
           'reasons.lightPathStatusCap60',
           { light: fmt(lightPathScore, 1) },
-          'light path is only {{light}}, so the result is capped to the light-glow band around 60',
-          '光路只有 {{light}}，归入轻微霞光档，最终展示分封顶到 60'
+          'light path is {{light}}, so the result is shown as a light-glow chance',
+          '光路约 {{light}}，更像轻微霞光机会'
         );
       } else if (Number(canvasScore) < 30 && finalNumber <= 40) {
         detail = ledgerText(
           'reasons.canvasStatusCap40',
           { canvas: fmt(canvasScore, 1) },
-          'cloud carrier is only {{canvas}}, so the result is capped to the no-fire-cloud band below 40',
-          '云层载体只有 {{canvas}}，归入无火烧云档，最终展示分封顶到 40 以下'
+          'cloud carrier is {{canvas}}, so fire-cloud chance is weak',
+          '云层载体约 {{canvas}}，火烧云机会偏弱'
         );
       }
 
@@ -1975,6 +1981,18 @@ class PredictionController {
       ? ledgerText('renderingFormula', { base: fmt(baseScore, 1), factor: fmt(renderingFactor, 2), rendered: fmt(renderedScore, 1) }, '{{base}} × rendering {{factor}} = {{rendered}}', '{{base}} × 显色系数 {{factor}} = {{rendered}}')
       : ledgerText('weatherTransparency', {}, 'weather transparency factor', '天气通透度');
 
+    const lightPathDetail = (() => {
+      if (prediction?.lightPathAnalysis?.capReason === 'overcast_cap_40') {
+        return ledgerText('details.lightPathLowCloudBlock', {}, 'low clouds block the sunlight path to the colorable clouds', '低云遮住太阳方向，光线不容易照到中高云');
+      }
+      if (prediction?.lightPathAnalysis?.capReason === 'precipitation_cap_50') {
+        return ledgerText('details.lightPathRain', {}, 'rain weakens direct sunset light', '降水会削弱日落直射光');
+      }
+      return prediction?.lightPathAnalysis?.source === 'solar_direction_openmeteo'
+        ? ledgerText('details.directionalSamples', {}, 'solar-azimuth samples at 15/30/50/100km are included', '已接入太阳方位 15/30/50/100km 周边采样')
+        : '';
+    })();
+
     const adjustmentHtml = capEvents.length
       ? capEvents.map((event, idx) => step(
         idx + 5,
@@ -1995,11 +2013,11 @@ class PredictionController {
         <div class="score-ledger-summary">${escape(summary)}</div>
         <div class="score-ledger-steps">
           ${step(1, ledgerText('labels.cloudCarrier', {}, 'Cloud carrier', '云层载体'), ledgerText('details.cloudCarrier', {}, 'usable colored cloud surface', '可被染色的云面质量'), fmt(canvasScore, 1), ledgerText('details.cloudPenalty', { low: fmt(prediction?.canvasAnalysis?.lowCloudPenalty, 2), overcast: fmt(prediction?.canvasAnalysis?.overcastPenalty, 2) }, 'low cloud ×{{low}}, overcast ×{{overcast}}', '低云 ×{{low}}，阴天 ×{{overcast}}'))}
-          ${step(2, ledgerText('labels.lightPath', {}, 'Light path', '光路'), ledgerText('details.lightPath', {}, 'sunlight reaches the cloud layer', '阳光是否能打到云层'), fmt(lightPathScore, 1), prediction?.lightPathAnalysis?.source === 'solar_direction_openmeteo' ? ledgerText('details.directionalSamples', {}, 'solar-azimuth samples at 15/30/50/100km are included', '已接入太阳方位 15/30/50/100km 周边采样') : '')}
+          ${step(2, ledgerText('labels.lightPath', {}, 'Light path', '光路'), ledgerText('details.lightPath', {}, 'sunlight reaches the cloud layer', '阳光是否能打到云层'), fmt(lightPathScore, 1), lightPathDetail)}
           ${step(3, ledgerText('labels.baseScore', {}, 'Base score', '基础分'), weightedDescription, fmt(baseScore, 1))}
           ${step(4, ledgerText('labels.rendering', {}, 'Rendering', '显色修正'), renderingDescription, fmt(renderedScore, 1), ledgerText('details.renderingFactors', { visibility: fmt(prediction?.renderingAnalysis?.visibilityFactor, 2), humidity: fmt(prediction?.renderingAnalysis?.humidityFactor, 2), aerosol: fmt(aerosolFactor, 2) }, 'visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}', '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}'))}
           ${adjustmentHtml}
-          ${step(capEvents.length ? capEvents.length + 5 : 5, ledgerText('labels.final', {}, 'Final', '最终分'), capEvents.length ? ledgerText('details.afterAdjustments', {}, 'after all caps and floors', '应用所有封顶/保底后') : ledgerText('details.finalDisplayed', {}, 'final displayed result', '最终展示结果'), fmt(finalScore, 0), '', 'final')}
+          ${step(capEvents.length ? capEvents.length + 5 : 5, ledgerText('labels.final', {}, 'Final', '最终分'), capEvents.length ? ledgerText('details.afterAdjustments', {}, 'after weather and visibility adjustments', '结合天气和能见度后') : ledgerText('details.finalDisplayed', {}, 'final displayed result', '最终展示结果'), fmt(finalScore, 0), '', 'final')}
         </div>
       </div>
     `;

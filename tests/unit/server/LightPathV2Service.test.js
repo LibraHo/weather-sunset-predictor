@@ -46,13 +46,13 @@ describe('LightPathV2Service', () => {
     expect(result.capReason).toBeNull();
   });
 
-  // 3. cloudCover=90 → 触发 overcast_cap_40
-  test('cloudCover=90 应触发 overcast_cap_40', () => {
+  // 3. 低云主导的满天云 → 光路受遮挡
+  test('低云主导的 cloudCover=90 应触发 overcast_cap_40', () => {
     const result = scoreLightPathV2({
       solarElevation: 2,
       lowClouds: 80,
-      midClouds: 80,
-      highClouds: 80,
+      midClouds: 40,
+      highClouds: 30,
       cloudBaseHeight: 700,
       cloudCover: 90,
       precipitation: 0,
@@ -61,6 +61,23 @@ describe('LightPathV2Service', () => {
     });
     expect(result.score).toBeLessThanOrEqual(40);
     expect(result.capReason).toBe('overcast_cap_40');
+  });
+
+  test('中高云主导且低云很少时，不应仅因 cloudCover=100 压低光路', () => {
+    const result = scoreLightPathV2({
+      solarElevation: 6,
+      lowClouds: 0,
+      midClouds: 45,
+      highClouds: 100,
+      cloudBaseHeight: null,
+      cloudCover: 100,
+      precipitation: 0,
+      convPrecip: 0,
+      weatherCode: 3
+    });
+
+    expect(result.capReason).toBeNull();
+    expect(result.score).toBeGreaterThan(40);
   });
 
   // 4. precipitation=1 → 触发 precipitation_cap_50
@@ -155,7 +172,7 @@ describe('坏样本回放（任务58.3）', () => {
     expect(result.capReason).toBe('overcast_cap_40');
   });
 
-  test('北京阴天：cloudCover=100, highClouds=100 → score <= 40', () => {
+  test('北京高云画布：cloudCover=100, highClouds=100, lowClouds=0 → 不应按低云阴天处理', () => {
     const result = scoreLightPathV2({
       solarElevation: 10,
       solarAzimuth: 260,
@@ -165,7 +182,7 @@ describe('坏样本回放（任务58.3）', () => {
       weatherCode: 3,
       cloudBaseHeight: null
     });
-    expect(result.score).toBeLessThanOrEqual(40);
-    expect(result.capReason).toBe('overcast_cap_40');
+    expect(result.score).toBeGreaterThan(40);
+    expect(result.capReason).toBeNull();
   });
 });

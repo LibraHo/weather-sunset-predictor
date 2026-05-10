@@ -97,8 +97,8 @@ describe('LightPath V2 集成测试 - /api/prediction/enhanced', () => {
     }
   });
 
-  // 3. cloudCover=100 → score <= 40，capReason 不为 null
-  test('cloudCover=100 时 lightPathAnalysis.score <= 40，capReason 不为 null', async () => {
+  // 3. 低云主导的 cloudCover=100 → 光路受遮挡
+  test('低云主导的 cloudCover=100 时 lightPathAnalysis.score <= 40，capReason 不为 null', async () => {
     const res = await request(app)
       .post('/api/prediction/enhanced')
       .send({
@@ -121,6 +121,31 @@ describe('LightPath V2 集成测试 - /api/prediction/enhanced', () => {
     const lp = res.body.data.lightPathAnalysis;
     expect(lp.score).toBeLessThanOrEqual(40);
     expect(lp.capReason).not.toBeNull();
+  });
+
+  test('中高云主导且低云很少时，不应仅因 cloudCover=100 压低光路', async () => {
+    const res = await request(app)
+      .post('/api/prediction/enhanced')
+      .send({
+        ...basePayload,
+        weatherData: {
+          cloudCover: 100,
+          lowClouds: 0,
+          midClouds: 45,
+          highClouds: 100,
+          cloudBaseHeight: null,
+          humidity: 62,
+          visibility: 18,
+          precipitation: 0,
+          convPrecip: 0,
+          weatherCode: 3
+        }
+      })
+      .expect(200);
+
+    const lp = res.body.data.lightPathAnalysis;
+    expect(lp.score).toBeGreaterThan(40);
+    expect(lp.capReason).toBeNull();
   });
 
   // 4. cloudCover=0 → 晴天高分 >= 60
