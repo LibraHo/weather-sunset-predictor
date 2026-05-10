@@ -1662,7 +1662,9 @@ class PredictionController {
 
     const cloudThickness = prediction?.cloudThickness || prediction?.lightPathAnalysis?.cloudThickness;
     const denseCarrierCanvasOnly = cloudThickness?.reasons?.includes('dense_upper_cloud_carrier_softened')
-      || thickHighCloudPenalty?.reason === 'dense_upper_cloud_carrier_canvas_only';
+      || cloudThickness?.reasons?.includes('opening_upper_cloud_carrier_softened')
+      || thickHighCloudPenalty?.reason === 'dense_upper_cloud_carrier_canvas_only'
+      || thickHighCloudPenalty?.reason === 'opening_upper_cloud_carrier_canvas_only';
     if (denseCarrierCanvasOnly) {
       add('positive', this._analysisText('carrier.dense'), this._analysisText('carrier.denseDesc'));
     }

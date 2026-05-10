@@ -410,22 +410,42 @@ function estimateCloudBaseHeight(weatherData) {
 
 // ========== 云厚评估模块（Phase 22）==========
 
-function isFavorableDenseUpperCloudCarrier(weatherData) {
-  const lowClouds = Number(weatherData.lowClouds || 0);
-  const midClouds = Number(weatherData.midClouds || 0);
-  const highClouds = Number(weatherData.highClouds || 0);
+function hasClearAirForUpperCloudCarrier(weatherData) {
   const visibility = Number(weatherData.visibility ?? 20);
   const precipitation = Number(weatherData.precipitation || 0);
   const { aod, pm10, dust } = getAerosolMetrics(weatherData);
 
-  return highClouds >= 80
-    && midClouds >= 30
-    && lowClouds <= 10
-    && precipitation <= 0.2
+  return precipitation <= 0.2
     && visibility >= 15
     && (aod == null || aod <= 0.45)
     && (pm10 == null || pm10 < 120)
     && (dust == null || dust < 80);
+}
+
+function isFavorableDenseUpperCloudCarrier(weatherData) {
+  const lowClouds = Number(weatherData.lowClouds || 0);
+  const midClouds = Number(weatherData.midClouds || 0);
+  const highClouds = Number(weatherData.highClouds || 0);
+
+  return highClouds >= 80
+    && midClouds >= 30
+    && lowClouds <= 10
+    && hasClearAirForUpperCloudCarrier(weatherData);
+}
+
+function isFavorableOpeningUpperCloudCarrier(weatherData, context = {}) {
+  const lowClouds = Number(weatherData.lowClouds || 0);
+  const midClouds = Number(weatherData.midClouds || 0);
+  const highClouds = Number(weatherData.highClouds || 0);
+  const lightPathScore = Number(context.lightPathScore?.score ?? context.lightPathScore ?? 0);
+  const directionalReason = context.lightPathScore?.directionalAnalysis?.reason || '';
+  const hasDirectionalOpening = directionalReason.includes('opening');
+
+  return lowClouds <= 10
+    && midClouds >= 45
+    && highClouds >= 40
+    && (lightPathScore >= 65 || hasDirectionalOpening)
+    && hasClearAirForUpperCloudCarrier(weatherData);
 }
 
 /**
@@ -440,7 +460,7 @@ function isFavorableDenseUpperCloudCarrier(weatherData) {
  * @param {Object|null} prevHourData - 目标时刻前1-2小时的数据（用于辐射比，避免日落时辐射自然为0）
  * @returns {{ thickness: 'thin'|'moderate'|'thick'|'unknown', modifier: number, reasons: string[] }}
  */
-function assessCloudThickness(weatherData, prevHourData = null) {
+function assessCloudThickness(weatherData, prevHourData = null, context = {}) {
   const cc = weatherData.cloudCover || 0;
   const weatherCode = weatherData.weatherCode;
   const wv = weatherData.waterVapourColumn;
@@ -525,6 +545,11 @@ function assessCloudThickness(weatherData, prevHourData = null) {
     return { thickness: 'moderate', modifier: 0.75, reasons: signals, score };
   }
 
+  if (thickness === 'thick' && isFavorableOpeningUpperCloudCarrier(weatherData, context)) {
+    signals.push('opening_upper_cloud_carrier_softened');
+    return { thickness: 'moderate', modifier: 0.58, reasons: signals, score };
+  }
+
   return { thickness, modifier, reasons: signals, score };
 }
 
@@ -543,13 +568,16 @@ function assessThickHighCloudPenalty(weatherData, cloudThickness) {
   const directWeak = reasons.includes('direct_ratio_low') || reasons.includes('direct_ratio_low_moderate');
   const diffuseDominant = reasons.includes('diffuse_dominant');
   const waterHeavy = reasons.includes('water_vapour_very_high');
-  const softenedCarrier = reasons.includes('dense_upper_cloud_carrier_softened');
+  const softenedCarrier = reasons.includes('dense_upper_cloud_carrier_softened')
+    || reasons.includes('opening_upper_cloud_carrier_softened');
 
   if (softenedCarrier) {
     return {
       applied: false,
       cap: null,
-      reason: 'dense_upper_cloud_carrier_canvas_only'
+      reason: reasons.includes('opening_upper_cloud_carrier_softened')
+        ? 'opening_upper_cloud_carrier_canvas_only'
+        : 'dense_upper_cloud_carrier_canvas_only'
     };
   }
 
@@ -1418,7 +1446,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   logger.debug('[EnhancedPredictionService]', '渲染修正:', renderingFactor.factor);
 
   // 5. 云厚评估（Phase 22）
-  const cloudThickness = assessCloudThickness(weatherData, prevHourData);
+  const cloudThickness = assessCloudThickness(weatherData, prevHourData, { lightPathScore });
   logger.debug('[EnhancedPredictionService]', '云厚评估:', cloudThickness.thickness, 'modifier:', cloudThickness.modifier, 'reasons:', cloudThickness.reasons);
 
   // 5.5 云厚修正画布分

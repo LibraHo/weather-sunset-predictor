@@ -735,11 +735,120 @@ describe('EnhancedPredictionService', () => {
       expect(result.cloudThickness.reasons).toContain('dense_upper_cloud_carrier_softened');
       expect(result.algorithm).toMatchObject({
         name: 'EnhancedPredictionService',
-        version: '2026.05.10-low-cloud-lightpath-v3'
+        version: '2026.05.11-opening-upper-cloud-carrier-v1'
       });
       expect(result.score).toBeGreaterThanOrEqual(50);
       expect(result.score).toBeLessThanOrEqual(60);
       expect(result.status).toBe('good_glow');
+    });
+
+    test('should soften thick-cloud penalty for opening mid/high-cloud carrier sunsets', () => {
+      const weatherData = {
+        cloudCover: 100,
+        lowClouds: 0,
+        midClouds: 62,
+        highClouds: 51,
+        humidity: 17,
+        visibility: 20,
+        precipitation: 0,
+        shortwaveRadiation: 1.9,
+        directRadiation: 0.1,
+        diffuseRadiation: 1.8,
+        waterVapourColumn: 19.1,
+        aerosolOpticalDepth: 0.28,
+        pm2_5: 21,
+        pm10: 31.5,
+        dust: 24
+      };
+      const prevHourData = {
+        shortwaveRadiation: 113.2,
+        directRadiation: 14,
+        diffuseRadiation: 99.2
+      };
+      const remoteCloudData = {
+        samples: [15, 30, 50, 100].map(distanceKm => ({
+          distanceKm,
+          cloudBaseHeight: 7000,
+          lowCloud: 0,
+          midCloud: 8,
+          highCloud: 65
+        }))
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData,
+        new Date('2026-05-10T11:17:00.000Z'),
+        39.999617,
+        116.275179,
+        'sunset',
+        { prevHourData, remoteCloudData }
+      );
+
+      expect(result.lightPathAnalysis.directionalAnalysis.reason).toBe('solar_direction_clear_opening');
+      expect(result.cloudThickness).toMatchObject({
+        thickness: 'moderate',
+        modifier: 0.58
+      });
+      expect(result.cloudThickness.reasons).toContain('opening_upper_cloud_carrier_softened');
+      expect(result.thickHighCloudPenalty).toMatchObject({
+        applied: false,
+        cap: null,
+        reason: 'opening_upper_cloud_carrier_canvas_only'
+      });
+      expect(result.canvasAnalysis.score).toBeGreaterThanOrEqual(58);
+      expect(result.score).toBeGreaterThan(55);
+      expect(result.score).toBeLessThan(65);
+      expect(result.status).toBe('good_glow');
+    });
+
+    test('should not soften opening carrier when haze is high', () => {
+      const weatherData = {
+        cloudCover: 100,
+        lowClouds: 0,
+        midClouds: 62,
+        highClouds: 51,
+        humidity: 17,
+        visibility: 20,
+        precipitation: 0,
+        shortwaveRadiation: 1.9,
+        directRadiation: 0.1,
+        diffuseRadiation: 1.8,
+        waterVapourColumn: 19.1,
+        aerosolOpticalDepth: 0.62,
+        pm10: 140,
+        dust: 24
+      };
+      const prevHourData = {
+        shortwaveRadiation: 113.2,
+        directRadiation: 14,
+        diffuseRadiation: 99.2
+      };
+      const remoteCloudData = {
+        samples: [15, 30, 50, 100].map(distanceKm => ({
+          distanceKm,
+          cloudBaseHeight: 7000,
+          lowCloud: 0,
+          midCloud: 8,
+          highCloud: 65
+        }))
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData,
+        new Date('2026-05-10T11:17:00.000Z'),
+        39.999617,
+        116.275179,
+        'sunset',
+        { prevHourData, remoteCloudData }
+      );
+
+      expect(result.cloudThickness).toMatchObject({
+        thickness: 'thick',
+        modifier: 0.45
+      });
+      expect(result.cloudThickness.reasons).not.toContain('opening_upper_cloud_carrier_softened');
+      expect(result.thickHighCloudPenalty.applied).toBe(false);
+      expect(result.aerosolHazeCap.applied).toBe(false);
     });
 
     test('should mark clear transparent sunset as casual viewing while keeping fire-cloud score low', () => {

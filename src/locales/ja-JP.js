@@ -47,7 +47,7 @@ apiAccess: 'API接続'
     "methodology": {
       "title": "焼き雲スコアの計算方法",
       "intro": "焼き雲指数は4つの主要因子を組み合わせて計算され、その日の夕焼け観賞が価値あるかどうかを素早く判断するのに役立ちます。",
-      "versionLabel": "Algorithm version: 2026.05.10-low-cloud-lightpath-v3",
+      "versionLabel": "Algorithm version: 2026.05.11-opening-upper-cloud-carrier-v1",
       "versionDesc": "This version improves light-path scoring: low clouds block sunlight, while rich mid/high clouds are treated mainly as the color canvas.",
       changelogTitle: "Version update history",
       changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
@@ -129,7 +129,7 @@ apiAccess: 'API接続'
           "title": "6. Cloud Thickness and Haze Corrections",
           "subtitle": "Cloud Thickness · Canvas and Air Adjustment",
           "desc": "More high clouds do not always mean a higher score. The model separates colorable mid/high-cloud carriers from gray curtains that weaken light.",
-          "level1": "Dense upper-cloud carrier: high ≥80%, mid ≥30%, low ≤10%, no rain, and air not hazy",
+          "level1": "Upper-cloud carrier: either dense high cloud, or mid/high clouds with an opening toward the sun, scarce low clouds, no rain, and clear air",
           "level2": "In this case cloud thickness adjusts colorable-cloud quality, while light-path judgment stays independent",
           "level3": "Very thick cloud curtains or gray air can still make colors darker and weaker.",
           "formula": "Final correction = colorable-cloud quality + independent haze/dust/rain/geometry limits"
