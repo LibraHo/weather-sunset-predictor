@@ -1893,9 +1893,9 @@ class PredictionController {
         tone: 'bad'
       } : null,
       denseCarrierCanvasOnly ? {
-        label: ledgerText('labels.cloudThicknessModifier', {}, 'Cloud-thickness modifier', '云厚修正'),
+        label: ledgerText('labels.cloudThicknessModifier', {}, 'Cloud layer effect', '云层厚度影响'),
         value: `×${fmt(cloudThickness?.modifier ?? 0.75, 2)}`,
-        detail: ledgerText('details.cloudThicknessModifier', {}, 'mid/high-cloud carriers are clear, so only colorable cloud quality is adjusted', '中高云载体明确时，仅按可染色云面质量做修正'),
+        detail: ledgerText('details.cloudThicknessModifier', {}, 'mid/high clouds can still catch sunset light, so cloud thickness has only a mild impact here', '中高云层仍能承接晚霞光线，当前云厚影响较轻'),
         tone: 'cap'
       } : null,
       geometricModel?.feasible === false ? {
