@@ -47,6 +47,8 @@ apiAccess: 'API接続'
     "methodology": {
       "title": "焼き雲スコアの計算方法",
       "intro": "焼き雲指数は4つの主要因子を組み合わせて計算され、その日の夕焼け観賞が価値あるかどうかを素早く判断するのに役立ちます。",
+      "versionLabel": "Algorithm version: 2026.05.10-upper-cloud-carrier-v2",
+      "versionDesc": "This version treats clear dense upper-cloud carrier scenes as a canvas-thickness modifier instead of also applying a thick high-cloud hard cap; haze, dust, rain, and geometry caps remain independent.",
       "factors": {
         "highMidCloudTitle": "中高層雲（キャンバス条件）",
         "highMidCloudDesc": "中高層雲が理想的であればあるほど、豊かなオレンジ・赤の階調が生まれやすくなります。少なすぎても多すぎても効果は低下します。",
@@ -114,13 +116,13 @@ apiAccess: 'API接続'
           "level4": "下層雲>70% → ×0.2（深刻な遮蔽）"
         },
         "thickHighCloudPenalty": {
-          "title": "6. 厚い高層雲の減点",
-          "subtitle": "Thick High Cloud · 上限",
-          "desc": "高層雲が多くても必ず高得点ではありません。厚い雲幕になり直達光が弱く散乱光が支配的な場合、太陽付近の局所的な色づきに留まります。",
-          "level1": "高層雲≥80%かつ総雲量≥60%でリスク判定",
-          "level2": "直達光比が低い、散乱光優勢、水蒸気が多い場合は光路点を下げます",
-          "level3": "厚い雲幕では最終点を約42–48に制限し、過大評価を防ぎます",
-          "formula": "厚い高層雲補正 = min(最終点, 42–48)。広い厚雲で局所的にしか光が漏れない場面に適用"
+          "title": "6. Cloud Thickness and Haze Corrections",
+          "subtitle": "Cloud Thickness · Canvas Modifier / Caps",
+          "desc": "More high clouds do not always mean a higher score. The model separates colorable mid/high-cloud carriers from light-suppressing gray curtains. Cloud thickness first modifies the canvas; haze and dust apply caps separately.",
+          "level1": "Dense upper-cloud carrier: high ≥80%, mid ≥30%, low ≤10%, no rain, and air not hazy",
+          "level2": "In this case cloud-thickness signals only multiply canvas by 0.75; they do not add another final cap or suppress light path again",
+          "level3": "True thick curtains can still cap around 42–48; haze/dust caps remain 45/35/28 based on air quality",
+          "formula": "Final correction = canvas thickness modifier + independent haze/dust/rain/geometry caps, avoiding double punishment from the same thickness signal"
         },
         "precipPenalty": {
           "title": "6. 降水ペナルティ係数",
@@ -268,6 +270,7 @@ apiAccess: 'API接続'
           "hardCap": "上限補正",
           "hazeCap": "霞・灰幕上限",
           "thickCloudCap": "厚い雲の上限",
+          "cloudThicknessModifier": "Cloud-thickness modifier",
           "geometryCap": "幾何条件の上限",
           "occlusion": "遮蔽補正",
           "carrierFloor": "載体による下支え",
@@ -282,6 +285,7 @@ apiAccess: 'API接続'
           "afterAdjustments": "すべての上限・下限補正後",
           "finalDisplayed": "最終表示結果",
           "thickCloudCap": "高層雲が厚く、実際の発色が弱くなります",
+          "cloudThicknessModifier": "when mid/high-cloud carriers are clear, thickness only softens the canvas and does not add another hard cap",
           "geometryCap": "太陽と雲層の幾何条件が不足しています",
           "occlusion": "遠方の遮蔽により最終スコアが下がります",
           "carrierFloor": "澄んだ高層雲の載体により過小評価を抑えます",
@@ -297,6 +301,7 @@ apiAccess: 'API接続'
           "extremeDustHazeCap28": "強い黄砂・霞によりスコア上限は28",
           "severeHazeCap35": "濃い霞によりスコア上限は35",
           "moderateHazeCap45": "中程度の霞によりスコア上限は45",
+          "denseCarrierCanvasOnly": "dense upper-cloud carrier: canvas-only thickness modifier applied",
           "adjustmentApplied": "上限/下限補正を適用",
           "displayCalibration": "最終表示スコアを予測ステータスの帯に合わせます",
           "lightPathStatusCap60": "光路は {{light}} のため、薄い霞光の帯として最終表示スコアを60付近で上限調整します",
@@ -314,6 +319,8 @@ apiAccess: 'API接続'
       "aerosol": { "moderate": "エアロゾル適度（AOD {{value}}）", "moderateDesc": "橙赤色の散乱を強めます", "high": "エアロゾル多め（AOD {{value}}）", "highDesc": "霞んだり暗く見える可能性があります", "low": "空気が澄みすぎ（AOD {{value}}）", "lowDesc": "色が淡くなる可能性があります" },
       "lightPath": { "opening": "太陽方向に光の抜けがあります", "openingDesc": "バックエンドが太陽方位の15/30/50/100km地点を採取し、低・中層雲の通路が比較的開いていると判定します", "wall": "太陽方向に雲の壁があります", "wallDesc": "太陽方位の低・中層雲が厚く、遠方の光路が主スコアを押し下げます" },
       "postRain": { "clear": "雨上がりの空気が澄んでいます", "clearDesc": "過去6時間に降水がありますが、視程と粒子条件が良いため雨上がり加点を残します", "gray": "雨上がりの灰色カーテンリスク", "grayDesc": "雨後の水蒸気・粒子・直達光の弱さを考慮し、保守的にスコア上限をかけます" },
+      "carrier": { "strong": "Clear high-cloud carrier", "strongDesc": "High clouds are sufficient, low clouds are scarce, and air is clear enough for a medium/high score base", "dense": "Dense mid/high-cloud carrier", "denseDesc": "High and mid clouds both provide canvas; thickness only softens the canvas and does not add a duplicate cap" },
+
       "layer": { "single": "雲層が単一", "singleDesc": "高層雲の質が良ければ鮮やかな夕焼けは期待できます" }
     },
     "status": {

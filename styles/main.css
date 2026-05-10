@@ -355,6 +355,22 @@ main > section {
   margin-bottom: 8px;
 }
 
+.methodology-version-card {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-primary, #ff7a1a) 10%, var(--color-bg));
+  color: var(--color-text);
+}
+
+.methodology-version-card span {
+  color: var(--color-text-light);
+  line-height: 1.5;
+}
+
 .methodology-grid {
   display: flex;
   flex-direction: column;

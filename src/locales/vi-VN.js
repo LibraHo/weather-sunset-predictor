@@ -47,6 +47,8 @@ const translations = {
     "methodology": {
       "title": "Phương pháp tính điểm mây đẹp",
       "intro": "Chỉ số mây đẹp được tính toán tổng hợp từ bốn yếu tố chính, giúp bạn nhanh chóng đánh giá liệu ngày hôm đó có đáng để chờ đợi hoàng hôn hay không.",
+      "versionLabel": "Algorithm version: 2026.05.10-upper-cloud-carrier-v2",
+      "versionDesc": "This version treats clear dense upper-cloud carrier scenes as a canvas-thickness modifier instead of also applying a thick high-cloud hard cap; haze, dust, rain, and geometry caps remain independent.",
       "factors": {
         "highMidCloudTitle": "Mây trung cao (điều kiện khung trời)",
         "highMidCloudDesc": "Mây trung cao càng lý tưởng thì càng dễ tạo ra các lớp cam đỏ phong phú; quá ít hoặc quá dày đều làm giảm hiệu quả.",
@@ -106,13 +108,13 @@ const translations = {
           "level4": "Mây thấp >70% → ×0.2 (chặn nghiêm trọng)"
         },
         "thickHighCloudPenalty": {
-          "title": "6. Phạt mây cao dày",
-          "subtitle": "Thick High Cloud · Giới hạn",
-          "desc": "Nhiều mây cao không luôn đồng nghĩa điểm cao. Khi mây cao tạo thành màn dày, ánh sáng trực tiếp yếu và ánh sáng tán xạ chiếm ưu thế, thường chỉ có vệt sáng cục bộ gần hoàng hôn.",
-          "level1": "Mây cao ≥80% và tổng mây ≥60% sẽ kích hoạt kiểm tra rủi ro",
-          "level2": "Tỉ lệ ánh sáng trực tiếp thấp, tán xạ trội hoặc hơi nước rất cao sẽ hạ điểm đường sáng",
-          "level3": "Màn mây dày bị giới hạn khoảng 42–48 điểm để tránh báo quá tốt",
-          "formula": "Hiệu chỉnh mây cao dày = min(điểm cuối, 42–48), dùng cho lớp mây dày chỉ hở sáng cục bộ"
+          "title": "6. Cloud Thickness and Haze Corrections",
+          "subtitle": "Cloud Thickness · Canvas Modifier / Caps",
+          "desc": "More high clouds do not always mean a higher score. The model separates colorable mid/high-cloud carriers from light-suppressing gray curtains. Cloud thickness first modifies the canvas; haze and dust apply caps separately.",
+          "level1": "Dense upper-cloud carrier: high ≥80%, mid ≥30%, low ≤10%, no rain, and air not hazy",
+          "level2": "In this case cloud-thickness signals only multiply canvas by 0.75; they do not add another final cap or suppress light path again",
+          "level3": "True thick curtains can still cap around 42–48; haze/dust caps remain 45/35/28 based on air quality",
+          "formula": "Final correction = canvas thickness modifier + independent haze/dust/rain/geometry caps, avoiding double punishment from the same thickness signal"
         },
         "precipPenalty": {
           "title": "5. Hệ số phạt lượng mưa",
@@ -270,6 +272,7 @@ const translations = {
           "hardCap": "Hard cap",
           "hazeCap": "Haze cap",
           "thickCloudCap": "Thick-cloud cap",
+          "cloudThicknessModifier": "Cloud-thickness modifier",
           "geometryCap": "Geometry cap",
           "occlusion": "Occlusion",
           "carrierFloor": "Carrier floor",
@@ -284,6 +287,7 @@ const translations = {
           "afterAdjustments": "after all caps and floors",
           "finalDisplayed": "final displayed result",
           "thickCloudCap": "thick high cloud reduces usable color rendering",
+          "cloudThicknessModifier": "when mid/high-cloud carriers are clear, thickness only softens the canvas and does not add another hard cap",
           "geometryCap": "sun/cloud geometry is not feasible",
           "occlusion": "distant obstruction reduces the score",
           "carrierFloor": "clear high-cloud carrier prevents over-penalty",
@@ -299,6 +303,7 @@ const translations = {
           "extremeDustHazeCap28": "severe dust/haze capped the score at 28",
           "severeHazeCap35": "heavy haze capped the score at 35",
           "moderateHazeCap45": "moderate haze capped the score at 45",
+          "denseCarrierCanvasOnly": "dense upper-cloud carrier: canvas-only thickness modifier applied",
           "adjustmentApplied": "cap/floor adjustment applied",
           "displayCalibration": "final display score is aligned with the prediction status band",
           "lightPathStatusCap60": "light path is only {{light}}, so the result is capped to the light-glow band around 60",
@@ -317,6 +322,8 @@ const translations = {
       "lightPath": { "opening": "Opening toward the sun", "openingDesc": "Backend samples 15/30/50/100km along the solar azimuth; the low/mid-cloud corridor is relatively open", "wall": "Cloud wall toward the sun", "wallDesc": "Low or mid clouds along the solar direction suppress the main score" },
       "postRain": { "clear": "Clear post-rain air", "clearDesc": "Rain in the last 6h is kept as a bonus because visibility and particles are acceptable", "gray": "Post-rain gray-curtain risk", "grayDesc": "Moisture, particles, or weak direct light after rain cap the score conservatively" },
       "aerosol": { "moderate": "Aerosol vừa phải (AOD {{value}})", "moderateDesc": "Tăng tán xạ cam đỏ", "high": "Aerosol cao (AOD {{value}})", "highDesc": "Có thể trông mờ hoặc tối", "low": "Không khí quá trong (AOD {{value}})", "lowDesc": "Màu có thể nhạt hơn" },
+      "carrier": { "strong": "Clear high-cloud carrier", "strongDesc": "High clouds are sufficient, low clouds are scarce, and air is clear enough for a medium/high score base", "dense": "Dense mid/high-cloud carrier", "denseDesc": "High and mid clouds both provide canvas; thickness only softens the canvas and does not add a duplicate cap" },
+
       "layer": { "single": "Một lớp mây", "singleDesc": "Nếu mây cao tốt, vẫn có thể tạo màu hoàng hôn rõ" }
     },
     "status": {

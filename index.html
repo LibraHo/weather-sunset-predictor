@@ -362,6 +362,10 @@
       <section id="tab-panel-methodology" class="card methodology-panel hidden" role="tabpanel" aria-label="methodology-panel" tabindex="0" hidden>
         <h2 data-i18n="home.methodology.title">火烧云计算方法</h2>
         <p data-i18n="home.methodology.intro">火烧云指数综合评估天空条件与光学传播路径，判断当日形成火烧云的概率与强度。以下为基于气象数据的完整计算原理。</p>
+        <div class="methodology-version-card">
+          <strong data-i18n="home.methodology.versionLabel">算法版本：2026.05.10-upper-cloud-carrier-v2</strong>
+          <span data-i18n="home.methodology.versionDesc">本版将“中高云载体明确”的厚云信号改为温和降低画布分，不再重复触发厚高云封顶；灰幕、沙尘、降水和几何封顶仍独立保留。</span>
+        </div>
 
                 <div class="methodology-grid">
           <!-- 第一部分：云种判别与画布评分 -->
@@ -441,16 +445,16 @@
           <!-- 第六部分：厚高云惩罚 -->
           <article class="methodology-item">
             <h3>
-              <span data-i18n="home.methodology.sections.thickHighCloudPenalty.title">6. 厚高云惩罚</span>
-              <small data-i18n="home.methodology.sections.thickHighCloudPenalty.subtitle">Thick High Cloud · Cap</small>
+              <span data-i18n="home.methodology.sections.thickHighCloudPenalty.title">6. 厚高云与灰幕修正</span>
+              <small data-i18n="home.methodology.sections.thickHighCloudPenalty.subtitle">Cloud Thickness · Canvas Modifier / Caps</small>
             </h3>
-            <p data-i18n="home.methodology.sections.thickHighCloudPenalty.desc">高云多不一定代表高分；需要同时判断云幕厚度与空气透明度。清透高云可保底，厚云幕或沙尘灰幕会封顶。</p>
+            <p data-i18n="home.methodology.sections.thickHighCloudPenalty.desc">高云多不一定代表高分；算法会区分“可被染色的中高云载体”和“遮光灰幕”。云厚只先修正画布，空气灰幕/沙尘等才做封顶。</p>
             <ul class="methodology-detail-list">
-              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level1">高云≥80% 且低云很少：先进入高云载体/厚云幕双向判定</li>
-              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level2">空气通透、沙尘不重时：避免云厚信号误伤，可保底到约64–68分</li>
-              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level3">直射比低、漫射主导或水汽很高：厚云幕封顶约42–48分；沙尘/PM10/AOD 极高时封顶约28分</li>
+              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level1">中高云载体明确：高云≥80%、中云≥30%、低云≤10%、无降水且空气不灰</li>
+              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level2">这类场景的云厚信号只让画布分×0.75，不再额外封顶、不再重复压低光路</li>
+              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level3">真正厚云幕仍可封顶约42–48分；灰霾/沙尘按空气条件独立封顶45/35/28分</li>
             </ul>
-            <p class="methodology-formula" data-i18n="home.methodology.sections.thickHighCloudPenalty.formula">最终修正 = 高云载体保底 或 min(最终分, 厚云幕/灰幕封顶)，用于区分“能染色的高云”和“灰黄遮光的云幕”</p>
+            <p class="methodology-formula" data-i18n="home.methodology.sections.thickHighCloudPenalty.formula">最终修正 = 画布云厚修正 + 独立灰幕/沙尘/降水/几何封顶，避免同一厚云信号被重复惩罚</p>
           </article>
         </div>
 

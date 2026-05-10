@@ -733,6 +733,10 @@ describe('EnhancedPredictionService', () => {
         modifier: 0.75
       });
       expect(result.cloudThickness.reasons).toContain('dense_upper_cloud_carrier_softened');
+      expect(result.algorithm).toMatchObject({
+        name: 'EnhancedPredictionService',
+        version: '2026.05.10-upper-cloud-carrier-v2'
+      });
       expect(result.score).toBeGreaterThanOrEqual(50);
       expect(result.score).toBeLessThanOrEqual(60);
       expect(result.status).toBe('light_glow');

@@ -17,6 +17,7 @@ const SunCalculator = require('../utils/SunCalculator.js');
 const logger = require('../utils/logger.js');
 const CloudLayerEstimator = require('./CloudLayerEstimator.js');
 const LightPathV2Service = require('./LightPathV2Service.js');
+const { ALGORITHM_VERSION } = require('./AlgorithmVersion.js');
 
 // ========== 常量定义 ==========
 
@@ -1594,6 +1595,10 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     highCloudCarrierAdjustment,
     postRainAdjustment,
     clearSunsetAdvice,
+    algorithm: {
+      name: 'EnhancedPredictionService',
+      version: ALGORITHM_VERSION
+    },
     status: adjustedStatus,
     description: adjustedDescription,
     advice: adjustedAdvice,
@@ -1631,6 +1636,7 @@ module.exports = {
   CLOUD_WEIGHTS,
   LIGHT_PATH_WEIGHTS,
   FINAL_WEIGHTS,
+  ALGORITHM_VERSION,
 
   // 辅助函数
   getJulianDay,
