@@ -47,6 +47,18 @@ apiAccess: 'Acceso API'
     "methodology": {
       "title": "Cómo se calcula la puntuación",
       "intro": "El índice de nubes rojas combina cuatro factores clave para estimar si vale la pena salir a ver el atardecer.",
+      "versionLabel": "Algorithm version: 2026.05.10-upper-cloud-carrier-v2",
+      "versionDesc": "This version treats clear dense upper-cloud carrier scenes as a canvas-thickness modifier instead of also applying a thick high-cloud hard cap; haze, dust, rain, and geometry caps remain independent.",
+      changelogTitle: "Version update history",
+      changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
+      changelog: {
+              "current": {
+                      "date": "2026-05-10",
+                      "title": "Dense mid/high-cloud carrier protection v2",
+                      "summary": "Fixes duplicate punishment when high and mid clouds are sufficient, low clouds are scarce, and air is not hazy. Thickness now only softens the canvas; true haze/dust still applies independent caps.",
+                      "validation": "Validation: Beijing replay lands around 53–60, while thick-curtain and dust cases stay low."
+              }
+      },
       "factors": {
         "highMidCloudTitle": "Nubes medias/altas (lienzo)",
         "highMidCloudDesc": "Una cobertura equilibrada de nubes medias y altas proporciona mejores capas naranja-rojo; demasiado pocas o gruesas perjudican el efecto.",
@@ -105,13 +117,13 @@ apiAccess: 'Acceso API'
           "level4": "Nubes bajas >70% → ×0.2 (bloqueo severo)"
         },
         "thickHighCloudPenalty": {
-          "title": "6. Penalización por nubes altas gruesas",
-          "subtitle": "Thick High Cloud · Tope",
-          "desc": "Muchas nubes altas no siempre significan mejor puntuación: si forman una cortina gruesa con poca luz directa y difusión dominante, solo suele haber brillo local junto al sol.",
-          "level1": "Nubes altas ≥80% y nubosidad total ≥60% activan la revisión de riesgo",
-          "level2": "Baja luz directa, difusión dominante o vapor de agua muy alto reducen la puntuación del trayecto de luz",
-          "level3": "Las cortinas gruesas se limitan a unos 42–48 puntos para evitar falsos excelentes",
-          "formula": "Corrección de nube alta gruesa = min(puntuación final, 42–48), para capas gruesas con luz solo local"
+          "title": "6. Cloud Thickness and Haze Corrections",
+          "subtitle": "Cloud Thickness · Canvas Modifier / Caps",
+          "desc": "More high clouds do not always mean a higher score. The model separates colorable mid/high-cloud carriers from light-suppressing gray curtains. Cloud thickness first modifies the canvas; haze and dust apply caps separately.",
+          "level1": "Dense upper-cloud carrier: high ≥80%, mid ≥30%, low ≤10%, no rain, and air not hazy",
+          "level2": "In this case cloud-thickness signals only multiply canvas by 0.75; they do not add another final cap or suppress light path again",
+          "level3": "True thick curtains can still cap around 42–48; haze/dust caps remain 45/35/28 based on air quality",
+          "formula": "Final correction = canvas thickness modifier + independent haze/dust/rain/geometry caps, avoiding double punishment from the same thickness signal"
         },
         "precipPenalty": {
           "title": "5. Penalización precipitaciones",
@@ -254,6 +266,7 @@ apiAccess: 'Acceso API'
           "hardCap": "Hard cap",
           "hazeCap": "Haze cap",
           "thickCloudCap": "Thick-cloud cap",
+          "cloudThicknessModifier": "Cloud-thickness modifier",
           "geometryCap": "Geometry cap",
           "occlusion": "Occlusion",
           "carrierFloor": "Carrier floor",
@@ -268,6 +281,7 @@ apiAccess: 'Acceso API'
           "afterAdjustments": "after all caps and floors",
           "finalDisplayed": "final displayed result",
           "thickCloudCap": "thick high cloud reduces usable color rendering",
+          "cloudThicknessModifier": "when mid/high-cloud carriers are clear, thickness only softens the canvas and does not add another hard cap",
           "geometryCap": "sun/cloud geometry is not feasible",
           "occlusion": "distant obstruction reduces the score",
           "carrierFloor": "clear high-cloud carrier prevents over-penalty",
@@ -283,6 +297,7 @@ apiAccess: 'Acceso API'
           "extremeDustHazeCap28": "severe dust/haze capped the score at 28",
           "severeHazeCap35": "heavy haze capped the score at 35",
           "moderateHazeCap45": "moderate haze capped the score at 45",
+          "denseCarrierCanvasOnly": "dense upper-cloud carrier: canvas-only thickness modifier applied",
           "adjustmentApplied": "cap/floor adjustment applied",
           "displayCalibration": "final display score is aligned with the prediction status band",
           "lightPathStatusCap60": "light path is only {{light}}, so the result is capped to the light-glow band around 60",
@@ -301,6 +316,8 @@ apiAccess: 'Acceso API'
       "lightPath": { "opening": "Opening toward the sun", "openingDesc": "Backend samples 15/30/50/100km along the solar azimuth; the low/mid-cloud corridor is relatively open", "wall": "Cloud wall toward the sun", "wallDesc": "Low or mid clouds along the solar direction suppress the main score" },
       "postRain": { "clear": "Clear post-rain air", "clearDesc": "Rain in the last 6h is kept as a bonus because visibility and particles are acceptable", "gray": "Post-rain gray-curtain risk", "grayDesc": "Moisture, particles, or weak direct light after rain cap the score conservatively" },
       "aerosol": { "moderate": "Aerosol moderado (AOD {{value}})", "moderateDesc": "Refuerza la dispersión naranja-roja", "high": "Aerosol alto (AOD {{value}})", "highDesc": "Puede verse brumoso u opaco", "low": "Aire muy limpio (AOD {{value}})", "lowDesc": "Los colores pueden ser más suaves" },
+      "carrier": { "strong": "Clear high-cloud carrier", "strongDesc": "High clouds are sufficient, low clouds are scarce, and air is clear enough for a medium/high score base", "dense": "Dense mid/high-cloud carrier", "denseDesc": "High and mid clouds both provide canvas; thickness only softens the canvas and does not add a duplicate cap" },
+
       "layer": { "single": "Una sola capa de nubes", "singleDesc": "Buenas nubes altas aún pueden colorearse bien" }
     },
     "status": {

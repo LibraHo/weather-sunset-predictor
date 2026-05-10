@@ -47,6 +47,18 @@ const translations = {
     "methodology": {
       "title": "火燒雲計算方法",
       "intro": "火燒雲指數由四個關鍵因子綜合計算，幫助你快速判斷當天是否值得守候晚霞。",
+      "versionLabel": "算法版本：2026.05.10-upper-cloud-carrier-v2",
+      "versionDesc": "本版將「中高雲載體明確」的厚雲訊號改為溫和降低畫布分，不再重複觸發厚高雲封頂；灰幕、沙塵、降水和幾何封頂仍獨立保留。",
+      changelogTitle: "版本更新記錄",
+      changelogHint: "用於回溯每次算法調整的原因、影響和驗證方式",
+      changelog: {
+              "current": {
+                      "date": "2026-05-10",
+                      "title": "中高雲載體保護 v2",
+                      "summary": "修正「高雲+中雲充足、低雲少、空氣不灰」場景被厚雲訊號重複懲罰的問題；雲厚只溫和降低畫布分，真正灰幕/沙塵仍獨立封頂。",
+                      "validation": "驗證：北京樣本回放約 53–60 分，厚雲幕和沙塵樣本仍保持低分。"
+              }
+      },
       "factors": {
         "highMidCloudTitle": "中高雲（畫布條件）",
         "highMidCloudDesc": "中高雲越理想，越容易形成豐富的橙紅色層次；過少或過厚都會降低效果。",
@@ -114,13 +126,13 @@ const translations = {
           "level4": "低雲>70% → ×0.2（嚴重遮擋）"
         },
         thickHighCloudPenalty: {
-          title: '6. 厚高雲懲罰',
-          subtitle: 'Thick High Cloud · 封頂',
-          desc: '高雲多不一定代表高分；需要同時判斷雲幕厚度與空氣透明度。清透高雲可保底，厚雲幕或沙塵灰幕會封頂。',
-          level1: '高雲≥80% 且低雲很少：先進入高雲載體／厚雲幕雙向判定',
-          level2: '空氣通透、沙塵不重時：避免雲厚訊號誤傷，可保底到約64–68分',
-          level3: '直射比低、漫射主導或水氣很高：厚雲幕封頂約42–48分；沙塵/PM10/AOD 極高時封頂約28分',
-          formula: '最終修正 = 高雲載體保底 或 min(最終分, 厚雲幕/灰幕封頂)，用於區分「能染色的高雲」和「灰黃遮光的雲幕」'
+          title: '6. 厚高雲與灰幕修正',
+          subtitle: 'Cloud Thickness · 畫布修正/封頂',
+          desc: '高雲多不一定代表高分；算法會區分「可被染色的中高雲載體」和「遮光灰幕」。雲厚只先修正畫布，空氣灰幕/沙塵等才做封頂。',
+          level1: '中高雲載體明確：高雲≥80%、中雲≥30%、低雲≤10%、無降水且空氣不灰',
+          level2: '這類場景的雲厚訊號只讓畫布分×0.75，不再額外封頂、不再重複壓低光路',
+          level3: '真正厚雲幕仍可封頂約42–48分；灰霾/沙塵按空氣條件獨立封頂45/35/28分',
+          formula: '最終修正 = 畫布雲厚修正 + 獨立灰幕/沙塵/降水/幾何封頂，避免同一厚雲訊號被重複懲罰'
         },
         "precipPenalty": {
           "title": "6. 降水懲罰係數",
@@ -268,6 +280,7 @@ const translations = {
           "hardCap": "硬封頂",
           "hazeCap": "灰幕封頂",
           "thickCloudCap": "厚雲封頂",
+          "cloudThicknessModifier": "雲厚修正",
           "geometryCap": "幾何封頂",
           "occlusion": "遮擋修正",
           "carrierFloor": "載體保底",
@@ -282,6 +295,7 @@ const translations = {
           "afterAdjustments": "套用所有封頂/保底後",
           "finalDisplayed": "最終顯示結果",
           "thickCloudCap": "高雲過厚，真實可染色效果下降",
+          "cloudThicknessModifier": "中高雲載體明確時，雲厚只溫和降低畫布分，不再額外封頂",
           "geometryCap": "太陽與雲層幾何條件不足",
           "occlusion": "遠端遮擋壓低最終分",
           "carrierFloor": "高雲載體清透，避免誤傷低估",
@@ -297,6 +311,7 @@ const translations = {
           "extremeDustHazeCap28": "強沙塵/灰幕壓制，分數封頂到 28",
           "severeHazeCap35": "重度灰霾壓制，分數封頂到 35",
           "moderateHazeCap45": "中度灰霾壓制，分數封頂到 45",
+          "denseCarrierCanvasOnly": "中高雲載體明確，僅套用畫布雲厚修正",
           "adjustmentApplied": "套用封頂/保底修正",
           "displayCalibration": "最終展示分按預測狀態檔位校準",
           "lightPathStatusCap60": "光路只有 {{light}}，歸入輕微霞光檔，最終展示分封頂到 60",
@@ -314,6 +329,7 @@ const translations = {
       "aerosol": { "moderate": "氣溶膠適中（AOD {{value}}）", "moderateDesc": "有利於增強紅橙色散射", "high": "氣溶膠偏高（AOD {{value}}）", "highDesc": "可能灰霾發暗", "low": "空氣過於通透（AOD {{value}}）", "lowDesc": "顏色可能偏淡" },
       "lightPath": { "opening": "太陽方向有透光開口", "openingDesc": "後端沿太陽方位採樣 15/30/50/100km，低中雲走廊較通暢，光線更容易打到雲層", "wall": "太陽方向有雲牆遮擋", "wallDesc": "太陽方位周邊低/中雲偏厚，遠端光路會壓低主評分" },
       "postRain": { "clear": "雨後空氣清透", "clearDesc": "近6小時有降水，但能見度和顆粒物條件較好，雨後加成保留", "gray": "雨後灰幕風險", "grayDesc": "降水後水氣/顆粒物/直射比不理想，算法按灰幕場景封頂" },
+      "carrier": { "strong": "高雲載體清晰", "strongDesc": "高雲充足、低雲稀少且空氣較通透，具備中高分基礎", "dense": "中高雲載體明確", "denseDesc": "高雲和中雲共同提供畫布，雲厚只溫和降分，不再重複封頂" },
       "layer": { "single": "雲層單一", "singleDesc": "高層雲品質好，仍可形成鮮明火燒雲" }
     },
     "status": {

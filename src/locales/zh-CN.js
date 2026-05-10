@@ -53,6 +53,18 @@ export default {
     methodology: {
       title: '火烧云计算方法',
       intro: '火烧云指数由四个关键因子综合计算，帮助你快速判断当天是否值得蹲守晚霞。',
+      versionLabel: '算法版本：2026.05.10-upper-cloud-carrier-v2',
+      versionDesc: '本版将“中高云载体明确”的厚云信号改为温和降低画布分，不再重复触发厚高云封顶；灰幕、沙尘、降水和几何封顶仍独立保留。',
+      changelogTitle: "版本更新记录",
+      changelogHint: "用于回溯每次算法调整的原因、影响和验证方式",
+      changelog: {
+              "current": {
+                      "date": "2026-05-10",
+                      "title": "中高云载体保护 v2",
+                      "summary": "修正“高云+中云充足、低云少、空气不灰”场景被厚云信号重复惩罚的问题；云厚只温和降低画布分，真正灰幕/沙尘仍独立封顶。",
+                      "validation": "验证：北京样本回放约 53–60 分，厚云幕和沙尘样本仍保持低分。"
+              }
+      },
       factors: {
         highMidCloudTitle: '中高云（画布条件）',
         highMidCloudDesc: '中高云越理想，越容易形成丰富的橙红色层次；过少或过厚都会降低效果。',
@@ -120,13 +132,13 @@ export default {
           level4: '低云>70% → ×0.2（严重遮挡）'
         },
         thickHighCloudPenalty: {
-          title: '6. 厚高云惩罚',
-          subtitle: 'Thick High Cloud · 封顶',
-          desc: '高云多不一定代表高分；需要同时判断云幕厚度与空气透明度。清透高云可保底，厚云幕或沙尘灰幕会封顶。',
-          level1: '高云≥80% 且低云很少：先进入高云载体/厚云幕双向判定',
-          level2: '空气通透、沙尘不重时：避免云厚信号误伤，可保底到约64–68分',
-          level3: '直射比低、漫射主导或水汽很高：厚云幕封顶约42–48分；沙尘/PM10/AOD 极高时封顶约28分',
-          formula: '最终修正 = 高云载体保底 或 min(最终分, 厚云幕/灰幕封顶)，用于区分“能染色的高云”和“灰黄遮光的云幕”'
+          title: '6. 厚高云与灰幕修正',
+          subtitle: 'Cloud Thickness · 画布修正/封顶',
+          desc: '高云多不一定代表高分；算法会区分“可被染色的中高云载体”和“遮光灰幕”。云厚只先修正画布，空气灰幕/沙尘等才做封顶。',
+          level1: '中高云载体明确：高云≥80%、中云≥30%、低云≤10%、无降水且空气不灰',
+          level2: '这类场景的云厚信号只让画布分×0.75，不再额外封顶、不再重复压低光路',
+          level3: '真正厚云幕仍可封顶约42–48分；灰霾/沙尘按空气条件独立封顶45/35/28分',
+          formula: '最终修正 = 画布云厚修正 + 独立灰幕/沙尘/降水/几何封顶，避免同一厚云信号被重复惩罚'
         },
         precipPenalty: {
           title: '6. 降水惩罚系数',
@@ -290,6 +302,7 @@ export default {
           hardCap: '硬封顶',
           hazeCap: '灰幕封顶',
           thickCloudCap: '厚云封顶',
+          cloudThicknessModifier: '云厚修正',
           geometryCap: '几何封顶',
           occlusion: '遮挡修正',
           carrierFloor: '载体保底',
@@ -304,6 +317,7 @@ export default {
           afterAdjustments: '应用所有封顶/保底后',
           finalDisplayed: '最终展示结果',
           thickCloudCap: '高云过厚，真实可染色效果下降',
+          cloudThicknessModifier: '中高云载体明确时，云厚只温和降低画布分，不再额外封顶',
           geometryCap: '太阳与云层几何条件不足',
           occlusion: '远端遮挡压低最终分',
           carrierFloor: '高云载体清透，避免误伤低估',
@@ -319,6 +333,7 @@ export default {
           extremeDustHazeCap28: '强沙尘/灰幕压制，分数封顶到 28',
           severeHazeCap35: '重度灰霾压制，分数封顶到 35',
           moderateHazeCap45: '中度灰霾压制，分数封顶到 45',
+          denseCarrierCanvasOnly: '中高云载体明确，仅应用画布云厚修正',
           adjustmentApplied: '应用封顶/保底修正',
           displayCalibration: '最终展示分按预测状态档位校准',
           lightPathStatusCap60: '光路只有 {{light}}，归入轻微霞光档，最终展示分封顶到 60',
@@ -366,6 +381,10 @@ formationAnalysis: {
       postRain: {
         clear: '雨后空气清透', clearDesc: '近6小时有降水，但能见度和颗粒物条件较好，雨后加成保留',
         gray: '雨后灰幕风险', grayDesc: '降水后水汽/颗粒物/直射比不理想，算法按灰幕场景封顶'
+      },
+      carrier: {
+        strong: '高云载体清晰', strongDesc: '高云充足、低云稀少且空气较通透，具备中高分基础',
+        dense: '中高云载体明确', denseDesc: '高云和中云共同提供画布，云厚只温和降分，不再重复封顶'
       },
       layer: { single: '云层单一', singleDesc: '高云质量好，仍可形成鲜明火烧云' }
     },

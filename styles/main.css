@@ -355,6 +355,107 @@ main > section {
   margin-bottom: 8px;
 }
 
+.methodology-version-card {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-primary, #ff7a1a) 10%, var(--color-bg));
+  color: var(--color-text);
+}
+
+.methodology-version-card span {
+  color: var(--color-text-light);
+  line-height: 1.5;
+}
+
+.methodology-changelog-card {
+  margin: 0 0 16px;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--color-primary, #ff7a1a) 28%, var(--color-border));
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--color-primary, #ff7a1a) 18%, transparent) 0, transparent 34%),
+    var(--color-bg);
+}
+
+.methodology-changelog-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.methodology-changelog-head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.methodology-changelog-head span {
+  max-width: 360px;
+  color: var(--color-text-light);
+  font-size: 0.88rem;
+  line-height: 1.45;
+  text-align: right;
+}
+
+.methodology-changelog-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.methodology-changelog-list li {
+  display: grid;
+  grid-template-columns: minmax(96px, 120px) 1fr;
+  gap: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--color-border);
+}
+
+.methodology-changelog-list time {
+  color: var(--color-primary);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.methodology-changelog-list strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.methodology-changelog-list p {
+  margin: 0 0 6px;
+  color: var(--color-text);
+  line-height: 1.55;
+}
+
+.methodology-changelog-list small {
+  color: var(--color-text-light);
+  line-height: 1.45;
+}
+
+@media (max-width: 640px) {
+  .methodology-changelog-head {
+    display: grid;
+  }
+
+  .methodology-changelog-head span {
+    max-width: none;
+    text-align: left;
+  }
+
+  .methodology-changelog-list li {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+
 .methodology-grid {
   display: flex;
   flex-direction: column;
