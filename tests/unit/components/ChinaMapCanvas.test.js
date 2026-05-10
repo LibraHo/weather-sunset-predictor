@@ -1,5 +1,7 @@
 import ChinaMapCanvas, { selectCitiesForZoom } from '../../../src/components/ChinaMapCanvas.js';
 import { MAP_CITY_NAME_I18N, getLocalizedMapCityName } from '../../../src/data/mapCityNames.js';
+import fs from 'fs';
+import path from 'path';
 
 const level1 = [
   { name: '北京' }, { name: '上海' }, { name: '广州' }, { name: '深圳' },
@@ -13,6 +15,12 @@ const level2 = [{ name: '苏州' }, { name: '宁波' }];
 const level3 = [{ name: '义乌' }];
 
 describe('ChinaMapCanvas city data coverage', () => {
+  it('fetches the latest shared East Asia basemap asset', () => {
+    const source = fs.readFileSync(path.resolve(process.cwd(), 'src/components/ChinaMapCanvas.js'), 'utf8');
+    expect(source).toContain('/data/east-asia-basemap-geojson.json?v=2');
+    expect(source).not.toContain('/data/east-asia-basemap-geojson.json?v=1');
+  });
+
   it('keeps score controls enabled by default but allows gallery pages to disable them', () => {
     const defaultMap = new ChinaMapCanvas();
     expect(defaultMap._options.showScoreLegend).toBe(true);

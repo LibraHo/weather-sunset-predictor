@@ -312,6 +312,65 @@ function getPhotos() {
   return readIndex();
 }
 
+function normalizeOptionalText(value) {
+  return String(value ?? '').trim();
+}
+
+function normalizeOptionalCoordinate(value, min, max) {
+  if (value === '' || value === null || value === undefined) return null;
+  const num = Number(value);
+  return Number.isFinite(num) && num >= min && num <= max ? num : null;
+}
+
+function normalizeOptionalDate(value) {
+  const raw = String(value ?? '').trim();
+  if (!raw) return null;
+  const date = new Date(raw);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+/**
+ * 更新照片元数据，不改动原图/缩略图文件。
+ * @param {string} id
+ * @param {object} patch
+ * @returns {object|null} 更新后的照片，不存在返回 null
+ */
+function updatePhoto(id, patch = {}) {
+  initDirs();
+  const photos = readIndex();
+  const idx = photos.findIndex(p => p.id === id);
+  if (idx === -1) return null;
+
+  const current = photos[idx];
+  const next = { ...current };
+
+  if (Object.prototype.hasOwnProperty.call(patch, 'desc')) {
+    next.desc = normalizeOptionalText(patch.desc);
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, 'locationName')) {
+    next.locationName = normalizeOptionalText(patch.locationName);
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, 'uploaderName')) {
+    next.uploaderName = normalizeOptionalText(patch.uploaderName);
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, 'takenAt')) {
+    next.takenAt = normalizeOptionalDate(patch.takenAt);
+  }
+
+  const hasLat = Object.prototype.hasOwnProperty.call(patch, 'lat');
+  const hasLon = Object.prototype.hasOwnProperty.call(patch, 'lon');
+  if (hasLat || hasLon) {
+    const lat = hasLat ? normalizeOptionalCoordinate(patch.lat, -90, 90) : current.lat;
+    const lon = hasLon ? normalizeOptionalCoordinate(patch.lon, -180, 180) : current.lon;
+    next.lat = Number.isFinite(lat) && Number.isFinite(lon) ? lat : null;
+    next.lon = Number.isFinite(lat) && Number.isFinite(lon) ? lon : null;
+  }
+
+  photos[idx] = next;
+  writeIndex(photos);
+  return next;
+}
+
 /**
  * 根据 ID 删除照片（原图 + 缩略图 + 索引条目）。
  * @param {string} id
@@ -364,6 +423,7 @@ module.exports = {
   initDirs,
   savePhoto,
   getPhotos,
+  updatePhoto,
   deletePhoto,
   getPhotoById,
   generateThumbnail,

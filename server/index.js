@@ -215,73 +215,58 @@ app.listen(PORT, () => {
  */
 function _scheduleGridRefresh() {
   const gridService = require('./services/GridScoreService');
-  const fs = require('fs');
-  const os = require('os');
-  const path = require('path');
+  const {
+    readScheduleConfig,
+    getDueScheduleJobs,
+    describeSchedule
+  } = require('./services/GridRefreshSchedule');
 
-  const CONFIG_PATH = path.join(os.homedir(), '.xiake', 'schedule-config.json');
+  const startRefresh = (period, reason) => {
+    gridService.refreshIfStale(0, period).catch(err =>
+      console.error(`[GridRefresh] ${reason}刷新失败 (${period}):`, err.message)
+    );
+  };
 
-  // 启动时检查并刷新一次
-  gridService.refreshIfStale().catch(err =>
-    console.error('[GridRefresh] 启动刷新失败:', err.message)
-  );
-
-  // 读取配置获取刷新时间
-  function _loadScheduleHours() {
-    const DEFAULT_HOURS_CST = [10, 22]; // 默认 CST 10:00 / 22:00
-    try {
-      if (!fs.existsSync(CONFIG_PATH)) return DEFAULT_HOURS_CST;
-      const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'));
-      if (!config.enabled || !Array.isArray(config.jobs)) return DEFAULT_HOURS_CST;
-      const hours = [];
-      for (const job of config.jobs) {
-        const m = job.time && job.time.match(/^(\d{1,2}):(\d{2})$/);
-        if (m) hours.push(parseInt(m[1]));
-      }
-      return hours.length > 0 ? [...new Set(hours)] : DEFAULT_HOURS_CST;
-    } catch (e) {
-      return DEFAULT_HOURS_CST;
-    }
+  // 启动时两个时段都检查一次，避免重启后只有晚霞缓存被维护。
+  for (const period of ['sunrise', 'sunset']) {
+    gridService.refreshIfStale(undefined, period).catch(err =>
+      console.error(`[GridRefresh] 启动刷新失败 (${period}):`, err.message)
+    );
   }
 
-  let scheduleHoursCST = _loadScheduleHours();
-  console.log(`[GridRefresh] 初始定时刷新时间(CST): ${scheduleHoursCST.map(h => `${String(h).padStart(2,'0')}:00`).join(', ')}`);
+  let scheduleConfig = readScheduleConfig();
+  console.log(`[GridRefresh] 初始定时刷新时间(CST): ${describeSchedule(scheduleConfig)}`);
 
-  // 记录已触发的小时，防止同一小时重复触发
-  const triggeredHours = new Set();
+  // 记录已触发的具体 job，防止同一分钟重复触发
+  const triggeredKeys = new Set();
 
   // 支持配置热重载
   global.__scheduleReload = () => {
-    scheduleHoursCST = _loadScheduleHours();
-    console.log(`[GridRefresh] 配置已重载，定时刷新时间(CST): ${scheduleHoursCST.map(h => `${String(h).padStart(2,'0')}:00`).join(', ')}`);
+    scheduleConfig = readScheduleConfig();
+    console.log(`[GridRefresh] 配置已重载，定时刷新时间(CST): ${describeSchedule(scheduleConfig)}`);
   };
 
   setInterval(() => {
     const now = new Date();
-    // CST = UTC+8
-    const hourCST = (now.getUTCHours() + 8) % 24;
-    const minCST = now.getUTCMinutes();
-    const dateKey = `${now.toISOString().slice(0, 10)}_${hourCST}`; // 格式: 2024-01-15_10
+    const dueJobs = getDueScheduleJobs(scheduleConfig, now, triggeredKeys);
 
-    // 检查是否在配置的时间点（小时匹配且分钟在0-5之间）且当天该小时未触发过
-    if (scheduleHoursCST.includes(hourCST) && minCST < 5 && !triggeredHours.has(dateKey)) {
-      triggeredHours.add(dateKey);
-      console.log(`[GridRefresh] 定时触发刷新（CST ${hourCST}:${String(minCST).padStart(2,'0')}）`);
-      gridService.refreshIfStale(0).catch(err =>
-        console.error('[GridRefresh] 定时刷新失败:', err.message)
-      );
+    for (const job of dueJobs) {
+      triggeredKeys.add(job.triggerKey);
+      console.log(`[GridRefresh] 定时触发刷新（CST ${job.time}, type=${job.type}, label=${job.label || '-'})`);
+      for (const period of job.periods) {
+        startRefresh(period, '定时');
+      }
     }
 
     // 清理过期的触发记录（保留最近48小时）
-    const cutoffDate = new Date(now);
-    cutoffDate.setHours(cutoffDate.getHours() - 48);
-    const cutoffKey = `${cutoffDate.toISOString().slice(0, 10)}_${cutoffDate.getHours()}`;
-    for (const key of triggeredHours) {
-      if (key < cutoffKey) {
-        triggeredHours.delete(key);
-      }
+    const cutoff = Date.now() - (48 * 60 * 60 * 1000);
+    for (const key of triggeredKeys) {
+      const day = key.slice(0, 10);
+      const time = key.slice(11, 16);
+      const keyTime = new Date(`${day}T${time}:00+08:00`).getTime();
+      if (Number.isFinite(keyTime) && keyTime < cutoff) triggeredKeys.delete(key);
     }
-  }, 5 * 60 * 1000); // 每 5 分钟检查一次
+  }, 60 * 1000); // 每分钟检查一次，支持后台配置的具体分钟
 }
 
 module.exports = app;

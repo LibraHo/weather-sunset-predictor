@@ -309,7 +309,7 @@ class ChinaMapCanvas {
       _cachedChinaGeoJSON = await resp.json();
     }
     if (!_cachedEastAsiaGeoJSON) {
-      const resp = await fetch('/data/east-asia-basemap-geojson.json?v=1');
+      const resp = await fetch('/data/east-asia-basemap-geojson.json?v=2');
       if (!resp.ok) throw new Error(`EastAsia GeoJSON fetch failed: ${resp.status}`);
       _cachedEastAsiaGeoJSON = await resp.json();
     }
@@ -502,8 +502,11 @@ class ChinaMapCanvas {
       }).addTo(this._map);
     }
 
-    // 合并 bounds 用于 fitBounds
+    // 合并底图 bounds，避免新增的北侧/东南亚边界被初始视野裁掉。
     const bounds = chinaLayer.getBounds();
+    if (eastAsiaLayer) {
+      bounds.extend(eastAsiaLayer.getBounds());
+    }
     this._geoJsonLayer = chinaLayer;
     this._eastAsiaLayer = eastAsiaLayer;
 

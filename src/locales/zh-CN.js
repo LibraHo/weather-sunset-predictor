@@ -58,6 +58,12 @@ export default {
       changelogTitle: "版本更新记录",
       changelogHint: "用于回溯每次算法调整的原因、影响和验证方式",
       changelog: {
+              "latest": {
+                      "date": "2026-05-11",
+                      "title": "开口型中高云保护 v1",
+                      "summary": "低云少、太阳方向有透光开口时，中高云更多按晚霞画布处理，减少把可染色云带误判成厚云幕。",
+                      "validation": "验证：颐和园开口型中高云样本不再过度压低；灰霾、降水和低云遮挡场景仍保持谨慎。"
+              },
               "current": {
                       "date": "2026-05-10",
                       "title": "低云主导光路 v3",
