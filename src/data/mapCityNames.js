@@ -74,6 +74,7 @@ export const MAP_CITY_NAME_I18N = {
   '仙台': { zhTW: '仙台', en: 'Sendai', ja: '仙台' },
   '广岛': { zhTW: '廣島', en: 'Hiroshima', ja: '広島' },
   '福冈': { zhTW: '福岡', en: 'Fukuoka', ja: '福岡' },
+  '乌兰巴托': { zhTW: '烏蘭巴托', en: 'Ulaanbaatar' },
   '曼谷': { zhTW: '曼谷', en: 'Bangkok' },
   '河内': { zhTW: '河內', en: 'Hanoi' },
   '胡志明市': { zhTW: '胡志明市', en: 'Ho Chi Minh City' },

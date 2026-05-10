@@ -575,12 +575,29 @@ function renderPhotos(photos) {
     <div class="photo-card">
       <img class="photo-thumb" src="${p.thumbUrl}" alt="${escapeHtml(p.filename)}">
       <div class="photo-info">
-        <div class="photo-desc">${escapeHtml(p.desc || '无描述')}</div>
+        <div class="photo-desc">${escapeHtml(p.locationName || p.desc || '无描述')}</div>
         <div class="photo-meta">${p.lat && p.lon ? `📍 ${p.lat.toFixed(4)}, ${p.lon.toFixed(4)}` : '📍 无位置'}</div>
+        <div class="photo-meta">拍摄：${escapeHtml(formatPhotoDateTime(p.takenAt) || '--')}</div>
+        <div class="photo-meta">上传：${escapeHtml(formatPhotoDateTime(p.uploadedAt) || '--')}</div>
+        <div class="photo-meta">上传者：${escapeHtml(p.uploaderName || '--')}</div>
         <button class="btn btn-danger btn-sm" style="width:100%" onclick="deletePhoto('${p.id}')">删除</button>
       </div>
     </div>
   `).join('');
+}
+
+function formatPhotoDateTime(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
 }
 
 async function deletePhoto(id) {
@@ -644,6 +661,9 @@ function initUploadForm() {
     const formData = new FormData();
     formData.append('photo', fileInput.files[0]);
     const desc = document.getElementById('description').value;
+    const locationName = document.getElementById('locationName')?.value?.trim() || '';
+    const uploaderName = document.getElementById('uploaderName')?.value?.trim() || '';
+    const takenAt = document.getElementById('takenAt')?.value || '';
     const lat = parseFloat(latInput?.value || '');
     const lon = parseFloat(lonInput?.value || '');
     if (!isValidPhotoCoordinate(lat, lon)) {
@@ -653,6 +673,9 @@ function initUploadForm() {
       return;
     }
     if (desc) formData.append('description', desc);
+    if (locationName) formData.append('locationName', locationName);
+    if (uploaderName) formData.append('uploaderName', uploaderName);
+    if (takenAt) formData.append('takenAt', new Date(takenAt).toISOString());
     formData.append('lat', lat);
     formData.append('lon', lon);
 

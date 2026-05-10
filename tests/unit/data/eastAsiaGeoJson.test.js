@@ -22,9 +22,16 @@ describe('east-asia-basemap-geojson basemap coverage', () => {
   it('includes Southeast Asia countries for the firecloud map basemap only', () => {
     const names = new Set((eastAsiaGeoJson.features || []).map(feature => feature.properties?.name));
 
-    ['Myanmar', 'Thailand', 'Laos', 'Cambodia', 'Vietnam', 'Malaysia', 'Indonesia'].forEach((name) => {
+    ['Myanmar', 'Thailand', 'Laos', 'Cambodia', 'Vietnam', 'Malaysia', 'Indonesia', 'Mongolia'].forEach((name) => {
       expect(names.has(name)).toBe(true);
     });
+  });
+
+  it('includes Mongolia as a northern basemap country', () => {
+    const mongolia = (eastAsiaGeoJson.features || []).find(feature => feature.properties?.name === 'Mongolia');
+    expect(mongolia).toBeTruthy();
+    expect(['Polygon', 'MultiPolygon']).toContain(mongolia.geometry?.type);
+    expect(countGeometryCoordinates(mongolia.geometry)).toBeGreaterThan(40);
   });
 
   it('uses a detailed Japan coastline instead of a coarse country outline', () => {

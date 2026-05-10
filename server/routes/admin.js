@@ -220,6 +220,9 @@ router.post('/upload', requireAuth, handlePhotoUpload, async (req, res) => {
       filename: req.file.originalname,
       lat,
       lon,
+      takenAt: req.body.takenAt || '',
+      locationName: req.body.locationName || '',
+      uploaderName: req.body.uploaderName || '',
       desc: req.body.description || '',
       clientIp: getClientIp(req),
     });

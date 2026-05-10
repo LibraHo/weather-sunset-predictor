@@ -81,7 +81,7 @@ const MOBILE_CORE_CITY_NAMES = new Set([
 
 const LOW_ZOOM_REGIONAL_CITY_NAMES = new Set([
   ...MOBILE_CORE_CITY_NAMES,
-  '台北', '首尔', '东京', '大阪',
+  '台北', '首尔', '东京', '大阪', '乌兰巴托',
   '曼谷', '河内', '胡志明市', '金边', '万象', '仰光', '吉隆坡', '雅加达'
 ]);
 
@@ -213,7 +213,9 @@ class ChinaMapCanvas {
     this._options = {
       style: options.style || 'dark',
       defaultZoom: options.defaultZoom || 4,
-      defaultCenter: options.defaultCenter || [35, 105]
+      defaultCenter: options.defaultCenter || [35, 105],
+      showScoreLegend: options.showScoreLegend !== false,
+      enableScoreQuery: options.enableScoreQuery !== false
     };
     
     this._map = null;
@@ -281,11 +283,15 @@ class ChinaMapCanvas {
     // 应用初始样式
     this._applyStyle();
 
-    // 添加图例
-    this._addLegend();
+    // 添加评分图例
+    if (this._options.showScoreLegend) {
+      this._addLegend();
+    }
 
-    // 添加点击查询
-    this._addClickHandler();
+    // 添加点击查分
+    if (this._options.enableScoreQuery) {
+      this._addClickHandler();
+    }
 
     window.addEventListener?.('languageChanged', this._languageChangeHandler);
 
@@ -604,6 +610,8 @@ class ChinaMapCanvas {
       { name: '仙台', lat: 38.2682, lon: 140.8694 },
       { name: '广岛', lat: 34.3853, lon: 132.4553 },
       { name: '福冈', lat: 33.5902, lon: 130.4017 },
+      // 蒙古国
+      { name: '乌兰巴托', lat: 47.8864, lon: 106.9057 },
       // 东南亚主要城市（仅底图标注，不扩展火烧云热力/栅格渲染范围）
       { name: '曼谷', lat: 13.7563, lon: 100.5018 },
       { name: '河内', lat: 21.0278, lon: 105.8342 },
