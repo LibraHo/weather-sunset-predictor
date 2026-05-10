@@ -47,6 +47,18 @@ apiAccess: 'API接続'
     "methodology": {
       "title": "焼き雲スコアの計算方法",
       "intro": "焼き雲指数は4つの主要因子を組み合わせて計算され、その日の夕焼け観賞が価値あるかどうかを素早く判断するのに役立ちます。",
+      "versionLabel": "Algorithm version: 2026.05.10-low-cloud-lightpath-v3",
+      "versionDesc": "This version improves light-path scoring: low clouds block sunlight, while rich mid/high clouds are treated mainly as the color canvas.",
+      changelogTitle: "Version update history",
+      changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
+      changelog: {
+              "current": {
+                      "date": "2026-05-10",
+                      "title": "Low-cloud-led light path v3",
+                      "summary": "Light path now focuses on low clouds and the solar-direction corridor. Rich mid/high clouds are treated as sunset-glow canvas first.",
+                      "validation": "Validation: full high-cloud canvas with scarce low cloud is no longer treated as low-cloud overcast; low-cloud and rain cases stay low."
+              }
+      },
       "factors": {
         "highMidCloudTitle": "中高層雲（キャンバス条件）",
         "highMidCloudDesc": "中高層雲が理想的であればあるほど、豊かなオレンジ・赤の階調が生まれやすくなります。少なすぎても多すぎても効果は低下します。",
@@ -114,13 +126,13 @@ apiAccess: 'API接続'
           "level4": "下層雲>70% → ×0.2（深刻な遮蔽）"
         },
         "thickHighCloudPenalty": {
-          "title": "6. 厚い高層雲の減点",
-          "subtitle": "Thick High Cloud · 上限",
-          "desc": "高層雲が多くても必ず高得点ではありません。厚い雲幕になり直達光が弱く散乱光が支配的な場合、太陽付近の局所的な色づきに留まります。",
-          "level1": "高層雲≥80%かつ総雲量≥60%でリスク判定",
-          "level2": "直達光比が低い、散乱光優勢、水蒸気が多い場合は光路点を下げます",
-          "level3": "厚い雲幕では最終点を約42–48に制限し、過大評価を防ぎます",
-          "formula": "厚い高層雲補正 = min(最終点, 42–48)。広い厚雲で局所的にしか光が漏れない場面に適用"
+          "title": "6. Cloud Thickness and Haze Corrections",
+          "subtitle": "Cloud Thickness · Canvas and Air Adjustment",
+          "desc": "More high clouds do not always mean a higher score. The model separates colorable mid/high-cloud carriers from gray curtains that weaken light.",
+          "level1": "Dense upper-cloud carrier: high ≥80%, mid ≥30%, low ≤10%, no rain, and air not hazy",
+          "level2": "In this case cloud thickness adjusts colorable-cloud quality, while light-path judgment stays independent",
+          "level3": "Very thick cloud curtains or gray air can still make colors darker and weaker.",
+          "formula": "Final correction = colorable-cloud quality + independent haze/dust/rain/geometry limits"
         },
         "precipPenalty": {
           "title": "6. 降水ペナルティ係数",
@@ -137,7 +149,7 @@ apiAccess: 'API接続'
           "subtitle": "Final Score Formula",
           "desc": "最終スコアはキャンバス評価と光路評価を加重計算し、ペナルティ係数を乗じて算出。",
           "formula": "総合スコア = (キャンバススコア × 0.8 + 光路スコア × 0.2) × 下層雲係数 × 降水係数",
-          "highCloudCap": "上層雲優位で遠方データなしの場合、上限を85点に緩和（旧69.9点）"
+          "highCloudCap": "上層雲が多く低い雲が少ない場合、良い色づきの土台として評価します"
         }
       }
     }
@@ -265,13 +277,14 @@ apiAccess: 'API接続'
           "baseScore": "基礎点",
           "rendering": "発色補正",
           "final": "最終スコア",
-          "hardCap": "上限補正",
-          "hazeCap": "霞・灰幕上限",
-          "thickCloudCap": "厚い雲の上限",
-          "geometryCap": "幾何条件の上限",
+          "hardCap": "天候による調整",
+          "hazeCap": "霞・灰幕の影響",
+          "thickCloudCap": "厚い雲の影響",
+          "cloudThicknessModifier": "Cloud-thickness modifier",
+          "geometryCap": "太陽角度",
           "occlusion": "遮蔽補正",
           "carrierFloor": "載体による下支え",
-          "postRainCap": "雨上がり灰幕上限",
+          "postRainCap": "雨上がりの灰幕",
           "displayCalibration": "表示スコア調整"
         },
         "details": {
@@ -279,28 +292,32 @@ apiAccess: 'API接続'
           "cloudPenalty": "低層雲 ×{{low}}、曇天 ×{{overcast}}",
           "lightPath": "日光が雲層へ届くか",
           "renderingFactors": "視程 ×{{visibility}}、湿度 ×{{humidity}}、エアロゾル ×{{aerosol}}",
-          "afterAdjustments": "すべての上限・下限補正後",
+          "afterAdjustments": "天候と見通しを加味した後",
           "finalDisplayed": "最終表示結果",
           "thickCloudCap": "高層雲が厚く、実際の発色が弱くなります",
+          "cloudThicknessModifier": "mid/high-cloud carriers are clear, so only colorable cloud quality is adjusted",
           "geometryCap": "太陽と雲層の幾何条件が不足しています",
           "occlusion": "遠方の遮蔽により最終スコアが下がります",
           "carrierFloor": "澄んだ高層雲の載体により過小評価を抑えます",
           "directionalSamples": "太陽方位15/30/50/100kmの周辺採取を反映済み",
-          "postRainCap": "雨後の水蒸気や霞で光が弱まり、低めの上限を適用します",
+          "lightPathLowCloudBlock": "低い雲が日差しを遮り、色づく雲まで光が届きにくいです",
+          "lightPathRain": "雨が夕日の直射光を弱めます",
+          "postRainCap": "雨後の水蒸気や霞で光が弱まり、色が灰色っぽくなります",
           "displayCalibration": "最終表示スコアを予測ステータスの帯に合わせます"
         },
         "reasons": {
-          "precipitationCap45": "降水と低層雲によりスコア上限は45",
-          "overcastCap35": "低層雲の曇天遮蔽によりスコア上限は35",
-          "overcastFogCap15": "曇天かつ視程5km以下のためスコア上限は15",
-          "rainyMidCloudOvercastCap35": "雨上がりの灰色の中層雲の曇天により、スコアを35で上限調整",
-          "extremeDustHazeCap28": "強い黄砂・霞によりスコア上限は28",
-          "severeHazeCap35": "濃い霞によりスコア上限は35",
-          "moderateHazeCap45": "中程度の霞によりスコア上限は45",
-          "adjustmentApplied": "上限/下限補正を適用",
+          "precipitationCap45": "雨と低い雲で観賞条件が大きく下がります",
+          "overcastCap35": "低い雲が太陽方向をふさぎ、光が雲まで届きにくいです",
+          "overcastFogCap15": "低い雲と低い視程で空が灰色に見えやすいです",
+          "rainyMidCloudOvercastCap35": "雨上がりの水蒸気が多く、色が出にくいです",
+          "extremeDustHazeCap28": "強い黄砂や霞が夕焼けの色を弱めます",
+          "severeHazeCap35": "濃い霞で色が出にくいです",
+          "moderateHazeCap45": "霞が橙や赤の色を弱めます",
+          "denseCarrierCanvasOnly": "dense upper-cloud carrier: canvas-only thickness modifier applied",
+          "adjustmentApplied": "天候による調整を反映",
           "displayCalibration": "最終表示スコアを予測ステータスの帯に合わせます",
-          "lightPathStatusCap60": "光路は {{light}} のため、薄い霞光の帯として最終表示スコアを60付近で上限調整します",
-          "canvasStatusCap40": "雲の載体は {{canvas}} のため、焼け雲なしの帯として最終表示スコアを40未満に上限調整します"
+          "lightPathStatusCap60": "光路は {{light}} で、薄い夕焼けの可能性に近いです",
+          "canvasStatusCap40": "雲の載体は {{canvas}} で、焼け雲の可能性は低めです"
         }
       }},
 "formationAnalysis": {
@@ -312,8 +329,10 @@ apiAccess: 'API接続'
       "visibility": { "good": "視程良好（{{value}}km）", "goodDesc": "空気が澄み、見通しが良好です", "moderate": "視程は普通（{{value}}km）", "moderateDesc": "彩度が少し落ちる可能性があります", "low": "視程が低い（{{value}}km）", "lowDesc": "霞や水蒸気が観賞に影響する可能性があります" },
       "humidity": { "moderate": "湿度は適度（{{value}}%）", "moderateDesc": "光の散乱に役立ちます", "high": "湿度が高い（{{value}}%）", "highDesc": "透明感が落ちる可能性があります", "low": "湿度が低い（{{value}}%）", "lowDesc": "乾いた空気で色が淡くなる可能性があります" },
       "aerosol": { "moderate": "エアロゾル適度（AOD {{value}}）", "moderateDesc": "橙赤色の散乱を強めます", "high": "エアロゾル多め（AOD {{value}}）", "highDesc": "霞んだり暗く見える可能性があります", "low": "空気が澄みすぎ（AOD {{value}}）", "lowDesc": "色が淡くなる可能性があります" },
-      "lightPath": { "opening": "太陽方向に光の抜けがあります", "openingDesc": "バックエンドが太陽方位の15/30/50/100km地点を採取し、低・中層雲の通路が比較的開いていると判定します", "wall": "太陽方向に雲の壁があります", "wallDesc": "太陽方位の低・中層雲が厚く、遠方の光路が主スコアを押し下げます" },
-      "postRain": { "clear": "雨上がりの空気が澄んでいます", "clearDesc": "過去6時間に降水がありますが、視程と粒子条件が良いため雨上がり加点を残します", "gray": "雨上がりの灰色カーテンリスク", "grayDesc": "雨後の水蒸気・粒子・直達光の弱さを考慮し、保守的にスコア上限をかけます" },
+      "lightPath": { "opening": "太陽方向に光の抜けがあります", "openingDesc": "バックエンドが太陽方位の15/30/50/100km地点を採取し、低・中層雲の通路が比較的開いていると判定します", "wall": "太陽方向に雲の壁があります", "wallDesc": "太陽方位の低・中層雲が厚く、遠方の光路が主スコアを押し下げます" , "lowCloudBlock": "Low clouds block sunlight", "lowCloudBlockDesc": "Low clouds sit in the sun direction, so sunlight struggles to reach mid/high clouds" },
+      "postRain": { "clear": "雨上がりの空気が澄んでいます", "clearDesc": "過去6時間に降水がありますが、視程と粒子条件が良いため雨上がり加点を残します", "gray": "雨上がりの灰色カーテンリスク", "grayDesc": "雨後の水蒸気・粒子・直達光の弱さで、色が灰色っぽくなりやすいです" },
+      "carrier": { "strong": "Clear high-cloud carrier", "strongDesc": "High clouds are sufficient, low clouds are scarce, and air is clear enough for a medium/high score base", "dense": "Dense mid/high-cloud carrier", "denseDesc": "High and mid clouds provide a steadier color canvas" },
+
       "layer": { "single": "雲層が単一", "singleDesc": "高層雲の質が良ければ鮮やかな夕焼けは期待できます" }
     },
     "status": {
@@ -380,7 +399,7 @@ apiAccess: 'API接続'
       "scoreHint": "高層雲が多く低雲が少なく、空気が十分に澄んでいる場合は過度な減点を避けます"
     },
     "aerosolHaze": {
-      "title": "砂じん・もやの上限制限",
+      "title": "砂じん・もやの影響",
       "scoreHint": "AOD、砂じん、PM10 が非常に高いと、高層雲が多くても色づきが抑えられます"
     },
     "lightPath": {

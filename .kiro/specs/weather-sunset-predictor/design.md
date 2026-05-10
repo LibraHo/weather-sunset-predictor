@@ -202,6 +202,29 @@ rankScore = exactMatch * 100
 - 照片：`photos.json`（id、lat、lon、takenAt、thumbnail）
 - 访客：`visitors.json`（ip_hash、lat、lon、country、city）
 
+**照片分享元数据增强（需求51）**：
+- 上传者：新增可选 `authorName`。前台/后台显示时若为空，统一 fallback 为 `网友`；服务端需限制长度并做 HTML 转义/输出安全。
+- 地点名称：新增可选 `placeName`。系统可根据经纬度反向地理编码自动建议，用户也可手动输入；手动地点只影响展示文案，不修改 `lat/lon`，避免“文字地点”和坐标互相覆盖。
+- 拍摄时间：新增/规范 `takenAt`。优先读取 EXIF DateTimeOriginal；用户可手动填写/修正；手动拍摄时间只影响时间展示，不影响经纬度和上传时间。
+- 上传时间：继续由服务端记录 `uploadedAt`，存储建议保留 ISO UTC；展示层统一转为 Asia/Shanghai（北京时间）。非北京时间用户上传时，不使用客户端时区作为最终上传时间来源。
+- 兼容旧数据：历史照片缺少 `authorName/placeName/takenAt/thumbFile` 时必须可读；展示层使用 fallback，不要求迁移时一次性补齐所有字段。
+
+**后台照片编辑管理（需求51）**：
+- 后台照片列表在现有删除能力外，新增编辑入口，支持修改 `authorName`、`placeName`、`takenAt`、`desc`、`lat`、`lon`。
+- `uploadedAt` 为服务端记录的审计时间，只读展示，不允许后台手动修改。
+- 编辑 `placeName` 只影响展示地点，不自动反写经纬度；编辑 `lat/lon` 需明确作为“修改地图位置”。
+- 编辑 `takenAt` 只影响拍摄时间展示，不改变上传时间。
+- 保存后写回 `photos.json`，公开 `/api/photos` 与 `/gallery` 立即使用更新后的元数据。
+- 服务端编辑接口必须复用新增字段的校验/规范化逻辑，并继续禁止暴露 `uploadIpHash`、`uploadDay` 等内部字段。
+
+**同地点多图地图展示（需求51）**：
+- 低 zoom：按屏幕像素距离聚合照片，显示代表缩略图 + 数量角标，视觉参考 Apple 相册地图。
+- zoom 变大：聚合半径逐步缩小，照片组自然拆分。
+- 完全相同或极近坐标：始终显示 stack marker，避免多个 marker 完全重叠。
+- 代表图：优先选最新上传或评分/拍摄时间更合适的一张作为封面；marker/popup 一律优先 `thumbUrl`，无缩略图才 fallback 原图。
+- 点击聚合 marker：弹出横向缩略图列表/小网格，展示上传者、地点、拍摄时间、上传时间；点单张照片再进入详情/大图。
+- 第一阶段优先前端聚合（基于当前 zoom 与像素距离），照片量增大后再考虑服务端聚合 API。
+
 ### 预测解释与图表可读性（需求48）
 
 **分数明细 Ledger**：由 `PredictionController.renderScoreBreakdownPopover()` 渲染，目标是解释“最终分为什么是这个数”。信息层级固定为：

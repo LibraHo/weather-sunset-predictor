@@ -10,6 +10,8 @@
  */
 
 import { jest } from '@jest/globals';
+import fs from 'fs';
+import path from 'path';
 import PredictionController from '../../../src/controllers/PredictionController.js';
 
 // Mock StorageService
@@ -30,6 +32,7 @@ const mockStorageService = {
 
 describe('PredictionController', () => {
   let predictionController;
+  const rootDir = path.resolve(process.cwd());
 
   beforeEach(() => {
     // 设置 DOM 环境
@@ -642,7 +645,7 @@ describe('PredictionController', () => {
       });
 
       expect(html).toContain('为什么是这个分数');
-      expect(html).toContain('28 分：强沙尘/灰幕压制，分数封顶到 28');
+      expect(html).toContain('28 分：强沙尘或灰幕会压住霞光');
       expect(html).not.toContain('score-ledger-context');
       expect(html).not.toContain('能见度 5km');
       expect(html).toContain('70.7');
@@ -670,8 +673,8 @@ describe('PredictionController', () => {
 
       expect(html).toContain('展示分校准');
       expect(html).toContain('79.4→60');
-      expect(html).toContain('光路只有 40.0，归入轻微霞光档，最终展示分封顶到 60');
-      expect(html).toContain('60 分：光路只有 40.0，归入轻微霞光档，最终展示分封顶到 60');
+      expect(html).toContain('光路约 40.0，更像轻微霞光机会');
+      expect(html).toContain('60 分：光路约 40.0，更像轻微霞光机会');
     });
   });
 
@@ -689,6 +692,36 @@ describe('PredictionController', () => {
       });
       expect(html).toBeTruthy();
       expect(typeof html).toBe('string');
+    });
+  });
+
+  describe('火烧云分析卡片', () => {
+    test('中高云载体文案不应暴露重复封顶等算法内部描述', () => {
+      const groups = predictionController.buildAnalysisGroups({
+        score: 72,
+        cloudLayers: { high: 88, mid: 42, low: 4 },
+        visibility: 18,
+        humidity: 58,
+        cloudThickness: { reasons: ['dense_upper_cloud_carrier_softened'] }
+      });
+      const html = predictionController.renderAnalysisCard(groups, 'test');
+
+      expect(html).toContain('中高云载体明确');
+      expect(html).toContain('色彩载体更稳定');
+      expect(html).not.toContain('不再重复封顶');
+      expect(html).not.toContain('不再额外封顶');
+    });
+
+    test('分析卡片最终 CSS 应保持上下文案左对齐且可换行', () => {
+      const css = fs.readFileSync(path.join(rootDir, 'styles/main.css'), 'utf8');
+      const finalRules = css.slice(css.lastIndexOf('formation analysis cards must read like compact notes'));
+
+      expect(finalRules).toContain('grid-template-columns: 22px minmax(0, 1fr)');
+      expect(finalRules).toContain('display: grid !important');
+      expect(finalRules).toContain('white-space: normal !important');
+      expect(finalRules).toContain('text-align: left !important');
+      expect(finalRules).not.toContain('display: contents');
+      expect(finalRules).not.toContain('text-align: right');
     });
   });
 

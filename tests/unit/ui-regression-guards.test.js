@@ -139,6 +139,23 @@ describe('recent user-reported UI regression guards', () => {
     expect(source).toContain('.score-breakdown-popover::before');
     expect(block).not.toContain('background: var(--glass-bg-heavy) !important');
   });
+
+  test('mobile prediction card children cannot widen the card', () => {
+    const source = css();
+    const radarSource = fs.readFileSync(path.resolve('src/components/RadarCompass.js'), 'utf8');
+    const guardBlock = source.match(/\/\* 2026-05-10: narrow phones must not let prediction-card content widen the card\. \*\/[\s\S]*$/)?.[0] || '';
+
+    expect(guardBlock).toContain('.prediction-app-shell > *');
+    expect(guardBlock).toContain('min-width: 0');
+    expect(guardBlock).toContain('max-width: 100%');
+    expect(guardBlock).toContain('.prediction-app-nav-compact');
+    expect(guardBlock).toContain('width: 100%');
+    expect(guardBlock).toContain('.conclusion-banner > strong');
+    expect(guardBlock).toContain('overflow-wrap: anywhere');
+    expect(radarSource).toContain('width:min(${S}px,100%)');
+    expect(radarSource).toContain('aspect-ratio:1 / 1');
+    expect(radarSource).toContain('width:100%;height:100%;display:block;');
+  });
 });
 
 describe('prediction title plate regression guards', () => {
