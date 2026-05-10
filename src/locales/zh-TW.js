@@ -47,7 +47,7 @@ const translations = {
     "methodology": {
       "title": "火燒雲計算方法",
       "intro": "火燒雲指數由四個關鍵因子綜合計算，幫助你快速判斷當天是否值得守候晚霞。",
-      "versionLabel": "算法版本：2026.05.10-low-cloud-lightpath-v3",
+      "versionLabel": "算法版本：2026.05.11-opening-upper-cloud-carrier-v1",
       "versionDesc": "本版優化光路判斷：低雲會遮住太陽光，中高雲更多作為晚霞畫布，不再只因總雲量高就壓低光路。",
       changelogTitle: "版本更新記錄",
       changelogHint: "用於回溯每次算法調整的原因、影響和驗證方式",
@@ -129,7 +129,7 @@ const translations = {
           title: '6. 厚高雲與灰幕修正',
           subtitle: 'Cloud Thickness · 畫布與空氣修正',
           desc: '高雲多不一定代表高分；算法會區分「可被染色的中高雲載體」和「遮光灰幕」。前者按雲面品質修正，後者結合空氣品質判斷。',
-          level1: '中高雲載體明確：高雲≥80%、中雲≥30%、低雲≤10%、無降水且空氣不灰',
+          level1: '中高雲載體明確：高雲很充足，或中高雲同時存在且太陽方向有透光開口，低雲少、無降水且空氣不灰',
           level2: '這類場景按可染色雲面品質修正畫布分，光路判斷保持獨立',
           level3: '如果雲幕很厚或空氣發灰，顏色會變暗、變淡',
           formula: '最終修正 = 雲面品質修正 + 灰幕/沙塵/降水/幾何限制等獨立條件'

@@ -47,7 +47,7 @@ apiAccess: 'API 연동'
     "methodology": {
       "title": "화염구름 점수 계산 방법",
       "intro": "화염구름 지수는 4가지 주요 요인을 종합하여 계산되며, 해당 날의 노을 관람이 가치 있는지 빠르게 판단하는 데 도움을 줍니다.",
-      "versionLabel": "Algorithm version: 2026.05.10-low-cloud-lightpath-v3",
+      "versionLabel": "Algorithm version: 2026.05.11-opening-upper-cloud-carrier-v1",
       "versionDesc": "This version improves light-path scoring: low clouds block sunlight, while rich mid/high clouds are treated mainly as the color canvas.",
       changelogTitle: "Version update history",
       changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
@@ -129,7 +129,7 @@ apiAccess: 'API 연동'
           "title": "6. Cloud Thickness and Haze Corrections",
           "subtitle": "Cloud Thickness · Canvas and Air Adjustment",
           "desc": "More high clouds do not always mean a higher score. The model separates colorable mid/high-cloud carriers from gray curtains that weaken light.",
-          "level1": "Dense upper-cloud carrier: high ≥80%, mid ≥30%, low ≤10%, no rain, and air not hazy",
+          "level1": "Upper-cloud carrier: either dense high cloud, or mid/high clouds with an opening toward the sun, scarce low clouds, no rain, and clear air",
           "level2": "In this case cloud thickness adjusts colorable-cloud quality, while light-path judgment stays independent",
           "level3": "Very thick cloud curtains or gray air can still make colors darker and weaker.",
           "formula": "Final correction = colorable-cloud quality + independent haze/dust/rain/geometry limits"

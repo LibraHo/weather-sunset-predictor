@@ -47,7 +47,7 @@ apiAccess: 'Acceso API'
     "methodology": {
       "title": "Cómo se calcula la puntuación",
       "intro": "El índice de nubes rojas combina cuatro factores clave para estimar si vale la pena salir a ver el atardecer.",
-      "versionLabel": "Algorithm version: 2026.05.10-low-cloud-lightpath-v3",
+      "versionLabel": "Algorithm version: 2026.05.11-opening-upper-cloud-carrier-v1",
       "versionDesc": "This version improves light-path scoring: low clouds block sunlight, while rich mid/high clouds are treated mainly as the color canvas.",
       changelogTitle: "Version update history",
       changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
@@ -120,7 +120,7 @@ apiAccess: 'Acceso API'
           "title": "6. Cloud Thickness and Haze Corrections",
           "subtitle": "Cloud Thickness · Canvas and Air Adjustment",
           "desc": "More high clouds do not always mean a higher score. The model separates colorable mid/high-cloud carriers from gray curtains that weaken light.",
-          "level1": "Dense upper-cloud carrier: high ≥80%, mid ≥30%, low ≤10%, no rain, and air not hazy",
+          "level1": "Upper-cloud carrier: either dense high cloud, or mid/high clouds with an opening toward the sun, scarce low clouds, no rain, and clear air",
           "level2": "In this case cloud thickness adjusts colorable-cloud quality, while light-path judgment stays independent",
           "level3": "Very thick cloud curtains or gray air can still make colors darker and weaker.",
           "formula": "Final correction = colorable-cloud quality + independent haze/dust/rain/geometry limits"
