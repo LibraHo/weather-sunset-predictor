@@ -694,7 +694,7 @@ class SettingsPanel {
    * 处理天气数据出口模式变更
    */
   handleWeatherFetchModeChange(mode) {
-    const nextMode = ['backend', 'client-fallback', 'client'].includes(mode) ? mode : 'backend';
+    const nextMode = ['backend', 'client-fallback', 'client'].includes(mode) ? mode : 'client-fallback';
     localStorage.setItem('weather_fetch_mode', nextMode);
     console.log('[SettingsPanel] 天气数据出口模式已更新:', nextMode);
   }

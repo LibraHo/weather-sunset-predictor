@@ -263,6 +263,12 @@ describe('SettingsPanel - API 配置入口', () => {
     expect(enUS.settings.weatherFetchModeBackend).toBe('Backend mode');
     expect(enUS.settings.weatherFetchModeClient).toBe('Frontend mode');
   });
+
+  test('天气计算模式收到非法值时回到自适应模式', () => {
+    const sp = makePanel();
+    sp.handleWeatherFetchModeChange('unknown-mode');
+    expect(localStorage.getItem('weather_fetch_mode')).toBe('client-fallback');
+  });
 });
 
 describe('SettingsPanel - 事件处理', () => {

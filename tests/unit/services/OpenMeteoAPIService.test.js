@@ -17,6 +17,7 @@ describe('OpenMeteoAPIService', () => {
 
   afterEach(() => {
     localStorage.clear();
+    jest.useRealTimers();
     if (fetchSpy) fetchSpy.mockRestore();
   });
 
@@ -136,6 +137,53 @@ describe('OpenMeteoAPIService', () => {
     expect(data).toBe(fallbackData);
     expect(service.clientWeatherService.fetchWeatherData).toHaveBeenCalledWith(39.9, 116.4, 24, 'gfs_seamless');
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  test('backend mode has a weather request timeout', async () => {
+    jest.useFakeTimers();
+    localStorage.setItem('weather_fetch_mode', 'backend');
+    service._windyEnabled = false;
+    service.timeout = 50;
+
+    fetchSpy.mockImplementationOnce((_url, options = {}) => new Promise((_, reject) => {
+      options.signal.addEventListener('abort', () => {
+        const error = new Error('aborted');
+        error.name = 'AbortError';
+        reject(error);
+      });
+    }));
+
+    const promise = service.fetchWeatherData(39.9, 116.4, 24);
+    const assertion = expect(promise).rejects.toMatchObject({
+      code: 'WEATHER_UPSTREAM_TIMEOUT',
+      message: 'Request timeout, please retry'
+    });
+    await jest.advanceTimersByTimeAsync(50);
+
+    await assertion;
+  });
+
+  test('client mode also has a browser weather timeout', async () => {
+    jest.useFakeTimers();
+    localStorage.setItem('weather_fetch_mode', 'client');
+    service.clientWeatherService.timeout = 50;
+
+    fetchSpy.mockImplementation((_url, options = {}) => new Promise((_, reject) => {
+      options.signal.addEventListener('abort', () => {
+        const error = new Error('aborted');
+        error.name = 'AbortError';
+        reject(error);
+      });
+    }));
+
+    const promise = service.fetchWeatherData(39.9, 116.4, 24);
+    const assertion = expect(promise).rejects.toMatchObject({
+      code: 'WEATHER_UPSTREAM_TIMEOUT',
+      message: 'Request timeout, please retry'
+    });
+    await jest.advanceTimersByTimeAsync(50);
+
+    await assertion;
   });
 
   test('client-fallback mode uses browser fetcher only for eligible backend weather errors', async () => {
