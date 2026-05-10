@@ -31,7 +31,7 @@ describe('east-asia-basemap-geojson basemap coverage', () => {
     const mongolia = (eastAsiaGeoJson.features || []).find(feature => feature.properties?.name === 'Mongolia');
     expect(mongolia).toBeTruthy();
     expect(['Polygon', 'MultiPolygon']).toContain(mongolia.geometry?.type);
-    expect(countGeometryCoordinates(mongolia.geometry)).toBeGreaterThan(40);
+    expect(countGeometryCoordinates(mongolia.geometry)).toBeGreaterThan(70);
   });
 
   it('uses a detailed Japan coastline instead of a coarse country outline', () => {

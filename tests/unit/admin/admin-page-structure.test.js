@@ -72,6 +72,9 @@ describe('admin page structure', () => {
       'uploadFeedback',
       'photoGpsStatus',
       'photoGrid',
+      'photoEditModal',
+      'photoEditForm',
+      'editPhotoId',
     ].forEach((id) => expect(html).toContain(`id="${id}"`));
 
     [
@@ -92,19 +95,26 @@ describe('admin page structure', () => {
       'isValidPhotoCoordinate',
       'setPhotoCoordinate',
       'autofillPhotoGpsFromExif',
+      'autofillPhotoMetadataFromExif',
+      'reverseGeocodePhotoLocation',
+      'initPhotoEditForm',
+      'openPhotoEditor',
+      'closePhotoEditor',
       'uploadPhotoWithProgress',
     ].forEach((fn) => expect(js).toContain(`function ${fn}`));
 
     expect(js).toContain("fileInput.addEventListener('change'");
     expect(js).toContain('已选择：${file.name}');
     expect(js).toContain("selectedName.textContent = '尚未选择照片'");
-    expect(html).toContain('地理位置必填');
-    expect(html).toContain('纬度（必填）');
-    expect(html).toContain('经度（必填）');
+    expect(html).toContain('纬度（可选）');
+    expect(html).toContain('经度（可选）');
+    expect(html).toContain('字段都可以留空或手动修改');
+    expect(html).toContain('编辑照片信息');
     expect(html).not.toContain('在地图上选择位置');
     expect(html).not.toContain('leaflet@1.9.4');
-    expect(js).toContain('window.exifr.gps(file)');
-    expect(js).toContain('位置是必填项');
+    expect(js).toContain('window.exifr.parse(file)');
+    expect(js).toContain('/api/geocoding/reverse');
+    expect(js).not.toContain('位置是必填项');
     expect(js).toContain("showMessage(message, 'error', 'uploadFeedback')");
     expect(js).not.toContain('window.L.map');
     expect(js).toContain("浏览器端 EXIF 读取库未加载");

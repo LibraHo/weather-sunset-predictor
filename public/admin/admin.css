@@ -302,7 +302,8 @@
 }
 
 .queue-head,
-.queue-meta {
+.queue-meta,
+.queue-cache {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -329,6 +330,14 @@
   margin-top: 8px;
   color: var(--theme-text-muted, var(--color-text-light));
   font-size: 0.82rem;
+}
+
+.queue-cache {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--theme-card-border, var(--color-border)) 70%, transparent);
+  color: var(--theme-text-muted, var(--color-text-light));
+  font-size: 0.78rem;
 }
 
 .queue-error {
@@ -465,6 +474,13 @@ body.theme-dark .admin-table tr:hover td {
 
 .form-row.two-inputs input {
   flex: 1;
+}
+
+.form-hint {
+  margin: 0;
+  color: var(--theme-text-muted, var(--color-text-light));
+  font-size: 0.86rem;
+  line-height: 1.5;
 }
 
 .admin-inline-switch {
@@ -642,6 +658,13 @@ body.theme-dark .admin-table tr:hover td {
   font-size: 0.72rem;
   color: var(--color-text-light);
   margin-bottom: 8px;
+}
+
+.photo-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 /* 按钮 */

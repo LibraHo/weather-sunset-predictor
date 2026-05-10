@@ -362,26 +362,35 @@
       <section id="tab-panel-methodology" class="card methodology-panel hidden" role="tabpanel" aria-label="methodology-panel" tabindex="0" hidden>
         <h2 data-i18n="home.methodology.title">火烧云计算方法</h2>
         <p data-i18n="home.methodology.intro">火烧云指数综合评估天空条件与光学传播路径，判断当日形成火烧云的概率与强度。以下为基于气象数据的完整计算原理。</p>
-        <div class="methodology-version-card">
-          <strong data-i18n="home.methodology.versionLabel">算法版本：2026.05.11-opening-upper-cloud-carrier-v1</strong>
-          <span data-i18n="home.methodology.versionDesc">本版优化光路判断：低云会遮住太阳光，中高云更多作为晚霞画布，不再只因为总云量高就压低光路。</span>
-        </div>
-
         <div class="methodology-changelog-card" aria-labelledby="methodology-changelog-title">
           <div class="methodology-changelog-head">
             <h3 id="methodology-changelog-title" data-i18n="home.methodology.changelogTitle">版本更新记录</h3>
             <span data-i18n="home.methodology.changelogHint">用于回溯每次算法调整的原因、影响和验证方式</span>
           </div>
-          <ol class="methodology-changelog-list">
-            <li>
-              <time datetime="2026-05-10" data-i18n="home.methodology.changelog.current.date">2026-05-10</time>
-              <div>
-                <strong data-i18n="home.methodology.changelog.current.title">低云主导光路 v3</strong>
-                <p data-i18n="home.methodology.changelog.current.summary">光路主要看低云和太阳方向是否挡光；高云、中云丰富时优先当作晚霞画布处理。</p>
-                <small data-i18n="home.methodology.changelog.current.validation">验证：高云满天但低云很少的样本不再被当作阴天；低云主导、降水样本仍保持低分。</small>
-              </div>
-            </li>
-          </ol>
+          <div class="methodology-changelog-scroll" tabindex="0">
+            <ol class="methodology-changelog-list">
+              <li>
+                <time datetime="2026-05-11" data-i18n="home.methodology.changelog.latest.date">2026-05-11</time>
+                <div>
+                  <strong data-i18n="home.methodology.changelog.latest.title">开口型中高云保护 v1</strong>
+                  <p data-i18n="home.methodology.changelog.latest.summary">低云少、太阳方向有透光开口时，中高云更多按晚霞画布处理，减少把可染色云带误判成厚云幕。</p>
+                  <small data-i18n="home.methodology.changelog.latest.validation">验证：颐和园开口型中高云样本不再过度压低；灰霾、降水和低云遮挡场景仍保持谨慎。</small>
+                </div>
+              </li>
+              <li>
+                <time datetime="2026-05-10" data-i18n="home.methodology.changelog.current.date">2026-05-10</time>
+                <div>
+                  <strong data-i18n="home.methodology.changelog.current.title">低云主导光路 v3</strong>
+                  <p data-i18n="home.methodology.changelog.current.summary">光路主要看低云和太阳方向是否挡光；高云、中云丰富时优先当作晚霞画布处理。</p>
+                  <small data-i18n="home.methodology.changelog.current.validation">验证：高云满天但低云很少的样本不再被当作阴天；低云主导、降水样本仍保持低分。</small>
+                </div>
+              </li>
+            </ol>
+          </div>
+          <div class="methodology-version-card">
+            <strong data-i18n="home.methodology.versionLabel">算法版本：2026.05.11-opening-upper-cloud-carrier-v1</strong>
+            <span data-i18n="home.methodology.versionDesc">本版优化光路判断：低云会遮住太阳光，中高云更多作为晚霞画布，不再只因为总云量高就压低光路。</span>
+          </div>
         </div>
 
                 <div class="methodology-grid">

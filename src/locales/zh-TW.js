@@ -52,6 +52,12 @@ const translations = {
       changelogTitle: "版本更新記錄",
       changelogHint: "用於回溯每次算法調整的原因、影響和驗證方式",
       changelog: {
+              "latest": {
+                      "date": "2026-05-11",
+                      "title": "開口型中高雲保護 v1",
+                      "summary": "低雲少、太陽方向有透光開口時，中高雲更多按晚霞畫布處理，減少把可染色雲帶誤判成厚雲幕。",
+                      "validation": "驗證：頤和園開口型中高雲樣本不再被過度壓低；灰霾、降水和低雲遮擋場景仍保持謹慎。"
+              },
               "current": {
                       "date": "2026-05-10",
                       "title": "低雲主導光路 v3",

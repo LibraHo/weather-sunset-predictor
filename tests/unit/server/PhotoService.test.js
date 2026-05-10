@@ -260,6 +260,68 @@ describe('getPhotos()', () => {
   });
 });
 
+// ─── updatePhoto ───────────────────────────────────────────────────────────
+describe('updatePhoto()', () => {
+  test('updates editable metadata without changing stored files', async () => {
+    const meta = await PhotoService.savePhoto({
+      buffer: makeJpegBuffer(256),
+      mimeType: 'image/jpeg',
+      desc: 'old',
+      lat: 39.9,
+      lon: 116.4,
+    });
+
+    const updated = PhotoService.updatePhoto(meta.id, {
+      desc: 'new',
+      locationName: '圆明园',
+      uploaderName: 'Alex',
+      takenAt: '2026-05-10T10:20:00.000Z',
+      lat: 40.008,
+      lon: 116.303,
+    });
+
+    expect(updated).toMatchObject({
+      id: meta.id,
+      origFile: meta.origFile,
+      thumbFile: meta.thumbFile,
+      desc: 'new',
+      locationName: '圆明园',
+      uploaderName: 'Alex',
+      takenAt: '2026-05-10T10:20:00.000Z',
+      lat: 40.008,
+      lon: 116.303,
+    });
+    expect(PhotoService.getPhotoById(meta.id)).toMatchObject({ desc: 'new', locationName: '圆明园' });
+  });
+
+  test('allows location and capture time to be cleared', async () => {
+    const meta = await PhotoService.savePhoto({
+      buffer: makeJpegBuffer(256),
+      mimeType: 'image/jpeg',
+      lat: 39.9,
+      lon: 116.4,
+      takenAt: '2026-05-10T10:20:00.000Z',
+      locationName: '颐和园',
+    });
+
+    const updated = PhotoService.updatePhoto(meta.id, {
+      lat: '',
+      lon: '',
+      takenAt: '',
+      locationName: '',
+    });
+
+    expect(updated.lat).toBeNull();
+    expect(updated.lon).toBeNull();
+    expect(updated.takenAt).toBeNull();
+    expect(updated.locationName).toBe('');
+  });
+
+  test('returns null for a missing photo id', () => {
+    expect(PhotoService.updatePhoto('missing', { desc: 'x' })).toBeNull();
+  });
+});
+
 // ─── deletePhoto ──────────────────────────────────────────────────────────
 describe('deletePhoto()', () => {
   test('removes photo entry from index', async () => {

@@ -52,6 +52,12 @@ apiAccess: 'API接続'
       changelogTitle: "Version update history",
       changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
       changelog: {
+              "latest": {
+                      "date": "2026-05-11",
+                      "title": "Opening upper-cloud carrier protection v1",
+                      "summary": "When low clouds are scarce and the solar direction has an opening, mid/high clouds are treated more as sunset-glow canvas instead of a thick cloud curtain.",
+                      "validation": "Validation: the Summer Palace opening-cloud sample is no longer over-penalized, while haze, rain, and low-cloud obstruction cases remain cautious."
+              },
               "current": {
                       "date": "2026-05-10",
                       "title": "Low-cloud-led light path v3",

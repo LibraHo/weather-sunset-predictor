@@ -79,10 +79,24 @@ const MOBILE_CORE_CITY_NAMES = new Set([
   '北京', '上海', '广州', '深圳', '成都', '重庆', '武汉', '西安', '杭州', '南京'
 ]);
 
+const MOBILE_OVERVIEW_CITY_NAMES = new Set([
+  '北京', '上海', '广州', '成都', '西安',
+  '东京', '首尔', '乌兰巴托', '曼谷', '雅加达'
+]);
+
+const OVERVIEW_CITY_NAMES = new Set([
+  '北京', '上海', '广州', '成都', '西安', '乌鲁木齐', '拉萨',
+  '台北', '首尔', '东京', '乌兰巴托', '曼谷', '河内', '雅加达'
+]);
+
 const LOW_ZOOM_REGIONAL_CITY_NAMES = new Set([
   ...MOBILE_CORE_CITY_NAMES,
   '台北', '首尔', '东京', '大阪', '乌兰巴托',
   '曼谷', '河内', '胡志明市', '金边', '万象', '仰光', '吉隆坡', '雅加达'
+]);
+
+const CHINA_SECONDARY_MAJOR_CITY_NAMES = new Set([
+  '深圳', '苏州', '宁波', '青岛', '大连', '厦门', '东莞', '佛山'
 ]);
 
 const DENSE_REGION_SECONDARY_CITY_NAMES = new Set([
@@ -110,22 +124,30 @@ function filterLowZoomCityDensity(cities) {
   return (cities || []).filter(city => !DENSE_REGION_SECONDARY_CITY_NAMES.has(city.name));
 }
 
+function filterMidZoomCityDensity(cities) {
+  return filterLowZoomCityDensity(cities)
+    .filter(city => !CHINA_SECONDARY_MAJOR_CITY_NAMES.has(city.name));
+}
+
 function selectCitiesForZoom(levels, zoom, isMobile = false) {
   const L1 = levels.level1 || [];
   const L2 = levels.level2 || [];
   const L3 = levels.level3 || [];
 
   if (isMobile) {
-    if (zoom < 5) return filterCitiesByName(L1, MOBILE_CORE_CITY_NAMES);
-    if (zoom < 6.5) return filterCitiesByName(L1, LOW_ZOOM_REGIONAL_CITY_NAMES);
-    if (zoom < 8.5) return filterLowZoomCityDensity(L1);
-    if (zoom < 10.5) return mergeUniqueCities(L1, L2);
+    if (zoom < 5.5) return filterCitiesByName(L1, MOBILE_OVERVIEW_CITY_NAMES);
+    if (zoom < 7.2) return filterCitiesByName(L1, OVERVIEW_CITY_NAMES);
+    if (zoom < 9.5) return filterCitiesByName(L1, LOW_ZOOM_REGIONAL_CITY_NAMES);
+    if (zoom < 11.5) return filterMidZoomCityDensity(L1);
+    if (zoom < 13) return mergeUniqueCities(L1, L2);
     return mergeUniqueCities(L1, L2, L3);
   }
 
-  if (zoom < 5) return filterCitiesByName(L1, LOW_ZOOM_REGIONAL_CITY_NAMES);
-  if (zoom < 7.8) return filterLowZoomCityDensity(L1);
-  if (zoom < 9.5) return mergeUniqueCities(L1, L2);
+  if (zoom < 5) return filterCitiesByName(L1, OVERVIEW_CITY_NAMES);
+  if (zoom < 6.5) return filterCitiesByName(L1, LOW_ZOOM_REGIONAL_CITY_NAMES);
+  if (zoom < 8.8) return filterMidZoomCityDensity(L1);
+  if (zoom < 10.2) return filterLowZoomCityDensity(L1);
+  if (zoom < 11.5) return mergeUniqueCities(L1, L2);
   return mergeUniqueCities(L1, L2, L3);
 }
 
@@ -309,7 +331,7 @@ class ChinaMapCanvas {
       _cachedChinaGeoJSON = await resp.json();
     }
     if (!_cachedEastAsiaGeoJSON) {
-      const resp = await fetch('/data/east-asia-basemap-geojson.json?v=1');
+      const resp = await fetch('/data/east-asia-basemap-geojson.json?v=2');
       if (!resp.ok) throw new Error(`EastAsia GeoJSON fetch failed: ${resp.status}`);
       _cachedEastAsiaGeoJSON = await resp.json();
     }
@@ -502,8 +524,11 @@ class ChinaMapCanvas {
       }).addTo(this._map);
     }
 
-    // 合并 bounds 用于 fitBounds
+    // 合并底图 bounds，避免新增的北侧/东南亚边界被初始视野裁掉。
     const bounds = chinaLayer.getBounds();
+    if (eastAsiaLayer) {
+      bounds.extend(eastAsiaLayer.getBounds());
+    }
     this._geoJsonLayer = chinaLayer;
     this._eastAsiaLayer = eastAsiaLayer;
 

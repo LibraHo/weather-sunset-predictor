@@ -103,8 +103,12 @@ class GridScoreService {
 
   getJobStatus(period = DEFAULT_PERIOD) {
     const safePeriod = this.normalizePeriod(period);
+    const cache = this.getCache(safePeriod);
     return {
-      ...(this._jobStatus?.[safePeriod] || this._createIdleStatus(safePeriod))
+      ...(this._jobStatus?.[safePeriod] || this._createIdleStatus(safePeriod)),
+      cacheUpdatedAt: cache?.updatedAt || null,
+      cacheCount: Array.isArray(cache?.gridPoints) ? cache.gridPoints.length : 0,
+      cacheStale: cache?.stale ?? null
     };
   }
 

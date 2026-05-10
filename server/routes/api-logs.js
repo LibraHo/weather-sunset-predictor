@@ -16,45 +16,12 @@ const apiAuditLog = require('../services/ApiAgentAuditLog');
 const apiTokenService = new (require('../services/ApiTokenService'))();
 const ApiApplicationService = require('../services/ApiApplicationService');
 const dailyStats = require('../services/ApiDailyStats');
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
+const {
+  readScheduleConfig,
+  writeScheduleConfig
+} = require('../services/GridRefreshSchedule');
 
 const apiApplications = new ApiApplicationService();
-
-// ---------------------------------------------------------------------------
-// 定时更新配置
-// ---------------------------------------------------------------------------
-const SCHEDULE_CONFIG_DIR = path.join(os.homedir(), '.xiake');
-const SCHEDULE_CONFIG_PATH = path.join(SCHEDULE_CONFIG_DIR, 'schedule-config.json');
-
-const DEFAULT_SCHEDULE = {
-  enabled: true,
-  jobs: [
-    { time: '10:00', type: 'both', label: '上午刷新' },
-    { time: '22:00', type: 'both', label: '晚间刷新' }
-  ]
-};
-
-function _readScheduleConfig() {
-  try {
-    if (!fs.existsSync(SCHEDULE_CONFIG_PATH)) {
-      return { ...DEFAULT_SCHEDULE };
-    }
-    const raw = fs.readFileSync(SCHEDULE_CONFIG_PATH, 'utf-8');
-    return JSON.parse(raw);
-  } catch (err) {
-    console.warn('[ScheduleConfig] 读取配置失败:', err.message);
-    return { ...DEFAULT_SCHEDULE };
-  }
-}
-
-function _writeScheduleConfig(config) {
-  if (!fs.existsSync(SCHEDULE_CONFIG_DIR)) {
-    fs.mkdirSync(SCHEDULE_CONFIG_DIR, { recursive: true });
-  }
-  fs.writeFileSync(SCHEDULE_CONFIG_PATH, JSON.stringify(config, null, 2), 'utf-8');
-}
 
 function parseIntSafe(value, fallback = 0) {
   const n = parseInt(value, 10);
@@ -371,7 +338,7 @@ router.get('/audit-logs', (req, res) => {
 // GET /api/admin/schedule — 获取定时更新配置
 // ---------------------------------------------------------------------------
 router.get('/schedule', (req, res) => {
-  const config = _readScheduleConfig();
+  const config = readScheduleConfig();
   res.json({ success: true, config });
 });
 
@@ -400,14 +367,14 @@ router.post('/schedule', (req, res) => {
       }
     }
     config.enabled = config.enabled !== false;
-    _writeScheduleConfig(config);
+    const savedConfig = writeScheduleConfig(config);
 
     // 通知调度器重新加载（通过全局事件）
     if (global.__scheduleReload) {
       global.__scheduleReload();
     }
 
-    res.json({ success: true, config });
+    res.json({ success: true, config: savedConfig });
   } catch (err) {
     console.error('[ScheduleConfig] 保存失败:', err);
     res.status(500).json({

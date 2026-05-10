@@ -358,11 +358,11 @@ main > section {
 .methodology-version-card {
   display: grid;
   gap: 6px;
-  margin: 12px 0 14px;
+  margin: 14px 0 0;
   padding: 12px 14px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-primary, #ff7a1a) 10%, var(--color-bg));
+  background: var(--color-card-bg);
   color: var(--color-text);
 }
 
@@ -374,11 +374,9 @@ main > section {
 .methodology-changelog-card {
   margin: 0 0 16px;
   padding: 16px;
-  border: 1px solid color-mix(in srgb, var(--color-primary, #ff7a1a) 28%, var(--color-border));
-  border-radius: var(--radius-lg);
-  background:
-    radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--color-primary, #ff7a1a) 18%, transparent) 0, transparent 34%),
-    var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-card-bg);
 }
 
 .methodology-changelog-head {
@@ -402,6 +400,18 @@ main > section {
   text-align: right;
 }
 
+.methodology-changelog-scroll {
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 0 8px 0 0;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+.methodology-changelog-scroll:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
 .methodology-changelog-list {
   display: grid;
   gap: 12px;
@@ -419,9 +429,9 @@ main > section {
 }
 
 .methodology-changelog-list time {
-  color: var(--color-primary);
+  color: var(--color-text);
   font-weight: 800;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
 }
 
 .methodology-changelog-list strong {
