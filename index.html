@@ -364,7 +364,7 @@
         <p data-i18n="home.methodology.intro">火烧云指数综合评估天空条件与光学传播路径，判断当日形成火烧云的概率与强度。以下为基于气象数据的完整计算原理。</p>
         <div class="methodology-version-card">
           <strong data-i18n="home.methodology.versionLabel">算法版本：2026.05.10-upper-cloud-carrier-v2</strong>
-          <span data-i18n="home.methodology.versionDesc">本版将“中高云载体明确”的厚云信号改为温和降低画布分，不再重复触发厚高云封顶；灰幕、沙尘、降水和几何封顶仍独立保留。</span>
+          <span data-i18n="home.methodology.versionDesc">本版将“中高云载体明确”的厚云信号改为云面质量修正；灰幕、沙尘、降水和几何限制仍独立评估。</span>
         </div>
 
         <div class="methodology-changelog-card" aria-labelledby="methodology-changelog-title">
@@ -377,7 +377,7 @@
               <time datetime="2026-05-10" data-i18n="home.methodology.changelog.current.date">2026-05-10</time>
               <div>
                 <strong data-i18n="home.methodology.changelog.current.title">中高云载体保护 v2</strong>
-                <p data-i18n="home.methodology.changelog.current.summary">修正“高云+中云充足、低云少、空气不灰”场景被厚云信号重复惩罚的问题；云厚只温和降低画布分，真正灰幕/沙尘仍独立封顶。</p>
+                <p data-i18n="home.methodology.changelog.current.summary">优化“高云+中云充足、低云少、空气不灰”场景的判断；云厚作为可染色云面质量修正，真正灰幕/沙尘仍独立评估。</p>
                 <small data-i18n="home.methodology.changelog.current.validation">验证：北京样本回放约 53–60 分，厚云幕和沙尘样本仍保持低分。</small>
               </div>
             </li>
@@ -468,10 +468,10 @@
             <p data-i18n="home.methodology.sections.thickHighCloudPenalty.desc">高云多不一定代表高分；算法会区分“可被染色的中高云载体”和“遮光灰幕”。云厚只先修正画布，空气灰幕/沙尘等才做封顶。</p>
             <ul class="methodology-detail-list">
               <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level1">中高云载体明确：高云≥80%、中云≥30%、低云≤10%、无降水且空气不灰</li>
-              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level2">这类场景的云厚信号只让画布分×0.75，不再额外封顶、不再重复压低光路</li>
+              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level2">这类场景按可染色云面质量修正画布分，光路判断保持独立</li>
               <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level3">真正厚云幕仍可封顶约42–48分；灰霾/沙尘按空气条件独立封顶45/35/28分</li>
             </ul>
-            <p class="methodology-formula" data-i18n="home.methodology.sections.thickHighCloudPenalty.formula">最终修正 = 画布云厚修正 + 独立灰幕/沙尘/降水/几何封顶，避免同一厚云信号被重复惩罚</p>
+            <p class="methodology-formula" data-i18n="home.methodology.sections.thickHighCloudPenalty.formula">最终修正 = 云面质量修正 + 灰幕/沙尘/降水/几何限制等独立条件</p>
           </article>
         </div>
 
