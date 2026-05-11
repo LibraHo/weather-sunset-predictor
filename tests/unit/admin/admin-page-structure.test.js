@@ -71,6 +71,9 @@ describe('admin page structure', () => {
       'uploadProgressText',
       'uploadFeedback',
       'photoGpsStatus',
+      'parseAddressBtn',
+      'parsePhotoCoordsBtn',
+      'parsePhotoTakenAtBtn',
       'photoGrid',
       'photoEditModal',
       'photoEditForm',
@@ -94,6 +97,10 @@ describe('admin page structure', () => {
       'restartBackend',
       'isValidPhotoCoordinate',
       'setPhotoCoordinate',
+      'parseUploadAddress',
+      'parseUploadPhotoCoordinates',
+      'parseUploadPhotoTakenAt',
+      'readPhotoExifMetadata',
       'autofillPhotoGpsFromExif',
       'autofillPhotoMetadataFromExif',
       'reverseGeocodePhotoLocation',
@@ -108,6 +115,9 @@ describe('admin page structure', () => {
     expect(js).toContain("selectedName.textContent = '尚未选择照片'");
     expect(html).toContain('纬度（可选）');
     expect(html).toContain('经度（可选）');
+    expect(html).toContain('解析地址');
+    expect(html).toContain('解析经纬度');
+    expect(html).toContain('解析拍摄时间');
     expect(html).toContain('字段都可以留空或手动修改');
     expect(html).toContain('编辑照片信息');
     expect(html).not.toContain('在地图上选择位置');

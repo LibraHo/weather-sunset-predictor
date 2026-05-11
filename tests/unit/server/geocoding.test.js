@@ -6,6 +6,9 @@
  * 不依赖 axios 或 Express，避免 ES module mock 兼容性问题。
  */
 
+import fs from 'fs';
+import path from 'path';
+
 describe('Geocoding Route — 数据转换逻辑', () => {
 
   // ========== 参数验证逻辑 ==========
@@ -301,6 +304,15 @@ describe('Geocoding Route — 数据转换逻辑', () => {
       expect(['北京市, China', 'Beijing, China']).toContain(helpers.rankGeocodingResults(beijing, '北京')[0].name);
       expect(helpers.rankGeocodingResults(shanghai, '上海')[0].name).toBe('上海, China');
       expect(helpers.rankGeocodingResults(hk, '香港')[0].name).toBe('Hong Kong, Hong Kong');
+    });
+  });
+
+  describe('后台调用日志', () => {
+    test('高德正向和反向地理编码会写入后台 API 日志', () => {
+      const source = fs.readFileSync(path.join(process.cwd(), 'server/routes/geocoding.js'), 'utf8');
+      expect(source).toContain("require('../services/ApiCallLog')");
+      expect(source).toContain("apiLog.track('gaode', 'geocode/geo'");
+      expect(source).toContain("apiLog.track('gaode', 'geocode/regeo'");
     });
   });
 

@@ -654,6 +654,9 @@ function initUploadForm() {
   const gpsStatus = document.getElementById('photoGpsStatus');
   const latInput = document.getElementById('lat');
   const lonInput = document.getElementById('lon');
+  const parseAddressBtn = document.getElementById('parseAddressBtn');
+  const parsePhotoCoordsBtn = document.getElementById('parsePhotoCoordsBtn');
+  const parsePhotoTakenAtBtn = document.getElementById('parsePhotoTakenAtBtn');
 
   if (!form || !fileInput) return;
 
@@ -678,6 +681,10 @@ function initUploadForm() {
     if (feedback) feedback.classList.add('hidden');
     await autofillPhotoMetadataFromExif(file, gpsStatus);
   });
+
+  parseAddressBtn?.addEventListener('click', () => parseUploadAddress(gpsStatus));
+  parsePhotoCoordsBtn?.addEventListener('click', () => parseUploadPhotoCoordinates(fileInput.files?.[0], gpsStatus));
+  parsePhotoTakenAtBtn?.addEventListener('click', () => parseUploadPhotoTakenAt(fileInput.files?.[0], gpsStatus));
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -758,8 +765,94 @@ function setPhotoCoordinate(lat, lon, statusEl, source = '已设置位置') {
   return true;
 }
 
+async function parseUploadAddress(statusEl) {
+  const locationInput = document.getElementById('locationName');
+  const query = locationInput?.value?.trim() || '';
+  if (!query) {
+    updateGpsStatus(statusEl, '请先填写拍摄地点，再解析地址。', 'warning');
+    return;
+  }
+
+  updateGpsStatus(statusEl, '正在解析地址...');
+  try {
+    const res = await fetch(`/api/geocoding/search?q=${encodeURIComponent(query)}&provider=auto&limit=1`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error?.message || '地址解析失败');
+    const first = Array.isArray(data.results) ? data.results[0] : null;
+    const lat = Number(first?.lat);
+    const lon = Number(first?.lon);
+    if (!isValidPhotoCoordinate(lat, lon)) {
+      updateGpsStatus(statusEl, '没有解析到可用坐标；可以换一个更完整的地址。', 'warning');
+      return;
+    }
+    setPhotoCoordinate(lat, lon, statusEl, '地址已解析');
+    if (locationInput && first?.name) locationInput.value = first.name;
+  } catch (err) {
+    updateGpsStatus(statusEl, `地址解析失败：${err?.message || '未知错误'}`, 'error');
+  }
+}
+
+async function parseUploadPhotoCoordinates(file, statusEl) {
+  if (!file) {
+    updateGpsStatus(statusEl, '请先选择照片，再重新解析经纬度。', 'warning');
+    return;
+  }
+
+  updateGpsStatus(statusEl, '正在重新读取照片经纬度...');
+  try {
+    const meta = await readPhotoExifMetadata(file);
+    if (!isValidPhotoCoordinate(meta.lat, meta.lon)) {
+      updateGpsStatus(statusEl, '照片里没有读取到可用经纬度；可以手动填写或清空。', 'warning');
+      return;
+    }
+    setPhotoCoordinate(meta.lat, meta.lon, statusEl, '已重新读取位置');
+    const locationInput = document.getElementById('locationName');
+    const name = await reverseGeocodePhotoLocation(meta.lat, meta.lon);
+    if (locationInput && name) locationInput.value = name;
+    updateGpsStatus(statusEl, name ? `已重新填写经纬度和地点：${name}` : '已重新填写经纬度；未解析到地点名称。', 'success');
+  } catch (err) {
+    updateGpsStatus(statusEl, `读取经纬度失败：${err?.message || '未知错误'}`, 'error');
+  }
+}
+
+async function parseUploadPhotoTakenAt(file, statusEl) {
+  if (!file) {
+    updateGpsStatus(statusEl, '请先选择照片，再重新解析拍摄时间。', 'warning');
+    return;
+  }
+
+  updateGpsStatus(statusEl, '正在重新读取拍摄时间...');
+  try {
+    const meta = await readPhotoExifMetadata(file);
+    const takenInput = document.getElementById('takenAt');
+    const localValue = toDateTimeLocalInput(meta.takenAt);
+    if (!takenInput || !localValue) {
+      updateGpsStatus(statusEl, '照片里没有读取到拍摄时间；可以手动填写或清空。', 'warning');
+      return;
+    }
+    takenInput.value = localValue;
+    updateGpsStatus(statusEl, '已重新填写拍摄时间。', 'success');
+  } catch (err) {
+    updateGpsStatus(statusEl, `读取拍摄时间失败：${err?.message || '未知错误'}`, 'error');
+  }
+}
+
 async function autofillPhotoGpsFromExif(file, statusEl) {
   return autofillPhotoMetadataFromExif(file, statusEl);
+}
+
+async function readPhotoExifMetadata(file) {
+  if (!window.exifr?.parse && !window.exifr?.gps) {
+    throw new Error('浏览器端 EXIF 读取库未加载');
+  }
+
+  const meta = window.exifr.parse ? await window.exifr.parse(file) : {};
+  const gps = meta?.latitude !== undefined ? meta : await window.exifr.gps(file);
+  return {
+    lat: Number(gps?.latitude),
+    lon: Number(gps?.longitude),
+    takenAt: meta?.DateTimeOriginal || meta?.CreateDate || meta?.ModifyDate || null
+  };
 }
 
 async function autofillPhotoMetadataFromExif(file, statusEl) {
@@ -776,11 +869,8 @@ async function autofillPhotoMetadataFromExif(file, statusEl) {
   updateGpsStatus(statusEl, '正在读取照片信息...');
 
   try {
-    const meta = window.exifr.parse ? await window.exifr.parse(file) : {};
-    const gps = meta?.latitude !== undefined ? meta : await window.exifr.gps(file);
-    const lat = Number(gps?.latitude);
-    const lon = Number(gps?.longitude);
-    const takenAt = meta?.DateTimeOriginal || meta?.CreateDate || meta?.ModifyDate;
+    const meta = await readPhotoExifMetadata(file);
+    const { lat, lon, takenAt } = meta;
     const takenInput = document.getElementById('takenAt');
     const locationInput = document.getElementById('locationName');
     const filled = [];
