@@ -19,6 +19,27 @@ export default {
     subtitle: '预测火烧云出现的最佳时机'
   },
 
+  gallery: {
+    pageTitle: '霞客分享地图',
+    title: '晚霞照片分享',
+    subtitle: '看看世界各地分享的晚霞照片',
+    loading: '加载照片中...',
+    loadFailed: '加载失败，请刷新重试',
+    emptyTitle: '暂无照片',
+    emptyBody: '上传第一张火烧云照片吧。',
+    legendAria: '图例',
+    photoLocationLegend: '照片位置',
+    photoAltFallback: '晚霞照片',
+    notProvided: '未填写',
+    takenAt: '拍摄时间',
+    locationName: '拍摄地点',
+    uploadedAt: '上传时间',
+    uploaderName: '上传者',
+    photoCount: '{{count}} 张照片',
+    clusterListAria: '聚合照片缩略图列表',
+    clusterPhotoLabel: '第 {{index}} 张照片：{{location}}'
+  },
+
   // Home tabs & methodology
   home: {
     tabs: {

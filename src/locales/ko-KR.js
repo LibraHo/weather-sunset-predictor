@@ -14,6 +14,26 @@ const translations = {
     "locatedAt": "현재 위치: {{name}}",
     "subtitle": "화염구름이 나타나는 최적의 시간 예측"
   },
+  "gallery": {
+    "pageTitle": "Xiake Share Map",
+    "title": "Sunset photo gallery",
+    "subtitle": "Explore sunset photos shared around the world",
+    "loading": "Loading photos...",
+    "loadFailed": "Failed to load photos. Please refresh and try again.",
+    "emptyTitle": "No photos yet",
+    "emptyBody": "Upload the first fire-cloud photo.",
+    "legendAria": "Legend",
+    "photoLocationLegend": "Photo locations",
+    "photoAltFallback": "Sunset photo",
+    "notProvided": "Not provided",
+    "takenAt": "Taken at",
+    "locationName": "Location",
+    "uploadedAt": "Uploaded at",
+    "uploaderName": "Uploaded by",
+    "photoCount": "{{count}} photos",
+    "clusterListAria": "Clustered photo thumbnails",
+    "clusterPhotoLabel": "Photo {{index}}: {{location}}"
+  },
   "home": {
     "tabs": {
       "ariaLabel": "홈 탭 내비게이션",
