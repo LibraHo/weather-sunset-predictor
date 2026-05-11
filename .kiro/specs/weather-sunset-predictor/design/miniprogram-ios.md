@@ -76,14 +76,93 @@ weather-sunset-predictor/
 - 接口响应不要写死微信端概念；微信登录态可以在认证层处理，业务数据保持通用。
 - 小程序本地只存缓存、最近状态和轻量 UI 偏好；用户收藏、最近查询、投稿归属放服务端。
 
+## MVP 信息架构
+
+第一版不做完整内容社区，优先把“查分、留存、分享、投稿”跑顺。
+
+```text
+小程序
+├── 首页
+│   ├── 地点搜索
+│   ├── 当前定位授权
+│   └── 今日/明日 朝霞/晚霞快捷查分
+├── 结果页
+│   ├── 分数与等级
+│   ├── 最佳观赏窗口
+│   ├── 关键指标
+│   └── 分享入口
+├── 地图/照片
+│   ├── 分享地图入口
+│   ├── 照片列表/轻量地图
+│   └── 照片上传
+└── 我的
+    ├── 收藏地点
+    ├── 最近查询
+    ├── 投稿记录
+    └── 隐私与数据管理
+```
+
+页面策略：
+- 首页、结果页、收藏/最近查询、分享卡片必须原生实现。
+- 分享地图第一阶段可跳 H5 或做轻量原生列表；正式地图聚合等 Web 端聚合稳定后再原生化。
+- 照片上传必须原生实现，避免 H5 在微信内选图/上传体验不稳定。
+- 设置页只放必要项：定位授权状态、缓存清理、隐私协议、数据删除入口。
+
+## 共享 API 契约草案
+
+| 能力 | 接口 | 说明 |
+| --- | --- | --- |
+| 微信登录 | `POST /api/wechat/login` | 入参 `code`，返回服务端 session token 与通用 `userId`。 |
+| 地点搜索 | `GET /api/geocoding/search?q=` | 复用 Web 搜索排序；结果字段对小程序/iOS 稳定。 |
+| 反向地理编码 | `GET /api/geocoding/reverse?lat=&lon=` | 上传照片或当前位置展示地点名。 |
+| 单点预测 | `POST /api/prediction/enhanced` | 小程序结果页主接口，复用现有增强预测。 |
+| 未来时间线 | `POST /api/prediction/batch` | 今日/明日/多日入口，按 MVP 需要裁剪展示。 |
+| 收藏列表 | `GET /api/user/favorites` | 登录后按 `userId` 返回收藏地点。 |
+| 新增收藏 | `POST /api/user/favorites` | 入参标准地点、经纬度、展示名。 |
+| 删除收藏 | `DELETE /api/user/favorites/:id` | 只允许删除当前 `userId` 数据。 |
+| 最近查询 | `GET /api/user/recent-locations` | 服务端同步，客户端可做本地兜底缓存。 |
+| 写入最近查询 | `POST /api/user/recent-locations` | 查分成功后写入，服务端去重/限量。 |
+| 照片列表 | `GET /api/photos` | 公开展示字段，不暴露内部限额字段。 |
+| 照片上传 | `POST /api/photos/upload` | 小程序/iOS 共享上传入口，带鉴权、限流、审核状态。 |
+| 分享落地 | `GET /api/share/resolve` | 根据分享参数返回地点/预测/照片入口元数据。 |
+
+契约规则：
+- 所有登录态接口使用服务端 session token，不把微信 `openid` 暴露给业务前端。
+- 错误响应统一 `{ error: { code, message, details? } }`，避免小程序和 iOS 分别猜错误文案。
+- 新接口默认要有频率限制、审计日志和字段兼容策略；旧客户端缺字段不能崩。
+- 照片上传不要复用后台 Basic Auth 上传接口，应新增面向用户端的受控接口。
+
 ## 用户与存储
 
 ### 小程序阶段
 
-- 使用 `openid` 作为微信用户维度。
-- 新增微信登录接口，例如 `POST /api/wechat/login`，服务端用 `code` 换 openid/session 信息。
-- 收藏地点、最近查询、照片投稿归属等服务端数据按 openid 存储。
+- 微信 `openid` 只作为 identity provider 标识，不作为业务表永久主键。
+- 新增微信登录接口，例如 `POST /api/wechat/login`，服务端用 `code` 换 openid/session 信息后创建或绑定 `userId`。
+- 收藏地点、最近查询、照片投稿归属等服务端数据绑定 `userId`。
 - 不在客户端长期保存敏感凭据。
+
+建议数据模型：
+
+```text
+users
+├── id
+├── displayName
+├── createdAt
+└── updatedAt
+
+user_identities
+├── userId
+├── provider        # wechat_mp / apple / phone / email
+├── providerUserId  # openid / apple sub / phone hash / email hash
+├── unionId
+├── createdAt
+└── lastLoginAt
+```
+
+服务端存储策略：
+- `favorites`、`recent_locations`、`photo_submissions` 引用 `userId`。
+- 小程序本地只缓存 session token、最近地点快照、UI 偏好；服务端数据才是准源。
+- 未来账号合并时，只合并 identities，不迁移业务表主键。
 
 ### 未来 iOS
 
@@ -121,6 +200,20 @@ weather-sunset-predictor/
    - 第一阶段可用 H5 入口或轻量原生列表/地图。
    - 正式阶段做原生地图 marker/聚合，与 Web 分享地图共用照片 API。
 
+## 地图与图表适配
+
+小程序不能直接搬 Web 的 Leaflet 和 Chart.js，需要按能力拆：
+
+- 首页/结果页图表：优先用 canvas 或轻量自定义组件实现分数、指标条、云层结构，不追求 Web 图表完全一致。
+- 分享地图：优先使用小程序 `map` 组件和自定义 marker；聚合算法可复用 Web 端纯函数思路，但渲染层独立。
+- 高级热力/复杂图层：第一阶段保留 H5 fallback，等原生地图性能和交互验证后再迁移。
+- 未来 iOS：API 和聚合数据结构复用，地图渲染用 MapKit 或同类原生能力。
+
+验收重点：
+- 地图 marker 数量上升时不明显卡顿。
+- 图表在低端机和窄屏上不遮挡文字。
+- 地图/图表数据结构不绑定小程序组件私有字段。
+
 ## 设计语言复用
 
 小程序不能直接复用 Web 的 HTML/CSS/DOM，但必须复用：
@@ -133,16 +226,42 @@ weather-sunset-predictor/
 建议在 `miniprogram/` 内维护轻量 token：
 
 ```css
---xiake-bg
---xiake-card-bg
---xiake-card-border
---xiake-text
---xiake-text-muted
---xiake-accent
---xiake-accent-strong
+--xiake-bg: var(--color-bg)
+--xiake-surface: var(--color-surface)
+--xiake-card-bg: var(--color-card)
+--xiake-card-border: var(--color-border)
+--xiake-text: var(--color-text)
+--xiake-text-muted: var(--color-text-muted)
+--xiake-accent: var(--color-sunset)
+--xiake-accent-strong: var(--color-sun-gold)
+--xiake-danger: var(--color-danger)
+--xiake-radius-card: 8px
+--xiake-shadow-card: ...
 ```
 
 这些 token 与 Web 主题变量语义保持一致，但实现可按小程序 WXSS 约束调整。
+
+组件策略：
+- 先沉淀 `ScoreHero`、`MetricGrid`、`LocationSearch`、`FavoriteButton`、`PhotoUploader`、`ShareCardPreview`。
+- 用户可见文案进入小程序 locale 文件，至少维护 `zh-CN`、`zh-TW`、`en-US`。
+- 不把 Web 的装饰性布局完整复制到小程序；小程序优先保证扫读、点击热区和性能。
+
+## 分享与落地
+
+- 小程序分享使用 `onShareAppMessage`，参数只放稳定短 id 或经纬度/日期/type 等可解析字段。
+- 分享标题遵循“地点 + 朝霞/晚霞评分 + 观赏窗口”，缩略图沿用霞客分享卡片构图。
+- 分享落地页必须能在未登录状态展示基础预测；收藏、投稿等动作再触发登录。
+- H5 fallback 用同一套分享参数，保证从公众号文章、浏览器、朋友圈入口进入时不丢上下文。
+- 未来 iOS 使用同一分享解析接口，平台层只替换系统分享能力。
+
+## 照片上传
+
+- 小程序使用 `wx.chooseMedia` 选图、`wx.uploadFile` 上传。
+- 服务端上传接口负责鉴权、大小限制、格式校验、缩略图、审核状态和元数据落库。
+- EXIF 经纬度/拍摄时间能读则自动建议；读不到时必须允许手动填写地点和拍摄时间。
+- 上传后的照片默认进入待审核或可隐藏状态，避免公开地图被垃圾内容污染。
+- `uploadedAt` 由服务端生成，不允许客户端传入覆盖。
+- 照片公开 API 只返回展示字段，不暴露 IP hash、每日限额等内部控制字段。
 
 ## 微信平台约束
 
@@ -153,10 +272,20 @@ weather-sunset-predictor/
 - 地图、canvas、图表能力需要按小程序组件能力重新评估，不直接照搬 Leaflet/Chart.js。
 - 订阅消息后续可做提醒，但要单独设计模板、触发条件和授权，不作为 MVP 必需项。
 
+## 隐私与审核清单
+
+- 请求域名：`https://sunset.bjhyc.online` 必须配置 request/upload/download 合法域名。
+- 业务域名：如保留 H5 fallback，需要配置 `web-view` 业务域名。
+- 权限声明：定位、相册/相机、上传图片必须有清晰用途说明。
+- 隐私协议：说明位置、照片、拍摄时间、上传者信息、收藏/最近查询的用途和保存方式。
+- 数据删除：用户需要能删除收藏、最近查询、投稿记录，或至少有可执行的人工删除入口。
+- 审核材料：准备核心页面截图、功能路径说明、定位/相册使用说明、ICP备案与域名归属材料。
+
 ## 测试与验收
 
 - 小程序 service 层需要可单测：API URL、参数、错误处理、字段映射。
 - 后端新增接口必须继续有 Jest/Supertest 覆盖。
 - MVP 必须人工在微信开发者工具验证：搜索、定位、评分、分享、上传、收藏。
+- API 契约测试必须覆盖小程序/iOS 共享字段、错误码、登录态、限流和旧字段兼容。
+- 地图/图表必须做真机或微信开发者工具性能与布局检查，不能只靠单测。
 - PR 交付仍按现有流程：branch、commit、PR、CI 状态；合并/部署需 Alex 明确授权。
-

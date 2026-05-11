@@ -278,7 +278,8 @@ rankScore = exactMatch * 100
 - 小程序代码放当前 repo 的 `miniprogram/`，不单独建库。
 - 小程序和未来 iOS 共用现有后端 API；新增 API 必须按多端契约设计，不复制预测算法。
 - `web-view` 仅作为临时入口/兼容方案，不作为正式 MVP 主体验。
-- 用户维度以微信 `openid` 为小程序阶段的主键；未来 iOS 可通过账号绑定或服务端用户模型扩展，不让业务数据只绑定某一端。
+- 用户模型以服务端 `userId` 为业务主键，微信 `openid` 只是小程序 identity provider；未来 iOS 可追加 Apple/手机号/邮箱等 identity。
+- 开工前必须先冻结 MVP 信息架构、共享 API 契约、设计 token 映射、地图/图表适配方案和微信平台审核清单。
 
 ## 数据模型
 
