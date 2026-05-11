@@ -143,7 +143,7 @@ app.use('/api/wechat', wechatRouteModule.createRouter({ userService }));
 app.use('/api/user', userRouteModule.createRouter({ userService }));
 app.use('/api/heatmap', heatmapRoutes);
 app.use('/api/spots', spotsRoutes);
-app.use('/api/photos', photosRoutes);
+app.use('/api/photos', photosRoutes.createRouter({ userService }));
 app.use('/', adminRoutes);
 
 // Admin API routes (protected by Basic Auth)

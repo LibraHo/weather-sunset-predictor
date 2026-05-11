@@ -1,7 +1,8 @@
 {
   "pages": [
     "pages/home/index",
-    "pages/result/index"
+    "pages/result/index",
+    "pages/gallery/index"
   ],
   "window": {
     "navigationBarTitleText": "霞客",

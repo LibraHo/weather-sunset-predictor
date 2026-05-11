@@ -1,0 +1,148 @@
+.gallery-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.gallery-hero {
+  padding: 12rpx 6rpx 4rpx;
+}
+
+.eyebrow {
+  font-size: 26rpx;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.warm-accent {
+  color: #f5c87a;
+}
+
+.headline {
+  margin-top: 16rpx;
+  color: #ffffff;
+  font-size: 44rpx;
+  font-weight: 900;
+  line-height: 1.18;
+}
+
+.caption {
+  margin-top: 14rpx;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 26rpx;
+  line-height: 1.55;
+}
+
+.glass-card {
+  background: rgba(18, 28, 52, 0.68);
+  backdrop-filter: blur(24rpx);
+}
+
+.map-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  padding: 26rpx;
+}
+
+.section-title {
+  color: #f5c87a;
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.map-copy {
+  margin-top: 10rpx;
+  font-size: 25rpx;
+  line-height: 1.5;
+}
+
+.map-button,
+.retry-button {
+  width: 100%;
+  margin: 0;
+  height: 78rpx;
+  line-height: 78rpx;
+  font-size: 27rpx;
+}
+
+.state-card {
+  padding: 30rpx 26rpx;
+  border-radius: 16rpx;
+}
+
+.error-state {
+  border: 1rpx solid rgba(248, 113, 113, 0.28);
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.26);
+}
+
+.state-title {
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.state-copy {
+  margin-top: 10rpx;
+  font-size: 25rpx;
+  line-height: 1.5;
+}
+
+.retry-button {
+  margin-top: 22rpx;
+}
+
+.photo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18rpx;
+}
+
+.list-title {
+  margin: 4rpx 6rpx 0;
+}
+
+.photo-card {
+  display: flex;
+  gap: 20rpx;
+  padding: 20rpx;
+}
+
+.photo-thumb,
+.photo-placeholder {
+  flex: none;
+  width: 156rpx;
+  height: 156rpx;
+  border-radius: 14rpx;
+  overflow: hidden;
+}
+
+.photo-placeholder {
+  color: rgba(245, 200, 122, 0.72);
+  font-size: 44rpx;
+  font-weight: 900;
+  line-height: 156rpx;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(245, 200, 122, 0.12), rgba(100, 168, 240, 0.10));
+}
+
+.photo-meta {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10rpx;
+}
+
+.photo-location {
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.photo-line {
+  font-size: 24rpx;
+  line-height: 1.35;
+}
