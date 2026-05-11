@@ -239,12 +239,13 @@ async function generateThumbnail(srcPath, dstPath) {
  * @param {string}  [opts.takenAt]  ISO8601 拍摄时间
  * @param {string}  [opts.locationName] 拍摄地点名称
  * @param {string}  [opts.uploaderName] 上传者展示名
+ * @param {string}  [opts.uploaderUserId] 上传者用户 ID（小程序登录用户）
  * @param {string}  [opts.desc]     照片描述
  * @param {string}  [opts.clientIp] 上传客户端 IP（用于每日限额，不落明文）
  * @returns {Promise<object>} 已保存的照片元数据
  * @throws {Error} 若 MIME 不合法或 buffer 超限则抛出
  */
-async function savePhoto({ buffer, mimeType, filename = '', lat, lon, takenAt, locationName = '', uploaderName = '', desc = '', clientIp = '' }) {
+async function savePhoto({ buffer, mimeType, filename = '', lat, lon, takenAt, locationName = '', uploaderName = '', uploaderUserId = '', desc = '', clientIp = '' }) {
   const now = new Date();
   const uploadStats = assertDailyUploadLimit(clientIp, now);
 
@@ -289,6 +290,7 @@ async function savePhoto({ buffer, mimeType, filename = '', lat, lon, takenAt, l
     takenAt: takenAt || null,
     locationName: String(locationName || '').trim(),
     uploaderName: String(uploaderName || '').trim(),
+    uploaderUserId: String(uploaderUserId || '').trim() || null,
     desc,
     uploadedAt: now.toISOString(),
     uploadDay: uploadStats?.uploadDay || getUploadDay(now),

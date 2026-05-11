@@ -1,0 +1,44 @@
+<view class="container gallery-page">
+  <view class="gallery-hero">
+    <view class="eyebrow warm-accent">霞客影集</view>
+    <view class="headline">分享地图与照片列表</view>
+    <view class="caption">看看大家最近拍到的霞光。</view>
+  </view>
+
+  <view class="map-entry xiake-card glass-card">
+    <view>
+      <view class="section-title">{{mapStatus.title}}</view>
+      <view class="map-copy subtle-text">{{mapStatus.description}}</view>
+    </view>
+    <button class="ghost-button map-button" bindtap="copyGalleryLink">打开 H5 分享地图</button>
+  </view>
+
+  <view class="state-card xiake-card" wx:if="{{loading}}">
+    <view class="state-title">正在加载照片…</view>
+    <view class="state-copy subtle-text">照片马上回来。</view>
+  </view>
+
+  <view class="state-card error-state" wx:elif="{{errorMessage}}">
+    <view class="state-title">加载失败</view>
+    <view class="state-copy">{{errorMessage}}</view>
+    <button class="ghost-button retry-button" bindtap="loadPhotos">重试</button>
+  </view>
+
+  <view class="state-card xiake-card empty-state" wx:elif="{{isEmpty}}">
+    <view class="state-title">还没有照片</view>
+    <view class="state-copy subtle-text">第一张霞光照片上传后，会出现在这里。</view>
+  </view>
+
+  <view class="photo-list" wx:else>
+    <view class="section-title list-title">最新照片</view>
+    <view class="photo-card xiake-card glass-card" wx:for="{{photos}}" wx:key="id">
+      <image wx:if="{{item.hasThumbnail}}" class="photo-thumb" src="{{item.thumbnailUrl}}" mode="aspectFill" />
+      <view wx:else class="photo-placeholder">霞</view>
+      <view class="photo-meta">
+        <view class="photo-location">{{item.location}}</view>
+        <view class="photo-line subtle-text">拍摄时间：{{item.takenAt}}</view>
+        <view class="photo-line subtle-text">上传者：{{item.uploader}}</view>
+      </view>
+    </view>
+  </view>
+</view>
