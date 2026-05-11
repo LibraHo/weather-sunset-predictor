@@ -1,0 +1,27 @@
+<view class="container result-page">
+  <block wx:if="{{hasPrediction}}">
+    <score-hero score="{{prediction.score}}" grade="{{prediction.grade}}" location-name="{{prediction.locationName}}" period="{{prediction.period}}" best-window="{{prediction.bestWindow}}" explanation="{{prediction.explanation}}" />
+
+    <view class="meta xiake-card">
+      <view class="meta-item">
+        <text class="label">日期</text>
+        <text class="value">{{prediction.dayLabel}}</text>
+      </view>
+      <view class="meta-item">
+        <text class="label">类型</text>
+        <text class="value">{{prediction.periodLabel}}</text>
+      </view>
+    </view>
+
+    <view class="section-head">关键天气因子</view>
+    <metric-grid metrics="{{metrics}}" />
+
+    <button class="ghost-button back-button" bindtap="goHome">重新查分</button>
+  </block>
+
+  <view class="empty-state xiake-card" wx:else>
+    <view class="empty-title">还没有可展示的分数</view>
+    <view class="empty-copy">请先回首页选择地点和日期，完成一次查分。</view>
+    <button class="primary-button empty-button" bindtap="goHome">返回首页</button>
+  </view>
+</view>

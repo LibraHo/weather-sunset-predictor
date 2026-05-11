@@ -1,0 +1,7 @@
+<view class="metric-grid">
+  <view class="metric xiake-card" wx:for="{{metrics}}" wx:key="key">
+    <view class="label">{{item.label}}</view>
+    <view class="value">{{item.value}}</view>
+    <view class="hint" wx:if="{{item.hint}}">{{item.hint}}</view>
+  </view>
+</view>
