@@ -42,6 +42,23 @@ describe('recent user-reported UI regression guards', () => {
     expect(cloudBlock).not.toMatch(/background(?:-color)?:\s*(?:#fff\b|#ffffff\b|#f5f5f5\b|#e5e7eb\b|var\(--color-bg\))/i);
   });
 
+  test('dark weather metric cards use neutral Xiake glass borders', () => {
+    const source = css();
+    const tokenBlock = source.match(/\/\* 暗色实际主题兜底：评分条 token 不能被亮色\/默认规则覆盖成黑灰 \*\/[\s\S]*?\n\}/)?.[0] || '';
+    const metricBlock = source.match(/\/\* Dark weather metric cards use the same neutral Xiake glass border as the rest of the panel\. \*\/[\s\S]*?body\[data-actual-theme="dark"\] \.weather-feature-item \{[\s\S]*?\n\}/)?.[0] || '';
+    const metricHoverBlock = source.match(/body\[data-actual-theme="dark"\] \.weather-feature-item:hover \{[\s\S]*?\n\}/)?.[0] || '';
+
+    expect(tokenBlock).toContain('--theme-card-border: rgba(255, 255, 255, 0.10);');
+    expect(tokenBlock).toContain('--weather-metric-border: var(--theme-card-border);');
+    expect(metricBlock).toContain('html[data-theme="dark"] .weather-feature-item');
+    expect(metricBlock).toContain('html[data-actual-theme="dark"] .weather-feature-item');
+    expect(metricBlock).toContain('border-color: var(--weather-metric-border) !important;');
+    expect(metricBlock).toContain('box-shadow: var(--weather-metric-shadow) !important;');
+    expect(metricBlock).not.toContain('var(--theme-accent)');
+    expect(metricHoverBlock).toContain('var(--weather-metric-border)');
+    expect(metricHoverBlock).not.toContain('var(--theme-accent)');
+  });
+
   test('3-day glow forecast is a weather tab with a loading state', () => {
     const page = html();
     const source = css();
