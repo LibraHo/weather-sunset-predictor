@@ -19,13 +19,32 @@ describe('gallery share map page', () => {
   });
 
   test('photo popup shows capture and upload metadata', () => {
-    expect(html).toContain('拍摄时间');
-    expect(html).toContain('拍摄地点');
-    expect(html).toContain('上传时间');
-    expect(html).toContain('上传者');
+    expect(html).toContain("t('gallery.takenAt')");
+    expect(html).toContain("t('gallery.locationName')");
+    expect(html).toContain("t('gallery.uploadedAt')");
+    expect(html).toContain("t('gallery.uploaderName')");
     expect(html).toContain('photo.uploaderName');
     expect(html).toContain('photo.takenAt');
     expect(html).toContain('photo.uploadedAt');
+  });
+
+  test('clusters nearby photos into accessible stack markers and thumbnail grids', () => {
+    expect(html).toContain("import { clusterPhotosByPixelDistance, preferredPhotoUrl } from '/src/utils/galleryPhotoClusters.js'");
+    expect(html).toContain('class="photo-marker stack-marker"');
+    expect(html).toContain('photo-count-badge');
+    expect(html).toContain('cluster-photo-grid');
+    expect(html).toContain('cluster-photo-button');
+    expect(html).toContain("map.on('zoomend moveend', renderPhotoMarkers)");
+    expect(html).toContain('aria-label');
+  });
+
+  test('uses thumbnail-first URLs and i18n hooks for gallery-visible copy', () => {
+    expect(html).toContain('preferredPhotoUrl(photo)');
+    expect(html).toContain('preferredPhotoUrl(representative)');
+    expect(html).toContain('data-i18n="gallery.title"');
+    expect(html).toContain('data-i18n="gallery.subtitle"');
+    expect(html).toContain('data-i18n-aria-label="gallery.legendAria"');
+    expect(html).toContain('data-i18n="gallery.photoLocationLegend"');
   });
 
   test('uses Xiake design language tokens and no emoji title markers', () => {
@@ -50,5 +69,10 @@ describe('gallery share map page', () => {
     expect(html).toContain('.gallery-title {\n      top: 16px;\n      left: 72px;');
     expect(html).toContain('.gallery-title { top: 12px; left: 64px;');
     expect(html).not.toContain('.gallery-title { top: 12px; left: 12px;');
+  });
+
+  test('mobile popup is constrained so zoom controls stay usable', () => {
+    expect(html).toContain('.photo-popup .leaflet-popup-content { max-height: min(58vh, 430px); overflow: auto; }');
+    expect(html).toContain('.cluster-photo-grid { grid-template-columns: repeat(2, minmax(0, 1fr));');
   });
 });

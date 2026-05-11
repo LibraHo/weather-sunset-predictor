@@ -14,6 +14,26 @@ const translations = {
     "switchedToLocation": "Đã chuyển sang {{location}}",
     "locatedAt": "Đã định vị tại {{location}}"
   },
+  "gallery": {
+    "pageTitle": "Bản đồ chia sẻ Xiake",
+    "title": "Thư viện ảnh hoàng hôn",
+    "subtitle": "Khám phá ảnh hoàng hôn được chia sẻ khắp thế giới",
+    "loading": "Đang tải ảnh...",
+    "loadFailed": "Tải ảnh thất bại. Vui lòng làm mới và thử lại.",
+    "emptyTitle": "Chưa có ảnh",
+    "emptyBody": "Hãy tải lên bức ảnh mây lửa đầu tiên.",
+    "legendAria": "Chú giải",
+    "photoLocationLegend": "Vị trí ảnh",
+    "photoAltFallback": "Ảnh hoàng hôn",
+    "notProvided": "Chưa cung cấp",
+    "takenAt": "Thời điểm chụp",
+    "locationName": "Địa điểm",
+    "uploadedAt": "Thời điểm tải lên",
+    "uploaderName": "Người tải lên",
+    "photoCount": "{{count}} ảnh",
+    "clusterListAria": "Danh sách ảnh thu nhỏ đã gom cụm",
+    "clusterPhotoLabel": "Ảnh {{index}}: {{location}}"
+  },
   "home": {
     "tabs": {
       "ariaLabel": "Điều hướng tab trang chủ",

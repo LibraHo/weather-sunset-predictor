@@ -14,6 +14,26 @@ const translations = {
     "switchedToLocation": "已切換到 {{location}}",
     "locatedAt": "已定位到 {{location}}"
   },
+  "gallery": {
+    "pageTitle": "霞客分享地圖",
+    "title": "晚霞照片分享",
+    "subtitle": "看看世界各地分享的晚霞照片",
+    "loading": "載入照片中...",
+    "loadFailed": "載入失敗，請重新整理再試",
+    "emptyTitle": "暫無照片",
+    "emptyBody": "上傳第一張火燒雲照片吧。",
+    "legendAria": "圖例",
+    "photoLocationLegend": "照片位置",
+    "photoAltFallback": "晚霞照片",
+    "notProvided": "未填寫",
+    "takenAt": "拍攝時間",
+    "locationName": "拍攝地點",
+    "uploadedAt": "上傳時間",
+    "uploaderName": "上傳者",
+    "photoCount": "{{count}} 張照片",
+    "clusterListAria": "聚合照片縮圖列表",
+    "clusterPhotoLabel": "第 {{index}} 張照片：{{location}}"
+  },
   "home": {
     "tabs": {
       "ariaLabel": "主頁分頁導航",

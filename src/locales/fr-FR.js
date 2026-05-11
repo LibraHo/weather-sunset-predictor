@@ -14,6 +14,26 @@ const translations = {
     "switchedToLocation": "Lieu changé pour {{location}}",
     "locatedAt": "Position définie sur {{location}}"
   },
+  "gallery": {
+    "pageTitle": "Carte de partage Xiake",
+    "title": "Galerie de photos de coucher de soleil",
+    "subtitle": "Découvrez les photos de coucher de soleil partagées dans le monde",
+    "loading": "Chargement des photos...",
+    "loadFailed": "Échec du chargement des photos. Actualisez et réessayez.",
+    "emptyTitle": "Aucune photo pour le moment",
+    "emptyBody": "Ajoutez la première photo de nuages flamboyants.",
+    "legendAria": "Légende",
+    "photoLocationLegend": "Emplacements des photos",
+    "photoAltFallback": "Photo de coucher de soleil",
+    "notProvided": "Non renseigné",
+    "takenAt": "Prise le",
+    "locationName": "Lieu",
+    "uploadedAt": "Envoyée le",
+    "uploaderName": "Envoyée par",
+    "photoCount": "{{count}} photos",
+    "clusterListAria": "Miniatures des photos groupées",
+    "clusterPhotoLabel": "Photo {{index}} : {{location}}"
+  },
   "home": {
     "tabs": {
       "ariaLabel": "Navigation par onglets",
