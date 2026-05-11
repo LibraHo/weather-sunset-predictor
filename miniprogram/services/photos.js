@@ -168,7 +168,7 @@ export async function uploadPhoto(photo = {}, options = {}) {
   const header = buildUploadHeader(token, options);
 
   return new Promise((resolve, reject) => {
-    wxClient.uploadFile({
+    const uploadTask = wxClient.uploadFile({
       url,
       filePath: photo.filePath,
       name: options.name || 'photo',
@@ -192,6 +192,10 @@ export async function uploadPhoto(photo = {}, options = {}) {
         }));
       }
     });
+
+    if (uploadTask && typeof uploadTask.onProgressUpdate === 'function' && typeof options.onProgress === 'function') {
+      uploadTask.onProgressUpdate(options.onProgress);
+    }
   });
 }
 

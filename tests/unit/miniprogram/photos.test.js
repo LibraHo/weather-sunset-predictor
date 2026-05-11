@@ -164,6 +164,30 @@ describe('miniprogram services/photos', () => {
     });
   });
 
+  test('uploadPhoto wires upload progress callback when wx returns an upload task', async () => {
+    const onProgress = jest.fn();
+    const uploadTask = { onProgressUpdate: jest.fn((handler) => handler({ progress: 42 })) };
+    const wxMock = {
+      uploadFile: jest.fn(({ success }) => {
+        success({
+          statusCode: 200,
+          data: JSON.stringify({ id: 'p4', lat: '1', lon: '2' })
+        });
+        return uploadTask;
+      })
+    };
+
+    await uploadPhoto({ filePath: '/tmp/photo.jpg' }, {
+      wx: wxMock,
+      baseUrl: 'https://api.example.com',
+      token: 'session-4',
+      onProgress
+    });
+
+    expect(uploadTask.onProgressUpdate).toHaveBeenCalledWith(onProgress);
+    expect(onProgress).toHaveBeenCalledWith({ progress: 42 });
+  });
+
   test('uploadPhoto rejects standardized server errors', async () => {
     const wxMock = {
       uploadFile: jest.fn(({ success }) => success({

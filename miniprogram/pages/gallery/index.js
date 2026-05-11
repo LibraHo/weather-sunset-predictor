@@ -53,6 +53,10 @@ Page({
         wx.showToast({ title: '复制失败，请稍后再试', icon: 'none' });
       }
     });
+  },
+
+  goUpload() {
+    wx.navigateTo({ url: '/pages/upload/index' });
   }
 });
 

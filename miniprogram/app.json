@@ -2,7 +2,8 @@
   "pages": [
     "pages/home/index",
     "pages/result/index",
-    "pages/gallery/index"
+    "pages/gallery/index",
+    "pages/upload/index"
   ],
   "window": {
     "navigationBarTitleText": "霞客",

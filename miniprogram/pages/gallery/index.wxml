@@ -10,7 +10,10 @@
       <view class="section-title">{{mapStatus.title}}</view>
       <view class="map-copy subtle-text">{{mapStatus.description}}</view>
     </view>
-    <button class="ghost-button map-button" bindtap="copyGalleryLink">打开 H5 分享地图</button>
+    <view class="map-actions">
+      <button class="primary-button map-button" bindtap="goUpload">上传照片</button>
+      <button class="ghost-button map-button" bindtap="copyGalleryLink">打开 H5 分享地图</button>
+    </view>
   </view>
 
   <view class="state-card xiake-card" wx:if="{{loading}}">
