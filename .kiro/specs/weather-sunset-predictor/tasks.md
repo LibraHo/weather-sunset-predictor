@@ -10,11 +10,11 @@
 Alex 判断公众号入口偏奇怪，小程序更适合霞客；后续还计划 iOS。结论：正式产品线选择原生小程序，公众号只做内容分发/导流；小程序代码放当前仓库 `miniprogram/`，后端继续复用现有 API。
 
 ### 任务拆分
-- [x] 52.1 小程序项目脚手架：在当前 repo 新增 `miniprogram/`，包含 `app.json/app.js/app.wxss`、基础 pages/components/services/utils 目录；不影响现有 Web 构建与部署。（PR #待创建，branch `feat/miniprogram-mvp-shell`）
-- [x] 52.2 API 契约梳理：列出小程序 MVP 依赖的共享接口，确认 `/api/prediction/enhanced`、`/api/geocoding/search`、`/api/photos`、照片上传、收藏/最近查询、微信登录等接口边界。（PR #待创建，已落地 `miniprogram/services/*` 契约壳）
-- [x] 52.3 微信登录与用户维度：新增或设计 `POST /api/wechat/login`，服务端以 openid 关联收藏、最近查询、照片投稿归属；为未来 iOS 预留跨端 userId/identity provider 模型。（PR #待创建，已落地 `miniprogram/services/auth.js` 客户端契约；服务端实现留到 52.6）
-- [x] 52.4 首页查分 MVP：原生小程序页面支持手动搜索地点、当前位置、朝霞/晚霞切换、今日/明日评分。（PR #待创建）
-- [x] 52.5 预测结果页：展示分数、质量等级、最佳观赏窗口、高/中/低云、能见度、湿度、AOD 和简短解释；不复制 Web 端长段落。（PR #待创建）
+- [x] 52.1 小程序项目脚手架：在当前 repo 新增 `miniprogram/`，包含 `app.json/app.js/app.wxss`、基础 pages/components/services/utils 目录；不影响现有 Web 构建与部署。（PR #661，branch `feat/miniprogram-mvp-shell`）
+- [x] 52.2 API 契约梳理：列出小程序 MVP 依赖的共享接口，确认 `/api/prediction/enhanced`、`/api/geocoding/search`、`/api/photos`、照片上传、收藏/最近查询、微信登录等接口边界。（PR #661，已落地 `miniprogram/services/*` 契约壳）
+- [ ] 52.3 微信登录与用户维度：新增或设计 `POST /api/wechat/login`，服务端以 openid 关联收藏、最近查询、照片投稿归属；为未来 iOS 预留跨端 userId/identity provider 模型。（PR #661 已落地 `miniprogram/services/auth.js` 客户端契约；服务端实现留到 52.6）
+- [x] 52.4 首页查分 MVP：原生小程序页面支持手动搜索地点、当前位置、朝霞/晚霞切换、今日/明日评分。（PR #661）
+- [x] 52.5 预测结果页：展示分数、质量等级、最佳观赏窗口、高/中/低云、能见度、湿度、AOD 和简短解释；不复制 Web 端长段落。（PR #661）
 - [ ] 52.6 收藏与最近查询：本地缓存 + 服务端持久化，按 openid 同步。
 - [ ] 52.7 小程序分享：实现微信小程序卡片分享，标题、描述、缩略图遵循霞客分享卡片规范。
 - [ ] 52.8 照片上传：使用 `wx.chooseMedia` / `wx.uploadFile` 接入现有照片 API 或小程序兼容接口，保留地点、拍摄时间、上传者、上传时间元数据。
