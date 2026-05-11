@@ -7958,6 +7958,12 @@ body.theme-dark,
 body[data-theme="dark"],
 body.theme-actual-dark,
 body[data-actual-theme="dark"] {
+  --theme-card-bg: rgba(18, 28, 52, 0.72);
+  --theme-card-border: rgba(255, 255, 255, 0.10);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --weather-metric-bg: linear-gradient(145deg, rgba(18, 28, 52, 0.78) 0%, rgba(12, 20, 40, 0.70) 100%);
+  --weather-metric-border: var(--theme-card-border);
+  --weather-metric-shadow: var(--glass-shadow);
   --score-track-color: rgba(255, 255, 255, 0.10);
   --score-poor-color: #94a3b8;
   --score-fair-color: #fdba74;
@@ -7965,6 +7971,33 @@ body[data-actual-theme="dark"] {
   --score-excellent-start: #fb923c;
   --score-excellent-mid: #fbbf24;
   --score-excellent-end: #f43f5e;
+}
+
+/* Dark weather metric cards use the same neutral Xiake glass border as the rest of the panel. */
+html.theme-dark .weather-feature-item,
+html[data-theme="dark"] .weather-feature-item,
+html.theme-actual-dark .weather-feature-item,
+html[data-actual-theme="dark"] .weather-feature-item,
+body.theme-dark .weather-feature-item,
+body[data-theme="dark"] .weather-feature-item,
+body.theme-actual-dark .weather-feature-item,
+body[data-actual-theme="dark"] .weather-feature-item {
+  background: var(--weather-metric-bg) !important;
+  border-color: var(--weather-metric-border) !important;
+  box-shadow: var(--weather-metric-shadow) !important;
+}
+
+html.theme-dark .weather-feature-item:hover,
+html[data-theme="dark"] .weather-feature-item:hover,
+html.theme-actual-dark .weather-feature-item:hover,
+html[data-actual-theme="dark"] .weather-feature-item:hover,
+body.theme-dark .weather-feature-item:hover,
+body[data-theme="dark"] .weather-feature-item:hover,
+body.theme-actual-dark .weather-feature-item:hover,
+body[data-actual-theme="dark"] .weather-feature-item:hover {
+  background: var(--glass-bg-hover) !important;
+  border-color: color-mix(in srgb, var(--weather-metric-border) 70%, rgba(255, 255, 255, 0.18)) !important;
+  box-shadow: var(--glass-shadow) !important;
 }
 
 /* High-impact token remapping for prediction surfaces. */
