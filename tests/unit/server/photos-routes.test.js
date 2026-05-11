@@ -12,6 +12,7 @@ let request;
 beforeAll(async () => {
   if (!global.TextEncoder) global.TextEncoder = TextEncoder;
   if (!global.TextDecoder) global.TextDecoder = TextDecoder;
+  if (!global.setImmediate) global.setImmediate = (fn, ...args) => setTimeout(fn, 0, ...args);
   const supertest = await import('supertest');
   request = supertest.default || supertest;
 });
