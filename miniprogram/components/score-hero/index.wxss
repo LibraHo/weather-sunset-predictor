@@ -1,9 +1,7 @@
 .score-hero {
   padding: 32rpx;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 82% 4%, rgba(255, 209, 102, 0.24), transparent 28%),
-    linear-gradient(140deg, rgba(18, 28, 52, 0.78), rgba(20, 33, 61, 0.62));
+  background: linear-gradient(140deg, rgba(255, 209, 102, 0.14) 0%, rgba(251, 146, 60, 0.10) 38%, rgba(18, 28, 52, 0.78) 100%);
 }
 
 .hero-top {
