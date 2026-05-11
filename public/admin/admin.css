@@ -476,6 +476,16 @@ body.theme-dark .admin-table tr:hover td {
   flex: 1;
 }
 
+.photo-parse-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.photo-parse-actions .btn {
+  min-width: 104px;
+}
+
 .form-hint {
   margin: 0;
   color: var(--theme-text-muted, var(--color-text-light));

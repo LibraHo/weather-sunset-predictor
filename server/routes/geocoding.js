@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
+const apiLog = require('../services/ApiCallLog');
 
 /**
  * 地理编码代理路由
@@ -311,6 +312,10 @@ function attachSearchMeta(payload, meta) {
   };
 }
 
+function getAxiosStatus(error) {
+  return Number(error?.response?.status) || 0;
+}
+
 async function handleAutoSearch(res, query, apiKey, limit = 8) {
   const effectiveKey = apiKey || process.env.GAODE_API_KEY;
   const resultSets = [];
@@ -326,11 +331,13 @@ async function handleAutoSearch(res, query, apiKey, limit = 8) {
   const shouldQueryGaode = effectiveKey && (!aliasRecord || aliasRecord.countryCode === 'CN' || isLikelyChinaQuery(query));
 
   if (shouldQueryGaode) {
+    const tracker = apiLog.track('gaode', 'geocode/geo', { address: query, source: 'geocoding:auto' });
     try {
       const response = await axios.get(`${GAODE_BASE}/geocode/geo`, {
         params: { address: query, key: effectiveKey, output: 'JSON' },
         timeout: 8000
       });
+      tracker.ok(response.status);
       const data = response.data;
       if (data.status === '1' && data.geocodes && data.geocodes.length > 0) {
         resultSets.push(...data.geocodes.map(item => {
@@ -349,6 +356,7 @@ async function handleAutoSearch(res, query, apiKey, limit = 8) {
         }));
       }
     } catch (error) {
+      tracker.fail(error, getAxiosStatus(error));
       errors.push(`gaode:${error.code || error.message}`);
     }
   }
@@ -535,12 +543,14 @@ async function handleGaodeSearch(res, query, apiKey, limit = 8) {
   apiKey = effectiveKey;
 
   console.log(`[Geocoding] 高德地图搜索: "${query}"`);
+  const tracker = apiLog.track('gaode', 'geocode/geo', { address: query, source: 'geocoding:direct' });
 
   try {
     const response = await axios.get(`${GAODE_BASE}/geocode/geo`, {
       params: { address: query, key: apiKey, output: 'JSON' },
       timeout: 8000
     });
+    tracker.ok(response.status);
 
     const data = response.data;
     if (data.status !== '1' || !data.geocodes || data.geocodes.length === 0) {
@@ -569,6 +579,7 @@ async function handleGaodeSearch(res, query, apiKey, limit = 8) {
     });
   } catch (error) {
     // 修复：高德超时/网络错误时，也应自动回退到 Open-Meteo
+    tracker.fail(error, getAxiosStatus(error));
     console.warn(`[Geocoding] 高德请求失败(${error.code || 'ERR'})，fallback 到 Open-Meteo: ${error.message}`);
     return await handleOpenMeteoSearch(res, query, limit);
   }
@@ -580,27 +591,34 @@ async function handleGaodeReverse(res, lat, lon, apiKey) {
   apiKey = effectiveKey;
 
   console.log(`[Geocoding] 高德地图反向地理编码: ${lat},${lon}`);
+  const tracker = apiLog.track('gaode', 'geocode/regeo', { lat, lon, source: 'geocoding:reverse' });
 
-  const response = await axios.get(`${GAODE_BASE}/geocode/regeo`, {
-    params: { location: `${lon},${lat}`, key: apiKey, output: 'JSON', extensions: 'base' },
-    timeout: 8000
-  });
+  try {
+    const response = await axios.get(`${GAODE_BASE}/geocode/regeo`, {
+      params: { location: `${lon},${lat}`, key: apiKey, output: 'JSON', extensions: 'base' },
+      timeout: 8000
+    });
+    tracker.ok(response.status);
 
-  const data = response.data;
-  if (data.status !== '1' || !data.regeocode?.formatted_address) {
-    return res.json({ name: null });
+    const data = response.data;
+    if (data.status !== '1' || !data.regeocode?.formatted_address) {
+      return res.json({ name: null });
+    }
+
+    const adcode = data.regeocode?.addressComponent?.adcode || null;
+    return res.json({
+      name: data.regeocode.formatted_address,
+      lat,
+      lon,
+      provider: 'gaode',
+      countryCode: 'CN',
+      regionCode: resolveGaodeRegionCode(adcode),
+      adcode
+    });
+  } catch (error) {
+    tracker.fail(error, getAxiosStatus(error));
+    throw error;
   }
-
-  const adcode = data.regeocode?.addressComponent?.adcode || null;
-  return res.json({
-    name: data.regeocode.formatted_address,
-    lat,
-    lon,
-    provider: 'gaode',
-    countryCode: 'CN',
-    regionCode: resolveGaodeRegionCode(adcode),
-    adcode
-  });
 }
 
 // ========== Google Maps Geocoding API ==========
