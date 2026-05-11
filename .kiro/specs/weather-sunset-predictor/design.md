@@ -16,6 +16,16 @@
 - `tasks.md` 只记录可执行任务、状态、PR/验证证据和明确待办；已完成大项保留摘要，避免重复展开。
 - 新增需求时三文档同步：需求编号、设计影响、任务拆分、验收标准必须能互相追溯。
 
+## 设计文档拆分策略（2026-05-11）
+
+需要轻拆，但不把三大文档拆散。
+
+- `design.md` 保持为架构总览、关键决策索引和跨模块约束。
+- 复杂专题放入 `design/` 子目录，入口必须从本文件链接回来。
+- 拆分标准：单专题超过约 120 行、跨 Web/小程序/iOS 多端、或需要长期独立演进时拆。
+- 第一批拆分：小程序与未来 iOS 产品线设计放入 [`design/miniprogram-ios.md`](./design/miniprogram-ios.md)。
+- 不拆 `requirements.md` 和 `tasks.md`：它们仍是需求编号与执行状态的单一索引。
+
 ## 架构
 
 ### 系统架构
@@ -29,9 +39,15 @@
 
 后端（Node.js + Python）
 ├── Express服务器：CORS、日志、路由
-├── API路由：/api/weather/*、/api/prediction/*、/api/firecloud/*、/api/heatmap/*
+├── API路由：/api/weather/*、/api/prediction/*、/api/firecloud/*、/api/heatmap/*、/api/photos、/api/agent/*
 ├── 服务层：PredictionService、SurroundingService、GridScoreService、CacheService
 └── Python GFS处理器：下载、解析、计算、生成PNG
+
+微信小程序（规划）
+├── 原生小程序前端：miniprogram/
+├── 页面：查分、地点搜索、收藏/最近查询、分享、照片上传
+├── 服务层：复用现有 HTTPS API，不复制预测算法
+└── 未来 iOS：复用同一 API 契约、产品结构和设计 token
 ```
 
 ### 数据流
@@ -203,16 +219,18 @@ rankScore = exactMatch * 100
 - 访客：`visitors.json`（ip_hash、lat、lon、country、city）
 
 **照片分享元数据增强（需求51）**：
-- 上传者：新增可选 `authorName`。前台/后台显示时若为空，统一 fallback 为 `网友`；服务端需限制长度并做 HTML 转义/输出安全。
-- 地点名称：新增可选 `placeName`。系统可根据经纬度反向地理编码自动建议，用户也可手动输入；手动地点只影响展示文案，不修改 `lat/lon`，避免“文字地点”和坐标互相覆盖。
-- 拍摄时间：新增/规范 `takenAt`。优先读取 EXIF DateTimeOriginal；用户可手动填写/修正；手动拍摄时间只影响时间展示，不影响经纬度和上传时间。
+- 上传者：字段为 `uploaderName`。前台/后台显示时若为空，统一 fallback 为 `网友`；服务端需限制长度并做 HTML 转义/输出安全。
+- 地点名称：字段为 `locationName`。系统可根据经纬度反向地理编码自动建议，用户也可手动输入；手动地点只影响展示文案，不修改 `lat/lon`，避免“文字地点”和坐标互相覆盖。
+- 拍摄时间：字段为 `takenAt`。优先读取 EXIF DateTimeOriginal；用户可手动填写/修正；手动拍摄时间只影响时间展示，不影响经纬度和上传时间。
 - 上传时间：继续由服务端记录 `uploadedAt`，存储建议保留 ISO UTC；展示层统一转为 Asia/Shanghai（北京时间）。非北京时间用户上传时，不使用客户端时区作为最终上传时间来源。
-- 兼容旧数据：历史照片缺少 `authorName/placeName/takenAt/thumbFile` 时必须可读；展示层使用 fallback，不要求迁移时一次性补齐所有字段。
+- 兼容旧数据：历史照片缺少 `uploaderName/locationName/takenAt/thumbFile` 时必须可读；展示层使用 fallback，不要求迁移时一次性补齐所有字段。
+- 上传表单提供三个手动解析动作：`解析地址` 调 `/api/geocoding/search` 回填 `lat/lon`；`解析经纬度` 从当前图片 EXIF 重新读取 GPS 并反查地点；`解析拍摄时间` 从当前图片 EXIF 重新读取 `takenAt`。
+- 高德等外部地理编码调用必须写入 `ApiCallLog`，后台日志和每日统计不能漏记。
 
 **后台照片编辑管理（需求51）**：
-- 后台照片列表在现有删除能力外，新增编辑入口，支持修改 `authorName`、`placeName`、`takenAt`、`desc`、`lat`、`lon`。
+- 后台照片列表在现有删除能力外，新增编辑入口，支持修改 `uploaderName`、`locationName`、`takenAt`、`desc`、`lat`、`lon`。
 - `uploadedAt` 为服务端记录的审计时间，只读展示，不允许后台手动修改。
-- 编辑 `placeName` 只影响展示地点，不自动反写经纬度；编辑 `lat/lon` 需明确作为“修改地图位置”。
+- 编辑 `locationName` 只影响展示地点，不自动反写经纬度；编辑 `lat/lon` 需明确作为“修改地图位置”。
 - 编辑 `takenAt` 只影响拍摄时间展示，不改变上传时间。
 - 保存后写回 `photos.json`，公开 `/api/photos` 与 `/gallery` 立即使用更新后的元数据。
 - 服务端编辑接口必须复用新增字段的校验/规范化逻辑，并继续禁止暴露 `uploadIpHash`、`uploadDay` 等内部字段。
@@ -250,6 +268,17 @@ rankScore = exactMatch * 100
 - `photos`：照片上传与管理。
 
 刷新策略按激活页面收敛：Dashboard/Ops/Logs 可定时刷新，Schedule/Agent/Photos 以用户操作触发为主。高风险动作集中在 Ops 的 danger zone，并保留确认框。
+
+### 微信小程序与未来 iOS（需求52）
+
+详见 [`design/miniprogram-ios.md`](./design/miniprogram-ios.md)。
+
+关键决策：
+- 主产品入口优先做原生微信小程序，不把公众号作为主产品；公众号仅用于文章、活动和跳转小程序。
+- 小程序代码放当前 repo 的 `miniprogram/`，不单独建库。
+- 小程序和未来 iOS 共用现有后端 API；新增 API 必须按多端契约设计，不复制预测算法。
+- `web-view` 仅作为临时入口/兼容方案，不作为正式 MVP 主体验。
+- 用户维度以微信 `openid` 为小程序阶段的主键；未来 iOS 可通过账号绑定或服务端用户模型扩展，不让业务数据只绑定某一端。
 
 ## 数据模型
 
