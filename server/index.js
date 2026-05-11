@@ -23,11 +23,15 @@ const agentRoutes = require('./routes/agent');
 const applicationsRoutes = require('./routes/applications');
 const shareRoutes = require('./routes/share');
 const shareStatsRoutes = require('./routes/share-stats');
+const wechatRouteModule = require('./routes/wechat');
+const userRouteModule = require('./routes/user');
+const UserService = require('./services/UserService');
 const basicAuth = require('basic-auth');
 const { requestLogger, errorLogger } = require('./middleware/logger');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const userService = new UserService();
 
 // 支持逗号分隔的多个 CORS 来源（如 "http://localhost:9002,http://localhost:8080"）
 const corsOrigins = (process.env.CORS_ORIGIN || 'http://localhost:9002')
@@ -135,6 +139,8 @@ app.use('/api/firecloud', firecloudRoutes);
 app.use('/api/prediction', predictionRoutes);
 app.use('/api/visitor', visitorRoutes);
 app.use('/api/share', shareStatsRoutes);
+app.use('/api/wechat', wechatRouteModule.createRouter({ userService }));
+app.use('/api/user', userRouteModule.createRouter({ userService }));
 app.use('/api/heatmap', heatmapRoutes);
 app.use('/api/spots', spotsRoutes);
 app.use('/api/photos', photosRoutes);

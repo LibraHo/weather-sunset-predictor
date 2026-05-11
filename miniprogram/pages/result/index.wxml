@@ -13,6 +13,11 @@
       </view>
     </view>
 
+    <view class="action-row">
+      <button class="ghost-button action-button" bindtap="toggleFavorite">{{isFavorite ? '取消收藏' : '收藏地点'}}</button>
+      <button class="ghost-button action-button" open-type="share">分享评分</button>
+    </view>
+
     <view class="section-head">关键天气因子</view>
     <metric-grid metrics="{{metrics}}" />
 
