@@ -1,0 +1,53 @@
+<view class="container home-page">
+  <view class="hero">
+    <view class="brand glow-title">霞客</view>
+    <view class="headline">先看分，再决定要不要出门。</view>
+    <view class="caption">面向朝霞 / 晚霞的快速查分工具。</view>
+  </view>
+
+  <location-search value="{{locationText}}" locating="{{locating}}" bind:change="onLocationChange" bind:confirm="onSearch" bind:locate="onUseCurrentLocation" />
+
+  <view class="control-card xiake-card">
+    <view class="section-title">预测类型</view>
+    <view class="segmented">
+      <view class="segment {{period === 'sunrise' ? 'active' : ''}}" data-value="sunrise" bindtap="selectPeriod">朝霞</view>
+      <view class="segment {{period === 'sunset' ? 'active' : ''}}" data-value="sunset" bindtap="selectPeriod">晚霞</view>
+    </view>
+
+    <view class="section-title date-title">日期</view>
+    <view class="segmented">
+      <view class="segment {{day === 'today' ? 'active' : ''}}" data-value="today" bindtap="selectDay">今日</view>
+      <view class="segment {{day === 'tomorrow' ? 'active' : ''}}" data-value="tomorrow" bindtap="selectDay">明日</view>
+    </view>
+  </view>
+
+  <view class="error-card" wx:if="{{errorMessage}}">{{errorMessage}}</view>
+
+  <button class="primary-button query-button" loading="{{loading}}" disabled="{{loading}}" bindtap="onSearch">
+    {{loading ? '正在查分…' : '查询霞光分数'}}
+  </button>
+
+  <view class="placeholder-grid">
+    <view class="mini-card xiake-card">
+      <view class="mini-head">最近查询</view>
+      <block wx:if="{{recentQueries.length}}">
+        <view class="query-item" wx:for="{{recentQueries}}" wx:key="savedAt" data-location="{{item.locationName}}" bindtap="useHistory">
+          <text>{{item.locationName}}</text>
+          <text class="subtle-text">{{item.periodLabel}} · {{item.dayLabel}}</text>
+        </view>
+      </block>
+      <view class="empty" wx:else>查过的地点会放在这里。</view>
+    </view>
+
+    <view class="mini-card xiake-card">
+      <view class="mini-head">收藏地点</view>
+      <block wx:if="{{favorites.length}}">
+        <view class="query-item" wx:for="{{favorites}}" wx:key="name" data-location="{{item.name}}" bindtap="useHistory">
+          <text>{{item.name}}</text>
+          <text class="subtle-text">一键复查</text>
+        </view>
+      </block>
+      <view class="empty" wx:else>常去的机位后续可收藏。</view>
+    </view>
+  </view>
+</view>
