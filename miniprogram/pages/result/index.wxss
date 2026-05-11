@@ -28,6 +28,20 @@
   font-weight: 800;
 }
 
+
+.action-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18rpx;
+}
+
+.action-button {
+  height: 82rpx;
+  margin: 0;
+  font-size: 28rpx;
+  line-height: 82rpx;
+}
+
 .section-head {
   margin-top: 6rpx;
   color: #f5c87a;

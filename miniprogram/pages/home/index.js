@@ -1,5 +1,6 @@
 import { searchLocations } from '../../services/geocoding.js';
 import { getEnhancedPrediction } from '../../services/prediction.js';
+import { addRecentLocation, listRecentLocations } from '../../services/user.js';
 
 const app = getApp();
 
@@ -29,13 +30,28 @@ Page({
     const recent = app.globalData.recentQueries || wx.getStorageSync('recentQueries') || [];
     const favorites = app.globalData.favorites || wx.getStorageSync('favoriteLocations') || [];
     this.setData({
-      recentQueries: recent.map((item) => ({
-        ...item,
-        periodLabel: item.period === 'sunrise' ? '朝霞' : '晚霞',
-        dayLabel: item.day === 'tomorrow' ? '明日' : '今日'
-      })),
+      recentQueries: decorateRecentQueries(recent),
       favorites
     });
+
+    this.refreshRemoteRecentQueries();
+  },
+
+  async refreshRemoteRecentQueries() {
+    if (this.refreshingRemoteRecent) return;
+    this.refreshingRemoteRecent = true;
+    try {
+      const recent = await listRecentLocations();
+      if (recent.length) {
+        app.globalData.recentQueries = recent.slice(0, 5);
+        wx.setStorageSync('recentQueries', app.globalData.recentQueries);
+        this.setData({ recentQueries: decorateRecentQueries(app.globalData.recentQueries) });
+      }
+    } catch (error) {
+      // Remote history is optional; local recent queries keep the page useful offline.
+    } finally {
+      this.refreshingRemoteRecent = false;
+    }
   },
 
   onLocationChange(event) {
@@ -51,7 +67,19 @@ Page({
   },
 
   useHistory(event) {
+    const index = event.currentTarget.dataset.index;
+    const item = this.data.recentQueries[index] || null;
     const location = event.currentTarget.dataset.location;
+    if (item) {
+      this.setData({
+        locationText: item.locationName || item.name || location,
+        coordinate: item.lat !== null && item.lon !== null ? { lat: item.lat, lon: item.lon } : item.coordinate || null,
+        period: item.type || item.period || this.data.period,
+        day: item.day || this.data.day,
+        errorMessage: ''
+      });
+      return;
+    }
     if (location) this.setData({ locationText: location, errorMessage: '' });
   },
 
@@ -94,6 +122,7 @@ Page({
       const raw = await this.callPredictionService(query);
       const prediction = normalizePrediction(raw, query);
       app.rememberQuery(query);
+      this.recordRecentLocation(query);
       app.saveLatestPrediction(prediction);
 
       wx.navigateTo({
@@ -152,8 +181,37 @@ Page({
       type: query.period,
       date
     });
+  },
+
+  async recordRecentLocation(query) {
+    try {
+      await addRecentLocation(buildRecentLocation(query));
+    } catch (error) {
+      // Local app.rememberQuery already captured the interaction.
+    }
   }
 });
+
+export function buildRecentLocation(query = {}) {
+  return {
+    name: query.locationName || query.location || '当前位置',
+    locationName: query.locationName || query.location || '当前位置',
+    lat: query.coordinate?.lat ?? query.lat,
+    lon: query.coordinate?.lon ?? query.lon,
+    type: query.period || query.type || 'sunset',
+    day: query.day || 'today',
+    date: resolvePredictionDate(query.day)
+  };
+}
+
+function decorateRecentQueries(recent = []) {
+  return recent.map((item) => ({
+    ...item,
+    locationName: item.locationName || item.name || item.location,
+    periodLabel: (item.period || item.type) === 'sunrise' ? '朝霞' : '晚霞',
+    dayLabel: item.day === 'tomorrow' ? '明日' : '今日'
+  }));
+}
 
 function wxPromise(fn, options) {
   return new Promise((resolve, reject) => {

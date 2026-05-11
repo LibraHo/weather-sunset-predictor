@@ -12,11 +12,11 @@ Alex 判断公众号入口偏奇怪，小程序更适合霞客；后续还计划
 ### 任务拆分
 - [x] 52.1 小程序项目脚手架：在当前 repo 新增 `miniprogram/`，包含 `app.json/app.js/app.wxss`、基础 pages/components/services/utils 目录；不影响现有 Web 构建与部署。（PR #661，branch `feat/miniprogram-mvp-shell`）
 - [x] 52.2 API 契约梳理：列出小程序 MVP 依赖的共享接口，确认 `/api/prediction/enhanced`、`/api/geocoding/search`、`/api/photos`、照片上传、收藏/最近查询、微信登录等接口边界。（PR #661，已落地 `miniprogram/services/*` 契约壳）
-- [ ] 52.3 微信登录与用户维度：新增或设计 `POST /api/wechat/login`，服务端以 openid 关联收藏、最近查询、照片投稿归属；为未来 iOS 预留跨端 userId/identity provider 模型。（PR #661 已落地 `miniprogram/services/auth.js` 客户端契约；服务端实现留到 52.6）
+- [x] 52.3 微信登录与用户维度：新增或设计 `POST /api/wechat/login`，服务端以 openid 关联收藏、最近查询、照片投稿归属；为未来 iOS 预留跨端 userId/identity provider 模型。（branch `feat/miniprogram-user-share`，新增服务端微信登录、`userId + identities`、小程序登录 token）
 - [x] 52.4 首页查分 MVP：原生小程序页面支持手动搜索地点、当前位置、朝霞/晚霞切换、今日/明日评分。（PR #661）
 - [x] 52.5 预测结果页：展示分数、质量等级、最佳观赏窗口、高/中/低云、能见度、湿度、AOD 和简短解释；不复制 Web 端长段落。（PR #661）
-- [ ] 52.6 收藏与最近查询：本地缓存 + 服务端持久化，按 openid 同步。
-- [ ] 52.7 小程序分享：实现微信小程序卡片分享，标题、描述、缩略图遵循霞客分享卡片规范。
+- [x] 52.6 收藏与最近查询：本地缓存 + 服务端持久化，按 openid 同步。（branch `feat/miniprogram-user-share`，服务端按 `userId` 存储，微信 openid 只作为 identity）
+- [x] 52.7 小程序分享：实现微信小程序卡片分享，标题、描述、缩略图遵循霞客分享卡片规范。（branch `feat/miniprogram-user-share`，已实现短标题与稳定路由参数；分享图后续随 52.17 深化）
 - [ ] 52.8 照片上传：使用 `wx.chooseMedia` / `wx.uploadFile` 接入现有照片 API 或小程序兼容接口，保留地点、拍摄时间、上传者、上传时间元数据。
 - [ ] 52.9 分享地图入口：第一阶段可跳 H5 或轻量原生地图/列表；正式阶段做原生 marker/聚合，并复用 `/api/photos`。
 - [ ] 52.10 微信平台配置清单：整理 request/upload/download/web-view 合法域名，定位权限、类目、`app.json` 声明、审核注意事项。

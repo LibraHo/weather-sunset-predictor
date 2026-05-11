@@ -31,7 +31,7 @@
     <view class="mini-card xiake-card">
       <view class="mini-head">最近查询</view>
       <block wx:if="{{recentQueries.length}}">
-        <view class="query-item" wx:for="{{recentQueries}}" wx:key="savedAt" data-location="{{item.locationName}}" bindtap="useHistory">
+        <view class="query-item" wx:for="{{recentQueries}}" wx:key="savedAt" data-index="{{index}}" data-location="{{item.locationName}}" bindtap="useHistory">
           <text>{{item.locationName}}</text>
           <text class="subtle-text">{{item.periodLabel}} · {{item.dayLabel}}</text>
         </view>
