@@ -19,17 +19,17 @@ Alex 判断公众号入口偏奇怪，小程序更适合霞客；后续还计划
 - [x] 52.7 小程序分享：实现微信小程序卡片分享，标题、描述、缩略图遵循霞客分享卡片规范。（branch `feat/miniprogram-user-share`，已实现短标题与稳定路由参数；分享图后续随 52.17 深化）
 - [x] 52.8 照片上传：使用 `wx.chooseMedia` / `wx.uploadFile` 接入现有照片 API 或小程序兼容接口，保留地点、拍摄时间、上传者、上传时间元数据。（branch `feat/miniprogram-photo-map` 已完成照片 service、上传 API、token 鉴权和元数据契约；branch `feat/miniprogram-photo-upload-page` 新增上传页面、选图、上传进度、元数据表单和分享地图入口）
 - [x] 52.9 分享地图入口：第一阶段可跳 H5 或轻量原生地图/列表；正式阶段做原生 marker/聚合，并复用 `/api/photos`。（branch `feat/miniprogram-photo-map`，已新增小程序照片列表和复制 H5 分享地图入口）
-- [ ] 52.10 微信平台配置清单：整理 request/upload/download/web-view 合法域名，定位权限、类目、`app.json` 声明、审核注意事项。
+- [x] 52.10 微信平台配置清单：整理 request/upload/download/web-view 合法域名，定位权限、类目、`app.json` 声明、审核注意事项。（PR #668，已补齐 `docs/miniprogram-platform-checklist.md`；不代表真机/体验版验收已完成）
 - [ ] 52.11 测试与验收：小程序 service 层单测、后端新增接口测试、微信开发者工具人工验收清单。
 - [ ] 52.12 MVP 信息架构：定稿 tab/页面层级、页面跳转、空状态、错误状态和深链参数；明确哪些页面原生实现，哪些阶段性跳 H5。
 - [ ] 52.13 共享 API 契约文档：为小程序和未来 iOS 固化登录、搜索、预测、收藏、最近查询、照片上传、分享、地图入口接口的请求/响应/错误码/限流。
 - [ ] 52.14 服务端用户模型设计：新增 `userId + identities` 设计，微信 `openid` 只作为 identity provider；收藏、最近查询、投稿归属绑定 `userId`。
-- [ ] 52.15 小程序设计 token 与基础组件：把 Web 主题变量映射为 WXSS token，并沉淀按钮、卡片、分数、指标、列表、弹窗等基础组件规范。
+- [x] 52.15 小程序设计 token 与基础组件：设计语言规范完成，详见 `docs/miniprogram-design-language.md`；组件实现继续由小程序样式 PR 落地。
 - [ ] 52.16 地图与图表技术验证：验证小程序 `map` marker/聚合、canvas/自定义图表可行性；明确哪些 Web Leaflet/Chart.js 能力不直接搬。
 - [ ] 52.17 小程序分享与落地页：设计 `onShareAppMessage` 参数、分享卡片标题/图、落地页路由和 H5 fallback。
 - [ ] 52.18 照片上传 MVP 契约：确认 `wx.chooseMedia` / `wx.uploadFile`、EXIF/手动地点时间、上传鉴权、限流、审核/隐藏策略。
-- [ ] 52.19 微信平台与隐私审核清单：整理合法域名、类目权限、定位/相册授权文案、隐私协议、用户数据删除路径和提审材料。
-- [ ] 52.20 未来 iOS 兼容检查：每个新增 API、用户字段、设计 token 和分享/上传流程都要标注 iOS 是否可复用或需要平台适配。
+- [x] 52.19 微信平台与隐私审核清单：已在 `docs/miniprogram-platform-checklist.md` 补齐合法域名、类目权限、定位/相册授权、隐私协议、数据删除路径和提审材料口径；实际提审证据待体验版/真机验收后填写。
+- [x] 52.20 未来 iOS 兼容检查：已在 `design/miniprogram-ios.md` 和 `docs/miniprogram-platform-checklist.md` 明确 API、用户字段、设计 token、分享/上传/地图数据结构的 iOS 复用口径；后续每个实现 PR 继续逐项复核。
 - [ ] 52.21 小程序调试链路：明确微信开发者工具、真机调试、体验版验收流程；记录 AppID、基础库版本、机型、网络环境和调试日志要求。
 - [ ] 52.22 小程序自动化测试：接入 service 单测、后端 API 合约测试，并预留 `miniprogram-automator` 页面自动化和 `miniprogram-ci` 构建/预览入口。
 - [ ] 52.23 真机验收矩阵：覆盖 iOS/Android 的定位、相册、上传、分享、地图 marker/聚合、弱网、授权拒绝和接口失败降级。
