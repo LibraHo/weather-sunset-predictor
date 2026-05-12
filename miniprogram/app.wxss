@@ -1,12 +1,21 @@
+/*
+ * 霞客小程序设计语言 / WXSS 不使用 CSS var：
+ * Token 以注释分组 + 稳定 utility class + 固定色值沉淀，页面可直接复用。
+ */
+
+/* Color tokens
+ * Night sky: #070b16 / #0a0f1e / #0e1930
+ * Sunset gold: #ffd166 / #f5c87a
+ * Warm orange: #fb923c / #f97316
+ * Text strong: #ffffff; text body: rgba(255, 255, 255, 0.72); text muted: rgba(255, 255, 255, 0.58)
+ * Glass surface: rgba(18, 28, 52, 0.68); glass stroke: rgba(255, 255, 255, 0.10)
+ * Success: #bbf7d0; Danger: #fecaca
+ */
 page {
   min-height: 100%;
   color: rgba(255, 255, 255, 0.92);
   background-color: #0a0f1e;
-  background-image:
-    radial-gradient(circle at 20% 8%, rgba(255, 184, 107, 0.22) 0, transparent 34%),
-    radial-gradient(circle at 85% 0%, rgba(100, 168, 240, 0.18) 0, transparent 30%),
-    radial-gradient(circle at 12% 76%, rgba(167, 139, 250, 0.16) 0, transparent 34%),
-    linear-gradient(180deg, #0a0f1e 0%, #0e1930 54%, #07101f 100%);
+  background-image: linear-gradient(180deg, #070b16 0%, #0a0f1e 42%, #0e1930 72%, #07101f 100%);
   font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
 }
 
@@ -16,26 +25,66 @@ page {
   padding: 32rpx 28rpx 56rpx;
 }
 
-.xiake-card {
+/* Background utilities */
+.xiake-bg-night-sky {
+  background-color: #0a0f1e;
+  background-image: linear-gradient(180deg, #070b16 0%, #0a0f1e 42%, #0e1930 72%, #07101f 100%);
+}
+
+.xiake-bg-sunset-band {
+  background: linear-gradient(135deg, rgba(255, 209, 102, 0.16) 0%, rgba(251, 146, 60, 0.10) 44%, rgba(18, 28, 52, 0.72) 100%);
+}
+
+/* Surface utilities */
+.xiake-card,
+.xiake-glass-card,
+.glass-card {
   box-sizing: border-box;
   border: 1rpx solid rgba(255, 255, 255, 0.10);
   border-radius: 16rpx;
-  background: rgba(18, 28, 52, 0.66);
+  background: rgba(18, 28, 52, 0.68);
   box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.30), inset 0 1rpx 0 rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(24rpx);
 }
 
-.glow-title {
+.xiake-panel {
+  box-sizing: border-box;
+  border: 1rpx solid rgba(255, 255, 255, 0.08);
+  border-radius: 14rpx;
+  background: rgba(7, 16, 31, 0.58);
+}
+
+/* Text hierarchy */
+.xiake-title,
+.headline {
+  color: #ffffff;
+  font-weight: 900;
+}
+
+.glow-title,
+.xiake-accent,
+.warm-accent {
   color: #f5c87a;
   font-weight: 800;
   letter-spacing: 0.04em;
 }
 
-.subtle-text {
+.xiake-body {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.subtle-text,
+.xiake-muted {
   color: rgba(255, 255, 255, 0.58);
 }
 
-.primary-button {
+.xiake-faint {
+  color: rgba(255, 255, 255, 0.44);
+}
+
+/* Buttons */
+.primary-button,
+.xiake-button-primary {
   height: 96rpx;
   border: 0;
   border-radius: 16rpx;
@@ -47,13 +96,15 @@ page {
   box-shadow: 0 16rpx 34rpx rgba(251, 146, 60, 0.28);
 }
 
-.primary-button[disabled] {
+.primary-button[disabled],
+.xiake-button-primary[disabled] {
   color: rgba(255, 255, 255, 0.52);
   background: rgba(255, 255, 255, 0.12);
   box-shadow: none;
 }
 
-.ghost-button {
+.ghost-button,
+.xiake-button-ghost {
   border: 1rpx solid rgba(251, 191, 36, 0.18);
   border-radius: 14rpx;
   color: #f5c87a;
@@ -62,4 +113,44 @@ page {
 
 button::after {
   border: 0;
+}
+
+/* Inputs */
+.xiake-input,
+.xiake-textarea,
+.location-input,
+.field-input,
+.field-textarea {
+  box-sizing: border-box;
+  border: 1rpx solid rgba(255, 255, 255, 0.10);
+  border-radius: 14rpx;
+  color: rgba(255, 255, 255, 0.94);
+  background: rgba(7, 16, 31, 0.58);
+}
+
+.input-placeholder,
+.xiake-placeholder {
+  color: rgba(255, 255, 255, 0.36);
+}
+
+/* Status messages */
+.xiake-state-error,
+.error-card,
+.error-state {
+  border: 1rpx solid rgba(248, 113, 113, 0.28);
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.26);
+}
+
+.xiake-state-success,
+.success-card {
+  border: 1rpx solid rgba(74, 222, 128, 0.22);
+  color: #bbf7d0;
+  background: rgba(22, 101, 52, 0.22);
+}
+
+.xiake-state-waiting {
+  border: 1rpx solid rgba(148, 163, 184, 0.18);
+  color: rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.10);
 }

@@ -216,32 +216,23 @@ user_identities
 
 ## 设计语言复用
 
-小程序不能直接复用 Web 的 HTML/CSS/DOM，但必须复用：
-- 品牌名、Logo、图标风格。
-- 霞客主题色：暖橙、日光金、夜空深蓝、玻璃感层级。
-- 评分表达：分数、等级、最佳窗口、云层指标。
-- 文案口径：普通用户能理解，避免工程词。
-- 分享卡片构图和信息优先级。
+小程序设计语言的可执行规范已沉淀到 `docs/miniprogram-design-language.md`。该文档是后续小程序样式 PR 和未来 iOS 视觉对齐的准源，覆盖：
 
-建议在 `miniprogram/` 内维护轻量 token：
+- 深色天空底色、日光金/暖橙强调、玻璃层级。
+- `8px` 标准卡片圆角语义，以及小标签、大面板、圆形角标的圆角区间。
+- 工具型密度：首屏优先展示地点、分数、最佳窗口和关键天气指标。
+- 按钮、卡片、输入、状态、照片、地图的组件规则。
+- 普通用户文案口径，避免暴露算法权重、接口字段或工程术语。
 
-```css
---xiake-bg: var(--color-bg)
---xiake-surface: var(--color-surface)
---xiake-card-bg: var(--color-card)
---xiake-card-border: var(--color-border)
---xiake-text: var(--color-text)
---xiake-text-muted: var(--color-text-muted)
---xiake-accent: var(--color-sunset)
---xiake-accent-strong: var(--color-sun-gold)
---xiake-danger: var(--color-danger)
---xiake-radius-card: 8px
---xiake-shadow-card: ...
-```
+跨端复用原则：
 
-这些 token 与 Web 主题变量语义保持一致，但实现可按小程序 WXSS 约束调整。
+- 小程序不能直接复用 Web 的 HTML/CSS/DOM，也不把 WXSS 变量名当作长期契约。
+- 未来 iOS 复用的是 token 语义：颜色角色、层级、圆角、字号区间、信息优先级、状态语义和分享/上传/地图数据结构。
+- 平台实现可以不同：小程序用 WXML/WXSS 与微信组件，iOS 用 SwiftUI/UIKit 与原生地图/相册能力。
+- 新增 token 或组件时，必须能解释其跨端语义；如果只服务微信组件私有实现，不应进入共享设计语言。
 
 组件策略：
+
 - 先沉淀 `ScoreHero`、`MetricGrid`、`LocationSearch`、`FavoriteButton`、`PhotoUploader`、`ShareCardPreview`。
 - 用户可见文案进入小程序 locale 文件，至少维护 `zh-CN`、`zh-TW`、`en-US`。
 - 不把 Web 的装饰性布局完整复制到小程序；小程序优先保证扫读、点击热区和性能。
