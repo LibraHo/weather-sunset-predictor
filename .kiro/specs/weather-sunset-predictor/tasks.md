@@ -1,6 +1,6 @@
 # 📋 Weather Sunset Predictor 任务清单
 
-**最后更新**：2026-05-11
+**最后更新**：2026-05-12
 
 ---
 
@@ -20,19 +20,19 @@ Alex 判断公众号入口偏奇怪，小程序更适合霞客；后续还计划
 - [x] 52.8 照片上传：使用 `wx.chooseMedia` / `wx.uploadFile` 接入现有照片 API 或小程序兼容接口，保留地点、拍摄时间、上传者、上传时间元数据。（branch `feat/miniprogram-photo-map` 已完成照片 service、上传 API、token 鉴权和元数据契约；branch `feat/miniprogram-photo-upload-page` 新增上传页面、选图、上传进度、元数据表单和分享地图入口）
 - [x] 52.9 分享地图入口：第一阶段可跳 H5 或轻量原生地图/列表；正式阶段做原生 marker/聚合，并复用 `/api/photos`。（branch `feat/miniprogram-photo-map`，已新增小程序照片列表和复制 H5 分享地图入口）
 - [x] 52.10 微信平台配置清单：整理 request/upload/download/web-view 合法域名，定位权限、类目、`app.json` 声明、审核注意事项。（PR #668，已补齐 `docs/miniprogram-platform-checklist.md`；不代表真机/体验版验收已完成）
-- [ ] 52.11 测试与验收：小程序 service 层单测、后端新增接口测试、微信开发者工具人工验收清单。
-- [ ] 52.12 MVP 信息架构：定稿 tab/页面层级、页面跳转、空状态、错误状态和深链参数；明确哪些页面原生实现，哪些阶段性跳 H5。
-- [ ] 52.13 共享 API 契约文档：为小程序和未来 iOS 固化登录、搜索、预测、收藏、最近查询、照片上传、分享、地图入口接口的请求/响应/错误码/限流。
-- [ ] 52.14 服务端用户模型设计：新增 `userId + identities` 设计，微信 `openid` 只作为 identity provider；收藏、最近查询、投稿归属绑定 `userId`。
+- [x] 52.11 测试与验收：小程序 service 层单测、后端新增接口测试、微信开发者工具人工验收清单。（小程序 12 个单测套件覆盖 service/page/config；服务端已有微信登录、用户、照片上传接口测试；人工验收清单见 `docs/miniprogram-platform-checklist.md`，真实执行仍依赖 AppID/真机/体验版）
+- [x] 52.12 MVP 信息架构：定稿 tab/页面层级、页面跳转、空状态、错误状态和深链参数；明确哪些页面原生实现，哪些阶段性跳 H5。（准源见 `design/miniprogram-ios.md` 与 `docs/miniprogram-completion-workflow.md`）
+- [x] 52.13 共享 API 契约文档：为小程序和未来 iOS 固化登录、搜索、预测、收藏、最近查询、照片上传、分享、地图入口接口的请求/响应/错误码/限流。（准源见 `design/miniprogram-ios.md` 共享 API 契约草案与对应 server/miniprogram 测试）
+- [x] 52.14 服务端用户模型设计：新增 `userId + identities` 设计，微信 `openid` 只作为 identity provider；收藏、最近查询、投稿归属绑定 `userId`。（已在 PR #664 落地服务端微信登录、session token、收藏/最近查询按 `userId` 归属）
 - [x] 52.15 小程序设计 token 与基础组件：设计语言规范完成，详见 `docs/miniprogram-design-language.md`；组件实现继续由小程序样式 PR 落地。
-- [ ] 52.16 地图与图表技术验证：验证小程序 `map` marker/聚合、canvas/自定义图表可行性；明确哪些 Web Leaflet/Chart.js 能力不直接搬。
-- [ ] 52.17 小程序分享与落地页：设计 `onShareAppMessage` 参数、分享卡片标题/图、落地页路由和 H5 fallback。
-- [ ] 52.18 照片上传 MVP 契约：确认 `wx.chooseMedia` / `wx.uploadFile`、EXIF/手动地点时间、上传鉴权、限流、审核/隐藏策略。
+- [x] 52.16 地图与图表技术验证：验证小程序 `map` marker/聚合、canvas/自定义图表可行性；明确哪些 Web Leaflet/Chart.js 能力不直接搬。（设计文档已明确小程序不直接搬 Leaflet/Chart.js；Web 聚合 PR #663 已合并；原生 `map` 真机性能验收列入平台清单）
+- [x] 52.17 小程序分享与落地页：设计 `onShareAppMessage` 参数、分享卡片标题/图、落地页路由和 H5 fallback。（PR #664 已落地稳定分享参数与短标题；H5 fallback 口径见 `design/miniprogram-ios.md`）
+- [x] 52.18 照片上传 MVP 契约：确认 `wx.chooseMedia` / `wx.uploadFile`、EXIF/手动地点时间、上传鉴权、限流、审核/隐藏策略。（PR #667 已落地上传页和 service；上传鉴权/限流/审核口径见 `design/miniprogram-ios.md` 与平台清单）
 - [x] 52.19 微信平台与隐私审核清单：已在 `docs/miniprogram-platform-checklist.md` 补齐合法域名、类目权限、定位/相册授权、隐私协议、数据删除路径和提审材料口径；实际提审证据待体验版/真机验收后填写。
 - [x] 52.20 未来 iOS 兼容检查：已在 `design/miniprogram-ios.md` 和 `docs/miniprogram-platform-checklist.md` 明确 API、用户字段、设计 token、分享/上传/地图数据结构的 iOS 复用口径；后续每个实现 PR 继续逐项复核。
-- [ ] 52.21 小程序调试链路：明确微信开发者工具、真机调试、体验版验收流程；记录 AppID、基础库版本、机型、网络环境和调试日志要求。
-- [ ] 52.22 小程序自动化测试：接入 service 单测、后端 API 合约测试，并预留 `miniprogram-automator` 页面自动化和 `miniprogram-ci` 构建/预览入口。
-- [ ] 52.23 真机验收矩阵：覆盖 iOS/Android 的定位、相册、上传、分享、地图 marker/聚合、弱网、授权拒绝和接口失败降级。
+- [x] 52.21 小程序调试链路：明确微信开发者工具、真机调试、体验版验收流程；记录 AppID、基础库版本、机型、网络环境和调试日志要求。（流程与记录字段见 `design/miniprogram-ios.md` 和 `docs/miniprogram-platform-checklist.md`；真实执行待外部条件）
+- [x] 52.22 小程序自动化测试：接入 service 单测、后端 API 合约测试，并预留 `miniprogram-automator` 页面自动化和 `miniprogram-ci` 构建/预览入口。（service/page/config 与后端合约测试已接入；automator/ci 入口已在设计文档预留，待真实 AppID 和 CI secret 后启用）
+- [x] 52.23 真机验收矩阵：覆盖 iOS/Android 的定位、相册、上传、分享、地图 marker/聚合、弱网、授权拒绝和接口失败降级。（矩阵见 `design/miniprogram-ios.md` 与 `docs/miniprogram-platform-checklist.md`；真实验收待外部条件）
 
 ### 设计文档
 - 总览：`design.md`
@@ -67,14 +67,15 @@ Alex 要求照片分享补齐更像“相册/地图”的元数据体验：上�
 - [x] 51.3 自动读取：继续从 EXIF 读取 GPS 与拍摄时间；接入反向地理编码，根据经纬度自动建议地点名称；自动地点仅写展示字段，不反向修改坐标。（PR #656/#657）
 - [x] 51.4 后台编辑管理：照片列表支持编辑上传者、地点、拍摄时间、描述、经纬度；上传时间只读不可改；保存后同步影响 `/api/photos` 与 `/gallery`。（PR #656）
 - [x] 51.5 时间规则：服务端记录上传时间，以服务端时间为准；展示层格式化展示，后台只读不可改。（PR #656）
-- [ ] 51.6 地图聚合展示：同一地点/近距离多图按 zoom 和像素距离聚合成 stack marker，显示代表缩略图 + 数量角标；点击后展示缩略图列表/小网格。
-- [ ] 51.7 Marker/Popup 细节：marker、popup、聚合列表优先使用 `thumbUrl`，无缩略图才 fallback 原图；popup 展示上传者、地点、拍摄时间、上传时间。（popup 元数据已完成，聚合列表待做）
-- [ ] 51.8 i18n 与无障碍：新增用户可见文案优先维护 `zh-CN`、`zh-TW`、`en-US`，其他语言默认英文 fallback；图片、按钮、时间文本有可读 label。
-- [ ] 51.9 测试与验证：补 PhotoService/API 单测、上传表单单测、地图聚合纯函数测试；用至少 50/100/150km 半径业务测试不回归；浏览器验证移动端聚合不遮挡缩放控件。（PhotoService/admin/geocoding 部分测试已补，地图聚合待做）
+- [x] 51.6 地图聚合展示：同一地点/近距离多图按 zoom 和像素距离聚合成 stack marker，显示代表缩略图 + 数量角标；点击后展示缩略图列表/小网格。（PR #663，merge commit `d92dc72`）
+- [x] 51.7 Marker/Popup 细节：marker、popup、聚合列表优先使用 `thumbUrl`，无缩略图才 fallback 原图；popup 展示上传者、地点、拍摄时间、上传时间。（PR #655/#663）
+- [x] 51.8 i18n 与无障碍：新增用户可见文案优先维护 `zh-CN`、`zh-TW`、`en-US`，其他语言默认英文 fallback；图片、按钮、时间文本有可读 label。（PR #663）
+- [x] 51.9 测试与验证：补 PhotoService/API 单测、上传表单单测、地图聚合纯函数测试；用至少 50/100/150km 半径业务测试不回归；浏览器验证移动端聚合不遮挡缩放控件。（PR #656/#657/#663）
 
 ### 已完成记录
 - PR #656：后台照片编辑、照片元数据、Grid 状态、地图底图/标签等修复；merge commit `896c46f`。
 - PR #657：上传表单新增解析地址/解析经纬度/解析拍摄时间；高德地理编码调用写入后台 API 日志；merge commit `0813de8`。
+- PR #663：照片地图聚合、缩略图优先、聚合交互和相关测试；merge commit `d92dc72`。
 
 ### 建议 PR 拆分 / 分发
 - 已完成：元数据基础、上传与编辑体验主体。
