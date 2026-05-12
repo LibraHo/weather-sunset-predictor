@@ -36,22 +36,22 @@ apiAccess: 'Accesso API'
     "methodology": {
       "title": "Come viene calcolato il punteggio",
       "intro": "L'indice nuvole rosse combina quattro fattori chiave per stimare se vale la pena osservare il tramonto.",
-      "versionLabel": "Algorithm version: 2026.05.11-opening-upper-cloud-carrier-v1",
-      "versionDesc": "This version improves light-path scoring: low clouds block sunlight, while rich mid/high clouds are treated mainly as the color canvas.",
+      "versionLabel": "Algorithm version: 2026.05.13-formation-factors-v1",
+      "versionDesc": "This version makes fire-cloud analysis a stable four-factor summary: cloud carrier, light path, air rendering, and limits. The scoring formula is unchanged.",
       changelogTitle: "Version update history",
       changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
       changelog: {
               "latest": {
-                      "date": "2026-05-11",
-                      "title": "Opening upper-cloud carrier protection v1",
-                      "summary": "When low clouds are scarce and the solar direction has an opening, mid/high clouds are treated more as sunset-glow canvas instead of a thick cloud curtain.",
-                      "validation": "Validation: the Summer Palace opening-cloud sample is no longer over-penalized, while haze, rain, and low-cloud obstruction cases remain cautious."
+                      "date": "2026-05-13",
+                      "title": "Four-factor analysis v1",
+                      "summary": "Fire-cloud analysis is now grouped into cloud carrier, light path, air rendering, and limits to reduce scattered notes.",
+                      "validation": "Validation: aerosol, low-cloud blockage, gray haze, thick cloud, and rain cases are grouped into the right factor; the scoring formula is unchanged."
               },
               "current": {
-                      "date": "2026-05-10",
-                      "title": "Low-cloud-led light path v3",
-                      "summary": "Light path now focuses on low clouds and the solar-direction corridor. Rich mid/high clouds are treated as sunset-glow canvas first.",
-                      "validation": "Validation: full high-cloud canvas with scarce low cloud is no longer treated as low-cloud overcast; low-cloud and rain cases stay low."
+                      "date": "2026-05-12",
+                      "title": "Aerosol weak carrier v1",
+                      "summary": "When clouds are scarce, moderate thin haze must be activated by an open sun-direction light path before it contributes as a weak red-sunset carrier.",
+                      "validation": "Validation: the Beijing weak red-sunset sample moves into the low-30s, while clean clear sky, heavy haze/dust, low-cloud blockage, and gray curtains stay low."
               }
       },
       "factors": {
@@ -309,6 +309,44 @@ apiAccess: 'Accesso API'
 "formationAnalysis": {
       "title": "Analisi delle condizioni per le nubi infuocate",
       "groups": { "positive": "Condizioni favorevoli", "neutral": "Fattori neutri", "warning": "Aspetti da osservare" },
+      "factors": {
+        "carrier": {
+          "title": "Cloud carrier",
+          "status": { "good": "Good", "fair": "Fair", "weak": "Weak" },
+          "desc": {
+            "good": "Mid/high clouds can catch sunset light and act as today's main color canvas.",
+            "fair": "Some colorable cloud layers exist, but their area or height is not ideal.",
+            "weak": "Suitable mid/high clouds are missing, so broad fire clouds are unlikely."
+          }
+        },
+        "lightPath": {
+          "title": "Light path",
+          "status": { "good": "Good", "fair": "Fair", "weak": "Weak" },
+          "desc": {
+            "good": "The sun direction is relatively open, so light can reach the cloud base.",
+            "fair": "There is some obstruction toward the sun, so color may stay local.",
+            "weak": "Low clouds or a cloud wall block the light path, making it hard for light to reach the clouds."
+          }
+        },
+        "rendering": {
+          "title": "Air rendering",
+          "status": { "good": "Good", "fair": "Fair", "weak": "Weak" },
+          "desc": {
+            "good": "Moderate particles and moisture make warm red-orange color easier to show.",
+            "fair": "Air conditions are ordinary; color mainly depends on clouds and light path.",
+            "weak": "Gray air or excessive particles can make color darker and flatter."
+          }
+        },
+        "limits": {
+          "title": "Limits",
+          "status": { "good": "None obvious", "fair": "Slight", "weak": "Obvious" },
+          "desc": {
+            "good": "No obvious suppressing condition is present.",
+            "fair": "Minor unfavorable factors may reduce duration or color intensity.",
+            "weak": "Rain, thick cloud, low-cloud blockage, or gray haze can suppress the overall result."
+          }
+        }
+      },
       "high": { "abundant": "Nubi alte abbondanti ({{value}}%)", "abundantDesc": "Buona base per catturare il colore", "sufficient": "Nubi alte sufficienti ({{value}}%)", "sufficientDesc": "Buon supporto per i colori del tramonto", "moderate": "Nubi alte moderate ({{value}}%)", "moderateDesc": "Possibile, ma con colori più leggeri", "few": "Poche nubi alte ({{value}}%)", "fewDesc": "Manca il principale supporto del colore" },
       "mid": { "balanced": "Nubi medie equilibrate ({{value}}%)", "balancedDesc": "Aggiungono diffusione del colore e profondità", "few": "Poche nubi medie ({{value}}%)", "fewHighCloudDesc": "Le nubi alte possono ancora portare colore", "fewDesc": "La stratificazione può essere limitata", "thick": "Nubi medie spesse ({{value}}%)", "thickDesc": "Può rendere la scena più grigia e meno trasparente" },
       "low": { "few": "Poche nubi basse ({{value}}%)", "fewDesc": "La vista dovrebbe restare aperta", "some": "Alcune nubi basse ({{value}}%)", "someDesc": "Possono coprire parte del colore vicino all’orizzonte", "thick": "Nubi basse spesse ({{value}}%)", "thickDesc": "Alto rischio di ostruzione" },

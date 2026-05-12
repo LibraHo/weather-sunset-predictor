@@ -9423,6 +9423,65 @@ html[data-actual-theme="dark"] #weather-section #weekly-cards.weekly-cards-conta
 }
 
 /* 2026-05-10: formation analysis cards must read like compact notes, not split ledgers. */
+.app-analysis-card .analysis-factor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.app-analysis-card .analysis-factor {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--theme-card-border);
+  border-radius: 8px;
+  background: var(--theme-panel-soft);
+  box-shadow: none;
+}
+
+.app-analysis-card .analysis-factor-heading {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin-bottom: 6px;
+}
+
+.app-analysis-card .analysis-factor-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--theme-accent);
+}
+
+.app-analysis-card .analysis-factor-title,
+.app-analysis-card .analysis-factor-status,
+.app-analysis-card .analysis-factor p {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  letter-spacing: 0;
+}
+
+.app-analysis-card .analysis-factor-title {
+  color: var(--theme-text);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.app-analysis-card .analysis-factor-status {
+  color: var(--theme-accent-strong);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.app-analysis-card .analysis-factor p {
+  margin: 0;
+  color: var(--theme-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  text-align: left;
+}
+
 .app-analysis-card .analysis-item {
   grid-template-columns: 22px minmax(0, 1fr) !important;
   align-items: start !important;
@@ -9471,6 +9530,25 @@ html[data-actual-theme="dark"] #weather-section #weekly-cards.weekly-cards-conta
 }
 
 @media (max-width: 430px) {
+  .app-analysis-card .analysis-factor-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .app-analysis-card .analysis-factor {
+    padding: 10px;
+  }
+
+  .app-analysis-card .analysis-factor-heading {
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    gap: 7px;
+  }
+
+  .app-analysis-card .analysis-factor-icon {
+    width: 20px;
+    height: 20px;
+  }
+
   .app-analysis-card .analysis-item {
     grid-template-columns: 20px minmax(0, 1fr) !important;
     gap: 8px !important;

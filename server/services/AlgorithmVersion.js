@@ -1,10 +1,16 @@
 'use strict';
 
-const ALGORITHM_VERSION = '2026.05.12-aerosol-carrier-v1';
+const ALGORITHM_VERSION = '2026.05.13-formation-factors-v1';
 
 const ALGORITHM_CHANGELOG = [
   {
     version: ALGORITHM_VERSION,
+    date: '2026-05-13',
+    title: 'Four-factor formation analysis',
+    summary: 'Formation analysis is now grouped into four stable user-facing factors: cloud carrier, light path, air rendering, and limiting factors. The scoring formula is unchanged.'
+  },
+  {
+    version: '2026.05.12-aerosol-carrier-v1',
     date: '2026-05-12',
     title: 'Aerosol weak carrier with light-path activation',
     summary: 'When clouds are scarce, moderate aerosol can act as a weak sunset color carrier only if the sun-direction light path is open. Heavy haze and dust still suppress the score.'

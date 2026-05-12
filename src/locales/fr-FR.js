@@ -67,22 +67,22 @@ const translations = {
     "methodology": {
       "title": "Comment le score est calculé",
       "intro": "L'indice de nuages rouges est calculé à partir de quatre facteurs clés pour vous aider à décider rapidement si la soirée vaut le déplacement.",
-      "versionLabel": "Algorithm version: 2026.05.11-opening-upper-cloud-carrier-v1",
-      "versionDesc": "This version improves light-path scoring: low clouds block sunlight, while rich mid/high clouds are treated mainly as the color canvas.",
+      "versionLabel": "Version de l’algorithme : 2026.05.13-formation-factors-v1",
+      "versionDesc": "Cette version stabilise l’analyse en quatre facteurs : support nuageux, trajet lumineux, rendu de l’air et limites. La formule de score ne change pas.",
       changelogTitle: "Version update history",
       changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
       changelog: {
               "latest": {
-                      "date": "2026-05-11",
-                      "title": "Opening upper-cloud carrier protection v1",
-                      "summary": "When low clouds are scarce and the solar direction has an opening, mid/high clouds are treated more as sunset-glow canvas instead of a thick cloud curtain.",
-                      "validation": "Validation: the Summer Palace opening-cloud sample is no longer over-penalized, while haze, rain, and low-cloud obstruction cases remain cautious."
+                      "date": "2026-05-13",
+                      "title": "Analyse à quatre facteurs v1",
+                      "summary": "L’analyse est regroupée en support nuageux, trajet lumineux, rendu de l’air et limites afin de réduire les notes dispersées.",
+                      "validation": "Validation : aérosols, blocage bas, brume grise, nuages épais et pluie sont rattachés au bon facteur ; la formule reste inchangée."
               },
               "current": {
-                      "date": "2026-05-10",
-                      "title": "Low-cloud-led light path v3",
-                      "summary": "Light path now focuses on low clouds and the solar-direction corridor. Rich mid/high clouds are treated as sunset-glow canvas first.",
-                      "validation": "Validation: full high-cloud canvas with scarce low cloud is no longer treated as low-cloud overcast; low-cloud and rain cases stay low."
+                      "date": "2026-05-12",
+                      "title": "Support faible par aérosols v1",
+                      "summary": "Quand les nuages manquent, une brume modérée ne contribue comme support faible que si le trajet lumineux vers le soleil est ouvert.",
+                      "validation": "Validation : l’exemple de Pékin monte dans les bas 30, tandis que ciel clair, forte brume/poussière, blocage bas et rideaux gris restent bas."
               }
       },
       "factors": {
@@ -362,6 +362,44 @@ const translations = {
 "formationAnalysis": {
       "title": "Analyse des conditions de formation des nuages flamboyants",
       "groups": { "positive": "Conditions favorables", "neutral": "Facteurs neutres", "warning": "Points à surveiller" },
+      "factors": {
+        "carrier": {
+          "title": "Support nuageux",
+          "status": { "good": "Bon", "fair": "Moyen", "weak": "Faible" },
+          "desc": {
+            "good": "Les nuages moyens et élevés peuvent capter la lumière du couchant et former le principal support de couleur.",
+            "fair": "Quelques couches peuvent se colorer, mais leur étendue ou leur hauteur n'est pas idéale.",
+            "weak": "Les bons nuages moyens/élevés manquent, donc un grand embrasement est peu probable."
+          }
+        },
+        "lightPath": {
+          "title": "Trajet lumineux",
+          "status": { "good": "Bon", "fair": "Moyen", "weak": "Faible" },
+          "desc": {
+            "good": "La direction du soleil est assez dégagée, la lumière peut atteindre la base des nuages.",
+            "fair": "Une partie du trajet est gênée, la couleur risque de rester locale.",
+            "weak": "Des nuages bas ou un mur nuageux bloquent le trajet de la lumière."
+          }
+        },
+        "rendering": {
+          "title": "Rendu de l'air",
+          "status": { "good": "Bon", "fair": "Moyen", "weak": "Faible" },
+          "desc": {
+            "good": "Des particules et de l'humidité modérées favorisent les tons chauds et rouges.",
+            "fair": "L'air est ordinaire ; la couleur dépend surtout des nuages et du trajet lumineux.",
+            "weak": "Un air gris ou trop chargé peut rendre les couleurs plus sombres et plus plates."
+          }
+        },
+        "limits": {
+          "title": "Limites",
+          "status": { "good": "Aucune nette", "fair": "Légères", "weak": "Nettes" },
+          "desc": {
+            "good": "Aucune condition de suppression évidente.",
+            "fair": "De petits facteurs défavorables peuvent réduire la durée ou l'intensité des couleurs.",
+            "weak": "Pluie, nuages épais, blocage bas ou brume grise peuvent réduire fortement le résultat."
+          }
+        }
+      },
       "high": { "abundant": "Nuages hauts abondants ({{value}}%)", "abundantDesc": "Bonne base pour capter la couleur", "sufficient": "Nuages hauts suffisants ({{value}}%)", "sufficientDesc": "Bon support pour les teintes du coucher", "moderate": "Nuages hauts modérés ({{value}}%)", "moderateDesc": "Possible, mais les couleurs peuvent être plus légères", "few": "Peu de nuages hauts ({{value}}%)", "fewDesc": "Le principal support de couleur manque" },
       "mid": { "balanced": "Nuages moyens équilibrés ({{value}}%)", "balancedDesc": "Ajoute diffusion des couleurs et profondeur", "few": "Peu de nuages moyens ({{value}}%)", "fewHighCloudDesc": "Les nuages hauts peuvent encore porter la couleur", "fewDesc": "Le relief des couches peut être limité", "thick": "Nuages moyens épais ({{value}}%)", "thickDesc": "Peut rendre l’image plus grise et moins transparente" },
       "low": { "few": "Peu de nuages bas ({{value}}%)", "fewDesc": "La vue devrait rester dégagée", "some": "Quelques nuages bas ({{value}}%)", "someDesc": "Peut masquer une partie des couleurs près de l’horizon", "thick": "Nuages bas épais ({{value}}%)", "thickDesc": "Risque d’obstruction élevé" },

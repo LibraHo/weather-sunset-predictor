@@ -1465,6 +1465,26 @@ class PredictionController {
     const fallback = {
       'title': '火烧云形成条件分析',
       'groups.positive': '有利条件', 'groups.neutral': '一般因素', 'groups.warning': '注意因素',
+      'factors.carrier.title': '云层载体',
+      'factors.carrier.status.good': '较好', 'factors.carrier.status.fair': '一般', 'factors.carrier.status.weak': '较弱',
+      'factors.carrier.desc.good': '中高云能承接日落光线，是今天主要的显色画布。',
+      'factors.carrier.desc.fair': '有一些可被染色的云层，但面积或高度不够理想。',
+      'factors.carrier.desc.weak': '缺少合适的中高云，天空不容易形成大片火烧云。',
+      'factors.lightPath.title': '光路条件',
+      'factors.lightPath.status.good': '较好', 'factors.lightPath.status.fair': '一般', 'factors.lightPath.status.weak': '较弱',
+      'factors.lightPath.desc.good': '太阳方向相对通透，光线有机会照到云底。',
+      'factors.lightPath.desc.fair': '太阳方向有一定遮挡，晚霞可能只出现在局部。',
+      'factors.lightPath.desc.weak': '低云或云墙挡住光路，光线不容易打到云层。',
+      'factors.rendering.title': '空气显色',
+      'factors.rendering.status.good': '较好', 'factors.rendering.status.fair': '一般', 'factors.rendering.status.weak': '较弱',
+      'factors.rendering.desc.good': '空气里有适度颗粒和水汽，颜色更容易偏暖、偏红。',
+      'factors.rendering.desc.fair': '空气条件普通，颜色表现主要看云层和光路。',
+      'factors.rendering.desc.weak': '空气偏灰或颗粒过重，颜色容易变暗、变淡。',
+      'factors.limits.title': '限制因素',
+      'factors.limits.status.good': '无明显', 'factors.limits.status.fair': '轻微', 'factors.limits.status.weak': '明显',
+      'factors.limits.desc.good': '没有明显压制条件。',
+      'factors.limits.desc.fair': '有轻微不利因素，可能压低持续时间或颜色强度。',
+      'factors.limits.desc.weak': '降水、厚云、低云遮挡或灰幕明显，会压低整体表现。',
       'high.abundant': '高层云充沛（{{value}}%）', 'high.abundantDesc': '色彩载体丰富，火烧云基础扎实',
       'high.sufficient': '高层云充足（{{value}}%）', 'high.sufficientDesc': '具备较好的霞光染色载体',
       'high.moderate': '高层云适中（{{value}}%）', 'high.moderateDesc': '可形成火烧云，但色彩可能偏淡',
@@ -1624,100 +1644,125 @@ class PredictionController {
   }
 
   buildAnalysisGroups(prediction) {
+    return this.buildAnalysisFactors(prediction);
+  }
+
+  buildAnalysisFactors(prediction) {
     const weather = this.extractAnalysisWeather(prediction);
-    const groups = [
-      { title: this._analysisText('groups.positive'), type: 'positive', icon: 'ok', items: [] },
-      { title: this._analysisText('groups.neutral'), type: 'neutral', icon: 'info', items: [] },
-      { title: this._analysisText('groups.warning'), type: 'warning', icon: 'warn', items: [] }
-    ];
-    const add = (groupType, title, desc) => {
-      const group = groups.find(g => g.type === groupType);
-      group.items.push({ title, desc });
-    };
-
-    if (weather.high >= 60) add('positive', this._analysisText('high.abundant', { value: weather.high.toFixed(0) }), this._analysisText('high.abundantDesc'));
-    else if (weather.high >= 35) add('positive', this._analysisText('high.sufficient', { value: weather.high.toFixed(0) }), this._analysisText('high.sufficientDesc'));
-    else if (weather.high >= 15) add('neutral', this._analysisText('high.moderate', { value: weather.high.toFixed(0) }), this._analysisText('high.moderateDesc'));
-    else add('warning', this._analysisText('high.few', { value: weather.high.toFixed(0) }), this._analysisText('high.fewDesc'));
-
-    if (weather.mid >= 20 && weather.mid <= 60) add('positive', this._analysisText('mid.balanced', { value: weather.mid.toFixed(0) }), this._analysisText('mid.balancedDesc'));
-    else if (weather.mid < 20) add('neutral', this._analysisText('mid.few', { value: weather.mid.toFixed(0) }), weather.high >= 35 ? this._analysisText('mid.fewHighCloudDesc') : this._analysisText('mid.fewDesc'));
-    else add('warning', this._analysisText('mid.thick', { value: weather.mid.toFixed(0) }), this._analysisText('mid.thickDesc'));
-
-    if (weather.low < 15) add('positive', this._analysisText('low.few', { value: weather.low.toFixed(0) }), this._analysisText('low.fewDesc'));
-    else if (weather.low < 35) add('neutral', this._analysisText('low.some', { value: weather.low.toFixed(0) }), this._analysisText('low.someDesc'));
-    else add('warning', this._analysisText('low.thick', { value: weather.low.toFixed(0) }), this._analysisText('low.thickDesc'));
-
-    if (weather.visibility >= 15) add('positive', this._analysisText('visibility.good', { value: weather.visibility.toFixed(0) }), this._analysisText('visibility.goodDesc'));
-    else if (weather.visibility >= 8) add('neutral', this._analysisText('visibility.moderate', { value: weather.visibility.toFixed(0) }), this._analysisText('visibility.moderateDesc'));
-    else add('warning', this._analysisText('visibility.low', { value: weather.visibility.toFixed(0) }), this._analysisText('visibility.lowDesc'));
-
-    if (weather.humidity >= 40 && weather.humidity <= 70) add('positive', this._analysisText('humidity.moderate', { value: weather.humidity.toFixed(0) }), this._analysisText('humidity.moderateDesc'));
-    else if (weather.humidity > 70) add('warning', this._analysisText('humidity.high', { value: weather.humidity.toFixed(0) }), this._analysisText('humidity.highDesc'));
-    else add('neutral', this._analysisText('humidity.low', { value: weather.humidity.toFixed(0) }), this._analysisText('humidity.lowDesc'));
-
     const thickHighCloudPenalty = prediction?.thickHighCloudPenalty || prediction?.lightPathAnalysis?.thickHighCloudPenalty;
-    if (thickHighCloudPenalty?.applied) {
-      add('warning', this.i18n.t('prediction.thickHighCloud.analysisTitle'), this.i18n.t('prediction.thickHighCloud.analysisDesc'));
-    }
-
     const cloudThickness = prediction?.cloudThickness || prediction?.lightPathAnalysis?.cloudThickness;
     const denseCarrierCanvasOnly = cloudThickness?.reasons?.includes('dense_upper_cloud_carrier_softened')
       || cloudThickness?.reasons?.includes('opening_upper_cloud_carrier_softened')
       || thickHighCloudPenalty?.reason === 'dense_upper_cloud_carrier_canvas_only'
       || thickHighCloudPenalty?.reason === 'opening_upper_cloud_carrier_canvas_only';
-    if (denseCarrierCanvasOnly) {
-      add('positive', this._analysisText('carrier.dense'), this._analysisText('carrier.denseDesc'));
-    }
-
     const aerosolHazeCap = prediction?.aerosolHazeCap;
-    if (aerosolHazeCap?.applied) {
-      const isExtreme = aerosolHazeCap.level === 'extreme';
-      add('warning',
-        this._analysisText(isExtreme ? 'aerosol.extremeHaze' : 'aerosol.hazeCap'),
-        this._analysisText(isExtreme ? 'aerosol.extremeHazeDesc' : 'aerosol.hazeCapDesc')
-      );
-    }
-
     const carrierAdjustment = prediction?.highCloudCarrierAdjustment;
     const aerosolCarrier = prediction?.aerosolCarrierScore || prediction?.breakdown?.aerosolCarrierScore;
     const postRainAdjustment = prediction?.postRainAdjustment;
-    if (carrierAdjustment?.applied) {
-      add('positive', this._analysisText('carrier.strong'), this._analysisText('carrier.strongDesc'));
-    }
-    if (aerosolCarrier?.activatedScore >= 18) {
-      add('neutral', this._analysisText('aerosol.carrier'), this._analysisText('aerosol.carrierDesc'));
-    }
-
     const lightPathAnalysis = prediction?.lightPathAnalysis || {};
-    if (lightPathAnalysis.capReason === 'overcast_cap_40') {
-      add('warning', this._analysisText('lightPath.lowCloudBlock'), this._analysisText('lightPath.lowCloudBlockDesc'));
-    }
-
     const directional = lightPathAnalysis.directionalAnalysis;
-    if (directional?.reason?.includes('opening')) {
-      add('positive', this._analysisText('lightPath.opening'), this._analysisText('lightPath.openingDesc'));
-    } else if (directional?.reason?.includes('cloud_wall') || directional?.reason?.includes('cloudy_corridor')) {
-      add('warning', this._analysisText('lightPath.wall'), this._analysisText('lightPath.wallDesc'));
+
+    const carrierScore = Number(
+      prediction?.breakdown?.carrierScore ??
+      prediction?.carrierAnalysis?.score ??
+      prediction?.canvasAnalysis?.score ??
+      prediction?.breakdown?.canvasScore
+    );
+    const cloudCanvasScore = Number(
+      prediction?.breakdown?.canvasScore ??
+      prediction?.carrierAnalysis?.cloudCanvasScore ??
+      prediction?.canvasAnalysis?.cloudCanvasScore ??
+      carrierScore
+    );
+    const effectiveCloudCover = Number.isFinite(Number(prediction?.canvasAnalysis?.effectiveCloudCover))
+      ? Number(prediction.canvasAnalysis.effectiveCloudCover)
+      : weather.high * 0.8 + weather.mid * 0.55;
+
+    let carrierLevel = 'weak';
+    if (carrierAdjustment?.applied || denseCarrierCanvasOnly || cloudCanvasScore >= 58 || weather.high >= 60 || effectiveCloudCover >= 48) {
+      carrierLevel = 'good';
+    } else if (cloudCanvasScore >= 30 || weather.high >= 15 || weather.mid >= 20 || aerosolCarrier?.activatedScore >= 18 || effectiveCloudCover >= 18) {
+      carrierLevel = 'fair';
     }
 
-    if (postRainAdjustment?.mode === 'post_rain_clear') {
-      add('positive', this._analysisText('postRain.clear'), this._analysisText('postRain.clearDesc'));
-    } else if (postRainAdjustment?.mode === 'post_rain_gray_curtain') {
-      add('warning', this._analysisText('postRain.gray'), this._analysisText('postRain.grayDesc'));
+    const lightPathScore = Number(prediction?.breakdown?.lightPathScore ?? lightPathAnalysis.score);
+    let lightPathLevel = 'weak';
+    if (directional?.reason?.includes('opening') || lightPathScore >= 65) {
+      lightPathLevel = 'good';
+    } else if (lightPathScore >= 45 || weather.low < 35) {
+      lightPathLevel = 'fair';
+    }
+    if (
+      lightPathAnalysis.capReason === 'overcast_cap_40' ||
+      directional?.reason?.includes('cloud_wall') ||
+      directional?.reason?.includes('cloudy_corridor') ||
+      weather.low >= 60
+    ) {
+      lightPathLevel = lightPathScore >= 45 ? 'fair' : 'weak';
     }
 
-    if (weather.aod != null) {
-      if (weather.aod >= 0.08 && weather.aod <= 0.35) add('positive', this._analysisText('aerosol.moderate', { value: weather.aod.toFixed(2) }), this._analysisText('aerosol.moderateDesc'));
-      else if (weather.aod > 0.35) add('warning', this._analysisText('aerosol.high', { value: weather.aod.toFixed(2) }), this._analysisText('aerosol.highDesc'));
-      else add('neutral', this._analysisText('aerosol.low', { value: weather.aod.toFixed(2) }), this._analysisText('aerosol.lowDesc'));
+    const renderingFactor = Number(prediction?.breakdown?.renderingFactor ?? prediction?.renderingAnalysis?.factor);
+    const aod = Number(weather.aod);
+    let renderingLevel = 'fair';
+    if (
+      postRainAdjustment?.mode === 'post_rain_gray_curtain' ||
+      aerosolHazeCap?.applied ||
+      weather.visibility < 8 ||
+      (Number.isFinite(aod) && aod > 0.45) ||
+      Number(weather.pm10) >= 120 ||
+      Number(weather.dust) >= 80
+    ) {
+      renderingLevel = 'weak';
+    } else if (
+      postRainAdjustment?.mode === 'post_rain_clear' ||
+      aerosolCarrier?.activatedScore >= 18 ||
+      renderingFactor >= 1.03 ||
+      (weather.visibility >= 15 && weather.humidity >= 35 && weather.humidity <= 75 && (!Number.isFinite(aod) || aod <= 0.35))
+    ) {
+      renderingLevel = 'good';
     }
 
-    if (weather.layerCount <= 1 && weather.high >= 35) {
-      add('warning', this._analysisText('layer.single'), this._analysisText('layer.singleDesc'));
+    const precipitation = Number(prediction?.precipitation ?? prediction?.rain ?? prediction?.factors?.precipitation?.value ?? 0);
+    let limitLevel = 'good';
+    const strongLimit = Boolean(
+      prediction?.severeWeatherCap?.reason ||
+      aerosolHazeCap?.applied ||
+      thickHighCloudPenalty?.applied ||
+      prediction?.geometricModel?.feasible === false ||
+      prediction?.occlusionAnalysis?.occluded ||
+      postRainAdjustment?.cap != null ||
+      lightPathAnalysis.capReason === 'overcast_cap_40' ||
+      precipitation > 0.5 ||
+      weather.low >= 60
+    );
+    const mildLimit = Boolean(
+      denseCarrierCanvasOnly ||
+      weather.low >= 25 ||
+      weather.visibility < 15 ||
+      weather.humidity > 75 ||
+      (Number.isFinite(aod) && aod > 0.35) ||
+      precipitation > 0.1
+    );
+    if (strongLimit) {
+      limitLevel = 'weak';
+    } else if (mildLimit) {
+      limitLevel = 'fair';
     }
 
-    return groups.filter(group => group.items.length > 0);
+    const factor = (key, level, icon) => ({
+      title: this._analysisText(`factors.${key}.title`),
+      status: this._analysisText(`factors.${key}.status.${level}`),
+      desc: this._analysisText(`factors.${key}.desc.${level}`),
+      type: level === 'good' ? 'positive' : (level === 'fair' ? 'neutral' : 'warning'),
+      icon
+    });
+
+    return [
+      factor('carrier', carrierLevel, 'cloud'),
+      factor('lightPath', lightPathLevel, lightPathLevel === 'weak' ? 'warn' : 'info'),
+      factor('rendering', renderingLevel, 'leaf'),
+      factor('limits', limitLevel, limitLevel === 'good' ? 'ok' : 'warn')
+    ];
   }
 
   extractAnalysisWeather(prediction) {
@@ -1766,7 +1811,9 @@ class PredictionController {
   }
 
   renderAnalysisCard(groups, conclusion) {
-    const groupHtml = groups.map(group => this.renderAnalysisGroup(group)).join('');
+    const groupHtml = groups.every(group => group.status)
+      ? `<div class="analysis-factor-grid">${groups.map(group => this.renderAnalysisFactor(group)).join('')}</div>`
+      : groups.map(group => this.renderAnalysisGroup(group)).join('');
     return `
       <div class="analysis-card app-analysis-card">
         <div class="analysis-card-title"><span>${this._analysisText('title')}</span></div>
@@ -1796,6 +1843,19 @@ class PredictionController {
         <span class="analysis-item-icon" aria-hidden="true">${this.renderInlineSvgIcon(icon)}</span>
         <span class="analysis-item-copy"><strong>${item.title}</strong><small>${item.desc}</small></span>
       </div>
+    `;
+  }
+
+  renderAnalysisFactor(factor) {
+    return `
+      <section class="analysis-factor analysis-factor-${factor.type}">
+        <div class="analysis-factor-heading">
+          <span class="analysis-factor-icon">${this.renderInlineSvgIcon(factor.icon)}</span>
+          <span class="analysis-factor-title">${factor.title}</span>
+          <strong class="analysis-factor-status">${factor.status}</strong>
+        </div>
+        <p>${factor.desc}</p>
+      </section>
     `;
   }
 
