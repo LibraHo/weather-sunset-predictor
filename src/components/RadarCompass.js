@@ -359,7 +359,7 @@ class RadarCompass {
         stroke-width="${main ? '1' : '0.6'}"/>`;
     }).join('');
 
-    const labelR = R_HIGH * 1.15;
+    const labelR = R_HIGH * 1.08;
     const labels = DIR_ORDER.map(d => {
       const lbl = text[d] || { N: '北', NE: '东北', E: '东', SE: '东南', S: '南', SW: '西南', W: '西', NW: '西北' }[d];
       const [x, y] = this._pt(cx, cy, labelR, this._dirAz(d));
@@ -450,7 +450,7 @@ class RadarCompass {
       ${labels}
     </svg>
   </div>
-  <svg width="${legendSvgWidth}" height="18" style="display:block;margin:4px auto 0;font-family:${zhFont};background:${T.legendBg};border-radius:8px;padding:0 4px;">
+  <svg width="${legendSvgWidth}" height="18" style="display:block;margin:8px auto 0;font-family:${zhFont};background:${T.legendBg};border-radius:8px;padding:0 4px;">
     ${legend}
   </svg>
 </div>`;

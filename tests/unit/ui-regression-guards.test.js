@@ -172,6 +172,8 @@ describe('recent user-reported UI regression guards', () => {
     expect(radarSource).toContain('width:min(${S}px,100%)');
     expect(radarSource).toContain('aspect-ratio:1 / 1');
     expect(radarSource).toContain('width:100%;height:100%;display:block;');
+    expect(radarSource).toContain('const labelR = R_HIGH * 1.08;');
+    expect(radarSource).toContain('margin:8px auto 0');
   });
 });
 
