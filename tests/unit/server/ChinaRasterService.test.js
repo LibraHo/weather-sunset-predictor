@@ -77,6 +77,8 @@ describe('ChinaRasterService.getRaster', () => {
 
     expect(raster).toHaveProperty('date');
     expect(raster).toHaveProperty('updatedAt');
+    expect(raster).toHaveProperty('generatedAt');
+    expect(raster).toHaveProperty('sourceUpdatedAt');
     expect(raster).toHaveProperty('period', 'sunset');
     expect(raster).toHaveProperty('resolution', 0.5);
     expect(raster).toHaveProperty('width');
@@ -159,7 +161,8 @@ describe('ChinaRasterService.getRaster', () => {
     const second = await chinaRasterService.getRaster('sunset', 0.5);
 
     expect(second).toBe(first);
-    expect(first.updatedAt).toBe('2000-01-01T00:00:00.000Z');
+    expect(first.updatedAt).toBe(first.generatedAt);
+    expect(first.sourceUpdatedAt).toBe('2000-01-01T00:00:00.000Z');
     expect(first._cachedAt).toEqual(expect.any(Number));
     expect(mockGridService.refreshIfStale).toHaveBeenCalledTimes(1);
     expect(mockGridService.getCache).toHaveBeenCalledTimes(1);
