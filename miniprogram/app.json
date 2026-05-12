@@ -12,6 +12,14 @@
     "backgroundColor": "#0a0f1e",
     "backgroundTextStyle": "light"
   },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于查询当前位置的朝霞/晚霞预测，并辅助填写照片投稿地点。"
+    }
+  },
+  "requiredPrivateInfos": [
+    "getLocation"
+  ],
   "style": "v2",
   "lazyCodeLoading": "requiredComponents",
   "usingComponents": {}
