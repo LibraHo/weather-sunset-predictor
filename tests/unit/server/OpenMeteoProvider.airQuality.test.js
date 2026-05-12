@@ -75,4 +75,75 @@ describe('OpenMeteoProvider air quality merge', () => {
     expect(result.providerMeta.unsupportedFields).toContain('air_quality');
     expect(result.providerMeta.degradedReason).toContain('air_quality_unavailable');
   });
+
+  test('fetchWeatherDataBatch merges aerosol fields for every grid point', async () => {
+    const provider = new OpenMeteoProvider();
+    const payloads = [
+      makeWeatherPayload(),
+      {
+        ...makeWeatherPayload(),
+        hourly: {
+          ...makeWeatherPayload().hourly,
+          cloud_cover_high: [70, 72]
+        }
+      }
+    ];
+    const airPayloads = [
+      makeAirPayload(),
+      {
+        hourly: {
+          ...makeAirPayload().hourly,
+          aerosol_optical_depth: [0.58, 0.61],
+          dust: [12, 14],
+          pm2_5: [36, 39],
+          pm10: [66, 70]
+        }
+      }
+    ];
+
+    provider._getWithRetry = jest.fn(async (_params, _timeout, label) => {
+      if (String(label).startsWith('air-quality-batch')) {
+        return { data: airPayloads };
+      }
+      return { data: payloads };
+    });
+
+    const result = await provider.fetchWeatherDataBatch([
+      { lat: 32, lon: 119 },
+      { lat: 31, lon: 118 }
+    ], 2, 'best_match');
+
+    expect(result['32,119'].data[0]).toMatchObject({
+      aerosolOpticalDepth: 0.18,
+      dust: 3,
+      pm2_5: 12,
+      pm10: 24
+    });
+    expect(result['31,118'].data[0]).toMatchObject({
+      aerosolOpticalDepth: 0.58,
+      dust: 12,
+      pm2_5: 36,
+      pm10: 66
+    });
+    expect(result['32,119'].providerMeta.airQualitySource).toBe('openmeteo_air_quality');
+    expect(result['31,118'].providerMeta.airQualitySource).toBe('openmeteo_air_quality');
+  });
+
+  test('fetchWeatherDataBatch degrades every point when batch air quality fails', async () => {
+    const provider = new OpenMeteoProvider();
+    provider._getWithRetry = jest.fn(async (_params, _timeout, label) => {
+      if (String(label).startsWith('air-quality-batch')) throw new Error('air batch timeout');
+      return { data: [makeWeatherPayload(), makeWeatherPayload()] };
+    });
+
+    const result = await provider.fetchWeatherDataBatch([
+      { lat: 32, lon: 119 },
+      { lat: 31, lon: 118 }
+    ], 2, 'best_match');
+
+    expect(result['32,119'].data[0].aerosolOpticalDepth).toBeUndefined();
+    expect(result['31,118'].data[0].aerosolOpticalDepth).toBeUndefined();
+    expect(result['32,119'].providerMeta.unsupportedFields).toContain('air_quality');
+    expect(result['31,118'].providerMeta.degradedReason).toContain('air_quality_unavailable');
+  });
 });

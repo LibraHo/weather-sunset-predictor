@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import ChinaMapCanvas, { selectCitiesForZoom } from '../../../src/components/ChinaMapCanvas.js';
 import { MAP_CITY_NAME_I18N, getLocalizedMapCityName } from '../../../src/data/mapCityNames.js';
 import fs from 'fs';
@@ -32,6 +33,59 @@ describe('ChinaMapCanvas city data coverage', () => {
     });
     expect(galleryMap._options.showScoreLegend).toBe(false);
     expect(galleryMap._options.enableScoreQuery).toBe(false);
+  });
+
+  it('queries exact point prediction before falling back to raster samples for click scores', async () => {
+    const originalFetch = global.fetch;
+    global.fetch = jest.fn(async (url) => {
+      if (url === '/api/prediction/enhanced') {
+        return {
+          ok: true,
+          json: async () => ({ success: true, data: { score: 35 } })
+        };
+      }
+      throw new Error('raster fallback should not be called');
+    });
+
+    try {
+      const map = new ChinaMapCanvas();
+      map._currentPeriod = 'sunset';
+      const score = await map._fetchExactPointScore(32.0603, 118.7969);
+
+      expect(score).toBe(35);
+      expect(global.fetch).toHaveBeenCalledWith('/api/prediction/enhanced', expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      }));
+      const body = JSON.parse(global.fetch.mock.calls[0][1].body);
+      expect(body).toMatchObject({ lat: 32.0603, lon: 118.7969, type: 'sunset' });
+    } finally {
+      global.fetch = originalFetch;
+    }
+  });
+
+  it('falls back to raster sample when exact point prediction is unavailable', async () => {
+    const originalFetch = global.fetch;
+    global.fetch = jest.fn(async (url) => {
+      if (url === '/api/prediction/enhanced') {
+        return { ok: false, json: async () => ({}) };
+      }
+      if (String(url).startsWith('/api/spots/china/raster?')) {
+        return { ok: true, json: async () => ({ score: 73 }) };
+      }
+      throw new Error(`unexpected url ${url}`);
+    });
+
+    try {
+      const map = new ChinaMapCanvas();
+      map._currentPeriod = 'sunset';
+      const score = await map._fetchExactPointScore(32.0603, 118.7969);
+
+      expect(score).toBe(73);
+      expect(global.fetch.mock.calls[1][0]).toContain('/api/spots/china/raster?period=sunset');
+    } finally {
+      global.fetch = originalFetch;
+    }
   });
 
   it('includes major Southeast Asia city labels for basemap only', () => {
