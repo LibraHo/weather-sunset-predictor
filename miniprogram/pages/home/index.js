@@ -70,6 +70,8 @@ Page({
     const index = event.currentTarget.dataset.index;
     const item = this.data.recentQueries[index] || null;
     const location = event.currentTarget.dataset.location;
+    const lat = toNumberOrNull(event.currentTarget.dataset.lat);
+    const lon = toNumberOrNull(event.currentTarget.dataset.lon);
     if (item) {
       this.setData({
         locationText: item.locationName || item.name || location,
@@ -80,7 +82,13 @@ Page({
       });
       return;
     }
-    if (location) this.setData({ locationText: location, errorMessage: '' });
+    if (location) {
+      this.setData({
+        locationText: location,
+        coordinate: lat !== null && lon !== null ? { lat, lon } : null,
+        errorMessage: ''
+      });
+    }
   },
 
   async onUseCurrentLocation() {
@@ -257,7 +265,16 @@ function friendlyError(error) {
 function resolvePredictionDate(day) {
   const date = new Date();
   if (day === 'tomorrow') date.setDate(date.getDate() + 1);
-  return date.toISOString();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${d}`;
+}
+
+function toNumberOrNull(value) {
+  if (value === undefined || value === null || value === '') return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
 }
 
 function formatBestWindow(value) {

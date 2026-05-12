@@ -42,7 +42,7 @@
     <view class="mini-card xiake-card">
       <view class="mini-head">收藏地点</view>
       <block wx:if="{{favorites.length}}">
-        <view class="query-item" wx:for="{{favorites}}" wx:key="name" data-location="{{item.name}}" bindtap="useHistory">
+        <view class="query-item" wx:for="{{favorites}}" wx:key="name" data-location="{{item.name}}" data-lat="{{item.lat}}" data-lon="{{item.lon}}" bindtap="useHistory">
           <text>{{item.name}}</text>
           <text class="subtle-text">一键复查</text>
         </view>
