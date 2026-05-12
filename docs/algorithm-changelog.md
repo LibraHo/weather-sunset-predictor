@@ -7,6 +7,23 @@
 3. 火烧云形成条件文字分析
 4. 对应回归测试/样本回放
 
+## 2026.05.12-aerosol-carrier-v1
+
+- 日期：2026-05-12
+- 代码：`server/services/EnhancedPredictionService.js`
+- 背景：北京 2026-05-12 晚霞样本中，中高云画布很少，模型给约 20 分；但现场能看到红色太阳盘和一点暖色天光，说明适度薄雾/气溶胶在光路通畅时也能提供弱显色载体，只是不应被当成典型火烧云。
+- 改动：
+  - 将最终评分里的“画布分”系统化为“载体分”：`carrierScore = max(cloudCanvasScore, activatedAerosolCarrier)`。
+  - 新增气溶胶弱载体分：适度 AOD/PM 可提供低上限的红日落载体；必须由光路分激活，光路差时不加分。
+  - 重霾、沙尘、低能见度、低云遮挡和降水仍按衰减/限制处理，不会因为气溶胶而抬高。
+- 预期影响：
+  - 云很少但有红太阳/暖色散射的普通日落，从 20 多分抬到 30 多分，表达为“有一点日落观赏性，但不是典型火烧云”。
+  - 好火烧云、高云载体场景基本不变；南京厚灰幕、重霾/沙尘和低云遮挡场景不抬高。
+- 回归测试：
+  - `tests/unit/server/EnhancedPredictionService.test.js`：北京弱红日落、干净晴空、光路未激活、重霾反例。
+  - `tests/unit/controllers/PredictionController.test.js`：火烧云分析展示气溶胶弱载体。
+  - `tests/unit/home-methodology-structure.test.js`、i18n 测试：方法页与多语言 key 同步。
+
 ## 2026.05.11-opening-upper-cloud-carrier-v1
 
 - 日期：2026-05-11

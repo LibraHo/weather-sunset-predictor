@@ -74,16 +74,16 @@ export default {
     methodology: {
       title: '火烧云计算方法',
       intro: '火烧云指数由四个关键因子综合计算，帮助你快速判断当天是否值得蹲守晚霞。',
-      versionLabel: '算法版本：2026.05.11-opening-upper-cloud-carrier-v1',
-      versionDesc: '本版优化光路判断：低云会遮住太阳光，中高云更多作为晚霞画布，不再只因为总云量高就压低光路。',
+      versionLabel: '算法版本：2026.05.12-aerosol-carrier-v1',
+      versionDesc: '本版把评分里的画布扩展为“载体”：中高云仍决定火烧云上限，适度薄雾只在光路通畅时提供普通红日落的弱载体。',
       changelogTitle: "版本更新记录",
       changelogHint: "用于回溯每次算法调整的原因、影响和验证方式",
       changelog: {
               "latest": {
-                      "date": "2026-05-11",
-                      "title": "开口型中高云保护 v1",
-                      "summary": "低云少、太阳方向有透光开口时，中高云更多按晚霞画布处理，减少把可染色云带误判成厚云幕。",
-                      "validation": "验证：颐和园开口型中高云样本不再过度压低；灰霾、降水和低云遮挡场景仍保持谨慎。"
+                      "date": "2026-05-12",
+                      "title": "气溶胶弱载体 v1",
+                      "summary": "云层很少时，适度薄雾/气溶胶必须被太阳方向光路激活，才会作为普通红日落的弱载体参与评分。",
+                      "validation": "验证：北京弱红日落可进入 30 多分；干净晴空、重霾沙尘、低云遮挡和厚灰幕场景不被抬高。"
               },
               "current": {
                       "date": "2026-05-10",
@@ -167,13 +167,13 @@ export default {
           level4: '低云>70% → ×0.2（严重遮挡）'
         },
         thickHighCloudPenalty: {
-          title: '6. 厚高云与灰幕修正',
-          subtitle: 'Cloud Thickness · 画布与空气修正',
-          desc: '高云多不一定代表高分；算法会区分“可被染色的中高云载体”和“遮光灰幕”。前者按云面质量修正，后者结合空气质量判断。',
+          title: '7. 载体与灰幕修正',
+          subtitle: 'Carrier Quality · 画布与薄雾',
+          desc: '算法把“能显色的载体”分成云层载体和气溶胶弱载体：中高云决定火烧云上限，适度薄雾只在光路通畅时提供普通红日落的中低分基础。',
           level1: '中高云载体明确：高云很充足，或中高云同时存在且太阳方向有透光开口，低云少、无降水且空气不灰',
-          level2: '这类场景按可染色云面质量修正画布分，光路判断保持独立',
-          level3: '如果云幕很厚或空气发灰，颜色会变暗、变淡',
-          formula: '最终修正 = 云面质量修正 + 灰幕/沙尘/降水/几何限制等独立条件'
+          level2: '云很少时，适度气溶胶必须被太阳方向光路激活，才会作为弱载体参与评分',
+          level3: '如果云幕很厚、重霾或沙尘明显，颜色会变暗变灰，仍按衰减和限制处理',
+          formula: '载体分 = max(云层载体, 气溶胶弱载体 × 光路激活)；最终分 = 载体分×0.8 + 光路分×0.2，再按显色条件修正'
         },
         precipPenalty: {
           title: '6. 降水惩罚系数',
@@ -303,9 +303,9 @@ export default {
       title: '分数明细',
       viewDetails: '查看评分明细',
       finalDisplayed: '最终展示分',
-      baseFormula: '基础分 = 画布 ×0.8 + 光路 ×0.2',
-      baseHint: '云层与光路融合后的基础分',
-      canvasHint: '高云/中云提供色彩载体，低云会遮挡',
+      baseFormula: '基础分 = 载体 ×0.8 + 光路 ×0.2',
+      baseHint: '载体与光路融合后的基础分',
+      canvasHint: '高云/中云提供主要色彩载体，适度薄雾可提供弱载体，低云会遮挡',
       lightPathHint: '太阳光是否能照到云层',
       finalFormula: '最终分 = 基础分 × 修正系数',
       renderingHint: '湿度、能见度影响颜色表现',
@@ -342,11 +342,13 @@ export default {
           occlusion: '遮挡修正',
           carrierFloor: '载体保底',
           postRainCap: '雨后灰幕',
-          displayCalibration: '展示分校准'
+          displayCalibration: '展示分校准',
+          aerosolCarrier: '气溶胶载体'
         },
         details: {
-          cloudCarrier: '可被染色的云面质量',
-          cloudPenalty: '低云 ×{{low}}，阴天 ×{{overcast}}',
+          cloudCarrier: '可被染色的云面或薄雾载体',
+          cloudPenalty: '云画布 {{canvas}}，低云 ×{{low}}，阴天 ×{{overcast}}',
+          aerosolCarrier: '云层很少时，薄雾在光路通畅时可承接一点暖色，光路激活 ×{{activation}}',
           lightPath: '阳光是否能打到云层',
           renderingFactors: '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}',
           afterAdjustments: '结合天气和能见度后',
@@ -409,7 +411,8 @@ formationAnalysis: {
       aerosol: {
         moderate: '气溶胶适中（AOD {{value}}）', moderateDesc: '有利于增强红橙色散射',
         high: '气溶胶偏高（AOD {{value}}）', highDesc: '可能灰霾发暗',
-        low: '空气过于通透（AOD {{value}}）', lowDesc: '颜色可能偏淡'
+        low: '空气过于通透（AOD {{value}}）', lowDesc: '颜色可能偏淡',
+        carrier: '薄雾红日载体', carrierDesc: '云层很少时，适度气溶胶在光路通畅时也能带来一点暖色日落'
       },
       lightPath: {
         opening: '太阳方向有透光开口', openingDesc: '太阳方向的低云较少，光线更容易打到云层',
