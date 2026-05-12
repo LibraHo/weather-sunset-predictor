@@ -15,7 +15,7 @@ describe('admin page structure', () => {
     expect(html).toContain('id="home-view-menu-btn"');
     expect(html).toContain('id="home-view-menu-dropdown"');
     expect(html).toContain('admin-view-option');
-    expect(html).not.toContain('admin-header');
+    expect(html).toContain('admin-header');
     expect(html).not.toContain('admin-view-menu');
 
     ['dashboard', 'ops', 'logs', 'schedule', 'agent', 'photos'].forEach((view) => {
