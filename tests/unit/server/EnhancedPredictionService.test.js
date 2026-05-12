@@ -292,6 +292,89 @@ describe('EnhancedPredictionService', () => {
 
   });
 
+  describe('aerosol weak carrier', () => {
+    test('activates moderate haze as a weak sunset carrier when light path is open', () => {
+      const weatherData = {
+        lowClouds: 0,
+        midClouds: 7,
+        highClouds: 0,
+        visibility: 20,
+        aerosolOpticalDepth: 0.62,
+        pm2_5: 43,
+        pm10: 54,
+        dust: 22
+      };
+      const cloudCanvas = EnhancedPredictionService.scoreCloudCanvas(weatherData);
+      const aerosolCarrier = EnhancedPredictionService.scoreAerosolCarrier(weatherData, { score: 80.4 });
+      const carrier = EnhancedPredictionService.buildCarrierScore(cloudCanvas, aerosolCarrier);
+      const result = EnhancedPredictionService.calculateFinalScore(
+        carrier,
+        { score: 80.4, hasRemoteData: true },
+        { factor: 0.75 },
+        'sunset'
+      );
+
+      expect(cloudCanvas.score).toBeLessThan(15);
+      expect(aerosolCarrier.activatedScore).toBeGreaterThan(30);
+      expect(aerosolCarrier.lightPathActivation).toBe(1);
+      expect(carrier.activeCarrier).toBe('aerosol');
+      expect(result.score).toBeGreaterThanOrEqual(30);
+      expect(result.score).toBeLessThanOrEqual(36);
+      expect(result.status).toBe('light_glow');
+    });
+
+    test('does not lift clean cloudless sky without aerosol signal', () => {
+      const weatherData = {
+        lowClouds: 0,
+        midClouds: 0,
+        highClouds: 0,
+        visibility: 25
+      };
+      const cloudCanvas = EnhancedPredictionService.scoreCloudCanvas(weatherData);
+      const aerosolCarrier = EnhancedPredictionService.scoreAerosolCarrier(weatherData, { score: 85 });
+      const carrier = EnhancedPredictionService.buildCarrierScore(cloudCanvas, aerosolCarrier);
+
+      expect(aerosolCarrier.activatedScore).toBe(0);
+      expect(carrier.activeCarrier).toBe('cloud');
+      expect(carrier.score).toBe(cloudCanvas.score);
+    });
+
+    test('requires light path activation before aerosol can lift the carrier score', () => {
+      const weatherData = {
+        lowClouds: 0,
+        midClouds: 5,
+        highClouds: 0,
+        visibility: 20,
+        aerosolOpticalDepth: 0.45,
+        pm2_5: 40,
+        pm10: 70,
+        dust: 20
+      };
+      const aerosolCarrier = EnhancedPredictionService.scoreAerosolCarrier(weatherData, { score: 45 });
+
+      expect(aerosolCarrier.score).toBeGreaterThan(20);
+      expect(aerosolCarrier.activatedScore).toBe(0);
+      expect(aerosolCarrier.lightPathActivation).toBe(0);
+    });
+
+    test('does not turn heavy haze into a carrier', () => {
+      const weatherData = {
+        lowClouds: 0,
+        midClouds: 8,
+        highClouds: 0,
+        visibility: 5,
+        aerosolOpticalDepth: 0.9,
+        pm2_5: 95,
+        pm10: 190,
+        dust: 130
+      };
+      const aerosolCarrier = EnhancedPredictionService.scoreAerosolCarrier(weatherData, { score: 85 });
+
+      expect(aerosolCarrier.activatedScore).toBe(0);
+      expect(aerosolCarrier.reason).toBe('heavy_haze_suppresses_aerosol_carrier');
+    });
+  });
+
   // ========== 光路评分测试 ==========
   describe('scoreLightPath', () => {
     // LightPathV2 重构后，旧的 remoteData 接口已合并，以下测试基于旧行为，暂时跳过
@@ -735,7 +818,7 @@ describe('EnhancedPredictionService', () => {
       expect(result.cloudThickness.reasons).toContain('dense_upper_cloud_carrier_softened');
       expect(result.algorithm).toMatchObject({
         name: 'EnhancedPredictionService',
-        version: '2026.05.11-opening-upper-cloud-carrier-v1'
+        version: '2026.05.12-aerosol-carrier-v1'
       });
       expect(result.score).toBeGreaterThanOrEqual(50);
       expect(result.score).toBeLessThanOrEqual(60);

@@ -455,16 +455,16 @@
           <!-- 第六部分：厚高云惩罚 -->
           <article class="methodology-item">
             <h3>
-              <span data-i18n="home.methodology.sections.thickHighCloudPenalty.title">7. 厚高云与灰幕修正</span>
-              <small data-i18n="home.methodology.sections.thickHighCloudPenalty.subtitle">Cloud Thickness · Canvas Quality</small>
+              <span data-i18n="home.methodology.sections.thickHighCloudPenalty.title">7. 载体与灰幕修正</span>
+              <small data-i18n="home.methodology.sections.thickHighCloudPenalty.subtitle">Carrier Quality · Canvas & Haze</small>
             </h3>
-            <p data-i18n="home.methodology.sections.thickHighCloudPenalty.desc">高云多不一定代表高分；算法会区分“可被染色的中高云载体”和“遮光灰幕”。前者按云面质量修正，后者结合空气质量判断。</p>
+            <p data-i18n="home.methodology.sections.thickHighCloudPenalty.desc">算法把“能显色的载体”分成云层载体和气溶胶弱载体：中高云决定火烧云上限，适度薄雾只在光路通畅时提供普通红日落的中低分基础。</p>
             <ul class="methodology-detail-list">
               <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level1">中高云载体明确：高云很充足，或中高云同时存在且太阳方向有透光开口，低云少、无降水且空气不灰</li>
-              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level2">这类场景按可染色云面质量修正画布分，光路判断保持独立</li>
-              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level3">如果云幕很厚或空气发灰，颜色会变暗、变淡</li>
+              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level2">云很少时，适度气溶胶必须被太阳方向光路激活，才会作为弱载体参与评分</li>
+              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level3">如果云幕很厚、重霾或沙尘明显，颜色会变暗变灰，仍按衰减和限制处理</li>
             </ul>
-            <p class="methodology-formula" data-i18n="home.methodology.sections.thickHighCloudPenalty.formula">最终修正 = 云面质量修正 + 灰幕/沙尘/降水/几何限制等独立条件</p>
+            <p class="methodology-formula" data-i18n="home.methodology.sections.thickHighCloudPenalty.formula">载体分 = max(云层载体, 气溶胶弱载体 × 光路激活)；最终分 = 载体分×0.8 + 光路分×0.2，再按显色条件修正</p>
           </article>
         </div>
 
@@ -526,7 +526,7 @@
             </ol>
           </div>
           <div class="methodology-version-card">
-            <strong data-i18n="home.methodology.versionLabel">算法版本：2026.05.11-opening-upper-cloud-carrier-v1</strong>
+            <strong data-i18n="home.methodology.versionLabel">算法版本：2026.05.12-aerosol-carrier-v1</strong>
             <span data-i18n="home.methodology.versionDesc">本版优化光路判断：低云会遮住太阳光，中高云更多作为晚霞画布，不再只因为总云量高就压低光路。</span>
           </div>
         </div>

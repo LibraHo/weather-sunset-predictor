@@ -1,10 +1,16 @@
 'use strict';
 
-const ALGORITHM_VERSION = '2026.05.11-opening-upper-cloud-carrier-v1';
+const ALGORITHM_VERSION = '2026.05.12-aerosol-carrier-v1';
 
 const ALGORITHM_CHANGELOG = [
   {
     version: ALGORITHM_VERSION,
+    date: '2026-05-12',
+    title: 'Aerosol weak carrier with light-path activation',
+    summary: 'When clouds are scarce, moderate aerosol can act as a weak sunset color carrier only if the sun-direction light path is open. Heavy haze and dust still suppress the score.'
+  },
+  {
+    version: '2026.05.11-opening-upper-cloud-carrier-v1',
     date: '2026-05-11',
     title: 'Opening upper-cloud carrier guard',
     summary: 'When low clouds are scarce, the sun-direction light path is open, air is clear, and mid/high clouds are both present, thick-cloud signals are softened instead of treating the scene as a fully blocked gray curtain.'

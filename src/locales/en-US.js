@@ -67,16 +67,16 @@ const translations = {
     "methodology": {
       "title": "Fire Cloud Calculation Method",
       "intro": "The Fire Cloud Index comprehensively evaluates sky conditions and optical propagation paths to determine the probability and intensity of fire cloud formation. Below is the complete calculation principle based on meteorological data.",
-      "versionLabel": "Algorithm version: 2026.05.11-opening-upper-cloud-carrier-v1",
-      "versionDesc": "This version improves light-path scoring: low clouds block sunlight, while rich mid/high clouds are treated mainly as the color canvas.",
+      "versionLabel": "Algorithm version: 2026.05.12-aerosol-carrier-v1",
+      "versionDesc": "This version expands the canvas into a carrier score: mid/high clouds still set the fire-cloud ceiling, while moderate thin haze can provide a weak red-sunset carrier only when the light path is open.",
       changelogTitle: "Version update history",
       changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
       changelog: {
               "latest": {
-                      "date": "2026-05-11",
-                      "title": "Opening upper-cloud carrier protection v1",
-                      "summary": "When low clouds are scarce and the solar direction has an opening, mid/high clouds are treated more as sunset-glow canvas instead of a thick cloud curtain.",
-                      "validation": "Validation: the Summer Palace opening-cloud sample is no longer over-penalized, while haze, rain, and low-cloud obstruction cases remain cautious."
+                      "date": "2026-05-12",
+                      "title": "Aerosol weak carrier v1",
+                      "summary": "When clouds are scarce, moderate thin haze must be activated by an open sun-direction light path before it contributes as a weak red-sunset carrier.",
+                      "validation": "Validation: the Beijing weak red-sunset sample moves into the low-30s, while clean clear sky, heavy haze/dust, low-cloud blockage, and gray curtains stay low."
               },
               "current": {
                       "date": "2026-05-10",
@@ -160,13 +160,13 @@ const translations = {
           "level4": "Low Cloud >70% → ×0.2 (severe blockage)"
         },
         "thickHighCloudPenalty": {
-          "title": "6. Cloud Thickness and Haze Corrections",
-          "subtitle": "Cloud Thickness · Canvas and Air Adjustment",
-          "desc": "More high clouds do not always mean a higher score. The model separates colorable mid/high-cloud carriers from gray curtains that weaken light.",
+          "title": "7. Carrier and Haze Corrections",
+          "subtitle": "Carrier Quality · Canvas and Thin Haze",
+          "desc": "The model separates color carriers into cloud carriers and weak aerosol carriers. Mid/high clouds set the fire-cloud ceiling; moderate thin haze only provides a low-to-mid red-sunset base when the light path is open.",
           "level1": "Upper-cloud carrier: either dense high cloud, or mid/high clouds with an opening toward the sun, scarce low clouds, no rain, and clear air",
-          "level2": "In this case cloud thickness adjusts colorable-cloud quality, while light-path judgment stays independent",
-          "level3": "Very thick cloud curtains or gray air can still make colors darker and weaker.",
-          "formula": "Final correction = colorable-cloud quality + independent haze/dust/rain/geometry limits"
+          "level2": "When clouds are scarce, moderate aerosol must be activated by the sun-direction light path before it contributes as a weak carrier",
+          "level3": "Very thick cloud curtains, heavy haze, or dust still darken and gray out the colors.",
+          "formula": "Carrier score = max(cloud carrier, aerosol weak carrier × light-path activation); final score = carrier ×0.8 + light path ×0.2, then rendering corrections"
         },
         "precipPenalty": {
           "title": "6. Precipitation Penalty",
@@ -280,9 +280,9 @@ const translations = {
       "title": "Score details",
       "viewDetails": "View score details",
       "finalDisplayed": "Final displayed score",
-      "baseFormula": "Base score = canvas ×0.8 + light path ×0.2",
-      "baseHint": "Base score after combining clouds and light path",
-      "canvasHint": "High/mid clouds carry color; low clouds can block it",
+      "baseFormula": "Base score = carrier ×0.8 + light path ×0.2",
+      "baseHint": "Base score after combining carrier and light path",
+      "canvasHint": "High/mid clouds are the main color carrier; moderate thin haze can be a weak carrier; low clouds can block it",
       "lightPathHint": "Whether sunlight can reach the clouds",
       "finalFormula": "Final score = base score × correction factors",
       "renderingHint": "Humidity and visibility affect color rendering",
@@ -319,11 +319,13 @@ const translations = {
           "occlusion": "Occlusion",
           "carrierFloor": "Carrier floor",
           "postRainCap": "Post-rain haze",
-          "displayCalibration": "Display calibration"
+          "displayCalibration": "Display calibration",
+          "aerosolCarrier": "Aerosol carrier"
         },
         "details": {
-          "cloudCarrier": "usable colored cloud surface",
-          "cloudPenalty": "low cloud ×{{low}}, overcast ×{{overcast}}",
+          "cloudCarrier": "usable color carrier from cloud or thin haze",
+          "cloudPenalty": "cloud canvas {{canvas}}, low cloud ×{{low}}, overcast ×{{overcast}}",
+          "aerosolCarrier": "thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}",
           "lightPath": "sunlight reaches the cloud layer",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
           "afterAdjustments": "after weather and visibility adjustments",
@@ -362,7 +364,7 @@ const translations = {
       "low": { "few": "Few low clouds ({{value}}%)", "fewDesc": "View should stay open", "some": "Some low clouds ({{value}}%)", "someDesc": "May block horizon color", "thick": "Thick low clouds ({{value}}%)", "thickDesc": "High blocking risk" },
       "visibility": { "good": "Good visibility ({{value}}km)", "goodDesc": "Clear air, good distance", "moderate": "Moderate visibility ({{value}}km)", "moderateDesc": "Saturation may drop", "low": "Low visibility ({{value}}km)", "lowDesc": "Haze or moisture may affect the view" },
       "humidity": { "moderate": "Moderate humidity ({{value}}%)", "moderateDesc": "Helps light scattering", "high": "High humidity ({{value}}%)", "highDesc": "May reduce transparency", "low": "Low humidity ({{value}}%)", "lowDesc": "Dry air may lighten colors" },
-      "aerosol": { "moderate": "Moderate aerosol (AOD {{value}})", "moderateDesc": "Boosts orange-red scattering", "high": "High aerosol (AOD {{value}})", "highDesc": "May look hazy or dull", "low": "Very clear air (AOD {{value}})", "lowDesc": "Colors may be lighter" },
+      "aerosol": { "moderate": "Moderate aerosol (AOD {{value}})", "moderateDesc": "Boosts orange-red scattering", "high": "High aerosol (AOD {{value}})", "highDesc": "May look hazy or dull", "low": "Very clear air (AOD {{value}})", "lowDesc": "Colors may be lighter", "carrier": "Thin-haze red-sunset carrier", "carrierDesc": "When clouds are scarce, moderate aerosol can add some warm sunset color if the light path is open" },
       "lightPath": { "opening": "Opening toward the sun", "openingDesc": "Low clouds are scarce toward the sun, so light can reach the cloud layer more easily", "wall": "Cloud wall toward the sun", "wallDesc": "Low or mid clouds along the solar direction suppress the main score", "lowCloudBlock": "Low clouds block sunlight", "lowCloudBlockDesc": "Low clouds sit in the sun direction, so sunlight struggles to reach mid/high clouds" },
       "postRain": { "clear": "Clear post-rain air", "clearDesc": "Rain in the last 6h is kept as a bonus because visibility and particles are acceptable", "gray": "Post-rain gray-curtain risk", "grayDesc": "Moisture, particles, or weak direct light after rain can turn the glow gray" },
       "carrier": { "strong": "Clear high-cloud carrier", "strongDesc": "High clouds are sufficient, low clouds are scarce, and air is clear enough for a medium/high score base", "dense": "Dense mid/high-cloud carrier", "denseDesc": "High and mid clouds provide a steadier color canvas" },

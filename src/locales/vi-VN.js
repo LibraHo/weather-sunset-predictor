@@ -321,11 +321,13 @@ const translations = {
           "occlusion": "Occlusion",
           "carrierFloor": "Carrier floor",
           "postRainCap": "Post-rain haze",
-          "displayCalibration": "Display calibration"
+          "displayCalibration": "Display calibration",
+          "aerosolCarrier": "Aerosol carrier"
         },
         "details": {
-          "cloudCarrier": "usable colored cloud surface",
-          "cloudPenalty": "low cloud ×{{low}}, overcast ×{{overcast}}",
+          "cloudCarrier": "usable color carrier from cloud or thin haze",
+          "cloudPenalty": "cloud canvas {{canvas}}, low cloud ×{{low}}, overcast ×{{overcast}}",
+          "aerosolCarrier": "thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}",
           "lightPath": "sunlight reaches the cloud layer",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
           "afterAdjustments": "after weather and visibility adjustments",
@@ -367,7 +369,7 @@ const translations = {
       "humidity": { "moderate": "Độ ẩm vừa phải ({{value}}%)", "moderateDesc": "Có lợi cho tán xạ ánh sáng", "high": "Độ ẩm cao ({{value}}%)", "highDesc": "Có thể giảm độ trong", "low": "Độ ẩm thấp ({{value}}%)", "lowDesc": "Không khí khô có thể làm màu nhạt hơn" },
       "lightPath": { "opening": "Opening toward the sun", "openingDesc": "Backend samples 15/30/50/100km along the solar azimuth; the low/mid-cloud corridor is relatively open", "wall": "Cloud wall toward the sun", "wallDesc": "Low or mid clouds along the solar direction suppress the main score" , "lowCloudBlock": "Low clouds block sunlight", "lowCloudBlockDesc": "Low clouds sit in the sun direction, so sunlight struggles to reach mid/high clouds" },
       "postRain": { "clear": "Clear post-rain air", "clearDesc": "Rain in the last 6h is kept as a bonus because visibility and particles are acceptable", "gray": "Post-rain gray-curtain risk", "grayDesc": "Moisture, particles, or weak direct light after rain can make the glow gray" },
-      "aerosol": { "moderate": "Aerosol vừa phải (AOD {{value}})", "moderateDesc": "Tăng tán xạ cam đỏ", "high": "Aerosol cao (AOD {{value}})", "highDesc": "Có thể trông mờ hoặc tối", "low": "Không khí quá trong (AOD {{value}})", "lowDesc": "Màu có thể nhạt hơn" },
+      "aerosol": { "moderate": "Aerosol vừa phải (AOD {{value}})", "moderateDesc": "Tăng tán xạ cam đỏ", "high": "Aerosol cao (AOD {{value}})", "highDesc": "Có thể trông mờ hoặc tối", "low": "Không khí quá trong (AOD {{value}})", "lowDesc": "Màu có thể nhạt hơn", "carrier": "Thin-haze red-sunset carrier", "carrierDesc": "When clouds are scarce, moderate aerosol can add some warm sunset color if the light path is open" },
       "carrier": { "strong": "Clear high-cloud carrier", "strongDesc": "High clouds are sufficient, low clouds are scarce, and air is clear enough for a medium/high score base", "dense": "Dense mid/high-cloud carrier", "denseDesc": "High and mid clouds provide a steadier color canvas" },
 
       "layer": { "single": "Một lớp mây", "singleDesc": "Nếu mây cao tốt, vẫn có thể tạo màu hoàng hôn rõ" }

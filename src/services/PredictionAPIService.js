@@ -228,6 +228,8 @@ class PredictionAPIService {
     // 保留增强算法明细字段，供前端评分明细弹层使用
     prediction.breakdown = data.breakdown || null;
     prediction.canvasAnalysis = data.canvasAnalysis || null;
+    prediction.carrierAnalysis = data.carrierAnalysis || null;
+    prediction.aerosolCarrierScore = data.aerosolCarrierScore || data.breakdown?.aerosolCarrierScore || null;
     prediction.lightPathAnalysis = data.lightPathAnalysis || null;
     prediction.renderingAnalysis = data.renderingAnalysis || null;
     prediction.aerosolHazeCap = data.aerosolHazeCap || null;

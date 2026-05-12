@@ -787,6 +787,23 @@ describe('PredictionController', () => {
       expect(html).not.toContain('不再额外封顶');
     });
 
+    test('气溶胶弱载体应同步出现在火烧云分析卡片', () => {
+      const groups = predictionController.buildAnalysisGroups({
+        score: 33,
+        cloudLayers: { high: 0, mid: 7, low: 0 },
+        visibility: 20,
+        humidity: 45,
+        aerosolCarrierScore: {
+          activatedScore: 31,
+          lightPathActivation: 1
+        }
+      });
+      const html = predictionController.renderAnalysisCard(groups, 'test');
+
+      expect(html).toContain('薄雾红日载体');
+      expect(html).toContain('一点暖色日落');
+    });
+
     test('分析卡片最终 CSS 应保持上下文案左对齐且可换行', () => {
       const css = fs.readFileSync(path.join(rootDir, 'styles/main.css'), 'utf8');
       const finalRules = css.slice(css.lastIndexOf('formation analysis cards must read like compact notes'));

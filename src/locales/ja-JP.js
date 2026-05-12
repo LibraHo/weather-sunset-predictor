@@ -319,11 +319,13 @@ apiAccess: 'API接続'
           "occlusion": "遮蔽補正",
           "carrierFloor": "載体による下支え",
           "postRainCap": "雨上がりの灰幕",
-          "displayCalibration": "表示スコア調整"
+          "displayCalibration": "表示スコア調整",
+          "aerosolCarrier": "エアロゾル載体"
         },
         "details": {
-          "cloudCarrier": "色づきに使える雲面の質",
-          "cloudPenalty": "低層雲 ×{{low}}、曇天 ×{{overcast}}",
+          "cloudCarrier": "雲または薄い霞による色づき載体",
+          "cloudPenalty": "雲キャンバス {{canvas}}、低層雲 ×{{low}}、曇天 ×{{overcast}}",
+          "aerosolCarrier": "雲が少ない時、光路が開いていれば薄い霞も暖色を少し運べます。光路活性 ×{{activation}}",
           "lightPath": "日光が雲層へ届くか",
           "renderingFactors": "視程 ×{{visibility}}、湿度 ×{{humidity}}、エアロゾル ×{{aerosol}}",
           "afterAdjustments": "天候と見通しを加味した後",
@@ -362,7 +364,7 @@ apiAccess: 'API接続'
       "low": { "few": "低層雲が少ない（{{value}}%）", "fewDesc": "視界は開けています", "some": "低層雲がやや多い（{{value}}%）", "someDesc": "地平線付近の色を一部遮る可能性があります", "thick": "低層雲が厚い（{{value}}%）", "thickDesc": "遮蔽リスクが高めです" },
       "visibility": { "good": "視程良好（{{value}}km）", "goodDesc": "空気が澄み、見通しが良好です", "moderate": "視程は普通（{{value}}km）", "moderateDesc": "彩度が少し落ちる可能性があります", "low": "視程が低い（{{value}}km）", "lowDesc": "霞や水蒸気が観賞に影響する可能性があります" },
       "humidity": { "moderate": "湿度は適度（{{value}}%）", "moderateDesc": "光の散乱に役立ちます", "high": "湿度が高い（{{value}}%）", "highDesc": "透明感が落ちる可能性があります", "low": "湿度が低い（{{value}}%）", "lowDesc": "乾いた空気で色が淡くなる可能性があります" },
-      "aerosol": { "moderate": "エアロゾル適度（AOD {{value}}）", "moderateDesc": "橙赤色の散乱を強めます", "high": "エアロゾル多め（AOD {{value}}）", "highDesc": "霞んだり暗く見える可能性があります", "low": "空気が澄みすぎ（AOD {{value}}）", "lowDesc": "色が淡くなる可能性があります" },
+      "aerosol": { "moderate": "エアロゾル適度（AOD {{value}}）", "moderateDesc": "橙赤色の散乱を強めます", "high": "エアロゾル多め（AOD {{value}}）", "highDesc": "霞んだり暗く見える可能性があります", "low": "空気が澄みすぎ（AOD {{value}}）", "lowDesc": "色が淡くなる可能性があります", "carrier": "薄霞の赤い夕日載体", "carrierDesc": "雲が少ない時、適度なエアロゾルは光路が開いていれば少し暖色を加えます" },
       "lightPath": { "opening": "太陽方向に光の抜けがあります", "openingDesc": "バックエンドが太陽方位の15/30/50/100km地点を採取し、低・中層雲の通路が比較的開いていると判定します", "wall": "太陽方向に雲の壁があります", "wallDesc": "太陽方位の低・中層雲が厚く、遠方の光路が主スコアを押し下げます" , "lowCloudBlock": "Low clouds block sunlight", "lowCloudBlockDesc": "Low clouds sit in the sun direction, so sunlight struggles to reach mid/high clouds" },
       "postRain": { "clear": "雨上がりの空気が澄んでいます", "clearDesc": "過去6時間に降水がありますが、視程と粒子条件が良いため雨上がり加点を残します", "gray": "雨上がりの灰色カーテンリスク", "grayDesc": "雨後の水蒸気・粒子・直達光の弱さで、色が灰色っぽくなりやすいです" },
       "carrier": { "strong": "Clear high-cloud carrier", "strongDesc": "High clouds are sufficient, low clouds are scarce, and air is clear enough for a medium/high score base", "dense": "Dense mid/high-cloud carrier", "denseDesc": "High and mid clouds provide a steadier color canvas" },

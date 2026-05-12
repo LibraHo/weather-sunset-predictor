@@ -305,11 +305,13 @@ apiAccess: 'Acceso API'
           "occlusion": "Occlusion",
           "carrierFloor": "Carrier floor",
           "postRainCap": "Post-rain haze",
-          "displayCalibration": "Display calibration"
+          "displayCalibration": "Display calibration",
+          "aerosolCarrier": "Aerosol carrier"
         },
         "details": {
-          "cloudCarrier": "usable colored cloud surface",
-          "cloudPenalty": "low cloud ×{{low}}, overcast ×{{overcast}}",
+          "cloudCarrier": "usable color carrier from cloud or thin haze",
+          "cloudPenalty": "cloud canvas {{canvas}}, low cloud ×{{low}}, overcast ×{{overcast}}",
+          "aerosolCarrier": "thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}",
           "lightPath": "sunlight reaches the cloud layer",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
           "afterAdjustments": "after weather and visibility adjustments",
@@ -351,7 +353,7 @@ apiAccess: 'Acceso API'
       "humidity": { "moderate": "Humedad moderada ({{value}}%)", "moderateDesc": "Ayuda a la dispersión de la luz", "high": "Humedad alta ({{value}}%)", "highDesc": "Puede reducir la transparencia", "low": "Humedad baja ({{value}}%)", "lowDesc": "El aire seco puede aclarar los colores" },
       "lightPath": { "opening": "Opening toward the sun", "openingDesc": "Backend samples 15/30/50/100km along the solar azimuth; the low/mid-cloud corridor is relatively open", "wall": "Cloud wall toward the sun", "wallDesc": "Low or mid clouds along the solar direction suppress the main score" , "lowCloudBlock": "Low clouds block sunlight", "lowCloudBlockDesc": "Low clouds sit in the sun direction, so sunlight struggles to reach mid/high clouds" },
       "postRain": { "clear": "Clear post-rain air", "clearDesc": "Rain in the last 6h is kept as a bonus because visibility and particles are acceptable", "gray": "Post-rain gray-curtain risk", "grayDesc": "Moisture, particles, or weak direct light after rain can make the glow gray" },
-      "aerosol": { "moderate": "Aerosol moderado (AOD {{value}})", "moderateDesc": "Refuerza la dispersión naranja-roja", "high": "Aerosol alto (AOD {{value}})", "highDesc": "Puede verse brumoso u opaco", "low": "Aire muy limpio (AOD {{value}})", "lowDesc": "Los colores pueden ser más suaves" },
+      "aerosol": { "moderate": "Aerosol moderado (AOD {{value}})", "moderateDesc": "Refuerza la dispersión naranja-roja", "high": "Aerosol alto (AOD {{value}})", "highDesc": "Puede verse brumoso u opaco", "low": "Aire muy limpio (AOD {{value}})", "lowDesc": "Los colores pueden ser más suaves", "carrier": "Thin-haze red-sunset carrier", "carrierDesc": "When clouds are scarce, moderate aerosol can add some warm sunset color if the light path is open" },
       "carrier": { "strong": "Clear high-cloud carrier", "strongDesc": "High clouds are sufficient, low clouds are scarce, and air is clear enough for a medium/high score base", "dense": "Dense mid/high-cloud carrier", "denseDesc": "High and mid clouds provide a steadier color canvas" },
 
       "layer": { "single": "Una sola capa de nubes", "singleDesc": "Buenas nubes altas aún pueden colorearse bien" }

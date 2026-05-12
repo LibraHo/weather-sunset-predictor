@@ -1486,6 +1486,7 @@ class PredictionController {
       'aerosol.low': '空气过于通透（AOD {{value}}）', 'aerosol.lowDesc': '颜色可能偏淡',
       'aerosol.extremeHaze': '沙尘/灰幕很重', 'aerosol.extremeHazeDesc': '高云虽多，但空气光学条件失效，霞光容易被压成灰黄色',
       'aerosol.hazeCap': '灰幕风险明显', 'aerosol.hazeCapDesc': '颗粒物或气溶胶偏高，会削弱红橙色染色',
+      'aerosol.carrier': '薄雾红日载体', 'aerosol.carrierDesc': '云层很少时，适度气溶胶在光路通畅时也能带来一点暖色日落',
       'lightPath.opening': '太阳方向有透光开口', 'lightPath.openingDesc': '后端沿太阳方位采样 15/30/50/100km，低中云走廊较通畅，光线更容易打到云层',
       'lightPath.wall': '太阳方向有云墙遮挡', 'lightPath.wallDesc': '太阳方位周边低/中云偏厚，远端光路会压低主评分',
       'lightPath.lowCloudBlock': '低云遮住光线', 'lightPath.lowCloudBlockDesc': '低云挡在太阳方向，阳光不容易照到中高云',
@@ -1679,9 +1680,13 @@ class PredictionController {
     }
 
     const carrierAdjustment = prediction?.highCloudCarrierAdjustment;
+    const aerosolCarrier = prediction?.aerosolCarrierScore || prediction?.breakdown?.aerosolCarrierScore;
     const postRainAdjustment = prediction?.postRainAdjustment;
     if (carrierAdjustment?.applied) {
       add('positive', this._analysisText('carrier.strong'), this._analysisText('carrier.strongDesc'));
+    }
+    if (aerosolCarrier?.activatedScore >= 18) {
+      add('neutral', this._analysisText('aerosol.carrier'), this._analysisText('aerosol.carrierDesc'));
     }
 
     const lightPathAnalysis = prediction?.lightPathAnalysis || {};
@@ -1827,11 +1832,13 @@ class PredictionController {
 
     const baseScore = prediction?.breakdown?.baseScore;
     const canvasScore = prediction?.canvasAnalysis?.score ?? prediction?.breakdown?.canvasScore;
+    const carrierScore = prediction?.carrierAnalysis?.score ?? prediction?.breakdown?.carrierScore ?? canvasScore;
     const lightPathScore = prediction?.lightPathAnalysis?.score ?? prediction?.breakdown?.lightPathScore;
     const renderingFactor = prediction?.renderingAnalysis?.factor ?? prediction?.breakdown?.renderingFactor;
     const renderedScore = prediction?.breakdown?.unclampedFinalScore;
     const finalScore = prediction?.score;
     const aerosol = prediction?.breakdown?.aerosolScattering;
+    const aerosolCarrier = prediction?.aerosolCarrierScore || prediction?.breakdown?.aerosolCarrierScore;
     const aerosolFactor = prediction?.renderingAnalysis?.aerosolFactor ?? aerosol?.factor;
     const thickHighCloudPenalty = prediction?.thickHighCloudPenalty || prediction?.lightPathAnalysis?.thickHighCloudPenalty;
     const cloudThickness = prediction?.cloudThickness || prediction?.lightPathAnalysis?.cloudThickness;
@@ -1916,6 +1923,17 @@ class PredictionController {
         detail: ledgerText('details.carrierFloor', {}, 'clear high-cloud carrier prevents over-penalty', '高云载体清透，避免误伤低估'),
         tone: 'good'
       } : null,
+      aerosolCarrier?.activatedScore >= 18 ? {
+        label: ledgerText('labels.aerosolCarrier', {}, 'Aerosol carrier', '气溶胶载体'),
+        value: fmt(aerosolCarrier.activatedScore, 1),
+        detail: ledgerText(
+          'details.aerosolCarrier',
+          { activation: fmt(aerosolCarrier.lightPathActivation, 2) },
+          'thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}',
+          '云层很少时，薄雾在光路通畅时可承接一点暖色，光路激活 ×{{activation}}'
+        ),
+        tone: 'good'
+      } : null,
       postRainAdjustment?.applied && postRainAdjustment.cap ? {
         label: ledgerText('labels.postRainCap', {}, 'Post-rain haze', '雨后灰幕'),
         value: `≤${fmt(postRainAdjustment.cap, 0)}`,
@@ -1973,8 +1991,8 @@ class PredictionController {
         </div>
       </div>`;
 
-    const weightedDescription = Number.isFinite(Number(canvasScore)) && Number.isFinite(Number(lightPathScore)) && Number.isFinite(Number(baseScore))
-      ? ledgerText('weightedFormula', { canvas: fmt(canvasScore, 1), light: fmt(lightPathScore, 1), base: fmt(baseScore, 1) }, '{{canvas}}×80% + {{light}}×20% = {{base}}', '{{canvas}}×80% + {{light}}×20% = {{base}}')
+    const weightedDescription = Number.isFinite(Number(carrierScore)) && Number.isFinite(Number(lightPathScore)) && Number.isFinite(Number(baseScore))
+      ? ledgerText('weightedFormula', { canvas: fmt(carrierScore, 1), light: fmt(lightPathScore, 1), base: fmt(baseScore, 1) }, '{{canvas}}×80% + {{light}}×20% = {{base}}', '{{canvas}}×80% + {{light}}×20% = {{base}}')
       : ledgerText('canvasPlusLightPath', {}, 'canvas + light path', '画布 + 光路');
     const renderingDescription = Number.isFinite(Number(baseScore)) && Number.isFinite(Number(renderingFactor)) && Number.isFinite(Number(renderedScore))
       ? ledgerText('renderingFormula', { base: fmt(baseScore, 1), factor: fmt(renderingFactor, 2), rendered: fmt(renderedScore, 1) }, '{{base}} × rendering {{factor}} = {{rendered}}', '{{base}} × 显色系数 {{factor}} = {{rendered}}')
@@ -2011,7 +2029,7 @@ class PredictionController {
         </div>
         <div class="score-ledger-summary">${escape(summary)}</div>
         <div class="score-ledger-steps">
-          ${step(1, ledgerText('labels.cloudCarrier', {}, 'Cloud carrier', '云层载体'), ledgerText('details.cloudCarrier', {}, 'usable colored cloud surface', '可被染色的云面质量'), fmt(canvasScore, 1), ledgerText('details.cloudPenalty', { low: fmt(prediction?.canvasAnalysis?.lowCloudPenalty, 2), overcast: fmt(prediction?.canvasAnalysis?.overcastPenalty, 2) }, 'low cloud ×{{low}}, overcast ×{{overcast}}', '低云 ×{{low}}，阴天 ×{{overcast}}'))}
+          ${step(1, ledgerText('labels.cloudCarrier', {}, 'Carrier', '载体'), ledgerText('details.cloudCarrier', {}, 'usable color carrier from cloud or thin haze', '可被染色的云面或薄雾载体'), fmt(carrierScore, 1), ledgerText('details.cloudPenalty', { low: fmt(prediction?.canvasAnalysis?.lowCloudPenalty, 2), overcast: fmt(prediction?.canvasAnalysis?.overcastPenalty, 2) }, 'cloud canvas {{canvas}}, low cloud ×{{low}}, overcast ×{{overcast}}', '云画布 {{canvas}}，低云 ×{{low}}，阴天 ×{{overcast}}').replaceAll('{{canvas}}', fmt(canvasScore, 1)))}
           ${step(2, ledgerText('labels.lightPath', {}, 'Light path', '光路'), ledgerText('details.lightPath', {}, 'sunlight reaches the cloud layer', '阳光是否能打到云层'), fmt(lightPathScore, 1), lightPathDetail)}
           ${step(3, ledgerText('labels.baseScore', {}, 'Base score', '基础分'), weightedDescription, fmt(baseScore, 1))}
           ${step(4, ledgerText('labels.rendering', {}, 'Rendering', '显色修正'), renderingDescription, fmt(renderedScore, 1), ledgerText('details.renderingFactors', { visibility: fmt(prediction?.renderingAnalysis?.visibilityFactor, 2), humidity: fmt(prediction?.renderingAnalysis?.humidityFactor, 2), aerosol: fmt(aerosolFactor, 2) }, 'visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}', '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}'))}
