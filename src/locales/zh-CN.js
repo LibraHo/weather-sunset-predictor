@@ -118,6 +118,10 @@ export default {
       scorePoorRange: '低概率 Low',
       scorePoorDetail: '<40 分',
       scorePoorDesc: '主条件不足，通常不建议专门出门',
+      scoreSourceTitle: '地图分与精确点分为什么会不同',
+      scoreSourceMap: '火烧云地图分用于看区域趋势，来自固定格点、批量天气数据和栅格插值；它会保持地图连续，但不等同于每个城市中心点的最终预测。',
+      scoreSourcePoint: '地点详情页的精确点分会针对输入坐标重新请求单点天气、空气质量和光路数据，按该点的日出/日落时间闭环计算。',
+      scoreSourceWhy: '因此两者可能有轻微差异：地图适合判断附近哪里更值得看，精确点分适合决定当前位置是否出门；如果差异很大，以精确点分为准。',
       sections: {
         cloudStructure: {
           title: '1. 云层结构',

@@ -111,6 +111,10 @@ const translations = {
       "scorePoorRange": "Faible",
       "scorePoorDetail": "<40 pts",
       "scorePoorDesc": "Conditions de base faibles, sortie dédiée peu recommandée",
+      "scoreSourceTitle": "Pourquoi le score de carte et le score du point exact peuvent différer",
+      "scoreSourceMap": "Le score de la carte sert à lire une tendance régionale. Il vient de points de grille fixes, de données météo par lot et d’une interpolation raster : la carte reste continue, mais ce n’est pas la prévision finale de chaque centre-ville.",
+      "scoreSourcePoint": "Le score du point exact, dans la page de détail, recharge la météo, la qualité de l’air et le trajet lumineux pour la coordonnée saisie, puis calcule selon l’heure de lever ou coucher du soleil de ce point.",
+      "scoreSourceWhy": "De petites différences sont donc normales : utilisez la carte pour repérer la zone voisine la plus prometteuse, et le point exact pour décider si vous sortez à votre position. Si l’écart est important, fiez-vous au point exact.",
       "sections": {
         "cloudStructure": {
           "title": "1. Structure des nuages",
