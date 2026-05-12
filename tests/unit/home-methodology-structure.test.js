@@ -4,6 +4,21 @@ import path from 'path';
 const ROOT = path.resolve(process.cwd());
 
 describe('home methodology structure', () => {
+  test('puts version update history at the end of the methodology page', () => {
+    const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+    const panelStart = html.indexOf('tab-panel-methodology');
+    const gridIndex = html.indexOf('methodology-grid', panelStart);
+    const scoreGuideIndex = html.indexOf('methodology-score-guide', panelStart);
+    const changelogIndex = html.indexOf('methodology-changelog-card', panelStart);
+    const mapPanelIndex = html.indexOf('tab-panel-map', panelStart);
+
+    expect(panelStart).toBeGreaterThan(-1);
+    expect(gridIndex).toBeGreaterThan(panelStart);
+    expect(scoreGuideIndex).toBeGreaterThan(gridIndex);
+    expect(changelogIndex).toBeGreaterThan(scoreGuideIndex);
+    expect(mapPanelIndex).toBeGreaterThan(changelogIndex);
+  });
+
   test('puts algorithm version at the end of a scrollable changelog card', () => {
     const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
     const cardStart = html.indexOf('methodology-changelog-card');
@@ -17,6 +32,21 @@ describe('home methodology structure', () => {
     expect(latestIndex).toBeGreaterThan(scrollIndex);
     expect(currentIndex).toBeGreaterThan(latestIndex);
     expect(versionIndex).toBeGreaterThan(currentIndex);
+  });
+
+  test('score guide matches backend score distribution thresholds', () => {
+    const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+    const scoreGuide = html.slice(
+      html.indexOf('methodology-score-guide'),
+      html.indexOf('methodology-changelog-card')
+    );
+
+    expect(scoreGuide).toContain('85-100 分');
+    expect(scoreGuide).toContain('70-84 分');
+    expect(scoreGuide).toContain('40-69 分');
+    expect(scoreGuide).toContain('&lt;40 分');
+    expect(scoreGuide).not.toContain('60-79 分');
+    expect(scoreGuide).not.toContain('40-59 分');
   });
 
   test('uses neutral methodology changelog styling instead of highlight gradients', () => {
