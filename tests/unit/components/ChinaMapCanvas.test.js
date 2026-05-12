@@ -18,8 +18,9 @@ const level3 = [{ name: '义乌' }];
 describe('ChinaMapCanvas city data coverage', () => {
   it('fetches the latest shared East Asia basemap asset', () => {
     const source = fs.readFileSync(path.resolve(process.cwd(), 'src/components/ChinaMapCanvas.js'), 'utf8');
-    expect(source).toContain('/data/east-asia-basemap-geojson.json?v=2');
+    expect(source).toContain('/data/east-asia-basemap-geojson.json?v=3');
     expect(source).not.toContain('/data/east-asia-basemap-geojson.json?v=1');
+    expect(source).not.toContain('/data/east-asia-basemap-geojson.json?v=2');
   });
 
   it('keeps score controls enabled by default but allows gallery pages to disable them', () => {
@@ -88,14 +89,21 @@ describe('ChinaMapCanvas city data coverage', () => {
     }
   });
 
-  it('includes major Southeast Asia city labels for basemap only', () => {
+  it('includes major Asia-Pacific city labels for basemap only', () => {
     const data = new ChinaMapCanvas()._getCityData();
     const names = new Set([...data.level1, ...data.level2, ...data.level3].map(city => city.name));
 
     [
       '乌兰巴托', '曼谷', '河内', '胡志明市', '金边', '万象', '仰光', '吉隆坡', '雅加达',
       '清迈', '普吉', '岘港', '暹粒', '曼德勒', '内比都', '槟城', '新山',
-      '哥打基纳巴卢', '泗水', '万隆', '棉兰', '登巴萨'
+      '哥打基纳巴卢', '泗水', '万隆', '棉兰', '登巴萨',
+      '阿斯塔纳', '阿拉木图', '塔什干', '比什凯克', '杜尚别', '阿什哈巴德',
+      '新德里', '孟买', '加尔各答', '卡拉奇', '达卡', '加德满都', '科伦坡',
+      '莫斯科', '圣彼得堡', '新西伯利亚', '符拉迪沃斯托克',
+      '悉尼', '墨尔本', '布里斯班', '珀斯',
+      '撒马尔罕', '奥什', '土库曼纳巴德', '班加罗尔', '金奈', '海得拉巴',
+      '拉合尔', '伊斯兰堡', '吉大港', '廷布', '马累', '喀布尔',
+      '叶卡捷琳堡', '伊尔库茨克', '哈巴罗夫斯克', '堪培拉', '阿德莱德', '达尔文'
     ].forEach((name) => {
       expect(names.has(name)).toBe(true);
     });
@@ -120,6 +128,8 @@ describe('ChinaMapCanvas city data coverage', () => {
     expect(getLocalizedMapCityName('首尔', 'ko-KR')).toBe('서울');
     expect(getLocalizedMapCityName('乌兰巴托', 'en-US')).toBe('Ulaanbaatar');
     expect(getLocalizedMapCityName('曼谷', 'fr-FR')).toBe('Bangkok');
+    expect(getLocalizedMapCityName('悉尼', 'zh-TW')).toBe('雪梨');
+    expect(getLocalizedMapCityName('新德里', 'en-US')).toBe('New Delhi');
   });
 });
 
