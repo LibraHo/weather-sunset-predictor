@@ -494,6 +494,26 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(() => controller._renderChinaSpotsTimestamp()).not.toThrow();
   });
 
+  test('_renderChinaSpotsTimestamp: 显示当前激活图层时间，不被另一时段覆盖', () => {
+    document.body.innerHTML = '<div id="china-spots-timestamp"></div>';
+    controller.i18n = {
+      getLanguage: () => 'en-US',
+      t: key => ({ 'weatherMap.updatedAt': 'Updated at {{time}}' }[key] || key)
+    };
+
+    const sunriseOverlay = { getUpdatedAt: jest.fn(() => '2026-01-01T12:34:00.000Z') };
+    const sunsetOverlay = { getUpdatedAt: jest.fn(() => '2026-01-01T02:12:00.000Z') };
+    controller.chinaSpotsOverlayManager = {
+      getActivePeriod: jest.fn(() => 'sunset'),
+      getOverlay: jest.fn(period => period === 'sunrise' ? sunriseOverlay : sunsetOverlay)
+    };
+
+    controller._renderChinaSpotsTimestamp();
+
+    expect(document.getElementById('china-spots-timestamp').textContent).toContain(':12');
+    expect(document.getElementById('china-spots-timestamp').textContent).not.toContain(':34');
+  });
+
   test('_renderDualPeriodScorePanel: 无 #china-spots-dual-score 元素时不报错', () => {
     document.body.innerHTML = '';
     expect(() => controller._renderDualPeriodScorePanel()).not.toThrow();
