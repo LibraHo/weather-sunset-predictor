@@ -175,6 +175,59 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     return airByTimestamp;
   }
 
+  async _fetchAirQualityDataBatch(points, hours = 24, forecastDays = 1) {
+    const pointList = Array.isArray(points) ? points : [];
+    if (pointList.length === 0) return {};
+
+    const params = {
+      latitude: pointList.map(p => p.lat).join(','),
+      longitude: pointList.map(p => p.lon).join(','),
+      hourly: 'aerosol_optical_depth,dust,pm2_5,pm10,us_aqi,european_aqi',
+      timeformat: 'unixtime',
+      timezone: 'auto',
+      forecast_days: forecastDays
+    };
+
+    const response = await this._getWithRetry(
+      params,
+      15000,
+      `air-quality-batch(points=${pointList.length})`,
+      this.AIR_QUALITY_API_URL,
+      'air_quality'
+    );
+
+    const payload = Array.isArray(response.data) ? response.data : [response.data];
+    if (payload.length !== pointList.length) {
+      throw new Error(`Open-Meteo Air Quality 批量返回数量异常: expected=${pointList.length}, actual=${payload.length}`);
+    }
+
+    const result = {};
+    for (let i = 0; i < pointList.length; i += 1) {
+      const point = pointList[i];
+      const hourly = payload[i]?.hourly;
+      if (!hourly?.time) {
+        throw new Error(`Open-Meteo Air Quality 批量响应格式错误: point=${point.lat},${point.lon}`);
+      }
+
+      const totalHours = Math.min(hours, hourly.time.length);
+      const airByTimestamp = new Map();
+      for (let h = 0; h < totalHours; h += 1) {
+        airByTimestamp.set(hourly.time[h] * 1000, {
+          aerosolOpticalDepth: hourly.aerosol_optical_depth?.[h] ?? null,
+          dust: hourly.dust?.[h] ?? null,
+          pm2_5: hourly.pm2_5?.[h] ?? null,
+          pm10: hourly.pm10?.[h] ?? null,
+          aqi: hourly.us_aqi?.[h] ?? hourly.european_aqi?.[h] ?? null,
+          usAqi: hourly.us_aqi?.[h] ?? null,
+          europeanAqi: hourly.european_aqi?.[h] ?? null
+        });
+      }
+      result[`${point.lat},${point.lon}`] = airByTimestamp;
+    }
+
+    return result;
+  }
+
   _mergeAirQualityData(weatherResult, airByTimestamp) {
     if (!weatherResult?.data || !airByTimestamp) return weatherResult;
     weatherResult.data = weatherResult.data.map(item => ({
@@ -274,6 +327,27 @@ class OpenMeteoProvider extends BaseWeatherProvider {
         const point = pointList[i];
         const key = `${point.lat},${point.lon}`;
         weatherMap[key] = this._normalizeHourlyResult(payload[i], hours, model, startTime, this.name);
+      }
+
+      try {
+        const airQualityMap = await this._fetchAirQualityDataBatch(pointList, hours, forecastDays);
+        for (const point of pointList) {
+          const key = `${point.lat},${point.lon}`;
+          this._mergeAirQualityData(weatherMap[key], airQualityMap[key]);
+          weatherMap[key].providerMeta.airQualitySource = 'openmeteo_air_quality';
+        }
+      } catch (airError) {
+        console.warn('[Open-Meteo Air Quality API] 批量请求失败，地图格点按无气溶胶数据降级:', airError.message);
+        for (const point of pointList) {
+          const key = `${point.lat},${point.lon}`;
+          const meta = weatherMap[key]?.providerMeta;
+          if (meta) {
+            meta.unsupportedFields = meta.unsupportedFields || [];
+            meta.degradedReason = meta.degradedReason || [];
+            meta.unsupportedFields.push('air_quality');
+            meta.degradedReason.push('air_quality_unavailable');
+          }
+        }
       }
 
       return weatherMap;

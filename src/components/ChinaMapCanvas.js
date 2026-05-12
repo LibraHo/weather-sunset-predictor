@@ -1314,6 +1314,44 @@ class ChinaMapCanvas {
     }
   }
 
+  _getScoreQueryPeriod() {
+    return this._currentPeriod === 'test' ? 'sunset' : this._currentPeriod;
+  }
+
+  async _fetchExactPointScore(lat, lon) {
+    const period = this._getScoreQueryPeriod();
+    const date = new Date().toISOString().slice(0, 10);
+
+    try {
+      const res = await fetch('/api/prediction/enhanced', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lat, lon, date, type: period })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const score = Number(data?.data?.score);
+        if (Number.isFinite(score)) return score;
+      }
+    } catch (_) {
+      // Fall back to the raster sample below.
+    }
+
+    try {
+      const res = await fetch(`/api/spots/china/raster?period=${period}&resolution=0.5&lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}`);
+      if (res.ok) {
+        const data = await res.json();
+        const score = Number(data?.score);
+        if (Number.isFinite(score)) return score;
+      }
+    } catch (_) {
+      // API unavailable: caller will render no-data.
+    }
+
+    return null;
+  }
+
   /**
    * 在点击位置显示 popup：地点名 + 分数
    * 尝试反向解析城市名，失败则显示经纬度
@@ -1343,17 +1381,7 @@ class ChinaMapCanvas {
       // 尝试从城市列表中匹配最近的城市
       const cityName = this._findNearestCityName(lat, lon);
 
-      // 从栅格数据 API 查询该点分数
-      let score = null;
-      try {
-        const res = await fetch(`/api/spots/china/raster?period=${this._currentPeriod}&resolution=0.5&lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}`);
-        if (res.ok) {
-          const data = await res.json();
-          score = data.score ?? null;
-        }
-      } catch (_) {
-        // API 不可用时静默
-      }
+      const score = await this._fetchExactPointScore(lat, lon);
 
       const cloudHumidity = await this._fetchPointCloudHumidity(lat, lon);
 
