@@ -11,7 +11,7 @@
 </head>
 <body class="theme-dark admin-body">
   <div id="admin-app">
-    <header>
+    <header class="admin-header">
       <div class="header-top-row">
         <a class="app-logo admin-logo" href="/admin#dashboard" aria-label="霞客管理后台">
           <svg class="app-logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 76 76" aria-hidden="true">
@@ -43,7 +43,13 @@
             <button id="theme-toggle" class="icon-btn header-svg-btn" aria-label="切换主题">
               <svg class="header-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A8.4 8.4 0 1 1 11.2 3 6.8 6.8 0 0 0 21 12.8Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
             </button>
-            <a href="/" class="btn btn-secondary btn-sm">返回前台</a>
+            <a href="/" class="icon-btn header-svg-btn admin-home-link" aria-label="返回前台" title="返回前台">
+              <svg class="header-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M4.75 11.25 12 5l7.25 6.25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M7.25 10.5v8h9.5v-8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                <path d="M10.25 18.5v-4h3.5v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+              </svg>
+            </a>
           </div>
         </div>
       </div>
