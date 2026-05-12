@@ -111,6 +111,10 @@ const translations = {
       "scorePoorRange": "Thấp",
       "scorePoorDetail": "<40 điểm",
       "scorePoorDesc": "Điều kiện chính yếu yếu, thường không đáng đi riêng",
+      "scoreSourceTitle": "Vì sao điểm bản đồ và điểm chính xác có thể khác nhau",
+      "scoreSourceMap": "Điểm trên bản đồ dùng để xem xu hướng khu vực. Nó đến từ các điểm lưới cố định, dữ liệu thời tiết theo lô và nội suy raster, nên bản đồ liên tục nhưng không phải dự báo cuối cùng cho từng tọa độ trung tâm thành phố.",
+      "scoreSourcePoint": "Điểm chính xác trên trang chi tiết sẽ lấy lại thời tiết một điểm, chất lượng không khí và dữ liệu đường sáng cho tọa độ đã nhập, rồi tính theo giờ bình minh hoặc hoàng hôn của điểm đó.",
+      "scoreSourceWhy": "Vì vậy chênh lệch nhỏ là bình thường: dùng bản đồ để chọn khu vực gần đó hứa hẹn hơn, và dùng điểm chính xác để quyết định có ra ngoài tại vị trí hiện tại hay không. Nếu lệch nhiều, hãy tin điểm chính xác.",
       "sections": {
         "cloudStructure": {
           "title": "1. Cấu trúc tầng mây",

@@ -111,6 +111,10 @@ apiAccess: 'Acceso API'
       "scorePoorRange": "Bajo",
       "scorePoorDetail": "<40 pts",
       "scorePoorDesc": "Configuración débil; normalmente no merece salida especial",
+      "scoreSourceTitle": "Por qué difieren el mapa y el punto exacto",
+      "scoreSourceMap": "La puntuación del mapa muestra tendencias regionales. Se calcula con puntos de cuadrícula fijos, datos meteorológicos por lote e interpolación ráster, así que mantiene continuidad visual pero no es el pronóstico final de cada centro urbano.",
+      "scoreSourcePoint": "La puntuación de punto exacto en la página de detalle vuelve a pedir clima, calidad del aire y trayectoria de luz para la coordenada introducida, y calcula contra la hora de amanecer o atardecer de ese punto.",
+      "scoreSourceWhy": "Por eso puede haber pequeñas diferencias: usa el mapa para elegir qué zona cercana promete más y el punto exacto para decidir si salir desde tu ubicación. Si la diferencia es grande, confía en el punto exacto.",
       "sections": {
         "cloudStructure": {
           "title": "1. Estructura de nubes",

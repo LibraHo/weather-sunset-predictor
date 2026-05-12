@@ -111,6 +111,10 @@ const translations = {
       "scorePoorRange": "Low",
       "scorePoorDetail": "<40 pts",
       "scorePoorDesc": "Core setup is weak; usually not worth a special trip",
+      "scoreSourceTitle": "Why map scores and exact-point scores can differ",
+      "scoreSourceMap": "The fire-cloud map score is for regional trends. It comes from fixed grid points, batch weather data, and raster interpolation, so it keeps the map continuous but is not the final forecast for every city-center coordinate.",
+      "scoreSourcePoint": "The exact-point score on the detail page re-fetches single-point weather, air-quality, and light-path data for the entered coordinate, then calculates against that point's sunrise or sunset time.",
+      "scoreSourceWhy": "Small differences are expected: use the map to decide which nearby area is more promising, and use the exact-point score to decide whether to go out at the current location. If they diverge a lot, trust the exact-point score.",
       "sections": {
         "cloudStructure": {
           "title": "1. Cloud Structure",

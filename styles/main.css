@@ -573,6 +573,26 @@ main > section {
 .score-fair .score-range { color: #9e9e9e; }
 .score-poor .score-range { color: #f44336; }
 
+.methodology-score-source-note {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+}
+
+.methodology-score-source-note h4 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.methodology-score-source-note p {
+  margin: 6px 0 0;
+  color: var(--color-text-light);
+  line-height: 1.55;
+}
+
 .methodology-score-guide ul {
   padding-left: 20px;
   margin: 8px 0 0;

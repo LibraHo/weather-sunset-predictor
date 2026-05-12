@@ -49,6 +49,20 @@ describe('home methodology structure', () => {
     expect(scoreGuide).not.toContain('40-59 分');
   });
 
+  test('explains why firecloud map scores can differ from exact point scores', () => {
+    const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+    const scoreGuide = html.slice(
+      html.indexOf('methodology-score-guide'),
+      html.indexOf('methodology-changelog-card')
+    );
+
+    expect(scoreGuide).toContain('methodology-score-source-note');
+    expect(scoreGuide).toContain('home.methodology.scoreSourceTitle');
+    expect(scoreGuide).toContain('home.methodology.scoreSourceMap');
+    expect(scoreGuide).toContain('home.methodology.scoreSourcePoint');
+    expect(scoreGuide).toContain('home.methodology.scoreSourceWhy');
+  });
+
   test('uses neutral methodology changelog styling instead of highlight gradients', () => {
     const css = fs.readFileSync(path.join(ROOT, 'styles/main.css'), 'utf8');
     const cardBlock = css.slice(

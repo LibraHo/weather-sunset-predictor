@@ -111,6 +111,10 @@ const translations = {
       "scorePoorRange": "低機率 Low",
       "scorePoorDetail": "<40 分",
       "scorePoorDesc": "主條件不足，通常不建議專程出門",
+      "scoreSourceTitle": "地圖分與精確點分為什麼會不同",
+      "scoreSourceMap": "火燒雲地圖分用來看區域趨勢，來自固定格點、批次天氣資料和柵格插值；它會保持地圖連續，但不等同於每個城市中心點的最終預測。",
+      "scoreSourcePoint": "地點詳情頁的精確點分會針對輸入座標重新請求單點天氣、空氣品質和光路資料，並按該點的日出／日落時間閉環計算。",
+      "scoreSourceWhy": "因此兩者可能有輕微差異：地圖適合判斷附近哪裡更值得看，精確點分適合決定目前位置是否出門；如果差異很大，以精確點分為準。",
       "sections": {
         "cloudStructure": {
           "title": "1. 雲層結構",
