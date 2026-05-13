@@ -49,6 +49,207 @@
   font-weight: 800;
 }
 
+.analysis-card,
+.radar-card,
+.three-day-card {
+  padding: 24rpx;
+}
+
+.analysis-lead {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 27rpx;
+  line-height: 1.62;
+}
+
+.analysis-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+  margin-top: 20rpx;
+}
+
+.analysis-item {
+  padding: 18rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.08);
+  border-radius: 14rpx;
+  background: rgba(7, 16, 31, 0.50);
+}
+
+.analysis-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.analysis-title {
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 25rpx;
+  font-weight: 800;
+}
+
+.analysis-value {
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 900;
+}
+
+.analysis-detail {
+  margin-top: 10rpx;
+  color: rgba(255, 255, 255, 0.54);
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+.tone-excellent {
+  border-color: rgba(251, 191, 36, 0.36);
+  background: rgba(251, 146, 60, 0.13);
+}
+
+.tone-good {
+  border-color: rgba(250, 204, 21, 0.28);
+  background: rgba(202, 138, 4, 0.12);
+}
+
+.tone-watch {
+  border-color: rgba(56, 189, 248, 0.26);
+  background: rgba(14, 116, 144, 0.12);
+}
+
+.tone-weak,
+.tone-unknown {
+  border-color: rgba(148, 163, 184, 0.16);
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.tone-center {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.panel-loading,
+.panel-error,
+.panel-empty {
+  padding: 22rpx 18rpx;
+  border-radius: 14rpx;
+  background: rgba(7, 16, 31, 0.50);
+}
+
+.loading-copy,
+.panel-empty {
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 25rpx;
+}
+
+.panel-error {
+  color: #fecaca;
+  font-size: 25rpx;
+}
+
+.loading-track {
+  height: 8rpx;
+  margin-top: 16rpx;
+  overflow: hidden;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.loading-fill {
+  width: 46%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ffd166, #fb923c);
+}
+
+.radar-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12rpx;
+}
+
+.radar-cell {
+  min-height: 118rpx;
+  padding: 14rpx 10rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.08);
+  border-radius: 14rpx;
+  text-align: center;
+  background: rgba(7, 16, 31, 0.50);
+}
+
+.radar-name {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.radar-score {
+  margin-top: 8rpx;
+  color: #ffffff;
+  font-size: 32rpx;
+  font-weight: 900;
+}
+
+.radar-cloud {
+  margin-top: 6rpx;
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 19rpx;
+  line-height: 1.35;
+}
+
+.three-day-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.day-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1fr;
+  gap: 12rpx;
+  align-items: stretch;
+}
+
+.day-meta,
+.day-score {
+  min-height: 92rpx;
+  box-sizing: border-box;
+  padding: 14rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.08);
+  border-radius: 14rpx;
+  background: rgba(7, 16, 31, 0.50);
+}
+
+.day-label {
+  color: #ffffff;
+  font-size: 27rpx;
+  font-weight: 900;
+}
+
+.day-date {
+  margin-top: 6rpx;
+  color: rgba(255, 255, 255, 0.44);
+  font-size: 21rpx;
+}
+
+.day-score {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8rpx;
+}
+
+.day-score-label {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 23rpx;
+  font-weight: 700;
+}
+
+.day-score-value {
+  color: #ffffff;
+  font-size: 34rpx;
+  font-weight: 900;
+}
+
 .back-button {
   height: 88rpx;
   margin: 8rpx 0 0;

@@ -72,4 +72,39 @@ describe('miniprogram page user/share helpers', () => {
     });
     expect(recent.date).toEqual(expect.any(String));
   });
+
+  test('result page builds Xiake core panels from backend analysis', () => {
+    const analysis = resultHelpers.buildAnalysisItems({
+      canvasAnalysis: { score: 83, breakdown: { highClouds: 64, midClouds: 20, lowClouds: 5 } },
+      lightPathAnalysis: { score: 72, azimuth: 286, occlusionProbability: 0.18, explain: '光路通畅' },
+      renderingAnalysis: { factor: 0.82, breakdown: { visibility: 'good', aerosol: 'polluted' } },
+      cloudType: { label: '高层云' }
+    });
+
+    expect(analysis).toHaveLength(3);
+    expect(analysis[0]).toMatchObject({ title: '云况画布', value: '83分', tone: 'good' });
+    expect(analysis[1].detail).toContain('太阳方位 286°');
+    expect(analysis[2]).toMatchObject({ title: '色彩修正', value: 'x0.82', tone: 'watch' });
+  });
+
+  test('result page maps surrounding and 3-day data to display rows', () => {
+    const radar = resultHelpers.buildRadarView({
+      points: [
+        { direction: 'N', name: '北', score: 77.4, level: 'good', highCloud: 61, midCloud: 20, lowCloud: 5 }
+      ]
+    });
+    const threeDay = resultHelpers.buildThreeDayGlowView([
+      { key: '2026-05-13', label: '今天', date: '2026-05-13', sunrise: { score: 88, level: 'excellent' }, sunset: { score: 46, level: 'watch' } }
+    ]);
+
+    expect(radar.hasData).toBe(true);
+    expect(radar.points).toHaveLength(9);
+    expect(radar.points[1]).toMatchObject({ direction: 'N', scoreText: 77, cloudText: '高 61% / 中 20% / 低 5%' });
+    expect(threeDay).toMatchObject({
+      hasData: true,
+      days: [
+        expect.objectContaining({ sunriseScoreText: 88, sunriseLevel: 'excellent', sunsetScoreText: 46, sunsetLevel: 'watch' })
+      ]
+    });
+  });
 });
