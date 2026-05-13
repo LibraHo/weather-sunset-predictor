@@ -233,7 +233,7 @@ function normalizePrediction(raw = {}, query) {
   const summary = data.summary || {};
   const explanation = typeof summary === 'string'
     ? summary
-    : (summary.description || data.description || data.advice || '已完成查分，建议结合临近时段云况再决定是否出门。');
+    : (summary.description || data.description || data.advice || '已完成查分，建议结合实时天气、视野和临近时段云况判断。');
 
   return {
     ...data,

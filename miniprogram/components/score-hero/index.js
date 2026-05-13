@@ -43,18 +43,18 @@ Component({
 
     gradeFromScore(score) {
       if (!Number.isFinite(score)) return '';
-      if (score >= 80) return 'excellent';
-      if (score >= 65) return 'good';
-      if (score >= 45) return 'fair';
+      if (score >= 85) return 'excellent';
+      if (score >= 70) return 'good';
+      if (score >= 40) return 'fair';
       return 'low';
     },
 
     gradeLabel(grade, score) {
       const map = {
-        excellent: '值得冲',
-        great: '值得冲',
-        good: '有机会',
-        fair: '一般',
+        excellent: '极佳',
+        great: '极佳',
+        good: '较好',
+        fair: '可关注',
         low: '偏弱',
         poor: '偏弱'
       };
