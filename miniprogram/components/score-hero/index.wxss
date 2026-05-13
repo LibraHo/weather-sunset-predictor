@@ -1,7 +1,7 @@
 .score-hero {
-  padding: 32rpx;
+  padding: 34rpx 32rpx;
   overflow: hidden;
-  background: linear-gradient(140deg, rgba(255, 209, 102, 0.14) 0%, rgba(251, 146, 60, 0.10) 38%, rgba(18, 28, 52, 0.78) 100%);
+  background: linear-gradient(142deg, rgba(251, 146, 60, 0.18) 0%, rgba(18, 28, 52, 0.78) 46%, rgba(10, 15, 30, 0.92) 100%);
 }
 
 .hero-top {
@@ -41,7 +41,7 @@
 
 .score {
   color: #ffd166;
-  font-size: 118rpx;
+  font-size: 126rpx;
   font-weight: 900;
   line-height: 1;
   text-shadow: 0 0 34rpx rgba(251, 146, 60, 0.25);
@@ -64,5 +64,5 @@
   margin-top: 18rpx;
   color: rgba(255, 255, 255, 0.68);
   font-size: 27rpx;
-  line-height: 1.55;
+  line-height: 1.58;
 }

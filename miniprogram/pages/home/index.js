@@ -13,6 +13,9 @@ Page({
     loading: false,
     locating: false,
     homeMenuOpen: false,
+    settingsOpen: false,
+    defaultPeriod: 'sunset',
+    defaultDay: 'today',
     errorMessage: '',
     recentQueries: [],
     favorites: []
@@ -20,6 +23,7 @@ Page({
 
   onLoad(options = {}) {
     this.predictionService = options.predictionService || this.predictionService || null;
+    this.applySavedSettings();
     this.refreshSavedLists();
   },
 
@@ -56,7 +60,7 @@ Page({
   },
 
   onLocationChange(event) {
-    this.setData({ locationText: event.detail.value, errorMessage: '' });
+    this.setData({ locationText: event.detail.value, coordinate: null, errorMessage: '' });
   },
 
   selectPeriod(event) {
@@ -71,8 +75,20 @@ Page({
     this.setData({ homeMenuOpen: !this.data.homeMenuOpen });
   },
 
+  openSettings() {
+    this.setData({ homeMenuOpen: false, settingsOpen: true });
+  },
+
+  closeSettings() {
+    this.setData({ settingsOpen: false });
+  },
+
   navigateFeature(event) {
     const target = event.currentTarget.dataset.target;
+    if (target === 'settings') {
+      this.openSettings();
+      return;
+    }
     const routes = {
       forecast: '',
       methodology: '/pages/methodology/index',
@@ -86,7 +102,44 @@ Page({
     wx.navigateTo({ url });
   },
 
-  useHistory(event) {
+  selectDefaultPeriod(event) {
+    const value = event.currentTarget.dataset.value || 'sunset';
+    this.saveSettings({ defaultPeriod: value });
+  },
+
+  selectDefaultDay(event) {
+    const value = event.currentTarget.dataset.value || 'today';
+    this.saveSettings({ defaultDay: value });
+  },
+
+  resetSettings() {
+    this.saveSettings({ defaultPeriod: 'sunset', defaultDay: 'today' });
+  },
+
+  applySavedSettings() {
+    const settings = readHomeSettings();
+    this.setData({
+      defaultPeriod: settings.defaultPeriod,
+      defaultDay: settings.defaultDay,
+      period: settings.defaultPeriod,
+      day: settings.defaultDay
+    });
+  },
+
+  saveSettings(patch = {}) {
+    const settings = {
+      defaultPeriod: patch.defaultPeriod || this.data.defaultPeriod || 'sunset',
+      defaultDay: patch.defaultDay || this.data.defaultDay || 'today'
+    };
+    wx.setStorageSync('homeSettings', settings);
+    this.setData({
+      ...settings,
+      period: settings.defaultPeriod,
+      day: settings.defaultDay
+    });
+  },
+
+  async useHistory(event) {
     const index = event.currentTarget.dataset.index;
     const item = this.data.recentQueries[index] || null;
     const location = event.currentTarget.dataset.location;
@@ -100,6 +153,7 @@ Page({
         day: item.day || this.data.day,
         errorMessage: ''
       });
+      await this.onSearch();
       return;
     }
     if (location) {
@@ -108,6 +162,7 @@ Page({
         coordinate: lat !== null && lon !== null ? { lat, lon } : null,
         errorMessage: ''
       });
+      await this.onSearch();
     }
   },
 
@@ -122,6 +177,7 @@ Page({
         coordinate: { lat: res.latitude, lon: res.longitude },
         locationText
       });
+      await this.onSearch();
     } catch (error) {
       this.setData({ errorMessage: '无法获取当前位置，请检查定位权限或手动输入地点。' });
     } finally {
@@ -164,7 +220,7 @@ Page({
   },
 
   async resolveLocation(locationText) {
-    if (this.data.coordinate && (!locationText || locationText === '当前位置')) {
+    if (this.data.coordinate) {
       return {
         name: locationText || '当前位置',
         lat: this.data.coordinate.lat,
@@ -239,6 +295,13 @@ function decorateRecentQueries(recent = []) {
     periodLabel: (item.period || item.type) === 'sunrise' ? '朝霞' : '晚霞',
     dayLabel: item.day === 'tomorrow' ? '明日' : '今日'
   }));
+}
+
+function readHomeSettings() {
+  const settings = wx.getStorageSync('homeSettings') || {};
+  const defaultPeriod = settings.defaultPeriod === 'sunrise' ? 'sunrise' : 'sunset';
+  const defaultDay = settings.defaultDay === 'tomorrow' ? 'tomorrow' : 'today';
+  return { defaultPeriod, defaultDay };
 }
 
 function wxPromise(fn, options) {

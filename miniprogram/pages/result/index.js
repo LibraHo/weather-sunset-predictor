@@ -180,7 +180,7 @@ function normalizePrediction(input = {}, options = {}) {
     periodLabel: period === 'sunrise' ? '朝霞' : '晚霞',
     dayLabel: day === 'tomorrow' ? '明日' : '今日',
     bestWindow: input.bestWindow || input.window || input.timeWindow || '--',
-    explanation: input.explanation || input.summary || input.reason || '暂无解释，等待预测服务返回更完整的数据。',
+    explanation: humanizeExplanation(input.explanation || input.summary || input.reason, input.score ?? input.totalScore ?? input.finalScore),
     breakdown: input.breakdown || null,
     canvasAnalysis: input.canvasAnalysis || null,
     lightPathAnalysis: input.lightPathAnalysis || null,
@@ -378,13 +378,32 @@ export function buildRadarView(surrounding = {}) {
     scoreText: Number.isFinite(Number(point.score)) ? Math.round(Number(point.score)) : '--',
     cloudText: `高 ${formatPercent(point.highCloud ?? 0)} / 中 ${formatPercent(point.midCloud ?? 0)} / 低 ${formatPercent(point.lowCloud ?? 0)}`
   }));
+  const directions = orderRadarDirections(points);
   return {
     loading: false,
     error: '',
     bestDirection: surrounding.bestDirection || null,
     points: orderRadarPoints(points),
+    directions,
+    bestItems: directions
+      .filter((item) => item.scoreText !== '--')
+      .sort((a, b) => Number(b.scoreText) - Number(a.scoreText))
+      .slice(0, 3),
     hasData: points.length > 0
   };
+}
+
+function orderRadarDirections(points = []) {
+  const order = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  const map = new Map(points.map((point) => [point.direction, point]));
+  return order.map((direction) => map.get(direction) || {
+    key: direction,
+    direction,
+    name: direction,
+    scoreText: '--',
+    level: 'unknown',
+    cloudText: '暂无数据'
+  });
 }
 
 function orderRadarPoints(points = []) {
@@ -418,4 +437,33 @@ export function buildThreeDayGlowView(days = []) {
 function formatGlowScore(score) {
   const number = Number(score);
   return Number.isFinite(number) ? Math.round(number) : '--';
+}
+
+function humanizeExplanation(value, score) {
+  if (value && typeof value === 'object') {
+    return value.description || value.text || value.label || humanizeExplanation(value.key || value.code, score);
+  }
+
+  const text = String(value || '').trim();
+  const internalTokens = {
+    conditions_excellent: '火烧云条件很强，云层和光路都比较配合。',
+    conditions_good: '火烧云条件可以关注，建议结合临近日落前云况再判断。',
+    conditions_fair: '火烧云条件一般，适合顺路观察，不建议专程追霞。',
+    conditions_low: '火烧云条件偏弱，普通日落效果还要看实时天气和视野。',
+    conditions_poor: '火烧云条件偏弱，普通日落效果还要看实时天气和视野。'
+  };
+  if (internalTokens[text]) return internalTokens[text];
+  if (/^[a-z]+_[a-z0-9_]+$/i.test(text)) {
+    return scoreToHumanSummary(score);
+  }
+  return text || scoreToHumanSummary(score);
+}
+
+function scoreToHumanSummary(score) {
+  const number = Number(score);
+  if (!Number.isFinite(number)) return '暂无解释，等待预测服务返回更完整的数据。';
+  if (number >= 85) return '火烧云条件很强，适合重点关注。';
+  if (number >= 70) return '火烧云条件较好，可以关注临近时段云况。';
+  if (number >= 40) return '火烧云条件一般，适合顺路观察。';
+  return '火烧云条件偏弱，不建议专程追霞。';
 }
