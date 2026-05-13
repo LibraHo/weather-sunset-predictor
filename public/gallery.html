@@ -214,7 +214,7 @@
     }
   </style>
 </head>
-<body class="theme-dark gallery-body">
+<body class="gallery-body">
   <div id="loading" class="gallery-glass" role="status" aria-live="polite">
     <div class="spinner" aria-hidden="true"></div>
     <p data-i18n="gallery.loading">加载照片中...</p>
@@ -248,8 +248,10 @@
   <script type="module">
     import ChinaMapCanvas from '/src/components/ChinaMapCanvas.js';
     import i18n from '/src/i18n.js';
+    import ThemeService from '/src/services/ThemeService.js';
     import { clusterPhotosByPixelDistance, preferredPhotoUrl } from '/src/utils/galleryPhotoClusters.js';
 
+    let themeService;
     let mapCanvas;
     let map;
     let markers = [];
@@ -270,9 +272,16 @@
       document.title = t('gallery.pageTitle');
     }
 
+    function getActualTheme() {
+      return document.body.dataset.actualTheme
+        || document.documentElement.dataset.actualTheme
+        || themeService?.getActualTheme?.()
+        || 'light';
+    }
+
     async function initMap() {
       mapCanvas = new ChinaMapCanvas({
-        style: 'dark',
+        style: getActualTheme(),
         defaultCenter: [35, 105],
         defaultZoom: 4,
         showScoreLegend: false,
@@ -423,6 +432,11 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+      themeService = new ThemeService();
+      window.addEventListener('themeChanged', (event) => {
+        const actualTheme = event.detail?.actualTheme || getActualTheme();
+        mapCanvas?.setTheme(actualTheme);
+      });
       await i18n.init();
       applyGalleryI18n();
       await initMap();

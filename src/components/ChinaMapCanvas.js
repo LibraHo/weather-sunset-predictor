@@ -169,6 +169,16 @@ function isMobileMapViewport() {
   return window.matchMedia?.('(max-width: 640px)').matches || window.innerWidth <= 640;
 }
 
+function isDarkMapTheme() {
+  if (typeof document === 'undefined') return false;
+  return document.body?.dataset?.actualTheme === 'dark'
+    || document.documentElement?.dataset?.actualTheme === 'dark'
+    || document.body?.classList?.contains('theme-dark')
+    || document.body?.classList?.contains('theme-actual-dark')
+    || document.documentElement?.classList?.contains('theme-dark')
+    || document.documentElement?.classList?.contains('theme-actual-dark');
+}
+
 function getMapUiTokens() {
   if (typeof window === 'undefined') {
     return {
@@ -434,7 +444,7 @@ class ChinaMapCanvas {
     if (!this._map) return;
 
     const theme = getMapUiTokens();
-    const isDark = document.body.classList.contains('theme-dark');
+    const isDark = isDarkMapTheme();
 
     if (this._focusMarker) {
       this._map.removeLayer(this._focusMarker);
@@ -1121,7 +1131,7 @@ class ChinaMapCanvas {
       const citiesToShow = selectCitiesForZoom({ level1: L1, level2: L2, level3: L3 }, zoom, isMobile);
 
       const mapTheme = getMapUiTokens();
-      const isDark = document.body.classList.contains('theme-dark');
+      const isDark = isDarkMapTheme();
       const textColor = isDark ? mapTheme.cityTextDark : mapTheme.cityText;
       const fontSize = isMobile
         ? (zoom < 6 ? '9px' : (zoom < 8 ? '10px' : (zoom < 10 ? '11px' : '12px')))
@@ -1179,10 +1189,9 @@ class ChinaMapCanvas {
    * 应用地图样式
    */
   _applyStyle() {
-    const isDark = document.body.classList.contains('theme-dark');
-    const isLightStyle = this._options.style === 'light';
+    const isDark = this._options.style === 'dark' || (this._options.style !== 'light' && isDarkMapTheme());
 
-    if (isDark && !isLightStyle) {
+    if (isDark) {
       // 暗色主题
       this._applyDarkTheme();
     } else {

@@ -48,12 +48,22 @@ describe('gallery share map page', () => {
   });
 
   test('uses Xiake design language tokens and no emoji title markers', () => {
-    expect(html).toContain('class="theme-dark gallery-body"');
+    expect(html).toContain('class="gallery-body"');
     expect(html).toContain('var(--theme-card-bg');
     expect(html).toContain('var(--theme-accent-strong');
     expect(html).toContain('gallery-logo-icon');
     expect(html).not.toContain('🔥');
     expect(html).not.toContain('📷');
+  });
+
+  test('follows the shared theme service instead of forcing a dark basemap', () => {
+    expect(html).toContain("import ThemeService from '/src/services/ThemeService.js'");
+    expect(html).toContain('themeService = new ThemeService()');
+    expect(html).toContain('style: getActualTheme()');
+    expect(html).toContain("window.addEventListener('themeChanged'");
+    expect(html).toContain('mapCanvas?.setTheme(actualTheme)');
+    expect(html).not.toContain('style: \'dark\'');
+    expect(html).not.toContain('class="theme-dark gallery-body"');
   });
 
   test('hero copy explains the gallery value instead of restating basemap implementation', () => {
