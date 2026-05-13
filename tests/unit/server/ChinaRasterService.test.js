@@ -161,8 +161,9 @@ describe('ChinaRasterService.getRaster', () => {
     const second = await chinaRasterService.getRaster('sunset', 0.5);
 
     expect(second).toBe(first);
-    expect(first.updatedAt).toBe(first.generatedAt);
+    expect(first.updatedAt).toBe('2000-01-01T00:00:00.000Z');
     expect(first.sourceUpdatedAt).toBe('2000-01-01T00:00:00.000Z');
+    expect(first.generatedAt).not.toBe(first.updatedAt);
     expect(first._cachedAt).toEqual(expect.any(Number));
     expect(mockGridService.refreshIfStale).toHaveBeenCalledTimes(1);
     expect(mockGridService.getCache).toHaveBeenCalledTimes(1);

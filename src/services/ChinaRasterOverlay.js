@@ -426,7 +426,7 @@ export default class ChinaRasterOverlay {
         ? this._buildSyntheticTestData(rawData)
         : rawData;
       this._rasterData = data;
-      this._updatedAt = data.generatedAt || data.updatedAt || null;
+      this._updatedAt = data.updatedAt || data.sourceUpdatedAt || data.generatedAt || null;
 
       this._buildOffscreen(data);
       this.show();

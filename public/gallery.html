@@ -184,7 +184,13 @@
     .popup-meta-list dt { color: var(--theme-text-muted, #aaa); opacity: 0.78; }
     .popup-meta-list dd { margin: 0; color: var(--theme-text, #fff); min-width: 0; overflow-wrap: anywhere; }
     .cluster-popup-title { margin: 0 0 10px; color: var(--theme-text, #fff); font-size: 0.92rem; font-weight: 700; }
-    .cluster-photo-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; max-width: 288px; }
+    .cluster-photo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 72px);
+      gap: 8px;
+      width: max-content;
+      max-width: 232px;
+    }
     .cluster-photo-button {
       appearance: none;
       border: 0;
@@ -194,15 +200,17 @@
       overflow: hidden;
       cursor: pointer;
       position: relative;
+      width: 72px;
+      height: 72px;
     }
     .cluster-photo-button:focus-visible { outline: 2px solid var(--theme-accent-strong, #f59e0b); outline-offset: 2px; }
-    .cluster-photo-button img { width: 88px; height: 72px; display: block; object-fit: cover; }
+    .cluster-photo-button img { width: 100%; height: 100%; max-width: none; display: block; object-fit: cover; }
     @media (max-width: 640px) {
       .gallery-title { top: 12px; left: 64px; max-width: calc(100vw - 76px); padding: 12px 14px; }
       .gallery-legend { right: 12px; bottom: 12px; }
       .photo-popup .leaflet-popup-content-wrapper { max-width: calc(100vw - 28px); }
       .photo-popup .leaflet-popup-content { max-height: min(58vh, 430px); overflow: auto; }
-      .cluster-photo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 196px; }
+      .cluster-photo-grid { grid-template-columns: repeat(2, 72px); max-width: 152px; }
     }
   </style>
 </head>

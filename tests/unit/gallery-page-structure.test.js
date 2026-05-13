@@ -73,6 +73,13 @@ describe('gallery share map page', () => {
 
   test('mobile popup is constrained so zoom controls stay usable', () => {
     expect(html).toContain('.photo-popup .leaflet-popup-content { max-height: min(58vh, 430px); overflow: auto; }');
-    expect(html).toContain('.cluster-photo-grid { grid-template-columns: repeat(2, minmax(0, 1fr));');
+    expect(html).toContain('.cluster-photo-grid { grid-template-columns: repeat(2, 72px);');
+  });
+
+  test('cluster thumbnails keep stable square dimensions inside Leaflet popups', () => {
+    expect(html).toContain('grid-template-columns: repeat(3, 72px);');
+    expect(html).toContain('width: 72px;');
+    expect(html).toContain('height: 72px;');
+    expect(html).toContain('.cluster-photo-button img { width: 100%; height: 100%; max-width: none;');
   });
 });

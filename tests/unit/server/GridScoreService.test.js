@@ -282,6 +282,20 @@ describe('GridScoreService', () => {
 
       expect(refreshSpy).toHaveBeenCalledTimes(1);
     });
+
+    test('refreshIfStale force=true 应刷新当天已有缓存', async () => {
+      service._cache['sunset'] = {
+        updatedAt: new Date().toISOString(),
+        gridPoints: []
+      };
+
+      const refreshSpy = jest.spyOn(service, '_doRefresh');
+
+      await service.refreshIfStale(0, 'sunset', { force: true });
+
+      expect(refreshSpy).toHaveBeenCalledTimes(1);
+      expect(refreshSpy).toHaveBeenCalledWith('sunset');
+    });
   });
 
   describe('并发控制', () => {

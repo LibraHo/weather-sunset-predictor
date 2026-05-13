@@ -1980,28 +1980,15 @@ class WeatherController {
     const tsEl = document.getElementById('china-spots-timestamp');
     if (!tsEl) return;
 
-    // 显示当前图层的生成时间，避免另一个时段的更新时间覆盖当前 tab。
-    const activePeriod = this.chinaSpotsOverlayManager?.getActivePeriod?.();
-    const activeOverlay = activePeriod
-      ? this.chinaSpotsOverlayManager?.getOverlay?.(activePeriod)
-      : null;
+    // 显示地图全局数据时间，避免朝霞/晚霞 tab 切换时“更新于”跳来跳去。
     let latestTime = null;
-    const activeUpdatedAt = activeOverlay?.getUpdatedAt?.() || null;
-    if (activeUpdatedAt) {
-      latestTime = new Date(activeUpdatedAt);
-    }
-
-    // 兼容初始化早期 active overlay 还没加载完成的情况。
     const periods = ['sunrise', 'sunset'];
-    if (!latestTime || Number.isNaN(latestTime.getTime())) {
-      latestTime = null;
-      for (const p of periods) {
-        const overlay = this.chinaSpotsOverlayManager?.getOverlay(p);
-        const t = overlay?.getUpdatedAt?.() || null;
-        if (t) {
-          const d = new Date(t);
-          if (!Number.isNaN(d.getTime()) && (!latestTime || d > latestTime)) latestTime = d;
-        }
+    for (const p of periods) {
+      const overlay = this.chinaSpotsOverlayManager?.getOverlay(p);
+      const t = overlay?.getUpdatedAt?.() || null;
+      if (t) {
+        const d = new Date(t);
+        if (!Number.isNaN(d.getTime()) && (!latestTime || d > latestTime)) latestTime = d;
       }
     }
 
