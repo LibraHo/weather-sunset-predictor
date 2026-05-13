@@ -107,6 +107,49 @@ describe('miniprogram page user/share helpers', () => {
     ]));
   });
 
+  test('home sunrise sunset preview switch rebuilds score time direction and analysis', () => {
+    const sunset = homeHelpers.buildPredictionPreviewForPeriod('sunset');
+    const sunrise = homeHelpers.buildPredictionPreviewForPeriod('sunrise');
+
+    expect(sunset.periodKey).toBe('sunset');
+    expect(sunrise.periodKey).toBe('sunrise');
+    expect(sunrise.score).not.toBe(sunset.score);
+    expect(sunrise.mainTime).not.toBe(sunset.mainTime);
+    expect(sunrise.bestViewingTime).not.toBe(sunset.bestViewingTime);
+    expect(sunrise.direction).not.toBe(sunset.direction);
+    expect(sunrise.analysis.map((item) => item.desc)).not.toEqual(sunset.analysis.map((item) => item.desc));
+    expect(sunrise.radar.directions).toHaveLength(8);
+    expect(sunrise.radar.directions).not.toEqual(sunset.radar.directions);
+  });
+
+  test('result period switch can request and render the alternate prediction card', () => {
+    const current = {
+      locationName: 'TEST',
+      lat: 39.9,
+      lon: 116.4,
+      period: 'sunset',
+      date: '2026-05-11',
+      score: 76,
+      metrics: { highCloud: 62, midCloud: 36, lowCloud: 8 }
+    };
+
+    expect(resultHelpers.buildPredictionPeriodRequest(current, 'sunrise')).toMatchObject({
+      lat: 39.9,
+      lon: 116.4,
+      type: 'sunrise',
+      date: '2026-05-11'
+    });
+
+    const state = resultHelpers.buildResultPeriodState({ ...current, period: 'sunrise', score: 58, bestWindow: '05:12-05:52' });
+    expect(state).toMatchObject({
+      activePeriod: 'sunrise',
+      prediction: expect.objectContaining({ period: 'sunrise', score: 58 }),
+      metrics: expect.any(Array),
+      analysisItems: expect.any(Array),
+      scoreLedger: expect.objectContaining({ summary: expect.stringContaining('58') })
+    });
+  });
+
   test('result page builds Xiake core panels from backend analysis', () => {
     const analysis = resultHelpers.buildAnalysisItems({
       canvasAnalysis: { score: 83, breakdown: { highClouds: 64, midClouds: 20, lowClouds: 5 } },

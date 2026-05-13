@@ -1,4 +1,4 @@
-<view class="container home-page {{weatherPreview.visible ? 'has-weather' : ''}}">
+<view class="container home-page theme-{{themeMode}} {{weatherPreview.visible ? 'has-weather' : ''}}">
   <view class="home-topbar">
     <view class="home-brand-row">
       <image class="app-logo-image" src="/assets/icons/xiake-logo.svg" mode="aspectFit" aria-hidden="true" />
@@ -38,25 +38,25 @@
     <view class="settings-panel-head">
       <view>
         <view class="settings-title">设置</view>
-        <view class="settings-subtitle">调整首页默认预测类型和日期。</view>
+        <view class="settings-subtitle">调整界面语言和显示主题。</view>
       </view>
       <button class="settings-close" bindtap="closeSettings">x</button>
     </view>
     <view class="settings-group">
-      <view class="settings-label">默认预测</view>
+      <view class="settings-label">界面语言</view>
       <view class="settings-segmented">
-        <view class="settings-segment {{defaultPeriod === 'sunrise' ? 'active' : ''}}" data-value="sunrise" bindtap="selectDefaultPeriod">朝霞</view>
-        <view class="settings-segment {{defaultPeriod === 'sunset' ? 'active' : ''}}" data-value="sunset" bindtap="selectDefaultPeriod">晚霞</view>
+        <view class="settings-segment {{interfaceLanguage === 'zh-CN' ? 'active' : ''}}" data-value="zh-CN" bindtap="selectInterfaceLanguage">中文</view>
+        <view class="settings-segment {{interfaceLanguage === 'en-US' ? 'active' : ''}}" data-value="en-US" bindtap="selectInterfaceLanguage">English</view>
       </view>
     </view>
     <view class="settings-group">
-      <view class="settings-label">默认日期</view>
+      <view class="settings-label">显示主题</view>
       <view class="settings-segmented">
-        <view class="settings-segment {{defaultDay === 'today' ? 'active' : ''}}" data-value="today" bindtap="selectDefaultDay">今天</view>
-        <view class="settings-segment {{defaultDay === 'tomorrow' ? 'active' : ''}}" data-value="tomorrow" bindtap="selectDefaultDay">明天</view>
+        <view class="settings-segment {{themeMode === 'system' ? 'active' : ''}}" data-value="system" bindtap="selectThemeMode">跟随系统</view>
+        <view class="settings-segment {{themeMode === 'light' ? 'active' : ''}}" data-value="light" bindtap="selectThemeMode">浅色</view>
+        <view class="settings-segment {{themeMode === 'dark' ? 'active' : ''}}" data-value="dark" bindtap="selectThemeMode">深色</view>
       </view>
     </view>
-    <button class="settings-reset" bindtap="resetSettings">恢复默认</button>
     <button class="settings-done" bindtap="closeSettings">完成</button>
   </view>
 
@@ -219,9 +219,6 @@
     </view>
 
     <view class="phenomenon-title-card">
-      <view class="phenomenon-icon-tile">
-        <image class="sun-event-image" src="/assets/icons/sun-event-{{predictionPreview.periodKey}}.svg" mode="aspectFit" aria-hidden="true" />
-      </view>
       <view class="phenomenon-title-copy">
         <view class="phenomenon-date-tag">{{predictionPreview.dateLabel}}</view>
         <view class="section-title">{{predictionPreview.periodLabel}}</view>
@@ -293,25 +290,25 @@
       <view class="prediction-radar-head">
         <view class="prediction-radar-title">周边云况雷达</view>
         <view class="prediction-radar-subtitle">20km · 连续云场</view>
-      </view>
-      <view class="prediction-radar-dial">
-        <view class="prediction-radar-ring prediction-radar-ring-low"></view>
+        </view>
+        <view class="prediction-radar-dial">
+          <view class="prediction-radar-cloud-field">
+            <canvas id="homeRadarCloudField" canvas-id="homeRadarCloudField" class="prediction-radar-cloud-canvas" disable-scroll="true"></canvas>
+          </view>
+          <view class="prediction-radar-ring prediction-radar-ring-low-inner"></view>
+          <view class="prediction-radar-ring prediction-radar-ring-low"></view>
         <view class="prediction-radar-ring prediction-radar-ring-mid"></view>
         <view class="prediction-radar-ring prediction-radar-ring-high"></view>
+        <view class="prediction-radar-ring-label prediction-radar-ring-label-high">高云</view>
+        <view class="prediction-radar-ring-label prediction-radar-ring-label-mid">中云</view>
+        <view class="prediction-radar-ring-label prediction-radar-ring-label-low">低云</view>
         <view class="prediction-radar-axis prediction-radar-axis-ns"></view>
         <view class="prediction-radar-axis prediction-radar-axis-ew"></view>
         <view class="prediction-radar-axis prediction-radar-axis-ne"></view>
         <view class="prediction-radar-axis prediction-radar-axis-nw"></view>
         <view class="prediction-radar-center"></view>
         <view class="prediction-radar-direction prediction-radar-direction-{{item.direction}}" wx:for="{{predictionPreview.radar.directions}}" wx:key="direction">
-          <text class="prediction-radar-score tone-{{item.level}}">{{item.scoreText}}</text>
           <text class="prediction-radar-name">{{item.name}}</text>
-        </view>
-      </view>
-      <view class="prediction-radar-detail">
-        <view class="prediction-radar-cloud" wx:for="{{predictionPreview.radar.directions}}" wx:key="direction">
-          <text>{{item.name}}</text>
-          <text>{{item.cloudText}}</text>
         </view>
       </view>
     </view>

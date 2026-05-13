@@ -1,6 +1,7 @@
 import { searchLocations } from '../../services/geocoding.js';
 import { getEnhancedPrediction } from '../../services/prediction.js';
 import { addRecentLocation, listRecentLocations } from '../../services/user.js';
+import { buildRadarCloudGradients, paintRadarCloudCanvas } from '../../utils/radar-cloud-field.js';
 
 const app = getApp();
 
@@ -14,8 +15,8 @@ Page({
     locating: false,
     homeMenuOpen: false,
     settingsOpen: false,
-    defaultPeriod: 'sunset',
-    defaultDay: 'today',
+    interfaceLanguage: 'zh-CN',
+    themeMode: 'system',
     weatherView: 'overview',
     weatherDay: 'today',
     weatherParameter: 'temp',
@@ -32,7 +33,9 @@ Page({
     if (options.weatherTest === '1' || options.test === 'weather') {
       this.setData({
         weatherPreview: buildTestWeatherPreview(),
-        predictionPreview: buildCompletePredictionPreview(buildTestPredictionPreview())
+        predictionPreview: buildPredictionPreviewForPeriod(this.data.period)
+      }, () => {
+        this.paintPredictionRadarCloudField();
       });
     }
     this.refreshSavedLists();
@@ -40,6 +43,7 @@ Page({
 
   onShow() {
     this.refreshSavedLists();
+    this.paintPredictionRadarCloudField();
   },
 
   refreshSavedLists() {
@@ -87,16 +91,11 @@ Page({
     if (!['sunrise', 'sunset'].includes(value)) return;
     this.setData({
       period: value,
-      predictionPreview: {
-        ...this.data.predictionPreview,
-        periodKey: value,
-        periodLabel: value === 'sunrise' ? '朝霞' : '晚霞',
-        eventTimeLabel: value === 'sunrise' ? '日出时间' : '日落时间',
-        directionLabel: value === 'sunrise' ? '日出方向' : '日落方向'
-      }
+      predictionPreview: buildPredictionPreviewForPeriod(value)
+    }, () => {
+      this.paintPredictionRadarCloudField();
     });
   },
-
   switchWeatherView(event) {
     const view = event.currentTarget.dataset.view;
     if (!['overview', 'hourly', 'glow'].includes(view)) return;
@@ -160,41 +159,33 @@ Page({
     wx.navigateTo({ url });
   },
 
-  selectDefaultPeriod(event) {
-    const value = event.currentTarget.dataset.value || 'sunset';
-    this.saveSettings({ defaultPeriod: value });
+  selectInterfaceLanguage(event) {
+    const value = event.currentTarget.dataset.value;
+    if (!['zh-CN', 'en-US'].includes(value)) return;
+    this.saveAppSettings({ interfaceLanguage: value });
   },
 
-  selectDefaultDay(event) {
-    const value = event.currentTarget.dataset.value || 'today';
-    this.saveSettings({ defaultDay: value });
-  },
-
-  resetSettings() {
-    this.saveSettings({ defaultPeriod: 'sunset', defaultDay: 'today' });
+  selectThemeMode(event) {
+    const value = event.currentTarget.dataset.value;
+    if (!['system', 'light', 'dark'].includes(value)) return;
+    this.saveAppSettings({ themeMode: value });
   },
 
   applySavedSettings() {
-    const settings = readHomeSettings();
+    const settings = readAppSettings();
     this.setData({
-      defaultPeriod: settings.defaultPeriod,
-      defaultDay: settings.defaultDay,
-      period: settings.defaultPeriod,
-      day: settings.defaultDay
+      interfaceLanguage: settings.interfaceLanguage,
+      themeMode: settings.themeMode
     });
   },
 
-  saveSettings(patch = {}) {
+  saveAppSettings(patch = {}) {
     const settings = {
-      defaultPeriod: patch.defaultPeriod || this.data.defaultPeriod || 'sunset',
-      defaultDay: patch.defaultDay || this.data.defaultDay || 'today'
+      interfaceLanguage: patch.interfaceLanguage || this.data.interfaceLanguage || 'zh-CN',
+      themeMode: patch.themeMode || this.data.themeMode || 'system'
     };
-    wx.setStorageSync('homeSettings', settings);
-    this.setData({
-      ...settings,
-      period: settings.defaultPeriod,
-      day: settings.defaultDay
-    });
+    wx.setStorageSync('appSettings', settings);
+    this.setData(settings);
   },
 
   async useHistory(event) {
@@ -248,9 +239,11 @@ Page({
     if (isWeatherTestLocation(locationText)) {
       this.setData({
         weatherPreview: buildTestWeatherPreview(),
-        predictionPreview: buildCompletePredictionPreview(buildTestPredictionPreview()),
+        predictionPreview: buildPredictionPreviewForPeriod(this.data.period),
         errorMessage: '',
         loading: false
+      }, () => {
+        this.paintPredictionRadarCloudField();
       });
       return;
     }
@@ -285,6 +278,14 @@ Page({
     } finally {
       this.setData({ loading: false });
     }
+  },
+
+  paintPredictionRadarCloudField() {
+    const directions = this.data.predictionPreview?.radar?.directions || [];
+    if (!directions.length) return;
+    setTimeout(() => {
+      paintRadarCloudCanvas('homeRadarCloudField', directions, { page: this });
+    }, 0);
   },
 
   async resolveLocation(locationText) {
@@ -459,7 +460,7 @@ export function buildDefaultPredictionPreview() {
 export function buildTestPredictionPreview() {
   return {
     icon: '☼',
-    dateLabel: 'TEST',
+    dateLabel: '今日',
     periodKey: 'sunset',
     periodLabel: '晚霞',
     conclusion: '高云较充足、低云较少，具备可观赏的晚霞基础。',
@@ -500,6 +501,33 @@ export function buildTestPredictionPreview() {
       }
     ]
   };
+}
+
+export function buildPredictionPreviewForPeriod(period = 'sunset') {
+  if (period === 'sunrise') {
+    return buildCompletePredictionPreview({
+      icon: '☼',
+      dateLabel: '今日',
+      periodKey: 'sunrise',
+      periodLabel: '朝霞',
+      conclusion: '东侧中高云较合适，低云遮挡偏少，具备可观赏的朝霞基础。',
+      score: 58,
+      scoreLabel: '可观 Watch',
+      scoreDesc: '建议提前观察',
+      eventTimeLabel: '日出时间',
+      mainTime: '05:04',
+      bestViewingTime: '04:42-05:22',
+      directionLabel: '日出方向',
+      direction: '东偏北',
+      clouds: [
+        { key: 'high', label: '高云', value: 38 },
+        { key: 'mid', label: '中云', value: 48 },
+        { key: 'low', label: '低云', value: 14 }
+      ]
+    });
+  }
+
+  return buildCompletePredictionPreview(buildTestPredictionPreview());
 }
 
 export function buildWeatherPreview(weather = {}) {
@@ -719,9 +747,25 @@ export function buildPredictionAnalysisGroups(input = {}) {
   ];
 }
 
-export function buildPredictionRadarPreview() {
-  return {
-    directions: [
+export function buildPredictionRadarPreview(period = 'sunset') {
+  if (period === 'sunrise') {
+    const directions = [
+      { direction: 'N', name: '北', scoreText: '51', level: 'watch', cloudText: '高 22% / 中 35% / 低 18%' },
+      { direction: 'NE', name: '东北', scoreText: '58', level: 'watch', cloudText: '高 30% / 中 48% / 低 14%' },
+      { direction: 'E', name: '东', scoreText: '62', level: 'watch', cloudText: '高 38% / 中 52% / 低 12%' },
+      { direction: 'SE', name: '东南', scoreText: '55', level: 'watch', cloudText: '高 34% / 中 46% / 低 16%' },
+      { direction: 'S', name: '南', scoreText: '44', level: 'watch', cloudText: '高 18% / 中 32% / 低 26%' },
+      { direction: 'SW', name: '西南', scoreText: '39', level: 'weak', cloudText: '高 14% / 中 26% / 低 32%' },
+      { direction: 'W', name: '西', scoreText: '36', level: 'weak', cloudText: '高 12% / 中 24% / 低 36%' },
+      { direction: 'NW', name: '西北', scoreText: '43', level: 'watch', cloudText: '高 18% / 中 30% / 低 24%' }
+    ];
+    return {
+      directions,
+      cloudGradients: buildRadarCloudGradients(directions)
+    };
+  }
+
+  const directions = [
       { direction: 'N', name: '北', scoreText: '62', level: 'watch', cloudText: '高 28% / 中 44% / 低 12%' },
       { direction: 'NE', name: '东北', scoreText: '68', level: 'watch', cloudText: '高 34% / 中 48% / 低 10%' },
       { direction: 'E', name: '东', scoreText: '58', level: 'watch', cloudText: '高 22% / 中 39% / 低 18%' },
@@ -730,7 +774,10 @@ export function buildPredictionRadarPreview() {
       { direction: 'SW', name: '西南', scoreText: '74', level: 'good', cloudText: '高 62% / 中 36% / 低 8%' },
       { direction: 'W', name: '西', scoreText: '76', level: 'good', cloudText: '高 64% / 中 36% / 低 8%' },
       { direction: 'NW', name: '西北', scoreText: '69', level: 'watch', cloudText: '高 55% / 中 38% / 低 12%' }
-    ]
+    ];
+  return {
+    directions,
+    cloudGradients: buildRadarCloudGradients(directions)
   };
 }
 
@@ -742,7 +789,7 @@ function buildCompletePredictionPreview(preview = {}) {
       mid: preview.clouds?.[1]?.value,
       low: preview.clouds?.[2]?.value
     }),
-    radar: buildPredictionRadarPreview()
+    radar: buildPredictionRadarPreview(preview.periodKey)
   };
 }
 
@@ -876,11 +923,11 @@ function getWeatherPreviewCondition(cloudCover) {
   return '阴';
 }
 
-function readHomeSettings() {
-  const settings = wx.getStorageSync('homeSettings') || {};
-  const defaultPeriod = settings.defaultPeriod === 'sunrise' ? 'sunrise' : 'sunset';
-  const defaultDay = settings.defaultDay === 'tomorrow' ? 'tomorrow' : 'today';
-  return { defaultPeriod, defaultDay };
+function readAppSettings() {
+  const settings = wx.getStorageSync('appSettings') || {};
+  const interfaceLanguage = settings.interfaceLanguage === 'en-US' ? 'en-US' : 'zh-CN';
+  const themeMode = ['system', 'light', 'dark'].includes(settings.themeMode) ? settings.themeMode : 'system';
+  return { interfaceLanguage, themeMode };
 }
 
 function wxPromise(fn, options) {

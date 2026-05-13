@@ -65,6 +65,10 @@ describe('miniprogram result page web parity', () => {
     expect(js).toContain('periodCards: {}');
     expect(js).toContain('selectResultPeriod(event)');
     expect(wxss).toContain('.result-prediction-toggle');
+    expect(wxml).not.toContain('result-prediction-toggle xiake-card');
+    expect(wxss).toContain('border-radius: 999rpx');
+    expect(wxss).toContain('background: rgba(255, 252, 246, 0.72)');
+    expect(wxss).toContain('background: linear-gradient(135deg, #f59e0b, #ea8500)');
   });
 
   test('renders the website radar compass structure instead of a placeholder-only panel', () => {
@@ -76,14 +80,29 @@ describe('miniprogram result page web parity', () => {
     expect(web).toContain('radar-cloud-field-');
     expect(web).toContain('radar-sun-event-icon');
     expect(wxml).toContain('radar-cloud-field');
+    expect(wxml).toContain('id="resultRadarCloudField"');
+    expect(wxml).toContain('canvas-id="resultRadarCloudField"');
+    expect(wxml).toContain('radar-cloud-canvas');
+    expect(wxml).toContain('radar-ring-low-inner');
+    expect(wxml).not.toContain('radar-cloud-gradient');
+    expect(wxml).not.toContain('radar-direction-score');
+    expect(wxml).not.toContain('radar-cloud-blob');
     expect(wxml).toContain('radar-sun-event-icon');
     expect(wxml).toContain('wx:for="{{radar.rings}}"');
-    expect(wxml).toContain('wx:for="{{radar.cloudBlobs}}"');
+    expect(wxml).not.toContain('wx:for="{{radar.cloudBlobs}}"');
     expect(wxml).toContain('wx:for="{{radar.sunEvents}}"');
+    expect(wxml).not.toContain('radar-detail-strip');
     expect(js).toContain('buildRadarRings');
-    expect(js).toContain('buildRadarCloudBlobs');
+    expect(js).toContain('cloudGradients: buildRadarCloudGradients(directions)');
+    expect(js).toContain("paintRadarCloudCanvas('resultRadarCloudField', directions, { page: this })");
+    expect(js).not.toContain('buildRadarCloudBlobs');
     expect(js).toContain('buildRadarSunEvents');
     expect(wxss).toContain('.radar-cloud-field');
+    expect(wxss).toContain('.radar-cloud-canvas');
+    expect(wxss).toContain('.radar-ring-low-inner');
+    expect(wxss).not.toContain('.radar-direction-score');
+    expect(wxss).not.toContain('.radar-cloud-gradient');
+    expect(wxss).not.toContain('.radar-cloud-blob-high');
     expect(wxss).toContain('.radar-sun-event-icon');
   });
 });
