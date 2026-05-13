@@ -16,6 +16,9 @@ describe('miniprogram completion workflow docs', () => {
     expect(doc).toContain('仓库内可完成');
     expect(doc).toContain('必须依赖微信后台/真机/体验版');
     expect(doc).toContain('PR #670');
+    expect(doc).toContain('PR #690');
+    expect(doc).toContain('PR #691');
+    expect(doc).toContain('体验版 `1.0.2`');
     expect(doc).toContain('docs/miniprogram-platform-checklist.md');
     expect(doc).toContain('真实小程序 AppID');
     expect(doc).toContain('体验版上传和二维码');
@@ -31,6 +34,9 @@ describe('miniprogram completion workflow docs', () => {
     expect(tasks).toContain('- [x] 52.13 共享 API 契约文档');
     expect(tasks).toContain('- [x] 52.23 真机验收矩阵');
     expect(tasks).toContain('真实执行待外部条件');
+    expect(tasks).toContain('PR #690/#691 已合并，体验版 `1.0.2` 已通过 `miniprogram-ci upload` 上传');
+    expect(tasks).toContain('PR #691 已把首页/结果页入口和原生火烧云地图往 Web 体验对齐');
+    expect(tasks).toContain('仍需真机连续操作验收');
   });
 
   test('platform checklist explicitly warns that unchecked items require real platform work', () => {
