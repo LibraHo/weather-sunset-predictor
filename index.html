@@ -489,23 +489,23 @@
             <div class="score-row score-poor">
               <span class="score-range" data-i18n="home.methodology.scorePoorRange">低概率 Low</span>
               <span class="score-detail" data-i18n="home.methodology.scorePoorDetail">&lt;40 分</span>
-              <span class="score-desc" data-i18n="home.methodology.scorePoorDesc">主条件不足，通常不建议专门出门</span>
+              <span class="score-desc" data-i18n="home.methodology.scorePoorDesc">火烧云条件偏弱；不建议专程追霞，普通日落效果需看实时天气和视野</span>
             </div>
           </div>
           <div class="methodology-score-source-note">
-            <h4 data-i18n="home.methodology.scoreSourceTitle">地图分与精确点分为什么会不同</h4>
-            <p data-i18n="home.methodology.scoreSourceMap">火烧云地图分用于看区域趋势，来自固定格点、批量天气数据和栅格插值；它会保持地图连续，但不等同于每个城市中心点的最终预测。</p>
-            <p data-i18n="home.methodology.scoreSourcePoint">地点详情页的精确点分会针对输入坐标重新请求单点天气、空气质量和光路数据，按该点的日出/日落时间闭环计算。</p>
-            <p data-i18n="home.methodology.scoreSourceWhy">因此两者可能有轻微差异：地图适合判断附近哪里更值得看，精确点分适合决定当前位置是否出门；如果差异很大，以精确点分为准。</p>
+            <h4 data-i18n="home.methodology.scoreSourceTitle">为什么地图颜色和地点详情分会不同</h4>
+            <p data-i18n="home.methodology.scoreSourceMap">地图上的颜色是区域趋势，用来快速看“这一片哪里更可能出彩”。为了让整张图连续，它会按固定网格批量计算，再在格点之间做平滑。</p>
+            <p data-i18n="home.methodology.scoreSourcePoint">地点详情分是你选中的具体位置，会按这个坐标重新计算当地日出/日落时间、云层、空气质量和太阳方向光路。</p>
+            <p data-i18n="home.methodology.scoreSourceWhy">所以地图适合先找方向，地点详情适合最后决定要不要去。如果两者差很多，以地点详情为准。</p>
           </div>
         </div>
 
         <div class="methodology-changelog-card" aria-labelledby="methodology-changelog-title">
           <div class="methodology-changelog-head">
             <h3 id="methodology-changelog-title" data-i18n="home.methodology.changelogTitle">版本更新记录</h3>
-            <span data-i18n="home.methodology.changelogHint">用于回溯每次算法调整的原因、影响和验证方式</span>
+            <span data-i18n="home.methodology.changelogHint">近三个月内的算法更新都会放在这里，可滚动回看原因、影响和验证方式</span>
           </div>
-          <div class="methodology-changelog-scroll" tabindex="0">
+          <div class="methodology-changelog-scroll" tabindex="0" role="region" aria-labelledby="methodology-changelog-title">
             <ol class="methodology-changelog-list">
               <li>
                 <time datetime="2026-05-13" data-i18n="home.methodology.changelog.latest.date">2026-05-13</time>
@@ -516,11 +516,35 @@
                 </div>
               </li>
               <li>
-                <time datetime="2026-05-12" data-i18n="home.methodology.changelog.current.date">2026-05-12</time>
+                <time datetime="2026-05-12" data-i18n="home.methodology.changelog.aerosol.date">2026-05-12</time>
                 <div>
-                  <strong data-i18n="home.methodology.changelog.current.title">气溶胶弱载体 v1</strong>
-                  <p data-i18n="home.methodology.changelog.current.summary">云层很少时，适度薄雾/气溶胶必须被太阳方向光路激活，才会作为普通红日落的弱载体参与评分。</p>
-                  <small data-i18n="home.methodology.changelog.current.validation">验证：北京弱红日落可进入 30 多分；干净晴空、重霾沙尘、低云遮挡和厚灰幕场景不被抬高。</small>
+                  <strong data-i18n="home.methodology.changelog.aerosol.title">气溶胶弱载体 v1</strong>
+                  <p data-i18n="home.methodology.changelog.aerosol.summary">云层很少时，适度薄雾/气溶胶必须被太阳方向光路激活，才会作为普通红日落的弱载体参与评分。</p>
+                  <small data-i18n="home.methodology.changelog.aerosol.validation">验证：北京弱红日落可进入 30 多分；干净晴空、重霾沙尘、低云遮挡和厚灰幕场景不被抬高。</small>
+                </div>
+              </li>
+              <li>
+                <time datetime="2026-05-11" data-i18n="home.methodology.changelog.openingCarrier.date">2026-05-11</time>
+                <div>
+                  <strong data-i18n="home.methodology.changelog.openingCarrier.title">开口型中高云载体 v1</strong>
+                  <p data-i18n="home.methodology.changelog.openingCarrier.summary">低云少、中高云可染色且太阳方向有开口时，不再把它误判成完全遮光的厚云幕。</p>
+                  <small data-i18n="home.methodology.changelog.openingCarrier.validation">验证：颐和园开口型中高云样本回到可观赏区间；灰霾、沙尘和无开口厚云仍保持保守。</small>
+                </div>
+              </li>
+              <li>
+                <time datetime="2026-05-10" data-i18n="home.methodology.changelog.lightPath.date">2026-05-10</time>
+                <div>
+                  <strong data-i18n="home.methodology.changelog.lightPath.title">低云主导光路 v3</strong>
+                  <p data-i18n="home.methodology.changelog.lightPath.summary">光路遮挡改为看低云是否挡住太阳方向，避免高云/中云很多但低云很少的晚霞画布被误伤。</p>
+                  <small data-i18n="home.methodology.changelog.lightPath.validation">验证：高云画布场景不再仅因总云量高而压低；低云主导、雨雪和低能见度仍保守。</small>
+                </div>
+              </li>
+              <li>
+                <time datetime="2026-05-10" data-i18n="home.methodology.changelog.upperCloudCarrier.date">2026-05-10</time>
+                <div>
+                  <strong data-i18n="home.methodology.changelog.upperCloudCarrier.title">中高云载体保护 v2</strong>
+                  <p data-i18n="home.methodology.changelog.upperCloudCarrier.summary">高云和中云都充足、低云少且空气不灰时，按可染色画布处理，不再简单压成低分。</p>
+                  <small data-i18n="home.methodology.changelog.upperCloudCarrier.validation">验证：北京中高云样本回到 50-60 分区间；空气灰、沙尘重或缺少中云支撑时仍保持低分。</small>
                 </div>
               </li>
             </ol>

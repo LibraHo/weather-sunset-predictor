@@ -69,21 +69,39 @@ apiAccess: 'API 연동'
       "intro": "화염구름 지수는 4가지 주요 요인을 종합하여 계산되며, 해당 날의 노을 관람이 가치 있는지 빠르게 판단하는 데 도움을 줍니다.",
       "versionLabel": "알고리즘 버전: 2026.05.13-formation-factors-v1",
       "versionDesc": "화염구름 분석을 구름 매개층, 빛 경로, 공기 발색, 제한 요인 네 가지로 고정했습니다. 점수 공식은 그대로입니다.",
-      changelogTitle: "Version update history",
-      changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
+      changelogTitle: "버전 업데이트 기록",
+      changelogHint: "최근 3개월의 알고리즘 업데이트를 여기에 모았습니다. 스크롤해 변경 이유, 영향, 검증 내용을 확인할 수 있습니다",
       changelog: {
-              "latest": {
-                      "date": "2026-05-13",
-                      "title": "4요인 분석 v1",
-                      "summary": "화염구름 분석을 네 가지 안정적인 요인으로 묶어 흩어진 설명 항목을 줄였습니다.",
-                      "validation": "검증: 에어로졸, 낮은 구름 차단, 회색 연무, 두꺼운 구름, 강수 사례가 대응 요인으로 통합됩니다. 점수 공식은 변하지 않습니다."
-              },
-              "current": {
-                      "date": "2026-05-12",
-                      "title": "에어로졸 약한 매개층 v1",
-                      "summary": "구름이 적을 때 적당한 얇은 연무는 태양 방향 빛 경로가 열려 있을 때만 약한 붉은 석양 매개층으로 반영됩니다.",
-                      "validation": "검증: 베이징 약한 붉은 석양 샘플은 30점대로 올라가고, 맑은 하늘·짙은 연무/먼지·낮은 구름 차단·회색 장막은 낮게 유지됩니다."
-              }
+        "latest": {
+          "date": "2026-05-13",
+          "title": "4요인 분석 v1",
+          "summary": "화염구름 분석을 네 가지 안정적인 요인으로 묶어 흩어진 설명 항목을 줄였습니다.",
+          "validation": "검증: 에어로졸, 낮은 구름 차단, 회색 연무, 두꺼운 구름, 강수 사례가 대응 요인으로 통합됩니다. 점수 공식은 변하지 않습니다."
+        },
+        "aerosol": {
+          "date": "2026-05-12",
+          "title": "에어로졸 약한 매개층 v1",
+          "summary": "구름이 적을 때 적당한 얇은 연무는 태양 방향 빛 경로가 열려 있을 때만 약한 붉은 석양 매개층으로 반영됩니다.",
+          "validation": "검증: 베이징 약한 붉은 석양 샘플은 30점대로 올라가고, 맑은 하늘·짙은 연무/먼지·낮은 구름 차단·회색 장막은 낮게 유지됩니다."
+        },
+        "openingCarrier": {
+          "date": "2026-05-11",
+          "title": "틈이 있는 중고층 구름 매개층 v1",
+          "summary": "저층 구름이 적고 중고층 구름이 색을 받을 수 있으며 태양 방향에 틈이 있을 때, 완전히 막힌 두꺼운 구름막으로 보지 않습니다.",
+          "validation": "검증: 이화원 중고층 구름 샘플은 관측 후보 구간으로 돌아가고, 연무·먼지·틈 없는 두꺼운 구름은 보수적으로 유지됩니다."
+        },
+        "lightPath": {
+          "date": "2026-05-10",
+          "title": "저층 구름 중심 빛 경로 v3",
+          "summary": "빛 경로 차단은 저층 구름이 태양 방향을 막는지를 중심으로 보며, 중고층 구름이 많고 저층 구름이 적은 노을 캔버스를 잘못 낮추지 않습니다.",
+          "validation": "검증: 고층 구름 캔버스는 총운량만으로 낮아지지 않고, 저층 구름 우세·비/눈·낮은 가시거리는 보수적으로 유지됩니다."
+        },
+        "upperCloudCarrier": {
+          "date": "2026-05-10",
+          "title": "중고층 구름 매개층 보호 v2",
+          "summary": "고층과 중층 구름이 충분하고 저층 구름이 적으며 공기가 회색이 아닐 때, 낮은 점수가 아니라 색을 받을 수 있는 캔버스로 봅니다.",
+          "validation": "검증: 베이징 중고층 구름 샘플은 50-60점대로 돌아가고, 회색 공기·강한 먼지·중층 구름 부족은 낮게 유지됩니다."
+        }
       },
       "factors": {
         "highMidCloudTitle": "중고층 구름 (캔버스 조건)",
@@ -110,11 +128,11 @@ apiAccess: 'API 연동'
       "scoreFairDesc": "색이 날 수 있으나 국지적 틈과 실황 확인 필요",
       "scorePoorRange": "낮은 확률 Low",
       "scorePoorDetail": "<40점",
-      "scorePoorDesc": "핵심 조건이 약해 일부러 나가긴 어려움",
-      "scoreSourceTitle": "지도 점수와 정확한 지점 점수가 다른 이유",
-      "scoreSourceMap": "화염구름 지도 점수는 지역 흐름을 보기 위한 값입니다. 고정 격자, 배치 날씨 데이터, 래스터 보간으로 만들어져 지도를 연속적으로 보여주지만, 모든 도시 중심 좌표의 최종 예보와 같지는 않습니다.",
-      "scoreSourcePoint": "상세 페이지의 정확한 지점 점수는 입력 좌표에 대해 단일 지점 날씨, 공기질, 빛 경로 데이터를 다시 요청하고 그 지점의 일출 또는 일몰 시간에 맞춰 계산합니다.",
-      "scoreSourceWhy": "따라서 작은 차이는 정상입니다. 지도는 주변에서 더 유망한 지역을 고르는 데 쓰고, 현재 위치에서 나갈지는 정확한 지점 점수를 기준으로 보세요. 차이가 크면 정확한 지점 점수를 우선합니다.",
+      "scorePoorDesc": "Fire-cloud conditions are weak; do not plan a dedicated chase from this score alone, and judge any ordinary sunset by live weather and visibility",
+      "scoreSourceTitle": "지도 색과 장소 상세 점수가 다른 이유",
+      "scoreSourceMap": "지도 색은 지역 흐름입니다. 근처에서 어느 방향이 더 유망한지 빠르게 보기 위해 고정 격자로 계산하고 격자 사이를 부드럽게 연결합니다.",
+      "scoreSourcePoint": "장소 상세 점수는 선택한 특정 위치의 값입니다. 그 좌표의 현지 일출/일몰 시간, 구름, 공기질, 태양 방향 빛 경로를 다시 계산합니다.",
+      "scoreSourceWhy": "먼저 지도에서 방향을 고르고, 마지막에 장소 상세로 나갈지 판단하세요. 차이가 크면 장소 상세 점수를 우선하세요.",
       "sections": {
         "cloudStructure": {
           "title": "1. 구름층 구조",

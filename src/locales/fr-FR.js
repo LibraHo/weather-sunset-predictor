@@ -69,21 +69,39 @@ const translations = {
       "intro": "L'indice de nuages rouges est calculé à partir de quatre facteurs clés pour vous aider à décider rapidement si la soirée vaut le déplacement.",
       "versionLabel": "Version de l’algorithme : 2026.05.13-formation-factors-v1",
       "versionDesc": "Cette version stabilise l’analyse en quatre facteurs : support nuageux, trajet lumineux, rendu de l’air et limites. La formule de score ne change pas.",
-      changelogTitle: "Version update history",
-      changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
+      changelogTitle: "Historique des versions",
+      changelogHint: "Les mises a jour des trois derniers mois sont ici ; faites defiler pour revoir la raison, l'impact et la validation",
       changelog: {
-              "latest": {
-                      "date": "2026-05-13",
-                      "title": "Analyse à quatre facteurs v1",
-                      "summary": "L’analyse est regroupée en support nuageux, trajet lumineux, rendu de l’air et limites afin de réduire les notes dispersées.",
-                      "validation": "Validation : aérosols, blocage bas, brume grise, nuages épais et pluie sont rattachés au bon facteur ; la formule reste inchangée."
-              },
-              "current": {
-                      "date": "2026-05-12",
-                      "title": "Support faible par aérosols v1",
-                      "summary": "Quand les nuages manquent, une brume modérée ne contribue comme support faible que si le trajet lumineux vers le soleil est ouvert.",
-                      "validation": "Validation : l’exemple de Pékin monte dans les bas 30, tandis que ciel clair, forte brume/poussière, blocage bas et rideaux gris restent bas."
-              }
+        "latest": {
+          "date": "2026-05-13",
+          "title": "Analyse a quatre facteurs v1",
+          "summary": "L'analyse est regroupee en support nuageux, trajet lumineux, rendu de l'air et limites afin de reduire les notes dispersees.",
+          "validation": "Validation : aerosols, blocage bas, brume grise, nuages epais et pluie sont rattaches au bon facteur ; la formule reste inchangee."
+        },
+        "aerosol": {
+          "date": "2026-05-12",
+          "title": "Support faible par aerosols v1",
+          "summary": "Quand les nuages manquent, une brume moderee ne contribue comme support faible que si le trajet lumineux vers le soleil est ouvert.",
+          "validation": "Validation : l'exemple de Pekin monte dans les bas 30, tandis que ciel clair, forte brume/poussiere, blocage bas et rideaux gris restent bas."
+        },
+        "openingCarrier": {
+          "date": "2026-05-11",
+          "title": "Support nuageux avec ouverture v1",
+          "summary": "Avec peu de nuages bas, des nuages moyens/hauts colorables et une ouverture vers le soleil, le modele ne traite plus le ciel comme un rideau epais totalement bloque.",
+          "validation": "Validation : l'echantillon du Palais d'ete revient en zone observable ; brume, poussiere et nuage epais ferme restent prudents."
+        },
+        "lightPath": {
+          "date": "2026-05-10",
+          "title": "Trajet lumineux domine par les nuages bas v3",
+          "summary": "Le blocage lumineux regarde maintenant si les nuages bas coupent la direction du soleil, afin de ne plus penaliser les toiles de coucher de soleil en nuages moyens/hauts.",
+          "validation": "Validation : les cas de toile en nuages hauts ne baissent plus par simple couverture totale ; nuages bas dominants, pluie/neige et faible visibilite restent prudents."
+        },
+        "upperCloudCarrier": {
+          "date": "2026-05-10",
+          "title": "Protection du support en nuages hauts v2",
+          "summary": "Quand nuages hauts et moyens sont riches, que les nuages bas sont rares et que l'air n'est pas gris, le ciel est traite comme une toile colorable.",
+          "validation": "Validation : l'echantillon de Pekin revient vers 50-60 ; air gris, poussiere forte ou faible soutien en nuages moyens restent bas."
+        }
       },
       "factors": {
         "highMidCloudTitle": "Nuages moyens/hauts (toile)",
@@ -110,11 +128,11 @@ const translations = {
       "scoreFairDesc": "Couleurs possibles, vérifier les ouvertures locales et le ciel réel",
       "scorePoorRange": "Faible",
       "scorePoorDetail": "<40 pts",
-      "scorePoorDesc": "Conditions de base faibles, sortie dédiée peu recommandée",
-      "scoreSourceTitle": "Pourquoi le score de carte et le score du point exact peuvent différer",
-      "scoreSourceMap": "Le score de la carte sert à lire une tendance régionale. Il vient de points de grille fixes, de données météo par lot et d’une interpolation raster : la carte reste continue, mais ce n’est pas la prévision finale de chaque centre-ville.",
-      "scoreSourcePoint": "Le score du point exact, dans la page de détail, recharge la météo, la qualité de l’air et le trajet lumineux pour la coordonnée saisie, puis calcule selon l’heure de lever ou coucher du soleil de ce point.",
-      "scoreSourceWhy": "De petites différences sont donc normales : utilisez la carte pour repérer la zone voisine la plus prometteuse, et le point exact pour décider si vous sortez à votre position. Si l’écart est important, fiez-vous au point exact.",
+      "scorePoorDesc": "Fire-cloud conditions are weak; do not plan a dedicated chase from this score alone, and judge any ordinary sunset by live weather and visibility",
+      "scoreSourceTitle": "Pourquoi la couleur de la carte et le score du lieu peuvent differer",
+      "scoreSourceMap": "Les couleurs de la carte montrent une tendance regionale pour reperer vite la zone la plus prometteuse. Pour garder une carte continue, le calcul se fait sur une grille fixe puis est lisse entre les points.",
+      "scoreSourcePoint": "Le score du lieu correspond au point choisi. Il recalcule l'heure locale, les nuages, la qualite de l'air et le trajet lumineux dans la direction du soleil.",
+      "scoreSourceWhy": "Utilisez donc la carte pour choisir une direction, puis le detail du lieu pour decider de sortir. Si l'ecart est fort, fiez-vous au score du lieu.",
       "sections": {
         "cloudStructure": {
           "title": "1. Structure des nuages",

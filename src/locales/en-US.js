@@ -70,20 +70,38 @@ const translations = {
       "versionLabel": "Algorithm version: 2026.05.13-formation-factors-v1",
       "versionDesc": "This version makes fire-cloud analysis a stable four-factor summary: cloud carrier, light path, air rendering, and limits. The scoring formula is unchanged.",
       changelogTitle: "Version update history",
-      changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
+      changelogHint: "Algorithm updates from the last three months live here; scroll to review why each change happened, its impact, and validation",
       changelog: {
-              "latest": {
-                      "date": "2026-05-13",
-                      "title": "Four-factor analysis v1",
-                      "summary": "Fire-cloud analysis is now grouped into cloud carrier, light path, air rendering, and limits to reduce scattered notes.",
-                      "validation": "Validation: aerosol, low-cloud blockage, gray haze, thick cloud, and rain cases are grouped into the right factor; the scoring formula is unchanged."
-              },
-              "current": {
-                      "date": "2026-05-12",
-                      "title": "Aerosol weak carrier v1",
-                      "summary": "When clouds are scarce, moderate thin haze must be activated by an open sun-direction light path before it contributes as a weak red-sunset carrier.",
-                      "validation": "Validation: the Beijing weak red-sunset sample moves into the low-30s, while clean clear sky, heavy haze/dust, low-cloud blockage, and gray curtains stay low."
-              }
+        "latest": {
+          "date": "2026-05-13",
+          "title": "Four-factor analysis v1",
+          "summary": "Fire-cloud analysis is now grouped into cloud carrier, light path, air rendering, and limits to reduce scattered notes.",
+          "validation": "Validation: aerosol, low-cloud blockage, gray haze, thick cloud, and rain cases are grouped into the right factor; the scoring formula is unchanged."
+        },
+        "aerosol": {
+          "date": "2026-05-12",
+          "title": "Aerosol weak carrier v1",
+          "summary": "When clouds are scarce, moderate thin haze must be activated by an open sun-direction light path before it contributes as a weak red-sunset carrier.",
+          "validation": "Validation: the Beijing weak red-sunset sample moves into the low-30s, while clean clear sky, heavy haze/dust, low-cloud blockage, and gray curtains stay low."
+        },
+        "openingCarrier": {
+          "date": "2026-05-11",
+          "title": "Open upper-cloud carrier v1",
+          "summary": "When low clouds are scarce, mid/high clouds can take color, and the sun direction has an opening, the model no longer treats the setup as a fully blocked thick cloud deck.",
+          "validation": "Validation: the Summer Palace open mid/high-cloud sample returns to the watchable range; haze, dust, and closed thick-cloud cases stay conservative."
+        },
+        "lightPath": {
+          "date": "2026-05-10",
+          "title": "Low-cloud light path v3",
+          "summary": "Light-path blockage now focuses on whether low clouds block the sun direction, avoiding false penalties for rich mid/high-cloud sunset canvases.",
+          "validation": "Validation: high-cloud canvas cases are no longer pushed down by total cloud cover alone; low-cloud-dominant, rain/snow, and poor-visibility cases stay conservative."
+        },
+        "upperCloudCarrier": {
+          "date": "2026-05-10",
+          "title": "Upper-cloud carrier protection v2",
+          "summary": "When high and mid clouds are both rich, low clouds are scarce, and the air is not gray, the sky is treated as a colorable canvas instead of a simple low score.",
+          "validation": "Validation: the Beijing mid/high-cloud sample returns to the 50-60 range; gray air, heavy dust, or weak mid-cloud support still stay low."
+        }
       },
       "factors": {
         "highMidCloudTitle": "Mid/High Clouds (Canvas)",
@@ -110,11 +128,11 @@ const translations = {
       "scoreFairDesc": "Possible color, but check local openings and live sky",
       "scorePoorRange": "Low",
       "scorePoorDetail": "<40 pts",
-      "scorePoorDesc": "Core setup is weak; usually not worth a special trip",
-      "scoreSourceTitle": "Why map scores and exact-point scores can differ",
-      "scoreSourceMap": "The fire-cloud map score is for regional trends. It comes from fixed grid points, batch weather data, and raster interpolation, so it keeps the map continuous but is not the final forecast for every city-center coordinate.",
-      "scoreSourcePoint": "The exact-point score on the detail page re-fetches single-point weather, air-quality, and light-path data for the entered coordinate, then calculates against that point's sunrise or sunset time.",
-      "scoreSourceWhy": "Small differences are expected: use the map to decide which nearby area is more promising, and use the exact-point score to decide whether to go out at the current location. If they diverge a lot, trust the exact-point score.",
+      "scorePoorDesc": "Fire-cloud conditions are weak; do not plan a dedicated chase from this score alone, and judge any ordinary sunset by live weather and visibility",
+      "scoreSourceTitle": "Why map colors and place-detail scores can differ",
+      "scoreSourceMap": "Map colors show the regional trend, helping you quickly see which nearby area is more promising. To keep the whole map continuous, it is calculated on a fixed grid and smoothed between grid points.",
+      "scoreSourcePoint": "The place-detail score is for the exact spot you selected. It recalculates that coordinate's local sunrise or sunset time, clouds, air quality, and sun-direction light path.",
+      "scoreSourceWhy": "Use the map to choose a direction first, then use the place detail to decide whether to go. If they differ a lot, trust the place-detail score.",
       "sections": {
         "cloudStructure": {
           "title": "1. Cloud Structure",

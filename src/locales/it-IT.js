@@ -38,21 +38,39 @@ apiAccess: 'Accesso API'
       "intro": "L'indice nuvole rosse combina quattro fattori chiave per stimare se vale la pena osservare il tramonto.",
       "versionLabel": "Algorithm version: 2026.05.13-formation-factors-v1",
       "versionDesc": "This version makes fire-cloud analysis a stable four-factor summary: cloud carrier, light path, air rendering, and limits. The scoring formula is unchanged.",
-      changelogTitle: "Version update history",
-      changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
+      changelogTitle: "Cronologia versioni",
+      changelogHint: "Gli aggiornamenti degli ultimi tre mesi sono qui; scorri per rivedere motivo, impatto e validazione",
       changelog: {
-              "latest": {
-                      "date": "2026-05-13",
-                      "title": "Four-factor analysis v1",
-                      "summary": "Fire-cloud analysis is now grouped into cloud carrier, light path, air rendering, and limits to reduce scattered notes.",
-                      "validation": "Validation: aerosol, low-cloud blockage, gray haze, thick cloud, and rain cases are grouped into the right factor; the scoring formula is unchanged."
-              },
-              "current": {
-                      "date": "2026-05-12",
-                      "title": "Aerosol weak carrier v1",
-                      "summary": "When clouds are scarce, moderate thin haze must be activated by an open sun-direction light path before it contributes as a weak red-sunset carrier.",
-                      "validation": "Validation: the Beijing weak red-sunset sample moves into the low-30s, while clean clear sky, heavy haze/dust, low-cloud blockage, and gray curtains stay low."
-              }
+        "latest": {
+          "date": "2026-05-13",
+          "title": "Analisi a quattro fattori v1",
+          "summary": "L'analisi viene raggruppata in supporto nuvoloso, percorso della luce, resa dell'aria e limiti per ridurre note disperse.",
+          "validation": "Validazione: aerosol, blocco da nuvole basse, foschia grigia, nuvole spesse e pioggia rientrano nel fattore corretto; la formula non cambia."
+        },
+        "aerosol": {
+          "date": "2026-05-12",
+          "title": "Supporto debole da aerosol v1",
+          "summary": "Con poche nuvole, una foschia moderata contribuisce come debole supporto al tramonto rosso solo se il percorso della luce e aperto.",
+          "validation": "Validazione: il caso di Pechino sale nei bassi 30 punti; cielo pulito, foschia/polvere forte, blocco basso e tende grigie restano bassi."
+        },
+        "openingCarrier": {
+          "date": "2026-05-11",
+          "title": "Supporto nuvoloso con apertura v1",
+          "summary": "Con poche nuvole basse, nuvole medie/alte colorabili e un'apertura verso il sole, il modello non lo tratta piu come una copertura spessa chiusa.",
+          "validation": "Validazione: il caso aperto del Palazzo d'Estate torna in fascia osservabile; foschia, polvere e coperture chiuse restano prudenti."
+        },
+        "lightPath": {
+          "date": "2026-05-10",
+          "title": "Percorso luce da nuvole basse v3",
+          "summary": "Il blocco della luce ora valuta se le nuvole basse coprono la direzione del sole, evitando penalita false per cieli con molte nuvole medie/alte.",
+          "validation": "Validazione: i casi con tela di nuvole alte non scendono solo per copertura totale; nuvole basse dominanti, pioggia/neve e bassa visibilita restano prudenti."
+        },
+        "upperCloudCarrier": {
+          "date": "2026-05-10",
+          "title": "Protezione supporto nuvole alte v2",
+          "summary": "Quando nuvole alte e medie sono ricche, le basse sono poche e l'aria non e grigia, il cielo e trattato come tela colorabile.",
+          "validation": "Validazione: il caso di Pechino torna a 50-60 punti; aria grigia, polvere forte o scarso supporto medio restano bassi."
+        }
       },
       "factors": {
         "highMidCloudTitle": "Nuvole medie/alte (tela)",
@@ -79,7 +97,11 @@ apiAccess: 'Accesso API'
       "scoreFairDesc": "Colori possibili; controlla aperture locali e cielo reale",
       "scorePoorRange": "Basso",
       "scorePoorDetail": "<40 pts",
-      "scorePoorDesc": "Condizioni principali deboli; di solito non vale un’uscita apposita",
+      "scorePoorDesc": "Fire-cloud conditions are weak; do not plan a dedicated chase from this score alone, and judge any ordinary sunset by live weather and visibility",
+      "scoreSourceTitle": "Perche colore della mappa e punteggio del luogo possono differire",
+      "scoreSourceMap": "I colori della mappa mostrano una tendenza regionale. Per mantenerla continua, il calcolo usa una griglia fissa e smussa i valori tra i punti.",
+      "scoreSourcePoint": "Il punteggio del luogo riguarda il punto scelto e ricalcola ora locale, nuvole, qualita dell'aria e percorso della luce verso il sole.",
+      "scoreSourceWhy": "Usa prima la mappa per scegliere una direzione, poi il dettaglio del luogo per decidere se uscire. Se differiscono molto, fidati del dettaglio.",
       "sections": {
         "cloudStructure": {
           "title": "1. Struttura delle nuvole",

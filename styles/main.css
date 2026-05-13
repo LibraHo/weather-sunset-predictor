@@ -401,9 +401,9 @@ main > section {
 }
 
 .methodology-changelog-scroll {
-  max-height: 260px;
+  max-height: 340px;
   overflow-y: auto;
-  padding: 0 8px 0 0;
+  padding: 2px 10px 2px 0;
   scrollbar-color: var(--color-border) transparent;
 }
 
@@ -8021,10 +8021,8 @@ body[data-actual-theme="dark"] .weather-feature-item:hover {
 }
 
 /* High-impact token remapping for prediction surfaces. */
-.score-gauge-number,
-.score-gauge-grade,
 .score-gauge-center .score-breakdown-hint-trigger {
-  color: var(--score-excellent-mid) !important;
+  color: var(--theme-accent-strong) !important;
 }
 .score-gauge-total,
 .prediction-app-footer {
@@ -9469,9 +9467,36 @@ html[data-actual-theme="dark"] #weather-section #weekly-cards.weekly-cards-conta
 }
 
 .app-analysis-card .analysis-factor-status {
-  color: var(--theme-accent-strong);
+  padding: 3px 7px;
+  border: 1px solid transparent;
+  border-radius: 999px;
   font-size: 0.82rem;
+  line-height: 1.15;
   white-space: nowrap;
+}
+
+.app-analysis-card .analysis-factor-status-good {
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-success) 32%, transparent);
+}
+
+.app-analysis-card .analysis-factor-status-fair {
+  color: var(--chart-wind-color);
+  background: color-mix(in srgb, var(--chart-wind-color) 12%, transparent);
+  border-color: color-mix(in srgb, var(--chart-wind-color) 30%, transparent);
+}
+
+.app-analysis-card .analysis-factor-status-mild {
+  color: var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 14%, transparent);
+  border-color: color-mix(in srgb, var(--color-warning) 34%, transparent);
+}
+
+.app-analysis-card .analysis-factor-status-weak {
+  color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-error) 32%, transparent);
 }
 
 .app-analysis-card .analysis-factor p {
