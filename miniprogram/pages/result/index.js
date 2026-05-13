@@ -1,6 +1,7 @@
 import { formatPercent, formatVisibility } from '../../utils/format.js';
 import { getEnhancedPrediction, getSurroundingPrediction, getThreeDayGlow, scoreToLevel } from '../../services/prediction.js';
 import { addFavorite, deleteFavorite, listFavorites } from '../../services/user.js';
+import { buildRadarCloudGradients, paintRadarCloudCanvas } from '../../utils/radar-cloud-field.js';
 
 const app = getApp();
 
@@ -97,7 +98,10 @@ Page({
     ]);
 
     if (radarResult.status === 'fulfilled') {
-      this.setData({ radar: buildRadarView(radarResult.value) });
+      const radar = buildRadarView(radarResult.value);
+      this.setData({ radar }, () => {
+        this.paintRadarCloudField(radar);
+      });
     } else {
       this.setData({ radar: buildEmptyRadar({ error: '周边云况暂时加载失败，请稍后再试。' }) });
     }
@@ -107,6 +111,14 @@ Page({
     } else {
       this.setData({ threeDayGlow: buildEmptyThreeDayGlow({ error: '三天预测暂时加载失败，请稍后再试。' }) });
     }
+  },
+
+  paintRadarCloudField(radar = this.data.radar) {
+    const directions = radar?.directions || [];
+    if (!directions.length) return;
+    setTimeout(() => {
+      paintRadarCloudCanvas('resultRadarCloudField', directions, { page: this });
+    }, 0);
   },
 
   async toggleFavorite() {
@@ -135,23 +147,48 @@ Page({
     }
   },
 
-  selectResultPeriod(event) {
+  async selectResultPeriod(event) {
     const period = event.currentTarget.dataset.period;
     if (!['sunrise', 'sunset'].includes(period) || period === this.data.activePeriod) return;
 
     const nextPrediction = this.data.periodCards[period];
-    if (!nextPrediction) {
+    if (nextPrediction) {
+      this.setData(buildResultPeriodState(nextPrediction), () => {
+        this.loadXiakePanels(nextPrediction);
+      });
+      return;
+    }
+
+    const current = this.data.prediction || {};
+    if (!hasCoordinates(current)) {
       this.setData({ activePeriod: period });
       return;
     }
 
     this.setData({
       activePeriod: period,
-      prediction: nextPrediction,
-      metrics: buildMetrics(nextPrediction),
-      analysisItems: buildAnalysisItems(nextPrediction),
-      scoreLedger: buildScoreLedger(nextPrediction)
+      loading: true,
+      radar: buildEmptyRadar({ loading: true })
     });
+
+    try {
+      const requested = buildPredictionPeriodRequest(current, period);
+      const fetched = await getEnhancedPrediction(requested);
+      const normalized = normalizePrediction(fetched, requested);
+      this.setData({
+        ...buildResultPeriodState(normalized),
+        loading: false,
+        periodCards: {
+          ...this.data.periodCards,
+          [period]: normalized
+        },
+        radar: buildEmptyRadar({ loading: hasCoordinates(normalized) })
+      }, () => {
+        this.loadXiakePanels(normalized);
+      });
+    } catch (error) {
+      this.setData({ loading: false });
+    }
   },
 
   onShareAppMessage() {
@@ -214,6 +251,26 @@ function normalizePrediction(input = {}, options = {}) {
     cloudType: input.cloudType || null,
     algorithm: input.algorithm || null,
     clearSunsetAdvice: input.clearSunsetAdvice || null
+  };
+}
+
+export function buildPredictionPeriodRequest(prediction = {}, period = 'sunset') {
+  return {
+    lat: Number(prediction.lat ?? prediction.latitude ?? prediction.coordinate?.lat),
+    lon: Number(prediction.lon ?? prediction.lng ?? prediction.longitude ?? prediction.coordinate?.lon),
+    type: period,
+    date: prediction.date || prediction.referenceTime || null
+  };
+}
+
+export function buildResultPeriodState(prediction = {}) {
+  const normalized = normalizePrediction(prediction, { type: prediction.period || prediction.type || 'sunset' });
+  return {
+    activePeriod: normalized.period,
+    prediction: normalized,
+    metrics: buildMetrics(normalized),
+    analysisItems: buildAnalysisItems(normalized),
+    scoreLedger: buildScoreLedger(normalized)
   };
 }
 
@@ -497,7 +554,7 @@ export function buildRadarView(surrounding = {}) {
     points: orderRadarPoints(points),
     directions,
     rings: buildRadarRings(),
-    cloudBlobs: buildRadarCloudBlobs(directions),
+    cloudGradients: buildRadarCloudGradients(directions),
     sunEvents: buildRadarSunEvents(surrounding),
     bestItems: directions
       .filter((item) => item.scoreText !== '--')
@@ -513,27 +570,6 @@ export function buildRadarRings() {
     { key: 'mid', label: '中云', className: 'mid' },
     { key: 'high', label: '高云', className: 'high' }
   ];
-}
-
-export function buildRadarCloudBlobs(directions = []) {
-  return directions
-    .filter((item) => item && item.scoreText !== '--')
-    .map((item, index) => {
-      const score = Number(item.scoreText);
-      const size = Math.max(34, Math.min(88, 34 + score * 0.55));
-      const positions = {
-        N: [46, 13], NE: [66, 21], E: [74, 45], SE: [65, 66],
-        S: [46, 72], SW: [24, 65], W: [16, 45], NW: [24, 20]
-      };
-      const [left, top] = positions[item.direction] || [50, 50];
-      return {
-        key: item.direction || `blob-${index}`,
-        left,
-        top,
-        size,
-        level: item.level || 'unknown'
-      };
-    });
 }
 
 export function buildRadarSunEvents(surrounding = {}) {

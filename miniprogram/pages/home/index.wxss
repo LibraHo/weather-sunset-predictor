@@ -232,18 +232,6 @@
   background: linear-gradient(135deg, #ffd166, #fb923c);
 }
 
-.settings-reset {
-  width: 100%;
-  height: 68rpx;
-  margin: 22rpx 0 0;
-  border-radius: 12rpx;
-  color: #f5c87a;
-  font-size: 25rpx;
-  font-weight: 800;
-  line-height: 68rpx;
-  background: rgba(251, 146, 60, 0.10);
-}
-
 .home-section-head {
   display: flex;
   align-items: flex-start;
@@ -394,61 +382,60 @@
 }
 
 .prediction-toggle-bar {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
   gap: 8rpx;
+  width: 332rpx;
+  margin: 20rpx auto 18rpx;
   padding: 8rpx;
-  border-radius: 16rpx;
-  background: rgba(7, 16, 31, 0.50);
+  border: 2rpx solid rgba(127, 83, 29, 0.12);
+  border-radius: 999rpx;
+  background: rgba(255, 252, 246, 0.72);
 }
 
 .prediction-toggle {
-  height: 58rpx;
-  border-radius: 12rpx;
-  color: rgba(255, 255, 255, 0.62);
+  min-width: 132rpx;
+  min-height: 58rpx;
+  padding: 0 26rpx;
+  border-radius: 999rpx;
+  color: rgba(89, 67, 54, 0.62);
   font-size: 24rpx;
   font-weight: 900;
   line-height: 58rpx;
   text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .prediction-toggle.active {
-  color: #1b1206;
-  background: linear-gradient(135deg, #ffd166, #fb923c);
+  color: #ffffff;
+  background: linear-gradient(135deg, #f59e0b, #ea8500);
 }
 
 .phenomenon-title-card {
   display: flex;
   align-items: center;
-  gap: 18rpx;
-  padding: 18rpx;
-  border: 1rpx solid rgba(255, 255, 255, 0.08);
-  border-radius: 18rpx;
-  background: rgba(7, 16, 31, 0.42);
-}
-
-.phenomenon-icon-tile {
-  display: flex;
-  align-items: center;
   justify-content: center;
-  width: 76rpx;
-  height: 76rpx;
-  border-radius: 20rpx;
-  color: #1b1206;
-  font-size: 42rpx;
-  font-weight: 900;
-  background: linear-gradient(135deg, #ffd166, #fb923c);
+  min-height: 86rpx;
+  padding: 10rpx 0 12rpx;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .phenomenon-title-copy {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   min-width: 0;
+  text-align: center;
 }
 
 .phenomenon-date-tag {
-  margin-bottom: 6rpx;
-  color: rgba(255, 255, 255, 0.46);
-  font-size: 22rpx;
+  margin-bottom: 4rpx;
+  color: rgba(89, 67, 54, 0.58);
+  font-size: 20rpx;
   font-weight: 800;
 }
 
@@ -1223,7 +1210,6 @@
 }
 
 .home-page.has-weather .prediction-share-menu,
-.home-page.has-weather .phenomenon-icon-tile,
 .home-page.has-weather .prediction-preview-action-primary {
   color: #ffffff;
   background: #39a849;
@@ -1238,7 +1224,6 @@
   color: rgba(89, 67, 54, 0.62);
 }
 
-.home-page.has-weather .phenomenon-title-card,
 .home-page.has-weather .score-summary-card,
 .home-page.has-weather .cloud-condition-card,
 .home-page.has-weather .app-analysis-card,
@@ -1318,17 +1303,33 @@
   max-width: 100%;
   margin: 20rpx auto 10rpx;
   border-radius: 50%;
+  overflow: visible;
+}
+
+.prediction-radar-cloud-field {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   overflow: hidden;
-  background:
-    conic-gradient(from 0deg, rgba(218,226,238,.28), rgba(184,198,218,.24), rgba(138,156,186,.18), rgba(218,226,238,.28)),
-    radial-gradient(circle, rgba(251,146,60,.13) 0 9%, rgba(184,198,218,.18) 26%, rgba(138,156,186,.16) 52%, rgba(255,252,246,.78) 100%);
+  border-radius: 50%;
+}
+
+.prediction-radar-cloud-canvas {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0.98;
 }
 
 .prediction-radar-ring,
 .prediction-radar-axis,
+.prediction-radar-ring-label,
 .prediction-radar-center,
 .prediction-radar-direction {
   position: absolute;
+  z-index: 3;
 }
 
 .prediction-radar-ring {
@@ -1339,9 +1340,25 @@
   transform: translate(-50%, -50%);
 }
 
-.prediction-radar-ring-low { width: 34%; height: 34%; }
-.prediction-radar-ring-mid { width: 62%; height: 62%; }
+.prediction-radar-ring-low-inner {
+  width: 22%;
+  height: 22%;
+}
+
+.prediction-radar-ring-low { width: 40%; height: 40%; }
+.prediction-radar-ring-mid { width: 64%; height: 64%; }
 .prediction-radar-ring-high { width: 88%; height: 88%; }
+
+.prediction-radar-ring-label {
+  color: rgba(89, 67, 54, 0.58);
+  font-size: 18rpx;
+  font-weight: 900;
+  transform: translate(-50%, -50%);
+}
+
+.prediction-radar-ring-label-high { left: 37.1%; top: 14.5%; }
+.prediction-radar-ring-label-mid { left: 41.5%; top: 26.7%; }
+.prediction-radar-ring-label-low { left: 44.7%; top: 35.5%; }
 
 .prediction-radar-axis {
   left: 50%;
@@ -1370,58 +1387,23 @@
 .prediction-radar-direction {
   width: 84rpx;
   text-align: center;
+  transform: translate(-50%, -50%);
 }
 
-.prediction-radar-direction-N { left: 50%; top: 3%; transform: translateX(-50%); }
-.prediction-radar-direction-NE { right: 6%; top: 13%; }
-.prediction-radar-direction-E { right: 1%; top: 50%; transform: translateY(-50%); }
-.prediction-radar-direction-SE { right: 6%; bottom: 13%; }
-.prediction-radar-direction-S { left: 50%; bottom: 3%; transform: translateX(-50%); }
-.prediction-radar-direction-SW { left: 6%; bottom: 13%; }
-.prediction-radar-direction-W { left: 1%; top: 50%; transform: translateY(-50%); }
-.prediction-radar-direction-NW { left: 6%; top: 13%; }
+.prediction-radar-direction-N { left: 50%; top: 4.6%; }
+.prediction-radar-direction-NE { left: 82.1%; top: 17.9%; }
+.prediction-radar-direction-E { left: 95.4%; top: 50%; }
+.prediction-radar-direction-SE { left: 82.1%; top: 82.1%; }
+.prediction-radar-direction-S { left: 50%; top: 95.4%; }
+.prediction-radar-direction-SW { left: 17.9%; top: 82.1%; }
+.prediction-radar-direction-W { left: 4.6%; top: 50%; }
+.prediction-radar-direction-NW { left: 17.9%; top: 17.9%; }
 
-.prediction-radar-score,
 .prediction-radar-name {
   display: block;
-}
-
-.prediction-radar-score {
-  min-width: 50rpx;
-  height: 38rpx;
-  margin: 0 auto;
-  border-radius: 999rpx;
-  color: #fff;
-  font-size: 22rpx;
-  font-weight: 900;
-  line-height: 38rpx;
-  background: #f59e0b;
-}
-
-.prediction-radar-name {
-  margin-top: 4rpx;
-  color: rgba(89, 67, 54, 0.68);
-  font-size: 19rpx;
-  font-weight: 800;
-}
-
-.prediction-radar-detail {
-  display: flex;
-  gap: 10rpx;
-  margin-top: 12rpx;
-  overflow-x: auto;
-}
-
-.prediction-radar-cloud {
-  flex: 0 0 190rpx;
-  display: flex;
-  flex-direction: column;
-  gap: 5rpx;
-  padding: 12rpx;
-  border-radius: 14rpx;
-  color: rgba(89, 67, 54, 0.60);
+  color: rgba(89, 67, 54, 0.66);
   font-size: 20rpx;
-  background: rgba(255, 252, 246, 0.66);
+  font-weight: 800;
 }
 
 .prediction-app-footer {

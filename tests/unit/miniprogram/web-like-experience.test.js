@@ -19,23 +19,33 @@ describe('miniprogram web-like experience shell', () => {
     expect(wxml).toContain('home-web-spacer');
     expect(wxml).toContain('home-footer-card');
     expect(wxml).toContain('weatherPreview.visible');
-    expect(wxml).toContain('settings-panel');
-    expect(wxml).toContain('bindtap="toggleSettings"');
-    expect(wxml).toContain('settings-done');
     expect(wxml).toContain('data-target="methodology"');
     expect(wxml).toContain('data-target="map"');
     expect(wxml).toContain('data-target="gallery"');
     expect(wxml).toContain('data-target="api"');
     expect(wxml).toContain('data-target="upload"');
+    expect(wxml).toContain('settings-panel');
+    expect(wxml).toContain('bindtap="toggleSettings"');
+    expect(wxml).toContain('settings-done');
     expect(wxml).toContain('data-target="settings"');
+    expect(wxml).toContain('data-value="zh-CN"');
+    expect(wxml).toContain('data-value="system"');
+    expect(wxml).toContain('theme-{{themeMode}}');
+    expect(wxml).not.toContain('默认预测');
+    expect(wxml).not.toContain('默认日期');
     expect(wxml).not.toContain('nav-grid');
     expect(wxml).not.toContain('nav-card');
 
     expect(js).toContain('toggleHomeMenu()');
     expect(js).toContain('toggleSettings()');
     expect(js).toContain('openSettings()');
-    expect(js).toContain('selectDefaultPeriod(event)');
-    expect(js).toContain("wx.setStorageSync('homeSettings'");
+    expect(js).toContain('selectInterfaceLanguage(event)');
+    expect(js).toContain('selectThemeMode(event)');
+    expect(js).toContain("wx.setStorageSync('appSettings'");
+    expect(js).not.toContain('selectDefaultPeriod(event)');
+    expect(js).not.toContain('selectDefaultDay(event)');
+    expect(js).not.toContain('resetSettings()');
+    expect(js).not.toContain("wx.setStorageSync('homeSettings'");
     expect(js).toContain('navigateFeature(event)');
     expect(js).toContain('async useHistory(event)');
     expect(js).toContain('await this.onSearch();');
@@ -118,14 +128,16 @@ describe('miniprogram web-like experience shell', () => {
 
     expect(wxml).toContain('radar-compass');
     expect(wxml).toContain('radar-compass-dial');
+    expect(wxml).toContain('canvas-id="resultRadarCloudField"');
     expect(wxml).toContain('radar-direction-{{item.direction}}');
     expect(wxml).toContain('radar-legend');
     expect(wxml).not.toContain('class="radar-grid"');
     expect(wxss).toContain('.radar-compass-dial');
-    expect(wxss).toContain('conic-gradient');
     expect(wxss).toContain('.radar-ring-outer');
+    expect(wxss).toContain('.radar-ring-low-inner');
     expect(js).toContain('orderRadarDirections');
     expect(js).toContain('bestItems');
+    expect(js).toContain('paintRadarCloudCanvas');
   });
 
   test('gallery is positioned as a native mini-program map with H5 as secondary fallback', () => {
