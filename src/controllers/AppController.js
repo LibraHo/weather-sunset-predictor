@@ -206,6 +206,8 @@ class AppController {
           this.predictionController.updatePredictionDisplay(predictions);
         } else {
           console.warn('[AppController] 没有生成预测数据，跳过预测显示');
+          this._setThreeDayGlowLoading(false);
+          this.showError(this.i18n.t('prediction.insufficientData'));
         }
       } else {
         console.warn('[AppController] 无天气数据，跳过天气/预测显示，继续加载地图');

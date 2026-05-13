@@ -1027,6 +1027,69 @@ describe('PredictionController', () => {
         predictionController.generatePredictions([{ temp: 20 }], { isValid: () => false })
       ).rejects.toThrow();
     });
+
+    test('批量预测请求超时时应直接抛出可提示错误，不继续静默单条重试', async () => {
+      localStorage.setItem('weather_fetch_mode', 'backend');
+      const timeoutError = new Error('后端预测 API 调用失败: 预测服务 20 秒内没有返回，请稍后重试');
+      timeoutError.code = 'PREDICTION_API_TIMEOUT';
+      predictionController.features = { USE_BACKEND_PREDICTION: true };
+      predictionController.predictionAPIService = {
+        calculateBatchClosedLoop: jest.fn(() => Promise.reject(timeoutError))
+      };
+
+      const today = new Date('2026-05-14T00:00:00+08:00');
+      const location = { lat: 39.9, lon: 116.4 };
+
+      await expect(
+        predictionController._prepareClosedLoopBatchPredictions({ today, location, targetTimezone: 'Asia/Shanghai' })
+      ).rejects.toMatchObject({
+        code: 'PREDICTION_API_TIMEOUT',
+        message: expect.stringContaining('朝晚霞预测服务没有及时返回')
+      });
+      expect(predictionController.predictionAPIService.calculateBatchClosedLoop).toHaveBeenCalledTimes(1);
+    });
+
+    test('所有朝晚霞预测都失败时应抛错给 AppController 显示提示', async () => {
+      localStorage.setItem('weather_fetch_mode', 'backend');
+      const base = new Date();
+      base.setHours(0, 0, 0, 0);
+      const weatherData = Array.from({ length: 4 }, (_, index) => {
+        const ts = new Date(base);
+        ts.setDate(base.getDate() + index);
+        ts.setHours(6, 0, 0, 0);
+        return {
+          timestamp: ts.getTime(),
+          timezone: 'Asia/Shanghai',
+          temp: 20,
+          humidity: 50,
+          cloudCover: 80
+        };
+      });
+      predictionController._prepareClosedLoopBatchPredictions = jest.fn(async () => {});
+      predictionController.predictionService.getSunriseTime = jest.fn((targetDate) => {
+        const date = new Date(targetDate);
+        date.setHours(6, 0, 0, 0);
+        return date;
+      });
+      predictionController.predictionService.getSunsetTime = jest.fn((targetDate) => {
+        const date = new Date(targetDate);
+        date.setHours(18, 0, 0, 0);
+        return date;
+      });
+      predictionController._calculatePredictionWithBackend = jest.fn(async () => {
+        throw new Error('后端预测 API 调用失败: 预测服务 20 秒内没有返回，请稍后重试');
+      });
+
+      await expect(
+        predictionController.generatePredictions(weatherData, {
+          lat: 39.9,
+          lon: 116.4,
+          name: '北京',
+          isValid: () => true
+        })
+      ).rejects.toThrow('朝晚霞预测读取失败');
+      expect(predictionController.predictions).toEqual([]);
+    });
   });
 });
 

@@ -459,6 +459,17 @@ class PredictionController {
       || message.includes('频繁');
   }
 
+  _isPredictionRequestTimeout(error) {
+    const code = String(error?.code || '').toLowerCase();
+    const name = String(error?.name || '').toLowerCase();
+    const message = String(error?.message || '').toLowerCase();
+    return code === 'prediction_api_timeout'
+      || name === 'timeouterror'
+      || message.includes('prediction_api_timeout')
+      || message.includes('signal is aborted')
+      || message.includes('没有返回');
+  }
+
   _predictionBatchKey(type, date) {
     const ts = date instanceof Date ? date.getTime() : new Date(date).getTime();
     return `${type}:${ts}`;
@@ -495,6 +506,12 @@ class PredictionController {
       });
       console.log(`[PredictionController] 后端闭环批量预测预取完成: ${this._closedLoopBatchPredictionMap.size}/${items.length}`);
     } catch (error) {
+      if (this._isPredictionRequestTimeout(error)) {
+        this._closedLoopBatchPredictionMap = null;
+        const timeoutError = new Error(`朝晚霞预测服务没有及时返回：${error.message}`);
+        timeoutError.code = error.code || 'PREDICTION_API_TIMEOUT';
+        throw timeoutError;
+      }
       console.warn('[PredictionController] 后端闭环批量预测失败，回退到单条预测:', error.message);
       this._closedLoopBatchPredictionMap = null;
     }
@@ -552,6 +569,7 @@ class PredictionController {
     }
 
     const predictions = [];
+    const predictionErrors = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -834,10 +852,17 @@ class PredictionController {
 
       } catch (error) {
         console.error(`[PredictionController] 处理第 ${i} 天时出错:`, error);
+        predictionErrors.push(error);
       }
     }
 
     console.log(`[PredictionController] 生成了 ${predictions.length} 个预测`);
+    if (predictions.length === 0 && predictionErrors.length > 0) {
+      const firstError = predictionErrors[0];
+      const error = new Error(`朝晚霞预测读取失败：${firstError.message || '后端预测服务暂时不可用'}`);
+      error.code = firstError.code || null;
+      throw error;
+    }
     this.predictions = predictions;
     return predictions;
   }

@@ -32,7 +32,7 @@ describe('PredictionAPIService', () => {
     test('should create instance with default base URL', () => {
       const service = new PredictionAPIService();
       expect(service.baseURL).toBe('http://localhost:3000');
-      expect(service.timeout).toBe(10000);
+      expect(service.timeout).toBe(20000);
     });
 
     test('should create instance with custom base URL', () => {
@@ -211,6 +211,29 @@ describe('PredictionAPIService', () => {
       await expect(
         predictionAPI.calculate(mockWeatherData, mockDate, mockLat, mockLon)
       ).rejects.toThrow('后端预测 API 调用失败');
+    });
+
+    test('should convert aborted prediction requests into readable timeout errors', async () => {
+      jest.useFakeTimers();
+      try {
+        predictionAPI.timeout = 5;
+        mockFetch.mockImplementationOnce((url, options) => new Promise((resolve, reject) => {
+          options.signal.addEventListener('abort', () => {
+            reject(options.signal.reason || new DOMException('Aborted', 'AbortError'));
+          });
+        }));
+
+        const promise = predictionAPI.calculate(mockWeatherData, mockDate, mockLat, mockLon);
+        const assertion = expect(promise).rejects.toMatchObject({
+          code: 'PREDICTION_API_TIMEOUT',
+          message: '后端预测 API 调用失败: 预测服务 1 秒内没有返回，请稍后重试'
+        });
+        await jest.advanceTimersByTimeAsync(5);
+
+        await assertion;
+      } finally {
+        jest.useRealTimers();
+      }
     });
 
     test('should omit frontend weather data for backend closed-loop prediction', async () => {

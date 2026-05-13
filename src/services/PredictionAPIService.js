@@ -16,7 +16,7 @@ class PredictionAPIService {
    */
   constructor(baseURL = 'http://localhost:3000') {
     this.baseURL = baseURL;
-    this.timeout = 10000; // 10秒超时
+    this.timeout = 20000; // 预测接口可能需要拉取多源天气，给后端留足响应时间
   }
 
   /**
@@ -158,7 +158,15 @@ class PredictionAPIService {
    */
   async _fetchWithTimeout(url, options) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+    const timeoutSeconds = Math.max(1, Math.ceil(this.timeout / 1000));
+    const timeoutError = new Error(`预测服务 ${timeoutSeconds} 秒内没有返回，请稍后重试`);
+    timeoutError.name = 'TimeoutError';
+    timeoutError.code = 'PREDICTION_API_TIMEOUT';
+    let timedOut = false;
+    const timeoutId = setTimeout(() => {
+      timedOut = true;
+      controller.abort(timeoutError);
+    }, this.timeout);
 
     try {
       const response = await fetch(url, {
@@ -177,6 +185,11 @@ class PredictionAPIService {
 
       return response;
 
+    } catch (error) {
+      if (timedOut || error?.name === 'AbortError') {
+        throw timeoutError;
+      }
+      throw error;
     } finally {
       clearTimeout(timeoutId);
     }
