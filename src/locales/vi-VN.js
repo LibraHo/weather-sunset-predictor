@@ -69,21 +69,39 @@ const translations = {
       "intro": "Chỉ số mây đẹp được tính toán tổng hợp từ bốn yếu tố chính, giúp bạn nhanh chóng đánh giá liệu ngày hôm đó có đáng để chờ đợi hoàng hôn hay không.",
       "versionLabel": "Phiên bản thuật toán: 2026.05.13-formation-factors-v1",
       "versionDesc": "Phiên bản này cố định phân tích thành bốn yếu tố: nền mây, đường sáng, màu trong không khí và yếu tố hạn chế. Công thức điểm không đổi.",
-      changelogTitle: "Version update history",
-      changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
+      changelogTitle: "Lịch sử cập nhật phiên bản",
+      changelogHint: "Các cập nhật thuật toán trong ba tháng gần đây nằm ở đây; cuộn để xem lý do, tác động và cách kiểm chứng",
       changelog: {
-              "latest": {
-                      "date": "2026-05-13",
-                      "title": "Phân tích bốn yếu tố v1",
-                      "summary": "Phân tích được gom thành nền mây, đường sáng, màu trong không khí và yếu tố hạn chế để giảm các ghi chú rời rạc.",
-                      "validation": "Kiểm chứng: aerosol, mây thấp che chắn, màn mù xám, mây dày và mưa đều được gom vào yếu tố tương ứng; công thức điểm không đổi."
-              },
-              "current": {
-                      "date": "2026-05-12",
-                      "title": "Nền aerosol yếu v1",
-                      "summary": "Khi ít mây, màn bụi mỏng vừa phải chỉ góp như nền hoàng hôn đỏ yếu nếu đường sáng về phía mặt trời thông thoáng.",
-                      "validation": "Kiểm chứng: mẫu hoàng hôn đỏ yếu ở Bắc Kinh lên khoảng 30 điểm; trời trong, bụi/mù nặng, mây thấp che và màn xám vẫn thấp."
-              }
+        "latest": {
+          "date": "2026-05-13",
+          "title": "Phân tích bốn yếu tố v1",
+          "summary": "Phân tích được gom thành nền mây, đường sáng, màu trong không khí và yếu tố hạn chế để giảm các ghi chú rời rạc.",
+          "validation": "Kiểm chứng: aerosol, mây thấp che chắn, màn mù xám, mây dày và mưa đều được gom vào yếu tố tương ứng; công thức điểm không đổi."
+        },
+        "aerosol": {
+          "date": "2026-05-12",
+          "title": "Nền aerosol yếu v1",
+          "summary": "Khi ít mây, màn bụi mỏng vừa phải chỉ góp như nền hoàng hôn đỏ yếu nếu đường sáng về phía mặt trời thông thoáng.",
+          "validation": "Kiểm chứng: mẫu hoàng hôn đỏ yếu ở Bắc Kinh lên khoảng 30 điểm; trời trong, bụi/mù nặng, mây thấp che và màn xám vẫn thấp."
+        },
+        "openingCarrier": {
+          "date": "2026-05-11",
+          "title": "Nền mây trung cao có khe sáng v1",
+          "summary": "Khi ít mây thấp, mây trung/cao có thể lên màu và hướng mặt trời có khe sáng, mô hình không còn xem đó là màn mây dày che kín.",
+          "validation": "Kiểm chứng: mẫu mây trung/cao có khe sáng ở Di Hòa Viên quay lại vùng có thể xem; mù xám, bụi và mây dày không khe vẫn được giữ thận trọng."
+        },
+        "lightPath": {
+          "date": "2026-05-10",
+          "title": "Đường sáng do mây thấp chi phối v3",
+          "summary": "Che chắn đường sáng giờ tập trung vào việc mây thấp có chặn hướng mặt trời hay không, tránh hạ nhầm các nền hoàng hôn có nhiều mây trung/cao.",
+          "validation": "Kiểm chứng: cảnh nền mây cao không còn bị hạ chỉ vì tổng mây cao; mây thấp chi phối, mưa/tuyết và tầm nhìn kém vẫn thận trọng."
+        },
+        "upperCloudCarrier": {
+          "date": "2026-05-10",
+          "title": "Bảo vệ nền mây trung cao v2",
+          "summary": "Khi mây cao và mây trung đều đủ, ít mây thấp và không khí không xám, bầu trời được xem như nền có thể lên màu thay vì bị ép điểm thấp.",
+          "validation": "Kiểm chứng: mẫu mây trung/cao ở Bắc Kinh quay lại khoảng 50-60 điểm; không khí xám, bụi nặng hoặc thiếu mây trung vẫn thấp."
+        }
       },
       "factors": {
         "highMidCloudTitle": "Mây trung cao (điều kiện khung trời)",
@@ -110,11 +128,11 @@ const translations = {
       "scoreFairDesc": "Có thể có màu, cần xem khe mây địa phương và thực tế",
       "scorePoorRange": "Thấp",
       "scorePoorDetail": "<40 điểm",
-      "scorePoorDesc": "Điều kiện chính yếu yếu, thường không đáng đi riêng",
-      "scoreSourceTitle": "Vì sao điểm bản đồ và điểm chính xác có thể khác nhau",
-      "scoreSourceMap": "Điểm trên bản đồ dùng để xem xu hướng khu vực. Nó đến từ các điểm lưới cố định, dữ liệu thời tiết theo lô và nội suy raster, nên bản đồ liên tục nhưng không phải dự báo cuối cùng cho từng tọa độ trung tâm thành phố.",
-      "scoreSourcePoint": "Điểm chính xác trên trang chi tiết sẽ lấy lại thời tiết một điểm, chất lượng không khí và dữ liệu đường sáng cho tọa độ đã nhập, rồi tính theo giờ bình minh hoặc hoàng hôn của điểm đó.",
-      "scoreSourceWhy": "Vì vậy chênh lệch nhỏ là bình thường: dùng bản đồ để chọn khu vực gần đó hứa hẹn hơn, và dùng điểm chính xác để quyết định có ra ngoài tại vị trí hiện tại hay không. Nếu lệch nhiều, hãy tin điểm chính xác.",
+      "scorePoorDesc": "Fire-cloud conditions are weak; do not plan a dedicated chase from this score alone, and judge any ordinary sunset by live weather and visibility",
+      "scoreSourceTitle": "Vì sao màu bản đồ và điểm chi tiết địa điểm có thể khác nhau",
+      "scoreSourceMap": "Màu trên bản đồ là xu hướng khu vực, giúp nhanh chóng xem vùng nào hứa hẹn hơn. Để bản đồ liên tục, hệ thống tính theo lưới cố định rồi làm mượt giữa các điểm lưới.",
+      "scoreSourcePoint": "Điểm chi tiết là vị trí cụ thể bạn chọn. Nó tính lại giờ bình minh/hoàng hôn, mây, chất lượng không khí và đường sáng theo hướng mặt trời cho tọa độ đó.",
+      "scoreSourceWhy": "Vì vậy hãy dùng bản đồ để chọn hướng trước, rồi dùng chi tiết địa điểm để quyết định có đi hay không. Nếu chênh lệch lớn, hãy tin điểm chi tiết địa điểm.",
       "sections": {
         "cloudStructure": {
           "title": "1. Cấu trúc tầng mây",

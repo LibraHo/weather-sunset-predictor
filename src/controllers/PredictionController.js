@@ -1428,7 +1428,7 @@ class PredictionController {
         { label: this._uiText('Mid', '中云'), value: Number(clouds.mid ?? 0), color: 'var(--cloud-mid-color)' },
         { label: this._uiText('Low', '低云'), value: Number(clouds.low ?? 0), color: 'var(--cloud-low-color)' }
       ],
-      quality: prediction.quality || this.getQualityFromScore(score),
+      quality: this.getQualityFromScore(score),
       analysis: this.buildAnalysisGroups(prediction),
       conclusion: this.buildAnalysisConclusion(prediction, score, clouds)
     };
@@ -1531,15 +1531,15 @@ class PredictionController {
   }
 
   getQualityFromScore(score) {
-    if (score >= 80) return 'excellent';
-    if (score >= 60) return 'good';
+    if (score >= 85) return 'excellent';
+    if (score >= 70) return 'good';
     if (score >= 40) return 'fair';
     return 'poor';
   }
 
   getScoreTheme(quality, score) {
     const value = Math.max(0, Math.min(100, Number(score) || 0));
-    if (value >= 80) {
+    if (value >= 85) {
       return [
         'var(--score-excellent-start, #fb923c)',
         'var(--score-excellent-mid, #fbbf24)',
@@ -1547,12 +1547,11 @@ class PredictionController {
       ];
     }
 
-    // 0–80 使用单色：从灰逐步过渡到更深橙色，但圆环本身不做渐变。
+    // Keep score colors aligned with the public guide: <40, 40-69, 70-84, 85+.
     const stops = [
-      { max: 20, color: 'var(--score-poor-color, #94a3b8)' },
-      { max: 40, color: 'var(--score-fair-color, #fdba74)' },
-      { max: 60, color: 'var(--score-good-color, #fb923c)' },
-      { max: 80, color: 'var(--score-excellent-mid, #fbbf24)' }
+      { max: 40, color: 'var(--score-poor-color, #94a3b8)' },
+      { max: 70, color: 'var(--score-fair-color, #fdba74)' },
+      { max: 85, color: 'var(--score-good-color, #fb923c)' }
     ];
     const color = stops.find(stop => value < stop.max)?.color || 'var(--score-excellent-mid, #fbbf24)';
     return [color, color, color];
@@ -1750,9 +1749,11 @@ class PredictionController {
     }
 
     const factor = (key, level, icon) => ({
+      key,
       title: this._analysisText(`factors.${key}.title`),
       status: this._analysisText(`factors.${key}.status.${level}`),
       desc: this._analysisText(`factors.${key}.desc.${level}`),
+      statusTone: level === 'good' ? 'good' : (level === 'weak' ? 'weak' : (key === 'limits' ? 'mild' : 'fair')),
       type: level === 'good' ? 'positive' : (level === 'fair' ? 'neutral' : 'warning'),
       icon
     });
@@ -1847,12 +1848,13 @@ class PredictionController {
   }
 
   renderAnalysisFactor(factor) {
+    const statusTone = ['good', 'fair', 'mild', 'weak'].includes(factor.statusTone) ? factor.statusTone : 'fair';
     return `
-      <section class="analysis-factor analysis-factor-${factor.type}">
+      <section class="analysis-factor analysis-factor-${factor.type} analysis-factor-${factor.key}">
         <div class="analysis-factor-heading">
           <span class="analysis-factor-icon">${this.renderInlineSvgIcon(factor.icon)}</span>
           <span class="analysis-factor-title">${factor.title}</span>
-          <strong class="analysis-factor-status">${factor.status}</strong>
+          <strong class="analysis-factor-status analysis-factor-status-${statusTone}">${factor.status}</strong>
         </div>
         <p>${factor.desc}</p>
       </section>
@@ -2284,12 +2286,13 @@ class PredictionController {
         const sunriseTime = pred.sunriseTime || pred.sunsetTime;
         const isPassed = sunriseTime ? now > new Date(sunriseTime.getTime() + 2 * 60 * 60 * 1000) : false;
         const score = Math.round(pred.score ?? 0);
-        const quality = qualityTextMap[pred.quality] ?? '较差';
+        const scoreQuality = this.getQualityFromScore(score);
+        const quality = qualityTextMap[scoreQuality] ?? '较差';
         sunriseRow = `
           <div class="fcard-row-item ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
             <span class="fcard-row-icon">${this.renderSunEventIcon('sunrise', 'sun-event-icon fcard-sun-event-icon')}</span>
             <span class="fcard-row-label">${this.i18n.t('prediction.sunrise')}</span>
-            <span class="fcard-row-score quality-${pred.quality}" title="${quality}">${score}${scoreSuffix}</span>
+            <span class="fcard-row-score quality-${scoreQuality}" title="${quality}">${score}${scoreSuffix}</span>
           </div>`;
       }
 
@@ -2300,12 +2303,13 @@ class PredictionController {
         const sunsetTime = pred.sunsetTime;
         const isPassed = sunsetTime ? now > new Date(sunsetTime.getTime() + 1.5 * 60 * 60 * 1000) : false;
         const score = Math.round(pred.score ?? 0);
-        const quality = qualityTextMap[pred.quality] ?? '较差';
+        const scoreQuality = this.getQualityFromScore(score);
+        const quality = qualityTextMap[scoreQuality] ?? '较差';
         sunsetRow = `
           <div class="fcard-row-item ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(dayPredictions.sunset)}">
             <span class="fcard-row-icon">${this.renderSunEventIcon('sunset', 'sun-event-icon fcard-sun-event-icon')}</span>
             <span class="fcard-row-label">${this.i18n.t('prediction.sunset')}</span>
-            <span class="fcard-row-score quality-${pred.quality}" title="${quality}">${score}${scoreSuffix}</span>
+            <span class="fcard-row-score quality-${scoreQuality}" title="${quality}">${score}${scoreSuffix}</span>
           </div>`;
       }
 

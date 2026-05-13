@@ -203,6 +203,18 @@ describe('PredictionController', () => {
   });
 
   describe('getQualityClass', () => {
+    test('按公开评分解读分档从分数推导质量等级', () => {
+      expect(predictionController.getQualityFromScore(85)).toBe('excellent');
+      expect(predictionController.getQualityFromScore(77)).toBe('good');
+      expect(predictionController.getQualityFromScore(45)).toBe('fair');
+      expect(predictionController.getQualityFromScore(39)).toBe('poor');
+    });
+
+    test('77 和 45 使用不同评分主题颜色', () => {
+      expect(predictionController.getScoreTheme('good', 77)[1]).toBe('var(--score-good-color, #fb923c)');
+      expect(predictionController.getScoreTheme('fair', 45)[1]).toBe('var(--score-fair-color, #fdba74)');
+    });
+
     test('应映射 excellent 为正确类名', () => {
       expect(predictionController.getQualityClass('excellent')).toBeTruthy();
     });
@@ -811,12 +823,30 @@ describe('PredictionController', () => {
       expect(html).not.toContain('薄雾红日载体');
     });
 
+    test('形成条件状态标签使用不同语义颜色', () => {
+      const html = predictionController.renderAnalysisCard([
+        { key: 'carrier', title: '云层载体', status: '较好', desc: 'test', type: 'positive', icon: 'cloud', statusTone: 'good' },
+        { key: 'lightPath', title: '光路条件', status: '一般', desc: 'test', type: 'neutral', icon: 'info', statusTone: 'fair' },
+        { key: 'limits', title: '限制因素', status: '轻微', desc: 'test', type: 'neutral', icon: 'warn', statusTone: 'mild' },
+        { key: 'rendering', title: '空气显色', status: '较弱', desc: 'test', type: 'warning', icon: 'warn', statusTone: 'weak' }
+      ], 'test');
+
+      expect(html).toContain('analysis-factor-status-good');
+      expect(html).toContain('analysis-factor-status-fair');
+      expect(html).toContain('analysis-factor-status-mild');
+      expect(html).toContain('analysis-factor-status-weak');
+    });
+
     test('分析卡片最终 CSS 应保持上下文案左对齐且可换行', () => {
       const css = fs.readFileSync(path.join(rootDir, 'styles/main.css'), 'utf8');
       const finalRules = css.slice(css.lastIndexOf('formation analysis cards must read like compact notes'));
 
       expect(finalRules).toContain('analysis-factor-grid');
       expect(finalRules).toContain('analysis-factor-heading');
+      expect(finalRules).toContain('analysis-factor-status-good');
+      expect(finalRules).toContain('analysis-factor-status-fair');
+      expect(finalRules).toContain('analysis-factor-status-mild');
+      expect(finalRules).toContain('analysis-factor-status-weak');
       expect(finalRules).toContain('grid-template-columns: 22px minmax(0, 1fr)');
       expect(finalRules).toContain('display: grid !important');
       expect(finalRules).toContain('white-space: normal !important');
@@ -1044,5 +1074,52 @@ describe('PredictionController - 3天朝晚霞时间线加载态', () => {
     expect(document.getElementById('forecast-timeline').dataset.loaded).toBe('true');
     expect(document.getElementById('forecast-loading').classList.contains('hidden')).toBe(true);
     expect(document.querySelectorAll('#forecast-timeline .forecast-day-card')).toHaveLength(3);
+  });
+
+  test('未来预测分数颜色按分数分档而不是接口 quality 字段', () => {
+    const base = new Date('2026-05-14T00:00:00+08:00');
+    const predictions = [
+      {
+        date: new Date(base.getTime() - 24 * 60 * 60 * 1000),
+        type: 'sunrise',
+        score: 20,
+        quality: 'poor',
+        sunriseTime: new Date(base.getTime() - 18 * 60 * 60 * 1000),
+        sunsetTime: new Date(base.getTime() - 6 * 60 * 60 * 1000)
+      },
+      {
+        date: base,
+        type: 'sunrise',
+        score: 77,
+        quality: 'good',
+        sunriseTime: new Date(base.getTime() + 6 * 60 * 60 * 1000),
+        sunsetTime: new Date(base.getTime() + 18 * 60 * 60 * 1000)
+      },
+      {
+        date: base,
+        type: 'sunset',
+        score: 45,
+        quality: 'good',
+        sunriseTime: new Date(base.getTime() + 6 * 60 * 60 * 1000),
+        sunsetTime: new Date(base.getTime() + 18 * 60 * 60 * 1000)
+      }
+    ];
+
+    predictionController.updateForecastTimeline(predictions);
+
+    const scores = [...document.querySelectorAll('#forecast-timeline .fcard-row-score')];
+    expect(scores[0].textContent).toContain('77');
+    expect(scores[0].classList.contains('quality-good')).toBe(true);
+    expect(scores[1].textContent).toContain('45');
+    expect(scores[1].classList.contains('quality-fair')).toBe(true);
+  });
+
+  test('评分仪表盘数字不再被全局强制成同一个颜色', () => {
+    const css = fs.readFileSync(path.join(process.cwd(), 'styles/main.css'), 'utf8');
+    const tokenBlock = css.slice(css.indexOf('High-impact token remapping for prediction surfaces.'), css.indexOf('.score-gauge-total'));
+
+    expect(tokenBlock).not.toContain('.score-gauge-number');
+    expect(tokenBlock).not.toContain('.score-gauge-grade');
+    expect(tokenBlock).not.toContain('color: var(--score-excellent-mid) !important');
   });
 });

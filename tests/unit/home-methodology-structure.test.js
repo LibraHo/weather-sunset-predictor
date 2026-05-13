@@ -24,14 +24,21 @@ describe('home methodology structure', () => {
     const cardStart = html.indexOf('methodology-changelog-card');
     const scrollIndex = html.indexOf('methodology-changelog-scroll', cardStart);
     const latestIndex = html.indexOf('home.methodology.changelog.latest.title', cardStart);
-    const currentIndex = html.indexOf('home.methodology.changelog.current.title', cardStart);
+    const aerosolIndex = html.indexOf('home.methodology.changelog.aerosol.title', cardStart);
+    const openingIndex = html.indexOf('home.methodology.changelog.openingCarrier.title', cardStart);
+    const lightPathIndex = html.indexOf('home.methodology.changelog.lightPath.title', cardStart);
+    const upperCloudIndex = html.indexOf('home.methodology.changelog.upperCloudCarrier.title', cardStart);
     const versionIndex = html.indexOf('methodology-version-card', cardStart);
 
     expect(cardStart).toBeGreaterThan(-1);
     expect(scrollIndex).toBeGreaterThan(cardStart);
     expect(latestIndex).toBeGreaterThan(scrollIndex);
-    expect(currentIndex).toBeGreaterThan(latestIndex);
-    expect(versionIndex).toBeGreaterThan(currentIndex);
+    expect(aerosolIndex).toBeGreaterThan(latestIndex);
+    expect(openingIndex).toBeGreaterThan(aerosolIndex);
+    expect(lightPathIndex).toBeGreaterThan(openingIndex);
+    expect(upperCloudIndex).toBeGreaterThan(lightPathIndex);
+    expect(versionIndex).toBeGreaterThan(upperCloudIndex);
+    expect((html.slice(scrollIndex, versionIndex).match(/<li>/g) || []).length).toBeGreaterThanOrEqual(5);
   });
 
   test('score guide matches backend score distribution thresholds', () => {
@@ -45,6 +52,8 @@ describe('home methodology structure', () => {
     expect(scoreGuide).toContain('70-84 分');
     expect(scoreGuide).toContain('40-69 分');
     expect(scoreGuide).toContain('&lt;40 分');
+    expect(scoreGuide).toContain('火烧云条件偏弱；不建议专程追霞，普通日落效果需看实时天气和视野');
+    expect(scoreGuide).not.toContain('普通晴天日落仍然可以看');
     expect(scoreGuide).not.toContain('60-79 分');
     expect(scoreGuide).not.toContain('40-59 分');
   });
@@ -61,6 +70,8 @@ describe('home methodology structure', () => {
     expect(scoreGuide).toContain('home.methodology.scoreSourceMap');
     expect(scoreGuide).toContain('home.methodology.scoreSourcePoint');
     expect(scoreGuide).toContain('home.methodology.scoreSourceWhy');
+    expect(scoreGuide).toContain('为什么地图颜色和地点详情分会不同');
+    expect(scoreGuide).not.toContain('地图分与精确点分为什么会不同');
   });
 
   test('uses neutral methodology changelog styling instead of highlight gradients', () => {
@@ -71,6 +82,7 @@ describe('home methodology structure', () => {
     );
 
     expect(css).toContain('.methodology-changelog-scroll');
+    expect(css).toContain('max-height: 340px');
     expect(cardBlock).toContain('background: var(--color-card-bg)');
     expect(cardBlock).not.toContain('radial-gradient');
     expect(cardBlock).not.toContain('color-mix(in srgb, var(--color-primary');

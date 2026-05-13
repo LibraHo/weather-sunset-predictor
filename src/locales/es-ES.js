@@ -69,21 +69,39 @@ apiAccess: 'Acceso API'
       "intro": "El índice de nubes rojas combina cuatro factores clave para estimar si vale la pena salir a ver el atardecer.",
       "versionLabel": "Versión del algoritmo: 2026.05.13-formation-factors-v1",
       "versionDesc": "Esta versión fija el análisis en cuatro factores: soporte de nubes, trayectoria de luz, color del aire y limitaciones. La fórmula de puntuación no cambia.",
-      changelogTitle: "Version update history",
-      changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
+      changelogTitle: "Historial de versiones",
+      changelogHint: "Aquí están las actualizaciones de los últimos tres meses; desplázate para revisar motivo, impacto y validación",
       changelog: {
-              "latest": {
-                      "date": "2026-05-13",
-                      "title": "Análisis de cuatro factores v1",
-                      "summary": "El análisis se agrupa en soporte de nubes, trayectoria de luz, color del aire y limitaciones para reducir notas dispersas.",
-                      "validation": "Validación: aerosol, bloqueo de nubes bajas, bruma gris, nubes gruesas y lluvia se agrupan en el factor correcto; la fórmula no cambia."
-              },
-              "current": {
-                      "date": "2026-05-12",
-                      "title": "Soporte débil de aerosol v1",
-                      "summary": "Con pocas nubes, la bruma moderada solo aporta como soporte débil de atardecer rojo si la trayectoria de luz está abierta.",
-                      "validation": "Validación: el caso de Pekín sube a los 30 puntos bajos; cielo limpio, bruma/polvo fuertes, bloqueo de nubes bajas y cortinas grises siguen bajos."
-              }
+        "latest": {
+          "date": "2026-05-13",
+          "title": "Análisis de cuatro factores v1",
+          "summary": "El análisis se agrupa en soporte de nubes, trayectoria de luz, color del aire y limitaciones para reducir notas dispersas.",
+          "validation": "Validación: aerosol, bloqueo de nubes bajas, bruma gris, nubes gruesas y lluvia se agrupan en el factor correcto; la fórmula no cambia."
+        },
+        "aerosol": {
+          "date": "2026-05-12",
+          "title": "Soporte débil de aerosol v1",
+          "summary": "Con pocas nubes, la bruma moderada solo aporta como soporte débil de atardecer rojo si la trayectoria de luz está abierta.",
+          "validation": "Validación: el caso de Pekín sube a los 30 puntos bajos; cielo limpio, bruma/polvo fuertes, bloqueo de nubes bajas y cortinas grises siguen bajos."
+        },
+        "openingCarrier": {
+          "date": "2026-05-11",
+          "title": "Soporte de nubes altas con apertura v1",
+          "summary": "Con pocas nubes bajas, nubes medias/altas que pueden colorearse y una apertura hacia el sol, el modelo ya no lo trata como una cubierta gruesa totalmente bloqueada.",
+          "validation": "Validación: el caso abierto del Palacio de Verano vuelve a rango observable; bruma, polvo y nubes gruesas sin apertura siguen conservadores."
+        },
+        "lightPath": {
+          "date": "2026-05-10",
+          "title": "Trayectoria de luz por nubes bajas v3",
+          "summary": "El bloqueo de luz ahora mira si las nubes bajas cortan la dirección del sol, evitando penalizar falsamente lienzos con muchas nubes medias/altas.",
+          "validation": "Validación: los casos de lienzo con nubes altas ya no bajan solo por nubosidad total; nubes bajas dominantes, lluvia/nieve y baja visibilidad siguen conservadores."
+        },
+        "upperCloudCarrier": {
+          "date": "2026-05-10",
+          "title": "Protección de soporte de nubes altas v2",
+          "summary": "Cuando hay nubes altas y medias abundantes, pocas nubes bajas y aire no gris, el cielo se trata como un lienzo coloreable en vez de un simple puntaje bajo.",
+          "validation": "Validación: el caso de Pekín vuelve al rango 50-60; aire gris, polvo fuerte o poco soporte de nubes medias siguen bajos."
+        }
       },
       "factors": {
         "highMidCloudTitle": "Nubes medias/altas (lienzo)",
@@ -110,11 +128,11 @@ apiAccess: 'Acceso API'
       "scoreFairDesc": "Puede haber color; revisa aperturas locales y cielo real",
       "scorePoorRange": "Bajo",
       "scorePoorDetail": "<40 pts",
-      "scorePoorDesc": "Configuración débil; normalmente no merece salida especial",
-      "scoreSourceTitle": "Por qué difieren el mapa y el punto exacto",
-      "scoreSourceMap": "La puntuación del mapa muestra tendencias regionales. Se calcula con puntos de cuadrícula fijos, datos meteorológicos por lote e interpolación ráster, así que mantiene continuidad visual pero no es el pronóstico final de cada centro urbano.",
-      "scoreSourcePoint": "La puntuación de punto exacto en la página de detalle vuelve a pedir clima, calidad del aire y trayectoria de luz para la coordenada introducida, y calcula contra la hora de amanecer o atardecer de ese punto.",
-      "scoreSourceWhy": "Por eso puede haber pequeñas diferencias: usa el mapa para elegir qué zona cercana promete más y el punto exacto para decidir si salir desde tu ubicación. Si la diferencia es grande, confía en el punto exacto.",
+      "scorePoorDesc": "Fire-cloud conditions are weak; do not plan a dedicated chase from this score alone, and judge any ordinary sunset by live weather and visibility",
+      "scoreSourceTitle": "Por qué el color del mapa y la puntuación del lugar pueden diferir",
+      "scoreSourceMap": "Los colores del mapa muestran una tendencia regional para ver rápido qué zona cercana promete más. Para mantener el mapa continuo, se calcula en una cuadrícula fija y se suaviza entre puntos.",
+      "scoreSourcePoint": "La puntuación del lugar es para el punto concreto que elegiste. Recalcula la hora local, nubes, calidad del aire y trayectoria de luz hacia el sol de esa coordenada.",
+      "scoreSourceWhy": "Usa primero el mapa para elegir dirección y luego el detalle del lugar para decidir si salir. Si difieren mucho, confía en el detalle del lugar.",
       "sections": {
         "cloudStructure": {
           "title": "1. Estructura de nubes",
