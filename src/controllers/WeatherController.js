@@ -1365,7 +1365,12 @@ class WeatherController {
       container.innerHTML = `
         <div class="radar-compass-loading" role="status" aria-live="polite">
           <div class="spinner radar-compass-loading-spinner" aria-hidden="true"></div>
-          <p>${loadingText}</p>
+          <div class="radar-compass-loading-copy">
+            <p>${loadingText}</p>
+            <div class="loading-progress radar-compass-loading-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="64">
+              <div class="loading-progress-fill radar-compass-progress-fill"></div>
+            </div>
+          </div>
         </div>
       `;
     }
