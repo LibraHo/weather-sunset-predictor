@@ -52,7 +52,7 @@
 }
 
 .share-option:hover {
-  background: rgba(74, 144, 226, 0.2);
+  background: var(--glass-bg-hover);
 }
 
 .share-option:active {
@@ -71,7 +71,7 @@
 
 /* ===== 预测卡片上的分享按钮 ===== */
 .prediction-share-btn {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--glass-bg);
   border: none;
   padding: 6px;
   border-radius: 8px;
@@ -84,7 +84,7 @@
 }
 
 .prediction-share-btn:hover {
-  background: rgba(255, 255, 255, 0.35);
+  background: var(--glass-bg-hover);
   transform: scale(1.05);
 }
 
@@ -165,12 +165,12 @@
 
 /* 需求46 修正：分享小菜单与全站 glass 样式统一 */
 .prediction-share-dropdown {
-  background: color-mix(in srgb, var(--glass-bg-heavy) 88%, transparent) !important;
-  border-color: var(--glass-border) !important;
-  box-shadow: var(--glass-shadow) !important;
-  color: var(--color-text) !important;
-  backdrop-filter: blur(var(--glass-blur-heavy)) saturate(1.25) !important;
-  -webkit-backdrop-filter: blur(var(--glass-blur-heavy)) saturate(1.25) !important;
+  background: color-mix(in srgb, var(--glass-bg-heavy) 88%, transparent);
+  border-color: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  color: var(--color-text);
+  backdrop-filter: blur(var(--glass-blur-heavy)) saturate(1.25);
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy)) saturate(1.25);
 }
 .prediction-share-btn {
   display: inline-flex !important;
@@ -182,5 +182,5 @@
   display: block;
   margin: auto;
 }
-.share-option { color: var(--color-text) !important; }
-.share-option:hover { background: var(--glass-bg-hover) !important; }
+.share-option { color: var(--color-text); }
+.share-option:hover { background: var(--glass-bg-hover); }
