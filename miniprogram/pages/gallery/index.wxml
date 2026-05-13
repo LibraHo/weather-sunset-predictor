@@ -2,7 +2,7 @@
   <view class="gallery-hero">
     <view class="eyebrow warm-accent">霞客影集</view>
     <view class="headline">照片分享地图</view>
-    <view class="caption">像网页版一样先看地图、照片和详情；H5 链接继续作为完整地图 fallback。</view>
+    <view class="caption">在小程序里直接看照片、位置和详情；需要大屏浏览时再打开 H5 地图。</view>
   </view>
 
   <view class="map-entry xiake-card glass-card">

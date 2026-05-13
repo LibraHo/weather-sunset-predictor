@@ -134,6 +134,18 @@ Page({
     return buildShareMessage(prediction);
   },
 
+  navigateExperience(event) {
+    const target = event.currentTarget.dataset.target;
+    const routes = {
+      methodology: '/pages/methodology/index',
+      map: `/pages/map/index?period=${this.data.prediction?.period || this.data.prediction?.type || 'sunset'}`,
+      gallery: '/pages/gallery/index',
+      upload: '/pages/upload/index'
+    };
+    const url = routes[target];
+    if (url) wx.navigateTo({ url });
+  },
+
   goHome() {
     wx.navigateBack({
       fail() {
