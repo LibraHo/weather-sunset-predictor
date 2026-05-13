@@ -99,6 +99,8 @@ describe('miniprogram page user/share helpers', () => {
 
     expect(radar.hasData).toBe(true);
     expect(radar.points).toHaveLength(9);
+    expect(radar.directions).toHaveLength(8);
+    expect(radar.bestItems[0]).toMatchObject({ direction: 'N', scoreText: 77 });
     expect(radar.points[1]).toMatchObject({ direction: 'N', scoreText: 77, cloudText: '高 61% / 中 20% / 低 5%' });
     expect(threeDay).toMatchObject({
       hasData: true,

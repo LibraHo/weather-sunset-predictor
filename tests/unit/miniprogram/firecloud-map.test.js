@@ -25,8 +25,8 @@ describe('miniprogram firecloud map', () => {
     const mapWxml = read('miniprogram/pages/map/index.wxml');
 
     expect(appJson.pages).toContain('pages/map/index');
-    expect(homeWxml).toContain('火烧云地图');
-    expect(resultWxml).toContain('火烧云地图');
+    expect(homeWxml).toContain('data-target="map"');
+    expect(resultWxml).toContain('data-target="map"');
     expect(mapWxml).toContain('<map');
     expect(mapWxml).toContain('markers="{{markers}}"');
     expect(mapWxml).toContain('bindmarkertap="focusSpot"');
