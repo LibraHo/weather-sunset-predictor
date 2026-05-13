@@ -41,6 +41,10 @@ describe('WeatherController - 24小时温度连续化', () => {
     const renderPromise = controller.renderRadarCompass({ name: 'test', lat: 0, lon: 0, isValid: () => true }, 'sunset');
     expect(document.querySelector('.radar-compass-loading')).not.toBeNull();
     expect(document.querySelector('.radar-compass-loading-spinner')).not.toBeNull();
+    expect(document.querySelector('.radar-compass-loading-copy')).not.toBeNull();
+    expect(document.querySelector('.radar-compass-loading-progress')).not.toBeNull();
+    expect(document.querySelector('.radar-compass-progress-fill')).not.toBeNull();
+    expect(document.querySelector('.radar-compass-loading-progress')?.getAttribute('aria-valuenow')).toBe('64');
 
     await renderPromise;
 

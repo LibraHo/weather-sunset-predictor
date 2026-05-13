@@ -8642,26 +8642,39 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
 .radar-compass-loading {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  min-height: 58px;
+  gap: var(--spacing-md);
+  min-height: 66px;
   margin-top: 12px;
-  padding: 12px 14px;
-  color: var(--color-text-light);
-  font-size: 13px;
-  border: 1px solid var(--glass-border, var(--color-border));
-  border-radius: 14px;
-  background: var(--glass-bg-light, color-mix(in srgb, var(--color-card-bg) 86%, transparent));
-}
-.radar-compass-loading p {
-  margin: 0;
+  padding: var(--spacing-md) var(--spacing-lg);
+  color: var(--color-text);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  box-shadow: var(--glass-shadow);
 }
 .radar-compass-loading-spinner {
   flex: 0 0 auto;
-  width: 18px;
-  height: 18px;
+  width: 28px;
+  height: 28px;
   margin: 0;
-  border-width: 2px;
+  border-width: 3px;
+}
+.radar-compass-loading-copy {
+  flex: 1;
+  min-width: 0;
+}
+.radar-compass-loading-copy p {
+  margin: 0 0 var(--spacing-xs);
+  color: var(--color-text);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.radar-compass-loading-progress {
+  margin-top: 0;
+}
+.radar-compass-progress-fill {
+  width: 64%;
+  animation: xiake-loading-progress 1.6s ease-in-out infinite alternate;
 }
 
 /* Prediction conclusion banner: keep icon/text aligned for wrapped CJK copy. */
