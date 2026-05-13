@@ -90,6 +90,9 @@ weather-sunset-predictor/
 │   ├── 分数与等级
 │   ├── 最佳观赏窗口
 │   ├── 关键指标
+│   ├── 火烧云文字分析
+│   ├── 周边云况雷达
+│   ├── 未来 3 天朝霞/晚霞预测
 │   └── 分享入口
 ├── 地图/照片
 │   ├── 分享地图入口
@@ -104,6 +107,10 @@ weather-sunset-predictor/
 
 页面策略：
 - 首页、结果页、收藏/最近查询、分享卡片必须原生实现。
+- 结果页不是“查分壳”：必须承载霞客核心判断能力，包括火烧云文字分析、周边云况雷达、三天预测和关键天气因子。
+- 火烧云文字分析复用 `/api/prediction/enhanced` 的 `breakdown`、`canvasAnalysis`、`lightPathAnalysis`、`renderingAnalysis`，小程序只做用户化压缩展示，不重新计算算法。
+- 周边云况雷达调用 `/api/prediction/surrounding`，小程序用 3x3 原生布局或 canvas 承载 8 方向分布；不直接搬 Web 雷达 DOM/Leaflet/Chart.js。
+- 三天预测第一阶段可用未来 3 天的 `sunrise/sunset` 增强预测聚合，后续如 `/api/prediction/batch` 契约稳定再切换为批量接口以降低请求数。
 - 分享地图第一阶段可跳 H5 或做轻量原生列表；正式地图聚合等 Web 端聚合稳定后再原生化。
 - 照片上传必须原生实现，避免 H5 在微信内选图/上传体验不稳定。
 - 设置页只放必要项：定位授权状态、缓存清理、隐私协议、数据删除入口。
@@ -116,6 +123,7 @@ weather-sunset-predictor/
 | 地点搜索 | `GET /api/geocoding/search?q=` | 复用 Web 搜索排序；结果字段对小程序/iOS 稳定。 |
 | 反向地理编码 | `GET /api/geocoding/reverse?lat=&lon=` | 上传照片或当前位置展示地点名。 |
 | 单点预测 | `POST /api/prediction/enhanced` | 小程序结果页主接口，复用现有增强预测。 |
+| 周边云况 | `POST /api/prediction/surrounding` | 小程序周边云况雷达，返回 8 方向采样、云层和分数。 |
 | 未来时间线 | `POST /api/prediction/batch` | 今日/明日/多日入口，按 MVP 需要裁剪展示。 |
 | 收藏列表 | `GET /api/user/favorites` | 登录后按 `userId` 返回收藏地点。 |
 | 新增收藏 | `POST /api/user/favorites` | 入参标准地点、经纬度、展示名。 |
@@ -181,7 +189,33 @@ user_identities
 2. 预测结果
    - 最终分、质量等级、最佳观赏窗口。
    - 高/中/低云、能见度、湿度、AOD 等核心指标。
-   - 简短解释，不搬 Web 端长段落。
+   - 火烧云文字分析：云况画布、光路条件、色彩修正三个维度。
+   - 周边云况雷达：8 方向云层/分数，帮助用户判断附近视野方向。
+   - 未来 3 天：朝霞/晚霞分数列表，评分颜色与 Web 标准一致。
+   - 解释文案要压缩成移动端可扫读内容，不搬 Web 端长段落。
+
+## 小程序核心能力开发计划
+
+本计划用于避免 Web 更新后小程序只同步样式、不同步能力。
+
+### P0：核心结果页补齐
+
+- 接入 `/api/prediction/enhanced` 完整分析字段：`breakdown`、`canvasAnalysis`、`lightPathAnalysis`、`renderingAnalysis`。
+- 接入 `/api/prediction/surrounding`，展示 8 方向周边云况雷达。
+- 聚合未来 3 天 `sunrise/sunset` 预测，展示三天朝霞/晚霞评分。
+- 验收：小程序结果页必须同时出现分数、关键因子、文字分析、云况雷达、三天预测。
+
+### P1：体验版真机校准
+
+- 用真实 AppID 上传体验版，验证合法域名、定位授权、弱网、接口失败、iOS/Android 布局。
+- 检查长文本、低分/高分颜色、雷达 3x3 布局、三天预测卡片在窄屏不溢出。
+- 验收：形成体验版截图和问题清单，阻塞项回到 PR 修复。
+
+### P2：跨端契约收敛
+
+- 若三天预测请求数过多，补共享批量接口或复用 `/api/prediction/batch`，避免小程序端串行多次请求。
+- 将小程序和 Web 的评分档位、状态色、核心解释字段建立回归测试，防止未来漂移。
+- 为未来 iOS 固化同一响应 schema，不引入微信端专属业务字段。
 
 3. 收藏与最近查询
    - 最近查询本地快速展示，服务端同步。
