@@ -60,7 +60,7 @@ Page({
   },
 
   onLocationChange(event) {
-    this.setData({ locationText: event.detail.value, errorMessage: '' });
+    this.setData({ locationText: event.detail.value, coordinate: null, errorMessage: '' });
   },
 
   selectPeriod(event) {
@@ -139,7 +139,7 @@ Page({
     });
   },
 
-  useHistory(event) {
+  async useHistory(event) {
     const index = event.currentTarget.dataset.index;
     const item = this.data.recentQueries[index] || null;
     const location = event.currentTarget.dataset.location;
@@ -153,6 +153,7 @@ Page({
         day: item.day || this.data.day,
         errorMessage: ''
       });
+      await this.onSearch();
       return;
     }
     if (location) {
@@ -161,6 +162,7 @@ Page({
         coordinate: lat !== null && lon !== null ? { lat, lon } : null,
         errorMessage: ''
       });
+      await this.onSearch();
     }
   },
 
@@ -175,6 +177,7 @@ Page({
         coordinate: { lat: res.latitude, lon: res.longitude },
         locationText
       });
+      await this.onSearch();
     } catch (error) {
       this.setData({ errorMessage: '无法获取当前位置，请检查定位权限或手动输入地点。' });
     } finally {
@@ -217,7 +220,7 @@ Page({
   },
 
   async resolveLocation(locationText) {
-    if (this.data.coordinate && (!locationText || locationText === '当前位置')) {
+    if (this.data.coordinate) {
       return {
         name: locationText || '当前位置',
         lat: this.data.coordinate.lat,

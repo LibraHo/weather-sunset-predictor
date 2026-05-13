@@ -32,7 +32,7 @@
 }
 
 .locate-button {
-  width: 132rpx;
+  width: 160rpx;
   height: 76rpx;
   margin: 0;
   border-radius: 12rpx;

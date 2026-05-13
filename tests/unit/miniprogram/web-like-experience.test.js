@@ -30,6 +30,9 @@ describe('miniprogram web-like experience shell', () => {
     expect(js).toContain('selectDefaultPeriod(event)');
     expect(js).toContain("wx.setStorageSync('homeSettings'");
     expect(js).toContain('navigateFeature(event)');
+    expect(js).toContain('async useHistory(event)');
+    expect(js).toContain('await this.onSearch();');
+    expect(js).toContain("this.setData({ locationText: event.detail.value, coordinate: null, errorMessage: '' })");
     expect(js).toContain("methodology: '/pages/methodology/index'");
     expect(js).toContain("map: `/pages/map/index?period=${this.data.period}`");
     expect(js).toContain("gallery: '/pages/gallery/index'");
@@ -45,6 +48,16 @@ describe('miniprogram web-like experience shell', () => {
     expect(wxss).not.toContain('.home-view-rail');
     expect(wxss).not.toContain('.nav-grid');
     expect(wxss).not.toContain('.nav-card');
+  });
+
+  test('location shortcuts query immediately instead of requiring a second tap', () => {
+    const locationWxml = read('miniprogram/components/location-search/index.wxml');
+    const homeJs = read('miniprogram/pages/home/index.js');
+
+    expect(locationWxml).toContain('定位查分');
+    expect(homeJs).toMatch(/async onUseCurrentLocation\(\)[\s\S]*await this\.onSearch\(\);/);
+    expect(homeJs).toMatch(/async useHistory\(event\)[\s\S]*await this\.onSearch\(\);/);
+    expect(homeJs).toMatch(/async resolveLocation\(locationText\)[\s\S]*if \(this\.data\.coordinate\)/);
   });
 
   test('result page keeps users in the Xiake product loop after scoring', () => {
