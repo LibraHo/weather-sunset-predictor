@@ -45,6 +45,21 @@
     <view class="source-note">所以地图适合先找方向，地点详情适合最后决定要不要去；如果两者差很多，以地点详情为准。</view>
   </view>
 
+  <view class="methodology-section xiake-card api-surface-card">
+    <view class="section-kicker">API Access</view>
+    <view class="section-title">Sunset Voyager API</view>
+    <view class="api-copy">和网页版 API 接入页保持同一组轻量入口：申请 Token、查看 OpenAPI 规格，并调用 Agent API 获取地点解析、朝霞/晚霞评分和解释。</view>
+    <view class="api-endpoint-list">
+      <view class="api-endpoint"><text class="api-path">/forecast</text><text>返回评分、质量等级和最佳观赏窗口</text></view>
+      <view class="api-endpoint"><text class="api-path">/explain</text><text>返回评分构成、关键限制和自然语言解释</text></view>
+      <view class="api-endpoint"><text class="api-path">/geocode</text><text>返回地点候选、坐标和置信度</text></view>
+    </view>
+    <view class="api-actions">
+      <button class="ghost-button api-button" bindtap="copyOpenApiSpec">复制 OpenAPI 规格链接</button>
+      <button class="ghost-button api-button" bindtap="copyApiApplyLink">复制 API 申请入口</button>
+    </view>
+  </view>
+
   <view class="methodology-section xiake-card changelog-card">
     <view class="changelog-head">
       <view>

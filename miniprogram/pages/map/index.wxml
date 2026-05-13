@@ -2,7 +2,7 @@
   <view class="map-hero xiake-card xiake-bg-sunset-band">
     <view class="eyebrow warm-accent">Firecloud Map</view>
     <view class="headline">火烧云地图</view>
-    <view class="caption">和网站一样先看区域趋势，再点进具体地点查详情分。</view>
+    <view class="caption">和网站一样先看区域趋势，再点进具体地点查看预测。</view>
   </view>
 
   <view class="map-tabs xiake-card">
@@ -19,6 +19,10 @@
       <view class="spot-count">{{spots.length}}</view>
     </view>
 
+    <view class="map-supported-regions">目前支持：中国大陆、港澳台、日本、韩国、朝鲜及中南半岛主要城市；小程序原生地图以点位标记呈现。</view>
+
+    <view class="period-label">{{periodDetailText}}</view>
+
     <view class="native-map-shell">
       <map
         class="native-map"
@@ -26,13 +30,27 @@
         longitude="{{mapCenter.longitude}}"
         scale="{{mapScale}}"
         markers="{{markers}}"
+        enable-scroll="{{true}}"
+        enable-zoom="{{true}}"
+        enable-rotate="{{false}}"
+        show-compass="{{true}}"
         bindmarkertap="focusSpot"
       />
       <view class="map-loading" wx:if="{{loading}}">
         <view class="loading-copy">正在读取{{periodLabel}}地图</view>
         <view class="loading-track"><view class="loading-fill"></view></view>
       </view>
-      <view class="map-empty" wx:elif="{{!spots.length && !errorMessage}}">地图数据暂未就绪</view>
+      <view class="map-empty" wx:elif="{{!spots.length && !errorMessage}}">今日暂无可见火烧云点位</view>
+    </view>
+
+    <view class="map-panel-hint">可拖动地图 · 双指缩放 · 点标记选中地点</view>
+
+    <view class="map-legend">
+      <view class="legend-title">{{periodLabel}}分数</view>
+      <view class="legend-row" wx:for="{{legendItems}}" wx:key="key">
+        <view class="legend-swatch legend-{{item.key}}" style="background: {{item.color}};"></view>
+        <view class="legend-copy">{{item.label}}</view>
+      </view>
     </view>
 
     <view class="error-card" wx:if="{{errorMessage}}">{{errorMessage}}</view>
@@ -43,7 +61,7 @@
         <view class="active-name">{{activeSpot.name}}</view>
         <view class="active-copy">{{periodLabel}} {{activeSpot.quality}} · {{activeSpot.lat}}, {{activeSpot.lon}}</view>
       </view>
-      <button class="ghost-button detail-button" bindtap="openSpotPrediction">查详情分</button>
+      <button class="ghost-button detail-button" bindtap="openSpotPrediction">查看地点预测</button>
     </view>
   </view>
 

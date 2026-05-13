@@ -10,6 +10,17 @@
 Alex 判断公众号入口偏奇怪，小程序更适合霞客；后续还计划 iOS。结论：正式产品线选择原生小程序，公众号只做内容分发/导流；小程序代码放当前仓库 `miniprogram/`，后端继续复用现有 API。
 
 2026-05-13 追加产品标准：小程序必须是霞客 Web 的同等原生端，要求同一设计 UI、同一核心功能、同一评分/解释口径。平台实现可以不同，但不能缩水成简化查分工具。
+### PR #693 baseline update (2026-05-13)
+PR #693 (`fix/miniprogram-web-parity-ui`, merge `709dd89`) is now part of the Requirement 52 baseline. Do not reopen or duplicate these items without side-by-side web screenshot evidence:
+- [x] Home compact product menu exposes settings, methodology, map, gallery, and upload destinations.
+- [x] Home settings panel stores default period/day and applies them on next open.
+- [x] Current-location and history shortcuts query immediately after selection.
+- [x] Result page keeps the user inside the Xiake product loop with methodology, map, gallery, and upload actions.
+- [x] Surrounding cloud panel renders as a compass-style radar.
+- [x] `tests/unit/miniprogram/web-like-experience.test.js` covers these shell-level parity expectations.
+
+Remaining tasks 52.28-52.30 now mean parity closure against the PR #693 baseline: compare latest Mini Program screenshots with web mobile, then patch only concrete gaps.
+- [x] 52.31 Mini Program Web parity first closure pass: home now has the web-mobile information hierarchy preview and direct API entry; result now has score ledger, share/favorite order, and product-loop entry order; map/gallery/upload/methodology now cover API surface, gallery empty state, upload return flow, and map-to-prediction wording. Verification: `npm.cmd test -- tests/unit/miniprogram --runInBand` passed 20 suites / 82 tests. Tasks 52.28-52.30 still require screenshot and real-device acceptance; source-level parity tests are not final visual acceptance.
 
 ### 任务拆分
 - [x] 52.1 小程序项目脚手架：在当前 repo 新增 `miniprogram/`，包含 `app.json/app.js/app.wxss`、基础 pages/components/services/utils 目录；不影响现有 Web 构建与部署。（PR #661，branch `feat/miniprogram-mvp-shell`）
@@ -37,11 +48,11 @@ Alex 判断公众号入口偏奇怪，小程序更适合霞客；后续还计划
 - [x] 52.23 真机验收矩阵：覆盖 iOS/Android 的定位、相册、上传、分享、地图 marker/聚合、弱网、授权拒绝和接口失败降级。（矩阵见 `design/miniprogram-ios.md` 与 `docs/miniprogram-platform-checklist.md`；真实验收待外部条件）
 - [x] 52.24 小程序核心结果页补齐：结果页必须不是单纯查分壳，补齐火烧云文字分析、周边云况雷达、未来 3 天朝霞/晚霞预测，并沿用 Web 评分档位与状态色。（PR #690，branch `feat/miniprogram-xiake-core-panels`，commit `c4d77a1`）
 - [x] 52.25 小程序核心 API 字段同步：`miniprogram/services/prediction.js` 保留 `/api/prediction/enhanced` 的 `breakdown`、`canvasAnalysis`、`lightPathAnalysis`、`renderingAnalysis`，新增 `/api/prediction/surrounding` 调用和三天预测聚合，避免 Web 算法升级后小程序丢字段。（PR #690）
-- [ ] 52.26 体验版真机校准：PR #690 合并并重新上传体验版后，在微信开发者工具、iOS 真机、Android 真机检查结果页三大能力、长文案、雷达 3x3、三天预测、弱网/接口失败降级；问题必须回到 PR 修复后再提审。
+- [ ] 52.26 体验版真机校准：PR #690/#693 合并并重新上传体验版后，在微信开发者工具、iOS 真机、Android 真机检查结果页三大能力、长文案、雷达 3x3、三天预测、弱网/接口失败降级；问题必须回到 PR 修复后再提审。
 - [ ] 52.27 跨端契约收敛：评估三天预测多次请求的性能；如体验版发现慢或失败率高，补共享批量接口或复用 `/api/prediction/batch`，并同步 Web、小程序、未来 iOS 的 schema 测试。
-- [ ] 52.28 UI parity 验收：小程序首页、结果页、上传页、照片/地图页必须按 Web 霞客设计语言重做或校准；验收以截图/真机为准，不能只靠 WXSS 单测。
+- [ ] 52.28 UI parity 验收：小程序首页、结果页、上传页、照片/地图页必须按 Web 霞客设计语言重做或校准；验收以截图/真机为准，不能只靠 WXSS 单测。 PR #693 has already delivered the first home/result shell pass; this item is now screenshot and real-device closure, not a full restart.
 - [ ] 52.29 功能 parity 补齐：补小程序算法说明入口、原生分享地图 marker/聚合、照片查看路径、Web 已有核心功能的移动端对应入口；每个功能需标明“原生实现 / H5 fallback / 暂缓原因”。
-- [ ] 52.30 操作逻辑 parity：小程序首页和结果页操作顺序对齐 Web 主流程：地点/定位、朝晚霞、日期、查询、结果、分析、雷达、三天预测、分享/收藏/地图/算法说明；入口必须可见、自然、可连续操作。
+- [ ] 52.30 操作逻辑 parity：小程序首页和结果页操作顺序对齐 Web 主流程：地点/定位、朝晚霞、日期、查询、结果、分析、雷达、三天预测、分享/收藏/地图/算法说明；入口必须可见、自然、可连续操作。 PR #693 already added the first navigation/action loop; continue from that baseline.
 
 ### 设计文档
 - 总览：`design.md`
@@ -55,8 +66,8 @@ Alex 判断公众号入口偏奇怪，小程序更适合霞客；后续还计划
 - PR E（核心能力补齐，当前 PR #690）：52.24、52.25；补火烧云文字分析、周边云况雷达、三天预测，防止小程序只同步 UI 不同步霞客功能。
 - PR F（体验版验收，待合并后执行）：52.10、52.11、52.19、52.20、52.21、52.22、52.23、52.26；微信开发者工具、真机调试、体验版、自动化、隐私审核、后端接口测试和 iOS 兼容复核。
 - PR G（性能与契约收敛，按体验版结果决定）：52.27；必要时补批量预测接口和 schema 回归测试。
-- PR H（完整同端体验）：52.28、52.29；按 Web 同等原生端标准补 UI parity 和功能 parity，完成前不提正式版审核。
-- PR I（操作逻辑收敛）：52.30；根据体验版截图和真机操作，把入口顺序、按钮位置、结果页行动路径继续对齐 Web。
+- PR H（完整同端体验）：52.28、52.29；按 Web 同等原生端标准补 UI parity 和功能 parity，完成前不提正式版审核。 After PR #693, PR H is a closure pass against screenshots, not a duplicate rebuild.
+- PR I（操作逻辑收敛）：52.30；根据体验版截图和真机操作，把入口顺序、按钮位置、结果页行动路径继续对齐 Web。 PR #693 already added the first navigation/action loop; continue from that baseline.
 
 ### 验收标准
 - 小程序代码在当前 repo 内，不单独建库。

@@ -1,12 +1,33 @@
 import { request } from './api.js';
 import { scoreToLevel } from './prediction.js';
 
+export const FIRECLOUD_LEGENDS = {
+  sunset: [
+    { key: 'below', label: '<40', color: '#f8d7a5' },
+    { key: 'low', label: '40', color: '#ffc069' },
+    { key: 'mid', label: '50', color: '#ffa94d' },
+    { key: 'high', label: '60', color: '#ff9a3d' },
+    { key: 'peak', label: '70+', color: '#ff8a2a' }
+  ],
+  sunrise: [
+    { key: 'below', label: '<30', color: '#f7c6d0' },
+    { key: 'low', label: '30', color: '#ffadc2' },
+    { key: 'mid', label: '40', color: '#ff94ad' },
+    { key: 'high', label: '55', color: '#ff7c99' },
+    { key: 'peak', label: '70+', color: '#ff6b8a' }
+  ]
+};
+
 export async function getChinaFirecloudSpots({ period = 'sunset' } = {}) {
   const response = await request('/api/spots/china', {
     method: 'GET',
     query: { period }
   });
   return normalizeChinaFirecloudSpots(response?.data || response);
+}
+
+export function getFirecloudLegend(period = 'sunset') {
+  return (FIRECLOUD_LEGENDS[period] || FIRECLOUD_LEGENDS.sunset).map((item) => ({ ...item }));
 }
 
 export function normalizeChinaFirecloudSpots(data = {}) {
@@ -95,5 +116,6 @@ function numberOrNull(value) {
 export default {
   getChinaFirecloudSpots,
   normalizeChinaFirecloudSpots,
+  getFirecloudLegend,
   buildSpotMarkers
 };

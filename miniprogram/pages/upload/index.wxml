@@ -5,16 +5,23 @@
     <view class="caption">选择照片，补充地点和拍摄时间，审核后展示在分享地图。</view>
   </view>
 
+  <view class="upload-parity-note xiake-card">
+    <view class="section-title">上传晚霞照片</view>
+    <view class="subtle-text">从预测结果带入地点后，补充照片和拍摄时间。</view>
+  </view>
+
   <view class="picker-card xiake-card glass-card" bindtap="choosePhoto">
     <image wx:if="{{hasPhoto}}" class="preview-image" src="{{previewUrl}}" mode="aspectFill" />
     <view wx:else class="picker-empty">
       <view class="picker-mark">霞</view>
       <view class="picker-title">选择照片</view>
       <view class="picker-copy subtle-text">支持从相册选择或直接拍摄。</view>
+      <view class="upload-format-hint">支持 JPG、PNG、HEIC，建议小于 20MB</view>
     </view>
   </view>
 
   <view class="form-card xiake-card">
+    <view class="metadata-edit-hint">照片信息都可以留空或手动修改；经纬度成对填写后会显示在分享地图。</view>
     <view class="field-group">
       <view class="field-label">拍摄地点</view>
       <input class="field-input" value="{{form.locationName}}" data-field="locationName" placeholder="例如：颐和园十七孔桥" bindinput="onFieldInput" />
@@ -62,6 +69,6 @@
     <button class="primary-button submit-button" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitPhoto">
       {{submitting ? '正在上传…' : '上传照片'}}
     </button>
-    <button class="ghost-button gallery-button" bindtap="goGallery">查看分享地图</button>
+    <button class="ghost-button gallery-button" bindtap="goGallery">返回图库</button>
   </view>
 </view>

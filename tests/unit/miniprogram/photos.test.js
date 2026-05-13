@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import { configureApi, resetApiConfig, setWxInstance } from '../../../miniprogram/services/api.js';
 import { clearSession, saveSession } from '../../../miniprogram/services/auth.js';
-import { buildPhotoUploadFormData, listPhotos, uploadPhoto } from '../../../miniprogram/services/photos.js';
+import { buildPhotoUploadFormData, listPhotos, normalizePhoto, uploadPhoto } from '../../../miniprogram/services/photos.js';
 
 describe('miniprogram services/photos', () => {
   afterEach(() => {
@@ -75,6 +75,21 @@ describe('miniprogram services/photos', () => {
       lat: '48.8566',
       lon: '2.3522',
       desc: 'blue hour'
+    });
+  });
+
+  test('normalizePhoto derives web-compatible photo URLs from backend id', () => {
+    expect(normalizePhoto({
+      id: 'photo-42',
+      latitude: '30.1',
+      longitude: '120.2',
+      thumbFile: 'thumb.jpg'
+    }, { baseUrl: 'https://api.example.com' })).toMatchObject({
+      id: 'photo-42',
+      lat: 30.1,
+      lon: 120.2,
+      thumbUrl: 'https://api.example.com/api/photos/photo-42/thumb',
+      originalUrl: 'https://api.example.com/api/photos/photo-42/original'
     });
   });
 

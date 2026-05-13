@@ -1,3 +1,6 @@
+const openapiSpecUrl = 'https://sunset.bjhyc.online/api/agent/openapi.json';
+const apiApplyUrl = 'https://sunset.bjhyc.online/api-apply.html';
+
 Page({
   data: {
     scoreBands: [
@@ -19,5 +22,23 @@ Page({
       { date: '2026-05-10', title: '低云主导光路 v3', summary: '光路遮挡改为看低云是否挡住太阳方向，避免中高云画布被总云量误伤。' },
       { date: '2026-05-10', title: '中高云载体保护 v2', summary: '高云和中云充足、低云少且空气不灰时，按可染色画布处理。' }
     ]
+  },
+
+  copyOpenApiSpec() {
+    copyLink(openapiSpecUrl, '链接已复制');
+  },
+
+  copyApiApplyLink() {
+    copyLink(apiApplyUrl, '申请入口已复制');
   }
 });
+
+function copyLink(url, title) {
+  wx.copyClipboardData({
+    data: url,
+    success: () => wx.showToast({ title, icon: 'none' }),
+    fail: () => wx.showToast({ title: '复制失败，请稍后重试', icon: 'none' })
+  });
+}
+
+export { apiApplyUrl, openapiSpecUrl };
