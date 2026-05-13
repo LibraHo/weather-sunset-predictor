@@ -4,9 +4,19 @@
   gap: 24rpx;
 }
 
+.home-topbar {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 64rpx;
+  padding: 4rpx 4rpx 0;
+}
+
 .home-hero {
   position: relative;
-  padding: 18rpx 6rpx 4rpx;
+  padding: 4rpx 6rpx 4rpx;
   overflow: hidden;
 }
 
@@ -24,72 +34,92 @@
 }
 
 .home-brand-row {
-  position: relative;
-  z-index: 1;
   display: flex;
   align-items: center;
-  gap: 16rpx;
+  gap: 12rpx;
 }
 
 .app-logo-mark {
   position: relative;
-  width: 54rpx;
-  height: 54rpx;
+  width: 42rpx;
+  height: 42rpx;
   color: #f5c87a;
 }
 
-.logo-arc {
+.logo-sun {
   position: absolute;
-  left: 9rpx;
+  left: 10rpx;
   top: 8rpx;
-  width: 36rpx;
-  height: 30rpx;
-  border-top: 4rpx solid currentColor;
-  border-left: 4rpx solid currentColor;
-  border-right: 4rpx solid currentColor;
-  border-radius: 40rpx 40rpx 0 0;
+  width: 22rpx;
+  height: 22rpx;
+  border-radius: 50%;
+  background: currentColor;
 }
 
 .logo-line {
   position: absolute;
-  left: 0;
-  right: 0;
-  height: 4rpx;
+  height: 3rpx;
   border-radius: 999rpx;
   background: currentColor;
 }
 
 .logo-line-1 {
-  top: 33rpx;
+  left: 2rpx;
+  right: 2rpx;
+  top: 32rpx;
 }
 
 .logo-line-2 {
-  left: 8rpx;
-  right: 8rpx;
-  top: 42rpx;
-  height: 3rpx;
-}
-
-.logo-line-3 {
-  left: 16rpx;
-  right: 16rpx;
-  top: 50rpx;
+  left: 12rpx;
+  right: 12rpx;
+  top: 39rpx;
   height: 3rpx;
 }
 
 .app-logo-text {
   color: #f5c87a;
-  font-size: 34rpx;
+  font-size: 30rpx;
   font-weight: 800;
   letter-spacing: 0;
   line-height: 1;
+}
+
+.home-view-menu {
+  position: relative;
+}
+
+.menu-button {
+  width: 56rpx;
+  height: 44rpx;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 999rpx;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 30rpx;
+  font-weight: 900;
+  line-height: 36rpx;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.home-view-menu-dropdown {
+  position: absolute;
+  top: 54rpx;
+  right: 0;
+  width: 236rpx;
+  box-sizing: border-box;
+  padding: 10rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.12);
+  border-radius: 16rpx;
+  background: rgba(10, 15, 30, 0.96);
+  box-shadow: 0 18rpx 46rpx rgba(0, 0, 0, 0.34);
 }
 
 .home-title {
   position: relative;
   z-index: 1;
   max-width: 620rpx;
-  margin-top: 30rpx;
+  margin-top: 22rpx;
   color: #ffffff;
   font-size: 52rpx;
   font-weight: 900;
@@ -105,29 +135,15 @@
   line-height: 1.5;
 }
 
-.home-view-rail {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  gap: 12rpx;
-  margin-top: 28rpx;
-  overflow-x: auto;
-}
-
 .home-view-option {
-  flex: 0 0 auto;
-  min-width: 92rpx;
-  height: 58rpx;
+  min-height: 56rpx;
   box-sizing: border-box;
-  padding: 0 18rpx;
-  border: 1rpx solid rgba(255, 255, 255, 0.10);
-  border-radius: 999rpx;
-  color: rgba(255, 255, 255, 0.70);
-  font-size: 24rpx;
+  padding: 12rpx 16rpx;
+  border-radius: 12rpx;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 25rpx;
   font-weight: 800;
-  line-height: 58rpx;
-  text-align: center;
-  background: rgba(255, 255, 255, 0.06);
+  line-height: 32rpx;
 }
 
 .home-view-option.active {

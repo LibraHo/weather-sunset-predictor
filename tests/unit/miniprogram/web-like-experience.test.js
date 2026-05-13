@@ -13,7 +13,7 @@ describe('miniprogram web-like experience shell', () => {
     const wxss = read('miniprogram/pages/home/index.wxss');
 
     expect(wxml).toContain('home-hero');
-    expect(wxml).toContain('home-view-rail');
+    expect(wxml).toContain('home-view-menu-dropdown');
     expect(wxml).toContain('查分');
     expect(wxml).toContain('算法');
     expect(wxml).toContain('地图');
@@ -28,9 +28,14 @@ describe('miniprogram web-like experience shell', () => {
     expect(js).toContain("gallery: '/pages/gallery/index'");
     expect(js).toContain("upload: '/pages/upload/index'");
     expect(wxss).toContain('.home-title');
-    expect(wxss).toContain('.home-view-rail');
+    expect(wxss).toContain('.menu-button');
+    expect(wxss).toContain('width: 56rpx');
+    expect(wxss).toContain('height: 44rpx');
+    expect(wxss).toContain('.home-view-menu-dropdown');
+    expect(wxss).not.toContain('width: 80rpx');
+    expect(wxss).not.toContain('height: 80rpx');
     expect(wxss).not.toContain('.app-header');
-    expect(wxss).not.toContain('.home-view-menu-dropdown');
+    expect(wxss).not.toContain('.home-view-rail');
     expect(wxss).not.toContain('.nav-grid');
     expect(wxss).not.toContain('.nav-card');
   });
