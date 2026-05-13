@@ -18,6 +18,16 @@
       <button class="ghost-button action-button" open-type="share">分享评分</button>
     </view>
 
+    <view class="result-view-switch xiake-card">
+      <view class="switch-title">页面切换</view>
+      <view class="switch-options">
+        <view class="switch-option" data-target="methodology" bindtap="navigateExperience">计算方法</view>
+        <view class="switch-option" data-target="map" bindtap="navigateExperience">火烧云地图</view>
+        <view class="switch-option" data-target="gallery" bindtap="navigateExperience">分享地图</view>
+        <view class="switch-option" data-target="upload" bindtap="navigateExperience">上传照片</view>
+      </view>
+    </view>
+
     <view class="section-head">关键天气因子</view>
     <metric-grid metrics="{{metrics}}" />
 

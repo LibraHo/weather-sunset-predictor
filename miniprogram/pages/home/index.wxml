@@ -1,9 +1,27 @@
 <view class="container home-page">
-  <view class="hero">
-    <view class="brand glow-title">霞客</view>
-    <view class="headline">先看火烧云条件，再安排观赏。</view>
-    <view class="caption">面向朝霞 / 晚霞的快速查分工具。</view>
+  <view class="app-header xiake-card">
+    <view class="app-logo">
+      <view class="app-logo-mark">
+        <view class="logo-arc"></view>
+        <view class="logo-line logo-line-1"></view>
+        <view class="logo-line logo-line-2"></view>
+        <view class="logo-line logo-line-3"></view>
+      </view>
+      <view class="app-logo-text">霞客</view>
+    </view>
+    <view class="home-view-menu">
+      <button class="menu-button" bindtap="toggleHomeMenu">☰</button>
+      <view class="home-view-menu-dropdown" wx:if="{{homeMenuOpen}}">
+        <view class="home-view-option active" data-target="forecast" bindtap="navigateFeature">预测功能</view>
+        <view class="home-view-option" data-target="methodology" bindtap="navigateFeature">火烧云计算方法</view>
+        <view class="home-view-option" data-target="map" bindtap="navigateFeature">火烧云地图</view>
+        <view class="home-view-option" data-target="gallery" bindtap="navigateFeature">分享地图</view>
+        <view class="home-view-option" data-target="upload" bindtap="navigateFeature">上传照片</view>
+      </view>
+    </view>
   </view>
+
+  <view class="hero-copy">先看火烧云条件，再安排观赏。</view>
 
   <location-search value="{{locationText}}" locating="{{locating}}" bind:change="onLocationChange" bind:confirm="onSearch" bind:locate="onUseCurrentLocation" />
 
@@ -26,6 +44,11 @@
   <button class="primary-button query-button" loading="{{loading}}" disabled="{{loading}}" bindtap="onSearch">
     {{loading ? '正在查分…' : '查询霞光分数'}}
   </button>
+
+  <view class="home-section-head">
+    <view class="section-title">个人入口</view>
+    <view class="section-hint">像网站首页一样先保留最近动作</view>
+  </view>
 
   <view class="placeholder-grid">
     <view class="mini-card xiake-card">

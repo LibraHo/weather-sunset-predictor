@@ -12,6 +12,7 @@ Page({
     day: 'today',
     loading: false,
     locating: false,
+    homeMenuOpen: false,
     errorMessage: '',
     recentQueries: [],
     favorites: []
@@ -64,6 +65,25 @@ Page({
 
   selectDay(event) {
     this.setData({ day: event.currentTarget.dataset.value });
+  },
+
+  toggleHomeMenu() {
+    this.setData({ homeMenuOpen: !this.data.homeMenuOpen });
+  },
+
+  navigateFeature(event) {
+    const target = event.currentTarget.dataset.target;
+    const routes = {
+      forecast: '',
+      methodology: '/pages/methodology/index',
+      map: `/pages/map/index?period=${this.data.period}`,
+      gallery: '/pages/gallery/index',
+      upload: '/pages/upload/index'
+    };
+    const url = routes[target];
+    this.setData({ homeMenuOpen: false });
+    if (!url) return;
+    wx.navigateTo({ url });
   },
 
   useHistory(event) {
