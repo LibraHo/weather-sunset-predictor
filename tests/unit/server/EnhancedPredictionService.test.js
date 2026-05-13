@@ -470,9 +470,29 @@ describe('EnhancedPredictionService', () => {
       // rainBonus 保持 1.2（雨后加成不受 AQI 影响）
       expect(result.rainBonus).toBe(1.2);
       // AQI 惩罚通过独立的 aqiFactor 施加
-      expect(result.aqiFactor).toBe(0.8);
-      // 最终系数 = 1.0 * 1.0 * 1.2 * 0.8 = 0.96
-      expect(result.factor).toBeCloseTo(0.96, 2);
+      expect(result.aqiFactor).toBe(0.92);
+      // 最终系数 = 1.0 * 1.0 * 1.2 * 0.92 = 1.10
+      expect(result.factor).toBeCloseTo(1.1, 2);
+    });
+
+    test('does not double-penalize transparent moderate haze', () => {
+      const weatherData = {
+        visibility: 18,
+        humidity: 52,
+        aqi: 180,
+        aerosolOpticalDepth: 0.52,
+        pm2_5: 58,
+        pm10: 95,
+        dust: 35,
+        shortwaveRadiation: 80,
+        directRadiation: 28
+      };
+      const result = EnhancedPredictionService.scoreRendering(weatherData);
+
+      expect(result.aqiFactor).toBe(0.92);
+      expect(result.aerosolFactor).toBe(1);
+      expect(result.factor).toBeCloseTo(0.92, 2);
+      expect(result.breakdown.aerosol).toBe('high');
     });
   });
 
@@ -986,6 +1006,64 @@ describe('EnhancedPredictionService', () => {
       expect(result.aerosolHazeCap.applied).toBe(false);
       expect(result.score).toBeGreaterThanOrEqual(65);
       expect(result.status).toBe('very_likely');
+    });
+
+    test('should not cap transparent moderate haze when upper clouds are available', () => {
+      const weatherData = {
+        cloudCover: 88,
+        lowClouds: 4,
+        midClouds: 20,
+        highClouds: 82,
+        humidity: 48,
+        visibility: 18,
+        precipitation: 0,
+        shortwaveRadiation: 80,
+        directRadiation: 28,
+        aerosolOpticalDepth: 0.52,
+        dust: 35,
+        pm2_5: 58,
+        pm10: 95,
+        aqi: 180
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData, new Date('2026-05-14T21:00:00.000Z'), 39.9042, 116.4074, 'sunrise'
+      );
+
+      expect(result.aerosolHazeCap.applied).toBe(false);
+      expect(result.renderingAnalysis.aerosolFactor).toBe(1);
+      expect(result.score).toBeGreaterThan(45);
+    });
+
+    test('should still cap gray-curtain haze when visibility and direct light are weak', () => {
+      const weatherData = {
+        cloudCover: 88,
+        lowClouds: 4,
+        midClouds: 20,
+        highClouds: 82,
+        humidity: 48,
+        visibility: 6,
+        precipitation: 0,
+        shortwaveRadiation: 80,
+        directRadiation: 8,
+        aerosolOpticalDepth: 0.52,
+        dust: 95,
+        pm2_5: 58,
+        pm10: 130,
+        aqi: 180
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData, new Date('2026-05-14T21:00:00.000Z'), 39.9042, 116.4074, 'sunrise'
+      );
+
+      expect(result.aerosolHazeCap).toMatchObject({
+        applied: true,
+        cap: 45,
+        level: 'moderate',
+        reason: 'moderate_haze_cap_45'
+      });
+      expect(result.score).toBeLessThanOrEqual(45);
     });
 
     test('should cap extreme dust haze high-cloud scenes below 30 points', () => {

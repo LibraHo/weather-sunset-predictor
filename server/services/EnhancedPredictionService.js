@@ -621,6 +621,15 @@ function getAerosolMetrics(weatherData) {
   };
 }
 
+function getDirectRadiationRatio(weatherData = {}) {
+  const direct = Number(weatherData.directRadiation);
+  const shortwave = Number(weatherData.shortwaveRadiation);
+  if (!Number.isFinite(direct) || !Number.isFinite(shortwave) || shortwave <= 50) {
+    return null;
+  }
+  return direct / shortwave;
+}
+
 /**
  * 气溶胶弱载体：适度薄霾/气溶胶可以承接一点红橙散射，
  * 但必须被光路激活，且只提供普通红日落的中低分上限。
@@ -703,25 +712,30 @@ function assessAerosolHazeCap(weatherData) {
   const highClouds = weatherData.highClouds || 0;
   const visibility = weatherData.visibility ?? 20;
   const { aod, pm25, pm10, dust } = getAerosolMetrics(weatherData);
+  const directRatio = getDirectRadiationRatio(weatherData);
 
   const hasUpperCloudCarrier = highClouds >= 65 && lowClouds <= 20;
   const extremeHaze = (aod != null && aod >= 0.8) || (dust != null && dust >= 300) || (pm10 != null && pm10 >= 250);
   const severeHaze = (aod != null && aod >= 0.55) || (dust != null && dust >= 150) || (pm10 != null && pm10 >= 180) || (pm25 != null && pm25 >= 90) || visibility < 6;
   const moderateHaze = (aod != null && aod >= 0.45) || (dust != null && dust >= 80) || (pm10 != null && pm10 >= 120) || visibility < 8;
+  const lightSuppressed = visibility < 8 || (directRatio != null && directRatio < 0.18);
+  const heavyParticulateCurtain = (dust != null && dust >= 120) || (pm10 != null && pm10 >= 180) || (pm25 != null && pm25 >= 90);
+  const opticallyThickAerosol = aod != null && aod >= 0.65;
+  const grayCurtainSignal = lightSuppressed || heavyParticulateCurtain || opticallyThickAerosol;
 
   if (hasUpperCloudCarrier && extremeHaze) {
-    return { applied: true, cap: 28, level: 'extreme', reason: 'extreme_dust_haze_cap_28', metrics: { aod, pm25, pm10, dust, visibility } };
+    return { applied: true, cap: 28, level: 'extreme', reason: 'extreme_dust_haze_cap_28', metrics: { aod, pm25, pm10, dust, visibility, directRatio } };
   }
 
-  if (hasUpperCloudCarrier && severeHaze) {
-    return { applied: true, cap: 35, level: 'severe', reason: 'severe_haze_cap_35', metrics: { aod, pm25, pm10, dust, visibility } };
+  if (hasUpperCloudCarrier && severeHaze && grayCurtainSignal) {
+    return { applied: true, cap: 35, level: 'severe', reason: 'severe_haze_cap_35', metrics: { aod, pm25, pm10, dust, visibility, directRatio } };
   }
 
-  if (hasUpperCloudCarrier && moderateHaze) {
-    return { applied: true, cap: 45, level: 'moderate', reason: 'moderate_haze_cap_45', metrics: { aod, pm25, pm10, dust, visibility } };
+  if (hasUpperCloudCarrier && moderateHaze && grayCurtainSignal) {
+    return { applied: true, cap: 45, level: 'moderate', reason: 'moderate_haze_cap_45', metrics: { aod, pm25, pm10, dust, visibility, directRatio } };
   }
 
-  return { applied: false, cap: null, level: null, reason: null, metrics: { aod, pm25, pm10, dust, visibility } };
+  return { applied: false, cap: null, level: null, reason: null, metrics: { aod, pm25, pm10, dust, visibility, directRatio } };
 }
 
 /**
@@ -1080,6 +1094,7 @@ function scoreRendering(weatherData, rainedRecently = false) {
   const pm25 = Number(weatherData.pm2_5 ?? weatherData.pm25 ?? 0);
   const pm10 = Number(weatherData.pm10 ?? 0);
   const dust = Number(weatherData.dust ?? 0);
+  const directRatio = getDirectRadiationRatio(weatherData);
 
   // 1. 能见度修正
   let visibilityFactor = 1.0;
@@ -1157,8 +1172,12 @@ function scoreRendering(weatherData, rainedRecently = false) {
   } else {
     aqiLevel = 'poor';               // 空气差
     colorTendency = 'dark_red';      // 暗红色调
-    // 严重污染（AQI > 150）单独施加惩罚
-    aqiFactor = aqi > 150 ? 0.8 : 1.0;
+    // AQI 主要提示色彩倾向；只有重污染才轻度惩罚，避免与灰幕封顶重复扣分。
+    if (aqi > 250 || (aqi > 150 && directRatio != null && directRatio < 0.18)) {
+      aqiFactor = 0.8;
+    } else {
+      aqiFactor = aqi > 150 ? 0.92 : 1.0;
+    }
   }
 
   let aerosolFactor = 1.0;
@@ -1171,7 +1190,7 @@ function scoreRendering(weatherData, rainedRecently = false) {
       aerosolFactor = 1.06;
       aerosolLevel = 'optimal';
     } else if (aerosolOpticalDepth <= 0.7) {
-      aerosolFactor = 0.95;
+      aerosolFactor = visibility >= 12 ? 1.0 : 0.95;
       aerosolLevel = 'high';
     } else {
       aerosolFactor = 0.88;
@@ -1180,11 +1199,12 @@ function scoreRendering(weatherData, rainedRecently = false) {
 
     const particulateModerate = pm25 > 35 || pm10 > 80 || dust > 50;
     const particulateHigh = pm25 > 75 || pm10 > 150 || dust > 100;
-    if (particulateHigh) {
+    const grayCurtain = visibility < 8 || (directRatio != null && directRatio < 0.18) || dust > 120 || pm10 > 180;
+    if (particulateHigh && grayCurtain) {
       aerosolFactor = Math.min(aerosolFactor, 0.85);
       aerosolLevel = 'polluted';
     } else if (particulateModerate) {
-      aerosolFactor = Math.min(aerosolFactor, 0.94);
+      aerosolFactor = Math.min(aerosolFactor, grayCurtain ? 0.94 : 1.0);
       aerosolLevel = aerosolLevel === 'optimal' ? 'moderate_pollution' : aerosolLevel;
     }
     if (visibility < 8 && (aerosolOpticalDepth > 0.35 || particulateModerate)) {
