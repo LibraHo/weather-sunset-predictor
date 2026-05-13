@@ -498,7 +498,7 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(() => controller._renderChinaSpotsTimestamp()).not.toThrow();
   });
 
-  test('_renderChinaSpotsTimestamp: 使用朝霞晚霞统一地图更新时间，不随当前 tab 跳变', () => {
+  test('_renderChinaSpotsTimestamp: 使用当前 tab 对应地图更新时间', () => {
     document.body.innerHTML = '<div id="china-spots-timestamp"></div>';
     controller.i18n = {
       getLanguage: () => 'en-US',
@@ -514,8 +514,9 @@ describe('WeatherController - 24小时温度连续化', () => {
 
     controller._renderChinaSpotsTimestamp();
 
-    expect(document.getElementById('china-spots-timestamp').textContent).toContain(':34');
-    expect(document.getElementById('china-spots-timestamp').textContent).not.toContain(':12');
+    expect(controller.chinaSpotsOverlayManager.getOverlay).toHaveBeenCalledWith('sunset');
+    expect(document.getElementById('china-spots-timestamp').textContent).toContain(':12');
+    expect(document.getElementById('china-spots-timestamp').textContent).not.toContain(':34');
   });
 
   test('_renderDualPeriodScorePanel: 无 #china-spots-dual-score 元素时不报错', () => {

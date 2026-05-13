@@ -1980,22 +1980,16 @@ class WeatherController {
     const tsEl = document.getElementById('china-spots-timestamp');
     if (!tsEl) return;
 
-    // 显示地图全局数据时间，避免朝霞/晚霞 tab 切换时“更新于”跳来跳去。
-    let latestTime = null;
-    const periods = ['sunrise', 'sunset'];
-    for (const p of periods) {
-      const overlay = this.chinaSpotsOverlayManager?.getOverlay(p);
-      const t = overlay?.getUpdatedAt?.() || null;
-      if (t) {
-        const d = new Date(t);
-        if (!Number.isNaN(d.getTime()) && (!latestTime || d > latestTime)) latestTime = d;
-      }
-    }
+    const activePeriod = this.chinaSpotsOverlayManager?.getActivePeriod?.() || this.currentOverlayType || 'sunset';
+    const overlay = this.chinaSpotsOverlayManager?.getOverlay(activePeriod);
+    const updatedAt = overlay?.getUpdatedAt?.() || null;
+    const updatedTime = updatedAt ? new Date(updatedAt) : null;
+    const hasValidTime = updatedTime && !Number.isNaN(updatedTime.getTime());
 
     const timeLocale = this.i18n?.getLanguage?.() || 'zh-CN';
-    tsEl.textContent = latestTime
+    tsEl.textContent = hasValidTime
       ? this._formatTemplate(this._t('weatherMap.updatedAt', '更新于 {{time}}'), {
-          time: latestTime.toLocaleTimeString(timeLocale, { hour: '2-digit', minute: '2-digit' })
+          time: updatedTime.toLocaleTimeString(timeLocale, { hour: '2-digit', minute: '2-digit' })
         })
       : '';
   }
