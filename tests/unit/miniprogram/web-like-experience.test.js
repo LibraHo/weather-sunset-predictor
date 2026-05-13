@@ -89,6 +89,23 @@ describe('miniprogram web-like experience shell', () => {
     expect(js).toContain('火烧云条件可以关注');
   });
 
+  test('surrounding cloud panel uses a compass radar instead of a low-fi grid', () => {
+    const wxml = read('miniprogram/pages/result/index.wxml');
+    const wxss = read('miniprogram/pages/result/index.wxss');
+    const js = read('miniprogram/pages/result/index.js');
+
+    expect(wxml).toContain('radar-compass');
+    expect(wxml).toContain('radar-compass-dial');
+    expect(wxml).toContain('radar-direction-{{item.direction}}');
+    expect(wxml).toContain('radar-legend');
+    expect(wxml).not.toContain('class="radar-grid"');
+    expect(wxss).toContain('.radar-compass-dial');
+    expect(wxss).toContain('conic-gradient');
+    expect(wxss).toContain('.radar-ring-outer');
+    expect(js).toContain('orderRadarDirections');
+    expect(js).toContain('bestItems');
+  });
+
   test('gallery is positioned as a native mini-program map with H5 as secondary fallback', () => {
     const wxml = read('miniprogram/pages/gallery/index.wxml');
     const js = read('miniprogram/pages/gallery/index.js');

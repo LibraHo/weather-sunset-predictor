@@ -378,13 +378,32 @@ export function buildRadarView(surrounding = {}) {
     scoreText: Number.isFinite(Number(point.score)) ? Math.round(Number(point.score)) : '--',
     cloudText: `高 ${formatPercent(point.highCloud ?? 0)} / 中 ${formatPercent(point.midCloud ?? 0)} / 低 ${formatPercent(point.lowCloud ?? 0)}`
   }));
+  const directions = orderRadarDirections(points);
   return {
     loading: false,
     error: '',
     bestDirection: surrounding.bestDirection || null,
     points: orderRadarPoints(points),
+    directions,
+    bestItems: directions
+      .filter((item) => item.scoreText !== '--')
+      .sort((a, b) => Number(b.scoreText) - Number(a.scoreText))
+      .slice(0, 3),
     hasData: points.length > 0
   };
+}
+
+function orderRadarDirections(points = []) {
+  const order = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  const map = new Map(points.map((point) => [point.direction, point]));
+  return order.map((direction) => map.get(direction) || {
+    key: direction,
+    direction,
+    name: direction,
+    scoreText: '--',
+    level: 'unknown',
+    cloudText: '暂无数据'
+  });
 }
 
 function orderRadarPoints(points = []) {
