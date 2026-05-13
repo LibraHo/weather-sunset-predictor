@@ -24,12 +24,12 @@
   position: relative;
   width: min(820px, 100%);
   max-height: calc(100vh - 48px);
-  background: rgba(255, 255, 255, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  border: 1px solid var(--glass-border);
   border-radius: 18px;
-  box-shadow: 0 24px 52px rgba(15, 23, 42, 0.2);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur-heavy));
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -50,10 +50,10 @@
 /* 暗色主题 */
 .theme-dark .settings-container,
 .settings-container.theme-dark {
-  background: rgba(17, 24, 39, 0.78);
-  border-color: rgba(148, 163, 184, 0.28);
-  box-shadow: 0 22px 45px rgba(2, 6, 23, 0.48);
-  color: #f3f4f6;
+  background: color-mix(in srgb, var(--color-surface) 86%, transparent);
+  border-color: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  color: var(--color-text);
 }
 
 /* 设置面板头部 */
@@ -62,29 +62,29 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent);
 }
 
 .theme-dark .settings-header {
-  border-bottom-color: rgba(148, 163, 184, 0.2);
+  border-bottom-color: color-mix(in srgb, var(--color-text) 18%, transparent);
 }
 
 .settings-header h2 {
   margin: 0;
   font-size: 32px;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--color-text);
 }
 
 .theme-dark .settings-header h2 {
-  color: #f3f4f6;
+  color: var(--color-text);
 }
 
 .settings-close {
   background: none;
   border: none;
   font-size: 28px;
-  color: #6b7280;
+  color: color-mix(in srgb, var(--color-text) 64%, transparent);
   cursor: pointer;
   padding: 0;
   width: 36px;
@@ -97,17 +97,17 @@
 }
 
 .settings-close:hover {
-  background: rgba(107, 114, 128, 0.12);
-  color: #1f2937;
+  background: var(--glass-bg-hover);
+  color: var(--color-text);
 }
 
 .theme-dark .settings-close {
-  color: #d1d5db;
+  color: color-mix(in srgb, var(--color-text) 86%, transparent);
 }
 
 .theme-dark .settings-close:hover {
-  background: rgba(148, 163, 184, 0.2);
-  color: #f9fafb;
+  background: var(--glass-bg-hover);
+  color: var(--color-text);
 }
 
 /* 设置面板内容 */
@@ -115,13 +115,13 @@
   flex: 1;
   overflow-y: auto;
   padding: 18px 24px 22px;
-  background: rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: color-mix(in srgb, var(--glass-bg) 56%, transparent);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
 }
 
 .theme-dark .settings-content {
-  background: rgba(15, 23, 42, 0.2);
+  background: color-mix(in srgb, var(--glass-bg) 52%, transparent);
 }
 
 .settings-content::-webkit-scrollbar {
@@ -129,7 +129,7 @@
 }
 
 .settings-content::-webkit-scrollbar-thumb {
-  background: rgba(107, 114, 128, 0.35);
+  background: color-mix(in srgb, var(--color-text) 36%, transparent);
   border-radius: 999px;
 }
 
@@ -146,13 +146,13 @@
   font-size: 14px;
   font-weight: 600;
   margin: 0 0 10px;
-  color: #374151;
+  color: var(--color-text);
   padding-left: 8px;
   letter-spacing: 0.2px;
 }
 
 .theme-dark .settings-section-title {
-  color: #e5e7eb;
+  color: var(--color-text);
 }
 
 .settings-section-content {
@@ -161,12 +161,12 @@
 
 .settings-section-divider {
   border: 0;
-  border-top: 1px solid rgba(209, 213, 219, 0.62);
+  border-top: 1px solid color-mix(in srgb, var(--color-text) 28%, transparent);
   margin: 16px 0;
 }
 
 .theme-dark .settings-section-divider {
-  border-top-color: rgba(148, 163, 184, 0.35);
+  border-top-color: color-mix(in srgb, var(--color-text) 32%, transparent);
 }
 
 /* 设置项 */
@@ -177,11 +177,11 @@
 }
 
 .settings-panel .setting-item:not(:last-child) {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent);
 }
 
 .theme-dark .settings-panel .setting-item:not(:last-child) {
-  border-bottom-color: rgba(148, 163, 184, 0.2);
+  border-bottom-color: color-mix(in srgb, var(--color-text) 18%, transparent);
 }
 
 .settings-panel .settings-section-content .setting-item {
@@ -215,19 +215,19 @@
   display: block;
   font-weight: 500;
   margin: 0;
-  color: #1f2937;
+  color: var(--color-text);
   line-height: 1.45;
 }
 
 .settings-panel .setting-label-title {
-  color: #111827;
+  color: var(--color-text);
   font-size: 16px;
   font-weight: 500;
 }
 
 .theme-dark .settings-panel .setting-label,
 .theme-dark .settings-panel .setting-label-title {
-  color: #f3f4f6;
+  color: var(--color-text);
 }
 
 .setting-text-block {
