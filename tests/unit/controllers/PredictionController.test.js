@@ -167,6 +167,36 @@ describe('PredictionController', () => {
       expect(result).toBe(cachedPrediction);
       expect(predictionController.predictionAPIService.calculate).not.toHaveBeenCalled();
     });
+
+    test('client-fallback 批量预测失败后，本轮单条预测应直接走浏览器天气兜底', async () => {
+      localStorage.setItem('weather_fetch_mode', 'client-fallback');
+      const date = new Date('2026-05-10T10:00:00Z');
+      const fallbackPrediction = { score: 61, quality: 'good', type: 'sunset' };
+      predictionController.weatherFetchMode = 'client-fallback';
+      predictionController.features = { USE_BACKEND_PREDICTION: true };
+      predictionController._forceClientWeatherPredictionFallback = true;
+      predictionController.predictionService = {
+        calculatePrediction: jest.fn(() => ({ score: 40 }))
+      };
+      predictionController.predictionAPIService = {
+        calculate: jest.fn(() => Promise.resolve(fallbackPrediction))
+      };
+
+      const result = await predictionController._calculatePredictionWithBackend(
+        { timestamp: date.getTime(), timezone: 'Asia/Shanghai', _prevHourData: { timestamp: date.getTime() - 3600000 } },
+        date,
+        39.9,
+        116.4,
+        'sunset',
+        []
+      );
+
+      expect(result).toBe(fallbackPrediction);
+      expect(predictionController.predictionAPIService.calculate).toHaveBeenCalledTimes(1);
+      expect(predictionController.predictionAPIService.calculate.mock.calls[0][5]).toEqual(
+        expect.objectContaining({ clientWeatherFallback: true })
+      );
+    });
   });
 
 
@@ -1028,10 +1058,11 @@ describe('PredictionController', () => {
       ).rejects.toThrow();
     });
 
-    test('批量预测请求超时时应直接抛出可提示错误，不继续静默单条重试', async () => {
-      localStorage.setItem('weather_fetch_mode', 'backend');
+    test('自适应模式下批量预测超时应标记本轮走前端天气兜底', async () => {
+      localStorage.setItem('weather_fetch_mode', 'client-fallback');
       const timeoutError = new Error('后端预测 API 调用失败: 预测服务 20 秒内没有返回，请稍后重试');
       timeoutError.code = 'PREDICTION_API_TIMEOUT';
+      predictionController.weatherFetchMode = 'client-fallback';
       predictionController.features = { USE_BACKEND_PREDICTION: true };
       predictionController.predictionAPIService = {
         calculateBatchClosedLoop: jest.fn(() => Promise.reject(timeoutError))
@@ -1040,13 +1071,11 @@ describe('PredictionController', () => {
       const today = new Date('2026-05-14T00:00:00+08:00');
       const location = { lat: 39.9, lon: 116.4 };
 
-      await expect(
-        predictionController._prepareClosedLoopBatchPredictions({ today, location, targetTimezone: 'Asia/Shanghai' })
-      ).rejects.toMatchObject({
-        code: 'PREDICTION_API_TIMEOUT',
-        message: expect.stringContaining('朝晚霞预测服务没有及时返回')
-      });
+      await predictionController._prepareClosedLoopBatchPredictions({ today, location, targetTimezone: 'Asia/Shanghai' });
+
       expect(predictionController.predictionAPIService.calculateBatchClosedLoop).toHaveBeenCalledTimes(1);
+      expect(predictionController._closedLoopBatchPredictionMap).toBeNull();
+      expect(predictionController._forceClientWeatherPredictionFallback).toBe(true);
     });
 
     test('所有朝晚霞预测都失败时应抛错给 AppController 显示提示', async () => {

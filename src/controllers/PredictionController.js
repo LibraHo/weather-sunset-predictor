@@ -368,6 +368,19 @@ class PredictionController {
           });
         }
 
+        if (mode === 'client-fallback' && this._forceClientWeatherPredictionFallback) {
+          console.warn('[PredictionController] 后端批量预测不可用，本轮直接使用浏览器天气数据 + 后端算分 fallback');
+          try {
+            return await this.predictionAPIService.calculate(weatherData, date, lat, lon, type, {
+              ...clientWeatherOptions,
+              clientWeatherFallback: true
+            });
+          } catch (fallbackError) {
+            console.warn('[PredictionController] 后端应急算分仍不可用，改用前端本地预测:', fallbackError.message);
+            return this._calculateLocalPredictionFallback(weatherData, date, lat, lon, type, weatherDataArray);
+          }
+        }
+
         if (mode !== 'client') {
           const batchKey = this._predictionBatchKey(type, date);
           const batchPrediction = this._closedLoopBatchPredictionMap?.get(batchKey);
@@ -447,10 +460,14 @@ class PredictionController {
       || code === 'weather_quota_exceeded'
       || code === 'weather_upstream_timeout'
       || code === 'weather_provider_unavailable'
+      || code === 'prediction_api_timeout'
       || message.includes('weather_rate_limited')
       || message.includes('weather_quota_exceeded')
       || message.includes('weather_upstream_timeout')
       || message.includes('weather_provider_unavailable')
+      || message.includes('prediction_api_timeout')
+      || message.includes('signal is aborted')
+      || message.includes('没有返回')
       || message.includes('429')
       || message.includes('quota')
       || message.includes('rate')
@@ -477,6 +494,7 @@ class PredictionController {
 
   async _prepareClosedLoopBatchPredictions({ today, location, targetTimezone }) {
     const mode = loadConfig().weatherFetchMode || this.weatherFetchMode || 'backend';
+    this._forceClientWeatherPredictionFallback = false;
     if (!this.features.USE_BACKEND_PREDICTION || mode === 'client') {
       this._closedLoopBatchPredictionMap = null;
       return;
@@ -506,11 +524,11 @@ class PredictionController {
       });
       console.log(`[PredictionController] 后端闭环批量预测预取完成: ${this._closedLoopBatchPredictionMap.size}/${items.length}`);
     } catch (error) {
-      if (this._isPredictionRequestTimeout(error)) {
+      if (mode === 'client-fallback' && this._isWeatherFallbackEligible(error)) {
+        console.warn('[PredictionController] 后端闭环批量预测失败，本轮改用浏览器天气数据应急:', error.message);
         this._closedLoopBatchPredictionMap = null;
-        const timeoutError = new Error(`朝晚霞预测服务没有及时返回：${error.message}`);
-        timeoutError.code = error.code || 'PREDICTION_API_TIMEOUT';
-        throw timeoutError;
+        this._forceClientWeatherPredictionFallback = true;
+        return;
       }
       console.warn('[PredictionController] 后端闭环批量预测失败，回退到单条预测:', error.message);
       this._closedLoopBatchPredictionMap = null;
@@ -573,6 +591,7 @@ class PredictionController {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    this._forceClientWeatherPredictionFallback = false;
     await this._prepareClosedLoopBatchPredictions({ today, location, targetTimezone });
 
     // 仅生成 UI 会展示的今天 + 未来3天，避免额外第5天白跑朝/晚霞预测请求
