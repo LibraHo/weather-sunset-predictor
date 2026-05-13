@@ -504,11 +504,12 @@ class GridScoreService {
    * @param {'sunrise'|'sunset'} period
    * @returns {Promise<void>}
    */
-  async refreshIfStale(maxAgeMs = DEFAULT_MAX_AGE_MS, period = DEFAULT_PERIOD) {
+  async refreshIfStale(maxAgeMs = DEFAULT_MAX_AGE_MS, period = DEFAULT_PERIOD, options = {}) {
     const safePeriod = this.normalizePeriod(period);
+    const force = options?.force === true;
     if (this._refreshingByPeriod[safePeriod]) return;
     const cache = this.getCache(safePeriod);
-    if (cache) {
+    if (cache && !force) {
       const age = Date.now() - new Date(cache.updatedAt).getTime();
       if (age <= maxAgeMs) return;
 

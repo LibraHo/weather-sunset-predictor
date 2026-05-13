@@ -228,7 +228,7 @@ function _scheduleGridRefresh() {
   } = require('./services/GridRefreshSchedule');
 
   const startRefresh = (period, reason) => {
-    gridService.refreshIfStale(0, period).catch(err =>
+    gridService.refreshIfStale(0, period, { force: true }).catch(err =>
       console.error(`[GridRefresh] ${reason}刷新失败 (${period}):`, err.message)
     );
   };
