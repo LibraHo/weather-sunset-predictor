@@ -857,7 +857,7 @@ class PredictionController {
     }
 
     console.log(`[PredictionController] 生成了 ${predictions.length} 个预测`);
-    if (predictions.length === 0 && predictionErrors.length > 0) {
+    if (predictions.length === 0 && predictionErrors.some(error => this._isPredictionRequestTimeout(error))) {
       const firstError = predictionErrors[0];
       const error = new Error(`朝晚霞预测读取失败：${firstError.message || '后端预测服务暂时不可用'}`);
       error.code = firstError.code || null;

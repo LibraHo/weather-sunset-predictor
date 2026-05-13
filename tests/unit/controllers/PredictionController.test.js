@@ -1077,7 +1077,9 @@ describe('PredictionController', () => {
         return date;
       });
       predictionController._calculatePredictionWithBackend = jest.fn(async () => {
-        throw new Error('后端预测 API 调用失败: 预测服务 20 秒内没有返回，请稍后重试');
+        const error = new Error('后端预测 API 调用失败: 预测服务 20 秒内没有返回，请稍后重试');
+        error.code = 'PREDICTION_API_TIMEOUT';
+        throw error;
       });
 
       await expect(
