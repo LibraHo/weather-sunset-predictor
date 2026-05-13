@@ -60,6 +60,34 @@
 
 ## 核心设计决策
 
+### 统一设计语言（Web 端，2026-05-13 更新）
+
+为避免“主界面一套风格、弹层/菜单另一套风格”的割裂，前端视觉统一为 **Sunset Glass** 设计语言：
+
+1. **单一 Token 源**
+   - 所有模块（页面、弹窗、下拉、Toast、按钮）优先使用 `styles/main.css` 中的主题 token。
+   - 关键 token：`--color-*`、`--glass-*`、`--header-*`。
+   - 禁止在子样式文件中新增同语义硬编码色值（例如固定 `#1f2937` 作为正文色、固定 `rgba(74,144,226,0.2)` 作为 hover 色）。
+
+2. **双主题一致性**
+   - 明亮/暗色主题都必须走同一套 token 名称；差异只允许在 token 值层定义，不允许在组件层分叉两套配色逻辑。
+   - `ThemeService` 负责切换 `theme-*` 类及 `data-theme`、`data-actual-theme` 属性；组件只消费变量，不自行判定主题。
+
+3. **玻璃材质规范**
+   - 容器背景：`var(--color-surface)` 或 `color-mix(... var(--glass-bg-heavy) ...)`。
+   - 悬停背景：`var(--glass-bg-hover)`。
+   - 边框：`var(--glass-border)`。
+   - 阴影：`var(--glass-shadow)`。
+   - 模糊：`var(--glass-blur)` / `var(--glass-blur-heavy)`。
+
+4. **禁用补丁式覆盖**
+   - 避免“先硬编码，再靠 `!important` 覆盖修正”的写法。
+   - 若需要修正模块风格，优先回收为 token，避免 selector 竞态和回归风险。
+
+5. **验收口径（UI）**
+   - 顶栏、设置面板、分享菜单在亮/暗模式中需保持同一视觉语言（色相、透明度、边框、阴影统一）。
+   - 不出现亮色常量泄漏到暗色模式（例如浅米色渐变终点、浅灰白固定 hover）。
+
 ### 天气数据源（Open-Meteo）
 
 - **主数据源**：Open-Meteo API（免费，无需Key）
