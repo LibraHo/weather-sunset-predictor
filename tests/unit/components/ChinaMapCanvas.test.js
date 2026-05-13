@@ -1,26 +1,109 @@
+import { jest } from '@jest/globals';
 import ChinaMapCanvas, { selectCitiesForZoom } from '../../../src/components/ChinaMapCanvas.js';
 import { MAP_CITY_NAME_I18N, getLocalizedMapCityName } from '../../../src/data/mapCityNames.js';
+import fs from 'fs';
+import path from 'path';
 
 const level1 = [
   { name: '北京' }, { name: '上海' }, { name: '广州' }, { name: '深圳' },
   { name: '成都' }, { name: '重庆' }, { name: '武汉' }, { name: '西安' },
   { name: '杭州' }, { name: '南京' }, { name: '长沙' }, { name: '昆明' },
   { name: '台北' }, { name: '首尔' }, { name: '东京' }, { name: '大阪' },
-  { name: '曼谷' }, { name: '河内' }, { name: '胡志明市' }, { name: '金边' },
+  { name: '乌兰巴托' }, { name: '曼谷' }, { name: '河内' }, { name: '胡志明市' }, { name: '金边' },
   { name: '万象' }, { name: '仰光' }, { name: '吉隆坡' }, { name: '雅加达' }
 ];
 const level2 = [{ name: '苏州' }, { name: '宁波' }];
 const level3 = [{ name: '义乌' }];
 
 describe('ChinaMapCanvas city data coverage', () => {
-  it('includes major Southeast Asia city labels for basemap only', () => {
+  it('fetches the latest shared East Asia basemap asset', () => {
+    const source = fs.readFileSync(path.resolve(process.cwd(), 'src/components/ChinaMapCanvas.js'), 'utf8');
+    expect(source).toContain('/data/east-asia-basemap-geojson.json?v=3');
+    expect(source).not.toContain('/data/east-asia-basemap-geojson.json?v=1');
+    expect(source).not.toContain('/data/east-asia-basemap-geojson.json?v=2');
+  });
+
+  it('keeps score controls enabled by default but allows gallery pages to disable them', () => {
+    const defaultMap = new ChinaMapCanvas();
+    expect(defaultMap._options.showScoreLegend).toBe(true);
+    expect(defaultMap._options.enableScoreQuery).toBe(true);
+
+    const galleryMap = new ChinaMapCanvas({
+      showScoreLegend: false,
+      enableScoreQuery: false
+    });
+    expect(galleryMap._options.showScoreLegend).toBe(false);
+    expect(galleryMap._options.enableScoreQuery).toBe(false);
+  });
+
+  it('queries exact point prediction before falling back to raster samples for click scores', async () => {
+    const originalFetch = global.fetch;
+    global.fetch = jest.fn(async (url) => {
+      if (url === '/api/prediction/enhanced') {
+        return {
+          ok: true,
+          json: async () => ({ success: true, data: { score: 35 } })
+        };
+      }
+      throw new Error('raster fallback should not be called');
+    });
+
+    try {
+      const map = new ChinaMapCanvas();
+      map._currentPeriod = 'sunset';
+      const score = await map._fetchExactPointScore(32.0603, 118.7969);
+
+      expect(score).toBe(35);
+      expect(global.fetch).toHaveBeenCalledWith('/api/prediction/enhanced', expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      }));
+      const body = JSON.parse(global.fetch.mock.calls[0][1].body);
+      expect(body).toMatchObject({ lat: 32.0603, lon: 118.7969, type: 'sunset' });
+    } finally {
+      global.fetch = originalFetch;
+    }
+  });
+
+  it('falls back to raster sample when exact point prediction is unavailable', async () => {
+    const originalFetch = global.fetch;
+    global.fetch = jest.fn(async (url) => {
+      if (url === '/api/prediction/enhanced') {
+        return { ok: false, json: async () => ({}) };
+      }
+      if (String(url).startsWith('/api/spots/china/raster?')) {
+        return { ok: true, json: async () => ({ score: 73 }) };
+      }
+      throw new Error(`unexpected url ${url}`);
+    });
+
+    try {
+      const map = new ChinaMapCanvas();
+      map._currentPeriod = 'sunset';
+      const score = await map._fetchExactPointScore(32.0603, 118.7969);
+
+      expect(score).toBe(73);
+      expect(global.fetch.mock.calls[1][0]).toContain('/api/spots/china/raster?period=sunset');
+    } finally {
+      global.fetch = originalFetch;
+    }
+  });
+
+  it('includes major Asia-Pacific city labels for basemap only', () => {
     const data = new ChinaMapCanvas()._getCityData();
     const names = new Set([...data.level1, ...data.level2, ...data.level3].map(city => city.name));
 
     [
-      '曼谷', '河内', '胡志明市', '金边', '万象', '仰光', '吉隆坡', '雅加达',
+      '乌兰巴托', '曼谷', '河内', '胡志明市', '金边', '万象', '仰光', '吉隆坡', '雅加达',
       '清迈', '普吉', '岘港', '暹粒', '曼德勒', '内比都', '槟城', '新山',
-      '哥打基纳巴卢', '泗水', '万隆', '棉兰', '登巴萨'
+      '哥打基纳巴卢', '泗水', '万隆', '棉兰', '登巴萨',
+      '阿斯塔纳', '阿拉木图', '塔什干', '比什凯克', '杜尚别', '阿什哈巴德',
+      '新德里', '孟买', '加尔各答', '卡拉奇', '达卡', '加德满都', '科伦坡',
+      '莫斯科', '圣彼得堡', '新西伯利亚', '符拉迪沃斯托克',
+      '悉尼', '墨尔本', '布里斯班', '珀斯',
+      '撒马尔罕', '奥什', '土库曼纳巴德', '班加罗尔', '金奈', '海得拉巴',
+      '拉合尔', '伊斯兰堡', '吉大港', '廷布', '马累', '喀布尔',
+      '叶卡捷琳堡', '伊尔库茨克', '哈巴罗夫斯克', '堪培拉', '阿德莱德', '达尔文'
     ].forEach((name) => {
       expect(names.has(name)).toBe(true);
     });
@@ -43,19 +126,23 @@ describe('ChinaMapCanvas city data coverage', () => {
     expect(getLocalizedMapCityName('武汉', 'ja-JP')).toBe('Wuhan');
     expect(getLocalizedMapCityName('东京', 'ja-JP')).toBe('東京');
     expect(getLocalizedMapCityName('首尔', 'ko-KR')).toBe('서울');
+    expect(getLocalizedMapCityName('乌兰巴托', 'en-US')).toBe('Ulaanbaatar');
     expect(getLocalizedMapCityName('曼谷', 'fr-FR')).toBe('Bangkok');
+    expect(getLocalizedMapCityName('悉尼', 'zh-TW')).toBe('雪梨');
+    expect(getLocalizedMapCityName('新德里', 'en-US')).toBe('New Delhi');
   });
 });
 
 describe('ChinaMapCanvas mobile city label selection', () => {
-  it('limits very low-zoom mobile labels to China core cities only', () => {
+  it('limits very low-zoom mobile labels to a small regional overview set', () => {
     const cities = selectCitiesForZoom({ level1, level2, level3 }, 4.5, true);
-    expect(cities.map(c => c.name)).toEqual(['北京', '上海', '广州', '深圳', '成都', '重庆', '武汉', '西安', '杭州', '南京']);
+    expect(cities.map(c => c.name)).toEqual(['北京', '上海', '广州', '成都', '西安', '首尔', '东京', '乌兰巴托', '曼谷', '雅加达']);
   });
 
   it('adds regional capitals on mobile before showing all level1 labels', () => {
-    const cities = selectCitiesForZoom({ level1, level2, level3 }, 5.5, true);
+    const cities = selectCitiesForZoom({ level1, level2, level3 }, 7.5, true);
     expect(cities.map(c => c.name)).toContain('曼谷');
+    expect(cities.map(c => c.name)).toContain('乌兰巴托');
     expect(cities.map(c => c.name)).toContain('雅加达');
     expect(cities.map(c => c.name)).not.toContain('长沙');
   });
@@ -63,9 +150,9 @@ describe('ChinaMapCanvas mobile city label selection', () => {
   it('uses less restrictive density on desktop than mobile at the same zoom', () => {
     const mobile = selectCitiesForZoom({ level1, level2, level3 }, 6.8, true);
     const desktop = selectCitiesForZoom({ level1, level2, level3 }, 6.8, false);
-    expect(mobile).toHaveLength(level1.length);
-    expect(desktop).toHaveLength(level1.length);
-    expect(selectCitiesForZoom({ level1, level2, level3 }, 4.5, false)).toHaveLength(22);
+    expect(mobile).toHaveLength(12);
+    expect(desktop).toHaveLength(24);
+    expect(selectCitiesForZoom({ level1, level2, level3 }, 4.5, false)).toHaveLength(12);
   });
 
   it('thins dense island and peninsula labels at low zoom', () => {
@@ -78,7 +165,7 @@ describe('ChinaMapCanvas mobile city label selection', () => {
     const lowZoomNames = selectCitiesForZoom({ level1: denseLevel1 }, 6.8, false).map(city => city.name);
     expect(lowZoomNames).toEqual(['北京', '台北', '首尔', '东京', '大阪']);
 
-    const higherZoomNames = selectCitiesForZoom({ level1: denseLevel1 }, 8.2, false).map(city => city.name);
+    const higherZoomNames = selectCitiesForZoom({ level1: denseLevel1 }, 11.5, false).map(city => city.name);
     expect(higherZoomNames).toContain('新北');
     expect(higherZoomNames).toContain('高雄');
     expect(higherZoomNames).toContain('釜山');
@@ -86,13 +173,14 @@ describe('ChinaMapCanvas mobile city label selection', () => {
   });
 
   it('delays dense mobile labels until higher zoom than desktop', () => {
-    expect(selectCitiesForZoom({ level1, level2, level3 }, 8, true)).toHaveLength(level1.length);
-    expect(selectCitiesForZoom({ level1, level2, level3 }, 9, true)).toHaveLength(level1.length + level2.length);
-    expect(selectCitiesForZoom({ level1, level2, level3 }, 10, true)).toHaveLength(level1.length + level2.length);
-    expect(selectCitiesForZoom({ level1, level2, level3 }, 11, true)).toHaveLength(level1.length + level2.length + level3.length);
+    expect(selectCitiesForZoom({ level1, level2, level3 }, 8, true)).toHaveLength(23);
+    expect(selectCitiesForZoom({ level1, level2, level3 }, 10, true)).toHaveLength(24);
+    expect(selectCitiesForZoom({ level1, level2, level3 }, 11.5, true)).toHaveLength(level1.length + level2.length);
+    expect(selectCitiesForZoom({ level1, level2, level3 }, 13, true)).toHaveLength(level1.length + level2.length + level3.length);
 
-    expect(selectCitiesForZoom({ level1, level2, level3 }, 7.5, false)).toHaveLength(level1.length);
-    expect(selectCitiesForZoom({ level1, level2, level3 }, 8.2, false)).toHaveLength(level1.length + level2.length);
-    expect(selectCitiesForZoom({ level1, level2, level3 }, 10, false)).toHaveLength(level1.length + level2.length + level3.length);
+    expect(selectCitiesForZoom({ level1, level2, level3 }, 7.5, false)).toHaveLength(24);
+    expect(selectCitiesForZoom({ level1, level2, level3 }, 9, false)).toHaveLength(level1.length);
+    expect(selectCitiesForZoom({ level1, level2, level3 }, 10.5, false)).toHaveLength(level1.length + level2.length);
+    expect(selectCitiesForZoom({ level1, level2, level3 }, 11.5, false)).toHaveLength(level1.length + level2.length + level3.length);
   });
 });

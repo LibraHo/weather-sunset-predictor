@@ -1,0 +1,15 @@
+<view class="score-hero xiake-card">
+  <view class="hero-top">
+    <view>
+      <view class="eyebrow">{{periodLabel}}预测</view>
+      <view class="location">{{locationName || '未命名地点'}}</view>
+    </view>
+    <view class="grade {{gradeClass}}">{{gradeLabel}}</view>
+  </view>
+  <view class="score-line">
+    <text class="score">{{scoreText}}</text>
+    <text class="unit">分</text>
+  </view>
+  <view class="window">最佳窗口：{{bestWindow || '等待天气数据'}}</view>
+  <view class="explain">{{explanation || '数据准备好后，这里会给出简短判断。'}}</view>
+</view>

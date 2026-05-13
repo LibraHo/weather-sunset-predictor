@@ -1,7 +1,7 @@
 /**
- * ChinaMapCanvas.js - 东亚 + 中南半岛地图底层组件（GeoJSON + Canvas）
+ * ChinaMapCanvas.js - 亚洲太平洋地图底层组件（GeoJSON + Canvas）
  *
- * 基于 Leaflet + GeoJSON 渲染中国/日韩朝/中南半岛边界，不依赖外部瓦片 API
+ * 基于 Leaflet + GeoJSON 渲染中国/日韩朝/亚洲太平洋边界，不依赖外部瓦片 API
  * GeoJSON 通过 fetch 懒加载，避免首屏阻塞 569KB 的模块解析
  *
  * feat: 全量地级行政单位标注 + 图例 + 点击查询 + 缩放分级显示
@@ -79,10 +79,37 @@ const MOBILE_CORE_CITY_NAMES = new Set([
   '北京', '上海', '广州', '深圳', '成都', '重庆', '武汉', '西安', '杭州', '南京'
 ]);
 
+const MOBILE_OVERVIEW_CITY_NAMES = new Set([
+  '北京', '上海', '广州', '成都', '西安',
+  '东京', '首尔', '乌兰巴托', '曼谷', '雅加达',
+  '塔什干', '新德里', '莫斯科', '悉尼'
+]);
+
+const OVERVIEW_CITY_NAMES = new Set([
+  '北京', '上海', '广州', '成都', '西安', '乌鲁木齐', '拉萨',
+  '台北', '首尔', '东京', '乌兰巴托', '曼谷', '河内', '雅加达',
+  '阿斯塔纳', '塔什干', '新德里', '孟买', '卡拉奇', '达卡', '莫斯科', '新西伯利亚', '悉尼', '墨尔本'
+]);
+
 const LOW_ZOOM_REGIONAL_CITY_NAMES = new Set([
   ...MOBILE_CORE_CITY_NAMES,
-  '台北', '首尔', '东京', '大阪',
-  '曼谷', '河内', '胡志明市', '金边', '万象', '仰光', '吉隆坡', '雅加达'
+  '台北', '首尔', '东京', '大阪', '乌兰巴托',
+  '曼谷', '河内', '胡志明市', '金边', '万象', '仰光', '吉隆坡', '雅加达',
+  '阿斯塔纳', '阿拉木图', '塔什干', '比什凯克', '杜尚别', '阿什哈巴德',
+  '新德里', '孟买', '加尔各答', '卡拉奇', '拉合尔', '达卡', '加德满都', '科伦坡',
+  '莫斯科', '圣彼得堡', '新西伯利亚', '符拉迪沃斯托克',
+  '悉尼', '墨尔本', '布里斯班', '珀斯'
+]);
+
+const INITIAL_FIT_BASEMAP_COUNTRY_NAMES = new Set([
+  'China', 'Japan', 'South Korea', 'North Korea', 'Mongolia',
+  'Myanmar', 'Thailand', 'Laos', 'Cambodia', 'Vietnam', 'Malaysia', 'Indonesia',
+  'Kazakhstan', 'Kyrgyzstan', 'Tajikistan', 'Uzbekistan', 'Turkmenistan',
+  'Afghanistan', 'Pakistan', 'India', 'Nepal', 'Bhutan', 'Bangladesh', 'Sri Lanka', 'Maldives'
+]);
+
+const CHINA_SECONDARY_MAJOR_CITY_NAMES = new Set([
+  '深圳', '苏州', '宁波', '青岛', '大连', '厦门', '东莞', '佛山'
 ]);
 
 const DENSE_REGION_SECONDARY_CITY_NAMES = new Set([
@@ -110,22 +137,30 @@ function filterLowZoomCityDensity(cities) {
   return (cities || []).filter(city => !DENSE_REGION_SECONDARY_CITY_NAMES.has(city.name));
 }
 
+function filterMidZoomCityDensity(cities) {
+  return filterLowZoomCityDensity(cities)
+    .filter(city => !CHINA_SECONDARY_MAJOR_CITY_NAMES.has(city.name));
+}
+
 function selectCitiesForZoom(levels, zoom, isMobile = false) {
   const L1 = levels.level1 || [];
   const L2 = levels.level2 || [];
   const L3 = levels.level3 || [];
 
   if (isMobile) {
-    if (zoom < 5) return filterCitiesByName(L1, MOBILE_CORE_CITY_NAMES);
-    if (zoom < 6.5) return filterCitiesByName(L1, LOW_ZOOM_REGIONAL_CITY_NAMES);
-    if (zoom < 8.5) return filterLowZoomCityDensity(L1);
-    if (zoom < 10.5) return mergeUniqueCities(L1, L2);
+    if (zoom < 5.5) return filterCitiesByName(L1, MOBILE_OVERVIEW_CITY_NAMES);
+    if (zoom < 7.2) return filterCitiesByName(L1, OVERVIEW_CITY_NAMES);
+    if (zoom < 9.5) return filterCitiesByName(L1, LOW_ZOOM_REGIONAL_CITY_NAMES);
+    if (zoom < 11.5) return filterMidZoomCityDensity(L1);
+    if (zoom < 13) return mergeUniqueCities(L1, L2);
     return mergeUniqueCities(L1, L2, L3);
   }
 
-  if (zoom < 5) return filterCitiesByName(L1, LOW_ZOOM_REGIONAL_CITY_NAMES);
-  if (zoom < 7.8) return filterLowZoomCityDensity(L1);
-  if (zoom < 9.5) return mergeUniqueCities(L1, L2);
+  if (zoom < 5) return filterCitiesByName(L1, OVERVIEW_CITY_NAMES);
+  if (zoom < 6.5) return filterCitiesByName(L1, LOW_ZOOM_REGIONAL_CITY_NAMES);
+  if (zoom < 8.8) return filterMidZoomCityDensity(L1);
+  if (zoom < 10.2) return filterLowZoomCityDensity(L1);
+  if (zoom < 11.5) return mergeUniqueCities(L1, L2);
   return mergeUniqueCities(L1, L2, L3);
 }
 
@@ -213,7 +248,9 @@ class ChinaMapCanvas {
     this._options = {
       style: options.style || 'dark',
       defaultZoom: options.defaultZoom || 4,
-      defaultCenter: options.defaultCenter || [35, 105]
+      defaultCenter: options.defaultCenter || [35, 105],
+      showScoreLegend: options.showScoreLegend !== false,
+      enableScoreQuery: options.enableScoreQuery !== false
     };
     
     this._map = null;
@@ -281,11 +318,15 @@ class ChinaMapCanvas {
     // 应用初始样式
     this._applyStyle();
 
-    // 添加图例
-    this._addLegend();
+    // 添加评分图例
+    if (this._options.showScoreLegend) {
+      this._addLegend();
+    }
 
-    // 添加点击查询
-    this._addClickHandler();
+    // 添加点击查分
+    if (this._options.enableScoreQuery) {
+      this._addClickHandler();
+    }
 
     window.addEventListener?.('languageChanged', this._languageChangeHandler);
 
@@ -303,7 +344,7 @@ class ChinaMapCanvas {
       _cachedChinaGeoJSON = await resp.json();
     }
     if (!_cachedEastAsiaGeoJSON) {
-      const resp = await fetch('/data/east-asia-basemap-geojson.json?v=1');
+      const resp = await fetch('/data/east-asia-basemap-geojson.json?v=3');
       if (!resp.ok) throw new Error(`EastAsia GeoJSON fetch failed: ${resp.status}`);
       _cachedEastAsiaGeoJSON = await resp.json();
     }
@@ -466,7 +507,7 @@ class ChinaMapCanvas {
       lineCap: 'round'
     };
 
-    // 东亚（日韩朝）+ 中南半岛边界使用更细实线，降低“锯齿/粗糙感”
+    // 外围国家边界使用更细实线，降低“锯齿/粗糙感”
     const eastAsiaStyle = {
       ...commonStyle,
       weight: 1.05,
@@ -480,8 +521,9 @@ class ChinaMapCanvas {
       onEachFeature: () => {}
     }).addTo(this._map);
 
-    // 2. 日本、韩国、朝鲜及中南半岛边界（从 east-asia 数据中过滤掉不完整的 China）
+    // 2. 外围国家边界（从 basemap 数据中过滤掉不完整的 China）
     let eastAsiaLayer = null;
+    let initialFitLayer = null;
     if (eastAsiaGeoJSON && eastAsiaGeoJSON.features) {
       const filtered = {
         ...eastAsiaGeoJSON,
@@ -494,10 +536,21 @@ class ChinaMapCanvas {
         smoothFactor: 1.2,
         onEachFeature: () => {}
       }).addTo(this._map);
+
+      const initialFitGeoJSON = {
+        ...eastAsiaGeoJSON,
+        features: eastAsiaGeoJSON.features.filter(
+          f => f.properties?.name !== 'China' && INITIAL_FIT_BASEMAP_COUNTRY_NAMES.has(f.properties?.name)
+        )
+      };
+      initialFitLayer = window.L.geoJSON(initialFitGeoJSON);
     }
 
-    // 合并 bounds 用于 fitBounds
+    // 合并初始视野 bounds。俄罗斯/澳大利亚边界可平移查看，但不参与初始 fit，避免地图首屏被缩得过小。
     const bounds = chinaLayer.getBounds();
+    if (initialFitLayer) {
+      bounds.extend(initialFitLayer.getBounds());
+    }
     this._geoJsonLayer = chinaLayer;
     this._eastAsiaLayer = eastAsiaLayer;
 
@@ -604,6 +657,8 @@ class ChinaMapCanvas {
       { name: '仙台', lat: 38.2682, lon: 140.8694 },
       { name: '广岛', lat: 34.3853, lon: 132.4553 },
       { name: '福冈', lat: 33.5902, lon: 130.4017 },
+      // 蒙古国
+      { name: '乌兰巴托', lat: 47.8864, lon: 106.9057 },
       // 东南亚主要城市（仅底图标注，不扩展火烧云热力/栅格渲染范围）
       { name: '曼谷', lat: 13.7563, lon: 100.5018 },
       { name: '河内', lat: 21.0278, lon: 105.8342 },
@@ -613,6 +668,30 @@ class ChinaMapCanvas {
       { name: '仰光', lat: 16.8409, lon: 96.1735 },
       { name: '吉隆坡', lat: 3.1390, lon: 101.6869 },
       { name: '雅加达', lat: -6.2088, lon: 106.8456 },
+      // 中亚主要城市
+      { name: '阿斯塔纳', lat: 51.1694, lon: 71.4491 },
+      { name: '阿拉木图', lat: 43.2389, lon: 76.8897 },
+      { name: '塔什干', lat: 41.2995, lon: 69.2401 },
+      { name: '比什凯克', lat: 42.8746, lon: 74.5698 },
+      { name: '杜尚别', lat: 38.5598, lon: 68.7870 },
+      { name: '阿什哈巴德', lat: 37.9601, lon: 58.3261 },
+      // 南亚主要城市
+      { name: '新德里', lat: 28.6139, lon: 77.2090 },
+      { name: '孟买', lat: 19.0760, lon: 72.8777 },
+      { name: '加尔各答', lat: 22.5726, lon: 88.3639 },
+      { name: '卡拉奇', lat: 24.8607, lon: 67.0011 },
+      { name: '达卡', lat: 23.8103, lon: 90.4125 },
+      { name: '加德满都', lat: 27.7172, lon: 85.3240 },
+      { name: '科伦坡', lat: 6.9271, lon: 79.8612 },
+      // 俄罗斯与澳大利亚区域锚点
+      { name: '莫斯科', lat: 55.7558, lon: 37.6173 },
+      { name: '圣彼得堡', lat: 59.9311, lon: 30.3609 },
+      { name: '新西伯利亚', lat: 55.0084, lon: 82.9357 },
+      { name: '符拉迪沃斯托克', lat: 43.1155, lon: 131.8855 },
+      { name: '悉尼', lat: -33.8688, lon: 151.2093 },
+      { name: '墨尔本', lat: -37.8136, lon: 144.9631 },
+      { name: '布里斯班', lat: -27.4698, lon: 153.0251 },
+      { name: '珀斯', lat: -31.9523, lon: 115.8613 },
     ];
 
     // ─── level2: 全部地级行政单位 ──────────────────────────────────
@@ -952,6 +1031,25 @@ class ChinaMapCanvas {
       { name: '万隆', lat: -6.9175, lon: 107.6191 },
       { name: '棉兰', lat: 3.5952, lon: 98.6722 },
       { name: '登巴萨', lat: -8.6705, lon: 115.2126 },
+      // ── 中亚/南亚/俄罗斯/澳大利亚主要城市（高缩放显示，仅底图标注）──
+      { name: '撒马尔罕', lat: 39.6542, lon: 66.9597 },
+      { name: '奥什', lat: 40.5283, lon: 72.7985 },
+      { name: '土库曼纳巴德', lat: 39.0833, lon: 63.5667 },
+      { name: '班加罗尔', lat: 12.9716, lon: 77.5946 },
+      { name: '金奈', lat: 13.0827, lon: 80.2707 },
+      { name: '海得拉巴', lat: 17.3850, lon: 78.4867 },
+      { name: '拉合尔', lat: 31.5204, lon: 74.3587 },
+      { name: '伊斯兰堡', lat: 33.6844, lon: 73.0479 },
+      { name: '吉大港', lat: 22.3569, lon: 91.7832 },
+      { name: '廷布', lat: 27.4728, lon: 89.6390 },
+      { name: '马累', lat: 4.1755, lon: 73.5093 },
+      { name: '喀布尔', lat: 34.5553, lon: 69.2075 },
+      { name: '叶卡捷琳堡', lat: 56.8389, lon: 60.6057 },
+      { name: '伊尔库茨克', lat: 52.2869, lon: 104.3050 },
+      { name: '哈巴罗夫斯克', lat: 48.4802, lon: 135.0719 },
+      { name: '堪培拉', lat: -35.2809, lon: 149.1300 },
+      { name: '阿德莱德', lat: -34.9285, lon: 138.6007 },
+      { name: '达尔文', lat: -12.4634, lon: 130.8456 },
     ];
 
     // ─── level3: 重要县级市（缩放>9）────────────────────────────
@@ -1281,6 +1379,44 @@ class ChinaMapCanvas {
     }
   }
 
+  _getScoreQueryPeriod() {
+    return this._currentPeriod === 'test' ? 'sunset' : this._currentPeriod;
+  }
+
+  async _fetchExactPointScore(lat, lon) {
+    const period = this._getScoreQueryPeriod();
+    const date = new Date().toISOString().slice(0, 10);
+
+    try {
+      const res = await fetch('/api/prediction/enhanced', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lat, lon, date, type: period })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const score = Number(data?.data?.score);
+        if (Number.isFinite(score)) return score;
+      }
+    } catch (_) {
+      // Fall back to the raster sample below.
+    }
+
+    try {
+      const res = await fetch(`/api/spots/china/raster?period=${period}&resolution=0.5&lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}`);
+      if (res.ok) {
+        const data = await res.json();
+        const score = Number(data?.score);
+        if (Number.isFinite(score)) return score;
+      }
+    } catch (_) {
+      // API unavailable: caller will render no-data.
+    }
+
+    return null;
+  }
+
   /**
    * 在点击位置显示 popup：地点名 + 分数
    * 尝试反向解析城市名，失败则显示经纬度
@@ -1310,17 +1446,7 @@ class ChinaMapCanvas {
       // 尝试从城市列表中匹配最近的城市
       const cityName = this._findNearestCityName(lat, lon);
 
-      // 从栅格数据 API 查询该点分数
-      let score = null;
-      try {
-        const res = await fetch(`/api/spots/china/raster?period=${this._currentPeriod}&resolution=0.5&lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}`);
-        if (res.ok) {
-          const data = await res.json();
-          score = data.score ?? null;
-        }
-      } catch (_) {
-        // API 不可用时静默
-      }
+      const score = await this._fetchExactPointScore(lat, lon);
 
       const cloudHumidity = await this._fetchPointCloudHumidity(lat, lon);
 

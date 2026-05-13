@@ -41,6 +41,10 @@ describe('WeatherController - 24小时温度连续化', () => {
     const renderPromise = controller.renderRadarCompass({ name: 'test', lat: 0, lon: 0, isValid: () => true }, 'sunset');
     expect(document.querySelector('.radar-compass-loading')).not.toBeNull();
     expect(document.querySelector('.radar-compass-loading-spinner')).not.toBeNull();
+    expect(document.querySelector('.radar-compass-loading-copy')).not.toBeNull();
+    expect(document.querySelector('.radar-compass-loading-progress')).not.toBeNull();
+    expect(document.querySelector('.radar-compass-progress-fill')).not.toBeNull();
+    expect(document.querySelector('.radar-compass-loading-progress')?.getAttribute('aria-valuenow')).toBe('64');
 
     await renderPromise;
 
@@ -494,6 +498,27 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(() => controller._renderChinaSpotsTimestamp()).not.toThrow();
   });
 
+  test('_renderChinaSpotsTimestamp: 使用当前 tab 对应地图更新时间', () => {
+    document.body.innerHTML = '<div id="china-spots-timestamp"></div>';
+    controller.i18n = {
+      getLanguage: () => 'en-US',
+      t: key => ({ 'weatherMap.updatedAt': 'Updated at {{time}}' }[key] || key)
+    };
+
+    const sunriseOverlay = { getUpdatedAt: jest.fn(() => '2026-01-01T12:34:00.000Z') };
+    const sunsetOverlay = { getUpdatedAt: jest.fn(() => '2026-01-01T02:12:00.000Z') };
+    controller.chinaSpotsOverlayManager = {
+      getActivePeriod: jest.fn(() => 'sunset'),
+      getOverlay: jest.fn(period => period === 'sunrise' ? sunriseOverlay : sunsetOverlay)
+    };
+
+    controller._renderChinaSpotsTimestamp();
+
+    expect(controller.chinaSpotsOverlayManager.getOverlay).toHaveBeenCalledWith('sunset');
+    expect(document.getElementById('china-spots-timestamp').textContent).toContain(':12');
+    expect(document.getElementById('china-spots-timestamp').textContent).not.toContain(':34');
+  });
+
   test('_renderDualPeriodScorePanel: 无 #china-spots-dual-score 元素时不报错', () => {
     document.body.innerHTML = '';
     expect(() => controller._renderDualPeriodScorePanel()).not.toThrow();
@@ -597,6 +622,68 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(document.getElementById('current-aerosol').textContent).toBe('0.12');
     expect(document.getElementById('current-aerosol').title).toBe('AOD 0.12');
     expect(document.getElementById('current-precipitation').textContent).toBe('1.6 mm');
+  });
+
+  test('updateWeatherDisplay: 当前天气应选择接近当前时间的小时点，而不是当天第一条', () => {
+    document.body.innerHTML = `
+      <section id="weather-section" class="card hidden">
+        <div id="weather-data" class="hidden"></div>
+        <div id="weather-location"></div>
+        <span id="current-temp-main"></span>
+        <span id="current-temp-unit"></span>
+        <span id="weather-icon-main"></span>
+        <span id="weather-description"></span>
+        <span id="current-humidity"></span>
+        <span id="current-cloud-cover"></span>
+        <span id="current-wind-speed"></span>
+        <span id="current-wind-direction-icon"></span>
+        <span id="current-wind-direction-text"></span>
+        <span id="current-pressure"></span>
+        <span id="current-visibility"></span>
+        <span id="current-aerosol"></span>
+        <span id="current-precipitation"></span>
+        <div id="weekly-cards"></div>
+      </section>
+    `;
+    controller.i18n = { t: jest.fn(key => key) };
+    controller.tempUnit = 'celsius';
+    controller.getConvertedTemp = value => value;
+    controller.formatWindSpeed = value => `${value} km/h`;
+    controller.renderWeeklyOverview = jest.fn();
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(new Date('2026-05-10T10:15:00Z').getTime());
+
+    controller.updateWeatherDisplay([
+      {
+        timestamp: new Date('2026-05-09T16:00:00Z').getTime(),
+        temp: 16.4,
+        humidity: 73,
+        cloudCover: 1,
+        windSpeed: 1,
+        windDirection: 0,
+        pressure: 1001,
+        visibility: 15,
+        aerosolOpticalDepth: 0.9,
+        precipitation: 0
+      },
+      {
+        timestamp: new Date('2026-05-10T10:00:00Z').getTime(),
+        temp: 31.8,
+        humidity: 28,
+        cloudCover: 100,
+        windSpeed: 2,
+        windDirection: 180,
+        pressure: 997,
+        visibility: 12,
+        aerosolOpticalDepth: 0.12,
+        precipitation: 0
+      }
+    ], { name: '北京', lat: 39.9, lon: 116.4 });
+
+    expect(document.getElementById('current-temp-main').textContent).toBe('31.8');
+    expect(document.getElementById('current-cloud-cover').textContent).toBe('100%');
+    expect(document.getElementById('current-humidity').textContent).toBe('28%');
+
+    nowSpy.mockRestore();
   });
 
   test('showError: 无 #weather-error 元素时不报错', () => {

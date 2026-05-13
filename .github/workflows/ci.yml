@@ -33,6 +33,7 @@ jobs:
       # Keep coverage non-blocking for now because current global thresholds
       # are intentionally higher than the current project baseline.
       - name: Run tests
+        timeout-minutes: 10
         run: npm test -- --runInBand --silent
 
       - name: Install Chromium for real-page i18n validation

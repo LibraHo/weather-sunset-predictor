@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "霞客查分",
+  "usingComponents": {
+    "location-search": "/components/location-search/index"
+  }
+}

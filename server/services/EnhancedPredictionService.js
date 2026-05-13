@@ -46,6 +46,17 @@ const FINAL_WEIGHTS = {
 
 // ========== 辅助函数 ==========
 
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function scoreRangePeak(value, min, peak, max) {
+  if (!Number.isFinite(value) || value <= min || value >= max) return 0;
+  if (value === peak) return 1;
+  if (value < peak) return (value - min) / (peak - min);
+  return (max - value) / (max - peak);
+}
+
 /**
  * 计算儒略日
  * @param {Date} date - 日期
@@ -410,22 +421,42 @@ function estimateCloudBaseHeight(weatherData) {
 
 // ========== 云厚评估模块（Phase 22）==========
 
-function isFavorableDenseUpperCloudCarrier(weatherData) {
-  const lowClouds = Number(weatherData.lowClouds || 0);
-  const midClouds = Number(weatherData.midClouds || 0);
-  const highClouds = Number(weatherData.highClouds || 0);
+function hasClearAirForUpperCloudCarrier(weatherData) {
   const visibility = Number(weatherData.visibility ?? 20);
   const precipitation = Number(weatherData.precipitation || 0);
   const { aod, pm10, dust } = getAerosolMetrics(weatherData);
 
-  return highClouds >= 80
-    && midClouds >= 30
-    && lowClouds <= 10
-    && precipitation <= 0.2
+  return precipitation <= 0.2
     && visibility >= 15
     && (aod == null || aod <= 0.45)
     && (pm10 == null || pm10 < 120)
     && (dust == null || dust < 80);
+}
+
+function isFavorableDenseUpperCloudCarrier(weatherData) {
+  const lowClouds = Number(weatherData.lowClouds || 0);
+  const midClouds = Number(weatherData.midClouds || 0);
+  const highClouds = Number(weatherData.highClouds || 0);
+
+  return highClouds >= 80
+    && midClouds >= 30
+    && lowClouds <= 10
+    && hasClearAirForUpperCloudCarrier(weatherData);
+}
+
+function isFavorableOpeningUpperCloudCarrier(weatherData, context = {}) {
+  const lowClouds = Number(weatherData.lowClouds || 0);
+  const midClouds = Number(weatherData.midClouds || 0);
+  const highClouds = Number(weatherData.highClouds || 0);
+  const lightPathScore = Number(context.lightPathScore?.score ?? context.lightPathScore ?? 0);
+  const directionalReason = context.lightPathScore?.directionalAnalysis?.reason || '';
+  const hasDirectionalOpening = directionalReason.includes('opening');
+
+  return lowClouds <= 10
+    && midClouds >= 45
+    && highClouds >= 40
+    && (lightPathScore >= 65 || hasDirectionalOpening)
+    && hasClearAirForUpperCloudCarrier(weatherData);
 }
 
 /**
@@ -440,7 +471,7 @@ function isFavorableDenseUpperCloudCarrier(weatherData) {
  * @param {Object|null} prevHourData - 目标时刻前1-2小时的数据（用于辐射比，避免日落时辐射自然为0）
  * @returns {{ thickness: 'thin'|'moderate'|'thick'|'unknown', modifier: number, reasons: string[] }}
  */
-function assessCloudThickness(weatherData, prevHourData = null) {
+function assessCloudThickness(weatherData, prevHourData = null, context = {}) {
   const cc = weatherData.cloudCover || 0;
   const weatherCode = weatherData.weatherCode;
   const wv = weatherData.waterVapourColumn;
@@ -525,6 +556,11 @@ function assessCloudThickness(weatherData, prevHourData = null) {
     return { thickness: 'moderate', modifier: 0.75, reasons: signals, score };
   }
 
+  if (thickness === 'thick' && isFavorableOpeningUpperCloudCarrier(weatherData, context)) {
+    signals.push('opening_upper_cloud_carrier_softened');
+    return { thickness: 'moderate', modifier: 0.58, reasons: signals, score };
+  }
+
   return { thickness, modifier, reasons: signals, score };
 }
 
@@ -543,13 +579,16 @@ function assessThickHighCloudPenalty(weatherData, cloudThickness) {
   const directWeak = reasons.includes('direct_ratio_low') || reasons.includes('direct_ratio_low_moderate');
   const diffuseDominant = reasons.includes('diffuse_dominant');
   const waterHeavy = reasons.includes('water_vapour_very_high');
-  const softenedCarrier = reasons.includes('dense_upper_cloud_carrier_softened');
+  const softenedCarrier = reasons.includes('dense_upper_cloud_carrier_softened')
+    || reasons.includes('opening_upper_cloud_carrier_softened');
 
   if (softenedCarrier) {
     return {
       applied: false,
       cap: null,
-      reason: 'dense_upper_cloud_carrier_canvas_only'
+      reason: reasons.includes('opening_upper_cloud_carrier_softened')
+        ? 'opening_upper_cloud_carrier_canvas_only'
+        : 'dense_upper_cloud_carrier_canvas_only'
     };
   }
 
@@ -579,6 +618,80 @@ function getAerosolMetrics(weatherData) {
     pm25: Number.isFinite(pm25) ? pm25 : null,
     pm10: Number.isFinite(pm10) ? pm10 : null,
     dust: Number.isFinite(dust) ? dust : null
+  };
+}
+
+/**
+ * 气溶胶弱载体：适度薄霾/气溶胶可以承接一点红橙散射，
+ * 但必须被光路激活，且只提供普通红日落的中低分上限。
+ */
+function scoreAerosolCarrier(weatherData, lightPathScore = {}) {
+  const { aod, pm25, pm10, dust } = getAerosolMetrics(weatherData);
+  const visibility = Number(weatherData.visibility ?? 20);
+  const lowClouds = Number(weatherData.lowClouds || 0);
+  const precipitation = Number(weatherData.precipitation ?? weatherData.rain ?? 0);
+  const lightPath = Number(lightPathScore?.score ?? lightPathScore ?? 0);
+
+  const hasAerosolSignal = aod != null || pm25 != null || pm10 != null || dust != null;
+  if (!hasAerosolSignal) {
+    return {
+      score: 0,
+      activatedScore: 0,
+      lightPathActivation: parseFloat(clamp((lightPath - 45) / 35, 0, 1).toFixed(2)),
+      level: 'unknown',
+      reason: 'aerosol_data_missing',
+      metrics: { aod, pm25, pm10, dust, visibility }
+    };
+  }
+
+  const heavyHaze = visibility < 8 ||
+    (aod != null && aod >= 0.85) ||
+    (pm25 != null && pm25 >= 90) ||
+    (pm10 != null && pm10 >= 180) ||
+    (dust != null && dust >= 120);
+  if (heavyHaze || lowClouds >= 40 || precipitation > 0.2) {
+    return {
+      score: 0,
+      activatedScore: 0,
+      lightPathActivation: parseFloat(clamp((lightPath - 45) / 35, 0, 1).toFixed(2)),
+      level: 'blocked',
+      reason: heavyHaze ? 'heavy_haze_suppresses_aerosol_carrier' : 'aerosol_carrier_not_visible',
+      metrics: { aod, pm25, pm10, dust, visibility }
+    };
+  }
+
+  const aodScore = aod == null ? 0 : scoreRangePeak(aod, 0.06, 0.52, 0.86) * 38;
+  const pm25Score = pm25 == null ? 0 : scoreRangePeak(pm25, 8, 45, 85) * 32;
+  const pm10Score = pm10 == null ? 0 : scoreRangePeak(pm10, 18, 75, 160) * 28;
+  const dustPenalty = dust != null && dust > 50 ? clamp((dust - 50) / 70, 0, 1) * 10 : 0;
+  const visibilityPenalty = visibility < 12 ? clamp((12 - visibility) / 4, 0, 1) * 12 : 0;
+
+  const rawScore = clamp(Math.max(aodScore, pm25Score, pm10Score) - dustPenalty - visibilityPenalty, 0, 38);
+  const lightPathActivation = clamp((lightPath - 45) / 35, 0, 1);
+  const activatedScore = rawScore * lightPathActivation;
+  const level = activatedScore >= 30 ? 'warm_disk' : (activatedScore >= 18 ? 'weak_warmth' : 'weak');
+
+  return {
+    score: parseFloat(rawScore.toFixed(1)),
+    activatedScore: parseFloat(activatedScore.toFixed(1)),
+    lightPathActivation: parseFloat(lightPathActivation.toFixed(2)),
+    level,
+    reason: activatedScore >= 18 ? 'aerosol_carrier_activated_by_light_path' : 'aerosol_carrier_too_weak',
+    metrics: { aod, pm25, pm10, dust, visibility }
+  };
+}
+
+function buildCarrierScore(canvasScore, aerosolCarrierScore) {
+  const cloudScore = Number(canvasScore?.score ?? 0);
+  const aerosolScore = Number(aerosolCarrierScore?.activatedScore ?? 0);
+  const useAerosolCarrier = aerosolScore > cloudScore;
+
+  return {
+    ...canvasScore,
+    score: parseFloat(Math.max(cloudScore, aerosolScore).toFixed(1)),
+    cloudCanvasScore: parseFloat(cloudScore.toFixed(1)),
+    aerosolCarrierScore,
+    activeCarrier: useAerosolCarrier ? 'aerosol' : 'cloud'
   };
 }
 
@@ -1238,7 +1351,7 @@ function applySevereWeatherCap(score, weatherData) {
  * @returns {Object} 最终预测结果
  */
 function calculateFinalScore(canvasScore, lightPathScore, renderingFactor, type = 'sunset') {
-  // 综合得分 = 画布×0.4 + 光路×0.6
+  // 综合得分 = 载体×0.8 + 光路×0.2
   const baseScore = (canvasScore.score * FINAL_WEIGHTS.CLOUD_CANVAS) +
                    (lightPathScore.score * FINAL_WEIGHTS.LIGHT_PATH);
 
@@ -1312,7 +1425,9 @@ function calculateFinalScore(canvasScore, lightPathScore, renderingFactor, type 
   // 修复：云量极低（无云）时强制封顶，避免出现70+误报
   const hasEffectiveCloud = Number.isFinite(canvasScore.effectiveCloudCover);
   const isVeryLowCloud = canvasScore.cloudLevel === 'space' || (hasEffectiveCloud && canvasScore.effectiveCloudCover < 10);
-  if (isVeryLowCloud) {
+  const aerosolCarrierActive = canvasScore.activeCarrier === 'aerosol' &&
+    Number(canvasScore.aerosolCarrierScore?.activatedScore) >= 18;
+  if (isVeryLowCloud && !aerosolCarrierActive) {
     status = 'no_fire_cloud';
     description = 'sky_clear';
     advice = 'wait_for_clouds';
@@ -1343,12 +1458,17 @@ function calculateFinalScore(canvasScore, lightPathScore, renderingFactor, type 
     type,
     breakdown: {
       baseScore: parseFloat(baseScore.toFixed(1)),
-      canvasScore: parseFloat(canvasScore.score.toFixed(1)),
+      canvasScore: parseFloat((canvasScore.cloudCanvasScore ?? canvasScore.score).toFixed(1)),
+      carrierScore: parseFloat(canvasScore.score.toFixed(1)),
+      activeCarrier: canvasScore.activeCarrier || 'cloud',
+      aerosolCarrierScore: canvasScore.aerosolCarrierScore || null,
       lightPathScore: parseFloat(lightPathScore.score.toFixed(1)),
       renderingFactor: renderingFactor.factor,
       unclampedFinalScore: parseFloat(clampedScore.toFixed(1))
     },
     canvasAnalysis: canvasScore,
+    carrierAnalysis: canvasScore,
+    aerosolCarrierScore: canvasScore.aerosolCarrierScore || null,
     lightPathAnalysis: lightPathScore,
     renderingAnalysis: renderingFactor
   };
@@ -1418,7 +1538,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   logger.debug('[EnhancedPredictionService]', '渲染修正:', renderingFactor.factor);
 
   // 5. 云厚评估（Phase 22）
-  const cloudThickness = assessCloudThickness(weatherData, prevHourData);
+  const cloudThickness = assessCloudThickness(weatherData, prevHourData, { lightPathScore });
   logger.debug('[EnhancedPredictionService]', '云厚评估:', cloudThickness.thickness, 'modifier:', cloudThickness.modifier, 'reasons:', cloudThickness.reasons);
 
   // 5.5 云厚修正画布分
@@ -1440,8 +1560,11 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     logger.debug('[EnhancedPredictionService]', '厚高云修正光路分:', originalLightPathScore, '->', lightPathScore.score, thickHighCloudPenalty.reason);
   }
 
-  // 6. 综合输出
-  const finalResult = calculateFinalScore(canvasScore, lightPathScore, renderingFactor, type);
+  // 6. 综合输出：云画布 + 气溶胶弱载体统一进入“载体分”
+  const aerosolCarrierScore = scoreAerosolCarrier(weatherData, lightPathScore);
+  const carrierScore = buildCarrierScore(canvasScore, aerosolCarrierScore);
+  logger.debug('[EnhancedPredictionService]', '载体评分:', carrierScore.score, 'active:', carrierScore.activeCarrier, 'aerosol:', aerosolCarrierScore);
+  const finalResult = calculateFinalScore(carrierScore, lightPathScore, renderingFactor, type);
 
   // 6. 太阳遮挡判定（试验版，温和惩罚）
   const occlusion = checkSolarOcclusion(
@@ -1519,7 +1642,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   }
 
   const clearSunsetAdvice = type === 'sunset'
-    ? assessClearSunsetViewingAdvice(weatherData, canvasScore, lightPathScore, {
+    ? assessClearSunsetViewingAdvice(weatherData, carrierScore, lightPathScore, {
       aerosolHazeCap,
       severeCap,
       occlusion,
@@ -1593,6 +1716,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     thickHighCloudPenalty,
     aerosolHazeCap,
     highCloudCarrierAdjustment,
+    aerosolCarrierScore,
     postRainAdjustment,
     clearSunsetAdvice,
     algorithm: {
@@ -1648,6 +1772,8 @@ module.exports = {
   cloudTypeClassifier,
   geometricLightModel,
   scoreCloudCanvas,
+  scoreAerosolCarrier,
+  buildCarrierScore,
   scoreLightPath,
   scoreRendering,
   calculateLightPathPointScore,

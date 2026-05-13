@@ -112,6 +112,7 @@
       font-size: 1.2rem;
     }
     .photo-marker {
+      position: relative;
       width: 48px;
       height: 48px;
       border-radius: 50%;
@@ -131,6 +132,31 @@
         0 14px 28px rgba(0,0,0,0.4);
     }
     .photo-marker img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-marker.stack-marker { overflow: visible; }
+    .photo-marker.stack-marker img {
+      border-radius: 50%;
+      border: 2px solid color-mix(in srgb, var(--theme-card-bg, #111827) 82%, transparent);
+      box-shadow: -6px 6px 0 color-mix(in srgb, var(--theme-card-bg, #111827) 78%, transparent), -10px 10px 0 color-mix(in srgb, var(--theme-accent-soft, rgba(251,146,60,0.18)) 80%, transparent);
+    }
+    .photo-count-badge {
+      position: absolute;
+      right: -8px;
+      top: -8px;
+      min-width: 24px;
+      height: 24px;
+      padding: 0 6px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      background: var(--theme-accent-strong, #f59e0b);
+      border: 2px solid var(--theme-card-bg, #111827);
+      font-size: 0.76rem;
+      font-weight: 700;
+      line-height: 1;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.34);
+    }
     .photo-popup .leaflet-popup-content-wrapper {
       background: color-mix(in srgb, var(--theme-card-bg, #111827) 94%, transparent);
       color: var(--theme-text, #fff);
@@ -145,18 +171,53 @@
     .photo-popup .leaflet-popup-content { margin: 0; padding: 14px; }
     .popup-photo { width: 100%; max-width: 300px; border-radius: 12px; margin-bottom: 10px; display: block; }
     .popup-desc { margin: 0 0 8px; color: var(--theme-text, #fff); font-size: 0.9rem; line-height: 1.45; }
-    .popup-location { display: flex; align-items: center; gap: 6px; color: var(--theme-text-muted, #aaa); font-size: 0.78rem; }
+    .popup-location { display: flex; align-items: center; gap: 6px; color: var(--theme-text-muted, #aaa); font-size: 0.78rem; margin-bottom: 8px; }
     .popup-location svg { width: 14px; height: 14px; color: var(--theme-accent-strong, #f59e0b); }
+    .popup-meta-list {
+      display: grid;
+      grid-template-columns: max-content minmax(0, 1fr);
+      gap: 4px 10px;
+      color: var(--theme-text-muted, #aaa);
+      font-size: 0.76rem;
+      line-height: 1.35;
+    }
+    .popup-meta-list dt { color: var(--theme-text-muted, #aaa); opacity: 0.78; }
+    .popup-meta-list dd { margin: 0; color: var(--theme-text, #fff); min-width: 0; overflow-wrap: anywhere; }
+    .cluster-popup-title { margin: 0 0 10px; color: var(--theme-text, #fff); font-size: 0.92rem; font-weight: 700; }
+    .cluster-photo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 72px);
+      gap: 8px;
+      width: max-content;
+      max-width: 232px;
+    }
+    .cluster-photo-button {
+      appearance: none;
+      border: 0;
+      padding: 0;
+      background: transparent;
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      width: 72px;
+      height: 72px;
+    }
+    .cluster-photo-button:focus-visible { outline: 2px solid var(--theme-accent-strong, #f59e0b); outline-offset: 2px; }
+    .cluster-photo-button img { width: 100%; height: 100%; max-width: none; display: block; object-fit: cover; }
     @media (max-width: 640px) {
       .gallery-title { top: 12px; left: 64px; max-width: calc(100vw - 76px); padding: 12px 14px; }
       .gallery-legend { right: 12px; bottom: 12px; }
+      .photo-popup .leaflet-popup-content-wrapper { max-width: calc(100vw - 28px); }
+      .photo-popup .leaflet-popup-content { max-height: min(58vh, 430px); overflow: auto; }
+      .cluster-photo-grid { grid-template-columns: repeat(2, 72px); max-width: 152px; }
     }
   </style>
 </head>
 <body class="theme-dark gallery-body">
   <div id="loading" class="gallery-glass" role="status" aria-live="polite">
     <div class="spinner" aria-hidden="true"></div>
-    <p>加载照片中...</p>
+    <p data-i18n="gallery.loading">加载照片中...</p>
   </div>
 
   <div class="gallery-title gallery-glass">
@@ -167,35 +228,55 @@
       <line x1="22" y1="66" x2="54" y2="66" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
     </svg>
     <div>
-      <h1>晚霞照片分享</h1>
-      <p>看看世界各地分享的晚霞照片</p>
+      <h1 data-i18n="gallery.title">晚霞照片分享</h1>
+      <p data-i18n="gallery.subtitle">看看世界各地分享的晚霞照片</p>
     </div>
   </div>
 
-  <div class="gallery-legend gallery-glass" aria-label="图例">
+  <div class="gallery-legend gallery-glass" aria-label="图例" data-i18n-aria-label="gallery.legendAria">
     <span class="legend-photo-dot" aria-hidden="true"></span>
-    <span>照片位置</span>
+    <span data-i18n="gallery.photoLocationLegend">照片位置</span>
   </div>
 
   <div id="empty-state" class="gallery-glass">
-    <h2>暂无照片</h2>
-    <p>上传第一张火烧云照片吧。</p>
+    <h2 data-i18n="gallery.emptyTitle">暂无照片</h2>
+    <p data-i18n="gallery.emptyBody">上传第一张火烧云照片吧。</p>
   </div>
 
   <div id="gallery-map"></div>
 
   <script type="module">
     import ChinaMapCanvas from '/src/components/ChinaMapCanvas.js';
+    import i18n from '/src/i18n.js';
+    import { clusterPhotosByPixelDistance, preferredPhotoUrl } from '/src/utils/galleryPhotoClusters.js';
 
     let mapCanvas;
     let map;
     let markers = [];
+    let photoData = [];
+
+    function t(key, params = {}) {
+      return i18n.t(key, params);
+    }
+
+    function applyGalleryI18n() {
+      document.documentElement.lang = i18n.currentLanguage || 'zh-CN';
+      document.querySelectorAll('[data-i18n]').forEach((el) => {
+        el.textContent = t(el.dataset.i18n);
+      });
+      document.querySelectorAll('[data-i18n-aria-label]').forEach((el) => {
+        el.setAttribute('aria-label', t(el.dataset.i18nAriaLabel));
+      });
+      document.title = t('gallery.pageTitle');
+    }
 
     async function initMap() {
       mapCanvas = new ChinaMapCanvas({
         style: 'dark',
         defaultCenter: [35, 105],
-        defaultZoom: 4
+        defaultZoom: 4,
+        showScoreLegend: false,
+        enableScoreQuery: false
       });
       await mapCanvas.init(document.getElementById('gallery-map'));
       map = mapCanvas.getMap();
@@ -211,27 +292,105 @@
       return div.innerHTML;
     }
 
-    function createMarker(photo) {
-      const filename = escapeHtml(photo.filename || 'firecloud photo');
+    function formatPhotoDateTime(value) {
+      if (!value) return t('gallery.notProvided');
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return t('gallery.notProvided');
+      return date.toLocaleString(i18n.currentLanguage || 'zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+    }
+
+    function photoLocationText(photo) {
+      const namedLocation = safeText(photo.locationName || photo.desc).trim();
+      if (namedLocation) return namedLocation;
+      if (Number.isFinite(Number(photo.lat)) && Number.isFinite(Number(photo.lon))) {
+        return `${Number(photo.lat).toFixed(4)}, ${Number(photo.lon).toFixed(4)}`;
+      }
+      return t('gallery.notProvided');
+    }
+
+    function createSinglePopup(photo) {
+      const filename = escapeHtml(photo.filename || t('gallery.photoAltFallback'));
+      const imageUrl = escapeHtml(preferredPhotoUrl(photo));
       const icon = L.divIcon({
         className: 'custom-div-icon',
-        html: `<div class="photo-marker"><img src="${escapeHtml(photo.thumbUrl)}" alt="${filename}"></div>`,
+        html: `<div class="photo-marker"><img src="${imageUrl}" alt="${filename}"></div>`,
         iconSize: [48, 48],
         iconAnchor: [24, 48],
         popupAnchor: [0, -48]
       });
-
-      const marker = L.marker([photo.lat, photo.lon], { icon });
+      const locationText = photoLocationText(photo);
+      const coordinatesText = Number.isFinite(Number(photo.lat)) && Number.isFinite(Number(photo.lon))
+        ? `${Number(photo.lat).toFixed(4)}, ${Number(photo.lon).toFixed(4)}`
+        : t('gallery.notProvided');
+      const uploaderText = safeText(photo.uploaderName).trim() || t('gallery.notProvided');
       const popupContent = `
-        <img src="${escapeHtml(photo.thumbUrl)}" class="popup-photo" alt="${filename}">
-        ${photo.desc ? `<p class="popup-desc">${escapeHtml(photo.desc)}</p>` : ''}
+        <img src="${imageUrl}" class="popup-photo" alt="${filename}">
+        <p class="popup-desc">${escapeHtml(locationText)}</p>
         <div class="popup-location">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/></svg>
-          <span>${Number(photo.lat).toFixed(4)}, ${Number(photo.lon).toFixed(4)}</span>
+          <span>${escapeHtml(coordinatesText)}</span>
         </div>
+        <dl class="popup-meta-list">
+          <dt>${escapeHtml(t('gallery.takenAt'))}</dt><dd>${escapeHtml(formatPhotoDateTime(photo.takenAt))}</dd>
+          <dt>${escapeHtml(t('gallery.locationName'))}</dt><dd>${escapeHtml(locationText)}</dd>
+          <dt>${escapeHtml(t('gallery.uploadedAt'))}</dt><dd>${escapeHtml(formatPhotoDateTime(photo.uploadedAt))}</dd>
+          <dt>${escapeHtml(t('gallery.uploaderName'))}</dt><dd>${escapeHtml(uploaderText)}</dd>
+        </dl>
       `;
+      return { icon, popupContent };
+    }
+
+    function createSingleMarker(photo) {
+      const { icon, popupContent } = createSinglePopup(photo);
+      const marker = L.marker([photo.lat, photo.lon], { icon, title: safeText(photo.filename || t('gallery.photoAltFallback')) });
       marker.bindPopup(popupContent, { maxWidth: 320, closeButton: true, className: 'photo-popup' });
       return marker;
+    }
+
+    function createClusterMarker(cluster) {
+      const representative = cluster.representative;
+      const filename = escapeHtml(representative?.filename || t('gallery.photoAltFallback'));
+      const countText = t('gallery.photoCount', { count: cluster.count });
+      const icon = L.divIcon({
+        className: 'custom-div-icon',
+        html: `<div class="photo-marker stack-marker" role="button" aria-label="${escapeHtml(countText)}"><img src="${escapeHtml(preferredPhotoUrl(representative))}" alt="${filename}"><span class="photo-count-badge" aria-hidden="true">${cluster.count}</span></div>`,
+        iconSize: [54, 54],
+        iconAnchor: [27, 54],
+        popupAnchor: [0, -54]
+      });
+      const marker = L.marker([cluster.lat, cluster.lon], { icon, title: countText });
+      const grid = cluster.photos.map((photo, index) => {
+        const photoLabel = t('gallery.clusterPhotoLabel', {
+          index: index + 1,
+          location: photoLocationText(photo)
+        });
+        return `<button type="button" class="cluster-photo-button" aria-label="${escapeHtml(photoLabel)}" title="${escapeHtml(photoLabel)}"><img src="${escapeHtml(preferredPhotoUrl(photo))}" alt="${escapeHtml(photo.filename || photoLabel)}"></button>`;
+      }).join('');
+      marker.bindPopup(`
+        <p class="cluster-popup-title">${escapeHtml(countText)}</p>
+        <div class="cluster-photo-grid" role="list" aria-label="${escapeHtml(t('gallery.clusterListAria'))}">${grid}</div>
+      `, { maxWidth: 320, closeButton: true, className: 'photo-popup' });
+      return marker;
+    }
+
+    function renderPhotoMarkers() {
+      markers.forEach(marker => map.removeLayer(marker));
+      const clusters = clusterPhotosByPixelDistance(photoData, {
+        zoom: map.getZoom(),
+        project: (photo) => {
+          const point = map.latLngToLayerPoint([photo.lat, photo.lon]);
+          return { x: point.x, y: point.y };
+        }
+      });
+      markers = clusters.map(cluster => cluster.isCluster ? createClusterMarker(cluster) : createSingleMarker(cluster.representative));
+      markers.forEach(marker => mapCanvas.addLayer(marker));
     }
 
     async function loadPhotos() {
@@ -249,23 +408,25 @@
           return;
         }
 
-        markers.forEach(marker => map.removeLayer(marker));
-        markers = photosWithLocation.map(createMarker);
-        markers.forEach(marker => mapCanvas.addLayer(marker));
+        photoData = photosWithLocation;
+        renderPhotoMarkers();
 
-        const group = L.featureGroup(markers);
+        const group = L.featureGroup(photoData.map(photo => L.marker([photo.lat, photo.lon])));
         const bounds = group.getBounds();
         if (bounds && bounds.isValid()) {
           map.fitBounds(bounds.pad(0.28), { maxZoom: 7 });
         }
       } catch (err) {
         console.error('加载照片失败:', err);
-        document.getElementById('loading').innerHTML = '<p>加载失败，请刷新重试</p>';
+        document.getElementById('loading').innerHTML = `<p>${escapeHtml(t('gallery.loadFailed'))}</p>`;
       }
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+      await i18n.init();
+      applyGalleryI18n();
       await initMap();
+      map.on('zoomend moveend', renderPhotoMarkers);
       await loadPhotos();
     });
   </script>

@@ -14,6 +14,26 @@ const translations = {
     "switchedToLocation": "已切換到 {{location}}",
     "locatedAt": "已定位到 {{location}}"
   },
+  "gallery": {
+    "pageTitle": "霞客分享地圖",
+    "title": "晚霞照片分享",
+    "subtitle": "看看世界各地分享的晚霞照片",
+    "loading": "載入照片中...",
+    "loadFailed": "載入失敗，請重新整理再試",
+    "emptyTitle": "暫無照片",
+    "emptyBody": "上傳第一張火燒雲照片吧。",
+    "legendAria": "圖例",
+    "photoLocationLegend": "照片位置",
+    "photoAltFallback": "晚霞照片",
+    "notProvided": "未填寫",
+    "takenAt": "拍攝時間",
+    "locationName": "拍攝地點",
+    "uploadedAt": "上傳時間",
+    "uploaderName": "上傳者",
+    "photoCount": "{{count}} 張照片",
+    "clusterListAria": "聚合照片縮圖列表",
+    "clusterPhotoLabel": "第 {{index}} 張照片：{{location}}"
+  },
   "home": {
     "tabs": {
       "ariaLabel": "主頁分頁導航",
@@ -47,17 +67,41 @@ const translations = {
     "methodology": {
       "title": "火燒雲計算方法",
       "intro": "火燒雲指數由四個關鍵因子綜合計算，幫助你快速判斷當天是否值得守候晚霞。",
-      "versionLabel": "算法版本：2026.05.10-upper-cloud-carrier-v2",
-      "versionDesc": "本版將「中高雲載體明確」的厚雲訊號改為溫和降低畫布分，不再重複觸發厚高雲封頂；灰幕、沙塵、降水和幾何封頂仍獨立保留。",
+      "versionLabel": "算法版本：2026.05.13-formation-factors-v1",
+      "versionDesc": "本版將火燒雲分析固定為四個穩定因子：雲層載體、光路條件、空氣顯色、限制因素；評分公式不變。",
       changelogTitle: "版本更新記錄",
-      changelogHint: "用於回溯每次算法調整的原因、影響和驗證方式",
+      changelogHint: "近三個月內的算法更新都會放在這裡，可捲動回看原因、影響和驗證方式",
       changelog: {
-              "current": {
-                      "date": "2026-05-10",
-                      "title": "中高雲載體保護 v2",
-                      "summary": "修正「高雲+中雲充足、低雲少、空氣不灰」場景被厚雲訊號重複懲罰的問題；雲厚只溫和降低畫布分，真正灰幕/沙塵仍獨立封頂。",
-                      "validation": "驗證：北京樣本回放約 53–60 分，厚雲幕和沙塵樣本仍保持低分。"
-              }
+        "latest": {
+          "date": "2026-05-13",
+          "title": "四因子分析 v1",
+          "summary": "火燒雲分析固定為雲層載體、光路條件、空氣顯色、限制因素四項，減少零散條目。",
+          "validation": "驗證：氣溶膠、低雲遮擋、灰幕、厚雲和降水場景都歸併到對應因子；評分公式不變。"
+        },
+        "aerosol": {
+          "date": "2026-05-12",
+          "title": "氣溶膠弱載體 v1",
+          "summary": "雲層很少時，適度薄霧／氣溶膠必須被太陽方向光路激活，才會作為普通紅日落的弱載體參與評分。",
+          "validation": "驗證：北京弱紅日落可進入 30 多分；乾淨晴空、重霾沙塵、低雲遮擋和厚灰幕場景不被抬高。"
+        },
+        "openingCarrier": {
+          "date": "2026-05-11",
+          "title": "開口型中高雲載體 v1",
+          "summary": "低雲少、中高雲可顯色且太陽方向有開口時，不再把它誤判成完全遮光的厚雲幕。",
+          "validation": "驗證：頤和園開口型中高雲樣本回到可觀賞區間；灰霾、沙塵和無開口厚雲仍保持保守。"
+        },
+        "lightPath": {
+          "date": "2026-05-10",
+          "title": "低雲主導光路 v3",
+          "summary": "光路遮擋改為看低雲是否擋住太陽方向，避免高雲／中雲很多但低雲很少的晚霞畫布被誤傷。",
+          "validation": "驗證：高雲畫布場景不再僅因總雲量高而壓低；低雲主導、雨雪和低能見度仍保守。"
+        },
+        "upperCloudCarrier": {
+          "date": "2026-05-10",
+          "title": "中高雲載體保護 v2",
+          "summary": "高雲和中雲都充足、低雲少且空氣不灰時，按可顯色畫布處理，不再簡單壓成低分。",
+          "validation": "驗證：北京中高雲樣本回到 50-60 分區間；空氣灰、沙塵重或缺少中雲支撐時仍保持低分。"
+        }
       },
       "factors": {
         "highMidCloudTitle": "中高雲（畫布條件）",
@@ -70,17 +114,25 @@ const translations = {
         "visibilityDesc": "更高能見度通常意味著更清晰的天空背景，晚霞邊界和色彩過渡更明顯。"
       },
       "scoreGuideTitle": "評分解讀",
-      "scoreExcellent": "優秀：>80（強烈推薦）",
-      "scoreGood": "良好：65-80（很可能出現）",
-      "scoreFair": "一般：40-65（可觀賞）",
-      "scoreExcellentRange": "優秀 Excellent",
-      "scoreExcellentDesc": "強烈推薦出門",
-      "scoreGoodRange": "良好 Good",
-      "scoreGoodDesc": "可觀賞，條件較好",
-      "scoreFairRange": "一般 Fair",
-      "scoreFairDesc": "謹慎期待",
-      "scorePoorRange": "不佳 Poor",
-      "scorePoorDesc": "不建議",
+      "scoreExcellent": "頂級：85-100（少見爆發）",
+      "scoreGood": "高分：70-84（值得守候）",
+      "scoreFair": "可觀賞：40-69（看實況）",
+      "scoreExcellentRange": "頂級 Rare",
+      "scoreExcellentDetail": "85-100 分",
+      "scoreExcellentDesc": "少見的爆發級條件，值得優先安排",
+      "scoreGoodRange": "高分 Strong",
+      "scoreGoodDetail": "70-84 分",
+      "scoreGoodDesc": "明顯高於常態，很適合專程守候",
+      "scoreFairRange": "可觀賞 Watch",
+      "scoreFairDetail": "40-69 分",
+      "scoreFairDesc": "有機會出色彩，但需要看局部開口和實況",
+      "scorePoorRange": "低機率 Low",
+      "scorePoorDetail": "<40 分",
+      "scorePoorDesc": "火燒雲條件偏弱；不建議專程追霞，普通日落效果需看即時天氣和視野",
+      "scoreSourceTitle": "為什麼地圖顏色和地點詳情分會不同",
+      "scoreSourceMap": "地圖上的顏色是區域趨勢，用來快速看「這一帶哪裡更可能出彩」。為了讓整張圖連續，它會按固定網格批次計算，再在格點之間做平滑。",
+      "scoreSourcePoint": "地點詳情分是你選中的具體位置，會按這個座標重新計算當地日出／日落時間、雲層、空氣品質和太陽方向光路。",
+      "scoreSourceWhy": "所以地圖適合先找方向，地點詳情適合最後決定要不要去。如果兩者差很多，以地點詳情為準。",
       "sections": {
         "cloudStructure": {
           "title": "1. 雲層結構",
@@ -95,10 +147,10 @@ const translations = {
         "lightPath": {
           "title": "光路條件",
           "subtitle": "夕陽是否能照到雲層",
-          "desc": "低雲、能見度與地平線遮擋會影響陽光抵達中高雲的機率。後端會沿太陽方位採樣 15/30/50/100km，識別透光開口或雲牆遮擋。",
-          "lowCloudEffect": "低雲越多越容易遮光；若太陽方向低/中雲成牆，則保守壓低光路分。",
+          "desc": "光路通暢度決定陽光能否照到可染色的中高雲。低雲擋在太陽方向時會明顯拉低光路；中高雲多時通常先看作晚霞畫布。",
+          "lowCloudEffect": "低雲少時光路更容易打開；低雲主導或太陽方向有低雲牆時，光線更難照到雲層。",
           "visibility": "能見度越高，光路越乾淨，色彩越清楚。",
-          "formula": "光路分 = 幾何/本地光路分 × 低雲係數 × 太陽方向走廊修正"
+          "formula": "光路分 = 太陽角度與雲底高度估算 + 低雲遮擋 + 太陽方向走廊修正"
         },
         "transparency": {
           "title": "3. 大氣透明度",
@@ -126,13 +178,13 @@ const translations = {
           "level4": "低雲>70% → ×0.2（嚴重遮擋）"
         },
         thickHighCloudPenalty: {
-          title: '6. 厚高雲與灰幕修正',
-          subtitle: 'Cloud Thickness · 畫布修正/封頂',
-          desc: '高雲多不一定代表高分；算法會區分「可被染色的中高雲載體」和「遮光灰幕」。雲厚只先修正畫布，空氣灰幕/沙塵等才做封頂。',
-          level1: '中高雲載體明確：高雲≥80%、中雲≥30%、低雲≤10%、無降水且空氣不灰',
-          level2: '這類場景的雲厚訊號只讓畫布分×0.75，不再額外封頂、不再重複壓低光路',
-          level3: '真正厚雲幕仍可封頂約42–48分；灰霾/沙塵按空氣條件獨立封頂45/35/28分',
-          formula: '最終修正 = 畫布雲厚修正 + 獨立灰幕/沙塵/降水/幾何封頂，避免同一厚雲訊號被重複懲罰'
+          title: '7. 載體與灰幕修正',
+          subtitle: 'Carrier Quality · 畫布與薄霧',
+          desc: '算法把「能顯色的載體」分成雲層載體和氣溶膠弱載體：中高雲決定火燒雲上限，適度薄霧只在光路通暢時提供普通紅日落的中低分基礎。',
+          level1: '中高雲載體明確：高雲很充足，或中高雲同時存在且太陽方向有透光開口，低雲少、無降水且空氣不灰',
+          level2: '雲很少時，適度氣溶膠必須被太陽方向光路激活，才會作為弱載體參與評分',
+          level3: '如果雲幕很厚、重霾或沙塵明顯，顏色會變暗變灰，仍按衰減和限制處理',
+          formula: '載體分 = max(雲層載體, 氣溶膠弱載體 × 光路激活)；最終分 = 載體分×0.8 + 光路分×0.2，再按顯色條件修正'
         },
         "precipPenalty": {
           "title": "6. 降水懲罰係數",
@@ -246,9 +298,9 @@ const translations = {
       "title": "評分明細",
       "viewDetails": "查看評分明細",
       "finalDisplayed": "最終顯示分",
-      "baseFormula": "基礎分 = 畫布 ×0.8 + 光路 ×0.2",
-      "baseHint": "雲層與光路融合後的基礎分",
-      "canvasHint": "高雲/中雲提供色彩載體，低雲可能遮擋",
+      "baseFormula": "基礎分 = 載體 ×0.8 + 光路 ×0.2",
+      "baseHint": "載體與光路融合後的基礎分",
+      "canvasHint": "高雲/中雲提供主要色彩載體，適度薄霧可提供弱載體，低雲可能遮擋",
       "lightPathHint": "太陽光是否能照到雲層",
       "finalFormula": "最終分 = 基礎分 × 修正係數",
       "renderingHint": "濕度與能見度影響色彩表現",
@@ -277,59 +329,101 @@ const translations = {
           "baseScore": "基礎分",
           "rendering": "顯色修正",
           "final": "最終分",
-          "hardCap": "硬封頂",
-          "hazeCap": "灰幕封頂",
-          "thickCloudCap": "厚雲封頂",
-          "cloudThicknessModifier": "雲厚修正",
-          "geometryCap": "幾何封頂",
+          "hardCap": "天氣限制",
+          "hazeCap": "灰幕影響",
+          "thickCloudCap": "厚雲影響",
+          "cloudThicknessModifier": "雲層厚度影響",
+          "geometryCap": "太陽角度",
           "occlusion": "遮擋修正",
           "carrierFloor": "載體保底",
-          "postRainCap": "雨後灰幕封頂",
-          "displayCalibration": "展示分校準"
+          "postRainCap": "雨後灰幕",
+          "displayCalibration": "展示分校準",
+          "aerosolCarrier": "氣溶膠載體"
         },
         "details": {
-          "cloudCarrier": "可被染色的雲面品質",
-          "cloudPenalty": "低雲 ×{{low}}，陰天 ×{{overcast}}",
+          "cloudCarrier": "可被染色的雲面或薄霧載體",
+          "cloudPenalty": "雲畫布 {{canvas}}，低雲 ×{{low}}，陰天 ×{{overcast}}",
+          "aerosolCarrier": "雲層很少時，薄霧在光路通暢時可承接一點暖色，光路激活 ×{{activation}}",
           "lightPath": "陽光是否能照到雲層",
           "renderingFactors": "能見度 ×{{visibility}}，濕度 ×{{humidity}}，氣溶膠 ×{{aerosol}}",
-          "afterAdjustments": "套用所有封頂/保底後",
+          "afterAdjustments": "結合天氣和能見度後",
           "finalDisplayed": "最終顯示結果",
           "thickCloudCap": "高雲過厚，真實可染色效果下降",
-          "cloudThicknessModifier": "中高雲載體明確時，雲厚只溫和降低畫布分，不再額外封頂",
+          "cloudThicknessModifier": "中高雲層仍能承接晚霞光線，目前雲層厚度影響較輕",
           "geometryCap": "太陽與雲層幾何條件不足",
           "occlusion": "遠端遮擋壓低最終分",
           "carrierFloor": "高雲載體清透，避免誤傷低估",
-          "directionalSamples": "已接入太陽方位 15/30/50/100km 周邊採樣",
-          "postRainCap": "雨後水氣/灰幕壓光，霞光按低上限處理",
+          "directionalSamples": "已參考太陽方向周邊雲況",
+          "lightPathLowCloudBlock": "低雲遮住太陽方向，光線不容易照到中高雲",
+          "lightPathRain": "降水會削弱日落直射光",
+          "postRainCap": "雨後水氣或灰幕偏重，霞光容易發灰",
           "displayCalibration": "最終展示分按預測狀態檔位校準"
         },
         "reasons": {
-          "precipitationCap45": "降水疊加低雲，分數封頂到 45",
-          "overcastCap35": "低雲陰天遮擋，分數封頂到 35",
-          "overcastFogCap15": "陰天且能見度≤5km，分數硬封頂到 15",
-          "rainyMidCloudOvercastCap35": "雨後灰幕中雲陰天，分數封頂到 35",
-          "extremeDustHazeCap28": "強沙塵/灰幕壓制，分數封頂到 28",
-          "severeHazeCap35": "重度灰霾壓制，分數封頂到 35",
-          "moderateHazeCap45": "中度灰霾壓制，分數封頂到 45",
-          "denseCarrierCanvasOnly": "中高雲載體明確，僅套用畫布雲厚修正",
-          "adjustmentApplied": "套用封頂/保底修正",
+          "precipitationCap45": "降水疊加低雲，觀賞條件明顯變差",
+          "overcastCap35": "低雲遮住太陽方向，光線不容易照到雲層",
+          "overcastFogCap15": "低雲疊加低能見度，天空容易發灰",
+          "rainyMidCloudOvercastCap35": "雨後水氣偏重，霞光不容易顯色",
+          "extremeDustHazeCap28": "強沙塵或灰幕會壓住霞光",
+          "severeHazeCap35": "重度灰霾讓顏色不容易出來",
+          "moderateHazeCap45": "灰霾會削弱紅橙色",
+          "denseCarrierCanvasOnly": "中高雲層仍能承接晚霞光線",
+          "adjustmentApplied": "已按限制條件修正",
           "displayCalibration": "最終展示分按預測狀態檔位校準",
-          "lightPathStatusCap60": "光路只有 {{light}}，歸入輕微霞光檔，最終展示分封頂到 60",
-          "canvasStatusCap40": "雲層載體只有 {{canvas}}，歸入無火燒雲檔，最終展示分封頂到 40 以下"
+          "lightPathStatusCap60": "光路約 {{light}}，更像輕微霞光機會",
+          "canvasStatusCap40": "雲層載體約 {{canvas}}，火燒雲機會偏弱"
         }
       }},
 "formationAnalysis": {
       "title": "火燒雲形成條件分析",
       "groups": { "positive": "有利條件", "neutral": "一般因素", "warning": "注意因素" },
+      "factors": {
+        "carrier": {
+          "title": "雲層載體",
+          "status": { "good": "較好", "fair": "一般", "weak": "較弱" },
+          "desc": {
+            "good": "中高雲能承接日落光線，是今天主要的顯色畫布。",
+            "fair": "有一些可被染色的雲層，但面積或高度不夠理想。",
+            "weak": "缺少合適的中高雲，天空不容易形成大片火燒雲。"
+          }
+        },
+        "lightPath": {
+          "title": "光路條件",
+          "status": { "good": "較好", "fair": "一般", "weak": "較弱" },
+          "desc": {
+            "good": "太陽方向相對通透，光線有機會照到雲底。",
+            "fair": "太陽方向有一定遮擋，晚霞可能只出現在局部。",
+            "weak": "低雲或雲牆擋住光路，光線不容易打到雲層。"
+          }
+        },
+        "rendering": {
+          "title": "空氣顯色",
+          "status": { "good": "較好", "fair": "一般", "weak": "較弱" },
+          "desc": {
+            "good": "空氣裡有適度顆粒和水氣，顏色更容易偏暖、偏紅。",
+            "fair": "空氣條件普通，顏色表現主要看雲層和光路。",
+            "weak": "空氣偏灰或顆粒過重，顏色容易變暗、變淡。"
+          }
+        },
+        "limits": {
+          "title": "限制因素",
+          "status": { "good": "無明顯", "fair": "輕微", "weak": "明顯" },
+          "desc": {
+            "good": "沒有明顯壓制條件。",
+            "fair": "有輕微不利因素，可能壓低持續時間或顏色強度。",
+            "weak": "降水、厚雲、低雲遮擋或灰幕明顯，會壓低整體表現。"
+          }
+        }
+      },
       "high": { "abundant": "高層雲充沛（{{value}}%）", "abundantDesc": "色彩載體豐富，火燒雲基礎紮實", "sufficient": "高層雲充足（{{value}}%）", "sufficientDesc": "具備不錯的霞光染色載體", "moderate": "高層雲適中（{{value}}%）", "moderateDesc": "可形成火燒雲，但色彩可能偏淡", "few": "高層雲偏少（{{value}}%）", "fewDesc": "缺少主要色彩載體" },
       "mid": { "balanced": "中層雲適中（{{value}}%）", "balancedDesc": "有利於色彩擴散和層次感", "few": "中層雲較少（{{value}}%）", "fewHighCloudDesc": "但高層雲充足，仍可獨立形成火燒雲", "fewDesc": "層次感可能不足", "thick": "中層雲偏厚（{{value}}%）", "thickDesc": "可能讓畫面偏灰，削弱霞光通透感" },
       "low": { "few": "低雲稀少（{{value}}%）", "fewDesc": "不會遮擋火燒雲", "some": "低雲較多（{{value}}%）", "someDesc": "可能部分遮擋低空色彩", "thick": "低雲偏厚（{{value}}%）", "thickDesc": "遮擋風險較大" },
       "visibility": { "good": "能見度良好（{{value}}km）", "goodDesc": "空氣通透，觀賞視野好", "moderate": "能見度一般（{{value}}km）", "moderateDesc": "色彩飽和度可能略受影響", "low": "能見度偏低（{{value}}km）", "lowDesc": "霧霾或水氣可能影響觀賞" },
       "humidity": { "moderate": "濕度適中（{{value}}%）", "moderateDesc": "有利於光線散射", "high": "濕度偏高（{{value}}%）", "highDesc": "可能略影響通透感", "low": "濕度偏低（{{value}}%）", "lowDesc": "空氣較乾，色彩可能偏淡" },
-      "aerosol": { "moderate": "氣溶膠適中（AOD {{value}}）", "moderateDesc": "有利於增強紅橙色散射", "high": "氣溶膠偏高（AOD {{value}}）", "highDesc": "可能灰霾發暗", "low": "空氣過於通透（AOD {{value}}）", "lowDesc": "顏色可能偏淡" },
-      "lightPath": { "opening": "太陽方向有透光開口", "openingDesc": "後端沿太陽方位採樣 15/30/50/100km，低中雲走廊較通暢，光線更容易打到雲層", "wall": "太陽方向有雲牆遮擋", "wallDesc": "太陽方位周邊低/中雲偏厚，遠端光路會壓低主評分" },
-      "postRain": { "clear": "雨後空氣清透", "clearDesc": "近6小時有降水，但能見度和顆粒物條件較好，雨後加成保留", "gray": "雨後灰幕風險", "grayDesc": "降水後水氣/顆粒物/直射比不理想，算法按灰幕場景封頂" },
-      "carrier": { "strong": "高雲載體清晰", "strongDesc": "高雲充足、低雲稀少且空氣較通透，具備中高分基礎", "dense": "中高雲載體明確", "denseDesc": "高雲和中雲共同提供畫布，雲厚只溫和降分，不再重複封頂" },
+      "aerosol": { "moderate": "氣溶膠適中（AOD {{value}}）", "moderateDesc": "有利於增強紅橙色散射", "high": "氣溶膠偏高（AOD {{value}}）", "highDesc": "可能灰霾發暗", "low": "空氣過於通透（AOD {{value}}）", "lowDesc": "顏色可能偏淡", "carrier": "薄霧紅日載體", "carrierDesc": "雲層很少時，適度氣溶膠在光路通暢時也能帶來一點暖色日落" },
+      "lightPath": { "opening": "太陽方向有透光開口", "openingDesc": "太陽方向的低雲較少，光線更容易打到雲層", "wall": "太陽方向有雲牆遮擋", "wallDesc": "太陽方位周邊低/中雲偏厚，遠端光路會壓低主評分", "lowCloudBlock": "低雲遮住光線", "lowCloudBlockDesc": "低雲擋在太陽方向，陽光不容易照到中高雲" },
+      "postRain": { "clear": "雨後空氣清透", "clearDesc": "近6小時有降水，但能見度和顆粒物條件較好，雨後加成保留", "gray": "雨後灰幕風險", "grayDesc": "降水後水氣或顆粒物偏重，霞光容易發灰" },
+      "carrier": { "strong": "高雲載體清晰", "strongDesc": "高雲充足、低雲稀少且空氣較通透，具備中高分基礎", "dense": "中高雲載體明確", "denseDesc": "高雲和中雲共同提供畫布，色彩載體更穩定" },
       "layer": { "single": "雲層單一", "singleDesc": "高層雲品質好，仍可形成鮮明火燒雲" }
     },
     "status": {
@@ -592,11 +686,11 @@ const translations = {
     "proxyUrl": "後端伺服器位址",
     "proxyUrlPlaceholder": "http://localhost:3000",
     "proxyUrlHint": "後端代理伺服器的 URL 位址",
-    "weatherFetchMode": "天氣資料出口模式",
-    "weatherFetchModeHint": "預設後端閉環；後端限流或逾時時可讓瀏覽器取得公開天氣，再交後端算分",
-    "weatherFetchModeBackend": "後端閉環（建議預設）",
-    "weatherFetchModeClientFallback": "後端優先，失敗時前端應急",
-    "weatherFetchModeClient": "前端取天氣（除錯/應急）",
+    "weatherFetchMode": "天氣計算模式",
+    "weatherFetchModeHint": "預設使用自適應模式：優先走後端，後端限流或逾時時自動切到前端應急，避免頁面一直載入",
+    "weatherFetchModeBackend": "後端模式",
+    "weatherFetchModeClientFallback": "自適應模式（預設）",
+    "weatherFetchModeClient": "前端模式",
     "notificationAndAlerts": "通知與提醒",
     "enableSunsetNotification": "啟用晚霞預測通知",
     "notificationHint": "當預測品質達到閾值時發送瀏覽器通知",

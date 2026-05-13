@@ -362,27 +362,6 @@
       <section id="tab-panel-methodology" class="card methodology-panel hidden" role="tabpanel" aria-label="methodology-panel" tabindex="0" hidden>
         <h2 data-i18n="home.methodology.title">火烧云计算方法</h2>
         <p data-i18n="home.methodology.intro">火烧云指数综合评估天空条件与光学传播路径，判断当日形成火烧云的概率与强度。以下为基于气象数据的完整计算原理。</p>
-        <div class="methodology-version-card">
-          <strong data-i18n="home.methodology.versionLabel">算法版本：2026.05.10-upper-cloud-carrier-v2</strong>
-          <span data-i18n="home.methodology.versionDesc">本版将“中高云载体明确”的厚云信号改为温和降低画布分，不再重复触发厚高云封顶；灰幕、沙尘、降水和几何封顶仍独立保留。</span>
-        </div>
-
-        <div class="methodology-changelog-card" aria-labelledby="methodology-changelog-title">
-          <div class="methodology-changelog-head">
-            <h3 id="methodology-changelog-title" data-i18n="home.methodology.changelogTitle">版本更新记录</h3>
-            <span data-i18n="home.methodology.changelogHint">用于回溯每次算法调整的原因、影响和验证方式</span>
-          </div>
-          <ol class="methodology-changelog-list">
-            <li>
-              <time datetime="2026-05-10" data-i18n="home.methodology.changelog.current.date">2026-05-10</time>
-              <div>
-                <strong data-i18n="home.methodology.changelog.current.title">中高云载体保护 v2</strong>
-                <p data-i18n="home.methodology.changelog.current.summary">修正“高云+中云充足、低云少、空气不灰”场景被厚云信号重复惩罚的问题；云厚只温和降低画布分，真正灰幕/沙尘仍独立封顶。</p>
-                <small data-i18n="home.methodology.changelog.current.validation">验证：北京样本回放约 53–60 分，厚云幕和沙尘样本仍保持低分。</small>
-              </div>
-            </li>
-          </ol>
-        </div>
 
                 <div class="methodology-grid">
           <!-- 第一部分：云种判别与画布评分 -->
@@ -403,7 +382,21 @@
           <!-- 第二部分：光路几何模型 -->
           <article class="methodology-item">
             <h3>
-              <span data-i18n="home.methodology.sections.transparency.title">2. 大气透明度</span>
+              <span data-i18n="home.methodology.sections.lightPath.title">2. 光路评估</span>
+              <small data-i18n="home.methodology.sections.lightPath.subtitle">Light Path · 光路评分</small>
+            </h3>
+            <p data-i18n="home.methodology.sections.lightPath.desc">光路通畅度决定阳光能否照到可染色的中高云。低云挡在太阳方向时会明显拉低光路；中高云多时通常先看作晚霞画布。</p>
+            <ul class="methodology-detail-list">
+              <li data-i18n="home.methodology.sections.lightPath.lowCloudEffect">低云少时光路更容易打开；低云主导或太阳方向有低云墙时，光线更难照到云层</li>
+              <li data-i18n="home.methodology.sections.lightPath.visibility">能见度：影响光线传播清晰度</li>
+            </ul>
+            <p class="methodology-formula" data-i18n="home.methodology.sections.lightPath.formula">光路分 = 太阳角度与云底高度估算 + 低云遮挡 + 太阳方向走廊修正</p>
+          </article>
+
+          <!-- 第三部分：大气透明度 -->
+          <article class="methodology-item">
+            <h3>
+              <span data-i18n="home.methodology.sections.transparency.title">3. 大气透明度</span>
               <small data-i18n="home.methodology.sections.transparency.subtitle">Transparency · 25分</small>
             </h3>
             <p data-i18n="home.methodology.sections.transparency.desc">透明的大气让光线更纯粹地染色云层，湿度适中有助于散射增强色彩。</p>
@@ -417,7 +410,7 @@
           <!-- 第三部分：AOD 气溶胶修正 -->
           <article class="methodology-item">
             <h3>
-              <span data-i18n="home.methodology.sections.layerDiversity.title">3. 云层立体感</span>
+              <span data-i18n="home.methodology.sections.layerDiversity.title">4. 云层立体感</span>
               <small data-i18n="home.methodology.sections.layerDiversity.subtitle">Layer Diversity · 15分</small>
             </h3>
             <p data-i18n="home.methodology.sections.layerDiversity.desc">高中低三层云同时存在时，光线折射角度多样，色彩层次更丰富。</p>
@@ -431,7 +424,7 @@
           <!-- 第四部分：渲染系数 -->
           <article class="methodology-item">
             <h3>
-              <span data-i18n="home.methodology.sections.lowCloudPenalty.title">4. 低云惩罚系数</span>
+              <span data-i18n="home.methodology.sections.lowCloudPenalty.title">5. 低云惩罚系数</span>
               <small data-i18n="home.methodology.sections.lowCloudPenalty.subtitle">Low Cloud Penalty · Multiplier</small>
             </h3>
             <p data-i18n="home.methodology.sections.lowCloudPenalty.desc">低云挡在视线前方，是火烧云的"视线杀手"，以乘性系数惩罚总分。</p>
@@ -446,7 +439,7 @@
           <!-- 第五部分：置信度评级 -->
           <article class="methodology-item">
             <h3>
-              <span data-i18n="home.methodology.sections.precipPenalty.title">5. 降水惩罚系数</span>
+              <span data-i18n="home.methodology.sections.precipPenalty.title">6. 降水惩罚系数</span>
               <small data-i18n="home.methodology.sections.precipPenalty.subtitle">Precipitation Penalty · Multiplier</small>
             </h3>
             <p data-i18n="home.methodology.sections.precipPenalty.desc">降水直接削弱火烧云可见性，以乘性系数惩罚总分。</p>
@@ -462,16 +455,16 @@
           <!-- 第六部分：厚高云惩罚 -->
           <article class="methodology-item">
             <h3>
-              <span data-i18n="home.methodology.sections.thickHighCloudPenalty.title">6. 厚高云与灰幕修正</span>
-              <small data-i18n="home.methodology.sections.thickHighCloudPenalty.subtitle">Cloud Thickness · Canvas Modifier / Caps</small>
+              <span data-i18n="home.methodology.sections.thickHighCloudPenalty.title">7. 载体与灰幕修正</span>
+              <small data-i18n="home.methodology.sections.thickHighCloudPenalty.subtitle">Carrier Quality · Canvas & Haze</small>
             </h3>
-            <p data-i18n="home.methodology.sections.thickHighCloudPenalty.desc">高云多不一定代表高分；算法会区分“可被染色的中高云载体”和“遮光灰幕”。云厚只先修正画布，空气灰幕/沙尘等才做封顶。</p>
+            <p data-i18n="home.methodology.sections.thickHighCloudPenalty.desc">算法把“能显色的载体”分成云层载体和气溶胶弱载体：中高云决定火烧云上限，适度薄雾只在光路通畅时提供普通红日落的中低分基础。</p>
             <ul class="methodology-detail-list">
-              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level1">中高云载体明确：高云≥80%、中云≥30%、低云≤10%、无降水且空气不灰</li>
-              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level2">这类场景的云厚信号只让画布分×0.75，不再额外封顶、不再重复压低光路</li>
-              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level3">真正厚云幕仍可封顶约42–48分；灰霾/沙尘按空气条件独立封顶45/35/28分</li>
+              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level1">中高云载体明确：高云很充足，或中高云同时存在且太阳方向有透光开口，低云少、无降水且空气不灰</li>
+              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level2">云很少时，适度气溶胶必须被太阳方向光路激活，才会作为弱载体参与评分</li>
+              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level3">如果云幕很厚、重霾或沙尘明显，颜色会变暗变灰，仍按衰减和限制处理</li>
             </ul>
-            <p class="methodology-formula" data-i18n="home.methodology.sections.thickHighCloudPenalty.formula">最终修正 = 画布云厚修正 + 独立灰幕/沙尘/降水/几何封顶，避免同一厚云信号被重复惩罚</p>
+            <p class="methodology-formula" data-i18n="home.methodology.sections.thickHighCloudPenalty.formula">载体分 = max(云层载体, 气溶胶弱载体 × 光路激活)；最终分 = 载体分×0.8 + 光路分×0.2，再按显色条件修正</p>
           </article>
         </div>
 
@@ -479,25 +472,86 @@
           <h3 data-i18n="home.methodology.scoreGuideTitle">评分解读 Score Guide</h3>
           <div class="score-table">
             <div class="score-row score-excellent">
-              <span class="score-range" data-i18n="home.methodology.scoreExcellentRange">优秀 Excellent</span>
-              <span class="score-detail">≥80 分</span>
-              <span class="score-desc" data-i18n="home.methodology.scoreExcellentDesc">强烈推荐出门观赏</span>
+              <span class="score-range" data-i18n="home.methodology.scoreExcellentRange">顶级 Rare</span>
+              <span class="score-detail" data-i18n="home.methodology.scoreExcellentDetail">85-100 分</span>
+              <span class="score-desc" data-i18n="home.methodology.scoreExcellentDesc">少见的爆发级条件，值得优先安排</span>
             </div>
             <div class="score-row score-good">
-              <span class="score-range" data-i18n="home.methodology.scoreGoodRange">良好 Good</span>
-              <span class="score-detail">60-79 分</span>
-              <span class="score-desc" data-i18n="home.methodology.scoreGoodDesc">较大概率出现壮观火烧云</span>
+              <span class="score-range" data-i18n="home.methodology.scoreGoodRange">高分 Strong</span>
+              <span class="score-detail" data-i18n="home.methodology.scoreGoodDetail">70-84 分</span>
+              <span class="score-desc" data-i18n="home.methodology.scoreGoodDesc">明显高于常态，适合专程蹲守</span>
             </div>
             <div class="score-row score-fair">
-              <span class="score-range" data-i18n="home.methodology.scoreFairRange">一般 Fair</span>
-              <span class="score-detail">40-59 分</span>
-              <span class="score-desc" data-i18n="home.methodology.scoreFairDesc">条件一般，可以期待但不保证</span>
+              <span class="score-range" data-i18n="home.methodology.scoreFairRange">可观赏 Watch</span>
+              <span class="score-detail" data-i18n="home.methodology.scoreFairDetail">40-69 分</span>
+              <span class="score-desc" data-i18n="home.methodology.scoreFairDesc">有机会出色彩，但需要看局地开口和实况</span>
             </div>
             <div class="score-row score-poor">
-              <span class="score-range" data-i18n="home.methodology.scorePoorRange">不佳 Poor</span>
-              <span class="score-detail">&lt;40 分</span>
-              <span class="score-desc" data-i18n="home.methodology.scorePoorDesc">火烧云概率较低</span>
+              <span class="score-range" data-i18n="home.methodology.scorePoorRange">低概率 Low</span>
+              <span class="score-detail" data-i18n="home.methodology.scorePoorDetail">&lt;40 分</span>
+              <span class="score-desc" data-i18n="home.methodology.scorePoorDesc">火烧云条件偏弱；不建议专程追霞，普通日落效果需看实时天气和视野</span>
             </div>
+          </div>
+          <div class="methodology-score-source-note">
+            <h4 data-i18n="home.methodology.scoreSourceTitle">为什么地图颜色和地点详情分会不同</h4>
+            <p data-i18n="home.methodology.scoreSourceMap">地图上的颜色是区域趋势，用来快速看“这一片哪里更可能出彩”。为了让整张图连续，它会按固定网格批量计算，再在格点之间做平滑。</p>
+            <p data-i18n="home.methodology.scoreSourcePoint">地点详情分是你选中的具体位置，会按这个坐标重新计算当地日出/日落时间、云层、空气质量和太阳方向光路。</p>
+            <p data-i18n="home.methodology.scoreSourceWhy">所以地图适合先找方向，地点详情适合最后决定要不要去。如果两者差很多，以地点详情为准。</p>
+          </div>
+        </div>
+
+        <div class="methodology-changelog-card" aria-labelledby="methodology-changelog-title">
+          <div class="methodology-changelog-head">
+            <h3 id="methodology-changelog-title" data-i18n="home.methodology.changelogTitle">版本更新记录</h3>
+            <span data-i18n="home.methodology.changelogHint">近三个月内的算法更新都会放在这里，可滚动回看原因、影响和验证方式</span>
+          </div>
+          <div class="methodology-changelog-scroll" tabindex="0" role="region" aria-labelledby="methodology-changelog-title">
+            <ol class="methodology-changelog-list">
+              <li>
+                <time datetime="2026-05-13" data-i18n="home.methodology.changelog.latest.date">2026-05-13</time>
+                <div>
+                  <strong data-i18n="home.methodology.changelog.latest.title">四因子分析 v1</strong>
+                  <p data-i18n="home.methodology.changelog.latest.summary">火烧云分析固定为云层载体、光路条件、空气显色、限制因素四项，减少零散条目。</p>
+                  <small data-i18n="home.methodology.changelog.latest.validation">验证：气溶胶、低云遮挡、灰幕、厚云和降水场景都归并到对应因子；评分公式不变。</small>
+                </div>
+              </li>
+              <li>
+                <time datetime="2026-05-12" data-i18n="home.methodology.changelog.aerosol.date">2026-05-12</time>
+                <div>
+                  <strong data-i18n="home.methodology.changelog.aerosol.title">气溶胶弱载体 v1</strong>
+                  <p data-i18n="home.methodology.changelog.aerosol.summary">云层很少时，适度薄雾/气溶胶必须被太阳方向光路激活，才会作为普通红日落的弱载体参与评分。</p>
+                  <small data-i18n="home.methodology.changelog.aerosol.validation">验证：北京弱红日落可进入 30 多分；干净晴空、重霾沙尘、低云遮挡和厚灰幕场景不被抬高。</small>
+                </div>
+              </li>
+              <li>
+                <time datetime="2026-05-11" data-i18n="home.methodology.changelog.openingCarrier.date">2026-05-11</time>
+                <div>
+                  <strong data-i18n="home.methodology.changelog.openingCarrier.title">开口型中高云载体 v1</strong>
+                  <p data-i18n="home.methodology.changelog.openingCarrier.summary">低云少、中高云可染色且太阳方向有开口时，不再把它误判成完全遮光的厚云幕。</p>
+                  <small data-i18n="home.methodology.changelog.openingCarrier.validation">验证：颐和园开口型中高云样本回到可观赏区间；灰霾、沙尘和无开口厚云仍保持保守。</small>
+                </div>
+              </li>
+              <li>
+                <time datetime="2026-05-10" data-i18n="home.methodology.changelog.lightPath.date">2026-05-10</time>
+                <div>
+                  <strong data-i18n="home.methodology.changelog.lightPath.title">低云主导光路 v3</strong>
+                  <p data-i18n="home.methodology.changelog.lightPath.summary">光路遮挡改为看低云是否挡住太阳方向，避免高云/中云很多但低云很少的晚霞画布被误伤。</p>
+                  <small data-i18n="home.methodology.changelog.lightPath.validation">验证：高云画布场景不再仅因总云量高而压低；低云主导、雨雪和低能见度仍保守。</small>
+                </div>
+              </li>
+              <li>
+                <time datetime="2026-05-10" data-i18n="home.methodology.changelog.upperCloudCarrier.date">2026-05-10</time>
+                <div>
+                  <strong data-i18n="home.methodology.changelog.upperCloudCarrier.title">中高云载体保护 v2</strong>
+                  <p data-i18n="home.methodology.changelog.upperCloudCarrier.summary">高云和中云都充足、低云少且空气不灰时，按可染色画布处理，不再简单压成低分。</p>
+                  <small data-i18n="home.methodology.changelog.upperCloudCarrier.validation">验证：北京中高云样本回到 50-60 分区间；空气灰、沙尘重或缺少中云支撑时仍保持低分。</small>
+                </div>
+              </li>
+            </ol>
+          </div>
+          <div class="methodology-version-card">
+            <strong data-i18n="home.methodology.versionLabel">算法版本：2026.05.13-formation-factors-v1</strong>
+            <span data-i18n="home.methodology.versionDesc">本版将火烧云分析固定为四个稳定因子：云层载体、光路条件、空气显色、限制因素；评分公式不变。</span>
           </div>
         </div>
       </section>

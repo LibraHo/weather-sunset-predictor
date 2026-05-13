@@ -62,6 +62,7 @@
 
   /* 顶部栏视觉变量 */
   --header-surface: rgba(255, 255, 255, 0.78);
+  --header-surface-tint: rgba(255, 237, 205, 0.72);
   --header-border: rgba(255, 255, 255, 0.62);
   --header-title-color: #7a4a12;
   --header-icon-color: #5d3b11;
@@ -116,6 +117,7 @@ body.theme-dark {
 
   /* 顶栏 — 沉浸式暖暗渐变 */
   --header-surface: rgba(14, 20, 38, 0.85);
+  --header-surface-tint: rgba(28, 40, 72, 0.88);
   --header-border: rgba(255, 200, 120, 0.12);
   --header-title-color: #f5c87a;
   --header-icon-color: #f7c46a;
@@ -166,7 +168,7 @@ header {
   width: auto;
   margin: 0 var(--spacing-md) 16px;
   padding: var(--spacing-lg);
-  background: linear-gradient(120deg, var(--header-surface) 0%, rgba(255, 237, 205, 0.72) 100%);
+  background: linear-gradient(120deg, var(--header-surface) 0%, var(--header-surface-tint) 100%);
   color: var(--header-title-color);
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--header-border);
@@ -358,11 +360,11 @@ main > section {
 .methodology-version-card {
   display: grid;
   gap: 6px;
-  margin: 12px 0 14px;
+  margin: 14px 0 0;
   padding: 12px 14px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-primary, #ff7a1a) 10%, var(--color-bg));
+  background: var(--color-card-bg);
   color: var(--color-text);
 }
 
@@ -374,11 +376,9 @@ main > section {
 .methodology-changelog-card {
   margin: 0 0 16px;
   padding: 16px;
-  border: 1px solid color-mix(in srgb, var(--color-primary, #ff7a1a) 28%, var(--color-border));
-  border-radius: var(--radius-lg);
-  background:
-    radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--color-primary, #ff7a1a) 18%, transparent) 0, transparent 34%),
-    var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-card-bg);
 }
 
 .methodology-changelog-head {
@@ -402,6 +402,18 @@ main > section {
   text-align: right;
 }
 
+.methodology-changelog-scroll {
+  max-height: 340px;
+  overflow-y: auto;
+  padding: 2px 10px 2px 0;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+.methodology-changelog-scroll:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
 .methodology-changelog-list {
   display: grid;
   gap: 12px;
@@ -419,9 +431,9 @@ main > section {
 }
 
 .methodology-changelog-list time {
-  color: var(--color-primary);
+  color: var(--color-text);
   font-weight: 800;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
 }
 
 .methodology-changelog-list strong {
@@ -562,6 +574,26 @@ main > section {
 .score-good .score-range { color: #ff9800; }
 .score-fair .score-range { color: #9e9e9e; }
 .score-poor .score-range { color: #f44336; }
+
+.methodology-score-source-note {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+}
+
+.methodology-score-source-note h4 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.methodology-score-source-note p {
+  margin: 6px 0 0;
+  color: var(--color-text-light);
+  line-height: 1.55;
+}
 
 .methodology-score-guide ul {
   padding-left: 20px;
@@ -7948,6 +7980,12 @@ body.theme-dark,
 body[data-theme="dark"],
 body.theme-actual-dark,
 body[data-actual-theme="dark"] {
+  --theme-card-bg: rgba(18, 28, 52, 0.72);
+  --theme-card-border: rgba(255, 255, 255, 0.10);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --weather-metric-bg: linear-gradient(145deg, rgba(18, 28, 52, 0.78) 0%, rgba(12, 20, 40, 0.70) 100%);
+  --weather-metric-border: var(--theme-card-border);
+  --weather-metric-shadow: var(--glass-shadow);
   --score-track-color: rgba(255, 255, 255, 0.10);
   --score-poor-color: #94a3b8;
   --score-fair-color: #fdba74;
@@ -7957,11 +7995,36 @@ body[data-actual-theme="dark"] {
   --score-excellent-end: #f43f5e;
 }
 
+/* Dark weather metric cards use the same neutral Xiake glass border as the rest of the panel. */
+html.theme-dark .weather-feature-item,
+html[data-theme="dark"] .weather-feature-item,
+html.theme-actual-dark .weather-feature-item,
+html[data-actual-theme="dark"] .weather-feature-item,
+body.theme-dark .weather-feature-item,
+body[data-theme="dark"] .weather-feature-item,
+body.theme-actual-dark .weather-feature-item,
+body[data-actual-theme="dark"] .weather-feature-item {
+  background: var(--weather-metric-bg) !important;
+  border-color: var(--weather-metric-border) !important;
+  box-shadow: var(--weather-metric-shadow) !important;
+}
+
+html.theme-dark .weather-feature-item:hover,
+html[data-theme="dark"] .weather-feature-item:hover,
+html.theme-actual-dark .weather-feature-item:hover,
+html[data-actual-theme="dark"] .weather-feature-item:hover,
+body.theme-dark .weather-feature-item:hover,
+body[data-theme="dark"] .weather-feature-item:hover,
+body.theme-actual-dark .weather-feature-item:hover,
+body[data-actual-theme="dark"] .weather-feature-item:hover {
+  background: var(--glass-bg-hover) !important;
+  border-color: color-mix(in srgb, var(--weather-metric-border) 70%, rgba(255, 255, 255, 0.18)) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+
 /* High-impact token remapping for prediction surfaces. */
-.score-gauge-number,
-.score-gauge-grade,
 .score-gauge-center .score-breakdown-hint-trigger {
-  color: var(--score-excellent-mid) !important;
+  color: var(--theme-accent-strong) !important;
 }
 .score-gauge-total,
 .prediction-app-footer {
@@ -8579,26 +8642,39 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
 .radar-compass-loading {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  min-height: 58px;
+  gap: var(--spacing-md);
+  min-height: 66px;
   margin-top: 12px;
-  padding: 12px 14px;
-  color: var(--color-text-light);
-  font-size: 13px;
-  border: 1px solid var(--glass-border, var(--color-border));
-  border-radius: 14px;
-  background: var(--glass-bg-light, color-mix(in srgb, var(--color-card-bg) 86%, transparent));
-}
-.radar-compass-loading p {
-  margin: 0;
+  padding: var(--spacing-md) var(--spacing-lg);
+  color: var(--color-text);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  box-shadow: var(--glass-shadow);
 }
 .radar-compass-loading-spinner {
   flex: 0 0 auto;
-  width: 18px;
-  height: 18px;
+  width: 28px;
+  height: 28px;
   margin: 0;
-  border-width: 2px;
+  border-width: 3px;
+}
+.radar-compass-loading-copy {
+  flex: 1;
+  min-width: 0;
+}
+.radar-compass-loading-copy p {
+  margin: 0 0 var(--spacing-xs);
+  color: var(--color-text);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.radar-compass-loading-progress {
+  margin-top: 0;
+}
+.radar-compass-progress-fill {
+  width: 64%;
+  animation: xiake-loading-progress 1.6s ease-in-out infinite alternate;
 }
 
 /* Prediction conclusion banner: keep icon/text aligned for wrapped CJK copy. */
@@ -9357,4 +9433,210 @@ html[data-actual-theme="dark"] #weather-section #weekly-cards.weekly-cards-conta
     border-color: rgba(255, 255, 255, 0.10) !important;
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
   }
+}
+
+/* 2026-05-10: formation analysis cards must read like compact notes, not split ledgers. */
+.app-analysis-card .analysis-factor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.app-analysis-card .analysis-factor {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--theme-card-border);
+  border-radius: 8px;
+  background: var(--theme-panel-soft);
+  box-shadow: none;
+}
+
+.app-analysis-card .analysis-factor-heading {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin-bottom: 6px;
+}
+
+.app-analysis-card .analysis-factor-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--theme-accent);
+}
+
+.app-analysis-card .analysis-factor-title,
+.app-analysis-card .analysis-factor-status,
+.app-analysis-card .analysis-factor p {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  letter-spacing: 0;
+}
+
+.app-analysis-card .analysis-factor-title {
+  color: var(--theme-text);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.app-analysis-card .analysis-factor-status {
+  padding: 3px 7px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.app-analysis-card .analysis-factor-status-good {
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-success) 32%, transparent);
+}
+
+.app-analysis-card .analysis-factor-status-fair {
+  color: var(--chart-wind-color);
+  background: color-mix(in srgb, var(--chart-wind-color) 12%, transparent);
+  border-color: color-mix(in srgb, var(--chart-wind-color) 30%, transparent);
+}
+
+.app-analysis-card .analysis-factor-status-mild {
+  color: var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 14%, transparent);
+  border-color: color-mix(in srgb, var(--color-warning) 34%, transparent);
+}
+
+.app-analysis-card .analysis-factor-status-weak {
+  color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-error) 32%, transparent);
+}
+
+.app-analysis-card .analysis-factor p {
+  margin: 0;
+  color: var(--theme-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.app-analysis-card .analysis-item {
+  grid-template-columns: 22px minmax(0, 1fr) !important;
+  align-items: start !important;
+  gap: 10px !important;
+  min-height: 0 !important;
+  padding: 10px 12px !important;
+  text-align: left !important;
+}
+
+.app-analysis-card .analysis-item-icon {
+  width: 22px !important;
+  height: 22px !important;
+  margin-top: 1px !important;
+}
+
+.app-analysis-card .analysis-item-copy {
+  display: grid !important;
+  gap: 3px !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  text-align: left !important;
+  justify-items: start !important;
+}
+
+.app-analysis-card .analysis-item-copy strong,
+.app-analysis-card .analysis-item-copy small {
+  display: block !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  overflow-wrap: anywhere !important;
+  word-break: normal !important;
+  letter-spacing: 0 !important;
+  text-align: left !important;
+}
+
+.app-analysis-card .analysis-item-copy strong {
+  font-size: 0.94rem !important;
+  line-height: 1.24 !important;
+}
+
+.app-analysis-card .analysis-item-copy small {
+  font-size: 0.82rem !important;
+  line-height: 1.36 !important;
+}
+
+@media (max-width: 430px) {
+  .app-analysis-card .analysis-factor-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .app-analysis-card .analysis-factor {
+    padding: 10px;
+  }
+
+  .app-analysis-card .analysis-factor-heading {
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    gap: 7px;
+  }
+
+  .app-analysis-card .analysis-factor-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .app-analysis-card .analysis-item {
+    grid-template-columns: 20px minmax(0, 1fr) !important;
+    gap: 8px !important;
+    padding: 9px 10px !important;
+  }
+
+  .app-analysis-card .analysis-item-icon {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .app-analysis-card .analysis-item-copy strong {
+    font-size: 0.88rem !important;
+  }
+
+  .app-analysis-card .analysis-item-copy small {
+    font-size: 0.76rem !important;
+  }
+}
+
+/* 2026-05-10: narrow phones must not let prediction-card content widen the card. */
+#today-predictions-container,
+.prediction-tab-panel,
+.prediction-app-card,
+.prediction-app-shell,
+.prediction-app-shell > * {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.prediction-app-shell,
+.prediction-app-nav-compact {
+  width: 100%;
+}
+
+.prediction-app-nav-compact {
+  min-width: 0;
+  max-width: 100%;
+  justify-self: stretch;
+}
+
+.prediction-app-nav-compact .prediction-share-menu {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.conclusion-banner > strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }

@@ -17,10 +17,22 @@ class OpenMeteoClientWeatherService {
     this.timeout = 15000;
   }
 
+  _createTimeoutError() {
+    const error = new Error('Request timeout, please retry');
+    error.code = 'WEATHER_UPSTREAM_TIMEOUT';
+    return error;
+  }
+
   _withTimeout(url) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
     return fetch(url, { signal: controller.signal })
+      .catch((error) => {
+        if (error?.name === 'AbortError' || error?.code === 20) {
+          throw this._createTimeoutError();
+        }
+        throw error;
+      })
       .finally(() => clearTimeout(timeoutId));
   }
 

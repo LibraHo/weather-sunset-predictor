@@ -34,5 +34,8 @@
     "jest-environment-jsdom": "^29.7.0",
     "playwright-mcp": "^0.0.19",
     "supertest": "^7.2.2"
+  },
+  "dependencies": {
+    "sharp": "^0.34.5"
   }
 }

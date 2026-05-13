@@ -42,6 +42,23 @@ describe('recent user-reported UI regression guards', () => {
     expect(cloudBlock).not.toMatch(/background(?:-color)?:\s*(?:#fff\b|#ffffff\b|#f5f5f5\b|#e5e7eb\b|var\(--color-bg\))/i);
   });
 
+  test('dark weather metric cards use neutral Xiake glass borders', () => {
+    const source = css();
+    const tokenBlock = source.match(/\/\* 暗色实际主题兜底：评分条 token 不能被亮色\/默认规则覆盖成黑灰 \*\/[\s\S]*?\n\}/)?.[0] || '';
+    const metricBlock = source.match(/\/\* Dark weather metric cards use the same neutral Xiake glass border as the rest of the panel\. \*\/[\s\S]*?body\[data-actual-theme="dark"\] \.weather-feature-item \{[\s\S]*?\n\}/)?.[0] || '';
+    const metricHoverBlock = source.match(/body\[data-actual-theme="dark"\] \.weather-feature-item:hover \{[\s\S]*?\n\}/)?.[0] || '';
+
+    expect(tokenBlock).toContain('--theme-card-border: rgba(255, 255, 255, 0.10);');
+    expect(tokenBlock).toContain('--weather-metric-border: var(--theme-card-border);');
+    expect(metricBlock).toContain('html[data-theme="dark"] .weather-feature-item');
+    expect(metricBlock).toContain('html[data-actual-theme="dark"] .weather-feature-item');
+    expect(metricBlock).toContain('border-color: var(--weather-metric-border) !important;');
+    expect(metricBlock).toContain('box-shadow: var(--weather-metric-shadow) !important;');
+    expect(metricBlock).not.toContain('var(--theme-accent)');
+    expect(metricHoverBlock).toContain('var(--weather-metric-border)');
+    expect(metricHoverBlock).not.toContain('var(--theme-accent)');
+  });
+
   test('3-day glow forecast is a weather tab with a loading state', () => {
     const page = html();
     const source = css();
@@ -62,6 +79,17 @@ describe('recent user-reported UI regression guards', () => {
     expect(mobileBlock).toContain('#three-day-glow .fcard-row-label');
     expect(mobileBlock).toContain('display: none');
     expect(source).toContain('.weather-view-toggle.xiake-toggle');
+  });
+
+  test('radar compass loading uses the shared progress bar treatment', () => {
+    const source = css();
+    const controller = fs.readFileSync(path.resolve('src/controllers/WeatherController.js'), 'utf8');
+
+    expect(controller).toContain('radar-compass-loading-progress');
+    expect(controller).toContain('radar-compass-progress-fill');
+    expect(source).toContain('.radar-compass-loading-progress');
+    expect(source).toContain('.radar-compass-progress-fill');
+    expect(source).toMatch(/\.radar-compass-progress-fill \{[\s\S]*?animation: xiake-loading-progress/);
   });
 
   test('compact cloud labels are allowed to wrap and do not force ellipsis', () => {
@@ -138,6 +166,25 @@ describe('recent user-reported UI regression guards', () => {
     expect(source).toContain('radial-gradient(circle at 16% 0%, rgba(255, 224, 178, 0.32), transparent 38%)');
     expect(source).toContain('.score-breakdown-popover::before');
     expect(block).not.toContain('background: var(--glass-bg-heavy) !important');
+  });
+
+  test('mobile prediction card children cannot widen the card', () => {
+    const source = css();
+    const radarSource = fs.readFileSync(path.resolve('src/components/RadarCompass.js'), 'utf8');
+    const guardBlock = source.match(/\/\* 2026-05-10: narrow phones must not let prediction-card content widen the card\. \*\/[\s\S]*$/)?.[0] || '';
+
+    expect(guardBlock).toContain('.prediction-app-shell > *');
+    expect(guardBlock).toContain('min-width: 0');
+    expect(guardBlock).toContain('max-width: 100%');
+    expect(guardBlock).toContain('.prediction-app-nav-compact');
+    expect(guardBlock).toContain('width: 100%');
+    expect(guardBlock).toContain('.conclusion-banner > strong');
+    expect(guardBlock).toContain('overflow-wrap: anywhere');
+    expect(radarSource).toContain('width:min(${S}px,100%)');
+    expect(radarSource).toContain('aspect-ratio:1 / 1');
+    expect(radarSource).toContain('width:100%;height:100%;display:block;');
+    expect(radarSource).toContain('const labelR = R_HIGH * 1.08;');
+    expect(radarSource).toContain('margin:8px auto 0');
   });
 });
 

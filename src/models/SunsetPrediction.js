@@ -105,17 +105,24 @@ class SunsetPrediction {
    * 需求：12.5 - 太阳方位角信息
    */
   getAzimuthDirection() {
-    if (this.sunAzimuth === null) return '';
+    const angle = Number(this.sunAzimuth);
+    if (!Number.isFinite(angle)) return '';
 
-    const directions = [
-      '北', '东北偏北', '东北', '东北偏东',
-      '东', '东南偏东', '东南', '东南偏南',
-      '南', '西南偏南', '西南', '西南偏西',
-      '西', '西北偏西', '西北', '西北偏北'
+    const normalized = ((angle % 360) + 360) % 360;
+    const nearestQuarter = Math.round(normalized / 90);
+    const cardinalAngle = nearestQuarter * 90;
+    const cardinalIndex = nearestQuarter % 4;
+    const offset = Math.round(normalized - cardinalAngle);
+    const cardinals = ['北', '东', '南', '西'];
+    const sideByCardinal = [
+      offset >= 0 ? '东' : '西',
+      offset >= 0 ? '南' : '北',
+      offset >= 0 ? '西' : '东',
+      offset >= 0 ? '北' : '南',
     ];
 
-    const index = Math.round(this.sunAzimuth / 22.5) % 16;
-    return directions[index];
+    if (offset === 0) return `正${cardinals[cardinalIndex]}`;
+    return `${cardinals[cardinalIndex]}偏${sideByCardinal[cardinalIndex]} ${Math.abs(offset)}°`;
   }
 
   /**

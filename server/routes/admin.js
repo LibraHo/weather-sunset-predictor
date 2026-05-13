@@ -110,6 +110,25 @@ function getClientIp(req) {
   );
 }
 
+function hasBodyField(body, key) {
+  return Object.prototype.hasOwnProperty.call(body || {}, key);
+}
+
+function parseOptionalCoordinate(body, key, min, max) {
+  if (!hasBodyField(body, key)) return undefined;
+  const raw = body[key];
+  if (raw === '' || raw === null || raw === undefined) return null;
+  const value = Number(raw);
+  return Number.isFinite(value) && value >= min && value <= max ? value : null;
+}
+
+function normalizeOptionalDate(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return null;
+  const date = new Date(raw);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
 // ---------------------------------------------------------------------------
 // GET /admin - 后台管理页面
 // ---------------------------------------------------------------------------
@@ -194,24 +213,28 @@ router.post('/upload', requireAuth, handlePhotoUpload, async (req, res) => {
       });
     }
 
-    // 尝试从 EXIF 解析 GPS
-    let lat = null, lon = null;
+    // 尝试从 EXIF 解析 GPS 与拍摄时间，后台表单可以覆盖或清空。
+    let lat = null, lon = null, takenAt = null;
     try {
       const exif = await exifr.parse(req.file.buffer);
       if (exif && typeof exif.latitude === 'number' && typeof exif.longitude === 'number') {
         lat = exif.latitude;
         lon = exif.longitude;
       }
+      const exifTakenAt = exif?.DateTimeOriginal || exif?.CreateDate || exif?.ModifyDate;
+      takenAt = normalizeOptionalDate(exifTakenAt);
     } catch (exifErr) {
       console.warn('[AdminRoutes] EXIF 解析失败:', exifErr.message);
     }
 
-    // 如果 EXIF 无 GPS，尝试从请求体获取
-    if (lat === null && typeof req.body.lat === 'string') {
-      lat = parseFloat(req.body.lat);
+    const bodyLat = parseOptionalCoordinate(req.body, 'lat', -90, 90);
+    const bodyLon = parseOptionalCoordinate(req.body, 'lon', -180, 180);
+    if (bodyLat !== undefined || bodyLon !== undefined) {
+      lat = Number.isFinite(bodyLat) && Number.isFinite(bodyLon) ? bodyLat : null;
+      lon = Number.isFinite(bodyLat) && Number.isFinite(bodyLon) ? bodyLon : null;
     }
-    if (lon === null && typeof req.body.lon === 'string') {
-      lon = parseFloat(req.body.lon);
+    if (hasBodyField(req.body, 'takenAt')) {
+      takenAt = normalizeOptionalDate(req.body.takenAt);
     }
 
     const photo = await photoService.savePhoto({
@@ -220,6 +243,9 @@ router.post('/upload', requireAuth, handlePhotoUpload, async (req, res) => {
       filename: req.file.originalname,
       lat,
       lon,
+      takenAt,
+      locationName: req.body.locationName || '',
+      uploaderName: req.body.uploaderName || '',
       desc: req.body.description || '',
       clientIp: getClientIp(req),
     });
@@ -283,6 +309,44 @@ router.post('/upload', requireAuth, handlePhotoUpload, async (req, res) => {
       error: {
         code: 'UPLOAD_FAILED',
         message: '上传失败'
+      }
+    });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// PATCH /admin/photos/:id - 更新照片元数据
+// ---------------------------------------------------------------------------
+router.patch('/photos/:id', requireAuth, express.json(), (req, res) => {
+  try {
+    const { id } = req.params;
+    const patch = {};
+    if (hasBodyField(req.body, 'description')) patch.desc = req.body.description;
+    if (hasBodyField(req.body, 'desc')) patch.desc = req.body.desc;
+    if (hasBodyField(req.body, 'locationName')) patch.locationName = req.body.locationName;
+    if (hasBodyField(req.body, 'uploaderName')) patch.uploaderName = req.body.uploaderName;
+    if (hasBodyField(req.body, 'takenAt')) patch.takenAt = req.body.takenAt;
+    if (hasBodyField(req.body, 'lat')) patch.lat = req.body.lat;
+    if (hasBodyField(req.body, 'lon')) patch.lon = req.body.lon;
+
+    const updated = photoService.updatePhoto(id, patch);
+
+    if (!updated) {
+      return res.status(404).json({
+        error: {
+          code: 'PHOTO_NOT_FOUND',
+          message: '照片不存在'
+        }
+      });
+    }
+
+    res.json({ success: true, photo: updated });
+  } catch (err) {
+    console.error('[AdminRoutes] PATCH /admin/photos/:id error:', err);
+    res.status(500).json({
+      error: {
+        code: 'UPDATE_FAILED',
+        message: '保存失败'
       }
     });
   }

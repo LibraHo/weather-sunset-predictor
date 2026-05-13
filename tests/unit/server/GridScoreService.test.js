@@ -161,6 +161,24 @@ describe('GridScoreService', () => {
       expect(sunsetCache).not.toBeNull();
       expect(sunsetCache.period).toBe('sunset');
     });
+
+    test('getJobStatus 空闲时也返回缓存更新时间和点数', () => {
+      const updatedAt = new Date().toISOString();
+      service._cache['sunrise'] = {
+        updatedAt,
+        gridPoints: [
+          { lat: 40, lon: 116, score: 70 },
+          { lat: 41, lon: 117, score: 62 },
+        ]
+      };
+
+      const status = service.getJobStatus('sunrise');
+
+      expect(status.running).toBe(false);
+      expect(status.cacheUpdatedAt).toBe(updatedAt);
+      expect(status.cacheCount).toBe(2);
+      expect(status.cacheStale).toBe(false);
+    });
   });
 
   describe('period 标准化', () => {
@@ -263,6 +281,20 @@ describe('GridScoreService', () => {
       await service.refreshIfStale(60 * 60 * 1000, 'sunset');
 
       expect(refreshSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('refreshIfStale force=true 应刷新当天已有缓存', async () => {
+      service._cache['sunset'] = {
+        updatedAt: new Date().toISOString(),
+        gridPoints: []
+      };
+
+      const refreshSpy = jest.spyOn(service, '_doRefresh');
+
+      await service.refreshIfStale(0, 'sunset', { force: true });
+
+      expect(refreshSpy).toHaveBeenCalledTimes(1);
+      expect(refreshSpy).toHaveBeenCalledWith('sunset');
     });
   });
 

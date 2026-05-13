@@ -14,6 +14,26 @@ const translations = {
     "locatedAt": "현재 위치: {{name}}",
     "subtitle": "화염구름이 나타나는 최적의 시간 예측"
   },
+  "gallery": {
+    "pageTitle": "Xiake Share Map",
+    "title": "Sunset photo gallery",
+    "subtitle": "Explore sunset photos shared around the world",
+    "loading": "Loading photos...",
+    "loadFailed": "Failed to load photos. Please refresh and try again.",
+    "emptyTitle": "No photos yet",
+    "emptyBody": "Upload the first fire-cloud photo.",
+    "legendAria": "Legend",
+    "photoLocationLegend": "Photo locations",
+    "photoAltFallback": "Sunset photo",
+    "notProvided": "Not provided",
+    "takenAt": "Taken at",
+    "locationName": "Location",
+    "uploadedAt": "Uploaded at",
+    "uploaderName": "Uploaded by",
+    "photoCount": "{{count}} photos",
+    "clusterListAria": "Clustered photo thumbnails",
+    "clusterPhotoLabel": "Photo {{index}}: {{location}}"
+  },
   "home": {
     "tabs": {
       "ariaLabel": "홈 탭 내비게이션",
@@ -47,17 +67,41 @@ apiAccess: 'API 연동'
     "methodology": {
       "title": "화염구름 점수 계산 방법",
       "intro": "화염구름 지수는 4가지 주요 요인을 종합하여 계산되며, 해당 날의 노을 관람이 가치 있는지 빠르게 판단하는 데 도움을 줍니다.",
-      "versionLabel": "Algorithm version: 2026.05.10-upper-cloud-carrier-v2",
-      "versionDesc": "This version treats clear dense upper-cloud carrier scenes as a canvas-thickness modifier instead of also applying a thick high-cloud hard cap; haze, dust, rain, and geometry caps remain independent.",
-      changelogTitle: "Version update history",
-      changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
+      "versionLabel": "알고리즘 버전: 2026.05.13-formation-factors-v1",
+      "versionDesc": "화염구름 분석을 구름 매개층, 빛 경로, 공기 발색, 제한 요인 네 가지로 고정했습니다. 점수 공식은 그대로입니다.",
+      changelogTitle: "버전 업데이트 기록",
+      changelogHint: "최근 3개월의 알고리즘 업데이트를 여기에 모았습니다. 스크롤해 변경 이유, 영향, 검증 내용을 확인할 수 있습니다",
       changelog: {
-              "current": {
-                      "date": "2026-05-10",
-                      "title": "Dense mid/high-cloud carrier protection v2",
-                      "summary": "Fixes duplicate punishment when high and mid clouds are sufficient, low clouds are scarce, and air is not hazy. Thickness now only softens the canvas; true haze/dust still applies independent caps.",
-                      "validation": "Validation: Beijing replay lands around 53–60, while thick-curtain and dust cases stay low."
-              }
+        "latest": {
+          "date": "2026-05-13",
+          "title": "4요인 분석 v1",
+          "summary": "화염구름 분석을 네 가지 안정적인 요인으로 묶어 흩어진 설명 항목을 줄였습니다.",
+          "validation": "검증: 에어로졸, 낮은 구름 차단, 회색 연무, 두꺼운 구름, 강수 사례가 대응 요인으로 통합됩니다. 점수 공식은 변하지 않습니다."
+        },
+        "aerosol": {
+          "date": "2026-05-12",
+          "title": "에어로졸 약한 매개층 v1",
+          "summary": "구름이 적을 때 적당한 얇은 연무는 태양 방향 빛 경로가 열려 있을 때만 약한 붉은 석양 매개층으로 반영됩니다.",
+          "validation": "검증: 베이징 약한 붉은 석양 샘플은 30점대로 올라가고, 맑은 하늘·짙은 연무/먼지·낮은 구름 차단·회색 장막은 낮게 유지됩니다."
+        },
+        "openingCarrier": {
+          "date": "2026-05-11",
+          "title": "틈이 있는 중고층 구름 매개층 v1",
+          "summary": "저층 구름이 적고 중고층 구름이 색을 받을 수 있으며 태양 방향에 틈이 있을 때, 완전히 막힌 두꺼운 구름막으로 보지 않습니다.",
+          "validation": "검증: 이화원 중고층 구름 샘플은 관측 후보 구간으로 돌아가고, 연무·먼지·틈 없는 두꺼운 구름은 보수적으로 유지됩니다."
+        },
+        "lightPath": {
+          "date": "2026-05-10",
+          "title": "저층 구름 중심 빛 경로 v3",
+          "summary": "빛 경로 차단은 저층 구름이 태양 방향을 막는지를 중심으로 보며, 중고층 구름이 많고 저층 구름이 적은 노을 캔버스를 잘못 낮추지 않습니다.",
+          "validation": "검증: 고층 구름 캔버스는 총운량만으로 낮아지지 않고, 저층 구름 우세·비/눈·낮은 가시거리는 보수적으로 유지됩니다."
+        },
+        "upperCloudCarrier": {
+          "date": "2026-05-10",
+          "title": "중고층 구름 매개층 보호 v2",
+          "summary": "고층과 중층 구름이 충분하고 저층 구름이 적으며 공기가 회색이 아닐 때, 낮은 점수가 아니라 색을 받을 수 있는 캔버스로 봅니다.",
+          "validation": "검증: 베이징 중고층 구름 샘플은 50-60점대로 돌아가고, 회색 공기·강한 먼지·중층 구름 부족은 낮게 유지됩니다."
+        }
       },
       "factors": {
         "highMidCloudTitle": "중고층 구름 (캔버스 조건)",
@@ -70,17 +114,25 @@ apiAccess: 'API 연동'
         "visibilityDesc": "가시거리가 높을수록 하늘 배경이 더 깨끗하고 노을의 경계와 색채 전환이 더 뚜렷해집니다."
       },
       "scoreGuideTitle": "점수 해석",
-      "scoreExcellent": "우수：>80（강력 추천）",
-      "scoreGood": "양호：65-80（높은 확률）",
-      "scoreFair": "보통：40-65（관람 가능）",
-      "scoreExcellentRange": "우수 Excellent",
-      "scoreExcellentDesc": "강력 추천",
-      "scoreGoodRange": "양호 Good",
-      "scoreGoodDesc": "관람 가능, 조건 양호",
-      "scoreFairRange": "보통 Fair",
-      "scoreFairDesc": "신중하게 기대",
-      "scorePoorRange": "불량 Poor",
-      "scorePoorDesc": "비추천",
+      "scoreExcellent": "희귀：85-100（폭발급 조건）",
+      "scoreGood": "고점：70-84（기다릴 가치 있음）",
+      "scoreFair": "관측 후보：40-69（실황 확인）",
+      "scoreExcellentRange": "희귀 Rare",
+      "scoreExcellentDetail": "85-100점",
+      "scoreExcellentDesc": "드문 폭발급 조건, 우선 관측할 만함",
+      "scoreGoodRange": "고점 Strong",
+      "scoreGoodDetail": "70-84점",
+      "scoreGoodDesc": "평소보다 뚜렷하게 좋아 전용 관측 가치 있음",
+      "scoreFairRange": "관측 후보 Watch",
+      "scoreFairDetail": "40-69점",
+      "scoreFairDesc": "색이 날 수 있으나 국지적 틈과 실황 확인 필요",
+      "scorePoorRange": "낮은 확률 Low",
+      "scorePoorDetail": "<40점",
+      "scorePoorDesc": "Fire-cloud conditions are weak; do not plan a dedicated chase from this score alone, and judge any ordinary sunset by live weather and visibility",
+      "scoreSourceTitle": "지도 색과 장소 상세 점수가 다른 이유",
+      "scoreSourceMap": "지도 색은 지역 흐름입니다. 근처에서 어느 방향이 더 유망한지 빠르게 보기 위해 고정 격자로 계산하고 격자 사이를 부드럽게 연결합니다.",
+      "scoreSourcePoint": "장소 상세 점수는 선택한 특정 위치의 값입니다. 그 좌표의 현지 일출/일몰 시간, 구름, 공기질, 태양 방향 빛 경로를 다시 계산합니다.",
+      "scoreSourceWhy": "먼저 지도에서 방향을 고르고, 마지막에 장소 상세로 나갈지 판단하세요. 차이가 크면 장소 상세 점수를 우선하세요.",
       "sections": {
         "cloudStructure": {
           "title": "1. 구름층 구조",
@@ -127,12 +179,12 @@ apiAccess: 'API 연동'
         },
         "thickHighCloudPenalty": {
           "title": "6. Cloud Thickness and Haze Corrections",
-          "subtitle": "Cloud Thickness · Canvas Modifier / Caps",
-          "desc": "More high clouds do not always mean a higher score. The model separates colorable mid/high-cloud carriers from light-suppressing gray curtains. Cloud thickness first modifies the canvas; haze and dust apply caps separately.",
-          "level1": "Dense upper-cloud carrier: high ≥80%, mid ≥30%, low ≤10%, no rain, and air not hazy",
-          "level2": "In this case cloud-thickness signals only multiply canvas by 0.75; they do not add another final cap or suppress light path again",
-          "level3": "True thick curtains can still cap around 42–48; haze/dust caps remain 45/35/28 based on air quality",
-          "formula": "Final correction = canvas thickness modifier + independent haze/dust/rain/geometry caps, avoiding double punishment from the same thickness signal"
+          "subtitle": "Cloud Thickness · Canvas and Air Adjustment",
+          "desc": "More high clouds do not always mean a higher score. The model separates colorable mid/high-cloud carriers from gray curtains that weaken light.",
+          "level1": "Upper-cloud carrier: either dense high cloud, or mid/high clouds with an opening toward the sun, scarce low clouds, no rain, and clear air",
+          "level2": "In this case cloud thickness adjusts colorable-cloud quality, while light-path judgment stays independent",
+          "level3": "Very thick cloud curtains or gray air can still make colors darker and weaker.",
+          "formula": "Final correction = colorable-cloud quality + independent haze/dust/rain/geometry limits"
         },
         "precipPenalty": {
           "title": "6. 강수 패널티 계수",
@@ -285,51 +337,93 @@ apiAccess: 'API 연동'
           "baseScore": "Base score",
           "rendering": "Rendering",
           "final": "Final",
-          "hardCap": "Hard cap",
-          "hazeCap": "Haze cap",
-          "thickCloudCap": "Thick-cloud cap",
-          "cloudThicknessModifier": "Cloud-thickness modifier",
-          "geometryCap": "Geometry cap",
+          "hardCap": "Weather limit",
+          "hazeCap": "Haze impact",
+          "thickCloudCap": "Thick cloud",
+          "cloudThicknessModifier": "Cloud layer effect",
+          "geometryCap": "Sun angle",
           "occlusion": "Occlusion",
           "carrierFloor": "Carrier floor",
-          "postRainCap": "Post-rain cap",
-          "displayCalibration": "Display calibration"
+          "postRainCap": "Post-rain haze",
+          "displayCalibration": "Display calibration",
+          "aerosolCarrier": "Aerosol carrier"
         },
         "details": {
-          "cloudCarrier": "usable colored cloud surface",
-          "cloudPenalty": "low cloud ×{{low}}, overcast ×{{overcast}}",
+          "cloudCarrier": "usable color carrier from cloud or thin haze",
+          "cloudPenalty": "cloud canvas {{canvas}}, low cloud ×{{low}}, overcast ×{{overcast}}",
+          "aerosolCarrier": "thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}",
           "lightPath": "sunlight reaches the cloud layer",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
-          "afterAdjustments": "after all caps and floors",
+          "afterAdjustments": "after weather and visibility adjustments",
           "finalDisplayed": "final displayed result",
           "thickCloudCap": "thick high cloud reduces usable color rendering",
-          "cloudThicknessModifier": "when mid/high-cloud carriers are clear, thickness only softens the canvas and does not add another hard cap",
+          "cloudThicknessModifier": "mid/high clouds can still catch sunset light, so cloud thickness has only a mild impact here",
           "geometryCap": "sun/cloud geometry is not feasible",
           "occlusion": "distant obstruction reduces the score",
           "carrierFloor": "clear high-cloud carrier prevents over-penalty",
-          "directionalSamples": "solar-azimuth samples at 15/30/50/100km are included",
+          "directionalSamples": "nearby clouds along the sun direction are included",
+          "lightPathLowCloudBlock": "low clouds block sunlight from reaching the colorable clouds",
+          "lightPathRain": "rain weakens direct sunset light",
           "postRainCap": "post-rain moisture or haze turns the glow into a gray curtain",
           "displayCalibration": "final display score is aligned with the prediction status band"
         },
         "reasons": {
-          "precipitationCap45": "rain with low clouds capped the score at 45",
-          "overcastCap35": "low-cloud overcast capped the score at 35",
-          "overcastFogCap15": "overcast sky plus visibility ≤5km capped the score at 15",
-          "rainyMidCloudOvercastCap35": "rainy gray mid-cloud overcast capped the score at 35",
-          "extremeDustHazeCap28": "severe dust/haze capped the score at 28",
-          "severeHazeCap35": "heavy haze capped the score at 35",
-          "moderateHazeCap45": "moderate haze capped the score at 45",
-          "denseCarrierCanvasOnly": "dense upper-cloud carrier: canvas-only thickness modifier applied",
-          "adjustmentApplied": "cap/floor adjustment applied",
+          "precipitationCap45": "rain plus low clouds keeps the score low",
+          "overcastCap35": "low clouds block the sunlight path",
+          "overcastFogCap15": "low cloud and low visibility make the sky too gray",
+          "rainyMidCloudOvercastCap35": "post-rain moisture makes the glow hard to show",
+          "extremeDustHazeCap28": "heavy dust or haze suppresses the glow",
+          "severeHazeCap35": "heavy haze makes colors hard to show",
+          "moderateHazeCap45": "haze weakens orange-red color",
+          "denseCarrierCanvasOnly": "mid/high clouds can still catch sunset light",
+          "adjustmentApplied": "score adjusted for limiting conditions",
           "displayCalibration": "final display score is aligned with the prediction status band",
-          "lightPathStatusCap60": "light path is only {{light}}, so the result is capped to the light-glow band around 60",
-          "canvasStatusCap40": "cloud carrier is only {{canvas}}, so the result is capped to the no-fire-cloud band below 40"
+          "lightPathStatusCap60": "light path is {{light}}, so the result is shown as a light-glow chance",
+          "canvasStatusCap40": "cloud carrier is {{canvas}}, so fire-cloud chance is weak"
         }
       }
     },
 "formationAnalysis": {
       "title": "화염구름 형성 조건 분석",
       "groups": { "positive": "유리한 조건", "neutral": "보통 요인", "warning": "주의 요인" },
+      "factors": {
+        "carrier": {
+          "title": "구름 매개층",
+          "status": { "good": "좋음", "fair": "보통", "weak": "약함" },
+          "desc": {
+            "good": "중고층 구름이 석양빛을 받아 오늘의 주요 색상 캔버스가 됩니다.",
+            "fair": "물들 수 있는 구름은 있지만 면적이나 높이가 이상적이지 않습니다.",
+            "weak": "적절한 중고층 구름이 부족해 넓은 화염구름이 생기기 어렵습니다."
+          }
+        },
+        "lightPath": {
+          "title": "빛 경로",
+          "status": { "good": "좋음", "fair": "보통", "weak": "약함" },
+          "desc": {
+            "good": "태양 방향이 비교적 트여 있어 빛이 구름 아래까지 닿을 수 있습니다.",
+            "fair": "태양 방향에 일부 가림이 있어 노을 색은 국지적으로 나타날 수 있습니다.",
+            "weak": "낮은 구름이나 구름 벽이 빛 경로를 막아 구름층까지 빛이 닿기 어렵습니다."
+          }
+        },
+        "rendering": {
+          "title": "공기 발색",
+          "status": { "good": "좋음", "fair": "보통", "weak": "약함" },
+          "desc": {
+            "good": "적당한 입자와 수분이 있어 따뜻한 붉은빛이 더 잘 드러납니다.",
+            "fair": "공기 조건은 보통이며 색 표현은 주로 구름과 빛 경로에 달려 있습니다.",
+            "weak": "공기가 탁하거나 입자가 너무 많아 색이 어둡고 옅어지기 쉽습니다."
+          }
+        },
+        "limits": {
+          "title": "제한 요인",
+          "status": { "good": "뚜렷하지 않음", "fair": "약간", "weak": "뚜렷함" },
+          "desc": {
+            "good": "뚜렷한 억제 조건은 없습니다.",
+            "fair": "가벼운 불리 요소가 있어 지속 시간이나 색 강도를 낮출 수 있습니다.",
+            "weak": "강수, 두꺼운 구름, 낮은 구름 차단, 회색 연무가 전체 표현을 낮춥니다."
+          }
+        }
+      },
       "high": {
         "abundant": "고층운 풍부 ({{value}}%)", "abundantDesc": "색을 받을 구름층이 충분합니다",
         "sufficient": "고층운 충분 ({{value}}%)", "sufficientDesc": "노을빛을 담을 조건이 좋습니다",
@@ -359,11 +453,12 @@ apiAccess: 'API 연동'
       "aerosol": {
         "moderate": "에어로졸 적절 (AOD {{value}})", "moderateDesc": "주황·붉은 산란을 강화합니다",
         "high": "에어로졸 높음 (AOD {{value}})", "highDesc": "흐리거나 어둡게 보일 수 있습니다",
-        "low": "공기가 너무 맑음 (AOD {{value}})", "lowDesc": "색이 옅을 수 있습니다"
+        "low": "공기가 너무 맑음 (AOD {{value}})", "lowDesc": "색이 옅을 수 있습니다",
+        "carrier": "Thin-haze red-sunset carrier", "carrierDesc": "When clouds are scarce, moderate aerosol can add some warm sunset color if the light path is open"
       },
-      "lightPath": { "opening": "Opening toward the sun", "openingDesc": "Backend samples 15/30/50/100km along the solar azimuth; the low/mid-cloud corridor is relatively open", "wall": "Cloud wall toward the sun", "wallDesc": "Low or mid clouds along the solar direction suppress the main score" },
-      "postRain": { "clear": "Clear post-rain air", "clearDesc": "Rain in the last 6h is kept as a bonus because visibility and particles are acceptable", "gray": "Post-rain gray-curtain risk", "grayDesc": "Moisture, particles, or weak direct light after rain cap the score conservatively" },
-      "carrier": { "strong": "Clear high-cloud carrier", "strongDesc": "High clouds are sufficient, low clouds are scarce, and air is clear enough for a medium/high score base", "dense": "Dense mid/high-cloud carrier", "denseDesc": "High and mid clouds both provide canvas; thickness only softens the canvas and does not add a duplicate cap" },
+      "lightPath": { "opening": "Opening toward the sun", "openingDesc": "Backend samples 15/30/50/100km along the solar azimuth; the low/mid-cloud corridor is relatively open", "wall": "Cloud wall toward the sun", "wallDesc": "Low or mid clouds along the solar direction suppress the main score" , "lowCloudBlock": "Low clouds block sunlight", "lowCloudBlockDesc": "Low clouds sit in the sun direction, so sunlight struggles to reach mid/high clouds" },
+      "postRain": { "clear": "Clear post-rain air", "clearDesc": "Rain in the last 6h is kept as a bonus because visibility and particles are acceptable", "gray": "Post-rain gray-curtain risk", "grayDesc": "Moisture, particles, or weak direct light after rain can make the glow gray" },
+      "carrier": { "strong": "Clear high-cloud carrier", "strongDesc": "High clouds are sufficient, low clouds are scarce, and air is clear enough for a medium/high score base", "dense": "Dense mid/high-cloud carrier", "denseDesc": "High and mid clouds provide a steadier color canvas" },
 
       "layer": { "single": "단일 구름층", "singleDesc": "고층운 상태가 좋으면 선명한 노을은 가능합니다" }
     },
@@ -610,11 +705,11 @@ apiAccess: 'API 연동'
     "proxyUrl": "백엔드 서버 URL",
     "proxyUrlPlaceholder": "http://localhost:3000",
     "proxyUrlHint": "백엔드 프록시 서버 URL 주소",
-    "weatherFetchMode": "날씨 데이터 가져오기 모드",
-    "weatherFetchModeHint": "기본값은 백엔드 폐쇄 루프입니다. 백엔드가 제한되거나 시간 초과되면 브라우저가 공개 날씨 데이터를 가져와 백엔드에서 점수 계산에 사용합니다",
-    "weatherFetchModeBackend": "백엔드 폐쇄 루프(권장 기본값)",
-    "weatherFetchModeClientFallback": "백엔드 우선, 실패 시 브라우저 긴급 대체",
-    "weatherFetchModeClient": "브라우저 날씨 가져오기(디버그/긴급)",
+    "weatherFetchMode": "날씨 계산 모드",
+    "weatherFetchModeHint": "기본값은 자동 모드입니다. 먼저 백엔드를 사용하고, 제한이나 시간 초과가 발생하면 프런트엔드로 전환해 계속 로딩되는 상황을 피합니다.",
+    "weatherFetchModeBackend": "백엔드 모드",
+    "weatherFetchModeClientFallback": "자동 모드(기본값)",
+    "weatherFetchModeClient": "프런트엔드 모드",
     "notificationAndAlerts": "알림",
     "enableSunsetNotification": "노을 알림 켜기",
     "notificationHint": "예측 품질이 임계값에 도달하면 브라우저 알림 전송",

@@ -10,6 +10,8 @@
  */
 
 import { jest } from '@jest/globals';
+import fs from 'fs';
+import path from 'path';
 import PredictionController from '../../../src/controllers/PredictionController.js';
 
 // Mock StorageService
@@ -30,6 +32,7 @@ const mockStorageService = {
 
 describe('PredictionController', () => {
   let predictionController;
+  const rootDir = path.resolve(process.cwd());
 
   beforeEach(() => {
     // 设置 DOM 环境
@@ -90,6 +93,80 @@ describe('PredictionController', () => {
       expect(predictionController.predictionService.calculatePrediction).toHaveBeenCalled();
       expect(predictionController.predictionAPIService.calculate).not.toHaveBeenCalled();
     });
+
+    test('client-fallback 模式下后端预测超时应回退到前端本地预测', async () => {
+      localStorage.setItem('weather_fetch_mode', 'client-fallback');
+      const localResult = { score: 52, quality: 'good', type: 'sunset' };
+      predictionController.weatherFetchMode = 'client-fallback';
+      predictionController.features = { USE_BACKEND_PREDICTION: true };
+      predictionController.predictionService = {
+        calculatePrediction: jest.fn(() => localResult)
+      };
+      const timeoutError = new Error('timeout');
+      timeoutError.code = 'WEATHER_UPSTREAM_TIMEOUT';
+      predictionController.predictionAPIService = {
+        calculate: jest.fn(() => Promise.reject(timeoutError))
+      };
+
+      const weatherData = {
+        timestamp: Date.now(),
+        timezone: 'Asia/Shanghai',
+        temp: 20,
+        humidity: 60,
+        cloudCover: 80,
+        lowClouds: 5,
+        midClouds: 60,
+        highClouds: 80
+      };
+      const result = await predictionController._calculatePredictionWithBackend(
+        weatherData,
+        new Date('2026-05-10T10:00:00Z'),
+        39.9,
+        116.4,
+        'sunset',
+        [weatherData]
+      );
+
+      expect(result).toBe(localResult);
+      expect(predictionController.predictionAPIService.calculate).toHaveBeenCalledTimes(2);
+      expect(predictionController.predictionAPIService.calculate.mock.calls[1][5]).toEqual(
+        expect.objectContaining({ clientWeatherFallback: true })
+      );
+      expect(predictionController.predictionService.calculatePrediction).toHaveBeenCalledWith(
+        weatherData,
+        expect.any(Date),
+        39.9,
+        116.4,
+        'sunset',
+        expect.objectContaining({ timezone: 'Asia/Shanghai' })
+      );
+    });
+
+    test('client-fallback 模式也应复用后端闭环批量预测缓存，避免再发单条请求', async () => {
+      localStorage.setItem('weather_fetch_mode', 'client-fallback');
+      const date = new Date('2026-05-10T10:00:00Z');
+      const cachedPrediction = { score: 80, quality: 'excellent', type: 'sunset' };
+      predictionController.weatherFetchMode = 'client-fallback';
+      predictionController.features = { USE_BACKEND_PREDICTION: true };
+      predictionController._closedLoopBatchPredictionMap = new Map([
+        [predictionController._predictionBatchKey('sunset', date), cachedPrediction]
+      ]);
+      predictionController.predictionAPIService = {
+        calculate: jest.fn(() => Promise.reject(new Error('single request should not be called')))
+      };
+
+      const result = await predictionController._calculatePredictionWithBackend(
+        { timestamp: date.getTime(), timezone: 'Asia/Shanghai' },
+        date,
+        39.9,
+        116.4,
+        'sunset',
+        []
+      );
+
+      expect(result).toBe(cachedPrediction);
+      expect(predictionController.predictionAPIService.calculate).not.toHaveBeenCalled();
+    });
   });
 
 
@@ -126,6 +203,18 @@ describe('PredictionController', () => {
   });
 
   describe('getQualityClass', () => {
+    test('按公开评分解读分档从分数推导质量等级', () => {
+      expect(predictionController.getQualityFromScore(85)).toBe('excellent');
+      expect(predictionController.getQualityFromScore(77)).toBe('good');
+      expect(predictionController.getQualityFromScore(45)).toBe('fair');
+      expect(predictionController.getQualityFromScore(39)).toBe('poor');
+    });
+
+    test('77 和 45 使用不同评分主题颜色', () => {
+      expect(predictionController.getScoreTheme('good', 77)[1]).toBe('var(--score-good-color, #fb923c)');
+      expect(predictionController.getScoreTheme('fair', 45)[1]).toBe('var(--score-fair-color, #fdba74)');
+    });
+
     test('应映射 excellent 为正确类名', () => {
       expect(predictionController.getQualityClass('excellent')).toBeTruthy();
     });
@@ -187,10 +276,11 @@ describe('PredictionController', () => {
   });
 
   describe('getLocalizedAzimuthDirection', () => {
-    test('296° 应返回 西北偏西', () => {
+    test('296° 应返回 西偏北 26°，避免“西北偏西”这类不自然表述', () => {
       predictionController.i18n = { currentLanguage: 'zh-CN' };
       const dir = predictionController.getLocalizedAzimuthDirection({ sunAzimuth: 296 });
-      expect(dir).toBe('西北偏西');
+      expect(dir).toBe('西偏北 26°');
+      expect(dir).not.toBe('西北偏西');
     });
 
     test('90° 应返回 正东', () => {
@@ -218,10 +308,10 @@ describe('PredictionController', () => {
       expect(dir).not.toBe('西北偏西');
     });
 
-    test('繁中环境 74° 应返回東北偏東', () => {
+    test('繁中环境 74° 应返回東偏北 16°', () => {
       predictionController.i18n = { currentLanguage: 'zh-TW' };
       const dir = predictionController.getLocalizedAzimuthDirection({ sunAzimuth: 74 });
-      expect(dir).toBe('東北偏東');
+      expect(dir).toBe('東偏北 16°');
     });
 
     test('韩语环境 296° 应返回서북서，不应 fallback 到 WNW', () => {
@@ -238,7 +328,7 @@ describe('PredictionController', () => {
         shouldShowAzimuth: () => true
       };
       const direction = predictionController.getPredictionDirectionText(prediction, 'sunrise');
-      expect(direction).toBe('东北偏东');
+      expect(direction).toBe('东偏北 16°');
       expect(direction).not.toContain('↑');
     });
 
@@ -348,7 +438,7 @@ describe('PredictionController', () => {
           end: new Date(sunsetTime.getTime() + 30 * 60 * 1000)
         }),
         shouldShowAzimuth: () => true,
-        getAzimuthDirection: () => '西北偏西'
+        getAzimuthDirection: () => '西偏北 26°'
       };
 
       const html = predictionController.renderSinglePrediction(
@@ -360,10 +450,10 @@ describe('PredictionController', () => {
         'sunset'
       );
 
-      expect(html).toContain('西北偏西');
+      expect(html).toContain('西偏北 26°');
       expect(html).toContain('app-info-row');
-      expect(html).toContain('西北偏西');
-      expect(html).not.toContain('西北偏西 ↑');
+      expect(html).not.toContain('西北偏西');
+      expect(html).not.toContain('西偏北 26° ↑');
     });
 
     test('北京朝霞场景日出方向不应显示为正北', () => {
@@ -388,7 +478,7 @@ describe('PredictionController', () => {
           end: new Date(sunriseTime.getTime() + 30 * 60 * 1000)
         }),
         shouldShowAzimuth: () => true,
-        getAzimuthDirection: () => '东北偏东'
+        getAzimuthDirection: () => '东偏北 16°'
       };
 
       const html = predictionController.renderSinglePrediction(
@@ -400,12 +490,12 @@ describe('PredictionController', () => {
         'sunrise'
       );
 
-      expect(html).toContain('东北偏东');
+      expect(html).toContain('东偏北 16°');
+      expect(html).not.toContain('东北偏东');
       expect(html).not.toContain('正北');
-      expect(html).not.toContain('北</span>');
     });
 
-    test('增强分析应显示后端透传的气溶胶 AOD 文案', () => {
+    test('增强分析应将后端透传的气溶胶条件归并到空气显色因子', () => {
       const prediction = {
         score: 62,
         quality: 'good',
@@ -443,14 +533,16 @@ describe('PredictionController', () => {
         prediction, 'sunset', '晚霞', '日落时间', '今日', 'sunset'
       );
 
-      expect(html).toContain('AOD 0.73');
+      expect(html).toContain('空气显色');
+      expect(html).toContain('空气偏灰或颗粒过重');
       expect(html).not.toContain('analysis-summary-copy');
       expect(html).not.toContain('云层画布');
       expect(html).not.toContain('空气渲染');
-      expect(html).toContain('高层云充足');
+      expect(html).not.toContain('AOD 0.73');
+      expect(html).not.toContain('高层云充足');
       expect(html).toContain('app-analysis-card');
-      expect(html).toContain('analysis-group-positive');
-      expect(html).toContain('analysis-group-warning');
+      expect(html).toContain('analysis-factor-grid');
+      expect(html).toContain('analysis-factor-warning');
       expect(html).toContain('conclusion-banner');
       expect(html).not.toContain('undefined');
       expect(html).not.toContain('null');
@@ -642,7 +734,7 @@ describe('PredictionController', () => {
       });
 
       expect(html).toContain('为什么是这个分数');
-      expect(html).toContain('28 分：强沙尘/灰幕压制，分数封顶到 28');
+      expect(html).toContain('28 分：强沙尘或灰幕会压住霞光');
       expect(html).not.toContain('score-ledger-context');
       expect(html).not.toContain('能见度 5km');
       expect(html).toContain('70.7');
@@ -670,8 +762,8 @@ describe('PredictionController', () => {
 
       expect(html).toContain('展示分校准');
       expect(html).toContain('79.4→60');
-      expect(html).toContain('光路只有 40.0，归入轻微霞光档，最终展示分封顶到 60');
-      expect(html).toContain('60 分：光路只有 40.0，归入轻微霞光档，最终展示分封顶到 60');
+      expect(html).toContain('光路约 40.0，更像轻微霞光机会');
+      expect(html).toContain('60 分：光路约 40.0，更像轻微霞光机会');
     });
   });
 
@@ -689,6 +781,78 @@ describe('PredictionController', () => {
       });
       expect(html).toBeTruthy();
       expect(typeof html).toBe('string');
+    });
+  });
+
+  describe('火烧云分析卡片', () => {
+    test('火烧云分析应合并为四个固定因子', () => {
+      const groups = predictionController.buildAnalysisGroups({
+        score: 72,
+        cloudLayers: { high: 88, mid: 42, low: 4 },
+        visibility: 18,
+        humidity: 58
+      });
+      const html = predictionController.renderAnalysisCard(groups, 'test');
+
+      expect(groups).toHaveLength(4);
+      expect(html).toContain('云层载体');
+      expect(html).toContain('光路条件');
+      expect(html).toContain('空气显色');
+      expect(html).toContain('限制因素');
+      expect(html).toContain('analysis-factor-grid');
+      expect(html).not.toContain('不再重复封顶');
+      expect(html).not.toContain('不再额外封顶');
+    });
+
+    test('气溶胶弱载体场景应归入固定因子而不是追加新条目', () => {
+      const groups = predictionController.buildAnalysisGroups({
+        score: 33,
+        cloudLayers: { high: 0, mid: 7, low: 0 },
+        visibility: 20,
+        humidity: 45,
+        aerosolCarrierScore: {
+          activatedScore: 31,
+          lightPathActivation: 1
+        }
+      });
+      const html = predictionController.renderAnalysisCard(groups, 'test');
+
+      expect(groups).toHaveLength(4);
+      expect(html).toContain('空气显色');
+      expect(html).toContain('颜色更容易偏暖、偏红');
+      expect(html).not.toContain('薄雾红日载体');
+    });
+
+    test('形成条件状态标签使用不同语义颜色', () => {
+      const html = predictionController.renderAnalysisCard([
+        { key: 'carrier', title: '云层载体', status: '较好', desc: 'test', type: 'positive', icon: 'cloud', statusTone: 'good' },
+        { key: 'lightPath', title: '光路条件', status: '一般', desc: 'test', type: 'neutral', icon: 'info', statusTone: 'fair' },
+        { key: 'limits', title: '限制因素', status: '轻微', desc: 'test', type: 'neutral', icon: 'warn', statusTone: 'mild' },
+        { key: 'rendering', title: '空气显色', status: '较弱', desc: 'test', type: 'warning', icon: 'warn', statusTone: 'weak' }
+      ], 'test');
+
+      expect(html).toContain('analysis-factor-status-good');
+      expect(html).toContain('analysis-factor-status-fair');
+      expect(html).toContain('analysis-factor-status-mild');
+      expect(html).toContain('analysis-factor-status-weak');
+    });
+
+    test('分析卡片最终 CSS 应保持上下文案左对齐且可换行', () => {
+      const css = fs.readFileSync(path.join(rootDir, 'styles/main.css'), 'utf8');
+      const finalRules = css.slice(css.lastIndexOf('formation analysis cards must read like compact notes'));
+
+      expect(finalRules).toContain('analysis-factor-grid');
+      expect(finalRules).toContain('analysis-factor-heading');
+      expect(finalRules).toContain('analysis-factor-status-good');
+      expect(finalRules).toContain('analysis-factor-status-fair');
+      expect(finalRules).toContain('analysis-factor-status-mild');
+      expect(finalRules).toContain('analysis-factor-status-weak');
+      expect(finalRules).toContain('grid-template-columns: 22px minmax(0, 1fr)');
+      expect(finalRules).toContain('display: grid !important');
+      expect(finalRules).toContain('white-space: normal !important');
+      expect(finalRules).toContain('text-align: left !important');
+      expect(finalRules).not.toContain('display: contents');
+      expect(finalRules).not.toContain('text-align: right');
     });
   });
 
@@ -715,7 +879,7 @@ describe('PredictionController', () => {
           end: new Date(sunsetTime.getTime() + 30 * 60 * 1000)
         }),
         shouldShowAzimuth: () => true,
-        getAzimuthDirection: () => '西北偏西'
+        getAzimuthDirection: () => '西偏北 26°'
       };
 
       const html = predictionController.renderSinglePrediction(
@@ -727,8 +891,9 @@ describe('PredictionController', () => {
         'sunset'
       );
 
-      expect(html).toContain('西北偏西');
-      expect(html).not.toContain('西北偏西 ↑');
+      expect(html).toContain('西偏北 26°');
+      expect(html).not.toContain('西北偏西');
+      expect(html).not.toContain('西偏北 26° ↑');
     });
   });
 
@@ -909,5 +1074,52 @@ describe('PredictionController - 3天朝晚霞时间线加载态', () => {
     expect(document.getElementById('forecast-timeline').dataset.loaded).toBe('true');
     expect(document.getElementById('forecast-loading').classList.contains('hidden')).toBe(true);
     expect(document.querySelectorAll('#forecast-timeline .forecast-day-card')).toHaveLength(3);
+  });
+
+  test('未来预测分数颜色按分数分档而不是接口 quality 字段', () => {
+    const base = new Date('2026-05-14T00:00:00+08:00');
+    const predictions = [
+      {
+        date: new Date(base.getTime() - 24 * 60 * 60 * 1000),
+        type: 'sunrise',
+        score: 20,
+        quality: 'poor',
+        sunriseTime: new Date(base.getTime() - 18 * 60 * 60 * 1000),
+        sunsetTime: new Date(base.getTime() - 6 * 60 * 60 * 1000)
+      },
+      {
+        date: base,
+        type: 'sunrise',
+        score: 77,
+        quality: 'good',
+        sunriseTime: new Date(base.getTime() + 6 * 60 * 60 * 1000),
+        sunsetTime: new Date(base.getTime() + 18 * 60 * 60 * 1000)
+      },
+      {
+        date: base,
+        type: 'sunset',
+        score: 45,
+        quality: 'good',
+        sunriseTime: new Date(base.getTime() + 6 * 60 * 60 * 1000),
+        sunsetTime: new Date(base.getTime() + 18 * 60 * 60 * 1000)
+      }
+    ];
+
+    predictionController.updateForecastTimeline(predictions);
+
+    const scores = [...document.querySelectorAll('#forecast-timeline .fcard-row-score')];
+    expect(scores[0].textContent).toContain('77');
+    expect(scores[0].classList.contains('quality-good')).toBe(true);
+    expect(scores[1].textContent).toContain('45');
+    expect(scores[1].classList.contains('quality-fair')).toBe(true);
+  });
+
+  test('评分仪表盘数字不再被全局强制成同一个颜色', () => {
+    const css = fs.readFileSync(path.join(process.cwd(), 'styles/main.css'), 'utf8');
+    const tokenBlock = css.slice(css.indexOf('High-impact token remapping for prediction surfaces.'), css.indexOf('.score-gauge-total'));
+
+    expect(tokenBlock).not.toContain('.score-gauge-number');
+    expect(tokenBlock).not.toContain('.score-gauge-grade');
+    expect(tokenBlock).not.toContain('color: var(--score-excellent-mid) !important');
   });
 });

@@ -237,12 +237,15 @@ async function generateThumbnail(srcPath, dstPath) {
  * @param {number}  [opts.lat]      纬度（EXIF 或手动指定）
  * @param {number}  [opts.lon]      经度（EXIF 或手动指定）
  * @param {string}  [opts.takenAt]  ISO8601 拍摄时间
+ * @param {string}  [opts.locationName] 拍摄地点名称
+ * @param {string}  [opts.uploaderName] 上传者展示名
+ * @param {string}  [opts.uploaderUserId] 上传者用户 ID（小程序登录用户）
  * @param {string}  [opts.desc]     照片描述
  * @param {string}  [opts.clientIp] 上传客户端 IP（用于每日限额，不落明文）
  * @returns {Promise<object>} 已保存的照片元数据
  * @throws {Error} 若 MIME 不合法或 buffer 超限则抛出
  */
-async function savePhoto({ buffer, mimeType, filename = '', lat, lon, takenAt, desc = '', clientIp = '' }) {
+async function savePhoto({ buffer, mimeType, filename = '', lat, lon, takenAt, locationName = '', uploaderName = '', uploaderUserId = '', desc = '', clientIp = '' }) {
   const now = new Date();
   const uploadStats = assertDailyUploadLimit(clientIp, now);
 
@@ -285,6 +288,9 @@ async function savePhoto({ buffer, mimeType, filename = '', lat, lon, takenAt, d
     lat:     Number.isFinite(lat)  ? lat  : null,
     lon:     Number.isFinite(lon)  ? lon  : null,
     takenAt: takenAt || null,
+    locationName: String(locationName || '').trim(),
+    uploaderName: String(uploaderName || '').trim(),
+    uploaderUserId: String(uploaderUserId || '').trim() || null,
     desc,
     uploadedAt: now.toISOString(),
     uploadDay: uploadStats?.uploadDay || getUploadDay(now),
@@ -306,6 +312,65 @@ async function savePhoto({ buffer, mimeType, filename = '', lat, lon, takenAt, d
 function getPhotos() {
   initDirs();
   return readIndex();
+}
+
+function normalizeOptionalText(value) {
+  return String(value ?? '').trim();
+}
+
+function normalizeOptionalCoordinate(value, min, max) {
+  if (value === '' || value === null || value === undefined) return null;
+  const num = Number(value);
+  return Number.isFinite(num) && num >= min && num <= max ? num : null;
+}
+
+function normalizeOptionalDate(value) {
+  const raw = String(value ?? '').trim();
+  if (!raw) return null;
+  const date = new Date(raw);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+/**
+ * 更新照片元数据，不改动原图/缩略图文件。
+ * @param {string} id
+ * @param {object} patch
+ * @returns {object|null} 更新后的照片，不存在返回 null
+ */
+function updatePhoto(id, patch = {}) {
+  initDirs();
+  const photos = readIndex();
+  const idx = photos.findIndex(p => p.id === id);
+  if (idx === -1) return null;
+
+  const current = photos[idx];
+  const next = { ...current };
+
+  if (Object.prototype.hasOwnProperty.call(patch, 'desc')) {
+    next.desc = normalizeOptionalText(patch.desc);
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, 'locationName')) {
+    next.locationName = normalizeOptionalText(patch.locationName);
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, 'uploaderName')) {
+    next.uploaderName = normalizeOptionalText(patch.uploaderName);
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, 'takenAt')) {
+    next.takenAt = normalizeOptionalDate(patch.takenAt);
+  }
+
+  const hasLat = Object.prototype.hasOwnProperty.call(patch, 'lat');
+  const hasLon = Object.prototype.hasOwnProperty.call(patch, 'lon');
+  if (hasLat || hasLon) {
+    const lat = hasLat ? normalizeOptionalCoordinate(patch.lat, -90, 90) : current.lat;
+    const lon = hasLon ? normalizeOptionalCoordinate(patch.lon, -180, 180) : current.lon;
+    next.lat = Number.isFinite(lat) && Number.isFinite(lon) ? lat : null;
+    next.lon = Number.isFinite(lat) && Number.isFinite(lon) ? lon : null;
+  }
+
+  photos[idx] = next;
+  writeIndex(photos);
+  return next;
 }
 
 /**
@@ -360,6 +425,7 @@ module.exports = {
   initDirs,
   savePhoto,
   getPhotos,
+  updatePhoto,
   deletePhoto,
   getPhotoById,
   generateThumbnail,

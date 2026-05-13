@@ -12,10 +12,41 @@ import OpenMeteoClientWeatherService from './OpenMeteoClientWeatherService.js';
 class WindyAPIService {
   constructor(_apiKey, options = {}) {
     this.proxyURL = options.proxyURL || 'http://localhost:3000'; // 后端代理URL
+    this.timeout = options.timeout || 15000;
+    this.featureFlagTimeout = options.featureFlagTimeout || 5000;
     this.clientWeatherService = new OpenMeteoClientWeatherService();
 
     console.log(`[WindyAPIService] 初始化后端代理模式`);
     console.log(`[WindyAPIService] 后端代理地址: ${this.proxyURL}`);
+  }
+
+  _createTimeoutError() {
+    const error = new Error('Request timeout, please retry');
+    error.code = 'WEATHER_UPSTREAM_TIMEOUT';
+    return error;
+  }
+
+  _isAbortError(error) {
+    return error?.name === 'AbortError' || error?.code === 20;
+  }
+
+  async _fetchWithTimeout(url, options = {}, timeoutMs = this.timeout) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      return await fetch(url, {
+        ...options,
+        signal: controller.signal
+      });
+    } catch (error) {
+      if (this._isAbortError(error)) {
+        throw this._createTimeoutError();
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 
   /**
@@ -95,7 +126,11 @@ class WindyAPIService {
       // 懒加载 feature flags（已缓存则直接用）
       if (this._windyEnabled === undefined) {
         try {
-          const featResp = await fetch(`${this.proxyURL}/api/config/features`);
+          const featResp = await this._fetchWithTimeout(
+            `${this.proxyURL}/api/config/features`,
+            {},
+            this.featureFlagTimeout
+          );
           const flags = featResp.ok ? await featResp.json() : {};
           this._windyEnabled = flags.windyEnabled === true;
         } catch {
@@ -109,7 +144,7 @@ class WindyAPIService {
     }
 
     try {
-      const response = await fetch(url, { headers });
+      const response = await this._fetchWithTimeout(url, { headers });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -133,6 +168,7 @@ class WindyAPIService {
       if (error.code ||
           error.message.includes('后端') ||
           error.message.includes('参数') ||
+          error.message.includes('超时') ||
           error.message.includes('频繁')) {
         throw error;
       }

@@ -40,6 +40,42 @@ apiAccess: 'الوصول إلى API'
     methodology: {
       title: 'كيف يتم حساب النقاط',
       intro: 'يجمع مؤشر السحب الحمراء أربعة عوامل رئيسية لتقدير ما إذا كانت مشاهدة الغروب تستحق العناء.',
+      versionLabel: 'إصدار الخوارزمية: 2026.05.13-formation-factors-v1',
+      versionDesc: 'يثبت هذا الإصدار التحليل في أربعة عوامل: حامل السحب، مسار الضوء، لون الهواء، والقيود. صيغة النقاط لم تتغير.',
+      changelogTitle: 'سجل تحديثات الإصدار',
+      changelogHint: 'توجد هنا تحديثات الخوارزمية خلال آخر ثلاثة أشهر؛ مرر لمراجعة السبب والأثر والتحقق',
+      changelog: {
+        latest: {
+          date: '2026-05-13',
+          title: 'تحليل أربعة عوامل v1',
+          summary: 'تم تجميع التحليل في حامل السحب، مسار الضوء، لون الهواء، والقيود لتقليل الملاحظات المتفرقة.',
+          validation: 'التحقق: الهباء، حجب السحب المنخفضة، الضباب الرمادي، السحب السميكة والمطر توضع في العامل الصحيح؛ صيغة النقاط لم تتغير.'
+        },
+        aerosol: {
+          date: '2026-05-12',
+          title: 'حامل الهباء الضعيف v1',
+          summary: 'عند قلة السحب، لا يساهم الضباب الخفيف المعتدل إلا إذا كان مسار الضوء نحو الشمس مفتوحًا.',
+          validation: 'التحقق: عينة بكين ترتفع إلى أوائل الثلاثينات، بينما السماء الصافية والضباب/الغبار الكثيف وحجب السحب المنخفضة تبقى منخفضة.'
+        },
+        openingCarrier: {
+          date: '2026-05-11',
+          title: 'حامل السحب مع فتحة ضوئية v1',
+          summary: 'عندما تقل السحب المنخفضة وتوجد سحب متوسطة/عالية قابلة للتلون مع فتحة نحو الشمس، لا يعاملها النموذج كغطاء سميك مغلق.',
+          validation: 'التحقق: عينة السحب المفتوحة تعود إلى نطاق قابل للمشاهدة؛ الضباب والغبار والغطاء السميك المغلق تبقى محافظة.'
+        },
+        lightPath: {
+          date: '2026-05-10',
+          title: 'مسار الضوء حسب السحب المنخفضة v3',
+          summary: 'يركز حجب الضوء الآن على ما إذا كانت السحب المنخفضة تغطي اتجاه الشمس، لتجنب خفض السماء ذات السحب المتوسطة/العالية خطأً.',
+          validation: 'التحقق: حالات السحب العالية لا تنخفض بسبب الغطاء الكلي فقط؛ السحب المنخفضة المهيمنة والمطر/الثلج وضعف الرؤية تبقى محافظة.'
+        },
+        upperCloudCarrier: {
+          date: '2026-05-10',
+          title: 'حماية حامل السحب المتوسطة والعالية v2',
+          summary: 'عندما تكون السحب العالية والمتوسطة كافية والسحب المنخفضة قليلة والهواء غير رمادي، يعاملها النظام كلوحة قابلة للتلون.',
+          validation: 'التحقق: عينة بكين تعود إلى نطاق 50-60؛ الهواء الرمادي أو الغبار الشديد أو ضعف السحب المتوسطة يبقى منخفضًا.'
+        }
+      },
       factors: {
         highMidCloudTitle: 'السحب المتوسطة/العالية (اللوحة)',
         highMidCloudDesc: 'تغطية متوازنة من السحب المتوسطة والعالية توفر طبقات برتقالية-حمراء أفضل؛ قليلة جدًا أو سميكة جدًا تضر بالتأثير.',
@@ -51,17 +87,25 @@ apiAccess: 'الوصول إلى API'
         visibilityDesc: 'الرؤية الأعلى تعني عادةً سماءً أكثر صفاءً وانتقالات ألوان أوضح عند الغروب.'
       },
       scoreGuideTitle: 'دليل النقاط',
-      scoreExcellent: 'ممتاز: >70 (يُنصح بالخروج)',
-      scoreGood: 'جيد: 40-70 (يستحق المشاهدة)',
-      scoreFair: 'مقبول: <40 (توقعات معتدلة)',
-      scoreExcellentRange: 'ممتاز',
-      scoreExcellentDesc: 'يُنصح بشدة بالخروج',
-      scoreGoodRange: 'جيد',
-      scoreGoodDesc: 'يمكن المشاهدة، ظروف جيدة',
-      scoreFairRange: 'مقبول',
-      scoreFairDesc: 'توقعات معتدلة',
-      scorePoorRange: 'ضعيف',
-      scorePoorDesc: 'غير موصى به',
+      scoreExcellent: 'نادر: 85-100 (ظروف قوية جدًا)',
+      scoreGood: 'قوي: 70-84 (يستحق المتابعة)',
+      scoreFair: 'راقب: 40-69 (تحقق من السماء الفعلية)',
+      scoreExcellentRange: 'نادر',
+      scoreExcellentDetail: '85-100 نقطة',
+      scoreExcellentDesc: 'ظروف نادرة وقوية، تستحق الأولوية',
+      scoreGoodRange: 'قوي',
+      scoreGoodDetail: '70-84 نقطة',
+      scoreGoodDesc: 'أفضل بوضوح من المعتاد ويستحق المتابعة',
+      scoreFairRange: 'راقب',
+      scoreFairDetail: '40-69 نقطة',
+      scoreFairDesc: 'قد تظهر ألوان، تحقق من الفتحات المحلية والسماء الفعلية',
+      scorePoorRange: 'منخفض',
+      scorePoorDetail: '<40 نقطة',
+      scorePoorDesc: 'Fire-cloud conditions are weak; do not plan a dedicated chase from this score alone, and judge any ordinary sunset by live weather and visibility',
+      scoreSourceTitle: 'لماذا قد يختلف لون الخريطة عن نقاط تفاصيل المكان',
+      scoreSourceMap: 'ألوان الخريطة تعرض اتجاهًا إقليميًا لمعرفة المنطقة الواعدة بسرعة. ولإبقاء الخريطة متصلة، يتم الحساب على شبكة ثابتة ثم تنعيم القيم بينها.',
+      scoreSourcePoint: 'نقاط تفاصيل المكان تخص الموضع الذي اخترته، وتعيد حساب الوقت المحلي والسحب وجودة الهواء ومسار الضوء نحو الشمس لذلك الإحداثي.',
+      scoreSourceWhy: 'استخدم الخريطة أولًا لاختيار الاتجاه، ثم تفاصيل المكان لتقرر الخروج. إذا كان الفرق كبيرًا، فاعتمد على نقاط تفاصيل المكان.',
       sections: {
         cloudStructure: {
           title: '1. بنية طبقات السحب',
@@ -242,14 +286,14 @@ apiAccess: 'الوصول إلى API'
           "baseScore": "Base score",
           "rendering": "Rendering",
           "final": "Final",
-          "hardCap": "Hard cap",
-          "hazeCap": "Haze cap",
-          "thickCloudCap": "Thick-cloud cap",
-          "cloudThicknessModifier": "Cloud-thickness modifier",
-          "geometryCap": "Geometry cap",
+          "hardCap": "Weather limit",
+          "hazeCap": "Haze impact",
+          "thickCloudCap": "Thick cloud",
+          "cloudThicknessModifier": "Cloud layer effect",
+          "geometryCap": "Sun angle",
           "occlusion": "Occlusion",
           "carrierFloor": "Carrier floor",
-          "postRainCap": "Post-rain cap",
+          "postRainCap": "Post-rain haze",
           "displayCalibration": "Display calibration"
         },
         "details": {
@@ -257,45 +301,85 @@ apiAccess: 'الوصول إلى API'
           "cloudPenalty": "low cloud ×{{low}}, overcast ×{{overcast}}",
           "lightPath": "sunlight reaches the cloud layer",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
-          "afterAdjustments": "after all caps and floors",
+          "afterAdjustments": "after weather and visibility adjustments",
           "finalDisplayed": "final displayed result",
           "thickCloudCap": "thick high cloud reduces usable color rendering",
-          "cloudThicknessModifier": "when mid/high-cloud carriers are clear, thickness only softens the canvas and does not add another hard cap",
+          "cloudThicknessModifier": "mid/high clouds can still catch sunset light, so cloud thickness has only a mild impact here",
           "geometryCap": "sun/cloud geometry is not feasible",
           "occlusion": "distant obstruction reduces the score",
           "carrierFloor": "clear high-cloud carrier prevents over-penalty",
-          "directionalSamples": "solar-azimuth samples at 15/30/50/100km are included",
+          "directionalSamples": "nearby clouds along the sun direction are included",
+          "lightPathLowCloudBlock": "low clouds block sunlight from reaching the colorable clouds",
+          "lightPathRain": "rain weakens direct sunset light",
           "postRainCap": "post-rain moisture or haze turns the glow into a gray curtain",
           "displayCalibration": "final display score is aligned with the prediction status band"
         },
         "reasons": {
-          "precipitationCap45": "rain with low clouds capped the score at 45",
-          "overcastCap35": "low-cloud overcast capped the score at 35",
-          "overcastFogCap15": "overcast sky plus visibility ≤5km capped the score at 15",
-          "rainyMidCloudOvercastCap35": "rainy gray mid-cloud overcast capped the score at 35",
-          "extremeDustHazeCap28": "severe dust/haze capped the score at 28",
-          "severeHazeCap35": "heavy haze capped the score at 35",
-          "moderateHazeCap45": "moderate haze capped the score at 45",
-          "denseCarrierCanvasOnly": "dense upper-cloud carrier: canvas-only thickness modifier applied",
-          "adjustmentApplied": "cap/floor adjustment applied",
+          "precipitationCap45": "rain plus low clouds keeps the score low",
+          "overcastCap35": "low clouds block the sunlight path",
+          "overcastFogCap15": "low cloud and low visibility make the sky too gray",
+          "rainyMidCloudOvercastCap35": "post-rain moisture makes the glow hard to show",
+          "extremeDustHazeCap28": "heavy dust or haze suppresses the glow",
+          "severeHazeCap35": "heavy haze makes colors hard to show",
+          "moderateHazeCap45": "haze weakens orange-red color",
+          "denseCarrierCanvasOnly": "mid/high clouds can still catch sunset light",
+          "adjustmentApplied": "score adjusted for limiting conditions",
           "displayCalibration": "final display score is aligned with the prediction status band",
-          "lightPathStatusCap60": "light path is only {{light}}, so the result is capped to the light-glow band around 60",
-          "canvasStatusCap40": "cloud carrier is only {{canvas}}, so the result is capped to the no-fire-cloud band below 40"
+          "lightPathStatusCap60": "light path is {{light}}, so the result is shown as a light-glow chance",
+          "canvasStatusCap40": "cloud carrier is {{canvas}}, so fire-cloud chance is weak"
         }
       }
     },
 "formationAnalysis": {
       "title": "Fire cloud formation analysis",
       "groups": { "positive": "Favorable", "neutral": "Neutral", "warning": "Watch-outs" },
+      "factors": {
+        "carrier": {
+          "title": "Cloud carrier",
+          "status": { "good": "Good", "fair": "Fair", "weak": "Weak" },
+          "desc": {
+            "good": "Mid/high clouds can catch sunset light and act as today's main color canvas.",
+            "fair": "Some colorable cloud layers exist, but their area or height is not ideal.",
+            "weak": "Suitable mid/high clouds are missing, so broad fire clouds are unlikely."
+          }
+        },
+        "lightPath": {
+          "title": "Light path",
+          "status": { "good": "Good", "fair": "Fair", "weak": "Weak" },
+          "desc": {
+            "good": "The sun direction is relatively open, so light can reach the cloud base.",
+            "fair": "There is some obstruction toward the sun, so color may stay local.",
+            "weak": "Low clouds or a cloud wall block the light path, making it hard for light to reach the clouds."
+          }
+        },
+        "rendering": {
+          "title": "Air rendering",
+          "status": { "good": "Good", "fair": "Fair", "weak": "Weak" },
+          "desc": {
+            "good": "Moderate particles and moisture make warm red-orange color easier to show.",
+            "fair": "Air conditions are ordinary; color mainly depends on clouds and light path.",
+            "weak": "Gray air or excessive particles can make color darker and flatter."
+          }
+        },
+        "limits": {
+          "title": "Limits",
+          "status": { "good": "None obvious", "fair": "Slight", "weak": "Obvious" },
+          "desc": {
+            "good": "No obvious suppressing condition is present.",
+            "fair": "Minor unfavorable factors may reduce duration or color intensity.",
+            "weak": "Rain, thick cloud, low-cloud blockage, or gray haze can suppress the overall result."
+          }
+        }
+      },
       "high": { "abundant": "Abundant high clouds ({{value}}%)", "abundantDesc": "Strong color base", "sufficient": "Sufficient high clouds ({{value}}%)", "sufficientDesc": "Good color carrier", "moderate": "Moderate high clouds ({{value}}%)", "moderateDesc": "Possible, but colors may be lighter", "few": "Too few high clouds ({{value}}%)", "fewDesc": "Main color carrier is lacking" },
       "mid": { "balanced": "Balanced mid clouds ({{value}}%)", "balancedDesc": "Adds color spread and depth", "few": "Few mid clouds ({{value}}%)", "fewHighCloudDesc": "High clouds can still carry color", "fewDesc": "Layering may be limited", "thick": "Thick mid clouds ({{value}}%)", "thickDesc": "May reduce clarity" },
       "low": { "few": "Few low clouds ({{value}}%)", "fewDesc": "View should stay open", "some": "Some low clouds ({{value}}%)", "someDesc": "May block horizon color", "thick": "Thick low clouds ({{value}}%)", "thickDesc": "High blocking risk" },
       "visibility": { "good": "Good visibility ({{value}}km)", "goodDesc": "Clear air, good distance", "moderate": "Moderate visibility ({{value}}km)", "moderateDesc": "Saturation may drop", "low": "Low visibility ({{value}}km)", "lowDesc": "Haze or moisture may affect the view" },
       "humidity": { "moderate": "Moderate humidity ({{value}}%)", "moderateDesc": "Helps light scattering", "high": "High humidity ({{value}}%)", "highDesc": "May reduce transparency", "low": "Low humidity ({{value}}%)", "lowDesc": "Dry air may lighten colors" },
-      "lightPath": { "opening": "Opening toward the sun", "openingDesc": "Backend samples 15/30/50/100km along the solar azimuth; the low/mid-cloud corridor is relatively open", "wall": "Cloud wall toward the sun", "wallDesc": "Low or mid clouds along the solar direction suppress the main score" },
-      "postRain": { "clear": "Clear post-rain air", "clearDesc": "Rain in the last 6h is kept as a bonus because visibility and particles are acceptable", "gray": "Post-rain gray-curtain risk", "grayDesc": "Moisture, particles, or weak direct light after rain cap the score conservatively" },
+      "lightPath": { "opening": "Opening toward the sun", "openingDesc": "Backend samples 15/30/50/100km along the solar azimuth; the low/mid-cloud corridor is relatively open", "wall": "Cloud wall toward the sun", "wallDesc": "Low or mid clouds along the solar direction suppress the main score" , "lowCloudBlock": "Low clouds block sunlight", "lowCloudBlockDesc": "Low clouds sit in the sun direction, so sunlight struggles to reach mid/high clouds" },
+      "postRain": { "clear": "Clear post-rain air", "clearDesc": "Rain in the last 6h is kept as a bonus because visibility and particles are acceptable", "gray": "Post-rain gray-curtain risk", "grayDesc": "Moisture, particles, or weak direct light after rain can make the glow gray" },
       "aerosol": { "moderate": "Moderate aerosol (AOD {{value}})", "moderateDesc": "Boosts orange-red scattering", "high": "High aerosol (AOD {{value}})", "highDesc": "May look hazy or dull", "low": "Very clear air (AOD {{value}})", "lowDesc": "Colors may be lighter" },
-      "carrier": { "strong": "Clear high-cloud carrier", "strongDesc": "High clouds are sufficient, low clouds are scarce, and air is clear enough for a medium/high score base", "dense": "Dense mid/high-cloud carrier", "denseDesc": "High and mid clouds both provide canvas; thickness only softens the canvas and does not add a duplicate cap" },
+      "carrier": { "strong": "Clear high-cloud carrier", "strongDesc": "High clouds are sufficient, low clouds are scarce, and air is clear enough for a medium/high score base", "dense": "Dense mid/high-cloud carrier", "denseDesc": "High and mid clouds provide a steadier color canvas" },
 
       "layer": { "single": "Single cloud layer", "singleDesc": "High clouds can still color well" }
     },
@@ -509,11 +593,11 @@ apiAccess: 'الوصول إلى API'
     proxyUrl: 'رابط خادم الوكيل',
     proxyUrlPlaceholder: 'http://localhost:3000',
     proxyUrlHint: 'عنوان رابط خادم الوكيل الخلفي',
-    weatherFetchMode: 'وضع جلب بيانات الطقس',
-    weatherFetchModeHint: 'الوضع الافتراضي حلقة مغلقة عبر الخلفية؛ إذا تعرّضت الخلفية للتقييد أو انتهاء المهلة، يمكن للمتصفح جلب طقس عام ثم إرساله للخلفية لحساب الدرجة',
-    weatherFetchModeBackend: 'حلقة خلفية مغلقة (الافتراضي الموصى به)',
-    weatherFetchModeClientFallback: 'الخلفية أولاً، والمتصفح كخطة طوارئ',
-    weatherFetchModeClient: 'جلب الطقس عبر المتصفح (تصحيح/طوارئ)',
+    weatherFetchMode: 'وضع حساب الطقس',
+    weatherFetchModeHint: 'الوضع التكيفي هو الافتراضي: يستخدم الخادم الخلفي أولاً، ثم ينتقل إلى الواجهة الأمامية إذا حدث تقييد أو انتهاء مهلة.',
+    weatherFetchModeBackend: 'وضع الخادم الخلفي',
+    weatherFetchModeClientFallback: 'الوضع التكيفي (افتراضي)',
+    weatherFetchModeClient: 'وضع الواجهة الأمامية',
     // الإشعارات والتنبيهات
     notificationAndAlerts: 'الإشعارات والتنبيهات',
     enableSunsetNotification: 'تفعيل إشعارات الغروب',

@@ -10,20 +10,27 @@
 }
 
 .admin-header {
-  position: sticky;
-  top: var(--spacing-md);
-  z-index: 100;
+  position: relative;
+  z-index: 1000;
+  overflow: visible;
+  width: calc(100% - (var(--spacing-md) + var(--spacing-md)));
   max-width: 1400px;
-  margin: var(--spacing-lg) auto 0;
+  margin: 0 auto 16px;
+  padding: var(--spacing-lg);
   backdrop-filter: blur(var(--glass-blur-heavy));
   -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
-  background: var(--header-surface);
+  background: linear-gradient(120deg, var(--header-surface) 0%, rgba(255, 237, 205, 0.72) 100%);
+  color: var(--header-title-color);
   border: 1px solid var(--header-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
 }
 
 .admin-logo {
+  text-decoration: none;
+}
+
+.admin-home-link {
   text-decoration: none;
 }
 
@@ -38,6 +45,12 @@
   color: var(--theme-text-muted, var(--color-text-light));
   font-size: 0.78rem;
   font-weight: 800;
+}
+
+@media (max-width: 768px) {
+  .admin-logo-badge {
+    display: none;
+  }
 }
 
 /* 主体布局 */
@@ -302,7 +315,8 @@
 }
 
 .queue-head,
-.queue-meta {
+.queue-meta,
+.queue-cache {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -329,6 +343,14 @@
   margin-top: 8px;
   color: var(--theme-text-muted, var(--color-text-light));
   font-size: 0.82rem;
+}
+
+.queue-cache {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--theme-card-border, var(--color-border)) 70%, transparent);
+  color: var(--theme-text-muted, var(--color-text-light));
+  font-size: 0.78rem;
 }
 
 .queue-error {
@@ -465,6 +487,23 @@ body.theme-dark .admin-table tr:hover td {
 
 .form-row.two-inputs input {
   flex: 1;
+}
+
+.photo-parse-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.photo-parse-actions .btn {
+  min-width: 104px;
+}
+
+.form-hint {
+  margin: 0;
+  color: var(--theme-text-muted, var(--color-text-light));
+  font-size: 0.86rem;
+  line-height: 1.5;
 }
 
 .admin-inline-switch {
@@ -642,6 +681,13 @@ body.theme-dark .admin-table tr:hover td {
   font-size: 0.72rem;
   color: var(--color-text-light);
   margin-bottom: 8px;
+}
+
+.photo-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 /* 按钮 */

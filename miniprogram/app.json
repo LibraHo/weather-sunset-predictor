@@ -1,0 +1,28 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/methodology/index",
+    "pages/map/index",
+    "pages/result/index",
+    "pages/gallery/index",
+    "pages/upload/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "霞客",
+    "navigationBarBackgroundColor": "#0a0f1e",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#0a0f1e",
+    "backgroundTextStyle": "light"
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于查询当前位置的朝霞/晚霞预测，并辅助填写照片投稿地点。"
+    }
+  },
+  "requiredPrivateInfos": [
+    "getLocation"
+  ],
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents",
+  "usingComponents": {}
+}

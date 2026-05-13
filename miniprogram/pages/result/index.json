@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "霞光分数",
+  "usingComponents": {
+    "score-hero": "/components/score-hero/index",
+    "metric-grid": "/components/metric-grid/index"
+  }
+}

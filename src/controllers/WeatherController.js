@@ -282,8 +282,7 @@ class WeatherController {
       }
     }
 
-    // 获取当前天气（第一个数据点）
-    const currentWeather = weatherData[0];
+    const currentWeather = this._getCurrentWeatherPoint(weatherData);
 
     // 更新位置
     const locationEl = document.getElementById('weather-location');
@@ -414,6 +413,35 @@ class WeatherController {
    */
   getCurrentWeatherData() {
     return this.currentWeatherData;
+  }
+
+  _getCurrentWeatherPoint(weatherData, now = Date.now()) {
+    if (!Array.isArray(weatherData) || weatherData.length === 0) {
+      return null;
+    }
+
+    const nowMs = Number(now);
+    if (!Number.isFinite(nowMs)) {
+      return weatherData[0];
+    }
+
+    return weatherData.reduce((best, item) => {
+      const timestamp = Number(item?.timestamp);
+      if (!Number.isFinite(timestamp)) {
+        return best;
+      }
+
+      const bestTimestamp = Number(best?.timestamp);
+      if (!Number.isFinite(bestTimestamp)) {
+        return item;
+      }
+
+      const diff = Math.abs(timestamp - nowMs);
+      const bestDiff = Math.abs(bestTimestamp - nowMs);
+      if (diff < bestDiff) return item;
+      if (diff === bestDiff && timestamp <= nowMs && bestTimestamp > nowMs) return item;
+      return best;
+    }, weatherData[0]);
   }
 
   /**
@@ -1337,7 +1365,12 @@ class WeatherController {
       container.innerHTML = `
         <div class="radar-compass-loading" role="status" aria-live="polite">
           <div class="spinner radar-compass-loading-spinner" aria-hidden="true"></div>
-          <p>${loadingText}</p>
+          <div class="radar-compass-loading-copy">
+            <p>${loadingText}</p>
+            <div class="loading-progress radar-compass-loading-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="64">
+              <div class="loading-progress-fill radar-compass-progress-fill"></div>
+            </div>
+          </div>
         </div>
       `;
     }
@@ -1546,7 +1579,7 @@ class WeatherController {
       async (loc) => {
         // 使用不修改全局状态的私有方法，避免周边请求覆盖当前位置/天气数据
         const weatherData = await this._fetchWeatherWithoutMutation(loc);
-        return weatherData[0]; // 返回当前天气数据
+        return this._getCurrentWeatherPoint(weatherData); // 返回当前天气数据
       },
       (weatherData) => {
         if (!weatherData) return null;
@@ -1947,22 +1980,16 @@ class WeatherController {
     const tsEl = document.getElementById('china-spots-timestamp');
     if (!tsEl) return;
 
-    // 以所有时段数据都抓取完成后的最新时间为准
-    const periods = ['sunrise', 'sunset'];
-    let latestTime = null;
-    for (const p of periods) {
-      const overlay = this.chinaSpotsOverlayManager?.getOverlay(p);
-      const t = overlay?.getUpdatedAt?.() || null;
-      if (t) {
-        const d = new Date(t);
-        if (!latestTime || d > latestTime) latestTime = d;
-      }
-    }
+    const activePeriod = this.chinaSpotsOverlayManager?.getActivePeriod?.() || this.currentOverlayType || 'sunset';
+    const overlay = this.chinaSpotsOverlayManager?.getOverlay(activePeriod);
+    const updatedAt = overlay?.getUpdatedAt?.() || null;
+    const updatedTime = updatedAt ? new Date(updatedAt) : null;
+    const hasValidTime = updatedTime && !Number.isNaN(updatedTime.getTime());
 
     const timeLocale = this.i18n?.getLanguage?.() || 'zh-CN';
-    tsEl.textContent = latestTime
+    tsEl.textContent = hasValidTime
       ? this._formatTemplate(this._t('weatherMap.updatedAt', '更新于 {{time}}'), {
-          time: latestTime.toLocaleTimeString(timeLocale, { hour: '2-digit', minute: '2-digit' })
+          time: updatedTime.toLocaleTimeString(timeLocale, { hour: '2-digit', minute: '2-digit' })
         })
       : '';
   }

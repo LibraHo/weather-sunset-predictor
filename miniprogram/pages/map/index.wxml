@@ -1,0 +1,60 @@
+<view class="container firecloud-map-page">
+  <view class="map-hero xiake-card xiake-bg-sunset-band">
+    <view class="eyebrow warm-accent">Firecloud Map</view>
+    <view class="headline">火烧云地图</view>
+    <view class="caption">和网站一样先看区域趋势，再点进具体地点查详情分。</view>
+  </view>
+
+  <view class="map-tabs xiake-card">
+    <view class="segment {{period === 'sunrise' ? 'active' : ''}}" data-value="sunrise" bindtap="selectPeriod">朝霞</view>
+    <view class="segment {{period === 'sunset' ? 'active' : ''}}" data-value="sunset" bindtap="selectPeriod">晚霞</view>
+  </view>
+
+  <view class="map-card xiake-card">
+    <view class="map-status">
+      <view>
+        <view class="status-title">{{periodLabel}}趋势点</view>
+        <view class="status-copy">{{updatedAtText}}</view>
+      </view>
+      <view class="spot-count">{{spots.length}}</view>
+    </view>
+
+    <view class="native-map-shell">
+      <map
+        class="native-map"
+        latitude="{{mapCenter.latitude}}"
+        longitude="{{mapCenter.longitude}}"
+        scale="{{mapScale}}"
+        markers="{{markers}}"
+        bindmarkertap="focusSpot"
+      />
+      <view class="map-loading" wx:if="{{loading}}">
+        <view class="loading-copy">正在读取{{periodLabel}}地图</view>
+        <view class="loading-track"><view class="loading-fill"></view></view>
+      </view>
+      <view class="map-empty" wx:elif="{{!spots.length && !errorMessage}}">地图数据暂未就绪</view>
+    </view>
+
+    <view class="error-card" wx:if="{{errorMessage}}">{{errorMessage}}</view>
+
+    <view class="active-spot" wx:if="{{activeSpot}}">
+      <view class="active-score tone-{{activeSpot.level}}">{{activeSpot.scoreText}}</view>
+      <view class="active-body">
+        <view class="active-name">{{activeSpot.name}}</view>
+        <view class="active-copy">{{periodLabel}} {{activeSpot.quality}} · {{activeSpot.lat}}, {{activeSpot.lon}}</view>
+      </view>
+      <button class="ghost-button detail-button" bindtap="openSpotPrediction">查详情分</button>
+    </view>
+  </view>
+
+  <view class="spot-list xiake-card" wx:if="{{spots.length}}">
+    <view class="section-title">高分点</view>
+    <view class="spot-row" wx:for="{{topSpots}}" wx:key="id" data-id="{{item.id}}" bindtap="focusSpot">
+      <view class="row-score tone-{{item.level}}">{{item.scoreText}}</view>
+      <view class="row-main">
+        <view class="row-name">{{item.name}}</view>
+        <view class="row-copy">{{item.quality}} · {{item.lat}}, {{item.lon}}</view>
+      </view>
+    </view>
+  </view>
+</view>

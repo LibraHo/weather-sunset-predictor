@@ -1,0 +1,76 @@
+<view class="container home-page">
+  <view class="app-header xiake-card">
+    <view class="app-logo">
+      <view class="app-logo-mark">
+        <view class="logo-arc"></view>
+        <view class="logo-line logo-line-1"></view>
+        <view class="logo-line logo-line-2"></view>
+        <view class="logo-line logo-line-3"></view>
+      </view>
+      <view class="app-logo-text">霞客</view>
+    </view>
+    <view class="home-view-menu">
+      <button class="menu-button" bindtap="toggleHomeMenu">☰</button>
+      <view class="home-view-menu-dropdown" wx:if="{{homeMenuOpen}}">
+        <view class="home-view-option active" data-target="forecast" bindtap="navigateFeature">预测功能</view>
+        <view class="home-view-option" data-target="methodology" bindtap="navigateFeature">火烧云计算方法</view>
+        <view class="home-view-option" data-target="map" bindtap="navigateFeature">火烧云地图</view>
+        <view class="home-view-option" data-target="gallery" bindtap="navigateFeature">分享地图</view>
+        <view class="home-view-option" data-target="upload" bindtap="navigateFeature">上传照片</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="hero-copy">先看火烧云条件，再安排观赏。</view>
+
+  <location-search value="{{locationText}}" locating="{{locating}}" bind:change="onLocationChange" bind:confirm="onSearch" bind:locate="onUseCurrentLocation" />
+
+  <view class="control-card xiake-card">
+    <view class="section-title">预测类型</view>
+    <view class="segmented">
+      <view class="segment {{period === 'sunrise' ? 'active' : ''}}" data-value="sunrise" bindtap="selectPeriod">朝霞</view>
+      <view class="segment {{period === 'sunset' ? 'active' : ''}}" data-value="sunset" bindtap="selectPeriod">晚霞</view>
+    </view>
+
+    <view class="section-title date-title">日期</view>
+    <view class="segmented">
+      <view class="segment {{day === 'today' ? 'active' : ''}}" data-value="today" bindtap="selectDay">今日</view>
+      <view class="segment {{day === 'tomorrow' ? 'active' : ''}}" data-value="tomorrow" bindtap="selectDay">明日</view>
+    </view>
+  </view>
+
+  <view class="error-card" wx:if="{{errorMessage}}">{{errorMessage}}</view>
+
+  <button class="primary-button query-button" loading="{{loading}}" disabled="{{loading}}" bindtap="onSearch">
+    {{loading ? '正在查分…' : '查询霞光分数'}}
+  </button>
+
+  <view class="home-section-head">
+    <view class="section-title">个人入口</view>
+    <view class="section-hint">像网站首页一样先保留最近动作</view>
+  </view>
+
+  <view class="placeholder-grid">
+    <view class="mini-card xiake-card">
+      <view class="mini-head">最近查询</view>
+      <block wx:if="{{recentQueries.length}}">
+        <view class="query-item" wx:for="{{recentQueries}}" wx:key="savedAt" data-index="{{index}}" data-location="{{item.locationName}}" bindtap="useHistory">
+          <text>{{item.locationName}}</text>
+          <text class="subtle-text">{{item.periodLabel}} · {{item.dayLabel}}</text>
+        </view>
+      </block>
+      <view class="empty" wx:else>查过的地点会放在这里。</view>
+    </view>
+
+    <view class="mini-card xiake-card">
+      <view class="mini-head">收藏地点</view>
+      <block wx:if="{{favorites.length}}">
+        <view class="query-item" wx:for="{{favorites}}" wx:key="name" data-location="{{item.name}}" data-lat="{{item.lat}}" data-lon="{{item.lon}}" bindtap="useHistory">
+          <text>{{item.name}}</text>
+          <text class="subtle-text">一键复查</text>
+        </view>
+      </block>
+      <view class="empty" wx:else>常去的机位后续可收藏。</view>
+    </view>
+  </view>
+</view>

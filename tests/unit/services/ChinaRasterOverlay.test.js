@@ -8,7 +8,9 @@
  *  - 朝霞/晚霞视觉区分（颜色差异验证）
  */
 
+import { jest } from '@jest/globals';
 import {
+  default as ChinaRasterOverlay,
   scoreToRGBA,
   resolutionForZoom,
   RASTER_MIN_SCORE,
@@ -233,6 +235,36 @@ describe('getPaletteForPeriod', () => {
   test('undefined 默认返回 FIRECLOUD_PALETTE', () => {
     const p = getPaletteForPeriod(undefined);
     expect(p).toBe(FIRECLOUD_PALETTE);
+  });
+});
+
+// ─── 数据时间 ────────────────────────────────────────────────────────────────
+
+describe('ChinaRasterOverlay updatedAt', () => {
+  test('loadAndRender 显示数据更新时间而不是接口响应生成时间', async () => {
+    const overlay = new ChinaRasterOverlay();
+    overlay._map = { getZoom: () => 5 };
+    overlay._buildOffscreen = jest.fn();
+    overlay.show = jest.fn();
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        updatedAt: '2026-05-13T01:00:00.000Z',
+        sourceUpdatedAt: '2026-05-13T01:00:00.000Z',
+        generatedAt: '2026-05-13T06:18:00.000Z',
+        width: 1,
+        height: 1,
+        bbox: { west: 72, east: 73, south: 18, north: 19 },
+        noData: -1,
+        values: [50]
+      })
+    });
+
+    await overlay.loadAndRender('sunset');
+
+    expect(overlay.getUpdatedAt()).toBe('2026-05-13T01:00:00.000Z');
+    expect(overlay.getUpdatedAt()).not.toBe('2026-05-13T06:18:00.000Z');
   });
 });
 

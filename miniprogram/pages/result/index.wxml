@@ -1,0 +1,99 @@
+<view class="container result-page">
+  <block wx:if="{{hasPrediction}}">
+    <score-hero score="{{prediction.score}}" grade="{{prediction.grade}}" location-name="{{prediction.locationName}}" period="{{prediction.period}}" best-window="{{prediction.bestWindow}}" explanation="{{prediction.explanation}}" />
+
+    <view class="meta xiake-card">
+      <view class="meta-item">
+        <text class="label">日期</text>
+        <text class="value">{{prediction.dayLabel}}</text>
+      </view>
+      <view class="meta-item">
+        <text class="label">类型</text>
+        <text class="value">{{prediction.periodLabel}}</text>
+      </view>
+    </view>
+
+    <view class="action-row">
+      <button class="ghost-button action-button" bindtap="toggleFavorite">{{isFavorite ? '取消收藏' : '收藏地点'}}</button>
+      <button class="ghost-button action-button" open-type="share">分享评分</button>
+    </view>
+
+    <view class="result-view-switch xiake-card">
+      <view class="switch-title">页面切换</view>
+      <view class="switch-options">
+        <view class="switch-option" data-target="methodology" bindtap="navigateExperience">计算方法</view>
+        <view class="switch-option" data-target="map" bindtap="navigateExperience">火烧云地图</view>
+        <view class="switch-option" data-target="gallery" bindtap="navigateExperience">分享地图</view>
+        <view class="switch-option" data-target="upload" bindtap="navigateExperience">上传照片</view>
+      </view>
+    </view>
+
+    <view class="section-head">关键天气因子</view>
+    <metric-grid metrics="{{metrics}}" />
+
+    <view class="section-head">火烧云文字分析</view>
+    <view class="analysis-card xiake-card">
+      <view class="analysis-lead">{{prediction.explanation}}</view>
+      <view class="analysis-grid">
+        <view class="analysis-item tone-{{item.tone}}" wx:for="{{analysisItems}}" wx:key="key">
+          <view class="analysis-topline">
+            <text class="analysis-title">{{item.title}}</text>
+            <text class="analysis-value">{{item.value}}</text>
+          </view>
+          <view class="analysis-detail">{{item.detail}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-head">周边云况雷达</view>
+    <view class="radar-card xiake-card">
+      <view wx:if="{{radar.loading}}" class="panel-loading">
+        <view class="loading-copy">正在读取周边 8 方向云况</view>
+        <view class="loading-track"><view class="loading-fill"></view></view>
+      </view>
+      <view wx:elif="{{radar.error}}" class="panel-error">{{radar.error}}</view>
+      <view wx:elif="{{radar.hasData}}" class="radar-grid">
+        <view class="radar-cell tone-{{item.level}}" wx:for="{{radar.points}}" wx:key="key">
+          <view class="radar-name">{{item.name}}</view>
+          <view class="radar-score">{{item.scoreText}}</view>
+          <view class="radar-cloud">{{item.cloudText}}</view>
+        </view>
+      </view>
+      <view wx:else class="panel-empty">这个地点暂时没有周边云况数据。</view>
+    </view>
+
+    <view class="section-head">3 天预测</view>
+    <view class="three-day-card xiake-card">
+      <view wx:if="{{threeDayGlow.loading}}" class="panel-loading">
+        <view class="loading-copy">正在计算未来 3 天朝霞 / 晚霞</view>
+        <view class="loading-track"><view class="loading-fill"></view></view>
+      </view>
+      <view wx:elif="{{threeDayGlow.error}}" class="panel-error">{{threeDayGlow.error}}</view>
+      <view wx:elif="{{threeDayGlow.hasData}}" class="three-day-list">
+        <view class="day-row" wx:for="{{threeDayGlow.days}}" wx:key="key">
+          <view class="day-meta">
+            <view class="day-label">{{item.label}}</view>
+            <view class="day-date">{{item.date}}</view>
+          </view>
+          <view class="day-score tone-{{item.sunriseLevel}}">
+            <text class="day-score-label">朝霞</text>
+            <text class="day-score-value">{{item.sunriseScoreText}}</text>
+          </view>
+          <view class="day-score tone-{{item.sunsetLevel}}">
+            <text class="day-score-label">晚霞</text>
+            <text class="day-score-value">{{item.sunsetScoreText}}</text>
+          </view>
+        </view>
+      </view>
+      <view wx:else class="panel-empty">这个地点暂时没有三天预测数据。</view>
+    </view>
+
+    <button class="ghost-button back-button" bindtap="goHome">重新查分</button>
+  </block>
+
+  <view class="empty-state xiake-card" wx:else>
+    <view class="empty-title">还没有可展示的分数</view>
+    <view class="empty-copy">请先回首页选择地点和日期，完成一次查分。</view>
+    <button class="primary-button empty-button" bindtap="goHome">返回首页</button>
+  </view>
+</view>

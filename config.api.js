@@ -15,7 +15,7 @@ const API_CONFIG = {
   mode: 'proxy',
 
   // 天气数据出口策略：backend=后端闭环；client-fallback=后端异常时浏览器取数再交后端算分；client=强制浏览器取数（调试/应急）
-  weatherFetchMode: 'backend',
+  weatherFetchMode: 'client-fallback',
 
   // 后端服务器配置（当 mode='proxy' 时使用）
   proxy: {

@@ -11,6 +11,7 @@ let currentLogTab = 'grid';
 let activeAdminView = 'dashboard';
 let refreshTimer = null;
 let slowRefreshTimer = null;
+let photoCache = [];
 
 const ADMIN_VIEWS = new Set(['dashboard', 'ops', 'logs', 'schedule', 'agent', 'photos']);
 
@@ -19,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   initAdminNavigation();
   initUploadForm();
+  initPhotoEditForm();
   initTokenForm();
   initTokenEditForm();
   loadActiveView();
@@ -431,6 +433,9 @@ function renderQueueStatus(items) {
     const title = item.period === 'sunrise' ? '朝霞' : '晚霞';
     const state = item.running ? '运行中' : '空闲';
     const eta = item.etaSeconds == null ? '-' : `${Math.ceil(Number(item.etaSeconds) / 60)} 分钟`;
+    const cacheCount = Number(item.cacheCount || 0);
+    const cacheTime = formatPhotoDateTime(item.cacheUpdatedAt) || '--';
+    const cacheState = item.cacheStale === true ? '已过期' : (item.cacheStale === false ? '可用' : '无缓存');
     const error = item.lastError ? `<div class="queue-error">${escapeHtml(item.lastError)}</div>` : '';
     return `<div class="queue-card">
       <div class="queue-head"><strong>${title}</strong><span class="${item.running ? 'status-ok' : ''}">${state}</span></div>
@@ -440,6 +445,11 @@ function renderQueueStatus(items) {
         <span>成功 ${Number(item.successPoints || 0)}</span>
         <span>失败 ${Number(item.errorPoints || 0)}</span>
         <span>ETA ${eta}</span>
+      </div>
+      <div class="queue-cache">
+        <span>缓存 ${cacheCount || '-'}</span>
+        <span>更新 ${escapeHtml(cacheTime)}</span>
+        <span>${escapeHtml(cacheState)}</span>
       </div>
       ${error}
     </div>`;
@@ -559,7 +569,8 @@ async function loadPhotos() {
   try {
     const res = await fetch('/api/photos');
     const data = await res.json();
-    renderPhotos(data.photos || []);
+    photoCache = data.photos || [];
+    renderPhotos(photoCache);
   } catch (err) {
     console.error('加载照片失败:', err);
   }
@@ -575,12 +586,46 @@ function renderPhotos(photos) {
     <div class="photo-card">
       <img class="photo-thumb" src="${p.thumbUrl}" alt="${escapeHtml(p.filename)}">
       <div class="photo-info">
-        <div class="photo-desc">${escapeHtml(p.desc || '无描述')}</div>
-        <div class="photo-meta">${p.lat && p.lon ? `📍 ${p.lat.toFixed(4)}, ${p.lon.toFixed(4)}` : '📍 无位置'}</div>
-        <button class="btn btn-danger btn-sm" style="width:100%" onclick="deletePhoto('${p.id}')">删除</button>
+        <div class="photo-desc">${escapeHtml(p.locationName || p.desc || '无描述')}</div>
+        <div class="photo-meta">坐标：${formatPhotoCoordinate(p)}</div>
+        <div class="photo-meta">拍摄：${escapeHtml(formatPhotoDateTime(p.takenAt) || '--')}</div>
+        <div class="photo-meta">上传：${escapeHtml(formatPhotoDateTime(p.uploadedAt) || '--')}</div>
+        <div class="photo-meta">上传者：${escapeHtml(p.uploaderName || '--')}</div>
+        <div class="photo-actions">
+          <button class="btn btn-secondary btn-sm" onclick="openPhotoEditor('${p.id}')">编辑</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePhoto('${p.id}')">删除</button>
+        </div>
       </div>
     </div>
   `).join('');
+}
+
+function formatPhotoCoordinate(photo) {
+  const lat = Number(photo?.lat);
+  const lon = Number(photo?.lon);
+  return isValidPhotoCoordinate(lat, lon) ? `${lat.toFixed(4)}, ${lon.toFixed(4)}` : '--';
+}
+
+function formatPhotoDateTime(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+}
+
+function toDateTimeLocalInput(value) {
+  if (!value) return '';
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const pad = (num) => String(num).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 async function deletePhoto(id) {
@@ -609,6 +654,9 @@ function initUploadForm() {
   const gpsStatus = document.getElementById('photoGpsStatus');
   const latInput = document.getElementById('lat');
   const lonInput = document.getElementById('lon');
+  const parseAddressBtn = document.getElementById('parseAddressBtn');
+  const parsePhotoCoordsBtn = document.getElementById('parsePhotoCoordsBtn');
+  const parsePhotoTakenAtBtn = document.getElementById('parsePhotoTakenAtBtn');
 
   if (!form || !fileInput) return;
 
@@ -631,8 +679,12 @@ function initUploadForm() {
     }
     resetProgress();
     if (feedback) feedback.classList.add('hidden');
-    await autofillPhotoGpsFromExif(file, gpsStatus);
+    await autofillPhotoMetadataFromExif(file, gpsStatus);
   });
+
+  parseAddressBtn?.addEventListener('click', () => parseUploadAddress(gpsStatus));
+  parsePhotoCoordsBtn?.addEventListener('click', () => parseUploadPhotoCoordinates(fileInput.files?.[0], gpsStatus));
+  parsePhotoTakenAtBtn?.addEventListener('click', () => parseUploadPhotoTakenAt(fileInput.files?.[0], gpsStatus));
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -644,17 +696,25 @@ function initUploadForm() {
     const formData = new FormData();
     formData.append('photo', fileInput.files[0]);
     const desc = document.getElementById('description').value;
-    const lat = parseFloat(latInput?.value || '');
-    const lon = parseFloat(lonInput?.value || '');
-    if (!isValidPhotoCoordinate(lat, lon)) {
-      const message = '照片位置是必填项：请手动填写有效经纬度。';
+    const locationName = document.getElementById('locationName')?.value?.trim() || '';
+    const uploaderName = document.getElementById('uploaderName')?.value?.trim() || '';
+    const takenAt = document.getElementById('takenAt')?.value || '';
+    const latRaw = latInput?.value?.trim() || '';
+    const lonRaw = lonInput?.value?.trim() || '';
+    const lat = parseFloat(latRaw);
+    const lon = parseFloat(lonRaw);
+    if ((latRaw || lonRaw) && !isValidPhotoCoordinate(lat, lon)) {
+      const message = '经纬度格式不正确；也可以清空坐标后直接上传。';
       showMessage(message, 'error', 'uploadFeedback');
       updateGpsStatus(gpsStatus, message, 'error');
       return;
     }
     if (desc) formData.append('description', desc);
-    formData.append('lat', lat);
-    formData.append('lon', lon);
+    if (locationName) formData.append('locationName', locationName);
+    if (uploaderName) formData.append('uploaderName', uploaderName);
+    formData.append('takenAt', takenAt ? new Date(takenAt).toISOString() : '');
+    formData.append('lat', isValidPhotoCoordinate(lat, lon) ? String(lat) : '');
+    formData.append('lon', isValidPhotoCoordinate(lat, lon) ? String(lon) : '');
 
     const btn = document.getElementById('uploadBtn');
     btn.disabled = true;
@@ -705,33 +765,214 @@ function setPhotoCoordinate(lat, lon, statusEl, source = '已设置位置') {
   return true;
 }
 
-async function autofillPhotoGpsFromExif(file, statusEl) {
+async function parseUploadAddress(statusEl) {
+  const locationInput = document.getElementById('locationName');
+  const query = locationInput?.value?.trim() || '';
+  if (!query) {
+    updateGpsStatus(statusEl, '请先填写拍摄地点，再解析地址。', 'warning');
+    return;
+  }
+
+  updateGpsStatus(statusEl, '正在解析地址...');
+  try {
+    const res = await fetch(`/api/geocoding/search?q=${encodeURIComponent(query)}&provider=auto&limit=1`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error?.message || '地址解析失败');
+    const first = Array.isArray(data.results) ? data.results[0] : null;
+    const lat = Number(first?.lat);
+    const lon = Number(first?.lon);
+    if (!isValidPhotoCoordinate(lat, lon)) {
+      updateGpsStatus(statusEl, '没有解析到可用坐标；可以换一个更完整的地址。', 'warning');
+      return;
+    }
+    setPhotoCoordinate(lat, lon, statusEl, '地址已解析');
+    if (locationInput && first?.name) locationInput.value = first.name;
+  } catch (err) {
+    updateGpsStatus(statusEl, `地址解析失败：${err?.message || '未知错误'}`, 'error');
+  }
+}
+
+async function parseUploadPhotoCoordinates(file, statusEl) {
   if (!file) {
-    updateGpsStatus(statusEl, '地理位置必填：选择照片后会尝试读取 EXIF；没有位置请手动填写经纬度。');
+    updateGpsStatus(statusEl, '请先选择照片，再重新解析经纬度。', 'warning');
     return;
   }
 
-  if (!window.exifr?.gps) {
-    updateGpsStatus(statusEl, '浏览器端 EXIF 读取库未加载；位置仍然必填，请手动填写经纬度。', 'warning');
+  updateGpsStatus(statusEl, '正在重新读取照片经纬度...');
+  try {
+    const meta = await readPhotoExifMetadata(file);
+    if (!isValidPhotoCoordinate(meta.lat, meta.lon)) {
+      updateGpsStatus(statusEl, '照片里没有读取到可用经纬度；可以手动填写或清空。', 'warning');
+      return;
+    }
+    setPhotoCoordinate(meta.lat, meta.lon, statusEl, '已重新读取位置');
+    const locationInput = document.getElementById('locationName');
+    const name = await reverseGeocodePhotoLocation(meta.lat, meta.lon);
+    if (locationInput && name) locationInput.value = name;
+    updateGpsStatus(statusEl, name ? `已重新填写经纬度和地点：${name}` : '已重新填写经纬度；未解析到地点名称。', 'success');
+  } catch (err) {
+    updateGpsStatus(statusEl, `读取经纬度失败：${err?.message || '未知错误'}`, 'error');
+  }
+}
+
+async function parseUploadPhotoTakenAt(file, statusEl) {
+  if (!file) {
+    updateGpsStatus(statusEl, '请先选择照片，再重新解析拍摄时间。', 'warning');
     return;
   }
 
-  updateGpsStatus(statusEl, '正在读取照片位置信息...');
+  updateGpsStatus(statusEl, '正在重新读取拍摄时间...');
+  try {
+    const meta = await readPhotoExifMetadata(file);
+    const takenInput = document.getElementById('takenAt');
+    const localValue = toDateTimeLocalInput(meta.takenAt);
+    if (!takenInput || !localValue) {
+      updateGpsStatus(statusEl, '照片里没有读取到拍摄时间；可以手动填写或清空。', 'warning');
+      return;
+    }
+    takenInput.value = localValue;
+    updateGpsStatus(statusEl, '已重新填写拍摄时间。', 'success');
+  } catch (err) {
+    updateGpsStatus(statusEl, `读取拍摄时间失败：${err?.message || '未知错误'}`, 'error');
+  }
+}
+
+async function autofillPhotoGpsFromExif(file, statusEl) {
+  return autofillPhotoMetadataFromExif(file, statusEl);
+}
+
+async function readPhotoExifMetadata(file) {
+  if (!window.exifr?.parse && !window.exifr?.gps) {
+    throw new Error('浏览器端 EXIF 读取库未加载');
+  }
+
+  const meta = window.exifr.parse ? await window.exifr.parse(file) : {};
+  const gps = meta?.latitude !== undefined ? meta : await window.exifr.gps(file);
+  return {
+    lat: Number(gps?.latitude),
+    lon: Number(gps?.longitude),
+    takenAt: meta?.DateTimeOriginal || meta?.CreateDate || meta?.ModifyDate || null
+  };
+}
+
+async function autofillPhotoMetadataFromExif(file, statusEl) {
+  if (!file) {
+    updateGpsStatus(statusEl, '选择照片后会尝试读取 EXIF 位置和拍摄时间；字段都可以留空或手动修改。');
+    return;
+  }
+
+  if (!window.exifr?.parse && !window.exifr?.gps) {
+    updateGpsStatus(statusEl, '浏览器端 EXIF 读取库未加载；字段可以手动填写或留空。', 'warning');
+    return;
+  }
+
+  updateGpsStatus(statusEl, '正在读取照片信息...');
 
   try {
-    const gps = await window.exifr.gps(file);
-    const lat = Number(gps?.latitude);
-    const lon = Number(gps?.longitude);
+    const meta = await readPhotoExifMetadata(file);
+    const { lat, lon, takenAt } = meta;
+    const takenInput = document.getElementById('takenAt');
+    const locationInput = document.getElementById('locationName');
+    const filled = [];
 
-    if (!isValidPhotoCoordinate(lat, lon)) {
-      updateGpsStatus(statusEl, '这张照片没有可用地理位置信息；位置是必填项，请手动填写经纬度。', 'warning');
+    if (takenInput && takenAt && !takenInput.value) {
+      const localValue = toDateTimeLocalInput(takenAt);
+      if (localValue) {
+        takenInput.value = localValue;
+        filled.push('拍摄时间');
+      }
+    }
+
+    if (isValidPhotoCoordinate(lat, lon)) {
+      setPhotoCoordinate(lat, lon, statusEl, '已读取位置');
+      filled.push('位置');
+      if (locationInput && !locationInput.value.trim()) {
+        const name = await reverseGeocodePhotoLocation(lat, lon);
+        if (name) {
+          locationInput.value = name;
+          filled.push('地点');
+        }
+      }
+      updateGpsStatus(statusEl, `已自动填写：${filled.join('、') || '照片信息'}；可继续手动修改或清空。`, 'success');
       return;
     }
 
-    setPhotoCoordinate(lat, lon, statusEl, '已读取位置');
+    updateGpsStatus(statusEl, filled.length ? `已自动填写：${filled.join('、')}；位置可留空或手动填写。` : '没有读取到可用位置和时间；字段可以留空。', filled.length ? 'success' : 'warning');
   } catch (err) {
-    updateGpsStatus(statusEl, '读取照片位置信息失败；位置是必填项，请手动填写经纬度。', 'error');
+    updateGpsStatus(statusEl, '读取照片信息失败；字段可以手动填写或留空。', 'error');
   }
+}
+
+async function reverseGeocodePhotoLocation(lat, lon) {
+  try {
+    const res = await fetch(`/api/geocoding/reverse?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&provider=auto`);
+    if (!res.ok) return '';
+    const data = await res.json();
+    return data.name || data.formattedAddress || data.address || data.locationName || '';
+  } catch {
+    return '';
+  }
+}
+
+function openPhotoEditor(id) {
+  const photo = photoCache.find(item => item.id === id);
+  if (!photo) return;
+  document.getElementById('editPhotoId').value = photo.id;
+  document.getElementById('editPhotoDescription').value = photo.desc || '';
+  document.getElementById('editPhotoLocationName').value = photo.locationName || '';
+  document.getElementById('editPhotoUploaderName').value = photo.uploaderName || '';
+  document.getElementById('editPhotoTakenAt').value = toDateTimeLocalInput(photo.takenAt);
+  document.getElementById('editPhotoLat').value = Number.isFinite(Number(photo.lat)) ? Number(photo.lat).toFixed(6) : '';
+  document.getElementById('editPhotoLon').value = Number.isFinite(Number(photo.lon)) ? Number(photo.lon).toFixed(6) : '';
+  document.getElementById('photoEditFeedback')?.classList.add('hidden');
+  document.getElementById('photoEditModal')?.classList.remove('hidden');
+}
+
+function closePhotoEditor() {
+  document.getElementById('photoEditModal')?.classList.add('hidden');
+}
+
+function initPhotoEditForm() {
+  const form = document.getElementById('photoEditForm');
+  if (!form) return;
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const id = document.getElementById('editPhotoId')?.value;
+    const latRaw = document.getElementById('editPhotoLat')?.value?.trim() || '';
+    const lonRaw = document.getElementById('editPhotoLon')?.value?.trim() || '';
+    const lat = parseFloat(latRaw);
+    const lon = parseFloat(lonRaw);
+    if ((latRaw || lonRaw) && !isValidPhotoCoordinate(lat, lon)) {
+      showMessage('经纬度格式不正确；也可以清空坐标。', 'error', 'photoEditFeedback');
+      return;
+    }
+
+    const takenAt = document.getElementById('editPhotoTakenAt')?.value || '';
+    const payload = {
+      description: document.getElementById('editPhotoDescription')?.value?.trim() || '',
+      locationName: document.getElementById('editPhotoLocationName')?.value?.trim() || '',
+      uploaderName: document.getElementById('editPhotoUploaderName')?.value?.trim() || '',
+      takenAt: takenAt ? new Date(takenAt).toISOString() : '',
+      lat: isValidPhotoCoordinate(lat, lon) ? lat : '',
+      lon: isValidPhotoCoordinate(lat, lon) ? lon : ''
+    };
+
+    try {
+      const res = await fetch(`/photos/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error?.message || '保存失败');
+      showMessage('保存成功', 'success', 'photoEditFeedback');
+      closePhotoEditor();
+      loadPhotos();
+    } catch (err) {
+      showMessage('保存失败: ' + (err?.message || '未知错误'), 'error', 'photoEditFeedback');
+    }
+  });
 }
 
 function uploadPhotoWithProgress(formData, onProgress) {

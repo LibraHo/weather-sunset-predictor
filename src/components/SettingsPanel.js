@@ -242,8 +242,8 @@ class SettingsPanel {
                 <small class="setting-subtitle">${this.i18n.t('settings.weatherFetchModeHint')}</small>
                 <div class="setting-control setting-control-full">
                   <select id="weather-fetch-mode-select" class="setting-select">
-                    <option value="backend">${this.i18n.t('settings.weatherFetchModeBackend')}</option>
                     <option value="client-fallback">${this.i18n.t('settings.weatherFetchModeClientFallback')}</option>
+                    <option value="backend">${this.i18n.t('settings.weatherFetchModeBackend')}</option>
                     <option value="client">${this.i18n.t('settings.weatherFetchModeClient')}</option>
                   </select>
                 </div>
@@ -421,7 +421,7 @@ class SettingsPanel {
 
     const weatherFetchModeSelect = document.getElementById('weather-fetch-mode-select');
     if (weatherFetchModeSelect) {
-      weatherFetchModeSelect.value = localStorage.getItem('weather_fetch_mode') || 'backend';
+      weatherFetchModeSelect.value = localStorage.getItem('weather_fetch_mode') || 'client-fallback';
     }
 
     // 加载通知设置
@@ -694,7 +694,7 @@ class SettingsPanel {
    * 处理天气数据出口模式变更
    */
   handleWeatherFetchModeChange(mode) {
-    const nextMode = ['backend', 'client-fallback', 'client'].includes(mode) ? mode : 'backend';
+    const nextMode = ['backend', 'client-fallback', 'client'].includes(mode) ? mode : 'client-fallback';
     localStorage.setItem('weather_fetch_mode', nextMode);
     console.log('[SettingsPanel] 天气数据出口模式已更新:', nextMode);
   }

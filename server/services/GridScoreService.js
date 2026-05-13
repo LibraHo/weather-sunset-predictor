@@ -103,8 +103,12 @@ class GridScoreService {
 
   getJobStatus(period = DEFAULT_PERIOD) {
     const safePeriod = this.normalizePeriod(period);
+    const cache = this.getCache(safePeriod);
     return {
-      ...(this._jobStatus?.[safePeriod] || this._createIdleStatus(safePeriod))
+      ...(this._jobStatus?.[safePeriod] || this._createIdleStatus(safePeriod)),
+      cacheUpdatedAt: cache?.updatedAt || null,
+      cacheCount: Array.isArray(cache?.gridPoints) ? cache.gridPoints.length : 0,
+      cacheStale: cache?.stale ?? null
     };
   }
 
@@ -500,11 +504,12 @@ class GridScoreService {
    * @param {'sunrise'|'sunset'} period
    * @returns {Promise<void>}
    */
-  async refreshIfStale(maxAgeMs = DEFAULT_MAX_AGE_MS, period = DEFAULT_PERIOD) {
+  async refreshIfStale(maxAgeMs = DEFAULT_MAX_AGE_MS, period = DEFAULT_PERIOD, options = {}) {
     const safePeriod = this.normalizePeriod(period);
+    const force = options?.force === true;
     if (this._refreshingByPeriod[safePeriod]) return;
     const cache = this.getCache(safePeriod);
-    if (cache) {
+    if (cache && !force) {
       const age = Date.now() - new Date(cache.updatedAt).getTime();
       if (age <= maxAgeMs) return;
 

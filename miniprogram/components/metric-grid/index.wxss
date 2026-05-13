@@ -1,0 +1,28 @@
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18rpx;
+}
+
+.metric {
+  min-height: 132rpx;
+  padding: 22rpx;
+}
+
+.label {
+  color: rgba(255, 255, 255, 0.50);
+  font-size: 24rpx;
+}
+
+.value {
+  margin-top: 10rpx;
+  color: #ffffff;
+  font-size: 34rpx;
+  font-weight: 800;
+}
+
+.hint {
+  margin-top: 6rpx;
+  color: #fdba74;
+  font-size: 22rpx;
+}

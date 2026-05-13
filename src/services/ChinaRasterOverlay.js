@@ -12,7 +12,7 @@ let _chinaGeoJSONCache = null;
 async function _loadChinaGeoJSON() {
   if (_chinaGeoJSONCache) return _chinaGeoJSONCache;
   try {
-    const resp = await fetch('/data/east-asia-geojson.json');
+    const resp = await fetch('/data/east-asia-basemap-geojson.json?v=3');
     if (resp.ok) _chinaGeoJSONCache = await resp.json();
   } catch (_) {}
   return _chinaGeoJSONCache;
@@ -426,7 +426,7 @@ export default class ChinaRasterOverlay {
         ? this._buildSyntheticTestData(rawData)
         : rawData;
       this._rasterData = data;
-      this._updatedAt = data.updatedAt || null;
+      this._updatedAt = data.updatedAt || data.sourceUpdatedAt || data.generatedAt || null;
 
       this._buildOffscreen(data);
       this.show();

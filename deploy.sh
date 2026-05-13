@@ -312,8 +312,11 @@ else
 fi
 
 cd "$APP_DIR"
-if [ ! -d "$APP_DIR/node_modules/express" ]; then
-  echo "  → 依赖缺失，安装生产依赖..."
+missing_deps=()
+[ -d "$APP_DIR/node_modules/express" ] || missing_deps+=("express")
+[ -d "$APP_DIR/node_modules/sharp" ] || missing_deps+=("sharp")
+if [ "${#missing_deps[@]}" -gt 0 ]; then
+  echo "  → 依赖缺失(${missing_deps[*]})，安装生产依赖..."
   NPM_BIN="$(dirname "$NODE_BIN")/npm"
   if ! sudo test -x "$NPM_BIN" 2>/dev/null; then
     NPM_BIN="$(command -v npm 2>/dev/null || true)"

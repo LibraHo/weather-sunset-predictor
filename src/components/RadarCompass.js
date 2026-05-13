@@ -359,7 +359,7 @@ class RadarCompass {
         stroke-width="${main ? '1' : '0.6'}"/>`;
     }).join('');
 
-    const labelR = R_HIGH * 1.15;
+    const labelR = R_HIGH * 1.08;
     const labels = DIR_ORDER.map(d => {
       const lbl = text[d] || { N: '北', NE: '东北', E: '东', SE: '东南', S: '南', SW: '西南', W: '西', NW: '西北' }[d];
       const [x, y] = this._pt(cx, cy, labelR, this._dirAz(d));
@@ -437,11 +437,11 @@ class RadarCompass {
     <div style="font-size:13px;font-weight:600;color:${T.title || '#333333'};">${text.title || '周边云况雷达'}</div>
     <div style="font-size:11px;color:${T.subtitle || '#666666'};">${text.subtitle || '20km · 连续云场'}</div>
   </div>
-  <div style="position:relative;width:${S}px;height:${S}px;max-width:100%;margin:0 auto;">
+  <div style="position:relative;width:min(${S}px,100%);aspect-ratio:1 / 1;height:auto;max-width:100%;margin:0 auto;">
     <canvas id="radar-cloud-field-${uid}" width="${S}" height="${S}"
-      style="position:absolute;inset:0;width:${S}px;height:${S}px;display:block;"></canvas>
+      style="position:absolute;inset:0;width:100%;height:100%;display:block;"></canvas>
     <svg width="${S}" height="${S}" viewBox="0 0 ${S} ${S}"
-      style="position:absolute;inset:0;display:block;font-family:${zhFont};" xmlns="http://www.w3.org/2000/svg">
+      style="position:absolute;inset:0;width:100%;height:100%;display:block;font-family:${zhFont};" xmlns="http://www.w3.org/2000/svg">
       ${lowInnerRing}
       ${rings}
       ${axes}
@@ -450,7 +450,7 @@ class RadarCompass {
       ${labels}
     </svg>
   </div>
-  <svg width="${legendSvgWidth}" height="18" style="display:block;margin:4px auto 0;font-family:${zhFont};background:${T.legendBg};border-radius:8px;padding:0 4px;">
+  <svg width="${legendSvgWidth}" height="18" style="display:block;margin:8px auto 0;font-family:${zhFont};background:${T.legendBg};border-radius:8px;padding:0 4px;">
     ${legend}
   </svg>
 </div>`;

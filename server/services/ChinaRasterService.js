@@ -89,10 +89,14 @@ class ChinaRasterService {
       resolution: safeRes
     });
 
-    const today = new Date().toISOString().slice(0, 10);
+    const generatedAt = new Date().toISOString();
+    const sourceUpdatedAt = spotsCache.updatedAt || generatedAt;
+    const today = generatedAt.slice(0, 10);
     const raster = {
       date: today,
-      updatedAt: spotsCache.updatedAt,
+      updatedAt: sourceUpdatedAt,
+      generatedAt,
+      sourceUpdatedAt,
       period: safePeriod,
       bbox: EAST_ASIA_BBOX,
       resolution: safeRes,

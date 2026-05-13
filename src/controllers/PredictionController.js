@@ -250,7 +250,7 @@ class PredictionController {
     const config = loadConfig();
     this.features = config.features;
     this.apiConfig = config;
-    this.weatherFetchMode = config.weatherFetchMode || 'backend';
+    this.weatherFetchMode = config.weatherFetchMode || 'client-fallback';
     this.predictionPanelAlignmentRaf = null;
     this.predictionPanelAlignmentRoot = null;
     this.predictionPanelResizeHandler = null;
@@ -368,7 +368,7 @@ class PredictionController {
           });
         }
 
-        if (mode === 'backend') {
+        if (mode !== 'client') {
           const batchKey = this._predictionBatchKey(type, date);
           const batchPrediction = this._closedLoopBatchPredictionMap?.get(batchKey);
           if (batchPrediction) {
@@ -382,10 +382,15 @@ class PredictionController {
         } catch (error) {
           if (mode === 'client-fallback' && this._isWeatherFallbackEligible(error)) {
             console.warn('[PredictionController] 后端闭环天气不可用，使用浏览器天气数据 + 后端算分 fallback:', error.message);
-            return await this.predictionAPIService.calculate(weatherData, date, lat, lon, type, {
-              ...clientWeatherOptions,
-              clientWeatherFallback: true
-            });
+            try {
+              return await this.predictionAPIService.calculate(weatherData, date, lat, lon, type, {
+                ...clientWeatherOptions,
+                clientWeatherFallback: true
+              });
+            } catch (fallbackError) {
+              console.warn('[PredictionController] 后端应急算分仍不可用，改用前端本地预测:', fallbackError.message);
+              return this._calculateLocalPredictionFallback(weatherData, date, lat, lon, type, weatherDataArray);
+            }
           }
           throw error;
         }
@@ -395,10 +400,14 @@ class PredictionController {
       }
     } else {
       // 使用前端计算
-      return this.predictionService.calculatePrediction(weatherData, date, lat, lon, type, {
-        timezone: weatherData?.timezone || null
-      });
+      return this._calculateLocalPredictionFallback(weatherData, date, lat, lon, type, weatherDataArray);
     }
+  }
+
+  _calculateLocalPredictionFallback(weatherData, date, lat, lon, type, weatherDataArray = null) {
+    return this.predictionService.calculatePrediction(weatherData, date, lat, lon, type, {
+      timezone: weatherData?.timezone || weatherDataArray?.providerMeta?.timezone || null
+    });
   }
 
 
@@ -457,7 +466,7 @@ class PredictionController {
 
   async _prepareClosedLoopBatchPredictions({ today, location, targetTimezone }) {
     const mode = loadConfig().weatherFetchMode || this.weatherFetchMode || 'backend';
-    if (!this.features.USE_BACKEND_PREDICTION || mode !== 'backend') {
+    if (!this.features.USE_BACKEND_PREDICTION || mode === 'client') {
       this._closedLoopBatchPredictionMap = null;
       return;
     }
@@ -506,19 +515,7 @@ class PredictionController {
     }
 
     if (!prediction.getAzimuthDirection) {
-      prediction.getAzimuthDirection = () => {
-        if (prediction.sunAzimuth === null || prediction.sunAzimuth === undefined) return '';
-
-        const directions = [
-          '北', '东北偏北', '东北', '东北偏东',
-          '东', '东南偏东', '东南', '东南偏南',
-          '南', '西南偏南', '西南', '西南偏西',
-          '西', '西北偏西', '西北', '西北偏北'
-        ];
-
-        const index = Math.round(prediction.sunAzimuth / 22.5) % 16;
-        return directions[index];
-      };
+      prediction.getAzimuthDirection = () => this.formatChineseRelativeAzimuth(prediction.sunAzimuth, 'zh-CN');
     }
 
     if (!prediction.shouldShowAzimuth) {
@@ -1431,7 +1428,7 @@ class PredictionController {
         { label: this._uiText('Mid', '中云'), value: Number(clouds.mid ?? 0), color: 'var(--cloud-mid-color)' },
         { label: this._uiText('Low', '低云'), value: Number(clouds.low ?? 0), color: 'var(--cloud-low-color)' }
       ],
-      quality: prediction.quality || this.getQualityFromScore(score),
+      quality: this.getQualityFromScore(score),
       analysis: this.buildAnalysisGroups(prediction),
       conclusion: this.buildAnalysisConclusion(prediction, score, clouds)
     };
@@ -1468,6 +1465,26 @@ class PredictionController {
     const fallback = {
       'title': '火烧云形成条件分析',
       'groups.positive': '有利条件', 'groups.neutral': '一般因素', 'groups.warning': '注意因素',
+      'factors.carrier.title': '云层载体',
+      'factors.carrier.status.good': '较好', 'factors.carrier.status.fair': '一般', 'factors.carrier.status.weak': '较弱',
+      'factors.carrier.desc.good': '中高云能承接日落光线，是今天主要的显色画布。',
+      'factors.carrier.desc.fair': '有一些可被染色的云层，但面积或高度不够理想。',
+      'factors.carrier.desc.weak': '缺少合适的中高云，天空不容易形成大片火烧云。',
+      'factors.lightPath.title': '光路条件',
+      'factors.lightPath.status.good': '较好', 'factors.lightPath.status.fair': '一般', 'factors.lightPath.status.weak': '较弱',
+      'factors.lightPath.desc.good': '太阳方向相对通透，光线有机会照到云底。',
+      'factors.lightPath.desc.fair': '太阳方向有一定遮挡，晚霞可能只出现在局部。',
+      'factors.lightPath.desc.weak': '低云或云墙挡住光路，光线不容易打到云层。',
+      'factors.rendering.title': '空气显色',
+      'factors.rendering.status.good': '较好', 'factors.rendering.status.fair': '一般', 'factors.rendering.status.weak': '较弱',
+      'factors.rendering.desc.good': '空气里有适度颗粒和水汽，颜色更容易偏暖、偏红。',
+      'factors.rendering.desc.fair': '空气条件普通，颜色表现主要看云层和光路。',
+      'factors.rendering.desc.weak': '空气偏灰或颗粒过重，颜色容易变暗、变淡。',
+      'factors.limits.title': '限制因素',
+      'factors.limits.status.good': '无明显', 'factors.limits.status.fair': '轻微', 'factors.limits.status.weak': '明显',
+      'factors.limits.desc.good': '没有明显压制条件。',
+      'factors.limits.desc.fair': '有轻微不利因素，可能压低持续时间或颜色强度。',
+      'factors.limits.desc.weak': '降水、厚云、低云遮挡或灰幕明显，会压低整体表现。',
       'high.abundant': '高层云充沛（{{value}}%）', 'high.abundantDesc': '色彩载体丰富，火烧云基础扎实',
       'high.sufficient': '高层云充足（{{value}}%）', 'high.sufficientDesc': '具备较好的霞光染色载体',
       'high.moderate': '高层云适中（{{value}}%）', 'high.moderateDesc': '可形成火烧云，但色彩可能偏淡',
@@ -1489,12 +1506,14 @@ class PredictionController {
       'aerosol.low': '空气过于通透（AOD {{value}}）', 'aerosol.lowDesc': '颜色可能偏淡',
       'aerosol.extremeHaze': '沙尘/灰幕很重', 'aerosol.extremeHazeDesc': '高云虽多，但空气光学条件失效，霞光容易被压成灰黄色',
       'aerosol.hazeCap': '灰幕风险明显', 'aerosol.hazeCapDesc': '颗粒物或气溶胶偏高，会削弱红橙色染色',
+      'aerosol.carrier': '薄雾红日载体', 'aerosol.carrierDesc': '云层很少时，适度气溶胶在光路通畅时也能带来一点暖色日落',
       'lightPath.opening': '太阳方向有透光开口', 'lightPath.openingDesc': '后端沿太阳方位采样 15/30/50/100km，低中云走廊较通畅，光线更容易打到云层',
       'lightPath.wall': '太阳方向有云墙遮挡', 'lightPath.wallDesc': '太阳方位周边低/中云偏厚，远端光路会压低主评分',
+      'lightPath.lowCloudBlock': '低云遮住光线', 'lightPath.lowCloudBlockDesc': '低云挡在太阳方向，阳光不容易照到中高云',
       'postRain.clear': '雨后空气清透', 'postRain.clearDesc': '近6小时有降水，但能见度和颗粒物条件较好，雨后加成保留',
-      'postRain.gray': '雨后灰幕风险', 'postRain.grayDesc': '降水后水汽/颗粒物/直射比不理想，算法按灰幕场景封顶',
+      'postRain.gray': '雨后灰幕风险', 'postRain.grayDesc': '降水后水汽或颗粒物偏重，霞光容易发灰',
       'carrier.strong': '高云载体清晰', 'carrier.strongDesc': '高云充足、低云稀少且空气较通透，具备中高分基础',
-      'carrier.dense': '中高云载体明确', 'carrier.denseDesc': '高云和中云共同提供画布，云厚只温和降分，不再重复封顶',
+      'carrier.dense': '中高云载体明确', 'carrier.denseDesc': '高云和中云共同提供画布，色彩载体更稳定',
       'layer.single': '云层单一', 'layer.singleDesc': '高云质量好，仍可形成鲜明火烧云'
     }[key] || fullKey;
 
@@ -1512,15 +1531,15 @@ class PredictionController {
   }
 
   getQualityFromScore(score) {
-    if (score >= 80) return 'excellent';
-    if (score >= 60) return 'good';
+    if (score >= 85) return 'excellent';
+    if (score >= 70) return 'good';
     if (score >= 40) return 'fair';
     return 'poor';
   }
 
   getScoreTheme(quality, score) {
     const value = Math.max(0, Math.min(100, Number(score) || 0));
-    if (value >= 80) {
+    if (value >= 85) {
       return [
         'var(--score-excellent-start, #fb923c)',
         'var(--score-excellent-mid, #fbbf24)',
@@ -1528,12 +1547,11 @@ class PredictionController {
       ];
     }
 
-    // 0–80 使用单色：从灰逐步过渡到更深橙色，但圆环本身不做渐变。
+    // Keep score colors aligned with the public guide: <40, 40-69, 70-84, 85+.
     const stops = [
-      { max: 20, color: 'var(--score-poor-color, #94a3b8)' },
-      { max: 40, color: 'var(--score-fair-color, #fdba74)' },
-      { max: 60, color: 'var(--score-good-color, #fb923c)' },
-      { max: 80, color: 'var(--score-excellent-mid, #fbbf24)' }
+      { max: 40, color: 'var(--score-poor-color, #94a3b8)' },
+      { max: 70, color: 'var(--score-fair-color, #fdba74)' },
+      { max: 85, color: 'var(--score-good-color, #fb923c)' }
     ];
     const color = stops.find(stop => value < stop.max)?.color || 'var(--score-excellent-mid, #fbbf24)';
     return [color, color, color];
@@ -1625,89 +1643,127 @@ class PredictionController {
   }
 
   buildAnalysisGroups(prediction) {
+    return this.buildAnalysisFactors(prediction);
+  }
+
+  buildAnalysisFactors(prediction) {
     const weather = this.extractAnalysisWeather(prediction);
-    const groups = [
-      { title: this._analysisText('groups.positive'), type: 'positive', icon: 'ok', items: [] },
-      { title: this._analysisText('groups.neutral'), type: 'neutral', icon: 'info', items: [] },
-      { title: this._analysisText('groups.warning'), type: 'warning', icon: 'warn', items: [] }
-    ];
-    const add = (groupType, title, desc) => {
-      const group = groups.find(g => g.type === groupType);
-      group.items.push({ title, desc });
-    };
-
-    if (weather.high >= 60) add('positive', this._analysisText('high.abundant', { value: weather.high.toFixed(0) }), this._analysisText('high.abundantDesc'));
-    else if (weather.high >= 35) add('positive', this._analysisText('high.sufficient', { value: weather.high.toFixed(0) }), this._analysisText('high.sufficientDesc'));
-    else if (weather.high >= 15) add('neutral', this._analysisText('high.moderate', { value: weather.high.toFixed(0) }), this._analysisText('high.moderateDesc'));
-    else add('warning', this._analysisText('high.few', { value: weather.high.toFixed(0) }), this._analysisText('high.fewDesc'));
-
-    if (weather.mid >= 20 && weather.mid <= 60) add('positive', this._analysisText('mid.balanced', { value: weather.mid.toFixed(0) }), this._analysisText('mid.balancedDesc'));
-    else if (weather.mid < 20) add('neutral', this._analysisText('mid.few', { value: weather.mid.toFixed(0) }), weather.high >= 35 ? this._analysisText('mid.fewHighCloudDesc') : this._analysisText('mid.fewDesc'));
-    else add('warning', this._analysisText('mid.thick', { value: weather.mid.toFixed(0) }), this._analysisText('mid.thickDesc'));
-
-    if (weather.low < 15) add('positive', this._analysisText('low.few', { value: weather.low.toFixed(0) }), this._analysisText('low.fewDesc'));
-    else if (weather.low < 35) add('neutral', this._analysisText('low.some', { value: weather.low.toFixed(0) }), this._analysisText('low.someDesc'));
-    else add('warning', this._analysisText('low.thick', { value: weather.low.toFixed(0) }), this._analysisText('low.thickDesc'));
-
-    if (weather.visibility >= 15) add('positive', this._analysisText('visibility.good', { value: weather.visibility.toFixed(0) }), this._analysisText('visibility.goodDesc'));
-    else if (weather.visibility >= 8) add('neutral', this._analysisText('visibility.moderate', { value: weather.visibility.toFixed(0) }), this._analysisText('visibility.moderateDesc'));
-    else add('warning', this._analysisText('visibility.low', { value: weather.visibility.toFixed(0) }), this._analysisText('visibility.lowDesc'));
-
-    if (weather.humidity >= 40 && weather.humidity <= 70) add('positive', this._analysisText('humidity.moderate', { value: weather.humidity.toFixed(0) }), this._analysisText('humidity.moderateDesc'));
-    else if (weather.humidity > 70) add('warning', this._analysisText('humidity.high', { value: weather.humidity.toFixed(0) }), this._analysisText('humidity.highDesc'));
-    else add('neutral', this._analysisText('humidity.low', { value: weather.humidity.toFixed(0) }), this._analysisText('humidity.lowDesc'));
-
     const thickHighCloudPenalty = prediction?.thickHighCloudPenalty || prediction?.lightPathAnalysis?.thickHighCloudPenalty;
-    if (thickHighCloudPenalty?.applied) {
-      add('warning', this.i18n.t('prediction.thickHighCloud.analysisTitle'), this.i18n.t('prediction.thickHighCloud.analysisDesc'));
-    }
-
     const cloudThickness = prediction?.cloudThickness || prediction?.lightPathAnalysis?.cloudThickness;
     const denseCarrierCanvasOnly = cloudThickness?.reasons?.includes('dense_upper_cloud_carrier_softened')
-      || thickHighCloudPenalty?.reason === 'dense_upper_cloud_carrier_canvas_only';
-    if (denseCarrierCanvasOnly) {
-      add('positive', this._analysisText('carrier.dense'), this._analysisText('carrier.denseDesc'));
-    }
-
+      || cloudThickness?.reasons?.includes('opening_upper_cloud_carrier_softened')
+      || thickHighCloudPenalty?.reason === 'dense_upper_cloud_carrier_canvas_only'
+      || thickHighCloudPenalty?.reason === 'opening_upper_cloud_carrier_canvas_only';
     const aerosolHazeCap = prediction?.aerosolHazeCap;
-    if (aerosolHazeCap?.applied) {
-      const isExtreme = aerosolHazeCap.level === 'extreme';
-      add('warning',
-        this._analysisText(isExtreme ? 'aerosol.extremeHaze' : 'aerosol.hazeCap'),
-        this._analysisText(isExtreme ? 'aerosol.extremeHazeDesc' : 'aerosol.hazeCapDesc')
-      );
-    }
-
     const carrierAdjustment = prediction?.highCloudCarrierAdjustment;
+    const aerosolCarrier = prediction?.aerosolCarrierScore || prediction?.breakdown?.aerosolCarrierScore;
     const postRainAdjustment = prediction?.postRainAdjustment;
-    if (carrierAdjustment?.applied) {
-      add('positive', this._analysisText('carrier.strong'), this._analysisText('carrier.strongDesc'));
+    const lightPathAnalysis = prediction?.lightPathAnalysis || {};
+    const directional = lightPathAnalysis.directionalAnalysis;
+
+    const carrierScore = Number(
+      prediction?.breakdown?.carrierScore ??
+      prediction?.carrierAnalysis?.score ??
+      prediction?.canvasAnalysis?.score ??
+      prediction?.breakdown?.canvasScore
+    );
+    const cloudCanvasScore = Number(
+      prediction?.breakdown?.canvasScore ??
+      prediction?.carrierAnalysis?.cloudCanvasScore ??
+      prediction?.canvasAnalysis?.cloudCanvasScore ??
+      carrierScore
+    );
+    const effectiveCloudCover = Number.isFinite(Number(prediction?.canvasAnalysis?.effectiveCloudCover))
+      ? Number(prediction.canvasAnalysis.effectiveCloudCover)
+      : weather.high * 0.8 + weather.mid * 0.55;
+
+    let carrierLevel = 'weak';
+    if (carrierAdjustment?.applied || denseCarrierCanvasOnly || cloudCanvasScore >= 58 || weather.high >= 60 || effectiveCloudCover >= 48) {
+      carrierLevel = 'good';
+    } else if (cloudCanvasScore >= 30 || weather.high >= 15 || weather.mid >= 20 || aerosolCarrier?.activatedScore >= 18 || effectiveCloudCover >= 18) {
+      carrierLevel = 'fair';
     }
 
-    const directional = prediction?.lightPathAnalysis?.directionalAnalysis;
-    if (directional?.reason?.includes('opening')) {
-      add('positive', this._analysisText('lightPath.opening'), this._analysisText('lightPath.openingDesc'));
-    } else if (directional?.reason?.includes('cloud_wall') || directional?.reason?.includes('cloudy_corridor')) {
-      add('warning', this._analysisText('lightPath.wall'), this._analysisText('lightPath.wallDesc'));
+    const lightPathScore = Number(prediction?.breakdown?.lightPathScore ?? lightPathAnalysis.score);
+    let lightPathLevel = 'weak';
+    if (directional?.reason?.includes('opening') || lightPathScore >= 65) {
+      lightPathLevel = 'good';
+    } else if (lightPathScore >= 45 || weather.low < 35) {
+      lightPathLevel = 'fair';
+    }
+    if (
+      lightPathAnalysis.capReason === 'overcast_cap_40' ||
+      directional?.reason?.includes('cloud_wall') ||
+      directional?.reason?.includes('cloudy_corridor') ||
+      weather.low >= 60
+    ) {
+      lightPathLevel = lightPathScore >= 45 ? 'fair' : 'weak';
     }
 
-    if (postRainAdjustment?.mode === 'post_rain_clear') {
-      add('positive', this._analysisText('postRain.clear'), this._analysisText('postRain.clearDesc'));
-    } else if (postRainAdjustment?.mode === 'post_rain_gray_curtain') {
-      add('warning', this._analysisText('postRain.gray'), this._analysisText('postRain.grayDesc'));
+    const renderingFactor = Number(prediction?.breakdown?.renderingFactor ?? prediction?.renderingAnalysis?.factor);
+    const aod = Number(weather.aod);
+    let renderingLevel = 'fair';
+    if (
+      postRainAdjustment?.mode === 'post_rain_gray_curtain' ||
+      aerosolHazeCap?.applied ||
+      weather.visibility < 8 ||
+      (Number.isFinite(aod) && aod > 0.45) ||
+      Number(weather.pm10) >= 120 ||
+      Number(weather.dust) >= 80
+    ) {
+      renderingLevel = 'weak';
+    } else if (
+      postRainAdjustment?.mode === 'post_rain_clear' ||
+      aerosolCarrier?.activatedScore >= 18 ||
+      renderingFactor >= 1.03 ||
+      (weather.visibility >= 15 && weather.humidity >= 35 && weather.humidity <= 75 && (!Number.isFinite(aod) || aod <= 0.35))
+    ) {
+      renderingLevel = 'good';
     }
 
-    if (weather.aod != null) {
-      if (weather.aod >= 0.08 && weather.aod <= 0.35) add('positive', this._analysisText('aerosol.moderate', { value: weather.aod.toFixed(2) }), this._analysisText('aerosol.moderateDesc'));
-      else if (weather.aod > 0.35) add('warning', this._analysisText('aerosol.high', { value: weather.aod.toFixed(2) }), this._analysisText('aerosol.highDesc'));
-      else add('neutral', this._analysisText('aerosol.low', { value: weather.aod.toFixed(2) }), this._analysisText('aerosol.lowDesc'));
+    const precipitation = Number(prediction?.precipitation ?? prediction?.rain ?? prediction?.factors?.precipitation?.value ?? 0);
+    let limitLevel = 'good';
+    const strongLimit = Boolean(
+      prediction?.severeWeatherCap?.reason ||
+      aerosolHazeCap?.applied ||
+      thickHighCloudPenalty?.applied ||
+      prediction?.geometricModel?.feasible === false ||
+      prediction?.occlusionAnalysis?.occluded ||
+      postRainAdjustment?.cap != null ||
+      lightPathAnalysis.capReason === 'overcast_cap_40' ||
+      precipitation > 0.5 ||
+      weather.low >= 60
+    );
+    const mildLimit = Boolean(
+      denseCarrierCanvasOnly ||
+      weather.low >= 25 ||
+      weather.visibility < 15 ||
+      weather.humidity > 75 ||
+      (Number.isFinite(aod) && aod > 0.35) ||
+      precipitation > 0.1
+    );
+    if (strongLimit) {
+      limitLevel = 'weak';
+    } else if (mildLimit) {
+      limitLevel = 'fair';
     }
 
-    if (weather.layerCount <= 1 && weather.high >= 35) {
-      add('warning', this._analysisText('layer.single'), this._analysisText('layer.singleDesc'));
-    }
+    const factor = (key, level, icon) => ({
+      key,
+      title: this._analysisText(`factors.${key}.title`),
+      status: this._analysisText(`factors.${key}.status.${level}`),
+      desc: this._analysisText(`factors.${key}.desc.${level}`),
+      statusTone: level === 'good' ? 'good' : (level === 'weak' ? 'weak' : (key === 'limits' ? 'mild' : 'fair')),
+      type: level === 'good' ? 'positive' : (level === 'fair' ? 'neutral' : 'warning'),
+      icon
+    });
 
-    return groups.filter(group => group.items.length > 0);
+    return [
+      factor('carrier', carrierLevel, 'cloud'),
+      factor('lightPath', lightPathLevel, lightPathLevel === 'weak' ? 'warn' : 'info'),
+      factor('rendering', renderingLevel, 'leaf'),
+      factor('limits', limitLevel, limitLevel === 'good' ? 'ok' : 'warn')
+    ];
   }
 
   extractAnalysisWeather(prediction) {
@@ -1756,7 +1812,9 @@ class PredictionController {
   }
 
   renderAnalysisCard(groups, conclusion) {
-    const groupHtml = groups.map(group => this.renderAnalysisGroup(group)).join('');
+    const groupHtml = groups.every(group => group.status)
+      ? `<div class="analysis-factor-grid">${groups.map(group => this.renderAnalysisFactor(group)).join('')}</div>`
+      : groups.map(group => this.renderAnalysisGroup(group)).join('');
     return `
       <div class="analysis-card app-analysis-card">
         <div class="analysis-card-title"><span>${this._analysisText('title')}</span></div>
@@ -1786,6 +1844,20 @@ class PredictionController {
         <span class="analysis-item-icon" aria-hidden="true">${this.renderInlineSvgIcon(icon)}</span>
         <span class="analysis-item-copy"><strong>${item.title}</strong><small>${item.desc}</small></span>
       </div>
+    `;
+  }
+
+  renderAnalysisFactor(factor) {
+    const statusTone = ['good', 'fair', 'mild', 'weak'].includes(factor.statusTone) ? factor.statusTone : 'fair';
+    return `
+      <section class="analysis-factor analysis-factor-${factor.type} analysis-factor-${factor.key}">
+        <div class="analysis-factor-heading">
+          <span class="analysis-factor-icon">${this.renderInlineSvgIcon(factor.icon)}</span>
+          <span class="analysis-factor-title">${factor.title}</span>
+          <strong class="analysis-factor-status analysis-factor-status-${statusTone}">${factor.status}</strong>
+        </div>
+        <p>${factor.desc}</p>
+      </section>
     `;
   }
 
@@ -1822,11 +1894,13 @@ class PredictionController {
 
     const baseScore = prediction?.breakdown?.baseScore;
     const canvasScore = prediction?.canvasAnalysis?.score ?? prediction?.breakdown?.canvasScore;
+    const carrierScore = prediction?.carrierAnalysis?.score ?? prediction?.breakdown?.carrierScore ?? canvasScore;
     const lightPathScore = prediction?.lightPathAnalysis?.score ?? prediction?.breakdown?.lightPathScore;
     const renderingFactor = prediction?.renderingAnalysis?.factor ?? prediction?.breakdown?.renderingFactor;
     const renderedScore = prediction?.breakdown?.unclampedFinalScore;
     const finalScore = prediction?.score;
     const aerosol = prediction?.breakdown?.aerosolScattering;
+    const aerosolCarrier = prediction?.aerosolCarrierScore || prediction?.breakdown?.aerosolCarrierScore;
     const aerosolFactor = prediction?.renderingAnalysis?.aerosolFactor ?? aerosol?.factor;
     const thickHighCloudPenalty = prediction?.thickHighCloudPenalty || prediction?.lightPathAnalysis?.thickHighCloudPenalty;
     const cloudThickness = prediction?.cloudThickness || prediction?.lightPathAnalysis?.cloudThickness;
@@ -1857,44 +1931,44 @@ class PredictionController {
     const precipitation = metric(['precipitation', 'convPrecip'], 0);
 
     const reasonText = (reason) => ({
-      precipitation_cap_45: ledgerText('reasons.precipitationCap45', {}, 'rain with low clouds capped the score at 45', '降水叠加低云，分数封顶到 45'),
-      overcast_cap_35: ledgerText('reasons.overcastCap35', {}, 'low-cloud overcast capped the score at 35', '低云阴天遮挡，分数封顶到 35'),
-      overcast_fog_cap_15: ledgerText('reasons.overcastFogCap15', {}, 'overcast sky plus visibility ≤5km capped the score at 15', '阴天且能见度≤5km，分数硬封顶到 15'),
-      rainy_mid_cloud_overcast_cap_35: ledgerText('reasons.rainyMidCloudOvercastCap35', {}, 'rainy gray mid-cloud overcast capped the score at 35', '雨后灰幕中云阴天，分数封顶到 35'),
-      no_visible_sunset_path_cap_5: ledgerText('reasons.noVisibleSunsetPathCap5', {}, 'no visible sunset light path; score capped at 5', '无可见日落光路，分数封顶到 5'),
-      no_visible_sunset_path_cap_15: ledgerText('reasons.noVisibleSunsetPathCap15', {}, 'gray rainy overcast likely blocks sunset light; score capped at 15', '雨后灰幕阴天大概率遮断日落光路，分数封顶到 15'),
-      extreme_dust_haze_cap_28: ledgerText('reasons.extremeDustHazeCap28', {}, 'severe dust/haze capped the score at 28', '强沙尘/灰幕压制，分数封顶到 28'),
-      severe_haze_cap_35: ledgerText('reasons.severeHazeCap35', {}, 'heavy haze capped the score at 35', '重度灰霾压制，分数封顶到 35'),
-      moderate_haze_cap_45: ledgerText('reasons.moderateHazeCap45', {}, 'moderate haze capped the score at 45', '中度灰霾压制，分数封顶到 45')
-    }[reason] || reason || ledgerText('reasons.adjustmentApplied', {}, 'cap/floor adjustment applied', '应用封顶/保底修正'));
+      precipitation_cap_45: ledgerText('reasons.precipitationCap45', {}, 'rain plus low clouds keeps the score low', '降水叠加低云，观赏条件明显变差'),
+      overcast_cap_35: ledgerText('reasons.overcastCap35', {}, 'low clouds block the sunlight path', '低云遮住太阳方向，光线不容易照到云层'),
+      overcast_fog_cap_15: ledgerText('reasons.overcastFogCap15', {}, 'low cloud and low visibility make the sky too gray', '低云叠加低能见度，天空容易发灰'),
+      rainy_mid_cloud_overcast_cap_35: ledgerText('reasons.rainyMidCloudOvercastCap35', {}, 'post-rain moisture makes the glow hard to show', '雨后水汽偏重，霞光不容易显色'),
+      no_visible_sunset_path_cap_5: ledgerText('reasons.noVisibleSunsetPathCap5', {}, 'sunset light is unlikely to reach the clouds', '日落光线很难照到云层'),
+      no_visible_sunset_path_cap_15: ledgerText('reasons.noVisibleSunsetPathCap15', {}, 'rainy gray sky likely blocks sunset light', '雨后灰幕偏重，日落光线大概率被挡住'),
+      extreme_dust_haze_cap_28: ledgerText('reasons.extremeDustHazeCap28', {}, 'heavy dust or haze suppresses the glow', '强沙尘或灰幕会压住霞光'),
+      severe_haze_cap_35: ledgerText('reasons.severeHazeCap35', {}, 'heavy haze makes colors hard to show', '重度灰霾让颜色不容易出来'),
+      moderate_haze_cap_45: ledgerText('reasons.moderateHazeCap45', {}, 'haze weakens orange-red color', '灰霾会削弱红橙色')
+    }[reason] || reason || ledgerText('reasons.adjustmentApplied', {}, 'score adjusted for limiting conditions', '已按限制条件修正'));
 
     const capEvents = [
       severeWeatherCap?.reason ? {
-        label: ledgerText('labels.hardCap', {}, 'Hard cap', '硬封顶'),
+        label: ledgerText('labels.hardCap', {}, 'Limiting weather', '天气限制'),
         value: `≤${fmt(severeWeatherCap.score, 0)}`,
         detail: reasonText(severeWeatherCap.reason),
         tone: 'bad'
       } : null,
       aerosolHazeCap?.applied ? {
-        label: ledgerText('labels.hazeCap', {}, 'Haze cap', '灰幕封顶'),
+        label: ledgerText('labels.hazeCap', {}, 'Haze limit', '灰幕影响'),
         value: `≤${fmt(aerosolHazeCap.cap, 0)}`,
         detail: reasonText(aerosolHazeCap.reason),
         tone: 'bad'
       } : null,
       thickHighCloudPenalty?.applied ? {
-        label: ledgerText('labels.thickCloudCap', {}, 'Thick-cloud cap', '厚云封顶'),
+        label: ledgerText('labels.thickCloudCap', {}, 'Thick cloud', '厚云影响'),
         value: `≤${fmt(thickHighCloudPenalty.cap, 0)}`,
         detail: ledgerText('details.thickCloudCap', {}, 'thick high cloud reduces usable color rendering', '高云过厚，真实可染色效果下降'),
         tone: 'bad'
       } : null,
       denseCarrierCanvasOnly ? {
-        label: ledgerText('labels.cloudThicknessModifier', {}, 'Cloud-thickness modifier', '云厚修正'),
+        label: ledgerText('labels.cloudThicknessModifier', {}, 'Cloud layer effect', '云层厚度影响'),
         value: `×${fmt(cloudThickness?.modifier ?? 0.75, 2)}`,
-        detail: ledgerText('details.cloudThicknessModifier', {}, 'when mid/high-cloud carriers are clear, thickness only softens the canvas and does not add another hard cap', '中高云载体明确时，云厚只温和降低画布分，不再额外封顶'),
+        detail: ledgerText('details.cloudThicknessModifier', {}, 'mid/high clouds can still catch sunset light, so cloud thickness has only a mild impact here', '中高云层仍能承接晚霞光线，当前云厚影响较轻'),
         tone: 'cap'
       } : null,
       geometricModel?.feasible === false ? {
-        label: ledgerText('labels.geometryCap', {}, 'Geometry cap', '几何封顶'),
+        label: ledgerText('labels.geometryCap', {}, 'Sun angle', '太阳角度'),
         value: '≤30',
         detail: geometricModel.reason || ledgerText('details.geometryCap', {}, 'sun/cloud geometry is not feasible', '太阳与云层几何条件不足'),
         tone: 'bad'
@@ -1911,10 +1985,21 @@ class PredictionController {
         detail: ledgerText('details.carrierFloor', {}, 'clear high-cloud carrier prevents over-penalty', '高云载体清透，避免误伤低估'),
         tone: 'good'
       } : null,
+      aerosolCarrier?.activatedScore >= 18 ? {
+        label: ledgerText('labels.aerosolCarrier', {}, 'Aerosol carrier', '气溶胶载体'),
+        value: fmt(aerosolCarrier.activatedScore, 1),
+        detail: ledgerText(
+          'details.aerosolCarrier',
+          { activation: fmt(aerosolCarrier.lightPathActivation, 2) },
+          'thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}',
+          '云层很少时，薄雾在光路通畅时可承接一点暖色，光路激活 ×{{activation}}'
+        ),
+        tone: 'good'
+      } : null,
       postRainAdjustment?.applied && postRainAdjustment.cap ? {
-        label: ledgerText('labels.postRainCap', {}, 'Post-rain cap', '雨后灰幕封顶'),
+        label: ledgerText('labels.postRainCap', {}, 'Post-rain haze', '雨后灰幕'),
         value: `≤${fmt(postRainAdjustment.cap, 0)}`,
-        detail: ledgerText('details.postRainCap', {}, 'post-rain moisture or haze turns the glow into a gray curtain', '雨后水汽/灰幕压光，霞光按低上限处理'),
+        detail: ledgerText('details.postRainCap', {}, 'post-rain moisture or haze turns the glow gray', '雨后水汽或灰幕偏重，霞光容易发灰'),
         tone: 'bad'
       } : null
     ].filter(Boolean);
@@ -1928,15 +2013,15 @@ class PredictionController {
         detail = ledgerText(
           'reasons.lightPathStatusCap60',
           { light: fmt(lightPathScore, 1) },
-          'light path is only {{light}}, so the result is capped to the light-glow band around 60',
-          '光路只有 {{light}}，归入轻微霞光档，最终展示分封顶到 60'
+          'light path is {{light}}, so the result is shown as a light-glow chance',
+          '光路约 {{light}}，更像轻微霞光机会'
         );
       } else if (Number(canvasScore) < 30 && finalNumber <= 40) {
         detail = ledgerText(
           'reasons.canvasStatusCap40',
           { canvas: fmt(canvasScore, 1) },
-          'cloud carrier is only {{canvas}}, so the result is capped to the no-fire-cloud band below 40',
-          '云层载体只有 {{canvas}}，归入无火烧云档，最终展示分封顶到 40 以下'
+          'cloud carrier is {{canvas}}, so fire-cloud chance is weak',
+          '云层载体约 {{canvas}}，火烧云机会偏弱'
         );
       }
 
@@ -1968,12 +2053,24 @@ class PredictionController {
         </div>
       </div>`;
 
-    const weightedDescription = Number.isFinite(Number(canvasScore)) && Number.isFinite(Number(lightPathScore)) && Number.isFinite(Number(baseScore))
-      ? ledgerText('weightedFormula', { canvas: fmt(canvasScore, 1), light: fmt(lightPathScore, 1), base: fmt(baseScore, 1) }, '{{canvas}}×80% + {{light}}×20% = {{base}}', '{{canvas}}×80% + {{light}}×20% = {{base}}')
+    const weightedDescription = Number.isFinite(Number(carrierScore)) && Number.isFinite(Number(lightPathScore)) && Number.isFinite(Number(baseScore))
+      ? ledgerText('weightedFormula', { canvas: fmt(carrierScore, 1), light: fmt(lightPathScore, 1), base: fmt(baseScore, 1) }, '{{canvas}}×80% + {{light}}×20% = {{base}}', '{{canvas}}×80% + {{light}}×20% = {{base}}')
       : ledgerText('canvasPlusLightPath', {}, 'canvas + light path', '画布 + 光路');
     const renderingDescription = Number.isFinite(Number(baseScore)) && Number.isFinite(Number(renderingFactor)) && Number.isFinite(Number(renderedScore))
       ? ledgerText('renderingFormula', { base: fmt(baseScore, 1), factor: fmt(renderingFactor, 2), rendered: fmt(renderedScore, 1) }, '{{base}} × rendering {{factor}} = {{rendered}}', '{{base}} × 显色系数 {{factor}} = {{rendered}}')
       : ledgerText('weatherTransparency', {}, 'weather transparency factor', '天气通透度');
+
+    const lightPathDetail = (() => {
+      if (prediction?.lightPathAnalysis?.capReason === 'overcast_cap_40') {
+        return ledgerText('details.lightPathLowCloudBlock', {}, 'low clouds block the sunlight path to the colorable clouds', '低云遮住太阳方向，光线不容易照到中高云');
+      }
+      if (prediction?.lightPathAnalysis?.capReason === 'precipitation_cap_50') {
+        return ledgerText('details.lightPathRain', {}, 'rain weakens direct sunset light', '降水会削弱日落直射光');
+      }
+      return prediction?.lightPathAnalysis?.source === 'solar_direction_openmeteo'
+        ? ledgerText('details.directionalSamples', {}, 'solar-azimuth samples at 15/30/50/100km are included', '已接入太阳方位 15/30/50/100km 周边采样')
+        : '';
+    })();
 
     const adjustmentHtml = capEvents.length
       ? capEvents.map((event, idx) => step(
@@ -1994,15 +2091,41 @@ class PredictionController {
         </div>
         <div class="score-ledger-summary">${escape(summary)}</div>
         <div class="score-ledger-steps">
-          ${step(1, ledgerText('labels.cloudCarrier', {}, 'Cloud carrier', '云层载体'), ledgerText('details.cloudCarrier', {}, 'usable colored cloud surface', '可被染色的云面质量'), fmt(canvasScore, 1), ledgerText('details.cloudPenalty', { low: fmt(prediction?.canvasAnalysis?.lowCloudPenalty, 2), overcast: fmt(prediction?.canvasAnalysis?.overcastPenalty, 2) }, 'low cloud ×{{low}}, overcast ×{{overcast}}', '低云 ×{{low}}，阴天 ×{{overcast}}'))}
-          ${step(2, ledgerText('labels.lightPath', {}, 'Light path', '光路'), ledgerText('details.lightPath', {}, 'sunlight reaches the cloud layer', '阳光是否能打到云层'), fmt(lightPathScore, 1), prediction?.lightPathAnalysis?.source === 'solar_direction_openmeteo' ? ledgerText('details.directionalSamples', {}, 'solar-azimuth samples at 15/30/50/100km are included', '已接入太阳方位 15/30/50/100km 周边采样') : '')}
+          ${step(1, ledgerText('labels.cloudCarrier', {}, 'Carrier', '载体'), ledgerText('details.cloudCarrier', {}, 'usable color carrier from cloud or thin haze', '可被染色的云面或薄雾载体'), fmt(carrierScore, 1), ledgerText('details.cloudPenalty', { low: fmt(prediction?.canvasAnalysis?.lowCloudPenalty, 2), overcast: fmt(prediction?.canvasAnalysis?.overcastPenalty, 2) }, 'cloud canvas {{canvas}}, low cloud ×{{low}}, overcast ×{{overcast}}', '云画布 {{canvas}}，低云 ×{{low}}，阴天 ×{{overcast}}').replaceAll('{{canvas}}', fmt(canvasScore, 1)))}
+          ${step(2, ledgerText('labels.lightPath', {}, 'Light path', '光路'), ledgerText('details.lightPath', {}, 'sunlight reaches the cloud layer', '阳光是否能打到云层'), fmt(lightPathScore, 1), lightPathDetail)}
           ${step(3, ledgerText('labels.baseScore', {}, 'Base score', '基础分'), weightedDescription, fmt(baseScore, 1))}
           ${step(4, ledgerText('labels.rendering', {}, 'Rendering', '显色修正'), renderingDescription, fmt(renderedScore, 1), ledgerText('details.renderingFactors', { visibility: fmt(prediction?.renderingAnalysis?.visibilityFactor, 2), humidity: fmt(prediction?.renderingAnalysis?.humidityFactor, 2), aerosol: fmt(aerosolFactor, 2) }, 'visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}', '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}'))}
           ${adjustmentHtml}
-          ${step(capEvents.length ? capEvents.length + 5 : 5, ledgerText('labels.final', {}, 'Final', '最终分'), capEvents.length ? ledgerText('details.afterAdjustments', {}, 'after all caps and floors', '应用所有封顶/保底后') : ledgerText('details.finalDisplayed', {}, 'final displayed result', '最终展示结果'), fmt(finalScore, 0), '', 'final')}
+          ${step(capEvents.length ? capEvents.length + 5 : 5, ledgerText('labels.final', {}, 'Final', '最终分'), capEvents.length ? ledgerText('details.afterAdjustments', {}, 'after weather and visibility adjustments', '结合天气和能见度后') : ledgerText('details.finalDisplayed', {}, 'final displayed result', '最终展示结果'), fmt(finalScore, 0), '', 'final')}
         </div>
       </div>
     `;
+  }
+
+  formatChineseRelativeAzimuth(azimuth, language = 'zh-CN') {
+    const angle = Number(azimuth);
+    if (!Number.isFinite(angle)) return '';
+
+    const normalized = ((angle % 360) + 360) % 360;
+    const nearestQuarter = Math.round(normalized / 90);
+    const cardinalAngle = nearestQuarter * 90;
+    const cardinalIndex = nearestQuarter % 4;
+    let offset = Math.round(normalized - cardinalAngle);
+    if (offset === -0) offset = 0;
+
+    const chars = language === 'zh-TW'
+      ? { n: '北', e: '東', s: '南', w: '西', straight: '正', lean: '偏' }
+      : { n: '北', e: '东', s: '南', w: '西', straight: '正', lean: '偏' };
+    const cardinals = [chars.n, chars.e, chars.s, chars.w];
+    const sideByCardinal = [
+      offset >= 0 ? chars.e : chars.w,
+      offset >= 0 ? chars.s : chars.n,
+      offset >= 0 ? chars.w : chars.e,
+      offset >= 0 ? chars.n : chars.s,
+    ];
+
+    if (offset === 0) return `${chars.straight}${cardinals[cardinalIndex]}`;
+    return `${cardinals[cardinalIndex]}${chars.lean}${sideByCardinal[cardinalIndex]} ${Math.abs(offset)}°`;
   }
 
   /**
@@ -2024,19 +2147,11 @@ class PredictionController {
           : normalizedLanguage.startsWith('zh') ? 'zh-CN'
             : normalizedLanguage.startsWith('en') ? 'en-US'
               : rawLanguage;
+    if (language === 'zh-CN' || language === 'zh-TW') {
+      return this.formatChineseRelativeAzimuth(prediction.sunAzimuth, language);
+    }
+
     const directionSets = {
-      'zh-CN': [
-        '正北', '东北偏北', '东北', '东北偏东',
-        '正东', '东南偏东', '东南', '东南偏南',
-        '正南', '西南偏南', '西南', '西南偏西',
-        '正西', '西北偏西', '西北', '西北偏北'
-      ],
-      'zh-TW': [
-        '正北', '東北偏北', '東北', '東北偏東',
-        '正東', '東南偏東', '東南', '東南偏南',
-        '正南', '西南偏南', '西南', '西南偏西',
-        '正西', '西北偏西', '西北', '西北偏北'
-      ],
       'ja-JP': [
         '北', '北北東', '北東', '東北東',
         '東', '東南東', '南東', '南南東',
@@ -2171,12 +2286,13 @@ class PredictionController {
         const sunriseTime = pred.sunriseTime || pred.sunsetTime;
         const isPassed = sunriseTime ? now > new Date(sunriseTime.getTime() + 2 * 60 * 60 * 1000) : false;
         const score = Math.round(pred.score ?? 0);
-        const quality = qualityTextMap[pred.quality] ?? '较差';
+        const scoreQuality = this.getQualityFromScore(score);
+        const quality = qualityTextMap[scoreQuality] ?? '较差';
         sunriseRow = `
           <div class="fcard-row-item ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(pred)}">
             <span class="fcard-row-icon">${this.renderSunEventIcon('sunrise', 'sun-event-icon fcard-sun-event-icon')}</span>
             <span class="fcard-row-label">${this.i18n.t('prediction.sunrise')}</span>
-            <span class="fcard-row-score quality-${pred.quality}" title="${quality}">${score}${scoreSuffix}</span>
+            <span class="fcard-row-score quality-${scoreQuality}" title="${quality}">${score}${scoreSuffix}</span>
           </div>`;
       }
 
@@ -2187,12 +2303,13 @@ class PredictionController {
         const sunsetTime = pred.sunsetTime;
         const isPassed = sunsetTime ? now > new Date(sunsetTime.getTime() + 1.5 * 60 * 60 * 1000) : false;
         const score = Math.round(pred.score ?? 0);
-        const quality = qualityTextMap[pred.quality] ?? '较差';
+        const scoreQuality = this.getQualityFromScore(score);
+        const quality = qualityTextMap[scoreQuality] ?? '较差';
         sunsetRow = `
           <div class="fcard-row-item ${isPassed ? 'passed' : ''}" data-index="${predictions.indexOf(dayPredictions.sunset)}">
             <span class="fcard-row-icon">${this.renderSunEventIcon('sunset', 'sun-event-icon fcard-sun-event-icon')}</span>
             <span class="fcard-row-label">${this.i18n.t('prediction.sunset')}</span>
-            <span class="fcard-row-score quality-${pred.quality}" title="${quality}">${score}${scoreSuffix}</span>
+            <span class="fcard-row-score quality-${scoreQuality}" title="${quality}">${score}${scoreSuffix}</span>
           </div>`;
       }
 
