@@ -17,6 +17,8 @@ Page({
     defaultPeriod: 'sunset',
     defaultDay: 'today',
     weatherView: 'overview',
+    weatherDay: 'today',
+    weatherParameter: 'temp',
     errorMessage: '',
     weatherPreview: buildDefaultWeatherPreview(),
     predictionPreview: buildDefaultPredictionPreview(),
@@ -30,7 +32,7 @@ Page({
     if (options.weatherTest === '1' || options.test === 'weather') {
       this.setData({
         weatherPreview: buildTestWeatherPreview(),
-        predictionPreview: buildTestPredictionPreview()
+        predictionPreview: buildCompletePredictionPreview(buildTestPredictionPreview())
       });
     }
     this.refreshSavedLists();
@@ -99,6 +101,24 @@ Page({
     const view = event.currentTarget.dataset.view;
     if (!['overview', 'hourly', 'glow'].includes(view)) return;
     this.setData({ weatherView: view });
+  },
+
+  switchWeatherDay(event) {
+    const day = event.currentTarget.dataset.day;
+    if (!['today', 'tomorrow'].includes(day)) return;
+    this.setData({
+      weatherDay: day,
+      weatherPreview: refreshWeatherHourlyView(this.data.weatherPreview, day, this.data.weatherParameter)
+    });
+  },
+
+  switchWeatherParameter(event) {
+    const parameter = event.currentTarget.dataset.param;
+    if (!['temp', 'precip', 'humidity', 'wind', 'pressure', 'clouds'].includes(parameter)) return;
+    this.setData({
+      weatherParameter: parameter,
+      weatherPreview: refreshWeatherHourlyView(this.data.weatherPreview, this.data.weatherDay, parameter)
+    });
   },
 
   toggleHomeMenu() {
@@ -228,7 +248,7 @@ Page({
     if (isWeatherTestLocation(locationText)) {
       this.setData({
         weatherPreview: buildTestWeatherPreview(),
-        predictionPreview: buildTestPredictionPreview(),
+        predictionPreview: buildCompletePredictionPreview(buildTestPredictionPreview()),
         errorMessage: '',
         loading: false
       });
@@ -354,6 +374,7 @@ export function buildDefaultWeatherPreview() {
     weekly: [],
     hourly: [],
     hourlyChart: [],
+    hourlyView: buildWeatherHourlyViewModel([], 'temp'),
     glow: [],
     weeklyTab: '7天概览',
     hourlyTab: '24小时预报',
@@ -488,6 +509,8 @@ export function buildWeatherPreview(weather = {}) {
   const cloudAverage = averageNumber([highCloud, midCloud, lowCloud, weather.cloudCover]);
   const provider = weather.provider || weather.providerMeta?.name || 'test';
   const windSpeed = formatWindSpeedValue(weather.windSpeed);
+  const hourly = buildWeatherHourlyPreview(weather);
+  const hourlyView = buildWeatherHourlyViewModel(hourly, 'temp');
   const windDirection = weather.windDirection || '风向';
   return {
     visible: true,
@@ -504,8 +527,9 @@ export function buildWeatherPreview(weather = {}) {
     windSpeed,
     windDirection,
     weekly: buildWeatherWeeklyPreview(weather),
-    hourly: buildWeatherHourlyPreview(weather),
-    hourlyChart: buildWeatherHourlyChart(weather),
+    hourly,
+    hourlyChart: hourlyView.chart,
+    hourlyView,
     glow: buildWeatherGlowPreview(weather),
     weeklyTab: '7天概览',
     hourlyTab: '24小时预报',
@@ -522,53 +546,204 @@ export function buildWeatherPreview(weather = {}) {
   };
 }
 
-export function buildWeatherHourlyPreview(weather = {}) {
+export function buildWeatherHourlyPreview(weather = {}, day = 'today') {
   const source = Array.isArray(weather.hourly) ? weather.hourly : [];
   if (source.length) {
-    return source.slice(0, 24).map((item, index) => ({
+    const offset = day === 'tomorrow' ? 24 : 0;
+    const window = source.slice(offset, offset + 24);
+    return (window.length ? window : source.slice(0, 24)).map((item, index) => ({
       key: item.key || item.time || `hour-${index}`,
       time: item.timeLabel || compactHour(item.time || item.date || item.timestamp) || `${index}:00`,
       temp: formatTemperatureValue(item.temp ?? item.temperature),
+      precip: formatNumberRaw(item.precipitation ?? item.precip ?? 0),
       humidity: formatPercentValue(item.humidity),
+      humidityValue: formatNumberRaw(item.humidity),
       cloud: formatPercentValue(item.cloudCover ?? item.clouds),
-      wind: formatWindSpeedValue(item.windSpeed ?? item.wind)
+      cloudValue: formatNumberRaw(item.cloudCover ?? item.clouds),
+      wind: formatWindSpeedValue(item.windSpeed ?? item.wind),
+      windValue: formatNumberRaw(item.windSpeed ?? item.wind),
+      pressure: formatNumberRaw(item.pressure)
     }));
   }
 
   const baseTemp = Number(weather.temp ?? weather.temperature);
   const temp = Number.isFinite(baseTemp) ? baseTemp : 19.9;
-  return [0, 3, 6, 9, 12, 15, 18, 21].map((hour, index) => ({
-    key: `test-hour-${hour}`,
-    time: `${String(hour).padStart(2, '0')}:00`,
-    temp: formatTemperatureValue(temp + Math.sin(index / 2) * 3),
-    humidity: formatPercentValue((weather.humidity ?? 72) - index),
-    cloud: formatPercentValue((weather.cloudCover ?? weather.midClouds ?? 53) + (index % 3) * 3),
-    wind: formatWindSpeedValue((weather.windSpeed ?? 11) + (index % 2))
-  }));
+  return Array.from({ length: 24 }, (_, index) => {
+    const hour = index;
+    const daylight = Math.max(0, Math.sin(((hour - 6) / 12) * Math.PI));
+    const tempValue = temp + daylight * 6 - 2 + Math.sin(index / 3) * 1.4;
+    const cloudValue = (weather.cloudCover ?? weather.midClouds ?? 53) + Math.sin(index / 2) * 10;
+    const humidityValue = (weather.humidity ?? 72) - daylight * 18 + Math.cos(index / 4) * 4;
+    const windValue = (weather.windSpeed ?? 11) + (index % 5) - 2;
+    return {
+      key: `test-hour-${day}-${hour}`,
+      time: `${String(hour).padStart(2, '0')}:00`,
+      temp: formatTemperatureValue(tempValue),
+      precip: formatNumberRaw(index % 9 === 0 ? 0.4 : 0),
+      humidity: formatPercentValue(humidityValue),
+      humidityValue: formatNumberRaw(humidityValue),
+      cloud: formatPercentValue(cloudValue),
+      cloudValue: formatNumberRaw(cloudValue),
+      wind: formatWindSpeedValue(windValue),
+      windValue: formatNumberRaw(windValue),
+      pressure: formatNumberRaw((weather.pressure ?? 1007) + Math.sin(index / 5) * 3)
+    };
+  });
 }
 
 export function buildWeatherHourlyChart(weather = {}) {
-  const hourly = buildWeatherHourlyPreview(weather);
-  const temps = hourly.map((item) => Number(item.temp)).filter(Number.isFinite);
-  const min = temps.length ? Math.min(...temps) : 0;
-  const max = temps.length ? Math.max(...temps) : 1;
+  return buildWeatherHourlyViewModel(buildWeatherHourlyPreview(weather), 'temp').chart;
+}
+
+export function buildWeatherHourlyViewModel(hourly = [], parameter = 'temp') {
+  const parameterConfig = getWeatherParameterConfig();
+  const config = parameterConfig[parameter] || parameterConfig.temp;
+  const values = hourly.map((item) => getHourlyParameterValue(item, parameter)).filter(Number.isFinite);
+  const min = values.length ? Math.min(...values) : 0;
+  const max = values.length ? Math.max(...values) : 1;
   const span = Math.max(1, max - min);
   const count = Math.max(1, hourly.length - 1);
 
-  return hourly.map((item, index) => {
-    const temp = Number(item.temp);
-    const normalized = Number.isFinite(temp) ? (temp - min) / span : 0.5;
+  const chart = hourly.map((item, index) => {
+    const value = getHourlyParameterValue(item, parameter);
+    const normalized = Number.isFinite(value) ? (value - min) / span : 0.5;
     const x = Math.round((index / count) * 100);
     const y = Math.round(82 - normalized * 58);
     return {
       key: item.key,
       time: item.time,
-      temp: item.temp,
+      value,
+      valueText: formatHourlyParameterValue(value, config.unit),
       left: x,
       top: y,
-      barHeight: Math.max(10, Math.round(normalized * 54) + 12)
+      barHeight: Math.max(10, Math.round(normalized * 54) + 12),
+      labelVisible: index % 4 === 0 || index === hourly.length - 1
     };
   });
+
+  const chartSegments = chart.slice(0, -1).map((item, index) => {
+    const next = chart[index + 1];
+    const dx = next.left - item.left;
+    const dy = next.top - item.top;
+    return {
+      key: `${item.key}-${next.key}`,
+      left: item.left,
+      top: item.top,
+      width: Math.max(1, Math.round(Math.sqrt(dx * dx + dy * dy))),
+      rotate: Math.round(Math.atan2(dy, dx) * 180 / Math.PI)
+    };
+  });
+
+  return {
+    selected: parameter,
+    label: config.label,
+    unit: config.unit,
+    parameters: Object.keys(parameterConfig).map((key) => ({ key, ...parameterConfig[key] })),
+    dayOptions: [
+      { key: 'today', label: '今天' },
+      { key: 'tomorrow', label: '明天' }
+    ],
+    chart,
+    chartSegments,
+    axisLabels: [max, min + span / 2, min].map((value, index) => ({
+      key: `axis-${index}`,
+      value: formatHourlyParameterValue(value, config.unit)
+    })),
+    weatherStrip: hourly.filter((_, index) => index % 4 === 0).map((item) => ({
+      key: item.key,
+      time: item.time,
+      text: item.cloud
+    }))
+  };
+}
+
+function getWeatherParameterConfig() {
+  return {
+    temp: { label: '温度', unit: '°C', icon: '℃' },
+    precip: { label: '降水', unit: 'mm', icon: '∿' },
+    humidity: { label: '湿度', unit: '%', icon: '◇' },
+    wind: { label: '风速', unit: 'km/h', icon: '≈' },
+    pressure: { label: '气压', unit: 'hPa', icon: '≡' },
+    clouds: { label: '云量', unit: '%', icon: '☁' }
+  };
+}
+
+function refreshWeatherHourlyView(preview = {}, day = 'today', parameter = 'temp') {
+  const hourly = buildWeatherHourlyPreview(preview.sourceWeather || {}, day);
+  const fallbackHourly = hourly.length ? hourly : (preview.hourly || []);
+  const hourlyView = buildWeatherHourlyViewModel(fallbackHourly, parameter);
+  return {
+    ...preview,
+    hourly: fallbackHourly,
+    hourlyChart: hourlyView.chart,
+    hourlyView
+  };
+}
+
+function getHourlyParameterValue(item = {}, parameter = 'temp') {
+  const value = {
+    temp: item.temp,
+    precip: item.precip,
+    humidity: item.humidityValue ?? item.humidity,
+    wind: item.windValue ?? item.wind,
+    pressure: item.pressure,
+    clouds: item.cloudValue ?? item.cloud
+  }[parameter];
+  return Number(String(value).replace(/[^0-9.-]/g, ''));
+}
+
+function formatHourlyParameterValue(value, unit) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return '--';
+  const rounded = unit === 'mm' ? Math.round(number * 10) / 10 : Math.round(number);
+  return `${rounded}${unit}`;
+}
+
+function formatNumberRaw(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.round(number * 10) / 10 : 0;
+}
+
+export function buildPredictionAnalysisGroups(input = {}) {
+  const high = Number(input.high ?? 62);
+  const mid = Number(input.mid ?? 36);
+  const low = Number(input.low ?? 8);
+  const visibility = Number(input.visibility ?? 13);
+  const humidity = Number(input.humidity ?? 72);
+  const aod = Number(input.aod ?? 0.11);
+  return [
+    { key: 'carrier', title: '云层载体', status: high >= 50 || mid >= 30 ? '较好' : '一般', tone: high >= 50 || mid >= 30 ? 'good' : 'fair', desc: `高云 ${Math.round(high)}%、中云 ${Math.round(mid)}%，有可染色云层基础。` },
+    { key: 'lightPath', title: '光路条件', status: low <= 25 ? '较好' : '一般', tone: low <= 25 ? 'good' : 'fair', desc: `低云 ${Math.round(low)}%，太阳方向相对通透，光线有机会照到云底。` },
+    { key: 'rendering', title: '空气显色', status: visibility >= 10 && humidity < 85 ? '较好' : '一般', tone: visibility >= 10 && humidity < 85 ? 'good' : 'fair', desc: `能见度 ${Math.round(visibility)}km、湿度 ${Math.round(humidity)}%、AOD ${aod.toFixed(2)}。` },
+    { key: 'limits', title: '限制因素', status: low > 45 ? '需警惕' : '较少', tone: low > 45 ? 'warning' : 'good', desc: low > 45 ? '低云偏多可能遮挡太阳方向。' : '降水和厚低云限制不明显。' }
+  ];
+}
+
+export function buildPredictionRadarPreview() {
+  return {
+    directions: [
+      { direction: 'N', name: '北', scoreText: '62', level: 'watch', cloudText: '高 28% / 中 44% / 低 12%' },
+      { direction: 'NE', name: '东北', scoreText: '68', level: 'watch', cloudText: '高 34% / 中 48% / 低 10%' },
+      { direction: 'E', name: '东', scoreText: '58', level: 'watch', cloudText: '高 22% / 中 39% / 低 18%' },
+      { direction: 'SE', name: '东南', scoreText: '52', level: 'watch', cloudText: '高 18% / 中 34% / 低 24%' },
+      { direction: 'S', name: '南', scoreText: '49', level: 'weak', cloudText: '高 16% / 中 30% / 低 28%' },
+      { direction: 'SW', name: '西南', scoreText: '74', level: 'good', cloudText: '高 62% / 中 36% / 低 8%' },
+      { direction: 'W', name: '西', scoreText: '76', level: 'good', cloudText: '高 64% / 中 36% / 低 8%' },
+      { direction: 'NW', name: '西北', scoreText: '69', level: 'watch', cloudText: '高 55% / 中 38% / 低 12%' }
+    ]
+  };
+}
+
+function buildCompletePredictionPreview(preview = {}) {
+  return {
+    ...preview,
+    analysis: buildPredictionAnalysisGroups({
+      high: preview.clouds?.[0]?.value,
+      mid: preview.clouds?.[1]?.value,
+      low: preview.clouds?.[2]?.value
+    }),
+    radar: buildPredictionRadarPreview()
+  };
 }
 
 export function buildWeatherGlowPreview(weather = {}) {

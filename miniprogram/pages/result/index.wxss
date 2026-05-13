@@ -359,10 +359,46 @@
     radial-gradient(circle at center, rgba(251, 146, 60, 0.13) 0 8%, rgba(184, 198, 218, 0.14) 18%, rgba(138, 156, 186, 0.12) 39%, rgba(218, 226, 238, 0.12) 64%, rgba(7, 16, 31, 0.64) 100%);
 }
 
+.radar-cloud-field {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 28% 24%, rgba(218, 226, 238, 0.30), transparent 20%),
+    radial-gradient(circle at 68% 28%, rgba(184, 198, 218, 0.24), transparent 24%),
+    radial-gradient(circle at 42% 72%, rgba(138, 156, 186, 0.20), transparent 22%);
+}
+
+.radar-cloud-blob {
+  position: absolute;
+  border-radius: 48% 54% 44% 58%;
+  filter: blur(1rpx);
+  transform: translate(-50%, -50%);
+}
+
+.radar-cloud-blob-good { background: rgba(218, 226, 238, 0.48); }
+.radar-cloud-blob-watch { background: rgba(184, 198, 218, 0.38); }
+.radar-cloud-blob-weak,
+.radar-cloud-blob-unknown { background: rgba(138, 156, 186, 0.28); }
+
+.radar-ring-label {
+  position: absolute;
+  right: 18%;
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 20rpx;
+  font-weight: 800;
+  z-index: 2;
+}
+
+.radar-ring-label-low { top: 42%; }
+.radar-ring-label-mid { top: 29%; }
+.radar-ring-label-high { top: 16%; }
+
 .radar-ring,
 .radar-axis,
 .radar-center-dot,
-.radar-direction {
+.radar-direction,
+.radar-sun-event-icon {
   position: absolute;
 }
 
@@ -412,6 +448,34 @@
   background: #fb923c;
   box-shadow: 0 0 28rpx rgba(251, 146, 60, 0.46);
   transform: translate(-50%, -50%);
+}
+
+.radar-sun-event-icon {
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rpx;
+  color: #fb923c;
+  transform: translate(-50%, -50%);
+}
+
+.radar-sun-event-symbol {
+  width: 42rpx;
+  height: 42rpx;
+  border: 2rpx solid rgba(251, 146, 60, 0.58);
+  border-radius: 50%;
+  font-size: 26rpx;
+  font-weight: 900;
+  line-height: 40rpx;
+  text-align: center;
+  background: rgba(7, 16, 31, 0.72);
+}
+
+.radar-sun-event-label {
+  color: rgba(255, 255, 255, 0.60);
+  font-size: 18rpx;
+  font-weight: 800;
 }
 
 .radar-direction {

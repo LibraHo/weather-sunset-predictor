@@ -85,6 +85,10 @@
           <view class="radar-compass-subtitle">20km · 8方向</view>
         </view>
         <view class="radar-compass-dial">
+          <view class="radar-cloud-field">
+            <view class="radar-cloud-blob radar-cloud-blob-{{item.level}}" wx:for="{{radar.cloudBlobs}}" wx:key="key" style="left: {{item.left}}%; top: {{item.top}}%; width: {{item.size}}rpx; height: {{item.size}}rpx;"></view>
+          </view>
+          <view class="radar-ring-label radar-ring-label-{{item.className}}" wx:for="{{radar.rings}}" wx:key="key">{{item.label}}</view>
           <view class="radar-ring radar-ring-outer"></view>
           <view class="radar-ring radar-ring-middle"></view>
           <view class="radar-ring radar-ring-inner"></view>
@@ -92,6 +96,10 @@
           <view class="radar-axis axis-ew"></view>
           <view class="radar-axis axis-ne-sw"></view>
           <view class="radar-axis axis-nw-se"></view>
+          <view class="radar-sun-event-icon radar-sun-event-icon-{{item.type}}" wx:for="{{radar.sunEvents}}" wx:key="key" style="left: {{item.left}}%; top: {{item.top}}%;">
+            <text class="radar-sun-event-symbol">{{item.type === 'sunrise' ? '↗' : '↘'}}</text>
+            <text class="radar-sun-event-label">{{item.label}}</text>
+          </view>
           <view class="radar-center-dot"></view>
           <view class="radar-direction radar-direction-{{item.direction}}" wx:for="{{radar.directions}}" wx:key="direction">
             <view class="radar-direction-score tone-{{item.level}}">{{item.scoreText}}</view>

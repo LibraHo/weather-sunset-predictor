@@ -496,12 +496,55 @@ export function buildRadarView(surrounding = {}) {
     bestDirection: surrounding.bestDirection || null,
     points: orderRadarPoints(points),
     directions,
+    rings: buildRadarRings(),
+    cloudBlobs: buildRadarCloudBlobs(directions),
+    sunEvents: buildRadarSunEvents(surrounding),
     bestItems: directions
       .filter((item) => item.scoreText !== '--')
       .sort((a, b) => Number(b.scoreText) - Number(a.scoreText))
       .slice(0, 3),
     hasData: points.length > 0
   };
+}
+
+export function buildRadarRings() {
+  return [
+    { key: 'low', label: '低云', className: 'low' },
+    { key: 'mid', label: '中云', className: 'mid' },
+    { key: 'high', label: '高云', className: 'high' }
+  ];
+}
+
+export function buildRadarCloudBlobs(directions = []) {
+  return directions
+    .filter((item) => item && item.scoreText !== '--')
+    .map((item, index) => {
+      const score = Number(item.scoreText);
+      const size = Math.max(34, Math.min(88, 34 + score * 0.55));
+      const positions = {
+        N: [46, 13], NE: [66, 21], E: [74, 45], SE: [65, 66],
+        S: [46, 72], SW: [24, 65], W: [16, 45], NW: [24, 20]
+      };
+      const [left, top] = positions[item.direction] || [50, 50];
+      return {
+        key: item.direction || `blob-${index}`,
+        left,
+        top,
+        size,
+        level: item.level || 'unknown'
+      };
+    });
+}
+
+export function buildRadarSunEvents(surrounding = {}) {
+  const type = surrounding.type || surrounding.period || 'sunset';
+  return [{
+    key: type,
+    type,
+    label: type === 'sunrise' ? '日出' : '日落',
+    left: type === 'sunrise' ? 72 : 18,
+    top: type === 'sunrise' ? 30 : 58
+  }];
 }
 
 function orderRadarDirections(points = []) {

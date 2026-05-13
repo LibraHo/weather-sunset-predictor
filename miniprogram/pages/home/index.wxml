@@ -151,14 +151,38 @@
       </view>
     </view>
     <view class="weather-hourly-panel" wx:if="{{weatherView === 'hourly' && weatherPreview.hourly.length}}">
+      <view class="weather-day-selector xiake-toggle xiake-toggle-compact">
+        <view class="weather-day-option {{weatherDay === item.key ? 'active' : ''}}" wx:for="{{weatherPreview.hourlyView.dayOptions}}" wx:key="key" data-day="{{item.key}}" bindtap="switchWeatherDay">{{item.label}}</view>
+      </view>
+      <view class="weather-parameter-selector xiake-toggle xiake-toggle-wrap">
+        <view class="weather-param-option {{weatherParameter === 'temp' ? 'active' : ''}}" data-param="temp" bindtap="switchWeatherParameter"><text class="weather-param-icon">℃</text><text class="weather-param-label">温度</text></view>
+        <view class="weather-param-option {{weatherParameter === 'precip' ? 'active' : ''}}" data-param="precip" bindtap="switchWeatherParameter"><text class="weather-param-icon">∿</text><text class="weather-param-label">降水</text></view>
+        <view class="weather-param-option {{weatherParameter === 'humidity' ? 'active' : ''}}" data-param="humidity" bindtap="switchWeatherParameter"><text class="weather-param-icon">◇</text><text class="weather-param-label">湿度</text></view>
+        <view class="weather-param-option {{weatherParameter === 'wind' ? 'active' : ''}}" data-param="wind" bindtap="switchWeatherParameter"><text class="weather-param-icon">≈</text><text class="weather-param-label">风速</text></view>
+        <view class="weather-param-option {{weatherParameter === 'pressure' ? 'active' : ''}}" data-param="pressure" bindtap="switchWeatherParameter"><text class="weather-param-icon">≡</text><text class="weather-param-label">气压</text></view>
+        <view class="weather-param-option {{weatherParameter === 'clouds' ? 'active' : ''}}" data-param="clouds" bindtap="switchWeatherParameter"><text class="weather-param-icon">☁</text><text class="weather-param-label">云量</text></view>
+      </view>
+      <view class="weather-chart-panel">
+        <view class="weather-chart-title">{{weatherPreview.hourlyView.label}}趋势 ({{weatherPreview.hourlyView.unit}})</view>
       <view class="weather-hourly-chart" aria-label="24小时预报图">
+        <view class="weather-hourly-axis">
+          <text class="weather-hourly-axis-label" wx:for="{{weatherPreview.hourlyView.axisLabels}}" wx:key="key">{{item.value}}</text>
+        </view>
         <view class="weather-hourly-grid-line weather-hourly-grid-line-top"></view>
         <view class="weather-hourly-grid-line weather-hourly-grid-line-mid"></view>
         <view class="weather-hourly-grid-line weather-hourly-grid-line-bottom"></view>
-        <view class="weather-hourly-chart-line"></view>
+        <view class="weather-hourly-chart-path" wx:for="{{weatherPreview.hourlyView.chartSegments}}" wx:key="key" style="left: {{item.left}}%; top: {{item.top}}%; width: {{item.width}}%; transform: rotate({{item.rotate}}deg);"></view>
         <view class="weather-hourly-chart-point" wx:for="{{weatherPreview.hourlyChart}}" wx:key="key" style="left: {{item.left}}%; top: {{item.top}}%;">
+          <text class="weather-hourly-point-label" wx:if="{{item.labelVisible}}">{{item.valueText}}</text>
           <view class="weather-hourly-chart-dot"></view>
           <view class="weather-hourly-chart-bar" style="height: {{item.barHeight}}rpx;"></view>
+        </view>
+      </view>
+        <view class="hourly-weather-strip">
+          <view class="hourly-weather-chip" wx:for="{{weatherPreview.hourlyView.weatherStrip}}" wx:key="key">
+            <text class="hourly-weather-time">{{item.time}}</text>
+            <text class="hourly-weather-text">{{item.text}}</text>
+          </view>
         </view>
       </view>
       <view class="weather-hourly-row" wx:for="{{weatherPreview.hourly}}" wx:key="key">
@@ -264,6 +288,35 @@
         </view>
       </view>
     </view>
+
+    <view class="prediction-radar-card">
+      <view class="prediction-radar-head">
+        <view class="prediction-radar-title">周边云况雷达</view>
+        <view class="prediction-radar-subtitle">20km · 连续云场</view>
+      </view>
+      <view class="prediction-radar-dial">
+        <view class="prediction-radar-ring prediction-radar-ring-low"></view>
+        <view class="prediction-radar-ring prediction-radar-ring-mid"></view>
+        <view class="prediction-radar-ring prediction-radar-ring-high"></view>
+        <view class="prediction-radar-axis prediction-radar-axis-ns"></view>
+        <view class="prediction-radar-axis prediction-radar-axis-ew"></view>
+        <view class="prediction-radar-axis prediction-radar-axis-ne"></view>
+        <view class="prediction-radar-axis prediction-radar-axis-nw"></view>
+        <view class="prediction-radar-center"></view>
+        <view class="prediction-radar-direction prediction-radar-direction-{{item.direction}}" wx:for="{{predictionPreview.radar.directions}}" wx:key="direction">
+          <text class="prediction-radar-score tone-{{item.level}}">{{item.scoreText}}</text>
+          <text class="prediction-radar-name">{{item.name}}</text>
+        </view>
+      </view>
+      <view class="prediction-radar-detail">
+        <view class="prediction-radar-cloud" wx:for="{{predictionPreview.radar.directions}}" wx:key="direction">
+          <text>{{item.name}}</text>
+          <text>{{item.cloudText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="prediction-app-footer">Observe the sky · Catch the beauty</view>
 
   </view>
 

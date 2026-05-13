@@ -66,4 +66,24 @@ describe('miniprogram result page web parity', () => {
     expect(js).toContain('selectResultPeriod(event)');
     expect(wxss).toContain('.result-prediction-toggle');
   });
+
+  test('renders the website radar compass structure instead of a placeholder-only panel', () => {
+    const web = read('src/components/RadarCompass.js');
+    const wxml = read('miniprogram/pages/result/index.wxml');
+    const js = read('miniprogram/pages/result/index.js');
+    const wxss = read('miniprogram/pages/result/index.wxss');
+
+    expect(web).toContain('radar-cloud-field-');
+    expect(web).toContain('radar-sun-event-icon');
+    expect(wxml).toContain('radar-cloud-field');
+    expect(wxml).toContain('radar-sun-event-icon');
+    expect(wxml).toContain('wx:for="{{radar.rings}}"');
+    expect(wxml).toContain('wx:for="{{radar.cloudBlobs}}"');
+    expect(wxml).toContain('wx:for="{{radar.sunEvents}}"');
+    expect(js).toContain('buildRadarRings');
+    expect(js).toContain('buildRadarCloudBlobs');
+    expect(js).toContain('buildRadarSunEvents');
+    expect(wxss).toContain('.radar-cloud-field');
+    expect(wxss).toContain('.radar-sun-event-icon');
+  });
 });
