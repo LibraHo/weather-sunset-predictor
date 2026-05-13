@@ -67,22 +67,22 @@ apiAccess: 'API 연동'
     "methodology": {
       "title": "화염구름 점수 계산 방법",
       "intro": "화염구름 지수는 4가지 주요 요인을 종합하여 계산되며, 해당 날의 노을 관람이 가치 있는지 빠르게 판단하는 데 도움을 줍니다.",
-      "versionLabel": "Algorithm version: 2026.05.11-opening-upper-cloud-carrier-v1",
-      "versionDesc": "This version improves light-path scoring: low clouds block sunlight, while rich mid/high clouds are treated mainly as the color canvas.",
+      "versionLabel": "알고리즘 버전: 2026.05.13-formation-factors-v1",
+      "versionDesc": "화염구름 분석을 구름 매개층, 빛 경로, 공기 발색, 제한 요인 네 가지로 고정했습니다. 점수 공식은 그대로입니다.",
       changelogTitle: "Version update history",
       changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
       changelog: {
               "latest": {
-                      "date": "2026-05-11",
-                      "title": "Opening upper-cloud carrier protection v1",
-                      "summary": "When low clouds are scarce and the solar direction has an opening, mid/high clouds are treated more as sunset-glow canvas instead of a thick cloud curtain.",
-                      "validation": "Validation: the Summer Palace opening-cloud sample is no longer over-penalized, while haze, rain, and low-cloud obstruction cases remain cautious."
+                      "date": "2026-05-13",
+                      "title": "4요인 분석 v1",
+                      "summary": "화염구름 분석을 네 가지 안정적인 요인으로 묶어 흩어진 설명 항목을 줄였습니다.",
+                      "validation": "검증: 에어로졸, 낮은 구름 차단, 회색 연무, 두꺼운 구름, 강수 사례가 대응 요인으로 통합됩니다. 점수 공식은 변하지 않습니다."
               },
               "current": {
-                      "date": "2026-05-10",
-                      "title": "Low-cloud-led light path v3",
-                      "summary": "Light path now focuses on low clouds and the solar-direction corridor. Rich mid/high clouds are treated as sunset-glow canvas first.",
-                      "validation": "Validation: full high-cloud canvas with scarce low cloud is no longer treated as low-cloud overcast; low-cloud and rain cases stay low."
+                      "date": "2026-05-12",
+                      "title": "에어로졸 약한 매개층 v1",
+                      "summary": "구름이 적을 때 적당한 얇은 연무는 태양 방향 빛 경로가 열려 있을 때만 약한 붉은 석양 매개층으로 반영됩니다.",
+                      "validation": "검증: 베이징 약한 붉은 석양 샘플은 30점대로 올라가고, 맑은 하늘·짙은 연무/먼지·낮은 구름 차단·회색 장막은 낮게 유지됩니다."
               }
       },
       "factors": {
@@ -368,6 +368,44 @@ apiAccess: 'API 연동'
 "formationAnalysis": {
       "title": "화염구름 형성 조건 분석",
       "groups": { "positive": "유리한 조건", "neutral": "보통 요인", "warning": "주의 요인" },
+      "factors": {
+        "carrier": {
+          "title": "구름 매개층",
+          "status": { "good": "좋음", "fair": "보통", "weak": "약함" },
+          "desc": {
+            "good": "중고층 구름이 석양빛을 받아 오늘의 주요 색상 캔버스가 됩니다.",
+            "fair": "물들 수 있는 구름은 있지만 면적이나 높이가 이상적이지 않습니다.",
+            "weak": "적절한 중고층 구름이 부족해 넓은 화염구름이 생기기 어렵습니다."
+          }
+        },
+        "lightPath": {
+          "title": "빛 경로",
+          "status": { "good": "좋음", "fair": "보통", "weak": "약함" },
+          "desc": {
+            "good": "태양 방향이 비교적 트여 있어 빛이 구름 아래까지 닿을 수 있습니다.",
+            "fair": "태양 방향에 일부 가림이 있어 노을 색은 국지적으로 나타날 수 있습니다.",
+            "weak": "낮은 구름이나 구름 벽이 빛 경로를 막아 구름층까지 빛이 닿기 어렵습니다."
+          }
+        },
+        "rendering": {
+          "title": "공기 발색",
+          "status": { "good": "좋음", "fair": "보통", "weak": "약함" },
+          "desc": {
+            "good": "적당한 입자와 수분이 있어 따뜻한 붉은빛이 더 잘 드러납니다.",
+            "fair": "공기 조건은 보통이며 색 표현은 주로 구름과 빛 경로에 달려 있습니다.",
+            "weak": "공기가 탁하거나 입자가 너무 많아 색이 어둡고 옅어지기 쉽습니다."
+          }
+        },
+        "limits": {
+          "title": "제한 요인",
+          "status": { "good": "뚜렷하지 않음", "fair": "약간", "weak": "뚜렷함" },
+          "desc": {
+            "good": "뚜렷한 억제 조건은 없습니다.",
+            "fair": "가벼운 불리 요소가 있어 지속 시간이나 색 강도를 낮출 수 있습니다.",
+            "weak": "강수, 두꺼운 구름, 낮은 구름 차단, 회색 연무가 전체 표현을 낮춥니다."
+          }
+        }
+      },
       "high": {
         "abundant": "고층운 풍부 ({{value}}%)", "abundantDesc": "색을 받을 구름층이 충분합니다",
         "sufficient": "고층운 충분 ({{value}}%)", "sufficientDesc": "노을빛을 담을 조건이 좋습니다",

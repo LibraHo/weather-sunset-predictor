@@ -67,22 +67,22 @@ apiAccess: 'API接続'
     "methodology": {
       "title": "焼き雲スコアの計算方法",
       "intro": "焼き雲指数は4つの主要因子を組み合わせて計算され、その日の夕焼け観賞が価値あるかどうかを素早く判断するのに役立ちます。",
-      "versionLabel": "Algorithm version: 2026.05.11-opening-upper-cloud-carrier-v1",
-      "versionDesc": "This version improves light-path scoring: low clouds block sunlight, while rich mid/high clouds are treated mainly as the color canvas.",
+      "versionLabel": "アルゴリズム版：2026.05.13-formation-factors-v1",
+      "versionDesc": "火焼け雲分析を、雲の載体・光路条件・空気の発色・制限要因の4項目に固定しました。スコア式は変わりません。",
       changelogTitle: "Version update history",
       changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
       changelog: {
               "latest": {
-                      "date": "2026-05-11",
-                      "title": "Opening upper-cloud carrier protection v1",
-                      "summary": "When low clouds are scarce and the solar direction has an opening, mid/high clouds are treated more as sunset-glow canvas instead of a thick cloud curtain.",
-                      "validation": "Validation: the Summer Palace opening-cloud sample is no longer over-penalized, while haze, rain, and low-cloud obstruction cases remain cautious."
+                      "date": "2026-05-13",
+                      "title": "4因子分析 v1",
+                      "summary": "火焼け雲分析を4つの安定した因子にまとめ、細かい説明項目を減らしました。",
+                      "validation": "検証：エアロゾル、低雲の遮り、灰色の霞、厚い雲、降水は対応する因子に統合されます。スコア式は不変です。"
               },
               "current": {
-                      "date": "2026-05-10",
-                      "title": "Low-cloud-led light path v3",
-                      "summary": "Light path now focuses on low clouds and the solar-direction corridor. Rich mid/high clouds are treated as sunset-glow canvas first.",
-                      "validation": "Validation: full high-cloud canvas with scarce low cloud is no longer treated as low-cloud overcast; low-cloud and rain cases stay low."
+                      "date": "2026-05-12",
+                      "title": "エアロゾル弱載体 v1",
+                      "summary": "雲が少ない時、適度な薄霞は太陽方向の光路が開いている場合だけ弱い赤い夕日の載体として加味されます。",
+                      "validation": "検証：北京の弱い赤い夕日サンプルは30点台へ入り、澄んだ晴天・重い霞や砂塵・低雲遮り・灰色幕は低いままです。"
               }
       },
       "factors": {
@@ -359,6 +359,44 @@ apiAccess: 'API接続'
 "formationAnalysis": {
       "title": "焼け雲の形成条件分析",
       "groups": { "positive": "有利な条件", "neutral": "中立要因", "warning": "注意点" },
+      "factors": {
+        "carrier": {
+          "title": "雲の載体",
+          "status": { "good": "良好", "fair": "普通", "weak": "弱め" },
+          "desc": {
+            "good": "中高層の雲が夕日の光を受け、今日の主な色づきのキャンバスになります。",
+            "fair": "色づく雲はありますが、広がりや高さは理想的ではありません。",
+            "weak": "適した中高層雲が少なく、大きな夕焼け雲は出にくい状態です。"
+          }
+        },
+        "lightPath": {
+          "title": "光路条件",
+          "status": { "good": "良好", "fair": "普通", "weak": "弱め" },
+          "desc": {
+            "good": "太陽方向が比較的開けていて、光が雲底に届きやすい状態です。",
+            "fair": "太陽方向に少し遮りがあり、色づきは局所的になりそうです。",
+            "weak": "低い雲や雲の壁が光路を遮り、光が雲層へ届きにくい状態です。"
+          }
+        },
+        "rendering": {
+          "title": "空気の発色",
+          "status": { "good": "良好", "fair": "普通", "weak": "弱め" },
+          "desc": {
+            "good": "適度な粒子と水分があり、暖色や赤みが出やすい空気です。",
+            "fair": "空気条件は普通で、色の出方は主に雲と光路に左右されます。",
+            "weak": "空気が灰色っぽい、または粒子が多すぎて、色が暗く薄くなりやすい状態です。"
+          }
+        },
+        "limits": {
+          "title": "制限要因",
+          "status": { "good": "目立たない", "fair": "軽め", "weak": "明確" },
+          "desc": {
+            "good": "目立つ抑制条件はありません。",
+            "fair": "軽い不利要素があり、持続時間や色の強さを少し下げる可能性があります。",
+            "weak": "降水、厚い雲、低雲の遮り、灰色の霞が全体の見え方を下げます。"
+          }
+        }
+      },
       "high": { "abundant": "高層雲が豊富（{{value}}%）", "abundantDesc": "色づきの土台が十分です", "sufficient": "高層雲が十分（{{value}}%）", "sufficientDesc": "夕焼け色を受ける雲があります", "moderate": "高層雲が適度（{{value}}%）", "moderateDesc": "可能性はありますが色は淡めかもしれません", "few": "高層雲が少なめ（{{value}}%）", "fewDesc": "主な色づきの担い手が不足しています" },
       "mid": { "balanced": "中層雲が適度（{{value}}%）", "balancedDesc": "色の広がりと奥行きを加えます", "few": "中層雲が少ない（{{value}}%）", "fewHighCloudDesc": "高層雲が十分なら単独でも色づきます", "fewDesc": "雲の層の立体感は限られます", "thick": "中層雲が厚い（{{value}}%）", "thickDesc": "画面が灰色っぽくなり透明感が落ちる可能性があります" },
       "low": { "few": "低層雲が少ない（{{value}}%）", "fewDesc": "視界は開けています", "some": "低層雲がやや多い（{{value}}%）", "someDesc": "地平線付近の色を一部遮る可能性があります", "thick": "低層雲が厚い（{{value}}%）", "thickDesc": "遮蔽リスクが高めです" },

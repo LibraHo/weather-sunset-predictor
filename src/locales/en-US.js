@@ -67,22 +67,22 @@ const translations = {
     "methodology": {
       "title": "Fire Cloud Calculation Method",
       "intro": "The Fire Cloud Index comprehensively evaluates sky conditions and optical propagation paths to determine the probability and intensity of fire cloud formation. Below is the complete calculation principle based on meteorological data.",
-      "versionLabel": "Algorithm version: 2026.05.12-aerosol-carrier-v1",
-      "versionDesc": "This version expands the canvas into a carrier score: mid/high clouds still set the fire-cloud ceiling, while moderate thin haze can provide a weak red-sunset carrier only when the light path is open.",
+      "versionLabel": "Algorithm version: 2026.05.13-formation-factors-v1",
+      "versionDesc": "This version makes fire-cloud analysis a stable four-factor summary: cloud carrier, light path, air rendering, and limits. The scoring formula is unchanged.",
       changelogTitle: "Version update history",
       changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
       changelog: {
               "latest": {
+                      "date": "2026-05-13",
+                      "title": "Four-factor analysis v1",
+                      "summary": "Fire-cloud analysis is now grouped into cloud carrier, light path, air rendering, and limits to reduce scattered notes.",
+                      "validation": "Validation: aerosol, low-cloud blockage, gray haze, thick cloud, and rain cases are grouped into the right factor; the scoring formula is unchanged."
+              },
+              "current": {
                       "date": "2026-05-12",
                       "title": "Aerosol weak carrier v1",
                       "summary": "When clouds are scarce, moderate thin haze must be activated by an open sun-direction light path before it contributes as a weak red-sunset carrier.",
                       "validation": "Validation: the Beijing weak red-sunset sample moves into the low-30s, while clean clear sky, heavy haze/dust, low-cloud blockage, and gray curtains stay low."
-              },
-              "current": {
-                      "date": "2026-05-10",
-                      "title": "Low-cloud-led light path v3",
-                      "summary": "Light path now focuses on low clouds and the solar-direction corridor. Rich mid/high clouds are treated as sunset-glow canvas first.",
-                      "validation": "Validation: full high-cloud canvas with scarce low cloud is no longer treated as low-cloud overcast; low-cloud and rain cases stay low."
               }
       },
       "factors": {
@@ -359,6 +359,44 @@ const translations = {
 "formationAnalysis": {
       "title": "Fire cloud formation analysis",
       "groups": { "positive": "Favorable", "neutral": "Neutral", "warning": "Watch-outs" },
+      "factors": {
+        "carrier": {
+          "title": "Cloud carrier",
+          "status": { "good": "Good", "fair": "Fair", "weak": "Weak" },
+          "desc": {
+            "good": "Mid/high clouds can catch sunset light and act as today's main color canvas.",
+            "fair": "Some colorable cloud layers exist, but their area or height is not ideal.",
+            "weak": "Suitable mid/high clouds are missing, so broad fire clouds are unlikely."
+          }
+        },
+        "lightPath": {
+          "title": "Light path",
+          "status": { "good": "Good", "fair": "Fair", "weak": "Weak" },
+          "desc": {
+            "good": "The sun direction is relatively open, so light can reach the cloud base.",
+            "fair": "There is some obstruction toward the sun, so color may stay local.",
+            "weak": "Low clouds or a cloud wall block the light path, making it hard for light to reach the clouds."
+          }
+        },
+        "rendering": {
+          "title": "Air rendering",
+          "status": { "good": "Good", "fair": "Fair", "weak": "Weak" },
+          "desc": {
+            "good": "Moderate particles and moisture make warm red-orange color easier to show.",
+            "fair": "Air conditions are ordinary; color mainly depends on clouds and light path.",
+            "weak": "Gray air or excessive particles can make color darker and flatter."
+          }
+        },
+        "limits": {
+          "title": "Limits",
+          "status": { "good": "None obvious", "fair": "Slight", "weak": "Obvious" },
+          "desc": {
+            "good": "No obvious suppressing condition is present.",
+            "fair": "Minor unfavorable factors may reduce duration or color intensity.",
+            "weak": "Rain, thick cloud, low-cloud blockage, or gray haze can suppress the overall result."
+          }
+        }
+      },
       "high": { "abundant": "Abundant high clouds ({{value}}%)", "abundantDesc": "Strong color base", "sufficient": "Sufficient high clouds ({{value}}%)", "sufficientDesc": "Good color carrier", "moderate": "Moderate high clouds ({{value}}%)", "moderateDesc": "Possible, but colors may be lighter", "few": "Too few high clouds ({{value}}%)", "fewDesc": "Main color carrier is lacking" },
       "mid": { "balanced": "Balanced mid clouds ({{value}}%)", "balancedDesc": "Adds color spread and depth", "few": "Few mid clouds ({{value}}%)", "fewHighCloudDesc": "High clouds can still carry color", "fewDesc": "Layering may be limited", "thick": "Thick mid clouds ({{value}}%)", "thickDesc": "May reduce clarity" },
       "low": { "few": "Few low clouds ({{value}}%)", "fewDesc": "View should stay open", "some": "Some low clouds ({{value}}%)", "someDesc": "May block horizon color", "thick": "Thick low clouds ({{value}}%)", "thickDesc": "High blocking risk" },

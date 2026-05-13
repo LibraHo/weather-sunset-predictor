@@ -67,22 +67,22 @@ const translations = {
     "methodology": {
       "title": "火燒雲計算方法",
       "intro": "火燒雲指數由四個關鍵因子綜合計算，幫助你快速判斷當天是否值得守候晚霞。",
-      "versionLabel": "算法版本：2026.05.12-aerosol-carrier-v1",
-      "versionDesc": "本版把評分裡的畫布擴展為「載體」：中高雲仍決定火燒雲上限，適度薄霧只在光路通暢時提供普通紅日落的弱載體。",
+      "versionLabel": "算法版本：2026.05.13-formation-factors-v1",
+      "versionDesc": "本版將火燒雲分析固定為四個穩定因子：雲層載體、光路條件、空氣顯色、限制因素；評分公式不變。",
       changelogTitle: "版本更新記錄",
       changelogHint: "用於回溯每次算法調整的原因、影響和驗證方式",
       changelog: {
               "latest": {
-                      "date": "2026-05-12",
-                      "title": "氣溶膠弱載體 v1",
-                      "summary": "雲層很少時，適度薄霧/氣溶膠必須被太陽方向光路激活，才會作為普通紅日落的弱載體參與評分。",
-                      "validation": "驗證：北京弱紅日落可進入 30 多分；乾淨晴空、重霾沙塵、低雲遮擋和厚灰幕場景不被抬高。"
+                      "date": "2026-05-13",
+                      "title": "四因子分析 v1",
+                      "summary": "火燒雲分析固定為雲層載體、光路條件、空氣顯色、限制因素四項，減少零散條目。",
+                      "validation": "驗證：氣溶膠、低雲遮擋、灰幕、厚雲和降水場景都歸併到對應因子；評分公式不變。"
               },
               "current": {
-                      "date": "2026-05-10",
-                      "title": "低雲主導光路 v3",
-                      "summary": "光路主要看低雲和太陽方向是否擋光；高雲、中雲豐富時優先當作晚霞畫布處理。",
-                      "validation": "驗證：高雲滿天但低雲很少的樣本不再被當作陰天；低雲主導、降水樣本仍保持低分。"
+                      "date": "2026-05-12",
+                      "title": "氣溶膠弱載體 v1",
+                      "summary": "雲層很少時，適度薄霧／氣溶膠必須被太陽方向光路激活，才會作為普通紅日落的弱載體參與評分。",
+                      "validation": "驗證：北京弱紅日落可進入 30 多分；乾淨晴空、重霾沙塵、低雲遮擋和厚灰幕場景不被抬高。"
               }
       },
       "factors": {
@@ -359,6 +359,44 @@ const translations = {
 "formationAnalysis": {
       "title": "火燒雲形成條件分析",
       "groups": { "positive": "有利條件", "neutral": "一般因素", "warning": "注意因素" },
+      "factors": {
+        "carrier": {
+          "title": "雲層載體",
+          "status": { "good": "較好", "fair": "一般", "weak": "較弱" },
+          "desc": {
+            "good": "中高雲能承接日落光線，是今天主要的顯色畫布。",
+            "fair": "有一些可被染色的雲層，但面積或高度不夠理想。",
+            "weak": "缺少合適的中高雲，天空不容易形成大片火燒雲。"
+          }
+        },
+        "lightPath": {
+          "title": "光路條件",
+          "status": { "good": "較好", "fair": "一般", "weak": "較弱" },
+          "desc": {
+            "good": "太陽方向相對通透，光線有機會照到雲底。",
+            "fair": "太陽方向有一定遮擋，晚霞可能只出現在局部。",
+            "weak": "低雲或雲牆擋住光路，光線不容易打到雲層。"
+          }
+        },
+        "rendering": {
+          "title": "空氣顯色",
+          "status": { "good": "較好", "fair": "一般", "weak": "較弱" },
+          "desc": {
+            "good": "空氣裡有適度顆粒和水氣，顏色更容易偏暖、偏紅。",
+            "fair": "空氣條件普通，顏色表現主要看雲層和光路。",
+            "weak": "空氣偏灰或顆粒過重，顏色容易變暗、變淡。"
+          }
+        },
+        "limits": {
+          "title": "限制因素",
+          "status": { "good": "無明顯", "fair": "輕微", "weak": "明顯" },
+          "desc": {
+            "good": "沒有明顯壓制條件。",
+            "fair": "有輕微不利因素，可能壓低持續時間或顏色強度。",
+            "weak": "降水、厚雲、低雲遮擋或灰幕明顯，會壓低整體表現。"
+          }
+        }
+      },
       "high": { "abundant": "高層雲充沛（{{value}}%）", "abundantDesc": "色彩載體豐富，火燒雲基礎紮實", "sufficient": "高層雲充足（{{value}}%）", "sufficientDesc": "具備不錯的霞光染色載體", "moderate": "高層雲適中（{{value}}%）", "moderateDesc": "可形成火燒雲，但色彩可能偏淡", "few": "高層雲偏少（{{value}}%）", "fewDesc": "缺少主要色彩載體" },
       "mid": { "balanced": "中層雲適中（{{value}}%）", "balancedDesc": "有利於色彩擴散和層次感", "few": "中層雲較少（{{value}}%）", "fewHighCloudDesc": "但高層雲充足，仍可獨立形成火燒雲", "fewDesc": "層次感可能不足", "thick": "中層雲偏厚（{{value}}%）", "thickDesc": "可能讓畫面偏灰，削弱霞光通透感" },
       "low": { "few": "低雲稀少（{{value}}%）", "fewDesc": "不會遮擋火燒雲", "some": "低雲較多（{{value}}%）", "someDesc": "可能部分遮擋低空色彩", "thick": "低雲偏厚（{{value}}%）", "thickDesc": "遮擋風險較大" },

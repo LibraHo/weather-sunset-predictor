@@ -67,22 +67,22 @@ apiAccess: 'Acceso API'
     "methodology": {
       "title": "Cómo se calcula la puntuación",
       "intro": "El índice de nubes rojas combina cuatro factores clave para estimar si vale la pena salir a ver el atardecer.",
-      "versionLabel": "Algorithm version: 2026.05.11-opening-upper-cloud-carrier-v1",
-      "versionDesc": "This version improves light-path scoring: low clouds block sunlight, while rich mid/high clouds are treated mainly as the color canvas.",
+      "versionLabel": "Versión del algoritmo: 2026.05.13-formation-factors-v1",
+      "versionDesc": "Esta versión fija el análisis en cuatro factores: soporte de nubes, trayectoria de luz, color del aire y limitaciones. La fórmula de puntuación no cambia.",
       changelogTitle: "Version update history",
       changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
       changelog: {
               "latest": {
-                      "date": "2026-05-11",
-                      "title": "Opening upper-cloud carrier protection v1",
-                      "summary": "When low clouds are scarce and the solar direction has an opening, mid/high clouds are treated more as sunset-glow canvas instead of a thick cloud curtain.",
-                      "validation": "Validation: the Summer Palace opening-cloud sample is no longer over-penalized, while haze, rain, and low-cloud obstruction cases remain cautious."
+                      "date": "2026-05-13",
+                      "title": "Análisis de cuatro factores v1",
+                      "summary": "El análisis se agrupa en soporte de nubes, trayectoria de luz, color del aire y limitaciones para reducir notas dispersas.",
+                      "validation": "Validación: aerosol, bloqueo de nubes bajas, bruma gris, nubes gruesas y lluvia se agrupan en el factor correcto; la fórmula no cambia."
               },
               "current": {
-                      "date": "2026-05-10",
-                      "title": "Low-cloud-led light path v3",
-                      "summary": "Light path now focuses on low clouds and the solar-direction corridor. Rich mid/high clouds are treated as sunset-glow canvas first.",
-                      "validation": "Validation: full high-cloud canvas with scarce low cloud is no longer treated as low-cloud overcast; low-cloud and rain cases stay low."
+                      "date": "2026-05-12",
+                      "title": "Soporte débil de aerosol v1",
+                      "summary": "Con pocas nubes, la bruma moderada solo aporta como soporte débil de atardecer rojo si la trayectoria de luz está abierta.",
+                      "validation": "Validación: el caso de Pekín sube a los 30 puntos bajos; cielo limpio, bruma/polvo fuertes, bloqueo de nubes bajas y cortinas grises siguen bajos."
               }
       },
       "factors": {
@@ -346,6 +346,44 @@ apiAccess: 'Acceso API'
 "formationAnalysis": {
       "title": "Análisis de condiciones para nubes encendidas",
       "groups": { "positive": "Condiciones favorables", "neutral": "Factores neutros", "warning": "Puntos a vigilar" },
+      "factors": {
+        "carrier": {
+          "title": "Soporte de nubes",
+          "status": { "good": "Bueno", "fair": "Normal", "weak": "Débil" },
+          "desc": {
+            "good": "Las nubes medias y altas pueden recibir la luz del atardecer y actuar como el principal lienzo de color.",
+            "fair": "Hay algunas capas de nubes que pueden teñirse, pero su extensión o altura no es ideal.",
+            "weak": "Faltan nubes medias y altas adecuadas, por lo que es difícil formar nubes rojas amplias."
+          }
+        },
+        "lightPath": {
+          "title": "Trayectoria de luz",
+          "status": { "good": "Buena", "fair": "Normal", "weak": "Débil" },
+          "desc": {
+            "good": "La dirección del sol está relativamente despejada, así que la luz puede alcanzar la base de las nubes.",
+            "fair": "Hay cierta obstrucción hacia el sol, por lo que el color puede quedar localizado.",
+            "weak": "Nubes bajas o una pared de nubes bloquean la trayectoria de la luz."
+          }
+        },
+        "rendering": {
+          "title": "Color del aire",
+          "status": { "good": "Bueno", "fair": "Normal", "weak": "Débil" },
+          "desc": {
+            "good": "Partículas y humedad moderadas ayudan a mostrar tonos cálidos y rojizos.",
+            "fair": "El aire es normal; el color depende sobre todo de las nubes y la trayectoria de luz.",
+            "weak": "El aire gris o demasiadas partículas pueden oscurecer y apagar el color."
+          }
+        },
+        "limits": {
+          "title": "Limitaciones",
+          "status": { "good": "Sin claras", "fair": "Leves", "weak": "Claras" },
+          "desc": {
+            "good": "No hay una condición de supresión evidente.",
+            "fair": "Factores desfavorables leves pueden reducir duración o intensidad del color.",
+            "weak": "Lluvia, nubes gruesas, bloqueo de nubes bajas o bruma gris reducen el resultado general."
+          }
+        }
+      },
       "high": { "abundant": "Nubes altas abundantes ({{value}}%)", "abundantDesc": "Buena base para captar color", "sufficient": "Nubes altas suficientes ({{value}}%)", "sufficientDesc": "Buen soporte para el color del atardecer", "moderate": "Nubes altas moderadas ({{value}}%)", "moderateDesc": "Posible, pero con colores más suaves", "few": "Pocas nubes altas ({{value}}%)", "fewDesc": "Falta el principal soporte de color" },
       "mid": { "balanced": "Nubes medias equilibradas ({{value}}%)", "balancedDesc": "Añaden expansión de color y profundidad", "few": "Pocas nubes medias ({{value}}%)", "fewHighCloudDesc": "Las nubes altas aún pueden portar color", "fewDesc": "La estratificación puede ser limitada", "thick": "Nubes medias gruesas ({{value}}%)", "thickDesc": "Puede volver la escena más gris y menos transparente" },
       "low": { "few": "Pocas nubes bajas ({{value}}%)", "fewDesc": "La vista debería quedar despejada", "some": "Algunas nubes bajas ({{value}}%)", "someDesc": "Pueden tapar parte del color cerca del horizonte", "thick": "Nubes bajas gruesas ({{value}}%)", "thickDesc": "Alto riesgo de bloqueo" },

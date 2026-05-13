@@ -74,22 +74,22 @@ export default {
     methodology: {
       title: '火烧云计算方法',
       intro: '火烧云指数由四个关键因子综合计算，帮助你快速判断当天是否值得蹲守晚霞。',
-      versionLabel: '算法版本：2026.05.12-aerosol-carrier-v1',
-      versionDesc: '本版把评分里的画布扩展为“载体”：中高云仍决定火烧云上限，适度薄雾只在光路通畅时提供普通红日落的弱载体。',
+      versionLabel: '算法版本：2026.05.13-formation-factors-v1',
+      versionDesc: '本版将火烧云分析固定为四个稳定因子：云层载体、光路条件、空气显色、限制因素；评分公式不变。',
       changelogTitle: "版本更新记录",
       changelogHint: "用于回溯每次算法调整的原因、影响和验证方式",
       changelog: {
               "latest": {
+                      "date": "2026-05-13",
+                      "title": "四因子分析 v1",
+                      "summary": "火烧云分析固定为云层载体、光路条件、空气显色、限制因素四项，减少零散条目。",
+                      "validation": "验证：气溶胶、低云遮挡、灰幕、厚云和降水场景都归并到对应因子；评分公式不变。"
+              },
+              "current": {
                       "date": "2026-05-12",
                       "title": "气溶胶弱载体 v1",
                       "summary": "云层很少时，适度薄雾/气溶胶必须被太阳方向光路激活，才会作为普通红日落的弱载体参与评分。",
                       "validation": "验证：北京弱红日落可进入 30 多分；干净晴空、重霾沙尘、低云遮挡和厚灰幕场景不被抬高。"
-              },
-              "current": {
-                      "date": "2026-05-10",
-                      "title": "低云主导光路 v3",
-                      "summary": "光路主要看低云和太阳方向是否挡光；高云、中云丰富时优先当作晚霞画布处理。",
-                      "validation": "验证：高云满天但低云很少的样本不再被当作阴天；低云主导、降水样本仍保持低分。"
               }
       },
       factors: {
@@ -382,6 +382,44 @@ export default {
 formationAnalysis: {
       title: '火烧云形成条件分析',
       groups: { positive: '有利条件', neutral: '一般因素', warning: '注意因素' },
+      factors: {
+        carrier: {
+          title: '云层载体',
+          status: { good: '较好', fair: '一般', weak: '较弱' },
+          desc: {
+            good: '中高云能承接日落光线，是今天主要的显色画布。',
+            fair: '有一些可被染色的云层，但面积或高度不够理想。',
+            weak: '缺少合适的中高云，天空不容易形成大片火烧云。'
+          }
+        },
+        lightPath: {
+          title: '光路条件',
+          status: { good: '较好', fair: '一般', weak: '较弱' },
+          desc: {
+            good: '太阳方向相对通透，光线有机会照到云底。',
+            fair: '太阳方向有一定遮挡，晚霞可能只出现在局部。',
+            weak: '低云或云墙挡住光路，光线不容易打到云层。'
+          }
+        },
+        rendering: {
+          title: '空气显色',
+          status: { good: '较好', fair: '一般', weak: '较弱' },
+          desc: {
+            good: '空气里有适度颗粒和水汽，颜色更容易偏暖、偏红。',
+            fair: '空气条件普通，颜色表现主要看云层和光路。',
+            weak: '空气偏灰或颗粒过重，颜色容易变暗、变淡。'
+          }
+        },
+        limits: {
+          title: '限制因素',
+          status: { good: '无明显', fair: '轻微', weak: '明显' },
+          desc: {
+            good: '没有明显压制条件。',
+            fair: '有轻微不利因素，可能压低持续时间或颜色强度。',
+            weak: '降水、厚云、低云遮挡或灰幕明显，会压低整体表现。'
+          }
+        }
+      },
       high: {
         abundant: '高层云充沛（{{value}}%）', abundantDesc: '色彩载体丰富，火烧云基础扎实',
         sufficient: '高层云充足（{{value}}%）', sufficientDesc: '具备较好的霞光染色载体',

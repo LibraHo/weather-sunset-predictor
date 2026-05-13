@@ -483,7 +483,7 @@ describe('PredictionController', () => {
       expect(html).not.toContain('正北');
     });
 
-    test('增强分析应显示后端透传的气溶胶 AOD 文案', () => {
+    test('增强分析应将后端透传的气溶胶条件归并到空气显色因子', () => {
       const prediction = {
         score: 62,
         quality: 'good',
@@ -521,14 +521,16 @@ describe('PredictionController', () => {
         prediction, 'sunset', '晚霞', '日落时间', '今日', 'sunset'
       );
 
-      expect(html).toContain('AOD 0.73');
+      expect(html).toContain('空气显色');
+      expect(html).toContain('空气偏灰或颗粒过重');
       expect(html).not.toContain('analysis-summary-copy');
       expect(html).not.toContain('云层画布');
       expect(html).not.toContain('空气渲染');
-      expect(html).toContain('高层云充足');
+      expect(html).not.toContain('AOD 0.73');
+      expect(html).not.toContain('高层云充足');
       expect(html).toContain('app-analysis-card');
-      expect(html).toContain('analysis-group-positive');
-      expect(html).toContain('analysis-group-warning');
+      expect(html).toContain('analysis-factor-grid');
+      expect(html).toContain('analysis-factor-warning');
       expect(html).toContain('conclusion-banner');
       expect(html).not.toContain('undefined');
       expect(html).not.toContain('null');
@@ -771,23 +773,26 @@ describe('PredictionController', () => {
   });
 
   describe('火烧云分析卡片', () => {
-    test('中高云载体文案不应暴露重复封顶等算法内部描述', () => {
+    test('火烧云分析应合并为四个固定因子', () => {
       const groups = predictionController.buildAnalysisGroups({
         score: 72,
         cloudLayers: { high: 88, mid: 42, low: 4 },
         visibility: 18,
-        humidity: 58,
-        cloudThickness: { reasons: ['dense_upper_cloud_carrier_softened'] }
+        humidity: 58
       });
       const html = predictionController.renderAnalysisCard(groups, 'test');
 
-      expect(html).toContain('中高云载体明确');
-      expect(html).toContain('色彩载体更稳定');
+      expect(groups).toHaveLength(4);
+      expect(html).toContain('云层载体');
+      expect(html).toContain('光路条件');
+      expect(html).toContain('空气显色');
+      expect(html).toContain('限制因素');
+      expect(html).toContain('analysis-factor-grid');
       expect(html).not.toContain('不再重复封顶');
       expect(html).not.toContain('不再额外封顶');
     });
 
-    test('气溶胶弱载体应同步出现在火烧云分析卡片', () => {
+    test('气溶胶弱载体场景应归入固定因子而不是追加新条目', () => {
       const groups = predictionController.buildAnalysisGroups({
         score: 33,
         cloudLayers: { high: 0, mid: 7, low: 0 },
@@ -800,14 +805,18 @@ describe('PredictionController', () => {
       });
       const html = predictionController.renderAnalysisCard(groups, 'test');
 
-      expect(html).toContain('薄雾红日载体');
-      expect(html).toContain('一点暖色日落');
+      expect(groups).toHaveLength(4);
+      expect(html).toContain('空气显色');
+      expect(html).toContain('颜色更容易偏暖、偏红');
+      expect(html).not.toContain('薄雾红日载体');
     });
 
     test('分析卡片最终 CSS 应保持上下文案左对齐且可换行', () => {
       const css = fs.readFileSync(path.join(rootDir, 'styles/main.css'), 'utf8');
       const finalRules = css.slice(css.lastIndexOf('formation analysis cards must read like compact notes'));
 
+      expect(finalRules).toContain('analysis-factor-grid');
+      expect(finalRules).toContain('analysis-factor-heading');
       expect(finalRules).toContain('grid-template-columns: 22px minmax(0, 1fr)');
       expect(finalRules).toContain('display: grid !important');
       expect(finalRules).toContain('white-space: normal !important');

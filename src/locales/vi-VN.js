@@ -67,22 +67,22 @@ const translations = {
     "methodology": {
       "title": "Phương pháp tính điểm mây đẹp",
       "intro": "Chỉ số mây đẹp được tính toán tổng hợp từ bốn yếu tố chính, giúp bạn nhanh chóng đánh giá liệu ngày hôm đó có đáng để chờ đợi hoàng hôn hay không.",
-      "versionLabel": "Algorithm version: 2026.05.11-opening-upper-cloud-carrier-v1",
-      "versionDesc": "This version improves light-path scoring: low clouds block sunlight, while rich mid/high clouds are treated mainly as the color canvas.",
+      "versionLabel": "Phiên bản thuật toán: 2026.05.13-formation-factors-v1",
+      "versionDesc": "Phiên bản này cố định phân tích thành bốn yếu tố: nền mây, đường sáng, màu trong không khí và yếu tố hạn chế. Công thức điểm không đổi.",
       changelogTitle: "Version update history",
       changelogHint: "Tracks why each algorithm change was made, its expected impact, and how it was validated",
       changelog: {
               "latest": {
-                      "date": "2026-05-11",
-                      "title": "Opening upper-cloud carrier protection v1",
-                      "summary": "When low clouds are scarce and the solar direction has an opening, mid/high clouds are treated more as sunset-glow canvas instead of a thick cloud curtain.",
-                      "validation": "Validation: the Summer Palace opening-cloud sample is no longer over-penalized, while haze, rain, and low-cloud obstruction cases remain cautious."
+                      "date": "2026-05-13",
+                      "title": "Phân tích bốn yếu tố v1",
+                      "summary": "Phân tích được gom thành nền mây, đường sáng, màu trong không khí và yếu tố hạn chế để giảm các ghi chú rời rạc.",
+                      "validation": "Kiểm chứng: aerosol, mây thấp che chắn, màn mù xám, mây dày và mưa đều được gom vào yếu tố tương ứng; công thức điểm không đổi."
               },
               "current": {
-                      "date": "2026-05-10",
-                      "title": "Low-cloud-led light path v3",
-                      "summary": "Light path now focuses on low clouds and the solar-direction corridor. Rich mid/high clouds are treated as sunset-glow canvas first.",
-                      "validation": "Validation: full high-cloud canvas with scarce low cloud is no longer treated as low-cloud overcast; low-cloud and rain cases stay low."
+                      "date": "2026-05-12",
+                      "title": "Nền aerosol yếu v1",
+                      "summary": "Khi ít mây, màn bụi mỏng vừa phải chỉ góp như nền hoàng hôn đỏ yếu nếu đường sáng về phía mặt trời thông thoáng.",
+                      "validation": "Kiểm chứng: mẫu hoàng hôn đỏ yếu ở Bắc Kinh lên khoảng 30 điểm; trời trong, bụi/mù nặng, mây thấp che và màn xám vẫn thấp."
               }
       },
       "factors": {
@@ -362,6 +362,44 @@ const translations = {
 "formationAnalysis": {
       "title": "Phân tích điều kiện hình thành mây đẹp",
       "groups": { "positive": "Điều kiện thuận lợi", "neutral": "Yếu tố trung tính", "warning": "Điểm cần chú ý" },
+      "factors": {
+        "carrier": {
+          "title": "Nền mây",
+          "status": { "good": "Tốt", "fair": "Vừa", "weak": "Yếu" },
+          "desc": {
+            "good": "Mây trung và cao có thể bắt ánh hoàng hôn, tạo thành nền màu chính hôm nay.",
+            "fair": "Có vài lớp mây có thể lên màu, nhưng diện tích hoặc độ cao chưa lý tưởng.",
+            "weak": "Thiếu mây trung/cao phù hợp, nên khó có mảng mây đỏ lớn."
+          }
+        },
+        "lightPath": {
+          "title": "Đường sáng",
+          "status": { "good": "Tốt", "fair": "Vừa", "weak": "Yếu" },
+          "desc": {
+            "good": "Hướng mặt trời khá thoáng, ánh sáng có cơ hội chạm tới đáy mây.",
+            "fair": "Hướng mặt trời có một phần che chắn, màu có thể chỉ xuất hiện cục bộ.",
+            "weak": "Mây thấp hoặc tường mây chặn đường sáng, khiến ánh sáng khó tới lớp mây."
+          }
+        },
+        "rendering": {
+          "title": "Màu trong không khí",
+          "status": { "good": "Tốt", "fair": "Vừa", "weak": "Yếu" },
+          "desc": {
+            "good": "Hạt bụi và độ ẩm vừa phải giúp màu ấm, đỏ cam dễ hiện rõ hơn.",
+            "fair": "Không khí ở mức bình thường; màu chủ yếu phụ thuộc vào mây và đường sáng.",
+            "weak": "Không khí xám hoặc quá nhiều hạt bụi làm màu dễ tối và nhạt."
+          }
+        },
+        "limits": {
+          "title": "Yếu tố hạn chế",
+          "status": { "good": "Không rõ", "fair": "Nhẹ", "weak": "Rõ" },
+          "desc": {
+            "good": "Không có điều kiện kìm hãm rõ ràng.",
+            "fair": "Một vài yếu tố bất lợi nhẹ có thể giảm thời lượng hoặc độ mạnh của màu.",
+            "weak": "Mưa, mây dày, mây thấp che chắn hoặc màn mù xám sẽ làm giảm tổng thể."
+          }
+        }
+      },
       "high": { "abundant": "Mây cao dồi dào ({{value}}%)", "abundantDesc": "Nền mây mang màu rất tốt", "sufficient": "Mây cao đủ ({{value}}%)", "sufficientDesc": "Có lớp mây tốt để bắt màu hoàng hôn", "moderate": "Mây cao vừa phải ({{value}}%)", "moderateDesc": "Có khả năng xuất hiện nhưng màu có thể nhạt", "few": "Mây cao hơi ít ({{value}}%)", "fewDesc": "Thiếu lớp mây chính để mang màu" },
       "mid": { "balanced": "Mây trung tầng cân bằng ({{value}}%)", "balancedDesc": "Tăng độ lan màu và chiều sâu", "few": "Mây trung tầng ít ({{value}}%)", "fewHighCloudDesc": "Mây cao đủ vẫn có thể tự bắt màu", "fewDesc": "Độ phân tầng có thể hạn chế", "thick": "Mây trung tầng dày ({{value}}%)", "thickDesc": "Có thể làm cảnh xám hơn và giảm độ trong của ánh hoàng hôn" },
       "low": { "few": "Mây thấp ít ({{value}}%)", "fewDesc": "Tầm nhìn khá thoáng", "some": "Mây thấp hơi nhiều ({{value}}%)", "someDesc": "Có thể che một phần màu gần đường chân trời", "thick": "Mây thấp dày ({{value}}%)", "thickDesc": "Nguy cơ che khuất cao" },
