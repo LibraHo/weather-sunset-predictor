@@ -2,7 +2,7 @@
   <block wx:if="{{hasPrediction}}">
     <score-hero score="{{prediction.score}}" grade="{{prediction.grade}}" location-name="{{prediction.locationName}}" period="{{prediction.period}}" best-window="{{prediction.bestWindow}}" explanation="{{prediction.explanation}}" />
 
-    <view class="meta xiake-card">
+    <view class="result-summary-row">
       <view class="meta-item">
         <text class="label">日期</text>
         <text class="value">{{prediction.dayLabel}}</text>
@@ -18,13 +18,13 @@
       <button class="ghost-button action-button" open-type="share">分享评分</button>
     </view>
 
-    <view class="result-view-switch xiake-card">
-      <view class="switch-title">页面切换</view>
+    <view class="result-view-switch">
+      <view class="switch-title">继续查看</view>
       <view class="switch-options">
-        <view class="switch-option" data-target="methodology" bindtap="navigateExperience">计算方法</view>
-        <view class="switch-option" data-target="map" bindtap="navigateExperience">火烧云地图</view>
-        <view class="switch-option" data-target="gallery" bindtap="navigateExperience">分享地图</view>
-        <view class="switch-option" data-target="upload" bindtap="navigateExperience">上传照片</view>
+        <view class="switch-option" data-target="methodology" bindtap="navigateExperience">算法</view>
+        <view class="switch-option" data-target="map" bindtap="navigateExperience">地图</view>
+        <view class="switch-option" data-target="gallery" bindtap="navigateExperience">照片</view>
+        <view class="switch-option" data-target="upload" bindtap="navigateExperience">上传</view>
       </view>
     </view>
 

@@ -12,13 +12,13 @@ describe('miniprogram web-like experience shell', () => {
     const js = read('miniprogram/pages/home/index.js');
     const wxss = read('miniprogram/pages/home/index.wxss');
 
-    expect(wxml).toContain('app-logo');
-    expect(wxml).toContain('home-view-menu-dropdown');
-    expect(wxml).toContain('预测功能');
-    expect(wxml).toContain('计算方法');
-    expect(wxml).toContain('火烧云地图');
-    expect(wxml).toContain('分享地图');
-    expect(wxml).toContain('上传照片');
+    expect(wxml).toContain('home-hero');
+    expect(wxml).toContain('home-view-rail');
+    expect(wxml).toContain('查分');
+    expect(wxml).toContain('算法');
+    expect(wxml).toContain('地图');
+    expect(wxml).toContain('照片');
+    expect(wxml).toContain('上传');
     expect(wxml).not.toContain('nav-grid');
     expect(wxml).not.toContain('nav-card');
     expect(js).toContain('toggleHomeMenu()');
@@ -27,8 +27,10 @@ describe('miniprogram web-like experience shell', () => {
     expect(js).toContain("map: `/pages/map/index?period=${this.data.period}`");
     expect(js).toContain("gallery: '/pages/gallery/index'");
     expect(js).toContain("upload: '/pages/upload/index'");
-    expect(wxss).toContain('.app-header');
-    expect(wxss).toContain('.home-view-menu-dropdown');
+    expect(wxss).toContain('.home-title');
+    expect(wxss).toContain('.home-view-rail');
+    expect(wxss).not.toContain('.app-header');
+    expect(wxss).not.toContain('.home-view-menu-dropdown');
     expect(wxss).not.toContain('.nav-grid');
     expect(wxss).not.toContain('.nav-card');
   });
@@ -38,11 +40,11 @@ describe('miniprogram web-like experience shell', () => {
     const js = read('miniprogram/pages/result/index.js');
     const wxss = read('miniprogram/pages/result/index.wxss');
 
-    expect(wxml).toContain('页面切换');
-    expect(wxml).toContain('计算方法');
-    expect(wxml).toContain('火烧云地图');
-    expect(wxml).toContain('分享地图');
-    expect(wxml).toContain('上传照片');
+    expect(wxml).toContain('继续查看');
+    expect(wxml).toContain('算法');
+    expect(wxml).toContain('地图');
+    expect(wxml).toContain('照片');
+    expect(wxml).toContain('上传');
     expect(js).toContain('navigateExperience(event)');
     expect(js).toContain("methodology: '/pages/methodology/index'");
     expect(js).toContain("map: `/pages/map/index?period=${this.data.prediction?.period || this.data.prediction?.type || 'sunset'}`");
@@ -50,7 +52,16 @@ describe('miniprogram web-like experience shell', () => {
     expect(js).toContain("upload: '/pages/upload/index'");
     expect(wxss).toContain('.result-view-switch');
     expect(wxss).toContain('.switch-options');
+    expect(wxss).toContain('border-radius: 999rpx');
     expect(wxss).not.toContain('.dock-grid');
+  });
+
+  test('result page never exposes backend condition enum tokens to users', () => {
+    const js = read('miniprogram/pages/result/index.js');
+
+    expect(js).toContain('humanizeExplanation');
+    expect(js).toContain('conditions_good');
+    expect(js).toContain('火烧云条件可以关注');
   });
 
   test('gallery is positioned as a native mini-program map with H5 as secondary fallback', () => {

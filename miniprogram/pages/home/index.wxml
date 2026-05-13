@@ -1,6 +1,6 @@
 <view class="container home-page">
-  <view class="app-header xiake-card">
-    <view class="app-logo">
+  <view class="home-hero">
+    <view class="home-brand-row">
       <view class="app-logo-mark">
         <view class="logo-arc"></view>
         <view class="logo-line logo-line-1"></view>
@@ -9,19 +9,16 @@
       </view>
       <view class="app-logo-text">霞客</view>
     </view>
-    <view class="home-view-menu">
-      <button class="menu-button" bindtap="toggleHomeMenu">☰</button>
-      <view class="home-view-menu-dropdown" wx:if="{{homeMenuOpen}}">
-        <view class="home-view-option active" data-target="forecast" bindtap="navigateFeature">预测功能</view>
-        <view class="home-view-option" data-target="methodology" bindtap="navigateFeature">火烧云计算方法</view>
-        <view class="home-view-option" data-target="map" bindtap="navigateFeature">火烧云地图</view>
-        <view class="home-view-option" data-target="gallery" bindtap="navigateFeature">分享地图</view>
-        <view class="home-view-option" data-target="upload" bindtap="navigateFeature">上传照片</view>
-      </view>
+    <view class="home-title">先看火烧云条件，再安排观赏。</view>
+    <view class="home-subtitle">和网站同源的评分、地图、分析与照片入口。</view>
+    <view class="home-view-rail">
+      <view class="home-view-option active" data-target="forecast" bindtap="navigateFeature">查分</view>
+      <view class="home-view-option" data-target="methodology" bindtap="navigateFeature">算法</view>
+      <view class="home-view-option" data-target="map" bindtap="navigateFeature">地图</view>
+      <view class="home-view-option" data-target="gallery" bindtap="navigateFeature">照片</view>
+      <view class="home-view-option" data-target="upload" bindtap="navigateFeature">上传</view>
     </view>
   </view>
-
-  <view class="hero-copy">先看火烧云条件，再安排观赏。</view>
 
   <location-search value="{{locationText}}" locating="{{locating}}" bind:change="onLocationChange" bind:confirm="onSearch" bind:locate="onUseCurrentLocation" />
 

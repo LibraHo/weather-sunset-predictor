@@ -1,7 +1,7 @@
 <view class="location-search xiake-card">
-  <view class="field-label">观测地点</view>
+  <view class="field-label">地点</view>
   <view class="input-row">
     <input class="location-input" value="{{value}}" placeholder="输入城市、区县或具体地点" placeholder-class="input-placeholder" confirm-type="search" bindinput="onInput" bindconfirm="onConfirm" />
-    <button class="locate-button" loading="{{locating}}" bindtap="onLocate">当前位置</button>
+    <button class="locate-button" loading="{{locating}}" bindtap="onLocate">定位</button>
   </view>
 </view>
