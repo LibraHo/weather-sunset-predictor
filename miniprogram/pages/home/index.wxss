@@ -106,7 +106,7 @@
   position: absolute;
   top: 54rpx;
   right: 0;
-  width: 236rpx;
+  width: 244rpx;
   box-sizing: border-box;
   padding: 10rpx;
   border: 1rpx solid rgba(255, 255, 255, 0.12);
@@ -150,6 +150,89 @@
   color: #1b1206;
   font-weight: 800;
   background: linear-gradient(135deg, #ffd166, #fb923c);
+}
+
+.settings-panel {
+  padding: 24rpx;
+}
+
+.settings-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.settings-title {
+  color: #ffffff;
+  font-size: 32rpx;
+  font-weight: 900;
+}
+
+.settings-subtitle {
+  margin-top: 6rpx;
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 23rpx;
+  line-height: 1.45;
+}
+
+.settings-close {
+  width: 52rpx;
+  height: 52rpx;
+  margin: 0;
+  padding: 0;
+  border-radius: 999rpx;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 34rpx;
+  line-height: 46rpx;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.settings-group {
+  margin-top: 22rpx;
+}
+
+.settings-label {
+  color: #f5c87a;
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.settings-segmented {
+  display: flex;
+  gap: 10rpx;
+  margin-top: 12rpx;
+  padding: 7rpx;
+  border-radius: 14rpx;
+  background: rgba(7, 16, 31, 0.52);
+}
+
+.settings-segment {
+  flex: 1;
+  height: 62rpx;
+  border-radius: 10rpx;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 25rpx;
+  font-weight: 800;
+  line-height: 62rpx;
+  text-align: center;
+}
+
+.settings-segment.active {
+  color: #1b1206;
+  background: linear-gradient(135deg, #ffd166, #fb923c);
+}
+
+.settings-reset {
+  width: 100%;
+  height: 68rpx;
+  margin: 22rpx 0 0;
+  border-radius: 12rpx;
+  color: #f5c87a;
+  font-size: 25rpx;
+  font-weight: 800;
+  line-height: 68rpx;
+  background: rgba(251, 146, 60, 0.10);
 }
 
 .home-section-head {

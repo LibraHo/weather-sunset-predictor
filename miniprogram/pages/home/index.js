@@ -13,6 +13,9 @@ Page({
     loading: false,
     locating: false,
     homeMenuOpen: false,
+    settingsOpen: false,
+    defaultPeriod: 'sunset',
+    defaultDay: 'today',
     errorMessage: '',
     recentQueries: [],
     favorites: []
@@ -20,6 +23,7 @@ Page({
 
   onLoad(options = {}) {
     this.predictionService = options.predictionService || this.predictionService || null;
+    this.applySavedSettings();
     this.refreshSavedLists();
   },
 
@@ -71,8 +75,20 @@ Page({
     this.setData({ homeMenuOpen: !this.data.homeMenuOpen });
   },
 
+  openSettings() {
+    this.setData({ homeMenuOpen: false, settingsOpen: true });
+  },
+
+  closeSettings() {
+    this.setData({ settingsOpen: false });
+  },
+
   navigateFeature(event) {
     const target = event.currentTarget.dataset.target;
+    if (target === 'settings') {
+      this.openSettings();
+      return;
+    }
     const routes = {
       forecast: '',
       methodology: '/pages/methodology/index',
@@ -84,6 +100,43 @@ Page({
     this.setData({ homeMenuOpen: false });
     if (!url) return;
     wx.navigateTo({ url });
+  },
+
+  selectDefaultPeriod(event) {
+    const value = event.currentTarget.dataset.value || 'sunset';
+    this.saveSettings({ defaultPeriod: value });
+  },
+
+  selectDefaultDay(event) {
+    const value = event.currentTarget.dataset.value || 'today';
+    this.saveSettings({ defaultDay: value });
+  },
+
+  resetSettings() {
+    this.saveSettings({ defaultPeriod: 'sunset', defaultDay: 'today' });
+  },
+
+  applySavedSettings() {
+    const settings = readHomeSettings();
+    this.setData({
+      defaultPeriod: settings.defaultPeriod,
+      defaultDay: settings.defaultDay,
+      period: settings.defaultPeriod,
+      day: settings.defaultDay
+    });
+  },
+
+  saveSettings(patch = {}) {
+    const settings = {
+      defaultPeriod: patch.defaultPeriod || this.data.defaultPeriod || 'sunset',
+      defaultDay: patch.defaultDay || this.data.defaultDay || 'today'
+    };
+    wx.setStorageSync('homeSettings', settings);
+    this.setData({
+      ...settings,
+      period: settings.defaultPeriod,
+      day: settings.defaultDay
+    });
   },
 
   useHistory(event) {
@@ -239,6 +292,13 @@ function decorateRecentQueries(recent = []) {
     periodLabel: (item.period || item.type) === 'sunrise' ? '朝霞' : '晚霞',
     dayLabel: item.day === 'tomorrow' ? '明日' : '今日'
   }));
+}
+
+function readHomeSettings() {
+  const settings = wx.getStorageSync('homeSettings') || {};
+  const defaultPeriod = settings.defaultPeriod === 'sunrise' ? 'sunrise' : 'sunset';
+  const defaultDay = settings.defaultDay === 'tomorrow' ? 'tomorrow' : 'today';
+  return { defaultPeriod, defaultDay };
 }
 
 function wxPromise(fn, options) {
