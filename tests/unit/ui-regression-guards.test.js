@@ -81,6 +81,17 @@ describe('recent user-reported UI regression guards', () => {
     expect(source).toContain('.weather-view-toggle.xiake-toggle');
   });
 
+  test('radar compass loading uses the shared progress bar treatment', () => {
+    const source = css();
+    const controller = fs.readFileSync(path.resolve('src/controllers/WeatherController.js'), 'utf8');
+
+    expect(controller).toContain('radar-compass-loading-progress');
+    expect(controller).toContain('radar-compass-progress-fill');
+    expect(source).toContain('.radar-compass-loading-progress');
+    expect(source).toContain('.radar-compass-progress-fill');
+    expect(source).toMatch(/\.radar-compass-progress-fill \{[\s\S]*?animation: xiake-loading-progress/);
+  });
+
   test('compact cloud labels are allowed to wrap and do not force ellipsis', () => {
     const source = css();
     const compactBlock = source.match(/\.compact-cloud-info \{[\s\S]*?\n\}/)?.[0] || '';
