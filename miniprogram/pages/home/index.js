@@ -238,6 +238,8 @@ function normalizePrediction(raw = {}, query) {
   return {
     ...data,
     locationName: data.locationName || data.location || query.locationName,
+    lat: data.lat ?? data.latitude ?? query.coordinate?.lat,
+    lon: data.lon ?? data.lng ?? data.longitude ?? query.coordinate?.lon,
     period: data.period || data.type || query.period,
     day: data.day || query.day,
     score: data.score ?? data.totalScore ?? data.finalScore,
