@@ -1,0 +1,70 @@
+<scroll-view class="container methodology-page" scroll-y="true">
+  <view class="methodology-hero xiake-card xiake-bg-sunset-band">
+    <view class="eyebrow">霞客方法</view>
+    <view class="headline">火烧云计算方法</view>
+    <view class="hero-copy">霞客综合天空画布、太阳方向光路、空气显色和坏天气限制，给出朝霞 / 晚霞的观赏分数。</view>
+  </view>
+
+  <view class="methodology-section xiake-card score-guide-card">
+    <view class="section-kicker">Score Guide</view>
+    <view class="section-title">评分解读</view>
+    <view class="score-list">
+      <view class="score-row score-{{item.tone}}" wx:for="{{scoreBands}}" wx:key="range">
+        <view class="score-main">
+          <text class="score-name">{{item.name}}</text>
+          <text class="score-range">{{item.range}}</text>
+        </view>
+        <view class="score-desc">{{item.desc}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="methodology-section xiake-card">
+    <view class="section-kicker">Formation</view>
+    <view class="section-title">形成条件</view>
+    <view class="factor-grid">
+      <view class="factor-card" wx:for="{{formationFactors}}" wx:key="title">
+        <view class="factor-title">{{item.title}}</view>
+        <view class="factor-subtitle">{{item.subtitle}}</view>
+        <view class="factor-desc">{{item.desc}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="methodology-section xiake-card score-source-card">
+    <view class="section-kicker">Map vs Point</view>
+    <view class="section-title">地图分 / 地点详情分说明</view>
+    <view class="source-item">
+      <view class="source-label">地图分</view>
+      <view class="source-copy">地图颜色是区域趋势，用来快速看“这一片哪里更可能出彩”。它按固定网格批量计算，并在格点之间做平滑。</view>
+    </view>
+    <view class="source-item">
+      <view class="source-label">地点详情分</view>
+      <view class="source-copy">详情分会按你选中的具体坐标，重新看当地日出/日落时间、云层、空气质量和太阳方向。</view>
+    </view>
+    <view class="source-note">所以地图适合先找方向，地点详情适合最后决定要不要去；如果两者差很多，以地点详情为准。</view>
+  </view>
+
+  <view class="methodology-section xiake-card changelog-card">
+    <view class="changelog-head">
+      <view>
+        <view class="section-kicker">Updates</view>
+        <view class="section-title">版本更新记录</view>
+      </view>
+      <view class="changelog-hint">可滚动回看</view>
+    </view>
+    <scroll-view class="changelog-scroll" scroll-y="true">
+      <view class="changelog-item" wx:for="{{changelog}}" wx:key="date">
+        <view class="changelog-date">{{item.date}}</view>
+        <view class="changelog-body">
+          <view class="changelog-title">{{item.title}}</view>
+          <view class="changelog-summary">{{item.summary}}</view>
+        </view>
+      </view>
+    </scroll-view>
+    <view class="version-card">
+      <view class="version-title">当前说明版本</view>
+      <view class="version-copy">2026.05.13 · 四因子分析说明；评分口径与 Web 保持一致。</view>
+    </view>
+  </view>
+</scroll-view>
