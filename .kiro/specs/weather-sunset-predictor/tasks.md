@@ -4,6 +4,12 @@
 
 ---
 
+### PR #696 conflict-resolution update (2026-05-14)
+PR #696 (`codex-miniprogram-web-parity-polish`) builds on PR #691/#693 instead of replacing them: it keeps the uploaded `1.0.2` real-device acceptance track from `main`, and adds source-level parity work for the Mini Program weather panel, 24-hour forecast chart, dawn/dusk prediction card, cloud radar visibility, and settings overlay close behavior.
+
+- [x] 52.31 Mini Program Web parity first closure pass: PR #693 established the home/result shell baseline and confirmed `npm.cmd test -- tests/unit/miniprogram --runInBand` on 20 suites / 82 tests; screenshot and real-device acceptance stayed open.
+- [x] 52.32 Mini Program Web parity detail closure pass: PR #696 expands the 24-hour forecast from a simplified list into a charted today/tomorrow forecast, restores denser prediction-card analysis and cloud-radar presentation, and verifies the updated miniprogram unit suite at 20 suites / 88 tests; screenshot and real-device acceptance still remain the final gate.
+
 ## 🆕 需求52：微信小程序与未来 iOS 产品线（2026-05-11）
 
 ### 背景

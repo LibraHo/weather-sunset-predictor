@@ -24,6 +24,15 @@
 - 复杂专题放入 `design/` 子目录，入口必须从本文件链接回来。
 - 拆分标准：单专题超过约 120 行、跨 Web/小程序/iOS 多端、或需要长期独立演进时拆。
 - 第一批拆分：小程序与未来 iOS 产品线设计放入 [`design/miniprogram-ios.md`](./design/miniprogram-ios.md)。
+#### PR #693 baseline update (2026-05-13)
+The current Mini Program design baseline includes PR #693 (`fix/miniprogram-web-parity-ui`, merge `709dd89`). The first home/result shell parity pass is already present:
+- Home compact product menu and settings panel.
+- Direct current-location/history shortcut query.
+- Result-page methodology/map/gallery/upload action loop.
+- Compass-style surrounding cloud radar.
+- Unit coverage in `tests/unit/miniprogram/web-like-experience.test.js`.
+
+Design follow-up should compare the latest Mini Program screens against web mobile screenshots and patch concrete mismatches only. The goal is parity closure, not a second independent redesign.
 - 不拆 `requirements.md` 和 `tasks.md`：它们仍是需求编号与执行状态的单一索引。
 
 ## 架构

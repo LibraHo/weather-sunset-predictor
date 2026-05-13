@@ -178,6 +178,52 @@
   background: rgba(251, 146, 60, 0.10);
 }
 
+.api-surface-card {
+  border-color: rgba(245, 200, 122, 0.32);
+}
+
+.api-copy {
+  margin-top: 12rpx;
+  color: rgba(255, 255, 255, 0.74);
+  line-height: 1.7;
+}
+
+.api-endpoint-list {
+  margin-top: 18rpx;
+  display: grid;
+  gap: 12rpx;
+}
+
+.api-endpoint {
+  display: flex;
+  gap: 14rpx;
+  align-items: flex-start;
+  padding: 16rpx;
+  border-radius: 14rpx;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 24rpx;
+}
+
+.api-path {
+  flex: 0 0 150rpx;
+  color: #ffd166;
+  font-family: Consolas, Monaco, monospace;
+  font-weight: 800;
+}
+
+.api-actions {
+  display: flex;
+  gap: 14rpx;
+  margin-top: 20rpx;
+}
+
+.api-button {
+  flex: 1;
+  min-height: 72rpx;
+  font-size: 24rpx;
+}
+
 .changelog-head {
   display: flex;
   align-items: flex-start;

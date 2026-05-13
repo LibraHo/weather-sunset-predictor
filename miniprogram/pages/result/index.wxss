@@ -4,6 +4,29 @@
   gap: 22rpx;
 }
 
+.result-prediction-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10rpx;
+  padding: 10rpx;
+}
+
+.result-period-option {
+  height: 66rpx;
+  border-radius: 12rpx;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 26rpx;
+  font-weight: 900;
+  line-height: 66rpx;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.result-period-option.active {
+  color: #1b1206;
+  background: linear-gradient(135deg, #ffd166, #fb923c);
+}
+
 .result-summary-row {
   display: flex;
   gap: 16rpx;
@@ -84,6 +107,112 @@
   color: #f5c87a;
   font-size: 28rpx;
   font-weight: 800;
+}
+
+.score-ledger-card {
+  padding: 24rpx;
+}
+
+.score-ledger-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.score-ledger-title {
+  color: #ffffff;
+  font-size: 28rpx;
+  font-weight: 900;
+}
+
+.score-ledger-subtitle {
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.score-ledger-summary {
+  margin-top: 16rpx;
+  padding: 18rpx;
+  border: 1rpx solid rgba(251, 191, 36, 0.18);
+  border-radius: 14rpx;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 25rpx;
+  line-height: 1.52;
+  background: rgba(251, 146, 60, 0.10);
+}
+
+.score-ledger-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  margin-top: 16rpx;
+}
+
+.score-ledger-step {
+  display: flex;
+  gap: 14rpx;
+  padding: 16rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.08);
+  border-radius: 14rpx;
+  background: rgba(7, 16, 31, 0.50);
+}
+
+.score-ledger-step-final {
+  border-color: rgba(251, 191, 36, 0.32);
+  background: rgba(251, 146, 60, 0.13);
+}
+
+.score-ledger-index {
+  flex: 0 0 42rpx;
+  width: 42rpx;
+  height: 42rpx;
+  border-radius: 50%;
+  color: #1b1206;
+  font-size: 22rpx;
+  font-weight: 900;
+  line-height: 42rpx;
+  text-align: center;
+  background: #ffd166;
+}
+
+.score-ledger-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.score-ledger-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.score-ledger-label {
+  color: #ffffff;
+  font-size: 25rpx;
+  font-weight: 900;
+}
+
+.score-ledger-result {
+  flex: 0 0 auto;
+  color: #ffd166;
+  font-size: 26rpx;
+  font-weight: 900;
+}
+
+.score-ledger-expression,
+.score-ledger-detail {
+  margin-top: 8rpx;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 23rpx;
+  line-height: 1.45;
+}
+
+.score-ledger-detail {
+  color: rgba(255, 255, 255, 0.42);
 }
 
 .analysis-card,
@@ -230,10 +359,46 @@
     radial-gradient(circle at center, rgba(251, 146, 60, 0.13) 0 8%, rgba(184, 198, 218, 0.14) 18%, rgba(138, 156, 186, 0.12) 39%, rgba(218, 226, 238, 0.12) 64%, rgba(7, 16, 31, 0.64) 100%);
 }
 
+.radar-cloud-field {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 28% 24%, rgba(218, 226, 238, 0.30), transparent 20%),
+    radial-gradient(circle at 68% 28%, rgba(184, 198, 218, 0.24), transparent 24%),
+    radial-gradient(circle at 42% 72%, rgba(138, 156, 186, 0.20), transparent 22%);
+}
+
+.radar-cloud-blob {
+  position: absolute;
+  border-radius: 48% 54% 44% 58%;
+  filter: blur(1rpx);
+  transform: translate(-50%, -50%);
+}
+
+.radar-cloud-blob-good { background: rgba(218, 226, 238, 0.48); }
+.radar-cloud-blob-watch { background: rgba(184, 198, 218, 0.38); }
+.radar-cloud-blob-weak,
+.radar-cloud-blob-unknown { background: rgba(138, 156, 186, 0.28); }
+
+.radar-ring-label {
+  position: absolute;
+  right: 18%;
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 20rpx;
+  font-weight: 800;
+  z-index: 2;
+}
+
+.radar-ring-label-low { top: 42%; }
+.radar-ring-label-mid { top: 29%; }
+.radar-ring-label-high { top: 16%; }
+
 .radar-ring,
 .radar-axis,
 .radar-center-dot,
-.radar-direction {
+.radar-direction,
+.radar-sun-event-icon {
   position: absolute;
 }
 
@@ -283,6 +448,34 @@
   background: #fb923c;
   box-shadow: 0 0 28rpx rgba(251, 146, 60, 0.46);
   transform: translate(-50%, -50%);
+}
+
+.radar-sun-event-icon {
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rpx;
+  color: #fb923c;
+  transform: translate(-50%, -50%);
+}
+
+.radar-sun-event-symbol {
+  width: 42rpx;
+  height: 42rpx;
+  border: 2rpx solid rgba(251, 146, 60, 0.58);
+  border-radius: 50%;
+  font-size: 26rpx;
+  font-weight: 900;
+  line-height: 40rpx;
+  text-align: center;
+  background: rgba(7, 16, 31, 0.72);
+}
+
+.radar-sun-event-label {
+  color: rgba(255, 255, 255, 0.60);
+  font-size: 18rpx;
+  font-weight: 800;
 }
 
 .radar-direction {

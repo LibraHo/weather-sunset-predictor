@@ -30,9 +30,26 @@
   line-height: 1.55;
 }
 
+.upload-parity-note {
+  padding: 22rpx;
+  background: rgba(18, 28, 52, 0.58);
+}
+
+.upload-parity-note .section-title {
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 900;
+}
+
+.upload-parity-note .subtle-text {
+  margin-top: 8rpx;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
 .glass-card {
-  background: rgba(18, 28, 52, 0.68);
-  backdrop-filter: blur(24rpx);
+  background: rgba(18, 28, 52, 0.82);
 }
 
 .picker-card {
@@ -78,6 +95,25 @@
 .picker-copy {
   margin-top: 10rpx;
   font-size: 25rpx;
+}
+
+.upload-format-hint,
+.metadata-edit-hint {
+  color: rgba(255, 255, 255, 0.60);
+  font-size: 23rpx;
+  line-height: 1.45;
+}
+
+.upload-format-hint {
+  margin-top: 14rpx;
+  padding: 0 32rpx;
+}
+
+.metadata-edit-hint {
+  padding: 18rpx 20rpx;
+  border: 1rpx solid rgba(245, 200, 122, 0.16);
+  border-radius: 14rpx;
+  background: rgba(251, 146, 60, 0.08);
 }
 
 .form-card {

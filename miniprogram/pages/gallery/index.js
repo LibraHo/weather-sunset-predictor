@@ -1,4 +1,4 @@
-import { listPhotos } from '../../services/photos.js';
+import { listPhotos, normalizePhoto } from '../../services/photos.js';
 
 export const GALLERY_LINK = 'https://sunset.bjhyc.online/gallery.html';
 export const DEFAULT_MAP_CENTER = { latitude: 35.8617, longitude: 104.1954 };
@@ -140,24 +140,25 @@ function findPhotoByEvent(photos = [], event = {}) {
 export function normalizePhotos(result = []) {
   const list = Array.isArray(result) ? result : (result.photos || result.data || result.items || []);
   return list.map((item, index) => {
-    const lat = parseCoordinate(item.lat ?? item.latitude);
-    const lon = parseCoordinate(item.lon ?? item.lng ?? item.longitude);
-    const originalUrl = item.originalUrl || item.original_url || item.url || item.imageUrl || '';
-    const thumbnailUrl = item.thumbUrl || item.thumbnailUrl || item.thumbnail || item.coverUrl || originalUrl || '';
-    const location = item.locationName || item.location || item.place || item.desc || '未知地点';
+    const normalized = normalizePhoto(item);
+    const lat = parseCoordinate(normalized.lat);
+    const lon = parseCoordinate(normalized.lon);
+    const originalUrl = normalized.originalUrl || '';
+    const thumbnailUrl = normalized.thumbUrl || item.thumbnail || item.coverUrl || originalUrl || '';
+    const location = normalized.locationName || item.location || item.place || normalized.desc || '未知地点';
 
     return {
-      id: item.id || item.photoId || item._id || `photo-${index}`,
+      id: normalized.id || `photo-${index}`,
       markerId: index + 1,
       location,
       coordinatesText: lat !== null && lon !== null ? `${lat.toFixed(4)}, ${lon.toFixed(4)}` : '位置待补充',
       lat,
       lon,
       hasLocation: lat !== null && lon !== null,
-      takenAt: formatPhotoTime(item.takenAt || item.shootingTime || item.createdAt || item.uploadedAt),
-      uploadedAt: formatPhotoTime(item.uploadedAt || item.createdAt),
-      uploader: item.uploaderName || item.uploader || item.author || '霞友',
-      description: item.desc || item.description || item.caption || '',
+      takenAt: formatPhotoTime(normalized.takenAt || item.shootingTime),
+      uploadedAt: formatPhotoTime(normalized.uploadedAt),
+      uploader: normalized.uploaderName || item.author || '霞友',
+      description: normalized.desc || '',
       thumbnailUrl,
       originalUrl,
       hasThumbnail: Boolean(thumbnailUrl),

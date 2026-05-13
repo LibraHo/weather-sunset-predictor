@@ -1,7 +1,16 @@
-<view class="location-search xiake-card">
-  <view class="field-label">地点</view>
+<view class="location-search">
+  <view class="field-label">位置</view>
   <view class="input-row">
-    <input class="location-input" value="{{value}}" placeholder="输入城市、区县或具体地点" placeholder-class="input-placeholder" confirm-type="search" bindinput="onInput" bindconfirm="onConfirm" />
-    <button class="locate-button" loading="{{locating}}" bindtap="onLocate">定位查分</button>
+    <button class="locate-icon" aria-label="locate" loading="{{locating}}" bindtap="onLocate">
+      <view class="star-icon">★</view>
+    </button>
+    <view class="location-input-shell">
+      <input class="location-input" value="{{value}}" placeholder="请输入城市名称..." placeholder-class="input-placeholder" confirm-type="search" bindinput="onInput" bindconfirm="onConfirm" />
+      <view class="pin-icon">
+        <view class="pin-head"></view>
+        <view class="pin-stem"></view>
+      </view>
+    </view>
+    <button class="location-query-button" bindtap="onConfirm">查询</button>
   </view>
 </view>

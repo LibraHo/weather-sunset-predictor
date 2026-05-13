@@ -274,6 +274,13 @@ Alex 提供新的朝晚霞预测概念界面，目标是借鉴其信息结构，
 - 小程序与 Web 的差异只能来自平台能力约束，例如 Leaflet/DOM 改为小程序 `map`/canvas/WXML；不能因为实现省事删掉 Web 已有的核心功能。
 - 小程序提审前必须通过真机验收矩阵：iOS/Android、定位授权/拒绝、相册上传、分享卡片、地图 marker 性能、弱网和接口失败降级。
 - CI 需要覆盖小程序 service 单测、共享 API 合约测试，并预留 `miniprogram-ci` 构建/预览与 `miniprogram-automator` 页面自动化入口。
+### PR #693 baseline update (2026-05-13)
+PR #693 (`fix/miniprogram-web-parity-ui`, merge `709dd89`) is included in Requirement 52. It already covers the first web-parity shell pass: home menu/settings, direct shortcut query, result product-loop navigation, and compass-style surrounding cloud radar.
+
+Acceptance update:
+- Future Mini Program parity work must start from the PR #693 code baseline.
+- Do not replace completed PR #693 shell behavior unless web-vs-Mini-Program screenshot review shows a specific mismatch.
+- Remaining parity work should focus on screenshot-level home/result polish, map/gallery/upload parity, methodology/API/settings surface review, and real-device validation.
 - 所有新增用户可见文案至少维护 `zh-CN`、`zh-TW`、`en-US`，其他语言默认英文 fallback。
 
 ## 附录：火烧云预测算法原理

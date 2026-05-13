@@ -55,12 +55,30 @@ function normalizeUploadPayload(payload) {
   return source?.photo ?? source;
 }
 
-export function normalizePhoto(photo = {}) {
+export function normalizePhoto(photo = {}, options = {}) {
   const location = photo.location || {};
   const uploader = photo.uploader || photo.user || {};
+  const id = firstDefined(photo.id, photo.photoId, photo._id, '');
+  const baseUrl = options.baseUrl ?? getApiConfig().baseUrl;
+  const thumbUrl = firstDefined(
+    photo.thumbUrl,
+    photo.thumbnailUrl,
+    photo.thumbnail_url,
+    photo.thumb_url,
+    photo.urls?.thumb,
+    id ? joinUrl(baseUrl, `/api/photos/${encodeURIComponent(id)}/thumb`) : ''
+  );
+  const originalUrl = firstDefined(
+    photo.originalUrl,
+    photo.original_url,
+    photo.url,
+    photo.imageUrl,
+    photo.urls?.original,
+    id ? joinUrl(baseUrl, `/api/photos/${encodeURIComponent(id)}/original`) : ''
+  );
 
   return {
-    id: firstDefined(photo.id, photo.photoId, photo._id, ''),
+    id,
     lat: parseNumber(firstDefined(photo.lat, photo.latitude, location.lat, location.latitude)),
     lon: parseNumber(firstDefined(photo.lon, photo.lng, photo.longitude, location.lon, location.lng, location.longitude)),
     locationName: firstDefined(photo.locationName, photo.location_name, photo.placeName, location.name, ''),
@@ -68,8 +86,8 @@ export function normalizePhoto(photo = {}) {
     takenAt: firstDefined(photo.takenAt, photo.taken_at, photo.capturedAt, photo.createdAt, null),
     uploadedAt: firstDefined(photo.uploadedAt, photo.uploaded_at, photo.createdAt, null),
     desc: firstDefined(photo.desc, photo.description, photo.caption, ''),
-    thumbUrl: firstDefined(photo.thumbUrl, photo.thumbnailUrl, photo.thumbnail_url, photo.thumb_url, photo.urls?.thumb, ''),
-    originalUrl: firstDefined(photo.originalUrl, photo.original_url, photo.url, photo.imageUrl, photo.urls?.original, '')
+    thumbUrl,
+    originalUrl
   };
 }
 
@@ -139,6 +157,7 @@ function buildUploadHeader(token, options = {}) {
 }
 
 export async function listPhotos(options = {}) {
+  const config = getApiConfig();
   const response = await request(PHOTOS_PATH, {
     method: 'GET',
     query: options.query || options.params,
@@ -149,7 +168,9 @@ export async function listPhotos(options = {}) {
     sessionToken: options.sessionToken || options.token
   });
 
-  return normalizePhotosPayload(response).map(normalizePhoto);
+  return normalizePhotosPayload(response).map((photo) => normalizePhoto(photo, {
+    baseUrl: options.baseUrl ?? config.baseUrl
+  }));
 }
 
 export async function uploadPhoto(photo = {}, options = {}) {

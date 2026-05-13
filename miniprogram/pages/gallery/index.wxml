@@ -16,6 +16,7 @@
 
     <view class="native-map-shell">
       <map
+        wx:if="{{photoStats.withLocation}}"
         class="native-map"
         latitude="{{mapCenter.latitude}}"
         longitude="{{mapCenter.longitude}}"
@@ -24,6 +25,10 @@
         bindmarkertap="focusPhoto"
       />
       <view class="map-empty-overlay" wx:if="{{!photoStats.withLocation && !loading}}">等待带位置的霞光照片</view>
+      <view class="map-legend">
+        <view class="legend-photo-dot"></view>
+        <view class="legend-text">照片位置</view>
+      </view>
     </view>
 
     <view class="active-photo" wx:if="{{activePhoto}}">
@@ -34,6 +39,7 @@
         <view class="active-location">{{activePhoto.location}}</view>
         <view class="active-line subtle-text">{{activePhoto.coordinatesText}}</view>
         <view class="active-line subtle-text">{{activePhoto.takenAt}} · {{activePhoto.uploader}}</view>
+        <view class="active-line active-uploaded-at subtle-text">上传时间：{{activePhoto.uploadedAt}}</view>
       </view>
     </view>
 
@@ -57,9 +63,9 @@
   </view>
 
   <view class="state-card xiake-card empty-state" wx:elif="{{isEmpty}}">
-    <view class="state-title">还没有照片</view>
-    <view class="state-copy subtle-text">第一张霞光照片上传后，会出现在地图和列表里。</view>
-    <button class="primary-button retry-button" bindtap="goUpload">上传第一张</button>
+    <view class="state-title">暂无照片</view>
+    <view class="state-copy subtle-text">上传第一张火烧云照片吧。</view>
+    <button class="primary-button retry-button" bindtap="goUpload">上传照片</button>
   </view>
 
   <view class="photo-list" wx:else>
@@ -78,6 +84,7 @@
         <view class="photo-location">{{item.location}}</view>
         <view class="photo-line subtle-text">拍摄时间：{{item.takenAt}}</view>
         <view class="photo-line subtle-text">位置：{{item.coordinatesText}}</view>
+        <view class="photo-line photo-uploaded-at subtle-text">上传时间：{{item.uploadedAt}}</view>
         <view class="photo-line subtle-text">上传者：{{item.uploader}}</view>
         <view class="card-actions">
           <button class="inline-button" catchtap="previewOriginal" data-id="{{item.id}}">原图</button>

@@ -5,6 +5,7 @@ import { jest } from '@jest/globals';
 import { configureApi, resetApiConfig, setWxInstance } from '../../../miniprogram/services/api.js';
 import {
   buildSpotMarkers,
+  getFirecloudLegend,
   getChinaFirecloudSpots,
   normalizeChinaFirecloudSpots
 } from '../../../miniprogram/services/firecloud-map.js';
@@ -30,7 +31,10 @@ describe('miniprogram firecloud map', () => {
     expect(mapWxml).toContain('<map');
     expect(mapWxml).toContain('markers="{{markers}}"');
     expect(mapWxml).toContain('bindmarkertap="focusSpot"');
-    expect(mapWxml).toContain('查详情分');
+    expect(mapWxml).toContain('enable-zoom="{{true}}"');
+    expect(mapWxml).toContain('wx:for="{{legendItems}}"');
+    expect(mapWxml).toContain('style="background: {{item.color}};"');
+    expect(mapWxml).toContain('bindtap="openSpotPrediction"');
   });
 
   test('loads same-source China spots API and normalizes markers', async () => {
@@ -41,7 +45,7 @@ describe('miniprogram firecloud map', () => {
           period: 'sunset',
           updatedAt: '2026-05-13T00:10:00.000Z',
           spots: [
-            { lat: 31.2, lon: 121.5, score: 88, quality: '顶级' },
+            { lat: 31.2, lon: 121.5, score: 88, quality: 'custom-quality' },
             { lat: null, lon: 116.4, score: 70 }
           ]
         }
@@ -58,8 +62,8 @@ describe('miniprogram firecloud map', () => {
       method: 'GET'
     }));
     expect(data.spots).toHaveLength(1);
-    expect(data.spots[0]).toMatchObject({ scoreText: '88', level: 'excellent', quality: '顶级' });
-    expect(markers[0]).toMatchObject({ latitude: 31.2, longitude: 121.5, title: '88分' });
+    expect(data.spots[0]).toMatchObject({ scoreText: '88', level: 'excellent', quality: 'custom-quality' });
+    expect(markers[0]).toMatchObject({ latitude: 31.2, longitude: 121.5, title: '88\u5206' });
   });
 
   test('normalizes spot bands with the same score policy as result pages', () => {
@@ -72,6 +76,16 @@ describe('miniprogram firecloud map', () => {
     });
 
     expect(data.spots.map((spot) => spot.level)).toEqual(['excellent', 'good', 'watch']);
-    expect(data.spots.map((spot) => spot.quality)).toEqual(['顶级', '较好', '可观赏']);
+    expect(data.spots.map((spot) => spot.quality)).toEqual(['\u9876\u7ea7', '\u8f83\u597d', '\u53ef\u89c2\u8d4f']);
+  });
+
+  test('uses web compact raster legend thresholds for map color semantics', () => {
+    const sunsetLegend = getFirecloudLegend('sunset');
+    const sunriseLegend = getFirecloudLegend('sunrise');
+
+    expect(sunsetLegend.map((item) => item.label)).toEqual(['<40', '40', '50', '60', '70+']);
+    expect(sunriseLegend.map((item) => item.label)).toEqual(['<30', '30', '40', '55', '70+']);
+    expect(sunsetLegend[4].color).toBe('#ff8a2a');
+    expect(sunriseLegend[4].color).toBe('#ff6b8a');
   });
 });

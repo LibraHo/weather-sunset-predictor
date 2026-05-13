@@ -1,4 +1,4 @@
-import { buildSpotMarkers, getChinaFirecloudSpots } from '../../services/firecloud-map.js';
+import { buildSpotMarkers, getChinaFirecloudSpots, getFirecloudLegend } from '../../services/firecloud-map.js';
 
 const DEFAULT_MAP_CENTER = { latitude: 35.8617, longitude: 104.1954 };
 
@@ -6,12 +6,14 @@ Page({
   data: {
     period: 'sunset',
     periodLabel: '晚霞',
+    periodDetailText: '',
     loading: false,
     errorMessage: '',
     updatedAtText: '等待地图数据',
     spots: [],
     topSpots: [],
     markers: [],
+    legendItems: getFirecloudLegend('sunset'),
     activeSpot: null,
     mapCenter: DEFAULT_MAP_CENTER,
     mapScale: 4
@@ -21,7 +23,9 @@ Page({
     const period = options.period === 'sunrise' ? 'sunrise' : 'sunset';
     this.setData({
       period,
-      periodLabel: periodLabel(period)
+      periodLabel: periodLabel(period),
+      periodDetailText: periodDetailText(period),
+      legendItems: getFirecloudLegend(period)
     });
     this.loadMap();
   },
@@ -32,12 +36,14 @@ Page({
     this.setData({
       period,
       periodLabel: periodLabel(period),
+      periodDetailText: periodDetailText(period),
       activeSpot: null,
       spots: [],
       topSpots: [],
       markers: [],
       mapCenter: DEFAULT_MAP_CENTER,
-      mapScale: 4
+      mapScale: 4,
+      legendItems: getFirecloudLegend(period)
     });
     this.loadMap();
   },
@@ -99,6 +105,21 @@ function periodLabel(period) {
   return period === 'sunrise' ? '朝霞' : '晚霞';
 }
 
+function periodDetailText(period) {
+  const date = new Date();
+  if (period === 'sunrise') {
+    date.setDate(date.getDate() + 1);
+    return `明天的朝霞 · ${formatMonthDay(date)}`;
+  }
+  return `今天的晚霞 · ${formatMonthDay(date)}`;
+}
+
+function formatMonthDay(date) {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${month}-${day}`;
+}
+
 function formatUpdatedAt(value) {
   if (!value) return '等待地图数据';
   const date = new Date(value);
@@ -110,4 +131,4 @@ function formatUpdatedAt(value) {
   return `更新于 ${month}-${day} ${hour}:${minute}`;
 }
 
-export { DEFAULT_MAP_CENTER, formatUpdatedAt };
+export { DEFAULT_MAP_CENTER, formatUpdatedAt, periodDetailText };

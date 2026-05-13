@@ -73,6 +73,40 @@ describe('miniprogram page user/share helpers', () => {
     expect(recent.date).toEqual(expect.any(String));
   });
 
+  test('home test weather data drives the weather preview card', () => {
+    const preview = homeHelpers.buildTestWeatherPreview();
+
+    expect(homeHelpers.isWeatherTestLocation('test')).toBe(true);
+    expect(homeHelpers.isWeatherTestLocation(' TEST ')).toBe(true);
+    expect(homeHelpers.isWeatherTestLocation('beijing')).toBe(false);
+    expect(preview).toMatchObject({
+      title: '天气信息',
+      badge: 'TEST',
+      location: 'TEST',
+      iconType: 'partly-cloudy',
+      iconSrc: '/assets/icons/weather-partly-cloudy.svg',
+      condition: '多云',
+      temperature: '19.9',
+      temperatureUnit: '°C',
+      windSpeed: '11 km/h',
+      windDirection: '西',
+      metrics: [
+        { key: 'humidity', value: '72%' },
+        { key: 'cloud', value: '53%' },
+        { key: 'pressure', value: '1007 hPa' },
+        { key: 'visibility', value: '13 km' },
+        { key: 'aerosol', value: '0.11' },
+        { key: 'precipitation', value: '0 mm' }
+      ],
+      note: '高 62% / 中 54% / 低 43% · 西 11 km/h'
+    });
+
+    expect(preview.weekly).toEqual(expect.arrayContaining([
+      expect.objectContaining({ key: 'today', label: '今天', temp: '15° / 31°', precip: '8%', wind: '21 km/h' }),
+      expect.objectContaining({ key: 'tomorrow', label: '明天', temp: '15° / 32°', precip: '6%', wind: '19 km/h' })
+    ]));
+  });
+
   test('result page builds Xiake core panels from backend analysis', () => {
     const analysis = resultHelpers.buildAnalysisItems({
       canvasAnalysis: { score: 83, breakdown: { highClouds: 64, midClouds: 20, lowClouds: 5 } },

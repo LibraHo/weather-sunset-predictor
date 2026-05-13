@@ -1,23 +1,31 @@
-<view class="container home-page">
+<view class="container home-page {{weatherPreview.visible ? 'has-weather' : ''}}">
   <view class="home-topbar">
     <view class="home-brand-row">
-      <view class="app-logo-mark" aria-hidden="true">
-        <view class="logo-sun"></view>
-        <view class="logo-line logo-line-1"></view>
-        <view class="logo-line logo-line-2"></view>
-      </view>
+      <image class="app-logo-image" src="/assets/icons/xiake-logo.svg" mode="aspectFit" aria-hidden="true" />
       <view class="app-logo-text">霞客</view>
     </view>
-    <view class="home-view-menu">
-      <button class="menu-button" bindtap="toggleHomeMenu">⋯</button>
-      <view class="home-view-menu-dropdown" wx:if="{{homeMenuOpen}}">
-        <view class="home-view-option active" data-target="forecast" bindtap="navigateFeature">查分</view>
-        <view class="home-view-option" data-target="settings" bindtap="navigateFeature">设置</view>
-        <view class="home-view-option" data-target="methodology" bindtap="navigateFeature">算法</view>
-        <view class="home-view-option" data-target="map" bindtap="navigateFeature">地图</view>
-        <view class="home-view-option" data-target="gallery" bindtap="navigateFeature">照片</view>
-        <view class="home-view-option" data-target="upload" bindtap="navigateFeature">上传</view>
+
+    <view class="home-header-actions">
+      <view class="home-view-menu">
+        <button class="menu-button icon-button" aria-label="menu" bindtap="toggleHomeMenu">
+          <image class="header-action-image" src="/assets/icons/menu.svg" mode="aspectFit" aria-hidden="true" />
+        </button>
+        <view class="home-view-menu-dropdown" wx:if="{{homeMenuOpen}}">
+          <view class="home-view-option active" data-target="forecast" bindtap="navigateFeature">预测功能</view>
+          <view class="home-view-option" data-target="settings" bindtap="navigateFeature">设置</view>
+          <view class="home-view-option" data-target="methodology" bindtap="navigateFeature">火烧云计算方法</view>
+          <view class="home-view-option" data-target="map" bindtap="navigateFeature">火烧云地图</view>
+          <view class="home-view-option" data-target="gallery" bindtap="navigateFeature">分享地图</view>
+          <view class="home-view-option" data-target="api" bindtap="navigateFeature">API接入</view>
+          <view class="home-view-option" data-target="upload" bindtap="navigateFeature">上传照片</view>
+        </view>
       </view>
+      <button class="header-icon-button icon-button" aria-label="notice">
+        <image class="header-action-image" src="/assets/icons/bell.svg" mode="aspectFit" aria-hidden="true" />
+      </button>
+      <button class="header-icon-button icon-button" aria-label="settings" bindtap="toggleSettings">
+        <image class="header-action-image" src="/assets/icons/settings.svg" mode="aspectFit" aria-hidden="true" />
+      </button>
     </view>
   </view>
 
@@ -30,9 +38,9 @@
     <view class="settings-panel-head">
       <view>
         <view class="settings-title">设置</view>
-        <view class="settings-subtitle">默认值会用于首页下次打开。</view>
+        <view class="settings-subtitle">调整首页默认预测类型和日期。</view>
       </view>
-      <button class="settings-close" bindtap="closeSettings">×</button>
+      <button class="settings-close" bindtap="closeSettings">x</button>
     </view>
     <view class="settings-group">
       <view class="settings-label">默认预测</view>
@@ -44,14 +52,27 @@
     <view class="settings-group">
       <view class="settings-label">默认日期</view>
       <view class="settings-segmented">
-        <view class="settings-segment {{defaultDay === 'today' ? 'active' : ''}}" data-value="today" bindtap="selectDefaultDay">今日</view>
-        <view class="settings-segment {{defaultDay === 'tomorrow' ? 'active' : ''}}" data-value="tomorrow" bindtap="selectDefaultDay">明日</view>
+        <view class="settings-segment {{defaultDay === 'today' ? 'active' : ''}}" data-value="today" bindtap="selectDefaultDay">今天</view>
+        <view class="settings-segment {{defaultDay === 'tomorrow' ? 'active' : ''}}" data-value="tomorrow" bindtap="selectDefaultDay">明天</view>
       </view>
     </view>
     <button class="settings-reset" bindtap="resetSettings">恢复默认</button>
+    <button class="settings-done" bindtap="closeSettings">完成</button>
   </view>
 
   <location-search value="{{locationText}}" locating="{{locating}}" bind:change="onLocationChange" bind:confirm="onSearch" bind:locate="onUseCurrentLocation" />
+
+  <view class="home-web-spacer"></view>
+
+  <view class="home-footer-card xiake-card" wx:if="{{!weatherPreview.visible}}">
+    <button class="footer-refresh-button">刷新</button>
+    <view class="footer-source">数据来源：Open-Meteo（GFS + ECMWF）</view>
+    <view class="footer-visitor">
+      <text class="footer-visitor-icon">👥</text>
+      <text>访问人数：</text>
+      <text class="footer-visitor-number">--</text>
+    </view>
+  </view>
 
   <view class="control-card xiake-card">
     <view class="section-title">预测类型</view>
@@ -62,23 +83,257 @@
 
     <view class="section-title date-title">日期</view>
     <view class="segmented">
-      <view class="segment {{day === 'today' ? 'active' : ''}}" data-value="today" bindtap="selectDay">今日</view>
-      <view class="segment {{day === 'tomorrow' ? 'active' : ''}}" data-value="tomorrow" bindtap="selectDay">明日</view>
+      <view class="segment {{day === 'today' ? 'active' : ''}}" data-value="today" bindtap="selectDay">今天</view>
+      <view class="segment {{day === 'tomorrow' ? 'active' : ''}}" data-value="tomorrow" bindtap="selectDay">明天</view>
     </view>
   </view>
 
   <view class="error-card" wx:if="{{errorMessage}}">{{errorMessage}}</view>
 
   <button class="primary-button query-button" loading="{{loading}}" disabled="{{loading}}" bindtap="onSearch">
-    {{loading ? '正在查分…' : '查询霞光分数'}}
+    {{loading ? '查询中...' : '查询霞光分数'}}
   </button>
 
-  <view class="home-section-head">
-    <view class="section-title">个人入口</view>
-    <view class="section-hint">像网站首页一样先保留最近动作</view>
+  <view class="home-weather-preview xiake-card" wx:if="{{weatherPreview.visible}}">
+    <view class="preview-head weather-panel-head">
+      <view>
+        <view class="section-title weather-panel-title">{{weatherPreview.title}}</view>
+        <view class="preview-copy">{{weatherPreview.description}}</view>
+      </view>
+      <view class="preview-badge">{{weatherPreview.badge}}</view>
+    </view>
+
+    <view class="weather-main-layout">
+      <view class="weather-visual-panel">
+        <view class="weather-location-inline">
+          <text class="weather-location-pin">⌖</text>
+          <text>{{weatherPreview.location}}</text>
+        </view>
+        <image class="weather-icon-image" src="{{weatherPreview.iconSrc}}" mode="aspectFit" aria-hidden="true" />
+        <view class="weather-desc">{{weatherPreview.condition}}</view>
+        <view class="weather-temp-large">
+          <text>{{weatherPreview.temperature}}</text>
+          <text class="temp-unit">{{weatherPreview.temperatureUnit}}</text>
+        </view>
+        <view class="weather-wind-main">
+          <text class="weather-wind-glyph">≈</text>
+          <text class="weather-wind-speed">{{weatherPreview.windSpeed}}</text>
+          <text class="weather-wind-divider"></text>
+          <text class="weather-wind-direction-text">{{weatherPreview.windDirection}}</text>
+        </view>
+      </view>
+
+      <view class="weather-metric-grid">
+        <view class="weather-metric weather-metric-{{item.key}}" wx:for="{{weatherPreview.metrics}}" wx:key="key">
+          <image class="weather-metric-image" src="/assets/icons/metric-{{item.key}}.svg" mode="aspectFit" aria-hidden="true" />
+          <text class="metric-label">{{item.label}}</text>
+          <text class="metric-value">{{item.value}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="weather-view-toggle">
+      <view class="weather-toggle {{weatherView === 'overview' ? 'active' : ''}}" data-view="overview" bindtap="switchWeatherView">{{weatherPreview.weeklyTab}}</view>
+      <view class="weather-toggle {{weatherView === 'hourly' ? 'active' : ''}}" data-view="hourly" bindtap="switchWeatherView">{{weatherPreview.hourlyTab}}</view>
+      <view class="weather-toggle {{weatherView === 'glow' ? 'active' : ''}}" data-view="glow" bindtap="switchWeatherView">{{weatherPreview.glowTab}}</view>
+    </view>
+    <view class="weather-weekly-list" wx:if="{{weatherView === 'overview' && weatherPreview.weekly.length}}">
+      <view class="weather-weekly-row" wx:for="{{weatherPreview.weekly}}" wx:key="key">
+        <view class="weather-weekly-day">
+          <text class="weather-weekly-label">{{item.label}}</text>
+          <text class="weather-weekly-condition">{{item.condition}}</text>
+        </view>
+        <view class="weather-weekly-values">
+          <text class="weather-weekly-temp">{{item.temp}}</text>
+          <text class="weather-weekly-meta">{{item.precip}}</text>
+          <text class="weather-weekly-meta">{{item.wind}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="weather-hourly-panel" wx:if="{{weatherView === 'hourly' && weatherPreview.hourly.length}}">
+      <view class="weather-day-selector xiake-toggle xiake-toggle-compact">
+        <view class="weather-day-option {{weatherDay === item.key ? 'active' : ''}}" wx:for="{{weatherPreview.hourlyView.dayOptions}}" wx:key="key" data-day="{{item.key}}" bindtap="switchWeatherDay">{{item.label}}</view>
+      </view>
+      <view class="weather-parameter-selector xiake-toggle xiake-toggle-wrap">
+        <view class="weather-param-option {{weatherParameter === 'temp' ? 'active' : ''}}" data-param="temp" bindtap="switchWeatherParameter"><text class="weather-param-icon">℃</text><text class="weather-param-label">温度</text></view>
+        <view class="weather-param-option {{weatherParameter === 'precip' ? 'active' : ''}}" data-param="precip" bindtap="switchWeatherParameter"><text class="weather-param-icon">∿</text><text class="weather-param-label">降水</text></view>
+        <view class="weather-param-option {{weatherParameter === 'humidity' ? 'active' : ''}}" data-param="humidity" bindtap="switchWeatherParameter"><text class="weather-param-icon">◇</text><text class="weather-param-label">湿度</text></view>
+        <view class="weather-param-option {{weatherParameter === 'wind' ? 'active' : ''}}" data-param="wind" bindtap="switchWeatherParameter"><text class="weather-param-icon">≈</text><text class="weather-param-label">风速</text></view>
+        <view class="weather-param-option {{weatherParameter === 'pressure' ? 'active' : ''}}" data-param="pressure" bindtap="switchWeatherParameter"><text class="weather-param-icon">≡</text><text class="weather-param-label">气压</text></view>
+        <view class="weather-param-option {{weatherParameter === 'clouds' ? 'active' : ''}}" data-param="clouds" bindtap="switchWeatherParameter"><text class="weather-param-icon">☁</text><text class="weather-param-label">云量</text></view>
+      </view>
+      <view class="weather-chart-panel">
+        <view class="weather-chart-title">{{weatherPreview.hourlyView.label}}趋势 ({{weatherPreview.hourlyView.unit}})</view>
+      <view class="weather-hourly-chart" aria-label="24小时预报图">
+        <view class="weather-hourly-axis">
+          <text class="weather-hourly-axis-label" wx:for="{{weatherPreview.hourlyView.axisLabels}}" wx:key="key">{{item.value}}</text>
+        </view>
+        <view class="weather-hourly-grid-line weather-hourly-grid-line-top"></view>
+        <view class="weather-hourly-grid-line weather-hourly-grid-line-mid"></view>
+        <view class="weather-hourly-grid-line weather-hourly-grid-line-bottom"></view>
+        <view class="weather-hourly-chart-path" wx:for="{{weatherPreview.hourlyView.chartSegments}}" wx:key="key" style="left: {{item.left}}%; top: {{item.top}}%; width: {{item.width}}%; transform: rotate({{item.rotate}}deg);"></view>
+        <view class="weather-hourly-chart-point" wx:for="{{weatherPreview.hourlyChart}}" wx:key="key" style="left: {{item.left}}%; top: {{item.top}}%;">
+          <text class="weather-hourly-point-label" wx:if="{{item.labelVisible}}">{{item.valueText}}</text>
+          <view class="weather-hourly-chart-dot"></view>
+          <view class="weather-hourly-chart-bar" style="height: {{item.barHeight}}rpx;"></view>
+        </view>
+      </view>
+        <view class="hourly-weather-strip">
+          <view class="hourly-weather-chip" wx:for="{{weatherPreview.hourlyView.weatherStrip}}" wx:key="key">
+            <text class="hourly-weather-time">{{item.time}}</text>
+            <text class="hourly-weather-text">{{item.text}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="weather-hourly-row" wx:for="{{weatherPreview.hourly}}" wx:key="key">
+        <text class="weather-hourly-time">{{item.time}}</text>
+        <text class="weather-hourly-temp">{{item.temp}}{{weatherPreview.temperatureUnit}}</text>
+        <text class="weather-hourly-meta">{{item.cloud}}</text>
+        <text class="weather-hourly-meta">{{item.wind}}</text>
+      </view>
+    </view>
+    <view class="weather-glow-panel" wx:if="{{weatherView === 'glow' && weatherPreview.glow.length}}">
+      <view class="weather-glow-row" wx:for="{{weatherPreview.glow}}" wx:key="key">
+        <view class="weather-glow-day">{{item.label}}</view>
+        <view class="weather-glow-scores">
+          <text class="weather-glow-score">朝 {{item.sunrise}}</text>
+          <text class="weather-glow-score">晚 {{item.sunset}}</text>
+        </view>
+        <view class="weather-glow-summary">{{item.summary}}</view>
+      </view>
+    </view>
   </view>
 
-  <view class="placeholder-grid">
+  <view class="home-prediction-preview xiake-card" wx:if="{{weatherPreview.visible}}">
+    <view class="prediction-app-nav">
+      <view class="prediction-share-menu prediction-share-menu-line" aria-hidden="true">
+        <image class="share-icon-image" src="/assets/icons/share-upload.svg" mode="aspectFit" aria-hidden="true" />
+      </view>
+    </view>
+    <view class="prediction-preview-action-row">
+      <view class="prediction-preview-action-label">预测卡片</view>
+    </view>
+    <view class="prediction-toggle-bar">
+      <view class="prediction-toggle {{predictionPreview.periodKey === 'sunrise' ? 'active' : ''}}" data-value="sunrise" bindtap="selectPredictionPreviewPeriod">朝霞</view>
+      <view class="prediction-toggle {{predictionPreview.periodKey === 'sunset' ? 'active' : ''}}" data-value="sunset" bindtap="selectPredictionPreviewPeriod">晚霞</view>
+    </view>
+
+    <view class="phenomenon-title-card">
+      <view class="phenomenon-icon-tile">
+        <image class="sun-event-image" src="/assets/icons/sun-event-{{predictionPreview.periodKey}}.svg" mode="aspectFit" aria-hidden="true" />
+      </view>
+      <view class="phenomenon-title-copy">
+        <view class="phenomenon-date-tag">{{predictionPreview.dateLabel}}</view>
+        <view class="section-title">{{predictionPreview.periodLabel}}</view>
+      </view>
+    </view>
+
+    <view class="conclusion-banner">
+      <image class="leaf-icon-image" src="/assets/icons/leaf.svg" mode="aspectFit" aria-hidden="true" />
+      <text class="conclusion-copy">{{predictionPreview.conclusion}}</text>
+    </view>
+
+    <view class="score-summary-card">
+      <view class="score-summary-left">
+        <view class="score-gauge-large-wrap">
+          <view class="score-gauge-large">
+            <view class="score-gauge-center">
+              <text class="score-gauge-number">{{predictionPreview.score}}</text>
+              <text class="score-gauge-total">/100</text>
+            </view>
+          </view>
+          <view class="score-gauge-caption">
+            <view class="score-gauge-grade">{{predictionPreview.scoreLabel}}</view>
+            <view class="score-gauge-desc">{{predictionPreview.scoreDesc}}</view>
+          </view>
+        </view>
+      </view>
+      <view class="score-summary-divider"></view>
+      <view class="score-summary-right">
+        <view class="event-time-label">{{predictionPreview.eventTimeLabel}}</view>
+        <view class="main-time app-main-time">{{predictionPreview.mainTime}}</view>
+        <view class="app-info-row">
+          <text class="app-info-label">最佳观赏</text>
+          <text class="app-info-value">{{predictionPreview.bestViewingTime}}</text>
+        </view>
+        <view class="app-info-row">
+          <text class="app-info-label">{{predictionPreview.directionLabel}}</text>
+          <text class="app-info-value">{{predictionPreview.direction}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="cloud-condition-card">
+      <view class="cloud-condition-item" wx:for="{{predictionPreview.clouds}}" wx:key="key">
+        <view class="cloud-condition-top">
+          <image class="cloud-layer-image" src="/assets/icons/cloud-layer.svg" mode="aspectFit" aria-hidden="true" />
+          <text class="cloud-condition-label">{{item.label}}</text>
+          <text class="cloud-condition-value">{{item.value}}%</text>
+        </view>
+        <view class="cloud-condition-track">
+          <view class="cloud-condition-fill cloud-condition-fill-{{item.key}}" style="width: {{item.value}}%;"></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="analysis-card app-analysis-card">
+      <view class="analysis-card-title">火烧云形成条件分析</view>
+      <view class="analysis-factor-grid">
+        <view class="analysis-factor analysis-factor-{{item.tone}}" wx:for="{{predictionPreview.analysis}}" wx:key="key">
+          <view class="analysis-factor-heading">
+            <text class="analysis-factor-title">{{item.title}}</text>
+            <text class="analysis-factor-status analysis-factor-status-{{item.tone}}">{{item.status}}</text>
+          </view>
+          <view class="analysis-factor-desc">{{item.desc}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="prediction-radar-card">
+      <view class="prediction-radar-head">
+        <view class="prediction-radar-title">周边云况雷达</view>
+        <view class="prediction-radar-subtitle">20km · 连续云场</view>
+      </view>
+      <view class="prediction-radar-dial">
+        <view class="prediction-radar-ring prediction-radar-ring-low"></view>
+        <view class="prediction-radar-ring prediction-radar-ring-mid"></view>
+        <view class="prediction-radar-ring prediction-radar-ring-high"></view>
+        <view class="prediction-radar-axis prediction-radar-axis-ns"></view>
+        <view class="prediction-radar-axis prediction-radar-axis-ew"></view>
+        <view class="prediction-radar-axis prediction-radar-axis-ne"></view>
+        <view class="prediction-radar-axis prediction-radar-axis-nw"></view>
+        <view class="prediction-radar-center"></view>
+        <view class="prediction-radar-direction prediction-radar-direction-{{item.direction}}" wx:for="{{predictionPreview.radar.directions}}" wx:key="direction">
+          <text class="prediction-radar-score tone-{{item.level}}">{{item.scoreText}}</text>
+          <text class="prediction-radar-name">{{item.name}}</text>
+        </view>
+      </view>
+      <view class="prediction-radar-detail">
+        <view class="prediction-radar-cloud" wx:for="{{predictionPreview.radar.directions}}" wx:key="direction">
+          <text>{{item.name}}</text>
+          <text>{{item.cloudText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="prediction-app-footer">Observe the sky · Catch the beauty</view>
+
+  </view>
+
+  <view class="home-experience-strip" wx:if="{{weatherPreview.visible}}">
+    <view class="experience-chip" data-target="methodology" bindtap="navigateFeature">方法</view>
+    <view class="experience-chip" data-target="map" bindtap="navigateFeature">地图</view>
+    <view class="experience-chip" data-target="gallery" bindtap="navigateFeature">照片</view>
+    <view class="experience-chip" data-target="api" bindtap="navigateFeature">API</view>
+    <view class="experience-chip" data-target="upload" bindtap="navigateFeature">上传</view>
+  </view>
+
+  <view class="home-section-head" wx:if="{{weatherPreview.visible}}">
+    <view class="section-title">最近地点</view>
+    <view class="section-hint">常用地点会在这里出现。</view>
+  </view>
+
+  <view class="placeholder-grid" wx:if="{{weatherPreview.visible}}">
     <view class="mini-card xiake-card">
       <view class="mini-head">最近查询</view>
       <block wx:if="{{recentQueries.length}}">
@@ -87,7 +342,7 @@
           <text class="subtle-text">{{item.periodLabel}} · {{item.dayLabel}}</text>
         </view>
       </block>
-      <view class="empty" wx:else>查过的地点会放在这里。</view>
+      <view class="empty" wx:else>查询后这里会保存最近地点。</view>
     </view>
 
     <view class="mini-card xiake-card">
@@ -95,10 +350,10 @@
       <block wx:if="{{favorites.length}}">
         <view class="query-item" wx:for="{{favorites}}" wx:key="name" data-location="{{item.name}}" data-lat="{{item.lat}}" data-lon="{{item.lon}}" bindtap="useHistory">
           <text>{{item.name}}</text>
-          <text class="subtle-text">一键复查</text>
+          <text class="subtle-text">点击再次查询</text>
         </view>
       </block>
-      <view class="empty" wx:else>常去的机位后续可收藏。</view>
+      <view class="empty" wx:else>收藏后的地点会放在这里。</view>
     </view>
   </view>
 </view>

@@ -8,9 +8,12 @@ Page({
   data: {
     hasPrediction: false,
     loading: false,
+    activePeriod: 'sunset',
+    periodCards: {},
     prediction: null,
     metrics: [],
     analysisItems: [],
+    scoreLedger: buildScoreLedger(),
     radar: buildEmptyRadar(),
     threeDayGlow: buildEmptyThreeDayGlow(),
     isFavorite: false
@@ -32,9 +35,12 @@ Page({
       this.setData({
         hasPrediction: true,
         loading: false,
+        activePeriod: normalized.period,
+        periodCards: { [normalized.period]: normalized },
         prediction: normalized,
         metrics: buildMetrics(normalized),
         analysisItems: buildAnalysisItems(normalized),
+        scoreLedger: buildScoreLedger(normalized),
         radar: buildEmptyRadar({ loading: hasCoordinates(normalized) }),
         threeDayGlow: buildEmptyThreeDayGlow({ loading: hasCoordinates(normalized) }),
         isFavorite: isFavoriteLocation(normalized, app.globalData.favorites || wx.getStorageSync('favoriteLocations') || [])
@@ -129,6 +135,25 @@ Page({
     }
   },
 
+  selectResultPeriod(event) {
+    const period = event.currentTarget.dataset.period;
+    if (!['sunrise', 'sunset'].includes(period) || period === this.data.activePeriod) return;
+
+    const nextPrediction = this.data.periodCards[period];
+    if (!nextPrediction) {
+      this.setData({ activePeriod: period });
+      return;
+    }
+
+    this.setData({
+      activePeriod: period,
+      prediction: nextPrediction,
+      metrics: buildMetrics(nextPrediction),
+      analysisItems: buildAnalysisItems(nextPrediction),
+      scoreLedger: buildScoreLedger(nextPrediction)
+    });
+  },
+
   onShareAppMessage() {
     const prediction = this.data.prediction || {};
     return buildShareMessage(prediction);
@@ -137,9 +162,10 @@ Page({
   navigateExperience(event) {
     const target = event.currentTarget.dataset.target;
     const routes = {
-      methodology: '/pages/methodology/index',
       map: `/pages/map/index?period=${this.data.prediction?.period || this.data.prediction?.type || 'sunset'}`,
+      methodology: '/pages/methodology/index',
       gallery: '/pages/gallery/index',
+      api: '/pages/methodology/index?section=api',
       upload: '/pages/upload/index'
     };
     const url = routes[target];
@@ -312,6 +338,91 @@ export function buildAnalysisItems(prediction = {}) {
   ];
 }
 
+export function buildScoreLedger(prediction = {}) {
+  const canvas = prediction.canvasAnalysis || {};
+  const lightPath = prediction.lightPathAnalysis || {};
+  const rendering = prediction.renderingAnalysis || {};
+  const breakdown = prediction.breakdown || {};
+  const finalScore = prediction.score ?? prediction.totalScore ?? prediction.finalScore;
+  const canvasScore = canvas.score ?? breakdown.canvasScore;
+  const lightPathScore = lightPath.score ?? breakdown.lightPathScore;
+  const baseScore = breakdown.baseScore;
+  const renderingFactor = rendering.factor ?? breakdown.renderingFactor;
+  const renderedScore = breakdown.renderedScore ?? finalScore;
+
+  const summary = Number.isFinite(Number(finalScore))
+    ? `${Math.round(Number(finalScore))} 分：由云层载体、光路和显色条件综合计算`
+    : '等待评分数据后展示完整解释';
+
+  return {
+    summary,
+    steps: [
+      {
+        key: 'cloudCarrier',
+        label: '载体',
+        result: formatScore(canvasScore),
+        expression: '可被染色的云面或薄雾载体',
+        detail: buildCloudCanvasText(canvas, prediction.cloudType),
+        tone: levelFromScore(canvasScore)
+      },
+      {
+        key: 'lightPath',
+        label: '光路',
+        result: formatScore(lightPathScore),
+        expression: '阳光是否能打到云层',
+        detail: buildLightPathText(lightPath),
+        tone: levelFromScore(lightPathScore)
+      },
+      {
+        key: 'baseScore',
+        label: '基础分',
+        result: formatScore(baseScore),
+        expression: buildBaseScoreExpression(canvasScore, lightPathScore, baseScore),
+        detail: '对齐网页版：载体占主要权重，光路用于修正可见染色机会',
+        tone: levelFromScore(baseScore)
+      },
+      {
+        key: 'rendering',
+        label: '显色修正',
+        result: formatScore(renderedScore),
+        expression: buildRenderingExpression(baseScore, renderingFactor, renderedScore),
+        detail: buildRenderingText(rendering),
+        tone: levelFromFactor(renderingFactor)
+      },
+      {
+        key: 'final',
+        label: '最终分',
+        result: formatScore(finalScore),
+        expression: '结合天气和能见度后的展示结果',
+        detail: humanizeExplanation(prediction.explanation || prediction.summary || prediction.reason, finalScore),
+        tone: 'final'
+      }
+    ]
+  };
+}
+
+function buildBaseScoreExpression(canvasScore, lightPathScore, baseScore) {
+  if (Number.isFinite(Number(canvasScore)) && Number.isFinite(Number(lightPathScore)) && Number.isFinite(Number(baseScore))) {
+    return `${roundOne(canvasScore)}×80% + ${roundOne(lightPathScore)}×20% = ${roundOne(baseScore)}`;
+  }
+  return '画布 + 光路';
+}
+
+function buildRenderingExpression(baseScore, renderingFactor, renderedScore) {
+  if (Number.isFinite(Number(baseScore)) && Number.isFinite(Number(renderingFactor)) && Number.isFinite(Number(renderedScore))) {
+    return `${roundOne(baseScore)} × 显色系数 ${roundTwo(renderingFactor)} = ${roundOne(renderedScore)}`;
+  }
+  return '天气通透度修正';
+}
+
+function roundOne(value) {
+  return String(Math.round(Number(value) * 10) / 10);
+}
+
+function roundTwo(value) {
+  return String(Math.round(Number(value) * 100) / 100);
+}
+
 function buildCloudCanvasText(canvas = {}, cloudType = null) {
   const cloudLabel = cloudType?.label || cloudType?.type;
   const high = canvas.breakdown?.highClouds;
@@ -385,12 +496,55 @@ export function buildRadarView(surrounding = {}) {
     bestDirection: surrounding.bestDirection || null,
     points: orderRadarPoints(points),
     directions,
+    rings: buildRadarRings(),
+    cloudBlobs: buildRadarCloudBlobs(directions),
+    sunEvents: buildRadarSunEvents(surrounding),
     bestItems: directions
       .filter((item) => item.scoreText !== '--')
       .sort((a, b) => Number(b.scoreText) - Number(a.scoreText))
       .slice(0, 3),
     hasData: points.length > 0
   };
+}
+
+export function buildRadarRings() {
+  return [
+    { key: 'low', label: '低云', className: 'low' },
+    { key: 'mid', label: '中云', className: 'mid' },
+    { key: 'high', label: '高云', className: 'high' }
+  ];
+}
+
+export function buildRadarCloudBlobs(directions = []) {
+  return directions
+    .filter((item) => item && item.scoreText !== '--')
+    .map((item, index) => {
+      const score = Number(item.scoreText);
+      const size = Math.max(34, Math.min(88, 34 + score * 0.55));
+      const positions = {
+        N: [46, 13], NE: [66, 21], E: [74, 45], SE: [65, 66],
+        S: [46, 72], SW: [24, 65], W: [16, 45], NW: [24, 20]
+      };
+      const [left, top] = positions[item.direction] || [50, 50];
+      return {
+        key: item.direction || `blob-${index}`,
+        left,
+        top,
+        size,
+        level: item.level || 'unknown'
+      };
+    });
+}
+
+export function buildRadarSunEvents(surrounding = {}) {
+  const type = surrounding.type || surrounding.period || 'sunset';
+  return [{
+    key: type,
+    type,
+    label: type === 'sunrise' ? '日出' : '日落',
+    left: type === 'sunrise' ? 72 : 18,
+    top: type === 'sunrise' ? 30 : 58
+  }];
 }
 
 function orderRadarDirections(points = []) {

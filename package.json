@@ -12,7 +12,13 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:report": "playwright show-report",
-    "test:i18n-hardcoded-zh": "node --experimental-vm-modules node_modules/jest/bin/jest.js tests/unit/i18n-hardcoded-zh.test.js"
+    "test:i18n-hardcoded-zh": "node --experimental-vm-modules node_modules/jest/bin/jest.js tests/unit/i18n-hardcoded-zh.test.js",
+    "mp:ci": "miniprogram-ci",
+    "mp:preview": "node scripts/miniprogram-ci.cjs preview",
+    "mp:upload": "node scripts/miniprogram-ci.cjs upload",
+    "mp:devtools": "node scripts/wechat-devtools-cli.cjs",
+    "mp:auto": "node scripts/wechat-devtools-auto.cjs",
+    "mp:auto:check": "node scripts/miniprogram-automator-check.cjs"
   },
   "keywords": [
     "weather",
@@ -32,6 +38,8 @@
     "fast-check": "^3.13.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
+    "miniprogram-automator": "^0.12.1",
+    "miniprogram-ci": "^2.1.31",
     "playwright-mcp": "^0.0.19",
     "supertest": "^7.2.2"
   },

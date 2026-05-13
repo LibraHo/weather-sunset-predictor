@@ -47,6 +47,7 @@ describe('miniprogram upload page source', () => {
   test('upload page supports chooseMedia, uploadPhoto and metadata fields', () => {
     const js = read('miniprogram/pages/upload/index.js');
     const wxml = read('miniprogram/pages/upload/index.wxml');
+    const wxss = read('miniprogram/pages/upload/index.wxss');
 
     expect(js).toContain('wx.chooseMedia');
     expect(js).toContain("mediaType: ['image']");
@@ -57,6 +58,10 @@ describe('miniprogram upload page source', () => {
     expect(wxml).toContain('data-field="lat"');
     expect(wxml).toContain('data-field="lon"');
     expect(wxml).toContain('data-field="desc"');
+    expect(wxml).toContain('upload-format-hint');
+    expect(wxml).toContain('metadata-edit-hint');
+    expect(wxss).toContain('.upload-format-hint');
+    expect(wxss).toContain('.metadata-edit-hint');
   });
 
   test('buildUploadPayload trims metadata and keeps file path', () => {
@@ -99,6 +104,6 @@ describe('miniprogram upload page source', () => {
     expect(wxml).toContain('warm-accent');
     expect(wxss).toContain('#f5c87a');
     expect(wxss).toContain('rgba(18, 28, 52');
-    expect(wxss).toContain('backdrop-filter');
+    expect(wxss).toContain('linear-gradient(135deg');
   });
 });
