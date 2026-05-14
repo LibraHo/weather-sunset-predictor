@@ -50,6 +50,8 @@ function makeMockCache(overrides = {}) {
     updatedAt: new Date().toISOString(),
     gridPoints: [
       { lat: 39.9, lon: 116.4, score: 75 },
+      { lat: 39.5, lon: 116.0, score: 72 },
+      { lat: 40.2, lon: 117.0, score: 68 },
       { lat: 31.2, lon: 121.5, score: 60 },
       { lat: 23.1, lon: 113.3, score: 50 },
       { lat: 30.6, lon: 104.1, score: 65 },
@@ -88,7 +90,7 @@ describe('ChinaRasterService.getRaster', () => {
     expect(raster).toHaveProperty('meta');
     expect(raster.meta.interpolation).toBe('idw');
     expect(raster.meta.source).toBe('east-asia-spots-cache');
-    expect(raster.meta.sourcePoints).toBe(8);
+    expect(raster.meta.sourcePoints).toBe(10);
   });
 
   test('values 长度等于 width * height', async () => {
@@ -97,6 +99,22 @@ describe('ChinaRasterService.getRaster', () => {
 
     const raster = await chinaRasterService.getRaster('sunset', 0.5);
     expect(raster.values.length).toBe(raster.width * raster.height);
+  });
+
+  test('unsupported South Asia cells stay noData after IDW interpolation', async () => {
+    const mockGridService = await getMockGridService();
+    mockGridService.getCache.mockReturnValue(makeMockCache());
+
+    const raster = await chinaRasterService.getRaster('sunset', 0.5);
+    const sample = (lat, lon) => {
+      const col = Math.round((lon - raster.bbox.west) / raster.resolution);
+      const row = Math.round((raster.bbox.north - lat) / raster.resolution);
+      return raster.values[row * raster.width + col];
+    };
+
+    expect(sample(28.5, 77.0)).toBe(raster.noData); // New Delhi area
+    expect(sample(27.5, 85.5)).toBe(raster.noData); // Kathmandu area
+    expect(raster.values.some(value => Number.isFinite(value) && value !== raster.noData)).toBe(true);
   });
 
   test('width/height 符合预期（0.5° 分辨率，bbox 72-146/18-53）', async () => {

@@ -18,6 +18,7 @@ const { calculateEnhancedPrediction } = require('./EnhancedPredictionService');
 const SunCalculator = require('../utils/SunCalculator');
 
 const config = require('../config/gridscore.config.js');
+const { isSupportedFirecloudRegion } = require('../utils/SupportedFirecloudRegion');
 
 // 中国区域范围
 const CHINA_BOUNDS = config.grid.bounds;
@@ -140,7 +141,7 @@ class GridScoreService {
         for (let lon = region.lonMin; lon <= region.lonMax; lon += step) {
           const p = { lat: parseFloat(lat.toFixed(1)), lon: parseFloat(lon.toFixed(1)) };
           const key = `${p.lat},${p.lon}`;
-          if (!seen.has(key)) {
+          if (!seen.has(key) && isSupportedFirecloudRegion(p.lat, p.lon)) {
             seen.add(key);
             points.push(p);
           }

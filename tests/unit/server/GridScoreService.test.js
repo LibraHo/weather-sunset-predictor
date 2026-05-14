@@ -108,6 +108,15 @@ describe('GridScoreService', () => {
         expect(inChina || inJapan || inKorea).toBe(true);
       });
     });
+
+    test('generateGrid 不应把印度等未支持国家纳入火烧云网格', () => {
+      const grid = service.generateGrid();
+
+      expect(grid.some(p => p.lat === 28 && p.lon === 77)).toBe(false); // New Delhi area
+      expect(grid.some(p => p.lat === 19 && p.lon === 73)).toBe(false); // Mumbai area
+      expect(grid.some(p => p.lat === 28 && p.lon === 85)).toBe(false); // Nepal area
+      expect(grid.some(p => p.lat === 40 && p.lon === 116)).toBe(true); // North China remains
+    });
   });
 
   describe('缓存逻辑', () => {
