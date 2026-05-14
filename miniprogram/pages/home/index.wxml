@@ -186,7 +186,6 @@
           <text class="weather-glow-score">朝 {{item.sunrise}}</text>
           <text class="weather-glow-score">晚 {{item.sunset}}</text>
         </view>
-        <view class="weather-glow-summary">{{item.summary}}</view>
       </view>
     </view>
   </view>

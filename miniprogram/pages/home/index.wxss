@@ -1854,19 +1854,16 @@
 }
 
 .weather-glow-row {
-  display: grid;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
   min-height: 76rpx;
   box-sizing: border-box;
   padding: 12rpx 16rpx;
   border: 2rpx solid rgba(127, 83, 29, 0.09);
   border-radius: 18rpx;
   background: rgba(255, 252, 246, 0.66);
-}
-
-.weather-glow-row {
-  grid-template-columns: 1fr 1.3fr 1.5fr;
-  gap: 12rpx;
 }
 
 .weather-glow-day,
@@ -1876,19 +1873,18 @@
   font-weight: 900;
 }
 
-.weather-glow-summary {
-  overflow: hidden;
-  color: rgba(89, 67, 54, 0.62);
-  font-size: 21rpx;
-  font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.weather-glow-day {
+  flex: 1 1 auto;
+  min-width: 128rpx;
 }
 
 .weather-glow-scores {
   display: flex;
-  gap: 10rpx;
-  min-width: 0;
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  gap: 18rpx;
+  min-width: 240rpx;
+  text-align: right;
 }
 
 /* Web icon parity: CSS line icons trace the H5 SVG paths with native mini-program nodes. */

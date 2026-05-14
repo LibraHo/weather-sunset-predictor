@@ -76,6 +76,8 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxml).toContain('wx:for="{{weatherPreview.weekly}}"');
     expect(homeWxml).toContain('wx:for="{{weatherPreview.hourlyChart}}"');
     expect(homeWxml).toContain('wx:for="{{weatherPreview.glow}}"');
+    expect(homeWxml).not.toContain('weather-glow-summary');
+    expect(homeWxml).not.toContain('{{item.summary}}');
     expect(homeWxml).not.toContain('home-three-day-glow');
     expect(homeWxml).toContain('data-target="methodology"');
     expect(homeWxml).toContain('data-target="map"');
@@ -96,6 +98,7 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxml).toContain('/assets/icons/metric-');
     expect(homeWxss).toContain('grid-template-columns: repeat(3, minmax(0, 1fr))');
     expect(homeWxss).toContain('.weather-weekly-row');
+    expect(homeWxss).not.toContain('.weather-glow-summary');
     expect(homeWxss).toContain('align-self: center;');
     expect(homeWxss).toContain('.home-experience-strip');
   });
