@@ -11,6 +11,7 @@ describe('miniprogram web-like experience shell', () => {
     const appConfig = JSON.parse(read('miniprogram/app.json'));
     const topbarWxml = read('miniprogram/components/app-topbar/index.wxml');
     const topbarJs = read('miniprogram/components/app-topbar/index.js');
+    const topbarWxss = read('miniprogram/components/app-topbar/index.wxss');
     const settingsIcon = read('miniprogram/assets/icons/settings.svg');
     const pagePaths = appConfig.pages.map((page) => `miniprogram/${page}.wxml`);
 
@@ -25,6 +26,10 @@ describe('miniprogram web-like experience shell', () => {
     expect(topbarWxml).toContain('bindtap="toggleSettings"');
     expect(topbarWxml).not.toContain('data-target="settings"');
     expect(topbarJs).not.toMatch(/if\s*\(\s*target\s*===\s*['"]settings['"]\s*\)/);
+    expect(topbarWxss).toContain('min-height: 132rpx');
+    expect(topbarWxss).toContain('background: rgba(255, 252, 246, 0.90)');
+    expect(topbarWxss).toContain('border-radius: 24rpx');
+    expect(topbarWxss).toContain('width: 74rpx');
     expect(settingsIcon).toContain('M19.43 12.98');
     expect(settingsIcon).toContain('M12 15.5');
   });
