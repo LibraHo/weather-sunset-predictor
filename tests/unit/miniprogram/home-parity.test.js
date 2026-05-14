@@ -100,6 +100,26 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxss).toContain('.home-experience-strip');
   });
 
+  test('weather icons keep the same colored SVG palette as the web weather card', () => {
+    const webCss = read('styles/main.css');
+    const partlyCloudy = read('miniprogram/assets/icons/weather-partly-cloudy.svg');
+    const sunny = read('miniprogram/assets/icons/weather-sunny.svg');
+    const cloud = read('miniprogram/assets/icons/weather-cloud.svg');
+    const rain = read('miniprogram/assets/icons/weather-rain.svg');
+
+    for (const token of ['#fbbf24', '#f59e0b', '#eef2ff', '#64748b', '#2563eb']) {
+      expect(webCss).toContain(token);
+    }
+
+    expect(partlyCloudy).toContain('fill="#fbbf24"');
+    expect(partlyCloudy).toContain('fill="#eef2ff"');
+    expect(partlyCloudy).toContain('stroke="#64748b"');
+    expect(partlyCloudy).not.toContain('viewBox="0 0 24 24" fill="none"');
+    expect(sunny).toContain('fill="#fbbf24"');
+    expect(cloud).toContain('fill="#eef2ff"');
+    expect(rain).toContain('stroke="#2563eb"');
+  });
+
   test('mini-program feature shortcuts preserve web menu order before upload', () => {
     const web = read('index.html');
     const homeWxml = read('miniprogram/pages/home/index.wxml');
