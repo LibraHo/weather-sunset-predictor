@@ -540,6 +540,10 @@
   font-weight: 900;
 }
 
+.app-main-time {
+  text-align: center;
+}
+
 .app-info-row {
   display: flex;
   justify-content: space-between;

@@ -222,6 +222,8 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeJs).toContain("paintRadarCloudCanvas('homeRadarCloudField', directions, { page: this })");
     expect(homeJs).not.toContain('buildRadarCloudBlobs');
     expect(homeWxss).toContain('.score-summary-card');
+    expect(homeWxss).toContain('.app-main-time');
+    expect(homeWxss).toContain('text-align: center;');
     expect(homeWxml).toContain('class="phenomenon-title-card"');
     expect(homeWxml.indexOf('phenomenon-date-tag')).toBeLessThan(homeWxml.indexOf('{{predictionPreview.periodLabel}}'));
     expect(homeWxml).not.toContain('bindtap="togglePredictionPreviewPeriod"');
