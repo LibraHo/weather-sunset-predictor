@@ -365,12 +365,12 @@
 .radar-cloud-field {
   position: absolute;
   inset: 0;
-  overflow: hidden;
-  border-radius: 50%;
+  overflow: visible;
 }
 
 .radar-cloud-canvas {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 2;
   width: 100%;
   height: 100%;
@@ -408,8 +408,8 @@
 }
 
 .radar-ring-outer {
-  width: 88%;
-  height: 88%;
+  width: 84%;
+  height: 84%;
 }
 
 .radar-ring-middle {
@@ -429,9 +429,9 @@
 
 .radar-axis {
   left: 50%;
-  top: 8%;
+  top: 6.3%;
   width: 1rpx;
-  height: 84%;
+  height: 87.4%;
   background: rgba(255, 255, 255, 0.10);
   transform-origin: center;
 }

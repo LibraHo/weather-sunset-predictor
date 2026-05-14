@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
-  <g transform="translate(-2 -2) scale(.82)" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round">
-    <circle cx="12" cy="12" r="4.4"/>
-    <path d="M12 2.6v2.1M12 19.3v2.1M4.9 4.9l1.5 1.5M17.6 17.6l1.5 1.5M2.6 12h2.1M19.3 12h2.1M4.9 19.1l1.5-1.5M17.6 6.4l1.5-1.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <g transform="translate(-2 -2) scale(.82)">
+    <circle cx="12" cy="12" r="4.4" fill="#fbbf24" stroke="#f59e0b" stroke-width="1.4"/>
+    <path d="M12 2.6v2.1M12 19.3v2.1M4.9 4.9l1.5 1.5M17.6 17.6l1.5 1.5M2.6 12h2.1M19.3 12h2.1M4.9 19.1l1.5-1.5M17.6 6.4l1.5-1.5" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
-  <path transform="translate(2 1)" d="M7.2 17.4h9.2a4.1 4.1 0 0 0 .4-8.2 5.3 5.3 0 0 0-10.1 1.5 3.4 3.4 0 0 0 .5 6.7Z" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path transform="translate(2 1)" d="M7.2 17.4h9.2a4.1 4.1 0 0 0 .4-8.2 5.3 5.3 0 0 0-10.1 1.5 3.4 3.4 0 0 0 .5 6.7Z" fill="#eef2ff" stroke="#64748b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

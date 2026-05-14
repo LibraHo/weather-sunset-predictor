@@ -1,0 +1,56 @@
+<view class="app-topbar-shell theme-{{themeMode}}">
+  <view class="home-topbar">
+    <view class="home-brand-row" bindtap="goHome">
+      <image class="app-logo-image" src="/assets/icons/xiake-logo.svg" mode="aspectFit" aria-hidden="true" />
+      <view class="app-logo-text">霞客</view>
+    </view>
+
+    <view class="home-header-actions">
+      <view class="home-view-menu">
+        <button class="menu-button icon-button" aria-label="menu" bindtap="toggleHomeMenu">
+          <image class="header-action-image" src="/assets/icons/menu.svg" mode="aspectFit" aria-hidden="true" />
+        </button>
+        <view class="home-view-menu-dropdown" wx:if="{{homeMenuOpen}}">
+          <view class="home-view-option {{current === 'home' ? 'active' : ''}}" data-target="forecast" bindtap="navigateFeature">预测功能</view>
+          <view class="home-view-option {{current === 'methodology' ? 'active' : ''}}" data-target="methodology" bindtap="navigateFeature">火烧云算法</view>
+          <view class="home-view-option {{current === 'map' ? 'active' : ''}}" data-target="map" bindtap="navigateFeature">火烧云地图</view>
+          <view class="home-view-option {{current === 'gallery' ? 'active' : ''}}" data-target="gallery" bindtap="navigateFeature">分享地图</view>
+          <view class="home-view-option" data-target="api" bindtap="navigateFeature">API接入</view>
+          <view class="home-view-option {{current === 'upload' ? 'active' : ''}}" data-target="upload" bindtap="navigateFeature">上传照片</view>
+        </view>
+      </view>
+      <button class="header-icon-button icon-button" aria-label="notice">
+        <image class="header-action-image" src="/assets/icons/bell.svg" mode="aspectFit" aria-hidden="true" />
+      </button>
+      <button class="header-icon-button icon-button" aria-label="settings" bindtap="toggleSettings">
+        <image class="header-action-image" src="/assets/icons/settings.svg" mode="aspectFit" aria-hidden="true" />
+      </button>
+    </view>
+  </view>
+
+  <view class="settings-panel xiake-card" wx:if="{{settingsOpen}}">
+    <view class="settings-panel-head">
+      <view>
+        <view class="settings-title">设置</view>
+        <view class="settings-subtitle">调整界面语言和显示主题。</view>
+      </view>
+      <button class="settings-close" aria-label="close settings" bindtap="closeSettings">x</button>
+    </view>
+    <view class="settings-group">
+      <view class="settings-label">界面语言</view>
+      <view class="settings-segmented">
+        <view class="settings-segment {{interfaceLanguage === 'zh-CN' ? 'active' : ''}}" data-value="zh-CN" bindtap="selectInterfaceLanguage">中文</view>
+        <view class="settings-segment {{interfaceLanguage === 'en-US' ? 'active' : ''}}" data-value="en-US" bindtap="selectInterfaceLanguage">English</view>
+      </view>
+    </view>
+    <view class="settings-group">
+      <view class="settings-label">显示主题</view>
+      <view class="settings-segmented">
+        <view class="settings-segment {{themeMode === 'system' ? 'active' : ''}}" data-value="system" bindtap="selectThemeMode">跟随系统</view>
+        <view class="settings-segment {{themeMode === 'light' ? 'active' : ''}}" data-value="light" bindtap="selectThemeMode">浅色</view>
+        <view class="settings-segment {{themeMode === 'dark' ? 'active' : ''}}" data-value="dark" bindtap="selectThemeMode">深色</view>
+      </view>
+    </view>
+    <button class="settings-done" bindtap="closeSettings">完成</button>
+  </view>
+</view>

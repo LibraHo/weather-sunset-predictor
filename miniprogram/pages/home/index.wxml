@@ -1,5 +1,6 @@
 <view class="container home-page theme-{{themeMode}} {{weatherPreview.visible ? 'has-weather' : ''}}">
-  <view class="home-topbar">
+  <app-topbar current="home" period="{{period}}" />
+  <view class="home-topbar" wx:if="{{false}}">
     <view class="home-brand-row">
       <image class="app-logo-image" src="/assets/icons/xiake-logo.svg" mode="aspectFit" aria-hidden="true" />
       <view class="app-logo-text">霞客</view>
@@ -34,7 +35,7 @@
     <view class="home-subtitle">和网站同源的评分、地图、分析与照片入口。</view>
   </view>
 
-  <view class="settings-panel xiake-card" wx:if="{{settingsOpen}}">
+  <view class="settings-panel xiake-card" wx:if="{{false}}">
     <view class="settings-panel-head">
       <view>
         <view class="settings-title">设置</view>
@@ -98,9 +99,7 @@
     <view class="preview-head weather-panel-head">
       <view>
         <view class="section-title weather-panel-title">{{weatherPreview.title}}</view>
-        <view class="preview-copy">{{weatherPreview.description}}</view>
       </view>
-      <view class="preview-badge">{{weatherPreview.badge}}</view>
     </view>
 
     <view class="weather-main-layout">
@@ -178,18 +177,6 @@
           <view class="weather-hourly-chart-bar" style="height: {{item.barHeight}}rpx;"></view>
         </view>
       </view>
-        <view class="hourly-weather-strip">
-          <view class="hourly-weather-chip" wx:for="{{weatherPreview.hourlyView.weatherStrip}}" wx:key="key">
-            <text class="hourly-weather-time">{{item.time}}</text>
-            <text class="hourly-weather-text">{{item.text}}</text>
-          </view>
-        </view>
-      </view>
-      <view class="weather-hourly-row" wx:for="{{weatherPreview.hourly}}" wx:key="key">
-        <text class="weather-hourly-time">{{item.time}}</text>
-        <text class="weather-hourly-temp">{{item.temp}}{{weatherPreview.temperatureUnit}}</text>
-        <text class="weather-hourly-meta">{{item.cloud}}</text>
-        <text class="weather-hourly-meta">{{item.wind}}</text>
       </view>
     </view>
     <view class="weather-glow-panel" wx:if="{{weatherView === 'glow' && weatherPreview.glow.length}}">
@@ -199,19 +186,18 @@
           <text class="weather-glow-score">朝 {{item.sunrise}}</text>
           <text class="weather-glow-score">晚 {{item.sunset}}</text>
         </view>
-        <view class="weather-glow-summary">{{item.summary}}</view>
       </view>
     </view>
   </view>
 
   <view class="home-prediction-preview xiake-card" wx:if="{{weatherPreview.visible}}">
-    <view class="prediction-app-nav">
+    <view class="preview-head prediction-panel-head">
+      <view>
+        <view class="section-title prediction-panel-title">朝晚霞预测</view>
+      </view>
       <view class="prediction-share-menu prediction-share-menu-line" aria-hidden="true">
         <image class="share-icon-image" src="/assets/icons/share-upload.svg" mode="aspectFit" aria-hidden="true" />
       </view>
-    </view>
-    <view class="prediction-preview-action-row">
-      <view class="prediction-preview-action-label">预测卡片</view>
     </view>
     <view class="prediction-toggle-bar">
       <view class="prediction-toggle {{predictionPreview.periodKey === 'sunrise' ? 'active' : ''}}" data-value="sunrise" bindtap="selectPredictionPreviewPeriod">朝霞</view>
@@ -293,7 +279,7 @@
         </view>
         <view class="prediction-radar-dial">
           <view class="prediction-radar-cloud-field">
-            <canvas id="homeRadarCloudField" canvas-id="homeRadarCloudField" class="prediction-radar-cloud-canvas" disable-scroll="true"></canvas>
+            <canvas id="homeRadarCloudField" canvas-id="homeRadarCloudField" type="2d" class="prediction-radar-cloud-canvas" disable-scroll="true"></canvas>
           </view>
           <view class="prediction-radar-ring prediction-radar-ring-low-inner"></view>
           <view class="prediction-radar-ring prediction-radar-ring-low"></view>

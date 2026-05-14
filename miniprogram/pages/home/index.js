@@ -270,8 +270,13 @@ Page({
       this.recordRecentLocation(query);
       app.saveLatestPrediction(prediction);
 
-      wx.navigateTo({
-        url: `/pages/result/index?source=latest&period=${query.period}&day=${query.day}`
+      this.setData({
+        ...buildHomePredictionSurface(prediction, query),
+        weatherView: 'overview',
+        weatherDay: query.day,
+        weatherParameter: 'temp'
+      }, () => {
+        this.paintPredictionRadarCloudField();
       });
     } catch (error) {
       this.setData({ errorMessage: friendlyError(error) });
@@ -530,6 +535,45 @@ export function buildPredictionPreviewForPeriod(period = 'sunset') {
   return buildCompletePredictionPreview(buildTestPredictionPreview());
 }
 
+export function buildHomePredictionSurface(prediction = {}, query = {}) {
+  const weather = buildWeatherFromPrediction(prediction, query);
+  return {
+    weatherPreview: buildWeatherPreview(weather),
+    predictionPreview: buildPredictionPreviewFromPrediction(prediction, query)
+  };
+}
+
+export function buildPredictionPreviewFromPrediction(prediction = {}, query = {}) {
+  const period = prediction.period || prediction.type || query.period || 'sunset';
+  const periodLabel = period === 'sunrise' ? '朝霞' : '晚霞';
+  const clouds = extractCloudLayers(prediction);
+  const weather = buildWeatherFromPrediction(prediction, query);
+  const score = Number(prediction.score ?? prediction.totalScore ?? prediction.finalScore);
+  const preview = {
+    dateLabel: prediction.day === 'tomorrow' || query.day === 'tomorrow' ? '明日' : '今日',
+    periodKey: period,
+    periodLabel,
+    eventTimeLabel: period === 'sunrise' ? '日出时间' : '日落时间',
+    mainTime: compactBestTime(prediction.mainTime || prediction.eventTime || prediction.referenceTime || prediction.bestWindow || prediction.date),
+    bestViewingTime: formatBestWindow(prediction.bestWindow || prediction.window || prediction.timeWindow || prediction.goldenHour || prediction.referenceTime || prediction.date),
+    directionLabel: period === 'sunrise' ? '日出方向' : '日落方向',
+    direction: prediction.direction || prediction.sunDirection || prediction.lightPathAnalysis?.directionalAnalysis?.direction || (period === 'sunrise' ? '东偏北' : '西偏北'),
+    score: Number.isFinite(score) ? Math.round(score) : '--',
+    scoreLabel: prediction.scoreLabel || buildScoreLabel(score),
+    scoreDesc: prediction.scoreDesc || (Number.isFinite(score) && score >= 70 ? '观赏条件不错' : '建议提前观察'),
+    conclusion: prediction.conclusion || prediction.explanation || prediction.summary?.description || `${periodLabel}条件已根据实时天气完成评估。`,
+    clouds: [
+      { key: 'high', label: '高云', value: toDisplayNumber(clouds.high) },
+      { key: 'mid', label: '中云', value: toDisplayNumber(clouds.mid) },
+      { key: 'low', label: '低云', value: toDisplayNumber(clouds.low) }
+    ],
+    visibility: weather.visibility,
+    humidity: weather.humidity,
+    aod: weather.aod ?? weather.aerosolOpticalDepth
+  };
+  return buildCompletePredictionPreview(preview);
+}
+
 export function buildWeatherPreview(weather = {}) {
   const highCloud = weather.highClouds ?? weather.highCloud ?? weather.clouds?.high;
   const midCloud = weather.midClouds ?? weather.midCloud ?? weather.clouds?.mid;
@@ -541,9 +585,10 @@ export function buildWeatherPreview(weather = {}) {
   const hourlyView = buildWeatherHourlyViewModel(hourly, 'temp');
   const windDirection = weather.windDirection || '风向';
   return {
+    sourceWeather: weather,
     visible: true,
     title: '天气信息',
-    description: `${provider} 天气测试数据，用于先验收天气卡片 UI。`,
+    description: provider === 'test' ? `${provider} 天气测试数据，用于先验收天气卡片 UI。` : `${provider} 天气数据，用于评估当前火烧云条件。`,
     badge: provider === 'test' ? 'TEST' : '7天概览',
     location: weather.location || weather.locationName || '当前位置',
     icon: weather.icon || getWeatherPreviewIcon(cloudAverage),
@@ -631,11 +676,13 @@ export function buildWeatherHourlyViewModel(hourly = [], parameter = 'temp') {
   const max = values.length ? Math.max(...values) : 1;
   const span = Math.max(1, max - min);
   const count = Math.max(1, hourly.length - 1);
+  const inset = 8;
+  const plotWidth = 100 - inset * 2;
 
   const chart = hourly.map((item, index) => {
     const value = getHourlyParameterValue(item, parameter);
     const normalized = Number.isFinite(value) ? (value - min) / span : 0.5;
-    const x = Math.round((index / count) * 100);
+    const x = Math.round((inset + (index / count) * plotWidth) * 10) / 10;
     const y = Math.round(82 - normalized * 58);
     return {
       key: item.key,
@@ -749,7 +796,7 @@ export function buildPredictionAnalysisGroups(input = {}) {
 
 export function buildPredictionRadarPreview(period = 'sunset') {
   if (period === 'sunrise') {
-    const directions = [
+    const directions = withRadarCloudFields([
       { direction: 'N', name: '北', scoreText: '51', level: 'watch', cloudText: '高 22% / 中 35% / 低 18%' },
       { direction: 'NE', name: '东北', scoreText: '58', level: 'watch', cloudText: '高 30% / 中 48% / 低 14%' },
       { direction: 'E', name: '东', scoreText: '62', level: 'watch', cloudText: '高 38% / 中 52% / 低 12%' },
@@ -758,14 +805,14 @@ export function buildPredictionRadarPreview(period = 'sunset') {
       { direction: 'SW', name: '西南', scoreText: '39', level: 'weak', cloudText: '高 14% / 中 26% / 低 32%' },
       { direction: 'W', name: '西', scoreText: '36', level: 'weak', cloudText: '高 12% / 中 24% / 低 36%' },
       { direction: 'NW', name: '西北', scoreText: '43', level: 'watch', cloudText: '高 18% / 中 30% / 低 24%' }
-    ];
+    ]);
     return {
       directions,
       cloudGradients: buildRadarCloudGradients(directions)
     };
   }
 
-  const directions = [
+  const directions = withRadarCloudFields([
       { direction: 'N', name: '北', scoreText: '62', level: 'watch', cloudText: '高 28% / 中 44% / 低 12%' },
       { direction: 'NE', name: '东北', scoreText: '68', level: 'watch', cloudText: '高 34% / 中 48% / 低 10%' },
       { direction: 'E', name: '东', scoreText: '58', level: 'watch', cloudText: '高 22% / 中 39% / 低 18%' },
@@ -774,7 +821,7 @@ export function buildPredictionRadarPreview(period = 'sunset') {
       { direction: 'SW', name: '西南', scoreText: '74', level: 'good', cloudText: '高 62% / 中 36% / 低 8%' },
       { direction: 'W', name: '西', scoreText: '76', level: 'good', cloudText: '高 64% / 中 36% / 低 8%' },
       { direction: 'NW', name: '西北', scoreText: '69', level: 'watch', cloudText: '高 55% / 中 38% / 低 12%' }
-    ];
+    ]);
   return {
     directions,
     cloudGradients: buildRadarCloudGradients(directions)
@@ -787,9 +834,43 @@ function buildCompletePredictionPreview(preview = {}) {
     analysis: buildPredictionAnalysisGroups({
       high: preview.clouds?.[0]?.value,
       mid: preview.clouds?.[1]?.value,
-      low: preview.clouds?.[2]?.value
+      low: preview.clouds?.[2]?.value,
+      visibility: preview.visibility,
+      humidity: preview.humidity,
+      aod: preview.aod
     }),
-    radar: buildPredictionRadarPreview(preview.periodKey)
+    radar: buildPredictionRadarFromClouds(preview.periodKey, preview.clouds)
+  };
+}
+
+function buildPredictionRadarFromClouds(period = 'sunset', clouds = []) {
+  const high = Number(clouds.find((item) => item.key === 'high')?.value);
+  const mid = Number(clouds.find((item) => item.key === 'mid')?.value);
+  const low = Number(clouds.find((item) => item.key === 'low')?.value);
+  if (![high, mid, low].every(Number.isFinite)) return buildPredictionRadarPreview(period);
+
+  const names = {
+    N: '北', NE: '东北', E: '东', SE: '东南', S: '南', SW: '西南', W: '西', NW: '西北'
+  };
+  const weights = period === 'sunrise'
+    ? { N: 0.74, NE: 0.92, E: 1, SE: 0.9, S: 0.72, SW: 0.58, W: 0.52, NW: 0.62 }
+    : { N: 0.72, NE: 0.62, E: 0.56, SE: 0.62, S: 0.72, SW: 0.92, W: 1, NW: 0.9 };
+  const directions = withRadarCloudFields(Object.entries(weights).map(([direction, weight]) => {
+    const h = clampPercent(high * weight + mid * (1 - weight) * 0.22);
+    const m = clampPercent(mid * (0.82 + weight * 0.18));
+    const l = clampPercent(low * (1.08 - weight * 0.14));
+    const score = Math.round(h * 0.62 + m * 0.28 - l * 0.18 + 18);
+    return {
+      direction,
+      name: names[direction],
+      scoreText: String(clampPercent(score)),
+      level: score >= 70 ? 'good' : (score >= 40 ? 'watch' : 'weak'),
+      cloudText: `高 ${Math.round(h)}% / 中 ${Math.round(m)}% / 低 ${Math.round(l)}%`
+    };
+  }));
+  return {
+    directions,
+    cloudGradients: buildRadarCloudGradients(directions)
   };
 }
 
@@ -923,6 +1004,100 @@ function getWeatherPreviewCondition(cloudCover) {
   return '阴';
 }
 
+function buildWeatherFromPrediction(prediction = {}, query = {}) {
+  const weather = prediction.weatherData || prediction.weather || {};
+  const metrics = prediction.metrics || {};
+  const clouds = extractCloudLayers(prediction);
+  return {
+    ...weather,
+    location: prediction.locationName || prediction.location || query.locationName || query.location,
+    provider: weather.provider || prediction.provider || prediction.providerMeta?.name || 'Open-Meteo',
+    providerMeta: weather.providerMeta || prediction.providerMeta,
+    temp: weather.temp ?? weather.temperature ?? metrics.temp ?? metrics.temperature ?? prediction.temperature,
+    humidity: weather.humidity ?? metrics.humidity ?? prediction.humidity,
+    pressure: weather.pressure ?? metrics.pressure ?? prediction.pressure,
+    visibility: weather.visibility ?? metrics.visibility ?? prediction.visibility,
+    aod: weather.aod ?? weather.aerosolOpticalDepth ?? metrics.aod ?? prediction.aod,
+    windSpeed: weather.windSpeed ?? metrics.windSpeed ?? prediction.windSpeed,
+    windDirection: weather.windDirection ?? metrics.windDirection ?? prediction.windDirection,
+    precipitation: weather.precipitation ?? metrics.precipitation ?? prediction.precipitation,
+    highClouds: clouds.high,
+    midClouds: clouds.mid,
+    lowClouds: clouds.low,
+    cloudCover: weather.cloudCover ?? metrics.cloudCover ?? prediction.cloudCover,
+    hourly: weather.hourly || prediction.hourly || [],
+    daily: weather.daily || prediction.daily || [],
+    glow: weather.glow || prediction.glow || []
+  };
+}
+
+function extractCloudLayers(prediction = {}) {
+  const weather = prediction.weatherData || prediction.weather || {};
+  const metrics = prediction.metrics || {};
+  const clouds = prediction.clouds || prediction.cloudLayers || {};
+  return {
+    high: firstFinite(clouds.high, clouds.highClouds, metrics.highCloud, metrics.highClouds, weather.highClouds, weather.highCloud, prediction.highCloud, prediction.highClouds),
+    mid: firstFinite(clouds.mid, clouds.midClouds, metrics.midCloud, metrics.midClouds, weather.midClouds, weather.midCloud, prediction.midCloud, prediction.midClouds),
+    low: firstFinite(clouds.low, clouds.lowClouds, clouds.lowCloudCover, metrics.lowCloud, metrics.lowClouds, weather.lowClouds, weather.lowCloudCover, prediction.lowCloud, prediction.lowClouds)
+  };
+}
+
+function firstFinite(...values) {
+  for (const value of values) {
+    const number = Number(value);
+    if (Number.isFinite(number)) return number;
+  }
+  return null;
+}
+
+function toDisplayNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.round(number) : 0;
+}
+
+function buildScoreLabel(score) {
+  const number = Number(score);
+  if (!Number.isFinite(number)) return '--';
+  if (number >= 85) return '极佳 Excellent';
+  if (number >= 70) return '高分 Strong';
+  if (number >= 40) return '可观 Watch';
+  return '较弱 Weak';
+}
+
+function compactBestTime(value) {
+  if (!value) return '--';
+  if (typeof value === 'string' && value.includes('-')) return value.split('-')[0].trim();
+  if (typeof value === 'object') return compactDateTime(value.start || value.from || value.time);
+  return compactDateTime(value);
+}
+
+function withRadarCloudFields(directions = []) {
+  return directions.map((item) => {
+    const values = parseCloudText(item.cloudText);
+    return {
+      ...item,
+      highCloud: item.highCloud ?? values.high,
+      midCloud: item.midCloud ?? values.mid,
+      lowCloud: item.lowCloud ?? values.low
+    };
+  });
+}
+
+function parseCloudText(text = '') {
+  const matches = String(text).match(/\d+(?:\.\d+)?/g) || [];
+  return {
+    high: Number(matches[0] ?? 0),
+    mid: Number(matches[1] ?? 0),
+    low: Number(matches[2] ?? 0)
+  };
+}
+
+function clampPercent(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return 0;
+  return Math.max(0, Math.min(100, Math.round(number)));
+}
+
 function readAppSettings() {
   const settings = wx.getStorageSync('appSettings') || {};
   const interfaceLanguage = settings.interfaceLanguage === 'en-US' ? 'en-US' : 'zh-CN';
@@ -955,6 +1130,8 @@ function normalizePrediction(raw = {}, query) {
     grade: data.grade || data.quality || data.level,
     bestWindow: formatBestWindow(data.bestWindow || data.window || data.timeWindow || data.referenceTime || data.date),
     explanation,
+    weatherData: data.weatherData || data.weather || {},
+    clouds,
     metrics: {
       ...(data.metrics || data.factors || data.weather || {}),
       highCloud: clouds.high,

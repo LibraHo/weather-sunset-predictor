@@ -82,6 +82,7 @@ describe('miniprogram result page web parity', () => {
     expect(wxml).toContain('radar-cloud-field');
     expect(wxml).toContain('id="resultRadarCloudField"');
     expect(wxml).toContain('canvas-id="resultRadarCloudField"');
+    expect(wxml).toContain('type="2d"');
     expect(wxml).toContain('radar-cloud-canvas');
     expect(wxml).toContain('radar-ring-low-inner');
     expect(wxml).not.toContain('radar-cloud-gradient');
@@ -100,6 +101,10 @@ describe('miniprogram result page web parity', () => {
     expect(wxss).toContain('.radar-cloud-field');
     expect(wxss).toContain('.radar-cloud-canvas');
     expect(wxss).toContain('.radar-ring-low-inner');
+    expect(wxss).toContain('width: 84%;');
+    expect(wxss).toContain('height: 84%;');
+    expect(wxss).toContain('top: 6.3%;');
+    expect(wxss).toContain('height: 87.4%;');
     expect(wxss).not.toContain('.radar-direction-score');
     expect(wxss).not.toContain('.radar-cloud-gradient');
     expect(wxss).not.toContain('.radar-cloud-blob-high');
