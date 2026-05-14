@@ -78,6 +78,7 @@ export function normalizeSurroundingPrediction(data = {}) {
     points: points.map((point) => {
       const prediction = point.prediction || {};
       const cloudLayers = point.cloudLayers || prediction.cloudLayers || {};
+      const weather = point.weatherData || point.weather || prediction.weatherData || prediction.weather || {};
       const score = numberOrNull(point.score ?? prediction.score);
       return {
         key: point.direction || point.label || point.name,
@@ -87,9 +88,9 @@ export function normalizeSurroundingPrediction(data = {}) {
         score,
         level: scoreToLevel(score),
         quality: point.quality || prediction.quality || prediction.status || null,
-        highCloud: numberOrNull(cloudLayers.high ?? point.weatherData?.highClouds),
-        midCloud: numberOrNull(cloudLayers.mid ?? point.weatherData?.midClouds),
-        lowCloud: numberOrNull(cloudLayers.low ?? point.weatherData?.lowClouds),
+        highCloud: numberOrNull(cloudLayers.high ?? cloudLayers.highClouds ?? point.highCloud ?? point.highClouds ?? prediction.highCloud ?? prediction.highClouds ?? weather.highCloud ?? weather.highClouds),
+        midCloud: numberOrNull(cloudLayers.mid ?? cloudLayers.midClouds ?? point.midCloud ?? point.midClouds ?? prediction.midCloud ?? prediction.midClouds ?? weather.midCloud ?? weather.midClouds),
+        lowCloud: numberOrNull(cloudLayers.low ?? cloudLayers.lowClouds ?? cloudLayers.lowCloudCover ?? point.lowCloud ?? point.lowClouds ?? point.lowCloudCover ?? prediction.lowCloud ?? prediction.lowClouds ?? prediction.lowCloudCover ?? weather.lowCloud ?? weather.lowClouds ?? weather.lowCloudCover),
         error: point.error || null
       };
     })

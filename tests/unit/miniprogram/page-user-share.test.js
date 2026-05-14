@@ -122,6 +122,55 @@ describe('miniprogram page user/share helpers', () => {
     expect(sunrise.radar.directions).not.toEqual(sunset.radar.directions);
   });
 
+  test('home real-city search builds the same weather and prediction surface as test mode', () => {
+    const state = homeHelpers.buildHomePredictionSurface({
+      locationName: '北京',
+      period: 'sunset',
+      date: '2026-05-14',
+      score: 81,
+      bestWindow: '18:38-19:18',
+      direction: '西偏北',
+      summary: { description: '高云和中云条件较好。' },
+      weatherData: {
+        provider: 'open-meteo',
+        temp: 22,
+        humidity: 63,
+        pressure: 1009,
+        visibility: 18,
+        windSpeed: 9,
+        windDirection: '西北',
+        highClouds: 66,
+        midClouds: 41,
+        lowClouds: 12,
+        precipitation: 0
+      },
+      clouds: { high: 66, mid: 41, low: 12 }
+    }, { locationName: '北京', period: 'sunset' });
+
+    expect(state.weatherPreview).toMatchObject({
+      visible: true,
+      badge: '7天概览',
+      location: '北京',
+      temperature: '22.0',
+      windDirection: '西北'
+    });
+    expect(state.weatherPreview.description).not.toContain('测试数据');
+    expect(state.predictionPreview).toMatchObject({
+      periodKey: 'sunset',
+      periodLabel: '晚霞',
+      score: 81,
+      bestViewingTime: '18:38-19:18',
+      direction: '西偏北',
+      clouds: [
+        { key: 'high', value: 66 },
+        { key: 'mid', value: 41 },
+        { key: 'low', value: 12 }
+      ]
+    });
+    expect(state.predictionPreview.radar.directions).toHaveLength(8);
+    expect(state.predictionPreview.radar.directions[0]).toMatchObject({ direction: 'N', highCloud: expect.any(Number) });
+  });
+
   test('result period switch can request and render the alternate prediction card', () => {
     const current = {
       locationName: 'TEST',

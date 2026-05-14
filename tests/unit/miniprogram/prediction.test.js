@@ -105,6 +105,28 @@ describe('miniprogram services/prediction', () => {
     expect(radar.bestDirection).toEqual({ direction: 'NE' });
   });
 
+  test('normalizeSurroundingPrediction keeps real backend cloud fields for canvas radar', () => {
+    const radar = normalizeSurroundingPrediction({
+      points: [
+        { direction: 'W', score: 76, highClouds: 64, midCloud: 36, lowCloudCover: 8 },
+        { direction: 'NW', score: 69, weather: { highClouds: 55, midClouds: 38, lowClouds: 12 } }
+      ]
+    });
+
+    expect(radar.points[0]).toMatchObject({
+      direction: 'W',
+      highCloud: 64,
+      midCloud: 36,
+      lowCloud: 8
+    });
+    expect(radar.points[1]).toMatchObject({
+      direction: 'NW',
+      highCloud: 55,
+      midCloud: 38,
+      lowCloud: 12
+    });
+  });
+
   test('getSurroundingPrediction posts to surrounding API', async () => {
     const wxMock = {
       request: jest.fn(({ success }) => success({
