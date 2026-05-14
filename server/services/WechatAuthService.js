@@ -2,8 +2,8 @@ const axios = require('axios');
 
 class WechatAuthService {
   constructor(options = {}) {
-    this.appId = options.appId || process.env.WECHAT_APP_ID;
-    this.appSecret = options.appSecret || process.env.WECHAT_APP_SECRET;
+    this.appId = options.appId || process.env.WECHAT_APP_ID || process.env.WECHAT_APPID;
+    this.appSecret = options.appSecret || process.env.WECHAT_APP_SECRET || process.env.WECHAT_APPSECRET;
     this.httpClient = options.httpClient || axios;
     this.endpoint = options.endpoint || 'https://api.weixin.qq.com/sns/jscode2session';
   }
