@@ -99,9 +99,7 @@
     <view class="preview-head weather-panel-head">
       <view>
         <view class="section-title weather-panel-title">{{weatherPreview.title}}</view>
-        <view class="preview-copy">{{weatherPreview.description}}</view>
       </view>
-      <view class="preview-badge">{{weatherPreview.badge}}</view>
     </view>
 
     <view class="weather-main-layout">
