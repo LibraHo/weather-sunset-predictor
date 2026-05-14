@@ -207,7 +207,11 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxss).toContain('.prediction-radar-card');
     expect(homeWxss).toContain('.prediction-radar-cloud-canvas');
     expect(homeWxss).toContain('.prediction-radar-ring-low-inner');
+    expect(homeWxss).toContain('.prediction-radar-ring-high { width: 84%; height: 84%; }');
+    expect(homeWxss).toContain('top: 6.3%;');
+    expect(homeWxss).toContain('height: 87.4%;');
     expect(homeWxss).toContain('.prediction-radar-ring-label-high');
+    expect(homeWxss).toContain('.prediction-radar-ring-label-high { left: 37.3%; top: 15.2%; }');
     expect(homeWxss).not.toContain('.prediction-radar-score');
     expect(homeWxss).not.toContain('.prediction-radar-cloud-gradient');
     expect(homeWxss).not.toContain('.prediction-radar-cloud-blob-high');

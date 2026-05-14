@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { buildRadarCloudGradients, buildRadarCloudImageData, normalizeRadarDirections, paintRadarCloudCanvas, paintRadarCloudCanvas2d } from '../../../miniprogram/utils/radar-cloud-field.js';
+import { RADAR_FIELD_GEOMETRY, buildRadarCloudGradients, buildRadarCloudImageData, normalizeRadarDirections, paintRadarCloudCanvas, paintRadarCloudCanvas2d } from '../../../miniprogram/utils/radar-cloud-field.js';
 
 const directions = [
   { direction: 'N', highCloud: 62, midCloud: 44, lowCloud: 12 },
@@ -13,6 +13,52 @@ const directions = [
 ];
 
 describe('miniprogram radar cloud field renderer', () => {
+  test('keeps the same cloud ring geometry as the website RadarCompass', () => {
+    expect(RADAR_FIELD_GEOMETRY).toMatchObject({
+      lowInnerRatio: 0.11,
+      lowRatio: 0.20,
+      midRatio: 0.32,
+      highRatio: 0.42,
+      axisRadiusRatio: 0.4368,
+      ringDiameters: {
+        lowInner: 22,
+        low: 40,
+        mid: 64,
+        high: 84
+      },
+      labelPositions: {
+        high: { left: 37.3, top: 15.2 },
+        mid: { left: 41.1, top: 25.6 },
+        low: { left: 44.7, top: 35.4 }
+      }
+    });
+
+    expect(RADAR_FIELD_GEOMETRY.layers.low).toMatchObject({
+      innerScale: 1.02,
+      outerScale: 0.96,
+      fadeScale: 0.34,
+      alphaMax: 0.90,
+      gamma: 1.20,
+      edgeCut: 0.18
+    });
+    expect(RADAR_FIELD_GEOMETRY.layers.mid).toMatchObject({
+      innerScale: 1.03,
+      outerScale: 0.98,
+      fadeScale: 0.34,
+      alphaMax: 0.82,
+      gamma: 1.12,
+      edgeCut: 0.20
+    });
+    expect(RADAR_FIELD_GEOMETRY.layers.high).toMatchObject({
+      innerScale: 1.02,
+      outerScale: 0.97,
+      fadeScale: 0.38,
+      alphaMax: 0.66,
+      gamma: 1.05,
+      edgeCut: 0.24
+    });
+  });
+
   test('normalizes directions in the same compass order as the website radar', () => {
     const normalized = normalizeRadarDirections([directions[6], directions[0], directions[2]]);
 

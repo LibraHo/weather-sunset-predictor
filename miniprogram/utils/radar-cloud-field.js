@@ -1,9 +1,33 @@
 const ORDER = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
 
+export const RADAR_FIELD_GEOMETRY = {
+  lowInnerRatio: 0.11,
+  lowRatio: 0.20,
+  midRatio: 0.32,
+  highRatio: 0.42,
+  axisRadiusRatio: 0.4368,
+  ringDiameters: {
+    lowInner: 22,
+    low: 40,
+    mid: 64,
+    high: 84
+  },
+  labelPositions: {
+    high: { left: 37.3, top: 15.2 },
+    mid: { left: 41.1, top: 25.6 },
+    low: { left: 44.7, top: 35.4 }
+  },
+  layers: {
+    low: { innerScale: 1.02, outerScale: 0.96, fadeScale: 0.34, alphaMax: 0.90, gamma: 1.20, edgeCut: 0.18 },
+    mid: { innerScale: 1.03, outerScale: 0.98, fadeScale: 0.34, alphaMax: 0.82, gamma: 1.12, edgeCut: 0.20 },
+    high: { innerScale: 1.02, outerScale: 0.97, fadeScale: 0.38, alphaMax: 0.66, gamma: 1.05, edgeCut: 0.24 }
+  }
+};
+
 const DEFAULT_COLORS = {
-  low: { r: 180, g: 210, b: 255, a: 0.98 },
-  mid: { r: 210, g: 225, b: 255, a: 0.95 },
-  high: { r: 235, g: 242, b: 255, a: 0.90 }
+  low: { r: 138, g: 156, b: 186, a: 0.95 },
+  mid: { r: 184, g: 198, b: 218, a: 0.88 },
+  high: { r: 218, g: 226, b: 238, a: 0.72 }
 };
 
 export function normalizeRadarDirections(directions = []) {
@@ -24,14 +48,14 @@ export function buildRadarCloudImageData(directions = [], size = 180) {
   const px = new Uint8ClampedArray(size * size * 4);
   const cx = size / 2;
   const cy = size / 2;
-  const rLowInner = size * 0.11;
-  const rLow = size * 0.20;
-  const rMid = size * 0.32;
-  const rHigh = size * 0.42;
+  const rLowInner = size * RADAR_FIELD_GEOMETRY.lowInnerRatio;
+  const rLow = size * RADAR_FIELD_GEOMETRY.lowRatio;
+  const rMid = size * RADAR_FIELD_GEOMETRY.midRatio;
+  const rHigh = size * RADAR_FIELD_GEOMETRY.highRatio;
   const layers = [
-    { key: 'low', inner: rLowInner * 1.02, outer: rLow * 0.96, fade: (rLow - rLowInner) * 0.46, alphaMax: 1.00, gamma: 0.96, color: DEFAULT_COLORS.low, edgeCut: 0.06 },
-    { key: 'mid', inner: rLow * 1.01, outer: rMid * 1.00, fade: (rMid - rLow) * 0.46, alphaMax: 1.00, gamma: 0.92, color: DEFAULT_COLORS.mid, edgeCut: 0.07 },
-    { key: 'high', inner: rMid * 1.00, outer: rHigh * 0.99, fade: (rHigh - rMid) * 0.50, alphaMax: 0.98, gamma: 0.88, color: DEFAULT_COLORS.high, edgeCut: 0.07 }
+    createLayer('low', rLowInner, rLow, rLow - rLowInner, DEFAULT_COLORS.low),
+    createLayer('mid', rLow, rMid, rMid - rLow, DEFAULT_COLORS.mid),
+    createLayer('high', rMid, rHigh, rHigh - rMid, DEFAULT_COLORS.high)
   ];
 
   for (let y = 0; y < size; y += 1) {
@@ -60,10 +84,11 @@ export function buildRadarCloudImageData(directions = [], size = 180) {
 
         const u = (theta / (Math.PI * 2)) * 12.5 * 8;
         const v = ((radius - (layer.inner + layer.outer) / 2) / Math.max(1, layer.outer - layer.inner)) * 1.6;
-        const texture = 0.48 + 0.70 * fbm(u * 0.65, v * 0.55, 3) + 0.24 * (fbm(u * 1.6 + 21, v - 7, 2) - 0.5);
+        const nLarge = fbm(u * 0.65, v * 0.55, 3);
+        const nSmall = fbm(u * 1.6 + 21, v * 1.0 - 7, 2);
+        const texture = 0.78 + 0.24 * nLarge + 0.08 * (nSmall - 0.5);
         const shaped = smoothstep(layer.edgeCut, 0.98, base * texture);
-        const coverBoost = smoothstep(0.08, 0.72, base);
-        const alpha = Math.max(0, Math.min(1, shaped * ringW * layer.alphaMax * layer.color.a * (0.55 + coverBoost * 0.55)));
+        const alpha = Math.max(0, Math.min(1, shaped * ringW * layer.alphaMax * layer.color.a));
         if (alpha <= 0.001) continue;
 
         const inv = 1 - outA;
@@ -82,7 +107,21 @@ export function buildRadarCloudImageData(directions = [], size = 180) {
     }
   }
 
-  return { width: size, height: size, data: blurImageData(px, size, Math.max(1, Math.round(size * 0.011))) };
+  return { width: size, height: size, data: blurImageData(px, size, Math.max(1, Math.round(size * 0.007))) };
+}
+
+function createLayer(key, innerRadius, outerRadius, ringWidth, color) {
+  const params = RADAR_FIELD_GEOMETRY.layers[key];
+  return {
+    key,
+    inner: innerRadius * params.innerScale,
+    outer: outerRadius * params.outerScale,
+    fade: ringWidth * params.fadeScale,
+    alphaMax: params.alphaMax,
+    gamma: params.gamma,
+    color,
+    edgeCut: params.edgeCut
+  };
 }
 
 export function buildRadarCloudGradient(directions = []) {
