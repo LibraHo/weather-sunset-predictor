@@ -312,6 +312,10 @@
   align-items: center;
 }
 
+.prediction-panel-head {
+  align-items: center;
+}
+
 .preview-copy {
   margin-top: 8rpx;
   color: rgba(255, 255, 255, 0.46);
@@ -1541,6 +1545,11 @@
 }
 
 .home-page.has-weather .weather-panel-title {
+  font-size: 42rpx;
+  letter-spacing: 0;
+}
+
+.home-page.has-weather .prediction-panel-title {
   font-size: 42rpx;
   letter-spacing: 0;
 }

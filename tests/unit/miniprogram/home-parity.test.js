@@ -167,8 +167,8 @@ describe('mini-program home parity with mobile web home', () => {
 
     expectInOrder(homeWxml, [
       'home-prediction-preview',
-      'prediction-app-nav',
-      'prediction-preview-action-row',
+      'prediction-panel-head',
+      '朝晚霞预测',
       'prediction-toggle-bar',
       'phenomenon-title-card',
       'conclusion-banner',
@@ -179,6 +179,7 @@ describe('mini-program home parity with mobile web home', () => {
     ]);
 
     expect(homeWxml).toContain('predictionPreview.score');
+    expect(homeWxml).toContain('class="section-title prediction-panel-title">朝晚霞预测</view>');
     expect(homeWxml).toContain('predictionPreview.scoreLabel');
     expect(homeWxml).toContain('predictionPreview.bestViewingTime');
     expect(homeWxml).toContain('src="/assets/icons/share-upload.svg"');
@@ -224,6 +225,7 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxss).not.toContain('.phenomenon-icon-tile');
     expect(homeWxss).not.toContain('.home-page.has-weather .phenomenon-title-card');
     expect(homeWxss).toContain('.prediction-toggle-bar');
+    expect(homeWxss).toContain('.prediction-panel-title');
     expect(homeWxss).toContain('display: flex;');
     expect(homeWxss).toContain('width: 332rpx');
     expect(homeWxss).toContain('background: linear-gradient(135deg, #f59e0b, #ea8500)');

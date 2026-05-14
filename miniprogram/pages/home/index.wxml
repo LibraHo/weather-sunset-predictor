@@ -192,13 +192,13 @@
   </view>
 
   <view class="home-prediction-preview xiake-card" wx:if="{{weatherPreview.visible}}">
-    <view class="prediction-app-nav">
+    <view class="preview-head prediction-panel-head">
+      <view>
+        <view class="section-title prediction-panel-title">朝晚霞预测</view>
+      </view>
       <view class="prediction-share-menu prediction-share-menu-line" aria-hidden="true">
         <image class="share-icon-image" src="/assets/icons/share-upload.svg" mode="aspectFit" aria-hidden="true" />
       </view>
-    </view>
-    <view class="prediction-preview-action-row">
-      <view class="prediction-preview-action-label">预测卡片</view>
     </view>
     <view class="prediction-toggle-bar">
       <view class="prediction-toggle {{predictionPreview.periodKey === 'sunrise' ? 'active' : ''}}" data-value="sunrise" bindtap="selectPredictionPreviewPeriod">朝霞</view>
