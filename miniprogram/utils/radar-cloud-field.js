@@ -6,6 +6,7 @@ export const RADAR_FIELD_GEOMETRY = {
   midRatio: 0.32,
   highRatio: 0.42,
   axisRadiusRatio: 0.4368,
+  canvasAlphaBoost: 1,
   ringDiameters: {
     lowInner: 22,
     low: 40,
@@ -88,7 +89,7 @@ export function buildRadarCloudImageData(directions = [], size = 180) {
         const nSmall = fbm(u * 1.6 + 21, v * 1.0 - 7, 2);
         const texture = 0.78 + 0.24 * nLarge + 0.08 * (nSmall - 0.5);
         const shaped = smoothstep(layer.edgeCut, 0.98, base * texture);
-        const alpha = Math.max(0, Math.min(1, shaped * ringW * layer.alphaMax * layer.color.a));
+        const alpha = Math.max(0, Math.min(1, shaped * ringW * layer.alphaMax * layer.color.a * RADAR_FIELD_GEOMETRY.canvasAlphaBoost));
         if (alpha <= 0.001) continue;
 
         const inv = 1 - outA;
@@ -100,9 +101,9 @@ export function buildRadarCloudImageData(directions = [], size = 180) {
 
       if (outA <= 0) continue;
       const idx = (y * size + x) * 4;
-      px[idx] = Math.round(outR / outA);
-      px[idx + 1] = Math.round(outG / outA);
-      px[idx + 2] = Math.round(outB / outA);
+      px[idx] = Math.round(outR);
+      px[idx + 1] = Math.round(outG);
+      px[idx + 2] = Math.round(outB);
       px[idx + 3] = Math.round(outA * 255);
     }
   }
@@ -152,8 +153,8 @@ function buildLayerGradient(directions, layerKey, rgb, minAlpha, maxAlpha) {
 export function paintRadarCloudCanvas(canvasId, directions, options = {}, size = 180) {
   if (!canvasId) return false;
   const wxApi = options.wxApi || options.wx || globalThis.wx;
-  if (paintRadarCloudCanvasLegacy(canvasId, directions, wxApi, size)) return true;
   if (paintRadarCloudCanvas2d(canvasId, directions, { ...options, wxApi }, size)) return true;
+  if (paintRadarCloudCanvasLegacy(canvasId, directions, wxApi, size)) return true;
   return false;
 }
 
@@ -162,7 +163,8 @@ export function paintRadarCloudCanvas2d(canvasId, directions, options = {}, size
   if (!wxApi?.createSelectorQuery) return false;
   const retry = options.retry ?? 4;
   const query = wxApi.createSelectorQuery();
-  const scopedQuery = options.component && query.in ? query.in(options.component) : query;
+  const scope = options.component || options.page;
+  const scopedQuery = scope && query.in ? query.in(scope) : query;
   if (!scopedQuery?.select) return false;
 
   scopedQuery
@@ -193,9 +195,21 @@ export function paintRadarCloudCanvas2d(canvasId, directions, options = {}, size
       if (!ctx?.putImageData) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.putImageData(createCanvasImageData(ctx, image), 0, 0);
+      softenRadarCloudCanvas(ctx, canvas);
     });
 
   return true;
+}
+
+function softenRadarCloudCanvas(ctx, canvas) {
+  if (!ctx?.drawImage || !canvas) return;
+  const previousComposite = ctx.globalCompositeOperation;
+  const previousFilter = ctx.filter;
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.filter = `blur(${Math.max(2.2, canvas.width * 0.007)}px)`;
+  ctx.drawImage(canvas, 0, 0);
+  ctx.filter = previousFilter || 'none';
+  ctx.globalCompositeOperation = previousComposite || 'source-over';
 }
 
 function paintRadarCloudCanvasLegacy(canvasId, directions, wxApi = globalThis.wx, size = 180) {

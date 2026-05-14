@@ -170,6 +170,7 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxml).toContain('prediction-radar-cloud-field');
     expect(homeWxml).toContain('id="homeRadarCloudField"');
     expect(homeWxml).toContain('canvas-id="homeRadarCloudField"');
+    expect(homeWxml).toContain('type="2d"');
     expect(homeWxml).toContain('prediction-radar-cloud-canvas');
     expect(homeWxml).toContain('prediction-radar-ring-low-inner');
     expect(homeWxml).toContain('prediction-radar-ring-label-high');

@@ -82,6 +82,7 @@ describe('miniprogram result page web parity', () => {
     expect(wxml).toContain('radar-cloud-field');
     expect(wxml).toContain('id="resultRadarCloudField"');
     expect(wxml).toContain('canvas-id="resultRadarCloudField"');
+    expect(wxml).toContain('type="2d"');
     expect(wxml).toContain('radar-cloud-canvas');
     expect(wxml).toContain('radar-ring-low-inner');
     expect(wxml).not.toContain('radar-cloud-gradient');

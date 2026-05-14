@@ -293,7 +293,7 @@
         </view>
         <view class="prediction-radar-dial">
           <view class="prediction-radar-cloud-field">
-            <canvas id="homeRadarCloudField" canvas-id="homeRadarCloudField" class="prediction-radar-cloud-canvas" disable-scroll="true"></canvas>
+            <canvas id="homeRadarCloudField" canvas-id="homeRadarCloudField" type="2d" class="prediction-radar-cloud-canvas" disable-scroll="true"></canvas>
           </view>
           <view class="prediction-radar-ring prediction-radar-ring-low-inner"></view>
           <view class="prediction-radar-ring prediction-radar-ring-low"></view>

@@ -11,6 +11,7 @@ const directions = [
   { direction: 'W', highCloud: 76, midCloud: 36, lowCloud: 8 },
   { direction: 'NW', highCloud: 69, midCloud: 38, lowCloud: 12 }
 ];
+const ORDER_FOR_TEST = directions.map((item) => item.direction);
 
 describe('miniprogram radar cloud field renderer', () => {
   test('keeps the same cloud ring geometry as the website RadarCompass', () => {
@@ -83,6 +84,27 @@ describe('miniprogram radar cloud field renderer', () => {
     expect(alphaValues.filter((value) => value > 0).length).toBeGreaterThan(800);
   });
 
+  test('keeps cloud colors neutral enough for the warm radar card', () => {
+    const heavyHighCloud = ORDER_FOR_TEST.map((direction) => ({ direction, highCloud: 100, midCloud: 0, lowCloud: 0 }));
+    const image = buildRadarCloudImageData(heavyHighCloud, 96);
+    const topOuterRingIndex = (12 * 96 + 48) * 4;
+
+    expect(image.data[topOuterRingIndex + 3]).toBeGreaterThan(40);
+    expect(image.data[topOuterRingIndex + 2] - image.data[topOuterRingIndex]).toBeLessThanOrEqual(28);
+    expect(image.data[topOuterRingIndex + 1] - image.data[topOuterRingIndex]).toBeLessThanOrEqual(18);
+  });
+
+  test('keeps high cloud visible after compositing on the white radar card', () => {
+    const lightHighCloud = ORDER_FOR_TEST.map((direction) => ({ direction, highCloud: 60, midCloud: 35, lowCloud: 8 }));
+    const image = buildRadarCloudImageData(lightHighCloud, 300);
+    const topHighCloudIndex = (40 * 300 + 150) * 4;
+    const alpha = image.data[topHighCloudIndex + 3] / 255;
+    const compositeRed = Math.round(image.data[topHighCloudIndex] * alpha + 255 * (1 - alpha));
+
+    expect(image.data[topHighCloudIndex + 3]).toBeGreaterThanOrEqual(30);
+    expect(compositeRed).toBeLessThanOrEqual(230);
+  });
+
   test('builds separate high mid low cloud gradients for the radar rings', () => {
     const gradients = buildRadarCloudGradients(directions);
 
@@ -110,7 +132,7 @@ describe('miniprogram radar cloud field renderer', () => {
     }));
   });
 
-  test('uses the official Canvas 2D node path when createSelectorQuery is available', () => {
+  test('prefers the official Canvas 2D node renderer over legacy canvasPutImageData', () => {
     const putImageData = jest.fn();
     const clearRect = jest.fn();
     const createImageData = jest.fn((width, height) => ({ width, height, data: new Uint8ClampedArray(width * height * 4) }));
@@ -118,6 +140,62 @@ describe('miniprogram radar cloud field renderer', () => {
       width: 0,
       height: 0,
       getContext: jest.fn(() => ({ clearRect, createImageData, putImageData }))
+    };
+    const exec = jest.fn((callback) => callback([{ node: canvas, width: 96, height: 96 }]));
+    const fields = jest.fn(() => ({ exec }));
+    const select = jest.fn(() => ({ fields }));
+    const query = { in: jest.fn(() => ({ select })), select };
+    const wxApi = {
+      createSelectorQuery: jest.fn(() => query),
+      getSystemInfoSync: jest.fn(() => ({ pixelRatio: 2 })),
+      canvasPutImageData: jest.fn()
+    };
+
+    const painted = paintRadarCloudCanvas('homeRadarCloudField', directions, { wxApi }, 64);
+
+    expect(painted).toBe(true);
+    expect(putImageData).toHaveBeenCalled();
+    expect(wxApi.canvasPutImageData).not.toHaveBeenCalled();
+  });
+
+  test('scopes Canvas 2D selector queries to the miniprogram page instance', () => {
+    const putImageData = jest.fn();
+    const clearRect = jest.fn();
+    const createImageData = jest.fn((width, height) => ({ width, height, data: new Uint8ClampedArray(width * height * 4) }));
+    const canvas = {
+      width: 0,
+      height: 0,
+      getContext: jest.fn(() => ({ clearRect, createImageData, putImageData }))
+    };
+    const exec = jest.fn((callback) => callback([{ node: canvas, width: 96, height: 96 }]));
+    const fields = jest.fn(() => ({ exec }));
+    const scopedSelect = jest.fn(() => ({ fields }));
+    const page = {};
+    const query = {
+      in: jest.fn((target) => (target === page ? { select: scopedSelect } : { select: jest.fn() })),
+      select: jest.fn()
+    };
+    const wxApi = {
+      createSelectorQuery: jest.fn(() => query),
+      getSystemInfoSync: jest.fn(() => ({ pixelRatio: 2 }))
+    };
+
+    paintRadarCloudCanvas2d('homeRadarCloudField', directions, { wxApi, page }, 64);
+
+    expect(query.in).toHaveBeenCalledWith(page);
+    expect(scopedSelect).toHaveBeenCalledWith('#homeRadarCloudField');
+    expect(putImageData).toHaveBeenCalled();
+  });
+
+  test('uses the official Canvas 2D node path when createSelectorQuery is available', () => {
+    const putImageData = jest.fn();
+    const clearRect = jest.fn();
+    const createImageData = jest.fn((width, height) => ({ width, height, data: new Uint8ClampedArray(width * height * 4) }));
+    const drawImage = jest.fn();
+    const canvas = {
+      width: 0,
+      height: 0,
+      getContext: jest.fn(() => ({ clearRect, createImageData, drawImage, putImageData }))
     };
     const exec = jest.fn((callback) => callback([{ node: canvas, width: 96, height: 96 }]));
     const fields = jest.fn(() => ({ exec }));
@@ -142,6 +220,7 @@ describe('miniprogram radar cloud field renderer', () => {
       height: 192,
       data: expect.any(Uint8ClampedArray)
     }), 0, 0);
+    expect(drawImage).toHaveBeenCalledWith(canvas, 0, 0);
     expect(wxApi.canvasPutImageData).not.toHaveBeenCalled();
   });
 });

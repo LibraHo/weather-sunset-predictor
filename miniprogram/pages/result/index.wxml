@@ -86,7 +86,7 @@
           </view>
           <view class="radar-compass-dial">
             <view class="radar-cloud-field">
-              <canvas id="resultRadarCloudField" canvas-id="resultRadarCloudField" class="radar-cloud-canvas" disable-scroll="true"></canvas>
+              <canvas id="resultRadarCloudField" canvas-id="resultRadarCloudField" type="2d" class="radar-cloud-canvas" disable-scroll="true"></canvas>
             </view>
           <view class="radar-ring-label radar-ring-label-{{item.className}}" wx:for="{{radar.rings}}" wx:key="key">{{item.label}}</view>
             <view class="radar-ring radar-ring-outer"></view>
