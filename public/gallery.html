@@ -21,7 +21,7 @@
       width: 100vw;
       height: 100vh;
       z-index: 1;
-      background: var(--map-bg-dark, #121a2f);
+      background: var(--map-bg, #f0f0f0);
     }
     .gallery-glass {
       position: fixed;
@@ -214,7 +214,7 @@
     }
   </style>
 </head>
-<body class="theme-dark gallery-body">
+<body class="gallery-body">
   <div id="loading" class="gallery-glass" role="status" aria-live="polite">
     <div class="spinner" aria-hidden="true"></div>
     <p data-i18n="gallery.loading">加载照片中...</p>
@@ -259,6 +259,38 @@
       return i18n.t(key, params);
     }
 
+    function getGalleryTheme() {
+      const validThemes = new Set(['light', 'dark', 'auto']);
+      let savedTheme = 'auto';
+      try {
+        savedTheme = localStorage.getItem('app_theme') || 'auto';
+      } catch (_) {
+        savedTheme = 'auto';
+      }
+      const theme = validThemes.has(savedTheme) ? savedTheme : 'auto';
+      const systemDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+      const actualTheme = theme === 'auto' ? (systemDark ? 'dark' : 'light') : theme;
+      return { theme, actualTheme };
+    }
+
+    function applyGalleryTheme() {
+      const { theme, actualTheme } = getGalleryTheme();
+      const root = document.documentElement;
+      const body = document.body;
+      const themeClasses = ['theme-light', 'theme-dark', 'theme-auto', 'theme-actual-light', 'theme-actual-dark'];
+      root.classList.remove(...themeClasses);
+      body.classList.remove(...themeClasses);
+
+      root.classList.add(`theme-${theme}`, `theme-actual-${actualTheme}`);
+      body.classList.add(`theme-${theme}`, `theme-actual-${actualTheme}`);
+      root.setAttribute('data-theme', theme);
+      root.setAttribute('data-actual-theme', actualTheme);
+      body.setAttribute('data-theme', theme);
+      body.setAttribute('data-actual-theme', actualTheme);
+      root.style.colorScheme = actualTheme;
+      return actualTheme;
+    }
+
     function applyGalleryI18n() {
       document.documentElement.lang = i18n.currentLanguage || 'zh-CN';
       document.querySelectorAll('[data-i18n]').forEach((el) => {
@@ -271,8 +303,9 @@
     }
 
     async function initMap() {
+      const actualTheme = applyGalleryTheme();
       mapCanvas = new ChinaMapCanvas({
-        style: 'dark',
+        style: actualTheme,
         defaultCenter: [35, 105],
         defaultZoom: 4,
         showScoreLegend: false,
@@ -424,6 +457,7 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
       await i18n.init();
+      applyGalleryTheme();
       applyGalleryI18n();
       await initMap();
       map.on('zoomend moveend', renderPhotoMarkers);
