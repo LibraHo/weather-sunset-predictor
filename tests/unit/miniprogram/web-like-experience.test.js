@@ -30,6 +30,8 @@ describe('miniprogram web-like experience shell', () => {
     expect(topbarWxss).toContain('background: rgba(255, 252, 246, 0.90)');
     expect(topbarWxss).toContain('border-radius: 24rpx');
     expect(topbarWxss).toContain('width: 74rpx');
+    expect(topbarWxss).toContain('linear-gradient(135deg, #ffd166 0%, #fb923c 70%, #f97316 100%)');
+    expect(topbarWxss).not.toContain('#39a849');
     expect(settingsIcon).toContain('M19.43 12.98');
     expect(settingsIcon).toContain('M12 15.5');
   });

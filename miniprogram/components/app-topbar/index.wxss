@@ -108,8 +108,9 @@
 }
 
 .home-view-option.active {
-  color: #ffffff;
-  background: #39a849;
+  color: #4f2f0f;
+  background: linear-gradient(135deg, #ffd166 0%, #fb923c 70%, #f97316 100%);
+  box-shadow: 0 8rpx 18rpx rgba(251, 146, 60, 0.24);
 }
 
 .settings-panel {
@@ -185,8 +186,9 @@
 }
 
 .settings-segment.active {
-  color: #ffffff;
-  background: #39a849;
+  color: #4f2f0f;
+  background: linear-gradient(135deg, #ffd166 0%, #fb923c 70%, #f97316 100%);
+  box-shadow: 0 8rpx 18rpx rgba(251, 146, 60, 0.24);
 }
 
 .settings-done {
