@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const GEOJSON_PATH = path.resolve(__dirname, '../../public/data/east-asia-geojson.json');
+const SUPPORTED_COUNTRY_NAMES = new Set(['China', 'Japan', 'South Korea']);
 
 let cachedFeatures = null;
 
@@ -9,7 +10,9 @@ function loadFeatures() {
   if (cachedFeatures) return cachedFeatures;
   try {
     const data = JSON.parse(fs.readFileSync(GEOJSON_PATH, 'utf8'));
-    cachedFeatures = Array.isArray(data?.features) ? data.features : [];
+    cachedFeatures = Array.isArray(data?.features)
+      ? data.features.filter(feature => SUPPORTED_COUNTRY_NAMES.has(feature?.properties?.name))
+      : [];
   } catch (err) {
     console.warn('[SupportedFirecloudRegion] failed to load GeoJSON:', err.message);
     cachedFeatures = [];
