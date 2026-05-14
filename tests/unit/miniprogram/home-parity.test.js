@@ -160,6 +160,8 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxml).toContain('predictionPreview.scoreLabel');
     expect(homeWxml).toContain('predictionPreview.bestViewingTime');
     expect(homeWxml).toContain('src="/assets/icons/share-upload.svg"');
+    expect(homeWxss).toContain('background: linear-gradient(135deg, #ffd166, #fb923c)');
+    expect(homeWxss).not.toContain('.home-page.has-weather .prediction-share-menu');
     expect(homeWxml).not.toContain('phenomenon-icon-tile');
     expect(homeWxml).not.toContain('src="/assets/icons/sun-event-{{predictionPreview.periodKey}}.svg"');
     expect(homeWxml).toContain('src="/assets/icons/leaf.svg"');

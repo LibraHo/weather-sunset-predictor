@@ -1209,7 +1209,6 @@
   background: #39a849;
 }
 
-.home-page.has-weather .prediction-share-menu,
 .home-page.has-weather .prediction-preview-action-primary {
   color: #ffffff;
   background: #39a849;
