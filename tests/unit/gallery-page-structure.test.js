@@ -48,12 +48,21 @@ describe('gallery share map page', () => {
   });
 
   test('uses Xiake design language tokens and no emoji title markers', () => {
-    expect(html).toContain('class="theme-dark gallery-body"');
+    expect(html).toContain('class="gallery-body"');
     expect(html).toContain('var(--theme-card-bg');
     expect(html).toContain('var(--theme-accent-strong');
     expect(html).toContain('gallery-logo-icon');
     expect(html).not.toContain('🔥');
     expect(html).not.toContain('📷');
+  });
+
+  test('inherits site theme instead of forcing dark mode', () => {
+    expect(html).toContain("localStorage.getItem('app_theme')");
+    expect(html).toContain('function applyGalleryTheme()');
+    expect(html).toContain("style: actualTheme");
+    expect(html).not.toContain('class="theme-dark gallery-body"');
+    expect(html).not.toContain("style: 'dark'");
+    expect(html).not.toContain('background: var(--map-bg-dark');
   });
 
   test('hero copy explains the gallery value instead of restating basemap implementation', () => {
