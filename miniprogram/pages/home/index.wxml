@@ -179,18 +179,6 @@
           <view class="weather-hourly-chart-bar" style="height: {{item.barHeight}}rpx;"></view>
         </view>
       </view>
-        <view class="hourly-weather-strip">
-          <view class="hourly-weather-chip" wx:for="{{weatherPreview.hourlyView.weatherStrip}}" wx:key="key">
-            <text class="hourly-weather-time">{{item.time}}</text>
-            <text class="hourly-weather-text">{{item.text}}</text>
-          </view>
-        </view>
-      </view>
-      <view class="weather-hourly-row" wx:for="{{weatherPreview.hourly}}" wx:key="key">
-        <text class="weather-hourly-time">{{item.time}}</text>
-        <text class="weather-hourly-temp">{{item.temp}}{{weatherPreview.temperatureUnit}}</text>
-        <text class="weather-hourly-meta">{{item.cloud}}</text>
-        <text class="weather-hourly-meta">{{item.wind}}</text>
       </view>
     </view>
     <view class="weather-glow-panel" wx:if="{{weatherView === 'glow' && weatherPreview.glow.length}}">

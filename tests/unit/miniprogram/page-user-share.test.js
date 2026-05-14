@@ -107,6 +107,26 @@ describe('miniprogram page user/share helpers', () => {
     ]));
   });
 
+  test('home hourly chart keeps points inside the plot area', () => {
+    const hourly = Array.from({ length: 24 }, (_, index) => ({
+      key: `h-${index}`,
+      time: `${String(index).padStart(2, '0')}:00`,
+      temp: 18 + Math.sin(index / 3) * 5,
+      cloudValue: 40 + index,
+      windValue: 8 + index / 4,
+      precipValue: index % 6,
+      humidityValue: 60 - index / 2,
+      pressure: 1000 + index
+    }));
+    const view = homeHelpers.buildWeatherHourlyViewModel(hourly, 'temp');
+
+    expect(view.chart[0].left).toBeGreaterThanOrEqual(8);
+    expect(view.chart.at(-1).left).toBeLessThanOrEqual(92);
+    expect(Math.min(...view.chart.map((item) => item.left))).toBeGreaterThanOrEqual(8);
+    expect(Math.max(...view.chart.map((item) => item.left))).toBeLessThanOrEqual(92);
+    expect(view.chartSegments.every((segment) => segment.left >= 8 && segment.left <= 92)).toBe(true);
+  });
+
   test('home sunrise sunset preview switch rebuilds score time direction and analysis', () => {
     const sunset = homeHelpers.buildPredictionPreviewForPeriod('sunset');
     const sunrise = homeHelpers.buildPredictionPreviewForPeriod('sunrise');

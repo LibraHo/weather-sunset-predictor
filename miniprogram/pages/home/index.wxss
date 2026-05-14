@@ -1705,6 +1705,12 @@
   background: rgba(127, 83, 29, 0.08);
 }
 
+.weather-day-selector {
+  align-self: center;
+  min-width: 320rpx;
+  justify-content: center;
+}
+
 .weather-parameter-selector {
   flex-wrap: wrap;
   border-radius: 18rpx;
@@ -1839,7 +1845,6 @@
   background: rgba(245, 158, 11, 0.28);
 }
 
-.weather-hourly-row,
 .weather-glow-row {
   display: grid;
   align-items: center;
@@ -1851,18 +1856,11 @@
   background: rgba(255, 252, 246, 0.66);
 }
 
-.weather-hourly-row {
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  gap: 10rpx;
-}
-
 .weather-glow-row {
   grid-template-columns: 1fr 1.3fr 1.5fr;
   gap: 12rpx;
 }
 
-.weather-hourly-time,
-.weather-hourly-temp,
 .weather-glow-day,
 .weather-glow-score {
   color: #3d3028;
@@ -1870,7 +1868,6 @@
   font-weight: 900;
 }
 
-.weather-hourly-meta,
 .weather-glow-summary {
   overflow: hidden;
   color: rgba(89, 67, 54, 0.62);
@@ -1878,43 +1875,6 @@
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.hourly-weather-strip {
-  display: flex;
-  gap: 10rpx;
-  margin-top: 14rpx;
-  overflow-x: auto;
-}
-
-.hourly-weather-chip {
-  flex: 0 0 122rpx;
-  box-sizing: border-box;
-  padding: 10rpx 12rpx;
-  border: 2rpx solid rgba(127, 83, 29, 0.09);
-  border-radius: 16rpx;
-  background: rgba(255, 255, 255, 0.54);
-}
-
-.hourly-weather-time,
-.hourly-weather-text {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.hourly-weather-time {
-  color: #3d3028;
-  font-size: 21rpx;
-  font-weight: 900;
-}
-
-.hourly-weather-text {
-  margin-top: 4rpx;
-  color: rgba(89, 67, 54, 0.58);
-  font-size: 20rpx;
-  font-weight: 700;
 }
 
 .weather-glow-scores {

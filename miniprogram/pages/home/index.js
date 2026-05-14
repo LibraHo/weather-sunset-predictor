@@ -676,11 +676,13 @@ export function buildWeatherHourlyViewModel(hourly = [], parameter = 'temp') {
   const max = values.length ? Math.max(...values) : 1;
   const span = Math.max(1, max - min);
   const count = Math.max(1, hourly.length - 1);
+  const inset = 8;
+  const plotWidth = 100 - inset * 2;
 
   const chart = hourly.map((item, index) => {
     const value = getHourlyParameterValue(item, parameter);
     const normalized = Number.isFinite(value) ? (value - min) / span : 0.5;
-    const x = Math.round((index / count) * 100);
+    const x = Math.round((inset + (index / count) * plotWidth) * 10) / 10;
     const y = Math.round(82 - normalized * 58);
     return {
       key: item.key,
