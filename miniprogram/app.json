@@ -24,5 +24,7 @@
   ],
   "style": "v2",
   "lazyCodeLoading": "requiredComponents",
-  "usingComponents": {}
+  "usingComponents": {
+    "app-topbar": "/components/app-topbar/index"
+  }
 }

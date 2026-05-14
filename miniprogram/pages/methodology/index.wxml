@@ -1,4 +1,5 @@
 <scroll-view class="container methodology-page" scroll-y="true">
+  <app-topbar current="methodology" />
   <view class="methodology-hero xiake-card xiake-bg-sunset-band">
     <view class="eyebrow">霞客方法</view>
     <view class="headline">火烧云计算方法</view>

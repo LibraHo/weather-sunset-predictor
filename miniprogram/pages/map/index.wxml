@@ -1,4 +1,5 @@
 <view class="container firecloud-map-page">
+  <app-topbar current="map" period="{{period}}" />
   <view class="map-hero xiake-card xiake-bg-sunset-band">
     <view class="eyebrow warm-accent">Firecloud Map</view>
     <view class="headline">火烧云地图</view>

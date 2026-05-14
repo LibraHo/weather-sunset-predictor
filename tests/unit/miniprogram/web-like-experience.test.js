@@ -7,6 +7,28 @@ const root = path.resolve(__dirname, '../../..');
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8');
 
 describe('miniprogram web-like experience shell', () => {
+  test('uses one global topbar without duplicating settings in the home menu', () => {
+    const appConfig = JSON.parse(read('miniprogram/app.json'));
+    const topbarWxml = read('miniprogram/components/app-topbar/index.wxml');
+    const topbarJs = read('miniprogram/components/app-topbar/index.js');
+    const settingsIcon = read('miniprogram/assets/icons/settings.svg');
+    const pagePaths = appConfig.pages.map((page) => `miniprogram/${page}.wxml`);
+
+    expect(appConfig.usingComponents).toMatchObject({
+      'app-topbar': '/components/app-topbar/index'
+    });
+    for (const pagePath of pagePaths) {
+      expect(read(pagePath)).toContain('<app-topbar');
+    }
+
+    expect(topbarWxml).toContain('home-view-menu-dropdown');
+    expect(topbarWxml).toContain('bindtap="toggleSettings"');
+    expect(topbarWxml).not.toContain('data-target="settings"');
+    expect(topbarJs).not.toMatch(/if\s*\(\s*target\s*===\s*['"]settings['"]\s*\)/);
+    expect(settingsIcon).toContain('M19.43 12.98');
+    expect(settingsIcon).toContain('M12 15.5');
+  });
+
   test('home opens with the same warm mobile shell and product destinations as web', () => {
     const wxml = read('miniprogram/pages/home/index.wxml');
     const js = read('miniprogram/pages/home/index.js');
@@ -15,6 +37,7 @@ describe('miniprogram web-like experience shell', () => {
     expect(wxml).toContain('home-topbar');
     expect(wxml).toContain('home-header-actions');
     expect(wxml).toContain('home-view-menu-dropdown');
+    expect(wxml).toContain('<app-topbar current="home"');
     expect(wxml).toContain('location-search');
     expect(wxml).toContain('home-web-spacer');
     expect(wxml).toContain('home-footer-card');
@@ -25,9 +48,7 @@ describe('miniprogram web-like experience shell', () => {
     expect(wxml).toContain('data-target="api"');
     expect(wxml).toContain('data-target="upload"');
     expect(wxml).toContain('settings-panel');
-    expect(wxml).toContain('bindtap="toggleSettings"');
     expect(wxml).toContain('settings-done');
-    expect(wxml).toContain('data-target="settings"');
     expect(wxml).toContain('data-value="zh-CN"');
     expect(wxml).toContain('data-value="system"');
     expect(wxml).toContain('theme-{{themeMode}}');
@@ -37,10 +58,6 @@ describe('miniprogram web-like experience shell', () => {
     expect(wxml).not.toContain('nav-card');
 
     expect(js).toContain('toggleHomeMenu()');
-    expect(js).toContain('toggleSettings()');
-    expect(js).toContain('openSettings()');
-    expect(js).toContain('selectInterfaceLanguage(event)');
-    expect(js).toContain('selectThemeMode(event)');
     expect(js).toContain("wx.setStorageSync('appSettings'");
     expect(js).not.toContain('selectDefaultPeriod(event)');
     expect(js).not.toContain('selectDefaultDay(event)');

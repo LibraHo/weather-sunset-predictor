@@ -1,5 +1,6 @@
 <view class="container home-page theme-{{themeMode}} {{weatherPreview.visible ? 'has-weather' : ''}}">
-  <view class="home-topbar">
+  <app-topbar current="home" period="{{period}}" />
+  <view class="home-topbar" wx:if="{{false}}">
     <view class="home-brand-row">
       <image class="app-logo-image" src="/assets/icons/xiake-logo.svg" mode="aspectFit" aria-hidden="true" />
       <view class="app-logo-text">霞客</view>
@@ -34,7 +35,7 @@
     <view class="home-subtitle">和网站同源的评分、地图、分析与照片入口。</view>
   </view>
 
-  <view class="settings-panel xiake-card" wx:if="{{settingsOpen}}">
+  <view class="settings-panel xiake-card" wx:if="{{false}}">
     <view class="settings-panel-head">
       <view>
         <view class="settings-title">设置</view>

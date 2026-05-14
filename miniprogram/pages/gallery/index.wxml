@@ -1,4 +1,5 @@
 <view class="container gallery-page">
+  <app-topbar current="gallery" />
   <view class="gallery-hero">
     <view class="eyebrow warm-accent">霞客影集</view>
     <view class="headline">照片分享地图</view>

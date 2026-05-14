@@ -1,4 +1,5 @@
 <view class="container result-page">
+  <app-topbar current="result" period="{{activePeriod}}" />
   <block wx:if="{{hasPrediction}}">
     <view class="result-prediction-toggle">
       <view class="result-period-option {{activePeriod === 'sunrise' ? 'active' : ''}}" data-period="sunrise" bindtap="selectResultPeriod">朝霞</view>
