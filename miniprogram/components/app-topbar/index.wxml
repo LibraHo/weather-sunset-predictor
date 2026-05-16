@@ -34,7 +34,7 @@
         <view class="settings-title">设置</view>
         <view class="settings-subtitle">调整界面语言和显示主题。</view>
       </view>
-      <button class="settings-close" aria-label="close settings" hover-class="button-hover" hover-stay-time="80" bindtap="closeSettings">x</button>
+      <button class="settings-close" aria-label="close settings" hover-class="button-hover" hover-stay-time="80" bindtap="closeSettings">×</button>
     </view>
     <view class="settings-group">
       <view class="settings-label">界面语言</view>
@@ -51,6 +51,6 @@
         <view class="settings-segment tap-feedback {{themeMode === 'dark' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-value="dark" bindtap="selectThemeMode">深色</view>
       </view>
     </view>
-    <button class="settings-done" hover-class="button-hover" hover-stay-time="80" bindtap="closeSettings">完成</button>
+    <button class="settings-done" hover-class="button-hover" hover-stay-time="80" bindtap="closeSettings">保存</button>
   </view>
 </view>

@@ -24,12 +24,17 @@ describe('miniprogram web-like experience shell', () => {
 
     expect(topbarWxml).toContain('home-view-menu-dropdown');
     expect(topbarWxml).toContain('bindtap="toggleSettings"');
+    expect(topbarWxml).toContain('class="settings-close"');
+    expect(topbarWxml).toContain('>保存</button>');
     expect(topbarWxml).not.toContain('data-target="settings"');
+    expect(topbarWxml).not.toContain('>完成</button>');
     expect(topbarJs).not.toMatch(/if\s*\(\s*target\s*===\s*['"]settings['"]\s*\)/);
     expect(topbarWxss).toContain('min-height: 132rpx');
     expect(topbarWxss).toContain('background: rgba(255, 252, 246, 0.90)');
     expect(topbarWxss).toContain('border-radius: 24rpx');
     expect(topbarWxss).toContain('width: 74rpx');
+    expect(topbarWxss).toMatch(/\.settings-close\s*\{[\s\S]*position: absolute;[\s\S]*right: 18rpx;[\s\S]*justify-content: center;/);
+    expect(topbarWxss).toMatch(/\.settings-done\s*\{[\s\S]*display: flex;[\s\S]*align-items: center;[\s\S]*justify-content: center;[\s\S]*line-height: 1;/);
     expect(topbarWxss).toContain('linear-gradient(135deg, #ffd166 0%, #fb923c 70%, #f97316 100%)');
     expect(topbarWxss).not.toContain('#39a849');
     expect(settingsIcon).toContain('M19.43 12.98');
