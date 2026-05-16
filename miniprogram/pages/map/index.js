@@ -67,7 +67,7 @@ Page({
   async loadMap() {
     this.setData({ loading: true, errorMessage: '' });
     try {
-      const raster = await getChinaFirecloudRaster({ period: this.data.period, resolution: 0.5 });
+      const raster = await getChinaFirecloudRaster({ period: this.data.period, resolution: 0.25 });
       const polygons = buildRasterPolygons(raster, this.data.period);
       this.setData({
         groundOverlays: [],

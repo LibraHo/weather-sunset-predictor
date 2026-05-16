@@ -50,7 +50,7 @@ describe('miniprogram firecloud map', () => {
     expect(mapJs).not.toContain('getChinaFirecloudSpots');
     expect(mapJs).not.toContain('openSpotPrediction');
     expect(mapJs).not.toContain('focusSpot');
-    expect(mapJs).toContain("resolution: 0.5");
+    expect(mapJs).toContain("resolution: 0.25");
     expect(mapJs).toContain('const polygons = buildRasterPolygons');
     expect(mapJs).toContain('groundOverlays: []');
     expect(mapWxml).toContain('enable-zoom="{{true}}"');
