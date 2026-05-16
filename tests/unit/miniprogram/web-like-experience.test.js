@@ -160,8 +160,12 @@ describe('miniprogram web-like experience shell', () => {
     const topbarWxml = read('miniprogram/components/app-topbar/index.wxml');
     const topbarJs = read('miniprogram/components/app-topbar/index.js');
     const topbarWxss = read('miniprogram/components/app-topbar/index.wxss');
+    const locationWxml = read('miniprogram/components/location-search/index.wxml');
+    const locationJs = read('miniprogram/components/location-search/index.js');
+    const locationWxss = read('miniprogram/components/location-search/index.wxss');
     const appSettings = read('miniprogram/utils/app-settings.js');
     const appWxss = read('miniprogram/app.wxss');
+    const homeWxml = read('miniprogram/pages/home/index.wxml');
     const homeWxss = read('miniprogram/pages/home/index.wxss');
 
     for (const page of appConfig.pages) {
@@ -183,6 +187,14 @@ describe('miniprogram web-like experience shell', () => {
     expect(appWxss).toContain('.container.theme-light');
     expect(topbarWxss).toContain('.app-topbar-shell.theme-dark .settings-panel');
     expect(homeWxss).toContain('.home-page.theme-dark.has-weather .home-weather-preview');
+    expect(homeWxml).toContain('theme="{{resolvedThemeMode}}"');
+    expect(locationWxml).toContain('theme-{{theme}}');
+    expect(locationJs).toContain("theme: { type: String, value: 'light' }");
+    expect(locationWxss).toContain('.location-search.theme-dark');
+    expect(locationWxss).toContain('.location-search.theme-dark .input-row');
+    expect(locationWxss).toContain('.location-search.theme-dark .location-input');
+    expect(homeWxss).toContain('.home-page.theme-dark .home-footer-card');
+    expect(homeWxss).not.toContain('.home-page.theme-dark.has-weather .home-footer-card');
   });
 
   test('result page keeps users in the Xiake product loop after scoring', () => {

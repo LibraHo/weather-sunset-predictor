@@ -2545,13 +2545,24 @@
 
 .home-page.theme-dark.has-weather .home-weather-preview,
 .home-page.theme-dark.has-weather .home-prediction-preview,
-.home-page.theme-dark.has-weather .location-search,
 .home-page.theme-dark .home-search-loading,
 .home-page.theme-dark.has-weather .control-card,
-.home-page.theme-dark.has-weather .home-footer-card {
+.home-page.theme-dark .home-footer-card {
   border-color: rgba(255, 255, 255, 0.10);
   background: rgba(18, 28, 52, 0.82);
   box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.30), inset 0 1rpx 0 rgba(255, 255, 255, 0.08);
+}
+
+.home-page.theme-dark .footer-refresh-button,
+.home-page.theme-dark .footer-visitor {
+  border-color: rgba(255, 255, 255, 0.10);
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.home-page.theme-dark .footer-source,
+.home-page.theme-dark .footer-visitor {
+  color: rgba(255, 255, 255, 0.58);
 }
 
 .home-page.theme-dark .home-search-spinner {

@@ -61,7 +61,7 @@
     <button class="settings-done" bindtap="closeSettings">完成</button>
   </view>
 
-  <location-search value="{{locationText}}" locating="{{locating}}" loading="{{loading}}" bind:change="onLocationChange" bind:confirm="onSearch" bind:locate="onUseCurrentLocation" />
+  <location-search value="{{locationText}}" locating="{{locating}}" loading="{{loading}}" theme="{{resolvedThemeMode}}" bind:change="onLocationChange" bind:confirm="onSearch" bind:locate="onUseCurrentLocation" />
 
   <view class="home-search-loading xiake-card" wx:if="{{loading}}" role="status" aria-live="polite">
     <view class="home-search-spinner" aria-hidden="true"></view>
