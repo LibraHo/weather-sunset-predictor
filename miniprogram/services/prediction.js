@@ -1,6 +1,7 @@
 import { request } from './api.js';
 
 function numberOrNull(value) {
+  if (value === null || value === undefined || value === '') return null;
   const num = Number(value);
   return Number.isFinite(num) ? num : null;
 }
@@ -12,9 +13,55 @@ function pick(source, keys) {
   return null;
 }
 
+function pickWeatherSource(source = {}) {
+  const weather = source.weatherData || source.weather || source.currentWeather || source.current_weather || {};
+  if (Array.isArray(weather)) return weather[0] || {};
+  return weather.current || weather.currentWeather || weather.current_weather || weather;
+}
+
+function normalizeVisibility(value) {
+  const num = numberOrNull(value);
+  if (num === null) return null;
+  return num > 1000 ? Number((num / 1000).toFixed(1)) : num;
+}
+
+function normalizeWeatherData(weather = {}, source = {}) {
+  const temp = pick(weather, ['temp', 'temperature', 'temperature_2m']) ?? pick(source, ['temp', 'temperature', 'temperature_2m']);
+  const humidity = pick(weather, ['humidity', 'relativeHumidity', 'relative_humidity_2m']) ?? pick(source, ['humidity', 'relativeHumidity', 'relative_humidity_2m']);
+  const pressure = pick(weather, ['pressure', 'surfacePressure', 'surface_pressure']) ?? pick(source, ['pressure', 'surfacePressure', 'surface_pressure']);
+  const visibility = pick(weather, ['visibility']) ?? pick(source, ['visibility']);
+  const windSpeed = pick(weather, ['windSpeed', 'wind_speed_10m', 'windspeed']) ?? pick(source, ['windSpeed', 'wind_speed_10m', 'windspeed']);
+  const windDirection = pick(weather, ['windDirection', 'wind_direction_10m', 'winddirection']) ?? pick(source, ['windDirection', 'wind_direction_10m', 'winddirection']);
+  const precipitation = pick(weather, ['precipitation', 'precip', 'rain', 'showers']) ?? pick(source, ['precipitation', 'precip', 'rain', 'showers']);
+  const aod = pick(weather, ['aod', 'aerosolOpticalDepth', 'aerosol_optical_depth', 'aqi']) ?? pick(source, ['aod', 'aerosolOpticalDepth', 'aerosol_optical_depth', 'aqi']);
+
+  return {
+    ...weather,
+    temp: numberOrNull(temp),
+    humidity: numberOrNull(humidity),
+    pressure: numberOrNull(pressure),
+    visibility: normalizeVisibility(visibility),
+    aod: numberOrNull(aod),
+    aerosolOpticalDepth: numberOrNull(aod),
+    windSpeed: numberOrNull(windSpeed),
+    windDirection,
+    precipitation: numberOrNull(precipitation),
+    cloudCover: numberOrNull(pick(weather, ['cloudCover', 'cloud_cover']) ?? pick(source, ['cloudCover', 'cloud_cover'])),
+    highClouds: numberOrNull(pick(weather, ['highClouds', 'highCloud', 'cloud_cover_high'])),
+    midClouds: numberOrNull(pick(weather, ['midClouds', 'midCloud', 'cloud_cover_mid'])),
+    lowClouds: numberOrNull(pick(weather, ['lowClouds', 'lowCloud', 'lowCloudCover', 'cloud_cover_low'])),
+    provider: weather.provider || source.provider || source.providerMeta?.name || null,
+    providerMeta: weather.providerMeta || source.providerMeta || null,
+    hourly: weather.hourly || source.hourly || [],
+    daily: weather.daily || source.daily || [],
+    glow: weather.glow || source.glow || []
+  };
+}
+
 export function normalizePrediction(data = {}) {
   const source = data?.data && !data.score ? data.data : data;
-  const weather = source.weatherData || source.weather || {};
+  const weather = pickWeatherSource(source);
+  const normalizedWeather = normalizeWeatherData(weather, source);
   const clouds = source.cloudLayers || source.clouds || {};
   const bestWindow = source.bestWindow || source.bestViewingWindow || source.goldenHour || source.timeAnalysis?.bestWindow || source.referenceTime || source.date || null;
   const summary = source.summary || {
@@ -32,13 +79,14 @@ export function normalizePrediction(data = {}) {
     lat: numberOrNull(source.lat ?? source.latitude ?? source.location?.lat),
     lon: numberOrNull(source.lon ?? source.lng ?? source.longitude ?? source.location?.lon),
     clouds: {
-      high: numberOrNull(pick(clouds, ['high', 'highClouds']) ?? weather.highClouds),
-      mid: numberOrNull(pick(clouds, ['mid', 'midClouds']) ?? weather.midClouds),
-      low: numberOrNull(pick(clouds, ['low', 'lowClouds', 'lowCloudCover']) ?? weather.lowClouds ?? weather.lowCloudCover)
+      high: numberOrNull(pick(clouds, ['high', 'highClouds', 'cloud_cover_high']) ?? normalizedWeather.highClouds),
+      mid: numberOrNull(pick(clouds, ['mid', 'midClouds', 'cloud_cover_mid']) ?? normalizedWeather.midClouds),
+      low: numberOrNull(pick(clouds, ['low', 'lowClouds', 'lowCloudCover', 'cloud_cover_low']) ?? normalizedWeather.lowClouds)
     },
-    visibility: numberOrNull(source.visibility ?? weather.visibility),
-    humidity: numberOrNull(source.humidity ?? weather.humidity),
-    aod: numberOrNull(source.aod ?? source.aerosolOpticalDepth ?? weather.aod ?? weather.aerosolOpticalDepth ?? weather.aqi),
+    visibility: normalizedWeather.visibility,
+    humidity: normalizedWeather.humidity,
+    aod: normalizedWeather.aod,
+    weatherData: normalizedWeather,
     type: source.type || null,
     date: source.date || source.referenceTime || null,
     description: source.description || '',

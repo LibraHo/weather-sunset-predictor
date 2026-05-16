@@ -580,7 +580,11 @@ export function buildPredictionPreviewFromPrediction(prediction = {}, query = {}
     score: Number.isFinite(score) ? Math.round(score) : '--',
     scoreLabel: prediction.scoreLabel || buildScoreLabel(score),
     scoreDesc: prediction.scoreDesc || (Number.isFinite(score) && score >= 70 ? '观赏条件不错' : '建议提前观察'),
-    conclusion: prediction.conclusion || prediction.explanation || prediction.summary?.description || `${periodLabel}条件已根据实时天气完成评估。`,
+    conclusion: humanizePredictionConclusion(
+      prediction.conclusion || prediction.explanation || prediction.summary?.description,
+      score,
+      periodLabel
+    ),
     clouds: [
       { key: 'high', label: '高云', value: toDisplayNumber(clouds.high) },
       { key: 'mid', label: '中云', value: toDisplayNumber(clouds.mid) },
@@ -591,6 +595,38 @@ export function buildPredictionPreviewFromPrediction(prediction = {}, query = {}
     aod: weather.aod ?? weather.aerosolOpticalDepth
   };
   return buildCompletePredictionPreview(preview);
+}
+
+function humanizePredictionConclusion(value, score, periodLabel = '霞光') {
+  if (value && typeof value === 'object') {
+    return humanizePredictionConclusion(value.description || value.text || value.label || value.key || value.code, score, periodLabel);
+  }
+
+  const text = String(value || '').trim();
+  const internalTokens = {
+    conditions_excellent: '火烧云条件很强，云层和光路都比较配合。',
+    excellent_conditions: '火烧云条件很强，云层和光路都比较配合。',
+    conditions_good: '火烧云条件可以关注，建议结合临近日落前云况再判断。',
+    good_conditions: '火烧云条件可以关注，建议结合临近日落前云况再判断。',
+    conditions_fair: '火烧云条件一般，适合顺路观察，不建议专程追霞。',
+    fair_conditions: '火烧云条件一般，适合顺路观察，不建议专程追霞。',
+    conditions_low: '火烧云条件偏弱，普通日落效果还要看实时天气和视野。',
+    low_conditions: '火烧云条件偏弱，普通日落效果还要看实时天气和视野。',
+    conditions_poor: '火烧云条件偏弱，普通日落效果还要看实时天气和视野。',
+    poor_conditions: '火烧云条件偏弱，普通日落效果还要看实时天气和视野。'
+  };
+  if (internalTokens[text]) return internalTokens[text];
+  if (/^[a-z]+_[a-z0-9_]+$/i.test(text)) return buildScoreConclusion(score, periodLabel);
+  return text || buildScoreConclusion(score, periodLabel);
+}
+
+function buildScoreConclusion(score, periodLabel = '霞光') {
+  const number = Number(score);
+  if (!Number.isFinite(number)) return `${periodLabel}条件已根据实时天气完成评估。`;
+  if (number >= 85) return '火烧云条件很强，值得重点关注。';
+  if (number >= 70) return '火烧云条件不错，有较好的观赏基础。';
+  if (number >= 40) return '火烧云条件一般，需要结合临近云况观察。';
+  return '火烧云条件偏弱，不建议只凭当前评分专程追霞。';
 }
 
 export function buildWeatherPreview(weather = {}) {
@@ -962,16 +998,19 @@ function decorateRecentQueries(recent = []) {
 }
 
 function formatPercentValue(value) {
+  if (value === null || value === undefined || value === '') return '--';
   const num = Number(value);
   return Number.isFinite(num) ? `${Math.round(num)}%` : '--';
 }
 
 function formatDistanceValue(value) {
+  if (value === null || value === undefined || value === '') return '--';
   const num = Number(value);
   return Number.isFinite(num) ? `${num.toFixed(num >= 10 ? 0 : 1)} km` : '--';
 }
 
 function formatWindSpeedValue(speed) {
+  if (speed === null || speed === undefined || speed === '') return '--';
   const speedNum = Number(speed);
   return Number.isFinite(speedNum) ? `${Math.round(speedNum)} km/h` : '--';
 }
@@ -981,12 +1020,14 @@ function formatWindValue(direction, speed) {
 }
 
 function formatNumberValue(value, unit) {
+  if (value === null || value === undefined || value === '') return '--';
   const num = Number(value);
   if (!Number.isFinite(num)) return '--';
   return `${num}${unit ? ` ${unit}` : ''}`;
 }
 
 function formatTemperatureValue(value) {
+  if (value === null || value === undefined || value === '') return '--';
   const num = Number(value);
   return Number.isFinite(num) ? num.toFixed(1) : '--';
 }
