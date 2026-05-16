@@ -197,6 +197,13 @@ describe('miniprogram page user/share helpers', () => {
     expect(state.predictionPreview.radar.directions[0]).toMatchObject({ direction: 'N', highCloud: expect.any(Number) });
   });
 
+  test('home asks the user to choose when one query contains multiple city names', () => {
+    expect(homeHelpers.shouldAskLocationChoice('北京 上海', [
+      { name: '上海市', lat: 31.230525, lon: 121.473667, countryCode: 'CN' },
+      { name: '北京市', lat: 39.904179, lon: 116.407387, countryCode: 'CN' }
+    ])).toBe(true);
+  });
+
   test('home prediction conclusion hides backend condition enum tokens', () => {
     const state = homeHelpers.buildHomePredictionSurface({
       locationName: 'TEST',

@@ -20,15 +20,20 @@ describe('miniprogram web-like experience shell', () => {
     });
     for (const pagePath of pagePaths) {
       expect(read(pagePath)).toContain('<app-topbar');
+      expect(read(pagePath)).toContain('theme-mode="{{themeMode}}"');
+      expect(read(pagePath)).toContain('resolved-theme-mode="{{resolvedThemeMode}}"');
     }
 
     expect(topbarWxml).toContain('home-view-menu-dropdown');
+    expect(topbarWxml).toContain('theme-{{resolvedThemeMode}}');
     expect(topbarWxml).toContain('bindtap="toggleSettings"');
     expect(topbarWxml).toContain('class="settings-close"');
     expect(topbarWxml).toContain('>保存</button>');
     expect(topbarWxml).not.toContain('data-target="settings"');
     expect(topbarWxml).not.toContain('>完成</button>');
     expect(topbarJs).not.toMatch(/if\s*\(\s*target\s*===\s*['"]settings['"]\s*\)/);
+    expect(topbarJs).toContain('themeMode:');
+    expect(topbarJs).toContain('resolvedThemeMode:');
     expect(topbarWxss).toContain('min-height: 132rpx');
     expect(topbarWxss).toContain('background: rgba(255, 252, 246, 0.90)');
     expect(topbarWxss).toContain('border-radius: 24rpx');
@@ -78,7 +83,7 @@ describe('miniprogram web-like experience shell', () => {
     expect(js).toContain('navigateFeature(event)');
     expect(js).toContain('async useHistory(event)');
     expect(js).toContain('await this.onSearch();');
-    expect(js).toContain("this.setData({ locationText: event.detail.value, coordinate: null, errorMessage: '' })");
+    expect(js).toContain("this.setData({ locationText: event.detail.value, coordinate: null, locationCandidates: [], errorMessage: '' })");
     expect(js).toContain("methodology: '/pages/methodology/index'");
     expect(js).toContain("map: `/pages/map/index?period=${this.data.period}`");
     expect(js).toContain("gallery: '/pages/gallery/index'");
@@ -115,11 +120,18 @@ describe('miniprogram web-like experience shell', () => {
     const homeJs = read('miniprogram/pages/home/index.js');
 
     expect(locationWxml).toContain('bindtap="onLocate"');
+    expect(locationWxml).toContain('bindtap="onFavorite"');
     expect(locationWxml).toContain('bindconfirm="onConfirm"');
     expect(locationWxml).toContain('bindtap="onConfirm"');
+    expect(locationWxml).toMatch(/class="favorite-icon"[\s\S]*bindtap="onFavorite"/);
+    expect(locationWxml).toMatch(/class="pin-location-button"[\s\S]*bindtap="onLocate"/);
     expect(homeJs).toMatch(/async onUseCurrentLocation\(\)[\s\S]*await this\.onSearch\(\);/);
+    expect(homeJs).toContain('reverseGeocode(res.latitude, res.longitude)');
+    expect(homeJs).toContain('async onAddCurrentFavorite()');
     expect(homeJs).toMatch(/async useHistory\(event\)[\s\S]*await this\.onSearch\(\);/);
     expect(homeJs).toMatch(/async resolveLocation\(locationText\)[\s\S]*if \(this\.data\.coordinate\)/);
+    expect(homeJs).toContain('locationCandidates');
+    expect(homeJs).toContain('selectLocationCandidate(event)');
   });
 
   test('tap targets provide native press feedback across the mini-program surface', () => {

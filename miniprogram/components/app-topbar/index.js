@@ -9,6 +9,14 @@ Component({
     period: {
       type: String,
       value: 'sunset'
+    },
+    themeMode: {
+      type: String,
+      value: 'system'
+    },
+    resolvedThemeMode: {
+      type: String,
+      value: 'light'
     }
   },
 

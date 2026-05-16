@@ -1,15 +1,17 @@
 <view class="location-search theme-{{theme}}">
   <view class="field-label">位置</view>
   <view class="input-row">
-    <button class="locate-icon" aria-label="locate" loading="{{locating}}" hover-class="button-hover" hover-stay-time="80" bindtap="onLocate">
+    <button class="favorite-icon" aria-label="收藏位置" loading="{{favoriteLoading}}" hover-class="button-hover" hover-stay-time="80" bindtap="onFavorite">
       <view class="star-icon">★</view>
     </button>
     <view class="location-input-shell">
       <input class="location-input" value="{{value}}" placeholder="请输入城市名称..." placeholder-class="input-placeholder" confirm-type="search" bindinput="onInput" bindconfirm="onConfirm" />
+      <button class="pin-location-button" aria-label="使用当前位置" loading="{{locating}}" hover-class="button-hover" hover-stay-time="80" bindtap="onLocate">
       <view class="pin-icon">
         <view class="pin-head"></view>
         <view class="pin-stem"></view>
       </view>
+      </button>
     </view>
     <button class="location-query-button" loading="{{loading}}" disabled="{{loading}}" hover-class="button-hover" hover-stay-time="80" bindtap="onConfirm">{{loading ? '读取中' : '查询'}}</button>
   </view>

@@ -217,4 +217,17 @@ describe('miniprogram firecloud map', () => {
     expect(mapJs).toContain('groundOverlays: []');
     expect(mapJs).not.toContain('buildRasterGroundOverlay(raster');
   });
+
+  test('map page follows the prediction page theme and segmented-control language', () => {
+    const wxml = read('miniprogram/pages/map/index.wxml');
+    const wxss = read('miniprogram/pages/map/index.wxss');
+
+    expect(wxml).toContain('<app-topbar current="map" period="{{period}}" theme-mode="{{themeMode}}" resolved-theme-mode="{{resolvedThemeMode}}"');
+    expect(wxml).toContain('map-tabs prediction-toggle-bar');
+    expect(wxml).toContain('tap-feedback prediction-toggle');
+    expect(wxss).toContain('.firecloud-map-page.theme-light .map-card');
+    expect(wxss).toContain('.firecloud-map-page.theme-dark .map-card');
+    expect(wxss).toContain('width: 332rpx');
+    expect(wxss).toContain('border-radius: 999rpx');
+  });
 });

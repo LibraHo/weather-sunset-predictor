@@ -32,12 +32,13 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     return null;
   }
 
-  async _getWithRetry(params, timeoutMs = 15000, label = 'request', url = this.API_URL, logType = 'grid') {
+  async _getWithRetry(params, timeoutMs = 15000, label = 'request', url = this.API_URL, logType = 'grid', retryOptions = {}) {
     // 记录本次调用
     quota.record(1);
     const tracker = apiLog.track(logType, label || 'open-meteo', params);
     let lastError = null;
-    for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
+    const maxRetries = Math.max(1, Number(retryOptions.maxRetries) || this.MAX_RETRIES);
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const response = await axios.get(url, { params, timeout: timeoutMs });
         tracker.ok(response.status);
@@ -47,6 +48,10 @@ class OpenMeteoProvider extends BaseWeatherProvider {
         const status = error?.response?.status;
         // 429 = 频率限制，优先读取 Retry-After header，否则固定等 60s，然后重试
         if (status === 429) {
+          if (attempt >= maxRetries) {
+            tracker.fail(error, status);
+            break;
+          }
           const retryAfter = this._parseRetryAfterMs(error);
           const waitMs = retryAfter || 60 * 1000; // 优先 header，否则 60s
           console.warn(`[Open-Meteo API] ${label} 遇到 429，等待 ${waitMs}ms 后重试 (attempt=${attempt})`);
@@ -56,7 +61,7 @@ class OpenMeteoProvider extends BaseWeatherProvider {
           continue;
         }
         const retryable = status === 503 || error?.code === 'ECONNABORTED';
-        if (!retryable || attempt >= this.MAX_RETRIES) {
+        if (!retryable || attempt >= maxRetries) {
           tracker.fail(error, status || 0);
           break;
         }
@@ -135,7 +140,7 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     };
   }
 
-  async _fetchAirQualityData(lat, lon, hours = 168, forecastDays = 7) {
+  async _fetchAirQualityData(lat, lon, hours = 168, forecastDays = 7, fetchOptions = {}) {
     const params = {
       latitude: lat,
       longitude: lon,
@@ -147,10 +152,11 @@ class OpenMeteoProvider extends BaseWeatherProvider {
 
     const response = await this._getWithRetry(
       params,
-      10000,
+      fetchOptions.airQualityTimeoutMs || 10000,
       `air-quality(${lat},${lon})`,
       this.AIR_QUALITY_API_URL,
-      'air_quality'
+      'air_quality',
+      fetchOptions
     );
 
     const hourly = response.data?.hourly;
@@ -237,7 +243,7 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     return weatherResult;
   }
 
-  async fetchWeatherData(lat, lon, hours = 168, userApiKey = null, weatherModel = 'ecmwf_ifs025') {
+  async fetchWeatherData(lat, lon, hours = 168, userApiKey = null, weatherModel = 'ecmwf_ifs025', fetchOptions = {}) {
     const startTime = Date.now();
     
     // Open-Meteo 仅支持查询天数，7天为 168 小时
@@ -260,19 +266,27 @@ class OpenMeteoProvider extends BaseWeatherProvider {
       // 使用 ECMWF IFS 025 模型（与 Windy 同源，精度更高）
       const response = await this._getWithRetry(
         { ...BASE_PARAMS, models: model },
-        10000,
-        `single(${lat},${lon})`
+        fetchOptions.timeoutMs || 10000,
+        `single(${lat},${lon})`,
+        this.API_URL,
+        'grid',
+        fetchOptions
       );
       const result = this._normalizeHourlyResult(response.data, hours, model, startTime, this.name);
 
+      if (fetchOptions.includeAirQuality === false) {
+        result.providerMeta.unsupportedFields.push('air_quality');
+        result.providerMeta.degradedReason.push('air_quality_skipped');
+      } else {
       try {
-        const airByTimestamp = await this._fetchAirQualityData(lat, lon, hours, forecastDays);
+        const airByTimestamp = await this._fetchAirQualityData(lat, lon, hours, forecastDays, fetchOptions);
         this._mergeAirQualityData(result, airByTimestamp);
         result.providerMeta.airQualitySource = 'openmeteo_air_quality';
       } catch (airError) {
         console.warn('[Open-Meteo Air Quality API] 请求失败，按无气溶胶数据降级:', airError.message);
         result.providerMeta.unsupportedFields.push('air_quality');
         result.providerMeta.degradedReason.push('air_quality_unavailable');
+      }
       }
 
       return result;

@@ -1,4 +1,5 @@
 import express from 'express';
+import { jest } from '@jest/globals';
 import { TextEncoder, TextDecoder } from 'node:util';
 
 if (!global.TextEncoder) {
@@ -12,12 +13,15 @@ if (!global.TextDecoder) {
 describe('Prediction API Integration', () => {
   let app;
   let request;
+  let orchestrator;
 
   beforeAll(async () => {
     const predictionRouterModule = await import('../../../server/routes/prediction.js');
     const supertestModule = await import('supertest');
+    const orchestratorModule = await import('../../../server/services/ProviderOrchestrator.js');
     const predictionRouter = predictionRouterModule.default || predictionRouterModule;
     request = supertestModule.default || supertestModule;
+    orchestrator = orchestratorModule.default || orchestratorModule;
 
     app = express();
     app.use(express.json());
@@ -120,6 +124,50 @@ describe('Prediction API Integration', () => {
         .expect(400);
 
       expect(res.body.error).toHaveProperty('code', 'INVALID_WEATHER_DATA');
+    });
+
+    test('uses fast closed-loop weather window when requested', async () => {
+      const fetchSpy = jest.spyOn(orchestrator, 'fetchWeatherData').mockResolvedValue({
+        data: [{
+          timestamp: new Date('2024-06-21T10:00:00Z').getTime(),
+          cloudCover: 45,
+          humidity: 55,
+          visibility: 14,
+          lowClouds: 20,
+          midClouds: 45,
+          highClouds: 25,
+          temp: 21,
+          windSpeed: 3,
+          windDirection: 180,
+          pressure: 1010,
+          precipitation: 0,
+          shortwaveRadiation: 300
+        }],
+        providerMeta: { name: 'openmeteo' }
+      });
+
+      const res = await request(app)
+        .post('/api/prediction/enhanced')
+        .send({
+          date: '2024-06-21',
+          referenceTime: '2024-06-21T10:00:00Z',
+          lat: 39.9,
+          lon: 116.4,
+          type: 'sunset',
+          options: {
+            fast: true,
+            includeRemoteCloudData: false,
+            forecastHours: 48
+          }
+        })
+        .expect(200);
+
+      expect(fetchSpy).toHaveBeenCalledWith(39.9, 116.4, 48, undefined, {
+        includeAirQuality: false,
+        maxRetries: 1,
+        timeoutMs: 5000
+      });
+      expect(res.body.data.weatherDataSource).toBe('backend_closed_loop_fast');
     });
   });
 
