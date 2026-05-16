@@ -56,8 +56,8 @@
       <view class="api-endpoint"><text class="api-path">/geocode</text><text>返回地点候选、坐标和置信度</text></view>
     </view>
     <view class="api-actions">
-      <button class="ghost-button api-button" bindtap="copyOpenApiSpec">复制 OpenAPI 规格链接</button>
-      <button class="ghost-button api-button" bindtap="copyApiApplyLink">复制 API 申请入口</button>
+      <button class="ghost-button api-button" bindtap="copyOpenApiSpec" hover-class="button-hover" hover-stay-time="80">复制 OpenAPI 规格链接</button>
+      <button class="ghost-button api-button" bindtap="copyApiApplyLink" hover-class="button-hover" hover-stay-time="80">复制 API 申请入口</button>
     </view>
   </view>
 

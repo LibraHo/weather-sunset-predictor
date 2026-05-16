@@ -7,8 +7,8 @@
   </view>
 
   <view class="map-tabs xiake-card">
-    <view class="segment {{period === 'sunrise' ? 'active' : ''}}" data-value="sunrise" bindtap="selectPeriod">朝霞</view>
-    <view class="segment {{period === 'sunset' ? 'active' : ''}}" data-value="sunset" bindtap="selectPeriod">晚霞</view>
+    <view class="segment tap-feedback {{period === 'sunrise' ? 'active' : ''}}" data-value="sunrise" bindtap="selectPeriod" hover-class="tap-feedback-hover" hover-stay-time="80">朝霞</view>
+    <view class="segment tap-feedback {{period === 'sunset' ? 'active' : ''}}" data-value="sunset" bindtap="selectPeriod" hover-class="tap-feedback-hover" hover-stay-time="80">晚霞</view>
   </view>
 
   <view class="map-card xiake-card">
@@ -62,13 +62,13 @@
         <view class="active-name">{{activeSpot.name}}</view>
         <view class="active-copy">{{periodLabel}} {{activeSpot.quality}} · {{activeSpot.lat}}, {{activeSpot.lon}}</view>
       </view>
-      <button class="ghost-button detail-button" bindtap="openSpotPrediction">查看地点预测</button>
+      <button class="ghost-button detail-button" bindtap="openSpotPrediction" hover-class="button-hover" hover-stay-time="80">查看地点预测</button>
     </view>
   </view>
 
   <view class="spot-list xiake-card" wx:if="{{spots.length}}">
     <view class="section-title">高分点</view>
-    <view class="spot-row" wx:for="{{topSpots}}" wx:key="id" data-id="{{item.id}}" bindtap="focusSpot">
+    <view class="spot-row tap-feedback" wx:for="{{topSpots}}" wx:key="id" data-id="{{item.id}}" bindtap="focusSpot" hover-class="card-tap-hover" hover-stay-time="80">
       <view class="row-score tone-{{item.level}}">{{item.scoreText}}</view>
       <view class="row-main">
         <view class="row-name">{{item.name}}</view>

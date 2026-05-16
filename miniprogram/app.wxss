@@ -95,6 +95,29 @@ page {
   box-shadow: 0 16rpx 34rpx rgba(251, 146, 60, 0.28);
 }
 
+.tap-feedback,
+.primary-button,
+.xiake-button-primary,
+.ghost-button,
+.xiake-button-ghost {
+  transition: transform 120ms ease, opacity 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+}
+
+.tap-feedback-hover,
+.button-hover,
+.card-tap-hover {
+  opacity: 0.82;
+  transform: scale(0.97);
+}
+
+.button-hover {
+  box-shadow: 0 8rpx 18rpx rgba(251, 146, 60, 0.18);
+}
+
+.card-tap-hover {
+  box-shadow: 0 10rpx 24rpx rgba(92, 58, 20, 0.14);
+}
+
 .primary-button[disabled],
 .xiake-button-primary[disabled] {
   color: rgba(255, 255, 255, 0.52);

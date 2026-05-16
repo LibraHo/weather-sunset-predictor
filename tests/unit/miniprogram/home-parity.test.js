@@ -218,6 +218,9 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeJs).not.toContain("dateLabel: 'TEST'");
     expect(homeJs).toContain('buildPredictionAnalysisGroups');
     expect(homeJs).toContain('buildPredictionRadarPreview');
+    expect(homeJs).toContain('lastRadarPaintSignature');
+    expect(homeJs).toContain('clearTimeout(this.radarPaintTimer)');
+    expect(homeJs).toContain('}, 80);');
     expect(homeJs).toContain('cloudGradients: buildRadarCloudGradients(directions)');
     expect(homeJs).toContain("paintRadarCloudCanvas('homeRadarCloudField', directions, { page: this })");
     expect(homeJs).not.toContain('buildRadarCloudBlobs');

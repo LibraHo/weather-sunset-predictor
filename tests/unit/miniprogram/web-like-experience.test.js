@@ -115,6 +115,39 @@ describe('miniprogram web-like experience shell', () => {
     expect(homeJs).toMatch(/async resolveLocation\(locationText\)[\s\S]*if \(this\.data\.coordinate\)/);
   });
 
+  test('tap targets provide native press feedback across the mini-program surface', () => {
+    const appWxss = read('miniprogram/app.wxss');
+    const topbarWxml = read('miniprogram/components/app-topbar/index.wxml');
+    const locationWxml = read('miniprogram/components/location-search/index.wxml');
+    const homeWxml = read('miniprogram/pages/home/index.wxml');
+    const resultWxml = read('miniprogram/pages/result/index.wxml');
+    const mapWxml = read('miniprogram/pages/map/index.wxml');
+    const galleryWxml = read('miniprogram/pages/gallery/index.wxml');
+    const uploadWxml = read('miniprogram/pages/upload/index.wxml');
+    const methodologyWxml = read('miniprogram/pages/methodology/index.wxml');
+
+    expect(appWxss).toContain('.tap-feedback-hover');
+    expect(appWxss).toContain('.button-hover');
+    expect(appWxss).toContain('.card-tap-hover');
+    expect(appWxss).toContain('transform: scale(0.97)');
+    expect(topbarWxml).toContain('class="home-brand-row tap-feedback"');
+    expect(topbarWxml).toContain('class="menu-button icon-button"');
+    expect(topbarWxml).toContain('class="header-icon-button icon-button"');
+    expect(topbarWxml).toContain('hover-class="button-hover"');
+    expect(locationWxml).toContain('hover-class="button-hover" hover-stay-time="80" bindtap="onLocate"');
+    expect(locationWxml).toContain('hover-class="button-hover" hover-stay-time="80" bindtap="onConfirm"');
+    expect(homeWxml).toContain('class="weather-toggle tap-feedback');
+    expect(homeWxml).toContain('class="prediction-toggle tap-feedback');
+    expect(homeWxml).toContain('class="query-item tap-feedback"');
+    expect(resultWxml).toContain('class="result-period-option tap-feedback');
+    expect(resultWxml).toContain('class="switch-option tap-feedback"');
+    expect(mapWxml).toContain('class="segment tap-feedback');
+    expect(mapWxml).toContain('class="spot-row tap-feedback"');
+    expect(galleryWxml).toContain('class="photo-card xiake-card glass-card tap-feedback"');
+    expect(uploadWxml).toContain('class="picker-card xiake-card glass-card tap-feedback"');
+    expect(methodologyWxml).toContain('bindtap="copyOpenApiSpec" hover-class="button-hover"');
+  });
+
   test('result page keeps users in the Xiake product loop after scoring', () => {
     const wxml = read('miniprogram/pages/result/index.wxml');
     const js = read('miniprogram/pages/result/index.js');

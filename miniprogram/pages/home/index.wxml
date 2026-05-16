@@ -78,20 +78,20 @@
   <view class="control-card xiake-card">
     <view class="section-title">预测类型</view>
     <view class="segmented">
-      <view class="segment {{period === 'sunrise' ? 'active' : ''}}" data-value="sunrise" bindtap="selectPeriod">朝霞</view>
-      <view class="segment {{period === 'sunset' ? 'active' : ''}}" data-value="sunset" bindtap="selectPeriod">晚霞</view>
+      <view class="segment tap-feedback {{period === 'sunrise' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-value="sunrise" bindtap="selectPeriod">朝霞</view>
+      <view class="segment tap-feedback {{period === 'sunset' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-value="sunset" bindtap="selectPeriod">晚霞</view>
     </view>
 
     <view class="section-title date-title">日期</view>
     <view class="segmented">
-      <view class="segment {{day === 'today' ? 'active' : ''}}" data-value="today" bindtap="selectDay">今天</view>
-      <view class="segment {{day === 'tomorrow' ? 'active' : ''}}" data-value="tomorrow" bindtap="selectDay">明天</view>
+      <view class="segment tap-feedback {{day === 'today' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-value="today" bindtap="selectDay">今天</view>
+      <view class="segment tap-feedback {{day === 'tomorrow' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-value="tomorrow" bindtap="selectDay">明天</view>
     </view>
   </view>
 
   <view class="error-card" wx:if="{{errorMessage}}">{{errorMessage}}</view>
 
-  <button class="primary-button query-button" loading="{{loading}}" disabled="{{loading}}" bindtap="onSearch">
+  <button class="primary-button query-button" loading="{{loading}}" disabled="{{loading}}" hover-class="button-hover" hover-stay-time="80" bindtap="onSearch">
     {{loading ? '查询中...' : '查询霞光分数'}}
   </button>
 
@@ -132,9 +132,9 @@
     </view>
 
     <view class="weather-view-toggle">
-      <view class="weather-toggle {{weatherView === 'overview' ? 'active' : ''}}" data-view="overview" bindtap="switchWeatherView">{{weatherPreview.weeklyTab}}</view>
-      <view class="weather-toggle {{weatherView === 'hourly' ? 'active' : ''}}" data-view="hourly" bindtap="switchWeatherView">{{weatherPreview.hourlyTab}}</view>
-      <view class="weather-toggle {{weatherView === 'glow' ? 'active' : ''}}" data-view="glow" bindtap="switchWeatherView">{{weatherPreview.glowTab}}</view>
+      <view class="weather-toggle tap-feedback {{weatherView === 'overview' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-view="overview" bindtap="switchWeatherView">{{weatherPreview.weeklyTab}}</view>
+      <view class="weather-toggle tap-feedback {{weatherView === 'hourly' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-view="hourly" bindtap="switchWeatherView">{{weatherPreview.hourlyTab}}</view>
+      <view class="weather-toggle tap-feedback {{weatherView === 'glow' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-view="glow" bindtap="switchWeatherView">{{weatherPreview.glowTab}}</view>
     </view>
     <view class="weather-weekly-list" wx:if="{{weatherView === 'overview' && weatherPreview.weekly.length}}">
       <view class="weather-weekly-row" wx:for="{{weatherPreview.weekly}}" wx:key="key">
@@ -151,15 +151,15 @@
     </view>
     <view class="weather-hourly-panel" wx:if="{{weatherView === 'hourly' && weatherPreview.hourly.length}}">
       <view class="weather-day-selector xiake-toggle xiake-toggle-compact">
-        <view class="weather-day-option {{weatherDay === item.key ? 'active' : ''}}" wx:for="{{weatherPreview.hourlyView.dayOptions}}" wx:key="key" data-day="{{item.key}}" bindtap="switchWeatherDay">{{item.label}}</view>
+        <view class="weather-day-option tap-feedback {{weatherDay === item.key ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" wx:for="{{weatherPreview.hourlyView.dayOptions}}" wx:key="key" data-day="{{item.key}}" bindtap="switchWeatherDay">{{item.label}}</view>
       </view>
       <view class="weather-parameter-selector xiake-toggle xiake-toggle-wrap">
-        <view class="weather-param-option {{weatherParameter === 'temp' ? 'active' : ''}}" data-param="temp" bindtap="switchWeatherParameter"><text class="weather-param-icon">℃</text><text class="weather-param-label">温度</text></view>
-        <view class="weather-param-option {{weatherParameter === 'precip' ? 'active' : ''}}" data-param="precip" bindtap="switchWeatherParameter"><text class="weather-param-icon">∿</text><text class="weather-param-label">降水</text></view>
-        <view class="weather-param-option {{weatherParameter === 'humidity' ? 'active' : ''}}" data-param="humidity" bindtap="switchWeatherParameter"><text class="weather-param-icon">◇</text><text class="weather-param-label">湿度</text></view>
-        <view class="weather-param-option {{weatherParameter === 'wind' ? 'active' : ''}}" data-param="wind" bindtap="switchWeatherParameter"><text class="weather-param-icon">≈</text><text class="weather-param-label">风速</text></view>
-        <view class="weather-param-option {{weatherParameter === 'pressure' ? 'active' : ''}}" data-param="pressure" bindtap="switchWeatherParameter"><text class="weather-param-icon">≡</text><text class="weather-param-label">气压</text></view>
-        <view class="weather-param-option {{weatherParameter === 'clouds' ? 'active' : ''}}" data-param="clouds" bindtap="switchWeatherParameter"><text class="weather-param-icon">☁</text><text class="weather-param-label">云量</text></view>
+        <view class="weather-param-option tap-feedback {{weatherParameter === 'temp' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-param="temp" bindtap="switchWeatherParameter"><text class="weather-param-icon">℃</text><text class="weather-param-label">温度</text></view>
+        <view class="weather-param-option tap-feedback {{weatherParameter === 'precip' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-param="precip" bindtap="switchWeatherParameter"><text class="weather-param-icon">∿</text><text class="weather-param-label">降水</text></view>
+        <view class="weather-param-option tap-feedback {{weatherParameter === 'humidity' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-param="humidity" bindtap="switchWeatherParameter"><text class="weather-param-icon">◇</text><text class="weather-param-label">湿度</text></view>
+        <view class="weather-param-option tap-feedback {{weatherParameter === 'wind' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-param="wind" bindtap="switchWeatherParameter"><text class="weather-param-icon">≈</text><text class="weather-param-label">风速</text></view>
+        <view class="weather-param-option tap-feedback {{weatherParameter === 'pressure' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-param="pressure" bindtap="switchWeatherParameter"><text class="weather-param-icon">≡</text><text class="weather-param-label">气压</text></view>
+        <view class="weather-param-option tap-feedback {{weatherParameter === 'clouds' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-param="clouds" bindtap="switchWeatherParameter"><text class="weather-param-icon">☁</text><text class="weather-param-label">云量</text></view>
       </view>
       <view class="weather-chart-panel">
         <view class="weather-chart-title">{{weatherPreview.hourlyView.label}}趋势 ({{weatherPreview.hourlyView.unit}})</view>
@@ -200,8 +200,8 @@
       </view>
     </view>
     <view class="prediction-toggle-bar">
-      <view class="prediction-toggle {{predictionPreview.periodKey === 'sunrise' ? 'active' : ''}}" data-value="sunrise" bindtap="selectPredictionPreviewPeriod">朝霞</view>
-      <view class="prediction-toggle {{predictionPreview.periodKey === 'sunset' ? 'active' : ''}}" data-value="sunset" bindtap="selectPredictionPreviewPeriod">晚霞</view>
+      <view class="prediction-toggle tap-feedback {{predictionPreview.periodKey === 'sunrise' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-value="sunrise" bindtap="selectPredictionPreviewPeriod">朝霞</view>
+      <view class="prediction-toggle tap-feedback {{predictionPreview.periodKey === 'sunset' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-value="sunset" bindtap="selectPredictionPreviewPeriod">晚霞</view>
     </view>
 
     <view class="phenomenon-title-card">
@@ -304,11 +304,11 @@
   </view>
 
   <view class="home-experience-strip" wx:if="{{weatherPreview.visible}}">
-    <view class="experience-chip" data-target="methodology" bindtap="navigateFeature">方法</view>
-    <view class="experience-chip" data-target="map" bindtap="navigateFeature">地图</view>
-    <view class="experience-chip" data-target="gallery" bindtap="navigateFeature">照片</view>
-    <view class="experience-chip" data-target="api" bindtap="navigateFeature">API</view>
-    <view class="experience-chip" data-target="upload" bindtap="navigateFeature">上传</view>
+    <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="methodology" bindtap="navigateFeature">方法</view>
+    <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="map" bindtap="navigateFeature">地图</view>
+    <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="gallery" bindtap="navigateFeature">照片</view>
+    <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="api" bindtap="navigateFeature">API</view>
+    <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="upload" bindtap="navigateFeature">上传</view>
   </view>
 
   <view class="home-section-head" wx:if="{{weatherPreview.visible}}">
@@ -320,7 +320,7 @@
     <view class="mini-card xiake-card">
       <view class="mini-head">最近查询</view>
       <block wx:if="{{recentQueries.length}}">
-        <view class="query-item" wx:for="{{recentQueries}}" wx:key="savedAt" data-index="{{index}}" data-location="{{item.locationName}}" bindtap="useHistory">
+        <view class="query-item tap-feedback" hover-class="card-tap-hover" hover-stay-time="80" wx:for="{{recentQueries}}" wx:key="savedAt" data-index="{{index}}" data-location="{{item.locationName}}" bindtap="useHistory">
           <text>{{item.locationName}}</text>
           <text class="subtle-text">{{item.periodLabel}} · {{item.dayLabel}}</text>
         </view>
@@ -331,7 +331,7 @@
     <view class="mini-card xiake-card">
       <view class="mini-head">收藏地点</view>
       <block wx:if="{{favorites.length}}">
-        <view class="query-item" wx:for="{{favorites}}" wx:key="name" data-location="{{item.name}}" data-lat="{{item.lat}}" data-lon="{{item.lon}}" bindtap="useHistory">
+        <view class="query-item tap-feedback" hover-class="card-tap-hover" hover-stay-time="80" wx:for="{{favorites}}" wx:key="name" data-location="{{item.name}}" data-lat="{{item.lat}}" data-lon="{{item.lon}}" bindtap="useHistory">
           <text>{{item.name}}</text>
           <text class="subtle-text">点击再次查询</text>
         </view>

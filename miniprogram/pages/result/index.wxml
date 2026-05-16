@@ -2,8 +2,8 @@
   <app-topbar current="result" period="{{activePeriod}}" />
   <block wx:if="{{hasPrediction}}">
     <view class="result-prediction-toggle">
-      <view class="result-period-option {{activePeriod === 'sunrise' ? 'active' : ''}}" data-period="sunrise" bindtap="selectResultPeriod">朝霞</view>
-      <view class="result-period-option {{activePeriod === 'sunset' ? 'active' : ''}}" data-period="sunset" bindtap="selectResultPeriod">晚霞</view>
+      <view class="result-period-option tap-feedback {{activePeriod === 'sunrise' ? 'active' : ''}}" data-period="sunrise" bindtap="selectResultPeriod" hover-class="tap-feedback-hover" hover-stay-time="80">朝霞</view>
+      <view class="result-period-option tap-feedback {{activePeriod === 'sunset' ? 'active' : ''}}" data-period="sunset" bindtap="selectResultPeriod" hover-class="tap-feedback-hover" hover-stay-time="80">晚霞</view>
     </view>
 
     <score-hero score="{{prediction.score}}" grade="{{prediction.grade}}" location-name="{{prediction.locationName}}" period="{{prediction.period}}" best-window="{{prediction.bestWindow}}" explanation="{{prediction.explanation}}" />
@@ -20,8 +20,8 @@
     </view>
 
     <view class="action-row">
-      <button class="ghost-button action-button" open-type="share">分享评分</button>
-      <button class="ghost-button action-button" bindtap="toggleFavorite">{{isFavorite ? '取消收藏' : '收藏地点'}}</button>
+      <button class="ghost-button action-button" open-type="share" hover-class="button-hover" hover-stay-time="80">分享评分</button>
+      <button class="ghost-button action-button" bindtap="toggleFavorite" hover-class="button-hover" hover-stay-time="80">{{isFavorite ? '取消收藏' : '收藏地点'}}</button>
     </view>
 
     <view class="score-ledger-card xiake-card">
@@ -48,11 +48,11 @@
     <view class="result-view-switch">
       <view class="switch-title">继续查看</view>
       <view class="switch-options">
-        <view class="switch-option" data-target="map" bindtap="navigateExperience">地图</view>
-        <view class="switch-option" data-target="methodology" bindtap="navigateExperience">算法</view>
-        <view class="switch-option" data-target="gallery" bindtap="navigateExperience">照片</view>
-        <view class="switch-option" data-target="api" bindtap="navigateExperience">API</view>
-        <view class="switch-option" data-target="upload" bindtap="navigateExperience">上传</view>
+        <view class="switch-option tap-feedback" data-target="map" bindtap="navigateExperience" hover-class="tap-feedback-hover" hover-stay-time="80">地图</view>
+        <view class="switch-option tap-feedback" data-target="methodology" bindtap="navigateExperience" hover-class="tap-feedback-hover" hover-stay-time="80">算法</view>
+        <view class="switch-option tap-feedback" data-target="gallery" bindtap="navigateExperience" hover-class="tap-feedback-hover" hover-stay-time="80">照片</view>
+        <view class="switch-option tap-feedback" data-target="api" bindtap="navigateExperience" hover-class="tap-feedback-hover" hover-stay-time="80">API</view>
+        <view class="switch-option tap-feedback" data-target="upload" bindtap="navigateExperience" hover-class="tap-feedback-hover" hover-stay-time="80">上传</view>
       </view>
     </view>
 
@@ -142,12 +142,12 @@
       <view wx:else class="panel-empty">这个地点暂时没有三天预测数据。</view>
     </view>
 
-    <button class="ghost-button back-button" bindtap="goHome">重新查分</button>
+    <button class="ghost-button back-button" bindtap="goHome" hover-class="button-hover" hover-stay-time="80">重新查分</button>
   </block>
 
   <view class="empty-state xiake-card" wx:else>
     <view class="empty-title">还没有可展示的分数</view>
     <view class="empty-copy">请先回首页选择地点和日期，完成一次查分。</view>
-    <button class="primary-button empty-button" bindtap="goHome">返回首页</button>
+    <button class="primary-button empty-button" bindtap="goHome" hover-class="button-hover" hover-stay-time="80">返回首页</button>
   </view>
 </view>

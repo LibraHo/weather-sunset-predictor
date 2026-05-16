@@ -46,6 +46,13 @@ Page({
     this.paintPredictionRadarCloudField();
   },
 
+  onUnload() {
+    if (this.radarPaintTimer) {
+      clearTimeout(this.radarPaintTimer);
+      this.radarPaintTimer = null;
+    }
+  },
+
   refreshSavedLists() {
     const recent = app.globalData.recentQueries || wx.getStorageSync('recentQueries') || [];
     const favorites = app.globalData.favorites || wx.getStorageSync('favoriteLocations') || [];
@@ -285,12 +292,24 @@ Page({
     }
   },
 
-  paintPredictionRadarCloudField() {
+  paintPredictionRadarCloudField({ force = false } = {}) {
     const directions = this.data.predictionPreview?.radar?.directions || [];
     if (!directions.length) return;
-    setTimeout(() => {
+    const signature = directions.map((item) => [
+      item.direction,
+      item.scoreText,
+      item.highCloud,
+      item.midCloud,
+      item.lowCloud,
+      item.cloudText
+    ].map((value) => value ?? '').join(':')).join('|');
+    if (!force && signature && signature === this.lastRadarPaintSignature) return;
+    this.lastRadarPaintSignature = signature;
+    if (this.radarPaintTimer) clearTimeout(this.radarPaintTimer);
+    this.radarPaintTimer = setTimeout(() => {
+      this.radarPaintTimer = null;
       paintRadarCloudCanvas('homeRadarCloudField', directions, { page: this });
-    }, 0);
+    }, 80);
   },
 
   async resolveLocation(locationText) {
