@@ -61,7 +61,18 @@
     <button class="settings-done" bindtap="closeSettings">完成</button>
   </view>
 
-  <location-search value="{{locationText}}" locating="{{locating}}" bind:change="onLocationChange" bind:confirm="onSearch" bind:locate="onUseCurrentLocation" />
+  <location-search value="{{locationText}}" locating="{{locating}}" loading="{{loading}}" bind:change="onLocationChange" bind:confirm="onSearch" bind:locate="onUseCurrentLocation" />
+
+  <view class="home-search-loading xiake-card" wx:if="{{loading}}" role="status" aria-live="polite">
+    <view class="home-search-spinner" aria-hidden="true"></view>
+    <view class="home-search-loading-copy">
+      <view class="home-search-loading-title">{{loadingMessage}}</view>
+      <view class="home-search-loading-progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{loadingProgress}}">
+        <view class="home-search-loading-fill" style="width: {{loadingProgress}}%;"></view>
+      </view>
+      <view class="home-search-loading-detail">{{loadingDetail}}</view>
+    </view>
+  </view>
 
   <view class="home-web-spacer"></view>
 

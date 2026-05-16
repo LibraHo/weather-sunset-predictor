@@ -13,6 +13,9 @@ Page({
     period: 'sunset',
     day: 'today',
     loading: false,
+    loadingMessage: '正在查询位置',
+    loadingProgress: 0,
+    loadingDetail: '',
     locating: false,
     homeMenuOpen: false,
     settingsOpen: false,
@@ -242,7 +245,12 @@ Page({
 
   async onSearch() {
     const locationText = (this.data.locationText || '').trim();
+    if (this.data.loading) return;
+
     if (isWeatherTestLocation(locationText)) {
+      this.startSearchLoading('正在读取测试天气', 64, '生成天气卡片与朝晚霞面板');
+      await waitForLoadingFrame();
+      this.setSearchLoadingStep('正在整理天气卡片', 92, '准备云况雷达与预测摘要');
       this.setData({
         weatherPreview: buildTestWeatherPreview(),
         predictionPreview: buildPredictionPreviewForPeriod(this.data.period),
@@ -259,7 +267,7 @@ Page({
       return;
     }
 
-    this.setData({ loading: true, errorMessage: '' });
+    this.startSearchLoading('正在查询位置', 36, '匹配城市坐标');
 
     try {
       const resolvedLocation = await this.resolveLocation(locationText);
@@ -270,8 +278,10 @@ Page({
         period: this.data.period,
         day: this.data.day
       };
+      this.setSearchLoadingStep('正在读取天气与霞光数据', 72, '同步天气、云量和朝晚霞评分');
       const raw = await this.callPredictionService(query);
       const prediction = normalizePrediction(raw, query);
+      this.setSearchLoadingStep('正在整理天气卡片', 92, '准备天气面板与云况雷达');
       app.rememberQuery(query);
       this.recordRecentLocation(query);
       app.saveLatestPrediction(prediction);
@@ -289,6 +299,25 @@ Page({
     } finally {
       this.setData({ loading: false });
     }
+  },
+
+  startSearchLoading(message, progress, detail = '') {
+    this.setData({
+      loading: true,
+      errorMessage: '',
+      loadingMessage: message,
+      loadingProgress: clampProgress(progress),
+      loadingDetail: detail
+    });
+  },
+
+  setSearchLoadingStep(message, progress, detail = '') {
+    if (!this.data.loading) return;
+    this.setData({
+      loadingMessage: message,
+      loadingProgress: clampProgress(progress),
+      loadingDetail: detail
+    });
   },
 
   paintPredictionRadarCloudField({ force = false } = {}) {
@@ -1155,6 +1184,14 @@ function clampPercent(value) {
   const number = Number(value);
   if (!Number.isFinite(number)) return 0;
   return Math.max(0, Math.min(100, Math.round(number)));
+}
+
+function clampProgress(value) {
+  return clampPercent(value);
+}
+
+function waitForLoadingFrame() {
+  return new Promise((resolve) => setTimeout(resolve, 120));
 }
 
 function wxPromise(fn, options) {

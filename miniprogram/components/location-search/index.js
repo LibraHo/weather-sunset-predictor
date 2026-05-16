@@ -1,7 +1,8 @@
 Component({
   properties: {
     value: { type: String, value: '' },
-    locating: { type: Boolean, value: false }
+    locating: { type: Boolean, value: false },
+    loading: { type: Boolean, value: false }
   },
 
   methods: {

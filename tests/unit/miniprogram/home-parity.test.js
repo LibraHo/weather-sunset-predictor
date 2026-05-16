@@ -151,6 +151,33 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeJs).toContain("api: '/pages/methodology/index?section=api'");
   });
 
+  test('home search uses the same in-card loading treatment as the web prediction flow', () => {
+    const web = read('index.html');
+    const webCss = read('styles/main.css');
+    const homeWxml = read('miniprogram/pages/home/index.wxml');
+    const homeWxss = read('miniprogram/pages/home/index.wxss');
+    const homeJs = read('miniprogram/pages/home/index.js');
+
+    expect(web).toContain('id="loading-indicator"');
+    expect(web).toContain('id="loading-progress-fill"');
+    expect(webCss).toContain('#prediction-section .loading');
+    expect(webCss).toContain('.loading-progress-fill');
+
+    expect(homeWxml).toContain('home-search-loading');
+    expect(homeWxml).toContain('wx:if="{{loading}}"');
+    expect(homeWxml).toContain('loadingMessage');
+    expect(homeWxml).toContain('loadingProgress');
+    expect(homeWxml).toContain('loadingDetail');
+    expect(homeWxss).toContain('.home-search-loading');
+    expect(homeWxss).toContain('.home-search-spinner');
+    expect(homeWxss).toContain('.home-search-loading-progress');
+    expect(homeWxss).toContain('animation: xiake-loading-progress 1.6s ease-in-out infinite alternate;');
+    expect(homeJs).toContain("loadingMessage: '正在查询位置'");
+    expect(homeJs).toContain('setSearchLoadingStep(');
+    expect(homeJs).toContain("this.setSearchLoadingStep('正在读取天气与霞光数据', 72");
+    expect(homeJs).toContain("this.setSearchLoadingStep('正在整理天气卡片', 92");
+  });
+
   test('home prediction preview mirrors the web test prediction card hierarchy', () => {
     const web = read('src/controllers/PredictionController.js');
     const webRender = web.slice(web.indexOf('  renderSinglePrediction('));
