@@ -9,6 +9,7 @@ const express = require('express');
 const router = express.Router();
 const gridService = require('../services/GridScoreService');
 const chinaRasterService = require('../services/ChinaRasterService');
+const { isSupportedFirecloudRegion } = require('../utils/SupportedFirecloudRegion');
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -67,7 +68,7 @@ router.get('/china', async (req, res, next) => {
 
     const today = new Date().toISOString().slice(0, 10);
     const spots = cache.gridPoints
-      .filter(p => typeof p.score === 'number' && p.score >= MIN_SPOT_SCORE)
+      .filter(p => typeof p.score === 'number' && p.score >= MIN_SPOT_SCORE && isSupportedFirecloudRegion(p.lat, p.lon))
       .map(p => ({
 
         lat: p.lat,

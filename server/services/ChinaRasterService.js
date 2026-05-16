@@ -17,6 +17,7 @@
 
 const { IdwInterpolator } = require('../utils/IdwInterpolator');
 const gridService = require('./GridScoreService');
+const { isSupportedFirecloudRegion } = require('../utils/SupportedFirecloudRegion');
 
 // 东亚渲染覆盖范围：包含中国大陆、台湾、韩国、日本
 const EAST_ASIA_BBOX = {
@@ -89,6 +90,14 @@ class ChinaRasterService {
       resolution: safeRes
     });
 
+    const maskedValues = values.map((value, index) => {
+      const row = Math.floor(index / width);
+      const col = index % width;
+      const lat = EAST_ASIA_BBOX.north - (row + 0.5) * safeRes;
+      const lon = EAST_ASIA_BBOX.west + (col + 0.5) * safeRes;
+      return isSupportedFirecloudRegion(lat, lon) ? value : NO_DATA_VALUE;
+    });
+
     const generatedAt = new Date().toISOString();
     const sourceUpdatedAt = spotsCache.updatedAt || generatedAt;
     const today = generatedAt.slice(0, 10);
@@ -104,7 +113,7 @@ class ChinaRasterService {
       height,
       valueRange: [0, 100],
       noData: NO_DATA_VALUE,
-      values,
+      values: maskedValues,
       _cachedAt: Date.now(),
       meta: {
         interpolation: 'idw',
