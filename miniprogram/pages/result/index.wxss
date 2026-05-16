@@ -8,14 +8,18 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8rpx;
+  box-sizing: border-box;
   padding: 8rpx;
   border: 2rpx solid rgba(127, 83, 29, 0.10);
   border-radius: 999rpx;
   background: rgba(255, 252, 246, 0.72);
+  overflow: hidden;
 }
 
 .result-period-option {
+  min-width: 0;
   min-height: 56rpx;
+  box-sizing: border-box;
   padding: 0 8rpx;
   border-radius: 999rpx;
   color: rgba(89, 67, 54, 0.62);

@@ -65,6 +65,8 @@ describe('miniprogram result page web parity', () => {
     expect(js).toContain('periodCards: {}');
     expect(js).toContain('selectResultPeriod(event)');
     expect(wxss).toContain('.result-prediction-toggle');
+    expect(wxss).toMatch(/\.result-prediction-toggle\s*\{[\s\S]*box-sizing: border-box;[\s\S]*overflow: hidden;/);
+    expect(wxss).toMatch(/\.result-period-option\s*\{[\s\S]*min-width: 0;[\s\S]*box-sizing: border-box;/);
     expect(wxml).not.toContain('result-prediction-toggle xiake-card');
     expect(wxss).toContain('border-radius: 999rpx');
     expect(wxss).toContain('background: rgba(255, 252, 246, 0.72)');

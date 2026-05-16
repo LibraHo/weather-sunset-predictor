@@ -389,16 +389,20 @@
   display: flex;
   gap: 8rpx;
   width: 332rpx;
+  box-sizing: border-box;
   margin: 20rpx auto 18rpx;
   padding: 8rpx;
   border: 2rpx solid rgba(127, 83, 29, 0.12);
   border-radius: 999rpx;
   background: rgba(255, 252, 246, 0.72);
+  overflow: hidden;
 }
 
 .prediction-toggle {
-  min-width: 132rpx;
+  flex: 1;
+  min-width: 0;
   min-height: 58rpx;
+  box-sizing: border-box;
   padding: 0 26rpx;
   border-radius: 999rpx;
   color: rgba(89, 67, 54, 0.62);

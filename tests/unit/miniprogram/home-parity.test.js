@@ -224,6 +224,8 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeJs).toContain('cloudGradients: buildRadarCloudGradients(directions)');
     expect(homeJs).toContain("paintRadarCloudCanvas('homeRadarCloudField', directions, { page: this })");
     expect(homeJs).not.toContain('buildRadarCloudBlobs');
+    expect(homeWxss).toMatch(/\.prediction-toggle-bar\s*\{[\s\S]*box-sizing: border-box;[\s\S]*overflow: hidden;/);
+    expect(homeWxss).toMatch(/\.prediction-toggle\s*\{[\s\S]*flex: 1;[\s\S]*min-width: 0;[\s\S]*box-sizing: border-box;/);
     expect(homeWxss).toContain('.score-summary-card');
     expect(homeWxss).toContain('.app-main-time');
     expect(homeWxss).toContain('text-align: center;');
