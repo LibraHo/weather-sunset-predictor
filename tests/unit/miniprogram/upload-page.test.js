@@ -14,7 +14,10 @@ describe('miniprogram upload page source', () => {
     globalThis.getApp = () => ({
       globalData: { latestPrediction: null }
     });
-    globalThis.Page = jest.fn();
+    globalThis.__uploadPage = null;
+    globalThis.Page = jest.fn((page) => {
+      globalThis.__uploadPage = page;
+    });
     globalThis.wx = {
       getStorageSync: jest.fn(() => null),
       chooseMedia: jest.fn(),
@@ -27,6 +30,7 @@ describe('miniprogram upload page source', () => {
     delete globalThis.getApp;
     delete globalThis.Page;
     delete globalThis.wx;
+    delete globalThis.__uploadPage;
   });
 
   test('app.json registers upload page', () => {
@@ -84,6 +88,55 @@ describe('miniprogram upload page source', () => {
       lon: '116.27',
       desc: '金色云边'
     });
+  });
+
+  test('submit success keeps the trimmed uploader name for the next upload', async () => {
+    const page = globalThis.__uploadPage;
+    const uploadFile = jest.fn(({ success }) => {
+      success({
+        statusCode: 201,
+        data: JSON.stringify({ success: true, photo: { id: 'p2' } })
+      });
+      return { onProgressUpdate: jest.fn((handler) => handler({ progress: 64 })) };
+    });
+    const state = {
+      ...page.data,
+      selectedPhoto: { filePath: '/tmp/photo.jpg' },
+      hasPhoto: true,
+      form: {
+        locationName: ' Test Place ',
+        uploaderName: ' Alex ',
+        takenAt: '',
+        lat: '',
+        lon: '',
+        desc: ''
+      }
+    };
+    const ctx = {
+      ...page,
+      data: state,
+      setData(patch) {
+        Object.entries(patch).forEach(([key, value]) => {
+          const parts = key.split('.');
+          let target = this.data;
+          while (parts.length > 1) {
+            const part = parts.shift();
+            target[part] = target[part] || {};
+            target = target[part];
+          }
+          target[parts[0]] = value;
+        });
+      }
+    };
+    globalThis.wx.getStorageSync.mockImplementation((key) => (key === 'sessionToken' ? 'test-token' : null));
+    globalThis.wx.uploadFile = uploadFile;
+
+    await page.submitPhoto.call(ctx);
+
+    expect(uploadFile.mock.calls[0][0].formData.uploaderName).toBe('Alex');
+    expect(ctx.data.form.uploaderName).toBe('Alex');
+    expect(ctx.data.hasPhoto).toBe(false);
+    expect(ctx.data.successMessage).toContain('照片已上传');
   });
 
   test('validateUploadPayload requires photo and valid paired coordinates', () => {

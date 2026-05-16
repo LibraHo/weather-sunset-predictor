@@ -149,7 +149,7 @@ describe('miniprogram web-like experience shell', () => {
     expect(resultWxml).toContain('class="result-period-option tap-feedback');
     expect(resultWxml).toContain('class="switch-option tap-feedback"');
     expect(mapWxml).toContain('class="segment tap-feedback');
-    expect(mapWxml).toContain('class="spot-row tap-feedback"');
+    expect(mapWxml).not.toContain('class="spot-row tap-feedback"');
     expect(galleryWxml).toContain('class="photo-card xiake-card glass-card tap-feedback"');
     expect(uploadWxml).toContain('class="picker-card xiake-card glass-card tap-feedback"');
     expect(methodologyWxml).toContain('bindtap="copyOpenApiSpec" hover-class="button-hover"');
@@ -199,7 +199,8 @@ describe('miniprogram web-like experience shell', () => {
     expect(homeWxss).toContain('.home-page.theme-dark.has-weather .weather-hourly-axis-label');
     expect(homeWxss).toContain('.home-page.theme-dark.has-weather .weather-hourly-point-label');
     expect(homeWxss).toContain('.home-page.theme-dark.has-weather .weather-hourly-chart-dot');
-    expect(homeWxss).toContain('.home-page.theme-dark.has-weather .weather-hourly-chart-bar');
+    expect(homeWxml).not.toContain('weather-hourly-chart-bar');
+    expect(homeWxss).not.toContain('.home-page.theme-dark.has-weather .weather-hourly-chart-bar');
     expect(homeWxss).not.toContain('.home-page.theme-dark.has-weather .weather-hourly-chart {\n  background: linear-gradient(180deg, rgba(255, 252, 246');
   });
 

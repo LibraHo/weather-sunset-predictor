@@ -25,9 +25,9 @@
 .eyebrow,
 .section-kicker {
   color: #f5c87a;
-  font-size: 22rpx;
+  font-size: 24rpx;
   font-weight: 900;
-  letter-spacing: 0.14em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 

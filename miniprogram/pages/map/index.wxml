@@ -1,9 +1,10 @@
 <view class="container firecloud-map-page theme-{{resolvedThemeMode}}">
   <app-topbar current="map" period="{{period}}" bind:settingschange="onAppSettingsChange" />
+
   <view class="map-hero xiake-card xiake-bg-sunset-band">
     <view class="eyebrow warm-accent">Firecloud Map</view>
     <view class="headline">火烧云地图</view>
-    <view class="caption">和网站一样先看区域趋势，再点进具体地点查看预测。</view>
+    <view class="caption">在地图上查看区域火烧云评分图层，颜色越暖表示评分越高。</view>
   </view>
 
   <view class="map-tabs xiake-card">
@@ -14,13 +15,12 @@
   <view class="map-card xiake-card">
     <view class="map-status">
       <view>
-        <view class="status-title">{{periodLabel}}趋势点</view>
+        <view class="status-title">{{periodLabel}}地图</view>
         <view class="status-copy">{{updatedAtText}}</view>
       </view>
-      <view class="spot-count">{{spots.length}}</view>
     </view>
 
-    <view class="map-supported-regions">目前支持：中国大陆、港澳台、日本、韩国、朝鲜及中南半岛主要城市；小程序原生地图以点位标记呈现。</view>
+    <view class="map-supported-regions">目前支持：中国大陆、港澳台、日本、韩国；地图使用同源栅格评分插值染色，色带与网页端火烧云图层一致。</view>
 
     <view class="period-label">{{periodDetailText}}</view>
 
@@ -30,21 +30,20 @@
         latitude="{{mapCenter.latitude}}"
         longitude="{{mapCenter.longitude}}"
         scale="{{mapScale}}"
-        markers="{{markers}}"
+        ground-overlays="{{groundOverlays}}"
+        polygons="{{polygons}}"
         enable-scroll="{{true}}"
         enable-zoom="{{true}}"
         enable-rotate="{{false}}"
         show-compass="{{true}}"
-        bindmarkertap="focusSpot"
       />
       <view class="map-loading" wx:if="{{loading}}">
         <view class="loading-copy">正在读取{{periodLabel}}地图</view>
         <view class="loading-track"><view class="loading-fill"></view></view>
       </view>
-      <view class="map-empty" wx:elif="{{!spots.length && !errorMessage}}">今日暂无可见火烧云点位</view>
     </view>
 
-    <view class="map-panel-hint">可拖动地图 · 双指缩放 · 点标记选中地点</view>
+    <view class="map-panel-hint">可拖动地图 · 双指缩放 · 颜色越暖表示评分越高</view>
 
     <view class="map-legend">
       <view class="legend-title">{{periodLabel}}分数</view>
@@ -55,25 +54,5 @@
     </view>
 
     <view class="error-card" wx:if="{{errorMessage}}">{{errorMessage}}</view>
-
-    <view class="active-spot" wx:if="{{activeSpot}}">
-      <view class="active-score tone-{{activeSpot.level}}">{{activeSpot.scoreText}}</view>
-      <view class="active-body">
-        <view class="active-name">{{activeSpot.name}}</view>
-        <view class="active-copy">{{periodLabel}} {{activeSpot.quality}} · {{activeSpot.lat}}, {{activeSpot.lon}}</view>
-      </view>
-      <button class="ghost-button detail-button" bindtap="openSpotPrediction" hover-class="button-hover" hover-stay-time="80">查看地点预测</button>
-    </view>
-  </view>
-
-  <view class="spot-list xiake-card" wx:if="{{spots.length}}">
-    <view class="section-title">高分点</view>
-    <view class="spot-row tap-feedback" wx:for="{{topSpots}}" wx:key="id" data-id="{{item.id}}" bindtap="focusSpot" hover-class="card-tap-hover" hover-stay-time="80">
-      <view class="row-score tone-{{item.level}}">{{item.scoreText}}</view>
-      <view class="row-main">
-        <view class="row-name">{{item.name}}</view>
-        <view class="row-copy">{{item.quality}} · {{item.lat}}, {{item.lon}}</view>
-      </view>
-    </view>
   </view>
 </view>

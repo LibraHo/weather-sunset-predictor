@@ -121,11 +121,16 @@ describe('miniprogram page user/share helpers', () => {
     }));
     const view = homeHelpers.buildWeatherHourlyViewModel(hourly, 'temp');
 
-    expect(view.chart[0].left).toBeGreaterThanOrEqual(8);
-    expect(view.chart.at(-1).left).toBeLessThanOrEqual(92);
-    expect(Math.min(...view.chart.map((item) => item.left))).toBeGreaterThanOrEqual(8);
-    expect(Math.max(...view.chart.map((item) => item.left))).toBeLessThanOrEqual(92);
-    expect(view.chartSegments.every((segment) => segment.left >= 8 && segment.left <= 92)).toBe(true);
+    expect(view.chart[0].left).toBeGreaterThanOrEqual(18);
+    expect(view.chart.at(-1).left).toBeLessThanOrEqual(82);
+    expect(Math.min(...view.chart.map((item) => item.left))).toBeGreaterThanOrEqual(18);
+    expect(Math.max(...view.chart.map((item) => item.left))).toBeLessThanOrEqual(82);
+    expect(view.chart).toHaveLength(13);
+    expect(view.chart[0].labelPlacement).toBe('right');
+    expect(view.chart.at(-1).labelPlacement).toBe('left');
+    expect(view.chart[Math.floor((view.chart.length - 1) / 2)].labelPlacement).toBe('center');
+    expect(view.chart.every((point) => point.top >= 26 && point.top <= 80)).toBe(true);
+    expect(view.chartSegments).toBeUndefined();
   });
 
   test('home sunrise sunset preview switch rebuilds score time direction and analysis', () => {

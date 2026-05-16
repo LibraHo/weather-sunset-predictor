@@ -14,10 +14,12 @@ const args = ['auto', '--project', projectPath, '--auto-port', autoPort];
 console.log(`Starting WeChat DevTools automation on ws://127.0.0.1:${autoPort}`);
 console.log(`Project: ${projectPath}`);
 
-const child = spawn(cliPath, args, {
+const command = `call "${cliPath}" ${args.map((arg) => `"${String(arg).replace(/"/g, '""')}"`).join(' ')}`;
+const child = spawn(process.env.ComSpec || 'cmd.exe', ['/d', '/c', command], {
   cwd: projectPath,
   stdio: 'inherit',
   shell: false,
+  windowsVerbatimArguments: true,
 });
 
 child.on('exit', (code, signal) => {

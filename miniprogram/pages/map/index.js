@@ -1,4 +1,8 @@
-import { buildSpotMarkers, getChinaFirecloudSpots, getFirecloudLegend } from '../../services/firecloud-map.js';
+import {
+  buildRasterPolygons,
+  getChinaFirecloudRaster,
+  getFirecloudLegend
+} from '../../services/firecloud-map.js';
 import { applyPageSettings, readAppSettings } from '../../utils/app-settings.js';
 
 const DEFAULT_MAP_CENTER = { latitude: 35.8617, longitude: 104.1954 };
@@ -11,11 +15,9 @@ Page({
     loading: false,
     errorMessage: '',
     updatedAtText: '等待地图数据',
-    spots: [],
-    topSpots: [],
-    markers: [],
+    groundOverlays: [],
+    polygons: [],
     legendItems: getFirecloudLegend('sunset'),
-    activeSpot: null,
     mapCenter: DEFAULT_MAP_CENTER,
     mapScale: 4,
     themeMode: 'system',
@@ -53,10 +55,8 @@ Page({
       period,
       periodLabel: periodLabel(period),
       periodDetailText: periodDetailText(period),
-      activeSpot: null,
-      spots: [],
-      topSpots: [],
-      markers: [],
+      groundOverlays: [],
+      polygons: [],
       mapCenter: DEFAULT_MAP_CENTER,
       mapScale: 4,
       legendItems: getFirecloudLegend(period)
@@ -67,18 +67,14 @@ Page({
   async loadMap() {
     this.setData({ loading: true, errorMessage: '' });
     try {
-      const data = await getChinaFirecloudSpots({ period: this.data.period });
-      const spots = data.spots;
-      const markers = buildSpotMarkers(spots);
-      const activeSpot = spots[0] || null;
+      const raster = await getChinaFirecloudRaster({ period: this.data.period, resolution: 0.5 });
+      const polygons = buildRasterPolygons(raster, this.data.period);
       this.setData({
-        spots,
-        topSpots: spots.slice(0, 12),
-        markers,
-        activeSpot,
-        updatedAtText: formatUpdatedAt(data.updatedAt),
-        mapCenter: activeSpot ? { latitude: activeSpot.lat, longitude: activeSpot.lon } : DEFAULT_MAP_CENTER,
-        mapScale: activeSpot ? 5 : 4
+        groundOverlays: [],
+        polygons,
+        updatedAtText: raster.isFallback ? '测试图层 · 后端暂不可用' : formatUpdatedAt(raster.updatedAt),
+        mapCenter: DEFAULT_MAP_CENTER,
+        mapScale: 4
       });
     } catch (error) {
       this.setData({
@@ -88,32 +84,6 @@ Page({
     } finally {
       this.setData({ loading: false });
     }
-  },
-
-  focusSpot(event = {}) {
-    const markerId = event.detail?.markerId;
-    const spotId = event.currentTarget?.dataset?.id;
-    const spot = this.data.spots.find((item) => (
-      Number(item.markerId) === Number(markerId) || String(item.id) === String(spotId)
-    ));
-    if (!spot) return;
-    this.setData({
-      activeSpot: spot,
-      mapCenter: { latitude: spot.lat, longitude: spot.lon },
-      mapScale: 7
-    });
-  },
-
-  openSpotPrediction() {
-    const spot = this.data.activeSpot;
-    if (!spot) return;
-    const query = [
-      `lat=${encodeURIComponent(spot.lat)}`,
-      `lon=${encodeURIComponent(spot.lon)}`,
-      `name=${encodeURIComponent(spot.name)}`,
-      `type=${encodeURIComponent(this.data.period)}`
-    ].join('&');
-    wx.navigateTo({ url: `/pages/result/index?${query}` });
   }
 });
 

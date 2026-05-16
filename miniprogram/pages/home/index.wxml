@@ -142,25 +142,38 @@
       </view>
     </view>
 
-    <view class="weather-view-toggle">
-      <view class="weather-toggle tap-feedback {{weatherView === 'overview' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-view="overview" bindtap="switchWeatherView">{{weatherPreview.weeklyTab}}</view>
-      <view class="weather-toggle tap-feedback {{weatherView === 'hourly' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-view="hourly" bindtap="switchWeatherView">{{weatherPreview.hourlyTab}}</view>
-      <view class="weather-toggle tap-feedback {{weatherView === 'glow' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-view="glow" bindtap="switchWeatherView">{{weatherPreview.glowTab}}</view>
-    </view>
-    <view class="weather-weekly-list" wx:if="{{weatherView === 'overview' && weatherPreview.weekly.length}}">
+    <view class="weather-forecast-module">
+      <view class="weather-view-toggle">
+        <view class="weather-toggle tap-feedback {{weatherView === 'overview' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-view="overview" bindtap="switchWeatherView">{{weatherPreview.weeklyTab}}</view>
+        <view class="weather-toggle tap-feedback {{weatherView === 'hourly' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-view="hourly" bindtap="switchWeatherView">{{weatherPreview.hourlyTab}}</view>
+        <view class="weather-toggle tap-feedback {{weatherView === 'glow' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-view="glow" bindtap="switchWeatherView">{{weatherPreview.glowTab}}</view>
+      </view>
+      <view class="weather-weekly-list" wx:if="{{weatherView === 'overview' && weatherPreview.weekly.length}}">
       <view class="weather-weekly-row" wx:for="{{weatherPreview.weekly}}" wx:key="key">
         <view class="weather-weekly-day">
           <text class="weather-weekly-label">{{item.label}}</text>
-          <text class="weather-weekly-condition">{{item.condition}}</text>
+          <text class="weather-weekly-date">{{item.dayDate}}</text>
+        </view>
+        <image class="weather-weekly-icon" src="{{item.iconSrc}}" mode="aspectFit" aria-hidden="true" />
+        <view class="weather-weekly-temp">
+          <text class="weather-weekly-min">{{item.minTemp}}</text>
+          <text class="weather-weekly-sep">~</text>
+          <text class="weather-weekly-max">{{item.maxTemp}}</text>
         </view>
         <view class="weather-weekly-values">
-          <text class="weather-weekly-temp">{{item.temp}}</text>
-          <text class="weather-weekly-meta">{{item.precip}}</text>
-          <text class="weather-weekly-meta">{{item.wind}}</text>
+          <view class="weather-weekly-meta weather-weekly-precip">
+            <image class="weather-weekly-meta-icon" src="/assets/icons/metric-precipitation.svg" mode="aspectFit" aria-hidden="true" />
+            <text class="weather-weekly-precip-text">{{item.precip}}</text>
+          </view>
+          <view class="weather-weekly-meta weather-weekly-wind">
+            <image class="weather-weekly-meta-icon" src="/assets/icons/metric-wind.svg" mode="aspectFit" aria-hidden="true" />
+            <text class="weather-weekly-wind-text">{{item.wind}}</text>
+            <text class="weather-weekly-wind-arrow">{{item.windArrow}}</text>
+          </view>
         </view>
       </view>
     </view>
-    <view class="weather-hourly-panel" wx:if="{{weatherView === 'hourly' && weatherPreview.hourly.length}}">
+      <view class="weather-hourly-panel" wx:if="{{weatherView === 'hourly' && weatherPreview.hourly.length}}">
       <view class="weather-day-selector xiake-toggle xiake-toggle-compact">
         <view class="weather-day-option tap-feedback {{weatherDay === item.key ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" wx:for="{{weatherPreview.hourlyView.dayOptions}}" wx:key="key" data-day="{{item.key}}" bindtap="switchWeatherDay">{{item.label}}</view>
       </view>
@@ -181,22 +194,27 @@
         <view class="weather-hourly-grid-line weather-hourly-grid-line-top"></view>
         <view class="weather-hourly-grid-line weather-hourly-grid-line-mid"></view>
         <view class="weather-hourly-grid-line weather-hourly-grid-line-bottom"></view>
-        <view class="weather-hourly-chart-path" wx:for="{{weatherPreview.hourlyView.chartSegments}}" wx:key="key" style="left: {{item.left}}%; top: {{item.top}}%; width: {{item.width}}%; transform: rotate({{item.rotate}}deg);"></view>
-        <view class="weather-hourly-chart-point" wx:for="{{weatherPreview.hourlyChart}}" wx:key="key" style="left: {{item.left}}%; top: {{item.top}}%;">
-          <text class="weather-hourly-point-label" wx:if="{{item.labelVisible}}">{{item.valueText}}</text>
-          <view class="weather-hourly-chart-dot"></view>
-          <view class="weather-hourly-chart-bar" style="height: {{item.barHeight}}rpx;"></view>
-        </view>
+        <canvas id="homeHourlyChart" canvas-id="homeHourlyChart" type="2d" class="weather-hourly-canvas" disable-scroll="true"></canvas>
+          <view class="weather-hourly-chart-point" wx:for="{{weatherPreview.hourlyChart}}" wx:key="key" style="left: {{item.left}}%; top: {{item.top}}%;">
+            <text class="weather-hourly-point-label weather-hourly-point-label-{{item.labelPlacement}}" wx:if="{{item.labelVisible}}">{{item.valueText}}</text>
+            <view class="weather-hourly-chart-dot"></view>
+          </view>
       </view>
       </view>
     </view>
-    <view class="weather-glow-panel" wx:if="{{weatherView === 'glow' && weatherPreview.glow.length}}">
-      <view class="weather-glow-row" wx:for="{{weatherPreview.glow}}" wx:key="key">
-        <view class="weather-glow-day">{{item.label}}</view>
-        <view class="weather-glow-scores">
-          <text class="weather-glow-score">朝 {{item.sunrise}}</text>
-          <text class="weather-glow-score">晚 {{item.sunset}}</text>
+      <view class="weather-glow-panel" wx:if="{{weatherView === 'glow' && weatherPreview.glow.length}}">
+      <view class="weather-glow-card" wx:for="{{weatherPreview.glow}}" wx:key="key">
+        <view class="weather-glow-head">
+          <view class="weather-glow-day">{{item.label}}</view>
+          <view class="weather-glow-date">{{item.dayDate}}</view>
         </view>
+        <view class="weather-glow-score-row">
+          <image class="weather-glow-score-icon" src="/assets/icons/sun-event-sunrise.svg" mode="aspectFit" aria-hidden="true" />
+          <view class="weather-glow-score weather-glow-score-sunrise"><text class="weather-glow-score-label">朝</text><text>{{item.sunrise}}</text></view>
+          <image class="weather-glow-score-icon" src="/assets/icons/sun-event-sunset.svg" mode="aspectFit" aria-hidden="true" />
+          <view class="weather-glow-score weather-glow-score-sunset"><text class="weather-glow-score-label">晚</text><text>{{item.sunset}}</text></view>
+        </view>
+      </view>
       </view>
     </view>
   </view>
@@ -215,6 +233,7 @@
       <view class="prediction-toggle tap-feedback {{predictionPreview.periodKey === 'sunset' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-value="sunset" bindtap="selectPredictionPreviewPeriod">晚霞</view>
     </view>
 
+    <view class="prediction-hero-card">
     <view class="phenomenon-title-card">
       <view class="phenomenon-title-copy">
         <view class="phenomenon-date-tag">{{predictionPreview.dateLabel}}</view>
@@ -255,6 +274,7 @@
           <text class="app-info-value">{{predictionPreview.direction}}</text>
         </view>
       </view>
+    </view>
     </view>
 
     <view class="cloud-condition-card">

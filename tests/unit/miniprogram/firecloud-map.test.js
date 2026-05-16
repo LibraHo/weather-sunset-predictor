@@ -4,10 +4,19 @@ import { fileURLToPath } from 'node:url';
 import { jest } from '@jest/globals';
 import { configureApi, resetApiConfig, setWxInstance } from '../../../miniprogram/services/api.js';
 import {
-  buildSpotMarkers,
-  getFirecloudLegend,
+  buildRasterGroundOverlay,
+  buildRasterOverlayImageUrl,
+  buildRasterPolygons,
+  buildTestFirecloudRaster,
+  buildTestFirecloudSpotData,
+  getChinaFirecloudRaster,
   getChinaFirecloudSpots,
-  normalizeChinaFirecloudSpots
+  getFirecloudLegend,
+  normalizeChinaFirecloudSpots,
+  scoreToFirecloudColor,
+  scoreToFirecloudMarkerColor,
+  scoreToRasterLayerColor,
+  scoreToRasterLayerHexColor
 } from '../../../miniprogram/services/firecloud-map.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -19,25 +28,97 @@ describe('miniprogram firecloud map', () => {
     resetApiConfig();
   });
 
-  test('registers native firecloud map page and routes from home/result', () => {
+  test('registers a native firecloud map page with only the raster polygon layer surface', () => {
     const appJson = JSON.parse(read('miniprogram/app.json'));
     const homeWxml = read('miniprogram/pages/home/index.wxml');
     const resultWxml = read('miniprogram/pages/result/index.wxml');
     const mapWxml = read('miniprogram/pages/map/index.wxml');
+    const mapJs = read('miniprogram/pages/map/index.js');
 
     expect(appJson.pages).toContain('pages/map/index');
     expect(homeWxml).toContain('data-target="map"');
     expect(resultWxml).toContain('data-target="map"');
     expect(mapWxml).toContain('<map');
-    expect(mapWxml).toContain('markers="{{markers}}"');
-    expect(mapWxml).toContain('bindmarkertap="focusSpot"');
+    expect(mapWxml).toContain('ground-overlays="{{groundOverlays}}"');
+    expect(mapWxml).toContain('polygons="{{polygons}}"');
+    expect(mapWxml).not.toContain('markers="{{markers}}"');
+    expect(mapWxml).not.toContain('bindmarkertap="focusSpot"');
+    expect(mapWxml).not.toContain('bindtap="openSpotPrediction"');
+    expect(mapWxml).not.toContain('spot-row');
+    expect(mapWxml).not.toContain('activeSpot');
+    expect(mapWxml).not.toContain('spots.length');
+    expect(mapJs).not.toContain('getChinaFirecloudSpots');
+    expect(mapJs).not.toContain('openSpotPrediction');
+    expect(mapJs).not.toContain('focusSpot');
+    expect(mapJs).toContain("resolution: 0.5");
+    expect(mapJs).toContain('const polygons = buildRasterPolygons');
+    expect(mapJs).toContain('groundOverlays: []');
     expect(mapWxml).toContain('enable-zoom="{{true}}"');
     expect(mapWxml).toContain('wx:for="{{legendItems}}"');
     expect(mapWxml).toContain('style="background: {{item.color}};"');
-    expect(mapWxml).toContain('bindtap="openSpotPrediction"');
+    expect(mapWxml).toContain('目前支持：中国大陆、港澳台、日本、韩国');
+    expect(mapWxml).toContain('栅格评分插值染色');
   });
 
-  test('loads same-source China spots API and normalizes markers', async () => {
+  test('builds a native map ground overlay image for the interpolated web-like raster layer', () => {
+    configureApi({ baseUrl: 'https://api.example.com' });
+    const raster = {
+      period: 'sunset',
+      bbox: { west: 100, east: 102, south: 30, north: 32 }
+    };
+    const overlay = buildRasterGroundOverlay(raster, { period: 'sunset', resolution: 0.25 });
+
+    expect(overlay.src).toContain('https://api.example.com/api/spots/china/raster-overlay.png?period=sunset&resolution=0.25');
+    expect(overlay.bounds).toEqual({
+      southwest: { latitude: 30, longitude: 100 },
+      northeast: { latitude: 32, longitude: 102 }
+    });
+    expect(overlay.opacity).toBeGreaterThan(0.8);
+    expect(buildRasterOverlayImageUrl({ period: 'sunrise', resolution: 0.5 })).toContain('/api/spots/china/raster-overlay.png?period=sunrise&resolution=0.5');
+  });
+
+  test('loads same-source raster API and paints an interpolated polygon layer instead of map pins', async () => {
+    const wxMock = {
+      request: jest.fn(({ success }) => success({
+        statusCode: 200,
+        data: {
+          period: 'sunset',
+          updatedAt: '2026-05-13T00:10:00.000Z',
+          bbox: { west: 100, east: 102, south: 30, north: 32 },
+          resolution: 1,
+          width: 2,
+          height: 2,
+          noData: -1,
+          values: [39, 45, 62, -1]
+        }
+      }))
+    };
+    setWxInstance(wxMock);
+    configureApi({ baseUrl: 'https://api.example.com' });
+
+    const raster = await getChinaFirecloudRaster({ period: 'sunset', resolution: 0.25 });
+    const polygons = buildRasterPolygons(raster, 'sunset');
+
+    expect(wxMock.request).toHaveBeenCalledWith(expect.objectContaining({
+      url: 'https://api.example.com/api/spots/china/raster?period=sunset&resolution=0.25',
+      method: 'GET'
+    }));
+    expect(raster.validCellCount).toBe(2);
+    expect(polygons).toHaveLength(2);
+    expect(polygons[0]).toMatchObject({
+      points: [
+        { latitude: 32, longitude: 101 },
+        { latitude: 32, longitude: 102 },
+        { latitude: 31, longitude: 102 },
+        { latitude: 31, longitude: 101 }
+      ],
+      strokeWidth: 0
+    });
+    expect(polygons[0].fillColor).toBe(scoreToRasterLayerHexColor(45, 'sunset'));
+    expect(polygons[0].fillColor).toMatch(/^#[0-9A-F]{8}$/);
+  });
+
+  test('keeps spot normalization utilities available for backend parity without exposing high-score UI', async () => {
     const wxMock = {
       request: jest.fn(({ success }) => success({
         statusCode: 200,
@@ -55,28 +136,27 @@ describe('miniprogram firecloud map', () => {
     configureApi({ baseUrl: 'https://api.example.com' });
 
     const data = await getChinaFirecloudSpots({ period: 'sunset' });
-    const markers = buildSpotMarkers(data.spots);
 
     expect(wxMock.request).toHaveBeenCalledWith(expect.objectContaining({
       url: 'https://api.example.com/api/spots/china?period=sunset',
       method: 'GET'
     }));
     expect(data.spots).toHaveLength(1);
-    expect(data.spots[0]).toMatchObject({ scoreText: '88', level: 'excellent', quality: 'custom-quality' });
-    expect(markers[0]).toMatchObject({ latitude: 31.2, longitude: 121.5, title: '88\u5206' });
+    expect(data.spots[0]).toMatchObject({ scoreText: '88', level: 'peak', quality: 'custom-quality' });
   });
 
-  test('normalizes spot bands with the same score policy as result pages', () => {
+  test('normalizes spot bands with the same compact raster policy as the web map', () => {
     const data = normalizeChinaFirecloudSpots({
       spots: [
         { lat: 1, lon: 2, score: 91 },
-        { lat: 3, lon: 4, score: 76 },
-        { lat: 5, lon: 6, score: 45 }
+        { lat: 3, lon: 4, score: 64 },
+        { lat: 5, lon: 6, score: 55 },
+        { lat: 7, lon: 8, score: 45 }
       ]
     });
 
-    expect(data.spots.map((spot) => spot.level)).toEqual(['excellent', 'good', 'watch']);
-    expect(data.spots.map((spot) => spot.quality)).toEqual(['\u9876\u7ea7', '\u8f83\u597d', '\u53ef\u89c2\u8d4f']);
+    expect(data.spots.map((spot) => spot.level)).toEqual(['peak', 'high', 'mid', 'low']);
+    expect(data.spots.map((spot) => spot.scoreText)).toEqual(['91', '64', '55', '45']);
   });
 
   test('uses web compact raster legend thresholds for map color semantics', () => {
@@ -84,8 +164,57 @@ describe('miniprogram firecloud map', () => {
     const sunriseLegend = getFirecloudLegend('sunrise');
 
     expect(sunsetLegend.map((item) => item.label)).toEqual(['<40', '40', '50', '60', '70+']);
-    expect(sunriseLegend.map((item) => item.label)).toEqual(['<30', '30', '40', '55', '70+']);
-    expect(sunsetLegend[4].color).toBe('#ff8a2a');
-    expect(sunriseLegend[4].color).toBe('#ff6b8a');
+    expect(sunriseLegend.map((item) => item.label)).toEqual(['<40', '40', '50', '60', '70+']);
+    expect(sunsetLegend[4].color).toBe('rgba(218,78,28,0.55)');
+    expect(sunriseLegend[4].color).toBe('rgba(218,78,28,0.65)');
+    expect(scoreToFirecloudColor(62, 'sunset')).toBe('rgba(248,132,54,0.36)');
+    expect(scoreToFirecloudMarkerColor(62, 'sunset')).toBe('#ff9a3d');
+    expect(scoreToRasterLayerColor(40, 'sunset')).toBe('rgba(255,236,212,0.05)');
+    expect(scoreToRasterLayerColor(70, 'sunset')).toBe('rgba(218,78,28,0.55)');
+    expect(scoreToRasterLayerHexColor(39, 'sunset')).toBe('#00000000');
+    expect(scoreToRasterLayerHexColor(70, 'sunset')).toBe('#DA4E1C8C');
+  });
+
+  test('falls back to generated China-Japan-Korea test spots when backend data is unavailable', async () => {
+    const wxMock = {
+      request: jest.fn(({ fail }) => fail({ errMsg: 'network down' }))
+    };
+    setWxInstance(wxMock);
+    configureApi({ baseUrl: 'https://api.example.com' });
+
+    const data = await getChinaFirecloudSpots({ period: 'sunset' });
+
+    expect(data.isFallback).toBe(true);
+    expect(data.fallbackReason).toBe('request-failed');
+    expect(data.spots.length).toBeGreaterThanOrEqual(8);
+    expect(data.spots.map((spot) => spot.name)).toEqual(expect.arrayContaining(['北京', '东京', '首尔']));
+  });
+
+  test('manual generated test data covers only the currently supported CJK map region', () => {
+    const data = buildTestFirecloudSpotData('sunset');
+
+    expect(data.spots.every((spot) => (
+      (spot.lon >= 73 && spot.lon <= 146)
+      && (spot.lat >= 18 && spot.lat <= 46)
+    ))).toBe(true);
+  });
+
+  test('manual generated raster data creates a visible interpolation layer when backend is unavailable', () => {
+    const raster = buildTestFirecloudRaster('sunset');
+    const polygons = buildRasterPolygons(raster, 'sunset');
+
+    expect(raster.isFallback).toBe(true);
+    expect(raster.validCellCount).toBeGreaterThan(0);
+    expect(polygons.length).toBeGreaterThan(0);
+    expect(polygons.every((polygon) => polygon.points.length === 4)).toBe(true);
+  });
+
+  test('map page renders native polygons instead of depending on the optional backend PNG', () => {
+    const mapJs = read('miniprogram/pages/map/index.js');
+
+    expect(mapJs).toContain('buildRasterPolygons');
+    expect(mapJs).toContain('const polygons = buildRasterPolygons(raster, this.data.period)');
+    expect(mapJs).toContain('groundOverlays: []');
+    expect(mapJs).not.toContain('buildRasterGroundOverlay(raster');
   });
 });

@@ -50,12 +50,17 @@ Page({
     this.applySavedSettings();
     this.refreshSavedLists();
     this.paintPredictionRadarCloudField();
+    this.paintHourlyChartLine({ force: true });
   },
 
   onUnload() {
     if (this.radarPaintTimer) {
       clearTimeout(this.radarPaintTimer);
       this.radarPaintTimer = null;
+    }
+    if (this.hourlyChartPaintTimer) {
+      clearTimeout(this.hourlyChartPaintTimer);
+      this.hourlyChartPaintTimer = null;
     }
   },
 
@@ -112,7 +117,9 @@ Page({
   switchWeatherView(event) {
     const view = event.currentTarget.dataset.view;
     if (!['overview', 'hourly', 'glow'].includes(view)) return;
-    this.setData({ weatherView: view });
+    this.setData({ weatherView: view }, () => {
+      if (view === 'hourly') this.paintHourlyChartLine({ force: true });
+    });
   },
 
   switchWeatherDay(event) {
@@ -121,6 +128,8 @@ Page({
     this.setData({
       weatherDay: day,
       weatherPreview: refreshWeatherHourlyView(this.data.weatherPreview, day, this.data.weatherParameter)
+    }, () => {
+      this.paintHourlyChartLine({ force: true });
     });
   },
 
@@ -130,6 +139,8 @@ Page({
     this.setData({
       weatherParameter: parameter,
       weatherPreview: refreshWeatherHourlyView(this.data.weatherPreview, this.data.weatherDay, parameter)
+    }, () => {
+      this.paintHourlyChartLine({ force: true });
     });
   },
 
@@ -337,6 +348,20 @@ Page({
     this.radarPaintTimer = setTimeout(() => {
       this.radarPaintTimer = null;
       paintRadarCloudCanvas('homeRadarCloudField', directions, { page: this });
+    }, 80);
+  },
+
+  paintHourlyChartLine({ force = false } = {}) {
+    if (this.data.weatherView !== 'hourly') return;
+    const chart = this.data.weatherPreview?.hourlyChart || this.data.weatherPreview?.hourlyView?.chart || [];
+    if (chart.length < 2) return;
+    const signature = chart.map((item) => `${item.left}:${item.top}:${item.valueText}`).join('|');
+    if (!force && signature && signature === this.lastHourlyChartPaintSignature) return;
+    this.lastHourlyChartPaintSignature = signature;
+    if (this.hourlyChartPaintTimer) clearTimeout(this.hourlyChartPaintTimer);
+    this.hourlyChartPaintTimer = setTimeout(() => {
+      this.hourlyChartPaintTimer = null;
+      paintHourlyChartCanvas('homeHourlyChart', chart, { page: this });
     }, 80);
   },
 
@@ -758,15 +783,20 @@ export function buildWeatherHourlyViewModel(hourly = [], parameter = 'temp') {
   const min = values.length ? Math.min(...values) : 0;
   const max = values.length ? Math.max(...values) : 1;
   const span = Math.max(1, max - min);
-  const count = Math.max(1, hourly.length - 1);
-  const inset = 8;
+  const inset = 18;
   const plotWidth = 100 - inset * 2;
 
-  const chart = hourly.map((item, index) => {
+  const displayHourly = hourly.filter((_, index) => index % 2 === 0);
+  if (hourly.length > 1 && displayHourly[displayHourly.length - 1] !== hourly[hourly.length - 1]) {
+    displayHourly.push(hourly[hourly.length - 1]);
+  }
+  const displayCount = Math.max(1, displayHourly.length - 1);
+
+  const chart = displayHourly.map((item, index) => {
     const value = getHourlyParameterValue(item, parameter);
     const normalized = Number.isFinite(value) ? (value - min) / span : 0.5;
-    const x = Math.round((inset + (index / count) * plotWidth) * 10) / 10;
-    const y = Math.round(82 - normalized * 58);
+    const x = Math.round((inset + (index / displayCount) * plotWidth) * 10) / 10;
+    const y = Math.round((80 - normalized * 54) * 10) / 10;
     return {
       key: item.key,
       time: item.time,
@@ -774,21 +804,8 @@ export function buildWeatherHourlyViewModel(hourly = [], parameter = 'temp') {
       valueText: formatHourlyParameterValue(value, config.unit),
       left: x,
       top: y,
-      barHeight: Math.max(10, Math.round(normalized * 54) + 12),
-      labelVisible: index % 4 === 0 || index === hourly.length - 1
-    };
-  });
-
-  const chartSegments = chart.slice(0, -1).map((item, index) => {
-    const next = chart[index + 1];
-    const dx = next.left - item.left;
-    const dy = next.top - item.top;
-    return {
-      key: `${item.key}-${next.key}`,
-      left: item.left,
-      top: item.top,
-      width: Math.max(1, Math.round(Math.sqrt(dx * dx + dy * dy))),
-      rotate: Math.round(Math.atan2(dy, dx) * 180 / Math.PI)
+      labelPlacement: index === 0 ? 'right' : (index === displayHourly.length - 1 ? 'left' : 'center'),
+      labelVisible: index === 0 || index === Math.floor((displayHourly.length - 1) / 2) || index === displayHourly.length - 1
     };
   });
 
@@ -802,7 +819,6 @@ export function buildWeatherHourlyViewModel(hourly = [], parameter = 'temp') {
       { key: 'tomorrow', label: '明天' }
     ],
     chart,
-    chartSegments,
     axisLabels: [max, min + span / 2, min].map((value, index) => ({
       key: `axis-${index}`,
       value: formatHourlyParameterValue(value, config.unit)
@@ -813,6 +829,54 @@ export function buildWeatherHourlyViewModel(hourly = [], parameter = 'temp') {
       text: item.cloud
     }))
   };
+}
+
+function paintHourlyChartCanvas(canvasId, chart = [], options = {}) {
+  const wxApi = options.wxApi || options.wx || globalThis.wx;
+  if (!canvasId || !chart.length || !wxApi?.createSelectorQuery) return false;
+
+  const query = wxApi.createSelectorQuery();
+  const scope = options.component || options.page;
+  const scopedQuery = scope && query.in ? query.in(scope) : query;
+  if (!scopedQuery?.select) return false;
+
+  scopedQuery
+    .select(`#${canvasId}`)
+    .fields({ node: true, size: true })
+    .exec((res = []) => {
+      const result = res[0] || {};
+      const canvas = result.node;
+      if (!canvas?.getContext) return;
+
+      const width = Math.max(1, Math.round(result.width || 320));
+      const height = Math.max(1, Math.round(result.height || 120));
+      const dpr = wxApi.getSystemInfoSync?.().pixelRatio || 1;
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.beginPath();
+      chart.forEach((item, index) => {
+        const x = width * Number(item.left || 0) / 100;
+        const y = height * Number(item.top || 0) / 100;
+        if (index === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.strokeStyle = options.lineColor || '#f59e0b';
+      ctx.lineWidth = options.lineWidth || 2.1;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.shadowColor = 'rgba(245, 158, 11, 0.20)';
+      ctx.shadowBlur = 4;
+      ctx.stroke();
+      ctx.restore();
+    });
+
+  return true;
 }
 
 function getWeatherParameterConfig() {
@@ -961,7 +1025,8 @@ export function buildWeatherGlowPreview(weather = {}) {
   if (Array.isArray(weather.glow) && weather.glow.length) {
     return weather.glow.map((item, index) => ({
       key: item.key || item.date || `glow-${index}`,
-      label: item.label || item.date || `D${index + 1}`,
+      label: item.label || formatGlowDayLabel(item.date, index),
+      dayDate: item.dayDate || item.dateLabel || formatGlowDateLabel(item.date, index),
       sunrise: item.sunrise ?? item.sunriseScore ?? '--',
       sunset: item.sunset ?? item.sunsetScore ?? '--',
       summary: item.summary || item.condition || ''
@@ -976,10 +1041,25 @@ export function buildWeatherGlowPreview(weather = {}) {
   ]);
   const base = Number.isFinite(Number(cloudAverage)) ? Math.round(cloudAverage) : 53;
   return [
-    { key: 'today', label: 'Today', sunrise: Math.max(0, base - 8), sunset: Math.min(100, base + 18), summary: 'High / mid / low cloud mix' },
-    { key: 'tomorrow', label: 'Tomorrow', sunrise: Math.max(0, base - 3), sunset: Math.min(100, base + 12), summary: 'Watch the western horizon' },
-    { key: 'day-3', label: 'Day 3', sunrise: Math.max(0, base - 12), sunset: Math.min(100, base + 6), summary: 'Medium confidence' }
+    { key: 'today', label: '今天', dayDate: '今日', sunrise: Math.max(0, base - 8), sunset: Math.min(100, base + 18), summary: '云层结构适合观察霞光' },
+    { key: 'tomorrow', label: '明天', dayDate: '次日', sunrise: Math.max(0, base - 3), sunset: Math.min(100, base + 12), summary: '留意西侧云带变化' },
+    { key: 'day-3', label: '后天', dayDate: '第3天', sunrise: Math.max(0, base - 12), sunset: Math.min(100, base + 6), summary: '中等把握，适合顺路观察' }
   ];
+}
+
+function formatGlowDayLabel(dateValue, index) {
+  if (index === 0) return '今天';
+  if (index === 1) return '明天';
+  if (index === 2) return '后天';
+  const date = parseWeeklyDate(dateValue);
+  if (!date) return `第${index + 1}天`;
+  return ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][date.getDay()];
+}
+
+function formatGlowDateLabel(dateValue, index) {
+  const date = parseWeeklyDate(dateValue);
+  if (date) return `${date.getMonth() + 1}/${date.getDate()}`;
+  return index === 0 ? '今日' : index === 1 ? '次日' : `第${index + 1}天`;
 }
 
 export function isWeatherTestLocation(value = '') {
@@ -988,24 +1068,34 @@ export function isWeatherTestLocation(value = '') {
 
 function buildWeatherWeeklyPreview(weather = {}) {
   if (Array.isArray(weather.weekly) && weather.weekly.length) {
-    return weather.weekly.map((item, index) => ({
-      key: item.key || item.date || `day-${index}`,
-      label: item.label || item.day || item.date || `D${index + 1}`,
-      condition: item.condition || item.summary || weather.condition || '--',
-      temp: item.temp || formatTempRange(item.minTemp ?? item.tempMin, item.maxTemp ?? item.tempMax),
-      precip: formatPercentValue(item.precip ?? item.precipitationProbability),
-      wind: formatWindSpeedValue(item.windSpeed ?? item.wind)
-    }));
+    return weather.weekly.map((item, index) => {
+      const temps = splitWeeklyTemperatures(item);
+      const precip = item.precip ?? item.precipitationProbability;
+      const cloudCover = item.cloudCover ?? item.cloud ?? weather.cloudCover;
+      return {
+        key: item.key || item.date || `day-${index}`,
+        label: item.label || item.day || formatWeeklyDayLabel(item.date, index),
+        dayDate: item.dayDate || item.dateLabel || formatWeeklyDateLabel(item.date, index),
+        condition: item.condition || item.summary || weather.condition || '--',
+        iconSrc: `/assets/icons/weather-${item.iconType || getWeatherPreviewIconType(cloudCover, precip)}.svg`,
+        minTemp: formatWeeklyTemperature(temps.min),
+        maxTemp: formatWeeklyTemperature(temps.max),
+        temp: item.temp || formatTempRange(temps.min, temps.max),
+        precip: formatPercentValue(precip),
+        wind: formatWindSpeedValue(item.windSpeed ?? item.wind),
+        windArrow: formatWindDirectionArrow(item.windDirection ?? item.windDeg ?? weather.windDirection)
+      };
+    });
   }
 
   return [
-    { key: 'today', label: '今天', condition: '多云', temp: '15° / 31°', precip: '8%', wind: '21 km/h' },
-    { key: 'tomorrow', label: '明天', condition: '多云', temp: '15° / 32°', precip: '6%', wind: '19 km/h' },
-    { key: 'sat', label: '周六', condition: '局部多云', temp: '15° / 28°', precip: '14%', wind: '24 km/h' },
-    { key: 'sun', label: '周日', condition: '晴间多云', temp: '17° / 27°', precip: '10%', wind: '18 km/h' },
-    { key: 'mon', label: '周一', condition: '少云', temp: '16° / 31°', precip: '5%', wind: '16 km/h' },
-    { key: 'tue', label: '周二', condition: '多云', temp: '16° / 32°', precip: '7%', wind: '20 km/h' },
-    { key: 'wed', label: '周三', condition: '晴', temp: '16° / 29°', precip: '4%', wind: '17 km/h' }
+    buildWeeklyRow('today', '今天', '(16日)', 'partly-cloudy', 15, 31, 8, 21, 180),
+    buildWeeklyRow('tomorrow', '明天', '(17日)', 'partly-cloudy', 15, 32, 6, 19, 180),
+    buildWeeklyRow('sat', '周六', '(18日)', 'partly-cloudy', 15, 28, 14, 24, 180),
+    buildWeeklyRow('sun', '周日', '(19日)', 'partly-cloudy', 17, 27, 10, 18, 180),
+    buildWeeklyRow('mon', '周一', '(20日)', 'partly-cloudy', 16, 31, 5, 16, 180),
+    buildWeeklyRow('tue', '周二', '(21日)', 'partly-cloudy', 16, 32, 7, 20, 180),
+    buildWeeklyRow('wed', '周三', '(22日)', 'sunny', 16, 29, 4, 17, 180)
   ];
 }
 
@@ -1014,6 +1104,76 @@ function formatTempRange(min, max) {
   const maxNum = Number(max);
   if (!Number.isFinite(minNum) || !Number.isFinite(maxNum)) return '--';
   return `${Math.round(minNum)}° / ${Math.round(maxNum)}°`;
+}
+
+function buildWeeklyRow(key, label, dayDate, iconType, minTemp, maxTemp, precip, windSpeed, windDirection) {
+  return {
+    key,
+    label,
+    dayDate,
+    condition: '',
+    iconSrc: `/assets/icons/weather-${iconType}.svg`,
+    minTemp: formatWeeklyTemperature(minTemp),
+    maxTemp: formatWeeklyTemperature(maxTemp),
+    temp: formatTempRange(minTemp, maxTemp),
+    precip: formatPercentValue(precip),
+    wind: formatWindSpeedValue(windSpeed),
+    windArrow: formatWindDirectionArrow(windDirection)
+  };
+}
+
+function splitWeeklyTemperatures(item = {}) {
+  const directMin = item.minTemp ?? item.tempMin ?? item.lowTemp ?? item.low;
+  const directMax = item.maxTemp ?? item.tempMax ?? item.highTemp ?? item.high;
+  const minNum = Number(directMin);
+  const maxNum = Number(directMax);
+  if (Number.isFinite(minNum) && Number.isFinite(maxNum)) return { min: minNum, max: maxNum };
+
+  const parts = String(item.temp || '').match(/-?\d+(?:\.\d+)?/g) || [];
+  const values = parts.map(Number).filter(Number.isFinite);
+  if (values.length >= 2) {
+    return { min: Math.min(values[0], values[1]), max: Math.max(values[0], values[1]) };
+  }
+  return { min: null, max: null };
+}
+
+function formatWeeklyTemperature(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? `${Math.round(num)}°` : '--';
+}
+
+function formatWeeklyDayLabel(dateValue, index) {
+  const labels = ['今天', '明天', '周一', '周二', '周三', '周四', '周五'];
+  if (index < 2) return labels[index];
+  const date = parseWeeklyDate(dateValue);
+  if (!date) return labels[index] || `D${index + 1}`;
+  return ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][date.getDay()];
+}
+
+function formatWeeklyDateLabel(dateValue, index) {
+  const date = parseWeeklyDate(dateValue);
+  if (date) return `(${date.getDate()}日)`;
+  return `(${16 + index}日)`;
+}
+
+function parseWeeklyDate(dateValue) {
+  if (!dateValue) return null;
+  const date = new Date(dateValue);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function formatWindDirectionArrow(direction) {
+  const deg = Number(direction);
+  if (!Number.isFinite(deg)) return '↓';
+  const normalized = ((deg % 360) + 360) % 360;
+  if (normalized >= 337.5 || normalized < 22.5) return '↑';
+  if (normalized < 67.5) return '↗';
+  if (normalized < 112.5) return '→';
+  if (normalized < 157.5) return '↘';
+  if (normalized < 202.5) return '↓';
+  if (normalized < 247.5) return '↙';
+  if (normalized < 292.5) return '←';
+  return '↖';
 }
 
 function decorateRecentQueries(recent = []) {

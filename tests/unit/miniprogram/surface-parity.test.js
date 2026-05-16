@@ -65,7 +65,7 @@ describe('miniprogram surface parity for map/gallery/upload/methodology', () => 
     expect(uploadWxss).toContain('.metadata-edit-hint');
   });
 
-  test('map keeps the web map-to-prediction flow visible on the native map surface', () => {
+  test('map keeps the native firecloud raster layer visible without high-score point UI', () => {
     const mapWxml = read('miniprogram/pages/map/index.wxml');
     const mapJs = read('miniprogram/pages/map/index.js');
     const index = read('index.html');
@@ -79,9 +79,12 @@ describe('miniprogram surface parity for map/gallery/upload/methodology', () => 
     expect(mapWxml).toContain('map-panel-hint');
     expect(mapWxml).toContain('wx:for="{{legendItems}}"');
     expect(mapWxml).toContain('legend-swatch legend-{{item.key}}');
-    expect(mapWxml).toContain('bindtap="openSpotPrediction"');
-    expect(mapJs).toContain('openSpotPrediction()');
+    expect(mapWxml).toContain('ground-overlays="{{groundOverlays}}"');
+    expect(mapWxml).not.toContain('bindtap="openSpotPrediction"');
+    expect(mapWxml).not.toContain('spot-row');
+    expect(mapJs).not.toContain('openSpotPrediction()');
+    expect(mapJs).not.toContain('getChinaFirecloudSpots');
     expect(mapJs).toContain('periodDetailText(period)');
-    expect(mapJs).toContain("wx.navigateTo({ url: `/pages/result/index?${query}` })");
+    expect(mapJs).toContain('getChinaFirecloudRaster');
   });
 });

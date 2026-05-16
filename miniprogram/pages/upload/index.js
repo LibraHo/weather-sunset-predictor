@@ -106,7 +106,7 @@ Page({
         previewUrl: '',
         form: {
           locationName: '',
-          uploaderName: this.data.form.uploaderName,
+          uploaderName: payload.uploaderName,
           takenAt: '',
           lat: '',
           lon: '',
