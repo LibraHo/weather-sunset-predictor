@@ -195,6 +195,12 @@ describe('miniprogram web-like experience shell', () => {
     expect(locationWxss).toContain('.location-search.theme-dark .location-input');
     expect(homeWxss).toContain('.home-page.theme-dark .home-footer-card');
     expect(homeWxss).not.toContain('.home-page.theme-dark.has-weather .home-footer-card');
+    expect(homeWxss).toContain('.home-page.theme-dark.has-weather .weather-hourly-chart');
+    expect(homeWxss).toContain('.home-page.theme-dark.has-weather .weather-hourly-axis-label');
+    expect(homeWxss).toContain('.home-page.theme-dark.has-weather .weather-hourly-point-label');
+    expect(homeWxss).toContain('.home-page.theme-dark.has-weather .weather-hourly-chart-dot');
+    expect(homeWxss).toContain('.home-page.theme-dark.has-weather .weather-hourly-chart-bar');
+    expect(homeWxss).not.toContain('.home-page.theme-dark.has-weather .weather-hourly-chart {\n  background: linear-gradient(180deg, rgba(255, 252, 246');
   });
 
   test('result page keeps users in the Xiake product loop after scoring', () => {
