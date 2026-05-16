@@ -1,4 +1,5 @@
 import { uploadPhoto } from '../../services/photos.js';
+import { applyPageSettings, readAppSettings } from '../../utils/app-settings.js';
 
 const app = getApp();
 
@@ -18,10 +19,13 @@ Page({
     submitting: false,
     progress: 0,
     errorMessage: '',
-    successMessage: ''
+    successMessage: '',
+    themeMode: 'system',
+    resolvedThemeMode: 'light'
   },
 
   onLoad(options = {}) {
+    this.applySavedSettings();
     const latest = app.globalData.latestPrediction || wx.getStorageSync('latestPrediction') || {};
     const locationName = options.locationName || latest.locationName || '';
     const lat = options.lat || latest.lat || '';
@@ -35,6 +39,18 @@ Page({
         lon
       }
     });
+  },
+
+  onShow() {
+    this.applySavedSettings();
+  },
+
+  applySavedSettings() {
+    applyPageSettings(this);
+  },
+
+  onAppSettingsChange(event) {
+    this.setData(event.detail || readAppSettings());
   },
 
   async choosePhoto() {

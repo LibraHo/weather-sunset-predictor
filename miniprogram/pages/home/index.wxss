@@ -2465,3 +2465,83 @@
   border-radius: 999rpx;
   background: currentColor;
 }
+
+.home-page.theme-dark.has-weather .home-weather-preview,
+.home-page.theme-dark.has-weather .home-prediction-preview,
+.home-page.theme-dark.has-weather .location-search,
+.home-page.theme-dark.has-weather .control-card,
+.home-page.theme-dark.has-weather .home-footer-card {
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(18, 28, 52, 0.82);
+  box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.30), inset 0 1rpx 0 rgba(255, 255, 255, 0.08);
+}
+
+.home-page.theme-dark.has-weather .weather-main-layout,
+.home-page.theme-dark.has-weather .weather-visual-panel,
+.home-page.theme-dark.has-weather .weather-metric,
+.home-page.theme-dark.has-weather .weather-view-toggle,
+.home-page.theme-dark.has-weather .weather-weekly-row,
+.home-page.theme-dark.has-weather .weather-hourly-panel,
+.home-page.theme-dark.has-weather .weather-chart-panel,
+.home-page.theme-dark.has-weather .weather-glow-row,
+.home-page.theme-dark.has-weather .score-summary-card,
+.home-page.theme-dark.has-weather .cloud-condition-card,
+.home-page.theme-dark.has-weather .app-analysis-card,
+.home-page.theme-dark.has-weather .prediction-radar-card,
+.home-page.theme-dark.has-weather .analysis-factor,
+.home-page.theme-dark.has-weather .phenomenon-title-card {
+  border-color: rgba(255, 255, 255, 0.09);
+  background: rgba(7, 16, 31, 0.58);
+}
+
+.home-page.theme-dark.has-weather .conclusion-banner {
+  color: #bbf7d0;
+  background: rgba(22, 101, 52, 0.24);
+}
+
+.home-page.theme-dark.has-weather .weather-panel-title,
+.home-page.theme-dark.has-weather .prediction-panel-title,
+.home-page.theme-dark.has-weather .section-title,
+.home-page.theme-dark.has-weather .score-gauge-number,
+.home-page.theme-dark.has-weather .score-gauge-grade,
+.home-page.theme-dark.has-weather .main-time,
+.home-page.theme-dark.has-weather .app-info-value,
+.home-page.theme-dark.has-weather .cloud-condition-value,
+.home-page.theme-dark.has-weather .analysis-card-title,
+.home-page.theme-dark.has-weather .analysis-factor-title,
+.home-page.theme-dark.has-weather .weather-temp-large,
+.home-page.theme-dark.has-weather .metric-value,
+.home-page.theme-dark.has-weather .weather-weekly-temp {
+  color: #ffffff;
+}
+
+.home-page.theme-dark.has-weather .weather-desc,
+.home-page.theme-dark.has-weather .metric-label,
+.home-page.theme-dark.has-weather .prediction-preview-action-label,
+.home-page.theme-dark.has-weather .phenomenon-date-tag,
+.home-page.theme-dark.has-weather .score-gauge-desc,
+.home-page.theme-dark.has-weather .event-time-label,
+.home-page.theme-dark.has-weather .app-info-row,
+.home-page.theme-dark.has-weather .analysis-factor-desc,
+.home-page.theme-dark.has-weather .score-gauge-total,
+.home-page.theme-dark.has-weather .cloud-condition-top,
+.home-page.theme-dark.has-weather .weather-weekly-condition,
+.home-page.theme-dark.has-weather .weather-weekly-meta {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.home-page.theme-dark.has-weather .prediction-toggle-bar,
+.home-page.theme-dark.has-weather .weather-view-toggle {
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(7, 16, 31, 0.62);
+}
+
+.home-page.theme-dark.has-weather .prediction-toggle,
+.home-page.theme-dark.has-weather .weather-toggle {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.home-page.theme-dark.has-weather .prediction-toggle.active,
+.home-page.theme-dark.has-weather .weather-toggle.active {
+  color: #1b1206;
+}

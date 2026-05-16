@@ -206,3 +206,55 @@
 button::after {
   border: 0;
 }
+
+.app-topbar-shell.theme-dark .home-topbar {
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(18, 28, 52, 0.90);
+  box-shadow: 0 28rpx 76rpx rgba(0, 0, 0, 0.32), inset 0 1rpx 0 rgba(255, 255, 255, 0.08);
+}
+
+.app-topbar-shell.theme-dark .app-logo-text {
+  color: #f5c87a;
+}
+
+.app-topbar-shell.theme-dark .icon-button,
+.app-topbar-shell.theme-dark .menu-button,
+.app-topbar-shell.theme-dark .header-icon-button {
+  color: #f5c87a;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12rpx 26rpx rgba(0, 0, 0, 0.24);
+}
+
+.app-topbar-shell.theme-dark .home-view-menu-dropdown,
+.app-topbar-shell.theme-dark .settings-panel {
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(18, 28, 52, 0.96);
+  box-shadow: 0 24rpx 60rpx rgba(0, 0, 0, 0.36), inset 0 1rpx 0 rgba(255, 255, 255, 0.08);
+}
+
+.app-topbar-shell.theme-dark .home-view-option,
+.app-topbar-shell.theme-dark .settings-segment {
+  color: rgba(255, 255, 255, 0.70);
+}
+
+.app-topbar-shell.theme-dark .home-view-option.active,
+.app-topbar-shell.theme-dark .settings-segment.active {
+  color: #1b1206;
+}
+
+.app-topbar-shell.theme-dark .settings-title {
+  color: #ffffff;
+}
+
+.app-topbar-shell.theme-dark .settings-subtitle,
+.app-topbar-shell.theme-dark .settings-close {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.app-topbar-shell.theme-dark .settings-label {
+  color: #f5c87a;
+}
+
+.app-topbar-shell.theme-dark .settings-segmented {
+  background: rgba(7, 16, 31, 0.62);
+}

@@ -25,6 +25,18 @@ page {
   padding: 32rpx 28rpx 56rpx;
 }
 
+.container.theme-dark {
+  color: rgba(255, 255, 255, 0.92);
+  background-color: #0a0f1e;
+  background-image: linear-gradient(180deg, #070b16 0%, #0a0f1e 42%, #0e1930 72%, #07101f 100%);
+}
+
+.container.theme-light {
+  color: #3d3028;
+  background-color: #f6efe6;
+  background-image: linear-gradient(180deg, #f6efe6 0%, #efe4d6 100%);
+}
+
 /* Background utilities */
 .xiake-bg-night-sky {
   background-color: #0a0f1e;

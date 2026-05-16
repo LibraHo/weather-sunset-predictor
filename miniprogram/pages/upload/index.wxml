@@ -1,5 +1,5 @@
-<view class="container upload-page">
-  <app-topbar current="upload" />
+<view class="container upload-page theme-{{resolvedThemeMode}}">
+  <app-topbar current="upload" bind:settingschange="onAppSettingsChange" />
   <view class="upload-hero">
     <view class="eyebrow warm-accent">霞客投稿</view>
     <view class="headline">把这次霞光放到地图上。</view>

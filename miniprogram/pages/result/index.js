@@ -2,6 +2,7 @@ import { formatPercent, formatVisibility } from '../../utils/format.js';
 import { getEnhancedPrediction, getSurroundingPrediction, getThreeDayGlow, scoreToLevel } from '../../services/prediction.js';
 import { addFavorite, deleteFavorite, listFavorites } from '../../services/user.js';
 import { buildRadarCloudGradients, paintRadarCloudCanvas } from '../../utils/radar-cloud-field.js';
+import { applyPageSettings, readAppSettings } from '../../utils/app-settings.js';
 
 const app = getApp();
 
@@ -17,10 +18,13 @@ Page({
     scoreLedger: buildScoreLedger(),
     radar: buildEmptyRadar(),
     threeDayGlow: buildEmptyThreeDayGlow(),
-    isFavorite: false
+    isFavorite: false,
+    themeMode: 'system',
+    resolvedThemeMode: 'light'
   },
 
   async onLoad(options = {}) {
+    this.applySavedSettings();
     this.loadOptions = options;
     this.setData({ loading: true });
 
@@ -119,6 +123,18 @@ Page({
     setTimeout(() => {
       paintRadarCloudCanvas('resultRadarCloudField', directions, { page: this });
     }, 0);
+  },
+
+  onShow() {
+    this.applySavedSettings();
+  },
+
+  applySavedSettings() {
+    applyPageSettings(this);
+  },
+
+  onAppSettingsChange(event) {
+    this.setData(event.detail || readAppSettings());
   },
 
   async toggleFavorite() {

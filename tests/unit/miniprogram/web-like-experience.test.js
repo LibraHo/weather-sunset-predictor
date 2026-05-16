@@ -58,14 +58,14 @@ describe('miniprogram web-like experience shell', () => {
     expect(wxml).toContain('settings-done');
     expect(wxml).toContain('data-value="zh-CN"');
     expect(wxml).toContain('data-value="system"');
-    expect(wxml).toContain('theme-{{themeMode}}');
+    expect(wxml).toContain('theme-{{resolvedThemeMode}}');
     expect(wxml).not.toContain('默认预测');
     expect(wxml).not.toContain('默认日期');
     expect(wxml).not.toContain('nav-grid');
     expect(wxml).not.toContain('nav-card');
 
     expect(js).toContain('toggleHomeMenu()');
-    expect(js).toContain("wx.setStorageSync('appSettings'");
+    expect(js).toContain('persistAppSettings(patch, this.data)');
     expect(js).not.toContain('selectDefaultPeriod(event)');
     expect(js).not.toContain('selectDefaultDay(event)');
     expect(js).not.toContain('resetSettings()');
@@ -146,6 +146,36 @@ describe('miniprogram web-like experience shell', () => {
     expect(galleryWxml).toContain('class="photo-card xiake-card glass-card tap-feedback"');
     expect(uploadWxml).toContain('class="picker-card xiake-card glass-card tap-feedback"');
     expect(methodologyWxml).toContain('bindtap="copyOpenApiSpec" hover-class="button-hover"');
+  });
+
+  test('theme settings apply a resolved light or dark theme to every native page', () => {
+    const appConfig = JSON.parse(read('miniprogram/app.json'));
+    const topbarWxml = read('miniprogram/components/app-topbar/index.wxml');
+    const topbarJs = read('miniprogram/components/app-topbar/index.js');
+    const topbarWxss = read('miniprogram/components/app-topbar/index.wxss');
+    const appSettings = read('miniprogram/utils/app-settings.js');
+    const appWxss = read('miniprogram/app.wxss');
+    const homeWxss = read('miniprogram/pages/home/index.wxss');
+
+    for (const page of appConfig.pages) {
+      const wxml = read(`miniprogram/${page}.wxml`);
+      const js = read(`miniprogram/${page}.js`);
+      expect(wxml).toContain('theme-{{resolvedThemeMode}}');
+      expect(wxml).toContain('bind:settingschange="onAppSettingsChange"');
+      expect(js).toContain('applyPageSettings');
+      expect(js).toContain('resolvedThemeMode');
+      expect(js).toContain('onAppSettingsChange(event)');
+    }
+
+    expect(topbarWxml).toContain('theme-{{resolvedThemeMode}} theme-setting-{{themeMode}}');
+    expect(topbarJs).toContain("this.triggerEvent('settingschange'");
+    expect(topbarJs).toContain('applyNavigationTheme(settings.resolvedThemeMode)');
+    expect(appSettings).toContain('resolveThemeMode(themeMode)');
+    expect(appSettings).toContain('wx.getSystemInfoSync');
+    expect(appWxss).toContain('.container.theme-dark');
+    expect(appWxss).toContain('.container.theme-light');
+    expect(topbarWxss).toContain('.app-topbar-shell.theme-dark .settings-panel');
+    expect(homeWxss).toContain('.home-page.theme-dark.has-weather .home-weather-preview');
   });
 
   test('result page keeps users in the Xiake product loop after scoring', () => {

@@ -1,4 +1,5 @@
 import { buildSpotMarkers, getChinaFirecloudSpots, getFirecloudLegend } from '../../services/firecloud-map.js';
+import { applyPageSettings, readAppSettings } from '../../utils/app-settings.js';
 
 const DEFAULT_MAP_CENTER = { latitude: 35.8617, longitude: 104.1954 };
 
@@ -16,10 +17,13 @@ Page({
     legendItems: getFirecloudLegend('sunset'),
     activeSpot: null,
     mapCenter: DEFAULT_MAP_CENTER,
-    mapScale: 4
+    mapScale: 4,
+    themeMode: 'system',
+    resolvedThemeMode: 'light'
   },
 
   onLoad(options = {}) {
+    this.applySavedSettings();
     const period = options.period === 'sunrise' ? 'sunrise' : 'sunset';
     this.setData({
       period,
@@ -28,6 +32,18 @@ Page({
       legendItems: getFirecloudLegend(period)
     });
     this.loadMap();
+  },
+
+  onShow() {
+    this.applySavedSettings();
+  },
+
+  applySavedSettings() {
+    applyPageSettings(this);
+  },
+
+  onAppSettingsChange(event) {
+    this.setData(event.detail || readAppSettings());
   },
 
   selectPeriod(event) {

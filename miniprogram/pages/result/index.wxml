@@ -1,5 +1,5 @@
-<view class="container result-page">
-  <app-topbar current="result" period="{{activePeriod}}" />
+<view class="container result-page theme-{{resolvedThemeMode}}">
+  <app-topbar current="result" period="{{activePeriod}}" bind:settingschange="onAppSettingsChange" />
   <block wx:if="{{hasPrediction}}">
     <view class="result-prediction-toggle">
       <view class="result-period-option tap-feedback {{activePeriod === 'sunrise' ? 'active' : ''}}" data-period="sunrise" bindtap="selectResultPeriod" hover-class="tap-feedback-hover" hover-stay-time="80">朝霞</view>

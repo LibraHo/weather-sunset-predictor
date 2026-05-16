@@ -1,4 +1,4 @@
-<view class="app-topbar-shell theme-{{themeMode}}">
+<view class="app-topbar-shell theme-{{resolvedThemeMode}} theme-setting-{{themeMode}}">
   <view class="home-topbar">
     <view class="home-brand-row tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" bindtap="goHome">
       <image class="app-logo-image" src="/assets/icons/xiake-logo.svg" mode="aspectFit" aria-hidden="true" />

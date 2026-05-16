@@ -37,6 +37,19 @@
   background: linear-gradient(135deg, #f59e0b, #ea8500);
 }
 
+.result-page.theme-dark .result-prediction-toggle {
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(7, 16, 31, 0.58);
+}
+
+.result-page.theme-dark .result-period-option {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.result-page.theme-dark .result-period-option.active {
+  color: #1b1206;
+}
+
 .result-summary-row {
   display: flex;
   gap: 16rpx;

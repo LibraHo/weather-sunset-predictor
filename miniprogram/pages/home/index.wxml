@@ -1,5 +1,5 @@
-<view class="container home-page theme-{{themeMode}} {{weatherPreview.visible ? 'has-weather' : ''}}">
-  <app-topbar current="home" period="{{period}}" />
+<view class="container home-page theme-{{resolvedThemeMode}} {{weatherPreview.visible ? 'has-weather' : ''}}">
+  <app-topbar current="home" period="{{period}}" bind:settingschange="onAppSettingsChange" />
   <view class="home-topbar" wx:if="{{false}}">
     <view class="home-brand-row">
       <image class="app-logo-image" src="/assets/icons/xiake-logo.svg" mode="aspectFit" aria-hidden="true" />

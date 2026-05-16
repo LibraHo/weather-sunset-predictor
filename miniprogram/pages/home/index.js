@@ -1,6 +1,7 @@
 import { searchLocations } from '../../services/geocoding.js';
 import { getEnhancedPrediction } from '../../services/prediction.js';
 import { addRecentLocation, listRecentLocations } from '../../services/user.js';
+import { applyPageSettings, readAppSettings, saveAppSettings as persistAppSettings } from '../../utils/app-settings.js';
 import { buildRadarCloudGradients, paintRadarCloudCanvas } from '../../utils/radar-cloud-field.js';
 
 const app = getApp();
@@ -17,6 +18,7 @@ Page({
     settingsOpen: false,
     interfaceLanguage: 'zh-CN',
     themeMode: 'system',
+    resolvedThemeMode: 'light',
     weatherView: 'overview',
     weatherDay: 'today',
     weatherParameter: 'temp',
@@ -42,6 +44,7 @@ Page({
   },
 
   onShow() {
+    this.applySavedSettings();
     this.refreshSavedLists();
     this.paintPredictionRadarCloudField();
   },
@@ -179,20 +182,16 @@ Page({
   },
 
   applySavedSettings() {
-    const settings = readAppSettings();
-    this.setData({
-      interfaceLanguage: settings.interfaceLanguage,
-      themeMode: settings.themeMode
-    });
+    applyPageSettings(this);
   },
 
   saveAppSettings(patch = {}) {
-    const settings = {
-      interfaceLanguage: patch.interfaceLanguage || this.data.interfaceLanguage || 'zh-CN',
-      themeMode: patch.themeMode || this.data.themeMode || 'system'
-    };
-    wx.setStorageSync('appSettings', settings);
+    const settings = persistAppSettings(patch, this.data);
     this.setData(settings);
+  },
+
+  onAppSettingsChange(event) {
+    this.setData(event.detail || readAppSettings());
   },
 
   async useHistory(event) {
@@ -1156,13 +1155,6 @@ function clampPercent(value) {
   const number = Number(value);
   if (!Number.isFinite(number)) return 0;
   return Math.max(0, Math.min(100, Math.round(number)));
-}
-
-function readAppSettings() {
-  const settings = wx.getStorageSync('appSettings') || {};
-  const interfaceLanguage = settings.interfaceLanguage === 'en-US' ? 'en-US' : 'zh-CN';
-  const themeMode = ['system', 'light', 'dark'].includes(settings.themeMode) ? settings.themeMode : 'system';
-  return { interfaceLanguage, themeMode };
 }
 
 function wxPromise(fn, options) {
