@@ -1,7 +1,7 @@
-<view class="location-search">
+<view class="location-search theme-{{theme}}">
   <view class="field-label">位置</view>
   <view class="input-row">
-    <button class="locate-icon" aria-label="locate" loading="{{locating}}" bindtap="onLocate">
+    <button class="locate-icon" aria-label="locate" loading="{{locating}}" hover-class="button-hover" hover-stay-time="80" bindtap="onLocate">
       <view class="star-icon">★</view>
     </button>
     <view class="location-input-shell">
@@ -11,6 +11,6 @@
         <view class="pin-stem"></view>
       </view>
     </view>
-    <button class="location-query-button" bindtap="onConfirm">查询</button>
+    <button class="location-query-button" loading="{{loading}}" disabled="{{loading}}" hover-class="button-hover" hover-stay-time="80" bindtap="onConfirm">{{loading ? '读取中' : '查询'}}</button>
   </view>
 </view>

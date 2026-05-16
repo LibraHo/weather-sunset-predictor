@@ -1,8 +1,12 @@
+import { applyPageSettings, readAppSettings } from '../../utils/app-settings.js';
+
 const openapiSpecUrl = 'https://sunset.bjhyc.online/api/agent/openapi.json';
 const apiApplyUrl = 'https://sunset.bjhyc.online/api-apply.html';
 
 Page({
   data: {
+    themeMode: 'system',
+    resolvedThemeMode: 'light',
     scoreBands: [
       { tone: 'rare', name: '顶级 Rare', range: '85-100 分', desc: '少见的爆发级条件，值得优先安排。' },
       { tone: 'strong', name: '高分 Strong', range: '70-84 分', desc: '明显高于常态，适合专程蹲守。' },
@@ -22,6 +26,22 @@ Page({
       { date: '2026-05-10', title: '低云主导光路 v3', summary: '光路遮挡改为看低云是否挡住太阳方向，避免中高云画布被总云量误伤。' },
       { date: '2026-05-10', title: '中高云载体保护 v2', summary: '高云和中云充足、低云少且空气不灰时，按可染色画布处理。' }
     ]
+  },
+
+  onLoad() {
+    this.applySavedSettings();
+  },
+
+  onShow() {
+    this.applySavedSettings();
+  },
+
+  applySavedSettings() {
+    applyPageSettings(this);
+  },
+
+  onAppSettingsChange(event) {
+    this.setData(event.detail || readAppSettings());
   },
 
   copyOpenApiSpec() {

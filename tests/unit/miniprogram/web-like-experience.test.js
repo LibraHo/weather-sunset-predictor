@@ -24,12 +24,17 @@ describe('miniprogram web-like experience shell', () => {
 
     expect(topbarWxml).toContain('home-view-menu-dropdown');
     expect(topbarWxml).toContain('bindtap="toggleSettings"');
+    expect(topbarWxml).toContain('class="settings-close"');
+    expect(topbarWxml).toContain('>保存</button>');
     expect(topbarWxml).not.toContain('data-target="settings"');
+    expect(topbarWxml).not.toContain('>完成</button>');
     expect(topbarJs).not.toMatch(/if\s*\(\s*target\s*===\s*['"]settings['"]\s*\)/);
     expect(topbarWxss).toContain('min-height: 132rpx');
     expect(topbarWxss).toContain('background: rgba(255, 252, 246, 0.90)');
     expect(topbarWxss).toContain('border-radius: 24rpx');
     expect(topbarWxss).toContain('width: 74rpx');
+    expect(topbarWxss).toMatch(/\.settings-close\s*\{[\s\S]*position: absolute;[\s\S]*right: 18rpx;[\s\S]*justify-content: center;/);
+    expect(topbarWxss).toMatch(/\.settings-done\s*\{[\s\S]*display: flex;[\s\S]*align-items: center;[\s\S]*justify-content: center;[\s\S]*line-height: 1;/);
     expect(topbarWxss).toContain('linear-gradient(135deg, #ffd166 0%, #fb923c 70%, #f97316 100%)');
     expect(topbarWxss).not.toContain('#39a849');
     expect(settingsIcon).toContain('M19.43 12.98');
@@ -58,14 +63,14 @@ describe('miniprogram web-like experience shell', () => {
     expect(wxml).toContain('settings-done');
     expect(wxml).toContain('data-value="zh-CN"');
     expect(wxml).toContain('data-value="system"');
-    expect(wxml).toContain('theme-{{themeMode}}');
+    expect(wxml).toContain('theme-{{resolvedThemeMode}}');
     expect(wxml).not.toContain('默认预测');
     expect(wxml).not.toContain('默认日期');
     expect(wxml).not.toContain('nav-grid');
     expect(wxml).not.toContain('nav-card');
 
     expect(js).toContain('toggleHomeMenu()');
-    expect(js).toContain("wx.setStorageSync('appSettings'");
+    expect(js).toContain('persistAppSettings(patch, this.data)');
     expect(js).not.toContain('selectDefaultPeriod(event)');
     expect(js).not.toContain('selectDefaultDay(event)');
     expect(js).not.toContain('resetSettings()');
@@ -83,6 +88,8 @@ describe('miniprogram web-like experience shell', () => {
     expect(js).toContain('buildTestWeatherPreview');
 
     expect(wxss).toContain('#f6efe6');
+    expect(wxss).toMatch(/\.home-page\s*\{[\s\S]*gap: 28rpx;/);
+    expect(wxss).not.toContain('gap: 56rpx;');
     expect(wxss).toContain('.home-topbar');
     expect(wxss).toContain('.home-header-actions');
     expect(wxss).toContain('.header-icon-button');
@@ -113,6 +120,88 @@ describe('miniprogram web-like experience shell', () => {
     expect(homeJs).toMatch(/async onUseCurrentLocation\(\)[\s\S]*await this\.onSearch\(\);/);
     expect(homeJs).toMatch(/async useHistory\(event\)[\s\S]*await this\.onSearch\(\);/);
     expect(homeJs).toMatch(/async resolveLocation\(locationText\)[\s\S]*if \(this\.data\.coordinate\)/);
+  });
+
+  test('tap targets provide native press feedback across the mini-program surface', () => {
+    const appWxss = read('miniprogram/app.wxss');
+    const topbarWxml = read('miniprogram/components/app-topbar/index.wxml');
+    const locationWxml = read('miniprogram/components/location-search/index.wxml');
+    const homeWxml = read('miniprogram/pages/home/index.wxml');
+    const resultWxml = read('miniprogram/pages/result/index.wxml');
+    const mapWxml = read('miniprogram/pages/map/index.wxml');
+    const galleryWxml = read('miniprogram/pages/gallery/index.wxml');
+    const uploadWxml = read('miniprogram/pages/upload/index.wxml');
+    const methodologyWxml = read('miniprogram/pages/methodology/index.wxml');
+
+    expect(appWxss).toContain('.tap-feedback-hover');
+    expect(appWxss).toContain('.button-hover');
+    expect(appWxss).toContain('.card-tap-hover');
+    expect(appWxss).toContain('transform: scale(0.97)');
+    expect(topbarWxml).toContain('class="home-brand-row tap-feedback"');
+    expect(topbarWxml).toContain('class="menu-button icon-button"');
+    expect(topbarWxml).toContain('class="header-icon-button icon-button"');
+    expect(topbarWxml).toContain('hover-class="button-hover"');
+    expect(locationWxml).toContain('hover-class="button-hover" hover-stay-time="80" bindtap="onLocate"');
+    expect(locationWxml).toContain('hover-class="button-hover" hover-stay-time="80" bindtap="onConfirm"');
+    expect(homeWxml).toContain('class="weather-toggle tap-feedback');
+    expect(homeWxml).toContain('class="prediction-toggle tap-feedback');
+    expect(homeWxml).toContain('class="query-item tap-feedback"');
+    expect(resultWxml).toContain('class="result-period-option tap-feedback');
+    expect(resultWxml).toContain('class="switch-option tap-feedback"');
+    expect(mapWxml).toContain('class="segment tap-feedback');
+    expect(mapWxml).not.toContain('class="spot-row tap-feedback"');
+    expect(galleryWxml).toContain('class="photo-card xiake-card glass-card tap-feedback"');
+    expect(uploadWxml).toContain('class="picker-card xiake-card glass-card tap-feedback"');
+    expect(methodologyWxml).toContain('bindtap="copyOpenApiSpec" hover-class="button-hover"');
+  });
+
+  test('theme settings apply a resolved light or dark theme to every native page', () => {
+    const appConfig = JSON.parse(read('miniprogram/app.json'));
+    const topbarWxml = read('miniprogram/components/app-topbar/index.wxml');
+    const topbarJs = read('miniprogram/components/app-topbar/index.js');
+    const topbarWxss = read('miniprogram/components/app-topbar/index.wxss');
+    const locationWxml = read('miniprogram/components/location-search/index.wxml');
+    const locationJs = read('miniprogram/components/location-search/index.js');
+    const locationWxss = read('miniprogram/components/location-search/index.wxss');
+    const appSettings = read('miniprogram/utils/app-settings.js');
+    const appWxss = read('miniprogram/app.wxss');
+    const homeWxml = read('miniprogram/pages/home/index.wxml');
+    const homeWxss = read('miniprogram/pages/home/index.wxss');
+
+    for (const page of appConfig.pages) {
+      const wxml = read(`miniprogram/${page}.wxml`);
+      const js = read(`miniprogram/${page}.js`);
+      expect(wxml).toContain('theme-{{resolvedThemeMode}}');
+      expect(wxml).toContain('bind:settingschange="onAppSettingsChange"');
+      expect(js).toContain('applyPageSettings');
+      expect(js).toContain('resolvedThemeMode');
+      expect(js).toContain('onAppSettingsChange(event)');
+    }
+
+    expect(topbarWxml).toContain('theme-{{resolvedThemeMode}} theme-setting-{{themeMode}}');
+    expect(topbarJs).toContain("this.triggerEvent('settingschange'");
+    expect(topbarJs).toContain('applyNavigationTheme(settings.resolvedThemeMode)');
+    expect(appSettings).toContain('resolveThemeMode(themeMode)');
+    expect(appSettings).toContain('wx.getSystemInfoSync');
+    expect(appWxss).toContain('.container.theme-dark');
+    expect(appWxss).toContain('.container.theme-light');
+    expect(topbarWxss).toContain('.app-topbar-shell.theme-dark .settings-panel');
+    expect(homeWxss).toContain('.home-page.theme-dark.has-weather .home-weather-preview');
+    expect(homeWxml).toContain('theme="{{resolvedThemeMode}}"');
+    expect(locationWxml).toContain('theme-{{theme}}');
+    expect(locationJs).toContain("theme: { type: String, value: 'light' }");
+    expect(locationWxss).toContain('.location-search.theme-dark');
+    expect(locationWxss).toContain('.location-search.theme-dark .input-row');
+    expect(locationWxss).toContain('.location-search.theme-dark .location-input');
+    expect(homeWxss).toContain('.home-page.theme-dark .home-footer-card');
+    expect(homeWxss).not.toContain('.home-page.theme-dark.has-weather .home-footer-card');
+    expect(homeWxss).toContain('.home-page.theme-dark.has-weather .weather-hourly-chart');
+    expect(homeWxss).toContain('.home-page.theme-dark.has-weather .weather-hourly-axis-label');
+    expect(homeWxss).toContain('.home-page.theme-dark.has-weather .weather-hourly-point-label');
+    expect(homeWxss).toContain('.home-page.theme-dark.has-weather .weather-hourly-chart-dot');
+    expect(homeWxml).not.toContain('weather-hourly-chart-bar');
+    expect(homeWxss).not.toContain('.home-page.theme-dark.has-weather .weather-hourly-chart-bar');
+    expect(homeWxss).not.toContain('.home-page.theme-dark.has-weather .weather-hourly-chart {\n  background: linear-gradient(180deg, rgba(255, 252, 246');
   });
 
   test('result page keeps users in the Xiake product loop after scoring', () => {

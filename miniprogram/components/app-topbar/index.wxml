@@ -1,28 +1,28 @@
-<view class="app-topbar-shell theme-{{themeMode}}">
+<view class="app-topbar-shell theme-{{resolvedThemeMode}} theme-setting-{{themeMode}}">
   <view class="home-topbar">
-    <view class="home-brand-row" bindtap="goHome">
+    <view class="home-brand-row tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" bindtap="goHome">
       <image class="app-logo-image" src="/assets/icons/xiake-logo.svg" mode="aspectFit" aria-hidden="true" />
       <view class="app-logo-text">霞客</view>
     </view>
 
     <view class="home-header-actions">
       <view class="home-view-menu">
-        <button class="menu-button icon-button" aria-label="menu" bindtap="toggleHomeMenu">
+        <button class="menu-button icon-button" aria-label="menu" hover-class="button-hover" hover-stay-time="80" bindtap="toggleHomeMenu">
           <image class="header-action-image" src="/assets/icons/menu.svg" mode="aspectFit" aria-hidden="true" />
         </button>
         <view class="home-view-menu-dropdown" wx:if="{{homeMenuOpen}}">
-          <view class="home-view-option {{current === 'home' ? 'active' : ''}}" data-target="forecast" bindtap="navigateFeature">预测功能</view>
-          <view class="home-view-option {{current === 'methodology' ? 'active' : ''}}" data-target="methodology" bindtap="navigateFeature">火烧云算法</view>
-          <view class="home-view-option {{current === 'map' ? 'active' : ''}}" data-target="map" bindtap="navigateFeature">火烧云地图</view>
-          <view class="home-view-option {{current === 'gallery' ? 'active' : ''}}" data-target="gallery" bindtap="navigateFeature">分享地图</view>
-          <view class="home-view-option" data-target="api" bindtap="navigateFeature">API接入</view>
-          <view class="home-view-option {{current === 'upload' ? 'active' : ''}}" data-target="upload" bindtap="navigateFeature">上传照片</view>
+          <view class="home-view-option tap-feedback {{current === 'home' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="forecast" bindtap="navigateFeature">预测功能</view>
+          <view class="home-view-option tap-feedback {{current === 'methodology' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="methodology" bindtap="navigateFeature">火烧云算法</view>
+          <view class="home-view-option tap-feedback {{current === 'map' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="map" bindtap="navigateFeature">火烧云地图</view>
+          <view class="home-view-option tap-feedback {{current === 'gallery' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="gallery" bindtap="navigateFeature">分享地图</view>
+          <view class="home-view-option tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="api" bindtap="navigateFeature">API接入</view>
+          <view class="home-view-option tap-feedback {{current === 'upload' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="upload" bindtap="navigateFeature">上传照片</view>
         </view>
       </view>
       <button class="header-icon-button icon-button" aria-label="notice">
         <image class="header-action-image" src="/assets/icons/bell.svg" mode="aspectFit" aria-hidden="true" />
       </button>
-      <button class="header-icon-button icon-button" aria-label="settings" bindtap="toggleSettings">
+      <button class="header-icon-button icon-button" aria-label="settings" hover-class="button-hover" hover-stay-time="80" bindtap="toggleSettings">
         <image class="header-action-image" src="/assets/icons/settings.svg" mode="aspectFit" aria-hidden="true" />
       </button>
     </view>
@@ -34,23 +34,23 @@
         <view class="settings-title">设置</view>
         <view class="settings-subtitle">调整界面语言和显示主题。</view>
       </view>
-      <button class="settings-close" aria-label="close settings" bindtap="closeSettings">x</button>
+      <button class="settings-close" aria-label="close settings" hover-class="button-hover" hover-stay-time="80" bindtap="closeSettings">×</button>
     </view>
     <view class="settings-group">
       <view class="settings-label">界面语言</view>
       <view class="settings-segmented">
-        <view class="settings-segment {{interfaceLanguage === 'zh-CN' ? 'active' : ''}}" data-value="zh-CN" bindtap="selectInterfaceLanguage">中文</view>
-        <view class="settings-segment {{interfaceLanguage === 'en-US' ? 'active' : ''}}" data-value="en-US" bindtap="selectInterfaceLanguage">English</view>
+        <view class="settings-segment tap-feedback {{interfaceLanguage === 'zh-CN' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-value="zh-CN" bindtap="selectInterfaceLanguage">中文</view>
+        <view class="settings-segment tap-feedback {{interfaceLanguage === 'en-US' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-value="en-US" bindtap="selectInterfaceLanguage">English</view>
       </view>
     </view>
     <view class="settings-group">
       <view class="settings-label">显示主题</view>
       <view class="settings-segmented">
-        <view class="settings-segment {{themeMode === 'system' ? 'active' : ''}}" data-value="system" bindtap="selectThemeMode">跟随系统</view>
-        <view class="settings-segment {{themeMode === 'light' ? 'active' : ''}}" data-value="light" bindtap="selectThemeMode">浅色</view>
-        <view class="settings-segment {{themeMode === 'dark' ? 'active' : ''}}" data-value="dark" bindtap="selectThemeMode">深色</view>
+        <view class="settings-segment tap-feedback {{themeMode === 'system' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-value="system" bindtap="selectThemeMode">跟随系统</view>
+        <view class="settings-segment tap-feedback {{themeMode === 'light' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-value="light" bindtap="selectThemeMode">浅色</view>
+        <view class="settings-segment tap-feedback {{themeMode === 'dark' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-value="dark" bindtap="selectThemeMode">深色</view>
       </view>
     </view>
-    <button class="settings-done" bindtap="closeSettings">完成</button>
+    <button class="settings-done" hover-class="button-hover" hover-stay-time="80" bindtap="closeSettings">保存</button>
   </view>
 </view>

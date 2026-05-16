@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals';
+import { normalizePrediction } from '../../../miniprogram/services/prediction.js';
 
 describe('miniprogram page user/share helpers', () => {
   let resultHelpers;
@@ -120,11 +121,16 @@ describe('miniprogram page user/share helpers', () => {
     }));
     const view = homeHelpers.buildWeatherHourlyViewModel(hourly, 'temp');
 
-    expect(view.chart[0].left).toBeGreaterThanOrEqual(8);
-    expect(view.chart.at(-1).left).toBeLessThanOrEqual(92);
-    expect(Math.min(...view.chart.map((item) => item.left))).toBeGreaterThanOrEqual(8);
-    expect(Math.max(...view.chart.map((item) => item.left))).toBeLessThanOrEqual(92);
-    expect(view.chartSegments.every((segment) => segment.left >= 8 && segment.left <= 92)).toBe(true);
+    expect(view.chart[0].left).toBeGreaterThanOrEqual(18);
+    expect(view.chart.at(-1).left).toBeLessThanOrEqual(82);
+    expect(Math.min(...view.chart.map((item) => item.left))).toBeGreaterThanOrEqual(18);
+    expect(Math.max(...view.chart.map((item) => item.left))).toBeLessThanOrEqual(82);
+    expect(view.chart).toHaveLength(13);
+    expect(view.chart[0].labelPlacement).toBe('right');
+    expect(view.chart.at(-1).labelPlacement).toBe('left');
+    expect(view.chart[Math.floor((view.chart.length - 1) / 2)].labelPlacement).toBe('center');
+    expect(view.chart.every((point) => point.top >= 26 && point.top <= 80)).toBe(true);
+    expect(view.chartSegments).toBeUndefined();
   });
 
   test('home sunrise sunset preview switch rebuilds score time direction and analysis', () => {
@@ -189,6 +195,56 @@ describe('miniprogram page user/share helpers', () => {
     });
     expect(state.predictionPreview.radar.directions).toHaveLength(8);
     expect(state.predictionPreview.radar.directions[0]).toMatchObject({ direction: 'N', highCloud: expect.any(Number) });
+  });
+
+  test('home prediction conclusion hides backend condition enum tokens', () => {
+    const state = homeHelpers.buildHomePredictionSurface({
+      locationName: 'TEST',
+      period: 'sunset',
+      score: 76,
+      conclusion: 'conditions_good',
+      weatherData: {
+        provider: 'open-meteo',
+        highClouds: 62,
+        midClouds: 36,
+        lowClouds: 8
+      },
+      clouds: { high: 62, mid: 36, low: 8 }
+    }, { locationName: 'TEST', period: 'sunset' });
+
+    expect(state.predictionPreview.conclusion).not.toMatch(/conditions_[a-z_]+/);
+    expect(state.predictionPreview.conclusion).toContain('火烧云条件');
+  });
+
+  test('home weather card renders normalized real-city weather metrics', () => {
+    const prediction = normalizePrediction({
+      score: 76,
+      status: 'good',
+      locationName: '北京',
+      cloudLayers: { high: 62, mid: 36, low: 8 },
+      weatherData: {
+        temperature_2m: 21.6,
+        relative_humidity_2m: 68,
+        surface_pressure: 1008.7,
+        visibility: 16000,
+        wind_speed_10m: 11.4,
+        wind_direction_10m: '西',
+        precipitation: 0,
+        aerosol_optical_depth: 0.12
+      }
+    });
+    const state = homeHelpers.buildHomePredictionSurface(prediction, { locationName: '北京', period: 'sunset' });
+
+    expect(state.weatherPreview.temperature).toBe('21.6');
+    expect(state.weatherPreview.windSpeed).toBe('11 km/h');
+    expect(state.weatherPreview.windDirection).toBe('西');
+    expect(state.weatherPreview.metrics).toEqual(expect.arrayContaining([
+      expect.objectContaining({ key: 'humidity', value: '68%' }),
+      expect.objectContaining({ key: 'pressure', value: '1008.7 hPa' }),
+      expect.objectContaining({ key: 'visibility', value: '16 km' }),
+      expect.objectContaining({ key: 'aerosol', value: '0.12' }),
+      expect.objectContaining({ key: 'precipitation', value: '0 mm' })
+    ]));
   });
 
   test('result period switch can request and render the alternate prediction card', () => {

@@ -1,3 +1,5 @@
+import { applyNavigationTheme, readAppSettings, saveAppSettings } from '../../utils/app-settings.js';
+
 Component({
   properties: {
     current: {
@@ -14,7 +16,8 @@ Component({
     homeMenuOpen: false,
     settingsOpen: false,
     interfaceLanguage: 'zh-CN',
-    themeMode: 'system'
+    themeMode: 'system',
+    resolvedThemeMode: 'light'
   },
 
   lifetimes: {
@@ -76,26 +79,15 @@ Component({
 
     applySavedSettings() {
       const settings = readAppSettings();
-      this.setData({
-        interfaceLanguage: settings.interfaceLanguage,
-        themeMode: settings.themeMode
-      });
+      this.setData(settings);
+      applyNavigationTheme(settings.resolvedThemeMode);
     },
 
     saveAppSettings(patch = {}) {
-      const settings = {
-        interfaceLanguage: patch.interfaceLanguage || this.data.interfaceLanguage || 'zh-CN',
-        themeMode: patch.themeMode || this.data.themeMode || 'system'
-      };
-      wx.setStorageSync('appSettings', settings);
+      const settings = saveAppSettings(patch, this.data);
       this.setData(settings);
+      applyNavigationTheme(settings.resolvedThemeMode);
+      this.triggerEvent('settingschange', settings, { bubbles: true, composed: true });
     }
   }
 });
-
-function readAppSettings() {
-  const settings = wx.getStorageSync('appSettings') || {};
-  const interfaceLanguage = settings.interfaceLanguage === 'en-US' ? 'en-US' : 'zh-CN';
-  const themeMode = ['system', 'light', 'dark'].includes(settings.themeMode) ? settings.themeMode : 'system';
-  return { interfaceLanguage, themeMode };
-}

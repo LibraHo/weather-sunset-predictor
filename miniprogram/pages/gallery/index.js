@@ -1,4 +1,5 @@
 import { listPhotos, normalizePhoto } from '../../services/photos.js';
+import { applyPageSettings, readAppSettings } from '../../utils/app-settings.js';
 
 export const GALLERY_LINK = 'https://sunset.bjhyc.online/gallery.html';
 export const DEFAULT_MAP_CENTER = { latitude: 35.8617, longitude: 104.1954 };
@@ -16,6 +17,8 @@ Page({
     latestPhoto: null,
     mapCenter: DEFAULT_MAP_CENTER,
     mapScale: 4,
+    themeMode: 'system',
+    resolvedThemeMode: 'light',
     photoStats: {
       total: 0,
       withLocation: 0
@@ -27,7 +30,20 @@ Page({
   },
 
   onLoad() {
+    this.applySavedSettings();
     this.loadPhotos();
+  },
+
+  onShow() {
+    this.applySavedSettings();
+  },
+
+  applySavedSettings() {
+    applyPageSettings(this);
+  },
+
+  onAppSettingsChange(event) {
+    this.setData(event.detail || readAppSettings());
   },
 
   async loadPhotos() {

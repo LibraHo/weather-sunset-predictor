@@ -1,5 +1,5 @@
-<view class="container gallery-page">
-  <app-topbar current="gallery" />
+<view class="container gallery-page theme-{{resolvedThemeMode}}">
+  <app-topbar current="gallery" bind:settingschange="onAppSettingsChange" />
   <view class="gallery-hero">
     <view class="eyebrow warm-accent">霞客影集</view>
     <view class="headline">照片分享地图</view>
@@ -33,7 +33,7 @@
     </view>
 
     <view class="active-photo" wx:if="{{activePhoto}}">
-      <image wx:if="{{activePhoto.hasThumbnail}}" class="active-thumb" src="{{activePhoto.thumbnailUrl}}" mode="aspectFill" bindtap="previewOriginal" data-id="{{activePhoto.id}}" />
+      <image wx:if="{{activePhoto.hasThumbnail}}" class="active-thumb tap-feedback" src="{{activePhoto.thumbnailUrl}}" mode="aspectFill" bindtap="previewOriginal" data-id="{{activePhoto.id}}" hover-class="tap-feedback-hover" hover-stay-time="80" />
       <view wx:else class="active-placeholder">霞</view>
       <view class="active-meta">
         <view class="active-label">当前照片</view>
@@ -45,10 +45,10 @@
     </view>
 
     <view class="map-actions">
-      <button class="primary-button map-button" bindtap="goUpload">上传照片</button>
-      <button class="ghost-button map-button" bindtap="previewOriginal" wx:if="{{activePhoto}}">查看原图</button>
-      <button class="ghost-button map-button" bindtap="copyPhotoLink" wx:if="{{activePhoto}}">复制照片链接</button>
-      <button class="ghost-button map-button" bindtap="copyGalleryLink">复制 H5 地图</button>
+      <button class="primary-button map-button" bindtap="goUpload" hover-class="button-hover" hover-stay-time="80">上传照片</button>
+      <button class="ghost-button map-button" bindtap="previewOriginal" wx:if="{{activePhoto}}" hover-class="button-hover" hover-stay-time="80">查看原图</button>
+      <button class="ghost-button map-button" bindtap="copyPhotoLink" wx:if="{{activePhoto}}" hover-class="button-hover" hover-stay-time="80">复制照片链接</button>
+      <button class="ghost-button map-button" bindtap="copyGalleryLink" hover-class="button-hover" hover-stay-time="80">复制 H5 地图</button>
     </view>
   </view>
 
@@ -60,13 +60,13 @@
   <view class="state-card error-state" wx:elif="{{errorMessage}}">
     <view class="state-title">加载失败</view>
     <view class="state-copy">{{errorMessage}}</view>
-    <button class="ghost-button retry-button" bindtap="loadPhotos">重试</button>
+    <button class="ghost-button retry-button" bindtap="loadPhotos" hover-class="button-hover" hover-stay-time="80">重试</button>
   </view>
 
   <view class="state-card xiake-card empty-state" wx:elif="{{isEmpty}}">
     <view class="state-title">暂无照片</view>
     <view class="state-copy subtle-text">上传第一张火烧云照片吧。</view>
-    <button class="primary-button retry-button" bindtap="goUpload">上传照片</button>
+    <button class="primary-button retry-button" bindtap="goUpload" hover-class="button-hover" hover-stay-time="80">上传照片</button>
   </view>
 
   <view class="photo-list" wx:else>
@@ -75,10 +75,10 @@
         <view class="section-title list-title">最新照片</view>
         <view class="latest-copy subtle-text" wx:if="{{latestPhoto}}">最近：{{latestPhoto.location}} · {{latestPhoto.takenAt}}</view>
       </view>
-      <button class="small-link" bindtap="copyGalleryLink">H5 地图</button>
+      <button class="small-link" bindtap="copyGalleryLink" hover-class="button-hover" hover-stay-time="80">H5 地图</button>
     </view>
 
-    <view class="photo-card xiake-card glass-card" wx:for="{{photos}}" wx:key="id" bindtap="focusPhoto" data-id="{{item.id}}">
+    <view class="photo-card xiake-card glass-card tap-feedback" wx:for="{{photos}}" wx:key="id" bindtap="focusPhoto" data-id="{{item.id}}" hover-class="card-tap-hover" hover-stay-time="80">
       <image wx:if="{{item.hasThumbnail}}" class="photo-thumb" src="{{item.thumbnailUrl}}" mode="aspectFill" />
       <view wx:else class="photo-placeholder">霞</view>
       <view class="photo-meta">

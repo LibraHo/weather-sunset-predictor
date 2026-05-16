@@ -8,14 +8,18 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8rpx;
+  box-sizing: border-box;
   padding: 8rpx;
   border: 2rpx solid rgba(127, 83, 29, 0.10);
   border-radius: 999rpx;
   background: rgba(255, 252, 246, 0.72);
+  overflow: hidden;
 }
 
 .result-period-option {
+  min-width: 0;
   min-height: 56rpx;
+  box-sizing: border-box;
   padding: 0 8rpx;
   border-radius: 999rpx;
   color: rgba(89, 67, 54, 0.62);
@@ -31,6 +35,19 @@
 .result-period-option.active {
   color: #ffffff;
   background: linear-gradient(135deg, #f59e0b, #ea8500);
+}
+
+.result-page.theme-dark .result-prediction-toggle {
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(7, 16, 31, 0.58);
+}
+
+.result-page.theme-dark .result-period-option {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.result-page.theme-dark .result-period-option.active {
+  color: #1b1206;
 }
 
 .result-summary-row {
@@ -381,7 +398,7 @@
 .radar-ring-label {
   position: absolute;
   color: rgba(255, 255, 255, 0.46);
-  font-size: 20rpx;
+  font-size: 21rpx;
   font-weight: 800;
   z-index: 2;
   transform: translate(-50%, -50%);
@@ -476,7 +493,7 @@
 
 .radar-sun-event-label {
   color: rgba(255, 255, 255, 0.60);
-  font-size: 18rpx;
+  font-size: 20rpx;
   font-weight: 800;
 }
 
@@ -497,7 +514,7 @@
 
 .radar-direction-name {
   color: rgba(255, 255, 255, 0.68);
-  font-size: 21rpx;
+  font-size: 22rpx;
   font-weight: 800;
 }
 
@@ -562,7 +579,7 @@
 .day-date {
   margin-top: 6rpx;
   color: rgba(255, 255, 255, 0.44);
-  font-size: 21rpx;
+  font-size: 22rpx;
 }
 
 .day-score {

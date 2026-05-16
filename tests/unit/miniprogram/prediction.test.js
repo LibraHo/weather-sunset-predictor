@@ -35,11 +35,48 @@ describe('miniprogram services/prediction', () => {
       visibility: 18,
       humidity: 56,
       aod: 0.18,
+      weatherData: expect.objectContaining({
+        temp: null,
+        humidity: 56,
+        visibility: 18,
+        aod: 0.18
+      }),
       canvasAnalysis: null,
       lightPathAnalysis: null,
       renderingAnalysis: null,
       summary: { description: 'conditions look good' },
       explanation: 'conditions look good'
+    });
+  });
+
+  test('normalizePrediction preserves real weather fields for the home weather card', () => {
+    const normalized = normalizePrediction({
+      score: 76,
+      status: 'good',
+      cloudLayers: { high: 62, mid: 36, low: 8 },
+      weatherData: {
+        temperature_2m: 21.6,
+        relative_humidity_2m: 68,
+        surface_pressure: 1008.7,
+        visibility: 16000,
+        wind_speed_10m: 11.4,
+        wind_direction_10m: 270,
+        precipitation: 0,
+        aerosol_optical_depth: 0.12,
+        cloud_cover: 36
+      }
+    });
+
+    expect(normalized.weatherData).toMatchObject({
+      temp: 21.6,
+      humidity: 68,
+      pressure: 1008.7,
+      visibility: 16,
+      windSpeed: 11.4,
+      windDirection: 270,
+      precipitation: 0,
+      aod: 0.12,
+      cloudCover: 36
     });
   });
 

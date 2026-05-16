@@ -10,6 +10,7 @@ const router = express.Router();
 const gridService = require('../services/GridScoreService');
 const chinaRasterService = require('../services/ChinaRasterService');
 const { isSupportedFirecloudRegion } = require('../utils/SupportedFirecloudRegion');
+const PngEncoder = require('../utils/PngEncoder');
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -35,10 +36,94 @@ function sampleRasterScore(raster, lat, lon) {
 
 const SUPPORTED_PERIODS = ['sunrise', 'sunset'];
 const MIN_SPOT_SCORE = 40;
+const RASTER_VISUAL_MIN_SCORE = 40;
+const RASTER_FULL_SCORE = 70;
+const RASTER_BAND_LEVELS = [40, 45, 50, 55, 60, 65, 70];
+const RASTER_PALETTES = {
+  sunset: [
+    { t: 0.00, r: 255, g: 236, b: 212, a: 0.05 },
+    { t: 0.12, r: 255, g: 218, b: 176, a: 0.10 },
+    { t: 0.28, r: 255, g: 194, b: 132, a: 0.18 },
+    { t: 0.46, r: 255, g: 166, b: 92, a: 0.26 },
+    { t: 0.64, r: 248, g: 132, b: 54, a: 0.35 },
+    { t: 0.82, r: 235, g: 100, b: 38, a: 0.44 },
+    { t: 1.00, r: 218, g: 78, b: 28, a: 0.55 }
+  ],
+  sunrise: [
+    { t: 0.00, r: 255, g: 236, b: 214, a: 0.06 },
+    { t: 0.12, r: 255, g: 220, b: 184, a: 0.12 },
+    { t: 0.28, r: 255, g: 196, b: 150, a: 0.22 },
+    { t: 0.46, r: 255, g: 166, b: 112, a: 0.32 },
+    { t: 0.64, r: 248, g: 132, b: 82, a: 0.42 },
+    { t: 0.82, r: 236, g: 104, b: 62, a: 0.54 },
+    { t: 1.00, r: 222, g: 84, b: 46, a: 0.65 }
+  ]
+};
 
 function normalizeSpotsPeriod(period) {
   const safe = typeof period === 'string' ? period.toLowerCase() : '';
   return SUPPORTED_PERIODS.includes(safe) ? safe : null;
+}
+
+function lerp(start, end, t) {
+  return start + (end - start) * t;
+}
+
+function smoothstep01(t) {
+  const value = clamp(t, 0, 1);
+  return value * value * (3 - 2 * value);
+}
+
+function samplePalette(t, palette) {
+  const value = clamp(t, 0, 1);
+  for (let index = 0; index < palette.length - 1; index += 1) {
+    const low = palette[index];
+    const high = palette[index + 1];
+    if (value >= low.t && value <= high.t) {
+      const localT = (value - low.t) / (high.t - low.t || 1);
+      return {
+        r: Math.round(lerp(low.r, high.r, localT)),
+        g: Math.round(lerp(low.g, high.g, localT)),
+        b: Math.round(lerp(low.b, high.b, localT)),
+        a: clamp(lerp(low.a, high.a, localT), 0, 1)
+      };
+    }
+  }
+  return palette[palette.length - 1];
+}
+
+function scoreToRasterRgba(score, period = 'sunset') {
+  if (!Number.isFinite(score) || score < RASTER_VISUAL_MIN_SCORE) return { r: 0, g: 0, b: 0, a: 0 };
+  const palette = RASTER_PALETTES[period] || RASTER_PALETTES.sunset;
+  const clamped = clamp(score, RASTER_VISUAL_MIN_SCORE, RASTER_FULL_SCORE);
+  let bandIndex = 0;
+  while (bandIndex < RASTER_BAND_LEVELS.length - 1 && clamped >= RASTER_BAND_LEVELS[bandIndex + 1]) {
+    bandIndex += 1;
+  }
+  const bandLo = RASTER_BAND_LEVELS[bandIndex];
+  const bandHi = RASTER_BAND_LEVELS[Math.min(bandIndex + 1, RASTER_BAND_LEVELS.length - 1)];
+  const localT = bandHi === bandLo ? 1 : smoothstep01((clamped - bandLo) / (bandHi - bandLo));
+  const globalLoT = (bandLo - RASTER_VISUAL_MIN_SCORE) / (RASTER_FULL_SCORE - RASTER_VISUAL_MIN_SCORE);
+  const globalHiT = (bandHi - RASTER_VISUAL_MIN_SCORE) / (RASTER_FULL_SCORE - RASTER_VISUAL_MIN_SCORE);
+  return samplePalette(lerp(globalLoT, globalHiT, localT), palette);
+}
+
+function renderRasterOverlayPng(raster, period) {
+  const { width, height, values, noData = -1 } = raster || {};
+  if (!width || !height || !Array.isArray(values)) {
+    throw new Error('Invalid raster data');
+  }
+  const rgba = new Uint8Array(width * height * 4);
+  for (let index = 0; index < width * height; index += 1) {
+    const score = Number(values[index]);
+    const color = score === noData ? { r: 0, g: 0, b: 0, a: 0 } : scoreToRasterRgba(score, period);
+    const offset = index * 4;
+    rgba[offset] = color.r;
+    rgba[offset + 1] = color.g;
+    rgba[offset + 2] = color.b;
+    rgba[offset + 3] = Math.round(clamp(color.a, 0, 1) * 255);
+  }
+  return PngEncoder.encode(rgba, width, height);
 }
 
 /**
@@ -146,6 +231,33 @@ router.get('/china/raster', async (req, res, next) => {
   }
 });
 
+router.get('/china/raster-overlay.png', async (req, res, next) => {
+  try {
+    const period = normalizeSpotsPeriod(req.query?.period || 'sunset');
+    if (!period) {
+      return res.status(400).json({
+        error: {
+          code: 'INVALID_PERIOD',
+          message: 'period 浠呮敮鎸?sunrise 鎴?sunset'
+        }
+      });
+    }
+
+    const rawRes = parseFloat(req.query?.resolution);
+    const resolution = (!isNaN(rawRes) && rawRes >= 0.1 && rawRes <= 2) ? rawRes : 0.25;
+    const raster = await chinaRasterService.getRaster(period, resolution);
+    const png = renderRasterOverlayPng(raster, period);
+
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    res.send(png);
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;
 module.exports.normalizeSpotsPeriod = normalizeSpotsPeriod;
 module.exports.SUPPORTED_PERIODS = SUPPORTED_PERIODS;
+module.exports.renderRasterOverlayPng = renderRasterOverlayPng;
+module.exports.scoreToRasterRgba = scoreToRasterRgba;

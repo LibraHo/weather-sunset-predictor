@@ -25,6 +25,18 @@ page {
   padding: 32rpx 28rpx 56rpx;
 }
 
+.container.theme-dark {
+  color: rgba(255, 255, 255, 0.92);
+  background-color: #0a0f1e;
+  background-image: linear-gradient(180deg, #070b16 0%, #0a0f1e 42%, #0e1930 72%, #07101f 100%);
+}
+
+.container.theme-light {
+  color: #3d3028;
+  background-color: #f6efe6;
+  background-image: linear-gradient(180deg, #f6efe6 0%, #efe4d6 100%);
+}
+
 /* Background utilities */
 .xiake-bg-night-sky {
   background-color: #0a0f1e;
@@ -93,6 +105,29 @@ page {
   line-height: 96rpx;
   background: linear-gradient(135deg, #ffd166 0%, #fb923c 58%, #f97316 100%);
   box-shadow: 0 16rpx 34rpx rgba(251, 146, 60, 0.28);
+}
+
+.tap-feedback,
+.primary-button,
+.xiake-button-primary,
+.ghost-button,
+.xiake-button-ghost {
+  transition: transform 120ms ease, opacity 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+}
+
+.tap-feedback-hover,
+.button-hover,
+.card-tap-hover {
+  opacity: 0.82;
+  transform: scale(0.97);
+}
+
+.button-hover {
+  box-shadow: 0 8rpx 18rpx rgba(251, 146, 60, 0.18);
+}
+
+.card-tap-hover {
+  box-shadow: 0 10rpx 24rpx rgba(92, 58, 20, 0.14);
 }
 
 .primary-button[disabled],

@@ -1,5 +1,5 @@
-<view class="container upload-page">
-  <app-topbar current="upload" />
+<view class="container upload-page theme-{{resolvedThemeMode}}">
+  <app-topbar current="upload" bind:settingschange="onAppSettingsChange" />
   <view class="upload-hero">
     <view class="eyebrow warm-accent">霞客投稿</view>
     <view class="headline">把这次霞光放到地图上。</view>
@@ -11,7 +11,7 @@
     <view class="subtle-text">从预测结果带入地点后，补充照片和拍摄时间。</view>
   </view>
 
-  <view class="picker-card xiake-card glass-card" bindtap="choosePhoto">
+  <view class="picker-card xiake-card glass-card tap-feedback" bindtap="choosePhoto" hover-class="card-tap-hover" hover-stay-time="80">
     <image wx:if="{{hasPhoto}}" class="preview-image" src="{{previewUrl}}" mode="aspectFill" />
     <view wx:else class="picker-empty">
       <view class="picker-mark">霞</view>
@@ -67,9 +67,9 @@
   <view class="success-card" wx:if="{{successMessage}}">{{successMessage}}</view>
 
   <view class="action-row">
-    <button class="primary-button submit-button" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitPhoto">
+    <button class="primary-button submit-button" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitPhoto" hover-class="button-hover" hover-stay-time="80">
       {{submitting ? '正在上传…' : '上传照片'}}
     </button>
-    <button class="ghost-button gallery-button" bindtap="goGallery">返回图库</button>
+    <button class="ghost-button gallery-button" bindtap="goGallery" hover-class="button-hover" hover-stay-time="80">返回图库</button>
   </view>
 </view>

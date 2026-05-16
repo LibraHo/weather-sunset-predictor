@@ -114,6 +114,7 @@
 }
 
 .settings-panel {
+  position: relative;
   margin-top: 18rpx;
   padding: 24rpx;
   color: #3d3028;
@@ -128,6 +129,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 18rpx;
+  padding-right: 64rpx;
 }
 
 .settings-title {
@@ -144,15 +146,22 @@
 }
 
 .settings-close {
-  width: 52rpx;
-  height: 52rpx;
+  position: absolute;
+  top: 18rpx;
+  right: 18rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58rpx;
+  height: 58rpx;
   margin: 0;
   padding: 0;
   border-radius: 999rpx;
-  color: rgba(89, 67, 54, 0.72);
+  color: rgba(89, 67, 54, 0.82);
   font-size: 34rpx;
-  line-height: 46rpx;
-  background: rgba(255, 255, 255, 0.08);
+  font-weight: 900;
+  line-height: 1;
+  background: rgba(127, 83, 29, 0.10);
 }
 
 .settings-group {
@@ -192,17 +201,73 @@
 }
 
 .settings-done {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   height: 72rpx;
   margin-top: 26rpx;
+  padding: 0;
   border-radius: 14rpx;
   color: #1b1206;
   font-size: 28rpx;
   font-weight: 900;
-  line-height: 72rpx;
+  line-height: 1;
   background: linear-gradient(135deg, #ffd166, #fb923c);
 }
 
 button::after {
   border: 0;
+}
+
+.app-topbar-shell.theme-dark .home-topbar {
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(18, 28, 52, 0.90);
+  box-shadow: 0 28rpx 76rpx rgba(0, 0, 0, 0.32), inset 0 1rpx 0 rgba(255, 255, 255, 0.08);
+}
+
+.app-topbar-shell.theme-dark .app-logo-text {
+  color: #f5c87a;
+}
+
+.app-topbar-shell.theme-dark .icon-button,
+.app-topbar-shell.theme-dark .menu-button,
+.app-topbar-shell.theme-dark .header-icon-button {
+  color: #f5c87a;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12rpx 26rpx rgba(0, 0, 0, 0.24);
+}
+
+.app-topbar-shell.theme-dark .home-view-menu-dropdown,
+.app-topbar-shell.theme-dark .settings-panel {
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(18, 28, 52, 0.96);
+  box-shadow: 0 24rpx 60rpx rgba(0, 0, 0, 0.36), inset 0 1rpx 0 rgba(255, 255, 255, 0.08);
+}
+
+.app-topbar-shell.theme-dark .home-view-option,
+.app-topbar-shell.theme-dark .settings-segment {
+  color: rgba(255, 255, 255, 0.70);
+}
+
+.app-topbar-shell.theme-dark .home-view-option.active,
+.app-topbar-shell.theme-dark .settings-segment.active {
+  color: #1b1206;
+}
+
+.app-topbar-shell.theme-dark .settings-title {
+  color: #ffffff;
+}
+
+.app-topbar-shell.theme-dark .settings-subtitle,
+.app-topbar-shell.theme-dark .settings-close {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.app-topbar-shell.theme-dark .settings-label {
+  color: #f5c87a;
+}
+
+.app-topbar-shell.theme-dark .settings-segmented {
+  background: rgba(7, 16, 31, 0.62);
 }
