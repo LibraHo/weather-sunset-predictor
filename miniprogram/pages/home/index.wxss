@@ -979,7 +979,7 @@
 .home-page {
   min-height: 100vh;
   padding: 32rpx 32rpx 64rpx;
-  gap: 56rpx;
+  gap: 28rpx;
   color: #3d3028;
   background: #f6efe6;
 }

@@ -88,6 +88,8 @@ describe('miniprogram web-like experience shell', () => {
     expect(js).toContain('buildTestWeatherPreview');
 
     expect(wxss).toContain('#f6efe6');
+    expect(wxss).toMatch(/\.home-page\s*\{[\s\S]*gap: 28rpx;/);
+    expect(wxss).not.toContain('gap: 56rpx;');
     expect(wxss).toContain('.home-topbar');
     expect(wxss).toContain('.home-header-actions');
     expect(wxss).toContain('.header-icon-button');
