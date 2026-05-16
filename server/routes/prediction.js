@@ -33,7 +33,7 @@ function closedLoopWeatherCacheKey(lat, lon, hours = 168) {
   return `closed-loop-weather:${Number(lat).toFixed(4)}:${Number(lon).toFixed(4)}:${hours}`;
 }
 
-async function fetchClosedLoopWeatherData(lat, lon, hours = 168) {
+async function fetchClosedLoopWeatherData(lat, lon, hours = 168, fetchOptions = {}) {
   const key = closedLoopWeatherCacheKey(lat, lon, hours);
   const cached = await cacheService.get(key);
   if (cached) {
@@ -44,7 +44,7 @@ async function fetchClosedLoopWeatherData(lat, lon, hours = 168) {
     return inFlightWeatherFetches.get(key);
   }
 
-  const pending = orchestrator.fetchWeatherData(lat, lon, hours)
+  const pending = orchestrator.fetchWeatherData(lat, lon, hours, undefined, fetchOptions)
     .then(async (weatherResponse) => {
       await cacheService.set(key, weatherResponse, CLOSED_LOOP_WEATHER_CACHE_TTL_SECONDS);
       return weatherResponse;
@@ -204,7 +204,9 @@ async function buildClosedLoopPredictionInput({
   type,
   referenceTime,
   weatherResponseOverride = null,
-  includeRemoteCloudData = true
+  includeRemoteCloudData = true,
+  forecastHours = 168,
+  weatherFetchOptions = {}
 }) {
   const targetDate = date ? new Date(date) : new Date();
   if (!(targetDate instanceof Date) || isNaN(targetDate.getTime())) {
@@ -218,7 +220,7 @@ async function buildClosedLoopPredictionInput({
       : SunCalculator.getSunsetTime(targetDate, lat, lon);
   }
 
-  const weatherResponse = weatherResponseOverride || await fetchClosedLoopWeatherData(lat, lon, 168);
+  const weatherResponse = weatherResponseOverride || await fetchClosedLoopWeatherData(lat, lon, forecastHours, weatherFetchOptions);
   const hourly = Array.isArray(weatherResponse.data) ? weatherResponse.data : [];
   if (!hourly.length) {
     const error = new Error('No weather data available');
@@ -457,6 +459,12 @@ router.post('/calculate', validatePredictionRequest, (req, res) => {
 router.post('/enhanced', validatePredictionRequest, async (req, res) => {
   try {
     const { weatherData, date, lat, lon, type, options = {}, referenceTime } = req.body;
+    const fastClosedLoop = options.fast === true;
+    const forecastHours = Math.max(24, Math.min(Number(options.forecastHours) || (fastClosedLoop ? 48 : 168), 168));
+    const includeRemoteCloudData = options.includeRemoteCloudData === true || (!fastClosedLoop && options.includeRemoteCloudData !== false);
+    const weatherFetchOptions = fastClosedLoop
+      ? { includeAirQuality: false, maxRetries: 1, timeoutMs: 5000 }
+      : {};
 
     console.log(`[PredictionRoute] Enhanced ${weatherData ? 'legacy-weather' : 'closed-loop'} prediction request: lat=${lat}, lon=${lon}, type=${type}`);
 
@@ -471,7 +479,16 @@ router.post('/enhanced', validatePredictionRequest, async (req, res) => {
           source: options.clientWeatherFallback ? 'client_weather_fallback' : 'client_weather_legacy',
           clientWeatherFallback: options.clientWeatherFallback === true
         }
-      : await buildClosedLoopPredictionInput({ lat, lon, date, type, referenceTime });
+      : await buildClosedLoopPredictionInput({
+          lat,
+          lon,
+          date,
+          type,
+          referenceTime,
+          includeRemoteCloudData,
+          forecastHours,
+          weatherFetchOptions
+        });
 
     const compatResult = buildEnhancedPredictionResponse({ closedLoop, lat, lon, type, options });
 

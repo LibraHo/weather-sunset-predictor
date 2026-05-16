@@ -1,5 +1,5 @@
 <view class="container gallery-page theme-{{resolvedThemeMode}}">
-  <app-topbar current="gallery" bind:settingschange="onAppSettingsChange" />
+  <app-topbar current="gallery" theme-mode="{{themeMode}}" resolved-theme-mode="{{resolvedThemeMode}}" bind:settingschange="onAppSettingsChange" />
   <view class="gallery-hero">
     <view class="eyebrow warm-accent">霞客影集</view>
     <view class="headline">照片分享地图</view>

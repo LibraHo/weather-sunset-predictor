@@ -1,4 +1,7 @@
 .methodology-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22rpx;
   min-height: 100vh;
   box-sizing: border-box;
   padding-bottom: 72rpx;
@@ -9,17 +12,6 @@
   position: relative;
   overflow: hidden;
   padding: 34rpx 30rpx;
-}
-
-.methodology-hero::after {
-  content: '';
-  position: absolute;
-  right: -80rpx;
-  bottom: -90rpx;
-  width: 260rpx;
-  height: 260rpx;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 209, 102, 0.38), rgba(251, 146, 60, 0.12) 48%, rgba(251, 146, 60, 0) 72%);
 }
 
 .eyebrow,
@@ -49,7 +41,6 @@
 }
 
 .methodology-section {
-  margin-top: 24rpx;
   padding: 26rpx;
   background: rgba(18, 28, 52, 0.68);
 }
@@ -271,4 +262,73 @@
   margin-top: 20rpx;
   padding: 18rpx;
   background: rgba(255, 255, 255, 0.07);
+}
+
+.methodology-page.theme-light .methodology-hero,
+.methodology-page.theme-light .methodology-section {
+  border-color: rgba(127, 83, 29, 0.14);
+  color: #3d3028;
+  background: rgba(255, 252, 246, 0.86);
+  box-shadow: 0 18rpx 48rpx rgba(92, 58, 20, 0.12), inset 0 1rpx 0 rgba(255, 255, 255, 0.90);
+}
+
+.methodology-page.theme-light .methodology-hero {
+  background: linear-gradient(135deg, rgba(255, 209, 102, 0.32), rgba(251, 146, 60, 0.16) 45%, rgba(255, 252, 246, 0.92) 100%);
+}
+
+.methodology-page.theme-light .headline,
+.methodology-page.theme-light .section-title,
+.methodology-page.theme-light .score-name,
+.methodology-page.theme-light .factor-title,
+.methodology-page.theme-light .source-label,
+.methodology-page.theme-light .changelog-title,
+.methodology-page.theme-light .version-title {
+  color: #3d3028;
+}
+
+.methodology-page.theme-light .hero-copy,
+.methodology-page.theme-light .score-desc,
+.methodology-page.theme-light .factor-desc,
+.methodology-page.theme-light .source-copy,
+.methodology-page.theme-light .source-note,
+.methodology-page.theme-light .changelog-summary,
+.methodology-page.theme-light .version-copy,
+.methodology-page.theme-light .api-copy,
+.methodology-page.theme-light .api-endpoint {
+  color: rgba(89, 67, 54, 0.72);
+}
+
+.methodology-page.theme-light .score-row,
+.methodology-page.theme-light .factor-card,
+.methodology-page.theme-light .source-item,
+.methodology-page.theme-light .version-card,
+.methodology-page.theme-light .api-endpoint {
+  border-color: rgba(127, 83, 29, 0.12);
+  background: rgba(255, 252, 246, 0.68);
+}
+
+.methodology-page.theme-light .source-note,
+.methodology-page.theme-light .changelog-hint {
+  color: #7a4a18;
+  background: rgba(251, 146, 60, 0.10);
+}
+
+.methodology-page.theme-light .changelog-item {
+  border-bottom-color: rgba(127, 83, 29, 0.12);
+}
+
+.methodology-page.theme-dark .methodology-hero,
+.methodology-page.theme-dark .methodology-section {
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(18, 28, 52, 0.82);
+  box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.30), inset 0 1rpx 0 rgba(255, 255, 255, 0.08);
+}
+
+.methodology-page.theme-dark .score-row,
+.methodology-page.theme-dark .factor-card,
+.methodology-page.theme-dark .source-item,
+.methodology-page.theme-dark .version-card,
+.methodology-page.theme-dark .api-endpoint {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(7, 16, 31, 0.58);
 }

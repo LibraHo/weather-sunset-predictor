@@ -104,7 +104,18 @@ describe('miniprogram services/prediction', () => {
     expect(wxMock.request).toHaveBeenCalledWith(expect.objectContaining({
       url: 'https://api.example.com/api/prediction/enhanced',
       method: 'POST',
-      data: { lat: 39.9, lon: 116.4, type: 'sunset', date: '2026-05-11', referenceTime: '2026-05-11' }
+      data: {
+        lat: 39.9,
+        lon: 116.4,
+        type: 'sunset',
+        date: '2026-05-11',
+        referenceTime: '2026-05-11',
+        options: {
+          fast: true,
+          includeRemoteCloudData: false,
+          forecastHours: 48
+        }
+      }
     }));
     expect(result).toMatchObject({
       score: 76,

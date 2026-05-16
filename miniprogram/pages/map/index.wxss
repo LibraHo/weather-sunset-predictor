@@ -1,7 +1,7 @@
 .firecloud-map-page {
   display: flex;
   flex-direction: column;
-  gap: 24rpx;
+  gap: 22rpx;
 }
 
 .map-hero,
@@ -31,26 +31,38 @@
 }
 
 .map-tabs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12rpx;
+  display: flex;
+  gap: 8rpx;
+  width: 332rpx;
+  box-sizing: border-box;
+  margin: 0 auto;
   padding: 8rpx;
-  background: rgba(7, 16, 31, 0.58);
+  border: 2rpx solid rgba(127, 83, 29, 0.12);
+  border-radius: 999rpx;
+  background: rgba(255, 252, 246, 0.72);
+  overflow: hidden;
 }
 
 .segment {
-  height: 72rpx;
-  border-radius: 12rpx;
-  color: rgba(255, 255, 255, 0.58);
-  font-size: 28rpx;
-  font-weight: 800;
-  line-height: 72rpx;
+  flex: 1;
+  min-width: 0;
+  min-height: 62rpx;
+  box-sizing: border-box;
+  padding: 0 26rpx;
+  border-radius: 999rpx;
+  color: rgba(89, 67, 54, 0.62);
+  font-size: 24rpx;
+  font-weight: 900;
+  line-height: 62rpx;
   text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .segment.active {
-  color: #1b1206;
-  background: linear-gradient(135deg, #ffd166, #fb923c);
+  color: #ffffff;
+  background: linear-gradient(135deg, #f59e0b, #ea8500);
 }
 
 .map-status {
@@ -197,4 +209,62 @@
   padding: 18rpx;
   border-radius: 14rpx;
   font-size: 25rpx;
+}
+
+.firecloud-map-page.theme-light .map-hero,
+.firecloud-map-page.theme-light .map-card {
+  border-color: rgba(127, 83, 29, 0.14);
+  color: #3d3028;
+  background: rgba(255, 252, 246, 0.86);
+  box-shadow: 0 18rpx 48rpx rgba(92, 58, 20, 0.12), inset 0 1rpx 0 rgba(255, 255, 255, 0.90);
+}
+
+.firecloud-map-page.theme-light .map-hero {
+  background: linear-gradient(135deg, rgba(255, 209, 102, 0.32), rgba(251, 146, 60, 0.16) 45%, rgba(255, 252, 246, 0.92) 100%);
+}
+
+.firecloud-map-page.theme-light .headline,
+.firecloud-map-page.theme-light .status-title {
+  color: #3d3028;
+}
+
+.firecloud-map-page.theme-light .caption,
+.firecloud-map-page.theme-light .status-copy,
+.firecloud-map-page.theme-light .period-label,
+.firecloud-map-page.theme-light .map-panel-hint,
+.firecloud-map-page.theme-light .legend-title,
+.firecloud-map-page.theme-light .legend-copy {
+  color: rgba(89, 67, 54, 0.66);
+}
+
+.firecloud-map-page.theme-light .map-supported-regions {
+  border-color: rgba(127, 83, 29, 0.12);
+  color: rgba(89, 67, 54, 0.72);
+  background: rgba(251, 146, 60, 0.08);
+}
+
+.firecloud-map-page.theme-light .native-map-shell,
+.firecloud-map-page.theme-light .map-legend {
+  border-color: rgba(127, 83, 29, 0.12);
+  background: rgba(255, 252, 246, 0.68);
+}
+
+.firecloud-map-page.theme-dark .map-hero,
+.firecloud-map-page.theme-dark .map-card {
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(18, 28, 52, 0.82);
+  box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.30), inset 0 1rpx 0 rgba(255, 255, 255, 0.08);
+}
+
+.firecloud-map-page.theme-dark .map-tabs {
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(7, 16, 31, 0.58);
+}
+
+.firecloud-map-page.theme-dark .segment {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.firecloud-map-page.theme-dark .segment.active {
+  color: #1b1206;
 }

@@ -1,18 +1,18 @@
 <view class="container firecloud-map-page theme-{{resolvedThemeMode}}">
-  <app-topbar current="map" period="{{period}}" bind:settingschange="onAppSettingsChange" />
+  <app-topbar current="map" period="{{period}}" theme-mode="{{themeMode}}" resolved-theme-mode="{{resolvedThemeMode}}" bind:settingschange="onAppSettingsChange" />
 
-  <view class="map-hero xiake-card xiake-bg-sunset-band">
+  <view class="map-hero xiake-card app-section-card xiake-bg-sunset-band">
     <view class="eyebrow warm-accent">Firecloud Map</view>
     <view class="headline">火烧云地图</view>
     <view class="caption">在地图上查看区域火烧云评分图层，颜色越暖表示评分越高。</view>
   </view>
 
-  <view class="map-tabs xiake-card">
-    <view class="segment tap-feedback {{period === 'sunrise' ? 'active' : ''}}" data-value="sunrise" bindtap="selectPeriod" hover-class="tap-feedback-hover" hover-stay-time="80">朝霞</view>
-    <view class="segment tap-feedback {{period === 'sunset' ? 'active' : ''}}" data-value="sunset" bindtap="selectPeriod" hover-class="tap-feedback-hover" hover-stay-time="80">晚霞</view>
+  <view class="map-tabs prediction-toggle-bar">
+    <view class="segment tap-feedback prediction-toggle {{period === 'sunrise' ? 'active' : ''}}" data-value="sunrise" bindtap="selectPeriod" hover-class="tap-feedback-hover" hover-stay-time="80">朝霞</view>
+    <view class="segment tap-feedback prediction-toggle {{period === 'sunset' ? 'active' : ''}}" data-value="sunset" bindtap="selectPeriod" hover-class="tap-feedback-hover" hover-stay-time="80">晚霞</view>
   </view>
 
-  <view class="map-card xiake-card">
+  <view class="map-card xiake-card app-section-card">
     <view class="map-status">
       <view>
         <view class="status-title">{{periodLabel}}地图</view>

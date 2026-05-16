@@ -99,13 +99,13 @@ class ProviderOrchestrator {
    * 任务43.3：尝试从指定 provider 获取数据并经过质量门禁
    * @returns { data, isQualityError } - isQualityError 为 true 时表示是序列校验失败
    */
-  async _fetchWithQualityGate(providerKey, lat, lon, hours, weatherModel = 'ecmwf_ifs025') {
+  async _fetchWithQualityGate(providerKey, lat, lon, hours, weatherModel = 'ecmwf_ifs025', fetchOptions = {}) {
     const provider = this.providers[providerKey];
     if (!provider) {
       throw new Error(`未知的天气数据源: ${providerKey}`);
     }
 
-    const rawData = await provider.fetchWeatherData(lat, lon, hours, null, weatherModel);
+    const rawData = await provider.fetchWeatherData(lat, lon, hours, null, weatherModel, fetchOptions);
 
     // 序列校验可能抛出（严重缺口/数据量太少）- 这是质量门禁错误
     let annotated;
@@ -180,14 +180,14 @@ class ProviderOrchestrator {
     return fallbackMap;
   }
 
-  async fetchWeatherData(lat, lon, hours = 168, weatherModel = 'ecmwf_ifs025') {
+  async fetchWeatherData(lat, lon, hours = 168, weatherModel = 'ecmwf_ifs025', fetchOptions = {}) {
     const primaryKey = this.primaryProvider;
     const fallbackKey = this.fallbackProvider;
 
     let primaryError = null;
 
     try {
-      return await this._fetchWithQualityGate(primaryKey, lat, lon, hours, weatherModel);
+      return await this._fetchWithQualityGate(primaryKey, lat, lon, hours, weatherModel, fetchOptions);
     } catch (err) {
       primaryError = err;
       const isQuality = err.isQualityError;
@@ -216,7 +216,7 @@ class ProviderOrchestrator {
       console.warn(`[ProviderOrchestrator] 触发 fallback (${fallbackKey}), 原因: ${err.message}`);
 
       try {
-        const fallbackData = await this._fetchWithQualityGate(fallbackKey, lat, lon, hours, weatherModel);
+        const fallbackData = await this._fetchWithQualityGate(fallbackKey, lat, lon, hours, weatherModel, fetchOptions);
         fallbackData.providerMeta.degradedReason = fallbackData.providerMeta.degradedReason || [];
         fallbackData.providerMeta.degradedReason.push(
           `Primary Provider (${primaryKey}) failed: ${primaryError.message}`

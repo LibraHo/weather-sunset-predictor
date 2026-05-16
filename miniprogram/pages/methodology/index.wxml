@@ -1,12 +1,12 @@
 <scroll-view class="container methodology-page theme-{{resolvedThemeMode}}" scroll-y="true">
-  <app-topbar current="methodology" bind:settingschange="onAppSettingsChange" />
-  <view class="methodology-hero xiake-card xiake-bg-sunset-band">
+  <app-topbar current="methodology" theme-mode="{{themeMode}}" resolved-theme-mode="{{resolvedThemeMode}}" bind:settingschange="onAppSettingsChange" />
+  <view class="methodology-hero xiake-card app-section-card xiake-bg-sunset-band">
     <view class="eyebrow">霞客方法</view>
     <view class="headline">火烧云计算方法</view>
     <view class="hero-copy">霞客综合天空画布、太阳方向光路、空气显色和坏天气限制，给出朝霞 / 晚霞的观赏分数。</view>
   </view>
 
-  <view class="methodology-section xiake-card score-guide-card">
+  <view class="methodology-section xiake-card app-section-card score-guide-card">
     <view class="section-kicker">Score Guide</view>
     <view class="section-title">评分解读</view>
     <view class="score-list">
@@ -20,7 +20,7 @@
     </view>
   </view>
 
-  <view class="methodology-section xiake-card">
+  <view class="methodology-section xiake-card app-section-card">
     <view class="section-kicker">Formation</view>
     <view class="section-title">形成条件</view>
     <view class="factor-grid">
@@ -32,7 +32,7 @@
     </view>
   </view>
 
-  <view class="methodology-section xiake-card score-source-card">
+  <view class="methodology-section xiake-card app-section-card score-source-card">
     <view class="section-kicker">Map vs Point</view>
     <view class="section-title">地图分 / 地点详情分说明</view>
     <view class="source-item">
@@ -46,7 +46,7 @@
     <view class="source-note">所以地图适合先找方向，地点详情适合最后决定要不要去；如果两者差很多，以地点详情为准。</view>
   </view>
 
-  <view class="methodology-section xiake-card api-surface-card">
+  <view class="methodology-section xiake-card app-section-card api-surface-card">
     <view class="section-kicker">API Access</view>
     <view class="section-title">Sunset Voyager API</view>
     <view class="api-copy">和网页版 API 接入页保持同一组轻量入口：申请 Token、查看 OpenAPI 规格，并调用 Agent API 获取地点解析、朝霞/晚霞评分和解释。</view>
@@ -61,7 +61,7 @@
     </view>
   </view>
 
-  <view class="methodology-section xiake-card changelog-card">
+  <view class="methodology-section xiake-card app-section-card changelog-card">
     <view class="changelog-head">
       <view>
         <view class="section-kicker">Updates</view>

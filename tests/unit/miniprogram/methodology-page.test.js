@@ -39,12 +39,18 @@ describe('miniprogram methodology page', () => {
 
   test('uses Xiake sunset glass styling instead of heavy blue form styling', () => {
     const wxss = read('miniprogram/pages/methodology/index.wxss');
+    const wxml = read('miniprogram/pages/methodology/index.wxml');
 
+    expect(wxml).toContain('<app-topbar current="methodology" theme-mode="{{themeMode}}" resolved-theme-mode="{{resolvedThemeMode}}"');
+    expect(wxml).toContain('methodology-section xiake-card app-section-card');
     expect(wxss).toContain('#0a0f1e');
     expect(wxss).toContain('#ffd166');
     expect(wxss).toContain('#fb923c');
     expect(wxss).toContain('rgba(18, 28, 52');
     expect(wxss).toContain('rgba(251, 146, 60');
+    expect(wxss).toContain('.methodology-page.theme-light .methodology-section');
+    expect(wxss).toContain('.methodology-page.theme-dark .methodology-section');
+    expect(wxss).toContain('gap: 22rpx');
     expect(wxss).not.toContain('#003366');
     expect(wxss).not.toContain('form-item');
   });

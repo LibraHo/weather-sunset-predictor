@@ -33,6 +33,67 @@
   transform: rotate(-12deg);
 }
 
+.location-candidate-card {
+  padding: 26rpx 28rpx;
+}
+
+.location-candidate-title {
+  color: #3d3028;
+  font-size: 30rpx;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.location-candidate-hint {
+  margin-top: 8rpx;
+  color: rgba(89, 67, 54, 0.68);
+  font-size: 24rpx;
+  line-height: 1.45;
+}
+
+.location-candidate-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  margin-top: 18rpx;
+}
+
+.location-candidate-item {
+  padding: 18rpx 20rpx;
+  border: 2rpx solid rgba(127, 83, 29, 0.12);
+  border-radius: 18rpx;
+  background: rgba(255, 252, 246, 0.78);
+}
+
+.location-candidate-name {
+  color: #3d3028;
+  font-size: 28rpx;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.location-candidate-meta {
+  margin-top: 4rpx;
+  color: rgba(89, 67, 54, 0.64);
+  font-size: 22rpx;
+  line-height: 1.35;
+}
+
+.home-page.theme-dark .location-candidate-title,
+.home-page.theme-dark .location-candidate-name {
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.home-page.theme-dark .location-candidate-hint,
+.home-page.theme-dark .location-candidate-meta {
+  color: rgba(226, 232, 240, 0.66);
+}
+
+.home-page.theme-dark .location-candidate-item {
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.06);
+}
+
 .home-brand-row {
   display: flex;
   align-items: center;

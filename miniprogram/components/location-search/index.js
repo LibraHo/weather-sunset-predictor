@@ -2,6 +2,7 @@ Component({
   properties: {
     value: { type: String, value: '' },
     locating: { type: Boolean, value: false },
+    favoriteLoading: { type: Boolean, value: false },
     loading: { type: Boolean, value: false },
     theme: { type: String, value: 'light' }
   },
@@ -17,6 +18,10 @@ Component({
 
     onLocate() {
       this.triggerEvent('locate');
+    },
+
+    onFavorite() {
+      this.triggerEvent('favorite');
     }
   }
 });

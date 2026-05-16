@@ -1,6 +1,6 @@
-import { searchLocations } from '../../services/geocoding.js';
+import { reverseGeocode, searchLocations } from '../../services/geocoding.js';
 import { getEnhancedPrediction } from '../../services/prediction.js';
-import { addRecentLocation, listRecentLocations } from '../../services/user.js';
+import { addFavorite, addRecentLocation, listRecentLocations } from '../../services/user.js';
 import { applyPageSettings, readAppSettings, saveAppSettings as persistAppSettings } from '../../utils/app-settings.js';
 import { buildRadarCloudGradients, paintRadarCloudCanvas } from '../../utils/radar-cloud-field.js';
 
@@ -17,6 +17,8 @@ Page({
     loadingProgress: 0,
     loadingDetail: '',
     locating: false,
+    favoriteLoading: false,
+    locationCandidates: [],
     homeMenuOpen: false,
     settingsOpen: false,
     interfaceLanguage: 'zh-CN',
@@ -93,7 +95,8 @@ Page({
   },
 
   onLocationChange(event) {
-    this.setData({ locationText: event.detail.value, coordinate: null, errorMessage: '' });
+    this.selectedLocationCandidate = null;
+    this.setData({ locationText: event.detail.value, coordinate: null, locationCandidates: [], errorMessage: '' });
   },
 
   selectPeriod(event) {
@@ -241,10 +244,12 @@ Page({
 
     try {
       const res = await wxPromise(wx.getLocation, { type: 'wgs84' });
-      const locationText = '当前位置';
+      const reverseName = await reverseGeocode(res.latitude, res.longitude).catch(() => '');
+      const locationText = reverseName || '当前位置';
       this.setData({
         coordinate: { lat: res.latitude, lon: res.longitude },
-        locationText
+        locationText,
+        locationCandidates: []
       });
       await this.onSearch();
     } catch (error) {
@@ -282,6 +287,7 @@ Page({
 
     try {
       const resolvedLocation = await this.resolveLocation(locationText);
+      this.currentResolvedLocation = resolvedLocation;
       const query = {
         location: resolvedLocation.name,
         locationName: resolvedLocation.name,
@@ -306,6 +312,9 @@ Page({
         this.paintPredictionRadarCloudField();
       });
     } catch (error) {
+      if (error && error.message === 'LOCATION_NEEDS_CONFIRMATION') {
+        return;
+      }
       this.setData({ errorMessage: friendlyError(error) });
     } finally {
       this.setData({ loading: false });
@@ -374,12 +383,68 @@ Page({
       };
     }
 
-    const results = await searchLocations(locationText, 1);
+    const results = await searchLocations(locationText, 5);
     if (!results.length) {
       throw new Error('LOCATION_NOT_FOUND');
     }
 
+    const selected = this.selectedLocationCandidate;
+    if (selected && selected.query === locationText) {
+      return selected.location;
+    }
+
+    if (shouldAskLocationChoice(locationText, results)) {
+      this.setData({
+        locationCandidates: decorateLocationCandidates(results, locationText),
+        errorMessage: ''
+      });
+      throw new Error('LOCATION_NEEDS_CONFIRMATION');
+    }
+
     return results[0];
+  },
+
+  async selectLocationCandidate(event) {
+    const index = Number(event.currentTarget.dataset.index);
+    const item = this.data.locationCandidates[index];
+    if (!item) return;
+    const location = {
+      name: item.name,
+      lat: item.lat,
+      lon: item.lon,
+      countryCode: item.countryCode,
+      regionCode: item.regionCode
+    };
+    this.selectedLocationCandidate = { query: this.data.locationText.trim(), location };
+    this.setData({
+      locationText: item.name,
+      coordinate: { lat: item.lat, lon: item.lon },
+      locationCandidates: [],
+      errorMessage: ''
+    });
+    await this.onSearch();
+  },
+
+  async onAddCurrentFavorite() {
+    if (this.data.favoriteLoading) return;
+    const location = this.currentResolvedLocation || buildFavoriteFromState(this.data);
+    if (!location) {
+      this.setData({ errorMessage: '请先查询或选择一个地点，再收藏。' });
+      return;
+    }
+
+    this.setData({ favoriteLoading: true, errorMessage: '' });
+    try {
+      const favorites = app.globalData.favorites || wx.getStorageSync('favoriteLocations') || [];
+      const next = upsertFavorite(favorites, location);
+      app.globalData.favorites = next;
+      wx.setStorageSync('favoriteLocations', next);
+      this.setData({ favorites: next });
+      await addFavorite(location).catch(() => null);
+      if (wx.showToast) wx.showToast({ title: '已收藏', icon: 'success' });
+    } finally {
+      this.setData({ favoriteLoading: false });
+    }
   },
 
   callPredictionService(query) {
@@ -432,6 +497,82 @@ export function buildRecentLocation(query = {}) {
     day: query.day || 'today',
     date: resolvePredictionDate(query.day)
   };
+}
+
+export function shouldAskLocationChoice(query = '', results = []) {
+  if (!Array.isArray(results) || results.length < 2) return false;
+  const tokens = splitPlaceTokens(query);
+  if (tokens.length > 1) {
+    const matchedTokens = new Set();
+    results.slice(0, 5).forEach((item) => {
+      const name = normalizePlaceText(item.name);
+      tokens.forEach((token) => {
+        if (name.includes(token)) matchedTokens.add(token);
+      });
+    });
+    if (matchedTokens.size > 1) return true;
+  }
+  const q = normalizePlaceText(query);
+  if (!q) return false;
+  const top = results[0] || {};
+  const second = results[1] || {};
+  const topCountry = (top.countryCode || '').toUpperCase();
+  const secondCountry = (second.countryCode || '').toUpperCase();
+  if (topCountry && secondCountry && topCountry !== secondCountry) return true;
+  const topName = normalizePlaceText(top.name);
+  const secondName = normalizePlaceText(second.name);
+  return topName.includes(q) && secondName.includes(q);
+}
+
+function decorateLocationCandidates(results = [], query = '') {
+  return results.slice(0, 5).map((item, index) => ({
+    ...item,
+    key: `${item.lat}:${item.lon}:${index}`,
+    meta: buildLocationCandidateMeta(item, query)
+  }));
+}
+
+function buildLocationCandidateMeta(item = {}, query = '') {
+  const parts = [
+    item.countryCode,
+    item.regionCode,
+    item.address && item.address !== item.name ? item.address : ''
+  ].filter(Boolean);
+  return parts.length ? parts.join(' · ') : `匹配 "${query}"`;
+}
+
+function buildFavoriteFromState(data = {}) {
+  const coordinate = data.coordinate || null;
+  const name = String(data.locationText || '').trim();
+  if (!coordinate || !name) return null;
+  return { name, locationName: name, lat: coordinate.lat, lon: coordinate.lon, type: data.period || 'sunset', day: data.day || 'today' };
+}
+
+function upsertFavorite(favorites = [], location = {}) {
+  const normalized = {
+    name: location.name || location.locationName || '当前位置',
+    locationName: location.locationName || location.name || '当前位置',
+    lat: Number(location.lat ?? location.coordinate?.lat),
+    lon: Number(location.lon ?? location.coordinate?.lon),
+    type: location.type || location.period || 'sunset',
+    day: location.day || 'today'
+  };
+  if (!Number.isFinite(normalized.lat) || !Number.isFinite(normalized.lon)) return favorites;
+  return [
+    normalized,
+    ...favorites.filter((item) => Math.abs(Number(item.lat) - normalized.lat) > 0.000001 || Math.abs(Number(item.lon) - normalized.lon) > 0.000001)
+  ].slice(0, 20);
+}
+
+function normalizePlaceText(value = '') {
+  return String(value).toLowerCase().replace(/[\s,，市省州县区镇乡·\-]/g, '');
+}
+
+function splitPlaceTokens(value = '') {
+  return String(value)
+    .split(/[\s,，、/|]+/)
+    .map(normalizePlaceText)
+    .filter(Boolean);
 }
 
 export function buildDefaultWeatherPreview() {
