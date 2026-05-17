@@ -622,7 +622,7 @@ router.post('/enhanced/closed-loop/batch', validateClosedLoopBatchRequest, async
         lon,
         date: item.date,
         type: item.type,
-        referenceTime: item.referenceTime || item.date,
+        referenceTime: item.referenceTime,
         weatherResponseOverride: weatherResponse,
         includeRemoteCloudData
       });

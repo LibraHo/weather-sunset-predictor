@@ -80,7 +80,7 @@ describe('miniprogram services/prediction', () => {
     });
   });
 
-  test('getEnhancedPrediction matches web closed-loop request shape and normalizes backend data', async () => {
+  test('getEnhancedPrediction lets the backend derive local sunrise or sunset reference time from the date', async () => {
     const wxMock = {
       request: jest.fn(({ success }) => success({
         statusCode: 200,
@@ -108,8 +108,7 @@ describe('miniprogram services/prediction', () => {
         lat: 39.9,
         lon: 116.4,
         type: 'sunset',
-        date: '2026-05-11',
-        referenceTime: '2026-05-11'
+        date: '2026-05-11'
       },
       timeout: 20000
     }));

@@ -2,6 +2,8 @@ import fs from 'fs';
 import path from 'path';
 
 const source = fs.readFileSync(path.resolve(process.cwd(), 'miniprogram/components/score-hero/index.js'), 'utf8');
+const wxml = fs.readFileSync(path.resolve(process.cwd(), 'miniprogram/components/score-hero/index.wxml'), 'utf8');
+const wxss = fs.readFileSync(path.resolve(process.cwd(), 'miniprogram/components/score-hero/index.wxss'), 'utf8');
 const homeWxml = fs.readFileSync(path.resolve(process.cwd(), 'miniprogram/pages/home/index.wxml'), 'utf8');
 const homeJs = fs.readFileSync(path.resolve(process.cwd(), 'miniprogram/pages/home/index.js'), 'utf8');
 
@@ -13,6 +15,15 @@ describe('miniprogram score hero scoring copy', () => {
     expect(source).not.toContain('if (score >= 80) return \'excellent\';');
     expect(source).not.toContain('if (score >= 65) return \'good\';');
     expect(source).not.toContain('if (score >= 45) return \'fair\';');
+  });
+
+  test('uses website score colors for the score text', () => {
+    expect(source).toContain('scoreClass:');
+    expect(wxml).toContain('class="score {{scoreClass}}"');
+    expect(wxss).toContain('#94a3b8');
+    expect(wxss).toContain('#fdba74');
+    expect(wxss).toContain('#fb923c');
+    expect(wxss).toContain('#fbbf24');
   });
 
   test('keeps low score copy focused on firecloud conditions instead of going out', () => {

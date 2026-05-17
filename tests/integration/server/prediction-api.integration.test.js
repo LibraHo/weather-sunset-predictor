@@ -232,6 +232,10 @@ describe('Prediction API Integration', () => {
   });
 
   describe('POST /api/prediction/enhanced/closed-loop/batch', () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
     test('rejects empty items with 400', async () => {
       const res = await request(app)
         .post('/api/prediction/enhanced/closed-loop/batch')
@@ -252,6 +256,47 @@ describe('Prediction API Integration', () => {
         .expect(400);
 
       expect(res.body.error).toHaveProperty('code', 'INVALID_TYPE');
+    });
+
+    test('derives local sunset reference time for date-only batch items', async () => {
+      jest.spyOn(orchestrator, 'fetchWeatherData').mockResolvedValue({
+        data: [
+          {
+            timestamp: new Date('2026-05-17T00:00:00Z').getTime(),
+            cloudCover: 10,
+            humidity: 40,
+            visibility: 20,
+            lowClouds: 5,
+            midClouds: 5,
+            highClouds: 5,
+            precipitation: 0
+          },
+          {
+            timestamp: new Date('2026-05-17T11:23:00Z').getTime(),
+            cloudCover: 90,
+            humidity: 95,
+            visibility: 4,
+            lowClouds: 85,
+            midClouds: 90,
+            highClouds: 95,
+            precipitation: 12
+          }
+        ],
+        providerMeta: { name: 'openmeteo', timezone: 'Asia/Shanghai' }
+      });
+
+      const res = await request(app)
+        .post('/api/prediction/enhanced/closed-loop/batch')
+        .send({
+          lat: 39.9042,
+          lon: 116.4074,
+          options: { includeRemoteCloudData: false },
+          items: [{ id: 'beijing-sunset', date: '2026-05-17', type: 'sunset' }]
+        })
+        .expect(200);
+
+      expect(res.body.data[0].referenceTime).toBe('2026-05-17T11:23:00.000Z');
+      expect(res.body.data[0].weatherData.precipitation).toBe(12);
     });
   });
 });
