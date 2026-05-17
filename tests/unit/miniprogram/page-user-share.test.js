@@ -323,11 +323,12 @@ describe('miniprogram page user/share helpers', () => {
     expect(homeWxml).toContain('prediction-local-loading');
   });
 
-  test('home search prefetches alternate sunrise sunset preview instead of falling back to static preview', () => {
+  test('home search fetches sunrise sunset preview cards together instead of falling back to static preview', () => {
     const homeSource = fs.readFileSync(path.resolve(process.cwd(), 'miniprogram/pages/home/index.js'), 'utf8');
 
     expect(homeSource).toContain('predictionPeriodCards: {}');
-    expect(homeSource).toContain('this.predictionPreviewPromises[alternatePeriod] = this.prefetchPredictionPreviewPeriod');
+    expect(homeSource).toContain('const predictionCards = await this.callPredictionCardBatch(query);');
+    expect(homeSource).toContain('getEnhancedPredictionBatch({');
     expect(homeSource).toContain('const cachedPrediction = this.data.predictionPeriodCards?.[value];');
     expect(homeSource).toContain('const pendingPrediction = this.predictionPreviewPromises?.[value];');
     expect(homeSource.indexOf('const cachedPrediction = this.data.predictionPeriodCards?.[value];')).toBeLessThan(homeSource.indexOf('predictionPreview: buildPredictionPreviewForPeriod(value)'));
