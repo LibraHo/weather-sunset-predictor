@@ -144,11 +144,8 @@ class SurroundingService {
 
     const distances = [15, 30, 50, 100];
     const points = distances.map(distanceKm => this.calculatePointByBearing(lat, lon, distanceKm, solarAzimuth));
-    const samples = [];
-
-    const fetchSample = async (point) => {
+    const buildSample = (point, weatherResponse) => {
       try {
-        const weatherResponse = await orchestrator.fetchWeatherData(point.lat, point.lon, 72);
         const hourly = Array.isArray(weatherResponse.data) ? weatherResponse.data : [];
         if (!hourly.length) throw new Error('天气数据为空');
 
@@ -178,16 +175,29 @@ class SurroundingService {
       }
     };
 
-    // 小批量并发：4 个光路点分 2 批，每批 2 个。
-    // 比全串行更快，又避免主预测一次性打满 4 个远端天气请求。
-    const BATCH_SIZE = 2;
-    for (let i = 0; i < points.length; i += BATCH_SIZE) {
-      const batch = points.slice(i, i + BATCH_SIZE);
-      const batchSamples = await Promise.all(batch.map(fetchSample));
-      samples.push(...batchSamples);
-      if (i + BATCH_SIZE < points.length) {
-        await new Promise(resolve => setTimeout(resolve, 250));
-      }
+    // Fetch all four light-path sample points in one cloud-only batch.
+    let samples;
+    try {
+      const weatherMap = await orchestrator.fetchWeatherDataBatch(points, 72, undefined, {
+        includeAirQuality: false,
+        fields: 'lightPath'
+      });
+      samples = points.map((point) => {
+        const weatherResponse = weatherMap?.[`${point.lat},${point.lon}`];
+        if (!weatherResponse) return { ...point, error: 'missing batch weather data' };
+        return buildSample(point, weatherResponse);
+      });
+    } catch (batchError) {
+      console.warn('[SurroundingService] Solar-direction batch sampling failed; falling back to per-point sampling:', batchError.message);
+      samples = await Promise.all(points.map(async (point) => {
+        try {
+          const weatherResponse = await orchestrator.fetchWeatherData(point.lat, point.lon, 72, undefined, { includeAirQuality: false });
+          return buildSample(point, weatherResponse);
+        } catch (error) {
+          console.warn(`[SurroundingService] Solar-direction ${point.distanceKm}km sample failed:`, error.message);
+          return { ...point, error: error.message };
+        }
+      }));
     }
 
     const payload = {

@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals';
+
 /**
  * SurroundingService 单元测试
  * 需求：22 (前后端分离 - Phase 2)
@@ -6,12 +8,14 @@
 describe('SurroundingService', () => {
   let SurroundingService;
   let CacheService;
+  let orchestrator;
   let surroundingService;
 
   beforeAll(async () => {
     // 动态导入模块
     SurroundingService = (await import('../../../server/services/SurroundingService.js')).default;
     CacheService = (await import('../../../server/services/CacheService.js')).default;
+    orchestrator = (await import('../../../server/services/ProviderOrchestrator.js')).default;
   });
 
   beforeEach(() => {
@@ -20,6 +24,7 @@ describe('SurroundingService', () => {
   });
 
   afterEach(() => {
+    jest.restoreAllMocks();
     // 清理
     if (surroundingService && surroundingService.cacheService) {
       surroundingService.cacheService.destroy();
@@ -98,6 +103,56 @@ describe('SurroundingService', () => {
 
       expect(nPoint.name).toBe('北');
       expect(nePoint.name).toBe('东北');
+    });
+  });
+
+  describe('getSolarDirectionLightPathSamples', () => {
+    test('uses one cloud-only batch weather request for solar-direction samples', async () => {
+      const referenceTime = new Date('2026-05-17T10:00:00Z');
+      const fetchBatchSpy = jest.spyOn(orchestrator, 'fetchWeatherDataBatch').mockImplementation(async (points) => {
+        const weatherMap = {};
+        for (const point of points) {
+          weatherMap[`${point.lat},${point.lon}`] = {
+            data: [{
+              timestamp: referenceTime.getTime(),
+              cloudCover: 44,
+              humidity: 55,
+              precipitation: 0,
+              lowClouds: 10,
+              midClouds: 34,
+              highClouds: 66,
+              cloudBaseHeight: 1800,
+              weatherCode: 1
+            }],
+            providerMeta: { name: 'openmeteo' }
+          };
+        }
+        return weatherMap;
+      });
+      const fetchSingleSpy = jest.spyOn(orchestrator, 'fetchWeatherData');
+
+      const result = await surroundingService.getSolarDirectionLightPathSamples({
+        lat: 39.9,
+        lon: 116.4,
+        type: 'sunset',
+        date: '2026-05-17',
+        azimuth: 285,
+        referenceTime
+      });
+
+      expect(fetchBatchSpy).toHaveBeenCalledTimes(1);
+      expect(fetchBatchSpy).toHaveBeenCalledWith(expect.arrayContaining([
+        expect.objectContaining({ distanceKm: 15 }),
+        expect.objectContaining({ distanceKm: 100 })
+      ]), 72, undefined, { includeAirQuality: false, fields: 'lightPath' });
+      expect(fetchSingleSpy).not.toHaveBeenCalled();
+      expect(result.samples).toHaveLength(4);
+      expect(result.samples[0]).toMatchObject({
+        highCloud: 66,
+        midCloud: 34,
+        lowCloud: 10,
+        provider: 'openmeteo'
+      });
     });
   });
 

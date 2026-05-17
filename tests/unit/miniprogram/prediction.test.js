@@ -80,7 +80,7 @@ describe('miniprogram services/prediction', () => {
     });
   });
 
-  test('getEnhancedPrediction posts request and normalizes backend data', async () => {
+  test('getEnhancedPrediction matches web closed-loop request shape and normalizes backend data', async () => {
     const wxMock = {
       request: jest.fn(({ success }) => success({
         statusCode: 200,
@@ -109,13 +109,9 @@ describe('miniprogram services/prediction', () => {
         lon: 116.4,
         type: 'sunset',
         date: '2026-05-11',
-        referenceTime: '2026-05-11',
-        options: {
-          fast: true,
-          includeRemoteCloudData: false,
-          forecastHours: 48
-        }
-      }
+        referenceTime: '2026-05-11'
+      },
+      timeout: 20000
     }));
     expect(result).toMatchObject({
       score: 76,
