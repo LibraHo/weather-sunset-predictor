@@ -115,6 +115,37 @@ export async function getEnhancedPrediction({ lat, lon, type = 'sunset', date, r
   return normalizePrediction(response?.data || response);
 }
 
+export async function getWeatherForecast({ lat, lon, hours = 168 } = {}) {
+  const response = await request('/api/weather/forecast', {
+    method: 'GET',
+    params: { lat, lon, hours },
+    timeout: 12000
+  });
+  return normalizeWeatherForecast(response?.data ? response : (response || {}));
+}
+
+export function normalizeWeatherForecast(response = {}) {
+  const data = Array.isArray(response.data) ? response.data : [];
+  const current = data[0] || {};
+  const providerMeta = response.providerMeta || current.providerMeta || null;
+  const weather = normalizeWeatherData(current, {
+    providerMeta,
+    provider: providerMeta?.name,
+    hourly: data,
+    daily: response.daily || [],
+    glow: response.glow || []
+  });
+  return {
+    ...weather,
+    location: response.location || null,
+    providerMeta,
+    provider: weather.provider || providerMeta?.name || 'Open-Meteo',
+    hourly: data,
+    daily: response.daily || [],
+    glow: response.glow || []
+  };
+}
+
 export function normalizeSurroundingPrediction(data = {}) {
   const source = data?.data || data;
   const points = Array.isArray(source.points)
@@ -210,8 +241,10 @@ export function scoreToLevel(score) {
 
 export default {
   getEnhancedPrediction,
+  getWeatherForecast,
   getSurroundingPrediction,
   getThreeDayGlow,
+  normalizeWeatherForecast,
   normalizePrediction,
   normalizeSurroundingPrediction,
   buildThreeDayDates,

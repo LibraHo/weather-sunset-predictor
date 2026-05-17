@@ -293,6 +293,19 @@ describe('miniprogram page user/share helpers', () => {
     expect(resultPageSource).toContain('this.data.activePeriod !== period');
   });
 
+  test('home search renders basic weather before waiting for glow scoring', () => {
+    const homeSource = fs.readFileSync(path.resolve(process.cwd(), 'miniprogram/pages/home/index.js'), 'utf8');
+    const homeWxml = fs.readFileSync(path.resolve(process.cwd(), 'miniprogram/pages/home/index.wxml'), 'utf8');
+
+    expect(homeSource.indexOf('weather = await this.callWeatherForecast(query);')).toBeLessThan(homeSource.indexOf('const raw = await this.callPredictionService(query);'));
+    expect(homeSource).toContain('weatherPreview: buildWeatherPreview({ ...weather, location: query.locationName })');
+    expect(homeSource).toContain("this.setSearchLoadingStep('正在计算霞光评分', 72, '基础天气暂未返回，继续读取综合预测');");
+    expect(homeSource).toContain('predictionPreviewLoading: true');
+    expect(homeSource).toContain('predictionPreviewLoading: false');
+    expect(homeWxml).toContain('wx:if="{{predictionPreviewLoading}}"');
+    expect(homeWxml).toContain('prediction-local-loading');
+  });
+
   test('result period switch clears loading when cached or stale period state wins', () => {
     const source = fs.readFileSync(path.resolve(process.cwd(), 'miniprogram/pages/result/index.js'), 'utf8');
 

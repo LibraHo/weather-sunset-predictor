@@ -210,8 +210,13 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxss).toContain('animation: xiake-loading-progress 1.6s ease-in-out infinite alternate;');
     expect(homeJs).toContain("loadingMessage: '正在查询位置'");
     expect(homeJs).toContain('setSearchLoadingStep(');
-    expect(homeJs).toContain("this.setSearchLoadingStep('正在读取天气与霞光数据', 72");
+    expect(homeJs).toContain("this.setSearchLoadingStep('正在读取基础天气', 58");
+    expect(homeJs).toContain("this.setSearchLoadingStep('正在计算霞光评分', 82");
     expect(homeJs).toContain("this.setSearchLoadingStep('正在整理天气卡片', 92");
+    expect(homeJs.indexOf('weather = await this.callWeatherForecast(query);')).toBeLessThan(homeJs.indexOf('const raw = await this.callPredictionService(query);'));
+    expect(homeJs).toContain("this.setSearchLoadingStep('正在计算霞光评分', 72, '基础天气暂未返回，继续读取综合预测');");
+    expect(homeWxml).toContain('prediction-local-loading');
+    expect(homeWxml).toContain('wx:if="{{predictionPreviewLoading}}"');
   });
 
   test('home prediction preview mirrors the web test prediction card hierarchy', () => {
