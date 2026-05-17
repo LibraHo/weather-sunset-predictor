@@ -7,6 +7,11 @@ Page({
   data: {
     themeMode: 'system',
     resolvedThemeMode: 'light',
+    apiOnly: false,
+    currentNav: 'methodology',
+    heroEyebrow: '霞客方法',
+    heroTitle: '火烧云计算方法',
+    heroCopy: '霞客综合天空画布、太阳方向光路、空气显色和坏天气限制，给出朝霞 / 晚霞的观赏分数。',
     scoreBands: [
       { tone: 'rare', name: '顶级 Rare', range: '85-100 分', desc: '少见的爆发级条件，值得优先安排。' },
       { tone: 'strong', name: '高分 Strong', range: '70-84 分', desc: '明显高于常态，适合专程蹲守。' },
@@ -28,7 +33,8 @@ Page({
     ]
   },
 
-  onLoad() {
+  onLoad(options = {}) {
+    this.applySectionMode(options);
     this.applySavedSettings();
   },
 
@@ -42,6 +48,19 @@ Page({
 
   onAppSettingsChange(event) {
     this.setData(event.detail || readAppSettings());
+  },
+
+  applySectionMode(options = {}) {
+    const apiOnly = options.section === 'api';
+    this.setData({
+      apiOnly,
+      currentNav: apiOnly ? 'api' : 'methodology',
+      heroEyebrow: apiOnly ? 'API Access' : '霞客方法',
+      heroTitle: apiOnly ? 'API接入' : '火烧云计算方法',
+      heroCopy: apiOnly
+        ? '面向 Agent、自动化脚本和研究项目的受控接口。先申请 Token，再用 Bearer 鉴权调用 /api/agent 下的接口。'
+        : '霞客综合天空画布、太阳方向光路、空气显色和坏天气限制，给出朝霞 / 晚霞的观赏分数。'
+    });
   },
 
   copyOpenApiSpec() {

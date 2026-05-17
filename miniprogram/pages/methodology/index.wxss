@@ -197,10 +197,12 @@
 }
 
 .api-path {
-  flex: 0 0 150rpx;
+  flex: 0 0 250rpx;
+  max-width: 250rpx;
   color: #ffd166;
   font-family: Consolas, Monaco, monospace;
   font-weight: 800;
+  word-break: break-all;
 }
 
 .api-actions {

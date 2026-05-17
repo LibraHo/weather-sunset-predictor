@@ -1,12 +1,12 @@
 <scroll-view class="container methodology-page theme-{{resolvedThemeMode}}" scroll-y="true">
-  <app-topbar current="methodology" theme-mode="{{themeMode}}" resolved-theme-mode="{{resolvedThemeMode}}" bind:settingschange="onAppSettingsChange" />
+  <app-topbar current="{{currentNav}}" theme-mode="{{themeMode}}" resolved-theme-mode="{{resolvedThemeMode}}" bind:settingschange="onAppSettingsChange" />
   <view class="methodology-hero xiake-card app-section-card xiake-bg-sunset-band">
-    <view class="eyebrow">霞客方法</view>
-    <view class="headline">火烧云计算方法</view>
-    <view class="hero-copy">霞客综合天空画布、太阳方向光路、空气显色和坏天气限制，给出朝霞 / 晚霞的观赏分数。</view>
+    <view class="eyebrow">{{heroEyebrow}}</view>
+    <view class="headline">{{heroTitle}}</view>
+    <view class="hero-copy">{{heroCopy}}</view>
   </view>
 
-  <view class="methodology-section xiake-card app-section-card score-guide-card">
+  <view wx:if="{{!apiOnly}}" class="methodology-section xiake-card app-section-card score-guide-card">
     <view class="section-kicker">Score Guide</view>
     <view class="section-title">评分解读</view>
     <view class="score-list">
@@ -20,7 +20,7 @@
     </view>
   </view>
 
-  <view class="methodology-section xiake-card app-section-card">
+  <view wx:if="{{!apiOnly}}" class="methodology-section xiake-card app-section-card">
     <view class="section-kicker">Formation</view>
     <view class="section-title">形成条件</view>
     <view class="factor-grid">
@@ -32,7 +32,7 @@
     </view>
   </view>
 
-  <view class="methodology-section xiake-card app-section-card score-source-card">
+  <view wx:if="{{!apiOnly}}" class="methodology-section xiake-card app-section-card score-source-card">
     <view class="section-kicker">Map vs Point</view>
     <view class="section-title">地图分 / 地点详情分说明</view>
     <view class="source-item">
@@ -48,12 +48,12 @@
 
   <view class="methodology-section xiake-card app-section-card api-surface-card">
     <view class="section-kicker">API Access</view>
-    <view class="section-title">Sunset Voyager API</view>
-    <view class="api-copy">和网页版 API 接入页保持同一组轻量入口：申请 Token、查看 OpenAPI 规格，并调用 Agent API 获取地点解析、朝霞/晚霞评分和解释。</view>
+    <view class="section-title">API接入</view>
+    <view class="api-copy">霞客 Agent API 使用 Token 鉴权，适合把地点解析、朝霞 / 晚霞预测、评分解释接入自动化工作流。小程序用户侧天气查询仍走小程序内置服务；这里是开发者接入入口。</view>
     <view class="api-endpoint-list">
-      <view class="api-endpoint"><text class="api-path">/forecast</text><text>返回评分、质量等级和最佳观赏窗口</text></view>
-      <view class="api-endpoint"><text class="api-path">/explain</text><text>返回评分构成、关键限制和自然语言解释</text></view>
-      <view class="api-endpoint"><text class="api-path">/geocode</text><text>返回地点候选、坐标和置信度</text></view>
+      <view class="api-endpoint"><text class="api-path">/api/agent/forecast</text><text>按地点、日期和朝霞 / 晚霞类型返回预测分数、等级和最佳观赏窗口</text></view>
+      <view class="api-endpoint"><text class="api-path">/api/agent/explain</text><text>返回评分构成、关键限制、解释文本和可读建议</text></view>
+      <view class="api-endpoint"><text class="api-path">/api/agent/geocode</text><text>把输入地点解析为标准名称、国家地区、经纬度和置信度</text></view>
     </view>
     <view class="api-actions">
       <button class="ghost-button api-button" bindtap="copyOpenApiSpec" hover-class="button-hover" hover-stay-time="80">复制 OpenAPI 规格链接</button>
@@ -61,7 +61,7 @@
     </view>
   </view>
 
-  <view class="methodology-section xiake-card app-section-card changelog-card">
+  <view wx:if="{{!apiOnly}}" class="methodology-section xiake-card app-section-card changelog-card">
     <view class="changelog-head">
       <view>
         <view class="section-kicker">Updates</view>
