@@ -55,4 +55,17 @@ describe('miniprogram design language styles', () => {
       expect(appWxss).toContain(className);
     });
   });
+
+  test('keeps page typography below the topbar logo and readable in score audit blocks', () => {
+    const topbarWxss = readText('miniprogram/components/app-topbar/index.wxss');
+    const resultWxss = readText('miniprogram/pages/result/index.wxss');
+    const methodologyWxss = readText('miniprogram/pages/methodology/index.wxss');
+    const mapWxss = readText('miniprogram/pages/map/index.wxss');
+
+    expect(topbarWxss).toContain('.app-logo-text');
+    expect(topbarWxss).toContain('font-size: 42rpx');
+    expect(methodologyWxss).not.toMatch(/font-size:\s*(4[3-9]|[5-9]\d)rpx/);
+    expect(mapWxss).not.toMatch(/font-size:\s*(4[3-9]|[5-9]\d)rpx/);
+    expect(resultWxss).not.toMatch(/score-ledger-[^{]+{[^}]*font-size:\s*(2[0-3])rpx/s);
+  });
 });
