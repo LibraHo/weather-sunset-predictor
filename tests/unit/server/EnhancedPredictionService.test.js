@@ -988,6 +988,38 @@ describe('EnhancedPredictionService', () => {
       expect(result.status).toBe('very_likely');
     });
 
+    test('should not let carrier floor override thick high-cloud cap', () => {
+      const weatherData = {
+        cloudCover: 100,
+        lowClouds: 0,
+        midClouds: 10,
+        highClouds: 99,
+        humidity: 54,
+        visibility: 20,
+        precipitation: 0,
+        shortwaveRadiation: 120,
+        directRadiation: 5,
+        diffuseRadiation: 115,
+        waterVapourColumn: 19.1,
+        aerosolOpticalDepth: 0.1,
+        dust: 10,
+        pm10: 30
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData, new Date('2026-05-18T10:30:00.000Z'), 39.9042, 116.4074, 'sunset'
+      );
+
+      expect(result.thickHighCloudPenalty).toMatchObject({
+        applied: true,
+        cap: 42,
+        reason: 'thick_high_cloud_diffuse_cap_42'
+      });
+      expect(result.highCloudCarrierAdjustment.applied).toBe(false);
+      expect(result.score).toBeLessThanOrEqual(42);
+      expect(result.status).toBe('good_glow');
+    });
+
     test('should cap extreme dust haze high-cloud scenes below 30 points', () => {
       const weatherData = {
         cloudCover: 83,
