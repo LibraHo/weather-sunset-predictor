@@ -300,7 +300,10 @@ Page({
 
     const nextPrediction = this.data.periodCards[period];
     if (nextPrediction) {
-      this.setData(buildResultPeriodState(nextPrediction), () => {
+      this.setData({
+        ...buildResultPeriodState(nextPrediction),
+        loading: false
+      }, () => {
         this.loadXiakePanels(nextPrediction);
       });
       return;
@@ -310,7 +313,10 @@ Page({
     if (pendingPeriodPromise) {
       this.setData({ activePeriod: period, loading: true });
       const prefetchedPrediction = await pendingPeriodPromise;
-      if (this.data.activePeriod !== period) return;
+      if (this.data.activePeriod !== period) {
+        this.setData({ loading: false });
+        return;
+      }
       if (prefetchedPrediction) {
         this.setData({
           ...buildResultPeriodState(prefetchedPrediction),
@@ -342,7 +348,10 @@ Page({
       const requested = buildPredictionPeriodRequest(current, period);
       const fetched = await getEnhancedPrediction(requested);
       const normalized = normalizePrediction(fetched, requested);
-      if (this.data.activePeriod !== period) return;
+      if (this.data.activePeriod !== period) {
+        this.setData({ loading: false });
+        return;
+      }
       this.setData({
         ...buildResultPeriodState(normalized),
         loading: false,
