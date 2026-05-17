@@ -558,6 +558,37 @@
   background: linear-gradient(135deg, #f59e0b, #ea8500);
 }
 
+.prediction-local-loading {
+  box-sizing: border-box;
+  margin: -4rpx 0 8rpx;
+  padding: 16rpx 18rpx;
+  border: 1rpx solid rgba(251, 191, 36, 0.18);
+  border-radius: 14rpx;
+  background: rgba(251, 146, 60, 0.10);
+}
+
+.prediction-local-loading-copy {
+  color: rgba(89, 67, 54, 0.70);
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.prediction-local-loading-track {
+  height: 8rpx;
+  margin-top: 12rpx;
+  overflow: hidden;
+  border-radius: 999rpx;
+  background: rgba(127, 83, 29, 0.12);
+}
+
+.prediction-local-loading-fill {
+  width: 56%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ffd166, #fb923c);
+  animation: xiake-loading-progress 1.6s ease-in-out infinite alternate;
+}
+
 .prediction-hero-card {
   display: flex;
   flex-direction: column;
@@ -2972,6 +3003,19 @@
 .home-page.theme-dark.has-weather .weather-day-selector {
   border-color: rgba(255, 255, 255, 0.10);
   background: rgba(7, 16, 31, 0.62);
+}
+
+.home-page.theme-dark.has-weather .prediction-local-loading {
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(7, 16, 31, 0.58);
+}
+
+.home-page.theme-dark.has-weather .prediction-local-loading-copy {
+  color: rgba(226, 232, 240, 0.72);
+}
+
+.home-page.theme-dark.has-weather .prediction-local-loading-track {
+  background: rgba(255, 255, 255, 0.10);
 }
 
 .home-page.theme-dark.has-weather .prediction-toggle,

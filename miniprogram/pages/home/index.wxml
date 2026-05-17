@@ -244,6 +244,11 @@
       <view class="prediction-toggle tap-feedback {{predictionPreview.periodKey === 'sunset' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-value="sunset" bindtap="selectPredictionPreviewPeriod">晚霞</view>
     </view>
 
+    <view class="prediction-local-loading" wx:if="{{predictionPreviewLoading}}">
+      <view class="prediction-local-loading-copy">基础天气已加载，正在计算朝晚霞评分</view>
+      <view class="prediction-local-loading-track"><view class="prediction-local-loading-fill"></view></view>
+    </view>
+
     <view class="prediction-hero-card">
     <view class="phenomenon-title-card">
       <view class="phenomenon-title-copy">

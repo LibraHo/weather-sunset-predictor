@@ -3,6 +3,7 @@ import { configureApi, resetApiConfig, setWxInstance } from '../../../miniprogra
 import {
   buildThreeDayDates,
   getEnhancedPrediction,
+  getWeatherForecast,
   getSurroundingPrediction,
   normalizePrediction,
   normalizeSurroundingPrediction,
@@ -77,6 +78,58 @@ describe('miniprogram services/prediction', () => {
       precipitation: 0,
       aod: 0.12,
       cloudCover: 36
+    });
+  });
+
+  test('getWeatherForecast fetches basic weather without invoking scoring', async () => {
+    const wxMock = {
+      request: jest.fn(({ success }) => success({
+        statusCode: 200,
+        data: {
+          success: true,
+          data: [
+            {
+              temperature_2m: 21.6,
+              relative_humidity_2m: 68,
+              surface_pressure: 1008.7,
+              visibility: 16000,
+              wind_speed_10m: 11.4,
+              wind_direction_10m: 270,
+              precipitation: 0,
+              cloud_cover: 36,
+              cloud_cover_high: 62,
+              cloud_cover_mid: 36,
+              cloud_cover_low: 8
+            }
+          ],
+          providerMeta: { name: 'openmeteo' }
+        }
+      }))
+    };
+    setWxInstance(wxMock);
+    configureApi({ baseUrl: 'https://api.example.com' });
+
+    const result = await getWeatherForecast({ lat: 39.9, lon: 116.4, hours: 168 });
+
+    expect(wxMock.request).toHaveBeenCalledWith(expect.objectContaining({
+      url: 'https://api.example.com/api/weather/forecast?lat=39.9&lon=116.4&hours=168',
+      method: 'GET',
+      timeout: 12000
+    }));
+    expect(wxMock.request.mock.calls[0][0].url).not.toContain('/api/prediction/enhanced');
+    expect(result).toMatchObject({
+      temp: 21.6,
+      humidity: 68,
+      pressure: 1008.7,
+      visibility: 16,
+      windSpeed: 11.4,
+      windDirection: 270,
+      precipitation: 0,
+      cloudCover: 36,
+      highClouds: 62,
+      midClouds: 36,
+      lowClouds: 8,
+      provider: 'openmeteo'
     });
   });
 
