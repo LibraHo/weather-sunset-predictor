@@ -24,6 +24,8 @@ describe('miniprogram score hero scoring copy', () => {
     expect(wxss).toContain('#fdba74');
     expect(wxss).toContain('#fb923c');
     expect(wxss).toContain('#fbbf24');
+    expect(wxss).toContain('#f43f5e');
+    expect(wxss).toContain('linear-gradient(135deg, #fb923c 0%, #fbbf24 55%, #f43f5e 100%)');
   });
 
   test('keeps low score copy focused on firecloud conditions instead of going out', () => {

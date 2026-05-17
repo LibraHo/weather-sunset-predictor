@@ -64,6 +64,10 @@
 
 .score-excellent {
   color: #fbbf24;
+  background: linear-gradient(135deg, #fb923c 0%, #fbbf24 55%, #f43f5e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   text-shadow: 0 0 34rpx rgba(251, 191, 36, 0.26);
 }
 
