@@ -151,7 +151,7 @@ describe('OpenMeteoProvider air quality merge', () => {
     const provider = new OpenMeteoProvider();
     provider._getWithRetry = jest.fn(async (params, _timeout, label) => {
       if (String(label).startsWith('air-quality-batch')) throw new Error('air quality should be skipped');
-      expect(params.hourly).toBe('relative_humidity_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,precipitation,weather_code');
+      expect(params.hourly).toBe('temperature_2m,relative_humidity_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,visibility,precipitation,surface_pressure,weather_code');
       return { data: [makeWeatherPayload(), makeWeatherPayload()] };
     });
 

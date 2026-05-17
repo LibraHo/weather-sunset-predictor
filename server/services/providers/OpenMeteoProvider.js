@@ -362,7 +362,7 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     const model = ALLOWED_MODELS.includes(weatherModel) ? weatherModel : 'ecmwf_ifs025';
 
     const hourlyFields = fetchOptions.fields === 'lightPath'
-      ? 'relative_humidity_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,precipitation,weather_code'
+      ? 'temperature_2m,relative_humidity_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,visibility,precipitation,surface_pressure,weather_code'
       : 'temperature_2m,relative_humidity_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,visibility,precipitation,surface_pressure,shortwave_radiation,direct_radiation,diffuse_radiation,total_column_integrated_water_vapour';
 
     const BASE_PARAMS = {
