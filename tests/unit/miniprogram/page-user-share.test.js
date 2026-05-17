@@ -201,6 +201,23 @@ describe('miniprogram page user/share helpers', () => {
     expect(state.predictionPreview.radar.directions[0]).toMatchObject({ direction: 'N', highCloud: expect.any(Number) });
   });
 
+  test('home prediction card shows sunset reference time instead of viewing-window start', () => {
+    const state = homeHelpers.buildHomePredictionSurface({
+      locationName: '北京',
+      period: 'sunset',
+      score: 76,
+      referenceTime: '2026-05-18T11:24:00.000Z',
+      bestWindow: {
+        start: '2026-05-18T10:58:00.000Z',
+        end: '2026-05-18T11:28:00.000Z'
+      },
+      weatherData: { provider: 'open-meteo' }
+    }, { locationName: '北京', period: 'sunset' });
+
+    expect(state.predictionPreview.mainTime).toBe('19:24');
+    expect(state.predictionPreview.bestViewingTime).toBe('18:58 - 19:28');
+  });
+
   test('home asks the user to choose when one query contains multiple city names', () => {
     expect(homeHelpers.shouldAskLocationChoice('北京 上海', [
       { name: '上海市', lat: 31.230525, lon: 121.473667, countryCode: 'CN' },
@@ -304,6 +321,16 @@ describe('miniprogram page user/share helpers', () => {
     expect(homeSource).toContain('predictionPreviewLoading: false');
     expect(homeWxml).toContain('wx:if="{{predictionPreviewLoading}}"');
     expect(homeWxml).toContain('prediction-local-loading');
+  });
+
+  test('home search prefetches alternate sunrise sunset preview instead of falling back to static preview', () => {
+    const homeSource = fs.readFileSync(path.resolve(process.cwd(), 'miniprogram/pages/home/index.js'), 'utf8');
+
+    expect(homeSource).toContain('predictionPeriodCards: {}');
+    expect(homeSource).toContain('this.predictionPreviewPromises[alternatePeriod] = this.prefetchPredictionPreviewPeriod');
+    expect(homeSource).toContain('const cachedPrediction = this.data.predictionPeriodCards?.[value];');
+    expect(homeSource).toContain('const pendingPrediction = this.predictionPreviewPromises?.[value];');
+    expect(homeSource.indexOf('const cachedPrediction = this.data.predictionPeriodCards?.[value];')).toBeLessThan(homeSource.indexOf('predictionPreview: buildPredictionPreviewForPeriod(value)'));
   });
 
   test('result period switch clears loading when cached or stale period state wins', () => {

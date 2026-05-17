@@ -81,6 +81,26 @@ describe('miniprogram services/prediction', () => {
     });
   });
 
+  test('normalizePrediction preserves backend referenceTime separately from viewing window', () => {
+    const normalized = normalizePrediction({
+      score: 76,
+      status: 'good',
+      type: 'sunset',
+      referenceTime: '2026-05-18T11:24:00.000Z',
+      goldenHour: {
+        start: '2026-05-18T10:58:00.000Z',
+        end: '2026-05-18T11:28:00.000Z'
+      }
+    });
+
+    expect(normalized.referenceTime).toBe('2026-05-18T11:24:00.000Z');
+    expect(normalized.date).toBe('2026-05-18T11:24:00.000Z');
+    expect(normalized.bestWindow).toEqual({
+      start: '2026-05-18T10:58:00.000Z',
+      end: '2026-05-18T11:28:00.000Z'
+    });
+  });
+
   test('getWeatherForecast fetches basic weather without invoking scoring', async () => {
     const wxMock = {
       request: jest.fn(({ success }) => success({

@@ -30,6 +30,7 @@ Page({
     errorMessage: '',
     weatherPreview: buildDefaultWeatherPreview(),
     predictionPreview: buildDefaultPredictionPreview(),
+    predictionPeriodCards: {},
     predictionPreviewLoading: false,
     recentQueries: [],
     favorites: []
@@ -111,6 +112,67 @@ Page({
   selectPredictionPreviewPeriod(event) {
     const value = event.currentTarget.dataset.value;
     if (!['sunrise', 'sunset'].includes(value)) return;
+    const cachedPrediction = this.data.predictionPeriodCards?.[value];
+    if (cachedPrediction) {
+      this.setData({
+        period: value,
+        predictionPreview: buildPredictionPreviewFromPrediction(cachedPrediction, this.currentPredictionQuery || { period: value }),
+        predictionPreviewLoading: false
+      }, () => {
+        this.paintPredictionRadarCloudField();
+      });
+      return;
+    }
+
+    const pendingPrediction = this.predictionPreviewPromises?.[value];
+    if (pendingPrediction) {
+      this.setData({
+        period: value,
+        predictionPreviewLoading: true
+      });
+      pendingPrediction.then((prediction) => {
+        if (!prediction || this.data.period !== value) return;
+        this.setData({
+          predictionPreview: buildPredictionPreviewFromPrediction(prediction, this.currentPredictionQuery || { period: value }),
+          predictionPreviewLoading: false,
+          predictionPeriodCards: {
+            ...(this.data.predictionPeriodCards || {}),
+            [value]: prediction
+          }
+        }, () => {
+          this.paintPredictionRadarCloudField();
+        });
+      }).catch(() => {
+        if (this.data.period === value) this.setData({ predictionPreviewLoading: false });
+      });
+      return;
+    }
+
+    if (this.currentPredictionQuery?.coordinate) {
+      this.setData({
+        period: value,
+        predictionPreviewLoading: true
+      });
+      this.prefetchPredictionPreviewPeriod({ ...this.currentPredictionQuery, period: value })
+        .then((prediction) => {
+          if (!prediction || this.data.period !== value) return;
+          this.setData({
+            predictionPreview: buildPredictionPreviewFromPrediction(prediction, this.currentPredictionQuery || { period: value }),
+            predictionPreviewLoading: false,
+            predictionPeriodCards: {
+              ...(this.data.predictionPeriodCards || {}),
+              [value]: prediction
+            }
+          }, () => {
+            this.paintPredictionRadarCloudField();
+          });
+        })
+        .catch(() => {
+          if (this.data.period === value) this.setData({ predictionPreviewLoading: false });
+        });
+      return;
+    }
+
     this.setData({
       period: value,
       predictionPreview: buildPredictionPreviewForPeriod(value)
@@ -296,6 +358,8 @@ Page({
         period: this.data.period,
         day: this.data.day
       };
+      this.currentPredictionQuery = query;
+      this.predictionPreviewPromises = {};
       this.setSearchLoadingStep('正在读取基础天气', 58, '先展示温度、风、湿度、能见度、气压和降水');
       let weather = null;
       try {
@@ -314,6 +378,11 @@ Page({
       } catch (weatherError) {
         this.setSearchLoadingStep('正在计算霞光评分', 72, '基础天气暂未返回，继续读取综合预测');
       }
+      const alternatePeriod = query.period === 'sunrise' ? 'sunset' : 'sunrise';
+      this.predictionPreviewPromises[alternatePeriod] = this.prefetchPredictionPreviewPeriod({
+        ...query,
+        period: alternatePeriod
+      });
       const raw = await this.callPredictionService(query);
       const prediction = normalizePrediction(raw, query);
       this.setSearchLoadingStep('正在整理天气卡片', 92, '准备天气面板与云况雷达');
@@ -323,6 +392,9 @@ Page({
 
       this.setData({
         ...buildHomePredictionSurface(prediction, query),
+        predictionPeriodCards: {
+          [query.period]: prediction
+        },
         predictionPreviewLoading: false,
         weatherView: 'overview',
         weatherDay: query.day,
@@ -330,6 +402,24 @@ Page({
       }, () => {
         this.paintPredictionRadarCloudField();
       });
+      this.predictionPreviewPromises[alternatePeriod].then((alternatePrediction) => {
+        if (!alternatePrediction) return;
+        const cards = {
+          ...(this.data.predictionPeriodCards || {}),
+          [alternatePeriod]: alternatePrediction
+        };
+        const nextData = { predictionPeriodCards: cards };
+        if (this.data.period === alternatePeriod) {
+          nextData.predictionPreview = buildPredictionPreviewFromPrediction(alternatePrediction, {
+            ...query,
+            period: alternatePeriod
+          });
+          nextData.predictionPreviewLoading = false;
+        }
+        this.setData(nextData, () => {
+          if (this.data.period === alternatePeriod) this.paintPredictionRadarCloudField();
+        });
+      }).catch(() => null);
     } catch (error) {
       if (error && error.message === 'LOCATION_NEEDS_CONFIRMATION') {
         return;
@@ -518,6 +608,11 @@ Page({
       lon: query.coordinate.lon,
       hours: 168
     });
+  },
+
+  async prefetchPredictionPreviewPeriod(query) {
+    const raw = await this.callPredictionService(query);
+    return normalizePrediction(raw, query);
   },
 
   async recordRecentLocation(query) {
@@ -1057,7 +1152,7 @@ function paintHourlyChartCanvas(canvasId, chart = [], options = {}) {
 
       const width = Math.max(1, Math.round(result.width || 320));
       const height = Math.max(1, Math.round(result.height || 120));
-      const dpr = wxApi.getSystemInfoSync?.().pixelRatio || 1;
+      const dpr = wxApi.getWindowInfo?.().pixelRatio || wxApi.getDeviceInfo?.().pixelRatio || 1;
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
 
@@ -1521,7 +1616,9 @@ function buildScoreLabel(score) {
 
 function compactBestTime(value) {
   if (!value) return '--';
-  if (typeof value === 'string' && value.includes('-')) return value.split('-')[0].trim();
+  if (typeof value === 'string' && /^\s*\d{1,2}:\d{2}\s*[-–]/.test(value)) {
+    return value.split(/[-–]/)[0].trim();
+  }
   if (typeof value === 'object') return compactDateTime(value.start || value.from || value.time);
   return compactDateTime(value);
 }

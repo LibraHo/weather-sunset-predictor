@@ -23,9 +23,7 @@ Component({
   data: {
     homeMenuOpen: false,
     settingsOpen: false,
-    interfaceLanguage: 'zh-CN',
-    themeMode: 'system',
-    resolvedThemeMode: 'light'
+    interfaceLanguage: 'zh-CN'
   },
 
   lifetimes: {

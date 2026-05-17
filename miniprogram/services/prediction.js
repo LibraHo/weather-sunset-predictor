@@ -88,6 +88,7 @@ export function normalizePrediction(data = {}) {
     aod: normalizedWeather.aod,
     weatherData: normalizedWeather,
     type: source.type || null,
+    referenceTime: source.referenceTime || null,
     date: source.date || source.referenceTime || null,
     description: source.description || '',
     advice: source.advice || '',

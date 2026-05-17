@@ -147,7 +147,7 @@ describe('miniprogram radar cloud field renderer', () => {
     const query = { in: jest.fn(() => ({ select })), select };
     const wxApi = {
       createSelectorQuery: jest.fn(() => query),
-      getSystemInfoSync: jest.fn(() => ({ pixelRatio: 2 })),
+      getWindowInfo: jest.fn(() => ({ pixelRatio: 2 })),
       canvasPutImageData: jest.fn()
     };
 
@@ -177,7 +177,7 @@ describe('miniprogram radar cloud field renderer', () => {
     };
     const wxApi = {
       createSelectorQuery: jest.fn(() => query),
-      getSystemInfoSync: jest.fn(() => ({ pixelRatio: 2 }))
+      getWindowInfo: jest.fn(() => ({ pixelRatio: 2 }))
     };
 
     paintRadarCloudCanvas2d('homeRadarCloudField', directions, { wxApi, page }, 64);
@@ -203,7 +203,7 @@ describe('miniprogram radar cloud field renderer', () => {
     const query = { in: jest.fn(() => ({ select })), select };
     const wxApi = {
       createSelectorQuery: jest.fn(() => query),
-      getSystemInfoSync: jest.fn(() => ({ pixelRatio: 2 })),
+      getWindowInfo: jest.fn(() => ({ pixelRatio: 2 })),
       canvasPutImageData: jest.fn()
     };
 
