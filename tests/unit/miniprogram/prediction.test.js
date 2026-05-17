@@ -3,6 +3,7 @@ import { configureApi, resetApiConfig, setWxInstance } from '../../../miniprogra
 import {
   buildThreeDayDates,
   getEnhancedPrediction,
+  getEnhancedPredictionBatch,
   getWeatherForecast,
   getSurroundingPrediction,
   normalizePrediction,
@@ -78,6 +79,26 @@ describe('miniprogram services/prediction', () => {
       precipitation: 0,
       aod: 0.12,
       cloudCover: 36
+    });
+  });
+
+  test('normalizePrediction preserves backend referenceTime separately from viewing window', () => {
+    const normalized = normalizePrediction({
+      score: 76,
+      status: 'good',
+      type: 'sunset',
+      referenceTime: '2026-05-18T11:24:00.000Z',
+      goldenHour: {
+        start: '2026-05-18T10:58:00.000Z',
+        end: '2026-05-18T11:28:00.000Z'
+      }
+    });
+
+    expect(normalized.referenceTime).toBe('2026-05-18T11:24:00.000Z');
+    expect(normalized.date).toBe('2026-05-18T11:24:00.000Z');
+    expect(normalized.bestWindow).toEqual({
+      start: '2026-05-18T10:58:00.000Z',
+      end: '2026-05-18T11:28:00.000Z'
     });
   });
 
@@ -173,6 +194,63 @@ describe('miniprogram services/prediction', () => {
       humidity: 45,
       aod: 34
     });
+  });
+
+  test('getEnhancedPredictionBatch fetches sunrise and sunset cards in one closed-loop request', async () => {
+    const wxMock = {
+      request: jest.fn(({ success }) => success({
+        statusCode: 200,
+        data: {
+          success: true,
+          data: [
+            {
+              id: 'sunrise',
+              type: 'sunrise',
+              score: 58,
+              referenceTime: '2026-05-11T21:02:00.000Z',
+              goldenHour: { start: '2026-05-11T20:42:00.000Z', end: '2026-05-11T21:22:00.000Z' }
+            },
+            {
+              id: 'sunset',
+              type: 'sunset',
+              score: 76,
+              referenceTime: '2026-05-11T11:24:00.000Z',
+              goldenHour: { start: '2026-05-11T10:58:00.000Z', end: '2026-05-11T11:28:00.000Z' }
+            }
+          ]
+        }
+      }))
+    };
+    setWxInstance(wxMock);
+    configureApi({ baseUrl: 'https://api.example.com' });
+
+    const result = await getEnhancedPredictionBatch({
+      lat: 39.9,
+      lon: 116.4,
+      items: [
+        { id: 'sunrise', type: 'sunrise', date: '2026-05-11' },
+        { id: 'sunset', type: 'sunset', date: '2026-05-11' }
+      ]
+    });
+
+    expect(wxMock.request).toHaveBeenCalledWith(expect.objectContaining({
+      url: 'https://api.example.com/api/prediction/enhanced/closed-loop/batch',
+      method: 'POST',
+      timeout: 30000,
+      data: {
+        lat: 39.9,
+        lon: 116.4,
+        options: { includeRemoteCloudData: true },
+        items: [
+          { id: 'sunrise', type: 'sunrise', date: '2026-05-11' },
+          { id: 'sunset', type: 'sunset', date: '2026-05-11' }
+        ]
+      }
+    }));
+    expect(result).toEqual([
+      expect.objectContaining({ type: 'sunrise', score: 58, referenceTime: '2026-05-11T21:02:00.000Z' }),
+      expect.objectContaining({ type: 'sunset', score: 76, referenceTime: '2026-05-11T11:24:00.000Z' })
+    ]);
   });
 
   test('normalizeSurroundingPrediction keeps 8-direction radar essentials', () => {

@@ -13,6 +13,6 @@
       </view>
       </button>
     </view>
-    <button class="location-query-button" loading="{{loading}}" disabled="{{loading}}" hover-class="button-hover" hover-stay-time="80" bindtap="onConfirm">{{loading ? '读取中' : '查询'}}</button>
+    <button class="location-query-button {{loading ? 'is-disabled' : ''}}" loading="{{loading}}" disabled="{{loading}}" hover-class="button-hover" hover-stay-time="80" bindtap="onConfirm">{{loading ? '读取中' : '查询'}}</button>
   </view>
 </view>

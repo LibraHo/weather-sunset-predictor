@@ -1,10 +1,19 @@
 import { reverseGeocode, searchLocations } from '../../services/geocoding.js';
-import { getEnhancedPrediction, getWeatherForecast } from '../../services/prediction.js';
+import { getEnhancedPrediction, getEnhancedPredictionBatch, getWeatherForecast } from '../../services/prediction.js';
 import { addFavorite, addRecentLocation, listRecentLocations } from '../../services/user.js';
 import { applyPageSettings, readAppSettings, saveAppSettings as persistAppSettings } from '../../utils/app-settings.js';
 import { buildRadarCloudGradients, paintRadarCloudCanvas } from '../../utils/radar-cloud-field.js';
 
 const app = getApp();
+let cachedCanvasPixelRatio = null;
+
+function getCachedCanvasPixelRatio(wxApi = wx) {
+  if (cachedCanvasPixelRatio) return cachedCanvasPixelRatio;
+  const deviceInfo = wxApi.getDeviceInfo?.() || {};
+  const windowInfo = wxApi.getWindowInfo?.() || {};
+  cachedCanvasPixelRatio = windowInfo.pixelRatio || deviceInfo.pixelRatio || 1;
+  return cachedCanvasPixelRatio;
+}
 
 Page({
   data: {
@@ -30,6 +39,7 @@ Page({
     errorMessage: '',
     weatherPreview: buildDefaultWeatherPreview(),
     predictionPreview: buildDefaultPredictionPreview(),
+    predictionPeriodCards: {},
     predictionPreviewLoading: false,
     recentQueries: [],
     favorites: []
@@ -111,6 +121,67 @@ Page({
   selectPredictionPreviewPeriod(event) {
     const value = event.currentTarget.dataset.value;
     if (!['sunrise', 'sunset'].includes(value)) return;
+    const cachedPrediction = this.data.predictionPeriodCards?.[value];
+    if (cachedPrediction) {
+      this.setData({
+        period: value,
+        predictionPreview: buildPredictionPreviewFromPrediction(cachedPrediction, this.currentPredictionQuery || { period: value }),
+        predictionPreviewLoading: false
+      }, () => {
+        this.paintPredictionRadarCloudField();
+      });
+      return;
+    }
+
+    const pendingPrediction = this.predictionPreviewPromises?.[value];
+    if (pendingPrediction) {
+      this.setData({
+        period: value,
+        predictionPreviewLoading: true
+      });
+      pendingPrediction.then((prediction) => {
+        if (!prediction || this.data.period !== value) return;
+        this.setData({
+          predictionPreview: buildPredictionPreviewFromPrediction(prediction, this.currentPredictionQuery || { period: value }),
+          predictionPreviewLoading: false,
+          predictionPeriodCards: {
+            ...(this.data.predictionPeriodCards || {}),
+            [value]: prediction
+          }
+        }, () => {
+          this.paintPredictionRadarCloudField();
+        });
+      }).catch(() => {
+        if (this.data.period === value) this.setData({ predictionPreviewLoading: false });
+      });
+      return;
+    }
+
+    if (this.currentPredictionQuery?.coordinate) {
+      this.setData({
+        period: value,
+        predictionPreviewLoading: true
+      });
+      this.prefetchPredictionPreviewPeriod({ ...this.currentPredictionQuery, period: value })
+        .then((prediction) => {
+          if (!prediction || this.data.period !== value) return;
+          this.setData({
+            predictionPreview: buildPredictionPreviewFromPrediction(prediction, this.currentPredictionQuery || { period: value }),
+            predictionPreviewLoading: false,
+            predictionPeriodCards: {
+              ...(this.data.predictionPeriodCards || {}),
+              [value]: prediction
+            }
+          }, () => {
+            this.paintPredictionRadarCloudField();
+          });
+        })
+        .catch(() => {
+          if (this.data.period === value) this.setData({ predictionPreviewLoading: false });
+        });
+      return;
+    }
+
     this.setData({
       period: value,
       predictionPreview: buildPredictionPreviewForPeriod(value)
@@ -296,6 +367,8 @@ Page({
         period: this.data.period,
         day: this.data.day
       };
+      this.currentPredictionQuery = query;
+      this.predictionPreviewPromises = {};
       this.setSearchLoadingStep('正在读取基础天气', 58, '先展示温度、风、湿度、能见度、气压和降水');
       let weather = null;
       try {
@@ -314,8 +387,8 @@ Page({
       } catch (weatherError) {
         this.setSearchLoadingStep('正在计算霞光评分', 72, '基础天气暂未返回，继续读取综合预测');
       }
-      const raw = await this.callPredictionService(query);
-      const prediction = normalizePrediction(raw, query);
+      const predictionCards = await this.callPredictionCardBatch(query);
+      const prediction = predictionCards[query.period] || await this.prefetchPredictionPreviewPeriod(query);
       this.setSearchLoadingStep('正在整理天气卡片', 92, '准备天气面板与云况雷达');
       app.rememberQuery(query);
       this.recordRecentLocation(query);
@@ -323,6 +396,7 @@ Page({
 
       this.setData({
         ...buildHomePredictionSurface(prediction, query),
+        predictionPeriodCards: predictionCards,
         predictionPreviewLoading: false,
         weatherView: 'overview',
         weatherDay: query.day,
@@ -518,6 +592,38 @@ Page({
       lon: query.coordinate.lon,
       hours: 168
     });
+  },
+
+  async callPredictionCardBatch(query) {
+    const date = resolvePredictionDate(query.day);
+    const periods = query.period === 'sunrise' ? ['sunrise', 'sunset'] : ['sunset', 'sunrise'];
+    const items = periods.map((period) => ({ id: period, type: period, date }));
+    try {
+      const rows = await getEnhancedPredictionBatch({
+        lat: query.coordinate.lat,
+        lon: query.coordinate.lon,
+        items,
+        includeRemoteCloudData: true
+      });
+      const cards = {};
+      rows.forEach((prediction, index) => {
+        const period = prediction.period || prediction.type || items[index]?.type;
+        if (period) cards[period] = normalizePrediction(prediction, { ...query, period });
+      });
+      if (cards[query.period]) return cards;
+    } catch (error) {
+      // Fall back to the single-card path below; search should remain usable if batch is unavailable.
+    }
+
+    const raw = await this.callPredictionService(query);
+    return {
+      [query.period]: normalizePrediction(raw, query)
+    };
+  },
+
+  async prefetchPredictionPreviewPeriod(query) {
+    const raw = await this.callPredictionService(query);
+    return normalizePrediction(raw, query);
   },
 
   async recordRecentLocation(query) {
@@ -1057,7 +1163,7 @@ function paintHourlyChartCanvas(canvasId, chart = [], options = {}) {
 
       const width = Math.max(1, Math.round(result.width || 320));
       const height = Math.max(1, Math.round(result.height || 120));
-      const dpr = wxApi.getSystemInfoSync?.().pixelRatio || 1;
+      const dpr = getCachedCanvasPixelRatio(wxApi);
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
 
@@ -1521,7 +1627,9 @@ function buildScoreLabel(score) {
 
 function compactBestTime(value) {
   if (!value) return '--';
-  if (typeof value === 'string' && value.includes('-')) return value.split('-')[0].trim();
+  if (typeof value === 'string' && /^\s*\d{1,2}:\d{2}\s*[-–]/.test(value)) {
+    return value.split(/[-–]/)[0].trim();
+  }
   if (typeof value === 'object') return compactDateTime(value.start || value.from || value.time);
   return compactDateTime(value);
 }
