@@ -1,5 +1,9 @@
 import { jest } from '@jest/globals';
+import fs from 'fs';
+import path from 'path';
 import { normalizePrediction } from '../../../miniprogram/services/prediction.js';
+
+const resultPageSource = fs.readFileSync(path.resolve(process.cwd(), 'miniprogram/pages/result/index.js'), 'utf8');
 
 describe('miniprogram page user/share helpers', () => {
   let resultHelpers;
@@ -280,6 +284,13 @@ describe('miniprogram page user/share helpers', () => {
       analysisItems: expect.any(Array),
       scoreLedger: expect.objectContaining({ summary: expect.stringContaining('58') })
     });
+  });
+
+  test('result period switch reuses prefetch promises and warms alternate panels', () => {
+    expect(resultPageSource).toContain('periodCardPromises');
+    expect(resultPageSource).toContain('prefetchXiakePanels');
+    expect(resultPageSource).toContain('this.periodCardPromises[period]');
+    expect(resultPageSource).toContain('this.data.activePeriod !== period');
   });
 
   test('result page metrics include the full weather API fields', () => {
