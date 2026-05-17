@@ -216,7 +216,10 @@
   background: linear-gradient(135deg, #ffd166, #fb923c);
 }
 
-button::after {
+.menu-button::after,
+.header-icon-button::after,
+.settings-close::after,
+.settings-done::after {
   border: 0;
 }
 

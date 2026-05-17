@@ -11,8 +11,10 @@ export function readAppSettings() {
 
 export function resolveThemeMode(themeMode = 'system') {
   if (themeMode === 'dark' || themeMode === 'light') return themeMode;
-  const systemInfo = typeof wx.getSystemInfoSync === 'function' ? wx.getSystemInfoSync() : {};
-  return systemInfo.theme === 'dark' || systemInfo.darkmode === true ? 'dark' : 'light';
+  const appBaseInfo = typeof wx.getAppBaseInfo === 'function' ? wx.getAppBaseInfo() : {};
+  const systemSetting = typeof wx.getSystemSetting === 'function' ? wx.getSystemSetting() : {};
+  const theme = appBaseInfo.theme || systemSetting.theme;
+  return theme === 'dark' || systemSetting.darkmode === true ? 'dark' : 'light';
 }
 
 export function saveAppSettings(patch = {}, current = {}) {
