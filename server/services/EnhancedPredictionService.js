@@ -727,14 +727,14 @@ function assessAerosolHazeCap(weatherData) {
 /**
  * 高云载体保底：高云充足、低云稀少、空气不灰时，避免日落低辐射或水汽信号把分数打穿。
  */
-function assessHighCloudCarrierAdjustment(weatherData, aerosolHazeCap) {
+function assessHighCloudCarrierAdjustment(weatherData, aerosolHazeCap, thickHighCloudPenalty = null) {
   const lowClouds = weatherData.lowClouds || 0;
   const midClouds = weatherData.midClouds || 0;
   const highClouds = weatherData.highClouds || 0;
   const visibility = weatherData.visibility ?? 20;
   const precipitation = weatherData.precipitation || 0;
 
-  if (aerosolHazeCap?.applied || precipitation > 0.2) {
+  if (aerosolHazeCap?.applied || thickHighCloudPenalty?.applied || precipitation > 0.2) {
     return { applied: false, floor: null, reason: null };
   }
 
@@ -1599,7 +1599,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
 
   // 6.8 气溶胶/沙尘灰幕封顶 + 清透高云载体保底（2026-05-06 北京/喀什反例）
   const aerosolHazeCap = assessAerosolHazeCap(weatherData);
-  const highCloudCarrierAdjustment = assessHighCloudCarrierAdjustment(weatherData, aerosolHazeCap);
+  const highCloudCarrierAdjustment = assessHighCloudCarrierAdjustment(weatherData, aerosolHazeCap, thickHighCloudPenalty);
 
   if (highCloudCarrierAdjustment.applied) {
     adjustedScore = Math.max(adjustedScore, highCloudCarrierAdjustment.floor);
