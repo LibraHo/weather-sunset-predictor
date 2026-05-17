@@ -1,7 +1,7 @@
 .result-page {
   display: flex;
   flex-direction: column;
-  gap: 22rpx;
+  gap: 24rpx;
 }
 
 .result-prediction-toggle {

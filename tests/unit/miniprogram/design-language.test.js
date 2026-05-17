@@ -68,4 +68,23 @@ describe('miniprogram design language styles', () => {
     expect(mapWxss).not.toMatch(/font-size:\s*(4[3-9]|[5-9]\d)rpx/);
     expect(resultWxss).not.toMatch(/score-ledger-[^{]+{[^}]*font-size:\s*(2[0-3])rpx/s);
   });
+
+  test('keeps primary page card spacing consistent', () => {
+    [
+      'miniprogram/pages/home/index.wxss',
+      'miniprogram/pages/methodology/index.wxss',
+      'miniprogram/pages/map/index.wxss',
+      'miniprogram/pages/gallery/index.wxss',
+      'miniprogram/pages/upload/index.wxss',
+      'miniprogram/pages/result/index.wxss'
+    ].forEach((file) => {
+      const wxss = readText(file);
+
+      expect(wxss).toMatch(/\.[\w-]+-page\s*\{[\s\S]*?gap:\s*24rpx;/);
+    });
+
+    const methodologyWxml = readText('miniprogram/pages/methodology/index.wxml');
+
+    expect(methodologyWxml.trim().startsWith('<view class="container methodology-page')).toBe(true);
+  });
 });

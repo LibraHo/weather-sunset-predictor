@@ -66,7 +66,7 @@ describe('miniprogram methodology page', () => {
     expect(wxss).toContain('rgba(251, 146, 60');
     expect(wxss).toContain('.methodology-page.theme-light .methodology-section');
     expect(wxss).toContain('.methodology-page.theme-dark .methodology-section');
-    expect(wxss).toContain('gap: 22rpx');
+    expect(wxss).toContain('gap: 24rpx');
     expect(wxss).not.toContain('#003366');
     expect(wxss).not.toContain('form-item');
   });
