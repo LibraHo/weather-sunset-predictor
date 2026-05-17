@@ -2,6 +2,7 @@ const axios = require('axios');
 const BaseWeatherProvider = require('./BaseWeatherProvider');
 const quota = require('../OpenMeteoQuota');
 const apiLog = require('../ApiCallLog');
+const { startProfile, logProfile } = require('../../utils/ProfileLogger');
 
 class OpenMeteoProvider extends BaseWeatherProvider {
   constructor() {
@@ -264,29 +265,75 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     
     try {
       // 使用 ECMWF IFS 025 模型（与 Windy 同源，精度更高）
-      const response = await this._getWithRetry(
-        { ...BASE_PARAMS, models: model },
-        fetchOptions.timeoutMs || 10000,
-        `single(${lat},${lon})`,
-        this.API_URL,
-        'grid',
-        fetchOptions
-      );
+      const forecastProfile = startProfile();
+      let response;
+      try {
+        response = await this._getWithRetry(
+          { ...BASE_PARAMS, models: model },
+          fetchOptions.timeoutMs || 10000,
+          `single(${lat},${lon})`,
+          this.API_URL,
+          'grid',
+          fetchOptions
+        );
+        logProfile('openmeteo.fetchWeatherData', 'weather_forecast', forecastProfile, {
+          status: 'ok',
+          lat,
+          lon,
+          hours,
+          forecastDays,
+          model
+        });
+      } catch (forecastError) {
+        logProfile('openmeteo.fetchWeatherData', 'weather_forecast', forecastProfile, {
+          status: 'error',
+          lat,
+          lon,
+          hours,
+          forecastDays,
+          model,
+          error: forecastError.message
+        });
+        throw forecastError;
+      }
       const result = this._normalizeHourlyResult(response.data, hours, model, startTime, this.name);
 
       if (fetchOptions.includeAirQuality === false) {
+        logProfile('openmeteo.fetchWeatherData', 'air_quality', startProfile(), {
+          status: 'skipped',
+          lat,
+          lon,
+          hours,
+          reason: 'includeAirQuality=false'
+        });
         result.providerMeta.unsupportedFields.push('air_quality');
         result.providerMeta.degradedReason.push('air_quality_skipped');
       } else {
-      try {
-        const airByTimestamp = await this._fetchAirQualityData(lat, lon, hours, forecastDays, fetchOptions);
-        this._mergeAirQualityData(result, airByTimestamp);
-        result.providerMeta.airQualitySource = 'openmeteo_air_quality';
-      } catch (airError) {
-        console.warn('[Open-Meteo Air Quality API] 请求失败，按无气溶胶数据降级:', airError.message);
-        result.providerMeta.unsupportedFields.push('air_quality');
-        result.providerMeta.degradedReason.push('air_quality_unavailable');
-      }
+        const airProfile = startProfile();
+        try {
+          const airByTimestamp = await this._fetchAirQualityData(lat, lon, hours, forecastDays, fetchOptions);
+          this._mergeAirQualityData(result, airByTimestamp);
+          result.providerMeta.airQualitySource = 'openmeteo_air_quality';
+          logProfile('openmeteo.fetchWeatherData', 'air_quality', airProfile, {
+            status: 'ok',
+            lat,
+            lon,
+            hours,
+            forecastDays
+          });
+        } catch (airError) {
+          logProfile('openmeteo.fetchWeatherData', 'air_quality', airProfile, {
+            status: 'degraded',
+            lat,
+            lon,
+            hours,
+            forecastDays,
+            error: airError.message
+          });
+          console.warn('[Open-Meteo Air Quality API] 请求失败，按无气溶胶数据降级:', airError.message);
+          result.providerMeta.unsupportedFields.push('air_quality');
+          result.providerMeta.degradedReason.push('air_quality_unavailable');
+        }
       }
 
       return result;
@@ -325,11 +372,32 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     };
 
     try {
-      const response = await this._getWithRetry(
-        BASE_PARAMS,
-        15000,
-        `batch(points=${pointList.length})`
-      );
+      const forecastProfile = startProfile();
+      let response;
+      try {
+        response = await this._getWithRetry(
+          BASE_PARAMS,
+          15000,
+          `batch(points=${pointList.length})`
+        );
+        logProfile('openmeteo.fetchWeatherDataBatch', 'weather_forecast', forecastProfile, {
+          status: 'ok',
+          points: pointList.length,
+          hours,
+          forecastDays,
+          model
+        });
+      } catch (forecastError) {
+        logProfile('openmeteo.fetchWeatherDataBatch', 'weather_forecast', forecastProfile, {
+          status: 'error',
+          points: pointList.length,
+          hours,
+          forecastDays,
+          model,
+          error: forecastError.message
+        });
+        throw forecastError;
+      }
 
       const payload = Array.isArray(response.data) ? response.data : [response.data];
       if (payload.length !== pointList.length) {
@@ -343,6 +411,7 @@ class OpenMeteoProvider extends BaseWeatherProvider {
         weatherMap[key] = this._normalizeHourlyResult(payload[i], hours, model, startTime, this.name);
       }
 
+      const airProfile = startProfile();
       try {
         const airQualityMap = await this._fetchAirQualityDataBatch(pointList, hours, forecastDays);
         for (const point of pointList) {
@@ -350,7 +419,20 @@ class OpenMeteoProvider extends BaseWeatherProvider {
           this._mergeAirQualityData(weatherMap[key], airQualityMap[key]);
           weatherMap[key].providerMeta.airQualitySource = 'openmeteo_air_quality';
         }
+        logProfile('openmeteo.fetchWeatherDataBatch', 'air_quality', airProfile, {
+          status: 'ok',
+          points: pointList.length,
+          hours,
+          forecastDays
+        });
       } catch (airError) {
+        logProfile('openmeteo.fetchWeatherDataBatch', 'air_quality', airProfile, {
+          status: 'degraded',
+          points: pointList.length,
+          hours,
+          forecastDays,
+          error: airError.message
+        });
         console.warn('[Open-Meteo Air Quality API] 批量请求失败，地图格点按无气溶胶数据降级:', airError.message);
         for (const point of pointList) {
           const key = `${point.lat},${point.lon}`;

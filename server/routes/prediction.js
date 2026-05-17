@@ -20,6 +20,7 @@ const CacheService = require('../services/CacheService.js');
 const cacheConfig = require('../config/cacheConfig.js');
 const orchestrator = require('../services/ProviderOrchestrator');
 const SunCalculator = require('../utils/SunCalculator.js');
+const { startProfile, profileDurationMs, logProfile } = require('../utils/ProfileLogger');
 
 // 创建服务实例（使用统一TTL配置）
 const predictionService = new PredictionService();
@@ -208,19 +209,24 @@ async function buildClosedLoopPredictionInput({
   forecastHours = 168,
   weatherFetchOptions = {}
 }) {
+  const timings = {};
   const targetDate = date ? new Date(date) : new Date();
   if (!(targetDate instanceof Date) || isNaN(targetDate.getTime())) {
     throw new Error('Invalid date');
   }
 
+  const referenceProfile = startProfile();
   let refTime = referenceTime ? new Date(referenceTime) : null;
   if (!(refTime instanceof Date) || isNaN(refTime.getTime())) {
     refTime = type === 'sunrise'
       ? SunCalculator.getSunriseTime(targetDate, lat, lon)
       : SunCalculator.getSunsetTime(targetDate, lat, lon);
   }
+  timings.referenceMs = profileDurationMs(referenceProfile);
 
+  const weatherFetchProfile = startProfile();
   const weatherResponse = weatherResponseOverride || await fetchClosedLoopWeatherData(lat, lon, forecastHours, weatherFetchOptions);
+  timings.weatherFetchMs = profileDurationMs(weatherFetchProfile);
   const hourly = Array.isArray(weatherResponse.data) ? weatherResponse.data : [];
   if (!hourly.length) {
     const error = new Error('No weather data available');
@@ -231,35 +237,96 @@ async function buildClosedLoopPredictionInput({
   const { selected, selectedIdx } = selectHourlyAt(hourly, refTime);
   const built = buildWeatherDataFromHourly(selected, hourly, selectedIdx);
   const azimuth = EnhancedPredictionService.calculateSolarAzimuth(refTime, lat, lon);
-  const remoteCloudData = includeRemoteCloudData
-    ? await surroundingService.getSolarDirectionLightPathSamples({
+  let remoteCloudData = null;
+  const remoteCloudProfile = startProfile();
+  if (includeRemoteCloudData) {
+    try {
+      remoteCloudData = await surroundingService.getSolarDirectionLightPathSamples({
         lat, lon, date: targetDate, type, azimuth, referenceTime: refTime
-      })
-    : null;
+      });
+      logProfile('prediction.closedLoop', 'remote_cloud', remoteCloudProfile, {
+        status: 'ok',
+        lat,
+        lon,
+        type,
+        samples: Array.isArray(remoteCloudData?.samples) ? remoteCloudData.samples.length : 0,
+        errors: Array.isArray(remoteCloudData?.errors) ? remoteCloudData.errors.length : 0,
+        cacheHit: remoteCloudData?.cache?.hit === true
+      });
+      timings.remoteCloudMs = profileDurationMs(remoteCloudProfile);
+    } catch (error) {
+      logProfile('prediction.closedLoop', 'remote_cloud', remoteCloudProfile, {
+        status: 'error',
+        lat,
+        lon,
+        type,
+        error: error.message
+      });
+      throw error;
+    }
+  } else {
+    logProfile('prediction.closedLoop', 'remote_cloud', remoteCloudProfile, {
+      status: 'skipped',
+      lat,
+      lon,
+      type,
+      reason: 'includeRemoteCloudData=false'
+    });
+    timings.remoteCloudMs = profileDurationMs(remoteCloudProfile);
+  }
 
   return {
     ...built,
     referenceTime: refTime,
     providerMeta: weatherResponse.providerMeta || null,
     remoteCloudData,
-    source: includeRemoteCloudData ? 'backend_closed_loop' : 'backend_closed_loop_fast'
+    source: includeRemoteCloudData ? 'backend_closed_loop' : 'backend_closed_loop_fast',
+    profileTimings: timings
   };
 }
 
 function buildEnhancedPredictionResponse({ closedLoop, lat, lon, type, options = {} }) {
-  const result = EnhancedPredictionService.calculateEnhancedPrediction(
-    closedLoop.weatherData,
-    closedLoop.referenceTime,
-    lat,
-    lon,
-    type,
-    {
-      ...options,
-      prevHourData: closedLoop.prevHourData,
-      rainedRecently: closedLoop.rainedRecently,
-      remoteCloudData: closedLoop.remoteCloudData
+  const scoringProfile = startProfile();
+  let result;
+  try {
+    result = EnhancedPredictionService.calculateEnhancedPrediction(
+      closedLoop.weatherData,
+      closedLoop.referenceTime,
+      lat,
+      lon,
+      type,
+      {
+        ...options,
+        prevHourData: closedLoop.prevHourData,
+        rainedRecently: closedLoop.rainedRecently,
+        remoteCloudData: closedLoop.remoteCloudData
+      }
+    );
+    logProfile('prediction.closedLoop', 'scoring', scoringProfile, {
+      status: 'ok',
+      lat,
+      lon,
+      type,
+      score: result.score,
+      quality: result.quality,
+      source: closedLoop.source || 'backend_closed_loop',
+      hasRemoteCloudData: Boolean(closedLoop.remoteCloudData)
+    });
+    if (closedLoop.profileTimings) {
+      closedLoop.profileTimings.calculateMs = profileDurationMs(scoringProfile);
     }
-  );
+  } catch (error) {
+    logProfile('prediction.closedLoop', 'scoring', scoringProfile, {
+      status: 'error',
+      lat,
+      lon,
+      type,
+      source: closedLoop.source || 'backend_closed_loop',
+      hasRemoteCloudData: Boolean(closedLoop.remoteCloudData),
+      error: error.message
+    });
+    throw error;
+  }
 
   return {
     ...result,
@@ -279,6 +346,7 @@ function buildEnhancedPredictionResponse({ closedLoop, lat, lon, type, options =
     clientWeatherFallback: closedLoop.clientWeatherFallback === true,
     referenceTime: closedLoop.referenceTime.toISOString(),
     remoteCloudData: closedLoop.remoteCloudData,
+    profileTimings: closedLoop.profileTimings || null,
   };
 }
 
@@ -457,6 +525,7 @@ router.post('/calculate', validatePredictionRequest, (req, res) => {
  * }
  */
 router.post('/enhanced', validatePredictionRequest, async (req, res) => {
+  const totalProfile = startProfile();
   try {
     const { weatherData, date, lat, lon, type, options = {}, referenceTime } = req.body;
     const fastClosedLoop = options.fast === true;
@@ -491,6 +560,21 @@ router.post('/enhanced', validatePredictionRequest, async (req, res) => {
         });
 
     const compatResult = buildEnhancedPredictionResponse({ closedLoop, lat, lon, type, options });
+    const profileTimings = closedLoop.profileTimings || {};
+    const aggregateProfile = {
+      referenceMs: profileTimings.referenceMs ?? null,
+      weatherFetchMs: profileTimings.weatherFetchMs ?? null,
+      remoteCloudMs: profileTimings.remoteCloudMs ?? null,
+      calculateMs: profileTimings.calculateMs ?? null,
+      totalMs: profileDurationMs(totalProfile),
+      lat,
+      lon,
+      type,
+      source: closedLoop.source || 'backend_closed_loop',
+      weatherCache: closedLoop.providerMeta?.cache || null,
+      remoteCloudCacheHit: closedLoop.remoteCloudData?.cache?.hit === true
+    };
+    console.info('[BackendProfileAggregate]', JSON.stringify(aggregateProfile));
 
     res.json({
       success: true,
