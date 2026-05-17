@@ -191,7 +191,7 @@
   max-width: 620rpx;
   margin-top: 22rpx;
   color: #ffffff;
-  font-size: 52rpx;
+  font-size: 42rpx;
   font-weight: 900;
   line-height: 1.14;
 }
@@ -565,10 +565,8 @@
   box-sizing: border-box;
   padding: 20rpx;
   border: 1rpx solid rgba(127, 83, 29, 0.12);
-  border-radius: 28rpx;
-  background:
-    linear-gradient(180deg, rgba(255, 252, 246, 0.74), rgba(255, 247, 235, 0.56)),
-    radial-gradient(circle at 0% 0%, rgba(251, 146, 60, 0.12), transparent 44%);
+  border-radius: 24rpx;
+  background: linear-gradient(180deg, rgba(255, 252, 246, 0.74), rgba(255, 247, 235, 0.56));
 }
 
 .phenomenon-title-card {
@@ -1409,9 +1407,7 @@
 }
 
 .home-page.has-weather .prediction-hero-card {
-  background:
-    linear-gradient(180deg, rgba(255, 252, 246, 0.74), rgba(255, 247, 235, 0.56)),
-    radial-gradient(circle at 0% 0%, rgba(251, 146, 60, 0.12), transparent 44%);
+  background: linear-gradient(180deg, rgba(255, 252, 246, 0.74), rgba(255, 247, 235, 0.56));
 }
 
 .home-page.has-weather .conclusion-banner {
@@ -1728,9 +1724,7 @@
 /* Weather test panel parity with the mobile web glass card. */
 .home-page.has-weather .home-weather-preview {
   padding: 40rpx 32rpx 42rpx;
-  background:
-    radial-gradient(circle at 16% 8%, rgba(255, 198, 94, 0.22), transparent 34%),
-    linear-gradient(145deg, rgba(255, 252, 246, 0.94), rgba(255, 246, 232, 0.86) 58%, rgba(236, 240, 255, 0.48));
+  background: linear-gradient(145deg, rgba(255, 252, 246, 0.94), rgba(255, 246, 232, 0.86) 58%, rgba(236, 240, 255, 0.48));
 }
 
 .home-page.has-weather .weather-panel-title {
@@ -1753,9 +1747,7 @@
   padding: 30rpx 24rpx;
   border: 2rpx solid rgba(127, 83, 29, 0.12);
   border-radius: 24rpx;
-  background:
-    radial-gradient(circle at 50% 16%, rgba(255, 210, 120, 0.26), transparent 38%),
-    linear-gradient(180deg, rgba(255, 252, 246, 0.86), rgba(255, 248, 236, 0.70));
+  background: linear-gradient(180deg, rgba(255, 252, 246, 0.86), rgba(255, 248, 236, 0.70));
   box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, 0.78);
 }
 
@@ -2152,9 +2144,7 @@
   padding: 18rpx;
   border: 2rpx solid rgba(186, 132, 72, 0.16);
   border-radius: 18rpx;
-  background:
-    linear-gradient(145deg, rgba(255, 252, 246, 0.82) 0%, rgba(255, 247, 235, 0.68) 100%),
-    radial-gradient(circle at 100% 0%, rgba(251, 146, 60, 0.14), transparent 46%);
+  background: linear-gradient(145deg, rgba(255, 252, 246, 0.82) 0%, rgba(255, 247, 235, 0.68) 100%);
 }
 
 .weather-glow-head {
@@ -2858,9 +2848,7 @@
 }
 
 .home-page.theme-dark.has-weather .prediction-hero-card {
-  background:
-    linear-gradient(180deg, rgba(10, 19, 37, 0.72), rgba(7, 16, 31, 0.58)),
-    radial-gradient(circle at 0% 0%, rgba(245, 158, 11, 0.10), transparent 46%);
+  background: linear-gradient(180deg, rgba(10, 19, 37, 0.72), rgba(7, 16, 31, 0.58));
 }
 
 .home-page.theme-dark.has-weather .prediction-hero-card .phenomenon-title-card {
@@ -3013,18 +3001,14 @@
 }
 
 .home-page.theme-dark.has-weather .weather-weekly-row {
-  background:
-    linear-gradient(145deg, rgba(18, 28, 52, 0.72) 0%, rgba(14, 22, 44, 0.58) 100%),
-    radial-gradient(circle at 12% 0%, rgba(251, 146, 60, 0.10), transparent 48%);
+  background: linear-gradient(145deg, rgba(18, 28, 52, 0.72) 0%, rgba(14, 22, 44, 0.58) 100%);
   border-color: rgba(255, 255, 255, 0.10);
   box-shadow: 0 10rpx 24rpx rgba(0, 0, 0, 0.26), inset 0 2rpx 0 rgba(255, 255, 255, 0.07);
 }
 
 .home-page.theme-dark.has-weather .weather-glow-card {
   border-color: rgba(255, 255, 255, 0.10);
-  background:
-    linear-gradient(145deg, rgba(18, 28, 52, 0.74) 0%, rgba(14, 22, 44, 0.60) 100%),
-    radial-gradient(circle at 100% 0%, rgba(245, 158, 11, 0.12), transparent 48%);
+  background: linear-gradient(145deg, rgba(18, 28, 52, 0.74) 0%, rgba(14, 22, 44, 0.60) 100%);
 }
 
 .home-page.theme-dark.has-weather .weather-weekly-label {

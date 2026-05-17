@@ -87,4 +87,27 @@ describe('miniprogram design language styles', () => {
 
     expect(methodologyWxml.trim().startsWith('<view class="container methodology-page')).toBe(true);
   });
+
+  test('keeps page-level visual language within shared bounds', () => {
+    const pageFiles = [
+      'miniprogram/pages/home/index.wxss',
+      'miniprogram/pages/methodology/index.wxss',
+      'miniprogram/pages/map/index.wxss',
+      'miniprogram/pages/gallery/index.wxss',
+      'miniprogram/pages/upload/index.wxss',
+      'miniprogram/pages/result/index.wxss'
+    ];
+
+    pageFiles.forEach((file) => {
+      expect(readText(file)).not.toMatch(/radial-gradient/i);
+    });
+
+    const homeWxss = readText('miniprogram/pages/home/index.wxss');
+    const galleryWxss = readText('miniprogram/pages/gallery/index.wxss');
+    const uploadWxss = readText('miniprogram/pages/upload/index.wxss');
+
+    expect(homeWxss).toMatch(/\.home-title\s*\{[\s\S]*?font-size:\s*42rpx;/);
+    expect(galleryWxss).toMatch(/\.headline\s*\{[\s\S]*?font-size:\s*42rpx;/);
+    expect(uploadWxss).toMatch(/\.headline\s*\{[\s\S]*?font-size:\s*42rpx;/);
+  });
 });
