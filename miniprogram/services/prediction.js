@@ -116,6 +116,25 @@ export async function getEnhancedPrediction({ lat, lon, type = 'sunset', date, r
   return normalizePrediction(response?.data || response);
 }
 
+export async function getEnhancedPredictionBatch({ lat, lon, items = [], includeRemoteCloudData = true } = {}) {
+  const response = await request('/api/prediction/enhanced/closed-loop/batch', {
+    method: 'POST',
+    timeout: 30000,
+    data: {
+      lat,
+      lon,
+      options: { includeRemoteCloudData },
+      items
+    }
+  });
+  const rows = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
+  return rows.map((item, index) => normalizePrediction({
+    ...item,
+    type: item.type || items[index]?.type || null,
+    date: item.date || items[index]?.date || item.referenceTime || null
+  }));
+}
+
 export async function getWeatherForecast({ lat, lon, hours = 168 } = {}) {
   const response = await request('/api/weather/forecast', {
     method: 'GET',
@@ -242,6 +261,7 @@ export function scoreToLevel(score) {
 
 export default {
   getEnhancedPrediction,
+  getEnhancedPredictionBatch,
   getWeatherForecast,
   getSurroundingPrediction,
   getThreeDayGlow,

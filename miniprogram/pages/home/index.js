@@ -1,10 +1,19 @@
 import { reverseGeocode, searchLocations } from '../../services/geocoding.js';
-import { getEnhancedPrediction, getWeatherForecast } from '../../services/prediction.js';
+import { getEnhancedPrediction, getEnhancedPredictionBatch, getWeatherForecast } from '../../services/prediction.js';
 import { addFavorite, addRecentLocation, listRecentLocations } from '../../services/user.js';
 import { applyPageSettings, readAppSettings, saveAppSettings as persistAppSettings } from '../../utils/app-settings.js';
 import { buildRadarCloudGradients, paintRadarCloudCanvas } from '../../utils/radar-cloud-field.js';
 
 const app = getApp();
+let cachedCanvasPixelRatio = null;
+
+function getCachedCanvasPixelRatio(wxApi = wx) {
+  if (cachedCanvasPixelRatio) return cachedCanvasPixelRatio;
+  const deviceInfo = wxApi.getDeviceInfo?.() || {};
+  const windowInfo = wxApi.getWindowInfo?.() || {};
+  cachedCanvasPixelRatio = windowInfo.pixelRatio || deviceInfo.pixelRatio || 1;
+  return cachedCanvasPixelRatio;
+}
 
 Page({
   data: {
@@ -378,13 +387,8 @@ Page({
       } catch (weatherError) {
         this.setSearchLoadingStep('正在计算霞光评分', 72, '基础天气暂未返回，继续读取综合预测');
       }
-      const alternatePeriod = query.period === 'sunrise' ? 'sunset' : 'sunrise';
-      this.predictionPreviewPromises[alternatePeriod] = this.prefetchPredictionPreviewPeriod({
-        ...query,
-        period: alternatePeriod
-      });
-      const raw = await this.callPredictionService(query);
-      const prediction = normalizePrediction(raw, query);
+      const predictionCards = await this.callPredictionCardBatch(query);
+      const prediction = predictionCards[query.period] || await this.prefetchPredictionPreviewPeriod(query);
       this.setSearchLoadingStep('正在整理天气卡片', 92, '准备天气面板与云况雷达');
       app.rememberQuery(query);
       this.recordRecentLocation(query);
@@ -392,9 +396,7 @@ Page({
 
       this.setData({
         ...buildHomePredictionSurface(prediction, query),
-        predictionPeriodCards: {
-          [query.period]: prediction
-        },
+        predictionPeriodCards: predictionCards,
         predictionPreviewLoading: false,
         weatherView: 'overview',
         weatherDay: query.day,
@@ -402,24 +404,6 @@ Page({
       }, () => {
         this.paintPredictionRadarCloudField();
       });
-      this.predictionPreviewPromises[alternatePeriod].then((alternatePrediction) => {
-        if (!alternatePrediction) return;
-        const cards = {
-          ...(this.data.predictionPeriodCards || {}),
-          [alternatePeriod]: alternatePrediction
-        };
-        const nextData = { predictionPeriodCards: cards };
-        if (this.data.period === alternatePeriod) {
-          nextData.predictionPreview = buildPredictionPreviewFromPrediction(alternatePrediction, {
-            ...query,
-            period: alternatePeriod
-          });
-          nextData.predictionPreviewLoading = false;
-        }
-        this.setData(nextData, () => {
-          if (this.data.period === alternatePeriod) this.paintPredictionRadarCloudField();
-        });
-      }).catch(() => null);
     } catch (error) {
       if (error && error.message === 'LOCATION_NEEDS_CONFIRMATION') {
         return;
@@ -608,6 +592,33 @@ Page({
       lon: query.coordinate.lon,
       hours: 168
     });
+  },
+
+  async callPredictionCardBatch(query) {
+    const date = resolvePredictionDate(query.day);
+    const periods = query.period === 'sunrise' ? ['sunrise', 'sunset'] : ['sunset', 'sunrise'];
+    const items = periods.map((period) => ({ id: period, type: period, date }));
+    try {
+      const rows = await getEnhancedPredictionBatch({
+        lat: query.coordinate.lat,
+        lon: query.coordinate.lon,
+        items,
+        includeRemoteCloudData: true
+      });
+      const cards = {};
+      rows.forEach((prediction, index) => {
+        const period = prediction.period || prediction.type || items[index]?.type;
+        if (period) cards[period] = normalizePrediction(prediction, { ...query, period });
+      });
+      if (cards[query.period]) return cards;
+    } catch (error) {
+      // Fall back to the single-card path below; search should remain usable if batch is unavailable.
+    }
+
+    const raw = await this.callPredictionService(query);
+    return {
+      [query.period]: normalizePrediction(raw, query)
+    };
   },
 
   async prefetchPredictionPreviewPeriod(query) {
@@ -1152,7 +1163,7 @@ function paintHourlyChartCanvas(canvasId, chart = [], options = {}) {
 
       const width = Math.max(1, Math.round(result.width || 320));
       const height = Math.max(1, Math.round(result.height || 120));
-      const dpr = wxApi.getWindowInfo?.().pixelRatio || wxApi.getDeviceInfo?.().pixelRatio || 1;
+      const dpr = getCachedCanvasPixelRatio(wxApi);
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
 
