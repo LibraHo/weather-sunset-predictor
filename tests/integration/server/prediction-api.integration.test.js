@@ -168,6 +168,15 @@ describe('Prediction API Integration', () => {
         timeoutMs: 5000
       });
       expect(res.body.data.weatherDataSource).toBe('backend_closed_loop_fast');
+      expect(res.body.data.weatherData).toEqual(expect.objectContaining({
+        temp: 21,
+        humidity: 55,
+        visibility: 14,
+        windSpeed: 3,
+        windDirection: 180,
+        pressure: 1010,
+        precipitation: 0
+      }));
       expect(res.body.data.diagnostics.timings).toEqual(expect.objectContaining({
         referenceMs: expect.any(Number),
         weatherFetchMs: expect.any(Number),

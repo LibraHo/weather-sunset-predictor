@@ -346,6 +346,7 @@ function buildEnhancedPredictionResponse({ closedLoop, lat, lon, type, options =
     weatherDataSource: closedLoop.source || 'backend_closed_loop',
     clientWeatherFallback: closedLoop.clientWeatherFallback === true,
     referenceTime: closedLoop.referenceTime.toISOString(),
+    weatherData: closedLoop.weatherData,
     remoteCloudData: closedLoop.remoteCloudData,
     profileTimings: closedLoop.profileTimings || null,
     diagnostics: {
