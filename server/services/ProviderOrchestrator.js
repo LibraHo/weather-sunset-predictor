@@ -120,7 +120,7 @@ class ProviderOrchestrator {
     return annotated;
   }
 
-  async _fetchBatchWithQualityGate(providerKey, points, hours, weatherModel = 'ecmwf_ifs025') {
+  async _fetchBatchWithQualityGate(providerKey, points, hours, weatherModel = 'ecmwf_ifs025', fetchOptions = {}) {
     const provider = this.providers[providerKey];
     if (!provider) {
       throw new Error(`未知的天气数据源: ${providerKey}`);
@@ -137,7 +137,7 @@ class ProviderOrchestrator {
     };
 
     if (typeof provider.fetchWeatherDataBatch === 'function') {
-      const rawMap = await provider.fetchWeatherDataBatch(pointList, hours, weatherModel);
+      const rawMap = await provider.fetchWeatherDataBatch(pointList, hours, weatherModel, fetchOptions);
       const result = {};
 
       for (const point of pointList) {
@@ -166,7 +166,7 @@ class ProviderOrchestrator {
     const fallbackMap = {};
     for (const point of pointList) {
       try {
-        const rawData = await provider.fetchWeatherData(point.lat, point.lon, hours, null, weatherModel);
+        const rawData = await provider.fetchWeatherData(point.lat, point.lon, hours, null, weatherModel, fetchOptions);
         addByPoint(fallbackMap, `${point.lat},${point.lon}`, rawData);
       } catch (error) {
         if (!error.isQualityError) {
@@ -235,7 +235,7 @@ class ProviderOrchestrator {
     }
   }
 
-  async fetchWeatherDataBatch(points, hours = 168, weatherModel = 'ecmwf_ifs025') {
+  async fetchWeatherDataBatch(points, hours = 168, weatherModel = 'ecmwf_ifs025', fetchOptions = {}) {
     const primaryKey = this.primaryProvider;
     const fallbackKey = this.fallbackProvider;
     const pointList = Array.isArray(points) ? points : [];
@@ -243,7 +243,7 @@ class ProviderOrchestrator {
     let primaryError = null;
 
     try {
-      return await this._fetchBatchWithQualityGate(primaryKey, pointList, hours, weatherModel);
+      return await this._fetchBatchWithQualityGate(primaryKey, pointList, hours, weatherModel, fetchOptions);
     } catch (err) {
       primaryError = err;
       const isQuality = err.isQualityError;
@@ -265,7 +265,7 @@ class ProviderOrchestrator {
       console.warn(`[ProviderOrchestrator] Batch 触发 fallback (${fallbackKey}), 原因: ${err.message}`);
 
       try {
-        const fallbackMap = await this._fetchBatchWithQualityGate(fallbackKey, pointList, hours, weatherModel);
+        const fallbackMap = await this._fetchBatchWithQualityGate(fallbackKey, pointList, hours, weatherModel, fetchOptions);
         for (const point of pointList) {
           const key = `${point.lat},${point.lon}`;
           const pointData = fallbackMap[key];

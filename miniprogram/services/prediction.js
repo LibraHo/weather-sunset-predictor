@@ -106,17 +106,13 @@ export function normalizePrediction(data = {}) {
 export async function getEnhancedPrediction({ lat, lon, type = 'sunset', date } = {}) {
   const response = await request('/api/prediction/enhanced', {
     method: 'POST',
+    timeout: 20000,
     data: {
       lat,
       lon,
       type,
       date,
-      referenceTime: date,
-      options: {
-        fast: true,
-        includeRemoteCloudData: false,
-        forecastHours: 48
-      }
+      referenceTime: date
     }
   });
   return normalizePrediction(response?.data || response);

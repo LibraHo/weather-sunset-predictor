@@ -168,6 +168,13 @@ describe('Prediction API Integration', () => {
         timeoutMs: 5000
       });
       expect(res.body.data.weatherDataSource).toBe('backend_closed_loop_fast');
+      expect(res.body.data.diagnostics.timings).toEqual(expect.objectContaining({
+        referenceMs: expect.any(Number),
+        weatherFetchMs: expect.any(Number),
+        remoteCloudMs: 0,
+        calculateMs: expect.any(Number),
+        totalMs: expect.any(Number)
+      }));
     });
   });
 

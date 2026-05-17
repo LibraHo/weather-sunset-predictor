@@ -182,7 +182,7 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     return airByTimestamp;
   }
 
-  async _fetchAirQualityDataBatch(points, hours = 24, forecastDays = 1) {
+  async _fetchAirQualityDataBatch(points, hours = 24, forecastDays = 1, fetchOptions = {}) {
     const pointList = Array.isArray(points) ? points : [];
     if (pointList.length === 0) return {};
 
@@ -197,10 +197,11 @@ class OpenMeteoProvider extends BaseWeatherProvider {
 
     const response = await this._getWithRetry(
       params,
-      15000,
+      fetchOptions.airQualityTimeoutMs || 15000,
       `air-quality-batch(points=${pointList.length})`,
       this.AIR_QUALITY_API_URL,
-      'air_quality'
+      'air_quality',
+      fetchOptions
     );
 
     const payload = Array.isArray(response.data) ? response.data : [response.data];
@@ -349,7 +350,7 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     }
   }
 
-  async fetchWeatherDataBatch(points, hours = 24, weatherModel = 'ecmwf_ifs025') {
+  async fetchWeatherDataBatch(points, hours = 24, weatherModel = 'ecmwf_ifs025', fetchOptions = {}) {
     const startTime = Date.now();
     const pointList = Array.isArray(points) ? points : [];
     if (pointList.length === 0) {
@@ -360,10 +361,14 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     const ALLOWED_MODELS = ['ecmwf_ifs025', 'gfs_seamless', 'best_match'];
     const model = ALLOWED_MODELS.includes(weatherModel) ? weatherModel : 'ecmwf_ifs025';
 
+    const hourlyFields = fetchOptions.fields === 'lightPath'
+      ? 'temperature_2m,relative_humidity_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,visibility,precipitation,surface_pressure,weather_code'
+      : 'temperature_2m,relative_humidity_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,visibility,precipitation,surface_pressure,shortwave_radiation,direct_radiation,diffuse_radiation,total_column_integrated_water_vapour';
+
     const BASE_PARAMS = {
       latitude: pointList.map(p => p.lat).join(','),
       longitude: pointList.map(p => p.lon).join(','),
-      hourly: 'temperature_2m,relative_humidity_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,visibility,precipitation,surface_pressure,shortwave_radiation,direct_radiation,diffuse_radiation,total_column_integrated_water_vapour',
+      hourly: hourlyFields,
       wind_speed_unit: 'ms',
       timeformat: 'unixtime',
       timezone: 'auto',
@@ -377,8 +382,11 @@ class OpenMeteoProvider extends BaseWeatherProvider {
       try {
         response = await this._getWithRetry(
           BASE_PARAMS,
-          15000,
-          `batch(points=${pointList.length})`
+          fetchOptions.timeoutMs || 15000,
+          `batch(points=${pointList.length})`,
+          undefined,
+          'forecast',
+          fetchOptions
         );
         logProfile('openmeteo.fetchWeatherDataBatch', 'weather_forecast', forecastProfile, {
           status: 'ok',
@@ -411,9 +419,30 @@ class OpenMeteoProvider extends BaseWeatherProvider {
         weatherMap[key] = this._normalizeHourlyResult(payload[i], hours, model, startTime, this.name);
       }
 
+      if (fetchOptions.includeAirQuality === false) {
+        logProfile('openmeteo.fetchWeatherDataBatch', 'air_quality', startProfile(), {
+          status: 'skipped',
+          points: pointList.length,
+          hours,
+          forecastDays,
+          reason: 'includeAirQuality=false'
+        });
+        for (const point of pointList) {
+          const key = `${point.lat},${point.lon}`;
+          const meta = weatherMap[key]?.providerMeta;
+          if (meta) {
+            meta.unsupportedFields = meta.unsupportedFields || [];
+            meta.degradedReason = meta.degradedReason || [];
+            meta.unsupportedFields.push('air_quality');
+            meta.degradedReason.push('air_quality_skipped');
+          }
+        }
+        return weatherMap;
+      }
+
       const airProfile = startProfile();
       try {
-        const airQualityMap = await this._fetchAirQualityDataBatch(pointList, hours, forecastDays);
+        const airQualityMap = await this._fetchAirQualityDataBatch(pointList, hours, forecastDays, fetchOptions);
         for (const point of pointList) {
           const key = `${point.lat},${point.lon}`;
           this._mergeAirQualityData(weatherMap[key], airQualityMap[key]);

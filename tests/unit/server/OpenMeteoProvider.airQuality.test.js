@@ -146,4 +146,22 @@ describe('OpenMeteoProvider air quality merge', () => {
     expect(result['32,119'].providerMeta.unsupportedFields).toContain('air_quality');
     expect(result['31,118'].providerMeta.degradedReason).toContain('air_quality_unavailable');
   });
+
+  test('fetchWeatherDataBatch can skip air quality when only cloud samples are needed', async () => {
+    const provider = new OpenMeteoProvider();
+    provider._getWithRetry = jest.fn(async (params, _timeout, label) => {
+      if (String(label).startsWith('air-quality-batch')) throw new Error('air quality should be skipped');
+      expect(params.hourly).toBe('temperature_2m,relative_humidity_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,visibility,precipitation,surface_pressure,weather_code');
+      return { data: [makeWeatherPayload(), makeWeatherPayload()] };
+    });
+
+    const result = await provider.fetchWeatherDataBatch([
+      { lat: 32, lon: 119 },
+      { lat: 31, lon: 118 }
+    ], 2, 'best_match', { includeAirQuality: false, fields: 'lightPath' });
+
+    expect(provider._getWithRetry).toHaveBeenCalledTimes(1);
+    expect(result['32,119'].data[0].highClouds).toEqual(expect.any(Number));
+    expect(result['31,118'].providerMeta.airQualitySource).toBeUndefined();
+  });
 });

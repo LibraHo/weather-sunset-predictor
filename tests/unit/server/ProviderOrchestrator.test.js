@@ -45,6 +45,25 @@ function makeOrch(overrides = {}) {
   return orch;
 }
 
+describe('batch fetch options', () => {
+  test('passes fetchOptions to batch-capable provider', async () => {
+    const fetchWeatherDataBatch = jest.fn(async () => ({
+      '39.9,116.4': { hours: 24, data: makeData(), providerMeta: { name: 'openmeteo' } }
+    }));
+    const orch = makeOrch();
+    orch.providers.openmeteo.fetchWeatherDataBatch = fetchWeatherDataBatch;
+
+    await orch.fetchWeatherDataBatch([{ lat: 39.9, lon: 116.4 }], 72, undefined, { includeAirQuality: false });
+
+    expect(fetchWeatherDataBatch).toHaveBeenCalledWith(
+      [{ lat: 39.9, lon: 116.4 }],
+      72,
+      'ecmwf_ifs025',
+      { includeAirQuality: false }
+    );
+  });
+});
+
 // ─────────────────────────────────────────────────────────────
 // 43.2：dataQuality 标签
 // ─────────────────────────────────────────────────────────────

@@ -272,7 +272,7 @@ async function buildClosedLoopPredictionInput({
       type,
       reason: 'includeRemoteCloudData=false'
     });
-    timings.remoteCloudMs = profileDurationMs(remoteCloudProfile);
+    timings.remoteCloudMs = 0;
   }
 
   return {
@@ -281,7 +281,8 @@ async function buildClosedLoopPredictionInput({
     providerMeta: weatherResponse.providerMeta || null,
     remoteCloudData,
     source: includeRemoteCloudData ? 'backend_closed_loop' : 'backend_closed_loop_fast',
-    profileTimings: timings
+    profileTimings: timings,
+    timings
   };
 }
 
@@ -347,6 +348,12 @@ function buildEnhancedPredictionResponse({ closedLoop, lat, lon, type, options =
     referenceTime: closedLoop.referenceTime.toISOString(),
     remoteCloudData: closedLoop.remoteCloudData,
     profileTimings: closedLoop.profileTimings || null,
+    diagnostics: {
+      timings: {
+        ...(closedLoop.timings || closedLoop.profileTimings || {}),
+        calculateMs: closedLoop.profileTimings?.calculateMs ?? null
+      }
+    }
   };
 }
 
@@ -561,12 +568,17 @@ router.post('/enhanced', validatePredictionRequest, async (req, res) => {
 
     const compatResult = buildEnhancedPredictionResponse({ closedLoop, lat, lon, type, options });
     const profileTimings = closedLoop.profileTimings || {};
+    compatResult.diagnostics = compatResult.diagnostics || {};
+    compatResult.diagnostics.timings = {
+      ...(compatResult.diagnostics.timings || {}),
+      totalMs: profileDurationMs(totalProfile)
+    };
     const aggregateProfile = {
       referenceMs: profileTimings.referenceMs ?? null,
       weatherFetchMs: profileTimings.weatherFetchMs ?? null,
       remoteCloudMs: profileTimings.remoteCloudMs ?? null,
       calculateMs: profileTimings.calculateMs ?? null,
-      totalMs: profileDurationMs(totalProfile),
+      totalMs: compatResult.diagnostics.timings.totalMs,
       lat,
       lon,
       type,
