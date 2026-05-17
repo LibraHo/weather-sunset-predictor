@@ -30,10 +30,11 @@ describe('miniprogram surface parity for map/gallery/upload/methodology', () => 
     const js = read('miniprogram/pages/methodology/index.js');
 
     expect(wxml).toContain('api-surface-card');
-    expect(wxml).toContain('Sunset Voyager API');
-    expect(wxml).toContain('/forecast');
-    expect(wxml).toContain('/explain');
-    expect(wxml).toContain('/geocode');
+    expect(wxml).toContain('API接入');
+    expect(wxml).toContain('/api/agent/forecast');
+    expect(wxml).toContain('/api/agent/explain');
+    expect(wxml).toContain('/api/agent/geocode');
+    expect(wxml).not.toContain('<text class="api-path">/forecast</text>');
     expect(wxml).toContain('bindtap="copyOpenApiSpec"');
     expect(wxml).toContain('bindtap="copyApiApplyLink"');
     expect(js).toContain("openapiSpecUrl = 'https://sunset.bjhyc.online/api/agent/openapi.json'");

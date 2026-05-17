@@ -1,7 +1,7 @@
 .result-page {
   display: flex;
   flex-direction: column;
-  gap: 22rpx;
+  gap: 24rpx;
 }
 
 .result-prediction-toggle {
@@ -23,7 +23,7 @@
   padding: 0 8rpx;
   border-radius: 999rpx;
   color: rgba(89, 67, 54, 0.62);
-  font-size: 22rpx;
+  font-size: 24rpx;
   font-weight: 900;
   line-height: 56rpx;
   text-align: center;
@@ -133,14 +133,13 @@
 }
 
 .score-ledger-card {
-  padding: 24rpx;
+  padding: 26rpx;
 }
 
 .score-ledger-hero {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16rpx;
+  flex-direction: column;
+  gap: 6rpx;
 }
 
 .score-ledger-title {
@@ -150,9 +149,8 @@
 }
 
 .score-ledger-subtitle {
-  flex: 0 0 auto;
-  color: rgba(255, 255, 255, 0.46);
-  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 24rpx;
   font-weight: 700;
 }
 
@@ -194,7 +192,7 @@
   height: 42rpx;
   border-radius: 50%;
   color: #1b1206;
-  font-size: 22rpx;
+  font-size: 24rpx;
   font-weight: 900;
   line-height: 42rpx;
   text-align: center;
@@ -228,14 +226,14 @@
 
 .score-ledger-expression,
 .score-ledger-detail {
-  margin-top: 8rpx;
-  color: rgba(255, 255, 255, 0.56);
-  font-size: 23rpx;
-  line-height: 1.45;
+  margin-top: 10rpx;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 24rpx;
+  line-height: 1.5;
 }
 
 .score-ledger-detail {
-  color: rgba(255, 255, 255, 0.42);
+  color: rgba(255, 255, 255, 0.56);
 }
 
 .analysis-card,
@@ -514,7 +512,7 @@
 
 .radar-direction-name {
   color: rgba(255, 255, 255, 0.68);
-  font-size: 22rpx;
+  font-size: 24rpx;
   font-weight: 800;
 }
 

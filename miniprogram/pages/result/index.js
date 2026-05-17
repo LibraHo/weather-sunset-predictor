@@ -144,10 +144,10 @@ Page({
 
     const radarPromise = this.radarPanelCache[radarKey]
       ? Promise.resolve(this.radarPanelCache[radarKey])
-      : getSurroundingPrediction({ lat, lon, type, date, radius: 100 }).then((value) => buildRadarView(value));
+      : this.getRadarPanelPromise({ lat, lon, type, date, radarKey });
     const threeDayPromise = this.threeDayGlowCache
       ? Promise.resolve(this.threeDayGlowCache)
-      : getThreeDayGlow({ lat, lon }).then((value) => buildThreeDayGlowView(value));
+      : this.getThreeDayGlowPromise({ lat, lon });
 
     const [radarResult, threeDayResult] = await Promise.allSettled([radarPromise, threeDayPromise]);
 
@@ -169,14 +169,62 @@ Page({
     }
   },
 
+  getRadarPanelPromise({ lat, lon, type, date, radarKey }) {
+    this.radarPanelCache = this.radarPanelCache || {};
+    this.radarPanelPromises = this.radarPanelPromises || {};
+    if (this.radarPanelCache[radarKey]) return Promise.resolve(this.radarPanelCache[radarKey]);
+    if (!this.radarPanelPromises[radarKey]) {
+      this.radarPanelPromises[radarKey] = getSurroundingPrediction({ lat, lon, type, date, radius: 100 })
+        .then((value) => {
+          const radar = buildRadarView(value);
+          this.radarPanelCache[radarKey] = radar;
+          return radar;
+        })
+        .finally(() => {
+          delete this.radarPanelPromises[radarKey];
+        });
+    }
+    return this.radarPanelPromises[radarKey];
+  },
+
+  getThreeDayGlowPromise({ lat, lon }) {
+    if (this.threeDayGlowCache) return Promise.resolve(this.threeDayGlowCache);
+    if (!this.threeDayGlowPromise) {
+      this.threeDayGlowPromise = getThreeDayGlow({ lat, lon })
+        .then((value) => {
+          const threeDayGlow = buildThreeDayGlowView(value);
+          this.threeDayGlowCache = threeDayGlow;
+          return threeDayGlow;
+        })
+        .finally(() => {
+          this.threeDayGlowPromise = null;
+        });
+    }
+    return this.threeDayGlowPromise;
+  },
+
+  async prefetchXiakePanels(prediction) {
+    if (!hasCoordinates(prediction)) return;
+    const lat = Number(prediction.lat);
+    const lon = Number(prediction.lon);
+    const type = prediction.period || prediction.type || 'sunset';
+    const date = prediction.date || null;
+    const radarKey = buildPanelCacheKey({ lat, lon, type, date });
+    await Promise.allSettled([
+      this.getRadarPanelPromise({ lat, lon, type, date, radarKey }),
+      this.getThreeDayGlowPromise({ lat, lon })
+    ]);
+  },
+
   async prefetchAlternatePeriod(prediction = this.data.prediction) {
-    if (this.prefetchingAlternatePeriod || !hasCoordinates(prediction)) return;
+    if (!hasCoordinates(prediction)) return;
     const currentPeriod = prediction.period || prediction.type || 'sunset';
     const nextPeriod = currentPeriod === 'sunrise' ? 'sunset' : 'sunrise';
     if (this.data.periodCards[nextPeriod]) return;
+    this.periodCardPromises = this.periodCardPromises || {};
+    if (this.periodCardPromises[nextPeriod]) return this.periodCardPromises[nextPeriod];
 
-    this.prefetchingAlternatePeriod = true;
-    try {
+    this.periodCardPromises[nextPeriod] = (async () => {
       const requested = buildPredictionPeriodRequest(prediction, nextPeriod);
       const fetched = await getEnhancedPrediction(requested);
       const normalized = normalizePrediction(fetched, requested);
@@ -186,11 +234,18 @@ Page({
           [nextPeriod]: normalized
         }
       });
-    } catch (error) {
-      // The visible card remains usable; the explicit toggle can retry.
-    } finally {
-      this.prefetchingAlternatePeriod = false;
-    }
+      this.prefetchXiakePanels(normalized);
+      return normalized;
+    })()
+      .catch((error) => {
+        // The visible card remains usable; the explicit toggle can retry.
+        return null;
+      })
+      .finally(() => {
+        delete this.periodCardPromises[nextPeriod];
+      });
+
+    return this.periodCardPromises[nextPeriod];
   },
 
   paintRadarCloudField(radar = this.data.radar) {
@@ -245,10 +300,36 @@ Page({
 
     const nextPrediction = this.data.periodCards[period];
     if (nextPrediction) {
-      this.setData(buildResultPeriodState(nextPrediction), () => {
+      this.setData({
+        ...buildResultPeriodState(nextPrediction),
+        loading: false
+      }, () => {
         this.loadXiakePanels(nextPrediction);
       });
       return;
+    }
+
+    const pendingPeriodPromise = this.periodCardPromises ? this.periodCardPromises[period] : null;
+    if (pendingPeriodPromise) {
+      this.setData({ activePeriod: period, loading: true });
+      const prefetchedPrediction = await pendingPeriodPromise;
+      if (this.data.activePeriod !== period) {
+        this.setData({ loading: false });
+        return;
+      }
+      if (prefetchedPrediction) {
+        this.setData({
+          ...buildResultPeriodState(prefetchedPrediction),
+          loading: false,
+          periodCards: {
+            ...this.data.periodCards,
+            [period]: prefetchedPrediction
+          }
+        }, () => {
+          this.loadXiakePanels(prefetchedPrediction);
+        });
+        return;
+      }
     }
 
     const current = this.data.prediction || {};
@@ -267,6 +348,10 @@ Page({
       const requested = buildPredictionPeriodRequest(current, period);
       const fetched = await getEnhancedPrediction(requested);
       const normalized = normalizePrediction(fetched, requested);
+      if (this.data.activePeriod !== period) {
+        this.setData({ loading: false });
+        return;
+      }
       this.setData({
         ...buildResultPeriodState(normalized),
         loading: false,
