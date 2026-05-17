@@ -346,6 +346,7 @@ function buildEnhancedPredictionResponse({ closedLoop, lat, lon, type, options =
     weatherDataSource: closedLoop.source || 'backend_closed_loop',
     clientWeatherFallback: closedLoop.clientWeatherFallback === true,
     referenceTime: closedLoop.referenceTime.toISOString(),
+    weatherData: closedLoop.weatherData,
     remoteCloudData: closedLoop.remoteCloudData,
     profileTimings: closedLoop.profileTimings || null,
     diagnostics: {
@@ -621,7 +622,7 @@ router.post('/enhanced/closed-loop/batch', validateClosedLoopBatchRequest, async
         lon,
         date: item.date,
         type: item.type,
-        referenceTime: item.referenceTime || item.date,
+        referenceTime: item.referenceTime,
         weatherResponseOverride: weatherResponse,
         includeRemoteCloudData
       });

@@ -282,6 +282,34 @@ describe('miniprogram page user/share helpers', () => {
     });
   });
 
+  test('result page metrics include the full weather API fields', () => {
+    const state = resultHelpers.buildResultPeriodState({
+      period: 'sunset',
+      score: 76,
+      clouds: { high: 62, mid: 36, low: 8 },
+      weatherData: {
+        temp: 21.6,
+        humidity: 68,
+        pressure: 1008.7,
+        visibility: 16,
+        windSpeed: 11.4,
+        windDirection: 270,
+        precipitation: 0,
+        aod: 0.12
+      }
+    });
+
+    expect(state.metrics).toEqual(expect.arrayContaining([
+      expect.objectContaining({ key: 'temp', value: '21.6°C' }),
+      expect.objectContaining({ key: 'wind', value: expect.stringContaining('11.4') }),
+      expect.objectContaining({ key: 'windDirection', value: '270°' }),
+      expect.objectContaining({ key: 'humidity', value: '68%' }),
+      expect.objectContaining({ key: 'visibility', value: '16km' }),
+      expect.objectContaining({ key: 'pressure', value: '1008.7 hPa' }),
+      expect.objectContaining({ key: 'precipitation', value: '0 mm' })
+    ]));
+  });
+
   test('result page builds Xiake core panels from backend analysis', () => {
     const analysis = resultHelpers.buildAnalysisItems({
       canvasAnalysis: { score: 83, breakdown: { highClouds: 64, midClouds: 20, lowClouds: 5 } },

@@ -7,7 +7,7 @@
     <view class="grade {{gradeClass}}">{{gradeLabel}}</view>
   </view>
   <view class="score-line">
-    <text class="score">{{scoreText}}</text>
+    <text class="score {{scoreClass}}">{{scoreText}}</text>
     <text class="unit">分</text>
   </view>
   <view class="window">最佳窗口：{{bestWindow || '等待天气数据'}}</view>

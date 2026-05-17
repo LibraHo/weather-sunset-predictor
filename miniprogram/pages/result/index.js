@@ -52,6 +52,7 @@ Page({
       });
       this.refreshFavoriteState(normalized);
       this.loadXiakePanels(normalized);
+      this.prefetchAlternatePeriod(normalized);
     } catch (error) {
       this.setData({ hasPrediction: false, loading: false });
     }
@@ -89,7 +90,7 @@ Page({
     }
   },
 
-  async loadXiakePanels(prediction) {
+  async loadXiakePanelsUncached(prediction) {
     if (!hasCoordinates(prediction)) return;
     const lat = Number(prediction.lat);
     const lon = Number(prediction.lon);
@@ -114,6 +115,81 @@ Page({
       this.setData({ threeDayGlow: buildThreeDayGlowView(threeDayResult.value) });
     } else {
       this.setData({ threeDayGlow: buildEmptyThreeDayGlow({ error: '三天预测暂时加载失败，请稍后再试。' }) });
+    }
+  },
+
+  async loadXiakePanels(prediction) {
+    if (!hasCoordinates(prediction)) return;
+    const lat = Number(prediction.lat);
+    const lon = Number(prediction.lon);
+    const type = prediction.period || prediction.type || 'sunset';
+    const date = prediction.date || null;
+    const radarKey = buildPanelCacheKey({ lat, lon, type, date });
+    this.radarPanelCache = this.radarPanelCache || {};
+
+    if (this.radarPanelCache[radarKey]) {
+      const radar = this.radarPanelCache[radarKey];
+      this.setData({ radar }, () => {
+        this.paintRadarCloudField(radar);
+      });
+    } else {
+      this.setData({ radar: buildEmptyRadar({ loading: true }) });
+    }
+
+    if (this.threeDayGlowCache) {
+      this.setData({ threeDayGlow: this.threeDayGlowCache });
+    } else {
+      this.setData({ threeDayGlow: buildEmptyThreeDayGlow({ loading: true }) });
+    }
+
+    const radarPromise = this.radarPanelCache[radarKey]
+      ? Promise.resolve(this.radarPanelCache[radarKey])
+      : getSurroundingPrediction({ lat, lon, type, date, radius: 100 }).then((value) => buildRadarView(value));
+    const threeDayPromise = this.threeDayGlowCache
+      ? Promise.resolve(this.threeDayGlowCache)
+      : getThreeDayGlow({ lat, lon }).then((value) => buildThreeDayGlowView(value));
+
+    const [radarResult, threeDayResult] = await Promise.allSettled([radarPromise, threeDayPromise]);
+
+    if (radarResult.status === 'fulfilled') {
+      const radar = radarResult.value;
+      this.radarPanelCache[radarKey] = radar;
+      this.setData({ radar }, () => {
+        this.paintRadarCloudField(radar);
+      });
+    } else {
+      this.setData({ radar: buildEmptyRadar({ error: '周边云况暂时加载失败，请稍后再试。' }) });
+    }
+
+    if (threeDayResult.status === 'fulfilled') {
+      this.threeDayGlowCache = threeDayResult.value;
+      this.setData({ threeDayGlow: threeDayResult.value });
+    } else {
+      this.setData({ threeDayGlow: buildEmptyThreeDayGlow({ error: '三天预测暂时加载失败，请稍后再试。' }) });
+    }
+  },
+
+  async prefetchAlternatePeriod(prediction = this.data.prediction) {
+    if (this.prefetchingAlternatePeriod || !hasCoordinates(prediction)) return;
+    const currentPeriod = prediction.period || prediction.type || 'sunset';
+    const nextPeriod = currentPeriod === 'sunrise' ? 'sunset' : 'sunrise';
+    if (this.data.periodCards[nextPeriod]) return;
+
+    this.prefetchingAlternatePeriod = true;
+    try {
+      const requested = buildPredictionPeriodRequest(prediction, nextPeriod);
+      const fetched = await getEnhancedPrediction(requested);
+      const normalized = normalizePrediction(fetched, requested);
+      this.setData({
+        periodCards: {
+          ...this.data.periodCards,
+          [nextPeriod]: normalized
+        }
+      });
+    } catch (error) {
+      // The visible card remains usable; the explicit toggle can retry.
+    } finally {
+      this.prefetchingAlternatePeriod = false;
     }
   },
 
@@ -293,20 +369,26 @@ export function buildResultPeriodState(prediction = {}) {
 function buildMetrics(prediction) {
   const metrics = prediction.metrics || {};
   const clouds = prediction.clouds || {};
+  const weather = prediction.weatherData || prediction.weather || {};
   const pick = (...keys) => {
     for (const key of keys) {
-      const value = metrics[key] ?? clouds[key] ?? prediction[key];
+      const value = metrics[key] ?? clouds[key] ?? weather[key] ?? prediction[key];
       if (value !== undefined && value !== null && value !== '') return value;
     }
     return '--';
   };
 
   return [
+    { key: 'temp', label: '温度', value: formatTemperature(pick('temp', 'temperature', 'temperature_2m')) },
+    { key: 'wind', label: '风速', value: formatWindSpeed(pick('windSpeed', 'wind', 'wind_speed_10m')) },
+    { key: 'windDirection', label: '风向', value: formatWindDirection(pick('windDirection', 'windDeg', 'wind_direction_10m')) },
     { key: 'highCloud', label: '高云', value: formatPercent(pick('highCloud', 'highCloudCover', 'cloudHigh', 'high')) },
     { key: 'midCloud', label: '中云', value: formatPercent(pick('midCloud', 'midCloudCover', 'cloudMid', 'mid')) },
     { key: 'lowCloud', label: '低云', value: formatPercent(pick('lowCloud', 'lowCloudCover', 'cloudLow', 'low')) },
     { key: 'visibility', label: '能见度', value: formatVisibility(pick('visibility', 'visibilityKm')) },
     { key: 'humidity', label: '湿度', value: formatPercent(pick('humidity', 'relativeHumidity')) },
+    { key: 'pressure', label: '气压', value: formatWithUnit(pick('pressure', 'surfacePressure', 'surface_pressure'), 'hPa') },
+    { key: 'precipitation', label: '降水', value: formatWithUnit(pick('precipitation', 'precip', 'rain', 'showers'), 'mm') },
     { key: 'aod', label: 'AOD', value: formatPlain(pick('aod', 'aerosolOpticalDepth')) }
   ];
 }
@@ -376,8 +458,36 @@ function formatPlain(value) {
   return Number.isFinite(number) ? String(Math.round(number * 1000) / 1000) : String(value);
 }
 
+function formatTemperature(value) {
+  if (value === '--') return value;
+  const number = Number(value);
+  return Number.isFinite(number) ? `${Math.round(number * 10) / 10}°C` : '--';
+}
+
+function formatWithUnit(value, unit) {
+  if (value === '--') return value;
+  const number = Number(value);
+  return Number.isFinite(number) ? `${Math.round(number * 10) / 10} ${unit}` : '--';
+}
+
+function formatWindSpeed(value) {
+  return formatWithUnit(value, 'km/h');
+}
+
+function formatWindDirection(value) {
+  if (value === '--') return value;
+  const number = Number(value);
+  return Number.isFinite(number) ? `${Math.round(number)}°` : String(value || '--');
+}
+
 function hasCoordinates(prediction = {}) {
   return Number.isFinite(Number(prediction.lat)) && Number.isFinite(Number(prediction.lon));
+}
+
+function buildPanelCacheKey({ lat, lon, type, date } = {}) {
+  const latKey = Number.isFinite(Number(lat)) ? Number(lat).toFixed(4) : '';
+  const lonKey = Number.isFinite(Number(lon)) ? Number(lon).toFixed(4) : '';
+  return `${latKey}:${lonKey}:${type || 'sunset'}:${date || ''}`;
 }
 
 export function buildAnalysisItems(prediction = {}) {

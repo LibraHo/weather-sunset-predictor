@@ -103,17 +103,14 @@ export function normalizePrediction(data = {}) {
   };
 }
 
-export async function getEnhancedPrediction({ lat, lon, type = 'sunset', date } = {}) {
+export async function getEnhancedPrediction({ lat, lon, type = 'sunset', date, referenceTime } = {}) {
+  const data = { lat, lon, type, date };
+  if (referenceTime) data.referenceTime = referenceTime;
+
   const response = await request('/api/prediction/enhanced', {
     method: 'POST',
     timeout: 20000,
-    data: {
-      lat,
-      lon,
-      type,
-      date,
-      referenceTime: date
-    }
+    data
   });
   return normalizePrediction(response?.data || response);
 }

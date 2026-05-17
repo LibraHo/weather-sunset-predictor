@@ -40,11 +40,40 @@
 }
 
 .score {
-  color: #ffd166;
+  color: #fbbf24;
   font-size: 126rpx;
   font-weight: 900;
   line-height: 1;
   text-shadow: 0 0 34rpx rgba(251, 146, 60, 0.25);
+}
+
+.score-poor {
+  color: #94a3b8;
+  text-shadow: 0 0 28rpx rgba(148, 163, 184, 0.18);
+}
+
+.score-fair {
+  color: #fdba74;
+  text-shadow: 0 0 30rpx rgba(253, 186, 116, 0.22);
+}
+
+.score-good {
+  color: #fb923c;
+  text-shadow: 0 0 32rpx rgba(251, 146, 60, 0.24);
+}
+
+.score-excellent {
+  color: #fbbf24;
+  background: linear-gradient(135deg, #fb923c 0%, #fbbf24 55%, #f43f5e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 34rpx rgba(251, 191, 36, 0.26);
+}
+
+.score-waiting {
+  color: rgba(255, 255, 255, 0.62);
+  text-shadow: none;
 }
 
 .unit {

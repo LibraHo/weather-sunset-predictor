@@ -12,6 +12,7 @@ Component({
     scoreText: '--',
     gradeLabel: '待判断',
     gradeClass: 'grade-waiting',
+    scoreClass: 'score-waiting',
     periodLabel: '晚霞'
   },
 
@@ -37,6 +38,7 @@ Component({
         scoreText: hasScore ? String(Math.round(score)) : '--',
         gradeLabel: this.gradeLabel(grade, score),
         gradeClass: this.gradeClass(grade, score),
+        scoreClass: this.scoreClass(score),
         periodLabel: this.properties.period === 'sunrise' ? '朝霞' : '晚霞'
       });
     },
@@ -67,6 +69,14 @@ Component({
       if (normalized === 'good') return 'grade-good';
       if (normalized === 'fair') return 'grade-fair';
       return 'grade-low';
+    },
+
+    scoreClass(score) {
+      if (!Number.isFinite(score)) return 'score-waiting';
+      if (score >= 85) return 'score-excellent';
+      if (score >= 70) return 'score-good';
+      if (score >= 40) return 'score-fair';
+      return 'score-poor';
     }
   }
 });
