@@ -1,5 +1,5 @@
 import { reverseGeocode, searchLocations } from '../../services/geocoding.js';
-import { getEnhancedPrediction } from '../../services/prediction.js';
+import { getEnhancedPrediction, getWeatherForecast } from '../../services/prediction.js';
 import { addFavorite, addRecentLocation, listRecentLocations } from '../../services/user.js';
 import { applyPageSettings, readAppSettings, saveAppSettings as persistAppSettings } from '../../utils/app-settings.js';
 import { buildRadarCloudGradients, paintRadarCloudCanvas } from '../../utils/radar-cloud-field.js';
@@ -30,6 +30,8 @@ Page({
     errorMessage: '',
     weatherPreview: buildDefaultWeatherPreview(),
     predictionPreview: buildDefaultPredictionPreview(),
+    predictionPeriodCards: {},
+    predictionPreviewLoading: false,
     recentQueries: [],
     favorites: []
   },
@@ -110,6 +112,67 @@ Page({
   selectPredictionPreviewPeriod(event) {
     const value = event.currentTarget.dataset.value;
     if (!['sunrise', 'sunset'].includes(value)) return;
+    const cachedPrediction = this.data.predictionPeriodCards?.[value];
+    if (cachedPrediction) {
+      this.setData({
+        period: value,
+        predictionPreview: buildPredictionPreviewFromPrediction(cachedPrediction, this.currentPredictionQuery || { period: value }),
+        predictionPreviewLoading: false
+      }, () => {
+        this.paintPredictionRadarCloudField();
+      });
+      return;
+    }
+
+    const pendingPrediction = this.predictionPreviewPromises?.[value];
+    if (pendingPrediction) {
+      this.setData({
+        period: value,
+        predictionPreviewLoading: true
+      });
+      pendingPrediction.then((prediction) => {
+        if (!prediction || this.data.period !== value) return;
+        this.setData({
+          predictionPreview: buildPredictionPreviewFromPrediction(prediction, this.currentPredictionQuery || { period: value }),
+          predictionPreviewLoading: false,
+          predictionPeriodCards: {
+            ...(this.data.predictionPeriodCards || {}),
+            [value]: prediction
+          }
+        }, () => {
+          this.paintPredictionRadarCloudField();
+        });
+      }).catch(() => {
+        if (this.data.period === value) this.setData({ predictionPreviewLoading: false });
+      });
+      return;
+    }
+
+    if (this.currentPredictionQuery?.coordinate) {
+      this.setData({
+        period: value,
+        predictionPreviewLoading: true
+      });
+      this.prefetchPredictionPreviewPeriod({ ...this.currentPredictionQuery, period: value })
+        .then((prediction) => {
+          if (!prediction || this.data.period !== value) return;
+          this.setData({
+            predictionPreview: buildPredictionPreviewFromPrediction(prediction, this.currentPredictionQuery || { period: value }),
+            predictionPreviewLoading: false,
+            predictionPeriodCards: {
+              ...(this.data.predictionPeriodCards || {}),
+              [value]: prediction
+            }
+          }, () => {
+            this.paintPredictionRadarCloudField();
+          });
+        })
+        .catch(() => {
+          if (this.data.period === value) this.setData({ predictionPreviewLoading: false });
+        });
+      return;
+    }
+
     this.setData({
       period: value,
       predictionPreview: buildPredictionPreviewForPeriod(value)
@@ -295,7 +358,31 @@ Page({
         period: this.data.period,
         day: this.data.day
       };
-      this.setSearchLoadingStep('正在读取天气与霞光数据', 72, '同步天气、云量和朝晚霞评分');
+      this.currentPredictionQuery = query;
+      this.predictionPreviewPromises = {};
+      this.setSearchLoadingStep('正在读取基础天气', 58, '先展示温度、风、湿度、能见度、气压和降水');
+      let weather = null;
+      try {
+        weather = await this.callWeatherForecast(query);
+        this.setData({
+          weatherPreview: buildWeatherPreview({ ...weather, location: query.locationName }),
+          predictionPreview: buildPredictionPreviewLoading(query.period, query.day, weather),
+          predictionPreviewLoading: true,
+          weatherView: 'overview',
+          weatherDay: query.day,
+          weatherParameter: 'temp'
+        }, () => {
+          this.paintPredictionRadarCloudField();
+        });
+        this.setSearchLoadingStep('正在计算霞光评分', 82, '基础天气已就绪，继续计算朝晚霞条件');
+      } catch (weatherError) {
+        this.setSearchLoadingStep('正在计算霞光评分', 72, '基础天气暂未返回，继续读取综合预测');
+      }
+      const alternatePeriod = query.period === 'sunrise' ? 'sunset' : 'sunrise';
+      this.predictionPreviewPromises[alternatePeriod] = this.prefetchPredictionPreviewPeriod({
+        ...query,
+        period: alternatePeriod
+      });
       const raw = await this.callPredictionService(query);
       const prediction = normalizePrediction(raw, query);
       this.setSearchLoadingStep('正在整理天气卡片', 92, '准备天气面板与云况雷达');
@@ -305,17 +392,42 @@ Page({
 
       this.setData({
         ...buildHomePredictionSurface(prediction, query),
+        predictionPeriodCards: {
+          [query.period]: prediction
+        },
+        predictionPreviewLoading: false,
         weatherView: 'overview',
         weatherDay: query.day,
         weatherParameter: 'temp'
       }, () => {
         this.paintPredictionRadarCloudField();
       });
+      this.predictionPreviewPromises[alternatePeriod].then((alternatePrediction) => {
+        if (!alternatePrediction) return;
+        const cards = {
+          ...(this.data.predictionPeriodCards || {}),
+          [alternatePeriod]: alternatePrediction
+        };
+        const nextData = { predictionPeriodCards: cards };
+        if (this.data.period === alternatePeriod) {
+          nextData.predictionPreview = buildPredictionPreviewFromPrediction(alternatePrediction, {
+            ...query,
+            period: alternatePeriod
+          });
+          nextData.predictionPreviewLoading = false;
+        }
+        this.setData(nextData, () => {
+          if (this.data.period === alternatePeriod) this.paintPredictionRadarCloudField();
+        });
+      }).catch(() => null);
     } catch (error) {
       if (error && error.message === 'LOCATION_NEEDS_CONFIRMATION') {
         return;
       }
-      this.setData({ errorMessage: friendlyError(error) });
+      this.setData({
+        errorMessage: friendlyError(error),
+        predictionPreviewLoading: false
+      });
     } finally {
       this.setData({ loading: false });
     }
@@ -476,6 +588,31 @@ Page({
       type: query.period,
       date
     });
+  },
+
+  callWeatherForecast(query) {
+    const services = app.services || {};
+    const candidates = [
+      services.weather,
+      services.weatherService
+    ].filter(Boolean);
+
+    for (const service of candidates) {
+      if (typeof service.getForecast === 'function') return service.getForecast(query);
+      if (typeof service.forecast === 'function') return service.forecast(query);
+      if (typeof service === 'function') return service(query);
+    }
+
+    return getWeatherForecast({
+      lat: query.coordinate.lat,
+      lon: query.coordinate.lon,
+      hours: 168
+    });
+  },
+
+  async prefetchPredictionPreviewPeriod(query) {
+    const raw = await this.callPredictionService(query);
+    return normalizePrediction(raw, query);
   },
 
   async recordRecentLocation(query) {
@@ -672,6 +809,30 @@ export function buildDefaultPredictionPreview() {
         desc: '查询后结合能见度、湿度和气溶胶判断颜色表现。'
       }
     ]
+  };
+}
+
+export function buildPredictionPreviewLoading(period = 'sunset', day = 'today', weather = {}) {
+  const preview = buildPredictionPreviewFromPrediction({
+    period,
+    day,
+    weatherData: weather,
+    clouds: {
+      high: weather.highClouds,
+      mid: weather.midClouds,
+      low: weather.lowClouds
+    },
+    explanation: '基础天气已加载，正在计算霞光评分。'
+  }, { period, day });
+
+  return {
+    ...preview,
+    score: '--',
+    scoreLabel: '计算中',
+    scoreDesc: '基础天气已就绪',
+    conclusion: '基础天气已加载，正在计算霞光评分。',
+    mainTime: '--:--',
+    bestViewingTime: '--'
   };
 }
 
@@ -991,7 +1152,7 @@ function paintHourlyChartCanvas(canvasId, chart = [], options = {}) {
 
       const width = Math.max(1, Math.round(result.width || 320));
       const height = Math.max(1, Math.round(result.height || 120));
-      const dpr = wxApi.getSystemInfoSync?.().pixelRatio || 1;
+      const dpr = wxApi.getWindowInfo?.().pixelRatio || wxApi.getDeviceInfo?.().pixelRatio || 1;
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
 
@@ -1455,7 +1616,9 @@ function buildScoreLabel(score) {
 
 function compactBestTime(value) {
   if (!value) return '--';
-  if (typeof value === 'string' && value.includes('-')) return value.split('-')[0].trim();
+  if (typeof value === 'string' && /^\s*\d{1,2}:\d{2}\s*[-–]/.test(value)) {
+    return value.split(/[-–]/)[0].trim();
+  }
   if (typeof value === 'object') return compactDateTime(value.start || value.from || value.time);
   return compactDateTime(value);
 }

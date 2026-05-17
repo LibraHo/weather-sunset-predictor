@@ -185,7 +185,7 @@ export function paintRadarCloudCanvas2d(canvasId, directions, options = {}, size
 
       const width = Math.max(1, Math.round(res[0].width || size));
       const height = Math.max(1, Math.round(res[0].height || width));
-      const dpr = wxApi.getSystemInfoSync?.().pixelRatio || 1;
+      const dpr = wxApi.getWindowInfo?.().pixelRatio || wxApi.getDeviceInfo?.().pixelRatio || 1;
       const renderSize = Math.max(size, Math.round(Math.min(width, height) * dpr));
       const image = buildRadarCloudImageData(directions, renderSize);
       canvas.width = image.width;

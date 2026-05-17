@@ -194,7 +194,8 @@ describe('miniprogram web-like experience shell', () => {
     expect(topbarJs).toContain("this.triggerEvent('settingschange'");
     expect(topbarJs).toContain('applyNavigationTheme(settings.resolvedThemeMode)');
     expect(appSettings).toContain('resolveThemeMode(themeMode)');
-    expect(appSettings).toContain('wx.getSystemInfoSync');
+    expect(appSettings).toContain('wx.getAppBaseInfo');
+    expect(appSettings).toContain('wx.getSystemSetting');
     expect(appWxss).toContain('.container.theme-dark');
     expect(appWxss).toContain('.container.theme-light');
     expect(topbarWxss).toContain('.app-topbar-shell.theme-dark .settings-panel');
