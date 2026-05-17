@@ -1,5 +1,5 @@
 import { reverseGeocode, searchLocations } from '../../services/geocoding.js';
-import { getEnhancedPrediction } from '../../services/prediction.js';
+import { getEnhancedPrediction, getWeatherForecast } from '../../services/prediction.js';
 import { addFavorite, addRecentLocation, listRecentLocations } from '../../services/user.js';
 import { applyPageSettings, readAppSettings, saveAppSettings as persistAppSettings } from '../../utils/app-settings.js';
 import { buildRadarCloudGradients, paintRadarCloudCanvas } from '../../utils/radar-cloud-field.js';
@@ -30,6 +30,7 @@ Page({
     errorMessage: '',
     weatherPreview: buildDefaultWeatherPreview(),
     predictionPreview: buildDefaultPredictionPreview(),
+    predictionPreviewLoading: false,
     recentQueries: [],
     favorites: []
   },
@@ -295,7 +296,20 @@ Page({
         period: this.data.period,
         day: this.data.day
       };
-      this.setSearchLoadingStep('正在读取天气与霞光数据', 72, '同步天气、云量和朝晚霞评分');
+      this.setSearchLoadingStep('正在读取基础天气', 58, '先展示温度、风、湿度、能见度、气压和降水');
+      const weather = await this.callWeatherForecast(query);
+      this.setData({
+        weatherPreview: buildWeatherPreview({ ...weather, location: query.locationName }),
+        predictionPreview: buildPredictionPreviewLoading(query.period, query.day, weather),
+        predictionPreviewLoading: true,
+        weatherView: 'overview',
+        weatherDay: query.day,
+        weatherParameter: 'temp'
+      }, () => {
+        this.paintPredictionRadarCloudField();
+      });
+
+      this.setSearchLoadingStep('正在计算霞光评分', 82, '基础天气已就绪，继续计算朝晚霞条件');
       const raw = await this.callPredictionService(query);
       const prediction = normalizePrediction(raw, query);
       this.setSearchLoadingStep('正在整理天气卡片', 92, '准备天气面板与云况雷达');
@@ -305,6 +319,7 @@ Page({
 
       this.setData({
         ...buildHomePredictionSurface(prediction, query),
+        predictionPreviewLoading: false,
         weatherView: 'overview',
         weatherDay: query.day,
         weatherParameter: 'temp'
@@ -315,7 +330,10 @@ Page({
       if (error && error.message === 'LOCATION_NEEDS_CONFIRMATION') {
         return;
       }
-      this.setData({ errorMessage: friendlyError(error) });
+      this.setData({
+        errorMessage: friendlyError(error),
+        predictionPreviewLoading: false
+      });
     } finally {
       this.setData({ loading: false });
     }
@@ -475,6 +493,26 @@ Page({
       lon: query.coordinate.lon,
       type: query.period,
       date
+    });
+  },
+
+  callWeatherForecast(query) {
+    const services = app.services || {};
+    const candidates = [
+      services.weather,
+      services.weatherService
+    ].filter(Boolean);
+
+    for (const service of candidates) {
+      if (typeof service.getForecast === 'function') return service.getForecast(query);
+      if (typeof service.forecast === 'function') return service.forecast(query);
+      if (typeof service === 'function') return service(query);
+    }
+
+    return getWeatherForecast({
+      lat: query.coordinate.lat,
+      lon: query.coordinate.lon,
+      hours: 168
     });
   },
 
@@ -672,6 +710,30 @@ export function buildDefaultPredictionPreview() {
         desc: '查询后结合能见度、湿度和气溶胶判断颜色表现。'
       }
     ]
+  };
+}
+
+export function buildPredictionPreviewLoading(period = 'sunset', day = 'today', weather = {}) {
+  const preview = buildPredictionPreviewFromPrediction({
+    period,
+    day,
+    weatherData: weather,
+    clouds: {
+      high: weather.highClouds,
+      mid: weather.midClouds,
+      low: weather.lowClouds
+    },
+    explanation: '基础天气已加载，正在计算霞光评分。'
+  }, { period, day });
+
+  return {
+    ...preview,
+    score: '--',
+    scoreLabel: '计算中',
+    scoreDesc: '基础天气已就绪',
+    conclusion: '基础天气已加载，正在计算霞光评分。',
+    mainTime: '--:--',
+    bestViewingTime: '--'
   };
 }
 
