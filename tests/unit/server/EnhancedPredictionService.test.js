@@ -818,7 +818,7 @@ describe('EnhancedPredictionService', () => {
       expect(result.cloudThickness.reasons).toContain('dense_upper_cloud_carrier_softened');
       expect(result.algorithm).toMatchObject({
         name: 'EnhancedPredictionService',
-        version: '2026.05.13-formation-factors-v1'
+        version: '2026.05.18-cloud-thickness-evidence-v1'
       });
       expect(result.score).toBeGreaterThanOrEqual(50);
       expect(result.score).toBeLessThanOrEqual(60);
@@ -872,15 +872,69 @@ describe('EnhancedPredictionService', () => {
         thickness: 'moderate',
         modifier: 0.58
       });
-      expect(result.cloudThickness.reasons).toContain('opening_upper_cloud_carrier_softened');
+      expect(result.cloudThickness.reasons).toContain('upper_cloud_direction_opening');
       expect(result.thickHighCloudPenalty).toMatchObject({
         applied: false,
         cap: null,
-        reason: 'opening_upper_cloud_carrier_canvas_only'
+        reason: 'directional_high_cloud_carrier_canvas_only'
       });
       expect(result.canvasAnalysis.score).toBeGreaterThanOrEqual(58);
       expect(result.score).toBeGreaterThan(55);
       expect(result.score).toBeLessThan(65);
+      expect(result.status).toBe('good_glow');
+    });
+
+    test('should soften rain-season high-cloud opening carrier without mid-cloud support', () => {
+      const weatherData = {
+        cloudCover: 87,
+        lowClouds: 0,
+        midClouds: 0,
+        highClouds: 66,
+        humidity: 68,
+        visibility: 20,
+        precipitation: 0,
+        shortwaveRadiation: 93,
+        directRadiation: 28.2,
+        diffuseRadiation: 64.8,
+        waterVapourColumn: 22.2,
+        aerosolOpticalDepth: 0.21,
+        pm2_5: 38.8,
+        pm10: 44.9,
+        dust: 12,
+        aqi: 70
+      };
+      const remoteCloudData = {
+        samples: [15, 30, 50, 100].map(distanceKm => ({
+          distanceKm,
+          cloudBaseHeight: 7000,
+          lowCloud: 0,
+          midCloud: 0,
+          highCloud: 92
+        }))
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData,
+        new Date('2026-05-18T11:24:00.000Z'),
+        39.9042,
+        116.4074,
+        'sunset',
+        { remoteCloudData }
+      );
+
+      expect(result.lightPathAnalysis.directionalAnalysis.reason).toBe('solar_direction_clear_opening');
+      expect(result.cloudThickness).toMatchObject({
+        thickness: 'moderate',
+        modifier: 0.66
+      });
+      expect(result.cloudThickness.reasons).toContain('upper_cloud_direction_opening');
+      expect(result.thickHighCloudPenalty).toMatchObject({
+        applied: false,
+        cap: null,
+        reason: 'directional_high_cloud_carrier_canvas_only'
+      });
+      expect(result.score).toBeGreaterThanOrEqual(58);
+      expect(result.score).toBeLessThanOrEqual(65);
       expect(result.status).toBe('good_glow');
     });
 

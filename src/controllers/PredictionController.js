@@ -1696,8 +1696,12 @@ class PredictionController {
     const cloudThickness = prediction?.cloudThickness || prediction?.lightPathAnalysis?.cloudThickness;
     const denseCarrierCanvasOnly = cloudThickness?.reasons?.includes('dense_upper_cloud_carrier_softened')
       || cloudThickness?.reasons?.includes('opening_upper_cloud_carrier_softened')
+      || cloudThickness?.reasons?.includes('directional_high_cloud_carrier_softened')
+      || cloudThickness?.reasons?.includes('upper_cloud_direction_opening')
+      || cloudThickness?.reasons?.includes('upper_cloud_clear_light_path')
       || thickHighCloudPenalty?.reason === 'dense_upper_cloud_carrier_canvas_only'
-      || thickHighCloudPenalty?.reason === 'opening_upper_cloud_carrier_canvas_only';
+      || thickHighCloudPenalty?.reason === 'opening_upper_cloud_carrier_canvas_only'
+      || thickHighCloudPenalty?.reason === 'directional_high_cloud_carrier_canvas_only';
     const aerosolHazeCap = prediction?.aerosolHazeCap;
     const carrierAdjustment = prediction?.highCloudCarrierAdjustment;
     const aerosolCarrier = prediction?.aerosolCarrierScore || prediction?.breakdown?.aerosolCarrierScore;
@@ -1949,7 +1953,13 @@ class PredictionController {
     const thickHighCloudPenalty = prediction?.thickHighCloudPenalty || prediction?.lightPathAnalysis?.thickHighCloudPenalty;
     const cloudThickness = prediction?.cloudThickness || prediction?.lightPathAnalysis?.cloudThickness;
     const denseCarrierCanvasOnly = cloudThickness?.reasons?.includes('dense_upper_cloud_carrier_softened')
-      || thickHighCloudPenalty?.reason === 'dense_upper_cloud_carrier_canvas_only';
+      || cloudThickness?.reasons?.includes('opening_upper_cloud_carrier_softened')
+      || cloudThickness?.reasons?.includes('directional_high_cloud_carrier_softened')
+      || cloudThickness?.reasons?.includes('upper_cloud_direction_opening')
+      || cloudThickness?.reasons?.includes('upper_cloud_clear_light_path')
+      || thickHighCloudPenalty?.reason === 'dense_upper_cloud_carrier_canvas_only'
+      || thickHighCloudPenalty?.reason === 'opening_upper_cloud_carrier_canvas_only'
+      || thickHighCloudPenalty?.reason === 'directional_high_cloud_carrier_canvas_only';
     const aerosolHazeCap = prediction?.aerosolHazeCap;
     const carrierAdjustment = prediction?.highCloudCarrierAdjustment;
     const postRainAdjustment = prediction?.postRainAdjustment;
@@ -2008,7 +2018,7 @@ class PredictionController {
       denseCarrierCanvasOnly ? {
         label: ledgerText('labels.cloudThicknessModifier', {}, 'Cloud layer effect', '云层厚度影响'),
         value: `×${fmt(cloudThickness?.modifier ?? 0.75, 2)}`,
-        detail: ledgerText('details.cloudThicknessModifier', {}, 'mid/high clouds can still catch sunset light, so cloud thickness has only a mild impact here', '中高云层仍能承接晚霞光线，当前云厚影响较轻'),
+        detail: ledgerText('details.cloudThicknessModifier', {}, 'cloud-thickness evidence is mixed, so the model applies a mild continuous modifier here', '云厚证据并不充分，当前按连续修正温和压分'),
         tone: 'cap'
       } : null,
       geometricModel?.feasible === false ? {

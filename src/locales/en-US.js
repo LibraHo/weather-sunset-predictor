@@ -67,16 +67,16 @@ const translations = {
     "methodology": {
       "title": "Fire Cloud Calculation Method",
       "intro": "The Fire Cloud Index comprehensively evaluates sky conditions and optical propagation paths to determine the probability and intensity of fire cloud formation. Below is the complete calculation principle based on meteorological data.",
-      "versionLabel": "Algorithm version: 2026.05.13-formation-factors-v1",
-      "versionDesc": "This version makes fire-cloud analysis a stable four-factor summary: cloud carrier, light path, air rendering, and limits. The scoring formula is unchanged.",
+      "versionLabel": "Algorithm version: 2026.05.18-cloud-thickness-evidence-v1",
+      "versionDesc": "This version changes cloud thickness to continuous evidence scoring: direct light, diffuse light, water vapor, low clouds, weather code, and sun-direction openings jointly set the thickness modifier instead of a single water-vapor signal crushing the score.",
       changelogTitle: "Version update history",
       changelogHint: "Algorithm updates from the last three months live here; scroll to review why each change happened, its impact, and validation",
       changelog: {
         "latest": {
-          "date": "2026-05-13",
-          "title": "Four-factor analysis v1",
-          "summary": "Fire-cloud analysis is now grouped into cloud carrier, light path, air rendering, and limits to reduce scattered notes.",
-          "validation": "Validation: aerosol, low-cloud blockage, gray haze, thick cloud, and rain cases are grouped into the right factor; the scoring formula is unchanged."
+          "date": "2026-05-18",
+          "title": "Cloud-thickness evidence scoring v1",
+          "summary": "Cloud thickness is now judged from direct light, diffuse light, water vapor, low clouds, weather code, and sun-direction openings; borderline thick evidence is mapped continuously instead of as a hard penalty.",
+          "validation": "Validation: the Beijing 2026-05-18 sunset sample returns to the watch range; thick high-cloud gray curtains, low cloud, haze, heavy rain, and closed thick-cloud cases stay conservative."
         },
         "aerosol": {
           "date": "2026-05-12",
@@ -348,8 +348,8 @@ const translations = {
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
           "afterAdjustments": "after weather and visibility adjustments",
           "finalDisplayed": "final displayed result",
-          "thickCloudCap": "thick high cloud reduces usable color rendering",
-          "cloudThicknessModifier": "mid/high clouds can still catch sunset light, so cloud thickness has only a mild impact here",
+          "thickCloudCap": "thick cloud or gray curtain reduces usable color rendering",
+          "cloudThicknessModifier": "cloud-thickness evidence is mixed, so the model applies a mild continuous modifier here",
           "geometryCap": "sun/cloud geometry is not feasible",
           "occlusion": "distant obstruction reduces the score",
           "carrierFloor": "clear high-cloud carrier prevents over-penalty",

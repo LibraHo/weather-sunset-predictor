@@ -67,16 +67,16 @@ const translations = {
     "methodology": {
       "title": "火燒雲計算方法",
       "intro": "火燒雲指數由四個關鍵因子綜合計算，幫助你快速判斷當天是否值得守候晚霞。",
-      "versionLabel": "算法版本：2026.05.13-formation-factors-v1",
-      "versionDesc": "本版將火燒雲分析固定為四個穩定因子：雲層載體、光路條件、空氣顯色、限制因素；評分公式不變。",
+      "versionLabel": "算法版本：2026.05.18-cloud-thickness-evidence-v1",
+      "versionDesc": "本版將雲層厚度改為連續證據評分：直射、漫射、水汽、低雲、天氣碼和太陽方向開口共同決定修正，不再用單一水汽訊號直接壓低分數。",
       changelogTitle: "版本更新記錄",
       changelogHint: "近三個月內的算法更新都會放在這裡，可捲動回看原因、影響和驗證方式",
       changelog: {
         "latest": {
-          "date": "2026-05-13",
-          "title": "四因子分析 v1",
-          "summary": "火燒雲分析固定為雲層載體、光路條件、空氣顯色、限制因素四項，減少零散條目。",
-          "validation": "驗證：氣溶膠、低雲遮擋、灰幕、厚雲和降水場景都歸併到對應因子；評分公式不變。"
+          "date": "2026-05-18",
+          "title": "雲厚證據評分 v1",
+          "summary": "雲層厚度由直射、漫射、水汽、低雲、天氣碼和太陽方向開口共同判斷；偏厚但證據不足時改為連續溫和壓分。",
+          "validation": "驗證：北京 2026-05-18 晚霞樣本回到可觀賞區間；厚高雲灰幕、低雲、灰霾、強降水和無開口厚雲仍保持保守。"
         },
         "aerosol": {
           "date": "2026-05-12",
@@ -348,8 +348,8 @@ const translations = {
           "renderingFactors": "能見度 ×{{visibility}}，濕度 ×{{humidity}}，氣溶膠 ×{{aerosol}}",
           "afterAdjustments": "結合天氣和能見度後",
           "finalDisplayed": "最終顯示結果",
-          "thickCloudCap": "高雲過厚，真實可染色效果下降",
-          "cloudThicknessModifier": "中高雲層仍能承接晚霞光線，目前雲層厚度影響較輕",
+          "thickCloudCap": "厚雲幕或灰幕會削弱真實可染色效果",
+          "cloudThicknessModifier": "雲層厚度證據並不充分，目前採連續修正溫和壓分",
           "geometryCap": "太陽與雲層幾何條件不足",
           "occlusion": "遠端遮擋壓低最終分",
           "carrierFloor": "高雲載體清透，避免誤傷低估",

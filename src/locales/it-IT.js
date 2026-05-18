@@ -36,7 +36,7 @@ apiAccess: 'Accesso API'
     "methodology": {
       "title": "Come viene calcolato il punteggio",
       "intro": "L'indice nuvole rosse combina quattro fattori chiave per stimare se vale la pena osservare il tramonto.",
-      "versionLabel": "Algorithm version: 2026.05.13-formation-factors-v1",
+      "versionLabel": "Algorithm version: 2026.05.18-cloud-thickness-evidence-v1",
       "versionDesc": "This version makes fire-cloud analysis a stable four-factor summary: cloud carrier, light path, air rendering, and limits. The scoring formula is unchanged.",
       changelogTitle: "Cronologia versioni",
       changelogHint: "Gli aggiornamenti degli ultimi tre mesi sono qui; scorri per rivedere motivo, impatto e validazione",
@@ -302,7 +302,7 @@ apiAccess: 'Accesso API'
           "afterAdjustments": "after weather and visibility adjustments",
           "finalDisplayed": "final displayed result",
           "thickCloudCap": "thick high cloud reduces usable color rendering",
-          "cloudThicknessModifier": "mid/high clouds can still catch sunset light, so cloud thickness has only a mild impact here",
+          "cloudThicknessModifier": "cloud-thickness evidence is mixed, so the model applies a mild continuous modifier here",
           "geometryCap": "sun/cloud geometry is not feasible",
           "occlusion": "distant obstruction reduces the score",
           "carrierFloor": "clear high-cloud carrier prevents over-penalty",

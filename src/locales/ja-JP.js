@@ -67,7 +67,7 @@ apiAccess: 'API接続'
     "methodology": {
       "title": "焼き雲スコアの計算方法",
       "intro": "焼き雲指数は4つの主要因子を組み合わせて計算され、その日の夕焼け観賞が価値あるかどうかを素早く判断するのに役立ちます。",
-      "versionLabel": "アルゴリズム版：2026.05.13-formation-factors-v1",
+      "versionLabel": "アルゴリズム版：2026.05.18-cloud-thickness-evidence-v1",
       "versionDesc": "火焼け雲分析を、雲の載体・光路条件・空気の発色・制限要因の4項目に固定しました。スコア式は変わりません。",
       changelogTitle: "バージョン更新履歴",
       changelogHint: "直近3か月のアルゴリズム更新をここにまとめています。スクロールして理由、影響、検証内容を確認できます",
@@ -349,7 +349,7 @@ apiAccess: 'API接続'
           "afterAdjustments": "天候と見通しを加味した後",
           "finalDisplayed": "最終表示結果",
           "thickCloudCap": "高層雲が厚く、実際の発色が弱くなります",
-          "cloudThicknessModifier": "mid/high clouds can still catch sunset light, so cloud thickness has only a mild impact here",
+          "cloudThicknessModifier": "cloud-thickness evidence is mixed, so the model applies a mild continuous modifier here",
           "geometryCap": "太陽と雲層の幾何条件が不足しています",
           "occlusion": "遠方の遮蔽により最終スコアが下がります",
           "carrierFloor": "澄んだ高層雲の載体により過小評価を抑えます",

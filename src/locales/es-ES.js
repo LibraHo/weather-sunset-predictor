@@ -67,7 +67,7 @@ apiAccess: 'Acceso API'
     "methodology": {
       "title": "Cómo se calcula la puntuación",
       "intro": "El índice de nubes rojas combina cuatro factores clave para estimar si vale la pena salir a ver el atardecer.",
-      "versionLabel": "Versión del algoritmo: 2026.05.13-formation-factors-v1",
+      "versionLabel": "Versión del algoritmo: 2026.05.18-cloud-thickness-evidence-v1",
       "versionDesc": "Esta versión fija el análisis en cuatro factores: soporte de nubes, trayectoria de luz, color del aire y limitaciones. La fórmula de puntuación no cambia.",
       changelogTitle: "Historial de versiones",
       changelogHint: "Aquí están las actualizaciones de los últimos tres meses; desplázate para revisar motivo, impacto y validación",
@@ -335,7 +335,7 @@ apiAccess: 'Acceso API'
           "afterAdjustments": "after weather and visibility adjustments",
           "finalDisplayed": "final displayed result",
           "thickCloudCap": "thick high cloud reduces usable color rendering",
-          "cloudThicknessModifier": "mid/high clouds can still catch sunset light, so cloud thickness has only a mild impact here",
+          "cloudThicknessModifier": "cloud-thickness evidence is mixed, so the model applies a mild continuous modifier here",
           "geometryCap": "sun/cloud geometry is not feasible",
           "occlusion": "distant obstruction reduces the score",
           "carrierFloor": "clear high-cloud carrier prevents over-penalty",
