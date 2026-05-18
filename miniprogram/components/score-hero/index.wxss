@@ -58,8 +58,8 @@
 }
 
 .score-good {
-  color: #fb923c;
-  text-shadow: 0 0 32rpx rgba(251, 146, 60, 0.24);
+  color: #ff9f43;
+  text-shadow: 0 0 34rpx rgba(255, 159, 67, 0.30);
 }
 
 .score-excellent {

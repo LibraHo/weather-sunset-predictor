@@ -19,10 +19,11 @@ describe('miniprogram score hero scoring copy', () => {
 
   test('uses website score colors for the score text', () => {
     expect(source).toContain('scoreClass:');
+    expect(source).toContain('if (score >= 65) return \'score-good\';');
     expect(wxml).toContain('class="score {{scoreClass}}"');
     expect(wxss).toContain('#94a3b8');
     expect(wxss).toContain('#fdba74');
-    expect(wxss).toContain('#fb923c');
+    expect(wxss).toContain('#ff9f43');
     expect(wxss).toContain('#fbbf24');
     expect(wxss).toContain('#f43f5e');
     expect(wxss).toContain('linear-gradient(135deg, #fb923c 0%, #fbbf24 55%, #f43f5e 100%)');

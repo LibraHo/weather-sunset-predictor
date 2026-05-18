@@ -74,7 +74,7 @@ Component({
     scoreClass(score) {
       if (!Number.isFinite(score)) return 'score-waiting';
       if (score >= 85) return 'score-excellent';
-      if (score >= 70) return 'score-good';
+      if (score >= 65) return 'score-good';
       if (score >= 40) return 'score-fair';
       return 'score-poor';
     }
