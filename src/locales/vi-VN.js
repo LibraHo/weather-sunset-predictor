@@ -67,7 +67,7 @@ const translations = {
     "methodology": {
       "title": "Phương pháp tính điểm mây đẹp",
       "intro": "Chỉ số mây đẹp được tính toán tổng hợp từ bốn yếu tố chính, giúp bạn nhanh chóng đánh giá liệu ngày hôm đó có đáng để chờ đợi hoàng hôn hay không.",
-      "versionLabel": "Phiên bản thuật toán: 2026.05.13-formation-factors-v1",
+      "versionLabel": "Phiên bản thuật toán: 2026.05.18-high-cloud-opening-v1",
       "versionDesc": "Phiên bản này cố định phân tích thành bốn yếu tố: nền mây, đường sáng, màu trong không khí và yếu tố hạn chế. Công thức điểm không đổi.",
       changelogTitle: "Lịch sử cập nhật phiên bản",
       changelogHint: "Các cập nhật thuật toán trong ba tháng gần đây nằm ở đây; cuộn để xem lý do, tác động và cách kiểm chứng",

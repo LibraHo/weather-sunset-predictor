@@ -459,12 +459,36 @@ function isFavorableOpeningUpperCloudCarrier(weatherData, context = {}) {
     && hasClearAirForUpperCloudCarrier(weatherData);
 }
 
+function isFavorableDirectionalHighCloudCarrier(weatherData, context = {}) {
+  const lowClouds = Number(weatherData.lowClouds || 0);
+  const highClouds = Number(weatherData.highClouds || 0);
+  const precipitation = Number(weatherData.precipitation ?? weatherData.rain ?? weatherData.showers ?? 0);
+  const lightPathScore = Number(context.lightPathScore?.score ?? context.lightPathScore ?? 0);
+  const directional = context.lightPathScore?.directionalAnalysis || {};
+  const directionalReason = directional.reason || '';
+  const directionalLowMid = Number(directional.lowMid);
+  const directionalHigh = Number(directional.high);
+  const hasDirectionalOpening = directionalReason.includes('opening');
+  const directionOpenEnough = hasDirectionalOpening
+    && Number.isFinite(directionalLowMid)
+    && directionalLowMid <= 15
+    && Number.isFinite(directionalHigh)
+    && directionalHigh >= 60;
+
+  return lowClouds <= 10
+    && highClouds >= 55
+    && precipitation <= 0.2
+    && lightPathScore >= 70
+    && directionOpenEnough
+    && hasClearAirForUpperCloudCarrier(weatherData);
+}
+
 /**
  * 云厚评估：区分“薄卷云（好幕布）”和“厚云幕（压光）”
  *
  * 三维判定：
  * 1. 辐射法：直射比 = direct / shortwave（低 = 厚云）
- * 2. 水汽法：waterVapour × cloudCover / 100（高 = 含水量大 = 厚云）
+ * 2. 水汽法：waterVapour × cloudCover / 100（高 = 含水量大，但需结合云型/光路判断）
  * 3. 天气码兜底：WMO 阴天码直接标厚
  *
  * @param {Object} weatherData - 天气数据（目标时刻）
@@ -561,6 +585,11 @@ function assessCloudThickness(weatherData, prevHourData = null, context = {}) {
     return { thickness: 'moderate', modifier: 0.58, reasons: signals, score };
   }
 
+  if (thickness === 'thick' && isFavorableDirectionalHighCloudCarrier(weatherData, context)) {
+    signals.push('directional_high_cloud_carrier_softened');
+    return { thickness: 'moderate', modifier: 0.58, reasons: signals, score };
+  }
+
   return { thickness, modifier, reasons: signals, score };
 }
 
@@ -580,7 +609,8 @@ function assessThickHighCloudPenalty(weatherData, cloudThickness) {
   const diffuseDominant = reasons.includes('diffuse_dominant');
   const waterHeavy = reasons.includes('water_vapour_very_high');
   const softenedCarrier = reasons.includes('dense_upper_cloud_carrier_softened')
-    || reasons.includes('opening_upper_cloud_carrier_softened');
+    || reasons.includes('opening_upper_cloud_carrier_softened')
+    || reasons.includes('directional_high_cloud_carrier_softened');
 
   if (softenedCarrier) {
     return {
@@ -588,7 +618,9 @@ function assessThickHighCloudPenalty(weatherData, cloudThickness) {
       cap: null,
       reason: reasons.includes('opening_upper_cloud_carrier_softened')
         ? 'opening_upper_cloud_carrier_canvas_only'
-        : 'dense_upper_cloud_carrier_canvas_only'
+        : (reasons.includes('directional_high_cloud_carrier_softened')
+          ? 'directional_high_cloud_carrier_canvas_only'
+          : 'dense_upper_cloud_carrier_canvas_only')
     };
   }
 

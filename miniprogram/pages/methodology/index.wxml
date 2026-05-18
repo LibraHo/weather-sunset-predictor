@@ -80,7 +80,7 @@
     </scroll-view>
     <view class="version-card">
       <view class="version-title">当前说明版本</view>
-      <view class="version-copy">2026.05.13 · 四因子分析说明；评分口径与 Web 保持一致。</view>
+      <view class="version-copy">2026.05.18 · 雨后高云开口保护；评分口径与 Web 保持一致。</view>
     </view>
   </view>
 </view>

@@ -67,7 +67,7 @@ const translations = {
     "methodology": {
       "title": "Comment le score est calculé",
       "intro": "L'indice de nuages rouges est calculé à partir de quatre facteurs clés pour vous aider à décider rapidement si la soirée vaut le déplacement.",
-      "versionLabel": "Version de l’algorithme : 2026.05.13-formation-factors-v1",
+      "versionLabel": "Version de l’algorithme : 2026.05.18-high-cloud-opening-v1",
       "versionDesc": "Cette version stabilise l’analyse en quatre facteurs : support nuageux, trajet lumineux, rendu de l’air et limites. La formule de score ne change pas.",
       changelogTitle: "Historique des versions",
       changelogHint: "Les mises a jour des trois derniers mois sont ici ; faites defiler pour revoir la raison, l'impact et la validation",

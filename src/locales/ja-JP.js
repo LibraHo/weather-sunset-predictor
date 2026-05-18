@@ -67,7 +67,7 @@ apiAccess: 'API接続'
     "methodology": {
       "title": "焼き雲スコアの計算方法",
       "intro": "焼き雲指数は4つの主要因子を組み合わせて計算され、その日の夕焼け観賞が価値あるかどうかを素早く判断するのに役立ちます。",
-      "versionLabel": "アルゴリズム版：2026.05.13-formation-factors-v1",
+      "versionLabel": "アルゴリズム版：2026.05.18-high-cloud-opening-v1",
       "versionDesc": "火焼け雲分析を、雲の載体・光路条件・空気の発色・制限要因の4項目に固定しました。スコア式は変わりません。",
       changelogTitle: "バージョン更新履歴",
       changelogHint: "直近3か月のアルゴリズム更新をここにまとめています。スクロールして理由、影響、検証内容を確認できます",

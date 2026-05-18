@@ -616,56 +616,95 @@ export function buildScoreLedger(prediction = {}) {
   const lightPathScore = lightPath.score ?? breakdown.lightPathScore;
   const baseScore = breakdown.baseScore;
   const renderingFactor = rendering.factor ?? breakdown.renderingFactor;
-  const renderedScore = breakdown.renderedScore ?? finalScore;
+  const renderedScore = breakdown.unclampedFinalScore ?? breakdown.renderedScore ?? finalScore;
+  const cloudThicknessStep = buildCloudThicknessStep(prediction, canvas);
 
   const summary = Number.isFinite(Number(finalScore))
     ? `${Math.round(Number(finalScore))} 分：由云层载体、光路和显色条件综合计算`
     : '等待评分数据后展示完整解释';
 
+  const steps = [
+    {
+      key: 'cloudCarrier',
+      label: '载体',
+      result: formatScore(canvasScore),
+      expression: '可被染色的云面或薄雾载体',
+      detail: buildCloudCanvasText(canvas, prediction.cloudType),
+      tone: levelFromScore(canvasScore)
+    },
+    {
+      key: 'lightPath',
+      label: '光路',
+      result: formatScore(lightPathScore),
+      expression: '阳光是否能打到云层',
+      detail: buildLightPathText(lightPath),
+      tone: levelFromScore(lightPathScore)
+    },
+    {
+      key: 'baseScore',
+      label: '基础分',
+      result: formatScore(baseScore),
+      expression: buildBaseScoreExpression(canvasScore, lightPathScore, baseScore),
+      detail: '对齐网页版：载体占主要权重，光路用于修正可见染色机会',
+      tone: levelFromScore(baseScore)
+    }
+  ];
+  if (cloudThicknessStep) steps.push(cloudThicknessStep);
+  steps.push(
+    {
+      key: 'rendering',
+      label: '显色修正',
+      result: formatScore(renderedScore),
+      expression: buildRenderingExpression(baseScore, renderingFactor, renderedScore),
+      detail: buildRenderingText(rendering),
+      tone: levelFromFactor(renderingFactor)
+    },
+    {
+      key: 'final',
+      label: '最终分',
+      result: formatScore(finalScore),
+      expression: '结合天气和能见度后的展示结果',
+      detail: humanizeExplanation(prediction.explanation || prediction.summary || prediction.reason, finalScore),
+      tone: 'final'
+    }
+  );
+
   return {
     summary,
-    steps: [
-      {
-        key: 'cloudCarrier',
-        label: '载体',
-        result: formatScore(canvasScore),
-        expression: '可被染色的云面或薄雾载体',
-        detail: buildCloudCanvasText(canvas, prediction.cloudType),
-        tone: levelFromScore(canvasScore)
-      },
-      {
-        key: 'lightPath',
-        label: '光路',
-        result: formatScore(lightPathScore),
-        expression: '阳光是否能打到云层',
-        detail: buildLightPathText(lightPath),
-        tone: levelFromScore(lightPathScore)
-      },
-      {
-        key: 'baseScore',
-        label: '基础分',
-        result: formatScore(baseScore),
-        expression: buildBaseScoreExpression(canvasScore, lightPathScore, baseScore),
-        detail: '对齐网页版：载体占主要权重，光路用于修正可见染色机会',
-        tone: levelFromScore(baseScore)
-      },
-      {
-        key: 'rendering',
-        label: '显色修正',
-        result: formatScore(renderedScore),
-        expression: buildRenderingExpression(baseScore, renderingFactor, renderedScore),
-        detail: buildRenderingText(rendering),
-        tone: levelFromFactor(renderingFactor)
-      },
-      {
-        key: 'final',
-        label: '最终分',
-        result: formatScore(finalScore),
-        expression: '结合天气和能见度后的展示结果',
-        detail: humanizeExplanation(prediction.explanation || prediction.summary || prediction.reason, finalScore),
-        tone: 'final'
-      }
-    ]
+    steps
+  };
+}
+
+function buildCloudThicknessStep(prediction = {}, canvas = {}) {
+  const cloudThickness = prediction.cloudThickness || canvas.cloudThickness;
+  const thickPenalty = prediction.thickHighCloudPenalty;
+  if (!cloudThickness?.thickness && !thickPenalty?.applied) return null;
+  const reasons = cloudThickness?.reasons || [];
+  const softened = reasons.includes('dense_upper_cloud_carrier_softened')
+    || reasons.includes('opening_upper_cloud_carrier_softened')
+    || reasons.includes('directional_high_cloud_carrier_softened')
+    || thickPenalty?.reason === 'dense_upper_cloud_carrier_canvas_only'
+    || thickPenalty?.reason === 'opening_upper_cloud_carrier_canvas_only'
+    || thickPenalty?.reason === 'directional_high_cloud_carrier_canvas_only';
+  if (thickPenalty?.applied) {
+    return {
+      key: 'cloudThickness',
+      label: '云厚修正',
+      result: `≤${Math.round(Number(thickPenalty.cap))}分`,
+      expression: '厚云幕或灰幕限制',
+      detail: '厚云幕、灰幕或强遮挡会削弱真实可染色效果。',
+      tone: 'bad'
+    };
+  }
+  return {
+    key: 'cloudThickness',
+    label: '云厚修正',
+    result: `x${roundTwo(cloudThickness.modifier ?? 1)}`,
+    expression: softened ? '太阳方向开口，高云/卷云保护' : '按辐射、水汽和天气码估算',
+    detail: softened
+      ? '低云少且太阳方向有开口时，高云/卷云仍可承接晚霞光线，云厚影响已软化。'
+      : '云层偏厚会降低可染色画布表现。',
+    tone: softened ? 'cap' : levelFromFactor(cloudThickness.modifier)
   };
 }
 

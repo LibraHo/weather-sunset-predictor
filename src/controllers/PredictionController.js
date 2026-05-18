@@ -1696,8 +1696,10 @@ class PredictionController {
     const cloudThickness = prediction?.cloudThickness || prediction?.lightPathAnalysis?.cloudThickness;
     const denseCarrierCanvasOnly = cloudThickness?.reasons?.includes('dense_upper_cloud_carrier_softened')
       || cloudThickness?.reasons?.includes('opening_upper_cloud_carrier_softened')
+      || cloudThickness?.reasons?.includes('directional_high_cloud_carrier_softened')
       || thickHighCloudPenalty?.reason === 'dense_upper_cloud_carrier_canvas_only'
-      || thickHighCloudPenalty?.reason === 'opening_upper_cloud_carrier_canvas_only';
+      || thickHighCloudPenalty?.reason === 'opening_upper_cloud_carrier_canvas_only'
+      || thickHighCloudPenalty?.reason === 'directional_high_cloud_carrier_canvas_only';
     const aerosolHazeCap = prediction?.aerosolHazeCap;
     const carrierAdjustment = prediction?.highCloudCarrierAdjustment;
     const aerosolCarrier = prediction?.aerosolCarrierScore || prediction?.breakdown?.aerosolCarrierScore;
@@ -1949,7 +1951,11 @@ class PredictionController {
     const thickHighCloudPenalty = prediction?.thickHighCloudPenalty || prediction?.lightPathAnalysis?.thickHighCloudPenalty;
     const cloudThickness = prediction?.cloudThickness || prediction?.lightPathAnalysis?.cloudThickness;
     const denseCarrierCanvasOnly = cloudThickness?.reasons?.includes('dense_upper_cloud_carrier_softened')
-      || thickHighCloudPenalty?.reason === 'dense_upper_cloud_carrier_canvas_only';
+      || cloudThickness?.reasons?.includes('opening_upper_cloud_carrier_softened')
+      || cloudThickness?.reasons?.includes('directional_high_cloud_carrier_softened')
+      || thickHighCloudPenalty?.reason === 'dense_upper_cloud_carrier_canvas_only'
+      || thickHighCloudPenalty?.reason === 'opening_upper_cloud_carrier_canvas_only'
+      || thickHighCloudPenalty?.reason === 'directional_high_cloud_carrier_canvas_only';
     const aerosolHazeCap = prediction?.aerosolHazeCap;
     const carrierAdjustment = prediction?.highCloudCarrierAdjustment;
     const postRainAdjustment = prediction?.postRainAdjustment;

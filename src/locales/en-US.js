@@ -67,16 +67,16 @@ const translations = {
     "methodology": {
       "title": "Fire Cloud Calculation Method",
       "intro": "The Fire Cloud Index comprehensively evaluates sky conditions and optical propagation paths to determine the probability and intensity of fire cloud formation. Below is the complete calculation principle based on meteorological data.",
-      "versionLabel": "Algorithm version: 2026.05.13-formation-factors-v1",
-      "versionDesc": "This version makes fire-cloud analysis a stable four-factor summary: cloud carrier, light path, air rendering, and limits. The scoring formula is unchanged.",
+      "versionLabel": "Algorithm version: 2026.05.18-high-cloud-opening-v1",
+      "versionDesc": "This version improves post-rain high-cloud and cirrus scenes: when low clouds are scarce, the sun direction is open, and air is not too gray, column water vapor no longer forces a thick gray-curtain penalty.",
       changelogTitle: "Version update history",
       changelogHint: "Algorithm updates from the last three months live here; scroll to review why each change happened, its impact, and validation",
       changelog: {
         "latest": {
-          "date": "2026-05-13",
-          "title": "Four-factor analysis v1",
-          "summary": "Fire-cloud analysis is now grouped into cloud carrier, light path, air rendering, and limits to reduce scattered notes.",
-          "validation": "Validation: aerosol, low-cloud blockage, gray haze, thick cloud, and rain cases are grouped into the right factor; the scoring formula is unchanged."
+          "date": "2026-05-18",
+          "title": "Post-rain high-cloud opening guard v1",
+          "summary": "When low clouds are scarce, high clouds are colorable, the sun direction is open, and air is not too gray, cloud thickness is treated as a mild modifier instead of a thick gray curtain.",
+          "validation": "Validation: the Beijing 2026-05-18 sunset sample returns to the watch range; low cloud, haze, heavy rain, and closed thick-cloud cases stay conservative."
         },
         "aerosol": {
           "date": "2026-05-12",
@@ -348,8 +348,8 @@ const translations = {
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
           "afterAdjustments": "after weather and visibility adjustments",
           "finalDisplayed": "final displayed result",
-          "thickCloudCap": "thick high cloud reduces usable color rendering",
-          "cloudThicknessModifier": "mid/high clouds can still catch sunset light, so cloud thickness has only a mild impact here",
+          "thickCloudCap": "thick cloud or gray curtain reduces usable color rendering",
+          "cloudThicknessModifier": "when low clouds are scarce and the sun direction is open, high cloud or cirrus can still catch sunset light, so the thickness impact is softened",
           "geometryCap": "sun/cloud geometry is not feasible",
           "occlusion": "distant obstruction reduces the score",
           "carrierFloor": "clear high-cloud carrier prevents over-penalty",

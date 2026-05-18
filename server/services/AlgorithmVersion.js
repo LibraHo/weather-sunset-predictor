@@ -1,10 +1,16 @@
 'use strict';
 
-const ALGORITHM_VERSION = '2026.05.13-formation-factors-v1';
+const ALGORITHM_VERSION = '2026.05.18-high-cloud-opening-v1';
 
 const ALGORITHM_CHANGELOG = [
   {
     version: ALGORITHM_VERSION,
+    date: '2026-05-18',
+    title: 'Post-rain high-cloud opening guard',
+    summary: 'When low clouds are scarce, high clouds are colorable, the sun direction is open, and the air is not too gray, cloud-thickness signals are softened instead of forcing a thick gray-curtain penalty.'
+  },
+  {
+    version: '2026.05.13-formation-factors-v1',
     date: '2026-05-13',
     title: 'Four-factor formation analysis',
     summary: 'Formation analysis is now grouped into four stable user-facing factors: cloud carrier, light path, air rendering, and limiting factors. The scoring formula is unchanged.'

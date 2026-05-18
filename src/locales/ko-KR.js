@@ -67,7 +67,7 @@ apiAccess: 'API 연동'
     "methodology": {
       "title": "화염구름 점수 계산 방법",
       "intro": "화염구름 지수는 4가지 주요 요인을 종합하여 계산되며, 해당 날의 노을 관람이 가치 있는지 빠르게 판단하는 데 도움을 줍니다.",
-      "versionLabel": "알고리즘 버전: 2026.05.13-formation-factors-v1",
+      "versionLabel": "알고리즘 버전: 2026.05.18-high-cloud-opening-v1",
       "versionDesc": "화염구름 분석을 구름 매개층, 빛 경로, 공기 발색, 제한 요인 네 가지로 고정했습니다. 점수 공식은 그대로입니다.",
       changelogTitle: "버전 업데이트 기록",
       changelogHint: "최근 3개월의 알고리즘 업데이트를 여기에 모았습니다. 스크롤해 변경 이유, 영향, 검증 내용을 확인할 수 있습니다",
