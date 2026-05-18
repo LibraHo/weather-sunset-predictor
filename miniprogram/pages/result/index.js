@@ -683,6 +683,8 @@ function buildCloudThicknessStep(prediction = {}, canvas = {}) {
   const softened = reasons.includes('dense_upper_cloud_carrier_softened')
     || reasons.includes('opening_upper_cloud_carrier_softened')
     || reasons.includes('directional_high_cloud_carrier_softened')
+    || reasons.includes('upper_cloud_direction_opening')
+    || reasons.includes('upper_cloud_clear_light_path')
     || thickPenalty?.reason === 'dense_upper_cloud_carrier_canvas_only'
     || thickPenalty?.reason === 'opening_upper_cloud_carrier_canvas_only'
     || thickPenalty?.reason === 'directional_high_cloud_carrier_canvas_only';
@@ -700,9 +702,9 @@ function buildCloudThicknessStep(prediction = {}, canvas = {}) {
     key: 'cloudThickness',
     label: '云厚修正',
     result: `x${roundTwo(cloudThickness.modifier ?? 1)}`,
-    expression: softened ? '太阳方向开口，高云/卷云保护' : '按辐射、水汽和天气码估算',
+    expression: softened ? '云厚证据温和修正' : '按辐射、水汽和天气码估算',
     detail: softened
-      ? '低云少且太阳方向有开口时，高云/卷云仍可承接晚霞光线，云厚影响已软化。'
+      ? '低云少、空气不过灰且太阳方向有开口时，水汽信号不会单独把高云/卷云压成厚灰幕。'
       : '云层偏厚会降低可染色画布表现。',
     tone: softened ? 'cap' : levelFromFactor(cloudThickness.modifier)
   };

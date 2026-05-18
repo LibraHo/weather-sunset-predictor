@@ -1,13 +1,13 @@
 'use strict';
 
-const ALGORITHM_VERSION = '2026.05.18-high-cloud-opening-v1';
+const ALGORITHM_VERSION = '2026.05.18-cloud-thickness-evidence-v1';
 
 const ALGORITHM_CHANGELOG = [
   {
     version: ALGORITHM_VERSION,
     date: '2026-05-18',
-    title: 'Post-rain high-cloud opening guard',
-    summary: 'When low clouds are scarce, high clouds are colorable, the sun direction is open, and the air is not too gray, cloud-thickness signals are softened instead of forcing a thick gray-curtain penalty.'
+    title: 'Cloud-thickness evidence scoring',
+    summary: 'Cloud thickness now uses continuous thin/thick evidence from direct light, diffuse light, water vapor, low clouds, weather code, and sun-direction openings, instead of discrete -1/-2 penalties from single signals.'
   },
   {
     version: '2026.05.13-formation-factors-v1',

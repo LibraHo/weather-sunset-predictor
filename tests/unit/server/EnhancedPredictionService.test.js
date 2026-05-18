@@ -818,7 +818,7 @@ describe('EnhancedPredictionService', () => {
       expect(result.cloudThickness.reasons).toContain('dense_upper_cloud_carrier_softened');
       expect(result.algorithm).toMatchObject({
         name: 'EnhancedPredictionService',
-        version: '2026.05.18-high-cloud-opening-v1'
+        version: '2026.05.18-cloud-thickness-evidence-v1'
       });
       expect(result.score).toBeGreaterThanOrEqual(50);
       expect(result.score).toBeLessThanOrEqual(60);
@@ -872,11 +872,11 @@ describe('EnhancedPredictionService', () => {
         thickness: 'moderate',
         modifier: 0.58
       });
-      expect(result.cloudThickness.reasons).toContain('opening_upper_cloud_carrier_softened');
+      expect(result.cloudThickness.reasons).toContain('upper_cloud_direction_opening');
       expect(result.thickHighCloudPenalty).toMatchObject({
         applied: false,
         cap: null,
-        reason: 'opening_upper_cloud_carrier_canvas_only'
+        reason: 'directional_high_cloud_carrier_canvas_only'
       });
       expect(result.canvasAnalysis.score).toBeGreaterThanOrEqual(58);
       expect(result.score).toBeGreaterThan(55);
@@ -925,9 +925,9 @@ describe('EnhancedPredictionService', () => {
       expect(result.lightPathAnalysis.directionalAnalysis.reason).toBe('solar_direction_clear_opening');
       expect(result.cloudThickness).toMatchObject({
         thickness: 'moderate',
-        modifier: 0.58
+        modifier: 0.66
       });
-      expect(result.cloudThickness.reasons).toContain('directional_high_cloud_carrier_softened');
+      expect(result.cloudThickness.reasons).toContain('upper_cloud_direction_opening');
       expect(result.thickHighCloudPenalty).toMatchObject({
         applied: false,
         cap: null,

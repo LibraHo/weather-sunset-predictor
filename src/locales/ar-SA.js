@@ -40,7 +40,7 @@ apiAccess: 'الوصول إلى API'
     methodology: {
       title: 'كيف يتم حساب النقاط',
       intro: 'يجمع مؤشر السحب الحمراء أربعة عوامل رئيسية لتقدير ما إذا كانت مشاهدة الغروب تستحق العناء.',
-      versionLabel: 'إصدار الخوارزمية: 2026.05.18-high-cloud-opening-v1',
+      versionLabel: 'إصدار الخوارزمية: 2026.05.18-cloud-thickness-evidence-v1',
       versionDesc: 'يثبت هذا الإصدار التحليل في أربعة عوامل: حامل السحب، مسار الضوء، لون الهواء، والقيود. صيغة النقاط لم تتغير.',
       changelogTitle: 'سجل تحديثات الإصدار',
       changelogHint: 'توجد هنا تحديثات الخوارزمية خلال آخر ثلاثة أشهر؛ مرر لمراجعة السبب والأثر والتحقق',
@@ -304,7 +304,7 @@ apiAccess: 'الوصول إلى API'
           "afterAdjustments": "after weather and visibility adjustments",
           "finalDisplayed": "final displayed result",
           "thickCloudCap": "thick high cloud reduces usable color rendering",
-          "cloudThicknessModifier": "mid/high clouds can still catch sunset light, so cloud thickness has only a mild impact here",
+          "cloudThicknessModifier": "cloud-thickness evidence is mixed, so the model applies a mild continuous modifier here",
           "geometryCap": "sun/cloud geometry is not feasible",
           "occlusion": "distant obstruction reduces the score",
           "carrierFloor": "clear high-cloud carrier prevents over-penalty",

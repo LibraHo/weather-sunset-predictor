@@ -74,16 +74,16 @@ export default {
     methodology: {
       title: '火烧云计算方法',
       intro: '火烧云指数由四个关键因子综合计算，帮助你快速判断当天是否值得蹲守晚霞。',
-      versionLabel: '算法版本：2026.05.18-high-cloud-opening-v1',
-      versionDesc: '本版优化雨后高云/卷云场景：低云少、太阳方向有开口且空气不过灰时，不再把整层水汽直接判成厚灰幕。',
+      versionLabel: '算法版本：2026.05.18-cloud-thickness-evidence-v1',
+      versionDesc: '本版把云厚判断改为连续证据评分：直射、漫射、水汽、低云、天气码和太阳方向开口共同决定云厚修正，不再用单个水汽信号直接打穿分数。',
       changelogTitle: "版本更新记录",
       changelogHint: "近三个月内的算法更新都会放在这里，可滚动回看原因、影响和验证方式",
       changelog: {
         latest: {
           date: '2026-05-18',
-          title: '雨后高云开口保护 v1',
-          summary: '低云少、高云可染色、太阳方向有开口且空气不过灰时，云厚修正从厚灰幕改为温和影响。',
-          validation: '验证：北京 2026-05-18 晚霞样本回到可观赏区间；低云、灰霾、强降水和无开口厚云仍保持保守。'
+          title: '云厚证据评分 v1',
+          summary: '云厚由直射、漫射、水汽、低云、天气码和太阳方向开口共同判断；偏厚但证据不充分时连续温和压分。',
+          validation: '验证：北京 2026-05-18 晚霞样本回到可观赏区间；厚高云灰幕、低云、灰霾、强降水和无开口厚云仍保持保守。'
         },
         aerosol: {
           date: '2026-05-12',
@@ -372,7 +372,7 @@ export default {
           afterAdjustments: '结合天气和能见度后',
           finalDisplayed: '最终展示结果',
           thickCloudCap: '厚云幕或灰幕会削弱真实可染色效果',
-          cloudThicknessModifier: '低云少且太阳方向有开口时，高云/卷云仍可承接晚霞光线，云厚影响已软化',
+          cloudThicknessModifier: '云厚证据并不充分，当前按连续修正温和压分',
           geometryCap: '太阳与云层几何条件不足',
           occlusion: '远端遮挡压低最终分',
           carrierFloor: '高云载体清透，避免误伤低估',
