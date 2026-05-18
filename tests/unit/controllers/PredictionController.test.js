@@ -240,7 +240,8 @@ describe('PredictionController', () => {
       expect(predictionController.getQualityFromScore(39)).toBe('poor');
     });
 
-    test('77 和 45 使用不同评分主题颜色', () => {
+    test('68 分和 45 分使用不同评分主题颜色', () => {
+      expect(predictionController.getScoreTheme('fair', 68)[1]).toBe('var(--score-good-color, #fb923c)');
       expect(predictionController.getScoreTheme('good', 77)[1]).toBe('var(--score-good-color, #fb923c)');
       expect(predictionController.getScoreTheme('fair', 45)[1]).toBe('var(--score-fair-color, #fdba74)');
     });

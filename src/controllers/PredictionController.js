@@ -1591,10 +1591,11 @@ class PredictionController {
       ];
     }
 
-    // Keep score colors aligned with the public guide: <40, 40-69, 70-84, 85+.
+    // Visual color turns warmer slightly before the semantic "good" label.
+    // A 65-69 watchable sunset should look like a promising glow, not a muted low score.
     const stops = [
       { max: 40, color: 'var(--score-poor-color, #94a3b8)' },
-      { max: 70, color: 'var(--score-fair-color, #fdba74)' },
+      { max: 65, color: 'var(--score-fair-color, #fdba74)' },
       { max: 85, color: 'var(--score-good-color, #fb923c)' }
     ];
     const color = stops.find(stop => value < stop.max)?.color || 'var(--score-excellent-mid, #fbbf24)';

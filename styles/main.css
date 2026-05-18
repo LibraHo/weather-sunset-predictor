@@ -7857,7 +7857,7 @@ body.theme-dark .weather-metric-card .weather-value {
   --score-track-color: rgba(186, 132, 72, 0.16);
   --score-poor-color: #9a8a7a;
   --score-fair-color: #d89a5f;
-  --score-good-color: #e8893f;
+  --score-good-color: #ff9f43;
   --score-excellent-start: #f97316;
   --score-excellent-mid: #f59e0b;
   --score-excellent-end: #dc2626;
@@ -7916,7 +7916,7 @@ body.theme-dark {
   --score-track-color: rgba(255, 255, 255, 0.10);
   --score-poor-color: #94a3b8;
   --score-fair-color: #fdba74;
-  --score-good-color: #fb923c;
+  --score-good-color: #ff9f43;
   --score-excellent-start: #fb923c;
   --score-excellent-mid: #fbbf24;
   --score-excellent-end: #f43f5e;
@@ -7952,7 +7952,7 @@ body.theme-dark {
     --score-track-color: rgba(255, 255, 255, 0.10);
     --score-poor-color: #94a3b8;
     --score-fair-color: #fdba74;
-    --score-good-color: #fb923c;
+    --score-good-color: #ff9f43;
     --score-excellent-start: #fb923c;
     --score-excellent-mid: #fbbf24;
     --score-excellent-end: #f43f5e;
@@ -7989,7 +7989,7 @@ body[data-actual-theme="dark"] {
   --score-track-color: rgba(255, 255, 255, 0.10);
   --score-poor-color: #94a3b8;
   --score-fair-color: #fdba74;
-  --score-good-color: #fb923c;
+  --score-good-color: #ff9f43;
   --score-excellent-start: #fb923c;
   --score-excellent-mid: #fbbf24;
   --score-excellent-end: #f43f5e;
