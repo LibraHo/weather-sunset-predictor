@@ -218,18 +218,26 @@ export async function getSurroundingPrediction({ lat, lon, type = 'sunset', date
 
 export async function getThreeDayGlow({ lat, lon } = {}) {
   const days = buildThreeDayDates();
-  const rows = await Promise.all(days.map(async (day) => {
-    const [sunrise, sunset] = await Promise.all([
-      getEnhancedPrediction({ lat, lon, type: 'sunrise', date: day.date }),
-      getEnhancedPrediction({ lat, lon, type: 'sunset', date: day.date })
-    ]);
+  const items = days.flatMap((day) => [
+    { id: `${day.key}:sunrise`, type: 'sunrise', date: day.date },
+    { id: `${day.key}:sunset`, type: 'sunset', date: day.date }
+  ]);
+  const predictions = await getEnhancedPredictionBatch({ lat, lon, items, includeRemoteCloudData: true });
+  const byKey = new Map();
+  predictions.forEach((prediction, index) => {
+    const item = items[index] || {};
+    byKey.set(item.id, prediction);
+  });
+
+  return days.map((day) => {
+    const sunrise = byKey.get(`${day.key}:sunrise`) || {};
+    const sunset = byKey.get(`${day.key}:sunset`) || {};
     return {
       ...day,
       sunrise: compactPrediction(sunrise, 'sunrise'),
       sunset: compactPrediction(sunset, 'sunset')
     };
-  }));
-  return rows;
+  });
 }
 
 export function buildThreeDayDates(baseDate = new Date()) {
