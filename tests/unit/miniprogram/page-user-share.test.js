@@ -303,6 +303,33 @@ describe('miniprogram page user/share helpers', () => {
     });
   });
 
+  test('result period state keeps heavy backend payloads out of setData', () => {
+    const heavyHourly = Array.from({ length: 168 }, (_, index) => ({ time: index, temp: 20 + index }));
+    const state = resultHelpers.buildResultPeriodState({
+      period: 'sunset',
+      score: 66,
+      lat: 39.9,
+      lon: 116.4,
+      weatherData: {
+        temperature_2m: 22,
+        hourly: heavyHourly,
+        remoteCloudSamples: heavyHourly,
+        rawProviderPayload: { hourly: heavyHourly }
+      },
+      remoteCloudData: { samples: heavyHourly },
+      debugProfile: { remoteCloudMs: 4200 },
+      canvasAnalysis: { score: 72 },
+      lightPathAnalysis: { score: 70 },
+      renderingAnalysis: { factor: 1.02 }
+    });
+
+    expect(state.prediction.weatherData).toEqual({ temperature_2m: 22 });
+    expect(state.prediction.remoteCloudData).toBeUndefined();
+    expect(state.prediction.debugProfile).toBeUndefined();
+    expect(JSON.stringify(state)).not.toContain('remoteCloudSamples');
+    expect(JSON.stringify(state)).not.toContain('rawProviderPayload');
+  });
+
   test('result period switch reuses prefetch promises and warms alternate panels', () => {
     expect(resultPageSource).toContain('periodCardPromises');
     expect(resultPageSource).toContain('prefetchXiakePanels');
@@ -342,9 +369,41 @@ describe('miniprogram page user/share helpers', () => {
     expect(homeSource).toContain('predictionPeriodCards: {}');
     expect(homeSource).toContain('const predictionCards = await this.callPredictionCardBatch(query);');
     expect(homeSource).toContain('getEnhancedPredictionBatch({');
+    expect(homeSource).toContain('compactPredictionPreviewPayload(normalizePrediction');
     expect(homeSource).toContain('const cachedPrediction = this.data.predictionPeriodCards?.[value];');
     expect(homeSource).toContain('const pendingPrediction = this.predictionPreviewPromises?.[value];');
     expect(homeSource.indexOf('const cachedPrediction = this.data.predictionPeriodCards?.[value];')).toBeLessThan(homeSource.indexOf('predictionPreview: buildPredictionPreviewForPeriod(value)'));
+  });
+
+  test('home cached prediction cards are compact enough for instant toggles', () => {
+    const compact = homeHelpers.compactPredictionPreviewPayload({
+      score: 72,
+      period: 'sunrise',
+      referenceTime: '2026-05-20T21:12:00.000Z',
+      weatherData: {
+        temperature_2m: 18,
+        hourly: Array.from({ length: 168 }, (_, index) => ({ index })),
+        daily: Array.from({ length: 7 }, (_, index) => ({ index })),
+        remoteCloudSamples: [{ id: 1 }]
+      },
+      lightPathAnalysis: {
+        score: 68,
+        samples: Array.from({ length: 100 }, (_, index) => ({ index })),
+        directionalAnalysis: { direction: '东偏北', reason: 'opening', raw: { large: true } }
+      },
+      remoteCloudData: { samples: [{ id: 1 }] }
+    });
+
+    expect(compact.weatherData).toEqual({ temperature_2m: 18 });
+    expect(compact.lightPathAnalysis).toEqual({
+      score: 68,
+      azimuth: undefined,
+      occlusionProbability: undefined,
+      explain: undefined,
+      directionalAnalysis: { direction: '东偏北', reason: 'opening' }
+    });
+    expect(JSON.stringify(compact)).not.toContain('remoteCloudSamples');
+    expect(JSON.stringify(compact)).not.toContain('samples');
   });
 
   test('result period switch clears loading when cached or stale period state wins', () => {

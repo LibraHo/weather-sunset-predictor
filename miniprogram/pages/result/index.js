@@ -447,11 +447,13 @@ function normalizePrediction(input = {}, options = {}) {
   const locationName = input.locationName || input.location || options.name || '未命名地点';
 
   return {
-    ...input,
-    metrics,
+    metrics: compactMetricObject(metrics),
+    clouds: compactMetricObject(input.clouds || {}),
+    weatherData: compactMetricObject(input.weatherData || input.weather || {}),
     period,
     type: period,
     day,
+    referenceTime: input.referenceTime || null,
     date: input.date || options.date || null,
     lat: input.lat ?? input.latitude ?? options.lat ?? input.coordinate?.lat ?? null,
     lon: input.lon ?? input.lng ?? input.longitude ?? options.lon ?? input.coordinate?.lon ?? null,
@@ -466,10 +468,60 @@ function normalizePrediction(input = {}, options = {}) {
     canvasAnalysis: input.canvasAnalysis || null,
     lightPathAnalysis: input.lightPathAnalysis || null,
     renderingAnalysis: input.renderingAnalysis || null,
+    lightPathGate: input.lightPathGate || null,
+    renderingAdjustment: input.renderingAdjustment || null,
+    cloudThickness: input.cloudThickness || null,
+    cloudThicknessAdjustment: input.cloudThicknessAdjustment || null,
+    thickHighCloudPenalty: input.thickHighCloudPenalty || null,
     cloudType: input.cloudType || null,
     algorithm: input.algorithm || null,
     clearSunsetAdvice: input.clearSunsetAdvice || null
   };
+}
+
+function compactMetricObject(source = {}) {
+  if (!source || typeof source !== 'object') return {};
+  const keys = [
+    'temp',
+    'temperature',
+    'temperature_2m',
+    'windSpeed',
+    'wind',
+    'wind_speed_10m',
+    'windDirection',
+    'windDeg',
+    'wind_direction_10m',
+    'highCloud',
+    'highCloudCover',
+    'cloudHigh',
+    'high',
+    'midCloud',
+    'midCloudCover',
+    'cloudMid',
+    'mid',
+    'lowCloud',
+    'lowCloudCover',
+    'cloudLow',
+    'low',
+    'visibility',
+    'visibilityKm',
+    'humidity',
+    'relativeHumidity',
+    'pressure',
+    'surfacePressure',
+    'surface_pressure',
+    'precipitation',
+    'precip',
+    'rain',
+    'showers',
+    'aod',
+    'aerosolOpticalDepth'
+  ];
+  return keys.reduce((result, key) => {
+    const value = source[key];
+    if (value !== undefined && value !== null && value !== '') result[key] = value;
+    return result;
+  }, {});
 }
 
 export function buildPredictionPeriodRequest(prediction = {}, period = 'sunset') {
