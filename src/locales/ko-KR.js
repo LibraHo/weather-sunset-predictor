@@ -184,7 +184,7 @@ apiAccess: 'API 연동'
           "level1": "Upper-cloud carrier: either dense high cloud, or mid/high clouds with an opening toward the sun, scarce low clouds, no rain, and clear air",
           "level2": "In this case cloud thickness adjusts colorable-cloud quality, while light-path judgment stays independent",
           "level3": "Very thick cloud curtains or gray air can still make colors darker and weaker.",
-          "formula": "Final correction = colorable-cloud quality + independent haze/dust/rain/geometry limits"
+          "formula": "최종 점수 = 색상 캐리어 × 광로 게이트 + 작은 발색 보정"
         },
         "precipPenalty": {
           "title": "6. 강수 패널티 계수",
@@ -200,7 +200,7 @@ apiAccess: 'API 연동'
           "title": "7. 종합 계산 공식",
           "subtitle": "Final Score Formula",
           "desc": "Final score applies the sun-direction light-path gate to the carrier score, then adds a small rendering adjustment.",
-          "formula": "Final Score = Carrier Score × Light-Path Gate + Rendering Adjustment",
+          "formula": "최종 점수 = 캐리어 점수 × 광로 게이트 + 발색 보정",
           "highCloudCap": "상층운 우위로 원거리 데이터 없을 때, 상한을 85점으로 완화(기존 69.9점)"
         }
       }

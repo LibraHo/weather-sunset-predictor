@@ -184,7 +184,7 @@ apiAccess: 'API接続'
           "level1": "Upper-cloud carrier: either dense high cloud, or mid/high clouds with an opening toward the sun, scarce low clouds, no rain, and clear air",
           "level2": "In this case cloud thickness adjusts colorable-cloud quality, while light-path judgment stays independent",
           "level3": "Very thick cloud curtains or gray air can still make colors darker and weaker.",
-          "formula": "Final correction = colorable-cloud quality + independent haze/dust/rain/geometry limits"
+          "formula": "最終スコア = 色の載体 × 光路ゲート + 小さな発色補正"
         },
         "precipPenalty": {
           "title": "6. 降水ペナルティ係数",
@@ -200,7 +200,7 @@ apiAccess: 'API接続'
           "title": "7. 総合計算式",
           "subtitle": "Final Score Formula",
           "desc": "Final score applies the sun-direction light-path gate to the carrier score, then adds a small rendering adjustment.",
-          "formula": "Final Score = Carrier Score × Light-Path Gate + Rendering Adjustment",
+          "formula": "最終スコア = 載体スコア × 光路ゲート + 発色補正",
           "highCloudCap": "上層雲が多く低い雲が少ない場合、良い色づきの土台として評価します"
         }
       }

@@ -37,7 +37,7 @@ apiAccess: 'Accesso API'
       "title": "Come viene calcolato il punteggio",
       "intro": "L'indice nuvole rosse combina quattro fattori chiave per stimare se vale la pena osservare il tramonto.",
       "versionLabel": "Algorithm version: 2026.05.19-additive-carrier-light-gate-v1",
-      "versionDesc": "This version makes fire-cloud analysis a stable four-factor summary: cloud carrier, light path, air rendering, and limits. The scoring formula is unchanged.",
+      "versionDesc": "This version changes positive cloud signals into bounded additive carrier points and uses existing sun-direction multi-point sampling as the light-path gate.",
       changelogTitle: "Cronologia versioni",
       changelogHint: "Gli aggiornamenti degli ultimi tre mesi sono qui; scorri per rivedere motivo, impatto e validazione",
       changelog: {
@@ -144,7 +144,7 @@ apiAccess: 'Accesso API'
           "level1": "Upper-cloud carrier: either dense high cloud, or mid/high clouds with an opening toward the sun, scarce low clouds, no rain, and clear air",
           "level2": "In this case cloud thickness adjusts colorable-cloud quality, while light-path judgment stays independent",
           "level3": "Very thick cloud curtains or gray air can still make colors darker and weaker.",
-          "formula": "Final correction = colorable-cloud quality + independent haze/dust/rain/geometry limits"
+          "formula": "Final score = color carrier × light-path gate + small rendering adjustment"
         },
         "precipPenalty": {
           "title": "5. Penalità precipitazioni",

@@ -176,7 +176,7 @@ const translations = {
           "level1": "Upper-cloud carrier: either dense high cloud, or mid/high clouds with an opening toward the sun, scarce low clouds, no rain, and clear air",
           "level2": "In this case cloud thickness adjusts colorable-cloud quality, while light-path judgment stays independent",
           "level3": "Very thick cloud curtains or gray air can still make colors darker and weaker.",
-          "formula": "Final correction = colorable-cloud quality + independent haze/dust/rain/geometry limits"
+          "formula": "Điểm cuối = nền mang màu × cổng đường sáng + hiệu chỉnh lên màu nhỏ"
         },
         "precipPenalty": {
           "title": "5. Hệ số phạt lượng mưa",
@@ -200,7 +200,7 @@ const translations = {
           "title": "Điểm cuối cùng",
           "subtitle": "Kết hợp nền mây, đường sáng và khả năng lên màu",
           "desc": "Điểm cuối cùng kết hợp cấu trúc mây, điều kiện đường sáng và khả năng tán xạ của không khí, đồng thời giới hạn các trường hợp cực đoan.",
-          "formula": "Tổng điểm = điểm nền mây × hệ số đường sáng × hệ số lên màu",
+          "formula": "Tổng điểm = điểm nền mang màu × cổng đường sáng + hiệu chỉnh lên màu",
           "highCloudCap": "Khi thiếu mây cao, điểm tối đa sẽ bị giới hạn ngay cả khi các điều kiện khác tốt."
         }
       }

@@ -68,15 +68,15 @@ const translations = {
       "title": "Fire Cloud Calculation Method",
       "intro": "The Fire Cloud Index comprehensively evaluates sky conditions and optical propagation paths to determine the probability and intensity of fire cloud formation. Below is the complete calculation principle based on meteorological data.",
       "versionLabel": "Algorithm version: 2026.05.19-additive-carrier-light-gate-v1",
-      "versionDesc": "This version changes cloud thickness to continuous evidence scoring: direct light, diffuse light, water vapor, low clouds, weather code, and sun-direction openings jointly set the thickness modifier instead of a single water-vapor signal crushing the score.",
+      "versionDesc": "This version changes positive cloud signals into bounded additive carrier points and uses existing sun-direction multi-point sampling as the light-path gate. directRatio is no longer used in scoring.",
       changelogTitle: "Version update history",
       changelogHint: "Algorithm updates from the last three months live here; scroll to review why each change happened, its impact, and validation",
       changelog: {
         "latest": {
-          "date": "2026-05-18",
-          "title": "Cloud-thickness evidence scoring v1",
-          "summary": "Cloud thickness is now judged from direct light, diffuse light, water vapor, low clouds, weather code, and sun-direction openings; borderline thick evidence is mapped continuously instead of as a hard penalty.",
-          "validation": "Validation: the Beijing 2026-05-18 sunset sample returns to the watch range; thick high-cloud gray curtains, low cloud, haze, heavy rain, and closed thick-cloud cases stay conservative."
+          "date": "2026-05-19",
+          "title": "Additive carrier + light-path gate v1",
+          "summary": "Positive cloud signals are now bounded additive carrier points, and existing sun-direction multi-point sampling gates the final score. 100% high cloud no longer drives a near-perfect score by itself.",
+          "validation": "Validation: the 36.36°N, 92.83°E pure-high-cloud sample drops from full score to 72; a Beijing near-path cloud-wall sample drops to 33.5; no extra API requests are added."
         },
         "aerosol": {
           "date": "2026-05-12",
