@@ -42,6 +42,7 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxml).toContain('weather-metric-grid');
     expect(homeWxml).toContain('weather-main-layout');
     expect(homeWxml).toContain('weather-visual-panel');
+    expect(homeWxml).toContain('/assets/icons/weather-location-pin.svg');
     expect(homeWxml).not.toContain('weatherPreview.description');
     expect(homeWxml).not.toContain('weatherPreview.badge');
     expect(homeWxml).toContain('src="{{weatherPreview.iconSrc}}"');
