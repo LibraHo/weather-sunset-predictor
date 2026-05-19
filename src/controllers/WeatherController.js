@@ -340,7 +340,7 @@ class WeatherController {
     }
     const normalizedDirection = this._normalizeWindDirection(currentWeather.windDirection);
     if (elements.windDirectionIcon) {
-      elements.windDirectionIcon.style.transform = `rotate(${normalizedDirection}deg)`;
+      elements.windDirectionIcon.style.transform = `rotate(${this._getWindFlowDirection(normalizedDirection)}deg)`;
     }
     if (elements.windDirectionText) {
       elements.windDirectionText.textContent = this._getWindDirectionLabel(normalizedDirection);
@@ -564,6 +564,7 @@ class WeatherController {
 
     const maxWindSpeed = Math.max(...dayData.map(d => d.windSpeed ?? 0));
     const avgWindDirection = dayData.reduce((sum, d) => sum + this._normalizeWindDirection(d.windDirection), 0) / dayData.length;
+    const avgWindFlowDirection = this._getWindFlowDirection(avgWindDirection);
 
     // 选择天气图标
     const weatherIcon = this._getWeatherIcon(avgCloudCover, precipProb);
@@ -590,7 +591,7 @@ class WeatherController {
         <div class="day-meta-chip day-meta-wind" role="listitem" aria-label="风速：${this.formatWindSpeed(maxWindSpeed)}，风向：${directionLabel}">
           <span class="icon day-meta-svg-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 8h11.5a2.5 2.5 0 1 0-2.5-2.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M3 12h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M3 16h12.5a2.5 2.5 0 1 1-2.5 2.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
           <span class="value">${this.formatWindSpeed(maxWindSpeed)}</span>
-          <span class="icon day-wind-direction-icon" style="transform: rotate(${avgWindDirection.toFixed(0)}deg);" aria-hidden="true">↑</span>
+          <span class="icon day-wind-direction-icon" style="transform: rotate(${avgWindFlowDirection.toFixed(0)}deg);" aria-hidden="true">↑</span>
         </div>
       </div>
     `;
@@ -630,6 +631,10 @@ class WeatherController {
     const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
     const index = Math.round(normalized / 45) % directions.length;
     return directions[index];
+  }
+
+  _getWindFlowDirection(direction) {
+    return (this._normalizeWindDirection(direction) + 180) % 360;
   }
 
   /**
