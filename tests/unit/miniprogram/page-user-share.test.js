@@ -515,4 +515,10 @@ describe('miniprogram page user/share helpers', () => {
       ]
     });
   });
+
+  test('result period fetch timing stays separate from build timing', () => {
+    expect(resultPageSource).toContain('const fetchEndedAt = perfNow();');
+    expect(resultPageSource).toContain('fetchMs: roundPerfMs(fetchEndedAt - fetchStartedAt)');
+    expect(resultPageSource).toContain('buildMs: roundPerfMs(builtAt - buildStartedAt)');
+  });
 });

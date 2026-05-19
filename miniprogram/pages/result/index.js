@@ -504,6 +504,7 @@ Page({
       const fetchStartedAt = perfNow();
       const fetched = await getEnhancedPrediction(requested);
       const normalized = normalizePrediction(fetched, requested);
+      const fetchEndedAt = perfNow();
       if (this.data.activePeriod !== period) {
         this.setData({ loading: false });
         return;
@@ -526,7 +527,7 @@ Page({
         logMiniPerf('result.toggle.fetch.setDataDone', {
           target: period,
           totalMs: roundPerfMs(setDataDoneAt - tapStartedAt),
-          fetchMs: roundPerfMs(builtAt - fetchStartedAt),
+          fetchMs: roundPerfMs(fetchEndedAt - fetchStartedAt),
           buildMs: roundPerfMs(builtAt - buildStartedAt),
           setDataMs: roundPerfMs(setDataDoneAt - setDataStartedAt),
           payloadBytes: estimatePayloadBytes(patch)

@@ -188,7 +188,7 @@ export function paintRadarCloudCanvas2d(canvasId, directions, options = {}, size
   const wxApi = options.wxApi || options.wx || globalThis.wx;
   if (!wxApi?.createSelectorQuery) return false;
   const retry = options.retry ?? 1;
-  const requestStartedAt = nowMs();
+  const requestStartedAt = options.requestStartedAt ?? nowMs();
   const query = wxApi.createSelectorQuery();
   const scope = options.component || options.page;
   const scopedQuery = scope && query.in ? query.in(scope) : query;
@@ -208,7 +208,7 @@ export function paintRadarCloudCanvas2d(canvasId, directions, options = {}, size
         });
         if (retry > 0) {
           setTimeout(() => {
-            paintRadarCloudCanvas2d(canvasId, directions, { ...options, wxApi, retry: retry - 1 }, size);
+            paintRadarCloudCanvas2d(canvasId, directions, { ...options, wxApi, retry: retry - 1, requestStartedAt }, size);
           }, 120);
           return;
         }
