@@ -125,10 +125,11 @@
           <text class="temp-unit">{{weatherPreview.temperatureUnit}}</text>
         </view>
         <view class="weather-wind-main">
-          <text class="weather-wind-glyph">≈</text>
+          <image class="weather-wind-glyph" src="/assets/icons/weather-wind-flow.svg" mode="aspectFit" aria-hidden="true" />
           <text class="weather-wind-speed">{{weatherPreview.windSpeed}}</text>
           <text class="weather-wind-divider"></text>
           <text class="weather-wind-direction-text">{{weatherPreview.windDirection}}</text>
+          <image class="weather-wind-direction-icon" src="/assets/icons/weather-wind-direction.svg" mode="aspectFit" style="{{weatherPreview.windDirectionArrowStyle}}" aria-hidden="true" />
         </view>
       </view>
 

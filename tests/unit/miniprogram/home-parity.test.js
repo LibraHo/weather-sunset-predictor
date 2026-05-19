@@ -48,6 +48,10 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxml).toContain('weatherPreview.temperature');
     expect(homeWxml).toContain('weatherPreview.windSpeed');
     expect(homeWxml).toContain('weatherPreview.metrics');
+    expect(homeWxml).toContain('weatherPreview.windDirectionArrowStyle');
+    expect(homeWxml).toContain('weather-wind-direction-icon');
+    expect(homeWxml).toContain('/assets/icons/weather-wind-flow.svg');
+    expect(homeWxml).toContain('/assets/icons/weather-wind-direction.svg');
     expect(homeWxml).toContain('src="/assets/icons/metric-{{item.key}}.svg"');
     expect(homeWxml).toContain('weather-view-toggle');
     expect(homeWxml).toContain('bindtap="switchWeatherView"');

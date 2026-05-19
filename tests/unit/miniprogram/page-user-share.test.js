@@ -264,7 +264,7 @@ describe('miniprogram page user/share helpers', () => {
     const state = homeHelpers.buildHomePredictionSurface(prediction, { locationName: '北京', period: 'sunset' });
 
     expect(state.weatherPreview.temperature).toBe('21.6');
-    expect(state.weatherPreview.windSpeed).toBe('11 km/h');
+    expect(state.weatherPreview.windSpeed).toBe('11.4 km/h');
     expect(state.weatherPreview.windDirection).toBe('西');
     expect(state.weatherPreview.metrics).toEqual(expect.arrayContaining([
       expect.objectContaining({ key: 'humidity', value: '68%' }),
@@ -273,6 +273,20 @@ describe('miniprogram page user/share helpers', () => {
       expect.objectContaining({ key: 'aerosol', value: '0.12' }),
       expect.objectContaining({ key: 'precipitation', value: '0 mm' })
     ]));
+  });
+
+  test('home weather card formats numeric wind direction like the website', () => {
+    const preview = homeHelpers.buildWeatherPreview({
+      location: '北京',
+      temp: 20.9,
+      windSpeed: 0.8,
+      windDirection: 127
+    });
+
+    expect(preview.windSpeed).toBe('0.8 km/h');
+    expect(preview.windDirection).toBe('东南');
+    expect(preview.windDirectionDegrees).toBe(127);
+    expect(preview.windDirectionArrowStyle).toBe('transform: rotate(307deg);');
   });
 
   test('result period switch can request and render the alternate prediction card', () => {

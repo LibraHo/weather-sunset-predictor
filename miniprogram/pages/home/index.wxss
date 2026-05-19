@@ -2530,29 +2530,14 @@
 }
 
 .weather-wind-glyph {
-  position: relative;
-  width: 34rpx;
+  width: 36rpx;
+  height: 36rpx;
+}
+
+.weather-wind-direction-icon {
+  width: 28rpx;
   height: 28rpx;
-}
-
-.weather-wind-glyph::before,
-.weather-wind-glyph::after {
-  position: absolute;
-  left: 0;
-  content: "";
-  width: 34rpx;
-  height: 4rpx;
-  border-radius: 999rpx;
-  background: currentColor;
-}
-
-.weather-wind-glyph::before {
-  top: 7rpx;
-}
-
-.weather-wind-glyph::after {
-  top: 18rpx;
-  width: 25rpx;
+  transform-origin: center center;
 }
 
 .prediction-share-menu-line + .prediction-share-menu {
@@ -2921,6 +2906,10 @@
 
 .home-page.theme-dark.has-weather .weather-wind-glyph {
   color: #b192f7;
+}
+
+.home-page.theme-dark.has-weather .weather-wind-direction-icon {
+  color: #f5c87a;
 }
 
 .home-page.theme-dark.has-weather .weather-wind-divider {

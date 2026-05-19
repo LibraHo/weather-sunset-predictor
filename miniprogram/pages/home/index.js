@@ -1214,9 +1214,9 @@ export function buildWeatherPreview(weather = {}) {
   const cloudAverage = averageNumber([highCloud, midCloud, lowCloud, weather.cloudCover]);
   const provider = weather.provider || weather.providerMeta?.name || 'test';
   const windSpeed = formatWindSpeedValue(weather.windSpeed);
+  const windDirectionInfo = formatWindDirectionInfo(weather.windDirection);
   const hourly = buildWeatherHourlyPreview(weather);
   const hourlyView = buildWeatherHourlyViewModel(hourly, 'temp');
-  const windDirection = weather.windDirection || '风向';
   return {
     sourceWeather: weather,
     visible: true,
@@ -1231,7 +1231,9 @@ export function buildWeatherPreview(weather = {}) {
     temperature: formatTemperatureValue(weather.temp ?? weather.temperature),
     temperatureUnit: '°C',
     windSpeed,
-    windDirection,
+    windDirection: windDirectionInfo.label,
+    windDirectionDegrees: windDirectionInfo.degrees,
+    windDirectionArrowStyle: `transform: rotate(${windDirectionInfo.flowDegrees}deg);`,
     weekly: buildWeatherWeeklyPreview(weather),
     hourly,
     hourlyChart: hourlyView.chart,
@@ -1248,7 +1250,7 @@ export function buildWeatherPreview(weather = {}) {
       { key: 'aerosol', icon: '∴', label: '气溶胶', value: formatNumberValue(weather.aod ?? weather.aerosolOpticalDepth, '') },
       { key: 'precipitation', icon: '◌', label: '降水', value: formatNumberValue(weather.precipitation, 'mm') }
     ],
-    note: `高 ${formatPercentValue(highCloud)} / 中 ${formatPercentValue(midCloud)} / 低 ${formatPercentValue(lowCloud)} · ${windDirection} ${windSpeed}`
+    note: `高 ${formatPercentValue(highCloud)} / 中 ${formatPercentValue(midCloud)} / 低 ${formatPercentValue(lowCloud)} · ${windDirectionInfo.label} ${windSpeed}`
   };
 }
 
@@ -1701,6 +1703,39 @@ function formatWindDirectionArrow(direction) {
   return '↖';
 }
 
+function formatWindDirectionInfo(direction) {
+  if (direction === null || direction === undefined || direction === '') {
+    return { label: '--', degrees: null, flowDegrees: 0 };
+  }
+  if (typeof direction === 'string') {
+    const trimmed = direction.trim();
+    const numeric = Number(trimmed.replace('°', ''));
+    if (!Number.isFinite(numeric)) {
+      return { label: trimmed || '--', degrees: null, flowDegrees: 0 };
+    }
+    direction = numeric;
+  }
+  const degrees = normalizeWindDegrees(Number(direction));
+  if (degrees === null) return { label: '--', degrees: null, flowDegrees: 0 };
+  return {
+    label: getWindDirectionLabel(degrees),
+    degrees,
+    flowDegrees: (degrees + 180) % 360
+  };
+}
+
+function normalizeWindDegrees(direction) {
+  if (!Number.isFinite(direction)) return null;
+  return ((direction % 360) + 360) % 360;
+}
+
+function getWindDirectionLabel(direction) {
+  const degrees = normalizeWindDegrees(direction);
+  if (degrees === null) return '--';
+  const labels = ['北', '东北', '东', '东南', '南', '西南', '西', '西北'];
+  return labels[Math.round(degrees / 45) % labels.length];
+}
+
 function decorateRecentQueries(recent = []) {
   return recent.map((item) => ({
     ...item,
@@ -1725,7 +1760,7 @@ function formatDistanceValue(value) {
 function formatWindSpeedValue(speed) {
   if (speed === null || speed === undefined || speed === '') return '--';
   const speedNum = Number(speed);
-  return Number.isFinite(speedNum) ? `${Math.round(speedNum)} km/h` : '--';
+  return Number.isFinite(speedNum) ? `${Number(speedNum.toFixed(1))} km/h` : '--';
 }
 
 function formatWindValue(direction, speed) {
