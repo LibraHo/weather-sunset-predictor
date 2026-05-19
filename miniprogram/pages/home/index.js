@@ -608,7 +608,7 @@ Page({
       const cards = {};
       rows.forEach((prediction, index) => {
         const period = prediction.period || prediction.type || items[index]?.type;
-        if (period) cards[period] = normalizePrediction(prediction, { ...query, period });
+        if (period) cards[period] = compactPredictionPreviewPayload(normalizePrediction(prediction, { ...query, period }));
       });
       if (cards[query.period]) return cards;
     } catch (error) {
@@ -617,13 +617,13 @@ Page({
 
     const raw = await this.callPredictionService(query);
     return {
-      [query.period]: normalizePrediction(raw, query)
+      [query.period]: compactPredictionPreviewPayload(normalizePrediction(raw, query))
     };
   },
 
   async prefetchPredictionPreviewPeriod(query) {
     const raw = await this.callPredictionService(query);
-    return normalizePrediction(raw, query);
+    return compactPredictionPreviewPayload(normalizePrediction(raw, query));
   },
 
   async recordRecentLocation(query) {
@@ -961,6 +961,120 @@ export function buildPredictionPreviewFromPrediction(prediction = {}, query = {}
     aod: weather.aod ?? weather.aerosolOpticalDepth
   };
   return buildCompletePredictionPreview(preview);
+}
+
+export function compactPredictionPreviewPayload(prediction = {}) {
+  const summary = prediction.summary;
+  return {
+    score: prediction.score ?? prediction.totalScore ?? prediction.finalScore,
+    quality: prediction.quality || prediction.status || null,
+    grade: prediction.grade || prediction.quality || prediction.level || null,
+    period: prediction.period || prediction.type || null,
+    type: prediction.type || prediction.period || null,
+    day: prediction.day || null,
+    date: prediction.date || prediction.referenceTime || null,
+    referenceTime: prediction.referenceTime || null,
+    bestWindow: prediction.bestWindow || prediction.bestViewingWindow || prediction.window || prediction.timeWindow || prediction.goldenHour || null,
+    mainTime: prediction.mainTime || prediction.eventTime || null,
+    eventTime: prediction.eventTime || null,
+    direction: prediction.direction || null,
+    sunDirection: prediction.sunDirection || null,
+    locationName: prediction.locationName || prediction.location || null,
+    location: prediction.location || prediction.locationName || null,
+    lat: prediction.lat ?? prediction.latitude ?? prediction.coordinate?.lat ?? null,
+    lon: prediction.lon ?? prediction.lng ?? prediction.longitude ?? prediction.coordinate?.lon ?? null,
+    scoreLabel: prediction.scoreLabel || null,
+    scoreDesc: prediction.scoreDesc || null,
+    conclusion: prediction.conclusion || null,
+    explanation: prediction.explanation || null,
+    summary: typeof summary === 'string'
+      ? summary
+      : (summary ? {
+        description: summary.description || '',
+        advice: summary.advice || '',
+        status: summary.status || summary.quality || null
+      } : null),
+    clouds: compactPredictionMetrics(prediction.clouds || prediction.cloudLayers || {}),
+    metrics: compactPredictionMetrics(prediction.metrics || {}),
+    weatherData: compactPredictionMetrics(prediction.weatherData || prediction.weather || {}),
+    breakdown: prediction.breakdown || null,
+    canvasAnalysis: prediction.canvasAnalysis || null,
+    lightPathAnalysis: compactLightPathAnalysis(prediction.lightPathAnalysis),
+    renderingAnalysis: prediction.renderingAnalysis || null,
+    lightPathGate: prediction.lightPathGate || null,
+    renderingAdjustment: prediction.renderingAdjustment || null,
+    cloudThickness: prediction.cloudThickness || null,
+    cloudThicknessAdjustment: prediction.cloudThicknessAdjustment || null,
+    thickHighCloudPenalty: prediction.thickHighCloudPenalty || null,
+    algorithm: prediction.algorithm || null,
+    cloudType: prediction.cloudType || null,
+    clearSunsetAdvice: prediction.clearSunsetAdvice || null
+  };
+}
+
+function compactLightPathAnalysis(lightPath = null) {
+  if (!lightPath || typeof lightPath !== 'object') return lightPath || null;
+  return {
+    score: lightPath.score,
+    azimuth: lightPath.azimuth,
+    occlusionProbability: lightPath.occlusionProbability,
+    explain: lightPath.explain,
+    directionalAnalysis: lightPath.directionalAnalysis ? {
+      direction: lightPath.directionalAnalysis.direction,
+      reason: lightPath.directionalAnalysis.reason
+    } : null
+  };
+}
+
+function compactPredictionMetrics(source = {}) {
+  if (!source || typeof source !== 'object') return {};
+  const keys = [
+    'temp',
+    'temperature',
+    'temperature_2m',
+    'windSpeed',
+    'wind',
+    'wind_speed_10m',
+    'windDirection',
+    'windDeg',
+    'wind_direction_10m',
+    'highCloud',
+    'highClouds',
+    'highCloudCover',
+    'cloudHigh',
+    'high',
+    'midCloud',
+    'midClouds',
+    'midCloudCover',
+    'cloudMid',
+    'mid',
+    'lowCloud',
+    'lowClouds',
+    'lowCloudCover',
+    'cloudLow',
+    'low',
+    'visibility',
+    'visibilityKm',
+    'humidity',
+    'relativeHumidity',
+    'pressure',
+    'surfacePressure',
+    'surface_pressure',
+    'precipitation',
+    'precip',
+    'rain',
+    'showers',
+    'aod',
+    'aerosolOpticalDepth',
+    'cloudCover',
+    'provider',
+    'providerMeta'
+  ];
+  return keys.reduce((result, key) => {
+    const value = source[key];
+    if (value !== undefined && value !== null && value !== '') result[key] = value;
+    return result;
+  }, {});
 }
 
 function humanizePredictionConclusion(value, score, periodLabel = '霞光') {
