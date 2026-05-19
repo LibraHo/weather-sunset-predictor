@@ -58,7 +58,6 @@ Component({
         methodology: '/pages/methodology/index',
         map: `/pages/map/index?period=${this.properties.period || 'sunset'}`,
         gallery: '/pages/gallery/index',
-        api: '/pages/methodology/index?section=api',
         upload: '/pages/upload/index'
       };
       const url = routes[target];

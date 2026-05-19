@@ -1,5 +1,22 @@
 const ORDER = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+const MAX_CANVAS_RENDER_SIZE = 260;
+const IMAGE_CACHE_LIMIT = 12;
 let cachedPixelRatio = null;
+const imageCache = new Map();
+
+function nowMs() {
+  if (typeof performance !== 'undefined' && typeof performance.now === 'function') return performance.now();
+  return Date.now();
+}
+
+function emitPaintProfile(options = {}, stage, payload = {}) {
+  if (typeof options.onProfile !== 'function') return;
+  try {
+    options.onProfile({ stage, ...payload });
+  } catch (error) {
+    // Profiling must never affect rendering.
+  }
+}
 
 function getCachedPixelRatio(wxApi) {
   if (cachedPixelRatio) return cachedPixelRatio;
@@ -163,14 +180,15 @@ export function paintRadarCloudCanvas(canvasId, directions, options = {}, size =
   if (!canvasId) return false;
   const wxApi = options.wxApi || options.wx || globalThis.wx;
   if (paintRadarCloudCanvas2d(canvasId, directions, { ...options, wxApi }, size)) return true;
-  if (paintRadarCloudCanvasLegacy(canvasId, directions, wxApi, size)) return true;
+  if (paintRadarCloudCanvasLegacy(canvasId, directions, wxApi, size, options)) return true;
   return false;
 }
 
 export function paintRadarCloudCanvas2d(canvasId, directions, options = {}, size = 180) {
   const wxApi = options.wxApi || options.wx || globalThis.wx;
   if (!wxApi?.createSelectorQuery) return false;
-  const retry = options.retry ?? 4;
+  const retry = options.retry ?? 1;
+  const requestStartedAt = options.requestStartedAt ?? nowMs();
   const query = wxApi.createSelectorQuery();
   const scope = options.component || options.page;
   const scopedQuery = scope && query.in ? query.in(scope) : query;
@@ -180,23 +198,31 @@ export function paintRadarCloudCanvas2d(canvasId, directions, options = {}, size
     .select(`#${canvasId}`)
     .fields({ node: true, size: true })
     .exec((res = []) => {
+      const execStartedAt = nowMs();
       const canvas = res?.[0]?.node;
       if (!canvas?.getContext) {
+        emitPaintProfile(options, 'canvas.missing', {
+          canvasId,
+          retry,
+          waitMs: roundMs(execStartedAt - requestStartedAt)
+        });
         if (retry > 0) {
           setTimeout(() => {
-            paintRadarCloudCanvas2d(canvasId, directions, { ...options, wxApi, retry: retry - 1 }, size);
+            paintRadarCloudCanvas2d(canvasId, directions, { ...options, wxApi, retry: retry - 1, requestStartedAt }, size);
           }, 120);
           return;
         }
-        paintRadarCloudCanvasLegacy(canvasId, directions, wxApi, size);
+        paintRadarCloudCanvasLegacy(canvasId, directions, wxApi, size, options);
         return;
       }
 
       const width = Math.max(1, Math.round(res[0].width || size));
       const height = Math.max(1, Math.round(res[0].height || width));
       const dpr = getCachedPixelRatio(wxApi);
-      const renderSize = Math.max(size, Math.round(Math.min(width, height) * dpr));
-      const image = buildRadarCloudImageData(directions, renderSize);
+      const renderSize = Math.min(MAX_CANVAS_RENDER_SIZE, Math.max(size, Math.round(Math.min(width, height) * dpr)));
+      const imageStartedAt = nowMs();
+      const { image, cacheHit } = getCachedRadarCloudImageData(directions, renderSize);
+      const imageBuiltAt = nowMs();
       canvas.width = image.width;
       canvas.height = image.height;
 
@@ -205,6 +231,19 @@ export function paintRadarCloudCanvas2d(canvasId, directions, options = {}, size
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.putImageData(createCanvasImageData(ctx, image), 0, 0);
       softenRadarCloudCanvas(ctx, canvas);
+      const doneAt = nowMs();
+      emitPaintProfile(options, 'canvas.done', {
+        canvasId,
+        width,
+        height,
+        dpr,
+        renderSize,
+        cacheHit,
+        waitMs: roundMs(execStartedAt - requestStartedAt),
+        imageMs: roundMs(imageBuiltAt - imageStartedAt),
+        drawMs: roundMs(doneAt - imageBuiltAt),
+        totalMs: roundMs(doneAt - requestStartedAt)
+      });
     });
 
   return true;
@@ -221,9 +260,11 @@ function softenRadarCloudCanvas(ctx, canvas) {
   ctx.globalCompositeOperation = previousComposite || 'source-over';
 }
 
-function paintRadarCloudCanvasLegacy(canvasId, directions, wxApi = globalThis.wx, size = 180) {
+function paintRadarCloudCanvasLegacy(canvasId, directions, wxApi = globalThis.wx, size = 180, options = {}) {
   if (!wxApi?.canvasPutImageData) return false;
-  const image = buildRadarCloudImageData(directions, size);
+  const startedAt = nowMs();
+  const { image, cacheHit } = getCachedRadarCloudImageData(directions, size);
+  const imageBuiltAt = nowMs();
   wxApi.canvasPutImageData({
     canvasId,
     x: 0,
@@ -232,7 +273,47 @@ function paintRadarCloudCanvasLegacy(canvasId, directions, wxApi = globalThis.wx
     height: image.height,
     data: image.data
   });
+  emitPaintProfile(options, 'canvas.legacy.done', {
+    canvasId,
+    renderSize: image.width,
+    cacheHit,
+    imageMs: roundMs(imageBuiltAt - startedAt),
+    totalMs: roundMs(nowMs() - startedAt)
+  });
   return true;
+}
+
+function getCachedRadarCloudImageData(directions, size) {
+  const key = `${size}:${buildRadarCloudCacheSignature(directions)}`;
+  const cached = imageCache.get(key);
+  if (cached) {
+    imageCache.delete(key);
+    imageCache.set(key, cached);
+    return { image: cached, cacheHit: true };
+  }
+
+  const image = buildRadarCloudImageData(directions, size);
+  imageCache.set(key, image);
+  while (imageCache.size > IMAGE_CACHE_LIMIT) {
+    imageCache.delete(imageCache.keys().next().value);
+  }
+  return { image, cacheHit: false };
+}
+
+function buildRadarCloudCacheSignature(directions = []) {
+  return normalizeRadarDirections(directions)
+    .map((item) => `${item.direction}:${roundCloudValue(item.low)},${roundCloudValue(item.mid)},${roundCloudValue(item.high)}`)
+    .join('|');
+}
+
+function roundCloudValue(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return 0;
+  return Math.round(number * 10) / 10;
+}
+
+function roundMs(value) {
+  return Math.round(Number(value) * 10) / 10;
 }
 
 function createCanvasImageData(ctx, image) {

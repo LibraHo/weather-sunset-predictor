@@ -58,6 +58,7 @@
   position: relative;
   flex: 1;
   min-width: 0;
+  z-index: 5;
 }
 
 .location-input {
@@ -167,6 +168,63 @@
   box-shadow: 0 12rpx 26rpx rgba(251, 146, 60, 0.22);
 }
 
+.location-suggestion-dropdown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% - 2rpx);
+  z-index: 20;
+  max-height: 360rpx;
+  overflow-y: auto;
+  box-sizing: border-box;
+  border: 2rpx solid rgba(127, 83, 29, 0.14);
+  border-top: 0;
+  border-radius: 0 0 18rpx 18rpx;
+  background: rgba(255, 252, 247, 0.98);
+  box-shadow: 0 22rpx 44rpx rgba(92, 58, 20, 0.16);
+}
+
+.location-suggestion-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12rpx;
+  box-sizing: border-box;
+  min-height: 76rpx;
+  padding: 16rpx 20rpx;
+  border-bottom: 2rpx solid rgba(127, 83, 29, 0.10);
+}
+
+.location-suggestion-item:last-child {
+  border-bottom: 0;
+}
+
+.location-suggestion-pin {
+  flex: none;
+  width: 30rpx;
+  color: #e92f8a;
+  font-size: 24rpx;
+  line-height: 1.35;
+}
+
+.location-suggestion-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.location-suggestion-name {
+  color: #3d3028;
+  font-size: 28rpx;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.location-suggestion-meta {
+  margin-top: 4rpx;
+  color: rgba(89, 67, 54, 0.62);
+  font-size: 22rpx;
+  line-height: 1.25;
+}
+
 .location-search.theme-dark {
   border-color: rgba(255, 255, 255, 0.10);
   background: rgba(18, 28, 52, 0.86);
@@ -199,4 +257,22 @@
 
 .location-search.theme-dark .pin-stem {
   background: linear-gradient(180deg, #f5c87a, rgba(245, 200, 122, 0.24));
+}
+
+.location-search.theme-dark .location-suggestion-dropdown {
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(14, 24, 46, 0.98);
+  box-shadow: 0 24rpx 48rpx rgba(0, 0, 0, 0.34);
+}
+
+.location-search.theme-dark .location-suggestion-item {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.location-search.theme-dark .location-suggestion-name {
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.location-search.theme-dark .location-suggestion-meta {
+  color: rgba(226, 232, 240, 0.64);
 }

@@ -17,7 +17,6 @@
           <view class="home-view-option" data-target="methodology" bindtap="navigateFeature">火烧云计算方法</view>
           <view class="home-view-option" data-target="map" bindtap="navigateFeature">火烧云地图</view>
           <view class="home-view-option" data-target="gallery" bindtap="navigateFeature">分享地图</view>
-          <view class="home-view-option" data-target="api" bindtap="navigateFeature">API接入</view>
           <view class="home-view-option" data-target="upload" bindtap="navigateFeature">上传照片</view>
         </view>
       </view>
@@ -61,18 +60,7 @@
     <button class="settings-done" bindtap="closeSettings">完成</button>
   </view>
 
-  <location-search value="{{locationText}}" locating="{{locating}}" favoriteLoading="{{favoriteLoading}}" loading="{{loading}}" theme="{{resolvedThemeMode}}" bind:change="onLocationChange" bind:confirm="onSearch" bind:locate="onUseCurrentLocation" bind:favorite="onAddCurrentFavorite" />
-
-  <view class="location-candidate-card xiake-card" wx:if="{{locationCandidates.length}}">
-    <view class="location-candidate-title">请选择具体地点</view>
-    <view class="location-candidate-hint">这个名称可能对应多个位置，选中后会继续查询。</view>
-    <view class="location-candidate-list">
-      <view class="location-candidate-item tap-feedback" hover-class="card-tap-hover" hover-stay-time="80" wx:for="{{locationCandidates}}" wx:key="key" data-index="{{index}}" bindtap="selectLocationCandidate">
-        <view class="location-candidate-name">{{item.name}}</view>
-        <view class="location-candidate-meta">{{item.meta}}</view>
-      </view>
-    </view>
-  </view>
+  <location-search value="{{locationText}}" locating="{{locating}}" favoriteLoading="{{favoriteLoading}}" loading="{{loading}}" theme="{{resolvedThemeMode}}" candidates="{{locationCandidates}}" bind:change="onLocationChange" bind:confirm="onSearch" bind:locate="onUseCurrentLocation" bind:favorite="onAddCurrentFavorite" bind:selectcandidate="selectLocationCandidate" />
 
   <view class="home-search-loading xiake-card" wx:if="{{loading}}" role="status" aria-live="polite">
     <view class="home-search-spinner" aria-hidden="true"></view>
@@ -93,7 +81,7 @@
     <view class="footer-visitor">
       <text class="footer-visitor-icon">👥</text>
       <text>访问人数：</text>
-      <text class="footer-visitor-number">--</text>
+      <text class="footer-visitor-number">{{visitorCountText}}</text>
     </view>
   </view>
 
@@ -351,12 +339,11 @@
   </view>
 
   <view class="home-experience-strip" wx:if="{{weatherPreview.visible}}">
-    <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="methodology" bindtap="navigateFeature">方法</view>
-    <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="map" bindtap="navigateFeature">地图</view>
-    <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="gallery" bindtap="navigateFeature">照片</view>
-    <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="api" bindtap="navigateFeature">API</view>
-    <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="upload" bindtap="navigateFeature">上传</view>
-  </view>
+        <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="methodology" bindtap="navigateFeature">方法</view>
+        <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="map" bindtap="navigateFeature">地图</view>
+        <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="gallery" bindtap="navigateFeature">照片</view>
+        <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="upload" bindtap="navigateFeature">上传</view>
+      </view>
 
   <view class="home-section-head" wx:if="{{weatherPreview.visible}}">
     <view class="section-title">最近地点</view>

@@ -4,7 +4,8 @@ Component({
     locating: { type: Boolean, value: false },
     favoriteLoading: { type: Boolean, value: false },
     loading: { type: Boolean, value: false },
-    theme: { type: String, value: 'light' }
+    theme: { type: String, value: 'light' },
+    candidates: { type: Array, value: [] }
   },
 
   methods: {
@@ -22,6 +23,12 @@ Component({
 
     onFavorite() {
       this.triggerEvent('favorite');
+    },
+
+    onSelectCandidate(event) {
+      this.triggerEvent('selectcandidate', {
+        index: event.currentTarget.dataset.index
+      });
     }
   }
 });

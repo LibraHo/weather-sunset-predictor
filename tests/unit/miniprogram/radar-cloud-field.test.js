@@ -223,4 +223,121 @@ describe('miniprogram radar cloud field renderer', () => {
     expect(drawImage).toHaveBeenCalledWith(canvas, 0, 0);
     expect(wxApi.canvasPutImageData).not.toHaveBeenCalled();
   });
+
+  test('caps high-DPR canvas render size so toggles avoid large pixel rebuilds', () => {
+    const putImageData = jest.fn();
+    const clearRect = jest.fn();
+    const createImageData = jest.fn((width, height) => ({ width, height, data: new Uint8ClampedArray(width * height * 4) }));
+    const canvas = {
+      width: 0,
+      height: 0,
+      getContext: jest.fn(() => ({ clearRect, createImageData, putImageData }))
+    };
+    const exec = jest.fn((callback) => callback([{ node: canvas, width: 218, height: 218 }]));
+    const fields = jest.fn(() => ({ exec }));
+    const select = jest.fn(() => ({ fields }));
+    const query = { in: jest.fn(() => ({ select })), select };
+    const wxApi = {
+      createSelectorQuery: jest.fn(() => query),
+      getWindowInfo: jest.fn(() => ({ pixelRatio: 3 }))
+    };
+    const profiles = [];
+
+    paintRadarCloudCanvas2d('homeRadarCloudField', directions, { wxApi, onProfile: (payload) => profiles.push(payload) }, 180);
+
+    expect(canvas.width).toBe(260);
+    expect(canvas.height).toBe(260);
+    expect(profiles.at(-1)).toMatchObject({
+      stage: 'canvas.done',
+      renderSize: 260
+    });
+  });
+
+  test('reuses generated radar image data for repeated period toggles', () => {
+    const uniqueDirections = directions.map((item) => ({ ...item, highCloud: item.highCloud + 1 }));
+    const putImageData = jest.fn();
+    const clearRect = jest.fn();
+    const createImageData = jest.fn((width, height) => ({ width, height, data: new Uint8ClampedArray(width * height * 4) }));
+    const canvas = {
+      width: 0,
+      height: 0,
+      getContext: jest.fn(() => ({ clearRect, createImageData, putImageData }))
+    };
+    const exec = jest.fn((callback) => callback([{ node: canvas, width: 120, height: 120 }]));
+    const fields = jest.fn(() => ({ exec }));
+    const select = jest.fn(() => ({ fields }));
+    const query = { in: jest.fn(() => ({ select })), select };
+    const wxApi = {
+      createSelectorQuery: jest.fn(() => query),
+      getWindowInfo: jest.fn(() => ({ pixelRatio: 2 }))
+    };
+    const profiles = [];
+
+    paintRadarCloudCanvas2d('homeRadarCloudField', uniqueDirections, { wxApi, onProfile: (payload) => profiles.push(payload) }, 180);
+    paintRadarCloudCanvas2d('homeRadarCloudField', uniqueDirections, { wxApi, onProfile: (payload) => profiles.push(payload) }, 180);
+
+    expect(profiles.filter((item) => item.stage === 'canvas.done').map((item) => item.cacheHit)).toEqual([false, true]);
+    expect(putImageData).toHaveBeenCalledTimes(2);
+  });
+
+  test('falls back quickly when Canvas 2D node is unavailable', () => {
+    jest.useFakeTimers();
+    const canvasPutImageData = jest.fn();
+    const exec = jest.fn((callback) => callback([{}]));
+    const fields = jest.fn(() => ({ exec }));
+    const select = jest.fn(() => ({ fields }));
+    const query = { in: jest.fn(() => ({ select })), select };
+    const wxApi = {
+      createSelectorQuery: jest.fn(() => query),
+      canvasPutImageData
+    };
+    const profiles = [];
+
+    const painted = paintRadarCloudCanvas2d('homeRadarCloudField', directions, { wxApi, onProfile: (payload) => profiles.push(payload) }, 64);
+    jest.runOnlyPendingTimers();
+
+    expect(painted).toBe(true);
+    expect(exec).toHaveBeenCalledTimes(2);
+    expect(canvasPutImageData).toHaveBeenCalledTimes(1);
+    expect(profiles.map((item) => item.stage)).toEqual(['canvas.missing', 'canvas.missing', 'canvas.legacy.done']);
+    jest.useRealTimers();
+  });
+
+  test('keeps canvas retry timing anchored to the first request', () => {
+    jest.useFakeTimers();
+    const nowValues = [0, 6, 126, 130, 131, 132, 133];
+    const nowSpy = jest.spyOn(performance, 'now').mockImplementation(() => nowValues.shift() ?? 133);
+    const putImageData = jest.fn();
+    const clearRect = jest.fn();
+    const createImageData = jest.fn((width, height) => ({ width, height, data: new Uint8ClampedArray(width * height * 4) }));
+    const canvas = {
+      width: 0,
+      height: 0,
+      getContext: jest.fn(() => ({ clearRect, createImageData, putImageData }))
+    };
+    const exec = jest
+      .fn()
+      .mockImplementationOnce((callback) => callback([{}]))
+      .mockImplementationOnce((callback) => callback([{ node: canvas, width: 64, height: 64 }]));
+    const fields = jest.fn(() => ({ exec }));
+    const select = jest.fn(() => ({ fields }));
+    const query = { in: jest.fn(() => ({ select })), select };
+    const wxApi = {
+      createSelectorQuery: jest.fn(() => query),
+      getWindowInfo: jest.fn(() => ({ pixelRatio: 1 }))
+    };
+    const profiles = [];
+
+    paintRadarCloudCanvas2d('homeRadarCloudField', directions, { wxApi, onProfile: (payload) => profiles.push(payload) }, 64);
+    jest.runOnlyPendingTimers();
+
+    const doneProfile = profiles.find((item) => item.stage === 'canvas.done');
+    expect(doneProfile).toMatchObject({
+      waitMs: 126,
+      totalMs: 132
+    });
+
+    nowSpy.mockRestore();
+    jest.useRealTimers();
+  });
 });

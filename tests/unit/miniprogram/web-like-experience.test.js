@@ -58,12 +58,13 @@ describe('miniprogram web-like experience shell', () => {
     expect(wxml).toContain('location-search');
     expect(wxml).toContain('home-web-spacer');
     expect(wxml).toContain('home-footer-card');
+    expect(wxml).toContain('visitorCountText');
     expect(wxml).toContain('weatherPreview.visible');
     expect(wxml).toContain('data-target="methodology"');
     expect(wxml).toContain('data-target="map"');
     expect(wxml).toContain('data-target="gallery"');
-    expect(wxml).toContain('data-target="api"');
     expect(wxml).toContain('data-target="upload"');
+    expect(wxml).not.toContain('data-target="api"');
     expect(wxml).toContain('settings-panel');
     expect(wxml).toContain('settings-done');
     expect(wxml).toContain('data-value="zh-CN"');
@@ -88,8 +89,12 @@ describe('miniprogram web-like experience shell', () => {
     expect(js).toContain("map: `/pages/map/index?period=${this.data.period}`");
     expect(js).toContain("gallery: '/pages/gallery/index'");
     expect(js).toContain("upload: '/pages/upload/index'");
+    expect(js).not.toContain("api: '/pages/methodology/index?section=api'");
     expect(js).toContain("options.weatherTest === '1'");
     expect(js).toContain('buildDefaultWeatherPreview');
+    expect(js).toContain("import { formatVisitorCount, incrementVisitorCount } from '../../services/visitor.js'");
+    expect(js).toContain('this.refreshVisitorCount();');
+    expect(js).toContain('async refreshVisitorCount()');
     expect(js).toContain('buildTestWeatherPreview');
 
     expect(wxss).toContain('#f6efe6');
@@ -117,12 +122,18 @@ describe('miniprogram web-like experience shell', () => {
 
   test('location shortcuts query immediately instead of requiring a second tap', () => {
     const locationWxml = read('miniprogram/components/location-search/index.wxml');
+    const homeWxml = read('miniprogram/pages/home/index.wxml');
     const homeJs = read('miniprogram/pages/home/index.js');
 
     expect(locationWxml).toContain('bindtap="onLocate"');
     expect(locationWxml).toContain('bindtap="onFavorite"');
     expect(locationWxml).toContain('bindconfirm="onConfirm"');
     expect(locationWxml).toContain('bindtap="onConfirm"');
+    expect(locationWxml).toContain('location-suggestion-dropdown');
+    expect(locationWxml).toContain('wx:if="{{candidates.length}}"');
+    expect(locationWxml).toContain('bindtap="onSelectCandidate"');
+    expect(homeWxml).toContain('candidates="{{locationCandidates}}"');
+    expect(homeWxml).toContain('bind:selectcandidate="selectLocationCandidate"');
     expect(locationWxml).toMatch(/class="favorite-icon"[\s\S]*bindtap="onFavorite"/);
     expect(locationWxml).toMatch(/class="pin-location-button"[\s\S]*bindtap="onLocate"/);
     expect(homeJs).toMatch(/async onUseCurrentLocation\(\)[\s\S]*await this\.onSearch\(\);/);
@@ -132,6 +143,7 @@ describe('miniprogram web-like experience shell', () => {
     expect(homeJs).toMatch(/async resolveLocation\(locationText\)[\s\S]*if \(this\.data\.coordinate\)/);
     expect(homeJs).toContain('locationCandidates');
     expect(homeJs).toContain('selectLocationCandidate(event)');
+    expect(homeJs).toContain('event.detail?.index');
   });
 
   test('tap targets provide native press feedback across the mini-program surface', () => {

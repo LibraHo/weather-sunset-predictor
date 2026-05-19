@@ -97,7 +97,8 @@ describe('miniprogram result page web parity', () => {
     expect(wxml).not.toContain('radar-detail-strip');
     expect(js).toContain('buildRadarRings');
     expect(js).toContain('cloudGradients: buildRadarCloudGradients(directions)');
-    expect(js).toContain("paintRadarCloudCanvas('resultRadarCloudField', directions, { page: this })");
+    expect(js).toContain("paintRadarCloudCanvas('resultRadarCloudField', directions, {");
+    expect(js).toContain("onProfile: (payload) => logMiniPerf('result.radar.canvas'");
     expect(js).not.toContain('buildRadarCloudBlobs');
     expect(js).toContain('buildRadarSunEvents');
     expect(wxss).toContain('.radar-cloud-field');

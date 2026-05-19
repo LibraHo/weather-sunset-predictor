@@ -15,7 +15,6 @@
           <view class="home-view-option tap-feedback {{current === 'methodology' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="methodology" bindtap="navigateFeature">火烧云算法</view>
           <view class="home-view-option tap-feedback {{current === 'map' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="map" bindtap="navigateFeature">火烧云地图</view>
           <view class="home-view-option tap-feedback {{current === 'gallery' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="gallery" bindtap="navigateFeature">分享地图</view>
-          <view class="home-view-option tap-feedback {{current === 'api' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="api" bindtap="navigateFeature">API接入</view>
           <view class="home-view-option tap-feedback {{current === 'upload' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="upload" bindtap="navigateFeature">上传照片</view>
         </view>
       </view>
