@@ -81,7 +81,7 @@
     <view class="footer-visitor">
       <text class="footer-visitor-icon">👥</text>
       <text>访问人数：</text>
-      <text class="footer-visitor-number">--</text>
+      <text class="footer-visitor-number">{{visitorCountText}}</text>
     </view>
   </view>
 

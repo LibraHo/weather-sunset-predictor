@@ -1,6 +1,7 @@
 import { reverseGeocode, searchLocations } from '../../services/geocoding.js';
 import { getEnhancedPrediction, getEnhancedPredictionBatch, getWeatherForecast } from '../../services/prediction.js';
 import { addFavorite, addRecentLocation, listRecentLocations } from '../../services/user.js';
+import { formatVisitorCount, incrementVisitorCount } from '../../services/visitor.js';
 import { applyPageSettings, readAppSettings, saveAppSettings as persistAppSettings } from '../../utils/app-settings.js';
 import { buildRadarCloudGradients, paintRadarCloudCanvas } from '../../utils/radar-cloud-field.js';
 
@@ -42,7 +43,8 @@ Page({
     predictionPeriodCards: {},
     predictionPreviewLoading: false,
     recentQueries: [],
-    favorites: []
+    favorites: [],
+    visitorCountText: '--'
   },
 
   onLoad(options = {}) {
@@ -57,6 +59,7 @@ Page({
       });
     }
     this.refreshSavedLists();
+    this.refreshVisitorCount();
   },
 
   onShow() {
@@ -258,6 +261,17 @@ Page({
       });
       this.paintPredictionRadarCloudField({ source: 'home.toggle.fallback', startedAt: tapStartedAt });
     });
+  },
+
+  async refreshVisitorCount() {
+    if (this.visitorCountRequested) return;
+    this.visitorCountRequested = true;
+    try {
+      const count = await incrementVisitorCount();
+      this.setData({ visitorCountText: formatVisitorCount(count) });
+    } catch (error) {
+      this.setData({ visitorCountText: '--' });
+    }
   },
   switchWeatherView(event) {
     const view = event.currentTarget.dataset.view;

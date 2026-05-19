@@ -58,6 +58,7 @@ describe('miniprogram web-like experience shell', () => {
     expect(wxml).toContain('location-search');
     expect(wxml).toContain('home-web-spacer');
     expect(wxml).toContain('home-footer-card');
+    expect(wxml).toContain('visitorCountText');
     expect(wxml).toContain('weatherPreview.visible');
     expect(wxml).toContain('data-target="methodology"');
     expect(wxml).toContain('data-target="map"');
@@ -91,6 +92,9 @@ describe('miniprogram web-like experience shell', () => {
     expect(js).not.toContain("api: '/pages/methodology/index?section=api'");
     expect(js).toContain("options.weatherTest === '1'");
     expect(js).toContain('buildDefaultWeatherPreview');
+    expect(js).toContain("import { formatVisitorCount, incrementVisitorCount } from '../../services/visitor.js'");
+    expect(js).toContain('this.refreshVisitorCount();');
+    expect(js).toContain('async refreshVisitorCount()');
     expect(js).toContain('buildTestWeatherPreview');
 
     expect(wxss).toContain('#f6efe6');
