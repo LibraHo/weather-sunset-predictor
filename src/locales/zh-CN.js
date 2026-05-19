@@ -74,7 +74,7 @@ export default {
     methodology: {
       title: '火烧云计算方法',
       intro: '火烧云指数由四个关键因子综合计算，帮助你快速判断当天是否值得蹲守晚霞。',
-      versionLabel: '算法版本：2026.05.18-cloud-thickness-evidence-v1',
+      versionLabel: '算法版本：2026.05.19-additive-carrier-light-gate-v1',
       versionDesc: '本版把云厚判断改为连续证据评分：直射、漫射、水汽、低云、天气码和太阳方向开口共同决定云厚修正，不再用单个水汽信号直接打穿分数。',
       changelogTitle: "版本更新记录",
       changelogHint: "近三个月内的算法更新都会放在这里，可滚动回看原因、影响和验证方式",
@@ -191,7 +191,7 @@ export default {
           level1: '中高云载体明确：高云很充足，或中高云同时存在且太阳方向有透光开口，低云少、无降水且空气不灰',
           level2: '云很少时，适度气溶胶必须被太阳方向光路激活，才会作为弱载体参与评分',
           level3: '如果云幕很厚、重霾或沙尘明显，颜色会变暗变灰，仍按衰减和限制处理',
-          formula: '载体分 = max(云层载体, 气溶胶弱载体 × 光路激活)；最终分 = 载体分×0.8 + 光路分×0.2，再按显色条件修正'
+          formula: '载体分 = 云层画布基础 + 载体加分 - 灰幕/厚云扣分；最终分 = 载体分 × 光路门控 + 显色小幅修正'
         },
         precipPenalty: {
           title: '6. 降水惩罚系数',
@@ -206,8 +206,8 @@ export default {
         finalFormula: {
           title: '7. 综合计算公式',
           subtitle: 'Final Score Formula',
-          desc: '最终得分由画布评分和光路评分加权计算，再乘以惩罚系数。',
-          formula: '综合得分 = (画布分 × 0.8 + 光路分 × 0.2) × 低云系数 × 降水系数',
+          desc: '最终得分由画布载体分经过太阳方向光路门控后，再叠加小幅显色修正。',
+          formula: '综合得分 = 载体分 × 光路门控 + 显色修正',
           highCloudCap: '高云主导且低云少时，避免把好画布误判为低分'
         }
       }
@@ -321,11 +321,11 @@ export default {
       title: '分数明细',
       viewDetails: '查看评分明细',
       finalDisplayed: '最终展示分',
-      baseFormula: '基础分 = 载体 ×0.8 + 光路 ×0.2',
-      baseHint: '载体与光路融合后的基础分',
+      baseFormula: '基础分 = 载体 × 光路门控',
+      baseHint: '太阳方向光路门控后的载体基础分',
       canvasHint: '高云/中云提供主要色彩载体，适度薄雾可提供弱载体，低云会遮挡',
       lightPathHint: '太阳光是否能照到云层',
-      finalFormula: '最终分 = 基础分 × 修正系数',
+      finalFormula: '最终分 = 基础分 + 显色修正',
       renderingHint: '湿度、能见度影响颜色表现',
       aerosolHint: '适度气溶胶增强橙红散射，过多则发灰',
       ledger: {

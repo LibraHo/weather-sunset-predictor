@@ -36,7 +36,7 @@ apiAccess: 'Accesso API'
     "methodology": {
       "title": "Come viene calcolato il punteggio",
       "intro": "L'indice nuvole rosse combina quattro fattori chiave per stimare se vale la pena osservare il tramonto.",
-      "versionLabel": "Algorithm version: 2026.05.18-cloud-thickness-evidence-v1",
+      "versionLabel": "Algorithm version: 2026.05.19-additive-carrier-light-gate-v1",
       "versionDesc": "This version makes fire-cloud analysis a stable four-factor summary: cloud carrier, light path, air rendering, and limits. The scoring formula is unchanged.",
       changelogTitle: "Cronologia versioni",
       changelogHint: "Gli aggiornamenti degli ultimi tre mesi sono qui; scorri per rivedere motivo, impatto e validazione",

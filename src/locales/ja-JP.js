@@ -67,7 +67,7 @@ apiAccess: 'API接続'
     "methodology": {
       "title": "焼き雲スコアの計算方法",
       "intro": "焼き雲指数は4つの主要因子を組み合わせて計算され、その日の夕焼け観賞が価値あるかどうかを素早く判断するのに役立ちます。",
-      "versionLabel": "アルゴリズム版：2026.05.18-cloud-thickness-evidence-v1",
+      "versionLabel": "アルゴリズム版：2026.05.19-additive-carrier-light-gate-v1",
       "versionDesc": "火焼け雲分析を、雲の載体・光路条件・空気の発色・制限要因の4項目に固定しました。スコア式は変わりません。",
       changelogTitle: "バージョン更新履歴",
       changelogHint: "直近3か月のアルゴリズム更新をここにまとめています。スクロールして理由、影響、検証内容を確認できます",
@@ -199,8 +199,8 @@ apiAccess: 'API接続'
         "finalFormula": {
           "title": "7. 総合計算式",
           "subtitle": "Final Score Formula",
-          "desc": "最終スコアはキャンバス評価と光路評価を加重計算し、ペナルティ係数を乗じて算出。",
-          "formula": "総合スコア = (キャンバススコア × 0.8 + 光路スコア × 0.2) × 下層雲係数 × 降水係数",
+          "desc": "Final score applies the sun-direction light-path gate to the carrier score, then adds a small rendering adjustment.",
+          "formula": "Final Score = Carrier Score × Light-Path Gate + Rendering Adjustment",
           "highCloudCap": "上層雲が多く低い雲が少ない場合、良い色づきの土台として評価します"
         }
       }
@@ -298,8 +298,8 @@ apiAccess: 'API接続'
       "title": "スコア詳細",
       "viewDetails": "スコア詳細を見る",
       "finalDisplayed": "最終表示スコア",
-      "baseFormula": "基礎点 = キャンバス ×0.8 + 光路 ×0.2",
-      "baseHint": "雲と光路を組み合わせた基礎点",
+      "baseFormula": "Base score = carrier × light-path gate",
+      "baseHint": "Base score after applying the sun-direction light-path gate",
       "canvasHint": "高層/中層雲は色を受け、低層雲は遮ることがあります",
       "lightPathHint": "日光が雲まで届くかどうか",
       "finalFormula": "最終点 = 基礎点 × 補正係数",

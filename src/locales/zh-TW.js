@@ -67,7 +67,7 @@ const translations = {
     "methodology": {
       "title": "火燒雲計算方法",
       "intro": "火燒雲指數由四個關鍵因子綜合計算，幫助你快速判斷當天是否值得守候晚霞。",
-      "versionLabel": "算法版本：2026.05.18-cloud-thickness-evidence-v1",
+      "versionLabel": "算法版本：2026.05.19-additive-carrier-light-gate-v1",
       "versionDesc": "本版將雲層厚度改為連續證據評分：直射、漫射、水汽、低雲、天氣碼和太陽方向開口共同決定修正，不再用單一水汽訊號直接壓低分數。",
       changelogTitle: "版本更新記錄",
       changelogHint: "近三個月內的算法更新都會放在這裡，可捲動回看原因、影響和驗證方式",
@@ -184,7 +184,7 @@ const translations = {
           level1: '中高雲載體明確：高雲很充足，或中高雲同時存在且太陽方向有透光開口，低雲少、無降水且空氣不灰',
           level2: '雲很少時，適度氣溶膠必須被太陽方向光路激活，才會作為弱載體參與評分',
           level3: '如果雲幕很厚、重霾或沙塵明顯，顏色會變暗變灰，仍按衰減和限制處理',
-          formula: '載體分 = max(雲層載體, 氣溶膠弱載體 × 光路激活)；最終分 = 載體分×0.8 + 光路分×0.2，再按顯色條件修正'
+          formula: '載體分 = 雲層畫布基礎 + 載體加分 - 灰幕／厚雲扣分；最終分 = 載體分 × 光路門控 + 顯色小幅修正'
         },
         "precipPenalty": {
           "title": "6. 降水懲罰係數",
@@ -298,11 +298,11 @@ const translations = {
       "title": "評分明細",
       "viewDetails": "查看評分明細",
       "finalDisplayed": "最終顯示分",
-      "baseFormula": "基礎分 = 載體 ×0.8 + 光路 ×0.2",
-      "baseHint": "載體與光路融合後的基礎分",
+      "baseFormula": "基礎分 = 載體 × 光路門控",
+      "baseHint": "太陽方向光路門控後的載體基礎分",
       "canvasHint": "高雲/中雲提供主要色彩載體，適度薄霧可提供弱載體，低雲可能遮擋",
       "lightPathHint": "太陽光是否能照到雲層",
-      "finalFormula": "最終分 = 基礎分 × 修正係數",
+      "finalFormula": "最終分 = 基礎分 + 顯色修正",
       "renderingHint": "濕度與能見度影響色彩表現",
       "aerosolHint": "適度氣溶膠增強橙紅散射，過多則發灰",
       "ledger": {

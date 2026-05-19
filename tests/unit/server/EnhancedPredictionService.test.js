@@ -818,7 +818,7 @@ describe('EnhancedPredictionService', () => {
       expect(result.cloudThickness.reasons).toContain('dense_upper_cloud_carrier_softened');
       expect(result.algorithm).toMatchObject({
         name: 'EnhancedPredictionService',
-        version: '2026.05.18-cloud-thickness-evidence-v1'
+        version: '2026.05.19-additive-carrier-light-gate-v1'
       });
       expect(result.score).toBeGreaterThanOrEqual(50);
       expect(result.score).toBeLessThanOrEqual(60);
@@ -880,8 +880,11 @@ describe('EnhancedPredictionService', () => {
       });
       expect(result.canvasAnalysis.score).toBeGreaterThanOrEqual(58);
       expect(result.score).toBeGreaterThan(55);
-      expect(result.score).toBeLessThan(65);
-      expect(result.status).toBe('good_glow');
+      expect(result.score).toBeLessThan(72);
+      expect(result.status).toBe('very_likely');
+      expect(result.lightPathGate).toMatchObject({
+        reason: 'solar_direction_clear_opening'
+      });
     });
 
     test('should soften rain-season high-cloud opening carrier without mid-cloud support', () => {
@@ -925,7 +928,7 @@ describe('EnhancedPredictionService', () => {
       expect(result.lightPathAnalysis.directionalAnalysis.reason).toBe('solar_direction_clear_opening');
       expect(result.cloudThickness).toMatchObject({
         thickness: 'moderate',
-        modifier: 0.66
+        modifier: 0.58
       });
       expect(result.cloudThickness.reasons).toContain('upper_cloud_direction_opening');
       expect(result.thickHighCloudPenalty).toMatchObject({
@@ -933,8 +936,8 @@ describe('EnhancedPredictionService', () => {
         cap: null,
         reason: 'directional_high_cloud_carrier_canvas_only'
       });
-      expect(result.score).toBeGreaterThanOrEqual(58);
-      expect(result.score).toBeLessThanOrEqual(65);
+      expect(result.score).toBeGreaterThanOrEqual(52);
+      expect(result.score).toBeLessThanOrEqual(60);
       expect(result.status).toBe('good_glow');
     });
 
@@ -1071,7 +1074,45 @@ describe('EnhancedPredictionService', () => {
       });
       expect(result.highCloudCarrierAdjustment.applied).toBe(false);
       expect(result.score).toBeLessThanOrEqual(42);
-      expect(result.status).toBe('good_glow');
+      expect(result.status).toBe('light_glow');
+    });
+
+    test('should gate strong cloud carrier when solar-direction samples show a near cloud wall', () => {
+      const weatherData = {
+        cloudCover: 80,
+        lowClouds: 0,
+        midClouds: 10,
+        highClouds: 90,
+        humidity: 50,
+        visibility: 20,
+        precipitation: 0
+      };
+      const remoteCloudData = {
+        samples: [15, 30, 50, 100].map((distanceKm, index) => ({
+          distanceKm,
+          cloudBaseHeight: 1000,
+          lowCloud: index === 0 ? 85 : 10,
+          midCloud: index === 0 ? 80 : 20,
+          highCloud: 60
+        }))
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData,
+        new Date('2026-05-19T11:24:00.000Z'),
+        39.9042,
+        116.4074,
+        'sunset',
+        { remoteCloudData }
+      );
+
+      expect(result.lightPathAnalysis.directionalAnalysis.reason).toBe('solar_direction_near_cloud_wall');
+      expect(result.lightPathGate).toMatchObject({
+        gate: 0.42,
+        reason: 'solar_direction_near_cloud_wall'
+      });
+      expect(result.score).toBeLessThan(40);
+      expect(result.status).toBe('no_fire_cloud');
     });
 
     test('should cap extreme dust haze high-cloud scenes below 30 points', () => {

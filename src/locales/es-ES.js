@@ -67,7 +67,7 @@ apiAccess: 'Acceso API'
     "methodology": {
       "title": "Cómo se calcula la puntuación",
       "intro": "El índice de nubes rojas combina cuatro factores clave para estimar si vale la pena salir a ver el atardecer.",
-      "versionLabel": "Versión del algoritmo: 2026.05.18-cloud-thickness-evidence-v1",
+      "versionLabel": "Versión del algoritmo: 2026.05.19-additive-carrier-light-gate-v1",
       "versionDesc": "Esta versión fija el análisis en cuatro factores: soporte de nubes, trayectoria de luz, color del aire y limitaciones. La fórmula de puntuación no cambia.",
       changelogTitle: "Historial de versiones",
       changelogHint: "Aquí están las actualizaciones de los últimos tres meses; desplázate para revisar motivo, impacto y validación",
