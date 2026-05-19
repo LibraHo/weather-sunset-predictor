@@ -4,6 +4,7 @@ import {
   buildThreeDayDates,
   getEnhancedPrediction,
   getEnhancedPredictionBatch,
+  getThreeDayGlow,
   getWeatherForecast,
   getSurroundingPrediction,
   normalizePrediction,
@@ -251,6 +252,43 @@ describe('miniprogram services/prediction', () => {
       expect.objectContaining({ type: 'sunrise', score: 58, referenceTime: '2026-05-11T21:02:00.000Z' }),
       expect.objectContaining({ type: 'sunset', score: 76, referenceTime: '2026-05-11T11:24:00.000Z' })
     ]);
+  });
+
+  test('getThreeDayGlow uses one closed-loop batch instead of six enhanced requests', async () => {
+    const wxMock = {
+      request: jest.fn(({ success }) => success({
+        statusCode: 200,
+        data: {
+          success: true,
+          data: Array.from({ length: 6 }, (_, index) => ({
+            id: `item-${index}`,
+            type: index % 2 === 0 ? 'sunrise' : 'sunset',
+            score: 60 + index,
+            referenceTime: '2026-05-11T11:24:00.000Z'
+          }))
+        }
+      }))
+    };
+    setWxInstance(wxMock);
+    configureApi({ baseUrl: 'https://api.example.com' });
+
+    const result = await getThreeDayGlow({ lat: 39.9, lon: 116.4 });
+
+    expect(wxMock.request).toHaveBeenCalledTimes(1);
+    expect(wxMock.request.mock.calls[0][0]).toMatchObject({
+      url: 'https://api.example.com/api/prediction/enhanced/closed-loop/batch',
+      method: 'POST',
+      timeout: 30000
+    });
+    expect(wxMock.request.mock.calls[0][0].data.items).toHaveLength(6);
+    expect(wxMock.request.mock.calls[0][0].data.items.map((item) => item.type)).toEqual([
+      'sunrise', 'sunset', 'sunrise', 'sunset', 'sunrise', 'sunset'
+    ]);
+    expect(result).toHaveLength(3);
+    expect(result[0]).toMatchObject({
+      sunrise: expect.objectContaining({ score: 60 }),
+      sunset: expect.objectContaining({ score: 61 })
+    });
   });
 
   test('normalizeSurroundingPrediction keeps 8-direction radar essentials', () => {
