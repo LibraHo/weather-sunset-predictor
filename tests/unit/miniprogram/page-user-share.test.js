@@ -344,7 +344,8 @@ describe('miniprogram page user/share helpers', () => {
   test('result page cached period switch avoids duplicate panel and canvas work', () => {
     expect(resultPageSource).toContain('const cachedRadar = this.radarPanelCache[radarKey] || null;');
     expect(resultPageSource).toContain('const radarPromise = cachedRadar ? null : this.getRadarPanelPromise');
-    expect(resultPageSource).toContain('if (!radarPromise && !threeDayPromise) return;');
+    expect(resultPageSource).toContain('if (!radarPromise && !threeDayPromise) {');
+    expect(resultPageSource).toContain("logMiniPerf('result.panels.cacheOnly.done'");
     expect(resultPageSource).toContain('lastResultRadarPaintSignature');
     expect(resultPageSource).toContain('resultRadarPaintTimer');
     expect(resultPageSource).toContain('resultPanelLoadTimer');
@@ -409,7 +410,8 @@ describe('miniprogram page user/share helpers', () => {
   test('result period switch clears loading when cached or stale period state wins', () => {
     const source = fs.readFileSync(path.resolve(process.cwd(), 'miniprogram/pages/result/index.js'), 'utf8');
 
-    expect(source).toContain('...buildResultPeriodState(nextPrediction),');
+    expect(source).toContain('const periodState = buildResultPeriodState(nextPrediction);');
+    expect(source).toContain('...periodState,');
     expect(source).toContain('loading: false,');
     expect(source).toContain('if (this.data.activePeriod !== period) {');
     expect(source).toContain('this.setData({ loading: false });');

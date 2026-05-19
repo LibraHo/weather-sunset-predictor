@@ -291,7 +291,8 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeJs).toContain('clearTimeout(this.radarPaintTimer)');
     expect(homeJs).toContain('}, 80);');
     expect(homeJs).toContain('cloudGradients: buildRadarCloudGradients(directions)');
-    expect(homeJs).toContain("paintRadarCloudCanvas('homeRadarCloudField', directions, { page: this })");
+    expect(homeJs).toContain("paintRadarCloudCanvas('homeRadarCloudField', directions, {");
+    expect(homeJs).toContain("onProfile: (payload) => logMiniPerf('home.radar.canvas'");
     expect(homeJs).not.toContain('buildRadarCloudBlobs');
     expect(homeWxss).toMatch(/\.prediction-toggle-bar\s*\{[\s\S]*box-sizing: border-box;[\s\S]*overflow: hidden;/);
     expect(homeWxss).toMatch(/\.prediction-toggle\s*\{[\s\S]*flex: 1;[\s\S]*min-width: 0;[\s\S]*box-sizing: border-box;/);

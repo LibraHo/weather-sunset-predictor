@@ -119,6 +119,7 @@ Page({
   },
 
   async loadXiakePanels(prediction) {
+    const startedAt = perfNow();
     if (!hasCoordinates(prediction)) return;
     const lat = Number(prediction.lat);
     const lon = Number(prediction.lon);
@@ -128,24 +129,48 @@ Page({
     this.radarPanelCache = this.radarPanelCache || {};
     const cachedRadar = this.radarPanelCache[radarKey] || null;
     const cachedThreeDay = this.threeDayGlowCache || null;
+    logMiniPerf('result.panels.start', {
+      period: type,
+      radarCacheHit: Boolean(cachedRadar),
+      threeDayCacheHit: Boolean(cachedThreeDay)
+    });
 
     if (cachedRadar) {
+      const setDataStartedAt = perfNow();
       this.setData({ radar: cachedRadar }, () => {
-        this.paintRadarCloudField(cachedRadar);
+        logMiniPerf('result.panels.cachedRadar.setDataDone', {
+          period: type,
+          setDataMs: roundPerfMs(perfNow() - setDataStartedAt),
+          payloadBytes: estimatePayloadBytes({ radar: cachedRadar })
+        });
+        this.paintRadarCloudField(cachedRadar, { source: 'result.panels.cachedRadar', startedAt });
       });
     } else {
       this.setData({ radar: buildEmptyRadar({ loading: true }) });
     }
 
     if (cachedThreeDay) {
-      this.setData({ threeDayGlow: cachedThreeDay });
+      const setDataStartedAt = perfNow();
+      this.setData({ threeDayGlow: cachedThreeDay }, () => {
+        logMiniPerf('result.panels.cachedThreeDay.setDataDone', {
+          period: type,
+          setDataMs: roundPerfMs(perfNow() - setDataStartedAt),
+          payloadBytes: estimatePayloadBytes({ threeDayGlow: cachedThreeDay })
+        });
+      });
     } else {
       this.setData({ threeDayGlow: buildEmptyThreeDayGlow({ loading: true }) });
     }
 
     const radarPromise = cachedRadar ? null : this.getRadarPanelPromise({ lat, lon, type, date, radarKey });
     const threeDayPromise = cachedThreeDay ? null : this.getThreeDayGlowPromise({ lat, lon });
-    if (!radarPromise && !threeDayPromise) return;
+    if (!radarPromise && !threeDayPromise) {
+      logMiniPerf('result.panels.cacheOnly.done', {
+        period: type,
+        totalMs: roundPerfMs(perfNow() - startedAt)
+      });
+      return;
+    }
 
     const [radarResult, threeDayResult] = await Promise.allSettled([
       radarPromise || Promise.resolve(null),
@@ -155,8 +180,15 @@ Page({
     if (radarPromise && radarResult.status === 'fulfilled') {
       const radar = radarResult.value;
       this.radarPanelCache[radarKey] = radar;
+      const setDataStartedAt = perfNow();
       this.setData({ radar }, () => {
-        this.paintRadarCloudField(radar);
+        logMiniPerf('result.panels.fetchedRadar.setDataDone', {
+          period: type,
+          totalMs: roundPerfMs(perfNow() - startedAt),
+          setDataMs: roundPerfMs(perfNow() - setDataStartedAt),
+          payloadBytes: estimatePayloadBytes({ radar })
+        });
+        this.paintRadarCloudField(radar, { source: 'result.panels.fetchedRadar', startedAt });
       });
     } else if (radarPromise) {
       this.setData({ radar: buildEmptyRadar({ error: '周边云况暂时加载失败，请稍后再试。' }) });
@@ -164,7 +196,15 @@ Page({
 
     if (threeDayPromise && threeDayResult.status === 'fulfilled') {
       this.threeDayGlowCache = threeDayResult.value;
-      this.setData({ threeDayGlow: threeDayResult.value });
+      const setDataStartedAt = perfNow();
+      this.setData({ threeDayGlow: threeDayResult.value }, () => {
+        logMiniPerf('result.panels.fetchedThreeDay.setDataDone', {
+          period: type,
+          totalMs: roundPerfMs(perfNow() - startedAt),
+          setDataMs: roundPerfMs(perfNow() - setDataStartedAt),
+          payloadBytes: estimatePayloadBytes({ threeDayGlow: threeDayResult.value })
+        });
+      });
     } else if (threeDayPromise) {
       this.setData({ threeDayGlow: buildEmptyThreeDayGlow({ error: '三天预测暂时加载失败，请稍后再试。' }) });
     }
@@ -266,13 +306,21 @@ Page({
 
   scheduleXiakePanels(prediction) {
     if (this.resultPanelLoadTimer) clearTimeout(this.resultPanelLoadTimer);
+    const scheduledAt = perfNow();
+    logMiniPerf('result.panels.schedule', {
+      period: prediction?.period || prediction?.type || 'sunset'
+    });
     this.resultPanelLoadTimer = setTimeout(() => {
       this.resultPanelLoadTimer = null;
+      logMiniPerf('result.panels.timerFired', {
+        period: prediction?.period || prediction?.type || 'sunset',
+        waitMs: roundPerfMs(perfNow() - scheduledAt)
+      });
       this.loadXiakePanels(prediction);
     }, 80);
   },
 
-  paintRadarCloudField(radar = this.data.radar, { force = false } = {}) {
+  paintRadarCloudField(radar = this.data.radar, { force = false, source = 'result.paint', startedAt = null } = {}) {
     const directions = radar?.directions || [];
     if (!directions.length) return;
     const signature = directions
@@ -285,12 +333,27 @@ Page({
         item.cloudText
       ].join(':'))
       .join('|');
-    if (!force && signature && signature === this.lastResultRadarPaintSignature) return;
+    if (!force && signature && signature === this.lastResultRadarPaintSignature) {
+      logMiniPerf('result.radar.skipSameSignature', { source, sinceStartMs: startedAt === null ? null : roundPerfMs(perfNow() - startedAt) });
+      return;
+    }
     this.lastResultRadarPaintSignature = signature;
     if (this.resultRadarPaintTimer) clearTimeout(this.resultRadarPaintTimer);
+    const scheduledAt = perfNow();
+    logMiniPerf('result.radar.schedule', { source, directions: directions.length, sinceStartMs: startedAt === null ? null : roundPerfMs(scheduledAt - startedAt) });
     this.resultRadarPaintTimer = setTimeout(() => {
       this.resultRadarPaintTimer = null;
-      paintRadarCloudCanvas('resultRadarCloudField', directions, { page: this });
+      const paintStartedAt = perfNow();
+      const requested = paintRadarCloudCanvas('resultRadarCloudField', directions, {
+        page: this,
+        onProfile: (payload) => logMiniPerf('result.radar.canvas', { source, ...payload })
+      });
+      logMiniPerf('result.radar.requested', {
+        source,
+        requested,
+        timerWaitMs: roundPerfMs(paintStartedAt - scheduledAt),
+        requestMs: roundPerfMs(perfNow() - paintStartedAt)
+      });
     }, 80);
   },
 
@@ -340,13 +403,37 @@ Page({
   async selectResultPeriod(event) {
     const period = event.currentTarget.dataset.period;
     if (!['sunrise', 'sunset'].includes(period) || period === this.data.activePeriod) return;
+    const tapStartedAt = perfNow();
+    logMiniPerf('result.toggle.tap', {
+      target: period,
+      current: this.data.activePeriod,
+      cacheHit: Boolean(this.data.periodCards[period]),
+      pendingHit: Boolean(this.periodCardPromises?.[period]),
+      cards: Object.keys(this.data.periodCards || {})
+    });
 
     const nextPrediction = this.data.periodCards[period];
     if (nextPrediction) {
-      this.setData({
-        ...buildResultPeriodState(nextPrediction),
+      const buildStartedAt = perfNow();
+      const periodState = buildResultPeriodState(nextPrediction);
+      const builtAt = perfNow();
+      const patch = {
+        ...periodState,
         loading: false
-      }, () => {
+      };
+      const setDataStartedAt = perfNow();
+      this.setData(patch, () => {
+        const setDataDoneAt = perfNow();
+        logMiniPerf('result.toggle.cached.setDataDone', {
+          target: period,
+          totalMs: roundPerfMs(setDataDoneAt - tapStartedAt),
+          buildMs: roundPerfMs(builtAt - buildStartedAt),
+          setDataMs: roundPerfMs(setDataDoneAt - setDataStartedAt),
+          payloadBytes: estimatePayloadBytes(patch),
+          metrics: patch.metrics?.length || 0,
+          analysisItems: patch.analysisItems?.length || 0,
+          ledgerSteps: patch.scoreLedger?.steps?.length || 0
+        });
         this.scheduleXiakePanels(nextPrediction);
       });
       return;
@@ -354,20 +441,41 @@ Page({
 
     const pendingPeriodPromise = this.periodCardPromises ? this.periodCardPromises[period] : null;
     if (pendingPeriodPromise) {
-      this.setData({ activePeriod: period });
+      const setDataStartedAt = perfNow();
+      this.setData({ activePeriod: period }, () => {
+        logMiniPerf('result.toggle.pending.activeSet', {
+          target: period,
+          setDataMs: roundPerfMs(perfNow() - setDataStartedAt)
+        });
+      });
+      const waitStartedAt = perfNow();
       const prefetchedPrediction = await pendingPeriodPromise;
       if (this.data.activePeriod !== period) {
         return;
       }
       if (prefetchedPrediction) {
-        this.setData({
-          ...buildResultPeriodState(prefetchedPrediction),
+        const buildStartedAt = perfNow();
+        const periodState = buildResultPeriodState(prefetchedPrediction);
+        const patch = {
+          ...periodState,
           loading: false,
           periodCards: {
             ...this.data.periodCards,
             [period]: prefetchedPrediction
           }
-        }, () => {
+        };
+        const builtAt = perfNow();
+        const finalSetDataStartedAt = perfNow();
+        this.setData(patch, () => {
+          const setDataDoneAt = perfNow();
+          logMiniPerf('result.toggle.pending.setDataDone', {
+            target: period,
+            totalMs: roundPerfMs(setDataDoneAt - tapStartedAt),
+            waitMs: roundPerfMs(builtAt - waitStartedAt),
+            buildMs: roundPerfMs(builtAt - buildStartedAt),
+            setDataMs: roundPerfMs(setDataDoneAt - finalSetDataStartedAt),
+            payloadBytes: estimatePayloadBytes(patch)
+          });
           this.scheduleXiakePanels(prefetchedPrediction);
         });
         return;
@@ -380,28 +488,49 @@ Page({
       return;
     }
 
+    const loadingSetDataStartedAt = perfNow();
     this.setData({
       activePeriod: period,
       radar: buildEmptyRadar({ loading: true })
+    }, () => {
+      logMiniPerf('result.toggle.fetch.loadingSet', {
+        target: period,
+        setDataMs: roundPerfMs(perfNow() - loadingSetDataStartedAt)
+      });
     });
 
     try {
       const requested = buildPredictionPeriodRequest(current, period);
+      const fetchStartedAt = perfNow();
       const fetched = await getEnhancedPrediction(requested);
       const normalized = normalizePrediction(fetched, requested);
       if (this.data.activePeriod !== period) {
         this.setData({ loading: false });
         return;
       }
-      this.setData({
-        ...buildResultPeriodState(normalized),
+      const buildStartedAt = perfNow();
+      const periodState = buildResultPeriodState(normalized);
+      const patch = {
+        ...periodState,
         loading: false,
         periodCards: {
           ...this.data.periodCards,
           [period]: normalized
         },
         radar: buildEmptyRadar({ loading: hasCoordinates(normalized) })
-      }, () => {
+      };
+      const builtAt = perfNow();
+      const setDataStartedAt = perfNow();
+      this.setData(patch, () => {
+        const setDataDoneAt = perfNow();
+        logMiniPerf('result.toggle.fetch.setDataDone', {
+          target: period,
+          totalMs: roundPerfMs(setDataDoneAt - tapStartedAt),
+          fetchMs: roundPerfMs(builtAt - fetchStartedAt),
+          buildMs: roundPerfMs(builtAt - buildStartedAt),
+          setDataMs: roundPerfMs(setDataDoneAt - setDataStartedAt),
+          payloadBytes: estimatePayloadBytes(patch)
+        });
         this.scheduleXiakePanels(normalized);
       });
     } catch (error) {
@@ -438,6 +567,36 @@ Page({
 
 function hasShareLocation(options = {}) {
   return options.lat !== undefined && options.lon !== undefined;
+}
+
+function perfNow() {
+  if (typeof performance !== 'undefined' && typeof performance.now === 'function') return performance.now();
+  return Date.now();
+}
+
+function roundPerfMs(value) {
+  return Math.round(Number(value) * 10) / 10;
+}
+
+function estimatePayloadBytes(payload) {
+  try {
+    return JSON.stringify(payload).length;
+  } catch (error) {
+    return -1;
+  }
+}
+
+function logMiniPerf(event, payload = {}) {
+  try {
+    console.info('[MiniPerf]', JSON.stringify({
+      event,
+      page: 'result',
+      at: Date.now(),
+      ...payload
+    }));
+  } catch (error) {
+    // Profiling must not affect user interactions.
+  }
 }
 
 function normalizePrediction(input = {}, options = {}) {

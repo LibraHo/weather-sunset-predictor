@@ -121,35 +121,76 @@ Page({
   selectPredictionPreviewPeriod(event) {
     const value = event.currentTarget.dataset.value;
     if (!['sunrise', 'sunset'].includes(value)) return;
+    const tapStartedAt = perfNow();
     const cachedPrediction = this.data.predictionPeriodCards?.[value];
+    const pendingPrediction = this.predictionPreviewPromises?.[value];
+    logMiniPerf('home.toggle.tap', {
+      target: value,
+      current: this.data.period,
+      cacheHit: Boolean(cachedPrediction),
+      pendingHit: Boolean(pendingPrediction),
+      cards: Object.keys(this.data.predictionPeriodCards || {})
+    });
     if (cachedPrediction) {
-      this.setData({
+      const buildStartedAt = perfNow();
+      const predictionPreview = buildPredictionPreviewFromPrediction(cachedPrediction, this.currentPredictionQuery || { period: value });
+      const builtAt = perfNow();
+      const patch = {
         period: value,
-        predictionPreview: buildPredictionPreviewFromPrediction(cachedPrediction, this.currentPredictionQuery || { period: value }),
+        predictionPreview,
         predictionPreviewLoading: false
-      }, () => {
-        this.paintPredictionRadarCloudField();
+      };
+      const setDataStartedAt = perfNow();
+      this.setData(patch, () => {
+        const setDataDoneAt = perfNow();
+        logMiniPerf('home.toggle.cached.setDataDone', {
+          target: value,
+          totalMs: roundPerfMs(setDataDoneAt - tapStartedAt),
+          buildMs: roundPerfMs(builtAt - buildStartedAt),
+          setDataMs: roundPerfMs(setDataDoneAt - setDataStartedAt),
+          payloadBytes: estimatePayloadBytes(patch),
+          radarDirections: predictionPreview.radar?.directions?.length || 0
+        });
+        this.paintPredictionRadarCloudField({ source: 'home.toggle.cached', startedAt: tapStartedAt });
       });
       return;
     }
 
-    const pendingPrediction = this.predictionPreviewPromises?.[value];
     if (pendingPrediction) {
+      const setLoadingStartedAt = perfNow();
       this.setData({
         period: value,
         predictionPreviewLoading: true
+      }, () => {
+        logMiniPerf('home.toggle.pending.loadingSet', {
+          target: value,
+          setDataMs: roundPerfMs(perfNow() - setLoadingStartedAt)
+        });
       });
       pendingPrediction.then((prediction) => {
         if (!prediction || this.data.period !== value) return;
-        this.setData({
-          predictionPreview: buildPredictionPreviewFromPrediction(prediction, this.currentPredictionQuery || { period: value }),
+        const buildStartedAt = perfNow();
+        const predictionPreview = buildPredictionPreviewFromPrediction(prediction, this.currentPredictionQuery || { period: value });
+        const patch = {
+          predictionPreview,
           predictionPreviewLoading: false,
           predictionPeriodCards: {
             ...(this.data.predictionPeriodCards || {}),
             [value]: prediction
           }
-        }, () => {
-          this.paintPredictionRadarCloudField();
+        };
+        const builtAt = perfNow();
+        const setDataStartedAt = perfNow();
+        this.setData(patch, () => {
+          const setDataDoneAt = perfNow();
+          logMiniPerf('home.toggle.pending.setDataDone', {
+            target: value,
+            totalMs: roundPerfMs(setDataDoneAt - tapStartedAt),
+            buildMs: roundPerfMs(builtAt - buildStartedAt),
+            setDataMs: roundPerfMs(setDataDoneAt - setDataStartedAt),
+            payloadBytes: estimatePayloadBytes(patch)
+          });
+          this.paintPredictionRadarCloudField({ source: 'home.toggle.pending', startedAt: tapStartedAt });
         });
       }).catch(() => {
         if (this.data.period === value) this.setData({ predictionPreviewLoading: false });
@@ -158,22 +199,43 @@ Page({
     }
 
     if (this.currentPredictionQuery?.coordinate) {
+      const setLoadingStartedAt = perfNow();
       this.setData({
         period: value,
         predictionPreviewLoading: true
+      }, () => {
+        logMiniPerf('home.toggle.fetch.loadingSet', {
+          target: value,
+          setDataMs: roundPerfMs(perfNow() - setLoadingStartedAt)
+        });
       });
+      const fetchStartedAt = perfNow();
       this.prefetchPredictionPreviewPeriod({ ...this.currentPredictionQuery, period: value })
         .then((prediction) => {
           if (!prediction || this.data.period !== value) return;
-          this.setData({
-            predictionPreview: buildPredictionPreviewFromPrediction(prediction, this.currentPredictionQuery || { period: value }),
+          const buildStartedAt = perfNow();
+          const predictionPreview = buildPredictionPreviewFromPrediction(prediction, this.currentPredictionQuery || { period: value });
+          const patch = {
+            predictionPreview,
             predictionPreviewLoading: false,
             predictionPeriodCards: {
               ...(this.data.predictionPeriodCards || {}),
               [value]: prediction
             }
-          }, () => {
-            this.paintPredictionRadarCloudField();
+          };
+          const builtAt = perfNow();
+          const setDataStartedAt = perfNow();
+          this.setData(patch, () => {
+            const setDataDoneAt = perfNow();
+            logMiniPerf('home.toggle.fetch.setDataDone', {
+              target: value,
+              totalMs: roundPerfMs(setDataDoneAt - tapStartedAt),
+              fetchMs: roundPerfMs(builtAt - fetchStartedAt),
+              buildMs: roundPerfMs(builtAt - buildStartedAt),
+              setDataMs: roundPerfMs(setDataDoneAt - setDataStartedAt),
+              payloadBytes: estimatePayloadBytes(patch)
+            });
+            this.paintPredictionRadarCloudField({ source: 'home.toggle.fetch', startedAt: tapStartedAt });
           });
         })
         .catch(() => {
@@ -182,11 +244,19 @@ Page({
       return;
     }
 
-    this.setData({
+    const fallbackPatch = {
       period: value,
       predictionPreview: buildPredictionPreviewForPeriod(value)
-    }, () => {
-      this.paintPredictionRadarCloudField();
+    };
+    const setDataStartedAt = perfNow();
+    this.setData(fallbackPatch, () => {
+      logMiniPerf('home.toggle.fallback.setDataDone', {
+        target: value,
+        totalMs: roundPerfMs(perfNow() - tapStartedAt),
+        setDataMs: roundPerfMs(perfNow() - setDataStartedAt),
+        payloadBytes: estimatePayloadBytes(fallbackPatch)
+      });
+      this.paintPredictionRadarCloudField({ source: 'home.toggle.fallback', startedAt: tapStartedAt });
     });
   },
   switchWeatherView(event) {
@@ -436,7 +506,7 @@ Page({
     });
   },
 
-  paintPredictionRadarCloudField({ force = false } = {}) {
+  paintPredictionRadarCloudField({ force = false, source = 'home.paint', startedAt = null } = {}) {
     const directions = this.data.predictionPreview?.radar?.directions || [];
     if (!directions.length) return;
     const signature = directions.map((item) => [
@@ -447,12 +517,27 @@ Page({
       item.lowCloud,
       item.cloudText
     ].map((value) => value ?? '').join(':')).join('|');
-    if (!force && signature && signature === this.lastRadarPaintSignature) return;
+    if (!force && signature && signature === this.lastRadarPaintSignature) {
+      logMiniPerf('home.radar.skipSameSignature', { source, sinceStartMs: startedAt === null ? null : roundPerfMs(perfNow() - startedAt) });
+      return;
+    }
     this.lastRadarPaintSignature = signature;
     if (this.radarPaintTimer) clearTimeout(this.radarPaintTimer);
+    const scheduledAt = perfNow();
+    logMiniPerf('home.radar.schedule', { source, directions: directions.length, sinceStartMs: startedAt === null ? null : roundPerfMs(scheduledAt - startedAt) });
     this.radarPaintTimer = setTimeout(() => {
       this.radarPaintTimer = null;
-      paintRadarCloudCanvas('homeRadarCloudField', directions, { page: this });
+      const paintStartedAt = perfNow();
+      const requested = paintRadarCloudCanvas('homeRadarCloudField', directions, {
+        page: this,
+        onProfile: (payload) => logMiniPerf('home.radar.canvas', { source, ...payload })
+      });
+      logMiniPerf('home.radar.requested', {
+        source,
+        requested,
+        timerWaitMs: roundPerfMs(paintStartedAt - scheduledAt),
+        requestMs: roundPerfMs(perfNow() - paintStartedAt)
+      });
     }, 80);
   },
 
@@ -1826,6 +1911,36 @@ function friendlyError(error) {
   if (error && error.message === 'LOCATION_NOT_FOUND') return '没有找到这个地点，请换个更具体的名称。';
   if (error && error.code === 'GEOCODING_RATE_LIMIT') return '地点搜索太频繁了，稍后再试。';
   return '查分失败，请换个地点或稍后再试。';
+}
+
+function perfNow() {
+  if (typeof performance !== 'undefined' && typeof performance.now === 'function') return performance.now();
+  return Date.now();
+}
+
+function roundPerfMs(value) {
+  return Math.round(Number(value) * 10) / 10;
+}
+
+function estimatePayloadBytes(payload) {
+  try {
+    return JSON.stringify(payload).length;
+  } catch (error) {
+    return -1;
+  }
+}
+
+function logMiniPerf(event, payload = {}) {
+  try {
+    console.info('[MiniPerf]', JSON.stringify({
+      event,
+      page: 'home',
+      at: Date.now(),
+      ...payload
+    }));
+  } catch (error) {
+    // Profiling must not affect user interactions.
+  }
 }
 
 function resolvePredictionDate(day) {

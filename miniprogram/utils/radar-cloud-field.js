@@ -1,6 +1,20 @@
 const ORDER = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
 let cachedPixelRatio = null;
 
+function nowMs() {
+  if (typeof performance !== 'undefined' && typeof performance.now === 'function') return performance.now();
+  return Date.now();
+}
+
+function emitPaintProfile(options = {}, stage, payload = {}) {
+  if (typeof options.onProfile !== 'function') return;
+  try {
+    options.onProfile({ stage, ...payload });
+  } catch (error) {
+    // Profiling must never affect rendering.
+  }
+}
+
 function getCachedPixelRatio(wxApi) {
   if (cachedPixelRatio) return cachedPixelRatio;
   const deviceInfo = wxApi.getDeviceInfo?.() || {};
@@ -171,6 +185,7 @@ export function paintRadarCloudCanvas2d(canvasId, directions, options = {}, size
   const wxApi = options.wxApi || options.wx || globalThis.wx;
   if (!wxApi?.createSelectorQuery) return false;
   const retry = options.retry ?? 4;
+  const requestStartedAt = nowMs();
   const query = wxApi.createSelectorQuery();
   const scope = options.component || options.page;
   const scopedQuery = scope && query.in ? query.in(scope) : query;
@@ -180,8 +195,14 @@ export function paintRadarCloudCanvas2d(canvasId, directions, options = {}, size
     .select(`#${canvasId}`)
     .fields({ node: true, size: true })
     .exec((res = []) => {
+      const execStartedAt = nowMs();
       const canvas = res?.[0]?.node;
       if (!canvas?.getContext) {
+        emitPaintProfile(options, 'canvas.missing', {
+          canvasId,
+          retry,
+          waitMs: roundMs(execStartedAt - requestStartedAt)
+        });
         if (retry > 0) {
           setTimeout(() => {
             paintRadarCloudCanvas2d(canvasId, directions, { ...options, wxApi, retry: retry - 1 }, size);
@@ -196,7 +217,9 @@ export function paintRadarCloudCanvas2d(canvasId, directions, options = {}, size
       const height = Math.max(1, Math.round(res[0].height || width));
       const dpr = getCachedPixelRatio(wxApi);
       const renderSize = Math.max(size, Math.round(Math.min(width, height) * dpr));
+      const imageStartedAt = nowMs();
       const image = buildRadarCloudImageData(directions, renderSize);
+      const imageBuiltAt = nowMs();
       canvas.width = image.width;
       canvas.height = image.height;
 
@@ -205,6 +228,18 @@ export function paintRadarCloudCanvas2d(canvasId, directions, options = {}, size
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.putImageData(createCanvasImageData(ctx, image), 0, 0);
       softenRadarCloudCanvas(ctx, canvas);
+      const doneAt = nowMs();
+      emitPaintProfile(options, 'canvas.done', {
+        canvasId,
+        width,
+        height,
+        dpr,
+        renderSize,
+        waitMs: roundMs(execStartedAt - requestStartedAt),
+        imageMs: roundMs(imageBuiltAt - imageStartedAt),
+        drawMs: roundMs(doneAt - imageBuiltAt),
+        totalMs: roundMs(doneAt - requestStartedAt)
+      });
     });
 
   return true;
@@ -233,6 +268,10 @@ function paintRadarCloudCanvasLegacy(canvasId, directions, wxApi = globalThis.wx
     data: image.data
   });
   return true;
+}
+
+function roundMs(value) {
+  return Math.round(Number(value) * 10) / 10;
 }
 
 function createCanvasImageData(ctx, image) {
