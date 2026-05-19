@@ -1571,12 +1571,6 @@ class AppController {
    * 设置面板切换 china_render_mode 后重建 overlay manager 并重渲染
    */
   setupChinaRenderModeListener() {
-    window.addEventListener('firecloudRasterColorModeChanged', () => {
-      if (this.weatherController?._chinaSpotsMapInstance?.setPeriod) {
-        this.weatherController._chinaSpotsMapInstance.setPeriod(this.weatherController.activeChinaSpotsPeriod || 'sunset');
-      }
-    });
-
     window.addEventListener('chinaRenderModeChanged', async (event) => {
       const mode = event?.detail?.mode || localStorage.getItem('china_render_mode') || 'raster';
       console.log('[AppController] 火烧云渲染模式已切换:', mode);

@@ -516,15 +516,10 @@ describe('SettingsPanel - 火烧云涂层颜色模式', () => {
     jest.restoreAllMocks();
   });
 
-  test('默认显示精简模式，并可切换到完整模式', () => {
+  test('不再显示火烧云涂层颜色模式设置', () => {
     const sp = makePanel();
     sp.open();
     const select = sp.panel.querySelector('#firecloud-raster-color-mode-select');
-    expect(select).not.toBeNull();
-    expect(select.value).toBe('compact');
-
-    select.value = 'full';
-    select.dispatchEvent(new Event('change'));
-    expect(localStorage.getItem('firecloud_raster_color_mode')).toBe('full');
+    expect(select).toBeNull();
   });
 });
