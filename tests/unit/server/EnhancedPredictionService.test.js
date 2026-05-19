@@ -198,6 +198,21 @@ describe('EnhancedPredictionService', () => {
       expect(result.effectiveCloudCover).toBeCloseTo(65.0, 1);
     });
 
+    test('pure high-cloud cover approaches but does not max out canvas score', () => {
+      const result = EnhancedPredictionService.scoreCloudCanvas({
+        cloudCover: 37,
+        lowClouds: 0,
+        midClouds: 0,
+        highClouds: 100
+      });
+
+      expect(result.cloudLevel).toBe('crowded');
+      expect(result.cloudRangeScore).toBeCloseTo(66.7, 1);
+      expect(result.highCloudBonus).toBe(1.2);
+      expect(result.score).toBeGreaterThan(70);
+      expect(result.score).toBeLessThan(75);
+    });
+
     test('should handle overcast conditions (all layers thick)', () => {
       // upperCloudCover = 95*0.75 + 95*0.45 = 114 > 100 → cloudLevel = 'crowded'
       // lowClouds=95 > 80 → lowCloudPenalty=0.1
@@ -632,8 +647,9 @@ describe('EnhancedPredictionService', () => {
         canvasScore, lightPathScore, renderingFactor, 'sunset'
       );
 
-      // (80*0.8 + 100*0.2) * 1.1 = 84 * 1.1 = 92.4
-      expect(result.score).toBeCloseTo(92.4, 1);
+      // Positive rendering bonuses now reward the remaining distance to 100:
+      // base=84, factor=1.1 => 84 + (100-84)*0.1*1.2 = 85.92
+      expect(result.score).toBeCloseTo(85.9, 1);
     });
 
     test('should clamp score to 0-100 range', () => {
@@ -734,6 +750,54 @@ describe('EnhancedPredictionService', () => {
       );
 
       expect(result.type).toBe('sunrise');
+    });
+
+    test('single-layer 100% high cloud does not become a 100-point prediction', () => {
+      const weatherData = {
+        cloudCover: 37,
+        lowClouds: 0,
+        midClouds: 0,
+        highClouds: 100,
+        humidity: 39,
+        visibility: 20,
+        precipitation: 0,
+        shortwaveRadiation: 46,
+        directRadiation: 11.6,
+        diffuseRadiation: 34.4,
+        waterVapourColumn: 3.9,
+        aerosolOpticalDepth: 0.14,
+        dust: 70,
+        pm2_5: 6.2,
+        pm10: 29.6,
+        aqi: 54
+      };
+      const prevHourData = {
+        shortwaveRadiation: 222,
+        directRadiation: 119.7,
+        diffuseRadiation: 102.3
+      };
+      const remoteCloudData = {
+        samples: [
+          { distanceKm: 15, lowCloud: 0, midCloud: 0, highCloud: 37, totalCloud: 37, cloudBaseHeight: null },
+          { distanceKm: 30, lowCloud: 0, midCloud: 0, highCloud: 37, totalCloud: 37, cloudBaseHeight: null },
+          { distanceKm: 50, lowCloud: 0, midCloud: 0, highCloud: 37, totalCloud: 37, cloudBaseHeight: null },
+          { distanceKm: 100, lowCloud: 0, midCloud: 0, highCloud: 37, totalCloud: 37, cloudBaseHeight: null }
+        ]
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData,
+        new Date('2026-05-19T12:50:00.000Z'),
+        36.36,
+        92.83,
+        'sunset',
+        { prevHourData, remoteCloudData, rainedRecently: true }
+      );
+
+      expect(result.canvasAnalysis.score).toBeGreaterThanOrEqual(80);
+      expect(result.canvasAnalysis.score).toBeLessThan(85);
+      expect(result.score).toBeGreaterThanOrEqual(80);
+      expect(result.score).toBeLessThan(85);
     });
 
     test('should cap thick high-cloud curtain scenes around 40 points', () => {
@@ -878,7 +942,7 @@ describe('EnhancedPredictionService', () => {
         cap: null,
         reason: 'directional_high_cloud_carrier_canvas_only'
       });
-      expect(result.canvasAnalysis.score).toBeGreaterThanOrEqual(58);
+      expect(result.canvasAnalysis.score).toBeGreaterThanOrEqual(57);
       expect(result.score).toBeGreaterThan(55);
       expect(result.score).toBeLessThan(65);
       expect(result.status).toBe('good_glow');

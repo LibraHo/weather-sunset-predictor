@@ -44,10 +44,26 @@ const FINAL_WEIGHTS = {
   LIGHT_PATH: 0.2      // 光路约束（保守权重）
 };
 
+const POSITIVE_SCORE_FACTOR_GAIN = 1.2;
+
 // ========== 辅助函数 ==========
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
+}
+
+function applyScoreFactor(score, factor) {
+  const s = clamp(Number(score) || 0, 0, 100);
+  const f = Number(factor);
+  if (!Number.isFinite(f)) return s;
+
+  if (f <= 1) {
+    return clamp(s * f, 0, 100);
+  }
+
+  // Positive bonuses approach 100 asymptotically instead of multiplying past it.
+  // This keeps 100 reachable but only when the underlying score is already elite.
+  return clamp(s + (100 - s) * (f - 1) * POSITIVE_SCORE_FACTOR_GAIN, 0, 100);
 }
 
 function scoreRangePeak(value, min, peak, max) {
@@ -362,7 +378,7 @@ function scoreCloudCanvas(weatherData) {
   let highCloudBonus = 1.0;
   if (highClouds > 50 && lowClouds < 30) {
     highCloudBonus = 1.20; // 1.15~1.2 之间，让画布分达到 75+
-    canvasScore = canvasScore * highCloudBonus;
+    canvasScore = applyScoreFactor(canvasScore, highCloudBonus);
   }
 
   return {
@@ -1086,7 +1102,7 @@ function scoreLightPath(weatherData, solarElevation, azimuth, remoteCloudData = 
   let lightPathScore = 100 * (1 - occlusionProbability);
   const directionalAnalysis = hasRemoteData ? analyzeRemoteLightPath(samples) : null;
   if (directionalAnalysis?.available) {
-    lightPathScore *= directionalAnalysis.modifier;
+    lightPathScore = applyScoreFactor(lightPathScore, directionalAnalysis.modifier);
     if (directionalAnalysis.cap != null) {
       lightPathScore = Math.min(lightPathScore, directionalAnalysis.cap);
     }
@@ -1441,8 +1457,8 @@ function calculateFinalScore(canvasScore, lightPathScore, renderingFactor, type 
   const baseScore = (canvasScore.score * FINAL_WEIGHTS.CLOUD_CANVAS) +
                    (lightPathScore.score * FINAL_WEIGHTS.LIGHT_PATH);
 
-  // 应用渲染修正系数
-  const finalScore = baseScore * renderingFactor.factor;
+  // 应用渲染修正系数。正向渲染加成按离100的剩余空间奖励，避免普通高分被乘爆。
+  const finalScore = applyScoreFactor(baseScore, renderingFactor.factor);
 
   // 确保得分在0-100范围内
   const clampedScore = Math.max(0, Math.min(100, finalScore));
@@ -1597,7 +1613,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   const canvasScoreRaw = scoreCloudCanvas(weatherData);
   const canvasScore = {
     ...canvasScoreRaw,
-    score: Math.min(100, parseFloat((canvasScoreRaw.score * cloudType.canvasMultiplier).toFixed(1)))
+    score: parseFloat(applyScoreFactor(canvasScoreRaw.score, cloudType.canvasMultiplier).toFixed(1))
   };
   logger.debug('[EnhancedPredictionService]', '画布评分(含云种):', canvasScore.score);
 
@@ -1615,7 +1631,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     : scoreLightPath(weatherData, timeCheck.elevation, azimuth, remoteCloudData);
   const lightPathScore = {
     ...lightPathScoreRaw,
-    score: Math.min(100, parseFloat((lightPathScoreRaw.score * cloudType.lightPathMultiplier).toFixed(1)))
+    score: parseFloat(applyScoreFactor(lightPathScoreRaw.score, cloudType.lightPathMultiplier).toFixed(1))
   };
   logger.debug('[EnhancedPredictionService]', '光路评分(含云种):', lightPathScore.score);
 
@@ -1630,7 +1646,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   // 5.5 云厚修正画布分
   if (cloudThickness.modifier !== 1.0) {
     const originalCanvasScore = canvasScore.score;
-    canvasScore.score = Math.min(100, parseFloat((canvasScore.score * cloudThickness.modifier).toFixed(1)));
+    canvasScore.score = parseFloat(applyScoreFactor(canvasScore.score, cloudThickness.modifier).toFixed(1));
     canvasScore.cloudThicknessModifier = cloudThickness.modifier;
     canvasScore.cloudThickness = cloudThickness.thickness;
     logger.debug('[EnhancedPredictionService]', '云厚修正画布分:', originalCanvasScore, '->', canvasScore.score);
