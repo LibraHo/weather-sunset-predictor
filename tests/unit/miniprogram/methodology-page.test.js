@@ -32,6 +32,9 @@ describe('miniprogram methodology page', () => {
     expect(js).toContain('70-84 分');
     expect(js).toContain('40-69 分');
     expect(js).toContain('<40 分');
+    expect(js).toContain('加法载体 + 光路门控 v1');
+    expect(js).toContain('不再用直射比直接参与评分');
+    expect(wxml).toContain('2026.05.19 · 加法载体 + 光路门控');
     expect(wxml).toContain('地图分');
     expect(wxml).toContain('地点详情分');
     expect(js).not.toContain('DOM');
