@@ -321,6 +321,9 @@ describe('miniprogram page user/share helpers', () => {
     expect(resultPageSource).toContain('lastResultRadarPaintSignature');
     expect(resultPageSource).toContain('resultRadarPaintTimer');
     expect(resultPageSource).toContain('resultPanelLoadTimer');
+    expect(resultPageSource).toContain('this.data.radar?.cacheKey === panelKey');
+    expect(resultPageSource).toContain('this.pendingResultPanelKey !== panelKey');
+    expect(resultPageSource).toContain('}, 450);');
   });
 
   test('home search renders basic weather before waiting for glow scoring', () => {

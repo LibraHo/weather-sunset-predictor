@@ -125,11 +125,13 @@ Page({
     const type = prediction.period || prediction.type || 'sunset';
     const date = prediction.date || null;
     const radarKey = buildPanelCacheKey({ lat, lon, type, date });
+    if (this.data.radar?.cacheKey === radarKey && this.threeDayGlowCache) return;
     this.radarPanelCache = this.radarPanelCache || {};
     const cachedRadar = this.radarPanelCache[radarKey] || null;
     const cachedThreeDay = this.threeDayGlowCache || null;
 
     if (cachedRadar) {
+      this.activeResultPanelKey = radarKey;
       this.setData({ radar: cachedRadar }, () => {
         this.paintRadarCloudField(cachedRadar);
       });
@@ -155,6 +157,7 @@ Page({
     if (radarPromise && radarResult.status === 'fulfilled') {
       const radar = radarResult.value;
       this.radarPanelCache[radarKey] = radar;
+      this.activeResultPanelKey = radarKey;
       this.setData({ radar }, () => {
         this.paintRadarCloudField(radar);
       });
@@ -177,7 +180,10 @@ Page({
     if (!this.radarPanelPromises[radarKey]) {
       this.radarPanelPromises[radarKey] = getSurroundingPrediction({ lat, lon, type, date, radius: 100 })
         .then((value) => {
-          const radar = buildRadarView(value);
+          const radar = {
+            ...buildRadarView(value),
+            cacheKey: radarKey
+          };
           this.radarPanelCache[radarKey] = radar;
           return radar;
         })
@@ -265,11 +271,22 @@ Page({
   },
 
   scheduleXiakePanels(prediction) {
+    if (!hasCoordinates(prediction)) return;
+    const panelKey = buildPanelCacheKey({
+      lat: prediction.lat,
+      lon: prediction.lon,
+      type: prediction.period || prediction.type || 'sunset',
+      date: prediction.date || null
+    });
+    if (this.data.radar?.cacheKey === panelKey && this.threeDayGlowCache) return;
+    this.pendingResultPanelKey = panelKey;
     if (this.resultPanelLoadTimer) clearTimeout(this.resultPanelLoadTimer);
     this.resultPanelLoadTimer = setTimeout(() => {
       this.resultPanelLoadTimer = null;
+      if (this.pendingResultPanelKey !== panelKey) return;
+      if (this.data.activePeriod !== (prediction.period || prediction.type || 'sunset')) return;
       this.loadXiakePanels(prediction);
-    }, 80);
+    }, 450);
   },
 
   paintRadarCloudField(radar = this.data.radar, { force = false } = {}) {
@@ -309,6 +326,7 @@ Page({
   onUnload() {
     if (this.resultRadarPaintTimer) clearTimeout(this.resultRadarPaintTimer);
     if (this.resultPanelLoadTimer) clearTimeout(this.resultPanelLoadTimer);
+    this.pendingResultPanelKey = null;
   },
 
   async toggleFavorite() {
