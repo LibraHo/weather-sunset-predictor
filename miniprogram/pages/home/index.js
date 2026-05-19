@@ -319,7 +319,6 @@ Page({
       methodology: '/pages/methodology/index',
       map: `/pages/map/index?period=${this.data.period}`,
       gallery: '/pages/gallery/index',
-      api: '/pages/methodology/index?section=api',
       upload: '/pages/upload/index'
     };
     const url = routes[target];

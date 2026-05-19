@@ -174,17 +174,20 @@ describe('mini-program home parity with mobile web home', () => {
       'data-target="methodology"',
       'data-target="map"',
       'data-target="gallery"',
-      'data-target="api"',
       'data-target="upload"'
     ]);
   });
 
-  test('home keeps a direct API access route instead of hiding the web API surface', () => {
+  test('home menu omits API access from the mini-program surface', () => {
     const homeWxml = read('miniprogram/pages/home/index.wxml');
     const homeJs = read('miniprogram/pages/home/index.js');
+    const topbarWxml = read('miniprogram/components/app-topbar/index.wxml');
+    const topbarJs = read('miniprogram/components/app-topbar/index.js');
 
-    expect(homeWxml).toContain('data-target="api"');
-    expect(homeJs).toContain("api: '/pages/methodology/index?section=api'");
+    expect(homeWxml).not.toContain('data-target="api"');
+    expect(homeJs).not.toContain("api: '/pages/methodology/index?section=api'");
+    expect(topbarWxml).not.toContain('data-target="api"');
+    expect(topbarJs).not.toContain("api: '/pages/methodology/index?section=api'");
   });
 
   test('home search uses the same in-card loading treatment as the web prediction flow', () => {

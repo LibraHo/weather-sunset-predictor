@@ -62,8 +62,8 @@ describe('miniprogram web-like experience shell', () => {
     expect(wxml).toContain('data-target="methodology"');
     expect(wxml).toContain('data-target="map"');
     expect(wxml).toContain('data-target="gallery"');
-    expect(wxml).toContain('data-target="api"');
     expect(wxml).toContain('data-target="upload"');
+    expect(wxml).not.toContain('data-target="api"');
     expect(wxml).toContain('settings-panel');
     expect(wxml).toContain('settings-done');
     expect(wxml).toContain('data-value="zh-CN"');
@@ -88,6 +88,7 @@ describe('miniprogram web-like experience shell', () => {
     expect(js).toContain("map: `/pages/map/index?period=${this.data.period}`");
     expect(js).toContain("gallery: '/pages/gallery/index'");
     expect(js).toContain("upload: '/pages/upload/index'");
+    expect(js).not.toContain("api: '/pages/methodology/index?section=api'");
     expect(js).toContain("options.weatherTest === '1'");
     expect(js).toContain('buildDefaultWeatherPreview');
     expect(js).toContain('buildTestWeatherPreview');

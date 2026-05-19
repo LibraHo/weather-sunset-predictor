@@ -17,7 +17,6 @@
           <view class="home-view-option" data-target="methodology" bindtap="navigateFeature">火烧云计算方法</view>
           <view class="home-view-option" data-target="map" bindtap="navigateFeature">火烧云地图</view>
           <view class="home-view-option" data-target="gallery" bindtap="navigateFeature">分享地图</view>
-          <view class="home-view-option" data-target="api" bindtap="navigateFeature">API接入</view>
           <view class="home-view-option" data-target="upload" bindtap="navigateFeature">上传照片</view>
         </view>
       </view>
@@ -340,12 +339,11 @@
   </view>
 
   <view class="home-experience-strip" wx:if="{{weatherPreview.visible}}">
-    <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="methodology" bindtap="navigateFeature">方法</view>
-    <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="map" bindtap="navigateFeature">地图</view>
-    <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="gallery" bindtap="navigateFeature">照片</view>
-    <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="api" bindtap="navigateFeature">API</view>
-    <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="upload" bindtap="navigateFeature">上传</view>
-  </view>
+        <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="methodology" bindtap="navigateFeature">方法</view>
+        <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="map" bindtap="navigateFeature">地图</view>
+        <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="gallery" bindtap="navigateFeature">照片</view>
+        <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="upload" bindtap="navigateFeature">上传</view>
+      </view>
 
   <view class="home-section-head" wx:if="{{weatherPreview.visible}}">
     <view class="section-title">最近地点</view>
