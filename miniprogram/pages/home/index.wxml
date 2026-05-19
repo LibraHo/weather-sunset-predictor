@@ -115,7 +115,7 @@
     <view class="weather-main-layout">
       <view class="weather-visual-panel">
         <view class="weather-location-inline">
-          <text class="weather-location-pin">⌖</text>
+          <image class="weather-location-pin" src="/assets/icons/weather-location-pin.svg" mode="aspectFit" aria-hidden="true" />
           <text>{{weatherPreview.location}}</text>
         </view>
         <image class="weather-icon-image" src="{{weatherPreview.iconSrc}}" mode="aspectFit" aria-hidden="true" />

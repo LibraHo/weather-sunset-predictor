@@ -2501,32 +2501,8 @@
 }
 
 .weather-location-pin {
-  position: relative;
   width: 26rpx;
   height: 26rpx;
-  border: 4rpx solid currentColor;
-  border-radius: 50%;
-}
-
-.weather-location-pin::before,
-.weather-location-pin::after {
-  position: absolute;
-  content: "";
-  background: currentColor;
-}
-
-.weather-location-pin::before {
-  left: 9rpx;
-  top: -9rpx;
-  width: 4rpx;
-  height: 40rpx;
-}
-
-.weather-location-pin::after {
-  left: -9rpx;
-  top: 9rpx;
-  width: 40rpx;
-  height: 4rpx;
 }
 
 .weather-wind-glyph {
