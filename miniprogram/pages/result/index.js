@@ -584,21 +584,21 @@ export function buildAnalysisItems(prediction = {}) {
   return [
     {
       key: 'canvas',
-      title: '云况画布',
+      title: '云层载体',
       value: formatScore(canvas.score ?? breakdown.canvasScore),
       tone: levelFromScore(canvas.score ?? breakdown.canvasScore),
       detail: buildCloudCanvasText(canvas, prediction.cloudType)
     },
     {
       key: 'lightPath',
-      title: '光路条件',
+      title: '光路门控',
       value: formatScore(lightPath.score ?? breakdown.lightPathScore),
       tone: levelFromScore(lightPath.score ?? breakdown.lightPathScore),
       detail: buildLightPathText(lightPath)
     },
     {
       key: 'rendering',
-      title: '色彩修正',
+      title: '显色修正',
       value: formatFactor(rendering.factor ?? breakdown.renderingFactor),
       tone: levelFromFactor(rendering.factor ?? breakdown.renderingFactor),
       detail: buildRenderingText(rendering)
@@ -616,11 +616,13 @@ export function buildScoreLedger(prediction = {}) {
   const lightPathScore = lightPath.score ?? breakdown.lightPathScore;
   const baseScore = breakdown.baseScore;
   const renderingFactor = rendering.factor ?? breakdown.renderingFactor;
+  const lightPathGate = prediction.lightPathGate?.gate ?? breakdown.lightPathGate;
+  const renderingAdjustment = prediction.renderingAdjustment?.adjustment ?? breakdown.renderingAdjustment;
   const renderedScore = breakdown.unclampedFinalScore ?? breakdown.renderedScore ?? finalScore;
   const cloudThicknessStep = buildCloudThicknessStep(prediction, canvas);
 
   const summary = Number.isFinite(Number(finalScore))
-    ? `${Math.round(Number(finalScore))} 分：由云层载体、光路和显色条件综合计算`
+    ? `${Math.round(Number(finalScore))} 分：由云层载体经光路门控后，再叠加显色修正`
     : '等待评分数据后展示完整解释';
 
   const steps = [
@@ -644,8 +646,8 @@ export function buildScoreLedger(prediction = {}) {
       key: 'baseScore',
       label: '基础分',
       result: formatScore(baseScore),
-      expression: buildBaseScoreExpression(canvasScore, lightPathScore, baseScore),
-      detail: '对齐网页版：载体占主要权重，光路用于修正可见染色机会',
+      expression: buildBaseScoreExpression(canvasScore, lightPathGate, baseScore),
+      detail: '对齐网页版：载体分先看可染色云面，再由太阳方向光路作为门控',
       tone: levelFromScore(baseScore)
     }
   ];
@@ -655,7 +657,7 @@ export function buildScoreLedger(prediction = {}) {
       key: 'rendering',
       label: '显色修正',
       result: formatScore(renderedScore),
-      expression: buildRenderingExpression(baseScore, renderingFactor, renderedScore),
+      expression: buildRenderingExpression(baseScore, renderingAdjustment, renderingFactor, renderedScore),
       detail: buildRenderingText(rendering),
       tone: levelFromFactor(renderingFactor)
     },
@@ -678,7 +680,8 @@ export function buildScoreLedger(prediction = {}) {
 function buildCloudThicknessStep(prediction = {}, canvas = {}) {
   const cloudThickness = prediction.cloudThickness || canvas.cloudThickness;
   const thickPenalty = prediction.thickHighCloudPenalty;
-  if (!cloudThickness?.thickness && !thickPenalty?.applied) return null;
+  const thicknessAdjustment = canvas.cloudThicknessAdjustment || prediction.cloudThicknessAdjustment;
+  if (!cloudThickness?.thickness && !thickPenalty?.applied && !thicknessAdjustment) return null;
   const reasons = cloudThickness?.reasons || [];
   const softened = reasons.includes('dense_upper_cloud_carrier_softened')
     || reasons.includes('opening_upper_cloud_carrier_softened')
@@ -698,11 +701,25 @@ function buildCloudThicknessStep(prediction = {}, canvas = {}) {
       tone: 'bad'
     };
   }
+  if (thicknessAdjustment) {
+    const adjustment = Number(thicknessAdjustment.adjustment || 0);
+    const sign = adjustment > 0 ? '+' : '';
+    return {
+      key: 'cloudThickness',
+      label: '云厚修正',
+      result: `${sign}${roundOne(adjustment)}分`,
+      expression: adjustment >= 0 ? '薄云载体加分' : '厚云幕扣分',
+      detail: adjustment >= 0
+        ? '薄云更容易被低角度阳光染色，因此只做有上限的加分。'
+        : '厚云幕会削弱真实可染色效果，因此从载体分中扣除。',
+      tone: adjustment >= 0 ? 'cap' : 'bad'
+    };
+  }
   return {
     key: 'cloudThickness',
     label: '云厚修正',
     result: `x${roundTwo(cloudThickness.modifier ?? 1)}`,
-    expression: softened ? '云厚证据温和修正' : '按辐射、水汽和天气码估算',
+    expression: softened ? '云厚证据温和修正' : '按漫射、水汽和天气码估算',
     detail: softened
       ? '低云少、空气不过灰且太阳方向有开口时，水汽信号不会单独把高云/卷云压成厚灰幕。'
       : '云层偏厚会降低可染色画布表现。',
@@ -710,18 +727,22 @@ function buildCloudThicknessStep(prediction = {}, canvas = {}) {
   };
 }
 
-function buildBaseScoreExpression(canvasScore, lightPathScore, baseScore) {
-  if (Number.isFinite(Number(canvasScore)) && Number.isFinite(Number(lightPathScore)) && Number.isFinite(Number(baseScore))) {
-    return `${roundOne(canvasScore)}×80% + ${roundOne(lightPathScore)}×20% = ${roundOne(baseScore)}`;
+function buildBaseScoreExpression(canvasScore, lightPathGate, baseScore) {
+  if (Number.isFinite(Number(canvasScore)) && Number.isFinite(Number(lightPathGate)) && Number.isFinite(Number(baseScore))) {
+    return `${roundOne(canvasScore)} × 光路门控 ${roundTwo(lightPathGate)} = ${roundOne(baseScore)}`;
   }
-  return '画布 + 光路';
+  return '载体 × 光路门控';
 }
 
-function buildRenderingExpression(baseScore, renderingFactor, renderedScore) {
+function buildRenderingExpression(baseScore, renderingAdjustment, renderingFactor, renderedScore) {
+  if (Number.isFinite(Number(baseScore)) && Number.isFinite(Number(renderingAdjustment)) && Number.isFinite(Number(renderedScore))) {
+    const sign = Number(renderingAdjustment) >= 0 ? '+' : '';
+    return `${roundOne(baseScore)} ${sign}${roundOne(renderingAdjustment)} = ${roundOne(renderedScore)}`;
+  }
   if (Number.isFinite(Number(baseScore)) && Number.isFinite(Number(renderingFactor)) && Number.isFinite(Number(renderedScore))) {
     return `${roundOne(baseScore)} × 显色系数 ${roundTwo(renderingFactor)} = ${roundOne(renderedScore)}`;
   }
-  return '天气通透度修正';
+  return '显色小幅修正';
 }
 
 function roundOne(value) {

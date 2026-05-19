@@ -380,9 +380,43 @@ describe('miniprogram page user/share helpers', () => {
     });
 
     expect(analysis).toHaveLength(3);
-    expect(analysis[0]).toMatchObject({ title: '云况画布', value: '83分', tone: 'good' });
+    expect(analysis[0]).toMatchObject({ title: '云层载体', value: '83分', tone: 'good' });
     expect(analysis[1].detail).toContain('太阳方位 286°');
-    expect(analysis[2]).toMatchObject({ title: '色彩修正', value: 'x0.82', tone: 'watch' });
+    expect(analysis[2]).toMatchObject({ title: '显色修正', value: 'x0.82', tone: 'watch' });
+  });
+
+  test('result score ledger follows additive carrier and light gate formula copy', () => {
+    const ledger = resultHelpers.buildScoreLedger({
+      score: 67,
+      canvasAnalysis: {
+        score: 78,
+        cloudThicknessAdjustment: { adjustment: -12, reason: 'moderate_thick_cloud_penalty' }
+      },
+      lightPathAnalysis: { score: 72 },
+      lightPathGate: { gate: 0.82 },
+      renderingAdjustment: { adjustment: 3.2 },
+      renderingAnalysis: { factor: 1.08 },
+      breakdown: {
+        baseScore: 64,
+        lightPathGate: 0.82,
+        renderingAdjustment: 3.2,
+        unclampedFinalScore: 67
+      }
+    });
+
+    expect(ledger.summary).toContain('云层载体经光路门控');
+    expect(ledger.steps.find((step) => step.key === 'baseScore')).toMatchObject({
+      expression: '78 × 光路门控 0.82 = 64'
+    });
+    expect(ledger.steps.find((step) => step.key === 'cloudThickness')).toMatchObject({
+      result: '-12分',
+      expression: '厚云幕扣分'
+    });
+    expect(ledger.steps.find((step) => step.key === 'rendering')).toMatchObject({
+      expression: '64 +3.2 = 67'
+    });
+    expect(JSON.stringify(ledger)).not.toContain('80%');
+    expect(JSON.stringify(ledger)).not.toContain('20%');
   });
 
   test('result page maps surrounding and 3-day data to display rows', () => {
