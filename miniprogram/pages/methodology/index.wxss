@@ -62,6 +62,7 @@
 
 .score-row,
 .factor-card,
+.calculation-step,
 .source-item,
 .version-card {
   border: 1rpx solid rgba(255, 255, 255, 0.08);
@@ -95,6 +96,7 @@
 
 .score-desc,
 .factor-desc,
+.calculation-desc,
 .source-copy,
 .source-note,
 .changelog-summary,
@@ -129,6 +131,7 @@
 }
 
 .factor-title,
+.calculation-title,
 .source-label,
 .changelog-title,
 .version-title {
@@ -145,6 +148,31 @@
 }
 
 .factor-desc {
+  margin-top: 10rpx;
+}
+
+.calculation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+  margin-top: 22rpx;
+}
+
+.calculation-step {
+  padding: 20rpx;
+}
+
+.calculation-formula {
+  margin-top: 8rpx;
+  color: #ffd166;
+  font-size: 24rpx;
+  font-family: Consolas, Monaco, monospace;
+  font-weight: 800;
+  line-height: 1.45;
+  word-break: break-all;
+}
+
+.calculation-desc {
   margin-top: 10rpx;
 }
 
@@ -282,6 +310,7 @@
 .methodology-page.theme-light .section-title,
 .methodology-page.theme-light .score-name,
 .methodology-page.theme-light .factor-title,
+.methodology-page.theme-light .calculation-title,
 .methodology-page.theme-light .source-label,
 .methodology-page.theme-light .changelog-title,
 .methodology-page.theme-light .version-title {
@@ -291,6 +320,7 @@
 .methodology-page.theme-light .hero-copy,
 .methodology-page.theme-light .score-desc,
 .methodology-page.theme-light .factor-desc,
+.methodology-page.theme-light .calculation-desc,
 .methodology-page.theme-light .source-copy,
 .methodology-page.theme-light .source-note,
 .methodology-page.theme-light .changelog-summary,
@@ -302,6 +332,7 @@
 
 .methodology-page.theme-light .score-row,
 .methodology-page.theme-light .factor-card,
+.methodology-page.theme-light .calculation-step,
 .methodology-page.theme-light .source-item,
 .methodology-page.theme-light .version-card,
 .methodology-page.theme-light .api-endpoint {
@@ -328,6 +359,7 @@
 
 .methodology-page.theme-dark .score-row,
 .methodology-page.theme-dark .factor-card,
+.methodology-page.theme-dark .calculation-step,
 .methodology-page.theme-dark .source-item,
 .methodology-page.theme-dark .version-card,
 .methodology-page.theme-dark .api-endpoint {

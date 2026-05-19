@@ -938,5 +938,11 @@ translations.home.methodology.sections.finalFormula = translations.home.methodol
   formula: 'Puntuación final = soporte de color × compuerta de trayectoria de luz + ajuste de color',
   highCloudCap: 'Cuando dominan las nubes altas y las nubes bajas son escasas, se permite una puntuación máxima más alta'
 };
+Object.assign(translations.home.methodology.sections.finalFormula, {
+  carrier: 'Puntuación de soporte = max(lienzo de nubes, soporte débil de aerosoles)',
+  lightGate: 'Compuerta de trayectoria de luz = 0,25–1,12; una pared de nubes cercana puede bajar a ~0,42, una lejana a ~0,55, y una apertura hacia el sol a ~0,90–0,96',
+  rendering: 'Ajuste de color = pequeña corrección por visibilidad, humedad, estado tras lluvia y partículas; el ajuste positivo se limita a unos +9 puntos',
+  statusCaps: 'La puntuación mostrada se calibra por estado: sin nubes rojas queda por debajo de 40, resplandor leve por debajo de 60; geometría imposible, nubes gruesas, cortina gris y lluvia con nubes bajas pueden limitarla más'
+});
 
 export default translations;

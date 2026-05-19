@@ -32,6 +32,18 @@
     </view>
   </view>
 
+  <view wx:if="{{!apiOnly}}" class="methodology-section xiake-card app-section-card calculation-card">
+    <view class="section-kicker">Formula</view>
+    <view class="section-title">分数计算链路</view>
+    <view class="calculation-list">
+      <view class="calculation-step" wx:for="{{calculationSteps}}" wx:key="title">
+        <view class="calculation-title">{{item.title}}</view>
+        <view class="calculation-formula">{{item.formula}}</view>
+        <view class="calculation-desc">{{item.desc}}</view>
+      </view>
+    </view>
+  </view>
+
   <view wx:if="{{!apiOnly}}" class="methodology-section xiake-card app-section-card score-source-card">
     <view class="section-kicker">Map vs Point</view>
     <view class="section-title">地图分 / 地点详情分说明</view>

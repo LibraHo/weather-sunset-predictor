@@ -201,7 +201,11 @@ const translations = {
           "subtitle": "Combiner toile, trajet lumineux et rendu",
           "desc": "Le score final combine la structure nuageuse, le trajet lumineux et le potentiel de rendu de l’air, avec des limites pour les cas extrêmes.",
           "formula": "Score total = score de support × porte du trajet lumineux + ajustement de rendu",
-          "highCloudCap": "Si les nuages hauts sont insuffisants, le score maximal reste limité même avec de bonnes autres conditions."
+          "highCloudCap": "Si les nuages hauts sont insuffisants, le score maximal reste limité même avec de bonnes autres conditions.",
+          "carrier": "Score de support = max(score de toile nuageuse, support faible par aérosols)",
+          "lightGate": "Porte du trajet lumineux = 0,25–1,12 ; un mur nuageux proche peut descendre vers 0,42, un mur lointain vers 0,55, une ouverture solaire vers 0,90–0,96",
+          "rendering": "Ajustement de rendu = petite correction liée à la visibilité, l’humidité, l’après-pluie et les particules ; le bonus positif est plafonné autour de +9 points",
+          "statusCaps": "Le score affiché est calibré par statut : pas de nuage rouge sous 40, lueur légère sous 60 ; géométrie impossible, nuage épais, rideau gris et pluie avec nuages bas peuvent encore le plafonner"
         }
       }
     }

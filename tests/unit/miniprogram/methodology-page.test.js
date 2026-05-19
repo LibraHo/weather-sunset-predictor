@@ -24,6 +24,7 @@ describe('miniprogram methodology page', () => {
     expect(js).toContain("heroTitle: '火烧云计算方法'");
     expect(wxml).toContain('评分解读');
     expect(wxml).toContain('形成条件');
+    expect(wxml).toContain('分数计算链路');
     expect(wxml).toContain('地图分 / 地点详情分说明');
     expect(wxml).toContain('版本更新记录');
     expect(wxml).toContain('changelog-scroll');
@@ -34,6 +35,10 @@ describe('miniprogram methodology page', () => {
     expect(js).toContain('<40 分');
     expect(js).toContain('加法载体 + 光路门控 v1');
     expect(js).toContain('不再用直射比直接参与评分');
+    expect(js).toContain('high×0.75 + mid×0.45');
+    expect(js).toContain('carrier × gate + renderingAdjustment');
+    expect(js).toContain('0.25-1.12');
+    expect(js).toContain('无火烧云 <40');
     expect(wxml).toContain('2026.05.19 · 加法载体 + 光路门控');
     expect(wxml).toContain('地图分');
     expect(wxml).toContain('地点详情分');

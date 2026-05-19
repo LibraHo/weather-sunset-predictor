@@ -155,6 +155,17 @@ apiAccess: 'Accesso API'
           "level3": "0.5–2mm/h → ×0.5",
           "level4": ">2mm/h → ×0.15 (pioggia intensa, quasi impossibile)",
           "formula": "Punteggio finale = Base × Penalità nuvole basse × Penalità precipitazioni"
+        },
+        "finalFormula": {
+          "title": "8. Punteggio finale",
+          "subtitle": "Final Score · supporto × porta del percorso luminoso + resa",
+          "desc": "Il punteggio finale non moltiplica più vari segnali positivi. Prima calcola il supporto di colore, poi lascia al percorso del sole decidere quanto possa funzionare, infine aggiunge una piccola correzione di resa.",
+          "formula": "Punteggio finale = clamp(supporto × porta del percorso luminoso + correzione resa, 0, 100)",
+          "highCloudCap": "Quando le nubi alte sono abbondanti ma il percorso luminoso è bloccato, la porta del percorso luminoso abbassa comunque il massimo.",
+          "carrier": "Punteggio supporto = max(lienzo di nubi, supporto aerosol debole)",
+          "lightGate": "Porta del percorso luminoso = 0,25–1,12; muro vicino ~0,42, muro lontano ~0,55, apertura verso il sole ~0,90–0,96",
+          "rendering": "Correzione resa = piccolo delta da visibilità, umidità, dopo-pioggia e particelle; bonus positivo circa +9 punti max",
+          "statusCaps": "Il punteggio mostrato è calibrato per stato: nessuna nube rossa sotto 40, bagliore leggero sotto 60; geometria impossibile, nube spessa, velo grigio e pioggia con nubi basse possono limitarlo ancora"
         }
       }
     }

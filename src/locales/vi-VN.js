@@ -201,7 +201,11 @@ const translations = {
           "subtitle": "Kết hợp nền mây, đường sáng và khả năng lên màu",
           "desc": "Điểm cuối cùng kết hợp cấu trúc mây, điều kiện đường sáng và khả năng tán xạ của không khí, đồng thời giới hạn các trường hợp cực đoan.",
           "formula": "Tổng điểm = điểm nền mang màu × cổng đường sáng + hiệu chỉnh lên màu",
-          "highCloudCap": "Khi thiếu mây cao, điểm tối đa sẽ bị giới hạn ngay cả khi các điều kiện khác tốt."
+          "highCloudCap": "Khi thiếu mây cao, điểm tối đa sẽ bị giới hạn ngay cả khi các điều kiện khác tốt.",
+          "carrier": "Điểm nền mang màu = max(điểm nền mây, điểm nền aerosol yếu)",
+          "lightGate": "Cổng đường sáng = 0,25–1,12; tường mây gần có thể xuống khoảng 0,42, tường mây xa khoảng 0,55, khoảng mở hướng mặt trời khoảng 0,90–0,96",
+          "rendering": "Hiệu chỉnh lên màu = điều chỉnh nhỏ từ tầm nhìn, độ ẩm, trạng thái sau mưa và hạt khí; phần cộng dương tối đa khoảng +9 điểm",
+          "statusCaps": "Điểm hiển thị được hiệu chỉnh theo trạng thái: không có mây đỏ dưới 40, ánh đỏ nhẹ dưới 60; hình học không khả thi, mây dày, màn xám và mưa kèm mây thấp có thể giới hạn thêm"
         }
       }
     }
