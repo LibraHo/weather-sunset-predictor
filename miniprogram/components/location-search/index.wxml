@@ -12,6 +12,15 @@
         <view class="pin-stem"></view>
       </view>
       </button>
+      <view class="location-suggestion-dropdown" wx:if="{{candidates.length}}">
+        <view class="location-suggestion-item tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" wx:for="{{candidates}}" wx:key="key" data-index="{{index}}" bindtap="onSelectCandidate">
+          <view class="location-suggestion-pin">📍</view>
+          <view class="location-suggestion-copy">
+            <view class="location-suggestion-name">{{item.name}}</view>
+            <view class="location-suggestion-meta">{{item.meta}}</view>
+          </view>
+        </view>
+      </view>
     </view>
     <button class="location-query-button {{loading ? 'is-disabled' : ''}}" loading="{{loading}}" disabled="{{loading}}" hover-class="button-hover" hover-stay-time="80" bindtap="onConfirm">{{loading ? '读取中' : '查询'}}</button>
   </view>

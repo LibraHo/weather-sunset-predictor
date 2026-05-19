@@ -117,12 +117,18 @@ describe('miniprogram web-like experience shell', () => {
 
   test('location shortcuts query immediately instead of requiring a second tap', () => {
     const locationWxml = read('miniprogram/components/location-search/index.wxml');
+    const homeWxml = read('miniprogram/pages/home/index.wxml');
     const homeJs = read('miniprogram/pages/home/index.js');
 
     expect(locationWxml).toContain('bindtap="onLocate"');
     expect(locationWxml).toContain('bindtap="onFavorite"');
     expect(locationWxml).toContain('bindconfirm="onConfirm"');
     expect(locationWxml).toContain('bindtap="onConfirm"');
+    expect(locationWxml).toContain('location-suggestion-dropdown');
+    expect(locationWxml).toContain('wx:if="{{candidates.length}}"');
+    expect(locationWxml).toContain('bindtap="onSelectCandidate"');
+    expect(homeWxml).toContain('candidates="{{locationCandidates}}"');
+    expect(homeWxml).toContain('bind:selectcandidate="selectLocationCandidate"');
     expect(locationWxml).toMatch(/class="favorite-icon"[\s\S]*bindtap="onFavorite"/);
     expect(locationWxml).toMatch(/class="pin-location-button"[\s\S]*bindtap="onLocate"/);
     expect(homeJs).toMatch(/async onUseCurrentLocation\(\)[\s\S]*await this\.onSearch\(\);/);
@@ -132,6 +138,7 @@ describe('miniprogram web-like experience shell', () => {
     expect(homeJs).toMatch(/async resolveLocation\(locationText\)[\s\S]*if \(this\.data\.coordinate\)/);
     expect(homeJs).toContain('locationCandidates');
     expect(homeJs).toContain('selectLocationCandidate(event)');
+    expect(homeJs).toContain('event.detail?.index');
   });
 
   test('tap targets provide native press feedback across the mini-program surface', () => {

@@ -586,7 +586,7 @@ Page({
   },
 
   async selectLocationCandidate(event) {
-    const index = Number(event.currentTarget.dataset.index);
+    const index = Number(event.detail?.index ?? event.currentTarget?.dataset?.index);
     const item = this.data.locationCandidates[index];
     if (!item) return;
     const location = {
