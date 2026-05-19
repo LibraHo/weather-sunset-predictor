@@ -103,11 +103,11 @@ describe('recent user-reported UI regression guards', () => {
     expect(controller).not.toContain('style="flex:1 1 0;min-width:0;" title="${highLabel}"');
   });
 
-  test('firecloud raster full mode starts coloring at 30 and compact at 40', () => {
+  test('firecloud raster coloring is fixed at 40 without a user color mode', () => {
     const source = rasterOverlay();
-    expect(source).toContain('const FULL_VISUAL_MIN_SCORE = 30');
-    expect(source).toContain('const COMPACT_VISUAL_MIN_SCORE = 40');
-    expect(source).toContain('mode === RASTER_COLOR_MODES.FULL ? FULL_VISUAL_MIN_SCORE : COMPACT_VISUAL_MIN_SCORE');
+    expect(source).toContain('const VISUAL_MIN_SCORE = 40');
+    expect(source).toContain('const BAND_LEVELS = [40, 45, 50, 55, 60, 65, 70]');
+    expect(source).not.toContain('firecloud_raster_color_mode');
   });
 
   test('front header and footer use the same card width language as other panels', () => {

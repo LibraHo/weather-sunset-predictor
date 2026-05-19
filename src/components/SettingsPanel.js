@@ -135,23 +135,6 @@ class SettingsPanel {
 
           <hr class="settings-section-divider" />
 
-          <!-- 🗺️ 地图底图 -->
-          <div class="settings-section">
-            <h3 class="settings-section-title">🗺️ ${this.i18n.t('settings.mapTileProvider') || this._uiText('Map Basemap', '地图底图')}</h3>
-            <div class="settings-section-content">
-              <div class="setting-item">
-                <label class="setting-label" for="firecloud-raster-color-mode-select">🔥 ${this._uiText('Fire cloud overlay color mode', '火烧云涂层颜色模式')}</label>
-                <select id="firecloud-raster-color-mode-select" class="setting-select">
-                  <option value="compact">${this._uiText('Compact: color starts above 40 pts', '精简：40 分以上开始染色')}</option>
-                  <option value="full">${this._uiText('Full: color starts above 30 pts', '完整：30 分以上开始染色')}</option>
-                </select>
-                <small class="setting-hint">${this._uiText('Changing this refreshes the fire-cloud map overlay and legend', '切换后会刷新火烧云地图涂层和图例')}</small>
-              </div>
-            </div>
-          </div>
-
-          <hr class="settings-section-divider" />
-
           <!-- ☁️ 天气数据源 -->
           <div class="settings-section">
             <h3 class="settings-section-title">☁️ ${this.i18n.t('settings.weatherProvider')}</h3>
@@ -394,15 +377,6 @@ class SettingsPanel {
       });
     }
 
-    const rasterColorModeSelect = document.getElementById('firecloud-raster-color-mode-select');
-    if (rasterColorModeSelect) {
-      rasterColorModeSelect.value = localStorage.getItem('firecloud_raster_color_mode') || 'compact';
-      rasterColorModeSelect.addEventListener('change', (e) => {
-        localStorage.setItem('firecloud_raster_color_mode', e.target.value);
-        window.dispatchEvent(new CustomEvent('firecloudRasterColorModeChanged', { detail: { mode: e.target.value } }));
-      });
-    }
-
     // 天气数据源状态 (任务 44)
     this.updateProviderStatus();
 
@@ -472,11 +446,6 @@ class SettingsPanel {
     const weatherModelSelect = document.getElementById('weather-model-select');
     if (weatherModelSelect) {
       weatherModelSelect.value = localStorage.getItem('weather_model') || 'ecmwf_ifs025';
-    }
-
-    const rasterColorModeSelect = document.getElementById('firecloud-raster-color-mode-select');
-    if (rasterColorModeSelect) {
-      rasterColorModeSelect.value = localStorage.getItem('firecloud_raster_color_mode') || 'compact';
     }
 
     // 任务17.3：加载默认位置

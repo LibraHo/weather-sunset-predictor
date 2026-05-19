@@ -24,43 +24,21 @@ async function _loadChinaGeoJSON() {
 const RASTER_MIN_SCORE = 15;
 const RASTER_FULL_SCORE = 70;
 
-const RASTER_COLOR_MODE_KEY = 'firecloud_raster_color_mode';
-const RASTER_COLOR_MODES = Object.freeze({
-  FULL: 'full',
-  COMPACT: 'compact'
-});
-const FULL_VISUAL_MIN_SCORE = 30;
-const COMPACT_VISUAL_MIN_SCORE = 40;
-
-function getRasterColorMode() {
-  try {
-    const mode = localStorage.getItem(RASTER_COLOR_MODE_KEY);
-    return mode === RASTER_COLOR_MODES.FULL ? RASTER_COLOR_MODES.FULL : RASTER_COLOR_MODES.COMPACT;
-  } catch (_) {
-    return RASTER_COLOR_MODES.COMPACT;
-  }
-}
-
-function getVisualMinScore(mode = getRasterColorMode()) {
-  return mode === RASTER_COLOR_MODES.FULL ? FULL_VISUAL_MIN_SCORE : COMPACT_VISUAL_MIN_SCORE;
-}
-
-function getBandLevels(mode = getRasterColorMode()) {
-  return mode === RASTER_COLOR_MODES.FULL
-    ? [30, 35, 40, 45, 50, 55, 60, 65, 70]
-    : [40, 45, 50, 55, 60, 65, 70];
-}
-
-function getContourLevels(mode = getRasterColorMode()) {
-  return mode === RASTER_COLOR_MODES.FULL
-    ? Array.from({ length: 21 }, (_, i) => 30 + i * 2)
-    : Array.from({ length: 16 }, (_, i) => 40 + i * 2);
-}
-
-// 默认导出常量保持兼容；运行时使用 get* 方法读取当前设置
 const VISUAL_MIN_SCORE = 40;
-const BAND_LEVELS = getBandLevels(RASTER_COLOR_MODES.COMPACT);
-const CONTOUR_LEVELS = getContourLevels(RASTER_COLOR_MODES.COMPACT);
+const BAND_LEVELS = [40, 45, 50, 55, 60, 65, 70];
+const CONTOUR_LEVELS = Array.from({ length: 16 }, (_, i) => 40 + i * 2);
+
+function getVisualMinScore() {
+  return VISUAL_MIN_SCORE;
+}
+
+function getBandLevels() {
+  return BAND_LEVELS;
+}
+
+function getContourLevels() {
+  return CONTOUR_LEVELS;
+}
 
 // 关键标签（高分不足时用次级标签）
 const KEY_LABEL_LEVELS = [70, 80];
@@ -116,8 +94,8 @@ function smoothstep01(t) {
   return x * x * (3 - 2 * x);
 }
 
-function alphaSoftThreshold(score, mode = getRasterColorMode()) {
-  const visualMin = getVisualMinScore(mode);
+function alphaSoftThreshold(score) {
+  const visualMin = getVisualMinScore();
   if (score < visualMin) return 0;
   return 1;
 }
@@ -144,16 +122,16 @@ function samplePalette(t, palette) {
 /**
  * score 映射为填色（粉色半透明、分级平滑）
  */
-function scoreToRGBA(score, noDataValue = -1, palette = FIRECLOUD_PALETTE, mode = getRasterColorMode()) {
+function scoreToRGBA(score, noDataValue = -1, palette = FIRECLOUD_PALETTE) {
   if (score === noDataValue || !Number.isFinite(score)) {
     return { r: 0, g: 0, b: 0, a: 0 };
   }
 
-  const soft = alphaSoftThreshold(score, mode);
+  const soft = alphaSoftThreshold(score);
   if (soft <= 0) return { r: 0, g: 0, b: 0, a: 0 };
 
-  const visualMin = getVisualMinScore(mode);
-  const bandLevels = getBandLevels(mode);
+  const visualMin = getVisualMinScore();
+  const bandLevels = getBandLevels();
   const clamped = clamp(score, visualMin, RASTER_FULL_SCORE);
 
   // 基于 band 的离散层级 + 层内平滑（兼顾 contourf 质感与边缘柔和）
@@ -335,14 +313,6 @@ export default class ChinaRasterOverlay {
     this._boundReproject = null;
     this._boundSchedule = null;
     this._rafHandle = null;
-
-    this._boundColorModeChanged = () => {
-      if (this._rasterData) this._buildOffscreen(this._rasterData);
-      if (this._visible) this._reprojectCanvas();
-    };
-    if (typeof window !== 'undefined') {
-      window.addEventListener('firecloudRasterColorModeChanged', this._boundColorModeChanged);
-    }
   }
 
   init(leafletMap) {
@@ -541,13 +511,12 @@ export default class ChinaRasterOverlay {
     const imgData = this._offCtx.createImageData(width, height);
     const buf = imgData.data;
     const palette = getPaletteForPeriod(this._period);
-    const colorMode = getRasterColorMode();
 
     for (let row = 0; row < height; row++) {
       for (let col = 0; col < width; col++) {
         const idx = row * width + col;
         const score = renderValues[idx];
-        const { r, g, b, a } = scoreToRGBA(score, noData, palette, colorMode);
+        const { r, g, b, a } = scoreToRGBA(score, noData, palette);
         const px = idx * 4;
         buf[px] = r;
         buf[px + 1] = g;
@@ -558,7 +527,7 @@ export default class ChinaRasterOverlay {
 
     this._offCtx.putImageData(imgData, 0, 0);
 
-    this._contours = buildContours(renderValues, width, height, getContourLevels(colorMode), noData);
+    this._contours = buildContours(renderValues, width, height, getContourLevels(), noData);
 
     const maxScore = renderValues.reduce((m, v) => (Number.isFinite(v) && v !== noData && v > m ? v : m), -Infinity);
     this._activeLabelLevels = maxScore >= 70 ? KEY_LABEL_LEVELS : FALLBACK_LABEL_LEVELS;
@@ -651,7 +620,7 @@ export default class ChinaRasterOverlay {
         const lon = bbox.west + (col + 0.5) * lonStep;
         const pt = this._map.latLngToContainerPoint(window.L.latLng(lat, lon));
 
-        const { r, g, b, a } = scoreToRGBA(score, noData, getPaletteForPeriod(this._period), getRasterColorMode());
+        const { r, g, b, a } = scoreToRGBA(score, noData, getPaletteForPeriod(this._period));
         if (a <= 0) continue;
 
         ctx.beginPath();
@@ -782,9 +751,6 @@ export default class ChinaRasterOverlay {
       this._map.off('moveend zoomend resize', this._boundReproject);
       this._map.off('move', this._boundSchedule);
     }
-    if (typeof window !== 'undefined' && this._boundColorModeChanged) {
-      window.removeEventListener('firecloudRasterColorModeChanged', this._boundColorModeChanged);
-    }
     if (this._canvas) this._canvas.remove();
 
     this._canvas = null;
@@ -800,9 +766,6 @@ export default class ChinaRasterOverlay {
 
 export {
   scoreToRGBA,
-  RASTER_COLOR_MODE_KEY,
-  RASTER_COLOR_MODES,
-  getRasterColorMode,
   getVisualMinScore,
   getBandLevels,
   getContourLevels,

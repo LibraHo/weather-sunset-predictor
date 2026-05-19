@@ -18,7 +18,6 @@ import {
   FIRECLOUD_PALETTE,
   SUNRISE_PALETTE,
   getPaletteForPeriod,
-  RASTER_COLOR_MODES,
   getVisualMinScore,
   getBandLevels,
 } from '../../../src/services/ChinaRasterOverlay.js';
@@ -27,14 +26,12 @@ import {
 
 describe('scoreToRGBA', () => {
 
-  test('full 模式从 30 分开始染色，compact 模式 40 分以下透明', () => {
-    expect(scoreToRGBA(20, -1, FIRECLOUD_PALETTE, RASTER_COLOR_MODES.FULL).a).toBe(0);
-    expect(scoreToRGBA(30, -1, FIRECLOUD_PALETTE, RASTER_COLOR_MODES.FULL).a).toBeGreaterThan(0);
-    expect(scoreToRGBA(20, -1, FIRECLOUD_PALETTE, RASTER_COLOR_MODES.COMPACT).a).toBe(0);
-    expect(getVisualMinScore(RASTER_COLOR_MODES.FULL)).toBe(30);
-    expect(getVisualMinScore(RASTER_COLOR_MODES.COMPACT)).toBe(40);
-    expect(getBandLevels(RASTER_COLOR_MODES.FULL)[0]).toBe(30);
-    expect(getBandLevels(RASTER_COLOR_MODES.COMPACT)[0]).toBe(40);
+  test('固定从 40 分开始染色', () => {
+    expect(scoreToRGBA(20, -1, FIRECLOUD_PALETTE).a).toBe(0);
+    expect(scoreToRGBA(30, -1, FIRECLOUD_PALETTE).a).toBe(0);
+    expect(scoreToRGBA(40, -1, FIRECLOUD_PALETTE).a).toBeGreaterThan(0);
+    expect(getVisualMinScore()).toBe(40);
+    expect(getBandLevels()[0]).toBe(40);
   });
 
   test('40 分以下返回透明，不染色', () => {
