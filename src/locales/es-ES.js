@@ -67,16 +67,16 @@ apiAccess: 'Acceso API'
     "methodology": {
       "title": "Cómo se calcula la puntuación",
       "intro": "El índice de nubes rojas combina cuatro factores clave para estimar si vale la pena salir a ver el atardecer.",
-      "versionLabel": "Versión del algoritmo: 2026.05.18-cloud-thickness-evidence-v1",
-      "versionDesc": "Esta versión fija el análisis en cuatro factores: soporte de nubes, trayectoria de luz, color del aire y limitaciones. La fórmula de puntuación no cambia.",
+      "versionLabel": "Versión del algoritmo: 2026.05.19-additive-carrier-light-gate-v1",
+      "versionDesc": "Esta versión convierte las señales positivas de nubes en puntos aditivos acotados y usa el muestreo multipunto hacia el sol como compuerta de trayectoria de luz.",
       changelogTitle: "Historial de versiones",
       changelogHint: "Aquí están las actualizaciones de los últimos tres meses; desplázate para revisar motivo, impacto y validación",
       changelog: {
         "latest": {
-          "date": "2026-05-13",
-          "title": "Análisis de cuatro factores v1",
-          "summary": "El análisis se agrupa en soporte de nubes, trayectoria de luz, color del aire y limitaciones para reducir notas dispersas.",
-          "validation": "Validación: aerosol, bloqueo de nubes bajas, bruma gris, nubes gruesas y lluvia se agrupan en el factor correcto; la fórmula no cambia."
+          "date": "2026-05-19",
+          "title": "Soporte aditivo + compuerta de luz v1",
+          "summary": "Las señales positivas de nubes pasan a sumar puntos acotados y el muestreo multipunto hacia el sol controla la compuerta de luz.",
+          "validation": "Validación: la muestra de nubes altas puras en 36.36°N, 92.83°E baja a 72; una pared de nubes cercana en la dirección solar baja a 33.5; sin más llamadas API."
         },
         "aerosol": {
           "date": "2026-05-12",
@@ -175,7 +175,7 @@ apiAccess: 'Acceso API'
           "level1": "Upper-cloud carrier: either dense high cloud, or mid/high clouds with an opening toward the sun, scarce low clouds, no rain, and clear air",
           "level2": "In this case cloud thickness adjusts colorable-cloud quality, while light-path judgment stays independent",
           "level3": "Very thick cloud curtains or gray air can still make colors darker and weaker.",
-          "formula": "Final correction = colorable-cloud quality + independent haze/dust/rain/geometry limits"
+          "formula": "Puntuación final = soporte de color × compuerta de trayectoria de luz + ajuste pequeño de color"
         },
         "precipPenalty": {
           "title": "5. Penalización precipitaciones",
@@ -935,7 +935,7 @@ translations.home.methodology.sections.finalFormula = translations.home.methodol
   title: '7. Fórmula de puntuación final',
   subtitle: 'Cálculo compuesto',
   desc: 'La puntuación final pondera la puntuación del lienzo y la del trayecto de luz, y después aplica multiplicadores de penalización.',
-  formula: 'Puntuación final = (Lienzo × 0,4 + Trayecto de luz × 0,6) × penalizaciones',
+  formula: 'Puntuación final = soporte de color × compuerta de trayectoria de luz + ajuste de color',
   highCloudCap: 'Cuando dominan las nubes altas y las nubes bajas son escasas, se permite una puntuación máxima más alta'
 };
 

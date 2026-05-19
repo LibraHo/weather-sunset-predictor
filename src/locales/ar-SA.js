@@ -40,7 +40,7 @@ apiAccess: 'الوصول إلى API'
     methodology: {
       title: 'كيف يتم حساب النقاط',
       intro: 'يجمع مؤشر السحب الحمراء أربعة عوامل رئيسية لتقدير ما إذا كانت مشاهدة الغروب تستحق العناء.',
-      versionLabel: 'إصدار الخوارزمية: 2026.05.18-cloud-thickness-evidence-v1',
+      versionLabel: 'إصدار الخوارزمية: 2026.05.19-additive-carrier-light-gate-v1',
       versionDesc: 'يثبت هذا الإصدار التحليل في أربعة عوامل: حامل السحب، مسار الضوء، لون الهواء، والقيود. صيغة النقاط لم تتغير.',
       changelogTitle: 'سجل تحديثات الإصدار',
       changelogHint: 'توجد هنا تحديثات الخوارزمية خلال آخر ثلاثة أشهر؛ مرر لمراجعة السبب والأثر والتحقق',
@@ -253,11 +253,11 @@ apiAccess: 'الوصول إلى API'
       title: 'تفاصيل الدرجة',
       viewDetails: 'عرض تفاصيل الدرجة',
       finalDisplayed: 'الدرجة النهائية المعروضة',
-      baseFormula: 'درجة الأساس = لوحة السحب ×0.8 + مسار الضوء ×0.2',
-      baseHint: 'درجة الأساس بعد دمج السحب ومسار الضوء',
+      baseFormula: 'Base score = carrier × light-path gate',
+      baseHint: 'Base score after applying the sun-direction light-path gate',
       canvasHint: 'السحب العالية/المتوسطة تحمل اللون، والسحب المنخفضة قد تحجبه',
       lightPathHint: 'هل يمكن لضوء الشمس الوصول إلى السحب',
-      finalFormula: 'الدرجة النهائية = درجة الأساس × معاملات التصحيح',
+      finalFormula: 'Final score = base score + rendering adjustment',
       renderingHint: 'الرطوبة والرؤية تؤثران في ظهور اللون',
       aerosolHint: 'الهباء المعتدل يعزز الأحمر البرتقالي، والكثير منه يجعل المشهد رمادياً'
 ,

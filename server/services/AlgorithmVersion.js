@@ -1,10 +1,16 @@
 'use strict';
 
-const ALGORITHM_VERSION = '2026.05.18-cloud-thickness-evidence-v1';
+const ALGORITHM_VERSION = '2026.05.19-additive-carrier-light-gate-v1';
 
 const ALGORITHM_CHANGELOG = [
   {
     version: ALGORITHM_VERSION,
+    date: '2026-05-19',
+    title: 'Additive carrier scoring with light-path gate',
+    summary: 'Positive cloud-carrier signals now add bounded points instead of multiplying repeatedly, and existing sun-direction light-path samples act as a gate when they show cloud-wall obstruction. No extra radiation/direct-ratio gate or additional API sampling is introduced.'
+  },
+  {
+    version: '2026.05.18-cloud-thickness-evidence-v1',
     date: '2026-05-18',
     title: 'Cloud-thickness evidence scoring',
     summary: 'Cloud thickness now uses continuous thin/thick evidence from direct light, diffuse light, water vapor, low clouds, weather code, and sun-direction openings, instead of discrete -1/-2 penalties from single signals.'

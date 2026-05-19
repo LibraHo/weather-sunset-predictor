@@ -67,7 +67,7 @@ const translations = {
     "methodology": {
       "title": "Phương pháp tính điểm mây đẹp",
       "intro": "Chỉ số mây đẹp được tính toán tổng hợp từ bốn yếu tố chính, giúp bạn nhanh chóng đánh giá liệu ngày hôm đó có đáng để chờ đợi hoàng hôn hay không.",
-      "versionLabel": "Phiên bản thuật toán: 2026.05.18-cloud-thickness-evidence-v1",
+      "versionLabel": "Phiên bản thuật toán: 2026.05.19-additive-carrier-light-gate-v1",
       "versionDesc": "Phiên bản này cố định phân tích thành bốn yếu tố: nền mây, đường sáng, màu trong không khí và yếu tố hạn chế. Công thức điểm không đổi.",
       changelogTitle: "Lịch sử cập nhật phiên bản",
       changelogHint: "Các cập nhật thuật toán trong ba tháng gần đây nằm ở đây; cuộn để xem lý do, tác động và cách kiểm chứng",
@@ -176,7 +176,7 @@ const translations = {
           "level1": "Upper-cloud carrier: either dense high cloud, or mid/high clouds with an opening toward the sun, scarce low clouds, no rain, and clear air",
           "level2": "In this case cloud thickness adjusts colorable-cloud quality, while light-path judgment stays independent",
           "level3": "Very thick cloud curtains or gray air can still make colors darker and weaker.",
-          "formula": "Final correction = colorable-cloud quality + independent haze/dust/rain/geometry limits"
+          "formula": "Điểm cuối = nền mang màu × cổng đường sáng + hiệu chỉnh lên màu nhỏ"
         },
         "precipPenalty": {
           "title": "5. Hệ số phạt lượng mưa",
@@ -200,7 +200,7 @@ const translations = {
           "title": "Điểm cuối cùng",
           "subtitle": "Kết hợp nền mây, đường sáng và khả năng lên màu",
           "desc": "Điểm cuối cùng kết hợp cấu trúc mây, điều kiện đường sáng và khả năng tán xạ của không khí, đồng thời giới hạn các trường hợp cực đoan.",
-          "formula": "Tổng điểm = điểm nền mây × hệ số đường sáng × hệ số lên màu",
+          "formula": "Tổng điểm = điểm nền mang màu × cổng đường sáng + hiệu chỉnh lên màu",
           "highCloudCap": "Khi thiếu mây cao, điểm tối đa sẽ bị giới hạn ngay cả khi các điều kiện khác tốt."
         }
       }

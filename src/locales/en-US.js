@@ -67,16 +67,16 @@ const translations = {
     "methodology": {
       "title": "Fire Cloud Calculation Method",
       "intro": "The Fire Cloud Index comprehensively evaluates sky conditions and optical propagation paths to determine the probability and intensity of fire cloud formation. Below is the complete calculation principle based on meteorological data.",
-      "versionLabel": "Algorithm version: 2026.05.18-cloud-thickness-evidence-v1",
-      "versionDesc": "This version changes cloud thickness to continuous evidence scoring: direct light, diffuse light, water vapor, low clouds, weather code, and sun-direction openings jointly set the thickness modifier instead of a single water-vapor signal crushing the score.",
+      "versionLabel": "Algorithm version: 2026.05.19-additive-carrier-light-gate-v1",
+      "versionDesc": "This version changes positive cloud signals into bounded additive carrier points and uses existing sun-direction multi-point sampling as the light-path gate. directRatio is no longer used in scoring.",
       changelogTitle: "Version update history",
       changelogHint: "Algorithm updates from the last three months live here; scroll to review why each change happened, its impact, and validation",
       changelog: {
         "latest": {
-          "date": "2026-05-18",
-          "title": "Cloud-thickness evidence scoring v1",
-          "summary": "Cloud thickness is now judged from direct light, diffuse light, water vapor, low clouds, weather code, and sun-direction openings; borderline thick evidence is mapped continuously instead of as a hard penalty.",
-          "validation": "Validation: the Beijing 2026-05-18 sunset sample returns to the watch range; thick high-cloud gray curtains, low cloud, haze, heavy rain, and closed thick-cloud cases stay conservative."
+          "date": "2026-05-19",
+          "title": "Additive carrier + light-path gate v1",
+          "summary": "Positive cloud signals are now bounded additive carrier points, and existing sun-direction multi-point sampling gates the final score. 100% high cloud no longer drives a near-perfect score by itself.",
+          "validation": "Validation: the 36.36°N, 92.83°E pure-high-cloud sample drops from full score to 72; a Beijing near-path cloud-wall sample drops to 33.5; no extra API requests are added."
         },
         "aerosol": {
           "date": "2026-05-12",
@@ -184,7 +184,7 @@ const translations = {
           "level1": "Upper-cloud carrier: either dense high cloud, or mid/high clouds with an opening toward the sun, scarce low clouds, no rain, and clear air",
           "level2": "When clouds are scarce, moderate aerosol must be activated by the sun-direction light path before it contributes as a weak carrier",
           "level3": "Very thick cloud curtains, heavy haze, or dust still darken and gray out the colors.",
-          "formula": "Carrier score = max(cloud carrier, aerosol weak carrier × light-path activation); final score = carrier ×0.8 + light path ×0.2, then rendering corrections"
+          "formula": "Carrier score = cloud canvas base + bounded carrier bonuses - gray or thick-cloud penalties; final score = carrier × light-path gate + small rendering adjustment"
         },
         "precipPenalty": {
           "title": "6. Precipitation Penalty",
@@ -199,8 +199,8 @@ const translations = {
         "finalFormula": {
           "title": "7. Final Score Formula",
           "subtitle": "Composite Calculation",
-          "desc": "Final score is calculated by weighting canvas score and light path score, then applying penalty multipliers.",
-          "formula": "Final Score = (Canvas Score × 0.8 + Light Path Score × 0.2) × Low Cloud Factor × Precipitation Factor",
+          "desc": "Final score applies the sun-direction light-path gate to the carrier score, then adds a small rendering adjustment.",
+          "formula": "Final Score = Carrier Score × Light-Path Gate + Rendering Adjustment",
           "highCloudCap": "When high clouds dominate and low clouds are scarce, avoid underrating a good color canvas"
         }
       }
@@ -298,11 +298,11 @@ const translations = {
       "title": "Score details",
       "viewDetails": "View score details",
       "finalDisplayed": "Final displayed score",
-      "baseFormula": "Base score = carrier ×0.8 + light path ×0.2",
-      "baseHint": "Base score after combining carrier and light path",
+      "baseFormula": "Base score = carrier × light-path gate",
+      "baseHint": "Base score after applying the sun-direction light-path gate",
       "canvasHint": "High/mid clouds are the main color carrier; moderate thin haze can be a weak carrier; low clouds can block it",
       "lightPathHint": "Whether sunlight can reach the clouds",
-      "finalFormula": "Final score = base score × correction factors",
+      "finalFormula": "Final score = base score + rendering adjustment",
       "renderingHint": "Humidity and visibility affect color rendering",
       "aerosolHint": "Moderate aerosol boosts orange-red scattering; too much turns gray",
       "ledger": {

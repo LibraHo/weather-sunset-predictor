@@ -50,6 +50,60 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
+function getCloudTypeAdditiveAdjustment(cloudType) {
+  switch (cloudType?.type) {
+    case 'stratus':
+      return { canvasBonus: -30, lightGateDelta: -0.35, reason: 'stratus_blocks_light' };
+    case 'stratocumulus':
+      return { canvasBonus: -4, lightGateDelta: -0.08, reason: 'low_cloud_partial_block' };
+    case 'altostratus':
+      return { canvasBonus: 4, lightGateDelta: 0.00, reason: 'upper_cloud_carrier' };
+    case 'altocumulus':
+      return { canvasBonus: 6, lightGateDelta: 0.00, reason: 'mid_cloud_carrier' };
+    case 'clear':
+      return { canvasBonus: -25, lightGateDelta: 0.04, reason: 'clear_but_no_cloud_canvas' };
+    case 'mixed':
+      return { canvasBonus: -8, lightGateDelta: -0.06, reason: 'mixed_cloud_layers' };
+    default:
+      return { canvasBonus: 0, lightGateDelta: 0, reason: 'neutral_cloud_type' };
+  }
+}
+
+function getCloudThicknessCanvasAdjustment(cloudThickness) {
+  const modifier = Number(cloudThickness?.modifier ?? 1);
+  const thickness = cloudThickness?.thickness || 'unknown';
+  if (modifier > 1) {
+    return { adjustment: 5, reason: 'thin_cloud_bonus' };
+  }
+  if (thickness === 'thick' || modifier <= 0.5) {
+    return { adjustment: -28, reason: 'thick_cloud_penalty' };
+  }
+  if (modifier < 1) {
+    return {
+      adjustment: -Math.round((1 - modifier) * 65),
+      reason: 'moderate_thick_cloud_penalty'
+    };
+  }
+  return { adjustment: 0, reason: 'neutral_cloud_thickness' };
+}
+
+function getRenderingScoreAdjustment(renderingFactor) {
+  const factor = Number(renderingFactor?.factor ?? 1);
+  if (!Number.isFinite(factor)) {
+    return { adjustment: 0, reason: 'rendering_unknown' };
+  }
+  if (factor >= 1) {
+    return {
+      adjustment: parseFloat(clamp((factor - 1) * 50, 0, 9).toFixed(1)),
+      reason: 'positive_rendering_bonus'
+    };
+  }
+  return {
+    adjustment: parseFloat((-clamp((1 - factor) * 55, 0, 25)).toFixed(1)),
+    reason: 'negative_rendering_penalty'
+  };
+}
+
 function scoreRangePeak(value, min, peak, max) {
   if (!Number.isFinite(value) || value <= min || value >= max) return 0;
   if (value === peak) return 1;
@@ -355,14 +409,14 @@ function scoreCloudCanvas(weatherData) {
     overcastPenalty *= 0.5;
   }
 
-  // 最终画布得分
+  // 最终画布得分：低云/阴天仍作为门控乘法。
   let canvasScore = cloudRangeScore * lowCloudPenalty * overcastPenalty;
 
-  // 高云主导场景加分：当 highClouds > 50% 且 lowClouds < 30% 时，增加 bonus 系数
-  let highCloudBonus = 1.0;
+  // 高云主导场景是同一类“画布载体”证据，改为加分，不再与云种/薄云连续相乘。
+  let highCloudBonus = 0;
   if (highClouds > 50 && lowClouds < 30) {
-    highCloudBonus = 1.20; // 1.15~1.2 之间，让画布分达到 75+
-    canvasScore = canvasScore * highCloudBonus;
+    highCloudBonus = clamp((highClouds - 50) / 50 * 6, 0, 6);
+    canvasScore += highCloudBonus;
   }
 
   return {
@@ -372,7 +426,7 @@ function scoreCloudCanvas(weatherData) {
     cloudLevel,
     lowCloudPenalty: parseFloat(lowCloudPenalty.toFixed(2)),
     overcastPenalty: parseFloat(overcastPenalty.toFixed(2)),
-    highCloudBonus: parseFloat(highCloudBonus.toFixed(2)),
+    highCloudBonus: parseFloat(highCloudBonus.toFixed(1)),
     totalCloudCover: parseFloat(totalCloudCover.toFixed(1)),
     hasOvercastKeyword,
     penaltyReason,
@@ -512,12 +566,12 @@ function isFavorableDirectionalHighCloudCarrier(weatherData, context = {}) {
  * 云厚评估：区分“薄卷云（好幕布）”和“厚云幕（压光）”
  *
  * 三维判定：
- * 1. 辐射法：直射比 = direct / shortwave（低 = 厚云）
+ * 1. 散射占比：diffuse / shortwave 高时说明云幕/霾幕更厚
  * 2. 水汽法：waterVapour × cloudCover / 100（高 = 含水量大，但需结合云型/光路判断）
  * 3. 天气码兜底：WMO 阴天码直接标厚
  *
  * @param {Object} weatherData - 天气数据（目标时刻）
- * @param {Object|null} prevHourData - 目标时刻前1-2小时的数据（用于辐射比，避免日落时辐射自然为0）
+ * @param {Object|null} prevHourData - 目标时刻前1-2小时的数据（用于散射占比，避免日落时辐射自然为0）
  * @returns {{ thickness: 'thin'|'moderate'|'thick'|'unknown', modifier: number, reasons: string[] }}
  */
 function assessCloudThickness(weatherData, prevHourData = null, context = {}) {
@@ -530,11 +584,9 @@ function assessCloudThickness(weatherData, prevHourData = null, context = {}) {
   let thinEvidence = 0;
   let thickEvidence = 0;
 
-  // --- 辐射信号：优先用前1-2小时数据（太阳还有高度），回退用当前时刻 ---
-  // 日落时 direct 自然为 0，不代表厚云
+  // --- 辐射信号：只采用散射占比；不再用 direct/shortwave，避免把日落前自然失光误判成厚云 ---
   const MIN_SHORTWAVE = 50; // 短波辐射最低阈值，低于此值辐射数据不可靠
   let sw = weatherData.shortwaveRadiation;
-  let dr = weatherData.directRadiation;
   let df = weatherData.diffuseRadiation;
   let usedPrevHour = false;
 
@@ -542,20 +594,9 @@ function assessCloudThickness(weatherData, prevHourData = null, context = {}) {
     const pSw = prevHourData.shortwaveRadiation;
     if (pSw != null && pSw >= MIN_SHORTWAVE) {
       sw = pSw;
-      dr = prevHourData.directRadiation;
       df = prevHourData.diffuseRadiation;
       usedPrevHour = true;
     }
-  }
-
-  // --- 信号1：直射比 ---
-  if (sw != null && dr != null && sw > MIN_SHORTWAVE) {
-    const directRatio = dr / sw;
-    if (directRatio > 0.6)      { thinEvidence += 2; signals.push('direct_ratio_high'); }
-    else if (directRatio > 0.35) { thinEvidence += 1; signals.push('direct_ratio_moderate'); }
-    else if (directRatio < 0.15) { thickEvidence += 2; signals.push('direct_ratio_low'); }
-    else                          { thickEvidence += 0.8; signals.push('direct_ratio_low_moderate'); }
-    if (usedPrevHour) signals.push('using_prev_hour_radiation');
   }
 
   // --- 信号2：水汽指数 ---
@@ -572,9 +613,10 @@ function assessCloudThickness(weatherData, prevHourData = null, context = {}) {
   // --- 信号3：散射比 ---
   if (sw != null && df != null && sw > MIN_SHORTWAVE) {
     const diffuseRatio = df / sw;
-    if (diffuseRatio > 0.75)    { thickEvidence += 1.2; signals.push('diffuse_dominant'); }
-    else if (diffuseRatio > 0.65) { thickEvidence += 0.4; signals.push('diffuse_moderate_high'); }
-    else if (diffuseRatio < 0.3){ thinEvidence += 1; signals.push('direct_dominant'); }
+    if (diffuseRatio > 0.65)    { thickEvidence += 2.4; signals.push('diffuse_dominant'); }
+    else if (diffuseRatio > 0.55) { thickEvidence += 0.8; signals.push('diffuse_moderate_high'); }
+    else if (diffuseRatio < 0.3){ thinEvidence += 1; signals.push('diffuse_low'); }
+    if (usedPrevHour) signals.push('using_prev_hour_radiation');
   }
 
   // --- 信号4：天气码兜底 ---
@@ -639,7 +681,8 @@ function assessCloudThickness(weatherData, prevHourData = null, context = {}) {
 
   if (thickness === 'thick' && isFavorableDirectionalHighCloudCarrier(weatherData, context)) {
     signals.push('directional_high_cloud_carrier_softened');
-    return { thickness: 'moderate', modifier: 0.62, reasons: signals, score, evidence };
+    const highOnlyOpening = Number(weatherData.midClouds || 0) < 30;
+    return { thickness: 'moderate', modifier: highOnlyOpening ? 0.66 : 0.62, reasons: signals, score, evidence };
   }
 
   return { thickness, modifier, reasons: signals, score, evidence };
@@ -657,7 +700,6 @@ function assessThickHighCloudPenalty(weatherData, cloudThickness) {
 
   const isHighCloudCurtain = highClouds >= 80 && cloudCover >= 60 && lowClouds < 20;
   const isThick = cloudThickness?.thickness === 'thick' || cloudThickness?.modifier <= 0.5;
-  const directWeak = reasons.includes('direct_ratio_low') || reasons.includes('direct_ratio_low_moderate');
   const diffuseDominant = reasons.includes('diffuse_dominant');
   const waterHeavy = reasons.includes('water_vapour_very_high');
   const softenedCarrier = reasons.includes('dense_upper_cloud_carrier_softened')
@@ -678,17 +720,17 @@ function assessThickHighCloudPenalty(weatherData, cloudThickness) {
     };
   }
 
-  if (!isHighCloudCurtain || !isThick || !(directWeak || diffuseDominant || waterHeavy)) {
+  if (!isHighCloudCurtain || !isThick || !(diffuseDominant || waterHeavy)) {
     return { applied: false, cap: null, reason: null };
   }
 
-  // 直射很弱 + 漫射主导：整片厚云幕，只能期待局部边缘光，接近现场 35–45 分。
-  const cap = (directWeak && diffuseDominant) ? 42 : 48;
+  // 漫射主导：整片厚云幕，只能期待局部边缘光，接近现场 35–45 分。
+  const cap = diffuseDominant ? 42 : 48;
 
   return {
     applied: true,
     cap,
-    reason: directWeak && diffuseDominant
+    reason: diffuseDominant
       ? 'thick_high_cloud_diffuse_cap_42'
       : 'thick_high_cloud_cap_48'
   };
@@ -826,7 +868,7 @@ function assessHighCloudCarrierAdjustment(weatherData, aerosolHazeCap, thickHigh
 
   const { aod, pm10, dust } = getAerosolMetrics(weatherData);
   const airClearEnough = visibility >= 15 && (aod == null || aod <= 0.45) && (pm10 == null || pm10 < 120) && (dust == null || dust < 80);
-  const carrierStrong = highClouds >= 85 && lowClouds <= 10 && airClearEnough;
+  const carrierStrong = ((highClouds >= 85) || (highClouds >= 80 && midClouds >= 30)) && lowClouds <= 10 && airClearEnough;
 
   if (!carrierStrong) {
     return { applied: false, floor: null, reason: null };
@@ -834,6 +876,10 @@ function assessHighCloudCarrierAdjustment(weatherData, aerosolHazeCap, thickHigh
 
   if (midClouds >= 45 || highClouds >= 95) {
     return { applied: true, floor: 68, reason: 'clear_upper_cloud_carrier_floor_68' };
+  }
+
+  if (midClouds >= 30 && highClouds >= 80) {
+    return { applied: true, floor: 54, reason: 'clear_upper_cloud_carrier_floor_54' };
   }
 
   return { applied: true, floor: 64, reason: 'clear_high_cloud_carrier_floor_64' };
@@ -1203,14 +1249,11 @@ function scoreRendering(weatherData, rainedRecently = false) {
 
   if (rainedRecently) {
     const recentRain = Number(weatherData.recentPrecipitation6h || 0);
-    const direct = Number(weatherData.directRadiation);
-    const shortwave = Number(weatherData.shortwaveRadiation);
-    const directRatio = Number.isFinite(direct) && Number.isFinite(shortwave) && shortwave > 50 ? direct / shortwave : null;
     const waterVapour = Number(weatherData.waterVapourColumn);
     const aerosolBad = (Number.isFinite(aerosolOpticalDepth) && aerosolOpticalDepth > 0.45) || pm25 > 75 || pm10 > 120 || dust > 80;
-    const grayCurtain = aerosolBad || visibility < 8 || humidity > 92 || (Number.isFinite(waterVapour) && waterVapour > 7) || (directRatio != null && directRatio < 0.18);
-    const cleanAfterRain = visibility >= 12 && !aerosolBad && humidity <= 90 && (directRatio == null || directRatio >= 0.25);
-    const hasPostRainDiscriminators = recentRain > 0 || Number.isFinite(aerosolOpticalDepth) || pm25 > 0 || pm10 > 0 || dust > 0 || Number.isFinite(waterVapour) || directRatio != null;
+    const grayCurtain = aerosolBad || visibility < 8 || humidity > 92 || (Number.isFinite(waterVapour) && waterVapour > 7);
+    const cleanAfterRain = visibility >= 12 && !aerosolBad && humidity <= 90;
+    const hasPostRainDiscriminators = recentRain > 0 || Number.isFinite(aerosolOpticalDepth) || pm25 > 0 || pm10 > 0 || dust > 0 || Number.isFinite(waterVapour);
 
     if (!hasPostRainDiscriminators) {
       rainBonus = 1.2;
@@ -1401,23 +1444,19 @@ function applySevereWeatherCap(score, weatherData) {
 
   const isMidCloudOvercastCurtain = cloudCover >= 95 && midClouds >= 60 && highClouds < 20 && lowClouds < 20;
   const hasRecentRainSignal = precipitation > 0 || convPrecip > 0 || recentPrecipitation6h >= 0.3 || recentRainHours >= 2 || isRainSnowCode;
-  const direct = Number(weatherData.directRadiation);
-  const shortwave = Number(weatherData.shortwaveRadiation);
-  const directRatio = Number.isFinite(direct) && Number.isFinite(shortwave) && shortwave > 20 ? direct / shortwave : null;
   const aerosolOpticalDepth = Number(weatherData.aerosolOpticalDepth ?? weatherData.aod);
   const pm25 = Number(weatherData.pm2_5 ?? weatherData.pm25 ?? 0);
   const pm10 = Number(weatherData.pm10 ?? 0);
   const dust = Number(weatherData.dust ?? 0);
   const waterVapour = Number(weatherData.waterVapourColumn);
   const hasGrayCurtainEvidence =
-    (directRatio != null && directRatio < 0.18) ||
     (Number.isFinite(aerosolOpticalDepth) && aerosolOpticalDepth > 0.35) ||
     pm25 > 35 || pm10 > 80 || dust > 50 ||
     (Number.isFinite(waterVapour) && waterVapour > 30) ||
     visibility < 10;
   if (isMidCloudOvercastCurtain && hasRecentRainSignal && hasGrayCurtainEvidence) {
     const noHighCloudCarrier = highClouds < 10;
-    const stronglyBlockedLightPath = (directRatio != null && directRatio < 0.12) || visibility < 8;
+    const stronglyBlockedLightPath = visibility < 8;
     const cap = noHighCloudCarrier && stronglyBlockedLightPath ? 5 : 15;
     return {
       score: Math.min(score, cap),
@@ -1426,6 +1465,115 @@ function applySevereWeatherCap(score, weatherData) {
   }
 
   return { score, reason: null };
+}
+
+function buildLightPathGate(lightPathScore, cloudTypeAdjustment = {}) {
+  const score = clamp(Number(lightPathScore?.score ?? 0), 0, 100);
+  let gate;
+  if (score >= 85) {
+    gate = 1.0 + (score - 85) / 15 * 0.08;
+  } else if (score >= 70) {
+    gate = 0.88 + (score - 70) / 15 * 0.12;
+  } else if (score >= 50) {
+    gate = 0.65 + (score - 50) / 20 * 0.23;
+  } else {
+    gate = 0.25 + score / 50 * 0.40;
+  }
+
+  const directionalReason = lightPathScore?.directionalAnalysis?.reason || '';
+  if (directionalReason.includes('cloud_wall')) {
+    gate = Math.min(gate, directionalReason.includes('near') ? 0.42 : 0.55);
+  } else if (directionalReason.includes('opening')) {
+    gate = Math.min(Math.max(gate, 0.90), 0.96);
+  } else if (directionalReason.includes('cloudy_corridor')) {
+    gate = Math.min(gate, 0.78);
+  }
+
+  gate += Number(cloudTypeAdjustment?.lightGateDelta || 0);
+
+  let cap = null;
+  let reason = directionalReason || 'light_path_score_gate';
+  gate = parseFloat(clamp(gate, 0.25, 1.12).toFixed(2));
+  return { gate, cap, reason, lightPathScore: parseFloat(score.toFixed(1)) };
+}
+
+function calculateGatedFinalScore(canvasScore, lightPathScore, renderingFactor, type = 'sunset', context = {}) {
+  const lightPathGate = context.lightPathGate || buildLightPathGate(lightPathScore);
+  const renderingAdjustment = context.renderingAdjustment || getRenderingScoreAdjustment(renderingFactor);
+  const gatedScore = Number(canvasScore.score || 0) * lightPathGate.gate;
+  const finalScore = gatedScore + renderingAdjustment.adjustment;
+  const clampedScore = clamp(finalScore, 0, 100);
+
+  const legacy = calculateFinalScore(canvasScore, lightPathScore, { ...renderingFactor, factor: 1.0 }, type);
+  let status = legacy.status;
+  let description = legacy.description;
+  let advice = legacy.advice;
+  let icon = legacy.icon;
+
+  if (lightPathGate.gate <= 0.45 || lightPathGate.cap != null) {
+    status = clampedScore < 40 ? 'no_fire_cloud' : 'light_glow';
+    description = 'light_path_blocked';
+    advice = 'light_path_obstructed';
+    icon = 'cloudy';
+  } else if (clampedScore < 40) {
+    status = 'light_glow';
+    description = 'conditions_fair';
+    advice = 'can_watch';
+    icon = 'sunset';
+  } else if (clampedScore < 65) {
+    status = 'good_glow';
+    description = 'conditions_good';
+    advice = 'can_watch';
+    icon = 'city_sunset';
+  } else if (clampedScore < 82) {
+    status = 'very_likely';
+    description = 'excellent_conditions';
+    advice = 'worth_watching';
+    icon = 'city_sunset';
+  } else {
+    status = 'legendary_eruption';
+    description = 'perfect_mid_high_clouds';
+    advice = 'highly_recommended';
+    icon = 'fire';
+  }
+
+  let displayScore = clampedScore;
+  if (lightPathGate.cap != null) {
+    displayScore = Math.min(displayScore, lightPathGate.cap);
+  }
+  if (status === 'no_fire_cloud') {
+    displayScore = Math.min(displayScore, 39.9);
+  } else if (status === 'light_glow') {
+    displayScore = Math.min(displayScore, 59.9);
+  }
+
+  return {
+    score: parseFloat(displayScore.toFixed(1)),
+    status,
+    icon,
+    description,
+    advice,
+    type,
+    breakdown: {
+      baseScore: parseFloat(gatedScore.toFixed(1)),
+      canvasScore: parseFloat((canvasScore.cloudCanvasScore ?? canvasScore.score).toFixed(1)),
+      carrierScore: parseFloat(canvasScore.score.toFixed(1)),
+      activeCarrier: canvasScore.activeCarrier || 'cloud',
+      aerosolCarrierScore: canvasScore.aerosolCarrierScore || null,
+      lightPathScore: parseFloat(lightPathScore.score.toFixed(1)),
+      lightPathGate: lightPathGate.gate,
+      renderingAdjustment: renderingAdjustment.adjustment,
+      renderingFactor: renderingFactor.factor,
+      unclampedFinalScore: parseFloat(clampedScore.toFixed(1))
+    },
+    canvasAnalysis: canvasScore,
+    carrierAnalysis: canvasScore,
+    aerosolCarrierScore: canvasScore.aerosolCarrierScore || null,
+    lightPathAnalysis: lightPathScore,
+    lightPathGate,
+    renderingAdjustment,
+    renderingAnalysis: renderingFactor
+  };
 }
 
 /**
@@ -1593,11 +1741,13 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   );
   logger.debug('[EnhancedPredictionService]', '云种判别:', cloudType.type, cloudType.reason);
 
-  // 3. 画布评分（本地云况）+ 云种乘数
+  // 3. 画布评分（本地云况）+ 云种加分。正向证据用加分，避免重复连乘。
   const canvasScoreRaw = scoreCloudCanvas(weatherData);
+  const cloudTypeAdjustment = getCloudTypeAdditiveAdjustment(cloudType);
   const canvasScore = {
     ...canvasScoreRaw,
-    score: Math.min(100, parseFloat((canvasScoreRaw.score * cloudType.canvasMultiplier).toFixed(1)))
+    score: parseFloat(clamp(canvasScoreRaw.score + cloudTypeAdjustment.canvasBonus, 0, 100).toFixed(1)),
+    cloudTypeAdjustment
   };
   logger.debug('[EnhancedPredictionService]', '画布评分(含云种):', canvasScore.score);
 
@@ -1615,7 +1765,8 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     : scoreLightPath(weatherData, timeCheck.elevation, azimuth, remoteCloudData);
   const lightPathScore = {
     ...lightPathScoreRaw,
-    score: Math.min(100, parseFloat((lightPathScoreRaw.score * cloudType.lightPathMultiplier).toFixed(1)))
+    score: parseFloat(lightPathScoreRaw.score.toFixed(1)),
+    cloudTypeLightPathDelta: cloudTypeAdjustment.lightGateDelta
   };
   logger.debug('[EnhancedPredictionService]', '光路评分(含云种):', lightPathScore.score);
 
@@ -1628,10 +1779,12 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   logger.debug('[EnhancedPredictionService]', '云厚评估:', cloudThickness.thickness, 'modifier:', cloudThickness.modifier, 'reasons:', cloudThickness.reasons);
 
   // 5.5 云厚修正画布分
-  if (cloudThickness.modifier !== 1.0) {
+  const cloudThicknessAdjustment = getCloudThicknessCanvasAdjustment(cloudThickness);
+  if (cloudThicknessAdjustment.adjustment !== 0) {
     const originalCanvasScore = canvasScore.score;
-    canvasScore.score = Math.min(100, parseFloat((canvasScore.score * cloudThickness.modifier).toFixed(1)));
+    canvasScore.score = parseFloat(clamp(canvasScore.score + cloudThicknessAdjustment.adjustment, 0, 100).toFixed(1));
     canvasScore.cloudThicknessModifier = cloudThickness.modifier;
+    canvasScore.cloudThicknessAdjustment = cloudThicknessAdjustment;
     canvasScore.cloudThickness = cloudThickness.thickness;
     logger.debug('[EnhancedPredictionService]', '云厚修正画布分:', originalCanvasScore, '->', canvasScore.score);
   }
@@ -1650,7 +1803,12 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   const aerosolCarrierScore = scoreAerosolCarrier(weatherData, lightPathScore);
   const carrierScore = buildCarrierScore(canvasScore, aerosolCarrierScore);
   logger.debug('[EnhancedPredictionService]', '载体评分:', carrierScore.score, 'active:', carrierScore.activeCarrier, 'aerosol:', aerosolCarrierScore);
-  const finalResult = calculateFinalScore(carrierScore, lightPathScore, renderingFactor, type);
+  const lightPathGate = buildLightPathGate(lightPathScore, cloudTypeAdjustment);
+  const renderingAdjustment = getRenderingScoreAdjustment(renderingFactor);
+  const finalResult = calculateGatedFinalScore(carrierScore, lightPathScore, renderingFactor, type, {
+    lightPathGate,
+    renderingAdjustment
+  });
 
   // 6. 太阳遮挡判定（试验版，温和惩罚）
   const occlusion = checkSolarOcclusion(
@@ -1666,6 +1824,8 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   // 6.5 几何不可行硬性上限（需求40.2）
   if (!geometric.feasible) {
     adjustedScore = Math.min(adjustedScore, 30);
+    adjustedStatus = 'no_fire_cloud';
+    adjustedDescription = 'cloud_too_thick';
     logger.warn('[EnhancedPredictionService]', '几何条件不满足，设置上限30:', geometric.reason);
   }
 
@@ -1685,14 +1845,24 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
 
   // 6.8 气溶胶/沙尘灰幕封顶 + 清透高云载体保底（2026-05-06 北京/喀什反例）
   const aerosolHazeCap = assessAerosolHazeCap(weatherData);
-  const highCloudCarrierAdjustment = assessHighCloudCarrierAdjustment(weatherData, aerosolHazeCap, thickHighCloudPenalty);
+  let highCloudCarrierAdjustment = assessHighCloudCarrierAdjustment(weatherData, aerosolHazeCap, thickHighCloudPenalty);
 
-  if (highCloudCarrierAdjustment.applied) {
+  if (highCloudCarrierAdjustment.applied && lightPathGate.cap == null && (lightPathGate.gate >= 0.82 || !lightPathScore.hasRemoteData)) {
     adjustedScore = Math.max(adjustedScore, highCloudCarrierAdjustment.floor);
     if (adjustedScore >= 65) {
       adjustedStatus = 'very_likely';
       adjustedDescription = 'excellent_conditions';
+    } else if (adjustedScore >= 40) {
+      adjustedStatus = 'good_glow';
+      adjustedDescription = 'conditions_good';
     }
+  } else if (highCloudCarrierAdjustment.applied) {
+    highCloudCarrierAdjustment = {
+      ...highCloudCarrierAdjustment,
+      applied: false,
+      suppressed: true,
+      suppressReason: 'light_path_gate_not_open'
+    };
   }
 
   if (aerosolHazeCap.applied) {
@@ -1738,8 +1908,10 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     : { applied: false, reason: null, metrics: null };
   let adjustedAdvice = finalResult.advice;
   if (clearSunsetAdvice.applied) {
+    adjustedStatus = 'no_fire_cloud';
     adjustedDescription = 'clear_sunset_transparent';
     adjustedAdvice = 'casual_viewing_ok';
+    adjustedScore = Math.min(adjustedScore, 39.9);
   }
 
   logger.debug('[EnhancedPredictionService]', '最终得分:', adjustedScore, 'occlusion:', occlusion, 'severeCap:', severeCap.reason);

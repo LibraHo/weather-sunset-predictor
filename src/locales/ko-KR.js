@@ -67,7 +67,7 @@ apiAccess: 'API 연동'
     "methodology": {
       "title": "화염구름 점수 계산 방법",
       "intro": "화염구름 지수는 4가지 주요 요인을 종합하여 계산되며, 해당 날의 노을 관람이 가치 있는지 빠르게 판단하는 데 도움을 줍니다.",
-      "versionLabel": "알고리즘 버전: 2026.05.18-cloud-thickness-evidence-v1",
+      "versionLabel": "알고리즘 버전: 2026.05.19-additive-carrier-light-gate-v1",
       "versionDesc": "화염구름 분석을 구름 매개층, 빛 경로, 공기 발색, 제한 요인 네 가지로 고정했습니다. 점수 공식은 그대로입니다.",
       changelogTitle: "버전 업데이트 기록",
       changelogHint: "최근 3개월의 알고리즘 업데이트를 여기에 모았습니다. 스크롤해 변경 이유, 영향, 검증 내용을 확인할 수 있습니다",
@@ -184,7 +184,7 @@ apiAccess: 'API 연동'
           "level1": "Upper-cloud carrier: either dense high cloud, or mid/high clouds with an opening toward the sun, scarce low clouds, no rain, and clear air",
           "level2": "In this case cloud thickness adjusts colorable-cloud quality, while light-path judgment stays independent",
           "level3": "Very thick cloud curtains or gray air can still make colors darker and weaker.",
-          "formula": "Final correction = colorable-cloud quality + independent haze/dust/rain/geometry limits"
+          "formula": "최종 점수 = 색상 캐리어 × 광로 게이트 + 작은 발색 보정"
         },
         "precipPenalty": {
           "title": "6. 강수 패널티 계수",
@@ -199,8 +199,8 @@ apiAccess: 'API 연동'
         "finalFormula": {
           "title": "7. 종합 계산 공식",
           "subtitle": "Final Score Formula",
-          "desc": "최종 점수는 캔버스 평가와 광로 평가를 가중 계산하고 패널티 계수를 곱하여 산출.",
-          "formula": "종합 점수 = (캔버스 점수 × 0.8 + 광로 점수 × 0.2) × 하층운 계수 × 강수 계수",
+          "desc": "Final score applies the sun-direction light-path gate to the carrier score, then adds a small rendering adjustment.",
+          "formula": "최종 점수 = 캐리어 점수 × 광로 게이트 + 발색 보정",
           "highCloudCap": "상층운 우위로 원거리 데이터 없을 때, 상한을 85점으로 완화(기존 69.9점)"
         }
       }
@@ -304,8 +304,8 @@ apiAccess: 'API 연동'
       "title": "점수 상세",
       "viewDetails": "점수 상세 보기",
       "finalDisplayed": "최종 표시 점수",
-      "baseFormula": "기초 점수 = 캔버스 ×0.8 + 광로 ×0.2",
-      "baseHint": "구름층과 광로를 합산한 기초 점수",
+      "baseFormula": "Base score = carrier × light-path gate",
+      "baseHint": "Base score after applying the sun-direction light-path gate",
       "canvasHint": "고층/중층운은 색을 받고 저층운은 가릴 수 있습니다",
       "lightPathHint": "햇빛이 구름층까지 도달하는지 여부",
       "finalFormula": "최종 점수 = 기초 점수 × 보정 계수",

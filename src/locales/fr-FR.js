@@ -67,7 +67,7 @@ const translations = {
     "methodology": {
       "title": "Comment le score est calculé",
       "intro": "L'indice de nuages rouges est calculé à partir de quatre facteurs clés pour vous aider à décider rapidement si la soirée vaut le déplacement.",
-      "versionLabel": "Version de l’algorithme : 2026.05.18-cloud-thickness-evidence-v1",
+      "versionLabel": "Version de l’algorithme : 2026.05.19-additive-carrier-light-gate-v1",
       "versionDesc": "Cette version stabilise l’analyse en quatre facteurs : support nuageux, trajet lumineux, rendu de l’air et limites. La formule de score ne change pas.",
       changelogTitle: "Historique des versions",
       changelogHint: "Les mises a jour des trois derniers mois sont ici ; faites defiler pour revoir la raison, l'impact et la validation",
@@ -176,7 +176,7 @@ const translations = {
           "level1": "Upper-cloud carrier: either dense high cloud, or mid/high clouds with an opening toward the sun, scarce low clouds, no rain, and clear air",
           "level2": "In this case cloud thickness adjusts colorable-cloud quality, while light-path judgment stays independent",
           "level3": "Very thick cloud curtains or gray air can still make colors darker and weaker.",
-          "formula": "Final correction = colorable-cloud quality + independent haze/dust/rain/geometry limits"
+          "formula": "Score final = support colorable × porte du trajet lumineux + petit ajustement de rendu"
         },
         "precipPenalty": {
           "title": "5. Pénalité précipitations",
@@ -200,7 +200,7 @@ const translations = {
           "title": "Score final",
           "subtitle": "Combiner toile, trajet lumineux et rendu",
           "desc": "Le score final combine la structure nuageuse, le trajet lumineux et le potentiel de rendu de l’air, avec des limites pour les cas extrêmes.",
-          "formula": "Score total = score de toile × facteur de trajet lumineux × facteur de rendu",
+          "formula": "Score total = score de support × porte du trajet lumineux + ajustement de rendu",
           "highCloudCap": "Si les nuages hauts sont insuffisants, le score maximal reste limité même avec de bonnes autres conditions."
         }
       }
