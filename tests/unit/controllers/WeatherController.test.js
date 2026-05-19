@@ -337,6 +337,7 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(chips[1].textContent).toContain('12 km/h');
     const windDirIcon = chips[1].querySelector('.day-wind-direction-icon');
     expect(windDirIcon).not.toBeNull();
+    expect(windDirIcon.style.transform).toBe('rotate(285deg)');
 
     dateFormatterSpy.mockRestore();
   });
@@ -358,6 +359,19 @@ describe('WeatherController - 24小时温度连续化', () => {
 
     expect(controller._getWindDirectionLabel(10)).toBe('北');
     expect(controller._getWindDirectionLabel(40)).toBe('东北');
+  });
+
+  test('风向箭头应指向风吹去的方向，文字仍表示风从哪来', () => {
+    controller.i18n = {
+      t: jest.fn((key) => {
+        if (key === 'surrounding.directions.S') return '南';
+        return key;
+      })
+    };
+
+    expect(controller._getWindDirectionLabel(180)).toBe('南');
+    expect(controller._getWindFlowDirection(180)).toBe(0);
+    expect(controller._getWindFlowDirection(90)).toBe(270);
   });
 
   // ========== 修复：_getChinaSpotsMapOptions 实际返回 zoom=4, minZoom=3, maxZoom=12 ==========
@@ -682,6 +696,8 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(document.getElementById('current-temp-main').textContent).toBe('31.8');
     expect(document.getElementById('current-cloud-cover').textContent).toBe('100%');
     expect(document.getElementById('current-humidity').textContent).toBe('28%');
+    expect(document.getElementById('current-wind-direction-text').textContent).toBe('surrounding.directions.S');
+    expect(document.getElementById('current-wind-direction-icon').style.transform).toBe('rotate(0deg)');
 
     nowSpy.mockRestore();
   });
