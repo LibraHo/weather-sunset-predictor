@@ -1,5 +1,5 @@
 import { formatPercent, formatVisibility } from '../../utils/format.js';
-import { getEnhancedPrediction, getSurroundingPrediction, getThreeDayGlow, scoreToLevel } from '../../services/prediction.js';
+import { getEnhancedPrediction, getEnhancedPredictionBatch, getSurroundingPrediction, getThreeDayGlow, scoreToLevel } from '../../services/prediction.js';
 import { addFavorite, deleteFavorite, listFavorites } from '../../services/user.js';
 import { buildRadarCloudGradients, paintRadarCloudCanvas } from '../../utils/radar-cloud-field.js';
 import { applyPageSettings, readAppSettings } from '../../utils/app-settings.js';
@@ -225,16 +225,31 @@ Page({
     if (this.periodCardPromises[nextPeriod]) return this.periodCardPromises[nextPeriod];
 
     this.periodCardPromises[nextPeriod] = (async () => {
-      const requested = buildPredictionPeriodRequest(prediction, nextPeriod);
-      const fetched = await getEnhancedPrediction(requested);
-      const normalized = normalizePrediction(fetched, requested);
+      const currentRequest = buildPredictionPeriodRequest(prediction, currentPeriod);
+      const nextRequest = buildPredictionPeriodRequest(prediction, nextPeriod);
+      const rows = await getEnhancedPredictionBatch({
+        lat: currentRequest.lat,
+        lon: currentRequest.lon,
+        items: [
+          { id: currentPeriod, type: currentPeriod, date: currentRequest.date },
+          { id: nextPeriod, type: nextPeriod, date: nextRequest.date }
+        ],
+        includeRemoteCloudData: true
+      });
+      const normalizedCards = {};
+      rows.forEach((row, index) => {
+        const request = index === 0 ? currentRequest : nextRequest;
+        const normalized = normalizePrediction(row, request);
+        normalizedCards[normalized.period] = normalized;
+      });
+      const normalized = normalizedCards[nextPeriod] || null;
       this.setData({
         periodCards: {
           ...this.data.periodCards,
-          [nextPeriod]: normalized
+          ...normalizedCards
         }
       });
-      this.prefetchXiakePanels(normalized);
+      if (normalized) this.prefetchXiakePanels(normalized);
       return normalized;
     })()
       .catch((error) => {
@@ -311,10 +326,9 @@ Page({
 
     const pendingPeriodPromise = this.periodCardPromises ? this.periodCardPromises[period] : null;
     if (pendingPeriodPromise) {
-      this.setData({ activePeriod: period, loading: true });
+      this.setData({ activePeriod: period });
       const prefetchedPrediction = await pendingPeriodPromise;
       if (this.data.activePeriod !== period) {
-        this.setData({ loading: false });
         return;
       }
       if (prefetchedPrediction) {
@@ -340,7 +354,6 @@ Page({
 
     this.setData({
       activePeriod: period,
-      loading: true,
       radar: buildEmptyRadar({ loading: true })
     });
 

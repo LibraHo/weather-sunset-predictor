@@ -306,8 +306,10 @@ describe('miniprogram page user/share helpers', () => {
   test('result period switch reuses prefetch promises and warms alternate panels', () => {
     expect(resultPageSource).toContain('periodCardPromises');
     expect(resultPageSource).toContain('prefetchXiakePanels');
+    expect(resultPageSource).toContain('getEnhancedPredictionBatch');
     expect(resultPageSource).toContain('this.periodCardPromises[period]');
     expect(resultPageSource).toContain('this.data.activePeriod !== period');
+    expect(resultPageSource).not.toContain('this.setData({ activePeriod: period, loading: true });');
   });
 
   test('home search renders basic weather before waiting for glow scoring', () => {
