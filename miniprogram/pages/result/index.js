@@ -126,45 +126,46 @@ Page({
     const date = prediction.date || null;
     const radarKey = buildPanelCacheKey({ lat, lon, type, date });
     this.radarPanelCache = this.radarPanelCache || {};
+    const cachedRadar = this.radarPanelCache[radarKey] || null;
+    const cachedThreeDay = this.threeDayGlowCache || null;
 
-    if (this.radarPanelCache[radarKey]) {
-      const radar = this.radarPanelCache[radarKey];
-      this.setData({ radar }, () => {
-        this.paintRadarCloudField(radar);
+    if (cachedRadar) {
+      this.setData({ radar: cachedRadar }, () => {
+        this.paintRadarCloudField(cachedRadar);
       });
     } else {
       this.setData({ radar: buildEmptyRadar({ loading: true }) });
     }
 
-    if (this.threeDayGlowCache) {
-      this.setData({ threeDayGlow: this.threeDayGlowCache });
+    if (cachedThreeDay) {
+      this.setData({ threeDayGlow: cachedThreeDay });
     } else {
       this.setData({ threeDayGlow: buildEmptyThreeDayGlow({ loading: true }) });
     }
 
-    const radarPromise = this.radarPanelCache[radarKey]
-      ? Promise.resolve(this.radarPanelCache[radarKey])
-      : this.getRadarPanelPromise({ lat, lon, type, date, radarKey });
-    const threeDayPromise = this.threeDayGlowCache
-      ? Promise.resolve(this.threeDayGlowCache)
-      : this.getThreeDayGlowPromise({ lat, lon });
+    const radarPromise = cachedRadar ? null : this.getRadarPanelPromise({ lat, lon, type, date, radarKey });
+    const threeDayPromise = cachedThreeDay ? null : this.getThreeDayGlowPromise({ lat, lon });
+    if (!radarPromise && !threeDayPromise) return;
 
-    const [radarResult, threeDayResult] = await Promise.allSettled([radarPromise, threeDayPromise]);
+    const [radarResult, threeDayResult] = await Promise.allSettled([
+      radarPromise || Promise.resolve(null),
+      threeDayPromise || Promise.resolve(null)
+    ]);
 
-    if (radarResult.status === 'fulfilled') {
+    if (radarPromise && radarResult.status === 'fulfilled') {
       const radar = radarResult.value;
       this.radarPanelCache[radarKey] = radar;
       this.setData({ radar }, () => {
         this.paintRadarCloudField(radar);
       });
-    } else {
+    } else if (radarPromise) {
       this.setData({ radar: buildEmptyRadar({ error: '周边云况暂时加载失败，请稍后再试。' }) });
     }
 
-    if (threeDayResult.status === 'fulfilled') {
+    if (threeDayPromise && threeDayResult.status === 'fulfilled') {
       this.threeDayGlowCache = threeDayResult.value;
       this.setData({ threeDayGlow: threeDayResult.value });
-    } else {
+    } else if (threeDayPromise) {
       this.setData({ threeDayGlow: buildEmptyThreeDayGlow({ error: '三天预测暂时加载失败，请稍后再试。' }) });
     }
   },
@@ -263,12 +264,34 @@ Page({
     return this.periodCardPromises[nextPeriod];
   },
 
-  paintRadarCloudField(radar = this.data.radar) {
+  scheduleXiakePanels(prediction) {
+    if (this.resultPanelLoadTimer) clearTimeout(this.resultPanelLoadTimer);
+    this.resultPanelLoadTimer = setTimeout(() => {
+      this.resultPanelLoadTimer = null;
+      this.loadXiakePanels(prediction);
+    }, 80);
+  },
+
+  paintRadarCloudField(radar = this.data.radar, { force = false } = {}) {
     const directions = radar?.directions || [];
     if (!directions.length) return;
-    setTimeout(() => {
+    const signature = directions
+      .map((item) => [
+        item.direction,
+        item.scoreText,
+        item.highCloud,
+        item.midCloud,
+        item.lowCloud,
+        item.cloudText
+      ].join(':'))
+      .join('|');
+    if (!force && signature && signature === this.lastResultRadarPaintSignature) return;
+    this.lastResultRadarPaintSignature = signature;
+    if (this.resultRadarPaintTimer) clearTimeout(this.resultRadarPaintTimer);
+    this.resultRadarPaintTimer = setTimeout(() => {
+      this.resultRadarPaintTimer = null;
       paintRadarCloudCanvas('resultRadarCloudField', directions, { page: this });
-    }, 0);
+    }, 80);
   },
 
   onShow() {
@@ -281,6 +304,11 @@ Page({
 
   onAppSettingsChange(event) {
     this.setData(event.detail || readAppSettings());
+  },
+
+  onUnload() {
+    if (this.resultRadarPaintTimer) clearTimeout(this.resultRadarPaintTimer);
+    if (this.resultPanelLoadTimer) clearTimeout(this.resultPanelLoadTimer);
   },
 
   async toggleFavorite() {
@@ -319,7 +347,7 @@ Page({
         ...buildResultPeriodState(nextPrediction),
         loading: false
       }, () => {
-        this.loadXiakePanels(nextPrediction);
+        this.scheduleXiakePanels(nextPrediction);
       });
       return;
     }
@@ -340,7 +368,7 @@ Page({
             [period]: prefetchedPrediction
           }
         }, () => {
-          this.loadXiakePanels(prefetchedPrediction);
+          this.scheduleXiakePanels(prefetchedPrediction);
         });
         return;
       }
@@ -374,7 +402,7 @@ Page({
         },
         radar: buildEmptyRadar({ loading: hasCoordinates(normalized) })
       }, () => {
-        this.loadXiakePanels(normalized);
+        this.scheduleXiakePanels(normalized);
       });
     } catch (error) {
       this.setData({ loading: false });

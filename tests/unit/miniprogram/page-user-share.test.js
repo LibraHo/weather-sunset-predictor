@@ -309,7 +309,18 @@ describe('miniprogram page user/share helpers', () => {
     expect(resultPageSource).toContain('getEnhancedPredictionBatch');
     expect(resultPageSource).toContain('this.periodCardPromises[period]');
     expect(resultPageSource).toContain('this.data.activePeriod !== period');
+    expect(resultPageSource).toContain('this.scheduleXiakePanels(nextPrediction)');
+    expect(resultPageSource).toContain('this.scheduleXiakePanels(prefetchedPrediction)');
     expect(resultPageSource).not.toContain('this.setData({ activePeriod: period, loading: true });');
+  });
+
+  test('result page cached period switch avoids duplicate panel and canvas work', () => {
+    expect(resultPageSource).toContain('const cachedRadar = this.radarPanelCache[radarKey] || null;');
+    expect(resultPageSource).toContain('const radarPromise = cachedRadar ? null : this.getRadarPanelPromise');
+    expect(resultPageSource).toContain('if (!radarPromise && !threeDayPromise) return;');
+    expect(resultPageSource).toContain('lastResultRadarPaintSignature');
+    expect(resultPageSource).toContain('resultRadarPaintTimer');
+    expect(resultPageSource).toContain('resultPanelLoadTimer');
   });
 
   test('home search renders basic weather before waiting for glow scoring', () => {
