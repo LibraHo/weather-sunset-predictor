@@ -378,6 +378,26 @@ describe('EnhancedPredictionService', () => {
       expect(aerosolCarrier.reason).toBe('aerosol_carrier_too_weak');
     });
 
+    test('keeps borderline visibility aerosol visible without turning it into a high score', () => {
+      const weatherData = {
+        lowClouds: 14,
+        midClouds: 7,
+        highClouds: 0,
+        visibility: 8,
+        aerosolOpticalDepth: 0.37,
+        pm2_5: 71.7,
+        pm10: 75,
+        dust: 2
+      };
+      const aerosolCarrier = EnhancedPredictionService.scoreAerosolCarrier(weatherData, { score: 48 });
+
+      expect(aerosolCarrier.score).toBeGreaterThanOrEqual(14);
+      expect(aerosolCarrier.activatedScore).toBeGreaterThanOrEqual(12);
+      expect(aerosolCarrier.activatedScore).toBeLessThan(18);
+      expect(aerosolCarrier.level).toBe('weak_warmth');
+      expect(aerosolCarrier.reason).toBe('aerosol_carrier_activated_by_clear_air_scattering');
+    });
+
     test('does not turn heavy haze into a carrier', () => {
       const weatherData = {
         lowClouds: 0,

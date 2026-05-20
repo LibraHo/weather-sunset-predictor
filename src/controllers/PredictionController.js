@@ -1729,7 +1729,7 @@ class PredictionController {
     let carrierLevel = 'weak';
     if (carrierAdjustment?.applied || denseCarrierCanvasOnly || cloudCanvasScore >= 58 || weather.high >= 60 || effectiveCloudCover >= 48) {
       carrierLevel = 'good';
-    } else if (cloudCanvasScore >= 30 || weather.high >= 15 || weather.mid >= 20 || aerosolCarrier?.activatedScore >= 18 || effectiveCloudCover >= 18) {
+    } else if (cloudCanvasScore >= 30 || weather.high >= 15 || weather.mid >= 20 || aerosolCarrier?.activatedScore >= 12 || effectiveCloudCover >= 18) {
       carrierLevel = 'fair';
     }
 
@@ -1766,7 +1766,7 @@ class PredictionController {
       renderingLevel = 'weak';
     } else if (
       postRainAdjustment?.mode === 'post_rain_clear' ||
-      aerosolCarrier?.activatedScore >= 18 ||
+      aerosolCarrier?.activatedScore >= 12 ||
       renderingFactor >= 1.03 ||
       (weather.visibility >= 15 && weather.humidity >= 35 && weather.humidity <= 75 && (!Number.isFinite(aod) || aod <= 0.35))
     ) {
@@ -2043,7 +2043,7 @@ class PredictionController {
         detail: ledgerText('details.carrierFloor', {}, 'clear high-cloud carrier prevents over-penalty', '高云载体清透，避免误伤低估'),
         tone: 'good'
       } : null,
-      aerosolCarrier?.activatedScore >= 18 ? {
+      aerosolCarrier?.activatedScore >= 12 ? {
         label: ledgerText('labels.aerosolCarrier', {}, 'Aerosol carrier', '气溶胶载体'),
         value: fmt(aerosolCarrier.activatedScore, 1),
         detail: ledgerText(
