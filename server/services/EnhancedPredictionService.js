@@ -796,7 +796,7 @@ function scoreAerosolCarrier(weatherData, lightPathScore = {}) {
 
   const rawScore = clamp(Math.max(aodScore, pm25Score, pm10Score) - dustPenalty - visibilityPenalty, 0, 38);
   const cloudPathActivation = clamp((lightPath - 45) / 35, 0, 1);
-  const hasModerateAerosol = rawScore >= 14 && visibility >= 8 && lowClouds < 35;
+  const hasModerateAerosol = rawScore >= 14 && visibility >= 8 && lowClouds < 40;
   const aerosolScatteringActivation = hasModerateAerosol ? 0.82 : 0;
   const lightPathActivation = Math.max(cloudPathActivation, aerosolScatteringActivation);
   const activatedScore = rawScore * lightPathActivation;
