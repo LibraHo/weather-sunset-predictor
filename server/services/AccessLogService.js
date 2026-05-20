@@ -13,8 +13,9 @@ const ipLocationService = require('./IpLocationService');
 
 const DATA_DIR = path.join(require('os').homedir(), '.xiake');
 const DATA_FILE = path.join(DATA_DIR, 'access-stats.json');
-const MAX_MEMORY_RECORDS = 500; // 内存中最多保留多少条原始记录
+const MAX_MEMORY_RECORDS = 2000; // 内存中最多保留多少条原始记录
 const MAX_PERSIST_DAYS = 30;    // 持久化保留多少天
+const BEIJING_OFFSET_MS = 8 * 60 * 60 * 1000;
 
 class AccessLogService {
   constructor() {
@@ -86,15 +87,21 @@ class AccessLogService {
   }
 
   _fmtDate(ts) {
-    const d = new Date(ts);
+    const d = new Date(ts + BEIJING_OFFSET_MS);
     const pad = n => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
   }
 
   _fmtHour(ts) {
-    const d = new Date(ts);
+    const d = new Date(ts + BEIJING_OFFSET_MS);
     const pad = n => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:00`;
+    return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:00`;
+  }
+
+  _fmtDateTime(ts) {
+    const d = new Date(ts + BEIJING_OFFSET_MS);
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
   }
 
   /**
@@ -212,6 +219,49 @@ class AccessLogService {
       topIps,
       topPaths,
       dailyTrend
+    };
+  }
+
+  getVisitorRecords({ date, limit = 500 } = {}) {
+    const now = Date.now();
+    const day = /^\d{4}-\d{2}-\d{2}$/.test(String(date || '')) ? String(date) : this._fmtDate(now);
+    const dayData = this._daily[day] || { pv: 0, uv: new Set(), ips: {} };
+    const maxRows = Math.min(1000, Math.max(1, Number(limit) || 500));
+
+    const topIps = Object.entries(dayData.ips || {})
+      .sort((a, b) => b[1] - a[1])
+      .map(([ip, count]) => ({
+        ip,
+        count,
+        location: ipLocationService.getDisplayLocation(ip)
+      }));
+
+    const records = this._records
+      .filter(r => this._fmtDate(r.t) === day)
+      .sort((a, b) => b.t - a.t)
+      .slice(0, maxRows)
+      .map(r => ({
+        time: this._fmtDateTime(r.t),
+        ip: r.ip,
+        location: ipLocationService.getDisplayLocation(r.ip),
+        method: r.method,
+        path: r.path,
+        ua: r.ua,
+      }));
+
+    const availableDays = Object.keys(this._daily).sort().reverse();
+
+    return {
+      date: day,
+      timezone: 'Asia/Shanghai',
+      summary: {
+        pv: dayData.pv || 0,
+        uv: dayData.uv?.size || 0,
+        ips: Object.keys(dayData.ips || {}).length,
+      },
+      topIps,
+      records,
+      availableDays,
     };
   }
 }

@@ -396,4 +396,11 @@ router.get('/admin/access-stats', requireAuth, (req, res) => {
   res.json(accessLogService.getStats());
 });
 
+router.get('/admin/visitor-records', requireAuth, (req, res) => {
+  res.json(accessLogService.getVisitorRecords({
+    date: req.query.date,
+    limit: req.query.limit
+  }));
+});
+
 module.exports = router;

@@ -32,6 +32,7 @@
             </button>
             <div id="home-view-menu-dropdown" class="home-view-menu-dropdown hidden" role="menu" aria-label="后台页面菜单">
               <button class="home-view-option admin-view-option active" role="menuitemradio" aria-checked="true" data-view="dashboard">总览</button>
+              <button class="home-view-option admin-view-option" role="menuitemradio" aria-checked="false" data-view="visitors">访客记录</button>
               <button class="home-view-option admin-view-option" role="menuitemradio" aria-checked="false" data-view="ops">运维</button>
               <button class="home-view-option admin-view-option" role="menuitemradio" aria-checked="false" data-view="logs">日志</button>
               <button class="home-view-option admin-view-option" role="menuitemradio" aria-checked="false" data-view="schedule">定时任务</button>
@@ -67,6 +68,7 @@
         <section class="admin-section">
           <div class="admin-entry-grid" aria-label="后台功能入口">
             <button class="admin-entry-card" data-view="ops"><strong>运维</strong><span>Grid 队列、刷新、缓存、重启</span></button>
+            <button class="admin-entry-card" data-view="visitors"><strong>访客记录</strong><span>按北京时间查看每日 IP 和访问明细</span></button>
             <button class="admin-entry-card" data-view="logs"><strong>日志</strong><span>API 调用、错误、每日统计</span></button>
             <button class="admin-entry-card" data-view="schedule"><strong>定时任务</strong><span>朝霞/晚霞自动刷新配置</span></button>
             <button class="admin-entry-card" data-view="agent"><strong>Agent / API</strong><span>Token、申请、用量、审计</span></button>
@@ -92,6 +94,30 @@
         </section>
         <section class="admin-section">
           <div class="admin-card"><h3 class="card-title">今日 Top IP</h3><div class="table-wrap"><table class="admin-table"><thead><tr><th>IP</th><th>归属地</th><th>访问次数</th></tr></thead><tbody id="ipStatsBody"><tr><td colspan="3" class="empty">加载中...</td></tr></tbody></table></div></div>
+        </section>
+      </section>
+
+      <section id="admin-panel-visitors" class="admin-panel hidden" data-admin-panel="visitors" role="tabpanel" aria-label="访客记录">
+        <div class="admin-page-hero card"><p class="admin-eyebrow">Visitors</p><h1>访客记录</h1><p>按北京时间查看每日 PV、UV、独立 IP、Top IP 和最近访问明细；IP 属地查询后会缓存，避免反复实时请求。</p></div>
+        <section class="admin-section">
+          <div class="admin-card">
+            <div class="admin-filter-row">
+              <label for="visitorDate">日期（北京时间）</label>
+              <input type="date" id="visitorDate">
+              <button class="btn btn-secondary" type="button" onclick="loadVisitorRecords()">查询</button>
+            </div>
+            <div class="kpi-grid visitor-kpi-grid">
+              <div class="kpi-card"><div class="kpi-label">PV</div><div class="kpi-value" id="visitor-pv">--</div></div>
+              <div class="kpi-card"><div class="kpi-label">UV</div><div class="kpi-value" id="visitor-uv">--</div></div>
+              <div class="kpi-card"><div class="kpi-label">独立 IP</div><div class="kpi-value" id="visitor-ip-count">--</div></div>
+            </div>
+          </div>
+        </section>
+        <section class="admin-section">
+          <div class="two-col">
+            <div class="admin-card"><h3 class="card-title">当日 IP</h3><div class="table-wrap visitor-table-wrap"><table class="admin-table"><thead><tr><th>IP</th><th>归属地</th><th>访问次数</th></tr></thead><tbody id="visitorIpBody"><tr><td colspan="3" class="empty">加载中...</td></tr></tbody></table></div></div>
+            <div class="admin-card"><h3 class="card-title">访问明细</h3><div class="table-wrap visitor-table-wrap"><table class="admin-table"><thead><tr><th>时间</th><th>IP</th><th>归属地</th><th>方法</th><th>路径</th></tr></thead><tbody id="visitorRecordBody"><tr><td colspan="5" class="empty">加载中...</td></tr></tbody></table></div></div>
+          </div>
         </section>
       </section>
 

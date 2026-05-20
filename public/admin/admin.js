@@ -13,7 +13,7 @@ let refreshTimer = null;
 let slowRefreshTimer = null;
 let photoCache = [];
 
-const ADMIN_VIEWS = new Set(['dashboard', 'ops', 'logs', 'schedule', 'agent', 'photos']);
+const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'ops', 'logs', 'schedule', 'agent', 'photos']);
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
@@ -53,6 +53,7 @@ async function loadAll() {
     loadLogSummary(),
     loadLogs(),
     loadQueue(),
+    loadVisitorRecords(),
     loadDailyStats(),
     loadSchedule(),
     loadTokens(),
@@ -134,6 +135,9 @@ async function loadActiveView() {
     case 'ops':
       await Promise.all([loadQueue(), loadHealth()]);
       break;
+    case 'visitors':
+      await loadVisitorRecords();
+      break;
     case 'logs':
       await Promise.all([loadLogSummary(), loadLogs(), loadDailyStats()]);
       break;
@@ -156,6 +160,8 @@ function refreshActiveView() {
     Promise.all([loadAccessStats(), loadLogSummary(), loadHealth(), loadShareStats()]);
   } else if (activeAdminView === 'ops') {
     Promise.all([loadQueue(), loadHealth()]);
+  } else if (activeAdminView === 'visitors') {
+    loadVisitorRecords();
   } else if (activeAdminView === 'logs') {
     Promise.all([loadLogSummary(), loadLogs()]);
   }
@@ -234,6 +240,52 @@ function renderAccessTrendChart(dailyTrend) {
       }
     }
   });
+}
+
+function getBeijingDateInputValue() {
+  const now = new Date(Date.now() + 8 * 60 * 60 * 1000);
+  const pad = n => String(n).padStart(2, '0');
+  return now.getUTCFullYear() + '-' + pad(now.getUTCMonth() + 1) + '-' + pad(now.getUTCDate());
+}
+
+async function loadVisitorRecords() {
+  const dateInput = document.getElementById('visitorDate');
+  if (!dateInput) return;
+  if (!dateInput.value) dateInput.value = getBeijingDateInputValue();
+
+  try {
+    const params = new URLSearchParams({ date: dateInput.value, limit: '500' });
+    const res = await fetch('/admin/visitor-records?' + params.toString(), { credentials: 'include' });
+    const data = await res.json();
+
+    document.getElementById('visitor-pv').textContent = data.summary?.pv ?? '--';
+    document.getElementById('visitor-uv').textContent = data.summary?.uv ?? '--';
+    document.getElementById('visitor-ip-count').textContent = data.summary?.ips ?? '--';
+
+    const ipBody = document.getElementById('visitorIpBody');
+    if (data.topIps?.length) {
+      ipBody.innerHTML = data.topIps.map(item =>
+        '<tr><td>' + escapeHtml(item.ip) + '</td><td>' + escapeHtml(item.location || '--') + '</td><td>' + Number(item.count || 0) + '</td></tr>'
+      ).join('');
+    } else {
+      ipBody.innerHTML = '<tr><td colspan="3" class="empty">暂无 IP 数据</td></tr>';
+    }
+
+    const recordBody = document.getElementById('visitorRecordBody');
+    if (data.records?.length) {
+      recordBody.innerHTML = data.records.map(item =>
+        '<tr><td>' + escapeHtml(item.time || '--') + '</td><td>' + escapeHtml(item.ip || '--') + '</td><td>' + escapeHtml(item.location || '--') + '</td><td>' + escapeHtml(item.method || '--') + '</td><td>' + escapeHtml(item.path || '--') + '</td></tr>'
+      ).join('');
+    } else {
+      recordBody.innerHTML = '<tr><td colspan="5" class="empty">暂无访问明细</td></tr>';
+    }
+  } catch (err) {
+    console.error('加载访客记录失败:', err);
+    const ipBody = document.getElementById('visitorIpBody');
+    const recordBody = document.getElementById('visitorRecordBody');
+    if (ipBody) ipBody.innerHTML = '<tr><td colspan="3" class="empty">访客 IP 加载失败</td></tr>';
+    if (recordBody) recordBody.innerHTML = '<tr><td colspan="5" class="empty">访问明细加载失败</td></tr>';
+  }
 }
 
 // =================== 分享统计 ===================

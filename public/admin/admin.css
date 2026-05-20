@@ -105,6 +105,37 @@
   transform: translateY(-1px);
 }
 
+.admin-filter-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: var(--spacing-md);
+}
+
+.admin-filter-row label {
+  color: var(--theme-text-muted, var(--color-text-light));
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.admin-filter-row input[type="date"] {
+  min-height: 38px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--theme-card-border, var(--color-border));
+  background: var(--theme-panel-soft, var(--color-card-bg));
+  color: var(--theme-text, var(--color-text));
+}
+
+.visitor-kpi-grid {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.visitor-table-wrap {
+  max-height: 520px;
+}
+
 .admin-panel {
   display: flex;
   flex-direction: column;
