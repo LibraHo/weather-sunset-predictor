@@ -361,7 +361,7 @@ describe('EnhancedPredictionService', () => {
 
     test('does not use aerosol scattering fallback when low clouds block the view', () => {
       const weatherData = {
-        lowClouds: 38,
+        lowClouds: 45,
         midClouds: 5,
         highClouds: 0,
         visibility: 20,
@@ -372,10 +372,48 @@ describe('EnhancedPredictionService', () => {
       };
       const aerosolCarrier = EnhancedPredictionService.scoreAerosolCarrier(weatherData, { score: 45 });
 
-      expect(aerosolCarrier.score).toBeGreaterThan(20);
       expect(aerosolCarrier.activatedScore).toBe(0);
       expect(aerosolCarrier.lightPathActivation).toBe(0);
-      expect(aerosolCarrier.reason).toBe('aerosol_carrier_too_weak');
+      expect(aerosolCarrier.reason).toBe('aerosol_carrier_not_visible');
+    });
+
+    test('keeps borderline visibility aerosol visible without turning it into a high score', () => {
+      const weatherData = {
+        lowClouds: 37,
+        midClouds: 7,
+        highClouds: 0,
+        visibility: 8,
+        aerosolOpticalDepth: 0.37,
+        pm2_5: 71.7,
+        pm10: 75,
+        dust: 2
+      };
+      const aerosolCarrier = EnhancedPredictionService.scoreAerosolCarrier(weatherData, { score: 48 });
+
+      expect(aerosolCarrier.score).toBeGreaterThanOrEqual(14);
+      expect(aerosolCarrier.activatedScore).toBeGreaterThanOrEqual(12);
+      expect(aerosolCarrier.activatedScore).toBeLessThan(18);
+      expect(aerosolCarrier.level).toBe('weak_warmth');
+      expect(aerosolCarrier.reason).toBe('aerosol_carrier_activated_by_clear_air_scattering');
+    });
+
+    test('uses visibility haze proxy when aerosol provider fields are missing', () => {
+      const weatherData = {
+        lowClouds: 37,
+        midClouds: 0,
+        highClouds: 27,
+        visibility: 8,
+        precipitation: 0,
+        aerosolOpticalDepth: null,
+        pm2_5: null,
+        pm10: null,
+        dust: null
+      };
+      const aerosolCarrier = EnhancedPredictionService.scoreAerosolCarrier(weatherData, { score: 48 });
+
+      expect(aerosolCarrier.score).toBeGreaterThan(0);
+      expect(aerosolCarrier.activatedScore).toBeGreaterThan(0);
+      expect(aerosolCarrier.reason).toBe('aerosol_carrier_activated_by_clear_air_scattering');
     });
 
     test('does not turn heavy haze into a carrier', () => {

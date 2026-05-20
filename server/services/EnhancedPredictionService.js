@@ -760,7 +760,8 @@ function scoreAerosolCarrier(weatherData, lightPathScore = {}) {
   const precipitation = Number(weatherData.precipitation ?? weatherData.rain ?? 0);
   const lightPath = Number(lightPathScore?.score ?? lightPathScore ?? 0);
 
-  const hasAerosolSignal = aod != null || pm25 != null || pm10 != null || dust != null;
+  const hasVisibilityHazeProxy = visibility >= 7 && visibility <= 12 && precipitation <= 0.2 && lowClouds < 40;
+  const hasAerosolSignal = aod != null || pm25 != null || pm10 != null || dust != null || hasVisibilityHazeProxy;
   if (!hasAerosolSignal) {
     return {
       score: 0,
@@ -791,16 +792,17 @@ function scoreAerosolCarrier(weatherData, lightPathScore = {}) {
   const aodScore = aod == null ? 0 : scoreRangePeak(aod, 0.06, 0.52, 0.86) * 38;
   const pm25Score = pm25 == null ? 0 : scoreRangePeak(pm25, 8, 45, 85) * 32;
   const pm10Score = pm10 == null ? 0 : scoreRangePeak(pm10, 18, 75, 160) * 28;
+  const visibilityHazeScore = hasVisibilityHazeProxy ? scoreRangePeak(visibility, 7, 9, 12) * 60 : 0;
   const dustPenalty = dust != null && dust > 50 ? clamp((dust - 50) / 70, 0, 1) * 10 : 0;
   const visibilityPenalty = visibility < 12 ? clamp((12 - visibility) / 4, 0, 1) * 12 : 0;
 
-  const rawScore = clamp(Math.max(aodScore, pm25Score, pm10Score) - dustPenalty - visibilityPenalty, 0, 38);
+  const rawScore = clamp(Math.max(aodScore, pm25Score, pm10Score, visibilityHazeScore) - dustPenalty - visibilityPenalty, 0, 38);
   const cloudPathActivation = clamp((lightPath - 45) / 35, 0, 1);
-  const hasModerateAerosol = rawScore >= 18 && visibility >= 12 && lowClouds < 35;
+  const hasModerateAerosol = rawScore >= 14 && visibility >= 8 && lowClouds < 40;
   const aerosolScatteringActivation = hasModerateAerosol ? 0.82 : 0;
   const lightPathActivation = Math.max(cloudPathActivation, aerosolScatteringActivation);
   const activatedScore = rawScore * lightPathActivation;
-  const level = activatedScore >= 30 ? 'warm_disk' : (activatedScore >= 18 ? 'weak_warmth' : 'weak');
+  const level = activatedScore >= 30 ? 'warm_disk' : (activatedScore >= 12 ? 'weak_warmth' : 'weak');
 
   return {
     score: parseFloat(rawScore.toFixed(1)),
@@ -809,7 +811,7 @@ function scoreAerosolCarrier(weatherData, lightPathScore = {}) {
     cloudPathActivation: parseFloat(cloudPathActivation.toFixed(2)),
     aerosolScatteringActivation: parseFloat(aerosolScatteringActivation.toFixed(2)),
     level,
-    reason: activatedScore >= 18
+    reason: activatedScore >= 12
       ? (aerosolScatteringActivation > cloudPathActivation ? 'aerosol_carrier_activated_by_clear_air_scattering' : 'aerosol_carrier_activated_by_light_path')
       : 'aerosol_carrier_too_weak',
     metrics: { aod, pm25, pm10, dust, visibility }
@@ -1673,7 +1675,7 @@ function calculateFinalScore(canvasScore, lightPathScore, renderingFactor, type 
   const hasEffectiveCloud = Number.isFinite(canvasScore.effectiveCloudCover);
   const isVeryLowCloud = canvasScore.cloudLevel === 'space' || (hasEffectiveCloud && canvasScore.effectiveCloudCover < 10);
   const aerosolCarrierActive = canvasScore.activeCarrier === 'aerosol' &&
-    Number(canvasScore.aerosolCarrierScore?.activatedScore) >= 18;
+    Number(canvasScore.aerosolCarrierScore?.activatedScore) >= 12;
   if (isVeryLowCloud && !aerosolCarrierActive) {
     status = 'no_fire_cloud';
     description = 'sky_clear';
