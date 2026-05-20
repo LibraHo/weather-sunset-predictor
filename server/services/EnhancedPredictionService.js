@@ -1116,18 +1116,21 @@ function scoreLightPath(weatherData, solarElevation, azimuth, remoteCloudData = 
     return { ...r, weightedBlock: r.block * (distanceWeights[i] || 0.3) };
   });
 
-  // 低云少时降低遮挡概率计算权重（低云少=光路通畅）
+  const rawOcclusionProbability = 1 - sampleResults.reduce((prod, s) => prod * (1 - s.weightedBlock), 1);
+  const nearRemoteBlock = hasRemoteData && sampleResults.slice(0, 3).some(s => Number(s.block || 0) >= 0.65);
+  const remoteBlockSignal = hasRemoteData && (rawOcclusionProbability >= 0.45 || nearRemoteBlock);
+
+  // 低云少时降低遮挡概率计算权重；但太阳方向远端采样已显示明显遮挡时，不能用本地点低云少来抵消。
   const lowClouds = weatherData.lowClouds || 0;
   const midClouds = weatherData.midClouds || 0;
   const highClouds = weatherData.highClouds || 0;
   let occlusionWeight = 1.0;
-  if (lowClouds < 20) {
+  if (!remoteBlockSignal && lowClouds < 20) {
     occlusionWeight = 0.7; // 低云极少，光路通畅，降低遮挡影响
-  } else if (lowClouds < 30) {
+  } else if (!remoteBlockSignal && lowClouds < 30) {
     occlusionWeight = 0.85; // 低云较少，光路较通畅
   }
 
-  const rawOcclusionProbability = 1 - sampleResults.reduce((prod, s) => prod * (1 - s.weightedBlock), 1);
   const occlusionProbability = rawOcclusionProbability * occlusionWeight;
   let lightPathScore = 100 * (1 - occlusionProbability);
   const directionalAnalysis = hasRemoteData ? analyzeRemoteLightPath(samples) : null;
@@ -1171,7 +1174,10 @@ function scoreLightPath(weatherData, solarElevation, azimuth, remoteCloudData = 
 
   return {
     score: parseFloat(lightPathScore.toFixed(1)),
+    rawOcclusionProbability: parseFloat(rawOcclusionProbability.toFixed(3)),
     occlusionProbability: parseFloat(occlusionProbability.toFixed(3)),
+    occlusionWeight: parseFloat(occlusionWeight.toFixed(2)),
+    remoteBlockSignal,
     azimuth,
     source: hasRemoteData ? (remoteCloudData.source || 'remote_samples') : 'local_estimate',
     samples: sampleResults.map(({ distanceKm, cloudBaseHeight, criticalElevation, block }) => ({

@@ -1734,8 +1734,11 @@ class PredictionController {
     }
 
     const lightPathScore = Number(prediction?.breakdown?.lightPathScore ?? lightPathAnalysis.score);
+    const directionalReason = directional?.reason || '';
+    const directionalOpening = directionalReason.includes('opening');
+    const hasDirectionalSamples = Boolean(directionalReason);
     let lightPathLevel = 'weak';
-    if (directional?.reason?.includes('opening') || lightPathScore >= 65) {
+    if (directionalOpening || (!hasDirectionalSamples && lightPathScore >= 75)) {
       lightPathLevel = 'good';
     } else if (lightPathScore >= 45 || weather.low < 35) {
       lightPathLevel = 'fair';

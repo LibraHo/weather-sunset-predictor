@@ -1115,6 +1115,51 @@ describe('EnhancedPredictionService', () => {
       expect(result.status).toBe('no_fire_cloud');
     });
 
+    test('should not discount remote solar-direction blockage just because local low cloud is scarce', () => {
+      const weatherData = {
+        cloudCover: 42,
+        lowClouds: 14,
+        midClouds: 18,
+        highClouds: 4,
+        humidity: 80,
+        visibility: 15,
+        precipitation: 0,
+        recentPrecipitation6h: 1.4,
+        recentRainHours: 5,
+        shortwaveRadiation: 78,
+        directRadiation: 17,
+        diffuseRadiation: 61,
+        waterVapourColumn: 30.2,
+        aerosolOpticalDepth: 0.4,
+        pm2_5: 29.7,
+        pm10: 32.1,
+        dust: 1,
+        aqi: 134
+      };
+      const remoteCloudData = {
+        samples: [
+          { distanceKm: 15, cloudBaseHeight: null, lowCloud: 23, midCloud: 8, highCloud: 0, totalCloud: 21 },
+          { distanceKm: 30, cloudBaseHeight: null, lowCloud: 40, midCloud: 7, highCloud: 0, totalCloud: 22 },
+          { distanceKm: 50, cloudBaseHeight: null, lowCloud: 40, midCloud: 7, highCloud: 0, totalCloud: 22 },
+          { distanceKm: 100, cloudBaseHeight: null, lowCloud: 12, midCloud: 0, highCloud: 0, totalCloud: 6 }
+        ]
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData,
+        new Date('2026-05-20T11:24:00.000Z'),
+        39.9042,
+        116.4074,
+        'sunset',
+        { remoteCloudData }
+      );
+
+      expect(result.lightPathAnalysis.remoteBlockSignal).toBe(true);
+      expect(result.lightPathAnalysis.occlusionWeight).toBe(1);
+      expect(result.lightPathAnalysis.score).toBeLessThan(55);
+      expect(result.lightPathAnalysis.directionalAnalysis.reason).toBe('solar_direction_neutral');
+    });
+
     test('should cap extreme dust haze high-cloud scenes below 30 points', () => {
       const weatherData = {
         cloudCover: 83,

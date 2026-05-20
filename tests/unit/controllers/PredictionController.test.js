@@ -854,6 +854,29 @@ describe('PredictionController', () => {
       expect(html).not.toContain('薄雾红日载体');
     });
 
+    test('太阳方向采样不是 opening 时光路条件不能显示良好', () => {
+      const groups = predictionController.buildAnalysisGroups({
+        score: 12,
+        cloudLayers: { high: 4, mid: 18, low: 14 },
+        visibility: 15,
+        humidity: 80,
+        breakdown: { lightPathScore: 63.3 },
+        lightPathAnalysis: {
+          score: 63.3,
+          directionalAnalysis: {
+            reason: 'solar_direction_neutral',
+            lowMid: 22.6,
+            high: 0
+          }
+        }
+      });
+
+      const lightPath = groups.find(item => item.key === 'lightPath');
+      expect(lightPath.status).toBe('一般');
+      expect(lightPath.statusTone).toBe('fair');
+      expect(lightPath.desc).toContain('太阳方向有一定遮挡');
+    });
+
     test('形成条件状态标签使用不同语义颜色', () => {
       const html = predictionController.renderAnalysisCard([
         { key: 'carrier', title: '云层载体', status: '较好', desc: 'test', type: 'positive', icon: 'cloud', statusTone: 'good' },
