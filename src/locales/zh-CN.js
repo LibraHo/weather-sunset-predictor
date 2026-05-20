@@ -69,7 +69,21 @@ export default {
       endpoints: '核心接口',
       forecastDesc: '返回评分、质量等级和最佳观赏窗口。',
       explainDesc: '返回评分构成、关键限制和自然语言解释。',
-      geocodeDesc: '返回地点候选、坐标和置信度。'
+      geocodeDesc: '返回地点候选、坐标和置信度。',
+      applyTitle: '申请 API Token',
+      emailLabel: '邮箱',
+      emailPlaceholder: 'name@example.com',
+      countryRegionLabel: '国家地区',
+      countryRegionPlaceholder: '中国大陆 / Hong Kong / US',
+      nicknameLabel: '昵称',
+      nicknamePlaceholder: '怎么称呼你',
+      purposeLabel: '用途',
+      purposePlaceholder: '说明使用场景、调用方式和是否公开展示',
+      submitApplication: '提交申请',
+      submitting: '提交中...',
+      submitRequired: '请完整填写邮箱、国家地区、昵称和用途。',
+      submitSuccess: '申请已提交，后台审核后会发放 Token。',
+      submitFailed: '提交失败，请稍后再试。'
     },
     methodology: {
       title: '火烧云计算方法',

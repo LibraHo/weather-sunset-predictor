@@ -62,7 +62,21 @@ const translations = {
       endpoints: '核心介面',
       forecastDesc: '返回評分、品質等級和最佳觀賞窗口。',
       explainDesc: '返回評分構成、關鍵限制和自然語言解釋。',
-      geocodeDesc: '返回地點候選、座標和信賴度。'
+      geocodeDesc: '返回地點候選、座標和信賴度。',
+      applyTitle: '申請 API Token',
+      emailLabel: '電子郵件',
+      emailPlaceholder: 'name@example.com',
+      countryRegionLabel: '國家／地區',
+      countryRegionPlaceholder: '台灣 / Hong Kong / US',
+      nicknameLabel: '暱稱',
+      nicknamePlaceholder: '希望我們怎麼稱呼你',
+      purposeLabel: '用途',
+      purposePlaceholder: '說明使用場景、呼叫方式，以及是否公開展示',
+      submitApplication: '送出申請',
+      submitting: '送出中...',
+      submitRequired: '請完整填寫電子郵件、國家／地區、暱稱和用途。',
+      submitSuccess: '申請已送出，後台審核後會發放 Token。',
+      submitFailed: '送出失敗，請稍後再試。'
     },
     "methodology": {
       "title": "火燒雲計算方法",

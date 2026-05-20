@@ -25,7 +25,7 @@ const XIAKE_DATA_DIR = process.env.XIAKE_DATA_DIR || path.join(os.homedir(), '.x
 const TOKEN_FILE = process.env.API_TOKEN_STORAGE_PATH || path.join(XIAKE_DATA_DIR, 'api-tokens.json');
 
 const DEFAULT_MINUTE_LIMIT = 120;
-const DEFAULT_DAILY_LIMIT = 5000;
+const DEFAULT_DAILY_LIMIT = 3;
 
 const LEGAL_PREFIXES = ['xiake_live_', 'xiake_test_'];
 

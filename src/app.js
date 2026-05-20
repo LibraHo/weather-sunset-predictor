@@ -170,6 +170,7 @@ async function initializeApp() {
     console.log('Initializing application...');
     initializeHomeTabs(document, () => onMapPanelVisible());
     setupLogoBackHome();
+    setupApiApplicationForm();
 
     // 朝/晚霞 tab 早期绑定（init 前就可点击）
     document.getElementById('map-tab-sunrise')?.addEventListener('click', () => {
@@ -223,6 +224,66 @@ async function initializeApp() {
       errorDiv.appendChild(retryBtn);
     }
   }
+}
+
+function getI18nText(key, fallback) {
+  return appController?.i18n?.t?.(key) || fallback;
+}
+
+function setupApiApplicationForm() {
+  const form = document.getElementById('api-application-form');
+  if (!form) return;
+
+  const submitBtn = document.getElementById('api-application-submit');
+  const messageEl = document.getElementById('api-application-message');
+
+  const setMessage = (message, type = '') => {
+    if (!messageEl) return;
+    messageEl.textContent = message;
+    messageEl.className = `api-application-message ${type}`.trim();
+  };
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const payload = {
+      email: document.getElementById('api-application-email')?.value?.trim() || '',
+      countryRegion: document.getElementById('api-application-country')?.value?.trim() || '',
+      nickname: document.getElementById('api-application-nickname')?.value?.trim() || '',
+      purpose: document.getElementById('api-application-purpose')?.value?.trim() || ''
+    };
+
+    if (!payload.email || !payload.countryRegion || !payload.nickname || !payload.purpose) {
+      setMessage(getI18nText('home.apiAccess.submitRequired', 'Please complete all required fields.'), 'error');
+      return;
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = getI18nText('home.apiAccess.submitting', 'Submitting...');
+    }
+    setMessage('');
+
+    try {
+      const res = await fetch('/api/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.error?.message || getI18nText('home.apiAccess.submitFailed', 'Submission failed.'));
+      }
+      form.reset();
+      setMessage(getI18nText('home.apiAccess.submitSuccess', 'Application submitted. We will review it before issuing a token.'), 'success');
+    } catch (error) {
+      setMessage(error?.message || getI18nText('home.apiAccess.submitFailed', 'Submission failed.'), 'error');
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = getI18nText('home.apiAccess.submitApplication', 'Submit application');
+      }
+    }
+  });
 }
 
 // 访客计数器

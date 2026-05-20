@@ -82,6 +82,13 @@ describe('ApiTokenService.createToken', () => {
     expect(stored).not.toHaveProperty('rawToken');
   });
 
+  test('未指定每日额度时默认每天 3 次', () => {
+    const created = service.createToken({ name: 'default-daily-limit' });
+
+    expect(created.tokenMeta.dailyLimit).toBe(3);
+    expect(service.getTokenById(created.tokenMeta.id).dailyLimit).toBe(3);
+  });
+
   test('认证成功会更新 lastUsedAt 和 usageCount', () => {
     const created = service.createToken({ name: 'counter-check', dailyLimit: 3, minuteLimit: 3 });
     expect(service.authenticateToken(created.token, []).token.usageCount).toBe(1);

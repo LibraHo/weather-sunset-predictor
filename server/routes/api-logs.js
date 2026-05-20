@@ -35,8 +35,8 @@ function findTokenById(id) {
 function normalizeTokenMeta(reqBody = {}) {
   return {
     name: typeof reqBody.name === 'string' ? reqBody.name.trim() : '',
-    minuteLimit: parseIntSafe(reqBody.minuteLimit, apiTokenService._blankTokenRecord().minuteLimit),
-    dailyLimit: parseIntSafe(reqBody.dailyLimit, apiTokenService._blankTokenRecord().dailyLimit),
+    minuteLimit: parseIntSafe(reqBody.minuteLimit, 120),
+    dailyLimit: parseIntSafe(reqBody.dailyLimit, 3),
     enabled: reqBody.enabled !== false,
     note: typeof reqBody.note === 'string' ? reqBody.note.trim() : '',
     nonCommercial: reqBody.nonCommercial !== false,
@@ -307,9 +307,12 @@ router.post('/applications/:id/review', (req, res) => {
         const { token, tokenMeta } = apiTokenService.createToken({
           name: (req.body?.tokenName || `api-${existing.email}`).slice(0, 60),
           minuteLimit: parseIntSafe(req.body?.minuteLimit, 120),
-          dailyLimit: parseIntSafe(req.body?.dailyLimit, 5000),
-          trustedUser: existing.contact || existing.email || '',
-          note: existing.purpose ? `申请用途：${existing.purpose}` : 'API 申请审批创建',
+          dailyLimit: parseIntSafe(req.body?.dailyLimit, 3),
+          trustedUser: existing.nickname || existing.contact || existing.email || '',
+          note: [
+            existing.countryRegion ? `国家地区：${existing.countryRegion}` : '',
+            existing.purpose ? `申请用途：${existing.purpose}` : 'API 申请审批创建'
+          ].filter(Boolean).join('；'),
           nonCommercial: true,
           expiresAt: typeof req.body?.expiresAt === 'string' && req.body.expiresAt.trim() ? req.body.expiresAt.trim() : null
         });

@@ -638,6 +638,34 @@
           </article>
         </div>
 
+        <div class="api-access-card api-application-card">
+          <h3 data-i18n="home.apiAccess.applyTitle">申请 API Token</h3>
+          <form id="api-application-form" class="api-application-form">
+            <div class="api-application-fields">
+              <label>
+                <span data-i18n="home.apiAccess.emailLabel">邮箱</span>
+                <input id="api-application-email" name="email" type="email" autocomplete="email" required data-i18n-placeholder="home.apiAccess.emailPlaceholder" placeholder="name@example.com">
+              </label>
+              <label>
+                <span data-i18n="home.apiAccess.countryRegionLabel">国家地区</span>
+                <input id="api-application-country" name="countryRegion" type="text" autocomplete="country-name" required data-i18n-placeholder="home.apiAccess.countryRegionPlaceholder" placeholder="中国大陆 / Hong Kong / US">
+              </label>
+              <label>
+                <span data-i18n="home.apiAccess.nicknameLabel">昵称</span>
+                <input id="api-application-nickname" name="nickname" type="text" autocomplete="nickname" required data-i18n-placeholder="home.apiAccess.nicknamePlaceholder" placeholder="怎么称呼你">
+              </label>
+              <label class="api-application-purpose">
+                <span data-i18n="home.apiAccess.purposeLabel">用途</span>
+                <textarea id="api-application-purpose" name="purpose" rows="4" required data-i18n-placeholder="home.apiAccess.purposePlaceholder" placeholder="说明使用场景、调用方式和是否公开展示"></textarea>
+              </label>
+            </div>
+            <div class="api-application-submit-row">
+              <button type="submit" class="btn btn-primary" id="api-application-submit" data-i18n="home.apiAccess.submitApplication">提交申请</button>
+              <span id="api-application-message" class="api-application-message" role="status" aria-live="polite"></span>
+            </div>
+          </form>
+        </div>
+
         <div class="api-access-card">
           <h3 data-i18n="home.apiAccess.exampleCall">示例调用</h3>
           <pre class="code-box">curl -H "Authorization: Bearer YOUR_TOKEN_HERE" \
