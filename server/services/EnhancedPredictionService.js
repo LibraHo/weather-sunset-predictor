@@ -760,7 +760,8 @@ function scoreAerosolCarrier(weatherData, lightPathScore = {}) {
   const precipitation = Number(weatherData.precipitation ?? weatherData.rain ?? 0);
   const lightPath = Number(lightPathScore?.score ?? lightPathScore ?? 0);
 
-  const hasAerosolSignal = aod != null || pm25 != null || pm10 != null || dust != null;
+  const hasVisibilityHazeProxy = visibility >= 7 && visibility <= 12 && precipitation <= 0.2 && lowClouds < 40;
+  const hasAerosolSignal = aod != null || pm25 != null || pm10 != null || dust != null || hasVisibilityHazeProxy;
   if (!hasAerosolSignal) {
     return {
       score: 0,
@@ -791,10 +792,11 @@ function scoreAerosolCarrier(weatherData, lightPathScore = {}) {
   const aodScore = aod == null ? 0 : scoreRangePeak(aod, 0.06, 0.52, 0.86) * 38;
   const pm25Score = pm25 == null ? 0 : scoreRangePeak(pm25, 8, 45, 85) * 32;
   const pm10Score = pm10 == null ? 0 : scoreRangePeak(pm10, 18, 75, 160) * 28;
+  const visibilityHazeScore = hasVisibilityHazeProxy ? scoreRangePeak(visibility, 7, 9, 12) * 60 : 0;
   const dustPenalty = dust != null && dust > 50 ? clamp((dust - 50) / 70, 0, 1) * 10 : 0;
   const visibilityPenalty = visibility < 12 ? clamp((12 - visibility) / 4, 0, 1) * 12 : 0;
 
-  const rawScore = clamp(Math.max(aodScore, pm25Score, pm10Score) - dustPenalty - visibilityPenalty, 0, 38);
+  const rawScore = clamp(Math.max(aodScore, pm25Score, pm10Score, visibilityHazeScore) - dustPenalty - visibilityPenalty, 0, 38);
   const cloudPathActivation = clamp((lightPath - 45) / 35, 0, 1);
   const hasModerateAerosol = rawScore >= 14 && visibility >= 8 && lowClouds < 40;
   const aerosolScatteringActivation = hasModerateAerosol ? 0.82 : 0;
