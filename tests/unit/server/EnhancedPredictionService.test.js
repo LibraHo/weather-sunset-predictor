@@ -339,7 +339,7 @@ describe('EnhancedPredictionService', () => {
       expect(carrier.score).toBe(cloudCanvas.score);
     });
 
-    test('requires light path activation before aerosol can lift the carrier score', () => {
+    test('keeps moderate aerosol visible when cloud light path is marginal but air is clear enough', () => {
       const weatherData = {
         lowClouds: 0,
         midClouds: 5,
@@ -353,8 +353,29 @@ describe('EnhancedPredictionService', () => {
       const aerosolCarrier = EnhancedPredictionService.scoreAerosolCarrier(weatherData, { score: 45 });
 
       expect(aerosolCarrier.score).toBeGreaterThan(20);
+      expect(aerosolCarrier.activatedScore).toBeGreaterThanOrEqual(18);
+      expect(aerosolCarrier.cloudPathActivation).toBe(0);
+      expect(aerosolCarrier.aerosolScatteringActivation).toBeGreaterThan(0.8);
+      expect(aerosolCarrier.reason).toBe('aerosol_carrier_activated_by_clear_air_scattering');
+    });
+
+    test('does not use aerosol scattering fallback when low clouds block the view', () => {
+      const weatherData = {
+        lowClouds: 38,
+        midClouds: 5,
+        highClouds: 0,
+        visibility: 20,
+        aerosolOpticalDepth: 0.45,
+        pm2_5: 40,
+        pm10: 70,
+        dust: 20
+      };
+      const aerosolCarrier = EnhancedPredictionService.scoreAerosolCarrier(weatherData, { score: 45 });
+
+      expect(aerosolCarrier.score).toBeGreaterThan(20);
       expect(aerosolCarrier.activatedScore).toBe(0);
       expect(aerosolCarrier.lightPathActivation).toBe(0);
+      expect(aerosolCarrier.reason).toBe('aerosol_carrier_too_weak');
     });
 
     test('does not turn heavy haze into a carrier', () => {
