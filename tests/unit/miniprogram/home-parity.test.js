@@ -98,7 +98,7 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxml).toContain('data-target="methodology"');
     expect(homeWxml).toContain('data-target="map"');
     expect(homeWxml).toContain('data-target="gallery"');
-    expect(homeWxml).toContain('data-target="upload"');
+    expect(homeWxml).not.toContain('data-target="upload"');
     expect(homeWxss).toContain('.home-weather-preview');
     expect(homeWxss).toContain('.weather-main-layout');
     expect(homeWxss).toContain('.weather-visual-panel');
@@ -160,7 +160,7 @@ describe('mini-program home parity with mobile web home', () => {
     expect(rain).toContain('stroke="#2563eb"');
   });
 
-  test('mini-program feature shortcuts preserve web menu order before upload', () => {
+  test('mini-program feature shortcuts preserve web menu order without upload entry', () => {
     const web = read('index.html');
     const homeWxml = read('miniprogram/pages/home/index.wxml');
 
@@ -174,9 +174,9 @@ describe('mini-program home parity with mobile web home', () => {
     expectInOrder(homeWxml, [
       'data-target="methodology"',
       'data-target="map"',
-      'data-target="gallery"',
-      'data-target="upload"'
+      'data-target="gallery"'
     ]);
+    expect(homeWxml).not.toContain('data-target="upload"');
   });
 
   test('home menu omits API access from the mini-program surface', () => {
