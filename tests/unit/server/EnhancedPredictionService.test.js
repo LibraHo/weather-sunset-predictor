@@ -397,6 +397,25 @@ describe('EnhancedPredictionService', () => {
       expect(aerosolCarrier.reason).toBe('aerosol_carrier_activated_by_clear_air_scattering');
     });
 
+    test('uses visibility haze proxy when aerosol provider fields are missing', () => {
+      const weatherData = {
+        lowClouds: 37,
+        midClouds: 0,
+        highClouds: 27,
+        visibility: 8,
+        precipitation: 0,
+        aerosolOpticalDepth: null,
+        pm2_5: null,
+        pm10: null,
+        dust: null
+      };
+      const aerosolCarrier = EnhancedPredictionService.scoreAerosolCarrier(weatherData, { score: 48 });
+
+      expect(aerosolCarrier.score).toBeGreaterThan(0);
+      expect(aerosolCarrier.activatedScore).toBeGreaterThan(0);
+      expect(aerosolCarrier.reason).toBe('aerosol_carrier_activated_by_clear_air_scattering');
+    });
+
     test('does not turn heavy haze into a carrier', () => {
       const weatherData = {
         lowClouds: 0,
