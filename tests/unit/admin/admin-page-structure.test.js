@@ -18,7 +18,7 @@ describe('admin page structure', () => {
     expect(html).toContain('admin-header');
     expect(html).not.toContain('admin-view-menu');
 
-    ['dashboard', 'ops', 'logs', 'schedule', 'agent', 'photos'].forEach((view) => {
+    ['dashboard', 'visitors', 'ops', 'logs', 'schedule', 'agent', 'photos'].forEach((view) => {
       expect(html).toContain(`data-admin-panel="${view}"`);
       expect(html).toContain(`data-view="${view}"`);
       expect(html).toContain(`id="admin-panel-${view}"`);
@@ -55,6 +55,9 @@ describe('admin page structure', () => {
       'apiHourlyChart',
       'healthGrid',
       'queueStatusGrid',
+      'visitorDate',
+      'visitorIpBody',
+      'visitorRecordBody',
       'logTableBody',
       'dailyStatsBody',
       'scheduleJobs',
@@ -84,6 +87,7 @@ describe('admin page structure', () => {
       'loadAccessStats',
       'loadHealth',
       'loadQueue',
+      'loadVisitorRecords',
       'loadLogs',
       'loadDailyStats',
       'loadSchedule',
@@ -119,6 +123,11 @@ describe('admin page structure', () => {
     expect(html).toContain('解析经纬度');
     expect(html).toContain('解析拍摄时间');
     expect(html).toContain('字段都可以留空或手动修改');
+    expect(html).toContain('访客记录');
+    expect(html).toContain('日期（北京时间）');
+    expect(js).toContain("const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'ops', 'logs', 'schedule', 'agent', 'photos'])");
+    expect(js).toContain("fetch('/admin/visitor-records?'");
+    expect(js).toContain('getBeijingDateInputValue');
     expect(html).toContain('编辑照片信息');
     expect(html).not.toContain('在地图上选择位置');
     expect(html).not.toContain('leaflet@1.9.4');
