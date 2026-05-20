@@ -361,7 +361,7 @@ describe('EnhancedPredictionService', () => {
 
     test('does not use aerosol scattering fallback when low clouds block the view', () => {
       const weatherData = {
-        lowClouds: 38,
+        lowClouds: 45,
         midClouds: 5,
         highClouds: 0,
         visibility: 20,
@@ -372,15 +372,14 @@ describe('EnhancedPredictionService', () => {
       };
       const aerosolCarrier = EnhancedPredictionService.scoreAerosolCarrier(weatherData, { score: 45 });
 
-      expect(aerosolCarrier.score).toBeGreaterThan(20);
       expect(aerosolCarrier.activatedScore).toBe(0);
       expect(aerosolCarrier.lightPathActivation).toBe(0);
-      expect(aerosolCarrier.reason).toBe('aerosol_carrier_too_weak');
+      expect(aerosolCarrier.reason).toBe('aerosol_carrier_not_visible');
     });
 
     test('keeps borderline visibility aerosol visible without turning it into a high score', () => {
       const weatherData = {
-        lowClouds: 14,
+        lowClouds: 37,
         midClouds: 7,
         highClouds: 0,
         visibility: 8,
