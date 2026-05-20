@@ -64,6 +64,8 @@ describe('miniprogram design language styles', () => {
 
     expect(topbarWxss).toContain('.app-logo-text');
     expect(topbarWxss).toContain('font-size: 42rpx');
+    expect(topbarWxss).toContain('font-family: "Cormorant Garamond", "PingFang SC", "Hiragino Sans GB", Georgia, serif;');
+    expect(topbarWxss).toContain('font-weight: 300');
     expect(methodologyWxss).not.toMatch(/font-size:\s*(4[3-9]|[5-9]\d)rpx/);
     expect(mapWxss).not.toMatch(/font-size:\s*(4[3-9]|[5-9]\d)rpx/);
     expect(resultWxss).not.toMatch(/score-ledger-[^{]+{[^}]*font-size:\s*(2[0-3])rpx/s);
