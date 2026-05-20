@@ -33,9 +33,9 @@
 
 .app-logo-text {
   color: #7a4a18;
-  font-family: "Cormorant Garamond", Georgia, "Songti SC", "STSong", serif;
+  font-family: "Cormorant Garamond", "PingFang SC", "Hiragino Sans GB", Georgia, serif;
   font-size: 42rpx;
-  font-weight: 500;
+  font-weight: 300;
   letter-spacing: 0;
   line-height: 1;
 }

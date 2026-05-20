@@ -49,8 +49,8 @@ describe('miniprogram services/photos', () => {
         takenAt: '2026-05-01T10:00:00Z',
         uploadedAt: '2026-05-01T11:00:00Z',
         desc: 'sunset',
-        thumbUrl: '/thumb/p1.jpg',
-        originalUrl: '/photo/p1.jpg'
+        thumbUrl: 'https://api.example.com/thumb/p1.jpg',
+        originalUrl: 'https://api.example.com/photo/p1.jpg'
       }
     ]);
     expect(wxMock.request.mock.calls[0][0]).toEqual(expect.objectContaining({
@@ -90,6 +90,18 @@ describe('miniprogram services/photos', () => {
       lon: 120.2,
       thumbUrl: 'https://api.example.com/api/photos/photo-42/thumb',
       originalUrl: 'https://api.example.com/api/photos/photo-42/original'
+    });
+  });
+
+  test('normalizePhoto expands relative thumbnail fields for mini program image loading', () => {
+    expect(normalizePhoto({
+      id: 'photo-43',
+      thumbnail: '/uploads/thumbs/photo-43.jpg',
+      coverUrl: '/uploads/covers/photo-43.jpg',
+      imageUrl: '/uploads/original/photo-43.jpg'
+    }, { baseUrl: 'https://api.example.com' })).toMatchObject({
+      thumbUrl: 'https://api.example.com/uploads/thumbs/photo-43.jpg',
+      originalUrl: 'https://api.example.com/uploads/original/photo-43.jpg'
     });
   });
 
@@ -139,8 +151,8 @@ describe('miniprogram services/photos', () => {
       takenAt: '2026-05-03T10:00:00Z',
       uploadedAt: '2026-05-03T10:01:00Z',
       desc: 'clouds',
-      thumbUrl: '/thumb/p2.jpg',
-      originalUrl: '/photo/p2.jpg'
+      thumbUrl: 'https://api.example.com/thumb/p2.jpg',
+      originalUrl: 'https://api.example.com/photo/p2.jpg'
     });
 
     expect(wxMock.uploadFile).toHaveBeenCalledWith(expect.objectContaining({

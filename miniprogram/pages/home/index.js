@@ -332,8 +332,7 @@ Page({
       forecast: '',
       methodology: '/pages/methodology/index',
       map: `/pages/map/index?period=${this.data.period}`,
-      gallery: '/pages/gallery/index',
-      upload: '/pages/upload/index'
+      gallery: '/pages/gallery/index'
     };
     const url = routes[target];
     this.setData({ homeMenuOpen: false });

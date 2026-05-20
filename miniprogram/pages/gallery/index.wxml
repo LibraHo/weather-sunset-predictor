@@ -45,7 +45,6 @@
     </view>
 
     <view class="map-actions">
-      <button class="primary-button map-button" bindtap="goUpload" hover-class="button-hover" hover-stay-time="80">上传照片</button>
       <button class="ghost-button map-button" bindtap="previewOriginal" wx:if="{{activePhoto}}" hover-class="button-hover" hover-stay-time="80">查看原图</button>
       <button class="ghost-button map-button" bindtap="copyPhotoLink" wx:if="{{activePhoto}}" hover-class="button-hover" hover-stay-time="80">复制照片链接</button>
       <button class="ghost-button map-button" bindtap="copyGalleryLink" hover-class="button-hover" hover-stay-time="80">复制 H5 地图</button>
@@ -65,8 +64,7 @@
 
   <view class="state-card xiake-card empty-state" wx:elif="{{isEmpty}}">
     <view class="state-title">暂无照片</view>
-    <view class="state-copy subtle-text">上传第一张火烧云照片吧。</view>
-    <button class="primary-button retry-button" bindtap="goUpload" hover-class="button-hover" hover-stay-time="80">上传照片</button>
+    <view class="state-copy subtle-text">暂时没有可展示的火烧云照片。</view>
   </view>
 
   <view class="photo-list" wx:else>
