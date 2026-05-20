@@ -38,14 +38,14 @@ describe('miniprogram upload page source', () => {
     expect(appJson.pages).toContain('pages/upload/index');
   });
 
-  test('gallery page links to upload page', () => {
+  test('gallery page does not expose upload entry', () => {
     const js = read('miniprogram/pages/gallery/index.js');
     const wxml = read('miniprogram/pages/gallery/index.wxml');
 
-    expect(js).toContain('goUpload()');
-    expect(js).toContain("url: '/pages/upload/index'");
-    expect(wxml).toContain('bindtap="goUpload"');
-    expect(wxml).toContain('上传照片');
+    expect(js).not.toContain('goUpload()');
+    expect(js).not.toContain("url: '/pages/upload/index'");
+    expect(wxml).not.toContain('bindtap="goUpload"');
+    expect(wxml).not.toContain('上传照片');
   });
 
   test('upload page supports chooseMedia, uploadPhoto and metadata fields', () => {
