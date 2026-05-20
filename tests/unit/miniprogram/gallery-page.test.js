@@ -63,9 +63,11 @@ describe('miniprogram gallery page source', () => {
     expect(js).toContain('copyPhotoLink(event = {})');
     expect(js).toContain('copyGalleryLink()');
     expect(js).toContain('wx.copyClipboardData');
-    expect(js).toContain("wx.navigateTo({ url: '/pages/upload/index' })");
+    expect(js).not.toContain('goUpload()');
+    expect(js).not.toContain("wx.navigateTo({ url: '/pages/upload/index' })");
     expect(js).not.toContain('navigateToMiniProgram');
-    expect(wxml).toContain('上传照片');
+    expect(wxml).not.toContain('上传照片');
+    expect(wxml).not.toContain('bindtap="goUpload"');
     expect(wxml).toContain('查看原图');
     expect(wxml).toContain('复制照片链接');
     expect(wxml).toContain('复制 H5 地图');

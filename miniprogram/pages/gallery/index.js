@@ -141,10 +141,6 @@ Page({
         wx.showToast({ title: '复制失败，请稍后再试', icon: 'none' });
       }
     });
-  },
-
-  goUpload() {
-    wx.navigateTo({ url: '/pages/upload/index' });
   }
 });
 
@@ -160,7 +156,7 @@ export function normalizePhotos(result = []) {
     const lat = parseCoordinate(normalized.lat);
     const lon = parseCoordinate(normalized.lon);
     const originalUrl = normalized.originalUrl || '';
-    const thumbnailUrl = normalized.thumbUrl || item.thumbnail || item.coverUrl || originalUrl || '';
+    const thumbnailUrl = normalized.thumbUrl || originalUrl || '';
     const location = normalized.locationName || item.location || item.place || normalized.desc || '未知地点';
 
     return {

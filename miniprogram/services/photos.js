@@ -18,6 +18,14 @@ function joinUrl(baseUrl = '', path = '') {
   return `${base}${suffix}`;
 }
 
+function normalizeImageUrl(value, baseUrl = '') {
+  if (!value) return '';
+  const url = String(value);
+  if (/^(https?:|wxfile:|cloud:|data:|file:)/i.test(url)) return url;
+  if (url.startsWith('//')) return `https:${url}`;
+  return joinUrl(baseUrl, url);
+}
+
 function firstDefined(...values) {
   return values.find((value) => value !== undefined && value !== null);
 }
@@ -60,22 +68,28 @@ export function normalizePhoto(photo = {}, options = {}) {
   const uploader = photo.uploader || photo.user || {};
   const id = firstDefined(photo.id, photo.photoId, photo._id, '');
   const baseUrl = options.baseUrl ?? getApiConfig().baseUrl;
-  const thumbUrl = firstDefined(
+  const thumbUrl = normalizeImageUrl(firstDefined(
     photo.thumbUrl,
     photo.thumbnailUrl,
     photo.thumbnail_url,
     photo.thumb_url,
+    photo.thumbnail,
+    photo.coverUrl,
+    photo.cover_url,
     photo.urls?.thumb,
     id ? joinUrl(baseUrl, `/api/photos/${encodeURIComponent(id)}/thumb`) : ''
-  );
-  const originalUrl = firstDefined(
+  ), baseUrl);
+  const originalUrl = normalizeImageUrl(firstDefined(
     photo.originalUrl,
     photo.original_url,
     photo.url,
     photo.imageUrl,
+    photo.original,
+    photo.fullUrl,
+    photo.full_url,
     photo.urls?.original,
     id ? joinUrl(baseUrl, `/api/photos/${encodeURIComponent(id)}/original`) : ''
-  );
+  ), baseUrl);
 
   return {
     id,

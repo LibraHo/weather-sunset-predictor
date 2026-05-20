@@ -43,14 +43,15 @@ describe('miniprogram surface parity for map/gallery/upload/methodology', () => 
     expect(js).toContain('copyApiApplyLink()');
   });
 
-  test('gallery and upload expose web-like empty, upload, metadata and return actions', () => {
+  test('gallery hides upload entry while upload page keeps metadata and return actions', () => {
     const galleryWxml = read('miniprogram/pages/gallery/index.wxml');
     const galleryWxss = read('miniprogram/pages/gallery/index.wxss');
     const uploadWxml = read('miniprogram/pages/upload/index.wxml');
     const uploadWxss = read('miniprogram/pages/upload/index.wxss');
 
     expect(galleryWxml).toContain('empty-state');
-    expect(galleryWxml).toContain('bindtap="goUpload"');
+    expect(galleryWxml).not.toContain('bindtap="goUpload"');
+    expect(galleryWxml).not.toContain('上传照片');
     expect(galleryWxml).toContain('bindtap="copyGalleryLink"');
     expect(galleryWxml).toContain('map-legend');
     expect(galleryWxml).toContain('active-uploaded-at');
