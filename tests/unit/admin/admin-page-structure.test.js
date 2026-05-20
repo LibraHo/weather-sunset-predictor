@@ -142,4 +142,16 @@ describe('admin page structure', () => {
     expect(html).not.toContain('🔑 API Token 管理');
     expect(html).not.toContain('📋 API 调用日志');
   });
+
+  test('queue status summarizes raw provider errors before rendering', () => {
+    const js = readAdminJs();
+    const css = fs.readFileSync(path.join(ROOT, 'public/admin/admin.css'), 'utf8');
+
+    expect(js).toContain('function summarizeQueueError');
+    expect(js).toContain('Open-Meteo Batch API 错误');
+    expect(js).toContain('message.length > 96');
+    expect(js).toContain('title="${escapeHtml(String(item.lastError))}"');
+    expect(js).not.toContain('${escapeHtml(item.lastError)}</div>');
+    expect(css).toContain('overflow-wrap: anywhere');
+  });
 });

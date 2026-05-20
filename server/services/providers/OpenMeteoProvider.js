@@ -33,6 +33,32 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     return null;
   }
 
+  _formatResponseError(error, fallbackLabel = 'Open-Meteo API') {
+    const status = error?.response?.status || 0;
+    const data = error?.response?.data;
+    let detail = '';
+
+    if (data && typeof data === 'object') {
+      detail = data.reason || data.message || data.error || JSON.stringify(data);
+    } else if (typeof data === 'string') {
+      const title = data.match(/<title>(.*?)<\/title>/i)?.[1];
+      const heading = data.match(/<h1>(.*?)<\/h1>/i)?.[1];
+      detail = title || heading || data;
+    }
+
+    detail = String(detail || error?.message || '请求失败')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\\r|\\n|\r|\n/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (detail.length > 120) {
+      detail = `${detail.slice(0, 117)}...`;
+    }
+
+    return `${fallbackLabel} 错误: ${status}${detail ? ` - ${detail}` : ''}`;
+  }
+
   async _getWithRetry(params, timeoutMs = 15000, label = 'request', url = this.API_URL, logType = 'grid', retryOptions = {}) {
     // 记录本次调用
     quota.record(1);
@@ -479,7 +505,7 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     } catch (error) {
       console.error('[Open-Meteo API] 批量请求失败:', error.message);
       if (error.response) {
-        throw new Error(`Open-Meteo Batch API 错误: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+        throw new Error(this._formatResponseError(error, 'Open-Meteo Batch API'));
       } else if (error.code === 'ECONNABORTED') {
         throw new Error('Open-Meteo 批量请求超时，请检查网络连接');
       } else {

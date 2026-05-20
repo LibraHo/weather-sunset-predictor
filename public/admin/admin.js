@@ -436,7 +436,8 @@ function renderQueueStatus(items) {
     const cacheCount = Number(item.cacheCount || 0);
     const cacheTime = formatPhotoDateTime(item.cacheUpdatedAt) || '--';
     const cacheState = item.cacheStale === true ? '已过期' : (item.cacheStale === false ? '可用' : '无缓存');
-    const error = item.lastError ? `<div class="queue-error">${escapeHtml(item.lastError)}</div>` : '';
+    const errorText = summarizeQueueError(item.lastError);
+    const error = errorText ? `<div class="queue-error" title="${escapeHtml(String(item.lastError))}">${escapeHtml(errorText)}</div>` : '';
     return `<div class="queue-card">
       <div class="queue-head"><strong>${title}</strong><span class="${item.running ? 'status-ok' : ''}">${state}</span></div>
       <div class="queue-progress"><span style="width:${progress}%"></span></div>
@@ -454,6 +455,24 @@ function renderQueueStatus(items) {
       ${error}
     </div>`;
   }).join('');
+}
+
+function summarizeQueueError(error) {
+  if (!error) return '';
+  let message = String(error)
+    .replace(/\\r|\\n|\r|\n/g, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&lt;[^&]*?&gt;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const status = message.match(/\b(4\d\d|5\d\d)\b/)?.[1];
+  const title = message.match(/\b(\d{3}\s+[^-;]+)/)?.[1]?.trim();
+  if (message.includes('Open-Meteo Batch API') && (title || status)) {
+    message = `Open-Meteo Batch API 错误: ${title || status}`;
+  }
+
+  return message.length > 96 ? `${message.slice(0, 93)}...` : message;
 }
 
 // =================== 每日统计 ===================

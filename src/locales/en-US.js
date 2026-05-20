@@ -141,7 +141,7 @@ const translations = {
           "highCloud": "High cloud: weight 0.75, the strongest red/orange carrier; when high cloud >50% and low cloud <30%, it adds only 0-6 pts instead of multiplying by 1.2",
           "midCloud": "Mid cloud: weight 0.45, also a color carrier; high and mid clouds together make the canvas more stable",
           "lowCloudBonus": "Low cloud: weight only 0.10; it mainly affects low-cloud penalties and light-path blockage. Scarce low cloud does not add points, it just avoids penalties",
-          "formula": "Upper-cloud canvas = high×0.75 + mid×0.45; base score: ≤10→10, 10-30→40-70, 30-70→70-100, 70-100→70-50, >100→43; then apply low-cloud/overcast penalties and bounded high-cloud bonus",
+          "formula": "Upper-cloud canvas = high×0.75 + mid×0.45\nBase score: ≤10→10, 10-30→40-70, 30-70→70-100, 70-100→70-50, >100→43\nThen apply low-cloud/overcast penalties and bounded high-cloud bonus",
           "highCloudBonus": "Cloud type and thickness are additive: altostratus +4, altocumulus +6, thin cloud +5, thick cloud about -28; low-cloud types also reduce the light-path gate"
         },
         "lightPath": {
@@ -150,7 +150,7 @@ const translations = {
           "desc": "The light-path score answers one question: can sunrise/sunset light reach the colorable cloud layer? Existing sun-direction multi-point sampling is used; no extra API calls are added.",
           "lowCloudEffect": "Samples are taken at 15 / 30 / 50 / 100 km with weights 0.35 / 0.30 / 0.25 / 0.10. Each point combines sun elevation, cloud-base height, and low/mid/high cloud blockage into a block value",
           "visibility": "The sun-direction corridor then adjusts the score: a near cloud wall caps near 48, a far wall near 56; low low+mid cloud with enough high cloud is treated as an opening",
-          "formula": "Occlusion = 1 - Π(1 - weighted block); light-path score = 100×(1-occlusion)×low-cloud weight adjustment×sun-direction corridor adjustment"
+          "formula": "Occlusion = 1 - Π(1 - weighted block)\nLight-path score = 100×(1-occlusion)×low-cloud weight adjustment×sun-direction corridor adjustment"
         },
         "transparency": {
           "title": "3. Atmospheric Transparency",
@@ -184,7 +184,7 @@ const translations = {
           "level1": "Cloud carrier = canvas base + additive cloud-type/thickness/high-cloud adjustments. Strong high cloud cannot reach a perfect score if the light path is blocked",
           "level2": "Aerosol is only a weak fallback when clouds are scarce: AOD/PM must be in a moderate range, low cloud <40, precipitation ≤0.2, and light path >45",
           "level3": "Heavy haze, dust, visibility <8, thick cloud, or rainy low cloud suppresses or caps the carrier; even a clear high-cloud floor can be rejected by the light-path gate",
-          "formula": "Aerosol activation = rawAerosolScore × clamp((lightPath-45)/35, 0, 1); carrier = max(cloud canvas, activated aerosol)"
+          "formula": "Aerosol activation = rawAerosolScore × clamp((lightPath-45)/35, 0, 1)\nCarrier = max(cloud canvas, activated aerosol)"
         },
         "precipPenalty": {
           "title": "6. Precipitation Penalty",

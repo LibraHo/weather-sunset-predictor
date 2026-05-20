@@ -95,6 +95,21 @@ describe('home methodology structure', () => {
     expect(en).toContain('Final score = clamp(carrier × light-path gate + rendering adjustment, 0, 100)');
   });
 
+  test('keeps methodology formula blocks readable across multiple lines', () => {
+    const css = fs.readFileSync(path.join(ROOT, 'styles/main.css'), 'utf8');
+    const formulaBlock = css.slice(
+      css.indexOf('.methodology-formula'),
+      css.indexOf('/* 评分表格样式 */')
+    );
+
+    expect(formulaBlock).toContain('white-space: pre-line');
+    expect(formulaBlock).toContain('overflow-wrap: anywhere');
+    expect(formulaBlock).toContain('word-break: normal');
+    expect(formulaBlock).toContain('line-height: 1.65');
+    expect(formulaBlock).toContain('text-align: center');
+    expect(formulaBlock).not.toContain('white-space: nowrap');
+  });
+
   test('uses neutral methodology changelog styling instead of highlight gradients', () => {
     const css = fs.readFileSync(path.join(ROOT, 'styles/main.css'), 'utf8');
     const cardBlock = css.slice(
