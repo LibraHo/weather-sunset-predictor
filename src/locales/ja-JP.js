@@ -201,7 +201,11 @@ apiAccess: 'API接続'
           "subtitle": "Final Score Formula",
           "desc": "Final score applies the sun-direction light-path gate to the carrier score, then adds a small rendering adjustment.",
           "formula": "最終スコア = 載体スコア × 光路ゲート + 発色補正",
-          "highCloudCap": "上層雲が多く低い雲が少ない場合、良い色づきの土台として評価します"
+          "highCloudCap": "上層雲が多く低い雲が少ない場合、良い色づきの土台として評価します",
+          "carrier": "載体スコア = max(雲キャンバススコア, 弱いエアロゾル載体スコア)",
+          "lightGate": "光路ゲート = 0.25–1.12。近い雲の壁は約0.42、遠い雲の壁は約0.55、太陽方向の開口は約0.90–0.96",
+          "rendering": "発色補正 = 視程・湿度・雨後状態・エアロゾルによる小幅な加減。正方向は約+9点まで",
+          "statusCaps": "表示スコアは状態に合わせて調整されます：火焼け雲なしは40未満、薄い夕焼けは60未満。幾何条件不可、厚い雲、灰色の幕、雨を伴う低い雲はさらに上限を下げます"
         }
       }
     }

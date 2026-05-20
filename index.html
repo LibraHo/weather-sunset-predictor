@@ -407,7 +407,7 @@
             <p class="methodology-formula" data-i18n="home.methodology.sections.transparency.formula">透明度分 = 能见度分 + 湿度分（最高25分）</p>
           </article>
 
-          <!-- 第三部分：AOD 气溶胶修正 -->
+          <!-- 第四部分：光路门控 -->
           <article class="methodology-item">
             <h3>
               <span data-i18n="home.methodology.sections.layerDiversity.title">4. 云层立体感</span>
@@ -465,6 +465,22 @@
               <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level3">如果云幕很厚、重霾或沙尘明显，颜色会变暗变灰，仍按衰减和限制处理</li>
             </ul>
             <p class="methodology-formula" data-i18n="home.methodology.sections.thickHighCloudPenalty.formula">载体分 = 云层画布基础 + 有界载体加分 - 灰幕/厚云扣分；最终分 = 载体分 × 光路门控 + 显色小幅修正</p>
+          </article>
+
+          <!-- 第八部分：最终公式 -->
+          <article class="methodology-item">
+            <h3>
+              <span data-i18n="home.methodology.sections.finalFormula.title">8. 最终分数</span>
+              <small data-i18n="home.methodology.sections.finalFormula.subtitle">Final Score · 载体 × 光路门控 + 显色修正</small>
+            </h3>
+            <p data-i18n="home.methodology.sections.finalFormula.desc">最终分不是把多个好条件连续相乘，而是先得到“可显色载体分”，再让太阳方向光路决定这份载体能发挥多少，最后只做小幅显色修正。</p>
+            <ul class="methodology-detail-list">
+              <li data-i18n="home.methodology.sections.finalFormula.carrier">载体分 = max(云层画布分, 气溶胶弱载体分)</li>
+              <li data-i18n="home.methodology.sections.finalFormula.lightGate">光路门控 = 0.25–1.12；近处云墙可压到约 0.42，远处云墙约 0.55，太阳方向开口约 0.90–0.96</li>
+              <li data-i18n="home.methodology.sections.finalFormula.rendering">显色修正 = 能见度、湿度、降水后状态和空气颗粒带来的小幅加减，正向最多约 +9 分</li>
+              <li data-i18n="home.methodology.sections.finalFormula.statusCaps">显示分还会按状态校准：无火烧云低于 40，轻微霞光低于 60；几何不可行、厚云、灰幕和雨低云会进一步封顶</li>
+            </ul>
+            <p class="methodology-formula" data-i18n="home.methodology.sections.finalFormula.formula">最终分 = clamp(载体分 × 光路门控 + 显色修正, 0, 100)</p>
           </article>
         </div>
 

@@ -66,7 +66,7 @@ const translations = {
     },
     "methodology": {
       "title": "Fire Cloud Calculation Method",
-      "intro": "The Fire Cloud Index comprehensively evaluates sky conditions and optical propagation paths to determine the probability and intensity of fire cloud formation. Below is the complete calculation principle based on meteorological data.",
+      "intro": "The current Fire Cloud Index first asks whether there is a usable color carrier, then whether sunlight can reach it along the sun direction, and finally applies only a small rendering adjustment. It no longer multiplies a chain of positive factors, so 100% high cloud does not automatically mean a perfect score.",
       "versionLabel": "Algorithm version: 2026.05.19-additive-carrier-light-gate-v1",
       "versionDesc": "This version changes positive cloud signals into bounded additive carrier points and uses existing sun-direction multi-point sampling as the light-path gate. directRatio is no longer used in scoring.",
       changelogTitle: "Version update history",
@@ -137,71 +137,75 @@ const translations = {
         "cloudStructure": {
           "title": "1. Cloud Structure",
           "subtitle": "Cloud Structure · Canvas Score",
-          "desc": "Fire clouds need the right cloud layers as a \"canvas\". High and mid clouds are key carriers; low clouds mainly block visibility.",
-          "highCloud": "High Cloud (>6km): Best carrier for fire clouds, good light transmission, produces wide red/orange areas",
-          "midCloud": "Mid Cloud (2–6km): Also produces fire clouds, slightly less effective than high clouds",
-          "lowCloudBonus": "Low Cloud (<2km): Mainly blocks visibility, does not contribute positive score",
-          "formula": "Effective cover = max(high×1.15, mid)×0.7 + min(high, mid)×0.2; Low cloud penalty: none below 30%, 0.5 at 80%",
-          "highCloudBonus": "High Cloud Bonus: When high clouds >50% and low clouds <30%, canvas score ×1.2"
+          "desc": "The backend treats mid/high clouds as the colorable canvas and low clouds mainly as blockers. Total cloud cover is only a fallback; the score is driven by layered cloud data.",
+          "highCloud": "High cloud: weight 0.75, the strongest red/orange carrier; when high cloud >50% and low cloud <30%, it adds only 0-6 pts instead of multiplying by 1.2",
+          "midCloud": "Mid cloud: weight 0.45, also a color carrier; high and mid clouds together make the canvas more stable",
+          "lowCloudBonus": "Low cloud: weight only 0.10; it mainly affects low-cloud penalties and light-path blockage. Scarce low cloud does not add points, it just avoids penalties",
+          "formula": "Upper-cloud canvas = high×0.75 + mid×0.45; base score: ≤10→10, 10-30→40-70, 30-70→70-100, 70-100→70-50, >100→43; then apply low-cloud/overcast penalties and bounded high-cloud bonus",
+          "highCloudBonus": "Cloud type and thickness are additive: altostratus +4, altocumulus +6, thin cloud +5, thick cloud about -28; low-cloud types also reduce the light-path gate"
         },
         "lightPath": {
           "title": "2. Light Path Assessment",
           "subtitle": "Light Path · Light Path Score",
-          "desc": "Light path estimates whether sunlight can reach colorable mid/high clouds. Low clouds in the sun direction can block it; rich mid/high clouds usually act as the glow canvas.",
-          "lowCloudEffect": "Scarce low clouds leave the light path open; low-cloud-dominant skies or a low-cloud wall toward the sun make illumination harder.",
-          "visibility": "Visibility: Affects light transmission clarity",
-          "formula": "Light Path Score = sun angle and cloud-base geometry + low-cloud obstruction + solar-direction corridor"
+          "desc": "The light-path score answers one question: can sunrise/sunset light reach the colorable cloud layer? Existing sun-direction multi-point sampling is used; no extra API calls are added.",
+          "lowCloudEffect": "Samples are taken at 15 / 30 / 50 / 100 km with weights 0.35 / 0.30 / 0.25 / 0.10. Each point combines sun elevation, cloud-base height, and low/mid/high cloud blockage into a block value",
+          "visibility": "The sun-direction corridor then adjusts the score: a near cloud wall caps near 48, a far wall near 56; low low+mid cloud with enough high cloud is treated as an opening",
+          "formula": "Occlusion = 1 - Π(1 - weighted block); light-path score = 100×(1-occlusion)×low-cloud weight adjustment×sun-direction corridor adjustment"
         },
         "transparency": {
           "title": "3. Atmospheric Transparency",
           "subtitle": "Transparency · Rendering Score",
-          "desc": "Clear atmosphere lets light color clouds more vividly. Moderate humidity enhances scattering.",
-          "visibility": "Visibility: 15 × (1 − e^(−v/15)), max 15 pts",
-          "humidity": "Humidity: Optimal 55%, Gaussian curve, max 10 pts",
-          "formula": "Transparency Score = Visibility + Humidity (max 25 pts)"
+          "desc": "Visibility, humidity, post-rain state, and aerosols affect rendering quality only; they no longer replace the cloud carrier.",
+          "visibility": "The rendering factor combines visibilityFactor, humidityFactor, rainBonus, aqiFactor, and aerosolFactor",
+          "humidity": "Rendering cannot multiply the score upward: factor≥1 becomes at most about +9 pts; factor<1 becomes at most about -25 pts",
+          "formula": "Rendering adjustment = factor≥1 ? min((factor-1)×50, 9) : -min((1-factor)×55, 25)"
         },
         "layerDiversity": {
-          "title": "4. Layer Diversity",
-          "subtitle": "Layer Diversity · Layer Score",
-          "desc": "When high, mid, and low clouds coexist, diverse refraction angles create richer color layers.",
-          "threeLayer": "All three layers >10% → 15 pts",
-          "twoLayer": "Any two layers >10% → 8 pts",
-          "oneLayer": "Only one layer or no cloud → 0 pts"
+          "title": "4. Light-Path Gate",
+          "subtitle": "Light Gate · How much carrier can work",
+          "desc": "The light-path score is no longer simply added with a 20% weight. It becomes a gate that controls how much of the carrier score survives.",
+          "threeLayer": "Light path ≥85: gate 1.00-1.08; only a very open path can slightly amplify the carrier",
+          "twoLayer": "Light path 70-85: gate 0.88-1.00; light path 50-70: gate 0.65-0.88",
+          "oneLayer": "Light path <50: gate 0.25-0.65; a sun-direction cloud wall can clamp it around 0.42/0.55"
         },
         "lowCloudPenalty": {
           "title": "5. Low Cloud Penalty",
           "subtitle": "Low Cloud Penalty · Multiplier",
-          "desc": "Low clouds block the view and are the \"visibility killer\" of fire clouds. Applied as a multiplicative penalty.",
-          "level1": "Low Cloud <20% → ×1.0 (no penalty)",
-          "level2": "Low Cloud 20–40% → ×1.0 to ×0.8 (linear)",
-          "level3": "Low Cloud 40–70% → ×0.8 to ×0.5 (linear)",
-          "level4": "Low Cloud >70% → ×0.2 (severe blockage)"
+          "desc": "Low cloud remains multiplicative because it is not a positive condition; it blocks both the canvas and the light path.",
+          "level1": "Low cloud <20% → ×1.0 (no penalty)",
+          "level2": "Low cloud 20-80% → linearly drops from ×1.0 to ×0.1",
+          "level3": "Low cloud ≥55% → triggers overcast/low-cloud-dominant suppression, with overcastPenalty down to about ×0.2",
+          "level4": "Total cloud cover ≥92 with low cloud ≥20% → light penalty to about ×0.75; explicit overcast text with low cloud ≥35% → another ×0.5"
         },
         "thickHighCloudPenalty": {
           "title": "7. Carrier and Haze Corrections",
           "subtitle": "Carrier Quality · Canvas and Thin Haze",
-          "desc": "The model separates color carriers into cloud carriers and weak aerosol carriers. Mid/high clouds set the fire-cloud ceiling; moderate thin haze only provides a low-to-mid red-sunset base when the light path is open.",
-          "level1": "Upper-cloud carrier: either dense high cloud, or mid/high clouds with an opening toward the sun, scarce low clouds, no rain, and clear air",
-          "level2": "When clouds are scarce, moderate aerosol must be activated by the sun-direction light path before it contributes as a weak carrier",
-          "level3": "Very thick cloud curtains, heavy haze, or dust still darken and gray out the colors.",
-          "formula": "Carrier score = cloud canvas base + bounded carrier bonuses - gray or thick-cloud penalties; final score = carrier × light-path gate + small rendering adjustment"
+          "desc": "The model separates usable color carriers into cloud carriers and weak aerosol carriers, then uses the higher of the two as the carrier score.",
+          "level1": "Cloud carrier = canvas base + additive cloud-type/thickness/high-cloud adjustments. Strong high cloud cannot reach a perfect score if the light path is blocked",
+          "level2": "Aerosol is only a weak fallback when clouds are scarce: AOD/PM must be in a moderate range, low cloud <40, precipitation ≤0.2, and light path >45",
+          "level3": "Heavy haze, dust, visibility <8, thick cloud, or rainy low cloud suppresses or caps the carrier; even a clear high-cloud floor can be rejected by the light-path gate",
+          "formula": "Aerosol activation = rawAerosolScore × clamp((lightPath-45)/35, 0, 1); carrier = max(cloud canvas, activated aerosol)"
         },
         "precipPenalty": {
           "title": "6. Precipitation Penalty",
           "subtitle": "Precipitation Penalty · Multiplier",
-          "desc": "Precipitation directly reduces fire cloud visibility. Applied as a multiplicative penalty.",
-          "level1": "Precipitation <0.1mm/h → ×1.0 (no penalty)",
-          "level2": "0.1–0.5mm/h → ×0.85",
-          "level3": "0.5–2mm/h → ×0.5",
-          "level4": ">2mm/h → ×0.15 (heavy rain, near zero chance)",
-          "formula": "Final Score = Base Score × Low Cloud Penalty × Precipitation Penalty"
+          "desc": "Precipitation now mainly works through light-path caps, aerosol-carrier disabling, and rendering adjustment instead of another final-score multiplier.",
+          "level1": "Precipitation ≤0.2mm/h: cloud carrier remains usable; clean post-rain air may improve rendering",
+          "level2": "Precipitation >0.2mm/h: weak aerosol carrier is considered invisible and does not provide fallback",
+          "level3": "Precipitation >1mm/h or rain/snow weather code, with low cloud >40%: light-path score capped at 50",
+          "level4": "Rain plus low cloud or gray curtain usually keeps the final status in Low or Light Glow",
+          "formula": "Precipitation effect = light-path cap + weak-carrier disable + rendering-factor adjustment, not final-score multiplication"
         },
         "finalFormula": {
-          "title": "7. Final Score Formula",
-          "subtitle": "Composite Calculation",
-          "desc": "Final score applies the sun-direction light-path gate to the carrier score, then adds a small rendering adjustment.",
-          "formula": "Final Score = Carrier Score × Light-Path Gate + Rendering Adjustment",
-          "highCloudCap": "When high clouds dominate and low clouds are scarce, avoid underrating a good color canvas"
+          "title": "8. Final Score",
+          "subtitle": "Final Score · carrier × light-path gate + rendering",
+          "desc": "The final score does not multiply several good signals together. It first gets a usable carrier score, lets the sun-direction light path decide how much of it can work, then adds a small rendering adjustment.",
+          "formula": "Final score = clamp(carrier × light-path gate + rendering adjustment, 0, 100)",
+          "highCloudCap": "When high clouds are rich but the light path is blocked, the light-path gate still lowers the ceiling.",
+          "carrier": "Carrier score = max(cloud canvas score, weak aerosol carrier score)",
+          "lightGate": "Light-path gate = 0.25-1.12; near cloud wall can clamp near 0.42, far wall near 0.55, sun-direction opening around 0.90-0.96",
+          "rendering": "Rendering adjustment = small visibility/humidity/post-rain/aerosol delta, with positive adjustment capped around +9 pts",
+          "statusCaps": "Display score is status-calibrated: no-fire-cloud stays below 40, light glow below 60; geometry failure, thick cloud, gray curtain, and rainy low cloud can cap it further"
         }
       }
     }

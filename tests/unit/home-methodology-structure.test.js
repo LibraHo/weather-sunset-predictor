@@ -74,6 +74,27 @@ describe('home methodology structure', () => {
     expect(scoreGuide).not.toContain('地图分与精确点分为什么会不同');
   });
 
+  test('documents the current additive carrier and light gate scoring formula', () => {
+    const zh = fs.readFileSync(path.join(ROOT, 'src/locales/zh-CN.js'), 'utf8');
+    const en = fs.readFileSync(path.join(ROOT, 'src/locales/en-US.js'), 'utf8');
+    const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+
+    expect(html).toContain('home.methodology.sections.finalFormula.carrier');
+    expect(html).toContain('home.methodology.sections.finalFormula.lightGate');
+    expect(html).toContain('home.methodology.sections.finalFormula.statusCaps');
+
+    expect(zh).toContain('中高云画布量 = 高云×0.75 + 中云×0.45');
+    expect(zh).toContain('光路门控 = 0.25–1.12');
+    expect(zh).toContain('最终分 = clamp(载体分 × 光路门控 + 显色修正, 0, 100)');
+    expect(zh).toContain('降水影响 = 光路封顶 + 弱载体禁用 + 渲染因子修正');
+    expect(zh).not.toContain('画布分×1.2倍');
+    expect(zh).not.toContain('透明度分 = 能见度分 + 湿度分（最高25分）');
+
+    expect(en).toContain('Upper-cloud canvas = high×0.75 + mid×0.45');
+    expect(en).toContain('Light-path gate = 0.25-1.12');
+    expect(en).toContain('Final score = clamp(carrier × light-path gate + rendering adjustment, 0, 100)');
+  });
+
   test('uses neutral methodology changelog styling instead of highlight gradients', () => {
     const css = fs.readFileSync(path.join(ROOT, 'styles/main.css'), 'utf8');
     const cardBlock = css.slice(

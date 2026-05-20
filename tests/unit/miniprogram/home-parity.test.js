@@ -191,6 +191,17 @@ describe('mini-program home parity with mobile web home', () => {
     expect(topbarJs).not.toContain("api: '/pages/methodology/index?section=api'");
   });
 
+  test('home and topbar feature menus use plain labels without emoji prefixes', () => {
+    const homeWxml = read('miniprogram/pages/home/index.wxml');
+    const topbarWxml = read('miniprogram/components/app-topbar/index.wxml');
+    const menuText = `${homeWxml}\n${topbarWxml}`;
+
+    expect(menuText).toContain('分享地图');
+    expect(menuText).not.toContain('📷 分享地图');
+    expect(menuText).not.toContain('📸 分享地图');
+    expect(menuText).not.toMatch(/[📷📸🔥🌅🌄🗺️]\s*(火烧云计算方法|火烧云算法|火烧云地图|分享地图|上传照片)/u);
+  });
+
   test('home search uses the same in-card loading treatment as the web prediction flow', () => {
     const web = read('index.html');
     const webCss = read('styles/main.css');

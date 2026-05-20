@@ -201,7 +201,11 @@ apiAccess: 'API 연동'
           "subtitle": "Final Score Formula",
           "desc": "Final score applies the sun-direction light-path gate to the carrier score, then adds a small rendering adjustment.",
           "formula": "최종 점수 = 캐리어 점수 × 광로 게이트 + 발색 보정",
-          "highCloudCap": "상층운 우위로 원거리 데이터 없을 때, 상한을 85점으로 완화(기존 69.9점)"
+          "highCloudCap": "상층운 우위로 원거리 데이터 없을 때, 상한을 85점으로 완화(기존 69.9점)",
+          "carrier": "캐리어 점수 = max(구름 캔버스 점수, 약한 에어로졸 캐리어 점수)",
+          "lightGate": "광로 게이트 = 0.25–1.12. 가까운 구름벽은 약 0.42, 먼 구름벽은 약 0.55, 태양 방향 개구부는 약 0.90–0.96",
+          "rendering": "발색 보정 = 가시거리, 습도, 비 온 뒤 상태, 에어로졸에 따른 작은 가감. 양의 보정은 약 +9점까지",
+          "statusCaps": "표시 점수는 상태에 맞춰 보정됩니다: 화염구름 없음은 40 미만, 약한 노을은 60 미만. 기하 조건 불가, 두꺼운 구름, 회색 장막, 비를 동반한 저층운은 추가로 상한을 낮춥니다"
         }
       }
     }
