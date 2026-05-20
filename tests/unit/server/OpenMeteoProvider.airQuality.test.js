@@ -40,6 +40,20 @@ const makeAirPayload = () => ({
 });
 
 describe('OpenMeteoProvider air quality merge', () => {
+  test('formats HTML gateway errors without leaking raw markup', () => {
+    const provider = new OpenMeteoProvider();
+    const message = provider._formatResponseError({
+      response: {
+        status: 502,
+        data: '<html>\\r\\n<head><title>502 Bad Gateway</title></head>\\r\\n<body><center><h1>502 Bad Gateway</h1></center></body></html>'
+      }
+    }, 'Open-Meteo Batch API');
+
+    expect(message).toBe('Open-Meteo Batch API 错误: 502 - 502 Bad Gateway');
+    expect(message).not.toContain('<html>');
+    expect(message).not.toContain('\\r\\n');
+  });
+
   test('fetchWeatherData merges aerosol and particulate fields by timestamp', async () => {
     const provider = new OpenMeteoProvider();
     provider._getWithRetry = jest.fn(async (_params, _timeout, label) => {
