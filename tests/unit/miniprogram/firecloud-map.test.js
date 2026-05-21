@@ -28,7 +28,7 @@ describe('miniprogram firecloud map', () => {
     resetApiConfig();
   });
 
-  test('registers a native firecloud map page with only the raster polygon layer surface', () => {
+  test('registers a native firecloud map page with a smooth raster overlay surface', () => {
     const appJson = JSON.parse(read('miniprogram/app.json'));
     const homeWxml = read('miniprogram/pages/home/index.wxml');
     const resultWxml = read('miniprogram/pages/result/index.wxml');
@@ -50,9 +50,9 @@ describe('miniprogram firecloud map', () => {
     expect(mapJs).not.toContain('getChinaFirecloudSpots');
     expect(mapJs).not.toContain('openSpotPrediction');
     expect(mapJs).not.toContain('focusSpot');
-    expect(mapJs).toContain("resolution: 0.25");
-    expect(mapJs).toContain('const polygons = buildRasterPolygons');
-    expect(mapJs).toContain('groundOverlays: []');
+    expect(mapJs).toContain('FIRECLOUD_MAP_RESOLUTION');
+    expect(mapJs).toContain('buildRasterGroundOverlay(raster, {');
+    expect(mapJs).toContain('groundOverlays: overlay ? [overlay] : []');
     expect(mapWxml).toContain('enable-zoom="{{true}}"');
     expect(mapWxml).toContain('wx:for="{{legendItems}}"');
     expect(mapWxml).toContain('style="background: {{item.color}};"');
@@ -209,13 +209,14 @@ describe('miniprogram firecloud map', () => {
     expect(polygons.every((polygon) => polygon.points.length === 4)).toBe(true);
   });
 
-  test('map page renders native polygons instead of depending on the optional backend PNG', () => {
+  test('map page prefers the PNG overlay over native polygons to avoid blocky grid artifacts', () => {
     const mapJs = read('miniprogram/pages/map/index.js');
 
+    expect(mapJs).toContain('buildRasterGroundOverlay');
     expect(mapJs).toContain('buildRasterPolygons');
-    expect(mapJs).toContain('const polygons = buildRasterPolygons(raster, this.data.period)');
-    expect(mapJs).toContain('groundOverlays: []');
-    expect(mapJs).not.toContain('buildRasterGroundOverlay(raster');
+    expect(mapJs).toContain('raster.isFallback ? null : buildRasterGroundOverlay(raster, {');
+    expect(mapJs).toContain('const polygons = overlay ? [] : buildRasterPolygons(raster, this.data.period)');
+    expect(mapJs).toContain('groundOverlays: overlay ? [overlay] : []');
   });
 
   test('map page follows the prediction page theme and segmented-control language', () => {

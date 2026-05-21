@@ -108,22 +108,58 @@ function scoreToRasterRgba(score, period = 'sunset') {
   return samplePalette(lerp(globalLoT, globalHiT, localT), palette);
 }
 
-function renderRasterOverlayPng(raster, period) {
+function sampleSmoothRasterValue(raster, x, y) {
+  const { width, height, values, noData = -1 } = raster;
+  const x0 = clamp(Math.floor(x), 0, width - 1);
+  const y0 = clamp(Math.floor(y), 0, height - 1);
+  const x1 = clamp(x0 + 1, 0, width - 1);
+  const y1 = clamp(y0 + 1, 0, height - 1);
+  const tx = clamp(x - x0, 0, 1);
+  const ty = clamp(y - y0, 0, 1);
+  const samples = [
+    { value: Number(values[y0 * width + x0]), weight: (1 - tx) * (1 - ty) },
+    { value: Number(values[y0 * width + x1]), weight: tx * (1 - ty) },
+    { value: Number(values[y1 * width + x0]), weight: (1 - tx) * ty },
+    { value: Number(values[y1 * width + x1]), weight: tx * ty }
+  ];
+
+  let weightedScore = 0;
+  let totalWeight = 0;
+  samples.forEach((sample) => {
+    if (Number.isFinite(sample.value) && sample.value !== noData) {
+      weightedScore += sample.value * sample.weight;
+      totalWeight += sample.weight;
+    }
+  });
+
+  return totalWeight > 0 ? weightedScore / totalWeight : noData;
+}
+
+function renderRasterOverlayPng(raster, period, options = {}) {
   const { width, height, values, noData = -1 } = raster || {};
   if (!width || !height || !Array.isArray(values)) {
     throw new Error('Invalid raster data');
   }
-  const rgba = new Uint8Array(width * height * 4);
-  for (let index = 0; index < width * height; index += 1) {
-    const score = Number(values[index]);
-    const color = score === noData ? { r: 0, g: 0, b: 0, a: 0 } : scoreToRasterRgba(score, period);
-    const offset = index * 4;
-    rgba[offset] = color.r;
-    rgba[offset + 1] = color.g;
-    rgba[offset + 2] = color.b;
-    rgba[offset + 3] = Math.round(clamp(color.a, 0, 1) * 255);
+  const scale = clamp(Math.round(options.scale || 4), 1, 8);
+  const outputWidth = width * scale;
+  const outputHeight = height * scale;
+  const rgba = new Uint8Array(outputWidth * outputHeight * 4);
+  for (let row = 0; row < outputHeight; row += 1) {
+    const y = (row + 0.5) / scale - 0.5;
+    for (let col = 0; col < outputWidth; col += 1) {
+      const x = (col + 0.5) / scale - 0.5;
+      const score = scale === 1
+        ? Number(values[row * width + col])
+        : sampleSmoothRasterValue({ width, height, values, noData }, x, y);
+      const color = score === noData ? { r: 0, g: 0, b: 0, a: 0 } : scoreToRasterRgba(score, period);
+      const offset = (row * outputWidth + col) * 4;
+      rgba[offset] = color.r;
+      rgba[offset + 1] = color.g;
+      rgba[offset + 2] = color.b;
+      rgba[offset + 3] = Math.round(clamp(color.a, 0, 1) * 255);
+    }
   }
-  return PngEncoder.encode(rgba, width, height);
+  return PngEncoder.encode(rgba, outputWidth, outputHeight);
 }
 
 /**
