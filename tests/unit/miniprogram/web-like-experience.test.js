@@ -278,14 +278,17 @@ describe('miniprogram web-like experience shell', () => {
     expect(js).toContain('paintRadarCloudCanvas');
   });
 
-  test('gallery is positioned as a native mini-program map with H5 as secondary fallback', () => {
+  test('gallery is positioned as a native mini-program map with compressed photo viewing only', () => {
     const wxml = read('miniprogram/pages/gallery/index.wxml');
     const js = read('miniprogram/pages/gallery/index.js');
 
     expect(wxml).toContain('<map');
-    expect(wxml).toContain('copyGalleryLink');
+    expect(wxml).not.toContain('copyGalleryLink');
+    expect(wxml).not.toContain('H5 地图');
+    expect(wxml).not.toContain('查看原图');
     expect(wxml).toContain('native-map-shell');
-    expect(js).toContain('copyGalleryLink()');
-    expect(js).toContain('GALLERY_LINK');
+    expect(js).not.toContain('copyGalleryLink()');
+    expect(js).not.toContain('GALLERY_LINK');
+    expect(js).toContain('previewPhoto(event = {})');
   });
 });

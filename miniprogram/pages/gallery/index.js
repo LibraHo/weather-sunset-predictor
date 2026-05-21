@@ -1,7 +1,6 @@
 import { listPhotos, normalizePhoto } from '../../services/photos.js';
 import { applyPageSettings, readAppSettings } from '../../utils/app-settings.js';
 
-export const GALLERY_LINK = 'https://sunset.bjhyc.online/gallery.html';
 export const DEFAULT_MAP_CENTER = { latitude: 35.8617, longitude: 104.1954 };
 
 Page({
@@ -12,7 +11,6 @@ Page({
     mapMarkers: [],
     hasPhotos: false,
     isEmpty: false,
-    galleryLink: GALLERY_LINK,
     activePhoto: null,
     latestPhoto: null,
     mapCenter: DEFAULT_MAP_CENTER,
@@ -24,8 +22,8 @@ Page({
       withLocation: 0
     },
     mapStatus: {
-      title: '霞客分享地图',
-      description: '直接在小程序里浏览照片位置、详情和原图；H5 地图保留给大屏查看。'
+      title: '霞光照片位置',
+      description: '欣赏压缩后的霞光照片和拍摄位置；小程序不提供原图下载。'
     }
   },
 
@@ -103,43 +101,16 @@ Page({
     });
   },
 
-  previewOriginal(event = {}) {
+  previewPhoto(event = {}) {
     const photo = findPhotoByEvent(this.data.photos, event) || this.data.activePhoto;
-    if (!photo?.originalUrl) {
-      wx.showToast({ title: '暂无原图地址', icon: 'none' });
+    if (!photo?.thumbnailUrl) {
+      wx.showToast({ title: '暂无可预览照片', icon: 'none' });
       return;
     }
 
     wx.previewImage({
-      current: photo.originalUrl,
-      urls: this.data.photos.map((item) => item.originalUrl).filter(Boolean)
-    });
-  },
-
-  copyPhotoLink(event = {}) {
-    const photo = findPhotoByEvent(this.data.photos, event) || this.data.activePhoto;
-    const link = photo?.originalUrl || photo?.thumbnailUrl || GALLERY_LINK;
-
-    wx.copyClipboardData({
-      data: link,
-      success: () => {
-        wx.showToast({ title: photo?.originalUrl ? '原图链接已复制' : '分享地图链接已复制', icon: 'none' });
-      },
-      fail: () => {
-        wx.showToast({ title: '复制失败，请稍后再试', icon: 'none' });
-      }
-    });
-  },
-
-  copyGalleryLink() {
-    wx.copyClipboardData({
-      data: GALLERY_LINK,
-      success: () => {
-        wx.showToast({ title: 'H5 分享地图链接已复制', icon: 'none' });
-      },
-      fail: () => {
-        wx.showToast({ title: '复制失败，请稍后再试', icon: 'none' });
-      }
+      current: photo.thumbnailUrl,
+      urls: this.data.photos.map((item) => item.thumbnailUrl).filter(Boolean)
     });
   }
 });
@@ -155,8 +126,7 @@ export function normalizePhotos(result = []) {
     const normalized = normalizePhoto(item);
     const lat = parseCoordinate(normalized.lat);
     const lon = parseCoordinate(normalized.lon);
-    const originalUrl = normalized.originalUrl || '';
-    const thumbnailUrl = normalized.thumbUrl || originalUrl || '';
+    const thumbnailUrl = normalized.thumbUrl || '';
     const location = normalized.locationName || item.location || item.place || normalized.desc || '未知地点';
 
     return {
@@ -172,9 +142,7 @@ export function normalizePhotos(result = []) {
       uploader: normalized.uploaderName || item.author || '霞友',
       description: normalized.desc || '',
       thumbnailUrl,
-      originalUrl,
-      hasThumbnail: Boolean(thumbnailUrl),
-      hasOriginal: Boolean(originalUrl)
+      hasThumbnail: Boolean(thumbnailUrl)
     };
   });
 }

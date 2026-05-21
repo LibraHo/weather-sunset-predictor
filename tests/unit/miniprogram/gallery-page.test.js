@@ -30,7 +30,7 @@ describe('miniprogram gallery page source', () => {
     expect(wxml).toContain('bindmarkertap="focusPhoto"');
   });
 
-  test('loads photos from service and normalizes metadata, coordinates and original URLs', () => {
+  test('loads photos from service and normalizes metadata, coordinates and compressed image URLs', () => {
     const js = read('miniprogram/pages/gallery/index.js');
     const wxml = read('miniprogram/pages/gallery/index.wxml');
 
@@ -50,27 +50,32 @@ describe('miniprogram gallery page source', () => {
     expect(wxml).toContain('{{item.uploadedAt}}');
     expect(wxml).toContain('{{item.thumbnailUrl}}');
     expect(wxml).toContain('photo-placeholder');
+    expect(js).toContain('previewPhoto(event = {})');
+    expect(js).not.toContain('hasOriginal');
+    expect(js).not.toContain('originalUrl');
   });
 
-  test('primary actions match web-like gallery behavior with H5 fallback retained', () => {
+  test('primary actions keep the mini program gallery as compressed-photo viewing only', () => {
     const js = read('miniprogram/pages/gallery/index.js');
     const wxml = read('miniprogram/pages/gallery/index.wxml');
 
-    expect(js).toContain("GALLERY_LINK = 'https://sunset.bjhyc.online/gallery.html'");
     expect(js).toContain('focusPhoto(event = {})');
-    expect(js).toContain('previewOriginal(event = {})');
+    expect(js).toContain('previewPhoto(event = {})');
     expect(js).toContain('wx.previewImage');
-    expect(js).toContain('copyPhotoLink(event = {})');
-    expect(js).toContain('copyGalleryLink()');
-    expect(js).toContain('wx.copyClipboardData');
+    expect(js).not.toContain('GALLERY_LINK');
+    expect(js).not.toContain('copyPhotoLink(event = {})');
+    expect(js).not.toContain('copyGalleryLink()');
+    expect(js).not.toContain('wx.copyClipboardData');
     expect(js).not.toContain('goUpload()');
     expect(js).not.toContain("wx.navigateTo({ url: '/pages/upload/index' })");
     expect(js).not.toContain('navigateToMiniProgram');
     expect(wxml).not.toContain('上传照片');
     expect(wxml).not.toContain('bindtap="goUpload"');
-    expect(wxml).toContain('查看原图');
-    expect(wxml).toContain('复制照片链接');
-    expect(wxml).toContain('复制 H5 地图');
+    expect(wxml).toContain('查看照片');
+    expect(wxml).not.toContain('查看原图');
+    expect(wxml).not.toContain('复制照片链接');
+    expect(wxml).not.toContain('复制 H5 地图');
+    expect(wxml).not.toContain('H5 地图');
   });
 
   test('keeps Xiake dark sky, warm accent and glass-card design language', () => {
