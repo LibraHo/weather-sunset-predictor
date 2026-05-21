@@ -273,6 +273,11 @@ Page({
       this.setData({ visitorCountText: '--' });
     }
   },
+
+  onShareAppMessage() {
+    return buildHomeShareMessage(this.data.predictionPreview, this.currentPredictionQuery || {});
+  },
+
   switchWeatherView(event) {
     const view = event.currentTarget.dataset.view;
     if (!['overview', 'hourly', 'glow'].includes(view)) return;
@@ -742,6 +747,40 @@ export function buildRecentLocation(query = {}) {
     day: query.day || 'today',
     date: resolvePredictionDate(query.day)
   };
+}
+
+export function buildHomeShareMessage(preview = {}, query = {}) {
+  const locationName = query.locationName || query.location || preview.locationName || '这个地点';
+  const period = preview.periodKey || query.period || query.type || 'sunset';
+  const periodLabel = preview.periodLabel || (period === 'sunrise' ? '朝霞' : '晚霞');
+  const scoreNumber = Number(preview.score);
+  const scoreText = Number.isFinite(scoreNumber) ? `${Math.round(scoreNumber)}分` : '值得一看';
+  return {
+    title: `霞客｜${locationName}${periodLabel}评分 ${scoreText}`,
+    path: buildHomeSharePath(preview, query)
+  };
+}
+
+export function buildHomeSharePath(preview = {}, query = {}) {
+  const lat = query.coordinate?.lat ?? query.lat ?? preview.lat;
+  const lon = query.coordinate?.lon ?? query.lon ?? query.lng ?? preview.lon ?? preview.lng;
+  const locationName = query.locationName || query.location || preview.locationName || '';
+  const period = preview.periodKey || query.period || query.type || 'sunset';
+  const date = query.date || resolvePredictionDate(query.day);
+  const params = {
+    lat,
+    lon,
+    name: locationName,
+    type: period,
+    date
+  };
+  const queryString = Object.entries(params)
+    .filter(([, value]) => value !== undefined && value !== null && value !== '')
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    .join('&');
+  return lat !== undefined && lat !== null && lon !== undefined && lon !== null
+    ? `/pages/result/index?${queryString}`
+    : '/pages/home/index';
 }
 
 export function shouldAskLocationChoice(query = '', results = []) {
