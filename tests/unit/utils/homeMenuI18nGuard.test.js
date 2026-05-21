@@ -20,7 +20,7 @@ describe('home menu i18n guard', () => {
     const requiredKeys = [
       'apiAccess', 'kicker', 'intro', 'openApiSpec', 'admin', 'quickStart',
       'step1', 'step2', 'step3', 'restrictions', 'restrictionText',
-      'exampleCall', 'endpoints', 'forecastDesc', 'explainDesc', 'geocodeDesc'
+      'endpoints', 'endpointsIntro', 'forecastDesc', 'explainDesc', 'geocodeDesc', 'mapSummaryDesc'
     ];
 
     for (const locale of fs.readdirSync(path.resolve('src/locales')).filter(file => file.endsWith('.js') && file !== 'index.js')) {
@@ -38,7 +38,7 @@ describe('home menu i18n guard', () => {
 
     expect(zhCN.intro).toContain('霞客 Agent API');
     expect(zhTW.intro).toContain('霞客 Agent API');
-    expect(en.intro).toContain('Sunset Voyager Agent API');
+    expect(en.intro).toContain('Sunset Voyager');
 
     for (const locale of ['ja-JP', 'ko-KR', 'es-ES', 'fr-FR', 'vi-VN', 'it-IT', 'ar-SA']) {
       const mod = await import(`../../../src/locales/${locale}.js`);

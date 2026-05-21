@@ -5192,6 +5192,114 @@ body.theme-dark {
   color: var(--color-text-light);
 }
 
+/* ── API 接口参考文档（新版） ── */
+.api-ref-header {
+  margin-top: 16px;
+}
+.api-ref-header p {
+  color: var(--color-text-light);
+  margin: 4px 0 0;
+  font-size: 0.92rem;
+}
+.api-ref-header code {
+  font-family: Consolas, 'Courier New', monospace;
+  background: var(--glass-bg-heavy);
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 0.88rem;
+}
+
+.api-ref-endpoint {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--glass-bg-heavy);
+  border: 1px solid var(--glass-border);
+}
+.api-ref-endpoint h4 {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.api-ref-endpoint > p {
+  margin: 0 0 10px;
+  color: var(--color-text-light);
+  font-size: 0.92rem;
+}
+
+.api-method {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.api-method-get {
+  background: #d1fae5;
+  color: #065f46;
+}
+body.theme-dark .api-method-get {
+  background: #064e3b;
+  color: #6ee7b7;
+}
+
+.api-param-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  margin: 8px 0;
+}
+.api-param-table th,
+.api-param-table td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--glass-border);
+}
+.api-param-table th {
+  font-weight: 600;
+  color: var(--color-text-light);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.api-param-table code {
+  font-family: Consolas, 'Courier New', monospace;
+  background: var(--glass-bg-heavy);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.84rem;
+}
+.api-param-table td:first-child {
+  width: 18%;
+}
+.api-param-table td:nth-child(2) {
+  width: 13%;
+}
+.api-param-table td:nth-child(3) {
+  width: 12%;
+}
+
+.api-curl-toggle {
+  margin-top: 8px;
+}
+.api-curl-toggle summary {
+  cursor: pointer;
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+.api-curl-toggle summary:hover {
+  opacity: 0.8;
+}
+.api-curl-toggle .code-box {
+  margin-top: 6px;
+}
+
 body.theme-dark .code-box {
   background: rgba(2, 6, 23, 0.24);
 }
