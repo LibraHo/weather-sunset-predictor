@@ -2124,8 +2124,8 @@ class WeatherController {
         return;
       }
 
-      // 固定使用原生地图（ChinaMapCanvas），移除高德底图切换
-      console.log('[WeatherController] 使用原生地图（ChinaMapCanvas）');
+      // 支持底图切换：自建 / 高德 / OSM
+      console.log('[WeatherController] 初始化地图（ChinaMapCanvas）');
       const isDark = document.body.classList.contains('theme-dark');
       this._chinaSpotsMapCanvas = new ChinaMapCanvas({
         style: isDark ? 'dark' : 'light',
@@ -2135,6 +2135,18 @@ class WeatherController {
       await this._chinaSpotsMapCanvas.init(mapEl);
       const map = this._chinaSpotsMapCanvas.getMap();
       this._chinaSpotsActiveTileLayer = null;
+
+      // 应用地图底图设置
+      const tileProvider = localStorage.getItem('map_tile_provider') || 'auto';
+      this._chinaSpotsMapCanvas.setTileProvider(tileProvider);
+
+      // 监听底图切换事件
+      this._onMapTileProviderChanged = (e) => {
+        if (this._chinaSpotsMapCanvas) {
+          this._chinaSpotsMapCanvas.setTileProvider(e.detail.provider);
+        }
+      };
+      window.addEventListener('mapTileProviderChanged', this._onMapTileProviderChanged);
 
       // 将 ChinaMapCanvas 实例挂到地图容器，供 ChinaRasterOverlayManager 同步图例
       map.getContainer()._chinaMapCanvas = this._chinaSpotsMapCanvas;

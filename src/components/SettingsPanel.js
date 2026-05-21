@@ -101,6 +101,26 @@ class SettingsPanel {
 
           <hr class="settings-section-divider" />
 
+          <!-- 🗺️ 地图底图 -->
+          <div class="settings-section">
+            <h3 class="settings-section-title">🗺️ ${this.i18n.t('settings.mapTileProvider')}</h3>
+            <div class="settings-section-content">
+              <div class="setting-item">
+                <label class="setting-label" for="map-tile-select">${this.i18n.t('settings.mapTileSource')}</label>
+                <div class="setting-control">
+                  <select id="map-tile-select" class="setting-select">
+                    <option value="auto">${this.i18n.t('settings.mapTileAuto')}</option>
+                    <option value="gaode">${this.i18n.t('settings.mapTileGaode')}</option>
+                    <option value="osm">${this.i18n.t('settings.mapTileOSM')}</option>
+                  </select>
+                </div>
+                <small class="setting-hint">${this._uiText('Switching basemap will reload the map immediately', '切换底图后会立即重新加载地图')}</small>
+              </div>
+            </div>
+          </div>
+
+          <hr class="settings-section-divider" />
+
           <!-- ⭐ 默认位置 -->
           <div class="settings-section">
             <h3 class="settings-section-title">⭐ ${this.i18n.t('settings.defaultLocation')}</h3>
@@ -353,6 +373,14 @@ class SettingsPanel {
       });
     }
 
+    // 地图底图切换
+    const mapTileSelect = document.getElementById('map-tile-select');
+    if (mapTileSelect) {
+      mapTileSelect.addEventListener('change', (e) => {
+        this.handleMapTileChange(e.target.value);
+      });
+    }
+
     // 位置解析提供商（需求 24）
     const geocodingProviderSelect = document.getElementById('geocoding-provider-select');
     if (geocodingProviderSelect) {
@@ -440,6 +468,13 @@ class SettingsPanel {
     const windUnitSelect = document.getElementById('wind-unit-select');
     if (windUnitSelect) {
       windUnitSelect.value = windUnit;
+    }
+
+    // 加载地图底图设置
+    const mapTile = localStorage.getItem('map_tile_provider') || 'auto';
+    const mapTileSelect = document.getElementById('map-tile-select');
+    if (mapTileSelect) {
+      mapTileSelect.value = mapTile;
     }
 
     // 加载${this._uiText('Weather model', '天气模型')}设置
@@ -752,6 +787,17 @@ class SettingsPanel {
 
     // 触发自定义事件，通知 WeatherController 刷新数据
     window.dispatchEvent(new CustomEvent('windUnitChanged', { detail: { unit } }));
+  }
+
+  /**
+   * 处理地图底图切换
+   */
+  handleMapTileChange(provider) {
+    localStorage.setItem('map_tile_provider', provider);
+    console.log('[SettingsPanel] 地图底图已切换为:', provider);
+
+    // 触发自定义事件，通知地图组件切换底图
+    window.dispatchEvent(new CustomEvent('mapTileProviderChanged', { detail: { provider } }));
   }
 
   // ========== 位置解析服务（需求 24）==========
