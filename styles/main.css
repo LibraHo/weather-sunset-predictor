@@ -5057,13 +5057,18 @@ body.theme-dark {
 }
 
 .api-access-actions,
-.api-access-grid {
+.api-access-grid,
+.api-access-doc-grid {
   display: grid;
   gap: 10px;
 }
 
 .api-access-grid {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.api-access-doc-grid {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
 .api-access-card {
@@ -5088,6 +5093,18 @@ body.theme-dark {
   color: var(--color-text);
   border-left: 3px solid var(--theme-accent, var(--color-warning));
   padding-left: 10px;
+}
+
+.api-doc-card {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.api-doc-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
 }
 
 .api-application-card {
@@ -5174,11 +5191,13 @@ body.theme-dark {
   color: var(--color-text);
 }
 
+.api-param-list,
 .api-endpoint-list {
   display: grid;
   gap: 8px;
 }
 
+.api-param-list > div,
 .api-endpoint-list > div {
   display: grid;
   gap: 3px;
@@ -5188,6 +5207,7 @@ body.theme-dark {
   border: 1px solid var(--glass-border);
 }
 
+.api-param-list small,
 .api-endpoint-list small {
   color: var(--color-text-light);
 }

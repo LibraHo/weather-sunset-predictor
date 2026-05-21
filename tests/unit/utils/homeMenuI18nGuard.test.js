@@ -20,7 +20,12 @@ describe('home menu i18n guard', () => {
     const requiredKeys = [
       'apiAccess', 'kicker', 'intro', 'openApiSpec', 'admin', 'quickStart',
       'step1', 'step2', 'step3', 'restrictions', 'restrictionText',
-      'exampleCall', 'endpoints', 'forecastDesc', 'explainDesc', 'geocodeDesc'
+      'authTitle', 'authBearer', 'authDefaultQuota', 'authAudit',
+      'requestTitle', 'paramLocation', 'paramType', 'paramDate', 'paramDetail',
+      'responseTitle', 'responseScore', 'responseWindow', 'responseExplain',
+      'errorsTitle', 'errorAuth', 'errorParams', 'errorUpstream',
+      'exampleCall', 'endpoints', 'forecastDesc', 'explainDesc', 'geocodeDesc',
+      'mapSummaryDesc'
     ];
 
     for (const locale of fs.readdirSync(path.resolve('src/locales')).filter(file => file.endsWith('.js') && file !== 'index.js')) {
@@ -44,5 +49,23 @@ describe('home menu i18n guard', () => {
       const mod = await import(`../../../src/locales/${locale}.js`);
       expect(mod.default.home.apiAccess).toEqual(en);
     }
+  });
+
+  test('API access page documents quota, parameters, responses, and errors', () => {
+    const html = fs.readFileSync(path.resolve('index.html'), 'utf8');
+    const apiPanel = html.slice(
+      html.indexOf('id="tab-panel-api"'),
+      html.indexOf('</section>', html.indexOf('id="tab-panel-api"'))
+    );
+
+    expect(apiPanel).toContain('home.apiAccess.authTitle');
+    expect(apiPanel).toContain('home.apiAccess.requestTitle');
+    expect(apiPanel).toContain('home.apiAccess.responseTitle');
+    expect(apiPanel).toContain('home.apiAccess.errorsTitle');
+    expect(apiPanel).toContain('home.apiAccess.mapSummaryDesc');
+    expect(apiPanel).toContain('api-access-doc-grid');
+    expect(apiPanel).toContain('api-param-list');
+    expect(apiPanel).toContain('/map-summary');
+    expect(apiPanel).toContain('YOUR_TOKEN_HERE');
   });
 });

@@ -638,6 +638,42 @@
           </article>
         </div>
 
+        <div class="api-access-doc-grid">
+          <article class="api-access-card api-doc-card">
+            <h3 data-i18n="home.apiAccess.authTitle">认证与额度</h3>
+            <ul class="api-doc-list">
+              <li data-i18n="home.apiAccess.authBearer">所有 Agent 接口都需要请求头：Authorization: Bearer YOUR_TOKEN。</li>
+              <li data-i18n="home.apiAccess.authDefaultQuota">新申请默认每日 3 次调用，后台可按申请用途调整。</li>
+              <li data-i18n="home.apiAccess.authAudit">调用会记录 Token、接口、状态码、耗时和错误码，用于排查与额度统计。</li>
+            </ul>
+          </article>
+          <article class="api-access-card api-doc-card">
+            <h3 data-i18n="home.apiAccess.requestTitle">通用请求参数</h3>
+            <div class="api-param-list" aria-label="api-common-params">
+              <div><span class="mono">location</span><small data-i18n="home.apiAccess.paramLocation">地点名称；也可以改用 lat + lon 精确坐标。</small></div>
+              <div><span class="mono">type</span><small data-i18n="home.apiAccess.paramType">sunrise 或 sunset；默认 sunset。</small></div>
+              <div><span class="mono">date</span><small data-i18n="home.apiAccess.paramDate">today、tomorrow 或 YYYY-MM-DD；默认 today。</small></div>
+              <div><span class="mono">detail</span><small data-i18n="home.apiAccess.paramDetail">forecast 可传 simple 或 full；full 会返回更多天气因子和解释对象。</small></div>
+            </div>
+          </article>
+          <article class="api-access-card api-doc-card">
+            <h3 data-i18n="home.apiAccess.responseTitle">响应重点</h3>
+            <ul class="api-doc-list">
+              <li data-i18n="home.apiAccess.responseScore">score 是 0-100 的朝霞/晚霞评分，quality 为 poor/fair/good/excellent。</li>
+              <li data-i18n="home.apiAccess.responseWindow">bestViewingWindow 给出建议观赏时间段。</li>
+              <li data-i18n="home.apiAccess.responseExplain">explain 会返回 scoreComposition、factorRelations、constraints 和自然语言解释。</li>
+            </ul>
+          </article>
+          <article class="api-access-card api-doc-card">
+            <h3 data-i18n="home.apiAccess.errorsTitle">错误码处理</h3>
+            <ul class="api-doc-list">
+              <li data-i18n="home.apiAccess.errorAuth">401 表示 Token 缺失或无效；403/429 表示权限或额度不足。</li>
+              <li data-i18n="home.apiAccess.errorParams">400 多为参数错误，例如 type/date/lat/lon/bbox 不合法。</li>
+              <li data-i18n="home.apiAccess.errorUpstream">502/503 表示天气源或地图缓存暂不可用，建议稍后重试。</li>
+            </ul>
+          </article>
+        </div>
+
         <div class="api-access-card api-application-card">
           <h3 data-i18n="home.apiAccess.applyTitle">申请 API Token</h3>
           <form id="api-application-form" class="api-application-form">
@@ -668,7 +704,8 @@
 
         <div class="api-access-card">
           <h3 data-i18n="home.apiAccess.exampleCall">示例调用</h3>
-          <pre class="code-box">curl -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+          <pre class="code-box"># Explain today's sunset score for Beijing
+curl -H "Authorization: Bearer YOUR_TOKEN_HERE" \
   "https://sunset.bjhyc.online/api/agent/explain?location=%E5%8C%97%E4%BA%AC&amp;type=sunset&amp;date=today"</pre>
         </div>
 
@@ -678,6 +715,7 @@
             <div><span class="mono">/forecast</span><small data-i18n="home.apiAccess.forecastDesc">返回评分、质量等级和最佳观赏窗口。</small></div>
             <div><span class="mono">/explain</span><small data-i18n="home.apiAccess.explainDesc">返回评分构成、关键限制和自然语言解释。</small></div>
             <div><span class="mono">/geocode</span><small data-i18n="home.apiAccess.geocodeDesc">返回地点候选、坐标和置信度。</small></div>
+            <div><span class="mono">/map-summary</span><small data-i18n="home.apiAccess.mapSummaryDesc">返回指定区域内达到阈值的地图网格摘要和高分点。</small></div>
           </div>
         </div>
       </section>
