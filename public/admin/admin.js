@@ -462,12 +462,16 @@ function switchLogTab(type, btn) {
 // =================== 队列状态 ===================
 async function loadQueue() {
   try {
-    const [sunsetRes, sunriseRes] = await Promise.all([
+    const [sunsetRes, sunriseRes, scheduleRes] = await Promise.all([
       fetch('/api/heatmap/status?period=sunset'),
-      fetch('/api/heatmap/status?period=sunrise')
+      fetch('/api/heatmap/status?period=sunrise'),
+      fetch('/api/admin/schedule', { credentials: 'include' })
     ]);
-    const [sunset, sunrise] = await Promise.all([sunsetRes.json(), sunriseRes.json()]);
-    renderQueueStatus([sunset, sunrise]);
+    const [sunset, sunrise, scheduleData] = await Promise.all([
+      sunsetRes.json(), sunriseRes.json(), scheduleRes.json()
+    ]);
+    const schedule = scheduleData?.config?.jobs || [];
+    renderQueueStatus([sunset, sunrise], schedule);
   } catch (err) {
     console.error('加载队列失败:', err);
     const el = document.getElementById('queueStatusGrid');
@@ -475,7 +479,27 @@ async function loadQueue() {
   }
 }
 
-function renderQueueStatus(items) {
+function calcNextSchedule(jobs, period, label) {
+  const now = new Date();
+  let next = null;
+  for (const job of jobs) {
+    if (!job.enabled && job.enabled !== undefined) continue;
+    if (job.type !== period && job.type !== 'both') continue;
+    const [h, m] = String(job.time || '').split(':').map(Number);
+    if (isNaN(h) || isNaN(m)) continue;
+    const t = new Date(now);
+    t.setHours(h, m, 0, 0);
+    if (t <= now) t.setDate(t.getDate() + 1);
+    if (!next || t < next) next = t;
+  }
+  if (!next) return '无计划';
+  const diffMin = Math.round((next - now) / 60000);
+  if (diffMin < 60) return `${diffMin} 分钟后`;
+  if (diffMin < 1440) return `${Math.floor(diffMin / 60)} 小时 ${diffMin % 60} 分钟后`;
+  return `${label} ${next.getHours().toString().padStart(2,'0')}:${next.getMinutes().toString().padStart(2,'0')}`;
+}
+
+function renderQueueStatus(items, schedule = []) {
   const el = document.getElementById('queueStatusGrid');
   if (!el) return;
   el.innerHTML = items.map((item) => {
@@ -483,26 +507,42 @@ function renderQueueStatus(items) {
     const completed = Number(item.completedPoints || 0);
     const progress = total > 0 ? Math.min(100, Math.round((completed / total) * 100)) : 0;
     const title = item.period === 'sunrise' ? '朝霞' : '晚霞';
-    const state = item.running ? '运行中' : '空闲';
+    const label = item.period === 'sunrise' ? '明天' : '今天';
+    const stateClass = item.running ? 'queue-badge-running' : 'queue-badge-idle';
+    const stateText = item.running ? '⚡ 运行中' : '✓ 空闲';
     const eta = item.etaSeconds == null ? '-' : `${Math.ceil(Number(item.etaSeconds) / 60)} 分钟`;
     const cacheCount = Number(item.cacheCount || 0);
+    const jobTime = formatPhotoDateTime(item.finishedAt) || null;
     const cacheTime = formatPhotoDateTime(item.cacheUpdatedAt) || '--';
-    const cacheState = item.cacheStale === true ? '已过期' : (item.cacheStale === false ? '可用' : '无缓存');
+    // 上次有效更新时间：优先用 job 完成时间，没有则用缓存时间
+    const lastUpdate = jobTime || cacheTime;
+    const cacheStateText = item.cacheStale === true ? '已过期' : (item.cacheStale === false ? '可用' : '无缓存');
+    const cacheStateClass = item.cacheStale === true ? 'cache-stale' : (item.cacheStale === false ? 'cache-fresh' : 'cache-none');
+    const nextSchedule = calcNextSchedule(schedule, item.period, label);
+    const gridPoints = total > 0 ? `${completed}/${total}` : (cacheCount > 0 ? `${cacheCount} (缓存)` : '<span class="queue-no-data">无数据</span>');
     const errorText = summarizeQueueError(item.lastError);
-    const error = errorText ? `<div class="queue-error" title="${escapeHtml(String(item.lastError))}">${escapeHtml(errorText)}</div>` : '';
+    const error = errorText ? `<div class="queue-error" title="${escapeHtml(String(item.lastError))}">⚠ ${escapeHtml(errorText)}</div>` : '';
     return `<div class="queue-card">
-      <div class="queue-head"><strong>${title}</strong><span class="${item.running ? 'status-ok' : ''}">${state}</span></div>
+      <div class="queue-card-header">
+        <div class="queue-title-row"><strong>${title} Grid</strong><span class="queue-badge ${stateClass}">${stateText}</span></div>
+        <div class="queue-times">
+          <div class="queue-time-item"><span class="queue-time-label">上次更新</span><span class="queue-time-value">${escapeHtml(lastUpdate)}</span></div>
+          <div class="queue-time-item"><span class="queue-time-label">下次更新</span><span class="queue-time-value">${escapeHtml(nextSchedule)}</span></div>
+        </div>
+      </div>
       <div class="queue-progress"><span style="width:${progress}%"></span></div>
       <div class="queue-meta">
-        <span>${completed}/${total || '-'}</span>
+        <span>网格点 ${gridPoints}</span>
         <span>成功 ${Number(item.successPoints || 0)}</span>
         <span>失败 ${Number(item.errorPoints || 0)}</span>
-        <span>ETA ${eta}</span>
+        ${item.running ? `<span>ETA ${eta}</span>` : ''}
       </div>
       <div class="queue-cache">
-        <span>缓存 ${cacheCount || '-'}</span>
-        <span>更新 ${escapeHtml(cacheTime)}</span>
-        <span>${escapeHtml(cacheState)}</span>
+        <span>缓存 ${cacheCount || '-'} 点</span>
+        <span class="${cacheStateClass}">${escapeHtml(cacheStateText)}</span>
+      </div>
+      <div class="queue-actions">
+        <button class="btn btn-secondary btn-sm" onclick="triggerRefresh('${item.period}')">🔄 手动刷新</button>
       </div>
       ${error}
     </div>`;
