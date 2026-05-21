@@ -448,10 +448,14 @@
   justify-content: center;
   width: 52rpx;
   height: 52rpx;
+  margin: 0;
+  padding: 0;
+  border: 0;
   border-radius: 16rpx;
   color: #1b1206;
   font-size: 28rpx;
   font-weight: 900;
+  line-height: 1;
   background: linear-gradient(135deg, #ffd166, #fb923c);
 }
 

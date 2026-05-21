@@ -52,6 +52,21 @@ describe('miniprogram page user/share helpers', () => {
     });
   });
 
+  test('home prediction share button opens the current compact result', () => {
+    expect(homeHelpers.buildHomeShareMessage({
+      periodKey: 'sunset',
+      periodLabel: '晚霞',
+      score: 76
+    }, {
+      locationName: '北京',
+      coordinate: { lat: 39.9042, lon: 116.4074 },
+      day: 'today'
+    })).toMatchObject({
+      title: '霞客｜北京晚霞评分 76分',
+      path: expect.stringContaining('/pages/result/index?')
+    });
+  });
+
   test('favorite helper matches coordinates and payload shape', () => {
     const prediction = { locationName: '天坛', lat: 39.882, lon: 116.406, period: 'sunset' };
     expect(resultHelpers.buildFavoritePayload(prediction)).toMatchObject({ name: '天坛', lat: 39.882, lon: 116.406, type: 'sunset' });

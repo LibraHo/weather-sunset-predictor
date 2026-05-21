@@ -269,6 +269,7 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxml).toContain('class="section-title prediction-panel-title">朝晚霞预测</view>');
     expect(homeWxml).toContain('predictionPreview.scoreLabel');
     expect(homeWxml).toContain('predictionPreview.bestViewingTime');
+    expect(homeWxml).toContain('open-type="share"');
     expect(homeWxml).toContain('src="/assets/icons/share-upload.svg"');
     expect(homeWxss).toContain('background: linear-gradient(135deg, #ffd166, #fb923c)');
     expect(homeWxss).not.toContain('.home-page.has-weather .prediction-share-menu');
