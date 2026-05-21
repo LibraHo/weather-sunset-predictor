@@ -664,6 +664,11 @@ apiAccess: 'الوصول إلى API'
     windSpeedUnit: 'وحدة سرعة الرياح',
     windKmh: 'كم/ساعة',
     windMs: 'م/ثانية',
+    mapTileProvider: 'Map Basemap',
+    mapTileSource: 'Basemap Source',
+    mapTileAuto: 'Auto (Gaode in China / OSM overseas)',
+    mapTileGaode: 'Gaode Map (China)',
+    mapTileOSM: 'OpenStreetMap (Overseas)',
     // Location service (Req 24)
     geocodingService: 'Location Service',
     geocodingMode: 'Mode',

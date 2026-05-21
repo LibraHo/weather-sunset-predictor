@@ -263,6 +263,8 @@ class ChinaMapCanvas {
     this._focusMarker = null;
     this._cityVisibilityUpdater = null;
     this._languageChangeHandler = () => this.refreshLanguage();
+    this._tileLayer = null;
+    this._tileProvider = 'auto';
   }
 
   /**
@@ -397,6 +399,65 @@ class ChinaMapCanvas {
     if (this._map) {
       this._map.setView([lat, lon], zoom);
     }
+  }
+
+  /**
+   * 切换地图底图来源
+   * @param {'auto'|'gaode'|'osm'} provider
+   */
+  setTileProvider(provider) {
+    if (!this._map) return;
+
+    const valid = ['auto', 'gaode', 'osm'].includes(provider);
+    if (!valid) {
+      console.warn('[ChinaMapCanvas] 未知底图来源:', provider);
+      return;
+    }
+
+    // 移除旧瓦片层
+    if (this._tileLayer) {
+      this._map.removeLayer(this._tileLayer);
+      this._tileLayer = null;
+    }
+
+    this._tileProvider = provider;
+
+    // auto 模式不使用外部瓦片（用自建 GeoJSON 底图）
+    if (provider === 'auto') {
+      console.log('[ChinaMapCanvas] 使用自建底图');
+      return;
+    }
+
+    const tileUrls = {
+      gaode: 'https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
+      osm: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+    };
+
+    const tileOptions = {
+      gaode: {
+        attribution: '&copy; <a href="https://www.amap.com">高德地图</a>',
+        subdomains: ['1', '2', '3', '4'],
+        maxZoom: 18
+      },
+      osm: {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19
+      }
+    };
+
+    this._tileLayer = window.L.tileLayer(tileUrls[provider], tileOptions[provider]);
+    // 插入到最底层（在 GeoJSON 之下）
+    this._tileLayer.addTo(this._map);
+    this._tileLayer.setZIndex(0);
+
+    console.log('[ChinaMapCanvas] 底图已切换为:', provider);
+  }
+
+  /**
+   * 获取当前底图来源
+   */
+  getTileProvider() {
+    return this._tileProvider;
   }
 
   /**
