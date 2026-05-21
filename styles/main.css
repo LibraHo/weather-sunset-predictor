@@ -5253,19 +5253,22 @@ body.theme-dark .api-method-get {
   border-collapse: collapse;
   font-size: 0.88rem;
   margin: 8px 0;
+  table-layout: fixed;
 }
 .api-param-table th,
 .api-param-table td {
   text-align: left;
-  padding: 6px 8px;
+  padding: 6px 10px;
   border-bottom: 1px solid var(--glass-border);
+  vertical-align: top;
+  word-break: break-word;
 }
 .api-param-table th {
   font-weight: 600;
   color: var(--color-text-light);
   font-size: 0.8rem;
-  text-transform: uppercase;
   letter-spacing: 0.03em;
+  white-space: nowrap;
 }
 .api-param-table code {
   font-family: Consolas, 'Courier New', monospace;
@@ -5273,15 +5276,16 @@ body.theme-dark .api-method-get {
   padding: 1px 5px;
   border-radius: 4px;
   font-size: 0.84rem;
+  white-space: nowrap;
 }
 .api-param-table td:first-child {
-  width: 18%;
+  width: 22%;
 }
 .api-param-table td:nth-child(2) {
-  width: 13%;
+  width: 15%;
 }
 .api-param-table td:nth-child(3) {
-  width: 12%;
+  width: 14%;
 }
 
 .api-curl-toggle {
@@ -5316,6 +5320,14 @@ body.theme-dark .code-box {
 
   .api-application-fields {
     grid-template-columns: 1fr;
+  }
+
+  .api-ref-endpoint {
+    overflow-x: auto;
+  }
+
+  .api-param-table {
+    min-width: 420px;
   }
 }
 
