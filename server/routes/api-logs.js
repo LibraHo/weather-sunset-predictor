@@ -302,27 +302,33 @@ router.post('/applications/:id/review', (req, res) => {
     }
 
     let createdToken = null;
+    let tokenError = null;
     if (status === 'approved' && req.body?.createToken) {
-      if (!existing.tokenId) {
-        const { token, tokenMeta } = apiTokenService.createToken({
-          name: (req.body?.tokenName || `api-${existing.email}`).slice(0, 60),
-          minuteLimit: parseIntSafe(req.body?.minuteLimit, 120),
-          dailyLimit: parseIntSafe(req.body?.dailyLimit, 3),
-          trustedUser: existing.nickname || existing.contact || existing.email || '',
-          note: [
-            existing.countryRegion ? `国家地区：${existing.countryRegion}` : '',
-            existing.purpose ? `申请用途：${existing.purpose}` : 'API 申请审批创建'
-          ].filter(Boolean).join('；'),
-          nonCommercial: true,
-          expiresAt: typeof req.body?.expiresAt === 'string' && req.body.expiresAt.trim() ? req.body.expiresAt.trim() : null
-        });
-        app.tokenId = tokenMeta.id;
-        apiApplications.linkToken(id, tokenMeta.id);
-        createdToken = token;
+      try {
+        if (!existing.tokenId) {
+          const { token, tokenMeta } = apiTokenService.createToken({
+            name: (req.body?.tokenName || `api-${existing.email}`).slice(0, 60),
+            minuteLimit: parseIntSafe(req.body?.minuteLimit, 120),
+            dailyLimit: parseIntSafe(req.body?.dailyLimit, 3),
+            trustedUser: existing.nickname || existing.contact || existing.email || '',
+            note: [
+              existing.countryRegion ? `国家地区：${existing.countryRegion}` : '',
+              existing.purpose ? `申请用途：${existing.purpose}` : 'API 申请审批创建'
+            ].filter(Boolean).join('；'),
+            nonCommercial: true,
+            expiresAt: typeof req.body?.expiresAt === 'string' && req.body.expiresAt.trim() ? req.body.expiresAt.trim() : null
+          });
+          app.tokenId = tokenMeta.id;
+          apiApplications.linkToken(id, tokenMeta.id);
+          createdToken = token;
+        }
+      } catch (err) {
+        console.warn('[api-logs] 申请审核通过但创建 Token 失败:', err.message);
+        tokenError = err.message || 'Token 创建失败';
       }
     }
 
-    return res.json({ success: true, application: app, token: createdToken });
+    return res.json({ success: true, application: app, token: createdToken, tokenError });
   } catch (err) {
     return res.status(500).json({ error: { code: err.code || 'REVIEW_FAILED', message: err.message || 'review failed' } });
   }
