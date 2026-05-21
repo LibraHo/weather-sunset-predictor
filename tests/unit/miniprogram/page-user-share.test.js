@@ -275,6 +275,44 @@ describe('miniprogram page user/share helpers', () => {
     ]));
   });
 
+  test('home weather card converts numeric wind direction to web-style label and arrow', () => {
+    const prediction = normalizePrediction({
+      score: 76,
+      status: 'good',
+      locationName: '北京',
+      cloudLayers: { high: 62, mid: 36, low: 8 },
+      weatherData: {
+        temperature_2m: 22.6,
+        wind_speed_10m: 2,
+        wind_direction_10m: 180
+      }
+    });
+    const state = homeHelpers.buildHomePredictionSurface(prediction, { locationName: '北京', period: 'sunset' });
+
+    expect(state.weatherPreview.windSpeed).toBe('2 km/h');
+    expect(state.weatherPreview.windDirection).toBe('南');
+    expect(state.weatherPreview.windDirection).not.toBe('180');
+    expect(state.weatherPreview.windDirectionArrow).toBe('↑');
+  });
+
+  test('home formation analysis uses web-style semantic status tones', () => {
+    const analysis = homeHelpers.buildPredictionAnalysisGroups({
+      high: 32,
+      mid: 0,
+      low: 12,
+      visibility: 20,
+      humidity: 68,
+      aod: 0.57
+    });
+
+    expect(analysis).toEqual(expect.arrayContaining([
+      expect.objectContaining({ key: 'carrier', status: '一般', tone: 'fair' }),
+      expect.objectContaining({ key: 'lightPath', status: '较好', tone: 'good' }),
+      expect.objectContaining({ key: 'rendering', status: '较好', tone: 'good' }),
+      expect.objectContaining({ key: 'limits', status: '无明显', tone: 'good' })
+    ]));
+  });
+
   test('result period switch can request and render the alternate prediction card', () => {
     const current = {
       locationName: 'TEST',
