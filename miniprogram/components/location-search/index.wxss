@@ -48,10 +48,9 @@
 }
 
 .star-icon {
-  color: #f0b429;
-  font-size: 38rpx;
-  line-height: 1;
-  text-shadow: 0 4rpx 10rpx rgba(240, 180, 41, 0.34);
+  width: 34rpx;
+  height: 34rpx;
+  filter: drop-shadow(0 4rpx 10rpx rgba(240, 180, 41, 0.34));
 }
 
 .location-input-shell {
@@ -200,10 +199,9 @@
 
 .location-suggestion-pin {
   flex: none;
-  width: 30rpx;
-  color: #e92f8a;
-  font-size: 24rpx;
-  line-height: 1.35;
+  width: 28rpx;
+  height: 28rpx;
+  margin-top: 3rpx;
 }
 
 .location-suggestion-copy {

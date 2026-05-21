@@ -21,6 +21,7 @@ describe('mini-program home parity with mobile web home', () => {
     const homeWxml = read('miniprogram/pages/home/index.wxml');
     const homeWxss = read('miniprogram/pages/home/index.wxss');
     const homeJs = read('miniprogram/pages/home/index.js');
+    const locationSearchWxml = read('miniprogram/components/location-search/index.wxml');
 
     expectInOrder(web, [
       'id="location-section"',
@@ -75,6 +76,16 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxml).toContain('data-param="wind"');
     expect(homeWxml).toContain('data-param="pressure"');
     expect(homeWxml).toContain('data-param="clouds"');
+    for (const iconName of ['temperature', 'precipitation', 'humidity', 'wind', 'pressure', 'cloud']) {
+      expect(homeWxml).toContain(`/assets/icons/weather-param-${iconName}.svg`);
+    }
+    expect(homeWxml).toContain('class="weather-param-icon"');
+    expect(homeWxml).not.toMatch(/<text class="weather-param-icon">/);
+    expect(homeWxml).not.toMatch(/[☁∿〰◇≈≡◎∴◌℃]/u);
+    expect(`${homeWxml}\n${locationSearchWxml}`).not.toMatch(/[👥📍★☁∿〰◇≈≡◎∴◌℃]/u);
+    expect(locationSearchWxml).toContain('/assets/icons/favorite-star.svg');
+    expect(locationSearchWxml).toContain('/assets/icons/weather-location-pin.svg');
+    expect(homeWxml).toContain('/assets/icons/users.svg');
     expect(homeWxml).toContain('weather-chart-panel');
     expect(homeWxml).toContain('weather-hourly-chart');
     expect(homeWxml).toContain('canvas-id="homeHourlyChart"');
@@ -330,6 +341,12 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxss).toContain('.cloud-condition-card');
     expect(homeWxss).toContain('grid-template-columns: repeat(3, minmax(0, 1fr))');
     expect(homeWxss).toContain('.app-analysis-card');
+    expect(homeWxss).toContain('.analysis-factor-status-good');
+    expect(homeWxss).toContain('.analysis-factor-status-fair');
+    expect(homeWxss).toContain('.analysis-factor-status-mild');
+    expect(homeWxss).toContain('.analysis-factor-status-weak');
+    expect(homeWxss).toContain('rgba(217, 119, 6, 0.12)');
+    expect(homeWxss).not.toContain('.home-page.has-weather .analysis-factor-status {\n  color: #39a849;');
     expect(homeWxss).toContain('.prediction-radar-card');
     expect(homeWxss).toContain('.prediction-radar-cloud-canvas');
     expect(homeWxss).toContain('.prediction-radar-ring-low-inner');

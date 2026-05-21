@@ -866,7 +866,6 @@ export function buildDefaultWeatherPreview() {
     description: '查询后先看当前天气，再进入预测结果。',
     badge: '7天概览',
     location: '--',
-    icon: '☁',
     iconType: 'cloud',
     iconSrc: '/assets/icons/weather-cloud.svg',
     condition: '--',
@@ -883,12 +882,12 @@ export function buildDefaultWeatherPreview() {
     hourlyTab: '24小时预报',
     glowTab: '3天朝晚霞',
     metrics: [
-      { key: 'humidity', icon: '◇', label: '湿度', value: '--' },
-      { key: 'cloud', icon: '☁', label: '云量', value: '--' },
-      { key: 'pressure', icon: '≡', label: '气压', value: '--' },
-      { key: 'visibility', icon: '◎', label: '能见度', value: '--' },
-      { key: 'aerosol', icon: '∴', label: '气溶胶', value: '--' },
-      { key: 'precipitation', icon: '◌', label: '降水', value: '--' }
+      { key: 'humidity', label: '湿度', value: '--' },
+      { key: 'cloud', label: '云量', value: '--' },
+      { key: 'pressure', label: '气压', value: '--' },
+      { key: 'visibility', label: '能见度', value: '--' },
+      { key: 'aerosol', label: '气溶胶', value: '--' },
+      { key: 'precipitation', label: '降水', value: '--' }
     ],
     note: '3天朝晚霞趋势会跟随查询结果一起查看'
   };
@@ -915,7 +914,6 @@ export function buildTestWeatherPreview() {
 
 export function buildDefaultPredictionPreview() {
   return {
-    icon: '☼',
     dateLabel: '今日',
     periodKey: 'sunset',
     periodLabel: '晚霞',
@@ -985,7 +983,6 @@ export function buildPredictionPreviewLoading(period = 'sunset', day = 'today', 
 
 export function buildTestPredictionPreview() {
   return {
-    icon: '☼',
     dateLabel: '今日',
     periodKey: 'sunset',
     periodLabel: '晚霞',
@@ -1032,7 +1029,6 @@ export function buildTestPredictionPreview() {
 export function buildPredictionPreviewForPeriod(period = 'sunset') {
   if (period === 'sunrise') {
     return buildCompletePredictionPreview({
-      icon: '☼',
       dateLabel: '今日',
       periodKey: 'sunrise',
       periodLabel: '朝霞',
@@ -1254,7 +1250,7 @@ export function buildWeatherPreview(weather = {}) {
   const windSpeed = formatWindSpeedValue(weather.windSpeed);
   const hourly = buildWeatherHourlyPreview(weather);
   const hourlyView = buildWeatherHourlyViewModel(hourly, 'temp');
-  const windDirection = weather.windDirection || '风向';
+  const windDirection = formatWindDirectionLabel(weather.windDirection);
   return {
     sourceWeather: weather,
     visible: true,
@@ -1262,7 +1258,6 @@ export function buildWeatherPreview(weather = {}) {
     description: provider === 'test' ? `${provider} 天气测试数据，用于先验收天气卡片 UI。` : `${provider} 天气数据，用于评估当前火烧云条件。`,
     badge: provider === 'test' ? 'TEST' : '7天概览',
     location: weather.location || weather.locationName || '当前位置',
-    icon: weather.icon || getWeatherPreviewIcon(cloudAverage),
     iconType: weather.iconType || getWeatherPreviewIconType(cloudAverage, weather.precipitation ?? weather.precipitationProbability),
     iconSrc: `/assets/icons/weather-${weather.iconType || getWeatherPreviewIconType(cloudAverage, weather.precipitation ?? weather.precipitationProbability)}.svg`,
     condition: weather.condition || getWeatherPreviewCondition(cloudAverage),
@@ -1270,6 +1265,7 @@ export function buildWeatherPreview(weather = {}) {
     temperatureUnit: '°C',
     windSpeed,
     windDirection,
+    windDirectionArrow: formatWindDirectionArrow(weather.windDirection),
     weekly: buildWeatherWeeklyPreview(weather),
     hourly,
     hourlyChart: hourlyView.chart,
@@ -1279,12 +1275,12 @@ export function buildWeatherPreview(weather = {}) {
     hourlyTab: '24小时预报',
     glowTab: '3天朝晚霞',
     metrics: [
-      { key: 'humidity', icon: '◇', label: '湿度', value: formatPercentValue(weather.humidity) },
-      { key: 'cloud', icon: '☁', label: '云量', value: formatPercentValue(cloudAverage) },
-      { key: 'pressure', icon: '≡', label: '气压', value: formatNumberValue(weather.pressure, 'hPa') },
-      { key: 'visibility', icon: '◎', label: '能见度', value: formatDistanceValue(weather.visibility) },
-      { key: 'aerosol', icon: '∴', label: '气溶胶', value: formatNumberValue(weather.aod ?? weather.aerosolOpticalDepth, '') },
-      { key: 'precipitation', icon: '◌', label: '降水', value: formatNumberValue(weather.precipitation, 'mm') }
+      { key: 'humidity', label: '湿度', value: formatPercentValue(weather.humidity) },
+      { key: 'cloud', label: '云量', value: formatPercentValue(cloudAverage) },
+      { key: 'pressure', label: '气压', value: formatNumberValue(weather.pressure, 'hPa') },
+      { key: 'visibility', label: '能见度', value: formatDistanceValue(weather.visibility) },
+      { key: 'aerosol', label: '气溶胶', value: formatNumberValue(weather.aod ?? weather.aerosolOpticalDepth, '') },
+      { key: 'precipitation', label: '降水', value: formatNumberValue(weather.precipitation, 'mm') }
     ],
     note: `高 ${formatPercentValue(highCloud)} / 中 ${formatPercentValue(midCloud)} / 低 ${formatPercentValue(lowCloud)} · ${windDirection} ${windSpeed}`
   };
@@ -1444,12 +1440,12 @@ function paintHourlyChartCanvas(canvasId, chart = [], options = {}) {
 
 function getWeatherParameterConfig() {
   return {
-    temp: { label: '温度', unit: '°C', icon: '℃' },
-    precip: { label: '降水', unit: 'mm', icon: '∿' },
-    humidity: { label: '湿度', unit: '%', icon: '◇' },
-    wind: { label: '风速', unit: 'km/h', icon: '≈' },
-    pressure: { label: '气压', unit: 'hPa', icon: '≡' },
-    clouds: { label: '云量', unit: '%', icon: '☁' }
+    temp: { label: '温度', unit: '°C', iconSrc: '/assets/icons/weather-param-temperature.svg' },
+    precip: { label: '降水', unit: 'mm', iconSrc: '/assets/icons/weather-param-precipitation.svg' },
+    humidity: { label: '湿度', unit: '%', iconSrc: '/assets/icons/weather-param-humidity.svg' },
+    wind: { label: '风速', unit: 'km/h', iconSrc: '/assets/icons/weather-param-wind.svg' },
+    pressure: { label: '气压', unit: 'hPa', iconSrc: '/assets/icons/weather-param-pressure.svg' },
+    clouds: { label: '云量', unit: '%', iconSrc: '/assets/icons/weather-param-cloud.svg' }
   };
 }
 
@@ -1500,7 +1496,7 @@ export function buildPredictionAnalysisGroups(input = {}) {
     { key: 'carrier', title: '云层载体', status: high >= 50 || mid >= 30 ? '较好' : '一般', tone: high >= 50 || mid >= 30 ? 'good' : 'fair', desc: `高云 ${Math.round(high)}%、中云 ${Math.round(mid)}%，有可染色云层基础。` },
     { key: 'lightPath', title: '光路条件', status: low <= 25 ? '较好' : '一般', tone: low <= 25 ? 'good' : 'fair', desc: `低云 ${Math.round(low)}%，太阳方向相对通透，光线有机会照到云底。` },
     { key: 'rendering', title: '空气显色', status: visibility >= 10 && humidity < 85 ? '较好' : '一般', tone: visibility >= 10 && humidity < 85 ? 'good' : 'fair', desc: `能见度 ${Math.round(visibility)}km、湿度 ${Math.round(humidity)}%、AOD ${aod.toFixed(2)}。` },
-    { key: 'limits', title: '限制因素', status: low > 45 ? '需警惕' : '较少', tone: low > 45 ? 'warning' : 'good', desc: low > 45 ? '低云偏多可能遮挡太阳方向。' : '降水和厚低云限制不明显。' }
+    { key: 'limits', title: '限制因素', status: low > 45 ? '明显' : '无明显', tone: low > 45 ? 'weak' : 'good', desc: low > 45 ? '低云偏多可能遮挡太阳方向。' : '降水和厚低云限制不明显。' }
   ];
 }
 
@@ -1728,7 +1724,7 @@ function parseWeeklyDate(dateValue) {
 function formatWindDirectionArrow(direction) {
   const deg = Number(direction);
   if (!Number.isFinite(deg)) return '↓';
-  const normalized = ((deg % 360) + 360) % 360;
+  const normalized = (((deg + 180) % 360) + 360) % 360;
   if (normalized >= 337.5 || normalized < 22.5) return '↑';
   if (normalized < 67.5) return '↗';
   if (normalized < 112.5) return '→';
@@ -1737,6 +1733,16 @@ function formatWindDirectionArrow(direction) {
   if (normalized < 247.5) return '↙';
   if (normalized < 292.5) return '←';
   return '↖';
+}
+
+function formatWindDirectionLabel(direction) {
+  if (direction === null || direction === undefined || direction === '') return '风向';
+  const deg = Number(direction);
+  if (!Number.isFinite(deg)) return String(direction);
+  const normalizedDirection = ((deg % 360) + 360) % 360;
+  const directions = ['北', '东北', '东', '东南', '南', '西南', '西', '西北'];
+  const index = Math.round(normalizedDirection / 45) % directions.length;
+  return directions[index];
 }
 
 function decorateRecentQueries(recent = []) {
@@ -1787,14 +1793,6 @@ function averageNumber(values) {
   const valid = values.map(Number).filter(Number.isFinite);
   if (!valid.length) return null;
   return valid.reduce((sum, value) => sum + value, 0) / valid.length;
-}
-
-function getWeatherPreviewIcon(cloudCover) {
-  const value = Number(cloudCover);
-  if (!Number.isFinite(value)) return '☁';
-  if (value < 25) return '☀';
-  if (value < 65) return '⛅';
-  return '☁';
 }
 
 function getWeatherPreviewIconType(cloudCover, precipitation = 0) {
