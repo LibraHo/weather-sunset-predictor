@@ -2,8 +2,8 @@
   <app-topbar current="gallery" theme-mode="{{themeMode}}" resolved-theme-mode="{{resolvedThemeMode}}" bind:settingschange="onAppSettingsChange" />
   <view class="gallery-hero">
     <view class="eyebrow warm-accent">霞客影集</view>
-    <view class="headline">照片分享地图</view>
-    <view class="caption">在小程序里直接看照片、位置和详情；需要大屏浏览时再打开 H5 地图。</view>
+    <view class="headline">霞光照片欣赏</view>
+    <view class="caption">欣赏压缩后的霞光照片和拍摄位置；小程序不提供原图下载。</view>
   </view>
 
   <view class="map-entry xiake-card glass-card">
@@ -33,7 +33,7 @@
     </view>
 
     <view class="active-photo" wx:if="{{activePhoto}}">
-      <image wx:if="{{activePhoto.hasThumbnail}}" class="active-thumb tap-feedback" src="{{activePhoto.thumbnailUrl}}" mode="aspectFill" bindtap="previewOriginal" data-id="{{activePhoto.id}}" hover-class="tap-feedback-hover" hover-stay-time="80" />
+      <image wx:if="{{activePhoto.hasThumbnail}}" class="active-thumb tap-feedback" src="{{activePhoto.thumbnailUrl}}" mode="aspectFill" bindtap="previewPhoto" data-id="{{activePhoto.id}}" hover-class="tap-feedback-hover" hover-stay-time="80" />
       <view wx:else class="active-placeholder">霞</view>
       <view class="active-meta">
         <view class="active-label">当前照片</view>
@@ -45,9 +45,7 @@
     </view>
 
     <view class="map-actions">
-      <button class="ghost-button map-button" bindtap="previewOriginal" wx:if="{{activePhoto}}" hover-class="button-hover" hover-stay-time="80">查看原图</button>
-      <button class="ghost-button map-button" bindtap="copyPhotoLink" wx:if="{{activePhoto}}" hover-class="button-hover" hover-stay-time="80">复制照片链接</button>
-      <button class="ghost-button map-button" bindtap="copyGalleryLink" hover-class="button-hover" hover-stay-time="80">复制 H5 地图</button>
+      <button class="ghost-button map-button" bindtap="previewPhoto" wx:if="{{activePhoto && activePhoto.hasThumbnail}}" hover-class="button-hover" hover-stay-time="80">查看照片</button>
     </view>
   </view>
 
@@ -73,7 +71,6 @@
         <view class="section-title list-title">最新照片</view>
         <view class="latest-copy subtle-text" wx:if="{{latestPhoto}}">最近：{{latestPhoto.location}} · {{latestPhoto.takenAt}}</view>
       </view>
-      <button class="small-link" bindtap="copyGalleryLink" hover-class="button-hover" hover-stay-time="80">H5 地图</button>
     </view>
 
     <view class="photo-card xiake-card glass-card tap-feedback" wx:for="{{photos}}" wx:key="id" bindtap="focusPhoto" data-id="{{item.id}}" hover-class="card-tap-hover" hover-stay-time="80">
@@ -86,8 +83,7 @@
         <view class="photo-line photo-uploaded-at subtle-text">上传时间：{{item.uploadedAt}}</view>
         <view class="photo-line subtle-text">上传者：{{item.uploader}}</view>
         <view class="card-actions">
-          <button class="inline-button" catchtap="previewOriginal" data-id="{{item.id}}">原图</button>
-          <button class="inline-button" catchtap="copyPhotoLink" data-id="{{item.id}}">复制链接</button>
+          <button class="inline-button" catchtap="previewPhoto" data-id="{{item.id}}" wx:if="{{item.hasThumbnail}}">查看照片</button>
         </view>
       </view>
     </view>

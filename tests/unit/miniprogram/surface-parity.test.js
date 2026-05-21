@@ -52,7 +52,9 @@ describe('miniprogram surface parity for map/gallery/upload/methodology', () => 
     expect(galleryWxml).toContain('empty-state');
     expect(galleryWxml).not.toContain('bindtap="goUpload"');
     expect(galleryWxml).not.toContain('上传照片');
-    expect(galleryWxml).toContain('bindtap="copyGalleryLink"');
+    expect(galleryWxml).not.toContain('copyGalleryLink');
+    expect(galleryWxml).not.toContain('H5 地图');
+    expect(galleryWxml).not.toContain('查看原图');
     expect(galleryWxml).toContain('map-legend');
     expect(galleryWxml).toContain('active-uploaded-at');
     expect(galleryWxml).toContain('photo-uploaded-at');
