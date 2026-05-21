@@ -202,7 +202,7 @@ describe('需求45 PR C - Token 管理 / API 申请 / 审计日志', () => {
   });
 
 
-  test('API 申请邮箱/联系方式必填校验 + 提交入库 + 前台不返回 Token', async () => {
+  test('API 申请邮箱/国家地区/昵称/用途必填校验 + 提交入库 + 前台不返回 Token', async () => {
     const badRes = await request(app)
       .post('/api/applications')
       .send({ email: 'a@example.com' });
@@ -214,18 +214,19 @@ describe('需求45 PR C - Token 管理 / API 申请 / 审计日志', () => {
       .post('/api/applications')
       .send({
         email: 'a@example.com',
-        contact: 'wechat:abc',
-        purpose: '个人测试',
-        expectedCallVolume: 100
+        countryRegion: '中国大陆',
+        nickname: 'Alex',
+        purpose: '个人测试'
       });
 
     expect(goodRes.status).toBe(201);
     expect(goodRes.body.success).toBe(true);
     expect(goodRes.body.application).toMatchObject({
       email: 'a@example.com',
-      contact: 'wechat:abc',
+      countryRegion: '中国大陆',
+      nickname: 'Alex',
+      contact: 'Alex',
       purpose: '个人测试',
-      expectedCallVolume: 100,
       status: 'pending'
     });
     expect(goodRes.body.application).not.toHaveProperty('token');
@@ -246,7 +247,8 @@ describe('需求45 PR C - Token 管理 / API 申请 / 审计日志', () => {
       .post('/api/applications')
       .send({
         email: 'b@example.com',
-        contact: 'tg:123',
+        countryRegion: '中国大陆',
+        nickname: 'tester-b',
         purpose: '学习用途'
       });
 
@@ -273,7 +275,8 @@ describe('需求45 PR C - Token 管理 / API 申请 / 审计日志', () => {
       .post('/api/applications')
       .send({
         email: 'c@example.com',
-        contact: 'wx:456',
+        countryRegion: '中国大陆',
+        nickname: 'tester-c',
         purpose: '科研用途'
       });
 
@@ -296,9 +299,10 @@ describe('需求45 PR C - Token 管理 / API 申请 / 审计日志', () => {
       .set('Authorization', makeAdminHeader(adminPassword));
     const createdMeta = tokensRes.body.tokens.find((t) => t.id === reviewedRes.body.application.tokenId);
     expect(createdMeta).toMatchObject({
-      trustedUser: 'wx:456',
+      trustedUser: 'tester-c',
       nonCommercial: true,
-      note: '申请用途：科研用途'
+      dailyLimit: 4000,
+      note: '国家地区：中国大陆；申请用途：科研用途'
     });
 
     const listAfter = await request(app)

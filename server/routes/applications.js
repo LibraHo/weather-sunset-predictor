@@ -11,7 +11,7 @@ const ApiApplicationService = require('../services/ApiApplicationService');
 const service = new ApiApplicationService();
 
 // POST /api/applications
-// 最小字段：email, contact；用途 purpose / expectedCallVolume 可选
+// 最小字段：email, countryRegion, nickname, purpose
 router.post('/', (req, res) => {
   try {
     const application = service.submitApplication(req.body || {});
@@ -19,6 +19,8 @@ router.post('/', (req, res) => {
       id: application.id,
       email: application.email,
       contact: application.contact,
+      countryRegion: application.countryRegion,
+      nickname: application.nickname,
       purpose: application.purpose,
       expectedCallVolume: application.expectedCallVolume,
       status: application.status,

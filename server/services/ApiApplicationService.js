@@ -65,12 +65,16 @@ class ApiApplicationService {
   _normalize(item = {}) {
     const now = new Date().toISOString();
     const email = String(item.email || '').trim();
-    const contact = String(item.contact || '').trim();
+    const countryRegion = String(item.countryRegion || item.country || '').trim();
+    const nickname = String(item.nickname || item.contact || '').trim();
+    const contact = String(item.contact || nickname).trim();
 
     return {
       id: item.id || uuidv4(),
       email,
       contact,
+      countryRegion,
+      nickname,
       purpose: typeof item.purpose === 'string' ? item.purpose.trim() : '',
       expectedCallVolume: Number.isFinite(item.expectedCallVolume) ? Math.max(0, Math.floor(item.expectedCallVolume)) : null,
       status: ALLOWED_STATUS.has(item.status) ? item.status : 'pending',
@@ -92,10 +96,12 @@ class ApiApplicationService {
   submitApplication(payload = {}) {
     this._load();
     const email = String(payload.email || '').trim();
-    const contact = String(payload.contact || '').trim();
+    const countryRegion = String(payload.countryRegion || payload.country || '').trim();
+    const nickname = String(payload.nickname || payload.contact || '').trim();
+    const purpose = String(payload.purpose || '').trim();
 
-    if (!email || !contact) {
-      const err = new Error('email and contact are required');
+    if (!email || !countryRegion || !nickname || !purpose) {
+      const err = new Error('email, countryRegion, nickname and purpose are required');
       err.code = 'INVALID_PARAMS';
       throw err;
     }
@@ -110,7 +116,10 @@ class ApiApplicationService {
     });
 
     entry.email = email;
-    entry.contact = contact;
+    entry.countryRegion = countryRegion;
+    entry.nickname = nickname;
+    entry.contact = nickname;
+    entry.purpose = purpose;
 
     this.applications.unshift(entry);
     this._persist();

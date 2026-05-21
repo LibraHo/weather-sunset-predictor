@@ -62,7 +62,21 @@ const translations = {
       endpoints: 'Core endpoints',
       forecastDesc: 'Returns score, quality level, and best viewing window.',
       explainDesc: 'Returns score composition, key constraints, and natural-language explanation.',
-      geocodeDesc: 'Returns location candidates, coordinates, and confidence.'
+      geocodeDesc: 'Returns location candidates, coordinates, and confidence.',
+      applyTitle: 'Apply for an API Token',
+      emailLabel: 'Email',
+      emailPlaceholder: 'name@example.com',
+      countryRegionLabel: 'Country / region',
+      countryRegionPlaceholder: 'Mainland China / Hong Kong / US',
+      nicknameLabel: 'Nickname',
+      nicknamePlaceholder: 'How should we address you?',
+      purposeLabel: 'Use case',
+      purposePlaceholder: 'Describe your use case, call pattern, and whether results will be public',
+      submitApplication: 'Submit application',
+      submitting: 'Submitting...',
+      submitRequired: 'Please complete email, country/region, nickname, and use case.',
+      submitSuccess: 'Application submitted. We will review it before issuing a token.',
+      submitFailed: 'Submission failed. Please try again later.'
     },
     "methodology": {
       "title": "Comment le score est calculé",

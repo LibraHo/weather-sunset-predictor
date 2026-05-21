@@ -5090,6 +5090,70 @@ body.theme-dark {
   padding-left: 10px;
 }
 
+.api-application-card {
+  display: grid;
+  gap: 12px;
+}
+
+.api-application-form {
+  display: grid;
+  gap: 14px;
+}
+
+.api-application-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.api-application-fields label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.api-application-fields input,
+.api-application-fields textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--glass-bg-heavy);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.api-application-purpose {
+  grid-column: 1 / -1;
+}
+
+.api-application-fields textarea {
+  resize: vertical;
+}
+
+.api-application-submit-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.api-application-message {
+  color: var(--color-text-light);
+  font-size: 0.92rem;
+}
+
+.api-application-message.success {
+  color: var(--color-success);
+}
+
+.api-application-message.error {
+  color: var(--color-danger);
+}
+
 .code-box {
   position: relative;
   border: 1px solid var(--glass-border);
@@ -5139,6 +5203,10 @@ body.theme-dark .code-box {
   }
 
   .api-access-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .api-application-fields {
     grid-template-columns: 1fr;
   }
 }
