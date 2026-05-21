@@ -2,7 +2,7 @@
   <view class="field-label">位置</view>
   <view class="input-row">
     <button class="favorite-icon" aria-label="收藏位置" loading="{{favoriteLoading}}" hover-class="button-hover" hover-stay-time="80" bindtap="onFavorite">
-      <view class="star-icon">★</view>
+      <image class="star-icon" src="/assets/icons/favorite-star.svg" mode="aspectFit" aria-hidden="true" />
     </button>
     <view class="location-input-shell">
       <input class="location-input" value="{{value}}" placeholder="请输入城市名称..." placeholder-class="input-placeholder" confirm-type="search" bindinput="onInput" bindconfirm="onConfirm" />
@@ -14,7 +14,7 @@
       </button>
       <view class="location-suggestion-dropdown" wx:if="{{candidates.length}}">
         <view class="location-suggestion-item tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" wx:for="{{candidates}}" wx:key="key" data-index="{{index}}" bindtap="onSelectCandidate">
-          <view class="location-suggestion-pin">📍</view>
+          <image class="location-suggestion-pin" src="/assets/icons/weather-location-pin.svg" mode="aspectFit" aria-hidden="true" />
           <view class="location-suggestion-copy">
             <view class="location-suggestion-name">{{item.name}}</view>
             <view class="location-suggestion-meta">{{item.meta}}</view>

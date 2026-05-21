@@ -78,7 +78,7 @@
     <button class="footer-refresh-button">刷新</button>
     <view class="footer-source">数据来源：Open-Meteo（GFS + ECMWF）</view>
     <view class="footer-visitor">
-      <text class="footer-visitor-icon">👥</text>
+      <image class="footer-visitor-icon" src="/assets/icons/users.svg" mode="aspectFit" aria-hidden="true" />
       <text>访问人数：</text>
       <text class="footer-visitor-number">{{visitorCountText}}</text>
     </view>
@@ -124,10 +124,11 @@
           <text class="temp-unit">{{weatherPreview.temperatureUnit}}</text>
         </view>
         <view class="weather-wind-main">
-          <text class="weather-wind-glyph">≈</text>
+          <image class="weather-wind-glyph" src="/assets/icons/metric-wind.svg" mode="aspectFit" aria-hidden="true" />
           <text class="weather-wind-speed">{{weatherPreview.windSpeed}}</text>
           <text class="weather-wind-divider"></text>
           <text class="weather-wind-direction-text">{{weatherPreview.windDirection}}</text>
+          <text class="weather-wind-direction-arrow">{{weatherPreview.windDirectionArrow}}</text>
         </view>
       </view>
 
@@ -176,12 +177,12 @@
         <view class="weather-day-option tap-feedback {{weatherDay === item.key ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" wx:for="{{weatherPreview.hourlyView.dayOptions}}" wx:key="key" data-day="{{item.key}}" bindtap="switchWeatherDay">{{item.label}}</view>
       </view>
       <view class="weather-parameter-selector xiake-toggle xiake-toggle-wrap">
-        <view class="weather-param-option tap-feedback {{weatherParameter === 'temp' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-param="temp" bindtap="switchWeatherParameter"><text class="weather-param-icon">℃</text><text class="weather-param-label">温度</text></view>
-        <view class="weather-param-option tap-feedback {{weatherParameter === 'precip' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-param="precip" bindtap="switchWeatherParameter"><text class="weather-param-icon">∿</text><text class="weather-param-label">降水</text></view>
-        <view class="weather-param-option tap-feedback {{weatherParameter === 'humidity' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-param="humidity" bindtap="switchWeatherParameter"><text class="weather-param-icon">◇</text><text class="weather-param-label">湿度</text></view>
-        <view class="weather-param-option tap-feedback {{weatherParameter === 'wind' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-param="wind" bindtap="switchWeatherParameter"><text class="weather-param-icon">≈</text><text class="weather-param-label">风速</text></view>
-        <view class="weather-param-option tap-feedback {{weatherParameter === 'pressure' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-param="pressure" bindtap="switchWeatherParameter"><text class="weather-param-icon">≡</text><text class="weather-param-label">气压</text></view>
-        <view class="weather-param-option tap-feedback {{weatherParameter === 'clouds' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-param="clouds" bindtap="switchWeatherParameter"><text class="weather-param-icon">☁</text><text class="weather-param-label">云量</text></view>
+        <view class="weather-param-option tap-feedback {{weatherParameter === 'temp' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-param="temp" bindtap="switchWeatherParameter"><image class="weather-param-icon" src="/assets/icons/weather-param-temperature.svg" mode="aspectFit" aria-hidden="true" /><text class="weather-param-label">温度</text></view>
+        <view class="weather-param-option tap-feedback {{weatherParameter === 'precip' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-param="precip" bindtap="switchWeatherParameter"><image class="weather-param-icon" src="/assets/icons/weather-param-precipitation.svg" mode="aspectFit" aria-hidden="true" /><text class="weather-param-label">降水</text></view>
+        <view class="weather-param-option tap-feedback {{weatherParameter === 'humidity' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-param="humidity" bindtap="switchWeatherParameter"><image class="weather-param-icon" src="/assets/icons/weather-param-humidity.svg" mode="aspectFit" aria-hidden="true" /><text class="weather-param-label">湿度</text></view>
+        <view class="weather-param-option tap-feedback {{weatherParameter === 'wind' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-param="wind" bindtap="switchWeatherParameter"><image class="weather-param-icon" src="/assets/icons/weather-param-wind.svg" mode="aspectFit" aria-hidden="true" /><text class="weather-param-label">风速</text></view>
+        <view class="weather-param-option tap-feedback {{weatherParameter === 'pressure' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-param="pressure" bindtap="switchWeatherParameter"><image class="weather-param-icon" src="/assets/icons/weather-param-pressure.svg" mode="aspectFit" aria-hidden="true" /><text class="weather-param-label">气压</text></view>
+        <view class="weather-param-option tap-feedback {{weatherParameter === 'clouds' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-param="clouds" bindtap="switchWeatherParameter"><image class="weather-param-icon" src="/assets/icons/weather-param-cloud.svg" mode="aspectFit" aria-hidden="true" /><text class="weather-param-label">云量</text></view>
       </view>
       <view class="weather-chart-panel">
         <view class="weather-chart-title">{{weatherPreview.hourlyView.label}}趋势 ({{weatherPreview.hourlyView.unit}})</view>
@@ -222,8 +223,11 @@
       <view>
         <view class="section-title prediction-panel-title">朝晚霞预测</view>
       </view>
-      <view class="prediction-share-menu prediction-share-menu-line" aria-hidden="true">
-        <image class="share-icon-image" src="/assets/icons/share-upload.svg" mode="aspectFit" aria-hidden="true" />
+      <view class="prediction-share-menu prediction-share-menu-line">
+        <button class="prediction-share-btn prediction-nav-share" open-type="share" aria-label="分享预测" hover-class="tap-feedback-hover" hover-stay-time="80">
+          <image wx:if="{{resolvedThemeMode === 'dark'}}" class="share-icon-image" src="/assets/icons/share-upload.svg" mode="aspectFit" aria-hidden="true" />
+          <image wx:else class="share-icon-image" src="/assets/icons/share-upload-amber.svg" mode="aspectFit" aria-hidden="true" />
+        </button>
       </view>
     </view>
     <view class="prediction-toggle-bar">
