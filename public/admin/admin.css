@@ -136,6 +136,21 @@
   max-height: 520px;
 }
 
+.visitor-ip-table {
+  min-width: 420px;
+}
+
+.visitor-record-table {
+  min-width: 720px;
+}
+
+.visitor-path-cell {
+  max-width: 260px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .admin-panel {
   display: flex;
   flex-direction: column;
@@ -279,6 +294,10 @@
   gap: var(--spacing-lg);
 }
 
+.two-col > * {
+  min-width: 0;
+}
+
 /* 通用卡片 */
 .admin-card {
   background: var(--color-card-bg);
@@ -286,6 +305,7 @@
   padding: var(--spacing-lg);
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--color-border);
+  min-width: 0;
 }
 
 .danger-zone {
@@ -483,9 +503,11 @@ body.theme-dark .queue-badge-idle {
 /* 表格 */
 .table-wrap {
   max-height: 320px;
-  overflow-y: auto;
+  max-width: 100%;
+  overflow: auto;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
+  -webkit-overflow-scrolling: touch;
 }
 
 .admin-table {

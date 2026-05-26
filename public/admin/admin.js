@@ -274,7 +274,7 @@ async function loadVisitorRecords() {
     const recordBody = document.getElementById('visitorRecordBody');
     if (data.records?.length) {
       recordBody.innerHTML = data.records.map(item =>
-        '<tr><td>' + escapeHtml(item.time || '--') + '</td><td>' + escapeHtml(item.ip || '--') + '</td><td>' + escapeHtml(item.location || '--') + '</td><td>' + escapeHtml(item.method || '--') + '</td><td>' + escapeHtml(item.path || '--') + '</td></tr>'
+        '<tr><td>' + escapeHtml(item.time || '--') + '</td><td>' + escapeHtml(item.ip || '--') + '</td><td>' + escapeHtml(item.location || '--') + '</td><td>' + escapeHtml(item.method || '--') + '</td><td class="visitor-path-cell">' + escapeHtml(item.path || '--') + '</td></tr>'
       ).join('');
     } else {
       recordBody.innerHTML = '<tr><td colspan="5" class="empty">暂无访问明细</td></tr>';
