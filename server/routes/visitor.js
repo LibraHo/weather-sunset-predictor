@@ -14,27 +14,62 @@ const router = express.Router();
 const VISITOR_DATA_DIR = process.env.XIAKE_DATA_DIR || path.join(os.homedir(), '.xiake');
 const VISITOR_COUNT_FILE = process.env.VISITOR_COUNT_FILE || path.join(VISITOR_DATA_DIR, 'visitor-count.json');
 
-let memCount = loadCount();
+let memState = loadState();
 
 function ensureDataDir() {
   fs.mkdirSync(path.dirname(VISITOR_COUNT_FILE), { recursive: true });
 }
 
-function parseCount(raw) {
-  const data = JSON.parse(raw);
-  const count = Number(data?.count ?? data?.visitorCount ?? 0);
+function normalizeStoredCount(value) {
+  const count = Number(value);
   return Number.isFinite(count) && count >= 0 ? Math.floor(count) : 0;
 }
 
-function loadCount() {
+function normalizeClientSource(value = '') {
+  const source = String(value || '').trim().toLowerCase();
+  if (['miniprogram', 'miniapp', 'wechat-miniprogram', 'wechat_miniprogram', 'wx', 'weapp'].includes(source)) {
+    return 'miniprogram';
+  }
+  if (['web', 'browser', 'h5', 'website'].includes(source)) return 'web';
+  return 'unknown';
+}
+
+function sanitizeClientBreakdown(byClient = {}) {
+  const result = {};
+  for (const [key, value] of Object.entries(byClient || {})) {
+    const client = normalizeClientSource(key);
+    if (client === 'unknown') continue;
+    const count = normalizeStoredCount(value);
+    if (count > 0) result[client] = (result[client] || 0) + count;
+  }
+  return result;
+}
+
+function parseState(raw) {
+  const data = JSON.parse(raw);
+  return {
+    count: normalizeStoredCount(data?.count ?? data?.visitorCount),
+    byClient: sanitizeClientBreakdown(data?.byClient)
+  };
+}
+
+function parseCount(raw) {
+  return parseState(raw).count;
+}
+
+function loadState() {
   try {
     if (fs.existsSync(VISITOR_COUNT_FILE)) {
-      return parseCount(fs.readFileSync(VISITOR_COUNT_FILE, 'utf8'));
+      return parseState(fs.readFileSync(VISITOR_COUNT_FILE, 'utf8'));
     }
   } catch (error) {
     console.warn('[VisitorCounter] 读取访客计数失败，临时使用内存计数:', error.message);
   }
-  return 0;
+  return { count: 0, byClient: {} };
+}
+
+function loadCount() {
+  return loadState().count;
 }
 
 function isBotUserAgent(userAgent = '') {
@@ -46,10 +81,14 @@ function isCountableVisit(req) {
   return !isBotUserAgent(userAgent);
 }
 
-function saveCount(count) {
+function saveState(state) {
   try {
     ensureDataDir();
-    const payload = JSON.stringify({ count, updatedAt: new Date().toISOString() }, null, 2);
+    const payload = JSON.stringify({
+      count: normalizeStoredCount(state?.count),
+      byClient: sanitizeClientBreakdown(state?.byClient),
+      updatedAt: new Date().toISOString()
+    }, null, 2);
     const tmpFile = `${VISITOR_COUNT_FILE}.tmp`;
     fs.writeFileSync(tmpFile, payload);
     fs.renameSync(tmpFile, VISITOR_COUNT_FILE);
@@ -58,11 +97,34 @@ function saveCount(count) {
   }
 }
 
+function saveCount(count) {
+  saveState({ count, byClient: {} });
+}
+
+function getRequestClient(req) {
+  return normalizeClientSource(
+    req.get?.('x-xiake-client')
+    || req.headers?.['x-xiake-client']
+    || req.body?.client
+    || req.body?.source
+    || req.query?.client
+    || req.query?.source
+  );
+}
+
+function buildCountResponse(extra = {}) {
+  return {
+    count: memState.count,
+    byClient: { ...memState.byClient },
+    ...extra
+  };
+}
+
 /**
  * GET /api/visitor/count
  */
 router.get('/count', (req, res) => {
-  res.json({ count: memCount });
+  res.json(buildCountResponse());
 });
 
 /**
@@ -70,13 +132,28 @@ router.get('/count', (req, res) => {
  */
 router.post('/count', (req, res) => {
   if (!isCountableVisit(req)) {
-    return res.json({ count: memCount, ignored: true, reason: 'bot_user_agent' });
+    return res.json(buildCountResponse({ ignored: true, reason: 'bot_user_agent' }));
   }
 
-  memCount += 1;
-  saveCount(memCount);
-  res.json({ count: memCount });
+  const client = getRequestClient(req);
+  memState.count += 1;
+  if (client !== 'unknown') {
+    memState.byClient[client] = (memState.byClient[client] || 0) + 1;
+  }
+  saveState(memState);
+  res.json(buildCountResponse({ client }));
 });
 
 module.exports = router;
-module.exports._test = { parseCount, loadCount, saveCount, isBotUserAgent, isCountableVisit, VISITOR_COUNT_FILE };
+module.exports._test = {
+  parseCount,
+  parseState,
+  loadCount,
+  loadState,
+  saveCount,
+  saveState,
+  normalizeClientSource,
+  isBotUserAgent,
+  isCountableVisit,
+  VISITOR_COUNT_FILE
+};

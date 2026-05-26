@@ -610,6 +610,137 @@ body.theme-dark .admin-table tr:hover td {
   gap: var(--spacing-sm);
 }
 
+/* 数据管线 */
+.pipeline-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.pipeline-summary-item {
+  min-height: 78px;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  background: var(--theme-card-bg, var(--color-card-bg));
+  border: 1px solid var(--theme-card-border, var(--color-border));
+  box-shadow: var(--shadow-sm);
+}
+
+.pipeline-summary-item span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--theme-text-muted, var(--color-text-light));
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.pipeline-summary-item strong {
+  display: block;
+  color: var(--theme-text, var(--color-text));
+  font-size: 0.95rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.pipeline-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.pipeline-stat {
+  min-height: 72px;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  background: var(--theme-panel-soft, var(--color-bg));
+  border: 1px solid var(--theme-card-border, var(--color-border));
+}
+
+.pipeline-stat span {
+  display: block;
+  color: var(--theme-text-muted, var(--color-text-light));
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.pipeline-stat strong {
+  display: block;
+  margin-top: 5px;
+  color: var(--theme-text, var(--color-text));
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.pipeline-bbox-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.pipeline-bbox-grid label,
+#pipelineConfigForm label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--theme-text-muted, var(--color-text-light));
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+#pipelineConfigForm .form-row.two-inputs label {
+  flex: 1;
+}
+
+.pipeline-bbox-grid input,
+#pipelineConfigForm select,
+.pipeline-run-row input {
+  min-height: 38px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--theme-card-border, var(--color-border));
+  background: var(--theme-panel-soft, var(--color-card-bg));
+  color: var(--theme-text, var(--color-text));
+}
+
+.pipeline-switch-row,
+.pipeline-run-row,
+.pipeline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.pipeline-danger-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.pipeline-run-row input {
+  flex: 1 1 260px;
+}
+
+.pipeline-reasons {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pipeline-reasons span {
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: var(--theme-panel-soft, var(--color-bg));
+  border: 1px solid var(--theme-card-border, var(--color-border));
+  color: var(--theme-text-muted, var(--color-text-light));
+  font-size: 0.78rem;
+}
+
+.pipeline-table-wrap {
+  max-height: 420px;
+}
+
 /* 上传表单 */
 .upload-form {
   display: flex;
@@ -861,6 +992,14 @@ body.theme-dark .admin-table tr:hover td {
 
   .tool-grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .pipeline-bbox-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .pipeline-run-row .btn {
+    flex: 1 1 130px;
   }
 
   .photo-grid {

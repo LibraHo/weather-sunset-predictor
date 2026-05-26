@@ -35,5 +35,38 @@ describe('AccessLogService visitor records', () => {
       location: '内网',
       path: '/admin'
     });
+    expect(result.records[0].client).toBe('web');
+  });
+
+  test('tracks access stats by client source', () => {
+    accessLogService._records = [];
+    accessLogService._daily = {};
+    const reqBase = {
+      path: '/api/prediction/home',
+      method: 'GET',
+      ip: '10.0.0.3',
+      headers: { 'user-agent': 'MicroMessenger/8.0.60' }
+    };
+
+    accessLogService.log({
+      ...reqBase,
+      headers: { ...reqBase.headers, 'x-xiake-client': 'miniprogram' }
+    });
+    accessLogService.log({
+      ...reqBase,
+      ip: '10.0.0.4',
+      headers: { 'user-agent': 'Mozilla/5.0', 'x-xiake-client': 'web' }
+    });
+
+    const stats = accessLogService.getStats();
+
+    expect(stats.today.clients).toEqual({
+      miniprogram: { pv: 1, uv: 1 },
+      web: { pv: 1, uv: 1 }
+    });
+    expect(stats.clientBreakdown).toEqual([
+      { client: 'miniprogram', pv: 1, uv: 1 },
+      { client: 'web', pv: 1, uv: 1 }
+    ]);
   });
 });

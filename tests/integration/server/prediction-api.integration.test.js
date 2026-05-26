@@ -299,4 +299,75 @@ describe('Prediction API Integration', () => {
       expect(res.body.data[0].weatherData.precipitation).toBe(12);
     });
   });
+
+  describe('GET /api/prediction/home', () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    test('returns one authoritative weather and prediction payload for the home surface', async () => {
+      const fetchSpy = jest.spyOn(orchestrator, 'fetchWeatherData').mockResolvedValue({
+        data: [
+          {
+            timestamp: new Date('2026-05-17T00:00:00Z').getTime(),
+            cloudCover: 20,
+            humidity: 45,
+            visibility: 18,
+            lowClouds: 10,
+            midClouds: 20,
+            highClouds: 30,
+            temp: 18,
+            windSpeed: 6,
+            windDirection: 135,
+            pressure: 1008,
+            precipitation: 0,
+            shortwaveRadiation: 200
+          },
+          {
+            timestamp: new Date('2026-05-17T11:23:00Z').getTime(),
+            cloudCover: 55,
+            humidity: 58,
+            visibility: 16,
+            lowClouds: 12,
+            midClouds: 45,
+            highClouds: 60,
+            temp: 24,
+            windSpeed: 8,
+            windDirection: 150,
+            pressure: 1005,
+            precipitation: 0,
+            shortwaveRadiation: 180
+          }
+        ],
+        providerMeta: { name: 'openmeteo', timezone: 'Asia/Shanghai' }
+      });
+
+      const res = await request(app)
+        .get('/api/prediction/home')
+        .query({
+          lat: 39.91,
+          lon: 116.41,
+          date: '2026-05-17',
+          period: 'sunset',
+          days: 1,
+          includeRemoteCloudData: 'false'
+        })
+        .expect(200);
+
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      expect(fetchSpy).toHaveBeenCalledWith(39.91, 116.41, 168, undefined, {});
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.weather.hourly).toHaveLength(2);
+      expect(res.body.data.predictions.current).toHaveProperty('type', 'sunset');
+      expect(res.body.data.predictions.sunrise).toHaveProperty('score');
+      expect(res.body.data.predictions.sunset).toHaveProperty('score');
+      expect(res.body.data.predictions.byDate).toHaveLength(1);
+      expect(res.body.data.request).toEqual(expect.objectContaining({
+        date: '2026-05-17',
+        period: 'sunset',
+        days: 1,
+        includeRemoteCloudData: false
+      }));
+    });
+  });
 });

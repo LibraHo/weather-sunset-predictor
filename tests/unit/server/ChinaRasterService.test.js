@@ -10,6 +10,8 @@ import { jest } from '@jest/globals';
 let chinaRasterService;
 let originalGetCache;
 let originalRefreshIfStale;
+let originalGetBestAvailableCache;
+let originalGetPublicMapCache;
 
 beforeAll(async () => {
   // 先加载 GridScoreService 模块保存原始方法
@@ -17,6 +19,8 @@ beforeAll(async () => {
   const gridService = gridModule.default || gridModule;
   originalGetCache = gridService.getCache;
   originalRefreshIfStale = gridService.refreshIfStale;
+  originalGetBestAvailableCache = gridService.getBestAvailableCache;
+  originalGetPublicMapCache = gridService.getPublicMapCache;
 });
 
 beforeEach(async () => {
@@ -26,6 +30,20 @@ beforeEach(async () => {
 
   gridService.getCache = jest.fn();
   gridService.refreshIfStale = jest.fn().mockResolvedValue(undefined);
+  gridService.getBestAvailableCache = undefined;
+  gridService.getPublicMapCache = jest.fn((period) => {
+    const cache = typeof gridService.getBestAvailableCache === 'function'
+      ? gridService.getBestAvailableCache(period)
+      : gridService.getCache(period);
+    return {
+      mode: 'hybrid',
+      status: cache ? 'ready' : 'not-ready',
+      cache: cache && !cache.source
+        ? { ...cache, source: 'openmeteo-grid-cache', degraded: true, degradedReason: 'GRID_PRODUCT_CACHE_NOT_READY' }
+        : cache,
+      degradedReason: cache ? null : 'GRID_PRODUCT_CACHE_NOT_READY'
+    };
+  });
 
   // 重新加载 ChinaRasterService 以使用新的 mock
   const rasterModule = await import('../../../server/services/ChinaRasterService.js');
@@ -42,6 +60,16 @@ afterEach(async () => {
   const gridService = gridModule.default || gridModule;
   gridService.getCache = originalGetCache;
   gridService.refreshIfStale = originalRefreshIfStale;
+  if (originalGetBestAvailableCache) {
+    gridService.getBestAvailableCache = originalGetBestAvailableCache;
+  } else {
+    delete gridService.getBestAvailableCache;
+  }
+  if (originalGetPublicMapCache) {
+    gridService.getPublicMapCache = originalGetPublicMapCache;
+  } else {
+    delete gridService.getPublicMapCache;
+  }
 });
 
 // 构造假散点数据（覆盖中国几个典型城市）
@@ -89,7 +117,8 @@ describe('ChinaRasterService.getRaster', () => {
     expect(raster).toHaveProperty('values');
     expect(raster).toHaveProperty('meta');
     expect(raster.meta.interpolation).toBe('idw');
-    expect(raster.meta.source).toBe('east-asia-spots-cache');
+    expect(raster.meta.source).toBe('openmeteo-grid-cache');
+    expect(raster.meta.degraded).toBe(true);
     expect(raster.meta.sourcePoints).toBe(10);
   });
 
@@ -174,6 +203,11 @@ describe('ChinaRasterService.getRaster', () => {
   test('缓存 TTL 基于生成时间而不是天气数据 updatedAt', async () => {
     const mockGridService = await getMockGridService();
     mockGridService.getCache.mockReturnValue(makeMockCache({ updatedAt: '2000-01-01T00:00:00.000Z' }));
+    mockGridService.getBestAvailableCache = jest.fn().mockReturnValue(makeMockCache({
+      source: 'grid-product-cache',
+      degraded: false,
+      updatedAt: '2000-01-01T00:00:00.000Z'
+    }));
 
     const first = await chinaRasterService.getRaster('sunset', 0.5);
     const second = await chinaRasterService.getRaster('sunset', 0.5);
@@ -184,7 +218,8 @@ describe('ChinaRasterService.getRaster', () => {
     expect(first.generatedAt).not.toBe(first.updatedAt);
     expect(first._cachedAt).toEqual(expect.any(Number));
     expect(mockGridService.refreshIfStale).not.toHaveBeenCalled();
-    expect(mockGridService.getCache).toHaveBeenCalledTimes(1);
+    expect(mockGridService.getBestAvailableCache).toHaveBeenCalledTimes(1);
+    expect(mockGridService.getCache).not.toHaveBeenCalled();
   });
 
   test('getRaster only reads existing grid cache and never triggers backend refresh', async () => {
@@ -214,6 +249,11 @@ describe('ChinaRasterService.getRaster', () => {
     mockGridService.getCache.mockReturnValue(makeMockCache());
 
     // 第一次调用
+    mockGridService.getBestAvailableCache = jest.fn().mockReturnValue(makeMockCache({
+      source: 'grid-product-cache',
+      degraded: false,
+      updatedAt: '2026-05-26T12:00:00.000Z'
+    }));
     await chinaRasterService.getRaster('sunset', 0.5);
     const firstCallCount = mockGridService.getCache.mock.calls.length;
 
@@ -223,5 +263,47 @@ describe('ChinaRasterService.getRaster', () => {
 
     // 缓存命中不应再调用 getCache
     expect(secondCallCount).toBe(firstCallCount);
+  });
+
+  test('public raster is cache-first and does not trigger grid refresh when pipeline cache is available', async () => {
+    const mockGridService = await getMockGridService();
+    mockGridService.getBestAvailableCache = jest.fn().mockReturnValue({
+      ...makeMockCache(),
+      source: 'grid-product-cache',
+      degraded: false
+    });
+    mockGridService.getCache.mockReturnValue(null);
+
+    const raster = await chinaRasterService.getRaster('sunset', 0.5);
+
+    expect(raster.meta.source).toBe('grid-product-cache');
+    expect(mockGridService.getBestAvailableCache).toHaveBeenCalledWith('sunset');
+    expect(mockGridService.refreshIfStale).not.toHaveBeenCalled();
+  });
+
+  test('degraded raster cache is regenerated when pipeline cache becomes ready', async () => {
+    const mockGridService = await getMockGridService();
+    mockGridService.getBestAvailableCache = jest.fn()
+      .mockReturnValueOnce(makeMockCache({
+        source: 'openmeteo-grid-cache',
+        degraded: true,
+        degradedReason: 'GRID_PRODUCT_CACHE_NOT_READY',
+        updatedAt: '2026-05-26T12:00:00.000Z'
+      }))
+      .mockReturnValueOnce(makeMockCache({
+        source: 'grid-product-cache',
+        degraded: false,
+        updatedAt: '2026-05-26T12:05:00.000Z'
+      }));
+
+    const first = await chinaRasterService.getRaster('sunset', 0.5);
+    const second = await chinaRasterService.getRaster('sunset', 0.5);
+
+    expect(first.meta.source).toBe('openmeteo-grid-cache');
+    expect(first.meta.degraded).toBe(true);
+    expect(second).not.toBe(first);
+    expect(second.meta.source).toBe('grid-product-cache');
+    expect(second.meta.degraded).toBe(false);
+    expect(mockGridService.getBestAvailableCache).toHaveBeenCalledTimes(2);
   });
 });

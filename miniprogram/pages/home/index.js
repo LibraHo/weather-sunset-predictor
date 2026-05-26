@@ -1,5 +1,5 @@
 import { reverseGeocode, searchLocations } from '../../services/geocoding.js';
-import { getEnhancedPrediction, getEnhancedPredictionBatch, getWeatherForecast } from '../../services/prediction.js';
+import { getEnhancedPrediction, getEnhancedPredictionBatch, getHomeGateway, getWeatherForecast } from '../../services/prediction.js';
 import { addFavorite, addRecentLocation, listRecentLocations } from '../../services/user.js';
 import { formatVisitorCount, incrementVisitorCount } from '../../services/visitor.js';
 import { applyPageSettings, readAppSettings, saveAppSettings as persistAppSettings } from '../../utils/app-settings.js';
@@ -457,6 +457,18 @@ Page({
       this.currentPredictionQuery = query;
       this.predictionPreviewPromises = {};
       this.setSearchLoadingStep('正在读取基础天气', 58, '先展示温度、风、湿度、能见度、气压和降水');
+      const gatewayPromise = this.callHomeGateway(query)
+        .then(data => ({ data }))
+        .catch(error => ({ error }));
+      const earlyGateway = await Promise.race([
+        gatewayPromise,
+        new Promise(resolve => setTimeout(() => resolve(null), 900))
+      ]);
+      if (earlyGateway?.data) {
+        this.applyUnifiedHomeGatewayResult(earlyGateway.data, query);
+        return;
+      }
+
       let weather = null;
       try {
         weather = await this.callWeatherForecast(query);
@@ -474,14 +486,24 @@ Page({
       } catch (weatherError) {
         this.setSearchLoadingStep('正在计算霞光评分', 72, '基础天气暂未返回，继续读取综合预测');
       }
-      const predictionCards = await this.callPredictionCardBatch(query);
-      const prediction = predictionCards[query.period] || await this.prefetchPredictionPreviewPeriod(query);
+      const gatewayResult = await gatewayPromise;
+      let predictionCards;
+      let prediction;
+      if (gatewayResult?.data) {
+        predictionCards = gatewayResult.data.predictionCards;
+        prediction = gatewayResult.data.prediction;
+        weather = gatewayResult.data.weather || weather;
+      } else {
+        predictionCards = await this.callPredictionCardBatch(query);
+        prediction = predictionCards[query.period] || await this.prefetchPredictionPreviewPeriod(query);
+      }
       this.setSearchLoadingStep('正在整理天气卡片', 92, '准备天气面板与云况雷达');
       app.rememberQuery(query);
       this.recordRecentLocation(query);
       app.saveLatestPrediction(prediction);
 
       this.setData({
+        weatherPreview: buildWeatherPreview({ ...weather, location: query.locationName }),
         ...buildHomePredictionSurface(prediction, query),
         predictionPeriodCards: predictionCards,
         predictionPreviewLoading: false,
@@ -693,6 +715,53 @@ Page({
       lat: query.coordinate.lat,
       lon: query.coordinate.lon,
       hours: 168
+    });
+  },
+
+  async callHomeGateway(query) {
+    const date = resolvePredictionDate(query.day);
+    const gateway = await getHomeGateway({
+      lat: query.coordinate.lat,
+      lon: query.coordinate.lon,
+      date,
+      period: query.period,
+      days: 3,
+      includeRemoteCloudData: true
+    });
+    const cards = {};
+    for (const period of ['sunrise', 'sunset']) {
+      const prediction = gateway.predictionCards?.[period];
+      if (prediction) {
+        cards[period] = compactPredictionPreviewPayload(normalizePrediction(prediction, { ...query, period }));
+      }
+    }
+    const prediction = cards[query.period] || cards.sunset || cards.sunrise;
+    if (!prediction) {
+      throw new Error('UNIFIED_GATEWAY_EMPTY_PREDICTION');
+    }
+    return {
+      gateway,
+      weather: gateway.weather,
+      prediction,
+      predictionCards: cards
+    };
+  },
+
+  applyUnifiedHomeGatewayResult(unified, query) {
+    app.rememberQuery(query);
+    this.recordRecentLocation(query);
+    app.saveLatestPrediction(unified.prediction);
+
+    this.setData({
+      weatherPreview: buildWeatherPreview({ ...unified.weather, location: query.locationName }),
+      predictionPreviewLoading: false,
+      predictionPeriodCards: unified.predictionCards,
+      ...buildHomePredictionSurface(unified.prediction, query),
+      weatherView: 'overview',
+      weatherDay: query.day,
+      weatherParameter: 'temp'
+    }, () => {
+      this.paintPredictionRadarCloudField();
     });
   },
 

@@ -37,6 +37,34 @@ const IDW_OPTIONS = {
   minNeighbors: 3
 };
 
+function getSpotsCache(period) {
+  if (typeof gridService.getPublicMapCache === 'function') {
+    const result = gridService.getPublicMapCache(period);
+    if (result.cache) return result.cache;
+    return {
+      _notReady: true,
+      mode: result.mode || null,
+      status: result.status || 'not-ready',
+      degradedReason: result.degradedReason || null,
+      gridPoints: []
+    };
+  }
+  return typeof gridService.getBestAvailableCache === 'function'
+    ? gridService.getBestAvailableCache(period)
+    : gridService.getCache(period);
+}
+
+function getSourceSignature(spotsCache) {
+  if (!spotsCache) return 'missing';
+  return [
+    spotsCache.source || 'unknown',
+    spotsCache.updatedAt || '',
+    spotsCache.degraded === true ? 'degraded' : 'ready',
+    spotsCache.degradedReason || '',
+    Array.isArray(spotsCache.gridPoints) ? spotsCache.gridPoints.length : 0
+  ].join('|');
+}
+
 class ChinaRasterService {
   constructor() {
     this._cache = {
@@ -70,17 +98,36 @@ class ChinaRasterService {
 
     // 先检查本地缓存：TTL 必须基于服务端生成时间，而不是天气数据 updatedAt
     // updatedAt 是预报数据时间，可能来自昨晚；若用它计算 age，会导致缓存永远过期，接口每次重新 IDW 插值。
+    let spotsCache = null;
     const resolutionKey = this._getResolutionKey(safeRes);
     const cached = this._cache[safePeriod]?.[resolutionKey];
     if (cached && cached.resolution === safeRes && cached._cachedAt) {
       const age = Date.now() - cached._cachedAt;
       if (age < CACHE_TTL_MS) {
-        return cached;
+        if (cached.meta?.degraded !== true) {
+          return cached;
+        }
+
+        spotsCache = getSpotsCache(safePeriod);
+        if (getSourceSignature(spotsCache) === cached._sourceSignature) {
+          return cached;
+        }
       }
     }
 
-    // Public map requests are cache-only; backend refresh jobs update the grid and warm this raster cache.
-    const spotsCache = gridService.getCache(safePeriod);
+    // Public map reads are cache-first. They must not start Open-Meteo refreshes.
+    if (!spotsCache) {
+      spotsCache = getSpotsCache(safePeriod);
+    }
+
+    if (spotsCache?._notReady) {
+      const err = new Error(spotsCache.status === 'paused' ? 'data pipeline is paused' : '散点数据尚未就绪，请稍后重试');
+      err.code = spotsCache.status === 'paused' ? 'DATA_PIPELINE_PAUSED' : 'RASTER_NOT_READY';
+      err.mode = spotsCache.mode || null;
+      err.status = spotsCache.status || 'not-ready';
+      err.degradedReason = spotsCache.degradedReason || null;
+      throw err;
+    }
 
     if (!spotsCache || !spotsCache.gridPoints || spotsCache.gridPoints.length === 0) {
       throw new Error('散点数据尚未就绪，请稍后重试');
@@ -126,13 +173,16 @@ class ChinaRasterService {
       noData: NO_DATA_VALUE,
       values: maskedValues,
       _cachedAt: Date.now(),
+      _sourceSignature: getSourceSignature(spotsCache),
       meta: {
         interpolation: 'idw',
         idwPower: IDW_OPTIONS.power,
         maxRadiusKm: IDW_OPTIONS.maxRadiusKm,
         minNeighbors: IDW_OPTIONS.minNeighbors,
         sourcePoints: points.length,
-        source: 'east-asia-spots-cache'
+        source: spotsCache.source || 'east-asia-spots-cache',
+        degraded: spotsCache.degraded === true,
+        degradedReason: spotsCache.degradedReason || null
       }
     };
 

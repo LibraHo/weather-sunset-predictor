@@ -1,7 +1,11 @@
 import { request } from './api.js';
 
 export async function incrementVisitorCount() {
-  const response = await request('/api/visitor/count', { method: 'POST' });
+  const response = await request('/api/visitor/count', {
+    method: 'POST',
+    data: { client: 'miniprogram' },
+    header: { 'X-Xiake-Client': 'miniprogram' }
+  });
   return normalizeVisitorCount(response);
 }
 

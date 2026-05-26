@@ -1,0 +1,147 @@
+import { createRequire } from 'module';
+import { jest } from '@jest/globals';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+import express from 'express';
+import { TextDecoder, TextEncoder } from 'util';
+
+const require = createRequire(import.meta.url);
+
+let createDataPipelineRouter;
+let DataPipelineConfigService;
+let DataPipelineRunLogService;
+let request;
+
+beforeAll(async () => {
+  global.TextEncoder = TextEncoder;
+  global.TextDecoder = TextDecoder;
+  request = (await import('supertest')).default;
+  const routeMod = await import('../../../server/routes/data-pipeline.js');
+  createDataPipelineRouter = routeMod.createRouter || routeMod.default?.createRouter;
+  const configMod = await import('../../../server/services/DataPipelineConfigService.js');
+  DataPipelineConfigService = configMod.default || configMod;
+  const logMod = await import('../../../server/services/DataPipelineRunLogService.js');
+  DataPipelineRunLogService = logMod.default || logMod;
+});
+
+function makeApp(options = {}) {
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'xiake-pipeline-routes-'));
+  const configService = new DataPipelineConfigService({ dataDir, freeDiskBytes: 20 * 1024 ** 3 });
+  const runLogService = new DataPipelineRunLogService({ dataDir });
+  const workerService = options.workerService;
+  const cleanupService = options.cleanupService === undefined ? {
+    cleanup: jest.fn().mockReturnValue({
+      deletedFiles: ['/tmp/old.grib2'],
+      deletedBytes: 1024,
+      prunedRuns: 0,
+      prunedSteps: 0
+    })
+  } : options.cleanupService;
+  const app = express();
+  app.use(express.json());
+  app.use('/api/admin/data-pipeline', createDataPipelineRouter({ configService, runLogService, cleanupService, workerService }));
+  return { app, cleanupService, dataDir, runLogService };
+}
+
+describe('data pipeline admin routes', () => {
+  test('GET /config returns default GFS+CAMS config', async () => {
+    const { app } = makeApp();
+    const res = await request(app).get('/api/admin/data-pipeline/config').expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.config.mode).toBe('gfs_cams');
+    expect(res.body.config.forecastHours).toBe(48);
+  });
+
+  test('POST /estimate rejects unsafe bbox with stable error code', async () => {
+    const { app } = makeApp();
+    const res = await request(app)
+      .post('/api/admin/data-pipeline/estimate')
+      .send({
+        regionPreset: 'custom_bbox',
+        bbox: { north: 90, south: -90, west: -180, east: 180 },
+        resolution: 0.25,
+        forecastHours: 72
+      })
+      .expect(400);
+
+    expect(res.body.error.code).toBe('DATA_PIPELINE_UNSAFE_CONFIG');
+    expect(res.body.estimate.safe).toBe(false);
+  });
+
+  test('POST /run creates queued run without starting external downloads', async () => {
+    const { app } = makeApp();
+    const res = await request(app)
+      .post('/api/admin/data-pipeline/run')
+      .send({ reason: 'manual-test' })
+      .expect(202);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.run.status).toBe('queued');
+    expect(res.body.run.config.mode).toBe('gfs_cams');
+  });
+
+  test('POST /run with dryRun executes the local fixture worker immediately', async () => {
+    const workerService = {
+      runOnce: jest.fn().mockResolvedValue({
+        status: 'completed',
+        degraded: false,
+        run: { id: 'run_fixture', status: 'completed' },
+        products: [{ source: 'gfs' }, { source: 'cams' }],
+        failedSteps: []
+      })
+    };
+    const { app } = makeApp({ workerService });
+
+    const res = await request(app)
+      .post('/api/admin/data-pipeline/run')
+      .send({ reason: 'dry-run-test', dryRun: true })
+      .expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.run.status).toBe('completed');
+    expect(res.body.products).toHaveLength(2);
+    expect(workerService.runOnce).toHaveBeenCalledWith(expect.objectContaining({
+      reason: 'dry-run-test',
+      dryRun: true
+    }));
+  });
+
+  test('POST /cleanup deletes files immediately and records completed cleanup step', async () => {
+    const { app, cleanupService } = makeApp();
+    const res = await request(app)
+      .post('/api/admin/data-pipeline/cleanup')
+      .expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.run.status).toBe('completed');
+    expect(res.body.step.status).toBe('completed');
+    expect(res.body.cleanup.deletedFiles).toEqual(['/tmp/old.grib2']);
+    expect(res.body.cleanup.deletedBytes).toBe(1024);
+    expect(cleanupService.cleanup).toHaveBeenCalledWith(expect.objectContaining({
+      deleteRawAfterMinutes: 60,
+      deleteTmpAfterHours: 3,
+      keepCacheDays: 3,
+      keepTileDays: 3,
+      keepLogDays: 7
+    }));
+  });
+
+  test('POST /cleanup uses the configured pipeline data directory by default', async () => {
+    const { app, dataDir } = makeApp({ cleanupService: null });
+    const oldRaw = path.join(dataDir, 'data', 'raw', 'gfs', 'old.grib2');
+    fs.mkdirSync(path.dirname(oldRaw), { recursive: true });
+    fs.writeFileSync(oldRaw, 'old', 'utf8');
+    const oldTime = new Date('2026-05-26T00:00:00Z');
+    fs.utimesSync(oldRaw, oldTime, oldTime);
+
+    const res = await request(app)
+      .post('/api/admin/data-pipeline/cleanup')
+      .expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.cleanup.deletedFiles).toContain(oldRaw);
+    expect(fs.existsSync(oldRaw)).toBe(false);
+  });
+});

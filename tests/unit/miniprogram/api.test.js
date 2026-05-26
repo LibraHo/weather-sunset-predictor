@@ -21,7 +21,10 @@ describe('miniprogram services/api', () => {
       method: 'POST',
       data: { a: 1 },
       timeout: 5000,
-      header: expect.objectContaining({ 'X-Session-Token': 'session-1' })
+      header: expect.objectContaining({
+        'X-Session-Token': 'session-1',
+        'X-Xiake-Client': 'miniprogram'
+      })
     }));
   });
 

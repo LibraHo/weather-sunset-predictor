@@ -12,8 +12,9 @@ let activeAdminView = 'dashboard';
 let refreshTimer = null;
 let slowRefreshTimer = null;
 let photoCache = [];
+let dataPipelineConfigCache = null;
 
-const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'ops', 'logs', 'schedule', 'agent', 'photos']);
+const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'ops', 'logs', 'schedule', 'data-pipeline', 'agent', 'photos']);
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
@@ -23,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initPhotoEditForm();
   initTokenForm();
   initTokenEditForm();
+  initDataPipelineForm();
   loadActiveView();
 
   refreshTimer = setInterval(refreshActiveView, 15000);
@@ -56,6 +58,7 @@ async function loadAll() {
     loadVisitorRecords(),
     loadDailyStats(),
     loadSchedule(),
+    loadDataPipeline(),
     loadTokens(),
     loadApplications(),
     loadAuditLogs(),
@@ -144,6 +147,9 @@ async function loadActiveView() {
     case 'schedule':
       await loadSchedule();
       break;
+    case 'data-pipeline':
+      await loadDataPipeline();
+      break;
     case 'agent':
       await Promise.all([loadTokens(), loadApplications(), loadAgentUsageStats(), loadAuditLogs()]);
       break;
@@ -164,6 +170,8 @@ function refreshActiveView() {
     loadVisitorRecords();
   } else if (activeAdminView === 'logs') {
     Promise.all([loadLogSummary(), loadLogs()]);
+  } else if (activeAdminView === 'data-pipeline') {
+    Promise.all([loadDataPipelineStatus(), loadDataPipelineRuns()]);
   }
 }
 
@@ -201,6 +209,7 @@ async function loadAccessStats() {
     }
 
     // 7天趋势图
+    renderClientStats(data.clientBreakdown || []);
     renderAccessTrendChart(data.dailyTrend || []);
   } catch (err) {
     console.error('加载访问统计失败:', err);
@@ -242,6 +251,22 @@ function renderAccessTrendChart(dailyTrend) {
   });
 }
 
+function renderClientStats(rows = []) {
+  const tbody = document.getElementById('clientStatsBody');
+  if (!tbody) return;
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="3" class="empty">暂无客户端数据</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map((item) => `
+    <tr>
+      <td>${escapeHtml(formatClientLabel(item.client))}</td>
+      <td>${Number(item.pv || 0)}</td>
+      <td>${Number(item.uv || 0)}</td>
+    </tr>
+  `).join('');
+}
+
 function getBeijingDateInputValue() {
   const now = new Date(Date.now() + 8 * 60 * 60 * 1000);
   const pad = n => String(n).padStart(2, '0');
@@ -274,18 +299,24 @@ async function loadVisitorRecords() {
     const recordBody = document.getElementById('visitorRecordBody');
     if (data.records?.length) {
       recordBody.innerHTML = data.records.map(item =>
-        '<tr><td>' + escapeHtml(item.time || '--') + '</td><td>' + escapeHtml(item.ip || '--') + '</td><td>' + escapeHtml(item.location || '--') + '</td><td>' + escapeHtml(item.method || '--') + '</td><td class="visitor-path-cell">' + escapeHtml(item.path || '--') + '</td></tr>'
+        '<tr><td>' + escapeHtml(item.time || '--') + '</td><td>' + escapeHtml(formatClientLabel(item.client)) + '</td><td>' + escapeHtml(item.ip || '--') + '</td><td>' + escapeHtml(item.location || '--') + '</td><td>' + escapeHtml(item.method || '--') + '</td><td class="visitor-path-cell">' + escapeHtml(item.path || '--') + '</td></tr>'
       ).join('');
     } else {
-      recordBody.innerHTML = '<tr><td colspan="5" class="empty">暂无访问明细</td></tr>';
+      recordBody.innerHTML = '<tr><td colspan="6" class="empty">暂无访问明细</td></tr>';
     }
   } catch (err) {
     console.error('加载访客记录失败:', err);
     const ipBody = document.getElementById('visitorIpBody');
     const recordBody = document.getElementById('visitorRecordBody');
     if (ipBody) ipBody.innerHTML = '<tr><td colspan="3" class="empty">访客 IP 加载失败</td></tr>';
-    if (recordBody) recordBody.innerHTML = '<tr><td colspan="5" class="empty">访问明细加载失败</td></tr>';
+    if (recordBody) recordBody.innerHTML = '<tr><td colspan="6" class="empty">访问明细加载失败</td></tr>';
   }
+}
+
+function formatClientLabel(client) {
+  if (client === 'miniprogram') return '微信小程序';
+  if (client === 'web') return '网页';
+  return client || '--';
 }
 
 // =================== 分享统计 ===================
@@ -673,6 +704,433 @@ async function saveSchedule() {
   }
   msgEl.classList.remove('hidden');
   setTimeout(() => msgEl.classList.add('hidden'), 5000);
+}
+
+// =================== GFS+CAMS 数据管线 ===================
+const DATA_PIPELINE_PRESET_BBOXES = {
+  china: { north: 54, south: 18, west: 73, east: 135 },
+  east_asia: { north: 60, south: 5, west: 70, east: 150 },
+  test_small: { north: 41, south: 39, west: 115, east: 117 }
+};
+
+const DATA_PIPELINE_PRESET_LABELS = {
+  china: '中国',
+  east_asia: '东亚',
+  test_small: '小范围测试',
+  custom_bbox: '自定义 bbox'
+};
+
+const DATA_PIPELINE_MODE_LABELS = {
+  gfs_cams: 'GFS+CAMS',
+  hybrid: 'Hybrid',
+  openmeteo: 'Open-Meteo',
+  cache_only: '仅缓存',
+  paused: '暂停'
+};
+
+async function loadDataPipeline() {
+  await loadDataPipelineConfig();
+  await Promise.all([loadDataPipelineStatus(), loadDataPipelineRuns()]);
+}
+
+async function loadDataPipelineConfig() {
+  try {
+    const res = await fetch('/api/admin/data-pipeline/config', { credentials: 'include' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || '加载配置失败');
+    dataPipelineConfigCache = data.config || null;
+    fillDataPipelineForm(dataPipelineConfigCache);
+    renderDataPipelineEstimate(data.estimate || null);
+  } catch (err) {
+    showMessage('加载数据管线配置失败: ' + err.message, 'error', 'pipelineConfigMsg');
+  }
+}
+
+async function loadDataPipelineStatus() {
+  try {
+    const res = await fetch('/api/admin/data-pipeline/status', { credentials: 'include' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || '加载状态失败');
+    dataPipelineConfigCache = data.config || dataPipelineConfigCache;
+    if (data.config) fillDataPipelineForm(data.config);
+    renderDataPipelineStatus(data);
+    renderDataPipelineEstimate(data.estimate || null);
+  } catch (err) {
+    const el = document.getElementById('pipelineStatusGrid');
+    if (el) el.innerHTML = '<p class="empty">数据管线状态加载失败</p>';
+  }
+}
+
+async function loadDataPipelineRuns() {
+  try {
+    const res = await fetch('/api/admin/data-pipeline/runs?limit=20', { credentials: 'include' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || '加载 runs 失败');
+    renderDataPipelineRuns(data.runs || []);
+  } catch (err) {
+    const tbody = document.getElementById('pipelineRunsBody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="empty">运行记录加载失败</td></tr>';
+  }
+}
+
+function fillDataPipelineForm(config = {}) {
+  const bbox = config.bbox || DATA_PIPELINE_PRESET_BBOXES.china;
+  setInputValue('pipelineMode', config.mode || 'gfs_cams');
+  setInputValue('pipelineRegionPreset', config.regionPreset || 'china');
+  setInputValue('pipelineBboxNorth', bbox.north);
+  setInputValue('pipelineBboxSouth', bbox.south);
+  setInputValue('pipelineBboxWest', bbox.west);
+  setInputValue('pipelineBboxEast', bbox.east);
+  setInputValue('pipelineResolution', config.resolution || 0.5);
+  setInputValue('pipelineForecastHours', config.forecastHours || 48);
+  setCheckedValue('pipelineGfsEnabled', config.sources?.gfs !== false);
+  setCheckedValue('pipelineCamsEnabled', config.sources?.cams !== false);
+  setCheckedValue('pipelineOpenMeteoFallback', config.sources?.openMeteoFallback !== false);
+}
+
+function initDataPipelineForm() {
+  const preset = document.getElementById('pipelineRegionPreset');
+  if (!preset) return;
+  preset.addEventListener('change', () => {
+    const bbox = DATA_PIPELINE_PRESET_BBOXES[preset.value];
+    if (!bbox) return;
+    setInputValue('pipelineBboxNorth', bbox.north);
+    setInputValue('pipelineBboxSouth', bbox.south);
+    setInputValue('pipelineBboxWest', bbox.west);
+    setInputValue('pipelineBboxEast', bbox.east);
+    showMessage('范围已切换，保存前请先估算。', 'success', 'pipelineConfigMsg');
+  });
+}
+
+function collectDataPipelineConfig() {
+  const storagePolicy = dataPipelineConfigCache?.storagePolicy || {};
+  const forecastStepHours = Number(dataPipelineConfigCache?.forecastStepHours || 1);
+  return {
+    ...(dataPipelineConfigCache || {}),
+    mode: getInputValue('pipelineMode') || 'gfs_cams',
+    regionPreset: getInputValue('pipelineRegionPreset') || 'china',
+    bbox: {
+      north: Number(getInputValue('pipelineBboxNorth')),
+      south: Number(getInputValue('pipelineBboxSouth')),
+      west: Number(getInputValue('pipelineBboxWest')),
+      east: Number(getInputValue('pipelineBboxEast'))
+    },
+    resolution: Number(getInputValue('pipelineResolution') || 0.5),
+    forecastHours: Number(getInputValue('pipelineForecastHours') || 48),
+    forecastStepHours,
+    sources: {
+      gfs: Boolean(document.getElementById('pipelineGfsEnabled')?.checked),
+      cams: Boolean(document.getElementById('pipelineCamsEnabled')?.checked),
+      openMeteoFallback: Boolean(document.getElementById('pipelineOpenMeteoFallback')?.checked)
+    },
+    storagePolicy
+  };
+}
+
+async function estimateDataPipeline(options = {}) {
+  try {
+    const payload = collectDataPipelineConfig();
+    const res = await fetch('/api/admin/data-pipeline/estimate', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(() => ({}));
+    renderDataPipelineEstimate(data.estimate || null);
+    if (!options.silent) {
+      showMessage(data.estimate?.safe ? '估算通过，配置在安全阈值内' : (data.error?.message || '估算未通过'), data.estimate?.safe ? 'success' : 'error', 'pipelineConfigMsg');
+    }
+    return { ok: res.ok, data };
+  } catch (err) {
+    if (!options.silent) showMessage('估算失败: ' + err.message, 'error', 'pipelineConfigMsg');
+    return { ok: false, error: err };
+  }
+}
+
+async function saveDataPipelineConfig() {
+  try {
+    const estimateResult = await estimateDataPipeline({ silent: true });
+    if (!estimateResult.ok) {
+      const message = estimateResult.data?.error?.message || estimateResult.error?.message || '估算未通过';
+      showMessage('保存已停止: ' + message, 'error', 'pipelineConfigMsg');
+      return;
+    }
+    const res = await fetch('/api/admin/data-pipeline/config', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(collectDataPipelineConfig())
+    });
+    const data = await res.json().catch(() => ({}));
+    renderDataPipelineEstimate(data.estimate || null);
+    if (!res.ok) throw new Error(data.error?.message || '保存失败');
+    dataPipelineConfigCache = data.config || dataPipelineConfigCache;
+    fillDataPipelineForm(dataPipelineConfigCache);
+    showMessage('数据管线配置已保存', 'success', 'pipelineConfigMsg');
+    await loadDataPipelineStatus();
+  } catch (err) {
+    showMessage('保存失败: ' + err.message, 'error', 'pipelineConfigMsg');
+  }
+}
+
+async function saveDataPipelineConfigWithMode(mode) {
+  const previousMode = getInputValue('pipelineMode') || dataPipelineConfigCache?.mode || 'gfs_cams';
+  setInputValue('pipelineMode', mode);
+  await saveDataPipelineConfig();
+  if (mode === 'paused') return;
+  if (!getInputValue('pipelineMode')) setInputValue('pipelineMode', previousMode);
+}
+
+async function pauseDataPipeline() {
+  if (!confirm('确认暂停数据管线？公共地图仍会读取已有缓存。')) return;
+  await saveDataPipelineConfigWithMode({ mode: 'paused' }.mode);
+}
+
+async function resumeDataPipeline() {
+  const defaultResumePatch = { mode: 'gfs_cams' };
+  const resumePatch = { mode: dataPipelineConfigCache?.mode && dataPipelineConfigCache.mode !== 'paused'
+    ? dataPipelineConfigCache.mode
+    : defaultResumePatch.mode };
+  if (!confirm('确认恢复数据管线？恢复后仍需手动 run 或等待调度。')) return;
+  await saveDataPipelineConfigWithMode(resumePatch.mode);
+}
+
+async function startDataPipelineRun() {
+  if (!confirm('确认启动 GFS+CAMS 数据管线 run？')) return;
+  await postDataPipelineRun('/api/admin/data-pipeline/run', {
+    reason: getInputValue('pipelineRunReason') || 'manual'
+  }, 'pipelineRunMsg');
+}
+
+async function startDataPipelineDryRun() {
+  if (!confirm('确认执行本地 dry-run？会写入一轮小样本 GFS+CAMS 产物和 run 记录，不会访问外部网络。')) return;
+  await postDataPipelineRun('/api/admin/data-pipeline/run', {
+    reason: getInputValue('pipelineRunReason') || 'dry-run',
+    dryRun: true
+  }, 'pipelineRunMsg');
+}
+
+async function retryDataPipelineRun(id) {
+  if (!confirm('确认重试这个数据管线 run？')) return;
+  await postDataPipelineRun(`/api/admin/data-pipeline/runs/${encodeURIComponent(id)}/retry`, {}, 'pipelineRunMsg');
+}
+
+async function cleanupDataPipeline() {
+  if (!confirm('确认触发数据管线 cleanup？')) return;
+  await postDataPipelineRun('/api/admin/data-pipeline/cleanup', {}, 'pipelineRunMsg');
+}
+
+async function cleanupDataPipelineDryRun() {
+  await postDataPipelineRun('/api/admin/data-pipeline/cleanup', { dryRun: true }, 'pipelineRunMsg');
+}
+
+function confirmDataPipelineRollback() {
+  if (!confirm('确认进入 rollback 预案？')) return;
+  if (!confirm('再次确认：当前版本只会记录 rollback 意图，不会改动后端数据。')) return;
+  showMessage('rollback 占位已确认：后端回滚执行器尚未接入。', 'error', 'pipelineRunMsg');
+}
+
+async function postDataPipelineRun(url, payload, targetId) {
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload || {})
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error?.message || '请求失败');
+    showMessage(data.note || `已创建 run: ${data.run?.id || '--'}`, 'success', targetId);
+    await Promise.all([loadDataPipelineStatus(), loadDataPipelineRuns()]);
+  } catch (err) {
+    showMessage('请求失败: ' + err.message, 'error', targetId);
+  }
+}
+
+async function renderDataPipelineRunDetail(id) {
+  try {
+    const res = await fetch(`/api/admin/data-pipeline/runs/${encodeURIComponent(id)}`, { credentials: 'include' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || '加载 run 详情失败');
+    const tbody = document.getElementById('pipelineRunStepsBody');
+    const steps = data.run?.steps || [];
+    if (!steps.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty">暂无步骤记录</td></tr>';
+      return;
+    }
+    tbody.innerHTML = steps.map((step) => `
+      <tr>
+        <td>${escapeHtml(step.type || '-')}</td>
+        <td>${escapeHtml(step.source || '-')}</td>
+        <td>${renderPipelineStatusBadge(step.status)}</td>
+        <td>${step.forecastHour == null ? '-' : 'f' + String(step.forecastHour).padStart(3, '0')}</td>
+        <td>${formatBytes(step.bytesDownloaded || 0)}</td>
+        <td class="status-err" title="${escapeHtml(step.message || '')}">${escapeHtml(step.errorCode || step.message || '-')}</td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    const tbody = document.getElementById('pipelineRunStepsBody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="empty">Run 详情加载失败</td></tr>';
+  }
+}
+
+function renderDataPipelineStatus(data = {}) {
+  const el = document.getElementById('pipelineStatusGrid');
+  if (!el) return;
+  const current = data.currentRun || null;
+  const latest = data.latestSuccessfulRun || null;
+  const today = data.today || {};
+  const config = data.config || {};
+  renderDataPipelineSummary(data);
+  el.innerHTML = `
+    <div class="pipeline-stat"><span>方案</span><strong>${escapeHtml(config.mode || '--')}</strong></div>
+    <div class="pipeline-stat"><span>范围</span><strong>${escapeHtml(config.regionPreset || '--')}</strong></div>
+    <div class="pipeline-stat"><span>当前 run</span><strong>${current ? renderPipelineStatusBadge(current.status) : '--'}</strong></div>
+    <div class="pipeline-stat"><span>当前进度</span><strong>${current ? getDataPipelineRunProgress(current) : '--'}</strong></div>
+    <div class="pipeline-stat"><span>今日 runs</span><strong>${Number(today.runCount || 0)} / 失败 ${Number(today.failedRunCount || 0)}</strong></div>
+    <div class="pipeline-stat"><span>今日下载</span><strong>${formatBytes(today.bytesDownloaded || 0)}</strong></div>
+    <div class="pipeline-stat"><span>最近成功</span><strong>${latest ? escapeHtml(formatPhotoDateTime(latest.completedAt) || latest.id) : '--'}</strong></div>
+    <div class="pipeline-stat"><span>失败原因</span><strong>${escapeHtml(formatDataPipelineFailure(current))}</strong></div>
+  `;
+}
+
+function renderDataPipelineSummary(data = {}) {
+  const config = data.config || dataPipelineConfigCache || {};
+  const estimate = data.estimate || {};
+  const current = data.currentRun || null;
+  const latest = data.latestSuccessfulRun || null;
+  const today = data.today || {};
+  const modeLabel = DATA_PIPELINE_MODE_LABELS[config.mode] || config.mode || '--';
+  const presetLabel = DATA_PIPELINE_PRESET_LABELS[config.regionPreset] || config.regionPreset || '--';
+  setTextContent('pipelineModeBadge', modeLabel);
+  setTextContent('pipelineRangeBadge', `${presetLabel} ${formatBbox(config.bbox)}`);
+  setTextContent('pipelineCurrentProgress', current ? `${renderPlainStatus(current.status)} ${getDataPipelineRunProgress(current)}` : '--');
+  setTextContent('pipelineLatestProduct', latest ? `${formatPhotoDateTime(latest.completedAt) || latest.id} ${formatBytes(latest.totalBytesDownloaded || 0)}` : '--');
+  setTextContent('pipelineTodayDownload', formatBytes(today.bytesDownloaded || 0));
+  setTextContent('pipelineFailureReason', formatDataPipelineFailure(current));
+  setTextContent('pipelineDiskBudget', estimate.freeDiskBytes == null
+    ? `${formatBytes(estimate.estimatedRawTmpBytes || 0)} raw/tmp`
+    : `${formatBytes(estimate.freeDiskBytes)} free / ${formatBytes(estimate.estimatedRawTmpBytes || 0)} raw/tmp`);
+  setTextContent('pipelineMemoryBudget', estimate.estimatedResidentMemoryMb
+    ? `${estimate.estimatedResidentMemoryMb} MB worker`
+    : `${config.runtimePolicy?.maxResidentMemoryMb || 512} MB worker`);
+}
+
+function formatDataPipelineFailure(run) {
+  if (!run || run.status !== 'failed') return '--';
+  return run.errorCode || run.message || 'failed';
+}
+
+function renderPlainStatus(status) {
+  if (status === 'completed') return 'completed';
+  if (status === 'failed') return 'failed';
+  return status || 'unknown';
+}
+
+function formatBbox(bbox = {}) {
+  if (![bbox.north, bbox.south, bbox.west, bbox.east].every((v) => Number.isFinite(Number(v)))) return '';
+  return `N${bbox.north}/S${bbox.south}/W${bbox.west}/E${bbox.east}`;
+}
+
+function renderDataPipelineEstimate(estimate) {
+  const el = document.getElementById('pipelineEstimateGrid');
+  if (!el) return;
+  if (!estimate) {
+    el.innerHTML = '<p class="empty">等待估算...</p>';
+    return;
+  }
+  const reasons = Array.isArray(estimate.reasons) && estimate.reasons.length
+    ? `<div class="pipeline-reasons">${estimate.reasons.map((r) => `<span>${escapeHtml(r)}</span>`).join('')}</div>`
+    : '<div class="pipeline-reasons"><span>安全阈值内</span></div>';
+  el.innerHTML = `
+    <div class="pipeline-stat"><span>安全性</span><strong>${estimate.safe ? '<span class="status-ok">安全</span>' : '<span class="status-err">需调整</span>'}</strong></div>
+    <div class="pipeline-stat"><span>网格点</span><strong>${Number(estimate.gridPoints || 0).toLocaleString('zh-CN')}</strong></div>
+    <div class="pipeline-stat"><span>预报步数</span><strong>${Number(estimate.forecastHourCount || 0)}</strong></div>
+    <div class="pipeline-stat"><span>预计下载</span><strong>${formatBytes(estimate.estimatedDownloadBytes || 0)}</strong></div>
+    <div class="pipeline-stat"><span>预计 raw/tmp</span><strong>${formatBytes(estimate.estimatedRawTmpBytes || 0)}</strong></div>
+    <div class="pipeline-stat"><span>bbox 面积</span><strong>${Number(estimate.bboxAreaDeg2 || 0).toLocaleString('zh-CN')} deg²</strong></div>
+    ${reasons}
+  `;
+}
+
+function renderDataPipelineRuns(runs = []) {
+  const tbody = document.getElementById('pipelineRunsBody');
+  if (!tbody) return;
+  if (!runs.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">暂无运行记录</td></tr>';
+    return;
+  }
+  tbody.innerHTML = runs.map((run) => {
+    const progress = getDataPipelineRunProgress(run);
+    const id = escapeHtml(run.id);
+    const jsId = escapeJsString(run.id);
+    return `<tr>
+      <td>${escapeHtml(formatPhotoDateTime(run.createdAt) || '--')}</td>
+      <td>${renderPipelineStatusBadge(run.status)}</td>
+      <td>${escapeHtml(run.reason || '-')}</td>
+      <td>${progress}</td>
+      <td>${formatBytes(run.totalBytesDownloaded || 0)}</td>
+      <td>
+        <button class="btn btn-secondary btn-sm" onclick="renderDataPipelineRunDetail('${jsId}')" title="${id}">详情</button>
+        <button class="btn btn-secondary btn-sm" onclick="retryDataPipelineRun('${jsId}')">重试</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function getDataPipelineRunProgress(run = {}) {
+  const steps = Array.isArray(run.steps) ? run.steps : [];
+  const total = steps.length || Number(run.stepCount || 0);
+  if (!total) return run.status || '--';
+  const completed = steps.length
+    ? steps.filter((step) => step.status === 'completed').length
+    : (run.status === 'completed' ? total : 0);
+  return `${completed}/${total}`;
+}
+
+function renderPipelineStatusBadge(status) {
+  const value = escapeHtml(status || 'unknown');
+  const ok = status === 'completed';
+  const bad = status === 'failed';
+  const cls = ok ? 'status-ok' : (bad ? 'status-err' : 'queue-badge-running');
+  return `<span class="${cls}">${value}</span>`;
+}
+
+function setInputValue(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.value = value == null ? '' : String(value);
+}
+
+function setCheckedValue(id, checked) {
+  const el = document.getElementById(id);
+  if (el) el.checked = Boolean(checked);
+}
+
+function setTextContent(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value == null || value === '' ? '--' : String(value);
+}
+
+function getInputValue(id) {
+  return document.getElementById(id)?.value?.trim() || '';
+}
+
+function escapeJsString(value) {
+  return String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+function formatBytes(value) {
+  const bytes = Number(value) || 0;
+  if (bytes < 1024) return `${bytes} B`;
+  const units = ['KB', 'MB', 'GB', 'TB'];
+  let n = bytes / 1024;
+  let i = 0;
+  while (n >= 1024 && i < units.length - 1) {
+    n /= 1024;
+    i += 1;
+  }
+  return `${n.toFixed(n >= 10 ? 1 : 2)} ${units[i]}`;
 }
 
 // =================== 照片管理 ===================

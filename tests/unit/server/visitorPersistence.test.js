@@ -36,6 +36,23 @@ describe('visitor counter persistence', () => {
     expect(data.updatedAt).toBeTruthy();
   });
 
+  test('parseState preserves legacy totals and client breakdowns', () => {
+    const route = require('../../../server/routes/visitor.js');
+    expect(route._test.parseState('{"count": 42}')).toEqual({ count: 42, byClient: {} });
+    expect(route._test.parseState('{"count": 9,"byClient":{"web":5,"miniprogram":4,"bot":2}}')).toEqual({
+      count: 9,
+      byClient: { web: 5, miniprogram: 4 }
+    });
+  });
+
+  test('normalizeClientSource maps supported visitor clients', () => {
+    const route = require('../../../server/routes/visitor.js');
+    expect(route._test.normalizeClientSource('miniapp')).toBe('miniprogram');
+    expect(route._test.normalizeClientSource('wechat-miniprogram')).toBe('miniprogram');
+    expect(route._test.normalizeClientSource('browser')).toBe('web');
+    expect(route._test.normalizeClientSource('unknown')).toBe('unknown');
+  });
+
   test('parseCount tolerates invalid or legacy shapes', () => {
     const route = require('../../../server/routes/visitor.js');
     expect(route._test.parseCount('{"visitorCount": 9}')).toBe(9);

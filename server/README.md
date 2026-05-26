@@ -146,6 +146,40 @@ curl http://localhost:3000/api/config/map-key
 
 ---
 
+#### GET /api/visitor/count
+
+读取共享访问人数计数。网页端和微信小程序共用同一个持久化文件 `~/.xiake/visitor-count.json`，不会因部署或重启清空。
+
+**响应示例：**
+```json
+{
+  "count": 12345,
+  "byClient": {
+    "web": 10000,
+    "miniprogram": 2345
+  }
+}
+```
+
+#### POST /api/visitor/count
+
+累计一次可计数访问。请求可以通过 `X-Xiake-Client` header 或 JSON body 的 `client` 字段标记来源，支持值：
+
+- `web`
+- `miniprogram`
+
+旧数据只有总数时会按总数兼容读取；新增来源统计只从上线后的新请求开始累加。
+
+**请求示例：**
+```bash
+curl -X POST "http://localhost:3000/api/visitor/count" \
+  -H "Content-Type: application/json" \
+  -H "X-Xiake-Client: miniprogram" \
+  -d '{"client":"miniprogram"}'
+```
+
+---
+
 ### 天气数据
 
 #### GET /api/weather/forecast
@@ -362,6 +396,68 @@ curl "http://localhost:3000/api/firecloud/overlay?lat=39.9042&lon=116.4074&radiu
     { "date": "2026-02-13", "data": [ /* 24 小时天气数据 */ ] },
     { "date": "2026-02-14", "data": [ /* ... */ ] }
   ]
+}
+```
+
+---
+
+#### GET /api/prediction/home
+
+首页统一聚合接口。网页端和微信小程序首页查分都应优先调用该接口，保证同一地点、同一天、同一朝霞/晚霞类型使用同一份后端天气输入和评分结果。
+
+**查询参数：**
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `lat` | 是 | 纬度 |
+| `lon` | 是 | 经度 |
+| `date` | 否 | 本地日期，格式 `YYYY-MM-DD`；默认今天 |
+| `period` / `type` | 否 | 当前主预测类型：`sunrise` / `sunset`；默认 `sunset` |
+| `days` | 否 | 返回天数，范围 1~4；默认 4 |
+| `hours` | 否 | 天气窗口小时数，默认 168 |
+| `includeRemoteCloudData` | 否 | 是否包含远端光路采样，默认 `true` |
+
+**请求示例：**
+```bash
+curl "http://localhost:3000/api/prediction/home?lat=39.9042&lon=116.4074&date=2026-05-26&period=sunset&days=4"
+```
+
+**响应结构：**
+```json
+{
+  "success": true,
+  "request": {
+    "location": { "lat": 39.9042, "lon": 116.4074 },
+    "date": "2026-05-26",
+    "period": "sunset",
+    "days": 4
+  },
+  "weather": {
+    "current": { "temp": 22.6, "cloudCover": 16, "windSpeed": 2 },
+    "hourly": [ /* 168h weather data */ ],
+    "daily": [ /* daily summary */ ]
+  },
+  "predictions": {
+    "current": { "type": "sunset", "score": 72 },
+    "sunrise": { "type": "sunrise", "score": 58 },
+    "sunset": { "type": "sunset", "score": 72 },
+    "list": [ /* sunrise/sunset items for each day */ ],
+    "byDate": {
+      "2026-05-26": {
+        "sunrise": { "score": 58 },
+        "sunset": { "score": 72 }
+      }
+    }
+  },
+  "source": {
+    "api": "prediction-home-gateway",
+    "weather": "closed-loop"
+  },
+  "profile": {
+    "weatherFetchMs": 781.2,
+    "calculateMs": 1.5,
+    "totalMs": 6262.1
+  }
 }
 ```
 

@@ -290,7 +290,14 @@ function setupApiApplicationForm() {
 async function updateVisitorCount() {
   try {
     const proxyUrl = API_CONFIG.proxy.url;
-    const response = await fetch(`${proxyUrl}/api/visitor/count`, { method: 'POST' });
+    const response = await fetch(`${proxyUrl}/api/visitor/count`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Xiake-Client': 'web'
+      },
+      body: JSON.stringify({ client: 'web' })
+    });
     if (response.ok) {
       const data = await response.json();
       const el = document.getElementById('visitor-count');

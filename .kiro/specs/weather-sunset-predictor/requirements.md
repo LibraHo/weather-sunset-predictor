@@ -2,9 +2,9 @@
 
 ## 简介
 
-天气晚霞预测器是一个Web应用程序，通过 **Open-Meteo API** 获取气象数据，分析云层、湿度、能见度等参数，预测火烧云（晚霞/朝霞）出现的可能性和质量。
+天气晚霞预测器是一个Web应用程序，通过 **Open-Meteo API** 获取点位气象数据，并通过 **NOAA GFS + CAMS** 批处理网格数据生成未来 48 小时火烧云地图，分析云层、湿度、能见度、气溶胶等参数，预测火烧云（晚霞/朝霞）出现的可能性和质量。
 
-> ⚠️ **架构说明**：系统已从 Windy API 迁移至 Open-Meteo 作为主数据源。Windy 仅作为地图能力保留（可选）。
+> ⚠️ **架构说明**：单点预测链路仍以 Open-Meteo 为主；地图热力/网格链路升级为 GFS 天气网格 + CAMS 气溶胶网格的后台批处理管线。Windy 仅作为历史/可选能力保留。
 
 ## 术语表
 
@@ -12,10 +12,13 @@
 - **火烧云（Sunset_Glow）**: 日落/日出时分天空中出现的红色或橙色云彩现象
 - **预测质量（Prediction_Quality）**: 火烧云出现可能性的评分，范围0-100
 - **Open-Meteo**: 免费天气数据API（当前主数据源）
+- **GFS**: NOAA Global Forecast System，作为火烧云地图天气网格主输入，提供云量、湿度、降水、辐射、风等字段
+- **CAMS**: Copernicus Atmosphere Monitoring Service，作为火烧云地图气溶胶主输入，提供 AOD、沙尘、黑碳、有机物、PM 等字段
+- **数据管线（Data Pipeline）**: 后台按配置范围、时效和字段白名单分批下载、解析、评分、出图和清理的任务链路
 - **Agent API**: 给大模型、MCP、自动化脚本调用的受控结构化 API，复用同一后端与预测算法
 - **API Token**: 后台生成的调用凭证，只在创建时明文展示，服务端仅保存哈希，用于鉴权、限流、审计和吊销
 
-## 需求列表（1-52）
+## 需求列表（1-53）
 
 ### 需求 1-5：核心功能
 1. **API密钥管理** - 后端统一配置，前端无Key输入
@@ -83,7 +86,7 @@
 41. **API调用日志记录** - 分类记录所有外部API调用（火烧云网格grid/天气查询weather/高德地理编码gaode/高德瓦片gaode_tile），管理后台分Tab展示，含时间/接口/参数/状态/耗时/错误
 42. **定时更新配置** - 管理后台可配置火烧云数据更新策略（多个时间点，每个可选朝霞/晚霞/都更新），配置持久化到 `~/.xiake/schedule-config.json`
 
-### 需求 43-52：开放能力、多端产品与分享地图
+### 需求 43-53：开放能力、多端产品、分享地图与地图数据管线
 43. **气溶胶散射评分** - 接入 Open-Meteo Air Quality API，将 AOD/PM/Dust 纳入评分和展示
 44. **全球地理编码重排** - Open-Meteo/Nominatim/Gaode 合并排序，国际城市别名优化
 45. **受控 Agent API** - Agent forecast/explain/geocode/map-summary、Token、限流、审计和申请流程
@@ -94,6 +97,7 @@
 50. **管理后台信息架构重构** - Dashboard/Ops/Logs/Schedule/Agent/Photos 面板化
 51. **照片分享元数据增强与地图聚合展示** - 照片元数据、后台编辑、EXIF/地理解析、地图聚合
 52. **微信小程序与未来 iOS 产品线** - 原生小程序优先，共用后端 API，未来 iOS 复用契约与设计语言
+53. **GFS+CAMS 火烧云地图数据管线** - 地图从 Open-Meteo 点位扫网格升级为 GFS+CAMS 原始网格批处理，后台可切换、可配置范围、可追溯下载量和处理进度
 
 ### 需求 43：气溶胶/空气颗粒纳入评分与 UI
 43. **气溶胶散射评分** - 接入 Open-Meteo Air Quality API，将 `aerosol_optical_depth`、`dust`、`pm2_5`、`pm10`、`us_aqi/european_aqi` 按小时合并进天气数据。评分上将能见度作为“通透度结果”，气溶胶作为“散射/灰霾原因修正”，避免重复计权。UI 需在实时天气、分数明细、文字分析、算法说明中展示气溶胶/颗粒物影响。无气溶胶数据时必须降级到现有逻辑。
@@ -283,6 +287,57 @@ Acceptance update:
 - Remaining parity work should focus on screenshot-level home/result polish, map/gallery/upload parity, methodology/API/settings surface review, and real-device validation.
 - 所有新增用户可见文案至少维护 `zh-CN`、`zh-TW`、`en-US`，其他语言默认英文 fallback。
 
+## 需求53：GFS+CAMS 火烧云地图数据管线与后台控制台（2026-05-26）
+
+### 背景
+现有火烧云地图使用 Open-Meteo 点位/批量 API 扫网格，受免费额度和点位调用模型限制，只适合 1° 粗网格或小范围刷新。地图产品需要更密的区域覆盖、未来 48 小时连续时效、可追溯任务状态和可控磁盘占用。当前正式部署目标为腾讯云 CVM `SA2.LARGE4`（北京 `ap-beijing-7`，4 核 AMD EPYC 7K62，约 3.6GiB RAM + 2GiB swap，40G 系统盘、约 18G 可用），因此必须使用单 worker、分批、流式、边处理边清理的网格数据管线。
+
+### 产品方向
+- 单点预测继续走现有 `ProviderOrchestrator` 与 Open-Meteo 主链路。
+- 火烧云地图改为内部数据管线：GFS 提供天气网格，CAMS 提供气溶胶网格，统一裁剪、缓存、评分和出瓦片。
+- 后台必须能管理数据源模式、拉取范围、未来时长、分辨率、手动刷新、重试、暂停、清理和回滚。
+- Open-Meteo 不再作为地图网格主抓取源，只保留点位详情、fallback 或对照用途。
+
+### 范围配置
+- 后台必须支持区域预设：`china`、`east_asia`、`test_small`、`custom_bbox`。
+- 自定义 bbox 至少包含 `north/south/west/east`，保存前必须校验经纬度范围、面积上限和格点数上限。
+- 默认配置：`china`、`0.5°`、未来 `48h`、GFS+CAMS、仅保留未来 48-72 小时评分结果。
+- 允许升级到 `0.25°`，但必须经过资源预估；如果预计下载量、格点数、临时文件或剩余磁盘不安全，后台应拒绝启动任务。
+- 任务运行时必须使用同一份配置，不允许下载器、评分器和瓦片服务各自读取不同范围。
+
+### 数据与资源约束
+- GFS 字段白名单第一版至少包含：`TCDC/LCDC/MCDC/HCDC/RH/VIS/APCP/PRATE/PWAT/DSWRF/TMP/UGRD/VGRD`。
+- CAMS 字段白名单第一版至少包含：`total_aerosol_optical_depth_550nm`、`dust_aerosol_optical_depth_550nm`、`black_carbon_aerosol_optical_depth_550nm`、`organic_matter_aerosol_optical_depth_550nm`、`sulphate_aerosol_optical_depth_550nm`、`particulate_matter_10um`。
+- 处理必须按 cycle 和 forecast hour 分批进行：下载一个小批次、解析、评分、写缓存、删除原始文件，再进入下一批次。
+- 网站、小程序和单点预测 API 的可用性优先级高于地图管线；GFS/CAMS 管线不得由用户请求触发，只能由后台手动操作或定时任务启动。
+- 管线默认单 worker，常驻内存预算 512MB、硬上限 768MB，并预留约 2GB 给 Node API、静态站点、小程序接口、系统缓存和数据库/日志写入。
+- 原始 GRIB/NetCDF 文件不得长期保存；处理成功后立即删除，失败时最多保留到后台配置的调试窗口。
+- 默认存储策略：`raw` 最多 1 小时、`tmp` 最多 3 小时、评分缓存 3 天、瓦片 3 天、日志 7 天。
+- 当全盘剩余低于 3GB，或 `raw/tmp` 预计超过 5GB，任务必须暂停并提示清理。
+
+### 后台控制台
+- `/admin` 的运维/数据面板必须展示当前数据源模式：`openmeteo`、`gfs_cams`、`hybrid`、`cache_only`、`paused`。
+- 必须展示最近一次成功产物的来源、cycle、bbox、分辨率、forecast window、生成时间和可用时效范围。
+- 必须展示当前任务阶段：`queued`、`downloading`、`parsing`、`scoring`、`tiling`、`cleanup`、`completed`、`failed`。
+- 必须展示下载与处理追溯：source、cycle、forecast hour、变量、区域、文件大小、耗时、成功/失败、错误原因。
+- 必须展示每日统计：下载次数、下载 MB/GB、处理 forecast hour 数、生成瓦片数、失败次数、重试次数。
+- 管理操作至少包括：手动刷新未来 48h、暂停/恢复、重试失败任务、清理旧缓存、切换数据源模式、回滚到上一个成功 cycle。
+
+### API 与持久化
+- 新增或复用后台 API：`GET /api/admin/data-pipeline/status`、`GET /api/admin/data-pipeline/config`、`POST /api/admin/data-pipeline/config`、`POST /api/admin/data-pipeline/estimate`、`GET /api/admin/data-pipeline/runs`、`GET /api/admin/data-pipeline/runs/:id`、`POST /api/admin/data-pipeline/run`、`POST /api/admin/data-pipeline/runs/:id/retry`、`POST /api/admin/data-pipeline/cleanup`。
+- 配置建议保存到 `~/.xiake/data-pipeline-config.json`；运行记录和步骤记录可先用 JSONL/SQLite，必须可被后台查询。
+- 每次下载、解析、评分、出瓦片、清理都必须先写 step 记录，再执行动作，完成后更新 bytes、耗时和输出路径。
+- 失败记录必须包含 `retryable`、`errorCode`、`message`、`source`、`cycle`、`forecastHour` 和相关路径；不得只在控制台输出。
+
+### 验收标准
+- 腾讯云 `SA2.LARGE4`（3.6GiB RAM、2GiB swap、40G 系统盘且约 18G 可用）环境下，默认中国/0.5°/48h 任务可以完成，不因一次性读取全量 GRIB/NetCDF 导致 OOM 或磁盘打满。
+- 后台可以切换地图数据源模式；切换到 `cache_only` 后地图只读最近成功产物，不再启动外部下载。
+- 后台可以配置拉取范围并看到资源预估；危险配置必须被拒绝且说明原因。
+- 任务进度可追溯到 GFS/CAMS 的每个下载与处理步骤；刷新页面后状态仍可恢复。
+- 原始文件处理后会自动清理；清理动作本身有记录。
+- `/api/heatmap` 与 `/api/tiles` 优先读取 GFS+CAMS 产物；产物缺失时按当前降级策略返回缓存/错误，不重新触发 Open-Meteo 大规模扫点。
+- 自动化测试至少覆盖配置校验、资源预估、状态机、运行日志、清理策略、数据源模式切换和失败重试。
+
 ## 附录：火烧云预测算法原理
 
 ### 评分公式
@@ -327,6 +382,12 @@ finalScore = finalScore × aerosolFactor  // 仅在有气溶胶数据时启用�
 ---
 
 ## 变更摘要
+
+### 2026-05-26
+- **需求53**：新增 GFS+CAMS 火烧云地图数据管线与后台控制台。地图链路从 Open-Meteo 点位扫网格升级为 GFS 天气网格 + CAMS 气溶胶网格批处理；后台支持数据源模式切换、拉取范围管理、资源预估、任务进度、下载量追溯、清理和回滚；默认按腾讯云 `SA2.LARGE4`（4 核、3.6GiB RAM、2GiB swap、40G 系统盘、约 18G 可用）约束设计未来 48 小时地图。
+
+### 2026-05-27
+- **需求53.16-53.18 运维与验收材料**：补充 GFS+CAMS 地图管线的运维口径。后台必须能从 `/admin`、`/api/admin/data-pipeline/status`、`/api/admin/data-pipeline/runs` 和地图接口 metadata 判断当前模式、当前 run/step、今日 GFS/CAMS 下载量、cleanup 释放量，以及地图使用的 `source/cycle/bbox/resolution/sourceMeta`。小资源验收必须先在腾讯云 `SA2.LARGE4` 上用测试小区域跑通，再扩大到中国范围；验收时必须记录峰值内存、swap、raw/tmp 峰值、下载量、耗时和地图溯源。
 
 ### 2026-05-09
 - **需求51**：照片分享元数据增强与地图聚合展示。上传照片新增上传者、地点、拍摄时间、上传时间等字段；上传者可缺省为“网友”；地点可由经纬度反向地理编码自动生成，也可手动输入且不影响经纬度；拍摄时间优先从 EXIF 自动读取，也可手动输入且不影响坐标；上传时间由服务端按北京时间记录与展示；后台照片管理支持编辑上传者、地点、拍摄时间、描述和经纬度，其中上传时间只读不可改；同一地点多张照片参考 Apple 相册地图做聚合/堆叠展示。

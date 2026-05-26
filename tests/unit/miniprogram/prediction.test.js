@@ -4,6 +4,7 @@ import {
   buildThreeDayDates,
   getEnhancedPrediction,
   getEnhancedPredictionBatch,
+  getHomeGateway,
   getThreeDayGlow,
   getWeatherForecast,
   getSurroundingPrediction,
@@ -153,6 +154,75 @@ describe('miniprogram services/prediction', () => {
       lowClouds: 8,
       provider: 'openmeteo'
     });
+  });
+
+  test('getHomeGateway fetches one authoritative home payload', async () => {
+    const wxMock = {
+      request: jest.fn(({ success }) => success({
+        statusCode: 200,
+        data: {
+          success: true,
+          data: {
+            weather: {
+              current: {
+                temp: 22.4,
+                humidity: 62,
+                visibility: 20,
+                windSpeed: 8,
+                windDirection: 135,
+                pressure: 1006,
+                precipitation: 0,
+                cloudCover: 35,
+                highClouds: 60,
+                midClouds: 30,
+                lowClouds: 8
+              },
+              hourly: [],
+              providerMeta: { name: 'openmeteo' }
+            },
+            predictions: {
+              currentPeriod: 'sunset',
+              current: { type: 'sunset', score: 76, weatherData: { visibility: 20, humidity: 62 } },
+              sunrise: { type: 'sunrise', score: 58 },
+              sunset: { type: 'sunset', score: 76 },
+              byDate: [
+                {
+                  date: '2026-05-11',
+                  sunrise: { type: 'sunrise', score: 58 },
+                  sunset: { type: 'sunset', score: 76 }
+                }
+              ]
+            }
+          }
+        }
+      }))
+    };
+    setWxInstance(wxMock);
+    configureApi({ baseUrl: 'https://api.example.com' });
+
+    const result = await getHomeGateway({
+      lat: 39.9,
+      lon: 116.4,
+      date: '2026-05-11',
+      period: 'sunset',
+      days: 3
+    });
+
+    expect(wxMock.request).toHaveBeenCalledWith(expect.objectContaining({
+      url: 'https://api.example.com/api/prediction/home?lat=39.9&lon=116.4&date=2026-05-11&period=sunset&days=3&includeRemoteCloudData=true',
+      method: 'GET',
+      timeout: 30000
+    }));
+    expect(result.weather).toMatchObject({
+      temp: 22.4,
+      humidity: 62,
+      visibility: 20,
+      windSpeed: 8,
+      windDirection: 135
+    });
+    expect(result.predictionCards.sunset).toMatchObject({ type: 'sunset', score: 76 });
+    expect(result.predictionCards.sunrise).toMatchObject({ type: 'sunrise', score: 58 });
+    expect(result.threeDayGlow).toHaveLength(1);
   });
 
   test('getEnhancedPrediction lets the backend derive local sunrise or sunset reference time from the date', async () => {
