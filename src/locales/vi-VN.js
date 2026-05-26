@@ -350,7 +350,9 @@ const translations = {
         "whyThisScore": "Why this score",
         "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
         "canvasPlusLightPath": "canvas + light path",
-        "renderingFormula": "{{base}} × rendering {{factor}} = {{rendered}}",
+        "renderingFormula": "{{base}} adjusted by rendering = {{rendered}}",
+        "renderingMultiplierFormula": "{{base}} × rendering {{factor}} = {{rendered}}",
+        "renderingAdjustmentFormula": "{{base}} {{sign}} rendering adjustment {{adjustment}} = {{rendered}}",
         "weatherTransparency": "weather transparency factor",
         "summary": {
           "event": "{{score}} points: {{detail}}",
@@ -461,7 +463,7 @@ const translations = {
       "low": { "few": "Mây thấp ít ({{value}}%)", "fewDesc": "Tầm nhìn khá thoáng", "some": "Mây thấp hơi nhiều ({{value}}%)", "someDesc": "Có thể che một phần màu gần đường chân trời", "thick": "Mây thấp dày ({{value}}%)", "thickDesc": "Nguy cơ che khuất cao" },
       "visibility": { "good": "Tầm nhìn tốt ({{value}}km)", "goodDesc": "Không khí trong, tầm nhìn tốt", "moderate": "Tầm nhìn trung bình ({{value}}km)", "moderateDesc": "Độ bão hòa màu có thể giảm nhẹ", "low": "Tầm nhìn thấp ({{value}}km)", "lowDesc": "Bụi mờ hoặc hơi nước có thể ảnh hưởng quan sát" },
       "humidity": { "moderate": "Độ ẩm vừa phải ({{value}}%)", "moderateDesc": "Có lợi cho tán xạ ánh sáng", "high": "Độ ẩm cao ({{value}}%)", "highDesc": "Có thể giảm độ trong", "low": "Độ ẩm thấp ({{value}}%)", "lowDesc": "Không khí khô có thể làm màu nhạt hơn" },
-      "lightPath": { "opening": "Opening toward the sun", "openingDesc": "Backend samples 15/30/50/100km along the solar azimuth; the low/mid-cloud corridor is relatively open", "wall": "Cloud wall toward the sun", "wallDesc": "Low or mid clouds along the solar direction suppress the main score" , "lowCloudBlock": "Low clouds block sunlight", "lowCloudBlockDesc": "Low clouds sit in the sun direction, so sunlight struggles to reach mid/high clouds" },
+      "lightPath": { "opening": "Opening toward the sun", "openingDesc": "Backend samples 25/50/75/100km along the solar azimuth; the low/mid-cloud corridor is relatively open", "wall": "Cloud wall toward the sun", "wallDesc": "Low or mid clouds along the solar direction suppress the main score" , "lowCloudBlock": "Low clouds block sunlight", "lowCloudBlockDesc": "Low clouds sit in the sun direction, so sunlight struggles to reach mid/high clouds" },
       "postRain": { "clear": "Clear post-rain air", "clearDesc": "Rain in the last 6h is kept as a bonus because visibility and particles are acceptable", "gray": "Post-rain gray-curtain risk", "grayDesc": "Moisture, particles, or weak direct light after rain can make the glow gray" },
       "aerosol": { "moderate": "Aerosol vừa phải (AOD {{value}})", "moderateDesc": "Tăng tán xạ cam đỏ", "high": "Aerosol cao (AOD {{value}})", "highDesc": "Có thể trông mờ hoặc tối", "low": "Không khí quá trong (AOD {{value}})", "lowDesc": "Màu có thể nhạt hơn", "carrier": "Thin-haze red-sunset carrier", "carrierDesc": "When clouds are scarce, moderate aerosol can add some warm sunset color if the light path is open" },
       "carrier": { "strong": "Clear high-cloud carrier", "strongDesc": "High clouds are sufficient, low clouds are scarce, and air is clear enough for a medium/high score base", "dense": "Dense mid/high-cloud carrier", "denseDesc": "High and mid clouds provide a steadier color canvas" },
@@ -899,7 +901,7 @@ const translations = {
   "surrounding": {
     "title": "Phân tích mây đỏ lân cận",
     "radarTitle": "Radar mây xung quanh",
-    "radarSubtitle": "20km · Trường mây liên tục",
+    "radarSubtitle": "25km · Trường mây liên tục",
     "radius": "Bán kính thăm dò",
     "radiusUnit": "km",
     "directions": {

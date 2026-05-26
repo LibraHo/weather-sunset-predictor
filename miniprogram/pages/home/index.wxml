@@ -310,7 +310,7 @@
     <view class="prediction-radar-card">
       <view class="prediction-radar-head">
         <view class="prediction-radar-title">周边云况雷达</view>
-        <view class="prediction-radar-subtitle">20km · 连续云场</view>
+        <view class="prediction-radar-subtitle">25km · 连续云场</view>
         </view>
         <view class="prediction-radar-dial">
           <view class="prediction-radar-cloud-field">

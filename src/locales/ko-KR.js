@@ -356,7 +356,9 @@ apiAccess: 'API 연동'
         "whyThisScore": "Why this score",
         "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
         "canvasPlusLightPath": "canvas + light path",
-        "renderingFormula": "{{base}} × rendering {{factor}} = {{rendered}}",
+        "renderingFormula": "{{base}} adjusted by rendering = {{rendered}}",
+        "renderingMultiplierFormula": "{{base}} × rendering {{factor}} = {{rendered}}",
+        "renderingAdjustmentFormula": "{{base}} {{sign}} rendering adjustment {{adjustment}} = {{rendered}}",
         "weatherTransparency": "weather transparency factor",
         "summary": {
           "event": "{{score}} points: {{detail}}",
@@ -494,7 +496,7 @@ apiAccess: 'API 연동'
         "low": "공기가 너무 맑음 (AOD {{value}})", "lowDesc": "색이 옅을 수 있습니다",
         "carrier": "Thin-haze red-sunset carrier", "carrierDesc": "When clouds are scarce, moderate aerosol can add some warm sunset color if the light path is open"
       },
-      "lightPath": { "opening": "Opening toward the sun", "openingDesc": "Backend samples 15/30/50/100km along the solar azimuth; the low/mid-cloud corridor is relatively open", "wall": "Cloud wall toward the sun", "wallDesc": "Low or mid clouds along the solar direction suppress the main score" , "lowCloudBlock": "Low clouds block sunlight", "lowCloudBlockDesc": "Low clouds sit in the sun direction, so sunlight struggles to reach mid/high clouds" },
+      "lightPath": { "opening": "Opening toward the sun", "openingDesc": "Backend samples 25/50/75/100km along the solar azimuth; the low/mid-cloud corridor is relatively open", "wall": "Cloud wall toward the sun", "wallDesc": "Low or mid clouds along the solar direction suppress the main score" , "lowCloudBlock": "Low clouds block sunlight", "lowCloudBlockDesc": "Low clouds sit in the sun direction, so sunlight struggles to reach mid/high clouds" },
       "postRain": { "clear": "Clear post-rain air", "clearDesc": "Rain in the last 6h is kept as a bonus because visibility and particles are acceptable", "gray": "Post-rain gray-curtain risk", "grayDesc": "Moisture, particles, or weak direct light after rain can make the glow gray" },
       "carrier": { "strong": "Clear high-cloud carrier", "strongDesc": "High clouds are sufficient, low clouds are scarce, and air is clear enough for a medium/high score base", "dense": "Dense mid/high-cloud carrier", "denseDesc": "High and mid clouds provide a steadier color canvas" },
 
@@ -900,7 +902,7 @@ apiAccess: 'API 연동'
   "surrounding": {
     "title": "주변 노을 분석",
     "radarTitle": "주변 구름 레이더",
-    "radarSubtitle": "20km · 연속 구름장",
+    "radarSubtitle": "25km · 연속 구름장",
     "radius": "탐지 반경",
     "radiusUnit": "킬로미터",
     "directions": {

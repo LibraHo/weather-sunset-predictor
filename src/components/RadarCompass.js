@@ -38,7 +38,7 @@ class RadarCompass {
       low: t('prediction.cloudLayers.shortLow', pick('低云', 'Low')), mid: t('prediction.cloudLayers.shortMid', pick('中云', 'Mid')), high: t('prediction.cloudLayers.shortHigh', pick('高云', 'High')),
       sunrise: t('prediction.tabs.sunrise', pick('日出', 'Sunrise')), sunset: t('prediction.tabs.sunset', pick('日落', 'Sunset')),
       title: t('surrounding.radarTitle', pick('周边云况雷达', 'Surrounding Cloud Radar')),
-      subtitle: t('surrounding.radarSubtitle', pick('20km · 连续云场', '20km · Continuous cloud field'))
+      subtitle: t('surrounding.radarSubtitle', pick('25km · 连续云场', '25km · Continuous cloud field'))
     };
     const theme = {
       // 视觉 token（无 UI token 则回退默认）
@@ -435,7 +435,7 @@ class RadarCompass {
   background:${T.bg || '#ffffff'};padding:10px 10px 8px;font-family:${zhFont};">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
     <div style="font-size:13px;font-weight:600;color:${T.title || '#333333'};">${text.title || '周边云况雷达'}</div>
-    <div style="font-size:11px;color:${T.subtitle || '#666666'};">${text.subtitle || '20km · 连续云场'}</div>
+    <div style="font-size:11px;color:${T.subtitle || '#666666'};">${text.subtitle || '25km · 连续云场'}</div>
   </div>
   <div style="position:relative;width:min(${S}px,100%);aspect-ratio:1 / 1;height:auto;max-width:100%;margin:0 auto;">
     <canvas id="radar-cloud-field-${uid}" width="${S}" height="${S}"

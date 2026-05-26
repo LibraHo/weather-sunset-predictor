@@ -189,8 +189,8 @@ export default {
           title: '2. 光路评估',
           subtitle: 'Light Path · 光路评分',
           desc: '光路分回答一个问题：日出/日落方向的阳光能不能照到可显色云层。已有太阳方向多点采样会参与判断，不新增 API 请求。',
-          lowCloudEffect: '采样距离为 15 / 30 / 50 / 100km，按 0.35 / 0.30 / 0.25 / 0.10 加权；每个点结合太阳高度、云底高度和低/中/高云遮挡估算 block',
-          visibility: '太阳方向走廊会额外修正：近处云墙封顶约 48，远处云墙封顶约 56；低云+中云走廊很低且高云存在时视为开口',
+          lowCloudEffect: '采样距离为 25 / 50 / 75 / 100km，按 0.40 / 0.35 / 0.18 / 0.07 加权；每个点结合太阳高度、云底高度和低/中/高云遮挡估算 block',
+          visibility: '太阳方向走廊会额外修正：25km 近端云墙封顶约 48，远端云墙封顶约 56；低云+中云走廊很低且高云存在时视为开口',
           formula: '遮挡概率 = 1 - Π(1 - 加权block)\n光路分 = 100×(1-遮挡概率)×低云权重修正×太阳方向走廊修正'
         },
         transparency: {
@@ -240,8 +240,8 @@ export default {
         finalFormula: {
           title: '8. 最终分数',
           subtitle: 'Final Score · 载体 × 光路门控 + 显色修正',
-          desc: '最终分不是把多个好条件连续相乘，而是先得到“可显色载体分”，再让太阳方向光路决定这份载体能发挥多少，最后只做小幅显色修正。',
-          formula: '最终分 = clamp(载体分 × 光路门控 + 显色修正, 0, 100)',
+          desc: '最终分不是把多个好条件连续相乘，而是先得到“可显色载体分”，再让太阳方向光路决定这份载体能发挥多少。显色好时只小幅加分，显色差时按比例压低，避免固定扣分把弱晚霞打穿。',
+          formula: '最终分 = clamp(载体分 × 光路门控 + 显色修正/衰减, 0, 100)',
           highCloudCap: '高云充足但光路被挡时，光路门控会压低最高得分。',
           carrier: '载体分 = max(云层画布分, 气溶胶弱载体分)',
           lightGate: '光路门控 = 0.25–1.12；近处云墙可压到约 0.42，远处云墙约 0.55，太阳方向开口约 0.90–0.96',
@@ -371,7 +371,9 @@ export default {
         whyThisScore: '为什么是这个分数',
         weightedFormula: '{{canvas}}×80% + {{light}}×20% = {{base}}',
         canvasPlusLightPath: '画布 + 光路',
-        renderingFormula: '{{base}} × 显色系数 {{factor}} = {{rendered}}',
+        renderingFormula: '{{base}} 经显色修正 = {{rendered}}',
+        renderingMultiplierFormula: '{{base}} × 显色系数 {{factor}} = {{rendered}}',
+        renderingAdjustmentFormula: '{{base}} {{sign}} 显色修正 {{adjustment}} = {{rendered}}',
         weatherTransparency: '天气通透度',
         summary: {
           event: '{{score}} 分：{{detail}}',
@@ -789,7 +791,7 @@ formationAnalysis: {
   surrounding: {
     title: '周边火烧云分析',
     radarTitle: '周边云况雷达',
-    radarSubtitle: '20km · 连续云场',
+    radarSubtitle: '25km · 连续云场',
     radius: '探测半径',
     radiusUnit: '公里',
     directions: {

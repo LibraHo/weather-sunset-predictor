@@ -182,7 +182,7 @@ const translations = {
           "title": "2. Light Path Assessment",
           "subtitle": "Light Path · Light Path Score",
           "desc": "The light-path score answers one question: can sunrise/sunset light reach the colorable cloud layer? Existing sun-direction multi-point sampling is used; no extra API calls are added.",
-          "lowCloudEffect": "Samples are taken at 15 / 30 / 50 / 100 km with weights 0.35 / 0.30 / 0.25 / 0.10. Each point combines sun elevation, cloud-base height, and low/mid/high cloud blockage into a block value",
+          "lowCloudEffect": "Samples are taken at 25 / 50 / 75 / 100 km with weights 0.40 / 0.35 / 0.18 / 0.07. Each point combines sun elevation, cloud-base height, and low/mid/high cloud blockage into a block value",
           "visibility": "The sun-direction corridor then adjusts the score: a near cloud wall caps near 48, a far wall near 56; low low+mid cloud with enough high cloud is treated as an opening",
           "formula": "Occlusion = 1 - Π(1 - weighted block)\nLight-path score = 100×(1-occlusion)×low-cloud weight adjustment×sun-direction corridor adjustment"
         },
@@ -233,8 +233,8 @@ const translations = {
         "finalFormula": {
           "title": "8. Final Score",
           "subtitle": "Final Score · carrier × light-path gate + rendering",
-          "desc": "The final score does not multiply several good signals together. It first gets a usable carrier score, lets the sun-direction light path decide how much of it can work, then adds a small rendering adjustment.",
-          "formula": "Final score = clamp(carrier × light-path gate + rendering adjustment, 0, 100)",
+          "desc": "The final score does not multiply several good signals together. It first gets a usable carrier score, lets the sun-direction light path decide how much of it can work, then uses rendering as a small bonus or a bounded multiplier so weak visible glow is not over-penalized.",
+          "formula": "Final score = clamp(carrier × light-path gate + rendering adjustment/attenuation, 0, 100)",
           "highCloudCap": "When high clouds are rich but the light path is blocked, the light-path gate still lowers the ceiling.",
           "carrier": "Carrier score = max(cloud canvas score, weak aerosol carrier score)",
           "lightGate": "Light-path gate = 0.25-1.12; near cloud wall can clamp near 0.42, far wall near 0.55, sun-direction opening around 0.90-0.96",
@@ -348,7 +348,9 @@ const translations = {
         "whyThisScore": "Why this score",
         "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
         "canvasPlusLightPath": "canvas + light path",
-        "renderingFormula": "{{base}} × rendering {{factor}} = {{rendered}}",
+        "renderingFormula": "{{base}} adjusted by rendering = {{rendered}}",
+        "renderingMultiplierFormula": "{{base}} × rendering {{factor}} = {{rendered}}",
+        "renderingAdjustmentFormula": "{{base}} {{sign}} rendering adjustment {{adjustment}} = {{rendered}}",
         "weatherTransparency": "weather transparency factor",
         "summary": {
           "event": "{{score}} points: {{detail}}",
@@ -692,7 +694,7 @@ const translations = {
   "surrounding": {
     "title": "Surrounding Fire Cloud Analysis",
     "radarTitle": "Surrounding Cloud Radar",
-    "radarSubtitle": "20km · Continuous cloud field",
+    "radarSubtitle": "25km · Continuous cloud field",
     "radius": "Detection Radius",
     "radiusUnit": "km",
     "directions": {
