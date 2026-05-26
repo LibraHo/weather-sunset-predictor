@@ -70,6 +70,9 @@
 }
 
 .settings-header h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   margin: 0;
   font-size: 32px;
   font-weight: 700;
@@ -81,24 +84,14 @@
 }
 
 .settings-close {
-  background: none;
-  border: none;
   font-size: 28px;
-  color: color-mix(in srgb, var(--color-text) 64%, transparent);
-  cursor: pointer;
-  padding: 0;
   width: 36px;
   height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   border-radius: 8px;
-  transition: all 0.2s;
 }
 
 .settings-close:hover {
-  background: var(--glass-bg-hover);
-  color: var(--color-text);
+  color: var(--button-icon-text);
 }
 
 .theme-dark .settings-close {
@@ -143,6 +136,9 @@
 }
 
 .settings-section-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 14px;
   font-weight: 600;
   margin: 0 0 10px;
@@ -400,6 +396,9 @@
 }
 
 .setting-default-location-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: #374151;
   font-size: 14px;
   text-align: right;
@@ -423,11 +422,37 @@
 }
 
 .default-location-list .favorite-location-item {
-  border-top: 1px solid rgba(209, 213, 219, 0.45) !important;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(209, 213, 219, 0.45);
 }
 
 .theme-dark .default-location-list .favorite-location-item {
-  border-top-color: rgba(148, 163, 184, 0.3) !important;
+  border-top-color: rgba(148, 163, 184, 0.3);
+}
+
+.favorite-location-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.current-default-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--button-icon-text);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.set-default-btn {
+  min-height: 30px;
+  padding: 0 12px;
+  font-size: 12px;
 }
 
 /* 设置面板底部 */
@@ -440,7 +465,8 @@
 
 .settings-footer .settings-close {
   width: auto;
-  height: auto;
+  min-width: 96px;
+  height: 40px;
   font-size: 15px;
   border-radius: 10px;
 }
@@ -449,26 +475,9 @@
   border-top-color: rgba(148, 163, 184, 0.2);
 }
 
-.btn-primary {
-  padding: 11px 28px;
-  background: linear-gradient(135deg, #4caf50 0%, #3b9a40 100%);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 8px 18px rgba(76, 175, 80, 0.2);
-}
-
-.btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 20px rgba(76, 175, 80, 0.24);
-}
-
-.btn-primary:active {
-  transform: translateY(0);
+.settings-svg-icon {
+  flex: 0 0 auto;
+  color: var(--button-icon-text);
 }
 
 /* 响应式设计 */
