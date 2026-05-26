@@ -16,9 +16,6 @@ const gridService = require('../services/GridScoreService');
 router.get('/grid', async (req, res, next) => {
   try {
     const period = req.query.period || 'sunset';
-    // 若缓存为空或过期，先刷新
-    await gridService.refreshIfStale(undefined, period);
-
     const cache = gridService.getCache(period);
     if (!cache) {
       return res.status(503).json({

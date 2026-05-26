@@ -343,4 +343,22 @@ describe('GridScoreService', () => {
       expect(afterRefresh).toBeGreaterThan(beforeRefresh);
     });
   });
+
+  describe('refresh completion listeners', () => {
+    test('_doRefresh notifies listeners after grid cache is saved', async () => {
+      service.generateGrid = jest.fn(() => [{ lat: 40, lon: 116 }]);
+      service.fetchAndScore = jest.fn(async () => [{ lat: 40, lon: 116, score: 72 }]);
+      service._saveToDisk = jest.fn();
+      const listener = jest.fn();
+
+      service.onRefreshComplete(listener);
+      await service._doRefresh('sunset');
+
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(listener).toHaveBeenCalledWith({
+        period: 'sunset',
+        cache: service._cache.sunset
+      });
+    });
+  });
 });

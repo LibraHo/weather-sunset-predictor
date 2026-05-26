@@ -183,8 +183,30 @@ describe('ChinaRasterService.getRaster', () => {
     expect(first.sourceUpdatedAt).toBe('2000-01-01T00:00:00.000Z');
     expect(first.generatedAt).not.toBe(first.updatedAt);
     expect(first._cachedAt).toEqual(expect.any(Number));
-    expect(mockGridService.refreshIfStale).toHaveBeenCalledTimes(1);
+    expect(mockGridService.refreshIfStale).not.toHaveBeenCalled();
     expect(mockGridService.getCache).toHaveBeenCalledTimes(1);
+  });
+
+  test('getRaster only reads existing grid cache and never triggers backend refresh', async () => {
+    const mockGridService = await getMockGridService();
+    mockGridService.getCache.mockReturnValue(makeMockCache());
+
+    await chinaRasterService.getRaster('sunset', 0.5);
+
+    expect(mockGridService.refreshIfStale).not.toHaveBeenCalled();
+    expect(mockGridService.getCache).toHaveBeenCalledWith('sunset');
+  });
+
+  test('warmCache invalidates and rebuilds raster cache from backend-updated grid data', async () => {
+    const mockGridService = await getMockGridService();
+    mockGridService.getCache.mockReturnValue(makeMockCache());
+
+    const warmed = await chinaRasterService.warmCache('sunset', [0.5]);
+
+    expect(warmed).toHaveLength(1);
+    expect(warmed[0].period).toBe('sunset');
+    expect(warmed[0].resolution).toBe(0.5);
+    expect(mockGridService.refreshIfStale).not.toHaveBeenCalled();
   });
 
   test('缓存命中时不重复调用 gridService.getCache 多次', async () => {
