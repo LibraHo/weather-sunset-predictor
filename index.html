@@ -127,11 +127,20 @@
         <h2 data-i18n="location.label">选择位置</h2>
         <div class="location-superbar">
           <div class="favorite-dropdown-wrapper">
-            <button id="favorites-toggle-btn" class="icon-chip" aria-label="收藏位置" data-i18n-aria-label="favorites.title">⭐</button>
+            <button id="favorites-toggle-btn" class="icon-chip xiake-icon-control" aria-label="收藏位置" data-i18n-aria-label="favorites.title">
+              <svg class="xiake-icon-svg" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+                <path d="M12 3.8l2.45 4.96 5.48.8-3.96 3.86.93 5.46L12 16.3l-4.9 2.58.93-5.46-3.96-3.86 5.48-.8L12 3.8z"/>
+              </svg>
+            </button>
             <div id="favorite-locations" class="favorite-popover hidden" role="dialog" aria-label="收藏位置弹窗">
               <div class="favorite-header">
-                <h3 data-i18n="favorites.title">⭐ 收藏位置</h3>
-                <button id="add-favorite-btn" class="btn btn-small" data-i18n="favorites.add">收藏当前位置</button>
+                <h3>
+                  <svg class="xiake-icon-svg xiake-section-icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+                    <path d="M12 3.8l2.45 4.96 5.48.8-3.96 3.86.93 5.46L12 16.3l-4.9 2.58.93-5.46-3.96-3.86 5.48-.8L12 3.8z"/>
+                  </svg>
+                  <span data-i18n="favorites.title">收藏位置</span>
+                </h3>
+                <button id="add-favorite-btn" class="btn btn-small xiake-action-btn xiake-action-btn-secondary" data-i18n="favorites.add">收藏当前位置</button>
               </div>
               <ul id="favorite-list" class="favorite-list">
                 <!-- 动态填充收藏位置 -->
@@ -140,7 +149,12 @@
           </div>
           <div class="location-input-wrapper">
             <input type="text" id="location-input" placeholder="输入城市名称" aria-label="城市名称输入" data-i18n-placeholder="location.placeholder">
-            <button id="current-location-btn" class="input-icon-btn" aria-label="使用当前位置" data-i18n-aria-label="buttons.useCurrentLocation">📍</button>
+            <button id="current-location-btn" class="input-icon-btn xiake-icon-control" aria-label="使用当前位置" data-i18n-aria-label="buttons.useCurrentLocation">
+              <svg class="xiake-icon-svg" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+                <path d="M12 21s6-5.15 6-10.2A6 6 0 0 0 6 10.8C6 15.85 12 21 12 21z"/>
+                <circle cx="12" cy="10.8" r="2"/>
+              </svg>
+            </button>
             <!-- 需求13：搜索历史下拉列表 + 空状态引导 -->
             <div id="search-empty-hint" class="search-empty-hint hidden">
               <span class="hint-icon">🔍</span>
@@ -151,7 +165,7 @@
               <!-- 动态填充搜索历史 -->
             </div>
           </div>
-          <button id="search-btn" class="btn btn-primary search-action-btn" data-i18n="buttons.search">查询</button>
+          <button id="search-btn" class="btn btn-primary search-action-btn xiake-action-btn xiake-action-btn-primary" data-i18n="buttons.search">查询</button>
         </div>
         <div id="location-error" class="error-message hidden"></div>
       </section>
@@ -660,7 +674,7 @@
               </label>
             </div>
             <div class="api-application-submit-row">
-              <button type="submit" class="btn btn-primary" id="api-application-submit" data-i18n="home.apiAccess.submitApplication">提交申请</button>
+              <button type="submit" class="btn btn-primary xiake-action-btn xiake-action-btn-primary" id="api-application-submit" data-i18n="home.apiAccess.submitApplication">提交申请</button>
               <span id="api-application-message" class="api-application-message" role="status" aria-live="polite"></span>
             </div>
           </form>
@@ -825,12 +839,25 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
     </main>
 
     <footer>
-      <button id="refresh-btn" class="btn btn-secondary" disabled data-i18n="buttons.refresh">
-        🔄 刷新数据
+      <button id="refresh-btn" class="btn btn-secondary xiake-action-btn xiake-action-btn-secondary" disabled>
+        <svg class="xiake-btn-icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+          <path d="M20 6v5h-5"/>
+          <path d="M4 18v-5h5"/>
+          <path d="M17.8 9A6.5 6.5 0 0 0 6.2 6.2L4 8.4"/>
+          <path d="M6.2 15A6.5 6.5 0 0 0 17.8 17.8L20 15.6"/>
+        </svg>
+        <span data-i18n="buttons.refresh">刷新数据</span>
       </button>
       <p class="footer-text" data-i18n="common.dataSource">数据来源：Open-Meteo（GFS + ECMWF）</p>
       <div id="visitor-counter" class="visitor-counter">
-        <span class="visitor-icon">👥</span>
+        <span class="visitor-icon" aria-hidden="true">
+          <svg class="xiake-icon-svg" viewBox="0 0 24 24" focusable="false">
+            <path d="M8.5 11.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+            <path d="M15.5 11.5a3 3 0 1 0 0-6"/>
+            <path d="M3.8 18.5c.72-2.7 2.35-4.1 4.7-4.1s3.98 1.4 4.7 4.1"/>
+            <path d="M13.2 14.7c2.1.2 3.55 1.5 4.2 3.8"/>
+          </svg>
+        </span>
         <span data-i18n="common.visitorCount">访问人数：</span>
         <span id="visitor-count" class="visitor-count-number">--</span>
       </div>

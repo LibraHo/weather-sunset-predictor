@@ -452,6 +452,21 @@ describe('SettingsPanel.renderFavoriteLocationsList', () => {
     expect(container.innerHTML).toContain('settings.currentDefaultLocation');
   });
 
+  test('默认位置名称作为文本渲染，不解析 HTML', () => {
+    const maliciousName = '<img src=x onerror=alert(1)>北京';
+    const sp = makePanel({
+      getFavoriteLocations: jest.fn().mockReturnValue([]),
+      getDefaultLocation: jest.fn().mockReturnValue({ lat: 39.9042, lon: 116.4074, name: maliciousName })
+    });
+    sp.open();
+
+    const display = document.getElementById('default-location-display');
+    expect(display.querySelector('.settings-svg-icon')).not.toBeNull();
+    expect(display.querySelector('img')).toBeNull();
+    expect(display.textContent).toContain(maliciousName);
+    expect(display.innerHTML).not.toContain('<img');
+  });
+
   test('handleSetDefaultLocation 调用 storageService.saveDefaultLocation', () => {
     const favorites = [
       { lat: 39.9, lon: 116.4, name: '北京' },

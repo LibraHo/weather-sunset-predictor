@@ -31,6 +31,18 @@
    - 移动端优先控制高度和行距。
    - 不靠硬挤、换行补救；需要重新设计排布时就重排结构。
 
+## 按钮与图标语言
+
+按钮必须服从同一套霞客操作语言：
+
+- 主操作按钮使用 `xiake-action-btn xiake-action-btn-primary`，用于查询、提交、完成等明确推进流程的动作。
+- 次操作按钮使用 `xiake-action-btn xiake-action-btn-secondary`，用于刷新、添加收藏、后台入口、OpenAPI 等非主流程动作。
+- 纯图标按钮使用 `xiake-icon-control`，尺寸固定，图标必须是线性 SVG，不使用 emoji 或图片。
+- 图标 SVG 使用圆角线帽、圆角连接、`currentColor` 描边，并跟随主题 token：`--button-icon-text`、`--button-icon-bg`、`--button-icon-border`。
+- 按钮颜色引用 token：`--button-primary-*`、`--button-secondary-*`，不能在业务组件里另写一套绿色/蓝色渐变。
+- 移动端按钮高度以 `40px` 为基础；图标按钮以 `30/40px` 两档为主，避免因为 emoji 字形导致视觉偏移。
+- 设置面板、首页搜索区、API/公众号导流入口、页脚刷新按钮都必须复用上述按钮语言。
+
 ## 亮色模式规范
 
 ### 氛围
