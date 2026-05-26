@@ -26,6 +26,22 @@ class SettingsPanel {
     return this._isEnglishUI() ? en : zh;
   }
 
+  iconSvg(name, extraClass = '') {
+    const paths = {
+      settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.05.05a2 2 0 0 1-2.83 2.83l-.05-.05a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 0 1-4 0v-.07a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.05.05a2 2 0 0 1-2.83-2.83l.05-.05A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 0 1 0-4h.04A1.7 1.7 0 0 0 4.6 8.94a1.7 1.7 0 0 0-.34-1.88l-.05-.05a2 2 0 0 1 2.83-2.83l.05.05a1.7 1.7 0 0 0 1.88.34H9a1.7 1.7 0 0 0 1-1.56V3a2 2 0 0 1 4 0v.07a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.88-.34l.05-.05a2 2 0 0 1 2.83 2.83l-.05.05a1.7 1.7 0 0 0-.34 1.88v.03A1.7 1.7 0 0 0 21 10h.04a2 2 0 0 1 0 4H21a1.7 1.7 0 0 0-1.56 1.03z"/>',
+      globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.2 2.45 3.3 5.45 3.3 9S14.2 18.55 12 21c-2.2-2.45-3.3-5.45-3.3-9S9.8 5.45 12 3z"/>',
+      map: '<path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3z"/><path d="M9 3v15"/><path d="M15 6v15"/>',
+      star: '<path d="M12 3.8l2.45 4.96 5.48.8-3.96 3.86.93 5.46L12 16.3l-4.9 2.58.93-5.46-3.96-3.86 5.48-.8L12 3.8z"/>',
+      pin: '<path d="M12 21s6-5.15 6-10.2A6 6 0 0 0 6 10.8C6 15.85 12 21 12 21z"/><circle cx="12" cy="10.8" r="2"/>',
+      cloud: '<path d="M17.5 18H8a4 4 0 1 1 .7-7.94A5.5 5.5 0 0 1 19 12.5 3 3 0 0 1 17.5 18z"/>',
+      bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"/><path d="M10 19a2 2 0 0 0 4 0"/>',
+      database: '<ellipse cx="12" cy="5" rx="7" ry="3"/><path d="M5 5v6c0 1.66 3.13 3 7 3s7-1.34 7-3V5"/><path d="M5 11v6c0 1.66 3.13 3 7 3s7-1.34 7-3v-6"/>',
+      x: '<path d="M18 6L6 18"/><path d="M6 6l12 12"/>',
+      check: '<path d="M20 6L9 17l-5-5"/>'
+    };
+    return `<svg class="xiake-icon-svg settings-svg-icon ${extraClass}" aria-hidden="true" viewBox="0 0 24 24" focusable="false">${paths[name] || paths.settings}</svg>`;
+  }
+
   /**
    * 初始化设置面板
    */
@@ -50,15 +66,15 @@ class SettingsPanel {
       <div class="settings-overlay"></div>
       <div class="settings-container">
         <div class="settings-header">
-          <h2>⚙️ ${this.i18n.t('settings.title')}</h2>
-          <button class="settings-close" aria-label="${this.i18n.t('settings.close')}">✕</button>
+          <h2>${this.iconSvg('settings')}<span>${this.i18n.t('settings.title')}</span></h2>
+          <button class="settings-close settings-close-icon xiake-icon-control" aria-label="${this.i18n.t('settings.close')}">${this.iconSvg('x')}</button>
         </div>
 
         <div class="settings-content">
 
-          <!-- 🌐 语言与显示 -->
+          <!-- 语言与显示 -->
           <div class="settings-section">
-            <h3 class="settings-section-title">🌐 ${this.i18n.t('settings.languageAndDisplay')}</h3>
+            <h3 class="settings-section-title">${this.iconSvg('globe')}<span>${this.i18n.t('settings.languageAndDisplay')}</span></h3>
             <div class="settings-section-content">
               <div class="setting-item">
                 <label class="setting-label">${this.i18n.t('settings.interfaceLanguage')}</label>
@@ -101,9 +117,9 @@ class SettingsPanel {
 
           <hr class="settings-section-divider" />
 
-          <!-- 🗺️ 地图底图 -->
+          <!-- 地图底图 -->
           <div class="settings-section">
-            <h3 class="settings-section-title">🗺️ ${this.i18n.t('settings.mapTileProvider')}</h3>
+            <h3 class="settings-section-title">${this.iconSvg('map')}<span>${this.i18n.t('settings.mapTileProvider')}</span></h3>
             <div class="settings-section-content">
               <div class="setting-item">
                 <label class="setting-label" for="map-tile-select">${this.i18n.t('settings.mapTileSource')}</label>
@@ -121,9 +137,9 @@ class SettingsPanel {
 
           <hr class="settings-section-divider" />
 
-          <!-- ⭐ 默认位置 -->
+          <!-- 默认位置 -->
           <div class="settings-section">
-            <h3 class="settings-section-title">⭐ ${this.i18n.t('settings.defaultLocation')}</h3>
+            <h3 class="settings-section-title">${this.iconSvg('star')}<span>${this.i18n.t('settings.defaultLocation')}</span></h3>
             <div class="settings-section-content">
               <div class="setting-item setting-item-default-location">
                 <div class="setting-row setting-row-between">
@@ -137,9 +153,9 @@ class SettingsPanel {
 
           <hr class="settings-section-divider" />
 
-          <!-- 📍 位置解析 -->
+          <!-- 位置解析 -->
           <div class="settings-section">
-            <h3 class="settings-section-title">📍 ${this.i18n.t('settings.geocodingService')}</h3>
+            <h3 class="settings-section-title">${this.iconSvg('pin')}<span>${this.i18n.t('settings.geocodingService')}</span></h3>
             <div class="settings-section-content">
               <div class="setting-item">
                 <label class="setting-label" for="geocoding-provider-select">${this.i18n.t('settings.geocodingProvider')}</label>
@@ -155,9 +171,9 @@ class SettingsPanel {
 
           <hr class="settings-section-divider" />
 
-          <!-- ☁️ 天气数据源 -->
+          <!-- 天气数据源 -->
           <div class="settings-section">
-            <h3 class="settings-section-title">☁️ ${this.i18n.t('settings.weatherProvider')}</h3>
+            <h3 class="settings-section-title">${this.iconSvg('cloud')}<span>${this.i18n.t('settings.weatherProvider')}</span></h3>
             <div class="settings-section-content">
               <div class="setting-item">
                 <label class="setting-label" for="weather-model-select">${this._uiText('Weather model', '天气模型')}</label>
@@ -207,9 +223,9 @@ class SettingsPanel {
 
           <hr class="settings-section-divider" />
 
-          <!-- 🔔 通知与提醒 -->
+          <!-- 通知与提醒 -->
           <div class="settings-section">
-            <h3 class="settings-section-title">🔔 ${this.i18n.t('settings.notificationAndAlerts')}</h3>
+            <h3 class="settings-section-title">${this.iconSvg('bell')}<span>${this.i18n.t('settings.notificationAndAlerts')}</span></h3>
             <div class="settings-section-content">
               <div class="setting-item setting-item-toggle">
                 <div class="setting-row setting-row-between">
@@ -236,9 +252,9 @@ class SettingsPanel {
 
           <hr class="settings-section-divider" />
 
-          <!-- ⚙️ 高级 -->
+          <!-- 高级 -->
           <details class="settings-section settings-advanced">
-            <summary class="settings-section-title settings-advanced-toggle">⚙️ ${this.i18n.t('settings.dataSource')}</summary>
+            <summary class="settings-section-title settings-advanced-toggle">${this.iconSvg('database')}<span>${this.i18n.t('settings.dataSource')}</span></summary>
             <div class="settings-section-content">
               <div class="setting-item">
                 <label class="setting-label setting-label-title" for="weather-fetch-mode-select">${this.i18n.t('settings.weatherFetchMode')}</label>
@@ -267,7 +283,10 @@ class SettingsPanel {
         </div>
 
         <div class="settings-footer">
-          <button class="settings-close btn-primary">${this.i18n.t('settings.done')}</button>
+          <button class="settings-close settings-done-btn btn-primary xiake-action-btn xiake-action-btn-primary">
+            ${this.iconSvg('check', 'xiake-btn-icon')}
+            <span>${this.i18n.t('settings.done')}</span>
+          </button>
         </div>
       </div>
     `;
@@ -502,7 +521,7 @@ class SettingsPanel {
     const defaultLocationDisplay = document.getElementById('default-location-display');
     if (defaultLocationDisplay) {
       if (defaultLocation) {
-        defaultLocationDisplay.textContent = `⭐ ${defaultLocation.name}`;
+        defaultLocationDisplay.innerHTML = `${this.iconSvg('star')}<span>${defaultLocation.name}</span>`;
         defaultLocationDisplay.classList.remove('setting-default-location-empty');
       } else {
         defaultLocationDisplay.textContent = this.i18n.t('settings.noDefaultLocation');
@@ -540,20 +559,11 @@ class SettingsPanel {
         Math.abs(fav.lon - defaultLocation.lon) < 0.001;
 
       return `
-        <div class="favorite-location-item" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-top: 1px solid var(--border-color, #e0e0e0);">
-          <span style="flex: 1;">${fav.name}</span>
+        <div class="favorite-location-item">
+          <span class="favorite-location-name">${fav.name}</span>
           ${isDefault
-            ? `<span style="color: var(--accent-color, #4CAF50); font-size: 12px;">⭐ ${this.i18n.t('settings.currentDefaultLocation')}</span>`
-            : `<button class="set-default-btn" data-index="${index}" style="
-                padding: 4px 12px;
-                background: transparent;
-                border: 1px solid var(--accent-color, #4CAF50);
-                color: var(--accent-color, #4CAF50);
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 12px;
-                transition: all 0.2s;
-              ">${this.i18n.t('settings.setAsDefault')}</button>`
+            ? `<span class="current-default-badge">${this.iconSvg('star')}<span>${this.i18n.t('settings.currentDefaultLocation')}</span></span>`
+            : `<button class="set-default-btn xiake-action-btn xiake-action-btn-secondary" data-index="${index}">${this.i18n.t('settings.setAsDefault')}</button>`
           }
         </div>
       `;
@@ -567,18 +577,6 @@ class SettingsPanel {
       });
     });
 
-    // 添加按钮悬停效果
-    const style = document.createElement('style');
-    style.textContent = `
-      .set-default-btn:hover {
-        background: var(--accent-color, #4CAF50) !important;
-        color: white !important;
-      }
-    `;
-    if (!document.querySelector('style[data-settings-panel-default-loc]')) {
-      style.setAttribute('data-settings-panel-default-loc', 'true');
-      document.head.appendChild(style);
-    }
   }
 
   /**
