@@ -104,15 +104,38 @@ function createRouter(deps = {}) {
     }
   });
 
-  router.post('/runs/:id/retry', (req, res) => {
+  router.post('/runs/:id/retry', async (req, res) => {
     try {
       const previous = runLogService.getRun(req.params.id);
+      const estimate = configService.estimate(previous.config);
+      if (!estimate.safe) {
+        return res.status(400).json({
+          error: { code: 'DATA_PIPELINE_UNSAFE_CONFIG', message: estimate.reasons.join('; ') },
+          estimate,
+          previousRunId: previous.id
+        });
+      }
+      if (req.body?.dryRun === true) {
+        const result = await workerService.runOnce({
+          config: previous.config,
+          reason: `retry:${previous.id}`,
+          dryRun: true
+        });
+        const statusCode = result.status === 'completed' ? 200 : 500;
+        return res.status(statusCode).json({
+          success: result.status === 'completed',
+          previousRunId: previous.id,
+          ...result,
+          estimate
+        });
+      }
       res.status(501).json({
         error: {
           code: 'DATA_PIPELINE_REAL_WORKER_NOT_IMPLEMENTED',
           message: 'retry is disabled until the real GFS/CAMS worker is implemented; use dryRun=true for validation'
         },
-        previousRunId: previous.id
+        previousRunId: previous.id,
+        estimate
       });
     } catch (err) {
       res.status(404).json({ error: { code: err.code || 'DATA_PIPELINE_RUN_NOT_FOUND', message: err.message } });

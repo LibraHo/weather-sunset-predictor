@@ -105,7 +105,20 @@ describe('DataPipelineCleanupService', () => {
   test('dryRun reports old files without deleting them or pruning logs', () => {
     const dataDir = makeTempDir();
     const oldRaw = path.join(dataDir, 'data', 'raw', 'gfs', 'old.grib2');
+    const oldProduct = path.join(dataDir, 'data', 'cache', 'grid-products', 'old_product.json');
+    const newProduct = path.join(dataDir, 'data', 'cache', 'grid-products', 'new_product.json');
+    const manifestPath = path.join(dataDir, 'data', 'cache', 'grid-products', 'manifest.json');
     writeFileWithMtime(oldRaw, 'old-raw', new Date('2026-05-26T10:30:00Z'));
+    writeFileWithMtime(oldProduct, '{"old":true}', new Date('2026-05-22T12:00:00Z'));
+    writeFileWithMtime(newProduct, '{"new":true}', new Date('2026-05-25T12:00:00Z'));
+    fs.writeFileSync(manifestPath, JSON.stringify({
+      schemaVersion: 1,
+      products: [
+        { productId: 'old_product', path: oldProduct, createdAt: '2026-05-22T12:00:00.000Z' },
+        { productId: 'new_product', path: newProduct, createdAt: '2026-05-25T12:00:00.000Z' },
+        { productId: 'missing_product', path: path.join(dataDir, 'data', 'cache', 'grid-products', 'missing.json') }
+      ]
+    }, null, 2), 'utf8');
     const runLogService = {
       pruneOlderThan: jest.fn()
     };
@@ -119,8 +132,13 @@ describe('DataPipelineCleanupService', () => {
 
     expect(result.dryRun).toBe(true);
     expect(result.deletedFiles).toContain(oldRaw);
+    expect(result.deletedFiles).toContain(oldProduct);
     expect(result.deletedBytes).toBeGreaterThan(0);
     expect(fs.existsSync(oldRaw)).toBe(true);
+    expect(fs.existsSync(oldProduct)).toBe(true);
+    expect(result.removedProducts).toBe(2);
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    expect(manifest.products.map(item => item.productId)).toEqual(['old_product', 'new_product', 'missing_product']);
     expect(runLogService.pruneOlderThan).not.toHaveBeenCalled();
   });
 });

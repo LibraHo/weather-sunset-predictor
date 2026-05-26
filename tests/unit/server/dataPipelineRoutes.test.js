@@ -107,6 +107,46 @@ describe('data pipeline admin routes', () => {
     }));
   });
 
+  test('POST /runs/:id/retry with dryRun reruns the previous config locally', async () => {
+    const workerService = {
+      runOnce: jest.fn().mockResolvedValue({
+        status: 'completed',
+        degraded: false,
+        run: { id: 'retry_fixture', status: 'completed' },
+        products: [{ source: 'gfs' }],
+        failedSteps: []
+      })
+    };
+    const { app, runLogService } = makeApp({ workerService });
+    const previous = runLogService.createRun({ mode: 'hybrid', regionPreset: 'test_small' }, { reason: 'failed-dry-run' });
+
+    const res = await request(app)
+      .post(`/api/admin/data-pipeline/runs/${previous.id}/retry`)
+      .send({ dryRun: true })
+      .expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.previousRunId).toBe(previous.id);
+    expect(workerService.runOnce).toHaveBeenCalledWith(expect.objectContaining({
+      config: expect.objectContaining({ regionPreset: 'test_small' }),
+      reason: `retry:${previous.id}`,
+      dryRun: true
+    }));
+  });
+
+  test('POST /runs/:id/retry rejects real retries until the worker is implemented', async () => {
+    const { app, runLogService } = makeApp();
+    const previous = runLogService.createRun({ mode: 'hybrid', regionPreset: 'test_small' }, { reason: 'failed-run' });
+
+    const res = await request(app)
+      .post(`/api/admin/data-pipeline/runs/${previous.id}/retry`)
+      .send({})
+      .expect(501);
+
+    expect(res.body.error.code).toBe('DATA_PIPELINE_REAL_WORKER_NOT_IMPLEMENTED');
+    expect(res.body.previousRunId).toBe(previous.id);
+  });
+
   test('POST /cleanup deletes files immediately and records completed cleanup step', async () => {
     const { app, cleanupService } = makeApp();
     const res = await request(app)

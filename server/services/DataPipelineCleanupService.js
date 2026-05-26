@@ -40,7 +40,7 @@ class DataPipelineCleanupService {
     }));
     removeResult(this._deleteOlderThan(this.tileDir, (Number(policy.keepTileDays) || 3) * 24 * 60 * 60 * 1000, { dryRun }));
 
-    const removedProducts = this._syncGridManifest({ dryRun });
+    const removedProducts = this._syncGridManifest({ dryRun, deletedFiles });
     const prune = typeof this.runLogService.pruneOlderThan === 'function'
       ? (dryRun ? { prunedRuns: 0, prunedSteps: 0 } : this.runLogService.pruneOlderThan({ olderThanDays: Number(policy.keepLogDays) || 7 }))
       : { prunedRuns: 0, prunedSteps: 0 };
@@ -83,9 +83,10 @@ class DataPipelineCleanupService {
     try {
       const manifest = JSON.parse(fs.readFileSync(this.manifestPath, 'utf8'));
       const products = Array.isArray(manifest.products) ? manifest.products : [];
+      const deletedFileSet = new Set((options.deletedFiles || []).map(filePath => path.resolve(filePath)));
       const kept = products.filter(item => {
         const productPath = item.path || path.join(this.gridProductDir, `${item.productId}.json`);
-        return fs.existsSync(productPath);
+        return fs.existsSync(productPath) && !deletedFileSet.has(path.resolve(productPath));
       });
       if (options.dryRun === true) {
         return products.length - kept.length;
