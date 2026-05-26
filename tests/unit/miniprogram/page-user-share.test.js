@@ -421,7 +421,10 @@ describe('miniprogram page user/share helpers', () => {
     const homeSource = fs.readFileSync(path.resolve(process.cwd(), 'miniprogram/pages/home/index.js'), 'utf8');
 
     expect(homeSource).toContain('predictionPeriodCards: {}');
-    expect(homeSource).toContain('const predictionCards = await this.callPredictionCardBatch(query);');
+    expect(homeSource).toContain('getHomeGateway');
+    expect(homeSource).toContain('const gatewayResult = await gatewayPromise;');
+    expect(homeSource).toContain('predictionCards = gatewayResult.data.predictionCards;');
+    expect(homeSource).toContain('predictionCards = await this.callPredictionCardBatch(query);');
     expect(homeSource).toContain('getEnhancedPredictionBatch({');
     expect(homeSource).toContain('compactPredictionPreviewPayload(normalizePrediction');
     expect(homeSource).toContain('const cachedPrediction = this.data.predictionPeriodCards?.[value];');

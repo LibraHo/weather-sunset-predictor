@@ -148,6 +148,65 @@ class PredictionAPIService {
     }
   }
 
+  _formatDateParam(date) {
+    const value = date instanceof Date ? date : new Date(date);
+    if (!(value instanceof Date) || Number.isNaN(value.getTime())) return date;
+    return [
+      value.getFullYear(),
+      String(value.getMonth() + 1).padStart(2, '0'),
+      String(value.getDate()).padStart(2, '0')
+    ].join('-');
+  }
+
+  async getHomeGateway({ lat, lon, date = new Date(), period = 'sunset', days = 4, includeRemoteCloudData = true } = {}) {
+    const startTime = Date.now();
+    const params = new URLSearchParams({
+      lat: String(lat),
+      lon: String(lon),
+      date: this._formatDateParam(date),
+      period,
+      days: String(days),
+      includeRemoteCloudData: includeRemoteCloudData ? 'true' : 'false'
+    });
+    const url = `${this.baseURL}/api/prediction/home?${params.toString()}`;
+    console.log(`[PredictionAPIService] Calling home gateway API: lat=${lat}, lon=${lon}, days=${days}`);
+
+    try {
+      const response = await this._fetchWithTimeout(url, { method: 'GET' }, 30000);
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Home gateway prediction failed');
+      }
+
+      const data = result.data || {};
+      const list = Array.isArray(data.predictions?.list)
+        ? data.predictions.list.map((row) => {
+            const prediction = this._convertToPrediction(row);
+            prediction.id = row.id;
+            prediction.dateKey = row.dateKey || row.date || null;
+            prediction.type = row.type || prediction.type;
+            return prediction;
+          })
+        : [];
+
+      const elapsed = Date.now() - startTime;
+      console.log(`[PredictionAPIService] Home gateway API success: ${elapsed}ms, count=${list.length}`);
+      return {
+        ...data,
+        predictions: {
+          ...(data.predictions || {}),
+          list
+        }
+      };
+    } catch (error) {
+      console.error('[PredictionAPIService] Home gateway API failed:', error);
+      const wrappedError = new Error(`Home gateway API failed: ${error.message}`);
+      wrappedError.code = error.code || null;
+      wrappedError.status = error.status || null;
+      throw wrappedError;
+    }
+  }
+
   /**
    * 带超时的 fetch 请求
    *
@@ -156,9 +215,9 @@ class PredictionAPIService {
    * @returns {Promise<Response>} fetch 响应
    * @private
    */
-  async _fetchWithTimeout(url, options) {
+  async _fetchWithTimeout(url, options, timeoutMs = this.timeout) {
     const controller = new AbortController();
-    const timeoutSeconds = Math.max(1, Math.ceil(this.timeout / 1000));
+    const timeoutSeconds = Math.max(1, Math.ceil(timeoutMs / 1000));
     const timeoutError = new Error(`预测服务 ${timeoutSeconds} 秒内没有返回，请稍后重试`);
     timeoutError.name = 'TimeoutError';
     timeoutError.code = 'PREDICTION_API_TIMEOUT';
@@ -166,7 +225,7 @@ class PredictionAPIService {
     const timeoutId = setTimeout(() => {
       timedOut = true;
       controller.abort(timeoutError);
-    }, this.timeout);
+    }, timeoutMs);
 
     try {
       const response = await fetch(url, {

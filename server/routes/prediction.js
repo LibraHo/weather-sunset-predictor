@@ -358,6 +358,105 @@ function buildEnhancedPredictionResponse({ closedLoop, lat, lon, type, options =
   };
 }
 
+function parseFiniteNumber(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
+}
+
+function normalizeGatewayPeriod(value) {
+  return value === 'sunrise' || value === 'sunset' ? value : 'sunset';
+}
+
+function parseGatewayDate(value) {
+  if (typeof value === 'string') {
+    const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (match) {
+      return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 0, 0, 0, 0);
+    }
+  }
+  const parsed = value ? new Date(value) : new Date();
+  if (parsed instanceof Date && !Number.isNaN(parsed.getTime())) {
+    parsed.setHours(0, 0, 0, 0);
+    return parsed;
+  }
+  return null;
+}
+
+function formatDateKey(date) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0')
+  ].join('-');
+}
+
+function addDays(date, days) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function buildGatewayPredictionItems({ startDate, days, lat, lon, timezone }) {
+  const items = [];
+  for (let i = 0; i < days; i += 1) {
+    const day = addDays(startDate, i);
+    const dateKey = formatDateKey(day);
+    for (const type of ['sunrise', 'sunset']) {
+      const referenceTime = type === 'sunrise'
+        ? SunCalculator.getSunriseTime(day, lat, lon, { timezone })
+        : SunCalculator.getSunsetTime(day, lat, lon, { timezone });
+      if (!referenceTime) continue;
+      items.push({
+        id: `${type}:${referenceTime.getTime()}`,
+        dayIndex: i,
+        date: dateKey,
+        dateKey,
+        type,
+        referenceTime: referenceTime.toISOString()
+      });
+    }
+  }
+  return items;
+}
+
+function buildGatewayWeatherPayload(weatherResponse, referenceTime = new Date()) {
+  const hourly = Array.isArray(weatherResponse?.data) ? weatherResponse.data : [];
+  const current = selectHourlyAt(hourly, referenceTime).selected;
+  return {
+    current,
+    hourly,
+    hours: hourly.length,
+    daily: weatherResponse?.daily || [],
+    providerMeta: weatherResponse?.providerMeta || null
+  };
+}
+
+function groupGatewayPredictions({ predictions, items, startDate, days, period }) {
+  const byId = new Map(predictions.map(item => [item.id, item]));
+  const byDate = [];
+  for (let i = 0; i < days; i += 1) {
+    const dateKey = formatDateKey(addDays(startDate, i));
+    const dayItems = items.filter(item => item.dateKey === dateKey);
+    const sunriseItem = dayItems.find(item => item.type === 'sunrise');
+    const sunsetItem = dayItems.find(item => item.type === 'sunset');
+    byDate.push({
+      date: dateKey,
+      sunrise: sunriseItem ? byId.get(sunriseItem.id) || null : null,
+      sunset: sunsetItem ? byId.get(sunsetItem.id) || null : null
+    });
+  }
+
+  const today = byDate[0] || {};
+  return {
+    currentPeriod: period,
+    current: today[period] || today.sunset || today.sunrise || null,
+    sunrise: today.sunrise || null,
+    sunset: today.sunset || null,
+    list: predictions,
+    byDate
+  };
+}
+
 /**
  * 验证周边预测请求参数
  */
@@ -456,6 +555,115 @@ function validateClosedLoopBatchRequest(req, res, next) {
 }
 
 // ========== API 端点 ==========
+
+/**
+ * GET /api/prediction/home
+ * Page-level gateway for the home prediction surface.
+ *
+ * The web app and miniprogram can consume this single payload so weather,
+ * current sunrise/sunset cards, and the multi-day glow strip come from the
+ * same backend weather snapshot and scoring path.
+ */
+router.get('/home', async (req, res) => {
+  const totalProfile = startProfile();
+  try {
+    const lat = parseFiniteNumber(req.query.lat);
+    const lon = parseFiniteNumber(req.query.lon);
+    if (lat === null || lat < -90 || lat > 90) {
+      return errorResponse(res, 400, 'INVALID_LATITUDE', 'lat must be a number between -90 and 90');
+    }
+    if (lon === null || lon < -180 || lon > 180) {
+      return errorResponse(res, 400, 'INVALID_LONGITUDE', 'lon must be a number between -180 and 180');
+    }
+
+    const startDate = parseGatewayDate(req.query.date);
+    if (!startDate) {
+      return errorResponse(res, 400, 'INVALID_DATE', 'date must be a valid date');
+    }
+
+    const period = normalizeGatewayPeriod(req.query.period || req.query.type);
+    const days = Math.max(1, Math.min(parseInt(req.query.days, 10) || 3, 4));
+    const includeRemoteCloudData = String(req.query.includeRemoteCloudData || 'true') !== 'false';
+    const forecastHours = Math.max(24, Math.min(parseInt(req.query.hours, 10) || 168, 168));
+
+    const weatherFetchProfile = startProfile();
+    const weatherResponse = await fetchClosedLoopWeatherData(lat, lon, forecastHours);
+    const weatherFetchMs = profileDurationMs(weatherFetchProfile);
+    const timezone = weatherResponse?.providerMeta?.timezone || null;
+    const items = buildGatewayPredictionItems({ startDate, days, lat, lon, timezone });
+    const predictions = new Array(items.length);
+
+    const calculateItem = async (item, index) => {
+      const closedLoop = await buildClosedLoopPredictionInput({
+        lat,
+        lon,
+        date: item.date,
+        type: item.type,
+        referenceTime: item.referenceTime,
+        weatherResponseOverride: weatherResponse,
+        includeRemoteCloudData,
+        forecastHours
+      });
+      return {
+        id: item.id,
+        date: item.date,
+        dateKey: item.dateKey,
+        dayIndex: item.dayIndex,
+        ...buildEnhancedPredictionResponse({
+          closedLoop,
+          lat,
+          lon,
+          type: item.type,
+          options: { includeRemoteCloudData }
+        })
+      };
+    };
+
+    const BATCH_SIZE = 2;
+    for (let i = 0; i < items.length; i += BATCH_SIZE) {
+      const batch = items.slice(i, i + BATCH_SIZE);
+      const rows = await Promise.all(batch.map((item, offset) => calculateItem(item, i + offset)));
+      rows.forEach((row, offset) => {
+        predictions[i + offset] = row;
+      });
+    }
+
+    const groupedPredictions = groupGatewayPredictions({ predictions, items, startDate, days, period });
+    const data = {
+      location: {
+        lat,
+        lon,
+        name: typeof req.query.name === 'string' ? req.query.name : null
+      },
+      request: {
+        date: formatDateKey(startDate),
+        period,
+        days,
+        includeRemoteCloudData
+      },
+      weather: buildGatewayWeatherPayload(weatherResponse, new Date()),
+      predictions: groupedPredictions,
+      source: {
+        api: 'prediction-home-gateway',
+        weatherProvider: weatherResponse?.providerMeta?.name || null,
+        weatherCache: weatherResponse?.providerMeta?.cache || null
+      },
+      profile: {
+        weatherFetchMs,
+        totalMs: profileDurationMs(totalProfile)
+      }
+    };
+
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('[PredictionRoute] Home gateway error:', error);
+    const providerError = normalizeWeatherProviderError(error);
+    if (providerError) {
+      return errorResponse(res, providerError.status, providerError.code, providerError.message);
+    }
+    errorResponse(res, 500, 'PREDICTION_HOME_GATEWAY_ERROR', error.message);
+  }
+});
 
 /**
  * POST /api/prediction/calculate

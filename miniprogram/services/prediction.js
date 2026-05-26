@@ -154,7 +154,7 @@ export async function getWeatherForecast({ lat, lon, hours = 168 } = {}) {
 
 export function normalizeWeatherForecast(response = {}) {
   const data = Array.isArray(response.data) ? response.data : [];
-  const current = data[0] || {};
+  const current = response.current || data[0] || {};
   const providerMeta = response.providerMeta || current.providerMeta || null;
   const weather = normalizeWeatherData(current, {
     providerMeta,
@@ -171,6 +171,61 @@ export function normalizeWeatherForecast(response = {}) {
     hourly: data,
     daily: response.daily || [],
     glow: response.glow || []
+  };
+}
+
+export async function getHomeGateway({
+  lat,
+  lon,
+  date,
+  period = 'sunset',
+  days = 3,
+  includeRemoteCloudData = true
+} = {}) {
+  const response = await request('/api/prediction/home', {
+    method: 'GET',
+    params: {
+      lat,
+      lon,
+      date,
+      period,
+      days,
+      includeRemoteCloudData: includeRemoteCloudData ? 'true' : 'false'
+    },
+    timeout: 30000
+  });
+  const source = response?.data || response || {};
+  const weatherSource = source.weather || {};
+  const weather = normalizeWeatherForecast({
+    current: weatherSource.current,
+    data: weatherSource.hourly || weatherSource.data || [],
+    daily: weatherSource.daily || [],
+    providerMeta: weatherSource.providerMeta || null
+  });
+  const sunrise = source.predictions?.sunrise ? normalizePrediction(source.predictions.sunrise) : null;
+  const sunset = source.predictions?.sunset ? normalizePrediction(source.predictions.sunset) : null;
+  const current = source.predictions?.current ? normalizePrediction(source.predictions.current) : (period === 'sunrise' ? sunrise : sunset);
+
+  return {
+    ...source,
+    weather,
+    predictions: {
+      ...(source.predictions || {}),
+      current,
+      sunrise,
+      sunset
+    },
+    predictionCards: {
+      ...(sunrise ? { sunrise } : {}),
+      ...(sunset ? { sunset } : {})
+    },
+    threeDayGlow: Array.isArray(source.predictions?.byDate)
+      ? source.predictions.byDate.map((day) => ({
+          date: day.date,
+          sunrise: day.sunrise ? compactPrediction(normalizePrediction(day.sunrise), 'sunrise') : null,
+          sunset: day.sunset ? compactPrediction(normalizePrediction(day.sunset), 'sunset') : null
+        }))
+      : []
   };
 }
 
@@ -276,6 +331,7 @@ export function scoreToLevel(score) {
 }
 
 export default {
+  getHomeGateway,
   getEnhancedPrediction,
   getEnhancedPredictionBatch,
   getWeatherForecast,

@@ -517,6 +517,27 @@ class PredictionController {
     if (!items.length) return;
 
     try {
+      const gateway = await this.predictionAPIService.getHomeGateway({
+        lat: location.lat,
+        lon: location.lon,
+        date: today,
+        period: 'sunset',
+        days: 4,
+        includeRemoteCloudData: true
+      });
+      this._closedLoopBatchPredictionMap = new Map();
+      gateway.predictions.list.forEach((prediction) => {
+        if (prediction?.id) this._closedLoopBatchPredictionMap.set(prediction.id, prediction);
+      });
+      if (this._closedLoopBatchPredictionMap.size > 0) {
+        console.log(`[PredictionController] 后端首页聚合预测预取完成: ${this._closedLoopBatchPredictionMap.size}/${items.length}`);
+        return;
+      }
+    } catch (gatewayError) {
+      console.warn('[PredictionController] 后端首页聚合预测失败，回退到批量预测:', gatewayError.message);
+    }
+
+    try {
       const predictions = await this.predictionAPIService.calculateBatchClosedLoop(items, location.lat, location.lon);
       this._closedLoopBatchPredictionMap = new Map();
       predictions.forEach((prediction) => {
