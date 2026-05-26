@@ -521,7 +521,13 @@ class SettingsPanel {
     const defaultLocationDisplay = document.getElementById('default-location-display');
     if (defaultLocationDisplay) {
       if (defaultLocation) {
-        defaultLocationDisplay.innerHTML = `${this.iconSvg('star')}<span>${defaultLocation.name}</span>`;
+        defaultLocationDisplay.textContent = '';
+        const iconTemplate = document.createElement('template');
+        iconTemplate.innerHTML = this.iconSvg('star').trim();
+        defaultLocationDisplay.appendChild(iconTemplate.content.firstElementChild);
+        const name = document.createElement('span');
+        name.textContent = defaultLocation.name;
+        defaultLocationDisplay.appendChild(name);
         defaultLocationDisplay.classList.remove('setting-default-location-empty');
       } else {
         defaultLocationDisplay.textContent = this.i18n.t('settings.noDefaultLocation');
