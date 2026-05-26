@@ -11,7 +11,7 @@ const DEFAULT_BBOXES = {
 };
 
 const DEFAULT_CONFIG = {
-  mode: 'gfs_cams',
+  mode: 'hybrid',
   regionPreset: 'china',
   bbox: DEFAULT_BBOXES.china,
   resolution: 0.5,

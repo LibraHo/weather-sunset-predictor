@@ -45,12 +45,12 @@ function makeApp(options = {}) {
 }
 
 describe('data pipeline admin routes', () => {
-  test('GET /config returns default GFS+CAMS config', async () => {
+  test('GET /config returns safe default hybrid config', async () => {
     const { app } = makeApp();
     const res = await request(app).get('/api/admin/data-pipeline/config').expect(200);
 
     expect(res.body.success).toBe(true);
-    expect(res.body.config.mode).toBe('gfs_cams');
+    expect(res.body.config.mode).toBe('hybrid');
     expect(res.body.config.forecastHours).toBe(48);
   });
 
@@ -70,16 +70,15 @@ describe('data pipeline admin routes', () => {
     expect(res.body.estimate.safe).toBe(false);
   });
 
-  test('POST /run creates queued run without starting external downloads', async () => {
+  test('POST /run rejects real runs until the worker is implemented', async () => {
     const { app } = makeApp();
     const res = await request(app)
       .post('/api/admin/data-pipeline/run')
       .send({ reason: 'manual-test' })
-      .expect(202);
+      .expect(501);
 
-    expect(res.body.success).toBe(true);
-    expect(res.body.run.status).toBe('queued');
-    expect(res.body.run.config.mode).toBe('gfs_cams');
+    expect(res.body.error.code).toBe('DATA_PIPELINE_REAL_WORKER_NOT_IMPLEMENTED');
+    expect(res.body.estimate.safe).toBe(true);
   });
 
   test('POST /run with dryRun executes the local fixture worker immediately', async () => {
@@ -125,7 +124,29 @@ describe('data pipeline admin routes', () => {
       keepCacheDays: 3,
       keepTileDays: 3,
       keepLogDays: 7
-    }));
+    }), { dryRun: false });
+  });
+
+  test('POST /cleanup dryRun previews cleanup without deleting files', async () => {
+    const cleanupService = {
+      cleanup: jest.fn().mockReturnValue({
+        dryRun: true,
+        deletedFiles: ['/tmp/would-delete.grib2'],
+        deletedBytes: 2048,
+        prunedRuns: 0,
+        prunedSteps: 0
+      })
+    };
+    const { app } = makeApp({ cleanupService });
+    const res = await request(app)
+      .post('/api/admin/data-pipeline/cleanup')
+      .send({ dryRun: true })
+      .expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.cleanup.dryRun).toBe(true);
+    expect(res.body.run.reason).toBe('manual-cleanup-dry-run');
+    expect(cleanupService.cleanup).toHaveBeenCalledWith(expect.any(Object), { dryRun: true });
   });
 
   test('POST /cleanup uses the configured pipeline data directory by default', async () => {
