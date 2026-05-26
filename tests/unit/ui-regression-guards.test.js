@@ -6,6 +6,8 @@ describe('recent user-reported UI regression guards', () => {
   const predictionController = () => fs.readFileSync(path.resolve('src/controllers/PredictionController.js'), 'utf8');
   const rasterOverlay = () => fs.readFileSync(path.resolve('src/services/ChinaRasterOverlay.js'), 'utf8');
   const html = () => fs.readFileSync(path.resolve('index.html'), 'utf8');
+  const settingsPanel = () => fs.readFileSync(path.resolve('src/components/SettingsPanel.js'), 'utf8');
+  const designSystem = () => fs.readFileSync(path.resolve('docs/design-system.md'), 'utf8');
 
   test('dark mode forecast cards have explicit dark backgrounds', () => {
     const source = css();
@@ -146,6 +148,34 @@ describe('recent user-reported UI regression guards', () => {
     expect(tabsMarkup).toContain('xiake-toggle-btn');
     expect(source).not.toContain('border: 1px solid rgba(255, 120, 0, 0.5)');
     expect(source).not.toContain('background: rgba(0, 0, 0, 0.4)');
+  });
+
+  test('home and settings action controls use Xiake SVG button language', () => {
+    const page = html();
+    const source = css();
+    const settingsSource = settingsPanel();
+    const docs = designSystem();
+
+    expect(page).toContain('id="favorites-toggle-btn" class="icon-chip xiake-icon-control"');
+    expect(page).toContain('id="current-location-btn" class="input-icon-btn xiake-icon-control"');
+    expect(page).toContain('id="search-btn" class="btn btn-primary search-action-btn xiake-action-btn xiake-action-btn-primary"');
+    expect(page).toContain('id="api-application-submit"');
+    expect(page).toContain('xiake-action-btn xiake-action-btn-primary');
+    expect(page).not.toMatch(/id="favorites-toggle-btn"[\s\S]*?⭐/);
+    expect(page).not.toMatch(/id="current-location-btn"[\s\S]*?📍/);
+    expect(page).not.toContain('🔄 刷新数据');
+
+    expect(source).toContain('--button-primary-bg');
+    expect(source).toContain('.xiake-action-btn');
+    expect(source).toContain('.xiake-icon-control');
+    expect(source).toContain('.xiake-icon-svg');
+    expect(settingsSource).toContain('iconSvg(name');
+    expect(settingsSource).toContain('settings-done-btn btn-primary xiake-action-btn xiake-action-btn-primary');
+    expect(settingsSource).not.toMatch(/<h2>⚙️/);
+    expect(settingsSource).not.toMatch(/<h3 class="settings-section-title">[🌐🗺️⭐📍☁️🔔⚙️]/u);
+    expect(docs).toContain('按钮与图标语言');
+    expect(docs).toContain('xiake-action-btn xiake-action-btn-primary');
+    expect(docs).toContain('纯图标按钮使用 `xiake-icon-control`');
   });
 
   test('dark mode share icon uses muted night color instead of orange accent', () => {

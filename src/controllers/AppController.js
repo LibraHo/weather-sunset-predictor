@@ -1666,10 +1666,9 @@ class AppController {
       }
     });
 
-    // 特殊处理：带emoji前缀的按钮
+    // 特殊处理：带 SVG 前缀的按钮
     const emojiButtons = [
-      { selector: '#favorite-locations h3', content: '⭐ ', key: 'favorites.title' },
-      { selector: '#refresh-btn', content: '🔄 ', key: 'buttons.refresh' }
+      { selector: '#refresh-btn span[data-i18n="buttons.refresh"]', content: '', key: 'buttons.refresh' }
     ];
 
     emojiButtons.forEach(({ selector, content, key }) => {
