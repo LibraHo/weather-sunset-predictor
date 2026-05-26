@@ -67,6 +67,7 @@ class GridScoreService {
       sunrise: this._createIdleStatus('sunrise'),
       sunset: this._createIdleStatus('sunset')
     };
+    this._refreshListeners = [];
     this._loadFromDisk();
   }
 
@@ -77,6 +78,25 @@ class GridScoreService {
 
   _sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  onRefreshComplete(listener) {
+    if (typeof listener !== 'function') return () => {};
+    this._refreshListeners.push(listener);
+    return () => {
+      this._refreshListeners = this._refreshListeners.filter(item => item !== listener);
+    };
+  }
+
+  async _notifyRefreshComplete(period, cache) {
+    const listeners = [...this._refreshListeners];
+    for (const listener of listeners) {
+      try {
+        await listener({ period, cache });
+      } catch (err) {
+        console.warn(`[GridScoreService] refresh-complete listener failed (${period}):`, err.message);
+      }
+    }
   }
 
   _createIdleStatus(period) {
@@ -562,6 +582,7 @@ class GridScoreService {
     }
 
     this._refreshingByPeriod[safePeriod] = true;
+    let completedCache = null;
     try {
       console.log(`[GridScoreService] 开始刷新网格评分 (${safePeriod})...`);
       const gridPoints = this.generateGrid();
@@ -571,6 +592,7 @@ class GridScoreService {
         gridPoints: scored
       };
       this._saveToDisk();
+      completedCache = this._cache[safePeriod];
       console.log(`[GridScoreService] 刷新完成 (${safePeriod})，共 ${scored.length} 个网格点`);
     } catch (err) {
       console.error(`[GridScoreService] 刷新失败 (${safePeriod}):`, err.message);
@@ -581,6 +603,10 @@ class GridScoreService {
       });
     } finally {
       this._refreshingByPeriod[safePeriod] = false;
+    }
+
+    if (completedCache) {
+      await this._notifyRefreshComplete(safePeriod, completedCache);
     }
   }
 

@@ -13,6 +13,8 @@
  */
 
 import { jest } from '@jest/globals';
+import fs from 'fs';
+import path from 'path';
 import { normalizeSpotsPeriod, SUPPORTED_PERIODS } from '../../../server/routes/spots.js';
 
 describe('Spots API Router - normalizeSpotsPeriod', () => {
@@ -51,5 +53,21 @@ describe('Spots API Router - normalizeSpotsPeriod', () => {
     expect(normalizeSpotsPeriod([])).toBeNull();
     // 布尔值
     expect(normalizeSpotsPeriod(true)).toBeNull();
+  });
+  test('public map GET routes stay cache-only and do not trigger grid refresh', () => {
+    const repoRoot = process.cwd();
+    const routeFiles = [
+      path.join(repoRoot, 'server/routes/spots.js'),
+      path.join(repoRoot, 'server/routes/heatmap.js')
+    ];
+
+    for (const file of routeFiles) {
+      const source = fs.readFileSync(file, 'utf-8');
+      const publicGetBlocks = source.match(/router\.get\('\/(?:china|grid|china\/raster|china\/raster-overlay\.png)'[\s\S]*?\n\}\);/g) || [];
+      expect(publicGetBlocks.length).toBeGreaterThan(0);
+      for (const block of publicGetBlocks) {
+        expect(block).not.toContain('refreshIfStale');
+      }
+    }
   });
 });

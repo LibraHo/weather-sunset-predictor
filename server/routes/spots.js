@@ -178,8 +178,6 @@ router.get('/china', async (req, res, next) => {
       });
     }
 
-    await gridService.refreshIfStale(undefined, period);
-
     const cache = gridService.getCache(period);
     if (!cache) {
       return res.status(503).json({

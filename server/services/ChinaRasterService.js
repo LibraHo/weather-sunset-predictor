@@ -40,9 +40,20 @@ const IDW_OPTIONS = {
 class ChinaRasterService {
   constructor() {
     this._cache = {
-      sunrise: null,
-      sunset: null
+      sunrise: {},
+      sunset: {}
     };
+    if (typeof gridService.onRefreshComplete === 'function') {
+      gridService.onRefreshComplete(({ period }) => {
+        this.warmCache(period).catch(err => {
+          console.warn(`[ChinaRasterService] raster cache warm failed (${period}):`, err.message);
+        });
+      });
+    }
+  }
+
+  _getResolutionKey(resolution) {
+    return String(resolution);
   }
 
   /**
@@ -59,7 +70,8 @@ class ChinaRasterService {
 
     // 先检查本地缓存：TTL 必须基于服务端生成时间，而不是天气数据 updatedAt
     // updatedAt 是预报数据时间，可能来自昨晚；若用它计算 age，会导致缓存永远过期，接口每次重新 IDW 插值。
-    const cached = this._cache[safePeriod];
+    const resolutionKey = this._getResolutionKey(safeRes);
+    const cached = this._cache[safePeriod]?.[resolutionKey];
     if (cached && cached.resolution === safeRes && cached._cachedAt) {
       const age = Date.now() - cached._cachedAt;
       if (age < CACHE_TTL_MS) {
@@ -67,8 +79,7 @@ class ChinaRasterService {
       }
     }
 
-    // 拿散点数据（触发 GridScoreService 刷新）
-    await gridService.refreshIfStale(undefined, safePeriod);
+    // Public map requests are cache-only; backend refresh jobs update the grid and warm this raster cache.
     const spotsCache = gridService.getCache(safePeriod);
 
     if (!spotsCache || !spotsCache.gridPoints || spotsCache.gridPoints.length === 0) {
@@ -125,8 +136,21 @@ class ChinaRasterService {
       }
     };
 
-    this._cache[safePeriod] = raster;
+    if (!this._cache[safePeriod]) {
+      this._cache[safePeriod] = {};
+    }
+    this._cache[safePeriod][resolutionKey] = raster;
     return raster;
+  }
+
+  async warmCache(period = 'sunset', resolutions = [0.25, 0.5]) {
+    const safePeriod = ['sunrise', 'sunset'].includes(period) ? period : 'sunset';
+    this.invalidateCache(safePeriod);
+    const warmed = [];
+    for (const resolution of resolutions) {
+      warmed.push(await this.getRaster(safePeriod, resolution));
+    }
+    return warmed;
   }
 
   /**
@@ -135,10 +159,10 @@ class ChinaRasterService {
    */
   invalidateCache(period = 'all') {
     if (period === 'all') {
-      this._cache.sunrise = null;
-      this._cache.sunset = null;
+      this._cache.sunrise = {};
+      this._cache.sunset = {};
     } else {
-      this._cache[period] = null;
+      this._cache[period] = {};
     }
   }
 }

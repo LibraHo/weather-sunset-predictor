@@ -61,7 +61,7 @@ describe('Spots API Integration', () => {
 
     const res = await request(app).get('/api/spots/china').expect(200);
 
-    expect(gridService.refreshIfStale).toHaveBeenCalled();
+    expect(gridService.refreshIfStale).not.toHaveBeenCalled();
     expect(res.body.updatedAt).toBe(updatedAt);
     // 业务当前阈值 MIN_SPOT_SCORE=40，58 分也应被包含
     expect(res.body.spots).toEqual([
