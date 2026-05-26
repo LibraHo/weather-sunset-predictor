@@ -1174,6 +1174,60 @@ describe('EnhancedPredictionService', () => {
       expect(result.status).toBe('no_fire_cloud');
     });
 
+    test('should use solar-direction curtain as carrier when local overhead clouds are sparse', () => {
+      const weatherData = {
+        cloudCover: 14,
+        lowClouds: 1,
+        midClouds: 23,
+        highClouds: 5,
+        humidity: 55,
+        visibility: 15,
+        precipitation: 0,
+        aerosolOpticalDepth: 0.35,
+        aqi: 155,
+        pm2_5: 65,
+        pm10: 90,
+        dust: 20,
+        shortwaveRadiation: 60,
+        diffuseRadiation: 35,
+        waterVapourColumn: 20
+      };
+      const prevHourData = {
+        shortwaveRadiation: 220,
+        diffuseRadiation: 110
+      };
+      const remoteCloudData = {
+        source: 'solar_direction_openmeteo',
+        samples: [15, 30, 50, 100].map((distanceKm, index) => ({
+          distanceKm,
+          cloudBaseHeight: 6500,
+          lowCloud: index === 0 ? 38 : 22,
+          midCloud: index === 0 ? 24 : 18,
+          highCloud: index === 3 ? 45 : 58
+        }))
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData,
+        new Date('2026-05-26T11:25:00.000Z'),
+        39.9042,
+        116.4074,
+        'sunset',
+        { prevHourData, remoteCloudData }
+      );
+
+      expect(result.directionalCurtainCarrier).toMatchObject({
+        applied: true,
+        floor: 35,
+        reason: 'solar_direction_curtain_carrier'
+      });
+      expect(result.carrierAnalysis.activeCarrier).toBe('directional_curtain');
+      expect(result.breakdown.renderingMode).toBe('negative_rendering_multiplier');
+      expect(result.score).toBeGreaterThanOrEqual(35);
+      expect(result.score).toBeLessThanOrEqual(40);
+      expect(result.status).toBe('light_glow');
+    });
+
     test('should not discount remote solar-direction blockage just because local low cloud is scarce', () => {
       const weatherData = {
         cloudCover: 42,
