@@ -113,18 +113,25 @@ describe('recent user-reported UI regression guards', () => {
   test('front header and footer use the same card width language as other panels', () => {
     const source = css();
     const headerBlock = source.match(/header \{[\s\S]*?\n\}/)?.[0] || '';
+    const mainBlock = source.match(/main \{[\s\S]*?\n\}/)?.[0] || '';
     const rowBlock = source.match(/\.header-top-row \{[\s\S]*?\n\}/)?.[0] || '';
     const footerBlock = source.match(/footer \{[\s\S]*?\n\}/)?.[0] || '';
 
+    expect(source).toContain('--page-gutter: var(--spacing-md)');
     expect(headerBlock).toContain('width: auto');
-    expect(headerBlock).toContain('margin: 0 var(--spacing-md) 16px');
+    expect(headerBlock).toContain('margin: 0 var(--page-gutter) 16px');
+    expect(mainBlock).toContain('padding: var(--spacing-lg) var(--page-gutter)');
+    expect(source).toMatch(/@media \(max-width: 768px\) \{[\s\S]*?--page-gutter: var\(--spacing-md\)/);
+    expect(source).toMatch(/@media \(max-width: 768px\) \{[\s\S]*?main \{[\s\S]*?padding: var\(--spacing-md\) var\(--page-gutter\)/);
+    expect(source).toMatch(/@media \(min-width: 1024px\) \{[\s\S]*?--page-gutter: var\(--spacing-lg\)/);
+    expect(source).toMatch(/@media \(min-width: 1024px\) \{[\s\S]*?main \{[\s\S]*?padding: var\(--spacing-xl\) var\(--page-gutter\)/);
     expect(headerBlock).toContain('border-radius: var(--radius-lg)');
     expect(headerBlock).not.toContain('width: 100vw');
     expect(headerBlock).not.toContain('margin-left: calc(50% - 50vw)');
     expect(rowBlock).toContain('width: 100%');
     expect(rowBlock).toContain('margin: 0');
     expect(footerBlock).toContain('width: auto');
-    expect(footerBlock).toContain('margin: 0 var(--spacing-md)');
+    expect(footerBlock).toContain('margin: 0 var(--page-gutter)');
     expect(footerBlock).toContain('border-radius: var(--radius-lg)');
     expect(footerBlock).not.toContain('width: 100vw');
     expect(footerBlock).not.toContain('margin-left: calc(50% - 50vw)');
