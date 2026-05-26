@@ -16,6 +16,8 @@ const orchestrator = require('./ProviderOrchestrator');
 const quota = require('./OpenMeteoQuota');
 const { calculateEnhancedPrediction } = require('./EnhancedPredictionService');
 const SunCalculator = require('../utils/SunCalculator');
+const GridProductScoreAdapter = require('./GridProductScoreAdapter');
+const DataPipelineModeService = require('./DataPipelineModeService');
 
 const config = require('../config/gridscore.config.js');
 const { isSupportedFirecloudRegion } = require('../utils/SupportedFirecloudRegion');
@@ -50,7 +52,7 @@ const SUPPORTED_PERIODS = ['sunrise', 'sunset'];
 const DEFAULT_PERIOD = 'sunset';
 
 class GridScoreService {
-  constructor() {
+  constructor(options = {}) {
     this._cache = {
       sunrise: null,
       sunset: null
@@ -67,6 +69,8 @@ class GridScoreService {
       sunrise: this._createIdleStatus('sunrise'),
       sunset: this._createIdleStatus('sunset')
     };
+    this._productScoreAdapter = options.productScoreAdapter || new GridProductScoreAdapter();
+    this._modeService = options.modeService || new DataPipelineModeService();
     this._loadFromDisk();
   }
 
@@ -497,6 +501,34 @@ class GridScoreService {
       stale: age > DEFAULT_MAX_AGE_MS,
       period: safePeriod
     };
+  }
+
+  getPipelineCache(period = DEFAULT_PERIOD) {
+    try {
+      return this._productScoreAdapter.getScoreCache(this.normalizePeriod(period));
+    } catch (err) {
+      console.warn('[GridScoreService] pipeline grid product cache unavailable:', err.message);
+      return null;
+    }
+  }
+
+  getBestAvailableCache(period = DEFAULT_PERIOD) {
+    const safePeriod = this.normalizePeriod(period);
+    const pipelineCache = this.getPipelineCache(safePeriod);
+    if (pipelineCache) return pipelineCache;
+
+    const legacyCache = this.getCache(safePeriod);
+    if (!legacyCache) return null;
+    return {
+      ...legacyCache,
+      source: 'openmeteo-grid-cache',
+      degraded: true,
+      degradedReason: 'GRID_PRODUCT_CACHE_NOT_READY'
+    };
+  }
+
+  getPublicMapCache(period = DEFAULT_PERIOD) {
+    return this._modeService.getPublicMapCache(this, this.normalizePeriod(period));
   }
 
   /**

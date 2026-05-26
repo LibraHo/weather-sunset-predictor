@@ -1,8 +1,64 @@
 # 📋 Weather Sunset Predictor 任务清单
 
-**最后更新**：2026-05-13
+**最后更新**：2026-05-26
 
 ---
+
+## 🔧 需求53：GFS+CAMS 火烧云地图数据管线与后台控制台（2026-05-26）
+
+### 背景
+Open-Meteo 点位 API 继续服务首页/单点预测，但不再适合作为火烧云地图网格主抓取源。地图链路改为 GFS 天气网格 + CAMS 气溶胶网格，按未来 48 小时、可配置 bbox、可追溯任务状态和腾讯云 `SA2.LARGE4`（4 核、3.6GiB RAM、2GiB swap、40G 系统盘、约18G可用）约束批处理。
+
+### 任务拆分
+- [x] 53.1 现状审计：梳理 `GridScoreService`、`FireCloudTileService`、`ChinaRasterService`、`GridRefreshSchedule`、`server/scripts/gfs_processor.py`、`/api/heatmap/*`、`/api/tiles/*`、`/admin` 当前地图链路，标出可复用点和需要隔离的 Open-Meteo 网格逻辑。（2026-05-26：见 `docs/data-pipeline-53-audit.md`）
+- [x] 53.2 配置模型：新增 `DataPipelineConfigService`，保存 `mode/regionPreset/bbox/resolution/forecastHours/sources/storagePolicy` 到 `~/.xiake/data-pipeline-config.json`，提供默认中国/0.5°/48h/GFS+CAMS 配置。（2026-05-26 本地实现，测试：`DataPipelineConfigService.test.js`）
+- [x] 53.3 配置校验与资源预估：实现 bbox、格点数、forecast hour、预计下载量、raw/tmp 占用、剩余磁盘阈值校验；危险配置必须拒绝并返回明确原因。（2026-05-26 本地实现，覆盖 global 高分辨率与低磁盘拒绝）
+- [x] 53.3a 前台可用性保护：管线默认单 worker，预算 512MB 常驻内存/768MB 硬上限，预留约 2GB 给网站、小程序 API 和系统；用户请求路径不得启动 GFS/CAMS 下载。（2026-05-26 本地实现：`runtimePolicy`）
+- [x] 53.4 运行日志模型：新增 `DataPipelineRunLogService`，记录 run 与 step，字段包含 source、cycle、forecastHour、variables、bbox、bytesDownloaded、elapsedMs、outputPath、errorCode、message、retryable。（2026-05-26 本地实现，测试：`DataPipelineRunLogService.test.js`）
+- [x] 53.5 后台 API：新增 `GET/POST /api/admin/data-pipeline/config`、`POST /estimate`、`GET /status`、`GET /runs`、`GET /runs/:id`、`POST /run`、`POST /runs/:id/retry`、`POST /cleanup`，全部走现有后台鉴权。（2026-05-26 本地实现，挂载在 `server/index.js`；`cleanup` 仅排队，真实删除留给 53.11）
+- [ ] 53.6 GFS 下载器：新增 `GfsGridSource` 或等价服务，按 `.idx`/NOMADS 子集和字段白名单获取未来 48h GFS 数据；一次只处理一个 forecast hour，处理后删除原始文件。
+- [ ] 53.7 CAMS 下载器：新增 `CamsAerosolSource`，按 bbox、未来 48h 和 AOD/PM 字段白名单拉取 CAMS 数据；支持失败降级并写入 step log。
+- [ ] 53.8 解析与标准化：把 GFS/CAMS 输出统一成内部网格结构，包含经纬度、时间、天气字段、气溶胶字段、sourceMeta；CAMS 0.4° 网格插值到地图评分网格。
+- [x] 53.9 评分合并：增强 `GridScoreService`，支持从 GFS+CAMS 网格缓存计算未来 48h 火烧云评分，不再依赖 Open-Meteo 大范围扫点。（2026-05-26：`GridProductScoreAdapter` 已接入标准化 GFS+CAMS 产物，保留 source/cycle/bbox/sourceMeta 溯源；真实 GRIB/NetCDF 下载解析仍属 53.6-53.8 后续）
+- [x] 53.10 瓦片/缓存输出：增强 `FireCloudTileService` 与 heatmap/tiles 路由，优先读取 GFS+CAMS 产物；缺失时读最近成功产物或返回可解释错误，不触发用户请求内重拉。（2026-05-26：`/api/heatmap/grid`、`/api/spots/china`、China raster、firecloud grid/tile 已缓存优先；未就绪空图不写入长期瓦片/网格缓存）
+- [x] 53.11 清理策略：实现 raw 1小时、tmp 3小时、评分缓存 3天、瓦片 3天、日志 7天或大小上限清理；清理动作也必须记录 step。（2026-05-26：`DataPipelineCleanupService` 已执行 raw/tmp/grid-products/tiles/log retention，manifest 同步裁剪，`POST /cleanup` 会完成 run/step 并返回 deletedFiles/deletedBytes/prunedRuns/prunedSteps；dryRun、并发锁、最新成功 cycle 保底留作后续增强）
+- [ ] 53.12 数据源模式切换：后台支持 `openmeteo`、`gfs_cams`、`hybrid`、`cache_only`、`paused`；地图默认 `gfs_cams`，单点预测默认仍为 Open-Meteo。
+- [ ] 53.13 后台控制台 UI：在 `/admin` 运维/数据面板展示模式、范围配置、资源预估、最近成功产物、当前进度、下载量、失败原因、磁盘剩余、操作按钮。
+- [ ] 53.14 拉取范围管理 UI：支持中国、东亚、测试小区域、自定义 bbox；保存前调用 `/estimate`，显示格点数、预计下载量、预计耗时和安全性。
+- [ ] 53.15 手动操作：后台实现手动刷新未来 48h、暂停/恢复、重试失败任务、清理旧缓存、回滚到上一个成功 cycle，并保留二次确认。
+- [x] 53.16 测试：覆盖配置默认值、配置校验、资源预估、run/step 状态机、失败重试、清理策略、数据源模式切换、heatmap/tiles 读缓存降级。（2026-05-27：已在 `docs/data-pipeline-small-host-acceptance.md` 记录 QA/devops 测试矩阵与执行命令；实际发布分支仍需执行并贴结果）
+- [x] 53.17 小资源验收：在腾讯云 `SA2.LARGE4`（3.6GiB RAM、2GiB swap、40G 系统盘、约18G可用）口径下，用测试小区域跑通 GFS+CAMS 端到端；记录峰值内存、临时文件峰值、下载量和耗时。（2026-05-27：已补小区域验收步骤与记录模板，要求先跑北京/天津测试 bbox）
+- [x] 53.18 文档与运维说明：补充部署环境变量、目录结构、清理策略、常见错误、如何从后台判断“现在在干嘛/今天拉了多少/地图来自哪次数据”。（2026-05-27：见 `docs/data-pipeline-ops-runbook.md`）
+
+### 建议 PR / 分工
+- PR A（控制面基础，backend）：53.1-53.5，先落配置、预估、run log 和后台 API，不接真实下载。
+- PR B（GFS/CAMS 数据源，data/python）：53.6-53.8，先用测试小区域跑通下载、解析、标准化和清理。
+- PR C（评分与地图产物，backend/map）：53.9-53.12，把 heatmap/tiles 切到 GFS+CAMS 缓存优先，并保留降级路径。
+- PR D（后台 UI，frontend/admin）：53.13-53.15，做模式切换、范围管理、进度、统计和危险操作确认。
+- PR E（验收与运维，qa/devops）：53.16-53.18，补自动化测试、小资源验收记录和运维说明。
+
+### 验收口径
+- [ ] 默认中国/0.5°/未来48h 配置能通过资源预估；危险 bbox 或磁盘不足会被拒绝。
+- [ ] 后台能回答：当前在处理哪一步、今天下载多少、最近成功地图来自哪个 source/cycle/bbox。
+- [ ] 刷新页面后 run 状态仍可恢复，失败原因可追溯到具体 source/forecast hour/step。
+- [ ] raw/tmp 不长期积压，原始文件处理后自动删除，清理动作有日志。
+- [x] `/api/heatmap` 和 `/api/tiles` 默认读 GFS+CAMS 产物，不再用 Open-Meteo 扫大范围网格。（2026-05-26：用户请求路径只读缓存/降级缓存；后台 worker 才允许下载）
+- [ ] 单点预测仍走现有 Open-Meteo 链路，GFS/CAMS 改造不破坏首页查分。
+
+---
+
+### 2026-05-26 agent execution note
+- [x] 53.6-53.8 PR B skeleton delivered by backend data worker: `GfsGridSourceService`, `CamsAerosolSourceService`, `GridProductCacheService`, and `DataPipelinePlannerService`; scope is request planning, field whitelist, standardized grid products, manifests, resource estimates, and tests. Real GRIB/NetCDF download/parse remains a later worker step.
+- [x] 53.13-53.15 PR D admin UI delivered by admin UI worker: `/admin` data-pipeline panel now supports status, range/config editing, estimate, dry-run estimate, manual run, retry, cleanup, recent runs, and run detail views.
+- [x] Local acceptance for this slice: `npm test -- --runTestsByPath tests/unit/server/DataPipelineConfigService.test.js tests/unit/server/DataPipelineRunLogService.test.js tests/unit/server/dataPipelineRoutes.test.js tests/unit/server/GfsGridSourceService.test.js tests/unit/server/CamsAerosolSourceService.test.js tests/unit/server/GridProductCacheService.test.js tests/unit/server/DataPipelinePlannerService.test.js tests/unit/admin/admin-page-structure.test.js tests/unit/admin/admin-header-card-width.test.js` passed 9 suites / 26 tests; `node --check public\admin\admin.js` passed.
+- [x] 53.9-53.10 PR C cache-first map slice accepted after implementation + spec/quality review: `/api/heatmap/grid`, `/api/spots/china`, `ChinaRasterService`, and `FireCloudTileService` read best available grid-product cache without public Open-Meteo refresh; degraded raster caches recheck source signatures, and not-ready grids/PNG tiles are not cached over fresh pipeline products.
+- [x] Local acceptance for PR C cache-first slice: `npm test -- tests/unit/server/GridProductScoreAdapter.test.js tests/unit/server/ChinaRasterService.test.js tests/unit/server/heatmapRoute.cacheFirst.test.js tests/unit/server/FireCloudTileService.cacheFirst.test.js tests/unit/server/GridScoreService.test.js tests/unit/server/GridProductCacheService.test.js tests/integration/server/firecloud-api.integration.test.js tests/integration/server/spots-api.integration.test.js --runInBand` passed 8 suites / 54 tests.
+- [x] 53.11 cleanup slice accepted after旁路 agent audit + TDD: cleanup now performs real deletion under the configured pipeline data directory, prunes old run/step logs, and records completed cleanup steps instead of returning queued-only status.
+- [x] Local acceptance for cleanup slice: `npm test -- tests/unit/server/DataPipelineConfigService.test.js tests/unit/server/DataPipelinePlannerService.test.js tests/unit/server/DataPipelineRunLogService.test.js tests/unit/server/DataPipelineCleanupService.test.js tests/unit/server/GridProductCacheService.test.js tests/unit/server/dataPipelineRoutes.test.js --runInBand` passed 6 suites / 19 tests.
+- [x] 53.6-53.18 final delegated execution: worker dry-run fixture, mode policy, admin controls, cleanup, documentation, and small-host acceptance materials are integrated. `POST /api/admin/data-pipeline/run` with `dryRun: true` now executes the local fixture worker and writes traceable GFS/CAMS grid products without external network calls; normal run remains queued until real GRIB/NetCDF downloader credentials and parser are enabled.
+- [x] Final local acceptance for Requirement 53 slice: `npm test -- tests/unit/server/DataPipelineConfigService.test.js tests/unit/server/DataPipelinePlannerService.test.js tests/unit/server/DataPipelineRunLogService.test.js tests/unit/server/DataPipelineCleanupService.test.js tests/unit/server/DataPipelineWorkerService.test.js tests/unit/server/DataPipelineModeService.test.js tests/unit/server/GfsGridSourceService.test.js tests/unit/server/CamsAerosolSourceService.test.js tests/unit/server/GridProductCacheService.test.js tests/unit/server/GridProductScoreAdapter.test.js tests/unit/server/GridScoreService.test.js tests/unit/server/GridScoreService.mode.test.js tests/unit/server/heatmapRoute.cacheFirst.test.js tests/unit/server/heatmapRoute.mode.test.js tests/unit/server/FireCloudTileService.cacheFirst.test.js tests/unit/server/FireCloudTileService.mode.test.js tests/unit/server/ChinaRasterService.test.js tests/unit/server/dataPipelineRoutes.test.js tests/integration/server/firecloud-api.integration.test.js tests/integration/server/spots-api.integration.test.js tests/unit/admin --runInBand` passed 22 suites / 98 tests; `node --check` passed for `public/admin/admin.js`, `server/routes/data-pipeline.js`, `server/services/DataPipelineWorkerService.js`, and `server/services/DataPipelineModeService.js`.
+- [x] 53.16-53.18 PR E documentation slice accepted: `docs/data-pipeline-ops-runbook.md`, `docs/data-pipeline-small-host-acceptance.md`, and `docs/data-pipeline-53-audit.md` now cover environment variables, directory layout, cleanup policy, common errors, admin status/download/provenance checks, and Tencent Cloud small-host acceptance. This slice changed docs only.
+- [x] OpenClaw deployment handoff test files are listed in `docs/data-pipeline-ops-runbook.md` under "OpenClaw Deployment Test Files"; run that focused Requirement 53 suite plus the listed `node --check` commands after deploy and before enabling real GFS/CAMS downloads.
 
 ### PR #696 conflict-resolution update (2026-05-14)
 PR #696 (`codex-miniprogram-web-parity-polish`) builds on PR #691/#693 instead of replacing them: it keeps the uploaded `1.0.2` real-device acceptance track from `main`, and adds source-level parity work for the Mini Program weather panel, 24-hour forecast chart, dawn/dusk prediction card, cloud radar visibility, and settings overlay close behavior.

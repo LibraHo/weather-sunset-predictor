@@ -19,6 +19,7 @@ const tilesRoutes = require('./routes/tiles');
 const photosRoutes = require('./routes/photos');
 const adminRoutes = require('./routes/admin');
 const apiLogsRoutes = require('./routes/api-logs');
+const dataPipelineRoutes = require('./routes/data-pipeline');
 const agentRoutes = require('./routes/agent');
 const applicationsRoutes = require('./routes/applications');
 const shareRoutes = require('./routes/share');
@@ -156,6 +157,7 @@ const adminApiAuth = (req, res, next) => {
   }
   next();
 };
+app.use('/api/admin/data-pipeline', adminApiAuth, dataPipelineRoutes);
 app.use('/api/admin', adminApiAuth, apiLogsRoutes);
 app.use('/api/admin/share', adminApiAuth, shareStatsRoutes);
 app.use('/share', shareRoutes);

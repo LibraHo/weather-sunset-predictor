@@ -65,6 +65,26 @@ function normalizeSpotsPeriod(period) {
   return SUPPORTED_PERIODS.includes(safe) ? safe : null;
 }
 
+function readPublicMapCache(period) {
+  if (typeof gridService.getPublicMapCache === 'function') {
+    return gridService.getPublicMapCache(period);
+  }
+  const cache = typeof gridService.getBestAvailableCache === 'function'
+    ? gridService.getBestAvailableCache(period)
+    : gridService.getCache(period);
+  return { mode: 'hybrid', status: cache ? 'ready' : 'not-ready', cache };
+}
+
+function notReadyError(modeResult) {
+  return {
+    code: modeResult.status === 'paused' ? 'DATA_PIPELINE_PAUSED' : 'GRID_NOT_READY',
+    message: modeResult.status === 'paused' ? 'data pipeline is paused' : 'grid data is not ready',
+    mode: modeResult.mode || null,
+    status: modeResult.status || 'not-ready',
+    degradedReason: modeResult.degradedReason || null
+  };
+}
+
 function lerp(start, end, t) {
   return start + (end - start) * t;
 }
@@ -178,13 +198,10 @@ router.get('/china', async (req, res, next) => {
       });
     }
 
-    await gridService.refreshIfStale(undefined, period);
-
-    const cache = gridService.getCache(period);
+    const modeResult = readPublicMapCache(period);
+    const cache = modeResult.cache;
     if (!cache) {
-      return res.status(503).json({
-        error: { code: 'GRID_NOT_READY', message: '网格数据尚未就绪，请稍后再试' }
-      });
+      return res.status(503).json({ error: notReadyError(modeResult) });
     }
 
     const today = new Date().toISOString().slice(0, 10);
@@ -203,6 +220,10 @@ router.get('/china', async (req, res, next) => {
       updatedAt: cache.updatedAt,
       date: today,
       period,
+      mode: modeResult.mode || null,
+      source: cache.source || 'openmeteo-grid-cache',
+      degraded: cache.degraded === true,
+      degradedReason: cache.degradedReason || null,
       spots
     });
   } catch (err) {

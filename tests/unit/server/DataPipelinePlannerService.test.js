@@ -1,0 +1,74 @@
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+
+let DataPipelinePlannerService;
+
+beforeAll(async () => {
+  const mod = await import('../../../server/services/DataPipelinePlannerService.js');
+  DataPipelinePlannerService = mod.default || mod;
+});
+
+function makeTempDir() {
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'xiake-pipeline-planner-'));
+}
+
+describe('DataPipelinePlannerService', () => {
+  test('creates a dry-run GFS+CAMS plan with traceable batches and resource estimates', () => {
+    const service = new DataPipelinePlannerService({
+      dataDir: makeTempDir(),
+      now: new Date('2026-05-26T10:15:00Z'),
+      freeDiskBytes: 20 * 1024 ** 3
+    });
+
+    const plan = service.createPlan({
+      mode: 'gfs_cams',
+      bbox: { north: 54, south: 18, west: 73, east: 135 },
+      resolution: 0.5,
+      forecastHours: 48,
+      forecastStepHours: 1,
+      sources: { gfs: true, cams: true },
+      runtimePolicy: { maxResidentMemoryMb: 512 },
+      storagePolicy: { minFreeDiskGb: 3, maxRawTmpGb: 5 }
+    });
+
+    expect(plan.safe).toBe(true);
+    expect(plan.windowHours).toBe(48);
+    expect(plan.sources).toEqual(['gfs', 'cams']);
+    expect(plan.runtimePolicy).toMatchObject({
+      workerConcurrency: 1,
+      maxResidentMemoryMb: 512,
+      publicRequestCanStartPipeline: false
+    });
+    expect(plan.steps.some(step => step.source === 'gfs' && step.forecastHour === 0)).toBe(true);
+    expect(plan.steps.some(step => step.source === 'cams' && step.forecastHours.includes(48))).toBe(true);
+    expect(plan.estimate).toMatchObject({
+      gridPoints: 9125,
+      estimatedDownloadBytes: expect.any(Number),
+      estimatedRawTmpBytes: expect.any(Number),
+      maxResidentBytes: expect.any(Number),
+      freeDiskBytes: 20 * 1024 ** 3
+    });
+  });
+
+  test('marks plan unsafe when raw tmp estimate would violate disk policy', () => {
+    const service = new DataPipelinePlannerService({
+      dataDir: makeTempDir(),
+      now: new Date('2026-05-26T10:15:00Z'),
+      freeDiskBytes: 3.1 * 1024 ** 3
+    });
+
+    const plan = service.createPlan({
+      mode: 'gfs_cams',
+      bbox: { north: 54, south: 18, west: 73, east: 135 },
+      resolution: 0.5,
+      forecastHours: 48,
+      forecastStepHours: 1,
+      sources: { gfs: true, cams: true },
+      storagePolicy: { minFreeDiskGb: 3, maxRawTmpGb: 5 }
+    });
+
+    expect(plan.safe).toBe(false);
+    expect(plan.reasons.join('; ')).toMatch(/disk/i);
+  });
+});

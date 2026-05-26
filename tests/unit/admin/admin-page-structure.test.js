@@ -18,7 +18,7 @@ describe('admin page structure', () => {
     expect(html).toContain('admin-header');
     expect(html).not.toContain('admin-view-menu');
 
-    ['dashboard', 'visitors', 'ops', 'logs', 'schedule', 'agent', 'photos'].forEach((view) => {
+    ['dashboard', 'visitors', 'ops', 'logs', 'schedule', 'data-pipeline', 'agent', 'photos'].forEach((view) => {
       expect(html).toContain(`data-admin-panel="${view}"`);
       expect(html).toContain(`data-view="${view}"`);
       expect(html).toContain(`id="admin-panel-${view}"`);
@@ -56,6 +56,7 @@ describe('admin page structure', () => {
       'healthGrid',
       'queueStatusGrid',
       'visitorDate',
+      'clientStatsBody',
       'visitorIpBody',
       'visitorRecordBody',
       'logTableBody',
@@ -125,8 +126,9 @@ describe('admin page structure', () => {
     expect(html).toContain('字段都可以留空或手动修改');
     expect(html).toContain('访客记录');
     expect(html).toContain('日期（北京时间）');
-    expect(js).toContain("const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'ops', 'logs', 'schedule', 'agent', 'photos'])");
+    expect(js).toContain("const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'ops', 'logs', 'schedule', 'data-pipeline', 'agent', 'photos'])");
     expect(js).toContain("fetch('/admin/visitor-records?'");
+    expect(js).toContain('renderClientStats');
     expect(js).toContain('getBeijingDateInputValue');
     expect(html).toContain('编辑照片信息');
     expect(html).not.toContain('在地图上选择位置');
@@ -140,6 +142,116 @@ describe('admin page structure', () => {
     expect(js).toContain("xhr.upload.addEventListener('progress'");
     expect(js).toContain("showMessage('上传成功', 'success', 'uploadFeedback')");
     expect(js).toContain("showMessage('上传失败: ' + message, 'error', 'uploadFeedback')");
+  });
+
+  test('data pipeline panel manages GFS+CAMS config, estimates, runs, and cleanup', () => {
+    const html = readAdminHtml();
+    const js = readAdminJs();
+
+    [
+      'pipelineMode',
+      'pipelineRegionPreset',
+      'pipelineBboxNorth',
+      'pipelineBboxSouth',
+      'pipelineBboxWest',
+      'pipelineBboxEast',
+      'pipelineResolution',
+      'pipelineForecastHours',
+      'pipelineGfsEnabled',
+      'pipelineCamsEnabled',
+      'pipelineOpenMeteoFallback',
+      'pipelineStatusGrid',
+      'pipelineEstimateGrid',
+      'pipelineRunReason',
+      'pipelineRunsBody',
+      'pipelineRunStepsBody',
+      'pipelineConfigMsg',
+      'pipelineRunMsg',
+    ].forEach((id) => expect(html).toContain(`id="${id}"`));
+
+    [
+      'loadDataPipeline',
+      'loadDataPipelineStatus',
+      'loadDataPipelineConfig',
+      'loadDataPipelineRuns',
+      'estimateDataPipeline',
+      'saveDataPipelineConfig',
+      'startDataPipelineRun',
+      'startDataPipelineDryRun',
+      'retryDataPipelineRun',
+      'cleanupDataPipeline',
+      'renderDataPipelineStatus',
+      'renderDataPipelineRuns',
+      'renderDataPipelineRunDetail',
+      'collectDataPipelineConfig',
+      'formatBytes',
+    ].forEach((fn) => expect(js).toContain(`function ${fn}`));
+
+    [
+      '/api/admin/data-pipeline/status',
+      '/api/admin/data-pipeline/config',
+      '/api/admin/data-pipeline/estimate',
+      '/api/admin/data-pipeline/run',
+      '/api/admin/data-pipeline/runs?limit=20',
+      '/api/admin/data-pipeline/cleanup',
+      '/api/admin/data-pipeline/runs/',
+    ].forEach((endpoint) => expect(js).toContain(endpoint));
+
+    expect(html).toContain('GFS+CAMS');
+    expect(html).toContain('dry-run');
+    expect(html).toContain('cleanupDataPipeline');
+    expect(js).toContain("case 'data-pipeline'");
+    expect(js).toContain("activeAdminView === 'data-pipeline'");
+  });
+
+  test('data pipeline admin exposes 53.13-53.15 operations and budget fields', () => {
+    const html = readAdminHtml();
+    const js = readAdminJs();
+    const css = fs.readFileSync(path.join(ROOT, 'public/admin/admin.css'), 'utf8');
+
+    [
+      'pipelineModeBadge',
+      'pipelineRangeBadge',
+      'pipelineCurrentProgress',
+      'pipelineLatestProduct',
+      'pipelineTodayDownload',
+      'pipelineFailureReason',
+      'pipelineDiskBudget',
+      'pipelineMemoryBudget',
+      'pipelineEstimateNotice',
+      'pipelinePauseBtn',
+      'pipelineResumeBtn',
+      'pipelineCleanupDryRunBtn',
+      'pipelineRollbackBtn',
+    ].forEach((id) => expect(html).toContain(`id="${id}"`));
+
+    [
+      '<option value="china">中国</option>',
+      '<option value="east_asia">东亚</option>',
+      '<option value="test_small">小范围测试</option>',
+      '<option value="custom_bbox">自定义 bbox</option>',
+    ].forEach((option) => expect(html).toContain(option));
+
+    [
+      'pauseDataPipeline',
+      'resumeDataPipeline',
+      'cleanupDataPipelineDryRun',
+      'confirmDataPipelineRollback',
+      'saveDataPipelineConfigWithMode',
+      'renderDataPipelineSummary',
+      'formatDataPipelineFailure',
+      'formatBbox',
+    ].forEach((fn) => expect(js).toContain(`function ${fn}`));
+
+    expect(js).toContain('await estimateDataPipeline({ silent: true })');
+    expect(js).toContain("mode: 'paused'");
+    expect(js).toContain("mode: 'gfs_cams'");
+    expect(js).toContain('dryRun: true');
+    expect(js).toContain("confirm('确认进入 rollback 预案？')");
+    expect(js).toContain("confirm('再次确认：当前版本只会记录 rollback 意图，不会改动后端数据。')");
+    expect(css).toContain('.pipeline-summary-grid');
+    expect(css).toContain('.pipeline-danger-actions');
+    expect(css).toContain('overflow-wrap: anywhere');
   });
 
   test('does not fall back to the old emoji long-page admin shell', () => {

@@ -146,6 +146,40 @@ curl http://localhost:3000/api/config/map-key
 
 ---
 
+#### GET /api/visitor/count
+
+读取共享访问人数计数。网页端和微信小程序共用同一个持久化文件 `~/.xiake/visitor-count.json`，不会因部署或重启清空。
+
+**响应示例：**
+```json
+{
+  "count": 12345,
+  "byClient": {
+    "web": 10000,
+    "miniprogram": 2345
+  }
+}
+```
+
+#### POST /api/visitor/count
+
+累计一次可计数访问。请求可以通过 `X-Xiake-Client` header 或 JSON body 的 `client` 字段标记来源，支持值：
+
+- `web`
+- `miniprogram`
+
+旧数据只有总数时会按总数兼容读取；新增来源统计只从上线后的新请求开始累加。
+
+**请求示例：**
+```bash
+curl -X POST "http://localhost:3000/api/visitor/count" \
+  -H "Content-Type: application/json" \
+  -H "X-Xiake-Client: miniprogram" \
+  -d '{"client":"miniprogram"}'
+```
+
+---
+
 ### 天气数据
 
 #### GET /api/weather/forecast

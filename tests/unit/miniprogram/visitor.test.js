@@ -20,6 +20,8 @@ describe('miniprogram visitor counter service', () => {
     const requestMock = jest.fn((options) => {
       expect(options.url).toBe('https://sunset.bjhyc.online/api/visitor/count');
       expect(options.method).toBe('POST');
+      expect(options.data).toEqual({ client: 'miniprogram' });
+      expect(options.header).toMatchObject({ 'X-Xiake-Client': 'miniprogram' });
       options.success({ statusCode: 200, data: { count: 12345 } });
     });
     api.configureApi({ baseUrl: 'https://sunset.bjhyc.online' });

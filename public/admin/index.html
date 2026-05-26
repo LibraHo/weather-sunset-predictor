@@ -36,6 +36,7 @@
               <button class="home-view-option admin-view-option" role="menuitemradio" aria-checked="false" data-view="ops">运维</button>
               <button class="home-view-option admin-view-option" role="menuitemradio" aria-checked="false" data-view="logs">日志</button>
               <button class="home-view-option admin-view-option" role="menuitemradio" aria-checked="false" data-view="schedule">定时任务</button>
+              <button class="home-view-option admin-view-option" role="menuitemradio" aria-checked="false" data-view="data-pipeline">数据管线</button>
               <button class="home-view-option admin-view-option" role="menuitemradio" aria-checked="false" data-view="agent">Agent / API</button>
               <button class="home-view-option admin-view-option" role="menuitemradio" aria-checked="false" data-view="photos">照片</button>
             </div>
@@ -71,6 +72,7 @@
             <button class="admin-entry-card" data-view="visitors"><strong>访客记录</strong><span>按北京时间查看每日 IP 和访问明细</span></button>
             <button class="admin-entry-card" data-view="logs"><strong>日志</strong><span>API 调用、错误、每日统计</span></button>
             <button class="admin-entry-card" data-view="schedule"><strong>定时任务</strong><span>朝霞/晚霞自动刷新配置</span></button>
+            <button class="admin-entry-card" data-view="data-pipeline"><strong>数据管线</strong><span>GFS+CAMS 范围、估算、运行追溯</span></button>
             <button class="admin-entry-card" data-view="agent"><strong>Agent / API</strong><span>Token、申请、用量、审计</span></button>
             <button class="admin-entry-card" data-view="photos"><strong>照片</strong><span>上传与分享地图照片管理</span></button>
           </div>
@@ -93,7 +95,10 @@
           </div>
         </section>
         <section class="admin-section">
-          <div class="admin-card"><h3 class="card-title">今日 Top IP</h3><div class="table-wrap"><table class="admin-table"><thead><tr><th>IP</th><th>归属地</th><th>访问次数</th></tr></thead><tbody id="ipStatsBody"><tr><td colspan="3" class="empty">加载中...</td></tr></tbody></table></div></div>
+          <div class="two-col">
+            <div class="admin-card"><h3 class="card-title">今日 Top IP</h3><div class="table-wrap"><table class="admin-table"><thead><tr><th>IP</th><th>归属地</th><th>访问次数</th></tr></thead><tbody id="ipStatsBody"><tr><td colspan="3" class="empty">加载中...</td></tr></tbody></table></div></div>
+            <div class="admin-card"><h3 class="card-title">今日客户端来源</h3><div class="table-wrap"><table class="admin-table"><thead><tr><th>Client</th><th>PV</th><th>UV</th></tr></thead><tbody id="clientStatsBody"><tr><td colspan="3" class="empty">加载中...</td></tr></tbody></table></div></div>
+          </div>
         </section>
       </section>
 
@@ -116,7 +121,7 @@
         <section class="admin-section">
           <div class="two-col">
             <div class="admin-card"><h3 class="card-title">当日 IP</h3><div class="table-wrap visitor-table-wrap"><table class="admin-table"><thead><tr><th>IP</th><th>归属地</th><th>访问次数</th></tr></thead><tbody id="visitorIpBody"><tr><td colspan="3" class="empty">加载中...</td></tr></tbody></table></div></div>
-            <div class="admin-card"><h3 class="card-title">访问明细</h3><div class="table-wrap visitor-table-wrap"><table class="admin-table"><thead><tr><th>时间</th><th>IP</th><th>归属地</th><th>方法</th><th>路径</th></tr></thead><tbody id="visitorRecordBody"><tr><td colspan="5" class="empty">加载中...</td></tr></tbody></table></div></div>
+            <div class="admin-card"><h3 class="card-title">访问明细</h3><div class="table-wrap visitor-table-wrap"><table class="admin-table"><thead><tr><th>时间</th><th>来源</th><th>IP</th><th>归属地</th><th>方法</th><th>路径</th></tr></thead><tbody id="visitorRecordBody"><tr><td colspan="6" class="empty">加载中...</td></tr></tbody></table></div></div>
           </div>
         </section>
       </section>
@@ -140,6 +145,88 @@
       <section id="admin-panel-schedule" class="admin-panel hidden" data-admin-panel="schedule" role="tabpanel" aria-label="定时任务">
         <div class="admin-page-hero card"><p class="admin-eyebrow">Schedule</p><h1>定时更新配置</h1><p>管理火烧云数据更新节奏，保存前会校验时间格式和重复配置。</p></div>
         <section class="admin-section"><div class="admin-card"><h3 class="card-title">刷新时间点</h3><div id="scheduleJobs" class="schedule-jobs"></div><div class="schedule-actions"><button class="btn btn-secondary" onclick="addScheduleJob()">+ 添加时间点</button><button class="btn btn-primary" onclick="saveSchedule()">保存配置</button></div><div id="scheduleMsg" class="admin-message hidden"></div></div></section>
+      </section>
+
+      <section id="admin-panel-data-pipeline" class="admin-panel hidden" data-admin-panel="data-pipeline" role="tabpanel" aria-label="数据管线">
+        <div class="admin-page-hero card"><p class="admin-eyebrow">Data Pipeline</p><h1>GFS+CAMS 数据管线</h1><p>像 Open-Meteo 拉取一样管理 GFS+CAMS 方案、拉取范围、下载估算、处理进度和运行记录。</p></div>
+        <section class="admin-section">
+          <div class="pipeline-summary-grid" aria-label="数据管线关键状态">
+            <div class="pipeline-summary-item"><span>模式</span><strong id="pipelineModeBadge">--</strong></div>
+            <div class="pipeline-summary-item"><span>范围</span><strong id="pipelineRangeBadge">--</strong></div>
+            <div class="pipeline-summary-item"><span>当前进度</span><strong id="pipelineCurrentProgress">--</strong></div>
+            <div class="pipeline-summary-item"><span>最近成功产物</span><strong id="pipelineLatestProduct">--</strong></div>
+            <div class="pipeline-summary-item"><span>今日下载</span><strong id="pipelineTodayDownload">--</strong></div>
+            <div class="pipeline-summary-item"><span>失败原因</span><strong id="pipelineFailureReason">--</strong></div>
+            <div class="pipeline-summary-item"><span>磁盘预算</span><strong id="pipelineDiskBudget">--</strong></div>
+            <div class="pipeline-summary-item"><span>内存预算</span><strong id="pipelineMemoryBudget">--</strong></div>
+          </div>
+        </section>
+        <section class="admin-section">
+          <div class="two-col">
+            <div class="admin-card">
+              <h3 class="card-title">当前状态</h3>
+              <div id="pipelineStatusGrid" class="pipeline-status-grid"><p class="empty">加载中...</p></div>
+            </div>
+            <div class="admin-card">
+              <h3 class="card-title">下载估算与安全性</h3>
+              <div id="pipelineEstimateGrid" class="pipeline-status-grid"><p class="empty">等待估算...</p></div>
+            </div>
+          </div>
+        </section>
+        <section class="admin-section">
+          <div class="admin-card">
+            <h3 class="card-title">拉取范围与方案</h3>
+            <form id="pipelineConfigForm" class="upload-form">
+              <div class="form-row two-inputs">
+                <label><span>方案</span><select id="pipelineMode"><option value="gfs_cams">GFS+CAMS</option><option value="hybrid">Hybrid</option><option value="openmeteo">Open-Meteo</option><option value="cache_only">仅缓存</option><option value="paused">暂停</option></select></label>
+                <label><span>范围预设</span><select id="pipelineRegionPreset"><option value="china">中国</option><option value="east_asia">东亚</option><option value="test_small">小范围测试</option><option value="custom_bbox">自定义 bbox</option></select></label>
+              </div>
+              <div class="pipeline-bbox-grid">
+                <label><span>North</span><input id="pipelineBboxNorth" type="number" step="0.01" min="-90" max="90"></label>
+                <label><span>South</span><input id="pipelineBboxSouth" type="number" step="0.01" min="-90" max="90"></label>
+                <label><span>West</span><input id="pipelineBboxWest" type="number" step="0.01" min="-180" max="180"></label>
+                <label><span>East</span><input id="pipelineBboxEast" type="number" step="0.01" min="-180" max="180"></label>
+              </div>
+              <div class="form-row two-inputs">
+                <label><span>分辨率</span><select id="pipelineResolution"><option value="1">1°</option><option value="0.5">0.5°</option><option value="0.25">0.25°</option></select></label>
+                <label><span>预报时长</span><select id="pipelineForecastHours"><option value="24">24h</option><option value="48">48h</option><option value="72">72h</option></select></label>
+              </div>
+              <div class="pipeline-switch-row">
+                <label class="admin-inline-switch"><input id="pipelineGfsEnabled" type="checkbox" checked><span>GFS</span></label>
+                <label class="admin-inline-switch"><input id="pipelineCamsEnabled" type="checkbox" checked><span>CAMS</span></label>
+                <label class="admin-inline-switch"><input id="pipelineOpenMeteoFallback" type="checkbox" checked><span>Open-Meteo fallback</span></label>
+              </div>
+              <div id="pipelineConfigMsg" class="admin-message hidden"></div>
+              <p id="pipelineEstimateNotice" class="form-hint">保存前会先估算下载量、raw/tmp 和内存预算。</p>
+              <div class="schedule-actions pipeline-actions">
+                <button type="button" class="btn btn-secondary" onclick="estimateDataPipeline()">估算下载量</button>
+                <button type="button" class="btn btn-primary" onclick="saveDataPipelineConfig()">保存配置</button>
+                <button id="pipelinePauseBtn" type="button" class="btn btn-secondary" onclick="pauseDataPipeline()">暂停</button>
+                <button id="pipelineResumeBtn" type="button" class="btn btn-secondary" onclick="resumeDataPipeline()">恢复</button>
+              </div>
+            </form>
+          </div>
+        </section>
+        <section class="admin-section">
+          <div class="admin-card">
+            <h3 class="card-title">手动运行</h3>
+            <div class="pipeline-run-row">
+              <input id="pipelineRunReason" type="text" placeholder="运行原因，例如 manual-refresh 或 dry-run">
+                  <button class="btn btn-secondary" type="button" onclick="startDataPipelineDryRun()">dry-run</button>
+                  <button class="btn btn-primary" type="button" onclick="startDataPipelineRun()">启动 run</button>
+                  <button class="btn btn-secondary" type="button" onclick="cleanupDataPipeline()">触发 cleanup</button>
+                  <button id="pipelineCleanupDryRunBtn" class="btn btn-secondary" type="button" onclick="cleanupDataPipelineDryRun()">cleanup dry-run</button>
+                  <button id="pipelineRollbackBtn" class="btn btn-danger" type="button" onclick="confirmDataPipelineRollback()">rollback</button>
+                </div>
+                <div id="pipelineRunMsg" class="admin-message hidden"></div>
+              </div>
+        </section>
+        <section class="admin-section">
+          <div class="two-col">
+            <div class="admin-card"><h3 class="card-title">最近 runs</h3><div class="table-wrap pipeline-table-wrap"><table class="admin-table"><thead><tr><th>时间</th><th>状态</th><th>原因</th><th>进度</th><th>下载</th><th>操作</th></tr></thead><tbody id="pipelineRunsBody"><tr><td colspan="6" class="empty">加载中...</td></tr></tbody></table></div></div>
+            <div class="admin-card"><h3 class="card-title">Run 详情</h3><div class="table-wrap pipeline-table-wrap"><table class="admin-table"><thead><tr><th>步骤</th><th>来源</th><th>状态</th><th>时效</th><th>下载</th><th>错误</th></tr></thead><tbody id="pipelineRunStepsBody"><tr><td colspan="6" class="empty">选择 run 查看步骤</td></tr></tbody></table></div></div>
+          </div>
+        </section>
       </section>
 
       <section id="admin-panel-agent" class="admin-panel hidden" data-admin-panel="agent" role="tabpanel" aria-label="Agent API">

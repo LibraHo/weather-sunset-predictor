@@ -6,8 +6,8 @@
 
 **技术栈**：
 - 前端：原生JavaScript ES6+、HTML5、CSS3、Chart.js、Leaflet
-- 后端：Node.js Express + Python（GFS数据处理）
-- 数据源：Open-Meteo API（主）、NOAA GFS（地图覆盖层）
+- 后端：Node.js Express + Python（GFS/CAMS 网格数据处理）
+- 数据源：Open-Meteo API（点位主链路）、NOAA GFS（地图天气网格）、CAMS（地图气溶胶网格）
 
 ## 文档维护原则
 
@@ -50,7 +50,7 @@ Design follow-up should compare the latest Mini Program screens against web mobi
 ├── Express服务器：CORS、日志、路由
 ├── API路由：/api/weather/*、/api/prediction/*、/api/firecloud/*、/api/heatmap/*、/api/photos、/api/agent/*
 ├── 服务层：PredictionService、SurroundingService、GridScoreService、CacheService
-└── Python GFS处理器：下载、解析、计算、生成PNG
+└── Python/Node 数据管线：GFS/CAMS 下载、解析、评分、生成瓦片、清理
 
 微信小程序（规划）
 ├── 原生小程序前端：miniprogram/
@@ -64,7 +64,7 @@ Design follow-up should compare the latest Mini Program screens against web mobi
 ```
 用户搜索位置 → 地理编码 → 后端代理天气API → 预测计算 → 前端渲染
                                     ↓
-                              Python GFS处理（地图覆盖层）
+                              GFS+CAMS 数据管线（未来48小时地图覆盖层）
 ```
 
 ## 核心设计决策
@@ -97,12 +97,83 @@ Design follow-up should compare the latest Mini Program screens against web mobi
    - 顶栏、设置面板、分享菜单在亮/暗模式中需保持同一视觉语言（色相、透明度、边框、阴影统一）。
    - 不出现亮色常量泄漏到暗色模式（例如浅米色渐变终点、浅灰白固定 hover）。
 
-### 天气数据源（Open-Meteo）
+### 天气数据源（点位 Open-Meteo）
 
-- **主数据源**：Open-Meteo API（免费，无需Key）
+- **主数据源**：Open-Meteo API（免费，无需Key），用于首页、点位查询、单点预测和 Open-Meteo fallback。
 - **字段映射**：cloud_cover_low/mid/high、visibility、precipitation等
 - **配额管理**：日限额10000次，软上限9000次暂停网格抓取
 - **429策略**：fail-fast，不长时间重试
+- **地图限制**：Open-Meteo 不再作为火烧云地图网格主数据源，避免用点位 API 扫大范围格点；地图只在 GFS/CAMS 产物缺失时按降级策略读缓存或返回可解释错误。
+
+### GFS+CAMS 地图数据管线（需求53）
+
+**定位**：该管线只服务火烧云地图、热力图、瓦片和地图摘要，不替换单点预测的 `ProviderOrchestrator`。单点预测继续保留 Open-Meteo 主链路；地图使用 GFS 天气网格 + CAMS 气溶胶网格批处理。
+
+**数据源职责**：
+- GFS：天气主输入，按 bbox 和字段白名单拉取未来 48 小时云量、湿度、降水、能见度、辐射、温度、风等字段。
+- CAMS：气溶胶主输入，按 bbox 拉取 AOD、沙尘、黑碳、有机物、硫酸盐、PM10 等字段。
+- Open-Meteo：点位详情、人工对照和故障 fallback，不参与默认地图网格扫点。
+
+**默认配置**：
+```json
+{
+  "mode": "gfs_cams",
+  "regionPreset": "china",
+  "bbox": { "north": 54, "south": 18, "west": 73, "east": 135 },
+  "resolution": 0.5,
+  "forecastHours": 48,
+  "forecastStepHours": 1,
+  "sources": { "gfs": true, "cams": true, "openMeteoFallback": true },
+  "runtimePolicy": {
+    "workerConcurrency": 1,
+    "maxResidentMemoryMb": 512,
+    "hardMemoryLimitMb": 768,
+    "reserveMemoryForApiMb": 2048,
+    "publicRequestCanStartPipeline": false,
+    "pauseWhenMemoryPressure": true
+  },
+  "storagePolicy": {
+    "deleteRawAfterMinutes": 60,
+    "deleteTmpAfterHours": 3,
+    "keepCacheDays": 3,
+    "minFreeDiskGb": 3
+  }
+}
+```
+
+**批处理流程**：
+```
+Schedule/Admin Trigger
+  → DataPipelineConfigService 读取范围/时效/分辨率
+  → estimate 校验格点数、预计下载量、raw/tmp 占用、剩余磁盘
+  → IngestionRunLog 创建 run
+  → GfsGridSource 按 cycle + forecast hour + 字段白名单下载/解析/写缓存/删原始
+  → CamsAerosolSource 按 cycle + 时间窗口 + 字段白名单下载/解析/删原始
+  → GridScoreService 合并 GFS/CAMS 网格，计算未来 48h 火烧云评分
+  → FireCloudTileService 生成地图缓存/瓦片
+  → cleanup 清理 raw/tmp/旧 cache/旧 tiles
+```
+
+**状态模型**：
+- Run：`queued | running | completed | failed | cancelled`
+- Step：`queued | downloading | parsing | scoring | tiling | cleanup | completed | failed | skipped`
+- 每个 step 记录：`source`、`cycle`、`forecastHour`、`variables`、`bbox`、`bytesDownloaded`、`elapsedMs`、`outputPath`、`errorCode`、`message`、`retryable`。
+
+**存储策略**：
+- 配置：`~/.xiake/data-pipeline-config.json`
+- 运行记录：优先 SQLite；MVP 可用 `~/.xiake/data-pipeline-runs.jsonl` 与 `~/.xiake/data-pipeline-steps.jsonl`
+- 原始文件：`~/.xiake/data/raw`，处理成功后立即删除，默认最多 1 小时
+- 临时文件：`~/.xiake/data/tmp`，默认最多 3 小时
+- 评分缓存：`~/.xiake/data/cache`，默认保留 3 天
+- 瓦片缓存：`~/.xiake/data/tiles`，默认保留 3 天
+
+**资源保护**：
+- Worker 默认并发为 1；不得一次性读取全部 forecast hour 或全部 GRIB 文件到内存。
+- 默认部署在腾讯云 CVM `SA2.LARGE4`（北京 `ap-beijing-7`，4 核 AMD EPYC 7K62，约 3.6GiB RAM + 2GiB swap，40G 系统盘、约 18G 可用）；任务启动前必须检查剩余磁盘和预计临时占用。
+- 网站与小程序 API 优先级高于地图管线；管线默认常驻内存预算 512MB、硬上限 768MB，并保留约 2GB 内存给 Node API、静态站点、小程序接口和系统缓存。
+- 用户请求路径不得启动 GFS/CAMS 下载或解析；只读最近成功产物或返回可解释状态，后台 schedule/admin run 才能启动管线。
+- 全盘剩余低于 3GB、raw/tmp 预计超过 5GB、bbox 超出上限或格点数超限时拒绝启动任务。
+- 任何清理动作都写入 step log，便于追溯“为什么某个原始文件不存在”。
 
 ### 预测算法
 
@@ -225,22 +296,23 @@ rankScore = exactMatch * 100
 - `London` / `伦敦` → London, GB
 - `北京` / `上海` → China
 
-### 地图覆盖层（需求20/33/37）
+### 地图覆盖层（需求20/33/37/53）
 
-**方案**：Leaflet + OpenStreetMap（开发），可选Windy Professional（生产）
+**方案**：Leaflet + OpenStreetMap/自研 GeoJSON 底图展示；后端默认读取 GFS+CAMS 管线生成的评分缓存或瓦片。
 
 **覆盖层生成**：
-1. 后端Python下载NOAA GFS GRIB2数据
-2. 解析变量：TCDC、LCDC、MCDC、HCDC
-3. 光路追踪算法计算概率
-4. 生成RGBA PNG覆盖层
-5. 前端Leaflet `L.imageOverlay()`叠加
+1. 后台数据管线按配置 bbox、分辨率、未来 48 小时拉取 GFS 与 CAMS。
+2. GFS 解析云量、湿度、降水、辐射、能见度、风等天气字段。
+3. CAMS 解析 AOD、沙尘、黑碳、有机物、硫酸盐、PM10 等气溶胶字段，并插值到地图评分网格。
+4. `GridScoreService` 只保存内部评分结果和必要因素摘要，不长期保存原始 GRIB/NetCDF。
+5. `FireCloudTileService` 生成地图缓存/瓦片；前端读取 `/api/heatmap/*` 与 `/api/tiles/*`，不直接触发外部数据下载。
 
 **东亚区域散点图（需求37）**：
 - 覆盖区域：中国、日本、韩国
-- 中国网格：1°间隔，约104点（72°E-135°E，18°N-53°N）
+- 默认地图数据范围：中国 bbox；后台可切换东亚 bbox 或测试小区域。
+- 默认分辨率：0.5°；资源允许时可切换 0.25°，切换前必须通过资源预估。
 - 日本、韩国：先复用中国同一套评分与展示规则，按各自国界范围生成采样点
-- 缓存：每日4次更新（08/12/15/17 CST）
+- 缓存：只保留未来 48-72 小时评分结果和最近成功 cycle；旧产物由 cleanup 删除
 - 显示：评分≥60的采样点，🌅/🌄图标标注
 
 ### 分享地图（需求38）
@@ -299,6 +371,7 @@ rankScore = exactMatch * 100
 后台入口仍为 `/admin`，但前端从单页长滚动改为主页模板同款 menu + panel：
 - `dashboard`：KPI、访问趋势、系统健康、Top IP。
 - `ops`：Grid 队列状态、手动刷新、清缓存、重启后端。
+- `data-pipeline`：GFS/CAMS 数据源模式、拉取范围、资源预估、运行进度、下载量统计、清理/重试/回滚。
 - `logs`：API 调用日志、24h 调用分布、每日统计。
 - `schedule`：定时刷新配置。
 - `agent`：Token、申请审核、Agent 用量、审计日志。
@@ -363,6 +436,7 @@ rankScore = exactMatch * 100
 - `GET /api/heatmap/grid?period=` - 网格评分数据
 - `POST /api/heatmap/refresh?period=` - 手动刷新
 - `GET /api/heatmap/status?period=` - 进度状态
+- 默认读取 GFS+CAMS 管线产物；不得在用户请求路径上触发大范围外部下载
 
 ### 火烧云覆盖层
 - `GET /api/firecloud/overlay?lat=&lon=&radius=` - 覆盖层PNG
@@ -371,6 +445,17 @@ rankScore = exactMatch * 100
 - `GET /admin/quota` - Open-Meteo配额统计
 - `GET /api/visitor/count` / `POST /api/visitor/count` - 访客计数
 - `GET /api/photos` / `POST /admin/upload` - 照片管理
+
+### 数据管线管理接口（需求53）
+- `GET /api/admin/data-pipeline/status` - 当前模式、最近成功产物、正在运行的 run、磁盘状态
+- `GET /api/admin/data-pipeline/config` - 获取 GFS/CAMS 拉取范围、分辨率、时效、存储策略
+- `POST /api/admin/data-pipeline/config` - 保存配置，必须校验 bbox、格点数、时效和磁盘阈值
+- `POST /api/admin/data-pipeline/estimate` - 根据配置预估格点数、forecast hour、下载量、临时文件占用和处理耗时
+- `GET /api/admin/data-pipeline/runs` - 最近运行记录列表
+- `GET /api/admin/data-pipeline/runs/:id` - 单次 run 与 step 明细
+- `POST /api/admin/data-pipeline/run` - 手动启动未来 48h 刷新
+- `POST /api/admin/data-pipeline/runs/:id/retry` - 重试失败 run 或失败 step
+- `POST /api/admin/data-pipeline/cleanup` - 手动清理 raw/tmp/旧缓存/旧瓦片
 
 ### API调用日志（需求41）
 - `GET /api/admin/logs?type=grid|weather|gaode|gaode_tile&limit=50` - 分类日志
@@ -609,15 +694,19 @@ CREATE TABLE api_token_usage (
 |---------|-----|------|
 | 天气数据 | 15分钟 | 内存 |
 | 预测结果 | 30分钟 | 内存 |
-| 网格评分 | 1小时 | 文件(~/.xiake/grid-cache.json) |
-| 覆盖层PNG | 30分钟 | 内存 |
+| GFS/CAMS 原始文件 | 处理后立即删除，兜底1小时 | 文件(~/.xiake/data/raw) |
+| 管线临时文件 | 3小时 | 文件(~/.xiake/data/tmp) |
+| 网格评分 | 3天，仅未来48-72h产物 | 文件(~/.xiake/data/cache) |
+| 覆盖层/瓦片 | 3天 | 文件(~/.xiake/data/tiles) |
+| 管线运行日志 | 7天或大小上限 | SQLite/JSONL(~/.xiake/data-pipeline-*.jsonl) |
 | Open-Meteo配额 | UTC日 | 文件(~/.xiake/openmeteo-quota.json) |
 
 ## 性能目标
 
 - 单点预测API：<500ms
 - 周边聚合API：<2000ms（8点并行）
-- 网格刷新：并发=1，批次=10，间隔=2500ms
+- Open-Meteo 网格刷新：保留为 fallback/历史路径，并发=1，批次=10，间隔=2500ms
+- GFS+CAMS 管线：单 worker 流式处理；默认中国/0.5°/未来48h 在腾讯云 `SA2.LARGE4`（3.6GiB RAM、2GiB swap、40G 系统盘、约18G可用）下完成
 - 地图首屏：<3s
 
 ## 错误处理
@@ -625,7 +714,8 @@ CREATE TABLE api_token_usage (
 - 网络错误：友好提示 + 重试按钮
 - API限流（429）：熔断等待（Retry-After或60s）
 - 数据验证失败：返回400 + 描述性错误
-- GFS数据失败：降级到雷达图模式
+- GFS/CAMS 管线失败：保留最近成功地图产物；无可用产物时返回可解释错误，不在用户请求中触发大范围重拉
+- 磁盘不足：任务启动前拒绝执行，后台展示剩余空间和清理建议
 
 ## 测试策略
 
@@ -642,8 +732,17 @@ CREATE TABLE api_token_usage (
 - IP存储前SHA256哈希
 - 文件上传限制20MB，MIME白名单
 - 管理接口Basic Auth
+- 数据管线配置、手动刷新、重试、清理和回滚均属于后台高风险操作，必须走 Basic Auth，并在 run log 中记录操作者上下文（可用脱敏 IP/UA）
 
 ## 变更摘要
+
+### 2026-05-26
+- 增加需求53设计：GFS+CAMS 地图数据管线、后台范围配置、资源预估、任务状态追溯、下载量统计、清理策略和地图接口降级口径。
+
+### 2026-05-27
+- Requirement 53 ops runbook and small-host acceptance materials were added under `docs/data-pipeline-ops-runbook.md` and `docs/data-pipeline-small-host-acceptance.md`.
+- Deployment docs now standardize the operator view around environment variables, `~/.xiake` directory layout, raw/tmp/cache/tile/log cleanup retention, common error codes, and admin evidence for "what is running now", "how much was downloaded today", and "which cycle the map is using".
+- Small-host validation is explicitly constrained to Tencent Cloud `SA2.LARGE4` (4 cores, about 3.6GiB RAM, 2GiB swap, about 18G free disk). The first real run must use a small Beijing/Tianjin test bbox, single worker concurrency, public-request download disabled, 3GB minimum free disk, and about 2GB memory reserve for the website and Mini Program APIs.
 
 ### 2026-05-07
 - 增加需求48设计：分数明细 ledger 解释链路、24 小时温度图天气标签。

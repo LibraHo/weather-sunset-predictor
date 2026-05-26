@@ -1,35 +1,46 @@
-/**
- * Heatmap Routes - 晚霞评分热力地图 API（Phase 16）
- *
- * GET  /api/heatmap/grid    — 返回缓存的网格评分数据
- * POST /api/heatmap/refresh — 手动触发刷新（频控保护）
- */
+'use strict';
 
 const express = require('express');
 const router = express.Router();
 const gridService = require('../services/GridScoreService');
 
-/**
- * GET /api/heatmap/grid
- * 返回缓存的网格评分，若无缓存则触发一次刷新
- */
+function readPublicMapCache(period) {
+  if (typeof gridService.getPublicMapCache === 'function') {
+    return gridService.getPublicMapCache(period);
+  }
+  const cache = typeof gridService.getBestAvailableCache === 'function'
+    ? gridService.getBestAvailableCache(period)
+    : gridService.getCache(period);
+  return { mode: 'hybrid', status: cache ? 'ready' : 'not-ready', cache };
+}
+
+function notReadyError(modeResult) {
+  return {
+    code: modeResult.status === 'paused' ? 'DATA_PIPELINE_PAUSED' : 'GRID_NOT_READY',
+    message: modeResult.status === 'paused' ? 'data pipeline is paused' : 'grid data is not ready',
+    mode: modeResult.mode || null,
+    status: modeResult.status || 'not-ready',
+    degradedReason: modeResult.degradedReason || null
+  };
+}
+
 router.get('/grid', async (req, res, next) => {
   try {
     const period = req.query.period || 'sunset';
-    // 若缓存为空或过期，先刷新
-    await gridService.refreshIfStale(undefined, period);
-
-    const cache = gridService.getCache(period);
+    const modeResult = readPublicMapCache(period);
+    const cache = modeResult.cache;
     if (!cache) {
-      return res.status(503).json({
-        error: { code: 'GRID_NOT_READY', message: '网格数据尚未就绪，请稍后再试' }
-      });
+      return res.status(503).json({ error: notReadyError(modeResult) });
     }
 
     res.json({
       updatedAt: cache.updatedAt,
       stale: cache.stale,
       count: cache.gridPoints.length,
+      mode: modeResult.mode || null,
+      source: cache.source || 'openmeteo-grid-cache',
+      degraded: cache.degraded === true,
+      degradedReason: cache.degradedReason || null,
       gridPoints: cache.gridPoints
     });
   } catch (err) {
@@ -37,10 +48,6 @@ router.get('/grid', async (req, res, next) => {
   }
 });
 
-/**
- * POST /api/heatmap/refresh
- * 手动触发刷新，60 分钟内限制一次
- */
 router.post('/refresh', async (req, res, next) => {
   try {
     const period = req.body?.period || req.query?.period || 'sunset';
@@ -60,10 +67,6 @@ router.post('/refresh', async (req, res, next) => {
   }
 });
 
-/**
- * GET /api/heatmap/status
- * 返回当前刷新任务状态
- */
 router.get('/status', (req, res) => {
   const period = req.query.period || 'sunset';
   res.json(gridService.getJobStatus(period));

@@ -17,6 +17,60 @@ const MAX_MEMORY_RECORDS = 2000; // 内存中最多保留多少条原始记录
 const MAX_PERSIST_DAYS = 30;    // 持久化保留多少天
 const BEIJING_OFFSET_MS = 8 * 60 * 60 * 1000;
 
+function normalizeClientSource(value = '') {
+  const source = String(value || '').trim().toLowerCase();
+  if (['miniprogram', 'miniapp', 'wechat-miniprogram', 'wechat_miniprogram', 'wx', 'weapp'].includes(source)) {
+    return 'miniprogram';
+  }
+  if (['web', 'browser', 'h5', 'website'].includes(source)) return 'web';
+  return 'unknown';
+}
+
+function emptyDailyStats() {
+  return { pv: 0, uv: new Set(), ips: {}, clients: {} };
+}
+
+function ensureDailyClient(daily, client) {
+  if (!daily.clients) daily.clients = {};
+  if (!daily.clients[client]) {
+    daily.clients[client] = { pv: 0, uv: new Set() };
+  }
+  return daily.clients[client];
+}
+
+function serializeClients(clients = {}) {
+  const output = {};
+  for (const [client, data] of Object.entries(clients || {})) {
+    output[client] = {
+      pv: data.pv || 0,
+      uv: Array.from(data.uv || [])
+    };
+  }
+  return output;
+}
+
+function hydrateClients(clients = {}) {
+  const output = {};
+  for (const [client, data] of Object.entries(clients || {})) {
+    output[client] = {
+      pv: data.pv || 0,
+      uv: new Set(Array.isArray(data.uv) ? data.uv : [])
+    };
+  }
+  return output;
+}
+
+function formatClients(clients = {}) {
+  const output = {};
+  for (const [client, data] of Object.entries(clients || {})) {
+    output[client] = {
+      pv: data.pv || 0,
+      uv: data.uv?.size || 0
+    };
+  }
+  return output;
+}
+
 class AccessLogService {
   constructor() {
     this._records = [];
@@ -52,7 +106,8 @@ class AccessLogService {
             this._daily[day] = {
               pv: d.pv || 0,
               uv: new Set(Array.isArray(d.uv) ? d.uv : []),
-              ips: d.ips || {}
+              ips: d.ips || {},
+              clients: hydrateClients(d.clients)
             };
           }
         }
@@ -71,7 +126,8 @@ class AccessLogService {
         dailyOut[day] = {
           pv: d.pv,
           uv: Array.from(d.uv),
-          ips: d.ips
+          ips: d.ips,
+          clients: serializeClients(d.clients)
         };
       }
       const payload = {
@@ -112,10 +168,11 @@ class AccessLogService {
     const path = req.path || req.url || '/';
     const method = req.method || 'GET';
     const ua = (req.headers && req.headers['user-agent']) || '';
+    const client = this._getClientSource(req);
     const now = Date.now();
     const day = this._fmtDate(now);
 
-    const record = { t: now, ip, path, method, ua: ua.slice(0, 200) };
+    const record = { t: now, ip, path, method, client, ua: ua.slice(0, 200) };
     this._records.push(record);
     if (this._records.length > MAX_MEMORY_RECORDS * 2) {
       this._records = this._records.slice(-MAX_MEMORY_RECORDS);
@@ -123,12 +180,15 @@ class AccessLogService {
 
     // 更新 daily
     if (!this._daily[day]) {
-      this._daily[day] = { pv: 0, uv: new Set(), ips: {} };
+      this._daily[day] = emptyDailyStats();
     }
     const d = this._daily[day];
     d.pv += 1;
     d.uv.add(ip);
     d.ips[ip] = (d.ips[ip] || 0) + 1;
+    const clientStats = ensureDailyClient(d, client);
+    clientStats.pv += 1;
+    clientStats.uv.add(ip);
 
     // 首次启动后或超过10秒未持久化，则写入磁盘
     if (now - this._lastPersist > 10000) {
@@ -144,6 +204,17 @@ class AccessLogService {
     return req.ip || req.connection?.remoteAddress || 'unknown';
   }
 
+  _getClientSource(req) {
+    const source = normalizeClientSource(
+      req.headers?.['x-xiake-client']
+      || req.query?.client
+      || req.query?.source
+      || req.body?.client
+      || req.body?.source
+    );
+    return source === 'unknown' ? 'web' : source;
+  }
+
   /**
    * 获取访问统计
    */
@@ -152,8 +223,8 @@ class AccessLogService {
     const today = this._fmtDate(now);
     const yesterday = this._fmtDate(now - 86400000);
 
-    const todayData = this._daily[today] || { pv: 0, uv: new Set(), ips: {} };
-    const yestData = this._daily[yesterday] || { pv: 0, uv: new Set(), ips: {} };
+    const todayData = this._daily[today] || emptyDailyStats();
+    const yestData = this._daily[yesterday] || emptyDailyStats();
 
     // 最近24小时每小时 PV
     const hourMap = {};
@@ -200,24 +271,32 @@ class AccessLogService {
         day: d,
         pv: dd.pv,
         uv: dd.uv.size || 0,
-        ips: Object.keys(dd.ips).length
+        ips: Object.keys(dd.ips).length,
+        clients: formatClients(dd.clients)
       });
     }
+
+    const clientBreakdown = Object.entries(formatClients(todayData.clients))
+      .sort((a, b) => b[1].pv - a[1].pv || a[0].localeCompare(b[0]))
+      .map(([client, data]) => ({ client, ...data }));
 
     return {
       today: {
         pv: todayData.pv,
         uv: todayData.uv.size || 0,
-        ips: Object.keys(todayData.ips).length
+        ips: Object.keys(todayData.ips).length,
+        clients: formatClients(todayData.clients)
       },
       yesterday: {
         pv: yestData.pv,
         uv: yestData.uv.size || 0,
-        ips: Object.keys(yestData.ips).length
+        ips: Object.keys(yestData.ips).length,
+        clients: formatClients(yestData.clients)
       },
       hourly,
       topIps,
       topPaths,
+      clientBreakdown,
       dailyTrend
     };
   }
@@ -246,6 +325,7 @@ class AccessLogService {
         location: ipLocationService.getDisplayLocation(r.ip),
         method: r.method,
         path: r.path,
+        client: normalizeClientSource(r.client) === 'unknown' ? 'web' : normalizeClientSource(r.client),
         ua: r.ua,
       }));
 

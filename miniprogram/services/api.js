@@ -77,6 +77,7 @@ export function request(pathOrOptions, maybeOptions = {}) {
   const token = options.sessionToken ?? options.token ?? runtimeConfig.sessionToken;
   const header = {
     'Content-Type': 'application/json',
+    'X-Xiake-Client': 'miniprogram',
     ...(options.header || options.headers || {})
   };
 
