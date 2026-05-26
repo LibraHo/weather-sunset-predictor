@@ -897,10 +897,7 @@ async function resumeDataPipeline() {
 }
 
 async function startDataPipelineRun() {
-  if (!confirm('确认启动 GFS+CAMS 数据管线 run？')) return;
-  await postDataPipelineRun('/api/admin/data-pipeline/run', {
-    reason: getInputValue('pipelineRunReason') || 'manual'
-  }, 'pipelineRunMsg');
+  showMessage('真实 GFS/CAMS worker 尚未接入；当前只允许 dry-run 验证。', 'error', 'pipelineRunMsg');
 }
 
 async function startDataPipelineDryRun() {

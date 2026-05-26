@@ -17,12 +17,12 @@ function makeTempDir() {
 }
 
 describe('DataPipelineConfigService', () => {
-  test('returns safe default china 48h GFS+CAMS config', () => {
+  test('returns safe default china 48h hybrid config', () => {
     const service = new DataPipelineConfigService({ dataDir: makeTempDir() });
 
     const config = service.getConfig();
 
-    expect(config.mode).toBe('gfs_cams');
+    expect(config.mode).toBe('hybrid');
     expect(config.regionPreset).toBe('china');
     expect(config.bbox).toEqual({ north: 54, south: 18, west: 73, east: 135 });
     expect(config.resolution).toBe(0.5);

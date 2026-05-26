@@ -1,6 +1,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { jest } from '@jest/globals';
 
 let DataPipelineCleanupService;
 let DataPipelineRunLogService;
@@ -99,5 +100,27 @@ describe('DataPipelineCleanupService', () => {
     expect(result.prunedRuns).toBe(1);
     expect(result.prunedSteps).toBe(1);
     expect(runLogService.listRuns({ limit: 10 }).map(run => run.id)).toEqual([newRun.id]);
+  });
+
+  test('dryRun reports old files without deleting them or pruning logs', () => {
+    const dataDir = makeTempDir();
+    const oldRaw = path.join(dataDir, 'data', 'raw', 'gfs', 'old.grib2');
+    writeFileWithMtime(oldRaw, 'old-raw', new Date('2026-05-26T10:30:00Z'));
+    const runLogService = {
+      pruneOlderThan: jest.fn()
+    };
+    const service = new DataPipelineCleanupService({
+      dataDir,
+      now: new Date('2026-05-26T12:00:00Z'),
+      runLogService
+    });
+
+    const result = service.cleanup({ deleteRawAfterMinutes: 60, keepLogDays: 7 }, { dryRun: true });
+
+    expect(result.dryRun).toBe(true);
+    expect(result.deletedFiles).toContain(oldRaw);
+    expect(result.deletedBytes).toBeGreaterThan(0);
+    expect(fs.existsSync(oldRaw)).toBe(true);
+    expect(runLogService.pruneOlderThan).not.toHaveBeenCalled();
   });
 });
