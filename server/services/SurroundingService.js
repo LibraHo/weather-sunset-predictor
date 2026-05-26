@@ -142,7 +142,7 @@ class SurroundingService {
       }
     }
 
-    const distances = [15, 30, 50, 100];
+    const distances = [25, 50, 75, 100];
     const points = distances.map(distanceKm => this.calculatePointByBearing(lat, lon, distanceKm, solarAzimuth));
     const buildSample = (point, weatherResponse) => {
       try {

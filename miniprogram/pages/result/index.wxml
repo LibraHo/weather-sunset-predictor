@@ -83,7 +83,7 @@
       <view wx:elif="{{radar.hasData}}" class="radar-compass">
         <view class="radar-compass-head">
           <view class="radar-compass-title">周边云况雷达</view>
-          <view class="radar-compass-subtitle">20km · 8方向</view>
+          <view class="radar-compass-subtitle">25km · 8方向</view>
           </view>
           <view class="radar-compass-dial">
             <view class="radar-cloud-field">

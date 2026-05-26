@@ -756,6 +756,8 @@ describe('PredictionController', () => {
           lightPathScore: 72.5,
           lightPathGate: 0.91,
           renderingFactor: 0.85,
+          renderingMode: 'negative_rendering_multiplier',
+          renderingAdjustment: -10.7,
           unclampedFinalScore: 60.4,
           aerosolScattering: { factor: 0.85 }
         },
@@ -774,9 +776,36 @@ describe('PredictionController', () => {
       expect(html).toContain('71.1');
       expect(html).toContain('光路门控 0.91');
       expect(html).not.toContain('70.7×80% + 72.5×20%');
+      expect(html).toContain('71.1 × 显色系数 0.85 = 60.4');
       expect(html).toContain('60.4');
       expect(html).toContain('≤28');
       expect(html).toContain('最终分');
+    });
+
+    test('分数明细正向显色应显示加分修正而不是错误乘法', () => {
+      const html = predictionController.renderScoreBreakdownPopover({
+        score: 77,
+        breakdown: {
+          baseScore: 71.1,
+          canvasScore: 70.7,
+          carrierScore: 70.7,
+          lightPathScore: 72.5,
+          lightPathGate: 1,
+          renderingFactor: 1.12,
+          renderingMode: 'positive_rendering_bonus',
+          renderingAdjustment: 6,
+          unclampedFinalScore: 77.1
+        },
+        canvasAnalysis: { score: 70.7 },
+        carrierAnalysis: { score: 70.7 },
+        lightPathAnalysis: { score: 72.5 },
+        lightPathGate: { gate: 1 },
+        renderingAdjustment: { adjustment: 6, reason: 'positive_rendering_bonus' },
+        renderingAnalysis: { factor: 1.12, visibilityFactor: 1.1, humidityFactor: 1, aerosolFactor: 1 }
+      });
+
+      expect(html).toContain('71.1 + 显色修正 6.0 = 77.1');
+      expect(html).not.toContain('71.1 × 显色系数 1.12 = 77.1');
     });
 
     test('分数明细应解释渲染后分到展示分的状态档位校准', () => {

@@ -44,6 +44,9 @@ const FINAL_WEIGHTS = {
   LIGHT_PATH: 0.2      // 光路约束（保守权重）
 };
 
+const SOLAR_DIRECTION_SAMPLE_DISTANCES_KM = [25, 50, 75, 100];
+const SOLAR_DIRECTION_SAMPLE_WEIGHTS = [0.40, 0.35, 0.18, 0.07];
+
 // ========== 辅助函数 ==========
 
 function clamp(value, min, max) {
@@ -862,7 +865,7 @@ function scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore = {}, we
     return { applied: false, score: 0, floor: null, reason: 'directional_cloud_wall' };
   }
 
-  const weights = [0.35, 0.30, 0.25, 0.10];
+  const weights = SOLAR_DIRECTION_SAMPLE_WEIGHTS;
   const totalWeight = samples.reduce((sum, _sample, index) => sum + (weights[index] || 0.1), 0);
   const avg = (key) => samples.reduce((sum, sample, index) => (
     sum + Number(sample[key] || 0) * (weights[index] || 0.1)
@@ -1139,8 +1142,7 @@ function buildLocalLightPathSamples(weatherData) {
   const mid = weatherData.midClouds || 0;
   const high = weatherData.highClouds || 0;
 
-  const distances = [15, 30, 50, 100];
-  return distances.map((distanceKm) => {
+  return SOLAR_DIRECTION_SAMPLE_DISTANCES_KM.map((distanceKm) => {
     const factor = 0.9 + (distanceKm / 200); // 远处略保守
     return {
       distanceKm,
@@ -1177,7 +1179,7 @@ function analyzeRemoteLightPath(samples) {
   const valid = Array.isArray(samples) ? samples.filter(s => !s.error) : [];
   if (valid.length === 0) return { available: false, modifier: 1, cap: null, reason: 'no_remote_samples' };
 
-  const weights = [0.35, 0.30, 0.25, 0.10];
+  const weights = SOLAR_DIRECTION_SAMPLE_WEIGHTS;
   const totalWeight = valid.reduce((sum, _s, idx) => sum + (weights[idx] || 0.1), 0);
   const avg = (key) => valid.reduce((sum, s, idx) => sum + Number(s[key] || 0) * (weights[idx] || 0.1), 0) / totalWeight;
   const near = valid[0] || {};
@@ -1226,7 +1228,7 @@ function analyzeRemoteLightPath(samples) {
  * 基于太阳高度角 + 云底高度 + 多点采样估算光路遮挡概率。
  */
 function scoreLightPath(weatherData, solarElevation, azimuth, remoteCloudData = null) {
-  const distanceWeights = [0.35, 0.30, 0.25, 0.10]; // 15/30/50/100km
+  const distanceWeights = SOLAR_DIRECTION_SAMPLE_WEIGHTS; // 25/50/75/100km
 
   let samples = [];
   let hasRemoteData = false;
@@ -2171,6 +2173,8 @@ module.exports = {
   CLOUD_WEIGHTS,
   LIGHT_PATH_WEIGHTS,
   FINAL_WEIGHTS,
+  SOLAR_DIRECTION_SAMPLE_DISTANCES_KM,
+  SOLAR_DIRECTION_SAMPLE_WEIGHTS,
   ALGORITHM_VERSION,
 
   // 辅助函数

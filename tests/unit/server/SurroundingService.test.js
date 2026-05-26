@@ -142,7 +142,9 @@ describe('SurroundingService', () => {
 
       expect(fetchBatchSpy).toHaveBeenCalledTimes(1);
       expect(fetchBatchSpy).toHaveBeenCalledWith(expect.arrayContaining([
-        expect.objectContaining({ distanceKm: 15 }),
+        expect.objectContaining({ distanceKm: 25 }),
+        expect.objectContaining({ distanceKm: 50 }),
+        expect.objectContaining({ distanceKm: 75 }),
         expect.objectContaining({ distanceKm: 100 })
       ]), 72, undefined, { includeAirQuality: false, fields: 'lightPath' });
       expect(fetchSingleSpy).not.toHaveBeenCalled();
@@ -182,6 +184,21 @@ describe('SurroundingService', () => {
     });
 
     test('非标准半径应被宽松接受并继续执行', async () => {
+      jest.spyOn(orchestrator, 'fetchWeatherData').mockResolvedValue({
+        data: [{
+          timestamp: new Date('2026-05-17T11:00:00.000Z').getTime(),
+          cloudCover: 30,
+          humidity: 50,
+          visibility: 15,
+          precipitation: 0,
+          lowClouds: 10,
+          midClouds: 20,
+          highClouds: 30,
+          cloudBaseHeight: 1800
+        }],
+        providerMeta: { name: 'test' }
+      });
+
       const params = {
         lat: 40.0,
         lon: 116.0,

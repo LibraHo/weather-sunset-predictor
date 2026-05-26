@@ -44,6 +44,11 @@ describe('EnhancedPredictionService', () => {
       expect(weights.LIGHT_PATH).toBe(0.2);
       expect(weights.CLOUD_CANVAS + weights.LIGHT_PATH).toBe(1.0);
     });
+
+    test('should use unified solar-direction sampling distances for light path and curtain carrier', () => {
+      expect(EnhancedPredictionService.SOLAR_DIRECTION_SAMPLE_DISTANCES_KM).toEqual([25, 50, 75, 100]);
+      expect(EnhancedPredictionService.SOLAR_DIRECTION_SAMPLE_WEIGHTS).toEqual([0.40, 0.35, 0.18, 0.07]);
+    });
   });
 
   // ========== 辅助函数测试 ==========
@@ -829,7 +834,7 @@ describe('EnhancedPredictionService', () => {
         cap: 42,
         reason: 'thick_high_cloud_diffuse_cap_42'
       });
-      expect(result.lightPathAnalysis.scoreBeforeThickHighCloudPenalty).toBeGreaterThan(80);
+      expect(result.lightPathAnalysis.scoreBeforeThickHighCloudPenalty).toBeGreaterThan(75);
       expect(result.lightPathAnalysis.score).toBeLessThanOrEqual(55);
       expect(result.score).toBeLessThanOrEqual(42);
       expect(result.description).toBe('weak_local_colors');
@@ -908,7 +913,7 @@ describe('EnhancedPredictionService', () => {
         diffuseRadiation: 99.2
       };
       const remoteCloudData = {
-        samples: [15, 30, 50, 100].map(distanceKm => ({
+        samples: [25, 50, 75, 100].map(distanceKm => ({
           distanceKm,
           cloudBaseHeight: 7000,
           lowCloud: 0,
@@ -966,7 +971,7 @@ describe('EnhancedPredictionService', () => {
         aqi: 70
       };
       const remoteCloudData = {
-        samples: [15, 30, 50, 100].map(distanceKm => ({
+        samples: [25, 50, 75, 100].map(distanceKm => ({
           distanceKm,
           cloudBaseHeight: 7000,
           lowCloud: 0,
@@ -1023,7 +1028,7 @@ describe('EnhancedPredictionService', () => {
         diffuseRadiation: 99.2
       };
       const remoteCloudData = {
-        samples: [15, 30, 50, 100].map(distanceKm => ({
+        samples: [25, 50, 75, 100].map(distanceKm => ({
           distanceKm,
           cloudBaseHeight: 7000,
           lowCloud: 0,
@@ -1147,7 +1152,7 @@ describe('EnhancedPredictionService', () => {
         precipitation: 0
       };
       const remoteCloudData = {
-        samples: [15, 30, 50, 100].map((distanceKm, index) => ({
+        samples: [25, 50, 75, 100].map((distanceKm, index) => ({
           distanceKm,
           cloudBaseHeight: 1000,
           lowCloud: index === 0 ? 85 : 10,
@@ -1198,7 +1203,7 @@ describe('EnhancedPredictionService', () => {
       };
       const remoteCloudData = {
         source: 'solar_direction_openmeteo',
-        samples: [15, 30, 50, 100].map((distanceKm, index) => ({
+        samples: [25, 50, 75, 100].map((distanceKm, index) => ({
           distanceKm,
           cloudBaseHeight: 6500,
           lowCloud: index === 0 ? 38 : 22,

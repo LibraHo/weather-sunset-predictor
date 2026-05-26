@@ -181,7 +181,7 @@ apiAccess: 'API接続'
         "lightPath": {
           "title": "2. 光路評価",
           "subtitle": "Light Path · 光路スコア",
-          "desc": "光路の通過度が光が雲層に届くかを決定します。バックエンドは太陽方位の15/30/50/100km地点も採取し、抜けや雲の壁を判定します。",
+          "desc": "光路の通過度が光が雲層に届くかを決定します。バックエンドは太陽方位の25/50/75/100km地点も採取し、抜けや雲の壁を判定します。",
           "lowCloudEffect": "下層雲<30%では遮蔽重みを下げます。太陽方向に低・中層雲の壁がある場合は保守的に光路点を抑えます",
           "visibility": "視程：光の伝播鮮明度に影響",
           "formula": "光路スコア = 幾何/局地光路スコア × 下層雲係数 × 太陽方向コリドー補正"
@@ -348,7 +348,9 @@ apiAccess: 'API接続'
         "whyThisScore": "このスコアの理由",
         "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
         "canvasPlusLightPath": "雲のキャンバス + 光路",
-        "renderingFormula": "{{base}} × 発色係数 {{factor}} = {{rendered}}",
+        "renderingFormula": "{{base}} adjusted by rendering = {{rendered}}",
+        "renderingMultiplierFormula": "{{base}} × rendering {{factor}} = {{rendered}}",
+        "renderingAdjustmentFormula": "{{base}} {{sign}} rendering adjustment {{adjustment}} = {{rendered}}",
         "weatherTransparency": "大気の透明度係数",
         "summary": {
           "event": "{{score}}点：{{detail}}",
@@ -391,7 +393,7 @@ apiAccess: 'API接続'
           "geometryCap": "太陽と雲層の幾何条件が不足しています",
           "occlusion": "遠方の遮蔽により最終スコアが下がります",
           "carrierFloor": "澄んだ高層雲の載体により過小評価を抑えます",
-          "directionalSamples": "太陽方位15/30/50/100kmの周辺採取を反映済み",
+          "directionalSamples": "太陽方位25/50/75/100kmの周辺採取を反映済み",
           "lightPathLowCloudBlock": "低い雲が日差しを遮り、色づく雲まで光が届きにくいです",
           "lightPathRain": "雨が夕日の直射光を弱めます",
           "postRainCap": "雨後の水蒸気や霞で光が弱まり、色が灰色っぽくなります",
@@ -459,7 +461,7 @@ apiAccess: 'API接続'
       "visibility": { "good": "視程良好（{{value}}km）", "goodDesc": "空気が澄み、見通しが良好です", "moderate": "視程は普通（{{value}}km）", "moderateDesc": "彩度が少し落ちる可能性があります", "low": "視程が低い（{{value}}km）", "lowDesc": "霞や水蒸気が観賞に影響する可能性があります" },
       "humidity": { "moderate": "湿度は適度（{{value}}%）", "moderateDesc": "光の散乱に役立ちます", "high": "湿度が高い（{{value}}%）", "highDesc": "透明感が落ちる可能性があります", "low": "湿度が低い（{{value}}%）", "lowDesc": "乾いた空気で色が淡くなる可能性があります" },
       "aerosol": { "moderate": "エアロゾル適度（AOD {{value}}）", "moderateDesc": "橙赤色の散乱を強めます", "high": "エアロゾル多め（AOD {{value}}）", "highDesc": "霞んだり暗く見える可能性があります", "low": "空気が澄みすぎ（AOD {{value}}）", "lowDesc": "色が淡くなる可能性があります", "carrier": "薄霞の赤い夕日載体", "carrierDesc": "雲が少ない時、適度なエアロゾルは光路が開いていれば少し暖色を加えます" },
-      "lightPath": { "opening": "太陽方向に光の抜けがあります", "openingDesc": "バックエンドが太陽方位の15/30/50/100km地点を採取し、低・中層雲の通路が比較的開いていると判定します", "wall": "太陽方向に雲の壁があります", "wallDesc": "太陽方位の低・中層雲が厚く、遠方の光路が主スコアを押し下げます" , "lowCloudBlock": "Low clouds block sunlight", "lowCloudBlockDesc": "Low clouds sit in the sun direction, so sunlight struggles to reach mid/high clouds" },
+      "lightPath": { "opening": "太陽方向に光の抜けがあります", "openingDesc": "バックエンドが太陽方位の25/50/75/100km地点を採取し、低・中層雲の通路が比較的開いていると判定します", "wall": "太陽方向に雲の壁があります", "wallDesc": "太陽方位の低・中層雲が厚く、遠方の光路が主スコアを押し下げます" , "lowCloudBlock": "Low clouds block sunlight", "lowCloudBlockDesc": "Low clouds sit in the sun direction, so sunlight struggles to reach mid/high clouds" },
       "postRain": { "clear": "雨上がりの空気が澄んでいます", "clearDesc": "過去6時間に降水がありますが、視程と粒子条件が良いため雨上がり加点を残します", "gray": "雨上がりの灰色カーテンリスク", "grayDesc": "雨後の水蒸気・粒子・直達光の弱さで、色が灰色っぽくなりやすいです" },
       "carrier": { "strong": "Clear high-cloud carrier", "strongDesc": "High clouds are sufficient, low clouds are scarce, and air is clear enough for a medium/high score base", "dense": "Dense mid/high-cloud carrier", "denseDesc": "High and mid clouds provide a steadier color canvas" },
 
@@ -871,7 +873,7 @@ apiAccess: 'API接続'
   "surrounding": {
     "title": "周辺焼き雲分析",
     "radarTitle": "周辺雲況レーダー",
-    "radarSubtitle": "20km · 連続した雲場",
+    "radarSubtitle": "25km · 連続した雲場",
     "radius": "探知半径",
     "radiusUnit": "キロメートル",
     "directions": {

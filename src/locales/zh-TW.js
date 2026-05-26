@@ -182,8 +182,8 @@ const translations = {
           "title": "光路條件",
           "subtitle": "夕陽是否能照到雲層",
           "desc": "光路分回答一個問題：日出／日落方向的陽光能不能照到可顯色雲層。既有太陽方向多點採樣會參與判斷，不新增 API 請求。",
-          "lowCloudEffect": "採樣距離為 15 / 30 / 50 / 100km，權重為 0.35 / 0.30 / 0.25 / 0.10；每個點結合太陽高度、雲底高度和低／中／高雲遮擋估算 block",
-          "visibility": "太陽方向走廊會額外修正：近處雲牆封頂約 48，遠處雲牆封頂約 56；低雲+中雲走廊很低且高雲存在時視為開口",
+          "lowCloudEffect": "採樣距離為 25 / 50 / 75 / 100km，權重為 0.40 / 0.35 / 0.18 / 0.07；每個點結合太陽高度、雲底高度和低／中／高雲遮擋估算 block",
+          "visibility": "太陽方向走廊會額外修正：25km 近端雲牆封頂約 48，遠端雲牆封頂約 56；低雲+中雲走廊很低且高雲存在時視為開口",
           "formula": "遮擋機率 = 1 - Π(1 - 加權block)\n光路分 = 100×(1-遮擋機率)×低雲權重修正×太陽方向走廊修正"
         },
         "transparency": {
@@ -348,7 +348,9 @@ const translations = {
         "whyThisScore": "為什麼是這個分數",
         "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
         "canvasPlusLightPath": "畫布 + 光路",
-        "renderingFormula": "{{base}} × 顯色係數 {{factor}} = {{rendered}}",
+        "renderingFormula": "{{base}} 經顯色修正 = {{rendered}}",
+        "renderingMultiplierFormula": "{{base}} × 顯色係數 {{factor}} = {{rendered}}",
+        "renderingAdjustmentFormula": "{{base}} {{sign}} 顯色修正 {{adjustment}} = {{rendered}}",
         "weatherTransparency": "天氣通透度",
         "summary": {
           "event": "{{score}} 分：{{detail}}",
@@ -906,7 +908,7 @@ const translations = {
   "surrounding": {
     "title": "周邊火燒雲分析",
     "radarTitle": "周邊雲況雷達",
-    "radarSubtitle": "20km · 連續雲場",
+    "radarSubtitle": "25km · 連續雲場",
     "radius": "探測半徑",
     "radiusUnit": "公里",
     "directions": {
