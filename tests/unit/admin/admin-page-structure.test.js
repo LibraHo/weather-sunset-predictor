@@ -127,6 +127,9 @@ describe('admin page structure', () => {
     expect(html).toContain('日期（北京时间）');
     expect(js).toContain("const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'ops', 'logs', 'schedule', 'agent', 'photos'])");
     expect(js).toContain("fetch('/admin/visitor-records?'");
+    expect(html).toContain('visitor-ip-table');
+    expect(html).toContain('visitor-record-table');
+    expect(js).toContain('class="visitor-path-cell"');
     expect(js).toContain('getBeijingDateInputValue');
     expect(html).toContain('编辑照片信息');
     expect(html).not.toContain('在地图上选择位置');
@@ -161,6 +164,24 @@ describe('admin page structure', () => {
     expect(js).toContain('message.length > 96');
     expect(js).toContain('title="${escapeHtml(String(item.lastError))}"');
     expect(js).not.toContain('${escapeHtml(item.lastError)}</div>');
+    expect(css).toContain('overflow-wrap: anywhere');
+  });
+
+  test('visitor record tables stay inside mobile admin cards', () => {
+    const html = readAdminHtml();
+    const js = readAdminJs();
+    const css = fs.readFileSync(path.join(ROOT, 'public/admin/admin.css'), 'utf8');
+
+    expect(html).toContain('class="admin-table visitor-ip-table"');
+    expect(html).toContain('class="admin-table visitor-record-table"');
+    expect(js).toContain('class="visitor-path-cell"');
+    expect(css).toContain('.two-col > *');
+    expect(css).toContain('min-width: 0');
+    expect(css).toContain('max-width: 100%');
+    expect(css).toContain('overflow: auto');
+    expect(css).toContain('.visitor-record-table');
+    expect(css).toContain('min-width: 720px');
+    expect(css).toContain('.visitor-path-cell');
     expect(css).toContain('overflow-wrap: anywhere');
   });
 });
