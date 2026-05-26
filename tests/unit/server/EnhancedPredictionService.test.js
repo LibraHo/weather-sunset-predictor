@@ -1233,6 +1233,78 @@ describe('EnhancedPredictionService', () => {
       expect(result.status).toBe('light_glow');
     });
 
+    test('should require a full solar-direction sample set before applying curtain carrier', () => {
+      const remoteCloudData = {
+        source: 'solar_direction_openmeteo',
+        samples: [25, 50, 75].map(distanceKm => ({
+          distanceKm,
+          cloudBaseHeight: 6500,
+          lowCloud: 15,
+          midCloud: 18,
+          highCloud: 72
+        }))
+      };
+
+      const carrier = EnhancedPredictionService.scoreDirectionalCurtainCarrier(
+        remoteCloudData,
+        { score: 82, directionalAnalysis: { reason: 'solar_direction_opening' } },
+        { precipitation: 0 }
+      );
+
+      expect(carrier).toMatchObject({
+        applied: false,
+        score: 0,
+        floor: null,
+        reason: 'no_directional_samples'
+      });
+    });
+
+    test('should not apply directional floor when cloud remains the active carrier', () => {
+      const weatherData = {
+        cloudCover: 70,
+        lowClouds: 5,
+        midClouds: 35,
+        highClouds: 75,
+        humidity: 55,
+        visibility: 15,
+        precipitation: 0,
+        aerosolOpticalDepth: 0.1,
+        aqi: 50,
+        pm2_5: 10,
+        pm10: 20,
+        dust: 5,
+        shortwaveRadiation: 20,
+        diffuseRadiation: 18,
+        waterVapourColumn: 20
+      };
+      const remoteCloudData = {
+        source: 'solar_direction_openmeteo',
+        samples: [25, 50, 75, 100].map((distanceKm, index) => ({
+          distanceKm,
+          cloudBaseHeight: 6500,
+          lowCloud: index === 0 ? 30 : 20,
+          midCloud: index === 0 ? 25 : 18,
+          highCloud: index === 3 ? 45 : 58
+        }))
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData,
+        new Date('2026-05-26T11:25:00.000Z'),
+        39.9042,
+        116.4074,
+        'sunset',
+        { remoteCloudData }
+      );
+
+      expect(result.carrierAnalysis.activeCarrier).toBe('cloud');
+      expect(result.directionalCurtainCarrier).toMatchObject({
+        applied: true,
+        floor: 35
+      });
+      expect(result.breakdown.directionalFloor).toBeNull();
+    });
+
     test('should not discount remote solar-direction blockage just because local low cloud is scarce', () => {
       const weatherData = {
         cloudCover: 42,
