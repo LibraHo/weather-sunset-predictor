@@ -856,7 +856,7 @@ function scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore = {}, we
   const samples = Array.isArray(remoteCloudData?.samples)
     ? remoteCloudData.samples.filter(sample => sample && !sample.error)
     : [];
-  if (samples.length < 3) {
+  if (samples.length < 4) {
     return { applied: false, score: 0, floor: null, reason: 'no_directional_samples' };
   }
 
@@ -1638,7 +1638,7 @@ function calculateGatedFinalScore(canvasScore, lightPathScore, renderingFactor, 
   const gatedScore = Number(canvasScore.score || 0) * lightPathGate.gate;
   const rendered = applyRenderingToGatedScore(gatedScore, renderingFactor, renderingAdjustment);
   const directionalCurtainCarrier = context.directionalCurtainCarrier || canvasScore.directionalCurtainCarrier || null;
-  const directionalFloor = directionalCurtainCarrier?.applied && lightPathGate.cap == null && lightPathGate.gate >= 0.75
+  const directionalFloor = canvasScore.activeCarrier === 'directional_curtain' && directionalCurtainCarrier?.applied && lightPathGate.cap == null && lightPathGate.gate >= 0.75
     ? directionalCurtainCarrier.floor
     : null;
   const finalScore = directionalFloor != null
@@ -1909,7 +1909,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   const azimuth = calculateSolarAzimuth(dateObj, lat, lon);
   // 优先使用 V2 物理重构算法（回滚开关：LIGHT_PATH_V2_ENABLED=false）
   const v2Result = LightPathV2Service.scoreFromWeatherData(weatherData, timeCheck.elevation, azimuth);
-  const hasDirectionalRemoteSamples = remoteCloudData && Array.isArray(remoteCloudData.samples) && remoteCloudData.samples.length >= 3;
+  const hasDirectionalRemoteSamples = remoteCloudData && Array.isArray(remoteCloudData.samples) && remoteCloudData.samples.length >= 4;
   const lightPathScoreRaw = (v2Result !== null && !hasDirectionalRemoteSamples)
     ? { ...v2Result, hasRemoteData: false, nearPointScore: v2Result.score, farPointScore: v2Result.score, breakdown: { nearPointCloudCover: weatherData.cloudCover || 0, farPointCloudCover: weatherData.cloudCover || 0 } }
     : scoreLightPath(weatherData, timeCheck.elevation, azimuth, remoteCloudData);
