@@ -582,6 +582,7 @@ class GridScoreService {
     }
 
     this._refreshingByPeriod[safePeriod] = true;
+    let completedCache = null;
     try {
       console.log(`[GridScoreService] 开始刷新网格评分 (${safePeriod})...`);
       const gridPoints = this.generateGrid();
@@ -591,7 +592,7 @@ class GridScoreService {
         gridPoints: scored
       };
       this._saveToDisk();
-      await this._notifyRefreshComplete(safePeriod, this._cache[safePeriod]);
+      completedCache = this._cache[safePeriod];
       console.log(`[GridScoreService] 刷新完成 (${safePeriod})，共 ${scored.length} 个网格点`);
     } catch (err) {
       console.error(`[GridScoreService] 刷新失败 (${safePeriod}):`, err.message);
@@ -602,6 +603,10 @@ class GridScoreService {
       });
     } finally {
       this._refreshingByPeriod[safePeriod] = false;
+    }
+
+    if (completedCache) {
+      await this._notifyRefreshComplete(safePeriod, completedCache);
     }
   }
 
