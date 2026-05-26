@@ -44,14 +44,6 @@ class DataPipelineModeService {
       degradedReason: null
     };
 
-    if (mode === 'paused') {
-      return {
-        ...base,
-        status: 'paused',
-        degradedReason: 'DATA_PIPELINE_PAUSED'
-      };
-    }
-
     if (mode === 'openmeteo') {
       const cache = withOpenMeteoCache(gridService.getCache(period));
       return cache
@@ -65,13 +57,21 @@ class DataPipelineModeService {
     if (pipelineCache) {
       return {
         ...base,
-        status: 'ready',
+        status: mode === 'paused' ? 'paused' : 'ready',
         cache: {
           ...pipelineCache,
-          degraded: pipelineCache.degraded === true,
-          degradedReason: pipelineCache.degradedReason || null
-        }
+          degraded: mode === 'paused' ? true : pipelineCache.degraded === true,
+          degradedReason: mode === 'paused' ? 'DATA_PIPELINE_PAUSED' : pipelineCache.degradedReason || null
+        },
+        degradedReason: mode === 'paused' ? 'DATA_PIPELINE_PAUSED' : null
       };
+    }
+
+    if (mode === 'paused') {
+      const legacyCache = withLegacyFallback(gridService.getCache(period), 'DATA_PIPELINE_PAUSED');
+      return legacyCache
+        ? { ...base, status: 'paused', cache: legacyCache, degradedReason: 'DATA_PIPELINE_PAUSED' }
+        : { ...base, status: 'paused', degradedReason: 'DATA_PIPELINE_PAUSED' };
     }
 
     if (mode === 'gfs_cams') {

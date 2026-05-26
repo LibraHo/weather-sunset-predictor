@@ -103,7 +103,7 @@ describe('DataPipelineModeService', () => {
     expect(gridService.refreshIfStale).not.toHaveBeenCalled();
   });
 
-  test('paused mode returns paused not-ready status without reading or refreshing caches', () => {
+  test('paused mode reads existing pipeline cache but still forbids refreshes', () => {
     const pipeline = makeCache('gfs-cams-grid-product');
     const legacy = makeCache('openmeteo-grid-cache');
     const gridService = makeGridService({ pipeline, legacy });
@@ -111,11 +111,33 @@ describe('DataPipelineModeService', () => {
 
     const result = service.getPublicMapCache(gridService, 'sunset');
 
-    expect(result.cache).toBeNull();
+    expect(result.cache).toMatchObject({
+      source: 'gfs-cams-grid-product',
+      degraded: true,
+      degradedReason: 'DATA_PIPELINE_PAUSED'
+    });
     expect(result.status).toBe('paused');
     expect(result.degradedReason).toBe('DATA_PIPELINE_PAUSED');
-    expect(gridService.getPipelineCache).not.toHaveBeenCalled();
+    expect(gridService.getPipelineCache).toHaveBeenCalledWith('sunset');
     expect(gridService.getCache).not.toHaveBeenCalled();
+    expect(gridService.refreshIfStale).not.toHaveBeenCalled();
+  });
+
+  test('paused mode falls back to existing legacy cache and never starts refreshes', () => {
+    const legacy = makeCache('openmeteo-grid-cache');
+    const gridService = makeGridService({ pipeline: null, legacy });
+    const service = new DataPipelineModeService({ configService: makeConfigService('paused') });
+
+    const result = service.getPublicMapCache(gridService, 'sunset');
+
+    expect(result.cache).toMatchObject({
+      source: 'openmeteo-grid-cache',
+      degraded: true,
+      degradedReason: 'DATA_PIPELINE_PAUSED'
+    });
+    expect(result.status).toBe('paused');
+    expect(gridService.getPipelineCache).toHaveBeenCalledWith('sunset');
+    expect(gridService.getCache).toHaveBeenCalledWith('sunset');
     expect(gridService.refreshIfStale).not.toHaveBeenCalled();
   });
 });
