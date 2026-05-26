@@ -367,6 +367,68 @@ curl "http://localhost:3000/api/firecloud/overlay?lat=39.9042&lon=116.4074&radiu
 
 ---
 
+#### GET /api/prediction/home
+
+首页统一聚合接口。网页端和微信小程序首页查分都应优先调用该接口，保证同一地点、同一天、同一朝霞/晚霞类型使用同一份后端天气输入和评分结果。
+
+**查询参数：**
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `lat` | 是 | 纬度 |
+| `lon` | 是 | 经度 |
+| `date` | 否 | 本地日期，格式 `YYYY-MM-DD`；默认今天 |
+| `period` / `type` | 否 | 当前主预测类型：`sunrise` / `sunset`；默认 `sunset` |
+| `days` | 否 | 返回天数，范围 1~4；默认 4 |
+| `hours` | 否 | 天气窗口小时数，默认 168 |
+| `includeRemoteCloudData` | 否 | 是否包含远端光路采样，默认 `true` |
+
+**请求示例：**
+```bash
+curl "http://localhost:3000/api/prediction/home?lat=39.9042&lon=116.4074&date=2026-05-26&period=sunset&days=4"
+```
+
+**响应结构：**
+```json
+{
+  "success": true,
+  "request": {
+    "location": { "lat": 39.9042, "lon": 116.4074 },
+    "date": "2026-05-26",
+    "period": "sunset",
+    "days": 4
+  },
+  "weather": {
+    "current": { "temp": 22.6, "cloudCover": 16, "windSpeed": 2 },
+    "hourly": [ /* 168h weather data */ ],
+    "daily": [ /* daily summary */ ]
+  },
+  "predictions": {
+    "current": { "type": "sunset", "score": 72 },
+    "sunrise": { "type": "sunrise", "score": 58 },
+    "sunset": { "type": "sunset", "score": 72 },
+    "list": [ /* sunrise/sunset items for each day */ ],
+    "byDate": {
+      "2026-05-26": {
+        "sunrise": { "score": 58 },
+        "sunset": { "score": 72 }
+      }
+    }
+  },
+  "source": {
+    "api": "prediction-home-gateway",
+    "weather": "closed-loop"
+  },
+  "profile": {
+    "weatherFetchMs": 781.2,
+    "calculateMs": 1.5,
+    "totalMs": 6262.1
+  }
+}
+```
+
+---
+
 #### POST /api/prediction/canvas
 
 云况画布评分——评估当前云型对火烧云的视觉呈现潜力。缓存 TTL：30 分钟。
