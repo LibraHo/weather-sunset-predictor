@@ -13,12 +13,12 @@
 
 const express = require('express');
 const multer = require('multer');
-const basicAuth = require('basic-auth');
 const exifr = require('exifr');
 const path = require('path');
 const { exec } = require('child_process');
 const util = require('util');
 const photoService = require('../services/PhotoService');
+const { requireAdminAuth, requireAdminRequestIntegrity } = require('../middleware/adminSecurity');
 
 const execAsync = util.promisify(exec);
 
@@ -27,7 +27,6 @@ const router = express.Router();
 // ---------------------------------------------------------------------------
 // 配置
 // ---------------------------------------------------------------------------
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'xiake2024';
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
 const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/heic', 'image/heif'];
 const FALLBACK_UPLOAD_MIMES = ['application/octet-stream'];
@@ -82,20 +81,10 @@ function handlePhotoUpload(req, res, next) {
 // Basic Auth 中间件
 // ---------------------------------------------------------------------------
 function requireAuth(req, res, next) {
-  const credentials = basicAuth(req);
-
-  if (!credentials || credentials.pass !== ADMIN_PASSWORD) {
-    res.set('WWW-Authenticate', 'Basic realm="Xiake Photo Admin"');
-    return res.status(401).json({
-      error: {
-        code: 'UNAUTHORIZED',
-        message: '认证失败'
-      }
-    });
-  }
-
-  next();
+  return requireAdminAuth(req, res, next);
 }
+
+router.use(requireAdminRequestIntegrity);
 
 function getClientIp(req) {
   const forwardedFor = req.headers['x-forwarded-for'];
@@ -386,7 +375,7 @@ router.delete('/photos/:id', requireAuth, (req, res) => {
 
 // Open-Meteo 配额统计
 const quota = require('../services/OpenMeteoQuota');
-router.get('/admin/quota', (req, res) => {
+router.get('/admin/quota', requireAuth, (req, res) => {
   res.json(quota.getStats());
 });
 

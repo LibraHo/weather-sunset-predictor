@@ -27,8 +27,8 @@ const shareStatsRoutes = require('./routes/share-stats');
 const wechatRouteModule = require('./routes/wechat');
 const userRouteModule = require('./routes/user');
 const UserService = require('./services/UserService');
-const basicAuth = require('basic-auth');
 const { requestLogger, errorLogger } = require('./middleware/logger');
+const { requireAdminAuth, requireAdminRequestIntegrity } = require('./middleware/adminSecurity');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -147,19 +147,10 @@ app.use('/api/spots', spotsRoutes);
 app.use('/api/photos', photosRoutes.createRouter({ userService }));
 app.use('/', adminRoutes);
 
-// Admin API routes (protected by Basic Auth)
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'xiake2024';
-const adminApiAuth = (req, res, next) => {
-  const credentials = basicAuth(req);
-  if (!credentials || credentials.pass !== ADMIN_PASSWORD) {
-    res.set('WWW-Authenticate', 'Basic realm="Xiake Photo Admin"');
-    return res.status(401).json({ error: { code: 'UNAUTHORIZED', message: '认证失败' } });
-  }
-  next();
-};
-app.use('/api/admin/data-pipeline', adminApiAuth, dataPipelineRoutes);
-app.use('/api/admin', adminApiAuth, apiLogsRoutes);
-app.use('/api/admin/share', adminApiAuth, shareStatsRoutes);
+// Admin API routes (protected by Basic Auth plus browser request integrity checks)
+app.use('/api/admin/data-pipeline', requireAdminAuth, requireAdminRequestIntegrity, dataPipelineRoutes);
+app.use('/api/admin', requireAdminAuth, requireAdminRequestIntegrity, apiLogsRoutes);
+app.use('/api/admin/share', requireAdminAuth, requireAdminRequestIntegrity, shareStatsRoutes);
 app.use('/share', shareRoutes);
 
 // 静态文件服务（公开分享页面）
@@ -167,6 +158,9 @@ app.use('/share', shareRoutes);
 app.use('/data', express.static(path.join(__dirname, '../public/data'), {
   maxAge: '7d',
   immutable: false
+}));
+app.use('/admin', requireAdminAuth, express.static(path.join(__dirname, '../public/admin'), {
+  maxAge: '1h'
 }));
 app.use(express.static(path.join(__dirname, '../public'), {
   maxAge: '1h'

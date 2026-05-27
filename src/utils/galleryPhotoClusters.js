@@ -16,7 +16,7 @@ function isValidPhotoLocation(photo) {
 
 function preferredPhotoUrl(photo) {
   if (!photo) return '';
-  return photo.thumbUrl || photo.thumbnailUrl || photo.imageThumbUrl || photo.url || photo.originalUrl || photo.imageUrl || (photo.id ? `/api/photos/${photo.id}/original` : '');
+  return photo.thumbUrl || photo.thumbnailUrl || photo.imageThumbUrl || photo.url || photo.imageUrl || '';
 }
 
 function photoClusterRepresentative(photos) {
