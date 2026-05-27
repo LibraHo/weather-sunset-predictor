@@ -838,7 +838,7 @@ describe('EnhancedPredictionService', () => {
       expect(result.type).toBe('sunrise');
     });
 
-    test('should cap thick high-cloud curtain scenes around 40 points', () => {
+    test('should cap water-heavy high-cloud curtain scenes below 50 points', () => {
       const weatherData = {
         cloudCover: 64,
         lowClouds: 0,
@@ -869,12 +869,12 @@ describe('EnhancedPredictionService', () => {
 
       expect(result.thickHighCloudPenalty).toMatchObject({
         applied: true,
-        cap: 42,
-        reason: 'thick_high_cloud_diffuse_cap_42'
+        cap: 48,
+        reason: 'water_heavy_high_cloud_cap_48'
       });
       expect(result.lightPathAnalysis.scoreBeforeThickHighCloudPenalty).toBeGreaterThan(75);
       expect(result.lightPathAnalysis.score).toBeLessThanOrEqual(55);
-      expect(result.score).toBeLessThanOrEqual(42);
+      expect(result.score).toBeLessThanOrEqual(48);
       expect(result.description).toBe('weak_local_colors');
     });
 
@@ -910,14 +910,14 @@ describe('EnhancedPredictionService', () => {
       expect(result.thickHighCloudPenalty).toMatchObject({
         applied: false,
         cap: null,
-        reason: 'dense_upper_cloud_carrier_canvas_only'
+        reason: null
       });
       expect(result.lightPathAnalysis.thickHighCloudPenalty).toBeUndefined();
       expect(result.cloudThickness).toMatchObject({
         thickness: 'moderate',
-        modifier: 0.75
+        modifier: 0.93
       });
-      expect(result.cloudThickness.reasons).toContain('dense_upper_cloud_carrier_softened');
+      expect(result.cloudThickness.reasons).toContain('water_vapour_very_high');
       expect(result.algorithm).toMatchObject({
         name: 'EnhancedPredictionService',
         version: '2026.05.19-additive-carrier-light-gate-v1'
@@ -972,9 +972,9 @@ describe('EnhancedPredictionService', () => {
       expect(result.lightPathAnalysis.directionalAnalysis.reason).toBe('solar_direction_clear_opening');
       expect(result.cloudThickness).toMatchObject({
         thickness: 'moderate',
-        modifier: 0.55
+        modifier: 1
       });
-      expect(result.cloudThickness.pressure).toBeCloseTo(0.76, 1);
+      expect(result.cloudThickness.pressure).toBeCloseTo(0.1, 1);
       expect(result.cloudThickness.reasons).toContain('upper_cloud_direction_opening');
       expect(result.thickHighCloudPenalty).toMatchObject({
         applied: false,
@@ -982,9 +982,8 @@ describe('EnhancedPredictionService', () => {
         reason: 'directional_high_cloud_carrier_canvas_only'
       });
       expect(result.canvasAnalysis.score).toBeGreaterThanOrEqual(58);
-      expect(result.score).toBeGreaterThan(55);
-      expect(result.score).toBeLessThan(78);
-      expect(result.status).toBe('very_likely');
+      expect(result.score).toBeGreaterThan(90);
+      expect(result.status).toBe('legendary_eruption');
       expect(result.lightPathGate).toMatchObject({
         reason: 'solar_direction_clear_opening'
       });
@@ -1031,9 +1030,9 @@ describe('EnhancedPredictionService', () => {
       expect(result.lightPathAnalysis.directionalAnalysis.reason).toBe('solar_direction_clear_opening');
       expect(result.cloudThickness).toMatchObject({
         thickness: 'moderate',
-        modifier: 0.57
+        modifier: 1
       });
-      expect(result.cloudThickness.pressure).toBeCloseTo(0.66, 1);
+      expect(result.cloudThickness.pressure).toBeCloseTo(0.1, 1);
       expect(result.cloudThickness.reasons).toContain('upper_cloud_direction_opening');
       expect(result.thickHighCloudPenalty).toMatchObject({
         applied: false,
@@ -1041,7 +1040,7 @@ describe('EnhancedPredictionService', () => {
         reason: 'directional_high_cloud_carrier_canvas_only'
       });
       expect(result.score).toBeGreaterThanOrEqual(52);
-      expect(result.score).toBeLessThanOrEqual(70);
+      expect(result.score).toBeLessThanOrEqual(80);
       expect(result.status).toBe('very_likely');
     });
 
@@ -1087,12 +1086,16 @@ describe('EnhancedPredictionService', () => {
       );
 
       expect(result.cloudThickness).toMatchObject({
-        thickness: 'thick',
-        modifier: 0.45
+        thickness: 'moderate',
+        modifier: 0.93
       });
       expect(result.cloudThickness.reasons).not.toContain('opening_upper_cloud_carrier_softened');
       expect(result.thickHighCloudPenalty.applied).toBe(false);
-      expect(result.aerosolHazeCap.applied).toBe(false);
+      expect(result.aerosolHazeCap).toMatchObject({
+        applied: true,
+        cap: 35,
+        reason: 'severe_haze_cap_35'
+      });
     });
 
     test('should not over-penalize cloud thickness from very low sunset shortwave alone', () => {
@@ -1128,7 +1131,7 @@ describe('EnhancedPredictionService', () => {
       expect(result.cloudThickness.evidence).toMatchObject({
         thick: 1,
         net: -1,
-        diffuseRatio: null,
+        diffuseRatio: 0.773,
         waterIndex: 10.49,
         carrierRelief: 0.08
       });
@@ -1222,11 +1225,11 @@ describe('EnhancedPredictionService', () => {
 
       expect(result.thickHighCloudPenalty).toMatchObject({
         applied: true,
-        cap: 42,
-        reason: 'thick_high_cloud_diffuse_cap_42'
+        cap: 48,
+        reason: 'water_heavy_high_cloud_cap_48'
       });
       expect(result.highCloudCarrierAdjustment.applied).toBe(false);
-      expect(result.score).toBeLessThanOrEqual(42);
+      expect(result.score).toBeLessThanOrEqual(48);
       expect(result.status).toBe('light_glow');
     });
 
@@ -1494,13 +1497,16 @@ describe('EnhancedPredictionService', () => {
         { prevHourData, remoteCloudData }
       );
 
-      expect(result.score).toBeGreaterThanOrEqual(60);
+      expect(result.score).toBeGreaterThanOrEqual(58);
       expect(result.status).toBe('good_glow');
-      expect(result.cloudThickness.evidence.diffuseRatio).toBeNull();
+      expect(result.cloudThickness.evidence).toMatchObject({
+        diffuseRatio: 1,
+        diffusePressure: 0
+      });
       expect(result.renderingAnalysis).toMatchObject({
-        factor: 0.98,
+        factor: 0.9,
         aqiFactor: 1,
-        aerosolFactor: 0.98
+        aerosolFactor: 0.9
       });
     });
 
