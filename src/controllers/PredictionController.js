@@ -1775,9 +1775,10 @@ class PredictionController {
 
     const renderingFactor = Number(prediction?.breakdown?.renderingFactor ?? prediction?.renderingAnalysis?.factor);
     const aod = Number(weather.aod);
+    const grayCurtainMode = postRainAdjustment?.mode === 'post_rain_gray_curtain' || postRainAdjustment?.mode === 'humid_haze_gray_curtain';
     let renderingLevel = 'fair';
     if (
-      postRainAdjustment?.mode === 'post_rain_gray_curtain' ||
+      grayCurtainMode ||
       aerosolHazeCap?.applied ||
       weather.visibility < 8 ||
       (Number.isFinite(aod) && aod > 0.45) ||
@@ -2012,6 +2013,15 @@ class PredictionController {
     const visibility = metric(['visibility']);
     const humidity = metric(['humidity']);
     const precipitation = metric(['precipitation', 'convPrecip'], 0);
+    const upperCloudCover = Number(highClouds) * 0.75 + Number(midClouds) * 0.45;
+    const cloudTypeAdjustment = prediction?.canvasAnalysis?.cloudTypeAdjustment;
+    const cloudThicknessAdjustment = prediction?.canvasAnalysis?.cloudThicknessAdjustment;
+    const cloudThicknessEvidence = cloudThickness?.evidence || {};
+    const signed = (value) => {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return '--';
+      return `${n >= 0 ? '+' : '-'}${Math.abs(n).toFixed(1)}`;
+    };
 
     const reasonText = (reason) => ({
       precipitation_cap_45: ledgerText('reasons.precipitationCap45', {}, 'rain plus low clouds keeps the score low', '降水叠加低云，观赏条件明显变差'),
@@ -2037,6 +2047,28 @@ class PredictionController {
         value: `≤${fmt(aerosolHazeCap.cap, 0)}`,
         detail: reasonText(aerosolHazeCap.reason),
         tone: 'bad'
+      } : null,
+      cloudThicknessAdjustment?.adjustment ? {
+        label: ledgerText('labels.cloudThicknessModifier', {}, 'Cloud layer effect', '云层厚度影响'),
+        value: signed(cloudThicknessAdjustment.adjustment),
+        detail: ledgerText(
+          'details.cloudThicknessAdjustment',
+          {
+            thickness: cloudThickness?.thickness || '--',
+            thin: fmt(cloudThicknessEvidence.thin, 1),
+            thick: fmt(cloudThicknessEvidence.thick, 1),
+            net: fmt(cloudThicknessEvidence.net, 1),
+            pressure: fmt(cloudThicknessEvidence.pressure ?? cloudThicknessAdjustment.pressure, 2),
+            diffuse: fmt(Number(cloudThicknessEvidence.diffuseRatio) * 100, 0),
+            water: fmt(cloudThicknessEvidence.waterIndex, 1),
+            relief: fmt(cloudThicknessEvidence.carrierRelief, 2),
+            base: fmt(cloudThicknessAdjustment.baseScore, 1),
+            max: fmt(cloudThicknessAdjustment.maxPenalty, 1)
+          },
+          'cloud thickness {{thickness}}, base {{base}} × 30% × pressure {{pressure}} = max {{max}} scaled; diffuse {{diffuse}}%, water {{water}}, carrier relief {{relief}}',
+          '云厚 {{thickness}}，画布 {{base}} × 30% × 压力 {{pressure}}，最大折损 {{max}}；散射 {{diffuse}}%，水汽 {{water}}，载体缓冲 {{relief}}'
+        ),
+        tone: Number(cloudThicknessAdjustment.adjustment) < 0 ? 'cap' : 'good'
       } : null,
       thickHighCloudPenalty?.applied ? {
         label: ledgerText('labels.thickCloudCap', {}, 'Thick cloud', '厚云影响'),
@@ -2080,9 +2112,9 @@ class PredictionController {
         tone: 'good'
       } : null,
       postRainAdjustment?.applied && postRainAdjustment.cap ? {
-        label: ledgerText('labels.postRainCap', {}, 'Post-rain haze', '雨后灰幕'),
+        label: ledgerText('labels.postRainCap', {}, 'Gray-curtain haze', '湿灰幕'),
         value: `≤${fmt(postRainAdjustment.cap, 0)}`,
-        detail: ledgerText('details.postRainCap', {}, 'post-rain moisture or haze turns the glow gray', '雨后水汽或灰幕偏重，霞光容易发灰'),
+        detail: ledgerText('details.postRainCap', {}, 'moisture, particles, or weak direct light turns the glow gray', '水汽、颗粒物或直达光偏弱，霞光容易发灰'),
         tone: 'bad'
       } : null
     ].filter(Boolean);
@@ -2165,6 +2197,68 @@ class PredictionController {
         : '';
     })();
 
+    const carrierDetail = (() => {
+      const parts = [];
+      if (Number.isFinite(upperCloudCover)) {
+        parts.push(ledgerText(
+          'details.upperCloudCanvas',
+          { high: fmt(highClouds, 1), mid: fmt(midClouds, 1), upper: fmt(upperCloudCover, 1), range: fmt(prediction?.canvasAnalysis?.cloudRangeScore, 1) },
+          'upper canvas {{upper}} = high {{high}}×0.75 + mid {{mid}}×0.45; range score {{range}}',
+          '中高云画布 {{upper}} = 高云 {{high}}×0.75 + 中云 {{mid}}×0.45；区间分 {{range}}'
+        ));
+      }
+      parts.push(ledgerText(
+        'details.cloudPenalty',
+        { canvas: fmt(canvasScore, 1), low: fmt(prediction?.canvasAnalysis?.lowCloudPenalty, 2), overcast: fmt(prediction?.canvasAnalysis?.overcastPenalty, 2) },
+        'cloud canvas {{canvas}}, low cloud ×{{low}}, overcast ×{{overcast}}',
+        '云画布 {{canvas}}，低云 ×{{low}}，阴天 ×{{overcast}}'
+      ));
+      if (Number(prediction?.canvasAnalysis?.highCloudBonus)) {
+        parts.push(ledgerText(
+          'details.highCloudBonus',
+          { bonus: signed(prediction.canvasAnalysis.highCloudBonus) },
+          'high-cloud dominant bonus {{bonus}}',
+          '高云主导 bonus {{bonus}}'
+        ));
+      }
+      if (Number(cloudTypeAdjustment?.canvasBonus)) {
+        parts.push(ledgerText(
+          'details.cloudTypeAdjustment',
+          { bonus: signed(cloudTypeAdjustment.canvasBonus), reason: cloudTypeAdjustment.reason || '--' },
+          'cloud type {{reason}} {{bonus}}',
+          '云种 {{reason}} {{bonus}}'
+        ));
+      }
+      if (Number(cloudThicknessAdjustment?.adjustment)) {
+        parts.push(ledgerText(
+          'details.cloudThicknessAdjustment',
+          {
+            thickness: cloudThickness?.thickness || '--',
+            thin: fmt(cloudThicknessEvidence.thin, 1),
+            thick: fmt(cloudThicknessEvidence.thick, 1),
+            net: fmt(cloudThicknessEvidence.net, 1),
+            pressure: fmt(cloudThicknessEvidence.pressure ?? cloudThicknessAdjustment.pressure, 2),
+            diffuse: fmt(Number(cloudThicknessEvidence.diffuseRatio) * 100, 0),
+            water: fmt(cloudThicknessEvidence.waterIndex, 1),
+            relief: fmt(cloudThicknessEvidence.carrierRelief, 2),
+            base: fmt(cloudThicknessAdjustment.baseScore, 1),
+            max: fmt(cloudThicknessAdjustment.maxPenalty, 1)
+          },
+          'cloud thickness {{thickness}}, base {{base}} × 30% × pressure {{pressure}} = max {{max}} scaled; diffuse {{diffuse}}%, water {{water}}, carrier relief {{relief}}',
+          '云厚 {{thickness}}，画布 {{base}} × 30% × 压力 {{pressure}}，最大折损 {{max}}；散射 {{diffuse}}%，水汽 {{water}}，载体缓冲 {{relief}}'
+        ));
+      }
+      if (directionalCurtainCarrier?.applied) {
+        parts.push(ledgerText(
+          'details.directionalCurtainCarrier',
+          { score: fmt(directionalCurtainCarrier.score, 1), high: fmt(directionalCurtainCarrier.metrics?.high, 1), lowMid: fmt(directionalCurtainCarrier.metrics?.lowMidBlock, 1) },
+          'solar-direction curtain {{score}}, high cloud {{high}}, low/mid block {{lowMid}}',
+          '日落方向幕布 {{score}}，高云 {{high}}，低中云遮挡 {{lowMid}}'
+        ));
+      }
+      return parts.join('；');
+    })();
+
     const adjustmentHtml = capEvents.length
       ? capEvents.map((event, idx) => step(
         idx + 5,
@@ -2184,7 +2278,7 @@ class PredictionController {
         </div>
         <div class="score-ledger-summary">${escape(summary)}</div>
         <div class="score-ledger-steps">
-          ${step(1, ledgerText('labels.cloudCarrier', {}, 'Carrier', '载体'), ledgerText('details.cloudCarrier', {}, 'usable color carrier from cloud, solar direction, or thin haze', '可被染色的本地云面、日落方向云幕或薄雾载体'), fmt(carrierScore, 1), directionalCurtainCarrier?.applied ? ledgerText('details.directionalCurtainCarrier', { score: fmt(directionalCurtainCarrier.score, 1), high: fmt(directionalCurtainCarrier.metrics?.high, 1), lowMid: fmt(directionalCurtainCarrier.metrics?.lowMidBlock, 1) }, 'solar-direction curtain {{score}}, high cloud {{high}}, low/mid block {{lowMid}}', '日落方向幕布 {{score}}，高云 {{high}}，低中云遮挡 {{lowMid}}') : ledgerText('details.cloudPenalty', { low: fmt(prediction?.canvasAnalysis?.lowCloudPenalty, 2), overcast: fmt(prediction?.canvasAnalysis?.overcastPenalty, 2) }, 'cloud canvas {{canvas}}, low cloud ×{{low}}, overcast ×{{overcast}}', '云画布 {{canvas}}，低云 ×{{low}}，阴天 ×{{overcast}}').replaceAll('{{canvas}}', fmt(canvasScore, 1)))}
+          ${step(1, ledgerText('labels.cloudCarrier', {}, 'Carrier', '载体'), ledgerText('details.cloudCarrier', {}, 'usable color carrier from cloud, solar direction, or thin haze', '可被染色的本地云面、日落方向云幕或薄雾载体'), fmt(carrierScore, 1), carrierDetail)}
           ${step(2, ledgerText('labels.lightPath', {}, 'Light path', '光路'), ledgerText('details.lightPath', {}, 'sunlight reaches the cloud layer', '阳光是否能打到云层'), fmt(lightPathScore, 1), lightPathDetail)}
           ${step(3, ledgerText('labels.baseScore', {}, 'Base score', '基础分'), weightedDescription, fmt(baseScore, 1))}
           ${step(4, ledgerText('labels.rendering', {}, 'Rendering', '显色修正'), renderingDescription, fmt(renderedScore, 1), ledgerText('details.renderingFactors', { visibility: fmt(prediction?.renderingAnalysis?.visibilityFactor, 2), humidity: fmt(prediction?.renderingAnalysis?.humidityFactor, 2), aerosol: fmt(aerosolFactor, 2) }, 'visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}', '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}'))}

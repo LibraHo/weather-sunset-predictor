@@ -365,6 +365,10 @@ apiAccess: 'Acceso API'
         "details": {
           "cloudCarrier": "usable color carrier from cloud or thin haze",
           "cloudPenalty": "cloud canvas {{canvas}}, low cloud ×{{low}}, overcast ×{{overcast}}",
+          "upperCloudCanvas": "lienzo de nubes medias/altas {{upper}} = altas {{high}}×0.75 + medias {{mid}}×0.45; puntuación de rango {{range}}",
+          "highCloudBonus": "bono por predominio de nubes altas {{bonus}}",
+          "cloudTypeAdjustment": "tipo de nube {{reason}} {{bonus}}",
+          "cloudThicknessAdjustment": "grosor de nube {{thickness}}, base {{base}} × 30% × presión {{pressure}} = máx {{max}} escalado; difusa {{diffuse}}%, vapor {{water}}, alivio portador {{relief}}",
           "aerosolCarrier": "thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}",
           "lightPath": "sunlight reaches the cloud layer",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",

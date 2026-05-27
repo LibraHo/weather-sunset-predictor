@@ -175,8 +175,8 @@ const translations = {
           "highCloud": "High cloud: weight 0.75, the strongest red/orange carrier; when high cloud >50% and low cloud <30%, it adds only 0-6 pts instead of multiplying by 1.2",
           "midCloud": "Mid cloud: weight 0.45, also a color carrier; high and mid clouds together make the canvas more stable",
           "lowCloudBonus": "Low cloud: weight only 0.10; it mainly affects low-cloud penalties and light-path blockage. Scarce low cloud does not add points, it just avoids penalties",
-          "formula": "Upper-cloud canvas = high×0.75 + mid×0.45\nBase score: ≤10→10, 10-30→40-70, 30-70→70-100, 70-100→70-50, >100→43\nThen apply low-cloud/overcast penalties and bounded high-cloud bonus",
-          "highCloudBonus": "Cloud type and thickness are additive: altostratus +4, altocumulus +6, thin cloud +5, thick cloud about -28; low-cloud types also reduce the light-path gate"
+          "formula": "Upper-cloud canvas = high×0.75 + mid×0.45\nBase score: ≤10→10, 10-30→40-70, 30-70→70-100, 70-100→70-50, >100→43\nCanvas score = range score × low-cloud penalty × overcast penalty + high-cloud bonus + cloud-type adjustment + cloud-thickness adjustment",
+          "highCloudBonus": "High-cloud bonus: when high cloud >50 and low cloud <30, add (high-50)/50×6, capped at 0-6 pts. Cloud type/thickness are additive: altostratus +4, altocumulus +6, thin cloud +5; moderate/thick cloud now applies a continuous proportional penalty: canvas before thickness × 30% × thickness pressure. Low-cloud types also reduce the light-path gate"
         },
         "lightPath": {
           "title": "2. Light Path Assessment",
@@ -376,13 +376,17 @@ const translations = {
           "geometryCap": "Sun angle",
           "occlusion": "Occlusion",
           "carrierFloor": "Carrier floor",
-          "postRainCap": "Post-rain haze",
+          "postRainCap": "Gray-curtain haze",
           "displayCalibration": "Display calibration",
           "aerosolCarrier": "Aerosol carrier"
         },
         "details": {
           "cloudCarrier": "usable color carrier from cloud or thin haze",
           "cloudPenalty": "cloud canvas {{canvas}}, low cloud ×{{low}}, overcast ×{{overcast}}",
+          "upperCloudCanvas": "upper canvas {{upper}} = high {{high}}×0.75 + mid {{mid}}×0.45; range score {{range}}",
+          "highCloudBonus": "high-cloud dominant bonus {{bonus}}",
+          "cloudTypeAdjustment": "cloud type {{reason}} {{bonus}}",
+          "cloudThicknessAdjustment": "cloud thickness {{thickness}}, base {{base}} × 30% × pressure {{pressure}} = max {{max}} scaled; diffuse {{diffuse}}%, water {{water}}, carrier relief {{relief}}",
           "aerosolCarrier": "thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}",
           "lightPath": "sunlight reaches the cloud layer",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
@@ -396,7 +400,7 @@ const translations = {
           "directionalSamples": "nearby clouds along the sun direction are included",
           "lightPathLowCloudBlock": "low clouds block sunlight from reaching the colorable clouds",
           "lightPathRain": "rain weakens direct sunset light",
-          "postRainCap": "post-rain moisture or haze turns the glow into a gray curtain",
+          "postRainCap": "moisture, particles, or weak direct light turns the glow into a gray curtain",
           "displayCalibration": "final display score is aligned with the prediction status band"
         },
         "reasons": {
@@ -462,7 +466,7 @@ const translations = {
       "humidity": { "moderate": "Moderate humidity ({{value}}%)", "moderateDesc": "Helps light scattering", "high": "High humidity ({{value}}%)", "highDesc": "May reduce transparency", "low": "Low humidity ({{value}}%)", "lowDesc": "Dry air may lighten colors" },
       "aerosol": { "moderate": "Moderate aerosol (AOD {{value}})", "moderateDesc": "Boosts orange-red scattering", "high": "High aerosol (AOD {{value}})", "highDesc": "May look hazy or dull", "low": "Very clear air (AOD {{value}})", "lowDesc": "Colors may be lighter", "carrier": "Thin-haze red-sunset carrier", "carrierDesc": "When clouds are scarce, moderate aerosol can add some warm sunset color if the light path is open" },
       "lightPath": { "opening": "Opening toward the sun", "openingDesc": "Low clouds are scarce toward the sun, so light can reach the cloud layer more easily", "wall": "Cloud wall toward the sun", "wallDesc": "Low or mid clouds along the solar direction suppress the main score", "lowCloudBlock": "Low clouds block sunlight", "lowCloudBlockDesc": "Low clouds sit in the sun direction, so sunlight struggles to reach mid/high clouds" },
-      "postRain": { "clear": "Clear post-rain air", "clearDesc": "Rain in the last 6h is kept as a bonus because visibility and particles are acceptable", "gray": "Post-rain gray-curtain risk", "grayDesc": "Moisture, particles, or weak direct light after rain can turn the glow gray" },
+      "postRain": { "clear": "Clear post-rain air", "clearDesc": "Rain in the last 6h is kept as a bonus because visibility and particles are acceptable", "gray": "Gray-curtain haze risk", "grayDesc": "Moisture, particles, or weak direct light can turn the glow gray" },
       "carrier": { "strong": "Clear high-cloud carrier", "strongDesc": "High clouds are sufficient, low clouds are scarce, and air is clear enough for a medium/high score base", "dense": "Dense mid/high-cloud carrier", "denseDesc": "High and mid clouds provide a steadier color canvas" },
       "layer": { "single": "Single cloud layer", "singleDesc": "High clouds can still color well" }
     },

@@ -175,8 +175,8 @@ const translations = {
           "highCloud": "高雲：權重 0.75，是最重要的紅橙色載體；高雲>50%且低雲<30%時，只額外加 0–6 分，不再乘 1.2",
           "midCloud": "中雲：權重 0.45，也是可顯色載體；高雲與中雲同時存在時會提高畫布穩定性",
           "lowCloudBonus": "低雲：權重只有 0.10，主要進入低雲懲罰和光路遮擋；低雲少不加分，只是不扣分",
-          "formula": "中高雲畫布量 = 高雲×0.75 + 中雲×0.45\n畫布基礎分：≤10→10，10–30→40–70，30–70→70–100，70–100→70–50，>100→43\n再乘低雲／陰天懲罰，並加上有限高雲 bonus",
-          "highCloudBonus": "雲種／雲厚修正是加減分：高層雲 +4、高積雲 +6、薄雲 +5、厚雲約 -28；低雲類雲種會同時扣畫布並壓低光路門控"
+          "formula": "中高雲畫布量 = 高雲×0.75 + 中雲×0.45\n畫布基礎分：≤10→10，10–30→40–70，30–70→70–100，70–100→70–50，>100→43\n畫布分 = 區間分 × 低雲懲罰 × 陰天懲罰 + 高雲 bonus + 雲種修正 + 雲厚修正",
+          "highCloudBonus": "高雲 bonus：高雲>50 且低雲<30 時，按 (高雲-50)/50×6 加 0–6 分。雲種／雲厚是加減分：高層雲 +4、高積雲 +6、薄雲 +5；偏厚／厚雲按當前畫布比例連續扣分，公式為雲厚修正前分×30%×雲厚壓力。低雲類雲種還會壓低光路門控"
         },
         "lightPath": {
           "title": "光路條件",
@@ -376,13 +376,17 @@ const translations = {
           "geometryCap": "太陽角度",
           "occlusion": "遮擋修正",
           "carrierFloor": "載體保底",
-          "postRainCap": "雨後灰幕",
+          "postRainCap": "濕灰幕",
           "displayCalibration": "展示分校準",
           "aerosolCarrier": "氣溶膠載體"
         },
         "details": {
           "cloudCarrier": "可被染色的雲面或薄霧載體",
           "cloudPenalty": "雲畫布 {{canvas}}，低雲 ×{{low}}，陰天 ×{{overcast}}",
+          "upperCloudCanvas": "中高雲畫布 {{upper}} = 高雲 {{high}}×0.75 + 中雲 {{mid}}×0.45；區間分 {{range}}",
+          "highCloudBonus": "高雲主導 bonus {{bonus}}",
+          "cloudTypeAdjustment": "雲種 {{reason}} {{bonus}}",
+          "cloudThicknessAdjustment": "雲厚 {{thickness}}，畫布 {{base}} × 30% × 壓力 {{pressure}}，最大折損 {{max}}；散射 {{diffuse}}%，水汽 {{water}}，載體緩衝 {{relief}}",
           "aerosolCarrier": "雲層很少時，薄霧在光路通暢時可承接一點暖色，光路激活 ×{{activation}}",
           "lightPath": "陽光是否能照到雲層",
           "renderingFactors": "能見度 ×{{visibility}}，濕度 ×{{humidity}}，氣溶膠 ×{{aerosol}}",
@@ -396,7 +400,7 @@ const translations = {
           "directionalSamples": "已參考太陽方向周邊雲況",
           "lightPathLowCloudBlock": "低雲遮住太陽方向，光線不容易照到中高雲",
           "lightPathRain": "降水會削弱日落直射光",
-          "postRainCap": "雨後水氣或灰幕偏重，霞光容易發灰",
+          "postRainCap": "水氣、顆粒物或直達光偏弱，霞光容易發灰",
           "displayCalibration": "最終展示分按預測狀態檔位校準"
         },
         "reasons": {
@@ -462,7 +466,7 @@ const translations = {
       "humidity": { "moderate": "濕度適中（{{value}}%）", "moderateDesc": "有利於光線散射", "high": "濕度偏高（{{value}}%）", "highDesc": "可能略影響通透感", "low": "濕度偏低（{{value}}%）", "lowDesc": "空氣較乾，色彩可能偏淡" },
       "aerosol": { "moderate": "氣溶膠適中（AOD {{value}}）", "moderateDesc": "有利於增強紅橙色散射", "high": "氣溶膠偏高（AOD {{value}}）", "highDesc": "可能灰霾發暗", "low": "空氣過於通透（AOD {{value}}）", "lowDesc": "顏色可能偏淡", "carrier": "薄霧紅日載體", "carrierDesc": "雲層很少時，適度氣溶膠在光路通暢時也能帶來一點暖色日落" },
       "lightPath": { "opening": "太陽方向有透光開口", "openingDesc": "太陽方向的低雲較少，光線更容易打到雲層", "wall": "太陽方向有雲牆遮擋", "wallDesc": "太陽方位周邊低/中雲偏厚，遠端光路會壓低主評分", "lowCloudBlock": "低雲遮住光線", "lowCloudBlockDesc": "低雲擋在太陽方向，陽光不容易照到中高雲" },
-      "postRain": { "clear": "雨後空氣清透", "clearDesc": "近6小時有降水，但能見度和顆粒物條件較好，雨後加成保留", "gray": "雨後灰幕風險", "grayDesc": "降水後水氣或顆粒物偏重，霞光容易發灰" },
+      "postRain": { "clear": "雨後空氣清透", "clearDesc": "近6小時有降水，但能見度和顆粒物條件較好，雨後加成保留", "gray": "濕灰幕風險", "grayDesc": "水氣、顆粒物或直達光偏弱時，霞光容易發灰" },
       "carrier": { "strong": "高雲載體清晰", "strongDesc": "高雲充足、低雲稀少且空氣較通透，具備中高分基礎", "dense": "中高雲載體明確", "denseDesc": "高雲和中雲共同提供畫布，色彩載體更穩定" },
       "layer": { "single": "雲層單一", "singleDesc": "高層雲品質好，仍可形成鮮明火燒雲" }
     },

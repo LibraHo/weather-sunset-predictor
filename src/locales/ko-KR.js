@@ -391,6 +391,10 @@ apiAccess: 'API 연동'
         "details": {
           "cloudCarrier": "usable color carrier from cloud or thin haze",
           "cloudPenalty": "cloud canvas {{canvas}}, low cloud ×{{low}}, overcast ×{{overcast}}",
+          "upperCloudCanvas": "중고층운 캔버스 {{upper}} = 상층운 {{high}}×0.75 + 중층운 {{mid}}×0.45; 구간 점수 {{range}}",
+          "highCloudBonus": "상층운 우세 보너스 {{bonus}}",
+          "cloudTypeAdjustment": "구름 유형 {{reason}} {{bonus}}",
+          "cloudThicknessAdjustment": "구름 두께 {{thickness}}, 바탕 {{base}} × 30% × 압력 {{pressure}}, 최대 {{max}}, 산란 {{diffuse}}%, 수증기 {{water}}, 운반체 완화 {{relief}}",
           "aerosolCarrier": "thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}",
           "lightPath": "sunlight reaches the cloud layer",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",

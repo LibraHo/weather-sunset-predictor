@@ -146,6 +146,39 @@ function selectHourlyAt(hourly, referenceTime) {
   return { selected, selectedIdx };
 }
 
+function smoothStep(edge0, edge1, value) {
+  if (!Number.isFinite(value)) return 0;
+  if (edge0 === edge1) return value >= edge1 ? 1 : 0;
+  const t = Math.max(0, Math.min(1, (value - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
+
+function calculateRecentRainSignal(hourly, selectedIdx) {
+  const rows = Array.isArray(hourly) ? hourly : [];
+  let total = 0;
+  let maxHourly = 0;
+  let wetHourEquivalent = 0;
+
+  for (let i = Math.max(0, selectedIdx - 6); i <= selectedIdx; i += 1) {
+    const precipitation = Math.max(0, Number(rows[i]?.precipitation || 0));
+    total += precipitation;
+    maxHourly = Math.max(maxHourly, precipitation);
+    wetHourEquivalent += smoothStep(0.02, 0.3, precipitation);
+  }
+
+  const amountSignal = smoothStep(0.2, 2.0, total);
+  const intensitySignal = smoothStep(0.1, 0.8, maxHourly);
+  const persistenceSignal = smoothStep(1.0, 4.0, wetHourEquivalent);
+  const signal = Math.max(0, Math.min(1, amountSignal * 0.45 + intensitySignal * 0.35 + persistenceSignal * 0.20));
+
+  return {
+    signal: Number(signal.toFixed(3)),
+    total: Number(total.toFixed(2)),
+    maxHourly: Number(maxHourly.toFixed(2)),
+    wetHourEquivalent: Number(wetHourEquivalent.toFixed(2))
+  };
+}
+
 function buildWeatherDataFromHourly(selected, hourly, selectedIdx) {
   let recentPrecipitation6h = 0;
   let recentRainHours = 0;
@@ -154,6 +187,7 @@ function buildWeatherDataFromHourly(selected, hourly, selectedIdx) {
     recentPrecipitation6h += precipitation;
     if (precipitation > 0) recentRainHours += 1;
   }
+  const recentRainSignal = calculateRecentRainSignal(hourly, selectedIdx);
 
   let prevHourData = null;
   for (let offset = 1; offset <= 2 && selectedIdx - offset >= 0; offset += 1) {
@@ -177,6 +211,9 @@ function buildWeatherDataFromHourly(selected, hourly, selectedIdx) {
       precipitation: selected.precipitation || 0,
       recentPrecipitation6h,
       recentRainHours,
+      recentRainSignal: recentRainSignal.signal,
+      recentRainMaxHourly: recentRainSignal.maxHourly,
+      recentRainWetHourEquivalent: recentRainSignal.wetHourEquivalent,
       lowClouds: selected.lowClouds || 0,
       midClouds: selected.midClouds || 0,
       highClouds: selected.highClouds || 0,
@@ -194,7 +231,7 @@ function buildWeatherDataFromHourly(selected, hourly, selectedIdx) {
       aqi: selected.aqi ?? null,
     },
     prevHourData,
-    rainedRecently: recentPrecipitation6h >= 0.2
+    rainedRecently: recentRainSignal.signal
   };
 }
 
