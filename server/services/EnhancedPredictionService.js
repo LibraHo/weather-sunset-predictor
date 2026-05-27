@@ -79,27 +79,32 @@ function getCloudTypeAdditiveAdjustment(cloudType) {
   }
 }
 
-function getCloudThicknessCanvasAdjustment(cloudThickness) {
+function getCloudThicknessCanvasAdjustment(cloudThickness, canvasScoreBeforeThickness = null) {
   const modifier = Number(cloudThickness?.modifier ?? 1);
   const thickness = cloudThickness?.thickness || 'unknown';
   if (modifier > 1) {
     return { adjustment: 5, reason: 'thin_cloud_bonus' };
   }
-  if (Number.isFinite(Number(cloudThickness?.pressure))) {
-    const pressure = clamp(Number(cloudThickness.pressure), 0, 1);
-    const adjustment = -Math.round(28 * pressure);
+  const pressure = Number.isFinite(Number(cloudThickness?.pressure))
+    ? clamp(Number(cloudThickness.pressure), 0, 1)
+    : (thickness === 'thick' || modifier <= 0.5 ? 1 : null);
+  const baseScore = Number(canvasScoreBeforeThickness);
+  if (pressure != null && Number.isFinite(baseScore) && baseScore > 0) {
+    const maxPenalty = baseScore * 0.30;
+    const adjustment = -Math.round(maxPenalty * pressure);
     return {
       adjustment,
       pressure: parseFloat(pressure.toFixed(2)),
+      maxPenalty: parseFloat(maxPenalty.toFixed(1)),
+      baseScore: parseFloat(baseScore.toFixed(1)),
+      penaltyRatio: 0.30,
       reason: adjustment < 0 ? 'cloud_thickness_pressure_penalty' : 'neutral_cloud_thickness'
     };
   }
-  if (thickness === 'thick' || modifier <= 0.5) {
-    return { adjustment: -28, reason: 'thick_cloud_penalty' };
-  }
   if (modifier < 1) {
+    const fallbackBase = Number.isFinite(baseScore) && baseScore > 0 ? baseScore : 100;
     return {
-      adjustment: -Math.round((1 - modifier) * 65),
+      adjustment: -Math.round(fallbackBase * 0.30 * clamp(1 - modifier, 0, 1)),
       reason: 'moderate_thick_cloud_penalty'
     };
   }
@@ -1993,7 +1998,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   logger.debug('[EnhancedPredictionService]', '云厚评估:', cloudThickness.thickness, 'modifier:', cloudThickness.modifier, 'reasons:', cloudThickness.reasons);
 
   // 5.5 云厚修正画布分
-  const cloudThicknessAdjustment = getCloudThicknessCanvasAdjustment(cloudThickness);
+  const cloudThicknessAdjustment = getCloudThicknessCanvasAdjustment(cloudThickness, canvasScore.score);
   if (cloudThicknessAdjustment.adjustment !== 0) {
     const originalCanvasScore = canvasScore.score;
     canvasScore.score = parseFloat(clamp(canvasScore.score + cloudThicknessAdjustment.adjustment, 0, 100).toFixed(1));
@@ -2055,7 +2060,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
 
   if (thickHighCloudPenalty.applied) {
     adjustedScore = Math.min(adjustedScore, thickHighCloudPenalty.cap);
-    adjustedStatus = adjustedScore < 40 ? 'light_glow' : 'good_glow';
+    adjustedStatus = 'light_glow';
     adjustedDescription = 'weak_local_colors';
   }
 

@@ -825,13 +825,13 @@ describe('PredictionController', () => {
           aerosolScattering: { factor: 1 }
         },
         canvasAnalysis: {
-          score: 54.7,
+          score: 58.7,
           cloudRangeScore: 66.7,
           lowCloudPenalty: 1,
           overcastPenalty: 1,
           highCloudBonus: 6,
           cloudTypeAdjustment: { canvasBonus: 4, reason: 'upper_cloud_carrier' },
-          cloudThicknessAdjustment: { adjustment: -22, pressure: 0.78, reason: 'cloud_thickness_pressure_penalty' },
+          cloudThicknessAdjustment: { adjustment: -18, pressure: 0.78, baseScore: 76.7, maxPenalty: 23, penaltyRatio: 0.30, reason: 'cloud_thickness_pressure_penalty' },
           breakdown: { highClouds: 100, midClouds: 0, lowClouds: 0 }
         },
         cloudThickness: {
@@ -849,8 +849,8 @@ describe('PredictionController', () => {
       expect(html).toContain('中高云画布 75.0 = 高云 100.0×0.75 + 中云 0.0×0.45；区间分 66.7');
       expect(html).toContain('高云主导 bonus +6.0');
       expect(html).toContain('云种 upper_cloud_carrier +4.0');
-      expect(html).toContain('云厚 thick，压力 0.78，散射 77%，水汽 10.5，载体缓冲 0.08');
-      expect(html).toContain('-22.0');
+      expect(html).toContain('云厚 thick，画布 76.7 × 30% × 压力 0.78，最大折损 23.0；散射 77%，水汽 10.5，载体缓冲 0.08');
+      expect(html).toContain('-18.0');
     });
 
     test('分数明细应解释渲染后分到展示分的状态档位校准', () => {

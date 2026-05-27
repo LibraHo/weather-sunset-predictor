@@ -1133,7 +1133,10 @@ describe('EnhancedPredictionService', () => {
         carrierRelief: 0.08
       });
       expect(result.canvasAnalysis.cloudThicknessAdjustment).toMatchObject({
-        adjustment: -22,
+        adjustment: -18,
+        baseScore: 76.7,
+        maxPenalty: 23,
+        penaltyRatio: 0.30,
         reason: 'cloud_thickness_pressure_penalty'
       });
       expect(result.renderingAnalysis.breakdown.specialMode).toBe('humid_haze_gray_curtain');

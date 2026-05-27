@@ -176,7 +176,7 @@ const translations = {
           "midCloud": "Mid cloud: weight 0.45, also a color carrier; high and mid clouds together make the canvas more stable",
           "lowCloudBonus": "Low cloud: weight only 0.10; it mainly affects low-cloud penalties and light-path blockage. Scarce low cloud does not add points, it just avoids penalties",
           "formula": "Upper-cloud canvas = high×0.75 + mid×0.45\nBase score: ≤10→10, 10-30→40-70, 30-70→70-100, 70-100→70-50, >100→43\nCanvas score = range score × low-cloud penalty × overcast penalty + high-cloud bonus + cloud-type adjustment + cloud-thickness adjustment",
-          "highCloudBonus": "High-cloud bonus: when high cloud >50 and low cloud <30, add (high-50)/50×6, capped at 0-6 pts. Cloud type/thickness are additive: altostratus +4, altocumulus +6, thin cloud +5; moderate/thick cloud now applies a continuous 0-28 pt penalty, -28×thickness pressure. Low-cloud types also reduce the light-path gate"
+          "highCloudBonus": "High-cloud bonus: when high cloud >50 and low cloud <30, add (high-50)/50×6, capped at 0-6 pts. Cloud type/thickness are additive: altostratus +4, altocumulus +6, thin cloud +5; moderate/thick cloud now applies a continuous proportional penalty: canvas before thickness × 30% × thickness pressure. Low-cloud types also reduce the light-path gate"
         },
         "lightPath": {
           "title": "2. Light Path Assessment",
@@ -386,7 +386,7 @@ const translations = {
           "upperCloudCanvas": "upper canvas {{upper}} = high {{high}}×0.75 + mid {{mid}}×0.45; range score {{range}}",
           "highCloudBonus": "high-cloud dominant bonus {{bonus}}",
           "cloudTypeAdjustment": "cloud type {{reason}} {{bonus}}",
-          "cloudThicknessAdjustment": "cloud thickness {{thickness}}, pressure {{pressure}}, diffuse {{diffuse}}%, water {{water}}, carrier relief {{relief}}",
+          "cloudThicknessAdjustment": "cloud thickness {{thickness}}, base {{base}} × 30% × pressure {{pressure}} = max {{max}} scaled; diffuse {{diffuse}}%, water {{water}}, carrier relief {{relief}}",
           "aerosolCarrier": "thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}",
           "lightPath": "sunlight reaches the cloud layer",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",

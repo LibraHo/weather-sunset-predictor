@@ -183,7 +183,7 @@ export default {
           midCloud: '中云：权重 0.45，也是可染色载体；高云与中云同时存在时会提高画布稳定性',
           lowCloudBonus: '低云：权重只有 0.10，主要进入低云惩罚和光路遮挡；低云少不加分，只是不扣分',
           formula: '中高云画布量 = 高云×0.75 + 中云×0.45\n画布基础分：≤10→10，10–30→40–70，30–70→70–100，70–100→70–50，>100→43\n画布分 = 区间分 × 低云惩罚 × 阴天惩罚 + 高云 bonus + 云种修正 + 云厚修正',
-          highCloudBonus: '高云 bonus：高云>50 且低云<30 时，按 (高云-50)/50×6 加 0–6 分。云种/云厚是加减分：高层云 +4、高积云 +6、薄云 +5；偏厚/厚云按压力连续扣 0–28 分，公式为 -28×云厚压力。低云类云种还会压低光路门控'
+          highCloudBonus: '高云 bonus：高云>50 且低云<30 时，按 (高云-50)/50×6 加 0–6 分。云种/云厚是加减分：高层云 +4、高积云 +6、薄云 +5；偏厚/厚云按当前画布比例连续扣分，公式为 画布修正前分×30%×云厚压力。低云类云种还会压低光路门控'
         },
         lightPath: {
           title: '2. 光路评估',
@@ -409,7 +409,7 @@ export default {
           upperCloudCanvas: '中高云画布 {{upper}} = 高云 {{high}}×0.75 + 中云 {{mid}}×0.45；区间分 {{range}}',
           highCloudBonus: '高云主导 bonus {{bonus}}',
           cloudTypeAdjustment: '云种 {{reason}} {{bonus}}',
-          cloudThicknessAdjustment: '云厚 {{thickness}}，压力 {{pressure}}，散射 {{diffuse}}%，水汽 {{water}}，载体缓冲 {{relief}}',
+          cloudThicknessAdjustment: '云厚 {{thickness}}，画布 {{base}} × 30% × 压力 {{pressure}}，最大折损 {{max}}；散射 {{diffuse}}%，水汽 {{water}}，载体缓冲 {{relief}}',
           aerosolCarrier: '云层很少时，薄雾在光路通畅时可承接一点暖色，光路激活 ×{{activation}}',
           lightPath: '阳光是否能打到云层',
           renderingFactors: '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}',
