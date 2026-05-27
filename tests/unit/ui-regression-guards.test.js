@@ -83,6 +83,23 @@ describe('recent user-reported UI regression guards', () => {
     expect(source).toContain('.weather-view-toggle.xiake-toggle');
   });
 
+  test('English weather parameter selector uses a stable grid instead of uneven flex wrapping', () => {
+    const source = css();
+    const gridBlock = source.match(/\.parameter-selector\.xiake-toggle\.xiake-toggle-wrap \{[\s\S]*?\n\}/)?.[0] || '';
+    const buttonBlock = source.match(/\.parameter-selector\.xiake-toggle \.btn-param\.xiake-toggle-btn \{[\s\S]*?\n\}/)?.[0] || '';
+    const labelBlock = source.match(/\.parameter-selector\.xiake-toggle \.param-label \{[\s\S]*?\n\}/)?.[0] || '';
+    const mobileBlock = source.match(/@media \(max-width: 640px\) \{[\s\S]*?\.parameter-selector\.xiake-toggle\.xiake-toggle-wrap \{[\s\S]*?\n  \}[\s\S]*?\n\}/)?.[0] || '';
+
+    expect(gridBlock).toContain('display: grid');
+    expect(gridBlock).toContain('grid-template-columns: repeat(3, minmax(0, 1fr))');
+    expect(gridBlock).toContain('width: min(100%, 700px)');
+    expect(buttonBlock).toContain('width: 100%');
+    expect(buttonBlock).toContain('min-width: 0 !important');
+    expect(labelBlock).toContain('text-overflow: ellipsis');
+    expect(mobileBlock).toContain('grid-template-columns: repeat(2, minmax(0, 1fr))');
+    expect(mobileBlock).toContain('width: min(100%, 360px)');
+  });
+
   test('radar compass loading uses the shared progress bar treatment', () => {
     const source = css();
     const controller = fs.readFileSync(path.resolve('src/controllers/WeatherController.js'), 'utf8');
