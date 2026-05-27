@@ -513,7 +513,45 @@ describe('EnhancedPredictionService', () => {
       const result = EnhancedPredictionService.scoreRendering(weatherData, true);
 
       expect(result.rainBonus).toBe(1.2);
+      expect(result.rainSignal).toBe(1);
       expect(result.breakdown.specialMode).toBe('post_rain');
+    });
+
+    test('should not treat trace precipitation plus haze as post-rain gray curtain', () => {
+      const weatherData = {
+        visibility: 15,
+        humidity: 75,
+        aqi: 163,
+        aerosolOpticalDepth: 0.55,
+        pm2_5: 96.2,
+        pm10: 97.3,
+        dust: 2,
+        recentPrecipitation6h: 0.6,
+        recentRainSignal: 0.06
+      };
+      const result = EnhancedPredictionService.scoreRendering(weatherData, true);
+
+      expect(result.rainSignal).toBe(0.06);
+      expect(result.rainBonus).toBe(1.0);
+      expect(result.breakdown.specialMode).toBe('humid_haze_gray_curtain');
+    });
+
+    test('should use post-rain gray curtain only for strong rain signal', () => {
+      const weatherData = {
+        visibility: 15,
+        humidity: 75,
+        aqi: 163,
+        aerosolOpticalDepth: 0.55,
+        pm2_5: 96.2,
+        pm10: 97.3,
+        recentPrecipitation6h: 1.4,
+        recentRainSignal: 0.75
+      };
+      const result = EnhancedPredictionService.scoreRendering(weatherData, true);
+
+      expect(result.rainSignal).toBe(0.75);
+      expect(result.rainBonus).toBeLessThan(1);
+      expect(result.breakdown.specialMode).toBe('post_rain_gray_curtain');
     });
 
     test('should identify color tendency based on AQI', () => {

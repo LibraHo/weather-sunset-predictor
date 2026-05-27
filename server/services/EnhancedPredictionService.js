@@ -1347,6 +1347,10 @@ function scoreRendering(weatherData, rainedRecently = false) {
   const pm25 = Number(weatherData.pm2_5 ?? weatherData.pm25 ?? 0);
   const pm10 = Number(weatherData.pm10 ?? 0);
   const dust = Number(weatherData.dust ?? 0);
+  const explicitRainSignal = Number(weatherData.recentRainSignal);
+  const rainSignal = Number.isFinite(explicitRainSignal)
+    ? clamp(explicitRainSignal, 0, 1)
+    : (rainedRecently ? 1 : 0);
 
   // 1. 能见度修正
   let visibilityFactor = 1.0;
@@ -1378,26 +1382,32 @@ function scoreRendering(weatherData, rainedRecently = false) {
     humidityLevel = 'moderate';     // 适中
   }
 
-  // 3. 特殊模式：雨后初晴
+  // 3. 特殊模式：雨后初晴 / 湿灰幕
   let rainBonus = 1.0;
   let specialMode = null;
 
-  if (rainedRecently) {
-    const recentRain = Number(weatherData.recentPrecipitation6h || 0);
-    const waterVapour = Number(weatherData.waterVapourColumn);
-    const aerosolBad = (Number.isFinite(aerosolOpticalDepth) && aerosolOpticalDepth > 0.45) || pm25 > 75 || pm10 > 120 || dust > 80;
-    const grayCurtain = aerosolBad || visibility < 8 || humidity > 92 || (Number.isFinite(waterVapour) && waterVapour > 7);
+  const recentRain = Number(weatherData.recentPrecipitation6h || 0);
+  const waterVapour = Number(weatherData.waterVapourColumn);
+  const aerosolBad = (Number.isFinite(aerosolOpticalDepth) && aerosolOpticalDepth > 0.45) || pm25 > 75 || pm10 > 120 || dust > 80;
+  const grayCurtain = aerosolBad || visibility < 8 || humidity > 92 || (Number.isFinite(waterVapour) && waterVapour > 7);
+
+  if (rainSignal > 0) {
     const cleanAfterRain = visibility >= 12 && !aerosolBad && humidity <= 90;
     const hasPostRainDiscriminators = recentRain > 0 || Number.isFinite(aerosolOpticalDepth) || pm25 > 0 || pm10 > 0 || dust > 0 || Number.isFinite(waterVapour);
+    const effectiveRain = rainSignal >= 0.6;
 
     if (!hasPostRainDiscriminators) {
-      rainBonus = 1.2;
+      rainBonus = parseFloat((1 + 0.2 * rainSignal).toFixed(2));
       specialMode = 'post_rain';
-    } else if (grayCurtain) {
-      rainBonus = recentRain >= 2 ? 0.78 : 0.88;
+    } else if (grayCurtain && effectiveRain) {
+      const grayPenalty = recentRain >= 2 ? 0.22 : 0.12;
+      rainBonus = parseFloat((1 - grayPenalty * rainSignal).toFixed(2));
       specialMode = 'post_rain_gray_curtain';
-    } else if (cleanAfterRain) {
-      rainBonus = 1.15;
+    } else if (grayCurtain) {
+      rainBonus = 1.0;
+      specialMode = 'humid_haze_gray_curtain';
+    } else if (cleanAfterRain && effectiveRain) {
+      rainBonus = parseFloat((1 + 0.15 * rainSignal).toFixed(2));
       specialMode = 'post_rain_clear';
     } else {
       rainBonus = 1.0;
@@ -1465,6 +1475,7 @@ function scoreRendering(weatherData, rainedRecently = false) {
     visibilityFactor: parseFloat(visibilityFactor.toFixed(2)),
     humidityFactor: parseFloat(humidityFactor.toFixed(2)),
     rainBonus: parseFloat(rainBonus.toFixed(2)),
+    rainSignal: parseFloat(rainSignal.toFixed(2)),
     aqiFactor: parseFloat(aqiFactor.toFixed(2)),
     aerosolFactor: parseFloat(aerosolFactor.toFixed(2)),
     breakdown: {
@@ -2025,7 +2036,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
 
   const postRainMode = renderingFactor.breakdown?.specialMode || null;
   let postRainAdjustment = { applied: false, mode: postRainMode, cap: null, reason: null };
-  if (postRainMode === 'post_rain_gray_curtain') {
+  if (postRainMode === 'post_rain_gray_curtain' || postRainMode === 'humid_haze_gray_curtain') {
     const lowMid = (weatherData.lowClouds || 0) * 0.6 + (weatherData.midClouds || 0) * 0.4;
     const directionalReason = lightPathScore.directionalAnalysis?.reason || '';
     const directionalWall = directionalReason.includes('cloud_wall');
@@ -2036,7 +2047,8 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
       adjustedStatus = adjustedScore < 40 ? 'no_fire_cloud' : 'light_glow';
       adjustedDescription = 'haze_light_suppressed';
     }
-    postRainAdjustment = { applied: true, mode: postRainMode, cap, reason: directionalOpening ? 'post_rain_gray_curtain_direction_opening_softened' : (directionalWall ? 'post_rain_gray_curtain_direction_wall' : 'post_rain_gray_curtain_cap') };
+    const prefix = postRainMode === 'humid_haze_gray_curtain' ? 'humid_haze_gray_curtain' : 'post_rain_gray_curtain';
+    postRainAdjustment = { applied: true, mode: postRainMode, cap, reason: directionalOpening ? `${prefix}_direction_opening_softened` : (directionalWall ? `${prefix}_direction_wall` : `${prefix}_cap`) };
   } else if (postRainMode === 'post_rain_clear') {
     postRainAdjustment = { applied: true, mode: postRainMode, cap: null, reason: 'post_rain_clear_bonus' };
   }

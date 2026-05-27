@@ -399,7 +399,7 @@ export default {
           geometryCap: '太阳角度',
           occlusion: '遮挡修正',
           carrierFloor: '载体保底',
-          postRainCap: '雨后灰幕',
+          postRainCap: '湿灰幕',
           displayCalibration: '展示分校准',
           aerosolCarrier: '气溶胶载体'
         },
@@ -419,7 +419,7 @@ export default {
           directionalSamples: '已参考太阳方向周边云况',
           lightPathLowCloudBlock: '低云遮住太阳方向，光线不容易照到中高云',
           lightPathRain: '降水会削弱日落直射光',
-          postRainCap: '雨后水汽或灰幕偏重，霞光容易发灰',
+          postRainCap: '水汽、颗粒物或直达光偏弱，霞光容易发灰',
           displayCalibration: '最终展示分按预测状态档位校准'
         },
         reasons: {
@@ -517,7 +517,7 @@ formationAnalysis: {
       },
       postRain: {
         clear: '雨后空气清透', clearDesc: '近6小时有降水，但能见度和颗粒物条件较好，雨后加成保留',
-        gray: '雨后灰幕风险', grayDesc: '降水后水汽或颗粒物偏重，霞光容易发灰'
+        gray: '湿灰幕风险', grayDesc: '水汽、颗粒物或直达光偏弱时，霞光容易发灰'
       },
       carrier: {
         strong: '高云载体清晰', strongDesc: '高云充足、低云稀少且空气较通透，具备中高分基础',

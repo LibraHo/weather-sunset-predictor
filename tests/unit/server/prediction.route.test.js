@@ -162,7 +162,24 @@ describe('Prediction Routes', () => {
       }, true);
 
       expect(result.rainBonus).toBe(1.2);
+      expect(result.rainSignal).toBe(1);
       expect(result.breakdown.specialMode).toBe('post_rain');
+    });
+
+    test('scoreRendering should name haze without effective rain as humid gray curtain', () => {
+      const result = EnhancedPredictionService.scoreRendering({
+        visibility: 15,
+        humidity: 75,
+        aqi: 163,
+        aerosolOpticalDepth: 0.55,
+        pm2_5: 96,
+        pm10: 97,
+        recentPrecipitation6h: 0.6,
+        recentRainSignal: 0.06
+      }, true);
+
+      expect(result.rainBonus).toBe(1.0);
+      expect(result.breakdown.specialMode).toBe('humid_haze_gray_curtain');
     });
   });
 

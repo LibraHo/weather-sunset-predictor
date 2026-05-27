@@ -1775,9 +1775,10 @@ class PredictionController {
 
     const renderingFactor = Number(prediction?.breakdown?.renderingFactor ?? prediction?.renderingAnalysis?.factor);
     const aod = Number(weather.aod);
+    const grayCurtainMode = postRainAdjustment?.mode === 'post_rain_gray_curtain' || postRainAdjustment?.mode === 'humid_haze_gray_curtain';
     let renderingLevel = 'fair';
     if (
-      postRainAdjustment?.mode === 'post_rain_gray_curtain' ||
+      grayCurtainMode ||
       aerosolHazeCap?.applied ||
       weather.visibility < 8 ||
       (Number.isFinite(aod) && aod > 0.45) ||
@@ -2080,9 +2081,9 @@ class PredictionController {
         tone: 'good'
       } : null,
       postRainAdjustment?.applied && postRainAdjustment.cap ? {
-        label: ledgerText('labels.postRainCap', {}, 'Post-rain haze', '雨后灰幕'),
+        label: ledgerText('labels.postRainCap', {}, 'Gray-curtain haze', '湿灰幕'),
         value: `≤${fmt(postRainAdjustment.cap, 0)}`,
-        detail: ledgerText('details.postRainCap', {}, 'post-rain moisture or haze turns the glow gray', '雨后水汽或灰幕偏重，霞光容易发灰'),
+        detail: ledgerText('details.postRainCap', {}, 'moisture, particles, or weak direct light turns the glow gray', '水汽、颗粒物或直达光偏弱，霞光容易发灰'),
         tone: 'bad'
       } : null
     ].filter(Boolean);
