@@ -890,6 +890,14 @@ input[type="text"]::placeholder {
   transform: translateY(-50%);
 }
 
+.location-superbar .icon-chip.xiake-icon-control:hover:not(:disabled) {
+  transform: none;
+}
+
+.location-superbar .input-icon-btn.xiake-icon-control:hover:not(:disabled) {
+  transform: translateY(-50%);
+}
+
 .search-action-btn {
   flex: 0 0 24%;
   min-width: 80px;

@@ -55,4 +55,23 @@ test.describe('用户反馈回归保护', () => {
       expect(Math.abs(alignment.footerLeft - alignment.headerLeft)).toBeLessThanOrEqual(1);
     }
   });
+
+  test('首页位置栏图标按钮 hover 时不发生位置跳动', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+
+    for (const selector of ['#favorites-toggle-btn', '#current-location-btn']) {
+      const button = page.locator(selector);
+      await expect(button).toBeVisible();
+
+      const before = await button.boundingBox();
+      await button.hover();
+      await page.waitForTimeout(180);
+      const after = await button.boundingBox();
+
+      expect(before).not.toBeNull();
+      expect(after).not.toBeNull();
+      expect(Math.abs(after.x - before.x)).toBeLessThanOrEqual(1);
+      expect(Math.abs(after.y - before.y)).toBeLessThanOrEqual(1);
+    }
+  });
 });
