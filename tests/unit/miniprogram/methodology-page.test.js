@@ -38,6 +38,7 @@ describe('miniprogram methodology page', () => {
     expect(js).toContain('画布修正前分 × 30% × 云厚压力');
     expect(js).toContain('thicknessPenalty = canvasBeforeThickness × 0.30 × thicknessPressure');
     expect(js).toContain('去掉固定 -28/24 上限');
+    expect(js).toContain('厚云、湿灰幕、沙尘');
     expect(js).toContain('不再用直射比直接参与评分');
     expect(js).toContain('high×0.75 + mid×0.45');
     expect(js).toContain('carrier × gate + renderingAdjustment');
