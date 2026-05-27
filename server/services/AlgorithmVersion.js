@@ -1,10 +1,16 @@
 'use strict';
 
-const ALGORITHM_VERSION = '2026.05.19-additive-carrier-light-gate-v1';
+const ALGORITHM_VERSION = '2026.05.27-cloud-thickness-proportional-v2';
 
 const ALGORITHM_CHANGELOG = [
   {
     version: ALGORITHM_VERSION,
+    date: '2026-05-27',
+    title: 'Cloud-thickness proportional penalty v2',
+    summary: 'Cloud-thickness penalty is now pre-thickness canvas score × 30% × thickness pressure, with the fixed -28/24 caps removed. Humid gray-curtain cases are calibrated as weak glow/watchable but not strong.'
+  },
+  {
+    version: '2026.05.19-additive-carrier-light-gate-v1',
     date: '2026-05-19',
     title: 'Additive carrier scoring with light-path gate',
     summary: 'Positive cloud-carrier signals now add bounded points instead of multiplying repeatedly, and existing sun-direction light-path samples act as a gate when they show cloud-wall obstruction. No extra radiation/direct-ratio gate or additional API sampling is introduced.'

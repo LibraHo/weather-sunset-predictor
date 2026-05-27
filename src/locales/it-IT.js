@@ -70,16 +70,16 @@ apiAccess: 'Accesso API'
     "methodology": {
       "title": "Come viene calcolato il punteggio",
       "intro": "L'indice nuvole rosse combina quattro fattori chiave per stimare se vale la pena osservare il tramonto.",
-      "versionLabel": "Algorithm version: 2026.05.19-additive-carrier-light-gate-v1",
-      "versionDesc": "This version changes positive cloud signals into bounded additive carrier points and uses existing sun-direction multi-point sampling as the light-path gate.",
+      "versionLabel": "Versione algoritmo: 2026.05.27-cloud-thickness-proportional-v2",
+      "versionDesc": "Questa versione trasforma la penalità per spessore delle nuvole in punteggio canvas prima dello spessore × 30% × pressione di spessore, rimuove i limiti fissi -28/24 e calibra i sipari grigi umidi come bagliore debole/osservabile ma non forte.",
       changelogTitle: "Cronologia versioni",
       changelogHint: "Gli aggiornamenti degli ultimi tre mesi sono qui; scorri per rivedere motivo, impatto e validazione",
       changelog: {
         "latest": {
-          "date": "2026-05-13",
-          "title": "Analisi a quattro fattori v1",
-          "summary": "L'analisi viene raggruppata in supporto nuvoloso, percorso della luce, resa dell'aria e limiti per ridurre note disperse.",
-          "validation": "Validazione: aerosol, blocco da nuvole basse, foschia grigia, nuvole spesse e pioggia rientrano nel fattore corretto; la formula non cambia."
+          "date": "2026-05-27",
+          "title": "Penalità proporzionale per spessore nuvoloso v2",
+          "summary": "La penalità per spessore delle nuvole ora è punteggio canvas prima dello spessore × 30% × pressione di spessore, senza i limiti fissi -28/24. I sipari grigi umidi sono calibrati come bagliore debole/osservabile ma non forte.",
+          "validation": "Validazione: nel campione di Pechino del 2026-05-27, pressione 0.78 su canvas 76.7 produce circa -18 punti, mantenendo il risultato nella fascia bagliore debole/osservabile."
         },
         "aerosol": {
           "date": "2026-05-12",

@@ -920,7 +920,7 @@ describe('EnhancedPredictionService', () => {
       expect(result.cloudThickness.reasons).toContain('dense_upper_cloud_carrier_softened');
       expect(result.algorithm).toMatchObject({
         name: 'EnhancedPredictionService',
-        version: '2026.05.19-additive-carrier-light-gate-v1'
+        version: '2026.05.27-cloud-thickness-proportional-v2'
       });
       expect(result.score).toBeGreaterThanOrEqual(50);
       expect(result.score).toBeLessThanOrEqual(60);
