@@ -184,3 +184,90 @@
 }
 .share-option { color: var(--color-text); }
 .share-option:hover { background: var(--glass-bg-hover); }
+
+/* Bottom card action: a centered share pill that adapts to light/dark theme tokens. */
+.prediction-share-footer-row {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100%;
+  min-height: 0;
+  margin: 22px 0 16px;
+}
+
+.prediction-share-menu.prediction-share-footer {
+  position: relative;
+  inset: auto;
+  z-index: 40;
+  display: inline-flex;
+  justify-content: center;
+  margin: 0;
+}
+
+.prediction-share-footer .prediction-share-btn {
+  min-width: 136px;
+  height: 50px;
+  padding: 0 24px !important;
+  gap: 10px;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0;
+  background: var(--theme-share-bg) !important;
+  color: var(--theme-share-icon) !important;
+  border: 1px solid var(--theme-share-border) !important;
+  box-shadow: var(--theme-share-shadow) !important;
+}
+
+.prediction-share-footer .prediction-share-btn:hover,
+.prediction-share-footer .prediction-share-btn[aria-expanded="true"] {
+  background: var(--theme-share-bg-hover) !important;
+  color: var(--theme-accent-strong) !important;
+  border-color: color-mix(in srgb, var(--theme-accent) 42%, transparent) !important;
+  transform: translateY(-1px);
+}
+
+.prediction-share-footer .prediction-share-btn:active {
+  transform: translateY(0);
+}
+
+.prediction-share-footer .prediction-share-btn .share-btn-icon {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  margin: 0;
+}
+
+.prediction-share-footer .share-btn-label {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  color: inherit;
+  white-space: nowrap;
+}
+
+.prediction-share-footer .prediction-share-dropdown {
+  top: auto;
+  right: auto;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+@media (max-width: 480px) {
+  .prediction-share-footer-row {
+    margin: 18px 0 18px;
+  }
+
+  .prediction-share-footer .prediction-share-btn {
+    min-width: 124px;
+    height: 46px;
+    padding: 0 20px !important;
+    font-size: 0.96rem;
+  }
+
+  .prediction-share-footer .prediction-share-dropdown {
+    min-width: min(220px, calc(100vw - 48px));
+  }
+}
