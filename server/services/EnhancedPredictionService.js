@@ -620,13 +620,13 @@ function isFavorableDirectionalHighCloudCarrier(weatherData, context = {}) {
 /**
  * 云厚评估：区分“薄卷云（好幕布）”和“厚云幕（压光）”
  *
- * 三维判定：
- * 1. 散射占比：diffuse / shortwave 高时说明云幕/霾幕更厚
- * 2. 水汽法：waterVapour × cloudCover / 100（高 = 含水量大，但需结合云型/光路判断）
- * 3. 天气码兜底：WMO 阴天码直接标厚
+ * 判定信号：
+ * 1. 水汽法：waterVapour × cloudCover / 100（高 = 含水量大，但需结合云型/光路判断）
+ * 2. 天气码兜底：WMO 阴天码直接标厚
+ * 3. 低云覆盖：低云多时才作为明确遮光厚云
  *
  * @param {Object} weatherData - 天气数据（目标时刻）
- * @param {Object|null} prevHourData - 目标时刻前1-2小时的数据（用于散射占比，避免日落时辐射自然为0）
+ * @param {Object|null} prevHourData - 目标时刻前1-2小时的数据（仅用于展示辐射证据，不参与云厚扣分）
  * @returns {{ thickness: 'thin'|'moderate'|'thick'|'unknown', modifier: number, reasons: string[] }}
  */
 function assessCloudThickness(weatherData, prevHourData = null, context = {}) {
@@ -639,17 +639,16 @@ function assessCloudThickness(weatherData, prevHourData = null, context = {}) {
   let thinEvidence = 0;
   let thickEvidence = 0;
 
-  // --- 辐射信号：只采用散射占比；不再用 direct/shortwave，避免把日落前自然失光误判成厚云 ---
-  const MIN_SHORTWAVE = 50; // 短波辐射最低阈值，低于此值辐射数据不可靠
+  // --- 辐射信号：短波/漫射只做证据展示，不参与云厚扣分。日落低太阳高度下该信号不稳定。 ---
   let sw = weatherData.shortwaveRadiation;
   let df = weatherData.diffuseRadiation;
   let usedPrevHour = false;
   let diffuseRatio = null;
   let waterIndex = null;
 
-  if ((sw == null || sw < MIN_SHORTWAVE) && prevHourData) {
+  if ((sw == null || sw <= 0) && prevHourData) {
     const pSw = prevHourData.shortwaveRadiation;
-    if (pSw != null && pSw >= MIN_SHORTWAVE) {
+    if (pSw != null && pSw > 0) {
       sw = pSw;
       df = prevHourData.diffuseRadiation;
       usedPrevHour = true;
@@ -667,13 +666,9 @@ function assessCloudThickness(weatherData, prevHourData = null, context = {}) {
     else                       { thickEvidence += upperCarrier.favorable ? 0.6 : 1.0; signals.push('water_vapour_very_high'); }
   }
 
-  // --- 信号3：散射比 ---
-  if (sw != null && df != null && sw > MIN_SHORTWAVE) {
+  // --- 展示证据：散射比不再作为厚云扣分输入 ---
+  if (sw != null && df != null && sw > 0) {
     diffuseRatio = df / sw;
-    if (diffuseRatio > 0.65)    { thickEvidence += 2.4; signals.push('diffuse_dominant'); }
-    else if (diffuseRatio > 0.55) { thickEvidence += 0.8; signals.push('diffuse_moderate_high'); }
-    else if (diffuseRatio < 0.3){ thinEvidence += 1; signals.push('diffuse_low'); }
-    if (usedPrevHour) signals.push('using_prev_hour_radiation');
   }
 
   // --- 信号4：天气码兜底 ---
@@ -717,12 +712,11 @@ function assessCloudThickness(weatherData, prevHourData = null, context = {}) {
   const pressureNet = thinEvidence - thickEvidenceBeforeCarrierRelief;
   const evidencePressure = smoothStep(1.5, 4.5, thickEvidenceBeforeCarrierRelief);
   const netPressure = smoothStep(0.8, 4.0, -pressureNet);
-  const diffusePressure = Number.isFinite(diffuseRatio) ? smoothStep(0.55, 0.80, diffuseRatio) : 0;
+  const diffusePressure = 0;
   const waterPressure = Number.isFinite(waterIndex) ? smoothStep(4.5, 11.0, waterIndex) : 0;
   const rawPressure = clamp(
     evidencePressure * 0.35
       + netPressure * 0.30
-      + diffusePressure * 0.25
       + waterPressure * 0.10,
     0,
     1
@@ -787,13 +781,19 @@ function assessCloudThickness(weatherData, prevHourData = null, context = {}) {
 function assessThickHighCloudPenalty(weatherData, cloudThickness) {
   const cloudCover = weatherData.cloudCover || 0;
   const lowClouds = weatherData.lowClouds || 0;
+  const midClouds = weatherData.midClouds || 0;
   const highClouds = weatherData.highClouds || 0;
+  const waterVapour = Number(weatherData.waterVapourColumn);
   const reasons = cloudThickness?.reasons || [];
 
   const isHighCloudCurtain = highClouds >= 80 && cloudCover >= 60 && lowClouds < 20;
   const isThick = cloudThickness?.thickness === 'thick' || cloudThickness?.modifier <= 0.5;
   const diffuseDominant = reasons.includes('diffuse_dominant');
-  const waterHeavy = reasons.includes('water_vapour_very_high');
+  const waterIndex = Number.isFinite(waterVapour) ? waterVapour * cloudCover / 100 : null;
+  const waterHeavy = reasons.includes('water_vapour_very_high')
+    && Number.isFinite(waterIndex)
+    && waterIndex >= 12
+    && midClouds < 30;
   const softenedCarrier = reasons.includes('dense_upper_cloud_carrier_softened')
     || reasons.includes('opening_upper_cloud_carrier_softened')
     || reasons.includes('directional_high_cloud_carrier_softened')
@@ -812,11 +812,11 @@ function assessThickHighCloudPenalty(weatherData, cloudThickness) {
     };
   }
 
-  if (!isHighCloudCurtain || !isThick || !(diffuseDominant || waterHeavy)) {
+  if (!isHighCloudCurtain || (!(isThick && diffuseDominant) && !waterHeavy)) {
     return { applied: false, cap: null, reason: null };
   }
 
-  // 漫射主导：整片厚云幕，只能期待局部边缘光，接近现场 35–45 分。
+  // 不再用漫射占比单独判厚；只有水汽柱+高云覆盖都很高时，才视为整片厚云幕。
   const cap = diffuseDominant ? 42 : 48;
 
   return {
@@ -824,7 +824,7 @@ function assessThickHighCloudPenalty(weatherData, cloudThickness) {
     cap,
     reason: diffuseDominant
       ? 'thick_high_cloud_diffuse_cap_42'
-      : 'thick_high_cloud_cap_48'
+      : 'water_heavy_high_cloud_cap_48'
   };
 }
 
@@ -1017,10 +1017,11 @@ function buildCarrierScore(canvasScore, aerosolCarrierScore, directionalCurtainC
 function assessAerosolHazeCap(weatherData) {
   const lowClouds = weatherData.lowClouds || 0;
   const highClouds = weatherData.highClouds || 0;
+  const midClouds = weatherData.midClouds || 0;
   const visibility = weatherData.visibility ?? 20;
   const { aod, pm25, pm10, dust } = getAerosolMetrics(weatherData);
 
-  const hasUpperCloudCarrier = highClouds >= 65 && lowClouds <= 20;
+  const hasUpperCloudCarrier = (highClouds >= 65 || (midClouds >= 45 && highClouds >= 45)) && lowClouds <= 20;
   const extremeHaze = (aod != null && aod >= 0.8) || (dust != null && dust >= 300) || (pm10 != null && pm10 >= 250);
   const severeHaze = (aod != null && aod >= 0.55) || (dust != null && dust >= 150) || (pm10 != null && pm10 >= 180) || (pm25 != null && pm25 >= 90) || visibility < 6;
   const moderateHaze = (aod != null && aod >= 0.45) || (dust != null && dust >= 80) || (pm10 != null && pm10 >= 120) || visibility < 8;
@@ -1223,7 +1224,7 @@ function calcSampleBlock(sample, solarElevation) {
 
   const layerOpacity = (low * 0.7 + mid * 0.2 + high * 0.1) / 100;
   const geometryBlock = sigmoid((criticalElevation - solarElevation) * 1.2);
-  const block = Math.max(0, Math.min(1, geometryBlock * 0.6 + layerOpacity * 0.4));
+  const block = Math.max(0, Math.min(1, geometryBlock * layerOpacity));
 
   return {
     distanceKm: Dkm,
@@ -1405,6 +1406,16 @@ function scoreRendering(weatherData, rainedRecently = false) {
   const pm25 = Number(weatherData.pm2_5 ?? weatherData.pm25 ?? 0);
   const pm10 = Number(weatherData.pm10 ?? 0);
   const dust = Number(weatherData.dust ?? 0);
+  const hasAerosolMetric = Number.isFinite(aerosolOpticalDepth)
+    || Number.isFinite(Number(weatherData.pm2_5 ?? weatherData.pm25))
+    || Number.isFinite(Number(weatherData.pm10))
+    || Number.isFinite(Number(weatherData.dust));
+  const moderateAerosolWithGoodVisibility = hasAerosolMetric
+    && visibility >= 12
+    && (!Number.isFinite(aerosolOpticalDepth) || aerosolOpticalDepth <= 0.55)
+    && pm25 < 65
+    && pm10 < 80
+    && dust < 80;
   const explicitRainSignal = Number(weatherData.recentRainSignal);
   const rainSignal = Number.isFinite(explicitRainSignal)
     ? clamp(explicitRainSignal, 0, 1)
@@ -1489,8 +1500,8 @@ function scoreRendering(weatherData, rainedRecently = false) {
   } else {
     aqiLevel = 'poor';               // 空气差
     colorTendency = 'dark_red';      // 暗红色调
-    // 严重污染（AQI > 150）单独施加惩罚
-    aqiFactor = aqi > 150 ? 0.8 : 1.0;
+    // AQI 偏高但能见度仍好、光学厚度未到灰幕级时，多表现为暖色散射，不直接按纯负面扣分。
+    aqiFactor = aqi > 150 && !moderateAerosolWithGoodVisibility ? 0.8 : 1.0;
   }
 
   let aerosolFactor = 1.0;
@@ -1503,7 +1514,7 @@ function scoreRendering(weatherData, rainedRecently = false) {
       aerosolFactor = 1.06;
       aerosolLevel = 'optimal';
     } else if (aerosolOpticalDepth <= 0.7) {
-      aerosolFactor = 0.95;
+      aerosolFactor = moderateAerosolWithGoodVisibility ? 0.9 : 0.95;
       aerosolLevel = 'high';
     } else {
       aerosolFactor = 0.88;
@@ -1516,7 +1527,7 @@ function scoreRendering(weatherData, rainedRecently = false) {
       aerosolFactor = Math.min(aerosolFactor, 0.85);
       aerosolLevel = 'polluted';
     } else if (particulateModerate) {
-      aerosolFactor = Math.min(aerosolFactor, 0.94);
+      aerosolFactor = Math.min(aerosolFactor, moderateAerosolWithGoodVisibility ? 0.9 : 0.94);
       aerosolLevel = aerosolLevel === 'optimal' ? 'moderate_pollution' : aerosolLevel;
     }
     if (visibility < 8 && (aerosolOpticalDepth > 0.35 || particulateModerate)) {

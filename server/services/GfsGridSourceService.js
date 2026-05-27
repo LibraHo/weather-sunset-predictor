@@ -1,5 +1,7 @@
 'use strict';
 
+const fs = require('fs');
+const https = require('https');
 const os = require('os');
 const path = require('path');
 
@@ -54,6 +56,8 @@ class GfsGridSourceService {
     this.dataDir = options.dataDir || path.join(os.homedir(), '.xiake');
     this.now = options.now || null;
     this.baseUrl = options.baseUrl || 'https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl';
+    this.downloadUrl = options.downloadUrl || downloadUrlToFile;
+    this.parser = options.parser || null;
   }
 
   buildRequestPlan(config = {}) {
@@ -113,6 +117,24 @@ class GfsGridSourceService {
     };
   }
 
+  async downloadBatch(batch) {
+    if (!batch?.dataUrl || !batch?.rawPath) {
+      const err = new Error('GFS batch is missing dataUrl or rawPath');
+      err.code = 'GFS_DOWNLOAD_BATCH_INVALID';
+      throw err;
+    }
+    return this.downloadUrl(batch.dataUrl, batch.rawPath);
+  }
+
+  async readGridRecords(batch) {
+    if (this.parser && typeof this.parser.readGridRecords === 'function') {
+      return this.parser.readGridRecords(batch);
+    }
+    const err = new Error('GFS GRIB2 parser is not configured; install/configure wgrib2 or cfgrib parser before real runs');
+    err.code = 'GFS_GRIB_PARSER_NOT_CONFIGURED';
+    throw err;
+  }
+
   _buildBatch({ cycle, forecastHour, bbox, resolution }) {
     const forecastToken = `f${pad(forecastHour, 3)}`;
     const file = `gfs.t${cycle.slice(8, 10)}z.pgrb2.0p25.${forecastToken}`;
@@ -153,6 +175,51 @@ class GfsGridSourceService {
       return acc;
     }, {});
   }
+}
+
+function downloadUrlToFile(url, targetPath) {
+  return new Promise((resolve, reject) => {
+    fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+    const tmpPath = `${targetPath}.download`;
+    const file = fs.createWriteStream(tmpPath);
+    let bytesDownloaded = 0;
+
+    const request = https.get(url, response => {
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        file.destroy();
+        fs.rmSync(tmpPath, { force: true });
+        const err = new Error(`GFS download failed with HTTP ${response.statusCode}`);
+        err.code = 'GFS_DOWNLOAD_HTTP_ERROR';
+        response.resume();
+        reject(err);
+        return;
+      }
+
+      response.on('data', chunk => {
+        bytesDownloaded += chunk.length;
+      });
+      response.pipe(file);
+    });
+
+    request.on('error', err => {
+      file.destroy();
+      fs.rmSync(tmpPath, { force: true });
+      err.code = err.code || 'GFS_DOWNLOAD_FAILED';
+      reject(err);
+    });
+
+    file.on('finish', () => {
+      file.close(() => {
+        fs.renameSync(tmpPath, targetPath);
+        resolve({ bytesDownloaded, rawPath: targetPath });
+      });
+    });
+    file.on('error', err => {
+      fs.rmSync(tmpPath, { force: true });
+      err.code = err.code || 'GFS_DOWNLOAD_WRITE_FAILED';
+      reject(err);
+    });
+  });
 }
 
 GfsGridSourceService.FIELD_WHITELIST = FIELD_WHITELIST;

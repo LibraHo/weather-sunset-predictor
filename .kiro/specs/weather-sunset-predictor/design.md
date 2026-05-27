@@ -154,6 +154,17 @@ Schedule/Admin Trigger
   → cleanup 清理 raw/tmp/旧 cache/旧 tiles
 ```
 
+**统一缓存管理流程**：
+```
+Admin Data Pipeline Panel
+  → GET /api/admin/data-pipeline/status
+  → cacheManagement.activeMap 显示公开地图当前实际读取 source/mode/status
+  → cacheManagement.pipelineProducts 汇总 GFS/CAMS 产品数量、点数、大小和最近 cycle
+  → cacheManagement.legacyOpenMeteo 显示 sunrise/sunset 旧 Grid 拉取、插值、缓存状态
+  → 模式切换仍写入 DataPipelineConfigService.mode
+  → Open-Meteo legacy refresh 通过 POST /api/heatmap/refresh 启动旧链路
+```
+
 **状态模型**：
 - Run：`queued | running | completed | failed | cancelled`
 - Step：`queued | downloading | parsing | scoring | tiling | cleanup | completed | failed | skipped`
@@ -174,6 +185,13 @@ Schedule/Admin Trigger
 - 用户请求路径不得启动 GFS/CAMS 下载或解析；只读最近成功产物或返回可解释状态，后台 schedule/admin run 才能启动管线。
 - 全盘剩余低于 3GB、raw/tmp 预计超过 5GB、bbox 超出上限或格点数超限时拒绝启动任务。
 - 任何清理动作都写入 step log，便于追溯“为什么某个原始文件不存在”。
+
+**真实下载路径与适配边界**：
+- `POST /api/admin/data-pipeline/run` 在 `dryRun:false` 时进入真实 worker 路径，按 planner step 调用 source `downloadBatch → readGridRecords → normalizeGridProduct → writeProduct → cleanup raw`。
+- GFS NOMADS URL 下载由 Node 侧接入，planner step 必须保留 `dataUrl/idxUrl/rawPath` 等源元数据。
+- GFS GRIB2 解析仍是显式适配器前置条件，生产建议接 `wgrib2` 或 Python `cfgrib/eccodes`。
+- CAMS ADS/CDS 下载与 NetCDF 解析同样是显式适配器前置条件；未配置时应返回 `CAMS_DOWNLOADER_NOT_CONFIGURED` 或 `CAMS_NETCDF_PARSER_NOT_CONFIGURED`，不得伪造成功产物。
+- 在解析器未就绪时，`hybrid` 模式必须保证公开地图继续读取已有 pipeline cache 或 Open-Meteo fallback。
 
 ### 预测算法
 
@@ -371,7 +389,7 @@ rankScore = exactMatch * 100
 后台入口仍为 `/admin`，但前端从单页长滚动改为主页模板同款 menu + panel：
 - `dashboard`：KPI、访问趋势、系统健康、Top IP。
 - `ops`：Grid 队列状态、手动刷新、清缓存、重启后端。
-- `data-pipeline`：GFS/CAMS 数据源模式、拉取范围、资源预估、运行进度、下载量统计、清理/重试/回滚。
+- `data-pipeline`：GFS/CAMS 数据源模式、拉取范围、资源预估、运行进度、下载量统计、统一缓存管理、新旧链路切换、Open-Meteo legacy 刷新、清理/重试/回滚。
 - `logs`：API 调用日志、24h 调用分布、每日统计。
 - `schedule`：定时刷新配置。
 - `agent`：Token、申请审核、Agent 用量、审计日志。
@@ -447,7 +465,7 @@ rankScore = exactMatch * 100
 - `GET /api/photos` / `POST /admin/upload` - 照片管理
 
 ### 数据管线管理接口（需求53）
-- `GET /api/admin/data-pipeline/status` - 当前模式、最近成功产物、正在运行的 run、磁盘状态
+- `GET /api/admin/data-pipeline/status` - 当前模式、最近成功产物、正在运行的 run、磁盘状态，以及 `cacheManagement` 统一缓存状态
 - `GET /api/admin/data-pipeline/config` - 获取 GFS/CAMS 拉取范围、分辨率、时效、存储策略
 - `POST /api/admin/data-pipeline/config` - 保存配置，必须校验 bbox、格点数、时效和磁盘阈值
 - `POST /api/admin/data-pipeline/estimate` - 根据配置预估格点数、forecast hour、下载量、临时文件占用和处理耗时
@@ -456,6 +474,44 @@ rankScore = exactMatch * 100
 - `POST /api/admin/data-pipeline/run` - 手动启动未来 48h 刷新
 - `POST /api/admin/data-pipeline/runs/:id/retry` - 重试失败 run 或失败 step
 - `POST /api/admin/data-pipeline/cleanup` - 手动清理 raw/tmp/旧缓存/旧瓦片
+
+`cacheManagement` 结构：
+```json
+{
+  "activeMap": {
+    "period": "sunset",
+    "mode": "hybrid",
+    "status": "ready",
+    "source": "openmeteo-grid-cache",
+    "pointCount": 1000,
+    "updatedAt": "2026-05-28T00:00:00.000Z",
+    "degraded": true,
+    "degradedReason": "GRID_PRODUCT_CACHE_NOT_READY"
+  },
+  "pipelineRun": {
+    "id": "run_...",
+    "status": "running",
+    "progress": "3/17",
+    "bytesDownloaded": 123456
+  },
+  "pipelineProducts": {
+    "totalProducts": 2,
+    "totalBytes": 3072,
+    "bySource": {
+      "gfs": { "productCount": 1, "pointCount": 9 },
+      "cams": { "productCount": 1, "pointCount": 9 }
+    }
+  },
+  "legacyOpenMeteo": {
+    "sunrise": { "status": "ready", "progress": "100/100", "cacheCount": 100 },
+    "sunset": { "status": "running", "progress": "25/100", "cacheCount": 0 }
+  },
+  "switching": {
+    "currentMode": "hybrid",
+    "modes": ["hybrid", "gfs_cams", "openmeteo", "cache_only", "paused"]
+  }
+}
+```
 
 ### API调用日志（需求41）
 - `GET /api/admin/logs?type=grid|weather|gaode|gaode_tile&limit=50` - 分类日志
@@ -743,6 +799,11 @@ CREATE TABLE api_token_usage (
 - Requirement 53 ops runbook and small-host acceptance materials were added under `docs/data-pipeline-ops-runbook.md` and `docs/data-pipeline-small-host-acceptance.md`.
 - Deployment docs now standardize the operator view around environment variables, `~/.xiake` directory layout, raw/tmp/cache/tile/log cleanup retention, common error codes, and admin evidence for "what is running now", "how much was downloaded today", and "which cycle the map is using".
 - Small-host validation is explicitly constrained to Tencent Cloud `SA2.LARGE4` (4 cores, about 3.6GiB RAM, 2GiB swap, about 18G free disk). The first real run must use a small Beijing/Tianjin test bbox, single worker concurrency, public-request download disabled, 3GB minimum free disk, and about 2GB memory reserve for the website and Mini Program APIs.
+
+### 2026-05-28
+- Requirement 53 cache management sync: `/api/admin/data-pipeline/status` exposes `cacheManagement` to unify active public map source, GFS/CAMS product cache, current pipeline run, and legacy Open-Meteo sunrise/sunset grid progress.
+- `/admin` data-pipeline panel includes a cache management section and can trigger Open-Meteo legacy grid refresh from the same place operators use for GFS/CAMS mode switching.
+- Real worker orchestration enters `downloadBatch/readGridRecords` for `dryRun:false`; GFS URL download metadata is preserved through planner steps, while GRIB2/NetCDF parsing and CAMS ADS/CDS retrieval remain explicit production adapters.
 
 ### 2026-05-07
 - 增加需求48设计：分数明细 ledger 解释链路、24 小时温度图天气标签。

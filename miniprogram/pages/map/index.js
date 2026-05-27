@@ -8,6 +8,7 @@ import { applyPageSettings, readAppSettings } from '../../utils/app-settings.js'
 
 const DEFAULT_MAP_CENTER = { latitude: 35.8617, longitude: 104.1954 };
 const FIRECLOUD_MAP_RESOLUTION = 0.25;
+const FIRECLOUD_MAP_ID = 'firecloud-native-map';
 
 Page({
   data: {
@@ -74,14 +75,24 @@ Page({
         period: this.data.period,
         resolution: FIRECLOUD_MAP_RESOLUTION
       });
-      const polygons = overlay ? [] : buildRasterPolygons(raster, this.data.period);
+      const polygons = buildRasterPolygons(raster, this.data.period);
       this.setData({
         groundOverlays: overlay ? [overlay] : [],
-        polygons,
+        polygons: overlay ? [] : polygons,
         updatedAtText: raster.isFallback ? '测试图层 · 后端暂不可用' : formatUpdatedAt(raster.updatedAt),
         mapCenter: DEFAULT_MAP_CENTER,
         mapScale: 4
       });
+
+      if (overlay) {
+        const added = await this.addNativeGroundOverlay(overlay);
+        if (!added) {
+          this.setData({
+            groundOverlays: [],
+            polygons
+          });
+        }
+      }
     } catch (error) {
       this.setData({
         errorMessage: '火烧云地图暂时加载失败，请稍后再试。',
@@ -90,6 +101,26 @@ Page({
     } finally {
       this.setData({ loading: false });
     }
+  },
+
+  addNativeGroundOverlay(overlay) {
+    const wxClient = getWx();
+    if (!wxClient || typeof wxClient.createMapContext !== 'function') {
+      return Promise.resolve(false);
+    }
+
+    const mapContext = wxClient.createMapContext(FIRECLOUD_MAP_ID, this);
+    if (!mapContext || typeof mapContext.addGroundOverlay !== 'function') {
+      return Promise.resolve(false);
+    }
+
+    return new Promise((resolve) => {
+      mapContext.addGroundOverlay({
+        ...overlay,
+        success: () => resolve(true),
+        fail: () => resolve(false)
+      });
+    });
   }
 });
 
@@ -123,4 +154,10 @@ function formatUpdatedAt(value) {
   return `更新于 ${month}-${day} ${hour}:${minute}`;
 }
 
-export { DEFAULT_MAP_CENTER, formatUpdatedAt, periodDetailText };
+function getWx() {
+  if (typeof wx !== 'undefined') return wx;
+  if (typeof globalThis !== 'undefined' && globalThis.wx) return globalThis.wx;
+  return null;
+}
+
+export { DEFAULT_MAP_CENTER, FIRECLOUD_MAP_ID, formatUpdatedAt, periodDetailText };

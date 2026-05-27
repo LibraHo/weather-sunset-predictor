@@ -73,4 +73,44 @@ describe('CamsAerosolSourceService', () => {
       sourceMeta: { camsForecastHour: 3, interpolation: 'deferred-bilinear' }
     });
   });
+
+  test('delegates CAMS downloads to an explicit ADS/CDS downloader adapter', async () => {
+    const service = new CamsAerosolSourceService({
+      dataDir: makeTempDir(),
+      now: new Date('2026-05-26T10:15:00Z'),
+      downloader: {
+        async downloadBatch(batch) {
+          return { bytesDownloaded: 2048, rawPath: batch.rawPath };
+        }
+      }
+    });
+    const batch = service.buildRequestPlan({
+      bbox: { north: 41, south: 39, west: 115, east: 117 },
+      resolution: 1,
+      forecastHours: 3,
+      forecastStepHours: 3
+    }).batches[0];
+
+    await expect(service.downloadBatch(batch)).resolves.toEqual({
+      bytesDownloaded: 2048,
+      rawPath: batch.rawPath
+    });
+  });
+
+  test('requires an explicit CAMS downloader and NetCDF parser for real products', async () => {
+    const service = new CamsAerosolSourceService({ dataDir: makeTempDir(), now: new Date('2026-05-26T10:15:00Z') });
+    const batch = service.buildRequestPlan({
+      bbox: { north: 41, south: 39, west: 115, east: 117 },
+      resolution: 1,
+      forecastHours: 3,
+      forecastStepHours: 3
+    }).batches[0];
+
+    await expect(service.downloadBatch(batch)).rejects.toMatchObject({
+      code: 'CAMS_DOWNLOADER_NOT_CONFIGURED'
+    });
+    await expect(service.readGridRecords(batch)).rejects.toMatchObject({
+      code: 'CAMS_NETCDF_PARSER_NOT_CONFIGURED'
+    });
+  });
 });

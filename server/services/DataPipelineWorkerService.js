@@ -52,11 +52,6 @@ class DataPipelineWorkerService {
       err.code = 'DATA_PIPELINE_WORKER_BUSY';
       throw err;
     }
-    if (dryRun !== true) {
-      const err = new Error('real network worker is not implemented yet');
-      err.code = 'DATA_PIPELINE_REAL_WORKER_NOT_IMPLEMENTED';
-      throw err;
-    }
 
     this._active = true;
     const run = this.runLogService.createRun(config, { reason });
@@ -78,7 +73,7 @@ class DataPipelineWorkerService {
       };
 
       for (const planStep of plan.steps) {
-        await this._runStep(run.id, planStep, summary);
+        await this._runStep(run.id, planStep, summary, { dryRun: dryRun === true });
       }
 
       const completedRun = this.runLogService.completeRun(run.id, {
@@ -119,9 +114,10 @@ class DataPipelineWorkerService {
     }
   }
 
-  async _runStep(runId, planStep, summary) {
+  async _runStep(runId, planStep, summary, options = {}) {
+    const dryRun = options.dryRun === true;
     const step = this.runLogService.createStep(runId, {
-      type: 'dry_run_fixture',
+      type: dryRun ? 'dry_run_fixture' : 'real_grid_download',
       source: planStep.source,
       cycle: planStep.cycle,
       forecastHour: planStep.forecastHour,
@@ -137,8 +133,9 @@ class DataPipelineWorkerService {
         await new Promise(resolve => setTimeout(resolve, this.stepDelayMs));
       }
 
-      const bytesDownloaded = this._writeRawPlaceholder(planStep);
-      const product = this._normalizeFixtureProduct(planStep);
+      const { bytesDownloaded, product } = dryRun
+        ? await this._runFixtureStep(planStep)
+        : await this._runRealStep(planStep);
       const entry = this.cacheService.writeProduct(product);
       this._cleanupRawIfNeeded(planStep);
       const completedStep = this.runLogService.completeStep(step.id, {
@@ -152,7 +149,7 @@ class DataPipelineWorkerService {
     } catch (err) {
       this._cleanupRawIfNeeded(planStep);
       const failedStep = this.runLogService.failStep(step.id, {
-        errorCode: err.code || `${String(planStep.source || 'SOURCE').toUpperCase()}_FIXTURE_FAILED`,
+        errorCode: err.code || `${String(planStep.source || 'SOURCE').toUpperCase()}_${dryRun ? 'FIXTURE' : 'REAL'}_FAILED`,
         message: err.message,
         retryable: planStep.retryable !== false,
         failRun: planStep.degradeOnFailure === true ? false : true
@@ -165,6 +162,40 @@ class DataPipelineWorkerService {
       }
       throw err;
     }
+  }
+
+  async _runFixtureStep(planStep) {
+    const bytesDownloaded = this._writeRawPlaceholder(planStep);
+    const product = this._normalizeFixtureProduct(planStep);
+    return { bytesDownloaded, product };
+  }
+
+  async _runRealStep(planStep) {
+    const sourceService = this._sourceServiceFor(planStep.source);
+    if (!sourceService || typeof sourceService.downloadBatch !== 'function') {
+      const err = new Error(`downloader is not configured for source: ${planStep.source}`);
+      err.code = `${String(planStep.source || 'SOURCE').toUpperCase()}_DOWNLOADER_NOT_CONFIGURED`;
+      throw err;
+    }
+    if (typeof sourceService.readGridRecords !== 'function') {
+      const err = new Error(`parser is not configured for source: ${planStep.source}`);
+      err.code = `${String(planStep.source || 'SOURCE').toUpperCase()}_PARSER_NOT_CONFIGURED`;
+      throw err;
+    }
+
+    const download = await sourceService.downloadBatch(planStep);
+    const records = await sourceService.readGridRecords(planStep);
+    const product = sourceService.normalizeGridProduct(planStep, records);
+    return {
+      bytesDownloaded: Number(download?.bytesDownloaded) || 0,
+      product
+    };
+  }
+
+  _sourceServiceFor(source) {
+    if (source === 'gfs') return this.gfsSourceService;
+    if (source === 'cams') return this.camsSourceService;
+    return null;
   }
 
   _normalizeFixtureProduct(planStep) {

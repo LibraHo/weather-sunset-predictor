@@ -296,7 +296,8 @@ Acceptance update:
 - 单点预测继续走现有 `ProviderOrchestrator` 与 Open-Meteo 主链路。
 - 火烧云地图改为内部数据管线：GFS 提供天气网格，CAMS 提供气溶胶网格，统一裁剪、缓存、评分和出瓦片。
 - 后台必须能管理数据源模式、拉取范围、未来时长、分辨率、手动刷新、重试、暂停、清理和回滚。
-- Open-Meteo 不再作为地图网格主抓取源，只保留点位详情、fallback 或对照用途。
+- Open-Meteo 不再作为地图网格主抓取源，只保留点位详情、legacy grid fallback、人工对照和故障恢复用途。
+- 后台必须提供统一缓存管理视图，能同时看到 GFS/CAMS 新管线、Open-Meteo 旧网格链路、当前公开地图实际读取的缓存源，以及新老模式切换状态。
 
 ### 范围配置
 - 后台必须支持区域预设：`china`、`east_asia`、`test_small`、`custom_bbox`。
@@ -321,10 +322,13 @@ Acceptance update:
 - 必须展示当前任务阶段：`queued`、`downloading`、`parsing`、`scoring`、`tiling`、`cleanup`、`completed`、`failed`。
 - 必须展示下载与处理追溯：source、cycle、forecast hour、变量、区域、文件大小、耗时、成功/失败、错误原因。
 - 必须展示每日统计：下载次数、下载 MB/GB、处理 forecast hour 数、生成瓦片数、失败次数、重试次数。
+- 必须展示统一缓存状态：公开地图当前 source/mode/status、GFS/CAMS 产品数量与点数、产品缓存占用、Open-Meteo sunrise/sunset 刷新进度、缓存点数、stale 状态和最近错误。
+- 必须能从同一面板触发 Open-Meteo legacy grid 刷新，用于 GFS/CAMS 产物未就绪时拉取、插值并写入旧版 Grid 缓存。
 - 管理操作至少包括：手动刷新未来 48h、暂停/恢复、重试失败任务、清理旧缓存、切换数据源模式、回滚到上一个成功 cycle。
 
 ### API 与持久化
 - 新增或复用后台 API：`GET /api/admin/data-pipeline/status`、`GET /api/admin/data-pipeline/config`、`POST /api/admin/data-pipeline/config`、`POST /api/admin/data-pipeline/estimate`、`GET /api/admin/data-pipeline/runs`、`GET /api/admin/data-pipeline/runs/:id`、`POST /api/admin/data-pipeline/run`、`POST /api/admin/data-pipeline/runs/:id/retry`、`POST /api/admin/data-pipeline/cleanup`。
+- `GET /api/admin/data-pipeline/status` 必须返回 `cacheManagement` 聚合对象，包含 `activeMap`、`pipelineRun`、`pipelineProducts`、`legacyOpenMeteo` 和 `switching`，供后台统一渲染新老缓存状态。
 - 配置建议保存到 `~/.xiake/data-pipeline-config.json`；运行记录和步骤记录可先用 JSONL/SQLite，必须可被后台查询。
 - 每次下载、解析、评分、出瓦片、清理都必须先写 step 记录，再执行动作，完成后更新 bytes、耗时和输出路径。
 - 失败记录必须包含 `retryable`、`errorCode`、`message`、`source`、`cycle`、`forecastHour` 和相关路径；不得只在控制台输出。
@@ -333,6 +337,7 @@ Acceptance update:
 - 腾讯云 `SA2.LARGE4`（3.6GiB RAM、2GiB swap、40G 系统盘且约 18G 可用）环境下，默认中国/0.5°/48h 任务可以完成，不因一次性读取全量 GRIB/NetCDF 导致 OOM 或磁盘打满。
 - 后台可以切换地图数据源模式；切换到 `cache_only` 后地图只读最近成功产物，不再启动外部下载。
 - 后台可以配置拉取范围并看到资源预估；危险配置必须被拒绝且说明原因。
+- 后台统一缓存管理必须能回答：当前公开地图实际读 GFS/CAMS 还是 Open-Meteo fallback；GFS/CAMS 新产物是否存在；Open-Meteo 旧网格是否正在刷新、插值进度多少、缓存是否可用。
 - 任务进度可追溯到 GFS/CAMS 的每个下载与处理步骤；刷新页面后状态仍可恢复。
 - 原始文件处理后会自动清理；清理动作本身有记录。
 - `/api/heatmap` 与 `/api/tiles` 优先读取 GFS+CAMS 产物；产物缺失时按当前降级策略返回缓存/错误，不重新触发 Open-Meteo 大规模扫点。
@@ -388,6 +393,9 @@ finalScore = finalScore × aerosolFactor  // 仅在有气溶胶数据时启用�
 
 ### 2026-05-27
 - **需求53.16-53.18 运维与验收材料**：补充 GFS+CAMS 地图管线的运维口径。后台必须能从 `/admin`、`/api/admin/data-pipeline/status`、`/api/admin/data-pipeline/runs` 和地图接口 metadata 判断当前模式、当前 run/step、今日 GFS/CAMS 下载量、cleanup 释放量，以及地图使用的 `source/cycle/bbox/resolution/sourceMeta`。小资源验收必须先在腾讯云 `SA2.LARGE4` 上用测试小区域跑通，再扩大到中国范围；验收时必须记录峰值内存、swap、raw/tmp 峰值、下载量、耗时和地图溯源。
+
+### 2026-05-28
+- **需求53.19 统一缓存管理系统**：后台数据管线面板必须整合新 GFS/CAMS 产品缓存与旧 Open-Meteo Grid 缓存，统一展示公开地图当前 source/mode/status、GFS/CAMS 产品数量与占用、Open-Meteo sunrise/sunset 拉取/插值进度、缓存可用性和错误原因；同一面板支持 Open-Meteo legacy 刷新与 `hybrid/gfs_cams/openmeteo/cache_only/paused` 模式切换。
 
 ### 2026-05-09
 - **需求51**：照片分享元数据增强与地图聚合展示。上传照片新增上传者、地点、拍摄时间、上传时间等字段；上传者可缺省为“网友”；地点可由经纬度反向地理编码自动生成，也可手动输入且不影响经纬度；拍摄时间优先从 EXIF 自动读取，也可手动输入且不影响坐标；上传时间由服务端按北京时间记录与展示；后台照片管理支持编辑上传者、地点、拍摄时间、描述和经纬度，其中上传时间只读不可改；同一地点多张照片参考 Apple 相册地图做聚合/堆叠展示。

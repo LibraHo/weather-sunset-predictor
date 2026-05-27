@@ -897,7 +897,11 @@ async function resumeDataPipeline() {
 }
 
 async function startDataPipelineRun() {
-  showMessage('真实 GFS/CAMS worker 尚未接入；当前只允许 dry-run 验证。', 'error', 'pipelineRunMsg');
+  if (!confirm('确认执行真实 GFS/CAMS run？会访问外部数据源，按当前配置分批下载并写入 cache。')) return;
+  await postDataPipelineRun('/api/admin/data-pipeline/run', {
+    reason: getInputValue('pipelineRunReason') || 'manual-real-run',
+    dryRun: false
+  }, 'pipelineRunMsg');
 }
 
 async function startDataPipelineDryRun() {
@@ -906,6 +910,26 @@ async function startDataPipelineDryRun() {
     reason: getInputValue('pipelineRunReason') || 'dry-run',
     dryRun: true
   }, 'pipelineRunMsg');
+}
+
+async function startOpenMeteoGridRefresh(period) {
+  const safePeriod = period === 'sunrise' ? 'sunrise' : 'sunset';
+  const label = safePeriod === 'sunrise' ? '朝霞' : '晚霞';
+  if (!confirm(`确认刷新 Open-Meteo ${label}网格？会拉取、插值并写入旧版 Grid 缓存。`)) return;
+  try {
+    const res = await fetch('/api/heatmap/refresh', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ period: safePeriod })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error?.message || 'Open-Meteo 刷新启动失败');
+    showMessage(data.message || `Open-Meteo ${label}刷新已启动`, 'success', 'pipelineRunMsg');
+    await loadDataPipelineStatus();
+  } catch (err) {
+    showMessage('Open-Meteo 刷新失败: ' + err.message, 'error', 'pipelineRunMsg');
+  }
 }
 
 async function retryDataPipelineRun(id) {
@@ -980,6 +1004,7 @@ function renderDataPipelineStatus(data = {}) {
   const today = data.today || {};
   const config = data.config || {};
   renderDataPipelineSummary(data);
+  renderCacheManagementStatus(data.cacheManagement || null);
   el.innerHTML = `
     <div class="pipeline-stat"><span>方案</span><strong>${escapeHtml(config.mode || '--')}</strong></div>
     <div class="pipeline-stat"><span>范围</span><strong>${escapeHtml(config.regionPreset || '--')}</strong></div>
@@ -990,6 +1015,43 @@ function renderDataPipelineStatus(data = {}) {
     <div class="pipeline-stat"><span>最近成功</span><strong>${latest ? escapeHtml(formatPhotoDateTime(latest.completedAt) || latest.id) : '--'}</strong></div>
     <div class="pipeline-stat"><span>失败原因</span><strong>${escapeHtml(formatDataPipelineFailure(current))}</strong></div>
   `;
+}
+
+function renderCacheManagementStatus(cacheManagement) {
+  const el = document.getElementById('pipelineCacheStatusGrid');
+  if (!el) return;
+  if (!cacheManagement) {
+    el.innerHTML = '<p class="empty">缓存状态加载中...</p>';
+    return;
+  }
+  const active = cacheManagement.activeMap || {};
+  const products = cacheManagement.pipelineProducts || {};
+  const gfs = products.bySource?.gfs || {};
+  const cams = products.bySource?.cams || {};
+  const legacy = cacheManagement.legacyOpenMeteo || {};
+  const sunrise = legacy.sunrise || {};
+  const sunset = legacy.sunset || {};
+
+  el.innerHTML = `
+    <div class="pipeline-stat"><span>公开地图</span><strong>${escapeHtml(active.source || '--')} / ${escapeHtml(active.status || '--')}</strong></div>
+    <div class="pipeline-stat"><span>公开模式</span><strong>${escapeHtml(active.mode || '--')}${active.degraded ? ' degraded' : ''}</strong></div>
+    <div class="pipeline-stat"><span>公开缓存点</span><strong>${Number(active.pointCount || 0).toLocaleString('zh-CN')}</strong></div>
+    <div class="pipeline-stat"><span>公开更新时间</span><strong>${escapeHtml(formatPhotoDateTime(active.updatedAt) || '--')}</strong></div>
+    <div class="pipeline-stat"><span>GFS 产品</span><strong>${Number(gfs.productCount || 0)} / ${Number(gfs.pointCount || 0).toLocaleString('zh-CN')} 点</strong></div>
+    <div class="pipeline-stat"><span>CAMS 产品</span><strong>${Number(cams.productCount || 0)} / ${Number(cams.pointCount || 0).toLocaleString('zh-CN')} 点</strong></div>
+    <div class="pipeline-stat"><span>Pipeline 缓存</span><strong>${Number(products.totalProducts || 0)} 个 / ${formatBytes(products.totalBytes || 0)}</strong></div>
+    <div class="pipeline-stat"><span>Open-Meteo 晚霞</span><strong>${formatLegacyCacheProgress(sunset)}</strong></div>
+    <div class="pipeline-stat"><span>Open-Meteo 朝霞</span><strong>${formatLegacyCacheProgress(sunrise)}</strong></div>
+    <div class="pipeline-stat"><span>降级原因</span><strong>${escapeHtml(active.degradedReason || '--')}</strong></div>
+  `;
+}
+
+function formatLegacyCacheProgress(status = {}) {
+  const state = status.status || (status.running ? 'running' : '--');
+  const progress = status.progress || '--';
+  const cache = Number(status.cacheCount || 0);
+  const stale = status.cacheStale === true ? ' stale' : '';
+  return `${escapeHtml(state)} ${escapeHtml(progress)} / cache ${cache}${stale}`;
 }
 
 function renderDataPipelineSummary(data = {}) {

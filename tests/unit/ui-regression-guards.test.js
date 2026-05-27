@@ -178,6 +178,14 @@ describe('recent user-reported UI regression guards', () => {
     expect(docs).toContain('纯图标按钮使用 `xiake-icon-control`');
   });
 
+  test('home location icon controls keep stable hover transforms', () => {
+    const source = css();
+
+    expect(source).toContain('.location-superbar .icon-chip.xiake-icon-control:hover:not(:disabled)');
+    expect(source).toMatch(/\.location-superbar \.icon-chip\.xiake-icon-control:hover:not\(:disabled\) \{[\s\S]*?transform: none;/);
+    expect(source).toMatch(/\.location-superbar \.input-icon-btn\.xiake-icon-control:hover:not\(:disabled\) \{[\s\S]*?transform: translateY\(-50%\);/);
+  });
+
   test('dark mode share icon uses muted night color instead of orange accent', () => {
     const source = css();
     const darkThemeBlocks = source.match(/body\.theme-dark \{[\s\S]*?\n\}/g) || [];
