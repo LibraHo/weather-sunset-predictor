@@ -1569,7 +1569,7 @@ export function buildPredictionAnalysisGroups(input = {}) {
   ];
 }
 
-export function buildPredictionRadarPreview(period = 'sunset') {
+export function buildPredictionRadarPreview(period = 'sunset', sunDirection = '') {
   if (period === 'sunrise') {
     const directions = withRadarCloudFields([
       { direction: 'N', name: '北', scoreText: '51', level: 'watch', cloudText: '高 22% / 中 35% / 低 18%' },
@@ -1583,6 +1583,7 @@ export function buildPredictionRadarPreview(period = 'sunset') {
     ]);
     return {
       directions,
+      sunMarker: buildRadarSunMarker(period, sunDirection),
       cloudGradients: buildRadarCloudGradients(directions)
     };
   }
@@ -1599,6 +1600,7 @@ export function buildPredictionRadarPreview(period = 'sunset') {
     ]);
   return {
     directions,
+    sunMarker: buildRadarSunMarker(period, sunDirection),
     cloudGradients: buildRadarCloudGradients(directions)
   };
 }
@@ -1614,15 +1616,15 @@ function buildCompletePredictionPreview(preview = {}) {
       humidity: preview.humidity,
       aod: preview.aod
     }),
-    radar: buildPredictionRadarFromClouds(preview.periodKey, preview.clouds)
+    radar: buildPredictionRadarFromClouds(preview.periodKey, preview.clouds, preview.direction)
   };
 }
 
-function buildPredictionRadarFromClouds(period = 'sunset', clouds = []) {
+function buildPredictionRadarFromClouds(period = 'sunset', clouds = [], sunDirection = '') {
   const high = Number(clouds.find((item) => item.key === 'high')?.value);
   const mid = Number(clouds.find((item) => item.key === 'mid')?.value);
   const low = Number(clouds.find((item) => item.key === 'low')?.value);
-  if (![high, mid, low].every(Number.isFinite)) return buildPredictionRadarPreview(period);
+  if (![high, mid, low].every(Number.isFinite)) return buildPredictionRadarPreview(period, sunDirection);
 
   const names = {
     N: '北', NE: '东北', E: '东', SE: '东南', S: '南', SW: '西南', W: '西', NW: '西北'
@@ -1645,8 +1647,81 @@ function buildPredictionRadarFromClouds(period = 'sunset', clouds = []) {
   }));
   return {
     directions,
+    sunMarker: buildRadarSunMarker(period, sunDirection),
     cloudGradients: buildRadarCloudGradients(directions)
   };
+}
+
+function buildRadarSunMarker(period = 'sunset', direction = '') {
+  const bearing = normalizeSunDirectionBearing(direction, period);
+  const radius = 36;
+  const radians = bearing * Math.PI / 180;
+  return {
+    label: period === 'sunrise' ? '日出方向' : '日落方向',
+    shortLabel: period === 'sunrise' ? '日出' : '日落',
+    bearing,
+    left: Number((50 + Math.sin(radians) * radius).toFixed(1)),
+    top: Number((50 - Math.cos(radians) * radius).toFixed(1))
+  };
+}
+
+function normalizeSunDirectionBearing(direction = '', period = 'sunset') {
+  const number = Number(direction);
+  if (Number.isFinite(number)) return ((number % 360) + 360) % 360;
+
+  const text = String(direction || '').trim();
+  if (!text) return period === 'sunrise' ? 67.5 : 292.5;
+
+  const exact = {
+    北: 0,
+    东北: 45,
+    东: 90,
+    东南: 135,
+    南: 180,
+    西南: 225,
+    西: 270,
+    西北: 315,
+    东偏北: 67.5,
+    东偏南: 112.5,
+    南偏东: 157.5,
+    南偏西: 202.5,
+    西偏南: 247.5,
+    西偏北: 292.5,
+    北偏西: 337.5,
+    北偏东: 22.5
+  };
+  if (Object.prototype.hasOwnProperty.call(exact, text)) return exact[text];
+
+  const compact = text.replace(/\s+/g, '').toLowerCase();
+  const english = {
+    n: 0,
+    ne: 45,
+    ene: 67.5,
+    e: 90,
+    ese: 112.5,
+    se: 135,
+    sse: 157.5,
+    s: 180,
+    ssw: 202.5,
+    sw: 225,
+    wsw: 247.5,
+    w: 270,
+    wnw: 292.5,
+    nw: 315,
+    nnw: 337.5,
+    nne: 22.5
+  };
+  if (Object.prototype.hasOwnProperty.call(english, compact)) return english[compact];
+
+  if (text.includes('西') && text.includes('北')) return 292.5;
+  if (text.includes('西') && text.includes('南')) return 247.5;
+  if (text.includes('东') && text.includes('北')) return 67.5;
+  if (text.includes('东') && text.includes('南')) return 112.5;
+  if (text.includes('西')) return 270;
+  if (text.includes('东')) return 90;
+  if (text.includes('北')) return 0;
+  if (text.includes('南')) return 180;
+  return period === 'sunrise' ? 67.5 : 292.5;
 }
 
 export function buildWeatherGlowPreview(weather = {}) {

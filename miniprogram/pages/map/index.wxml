@@ -26,6 +26,7 @@
 
     <view class="native-map-shell">
       <map
+        id="firecloud-native-map"
         class="native-map"
         latitude="{{mapCenter.latitude}}"
         longitude="{{mapCenter.longitude}}"

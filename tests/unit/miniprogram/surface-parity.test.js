@@ -83,11 +83,14 @@ describe('miniprogram surface parity for map/gallery/upload/methodology', () => 
     expect(mapWxml).toContain('map-panel-hint');
     expect(mapWxml).toContain('wx:for="{{legendItems}}"');
     expect(mapWxml).toContain('legend-swatch legend-{{item.key}}');
+    expect(mapWxml).toContain('id="firecloud-native-map"');
     expect(mapWxml).toContain('ground-overlays="{{groundOverlays}}"');
     expect(mapWxml).not.toContain('bindtap="openSpotPrediction"');
     expect(mapWxml).not.toContain('spot-row');
     expect(mapJs).not.toContain('openSpotPrediction()');
     expect(mapJs).not.toContain('getChinaFirecloudSpots');
+    expect(mapJs).toContain('addNativeGroundOverlay');
+    expect(mapJs).toContain('buildRasterPolygons(raster, this.data.period)');
     expect(mapJs).toContain('periodDetailText(period)');
     expect(mapJs).toContain('getChinaFirecloudRaster');
   });
