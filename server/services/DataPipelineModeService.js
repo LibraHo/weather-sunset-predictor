@@ -3,6 +3,7 @@
 const DataPipelineConfigService = require('./DataPipelineConfigService');
 
 const VALID_MODES = new Set(['openmeteo', 'gfs_cams', 'hybrid', 'cache_only', 'paused']);
+const MIN_PUBLIC_PIPELINE_POINTS = 100;
 
 function withLegacyFallback(cache, degradedReason) {
   if (!cache) return null;
@@ -22,6 +23,14 @@ function withOpenMeteoCache(cache) {
     degraded: cache.degraded === true,
     degradedReason: cache.degradedReason || null
   };
+}
+
+function pointCount(cache) {
+  return Array.isArray(cache?.gridPoints) ? cache.gridPoints.length : 0;
+}
+
+function isSparsePipelineCache(cache) {
+  return pointCount(cache) > 0 && pointCount(cache) < MIN_PUBLIC_PIPELINE_POINTS;
 }
 
 class DataPipelineModeService {
@@ -55,6 +64,13 @@ class DataPipelineModeService {
       ? gridService.getPipelineCache(period)
       : null;
     if (pipelineCache) {
+      if (mode === 'hybrid' && isSparsePipelineCache(pipelineCache)) {
+        const legacyCache = withLegacyFallback(gridService.getCache(period), 'GRID_PRODUCT_CACHE_SPARSE');
+        if (legacyCache && pointCount(legacyCache) > pointCount(pipelineCache)) {
+          return { ...base, status: 'ready', cache: legacyCache, degradedReason: 'GRID_PRODUCT_CACHE_SPARSE' };
+        }
+      }
+
       return {
         ...base,
         status: mode === 'paused' ? 'paused' : 'ready',

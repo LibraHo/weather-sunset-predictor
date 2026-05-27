@@ -41,6 +41,18 @@ function makeCache(source) {
   };
 }
 
+function makeCacheWithPoints(source, count) {
+  return {
+    updatedAt: '2026-05-27T00:00:00.000Z',
+    source,
+    gridPoints: Array.from({ length: count }, (_, index) => ({
+      lat: 20 + index * 0.1,
+      lon: 100 + index * 0.1,
+      score: 60
+    }))
+  };
+}
+
 describe('DataPipelineModeService', () => {
   test('openmeteo mode reads only legacy Open-Meteo grid cache', () => {
     const pipeline = makeCache('gfs-cams-grid-product');
@@ -83,6 +95,41 @@ describe('DataPipelineModeService', () => {
       degraded: true,
       degradedReason: 'GRID_PRODUCT_CACHE_NOT_READY'
     });
+    expect(gridService.getPipelineCache).toHaveBeenCalledWith('sunset');
+    expect(gridService.getCache).toHaveBeenCalledWith('sunset');
+    expect(gridService.refreshIfStale).not.toHaveBeenCalled();
+  });
+
+  test('hybrid mode falls back when pipeline product is too sparse for public maps', () => {
+    const pipeline = makeCacheWithPoints('grid-product-cache', 1);
+    const legacy = makeCacheWithPoints('openmeteo-grid-cache', 1012);
+    const gridService = makeGridService({ pipeline, legacy });
+    const service = new DataPipelineModeService({ configService: makeConfigService('hybrid') });
+
+    const result = service.getPublicMapCache(gridService, 'sunset');
+
+    expect(result.cache).toMatchObject({
+      source: 'openmeteo-grid-cache',
+      degraded: true,
+      degradedReason: 'GRID_PRODUCT_CACHE_SPARSE'
+    });
+    expect(result.status).toBe('ready');
+    expect(result.degradedReason).toBe('GRID_PRODUCT_CACHE_SPARSE');
+    expect(result.cache.gridPoints).toHaveLength(1012);
+    expect(gridService.getPipelineCache).toHaveBeenCalledWith('sunset');
+    expect(gridService.getCache).toHaveBeenCalledWith('sunset');
+    expect(gridService.refreshIfStale).not.toHaveBeenCalled();
+  });
+
+  test('hybrid mode keeps sparse pipeline product when no better legacy cache exists', () => {
+    const pipeline = makeCacheWithPoints('grid-product-cache', 1);
+    const gridService = makeGridService({ pipeline, legacy: null });
+    const service = new DataPipelineModeService({ configService: makeConfigService('hybrid') });
+
+    const result = service.getPublicMapCache(gridService, 'sunset');
+
+    expect(result.cache).toMatchObject({ source: 'grid-product-cache', degraded: false });
+    expect(result.cache.gridPoints).toHaveLength(1);
     expect(gridService.getPipelineCache).toHaveBeenCalledWith('sunset');
     expect(gridService.getCache).toHaveBeenCalledWith('sunset');
     expect(gridService.refreshIfStale).not.toHaveBeenCalled();
