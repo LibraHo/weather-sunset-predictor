@@ -386,7 +386,7 @@ apiAccess: 'API接続'
           "upperCloudCanvas": "中高層雲キャンバス {{upper}} = 高層雲 {{high}}×0.75 + 中層雲 {{mid}}×0.45；区間スコア {{range}}",
           "highCloudBonus": "高層雲優勢ボーナス {{bonus}}",
           "cloudTypeAdjustment": "雲種 {{reason}} {{bonus}}",
-          "cloudThicknessAdjustment": "雲厚 {{thickness}}、証拠 thin {{thin}} / thick {{thick}} / net {{net}}",
+          "cloudThicknessAdjustment": "雲厚 {{thickness}}、圧力 {{pressure}}、散乱 {{diffuse}}%、水蒸気 {{water}}、キャリア緩和 {{relief}}",
           "aerosolCarrier": "雲が少ない時、光路が開いていれば薄い霞も暖色を少し運べます。光路活性 ×{{activation}}",
           "lightPath": "日光が雲層へ届くか",
           "renderingFactors": "視程 ×{{visibility}}、湿度 ×{{humidity}}、エアロゾル ×{{aerosol}}",

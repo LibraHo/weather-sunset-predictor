@@ -972,8 +972,9 @@ describe('EnhancedPredictionService', () => {
       expect(result.lightPathAnalysis.directionalAnalysis.reason).toBe('solar_direction_clear_opening');
       expect(result.cloudThickness).toMatchObject({
         thickness: 'moderate',
-        modifier: 0.58
+        modifier: 0.55
       });
+      expect(result.cloudThickness.pressure).toBeCloseTo(0.76, 1);
       expect(result.cloudThickness.reasons).toContain('upper_cloud_direction_opening');
       expect(result.thickHighCloudPenalty).toMatchObject({
         applied: false,
@@ -982,7 +983,7 @@ describe('EnhancedPredictionService', () => {
       });
       expect(result.canvasAnalysis.score).toBeGreaterThanOrEqual(58);
       expect(result.score).toBeGreaterThan(55);
-      expect(result.score).toBeLessThan(72);
+      expect(result.score).toBeLessThan(78);
       expect(result.status).toBe('very_likely');
       expect(result.lightPathGate).toMatchObject({
         reason: 'solar_direction_clear_opening'
@@ -1030,8 +1031,9 @@ describe('EnhancedPredictionService', () => {
       expect(result.lightPathAnalysis.directionalAnalysis.reason).toBe('solar_direction_clear_opening');
       expect(result.cloudThickness).toMatchObject({
         thickness: 'moderate',
-        modifier: 0.58
+        modifier: 0.57
       });
+      expect(result.cloudThickness.pressure).toBeCloseTo(0.66, 1);
       expect(result.cloudThickness.reasons).toContain('upper_cloud_direction_opening');
       expect(result.thickHighCloudPenalty).toMatchObject({
         applied: false,
@@ -1039,7 +1041,7 @@ describe('EnhancedPredictionService', () => {
         reason: 'directional_high_cloud_carrier_canvas_only'
       });
       expect(result.score).toBeGreaterThanOrEqual(52);
-      expect(result.score).toBeLessThanOrEqual(60);
+      expect(result.score).toBeLessThanOrEqual(65);
       expect(result.status).toBe('good_glow');
     });
 
@@ -1091,6 +1093,58 @@ describe('EnhancedPredictionService', () => {
       expect(result.cloudThickness.reasons).not.toContain('opening_upper_cloud_carrier_softened');
       expect(result.thickHighCloudPenalty.applied).toBe(false);
       expect(result.aerosolHazeCap.applied).toBe(false);
+    });
+
+    test('should apply continuous cloud-thickness pressure to humid high-cloud haze sample', () => {
+      const weatherData = {
+        cloudCover: 43,
+        lowClouds: 0,
+        midClouds: 0,
+        highClouds: 100,
+        humidity: 75,
+        visibility: 20,
+        precipitation: 0,
+        recentPrecipitation6h: 0.6,
+        recentRainSignal: 0.21,
+        shortwaveRadiation: 86,
+        directRadiation: 19.5,
+        diffuseRadiation: 66.5,
+        waterVapourColumn: 24.4,
+        aerosolOpticalDepth: 0.526,
+        pm2_5: 0,
+        pm10: 0,
+        dust: 0,
+        aqi: 0
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData, new Date('2026-05-27T11:30:00.000Z'), 39.9042, 116.4074, 'sunset'
+      );
+
+      expect(result.cloudThickness).toMatchObject({
+        thickness: 'thick',
+        pressure: 0.78
+      });
+      expect(result.cloudThickness.evidence).toMatchObject({
+        thick: 3.4,
+        net: -3.4,
+        diffuseRatio: 0.773,
+        waterIndex: 10.49,
+        carrierRelief: 0.08
+      });
+      expect(result.canvasAnalysis.cloudThicknessAdjustment).toMatchObject({
+        adjustment: -22,
+        reason: 'cloud_thickness_pressure_penalty'
+      });
+      expect(result.renderingAnalysis.breakdown.specialMode).toBe('humid_haze_gray_curtain');
+      expect(result.postRainAdjustment).toMatchObject({
+        applied: true,
+        mode: 'humid_haze_gray_curtain',
+        cap: 42
+      });
+      expect(result.score).toBeGreaterThanOrEqual(38);
+      expect(result.score).toBeLessThanOrEqual(42);
+      expect(result.status).toBe('light_glow');
     });
 
     test('should mark clear transparent sunset as casual viewing while keeping fire-cloud score low', () => {

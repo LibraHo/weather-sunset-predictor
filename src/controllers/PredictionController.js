@@ -2057,10 +2057,14 @@ class PredictionController {
             thickness: cloudThickness?.thickness || '--',
             thin: fmt(cloudThicknessEvidence.thin, 1),
             thick: fmt(cloudThicknessEvidence.thick, 1),
-            net: fmt(cloudThicknessEvidence.net, 1)
+            net: fmt(cloudThicknessEvidence.net, 1),
+            pressure: fmt(cloudThicknessEvidence.pressure ?? cloudThicknessAdjustment.pressure, 2),
+            diffuse: fmt(Number(cloudThicknessEvidence.diffuseRatio) * 100, 0),
+            water: fmt(cloudThicknessEvidence.waterIndex, 1),
+            relief: fmt(cloudThicknessEvidence.carrierRelief, 2)
           },
-          'cloud thickness {{thickness}}, evidence thin {{thin}} / thick {{thick}} / net {{net}}',
-          '云厚 {{thickness}}，证据 thin {{thin}} / thick {{thick}} / net {{net}}'
+          'cloud thickness {{thickness}}, pressure {{pressure}}, diffuse {{diffuse}}%, water {{water}}, carrier relief {{relief}}',
+          '云厚 {{thickness}}，压力 {{pressure}}，散射 {{diffuse}}%，水汽 {{water}}，载体缓冲 {{relief}}'
         ),
         tone: Number(cloudThicknessAdjustment.adjustment) < 0 ? 'cap' : 'good'
       } : null,
@@ -2230,10 +2234,14 @@ class PredictionController {
             thickness: cloudThickness?.thickness || '--',
             thin: fmt(cloudThicknessEvidence.thin, 1),
             thick: fmt(cloudThicknessEvidence.thick, 1),
-            net: fmt(cloudThicknessEvidence.net, 1)
+            net: fmt(cloudThicknessEvidence.net, 1),
+            pressure: fmt(cloudThicknessEvidence.pressure ?? cloudThicknessAdjustment.pressure, 2),
+            diffuse: fmt(Number(cloudThicknessEvidence.diffuseRatio) * 100, 0),
+            water: fmt(cloudThicknessEvidence.waterIndex, 1),
+            relief: fmt(cloudThicknessEvidence.carrierRelief, 2)
           },
-          'cloud thickness {{thickness}}, evidence thin {{thin}} / thick {{thick}} / net {{net}}',
-          '云厚 {{thickness}}，证据 thin {{thin}} / thick {{thick}} / net {{net}}'
+          'cloud thickness {{thickness}}, pressure {{pressure}}, diffuse {{diffuse}}%, water {{water}}, carrier relief {{relief}}',
+          '云厚 {{thickness}}，压力 {{pressure}}，散射 {{diffuse}}%，水汽 {{water}}，载体缓冲 {{relief}}'
         ));
       }
       if (directionalCurtainCarrier?.applied) {

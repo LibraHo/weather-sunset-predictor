@@ -176,7 +176,7 @@ const translations = {
           "midCloud": "中雲：權重 0.45，也是可顯色載體；高雲與中雲同時存在時會提高畫布穩定性",
           "lowCloudBonus": "低雲：權重只有 0.10，主要進入低雲懲罰和光路遮擋；低雲少不加分，只是不扣分",
           "formula": "中高雲畫布量 = 高雲×0.75 + 中雲×0.45\n畫布基礎分：≤10→10，10–30→40–70，30–70→70–100，70–100→70–50，>100→43\n畫布分 = 區間分 × 低雲懲罰 × 陰天懲罰 + 高雲 bonus + 雲種修正 + 雲厚修正",
-          "highCloudBonus": "高雲 bonus：高雲>50 且低雲<30 時，按 (高雲-50)/50×6 加 0–6 分。雲種／雲厚是加減分：高層雲 +4、高積雲 +6、薄雲 +5、厚雲 -28；偏厚但證據不足時按 modifier 連續扣分，約為 -(1-modifier)×65。低雲類雲種還會壓低光路門控"
+          "highCloudBonus": "高雲 bonus：高雲>50 且低雲<30 時，按 (高雲-50)/50×6 加 0–6 分。雲種／雲厚是加減分：高層雲 +4、高積雲 +6、薄雲 +5；偏厚／厚雲按壓力連續扣 0–28 分，公式為 -28×雲厚壓力。低雲類雲種還會壓低光路門控"
         },
         "lightPath": {
           "title": "光路條件",
@@ -386,7 +386,7 @@ const translations = {
           "upperCloudCanvas": "中高雲畫布 {{upper}} = 高雲 {{high}}×0.75 + 中雲 {{mid}}×0.45；區間分 {{range}}",
           "highCloudBonus": "高雲主導 bonus {{bonus}}",
           "cloudTypeAdjustment": "雲種 {{reason}} {{bonus}}",
-          "cloudThicknessAdjustment": "雲厚 {{thickness}}，證據 thin {{thin}} / thick {{thick}} / net {{net}}",
+          "cloudThicknessAdjustment": "雲厚 {{thickness}}，壓力 {{pressure}}，散射 {{diffuse}}%，水汽 {{water}}，載體緩衝 {{relief}}",
           "aerosolCarrier": "雲層很少時，薄霧在光路通暢時可承接一點暖色，光路激活 ×{{activation}}",
           "lightPath": "陽光是否能照到雲層",
           "renderingFactors": "能見度 ×{{visibility}}，濕度 ×{{humidity}}，氣溶膠 ×{{aerosol}}",
