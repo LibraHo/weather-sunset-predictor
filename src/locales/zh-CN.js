@@ -370,13 +370,14 @@ export default {
         pts: '分',
         whyThisScore: '为什么是这个分数',
         weightedFormula: '{{canvas}}×80% + {{light}}×20% = {{base}}',
+        gatedFormula: '{{carrier}} × 光路门控 {{gate}} = {{base}}',
         canvasPlusLightPath: '画布 + 光路',
         renderingFormula: '{{base}} 经显色修正 = {{rendered}}',
         renderingMultiplierFormula: '{{base}} × 显色系数 {{factor}} = {{rendered}}',
         renderingAdjustmentFormula: '{{base}} {{sign}} 显色修正 {{adjustment}} = {{rendered}}',
         weatherTransparency: '天气通透度',
         summary: {
-          event: '{{score}} 分：{{detail}}',
+          event: '{{score}} 分：主要调整是 {{detail}}',
           rendered: '{{base}} 分经显色条件修正为 {{rendered}} 分',
           default: '{{score}} 分：由云层、光路和显色条件综合计算'
         },
@@ -401,7 +402,8 @@ export default {
           carrierFloor: '载体保底',
           postRainCap: '湿灰幕',
           displayCalibration: '展示分校准',
-          aerosolCarrier: '气溶胶载体'
+          aerosolCarrier: '气溶胶载体',
+          evidence: '计算依据'
         },
         details: {
           cloudCarrier: '可被染色的云面或薄雾载体',
@@ -424,13 +426,17 @@ export default {
           lightPathLowCloudBlock: '低云遮住太阳方向，光线不容易照到中高云',
           lightPathRain: '降水会削弱日落直射光',
           postRainCap: '水汽、颗粒物或直达光偏弱，霞光容易发灰',
-          displayCalibration: '最终展示分按预测状态档位校准'
+          displayCalibration: '最终展示分按预测状态档位校准',
+          positiveAdjustment: '有利条件修正',
+          limitingAdjustment: '限制条件修正'
         },
         reasons: {
           precipitationCap45: '降水叠加低云，观赏条件明显变差',
           overcastCap35: '低云遮住太阳方向，光线不容易照到云层',
           overcastFogCap15: '低云叠加低能见度，天空容易发灰',
           rainyMidCloudOvercastCap35: '雨后水汽偏重，霞光不容易显色',
+          noVisibleSunsetPathCap5: '日落光线很难照到云层',
+          noVisibleSunsetPathCap15: '雨后灰幕偏重，日落光线大概率被挡住',
           extremeDustHazeCap28: '强沙尘或灰幕会压住霞光',
           severeHazeCap35: '重度灰霾让颜色不容易出来',
           moderateHazeCap45: '灰霾会削弱红橙色',

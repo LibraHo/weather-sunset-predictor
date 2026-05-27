@@ -311,13 +311,14 @@ apiAccess: 'الوصول إلى API'
         "pts": "pts",
         "whyThisScore": "Why this score",
         "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
+        "gatedFormula": "{{carrier}} × light-path gate {{gate}} = {{base}}",
         "canvasPlusLightPath": "canvas + light path",
         "renderingFormula": "{{base}} adjusted by rendering = {{rendered}}",
         "renderingMultiplierFormula": "{{base}} × rendering {{factor}} = {{rendered}}",
         "renderingAdjustmentFormula": "{{base}} {{sign}} rendering adjustment {{adjustment}} = {{rendered}}",
         "weatherTransparency": "weather transparency factor",
         "summary": {
-          "event": "{{score}} points: {{detail}}",
+          "event": "{{score}} points: main adjustment is {{detail}}",
           "rendered": "{{base}} points adjusted by rendering conditions to {{rendered}}",
           "default": "{{score}} points: calculated from cloud carrier, light path, and rendering conditions"
         },
@@ -341,7 +342,8 @@ apiAccess: 'الوصول إلى API'
           "occlusion": "Occlusion",
           "carrierFloor": "Carrier floor",
           "postRainCap": "Post-rain haze",
-          "displayCalibration": "Display calibration"
+          "displayCalibration": "Display calibration",
+          "evidence": "Calculation evidence"
         },
         "details": {
           "cloudCarrier": "usable colored cloud surface",
@@ -359,13 +361,17 @@ apiAccess: 'الوصول إلى API'
           "lightPathLowCloudBlock": "low clouds block sunlight from reaching the colorable clouds",
           "lightPathRain": "rain weakens direct sunset light",
           "postRainCap": "post-rain moisture or haze turns the glow into a gray curtain",
-          "displayCalibration": "final display score is aligned with the prediction status band"
+          "displayCalibration": "final display score is aligned with the prediction status band",
+          "positiveAdjustment": "favorable condition adjustment",
+          "limitingAdjustment": "limiting condition adjustment"
         },
         "reasons": {
           "precipitationCap45": "rain plus low clouds keeps the score low",
           "overcastCap35": "low clouds block the sunlight path",
           "overcastFogCap15": "low cloud and low visibility make the sky too gray",
           "rainyMidCloudOvercastCap35": "post-rain moisture makes the glow hard to show",
+          "noVisibleSunsetPathCap5": "sunset light is unlikely to reach the clouds",
+          "noVisibleSunsetPathCap15": "rainy gray sky likely blocks sunset light",
           "extremeDustHazeCap28": "heavy dust or haze suppresses the glow",
           "severeHazeCap35": "heavy haze makes colors hard to show",
           "moderateHazeCap45": "haze weakens orange-red color",

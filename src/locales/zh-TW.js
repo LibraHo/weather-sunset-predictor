@@ -347,13 +347,14 @@ const translations = {
         "pts": "分",
         "whyThisScore": "為什麼是這個分數",
         "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
+        "gatedFormula": "{{carrier}} × 光路門控 {{gate}} = {{base}}",
         "canvasPlusLightPath": "畫布 + 光路",
         "renderingFormula": "{{base}} 經顯色修正 = {{rendered}}",
         "renderingMultiplierFormula": "{{base}} × 顯色係數 {{factor}} = {{rendered}}",
         "renderingAdjustmentFormula": "{{base}} {{sign}} 顯色修正 {{adjustment}} = {{rendered}}",
         "weatherTransparency": "天氣通透度",
         "summary": {
-          "event": "{{score}} 分：{{detail}}",
+          "event": "{{score}} 分：主要調整是 {{detail}}",
           "rendered": "{{base}} 分經顯色條件修正為 {{rendered}} 分",
           "default": "{{score}} 分：由雲層、光路和顯色條件綜合計算"
         },
@@ -378,7 +379,8 @@ const translations = {
           "carrierFloor": "載體保底",
           "postRainCap": "濕灰幕",
           "displayCalibration": "展示分校準",
-          "aerosolCarrier": "氣溶膠載體"
+          "aerosolCarrier": "氣溶膠載體",
+          "evidence": "計算依據"
         },
         "details": {
           "cloudCarrier": "可被染色的雲面或薄霧載體",
@@ -401,13 +403,17 @@ const translations = {
           "lightPathLowCloudBlock": "低雲遮住太陽方向，光線不容易照到中高雲",
           "lightPathRain": "降水會削弱日落直射光",
           "postRainCap": "水氣、顆粒物或直達光偏弱，霞光容易發灰",
-          "displayCalibration": "最終展示分按預測狀態檔位校準"
+          "displayCalibration": "最終展示分按預測狀態檔位校準",
+          "positiveAdjustment": "有利條件修正",
+          "limitingAdjustment": "限制條件修正"
         },
         "reasons": {
           "precipitationCap45": "降水疊加低雲，觀賞條件明顯變差",
           "overcastCap35": "低雲遮住太陽方向，光線不容易照到雲層",
           "overcastFogCap15": "低雲疊加低能見度，天空容易發灰",
           "rainyMidCloudOvercastCap35": "雨後水氣偏重，霞光不容易顯色",
+          "noVisibleSunsetPathCap5": "日落光線很難照到雲層",
+          "noVisibleSunsetPathCap15": "雨後灰幕偏重，日落光線大概率被擋住",
           "extremeDustHazeCap28": "強沙塵或灰幕會壓住霞光",
           "severeHazeCap35": "重度灰霾讓顏色不容易出來",
           "moderateHazeCap45": "灰霾會削弱紅橙色",

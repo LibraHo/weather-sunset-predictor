@@ -694,6 +694,65 @@ describe('PredictionController', () => {
       expect(trigger.getAttribute('aria-expanded')).toBe('false');
     });
 
+    test('点击分数明细里的计算依据不应关闭明细面板', () => {
+      document.body.innerHTML = `
+        <section id="prediction-section" class="hidden">
+          <h2 id="prediction-section-title"></h2>
+          <div id="prediction-display"></div>
+        </section>
+      `;
+
+      const displayDate = new Date();
+      const sunsetTime = new Date(Date.now() + 2 * 60 * 60 * 1000);
+      const sunriseTime = new Date(Date.now() - 8 * 60 * 60 * 1000);
+      const basePrediction = {
+        date: displayDate,
+        score: 64,
+        quality: 'good',
+        type: 'sunset',
+        sunriseTime,
+        sunsetTime,
+        goldenHour: null,
+        blueHour: null,
+        sunAzimuth: null,
+        cloudLayers: null,
+        factors: {},
+        breakdown: {
+          baseScore: 70,
+          canvasScore: 65,
+          lightPathScore: 80,
+          lightPathGate: 0.95,
+          renderingFactor: 0.9,
+          unclampedFinalScore: 63
+        },
+        canvasAnalysis: { score: 65 },
+        lightPathAnalysis: { score: 80 },
+        renderingAnalysis: { factor: 0.9 },
+        getOptimalViewingWindow: () => ({
+          start: new Date('2024-06-21T19:15:00+08:00'),
+          end: new Date('2024-06-21T20:15:00+08:00')
+        }),
+        shouldShowAzimuth: () => false
+      };
+
+      const sunrisePrediction = { ...basePrediction, type: 'sunrise' };
+      const sunsetPrediction = { ...basePrediction, type: 'sunset' };
+      predictionController.predictions = [sunrisePrediction, sunsetPrediction];
+      predictionController.updateTodayPredictions(sunrisePrediction, sunsetPrediction, sunriseTime, sunsetTime, displayDate);
+
+      const trigger = document.querySelector('.score-breakdown-trigger');
+      const popover = document.querySelector('.score-breakdown-popover');
+      trigger.click();
+      expect(popover.hidden).toBe(false);
+
+      const summary = popover.querySelector('.score-ledger-detail summary');
+      expect(summary).toBeTruthy();
+      summary.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+      expect(popover.hidden).toBe(false);
+      expect(trigger.getAttribute('aria-expanded')).toBe('true');
+    });
+
     test('动态插入的新分数仪表盘也应响应点击', () => {
       document.body.innerHTML = `
         <section id="prediction-section" class="hidden">
@@ -768,7 +827,9 @@ describe('PredictionController', () => {
       });
 
       expect(html).toContain('为什么是这个分数');
-      expect(html).toContain('28 分：强沙尘或灰幕会压住霞光');
+      expect(html).toContain('28 分：主要调整是 灰幕影响 ≤28');
+      expect(html).toContain('计算依据');
+      expect(html).toContain('强沙尘或灰幕会压住霞光');
       expect(html).not.toContain('score-ledger-context');
       expect(html).not.toContain('能见度 5km');
       expect(html).toContain('70.7');
@@ -871,7 +932,7 @@ describe('PredictionController', () => {
       expect(html).toContain('展示分校准');
       expect(html).toContain('79.4→60');
       expect(html).toContain('光路约 40.0，更像轻微霞光机会');
-      expect(html).toContain('60 分：光路约 40.0，更像轻微霞光机会');
+      expect(html).toContain('60 分：主要调整是 展示分校准 79.4→60');
     });
   });
 

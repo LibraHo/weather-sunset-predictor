@@ -347,13 +347,14 @@ apiAccess: 'API接続'
         "pts": "点",
         "whyThisScore": "このスコアの理由",
         "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
+        "gatedFormula": "{{carrier}} × 光路ゲート {{gate}} = {{base}}",
         "canvasPlusLightPath": "雲のキャンバス + 光路",
         "renderingFormula": "{{base}} adjusted by rendering = {{rendered}}",
         "renderingMultiplierFormula": "{{base}} × rendering {{factor}} = {{rendered}}",
         "renderingAdjustmentFormula": "{{base}} {{sign}} rendering adjustment {{adjustment}} = {{rendered}}",
         "weatherTransparency": "大気の透明度係数",
         "summary": {
-          "event": "{{score}}点：{{detail}}",
+          "event": "{{score}}点：主な調整は {{detail}}",
           "rendered": "{{base}}点が発色条件で補正され {{rendered}}点になりました",
           "default": "{{score}}点：雲の載体、光路、発色条件から総合計算"
         },
@@ -378,7 +379,8 @@ apiAccess: 'API接続'
           "carrierFloor": "載体による下支え",
           "postRainCap": "雨上がりの灰幕",
           "displayCalibration": "表示スコア調整",
-          "aerosolCarrier": "エアロゾル載体"
+          "aerosolCarrier": "エアロゾル載体",
+          "evidence": "計算根拠"
         },
         "details": {
           "cloudCarrier": "雲または薄い霞による色づき載体",
@@ -401,13 +403,17 @@ apiAccess: 'API接続'
           "lightPathLowCloudBlock": "低い雲が日差しを遮り、色づく雲まで光が届きにくいです",
           "lightPathRain": "雨が夕日の直射光を弱めます",
           "postRainCap": "雨後の水蒸気や霞で光が弱まり、色が灰色っぽくなります",
-          "displayCalibration": "最終表示スコアを予測ステータスの帯に合わせます"
+          "displayCalibration": "最終表示スコアを予測ステータスの帯に合わせます",
+          "positiveAdjustment": "有利条件による補正",
+          "limitingAdjustment": "制限条件による補正"
         },
         "reasons": {
           "precipitationCap45": "雨と低い雲で観賞条件が大きく下がります",
           "overcastCap35": "低い雲が太陽方向をふさぎ、光が雲まで届きにくいです",
           "overcastFogCap15": "低い雲と低い視程で空が灰色に見えやすいです",
           "rainyMidCloudOvercastCap35": "雨上がりの水蒸気が多く、色が出にくいです",
+          "noVisibleSunsetPathCap5": "夕日の光が雲まで届きにくいです",
+          "noVisibleSunsetPathCap15": "雨後の灰幕で夕日の光が遮られやすいです",
           "extremeDustHazeCap28": "強い黄砂や霞が夕焼けの色を弱めます",
           "severeHazeCap35": "濃い霞で色が出にくいです",
           "moderateHazeCap45": "霞が橙や赤の色を弱めます",

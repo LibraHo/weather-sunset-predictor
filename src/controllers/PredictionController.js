@@ -1312,6 +1312,14 @@ class PredictionController {
       };
 
       document.addEventListener('click', (e) => {
+        if (
+          closestElement(e.target, '.score-breakdown-popover') &&
+          closestElement(e.target, '.score-ledger-detail')
+        ) {
+          e.stopPropagation();
+          return;
+        }
+
         const trigger = closestElement(e.target, '.score-breakdown-trigger');
         if (!trigger) {
           if (!closestElement(e.target, '.score-breakdown-popover')) {
@@ -2150,7 +2158,12 @@ class PredictionController {
 
     const primaryEvent = capEvents.find(event => event.tone === 'bad') || capEvents[0];
     const summary = primaryEvent
-      ? ledgerText('summary.event', { score: fmt(finalScore, 0), detail: primaryEvent.detail }, '{{score}} points: {{detail}}', '{{score}} 分：{{detail}}')
+      ? ledgerText(
+        'summary.event',
+        { score: fmt(finalScore, 0), detail: `${primaryEvent.label} ${primaryEvent.value}` },
+        '{{score}} points: main adjustment is {{detail}}',
+        '{{score}} 分：主要调整是 {{detail}}'
+      )
       : Number.isFinite(Number(baseScore)) && Number.isFinite(Number(renderedScore))
         ? ledgerText('summary.rendered', { base: fmt(baseScore, 0), rendered: fmt(renderedScore, 0) }, '{{base}} points adjusted by rendering conditions to {{rendered}}', '{{base}} 分经显色条件修正为 {{rendered}} 分')
         : ledgerText('summary.default', { score: fmt(finalScore, 0) }, '{{score}} points: calculated from cloud carrier, light path, and rendering conditions', '{{score}} 分：由云层、光路和显色条件综合计算');
@@ -2164,7 +2177,11 @@ class PredictionController {
             <span class="score-ledger-result">${escape(result)}</span>
           </div>
           ${description ? `<div class="score-ledger-expression">${escape(description)}</div>` : ''}
-          ${detail ? `<div class="score-ledger-detail">${escape(detail)}</div>` : ''}
+          ${detail ? `
+            <details class="score-ledger-detail">
+              <summary>${escape(ledgerText('labels.evidence', {}, 'Calculation evidence', '计算依据'))}</summary>
+              <div class="score-ledger-detail-copy">${escape(detail)}</div>
+            </details>` : ''}
         </div>
       </div>`;
 
@@ -2263,9 +2280,11 @@ class PredictionController {
       ? capEvents.map((event, idx) => step(
         idx + 5,
         event.label,
-        event.detail,
+        event.tone === 'good'
+          ? ledgerText('details.positiveAdjustment', {}, 'favorable condition adjustment', '有利条件修正')
+          : ledgerText('details.limitingAdjustment', {}, 'limiting condition adjustment', '限制条件修正'),
         event.value,
-        '',
+        event.detail,
         event.tone === 'good' ? 'good' : 'cap'
       )).join('')
       : '';
