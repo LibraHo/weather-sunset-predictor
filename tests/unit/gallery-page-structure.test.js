@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 const html = fs.readFileSync(path.resolve(process.cwd(), 'public/gallery.html'), 'utf8');
+const appSource = fs.readFileSync(path.resolve(process.cwd(), 'src/app.js'), 'utf8');
 
 describe('gallery share map page', () => {
   test('uses the firecloud map basemap component and local Leaflet assets', () => {
@@ -63,6 +64,19 @@ describe('gallery share map page', () => {
     expect(html).not.toContain('class="theme-dark gallery-body"');
     expect(html).not.toContain("style: 'dark'");
     expect(html).not.toContain('background: var(--map-bg-dark');
+  });
+
+  test('syncs gallery basemap with the shared map tile setting', () => {
+    expect(html).toContain("localStorage.getItem('map_tile_provider')");
+    expect(html).toContain('function applyGalleryMapTileProvider');
+    expect(html).toContain('mapCanvas.setTileProvider(provider)');
+    expect(html).toContain("event.key === 'map_tile_provider'");
+    expect(html).toContain("event.data?.type === 'mapTileProviderChanged'");
+    expect(html).toContain('applyGalleryMapTileProvider();');
+    expect(appSource).toContain('function setupGalleryBasemapSync');
+    expect(appSource).toContain("document.getElementById('gallery-iframe')");
+    expect(appSource).toContain("type: 'mapTileProviderChanged'");
+    expect(appSource).toContain('galleryFrame.contentWindow?.postMessage');
   });
 
   test('hero copy explains the gallery value instead of restating basemap implementation', () => {
