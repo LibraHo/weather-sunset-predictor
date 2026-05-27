@@ -7489,6 +7489,24 @@ html[data-actual-theme="light"] .weather-desc {
 .parameter-selector.xiake-toggle {
   margin-bottom: 16px !important;
 }
+.parameter-selector.xiake-toggle.xiake-toggle-wrap {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: min(100%, 700px);
+  gap: 6px;
+  border-radius: 24px;
+}
+.parameter-selector.xiake-toggle .btn-param.xiake-toggle-btn {
+  width: 100%;
+  min-width: 0 !important;
+  justify-content: center;
+  padding: 9px 12px !important;
+}
+.parameter-selector.xiake-toggle .param-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 @media (max-width: 640px) {
   .xiake-toggle { width: min(100%, 360px); }
   .xiake-toggle-btn,
@@ -7498,6 +7516,10 @@ html[data-actual-theme="light"] .weather-desc {
     font-size: 0.84rem !important;
   }
   .xiake-toggle-wrap .xiake-toggle-btn { flex: 1 1 calc(33.333% - 6px); }
+  .parameter-selector.xiake-toggle.xiake-toggle-wrap {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: min(100%, 360px);
+  }
 }
 
 /* 天气信息指标卡：两行三列统一 SVG 模板 */
