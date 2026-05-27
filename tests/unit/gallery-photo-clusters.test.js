@@ -30,9 +30,9 @@ describe('gallery photo pixel clustering', () => {
     expect(getZoomDistance(12)).toBeGreaterThan(getZoomDistance(14));
   });
 
-  test('prefers thumbnails and falls back to original photo endpoint', () => {
+  test('prefers thumbnails and does not fall back to private originals', () => {
     expect(preferredPhotoUrl({ id: 'abc', thumbUrl: '/api/photos/abc/thumb' })).toBe('/api/photos/abc/thumb');
-    expect(preferredPhotoUrl({ id: 'abc', originalUrl: '/original/abc' })).toBe('/original/abc');
-    expect(preferredPhotoUrl({ id: 'abc' })).toBe('/api/photos/abc/original');
+    expect(preferredPhotoUrl({ id: 'abc', originalUrl: '/original/abc' })).toBe('');
+    expect(preferredPhotoUrl({ id: 'abc' })).toBe('');
   });
 });

@@ -219,7 +219,7 @@ router.get('/:id/thumb', (req, res) => {
 // GET /api/photos/:id/original
 // 返回指定照片的原图文件
 // ---------------------------------------------------------------------------
-router.get('/:id/original', (req, res) => {
+router.get('/:id/original', requireUser, (req, res) => {
   try {
     const { id } = req.params;
     const photo = photoService.getPhotoById(id);
