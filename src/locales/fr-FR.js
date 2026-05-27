@@ -101,16 +101,16 @@ const translations = {
     "methodology": {
       "title": "Comment le score est calculé",
       "intro": "L'indice de nuages rouges est calculé à partir de quatre facteurs clés pour vous aider à décider rapidement si la soirée vaut le déplacement.",
-      "versionLabel": "Version de l’algorithme : 2026.05.19-additive-carrier-light-gate-v1",
-      "versionDesc": "Cette version stabilise l’analyse en quatre facteurs : support nuageux, trajet lumineux, rendu de l’air et limites. La formule de score ne change pas.",
+      "versionLabel": "Version de l’algorithme : 2026.05.27-cloud-thickness-proportional-v2",
+      "versionDesc": "Cette version remplace la pénalité d’épaisseur nuageuse par score de canevas avant épaisseur × 30 % × pression d’épaisseur, supprime les plafonds fixes -28/24 et calibre les rideaux gris humides comme faible lueur / observable mais non fort.",
       changelogTitle: "Historique des versions",
       changelogHint: "Les mises a jour des trois derniers mois sont ici ; faites defiler pour revoir la raison, l'impact et la validation",
       changelog: {
         "latest": {
-          "date": "2026-05-13",
-          "title": "Analyse a quatre facteurs v1",
-          "summary": "L'analyse est regroupee en support nuageux, trajet lumineux, rendu de l'air et limites afin de reduire les notes dispersees.",
-          "validation": "Validation : aerosols, blocage bas, brume grise, nuages epais et pluie sont rattaches au bon facteur ; la formule reste inchangee."
+          "date": "2026-05-27",
+          "title": "Pénalité proportionnelle d’épaisseur nuageuse v2",
+          "summary": "La pénalité d’épaisseur nuageuse devient score de canevas avant épaisseur × 30 % × pression d’épaisseur, avec suppression des plafonds fixes -28/24. Les rideaux gris humides sont calibrés comme faible lueur / observable mais non fort.",
+          "validation": "Validation : sur l’échantillon de Pékin du 2026-05-27, une pression 0,78 sur un canevas 76,7 donne environ -18 points et conserve le résultat dans la zone faible lueur / observable."
         },
         "aerosol": {
           "date": "2026-05-12",

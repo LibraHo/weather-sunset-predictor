@@ -41,6 +41,34 @@ describe('home methodology structure', () => {
     expect((html.slice(scrollIndex, versionIndex).match(/<li>/g) || []).length).toBeGreaterThanOrEqual(5);
   });
 
+  test('shows the current cloud-thickness proportional penalty in version history', () => {
+    const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+    const localeFiles = [
+      'zh-CN.js',
+      'zh-TW.js',
+      'en-US.js',
+      'ja-JP.js',
+      'ko-KR.js',
+      'vi-VN.js',
+      'fr-FR.js',
+      'es-ES.js',
+      'it-IT.js',
+      'ar-SA.js'
+    ];
+    const localeTexts = localeFiles.map(file => fs.readFileSync(path.join(ROOT, 'src/locales', file), 'utf8'));
+
+    for (const text of [html, ...localeTexts]) {
+      expect(text).toContain('2026-05-27');
+      expect(text).toContain('2026.05.27-cloud-thickness-proportional-v2');
+    }
+
+    expect(html).toContain('云厚比例折损 v2');
+    expect(html).toContain('画布修正前分 × 30% × 云厚压力');
+    expect(html).toContain('去掉固定 -28/24 上限');
+    expect(localeTexts.join('\n')).toContain('Cloud-thickness proportional penalty v2');
+    expect(localeTexts.join('\n')).toContain('pre-thickness canvas score × 30% × thickness pressure');
+  });
+
   test('score guide matches backend score distribution thresholds', () => {
     const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
     const scoreGuide = html.slice(

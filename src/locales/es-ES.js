@@ -101,16 +101,16 @@ apiAccess: 'Acceso API'
     "methodology": {
       "title": "Cómo se calcula la puntuación",
       "intro": "El índice de nubes rojas combina cuatro factores clave para estimar si vale la pena salir a ver el atardecer.",
-      "versionLabel": "Versión del algoritmo: 2026.05.19-additive-carrier-light-gate-v1",
-      "versionDesc": "Esta versión convierte las señales positivas de nubes en puntos aditivos acotados y usa el muestreo multipunto hacia el sol como compuerta de trayectoria de luz.",
+      "versionLabel": "Versión del algoritmo: 2026.05.27-cloud-thickness-proportional-v2",
+      "versionDesc": "Esta versión cambia la penalización por espesor de nubes a puntuación de lienzo antes del espesor × 30% × presión de espesor, elimina los topes fijos -28/24 y calibra las cortinas grises húmedas como resplandor débil/observable pero no fuerte.",
       changelogTitle: "Historial de versiones",
       changelogHint: "Aquí están las actualizaciones de los últimos tres meses; desplázate para revisar motivo, impacto y validación",
       changelog: {
         "latest": {
-          "date": "2026-05-19",
-          "title": "Soporte aditivo + compuerta de luz v1",
-          "summary": "Las señales positivas de nubes pasan a sumar puntos acotados y el muestreo multipunto hacia el sol controla la compuerta de luz.",
-          "validation": "Validación: la muestra de nubes altas puras en 36.36°N, 92.83°E baja a 72; una pared de nubes cercana en la dirección solar baja a 33.5; sin más llamadas API."
+          "date": "2026-05-27",
+          "title": "Penalización proporcional por espesor de nubes v2",
+          "summary": "La penalización por espesor de nubes ahora es puntuación de lienzo antes del espesor × 30% × presión de espesor, sin los topes fijos -28/24. Las cortinas grises húmedas se calibran como resplandor débil/observable pero no fuerte.",
+          "validation": "Validación: en la muestra de Pekín del 2026-05-27, presión 0.78 sobre lienzo 76.7 da unos -18 puntos y mantiene el resultado en el rango de resplandor débil/observable."
         },
         "aerosol": {
           "date": "2026-05-12",

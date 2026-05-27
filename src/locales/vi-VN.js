@@ -101,16 +101,16 @@ const translations = {
     "methodology": {
       "title": "Phương pháp tính điểm mây đẹp",
       "intro": "Chỉ số mây đẹp được tính toán tổng hợp từ bốn yếu tố chính, giúp bạn nhanh chóng đánh giá liệu ngày hôm đó có đáng để chờ đợi hoàng hôn hay không.",
-      "versionLabel": "Phiên bản thuật toán: 2026.05.19-additive-carrier-light-gate-v1",
-      "versionDesc": "Phiên bản này cố định phân tích thành bốn yếu tố: nền mây, đường sáng, màu trong không khí và yếu tố hạn chế. Công thức điểm không đổi.",
+      "versionLabel": "Phiên bản thuật toán: 2026.05.27-cloud-thickness-proportional-v2",
+      "versionDesc": "Phiên bản này đổi mức trừ do mây dày thành điểm nền mây trước hiệu chỉnh độ dày × 30% × áp lực độ dày, bỏ trần cố định -28/24 và hiệu chỉnh màn mây xám ẩm thành mức cháy yếu/có thể xem nhưng không mạnh.",
       changelogTitle: "Lịch sử cập nhật phiên bản",
       changelogHint: "Các cập nhật thuật toán trong ba tháng gần đây nằm ở đây; cuộn để xem lý do, tác động và cách kiểm chứng",
       changelog: {
         "latest": {
-          "date": "2026-05-13",
-          "title": "Phân tích bốn yếu tố v1",
-          "summary": "Phân tích được gom thành nền mây, đường sáng, màu trong không khí và yếu tố hạn chế để giảm các ghi chú rời rạc.",
-          "validation": "Kiểm chứng: aerosol, mây thấp che chắn, màn mù xám, mây dày và mưa đều được gom vào yếu tố tương ứng; công thức điểm không đổi."
+          "date": "2026-05-27",
+          "title": "Trừ điểm tỷ lệ theo độ dày mây v2",
+          "summary": "Mức trừ do mây dày nay là điểm nền mây trước hiệu chỉnh độ dày × 30% × áp lực độ dày, bỏ trần cố định -28/24. Màn mây xám ẩm được hiệu chỉnh thành cháy yếu/có thể xem nhưng không mạnh.",
+          "validation": "Kiểm chứng: mẫu Bắc Kinh ngày 2026-05-27 có áp lực 0.78 trên nền 76.7 nên trừ khoảng -18 điểm, giữ kết quả trong vùng cháy yếu/có thể xem."
         },
         "aerosol": {
           "date": "2026-05-12",
