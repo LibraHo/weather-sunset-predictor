@@ -182,8 +182,8 @@ export default {
           highCloud: '高云：权重 0.75，是最重要的红橙色载体；高云>50%且低云<30%时，只额外加 0–6 分，不再乘 1.2',
           midCloud: '中云：权重 0.45，也是可染色载体；高云与中云同时存在时会提高画布稳定性',
           lowCloudBonus: '低云：权重只有 0.10，主要进入低云惩罚和光路遮挡；低云少不加分，只是不扣分',
-          formula: '中高云画布量 = 高云×0.75 + 中云×0.45\n画布基础分：≤10→10，10–30→40–70，30–70→70–100，70–100→70–50，>100→43\n随后乘低云/阴天惩罚，再加有限高云 bonus',
-          highCloudBonus: '云种/云厚修正是加减分：高层云 +4、Altocumulus +6、薄云 +5、厚云约 -28；低云类云种会同时扣画布并压低光路门控'
+          formula: '中高云画布量 = 高云×0.75 + 中云×0.45\n画布基础分：≤10→10，10–30→40–70，30–70→70–100，70–100→70–50，>100→43\n画布分 = 区间分 × 低云惩罚 × 阴天惩罚 + 高云 bonus + 云种修正 + 云厚修正',
+          highCloudBonus: '高云 bonus：高云>50 且低云<30 时，按 (高云-50)/50×6 加 0–6 分。云种/云厚是加减分：高层云 +4、高积云 +6、薄云 +5、厚云 -28；偏厚但证据不足时按 modifier 连续扣分，公式约为 -(1-modifier)×65。低云类云种还会压低光路门控'
         },
         lightPath: {
           title: '2. 光路评估',
@@ -406,6 +406,10 @@ export default {
         details: {
           cloudCarrier: '可被染色的云面或薄雾载体',
           cloudPenalty: '云画布 {{canvas}}，低云 ×{{low}}，阴天 ×{{overcast}}',
+          upperCloudCanvas: '中高云画布 {{upper}} = 高云 {{high}}×0.75 + 中云 {{mid}}×0.45；区间分 {{range}}',
+          highCloudBonus: '高云主导 bonus {{bonus}}',
+          cloudTypeAdjustment: '云种 {{reason}} {{bonus}}',
+          cloudThicknessAdjustment: '云厚 {{thickness}}，证据 thin {{thin}} / thick {{thick}} / net {{net}}',
           aerosolCarrier: '云层很少时，薄雾在光路通畅时可承接一点暖色，光路激活 ×{{activation}}',
           lightPath: '阳光是否能打到云层',
           renderingFactors: '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}',
