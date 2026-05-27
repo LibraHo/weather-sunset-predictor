@@ -15,7 +15,8 @@ describe('assessCloudThickness', () => {
       weatherCode: 3
     });
     expect(result.thickness).toBe('thick');
-    expect(result.modifier).toBeLessThan(0.6);
+    expect(result.modifier).toBe(0.7);
+    expect(result.evidence.diffusePressure).toBe(0);
   });
 
   test('薄卷云：直射比高 + 水汽低', () => {
