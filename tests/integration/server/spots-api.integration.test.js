@@ -18,6 +18,7 @@ describe('Spots API Integration', () => {
   let originalGetCache;
   let originalGetBestAvailableCache;
   let originalGetPublicMapCache;
+  let chinaRasterService;
 
   beforeAll(async () => {
     const supertestModule = await import('supertest');
@@ -30,6 +31,9 @@ describe('Spots API Integration', () => {
     originalGetCache = gridService.getCache;
     originalGetBestAvailableCache = gridService.getBestAvailableCache;
     originalGetPublicMapCache = gridService.getPublicMapCache;
+
+    const rasterServiceModule = await import('../../../server/services/ChinaRasterService.js');
+    chinaRasterService = rasterServiceModule.default || rasterServiceModule;
 
     const spotsRouterModule = await import('../../../server/routes/spots.js');
     const spotsRouter = spotsRouterModule.default || spotsRouterModule;
@@ -113,6 +117,27 @@ describe('Spots API Integration', () => {
     expect(gridService.refreshIfStale).not.toHaveBeenCalled();
     expect(res.body.error).toMatchObject({
       code: 'GRID_NOT_READY'
+    });
+  });
+
+  test('GET /api/spots/china/raster returns paused pipeline errors as 503', async () => {
+    chinaRasterService.invalidateCache?.('all');
+    gridService.refreshIfStale = jest.fn(async () => {});
+    gridService.getCache = jest.fn(() => null);
+    gridService.getPublicMapCache = jest.fn(() => ({
+      mode: 'paused',
+      status: 'paused',
+      cache: null,
+      degradedReason: 'DATA_PIPELINE_PAUSED'
+    }));
+
+    const res = await request(app).get('/api/spots/china/raster').expect(503);
+
+    expect(gridService.refreshIfStale).not.toHaveBeenCalled();
+    expect(res.body.error).toMatchObject({
+      code: 'DATA_PIPELINE_PAUSED',
+      status: 'paused',
+      mode: 'paused'
     });
   });
 });

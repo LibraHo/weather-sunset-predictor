@@ -23,7 +23,8 @@ class DataPipelineCleanupService {
     this.now = options.now || null;
   }
 
-  cleanup(policy = {}) {
+  cleanup(policy = {}, options = {}) {
+    const dryRun = options.dryRun === true;
     const deletedFiles = [];
     let deletedBytes = 0;
     const removeResult = result => {
@@ -31,19 +32,21 @@ class DataPipelineCleanupService {
       deletedBytes += result.deletedBytes;
     };
 
-    removeResult(this._deleteOlderThan(this.rawDir, (Number(policy.deleteRawAfterMinutes) || 60) * 60 * 1000));
-    removeResult(this._deleteOlderThan(this.tmpDir, (Number(policy.deleteTmpAfterHours) || 3) * 60 * 60 * 1000));
+    removeResult(this._deleteOlderThan(this.rawDir, (Number(policy.deleteRawAfterMinutes) || 60) * 60 * 1000, { dryRun }));
+    removeResult(this._deleteOlderThan(this.tmpDir, (Number(policy.deleteTmpAfterHours) || 3) * 60 * 60 * 1000, { dryRun }));
     removeResult(this._deleteOlderThan(this.gridProductDir, (Number(policy.keepCacheDays) || 3) * 24 * 60 * 60 * 1000, {
-      excludeNames: new Set(['manifest.json'])
+      excludeNames: new Set(['manifest.json']),
+      dryRun
     }));
-    removeResult(this._deleteOlderThan(this.tileDir, (Number(policy.keepTileDays) || 3) * 24 * 60 * 60 * 1000));
+    removeResult(this._deleteOlderThan(this.tileDir, (Number(policy.keepTileDays) || 3) * 24 * 60 * 60 * 1000, { dryRun }));
 
-    const removedProducts = this._syncGridManifest();
+    const removedProducts = this._syncGridManifest({ dryRun, deletedFiles });
     const prune = typeof this.runLogService.pruneOlderThan === 'function'
-      ? this.runLogService.pruneOlderThan({ olderThanDays: Number(policy.keepLogDays) || 7 })
+      ? (dryRun ? { prunedRuns: 0, prunedSteps: 0 } : this.runLogService.pruneOlderThan({ olderThanDays: Number(policy.keepLogDays) || 7 }))
       : { prunedRuns: 0, prunedSteps: 0 };
 
     return {
+      dryRun,
       deletedFiles,
       deletedBytes,
       removedProducts,
@@ -62,24 +65,32 @@ class DataPipelineCleanupService {
       if (options.excludeNames?.has(path.basename(filePath))) continue;
       const stat = fs.statSync(filePath);
       if (stat.mtimeMs >= cutoff) continue;
-      fs.unlinkSync(filePath);
+      if (options.dryRun !== true) {
+        fs.unlinkSync(filePath);
+      }
       deletedFiles.push(filePath);
       deletedBytes += stat.size;
     }
 
-    this._removeEmptyDirs(root);
+    if (options.dryRun !== true) {
+      this._removeEmptyDirs(root);
+    }
     return { deletedFiles, deletedBytes };
   }
 
-  _syncGridManifest() {
+  _syncGridManifest(options = {}) {
     if (!fs.existsSync(this.manifestPath)) return 0;
     try {
       const manifest = JSON.parse(fs.readFileSync(this.manifestPath, 'utf8'));
       const products = Array.isArray(manifest.products) ? manifest.products : [];
+      const deletedFileSet = new Set((options.deletedFiles || []).map(filePath => path.resolve(filePath)));
       const kept = products.filter(item => {
         const productPath = item.path || path.join(this.gridProductDir, `${item.productId}.json`);
-        return fs.existsSync(productPath);
+        return fs.existsSync(productPath) && !deletedFileSet.has(path.resolve(productPath));
       });
+      if (options.dryRun === true) {
+        return products.length - kept.length;
+      }
       fs.writeFileSync(this.manifestPath, JSON.stringify({
         ...manifest,
         products: kept

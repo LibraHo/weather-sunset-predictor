@@ -92,18 +92,51 @@ function createRouter(deps = {}) {
         return res.status(statusCode).json({ success: result.status === 'completed', ...result, estimate });
       }
 
-      const run = runLogService.createRun(config, { reason: req.body?.reason || 'manual' });
-      return res.status(202).json({ success: true, run, estimate });
+      return res.status(501).json({
+        error: {
+          code: 'DATA_PIPELINE_REAL_WORKER_NOT_IMPLEMENTED',
+          message: 'real GFS/CAMS worker is not implemented yet; use dryRun=true for validation'
+        },
+        estimate
+      });
     } catch (err) {
       return res.status(500).json({ error: { code: err.code || 'DATA_PIPELINE_RUN_CREATE_FAILED', message: err.message } });
     }
   });
 
-  router.post('/runs/:id/retry', (req, res) => {
+  router.post('/runs/:id/retry', async (req, res) => {
     try {
       const previous = runLogService.getRun(req.params.id);
-      const run = runLogService.createRun(previous.config, { reason: `retry:${previous.id}` });
-      res.status(202).json({ success: true, run, previousRunId: previous.id });
+      const estimate = configService.estimate(previous.config);
+      if (!estimate.safe) {
+        return res.status(400).json({
+          error: { code: 'DATA_PIPELINE_UNSAFE_CONFIG', message: estimate.reasons.join('; ') },
+          estimate,
+          previousRunId: previous.id
+        });
+      }
+      if (req.body?.dryRun === true) {
+        const result = await workerService.runOnce({
+          config: previous.config,
+          reason: `retry:${previous.id}`,
+          dryRun: true
+        });
+        const statusCode = result.status === 'completed' ? 200 : 500;
+        return res.status(statusCode).json({
+          success: result.status === 'completed',
+          previousRunId: previous.id,
+          ...result,
+          estimate
+        });
+      }
+      res.status(501).json({
+        error: {
+          code: 'DATA_PIPELINE_REAL_WORKER_NOT_IMPLEMENTED',
+          message: 'retry is disabled until the real GFS/CAMS worker is implemented; use dryRun=true for validation'
+        },
+        previousRunId: previous.id,
+        estimate
+      });
     } catch (err) {
       res.status(404).json({ error: { code: err.code || 'DATA_PIPELINE_RUN_NOT_FOUND', message: err.message } });
     }
@@ -111,16 +144,17 @@ function createRouter(deps = {}) {
 
   router.post('/cleanup', (req, res) => {
     const config = configService.getConfig();
-    const run = runLogService.createRun(config, { reason: 'manual-cleanup' });
+    const dryRun = req.body?.dryRun === true;
+    const run = runLogService.createRun(config, { reason: dryRun ? 'manual-cleanup-dry-run' : 'manual-cleanup' });
     const step = runLogService.createStep(run.id, { type: 'cleanup', source: 'local' });
     try {
-      const cleanup = cleanupService.cleanup(config.storagePolicy || {});
+      const cleanup = cleanupService.cleanup(config.storagePolicy || {}, { dryRun });
       const completedStep = runLogService.completeStep(step.id, {
         bytesDownloaded: 0,
-        outputPath: 'local-cleanup',
+        outputPath: dryRun ? 'local-cleanup-dry-run' : 'local-cleanup',
         elapsedMs: 0
       });
-      const completedRun = runLogService.completeRun(run.id, { artifactPath: 'local-cleanup' });
+      const completedRun = runLogService.completeRun(run.id, { artifactPath: dryRun ? 'local-cleanup-dry-run' : 'local-cleanup' });
       res.json({ success: true, run: completedRun, step: completedStep, cleanup });
     } catch (err) {
       const failedStep = runLogService.failStep(step.id, {

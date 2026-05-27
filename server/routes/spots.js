@@ -85,6 +85,24 @@ function notReadyError(modeResult) {
   };
 }
 
+function isRasterNotReadyError(err) {
+  const message = String(err?.message || '');
+  return err?.code === 'RASTER_NOT_READY'
+    || err?.code === 'DATA_PIPELINE_PAUSED'
+    || message.includes('尚未就绪');
+}
+
+function rasterNotReadyError(err) {
+  const code = err?.code === 'DATA_PIPELINE_PAUSED' ? 'DATA_PIPELINE_PAUSED' : 'RASTER_NOT_READY';
+  return {
+    code,
+    message: err?.message || (code === 'DATA_PIPELINE_PAUSED' ? 'data pipeline is paused' : 'raster data is not ready'),
+    mode: err?.mode || null,
+    status: err?.status || (code === 'DATA_PIPELINE_PAUSED' ? 'paused' : 'not-ready'),
+    degradedReason: err?.degradedReason || null
+  };
+}
+
 function lerp(start, end, t) {
   return start + (end - start) * t;
 }
@@ -279,10 +297,8 @@ router.get('/china/raster', async (req, res, next) => {
 
     res.json(raster);
   } catch (err) {
-    if (err.message && err.message.includes('尚未就绪')) {
-      return res.status(503).json({
-        error: { code: 'RASTER_NOT_READY', message: err.message }
-      });
+    if (isRasterNotReadyError(err)) {
+      return res.status(503).json({ error: rasterNotReadyError(err) });
     }
     next(err);
   }
@@ -309,6 +325,9 @@ router.get('/china/raster-overlay.png', async (req, res, next) => {
     res.setHeader('Cache-Control', 'public, max-age=300');
     res.send(png);
   } catch (err) {
+    if (isRasterNotReadyError(err)) {
+      return res.status(503).json({ error: rasterNotReadyError(err) });
+    }
     next(err);
   }
 });
