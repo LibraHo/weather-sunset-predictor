@@ -92,13 +92,13 @@ function createRouter(deps = {}) {
         return res.status(statusCode).json({ success: result.status === 'completed', ...result, estimate });
       }
 
-      return res.status(501).json({
-        error: {
-          code: 'DATA_PIPELINE_REAL_WORKER_NOT_IMPLEMENTED',
-          message: 'real GFS/CAMS worker is not implemented yet; use dryRun=true for validation'
-        },
-        estimate
+      const result = await workerService.runOnce({
+        config,
+        reason: req.body?.reason || 'manual-real-run',
+        dryRun: false
       });
+      const statusCode = result.status === 'completed' ? 200 : 500;
+      return res.status(statusCode).json({ success: result.status === 'completed', ...result, estimate });
     } catch (err) {
       return res.status(500).json({ error: { code: err.code || 'DATA_PIPELINE_RUN_CREATE_FAILED', message: err.message } });
     }
@@ -129,12 +129,17 @@ function createRouter(deps = {}) {
           estimate
         });
       }
-      res.status(501).json({
-        error: {
-          code: 'DATA_PIPELINE_REAL_WORKER_NOT_IMPLEMENTED',
-          message: 'retry is disabled until the real GFS/CAMS worker is implemented; use dryRun=true for validation'
-        },
+
+      const result = await workerService.runOnce({
+        config: previous.config,
+        reason: `retry:${previous.id}`,
+        dryRun: false
+      });
+      const statusCode = result.status === 'completed' ? 200 : 500;
+      res.status(statusCode).json({
+        success: result.status === 'completed',
         previousRunId: previous.id,
+        ...result,
         estimate
       });
     } catch (err) {

@@ -117,6 +117,23 @@ Look for:
 
 If public maps show a not-ready/degraded state, check whether the latest successful grid product exists before starting a new worker.
 
+## Real Download MVP
+
+The admin `启动 run` button now enters the real worker path instead of returning a fixed 501. The worker still processes one planned batch at a time, records bytes per step, writes standardized grid-product cache entries, and deletes raw files after each successful product write when `cleanupRawAfterProcess=true`.
+
+Production prerequisites:
+
+- GFS: NOAA/NOMADS URL download is wired in Node. GRIB2 parsing still requires an explicit parser adapter, for example `wgrib2` or Python `cfgrib/eccodes`.
+- CAMS: ADS/CDS retrieval and NetCDF parsing are explicit adapters. Configure credentials and parser tooling before expecting aerosol products.
+- Keep `regionPreset=test_small`, `forecastHours=48`, `forecastStepHours=3`, and `workerConcurrency=1` for the first production run on the 3.6GiB host.
+- Run `dryRun` first, then one real test-small run. If the real run reports `GFS_GRIB_PARSER_NOT_CONFIGURED`, `CAMS_DOWNLOADER_NOT_CONFIGURED`, or `CAMS_NETCDF_PARSER_NOT_CONFIGURED`, the orchestration is working but the production parser/downloader adapter is not installed yet.
+
+Expected first-real-run behavior without parser tooling:
+
+- GFS may download a raw `.grib2` file and then fail at parsing with `GFS_GRIB_PARSER_NOT_CONFIGURED`.
+- CAMS should degrade with `CAMS_DOWNLOADER_NOT_CONFIGURED` until the ADS/CDS adapter is configured.
+- Public maps should remain protected by `hybrid` mode and existing cache/fallback behavior.
+
 ## Admin: How Much Was Downloaded Today
 
 Use `/admin` recent runs or `GET /api/admin/data-pipeline/runs`.
@@ -222,5 +239,7 @@ Also run syntax checks for the deployment-critical files:
 node --check public/admin/admin.js
 node --check server/routes/data-pipeline.js
 node --check server/services/DataPipelineWorkerService.js
+node --check server/services/GfsGridSourceService.js
+node --check server/services/CamsAerosolSourceService.js
 node --check server/services/DataPipelineModeService.js
 ```

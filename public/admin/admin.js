@@ -897,7 +897,11 @@ async function resumeDataPipeline() {
 }
 
 async function startDataPipelineRun() {
-  showMessage('真实 GFS/CAMS worker 尚未接入；当前只允许 dry-run 验证。', 'error', 'pipelineRunMsg');
+  if (!confirm('确认执行真实 GFS/CAMS run？会访问外部数据源，按当前配置分批下载并写入 cache。')) return;
+  await postDataPipelineRun('/api/admin/data-pipeline/run', {
+    reason: getInputValue('pipelineRunReason') || 'manual-real-run',
+    dryRun: false
+  }, 'pipelineRunMsg');
 }
 
 async function startDataPipelineDryRun() {
