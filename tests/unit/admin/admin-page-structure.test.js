@@ -164,6 +164,7 @@ describe('admin page structure', () => {
       'pipelineCamsEnabled',
       'pipelineOpenMeteoFallback',
       'pipelineStatusGrid',
+      'pipelineCacheStatusGrid',
       'pipelineEstimateGrid',
       'pipelineRunReason',
       'pipelineRunsBody',
@@ -184,6 +185,8 @@ describe('admin page structure', () => {
       'retryDataPipelineRun',
       'cleanupDataPipeline',
       'renderDataPipelineStatus',
+      'renderCacheManagementStatus',
+      'startOpenMeteoGridRefresh',
       'renderDataPipelineRuns',
       'renderDataPipelineRunDetail',
       'collectDataPipelineConfig',
@@ -198,6 +201,7 @@ describe('admin page structure', () => {
       '/api/admin/data-pipeline/runs?limit=20',
       '/api/admin/data-pipeline/cleanup',
       '/api/admin/data-pipeline/runs/',
+      '/api/heatmap/refresh',
     ].forEach((endpoint) => expect(js).toContain(endpoint));
 
     expect(html).toContain('GFS+CAMS');

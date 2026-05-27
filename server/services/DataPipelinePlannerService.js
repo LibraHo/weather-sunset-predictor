@@ -7,6 +7,10 @@ const DataPipelineConfigService = require('./DataPipelineConfigService');
 const GfsGridSourceService = require('./GfsGridSourceService');
 const CamsAerosolSourceService = require('./CamsAerosolSourceService');
 
+function clone(value) {
+  return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+}
+
 class DataPipelinePlannerService {
   constructor(options = {}) {
     this.dataDir = options.dataDir || path.join(os.homedir(), '.xiake');
@@ -104,6 +108,9 @@ class DataPipelinePlannerService {
       variables: batch.variables.slice(),
       bbox: batch.bbox,
       estimatedBytes: batch.estimatedBytes,
+      dataUrl: batch.dataUrl || null,
+      idxUrl: batch.idxUrl || null,
+      request: clone(batch.request) || null,
       rawPath: batch.rawPath,
       cleanupRawAfterProcess: batch.cleanupRawAfterProcess === true,
       degradeOnFailure: batch.degradeOnFailure === true,

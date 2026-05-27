@@ -5,6 +5,125 @@ const DataPipelineConfigService = require('../services/DataPipelineConfigService
 const DataPipelineRunLogService = require('../services/DataPipelineRunLogService');
 const DataPipelineCleanupService = require('../services/DataPipelineCleanupService');
 const DataPipelineWorkerService = require('../services/DataPipelineWorkerService');
+const GridProductCacheService = require('../services/GridProductCacheService');
+
+function countPoints(cache) {
+  return Array.isArray(cache?.gridPoints) ? cache.gridPoints.length : 0;
+}
+
+function summarizeLegacyJobStatus(status = {}) {
+  const totalPoints = Number(status.totalPoints || 0);
+  const completedPoints = Number(status.completedPoints || 0);
+  const cacheCount = Number(status.cacheCount || 0);
+  const running = status.running === true;
+  return {
+    period: status.period || null,
+    status: running ? 'running' : (cacheCount > 0 ? 'ready' : 'not-ready'),
+    running,
+    progress: totalPoints > 0 ? `${completedPoints}/${totalPoints}` : (cacheCount > 0 ? `${cacheCount} cache` : '0/0'),
+    totalPoints,
+    completedPoints,
+    totalBatches: Number(status.totalBatches || 0),
+    completedBatches: Number(status.completedBatches || 0),
+    cacheUpdatedAt: status.cacheUpdatedAt || null,
+    cacheCount,
+    cacheStale: status.cacheStale ?? null,
+    lastError: status.lastError || null
+  };
+}
+
+function summarizeProductManifest(productCacheService) {
+  let products = [];
+  try {
+    products = productCacheService.listManifest().products || [];
+  } catch (_) {
+    products = [];
+  }
+  const bySource = {};
+  let totalBytes = 0;
+
+  for (const item of products) {
+    const source = item.source || 'unknown';
+    totalBytes += Number(item.byteSize || 0);
+    if (!bySource[source]) {
+      bySource[source] = {
+        productCount: 0,
+        pointCount: 0,
+        latestCreatedAt: null,
+        latestCycle: null
+      };
+    }
+    bySource[source].productCount += 1;
+    bySource[source].pointCount += Number(item.pointCount || 0);
+    if (!bySource[source].latestCreatedAt || String(item.createdAt || '') > bySource[source].latestCreatedAt) {
+      bySource[source].latestCreatedAt = item.createdAt || null;
+      bySource[source].latestCycle = item.cycle || null;
+    }
+  }
+
+  return {
+    totalProducts: products.length,
+    totalBytes,
+    bySource,
+    latestProducts: products.slice(0, 6).map(item => ({
+      productId: item.productId,
+      source: item.source,
+      productType: item.productType,
+      cycle: item.cycle || null,
+      forecastHour: Number.isFinite(item.forecastHour) ? item.forecastHour : null,
+      forecastHours: Array.isArray(item.forecastHours) ? item.forecastHours.slice() : null,
+      pointCount: Number(item.pointCount || 0),
+      byteSize: Number(item.byteSize || 0),
+      createdAt: item.createdAt || null
+    }))
+  };
+}
+
+function buildCacheManagementStatus({ config, currentRun, gridService, productCacheService }) {
+  const period = 'sunset';
+  const active = typeof gridService.getPublicMapCache === 'function'
+    ? gridService.getPublicMapCache(period)
+    : { mode: config.mode, status: 'not-ready', cache: null };
+  const activeCache = active.cache || null;
+  const sunrise = typeof gridService.getJobStatus === 'function'
+    ? gridService.getJobStatus('sunrise')
+    : { period: 'sunrise' };
+  const sunset = typeof gridService.getJobStatus === 'function'
+    ? gridService.getJobStatus('sunset')
+    : { period: 'sunset' };
+
+  return {
+    activeMap: {
+      period,
+      mode: active.mode || config.mode || null,
+      status: active.status || (activeCache ? 'ready' : 'not-ready'),
+      source: activeCache?.source || null,
+      pointCount: countPoints(activeCache),
+      updatedAt: activeCache?.updatedAt || null,
+      stale: activeCache?.stale ?? null,
+      degraded: activeCache?.degraded === true,
+      degradedReason: activeCache?.degradedReason || active.degradedReason || null
+    },
+    pipelineRun: {
+      id: currentRun?.id || null,
+      status: currentRun?.status || null,
+      progress: currentRun ? `${(currentRun.steps || []).filter(step => step.status === 'completed').length}/${(currentRun.steps || []).length || currentRun.stepCount || 0}` : null,
+      bytesDownloaded: Number(currentRun?.totalBytesDownloaded || 0),
+      reason: currentRun?.reason || null,
+      errorCode: currentRun?.errorCode || null,
+      message: currentRun?.message || null
+    },
+    pipelineProducts: summarizeProductManifest(productCacheService),
+    legacyOpenMeteo: {
+      sunrise: summarizeLegacyJobStatus(sunrise),
+      sunset: summarizeLegacyJobStatus(sunset)
+    },
+    switching: {
+      currentMode: config.mode || null,
+      modes: ['hybrid', 'gfs_cams', 'openmeteo', 'cache_only', 'paused']
+    }
+  };
+}
 
 function createRouter(deps = {}) {
   const router = express.Router();
@@ -17,6 +136,11 @@ function createRouter(deps = {}) {
   const workerService = deps.workerService || new DataPipelineWorkerService({
     dataDir: configService.dataDir,
     runLogService,
+    freeDiskBytes: configService.freeDiskBytes
+  });
+  const gridService = deps.gridService || require('../services/GridScoreService');
+  const productCacheService = deps.productCacheService || new GridProductCacheService({
+    dataDir: configService.dataDir,
     freeDiskBytes: configService.freeDiskBytes
   });
 
@@ -49,13 +173,20 @@ function createRouter(deps = {}) {
 
   router.get('/status', (req, res) => {
     const config = configService.getConfig();
+    const currentRun = runLogService.getLatestRun();
     res.json({
       success: true,
       config,
       estimate: configService.estimate(config),
-      currentRun: runLogService.getLatestRun(),
+      currentRun,
       latestSuccessfulRun: runLogService.getLatestSuccessfulRun(),
-      today: runLogService.getDailyStats()
+      today: runLogService.getDailyStats(),
+      cacheManagement: buildCacheManagementStatus({
+        config,
+        currentRun,
+        gridService,
+        productCacheService
+      })
     });
   });
 
@@ -92,13 +223,13 @@ function createRouter(deps = {}) {
         return res.status(statusCode).json({ success: result.status === 'completed', ...result, estimate });
       }
 
-      return res.status(501).json({
-        error: {
-          code: 'DATA_PIPELINE_REAL_WORKER_NOT_IMPLEMENTED',
-          message: 'real GFS/CAMS worker is not implemented yet; use dryRun=true for validation'
-        },
-        estimate
+      const result = await workerService.runOnce({
+        config,
+        reason: req.body?.reason || 'manual-real-run',
+        dryRun: false
       });
+      const statusCode = result.status === 'completed' ? 200 : 500;
+      return res.status(statusCode).json({ success: result.status === 'completed', ...result, estimate });
     } catch (err) {
       return res.status(500).json({ error: { code: err.code || 'DATA_PIPELINE_RUN_CREATE_FAILED', message: err.message } });
     }
@@ -129,12 +260,17 @@ function createRouter(deps = {}) {
           estimate
         });
       }
-      res.status(501).json({
-        error: {
-          code: 'DATA_PIPELINE_REAL_WORKER_NOT_IMPLEMENTED',
-          message: 'retry is disabled until the real GFS/CAMS worker is implemented; use dryRun=true for validation'
-        },
+
+      const result = await workerService.runOnce({
+        config: previous.config,
+        reason: `retry:${previous.id}`,
+        dryRun: false
+      });
+      const statusCode = result.status === 'completed' ? 200 : 500;
+      res.status(statusCode).json({
+        success: result.status === 'completed',
         previousRunId: previous.id,
+        ...result,
         estimate
       });
     } catch (err) {

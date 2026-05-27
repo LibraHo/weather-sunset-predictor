@@ -64,4 +64,45 @@ describe('GfsGridSourceService', () => {
       { lat: 40, lon: 116, weather: { TCDC: 72, RH: 61, VIS: 12000 }, aerosol: {}, sourceMeta: { gfsForecastHour: 1 } }
     ]);
   });
+
+  test('downloads a GFS batch through an injectable URL downloader', async () => {
+    const calls = [];
+    const service = new GfsGridSourceService({
+      dataDir: makeTempDir(),
+      now: new Date('2026-05-26T10:15:00Z'),
+      downloadUrl: async (url, targetPath) => {
+        calls.push({ url, targetPath });
+        fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+        fs.writeFileSync(targetPath, 'payload');
+        return { bytesDownloaded: 7, rawPath: targetPath };
+      }
+    });
+    const batch = service.buildRequestPlan({
+      bbox: { north: 41, south: 39, west: 115, east: 117 },
+      resolution: 1,
+      forecastHours: 0
+    }).batches[0];
+
+    const result = await service.downloadBatch(batch);
+
+    expect(result).toEqual({ bytesDownloaded: 7, rawPath: batch.rawPath });
+    expect(calls[0]).toMatchObject({
+      url: batch.dataUrl,
+      targetPath: batch.rawPath
+    });
+    expect(fs.existsSync(batch.rawPath)).toBe(true);
+  });
+
+  test('requires an explicit GFS parser for real GRIB2 products', async () => {
+    const service = new GfsGridSourceService({ dataDir: makeTempDir(), now: new Date('2026-05-26T10:15:00Z') });
+    const batch = service.buildRequestPlan({
+      bbox: { north: 41, south: 39, west: 115, east: 117 },
+      resolution: 1,
+      forecastHours: 0
+    }).batches[0];
+
+    await expect(service.readGridRecords(batch)).rejects.toMatchObject({
+      code: 'GFS_GRIB_PARSER_NOT_CONFIGURED'
+    });
+  });
 });

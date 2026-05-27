@@ -54,6 +54,8 @@ class CamsAerosolSourceService {
     this.dataDir = options.dataDir || path.join(os.homedir(), '.xiake');
     this.now = options.now || null;
     this.batchForecastCount = options.batchForecastCount || 3;
+    this.downloader = options.downloader || null;
+    this.parser = options.parser || null;
   }
 
   buildRequestPlan(config = {}) {
@@ -119,6 +121,24 @@ class CamsAerosolSourceService {
         rawPath: batch.rawPath
       }
     };
+  }
+
+  async downloadBatch(batch) {
+    if (this.downloader && typeof this.downloader.downloadBatch === 'function') {
+      return this.downloader.downloadBatch(batch);
+    }
+    const err = new Error('CAMS downloader is not configured; configure an ADS/CDS API downloader before real aerosol runs');
+    err.code = 'CAMS_DOWNLOADER_NOT_CONFIGURED';
+    throw err;
+  }
+
+  async readGridRecords(batch) {
+    if (this.parser && typeof this.parser.readGridRecords === 'function') {
+      return this.parser.readGridRecords(batch);
+    }
+    const err = new Error('CAMS NetCDF parser is not configured; install/configure netCDF/xarray parser before real aerosol runs');
+    err.code = 'CAMS_NETCDF_PARSER_NOT_CONFIGURED';
+    throw err;
   }
 
   _buildBatch({ cycle, forecastHours, bbox, resolution }) {

@@ -186,4 +186,69 @@ describe('DataPipelineWorkerService', () => {
     release();
     await expect(firstRun).resolves.toMatchObject({ status: 'completed' });
   });
+
+  test('runs a real GFS batch through downloader and parser adapters', async () => {
+    const dataDir = makeTempDir();
+    const gfsSourceService = {
+      async downloadBatch(planStep) {
+        fs.mkdirSync(path.dirname(planStep.rawPath), { recursive: true });
+        fs.writeFileSync(planStep.rawPath, 'real-gfs-payload');
+        return { bytesDownloaded: 16, rawPath: planStep.rawPath };
+      },
+      async readGridRecords(planStep) {
+        expect(fs.existsSync(planStep.rawPath)).toBe(true);
+        return [
+          { lat: 40, lon: 116, values: { TCDC: 70, RH: 55, VIS: 15000 } }
+        ];
+      },
+      normalizeGridProduct(batch, records) {
+        return {
+          source: 'gfs',
+          productType: 'weather_grid',
+          schemaVersion: 1,
+          cycle: batch.cycle,
+          forecastHour: batch.forecastHour,
+          validTime: '2026-05-26T12:00:00.000Z',
+          grid: { bbox: batch.bbox, resolution: batch.resolution },
+          fields: ['TCDC', 'RH', 'VIS'],
+          points: records.map(record => ({
+            lat: record.lat,
+            lon: record.lon,
+            weather: record.values,
+            aerosol: {},
+            sourceMeta: { gfsForecastHour: batch.forecastHour }
+          })),
+          sourceMeta: { rawPath: batch.rawPath }
+        };
+      }
+    };
+
+    const worker = new DataPipelineWorkerService({
+      dataDir,
+      now: new Date('2026-05-26T12:00:00Z'),
+      freeDiskBytes: 20 * 1024 ** 3,
+      gfsSourceService
+    });
+
+    const result = await worker.runOnce({
+      config: baseConfig({ sources: { gfs: true, cams: false, openMeteoFallback: true } }),
+      reason: 'real-gfs-test',
+      dryRun: false
+    });
+
+    const cache = new GridProductCacheService({ dataDir });
+    const manifest = cache.listManifest();
+    const run = worker.runLogService.getRun(result.run.id);
+
+    expect(result.status).toBe('completed');
+    expect(run.steps[0]).toMatchObject({
+      type: 'real_grid_download',
+      source: 'gfs',
+      bytesDownloaded: 16,
+      outputPath: expect.stringContaining('grid-products')
+    });
+    expect(manifest.products).toHaveLength(2);
+    expect(manifest.products.every(item => item.source === 'gfs')).toBe(true);
+    expect(fs.existsSync(path.join(dataDir, 'data', 'raw', 'gfs'))).toBe(false);
+  });
 });
