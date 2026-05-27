@@ -101,16 +101,16 @@ const translations = {
     "methodology": {
       "title": "Fire Cloud Calculation Method",
       "intro": "The current Fire Cloud Index first asks whether there is a usable color carrier, then whether sunlight can reach it along the sun direction, and finally applies only a small rendering adjustment. It no longer multiplies a chain of positive factors, so 100% high cloud does not automatically mean a perfect score.",
-      "versionLabel": "Algorithm version: 2026.05.19-additive-carrier-light-gate-v1",
-      "versionDesc": "This version changes positive cloud signals into bounded additive carrier points and uses existing sun-direction multi-point sampling as the light-path gate. directRatio is no longer used in scoring.",
+      "versionLabel": "Algorithm version: 2026.05.27-cloud-thickness-proportional-v2",
+      "versionDesc": "This version changes cloud-thickness penalty to pre-thickness canvas score × 30% × thickness pressure, removes the fixed -28/24 caps, and calibrates humid gray-curtain cases as weak glow/watchable but not strong.",
       changelogTitle: "Version update history",
       changelogHint: "Algorithm updates from the last three months live here; scroll to review why each change happened, its impact, and validation",
       changelog: {
         "latest": {
-          "date": "2026-05-19",
-          "title": "Additive carrier + light-path gate v1",
-          "summary": "Positive cloud signals are now bounded additive carrier points, and existing sun-direction multi-point sampling gates the final score. 100% high cloud no longer drives a near-perfect score by itself.",
-          "validation": "Validation: the 36.36°N, 92.83°E pure-high-cloud sample drops from full score to 72; a Beijing near-path cloud-wall sample drops to 33.5; no extra API requests are added."
+          "date": "2026-05-27",
+          "title": "Cloud-thickness proportional penalty v2",
+          "summary": "Cloud-thickness penalty is now pre-thickness canvas score × 30% × thickness pressure, with the fixed -28/24 caps removed. Humid gray-curtain cases are calibrated as weak glow/watchable but not strong.",
+          "validation": "Validation: for the 2026-05-27 Beijing sample, pressure 0.78 on a 76.7 canvas gives about -18 penalty, keeping the result in the weak-glow/watchable range."
         },
         "aerosol": {
           "date": "2026-05-12",

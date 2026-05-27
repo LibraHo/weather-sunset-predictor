@@ -538,11 +538,11 @@
           <div class="methodology-changelog-scroll" tabindex="0" role="region" aria-labelledby="methodology-changelog-title">
             <ol class="methodology-changelog-list">
               <li>
-                <time datetime="2026-05-19" data-i18n="home.methodology.changelog.latest.date">2026-05-19</time>
+                <time datetime="2026-05-27" data-i18n="home.methodology.changelog.latest.date">2026-05-27</time>
                 <div>
-                  <strong data-i18n="home.methodology.changelog.latest.title">加法载体 + 光路门控 v1</strong>
-                  <p data-i18n="home.methodology.changelog.latest.summary">正向云层信号改为有界加分，已有太阳方向多点采样作为光路门控；高云 100% 不再自动接近满分。</p>
-                  <small data-i18n="home.methodology.changelog.latest.validation">验证：36.36°N, 92.83°E 纯高云样本从满分降到 72；北京近端光路云墙样本降到 33.5；不新增 API 请求。</small>
+                  <strong data-i18n="home.methodology.changelog.latest.title">云厚比例折损 v2</strong>
+                  <p data-i18n="home.methodology.changelog.latest.summary">云厚扣分改为画布修正前分 × 30% × 云厚压力，去掉固定 -28/24 上限；湿灰幕场景同步按小烧/可看但不强校准。</p>
+                  <small data-i18n="home.methodology.changelog.latest.validation">验证：2026-05-27 北京样本云厚压力 0.78，画布 76.7 时扣分约 -18；最终保留在小烧/可顺带看区间。</small>
                 </div>
               </li>
               <li>
@@ -580,8 +580,8 @@
             </ol>
           </div>
           <div class="methodology-version-card">
-            <strong data-i18n="home.methodology.versionLabel">算法版本：2026.05.19-additive-carrier-light-gate-v1</strong>
-            <span data-i18n="home.methodology.versionDesc">本版将正向云层信号改为有界加分，并让太阳方向多点采样作为光路门控；不再用 directRatio 参与评分。</span>
+            <strong data-i18n="home.methodology.versionLabel">算法版本：2026.05.27-cloud-thickness-proportional-v2</strong>
+            <span data-i18n="home.methodology.versionDesc">本版将云厚扣分改为“画布修正前分×30%×云厚压力”，去掉固定 -28/24 上限，并将湿灰幕场景校准到小烧/可看但不强。</span>
           </div>
         </div>
       </section>
