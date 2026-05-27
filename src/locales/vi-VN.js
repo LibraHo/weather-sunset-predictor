@@ -385,6 +385,10 @@ const translations = {
         "details": {
           "cloudCarrier": "usable color carrier from cloud or thin haze",
           "cloudPenalty": "cloud canvas {{canvas}}, low cloud ×{{low}}, overcast ×{{overcast}}",
+          "upperCloudCanvas": "nền mây trung/cao {{upper}} = mây cao {{high}}×0.75 + mây trung {{mid}}×0.45; điểm khoảng {{range}}",
+          "highCloudBonus": "điểm cộng khi mây cao chiếm ưu thế {{bonus}}",
+          "cloudTypeAdjustment": "loại mây {{reason}} {{bonus}}",
+          "cloudThicknessAdjustment": "độ dày mây {{thickness}}, bằng chứng thin {{thin}} / thick {{thick}} / net {{net}}",
           "aerosolCarrier": "thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}",
           "lightPath": "sunlight reaches the cloud layer",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
