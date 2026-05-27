@@ -59,7 +59,11 @@ function getRequestOrigin(req) {
 function isSameOriginUrl(rawUrl, expectedOrigin) {
   if (!rawUrl || !expectedOrigin) return true;
   try {
-    return new URL(rawUrl).origin === expectedOrigin;
+    const actual = new URL(rawUrl);
+    const expected = new URL(expectedOrigin);
+    if (actual.host !== expected.host) return false;
+    if (actual.protocol === expected.protocol) return true;
+    return expected.protocol === 'http:' && actual.protocol === 'https:';
   } catch (_) {
     return false;
   }

@@ -82,6 +82,13 @@ describe('admin security boundaries', () => {
       .set('Origin', 'http://xiake.example')
       .set('Authorization', basic('admin', 'unit-secret'))
       .expect(200);
+
+    await request(app)
+      .post('/restart')
+      .set('Host', 'xiake.example')
+      .set('Origin', 'https://xiake.example')
+      .set('Authorization', basic('admin', 'unit-secret'))
+      .expect(200);
   });
 
   test('server mounts admin static assets behind admin auth before public static', () => {
