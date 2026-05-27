@@ -305,6 +305,9 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxml).toContain('prediction-radar-cloud-canvas');
     expect(homeWxml).toContain('prediction-radar-ring-low-inner');
     expect(homeWxml).toContain('prediction-radar-ring-label-high');
+    expect(homeWxml).toContain('prediction-radar-sun-marker');
+    expect(homeWxml).toContain('predictionPreview.radar.sunMarker.left');
+    expect(homeWxml).toContain('predictionPreview.radar.sunMarker.shortLabel');
     expect(homeWxml).not.toContain('prediction-radar-cloud-gradient');
     expect(homeWxml).not.toContain('prediction-radar-score');
     expect(homeWxml).toContain('wx:for="{{predictionPreview.radar.directions}}"');
@@ -320,6 +323,9 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeJs).not.toContain("dateLabel: 'TEST'");
     expect(homeJs).toContain('buildPredictionAnalysisGroups');
     expect(homeJs).toContain('buildPredictionRadarPreview');
+    expect(homeJs).toContain('buildRadarSunMarker');
+    expect(homeJs).toContain('normalizeSunDirectionBearing');
+    expect(homeJs).toContain('sunMarker: buildRadarSunMarker(period, sunDirection)');
     expect(homeJs).toContain('lastRadarPaintSignature');
     expect(homeJs).toContain('clearTimeout(this.radarPaintTimer)');
     expect(homeJs).toContain('}, 80);');
@@ -361,6 +367,9 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxss).toContain('height: 87.4%;');
     expect(homeWxss).toContain('.prediction-radar-ring-label-high');
     expect(homeWxss).toContain('.prediction-radar-ring-label-high { left: 37.3%; top: 15.2%; }');
+    expect(homeWxss).toContain('.prediction-radar-sun-marker');
+    expect(homeWxss).toContain('.prediction-radar-sun-dot');
+    expect(homeWxss).toContain('.prediction-radar-sun-label');
     expect(homeWxss).toContain('.home-page.theme-dark.has-weather .prediction-radar-title');
     expect(homeWxss).toContain('color: rgba(241, 245, 249, 0.95);');
     expect(homeWxss).toContain('.home-page.theme-dark.has-weather .prediction-radar-subtitle');

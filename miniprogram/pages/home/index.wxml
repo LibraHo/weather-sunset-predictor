@@ -328,6 +328,10 @@
         <view class="prediction-radar-axis prediction-radar-axis-ne"></view>
         <view class="prediction-radar-axis prediction-radar-axis-nw"></view>
         <view class="prediction-radar-center"></view>
+        <view wx:if="{{predictionPreview.radar.sunMarker}}" class="prediction-radar-sun-marker" style="left: {{predictionPreview.radar.sunMarker.left}}%; top: {{predictionPreview.radar.sunMarker.top}}%;">
+          <view class="prediction-radar-sun-dot"></view>
+          <text class="prediction-radar-sun-label">{{predictionPreview.radar.sunMarker.shortLabel}}</text>
+        </view>
         <view class="prediction-radar-direction prediction-radar-direction-{{item.direction}}" wx:for="{{predictionPreview.radar.directions}}" wx:key="direction">
           <text class="prediction-radar-name">{{item.name}}</text>
         </view>

@@ -214,6 +214,37 @@ describe('miniprogram page user/share helpers', () => {
     });
     expect(state.predictionPreview.radar.directions).toHaveLength(8);
     expect(state.predictionPreview.radar.directions[0]).toMatchObject({ direction: 'N', highCloud: expect.any(Number) });
+    expect(state.predictionPreview.radar.sunMarker).toMatchObject({
+      label: '日落方向',
+      shortLabel: '日落',
+      bearing: 292.5,
+      left: 16.7,
+      top: 36.2
+    });
+  });
+
+  test('home radar marks sunrise direction on the cloud field', () => {
+    const state = homeHelpers.buildHomePredictionSurface({
+      locationName: '北京',
+      period: 'sunrise',
+      score: 58,
+      direction: '东偏北',
+      weatherData: {
+        provider: 'open-meteo',
+        highClouds: 38,
+        midClouds: 48,
+        lowClouds: 14
+      },
+      clouds: { high: 38, mid: 48, low: 14 }
+    }, { locationName: '北京', period: 'sunrise' });
+
+    expect(state.predictionPreview.radar.sunMarker).toMatchObject({
+      label: '日出方向',
+      shortLabel: '日出',
+      bearing: 67.5,
+      left: 83.3,
+      top: 36.2
+    });
   });
 
   test('home prediction card shows sunset reference time instead of viewing-window start', () => {

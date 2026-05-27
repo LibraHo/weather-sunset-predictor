@@ -1530,6 +1530,7 @@
 .prediction-radar-axis,
 .prediction-radar-ring-label,
 .prediction-radar-center,
+.prediction-radar-sun-marker,
 .prediction-radar-direction {
   position: absolute;
   z-index: 3;
@@ -1585,6 +1586,36 @@
   border-radius: 50%;
   background: #f59e0b;
   transform: translate(-50%, -50%);
+}
+
+.prediction-radar-sun-marker {
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 4rpx 8rpx 4rpx 5rpx;
+  border: 2rpx solid rgba(245, 158, 11, 0.34);
+  border-radius: 999rpx;
+  background: rgba(255, 247, 237, 0.88);
+  box-shadow: 0 8rpx 18rpx rgba(217, 119, 6, 0.18);
+  transform: translate(-50%, -50%);
+}
+
+.prediction-radar-sun-dot {
+  width: 13rpx;
+  height: 13rpx;
+  border: 3rpx solid rgba(255, 255, 255, 0.80);
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 0 4rpx rgba(245, 158, 11, 0.16);
+}
+
+.prediction-radar-sun-label {
+  color: #b45309;
+  font-size: 18rpx;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .prediction-radar-direction {
@@ -2885,6 +2916,15 @@
 
 .home-page.theme-dark.has-weather .prediction-radar-ring-label {
   color: rgba(203, 213, 225, 0.78);
+}
+
+.home-page.theme-dark.has-weather .prediction-radar-sun-marker {
+  border-color: rgba(251, 191, 36, 0.38);
+  background: rgba(30, 41, 59, 0.86);
+}
+
+.home-page.theme-dark.has-weather .prediction-radar-sun-label {
+  color: #fbbf24;
 }
 
 .home-page.theme-dark.has-weather .prediction-radar-name {
