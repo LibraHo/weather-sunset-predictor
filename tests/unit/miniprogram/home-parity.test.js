@@ -253,12 +253,12 @@ describe('mini-program home parity with mobile web home', () => {
     const homeJs = read('miniprogram/pages/home/index.js');
 
     expectInOrder(webRender, [
-      'prediction-share-menu',
       'phenomenon-title-card',
       'renderConclusionBanner',
       'score-summary-card',
       'renderCloudConditionCard',
       'renderAnalysisCard',
+      'prediction-share-menu prediction-share-footer',
       'prediction-app-footer'
     ]);
 

@@ -40,7 +40,8 @@ describe('miniprogram result page web parity', () => {
     const js = read('miniprogram/pages/result/index.js');
     const renderStart = web.indexOf('  renderSinglePrediction(');
 
-    expect(web.indexOf('prediction-share-menu', renderStart)).toBeLessThan(web.indexOf('score-summary-card', renderStart));
+    expect(web.indexOf('score-summary-card', renderStart)).toBeLessThan(web.indexOf('prediction-share-menu prediction-share-footer', renderStart));
+    expect(web.indexOf('renderAnalysisCard', renderStart)).toBeLessThan(web.indexOf('prediction-share-menu prediction-share-footer', renderStart));
 
     expect(wxml.indexOf('open-type="share"')).toBeLessThan(wxml.indexOf('bindtap="toggleFavorite"'));
     expect(wxml.indexOf('data-target="map"')).toBeLessThan(wxml.indexOf('data-target="methodology"'));

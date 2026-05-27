@@ -1400,14 +1400,43 @@ class PredictionController {
     const saveLabel = this.i18n.t('share.saveImage');
     const copyLabel = this.i18n.t('share.copyLink');
     const nativeLabel = this.i18n.t('share.nativeShare');
+    const sharePanelLabel = this.i18n.t('share.panelTitle');
 
     return `
       <div class="prediction-card prediction-app-card ${qualityClass}" data-type="${type}">
         <div class="prediction-app-shell">
-          <div class="prediction-app-nav prediction-app-nav-compact" aria-label="${forecast.type} ${this.i18n.t('share.panelTitle')}">
-            <div class="prediction-share-menu" data-share-type="${type}">
+          <div class="phenomenon-title-card">
+            <div class="phenomenon-icon-tile" aria-hidden="true">${forecast.icon}</div>
+            <div class="phenomenon-title-copy">
+              <span class="phenomenon-date-tag">${dateLabel}</span>
+              <h3>${forecast.type}</h3>
+            </div>
+          </div>
+
+          ${this.renderConclusionBanner(forecast.conclusion)}
+
+          <div class="score-summary-card">
+            <div class="score-summary-left score-breakdown-trigger" role="button" tabindex="0" aria-expanded="false" aria-label="${this.i18n.t('prediction.composite.finalScore')}">
+              ${this.renderLargeScoreGauge(forecast, type)}
+              ${scoreBreakdownHtml}
+            </div>
+            <div class="score-summary-divider" aria-hidden="true"></div>
+            <div class="score-summary-right">
+              <div class="event-time-label">${forecast.timeLabel}</div>
+              <div class="main-time app-main-time">${forecast.mainTime}</div>
+              ${this.renderInfoRow('⏱️', this.i18n.t('prediction.bestViewingTime'), forecast.bestViewingTime)}
+              ${forecast.direction ? this.renderInfoRow('🧭', forecast.directionLabel, this.renderDirectionValue(forecast.direction, forecast.azimuth), 'app-info-row-direction') : ''}
+            </div>
+          </div>
+
+          ${this.renderCloudConditionCard(forecast.clouds)}
+          ${this.renderAnalysisCard(forecast.analysis, forecast.conclusion)}
+          <div id="radar-compass-${type}" style="margin-top:12px;display:none;"></div>
+          <div class="prediction-app-nav prediction-app-nav-compact prediction-share-footer-row" aria-label="${forecast.type} ${sharePanelLabel}">
+            <div class="prediction-share-menu prediction-share-footer" data-share-type="${type}">
               <button class="prediction-share-btn prediction-nav-share" data-type="${type}" aria-label="${this.i18n.t('share.title')}" aria-expanded="false">
                 ${shareIconSvg}
+                <span class="share-btn-label">${sharePanelLabel}</span>
               </button>
               <div class="prediction-share-dropdown hidden" role="menu" aria-label="${this.i18n.t('share.title')}">
                 <button class="share-option" role="menuitem" data-action="save">
@@ -1438,34 +1467,6 @@ class PredictionController {
               </div>
             </div>
           </div>
-
-          <div class="phenomenon-title-card">
-            <div class="phenomenon-icon-tile" aria-hidden="true">${forecast.icon}</div>
-            <div class="phenomenon-title-copy">
-              <span class="phenomenon-date-tag">${dateLabel}</span>
-              <h3>${forecast.type}</h3>
-            </div>
-          </div>
-
-          ${this.renderConclusionBanner(forecast.conclusion)}
-
-          <div class="score-summary-card">
-            <div class="score-summary-left score-breakdown-trigger" role="button" tabindex="0" aria-expanded="false" aria-label="${this.i18n.t('prediction.composite.finalScore')}">
-              ${this.renderLargeScoreGauge(forecast, type)}
-              ${scoreBreakdownHtml}
-            </div>
-            <div class="score-summary-divider" aria-hidden="true"></div>
-            <div class="score-summary-right">
-              <div class="event-time-label">${forecast.timeLabel}</div>
-              <div class="main-time app-main-time">${forecast.mainTime}</div>
-              ${this.renderInfoRow('⏱️', this.i18n.t('prediction.bestViewingTime'), forecast.bestViewingTime)}
-              ${forecast.direction ? this.renderInfoRow('🧭', forecast.directionLabel, this.renderDirectionValue(forecast.direction, forecast.azimuth), 'app-info-row-direction') : ''}
-            </div>
-          </div>
-
-          ${this.renderCloudConditionCard(forecast.clouds)}
-          ${this.renderAnalysisCard(forecast.analysis, forecast.conclusion)}
-          <div id="radar-compass-${type}" style="margin-top:12px;display:none;"></div>
           <div class="prediction-app-footer">${this._uiText('Observe the sky · Catch the beauty', '观天有时 · 收获美景')}</div>
         </div>
       </div>
