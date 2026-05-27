@@ -190,6 +190,8 @@ async function initializeApp() {
       });
     }
 
+    setupGalleryBasemapSync();
+
     await appController.initialize();
     console.log('Application initialized successfully');
   } catch (error) {
@@ -224,6 +226,19 @@ async function initializeApp() {
       errorDiv.appendChild(retryBtn);
     }
   }
+}
+
+function setupGalleryBasemapSync() {
+  const galleryFrame = document.getElementById('gallery-iframe');
+  if (!galleryFrame) return;
+
+  window.addEventListener('mapTileProviderChanged', (event) => {
+    const provider = event.detail?.provider || localStorage.getItem('map_tile_provider') || 'auto';
+    galleryFrame.contentWindow?.postMessage(
+      { type: 'mapTileProviderChanged', provider },
+      window.location.origin
+    );
+  });
 }
 
 function getI18nText(key, fallback) {

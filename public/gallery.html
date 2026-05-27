@@ -302,6 +302,39 @@
       document.title = t('gallery.pageTitle');
     }
 
+    function getSavedMapTileProvider() {
+      try {
+        const provider = localStorage.getItem('map_tile_provider') || 'auto';
+        return ['auto', 'gaode', 'osm'].includes(provider) ? provider : 'auto';
+      } catch (_) {
+        return 'auto';
+      }
+    }
+
+    function applyGalleryMapTileProvider(provider = getSavedMapTileProvider()) {
+      if (!mapCanvas || typeof mapCanvas.setTileProvider !== 'function') return;
+      mapCanvas.setTileProvider(provider);
+    }
+
+    function setupMapTileProviderSync() {
+      window.addEventListener('storage', (event) => {
+        if (event.key === 'map_tile_provider') {
+          applyGalleryMapTileProvider(event.newValue || 'auto');
+        }
+      });
+
+      window.addEventListener('mapTileProviderChanged', (event) => {
+        applyGalleryMapTileProvider(event.detail?.provider || getSavedMapTileProvider());
+      });
+
+      window.addEventListener('message', (event) => {
+        if (event.origin !== window.location.origin) return;
+        if (event.data?.type === 'mapTileProviderChanged') {
+          applyGalleryMapTileProvider(event.data.provider || getSavedMapTileProvider());
+        }
+      });
+    }
+
     async function initMap() {
       const actualTheme = applyGalleryTheme();
       mapCanvas = new ChinaMapCanvas({
@@ -312,6 +345,7 @@
         enableScoreQuery: false
       });
       await mapCanvas.init(document.getElementById('gallery-map'));
+      applyGalleryMapTileProvider();
       map = mapCanvas.getMap();
     }
 
@@ -459,6 +493,7 @@
       await i18n.init();
       applyGalleryTheme();
       applyGalleryI18n();
+      setupMapTileProviderSync();
       await initMap();
       map.on('zoomend moveend', renderPhotoMarkers);
       await loadPhotos();
