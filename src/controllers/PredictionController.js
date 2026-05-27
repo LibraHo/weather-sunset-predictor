@@ -1312,6 +1312,14 @@ class PredictionController {
       };
 
       document.addEventListener('click', (e) => {
+        if (
+          closestElement(e.target, '.score-breakdown-popover') &&
+          closestElement(e.target, '.score-ledger-detail')
+        ) {
+          e.stopPropagation();
+          return;
+        }
+
         const trigger = closestElement(e.target, '.score-breakdown-trigger');
         if (!trigger) {
           if (!closestElement(e.target, '.score-breakdown-popover')) {
