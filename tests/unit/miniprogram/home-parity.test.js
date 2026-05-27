@@ -281,8 +281,14 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxml).toContain('predictionPreview.scoreLabel');
     expect(homeWxml).toContain('predictionPreview.bestViewingTime');
     expect(homeWxml).toContain('open-type="share"');
+    expect(homeWxml).toContain('style="width: 52rpx; min-width: 52rpx; max-width: 52rpx; height: 52rpx; min-height: 52rpx; padding: 0; margin: 0; line-height: 52rpx;"');
     expect(homeWxml).toContain('src="/assets/icons/share-upload.svg"');
     expect(homeWxss).toContain('background: linear-gradient(135deg, #ffd166, #fb923c)');
+    expect(homeWxss).toMatch(/\.prediction-share-menu\s*\{[\s\S]*?flex:\s*0 0 52rpx;/);
+    expect(homeWxss).toMatch(/\.prediction-share-menu\s*\{[\s\S]*?min-width:\s*52rpx;/);
+    expect(homeWxss).toMatch(/\.prediction-share-menu\s*\{[\s\S]*?max-width:\s*52rpx;/);
+    expect(homeWxss).toMatch(/\.prediction-share-menu\s*\{[\s\S]*?box-sizing:\s*border-box;/);
+    expect(homeWxss).toMatch(/\.prediction-share-menu::after\s*\{[\s\S]*?border:\s*0;/);
     expect(homeWxss).not.toContain('.home-page.has-weather .prediction-share-menu');
     expect(homeWxml).not.toContain('phenomenon-icon-tile');
     expect(homeWxml).not.toContain('src="/assets/icons/sun-event-{{predictionPreview.periodKey}}.svg"');

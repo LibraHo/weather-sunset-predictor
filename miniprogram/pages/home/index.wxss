@@ -444,12 +444,17 @@
 
 .prediction-share-menu {
   display: flex;
+  flex: 0 0 52rpx;
   align-items: center;
   justify-content: center;
   width: 52rpx;
+  min-width: 52rpx;
+  max-width: 52rpx;
   height: 52rpx;
+  min-height: 52rpx;
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
   border: 0;
   border-radius: 16rpx;
   color: #1b1206;
@@ -457,6 +462,10 @@
   font-weight: 900;
   line-height: 1;
   background: linear-gradient(135deg, #ffd166, #fb923c);
+}
+
+.prediction-share-menu::after {
+  border: 0;
 }
 
 .prediction-preview-action-label {
