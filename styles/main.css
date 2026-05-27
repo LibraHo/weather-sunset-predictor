@@ -8684,9 +8684,9 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
   background: color-mix(in srgb, var(--theme-accent-soft, #ffb347) 18%, var(--glass-bg-hover));
   border-left: 4px solid color-mix(in srgb, var(--theme-accent, #ff8c00) 76%, transparent);
   color: var(--color-text);
-  font-size: 0.8rem;
-  font-weight: 820;
-  line-height: 1.45;
+  font-size: 0.78rem;
+  font-weight: 780;
+  line-height: 1.35;
 }
 .score-ledger-steps {
   display: grid;
@@ -8742,17 +8742,51 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
 .score-ledger-expression {
   margin-top: 3px;
   color: var(--color-text-light);
-  font-size: 0.68rem;
-  font-weight: 650;
-  line-height: 1.35;
+  font-size: 0.67rem;
+  font-weight: 680;
+  line-height: 1.32;
   font-variant-numeric: tabular-nums;
 }
 .score-ledger-detail {
-  margin-top: 3px;
+  margin-top: 6px;
   color: var(--color-text-light);
-  opacity: 0.86;
-  font-size: 0.64rem;
-  line-height: 1.35;
+  font-size: 0.63rem;
+  line-height: 1.4;
+}
+.score-ledger-detail summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: color-mix(in srgb, var(--color-text-light) 82%, var(--theme-accent));
+  font-weight: 760;
+  cursor: pointer;
+  list-style: none;
+}
+.score-ledger-detail summary::-webkit-details-marker {
+  display: none;
+}
+.score-ledger-detail summary::after {
+  content: "+";
+  width: 14px;
+  height: 14px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--glass-border) 70%, transparent);
+  font-size: 0.62rem;
+  line-height: 1;
+}
+.score-ledger-detail[open] summary::after {
+  content: "-";
+}
+.score-ledger-detail-copy {
+  margin-top: 5px;
+  padding: 7px 8px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--glass-bg-hover) 52%, transparent);
+  color: var(--color-text-light);
+  opacity: 0.88;
+  overflow-wrap: anywhere;
 }
 .score-ledger-step-cap .score-ledger-index,
 .score-ledger-step-cap .score-ledger-result {

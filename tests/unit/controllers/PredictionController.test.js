@@ -768,7 +768,9 @@ describe('PredictionController', () => {
       });
 
       expect(html).toContain('为什么是这个分数');
-      expect(html).toContain('28 分：强沙尘或灰幕会压住霞光');
+      expect(html).toContain('28 分：主要调整是 灰幕影响 ≤28');
+      expect(html).toContain('计算依据');
+      expect(html).toContain('强沙尘或灰幕会压住霞光');
       expect(html).not.toContain('score-ledger-context');
       expect(html).not.toContain('能见度 5km');
       expect(html).toContain('70.7');
@@ -871,7 +873,7 @@ describe('PredictionController', () => {
       expect(html).toContain('展示分校准');
       expect(html).toContain('79.4→60');
       expect(html).toContain('光路约 40.0，更像轻微霞光机会');
-      expect(html).toContain('60 分：光路约 40.0，更像轻微霞光机会');
+      expect(html).toContain('60 分：主要调整是 展示分校准 79.4→60');
     });
   });
 
