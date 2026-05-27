@@ -640,7 +640,7 @@ function assessCloudThickness(weatherData, prevHourData = null, context = {}) {
   let thickEvidence = 0;
 
   // --- 辐射信号：只采用散射占比；不再用 direct/shortwave，避免把日落前自然失光误判成厚云 ---
-  const MIN_SHORTWAVE = 50; // 短波辐射最低阈值，低于此值辐射数据不可靠
+  const MIN_SHORTWAVE = 90; // 日落低太阳高度下短波过低时，漫射占比不能可靠代表云厚
   let sw = weatherData.shortwaveRadiation;
   let df = weatherData.diffuseRadiation;
   let usedPrevHour = false;
@@ -1223,7 +1223,7 @@ function calcSampleBlock(sample, solarElevation) {
 
   const layerOpacity = (low * 0.7 + mid * 0.2 + high * 0.1) / 100;
   const geometryBlock = sigmoid((criticalElevation - solarElevation) * 1.2);
-  const block = Math.max(0, Math.min(1, geometryBlock * 0.6 + layerOpacity * 0.4));
+  const block = Math.max(0, Math.min(1, geometryBlock * layerOpacity));
 
   return {
     distanceKm: Dkm,
@@ -1405,6 +1405,16 @@ function scoreRendering(weatherData, rainedRecently = false) {
   const pm25 = Number(weatherData.pm2_5 ?? weatherData.pm25 ?? 0);
   const pm10 = Number(weatherData.pm10 ?? 0);
   const dust = Number(weatherData.dust ?? 0);
+  const hasAerosolMetric = Number.isFinite(aerosolOpticalDepth)
+    || Number.isFinite(Number(weatherData.pm2_5 ?? weatherData.pm25))
+    || Number.isFinite(Number(weatherData.pm10))
+    || Number.isFinite(Number(weatherData.dust));
+  const moderateAerosolWithGoodVisibility = hasAerosolMetric
+    && visibility >= 12
+    && (!Number.isFinite(aerosolOpticalDepth) || aerosolOpticalDepth <= 0.55)
+    && pm25 < 65
+    && pm10 < 80
+    && dust < 80;
   const explicitRainSignal = Number(weatherData.recentRainSignal);
   const rainSignal = Number.isFinite(explicitRainSignal)
     ? clamp(explicitRainSignal, 0, 1)
@@ -1489,8 +1499,8 @@ function scoreRendering(weatherData, rainedRecently = false) {
   } else {
     aqiLevel = 'poor';               // 空气差
     colorTendency = 'dark_red';      // 暗红色调
-    // 严重污染（AQI > 150）单独施加惩罚
-    aqiFactor = aqi > 150 ? 0.8 : 1.0;
+    // AQI 偏高但能见度仍好、光学厚度未到灰幕级时，多表现为暖色散射，不直接按纯负面扣分。
+    aqiFactor = aqi > 150 && !moderateAerosolWithGoodVisibility ? 0.8 : 1.0;
   }
 
   let aerosolFactor = 1.0;
@@ -1503,7 +1513,7 @@ function scoreRendering(weatherData, rainedRecently = false) {
       aerosolFactor = 1.06;
       aerosolLevel = 'optimal';
     } else if (aerosolOpticalDepth <= 0.7) {
-      aerosolFactor = 0.95;
+      aerosolFactor = moderateAerosolWithGoodVisibility ? 1.0 : 0.95;
       aerosolLevel = 'high';
     } else {
       aerosolFactor = 0.88;
@@ -1516,7 +1526,7 @@ function scoreRendering(weatherData, rainedRecently = false) {
       aerosolFactor = Math.min(aerosolFactor, 0.85);
       aerosolLevel = 'polluted';
     } else if (particulateModerate) {
-      aerosolFactor = Math.min(aerosolFactor, 0.94);
+      aerosolFactor = Math.min(aerosolFactor, moderateAerosolWithGoodVisibility ? 0.98 : 0.94);
       aerosolLevel = aerosolLevel === 'optimal' ? 'moderate_pollution' : aerosolLevel;
     }
     if (visibility < 8 && (aerosolOpticalDepth > 0.35 || particulateModerate)) {
