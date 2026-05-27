@@ -175,6 +175,16 @@
         </section>
         <section class="admin-section">
           <div class="admin-card">
+            <h3 class="card-title">缓存管理</h3>
+            <div id="pipelineCacheStatusGrid" class="pipeline-status-grid"><p class="empty">加载中...</p></div>
+            <div class="schedule-actions pipeline-actions">
+              <button class="btn btn-secondary" type="button" onclick="startOpenMeteoGridRefresh('sunset')">刷新 Open-Meteo 晚霞</button>
+              <button class="btn btn-secondary" type="button" onclick="startOpenMeteoGridRefresh('sunrise')">刷新 Open-Meteo 朝霞</button>
+            </div>
+          </div>
+        </section>
+        <section class="admin-section">
+          <div class="admin-card">
             <h3 class="card-title">拉取范围与方案</h3>
             <form id="pipelineConfigForm" class="upload-form">
               <div class="form-row two-inputs">

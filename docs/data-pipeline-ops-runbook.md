@@ -176,6 +176,27 @@ Operator interpretation:
 - `degraded=true` with `GRID_PRODUCT_CACHE_NOT_READY`: no complete GFS+CAMS product is available yet.
 - stale cycle but successful status: worker is not refreshing or is paused; check mode and latest failed run.
 
+## Admin: Unified Cache Management
+
+The data pipeline panel also shows a unified cache view so operators do not need to compare separate pages by hand.
+
+It reports:
+
+- active public map cache: mode, status, source, point count, updated time, and degraded reason.
+- GFS/CAMS product cache: product counts, point counts, total bytes, latest product metadata.
+- legacy Open-Meteo grid cache: sunrise/sunset refresh status, progress, batch counts, cache count, stale flag, and last error.
+- current pipeline run: run id, status, progress, downloaded bytes, and failure metadata.
+
+Use the same panel for switching:
+
+- `hybrid`: prefer GFS/CAMS products, fall back to Open-Meteo cache when products are missing or sparse.
+- `gfs_cams`: read only GFS/CAMS products.
+- `openmeteo`: read only legacy Open-Meteo grid cache.
+- `cache_only`: read existing caches without allowing public refresh.
+- `paused`: keep public reads on existing cache/fallback, but do not run pipeline work.
+
+If GFS/CAMS products are not ready, use the Open-Meteo refresh buttons in this panel to start the legacy grid pull/interpolation path and watch the same cache view for progress.
+
 ## Common Errors
 
 - `LOW_DISK_SPACE`: free disk is below `minFreeDiskGb`. Run cleanup, shrink bbox, or wait for more disk.

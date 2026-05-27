@@ -40,7 +40,14 @@ function makeApp(options = {}) {
   } : options.cleanupService;
   const app = express();
   app.use(express.json());
-  app.use('/api/admin/data-pipeline', createDataPipelineRouter({ configService, runLogService, cleanupService, workerService }));
+  app.use('/api/admin/data-pipeline', createDataPipelineRouter({
+    configService,
+    runLogService,
+    cleanupService,
+    workerService,
+    gridService: options.gridService,
+    productCacheService: options.productCacheService
+  }));
   return { app, cleanupService, dataDir, runLogService };
 }
 
@@ -68,6 +75,99 @@ describe('data pipeline admin routes', () => {
 
     expect(res.body.error.code).toBe('DATA_PIPELINE_UNSAFE_CONFIG');
     expect(res.body.estimate.safe).toBe(false);
+  });
+
+  test('GET /status includes unified cache management for new and legacy map caches', async () => {
+    const gridService = {
+      getPublicMapCache: jest.fn().mockReturnValue({
+        mode: 'hybrid',
+        status: 'ready',
+        cache: {
+          source: 'openmeteo-grid-cache',
+          updatedAt: '2026-05-27T10:00:00.000Z',
+          stale: false,
+          degraded: true,
+          degradedReason: 'GRID_PRODUCT_CACHE_NOT_READY',
+          gridPoints: [{ lat: 40, lon: 116, score: 71 }]
+        },
+        degradedReason: 'GRID_PRODUCT_CACHE_NOT_READY'
+      }),
+      getJobStatus: jest.fn((period) => ({
+        period,
+        running: period === 'sunset',
+        totalPoints: 100,
+        completedPoints: period === 'sunset' ? 25 : 100,
+        totalBatches: 4,
+        completedBatches: period === 'sunset' ? 1 : 4,
+        cacheUpdatedAt: period === 'sunrise' ? '2026-05-27T09:00:00.000Z' : null,
+        cacheCount: period === 'sunrise' ? 100 : 0,
+        cacheStale: period === 'sunrise' ? false : null,
+        lastError: null
+      }))
+    };
+    const productCacheService = {
+      listManifest: jest.fn().mockReturnValue({
+        products: [
+          {
+            productId: 'weather-1',
+            source: 'gfs',
+            productType: 'weather_grid',
+            cycle: '2026052706',
+            forecastHour: 0,
+            pointCount: 9,
+            byteSize: 1024,
+            createdAt: '2026-05-27T11:00:00.000Z'
+          },
+          {
+            productId: 'aerosol-1',
+            source: 'cams',
+            productType: 'aerosol_grid',
+            cycle: '2026052700',
+            forecastHours: [0, 3, 6],
+            pointCount: 9,
+            byteSize: 2048,
+            createdAt: '2026-05-27T11:05:00.000Z'
+          }
+        ]
+      })
+    };
+    const { app } = makeApp({ gridService, productCacheService });
+
+    const res = await request(app)
+      .get('/api/admin/data-pipeline/status')
+      .expect(200);
+
+    expect(res.body.cacheManagement).toMatchObject({
+      activeMap: {
+        period: 'sunset',
+        mode: 'hybrid',
+        status: 'ready',
+        source: 'openmeteo-grid-cache',
+        pointCount: 1,
+        degraded: true,
+        degradedReason: 'GRID_PRODUCT_CACHE_NOT_READY'
+      },
+      pipelineProducts: {
+        totalProducts: 2,
+        totalBytes: 3072,
+        bySource: {
+          gfs: { productCount: 1, pointCount: 9 },
+          cams: { productCount: 1, pointCount: 9 }
+        }
+      },
+      legacyOpenMeteo: {
+        sunrise: expect.objectContaining({
+          status: 'ready',
+          cacheCount: 100,
+          progress: '100/100'
+        }),
+        sunset: expect.objectContaining({
+          status: 'running',
+          running: true,
+          progress: '25/100'
+        })
+      }
+    });
   });
 
   test('POST /run with dryRun executes the local fixture worker immediately', async () => {
