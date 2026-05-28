@@ -186,6 +186,12 @@ describe('recent user-reported UI regression guards', () => {
     expect(source).toContain('.xiake-action-btn');
     expect(source).toContain('.xiake-icon-control');
     expect(source).toContain('.xiake-icon-svg');
+    expect(source).toMatch(/\.xiake-icon-control \.xiake-icon-svg,[\s\S]*?width: var\(--xiake-control-icon-size, 17px\);/);
+    const sharedIconBlock = source.match(/\.xiake-icon-svg,\n\.xiake-btn-icon \{[\s\S]*?\n\}/)?.[0] || '';
+    expect(sharedIconBlock).not.toMatch(/\n\s*width:/);
+    expect(sharedIconBlock).not.toMatch(/\n\s*height:/);
+    expect(source).toMatch(/\.icon-chip \{[\s\S]*?width: 36px;[\s\S]*?height: 36px;/);
+    expect(source).toMatch(/\.input-icon-btn \{[\s\S]*?width: 32px;[\s\S]*?height: 32px;/);
     expect(settingsSource).toContain('iconSvg(name');
     expect(settingsSource).toContain('settings-done-btn btn-primary xiake-action-btn xiake-action-btn-primary');
     expect(settingsSource).not.toMatch(/<h2>⚙️/);
@@ -193,6 +199,16 @@ describe('recent user-reported UI regression guards', () => {
     expect(docs).toContain('按钮与图标语言');
     expect(docs).toContain('xiake-action-btn xiake-action-btn-primary');
     expect(docs).toContain('纯图标按钮使用 `xiake-icon-control`');
+  });
+
+  test('auto dark theme keeps home icon controls on dark tokens', () => {
+    const source = css();
+    const autoDarkBlock = source.match(/@media \(prefers-color-scheme: dark\) \{[\s\S]*?body\.theme-auto \{[\s\S]*?\n  \}/)?.[0] || '';
+
+    expect(autoDarkBlock).toContain('--button-icon-bg: rgba(251, 146, 60, 0.10);');
+    expect(autoDarkBlock).toContain('--button-icon-text: #f7c46a;');
+    expect(autoDarkBlock).toContain('--button-icon-border: rgba(251, 191, 36, 0.18);');
+    expect(autoDarkBlock).not.toContain('--button-icon-text: var(--header-icon-color);');
   });
 
   test('home location icon controls keep stable hover transforms', () => {
