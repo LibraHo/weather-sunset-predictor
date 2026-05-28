@@ -460,7 +460,17 @@ describe('miniprogram page user/share helpers', () => {
     expect(homeSource).toContain('compactPredictionPreviewPayload(normalizePrediction');
     expect(homeSource).toContain('const cachedPrediction = this.data.predictionPeriodCards?.[value];');
     expect(homeSource).toContain('const pendingPrediction = this.predictionPreviewPromises?.[value];');
-    expect(homeSource.indexOf('const cachedPrediction = this.data.predictionPeriodCards?.[value];')).toBeLessThan(homeSource.indexOf('predictionPreview: buildPredictionPreviewForPeriod(value)'));
+    expect(homeSource.indexOf('const cachedPrediction = this.data.predictionPeriodCards?.[value];')).toBeLessThan(homeSource.indexOf('predictionPreview: buildPredictionPreviewForPeriod(value, this.data.day)'));
+  });
+
+  test('home defaults to tomorrow after 23:00 local time', () => {
+    expect(homeHelpers.getDefaultPredictionDay(new Date('2026-05-28T22:59:00+08:00'))).toBe('today');
+    expect(homeHelpers.getDefaultPredictionDay(new Date('2026-05-28T23:00:00+08:00'))).toBe('tomorrow');
+    expect(homeHelpers.resolveQueryDay()).toMatch(/today|tomorrow/);
+    expect(homeHelpers.buildPredictionPreviewForPeriod('sunset', 'tomorrow')).toMatchObject({
+      dateLabel: '明日',
+      periodKey: 'sunset'
+    });
   });
 
   test('home cached prediction cards are compact enough for instant toggles', () => {

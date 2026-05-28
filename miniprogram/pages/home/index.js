@@ -21,7 +21,7 @@ Page({
     locationText: '',
     coordinate: null,
     period: 'sunset',
-    day: 'today',
+    day: getDefaultPredictionDay(),
     loading: false,
     loadingMessage: '正在查询位置',
     loadingProgress: 0,
@@ -35,7 +35,7 @@ Page({
     themeMode: 'system',
     resolvedThemeMode: 'light',
     weatherView: 'overview',
-    weatherDay: 'today',
+    weatherDay: getDefaultPredictionDay(),
     weatherParameter: 'temp',
     errorMessage: '',
     weatherPreview: buildDefaultWeatherPreview(),
@@ -49,11 +49,12 @@ Page({
 
   onLoad(options = {}) {
     this.predictionService = options.predictionService || this.predictionService || null;
+    this.applyDefaultPredictionDay();
     this.applySavedSettings();
     if (options.weatherTest === '1' || options.test === 'weather') {
       this.setData({
         weatherPreview: buildTestWeatherPreview(),
-        predictionPreview: buildPredictionPreviewForPeriod(this.data.period)
+        predictionPreview: buildPredictionPreviewForPeriod(this.data.period, this.data.day)
       }, () => {
         this.paintPredictionRadarCloudField();
       });
@@ -118,6 +119,7 @@ Page({
   },
 
   selectDay(event) {
+    this.dayWasSelected = true;
     this.setData({ day: event.currentTarget.dataset.value });
   },
 
@@ -249,7 +251,7 @@ Page({
 
     const fallbackPatch = {
       period: value,
-      predictionPreview: buildPredictionPreviewForPeriod(value)
+      predictionPreview: buildPredictionPreviewForPeriod(value, this.data.day)
     };
     const setDataStartedAt = perfNow();
     this.setData(fallbackPatch, () => {
@@ -361,6 +363,13 @@ Page({
     applyPageSettings(this);
   },
 
+  applyDefaultPredictionDay() {
+    if (this.dayWasSelected) return;
+    const day = getDefaultPredictionDay();
+    if (this.data.day === day && this.data.weatherDay === day) return;
+    this.setData({ day, weatherDay: day });
+  },
+
   saveAppSettings(patch = {}) {
     const settings = persistAppSettings(patch, this.data);
     this.setData(settings);
@@ -428,7 +437,7 @@ Page({
       this.setSearchLoadingStep('正在整理天气卡片', 92, '准备云况雷达与预测摘要');
       this.setData({
         weatherPreview: buildTestWeatherPreview(),
-        predictionPreview: buildPredictionPreviewForPeriod(this.data.period),
+        predictionPreview: buildPredictionPreviewForPeriod(this.data.period, this.data.day),
         errorMessage: '',
         loading: false
       }, () => {
@@ -452,7 +461,7 @@ Page({
         locationName: resolvedLocation.name,
         coordinate: { lat: resolvedLocation.lat, lon: resolvedLocation.lon },
         period: this.data.period,
-        day: this.data.day
+        day: resolveQueryDay(this.data.day)
       };
       this.currentPredictionQuery = query;
       this.predictionPreviewPromises = {};
@@ -807,14 +816,15 @@ Page({
 });
 
 export function buildRecentLocation(query = {}) {
+  const day = resolveQueryDay(query.day);
   return {
     name: query.locationName || query.location || '当前位置',
     locationName: query.locationName || query.location || '当前位置',
     lat: query.coordinate?.lat ?? query.lat,
     lon: query.coordinate?.lon ?? query.lon,
     type: query.period || query.type || 'sunset',
-    day: query.day || 'today',
-    date: resolvePredictionDate(query.day)
+    day,
+    date: resolvePredictionDate(day)
   };
 }
 
@@ -835,7 +845,7 @@ export function buildHomeSharePath(preview = {}, query = {}) {
   const lon = query.coordinate?.lon ?? query.lon ?? query.lng ?? preview.lon ?? preview.lng;
   const locationName = query.locationName || query.location || preview.locationName || '';
   const period = preview.periodKey || query.period || query.type || 'sunset';
-  const date = query.date || resolvePredictionDate(query.day);
+  const date = query.date || resolvePredictionDate(resolveQueryDay(query.day));
   const params = {
     lat,
     lon,
@@ -850,6 +860,14 @@ export function buildHomeSharePath(preview = {}, query = {}) {
   return lat !== undefined && lat !== null && lon !== undefined && lon !== null
     ? `/pages/result/index?${queryString}`
     : '/pages/home/index';
+}
+
+export function getDefaultPredictionDay(now = new Date()) {
+  return now.getHours() >= 23 ? 'tomorrow' : 'today';
+}
+
+export function resolveQueryDay(day) {
+  return day === 'today' || day === 'tomorrow' ? day : getDefaultPredictionDay();
 }
 
 export function shouldAskLocationChoice(query = '', results = []) {
@@ -1095,10 +1113,11 @@ export function buildTestPredictionPreview() {
   };
 }
 
-export function buildPredictionPreviewForPeriod(period = 'sunset') {
+export function buildPredictionPreviewForPeriod(period = 'sunset', day = getDefaultPredictionDay()) {
+  const dateLabel = day === 'tomorrow' ? '明日' : '今日';
   if (period === 'sunrise') {
     return buildCompletePredictionPreview({
-      dateLabel: '今日',
+      dateLabel,
       periodKey: 'sunrise',
       periodLabel: '朝霞',
       conclusion: '东侧中高云较合适，低云遮挡偏少，具备可观赏的朝霞基础。',
@@ -1118,7 +1137,10 @@ export function buildPredictionPreviewForPeriod(period = 'sunset') {
     });
   }
 
-  return buildCompletePredictionPreview(buildTestPredictionPreview());
+  return buildCompletePredictionPreview({
+    ...buildTestPredictionPreview(),
+    dateLabel
+  });
 }
 
 export function buildHomePredictionSurface(prediction = {}, query = {}) {
