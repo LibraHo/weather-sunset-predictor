@@ -15,6 +15,16 @@ let photoCache = [];
 let dataPipelineConfigCache = null;
 
 const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'ops', 'logs', 'schedule', 'data-pipeline', 'agent', 'photos']);
+const ADMIN_VIEW_META = {
+  dashboard: ['运行总览', '状态优先、操作分区，快速判断霞客当前运行情况。'],
+  visitors: ['访客分析', '按北京时间查看 PV、UV、IP 和访问明细。'],
+  ops: ['运维操作', '队列状态和高风险动作独立管理。'],
+  logs: ['日志', '集中查看外部 API 调用、错误率和每日统计。'],
+  schedule: ['定时任务', '管理朝霞和晚霞自动刷新时间点。'],
+  'data-pipeline': ['数据管线', '管理 GFS+CAMS 配置、预算、运行和历史。'],
+  agent: ['API Token', 'Token 创建、申请审核、用量和审计日志。'],
+  photos: ['照片管理', '上传、解析和管理分享地图照片。']
+};
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
@@ -25,7 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initTokenForm();
   initTokenEditForm();
   initDataPipelineForm();
-  loadActiveView();
 
   refreshTimer = setInterval(refreshActiveView, 15000);
   slowRefreshTimer = setInterval(() => {
@@ -103,7 +112,13 @@ function initAdminNavigation() {
       option.classList.toggle('active', active);
       option.setAttribute('aria-checked', String(active));
       option.setAttribute('aria-pressed', String(active));
+      if (active) {
+        option.setAttribute('aria-current', 'page');
+      } else {
+        option.removeAttribute('aria-current');
+      }
     });
+    updateAdminPageHeading(activeAdminView);
     if (window.location.hash.replace(/^#/, '') !== activeAdminView) {
       history.replaceState(null, '', `#${activeAdminView}`);
     }
@@ -128,6 +143,14 @@ function initAdminNavigation() {
 
   window.addEventListener('hashchange', () => window.setAdminView(getViewFromHash()));
   window.setAdminView(getViewFromHash());
+}
+
+function updateAdminPageHeading(view) {
+  const [title, subtitle] = ADMIN_VIEW_META[view] || ADMIN_VIEW_META.dashboard;
+  const titleEl = document.getElementById('admin-page-title');
+  const subtitleEl = document.getElementById('admin-page-subtitle');
+  if (titleEl) titleEl.textContent = title;
+  if (subtitleEl) subtitleEl.textContent = subtitle;
 }
 
 async function loadActiveView() {

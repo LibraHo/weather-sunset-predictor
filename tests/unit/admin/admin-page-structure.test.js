@@ -6,17 +6,19 @@ const readAdminHtml = () => fs.readFileSync(path.join(ROOT, 'public/admin/index.
 const readAdminJs = () => fs.readFileSync(path.join(ROOT, 'public/admin/admin.js'), 'utf8');
 
 describe('admin page structure', () => {
-  test('admin uses home-style menu and separates major functions into panels', () => {
+  test('admin uses console shell navigation and separates major functions into panels', () => {
     const html = readAdminHtml();
 
-    expect(html).toContain('header-top-row');
-    expect(html).toContain('header-right-group');
-    expect(html).toContain('home-view-menu');
-    expect(html).toContain('id="home-view-menu-btn"');
-    expect(html).toContain('id="home-view-menu-dropdown"');
+    expect(html).toContain('class="admin-shell"');
+    expect(html).toContain('class="admin-sidebar"');
+    expect(html).toContain('class="admin-nav"');
+    expect(html).toContain('class="admin-workspace"');
+    expect(html).toContain('id="admin-page-title"');
+    expect(html).toContain('id="admin-page-subtitle"');
     expect(html).toContain('admin-view-option');
     expect(html).toContain('admin-header');
-    expect(html).not.toContain('admin-view-menu');
+    expect(html).not.toContain('home-view-menu');
+    expect(html).not.toContain('id="home-view-menu-btn"');
 
     ['dashboard', 'visitors', 'ops', 'logs', 'schedule', 'data-pipeline', 'agent', 'photos'].forEach((view) => {
       expect(html).toContain(`data-admin-panel="${view}"`);
@@ -24,7 +26,7 @@ describe('admin page structure', () => {
       expect(html).toContain(`id="admin-panel-${view}"`);
     });
 
-    expect(html).toContain('admin-entry-grid');
+    expect(html).not.toContain('admin-entry-grid');
     expect(html).toContain('id="kpi-share-today"');
     expect(html).toContain('id="kpi-share-total"');
   });
@@ -38,6 +40,38 @@ describe('admin page structure', () => {
     expect(opsHtml).toContain('danger-zone');
     expect(opsHtml).toContain('clearGridCache');
     expect(opsHtml).toContain('restartBackend');
+  });
+
+  test('data pipeline separates status, config, run controls, danger actions, and history', () => {
+    const html = readAdminHtml();
+    const pipelineStart = html.indexOf('id="admin-panel-data-pipeline"');
+    const agentStart = html.indexOf('id="admin-panel-agent"');
+    const pipelineHtml = html.slice(pipelineStart, agentStart);
+
+    ['状态与预算', '配置', '运行控制', 'Danger Zone', '运行历史'].forEach((label) => {
+      expect(pipelineHtml).toContain(label);
+    });
+
+    const runStart = pipelineHtml.indexOf('运行控制');
+    const dangerStart = pipelineHtml.indexOf('Danger Zone');
+    const runHtml = pipelineHtml.slice(runStart, dangerStart);
+    const dangerHtml = pipelineHtml.slice(dangerStart);
+
+    expect(runHtml).toContain('startDataPipelineDryRun');
+    expect(runHtml).toContain('startDataPipelineRun');
+    expect(runHtml).not.toContain('confirmDataPipelineRollback');
+    expect(dangerHtml).toContain('cleanupDataPipeline');
+    expect(dangerHtml).toContain('cleanupDataPipelineDryRun');
+    expect(dangerHtml).toContain('confirmDataPipelineRollback');
+  });
+
+  test('admin console design document captures the new framework', () => {
+    const doc = fs.readFileSync(path.join(ROOT, 'docs/admin-console-design.md'), 'utf8');
+
+    expect(doc).toContain('persistent navigation shell');
+    expect(doc).toContain('数据管线');
+    expect(doc).toContain('Danger Zone');
+    expect(doc).toContain('preserve existing DOM IDs');
   });
 
   test('restored new admin keeps every legacy admin capability reachable in panels', () => {
