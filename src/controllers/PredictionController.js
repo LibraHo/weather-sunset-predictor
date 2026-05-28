@@ -17,6 +17,8 @@ import NotificationService from '../services/NotificationService.js';
 import i18n from '../i18n.js';
 import { loadConfig } from '../../config.api.js';
 
+const EVENT_PASSED_BUFFER_MS = 30 * 60 * 1000;
+
 // 分享面板状态
 let sharePanelInstance = null;
 
@@ -972,7 +974,7 @@ class PredictionController {
 
     // 朝霞时间检查 - 独立判断
     if (sunriseTime && todaySunrise) {
-      const sunriseEndTime = new Date(sunriseTime.getTime() + 2 * 60 * 60 * 1000);
+      const sunriseEndTime = new Date(sunriseTime.getTime() + EVENT_PASSED_BUFFER_MS);
       if (now > sunriseEndTime) {
         console.log('[PredictionController] 今日朝霞时间已过，切换到明天的朝霞预测');
         displaySunrise = tomorrowSunrise;
@@ -982,7 +984,7 @@ class PredictionController {
 
     // 晚霞时间检查 - 独立判断
     if (sunsetTime && todaySunset) {
-      const sunsetEndTime = new Date(sunsetTime.getTime() + 1.5 * 60 * 60 * 1000);
+      const sunsetEndTime = new Date(sunsetTime.getTime() + EVENT_PASSED_BUFFER_MS);
       if (now > sunsetEndTime) {
         console.log('[PredictionController] 今日晚霞时间已过，切换到明天的晚霞预测');
         displaySunset = tomorrowSunset;
@@ -1028,7 +1030,7 @@ class PredictionController {
    * 逻辑：
    * - 日出之前（0:00-日出）→ 显示今日朝霞 + 今日晚霞（默认朝霞）
    * - 中午（12:00-日落前）→ 显示今日晚霞 + 明日朝霞（默认晚霞）
-   * - 日落后 → 显示明日朝霞 + 明日晚霞（默认明日朝霞）
+   * - 日落后30分钟 → 显示明日朝霞 + 明日晚霞（默认明日朝霞）
    * @param {Date|null} sunriseTime - 日出时间
    * @param {Date|null} sunsetTime - 日落时间
    * @param {Object|null} sunrisePrediction - 朝霞预测
@@ -1043,7 +1045,7 @@ class PredictionController {
 
     // 判断当前时段
     const isBeforeSunrise = sunriseTime && now < sunriseTime;
-    const isAfterSunset = sunsetTime && now > new Date(sunsetTime.getTime() + 1.5 * 60 * 60 * 1000); // 日落后1.5小时
+    const isAfterSunset = sunsetTime && now > new Date(sunsetTime.getTime() + EVENT_PASSED_BUFFER_MS);
 
     // 日落后：显示明日朝霞 + 明日晚霞
     if (isAfterSunset) {
@@ -2491,7 +2493,7 @@ class PredictionController {
       if (dayPredictions.sunrise) {
         const pred = dayPredictions.sunrise;
         const sunriseTime = pred.sunriseTime || pred.sunsetTime;
-        const isPassed = sunriseTime ? now > new Date(sunriseTime.getTime() + 2 * 60 * 60 * 1000) : false;
+        const isPassed = sunriseTime ? now > new Date(sunriseTime.getTime() + EVENT_PASSED_BUFFER_MS) : false;
         const score = Math.round(pred.score ?? 0);
         const scoreQuality = this.getQualityFromScore(score);
         const quality = qualityTextMap[scoreQuality] ?? '较差';
@@ -2508,7 +2510,7 @@ class PredictionController {
       if (dayPredictions.sunset) {
         const pred = dayPredictions.sunset;
         const sunsetTime = pred.sunsetTime;
-        const isPassed = sunsetTime ? now > new Date(sunsetTime.getTime() + 1.5 * 60 * 60 * 1000) : false;
+        const isPassed = sunsetTime ? now > new Date(sunsetTime.getTime() + EVENT_PASSED_BUFFER_MS) : false;
         const score = Math.round(pred.score ?? 0);
         const scoreQuality = this.getQualityFromScore(score);
         const quality = qualityTextMap[scoreQuality] ?? '较差';

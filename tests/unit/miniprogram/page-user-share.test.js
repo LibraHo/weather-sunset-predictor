@@ -460,7 +460,19 @@ describe('miniprogram page user/share helpers', () => {
     expect(homeSource).toContain('compactPredictionPreviewPayload(normalizePrediction');
     expect(homeSource).toContain('const cachedPrediction = this.data.predictionPeriodCards?.[value];');
     expect(homeSource).toContain('const pendingPrediction = this.predictionPreviewPromises?.[value];');
-    expect(homeSource.indexOf('const cachedPrediction = this.data.predictionPeriodCards?.[value];')).toBeLessThan(homeSource.indexOf('predictionPreview: buildPredictionPreviewForPeriod(value)'));
+    expect(homeSource.indexOf('const cachedPrediction = this.data.predictionPeriodCards?.[value];')).toBeLessThan(homeSource.indexOf('predictionPreview: buildPredictionPreviewForPeriod(value, this.data.day)'));
+  });
+
+  test('home defaults to tomorrow after the selected sun event has passed by 30 minutes', () => {
+    const beijing = { lat: 39.9042, lon: 116.4074 };
+    expect(homeHelpers.getDefaultPredictionDay(new Date('2026-05-28T19:30:00+08:00'), { period: 'sunset', coordinate: beijing })).toBe('today');
+    expect(homeHelpers.getDefaultPredictionDay(new Date('2026-05-28T20:10:00+08:00'), { period: 'sunset', coordinate: beijing })).toBe('tomorrow');
+    expect(homeHelpers.getDefaultPredictionDay(new Date('2026-05-28T05:40:00+08:00'), { period: 'sunrise', coordinate: beijing })).toBe('tomorrow');
+    expect(homeHelpers.resolveQueryDay()).toMatch(/today|tomorrow/);
+    expect(homeHelpers.buildPredictionPreviewForPeriod('sunset', 'tomorrow')).toMatchObject({
+      dateLabel: '明日',
+      periodKey: 'sunset'
+    });
   });
 
   test('home cached prediction cards are compact enough for instant toggles', () => {

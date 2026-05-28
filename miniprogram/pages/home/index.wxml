@@ -223,9 +223,6 @@
       <view>
         <view class="section-title prediction-panel-title">朝晚霞预测</view>
       </view>
-      <button class="prediction-share-menu prediction-share-menu-line" style="width: 52rpx; min-width: 52rpx; max-width: 52rpx; height: 52rpx; min-height: 52rpx; padding: 0; margin: 0; line-height: 52rpx;" open-type="share" aria-label="分享霞光评分" hover-class="button-hover" hover-stay-time="80">
-        <image class="share-icon-image" src="/assets/icons/share-upload.svg" mode="aspectFit" aria-hidden="true" />
-      </button>
     </view>
     <view class="prediction-toggle-bar">
       <view class="prediction-toggle tap-feedback {{predictionPreview.periodKey === 'sunrise' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-value="sunrise" bindtap="selectPredictionPreviewPeriod">朝霞</view>
@@ -336,6 +333,13 @@
           <text class="prediction-radar-name">{{item.name}}</text>
         </view>
       </view>
+    </view>
+
+    <view class="prediction-share-footer-row">
+      <button class="prediction-share-menu prediction-share-footer" open-type="share" aria-label="分享霞光评分" hover-class="button-hover" hover-stay-time="80">
+        <image class="share-icon-image" src="/assets/icons/share-upload.svg" mode="aspectFit" aria-hidden="true" />
+        <text class="share-btn-label">分享评分</text>
+      </button>
     </view>
 
     <view class="prediction-app-footer">Observe the sky · Catch the beauty</view>

@@ -28,7 +28,7 @@ describe('miniprogram firecloud map', () => {
     resetApiConfig();
   });
 
-  test('registers a native firecloud map page with a smooth raster overlay surface', () => {
+  test('registers a native firecloud map page with a visible raster polygon surface', () => {
     const appJson = JSON.parse(read('miniprogram/app.json'));
     const homeWxml = read('miniprogram/pages/home/index.wxml');
     const resultWxml = read('miniprogram/pages/result/index.wxml');
@@ -53,8 +53,12 @@ describe('miniprogram firecloud map', () => {
     expect(mapJs).not.toContain('focusSpot');
     expect(mapJs).toContain('FIRECLOUD_MAP_RESOLUTION');
     expect(mapJs).toContain("FIRECLOUD_MAP_ID = 'firecloud-native-map'");
-    expect(mapJs).toContain('buildRasterGroundOverlay(raster, {');
-    expect(mapJs).toContain('groundOverlays: overlay ? [overlay] : []');
+    expect(mapJs).toContain('const FIRECLOUD_MAP_RESOLUTION = 1;');
+    expect(mapJs).toContain('buildRasterPolygons(raster, this.data.period)');
+    expect(mapJs).toContain('groundOverlays: []');
+    expect(mapJs).toContain('polygons');
+    expect(mapJs).toContain('function getDefaultMapDay(now = new Date(), options = {})');
+    expect(mapJs).toContain('getDefaultSunEventDay(now, options)');
     expect(mapWxml).toContain('enable-zoom="{{true}}"');
     expect(mapWxml).toContain('wx:for="{{legendItems}}"');
     expect(mapWxml).toContain('style="background: {{item.color}};"');
@@ -211,18 +215,15 @@ describe('miniprogram firecloud map', () => {
     expect(polygons.every((polygon) => polygon.points.length === 4)).toBe(true);
   });
 
-  test('map page uses native ground overlay and falls back to polygons when the map layer fails', () => {
+  test('map page uses polygons as the primary visible raster layer', () => {
     const mapJs = read('miniprogram/pages/map/index.js');
 
-    expect(mapJs).toContain('buildRasterGroundOverlay');
     expect(mapJs).toContain('buildRasterPolygons');
-    expect(mapJs).toContain('raster.isFallback ? null : buildRasterGroundOverlay(raster, {');
     expect(mapJs).toContain('const polygons = buildRasterPolygons(raster, this.data.period)');
-    expect(mapJs).toContain('groundOverlays: overlay ? [overlay] : []');
-    expect(mapJs).toContain('const added = await this.addNativeGroundOverlay(overlay)');
-    expect(mapJs).toContain('wxClient.createMapContext(FIRECLOUD_MAP_ID, this)');
-    expect(mapJs).toContain('mapContext.addGroundOverlay({');
+    expect(mapJs).toContain('groundOverlays: []');
     expect(mapJs).toContain('polygons');
+    expect(mapJs).not.toContain('addNativeGroundOverlay');
+    expect(mapJs).not.toContain('createMapContext');
   });
 
   test('map page follows the prediction page theme and segmented-control language', () => {

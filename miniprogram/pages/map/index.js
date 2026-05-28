@@ -1,13 +1,13 @@
 import {
-  buildRasterGroundOverlay,
   buildRasterPolygons,
   getChinaFirecloudRaster,
   getFirecloudLegend
 } from '../../services/firecloud-map.js';
 import { applyPageSettings, readAppSettings } from '../../utils/app-settings.js';
+import { getDefaultSunEventDay } from '../../utils/sun-event-day.js';
 
 const DEFAULT_MAP_CENTER = { latitude: 35.8617, longitude: 104.1954 };
-const FIRECLOUD_MAP_RESOLUTION = 0.25;
+const FIRECLOUD_MAP_RESOLUTION = 1;
 const FIRECLOUD_MAP_ID = 'firecloud-native-map';
 
 Page({
@@ -71,28 +71,14 @@ Page({
     this.setData({ loading: true, errorMessage: '' });
     try {
       const raster = await getChinaFirecloudRaster({ period: this.data.period, resolution: FIRECLOUD_MAP_RESOLUTION });
-      const overlay = raster.isFallback ? null : buildRasterGroundOverlay(raster, {
-        period: this.data.period,
-        resolution: FIRECLOUD_MAP_RESOLUTION
-      });
       const polygons = buildRasterPolygons(raster, this.data.period);
       this.setData({
-        groundOverlays: overlay ? [overlay] : [],
-        polygons: overlay ? [] : polygons,
+        groundOverlays: [],
+        polygons,
         updatedAtText: raster.isFallback ? '测试图层 · 后端暂不可用' : formatUpdatedAt(raster.updatedAt),
         mapCenter: DEFAULT_MAP_CENTER,
         mapScale: 4
       });
-
-      if (overlay) {
-        const added = await this.addNativeGroundOverlay(overlay);
-        if (!added) {
-          this.setData({
-            groundOverlays: [],
-            polygons
-          });
-        }
-      }
     } catch (error) {
       this.setData({
         errorMessage: '火烧云地图暂时加载失败，请稍后再试。',
@@ -101,26 +87,6 @@ Page({
     } finally {
       this.setData({ loading: false });
     }
-  },
-
-  addNativeGroundOverlay(overlay) {
-    const wxClient = getWx();
-    if (!wxClient || typeof wxClient.createMapContext !== 'function') {
-      return Promise.resolve(false);
-    }
-
-    const mapContext = wxClient.createMapContext(FIRECLOUD_MAP_ID, this);
-    if (!mapContext || typeof mapContext.addGroundOverlay !== 'function') {
-      return Promise.resolve(false);
-    }
-
-    return new Promise((resolve) => {
-      mapContext.addGroundOverlay({
-        ...overlay,
-        success: () => resolve(true),
-        fail: () => resolve(false)
-      });
-    });
   }
 });
 
@@ -130,11 +96,12 @@ function periodLabel(period) {
 
 function periodDetailText(period) {
   const date = new Date();
-  if (period === 'sunrise') {
+  const day = getDefaultMapDay(date, { period });
+  if (day === 'tomorrow') {
     date.setDate(date.getDate() + 1);
-    return `明天的朝霞 · ${formatMonthDay(date)}`;
   }
-  return `今天的晚霞 · ${formatMonthDay(date)}`;
+  const dayLabel = day === 'tomorrow' ? '明天' : '今天';
+  return `${dayLabel}的${periodLabel(period)} · ${formatMonthDay(date)}`;
 }
 
 function formatMonthDay(date) {
@@ -154,10 +121,8 @@ function formatUpdatedAt(value) {
   return `更新于 ${month}-${day} ${hour}:${minute}`;
 }
 
-function getWx() {
-  if (typeof wx !== 'undefined') return wx;
-  if (typeof globalThis !== 'undefined' && globalThis.wx) return globalThis.wx;
-  return null;
+function getDefaultMapDay(now = new Date(), options = {}) {
+  return getDefaultSunEventDay(now, options);
 }
 
-export { DEFAULT_MAP_CENTER, FIRECLOUD_MAP_ID, formatUpdatedAt, periodDetailText };
+export { DEFAULT_MAP_CENTER, FIRECLOUD_MAP_ID, formatUpdatedAt, getDefaultMapDay, periodDetailText };

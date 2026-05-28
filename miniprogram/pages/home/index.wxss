@@ -444,28 +444,45 @@
 
 .prediction-share-menu {
   display: flex;
-  flex: 0 0 52rpx;
   align-items: center;
   justify-content: center;
-  width: 52rpx;
-  min-width: 52rpx;
-  max-width: 52rpx;
-  height: 52rpx;
-  min-height: 52rpx;
+  gap: 12rpx;
+  min-width: 248rpx;
+  height: 82rpx;
   margin: 0;
-  padding: 0;
+  padding: 0 32rpx;
   box-sizing: border-box;
-  border: 0;
-  border-radius: 16rpx;
+  border: 1rpx solid rgba(217, 119, 6, 0.24);
+  border-radius: 999rpx;
   color: #1b1206;
   font-size: 28rpx;
   font-weight: 900;
   line-height: 1;
-  background: linear-gradient(135deg, #ffd166, #fb923c);
+  background: linear-gradient(135deg, rgba(255, 209, 102, 0.96), rgba(251, 146, 60, 0.96));
+  box-shadow: 0 16rpx 34rpx rgba(217, 119, 6, 0.18);
 }
 
 .prediction-share-menu::after {
   border: 0;
+}
+
+.prediction-share-footer-row {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: 18rpx 0 8rpx;
+}
+
+.prediction-share-footer {
+  flex: 0 0 auto;
+}
+
+.share-btn-label {
+  color: inherit;
+  font-size: 28rpx;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .prediction-preview-action-label {
@@ -2620,10 +2637,6 @@
 .weather-wind-glyph::after {
   top: 18rpx;
   width: 25rpx;
-}
-
-.prediction-share-menu-line + .prediction-share-menu {
-  display: none;
 }
 
 .share-line-icon {
