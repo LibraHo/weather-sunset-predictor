@@ -789,14 +789,19 @@ footer {
 
 .xiake-icon-svg,
 .xiake-btn-icon {
-  width: var(--xiake-control-icon-size, 17px);
-  height: var(--xiake-control-icon-size, 17px);
   display: block;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.xiake-icon-control .xiake-icon-svg,
+.xiake-icon-control .xiake-btn-icon,
+.xiake-action-btn .xiake-btn-icon {
+  width: var(--xiake-control-icon-size, 17px);
+  height: var(--xiake-control-icon-size, 17px);
 }
 
 .xiake-section-icon {

@@ -186,7 +186,10 @@ describe('recent user-reported UI regression guards', () => {
     expect(source).toContain('.xiake-action-btn');
     expect(source).toContain('.xiake-icon-control');
     expect(source).toContain('.xiake-icon-svg');
-    expect(source).toContain('width: var(--xiake-control-icon-size, 17px);');
+    expect(source).toMatch(/\.xiake-icon-control \.xiake-icon-svg,[\s\S]*?width: var\(--xiake-control-icon-size, 17px\);/);
+    const sharedIconBlock = source.match(/\.xiake-icon-svg,\n\.xiake-btn-icon \{[\s\S]*?\n\}/)?.[0] || '';
+    expect(sharedIconBlock).not.toMatch(/\n\s*width:/);
+    expect(sharedIconBlock).not.toMatch(/\n\s*height:/);
     expect(source).toMatch(/\.icon-chip \{[\s\S]*?width: 36px;[\s\S]*?height: 36px;/);
     expect(source).toMatch(/\.input-icon-btn \{[\s\S]*?width: 32px;[\s\S]*?height: 32px;/);
     expect(settingsSource).toContain('iconSvg(name');
