@@ -4,6 +4,7 @@ import { addFavorite, addRecentLocation, listRecentLocations } from '../../servi
 import { formatVisitorCount, incrementVisitorCount } from '../../services/visitor.js';
 import { applyPageSettings, readAppSettings, saveAppSettings as persistAppSettings } from '../../utils/app-settings.js';
 import { buildRadarCloudGradients, paintRadarCloudCanvas } from '../../utils/radar-cloud-field.js';
+import { getDefaultSunEventDay } from '../../utils/sun-event-day.js';
 
 const app = getApp();
 let cachedCanvasPixelRatio = null;
@@ -115,7 +116,15 @@ Page({
   },
 
   selectPeriod(event) {
-    this.setData({ period: event.currentTarget.dataset.value });
+    const period = event.currentTarget.dataset.value;
+    if (!['sunrise', 'sunset'].includes(period)) return;
+    const patch = { period };
+    if (!this.dayWasSelected) {
+      const day = getDefaultPredictionDay(new Date(), { period, coordinate: this.data.coordinate });
+      patch.day = day;
+      patch.weatherDay = day;
+    }
+    this.setData(patch);
   },
 
   selectDay(event) {
@@ -365,7 +374,10 @@ Page({
 
   applyDefaultPredictionDay() {
     if (this.dayWasSelected) return;
-    const day = getDefaultPredictionDay();
+    const day = getDefaultPredictionDay(new Date(), {
+      period: this.data.period,
+      coordinate: this.data.coordinate
+    });
     if (this.data.day === day && this.data.weatherDay === day) return;
     this.setData({ day, weatherDay: day });
   },
@@ -456,12 +468,18 @@ Page({
     try {
       const resolvedLocation = await this.resolveLocation(locationText);
       this.currentResolvedLocation = resolvedLocation;
+      const defaultDay = this.dayWasSelected
+        ? resolveQueryDay(this.data.day)
+        : getDefaultPredictionDay(new Date(), {
+            period: this.data.period,
+            coordinate: { lat: resolvedLocation.lat, lon: resolvedLocation.lon }
+          });
       const query = {
         location: resolvedLocation.name,
         locationName: resolvedLocation.name,
         coordinate: { lat: resolvedLocation.lat, lon: resolvedLocation.lon },
         period: this.data.period,
-        day: resolveQueryDay(this.data.day)
+        day: defaultDay
       };
       this.currentPredictionQuery = query;
       this.predictionPreviewPromises = {};
@@ -862,8 +880,8 @@ export function buildHomeSharePath(preview = {}, query = {}) {
     : '/pages/home/index';
 }
 
-export function getDefaultPredictionDay(now = new Date()) {
-  return now.getHours() >= 23 ? 'tomorrow' : 'today';
+export function getDefaultPredictionDay(now = new Date(), options = {}) {
+  return getDefaultSunEventDay(now, options);
 }
 
 export function resolveQueryDay(day) {

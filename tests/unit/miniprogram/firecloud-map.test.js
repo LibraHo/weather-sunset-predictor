@@ -57,8 +57,8 @@ describe('miniprogram firecloud map', () => {
     expect(mapJs).toContain('buildRasterPolygons(raster, this.data.period)');
     expect(mapJs).toContain('groundOverlays: []');
     expect(mapJs).toContain('polygons');
-    expect(mapJs).toContain('function getDefaultMapDay(now = new Date())');
-    expect(mapJs).toContain("now.getHours() >= 23 ? 'tomorrow' : 'today'");
+    expect(mapJs).toContain('function getDefaultMapDay(now = new Date(), options = {})');
+    expect(mapJs).toContain('getDefaultSunEventDay(now, options)');
     expect(mapWxml).toContain('enable-zoom="{{true}}"');
     expect(mapWxml).toContain('wx:for="{{legendItems}}"');
     expect(mapWxml).toContain('style="background: {{item.color}};"');

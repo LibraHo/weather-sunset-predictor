@@ -4,6 +4,7 @@ import {
   getFirecloudLegend
 } from '../../services/firecloud-map.js';
 import { applyPageSettings, readAppSettings } from '../../utils/app-settings.js';
+import { getDefaultSunEventDay } from '../../utils/sun-event-day.js';
 
 const DEFAULT_MAP_CENTER = { latitude: 35.8617, longitude: 104.1954 };
 const FIRECLOUD_MAP_RESOLUTION = 1;
@@ -95,7 +96,7 @@ function periodLabel(period) {
 
 function periodDetailText(period) {
   const date = new Date();
-  const day = getDefaultMapDay(date);
+  const day = getDefaultMapDay(date, { period });
   if (day === 'tomorrow') {
     date.setDate(date.getDate() + 1);
   }
@@ -120,8 +121,8 @@ function formatUpdatedAt(value) {
   return `更新于 ${month}-${day} ${hour}:${minute}`;
 }
 
-function getDefaultMapDay(now = new Date()) {
-  return now.getHours() >= 23 ? 'tomorrow' : 'today';
+function getDefaultMapDay(now = new Date(), options = {}) {
+  return getDefaultSunEventDay(now, options);
 }
 
 export { DEFAULT_MAP_CENTER, FIRECLOUD_MAP_ID, formatUpdatedAt, getDefaultMapDay, periodDetailText };

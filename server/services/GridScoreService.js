@@ -35,6 +35,7 @@ const BATCH_DELAY_MS = config.batch?.delayMs || 0;
 
 // 预测时长（小时）
 const FORECAST_HOURS = config.api?.forecastHours || 24;
+const EVENT_PASSED_BUFFER_MS = 30 * 60 * 1000;
 
 // 缓存最大年龄
 const DEFAULT_MAX_AGE_MS = config.cache.maxAgeMs;
@@ -311,7 +312,7 @@ class GridScoreService {
                 const now = new Date();
                 if (safePeriod === 'sunset') {
                   const todaySunset = SunCalculator.getSunsetTime(date, point.lat, point.lon);
-                  if (now > todaySunset) {
+                  if (now > new Date(todaySunset.getTime() + EVENT_PASSED_BUFFER_MS)) {
                     const tomorrow = new Date(date);
                     tomorrow.setDate(tomorrow.getDate() + 1);
                     predictionDate = SunCalculator.getSunsetTime(tomorrow, point.lat, point.lon);
@@ -320,7 +321,7 @@ class GridScoreService {
                   }
                 } else {
                   const todaySunrise = SunCalculator.getSunriseTime(date, point.lat, point.lon);
-                  if (now > todaySunrise) {
+                  if (now > new Date(todaySunrise.getTime() + EVENT_PASSED_BUFFER_MS)) {
                     const tomorrow = new Date(date);
                     tomorrow.setDate(tomorrow.getDate() + 1);
                     predictionDate = SunCalculator.getSunriseTime(tomorrow, point.lat, point.lon);
