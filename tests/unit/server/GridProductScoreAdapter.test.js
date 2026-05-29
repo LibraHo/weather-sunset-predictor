@@ -176,4 +176,41 @@ describe('GridProductScoreAdapter', () => {
 
     expect(adapter.getScoreCache('sunset')).toBeNull();
   });
+
+  test('does not use stale CAMS aerosol products with fresh GFS weather', () => {
+    const cacheService = new GridProductCacheService({
+      dataDir: makeTempDir(),
+      now: new Date('2026-05-29T18:30:00Z')
+    });
+    cacheService.writeProduct({
+      source: 'gfs',
+      productType: 'weather_grid',
+      schemaVersion: 1,
+      cycle: '2026052912',
+      forecastHour: 6,
+      validTime: '2026-05-29T18:00:00.000Z',
+      grid: { bbox: { north: 43, south: 38, west: 113, east: 118 }, resolution: 0.5 },
+      fields: ['TCDC', 'LCDC', 'MCDC', 'HCDC', 'RH', 'VIS', 'APCP', 'DSWRF', 'PWAT', 'UGRD', 'VGRD'],
+      points: [{ lat: 40, lon: 116, weather: fullGfsWeather() }]
+    });
+    cacheService.writeProduct({
+      source: 'cams',
+      productType: 'aerosol_grid',
+      schemaVersion: 1,
+      cycle: '2026052700',
+      forecastHours: [6],
+      validTime: '2026-05-27T06:00:00.000Z',
+      grid: { bbox: { north: 43, south: 38, west: 113, east: 118 }, resolution: 0.5 },
+      fields: ['aod550'],
+      points: [{ lat: 40, lon: 116, aerosol: { aod550: 0.2 } }]
+    });
+
+    const adapter = new GridProductScoreAdapter({ cacheService });
+    const cache = adapter.getScoreCache('sunset');
+
+    expect(cache.degraded).toBe(true);
+    expect(cache.degradedReason).toBe('CAMS_AEROSOL_CACHE_NOT_READY');
+    expect(cache.meta.products.aerosol).toBeNull();
+    expect(cache.gridPoints[0].aerosol).toEqual({});
+  });
 });

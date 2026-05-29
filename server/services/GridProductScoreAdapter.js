@@ -16,6 +16,7 @@ const REQUIRED_GFS_FIELDS = [
   'UGRD',
   'VGRD'
 ];
+const MAX_AEROSOL_WEATHER_TIME_DELTA_MS = 18 * 60 * 60 * 1000;
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -62,6 +63,22 @@ function pointKey(point) {
   const lon = toNumber(point?.lon);
   if (lat === null || lon === null) return null;
   return `${lat.toFixed(4)},${lon.toFixed(4)}`;
+}
+
+function productTimestamp(product) {
+  for (const value of [product?.validTime, product?.createdAt]) {
+    const time = new Date(value).getTime();
+    if (Number.isFinite(time)) return time;
+  }
+  return null;
+}
+
+function isCompatibleAerosolProduct(weatherProduct, aerosolProduct) {
+  if (!aerosolProduct) return false;
+  const weatherTime = productTimestamp(weatherProduct);
+  const aerosolTime = productTimestamp(aerosolProduct);
+  if (weatherTime === null || aerosolTime === null) return false;
+  return Math.abs(weatherTime - aerosolTime) <= MAX_AEROSOL_WEATHER_TIME_DELTA_MS;
 }
 
 function missingRequiredGfsFields(weather) {
@@ -139,12 +156,15 @@ class GridProductScoreAdapter {
       source: 'gfs',
       productType: 'weather_grid'
     });
-    const aerosolProduct = this.cacheService.getLatestProduct({
+    const latestAerosolProduct = this.cacheService.getLatestProduct({
       source: 'cams',
       productType: 'aerosol_grid'
     });
 
     if (!weatherProduct) return null;
+    const aerosolProduct = isCompatibleAerosolProduct(weatherProduct, latestAerosolProduct)
+      ? latestAerosolProduct
+      : null;
     const missingAerosol = !aerosolProduct;
 
     const merged = new Map();
