@@ -33,6 +33,7 @@ function makeData(count = 24, startTs = 1700000000000) {
 
 function makeOrch(overrides = {}) {
   const orch = new ProviderOrchestrator();
+  orch.configService = { getConfig: jest.fn(() => ({ mode: 'openmeteo' })) };
   orch.providers = {
     openmeteo: { fetchWeatherData: jest.fn(async () => ({ hours: 24, data: makeData(), providerMeta: { name: 'openmeteo' } })) },
     windy: { fetchWeatherData: jest.fn(async () => ({ hours: 24, data: makeData(), providerMeta: { name: 'windy' } })) }
@@ -213,6 +214,7 @@ describe('45.1 orchestrator 降级逻辑', () => {
 
   test('gfs_cache primary is treated as a validated provider', async () => {
     const orch = makeOrch();
+    orch.configService = { getConfig: jest.fn(() => ({ mode: 'gfs_cams' })) };
     orch.providers.gfs_cache = {
       fetchWeatherData: jest.fn(async () => ({
         hours: 24,
@@ -220,12 +222,62 @@ describe('45.1 orchestrator 降级逻辑', () => {
         providerMeta: { name: 'gfs_cache' }
       }))
     };
-    orch.primaryProvider = 'gfs_cache';
 
     const result = await orch.fetchWeatherData(39.9, 116.4, 24);
 
     expect(result.providerMeta.name).toBe('gfs_cache');
     expect(result.providerMeta.providerValidated).toBe(true);
+  });
+
+  test('hybrid pipeline mode uses gfs_cache before Open-Meteo', async () => {
+    const orch = makeOrch();
+    orch.configService = { getConfig: jest.fn(() => ({ mode: 'hybrid' })) };
+    orch.providers.gfs_cache = {
+      fetchWeatherData: jest.fn(async () => ({
+        hours: 24,
+        data: makeData(),
+        providerMeta: { name: 'gfs_cache' }
+      }))
+    };
+
+    const result = await orch.fetchWeatherData(39.9, 116.4, 24);
+
+    expect(result.providerMeta.name).toBe('gfs_cache');
+    expect(orch.providers.gfs_cache.fetchWeatherData).toHaveBeenCalled();
+    expect(orch.providers.openmeteo.fetchWeatherData).not.toHaveBeenCalled();
+  });
+
+  test('hybrid pipeline mode falls back to Open-Meteo when GFS cache is unavailable', async () => {
+    const orch = makeOrch();
+    orch.configService = { getConfig: jest.fn(() => ({ mode: 'hybrid' })) };
+    orch.providers.gfs_cache = {
+      fetchWeatherData: jest.fn(async () => {
+        const error = new Error('GFS_CACHE_EMPTY_OR_STALE');
+        error.code = 'GFS_CACHE_EMPTY_OR_STALE';
+        throw error;
+      })
+    };
+
+    const result = await orch.fetchWeatherData(39.9, 116.4, 24);
+
+    expect(result.providerMeta.name).toBe('openmeteo');
+    expect(result.providerMeta.usedFallback).toBe(true);
+    expect(result.providerMeta.fallbackReason).toBe('primary_provider_error');
+  });
+
+  test('gfs_cams pipeline mode does not call Open-Meteo when GFS cache is unavailable', async () => {
+    const orch = makeOrch();
+    orch.configService = { getConfig: jest.fn(() => ({ mode: 'gfs_cams' })) };
+    orch.providers.gfs_cache = {
+      fetchWeatherData: jest.fn(async () => {
+        const error = new Error('GFS_CACHE_EMPTY_OR_STALE');
+        error.code = 'GFS_CACHE_EMPTY_OR_STALE';
+        throw error;
+      })
+    };
+
+    await expect(orch.fetchWeatherData(39.9, 116.4, 24)).rejects.toThrow('GFS_CACHE_EMPTY_OR_STALE');
+    expect(orch.providers.openmeteo.fetchWeatherData).not.toHaveBeenCalled();
   });
 
   test('feature flag 关闭时 unsupportedFields 包含 cape/convPrecip', async () => {
