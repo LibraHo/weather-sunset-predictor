@@ -25,10 +25,8 @@
       <nav class="admin-nav" aria-label="后台模块">
         <button class="admin-nav-item admin-view-option active" aria-current="page" aria-pressed="true" data-view="dashboard"><span>总览</span><small>状态和值班</small></button>
         <button class="admin-nav-item admin-view-option" aria-pressed="false" data-view="visitors"><span>访客分析</span><small>PV、UV、IP</small></button>
-        <button class="admin-nav-item admin-view-option" aria-pressed="false" data-view="ops"><span>运维操作</span><small>队列与危险动作</small></button>
-        <button class="admin-nav-item admin-view-option" aria-pressed="false" data-view="data-pipeline"><span>数据管线</span><small>GFS+CAMS</small></button>
+        <button class="admin-nav-item admin-view-option" aria-pressed="false" data-view="ops"><span>运维中心</span><small>队列、定时、数据管线</small></button>
         <button class="admin-nav-item admin-view-option" aria-pressed="false" data-view="logs"><span>日志</span><small>调用与错误</small></button>
-        <button class="admin-nav-item admin-view-option" aria-pressed="false" data-view="schedule"><span>定时任务</span><small>刷新计划</small></button>
         <button class="admin-nav-item admin-view-option" aria-pressed="false" data-view="agent"><span>API Token</span><small>申请、用量、审计</small></button>
         <button class="admin-nav-item admin-view-option" aria-pressed="false" data-view="photos"><span>照片管理</span><small>上传与图库</small></button>
       </nav>
@@ -114,7 +112,7 @@
       </section>
 
       <section id="admin-panel-ops" class="admin-panel hidden" data-admin-panel="ops" role="tabpanel" aria-label="运维">
-        <div class="admin-page-intro"><p class="admin-eyebrow">Operations</p><h1>运维控制台</h1><p>高风险动作独立管理，Grid 队列状态可视化，避免和普通数据查看混在一起。</p></div>
+        <div class="admin-page-intro"><p class="admin-eyebrow">Operations</p><h1>运维中心</h1><p>队列、定时刷新、GFS+CAMS 数据管线集中在一个工作区，先看状态，再做操作。</p></div>
         <section class="admin-section">
           <div class="two-col">
             <div class="admin-card"><h3 class="card-title">Grid 队列状态</h3><div id="queueStatusGrid" class="queue-status-grid"><p class="empty">加载中...</p></div></div>
@@ -129,12 +127,12 @@
         <section class="admin-section"><div class="two-col"><div class="admin-card"><h3 class="card-title">API 调用日志</h3><div class="tab-bar"><button class="tab-btn active" onclick="switchLogTab('grid', this)">Grid</button><button class="tab-btn" onclick="switchLogTab('weather', this)">Weather</button><button class="tab-btn" onclick="switchLogTab('gaode,gaode_tile', this)">高德</button><button class="tab-btn" onclick="switchLogTab('errors', this)">Errors</button></div><div class="table-wrap"><table class="admin-table"><thead><tr><th>时间</th><th>接口</th><th>状态</th><th>耗时</th><th>错误</th></tr></thead><tbody id="logTableBody"><tr><td colspan="5" class="empty">加载中...</td></tr></tbody></table></div></div><div class="admin-card"><h3 class="card-title">每日 API 调用 & 重连统计（近7天）</h3><div class="table-wrap"><table class="admin-table"><thead><tr><th>日期</th><th>总调用</th><th>失败</th><th>Grid</th><th>Weather</th><th>高德</th><th>重试</th><th>重连恢复</th><th>重连失败</th></tr></thead><tbody id="dailyStatsBody"><tr><td colspan="9" class="empty">加载中...</td></tr></tbody></table></div></div></div></section>
       </section>
 
-      <section id="admin-panel-schedule" class="admin-panel hidden" data-admin-panel="schedule" role="tabpanel" aria-label="定时任务">
+      <section id="admin-panel-schedule" class="admin-panel hidden" data-admin-panel="ops" role="tabpanel" aria-label="定时任务">
         <div class="admin-page-intro"><p class="admin-eyebrow">Schedule</p><h1>定时更新配置</h1><p>管理火烧云数据更新节奏，保存前会校验时间格式和重复配置。</p></div>
         <section class="admin-section"><div class="admin-card"><h3 class="card-title">刷新时间点</h3><div id="scheduleJobs" class="schedule-jobs"></div><div class="schedule-actions"><button class="btn btn-secondary" onclick="addScheduleJob()">+ 添加时间点</button><button class="btn btn-primary" onclick="saveSchedule()">保存配置</button></div><div id="scheduleMsg" class="admin-message hidden"></div></div></section>
       </section>
 
-      <section id="admin-panel-data-pipeline" class="admin-panel hidden" data-admin-panel="data-pipeline" role="tabpanel" aria-label="数据管线">
+      <section id="admin-panel-data-pipeline" class="admin-panel hidden" data-admin-panel="ops" role="tabpanel" aria-label="数据管线">
         <div class="admin-page-intro"><p class="admin-eyebrow">Data Pipeline</p><h1>GFS+CAMS 数据管线</h1><p>像 Open-Meteo 拉取一样管理 GFS+CAMS 方案、拉取范围、下载估算、处理进度和运行记录。</p></div>
         <section class="admin-section admin-section-group">
           <div class="pipeline-guide-grid" aria-label="数据管线操作流程">

@@ -10,14 +10,12 @@ The admin console is an operational workspace, not a marketing or content page. 
 
 ## Information Architecture
 
-The console uses a persistent navigation shell. Each module owns one workflow:
+The console uses a persistent navigation shell. Each top-level navigation item should map to how an operator thinks about the work, not to every backend subsystem:
 
 - 总览: health, traffic, error rate, share count, top IP, client source.
 - 访客分析: date-scoped visitor totals, IP list, request details.
-- 运维操作: queue status and service-impacting operations.
-- 数据管线: GFS+CAMS status, configuration, run controls, danger actions, history.
+- 运维中心: queue status, service-impacting operations, firecloud refresh schedule, GFS+CAMS status, configuration, run controls, danger actions, history.
 - 日志: API distribution, provider logs, daily error/retry stats.
-- 定时任务: firecloud refresh schedule.
 - API Token: token creation, batch disable, applications, usage, audit logs.
 - 照片管理: upload, metadata parsing, gallery management.
 
@@ -33,7 +31,7 @@ The dashboard must stay status-first. It should not duplicate every module entry
 
 ## Data Pipeline Workflow
 
-The data pipeline is split into five explicit zones:
+The data pipeline lives inside 运维中心 so operators do not need to guess whether it is under 运维操作, 定时任务, or 数据管线. Within that center, the data pipeline is split into explicit zones:
 
 1. 状态与预算: mode, range, progress, latest product, download, failure, disk and memory budgets.
 2. 当前状态: runtime state, estimate, cache state.
