@@ -48,6 +48,12 @@ function fmtDateTime(ts) {
   return new Date(ts).toISOString();
 }
 
+function clampNumber(value, min, max, fallback) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.min(max, Math.max(min, Math.round(number)));
+}
+
 class AccessGuardService {
   constructor() {
     this._config = { ...DEFAULT_CONFIG };
@@ -64,6 +70,9 @@ class AccessGuardService {
     try {
       if (!fs.existsSync(DATA_FILE)) return;
       const raw = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+      if (raw.config && typeof raw.config === 'object') {
+        this._config = this._normalizeConfig({ ...this._config, ...raw.config });
+      }
       if (raw.blocked && typeof raw.blocked === 'object') this._blocked = raw.blocked;
       if (Array.isArray(raw.events)) this._events = raw.events.slice(-100);
     } catch (err) {
@@ -76,6 +85,7 @@ class AccessGuardService {
       ensureDir();
       fs.writeFileSync(DATA_FILE, JSON.stringify({
         updatedAt: Date.now(),
+        config: this._config,
         blocked: this._blocked,
         events: this._events.slice(-100),
       }), 'utf8');
@@ -89,6 +99,20 @@ class AccessGuardService {
     this._events.push({ type, at: Date.now(), ...payload });
     this._events = this._events.slice(-100);
     this._persist();
+  }
+
+  _normalizeConfig(config = {}) {
+    const enabled = typeof config.enabled === 'boolean'
+      ? config.enabled
+      : String(config.enabled) !== 'false';
+
+    return {
+      enabled,
+      perMinuteLimit: clampNumber(config.perMinuteLimit, 30, 10000, DEFAULT_CONFIG.perMinuteLimit),
+      rollingLimit: clampNumber(config.rollingLimit, 100, 100000, DEFAULT_CONFIG.rollingLimit),
+      suspiciousPathLimit: clampNumber(config.suspiciousPathLimit, 3, 1000, DEFAULT_CONFIG.suspiciousPathLimit),
+      blockMs: clampNumber(config.blockMs, 5 * MINUTE_MS, 7 * 24 * 60 * MINUTE_MS, DEFAULT_CONFIG.blockMs),
+    };
   }
 
   _cleanup(now) {
@@ -193,6 +217,34 @@ class AccessGuardService {
     delete this._blocked[normalizedIp];
     if (existed) this._recordEvent('unblock', { ip: normalizedIp, reason: 'manual_unblock' });
     return existed;
+  }
+
+  updateConfig(input = {}) {
+    const next = this._normalizeConfig({
+      ...this._config,
+      enabled: input.enabled,
+      perMinuteLimit: input.perMinuteLimit,
+      rollingLimit: input.rollingLimit,
+      suspiciousPathLimit: input.suspiciousPathLimit,
+      blockMs: input.blockMinutes !== undefined ? Number(input.blockMinutes) * MINUTE_MS : input.blockMs,
+    });
+    if (next.rollingLimit < next.perMinuteLimit) {
+      const err = new Error('10分钟阈值不能小于1分钟阈值');
+      err.code = 'INVALID_ACCESS_GUARD_CONFIG';
+      throw err;
+    }
+    this._config = next;
+    this._recordEvent('config_update', {
+      reason: 'manual_config_update',
+      config: {
+        enabled: next.enabled,
+        perMinuteLimit: next.perMinuteLimit,
+        rollingLimit: next.rollingLimit,
+        suspiciousPathLimit: next.suspiciousPathLimit,
+        blockMinutes: Math.round(next.blockMs / MINUTE_MS),
+      }
+    });
+    return this.getStatus().config;
   }
 
   getStatus() {

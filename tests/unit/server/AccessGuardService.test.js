@@ -86,4 +86,33 @@ describe('AccessGuardService', () => {
     expect(accessGuardService.unblock('198.51.100.9')).toBe(true);
     expect(accessGuardService.check(makeReq('/', '198.51.100.9')).blocked).toBe(false);
   });
+
+  test('updates guard thresholds from admin config', () => {
+    const config = accessGuardService.updateConfig({
+      enabled: false,
+      perMinuteLimit: 120,
+      rollingLimit: 900,
+      suspiciousPathLimit: 8,
+      blockMinutes: 45,
+    });
+
+    expect(config).toEqual({
+      perMinuteLimit: 120,
+      rollingLimit: 900,
+      suspiciousPathLimit: 8,
+      blockMinutes: 45,
+    });
+    expect(accessGuardService.getStatus().enabled).toBe(false);
+    expect(accessGuardService.getStatus().events[0]).toMatchObject({
+      type: 'config_update',
+      reason: 'manual_config_update',
+    });
+  });
+
+  test('rejects a rolling threshold below the minute threshold', () => {
+    expect(() => accessGuardService.updateConfig({
+      perMinuteLimit: 500,
+      rollingLimit: 100,
+    })).toThrow('10分钟阈值不能小于1分钟阈值');
+  });
 });
