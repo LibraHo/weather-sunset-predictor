@@ -381,6 +381,7 @@ router.get('/admin/quota', requireAuth, (req, res) => {
 
 // 访问统计
 const accessLogService = require('../services/AccessLogService');
+const accessGuardService = require('../services/AccessGuardService');
 router.get('/admin/access-stats', requireAuth, (req, res) => {
   res.json(accessLogService.getStats());
 });
@@ -390,6 +391,38 @@ router.get('/admin/visitor-records', requireAuth, (req, res) => {
     date: req.query.date,
     limit: req.query.limit
   }));
+});
+
+router.get('/admin/access-guard', requireAuth, (req, res) => {
+  res.json(accessGuardService.getStatus());
+});
+
+router.post('/admin/access-guard/block', requireAuth, (req, res) => {
+  try {
+    const entry = accessGuardService.manualBlock(req.body?.ip, req.body?.reason || 'manual_block');
+    res.json({ success: true, entry });
+  } catch (err) {
+    res.status(400).json({
+      error: {
+        code: err.code || 'ACCESS_GUARD_BLOCK_FAILED',
+        message: err.message || '封禁失败'
+      }
+    });
+  }
+});
+
+router.post('/admin/access-guard/unblock', requireAuth, (req, res) => {
+  try {
+    const existed = accessGuardService.unblock(req.body?.ip);
+    res.json({ success: true, existed });
+  } catch (err) {
+    res.status(400).json({
+      error: {
+        code: err.code || 'ACCESS_GUARD_UNBLOCK_FAILED',
+        message: err.message || '解封失败'
+      }
+    });
+  }
 });
 
 module.exports = router;

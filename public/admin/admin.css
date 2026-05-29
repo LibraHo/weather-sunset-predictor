@@ -784,11 +784,26 @@ body.theme-dark .admin-table tr:hover td {
 
 .pipeline-switch-row,
 .pipeline-run-row,
-.pipeline-actions {
+.pipeline-actions,
+.access-guard-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--spacing-sm);
+}
+
+.access-guard-actions {
+  margin-top: var(--spacing-md);
+}
+
+.access-guard-actions input {
+  flex: 1 1 220px;
+  min-height: 38px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--theme-card-border, var(--color-border));
+  background: var(--theme-panel-soft, var(--color-card-bg));
+  color: var(--theme-text, var(--color-text));
 }
 
 .pipeline-danger-actions {

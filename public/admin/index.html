@@ -119,6 +119,30 @@
             <div class="admin-card danger-zone"><h3 class="card-title">运维工具箱</h3><p class="admin-muted">以下操作会影响线上数据或服务，请确认后执行。</p><div class="tool-grid"><button class="btn btn-secondary" onclick="triggerRefresh('sunset')">手动刷新晚霞</button><button class="btn btn-secondary" onclick="triggerRefresh('sunrise')">手动刷新朝霞</button><button class="btn btn-secondary" onclick="clearGridCache()">清空 Grid 缓存</button><button class="btn btn-danger" onclick="restartBackend()">重启后端进程</button></div></div>
           </div>
         </section>
+        <section class="admin-section">
+          <div class="admin-section-heading"><h2>访问防护</h2><p>自动拦截过量访问和敏感路径扫描；异常 IP 可手动封禁或解封。</p></div>
+          <div class="two-col">
+            <div class="admin-card">
+              <h3 class="card-title">防护状态</h3>
+              <div id="accessGuardSummary" class="pipeline-status-grid"><p class="empty">加载中...</p></div>
+              <div class="access-guard-actions">
+                <input id="accessGuardIpInput" type="text" placeholder="IP，例如 35.201.242.131">
+                <button class="btn btn-danger" type="button" onclick="blockAccessGuardIp()">封禁 IP</button>
+              </div>
+              <div id="accessGuardMsg" class="admin-message hidden"></div>
+            </div>
+            <div class="admin-card">
+              <h3 class="card-title">当前封禁</h3>
+              <div class="table-wrap visitor-table-wrap"><table class="admin-table"><thead><tr><th>IP</th><th>归属地</th><th>原因</th><th>到期</th><th>操作</th></tr></thead><tbody id="accessGuardBlockedBody"><tr><td colspan="5" class="empty">加载中...</td></tr></tbody></table></div>
+            </div>
+          </div>
+        </section>
+        <section class="admin-section">
+          <div class="two-col">
+            <div class="admin-card"><h3 class="card-title">高频访问</h3><div class="table-wrap visitor-table-wrap"><table class="admin-table visitor-record-table"><thead><tr><th>IP</th><th>归属地</th><th>1分钟</th><th>10分钟</th><th>可疑</th><th>最近路径</th></tr></thead><tbody id="accessGuardRecentBody"><tr><td colspan="6" class="empty">加载中...</td></tr></tbody></table></div></div>
+            <div class="admin-card"><h3 class="card-title">拦截事件</h3><div class="table-wrap visitor-table-wrap"><table class="admin-table visitor-record-table"><thead><tr><th>时间</th><th>类型</th><th>IP</th><th>原因</th><th>路径</th></tr></thead><tbody id="accessGuardEventsBody"><tr><td colspan="5" class="empty">加载中...</td></tr></tbody></table></div></div>
+          </div>
+        </section>
       </section>
 
       <section id="admin-panel-logs" class="admin-panel hidden" data-admin-panel="logs" role="tabpanel" aria-label="日志">
