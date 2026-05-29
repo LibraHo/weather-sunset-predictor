@@ -77,6 +77,7 @@ async function loadAll() {
     loadDailyStats(),
     loadSchedule(),
     loadDataPipeline(),
+    loadAccessGuard(),
     loadTokens(),
     loadApplications(),
     loadAuditLogs(),
@@ -198,7 +199,7 @@ async function loadActiveView() {
       await Promise.all([loadAccessStats(), loadLogSummary(), loadHealth(), loadShareStats()]);
       break;
     case 'ops':
-      await Promise.all([loadQueue(), loadHealth(), loadSchedule(), loadDataPipeline()]);
+      await Promise.all([loadQueue(), loadHealth(), loadSchedule(), loadDataPipeline(), loadAccessGuard()]);
       break;
     case 'visitors':
       await loadVisitorRecords();
@@ -221,7 +222,7 @@ function refreshActiveView() {
   if (activeAdminView === 'dashboard') {
     Promise.all([loadAccessStats(), loadLogSummary(), loadHealth(), loadShareStats()]);
   } else if (activeAdminView === 'ops') {
-    Promise.all([loadQueue(), loadHealth(), loadDataPipelineStatus(), loadDataPipelineRuns()]);
+    Promise.all([loadQueue(), loadHealth(), loadDataPipelineStatus(), loadDataPipelineRuns(), loadAccessGuard()]);
   } else if (activeAdminView === 'visitors') {
     loadVisitorRecords();
   } else if (activeAdminView === 'logs') {
@@ -371,6 +372,146 @@ function formatClientLabel(client) {
   if (client === 'miniprogram') return '微信小程序';
   if (client === 'web') return '网页';
   return client || '--';
+}
+
+// =================== 访问防护 ===================
+async function loadAccessGuard() {
+  const summary = document.getElementById('accessGuardSummary');
+  if (!summary) return;
+
+  try {
+    const res = await fetch('/admin/access-guard', { credentials: 'include' });
+    const data = await res.json();
+    renderAccessGuard(data);
+  } catch (err) {
+    console.error('加载访问防护失败:', err);
+    summary.innerHTML = '<p class="empty">访问防护加载失败</p>';
+  }
+}
+
+function formatAccessGuardReason(reason) {
+  const map = {
+    suspicious_path_scan: '敏感路径扫描',
+    per_minute_limit: '每分钟过量',
+    rolling_limit: '10分钟过量',
+    manual_block: '手动封禁',
+    manual_unblock: '手动解封'
+  };
+  return map[reason] || reason || '--';
+}
+
+function formatAccessGuardEvent(type) {
+  const map = {
+    auto_block: '自动封禁',
+    manual_block: '手动封禁',
+    unblock: '解封'
+  };
+  return map[type] || type || '--';
+}
+
+function renderAccessGuard(data) {
+  const summary = document.getElementById('accessGuardSummary');
+  const blockedBody = document.getElementById('accessGuardBlockedBody');
+  const recentBody = document.getElementById('accessGuardRecentBody');
+  const eventsBody = document.getElementById('accessGuardEventsBody');
+  const config = data.config || {};
+
+  summary.innerHTML = [
+    ['状态', data.enabled ? '启用' : '禁用'],
+    ['1分钟阈值', `${Number(config.perMinuteLimit || 0)} 次/IP`],
+    ['10分钟阈值', `${Number(config.rollingLimit || 0)} 次/IP`],
+    ['扫描阈值', `${Number(config.suspiciousPathLimit || 0)} 次/10分钟`],
+    ['封禁时长', `${Number(config.blockMinutes || 0)} 分钟`],
+    ['当前封禁', `${(data.blocked || []).length} 个 IP`],
+  ].map(([label, value]) => `<div class="pipeline-stat"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join('');
+
+  if (data.blocked?.length) {
+    blockedBody.innerHTML = data.blocked.map(item => `
+      <tr>
+        <td>${escapeHtml(item.ip)}</td>
+        <td>${escapeHtml(item.location || '--')}</td>
+        <td>${escapeHtml(formatAccessGuardReason(item.reason))}</td>
+        <td>${escapeHtml(item.expiresAtText || '--')}</td>
+        <td><button class="btn btn-secondary btn-sm access-guard-unblock-btn" type="button" data-ip="${escapeHtml(item.ip)}">解封</button></td>
+      </tr>
+    `).join('');
+    blockedBody.querySelectorAll('.access-guard-unblock-btn').forEach((button) => {
+      button.addEventListener('click', () => unblockAccessGuardIp(button.dataset.ip));
+    });
+  } else {
+    blockedBody.innerHTML = '<tr><td colspan="5" class="empty">暂无封禁 IP</td></tr>';
+  }
+
+  if (data.recentIps?.length) {
+    recentBody.innerHTML = data.recentIps.map(item => `
+      <tr>
+        <td>${escapeHtml(item.ip)}</td>
+        <td>${escapeHtml(item.location || '--')}</td>
+        <td>${Number(item.lastMinute || 0)}</td>
+        <td>${Number(item.rolling || 0)}</td>
+        <td>${Number(item.suspicious || 0)}</td>
+        <td class="visitor-path-cell">${escapeHtml(item.lastPath || '--')}</td>
+      </tr>
+    `).join('');
+  } else {
+    recentBody.innerHTML = '<tr><td colspan="6" class="empty">暂无高频访问</td></tr>';
+  }
+
+  if (data.events?.length) {
+    eventsBody.innerHTML = data.events.map(item => `
+      <tr>
+        <td>${escapeHtml(item.atText || '--')}</td>
+        <td>${escapeHtml(formatAccessGuardEvent(item.type))}</td>
+        <td>${escapeHtml(item.ip || '--')}</td>
+        <td>${escapeHtml(formatAccessGuardReason(item.reason))}</td>
+        <td class="visitor-path-cell">${escapeHtml(item.path || '--')}</td>
+      </tr>
+    `).join('');
+  } else {
+    eventsBody.innerHTML = '<tr><td colspan="5" class="empty">暂无拦截事件</td></tr>';
+  }
+}
+
+async function blockAccessGuardIp() {
+  const input = document.getElementById('accessGuardIpInput');
+  const ip = input?.value?.trim();
+  if (!ip) {
+    showMessage('请输入要封禁的 IP', 'error', 'accessGuardMsg');
+    return;
+  }
+  try {
+    const res = await fetch('/admin/access-guard/block', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ip, reason: 'manual_block' })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || '封禁失败');
+    if (input) input.value = '';
+    showMessage('已封禁 IP：' + ip, 'success', 'accessGuardMsg');
+    await loadAccessGuard();
+  } catch (err) {
+    showMessage('封禁失败: ' + err.message, 'error', 'accessGuardMsg');
+  }
+}
+
+async function unblockAccessGuardIp(ip) {
+  if (!ip || !confirm('确定解封 ' + ip + ' 吗？')) return;
+  try {
+    const res = await fetch('/admin/access-guard/unblock', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ip })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || '解封失败');
+    showMessage('已解封 IP：' + ip, 'success', 'accessGuardMsg');
+    await loadAccessGuard();
+  } catch (err) {
+    showMessage('解封失败: ' + err.message, 'error', 'accessGuardMsg');
+  }
 }
 
 // =================== 分享统计 ===================
