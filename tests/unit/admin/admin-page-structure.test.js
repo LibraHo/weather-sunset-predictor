@@ -20,11 +20,17 @@ describe('admin page structure', () => {
     expect(html).not.toContain('home-view-menu');
     expect(html).not.toContain('id="home-view-menu-btn"');
 
-    ['dashboard', 'visitors', 'ops', 'logs', 'schedule', 'data-pipeline', 'agent', 'photos'].forEach((view) => {
+    ['dashboard', 'visitors', 'ops', 'logs', 'agent', 'photos'].forEach((view) => {
       expect(html).toContain(`data-admin-panel="${view}"`);
       expect(html).toContain(`data-view="${view}"`);
       expect(html).toContain(`id="admin-panel-${view}"`);
     });
+    expect(html).toContain('id="admin-panel-schedule"');
+    expect(html).toContain('id="admin-panel-data-pipeline"');
+    expect(html).toContain('data-admin-panel="ops"');
+    expect(html).not.toContain('data-view="schedule"');
+    expect(html).not.toContain('data-view="data-pipeline"');
+    expect(html).toContain('队列、定时、数据管线');
 
     expect(html).not.toContain('admin-entry-grid');
     expect(html).toContain('id="kpi-share-today"');
@@ -51,6 +57,23 @@ describe('admin page structure', () => {
     expect(opsHtml).toContain('danger-zone');
     expect(opsHtml).toContain('clearGridCache');
     expect(opsHtml).toContain('restartBackend');
+  });
+
+  test('ops center combines operations, schedule, and data pipeline into one navigation target', () => {
+    const html = readAdminHtml();
+    const js = readAdminJs();
+
+    expect(html).toContain('运维中心');
+    expect(html).toContain('Grid 队列状态');
+    expect(html).toContain('刷新与调度');
+    expect(html).toContain('数据管线');
+    expect(html).toContain('id="admin-panel-schedule" class="admin-section admin-section-group ops-workspace-block hidden" data-admin-panel="ops"');
+    expect(html).toContain('id="admin-panel-data-pipeline" class="admin-section admin-section-group ops-workspace-block hidden" data-admin-panel="ops"');
+    expect(html).not.toContain('<p class="admin-eyebrow">Schedule</p><h1>定时更新配置</h1>');
+    expect(html).not.toContain('<p class="admin-eyebrow">Data Pipeline</p><h1>GFS+CAMS 数据管线</h1>');
+    expect(js).toContain("schedule: 'ops'");
+    expect(js).toContain("'data-pipeline': 'ops'");
+    expect(js).toContain('loadQueue(), loadHealth(), loadSchedule(), loadDataPipeline()');
   });
 
   test('data pipeline separates status, config, run controls, danger actions, and history', () => {
@@ -171,7 +194,7 @@ describe('admin page structure', () => {
     expect(html).toContain('字段都可以留空或手动修改');
     expect(html).toContain('访客记录');
     expect(html).toContain('日期（北京时间）');
-    expect(js).toContain("const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'ops', 'logs', 'schedule', 'data-pipeline', 'agent', 'photos'])");
+    expect(js).toContain("const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'ops', 'logs', 'agent', 'photos'])");
     expect(js).toContain("fetch('/admin/visitor-records?'");
     expect(js).toContain('renderClientStats');
     expect(html).toContain('visitor-ip-table');
@@ -252,8 +275,7 @@ describe('admin page structure', () => {
     expect(html).toContain('GFS+CAMS');
     expect(html).toContain('dry-run');
     expect(html).toContain('cleanupDataPipeline');
-    expect(js).toContain("case 'data-pipeline'");
-    expect(js).toContain("activeAdminView === 'data-pipeline'");
+    expect(js).toContain('loadDataPipelineStatus(), loadDataPipelineRuns()');
   });
 
   test('data pipeline admin exposes 53.13-53.15 operations and budget fields', () => {

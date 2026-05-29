@@ -14,14 +14,16 @@ let slowRefreshTimer = null;
 let photoCache = [];
 let dataPipelineConfigCache = null;
 
-const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'ops', 'logs', 'schedule', 'data-pipeline', 'agent', 'photos']);
+const ADMIN_VIEW_ALIASES = {
+  schedule: 'ops',
+  'data-pipeline': 'ops'
+};
+const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'ops', 'logs', 'agent', 'photos']);
 const ADMIN_VIEW_META = {
   dashboard: ['运行总览', '状态优先、操作分区，快速判断霞客当前运行情况。'],
   visitors: ['访客分析', '按北京时间查看 PV、UV、IP 和访问明细。'],
-  ops: ['运维操作', '队列状态和高风险动作独立管理。'],
+  ops: ['运维中心', '队列、定时任务、GFS+CAMS 数据管线集中管理。'],
   logs: ['日志', '集中查看外部 API 调用、错误率和每日统计。'],
-  schedule: ['定时任务', '管理朝霞和晚霞自动刷新时间点。'],
-  'data-pipeline': ['数据管线', '管理 GFS+CAMS 配置、预算、运行和历史。'],
   agent: ['API Token', 'Token 创建、申请审核、用量和审计日志。'],
   photos: ['照片管理', '上传、解析和管理分享地图照片。']
 };
@@ -84,7 +86,8 @@ function initAdminNavigation() {
   const options = Array.from(document.querySelectorAll('.admin-view-option[data-view], .admin-entry-card[data-view]'));
 
   const getViewFromHash = () => {
-    const view = window.location.hash.replace(/^#/, '') || 'dashboard';
+    const rawView = window.location.hash.replace(/^#/, '') || 'dashboard';
+    const view = ADMIN_VIEW_ALIASES[rawView] || rawView;
     return ADMIN_VIEWS.has(view) ? view : 'dashboard';
   };
 
@@ -101,7 +104,8 @@ function initAdminNavigation() {
   };
 
   window.setAdminView = (view) => {
-    activeAdminView = ADMIN_VIEWS.has(view) ? view : 'dashboard';
+    const normalizedView = ADMIN_VIEW_ALIASES[view] || view;
+    activeAdminView = ADMIN_VIEWS.has(normalizedView) ? normalizedView : 'dashboard';
     document.querySelectorAll('[data-admin-panel]').forEach((panel) => {
       const show = panel.dataset.adminPanel === activeAdminView;
       panel.classList.toggle('hidden', !show);
@@ -159,19 +163,13 @@ async function loadActiveView() {
       await Promise.all([loadAccessStats(), loadLogSummary(), loadHealth(), loadShareStats()]);
       break;
     case 'ops':
-      await Promise.all([loadQueue(), loadHealth()]);
+      await Promise.all([loadQueue(), loadHealth(), loadSchedule(), loadDataPipeline()]);
       break;
     case 'visitors':
       await loadVisitorRecords();
       break;
     case 'logs':
       await Promise.all([loadLogSummary(), loadLogs(), loadDailyStats()]);
-      break;
-    case 'schedule':
-      await loadSchedule();
-      break;
-    case 'data-pipeline':
-      await loadDataPipeline();
       break;
     case 'agent':
       await Promise.all([loadTokens(), loadApplications(), loadAgentUsageStats(), loadAuditLogs()]);
@@ -188,13 +186,11 @@ function refreshActiveView() {
   if (activeAdminView === 'dashboard') {
     Promise.all([loadAccessStats(), loadLogSummary(), loadHealth(), loadShareStats()]);
   } else if (activeAdminView === 'ops') {
-    Promise.all([loadQueue(), loadHealth()]);
+    Promise.all([loadQueue(), loadHealth(), loadDataPipelineStatus(), loadDataPipelineRuns()]);
   } else if (activeAdminView === 'visitors') {
     loadVisitorRecords();
   } else if (activeAdminView === 'logs') {
     Promise.all([loadLogSummary(), loadLogs()]);
-  } else if (activeAdminView === 'data-pipeline') {
-    Promise.all([loadDataPipelineStatus(), loadDataPipelineRuns()]);
   }
 }
 

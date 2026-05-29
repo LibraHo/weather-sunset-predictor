@@ -164,6 +164,7 @@
 }
 
 .admin-panel.hidden,
+.ops-workspace-block.hidden,
 .admin-modal.hidden {
   display: none !important;
 }
