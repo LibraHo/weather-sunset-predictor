@@ -21,18 +21,31 @@ except Exception:  # pragma: no cover - surfaced as a runtime error
 
 FIELD_ALIASES = {
     "tcc": "TCDC",
+    "avg_tcc": "TCDC",
     "lcc": "LCDC",
+    "avg_lcc": "LCDC",
     "mcc": "MCDC",
+    "avg_mcc": "MCDC",
     "hcc": "HCDC",
+    "avg_hcc": "HCDC",
     "r": "RH",
+    "r2": "RH",
+    "2r": "RH",
     "vis": "VIS",
     "tp": "APCP",
     "prate": "PRATE",
     "pwat": "PWAT",
     "dswrf": "DSWRF",
+    "sdswrf": "DSWRF",
     "t": "TMP",
+    "t2m": "TMP",
+    "2t": "TMP",
     "u": "UGRD",
+    "u10": "UGRD",
+    "10u": "UGRD",
     "v": "VGRD",
+    "v10": "VGRD",
+    "10v": "VGRD",
     "TCDC": "TCDC",
     "LCDC": "LCDC",
     "MCDC": "MCDC",
@@ -120,7 +133,7 @@ def put_value(records, lat, lon, field, value):
         return
     key = f"{lat:.4f},{lon:.4f}"
     record = records.setdefault(key, {"lat": round(lat, 4), "lon": round(lon, 4), "values": {}})
-    record["values"][field] = number
+    record["values"].setdefault(field, number)
 
 
 def ingest_variable(records, data_array, field, args):

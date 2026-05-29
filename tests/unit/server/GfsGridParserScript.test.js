@@ -14,4 +14,15 @@ describe('gfs_grid_parser.py', () => {
     expect(script).not.toContain('aligned(lat, args.south');
     expect(script).not.toContain('aligned(lon, args.west');
   });
+
+  test('maps cfgrib short names for expanded GFS weather fields', () => {
+    const script = fs.readFileSync(scriptPath, 'utf8');
+
+    expect(script).toContain('"r2": "RH"');
+    expect(script).toContain('"u10": "UGRD"');
+    expect(script).toContain('"v10": "VGRD"');
+    expect(script).toContain('"sdswrf": "DSWRF"');
+    expect(script).toContain('"avg_lcc": "LCDC"');
+    expect(script).toContain('record["values"].setdefault(field, number)');
+  });
 });

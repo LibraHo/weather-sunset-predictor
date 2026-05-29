@@ -39,6 +39,12 @@ describe('GfsGridSourceService', () => {
     });
     expect(plan.batches[6].idxUrl).toContain('gfs.t06z.pgrb2.0p25.f006.idx');
     expect(plan.batches[6].dataUrl).toContain('filter_gfs_0p25.pl');
+    expect(plan.batches[6].dataUrl).toContain('lev_entire_atmosphere_%28considered_as_a_single_layer%29=on');
+    expect(plan.batches[6].dataUrl).toContain('lev_2_m_above_ground=on');
+    expect(plan.batches[6].dataUrl).toContain('lev_10_m_above_ground=on');
+    expect(plan.batches[6].dataUrl).toContain('lev_low_cloud_layer=on');
+    expect(plan.batches[6].dataUrl).toContain('lev_middle_cloud_layer=on');
+    expect(plan.batches[6].dataUrl).toContain('lev_high_cloud_layer=on');
   });
 
   test('normalizes GFS records into an internal grid product without downloading data', () => {

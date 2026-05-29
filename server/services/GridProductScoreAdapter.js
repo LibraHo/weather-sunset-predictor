@@ -1,6 +1,21 @@
 'use strict';
 
 const GridProductCacheService = require('./GridProductCacheService');
+const { calculateEnhancedPrediction } = require('./EnhancedPredictionService');
+
+const REQUIRED_GFS_FIELDS = [
+  'TCDC',
+  'LCDC',
+  'MCDC',
+  'HCDC',
+  'RH',
+  'VIS',
+  'APCP',
+  'DSWRF',
+  'PWAT',
+  'UGRD',
+  'VGRD'
+];
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -29,6 +44,19 @@ function firstFinite(...values) {
   return null;
 }
 
+function visibilityKm(value) {
+  const number = toNumber(value);
+  if (number === null) return null;
+  return number > 1000 ? number / 1000 : number;
+}
+
+function windSpeedFromFields(weather) {
+  const u = firstFinite(weather.UGRD, weather.u10, weather.windU);
+  const v = firstFinite(weather.VGRD, weather.v10, weather.windV);
+  if (u !== null && v !== null) return Math.sqrt(u * u + v * v);
+  return firstFinite(weather.windSpeed, weather.wind_speed);
+}
+
 function pointKey(point) {
   const lat = toNumber(point?.lat);
   const lon = toNumber(point?.lon);
@@ -36,41 +64,68 @@ function pointKey(point) {
   return `${lat.toFixed(4)},${lon.toFixed(4)}`;
 }
 
-function scoreFromFields(point) {
-  const explicit = clampScore(point?.score ?? point?.firecloudScore);
-  if (explicit !== null) return explicit;
+function missingRequiredGfsFields(weather) {
+  return REQUIRED_GFS_FIELDS.filter(field => !isFiniteNumber(weather?.[field]));
+}
 
+function weatherDataFromPoint(point) {
   const weather = point?.weather || {};
   const aerosol = point?.aerosol || {};
-  const totalCloud = firstFinite(
-    weather.total_cloud_cover,
-    weather.totalCloudCover,
-    weather.cloud_cover,
-    weather.cloudCover,
-    weather.TCDC
-  );
-  const highCloud = firstFinite(
-    weather.high_cloud_cover,
-    weather.highCloudCover,
-    weather.HCDC
-  );
-  const humidity = firstFinite(
-    weather.relative_humidity,
-    weather.relativeHumidity,
-    weather.RH
-  );
-  const aod = firstFinite(
+  const missing = missingRequiredGfsFields(weather);
+  if (missing.length > 0) {
+    return { weatherData: null, missing };
+  }
+
+  const precipitation = firstFinite(weather.APCP, weather.precipitation);
+  const windSpeed = windSpeedFromFields(weather);
+  const aerosolOpticalDepth = firstFinite(
     aerosol.aod550,
     aerosol.total_aerosol_optical_depth_550nm,
     aerosol.AOD550
   );
 
-  let score = 45;
-  if (totalCloud !== null) score += Math.max(0, 25 - Math.abs(totalCloud - 55) * 0.45);
-  if (highCloud !== null) score += Math.max(0, 20 - Math.abs(highCloud - 70) * 0.3);
-  if (humidity !== null) score += humidity > 85 ? -12 : (humidity > 35 && humidity < 75 ? 8 : 0);
-  if (aod !== null) score += aod <= 0.35 ? 7 : (aod > 0.8 ? -12 : 0);
-  return clampScore(score);
+  const weatherData = {
+    cloudCover: firstFinite(weather.TCDC, weather.cloudCover),
+    lowClouds: firstFinite(weather.LCDC, weather.lowClouds),
+    midClouds: firstFinite(weather.MCDC, weather.midClouds),
+    highClouds: firstFinite(weather.HCDC, weather.highClouds),
+    humidity: firstFinite(weather.RH, weather.humidity),
+    visibility: visibilityKm(firstFinite(weather.VIS, weather.visibility)),
+    precipitation,
+    recentPrecipitation6h: precipitation,
+    shortwaveRadiation: firstFinite(weather.DSWRF, weather.shortwaveRadiation),
+    waterVapourColumn: firstFinite(weather.PWAT, weather.waterVapourColumn),
+    windSpeed
+  };
+
+  if (aerosolOpticalDepth !== null) {
+    weatherData.aerosolOpticalDepth = aerosolOpticalDepth;
+  }
+
+  return { weatherData, missing: [] };
+}
+
+function scoreFromFields(point, period) {
+  const explicit = clampScore(point?.score ?? point?.firecloudScore);
+  if (explicit !== null) return explicit;
+
+  const { weatherData, missing } = weatherDataFromPoint(point);
+  if (!weatherData) {
+    point._missingRequiredFields = missing;
+    return null;
+  }
+
+  const date = point.validTime || point.sourceMeta?.weather?.validTime || new Date().toISOString();
+  try {
+    const result = calculateEnhancedPrediction(weatherData, date, point.lat, point.lon, period);
+    point._predictionBreakdown = result.breakdown || null;
+    point._predictionQuality = result.quality || null;
+    point._predictionWeatherData = weatherData;
+    return clampScore(result.score);
+  } catch (err) {
+    point._scoreError = err.message;
+    return null;
+  }
 }
 
 class GridProductScoreAdapter {
@@ -89,7 +144,8 @@ class GridProductScoreAdapter {
       productType: 'aerosol_grid'
     });
 
-    if (!weatherProduct || !aerosolProduct) return null;
+    if (!weatherProduct) return null;
+    const missingAerosol = !aerosolProduct;
 
     const merged = new Map();
     for (const point of weatherProduct.points || []) {
@@ -107,39 +163,44 @@ class GridProductScoreAdapter {
       });
     }
 
-    for (const point of aerosolProduct.points || []) {
-      const key = pointKey(point);
-      if (!key) continue;
-      const existing = merged.get(key) || {
-        lat: Number(point.lat),
-        lon: Number(point.lon),
-        weather: {},
-        aerosol: {}
-      };
-      existing.aerosol = clone(point.aerosol || {});
-      existing._aerosolScore = point.score ?? point.firecloudScore;
-      existing.sourceMeta = {
-        ...(existing.sourceMeta || {}),
-        aerosol: this._pointSourceMeta(aerosolProduct, point)
-      };
-      merged.set(key, existing);
+    if (aerosolProduct) {
+      for (const point of aerosolProduct.points || []) {
+        const key = pointKey(point);
+        if (!key) continue;
+        const existing = merged.get(key) || {
+          lat: Number(point.lat),
+          lon: Number(point.lon),
+          weather: {},
+          aerosol: {}
+        };
+        existing.aerosol = clone(point.aerosol || {});
+        existing._aerosolScore = point.score ?? point.firecloudScore;
+        existing.sourceMeta = {
+          ...(existing.sourceMeta || {}),
+          aerosol: this._pointSourceMeta(aerosolProduct, point)
+        };
+        merged.set(key, existing);
+      }
     }
 
     const gridPoints = Array.from(merged.values())
       .map(point => {
-        const score = scoreFromFields({
+        const scoringPoint = {
           ...point,
           score: isFiniteNumber(point._weatherScore) ? point._weatherScore : point._aerosolScore
-        });
+        };
+        const score = scoreFromFields(scoringPoint, period === 'sunrise' ? 'sunrise' : 'sunset');
         return {
           lat: point.lat,
           lon: point.lon,
           score,
-          quality: score === null ? 'no-data' : 'pipeline-cache',
+          quality: scoringPoint._predictionQuality || (score === null ? 'no-data' : 'pipeline-cache'),
           weather: point.weather,
           aerosol: point.aerosol,
           sourceMeta: clone(point.sourceMeta || {}),
-          breakdown: null
+          breakdown: scoringPoint._predictionBreakdown || null,
+          missingRequiredFields: scoringPoint._missingRequiredFields || undefined,
+          scoreError: scoringPoint._scoreError || undefined
         };
       })
       .filter(point => Number.isFinite(point.score));
@@ -153,11 +214,12 @@ class GridProductScoreAdapter {
       gridPoints,
       stale: false,
       source: 'grid-product-cache',
-      degraded: false,
+      degraded: missingAerosol,
+      degradedReason: missingAerosol ? 'CAMS_AEROSOL_CACHE_NOT_READY' : null,
       meta: {
         products: {
           weather: this._productMeta(weatherProduct),
-          aerosol: this._productMeta(aerosolProduct)
+          aerosol: aerosolProduct ? this._productMeta(aerosolProduct) : null
         }
       }
     };
