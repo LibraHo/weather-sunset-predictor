@@ -12,6 +12,17 @@ const FIELD_WHITELIST = [
   'APCP', 'PRATE', 'PWAT', 'DSWRF', 'TMP', 'UGRD', 'VGRD'
 ];
 
+const LEVEL_FILTERS = [
+  'lev_entire_atmosphere=on',
+  'lev_entire_atmosphere_%28considered_as_a_single_layer%29=on',
+  'lev_surface=on',
+  'lev_2_m_above_ground=on',
+  'lev_10_m_above_ground=on',
+  'lev_low_cloud_layer=on',
+  'lev_middle_cloud_layer=on',
+  'lev_high_cloud_layer=on'
+];
+
 const GLOBAL_GFS_GRID_POINTS = 721 * 1440;
 const GFS_GLOBAL_FIELD_BYTES_PER_HOUR = 29 * 1024 * 1024;
 
@@ -146,8 +157,7 @@ class GfsGridSourceService {
     const query = [
       `file=${file}`,
       ...FIELD_WHITELIST.map(field => `var_${field}=on`),
-      'lev_entire_atmosphere=on',
-      'lev_surface=on',
+      ...LEVEL_FILTERS,
       `leftlon=${bbox.west}`,
       `rightlon=${bbox.east}`,
       `toplat=${bbox.north}`,
