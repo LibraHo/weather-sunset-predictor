@@ -115,6 +115,7 @@
         <div class="admin-page-intro"><p class="admin-eyebrow">Operations</p><h1>运维中心</h1><p>队列、定时刷新、GFS+CAMS 数据管线集中在一个工作区，先看状态，再做操作。</p></div>
         <nav class="ops-center-nav" aria-label="运维中心内部导航">
           <a class="ops-center-link" href="#ops-status">状态</a>
+          <a class="ops-center-link" href="#ops-guard">防护</a>
           <a class="ops-center-link" href="#ops-schedule">调度</a>
           <a class="ops-center-link" href="#ops-pipeline">数据管线</a>
           <a class="ops-center-link" href="#ops-history">历史</a>
@@ -124,6 +125,30 @@
           <div class="two-col">
             <div class="admin-card"><h3 class="card-title">Grid 队列状态</h3><div id="queueStatusGrid" class="queue-status-grid"><p class="empty">加载中...</p></div></div>
             <div class="admin-card ops-focus-card"><h3 class="card-title">值班焦点</h3><p class="admin-muted">先确认队列、调度、数据管线和最近 run，再进入配置或危险操作。</p><div class="ops-focus-list"><span>1. 看队列状态</span><span>2. 查刷新调度</span><span>3. 估算后再运行</span><span>4. 危险操作在底部</span></div></div>
+          </div>
+        </section>
+        <section id="ops-guard" class="admin-section ops-workspace-section">
+          <div class="admin-section-heading"><h2>访问防护</h2><p>自动拦截过量访问和敏感路径扫描；异常 IP 可手动封禁或解封。</p></div>
+          <div class="two-col">
+            <div class="admin-card">
+              <h3 class="card-title">防护状态</h3>
+              <div id="accessGuardSummary" class="pipeline-status-grid"><p class="empty">加载中...</p></div>
+              <div class="access-guard-actions">
+                <input id="accessGuardIpInput" type="text" placeholder="IP，例如 35.201.242.131">
+                <button class="btn btn-danger" type="button" onclick="blockAccessGuardIp()">封禁 IP</button>
+              </div>
+              <div id="accessGuardMsg" class="admin-message hidden"></div>
+            </div>
+            <div class="admin-card">
+              <h3 class="card-title">当前封禁</h3>
+              <div class="table-wrap visitor-table-wrap"><table class="admin-table"><thead><tr><th>IP</th><th>归属地</th><th>原因</th><th>到期</th><th>操作</th></tr></thead><tbody id="accessGuardBlockedBody"><tr><td colspan="5" class="empty">加载中...</td></tr></tbody></table></div>
+            </div>
+          </div>
+        </section>
+        <section class="admin-section">
+          <div class="two-col">
+            <div class="admin-card"><h3 class="card-title">高频访问</h3><div class="table-wrap visitor-table-wrap"><table class="admin-table visitor-record-table"><thead><tr><th>IP</th><th>归属地</th><th>1分钟</th><th>10分钟</th><th>可疑</th><th>最近路径</th></tr></thead><tbody id="accessGuardRecentBody"><tr><td colspan="6" class="empty">加载中...</td></tr></tbody></table></div></div>
+            <div class="admin-card"><h3 class="card-title">拦截事件</h3><div class="table-wrap visitor-table-wrap"><table class="admin-table visitor-record-table"><thead><tr><th>时间</th><th>类型</th><th>IP</th><th>原因</th><th>路径</th></tr></thead><tbody id="accessGuardEventsBody"><tr><td colspan="5" class="empty">加载中...</td></tr></tbody></table></div></div>
           </div>
         </section>
 

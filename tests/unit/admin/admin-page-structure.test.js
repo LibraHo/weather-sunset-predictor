@@ -68,6 +68,7 @@ describe('admin page structure', () => {
 
     expect(html).toContain('运维中心');
     expect(html).toContain('Grid 队列状态');
+    expect(html).toContain('访问防护');
     expect(html).toContain('刷新与调度');
     expect(html).toContain('数据管线');
     expect(opsHtml).toContain('class="ops-center-nav"');
@@ -85,7 +86,30 @@ describe('admin page structure', () => {
     expect(html).not.toContain('<p class="admin-eyebrow">Data Pipeline</p><h1>GFS+CAMS 数据管线</h1>');
     expect(js).toContain("schedule: 'ops'");
     expect(js).toContain("'data-pipeline': 'ops'");
-    expect(js).toContain('loadQueue(), loadHealth(), loadSchedule(), loadDataPipeline()');
+    expect(js).toContain('loadQueue(), loadHealth(), loadSchedule(), loadDataPipeline(), loadAccessGuard()');
+  });
+
+  test('ops center includes access guard status, block list, and controls', () => {
+    const html = readAdminHtml();
+    const js = readAdminJs();
+
+    [
+      'accessGuardSummary',
+      'accessGuardIpInput',
+      'accessGuardMsg',
+      'accessGuardBlockedBody',
+      'accessGuardRecentBody',
+      'accessGuardEventsBody',
+    ].forEach((id) => expect(html).toContain(`id="${id}"`));
+
+    expect(html).toContain('自动拦截过量访问和敏感路径扫描');
+    expect(html).toContain('封禁 IP');
+    expect(js).toContain("fetch('/admin/access-guard'");
+    expect(js).toContain("fetch('/admin/access-guard/block'");
+    expect(js).toContain("fetch('/admin/access-guard/unblock'");
+    expect(js).toContain('function loadAccessGuard');
+    expect(js).toContain('function blockAccessGuardIp');
+    expect(js).toContain('function unblockAccessGuardIp');
   });
 
   test('ops center keeps dangerous operations below normal status and run workflows', () => {

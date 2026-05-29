@@ -87,7 +87,21 @@ app.use(requestLogger()); // Custom request logging
 
 // 访问统计中间件（排除 health、静态资源、瓦片）
 const accessLogService = require('./services/AccessLogService');
+const accessGuardService = require('./services/AccessGuardService');
 app.use((req, res, next) => {
+  if (req.path !== '/health') {
+    const guard = accessGuardService.check(req);
+    if (guard.blocked) {
+      return res.status(guard.status || 429).json({
+        error: {
+          code: 'ACCESS_GUARD_BLOCKED',
+          message: '访问过于频繁，已被临时拦截',
+          reason: guard.reason
+        }
+      });
+    }
+  }
+
   const skipPaths = ['/health', '/api/tiles', '/data/', '/styles/', '/src/', '/public/'];
   const shouldSkip = skipPaths.some(p => req.path.startsWith(p));
   if (!shouldSkip && req.path !== '/favicon.ico') {
