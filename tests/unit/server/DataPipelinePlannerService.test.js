@@ -53,7 +53,7 @@ describe('DataPipelinePlannerService', () => {
       })
     });
     expect(plan.estimate).toMatchObject({
-      gridPoints: 9125,
+      gridPoints: 10731,
       estimatedDownloadBytes: expect.any(Number),
       estimatedRawTmpBytes: expect.any(Number),
       maxResidentBytes: expect.any(Number),

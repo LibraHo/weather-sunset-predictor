@@ -19,14 +19,27 @@ const ADMIN_VIEW_ALIASES = {
   schedule: 'ops',
   'data-pipeline': 'ops',
   'ops-status': 'ops',
+  'ops-guard': 'ops',
+  'ops-mode': 'ops',
+  'ops-queue': 'ops',
   'ops-schedule': 'ops',
   'ops-pipeline': 'ops',
-  'ops-guard': 'ops',
+  'ops-config': 'ops',
   'ops-history': 'ops',
   'ops-danger': 'ops'
 };
 const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'ops', 'logs', 'agent', 'photos']);
-const OPS_INTERNAL_ANCHORS = new Set(['ops-status', 'ops-schedule', 'ops-pipeline', 'ops-guard', 'ops-history', 'ops-danger']);
+const OPS_INTERNAL_ANCHORS = new Set([
+  'ops-status',
+  'ops-guard',
+  'ops-mode',
+  'ops-queue',
+  'ops-schedule',
+  'ops-pipeline',
+  'ops-config',
+  'ops-history',
+  'ops-danger',
+]);
 const ADMIN_VIEW_META = {
   dashboard: ['运行总览', '状态优先、操作分区，快速判断霞客当前运行情况。'],
   visitors: ['访客分析', '按北京时间查看 PV、UV、IP 和访问明细。'],
@@ -978,15 +991,30 @@ async function saveSchedule() {
 // =================== GFS+CAMS 数据管线 ===================
 const DATA_PIPELINE_PRESET_BBOXES = {
   china: { north: 54, south: 18, west: 73, east: 135 },
+  japan: { north: 46, south: 31, west: 129, east: 146 },
+  south_korea: { north: 39.5, south: 33, west: 124, east: 132 },
+  china_japan_korea: { north: 54, south: 18, west: 73, east: 146 },
   east_asia: { north: 60, south: 5, west: 70, east: 150 },
   test_small: { north: 41, south: 39, west: 115, east: 117 }
 };
 
 const DATA_PIPELINE_PRESET_LABELS = {
+  china_japan_korea: '中国 + 日本 + 韩国',
   china: '中国',
+  japan: '日本',
+  south_korea: '韩国',
   east_asia: '东亚',
   test_small: '小范围测试',
-  custom_bbox: '自定义 bbox'
+  custom_bbox: '自定义地理边界'
+};
+
+const DATA_PIPELINE_PRESET_COUNTRIES = {
+  china_japan_korea: ['CN', 'JP', 'KR'],
+  china: ['CN'],
+  japan: ['JP'],
+  south_korea: ['KR'],
+  east_asia: ['CN', 'JP', 'KR'],
+  test_small: ['CN']
 };
 
 const DATA_PIPELINE_MODE_LABELS = {
@@ -1006,10 +1034,10 @@ const DATA_PIPELINE_RECOMMENDED_PRESETS = {
     forecastHours: 24,
     sources: { gfs: true, cams: true, openMeteoFallback: true }
   },
-  'china-balanced': {
-    label: '中国均衡',
+  'east-asia-balanced': {
+    label: '中日韩均衡',
     mode: 'gfs_cams',
-    regionPreset: 'china',
+    regionPreset: 'china_japan_korea',
     resolution: 0.5,
     forecastHours: 48,
     sources: { gfs: true, cams: true, openMeteoFallback: true }
@@ -1065,14 +1093,14 @@ async function loadDataPipelineRuns() {
     renderDataPipelineRuns(data.runs || []);
   } catch (err) {
     const tbody = document.getElementById('pipelineRunsBody');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="empty">运行记录加载失败</td></tr>';
+    if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="empty">运行记录加载失败</td></tr>';
   }
 }
 
 function fillDataPipelineForm(config = {}) {
-  const bbox = config.bbox || DATA_PIPELINE_PRESET_BBOXES.china;
+  const bbox = config.bbox || DATA_PIPELINE_PRESET_BBOXES.china_japan_korea;
   setInputValue('pipelineMode', config.mode || 'gfs_cams');
-  setInputValue('pipelineRegionPreset', config.regionPreset || 'china');
+  setInputValue('pipelineRegionPreset', config.regionPreset || 'china_japan_korea');
   setInputValue('pipelineBboxNorth', bbox.north);
   setInputValue('pipelineBboxSouth', bbox.south);
   setInputValue('pipelineBboxWest', bbox.west);
@@ -1082,6 +1110,7 @@ function fillDataPipelineForm(config = {}) {
   setCheckedValue('pipelineGfsEnabled', config.sources?.gfs !== false);
   setCheckedValue('pipelineCamsEnabled', config.sources?.cams !== false);
   setCheckedValue('pipelineOpenMeteoFallback', config.sources?.openMeteoFallback !== false);
+  setRegionDefinitionCheckboxes(config.regionDefinition || { type: 'countries', countries: DATA_PIPELINE_PRESET_COUNTRIES[config.regionPreset || 'china_japan_korea'] || ['CN', 'JP', 'KR'] });
 }
 
 function initDataPipelineForm() {
@@ -1094,6 +1123,7 @@ function initDataPipelineForm() {
     setInputValue('pipelineBboxSouth', bbox.south);
     setInputValue('pipelineBboxWest', bbox.west);
     setInputValue('pipelineBboxEast', bbox.east);
+    setRegionDefinitionCheckboxes({ type: 'countries', countries: DATA_PIPELINE_PRESET_COUNTRIES[preset.value] || ['CN', 'JP', 'KR'] });
     showMessage('范围已切换，保存前请先估算。', 'success', 'pipelineConfigMsg');
   });
 }
@@ -1112,10 +1142,34 @@ function applyDataPipelinePreset(name) {
     setInputValue('pipelineBboxWest', bbox.west);
     setInputValue('pipelineBboxEast', bbox.east);
   }
+  setRegionDefinitionCheckboxes({ type: 'countries', countries: DATA_PIPELINE_PRESET_COUNTRIES[preset.regionPreset] || ['CN', 'JP', 'KR'] });
   setCheckedValue('pipelineGfsEnabled', preset.sources.gfs);
   setCheckedValue('pipelineCamsEnabled', preset.sources.cams);
   setCheckedValue('pipelineOpenMeteoFallback', preset.sources.openMeteoFallback);
   showMessage(`已套用「${preset.label}」，下一步点“1 估算下载量”。`, 'success', 'pipelineConfigMsg');
+}
+
+function setRegionDefinitionCheckboxes(regionDefinition = {}) {
+  const countries = Array.isArray(regionDefinition.countries) ? regionDefinition.countries : ['CN', 'JP', 'KR'];
+  setCheckedValue('pipelineRegionChina', countries.includes('CN'));
+  setCheckedValue('pipelineRegionJapan', countries.includes('JP'));
+  setCheckedValue('pipelineRegionKorea', countries.includes('KR'));
+}
+
+function collectRegionDefinition() {
+  const countries = [];
+  if (document.getElementById('pipelineRegionChina')?.checked) countries.push('CN');
+  if (document.getElementById('pipelineRegionJapan')?.checked) countries.push('JP');
+  if (document.getElementById('pipelineRegionKorea')?.checked) countries.push('KR');
+  return countries.length > 0 ? { type: 'countries', countries } : { type: 'bbox' };
+}
+
+async function selectDataPipelineMode(mode) {
+  const safeMode = mode === 'openmeteo' ? 'openmeteo' : 'gfs_cams';
+  const label = safeMode === 'openmeteo' ? 'old / Open-Meteo' : 'new / GFS+CAMS';
+  if (!confirm(`切换当前方案到 ${label}？定时任务会跟随这个方案执行。`)) return;
+  setInputValue('pipelineMode', safeMode);
+  await saveDataPipelineConfigWithMode(safeMode);
 }
 
 function collectDataPipelineConfig() {
@@ -1124,7 +1178,8 @@ function collectDataPipelineConfig() {
   return {
     ...(dataPipelineConfigCache || {}),
     mode: getInputValue('pipelineMode') || 'gfs_cams',
-    regionPreset: getInputValue('pipelineRegionPreset') || 'china',
+    regionPreset: getInputValue('pipelineRegionPreset') || 'china_japan_korea',
+    regionDefinition: collectRegionDefinition(),
     bbox: {
       north: Number(getInputValue('pipelineBboxNorth')),
       south: Number(getInputValue('pipelineBboxSouth')),
@@ -1316,21 +1371,71 @@ function renderDataPipelineStatus(data = {}) {
   const el = document.getElementById('pipelineStatusGrid');
   if (!el) return;
   const current = data.currentRun || null;
-  const latest = data.latestSuccessfulRun || null;
-  const today = data.today || {};
   const config = data.config || {};
   renderDataPipelineSummary(data);
   renderCacheManagementStatus(data.cacheManagement || null);
+  renderDataPipelineScheme(data);
+  renderSchemeScopedQueues(data);
+  const cacheManagement = data.cacheManagement || {};
+  const active = cacheManagement.activeMap || {};
+  const modeLabel = config.mode === 'openmeteo' ? 'old / Open-Meteo' : 'new / GFS+CAMS';
   el.innerHTML = `
-    <div class="pipeline-stat"><span>方案</span><strong>${escapeHtml(config.mode || '--')}</strong></div>
-    <div class="pipeline-stat"><span>范围</span><strong>${escapeHtml(config.regionPreset || '--')}</strong></div>
-    <div class="pipeline-stat"><span>当前 run</span><strong>${current ? renderPipelineStatusBadge(current.status) : '--'}</strong></div>
-    <div class="pipeline-stat"><span>当前进度</span><strong>${current ? getDataPipelineRunProgress(current) : '--'}</strong></div>
-    <div class="pipeline-stat"><span>今日 runs</span><strong>${Number(today.runCount || 0)} / 失败 ${Number(today.failedRunCount || 0)}</strong></div>
-    <div class="pipeline-stat"><span>今日下载</span><strong>${formatBytes(today.bytesDownloaded || 0)}</strong></div>
-    <div class="pipeline-stat"><span>最近成功</span><strong>${latest ? escapeHtml(formatPhotoDateTime(latest.completedAt) || latest.id) : '--'}</strong></div>
-    <div class="pipeline-stat"><span>失败原因</span><strong>${escapeHtml(formatDataPipelineFailure(current))}</strong></div>
+    <div class="pipeline-stat"><span>当前方案</span><strong id="pipelineModeBadge">${escapeHtml(modeLabel)}</strong></div>
+    <div class="pipeline-stat"><span>业务区域 / 下载边界</span><strong id="pipelineRangeBadge">${escapeHtml(DATA_PIPELINE_PRESET_LABELS[config.regionPreset] || config.regionPreset || '--')} ${escapeHtml(formatBbox(config.bbox))}</strong></div>
+    <div class="pipeline-stat"><span>公开地图来源</span><strong>${escapeHtml(active.source || active.mode || config.mode || '--')}</strong></div>
+    <div class="pipeline-stat"><span>公开缓存点</span><strong>${Number(active.pointCount || 0).toLocaleString('zh-CN')}</strong></div>
+    <div class="pipeline-stat"><span>当前 new run</span><strong id="pipelineCurrentProgress">${current ? `${renderPipelineStatusBadge(current.status)} ${getDataPipelineRunProgress(current)}` : '--'}</strong></div>
+    <div class="pipeline-stat"><span>最近成功产物</span><strong id="pipelineLatestProduct">${data.latestSuccessfulRun ? escapeHtml(formatPhotoDateTime(data.latestSuccessfulRun.completedAt) || data.latestSuccessfulRun.id) : '--'}</strong></div>
+    <div class="pipeline-stat"><span>今日下载</span><strong id="pipelineTodayDownload">${formatBytes(data.today?.bytesDownloaded || 0)}</strong></div>
+    <div class="pipeline-stat"><span>失败原因 / 本地处理</span><strong id="pipelineFailureReason">${escapeHtml(formatDataPipelineFailure(current))}</strong></div>
+    <div class="pipeline-stat"><span>磁盘预算</span><strong id="pipelineDiskBudget">${formatBytes(data.estimate?.estimatedRawTmpBytes || 0)} raw/tmp</strong></div>
+    <div class="pipeline-stat"><span>内存预算</span><strong id="pipelineMemoryBudget">${data.estimate?.estimatedResidentMemoryMb || config.runtimePolicy?.maxResidentMemoryMb || 512} MB worker</strong></div>
+    <div class="pipeline-stat"><span>降级状态</span><strong>${active.degraded ? escapeHtml(active.degradedReason || 'degraded') : '未降级'}</strong></div>
   `;
+}
+
+function renderDataPipelineScheme(data = {}) {
+  const mode = data.config?.mode || dataPipelineConfigCache?.mode || getInputValue('pipelineMode') || 'gfs_cams';
+  document.querySelectorAll('[data-pipeline-mode]').forEach((button) => {
+    const active = button.dataset.pipelineMode === mode;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+}
+
+function renderSchemeScopedQueues(data = {}) {
+  const cacheManagement = data.cacheManagement || {};
+  const products = cacheManagement.pipelineProducts || {};
+  const legacy = cacheManagement.legacyOpenMeteo || {};
+  const sunrise = legacy.sunrise || {};
+  const sunset = legacy.sunset || {};
+  const gfs = products.bySource?.gfs || {};
+  const cams = products.bySource?.cams || {};
+  const current = data.currentRun || {};
+  const today = data.today || {};
+  const latest = data.latestSuccessfulRun || null;
+
+  const legacyEl = document.getElementById('pipelineLegacyQueueGrid');
+  if (legacyEl) {
+    legacyEl.innerHTML = `
+      <div class="pipeline-stat"><span>晚霞队列</span><strong>${formatLegacyCacheProgress(sunset)}</strong></div>
+      <div class="pipeline-stat"><span>朝霞队列</span><strong>${formatLegacyCacheProgress(sunrise)}</strong></div>
+      <div class="pipeline-stat"><span>晚霞失败原因</span><strong>${escapeHtml(sunset.lastError || '--')}</strong></div>
+      <div class="pipeline-stat"><span>朝霞失败原因</span><strong>${escapeHtml(sunrise.lastError || '--')}</strong></div>
+    `;
+  }
+
+  const newEl = document.getElementById('pipelineNewQueueGrid');
+  if (newEl) {
+    newEl.innerHTML = `
+      <div class="pipeline-stat"><span>当前 run</span><strong>${current.id ? `${renderPipelineStatusBadge(current.status)} ${getDataPipelineRunProgress(current)}` : '--'}</strong></div>
+      <div class="pipeline-stat"><span>今日 runs</span><strong>${Number(today.runCount || 0)} / 失败 ${Number(today.failedRunCount || 0)}</strong></div>
+      <div class="pipeline-stat"><span>GFS 产品</span><strong>${Number(gfs.productCount || 0)} / ${Number(gfs.pointCount || 0).toLocaleString('zh-CN')} 点</strong></div>
+      <div class="pipeline-stat"><span>CAMS 产品</span><strong>${Number(cams.productCount || 0)} / ${Number(cams.pointCount || 0).toLocaleString('zh-CN')} 点</strong></div>
+      <div class="pipeline-stat"><span>最近成功</span><strong>${latest ? escapeHtml(formatPhotoDateTime(latest.completedAt) || latest.id) : '--'}</strong></div>
+      <div class="pipeline-stat"><span>失败原因 / 本地处理</span><strong>${escapeHtml(formatDataPipelineFailure(current))}</strong></div>
+    `;
+  }
 }
 
 function renderCacheManagementStatus(cacheManagement) {
@@ -1340,25 +1445,15 @@ function renderCacheManagementStatus(cacheManagement) {
     el.innerHTML = '<p class="empty">缓存状态加载中...</p>';
     return;
   }
-  const active = cacheManagement.activeMap || {};
-  const products = cacheManagement.pipelineProducts || {};
-  const gfs = products.bySource?.gfs || {};
-  const cams = products.bySource?.cams || {};
   const legacy = cacheManagement.legacyOpenMeteo || {};
   const sunrise = legacy.sunrise || {};
   const sunset = legacy.sunset || {};
 
   el.innerHTML = `
-    <div class="pipeline-stat"><span>公开地图</span><strong>${escapeHtml(active.source || '--')} / ${escapeHtml(active.status || '--')}</strong></div>
-    <div class="pipeline-stat"><span>公开模式</span><strong>${escapeHtml(active.mode || '--')}${active.degraded ? ' degraded' : ''}</strong></div>
-    <div class="pipeline-stat"><span>公开缓存点</span><strong>${Number(active.pointCount || 0).toLocaleString('zh-CN')}</strong></div>
-    <div class="pipeline-stat"><span>公开更新时间</span><strong>${escapeHtml(formatPhotoDateTime(active.updatedAt) || '--')}</strong></div>
-    <div class="pipeline-stat"><span>GFS 产品</span><strong>${Number(gfs.productCount || 0)} / ${Number(gfs.pointCount || 0).toLocaleString('zh-CN')} 点</strong></div>
-    <div class="pipeline-stat"><span>CAMS 产品</span><strong>${Number(cams.productCount || 0)} / ${Number(cams.pointCount || 0).toLocaleString('zh-CN')} 点</strong></div>
-    <div class="pipeline-stat"><span>Pipeline 缓存</span><strong>${Number(products.totalProducts || 0)} 个 / ${formatBytes(products.totalBytes || 0)}</strong></div>
     <div class="pipeline-stat"><span>Open-Meteo 晚霞</span><strong>${formatLegacyCacheProgress(sunset)}</strong></div>
     <div class="pipeline-stat"><span>Open-Meteo 朝霞</span><strong>${formatLegacyCacheProgress(sunrise)}</strong></div>
-    <div class="pipeline-stat"><span>降级原因</span><strong>${escapeHtml(active.degradedReason || '--')}</strong></div>
+    <div class="pipeline-stat"><span>晚霞失败原因</span><strong>${escapeHtml(sunset.lastError || '--')}</strong></div>
+    <div class="pipeline-stat"><span>朝霞失败原因</span><strong>${escapeHtml(sunrise.lastError || '--')}</strong></div>
   `;
 }
 
@@ -1424,7 +1519,7 @@ function renderDataPipelineEstimate(estimate) {
     <div class="pipeline-stat"><span>预报步数</span><strong>${Number(estimate.forecastHourCount || 0)}</strong></div>
     <div class="pipeline-stat"><span>预计下载</span><strong>${formatBytes(estimate.estimatedDownloadBytes || 0)}</strong></div>
     <div class="pipeline-stat"><span>预计 raw/tmp</span><strong>${formatBytes(estimate.estimatedRawTmpBytes || 0)}</strong></div>
-    <div class="pipeline-stat"><span>bbox 面积</span><strong>${Number(estimate.bboxAreaDeg2 || 0).toLocaleString('zh-CN')} deg²</strong></div>
+    <div class="pipeline-stat"><span>下载边界面积</span><strong>${Number(estimate.bboxAreaDeg2 || 0).toLocaleString('zh-CN')} deg²</strong></div>
     ${reasons}
   `;
 }
@@ -1433,7 +1528,7 @@ function renderDataPipelineRuns(runs = []) {
   const tbody = document.getElementById('pipelineRunsBody');
   if (!tbody) return;
   if (!runs.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty">暂无运行记录</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">暂无运行记录</td></tr>';
     return;
   }
   tbody.innerHTML = runs.map((run) => {
@@ -1446,12 +1541,19 @@ function renderDataPipelineRuns(runs = []) {
       <td>${escapeHtml(run.reason || '-')}</td>
       <td>${progress}</td>
       <td>${formatBytes(run.totalBytesDownloaded || 0)}</td>
+      <td>${escapeHtml(formatDataPipelineRunIssue(run))}</td>
       <td>
         <button class="btn btn-secondary btn-sm" onclick="renderDataPipelineRunDetail('${jsId}')" title="${id}">详情</button>
         <button class="btn btn-secondary btn-sm" onclick="retryDataPipelineRun('${jsId}')">重试</button>
       </td>
     </tr>`;
   }).join('');
+}
+
+function formatDataPipelineRunIssue(run = {}) {
+  if (run.status === 'failed') return run.errorCode || run.message || 'failed';
+  if (String(run.reason || '').includes('dry-run') || String(run.artifactPath || '').includes('local')) return '本地处理';
+  return '--';
 }
 
 function getDataPipelineRunProgress(run = {}) {
