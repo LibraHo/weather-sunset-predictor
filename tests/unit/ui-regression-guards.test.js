@@ -1,14 +1,16 @@
 import fs from 'fs';
 import path from 'path';
 
+const readText = (file) => fs.readFileSync(path.resolve(file), 'utf8').replace(/\r\n/g, '\n');
+
 describe('recent user-reported UI regression guards', () => {
-  const css = () => fs.readFileSync(path.resolve('styles/main.css'), 'utf8');
-  const sharePanelCss = () => fs.readFileSync(path.resolve('styles/share-panel.css'), 'utf8');
-  const predictionController = () => fs.readFileSync(path.resolve('src/controllers/PredictionController.js'), 'utf8');
-  const rasterOverlay = () => fs.readFileSync(path.resolve('src/services/ChinaRasterOverlay.js'), 'utf8');
-  const html = () => fs.readFileSync(path.resolve('index.html'), 'utf8');
-  const settingsPanel = () => fs.readFileSync(path.resolve('src/components/SettingsPanel.js'), 'utf8');
-  const designSystem = () => fs.readFileSync(path.resolve('docs/design-system.md'), 'utf8');
+  const css = () => readText('styles/main.css');
+  const sharePanelCss = () => readText('styles/share-panel.css');
+  const predictionController = () => readText('src/controllers/PredictionController.js');
+  const rasterOverlay = () => readText('src/services/ChinaRasterOverlay.js');
+  const html = () => readText('index.html');
+  const settingsPanel = () => readText('src/components/SettingsPanel.js');
+  const designSystem = () => readText('docs/design-system.md');
 
   test('dark mode forecast cards have explicit dark backgrounds', () => {
     const source = css();
@@ -312,7 +314,7 @@ describe('recent user-reported UI regression guards', () => {
 
 describe('prediction title plate regression guards', () => {
   test('main prediction title plate stays transparent in dark mode too', () => {
-    const source = fs.readFileSync(path.resolve('styles/main.css'), 'utf8');
+    const source = readText('styles/main.css');
     const titlePlateBlock = source.match(/\.prediction-app-card \.phenomenon-title-card,[\s\S]*?\n\}/)?.[0] || '';
 
     expect(titlePlateBlock).toContain('body.theme-dark .prediction-app-card .phenomenon-title-card');
@@ -324,7 +326,7 @@ describe('prediction title plate regression guards', () => {
 
 describe('prediction paired-card alignment guards', () => {
   test('desktop prediction cards use generic paired row sync instead of one-off fixed heights', () => {
-    const source = fs.readFileSync(path.resolve('src/controllers/PredictionController.js'), 'utf8');
+    const source = readText('src/controllers/PredictionController.js');
 
     expect(source).toContain('syncPairedPredictionCardRows');
     expect(source).toContain('getPredictionAlignmentSelectors');
