@@ -1283,6 +1283,79 @@ body.theme-dark .admin-table tr:hover td {
   margin-bottom: var(--spacing-sm);
 }
 
+.ops-center-nav {
+  position: sticky;
+  top: 61px;
+  z-index: 30;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 8px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-card-border, var(--color-border)) 72%, transparent);
+  background: color-mix(in srgb, var(--theme-bg, var(--color-bg)) 92%, transparent);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+.ops-center-link {
+  flex: 0 0 auto;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  border: 1px solid var(--theme-card-border, var(--color-border));
+  border-radius: var(--radius-sm);
+  color: var(--theme-text-muted, var(--color-text-light));
+  text-decoration: none;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.ops-center-link:hover,
+.ops-center-link:focus-visible {
+  color: var(--theme-text, var(--color-text));
+  border-color: color-mix(in srgb, var(--theme-accent, #ff9800) 42%, var(--theme-card-border, var(--color-border)));
+  background: color-mix(in srgb, var(--theme-accent, #ff9800) 10%, transparent);
+}
+
+.ops-center-link-danger {
+  color: var(--color-error);
+}
+
+.ops-workspace-section,
+.ops-workspace-block,
+#ops-schedule,
+#ops-pipeline,
+#ops-history,
+#ops-danger {
+  scroll-margin-top: 112px;
+}
+
+.ops-focus-card {
+  min-height: 100%;
+}
+
+.ops-focus-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+  margin-top: var(--spacing-sm);
+}
+
+.ops-focus-list span {
+  padding: 8px 10px;
+  border: 1px solid var(--theme-card-border, var(--color-border));
+  border-radius: var(--radius-sm);
+  background: var(--theme-panel-soft, var(--color-bg));
+  color: var(--theme-text-muted, var(--color-text-light));
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.ops-danger-section {
+  margin-top: var(--spacing-md);
+}
+
 @media (max-width: 1024px) {
   .admin-shell {
     grid-template-columns: 1fr;
@@ -1328,6 +1401,10 @@ body.theme-dark .admin-table tr:hover td {
 
   .admin-header {
     position: static;
+  }
+
+  .ops-center-nav {
+    top: 104px;
   }
 }
 

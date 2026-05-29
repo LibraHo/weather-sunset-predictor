@@ -113,27 +113,27 @@
 
       <section id="admin-panel-ops" class="admin-panel hidden" data-admin-panel="ops" role="tabpanel" aria-label="运维">
         <div class="admin-page-intro"><p class="admin-eyebrow">Operations</p><h1>运维中心</h1><p>队列、定时刷新、GFS+CAMS 数据管线集中在一个工作区，先看状态，再做操作。</p></div>
-        <section class="admin-section">
+        <nav class="ops-center-nav" aria-label="运维中心内部导航">
+          <a class="ops-center-link" href="#ops-status">状态</a>
+          <a class="ops-center-link" href="#ops-schedule">调度</a>
+          <a class="ops-center-link" href="#ops-pipeline">数据管线</a>
+          <a class="ops-center-link" href="#ops-history">历史</a>
+          <a class="ops-center-link ops-center-link-danger" href="#ops-danger">危险区</a>
+        </nav>
+        <section id="ops-status" class="admin-section ops-workspace-section">
           <div class="two-col">
             <div class="admin-card"><h3 class="card-title">Grid 队列状态</h3><div id="queueStatusGrid" class="queue-status-grid"><p class="empty">加载中...</p></div></div>
-            <div class="admin-card danger-zone"><h3 class="card-title">运维工具箱</h3><p class="admin-muted">以下操作会影响线上数据或服务，请确认后执行。</p><div class="tool-grid"><button class="btn btn-secondary" onclick="triggerRefresh('sunset')">手动刷新晚霞</button><button class="btn btn-secondary" onclick="triggerRefresh('sunrise')">手动刷新朝霞</button><button class="btn btn-secondary" onclick="clearGridCache()">清空 Grid 缓存</button><button class="btn btn-danger" onclick="restartBackend()">重启后端进程</button></div></div>
+            <div class="admin-card ops-focus-card"><h3 class="card-title">值班焦点</h3><p class="admin-muted">先确认队列、调度、数据管线和最近 run，再进入配置或危险操作。</p><div class="ops-focus-list"><span>1. 看队列状态</span><span>2. 查刷新调度</span><span>3. 估算后再运行</span><span>4. 危险操作在底部</span></div></div>
           </div>
         </section>
-      </section>
-
-      <section id="admin-panel-logs" class="admin-panel hidden" data-admin-panel="logs" role="tabpanel" aria-label="日志">
-        <div class="admin-page-intro"><p class="admin-eyebrow">Logs</p><h1>调用日志</h1><p>集中查看外部 API 调用、错误率、每日统计和重连恢复情况。</p></div>
-        <section class="admin-section"><div class="chart-card"><h3 class="chart-title">24h API 调用分布</h3><div class="chart-wrap"><canvas id="apiHourlyChart"></canvas></div></div></section>
-        <section class="admin-section"><div class="two-col"><div class="admin-card"><h3 class="card-title">API 调用日志</h3><div class="tab-bar"><button class="tab-btn active" onclick="switchLogTab('grid', this)">Grid</button><button class="tab-btn" onclick="switchLogTab('weather', this)">Weather</button><button class="tab-btn" onclick="switchLogTab('gaode,gaode_tile', this)">高德</button><button class="tab-btn" onclick="switchLogTab('errors', this)">Errors</button></div><div class="table-wrap"><table class="admin-table"><thead><tr><th>时间</th><th>接口</th><th>状态</th><th>耗时</th><th>错误</th></tr></thead><tbody id="logTableBody"><tr><td colspan="5" class="empty">加载中...</td></tr></tbody></table></div></div><div class="admin-card"><h3 class="card-title">每日 API 调用 & 重连统计（近7天）</h3><div class="table-wrap"><table class="admin-table"><thead><tr><th>日期</th><th>总调用</th><th>失败</th><th>Grid</th><th>Weather</th><th>高德</th><th>重试</th><th>重连恢复</th><th>重连失败</th></tr></thead><tbody id="dailyStatsBody"><tr><td colspan="9" class="empty">加载中...</td></tr></tbody></table></div></div></div></section>
-      </section>
 
       <section id="admin-panel-schedule" class="admin-section admin-section-group ops-workspace-block hidden" data-admin-panel="ops" aria-label="定时任务">
-        <div class="admin-section-heading"><h2>刷新与调度</h2><p>同一个运维中心里管理手动刷新和自动刷新时间，不再单独开一个定时任务页面。</p></div>
+        <div id="ops-schedule" class="admin-section-heading"><h2>刷新与调度</h2><p>同一个运维中心里管理手动刷新和自动刷新时间，不再单独开一个定时任务页面。</p></div>
         <div class="admin-card"><h3 class="card-title">刷新时间点</h3><div id="scheduleJobs" class="schedule-jobs"></div><div class="schedule-actions"><button class="btn btn-secondary" onclick="addScheduleJob()">+ 添加时间点</button><button class="btn btn-primary" onclick="saveSchedule()">保存配置</button></div><div id="scheduleMsg" class="admin-message hidden"></div></div>
       </section>
 
       <section id="admin-panel-data-pipeline" class="admin-section admin-section-group ops-workspace-block hidden" data-admin-panel="ops" aria-label="数据管线">
-        <div class="admin-section-heading"><h2>数据管线</h2><p>GFS+CAMS 配置、预算、运行和记录都放在运维中心内，不再作为独立页面入口。</p></div>
+        <div id="ops-pipeline" class="admin-section-heading"><h2>数据管线</h2><p>GFS+CAMS 配置、预算、运行和记录都放在运维中心内，不再作为独立页面入口。</p></div>
         <section class="admin-section admin-section-group">
           <div class="pipeline-guide-grid" aria-label="数据管线操作流程">
             <div class="pipeline-guide-item"><span>1</span><strong>选推荐配置</strong><small>先用小范围测试，确认链路可跑通。</small></div>
@@ -243,18 +243,7 @@
                 <div id="pipelineRunMsg" class="admin-message hidden"></div>
               </div>
         </section>
-        <section class="admin-section admin-section-group">
-          <div class="admin-card danger-zone pipeline-danger-card">
-            <h3 class="card-title">Danger Zone</h3>
-            <p class="admin-muted">清理和回滚类动作会影响缓存、产物或运维判断，必须和普通运行分开。</p>
-            <div class="pipeline-danger-actions">
-              <button class="btn btn-secondary" type="button" onclick="cleanupDataPipeline()">触发 cleanup</button>
-              <button id="pipelineCleanupDryRunBtn" class="btn btn-secondary" type="button" onclick="cleanupDataPipelineDryRun()">cleanup dry-run</button>
-              <button id="pipelineRollbackBtn" class="btn btn-danger" type="button" onclick="confirmDataPipelineRollback()">rollback</button>
-            </div>
-          </div>
-        </section>
-        <section class="admin-section admin-section-group">
+        <section id="ops-history" class="admin-section admin-section-group">
           <div class="admin-section-heading">
             <h2>运行历史</h2>
             <p>左侧看最近 runs，右侧选择单次 run 后追踪步骤和错误。</p>
@@ -264,6 +253,31 @@
             <div class="admin-card"><h3 class="card-title">Run 详情</h3><div class="table-wrap pipeline-table-wrap"><table class="admin-table"><thead><tr><th>步骤</th><th>来源</th><th>状态</th><th>时效</th><th>下载</th><th>错误</th></tr></thead><tbody id="pipelineRunStepsBody"><tr><td colspan="6" class="empty">选择 run 查看步骤</td></tr></tbody></table></div></div>
           </div>
         </section>
+        <section id="ops-danger" class="admin-section admin-section-group ops-danger-section">
+          <div class="admin-section-heading">
+            <h2>Danger Zone / 危险区</h2>
+            <p>这些动作会影响线上缓存、服务进程或运维判断；普通值班流程不需要先看这里。</p>
+          </div>
+          <div class="admin-card danger-zone pipeline-danger-card">
+            <h3 class="card-title">破坏性操作</h3>
+            <p class="admin-muted">执行前请确认当前队列、run 历史和数据来源状态。</p>
+            <div class="pipeline-danger-actions">
+              <button class="btn btn-secondary" type="button" onclick="triggerRefresh('sunset')">手动刷新晚霞</button>
+              <button class="btn btn-secondary" type="button" onclick="triggerRefresh('sunrise')">手动刷新朝霞</button>
+              <button class="btn btn-secondary" type="button" onclick="clearGridCache()">清空 Grid 缓存</button>
+              <button class="btn btn-secondary" type="button" onclick="cleanupDataPipeline()">触发 cleanup</button>
+              <button id="pipelineCleanupDryRunBtn" class="btn btn-secondary" type="button" onclick="cleanupDataPipelineDryRun()">cleanup dry-run</button>
+              <button id="pipelineRollbackBtn" class="btn btn-danger" type="button" onclick="confirmDataPipelineRollback()">rollback</button>
+              <button class="btn btn-danger" type="button" onclick="restartBackend()">重启后端进程</button>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section id="admin-panel-logs" class="admin-panel hidden" data-admin-panel="logs" role="tabpanel" aria-label="日志">
+        <div class="admin-page-intro"><p class="admin-eyebrow">Logs</p><h1>调用日志</h1><p>集中查看外部 API 调用、错误率、每日统计和重连恢复情况。</p></div>
+        <section class="admin-section"><div class="chart-card"><h3 class="chart-title">24h API 调用分布</h3><div class="chart-wrap"><canvas id="apiHourlyChart"></canvas></div></div></section>
+        <section class="admin-section"><div class="two-col"><div class="admin-card"><h3 class="card-title">API 调用日志</h3><div class="tab-bar"><button class="tab-btn active" onclick="switchLogTab('grid', this)">Grid</button><button class="tab-btn" onclick="switchLogTab('weather', this)">Weather</button><button class="tab-btn" onclick="switchLogTab('gaode,gaode_tile', this)">高德</button><button class="tab-btn" onclick="switchLogTab('errors', this)">Errors</button></div><div class="table-wrap"><table class="admin-table"><thead><tr><th>时间</th><th>接口</th><th>状态</th><th>耗时</th><th>错误</th></tr></thead><tbody id="logTableBody"><tr><td colspan="5" class="empty">加载中...</td></tr></tbody></table></div></div><div class="admin-card"><h3 class="card-title">每日 API 调用 & 重连统计（近7天）</h3><div class="table-wrap"><table class="admin-table"><thead><tr><th>日期</th><th>总调用</th><th>失败</th><th>Grid</th><th>Weather</th><th>高德</th><th>重试</th><th>重连恢复</th><th>重连失败</th></tr></thead><tbody id="dailyStatsBody"><tr><td colspan="9" class="empty">加载中...</td></tr></tbody></table></div></div></div></section>
       </section>
 
       <section id="admin-panel-agent" class="admin-panel hidden" data-admin-panel="agent" role="tabpanel" aria-label="Agent API">
