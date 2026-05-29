@@ -131,7 +131,8 @@ function initAdminNavigation() {
     });
     updateAdminPageHeading(activeAdminView);
     const currentHash = window.location.hash.replace(/^#/, '');
-    if (currentHash !== activeAdminView && !OPS_INTERNAL_ANCHORS.has(currentHash)) {
+    const stayingOnOpsAnchor = activeAdminView === 'ops' && OPS_INTERNAL_ANCHORS.has(currentHash);
+    if (currentHash !== activeAdminView && !stayingOnOpsAnchor) {
       history.replaceState(null, '', `#${activeAdminView}`);
     }
     loadActiveView();

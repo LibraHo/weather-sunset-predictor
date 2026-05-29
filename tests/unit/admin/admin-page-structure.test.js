@@ -118,6 +118,13 @@ describe('admin page structure', () => {
     expect(dangerHtml).toContain('confirmDataPipelineRollback');
   });
 
+  test('ops internal anchors only suppress hash replacement while staying in ops', () => {
+    const js = readAdminJs();
+
+    expect(js).toContain("activeAdminView === 'ops' && OPS_INTERNAL_ANCHORS.has(currentHash)");
+    expect(js).not.toContain("currentHash !== activeAdminView && !OPS_INTERNAL_ANCHORS.has(currentHash)");
+  });
+
   test('data pipeline separates status, config, run controls, danger actions, and history', () => {
     const html = readAdminHtml();
     const pipelineStart = html.indexOf('id="admin-panel-data-pipeline"');
