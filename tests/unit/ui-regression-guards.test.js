@@ -3,6 +3,7 @@ import path from 'path';
 
 describe('recent user-reported UI regression guards', () => {
   const css = () => fs.readFileSync(path.resolve('styles/main.css'), 'utf8');
+  const sharePanelCss = () => fs.readFileSync(path.resolve('styles/share-panel.css'), 'utf8');
   const predictionController = () => fs.readFileSync(path.resolve('src/controllers/PredictionController.js'), 'utf8');
   const rasterOverlay = () => fs.readFileSync(path.resolve('src/services/ChinaRasterOverlay.js'), 'utf8');
   const html = () => fs.readFileSync(path.resolve('index.html'), 'utf8');
@@ -248,6 +249,31 @@ describe('recent user-reported UI regression guards', () => {
     expect(themeTokenBlock).toContain('--theme-share-border: rgba(255, 255, 255, 0.14)');
     expect(shareButtonBlock).toContain('color: var(--theme-share-icon) !important');
     expect(shareButtonBlock).not.toContain('color: var(--theme-accent) !important');
+  });
+
+  test('share menu follows home menu glass scale instead of oversized desktop controls', () => {
+    const source = sharePanelCss();
+    const desktopBlock = source.match(/@media \(min-width: 1024px\) \{[\s\S]*?\.share-icon \{[\s\S]*?\n  \}[\s\S]*?\n\}/)?.[0] || '';
+    const footerBlock = source.match(/\.prediction-share-footer \.prediction-share-btn \{[\s\S]*?\n\}/)?.[0] || '';
+    const rowBlock = source.match(/\.prediction-share-footer-row \{[\s\S]*?\n\}/)?.[0] || '';
+    const glassBlock = source.match(/\/\* 需求46 修正：分享小菜单与全站 glass 样式统一 \*\/[\s\S]*?\.prediction-share-dropdown \{[\s\S]*?\n\}/)?.[0] || '';
+    const mobileBlock = source.match(/@media \(max-width: 480px\) \{[\s\S]*?\n\}/)?.[0] || '';
+    const iconBlocks = source.match(/\.share-icon \{[\s\S]*?\n\}/g) || [];
+
+    expect(desktopBlock).toContain('min-width: 190px');
+    expect(desktopBlock).toContain('min-height: 44px');
+    expect(desktopBlock).toContain('font-size: 1rem');
+    expect(desktopBlock).toContain('width: 20px');
+    expect(desktopBlock).not.toContain('width: 28px');
+    expect(desktopBlock).not.toContain('padding: 14px 16px');
+    expect(iconBlocks.every((block) => block.includes('width: 20px'))).toBe(true);
+    expect(footerBlock).toContain('height: 42px');
+    expect(footerBlock).toContain('padding: 0 18px !important');
+    expect(rowBlock).toContain('margin: 12px 0 10px');
+    expect(glassBlock).toContain('background: color-mix(in srgb, var(--glass-bg-heavy) 88%, transparent)');
+    expect(glassBlock).toContain('backdrop-filter: blur(var(--glass-blur-heavy)) saturate(1.25)');
+    expect(mobileBlock).toContain('margin: 10px 0 10px');
+    expect(mobileBlock).toContain('height: 40px');
   });
 
   test('score breakdown popover keeps translucent glass effect', () => {
