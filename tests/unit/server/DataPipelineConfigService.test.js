@@ -78,6 +78,22 @@ describe('DataPipelineConfigService', () => {
     expect(estimate.regionDefinition.type).toBe('countries');
   });
 
+  test('keeps zero forecast hours for single-cycle smoke runs', () => {
+    const service = new DataPipelineConfigService({ dataDir: makeTempDir(), freeDiskBytes: 20 * 1024 ** 3 });
+
+    const config = service.saveConfig({
+      regionPreset: 'test_small',
+      sources: { gfs: true, cams: false, openMeteoFallback: false },
+      forecastHours: 0,
+      forecastStepHours: 6
+    });
+    const estimate = service.estimate(config);
+
+    expect(config.forecastHours).toBe(0);
+    expect(estimate.safe).toBe(true);
+    expect(estimate.forecastHourCount).toBe(1);
+  });
+
   test('rejects dangerous global high resolution config', () => {
     const service = new DataPipelineConfigService({ dataDir: makeTempDir(), freeDiskBytes: 20 * 1024 ** 3 });
 
