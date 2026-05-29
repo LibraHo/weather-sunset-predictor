@@ -13,6 +13,7 @@ let refreshTimer = null;
 let slowRefreshTimer = null;
 let photoCache = [];
 let dataPipelineConfigCache = null;
+let accessGuardConfigDirty = false;
 
 const ADMIN_VIEW_ALIASES = {
   schedule: 'ops',
@@ -20,11 +21,12 @@ const ADMIN_VIEW_ALIASES = {
   'ops-status': 'ops',
   'ops-schedule': 'ops',
   'ops-pipeline': 'ops',
+  'ops-guard': 'ops',
   'ops-history': 'ops',
   'ops-danger': 'ops'
 };
 const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'ops', 'logs', 'agent', 'photos']);
-const OPS_INTERNAL_ANCHORS = new Set(['ops-status', 'ops-schedule', 'ops-pipeline', 'ops-history', 'ops-danger']);
+const OPS_INTERNAL_ANCHORS = new Set(['ops-status', 'ops-schedule', 'ops-pipeline', 'ops-guard', 'ops-history', 'ops-danger']);
 const ADMIN_VIEW_META = {
   dashboard: ['运行总览', '状态优先、操作分区，快速判断霞客当前运行情况。'],
   visitors: ['访客分析', '按北京时间查看 PV、UV、IP 和访问明细。'],
@@ -44,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTokenForm();
   initTokenEditForm();
   initDataPipelineForm();
+  initAccessGuardConfigForm();
 
   refreshTimer = setInterval(refreshActiveView, 15000);
   slowRefreshTimer = setInterval(() => {
@@ -375,14 +378,14 @@ function formatClientLabel(client) {
 }
 
 // =================== 访问防护 ===================
-async function loadAccessGuard() {
+async function loadAccessGuard(options = {}) {
   const summary = document.getElementById('accessGuardSummary');
   if (!summary) return;
 
   try {
     const res = await fetch('/admin/access-guard', { credentials: 'include' });
     const data = await res.json();
-    renderAccessGuard(data);
+    renderAccessGuard(data, options);
   } catch (err) {
     console.error('加载访问防护失败:', err);
     summary.innerHTML = '<p class="empty">访问防护加载失败</p>';
@@ -409,12 +412,58 @@ function formatAccessGuardEvent(type) {
   return map[type] || type || '--';
 }
 
-function renderAccessGuard(data) {
+function initAccessGuardConfigForm() {
+  const form = document.getElementById('accessGuardConfigForm');
+  if (!form) return;
+  form.addEventListener('input', () => {
+    accessGuardConfigDirty = true;
+  });
+  form.addEventListener('change', () => {
+    accessGuardConfigDirty = true;
+  });
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    await saveAccessGuardConfig();
+  });
+}
+
+function setAccessGuardConfigForm(config = {}, enabled = true, options = {}) {
+  const form = document.getElementById('accessGuardConfigForm');
+  const isEditing = form?.contains(document.activeElement);
+  if (!options.force && (accessGuardConfigDirty || isEditing)) return;
+
+  const fields = {
+    accessGuardEnabled: enabled,
+    accessGuardPerMinuteLimit: config.perMinuteLimit,
+    accessGuardRollingLimit: config.rollingLimit,
+    accessGuardSuspiciousPathLimit: config.suspiciousPathLimit,
+    accessGuardBlockMinutes: config.blockMinutes,
+  };
+  Object.entries(fields).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.type === 'checkbox') {
+      el.checked = !!value;
+    } else {
+      el.value = value ?? '';
+    }
+  });
+  accessGuardConfigDirty = false;
+}
+
+function readAccessGuardNumber(id) {
+  const el = document.getElementById(id);
+  const value = Number(el?.value);
+  return Number.isFinite(value) ? value : undefined;
+}
+
+function renderAccessGuard(data, options = {}) {
   const summary = document.getElementById('accessGuardSummary');
   const blockedBody = document.getElementById('accessGuardBlockedBody');
   const recentBody = document.getElementById('accessGuardRecentBody');
   const eventsBody = document.getElementById('accessGuardEventsBody');
   const config = data.config || {};
+  setAccessGuardConfigForm(config, data.enabled, { force: options.forceConfig });
 
   summary.innerHTML = [
     ['状态', data.enabled ? '启用' : '禁用'],
@@ -469,6 +518,31 @@ function renderAccessGuard(data) {
     `).join('');
   } else {
     eventsBody.innerHTML = '<tr><td colspan="5" class="empty">暂无拦截事件</td></tr>';
+  }
+}
+
+async function saveAccessGuardConfig() {
+  const enabledEl = document.getElementById('accessGuardEnabled');
+  try {
+    const res = await fetch('/admin/access-guard/config', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        enabled: !!enabledEl?.checked,
+        perMinuteLimit: readAccessGuardNumber('accessGuardPerMinuteLimit'),
+        rollingLimit: readAccessGuardNumber('accessGuardRollingLimit'),
+        suspiciousPathLimit: readAccessGuardNumber('accessGuardSuspiciousPathLimit'),
+        blockMinutes: readAccessGuardNumber('accessGuardBlockMinutes'),
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || '保存失败');
+    showMessage('防护配置已保存', 'success', 'accessGuardMsg');
+    accessGuardConfigDirty = false;
+    await loadAccessGuard({ forceConfig: true });
+  } catch (err) {
+    showMessage('保存失败: ' + err.message, 'error', 'accessGuardMsg');
   }
 }
 

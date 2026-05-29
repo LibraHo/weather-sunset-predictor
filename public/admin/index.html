@@ -133,6 +133,18 @@
             <div class="admin-card">
               <h3 class="card-title">防护状态</h3>
               <div id="accessGuardSummary" class="pipeline-status-grid"><p class="empty">加载中...</p></div>
+              <form id="accessGuardConfigForm" class="access-guard-config-form">
+                <label class="admin-inline-switch"><input id="accessGuardEnabled" type="checkbox" checked><span>启用自动拦截</span></label>
+                <div class="form-row two-inputs">
+                  <input id="accessGuardPerMinuteLimit" type="number" min="30" max="10000" placeholder="1分钟阈值">
+                  <input id="accessGuardRollingLimit" type="number" min="100" max="100000" placeholder="10分钟阈值">
+                </div>
+                <div class="form-row two-inputs">
+                  <input id="accessGuardSuspiciousPathLimit" type="number" min="3" max="1000" placeholder="扫描阈值">
+                  <input id="accessGuardBlockMinutes" type="number" min="5" max="10080" placeholder="封禁分钟">
+                </div>
+                <button class="btn btn-primary" type="submit">保存防护配置</button>
+              </form>
               <div class="access-guard-actions">
                 <input id="accessGuardIpInput" type="text" placeholder="IP，例如 35.201.242.131">
                 <button class="btn btn-danger" type="button" onclick="blockAccessGuardIp()">封禁 IP</button>

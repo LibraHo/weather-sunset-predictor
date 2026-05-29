@@ -95,6 +95,12 @@ describe('admin page structure', () => {
 
     [
       'accessGuardSummary',
+      'accessGuardConfigForm',
+      'accessGuardEnabled',
+      'accessGuardPerMinuteLimit',
+      'accessGuardRollingLimit',
+      'accessGuardSuspiciousPathLimit',
+      'accessGuardBlockMinutes',
       'accessGuardIpInput',
       'accessGuardMsg',
       'accessGuardBlockedBody',
@@ -103,13 +109,20 @@ describe('admin page structure', () => {
     ].forEach((id) => expect(html).toContain(`id="${id}"`));
 
     expect(html).toContain('自动拦截过量访问和敏感路径扫描');
+    expect(html).toContain('保存防护配置');
     expect(html).toContain('封禁 IP');
     expect(js).toContain("fetch('/admin/access-guard'");
+    expect(js).toContain("fetch('/admin/access-guard/config'");
     expect(js).toContain("fetch('/admin/access-guard/block'");
     expect(js).toContain("fetch('/admin/access-guard/unblock'");
     expect(js).toContain('function loadAccessGuard');
+    expect(js).toContain('function saveAccessGuardConfig');
     expect(js).toContain('function blockAccessGuardIp');
     expect(js).toContain('function unblockAccessGuardIp');
+    expect(js).toContain('accessGuardConfigDirty');
+    expect(js).toContain("form.addEventListener('input'");
+    expect(js).toContain('document.activeElement');
+    expect(js).toContain('forceConfig');
   });
 
   test('ops center keeps dangerous operations below normal status and run workflows', () => {

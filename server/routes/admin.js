@@ -397,6 +397,20 @@ router.get('/admin/access-guard', requireAuth, (req, res) => {
   res.json(accessGuardService.getStatus());
 });
 
+router.post('/admin/access-guard/config', requireAuth, (req, res) => {
+  try {
+    const config = accessGuardService.updateConfig(req.body || {});
+    res.json({ success: true, config });
+  } catch (err) {
+    res.status(400).json({
+      error: {
+        code: err.code || 'ACCESS_GUARD_CONFIG_FAILED',
+        message: err.message || '保存防护配置失败'
+      }
+    });
+  }
+});
+
 router.post('/admin/access-guard/block', requireAuth, (req, res) => {
   try {
     const entry = accessGuardService.manualBlock(req.body?.ip, req.body?.reason || 'manual_block');
