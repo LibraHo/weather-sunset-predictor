@@ -65,10 +65,12 @@ describe('admin page structure', () => {
 
     expect(html).toContain('运维中心');
     expect(html).toContain('Grid 队列状态');
-    expect(html).toContain('定时更新配置');
-    expect(html).toContain('GFS+CAMS 数据管线');
-    expect(html).toContain('id="admin-panel-schedule" class="admin-panel hidden" data-admin-panel="ops"');
-    expect(html).toContain('id="admin-panel-data-pipeline" class="admin-panel hidden" data-admin-panel="ops"');
+    expect(html).toContain('刷新与调度');
+    expect(html).toContain('数据管线');
+    expect(html).toContain('id="admin-panel-schedule" class="admin-section admin-section-group ops-workspace-block hidden" data-admin-panel="ops"');
+    expect(html).toContain('id="admin-panel-data-pipeline" class="admin-section admin-section-group ops-workspace-block hidden" data-admin-panel="ops"');
+    expect(html).not.toContain('<p class="admin-eyebrow">Schedule</p><h1>定时更新配置</h1>');
+    expect(html).not.toContain('<p class="admin-eyebrow">Data Pipeline</p><h1>GFS+CAMS 数据管线</h1>');
     expect(js).toContain("schedule: 'ops'");
     expect(js).toContain("'data-pipeline': 'ops'");
     expect(js).toContain('loadQueue(), loadHealth(), loadSchedule(), loadDataPipeline()');

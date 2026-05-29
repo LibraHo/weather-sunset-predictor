@@ -127,13 +127,13 @@
         <section class="admin-section"><div class="two-col"><div class="admin-card"><h3 class="card-title">API 调用日志</h3><div class="tab-bar"><button class="tab-btn active" onclick="switchLogTab('grid', this)">Grid</button><button class="tab-btn" onclick="switchLogTab('weather', this)">Weather</button><button class="tab-btn" onclick="switchLogTab('gaode,gaode_tile', this)">高德</button><button class="tab-btn" onclick="switchLogTab('errors', this)">Errors</button></div><div class="table-wrap"><table class="admin-table"><thead><tr><th>时间</th><th>接口</th><th>状态</th><th>耗时</th><th>错误</th></tr></thead><tbody id="logTableBody"><tr><td colspan="5" class="empty">加载中...</td></tr></tbody></table></div></div><div class="admin-card"><h3 class="card-title">每日 API 调用 & 重连统计（近7天）</h3><div class="table-wrap"><table class="admin-table"><thead><tr><th>日期</th><th>总调用</th><th>失败</th><th>Grid</th><th>Weather</th><th>高德</th><th>重试</th><th>重连恢复</th><th>重连失败</th></tr></thead><tbody id="dailyStatsBody"><tr><td colspan="9" class="empty">加载中...</td></tr></tbody></table></div></div></div></section>
       </section>
 
-      <section id="admin-panel-schedule" class="admin-panel hidden" data-admin-panel="ops" role="tabpanel" aria-label="定时任务">
-        <div class="admin-page-intro"><p class="admin-eyebrow">Schedule</p><h1>定时更新配置</h1><p>管理火烧云数据更新节奏，保存前会校验时间格式和重复配置。</p></div>
-        <section class="admin-section"><div class="admin-card"><h3 class="card-title">刷新时间点</h3><div id="scheduleJobs" class="schedule-jobs"></div><div class="schedule-actions"><button class="btn btn-secondary" onclick="addScheduleJob()">+ 添加时间点</button><button class="btn btn-primary" onclick="saveSchedule()">保存配置</button></div><div id="scheduleMsg" class="admin-message hidden"></div></div></section>
+      <section id="admin-panel-schedule" class="admin-section admin-section-group ops-workspace-block hidden" data-admin-panel="ops" aria-label="定时任务">
+        <div class="admin-section-heading"><h2>刷新与调度</h2><p>同一个运维中心里管理手动刷新和自动刷新时间，不再单独开一个定时任务页面。</p></div>
+        <div class="admin-card"><h3 class="card-title">刷新时间点</h3><div id="scheduleJobs" class="schedule-jobs"></div><div class="schedule-actions"><button class="btn btn-secondary" onclick="addScheduleJob()">+ 添加时间点</button><button class="btn btn-primary" onclick="saveSchedule()">保存配置</button></div><div id="scheduleMsg" class="admin-message hidden"></div></div>
       </section>
 
-      <section id="admin-panel-data-pipeline" class="admin-panel hidden" data-admin-panel="ops" role="tabpanel" aria-label="数据管线">
-        <div class="admin-page-intro"><p class="admin-eyebrow">Data Pipeline</p><h1>GFS+CAMS 数据管线</h1><p>像 Open-Meteo 拉取一样管理 GFS+CAMS 方案、拉取范围、下载估算、处理进度和运行记录。</p></div>
+      <section id="admin-panel-data-pipeline" class="admin-section admin-section-group ops-workspace-block hidden" data-admin-panel="ops" aria-label="数据管线">
+        <div class="admin-section-heading"><h2>数据管线</h2><p>GFS+CAMS 配置、预算、运行和记录都放在运维中心内，不再作为独立页面入口。</p></div>
         <section class="admin-section admin-section-group">
           <div class="pipeline-guide-grid" aria-label="数据管线操作流程">
             <div class="pipeline-guide-item"><span>1</span><strong>选推荐配置</strong><small>先用小范围测试，确认链路可跑通。</small></div>
