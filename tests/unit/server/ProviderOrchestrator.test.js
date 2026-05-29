@@ -228,6 +228,24 @@ describe('45.1 orchestrator 降级逻辑', () => {
     expect(result.providerMeta.providerValidated).toBe(true);
   });
 
+  test('pipeline mode does not switch regular weather away from Open-Meteo', async () => {
+    const orch = makeOrch();
+    orch.configService = { getConfig: jest.fn(() => ({ mode: 'gfs_cams' })) };
+    orch.providers.gfs_cache = {
+      fetchWeatherData: jest.fn(async () => ({
+        hours: 24,
+        data: makeData(),
+        providerMeta: { name: 'gfs_cache' }
+      }))
+    };
+
+    const result = await orch.fetchWeatherData(39.9, 116.4, 24);
+
+    expect(result.providerMeta.name).toBe('openmeteo');
+    expect(orch.providers.gfs_cache.fetchWeatherData).not.toHaveBeenCalled();
+    expect(orch.providers.openmeteo.fetchWeatherData).toHaveBeenCalled();
+  });
+
   test('feature flag 关闭时 unsupportedFields 包含 cape/convPrecip', async () => {
     const orch = makeOrch();
     orch.featureFlags.capeScoreEnabled = false;
