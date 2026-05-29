@@ -1,6 +1,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { jest } from '@jest/globals';
 
 let GfsGridSourceService;
 
@@ -93,8 +94,35 @@ describe('GfsGridSourceService', () => {
     expect(fs.existsSync(batch.rawPath)).toBe(true);
   });
 
+  test('reads GFS records through the configured parser', async () => {
+    const parser = {
+      readGridRecords: jest.fn(async () => [
+        { lat: 40, lon: 116, values: { TCDC: 72 } }
+      ])
+    };
+    const service = new GfsGridSourceService({
+      dataDir: makeTempDir(),
+      now: new Date('2026-05-26T10:15:00Z'),
+      parser
+    });
+    const batch = service.buildRequestPlan({
+      bbox: { north: 41, south: 39, west: 115, east: 117 },
+      resolution: 1,
+      forecastHours: 0
+    }).batches[0];
+
+    await expect(service.readGridRecords(batch)).resolves.toEqual([
+      { lat: 40, lon: 116, values: { TCDC: 72 } }
+    ]);
+    expect(parser.readGridRecords).toHaveBeenCalledWith(batch);
+  });
+
   test('requires an explicit GFS parser for real GRIB2 products', async () => {
-    const service = new GfsGridSourceService({ dataDir: makeTempDir(), now: new Date('2026-05-26T10:15:00Z') });
+    const service = new GfsGridSourceService({
+      dataDir: makeTempDir(),
+      now: new Date('2026-05-26T10:15:00Z'),
+      parser: null
+    });
     const batch = service.buildRequestPlan({
       bbox: { north: 41, south: 39, west: 115, east: 117 },
       resolution: 1,

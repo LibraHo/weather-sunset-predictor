@@ -5,6 +5,8 @@ const https = require('https');
 const os = require('os');
 const path = require('path');
 
+const GfsCfgribParserService = require('./GfsCfgribParserService');
+
 const FIELD_WHITELIST = [
   'TCDC', 'LCDC', 'MCDC', 'HCDC', 'RH', 'VIS',
   'APCP', 'PRATE', 'PWAT', 'DSWRF', 'TMP', 'UGRD', 'VGRD'
@@ -57,7 +59,9 @@ class GfsGridSourceService {
     this.now = options.now || null;
     this.baseUrl = options.baseUrl || 'https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl';
     this.downloadUrl = options.downloadUrl || downloadUrlToFile;
-    this.parser = options.parser || null;
+    this.parser = Object.prototype.hasOwnProperty.call(options, 'parser')
+      ? options.parser
+      : new GfsCfgribParserService();
   }
 
   buildRequestPlan(config = {}) {
