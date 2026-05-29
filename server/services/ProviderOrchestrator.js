@@ -3,12 +3,9 @@ const gfsCacheProvider = require('./providers/GfsCacheProvider');
 const windyProvider = require('./providers/WindyProviderAdapter');
 const caiyunProvider = require('./providers/CaiyunProviderAdapter');
 const sequenceValidator = require('./validators/ForecastSequenceValidator');
-const DataPipelineConfigService = require('./DataPipelineConfigService');
-
-const PIPELINE_WEATHER_MODES = new Set(['openmeteo', 'hybrid', 'gfs_cams', 'cache_only', 'paused']);
 
 class ProviderOrchestrator {
-  constructor(options = {}) {
+  constructor() {
     // Phase 15 任务63.1：ENABLE_WINDY 统一开关（默认 false）
     // true  → Windy 注册为 emergency fallback，可一键接入
     // false → Windy 完全不注册，fallback 也不触发
@@ -22,9 +19,7 @@ class ProviderOrchestrator {
     };
 
     // 任务51.1：默认仅 Open-Meteo，Windy 仅 emergency fallback
-    this.configService = options.configService || new DataPipelineConfigService();
-    this.envPrimaryProvider = process.env.PRIMARY_WEATHER_PROVIDER || null;
-    this.primaryProvider = this.envPrimaryProvider || 'openmeteo';
+    this.primaryProvider = process.env.PRIMARY_WEATHER_PROVIDER || 'openmeteo';
     this.fallbackProvider = process.env.FALLBACK_WEATHER_PROVIDER || 'windy';
 
     // emergency fallback: ENABLE_WINDY=true 时生效（默认关闭）
@@ -66,57 +61,6 @@ class ProviderOrchestrator {
     };
 
     return meta;
-  }
-
-  _readPipelineMode() {
-    try {
-      const mode = this.configService?.getConfig?.()?.mode;
-      return PIPELINE_WEATHER_MODES.has(mode) ? mode : 'hybrid';
-    } catch (err) {
-      console.warn('[ProviderOrchestrator] failed to read pipeline mode:', err.message);
-      return 'hybrid';
-    }
-  }
-
-  _resolveProviderPlan() {
-    if (this.envPrimaryProvider) {
-      return {
-        mode: 'env',
-        primaryKey: this.primaryProvider,
-        fallbackKey: this.fallbackProvider,
-        allowProviderErrorFallback: this.emergencyFallbackEnabled,
-        allowQualityFallback: this.qualityGateFallbackEnabled
-      };
-    }
-
-    const mode = this._readPipelineMode();
-    if (mode === 'openmeteo' || mode === 'paused') {
-      return {
-        mode,
-        primaryKey: 'openmeteo',
-        fallbackKey: this.fallbackProvider,
-        allowProviderErrorFallback: this.emergencyFallbackEnabled,
-        allowQualityFallback: this.qualityGateFallbackEnabled
-      };
-    }
-
-    if (mode === 'hybrid') {
-      return {
-        mode,
-        primaryKey: 'gfs_cache',
-        fallbackKey: 'openmeteo',
-        allowProviderErrorFallback: true,
-        allowQualityFallback: true
-      };
-    }
-
-    return {
-      mode,
-      primaryKey: 'gfs_cache',
-      fallbackKey: null,
-      allowProviderErrorFallback: false,
-      allowQualityFallback: false
-    };
   }
 
   /**
@@ -239,9 +183,8 @@ class ProviderOrchestrator {
   }
 
   async fetchWeatherData(lat, lon, hours = 168, weatherModel = 'ecmwf_ifs025', fetchOptions = {}) {
-    const providerPlan = this._resolveProviderPlan();
-    const primaryKey = providerPlan.primaryKey;
-    const fallbackKey = providerPlan.fallbackKey;
+    const primaryKey = this.primaryProvider;
+    const fallbackKey = this.fallbackProvider;
 
     let primaryError = null;
 
@@ -260,8 +203,8 @@ class ProviderOrchestrator {
       // 任务43.3：质量门禁失败 → qualityGateFallback
       // emergency fallback：服务本身故障
       const canFallback = isQuality
-        ? providerPlan.allowQualityFallback
-        : providerPlan.allowProviderErrorFallback;
+        ? this.qualityGateFallbackEnabled
+        : this.emergencyFallbackEnabled;
 
       if (!canFallback || fallbackKey === primaryKey) {
         throw primaryError;
@@ -295,9 +238,8 @@ class ProviderOrchestrator {
   }
 
   async fetchWeatherDataBatch(points, hours = 168, weatherModel = 'ecmwf_ifs025', fetchOptions = {}) {
-    const providerPlan = this._resolveProviderPlan();
-    const primaryKey = providerPlan.primaryKey;
-    const fallbackKey = providerPlan.fallbackKey;
+    const primaryKey = this.primaryProvider;
+    const fallbackKey = this.fallbackProvider;
     const pointList = Array.isArray(points) ? points : [];
 
     let primaryError = null;
@@ -315,8 +257,8 @@ class ProviderOrchestrator {
       }
 
       const canFallback = isQuality
-        ? providerPlan.allowQualityFallback
-        : providerPlan.allowProviderErrorFallback;
+        ? this.qualityGateFallbackEnabled
+        : this.emergencyFallbackEnabled;
 
       if (!canFallback || fallbackKey === primaryKey || !this.providers[fallbackKey]) {
         throw primaryError;
