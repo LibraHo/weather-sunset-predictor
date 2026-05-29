@@ -34,10 +34,12 @@ function parseCycle(cycle) {
   return new Date(`${cycle.slice(0, 4)}-${cycle.slice(4, 6)}-${cycle.slice(6, 8)}T${cycle.slice(8, 10)}:00:00Z`);
 }
 
-function latestCycle(now) {
+function latestAnalysisCycle(now) {
   const date = new Date(now);
-  const hour = date.getUTCHours() >= 12 ? 12 : 0;
-  date.setUTCHours(hour, 0, 0, 0);
+  if (date.getUTCHours() < 8) {
+    date.setUTCDate(date.getUTCDate() - 1);
+  }
+  date.setUTCHours(0, 0, 0, 0);
   return formatCycle(date);
 }
 
@@ -72,26 +74,15 @@ class CamsAerosolSourceService {
   buildRequestPlan(config = {}) {
     const bbox = normalizeBbox(config.bbox || { north: 54, south: 18, west: 73, east: 135 });
     const resolution = Number(config.resolution || 0.5);
-    const forecastHours = Number.isFinite(Number(config.forecastHours)) ? Number(config.forecastHours) : 48;
-    const forecastStepHours = Number.isFinite(Number(config.forecastStepHours)) ? Number(config.forecastStepHours) : 3;
-    const cycle = config.cycle || latestCycle(this.now || new Date());
-    const hours = [];
-
-    for (let hour = 0; hour <= Math.min(forecastHours, 48); hour += forecastStepHours) {
-      hours.push(hour);
-    }
-
-    const batches = [];
-    for (let i = 0; i < hours.length; i += this.batchForecastCount) {
-      batches.push(this._buildBatch({ cycle, forecastHours: hours.slice(i, i + this.batchForecastCount), bbox, resolution }));
-    }
+    const cycle = config.camsAnalysisCycle || config.cycle || latestAnalysisCycle(this.now || new Date());
+    const batches = [this._buildAnalysisBatch({ cycle, bbox, resolution })];
 
     return {
       source: 'cams',
       cycle,
       bbox,
       resolution,
-      forecastHours: hours,
+      forecastHours: [],
       variables: FIELD_WHITELIST.slice(),
       batches,
       estimatedBytes: batches.reduce((sum, batch) => sum + batch.estimatedBytes, 0)
@@ -99,17 +90,20 @@ class CamsAerosolSourceService {
   }
 
   normalizeGridProduct(batch, records = []) {
-    const forecastHour = batch.forecastHours.length === 1 ? batch.forecastHours[0] : null;
-    const validTime = Number.isFinite(forecastHour)
-      ? new Date(parseCycle(batch.cycle).getTime() + forecastHour * 60 * 60 * 1000).toISOString()
-      : null;
+    const forecastHour = batch.productType === 'analysis' ? null : (batch.forecastHours.length === 1 ? batch.forecastHours[0] : null);
+    const validTime = batch.productType === 'analysis'
+      ? parseCycle(batch.cycle).toISOString()
+      : (Number.isFinite(forecastHour)
+        ? new Date(parseCycle(batch.cycle).getTime() + forecastHour * 60 * 60 * 1000).toISOString()
+        : null);
     const points = records.map(record => ({
       lat: Number(record.lat),
       lon: Number(record.lon),
       weather: {},
       aerosol: this._pickFields(record.values || {}),
       sourceMeta: {
-        camsForecastHour: Number.isFinite(record.forecastHour) ? record.forecastHour : batch.forecastHours[0],
+        camsProductType: batch.productType || 'forecast',
+        camsForecastHour: Number.isFinite(record.forecastHour) ? record.forecastHour : (batch.forecastHours || [])[0],
         interpolation: 'deferred-bilinear'
       }
     }));
@@ -134,7 +128,8 @@ class CamsAerosolSourceService {
       points,
       sourceMeta: {
         requestId: batch.requestId,
-        rawPath: batch.rawPath
+        rawPath: batch.rawPath,
+        productType: batch.productType || 'forecast'
       }
     };
   }
@@ -157,35 +152,34 @@ class CamsAerosolSourceService {
     throw err;
   }
 
-  _buildBatch({ cycle, forecastHours, bbox, resolution }) {
-    const hourToken = forecastHours.map(hour => pad(hour, 3)).join('-');
+  _buildAnalysisBatch({ cycle, bbox, resolution }) {
     const estimatedBytes = Math.ceil(
       CAMS_GLOBAL_FIELD_BYTES_PER_CYCLE *
       (gridPointCount(bbox, resolution) / GLOBAL_CAMS_GRID_POINTS) *
-      (forecastHours.length / 17)
+      (1 / 17)
     );
 
     return {
-      id: `cams_${cycle}_f${hourToken}`,
-      requestId: `cams:${cycle}:f${hourToken}`,
+      id: `cams_${cycle}_analysis`,
+      requestId: `cams:${cycle}:analysis`,
       source: 'cams',
+      productType: 'analysis',
       cycle,
-      forecastHours: forecastHours.slice(),
+      forecastHours: [],
       bbox: clone(bbox),
       resolution,
       variables: FIELD_WHITELIST.slice(),
       request: {
         dataset: 'cams-global-atmospheric-composition-forecasts',
-        productType: 'forecast',
-        type: 'forecast',
-        format: 'netcdf_zip',
+        productType: 'analysis',
+        type: 'analysis',
+        format: 'netcdf',
         date: `${cycle.slice(0, 4)}-${cycle.slice(4, 6)}-${cycle.slice(6, 8)}`,
         time: `${cycle.slice(8, 10)}:00`,
-        leadtime_hour: forecastHours.slice(),
         variable: FIELD_WHITELIST.slice(),
         area: [bbox.north, bbox.west, bbox.south, bbox.east]
       },
-      rawPath: path.join(this.dataDir, 'data', 'raw', 'cams', cycle, `cams_${cycle}_f${hourToken}.netcdf_zip`),
+      rawPath: path.join(this.dataDir, 'data', 'raw', 'cams', cycle, `cams_${cycle}_analysis.nc`),
       estimatedBytes,
       cleanupRawAfterProcess: true,
       degradeOnFailure: true
