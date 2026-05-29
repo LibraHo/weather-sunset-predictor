@@ -162,26 +162,26 @@
   display: none !important;
 }
 
-.admin-page-hero {
-  padding: clamp(18px, 3vw, 28px);
-  border-radius: var(--radius-lg);
-  background: var(--theme-card-bg, var(--color-card-bg));
-  border: 1px solid var(--theme-card-border, var(--color-border));
-  box-shadow: var(--shadow-sm);
+.admin-page-intro {
+  display: grid;
+  gap: 4px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-card-border, var(--color-border)) 72%, transparent);
 }
 
-.admin-page-hero h1 {
-  margin: 4px 0 8px;
+.admin-page-intro h1 {
+  margin: 0;
   color: var(--theme-text, var(--color-text));
-  font-size: clamp(1.45rem, 2.8vw, 2.2rem);
-  letter-spacing: -0.03em;
+  font-size: 1.1rem;
+  letter-spacing: 0;
 }
 
-.admin-page-hero p {
+.admin-page-intro p {
   margin: 0;
   max-width: 760px;
   color: var(--theme-text-muted, var(--color-text-light));
-  line-height: 1.6;
+  font-size: 0.86rem;
+  line-height: 1.45;
 }
 
 .admin-eyebrow {
@@ -1118,16 +1118,6 @@ body.theme-dark .admin-table tr:hover td {
   width: 100%;
   max-width: 1440px;
   padding: var(--spacing-lg);
-}
-
-.admin-page-hero {
-  padding: 14px 16px;
-  border-radius: var(--radius-sm);
-}
-
-.admin-page-hero h1 {
-  font-size: 1.15rem;
-  letter-spacing: 0;
 }
 
 .admin-section-group {

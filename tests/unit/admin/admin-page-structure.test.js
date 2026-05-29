@@ -31,6 +31,17 @@ describe('admin page structure', () => {
     expect(html).toContain('id="kpi-share-total"');
   });
 
+  test('admin module introductions are compact console headers, not page cards', () => {
+    const html = readAdminHtml();
+    const css = fs.readFileSync(path.join(ROOT, 'public/admin/admin.css'), 'utf8');
+
+    expect(html).toContain('class="admin-page-intro"');
+    expect(html).not.toContain('admin-page-hero card');
+    expect(css).toContain('.admin-page-intro');
+    expect(css).toContain('border-bottom: 1px solid color-mix');
+    expect(css).not.toContain('.admin-page-hero');
+  });
+
   test('dangerous operations live in ops panel, not dashboard', () => {
     const html = readAdminHtml();
     const opsStart = html.indexOf('id="admin-panel-ops"');
