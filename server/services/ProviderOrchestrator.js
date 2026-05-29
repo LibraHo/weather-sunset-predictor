@@ -1,4 +1,5 @@
 const openMeteoProvider = require('./providers/OpenMeteoProvider');
+const gfsCacheProvider = require('./providers/GfsCacheProvider');
 const windyProvider = require('./providers/WindyProviderAdapter');
 const caiyunProvider = require('./providers/CaiyunProviderAdapter');
 const sequenceValidator = require('./validators/ForecastSequenceValidator');
@@ -12,6 +13,7 @@ class ProviderOrchestrator {
 
     this.providers = {
       openmeteo: openMeteoProvider,
+      gfs_cache: gfsCacheProvider,
       ...(this.windyEnabled ? { windy: windyProvider } : {}),
       caiyun: caiyunProvider
     };
@@ -86,9 +88,9 @@ class ProviderOrchestrator {
     }
 
     // 任务51.2：providerMeta 强制校验
-    rawData.providerMeta.providerValidated = rawData.providerMeta.name === 'openmeteo';
+    rawData.providerMeta.providerValidated = rawData.providerMeta.name === providerName;
     if (!rawData.providerMeta.providerValidated) {
-      rawData.providerMeta.degradedReason.push(`provider not openmeteo: ${rawData.providerMeta.name}`);
+      rawData.providerMeta.degradedReason.push(`provider mismatch: expected ${providerName}, got ${rawData.providerMeta.name}`);
     }
 
     rawData.providerMeta = this._appendScoringDegradeMeta(rawData.providerMeta);

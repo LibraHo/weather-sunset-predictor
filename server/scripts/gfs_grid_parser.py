@@ -96,10 +96,12 @@ def squeeze_to_lat_lon(data_array, lat_name, lon_name):
     return data_array
 
 
-def aligned(value, start, step):
+def aligned_to_global_grid(value, step):
     if step <= 0:
         return True
-    ratio = (value - start) / step
+    # The bbox can be arbitrary (for example 39.1..40.1). Downsample from the
+    # source coordinate grid instead of requiring bbox edges to align.
+    ratio = value / step
     return abs(ratio - round(ratio)) < 1e-4
 
 
@@ -136,11 +138,11 @@ def ingest_variable(records, data_array, field, args):
     if latitudes.ndim == 1 and longitudes.ndim == 1:
         for row, raw_lat in enumerate(latitudes):
             lat = float(raw_lat)
-            if not aligned(lat, args.south, args.resolution):
+            if not aligned_to_global_grid(lat, args.resolution):
                 continue
             for col, raw_lon in enumerate(longitudes):
                 lon = normalize_lon(raw_lon)
-                if not aligned(lon, args.west, args.resolution) or not in_bbox(lat, lon, args):
+                if not aligned_to_global_grid(lon, args.resolution) or not in_bbox(lat, lon, args):
                     continue
                 put_value(records, lat, lon, field, values[row, col])
                 count += 1
@@ -150,7 +152,7 @@ def ingest_variable(records, data_array, field, args):
         for index, value in np.ndenumerate(values):
             lat = float(latitudes[index])
             lon = normalize_lon(longitudes[index])
-            if not aligned(lat, args.south, args.resolution) or not aligned(lon, args.west, args.resolution):
+            if not aligned_to_global_grid(lat, args.resolution) or not aligned_to_global_grid(lon, args.resolution):
                 continue
             if not in_bbox(lat, lon, args):
                 continue

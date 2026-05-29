@@ -81,4 +81,25 @@ describe('DataPipelinePlannerService', () => {
     expect(plan.safe).toBe(false);
     expect(plan.reasons.join('; ')).toMatch(/disk/i);
   });
+
+  test('does not expand a zero-hour smoke plan into the default 48h window', () => {
+    const service = new DataPipelinePlannerService({
+      dataDir: makeTempDir(),
+      now: new Date('2026-05-26T10:15:00Z'),
+      freeDiskBytes: 20 * 1024 ** 3
+    });
+
+    const plan = service.createPlan({
+      mode: 'gfs_cams',
+      regionPreset: 'test_small',
+      sources: { gfs: true, cams: false },
+      forecastHours: 0,
+      forecastStepHours: 6
+    });
+
+    expect(plan.safe).toBe(true);
+    expect(plan.windowHours).toBe(0);
+    expect(plan.steps).toHaveLength(1);
+    expect(plan.steps[0]).toMatchObject({ source: 'gfs', forecastHour: 0 });
+  });
 });

@@ -80,9 +80,9 @@ function mergeConfig(input = {}) {
     regionPreset,
     regionDefinition,
     bbox: normalizeBbox(bbox),
-    resolution: Number(input.resolution || DEFAULT_CONFIG.resolution),
-    forecastHours: Number(input.forecastHours || DEFAULT_CONFIG.forecastHours),
-    forecastStepHours: Number(input.forecastStepHours || DEFAULT_CONFIG.forecastStepHours),
+    resolution: Number(input.resolution ?? DEFAULT_CONFIG.resolution),
+    forecastHours: Number(input.forecastHours ?? DEFAULT_CONFIG.forecastHours),
+    forecastStepHours: Number(input.forecastStepHours ?? DEFAULT_CONFIG.forecastStepHours),
     sources: {
       ...DEFAULT_CONFIG.sources,
       ...(input.sources || {})
@@ -241,7 +241,7 @@ class DataPipelineConfigService {
     if (!VALID_MODES.has(config.mode)) reasons.push(`mode ${config.mode} is invalid`);
     if (!VALID_PRESETS.has(config.regionPreset)) reasons.push(`region preset ${config.regionPreset} is invalid`);
     if (!VALID_RESOLUTIONS.has(config.resolution)) reasons.push(`resolution ${config.resolution} is invalid`);
-    if (!Number.isFinite(config.forecastHours) || config.forecastHours <= 0) reasons.push('forecast hours must be positive');
+    if (!Number.isFinite(config.forecastHours) || config.forecastHours < 0) reasons.push('forecast hours must be zero or positive');
     if (!Number.isFinite(config.forecastStepHours) || config.forecastStepHours <= 0) reasons.push('forecast step hours must be positive');
     if (!Number.isInteger(Number(config.runtimePolicy.workerConcurrency)) || Number(config.runtimePolicy.workerConcurrency) !== 1) {
       reasons.push('worker concurrency must be exactly 1 on the small production host');

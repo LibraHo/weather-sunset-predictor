@@ -40,7 +40,8 @@ class DataPipelinePlannerService {
       }
     };
 
-    config.forecastHours = Math.min(Number(config.forecastHours) || 48, 48);
+    const forecastHours = Number(config.forecastHours);
+    config.forecastHours = Math.min(Number.isFinite(forecastHours) ? forecastHours : 48, 48);
 
     const gfsPlan = config.sources.gfs
       ? new GfsGridSourceService({ dataDir: this.dataDir, now: this.now }).buildRequestPlan(config)
