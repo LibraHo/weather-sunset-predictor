@@ -201,6 +201,24 @@ describe('recent user-reported UI regression guards', () => {
     expect(docs).toContain('纯图标按钮使用 `xiake-icon-control`');
   });
 
+  test('settings panel decorative icons stay bounded on desktop and mobile', () => {
+    const source = fs.readFileSync(path.resolve('styles/settings-panel.css'), 'utf8');
+    const headerIconBlock = source.match(/\.settings-header h2 \.settings-svg-icon \{[\s\S]*?\n\}/)?.[0] || '';
+    const sectionIconBlock = source.match(/\.settings-section-title \.settings-svg-icon \{[\s\S]*?\n\}/)?.[0] || '';
+    const mobileBlock = source.match(/@media \(max-width: 768px\) \{[\s\S]*?\.settings-section-title \.settings-svg-icon \{[\s\S]*?\n  \}[\s\S]*?\n\}/)?.[0] || '';
+
+    expect(headerIconBlock).toContain('width: clamp(30px, 5vw, 42px);');
+    expect(headerIconBlock).toContain('height: clamp(30px, 5vw, 42px);');
+    expect(sectionIconBlock).toContain('width: 22px;');
+    expect(sectionIconBlock).toContain('height: 22px;');
+    expect(mobileBlock).toContain('background: rgb(255, 251, 243);');
+    expect(mobileBlock).toContain('background: rgb(18, 28, 52);');
+    expect(mobileBlock).toContain('width: 32px;');
+    expect(mobileBlock).toContain('height: 32px;');
+    expect(mobileBlock).toContain('width: 20px;');
+    expect(mobileBlock).toContain('height: 20px;');
+  });
+
   test('auto dark theme keeps home icon controls on dark tokens', () => {
     const source = css();
     const autoDarkBlock = source.match(/@media \(prefers-color-scheme: dark\) \{[\s\S]*?body\.theme-auto \{[\s\S]*?\n  \}/)?.[0] || '';
