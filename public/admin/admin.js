@@ -16,9 +16,15 @@ let dataPipelineConfigCache = null;
 
 const ADMIN_VIEW_ALIASES = {
   schedule: 'ops',
-  'data-pipeline': 'ops'
+  'data-pipeline': 'ops',
+  'ops-status': 'ops',
+  'ops-schedule': 'ops',
+  'ops-pipeline': 'ops',
+  'ops-history': 'ops',
+  'ops-danger': 'ops'
 };
 const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'ops', 'logs', 'agent', 'photos']);
+const OPS_INTERNAL_ANCHORS = new Set(['ops-status', 'ops-schedule', 'ops-pipeline', 'ops-history', 'ops-danger']);
 const ADMIN_VIEW_META = {
   dashboard: ['运行总览', '状态优先、操作分区，快速判断霞客当前运行情况。'],
   visitors: ['访客分析', '按北京时间查看 PV、UV、IP 和访问明细。'],
@@ -32,6 +38,7 @@ const ADMIN_VIEW_META = {
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   initAdminNavigation();
+  initOpsCenterNav();
   initUploadForm();
   initPhotoEditForm();
   initTokenForm();
@@ -123,7 +130,8 @@ function initAdminNavigation() {
       }
     });
     updateAdminPageHeading(activeAdminView);
-    if (window.location.hash.replace(/^#/, '') !== activeAdminView) {
+    const currentHash = window.location.hash.replace(/^#/, '');
+    if (currentHash !== activeAdminView && !OPS_INTERNAL_ANCHORS.has(currentHash)) {
       history.replaceState(null, '', `#${activeAdminView}`);
     }
     loadActiveView();
@@ -147,6 +155,32 @@ function initAdminNavigation() {
 
   window.addEventListener('hashchange', () => window.setAdminView(getViewFromHash()));
   window.setAdminView(getViewFromHash());
+  const initialHash = window.location.hash.replace(/^#/, '');
+  if (OPS_INTERNAL_ANCHORS.has(initialHash)) {
+    requestAnimationFrame(() => scrollToOpsAnchor(initialHash));
+  }
+}
+
+function initOpsCenterNav() {
+  document.querySelectorAll('.ops-center-link[href^="#ops-"]').forEach((link) => {
+    link.addEventListener('click', (event) => {
+      event.preventDefault();
+      const anchor = link.getAttribute('href').slice(1);
+      if (activeAdminView !== 'ops') window.setAdminView('ops');
+      requestAnimationFrame(() => scrollToOpsAnchor(anchor));
+    });
+  });
+}
+
+function scrollToOpsAnchor(anchor) {
+  if (!OPS_INTERNAL_ANCHORS.has(anchor)) return;
+  const target = document.getElementById(anchor);
+  if (!target) return;
+  document.querySelectorAll('.ops-center-link').forEach((link) => {
+    link.classList.toggle('active', link.getAttribute('href') === `#${anchor}`);
+  });
+  history.replaceState(null, '', `#${anchor}`);
+  target.scrollIntoView({ block: 'start' });
 }
 
 function updateAdminPageHeading(view) {

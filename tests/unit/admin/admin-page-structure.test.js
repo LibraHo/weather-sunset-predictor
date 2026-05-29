@@ -51,8 +51,8 @@ describe('admin page structure', () => {
   test('dangerous operations live in ops panel, not dashboard', () => {
     const html = readAdminHtml();
     const opsStart = html.indexOf('id="admin-panel-ops"');
-    const logsStart = html.indexOf('id="admin-panel-logs"');
-    const opsHtml = html.slice(opsStart, logsStart);
+    const agentStart = html.indexOf('id="admin-panel-agent"');
+    const opsHtml = html.slice(opsStart, agentStart);
 
     expect(opsHtml).toContain('danger-zone');
     expect(opsHtml).toContain('clearGridCache');
@@ -62,18 +62,60 @@ describe('admin page structure', () => {
   test('ops center combines operations, schedule, and data pipeline into one navigation target', () => {
     const html = readAdminHtml();
     const js = readAdminJs();
+    const opsStart = html.indexOf('id="admin-panel-ops"');
+    const agentStart = html.indexOf('id="admin-panel-agent"');
+    const opsHtml = html.slice(opsStart, agentStart);
 
     expect(html).toContain('运维中心');
     expect(html).toContain('Grid 队列状态');
     expect(html).toContain('刷新与调度');
     expect(html).toContain('数据管线');
-    expect(html).toContain('id="admin-panel-schedule" class="admin-section admin-section-group ops-workspace-block hidden" data-admin-panel="ops"');
-    expect(html).toContain('id="admin-panel-data-pipeline" class="admin-section admin-section-group ops-workspace-block hidden" data-admin-panel="ops"');
+    expect(opsHtml).toContain('class="ops-center-nav"');
+    expect(opsHtml).toContain('href="#ops-status"');
+    expect(opsHtml).toContain('href="#ops-schedule"');
+    expect(opsHtml).toContain('href="#ops-pipeline"');
+    expect(opsHtml).toContain('href="#ops-history"');
+    expect(opsHtml).toContain('href="#ops-danger"');
+    expect(opsHtml).toContain('id="ops-status"');
+    expect(opsHtml).toContain('id="admin-panel-schedule"');
+    expect(opsHtml).toContain('id="admin-panel-data-pipeline"');
+    expect(opsHtml).toContain('id="ops-history"');
+    expect(opsHtml).toContain('id="ops-danger"');
     expect(html).not.toContain('<p class="admin-eyebrow">Schedule</p><h1>定时更新配置</h1>');
     expect(html).not.toContain('<p class="admin-eyebrow">Data Pipeline</p><h1>GFS+CAMS 数据管线</h1>');
     expect(js).toContain("schedule: 'ops'");
     expect(js).toContain("'data-pipeline': 'ops'");
     expect(js).toContain('loadQueue(), loadHealth(), loadSchedule(), loadDataPipeline()');
+  });
+
+  test('ops center keeps dangerous operations below normal status and run workflows', () => {
+    const html = readAdminHtml();
+    const opsStart = html.indexOf('id="admin-panel-ops"');
+    const agentStart = html.indexOf('id="admin-panel-agent"');
+    const opsHtml = html.slice(opsStart, agentStart);
+
+    const statusIndex = opsHtml.indexOf('id="ops-status"');
+    const scheduleIndex = opsHtml.indexOf('id="admin-panel-schedule"');
+    const pipelineIndex = opsHtml.indexOf('id="admin-panel-data-pipeline"');
+    const historyIndex = opsHtml.indexOf('id="ops-history"');
+    const dangerIndex = opsHtml.indexOf('id="ops-danger"');
+
+    [statusIndex, scheduleIndex, pipelineIndex, historyIndex, dangerIndex].forEach((index) => {
+      expect(index).toBeGreaterThanOrEqual(0);
+    });
+    expect(statusIndex).toBeLessThan(scheduleIndex);
+    expect(scheduleIndex).toBeLessThan(pipelineIndex);
+    expect(pipelineIndex).toBeLessThan(historyIndex);
+    expect(historyIndex).toBeLessThan(dangerIndex);
+
+    const statusHtml = opsHtml.slice(statusIndex, scheduleIndex);
+    const dangerHtml = opsHtml.slice(dangerIndex);
+    expect(statusHtml).not.toContain('restartBackend');
+    expect(statusHtml).not.toContain('clearGridCache');
+    expect(dangerHtml).toContain('restartBackend');
+    expect(dangerHtml).toContain('clearGridCache');
+    expect(dangerHtml).toContain('cleanupDataPipeline');
+    expect(dangerHtml).toContain('confirmDataPipelineRollback');
   });
 
   test('data pipeline separates status, config, run controls, danger actions, and history', () => {
