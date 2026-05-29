@@ -119,6 +119,10 @@ describe('admin page structure', () => {
     expect(js).toContain('function saveAccessGuardConfig');
     expect(js).toContain('function blockAccessGuardIp');
     expect(js).toContain('function unblockAccessGuardIp');
+    expect(js).toContain('accessGuardConfigDirty');
+    expect(js).toContain("form.addEventListener('input'");
+    expect(js).toContain('document.activeElement');
+    expect(js).toContain('forceConfig');
   });
 
   test('ops center keeps dangerous operations below normal status and run workflows', () => {
