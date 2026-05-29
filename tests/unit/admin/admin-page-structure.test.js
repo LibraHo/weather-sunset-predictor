@@ -31,6 +31,17 @@ describe('admin page structure', () => {
     expect(html).toContain('id="kpi-share-total"');
   });
 
+  test('admin module introductions are compact console headers, not page cards', () => {
+    const html = readAdminHtml();
+    const css = fs.readFileSync(path.join(ROOT, 'public/admin/admin.css'), 'utf8');
+
+    expect(html).toContain('class="admin-page-intro"');
+    expect(html).not.toContain('admin-page-hero card');
+    expect(css).toContain('.admin-page-intro');
+    expect(css).toContain('border-bottom: 1px solid color-mix');
+    expect(css).not.toContain('.admin-page-hero');
+  });
+
   test('dangerous operations live in ops panel, not dashboard', () => {
     const html = readAdminHtml();
     const opsStart = html.indexOf('id="admin-panel-ops"');
@@ -279,11 +290,26 @@ describe('admin page structure', () => {
       'cleanupDataPipelineDryRun',
       'confirmDataPipelineRollback',
       'saveDataPipelineConfigWithMode',
+      'applyDataPipelinePreset',
       'renderDataPipelineSummary',
       'formatDataPipelineFailure',
       'formatBbox',
     ].forEach((fn) => expect(js).toContain(`function ${fn}`));
 
+    [
+      '数据管线操作流程',
+      '先跑小范围',
+      '中国均衡',
+      '只用 Open-Meteo',
+      '高级 bbox 边界',
+      '1 估算下载量',
+      '2 保存配置',
+      '3 dry-run',
+      '4 启动真实 run',
+    ].forEach((copy) => expect(html).toContain(copy));
+
+    expect(js).toContain('DATA_PIPELINE_RECOMMENDED_PRESETS');
+    expect(js).toContain("showMessage(`已套用「${preset.label}」，下一步点“1 估算下载量”。`");
     expect(js).toContain('await estimateDataPipeline({ silent: true })');
     expect(js).toContain("mode: 'paused'");
     expect(js).toContain("mode: 'gfs_cams'");
@@ -291,6 +317,8 @@ describe('admin page structure', () => {
     expect(js).toContain("confirm('确认进入 rollback 预案？')");
     expect(js).toContain("confirm('再次确认：当前版本只会记录 rollback 意图，不会改动后端数据。')");
     expect(css).toContain('.pipeline-summary-grid');
+    expect(css).toContain('.pipeline-guide-grid');
+    expect(css).toContain('.pipeline-preset-btn');
     expect(css).toContain('.pipeline-danger-actions');
     expect(css).toContain('overflow-wrap: anywhere');
   });

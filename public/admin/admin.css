@@ -9,6 +9,12 @@
   color: var(--theme-text, var(--color-text));
 }
 
+.admin-body *,
+.admin-body *::before,
+.admin-body *::after {
+  box-sizing: border-box;
+}
+
 .admin-header {
   position: relative;
   z-index: 1000;
@@ -162,26 +168,26 @@
   display: none !important;
 }
 
-.admin-page-hero {
-  padding: clamp(18px, 3vw, 28px);
-  border-radius: var(--radius-lg);
-  background: var(--theme-card-bg, var(--color-card-bg));
-  border: 1px solid var(--theme-card-border, var(--color-border));
-  box-shadow: var(--shadow-sm);
+.admin-page-intro {
+  display: grid;
+  gap: 4px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-card-border, var(--color-border)) 72%, transparent);
 }
 
-.admin-page-hero h1 {
-  margin: 4px 0 8px;
+.admin-page-intro h1 {
+  margin: 0;
   color: var(--theme-text, var(--color-text));
-  font-size: clamp(1.45rem, 2.8vw, 2.2rem);
-  letter-spacing: -0.03em;
+  font-size: 1.1rem;
+  letter-spacing: 0;
 }
 
-.admin-page-hero p {
+.admin-page-intro p {
   margin: 0;
   max-width: 760px;
   color: var(--theme-text-muted, var(--color-text-light));
-  line-height: 1.6;
+  font-size: 0.86rem;
+  line-height: 1.45;
 }
 
 .admin-eyebrow {
@@ -611,6 +617,71 @@ body.theme-dark .admin-table tr:hover td {
 }
 
 /* 数据管线 */
+.pipeline-guide-grid,
+.pipeline-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.pipeline-guide-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 10px;
+  align-items: start;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--theme-card-border, var(--color-border));
+  border-radius: var(--radius-md);
+  background: var(--theme-panel-soft, var(--color-bg));
+}
+
+.pipeline-guide-item span {
+  grid-row: span 2;
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--theme-accent, #ff9800) 18%, transparent);
+  color: var(--theme-accent-strong, var(--theme-accent));
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.pipeline-guide-item strong,
+.pipeline-preset-btn strong {
+  color: var(--theme-text, var(--color-text));
+  font-size: 0.9rem;
+  line-height: 1.3;
+}
+
+.pipeline-guide-item small,
+.pipeline-preset-btn span,
+#pipelineConfigForm label small {
+  color: var(--theme-text-muted, var(--color-text-light));
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.pipeline-preset-btn {
+  min-height: 84px;
+  display: grid;
+  gap: 6px;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--theme-card-border, var(--color-border));
+  border-radius: var(--radius-md);
+  background: var(--theme-panel-soft, var(--color-bg));
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pipeline-preset-btn:hover,
+.pipeline-preset-btn:focus-visible {
+  border-color: color-mix(in srgb, var(--theme-accent, #ff9800) 42%, var(--theme-card-border, var(--color-border)));
+  background: color-mix(in srgb, var(--theme-accent, #ff9800) 10%, var(--theme-panel-soft, var(--color-bg)));
+}
+
 .pipeline-summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
@@ -689,6 +760,14 @@ body.theme-dark .admin-table tr:hover td {
 
 #pipelineConfigForm .form-row.two-inputs label {
   flex: 1;
+}
+
+.pipeline-advanced-fields {
+  margin: 0;
+}
+
+.pipeline-advanced-fields .pipeline-bbox-grid {
+  margin-top: var(--spacing-sm);
 }
 
 .pipeline-bbox-grid input,
@@ -1120,16 +1199,6 @@ body.theme-dark .admin-table tr:hover td {
   padding: var(--spacing-lg);
 }
 
-.admin-page-hero {
-  padding: 14px 16px;
-  border-radius: var(--radius-sm);
-}
-
-.admin-page-hero h1 {
-  font-size: 1.15rem;
-  letter-spacing: 0;
-}
-
 .admin-section-group {
   display: grid;
   gap: var(--spacing-md);
@@ -1222,7 +1291,10 @@ body.theme-dark .admin-table tr:hover td {
     position: sticky;
     top: 0;
     z-index: 950;
+    width: 100%;
+    min-width: 0;
     height: auto;
+    overflow: hidden;
     padding: var(--spacing-sm) var(--spacing-md);
     border-right: 0;
     border-bottom: 1px solid var(--theme-card-border, var(--color-border));
@@ -1233,6 +1305,8 @@ body.theme-dark .admin-table tr:hover td {
   }
 
   .admin-nav {
+    min-width: 0;
+    max-width: 100%;
     flex-direction: row;
     overflow-x: auto;
     padding-bottom: 2px;

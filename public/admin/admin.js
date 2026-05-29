@@ -751,6 +751,33 @@ const DATA_PIPELINE_MODE_LABELS = {
   paused: '暂停'
 };
 
+const DATA_PIPELINE_RECOMMENDED_PRESETS = {
+  'safe-test': {
+    label: '先跑小范围',
+    mode: 'gfs_cams',
+    regionPreset: 'test_small',
+    resolution: 1,
+    forecastHours: 24,
+    sources: { gfs: true, cams: true, openMeteoFallback: true }
+  },
+  'china-balanced': {
+    label: '中国均衡',
+    mode: 'gfs_cams',
+    regionPreset: 'china',
+    resolution: 0.5,
+    forecastHours: 48,
+    sources: { gfs: true, cams: true, openMeteoFallback: true }
+  },
+  'fallback-only': {
+    label: '只用 Open-Meteo',
+    mode: 'openmeteo',
+    regionPreset: 'china',
+    resolution: 0.5,
+    forecastHours: 48,
+    sources: { gfs: false, cams: false, openMeteoFallback: true }
+  }
+};
+
 async function loadDataPipeline() {
   await loadDataPipelineConfig();
   await Promise.all([loadDataPipelineStatus(), loadDataPipelineRuns()]);
@@ -823,6 +850,26 @@ function initDataPipelineForm() {
     setInputValue('pipelineBboxEast', bbox.east);
     showMessage('范围已切换，保存前请先估算。', 'success', 'pipelineConfigMsg');
   });
+}
+
+function applyDataPipelinePreset(name) {
+  const preset = DATA_PIPELINE_RECOMMENDED_PRESETS[name];
+  if (!preset) return;
+  const bbox = DATA_PIPELINE_PRESET_BBOXES[preset.regionPreset];
+  setInputValue('pipelineMode', preset.mode);
+  setInputValue('pipelineRegionPreset', preset.regionPreset);
+  setInputValue('pipelineResolution', preset.resolution);
+  setInputValue('pipelineForecastHours', preset.forecastHours);
+  if (bbox) {
+    setInputValue('pipelineBboxNorth', bbox.north);
+    setInputValue('pipelineBboxSouth', bbox.south);
+    setInputValue('pipelineBboxWest', bbox.west);
+    setInputValue('pipelineBboxEast', bbox.east);
+  }
+  setCheckedValue('pipelineGfsEnabled', preset.sources.gfs);
+  setCheckedValue('pipelineCamsEnabled', preset.sources.cams);
+  setCheckedValue('pipelineOpenMeteoFallback', preset.sources.openMeteoFallback);
+  showMessage(`已套用「${preset.label}」，下一步点“1 估算下载量”。`, 'success', 'pipelineConfigMsg');
 }
 
 function collectDataPipelineConfig() {
