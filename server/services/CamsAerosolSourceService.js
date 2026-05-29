@@ -3,6 +3,9 @@
 const os = require('os');
 const path = require('path');
 
+const CamsCdsDownloaderService = require('./CamsCdsDownloaderService');
+const CamsNetcdfParserService = require('./CamsNetcdfParserService');
+
 const FIELD_WHITELIST = [
   'total_aerosol_optical_depth_550nm',
   'dust_aerosol_optical_depth_550nm',
@@ -25,6 +28,10 @@ function pad(value, size = 2) {
 
 function formatCycle(date) {
   return `${date.getUTCFullYear()}${pad(date.getUTCMonth() + 1)}${pad(date.getUTCDate())}${pad(date.getUTCHours())}`;
+}
+
+function parseCycle(cycle) {
+  return new Date(`${cycle.slice(0, 4)}-${cycle.slice(4, 6)}-${cycle.slice(6, 8)}T${cycle.slice(8, 10)}:00:00Z`);
 }
 
 function latestCycle(now) {
@@ -53,9 +60,13 @@ class CamsAerosolSourceService {
   constructor(options = {}) {
     this.dataDir = options.dataDir || path.join(os.homedir(), '.xiake');
     this.now = options.now || null;
-    this.batchForecastCount = options.batchForecastCount || 3;
-    this.downloader = options.downloader || null;
-    this.parser = options.parser || null;
+    this.batchForecastCount = options.batchForecastCount || 1;
+    this.downloader = Object.prototype.hasOwnProperty.call(options, 'downloader')
+      ? options.downloader
+      : new CamsCdsDownloaderService();
+    this.parser = Object.prototype.hasOwnProperty.call(options, 'parser')
+      ? options.parser
+      : new CamsNetcdfParserService();
   }
 
   buildRequestPlan(config = {}) {
@@ -88,6 +99,10 @@ class CamsAerosolSourceService {
   }
 
   normalizeGridProduct(batch, records = []) {
+    const forecastHour = batch.forecastHours.length === 1 ? batch.forecastHours[0] : null;
+    const validTime = Number.isFinite(forecastHour)
+      ? new Date(parseCycle(batch.cycle).getTime() + forecastHour * 60 * 60 * 1000).toISOString()
+      : null;
     const points = records.map(record => ({
       lat: Number(record.lat),
       lon: Number(record.lon),
@@ -104,8 +119,9 @@ class CamsAerosolSourceService {
       productType: 'aerosol_grid',
       schemaVersion: 1,
       cycle: batch.cycle,
+      forecastHour,
       forecastHours: batch.forecastHours.slice(),
-      validTime: null,
+      validTime,
       grid: {
         bbox: clone(batch.bbox),
         resolution: batch.resolution
@@ -161,14 +177,15 @@ class CamsAerosolSourceService {
       request: {
         dataset: 'cams-global-atmospheric-composition-forecasts',
         productType: 'forecast',
-        format: 'netcdf',
+        type: 'forecast',
+        format: 'netcdf_zip',
         date: `${cycle.slice(0, 4)}-${cycle.slice(4, 6)}-${cycle.slice(6, 8)}`,
         time: `${cycle.slice(8, 10)}:00`,
-        leadtimeHour: forecastHours.slice(),
+        leadtime_hour: forecastHours.slice(),
         variable: FIELD_WHITELIST.slice(),
         area: [bbox.north, bbox.west, bbox.south, bbox.east]
       },
-      rawPath: path.join(this.dataDir, 'data', 'raw', 'cams', cycle, `cams_${cycle}_f${hourToken}.nc`),
+      rawPath: path.join(this.dataDir, 'data', 'raw', 'cams', cycle, `cams_${cycle}_f${hourToken}.netcdf_zip`),
       estimatedBytes,
       cleanupRawAfterProcess: true,
       degradeOnFailure: true
