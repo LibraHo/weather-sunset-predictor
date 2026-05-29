@@ -49,7 +49,8 @@ describe('DataPipelinePlannerService', () => {
     expect(camsStep).toMatchObject({
       request: expect.objectContaining({
         dataset: 'cams-global-atmospheric-composition-forecasts',
-        format: 'netcdf'
+        type: 'forecast',
+        format: 'netcdf_zip'
       })
     });
     expect(plan.estimate).toMatchObject({
