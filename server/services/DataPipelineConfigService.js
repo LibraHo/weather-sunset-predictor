@@ -6,14 +6,29 @@ const path = require('path');
 
 const DEFAULT_BBOXES = {
   china: { north: 54, south: 18, west: 73, east: 135 },
+  japan: { north: 46, south: 31, west: 129, east: 146 },
+  south_korea: { north: 39.5, south: 33, west: 124, east: 132 },
+  china_japan_korea: { north: 54, south: 18, west: 73, east: 146 },
   east_asia: { north: 60, south: 5, west: 70, east: 150 },
   test_small: { north: 41, south: 39, west: 115, east: 117 }
 };
 
+const REGION_COUNTRIES = {
+  CN: { name: 'China', bbox: DEFAULT_BBOXES.china },
+  JP: { name: 'Japan', bbox: DEFAULT_BBOXES.japan },
+  KR: { name: 'South Korea', bbox: DEFAULT_BBOXES.south_korea }
+};
+
+const DEFAULT_REGION_DEFINITION = {
+  type: 'countries',
+  countries: ['CN', 'JP', 'KR']
+};
+
 const DEFAULT_CONFIG = {
   mode: 'hybrid',
-  regionPreset: 'china',
-  bbox: DEFAULT_BBOXES.china,
+  regionPreset: 'china_japan_korea',
+  regionDefinition: DEFAULT_REGION_DEFINITION,
+  bbox: DEFAULT_BBOXES.china_japan_korea,
   resolution: 0.5,
   forecastHours: 48,
   forecastStepHours: 1,
@@ -38,7 +53,7 @@ const DEFAULT_CONFIG = {
 };
 
 const VALID_MODES = new Set(['openmeteo', 'gfs_cams', 'hybrid', 'cache_only', 'paused']);
-const VALID_PRESETS = new Set(['china', 'east_asia', 'test_small', 'custom_bbox']);
+const VALID_PRESETS = new Set(['china_japan_korea', 'china', 'japan', 'south_korea', 'east_asia', 'test_small', 'custom_bbox']);
 const VALID_RESOLUTIONS = new Set([0.25, 0.5, 1]);
 const MAX_BBOX_AREA_DEG2 = 12000;
 const MAX_GRID_POINTS = 200000;
@@ -53,14 +68,17 @@ function clone(value) {
 
 function mergeConfig(input = {}) {
   const regionPreset = VALID_PRESETS.has(input.regionPreset) ? input.regionPreset : DEFAULT_CONFIG.regionPreset;
-  const presetBbox = regionPreset === 'custom_bbox' ? DEFAULT_CONFIG.bbox : DEFAULT_BBOXES[regionPreset];
-  const bbox = input.bbox || presetBbox || DEFAULT_CONFIG.bbox;
+  const regionDefinition = normalizeRegionDefinition(input.regionDefinition, regionPreset);
+  const regionBbox = bboxFromRegionDefinition(regionDefinition);
+  const presetBbox = regionPreset === 'custom_bbox' ? null : DEFAULT_BBOXES[regionPreset];
+  const bbox = regionBbox || input.bbox || presetBbox || DEFAULT_CONFIG.bbox;
 
   return {
     ...clone(DEFAULT_CONFIG),
     ...input,
     mode: VALID_MODES.has(input.mode) ? input.mode : (input.mode || DEFAULT_CONFIG.mode),
     regionPreset,
+    regionDefinition,
     bbox: normalizeBbox(bbox),
     resolution: Number(input.resolution || DEFAULT_CONFIG.resolution),
     forecastHours: Number(input.forecastHours || DEFAULT_CONFIG.forecastHours),
@@ -77,6 +95,41 @@ function mergeConfig(input = {}) {
       ...DEFAULT_CONFIG.storagePolicy,
       ...(input.storagePolicy || {})
     }
+  };
+}
+
+function normalizeRegionDefinition(input, regionPreset) {
+  if (regionPreset === 'custom_bbox') {
+    return { type: 'bbox' };
+  }
+
+  const countries = Array.isArray(input?.countries)
+    ? input.countries.map(code => String(code).toUpperCase()).filter(code => REGION_COUNTRIES[code])
+    : null;
+
+  if (input?.type === 'countries' && countries?.length) {
+    return {
+      type: 'countries',
+      countries: [...new Set(countries)]
+    };
+  }
+
+  if (regionPreset === 'china') return { type: 'countries', countries: ['CN'] };
+  if (regionPreset === 'japan') return { type: 'countries', countries: ['JP'] };
+  if (regionPreset === 'south_korea') return { type: 'countries', countries: ['KR'] };
+  if (regionPreset === 'china_japan_korea' || regionPreset === 'east_asia') return clone(DEFAULT_REGION_DEFINITION);
+  return clone(DEFAULT_REGION_DEFINITION);
+}
+
+function bboxFromRegionDefinition(regionDefinition) {
+  if (regionDefinition?.type !== 'countries' || !Array.isArray(regionDefinition.countries)) return null;
+  const boxes = regionDefinition.countries.map(code => REGION_COUNTRIES[code]?.bbox).filter(Boolean);
+  if (boxes.length === 0) return null;
+  return {
+    north: Math.max(...boxes.map(box => box.north)),
+    south: Math.min(...boxes.map(box => box.south)),
+    west: Math.min(...boxes.map(box => box.west)),
+    east: Math.max(...boxes.map(box => box.east))
   };
 }
 
@@ -173,6 +226,7 @@ class DataPipelineConfigService {
       safe: reasons.length === 0,
       reasons,
       config,
+      regionDefinition: clone(config.regionDefinition),
       bboxAreaDeg2,
       gridPoints,
       forecastHourCount,

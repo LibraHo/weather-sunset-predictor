@@ -37,14 +37,16 @@ describe('admin page structure', () => {
     expect(html).toContain('id="kpi-share-total"');
   });
 
-  test('admin module introductions are compact console headers, not page cards', () => {
+  test('admin panels rely on the workspace header instead of repeating page introductions', () => {
     const html = readAdminHtml();
     const css = fs.readFileSync(path.join(ROOT, 'public/admin/admin.css'), 'utf8');
 
-    expect(html).toContain('class="admin-page-intro"');
+    expect(html).toContain('class="admin-header"');
+    expect(html).toContain('id="admin-page-title"');
+    expect(html).toContain('id="admin-page-subtitle"');
+    expect(html).not.toContain('class="admin-page-intro"');
     expect(html).not.toContain('admin-page-hero card');
-    expect(css).toContain('.admin-page-intro');
-    expect(css).toContain('border-bottom: 1px solid color-mix');
+    expect(css).not.toContain('.admin-page-intro');
     expect(css).not.toContain('.admin-page-hero');
   });
 
@@ -69,18 +71,21 @@ describe('admin page structure', () => {
     expect(html).toContain('运维中心');
     expect(html).toContain('Grid 队列状态');
     expect(html).toContain('访问防护');
-    expect(html).toContain('刷新与调度');
+    expect(html).toContain('定时任务跟随当前方案');
     expect(html).toContain('数据管线');
     expect(opsHtml).toContain('class="ops-center-nav"');
     expect(opsHtml).toContain('href="#ops-status"');
+    expect(opsHtml).toContain('href="#ops-mode"');
+    expect(opsHtml).toContain('href="#ops-queue"');
     expect(opsHtml).toContain('href="#ops-schedule"');
-    expect(opsHtml).toContain('href="#ops-pipeline"');
-    expect(opsHtml).toContain('href="#ops-history"');
+    expect(opsHtml).toContain('href="#ops-config"');
     expect(opsHtml).toContain('href="#ops-danger"');
     expect(opsHtml).toContain('id="ops-status"');
+    expect(opsHtml).toContain('id="ops-mode"');
+    expect(opsHtml).toContain('id="ops-queue"');
     expect(opsHtml).toContain('id="admin-panel-schedule"');
     expect(opsHtml).toContain('id="admin-panel-data-pipeline"');
-    expect(opsHtml).toContain('id="ops-history"');
+    expect(opsHtml).toContain('id="ops-config"');
     expect(opsHtml).toContain('id="ops-danger"');
     expect(html).not.toContain('<p class="admin-eyebrow">Schedule</p><h1>定时更新配置</h1>');
     expect(html).not.toContain('<p class="admin-eyebrow">Data Pipeline</p><h1>GFS+CAMS 数据管线</h1>');
@@ -132,20 +137,24 @@ describe('admin page structure', () => {
     const opsHtml = html.slice(opsStart, agentStart);
 
     const statusIndex = opsHtml.indexOf('id="ops-status"');
+    const modeIndex = opsHtml.indexOf('id="ops-mode"');
+    const queueIndex = opsHtml.indexOf('id="ops-queue"');
     const scheduleIndex = opsHtml.indexOf('id="admin-panel-schedule"');
     const pipelineIndex = opsHtml.indexOf('id="admin-panel-data-pipeline"');
-    const historyIndex = opsHtml.indexOf('id="ops-history"');
+    const configIndex = opsHtml.indexOf('id="ops-config"');
     const dangerIndex = opsHtml.indexOf('id="ops-danger"');
 
-    [statusIndex, scheduleIndex, pipelineIndex, historyIndex, dangerIndex].forEach((index) => {
+    [statusIndex, pipelineIndex, modeIndex, queueIndex, scheduleIndex, configIndex, dangerIndex].forEach((index) => {
       expect(index).toBeGreaterThanOrEqual(0);
     });
-    expect(statusIndex).toBeLessThan(scheduleIndex);
-    expect(scheduleIndex).toBeLessThan(pipelineIndex);
-    expect(pipelineIndex).toBeLessThan(historyIndex);
-    expect(historyIndex).toBeLessThan(dangerIndex);
+    expect(statusIndex).toBeLessThan(pipelineIndex);
+    expect(pipelineIndex).toBeLessThan(modeIndex);
+    expect(modeIndex).toBeLessThan(queueIndex);
+    expect(queueIndex).toBeLessThan(scheduleIndex);
+    expect(scheduleIndex).toBeLessThan(configIndex);
+    expect(configIndex).toBeLessThan(dangerIndex);
 
-    const statusHtml = opsHtml.slice(statusIndex, scheduleIndex);
+    const statusHtml = opsHtml.slice(statusIndex, pipelineIndex);
     const dangerHtml = opsHtml.slice(dangerIndex);
     expect(statusHtml).not.toContain('restartBackend');
     expect(statusHtml).not.toContain('clearGridCache');
@@ -168,21 +177,82 @@ describe('admin page structure', () => {
     const agentStart = html.indexOf('id="admin-panel-agent"');
     const pipelineHtml = html.slice(pipelineStart, agentStart);
 
-    ['状态与预算', '配置', '运行控制', 'Danger Zone', '运行历史'].forEach((label) => {
+    ['切换当前方案', '任务队列', '定时任务跟随当前方案', '方案参数', 'Danger Zone'].forEach((label) => {
       expect(pipelineHtml).toContain(label);
     });
 
-    const runStart = pipelineHtml.indexOf('运行控制');
+    const runStart = pipelineHtml.indexOf('任务队列');
     const dangerStart = pipelineHtml.indexOf('Danger Zone');
     const runHtml = pipelineHtml.slice(runStart, dangerStart);
     const dangerHtml = pipelineHtml.slice(dangerStart);
 
+    expect(runHtml).toContain('startOpenMeteoGridRefresh');
     expect(runHtml).toContain('startDataPipelineDryRun');
     expect(runHtml).toContain('startDataPipelineRun');
     expect(runHtml).not.toContain('confirmDataPipelineRollback');
     expect(dangerHtml).toContain('cleanupDataPipeline');
     expect(dangerHtml).toContain('cleanupDataPipelineDryRun');
     expect(dangerHtml).toContain('confirmDataPipelineRollback');
+  });
+
+  test('ops data workspace separates scheme, queues, schedule, and scheme-specific config', () => {
+    const html = readAdminHtml();
+    const js = readAdminJs();
+    const pipelineStart = html.indexOf('id="admin-panel-data-pipeline"');
+    const dangerStart = html.indexOf('id="ops-danger"');
+    const pipelineHtml = html.slice(pipelineStart, dangerStart);
+
+    [
+      'id="ops-mode"',
+      'id="ops-queue"',
+      'id="ops-schedule"',
+      'id="ops-config"',
+      'id="legacy-openmeteo-panel"',
+      'id="new-gfs-cams-panel"',
+      'id="pipeline-new-config-panel"',
+      'id="pipeline-legacy-config-panel"',
+      'id="pipelineRunStepsBody"',
+    ].forEach((token) => expect(pipelineHtml).toContain(token));
+
+    expect(pipelineHtml.indexOf('id="ops-mode"')).toBeLessThan(pipelineHtml.indexOf('id="ops-queue"'));
+    expect(pipelineHtml.indexOf('id="ops-queue"')).toBeLessThan(pipelineHtml.indexOf('id="ops-schedule"'));
+    expect(pipelineHtml.indexOf('id="ops-schedule"')).toBeLessThan(pipelineHtml.indexOf('id="ops-config"'));
+
+    expect(pipelineHtml).toContain('切换当前方案');
+    expect(pipelineHtml).toContain('old / Open-Meteo');
+    expect(pipelineHtml).toContain('new / GFS+CAMS');
+    expect(pipelineHtml).toContain('任务队列');
+    expect(pipelineHtml).toContain('失败原因 / 本地处理');
+    expect(pipelineHtml).toContain('定时任务跟随当前方案');
+    expect(pipelineHtml).toContain('old 参数');
+    expect(pipelineHtml).toContain('new 参数');
+
+    const legacyPanel = pipelineHtml.slice(
+      pipelineHtml.indexOf('id="pipeline-legacy-config-panel"'),
+      pipelineHtml.indexOf('id="pipeline-new-config-panel"')
+    );
+    const newPanel = pipelineHtml.slice(pipelineHtml.indexOf('id="pipeline-new-config-panel"'));
+    expect(legacyPanel).toContain('Open-Meteo');
+    expect(legacyPanel).not.toContain('pipelineRegionPreset');
+    expect(legacyPanel).not.toContain('pipelineGfsEnabled');
+    expect(newPanel).toContain('pipelineRegionPreset');
+    expect(newPanel).toContain('pipelineGfsEnabled');
+    expect(newPanel).toContain('pipelineCamsEnabled');
+
+    [
+      'ops-status',
+      'ops-guard',
+      'ops-mode',
+      'ops-queue',
+      'ops-schedule',
+      'ops-pipeline',
+      'ops-config',
+      'ops-history',
+      'ops-danger',
+    ].forEach((anchor) => expect(js).toContain(`'${anchor}'`));
+    expect(js).toContain('function selectDataPipelineMode');
+    expect(js).toContain('renderDataPipelineScheme');
+    expect(js).toContain('renderSchemeScopedQueues');
   });
 
   test('admin console design document captures the new framework', () => {
@@ -387,9 +457,12 @@ describe('admin page structure', () => {
 
     [
       '<option value="china">中国</option>',
+      '<option value="china_japan_korea">中国 + 日本 + 韩国</option>',
+      '<option value="japan">日本</option>',
+      '<option value="south_korea">韩国</option>',
       '<option value="east_asia">东亚</option>',
       '<option value="test_small">小范围测试</option>',
-      '<option value="custom_bbox">自定义 bbox</option>',
+      '<option value="custom_bbox">自定义地理边界</option>',
     ].forEach((option) => expect(html).toContain(option));
 
     [
@@ -405,15 +478,27 @@ describe('admin page structure', () => {
     ].forEach((fn) => expect(js).toContain(`function ${fn}`));
 
     [
-      '数据管线操作流程',
-      '先跑小范围',
-      '中国均衡',
-      '只用 Open-Meteo',
-      '高级 bbox 边界',
-      '1 估算下载量',
-      '2 保存配置',
-      '3 dry-run',
-      '4 启动真实 run',
+      '切换当前方案',
+      'old / Open-Meteo',
+      'new / GFS+CAMS',
+      '任务队列',
+      '定时任务跟随当前方案',
+      '方案参数',
+      '业务覆盖范围',
+      '不规则区域',
+      'pipelineRegionChina',
+      'pipelineRegionJapan',
+      'pipelineRegionKorea',
+      'old 固定 1°',
+      '地理边界高级设置',
+      '北边界',
+      '南边界',
+      '西边界',
+      '东边界',
+      '估算 new 下载量',
+      '保存 new 参数',
+      'dry-run 本地处理',
+      '启动真实 run',
     ].forEach((copy) => expect(html).toContain(copy));
 
     expect(js).toContain('DATA_PIPELINE_RECOMMENDED_PRESETS');
@@ -424,8 +509,8 @@ describe('admin page structure', () => {
     expect(js).toContain('dryRun: true');
     expect(js).toContain("confirm('确认进入 rollback 预案？')");
     expect(js).toContain("confirm('再次确认：当前版本只会记录 rollback 意图，不会改动后端数据。')");
-    expect(css).toContain('.pipeline-summary-grid');
-    expect(css).toContain('.pipeline-guide-grid');
+    expect(css).toContain('.pipeline-mode-grid');
+    expect(css).toContain('.pipeline-scheme-grid');
     expect(css).toContain('.pipeline-preset-btn');
     expect(css).toContain('.pipeline-danger-actions');
     expect(css).toContain('overflow-wrap: anywhere');

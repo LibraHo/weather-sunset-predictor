@@ -17,14 +17,15 @@ function makeTempDir() {
 }
 
 describe('DataPipelineConfigService', () => {
-  test('returns safe default china 48h hybrid config', () => {
+  test('returns safe default China Japan Korea 48h hybrid config', () => {
     const service = new DataPipelineConfigService({ dataDir: makeTempDir() });
 
     const config = service.getConfig();
 
     expect(config.mode).toBe('hybrid');
-    expect(config.regionPreset).toBe('china');
-    expect(config.bbox).toEqual({ north: 54, south: 18, west: 73, east: 135 });
+    expect(config.regionPreset).toBe('china_japan_korea');
+    expect(config.regionDefinition).toEqual({ type: 'countries', countries: ['CN', 'JP', 'KR'] });
+    expect(config.bbox).toEqual({ north: 54, south: 18, west: 73, east: 146 });
     expect(config.resolution).toBe(0.5);
     expect(config.forecastHours).toBe(48);
     expect(config.sources).toEqual({ gfs: true, cams: true, openMeteoFallback: true });
@@ -45,11 +46,36 @@ describe('DataPipelineConfigService', () => {
     const estimate = service.estimate(service.getConfig());
 
     expect(estimate.safe).toBe(true);
-    expect(estimate.gridPoints).toBe(9125);
+    expect(estimate.gridPoints).toBe(10731);
     expect(estimate.forecastHourCount).toBe(49);
     expect(estimate.estimatedDownloadBytes).toBeGreaterThan(0);
     expect(estimate.estimatedResidentMemoryMb).toBeLessThanOrEqual(512);
     expect(estimate.reasons).toEqual([]);
+  });
+
+  test('derives download bbox from an irregular country region definition', () => {
+    const service = new DataPipelineConfigService({ dataDir: makeTempDir(), freeDiskBytes: 20 * 1024 ** 3 });
+
+    const config = service.saveConfig({
+      mode: 'gfs_cams',
+      regionPreset: 'china_japan_korea',
+      regionDefinition: {
+        type: 'countries',
+        countries: ['CN', 'JP', 'KR']
+      },
+      resolution: 0.5,
+      forecastHours: 24
+    });
+    const estimate = service.estimate(config);
+
+    expect(config.regionPreset).toBe('china_japan_korea');
+    expect(config.regionDefinition).toEqual({
+      type: 'countries',
+      countries: ['CN', 'JP', 'KR']
+    });
+    expect(config.bbox).toEqual({ north: 54, south: 18, west: 73, east: 146 });
+    expect(estimate.safe).toBe(true);
+    expect(estimate.regionDefinition.type).toBe('countries');
   });
 
   test('rejects dangerous global high resolution config', () => {
