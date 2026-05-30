@@ -1072,6 +1072,8 @@ body.theme-dark .admin-table tr:hover td {
 
 .photo-card {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
   background: var(--color-card-bg);
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -1099,10 +1101,15 @@ body.theme-dark .admin-table tr:hover td {
 
 .photo-info {
   padding: var(--spacing-sm);
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
 }
 
 .photo-desc {
   font-size: 0.8rem;
+  line-height: 1.45;
   color: var(--color-text);
   margin-bottom: 4px;
   max-height: 36px;
@@ -1112,15 +1119,18 @@ body.theme-dark .admin-table tr:hover td {
 
 .photo-meta {
   font-size: 0.72rem;
+  line-height: 1.45;
   color: var(--color-text-light);
   margin-bottom: 8px;
+  overflow-wrap: anywhere;
 }
 
 .photo-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin-top: 10px;
+  margin-top: auto;
+  padding-top: 10px;
 }
 
 /* 按钮 */
@@ -1163,6 +1173,21 @@ body.theme-dark .admin-table tr:hover td {
 
   .photo-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .photo-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .photo-thumb {
+    height: auto;
+    min-height: 0;
+  }
+
+  .photo-desc {
+    max-height: none;
   }
 }
 
