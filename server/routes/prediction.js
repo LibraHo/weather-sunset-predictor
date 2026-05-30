@@ -434,10 +434,20 @@ function addDays(date, days) {
   return next;
 }
 
+function formatDateKeyAtOffset(date, offsetHours) {
+  const shifted = new Date(date.getTime() + offsetHours * 60 * 60 * 1000);
+  return [
+    shifted.getUTCFullYear(),
+    String(shifted.getUTCMonth() + 1).padStart(2, '0'),
+    String(shifted.getUTCDate()).padStart(2, '0')
+  ].join('-');
+}
+
 function resolveNextEventDate(date, period, lat, lon, now = new Date()) {
   if (!(date instanceof Date) || Number.isNaN(date.getTime())) return date;
   if (period !== 'sunrise' && period !== 'sunset') return date;
-  if (formatDateKey(date) !== formatDateKey(now)) return date;
+  const timezoneOffset = SunCalculator.getTargetTimezoneOffsetHours(now, lon);
+  if (formatDateKey(date) !== formatDateKeyAtOffset(now, timezoneOffset)) return date;
 
   const eventTime = period === 'sunrise'
     ? SunCalculator.getSunriseTime(date, lat, lon)
