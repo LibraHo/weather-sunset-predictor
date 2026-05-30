@@ -302,6 +302,7 @@ describe('Prediction API Integration', () => {
 
   describe('GET /api/prediction/home', () => {
     afterEach(() => {
+      jest.useRealTimers();
       jest.restoreAllMocks();
     });
 
@@ -368,6 +369,47 @@ describe('Prediction API Integration', () => {
         days: 1,
         includeRemoteCloudData: false
       }));
+    });
+
+    test('rolls stale current-day sunrise requests to the next event day', async () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-05-30T13:52:00Z'));
+      jest.spyOn(orchestrator, 'fetchWeatherData').mockResolvedValue({
+        data: [
+          {
+            timestamp: new Date('2026-05-30T21:48:00Z').getTime(),
+            cloudCover: 80,
+            humidity: 50,
+            visibility: 20,
+            lowClouds: 0,
+            midClouds: 20,
+            highClouds: 100,
+            temp: 18,
+            windSpeed: 3,
+            windDirection: 90,
+            pressure: 1008,
+            precipitation: 0,
+            shortwaveRadiation: 0
+          }
+        ],
+        providerMeta: { name: 'openmeteo', timezone: 'Asia/Shanghai' }
+      });
+
+      const res = await request(app)
+        .get('/api/prediction/home')
+        .query({
+          lat: 39.9042,
+          lon: 116.4074,
+          date: '2026-05-30',
+          period: 'sunrise',
+          days: 1,
+          includeRemoteCloudData: 'false'
+        })
+        .expect(200);
+
+      expect(res.body.data.request.date).toBe('2026-05-31');
+      expect(res.body.data.predictions.current.dateKey).toBe('2026-05-31');
+      expect(res.body.data.predictions.current.type).toBe('sunrise');
+      expect(res.body.data.predictions.current.referenceTime).toMatch(/^2026-05-30T20:/);
     });
   });
 });

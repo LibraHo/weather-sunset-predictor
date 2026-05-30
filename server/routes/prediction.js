@@ -28,6 +28,7 @@ const cacheService = new CacheService({ defaultTTL: cacheConfig.ttl.DEFAULT });
 const surroundingService = new SurroundingService({ cacheService });
 
 const CLOSED_LOOP_WEATHER_CACHE_TTL_SECONDS = 120;
+const EVENT_ROLLOVER_BUFFER_MS = 30 * 60 * 1000;
 const inFlightWeatherFetches = new Map();
 
 function closedLoopWeatherCacheKey(lat, lon, hours = 168) {
@@ -433,6 +434,23 @@ function addDays(date, days) {
   return next;
 }
 
+function resolveNextEventDate(date, period, lat, lon, now = new Date()) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return date;
+  if (period !== 'sunrise' && period !== 'sunset') return date;
+  if (formatDateKey(date) !== formatDateKey(now)) return date;
+
+  const eventTime = period === 'sunrise'
+    ? SunCalculator.getSunriseTime(date, lat, lon)
+    : SunCalculator.getSunsetTime(date, lat, lon);
+
+  if (eventTime instanceof Date && !Number.isNaN(eventTime.getTime())
+      && now.getTime() > eventTime.getTime() + EVENT_ROLLOVER_BUFFER_MS) {
+    return addDays(date, 1);
+  }
+
+  return date;
+}
+
 function buildGatewayPredictionItems({ startDate, days, lat, lon, timezone }) {
   const items = [];
   for (let i = 0; i < days; i += 1) {
@@ -613,12 +631,13 @@ router.get('/home', async (req, res) => {
       return errorResponse(res, 400, 'INVALID_LONGITUDE', 'lon must be a number between -180 and 180');
     }
 
-    const startDate = parseGatewayDate(req.query.date);
-    if (!startDate) {
+    const requestedStartDate = parseGatewayDate(req.query.date);
+    if (!requestedStartDate) {
       return errorResponse(res, 400, 'INVALID_DATE', 'date must be a valid date');
     }
 
     const period = normalizeGatewayPeriod(req.query.period || req.query.type);
+    const startDate = resolveNextEventDate(requestedStartDate, period, lat, lon);
     const days = Math.max(1, Math.min(parseInt(req.query.days, 10) || 3, 4));
     const includeRemoteCloudData = String(req.query.includeRemoteCloudData || 'true') !== 'false';
     const forecastHours = Math.max(24, Math.min(parseInt(req.query.hours, 10) || 168, 168));
