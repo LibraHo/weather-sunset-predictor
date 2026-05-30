@@ -65,6 +65,30 @@ def in_bbox(lat, lon, args):
     return args.south - 1e-6 <= lat <= args.north + 1e-6 and args.west - 1e-6 <= lon <= args.east + 1e-6
 
 
+def target_axis(start, stop, step, descending=False):
+    values = []
+    current = float(start)
+    epsilon = abs(step) / 1000.0
+    if descending:
+        while current >= stop - epsilon:
+            values.append(round(current, 6))
+            current -= step
+    else:
+        while current <= stop + epsilon:
+            values.append(round(current, 6))
+            current += step
+    return np.asarray(values, dtype=float)
+
+
+def nearest_indices(source_values, target_values):
+    source = np.asarray(source_values, dtype=float)
+    target = np.asarray(target_values, dtype=float)
+    if source.size == 0 or target.size == 0:
+        return np.asarray([], dtype=int)
+    distances = np.abs(source.reshape(1, -1) - target.reshape(-1, 1))
+    return np.argmin(distances, axis=1)
+
+
 def forecast_hour_from_array(data_array):
     for dim in data_array.dims:
         if dim in ("step", "leadtime", "leadtime_hour", "forecast_hour"):
@@ -120,15 +144,20 @@ def ingest_variable(records, data_array, field, args):
 
     count = 0
     if latitudes.ndim == 1 and longitudes.ndim == 1:
-        for row, raw_lat in enumerate(latitudes):
-            lat = float(raw_lat)
-            if not aligned_to_global_grid(lat, args.resolution):
-                continue
-            for col, raw_lon in enumerate(longitudes):
-                lon = normalize_lon(raw_lon)
-                if not aligned_to_global_grid(lon, args.resolution) or not in_bbox(lat, lon, args):
+        target_lats = target_axis(args.north, args.south, args.resolution, descending=True)
+        target_lons = target_axis(args.west, args.east, args.resolution)
+        interp_lons = target_lons.copy()
+        if np.nanmax(longitudes) > 180.0:
+            interp_lons = np.asarray([lon + 360.0 if lon < 0 else lon for lon in target_lons], dtype=float)
+
+        lat_indices = nearest_indices(latitudes, target_lats)
+        lon_indices = nearest_indices(longitudes, interp_lons)
+        sampled_values = values[np.ix_(lat_indices, lon_indices)]
+        for row, lat in enumerate(target_lats):
+            for col, lon in enumerate(target_lons):
+                if not in_bbox(float(lat), float(lon), args):
                     continue
-                put_value(records, lat, lon, forecast_hour, field, values[row, col])
+                put_value(records, float(lat), float(lon), forecast_hour, field, sampled_values[row, col])
                 count += 1
         return count
 

@@ -115,7 +115,7 @@ class CamsAerosolSourceService {
       aerosol: this._pickFields(record.values || {}),
       sourceMeta: {
         camsProductType: batch.productType || 'forecast',
-        camsForecastHour: Number.isFinite(record.forecastHour) ? record.forecastHour : (batch.forecastHours || [])[0],
+        camsForecastHour: Number.isFinite(forecastHour) ? forecastHour : (batch.forecastHours || [])[0],
         interpolation: 'deferred-bilinear'
       }
     }));
