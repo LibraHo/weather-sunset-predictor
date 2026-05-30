@@ -79,12 +79,30 @@ function summarizeProductManifest(productCacheService) {
   };
 }
 
-function buildCacheManagementStatus({ config, currentRun, gridService, productCacheService }) {
-  const period = 'sunset';
-  const active = typeof gridService.getPublicMapCache === 'function'
-    ? gridService.getPublicMapCache(period)
-    : { mode: config.mode, status: 'not-ready', cache: null };
+function summarizeActiveMap(period, active, config) {
   const activeCache = active.cache || null;
+  return {
+    period,
+    mode: active.mode || config.mode || null,
+    status: active.status || (activeCache ? 'ready' : 'not-ready'),
+    source: activeCache?.source || null,
+    pointCount: countPoints(activeCache),
+    updatedAt: activeCache?.updatedAt || null,
+    stale: activeCache?.stale ?? null,
+    degraded: activeCache?.degraded === true,
+    degradedReason: activeCache?.degradedReason || active.degradedReason || null,
+    targetTime: activeCache?.meta?.targetTime || null,
+    sourceUpdatedAt: activeCache?.meta?.products?.weather?.validTime || activeCache?.sourceUpdatedAt || null
+  };
+}
+
+function buildCacheManagementStatus({ config, currentRun, gridService, productCacheService }) {
+  const active = typeof gridService.getPublicMapCache === 'function'
+    ? gridService.getPublicMapCache('sunset')
+    : { mode: config.mode, status: 'not-ready', cache: null };
+  const activeSunrise = typeof gridService.getPublicMapCache === 'function'
+    ? gridService.getPublicMapCache('sunrise')
+    : { mode: config.mode, status: 'not-ready', cache: null };
   const sunrise = typeof gridService.getJobStatus === 'function'
     ? gridService.getJobStatus('sunrise')
     : { period: 'sunrise' };
@@ -93,16 +111,10 @@ function buildCacheManagementStatus({ config, currentRun, gridService, productCa
     : { period: 'sunset' };
 
   return {
-    activeMap: {
-      period,
-      mode: active.mode || config.mode || null,
-      status: active.status || (activeCache ? 'ready' : 'not-ready'),
-      source: activeCache?.source || null,
-      pointCount: countPoints(activeCache),
-      updatedAt: activeCache?.updatedAt || null,
-      stale: activeCache?.stale ?? null,
-      degraded: activeCache?.degraded === true,
-      degradedReason: activeCache?.degradedReason || active.degradedReason || null
+    activeMap: summarizeActiveMap('sunset', active, config),
+    activeMaps: {
+      sunrise: summarizeActiveMap('sunrise', activeSunrise, config),
+      sunset: summarizeActiveMap('sunset', active, config)
     },
     pipelineRun: {
       id: currentRun?.id || null,

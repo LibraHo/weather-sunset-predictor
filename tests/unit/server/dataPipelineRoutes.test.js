@@ -147,6 +147,18 @@ describe('data pipeline admin routes', () => {
         degraded: true,
         degradedReason: 'GRID_PRODUCT_CACHE_NOT_READY'
       },
+      activeMaps: {
+        sunrise: {
+          period: 'sunrise',
+          status: 'ready',
+          pointCount: 1
+        },
+        sunset: {
+          period: 'sunset',
+          status: 'ready',
+          pointCount: 1
+        }
+      },
       pipelineProducts: {
         totalProducts: 2,
         totalBytes: 3072,

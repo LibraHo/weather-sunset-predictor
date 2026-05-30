@@ -1378,12 +1378,16 @@ function renderDataPipelineStatus(data = {}) {
   renderSchemeScopedQueues(data);
   const cacheManagement = data.cacheManagement || {};
   const active = cacheManagement.activeMap || {};
+  const activeMaps = cacheManagement.activeMaps || {};
+  const sunriseMap = activeMaps.sunrise || {};
+  const sunsetMap = activeMaps.sunset || active;
   const modeLabel = config.mode === 'openmeteo' ? 'old / Open-Meteo' : 'new / GFS+CAMS';
   el.innerHTML = `
     <div class="pipeline-stat"><span>当前方案</span><strong id="pipelineModeBadge">${escapeHtml(modeLabel)}</strong></div>
     <div class="pipeline-stat"><span>业务区域 / 下载边界</span><strong id="pipelineRangeBadge">${escapeHtml(DATA_PIPELINE_PRESET_LABELS[config.regionPreset] || config.regionPreset || '--')} ${escapeHtml(formatBbox(config.bbox))}</strong></div>
     <div class="pipeline-stat"><span>公开地图来源</span><strong>${escapeHtml(active.source || active.mode || config.mode || '--')}</strong></div>
-    <div class="pipeline-stat"><span>公开缓存点</span><strong>${Number(active.pointCount || 0).toLocaleString('zh-CN')}</strong></div>
+    <div class="pipeline-stat"><span>晚霞地图缓存</span><strong>${formatActiveMapStatus(sunsetMap)}</strong></div>
+    <div class="pipeline-stat"><span>朝霞地图缓存</span><strong>${formatActiveMapStatus(sunriseMap)}</strong></div>
     <div class="pipeline-stat"><span>当前 new run</span><strong id="pipelineCurrentProgress">${current ? `${renderPipelineStatusBadge(current.status)} ${getDataPipelineRunProgress(current)}` : '--'}</strong></div>
     <div class="pipeline-stat"><span>最近成功产物</span><strong id="pipelineLatestProduct">${data.latestSuccessfulRun ? escapeHtml(formatPhotoDateTime(data.latestSuccessfulRun.completedAt) || data.latestSuccessfulRun.id) : '--'}</strong></div>
     <div class="pipeline-stat"><span>今日下载</span><strong id="pipelineTodayDownload">${formatBytes(data.today?.bytesDownloaded || 0)}</strong></div>
@@ -1392,6 +1396,13 @@ function renderDataPipelineStatus(data = {}) {
     <div class="pipeline-stat"><span>内存预算</span><strong id="pipelineMemoryBudget">${data.estimate?.estimatedResidentMemoryMb || config.runtimePolicy?.maxResidentMemoryMb || 512} MB worker</strong></div>
     <div class="pipeline-stat"><span>降级状态</span><strong>${active.degraded ? escapeHtml(active.degradedReason || 'degraded') : '未降级'}</strong></div>
   `;
+}
+
+function formatActiveMapStatus(map = {}) {
+  const count = Number(map.pointCount || 0).toLocaleString('zh-CN');
+  const sourceTime = formatPhotoDateTime(map.sourceUpdatedAt || map.targetTime) || '--';
+  const degraded = map.degraded ? ` / ${map.degradedReason || 'degraded'}` : '';
+  return `${count} 点 / ${escapeHtml(sourceTime)}${escapeHtml(degraded)}`;
 }
 
 function renderDataPipelineScheme(data = {}) {
