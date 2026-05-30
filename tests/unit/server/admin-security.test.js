@@ -99,6 +99,9 @@ describe('admin security boundaries', () => {
     expect(adminStaticIdx).toBeGreaterThan(-1);
     expect(publicStaticIdx).toBeGreaterThan(-1);
     expect(adminStaticIdx).toBeLessThan(publicStaticIdx);
+    expect(source).toContain("res.setHeader('Cache-Control', 'no-store')");
+    expect(source).toContain('etag: false');
+    expect(source).not.toContain("app.use('/admin', requireAdminAuth, express.static(path.join(__dirname, '../public/admin'), {\n  maxAge: '1h'");
   });
 
   test('/admin/quota requires admin auth', async () => {

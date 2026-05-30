@@ -4,10 +4,30 @@ import path from 'path';
 const ROOT = path.resolve(process.cwd());
 const readAdminHtml = () => fs.readFileSync(path.join(ROOT, 'public/admin/index.html'), 'utf8');
 const readAdminJs = () => fs.readFileSync(path.join(ROOT, 'public/admin/admin.js'), 'utf8');
+const readAdminCss = () => fs.readFileSync(path.join(ROOT, 'public/admin/admin.css'), 'utf8');
+
+function getSectionParents(html) {
+  const parents = {};
+  const stack = [];
+  const tagRegex = /<\/?section\b[^>]*>/gi;
+  let match;
+  while ((match = tagRegex.exec(html))) {
+    const tag = match[0];
+    if (tag.startsWith('</')) {
+      stack.pop();
+      continue;
+    }
+    const id = tag.match(/id="([^"]+)"/)?.[1] || '';
+    if (id) parents[id] = stack.at(-1)?.id || null;
+    stack.push({ id });
+  }
+  return { parents, stack };
+}
 
 describe('admin page structure', () => {
   test('admin uses console shell navigation and separates major functions into panels', () => {
     const html = readAdminHtml();
+    const { parents, stack } = getSectionParents(html);
 
     expect(html).toContain('class="admin-shell"');
     expect(html).toContain('class="admin-sidebar"');
@@ -35,11 +55,49 @@ describe('admin page structure', () => {
     expect(html).not.toContain('admin-entry-grid');
     expect(html).toContain('id="kpi-share-today"');
     expect(html).toContain('id="kpi-share-total"');
+    expect(stack).toHaveLength(0);
+    expect(parents['admin-panel-logs']).toBeNull();
+    expect(parents['admin-panel-agent']).toBeNull();
+    expect(parents['admin-panel-photos']).toBeNull();
+    expect(parents['admin-panel-data-pipeline']).toBe('admin-panel-ops');
+  });
+
+  test('mobile admin navigation exposes every main panel without horizontal scrolling', () => {
+    const css = readAdminCss();
+    const mobileStart = css.indexOf('@media (max-width: 768px)');
+    const mobileCss = css.slice(mobileStart);
+
+    expect(mobileCss).toContain('.admin-nav');
+    expect(mobileCss).toContain('grid-template-columns: repeat(3, minmax(0, 1fr))');
+    expect(mobileCss).toContain('overflow: visible');
+    expect(mobileCss).toContain('.admin-nav-item');
+    expect(mobileCss).toContain('min-width: 0');
+    expect(mobileCss).toContain('.admin-nav-item small');
+    expect(mobileCss).toContain('display: none');
+  });
+
+  test('mobile photo management keeps thumbnails visible in narrow layouts', () => {
+    const css = readAdminCss();
+    const js = readAdminJs();
+    const mobileStart = css.indexOf('@media (max-width: 768px)');
+    const mobileCss = css.slice(mobileStart);
+
+    expect(css).toContain('.photo-grid');
+    expect(css).toContain('min-width: 0');
+    expect(css).toContain('.photo-thumb');
+    expect(css).toContain('display: block');
+    expect(css).toContain('min-height: 160px');
+    expect(css).toContain('aspect-ratio: 1 / 1');
+    expect(css).toContain('.photo-thumb-placeholder');
+    expect(mobileCss).toContain('grid-template-columns: repeat(2, minmax(0, 1fr))');
+    expect(js).toContain('function renderPhotoThumb');
+    expect(js).toContain('photo?.thumbUrl || photo?.url || photo?.originalUrl');
+    expect(js).toContain('loading="lazy" decoding="async"');
   });
 
   test('admin panels rely on the workspace header instead of repeating page introductions', () => {
     const html = readAdminHtml();
-    const css = fs.readFileSync(path.join(ROOT, 'public/admin/admin.css'), 'utf8');
+    const css = readAdminCss();
 
     expect(html).toContain('class="admin-header"');
     expect(html).toContain('id="admin-page-title"');
