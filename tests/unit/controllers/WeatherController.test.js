@@ -57,6 +57,27 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(payload.sunAzimuths).toHaveProperty('sunset');
   });
 
+  test('renderRadarCompass: 晚上查看朝霞时应请求下一次日出日期', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-05-30T13:06:00.000Z'));
+    try {
+      document.body.innerHTML = '<div id="radar-compass-sunrise"></div>';
+      controller.i18n = { t: (key) => key };
+      controller.predictionAPIService = {
+        getSurrounding: jest.fn(async () => ({ points: [], sunAzimuths: {} }))
+      };
+      controller._radarCompass = { render: jest.fn() };
+
+      await controller.renderRadarCompass({ name: '北京', lat: 39.9042, lon: 116.4074 }, 'sunrise');
+
+      expect(controller.predictionAPIService.getSurrounding).toHaveBeenCalledTimes(1);
+      const dateArg = controller.predictionAPIService.getSurrounding.mock.calls[0][4];
+      expect(dateArg).toBeInstanceOf(Date);
+      expect(dateArg.toISOString().slice(0, 10)).toBe('2026-05-31');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   test.skip('应该将3小时间隔数据插值为连续24小时，避免温度折线异常跳变', () => {
     const baseTs = new Date('2026-01-01T00:00:00Z').getTime();
 

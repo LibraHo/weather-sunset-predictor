@@ -1149,9 +1149,13 @@ router.get('/directions', async (req, res) => {
     const lon = parseFloat(req.query.lon);
     const type = req.query.type || 'sunset';
     const radius = parseFloat(req.query.radius) || 20;
+    const targetDate = req.query.date ? new Date(req.query.date) : new Date();
 
     if (isNaN(lat) || isNaN(lon)) {
       return errorResponse(res, 400, 'INVALID_PARAMS', 'lat and lon are required');
+    }
+    if (!(targetDate instanceof Date) || Number.isNaN(targetDate.getTime())) {
+      return errorResponse(res, 400, 'INVALID_DATE', 'date is invalid');
     }
 
     const DIRS = [
@@ -1165,7 +1169,9 @@ router.get('/directions', async (req, res) => {
       { dir: 'NW', angle: 315 },
     ];
     const R = 6371;
-    const now = new Date();
+    const referenceTime = type === 'sunrise'
+      ? SunCalculator.getSunriseTime(targetDate, lat, lon)
+      : SunCalculator.getSunsetTime(targetDate, lat, lon);
 
     const results = await Promise.allSettled(DIRS.map(async (d) => {
       const rad  = d.angle * Math.PI / 180;
@@ -1178,7 +1184,9 @@ router.get('/directions', async (req, res) => {
       const hourly = Array.isArray(weatherResponse.data) ? weatherResponse.data : [];
       if (!hourly.length) throw new Error('no weather data');
 
-      const nowTs = now.getTime();
+      const nowTs = referenceTime instanceof Date && !Number.isNaN(referenceTime.getTime())
+        ? referenceTime.getTime()
+        : targetDate.getTime();
       const selected = hourly.reduce((c, x) =>
         Math.abs((x.timestamp || 0) - nowTs) < Math.abs((c.timestamp || 0) - nowTs) ? x : c
       , hourly[0]);
@@ -1215,7 +1223,7 @@ router.get('/directions', async (req, res) => {
       }
 
       const prediction = EnhancedPredictionService.calculateEnhancedPrediction(
-        weatherData, now, pLat, pLon, type, { prevHourData }
+        weatherData, referenceTime || targetDate, pLat, pLon, type, { prevHourData }
       );
 
       return {
