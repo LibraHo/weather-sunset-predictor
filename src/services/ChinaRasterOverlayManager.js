@@ -156,7 +156,10 @@ export default class ChinaRasterOverlayManager {
 
     if ((activeOverlay.getSpotCount?.() ?? 0) === 0) {
       this.loadAndRender(period).then(() => {
-        if (this._activePeriod !== period) return;
+        if (this._activePeriod !== period) {
+          activeOverlay.hide();
+          return;
+        }
         this._getActiveOverlay().show();
         if (typeof this._onPeriodChange === 'function') {
           this._onPeriodChange(period);

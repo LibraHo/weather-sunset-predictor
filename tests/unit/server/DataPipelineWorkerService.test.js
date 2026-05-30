@@ -187,6 +187,45 @@ describe('DataPipelineWorkerService', () => {
     await expect(firstRun).resolves.toMatchObject({ status: 'completed' });
   });
 
+  test('fails a parallel run from another worker instance with the same data dir', async () => {
+    const dataDir = makeTempDir();
+    let release;
+    let blocked = false;
+    const firstWorker = new DataPipelineWorkerService({
+      dataDir,
+      now: new Date('2026-05-26T12:00:00Z'),
+      freeDiskBytes: 20 * 1024 ** 3,
+      beforeStep: () => {
+        if (blocked) return Promise.resolve();
+        blocked = true;
+        return new Promise(resolve => {
+          release = resolve;
+        });
+      }
+    });
+    const secondWorker = new DataPipelineWorkerService({
+      dataDir,
+      now: new Date('2026-05-26T12:00:00Z'),
+      freeDiskBytes: 20 * 1024 ** 3
+    });
+
+    const firstRun = firstWorker.runOnce({
+      config: baseConfig({ sources: { gfs: true, cams: false, openMeteoFallback: true } }),
+      reason: 'scheduled',
+      dryRun: true
+    });
+    await Promise.resolve();
+
+    await expect(secondWorker.runOnce({
+      config: baseConfig({ sources: { gfs: true, cams: false, openMeteoFallback: true } }),
+      reason: 'manual',
+      dryRun: true
+    })).rejects.toMatchObject({ code: 'DATA_PIPELINE_WORKER_BUSY' });
+
+    release();
+    await expect(firstRun).resolves.toMatchObject({ status: 'completed' });
+  });
+
   test('runs a real GFS batch through downloader and parser adapters', async () => {
     const dataDir = makeTempDir();
     const gfsSourceService = {

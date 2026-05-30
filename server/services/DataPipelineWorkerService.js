@@ -10,6 +10,8 @@ const GridProductCacheService = require('./GridProductCacheService');
 const GfsGridSourceService = require('./GfsGridSourceService');
 const CamsAerosolSourceService = require('./CamsAerosolSourceService');
 
+const activeRunKeys = new Set();
+
 function nowMs() {
   return Date.now();
 }
@@ -43,20 +45,23 @@ class DataPipelineWorkerService {
     });
     this.beforeStep = options.beforeStep || null;
     this.stepDelayMs = Number(options.stepDelayMs) || 0;
+    this.lockKey = options.lockKey || path.resolve(this.dataDir);
     this._active = false;
   }
 
   async runOnce({ config = {}, reason = 'manual', dryRun = true } = {}) {
-    if (this._active) {
+    if (this._active || activeRunKeys.has(this.lockKey)) {
       const err = new Error('data pipeline worker is already running');
       err.code = 'DATA_PIPELINE_WORKER_BUSY';
       throw err;
     }
 
     this._active = true;
-    const run = this.runLogService.createRun(config, { reason });
+    activeRunKeys.add(this.lockKey);
+    let run = null;
 
     try {
+      run = this.runLogService.createRun(config, { reason });
       const plan = this.plannerService.createPlan(config);
       if (!plan.safe) {
         const err = new Error(plan.reasons.join('; '));
@@ -90,8 +95,8 @@ class DataPipelineWorkerService {
     } catch (err) {
       let latestRun;
       try {
-        latestRun = this.runLogService.getRun(run.id);
-        if (latestRun.status !== 'failed') {
+        latestRun = run ? this.runLogService.getRun(run.id) : null;
+        if (latestRun && latestRun.status !== 'failed') {
           latestRun = this.runLogService.failRun(run.id, {
             errorCode: err.code || 'DATA_PIPELINE_WORKER_FAILED',
             message: err.message
@@ -111,6 +116,7 @@ class DataPipelineWorkerService {
       };
     } finally {
       this._active = false;
+      activeRunKeys.delete(this.lockKey);
     }
   }
 

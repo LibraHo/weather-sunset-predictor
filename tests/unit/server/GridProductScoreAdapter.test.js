@@ -144,6 +144,35 @@ describe('GridProductScoreAdapter', () => {
     expect(sunrise.meta.targetTime).not.toBe(sunset.meta.targetTime);
   });
 
+  test('keeps advancing sunrise target after the Beijing event buffer has passed', () => {
+    const cacheService = new GridProductCacheService({
+      dataDir: makeTempDir(),
+      now: new Date('2026-05-30T20:00:00Z')
+    });
+    for (const validTime of ['2026-05-30T20:48:00.000Z', '2026-05-31T20:48:00.000Z']) {
+      cacheService.writeProduct({
+        source: 'gfs',
+        productType: 'weather_grid',
+        schemaVersion: 1,
+        cycle: '2026053018',
+        forecastHour: 6,
+        validTime,
+        grid: { bbox: { north: 41, south: 39, west: 115, east: 117 }, resolution: 0.5 },
+        fields: ['TCDC', 'LCDC', 'MCDC', 'HCDC', 'RH', 'VIS', 'APCP', 'DSWRF', 'PWAT', 'UGRD', 'VGRD'],
+        points: [{ lat: 40, lon: 116, weather: fullGfsWeather() }]
+      });
+    }
+
+    const adapter = new GridProductScoreAdapter({
+      cacheService,
+      now: new Date('2026-05-30T21:30:00Z')
+    });
+    const sunrise = adapter.getScoreCache('sunrise');
+
+    expect(sunrise.meta.products.weather.validTime).toBe('2026-05-31T20:48:00.000Z');
+    expect(new Date(sunrise.meta.targetTime).getTime()).toBeGreaterThan(new Date('2026-05-30T21:30:00Z').getTime());
+  });
+
   test('uses product createdAt as public map update time, not forecast validTime', () => {
     const cacheService = new GridProductCacheService({
       dataDir: makeTempDir(),
