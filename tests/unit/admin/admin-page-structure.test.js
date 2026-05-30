@@ -81,15 +81,25 @@ describe('admin page structure', () => {
     const js = readAdminJs();
     const mobileStart = css.indexOf('@media (max-width: 768px)');
     const mobileCss = css.slice(mobileStart);
+    const narrowMobileStart = css.indexOf('@media (max-width: 520px)');
+    const narrowMobileCss = css.slice(narrowMobileStart);
 
     expect(css).toContain('.photo-grid');
     expect(css).toContain('min-width: 0');
+    expect(css).toContain('display: flex');
+    expect(css).toContain('flex-direction: column');
+    expect(css).toContain('overflow-wrap: anywhere');
+    expect(css).toContain('min-height: calc(1.45em * 2)');
+    expect(css).toContain('min-height: 1.45em');
+    expect(css).toContain('margin-top: auto');
     expect(css).toContain('.photo-thumb');
     expect(css).toContain('display: block');
     expect(css).toContain('min-height: 160px');
     expect(css).toContain('aspect-ratio: 1 / 1');
     expect(css).toContain('.photo-thumb-placeholder');
     expect(mobileCss).toContain('grid-template-columns: repeat(2, minmax(0, 1fr))');
+    expect(narrowMobileCss).toContain('grid-template-columns: 1fr');
+    expect(narrowMobileCss).toContain('max-height: none');
     expect(js).toContain('function renderPhotoThumb');
     expect(js).toContain('photo?.thumbUrl || photo?.url || photo?.originalUrl');
     expect(js).toContain('loading="lazy" decoding="async"');
