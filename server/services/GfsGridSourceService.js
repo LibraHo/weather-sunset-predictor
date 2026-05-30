@@ -44,6 +44,7 @@ function parseCycle(cycle) {
 
 function latestCycle(now) {
   const date = new Date(now);
+  date.setUTCHours(date.getUTCHours() - 6, 0, 0, 0);
   const hour = Math.floor(date.getUTCHours() / 6) * 6;
   date.setUTCHours(hour, 0, 0, 0);
   return formatCycle(date);
