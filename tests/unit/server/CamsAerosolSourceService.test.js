@@ -26,7 +26,7 @@ function writeNodeScript(dir, body) {
 }
 
 describe('CamsAerosolSourceService', () => {
-  test('builds CAMS analysis request batch for a bbox-limited aerosol plan', () => {
+  test('builds CAMS forecast request batches for a bbox-limited aerosol plan', () => {
     const service = new CamsAerosolSourceService({ dataDir: makeTempDir(), now: new Date('2026-05-26T10:15:00Z') });
 
     const plan = service.buildRequestPlan({
@@ -38,21 +38,26 @@ describe('CamsAerosolSourceService', () => {
 
     expect(plan.source).toBe('cams');
     expect(plan.cycle).toBe('2026052600');
-    expect(plan.forecastHours).toEqual([]);
-    expect(plan.batches).toHaveLength(1);
+    expect(plan.forecastHours).toEqual([0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48]);
+    expect(plan.batches).toHaveLength(17);
     expect(plan.batches[0]).toMatchObject({
       source: 'cams',
-      productType: 'analysis',
-      forecastHours: [],
+      productType: 'forecast',
+      forecastHour: 0,
+      forecastHours: [0],
       variables: CamsAerosolSourceService.FIELD_WHITELIST,
       cleanupRawAfterProcess: true
     });
     expect(plan.batches[0].request).toMatchObject({
-      type: 'analysis',
+      type: 'forecast',
       format: 'netcdf',
+      leadtime_hour: ['0'],
       area: [54, 73, 18, 135]
     });
-    expect(plan.batches[0].request.leadtime_hour).toBeUndefined();
+    expect(plan.batches[2]).toMatchObject({
+      forecastHour: 6,
+      request: { leadtime_hour: ['6'] }
+    });
   });
 
   test('normalizes CAMS records into aerosol grid points on the target grid', () => {
@@ -66,7 +71,7 @@ describe('CamsAerosolSourceService', () => {
       resolution: 0.5,
       forecastHours: 3,
       forecastStepHours: 3
-    }).batches[0];
+    }).batches[1];
 
     const product = service.normalizeGridProduct(batch, [
       {
@@ -81,23 +86,23 @@ describe('CamsAerosolSourceService', () => {
       source: 'cams',
       productType: 'aerosol_grid',
       schemaVersion: 1,
-      forecastHour: null,
-      forecastHours: [],
-      validTime: '2026-05-26T00:00:00.000Z',
+      forecastHour: 3,
+      forecastHours: [3],
+      validTime: '2026-05-26T03:00:00.000Z',
       grid: { resolution: 0.5, bbox: { north: 41, south: 39, west: 115, east: 117 } },
       interpolation: { targetResolution: 0.5, method: 'deferred-bilinear' },
-      fields: expect.arrayContaining(['total_aerosol_optical_depth_550nm', 'particulate_matter_10um'])
+      fields: ['total_aerosol_optical_depth_550nm']
     });
     expect(product.points[0]).toEqual({
       lat: 40,
       lon: 116,
       weather: {},
-      aerosol: { total_aerosol_optical_depth_550nm: 0.22, particulate_matter_10um: 38 },
-      sourceMeta: { camsProductType: 'analysis', camsForecastHour: 3, interpolation: 'deferred-bilinear' }
+      aerosol: { total_aerosol_optical_depth_550nm: 0.22 },
+      sourceMeta: { camsProductType: 'forecast', camsForecastHour: 3, interpolation: 'deferred-bilinear' }
     });
   });
 
-  test('normalizes CAMS analysis product with validTime for GFS matching', () => {
+  test('normalizes CAMS forecast product with validTime for GFS matching', () => {
     const service = new CamsAerosolSourceService({
       dataDir: makeTempDir(),
       now: new Date('2026-05-26T10:15:00Z'),
@@ -108,7 +113,7 @@ describe('CamsAerosolSourceService', () => {
       resolution: 0.5,
       forecastHours: 6,
       forecastStepHours: 6
-    }).batches[0];
+    }).batches[1];
 
     const product = service.normalizeGridProduct(batch, [
       {
@@ -120,9 +125,9 @@ describe('CamsAerosolSourceService', () => {
     ]);
 
     expect(product).toMatchObject({
-      forecastHour: null,
-      forecastHours: [],
-      validTime: '2026-05-26T00:00:00.000Z'
+      forecastHour: 6,
+      forecastHours: [6],
+      validTime: '2026-05-26T06:00:00.000Z'
     });
   });
 
