@@ -1641,7 +1641,7 @@ function renderPhotos(photos) {
   }
   grid.innerHTML = photos.map(p => `
     <div class="photo-card">
-      <img class="photo-thumb" src="${p.thumbUrl}" alt="${escapeHtml(p.filename)}">
+      ${renderPhotoThumb(p)}
       <div class="photo-info">
         <div class="photo-desc">${escapeHtml(p.locationName || p.desc || '无描述')}</div>
         <div class="photo-meta">坐标：${formatPhotoCoordinate(p)}</div>
@@ -1655,6 +1655,15 @@ function renderPhotos(photos) {
       </div>
     </div>
   `).join('');
+}
+
+function renderPhotoThumb(photo) {
+  const src = photo?.thumbUrl || photo?.url || photo?.originalUrl || '';
+  const alt = escapeHtml(photo?.filename || photo?.locationName || '照片');
+  if (!src) {
+    return `<div class="photo-thumb photo-thumb-placeholder" role="img" aria-label="${alt}">无缩略图</div>`;
+  }
+  return `<img class="photo-thumb" src="${escapeHtml(src)}" alt="${alt}" loading="lazy" decoding="async">`;
 }
 
 function formatPhotoCoordinate(photo) {

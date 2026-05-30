@@ -174,7 +174,11 @@ app.use('/data', express.static(path.join(__dirname, '../public/data'), {
   immutable: false
 }));
 app.use('/admin', requireAdminAuth, express.static(path.join(__dirname, '../public/admin'), {
-  maxAge: '1h'
+  maxAge: 0,
+  etag: false,
+  setHeaders: (res) => {
+    res.setHeader('Cache-Control', 'no-store');
+  }
 }));
 app.use(express.static(path.join(__dirname, '../public'), {
   maxAge: '1h'
