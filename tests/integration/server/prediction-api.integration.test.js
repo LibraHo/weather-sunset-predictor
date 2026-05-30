@@ -451,4 +451,58 @@ describe('Prediction API Integration', () => {
       expect(res.body.data.predictions.current.dateKey).toBe('2026-05-31');
     });
   });
+
+  describe('GET /api/prediction/directions', () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    test('uses a 48h weather window for next-event sunrise radar', async () => {
+      const fetchSpy = jest.spyOn(orchestrator, 'fetchWeatherData').mockResolvedValue({
+        data: [
+          {
+            timestamp: new Date('2026-05-30T15:00:00Z').getTime(),
+            cloudCover: 0,
+            humidity: 45,
+            visibility: 20,
+            lowClouds: 0,
+            midClouds: 0,
+            highClouds: 0,
+            precipitation: 0
+          },
+          {
+            timestamp: new Date('2026-05-30T21:00:00Z').getTime(),
+            cloudCover: 94,
+            humidity: 50,
+            visibility: 20,
+            lowClouds: 0,
+            midClouds: 7,
+            highClouds: 100,
+            precipitation: 0
+          }
+        ],
+        providerMeta: { name: 'openmeteo', timezone: 'Asia/Shanghai' }
+      });
+
+      const res = await request(app)
+        .get('/api/prediction/directions')
+        .query({
+          lat: 39.9042,
+          lon: 116.4074,
+          type: 'sunrise',
+          radius: 20,
+          date: '2026-05-31'
+        })
+        .expect(200);
+
+      expect(fetchSpy).toHaveBeenCalledTimes(8);
+      expect(fetchSpy).toHaveBeenCalledWith(expect.any(Number), expect.any(Number), 48);
+      expect(res.body.data.directions).toHaveLength(8);
+      expect(res.body.data.directions[0].cloudLayers).toEqual({
+        low: 0,
+        mid: 7,
+        high: 100
+      });
+    });
+  });
 });
