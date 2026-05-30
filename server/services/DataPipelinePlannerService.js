@@ -11,6 +11,14 @@ function clone(value) {
   return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
 }
 
+function parseCycle(cycle) {
+  return new Date(`${cycle.slice(0, 4)}-${cycle.slice(4, 6)}-${cycle.slice(6, 8)}T${cycle.slice(8, 10)}:00:00Z`);
+}
+
+function forecastValidTime(batch) {
+  return new Date(parseCycle(batch.cycle).getTime() + Number(batch.forecastHour || 0) * 60 * 60 * 1000).toISOString();
+}
+
 class DataPipelinePlannerService {
   constructor(options = {}) {
     this.dataDir = options.dataDir || path.join(os.homedir(), '.xiake');
@@ -49,6 +57,7 @@ class DataPipelinePlannerService {
     const camsPlan = config.sources.cams
       ? new CamsAerosolSourceService({ dataDir: this.dataDir, now: this.now }).buildRequestPlan({
         ...config,
+        forecastValidTimes: gfsPlan?.batches ? gfsPlan.batches.map(forecastValidTime) : null,
         forecastStepHours: Math.max(3, Number(config.forecastStepHours) || 3)
       })
       : null;

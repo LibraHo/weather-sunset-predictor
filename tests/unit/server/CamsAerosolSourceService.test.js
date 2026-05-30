@@ -37,7 +37,7 @@ describe('CamsAerosolSourceService', () => {
     });
 
     expect(plan.source).toBe('cams');
-    expect(plan.cycle).toBe('2026052600');
+    expect(plan.cycle).toBe('2026052512');
     expect(plan.forecastHours).toEqual([0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48]);
     expect(plan.batches).toHaveLength(17);
     expect(plan.batches[0]).toMatchObject({
@@ -58,6 +58,29 @@ describe('CamsAerosolSourceService', () => {
       forecastHour: 6,
       request: { leadtime_hour: ['6'] }
     });
+  });
+
+  test('maps GFS valid times to CAMS forecast leadtimes from the latest available CAMS cycle', () => {
+    const service = new CamsAerosolSourceService({ dataDir: makeTempDir(), now: new Date('2026-05-26T10:15:00Z') });
+
+    const plan = service.buildRequestPlan({
+      bbox: { north: 41, south: 39, west: 115, east: 117 },
+      resolution: 0.5,
+      forecastValidTimes: [
+        '2026-05-26T06:00:00.000Z',
+        '2026-05-26T12:00:00.000Z',
+        '2026-05-27T06:00:00.000Z'
+      ]
+    });
+
+    expect(plan.cycle).toBe('2026052512');
+    expect(plan.forecastHours).toEqual([18, 24, 42]);
+    expect(plan.batches.map(batch => batch.request.leadtime_hour)).toEqual([['18'], ['24'], ['42']]);
+    expect(plan.batches.map(batch => batch.requestId)).toEqual([
+      'cams:2026052512:f018',
+      'cams:2026052512:f024',
+      'cams:2026052512:f042'
+    ]);
   });
 
   test('normalizes CAMS records into aerosol grid points on the target grid', () => {
@@ -88,7 +111,7 @@ describe('CamsAerosolSourceService', () => {
       schemaVersion: 1,
       forecastHour: 3,
       forecastHours: [3],
-      validTime: '2026-05-26T03:00:00.000Z',
+      validTime: '2026-05-25T15:00:00.000Z',
       grid: { resolution: 0.5, bbox: { north: 41, south: 39, west: 115, east: 117 } },
       interpolation: { targetResolution: 0.5, method: 'deferred-bilinear' },
       fields: ['total_aerosol_optical_depth_550nm']
@@ -127,7 +150,7 @@ describe('CamsAerosolSourceService', () => {
     expect(product).toMatchObject({
       forecastHour: 6,
       forecastHours: [6],
-      validTime: '2026-05-26T06:00:00.000Z'
+      validTime: '2026-05-25T18:00:00.000Z'
     });
   });
 

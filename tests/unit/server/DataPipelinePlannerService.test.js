@@ -47,14 +47,16 @@ describe('DataPipelinePlannerService', () => {
       idxUrl: expect.stringContaining('.idx')
     });
     expect(camsStep).toMatchObject({
-      forecastHour: 0,
+      cycle: '2026052512',
+      forecastHour: 18,
       request: expect.objectContaining({
         dataset: 'cams-global-atmospheric-composition-forecasts',
         type: 'forecast',
         format: 'netcdf',
-        leadtime_hour: ['0']
+        leadtime_hour: ['18']
       })
     });
+    expect(plan.cams.forecastHours.slice(0, 3)).toEqual([18, 19, 20]);
     expect(plan.estimate).toMatchObject({
       gridPoints: 10731,
       estimatedDownloadBytes: expect.any(Number),
