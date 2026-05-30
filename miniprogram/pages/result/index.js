@@ -3,6 +3,7 @@ import { getEnhancedPrediction, getEnhancedPredictionBatch, getSurroundingPredic
 import { addFavorite, deleteFavorite, listFavorites } from '../../services/user.js';
 import { buildRadarCloudGradients, paintRadarCloudCanvas } from '../../utils/radar-cloud-field.js';
 import { applyPageSettings, readAppSettings } from '../../utils/app-settings.js';
+import { getDefaultSunEventDay } from '../../utils/sun-event-day.js';
 
 const app = getApp();
 
@@ -684,13 +685,42 @@ function compactMetricObject(source = {}) {
   }, {});
 }
 
-export function buildPredictionPeriodRequest(prediction = {}, period = 'sunset') {
+export function buildPredictionPeriodRequest(prediction = {}, period = 'sunset', options = {}) {
+  const currentPeriod = prediction.period || prediction.type || 'sunset';
+  const lat = Number(prediction.lat ?? prediction.latitude ?? prediction.coordinate?.lat);
+  const lon = Number(prediction.lon ?? prediction.lng ?? prediction.longitude ?? prediction.coordinate?.lon);
+  const date = period === currentPeriod
+    ? normalizeDateKey(prediction.date || prediction.referenceTime)
+    : resolveDefaultPeriodDate({ period, lat, lon, now: options.now });
   return {
-    lat: Number(prediction.lat ?? prediction.latitude ?? prediction.coordinate?.lat),
-    lon: Number(prediction.lon ?? prediction.lng ?? prediction.longitude ?? prediction.coordinate?.lon),
+    lat,
+    lon,
     type: period,
-    date: prediction.date || prediction.referenceTime || null
+    date
   };
+}
+
+function resolveDefaultPeriodDate({ period = 'sunset', lat, lon, now = new Date() } = {}) {
+  const day = getDefaultSunEventDay(now, { period, lat, lon });
+  const date = new Date(now);
+  if (day === 'tomorrow') date.setDate(date.getDate() + 1);
+  return formatDateKey(date);
+}
+
+function normalizeDateKey(value) {
+  if (!value) return null;
+  const direct = String(value).match(/^(\d{4}-\d{2}-\d{2})/);
+  if (direct) return direct[1];
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return formatDateKey(date);
+}
+
+function formatDateKey(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 export function buildResultPeriodState(prediction = {}) {

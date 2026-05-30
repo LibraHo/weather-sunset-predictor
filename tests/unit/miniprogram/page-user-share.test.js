@@ -67,6 +67,23 @@ describe('miniprogram page user/share helpers', () => {
     });
   });
 
+  test('home share path uses the selected prediction card date', () => {
+    const message = homeHelpers.buildHomeShareMessage({
+      periodKey: 'sunrise',
+      periodLabel: '朝霞',
+      score: 75,
+      date: '2026-05-31'
+    }, {
+      locationName: '北京',
+      coordinate: { lat: 39.9042, lon: 116.4074 },
+      period: 'sunset',
+      day: 'today'
+    });
+
+    expect(message.path).toContain('type=sunrise');
+    expect(message.path).toContain('date=2026-05-31');
+  });
+
   test('favorite helper matches coordinates and payload shape', () => {
     const prediction = { locationName: '天坛', lat: 39.882, lon: 116.406, period: 'sunset' };
     expect(resultHelpers.buildFavoritePayload(prediction)).toMatchObject({ name: '天坛', lat: 39.882, lon: 116.406, type: 'sunset' });
@@ -370,10 +387,18 @@ describe('miniprogram page user/share helpers', () => {
       metrics: { highCloud: 62, midCloud: 36, lowCloud: 8 }
     };
 
-    expect(resultHelpers.buildPredictionPeriodRequest(current, 'sunrise')).toMatchObject({
+    expect(resultHelpers.buildPredictionPeriodRequest(current, 'sunrise', {
+      now: new Date('2026-05-30T21:15:00+08:00')
+    })).toMatchObject({
       lat: 39.9,
       lon: 116.4,
       type: 'sunrise',
+      date: '2026-05-31'
+    });
+    expect(resultHelpers.buildPredictionPeriodRequest(current, 'sunset', {
+      now: new Date('2026-05-30T21:15:00+08:00')
+    })).toMatchObject({
+      type: 'sunset',
       date: '2026-05-11'
     });
 
