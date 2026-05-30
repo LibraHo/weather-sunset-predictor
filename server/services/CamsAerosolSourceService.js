@@ -7,12 +7,7 @@ const CamsCdsDownloaderService = require('./CamsCdsDownloaderService');
 const CamsNetcdfParserService = require('./CamsNetcdfParserService');
 
 const FIELD_WHITELIST = [
-  'total_aerosol_optical_depth_550nm',
-  'dust_aerosol_optical_depth_550nm',
-  'black_carbon_aerosol_optical_depth_550nm',
-  'organic_matter_aerosol_optical_depth_550nm',
-  'sulphate_aerosol_optical_depth_550nm',
-  'particulate_matter_10um'
+  'total_aerosol_optical_depth_550nm'
 ];
 
 const GLOBAL_CAMS_GRID_POINTS = 451 * 900;
@@ -36,11 +31,18 @@ function parseCycle(cycle) {
 
 function latestAnalysisCycle(now) {
   const date = new Date(now);
-  if (date.getUTCHours() < 8) {
-    date.setUTCDate(date.getUTCDate() - 1);
-  }
   date.setUTCHours(0, 0, 0, 0);
   return formatCycle(date);
+}
+
+function forecastHours(config = {}) {
+  const windowHours = Math.min(Number(config.forecastHours) || 48, 48);
+  const stepHours = Math.max(1, Number(config.forecastStepHours) || 3);
+  const out = [];
+  for (let hour = 0; hour <= windowHours; hour += stepHours) {
+    out.push(hour);
+  }
+  return out;
 }
 
 function normalizeBbox(bbox) {
@@ -75,14 +77,15 @@ class CamsAerosolSourceService {
     const bbox = normalizeBbox(config.bbox || { north: 54, south: 18, west: 73, east: 135 });
     const resolution = Number(config.resolution || 0.5);
     const cycle = config.camsAnalysisCycle || config.cycle || latestAnalysisCycle(this.now || new Date());
-    const batches = [this._buildAnalysisBatch({ cycle, bbox, resolution })];
+    const hours = forecastHours(config);
+    const batches = hours.map(forecastHour => this._buildForecastBatch({ cycle, bbox, resolution, forecastHour }));
 
     return {
       source: 'cams',
       cycle,
       bbox,
       resolution,
-      forecastHours: [],
+      forecastHours: hours,
       variables: FIELD_WHITELIST.slice(),
       batches,
       estimatedBytes: batches.reduce((sum, batch) => sum + batch.estimatedBytes, 0)
@@ -180,6 +183,43 @@ class CamsAerosolSourceService {
         area: [bbox.north, bbox.west, bbox.south, bbox.east]
       },
       rawPath: path.join(this.dataDir, 'data', 'raw', 'cams', cycle, `cams_${cycle}_analysis.nc`),
+      estimatedBytes,
+      cleanupRawAfterProcess: true,
+      degradeOnFailure: true
+    };
+  }
+
+  _buildForecastBatch({ cycle, bbox, resolution, forecastHour }) {
+    const estimatedBytes = Math.ceil(
+      CAMS_GLOBAL_FIELD_BYTES_PER_CYCLE *
+      (gridPointCount(bbox, resolution) / GLOBAL_CAMS_GRID_POINTS) *
+      (1 / 17)
+    );
+    const paddedHour = pad(forecastHour, 3);
+
+    return {
+      id: `cams_${cycle}_f${paddedHour}`,
+      requestId: `cams:${cycle}:f${paddedHour}`,
+      source: 'cams',
+      productType: 'forecast',
+      cycle,
+      forecastHour,
+      forecastHours: [forecastHour],
+      bbox: clone(bbox),
+      resolution,
+      variables: FIELD_WHITELIST.slice(),
+      request: {
+        dataset: 'cams-global-atmospheric-composition-forecasts',
+        productType: 'forecast',
+        type: 'forecast',
+        format: 'netcdf',
+        date: `${cycle.slice(0, 4)}-${cycle.slice(4, 6)}-${cycle.slice(6, 8)}`,
+        time: `${cycle.slice(8, 10)}:00`,
+        leadtime_hour: [String(forecastHour)],
+        variable: FIELD_WHITELIST.slice(),
+        area: [bbox.north, bbox.west, bbox.south, bbox.east]
+      },
+      rawPath: path.join(this.dataDir, 'data', 'raw', 'cams', cycle, `cams_${cycle}_f${paddedHour}.nc`),
       estimatedBytes,
       cleanupRawAfterProcess: true,
       degradeOnFailure: true
