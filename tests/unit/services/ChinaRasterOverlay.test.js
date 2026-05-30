@@ -238,7 +238,7 @@ describe('getPaletteForPeriod', () => {
 // ─── 数据时间 ────────────────────────────────────────────────────────────────
 
 describe('ChinaRasterOverlay updatedAt', () => {
-  test('loadAndRender 显示数据更新时间而不是接口响应生成时间', async () => {
+  test('loadAndRender 优先显示 raster 更新时间而不是源预报时刻', async () => {
     const overlay = new ChinaRasterOverlay();
     overlay._map = { getZoom: () => 5 };
     overlay._buildOffscreen = jest.fn();
@@ -247,8 +247,8 @@ describe('ChinaRasterOverlay updatedAt', () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
-        updatedAt: '2026-05-13T01:00:00.000Z',
-        sourceUpdatedAt: '2026-05-13T01:00:00.000Z',
+        updatedAt: '2026-05-13T06:18:00.000Z',
+        sourceUpdatedAt: '2026-05-14T06:00:00.000Z',
         generatedAt: '2026-05-13T06:18:00.000Z',
         width: 1,
         height: 1,
@@ -260,8 +260,8 @@ describe('ChinaRasterOverlay updatedAt', () => {
 
     await overlay.loadAndRender('sunset');
 
-    expect(overlay.getUpdatedAt()).toBe('2026-05-13T01:00:00.000Z');
-    expect(overlay.getUpdatedAt()).not.toBe('2026-05-13T06:18:00.000Z');
+    expect(overlay.getUpdatedAt()).toBe('2026-05-13T06:18:00.000Z');
+    expect(overlay.getUpdatedAt()).not.toBe('2026-05-14T06:00:00.000Z');
   });
 
   test('loadAndRender 加载中复用同一个请求，避免切换时误判空图层', async () => {

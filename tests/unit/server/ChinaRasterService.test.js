@@ -213,13 +213,26 @@ describe('ChinaRasterService.getRaster', () => {
     const second = await chinaRasterService.getRaster('sunset', 0.5);
 
     expect(second).toBe(first);
-    expect(first.updatedAt).toBe('2000-01-01T00:00:00.000Z');
+    expect(first.updatedAt).toBe(first.generatedAt);
     expect(first.sourceUpdatedAt).toBe('2000-01-01T00:00:00.000Z');
-    expect(first.generatedAt).not.toBe(first.updatedAt);
     expect(first._cachedAt).toEqual(expect.any(Number));
     expect(mockGridService.refreshIfStale).not.toHaveBeenCalled();
     expect(mockGridService.getBestAvailableCache).toHaveBeenCalledTimes(1);
     expect(mockGridService.getCache).not.toHaveBeenCalled();
+  });
+
+  test('updatedAt uses raster generation time when source time is a future forecast valid time', async () => {
+    const mockGridService = await getMockGridService();
+    mockGridService.getBestAvailableCache = jest.fn().mockReturnValue(makeMockCache({
+      source: 'grid-product-cache',
+      degraded: false,
+      updatedAt: '2099-01-01T06:00:00.000Z'
+    }));
+
+    const raster = await chinaRasterService.getRaster('sunrise', 0.5);
+
+    expect(raster.updatedAt).toBe(raster.generatedAt);
+    expect(raster.sourceUpdatedAt).toBe('2099-01-01T06:00:00.000Z');
   });
 
   test('getRaster only reads existing grid cache and never triggers backend refresh', async () => {

@@ -157,11 +157,13 @@ class ChinaRasterService {
     });
 
     const generatedAt = new Date().toISOString();
-    const sourceUpdatedAt = spotsCache.updatedAt || generatedAt;
+    const sourceUpdatedAt = spotsCache.updatedAt || null;
     const today = generatedAt.slice(0, 10);
     const raster = {
       date: today,
-      updatedAt: sourceUpdatedAt,
+      // updatedAt is the raster/cache generation time shown in UI. The source
+      // timestamp can be a forecast valid time in the future, so keep it as metadata.
+      updatedAt: generatedAt,
       generatedAt,
       sourceUpdatedAt,
       period: safePeriod,
