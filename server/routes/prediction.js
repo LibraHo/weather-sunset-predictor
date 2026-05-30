@@ -29,6 +29,7 @@ const surroundingService = new SurroundingService({ cacheService });
 
 const CLOSED_LOOP_WEATHER_CACHE_TTL_SECONDS = 120;
 const EVENT_ROLLOVER_BUFFER_MS = 30 * 60 * 1000;
+const RADAR_WEATHER_FORECAST_HOURS = 48;
 const inFlightWeatherFetches = new Map();
 
 function closedLoopWeatherCacheKey(lat, lon, hours = 168) {
@@ -1209,7 +1210,7 @@ router.get('/directions', async (req, res) => {
       const pLat = lat + dLat;
       const pLon = lon + dLon;
 
-      const weatherResponse = await orchestrator.fetchWeatherData(pLat, pLon, 24);
+      const weatherResponse = await orchestrator.fetchWeatherData(pLat, pLon, RADAR_WEATHER_FORECAST_HOURS);
       const hourly = Array.isArray(weatherResponse.data) ? weatherResponse.data : [];
       if (!hourly.length) throw new Error('no weather data');
 

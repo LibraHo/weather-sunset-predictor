@@ -14,6 +14,8 @@ const EnhancedPredictionService = require('./EnhancedPredictionService.js');
 const SunCalculator = require('../utils/SunCalculator.js');
 const cacheConfig = require('../config/cacheConfig.js');
 
+const RADAR_WEATHER_FORECAST_HOURS = 48;
+
 // ========== 服务类定义 ==========
 
 class SurroundingService {
@@ -292,7 +294,7 @@ class SurroundingService {
     const _fetchPoint = async (point) => {
       try {
         // 获取天气数据
-        const weatherResponse = await orchestrator.fetchWeatherData(point.lat, point.lon, 24);
+        const weatherResponse = await orchestrator.fetchWeatherData(point.lat, point.lon, RADAR_WEATHER_FORECAST_HOURS);
 
         // 按类型选择参考时刻：朝霞用日出时刻，晚霞用日落时刻
         const referenceTime = type === 'sunrise'
