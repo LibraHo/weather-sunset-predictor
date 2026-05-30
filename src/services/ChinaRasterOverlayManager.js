@@ -140,7 +140,8 @@ export default class ChinaRasterOverlayManager {
 
     this._getActiveOverlay().hide();
     this._activePeriod = period;
-    this._getActiveOverlay().show();
+    const activeOverlay = this._getActiveOverlay();
+    activeOverlay.show();
     this._updateTabUI();
 
     // 同步图例色系
@@ -151,6 +152,18 @@ export default class ChinaRasterOverlayManager {
     // 通知外部（WeatherController 更新时段说明/时间戳/空状态）
     if (typeof this._onPeriodChange === 'function') {
       this._onPeriodChange(period);
+    }
+
+    if ((activeOverlay.getSpotCount?.() ?? 0) === 0) {
+      this.loadAndRender(period).then(() => {
+        if (this._activePeriod !== period) return;
+        this._getActiveOverlay().show();
+        if (typeof this._onPeriodChange === 'function') {
+          this._onPeriodChange(period);
+        }
+      }).catch((err) => {
+        console.error(`[ChinaRasterOverlayManager] 切换后补拉 ${period} 栅格失败:`, err);
+      });
     }
   }
 

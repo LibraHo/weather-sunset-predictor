@@ -130,9 +130,9 @@ describe('ChinaRasterOverlay.getMaxScore', () => {
     expect(o.getMaxScore()).toBeNull();
   });
 
-  test('getSpotCount 返回 >= RASTER_MIN_SCORE 的有效点数', () => {
+  test('getSpotCount 只统计可见格元', () => {
     const o = new ChinaRasterOverlay();
-    o._rasterData = { values: [50, 80, 90], noData: NO_DATA };
+    o._rasterData = { values: [15, 39, 50, 80, 90], noData: NO_DATA };
     expect(o.getSpotCount()).toBe(3);
   });
 });

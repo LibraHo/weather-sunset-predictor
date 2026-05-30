@@ -263,6 +263,43 @@ describe('ChinaRasterOverlay updatedAt', () => {
     expect(overlay.getUpdatedAt()).toBe('2026-05-13T01:00:00.000Z');
     expect(overlay.getUpdatedAt()).not.toBe('2026-05-13T06:18:00.000Z');
   });
+
+  test('loadAndRender 加载中复用同一个请求，避免切换时误判空图层', async () => {
+    const overlay = new ChinaRasterOverlay();
+    overlay._map = { getZoom: () => 5 };
+    overlay._buildOffscreen = jest.fn();
+    overlay.show = jest.fn();
+
+    let releaseJson;
+    const jsonReady = new Promise(resolve => {
+      releaseJson = resolve;
+    });
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => {
+        await jsonReady;
+        return {
+          updatedAt: '2026-05-13T01:00:00.000Z',
+          width: 1,
+          height: 1,
+          bbox: { west: 72, east: 73, south: 18, north: 19 },
+          noData: -1,
+          values: [50]
+        };
+      }
+    });
+
+    const first = overlay.loadAndRender('sunrise');
+    const second = overlay.loadAndRender('sunrise');
+
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+
+    releaseJson();
+    await first;
+    await second;
+    expect(overlay.getSpotCount()).toBe(1);
+  });
 });
 
 // ─── scoreToRGBA 使用自定义色板 ───────────────────────────────────────────────

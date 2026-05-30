@@ -308,6 +308,7 @@ export default class ChinaRasterOverlay {
     this._period = 'sunset';
     this._visible = false;
     this._loading = false;
+    this._loadPromise = null;
     this._updatedAt = null;
 
     this._boundReproject = null;
@@ -370,19 +371,20 @@ export default class ChinaRasterOverlay {
     const noData = this._rasterData.noData ?? -1;
     let count = 0;
     for (const v of this._rasterData.values) {
-      if (Number.isFinite(v) && v !== noData && v >= RASTER_MIN_SCORE) count += 1;
+      if (Number.isFinite(v) && v !== noData && v >= getVisualMinScore()) count += 1;
     }
     return count;
   }
 
   isVisible() { return this._visible; }
+  isLoading() { return this._loading; }
 
   async loadAndRender(period = this._period) {
     this.setPeriod(period);
-    if (this._loading) return;
+    if (this._loading && this._loadPromise) return this._loadPromise;
 
-    this._loading = true;
-    try {
+    this._loadPromise = (async () => {
+      this._loading = true;
       const zoom = this._map ? this._map.getZoom() : 5;
       const resolution = resolutionForZoom(zoom);
       const requestPeriod = this._period === 'test' ? 'sunset' : this._period;
@@ -400,10 +402,15 @@ export default class ChinaRasterOverlay {
 
       this._buildOffscreen(data);
       this.show();
+    })();
+
+    try {
+      await this._loadPromise;
     } catch (err) {
       console.error('[ChinaRasterOverlay] 加载栅格失败:', err);
     } finally {
       this._loading = false;
+      this._loadPromise = null;
     }
   }
 

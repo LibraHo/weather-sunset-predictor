@@ -20,6 +20,7 @@ function makeMockOverlay() {
     setPeriod:     jest.fn(),
     getPeriod:     jest.fn(() => 'sunset'),
     getUpdatedAt:  jest.fn(() => '2026-03-21T07:00:00Z'),
+    getSpotCount:  jest.fn(() => 12),
     isVisible:     jest.fn(() => false),
     loadAndRender: jest.fn(async () => {}),
   };
@@ -114,6 +115,20 @@ describe('ChinaRasterOverlayManager', () => {
       expect(manager._sunsetOverlay.hide).not.toHaveBeenCalled();
     });
 
+    test('切换到未加载图层时补拉并再次通知状态更新', async () => {
+      const onPeriodChange = jest.fn();
+      manager.onPeriodChange(onPeriodChange);
+      manager._sunriseOverlay.getSpotCount.mockReturnValueOnce(0).mockReturnValue(9);
+
+      manager.switchPeriod('sunrise');
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(manager._sunriseOverlay.loadAndRender).toHaveBeenCalledWith('sunrise');
+      expect(onPeriodChange).toHaveBeenCalledWith('sunrise');
+      expect(onPeriodChange).toHaveBeenCalledTimes(2);
+    });
+
     test('不支持的时段不崩溃，时段不变', () => {
       expect(() => manager.switchPeriod('invalid')).not.toThrow();
       expect(manager.getActivePeriod()).toBe('sunset');
@@ -181,8 +196,9 @@ describe('ChinaRasterOverlayManager', () => {
   // ─── getSpotCount() ───────────────────────────────────────────────────────
 
   describe('getSpotCount()', () => {
-    test('栅格层无散点，始终返回 0', () => {
-      expect(manager.getSpotCount()).toBe(0);
+    test('返回当前栅格层可见格元数量', () => {
+      manager._sunsetOverlay.getSpotCount.mockReturnValue(8);
+      expect(manager.getSpotCount()).toBe(8);
     });
   });
 
