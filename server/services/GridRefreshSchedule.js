@@ -10,8 +10,10 @@ const SCHEDULE_CONFIG_PATH = path.join(SCHEDULE_CONFIG_DIR, 'schedule-config.jso
 const DEFAULT_SCHEDULE = {
   enabled: true,
   jobs: [
-    { time: '10:00', type: 'both', label: '上午刷新' },
-    { time: '22:00', type: 'both', label: '晚间刷新' }
+    { time: '08:00', type: 'sunrise', label: '朝霞早间刷新' },
+    { time: '20:00', type: 'sunrise', label: '朝霞晚间刷新' },
+    { time: '00:00', type: 'sunset', label: '晚霞夜间刷新' },
+    { time: '12:00', type: 'sunset', label: '晚霞午间刷新' }
   ]
 };
 

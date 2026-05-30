@@ -2,6 +2,7 @@ import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
 const {
+  cloneDefaultSchedule,
   expandJobPeriods,
   getCstClock,
   getDueScheduleJobs,
@@ -9,6 +10,18 @@ const {
 } = require('../../../server/services/GridRefreshSchedule.js');
 
 describe('GridRefreshSchedule', () => {
+  test('defaults to the configured separate sunrise and sunset refresh times', () => {
+    expect(cloneDefaultSchedule()).toEqual({
+      enabled: true,
+      jobs: [
+        { time: '08:00', type: 'sunrise', label: '朝霞早间刷新' },
+        { time: '20:00', type: 'sunrise', label: '朝霞晚间刷新' },
+        { time: '00:00', type: 'sunset', label: '晚霞夜间刷新' },
+        { time: '12:00', type: 'sunset', label: '晚霞午间刷新' },
+      ]
+    });
+  });
+
   test('checks exact HH:mm in China time instead of only the hour', () => {
     const config = {
       enabled: true,
