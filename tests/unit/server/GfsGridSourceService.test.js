@@ -26,7 +26,7 @@ describe('GfsGridSourceService', () => {
     });
 
     expect(plan.source).toBe('gfs');
-    expect(plan.cycle).toBe('2026052606');
+    expect(plan.cycle).toBe('2026052600');
     expect(plan.forecastHours).toHaveLength(49);
     expect(plan.forecastHours[0]).toBe(0);
     expect(plan.forecastHours[48]).toBe(48);
@@ -37,7 +37,7 @@ describe('GfsGridSourceService', () => {
       variables: GfsGridSourceService.FIELD_WHITELIST,
       cleanupRawAfterProcess: true
     });
-    expect(plan.batches[6].idxUrl).toContain('gfs.t06z.pgrb2.0p25.f006.idx');
+    expect(plan.batches[6].idxUrl).toContain('gfs.t00z.pgrb2.0p25.f006.idx');
     expect(plan.batches[6].dataUrl).toContain('filter_gfs_0p25.pl');
     expect(plan.batches[6].dataUrl).toContain('lev_entire_atmosphere_%28considered_as_a_single_layer%29=on');
     expect(plan.batches[6].dataUrl).toContain('lev_2_m_above_ground=on');
