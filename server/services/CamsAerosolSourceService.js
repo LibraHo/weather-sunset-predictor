@@ -29,13 +29,22 @@ function parseCycle(cycle) {
   return new Date(`${cycle.slice(0, 4)}-${cycle.slice(4, 6)}-${cycle.slice(6, 8)}T${cycle.slice(8, 10)}:00:00Z`);
 }
 
-function latestAnalysisCycle(now) {
+function latestForecastCycle(now) {
   const date = new Date(now);
-  date.setUTCHours(0, 0, 0, 0);
+  date.setUTCHours(date.getUTCHours() - 18, 0, 0, 0);
+  const hour = date.getUTCHours() >= 12 ? 12 : 0;
+  date.setUTCHours(hour, 0, 0, 0);
   return formatCycle(date);
 }
 
-function forecastHours(config = {}) {
+function forecastHours(config = {}, cycle = null) {
+  if (Array.isArray(config.forecastValidTimes) && cycle) {
+    const cycleMs = parseCycle(cycle).getTime();
+    return config.forecastValidTimes
+      .map(value => Math.round((new Date(value).getTime() - cycleMs) / (60 * 60 * 1000)))
+      .filter(hour => Number.isInteger(hour) && hour >= 0 && hour <= 120);
+  }
+
   const windowHours = Math.min(Number(config.forecastHours) || 48, 48);
   const stepHours = Math.max(1, Number(config.forecastStepHours) || 3);
   const out = [];
@@ -76,8 +85,8 @@ class CamsAerosolSourceService {
   buildRequestPlan(config = {}) {
     const bbox = normalizeBbox(config.bbox || { north: 54, south: 18, west: 73, east: 135 });
     const resolution = Number(config.resolution || 0.5);
-    const cycle = config.camsAnalysisCycle || config.cycle || latestAnalysisCycle(this.now || new Date());
-    const hours = forecastHours(config);
+    const cycle = config.camsForecastCycle || config.camsCycle || latestForecastCycle(this.now || new Date());
+    const hours = forecastHours(config, cycle);
     const batches = hours.map(forecastHour => this._buildForecastBatch({ cycle, bbox, resolution, forecastHour }));
 
     return {
@@ -153,40 +162,6 @@ class CamsAerosolSourceService {
     const err = new Error('CAMS NetCDF parser is not configured; install/configure netCDF/xarray parser before real aerosol runs');
     err.code = 'CAMS_NETCDF_PARSER_NOT_CONFIGURED';
     throw err;
-  }
-
-  _buildAnalysisBatch({ cycle, bbox, resolution }) {
-    const estimatedBytes = Math.ceil(
-      CAMS_GLOBAL_FIELD_BYTES_PER_CYCLE *
-      (gridPointCount(bbox, resolution) / GLOBAL_CAMS_GRID_POINTS) *
-      (1 / 17)
-    );
-
-    return {
-      id: `cams_${cycle}_analysis`,
-      requestId: `cams:${cycle}:analysis`,
-      source: 'cams',
-      productType: 'analysis',
-      cycle,
-      forecastHours: [],
-      bbox: clone(bbox),
-      resolution,
-      variables: FIELD_WHITELIST.slice(),
-      request: {
-        dataset: 'cams-global-atmospheric-composition-forecasts',
-        productType: 'analysis',
-        type: 'analysis',
-        format: 'netcdf',
-        date: `${cycle.slice(0, 4)}-${cycle.slice(4, 6)}-${cycle.slice(6, 8)}`,
-        time: `${cycle.slice(8, 10)}:00`,
-        variable: FIELD_WHITELIST.slice(),
-        area: [bbox.north, bbox.west, bbox.south, bbox.east]
-      },
-      rawPath: path.join(this.dataDir, 'data', 'raw', 'cams', cycle, `cams_${cycle}_analysis.nc`),
-      estimatedBytes,
-      cleanupRawAfterProcess: true,
-      degradeOnFailure: true
-    };
   }
 
   _buildForecastBatch({ cycle, bbox, resolution, forecastHour }) {
