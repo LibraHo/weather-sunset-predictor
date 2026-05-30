@@ -2,6 +2,7 @@
 
 const GridProductCacheService = require('./GridProductCacheService');
 const { calculateEnhancedPrediction } = require('./EnhancedPredictionService');
+const SunCalculator = require('../utils/SunCalculator');
 
 const REQUIRED_GFS_FIELDS = [
   'TCDC',
@@ -17,6 +18,12 @@ const REQUIRED_GFS_FIELDS = [
   'VGRD'
 ];
 const MAX_AEROSOL_WEATHER_TIME_DELTA_MS = 18 * 60 * 60 * 1000;
+const EVENT_PASSED_BUFFER_MS = 30 * 60 * 1000;
+const MAP_REFERENCE_POINT = {
+  lat: 39.9042,
+  lon: 116.4074,
+  timezone: 'Asia/Shanghai'
+};
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -79,6 +86,19 @@ function isCompatibleAerosolProduct(weatherProduct, aerosolProduct) {
   const aerosolTime = productTimestamp(aerosolProduct);
   if (weatherTime === null || aerosolTime === null) return false;
   return Math.abs(weatherTime - aerosolTime) <= MAX_AEROSOL_WEATHER_TIME_DELTA_MS;
+}
+
+function nextMapEventTime(period, now = new Date()) {
+  const safePeriod = period === 'sunrise' ? 'sunrise' : 'sunset';
+  const getter = safePeriod === 'sunrise'
+    ? SunCalculator.getSunriseTime
+    : SunCalculator.getSunsetTime;
+  const todayEvent = getter(now, MAP_REFERENCE_POINT.lat, MAP_REFERENCE_POINT.lon, { timezone: MAP_REFERENCE_POINT.timezone });
+  if (now.getTime() <= todayEvent.getTime() + EVENT_PASSED_BUFFER_MS) return todayEvent;
+
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return getter(tomorrow, MAP_REFERENCE_POINT.lat, MAP_REFERENCE_POINT.lon, { timezone: MAP_REFERENCE_POINT.timezone });
 }
 
 function missingRequiredGfsFields(weather) {
@@ -152,13 +172,17 @@ class GridProductScoreAdapter {
   }
 
   getScoreCache(period = 'sunset') {
-    const weatherProduct = this.cacheService.getLatestProduct({
+    const safePeriod = period === 'sunrise' ? 'sunrise' : 'sunset';
+    const targetTime = nextMapEventTime(safePeriod, new Date(this.now || Date.now()));
+    const weatherProduct = this._getClosestProduct({
       source: 'gfs',
-      productType: 'weather_grid'
+      productType: 'weather_grid',
+      targetTime
     });
-    const latestAerosolProduct = this.cacheService.getLatestProduct({
+    const latestAerosolProduct = this._getClosestProduct({
       source: 'cams',
-      productType: 'aerosol_grid'
+      productType: 'aerosol_grid',
+      targetTime: weatherProduct?.validTime || targetTime
     });
 
     if (!weatherProduct) return null;
@@ -209,7 +233,7 @@ class GridProductScoreAdapter {
           ...point,
           score: isFiniteNumber(point._weatherScore) ? point._weatherScore : point._aerosolScore
         };
-        const score = scoreFromFields(scoringPoint, period === 'sunrise' ? 'sunrise' : 'sunset');
+        const score = scoreFromFields(scoringPoint, safePeriod);
         return {
           lat: point.lat,
           lon: point.lon,
@@ -230,7 +254,7 @@ class GridProductScoreAdapter {
     const updatedAt = this._latestTimestamp(weatherProduct, aerosolProduct);
     return {
       updatedAt,
-      period: period === 'sunrise' ? 'sunrise' : 'sunset',
+      period: safePeriod,
       gridPoints,
       stale: false,
       source: 'grid-product-cache',
@@ -240,9 +264,28 @@ class GridProductScoreAdapter {
         products: {
           weather: this._productMeta(weatherProduct),
           aerosol: aerosolProduct ? this._productMeta(aerosolProduct) : null
-        }
+        },
+        targetTime: targetTime.toISOString(),
+        referencePoint: clone(MAP_REFERENCE_POINT)
       }
     };
+  }
+
+  _getClosestProduct({ source, productType, targetTime }) {
+    const targetTs = new Date(targetTime).getTime();
+    const entries = this.cacheService.listManifest().products
+      .filter(item => {
+        if (source && item.source !== source) return false;
+        if (productType && item.productType !== productType) return false;
+        return Number.isFinite(productTimestamp(item));
+      })
+      .sort((a, b) => {
+        const aDiff = Math.abs(productTimestamp(a) - targetTs);
+        const bDiff = Math.abs(productTimestamp(b) - targetTs);
+        if (aDiff !== bDiff) return aDiff - bDiff;
+        return productTimestamp(b) - productTimestamp(a);
+      });
+    return entries.length > 0 ? this.cacheService.readProduct(entries[0].productId) : null;
   }
 
   _productMeta(product) {

@@ -102,6 +102,48 @@ describe('GridProductScoreAdapter', () => {
     expect(cache.meta.products.aerosol.sourceMeta.requestId).toBe('cams:2026052600:f006');
   });
 
+  test('selects different forecast products for next sunrise and sunset target times', () => {
+    const cacheService = new GridProductCacheService({
+      dataDir: makeTempDir(),
+      now: new Date('2026-05-30T21:00:00Z')
+    });
+    for (const validTime of ['2026-05-31T00:00:00.000Z', '2026-05-31T10:00:00.000Z']) {
+      cacheService.writeProduct({
+        source: 'gfs',
+        productType: 'weather_grid',
+        schemaVersion: 1,
+        cycle: '2026053018',
+        forecastHour: validTime.endsWith('00:00:00.000Z') ? 6 : 16,
+        validTime,
+        grid: { bbox: { north: 41, south: 39, west: 115, east: 117 }, resolution: 0.5 },
+        fields: ['TCDC', 'LCDC', 'MCDC', 'HCDC', 'RH', 'VIS', 'APCP', 'DSWRF', 'PWAT', 'UGRD', 'VGRD'],
+        points: [{ lat: 40, lon: 116, weather: fullGfsWeather() }]
+      });
+      cacheService.writeProduct({
+        source: 'cams',
+        productType: 'aerosol_grid',
+        schemaVersion: 1,
+        cycle: '2026053018',
+        forecastHour: validTime.endsWith('00:00:00.000Z') ? 6 : 16,
+        validTime,
+        grid: { bbox: { north: 41, south: 39, west: 115, east: 117 }, resolution: 0.5 },
+        fields: ['aod550'],
+        points: [{ lat: 40, lon: 116, aerosol: { aod550: 0.18 } }]
+      });
+    }
+
+    const adapter = new GridProductScoreAdapter({
+      cacheService,
+      now: new Date('2026-05-30T21:00:00Z')
+    });
+    const sunrise = adapter.getScoreCache('sunrise');
+    const sunset = adapter.getScoreCache('sunset');
+
+    expect(sunrise.meta.products.weather.validTime).toBe('2026-05-31T00:00:00.000Z');
+    expect(sunset.meta.products.weather.validTime).toBe('2026-05-31T10:00:00.000Z');
+    expect(sunrise.meta.targetTime).not.toBe(sunset.meta.targetTime);
+  });
+
   test('serves a degraded GFS-only score cache when CAMS aerosol is missing', () => {
     const cacheService = new GridProductCacheService({ dataDir: makeTempDir() });
     cacheService.writeProduct({
