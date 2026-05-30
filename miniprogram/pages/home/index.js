@@ -757,9 +757,12 @@ Page({
     });
     const cards = {};
     for (const period of ['sunrise', 'sunset']) {
-      const prediction = gateway.predictionCards?.[period];
+      const day = this.dayWasSelected
+        ? query.day
+        : getDefaultPredictionDay(new Date(), { period, coordinate: query.coordinate });
+      const prediction = pickGatewayPredictionCard(gateway, period, query, day);
       if (prediction) {
-        cards[period] = compactPredictionPreviewPayload(normalizePrediction(prediction, { ...query, period }));
+        cards[period] = prediction;
       }
     }
     const prediction = cards[query.period] || cards.sunset || cards.sunrise;
@@ -863,7 +866,7 @@ export function buildHomeSharePath(preview = {}, query = {}) {
   const lon = query.coordinate?.lon ?? query.lon ?? query.lng ?? preview.lon ?? preview.lng;
   const locationName = query.locationName || query.location || preview.locationName || '';
   const period = preview.periodKey || query.period || query.type || 'sunset';
-  const date = query.date || resolvePredictionDate(resolveQueryDay(query.day));
+  const date = normalizeDateKey(preview.date) || normalizeDateKey(preview.referenceTime) || query.date || resolvePredictionDate(resolveQueryDay(query.day));
   const params = {
     lat,
     lon,
@@ -1179,6 +1182,11 @@ export function buildPredictionPreviewFromPrediction(prediction = {}, query = {}
     dateLabel: prediction.day === 'tomorrow' || query.day === 'tomorrow' ? '明日' : '今日',
     periodKey: period,
     periodLabel,
+    date: normalizeDateKey(prediction.date) || normalizeDateKey(prediction.referenceTime) || null,
+    referenceTime: prediction.referenceTime || null,
+    locationName: prediction.locationName || prediction.location || query.locationName || query.location || '',
+    lat: prediction.lat ?? prediction.latitude ?? query.coordinate?.lat ?? query.lat ?? null,
+    lon: prediction.lon ?? prediction.lng ?? prediction.longitude ?? query.coordinate?.lon ?? query.lon ?? null,
     eventTimeLabel: period === 'sunrise' ? '日出时间' : '日落时间',
     mainTime: compactBestTime(prediction.mainTime || prediction.eventTime || prediction.referenceTime || prediction.bestWindow || prediction.date),
     bestViewingTime: formatBestWindow(prediction.bestWindow || prediction.window || prediction.timeWindow || prediction.goldenHour || prediction.referenceTime || prediction.date),
@@ -2140,6 +2148,21 @@ function normalizePrediction(raw = {}, query) {
   };
 }
 
+function pickGatewayPredictionCard(gateway = {}, period = 'sunset', query = {}, day = 'today') {
+  const date = resolvePredictionDate(day);
+  const byDate = Array.isArray(gateway.predictions?.byDate) ? gateway.predictions.byDate : [];
+  const dayRow = byDate.find((item) => item?.date === date);
+  const raw = dayRow?.[period] || gateway.predictionCards?.[period] || gateway.predictions?.[period];
+  if (!raw) return null;
+  return compactPredictionPreviewPayload(normalizePrediction({
+    ...raw,
+    type: raw.type || period,
+    period: raw.period || raw.type || period,
+    day: raw.day || day,
+    date: raw.date || date
+  }, { ...query, period, day, date }));
+}
+
 function friendlyError(error) {
   if (error && error.message === 'LOCATION_NOT_FOUND') return '没有找到这个地点，请换个更具体的名称。';
   if (error && error.code === 'GEOCODING_RATE_LIMIT') return '地点搜索太频繁了，稍后再试。';
@@ -2179,6 +2202,19 @@ function logMiniPerf(event, payload = {}) {
 function resolvePredictionDate(day) {
   const date = new Date();
   if (day === 'tomorrow') date.setDate(date.getDate() + 1);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${d}`;
+}
+
+function normalizeDateKey(value) {
+  if (!value) return '';
+  const text = String(value);
+  const direct = text.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (direct) return direct[1];
+  const date = new Date(text);
+  if (Number.isNaN(date.getTime())) return '';
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');

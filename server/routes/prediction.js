@@ -28,6 +28,7 @@ const cacheService = new CacheService({ defaultTTL: cacheConfig.ttl.DEFAULT });
 const surroundingService = new SurroundingService({ cacheService });
 
 const CLOSED_LOOP_WEATHER_CACHE_TTL_SECONDS = 120;
+const EVENT_ROLLOVER_BUFFER_MS = 30 * 60 * 1000;
 const inFlightWeatherFetches = new Map();
 
 function closedLoopWeatherCacheKey(lat, lon, hours = 168) {
@@ -433,6 +434,33 @@ function addDays(date, days) {
   return next;
 }
 
+function formatDateKeyAtOffset(date, offsetHours) {
+  const shifted = new Date(date.getTime() + offsetHours * 60 * 60 * 1000);
+  return [
+    shifted.getUTCFullYear(),
+    String(shifted.getUTCMonth() + 1).padStart(2, '0'),
+    String(shifted.getUTCDate()).padStart(2, '0')
+  ].join('-');
+}
+
+function resolveNextEventDate(date, period, lat, lon, now = new Date()) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return date;
+  if (period !== 'sunrise' && period !== 'sunset') return date;
+  const timezoneOffset = SunCalculator.getTargetTimezoneOffsetHours(now, lon);
+  if (formatDateKey(date) !== formatDateKeyAtOffset(now, timezoneOffset)) return date;
+
+  const eventTime = period === 'sunrise'
+    ? SunCalculator.getSunriseTime(date, lat, lon)
+    : SunCalculator.getSunsetTime(date, lat, lon);
+
+  if (eventTime instanceof Date && !Number.isNaN(eventTime.getTime())
+      && now.getTime() > eventTime.getTime() + EVENT_ROLLOVER_BUFFER_MS) {
+    return addDays(date, 1);
+  }
+
+  return date;
+}
+
 function buildGatewayPredictionItems({ startDate, days, lat, lon, timezone }) {
   const items = [];
   for (let i = 0; i < days; i += 1) {
@@ -613,12 +641,13 @@ router.get('/home', async (req, res) => {
       return errorResponse(res, 400, 'INVALID_LONGITUDE', 'lon must be a number between -180 and 180');
     }
 
-    const startDate = parseGatewayDate(req.query.date);
-    if (!startDate) {
+    const requestedStartDate = parseGatewayDate(req.query.date);
+    if (!requestedStartDate) {
       return errorResponse(res, 400, 'INVALID_DATE', 'date must be a valid date');
     }
 
     const period = normalizeGatewayPeriod(req.query.period || req.query.type);
+    const startDate = resolveNextEventDate(requestedStartDate, period, lat, lon);
     const days = Math.max(1, Math.min(parseInt(req.query.days, 10) || 3, 4));
     const includeRemoteCloudData = String(req.query.includeRemoteCloudData || 'true') !== 'false';
     const forecastHours = Math.max(24, Math.min(parseInt(req.query.hours, 10) || 168, 168));
@@ -1149,9 +1178,13 @@ router.get('/directions', async (req, res) => {
     const lon = parseFloat(req.query.lon);
     const type = req.query.type || 'sunset';
     const radius = parseFloat(req.query.radius) || 20;
+    const targetDate = req.query.date ? new Date(req.query.date) : new Date();
 
     if (isNaN(lat) || isNaN(lon)) {
       return errorResponse(res, 400, 'INVALID_PARAMS', 'lat and lon are required');
+    }
+    if (!(targetDate instanceof Date) || Number.isNaN(targetDate.getTime())) {
+      return errorResponse(res, 400, 'INVALID_DATE', 'date is invalid');
     }
 
     const DIRS = [
@@ -1165,7 +1198,9 @@ router.get('/directions', async (req, res) => {
       { dir: 'NW', angle: 315 },
     ];
     const R = 6371;
-    const now = new Date();
+    const referenceTime = type === 'sunrise'
+      ? SunCalculator.getSunriseTime(targetDate, lat, lon)
+      : SunCalculator.getSunsetTime(targetDate, lat, lon);
 
     const results = await Promise.allSettled(DIRS.map(async (d) => {
       const rad  = d.angle * Math.PI / 180;
@@ -1178,7 +1213,9 @@ router.get('/directions', async (req, res) => {
       const hourly = Array.isArray(weatherResponse.data) ? weatherResponse.data : [];
       if (!hourly.length) throw new Error('no weather data');
 
-      const nowTs = now.getTime();
+      const nowTs = referenceTime instanceof Date && !Number.isNaN(referenceTime.getTime())
+        ? referenceTime.getTime()
+        : targetDate.getTime();
       const selected = hourly.reduce((c, x) =>
         Math.abs((x.timestamp || 0) - nowTs) < Math.abs((c.timestamp || 0) - nowTs) ? x : c
       , hourly[0]);
@@ -1215,7 +1252,7 @@ router.get('/directions', async (req, res) => {
       }
 
       const prediction = EnhancedPredictionService.calculateEnhancedPrediction(
-        weatherData, now, pLat, pLon, type, { prevHourData }
+        weatherData, referenceTime || targetDate, pLat, pLon, type, { prevHourData }
       );
 
       return {

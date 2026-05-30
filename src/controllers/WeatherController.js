@@ -15,6 +15,7 @@ import MockWindyMapService from '../services/MockWindyMapService.js';
 import RadarCompass from '../components/RadarCompass.js';
 import RadarChartService from '../services/RadarChartService.js';
 import FireCloudOverlayService from '../services/FireCloudOverlayService.js';
+import SunsetPredictionService from '../services/SunsetPredictionService.js';
 import PredictionAPIService from '../services/PredictionAPIService.js';
 import { loadConfig } from '../../config.api.js';
 import i18n from '../i18n.js';
@@ -89,6 +90,37 @@ function generateManualTestRadarData(type = 'sunset') {
       ? { sunrise: 72 + Math.random() * 26 }
       : { sunset: 250 + Math.random() * 38 }
   };
+}
+
+const RADAR_EVENT_ROLLOVER_MS = 30 * 60 * 1000;
+const radarSunService = new SunsetPredictionService();
+
+function getNextRadarEventDate(location, type = 'sunset', now = new Date()) {
+  const safeType = type === 'sunrise' ? 'sunrise' : 'sunset';
+  const base = now instanceof Date && !Number.isNaN(now.getTime()) ? now : new Date();
+  const timezone = location?.timezone || location?.timeZone || null;
+
+  for (let offset = 0; offset <= 2; offset += 1) {
+    const candidate = new Date(base);
+    candidate.setDate(base.getDate() + offset);
+
+    try {
+      const eventTime = safeType === 'sunrise'
+        ? radarSunService.getSunriseTime(candidate, location.lat, location.lon, { timezone })
+        : radarSunService.getSunsetTime(candidate, location.lat, location.lon, { timezone });
+
+      if (eventTime instanceof Date && !Number.isNaN(eventTime.getTime())
+        && eventTime.getTime() + RADAR_EVENT_ROLLOVER_MS > base.getTime()) {
+        return candidate;
+      }
+    } catch (_) {
+      break;
+    }
+  }
+
+  const fallback = new Date(base);
+  fallback.setDate(base.getDate() + 1);
+  return fallback;
 }
 
 /**
@@ -1386,6 +1418,7 @@ class WeatherController {
       const radius = 50; // 后端仅接受 50/100/150
       const now = new Date();
       const type = predictionType || (now.getHours() < 12 ? 'sunrise' : 'sunset');
+      const radarDate = getNextRadarEventDate(location, type, now);
 
       if (isManualTestLocation(location)) {
         const manualRadar = generateManualTestRadarData(type);
@@ -1401,16 +1434,16 @@ class WeatherController {
             location.lon,
             radius,
             type,
-            now
+            radarDate
           );
           dirs = this._convertSurroundingToRadarDirs(data);
           sunAzimuths = data.sunAzimuths || {};
         } catch (apiError) {
           console.warn('[WeatherController] 后端周边API失败，回退前端逐点请求:', apiError.message);
-          dirs = await this._fetchRadarDirsFrontend(location, radius, type);
+          dirs = await this._fetchRadarDirsFrontend(location, radius, type, radarDate);
         }
       } else {
-        dirs = await this._fetchRadarDirsFrontend(location, radius, type);
+        dirs = await this._fetchRadarDirsFrontend(location, radius, type, radarDate);
       }
 
       this._radarCompass.render(container, { directions: dirs, sunAzimuths, predictionType: type });
@@ -1438,13 +1471,14 @@ class WeatherController {
     }));
   }
 
-  async _fetchRadarDirsFrontend(location, radius = 20, type = 'sunset') {
+  async _fetchRadarDirsFrontend(location, radius = 20, type = 'sunset', date = new Date()) {
     const LABEL = { N:'北', NE:'东北', E:'东', SE:'东南', S:'南', SW:'西南', W:'西', NW:'西北' };
     const base = window._appConfig?.proxyURL || '';
     try {
       // 用后端聚合接口，一次请求返回 8 方向，避免触发 rate limit
+      const dateParam = encodeURIComponent(date instanceof Date ? date.toISOString() : String(date));
       const res = await fetch(
-        `${base}/api/prediction/directions?lat=${location.lat.toFixed(4)}&lon=${location.lon.toFixed(4)}&type=${type}&radius=${radius}`,
+        `${base}/api/prediction/directions?lat=${location.lat.toFixed(4)}&lon=${location.lon.toFixed(4)}&type=${type}&radius=${radius}&date=${dateParam}`,
         { signal: AbortSignal.timeout(15000) }
       );
       const json = res.ok ? await res.json() : {};
