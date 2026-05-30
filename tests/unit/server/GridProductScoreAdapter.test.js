@@ -144,6 +144,34 @@ describe('GridProductScoreAdapter', () => {
     expect(sunrise.meta.targetTime).not.toBe(sunset.meta.targetTime);
   });
 
+  test('uses product createdAt as public map update time, not forecast validTime', () => {
+    const cacheService = new GridProductCacheService({
+      dataDir: makeTempDir(),
+      now: new Date('2026-05-30T20:10:00Z')
+    });
+    cacheService.writeProduct({
+      source: 'gfs',
+      productType: 'weather_grid',
+      schemaVersion: 1,
+      cycle: '2026053018',
+      forecastHour: 6,
+      validTime: '2026-05-31T00:00:00.000Z',
+      grid: { bbox: { north: 41, south: 39, west: 115, east: 117 }, resolution: 0.5 },
+      fields: ['TCDC', 'LCDC', 'MCDC', 'HCDC', 'RH', 'VIS', 'APCP', 'DSWRF', 'PWAT', 'UGRD', 'VGRD'],
+      points: [{ lat: 40, lon: 116, weather: fullGfsWeather() }]
+    });
+
+    const adapter = new GridProductScoreAdapter({
+      cacheService,
+      now: new Date('2026-05-30T21:00:00Z')
+    });
+    const cache = adapter.getScoreCache('sunrise');
+
+    expect(cache.updatedAt).toBe('2026-05-30T20:10:00.000Z');
+    expect(cache.updatedAt).not.toBe(cache.meta.products.weather.validTime);
+    expect(cache.meta.products.weather.validTime).toBe('2026-05-31T00:00:00.000Z');
+  });
+
   test('serves a degraded GFS-only score cache when CAMS aerosol is missing', () => {
     const cacheService = new GridProductCacheService({ dataDir: makeTempDir() });
     cacheService.writeProduct({

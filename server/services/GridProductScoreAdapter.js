@@ -251,7 +251,7 @@ class GridProductScoreAdapter {
 
     if (gridPoints.length === 0) return null;
 
-    const updatedAt = this._latestTimestamp(weatherProduct, aerosolProduct);
+    const updatedAt = this._latestCreatedAt(weatherProduct, aerosolProduct);
     return {
       updatedAt,
       period: safePeriod,
@@ -320,9 +320,9 @@ class GridProductScoreAdapter {
     };
   }
 
-  _latestTimestamp(...products) {
+  _latestCreatedAt(...products) {
     const times = products
-      .flatMap(product => [product?.createdAt, product?.validTime])
+      .map(product => product?.createdAt)
       .map(value => new Date(value).getTime())
       .filter(Number.isFinite);
     if (times.length > 0) {
