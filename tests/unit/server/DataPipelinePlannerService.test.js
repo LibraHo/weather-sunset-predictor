@@ -41,7 +41,7 @@ describe('DataPipelinePlannerService', () => {
       publicRequestCanStartPipeline: false
     });
     const gfsStep = plan.steps.find(step => step.source === 'gfs' && step.forecastHour === 0);
-    const camsStep = plan.steps.find(step => step.source === 'cams' && step.forecastHours.includes(48));
+    const camsStep = plan.steps.find(step => step.source === 'cams');
     expect(gfsStep).toMatchObject({
       dataUrl: expect.stringContaining('filter_gfs_0p25.pl'),
       idxUrl: expect.stringContaining('.idx')
@@ -49,10 +49,11 @@ describe('DataPipelinePlannerService', () => {
     expect(camsStep).toMatchObject({
       request: expect.objectContaining({
         dataset: 'cams-global-atmospheric-composition-forecasts',
-        type: 'forecast',
-        format: 'netcdf_zip'
+        type: 'analysis',
+        format: 'netcdf'
       })
     });
+    expect(camsStep.request.leadtime_hour).toBeUndefined();
     expect(plan.estimate).toMatchObject({
       gridPoints: 10731,
       estimatedDownloadBytes: expect.any(Number),

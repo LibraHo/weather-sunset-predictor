@@ -35,11 +35,12 @@ def normalize_request(request):
         "type": request.get("type") or request.get("productType") or "forecast",
         "date": request["date"],
         "time": request["time"],
-        "leadtime_hour": [str(int(hour)) for hour in leadtime],
         "variable": request["variable"],
         "format": request.get("format") or "netcdf_zip",
         "area": [float(value) for value in request["area"]],
     }
+    if leadtime:
+        payload["leadtime_hour"] = [str(int(hour)) for hour in leadtime]
     return request["dataset"], payload
 
 
