@@ -89,6 +89,8 @@ describe('admin page structure', () => {
     expect(css).toContain('display: flex');
     expect(css).toContain('flex-direction: column');
     expect(css).toContain('overflow-wrap: anywhere');
+    expect(css).toContain('min-height: calc(1.45em * 2)');
+    expect(css).toContain('min-height: 1.45em');
     expect(css).toContain('margin-top: auto');
     expect(css).toContain('.photo-thumb');
     expect(css).toContain('display: block');

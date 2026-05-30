@@ -1112,6 +1112,7 @@ body.theme-dark .admin-table tr:hover td {
   line-height: 1.45;
   color: var(--color-text);
   margin-bottom: 4px;
+  min-height: calc(1.45em * 2);
   max-height: 36px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1122,6 +1123,7 @@ body.theme-dark .admin-table tr:hover td {
   line-height: 1.45;
   color: var(--color-text-light);
   margin-bottom: 8px;
+  min-height: 1.45em;
   overflow-wrap: anywhere;
 }
 
