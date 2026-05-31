@@ -82,8 +82,17 @@ class ScheduledGridRefreshService {
 
     this.running = true;
     try {
-      this.logger.log(`[GridRefresh] 定时触发 GFS+CAMS pipeline（CST ${job.time}, type=${job.type}, label=${job.label || '-'})`);
       const config = this.configService.getConfig();
+      if (config.mode === 'openmeteo') {
+        this.logger.log(`[GridRefresh] 定时触发 Open-Meteo 缓存刷新（CST ${job.time}, type=${job.type}, label=${job.label || '-'})`);
+        await Promise.all(job.periods.map(period => this.gridService.refreshIfStale(undefined, period)));
+        if (typeof this.rasterService.invalidateCache === 'function') {
+          this.rasterService.invalidateCache('all');
+        }
+        return;
+      }
+
+      this.logger.log(`[GridRefresh] 定时触发 GFS+CAMS pipeline（CST ${job.time}, type=${job.type}, label=${job.label || '-'})`);
       const result = await this.workerService.runOnce({
         config,
         reason: `scheduled-grid-refresh:${job.time}:${job.type}`,

@@ -65,4 +65,31 @@ describe('ScheduledGridRefreshService', () => {
     expect(workerService.runOnce).toHaveBeenCalledTimes(1);
     expect(gridService.refreshIfStale).not.toHaveBeenCalled();
   });
+
+  test('openmeteo mode refreshes legacy caches instead of starting GFS CAMS pipeline', async () => {
+    const workerService = {
+      runOnce: jest.fn()
+    };
+    const gridService = {
+      refreshIfStale: jest.fn().mockResolvedValue(undefined)
+    };
+    const rasterService = {
+      invalidateCache: jest.fn()
+    };
+    const service = new ScheduledGridRefreshService({
+      readScheduleConfig: () => ({ enabled: true, jobs: [{ time: '12:00', type: 'both', label: '旧版刷新' }] }),
+      configService: { getConfig: () => ({ mode: 'openmeteo' }) },
+      workerService,
+      gridService,
+      rasterService,
+      logger: { log: jest.fn(), warn: jest.fn(), error: jest.fn() }
+    });
+
+    await service.runDueJobs(new Date('2026-05-30T04:00:00Z'));
+
+    expect(workerService.runOnce).not.toHaveBeenCalled();
+    expect(gridService.refreshIfStale).toHaveBeenCalledWith(undefined, 'sunrise');
+    expect(gridService.refreshIfStale).toHaveBeenCalledWith(undefined, 'sunset');
+    expect(rasterService.invalidateCache).toHaveBeenCalledWith('all');
+  });
 });

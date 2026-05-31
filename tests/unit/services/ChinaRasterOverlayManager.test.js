@@ -129,6 +129,23 @@ describe('ChinaRasterOverlayManager', () => {
       expect(onPeriodChange).toHaveBeenCalledTimes(2);
     });
 
+    test('切换期间补拉完成但时段已变更时隐藏失焦图层', async () => {
+      let resolveLoad;
+      manager._sunriseOverlay.getSpotCount.mockReturnValueOnce(0).mockReturnValue(9);
+      manager._sunriseOverlay.loadAndRender.mockReturnValue(new Promise(resolve => {
+        resolveLoad = resolve;
+      }));
+
+      manager.switchPeriod('sunrise');
+      manager.switchPeriod('sunset');
+      resolveLoad();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(manager.getActivePeriod()).toBe('sunset');
+      expect(manager._sunriseOverlay.hide).toHaveBeenCalledTimes(2);
+    });
+
     test('不支持的时段不崩溃，时段不变', () => {
       expect(() => manager.switchPeriod('invalid')).not.toThrow();
       expect(manager.getActivePeriod()).toBe('sunset');

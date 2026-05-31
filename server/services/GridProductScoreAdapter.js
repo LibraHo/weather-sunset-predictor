@@ -93,12 +93,36 @@ function nextMapEventTime(period, now = new Date()) {
   const getter = safePeriod === 'sunrise'
     ? SunCalculator.getSunriseTime
     : SunCalculator.getSunsetTime;
-  const todayEvent = getter(now, MAP_REFERENCE_POINT.lat, MAP_REFERENCE_POINT.lon, { timezone: MAP_REFERENCE_POINT.timezone });
-  if (now.getTime() <= todayEvent.getTime() + EVENT_PASSED_BUFFER_MS) return todayEvent;
+  for (let offset = 0; offset <= 3; offset += 1) {
+    const event = getter(
+      targetLocalDate(now, MAP_REFERENCE_POINT.timezone, offset),
+      MAP_REFERENCE_POINT.lat,
+      MAP_REFERENCE_POINT.lon,
+      { timezone: MAP_REFERENCE_POINT.timezone }
+    );
+    if (now.getTime() <= event.getTime() + EVENT_PASSED_BUFFER_MS) return event;
+  }
+  return getter(
+    targetLocalDate(now, MAP_REFERENCE_POINT.timezone, 4),
+    MAP_REFERENCE_POINT.lat,
+    MAP_REFERENCE_POINT.lon,
+    { timezone: MAP_REFERENCE_POINT.timezone }
+  );
+}
 
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  return getter(tomorrow, MAP_REFERENCE_POINT.lat, MAP_REFERENCE_POINT.lon, { timezone: MAP_REFERENCE_POINT.timezone });
+function targetLocalDate(now, timeZone, dayOffset = 0) {
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).formatToParts(now);
+    const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+    return new Date(Number(values.year), Number(values.month) - 1, Number(values.day) + dayOffset, 12, 0, 0, 0);
+  } catch (_) {
+    return new Date(now.getTime() + dayOffset * 24 * 60 * 60 * 1000);
+  }
 }
 
 function missingRequiredGfsFields(weather) {
@@ -251,7 +275,7 @@ class GridProductScoreAdapter {
 
     if (gridPoints.length === 0) return null;
 
-    const updatedAt = this._latestTimestamp(weatherProduct, aerosolProduct);
+    const updatedAt = this._latestCreatedAt(weatherProduct, aerosolProduct);
     return {
       updatedAt,
       period: safePeriod,
@@ -320,9 +344,9 @@ class GridProductScoreAdapter {
     };
   }
 
-  _latestTimestamp(...products) {
+  _latestCreatedAt(...products) {
     const times = products
-      .flatMap(product => [product?.createdAt, product?.validTime])
+      .map(product => product?.createdAt)
       .map(value => new Date(value).getTime())
       .filter(Number.isFinite);
     if (times.length > 0) {

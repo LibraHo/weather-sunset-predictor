@@ -65,6 +65,14 @@ function getSourceSignature(spotsCache) {
   ].join('|');
 }
 
+function getForecastSourceTime(spotsCache) {
+  return spotsCache?.meta?.products?.weather?.validTime ||
+    spotsCache?.meta?.targetTime ||
+    spotsCache?.sourceUpdatedAt ||
+    spotsCache?.updatedAt ||
+    null;
+}
+
 class ChinaRasterService {
   constructor() {
     this._cache = {
@@ -157,13 +165,14 @@ class ChinaRasterService {
     });
 
     const generatedAt = new Date().toISOString();
-    const sourceUpdatedAt = spotsCache.updatedAt || null;
+    const updatedAt = spotsCache.updatedAt || generatedAt;
+    const sourceUpdatedAt = getForecastSourceTime(spotsCache);
     const today = generatedAt.slice(0, 10);
     const raster = {
       date: today,
-      // updatedAt is the raster/cache generation time shown in UI. The source
+      // updatedAt is the data product/cache update time shown in UI. The source
       // timestamp can be a forecast valid time in the future, so keep it as metadata.
-      updatedAt: generatedAt,
+      updatedAt,
       generatedAt,
       sourceUpdatedAt,
       period: safePeriod,

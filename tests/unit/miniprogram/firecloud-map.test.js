@@ -28,7 +28,7 @@ describe('miniprogram firecloud map', () => {
     resetApiConfig();
   });
 
-  test('registers a native firecloud map page with a visible raster polygon surface', () => {
+  test('registers a native firecloud map page with a backend-rendered raster image surface', () => {
     const appJson = JSON.parse(read('miniprogram/app.json'));
     const homeWxml = read('miniprogram/pages/home/index.wxml');
     const resultWxml = read('miniprogram/pages/result/index.wxml');
@@ -53,10 +53,10 @@ describe('miniprogram firecloud map', () => {
     expect(mapJs).not.toContain('focusSpot');
     expect(mapJs).toContain('FIRECLOUD_MAP_RESOLUTION');
     expect(mapJs).toContain("FIRECLOUD_MAP_ID = 'firecloud-native-map'");
-    expect(mapJs).toContain('const FIRECLOUD_MAP_RESOLUTION = 1;');
-    expect(mapJs).toContain('buildRasterPolygons(raster, this.data.period)');
-    expect(mapJs).toContain('groundOverlays: []');
-    expect(mapJs).toContain('polygons');
+    expect(mapJs).toContain('const FIRECLOUD_MAP_RESOLUTION = 0.5;');
+    expect(mapJs).toContain('buildRasterGroundOverlay(raster');
+    expect(mapJs).toContain('groundOverlays: [groundOverlay]');
+    expect(mapJs).toContain('polygons: []');
     expect(mapJs).toContain('function getDefaultMapDay(now = new Date(), options = {})');
     expect(mapJs).toContain('getDefaultSunEventDay(now, options)');
     expect(mapWxml).toContain('enable-zoom="{{true}}"');
@@ -206,22 +206,40 @@ describe('miniprogram firecloud map', () => {
   });
 
   test('manual generated raster data creates a visible interpolation layer when backend is unavailable', () => {
-    const raster = buildTestFirecloudRaster('sunset');
+    const raster = buildTestFirecloudRaster('sunset', 'manual-test', { resolution: 2 });
     const polygons = buildRasterPolygons(raster, 'sunset');
 
     expect(raster.isFallback).toBe(true);
+    expect(raster.resolution).toBe(2);
     expect(raster.validCellCount).toBeGreaterThan(0);
     expect(polygons.length).toBeGreaterThan(0);
+    expect(polygons.length).toBeLessThan(500);
     expect(polygons.every((polygon) => polygon.points.length === 4)).toBe(true);
   });
 
-  test('map page uses polygons as the primary visible raster layer', () => {
+  test('raster request fallback keeps the requested coarse resolution to avoid polygon overload', async () => {
+    const wxMock = {
+      request: jest.fn(({ fail }) => fail({ errMsg: 'network down' }))
+    };
+    setWxInstance(wxMock);
+    configureApi({ baseUrl: 'https://api.example.com' });
+
+    const raster = await getChinaFirecloudRaster({ period: 'sunset', resolution: 2 });
+    const polygons = buildRasterPolygons(raster, 'sunset');
+
+    expect(raster.isFallback).toBe(true);
+    expect(raster.fallbackReason).toBe('request-failed');
+    expect(raster.resolution).toBe(2);
+    expect(polygons.length).toBeLessThan(500);
+  });
+
+  test('map page uses backend PNG ground overlay as the primary visible raster layer', () => {
     const mapJs = read('miniprogram/pages/map/index.js');
 
-    expect(mapJs).toContain('buildRasterPolygons');
-    expect(mapJs).toContain('const polygons = buildRasterPolygons(raster, this.data.period)');
-    expect(mapJs).toContain('groundOverlays: []');
-    expect(mapJs).toContain('polygons');
+    expect(mapJs).toContain('buildRasterGroundOverlay');
+    expect(mapJs).toContain('groundOverlays: [groundOverlay]');
+    expect(mapJs).toContain('polygons: []');
+    expect(mapJs).not.toContain('const polygons = buildRasterPolygons(raster, this.data.period)');
     expect(mapJs).not.toContain('addNativeGroundOverlay');
     expect(mapJs).not.toContain('createMapContext');
   });
