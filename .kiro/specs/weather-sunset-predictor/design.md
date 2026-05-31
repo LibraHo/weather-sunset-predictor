@@ -391,11 +391,54 @@ rankScore = exactMatch * 100
 - `ops`：Grid 队列状态、手动刷新、清缓存、重启后端。
 - `data-pipeline`：GFS/CAMS 数据源模式、拉取范围、资源预估、运行进度、下载量统计、统一缓存管理、新旧链路切换、Open-Meteo legacy 刷新、清理/重试/回滚。
 - `logs`：API 调用日志、24h 调用分布、每日统计。
+- `analytics`：访客/运营分析，展示 UV/PV、来源渠道、热门地点、关键行为、转化漏斗、异常和慢请求。
 - `schedule`：定时刷新配置。
 - `agent`：Token、申请审核、Agent 用量、审计日志。
 - `photos`：照片上传与管理。
 
 刷新策略按激活页面收敛：Dashboard/Ops/Logs 可定时刷新，Schedule/Agent/Photos 以用户操作触发为主。高风险动作集中在 Ops 的 danger zone，并保留确认框。
+
+### 后台访客与运营分析（需求55）
+
+**定位**：在现有访客计数、API 调用日志和后台 Dashboard 基础上，新增面向运营判断的聚合分析能力。目标不是监控服务器，而是回答用户来源、使用路径、功能转化和异常阻塞。
+
+**采集事件模型**：
+```text
+analytics_events
+├── id
+├── occurredAt
+├── channel          # web / miniprogram / agent_api / admin
+├── eventName        # page_view / prediction_query / map_view / photo_upload / feedback_submit / api_apply / share_click / error
+├── visitorHash      # IP + UA + salt 的 hash，不能反推明文 IP
+├── userId           # 登录后可选，后台展示默认聚合
+├── sessionIdHash
+├── path
+├── referrerType     # direct / share / search / official_account / mini_program / unknown
+├── deviceType       # ios / android / desktop / bot / unknown
+├── region           # country/province/city 粗粒度
+├── targetType       # location / period / feature / endpoint
+├── targetLabel      # 脱敏后的城市名、功能名或接口名
+├── status           # success / failed
+├── elapsedMs
+└── errorCode
+```
+
+**聚合视图**：
+- 总览：今日/昨日/7日/30日 UV、PV、新访客、回访访客、预测查询量、小程序访问量、Agent/API 调用量、照片上传、反馈、API 申请。
+- 来源：Web/小程序/API/后台渠道，直接访问/分享/搜索/公众号或小程序入口，设备类型和粗粒度地区。
+- 行为：热门地点、朝霞/晚霞比例、日期选择比例、火烧云地图查看、分享、上传照片、留言反馈、API 申请。
+- 漏斗：首页访问 -> 地点查询 -> 查看预测 -> 分享/上传/API 申请。
+- 质量：接口失败率、慢请求 Top、地理编码失败 Top query、小程序错误、火烧云图层加载失败、API token 使用异常。
+
+**存储策略**：
+- 优先复用或扩展 `~/.xiake/visitor.db`，避免继续分散到多个 JSON 文件。
+- 原始事件短期保留，默认 30 天；按日聚合结果长期保留，默认 1 年。
+- 聚合任务可在请求写入时轻量增量更新，也可由后台定时任务汇总；用户请求不能被分析写入阻塞。
+
+**隐私边界**：
+- 不保存明文 IP、第三方登录 `openid/unionid`、session token、API token 明文或精确个人轨迹。
+- 地区只保留国家/省市/城市级；用户主动查询位置可用于热门地点统计，但不得作为访客轨迹展示。
+- `userId` 只用于登录业务归属、安全审计和删除请求；运营面板默认展示聚合指标。
 
 ### 微信小程序与未来 iOS（需求52）
 
@@ -527,6 +570,15 @@ sessions
 - `GET /admin/quota` - Open-Meteo配额统计
 - `GET /api/visitor/count` / `POST /api/visitor/count` - 访客计数
 - `GET /api/photos` / `POST /admin/upload` - 照片管理
+
+### 后台访客与运营分析接口（需求55）
+- `POST /api/analytics/event` - 前端/小程序写入轻量事件，服务端脱敏并限流；失败不得影响主业务
+- `GET /api/admin/analytics/summary?range=` - UV/PV、查询量、照片上传、反馈、API 申请、Agent/API 调用量总览
+- `GET /api/admin/analytics/sources?range=` - 渠道、入口来源、设备和粗粒度地区分布
+- `GET /api/admin/analytics/behavior?range=` - 热门地点、朝霞/晚霞比例、功能点击与关键事件
+- `GET /api/admin/analytics/funnel?range=` - 首页访问、地点查询、查看预测、分享/上传/API 申请转化漏斗
+- `GET /api/admin/analytics/quality?range=` - 接口失败率、慢请求、地理编码失败、小程序错误和图层加载失败
+- `POST /api/admin/analytics/cleanup` - 按保留策略清理原始事件，保留聚合数据
 
 ### 数据管线管理接口（需求53）
 - `GET /api/admin/data-pipeline/status` - 当前模式、最近成功产物、正在运行的 run、磁盘状态，以及 `cacheManagement` 统一缓存状态
@@ -851,6 +903,7 @@ CREATE TABLE api_token_usage (
 - 第三方登录 secret、微信 AppSecret、Google Client Secret 和 `AUTH_SECRET` 只允许存储在后端环境变量或服务器安全配置中
 - 小程序 session token 不得暴露微信 `openid`、`unionid`；业务接口只识别服务端 `userId`
 - 账号合并和身份绑定必须防止 identity 被绑定到多个用户；跨用户数据访问必须按 `userId` 校验
+- 访客/运营分析只允许后台读取聚合数据；采集端不得落明文 IP、token、openid/unionid 或精确个人轨迹
 - API Key仅存储于后端环境变量
 - 前端不暴露Windy/Open-Meteo Key
 - IP存储前SHA256哈希
@@ -862,6 +915,7 @@ CREATE TABLE api_token_usage (
 
 ### 2026-05-31
 - 增加需求54设计：统一 `users + user_identities + sessions` 账号模型，Web 微信、Web Google、小程序微信登录统一归属 `userId`；补充 OAuth/OIDC 回调、微信 `unionid` 合并、平台申请项、session 安全和照片/反馈/API 申请业务归属。
+- 增加需求55设计：后台访客与运营分析面板，覆盖事件采集模型、UV/PV、来源渠道、行为路径、转化漏斗、异常质量指标、SQLite 存储和隐私边界。
 
 ### 2026-05-26
 - 增加需求53设计：GFS+CAMS 地图数据管线、后台范围配置、资源预估、任务状态追溯、下载量统计、清理策略和地图接口降级口径。
