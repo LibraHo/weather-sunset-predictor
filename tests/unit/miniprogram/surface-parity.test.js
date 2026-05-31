@@ -69,7 +69,7 @@ describe('miniprogram surface parity for map/gallery/upload/methodology', () => 
     expect(uploadWxss).toContain('.metadata-edit-hint');
   });
 
-  test('map keeps the native firecloud raster layer visible without high-score point UI', () => {
+  test('map keeps the backend-rendered firecloud raster layer visible without high-score point UI', () => {
     const mapWxml = read('miniprogram/pages/map/index.wxml');
     const mapJs = read('miniprogram/pages/map/index.js');
     const index = read('index.html');
@@ -89,8 +89,9 @@ describe('miniprogram surface parity for map/gallery/upload/methodology', () => 
     expect(mapWxml).not.toContain('spot-row');
     expect(mapJs).not.toContain('openSpotPrediction()');
     expect(mapJs).not.toContain('getChinaFirecloudSpots');
-    expect(mapJs).toContain('groundOverlays: []');
-    expect(mapJs).toContain('buildRasterPolygons(raster, this.data.period)');
+    expect(mapJs).toContain('groundOverlays: [groundOverlay]');
+    expect(mapJs).toContain('buildRasterGroundOverlay(raster');
+    expect(mapJs).toContain('const FIRECLOUD_MAP_RESOLUTION = 0.5;');
     expect(mapJs).toContain('periodDetailText(period)');
     expect(mapJs).toContain('getChinaFirecloudRaster');
     expect(mapJs).not.toContain('addNativeGroundOverlay');

@@ -28,7 +28,7 @@ describe('miniprogram firecloud map', () => {
     resetApiConfig();
   });
 
-  test('registers a native firecloud map page with a visible raster polygon surface', () => {
+  test('registers a native firecloud map page with a backend-rendered raster image surface', () => {
     const appJson = JSON.parse(read('miniprogram/app.json'));
     const homeWxml = read('miniprogram/pages/home/index.wxml');
     const resultWxml = read('miniprogram/pages/result/index.wxml');
@@ -53,10 +53,10 @@ describe('miniprogram firecloud map', () => {
     expect(mapJs).not.toContain('focusSpot');
     expect(mapJs).toContain('FIRECLOUD_MAP_RESOLUTION');
     expect(mapJs).toContain("FIRECLOUD_MAP_ID = 'firecloud-native-map'");
-    expect(mapJs).toContain('const FIRECLOUD_MAP_RESOLUTION = 2;');
-    expect(mapJs).toContain('buildRasterPolygons(raster, this.data.period)');
-    expect(mapJs).toContain('groundOverlays: []');
-    expect(mapJs).toContain('polygons');
+    expect(mapJs).toContain('const FIRECLOUD_MAP_RESOLUTION = 0.5;');
+    expect(mapJs).toContain('buildRasterGroundOverlay(raster');
+    expect(mapJs).toContain('groundOverlays: [groundOverlay]');
+    expect(mapJs).toContain('polygons: []');
     expect(mapJs).toContain('function getDefaultMapDay(now = new Date(), options = {})');
     expect(mapJs).toContain('getDefaultSunEventDay(now, options)');
     expect(mapWxml).toContain('enable-zoom="{{true}}"');
@@ -233,13 +233,13 @@ describe('miniprogram firecloud map', () => {
     expect(polygons.length).toBeLessThan(500);
   });
 
-  test('map page uses polygons as the primary visible raster layer', () => {
+  test('map page uses backend PNG ground overlay as the primary visible raster layer', () => {
     const mapJs = read('miniprogram/pages/map/index.js');
 
-    expect(mapJs).toContain('buildRasterPolygons');
-    expect(mapJs).toContain('const polygons = buildRasterPolygons(raster, this.data.period)');
-    expect(mapJs).toContain('groundOverlays: []');
-    expect(mapJs).toContain('polygons');
+    expect(mapJs).toContain('buildRasterGroundOverlay');
+    expect(mapJs).toContain('groundOverlays: [groundOverlay]');
+    expect(mapJs).toContain('polygons: []');
+    expect(mapJs).not.toContain('const polygons = buildRasterPolygons(raster, this.data.period)');
     expect(mapJs).not.toContain('addNativeGroundOverlay');
     expect(mapJs).not.toContain('createMapContext');
   });
