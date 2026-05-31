@@ -407,17 +407,17 @@ rankScore = exactMatch * 100
 analytics_events
 ├── id
 ├── occurredAt
-├── channel          # web / miniprogram / agent_api / admin
+├── channel          # web / miniprogram / agent_api / admin，用户 KPI 默认排除 admin
 ├── eventName        # page_view / prediction_query / map_view / photo_upload / feedback_submit / api_apply / share_click / error
 ├── visitorHash      # IP + UA + salt 的 hash，不能反推明文 IP
 ├── userId           # 登录后可选，后台展示默认聚合
 ├── sessionIdHash
-├── path
+├── path             # 规范化 route，不含 query string、lat/lon、token、OAuth code/state
 ├── referrerType     # direct / share / search / official_account / mini_program / unknown
 ├── deviceType       # ios / android / desktop / bot / unknown
 ├── region           # country/province/city 粗粒度
 ├── targetType       # location / period / feature / endpoint
-├── targetLabel      # 脱敏后的城市名、功能名或接口名
+├── targetLabel      # 脱敏后的城市/区域、功能名或接口名，不含精确经纬度
 ├── status           # success / failed
 ├── elapsedMs
 └── errorCode
@@ -434,6 +434,8 @@ analytics_events
 - 优先复用或扩展 `~/.xiake/visitor.db`，避免继续分散到多个 JSON 文件。
 - 原始事件短期保留，默认 30 天；按日聚合结果长期保留，默认 1 年。
 - 聚合任务可在请求写入时轻量增量更新，也可由后台定时任务汇总；用户请求不能被分析写入阻塞。
+- 写入前必须规范化路径并剥离 query string、精确 `lat/lon`、OAuth code/state、token 等敏感参数。
+- bot、spider、健康检查和后台/admin 访问默认不进入对外用户 UV/PV，可单独进入质量或管理员审计视图。
 
 **隐私边界**：
 - 不保存明文 IP、第三方登录 `openid/unionid`、session token、API token 明文或精确个人轨迹。

@@ -12,14 +12,14 @@
 ### 任务拆分
 - [ ] 55.1 现状审计：梳理 `visitor.db`、访客计数、API 调用日志、后台 Dashboard、照片上传、API 申请、小程序请求来源，确认可复用数据与缺口。
 - [ ] 55.2 事件模型：设计 `analytics_events` 和日聚合表，字段包含 channel、eventName、visitorHash、userId、path、referrerType、deviceType、region、targetType、status、elapsedMs、errorCode。
-- [ ] 55.3 隐私与保留策略：IP 只存 hash，禁止保存 token/openid/unionid 明文；地区只到粗粒度；原始事件默认 30 天、日聚合默认 1 年；支持按 `userId` 删除。
-- [ ] 55.4 采集接口：新增 `POST /api/analytics/event`，前端/小程序失败不阻塞主业务；服务端限流、脱敏、校验事件白名单。
+- [ ] 55.3 隐私与保留策略：IP 只存 hash，禁止保存 token/openid/unionid 明文；路径必须剥离 query string、精确 `lat/lon`、OAuth code/state；地区只到粗粒度；原始事件默认 30 天、日聚合默认 1 年；支持按 `userId` 删除。
+- [ ] 55.4 采集接口：新增 `POST /api/analytics/event`，前端/小程序失败不阻塞主业务；服务端限流、脱敏、校验事件白名单，并过滤或单独标记 bot/spider/健康检查。
 - [ ] 55.5 服务端自动埋点：预测查询、地理编码、火烧云地图、照片上传、留言反馈、API 申请、Agent/API 调用自动写入关键事件。
 - [ ] 55.6 前端/小程序轻量埋点：页面访问、分享点击、地图查看、上传入口、API 申请入口等用户行为写入事件；用户可见文案走 i18n。
 - [ ] 55.7 后台分析 API：新增 summary/sources/behavior/funnel/quality 接口，全部走后台鉴权。
-- [ ] 55.8 后台 UI：新增「访客分析」或「运营分析」Tab，展示总览、来源、热门地点、行为事件、转化漏斗、错误与慢请求。
+- [ ] 55.8 后台 UI：新增「访客分析」或「运营分析」Tab，展示总览、来源、热门地点、行为事件、转化漏斗、错误与慢请求；后台/admin 访问默认不计入用户 UV/PV。
 - [ ] 55.9 异常质量面板：展示接口失败率、慢请求 Top、地理编码失败 Top query、小程序错误、火烧云图层加载失败、API token 使用异常。
-- [ ] 55.10 测试与验收：覆盖脱敏、事件白名单、后台鉴权、聚合统计、漏斗计算、保留清理、移动端布局和 i18n key。
+- [ ] 55.10 测试与验收：覆盖脱敏、路径/query 清洗、事件白名单、bot 过滤、后台鉴权、聚合统计、漏斗计算、保留清理、移动端布局和 i18n key。
 
 ### 建议 PR 拆分
 - PR A（数据与隐私基础）：55.1-55.4，先落事件表、脱敏、保留策略和采集接口。
@@ -33,7 +33,7 @@
 - 后台能看热门地点、朝霞/晚霞比例、地图查看、分享、上传照片、API 申请等关键行为。
 - 后台至少提供一个漏斗：访问首页 -> 查询地点 -> 查看预测 -> 分享/上传/API 申请。
 - 后台能看失败率、慢请求 Top、地理编码失败 Top query、小程序错误摘要和火烧云图层加载失败。
-- 统计接口必须后台鉴权；采集与存储不得落明文 IP、token、openid/unionid 或精确访客轨迹。
+- 统计接口必须后台鉴权；采集与存储不得落明文 IP、token、openid/unionid、完整 query string 或精确访客轨迹。
 - 每个 PR 必须带 branch、commit、PR、CI 状态；合并/部署仍需 Alex 明确授权。
 
 ---
