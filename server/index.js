@@ -24,6 +24,10 @@ const agentRoutes = require('./routes/agent');
 const applicationsRoutes = require('./routes/applications');
 const shareRoutes = require('./routes/share');
 const shareStatsRoutes = require('./routes/share-stats');
+const analyticsRoutes = require('./routes/analytics');
+const analyticsAdminRoutes = require('./routes/analytics-admin');
+const analyticsService = require('./services/AnalyticsService');
+const authRouteModule = require('./routes/auth');
 const wechatRouteModule = require('./routes/wechat');
 const userRouteModule = require('./routes/user');
 const UserService = require('./services/UserService');
@@ -33,6 +37,7 @@ const { requireAdminAuth, requireAdminRequestIntegrity } = require('./middleware
 const app = express();
 const PORT = process.env.PORT || 3000;
 const userService = new UserService();
+app.locals.analyticsHook = (event) => analyticsService.recordEvent({ channel: 'server', ...(event || {}) });
 
 // 支持逗号分隔的多个 CORS 来源（如 "http://localhost:9002,http://localhost:8080"）
 const corsOrigins = (process.env.CORS_ORIGIN || 'http://localhost:9002')
@@ -110,12 +115,62 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(recordApiAnalytics);
+
 // 瓦片/地理搜索路由优先挂载（绕过全局 apiLimiter，使用各自限速）
 app.use('/api/tiles', tilesLimiter, tilesRoutes);
 app.use('/api/geocoding', geocodingLimiter, geocodingRoutes);
 
 // 对其余 /api/* 路由启用速率限制
 app.use('/api/', apiLimiter);
+
+function analyticsTargetType(pathname) {
+  if (pathname.startsWith('/api/prediction') || pathname.startsWith('/api/weather')) return 'prediction';
+  if (pathname.startsWith('/api/geocoding')) return 'api';
+  if (pathname.startsWith('/api/tiles') || pathname.startsWith('/api/heatmap') || pathname.startsWith('/api/firecloud')) return 'map';
+  if (pathname.startsWith('/api/photos')) return 'photo';
+  if (pathname.startsWith('/api/applications')) return 'api_application';
+  if (pathname.startsWith('/api/agent')) return 'api';
+  return 'api';
+}
+
+function shouldRecordApiAnalytics(pathname) {
+  return [
+    '/api/prediction',
+    '/api/weather',
+    '/api/geocoding',
+    '/api/tiles',
+    '/api/heatmap',
+    '/api/firecloud',
+    '/api/photos',
+    '/api/applications',
+    '/api/agent'
+  ].some(prefix => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
+
+function recordApiAnalytics(req, res, next) {
+  const pathname = (req.path || '').split('?')[0];
+  if (!shouldRecordApiAnalytics(pathname)) return next();
+
+  const startedAt = Date.now();
+  res.on('finish', () => {
+    try {
+      analyticsService.recordEvent({
+        channel: pathname.startsWith('/api/agent') ? 'api' : 'server',
+        eventName: pathname.startsWith('/api/geocoding') && res.statusCode >= 400 ? 'geocoding_failed' : 'api_request',
+        path: pathname,
+        targetType: analyticsTargetType(pathname),
+        status: res.statusCode >= 400 ? 'error' : 'success',
+        elapsedMs: Date.now() - startedAt,
+        errorCode: res.statusCode >= 400 ? `HTTP_${res.statusCode}` : ''
+      });
+    } catch (error) {
+      // Analytics must never affect request handling.
+    }
+  });
+
+  return next();
+}
 
 // Routes
 app.get('/health', (req, res) => {
@@ -147,13 +202,16 @@ app.get('/api/config/features', (req, res) => {
 });
 
 app.use('/api/agent', agentRoutes);
-app.use('/api/applications', applicationsRoutes);
+app.use('/api/applications', applicationsRoutes.createRouter({ userService }));
+app.use('/api/analytics', analyticsRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/agent', agentForecastRoutes);
 app.use('/api/firecloud', firecloudRoutes);
 app.use('/api/prediction', predictionRoutes);
 app.use('/api/visitor', visitorRoutes);
 app.use('/api/share', shareStatsRoutes);
+app.use('/auth', authRouteModule.createRouter({ userService }));
+app.use('/api/me', authRouteModule.createApiMeRouter({ userService }));
 app.use('/api/wechat', wechatRouteModule.createRouter({ userService }));
 app.use('/api/user', userRouteModule.createRouter({ userService }));
 app.use('/api/heatmap', heatmapRoutes);
@@ -163,6 +221,7 @@ app.use('/', adminRoutes);
 
 // Admin API routes (protected by Basic Auth plus browser request integrity checks)
 app.use('/api/admin/data-pipeline', requireAdminAuth, requireAdminRequestIntegrity, dataPipelineRoutes);
+app.use('/api/admin/analytics', requireAdminAuth, requireAdminRequestIntegrity, analyticsAdminRoutes);
 app.use('/api/admin', requireAdminAuth, requireAdminRequestIntegrity, apiLogsRoutes);
 app.use('/api/admin/share', requireAdminAuth, requireAdminRequestIntegrity, shareStatsRoutes);
 app.use('/share', shareRoutes);

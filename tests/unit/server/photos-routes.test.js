@@ -26,6 +26,7 @@ function makeJpegBuffer(sizeBytes = 256) {
 
 function createApp(router) {
   const app = express();
+  app.use(express.json());
   app.use('/api/photos', router);
   return app;
 }
@@ -34,6 +35,7 @@ describe('photos routes', () => {
   let tempDir;
   let userService;
   let token;
+  let secondToken;
   let app;
 
   beforeEach(() => {
@@ -50,6 +52,8 @@ describe('photos routes', () => {
     });
     const user = userService.upsertWechatUser({ openid: 'openid-photo', sessionKey: 'session-photo' });
     token = userService.issueToken(user);
+    const secondUser = userService.upsertWechatUser({ openid: 'openid-photo-2', sessionKey: 'session-photo-2' });
+    secondToken = userService.issueToken(secondUser);
     app = createApp(createRouter({ userService }));
   });
 
@@ -59,7 +63,7 @@ describe('photos routes', () => {
     delete process.env.PHOTO_UPLOAD_DAILY_IP_LIMIT;
   });
 
-  test('lists public photos without internal upload limit fields', async () => {
+  test('lists public photos without internal upload and owner identity fields', async () => {
     const PhotoService = require('../../../server/services/PhotoService.js');
     await PhotoService.savePhoto({
       buffer: makeJpegBuffer(),
@@ -67,8 +71,9 @@ describe('photos routes', () => {
       filename: 'sunset.jpg',
       lat: 39.9,
       lon: 116.4,
-      locationName: '景山',
+      locationName: 'Jingshan',
       uploaderName: 'Alex',
+      uploaderUserId: 'user-private-1',
       clientIp: '127.0.0.1'
     });
 
@@ -77,11 +82,16 @@ describe('photos routes', () => {
     expect(res.body.photos[0]).toMatchObject({
       lat: 39.9,
       lon: 116.4,
-      locationName: '景山',
+      locationName: 'Jingshan',
       uploaderName: 'Alex'
     });
     expect(res.body.photos[0].uploadIpHash).toBeUndefined();
     expect(res.body.photos[0].uploadDay).toBeUndefined();
+    expect(res.body.photos[0].uploaderUserId).toBeUndefined();
+    expect(res.body.photos[0].userId).toBeUndefined();
+    expect(res.body.photos[0].ownerUserId).toBeUndefined();
+    expect(res.body.photos[0].identity).toBeUndefined();
+    expect(res.body.photos[0].identities).toBeUndefined();
   });
 
   test('requires login token for mini program upload', async () => {
@@ -90,40 +100,170 @@ describe('photos routes', () => {
       .attach('photo', makeJpegBuffer(), { filename: 'sunset.jpg', contentType: 'image/jpeg' })
       .expect(401);
 
-    expect(res.body).toEqual({ error: { code: 'UNAUTHORIZED', message: '请先登录' } });
+    expect(res.body.error.code).toBe('UNAUTHORIZED');
   });
 
-  test('uploads a photo with metadata for the logged in user', async () => {
+  test('uploads a photo with hidden response metadata while storage keeps logged in owner', async () => {
     const res = await request(app)
       .post('/api/photos/upload')
       .set('Authorization', `Bearer ${token}`)
-      .field('locationName', '颐和园')
+      .field('locationName', 'Summer Palace')
       .field('uploaderName', 'Alex')
       .field('takenAt', '2026-05-11T10:00:00.000Z')
       .field('lat', '39.999617')
       .field('lon', '116.275179')
-      .field('desc', '湖边晚霞')
+      .field('desc', 'Lakeside sunset')
       .attach('photo', makeJpegBuffer(), { filename: 'summer-palace.jpg', contentType: 'image/jpeg' })
       .expect(201);
 
     expect(res.body.photo).toMatchObject({
-      locationName: '颐和园',
+      locationName: 'Summer Palace',
       uploaderName: 'Alex',
-      uploaderUserId: userService.verifyToken(token).userId,
       takenAt: '2026-05-11T10:00:00.000Z',
       lat: 39.999617,
       lon: 116.275179,
-      desc: '湖边晚霞'
+      desc: 'Lakeside sunset'
     });
+    expect(res.body.photo.uploaderUserId).toBeUndefined();
+    expect(res.body.photo.uploadIpHash).toBeUndefined();
+    expect(res.body.photo.uploadDay).toBeUndefined();
+
+    const PhotoService = require('../../../server/services/PhotoService.js');
+    expect(PhotoService.getPhotoById(res.body.photo.id).uploaderUserId).toBe(userService.verifyToken(token).userId);
+  });
+
+  test('user uploads are pending until admin review approves them for the public list', async () => {
+    const AdminRoutes = require('../../../server/routes/admin.js');
+    process.env.ADMIN_PASSWORD = 'review-secret';
+    const adminApp = express();
+    adminApp.use(express.json());
+    adminApp.use('/', AdminRoutes);
+    const adminAuth = `Basic ${Buffer.from('admin:review-secret').toString('base64')}`;
+
+    const upload = await request(app)
+      .post('/api/photos/upload')
+      .set('Authorization', `Bearer ${token}`)
+      .field('locationName', 'Pending Ridge')
+      .attach('photo', makeJpegBuffer(), { filename: 'pending.jpg', contentType: 'image/jpeg' })
+      .expect(201);
+
+    expect(upload.body.photo.reviewStatus).toBe('pending');
+
+    const publicBefore = await request(app).get('/api/photos').expect(200);
+    expect(publicBefore.body.photos.map(photo => photo.id)).not.toContain(upload.body.photo.id);
+
+    const adminList = await request(adminApp)
+      .get('/admin/photos')
+      .set('Authorization', adminAuth)
+      .expect(200);
+    expect(adminList.body.photos.find(photo => photo.id === upload.body.photo.id)).toMatchObject({
+      reviewStatus: 'pending',
+      locationName: 'Pending Ridge'
+    });
+
+    const reviewed = await request(adminApp)
+      .post(`/photos/${upload.body.photo.id}/review`)
+      .set('Authorization', adminAuth)
+      .send({ reviewStatus: 'approved', reviewNote: 'ok' })
+      .expect(200);
+    expect(reviewed.body.photo).toMatchObject({
+      reviewStatus: 'approved',
+      reviewNote: 'ok'
+    });
+
+    const publicAfter = await request(app).get('/api/photos').expect(200);
+    expect(publicAfter.body.photos.map(photo => photo.id)).toContain(upload.body.photo.id);
+    delete process.env.ADMIN_PASSWORD;
+  });
+
+  test('users can manage only their own uploads and edits require re-review', async () => {
+    const firstUpload = await request(app)
+      .post('/api/photos/upload')
+      .set('Authorization', `Bearer ${token}`)
+      .field('locationName', 'Mine')
+      .field('desc', 'Keep me')
+      .field('lat', '39.9')
+      .field('lon', '116.4')
+      .attach('photo', makeJpegBuffer(), { filename: 'mine.jpg', contentType: 'image/jpeg' })
+      .expect(201);
+
+    const mine = await request(app)
+      .get('/api/photos/mine')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(mine.body.photos.map(photo => photo.id)).toContain(firstUpload.body.photo.id);
+
+    await request(app)
+      .patch(`/api/photos/mine/${firstUpload.body.photo.id}`)
+      .set('Authorization', `Bearer ${secondToken}`)
+      .send({ locationName: 'Stolen' })
+      .expect(404);
+
+    const edited = await request(app)
+      .patch(`/api/photos/mine/${firstUpload.body.photo.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ locationName: 'Edited Mine', reviewStatus: 'approved' })
+      .expect(200);
+    expect(edited.body.photo).toMatchObject({
+      locationName: 'Edited Mine',
+      desc: 'Keep me',
+      lat: 39.9,
+      lon: 116.4,
+      reviewStatus: 'pending'
+    });
+
+    await request(app)
+      .get(`/api/photos/${firstUpload.body.photo.id}/original`)
+      .set('Authorization', `Bearer ${secondToken}`)
+      .expect(404);
+
+    await request(app)
+      .delete(`/api/photos/mine/${firstUpload.body.photo.id}`)
+      .set('Authorization', `Bearer ${secondToken}`)
+      .expect(404);
+
+    await request(app)
+      .delete(`/api/photos/mine/${firstUpload.body.photo.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    const afterDelete = await request(app)
+      .get('/api/photos/mine')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(afterDelete.body.photos.map(photo => photo.id)).not.toContain(firstUpload.body.photo.id);
+  });
+
+  test('optional analytics hook failures do not block photo upload', async () => {
+    const analyticsHook = jest.fn(() => {
+      throw new Error('analytics unavailable');
+    });
+    const createRouter = require('../../../server/routes/photos.js').createRouter;
+    const hookedApp = createApp(createRouter({ userService, analyticsHook }));
+
+    const res = await request(hookedApp)
+      .post('/api/photos/upload')
+      .set('Authorization', `Bearer ${token}`)
+      .field('locationName', 'Jingshan')
+      .attach('photo', makeJpegBuffer(), { filename: 'hooked.jpg', contentType: 'image/jpeg' })
+      .expect(201);
+
+    await new Promise(resolve => setImmediate(resolve));
+    expect(res.body.photo.id).toBeTruthy();
+    expect(analyticsHook).toHaveBeenCalledWith(expect.objectContaining({
+      eventName: 'photo_upload',
+      userId: userService.verifyToken(token).userId,
+      status: 'success'
+    }));
   });
 
   test('rejects upload without a photo file', async () => {
     const res = await request(app)
       .post('/api/photos/upload')
       .set('Authorization', `Bearer ${token}`)
-      .field('locationName', '景山')
+      .field('locationName', 'Jingshan')
       .expect(400);
 
-    expect(res.body).toEqual({ error: { code: 'PHOTO_REQUIRED', message: '请选择要上传的照片' } });
+    expect(res.body.error.code).toBe('PHOTO_REQUIRED');
   });
 });

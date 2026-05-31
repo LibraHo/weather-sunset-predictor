@@ -2,6 +2,7 @@ import { createApiError, getApiConfig, request } from './api.js';
 import { getSessionToken, loginWithWechat } from './auth.js';
 
 const PHOTOS_PATH = '/api/photos';
+const MY_PHOTOS_PATH = '/api/photos/mine';
 const PHOTO_UPLOAD_PATH = '/api/photos/upload';
 
 function getWx(options = {}) {
@@ -100,6 +101,9 @@ export function normalizePhoto(photo = {}, options = {}) {
     takenAt: firstDefined(photo.takenAt, photo.taken_at, photo.capturedAt, photo.createdAt, null),
     uploadedAt: firstDefined(photo.uploadedAt, photo.uploaded_at, photo.createdAt, null),
     desc: firstDefined(photo.desc, photo.description, photo.caption, ''),
+    reviewStatus: firstDefined(photo.reviewStatus, photo.review_status, 'approved'),
+    reviewNote: firstDefined(photo.reviewNote, photo.review_note, ''),
+    reviewedAt: firstDefined(photo.reviewedAt, photo.reviewed_at) ?? null,
     thumbUrl,
     originalUrl
   };
@@ -187,6 +191,56 @@ export async function listPhotos(options = {}) {
   }));
 }
 
+export async function listMyPhotos(options = {}) {
+  const config = getApiConfig();
+  const wxClient = getWx(options);
+  const token = await resolveUploadToken(options, wxClient);
+  const response = await request(MY_PHOTOS_PATH, {
+    method: 'GET',
+    wx: wxClient,
+    baseUrl: options.baseUrl,
+    timeout: options.timeout,
+    header: buildUploadHeader(token, options),
+    sessionToken: token
+  });
+
+  return normalizePhotosPayload(response).map((photo) => normalizePhoto(photo, {
+    baseUrl: options.baseUrl ?? config.baseUrl
+  }));
+}
+
+export async function updateMyPhoto(id, patch = {}, options = {}) {
+  const config = getApiConfig();
+  const wxClient = getWx(options);
+  const token = await resolveUploadToken(options, wxClient);
+  const response = await request(`${MY_PHOTOS_PATH}/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    data: patch,
+    wx: wxClient,
+    baseUrl: options.baseUrl,
+    timeout: options.timeout,
+    header: buildUploadHeader(token, options),
+    sessionToken: token
+  });
+  return normalizePhoto(normalizeUploadPayload(response), {
+    baseUrl: options.baseUrl ?? config.baseUrl
+  });
+}
+
+export async function deleteMyPhoto(id, options = {}) {
+  const wxClient = getWx(options);
+  const token = await resolveUploadToken(options, wxClient);
+  await request(`${MY_PHOTOS_PATH}/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    wx: wxClient,
+    baseUrl: options.baseUrl,
+    timeout: options.timeout,
+    header: buildUploadHeader(token, options),
+    sessionToken: token
+  });
+  return true;
+}
+
 export async function uploadPhoto(photo = {}, options = {}) {
   const wxClient = getWx(options);
   if (!wxClient || typeof wxClient.uploadFile !== 'function') {
@@ -236,7 +290,10 @@ export async function uploadPhoto(photo = {}, options = {}) {
 
 export default {
   listPhotos,
+  listMyPhotos,
   uploadPhoto,
+  updateMyPhoto,
+  deleteMyPhoto,
   normalizePhoto,
   buildPhotoUploadFormData
 };

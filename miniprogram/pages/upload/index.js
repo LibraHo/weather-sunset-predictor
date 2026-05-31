@@ -1,4 +1,5 @@
-import { uploadPhoto } from '../../services/photos.js';
+import { deleteMyPhoto, listMyPhotos, uploadPhoto } from '../../services/photos.js';
+import { trackPageVisit, trackUploadEntry } from '../../services/analytics.js';
 import { applyPageSettings, readAppSettings } from '../../utils/app-settings.js';
 
 const app = getApp();
@@ -20,11 +21,16 @@ Page({
     progress: 0,
     errorMessage: '',
     successMessage: '',
+    myPhotos: [],
+    myPhotosLoading: false,
+    myPhotosError: '',
     themeMode: 'system',
     resolvedThemeMode: 'light'
   },
 
   onLoad(options = {}) {
+    trackPageVisit({ path: '/pages/upload/index' });
+    trackUploadEntry({ path: '/pages/upload/index' });
     this.applySavedSettings();
     const latest = app.globalData.latestPrediction || wx.getStorageSync('latestPrediction') || {};
     const locationName = options.locationName || latest.locationName || '';
@@ -39,10 +45,12 @@ Page({
         lon
       }
     });
+    this.loadMyPhotos();
   },
 
   onShow() {
     this.applySavedSettings();
+    this.loadMyPhotos();
   },
 
   applySavedSettings() {
@@ -113,6 +121,7 @@ Page({
           desc: ''
         }
       });
+      this.loadMyPhotos();
     } catch (error) {
       this.setData({
         submitting: false,
@@ -123,6 +132,34 @@ Page({
 
   goGallery() {
     wx.navigateTo({ url: '/pages/gallery/index' });
+  },
+
+  async loadMyPhotos() {
+    this.setData({ myPhotosLoading: true, myPhotosError: '' });
+    try {
+      const photos = await listMyPhotos();
+      this.setData({
+        myPhotos: photos.map(toMyPhotoViewModel),
+        myPhotosLoading: false
+      });
+    } catch (error) {
+      this.setData({
+        myPhotosLoading: false,
+        myPhotosError: error.message || '我的上传加载失败'
+      });
+    }
+  },
+
+  async deleteUploadedPhoto(event) {
+    const id = event.currentTarget.dataset.id;
+    if (!id) return;
+    this.setData({ myPhotosError: '' });
+    try {
+      await deleteMyPhoto(id);
+      await this.loadMyPhotos();
+    } catch (error) {
+      this.setData({ myPhotosError: error.message || '删除失败' });
+    }
   }
 });
 
@@ -172,4 +209,19 @@ export function validateUploadPayload(payload = {}) {
 function isValidCoordinate(value, min, max) {
   const number = Number(value);
   return Number.isFinite(number) && number >= min && number <= max;
+}
+
+export function toMyPhotoViewModel(photo = {}) {
+  const labels = {
+    pending: '待审核',
+    approved: '已通过',
+    rejected: '已拒绝'
+  };
+  const reviewStatus = photo.reviewStatus || 'approved';
+  return {
+    ...photo,
+    reviewStatus,
+    reviewStatusLabel: labels[reviewStatus] || reviewStatus,
+    title: photo.locationName || photo.desc || '未命名照片'
+  };
 }

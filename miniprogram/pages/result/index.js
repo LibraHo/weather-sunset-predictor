@@ -1,6 +1,7 @@
 import { formatPercent, formatVisibility } from '../../utils/format.js';
 import { getEnhancedPrediction, getEnhancedPredictionBatch, getSurroundingPrediction, getThreeDayGlow, scoreToLevel } from '../../services/prediction.js';
 import { addFavorite, deleteFavorite, listFavorites } from '../../services/user.js';
+import { trackApiApplicationEntry, trackPageVisit, trackShareClick, trackUploadEntry } from '../../services/analytics.js';
 import { buildRadarCloudGradients, paintRadarCloudCanvas } from '../../utils/radar-cloud-field.js';
 import { applyPageSettings, readAppSettings } from '../../utils/app-settings.js';
 import { getDefaultSunEventDay } from '../../utils/sun-event-day.js';
@@ -25,6 +26,7 @@ Page({
   },
 
   async onLoad(options = {}) {
+    trackPageVisit({ path: '/pages/result/index' });
     this.applySavedSettings();
     this.loadOptions = options;
     this.setData({ loading: true });
@@ -542,6 +544,7 @@ Page({
 
   onShareAppMessage() {
     const prediction = this.data.prediction || {};
+    trackShareClick({ path: '/pages/result/index', targetLabel: 'result-share' });
     return buildShareMessage(prediction);
   },
 
@@ -555,6 +558,8 @@ Page({
       upload: '/pages/upload/index'
     };
     const url = routes[target];
+    if (target === 'api') trackApiApplicationEntry({ path: '/pages/result/index' });
+    if (target === 'upload') trackUploadEntry({ path: '/pages/result/index' });
     if (url) wx.navigateTo({ url });
   },
 

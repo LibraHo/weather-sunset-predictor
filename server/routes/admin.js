@@ -118,6 +118,14 @@ function normalizeOptionalDate(value) {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
+function withPhotoUrls(photo = {}) {
+  return {
+    ...photo,
+    thumbUrl: photo.thumbFile ? `/api/photos/${photo.id}/thumb` : null,
+    originalUrl: photo.origFile ? `/api/photos/${photo.id}/original` : null
+  };
+}
+
 // ---------------------------------------------------------------------------
 // GET /admin - 后台管理页面
 // ---------------------------------------------------------------------------
@@ -237,6 +245,8 @@ router.post('/upload', requireAuth, handlePhotoUpload, async (req, res) => {
       uploaderName: req.body.uploaderName || '',
       desc: req.body.description || '',
       clientIp: getClientIp(req),
+      reviewStatus: 'approved',
+      reviewedBy: 'admin',
     });
 
     res.status(201).json({
@@ -306,6 +316,62 @@ router.post('/upload', requireAuth, handlePhotoUpload, async (req, res) => {
 // ---------------------------------------------------------------------------
 // PATCH /admin/photos/:id - 更新照片元数据
 // ---------------------------------------------------------------------------
+router.get('/admin/photos', requireAuth, (req, res) => {
+  try {
+    res.json({
+      success: true,
+      photos: photoService.getPhotos().map(withPhotoUrls)
+    });
+  } catch (err) {
+    console.error('[AdminRoutes] GET /admin/photos error:', err);
+    res.status(500).json({
+      error: {
+        code: 'PHOTOS_FETCH_FAILED',
+        message: '获取照片列表失败'
+      }
+    });
+  }
+});
+
+router.post('/photos/:id/review', requireAuth, express.json(), (req, res) => {
+  try {
+    const reviewStatus = req.body?.reviewStatus || req.body?.status;
+    const reviewNote = req.body?.reviewNote || req.body?.note || '';
+    const reviewed = photoService.reviewPhoto(req.params.id, {
+      reviewStatus,
+      reviewNote,
+      reviewedBy: 'admin'
+    });
+
+    if (!reviewed) {
+      return res.status(404).json({
+        error: {
+          code: 'PHOTO_NOT_FOUND',
+          message: '照片不存在'
+        }
+      });
+    }
+
+    res.json({ success: true, photo: withPhotoUrls(reviewed) });
+  } catch (err) {
+    if (err?.code === 'INVALID_REVIEW_STATUS') {
+      return res.status(400).json({
+        error: {
+          code: 'INVALID_REVIEW_STATUS',
+          message: 'reviewStatus must be approved or rejected'
+        }
+      });
+    }
+    console.error('[AdminRoutes] POST /photos/:id/review error:', err);
+    res.status(500).json({
+      error: {
+        code: 'PHOTO_REVIEW_FAILED',
+        message: '审核失败'
+      }
+    });
+  }
+});
+
 router.patch('/photos/:id', requireAuth, express.json(), (req, res) => {
   try {
     const { id } = req.params;

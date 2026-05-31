@@ -29,6 +29,7 @@ const ADMIN_VIEW_ALIASES = {
   'ops-danger': 'ops'
 };
 const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'ops', 'logs', 'agent', 'photos']);
+ADMIN_VIEWS.add('analytics');
 const OPS_INTERNAL_ANCHORS = new Set([
   'ops-status',
   'ops-guard',
@@ -43,6 +44,7 @@ const OPS_INTERNAL_ANCHORS = new Set([
 const ADMIN_VIEW_META = {
   dashboard: ['运行总览', '状态优先、操作分区，快速判断霞客当前运行情况。'],
   visitors: ['访客分析', '按北京时间查看 PV、UV、IP 和访问明细。'],
+  analytics: ['运营分析', '聚合查看来源、热门路径、关键行为、转化漏斗和质量阻塞。'],
   ops: ['运维中心', '队列、定时任务、GFS+CAMS 数据管线集中管理。'],
   logs: ['日志', '集中查看外部 API 调用、错误率和每日统计。'],
   agent: ['API Token', 'Token 创建、申请审核、用量和审计日志。'],
@@ -90,6 +92,7 @@ async function loadAll() {
     loadLogs(),
     loadQueue(),
     loadVisitorRecords(),
+    loadAnalyticsDashboard(),
     loadDailyStats(),
     loadSchedule(),
     loadDataPipeline(),
@@ -220,6 +223,9 @@ async function loadActiveView() {
     case 'visitors':
       await loadVisitorRecords();
       break;
+    case 'analytics':
+      await loadAnalyticsDashboard();
+      break;
     case 'logs':
       await Promise.all([loadLogSummary(), loadLogs(), loadDailyStats()]);
       break;
@@ -241,6 +247,8 @@ function refreshActiveView() {
     Promise.all([loadQueue(), loadHealth(), loadDataPipelineStatus(), loadDataPipelineRuns(), loadAccessGuard()]);
   } else if (activeAdminView === 'visitors') {
     loadVisitorRecords();
+  } else if (activeAdminView === 'analytics') {
+    loadAnalyticsDashboard();
   } else if (activeAdminView === 'logs') {
     Promise.all([loadLogSummary(), loadLogs()]);
   }
@@ -387,7 +395,307 @@ async function loadVisitorRecords() {
 function formatClientLabel(client) {
   if (client === 'miniprogram') return '微信小程序';
   if (client === 'web') return '网页';
+  if (client === 'agent_api') return 'Agent/API';
+  if (client === 'admin') return '后台';
   return client || '--';
+}
+
+// =================== 访客与运营分析 ===================
+const ANALYTICS_ENDPOINTS = {
+  summary: '/api/admin/analytics/summary',
+  sources: '/api/admin/analytics/sources',
+  behavior: '/api/admin/analytics/behavior',
+  funnel: '/api/admin/analytics/funnel',
+  quality: '/api/admin/analytics/quality'
+};
+
+function getAnalyticsRange() {
+  return document.getElementById('analyticsRange')?.value || '7d';
+}
+
+function setAnalyticsLoading() {
+  const overview = document.getElementById('analyticsOverviewGrid');
+  const sources = document.getElementById('analyticsSourceGrid');
+  const funnel = document.getElementById('analyticsFunnelList');
+  const quality = document.getElementById('analyticsQualityGrid');
+  const popular = document.getElementById('analyticsPopularBody');
+  const behavior = document.getElementById('analyticsBehaviorBody');
+  const qualityBody = document.getElementById('analyticsQualityBody');
+  if (overview) overview.innerHTML = '<p class="empty">加载中...</p>';
+  if (sources) sources.innerHTML = '<p class="empty">加载中...</p>';
+  if (funnel) funnel.innerHTML = '<p class="empty">加载中...</p>';
+  if (quality) quality.innerHTML = '<p class="empty">加载中...</p>';
+  if (popular) popular.innerHTML = '<tr><td colspan="4" class="empty">加载中...</td></tr>';
+  if (behavior) behavior.innerHTML = '<tr><td colspan="4" class="empty">加载中...</td></tr>';
+  if (qualityBody) qualityBody.innerHTML = '<tr><td colspan="4" class="empty">加载中...</td></tr>';
+}
+
+async function fetchAnalyticsSection(section, range) {
+  const url = `${ANALYTICS_ENDPOINTS[section]}?range=${encodeURIComponent(range)}`;
+  try {
+    const res = await fetch(url, { credentials: 'include' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.success === false) {
+      throw new Error(data.error?.message || data.message || `HTTP ${res.status}`);
+    }
+    return { ok: true, data };
+  } catch (err) {
+    console.error(`加载 ${section} 分析失败:`, err);
+    return { ok: false, error: err };
+  }
+}
+
+async function loadAnalyticsDashboard() {
+  if (!document.getElementById('analyticsOverviewGrid')) return;
+  const range = getAnalyticsRange();
+  setAnalyticsLoading();
+  const [summary, sources, behavior, funnel, quality] = await Promise.all([
+    fetchAnalyticsSection('summary', range),
+    fetchAnalyticsSection('sources', range),
+    fetchAnalyticsSection('behavior', range),
+    fetchAnalyticsSection('funnel', range),
+    fetchAnalyticsSection('quality', range)
+  ]);
+  renderAnalyticsOverview(summary);
+  renderAnalyticsSources(sources);
+  renderAnalyticsBehavior(behavior);
+  renderAnalyticsFunnel(funnel);
+  renderAnalyticsQuality(quality);
+}
+
+function unwrapAnalyticsData(result, key) {
+  if (!result?.ok) return null;
+  const data = result.data || {};
+  return data[key] || data.data?.[key] || data.data || data;
+}
+
+function formatAnalyticsNumber(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return '--';
+  return Math.floor(n).toLocaleString('zh-CN');
+}
+
+function formatAnalyticsPercent(value) {
+  if (value == null || value === '') return '--';
+  const n = Number(value);
+  if (!Number.isFinite(n)) return String(value);
+  return `${n > 1 ? n.toFixed(1) : (n * 100).toFixed(1)}%`;
+}
+
+function analyticsErrorMarkup(label) {
+  return `<p class="empty analytics-error">${escapeHtml(label)}加载失败</p>`;
+}
+
+function firstAnalyticsArray(...values) {
+  return values.find(Array.isArray) || [];
+}
+
+function renderAnalyticsOverview(result) {
+  const grid = document.getElementById('analyticsOverviewGrid');
+  if (!grid) return;
+  if (!result.ok) {
+    grid.innerHTML = analyticsErrorMarkup('总览');
+    return;
+  }
+  const data = unwrapAnalyticsData(result, 'summary') || {};
+  const metrics = [
+    ['PV', data.pv ?? data.pageViews ?? data.totalPv],
+    ['UV', data.uv ?? data.uniqueVisitors ?? data.totalUv],
+    ['新访客', data.newVisitors ?? data.newUsers],
+    ['回访访客', data.returningVisitors ?? data.returningUsers],
+    ['预测查询', data.predictionQueries ?? data.predictions ?? data.queryCount],
+    ['小程序访问', data.miniprogramVisits ?? data.miniProgramVisits],
+    ['照片上传', data.photoUploads ?? data.uploads],
+    ['API 申请', data.apiApplications ?? data.apiApply ?? data.applications],
+    ['Agent/API 调用', data.agentApiCalls ?? data.apiCalls ?? data.agentCalls]
+  ];
+  const visible = metrics.filter(([, value]) => value !== undefined && value !== null);
+  if (!visible.length) {
+    grid.innerHTML = '<p class="empty">暂无总览数据</p>';
+    return;
+  }
+  grid.innerHTML = visible.map(([label, value]) => `
+    <div class="analytics-metric">
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(formatAnalyticsNumber(value))}</strong>
+    </div>
+  `).join('');
+}
+
+function normalizeBreakdownRows(rows = []) {
+  return rows.map((item) => ({
+    label: item.label || item.name || item.channel || item.source || item.referrerType || item.deviceType || item.region || item.key || '--',
+    count: Number(item.count ?? item.value ?? item.pv ?? item.total ?? 0),
+    ratio: item.ratio ?? item.percent ?? item.rate
+  })).filter(item => item.count > 0 || item.label !== '--');
+}
+
+function renderAnalyticsBreakdown(title, rows = []) {
+  const normalized = normalizeBreakdownRows(rows);
+  if (!normalized.length) return '';
+  const max = Math.max(...normalized.map(item => item.count), 1);
+  return `
+    <div class="analytics-breakdown-group">
+      <h4>${escapeHtml(title)}</h4>
+      ${normalized.slice(0, 6).map(item => {
+        const width = Math.max(4, Math.round((item.count / max) * 100));
+        return `<div class="analytics-bar-row">
+          <span>${escapeHtml(formatClientLabel(item.label))}</span>
+          <div class="analytics-bar-track"><div class="analytics-bar-fill" style="width:${width}%"></div></div>
+          <strong>${escapeHtml(formatAnalyticsNumber(item.count))}</strong>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+function renderAnalyticsSources(result) {
+  const grid = document.getElementById('analyticsSourceGrid');
+  if (!grid) return;
+  if (!result.ok) {
+    grid.innerHTML = analyticsErrorMarkup('来源');
+    return;
+  }
+  const data = unwrapAnalyticsData(result, 'sources') || {};
+  const blocks = [
+    renderAnalyticsBreakdown('渠道', firstAnalyticsArray(data.channels, data.channelBreakdown, data.sources)),
+    renderAnalyticsBreakdown('入口', firstAnalyticsArray(data.referrers, data.referrerTypes, data.entries)),
+    renderAnalyticsBreakdown('设备', firstAnalyticsArray(data.devices, data.deviceTypes)),
+    renderAnalyticsBreakdown('地区', firstAnalyticsArray(data.regions, data.locations))
+  ].filter(Boolean);
+  grid.innerHTML = blocks.length ? blocks.join('') : '<p class="empty">暂无来源数据</p>';
+}
+
+function normalizeTableRows(rows = [], typeLabel = '项目') {
+  return rows.map((item) => ({
+    type: item.type || item.kind || typeLabel,
+    label: item.label || item.name || item.path || item.targetLabel || item.location || item.endpoint || '--',
+    count: Number(item.count ?? item.value ?? item.total ?? 0),
+    ratio: item.ratio ?? item.percent ?? item.rate
+  }));
+}
+
+function renderAnalyticsBehavior(result) {
+  const popularBody = document.getElementById('analyticsPopularBody');
+  const behaviorBody = document.getElementById('analyticsBehaviorBody');
+  if (!popularBody || !behaviorBody) return;
+  if (!result.ok) {
+    popularBody.innerHTML = '<tr><td colspan="4" class="empty">热门路径 / 地点加载失败</td></tr>';
+    behaviorBody.innerHTML = '<tr><td colspan="4" class="empty">行为事件加载失败</td></tr>';
+    return;
+  }
+  const data = unwrapAnalyticsData(result, 'behavior') || {};
+  const popularRows = [
+    ...normalizeTableRows(firstAnalyticsArray(data.popularPaths, data.paths, data.topPaths), '路径'),
+    ...normalizeTableRows(firstAnalyticsArray(data.popularLocations, data.locations, data.topLocations, data.places), '地点')
+  ].sort((a, b) => b.count - a.count).slice(0, 12);
+
+  popularBody.innerHTML = popularRows.length
+    ? popularRows.map(row => `<tr>
+      <td>${escapeHtml(row.type)}</td>
+      <td class="visitor-path-cell">${escapeHtml(row.label)}</td>
+      <td>${escapeHtml(formatAnalyticsNumber(row.count))}</td>
+      <td>${escapeHtml(formatAnalyticsPercent(row.ratio))}</td>
+    </tr>`).join('')
+    : '<tr><td colspan="4" class="empty">暂无热门路径或地点</td></tr>';
+
+  const events = normalizeTableRows(firstAnalyticsArray(data.events, data.behaviorEvents, data.featureClicks, data.actions), '事件');
+  behaviorBody.innerHTML = events.length
+    ? events.slice(0, 12).map(row => `<tr>
+      <td>${escapeHtml(row.type)}</td>
+      <td class="visitor-path-cell">${escapeHtml(row.label)}</td>
+      <td>${escapeHtml(formatAnalyticsNumber(row.count))}</td>
+      <td>${escapeHtml(formatAnalyticsPercent(row.ratio))}</td>
+    </tr>`).join('')
+    : '<tr><td colspan="4" class="empty">暂无行为事件</td></tr>';
+}
+
+function normalizeFunnelSteps(data = {}) {
+  const steps = firstAnalyticsArray(data.steps, data.funnel, data.items);
+  return steps.map((item, index) => ({
+    label: item.label || item.name || item.eventName || `步骤 ${index + 1}`,
+    count: Number(item.count ?? item.users ?? item.value ?? 0),
+    rate: item.conversionRate ?? item.rate ?? item.ratio,
+    dropoff: item.dropoffRate ?? item.dropRate
+  }));
+}
+
+function renderAnalyticsFunnel(result) {
+  const list = document.getElementById('analyticsFunnelList');
+  if (!list) return;
+  if (!result.ok) {
+    list.innerHTML = analyticsErrorMarkup('漏斗');
+    return;
+  }
+  const steps = normalizeFunnelSteps(unwrapAnalyticsData(result, 'funnel') || {});
+  if (!steps.length) {
+    list.innerHTML = '<p class="empty">暂无漏斗数据</p>';
+    return;
+  }
+  const max = Math.max(...steps.map(step => step.count), 1);
+  list.innerHTML = steps.map((step, index) => {
+    const width = Math.max(6, Math.round((step.count / max) * 100));
+    return `<div class="analytics-funnel-step">
+      <div class="analytics-funnel-head">
+        <span>${index + 1}. ${escapeHtml(step.label)}</span>
+        <strong>${escapeHtml(formatAnalyticsNumber(step.count))}</strong>
+      </div>
+      <div class="analytics-funnel-track"><div class="analytics-funnel-fill" style="width:${width}%"></div></div>
+      <div class="analytics-funnel-meta">转化 ${escapeHtml(formatAnalyticsPercent(step.rate))} · 流失 ${escapeHtml(formatAnalyticsPercent(step.dropoff))}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderAnalyticsQuality(result) {
+  const grid = document.getElementById('analyticsQualityGrid');
+  const tbody = document.getElementById('analyticsQualityBody');
+  if (!grid || !tbody) return;
+  if (!result.ok) {
+    grid.innerHTML = analyticsErrorMarkup('质量');
+    tbody.innerHTML = '<tr><td colspan="4" class="empty">质量明细加载失败</td></tr>';
+    return;
+  }
+  const data = unwrapAnalyticsData(result, 'quality') || {};
+  const metrics = [
+    ['接口失败率', data.errorRate ?? data.failureRate],
+    ['慢请求率', data.slowRate],
+    ['失败请求', data.failedRequests ?? data.errors],
+    ['慢请求', data.slowRequests],
+    ['地理编码失败', data.geocodingFailures],
+    ['小程序错误', data.miniprogramErrors ?? data.miniProgramErrors],
+    ['图层加载失败', data.mapLayerFailures],
+    ['Token 异常', data.apiTokenAnomalies]
+  ].filter(([, value]) => value !== undefined && value !== null);
+  grid.innerHTML = metrics.length
+    ? metrics.map(([label, value]) => `<div class="analytics-quality-item"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(label.includes('率') ? formatAnalyticsPercent(value) : formatAnalyticsNumber(value)))}</strong></div>`).join('')
+    : '<p class="empty">暂无质量数据</p>';
+
+  const rows = [
+    ...normalizeQualityRows(firstAnalyticsArray(data.slowTop, data.slowRequestsTop, data.slowEndpoints), '慢请求'),
+    ...normalizeQualityRows(firstAnalyticsArray(data.errorTop, data.failedEndpoints, data.errorsTop), '错误'),
+    ...normalizeQualityRows(firstAnalyticsArray(data.geocodingFailureTop, data.geocodingFailuresTop), '地理编码'),
+    ...normalizeQualityRows(firstAnalyticsArray(data.miniprogramErrorTop, data.miniProgramErrorTop), '小程序'),
+    ...normalizeQualityRows(firstAnalyticsArray(data.mapLayerFailureTop), '图层'),
+    ...normalizeQualityRows(firstAnalyticsArray(data.tokenAnomalyTop, data.apiTokenAnomalyTop), 'Token')
+  ].slice(0, 16);
+
+  tbody.innerHTML = rows.length
+    ? rows.map(row => `<tr>
+      <td>${escapeHtml(row.type)}</td>
+      <td class="visitor-path-cell">${escapeHtml(row.label)}</td>
+      <td>${escapeHtml(formatAnalyticsNumber(row.count))}</td>
+      <td>${escapeHtml(row.detail)}</td>
+    </tr>`).join('')
+    : '<tr><td colspan="4" class="empty">暂无错误或慢请求明细</td></tr>';
+}
+
+function normalizeQualityRows(rows = [], type) {
+  return rows.map(item => ({
+    type,
+    label: item.label || item.endpoint || item.path || item.query || item.errorCode || item.name || '--',
+    count: Number(item.count ?? item.total ?? item.value ?? 0),
+    detail: item.elapsedMs ? `${Number(item.elapsedMs)} ms` : (item.errorCode || item.message || item.status || '--')
+  }));
 }
 
 // =================== 访问防护 ===================
@@ -1624,7 +1932,7 @@ function formatBytes(value) {
 // =================== 照片管理 ===================
 async function loadPhotos() {
   try {
-    const res = await fetch('/api/photos');
+    const res = await fetch('/admin/photos', { credentials: 'include' });
     const data = await res.json();
     photoCache = data.photos || [];
     renderPhotos(photoCache);
@@ -1648,13 +1956,38 @@ function renderPhotos(photos) {
         <div class="photo-meta">拍摄：${escapeHtml(formatPhotoDateTime(p.takenAt) || '--')}</div>
         <div class="photo-meta">上传：${escapeHtml(formatPhotoDateTime(p.uploadedAt) || '--')}</div>
         <div class="photo-meta">上传者：${escapeHtml(p.uploaderName || '--')}</div>
+        <div class="photo-meta">审核：${renderPhotoReviewStatus(p)}</div>
         <div class="photo-actions">
+          ${renderPhotoReviewActions(p)}
           <button class="btn btn-secondary btn-sm" onclick="openPhotoEditor('${p.id}')">编辑</button>
           <button class="btn btn-danger btn-sm" onclick="deletePhoto('${p.id}')">删除</button>
         </div>
       </div>
     </div>
   `).join('');
+}
+
+function renderPhotoReviewStatus(photo) {
+  const status = photo?.reviewStatus || 'approved';
+  const labels = {
+    pending: '待审核',
+    approved: '已通过',
+    rejected: '已拒绝'
+  };
+  const note = photo?.reviewNote ? ` / ${escapeHtml(photo.reviewNote)}` : '';
+  return `${labels[status] || escapeHtml(status)}${note}`;
+}
+
+function renderPhotoReviewActions(photo) {
+  const id = escapeJsString(photo?.id || '');
+  const status = photo?.reviewStatus || 'approved';
+  const approve = status === 'approved'
+    ? ''
+    : `<button class="btn btn-primary btn-sm" onclick="reviewPhoto('${id}', 'approved')">通过</button>`;
+  const reject = status === 'rejected'
+    ? ''
+    : `<button class="btn btn-warning btn-sm" onclick="reviewPhoto('${id}', 'rejected')">拒绝</button>`;
+  return `${approve}${reject}`;
 }
 
 function renderPhotoThumb(photo) {
@@ -1706,6 +2039,26 @@ async function deletePhoto(id) {
     }
   } catch (err) {
     showMessage('删除失败', 'error');
+  }
+}
+
+async function reviewPhoto(id, reviewStatus) {
+  const reviewNote = reviewStatus === 'rejected'
+    ? (prompt('拒绝原因（可选）', '') || '')
+    : '';
+  try {
+    const res = await fetch(`/photos/${encodeURIComponent(id)}/review`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reviewStatus, reviewNote })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error?.message || '审核失败');
+    showMessage(reviewStatus === 'approved' ? '已通过审核' : '已拒绝');
+    loadPhotos();
+  } catch (err) {
+    showMessage('审核失败: ' + (err?.message || '未知错误'), 'error');
   }
 }
 
