@@ -121,7 +121,11 @@ weather-sunset-predictor/
 
 | 能力 | 接口 | 说明 |
 | --- | --- | --- |
-| 微信登录 | `POST /api/wechat/login` | 入参 `code`，返回服务端 session token 与通用 `userId`。 |
+| 小程序微信登录 | `POST /auth/wechat/mini/login` | 入参 `code`，后端 `code2Session` 换 `openid/unionid`，返回服务端 session token 与通用 `userId`。 |
+| 网页微信登录 | `GET /auth/wechat/web/start` / `GET /auth/wechat/web/callback` | 微信开放平台网站应用扫码登录，回调后绑定 `wechat_web` identity。 |
+| 网页 Google 登录 | `GET /auth/google/start` / `GET /auth/google/callback` | Google OAuth/OIDC 登录，使用 `sub` 绑定 `google` identity。 |
+| 当前用户 | `GET /api/me` | 返回当前 `userId`、展示名、头像和已绑定身份摘要。 |
+| 注销 | `POST /auth/logout` | 注销当前 Web session 或小程序 token。 |
 | 地点搜索 | `GET /api/geocoding/search?q=` | 复用 Web 搜索排序；结果字段对小程序/iOS 稳定。 |
 | 反向地理编码 | `GET /api/geocoding/reverse?lat=&lon=` | 上传照片或当前位置展示地点名。 |
 | 单点预测 | `POST /api/prediction/enhanced` | 小程序结果页主接口，复用现有增强预测。 |
@@ -144,11 +148,13 @@ weather-sunset-predictor/
 
 ## 用户与存储
 
-### 小程序阶段
+### 统一账号阶段
 
 - 微信 `openid` 只作为 identity provider 标识，不作为业务表永久主键。
-- 新增微信登录接口，例如 `POST /api/wechat/login`，服务端用 `code` 换 openid/session 信息后创建或绑定 `userId`。
-- 收藏地点、最近查询、照片投稿归属等服务端数据绑定 `userId`。
+- 小程序微信登录使用 `POST /auth/wechat/mini/login`，服务端用 `code` 换 `openid/unionid` 后创建或绑定 `userId`。
+- Web 微信登录使用微信开放平台网站应用；Web 微信和小程序微信必须绑定到同一开放平台主体，优先用 `unionid` 自动合并同一个用户。
+- Web Google 登录使用 Google OIDC `sub` 作为 provider identity；邮箱只做展示/联系信息，不作为唯一主键。
+- 收藏地点、最近查询、照片投稿、留言反馈、API 申请等服务端数据绑定 `userId`。
 - 不在客户端长期保存敏感凭据。
 
 建议数据模型：
@@ -162,15 +168,15 @@ users
 
 user_identities
 ├── userId
-├── provider        # wechat_mp / apple / phone / email
-├── providerUserId  # openid / apple sub / phone hash / email hash
+├── provider        # wechat_miniprogram / wechat_web / google / apple / phone / email
+├── providerUserId  # openid / google sub / apple sub / phone hash / email hash
 ├── unionId
 ├── createdAt
 └── lastLoginAt
 ```
 
 服务端存储策略：
-- `favorites`、`recent_locations`、`photo_submissions` 引用 `userId`。
+- `favorites`、`recent_locations`、`photo_submissions`、`feedback`、`api_applications`、`api_tokens` 引用 `userId`。
 - 小程序本地只缓存 session token、最近地点快照、UI 偏好；服务端数据才是准源。
 - 未来账号合并时，只合并 identities，不迁移业务表主键。
 
@@ -345,6 +351,8 @@ user_identities
 
 - 所有请求域名、上传域名、下载域名需要在微信小程序后台配置。
 - 域名必须 HTTPS，不能使用 IP、端口或未备案域名。
+- Web 微信登录需要微信开放平台「网站应用」，小程序和网站应用必须绑定到同一开放平台主体，才能用 `unionid` 自动打通账号。
+- Google 登录需要 Google Cloud Web OAuth Client，并配置 `https://sunset.bjhyc.online/auth/google/callback`。
 - `web-view` 需要配置业务域名，仅作为临时入口或补充页面。
 - `wx.getLocation` / `wx.chooseLocation` 需要在 `app.json` 声明，并确认类目与接口权限。
 - 地图、canvas、图表能力需要按小程序组件能力重新评估，不直接照搬 Leaflet/Chart.js。
@@ -355,7 +363,7 @@ user_identities
 - 请求域名：`https://sunset.bjhyc.online` 必须配置 request/upload/download 合法域名。
 - 业务域名：如保留 H5 fallback，需要配置 `web-view` 业务域名。
 - 权限声明：定位、相册/相机、上传图片必须有清晰用途说明。
-- 隐私协议：说明位置、照片、拍摄时间、上传者信息、收藏/最近查询的用途和保存方式。
+- 隐私协议：说明第三方登录身份、位置、照片、拍摄时间、上传者信息、收藏/最近查询、留言反馈、API 申请的用途和保存方式。
 - 数据删除：用户需要能删除收藏、最近查询、投稿记录，或至少有可执行的人工删除入口。
 - 审核材料：准备核心页面截图、功能路径说明、定位/相册使用说明、ICP备案与域名归属材料。
 

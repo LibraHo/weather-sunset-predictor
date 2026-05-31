@@ -1,6 +1,42 @@
 # 📋 Weather Sunset Predictor 任务清单
 
-**最后更新**：2026-05-28
+**最后更新**：2026-05-31
+
+---
+
+## 🆕 需求54：统一用户账号与第三方登录（2026-05-31）
+
+### 背景
+Web 端需要微信扫码登录和 Google 登录，小程序端需要微信登录；两端账号要相通。登录后照片上传、留言反馈、API 申请都应归属同一个服务端 `userId`。
+
+### 任务拆分
+- [ ] 54.1 平台申请与配置确认：微信开放平台主体认证；网站应用申请并配置 `sunset.bjhyc.online` 回调域名；小程序绑定同一开放平台主体；Google Cloud 创建 Web OAuth Client，回调地址 `https://sunset.bjhyc.online/auth/google/callback`。
+- [ ] 54.2 环境变量与密钥部署：生产配置 `WECHAT_WEB_APP_ID`、`WECHAT_WEB_APP_SECRET`、`WECHAT_MINI_APP_ID`、`WECHAT_MINI_APP_SECRET`、`GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`、`AUTH_SECRET`；secret 不进入前端、不写入仓库。
+- [ ] 54.3 数据模型：新增/迁移 `users`、`user_identities`、`sessions`；`user_identities` 支持 `wechat_web`、`wechat_miniprogram`、`google`，并约束 provider identity 唯一。
+- [ ] 54.4 身份合并逻辑：微信优先按 `unionid` 合并 Web 与小程序身份；Google 按 OIDC `sub` 绑定；无 `unionid` 时提供手动绑定路径和冲突保护。
+- [ ] 54.5 Web 微信登录：实现 `/auth/wechat/web/start`、`/auth/wechat/web/callback`，校验 `state`，换取 `openid/unionid`，写入安全 session cookie。
+- [ ] 54.6 小程序微信登录：实现 `/auth/wechat/mini/login`，使用 `code2Session` 换 `openid/unionid`，返回服务端 session token 和通用 `userId`。
+- [ ] 54.7 Google 登录：实现 `/auth/google/start`、`/auth/google/callback`，校验 `id_token`，读取 `sub/email/name/avatar`，创建或绑定 identity。
+- [ ] 54.8 登录态与 `/api/me`：Web cookie、小程序 token 都解析到同一 `userId`；新增当前用户信息接口和注销接口。
+- [ ] 54.9 照片上传归属：用户端照片上传必须登录并写 `userId`；公开照片 API 不暴露身份内部字段；后台审核保持独立。
+- [ ] 54.10 留言反馈归属：新增或改造反馈接口，登录反馈绑定 `userId`；如保留匿名反馈，需有清晰字段区分。
+- [ ] 54.11 API 申请归属：API 申请记录绑定 `userId`；后台审核创建 token 时记录申请与 token 关联，避免只靠邮箱文本匹配。
+- [ ] 54.12 隐私与合规：补齐登录、照片、反馈、API 申请相关隐私政策、用户协议、数据删除或人工删除入口。
+- [ ] 54.13 测试与验收：覆盖 OAuth state、token 校验、unionid 合并、identity 冲突、未登录拒绝、跨用户不可访问、照片/反馈/API 申请归属和旧数据兼容。
+
+### 建议 PR 拆分
+- PR A（账号基础）：54.2-54.4，先落模型、session、合并规则和测试。
+- PR B（小程序登录）：54.6、54.8，先接小程序微信登录和 `/api/me`。
+- PR C（Web 登录）：54.5、54.7，接 Web 微信和 Google 登录。
+- PR D（业务归属）：54.9-54.11，把照片、反馈、API 申请绑定 `userId`。
+- PR E（合规与验收）：54.1、54.12、54.13，补平台配置证据、隐私文案和端到端验收。
+
+### 验收标准
+- 同一个微信用户在 Web 微信和小程序微信登录时，如果拿到同一 `unionid`，必须看到同一个账号数据。
+- Web Google 登录可以创建/绑定同一 `userId`，并与微信身份共存。
+- 登录后照片、反馈、API 申请均可在后台追溯到 `userId`，跨用户访问被拒绝。
+- 所有新增用户可见文案至少维护 `zh-CN`、`zh-TW`、`en-US`。
+- 每个 PR 必须带 branch、commit、PR、CI 状态；合并/部署仍需 Alex 明确授权。
 
 ---
 
@@ -82,7 +118,7 @@ Alex 判断公众号入口偏奇怪，小程序更适合霞客；后续还计划
 ### 任务拆分
 - [x] 52.1 小程序项目脚手架：在当前 repo 新增 `miniprogram/`，包含 `app.json/app.js/app.wxss`、基础 pages/components/services/utils 目录；不影响现有 Web 构建与部署。（PR #661，branch `feat/miniprogram-mvp-shell`）
 - [x] 52.2 API 契约梳理：列出小程序 MVP 依赖的共享接口，确认 `/api/prediction/enhanced`、`/api/geocoding/search`、`/api/photos`、照片上传、收藏/最近查询、微信登录等接口边界。（PR #661，已落地 `miniprogram/services/*` 契约壳）
-- [x] 52.3 微信登录与用户维度：新增或设计 `POST /api/wechat/login`，服务端以 openid 关联收藏、最近查询、照片投稿归属；为未来 iOS 预留跨端 userId/identity provider 模型。（branch `feat/miniprogram-user-share`，新增服务端微信登录、`userId + identities`、小程序登录 token）
+- [x] 52.3 微信登录与用户维度：新增或设计小程序微信登录接口，服务端以 openid 关联收藏、最近查询、照片投稿归属；为未来 iOS 预留跨端 userId/identity provider 模型。（branch `feat/miniprogram-user-share`，新增服务端微信登录、`userId + identities`、小程序登录 token；需求54 将升级为 `/auth/wechat/mini/login` 并用 `unionid` 打通 Web）
 - [x] 52.4 首页查分 MVP：原生小程序页面支持手动搜索地点、当前位置、朝霞/晚霞切换、今日/明日评分。（PR #661）
 - [x] 52.5 预测结果页：展示分数、质量等级、最佳观赏窗口、高/中/低云、能见度、湿度、AOD 和简短解释；不复制 Web 端长段落。（PR #661）
 - [x] 52.6 收藏与最近查询：本地缓存 + 服务端持久化，按 openid 同步。（branch `feat/miniprogram-user-share`，服务端按 `userId` 存储，微信 openid 只作为 identity）

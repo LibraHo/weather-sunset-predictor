@@ -411,6 +411,61 @@ rankScore = exactMatch * 100
 - 用户模型以服务端 `userId` 为业务主键，微信 `openid` 只是小程序 identity provider；未来 iOS 可追加 Apple/手机号/邮箱等 identity。
 - 开工前必须先冻结 MVP 信息架构、共享 API 契约、设计 token 映射、地图/图表适配方案和微信平台审核清单。
 
+### 统一用户账号与第三方登录（需求54）
+
+**目标**：Web、小程序和未来 iOS 共用同一个服务端用户模型。用户可以通过 Web 微信、Web Google、小程序微信登录，同一个真实用户最终落到同一个 `userId`；照片、反馈、API 申请、收藏和最近查询都引用 `userId`。
+
+**数据模型**：
+```text
+users
+├── id
+├── displayName
+├── avatarUrl
+├── primaryEmail
+├── createdAt
+└── updatedAt
+
+user_identities
+├── userId
+├── provider          # wechat_web / wechat_miniprogram / google / future apple
+├── providerUserId    # openid / google sub / apple sub
+├── unionId           # 微信开放平台 unionid，可为空
+├── email
+├── displayName
+├── avatarUrl
+├── createdAt
+└── lastLoginAt
+
+sessions
+├── id / tokenHash
+├── userId
+├── clientType        # web / miniprogram / api
+├── expiresAt
+├── createdAt
+└── revokedAt
+```
+
+**身份合并规则**：
+- 微信优先用 `unionId` 合并：同一开放平台主体下，Web 微信登录和小程序微信登录拿到同一 `unionid` 时绑定到同一个 `userId`。
+- `openid` 只在同一 provider 内唯一；不能用小程序 `openid` 直接匹配 Web 微信 `openid`。
+- Google 使用 OIDC `sub` 作为稳定 provider identity；邮箱只用于展示、联系和辅助绑定，不作为唯一主键。
+- 一个 identity 只能绑定一个 user；手动绑定或合并必须要求当前用户已登录并显式确认。
+
+**登录流程**：
+- Web 微信：`/auth/wechat/web/start` 生成 `state` 并跳转微信开放平台授权；`/auth/wechat/web/callback` 校验 `state` 后换 token，读取 `openid/unionid`，创建或绑定 identity，再写 Web session cookie。
+- 小程序微信：小程序调用 `wx.login()` 获取 code；后端 `/auth/wechat/mini/login` 调用 `code2Session`，读取 `openid/unionid`，创建或绑定 identity，返回小程序 session token。
+- Google：`/auth/google/start` 跳转 Google OAuth；`/auth/google/callback` 校验 `state` 和 `id_token`，读取 `sub/email/name/avatar`，创建或绑定 identity，再写 Web session cookie。
+
+**业务归属**：
+- `photos`、`feedback`、`api_applications`、`api_tokens`、`favorites`、`recent_locations` 均引用 `userId`。
+- API 申请仍保留邮箱/联系方式字段，但审核和 token 创建应从申请记录关联到 `userId`。
+- 管理后台 Basic Auth/Admin token 不并入普通用户账号体系。
+
+**平台配置**：
+- 微信开放平台账号需完成主体认证，并绑定网站应用和小程序；否则无法稳定获得同一 `unionid`。
+- 生产环境变量包括 `WECHAT_WEB_APP_ID`、`WECHAT_WEB_APP_SECRET`、`WECHAT_MINI_APP_ID`、`WECHAT_MINI_APP_SECRET`、`GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`、`AUTH_SECRET`。
+- 回调域名：微信网站应用使用 `sunset.bjhyc.online`；Google 使用 `https://sunset.bjhyc.online/auth/google/callback`。
+
 ## 数据模型
 
 ### Location
@@ -449,6 +504,15 @@ rankScore = exactMatch * 100
 - `POST /api/prediction/surrounding` - 周边8方位预测
 - `POST /api/prediction/enhanced` - 增强预测
 - `POST /api/prediction/batch` - 批量预测
+
+### 用户认证与账号（需求54）
+- `GET /auth/wechat/web/start` - Web 微信扫码登录入口，生成 `state` 并跳转微信开放平台
+- `GET /auth/wechat/web/callback` - Web 微信 OAuth 回调，换取 `openid/unionid` 后写入 Web session
+- `POST /auth/wechat/mini/login` - 小程序微信登录，入参 `code`，返回服务端 session token 与通用 `userId`
+- `GET /auth/google/start` - Google OAuth/OIDC 登录入口
+- `GET /auth/google/callback` - Google OAuth/OIDC 回调，校验 `id_token` 后写入 Web session
+- `POST /auth/logout` - 注销当前 session
+- `GET /api/me` - 返回当前登录用户、已绑定 identities 和可用能力
 
 ### 网格/热力图
 - `GET /api/heatmap/grid?period=` - 网格评分数据
@@ -783,6 +847,10 @@ CREATE TABLE api_token_usage (
 ## 安全
 
 - Agent API 必须鉴权；API Token 明文只在创建时显示，服务端仅保存 hash，支持停用/吊销/额度限制
+- 用户登录 OAuth 回调必须校验 `state`、回调域名和 token 签名；Web session cookie 必须设置 `HttpOnly`、`Secure`、`SameSite`
+- 第三方登录 secret、微信 AppSecret、Google Client Secret 和 `AUTH_SECRET` 只允许存储在后端环境变量或服务器安全配置中
+- 小程序 session token 不得暴露微信 `openid`、`unionid`；业务接口只识别服务端 `userId`
+- 账号合并和身份绑定必须防止 identity 被绑定到多个用户；跨用户数据访问必须按 `userId` 校验
 - API Key仅存储于后端环境变量
 - 前端不暴露Windy/Open-Meteo Key
 - IP存储前SHA256哈希
@@ -791,6 +859,9 @@ CREATE TABLE api_token_usage (
 - 数据管线配置、手动刷新、重试、清理和回滚均属于后台高风险操作，必须走 Basic Auth，并在 run log 中记录操作者上下文（可用脱敏 IP/UA）
 
 ## 变更摘要
+
+### 2026-05-31
+- 增加需求54设计：统一 `users + user_identities + sessions` 账号模型，Web 微信、Web Google、小程序微信登录统一归属 `userId`；补充 OAuth/OIDC 回调、微信 `unionid` 合并、平台申请项、session 安全和照片/反馈/API 申请业务归属。
 
 ### 2026-05-26
 - 增加需求53设计：GFS+CAMS 地图数据管线、后台范围配置、资源预估、任务状态追溯、下载量统计、清理策略和地图接口降级口径。
