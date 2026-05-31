@@ -53,7 +53,7 @@ describe('miniprogram firecloud map', () => {
     expect(mapJs).not.toContain('focusSpot');
     expect(mapJs).toContain('FIRECLOUD_MAP_RESOLUTION');
     expect(mapJs).toContain("FIRECLOUD_MAP_ID = 'firecloud-native-map'");
-    expect(mapJs).toContain('const FIRECLOUD_MAP_RESOLUTION = 1;');
+    expect(mapJs).toContain('const FIRECLOUD_MAP_RESOLUTION = 2;');
     expect(mapJs).toContain('buildRasterPolygons(raster, this.data.period)');
     expect(mapJs).toContain('groundOverlays: []');
     expect(mapJs).toContain('polygons');
@@ -206,13 +206,31 @@ describe('miniprogram firecloud map', () => {
   });
 
   test('manual generated raster data creates a visible interpolation layer when backend is unavailable', () => {
-    const raster = buildTestFirecloudRaster('sunset');
+    const raster = buildTestFirecloudRaster('sunset', 'manual-test', { resolution: 2 });
     const polygons = buildRasterPolygons(raster, 'sunset');
 
     expect(raster.isFallback).toBe(true);
+    expect(raster.resolution).toBe(2);
     expect(raster.validCellCount).toBeGreaterThan(0);
     expect(polygons.length).toBeGreaterThan(0);
+    expect(polygons.length).toBeLessThan(500);
     expect(polygons.every((polygon) => polygon.points.length === 4)).toBe(true);
+  });
+
+  test('raster request fallback keeps the requested coarse resolution to avoid polygon overload', async () => {
+    const wxMock = {
+      request: jest.fn(({ fail }) => fail({ errMsg: 'network down' }))
+    };
+    setWxInstance(wxMock);
+    configureApi({ baseUrl: 'https://api.example.com' });
+
+    const raster = await getChinaFirecloudRaster({ period: 'sunset', resolution: 2 });
+    const polygons = buildRasterPolygons(raster, 'sunset');
+
+    expect(raster.isFallback).toBe(true);
+    expect(raster.fallbackReason).toBe('request-failed');
+    expect(raster.resolution).toBe(2);
+    expect(polygons.length).toBeLessThan(500);
   });
 
   test('map page uses polygons as the primary visible raster layer', () => {

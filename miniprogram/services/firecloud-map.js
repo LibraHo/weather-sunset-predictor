@@ -75,9 +75,9 @@ export async function getChinaFirecloudRaster({ period = 'sunset', resolution = 
       query: { period, resolution }
     });
     const normalized = normalizeChinaFirecloudRaster(response?.data || response, { period, resolution });
-    return normalized.validCellCount ? normalized : buildTestFirecloudRaster(period, 'empty-raster');
+    return normalized.validCellCount ? normalized : buildTestFirecloudRaster(period, 'empty-raster', { resolution });
   } catch (error) {
-    return buildTestFirecloudRaster(period, 'request-failed');
+    return buildTestFirecloudRaster(period, 'request-failed', { resolution });
   }
 }
 
@@ -162,9 +162,9 @@ export function buildTestFirecloudSpotData(period = 'sunset', reason = 'manual-t
   }, { period });
 }
 
-export function buildTestFirecloudRaster(period = 'sunset', reason = 'manual-test') {
+export function buildTestFirecloudRaster(period = 'sunset', reason = 'manual-test', options = {}) {
   const source = buildTestFirecloudSpotData(period, reason).spots;
-  const resolution = 0.25;
+  const resolution = numberOrNull(options.resolution) || 1;
   const bbox = { ...FIRECLOUD_RASTER_BBOX };
   const width = Math.ceil((bbox.east - bbox.west) / resolution);
   const height = Math.ceil((bbox.north - bbox.south) / resolution);

@@ -7,7 +7,7 @@ import { applyPageSettings, readAppSettings } from '../../utils/app-settings.js'
 import { getDefaultSunEventDay } from '../../utils/sun-event-day.js';
 
 const DEFAULT_MAP_CENTER = { latitude: 35.8617, longitude: 104.1954 };
-const FIRECLOUD_MAP_RESOLUTION = 1;
+const FIRECLOUD_MAP_RESOLUTION = 2;
 const FIRECLOUD_MAP_ID = 'firecloud-native-map';
 
 Page({
