@@ -18,7 +18,7 @@
 - **Agent API**: 给大模型、MCP、自动化脚本调用的受控结构化 API，复用同一后端与预测算法
 - **API Token**: 后台生成的调用凭证，只在创建时明文展示，服务端仅保存哈希，用于鉴权、限流、审计和吊销
 
-## 需求列表（1-53）
+## 需求列表（1-55）
 
 ### 需求 1-5：核心功能
 1. **API密钥管理** - 后端统一配置，前端无Key输入
@@ -86,7 +86,7 @@
 41. **API调用日志记录** - 分类记录所有外部API调用（火烧云网格grid/天气查询weather/高德地理编码gaode/高德瓦片gaode_tile），管理后台分Tab展示，含时间/接口/参数/状态/耗时/错误
 42. **定时更新配置** - 管理后台可配置火烧云数据更新策略（多个时间点，每个可选朝霞/晚霞/都更新），配置持久化到 `~/.xiake/schedule-config.json`
 
-### 需求 43-53：开放能力、多端产品、分享地图与地图数据管线
+### 需求 43-55：开放能力、多端产品、分享地图、地图数据管线、统一账号与运营分析
 43. **气溶胶散射评分** - 接入 Open-Meteo Air Quality API，将 AOD/PM/Dust 纳入评分和展示
 44. **全球地理编码重排** - Open-Meteo/Nominatim/Gaode 合并排序，国际城市别名优化
 45. **受控 Agent API** - Agent forecast/explain/geocode/map-summary、Token、限流、审计和申请流程
@@ -98,6 +98,8 @@
 51. **照片分享元数据增强与地图聚合展示** - 照片元数据、后台编辑、EXIF/地理解析、地图聚合
 52. **微信小程序与未来 iOS 产品线** - 原生小程序优先，共用后端 API，未来 iOS 复用契约与设计语言
 53. **GFS+CAMS 火烧云地图数据管线** - 地图从 Open-Meteo 点位扫网格升级为 GFS+CAMS 原始网格批处理，后台可切换、可配置范围、可追溯下载量和处理进度
+54. **统一用户账号与第三方登录** - 网页端支持微信扫码登录与 Google 登录，小程序端支持微信登录；通过 `users + user_identities + sessions` 打通 Web、小程序和未来 iOS，登录后照片上传、留言反馈和 API 申请统一归属 `userId`
+55. **后台访客与运营分析** - 后台从简单访客计数升级为运营分析面板，统计 UV/PV、来源渠道、预测查询、热门地点、照片上传、反馈/API 申请、转化漏斗、错误率和慢请求；隐私上只存 hash 与粗粒度地区，不保存精确个人轨迹
 
 ### 需求 43：气溶胶/空气颗粒纳入评分与 UI
 43. **气溶胶散射评分** - 接入 Open-Meteo Air Quality API，将 `aerosol_optical_depth`、`dust`、`pm2_5`、`pm10`、`us_aqi/european_aqi` 按小时合并进天气数据。评分上将能见度作为“通透度结果”，气溶胶作为“散射/灰霾原因修正”，避免重复计权。UI 需在实时天气、分数明细、文字分析、算法说明中展示气溶胶/颗粒物影响。无气溶胶数据时必须降级到现有逻辑。
@@ -287,6 +289,81 @@ Acceptance update:
 - Remaining parity work should focus on screenshot-level home/result polish, map/gallery/upload parity, methodology/API/settings surface review, and real-device validation.
 - 所有新增用户可见文案至少维护 `zh-CN`、`zh-TW`、`en-US`，其他语言默认英文 fallback。
 
+## 需求54：统一用户账号与第三方登录（2026-05-31）
+
+### 背景
+霞客需要把 Web、小程序和未来 iOS 的用户能力收敛到同一个账号体系。用户可以在网页端用微信或 Google 登录，在小程序端用微信登录；登录后上传照片、留言反馈、申请 API 都应归属同一个 `userId`，避免同一个人在不同端产生割裂账号。
+
+### 产品方向
+- 统一账号中心：`users` 表代表真实用户，业务数据只引用 `userId`。
+- 多身份绑定：`user_identities` 记录 `wechat_web`、`wechat_miniprogram`、`google`，未来可扩展 Apple、手机号、邮箱。
+- 微信 Web 和微信小程序优先用同一微信开放平台主体下的 `unionid` 自动打通；拿不到 `unionid` 时必须提供安全的手动绑定路径。
+- Web 端登录方式：微信开放平台「网站应用」扫码登录、Google OAuth/OIDC 登录。
+- 小程序端登录方式：`wx.login()` 获取 code，后端 `code2Session` 换 `openid/unionid`。
+- 登录态分端处理：Web 使用安全 session cookie，小程序使用服务端签发的 session token；业务层都解析为同一个 `userId`。
+- 管理后台 Basic Auth/Admin token 与普通用户登录体系保持隔离。
+
+### 申请与平台配置
+- 微信开放平台账号必须完成主体认证，并把网站应用和小程序绑定到同一个开放平台主体。
+- 微信网页登录需申请开放平台「网站应用」，回调域名使用 `sunset.bjhyc.online`，生产配置 `WECHAT_WEB_APP_ID`、`WECHAT_WEB_APP_SECRET`。
+- 小程序后台需提供 `WECHAT_MINI_APP_ID`、`WECHAT_MINI_APP_SECRET`，并在微信后台配置 request/upload/download 合法域名。
+- Google Cloud 需创建 Web OAuth Client，回调地址为 `https://sunset.bjhyc.online/auth/google/callback`，生产配置 `GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`。
+- 生产必须配置 `AUTH_SECRET` 或等价 session 签名密钥；所有第三方 secret 只允许存在后端环境变量或服务器安全配置中。
+- 登录、照片上传、留言反馈和 API 申请上线前必须补齐隐私政策、用户协议、数据删除或人工删除入口。
+
+### 登录后能力
+- 照片上传：必须绑定 `userId`，可继续保留审核/隐藏/限流机制。
+- 留言反馈：建议登录后绑定 `userId`；如允许匿名反馈，后续登录后也应可关联用户主动提交的反馈。
+- API 申请：申请记录、审核状态和生成的 API token 归属 `userId`；不再只依赖邮箱文本匹配。
+- 收藏、最近查询、照片投稿等已有小程序用户数据继续引用 `userId`，不得直接引用 `openid` 作为业务主键。
+
+### 验收标准
+- 同一个微信用户在 Web 微信登录和小程序微信登录时，如能拿到同一 `unionid`，必须落到同一个 `userId`。
+- Google 登录创建或绑定到 `google sub` identity；邮箱只作为展示/联系字段，不能单独作为不可变主键。
+- Web session cookie 必须设置 `HttpOnly`、`Secure`、`SameSite`；小程序 token 不暴露第三方 `openid`、`unionid`。
+- 第三方回调必须校验 `state`、回调域名和 token 签名，不接受前端伪造身份。
+- 账号合并必须有冲突保护：一个 identity 只能绑定一个 user；手动绑定需要用户显式确认。
+- 照片上传、留言反馈、API 申请的接口测试必须覆盖未登录拒绝、已登录归属、跨用户不可访问和旧数据兼容。
+- 新增用户可见文案必须同步 `zh-CN`、`zh-TW`、`en-US`；登录失败、绑定冲突、授权取消要有可理解提示。
+
+## 需求55：后台访客与运营分析（2026-05-31）
+
+### 背景
+现有访客能力主要是计数和分享地图访客点，无法回答“用户有没有真的用起来、从哪里来、查了什么、卡在哪里、哪些功能有价值”。后台需要新增访客与运营分析能力，帮助 Alex 判断 Web、小程序、API、照片、反馈和 API 申请的真实使用情况。
+
+### 产品方向
+- 后台新增「访客分析」或「运营分析」面板，不和系统健康、数据管线状态混在一起。
+- 第一阶段以自有轻量统计为主，不引入重型第三方埋点；保留后续接入专业分析工具的边界。
+- 分析对象覆盖 Web、小程序、Agent/API、照片、反馈、API 申请等关键路径。
+- 数据采集必须隐私优先：IP 只存 hash，地区只到国家/省市或城市级，精确经纬度只用于用户主动查询/上传业务，不作为访客轨迹长期保存。
+- 采集路径必须规范化：不得保存完整 query string、精确 `lat/lon`、token、OAuth code/state 或其他敏感参数。
+
+### 指标范围
+- 总览指标：今日/昨日/7日/30日 UV、PV、新访客、回访访客、人均访问页数、平均停留时间、预测查询量、小程序访问量、Agent/API 调用量。
+- 来源分析：Web/小程序/API/后台渠道，直接访问/分享链接/搜索/公众号或小程序入口，设备类型 iOS/Android/Desktop，粗粒度地区。
+- 行为分析：热门搜索地点、朝霞/晚霞切换比例、日期选择比例、查看火烧云地图、上传照片、分享、留言反馈、API 申请等事件。
+- 转化漏斗：首页访问 -> 地点查询 -> 查看预测 -> 查看地图/分享/上传照片/申请 API。
+- 质量与异常：接口失败率、慢请求 Top、地理编码失败 Top query、小程序错误日志、火烧云图层加载失败、API token 使用异常。
+
+### 隐私与保留策略
+- 默认不记录完整 IP、精确个人轨迹、第三方登录 openid/unionid、session token 或 API token 明文。
+- 页面路径只保存规范化 route，不保存 query string；热门地点统计使用城市/地点名或网格化区域，不保存精确经纬度轨迹。
+- userId 维度分析只用于登录后归属和安全审计；后台展示以聚合指标为主，避免直接展示个人行为时间线。
+- 后台/admin 访问默认不计入对外用户 UV/PV，可单独进入管理员操作审计。
+- 必须过滤或单独标记 bot/spider/健康检查请求，避免污染真实访客指标。
+- 原始事件可短期保存，聚合指标长期保存；保留天数应可配置，默认建议原始事件 30 天、日聚合 1 年。
+- 提供数据删除或人工删除入口，能删除指定 `userId` 的访客/行为事件。
+
+### 验收标准
+- 后台能查看今日/昨日/7日/30日 UV、PV、预测查询量、照片上传、反馈、API 申请和 Agent/API 调用量。
+- 后台能按渠道区分 Web、小程序、API、后台，并展示热门地点和主要入口来源。
+- 后台能展示至少一个核心漏斗：访问首页 -> 查询地点 -> 查看预测 -> 分享/上传/API 申请。
+- 后台能展示接口失败率、慢请求 Top、地理编码失败 Top query 和小程序错误摘要。
+- 统计接口必须走后台鉴权；公开前端不得读取运营分析数据。
+- 采集逻辑必须有隐私测试：不落明文 IP、不落 token/openid/unionid、不保存精确访客轨迹。
+- 采集逻辑必须有路径脱敏测试：完整 URL query、精确 `lat/lon`、OAuth code/state、API token 不得写入事件表。
+- 新增后台 UI 文案必须同步 `zh-CN`、`zh-TW`、`en-US`，移动端后台不能溢出。
+
 ## 需求53：GFS+CAMS 火烧云地图数据管线与后台控制台（2026-05-26）
 
 ### 背景
@@ -387,6 +464,10 @@ finalScore = finalScore × aerosolFactor  // 仅在有气溶胶数据时启用�
 ---
 
 ## 变更摘要
+
+### 2026-05-31
+- **需求54**：新增统一用户账号与第三方登录。网页端支持微信开放平台网站应用扫码登录与 Google OAuth/OIDC，小程序端支持微信登录；通过 `users + user_identities + sessions` 和微信 `unionid` 打通两端，登录后照片上传、留言反馈、API 申请统一归属 `userId`。平台申请包含微信开放平台账号/网站应用、小程序 AppSecret、Google OAuth Client、生产 `AUTH_SECRET`、隐私政策和用户协议。
+- **需求55**：新增后台访客与运营分析。后台从访客计数升级为运营分析面板，覆盖 UV/PV、来源渠道、热门查询、功能点击、转化漏斗、照片/反馈/API 申请、接口失败率、慢请求和小程序错误；采集只保留 hash 与粗粒度地区，不保存明文 IP、token、openid/unionid 或精确个人轨迹。
 
 ### 2026-05-26
 - **需求53**：新增 GFS+CAMS 火烧云地图数据管线与后台控制台。地图链路从 Open-Meteo 点位扫网格升级为 GFS 天气网格 + CAMS 气溶胶网格批处理；后台支持数据源模式切换、拉取范围管理、资源预估、任务进度、下载量追溯、清理和回滚；默认按腾讯云 `SA2.LARGE4`（4 核、3.6GiB RAM、2GiB swap、40G 系统盘、约 18G 可用）约束设计未来 48 小时地图。
