@@ -28,7 +28,7 @@ describe('miniprogram firecloud map', () => {
     resetApiConfig();
   });
 
-  test('registers a native firecloud map page with a backend-rendered ground overlay surface', () => {
+  test('registers a native firecloud map page with a visible raster polygon surface', () => {
     const appJson = JSON.parse(read('miniprogram/app.json'));
     const homeWxml = read('miniprogram/pages/home/index.wxml');
     const resultWxml = read('miniprogram/pages/result/index.wxml');
@@ -51,14 +51,12 @@ describe('miniprogram firecloud map', () => {
     expect(mapJs).not.toContain('getChinaFirecloudSpots');
     expect(mapJs).not.toContain('openSpotPrediction');
     expect(mapJs).not.toContain('focusSpot');
-    expect(mapJs).toContain('FIRECLOUD_MAP_METADATA_RESOLUTION');
-    expect(mapJs).toContain('FIRECLOUD_MAP_OVERLAY_RESOLUTION');
+    expect(mapJs).toContain('FIRECLOUD_MAP_RESOLUTION');
     expect(mapJs).toContain("FIRECLOUD_MAP_ID = 'firecloud-native-map'");
-    expect(mapJs).toContain('const FIRECLOUD_MAP_METADATA_RESOLUTION = 2;');
-    expect(mapJs).toContain('const FIRECLOUD_MAP_OVERLAY_RESOLUTION = 0.5;');
-    expect(mapJs).toContain('buildRasterGroundOverlay');
-    expect(mapJs).toContain('groundOverlays: groundOverlay ? [groundOverlay] : []');
-    expect(mapJs).toContain('polygons: []');
+    expect(mapJs).toContain('const FIRECLOUD_MAP_RESOLUTION = 1;');
+    expect(mapJs).toContain('buildRasterPolygons(raster, this.data.period)');
+    expect(mapJs).toContain('groundOverlays: []');
+    expect(mapJs).toContain('polygons');
     expect(mapJs).toContain('function getDefaultMapDay(now = new Date(), options = {})');
     expect(mapJs).toContain('getDefaultSunEventDay(now, options)');
     expect(mapWxml).toContain('enable-zoom="{{true}}"');
@@ -85,7 +83,7 @@ describe('miniprogram firecloud map', () => {
     expect(buildRasterOverlayImageUrl({ period: 'sunrise', resolution: 0.5 })).toContain('/api/spots/china/raster-overlay.png?period=sunrise&resolution=0.5');
   });
 
-  test('loads same-source raster API metadata while overlay image is rendered by backend', async () => {
+  test('loads same-source raster API and paints an interpolated polygon layer instead of map pins', async () => {
     const wxMock = {
       request: jest.fn(({ success }) => success({
         statusCode: 200,
@@ -105,18 +103,25 @@ describe('miniprogram firecloud map', () => {
     configureApi({ baseUrl: 'https://api.example.com' });
 
     const raster = await getChinaFirecloudRaster({ period: 'sunset', resolution: 0.25 });
-    const overlay = buildRasterGroundOverlay(raster, { period: 'sunset', resolution: 0.5 });
+    const polygons = buildRasterPolygons(raster, 'sunset');
 
     expect(wxMock.request).toHaveBeenCalledWith(expect.objectContaining({
       url: 'https://api.example.com/api/spots/china/raster?period=sunset&resolution=0.25',
       method: 'GET'
     }));
     expect(raster.validCellCount).toBe(2);
-    expect(overlay.src).toContain('/api/spots/china/raster-overlay.png?period=sunset&resolution=0.5');
-    expect(overlay.bounds).toEqual({
-      southwest: { latitude: 30, longitude: 100 },
-      northeast: { latitude: 32, longitude: 102 }
+    expect(polygons).toHaveLength(2);
+    expect(polygons[0]).toMatchObject({
+      points: [
+        { latitude: 32, longitude: 101 },
+        { latitude: 32, longitude: 102 },
+        { latitude: 31, longitude: 102 },
+        { latitude: 31, longitude: 101 }
+      ],
+      strokeWidth: 0
     });
+    expect(polygons[0].fillColor).toBe(scoreToRasterLayerHexColor(45, 'sunset'));
+    expect(polygons[0].fillColor).toMatch(/^#[0-9A-F]{8}$/);
   });
 
   test('keeps spot normalization utilities available for backend parity without exposing high-score UI', async () => {
@@ -210,13 +215,14 @@ describe('miniprogram firecloud map', () => {
     expect(polygons.every((polygon) => polygon.points.length === 4)).toBe(true);
   });
 
-  test('map page uses a backend PNG ground overlay as the primary visible raster layer', () => {
+  test('map page uses polygons as the primary visible raster layer', () => {
     const mapJs = read('miniprogram/pages/map/index.js');
 
-    expect(mapJs).toContain('buildRasterGroundOverlay');
-    expect(mapJs).toContain('groundOverlays: groundOverlay ? [groundOverlay] : []');
-    expect(mapJs).toContain('polygons: []');
-    expect(mapJs).not.toContain('const polygons = buildRasterPolygons(raster, this.data.period)');
+    expect(mapJs).toContain('buildRasterPolygons');
+    expect(mapJs).toContain('const polygons = buildRasterPolygons(raster, this.data.period)');
+    expect(mapJs).toContain('groundOverlays: []');
+    expect(mapJs).toContain('polygons');
+    expect(mapJs).not.toContain('addNativeGroundOverlay');
     expect(mapJs).not.toContain('createMapContext');
   });
 
