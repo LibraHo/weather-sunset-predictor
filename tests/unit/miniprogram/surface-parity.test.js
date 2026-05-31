@@ -89,8 +89,9 @@ describe('miniprogram surface parity for map/gallery/upload/methodology', () => 
     expect(mapWxml).not.toContain('spot-row');
     expect(mapJs).not.toContain('openSpotPrediction()');
     expect(mapJs).not.toContain('getChinaFirecloudSpots');
-    expect(mapJs).toContain('groundOverlays: []');
-    expect(mapJs).toContain('buildRasterPolygons(raster, this.data.period)');
+    expect(mapJs).toContain('buildRasterGroundOverlay');
+    expect(mapJs).toContain('groundOverlays: groundOverlay ? [groundOverlay] : []');
+    expect(mapJs).toContain('polygons: []');
     expect(mapJs).toContain('periodDetailText(period)');
     expect(mapJs).toContain('getChinaFirecloudRaster');
     expect(mapJs).not.toContain('addNativeGroundOverlay');

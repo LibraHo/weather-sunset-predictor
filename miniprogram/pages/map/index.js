@@ -1,5 +1,5 @@
 import {
-  buildRasterPolygons,
+  buildRasterGroundOverlay,
   getChinaFirecloudRaster,
   getFirecloudLegend
 } from '../../services/firecloud-map.js';
@@ -7,7 +7,8 @@ import { applyPageSettings, readAppSettings } from '../../utils/app-settings.js'
 import { getDefaultSunEventDay } from '../../utils/sun-event-day.js';
 
 const DEFAULT_MAP_CENTER = { latitude: 35.8617, longitude: 104.1954 };
-const FIRECLOUD_MAP_RESOLUTION = 1;
+const FIRECLOUD_MAP_METADATA_RESOLUTION = 2;
+const FIRECLOUD_MAP_OVERLAY_RESOLUTION = 0.5;
 const FIRECLOUD_MAP_ID = 'firecloud-native-map';
 
 Page({
@@ -70,11 +71,16 @@ Page({
   async loadMap() {
     this.setData({ loading: true, errorMessage: '' });
     try {
-      const raster = await getChinaFirecloudRaster({ period: this.data.period, resolution: FIRECLOUD_MAP_RESOLUTION });
-      const polygons = buildRasterPolygons(raster, this.data.period);
+      const raster = await getChinaFirecloudRaster({ period: this.data.period, resolution: FIRECLOUD_MAP_METADATA_RESOLUTION });
+      const groundOverlay = raster.isFallback
+        ? null
+        : buildRasterGroundOverlay(raster, {
+          period: this.data.period,
+          resolution: FIRECLOUD_MAP_OVERLAY_RESOLUTION
+        });
       this.setData({
-        groundOverlays: [],
-        polygons,
+        groundOverlays: groundOverlay ? [groundOverlay] : [],
+        polygons: [],
         updatedAtText: raster.isFallback ? '测试图层 · 后端暂不可用' : formatUpdatedAt(raster.updatedAt),
         mapCenter: DEFAULT_MAP_CENTER,
         mapScale: 4
