@@ -445,6 +445,18 @@ class UserService {
     return true;
   }
 
+  revokeToken(token) {
+    try {
+      if (!this.verifyToken(token)) return false;
+      const parts = String(token || '').split('.');
+      if (parts.length !== 3) return false;
+      const payload = parseTokenPart(parts[1]);
+      return payload.jti ? this.revokeSession(payload.jti) : false;
+    } catch (error) {
+      return false;
+    }
+  }
+
   normalizeLocation(location = {}) {
     const name = typeof location.name === 'string' ? location.name.trim() : '';
     const lat = Number(location.lat);

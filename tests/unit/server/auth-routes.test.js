@@ -54,6 +54,10 @@ class FakeUserService {
     return this.findById(this.tokens.get(token));
   }
 
+  revokeToken(token) {
+    return this.tokens.delete(token);
+  }
+
   save() {}
 }
 
@@ -298,6 +302,11 @@ describe('auth routes', () => {
       .post('/auth/logout')
       .set('Cookie', `xiake_session=${sessionCookie}`)
       .expect(200);
+
+    await request(app)
+      .get('/auth/me')
+      .set('Cookie', `xiake_session=${sessionCookie}`)
+      .expect(401);
 
     const logout = await request(app).post('/auth/logout').expect(200);
     expect(logout.headers['set-cookie'].join('\n')).toContain('xiake_session=;');

@@ -66,6 +66,11 @@ function findRequestUser(req, oauthLoginService) {
   return oauthLoginService.verifyToken(token);
 }
 
+function findRequestToken(req) {
+  const cookies = parseCookies(req.headers.cookie);
+  return getBearerToken(req) || cookies[SESSION_COOKIE] || null;
+}
+
 function sendCurrentUser(req, res, oauthLoginService) {
   const user = findRequestUser(req, oauthLoginService);
   if (!user) {
@@ -150,6 +155,8 @@ function createRouter(options = {}) {
   router.get('/me', (req, res) => sendCurrentUser(req, res, oauthLoginService));
 
   router.post('/logout', (req, res) => {
+    const token = findRequestToken(req);
+    if (token) oauthLoginService.revokeToken(token);
     res.clearCookie(SESSION_COOKIE, cookieOptions());
     res.json({ success: true });
   });
@@ -178,6 +185,7 @@ module.exports._test = {
   STATE_COOKIE,
   cookieOptions,
   parseCookies,
+  findRequestToken,
   serializeUser,
   sendError
 };

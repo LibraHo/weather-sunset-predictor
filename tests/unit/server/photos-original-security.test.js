@@ -19,9 +19,17 @@ function makeJpegBuffer(sizeBytes = 256) {
   return buf;
 }
 
+function makePngBuffer() {
+  return Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=',
+    'base64'
+  );
+}
+
 describe('photo original file access', () => {
   let tempDir;
   let token;
+  let secondToken;
   let app;
 
   beforeEach(() => {
@@ -38,6 +46,8 @@ describe('photo original file access', () => {
     });
     const user = userService.upsertWechatUser({ openid: 'openid-photo', sessionKey: 'session-photo' });
     token = userService.issueToken(user);
+    const secondUser = userService.upsertWechatUser({ openid: 'openid-second-photo', sessionKey: 'session-second-photo' });
+    secondToken = userService.issueToken(secondUser);
 
     app = express();
     app.use('/api/photos', createRouter({ userService }));
@@ -64,6 +74,33 @@ describe('photo original file access', () => {
 
     await request(app)
       .get(`/api/photos/${photo.id}/original`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+  });
+
+  test('does not expose pending thumbnails to anonymous visitors or other users', async () => {
+    const PhotoService = require('../../../server/services/PhotoService.js');
+    const userId = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString('utf8')).sub;
+    const photo = await PhotoService.savePhoto({
+      buffer: makePngBuffer(),
+      mimeType: 'image/png',
+      filename: 'pending.png',
+      clientIp: '127.0.0.1',
+      uploaderUserId: userId,
+      reviewStatus: 'pending'
+    });
+
+    await request(app)
+      .get(`/api/photos/${photo.id}/thumb`)
+      .expect(404);
+
+    await request(app)
+      .get(`/api/photos/${photo.id}/thumb`)
+      .set('Authorization', `Bearer ${secondToken}`)
+      .expect(404);
+
+    await request(app)
+      .get(`/api/photos/${photo.id}/thumb`)
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
   });

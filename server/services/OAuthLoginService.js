@@ -306,6 +306,11 @@ class OAuthLoginService {
     return this.userService.verifyToken(token);
   }
 
+  revokeToken(token) {
+    if (!token || typeof this.userService?.revokeToken !== 'function') return false;
+    return this.userService.revokeToken(token);
+  }
+
   upsertIdentity({ provider, subject, unionid, profile = {} }) {
     if (!provider || !subject) {
       throw createError('IDENTITY_INVALID', 'Identity provider and subject are required', 400);

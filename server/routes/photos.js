@@ -51,12 +51,17 @@ function createAuthMiddleware(userService) {
   };
 }
 
+function findOptionalUser(req, userService) {
+  const token = extractToken(req);
+  return token ? userService.verifyToken(token) : null;
+}
+
 function isApprovedPhoto(photo = {}) {
   return photoService.normalizeReviewStatus(photo.reviewStatus) === 'approved';
 }
 
 function isPhotoOwner(photo = {}, user = {}) {
-  return String(photo.uploaderUserId || '') === String(user.userId || '');
+  return Boolean(user?.userId) && String(photo.uploaderUserId || '') === String(user.userId);
 }
 
 function sendUploadError(res, err) {
@@ -270,7 +275,7 @@ router.post('/upload', requireUser, handlePhotoUpload, async (req, res) => {
 
 // ---------------------------------------------------------------------------
 // GET /api/photos/mine
-// 杩斿洖褰撳墠鐧诲綍鐢ㄦ埛鐨勪笂浼犵収鐗囷紙鍚鏍哥姸鎬侊級
+// 返回当前登录用户的上传照片（含审核状态）
 // ---------------------------------------------------------------------------
 router.get('/mine', requireUser, (req, res) => {
   try {
@@ -282,49 +287,49 @@ router.get('/mine', requireUser, (req, res) => {
   } catch (err) {
     console.error('[PhotosRoutes] GET /api/photos/mine error:', err);
     res.status(500).json({
-      error: { code: 'USER_PHOTOS_FETCH_FAILED', message: '鑾峰彇鎴戠殑鐓х墖澶辫触' }
+      error: { code: 'USER_PHOTOS_FETCH_FAILED', message: '获取我的照片失败' }
     });
   }
 });
 
 // ---------------------------------------------------------------------------
 // PATCH /api/photos/mine/:id
-// 鐧诲綍鐢ㄦ埛淇敼鑷繁鐨勭収鐗囧厓鏁版嵁锛屼慨鏀瑰悗閲嶆柊杩涘叆寰呭
+// 登录用户修改自己的照片元数据，修改后重新进入待审
 // ---------------------------------------------------------------------------
 router.patch('/mine/:id', requireUser, express.json(), (req, res) => {
   try {
     const updated = photoService.updateUserPhoto(req.params.id, req.user.userId, req.body || {});
     if (!updated) {
       return res.status(404).json({
-        error: { code: 'PHOTO_NOT_FOUND', message: '鐓х墖涓嶅瓨鍦ㄦ垨鏃犳潈淇敼' }
+        error: { code: 'PHOTO_NOT_FOUND', message: '照片不存在或无权修改' }
       });
     }
     res.json({ photo: sanitizeUserPhoto(updated) });
   } catch (err) {
     console.error('[PhotosRoutes] PATCH /api/photos/mine/:id error:', err);
     res.status(500).json({
-      error: { code: 'USER_PHOTO_UPDATE_FAILED', message: '淇濆瓨澶辫触' }
+      error: { code: 'USER_PHOTO_UPDATE_FAILED', message: '保存失败' }
     });
   }
 });
 
 // ---------------------------------------------------------------------------
 // DELETE /api/photos/mine/:id
-// 鐧诲綍鐢ㄦ埛鍒犻櫎鑷繁鐨勪笂浼犵収鐗?
+// 登录用户删除自己的上传照片
 // ---------------------------------------------------------------------------
 router.delete('/mine/:id', requireUser, (req, res) => {
   try {
     const deleted = photoService.deleteUserPhoto(req.params.id, req.user.userId);
     if (!deleted) {
       return res.status(404).json({
-        error: { code: 'PHOTO_NOT_FOUND', message: '鐓х墖涓嶅瓨鍦ㄦ垨鏃犳潈鍒犻櫎' }
+        error: { code: 'PHOTO_NOT_FOUND', message: '照片不存在或无权删除' }
       });
     }
     res.json({ success: true });
   } catch (err) {
     console.error('[PhotosRoutes] DELETE /api/photos/mine/:id error:', err);
     res.status(500).json({
-      error: { code: 'USER_PHOTO_DELETE_FAILED', message: '鍒犻櫎澶辫触' }
+      error: { code: 'USER_PHOTO_DELETE_FAILED', message: '删除失败' }
     });
   }
 });
@@ -339,6 +344,16 @@ router.get('/:id/thumb', (req, res) => {
     const photo = photoService.getPhotoById(id);
 
     if (!photo) {
+      return res.status(404).json({
+        error: {
+          code: 'PHOTO_NOT_FOUND',
+          message: '照片不存在'
+        }
+      });
+    }
+
+    const user = findOptionalUser(req, userService);
+    if (!isApprovedPhoto(photo) && !isPhotoOwner(photo, user)) {
       return res.status(404).json({
         error: {
           code: 'PHOTO_NOT_FOUND',
