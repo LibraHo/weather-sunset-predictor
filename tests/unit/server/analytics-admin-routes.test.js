@@ -98,7 +98,7 @@ describe('analytics admin routes', () => {
   });
 
   test('range selector is passed to analytics service with calendar-day bounds for today', async () => {
-    jest.useFakeTimers().setSystemTime(new Date('2026-06-02T10:30:00Z'));
+    jest.useFakeTimers().setSystemTime(new Date('2026-06-01T16:30:00Z'));
     const { app, analyticsService } = makeApp([]);
 
     try {
@@ -116,7 +116,7 @@ describe('analytics admin routes', () => {
     }
 
     expect(analyticsService.listEvents.mock.calls.map(([options]) => options)).toEqual([
-      { days: 1, startDate: '2026-06-02', endDate: '2026-06-02' },
+      { days: 1, startDate: '2026-06-01', endDate: '2026-06-01' },
       { days: 30, startDate: undefined, endDate: undefined },
       { days: 14, startDate: undefined, endDate: undefined }
     ]);
