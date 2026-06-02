@@ -40,6 +40,18 @@ function parseDays(value) {
   return Math.min(Math.max(days, 1), 90);
 }
 
+function parseRangeDays(range) {
+  const normalized = String(range || '').trim().toLowerCase();
+  if (normalized === 'today') return 1;
+  const match = normalized.match(/^(\d+)d$/);
+  if (match) return parseDays(match[1]);
+  return null;
+}
+
+function parseQueryDays(query = {}) {
+  return parseRangeDays(query.range) || parseDays(query.days);
+}
+
 function roundPercent(value) {
   return Number((value || 0).toFixed(2));
 }
@@ -53,7 +65,7 @@ function asArray(value) {
 
 async function readEvents(analyticsService, req) {
   const options = {
-    days: parseDays(req.query.days),
+    days: parseQueryDays(req.query),
     startDate: req.query.startDate || undefined,
     endDate: req.query.endDate || undefined
   };
