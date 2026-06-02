@@ -1728,4 +1728,37 @@ describe('applySevereWeatherCap - no visible sunset path', () => {
     expect(result.score).toBeLessThanOrEqual(15);
     expect(result.reason).toBe('no_visible_sunset_path_cap_15');
   });
+
+  test('uses low solar transmission as cloud-thickness evidence for 2026-06-02 Beijing', () => {
+    const weatherData = {
+      cloudCover: 95,
+      lowClouds: 0,
+      midClouds: 100,
+      highClouds: 29,
+      precipitation: 0,
+      weatherCode: null,
+      visibility: 20,
+      shortwaveRadiation: 12,
+      directRadiation: 0,
+      diffuseRadiation: 12,
+      waterVapourColumn: 35.1,
+      aerosolOpticalDepth: 0.87,
+      pm2_5: 64.7,
+      pm10: 70.1,
+      aqi: 151
+    };
+
+    const result = EnhancedPredictionService.calculateEnhancedPrediction(
+      weatherData,
+      new Date('2026-06-02T11:36:00.000Z'),
+      39.9042,
+      116.4074,
+      'sunset'
+    );
+
+    expect(result.cloudThickness.reasons).toContain('low_solar_transmission');
+    expect(result.severeWeatherCap.reason).toBeNull();
+    expect(result.score).toBeLessThan(40);
+  });
+
 });
