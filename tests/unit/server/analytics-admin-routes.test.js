@@ -97,6 +97,22 @@ describe('analytics admin routes', () => {
     expect(res.body.summary.locations).toEqual([{ key: 'Beijing', count: 2 }]);
   });
 
+  test('range selector is passed to analytics service as day windows', async () => {
+    const { app, analyticsService } = makeApp([]);
+
+    await request(app)
+      .get('/api/admin/analytics/summary?range=today')
+      .expect(200);
+    await request(app)
+      .get('/api/admin/analytics/summary?range=30d')
+      .expect(200);
+    await request(app)
+      .get('/api/admin/analytics/summary?days=14')
+      .expect(200);
+
+    expect(analyticsService.listEvents.mock.calls.map(([options]) => options.days)).toEqual([1, 30, 14]);
+  });
+
   test('behavior and funnel expose page, share, map, upload, and API application entries', async () => {
     const { app } = makeApp([
       { type: 'page_view', visitorId: 'u1', path: '/' },
