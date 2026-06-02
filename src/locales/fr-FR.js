@@ -112,6 +112,12 @@ const translations = {
           "summary": "La pénalité d’épaisseur nuageuse devient score de canevas avant épaisseur × 30 % × pression d’épaisseur, avec suppression des plafonds fixes -28/24. Les rideaux gris humides sont calibrés comme faible lueur / observable mais non fort.",
           "validation": "Validation : sur l’échantillon de Pékin du 2026-05-27, une pression 0,78 sur un canevas 76,7 donne environ -18 points et conserve le résultat dans la zone faible lueur / observable."
         },
+        "cloudThickness": {
+          "date": "2026-05-27",
+          "title": "Pénalité proportionnelle d’épaisseur nuageuse v2",
+          "summary": "La pénalité d’épaisseur nuageuse devient score de canevas avant épaisseur × 30 % × pression d’épaisseur, avec suppression des plafonds fixes -28/24. Les rideaux gris humides sont calibrés comme faible lueur / observable mais non fort.",
+          "validation": "Validation : sur l’échantillon de Pékin du 2026-05-27, une pression 0,78 sur un canevas 76,7 donne environ -18 points et conserve le résultat dans la zone faible lueur / observable."
+        },
         "aerosol": {
           "date": "2026-05-12",
           "title": "Support faible par aerosols v1",
@@ -390,7 +396,9 @@ const translations = {
           "upperCloudCanvas": "toile nuageuse moyenne/haute {{upper}} = hauts {{high}}×0.75 + moyens {{mid}}×0.45; score de plage {{range}}",
           "highCloudBonus": "bonus de dominance des nuages hauts {{bonus}}",
           "cloudTypeAdjustment": "type de nuage {{reason}} {{bonus}}",
-          "cloudThicknessAdjustment": "épaisseur nuageuse {{thickness}}, base {{base}} × 30% × pression {{pressure}} = max {{max}} ajusté; diffus {{diffuse}}%, vapeur {{water}}, allègement support {{relief}}",
+          "cloudThicknessAdjustment": "épaisseur nuageuse {{thickness}}, base {{base}} × 30% × pression {{pressure}} = max {{max}} ajusté; diffus {{diffuse}}%, vapeur {{water}}, allègement support {{relief}}, faible transmission solaire {{solar}}",
+          "lowSolarTransmissionYes": "oui",
+          "lowSolarTransmissionNo": "non",
           "aerosolCarrier": "thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}",
           "lightPath": "sunlight reaches the cloud layer",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",

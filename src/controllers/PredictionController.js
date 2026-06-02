@@ -2073,11 +2073,14 @@ class PredictionController {
             diffuse: fmt(Number(cloudThicknessEvidence.diffuseRatio) * 100, 0),
             water: fmt(cloudThicknessEvidence.waterIndex, 1),
             relief: fmt(cloudThicknessEvidence.carrierRelief, 2),
+            solar: cloudThickness?.reasons?.includes('low_solar_transmission')
+              ? ledgerText('details.lowSolarTransmissionYes', {}, 'yes', '命中')
+              : ledgerText('details.lowSolarTransmissionNo', {}, 'no', '未命中'),
             base: fmt(cloudThicknessAdjustment.baseScore, 1),
             max: fmt(cloudThicknessAdjustment.maxPenalty, 1)
           },
-          'cloud thickness {{thickness}}, base {{base}} × 30% × pressure {{pressure}} = max {{max}} scaled; diffuse {{diffuse}}%, water {{water}}, carrier relief {{relief}}',
-          '云厚 {{thickness}}，画布 {{base}} × 30% × 压力 {{pressure}}，最大折损 {{max}}；散射 {{diffuse}}%，水汽 {{water}}，载体缓冲 {{relief}}'
+          'cloud thickness {{thickness}}, base {{base}} × 30% × pressure {{pressure}} = max {{max}} scaled; diffuse {{diffuse}}%, water {{water}}, carrier relief {{relief}}, low solar transmission {{solar}}',
+          '云厚 {{thickness}}，画布 {{base}} × 30% × 压力 {{pressure}}，最大折损 {{max}}；散射 {{diffuse}}%，水汽 {{water}}，载体缓冲 {{relief}}，低太阳透射 {{solar}}'
         ),
         tone: Number(cloudThicknessAdjustment.adjustment) < 0 ? 'cap' : 'good'
       } : null,
@@ -2261,11 +2264,14 @@ class PredictionController {
             diffuse: fmt(Number(cloudThicknessEvidence.diffuseRatio) * 100, 0),
             water: fmt(cloudThicknessEvidence.waterIndex, 1),
             relief: fmt(cloudThicknessEvidence.carrierRelief, 2),
+            solar: cloudThickness?.reasons?.includes('low_solar_transmission')
+              ? ledgerText('details.lowSolarTransmissionYes', {}, 'yes', '命中')
+              : ledgerText('details.lowSolarTransmissionNo', {}, 'no', '未命中'),
             base: fmt(cloudThicknessAdjustment.baseScore, 1),
             max: fmt(cloudThicknessAdjustment.maxPenalty, 1)
           },
-          'cloud thickness {{thickness}}, base {{base}} × 30% × pressure {{pressure}} = max {{max}} scaled; diffuse {{diffuse}}%, water {{water}}, carrier relief {{relief}}',
-          '云厚 {{thickness}}，画布 {{base}} × 30% × 压力 {{pressure}}，最大折损 {{max}}；散射 {{diffuse}}%，水汽 {{water}}，载体缓冲 {{relief}}'
+          'cloud thickness {{thickness}}, base {{base}} × 30% × pressure {{pressure}} = max {{max}} scaled; diffuse {{diffuse}}%, water {{water}}, carrier relief {{relief}}, low solar transmission {{solar}}',
+          '云厚 {{thickness}}，画布 {{base}} × 30% × 压力 {{pressure}}，最大折损 {{max}}；散射 {{diffuse}}%，水汽 {{water}}，载体缓冲 {{relief}}，低太阳透射 {{solar}}'
         ));
       }
       if (directionalCurtainCarrier?.applied) {

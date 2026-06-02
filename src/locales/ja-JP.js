@@ -112,6 +112,12 @@ apiAccess: 'API接続'
           "summary": "雲の厚さペナルティを、厚み補正前のキャンバス点 × 30% × 厚み圧に変更し、固定の -28/24 上限を外しました。湿った灰色の雲幕は弱い焼け／見られるが強くない範囲へ校正されます。",
           "validation": "検証：2026-05-27 の北京サンプルでは厚み圧 0.78、キャンバス 76.7 のとき約 -18 点となり、結果は弱い焼け／見られる範囲に残ります。"
         },
+        "cloudThickness": {
+          "date": "2026-05-27",
+          "title": "雲厚比例ペナルティ v2",
+          "summary": "雲の厚さペナルティを、厚み補正前のキャンバス点 × 30% × 厚み圧に変更し、固定の -28/24 上限を外しました。湿った灰色の雲幕は弱い焼け／見られるが強くない範囲へ校正されます。",
+          "validation": "検証：2026-05-27 の北京サンプルでは厚み圧 0.78、キャンバス 76.7 のとき約 -18 点となり、結果は弱い焼け／見られる範囲に残ります。"
+        },
         "aerosol": {
           "date": "2026-05-12",
           "title": "エアロゾル弱載体 v1",
@@ -388,7 +394,9 @@ apiAccess: 'API接続'
           "upperCloudCanvas": "中高層雲キャンバス {{upper}} = 高層雲 {{high}}×0.75 + 中層雲 {{mid}}×0.45；区間スコア {{range}}",
           "highCloudBonus": "高層雲優勢ボーナス {{bonus}}",
           "cloudTypeAdjustment": "雲種 {{reason}} {{bonus}}",
-          "cloudThicknessAdjustment": "雲厚 {{thickness}}、画布 {{base}} × 30% × 圧力 {{pressure}}、最大 {{max}}、散乱 {{diffuse}}%、水蒸気 {{water}}、キャリア緩和 {{relief}}",
+          "cloudThicknessAdjustment": "雲厚 {{thickness}}、画布 {{base}} × 30% × 圧力 {{pressure}}、最大 {{max}}、散乱 {{diffuse}}%、水蒸気 {{water}}、キャリア緩和 {{relief}}、低い太陽透過 {{solar}}",
+          "lowSolarTransmissionYes": "該当",
+          "lowSolarTransmissionNo": "該当なし",
           "aerosolCarrier": "雲が少ない時、光路が開いていれば薄い霞も暖色を少し運べます。光路活性 ×{{activation}}",
           "lightPath": "日光が雲層へ届くか",
           "renderingFactors": "視程 ×{{visibility}}、湿度 ×{{humidity}}、エアロゾル ×{{aerosol}}",

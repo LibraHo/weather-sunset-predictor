@@ -101,12 +101,18 @@ const translations = {
     "methodology": {
       "title": "火燒雲計算方法",
       "intro": "目前的火燒雲指數會先判斷「有沒有可顯色載體」，再判斷太陽方向的光路能不能把光打到載體上，最後只用空氣顯色條件做小幅修正。它不再把一串好條件連續相乘，所以高雲 100% 不會自動滿分。",
-      "versionLabel": "算法版本：2026.05.27-cloud-thickness-proportional-v2",
-      "versionDesc": "本版將雲厚扣分改為「畫布修正前分×30%×雲厚壓力」，去掉固定 -28/24 上限，並將濕灰幕場景校準到小燒／可看但不強。",
+      "versionLabel": "算法版本：2026.06.02-low-solar-transmission-v1",
+      "versionDesc": "本版在雲厚評估中加入低太陽透射證據：direct/shortwave 極低只和高總雲量、高中雲、弱高雲載體、灰空氣組合使用，不單獨扣死正常低太陽高度晚霞。",
       changelogTitle: "版本更新記錄",
       changelogHint: "近三個月內的算法更新都會放在這裡，可捲動回看原因、影響和驗證方式",
       changelog: {
         "latest": {
+          "date": "2026-06-02",
+          "title": "低太陽透射證據 v1",
+          "summary": "在雲厚評估中恢復 directRadiation / shortwaveRadiation 作為太陽透射證據；只有中雲／總雲量很高、高雲載體弱且灰空氣明顯時才壓分，不單獨因日落低輻射扣死。",
+          "validation": "驗證：2026-06-02 北京樣本無降水，但 direct=0、shortwave=12、AOD=0.87、AQI=151，評分從偏高壓回低概率區間。"
+        },
+        "cloudThickness": {
           "date": "2026-05-27",
           "title": "雲厚比例折損 v2",
           "summary": "雲厚扣分改為畫布修正前分 × 30% × 雲厚壓力，去掉固定 -28/24 上限；濕灰幕場景同步按小燒／可看但不強校準。",
@@ -176,7 +182,7 @@ const translations = {
           "midCloud": "中雲：權重 0.45，也是可顯色載體；高雲與中雲同時存在時會提高畫布穩定性",
           "lowCloudBonus": "低雲：權重只有 0.10，主要進入低雲懲罰和光路遮擋；低雲少不加分，只是不扣分",
           "formula": "中高雲畫布量 = 高雲×0.75 + 中雲×0.45\n畫布基礎分：≤10→10，10–30→40–70，30–70→70–100，70–100→70–50，>100→43\n畫布分 = 區間分 × 低雲懲罰 × 陰天懲罰 + 高雲 bonus + 雲種修正 + 雲厚修正",
-          "highCloudBonus": "高雲 bonus：高雲>50 且低雲<30 時，按 (高雲-50)/50×6 加 0–6 分。雲種／雲厚是加減分：高層雲 +4、高積雲 +6、薄雲 +5；偏厚／厚雲按當前畫布比例連續扣分，公式為雲厚修正前分×30%×雲厚壓力。低雲類雲種還會壓低光路門控"
+          "highCloudBonus": "高雲 bonus：高雲>50 且低雲<30 時，按 (高雲-50)/50×6 加 0–6 分。雲種／雲厚是加減分：高層雲 +4、高積雲 +6、薄雲 +5；偏厚／厚雲按當前畫布比例連續扣分，公式為雲厚修正前分×30%×雲厚壓力。若中雲／總雲量很高、高雲載體弱、direct/shortwave 極低且灰空氣明顯，會加入低太陽透射證據。低雲類雲種還會壓低光路門控"
         },
         "lightPath": {
           "title": "光路條件",
@@ -388,7 +394,9 @@ const translations = {
           "upperCloudCanvas": "中高雲畫布 {{upper}} = 高雲 {{high}}×0.75 + 中雲 {{mid}}×0.45；區間分 {{range}}",
           "highCloudBonus": "高雲主導 bonus {{bonus}}",
           "cloudTypeAdjustment": "雲種 {{reason}} {{bonus}}",
-          "cloudThicknessAdjustment": "雲厚 {{thickness}}，畫布 {{base}} × 30% × 壓力 {{pressure}}，最大折損 {{max}}；散射 {{diffuse}}%，水汽 {{water}}，載體緩衝 {{relief}}",
+          "cloudThicknessAdjustment": "雲厚 {{thickness}}，畫布 {{base}} × 30% × 壓力 {{pressure}}，最大折損 {{max}}；散射 {{diffuse}}%，水汽 {{water}}，載體緩衝 {{relief}}，低太陽透射 {{solar}}",
+          "lowSolarTransmissionYes": "命中",
+          "lowSolarTransmissionNo": "未命中",
           "aerosolCarrier": "雲層很少時，薄霧在光路通暢時可承接一點暖色，光路激活 ×{{activation}}",
           "lightPath": "陽光是否能照到雲層",
           "renderingFactors": "能見度 ×{{visibility}}，濕度 ×{{humidity}}，氣溶膠 ×{{aerosol}}",

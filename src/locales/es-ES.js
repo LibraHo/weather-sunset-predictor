@@ -112,6 +112,12 @@ apiAccess: 'Acceso API'
           "summary": "La penalización por espesor de nubes ahora es puntuación de lienzo antes del espesor × 30% × presión de espesor, sin los topes fijos -28/24. Las cortinas grises húmedas se calibran como resplandor débil/observable pero no fuerte.",
           "validation": "Validación: en la muestra de Pekín del 2026-05-27, presión 0.78 sobre lienzo 76.7 da unos -18 puntos y mantiene el resultado en el rango de resplandor débil/observable."
         },
+        "cloudThickness": {
+          "date": "2026-05-27",
+          "title": "Penalización proporcional por espesor de nubes v2",
+          "summary": "La penalización por espesor de nubes ahora es puntuación de lienzo antes del espesor × 30% × presión de espesor, sin los topes fijos -28/24. Las cortinas grises húmedas se calibran como resplandor débil/observable pero no fuerte.",
+          "validation": "Validación: en la muestra de Pekín del 2026-05-27, presión 0.78 sobre lienzo 76.7 da unos -18 puntos y mantiene el resultado en el rango de resplandor débil/observable."
+        },
         "aerosol": {
           "date": "2026-05-12",
           "title": "Soporte débil de aerosol v1",
@@ -370,7 +376,9 @@ apiAccess: 'Acceso API'
           "upperCloudCanvas": "lienzo de nubes medias/altas {{upper}} = altas {{high}}×0.75 + medias {{mid}}×0.45; puntuación de rango {{range}}",
           "highCloudBonus": "bono por predominio de nubes altas {{bonus}}",
           "cloudTypeAdjustment": "tipo de nube {{reason}} {{bonus}}",
-          "cloudThicknessAdjustment": "grosor de nube {{thickness}}, base {{base}} × 30% × presión {{pressure}} = máx {{max}} escalado; difusa {{diffuse}}%, vapor {{water}}, alivio portador {{relief}}",
+          "cloudThicknessAdjustment": "grosor de nube {{thickness}}, base {{base}} × 30% × presión {{pressure}} = máx {{max}} escalado; difusa {{diffuse}}%, vapor {{water}}, alivio portador {{relief}}, baja transmisión solar {{solar}}",
+          "lowSolarTransmissionYes": "sí",
+          "lowSolarTransmissionNo": "no",
           "aerosolCarrier": "thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}",
           "lightPath": "sunlight reaches the cloud layer",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",

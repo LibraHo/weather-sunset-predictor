@@ -112,6 +112,12 @@ apiAccess: 'API 연동'
           "summary": "구름 두께 감점은 이제 두께 보정 전 캔버스 점수 × 30% × 두께 압력이며, 고정 -28/24 상한을 제거했습니다. 습한 회색 장막은 약한 노을/볼 만하지만 강하지 않은 범위로 보정됩니다.",
           "validation": "검증: 2026-05-27 베이징 샘플에서 두께 압력 0.78, 캔버스 76.7이면 약 -18점이 적용되어 결과가 약한 노을/볼 만한 범위에 남습니다."
         },
+        "cloudThickness": {
+          "date": "2026-05-27",
+          "title": "구름 두께 비례 감점 v2",
+          "summary": "구름 두께 감점은 이제 두께 보정 전 캔버스 점수 × 30% × 두께 압력이며, 고정 -28/24 상한을 제거했습니다. 습한 회색 장막은 약한 노을/볼 만하지만 강하지 않은 범위로 보정됩니다.",
+          "validation": "검증: 2026-05-27 베이징 샘플에서 두께 압력 0.78, 캔버스 76.7이면 약 -18점이 적용되어 결과가 약한 노을/볼 만한 범위에 남습니다."
+        },
         "aerosol": {
           "date": "2026-05-12",
           "title": "에어로졸 약한 매개층 v1",
@@ -396,7 +402,9 @@ apiAccess: 'API 연동'
           "upperCloudCanvas": "중고층운 캔버스 {{upper}} = 상층운 {{high}}×0.75 + 중층운 {{mid}}×0.45; 구간 점수 {{range}}",
           "highCloudBonus": "상층운 우세 보너스 {{bonus}}",
           "cloudTypeAdjustment": "구름 유형 {{reason}} {{bonus}}",
-          "cloudThicknessAdjustment": "구름 두께 {{thickness}}, 바탕 {{base}} × 30% × 압력 {{pressure}}, 최대 {{max}}, 산란 {{diffuse}}%, 수증기 {{water}}, 운반체 완화 {{relief}}",
+          "cloudThicknessAdjustment": "구름 두께 {{thickness}}, 바탕 {{base}} × 30% × 압력 {{pressure}}, 최대 {{max}}, 산란 {{diffuse}}%, 수증기 {{water}}, 운반체 완화 {{relief}}, 낮은 태양 투과 {{solar}}",
+          "lowSolarTransmissionYes": "해당",
+          "lowSolarTransmissionNo": "해당 없음",
           "aerosolCarrier": "thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}",
           "lightPath": "sunlight reaches the cloud layer",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
