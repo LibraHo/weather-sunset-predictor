@@ -2,6 +2,7 @@ import { reverseGeocode, searchLocations } from '../../services/geocoding.js';
 import { getEnhancedPrediction, getEnhancedPredictionBatch, getHomeGateway, getWeatherForecast } from '../../services/prediction.js';
 import { addFavorite, addRecentLocation, listRecentLocations } from '../../services/user.js';
 import { formatVisitorCount, incrementVisitorCount } from '../../services/visitor.js';
+import { trackMapView, trackPageVisit, trackShareClick } from '../../services/analytics.js';
 import { applyPageSettings, readAppSettings, saveAppSettings as persistAppSettings } from '../../utils/app-settings.js';
 import { buildRadarCloudGradients, paintRadarCloudCanvas } from '../../utils/radar-cloud-field.js';
 import { getDefaultSunEventDay } from '../../utils/sun-event-day.js';
@@ -49,6 +50,7 @@ Page({
   },
 
   onLoad(options = {}) {
+    trackPageVisit({ path: '/pages/home/index' });
     this.predictionService = options.predictionService || this.predictionService || null;
     this.applyDefaultPredictionDay();
     this.applySavedSettings();
@@ -286,6 +288,7 @@ Page({
   },
 
   onShareAppMessage() {
+    trackShareClick({ path: '/pages/home/index', targetLabel: 'home-share' });
     return buildHomeShareMessage(this.data.predictionPreview, this.currentPredictionQuery || {});
   },
 
@@ -353,6 +356,7 @@ Page({
     const url = routes[target];
     this.setData({ homeMenuOpen: false });
     if (!url) return;
+    if (target === 'map') trackMapView({ path: '/pages/home/index', targetLabel: 'home-menu-map' });
     wx.navigateTo({ url });
   },
 

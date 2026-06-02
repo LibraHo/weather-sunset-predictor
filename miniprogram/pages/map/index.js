@@ -3,6 +3,7 @@ import {
   getChinaFirecloudRaster,
   getFirecloudLegend
 } from '../../services/firecloud-map.js';
+import { trackMapView, trackPageVisit } from '../../services/analytics.js';
 import { applyPageSettings, readAppSettings } from '../../utils/app-settings.js';
 import { getDefaultSunEventDay } from '../../utils/sun-event-day.js';
 
@@ -28,6 +29,8 @@ Page({
   },
 
   onLoad(options = {}) {
+    trackPageVisit({ path: '/pages/map/index' });
+    trackMapView({ path: '/pages/map/index', targetLabel: 'china-firecloud-map' });
     this.applySavedSettings();
     const period = options.period === 'sunrise' ? 'sunrise' : 'sunset';
     this.setData({

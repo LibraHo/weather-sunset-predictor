@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import { configureApi, resetApiConfig, setWxInstance } from '../../../miniprogram/services/api.js';
 import { clearSession, saveSession } from '../../../miniprogram/services/auth.js';
-import { buildPhotoUploadFormData, listPhotos, normalizePhoto, uploadPhoto } from '../../../miniprogram/services/photos.js';
+import { buildPhotoUploadFormData, deleteMyPhoto, listMyPhotos, listPhotos, normalizePhoto, updateMyPhoto, uploadPhoto } from '../../../miniprogram/services/photos.js';
 
 describe('miniprogram services/photos', () => {
   afterEach(() => {
@@ -49,6 +49,9 @@ describe('miniprogram services/photos', () => {
         takenAt: '2026-05-01T10:00:00Z',
         uploadedAt: '2026-05-01T11:00:00Z',
         desc: 'sunset',
+        reviewStatus: 'approved',
+        reviewNote: '',
+        reviewedAt: null,
         thumbUrl: 'https://api.example.com/thumb/p1.jpg',
         originalUrl: 'https://api.example.com/photo/p1.jpg'
       }
@@ -151,6 +154,9 @@ describe('miniprogram services/photos', () => {
       takenAt: '2026-05-03T10:00:00Z',
       uploadedAt: '2026-05-03T10:01:00Z',
       desc: 'clouds',
+      reviewStatus: 'approved',
+      reviewNote: '',
+      reviewedAt: null,
       thumbUrl: 'https://api.example.com/thumb/p2.jpg',
       originalUrl: 'https://api.example.com/photo/p2.jpg'
     });
@@ -189,6 +195,78 @@ describe('miniprogram services/photos', () => {
     expect(wxMock.uploadFile.mock.calls[0][0].header).toEqual({
       Authorization: 'Bearer bearer-token-1'
     });
+  });
+
+  test('listMyPhotos calls authenticated mine endpoint and preserves review status', async () => {
+    const wxMock = {
+      request: jest.fn(({ success }) => success({
+        statusCode: 200,
+        data: {
+          photos: [
+            {
+              id: 'mine-1',
+              locationName: 'Pending ridge',
+              reviewStatus: 'pending',
+              reviewNote: 'waiting',
+              thumbUrl: '/api/photos/mine-1/thumb'
+            }
+          ]
+        }
+      })),
+      getStorageSync: jest.fn(),
+      setStorageSync: jest.fn(),
+      removeStorageSync: jest.fn()
+    };
+    configureApi({ baseUrl: 'https://api.example.com' });
+    saveSession({ sessionToken: 'session-mine' }, { wx: wxMock });
+
+    await expect(listMyPhotos({ wx: wxMock })).resolves.toMatchObject([
+      {
+        id: 'mine-1',
+        locationName: 'Pending ridge',
+        reviewStatus: 'pending',
+        reviewNote: 'waiting',
+        thumbUrl: 'https://api.example.com/api/photos/mine-1/thumb'
+      }
+    ]);
+    expect(wxMock.request).toHaveBeenCalledWith(expect.objectContaining({
+      url: 'https://api.example.com/api/photos/mine',
+      method: 'GET',
+      header: expect.objectContaining({ 'X-Session-Token': 'session-mine' })
+    }));
+  });
+
+  test('updateMyPhoto and deleteMyPhoto use owner management endpoints', async () => {
+    const wxMock = {
+      request: jest.fn(({ method, success }) => success({
+        statusCode: 200,
+        data: method === 'PATCH'
+          ? { photo: { id: 'mine-2', locationName: 'Edited', reviewStatus: 'pending' } }
+          : { success: true }
+      })),
+      getStorageSync: jest.fn(),
+      setStorageSync: jest.fn(),
+      removeStorageSync: jest.fn()
+    };
+    configureApi({ baseUrl: 'https://api.example.com' });
+    saveSession({ sessionToken: 'session-mine-2' }, { wx: wxMock });
+
+    await expect(updateMyPhoto('mine-2', { locationName: 'Edited' }, { wx: wxMock })).resolves.toMatchObject({
+      id: 'mine-2',
+      locationName: 'Edited',
+      reviewStatus: 'pending'
+    });
+    await expect(deleteMyPhoto('mine-2', { wx: wxMock })).resolves.toBe(true);
+
+    expect(wxMock.request.mock.calls[0][0]).toEqual(expect.objectContaining({
+      url: 'https://api.example.com/api/photos/mine/mine-2',
+      method: 'PATCH',
+      data: { locationName: 'Edited' }
+    }));
+    expect(wxMock.request.mock.calls[1][0]).toEqual(expect.objectContaining({
+      url: 'https://api.example.com/api/photos/mine/mine-2',
+      method: 'DELETE'
+    }));
   });
 
   test('uploadPhoto wires upload progress callback when wx returns an upload task', async () => {

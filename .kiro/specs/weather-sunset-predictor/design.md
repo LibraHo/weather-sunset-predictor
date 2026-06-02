@@ -908,6 +908,35 @@ CREATE TABLE api_token_usage (
 - 访客/运营分析只允许后台读取聚合数据；采集端不得落明文 IP、token、openid/unionid 或精确个人轨迹
 - API Key仅存储于后端环境变量
 - 前端不暴露Windy/Open-Meteo Key
+
+## 登录用户照片投稿与审核（需求54，2026-06-01 更新）
+
+**目标**：普通登录用户上传图片时复用后台照片上传链路，保证同样的文件校验、EXIF 解析、缩略图生成、限额和元数据存储；公开图库与分享地图只展示后台审核通过的照片。
+
+**数据模型**：
+- `photos.json` 中每条照片继续保存 `id/origFile/thumbFile/lat/lon/takenAt/locationName/uploaderName/desc/uploadedAt/uploaderUserId/uploadIpHash/uploadDay`。
+- 新增审核字段：`reviewStatus`（`pending|approved|rejected`）、`reviewNote`、`reviewedAt`、`reviewedBy`。
+- 旧照片缺少 `reviewStatus` 时兼容为 `approved`，避免历史分享地图清空。
+- 用户上传：`uploaderUserId=userId`、`reviewStatus=pending`。
+- 后台上传：`reviewStatus=approved`、`reviewedBy=admin`。
+
+**API 契约**：
+- `POST /api/photos/upload`：需要普通用户 token；复用后台上传行为，服务端尝试读取 EXIF 经纬度/拍摄时间，用户表单字段可覆盖或清空；返回用户可见照片字段和审核状态，不返回 `uploadIpHash/openid/unionid` 等内部字段。
+- `GET /api/photos`：公开列表，只返回 `approved` 照片。
+- `GET /api/photos/mine`：普通用户列出自己的全部投稿，包含 `reviewStatus/reviewNote`。
+- `PATCH /api/photos/mine/:id`：普通用户仅可编辑自己的照片元数据；编辑后重新进入 `pending`。
+- `DELETE /api/photos/mine/:id`：普通用户仅可删除自己的照片。
+- `GET /admin/photos`：后台列出所有照片。
+- `POST /photos/:id/review`：后台通过或拒绝照片，写 `reviewStatus/reviewNote/reviewedAt/reviewedBy`。
+
+**界面**：
+- 小程序上传页作为用户面板的第一阶段入口：在上传表单下方增加“我的上传”，展示缩略图、地点、拍摄/上传时间、审核状态、拒绝原因、删除操作。
+- 后台照片管理卡片显示审核状态，并提供通过/拒绝操作；后台编辑元数据不改变审核结果，审核操作独立。
+
+**安全与隐私**：
+- 用户端所有管理接口必须按 `uploaderUserId === req.user.userId` 校验，跨用户访问返回 404。
+- 公开 API 不暴露 `uploaderUserId`、`uploadIpHash`、`uploadDay`、identity 相关字段。
+- 审核失败原因只返回给照片所有者和后台，不进入公开图库。
 - IP存储前SHA256哈希
 - 文件上传限制20MB，MIME白名单
 - 管理接口Basic Auth

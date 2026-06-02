@@ -66,6 +66,30 @@
   <view class="error-card" wx:if="{{errorMessage}}">{{errorMessage}}</view>
   <view class="success-card" wx:if="{{successMessage}}">{{successMessage}}</view>
 
+  <view class="my-photos-card xiake-card">
+    <view class="my-photos-head">
+      <view>
+        <view class="section-title">我的上传</view>
+        <view class="subtle-text">已上传的照片会先进入后台审核。</view>
+      </view>
+      <view class="my-photos-count">{{myPhotos.length}}</view>
+    </view>
+    <view class="my-photos-loading" wx:if="{{myPhotosLoading}}">加载中...</view>
+    <view class="error-card compact" wx:elif="{{myPhotosError}}">{{myPhotosError}}</view>
+    <view class="my-photos-empty subtle-text" wx:elif="{{!myPhotos.length}}">暂无上传照片</view>
+    <view class="my-photo-list" wx:else>
+      <view class="my-photo-item" wx:for="{{myPhotos}}" wx:key="id">
+        <image class="my-photo-thumb" src="{{item.thumbUrl || item.originalUrl}}" mode="aspectFill" />
+        <view class="my-photo-main">
+          <view class="my-photo-title">{{item.title}}</view>
+          <view class="my-photo-meta">{{item.reviewStatusLabel}}</view>
+          <view class="my-photo-note" wx:if="{{item.reviewNote}}">{{item.reviewNote}}</view>
+        </view>
+        <button class="icon-action danger" data-id="{{item.id}}" bindtap="deleteUploadedPhoto">删除</button>
+      </view>
+    </view>
+  </view>
+
   <view class="action-row">
     <button class="primary-button submit-button" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitPhoto" hover-class="button-hover" hover-stay-time="80">
       {{submitting ? '正在上传…' : '上传照片'}}

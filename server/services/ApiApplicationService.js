@@ -68,6 +68,7 @@ class ApiApplicationService {
     const countryRegion = String(item.countryRegion || item.country || '').trim();
     const nickname = String(item.nickname || item.contact || '').trim();
     const contact = String(item.contact || nickname).trim();
+    const userId = typeof item.userId === 'string' && item.userId.trim() ? item.userId.trim() : null;
 
     return {
       id: item.id || uuidv4(),
@@ -80,6 +81,8 @@ class ApiApplicationService {
       status: ALLOWED_STATUS.has(item.status) ? item.status : 'pending',
       remarks: typeof item.remarks === 'string' ? item.remarks : '',
       tokenId: item.tokenId || null,
+      userId,
+      ownerType: userId ? 'user' : 'anonymous',
       createdAt: item.createdAt || now,
       updatedAt: item.updatedAt || now,
     };
@@ -113,6 +116,7 @@ class ApiApplicationService {
       updatedAt: new Date().toISOString(),
       status: 'pending',
       tokenId: null,
+      userId: typeof payload.userId === 'string' && payload.userId.trim() ? payload.userId.trim() : null,
     });
 
     entry.email = email;

@@ -44,6 +44,7 @@ const DAILY_UPLOAD_LIMIT_PER_IP = Math.max(
 );
 const UPLOAD_DAY_TIME_ZONE = process.env.PHOTO_UPLOAD_DAY_TIME_ZONE || 'Asia/Shanghai';
 const IP_HASH_SALT = process.env.PHOTO_UPLOAD_IP_HASH_SALT || process.env.ADMIN_PASSWORD || 'xiake-photo-upload';
+const REVIEW_STATUSES = new Set(['pending', 'approved', 'rejected']);
 
 // ---------------------------------------------------------------------------
 // 内部辅助
@@ -62,12 +63,27 @@ function ensureDir(dir) {
  * 读取照片索引。
  * @returns {object[]} 照片元数据数组
  */
+function normalizeReviewStatus(value, fallback = 'approved') {
+  const status = String(value || '').trim().toLowerCase();
+  return REVIEW_STATUSES.has(status) ? status : fallback;
+}
+
+function normalizePhotoRecord(photo = {}) {
+  return {
+    ...photo,
+    reviewStatus: normalizeReviewStatus(photo.reviewStatus, 'approved'),
+    reviewNote: String(photo.reviewNote || ''),
+    reviewedAt: photo.reviewedAt || null,
+    reviewedBy: photo.reviewedBy || null,
+  };
+}
+
 function readIndex() {
   try {
     if (!fs.existsSync(PHOTOS_INDEX)) return [];
     const raw = fs.readFileSync(PHOTOS_INDEX, 'utf-8');
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? parsed.map(normalizePhotoRecord) : [];
   } catch {
     return [];
   }
@@ -245,7 +261,7 @@ async function generateThumbnail(srcPath, dstPath) {
  * @returns {Promise<object>} 已保存的照片元数据
  * @throws {Error} 若 MIME 不合法或 buffer 超限则抛出
  */
-async function savePhoto({ buffer, mimeType, filename = '', lat, lon, takenAt, locationName = '', uploaderName = '', uploaderUserId = '', desc = '', clientIp = '' }) {
+async function savePhoto({ buffer, mimeType, filename = '', lat, lon, takenAt, locationName = '', uploaderName = '', uploaderUserId = '', desc = '', clientIp = '', reviewStatus = 'approved', reviewNote = '', reviewedBy = null }) {
   const now = new Date();
   const uploadStats = assertDailyUploadLimit(clientIp, now);
 
@@ -295,6 +311,10 @@ async function savePhoto({ buffer, mimeType, filename = '', lat, lon, takenAt, l
     uploadedAt: now.toISOString(),
     uploadDay: uploadStats?.uploadDay || getUploadDay(now),
     uploadIpHash: uploadStats?.uploadIpHash || hashClientIp(clientIp),
+    reviewStatus: normalizeReviewStatus(reviewStatus, 'approved'),
+    reviewNote: String(reviewNote || '').trim(),
+    reviewedAt: normalizeReviewStatus(reviewStatus, 'approved') === 'approved' ? now.toISOString() : null,
+    reviewedBy: reviewedBy || (normalizeReviewStatus(reviewStatus, 'approved') === 'approved' ? 'admin' : null),
     sizeMb: parseFloat(sizeMb.toFixed(3)),
   };
 
@@ -312,6 +332,16 @@ async function savePhoto({ buffer, mimeType, filename = '', lat, lon, takenAt, l
 function getPhotos() {
   initDirs();
   return readIndex();
+}
+
+function getPublicPhotos() {
+  return getPhotos().filter(photo => normalizeReviewStatus(photo.reviewStatus) === 'approved');
+}
+
+function getPhotosByUser(userId) {
+  const target = String(userId || '').trim();
+  if (!target) return [];
+  return getPhotos().filter(photo => String(photo.uploaderUserId || '') === target);
 }
 
 function normalizeOptionalText(value) {
@@ -368,9 +398,54 @@ function updatePhoto(id, patch = {}) {
     next.lon = Number.isFinite(lat) && Number.isFinite(lon) ? lon : null;
   }
 
+  if (Object.prototype.hasOwnProperty.call(patch, 'reviewStatus')) {
+    const status = normalizeReviewStatus(patch.reviewStatus, current.reviewStatus || 'approved');
+    next.reviewStatus = status;
+    next.reviewNote = typeof patch.reviewNote === 'string' ? patch.reviewNote.trim() : (next.reviewNote || '');
+    if (status === 'pending') {
+      next.reviewedAt = null;
+      next.reviewedBy = null;
+    } else {
+      next.reviewedAt = new Date().toISOString();
+      next.reviewedBy = Object.prototype.hasOwnProperty.call(patch, 'reviewedBy') ? patch.reviewedBy : 'admin';
+    }
+  }
+
   photos[idx] = next;
   writeIndex(photos);
   return next;
+}
+
+function updateUserPhoto(id, userId, patch = {}) {
+  initDirs();
+  const current = getPhotoById(id);
+  if (!current || String(current.uploaderUserId || '') !== String(userId || '')) return null;
+
+  const userPatch = {
+    reviewStatus: 'pending',
+    reviewNote: '',
+    reviewedBy: null
+  };
+  for (const key of ['desc', 'locationName', 'uploaderName', 'takenAt', 'lat', 'lon']) {
+    if (Object.prototype.hasOwnProperty.call(patch, key)) {
+      userPatch[key] = patch[key];
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, 'description') && !Object.prototype.hasOwnProperty.call(userPatch, 'desc')) {
+    userPatch.desc = patch.description;
+  }
+
+  return updatePhoto(id, userPatch);
+}
+
+function reviewPhoto(id, { reviewStatus, reviewNote = '', reviewedBy = 'admin' } = {}) {
+  const status = normalizeReviewStatus(reviewStatus, '');
+  if (!status || status === 'pending') {
+    const err = new Error('reviewStatus must be approved or rejected');
+    err.code = 'INVALID_REVIEW_STATUS';
+    throw err;
+  }
+  return updatePhoto(id, { reviewStatus: status, reviewNote, reviewedBy });
 }
 
 /**
@@ -400,6 +475,12 @@ function deletePhoto(id) {
   return true;
 }
 
+function deleteUserPhoto(id, userId) {
+  const current = getPhotoById(id);
+  if (!current || String(current.uploaderUserId || '') !== String(userId || '')) return false;
+  return deletePhoto(id);
+}
+
 /**
  * 按 ID 获取单张照片元数据。
  * @param {string} id
@@ -425,8 +506,13 @@ module.exports = {
   initDirs,
   savePhoto,
   getPhotos,
+  getPublicPhotos,
+  getPhotosByUser,
   updatePhoto,
+  updateUserPhoto,
+  reviewPhoto,
   deletePhoto,
+  deleteUserPhoto,
   getPhotoById,
   generateThumbnail,
   getUploadDay,
@@ -445,6 +531,7 @@ module.exports = {
   ALLOWED_MIMES,
   detectImageMimeFromBuffer,
   normalizeImageMime,
+  normalizeReviewStatus,
   MAX_FILE_SIZE_MB,
   DAILY_UPLOAD_LIMIT_PER_IP,
   UPLOAD_DAY_TIME_ZONE,

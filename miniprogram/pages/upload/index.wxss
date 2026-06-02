@@ -204,6 +204,109 @@
   background: rgba(22, 101, 52, 0.22);
 }
 
+.error-card.compact {
+  margin-top: 18rpx;
+}
+
+.my-photos-card {
+  padding: 24rpx;
+  background: rgba(18, 28, 52, 0.72);
+}
+
+.my-photos-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.my-photos-head .section-title {
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 900;
+}
+
+.my-photos-count {
+  min-width: 48rpx;
+  height: 48rpx;
+  border-radius: 999rpx;
+  color: #0d172a;
+  background: #f5c87a;
+  font-size: 24rpx;
+  font-weight: 900;
+  line-height: 48rpx;
+  text-align: center;
+}
+
+.my-photos-loading,
+.my-photos-empty {
+  margin-top: 22rpx;
+  font-size: 25rpx;
+}
+
+.my-photo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-top: 22rpx;
+}
+
+.my-photo-item {
+  display: grid;
+  grid-template-columns: 112rpx 1fr auto;
+  align-items: center;
+  gap: 16rpx;
+  min-height: 112rpx;
+  padding: 14rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.10);
+  border-radius: 14rpx;
+  background: rgba(7, 16, 31, 0.48);
+}
+
+.my-photo-thumb {
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 12rpx;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.my-photo-title {
+  color: #ffffff;
+  font-size: 27rpx;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.my-photo-meta {
+  margin-top: 8rpx;
+  color: #f5c87a;
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.my-photo-note {
+  margin-top: 6rpx;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 23rpx;
+  line-height: 1.35;
+}
+
+.icon-action {
+  width: 96rpx;
+  min-width: 96rpx;
+  height: 58rpx;
+  margin: 0;
+  padding: 0;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+  line-height: 58rpx;
+}
+
+.icon-action.danger {
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.36);
+}
+
 .action-row {
   display: grid;
   grid-template-columns: 1fr;

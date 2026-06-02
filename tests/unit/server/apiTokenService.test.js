@@ -26,6 +26,25 @@ afterEach(() => {
 });
 
 describe('ApiTokenService.createToken', () => {
+  test('created token can carry application and user ownership references without exposing secrets', () => {
+    const created = service.createToken({
+      name: 'owned-token',
+      applicationId: 'application-1',
+      userId: 'user-1'
+    });
+
+    expect(created.tokenMeta).toMatchObject({
+      applicationId: 'application-1',
+      userId: 'user-1'
+    });
+    const stored = JSON.parse(fs.readFileSync(tokenFile, 'utf8')).tokens[0];
+    expect(stored).toMatchObject({
+      applicationId: 'application-1',
+      userId: 'user-1'
+    });
+    expect(created.tokenMeta).not.toHaveProperty('tokenHash');
+  });
+
   test('生产环境缺少 SERVER_TOKEN_SECRET 时应阻止创建 token', () => {
     process.env.NODE_ENV = 'production';
     const badService = new ApiTokenService({

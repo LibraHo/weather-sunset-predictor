@@ -78,6 +78,8 @@ class ApiTokenService {
       nonCommercial: overrides.nonCommercial !== false,
       expiresAt: typeof overrides.expiresAt === 'string' && overrides.expiresAt.trim() ? overrides.expiresAt.trim() : null,
       trustedUser: typeof overrides.trustedUser === 'string' ? overrides.trustedUser : '',
+      applicationId: typeof overrides.applicationId === 'string' && overrides.applicationId.trim() ? overrides.applicationId.trim() : null,
+      userId: typeof overrides.userId === 'string' && overrides.userId.trim() ? overrides.userId.trim() : null,
       createdAt: now,
       lastUsedAt: null,
       usageCount: 0,
@@ -182,7 +184,7 @@ class ApiTokenService {
 
   // ---- 公共能力 ----
 
-  createToken({ name = 'untitled', scopes = ['forecast:read'], minuteLimit, dailyLimit, enabled = true, note = '', nonCommercial = true, expiresAt = null, trustedUser = '' } = {}) {
+  createToken({ name = 'untitled', scopes = ['forecast:read'], minuteLimit, dailyLimit, enabled = true, note = '', nonCommercial = true, expiresAt = null, trustedUser = '', applicationId = null, userId = null } = {}) {
     this._ensureFeatureEnabled();
 
     const prefix = process.env.NODE_ENV === 'production' ? 'xiake_live_' : 'xiake_test_';
@@ -198,6 +200,8 @@ class ApiTokenService {
       nonCommercial,
       expiresAt,
       trustedUser,
+      applicationId,
+      userId,
       prefix,
       tokenHash: this._hashToken(token, this.secret)
     });

@@ -80,12 +80,16 @@ describe('需求45 PR C - Token 管理 / API 申请 / 审计日志', () => {
     process.env.API_APPLICATION_STORAGE_PATH = applicationStorage;
     process.env.ADMIN_PASSWORD = adminPassword;
     process.env.NODE_ENV = 'test';
+    process.env.USER_DATA_FILE = path.join(tmpDir, 'users.json');
+    process.env.USER_SESSION_SECRET = 'unit-user-session-secret';
 
     app = createExpressApp();
   });
 
   afterEach(() => {
     try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch {}
+    delete process.env.USER_DATA_FILE;
+    delete process.env.USER_SESSION_SECRET;
   });
 
   test('admin 创建 token 成功，明文仅创建返回且列表不泄露明文', async () => {
@@ -240,6 +244,86 @@ describe('需求45 PR C - Token 管理 / API 申请 / 审计日志', () => {
     expect(listRes.body.success).toBe(true);
     expect(listRes.body.applications.length).toBe(1);
     expect(listRes.body.applications[0].email).toBe('a@example.com');
+  });
+
+  test('API application keeps anonymous and logged-in ownership fields separate', async () => {
+    const anonymousRes = await request(app)
+      .post('/api/applications')
+      .send({
+        email: 'anon@example.com',
+        countryRegion: 'US',
+        nickname: 'Anon',
+        purpose: 'anonymous test'
+      });
+
+    expect(anonymousRes.status).toBe(201);
+    expect(anonymousRes.body.application).toMatchObject({
+      ownerType: 'anonymous',
+      userId: null
+    });
+
+    const UserService = require('../../../server/services/UserService');
+    const userService = new UserService({
+      dataFile: process.env.USER_DATA_FILE,
+      sessionSecret: process.env.USER_SESSION_SECRET
+    });
+    const user = userService.upsertWechatUser({ openid: 'openid-api-application', sessionKey: 'session-key' });
+    const userToken = userService.issueToken(user);
+
+    const loggedInRes = await request(app)
+      .post('/api/applications')
+      .set('Authorization', `Bearer ${userToken}`)
+      .send({
+        email: 'owner@example.com',
+        countryRegion: 'US',
+        nickname: 'Owner',
+        purpose: 'owned test'
+      });
+
+    expect(loggedInRes.status).toBe(201);
+    expect(loggedInRes.body.application).toMatchObject({
+      ownerType: 'user',
+      userId: user.userId
+    });
+
+    const publicListRes = await request(app)
+      .get('/api/applications')
+      .expect(200);
+    expect(publicListRes.body.applications).toHaveLength(2);
+    expect(publicListRes.body.applications[0]).not.toHaveProperty('userId');
+    expect(publicListRes.body.applications[0]).not.toHaveProperty('ownerType');
+
+    const adminListRes = await request(app)
+      .get('/api/admin/applications')
+      .set('Authorization', makeAdminHeader(adminPassword));
+    const owned = adminListRes.body.applications.find((item) => item.email === 'owner@example.com');
+    expect(owned).toMatchObject({ userId: user.userId, ownerType: 'user' });
+  });
+
+  test('optional analytics hook failures do not block API applications', async () => {
+    jest.resetModules();
+    const analyticsHook = jest.fn(() => Promise.reject(new Error('analytics offline')));
+    const createRouter = require('../../../server/routes/applications').createRouter;
+    const hookedApp = express();
+    hookedApp.use(express.json());
+    hookedApp.use('/api/applications', createRouter({ analyticsHook }));
+
+    const res = await request(hookedApp)
+      .post('/api/applications')
+      .send({
+        email: 'hook@example.com',
+        countryRegion: 'US',
+        nickname: 'Hook',
+        purpose: 'hook test'
+      });
+
+    expect(res.status).toBe(201);
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(analyticsHook).toHaveBeenCalledWith(expect.objectContaining({
+      eventName: 'api_application_submit',
+      ownerType: 'anonymous',
+      status: 'success'
+    }));
   });
 
   test('后台申请列表可见、拒绝记录状态/备注、批准可创建 token 并关联 tokenId', async () => {

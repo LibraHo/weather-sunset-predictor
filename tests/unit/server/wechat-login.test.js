@@ -57,7 +57,7 @@ describe('wechat login route', () => {
     expect(wechatAuthService.code2Session).toHaveBeenCalledWith('mock-code');
     expect(res.body.token).toMatch(/^ey/);
     expect(res.body.user.userId).toBeTruthy();
-    expect(res.body.user.identities).toEqual([{ provider: 'wechat', subject: 'openid-a' }]);
+    expect(res.body.user.identities).toEqual([{ provider: 'wechat_miniprogram', subject: 'openid-a' }]);
     expect(userService.verifyToken(res.body.token).userId).toBe(res.body.user.userId);
   });
 

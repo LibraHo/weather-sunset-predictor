@@ -25,6 +25,7 @@
       <nav class="admin-nav" aria-label="后台模块">
         <button class="admin-nav-item admin-view-option active" aria-current="page" aria-pressed="true" data-view="dashboard"><span>总览</span><small>状态和值班</small></button>
         <button class="admin-nav-item admin-view-option" aria-pressed="false" data-view="visitors"><span>访客分析</span><small>PV、UV、IP</small></button>
+        <button class="admin-nav-item admin-view-option" aria-pressed="false" data-view="analytics"><span>运营分析</span><small>来源、行为、质量</small></button>
         <button class="admin-nav-item admin-view-option" aria-pressed="false" data-view="ops"><span>运维中心</span><small>队列、定时、数据管线</small></button>
         <button class="admin-nav-item admin-view-option" aria-pressed="false" data-view="logs"><span>日志</span><small>调用与错误</small></button>
         <button class="admin-nav-item admin-view-option" aria-pressed="false" data-view="agent"><span>API Token</span><small>申请、用量、审计</small></button>
@@ -101,6 +102,78 @@
           <div class="two-col">
             <div class="admin-card"><h3 class="card-title">当日 IP</h3><div class="table-wrap visitor-table-wrap"><table class="admin-table visitor-ip-table"><thead><tr><th>IP</th><th>归属地</th><th>访问次数</th></tr></thead><tbody id="visitorIpBody"><tr><td colspan="3" class="empty">加载中...</td></tr></tbody></table></div></div>
             <div class="admin-card"><h3 class="card-title">访问明细</h3><div class="table-wrap visitor-table-wrap"><table class="admin-table visitor-record-table"><thead><tr><th>时间</th><th>来源</th><th>IP</th><th>归属地</th><th>方法</th><th>路径</th></tr></thead><tbody id="visitorRecordBody"><tr><td colspan="6" class="empty">加载中...</td></tr></tbody></table></div></div>
+          </div>
+        </section>
+      </section>
+
+      <section id="admin-panel-analytics" class="admin-panel hidden" data-admin-panel="analytics" role="tabpanel" aria-label="访客与运营分析">
+        <section class="admin-section">
+          <div class="admin-card analytics-toolbar-card">
+            <div class="admin-filter-row analytics-filter-row">
+              <label for="analyticsRange">时间范围</label>
+              <select id="analyticsRange" onchange="loadAnalyticsDashboard()">
+                <option value="today">今日</option>
+                <option value="7d" selected>近 7 天</option>
+                <option value="30d">近 30 天</option>
+              </select>
+              <button class="btn btn-secondary" type="button" onclick="loadAnalyticsDashboard()">刷新</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="admin-section">
+          <div class="admin-card">
+            <h3 class="card-title">总览</h3>
+            <div id="analyticsOverviewGrid" class="analytics-overview-grid"><p class="empty">加载中...</p></div>
+          </div>
+        </section>
+
+        <section class="admin-section">
+          <div class="analytics-grid">
+            <div class="admin-card">
+              <h3 class="card-title">来源</h3>
+              <div id="analyticsSourceGrid" class="analytics-breakdown-grid"><p class="empty">加载中...</p></div>
+            </div>
+            <div class="admin-card">
+              <h3 class="card-title">热门路径 / 地点</h3>
+              <div class="table-wrap analytics-table-wrap">
+                <table class="admin-table analytics-table">
+                  <thead><tr><th>类型</th><th>名称</th><th>次数</th><th>占比</th></tr></thead>
+                  <tbody id="analyticsPopularBody"><tr><td colspan="4" class="empty">加载中...</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="admin-section">
+          <div class="analytics-grid">
+            <div class="admin-card">
+              <h3 class="card-title">行为事件</h3>
+              <div class="table-wrap analytics-table-wrap">
+                <table class="admin-table analytics-table">
+                  <thead><tr><th>事件</th><th>目标</th><th>次数</th><th>成功率</th></tr></thead>
+                  <tbody id="analyticsBehaviorBody"><tr><td colspan="4" class="empty">加载中...</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="admin-card">
+              <h3 class="card-title">转化漏斗</h3>
+              <div id="analyticsFunnelList" class="analytics-funnel-list"><p class="empty">加载中...</p></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="admin-section">
+          <div class="admin-card">
+            <h3 class="card-title">错误 / 慢请求质量</h3>
+            <div id="analyticsQualityGrid" class="analytics-quality-grid"><p class="empty">加载中...</p></div>
+            <div class="table-wrap analytics-table-wrap analytics-quality-table-wrap">
+              <table class="admin-table analytics-table">
+                <thead><tr><th>类别</th><th>目标</th><th>次数</th><th>耗时 / 错误</th></tr></thead>
+                <tbody id="analyticsQualityBody"><tr><td colspan="4" class="empty">加载中...</td></tr></tbody>
+              </table>
+            </div>
           </div>
         </section>
       </section>
