@@ -639,7 +639,9 @@ function assessCloudThickness(weatherData, prevHourData = null, context = {}) {
   let thinEvidence = 0;
   let thickEvidence = 0;
 
-  // --- 辐射信号：短波/漫射只做证据展示，不参与云厚扣分。日落低太阳高度下该信号不稳定。 ---
+  // --- 辐射信号：单独的低辐射不参与扣分；只有与厚中云和灰空气同时出现才作为透射证据。 ---
+  const targetShortwaveRadiation = Number(weatherData.shortwaveRadiation);
+  const targetDirectRadiation = Number(weatherData.directRadiation);
   let sw = weatherData.shortwaveRadiation;
   let df = weatherData.diffuseRadiation;
   let usedPrevHour = false;
@@ -669,6 +671,25 @@ function assessCloudThickness(weatherData, prevHourData = null, context = {}) {
   // --- 展示证据：散射比不再作为厚云扣分输入 ---
   if (sw != null && df != null && sw > 0) {
     diffuseRatio = df / sw;
+  }
+
+  const highClouds = Number(weatherData.highClouds || 0);
+  const midClouds = Number(weatherData.midClouds || 0);
+  const { aod, pm25, pm10 } = getAerosolMetrics(weatherData);
+  const aqi = Number(weatherData.aqi);
+  const isMidCloudCurtain = cc >= 90 && lowClouds <= 10 && midClouds >= 70 && highClouds < 45;
+  const hasWeakDirectLight =
+    Number.isFinite(targetDirectRadiation) && targetDirectRadiation <= 5 &&
+    Number.isFinite(targetShortwaveRadiation) && targetShortwaveRadiation <= 40;
+  const hasGrayAir =
+    (aod != null && aod >= 0.55) ||
+    (pm25 != null && pm25 >= 55) ||
+    (pm10 != null && pm10 >= 100) ||
+    (Number.isFinite(aqi) && aqi >= 150) ||
+    (Number.isFinite(waterIndex) && waterIndex >= 30);
+  if (isMidCloudCurtain && hasWeakDirectLight && hasGrayAir) {
+    thickEvidence += 3.0;
+    signals.push('low_solar_transmission');
   }
 
   // --- 信号4：天气码兜底 ---
@@ -702,8 +723,6 @@ function assessCloudThickness(weatherData, prevHourData = null, context = {}) {
   }
 
   const score = parseFloat((thinEvidence - thickEvidence).toFixed(2));
-  const highClouds = Number(weatherData.highClouds || 0);
-  const midClouds = Number(weatherData.midClouds || 0);
   const highOnlyUpperCarrier = lowClouds <= 10 && highClouds >= 80 && midClouds < 30;
   const carrierRelief = highOnlyUpperCarrier ? 0.08 : 0;
   if (carrierRelief > 0) {

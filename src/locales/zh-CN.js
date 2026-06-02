@@ -108,12 +108,18 @@ export default {
     methodology: {
       title: '火烧云计算方法',
       intro: '当前火烧云指数先判断“有没有可显色载体”，再判断太阳方向光路是否能把光打到载体上，最后用空气显色条件做小幅修正。它不是把一串好条件连续相乘，所以高云 100% 不会自动满分。',
-      versionLabel: '算法版本：2026.05.27-cloud-thickness-proportional-v2',
-      versionDesc: '本版将云厚扣分改为“画布修正前分×30%×云厚压力”，去掉固定 -28/24 上限，并将湿灰幕场景校准到小烧/可看但不强。',
+      versionLabel: '算法版本：2026.06.02-low-solar-transmission-v1',
+      versionDesc: '本版在云厚评估中加入低太阳透射证据：direct/shortwave 极低只和高总云量、高中云、弱高云载体、灰空气组合使用，不单独扣死正常低太阳高度晚霞。',
       changelogTitle: "版本更新记录",
       changelogHint: "近三个月内的算法更新都会放在这里，可滚动回看原因、影响和验证方式",
       changelog: {
         latest: {
+          date: '2026-06-02',
+          title: '低太阳透射证据 v1',
+          summary: '在云厚评估中恢复 directRadiation / shortwaveRadiation 作为太阳透射证据；只有中云/总云量很高、高云载体弱且灰空气明显时才压分，不单独因日落低辐射扣死。',
+          validation: '验证：2026-06-02 北京样本无降水，但 direct=0、shortwave=12、AOD=0.87、AQI=151，评分从偏高压回低概率区间。'
+        },
+        cloudThickness: {
           date: '2026-05-27',
           title: '云厚比例折损 v2',
           summary: '云厚扣分改为画布修正前分 × 30% × 云厚压力，去掉固定 -28/24 上限；湿灰幕场景同步按小烧/可看但不强校准。',
@@ -183,7 +189,7 @@ export default {
           midCloud: '中云：权重 0.45，也是可染色载体；高云与中云同时存在时会提高画布稳定性',
           lowCloudBonus: '低云：权重只有 0.10，主要进入低云惩罚和光路遮挡；低云少不加分，只是不扣分',
           formula: '中高云画布量 = 高云×0.75 + 中云×0.45\n画布基础分：≤10→10，10–30→40–70，30–70→70–100，70–100→70–50，>100→43\n画布分 = 区间分 × 低云惩罚 × 阴天惩罚 + 高云 bonus + 云种修正 + 云厚修正',
-          highCloudBonus: '高云 bonus：高云>50 且低云<30 时，按 (高云-50)/50×6 加 0–6 分。云种/云厚是加减分：高层云 +4、高积云 +6、薄云 +5；偏厚/厚云按当前画布比例连续扣分，公式为 画布修正前分×30%×云厚压力。低云类云种还会压低光路门控'
+          highCloudBonus: '高云 bonus：高云>50 且低云<30 时，按 (高云-50)/50×6 加 0–6 分。云种/云厚是加减分：高层云 +4、高积云 +6、薄云 +5；偏厚/厚云按当前画布比例连续扣分，公式为 画布修正前分×30%×云厚压力。若中云/总云量很高、高云载体弱、direct/shortwave 极低且灰空气明显，会加入低太阳透射证据。低云类云种还会压低光路门控'
         },
         lightPath: {
           title: '2. 光路评估',
@@ -411,7 +417,9 @@ export default {
           upperCloudCanvas: '中高云画布 {{upper}} = 高云 {{high}}×0.75 + 中云 {{mid}}×0.45；区间分 {{range}}',
           highCloudBonus: '高云主导 bonus {{bonus}}',
           cloudTypeAdjustment: '云种 {{reason}} {{bonus}}',
-          cloudThicknessAdjustment: '云厚 {{thickness}}，画布 {{base}} × 30% × 压力 {{pressure}}，最大折损 {{max}}；散射 {{diffuse}}%，水汽 {{water}}，载体缓冲 {{relief}}',
+          cloudThicknessAdjustment: '云厚 {{thickness}}，画布 {{base}} × 30% × 压力 {{pressure}}，最大折损 {{max}}；散射 {{diffuse}}%，水汽 {{water}}，载体缓冲 {{relief}}，低太阳透射 {{solar}}',
+          lowSolarTransmissionYes: '命中',
+          lowSolarTransmissionNo: '未命中',
           aerosolCarrier: '云层很少时，薄雾在光路通畅时可承接一点暖色，光路激活 ×{{activation}}',
           lightPath: '阳光是否能打到云层',
           renderingFactors: '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}',

@@ -81,4 +81,37 @@ describe('score breakdown i18n', () => {
     expect(html).not.toContain('Rendering');
     expect(html).not.toContain('Visibility 4km');
   });
+
+  test('Chinese score detail ledger explains low solar transmission evidence', () => {
+    i18n.currentLanguage = 'zh-CN';
+    const controller = new PredictionController(mockStorageService);
+    const prediction = {
+      ...makePrediction(),
+      cloudThickness: {
+        thickness: 'thick',
+        reasons: ['low_solar_transmission'],
+        evidence: {
+          pressure: 1,
+          diffuseRatio: 1,
+          waterIndex: 35.1,
+          carrierRelief: 0
+        }
+      },
+      canvasAnalysis: {
+        ...makePrediction().canvasAnalysis,
+        cloudThicknessAdjustment: {
+          adjustment: -18,
+          pressure: 1,
+          baseScore: 60,
+          maxPenalty: 18
+        }
+      }
+    };
+
+    const html = controller.renderScoreBreakdownPopover(prediction);
+
+    expect(html).toContain('低太阳透射');
+    expect(html).toContain('命中');
+    expect(html).not.toContain('low solar transmission hit');
+  });
 });

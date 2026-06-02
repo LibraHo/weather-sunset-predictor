@@ -538,11 +538,19 @@
           <div class="methodology-changelog-scroll" tabindex="0" role="region" aria-labelledby="methodology-changelog-title">
             <ol class="methodology-changelog-list">
               <li>
-                <time datetime="2026-05-27" data-i18n="home.methodology.changelog.latest.date">2026-05-27</time>
+                <time datetime="2026-06-02" data-i18n="home.methodology.changelog.latest.date">2026-06-02</time>
                 <div>
-                  <strong data-i18n="home.methodology.changelog.latest.title">云厚比例折损 v2</strong>
-                  <p data-i18n="home.methodology.changelog.latest.summary">云厚扣分改为画布修正前分 × 30% × 云厚压力，去掉固定 -28/24 上限；湿灰幕场景同步按小烧/可看但不强校准。</p>
-                  <small data-i18n="home.methodology.changelog.latest.validation">验证：2026-05-27 北京样本云厚压力 0.78，画布 76.7 时扣分约 -18；最终保留在小烧/可顺带看区间。</small>
+                  <strong data-i18n="home.methodology.changelog.latest.title">低太阳透射证据 v1</strong>
+                  <p data-i18n="home.methodology.changelog.latest.summary">在云厚评估中恢复 directRadiation / shortwaveRadiation 作为太阳透射证据；只有中云/总云量很高、高云载体弱且灰空气明显时才压分，不单独因日落低辐射扣死。</p>
+                  <small data-i18n="home.methodology.changelog.latest.validation">验证：2026-06-02 北京样本无降水，但 direct=0、shortwave=12、AOD=0.87、AQI=151，评分从偏高压回低概率区间。</small>
+                </div>
+              </li>
+              <li>
+                <time datetime="2026-05-27" data-i18n="home.methodology.changelog.cloudThickness.date">2026-05-27</time>
+                <div>
+                  <strong data-i18n="home.methodology.changelog.cloudThickness.title">云厚比例折损 v2</strong>
+                  <p data-i18n="home.methodology.changelog.cloudThickness.summary">云厚扣分改为画布修正前分 × 30% × 云厚压力，去掉固定 -28/24 上限；湿灰幕场景同步按小烧/可看但不强校准。</p>
+                  <small data-i18n="home.methodology.changelog.cloudThickness.validation">验证：2026-05-27 北京样本云厚压力 0.78，画布 76.7 时扣分约 -18；最终保留在小烧/可顺带看区间。</small>
                 </div>
               </li>
               <li>
@@ -580,8 +588,8 @@
             </ol>
           </div>
           <div class="methodology-version-card">
-            <strong data-i18n="home.methodology.versionLabel">算法版本：2026.05.27-cloud-thickness-proportional-v2</strong>
-            <span data-i18n="home.methodology.versionDesc">本版将云厚扣分改为“画布修正前分×30%×云厚压力”，去掉固定 -28/24 上限，并将湿灰幕场景校准到小烧/可看但不强。</span>
+            <strong data-i18n="home.methodology.versionLabel">算法版本：2026.06.02-low-solar-transmission-v1</strong>
+            <span data-i18n="home.methodology.versionDesc">本版在云厚评估中加入低太阳透射证据：direct/shortwave 极低只和高总云量、高中云、弱高云载体、灰空气组合使用，不单独扣死正常低太阳高度晚霞。</span>
           </div>
         </div>
       </section>
