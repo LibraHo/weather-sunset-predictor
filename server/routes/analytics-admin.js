@@ -42,14 +42,35 @@ function parseDays(value) {
 
 function parseRangeDays(range) {
   const normalized = String(range || '').trim().toLowerCase();
-  if (normalized === 'today') return 1;
   const match = normalized.match(/^(\d+)d$/);
   if (match) return parseDays(match[1]);
   return null;
 }
 
-function parseQueryDays(query = {}) {
-  return parseRangeDays(query.range) || parseDays(query.days);
+function formatDateOnly(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function parseQueryOptions(query = {}, now = new Date()) {
+  const startDate = query.startDate || undefined;
+  const endDate = query.endDate || undefined;
+  const range = String(query.range || '').trim().toLowerCase();
+  if (range === 'today' && !startDate && !endDate) {
+    const today = formatDateOnly(now);
+    return {
+      days: 1,
+      startDate: today,
+      endDate: today
+    };
+  }
+  return {
+    days: parseRangeDays(range) || parseDays(query.days),
+    startDate,
+    endDate
+  };
 }
 
 function roundPercent(value) {
@@ -64,11 +85,7 @@ function asArray(value) {
 }
 
 async function readEvents(analyticsService, req) {
-  const options = {
-    days: parseQueryDays(req.query),
-    startDate: req.query.startDate || undefined,
-    endDate: req.query.endDate || undefined
-  };
+  const options = parseQueryOptions(req.query);
 
   if (analyticsService && typeof analyticsService.listEvents === 'function') {
     return asArray(await analyticsService.listEvents(options));

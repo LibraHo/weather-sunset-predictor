@@ -97,20 +97,29 @@ describe('analytics admin routes', () => {
     expect(res.body.summary.locations).toEqual([{ key: 'Beijing', count: 2 }]);
   });
 
-  test('range selector is passed to analytics service as day windows', async () => {
+  test('range selector is passed to analytics service with calendar-day bounds for today', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-06-02T10:30:00Z'));
     const { app, analyticsService } = makeApp([]);
 
-    await request(app)
-      .get('/api/admin/analytics/summary?range=today')
-      .expect(200);
-    await request(app)
-      .get('/api/admin/analytics/summary?range=30d')
-      .expect(200);
-    await request(app)
-      .get('/api/admin/analytics/summary?days=14')
-      .expect(200);
+    try {
+      await request(app)
+        .get('/api/admin/analytics/summary?range=today')
+        .expect(200);
+      await request(app)
+        .get('/api/admin/analytics/summary?range=30d')
+        .expect(200);
+      await request(app)
+        .get('/api/admin/analytics/summary?days=14')
+        .expect(200);
+    } finally {
+      jest.useRealTimers();
+    }
 
-    expect(analyticsService.listEvents.mock.calls.map(([options]) => options.days)).toEqual([1, 30, 14]);
+    expect(analyticsService.listEvents.mock.calls.map(([options]) => options)).toEqual([
+      { days: 1, startDate: '2026-06-02', endDate: '2026-06-02' },
+      { days: 30, startDate: undefined, endDate: undefined },
+      { days: 14, startDate: undefined, endDate: undefined }
+    ]);
   });
 
   test('behavior and funnel expose page, share, map, upload, and API application entries', async () => {
