@@ -533,11 +533,12 @@ function estimateCloudBaseHeight(weatherData) {
 function hasClearAirForUpperCloudCarrier(weatherData) {
   const visibility = Number(weatherData.visibility ?? 20);
   const precipitation = Number(weatherData.precipitation || 0);
-  const { aod, pm10, dust } = getAerosolMetrics(weatherData);
+  const { aod, pm25, pm10, dust } = getAerosolMetrics(weatherData);
 
   return precipitation <= 0.2
     && visibility >= 15
     && (aod == null || aod <= 0.45)
+    && (pm25 == null || pm25 < 65)
     && (pm10 == null || pm10 < 120)
     && (dust == null || dust < 80);
 }
@@ -847,16 +848,22 @@ function assessThickHighCloudPenalty(weatherData, cloudThickness) {
   };
 }
 
+function parseOptionalFiniteMetric(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
 function getAerosolMetrics(weatherData) {
-  const aod = Number(weatherData.aerosolOpticalDepth ?? weatherData.aod);
-  const pm25 = Number(weatherData.pm2_5 ?? weatherData.pm25);
-  const pm10 = Number(weatherData.pm10);
-  const dust = Number(weatherData.dust);
+  const aod = parseOptionalFiniteMetric(weatherData.aerosolOpticalDepth ?? weatherData.aod);
+  const pm25 = parseOptionalFiniteMetric(weatherData.pm2_5 ?? weatherData.pm25);
+  const pm10 = parseOptionalFiniteMetric(weatherData.pm10);
+  const dust = parseOptionalFiniteMetric(weatherData.dust);
   return {
-    aod: Number.isFinite(aod) ? aod : null,
-    pm25: Number.isFinite(pm25) ? pm25 : null,
-    pm10: Number.isFinite(pm10) ? pm10 : null,
-    dust: Number.isFinite(dust) ? dust : null
+    aod,
+    pm25,
+    pm10,
+    dust
   };
 }
 
@@ -1075,10 +1082,11 @@ function assessHighCloudCarrierAdjustment(weatherData, aerosolHazeCap, thickHigh
   }
 
   const { aod, pm25, pm10, dust } = getAerosolMetrics(weatherData);
-  const hasAirQualityMetric = aod != null || pm25 != null || pm10 != null || dust != null;
+  const hasAirQualityMetric = [aod, pm25, pm10, dust].some(value => Number.isFinite(value));
   const airClearEnough = hasAirQualityMetric
     && visibility >= 15
     && (aod == null || aod <= 0.45)
+    && (pm25 == null || pm25 < 65)
     && (pm10 == null || pm10 < 120)
     && (dust == null || dust < 80);
   const carrierStrong = ((highClouds >= 85) || (highClouds >= 80 && midClouds >= 30)) && lowClouds <= 10 && airClearEnough;
