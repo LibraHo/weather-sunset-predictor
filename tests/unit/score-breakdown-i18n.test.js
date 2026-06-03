@@ -21,7 +21,7 @@ const mockStorageService = {
 
 function makePrediction() {
   return {
-    score: 15,
+    score: 35,
     factors: {
       visibility: { value: 4 },
       humidity: { value: 88 },
@@ -46,8 +46,8 @@ function makePrediction() {
       aerosolScattering: { factor: 0.9 }
     },
     severeWeatherCap: {
-      reason: 'overcast_fog_cap_15',
-      score: 15
+      reason: 'overcast_low_visibility_cap_35',
+      score: 35
     }
   };
 }
@@ -71,7 +71,7 @@ describe('score breakdown i18n', () => {
     expect(html).toContain('光路');
     expect(html).toContain('発色補正');
     expect(html).toContain('最終スコア');
-    expect(html).toContain('低い雲と低い視程で空が灰色に見えやすいです');
+    expect(html).toContain('雲量が非常に多く視程も低いため、スコアを保守的に下げています');
 
     expect(html).not.toContain('score-ledger-score-block');
     expect(html).not.toContain('score-ledger-context');

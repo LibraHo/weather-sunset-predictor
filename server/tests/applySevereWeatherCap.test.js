@@ -105,4 +105,21 @@ describe('applySevereWeatherCap regression', () => {
     expect(result.score).toBeLessThanOrEqual(35);
     expect(result.reason).not.toBeNull();
   });
+
+  test('Case H: 总云量高+低能见度但低云很少 - 只应保守 cap35，不应 cap15', () => {
+    const weatherData = {
+      cloudCover: 100,
+      lowClouds: 2,
+      midClouds: 84,
+      highClouds: 72,
+      visibility: 5,
+      precipitation: 0.4,
+      recentPrecipitation6h: 1.2,
+      recentRainHours: 3,
+      weatherCode: null
+    };
+    const result = applySevereWeatherCap(80, weatherData);
+    expect(result.score).toBe(35);
+    expect(result.reason).toBe('overcast_low_visibility_cap_35');
+  });
 });

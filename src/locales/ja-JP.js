@@ -418,7 +418,8 @@ apiAccess: 'API接続'
         "reasons": {
           "precipitationCap45": "雨と低い雲で観賞条件が大きく下がります",
           "overcastCap35": "低い雲が太陽方向をふさぎ、光が雲まで届きにくいです",
-          "overcastFogCap15": "低い雲と低い視程で空が灰色に見えやすいです",
+          "overcastLowVisibilityCap35": "雲量が非常に多く視程も低いため、スコアを保守的に下げています",
+          "overcastFogCap15": "雲量が非常に多く視程も低いため、空が灰色に見えやすいです",
           "rainyMidCloudOvercastCap35": "雨上がりの水蒸気が多く、色が出にくいです",
           "noVisibleSunsetPathCap5": "夕日の光が雲まで届きにくいです",
           "noVisibleSunsetPathCap15": "雨後の灰幕で夕日の光が遮られやすいです",
