@@ -1739,6 +1739,7 @@ class PredictionController {
     const carrierAdjustment = prediction?.highCloudCarrierAdjustment;
     const aerosolCarrier = prediction?.aerosolCarrierScore || prediction?.breakdown?.aerosolCarrierScore;
     const postRainAdjustment = prediction?.postRainAdjustment;
+    const scoringV2 = prediction?.scoringV2;
     const lightPathAnalysis = prediction?.lightPathAnalysis || {};
     const directional = lightPathAnalysis.directionalAnalysis;
 
@@ -1788,7 +1789,9 @@ class PredictionController {
     const aod = Number(weather.aod);
     const grayCurtainMode = postRainAdjustment?.mode === 'post_rain_gray_curtain' || postRainAdjustment?.mode === 'humid_haze_gray_curtain';
     let renderingLevel = 'fair';
-    if (
+    if (scoringV2?.airMode === 'warm_scattering_path_open') {
+      renderingLevel = 'good';
+    } else if (
       grayCurtainMode ||
       aerosolHazeCap?.applied ||
       weather.visibility < 8 ||
@@ -1799,6 +1802,7 @@ class PredictionController {
       renderingLevel = 'weak';
     } else if (
       postRainAdjustment?.mode === 'post_rain_clear' ||
+      scoringV2?.airMode === 'warm_scattering_path_open' ||
       aerosolCarrier?.activatedScore >= 12 ||
       renderingFactor >= 1.03 ||
       (weather.visibility >= 15 && weather.humidity >= 35 && weather.humidity <= 75 && (!Number.isFinite(aod) || aod <= 0.35))
@@ -1824,7 +1828,7 @@ class PredictionController {
       weather.low >= 25 ||
       weather.visibility < 15 ||
       weather.humidity > 75 ||
-      (Number.isFinite(aod) && aod > 0.35) ||
+      (scoringV2?.airMode !== 'warm_scattering_path_open' && Number.isFinite(aod) && aod > 0.35) ||
       precipitation > 0.1
     );
     if (strongLimit) {
@@ -2004,6 +2008,7 @@ class PredictionController {
     const carrierAdjustment = prediction?.highCloudCarrierAdjustment;
     const directionalCurtainCarrier = prediction?.directionalCurtainCarrier || prediction?.breakdown?.directionalCurtainCarrier;
     const postRainAdjustment = prediction?.postRainAdjustment;
+    const scoringV2 = prediction?.scoringV2;
     const severeWeatherCap = prediction?.severeWeatherCap;
     const occlusionAnalysis = prediction?.occlusionAnalysis;
     const geometricModel = prediction?.geometricModel;
@@ -2044,7 +2049,8 @@ class PredictionController {
       no_visible_sunset_path_cap_15: ledgerText('reasons.noVisibleSunsetPathCap15', {}, 'rainy gray sky likely blocks sunset light', '雨后灰幕偏重，日落光线大概率被挡住'),
       extreme_dust_haze_cap_28: ledgerText('reasons.extremeDustHazeCap28', {}, 'heavy dust or haze suppresses the glow', '强沙尘或灰幕会压住霞光'),
       severe_haze_cap_35: ledgerText('reasons.severeHazeCap35', {}, 'heavy haze makes colors hard to show', '重度灰霾让颜色不容易出来'),
-      moderate_haze_cap_45: ledgerText('reasons.moderateHazeCap45', {}, 'haze weakens orange-red color', '灰霾会削弱红橙色')
+      moderate_haze_cap_45: ledgerText('reasons.moderateHazeCap45', {}, 'haze weakens orange-red color', '灰霾会削弱红橙色'),
+      haze_warm_scattering_path_open: ledgerText('reasons.hazeWarmScatteringPathOpen', {}, 'open sunset path turns moderate particles into warm orange-red scattering', '日落光路打开，适度颗粒增强橙红散射')
     }[reason] || reason || ledgerText('reasons.adjustmentApplied', {}, 'score adjusted for limiting conditions', '已按限制条件修正'));
 
     const capEvents = [
@@ -2113,6 +2119,21 @@ class PredictionController {
         label: ledgerText('labels.carrierFloor', {}, 'Carrier floor', '载体保底'),
         value: `≥${fmt(carrierAdjustment.floor, 0)}`,
         detail: ledgerText('details.carrierFloor', {}, 'clear high-cloud carrier prevents over-penalty', '高云载体清透，避免误伤低估'),
+        tone: 'good'
+      } : null,
+      scoringV2?.applied && scoringV2?.airMode === 'warm_scattering_path_open' ? {
+        label: ledgerText('labels.scoringV2', {}, 'Open-path warm scattering', '开口暖色散射'),
+        value: fmt(scoringV2.score, 1),
+        detail: ledgerText(
+          'details.scoringV2',
+          {
+            carrier: fmt(scoringV2.cloudCarrier, 1),
+            path: fmt(scoringV2.pathFactor, 2),
+            air: fmt(scoringV2.airFactor, 2)
+          },
+          'cloud carrier {{carrier}} × sunset path {{path}} × air rendering {{air}}',
+          '云载体 {{carrier}} × 日落光路 {{path}} × 空气显色 {{air}}'
+        ),
         tone: 'good'
       } : null,
       aerosolCarrier?.activatedScore >= 12 ? {

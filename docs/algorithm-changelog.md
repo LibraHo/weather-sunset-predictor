@@ -7,6 +7,23 @@
 3. 火烧云形成条件文字分析
 4. 对应回归测试/样本回放
 
+## 2026.06.03-sunset-scoring-v2
+
+- 日期：2026-06-03
+- 代码：`server/services/EnhancedPredictionService.js`、`src/controllers/PredictionController.js`、`src/locales/*.js`
+- 背景：北京 2026-06-03 实况无雨，光非常美且呈橙红色，主观约 68；旧逻辑把 AOD/dust 偏高一概视为灰幕风险，将光路开且有中高云接光的样本压到 35。Alex 明确要求不要为单个样本乱加特殊规则，而要调整评分系统。
+- 改动：
+  - 新增通用 `scoringV2` 解释层：`云载体 × 日落光路 × 空气显色`。
+  - 当日落方向光路开、低云不堵、能见度可接受时，轻/中度 AOD/PM/dust 作为橙红散射正向因素；无光路、极端霾、低能见度、降水和厚低云仍优先压制。
+  - 火烧云分析和评分细则同步显示“四分量”口径，不再把开口暖色散射解释成灰幕失败。
+- 预期影响：
+  - 2026-06-03 北京从 35 回到约 66，落入 60–68 实况区间。
+  - 2026-06-02 北京无雨灰幕样本保持约 30，不因 AOD/PM 存在而被抬高。
+- 回归测试：
+  - `tests/fixtures/real-sunset-cases/2026-06-03-beijing-sunset.json`：开口暖色散射样本。
+  - `tests/unit/server/real-sunset-case-library.test.js`：6/2 与 6/3 真实样本统一回放。
+  - `tests/unit/server/EnhancedPredictionService.test.js`：厚高云、极端霾、低云/光路等反例继续通过。
+
 ## 2026.05.13-formation-factors-v1
 
 - 日期：2026-05-13

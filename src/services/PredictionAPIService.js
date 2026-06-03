@@ -304,6 +304,7 @@ class PredictionAPIService {
     prediction.aerosolCarrierScore = data.aerosolCarrierScore || data.breakdown?.aerosolCarrierScore || null;
     prediction.lightPathAnalysis = data.lightPathAnalysis || null;
     prediction.renderingAnalysis = data.renderingAnalysis || null;
+    prediction.scoringV2 = data.scoringV2 || null;
     prediction.aerosolHazeCap = data.aerosolHazeCap || null;
     prediction.highCloudCarrierAdjustment = data.highCloudCarrierAdjustment || null;
     prediction.postRainAdjustment = data.postRainAdjustment || null;

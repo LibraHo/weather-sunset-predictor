@@ -386,6 +386,7 @@ apiAccess: 'API接続'
           "postRainCap": "雨上がりの灰幕",
           "displayCalibration": "表示スコア調整",
           "aerosolCarrier": "エアロゾル載体",
+          "scoringV2": "開いた光路の暖色散乱",
           "evidence": "計算根拠"
         },
         "details": {
@@ -398,6 +399,7 @@ apiAccess: 'API接続'
           "lowSolarTransmissionYes": "該当",
           "lowSolarTransmissionNo": "該当なし",
           "aerosolCarrier": "雲が少ない時、光路が開いていれば薄い霞も暖色を少し運べます。光路活性 ×{{activation}}",
+          "scoringV2": "雲キャリア {{carrier}} × 日没光路 {{path}} × 空気の発色 {{air}}",
           "lightPath": "日光が雲層へ届くか",
           "renderingFactors": "視程 ×{{visibility}}、湿度 ×{{humidity}}、エアロゾル ×{{aerosol}}",
           "afterAdjustments": "天候と見通しを加味した後",
@@ -426,6 +428,7 @@ apiAccess: 'API接続'
           "extremeDustHazeCap28": "強い黄砂や霞が夕焼けの色を弱めます",
           "severeHazeCap35": "濃い霞で色が出にくいです",
           "moderateHazeCap45": "霞が橙や赤の色を弱めます",
+          "hazeWarmScatteringPathOpen": "日没方向の光路が開き、適度な粒子が暖かい橙赤色の散乱を強めます",
           "denseCarrierCanvasOnly": "mid/high clouds can still catch sunset light",
           "adjustmentApplied": "天候による調整を反映",
           "displayCalibration": "最終表示スコアを予測ステータスの帯に合わせます",
