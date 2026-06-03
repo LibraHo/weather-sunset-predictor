@@ -1213,7 +1213,12 @@ describe('EnhancedPredictionService', () => {
         shortwaveRadiation: 5,
         directRadiation: 0,
         diffuseRadiation: 5,
-        waterVapourColumn: 32.8
+        waterVapourColumn: 32.8,
+        aerosolOpticalDepth: null,
+        dust: null,
+        pm2_5: null,
+        pm10: null,
+        aqi: null
       };
 
       const result = EnhancedPredictionService.calculateEnhancedPrediction(
