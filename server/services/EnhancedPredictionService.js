@@ -999,7 +999,7 @@ function scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore = {}, we
   score = parseFloat(clamp(score, 0, 62).toFixed(1));
   let floor = null;
   if (score >= 55 && upperSignal >= 75 && lowMidBlock <= 24 && nearLowMidBlock <= 30) {
-    floor = parseFloat(Math.min(score, 60).toFixed(1));
+    floor = 50;
   } else if (score >= 42) {
     floor = lowMidBlock >= 38 ? 30 : 35;
   } else if (score >= 30) {
@@ -1068,7 +1068,7 @@ function assessAerosolHazeCap(weatherData) {
   }
 
   if (hasUpperCloudCarrier && severeHaze && opticalHazeOnly) {
-    return { applied: true, cap: 62, level: 'optical', reason: 'optical_haze_carrier_cap_62', metrics: { aod, pm25, pm10, dust, visibility } };
+    return { applied: true, cap: 55, level: 'optical', reason: 'optical_haze_carrier_cap_55', metrics: { aod, pm25, pm10, dust, visibility } };
   }
 
   if (hasUpperCloudCarrier && severeHaze) {
