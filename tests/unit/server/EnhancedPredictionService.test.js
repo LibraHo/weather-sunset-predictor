@@ -1261,6 +1261,61 @@ describe('EnhancedPredictionService', () => {
       expect(result.score).toBeLessThan(65);
     });
 
+    test('should keep optical-haze upper-cloud directional curtain around 50 points', () => {
+      const weatherData = {
+        cloudCover: 98,
+        lowClouds: 0,
+        midClouds: 100,
+        highClouds: 100,
+        humidity: 62,
+        visibility: 20,
+        precipitation: 0,
+        recentPrecipitation6h: 0,
+        recentRainHours: 0,
+        shortwaveRadiation: 7,
+        directRadiation: 0,
+        diffuseRadiation: 7,
+        waterVapourColumn: 32.8,
+        aerosolOpticalDepth: 0.72,
+        dust: 96,
+        pm2_5: 39.5,
+        pm10: 91.3,
+        aqi: 116
+      };
+      const remoteCloudData = {
+        samples: [
+          { lowCloud: 0, midCloud: 100, highCloud: 100, totalCloud: 97 },
+          { lowCloud: 0, midCloud: 72, highCloud: 25, totalCloud: 93 },
+          { lowCloud: 0, midCloud: 51, highCloud: 0, totalCloud: 80 },
+          { lowCloud: 0, midCloud: 33, highCloud: 0, totalCloud: 84 }
+        ]
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData,
+        new Date('2026-06-03T11:37:00.000Z'),
+        39.9042,
+        116.4074,
+        'sunset',
+        { remoteCloudData }
+      );
+
+      expect(result.directionalCurtainCarrier).toMatchObject({
+        applied: true,
+        floor: 50,
+        reason: 'solar_direction_curtain_carrier'
+      });
+      expect(result.aerosolHazeCap).toMatchObject({
+        applied: true,
+        cap: 55,
+        reason: 'optical_haze_carrier_cap_55'
+      });
+      expect(result.highCloudCarrierAdjustment.applied).toBe(false);
+      expect(result.score).toBeGreaterThanOrEqual(50);
+      expect(result.score).toBeLessThanOrEqual(55);
+      expect(result.status).toBe('good_glow');
+    });
+
     test('should not let carrier floor override thick high-cloud cap', () => {
       const weatherData = {
         cloudCover: 100,

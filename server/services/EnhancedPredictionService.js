@@ -997,9 +997,14 @@ function scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore = {}, we
   }
 
   score = parseFloat(clamp(score, 0, 62).toFixed(1));
-  const floor = score >= 42
-    ? (lowMidBlock >= 38 ? 30 : 35)
-    : (score >= 30 ? 24 : null);
+  let floor = null;
+  if (score >= 55 && upperSignal >= 75 && lowMidBlock <= 24 && nearLowMidBlock <= 30) {
+    floor = 50;
+  } else if (score >= 42) {
+    floor = lowMidBlock >= 38 ? 30 : 35;
+  } else if (score >= 30) {
+    floor = 24;
+  }
 
   return {
     applied: score >= 24,
@@ -1050,10 +1055,20 @@ function assessAerosolHazeCap(weatherData) {
   const hasUpperCloudCarrier = (highClouds >= 65 || (midClouds >= 45 && highClouds >= 45)) && lowClouds <= 20;
   const extremeHaze = (aod != null && aod >= 0.8) || (dust != null && dust >= 300) || (pm10 != null && pm10 >= 250);
   const severeHaze = (aod != null && aod >= 0.55) || (dust != null && dust >= 150) || (pm10 != null && pm10 >= 180) || (pm25 != null && pm25 >= 90) || visibility < 6;
+  const opticalHazeOnly =
+    aod != null && aod >= 0.55 && aod < 0.8 &&
+    visibility >= 12 &&
+    (pm25 == null || pm25 < 65) &&
+    (pm10 == null || pm10 < 120) &&
+    (dust == null || dust < 150);
   const moderateHaze = (aod != null && aod >= 0.45) || (dust != null && dust >= 80) || (pm10 != null && pm10 >= 120) || visibility < 8;
 
   if (hasUpperCloudCarrier && extremeHaze) {
     return { applied: true, cap: 28, level: 'extreme', reason: 'extreme_dust_haze_cap_28', metrics: { aod, pm25, pm10, dust, visibility } };
+  }
+
+  if (hasUpperCloudCarrier && severeHaze && opticalHazeOnly) {
+    return { applied: true, cap: 55, level: 'optical', reason: 'optical_haze_carrier_cap_55', metrics: { aod, pm25, pm10, dust, visibility } };
   }
 
   if (hasUpperCloudCarrier && severeHaze) {
@@ -2132,8 +2147,13 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
 
   if (aerosolHazeCap.applied) {
     adjustedScore = Math.min(adjustedScore, aerosolHazeCap.cap);
-    adjustedStatus = adjustedScore < 40 ? 'no_fire_cloud' : 'light_glow';
-    adjustedDescription = aerosolHazeCap.level === 'extreme' ? 'haze_light_suppressed' : 'weak_local_colors';
+    if (aerosolHazeCap.level === 'optical' && adjustedScore >= 50) {
+      adjustedStatus = 'good_glow';
+      adjustedDescription = 'conditions_good';
+    } else {
+      adjustedStatus = adjustedScore < 40 ? 'no_fire_cloud' : 'light_glow';
+      adjustedDescription = aerosolHazeCap.level === 'extreme' ? 'haze_light_suppressed' : 'weak_local_colors';
+    }
   }
 
   const postRainMode = renderingFactor.breakdown?.specialMode || null;
