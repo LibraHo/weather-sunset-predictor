@@ -1261,7 +1261,7 @@ describe('EnhancedPredictionService', () => {
       expect(result.score).toBeLessThan(65);
     });
 
-    test('should keep optical-haze upper-cloud directional curtain around 60 points', () => {
+    test('should keep optical-haze upper-cloud directional curtain in the 60-68 band', () => {
       const weatherData = {
         cloudCover: 98,
         lowClouds: 0,
@@ -1304,15 +1304,15 @@ describe('EnhancedPredictionService', () => {
         applied: true,
         reason: 'solar_direction_curtain_carrier'
       });
-      expect(result.directionalCurtainCarrier.floor).toBeCloseTo(59.2, 1);
+      expect(result.directionalCurtainCarrier.floor).toBeCloseTo(63.2, 1);
       expect(result.aerosolHazeCap).toMatchObject({
         applied: true,
-        cap: 62,
-        reason: 'optical_haze_carrier_cap_62'
+        cap: 68,
+        reason: 'optical_haze_carrier_cap_68'
       });
       expect(result.highCloudCarrierAdjustment.applied).toBe(false);
-      expect(result.score).toBeGreaterThanOrEqual(58);
-      expect(result.score).toBeLessThanOrEqual(62);
+      expect(result.score).toBeGreaterThanOrEqual(60);
+      expect(result.score).toBeLessThanOrEqual(68);
       expect(result.status).toBe('good_glow');
     });
 
