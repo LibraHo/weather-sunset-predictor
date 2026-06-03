@@ -1,0 +1,132 @@
+{
+  "id": "2026-05-18-beijing-yuyuantan-sunset-rain-season-high-cloud-path",
+  "title": "2026-05-18 Beijing/Yuyuantan sunset: rain-season high cloud path, good but not 78+",
+  "location": {
+    "name": "Beijing / Yuyuantan",
+    "nameZh": "北京/玉渊潭",
+    "lat": 39.9042,
+    "lon": 116.4074,
+    "timezone": "Asia/Shanghai"
+  },
+  "event": {
+    "period": "sunset",
+    "localDate": "2026-05-18",
+    "calculationTimeUtc": "2026-05-18T11:24:00.000Z",
+    "sunAzimuth": 300
+  },
+  "feedback": {
+    "source": "Alex历史反馈与算法复盘",
+    "reportedAt": "2026-05-18T20:00:00+08:00",
+    "summary": "雨后高云光路样本，实况约 65，可看但不是 78+ 的强爆发。",
+    "subjectiveScore": {
+      "min": 58,
+      "max": 68,
+      "label": "约 65，不是 78+"
+    },
+    "actualOutcome": {
+      "fireCloud": "good_glow",
+      "rainDuringWindow": false,
+      "orangeLightOrOpening": true,
+      "worthWaiting": true,
+      "notes": "日落方向近端高云和光路好，属于可看强正样本；但不是本地满天都参与的顶级爆发。"
+    },
+    "previousModelScores": [
+      {
+        "score": 49.1,
+        "source": "历史旧分"
+      },
+      {
+        "score": 75.6,
+        "source": "2026-06-03 scoringV2 初版回放"
+      }
+    ]
+  },
+  "capture": {
+    "dataCompleteness": "historical_partial_snapshot",
+    "sourceFiles": [
+      "tests/unit/server/EnhancedPredictionService.test.js"
+    ]
+  },
+  "input": {
+    "weatherData": {
+      "cloudCover": 87,
+      "lowClouds": 0,
+      "midClouds": 0,
+      "highClouds": 66,
+      "humidity": 68,
+      "visibility": 20,
+      "precipitation": 0,
+      "shortwaveRadiation": 93,
+      "directRadiation": 28.2,
+      "diffuseRadiation": 64.8,
+      "waterVapourColumn": 22.2,
+      "aerosolOpticalDepth": 0.21,
+      "pm2_5": 38.8,
+      "pm10": 44.9,
+      "dust": 12,
+      "aqi": 70
+    },
+    "options": {
+      "remoteCloudData": {
+        "source": "solar_direction_openmeteo",
+        "samples": [
+          {
+            "distanceKm": 25,
+            "cloudBaseHeight": 7000,
+            "lowCloud": 0,
+            "midCloud": 0,
+            "highCloud": 92
+          },
+          {
+            "distanceKm": 50,
+            "cloudBaseHeight": 7000,
+            "lowCloud": 0,
+            "midCloud": 0,
+            "highCloud": 92
+          },
+          {
+            "distanceKm": 75,
+            "cloudBaseHeight": 7000,
+            "lowCloud": 0,
+            "midCloud": 0,
+            "highCloud": 92
+          },
+          {
+            "distanceKm": 100,
+            "cloudBaseHeight": 7000,
+            "lowCloud": 0,
+            "midCloud": 0,
+            "highCloud": 92
+          }
+        ]
+      }
+    }
+  },
+  "expectations": {
+    "score": {
+      "min": 58,
+      "max": 68
+    },
+    "statusAnyOf": [
+      "good_glow",
+      "very_likely"
+    ],
+    "equals": [
+      {
+        "path": "visibleSunsetSectorCap.applied",
+        "value": true
+      },
+      {
+        "path": "visibleSunsetSectorCap.cap",
+        "value": 68
+      }
+    ],
+    "notAbove": [
+      {
+        "path": "score",
+        "value": 68,
+        "reason": "Visible sunset-sector high clouds can support 60-68, but should not be scored as a 78+ full-sky eruption."
+      }
+    ]
+  }
+}

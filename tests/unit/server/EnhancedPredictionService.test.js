@@ -982,8 +982,18 @@ describe('EnhancedPredictionService', () => {
         reason: 'directional_high_cloud_carrier_canvas_only'
       });
       expect(result.canvasAnalysis.score).toBeGreaterThanOrEqual(58);
-      expect(result.score).toBeGreaterThan(90);
-      expect(result.status).toBe('legendary_eruption');
+      expect(result.visibleSunsetSectorCap).toMatchObject({
+        applied: true,
+        cap: 68,
+        reason: 'visible_sunset_sector_cap'
+      });
+      expect(result.scoringV2).toMatchObject({
+        rawScore: 100,
+        score: 68
+      });
+      expect(result.score).toBeGreaterThanOrEqual(60);
+      expect(result.score).toBeLessThanOrEqual(68);
+      expect(result.status).toBe('very_likely');
       expect(result.lightPathGate).toMatchObject({
         reason: 'solar_direction_clear_opening'
       });
@@ -1039,8 +1049,13 @@ describe('EnhancedPredictionService', () => {
         cap: null,
         reason: 'directional_high_cloud_carrier_canvas_only'
       });
+      expect(result.visibleSunsetSectorCap).toMatchObject({
+        applied: true,
+        cap: 68,
+        reason: 'visible_sunset_sector_cap'
+      });
       expect(result.score).toBeGreaterThanOrEqual(52);
-      expect(result.score).toBeLessThanOrEqual(80);
+      expect(result.score).toBeLessThanOrEqual(68);
       expect(result.status).toBe('very_likely');
     });
 

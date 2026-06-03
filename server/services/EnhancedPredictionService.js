@@ -1079,7 +1079,53 @@ function assessAerosolHazeCap(weatherData, context = {}) {
   return { applied: false, cap: null, level: null, reason: null, metrics: { aod, pm25, pm10, dust, visibility } };
 }
 
-function assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightPathGate, renderingFactor) {
+function assessVisibleSunsetSectorCap(weatherData, carrierScore, lightPathScore, lightPathGate, remoteCloudData = null) {
+  const lowClouds = Number(weatherData.lowClouds || 0);
+  const midClouds = Number(weatherData.midClouds || 0);
+  const highClouds = Number(weatherData.highClouds || 0);
+  const cloudCarrier = Number(carrierScore?.score ?? 0);
+  const pathScore = Number(lightPathScore?.score ?? 0);
+  const pathGate = Number(lightPathGate?.gate ?? 0);
+  const directionalReason = lightPathScore?.directionalAnalysis?.reason || lightPathGate?.reason || '';
+  const pathOpen = pathGate >= 0.85 || directionalReason.includes('opening');
+  const localUpperCarrier = highClouds * 0.65 + midClouds * 0.35;
+  // Current directional samples start at 25 km. Use the first three points as a
+  // visible-sector proxy; a future sampling revision should add a 10-15 km
+  // point for foreground western clouds without changing this cap's semantics.
+  const samples = Array.isArray(remoteCloudData?.samples)
+    ? remoteCloudData.samples.filter(sample => sample && !sample.error).slice(0, 3)
+    : [];
+  const sectorUpperCarrier = samples.length > 0
+    ? samples.reduce((sum, sample) => (
+      sum + Number(sample.highCloud || 0) * 0.65 + Number(sample.midCloud || 0) * 0.35
+    ), 0) / samples.length
+    : 0;
+  const visibleSectorCarrier = Math.max(localUpperCarrier, sectorUpperCarrier);
+  const metrics = {
+    localUpperCarrier: parseFloat(localUpperCarrier.toFixed(1)),
+    sectorUpperCarrier: parseFloat(sectorUpperCarrier.toFixed(1)),
+    visibleSectorCarrier: parseFloat(visibleSectorCarrier.toFixed(1)),
+    pathScore: Number.isFinite(pathScore) ? parseFloat(pathScore.toFixed(1)) : null,
+    pathGate: Number.isFinite(pathGate) ? parseFloat(pathGate.toFixed(2)) : null
+  };
+
+  if (!pathOpen || lowClouds > 25 || pathScore < 65 || cloudCarrier < 65) {
+    return { applied: false, cap: null, reason: null, metrics };
+  }
+
+  if (visibleSectorCarrier >= 70) {
+    return { applied: false, cap: null, reason: 'visible_sunset_sector_participation_sufficient', metrics };
+  }
+
+  return {
+    applied: true,
+    cap: visibleSectorCarrier >= 50 ? 68 : 66,
+    reason: 'visible_sunset_sector_cap',
+    metrics
+  };
+}
+
+function assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightPathGate, renderingFactor, remoteCloudData = null) {
   const lowClouds = Number(weatherData.lowClouds || 0);
   const midClouds = Number(weatherData.midClouds || 0);
   const highClouds = Number(weatherData.highClouds || 0);
@@ -1125,16 +1171,22 @@ function assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightP
   }
 
   const pathFactor = pathOpen ? Math.max(1, pathGate) : pathGate;
-  const score = clamp(cloudCarrier * pathFactor * airFactor, 0, 100);
+  const rawScore = clamp(cloudCarrier * pathFactor * airFactor, 0, 100);
+  const visibleSunsetSectorCap = assessVisibleSunsetSectorCap(weatherData, carrierScore, lightPathScore, lightPathGate, remoteCloudData);
+  const score = visibleSunsetSectorCap.applied
+    ? Math.min(rawScore, visibleSunsetSectorCap.cap)
+    : rawScore;
   return {
     applied: !hardBlocked && cloudCanReceiveLight && pathScore >= 50,
     score: parseFloat(score.toFixed(1)),
+    rawScore: parseFloat(rawScore.toFixed(1)),
     cloudCarrier: parseFloat(cloudCarrier.toFixed(1)),
     pathFactor: parseFloat(pathFactor.toFixed(2)),
     airFactor,
     airMode,
     pathOpen,
     hardBlocked,
+    visibleSunsetSectorCap,
     metrics: {
       upperCloudCarrier: parseFloat(upperCloudCarrier.toFixed(1)),
       lowClouds,
@@ -2190,8 +2242,10 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   }
 
   const scoringV2 = type === 'sunset'
-    ? assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightPathGate, renderingFactor)
+    ? assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightPathGate, renderingFactor, remoteCloudData)
     : { applied: false };
+  const visibleSunsetSectorCap = scoringV2.visibleSunsetSectorCap
+    || assessVisibleSunsetSectorCap(weatherData, carrierScore, lightPathScore, lightPathGate, remoteCloudData);
   if (!thickHighCloudPenalty.applied && scoringV2.applied && scoringV2.score > adjustedScore) {
     adjustedScore = scoringV2.score;
     if (adjustedScore >= 82) {
@@ -2232,6 +2286,17 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     adjustedScore = Math.min(adjustedScore, aerosolHazeCap.cap);
     adjustedStatus = adjustedScore < 40 ? 'no_fire_cloud' : 'light_glow';
     adjustedDescription = aerosolHazeCap.level === 'extreme' ? 'haze_light_suppressed' : 'weak_local_colors';
+  }
+
+  if (visibleSunsetSectorCap.applied) {
+    adjustedScore = Math.min(adjustedScore, visibleSunsetSectorCap.cap);
+    if (adjustedScore >= 65) {
+      adjustedStatus = 'very_likely';
+      adjustedDescription = 'excellent_conditions';
+    } else if (adjustedScore >= 40) {
+      adjustedStatus = 'good_glow';
+      adjustedDescription = 'conditions_good';
+    }
   }
 
   const postRainMode = renderingFactor.breakdown?.specialMode || null;
@@ -2341,6 +2406,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     thickHighCloudPenalty,
     aerosolHazeCap,
     scoringV2,
+    visibleSunsetSectorCap,
     highCloudCarrierAdjustment,
     aerosolCarrierScore,
     directionalCurtainCarrier,

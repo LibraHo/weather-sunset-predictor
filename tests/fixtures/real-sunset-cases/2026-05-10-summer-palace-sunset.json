@@ -1,0 +1,144 @@
+{
+  "id": "2026-05-10-summer-palace-sunset-open-path-golden-cloud-band",
+  "title": "2026-05-10 Summer Palace sunset: open path with golden mid/high cloud band",
+  "location": {
+    "name": "Summer Palace, Beijing",
+    "nameZh": "北京颐和园",
+    "lat": 39.999617,
+    "lon": 116.275179,
+    "timezone": "Asia/Shanghai"
+  },
+  "event": {
+    "period": "sunset",
+    "localDate": "2026-05-10",
+    "calculationTimeUtc": "2026-05-10T11:17:00.000Z",
+    "sunAzimuth": 296
+  },
+  "feedback": {
+    "source": "Alex现场反馈与校准复盘",
+    "reportedAt": "2026-05-10T18:50:00+08:00",
+    "summary": "太阳附近有明确透光开口，中高云带被成片染成金黄色，水面有暖色反射；偏好、值得看，但不是顶级满分大烧。",
+    "subjectiveScore": {
+      "min": 55,
+      "max": 68,
+      "label": "偏好/值得看，目标 60-70 以下"
+    },
+    "actualOutcome": {
+      "fireCloud": "good_glow",
+      "rainDuringWindow": false,
+      "orangeLightOrOpening": true,
+      "worthWaiting": true,
+      "notes": "低云为 0，日落方向有开口；可见日落扇区中高云参与度中等，不应只靠远端开口冲到 80/100。"
+    },
+    "previousModelScores": [
+      {
+        "score": 42.9,
+        "source": "2026-05-10 线上原始预测"
+      },
+      {
+        "score": 100,
+        "source": "2026-06-03 scoringV2 初版回放"
+      }
+    ]
+  },
+  "capture": {
+    "dataCompleteness": "historical_calibration_snapshot",
+    "sourceFiles": [
+      "memory/calibration/2026-05-10-summer-palace-note.md",
+      "memory/calibration/2026-05-10-summer-palace-weather.json",
+      "memory/calibration/2026-05-10-summer-palace-prediction-batch.json"
+    ]
+  },
+  "input": {
+    "weatherData": {
+      "cloudCover": 100,
+      "lowClouds": 0,
+      "midClouds": 62,
+      "highClouds": 51,
+      "humidity": 17,
+      "visibility": 20,
+      "precipitation": 0,
+      "shortwaveRadiation": 1.9,
+      "directRadiation": 0.1,
+      "diffuseRadiation": 1.8,
+      "waterVapourColumn": 19.1,
+      "aerosolOpticalDepth": 0.28,
+      "pm2_5": 21,
+      "pm10": 31.5,
+      "dust": 24,
+      "aqi": 155
+    },
+    "options": {
+      "prevHourData": {
+        "shortwaveRadiation": 113.2,
+        "directRadiation": 14,
+        "diffuseRadiation": 99.2
+      },
+      "remoteCloudData": {
+        "source": "solar_direction_openmeteo",
+        "azimuth": 296,
+        "samples": [
+          {
+            "distanceKm": 15,
+            "cloudBaseHeight": null,
+            "lowCloud": 0,
+            "midCloud": 50,
+            "highCloud": 57,
+            "totalCloud": 100
+          },
+          {
+            "distanceKm": 30,
+            "cloudBaseHeight": null,
+            "lowCloud": 0,
+            "midCloud": 50,
+            "highCloud": 57,
+            "totalCloud": 100
+          },
+          {
+            "distanceKm": 50,
+            "cloudBaseHeight": null,
+            "lowCloud": 0,
+            "midCloud": 56,
+            "highCloud": 52,
+            "totalCloud": 100
+          },
+          {
+            "distanceKm": 100,
+            "cloudBaseHeight": null,
+            "lowCloud": 0,
+            "midCloud": 60,
+            "highCloud": 99,
+            "totalCloud": 100
+          }
+        ]
+      }
+    }
+  },
+  "expectations": {
+    "score": {
+      "min": 55,
+      "max": 68
+    },
+    "statusAnyOf": [
+      "good_glow",
+      "very_likely"
+    ],
+    "equals": [
+      {
+        "path": "visibleSunsetSectorCap.applied",
+        "value": true
+      },
+      {
+        "path": "visibleSunsetSectorCap.reason",
+        "value": "visible_sunset_sector_cap"
+      }
+    ],
+    "notAbove": [
+      {
+        "path": "score",
+        "value": 68,
+        "reason": "Open sunset path with only moderate visible sunset-sector participation should not become a top-tier eruption."
+      }
+    ]
+  }
+}
