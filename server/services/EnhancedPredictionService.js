@@ -533,11 +533,12 @@ function estimateCloudBaseHeight(weatherData) {
 function hasClearAirForUpperCloudCarrier(weatherData) {
   const visibility = Number(weatherData.visibility ?? 20);
   const precipitation = Number(weatherData.precipitation || 0);
-  const { aod, pm10, dust } = getAerosolMetrics(weatherData);
+  const { aod, pm25, pm10, dust } = getAerosolMetrics(weatherData);
 
   return precipitation <= 0.2
     && visibility >= 15
     && (aod == null || aod <= 0.45)
+    && (pm25 == null || pm25 < 65)
     && (pm10 == null || pm10 < 120)
     && (dust == null || dust < 80);
 }
@@ -1085,6 +1086,7 @@ function assessHighCloudCarrierAdjustment(weatherData, aerosolHazeCap, thickHigh
   const airClearEnough = hasAirQualityMetric
     && visibility >= 15
     && (aod == null || aod <= 0.45)
+    && (pm25 == null || pm25 < 65)
     && (pm10 == null || pm10 < 120)
     && (dust == null || dust < 80);
   const carrierStrong = ((highClouds >= 85) || (highClouds >= 80 && midClouds >= 30)) && lowClouds <= 10 && airClearEnough;
