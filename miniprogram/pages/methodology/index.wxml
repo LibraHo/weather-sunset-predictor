@@ -92,7 +92,7 @@
     </scroll-view>
     <view class="version-card">
       <view class="version-title">当前说明版本</view>
-      <view class="version-copy">2026.06.02 · 低太阳透射证据；评分口径与 Web 保持一致。</view>
+      <view class="version-copy">2026.06.03 · 日落评分 v2；评分口径与 Web 保持一致。</view>
     </view>
   </view>
 </view>

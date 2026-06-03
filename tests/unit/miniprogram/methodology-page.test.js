@@ -43,10 +43,10 @@ describe('miniprogram methodology page', () => {
     expect(js).toContain('厚云、湿灰幕、沙尘');
     expect(js).toContain('不再用直射比直接参与评分');
     expect(js).toContain('high×0.75 + mid×0.45');
-    expect(js).toContain('carrier × gate + renderingAdjustment');
+    expect(js).toContain('cloudCarrier × sunsetPath × airRendering');
     expect(js).toContain('0.25-1.12');
     expect(js).toContain('无火烧云 <40');
-    expect(wxml).toContain('2026.06.02 · 低太阳透射证据');
+    expect(wxml).toContain('2026.06.03 · 日落评分 v2');
     expect(wxml).toContain('地图分');
     expect(wxml).toContain('地点详情分');
     expect(js).not.toContain('DOM');

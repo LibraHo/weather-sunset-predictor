@@ -368,6 +368,7 @@ apiAccess: 'Acceso API'
           "postRainCap": "Post-rain haze",
           "displayCalibration": "Display calibration",
           "aerosolCarrier": "Aerosol carrier",
+          "scoringV2": "Open-path warm scattering",
           "evidence": "Calculation evidence"
         },
         "details": {
@@ -380,6 +381,7 @@ apiAccess: 'Acceso API'
           "lowSolarTransmissionYes": "sí",
           "lowSolarTransmissionNo": "no",
           "aerosolCarrier": "thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}",
+          "scoringV2": "cloud carrier {{carrier}} × sunset path {{path}} × air rendering {{air}}",
           "lightPath": "sunlight reaches the cloud layer",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
           "afterAdjustments": "after weather and visibility adjustments",
@@ -408,6 +410,7 @@ apiAccess: 'Acceso API'
           "extremeDustHazeCap28": "heavy dust or haze suppresses the glow",
           "severeHazeCap35": "heavy haze makes colors hard to show",
           "moderateHazeCap45": "haze weakens orange-red color",
+          "hazeWarmScatteringPathOpen": "open sunset path turns moderate particles into warm orange-red scattering",
           "denseCarrierCanvasOnly": "mid/high clouds can still catch sunset light",
           "adjustmentApplied": "score adjusted for limiting conditions",
           "displayCalibration": "final display score is aligned with the prediction status band",

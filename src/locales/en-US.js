@@ -101,16 +101,16 @@ const translations = {
     "methodology": {
       "title": "Fire Cloud Calculation Method",
       "intro": "The current Fire Cloud Index first asks whether there is a usable color carrier, then whether sunlight can reach it along the sun direction, and finally applies only a small rendering adjustment. It no longer multiplies a chain of positive factors, so 100% high cloud does not automatically mean a perfect score.",
-      "versionLabel": "Algorithm version: 2026.06.02-low-solar-transmission-v1",
-      "versionDesc": "This version adds low solar-transmission evidence to cloud-thickness assessment. Extremely low direct/shortwave radiation is used only together with high total/mid cloud, weak high-cloud carrier, and gray-air evidence, so normal low-sun sunsets are not penalized by radiation alone.",
+      "versionLabel": "Algorithm version: 2026.06.03-sunset-scoring-v2",
+      "versionDesc": "This version combines cloud carrier, sunset path, and air rendering. Moderate particles can enhance orange-red scattering when the path is open; blocked paths, extreme haze, low visibility, rain, and thick low clouds still suppress the score.",
       changelogTitle: "Version update history",
       changelogHint: "Algorithm updates from the last three months live here; scroll to review why each change happened, its impact, and validation",
       changelog: {
         "latest": {
-          "date": "2026-06-02",
-          "title": "Low solar-transmission evidence v1",
-          "summary": "directRadiation / shortwaveRadiation return as solar-transmission evidence inside cloud-thickness assessment. They only reduce the score when paired with high total/mid cloud, weak high-cloud carrier, and gray-air evidence.",
-          "validation": "Validation: the 2026-06-02 Beijing sample had no precipitation, but direct=0, shortwave=12, AOD=0.87, AQI=151, moving the score back into the low-probability band."
+          "date": "2026-06-03",
+          "title": "Sunset scoring v2",
+          "summary": "The final score now combines cloud carrier, sunset path, and air rendering. With an open path and acceptable visibility, moderate AOD, PM, and dust are treated as warm orange-red scattering instead of automatic gray-curtain failure.",
+          "validation": "Validation: 2026-06-02 Beijing remains low around 30; 2026-06-03 Beijing replays around 66, matching the 60-68 real-world feedback range."
         },
         "cloudThickness": {
           "date": "2026-05-27",
@@ -195,10 +195,10 @@ const translations = {
         "transparency": {
           "title": "3. Atmospheric Transparency",
           "subtitle": "Transparency · Rendering Score",
-          "desc": "Visibility, humidity, post-rain state, and aerosols affect rendering quality only; they no longer replace the cloud carrier.",
+          "desc": "Visibility, humidity, post-rain state, and aerosols affect rendering quality. With an open path, moderate particles can enhance warm scattering; with a blocked path or excessive particles, they become gray-curtain suppression.",
           "visibility": "The rendering factor combines visibilityFactor, humidityFactor, rainBonus, aqiFactor, and aerosolFactor",
           "humidity": "Rendering cannot multiply the score upward: factor≥1 becomes at most about +9 pts; factor<1 becomes at most about -25 pts",
-          "formula": "Rendering adjustment = factor≥1 ? min((factor-1)×50, 9) : -min((1-factor)×55, 25)"
+          "formula": "Air rendering = open path ? warm-scattering factor 1.02-1.12 : base rendering factor; heavy haze / low visibility stays around 0.6-0.8"
         },
         "layerDiversity": {
           "title": "4. Light-Path Gate",
@@ -220,11 +220,11 @@ const translations = {
         "thickHighCloudPenalty": {
           "title": "7. Carrier and Haze Corrections",
           "subtitle": "Carrier Quality · Canvas and Thin Haze",
-          "desc": "The model separates usable color carriers into cloud carriers and weak aerosol carriers, then uses the higher of the two as the carrier score.",
+          "desc": "The model first scores what can take color, then uses the sunset path and air rendering to decide how much of that carrier can show. Aerosol is no longer only a weak fallback; it can also contribute warm scattering when the path is open.",
           "level1": "Cloud carrier = canvas base + additive cloud-type/thickness/high-cloud adjustments. Strong high cloud cannot reach a perfect score if the light path is blocked",
-          "level2": "Aerosol is only a weak fallback when clouds are scarce: AOD/PM must be in a moderate range, low cloud <40, precipitation ≤0.2, and light path >45",
+          "level2": "When clouds are scarce, weak aerosol carrier still acts as a fallback. When clouds are present and the path is open, moderate AOD/PM/dust enters air rendering as warm scattering.",
           "level3": "Heavy haze, dust, visibility <8, thick cloud, or rainy low cloud suppresses or caps the carrier; even a clear high-cloud floor can be rejected by the light-path gate",
-          "formula": "Aerosol activation = rawAerosolScore × clamp((lightPath-45)/35, 0, 1)\nCarrier = max(cloud canvas, activated aerosol)"
+          "formula": "scoringV2 = cloud carrier × sunset path × air rendering\nWarm scattering only applies when the path is open, low clouds are not blocking, and visibility is acceptable."
         },
         "precipPenalty": {
           "title": "6. Precipitation Penalty",
@@ -238,13 +238,13 @@ const translations = {
         },
         "finalFormula": {
           "title": "8. Final Score",
-          "subtitle": "Final Score · carrier × light-path gate + rendering",
-          "desc": "The final score does not multiply several good signals together. It first gets a usable carrier score, lets the sun-direction light path decide how much of it can work, then uses rendering as a small bonus or a bounded multiplier so weak visible glow is not over-penalized.",
-          "formula": "Final score = clamp(carrier × light-path gate + rendering adjustment/attenuation, 0, 100)",
+          "subtitle": "Final Score · cloud carrier × sunset path × air rendering",
+          "desc": "The score is not a city/date-specific floor. Clouds, path, and air jointly explain the result. When the path is open, moderate particles can make orange-red light stronger; when the path is blocked, the same particles turn gray.",
+          "formula": "Final score = clamp(cloud carrier × sunset path × air rendering, 0, 100), then hard blockers / thick cloud / gray curtain calibrate it",
           "highCloudCap": "When high clouds are rich but the light path is blocked, the light-path gate still lowers the ceiling.",
           "carrier": "Carrier score = max(cloud canvas score, weak aerosol carrier score)",
           "lightGate": "Light-path gate = 0.25-1.12; near cloud wall can clamp near 0.42, far wall near 0.55, sun-direction opening around 0.90-0.96",
-          "rendering": "Rendering adjustment = small visibility/humidity/post-rain/aerosol delta, with positive adjustment capped around +9 pts",
+          "rendering": "Air rendering = 0.6-1.15; with an open path, moderate AOD, PM, and dust can enter the 1.02-1.12 warm-scattering band",
           "statusCaps": "Display score is status-calibrated: no-fire-cloud stays below 40, light glow below 60; geometry failure, thick cloud, gray curtain, and rainy low cloud can cap it further"
         }
       }
@@ -346,7 +346,7 @@ const translations = {
       "baseHint": "Base score after applying the sun-direction light-path gate",
       "canvasHint": "High/mid clouds are the main color carrier; moderate thin haze can be a weak carrier; low clouds can block it",
       "lightPathHint": "Whether sunlight can reach the clouds",
-      "finalFormula": "Final score = base score + rendering adjustment",
+      "finalFormula": "Final score = cloud carrier × sunset path × air rendering",
       "renderingHint": "Humidity and visibility affect color rendering",
       "aerosolHint": "Moderate aerosol boosts orange-red scattering; too much turns gray",
       "ledger": {
@@ -386,6 +386,7 @@ const translations = {
           "postRainCap": "Gray-curtain haze",
           "displayCalibration": "Display calibration",
           "aerosolCarrier": "Aerosol carrier",
+          "scoringV2": "Open-path warm scattering",
           "evidence": "Calculation evidence"
         },
         "details": {
@@ -398,6 +399,7 @@ const translations = {
           "lowSolarTransmissionYes": "hit",
           "lowSolarTransmissionNo": "not hit",
           "aerosolCarrier": "thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}",
+          "scoringV2": "cloud carrier {{carrier}} × sunset path {{path}} × air rendering {{air}}",
           "lightPath": "sunlight reaches the cloud layer",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
           "afterAdjustments": "after weather and visibility adjustments",
@@ -426,6 +428,7 @@ const translations = {
           "extremeDustHazeCap28": "heavy dust or haze suppresses the glow",
           "severeHazeCap35": "heavy haze makes colors hard to show",
           "moderateHazeCap45": "haze weakens orange-red color",
+          "hazeWarmScatteringPathOpen": "open sunset path turns moderate particles into warm orange-red scattering",
           "denseCarrierCanvasOnly": "mid/high clouds can still catch sunset light",
           "adjustmentApplied": "score adjusted for limiting conditions",
           "displayCalibration": "final display score is aligned with the prediction status band",

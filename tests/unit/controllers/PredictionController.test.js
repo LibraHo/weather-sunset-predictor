@@ -992,6 +992,32 @@ describe('PredictionController', () => {
       expect(html).not.toContain('薄雾红日载体');
     });
 
+    test('开口暖色散射场景应显示空气显色较好', () => {
+      const groups = predictionController.buildAnalysisGroups({
+        score: 66,
+        cloudLayers: { high: 100, mid: 100, low: 0 },
+        visibility: 20,
+        humidity: 62,
+        aerosolOpticalDepth: 0.72,
+        pm10: 91.3,
+        dust: 96,
+        scoringV2: {
+          applied: true,
+          airMode: 'warm_scattering_path_open',
+          score: 66.3
+        },
+        lightPathAnalysis: {
+          score: 92.5,
+          directionalAnalysis: { reason: 'solar_direction_partial_opening' }
+        }
+      });
+      const rendering = groups.find(item => item.key === 'rendering');
+
+      expect(rendering.status).toBe('较好');
+      expect(rendering.statusTone).toBe('good');
+      expect(rendering.desc).toContain('颜色更容易偏暖、偏红');
+    });
+
     test('太阳方向采样不是 opening 时光路条件不能显示良好', () => {
       const groups = predictionController.buildAnalysisGroups({
         score: 12,
