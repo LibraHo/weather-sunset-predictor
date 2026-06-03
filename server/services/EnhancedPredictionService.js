@@ -1040,20 +1040,32 @@ function buildCarrierScore(canvasScore, aerosolCarrierScore, directionalCurtainC
 /**
  * 灰幕/沙尘封顶：高云存在但空气光学条件失效时，不能按“高云画布”给乐观分。
  */
-function assessAerosolHazeCap(weatherData) {
+function assessAerosolHazeCap(weatherData, context = {}) {
   const lowClouds = weatherData.lowClouds || 0;
   const highClouds = weatherData.highClouds || 0;
   const midClouds = weatherData.midClouds || 0;
   const visibility = weatherData.visibility ?? 20;
   const { aod, pm25, pm10, dust } = getAerosolMetrics(weatherData);
+  const pathOpen = context.pathOpen === true;
 
   const hasUpperCloudCarrier = (highClouds >= 65 || (midClouds >= 45 && highClouds >= 45)) && lowClouds <= 20;
   const extremeHaze = (aod != null && aod >= 0.8) || (dust != null && dust >= 300) || (pm10 != null && pm10 >= 250);
   const severeHaze = (aod != null && aod >= 0.55) || (dust != null && dust >= 150) || (pm10 != null && pm10 >= 180) || (pm25 != null && pm25 >= 90) || visibility < 6;
+  const warmScatteringHaze =
+    pathOpen &&
+    visibility >= 12 &&
+    (aod == null || aod < 0.8) &&
+    (pm25 == null || pm25 < 65) &&
+    (pm10 == null || pm10 < 120) &&
+    (dust == null || dust < 150);
   const moderateHaze = (aod != null && aod >= 0.45) || (dust != null && dust >= 80) || (pm10 != null && pm10 >= 120) || visibility < 8;
 
   if (hasUpperCloudCarrier && extremeHaze) {
     return { applied: true, cap: 28, level: 'extreme', reason: 'extreme_dust_haze_cap_28', metrics: { aod, pm25, pm10, dust, visibility } };
+  }
+
+  if (hasUpperCloudCarrier && severeHaze && warmScatteringHaze) {
+    return { applied: false, cap: null, level: 'warm_scattering', reason: 'haze_warm_scattering_path_open', metrics: { aod, pm25, pm10, dust, visibility } };
   }
 
   if (hasUpperCloudCarrier && severeHaze) {
@@ -1065,6 +1077,75 @@ function assessAerosolHazeCap(weatherData) {
   }
 
   return { applied: false, cap: null, level: null, reason: null, metrics: { aod, pm25, pm10, dust, visibility } };
+}
+
+function assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightPathGate, renderingFactor) {
+  const lowClouds = Number(weatherData.lowClouds || 0);
+  const midClouds = Number(weatherData.midClouds || 0);
+  const highClouds = Number(weatherData.highClouds || 0);
+  const visibility = Number(weatherData.visibility ?? 20);
+  const precipitation = Number(weatherData.precipitation ?? weatherData.rain ?? weatherData.showers ?? 0);
+  const { aod, pm25, pm10, dust } = getAerosolMetrics(weatherData);
+
+  const cloudCarrier = clamp(Number(carrierScore?.score ?? 0), 0, 100);
+  const pathScore = clamp(Number(lightPathScore?.score ?? 0), 0, 100);
+  const pathGate = clamp(Number(lightPathGate?.gate ?? 0), 0, 1.12);
+  const directionalReason = lightPathScore?.directionalAnalysis?.reason || lightPathGate?.reason || '';
+  const pathOpen = pathGate >= 0.85 || directionalReason.includes('opening');
+  const pathBlocked = pathGate <= 0.45 || directionalReason.includes('cloud_wall');
+  const upperCloudCarrier = highClouds * 0.65 + midClouds * 0.35;
+  const cloudCanReceiveLight = upperCloudCarrier >= 45 && lowClouds <= 35;
+  const heavyAir =
+    visibility < 8 ||
+    (aod != null && aod >= 0.8) ||
+    (pm25 != null && pm25 >= 90) ||
+    (pm10 != null && pm10 >= 180) ||
+    (dust != null && dust >= 150);
+  const moderateAir =
+    (aod != null && aod >= 0.45) ||
+    (pm25 != null && pm25 >= 25) ||
+    (pm10 != null && pm10 >= 70) ||
+    (dust != null && dust >= 70);
+  const hardBlocked = precipitation > 0.2 || lowClouds >= 60 || pathBlocked || visibility < 6;
+
+  let airFactor = Number(renderingFactor?.factor ?? 1);
+  let airMode = renderingFactor?.breakdown?.specialMode || 'neutral';
+  if (pathOpen && cloudCanReceiveLight && moderateAir && !heavyAir && !hardBlocked) {
+    const aerosolWarmth = Math.max(
+      aod == null ? 0 : scoreRangePeak(aod, 0.35, 0.62, 0.8),
+      pm25 == null ? 0 : scoreRangePeak(pm25, 20, 42, 65),
+      pm10 == null ? 0 : scoreRangePeak(pm10, 60, 95, 130),
+      dust == null ? 0 : scoreRangePeak(dust, 60, 95, 150)
+    );
+    airFactor = parseFloat((1.02 + aerosolWarmth * 0.10).toFixed(2));
+    airMode = 'warm_scattering_path_open';
+  } else if (heavyAir || visibility < 8) {
+    airFactor = Math.min(airFactor, 0.75);
+    airMode = 'heavy_haze_suppression';
+  }
+
+  const pathFactor = pathOpen ? Math.max(1, pathGate) : pathGate;
+  const score = clamp(cloudCarrier * pathFactor * airFactor, 0, 100);
+  return {
+    applied: !hardBlocked && cloudCanReceiveLight && pathScore >= 50,
+    score: parseFloat(score.toFixed(1)),
+    cloudCarrier: parseFloat(cloudCarrier.toFixed(1)),
+    pathFactor: parseFloat(pathFactor.toFixed(2)),
+    airFactor,
+    airMode,
+    pathOpen,
+    hardBlocked,
+    metrics: {
+      upperCloudCarrier: parseFloat(upperCloudCarrier.toFixed(1)),
+      lowClouds,
+      visibility,
+      precipitation,
+      aod,
+      pm25,
+      pm10,
+      dust
+    }
+  };
 }
 
 /**
@@ -2108,8 +2189,25 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     adjustedDescription = 'weak_local_colors';
   }
 
+  const scoringV2 = type === 'sunset'
+    ? assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightPathGate, renderingFactor)
+    : { applied: false };
+  if (!thickHighCloudPenalty.applied && scoringV2.applied && scoringV2.score > adjustedScore) {
+    adjustedScore = scoringV2.score;
+    if (adjustedScore >= 82) {
+      adjustedStatus = 'legendary_eruption';
+      adjustedDescription = 'perfect_mid_high_clouds';
+    } else if (adjustedScore >= 65) {
+      adjustedStatus = 'very_likely';
+      adjustedDescription = 'excellent_conditions';
+    } else if (adjustedScore >= 40) {
+      adjustedStatus = 'good_glow';
+      adjustedDescription = 'conditions_good';
+    }
+  }
+
   // 6.8 气溶胶/沙尘灰幕封顶 + 清透高云载体保底（2026-05-06 北京/喀什反例）
-  const aerosolHazeCap = assessAerosolHazeCap(weatherData);
+  const aerosolHazeCap = assessAerosolHazeCap(weatherData, { pathOpen: scoringV2.pathOpen === true });
   let highCloudCarrierAdjustment = assessHighCloudCarrierAdjustment(weatherData, aerosolHazeCap, thickHighCloudPenalty);
 
   if (highCloudCarrierAdjustment.applied && lightPathGate.cap == null && (lightPathGate.gate >= 0.82 || !lightPathScore.hasRemoteData)) {
@@ -2242,6 +2340,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     },
     thickHighCloudPenalty,
     aerosolHazeCap,
+    scoringV2,
     highCloudCarrierAdjustment,
     aerosolCarrierScore,
     directionalCurtainCarrier,
