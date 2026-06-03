@@ -1670,10 +1670,11 @@ function applySevereWeatherCap(score, weatherData) {
     return { score: Math.min(score, 35), reason: 'overcast_cap_35' };
   }
 
-  // 阴天+真雾霾（能见度极差）：远处泛橙水平，最多给15分
+  // 总云量很高 + 低能见度是强负面信号，但不应单独打死。
+  // 低云很少、光路仍开、云载体较好时，仍可能有局部暖色。
   const visibility = weatherData.visibility ?? 20;
   if (cloudCover >= 95 && visibility <= 5) {
-    return { score: Math.min(score, 15), reason: 'overcast_fog_cap_15' };
+    return { score: Math.min(score, 35), reason: 'overcast_low_visibility_cap_35' };
   }
 
   const isMidCloudOvercastCurtain = cloudCover >= 95 && midClouds >= 60 && highClouds < 20 && lowClouds < 20;

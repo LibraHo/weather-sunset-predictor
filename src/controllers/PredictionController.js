@@ -2037,7 +2037,8 @@ class PredictionController {
     const reasonText = (reason) => ({
       precipitation_cap_45: ledgerText('reasons.precipitationCap45', {}, 'rain plus low clouds keeps the score low', '降水叠加低云，观赏条件明显变差'),
       overcast_cap_35: ledgerText('reasons.overcastCap35', {}, 'low clouds block the sunlight path', '低云遮住太阳方向，光线不容易照到云层'),
-      overcast_fog_cap_15: ledgerText('reasons.overcastFogCap15', {}, 'low cloud and low visibility make the sky too gray', '低云叠加低能见度，天空容易发灰'),
+      overcast_low_visibility_cap_35: ledgerText('reasons.overcastLowVisibilityCap35', {}, 'very cloudy sky and low visibility keep the score conservative', '总云量很高叠加低能见度，先保守压低评分'),
+      overcast_fog_cap_15: ledgerText('reasons.overcastFogCap15', {}, 'very cloudy sky and low visibility make the sky too gray', '总云量很高叠加低能见度，天空容易发灰'),
       rainy_mid_cloud_overcast_cap_35: ledgerText('reasons.rainyMidCloudOvercastCap35', {}, 'post-rain moisture makes the glow hard to show', '雨后水汽偏重，霞光不容易显色'),
       no_visible_sunset_path_cap_5: ledgerText('reasons.noVisibleSunsetPathCap5', {}, 'sunset light is unlikely to reach the clouds', '日落光线很难照到云层'),
       no_visible_sunset_path_cap_15: ledgerText('reasons.noVisibleSunsetPathCap15', {}, 'rainy gray sky likely blocks sunset light', '雨后灰幕偏重，日落光线大概率被挡住'),

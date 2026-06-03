@@ -441,7 +441,8 @@ export default {
         reasons: {
           precipitationCap45: '降水叠加低云，观赏条件明显变差',
           overcastCap35: '低云遮住太阳方向，光线不容易照到云层',
-          overcastFogCap15: '低云叠加低能见度，天空容易发灰',
+          overcastLowVisibilityCap35: '总云量很高叠加低能见度，先保守压低评分',
+          overcastFogCap15: '总云量很高叠加低能见度，天空容易发灰',
           rainyMidCloudOvercastCap35: '雨后水汽偏重，霞光不容易显色',
           noVisibleSunsetPathCap5: '日落光线很难照到云层',
           noVisibleSunsetPathCap15: '雨后灰幕偏重，日落光线大概率被挡住',

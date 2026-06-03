@@ -418,7 +418,8 @@ const translations = {
         "reasons": {
           "precipitationCap45": "降水疊加低雲，觀賞條件明顯變差",
           "overcastCap35": "低雲遮住太陽方向，光線不容易照到雲層",
-          "overcastFogCap15": "低雲疊加低能見度，天空容易發灰",
+          "overcastLowVisibilityCap35": "總雲量很高疊加低能見度，先保守壓低評分",
+          "overcastFogCap15": "總雲量很高疊加低能見度，天空容易發灰",
           "rainyMidCloudOvercastCap35": "雨後水氣偏重，霞光不容易顯色",
           "noVisibleSunsetPathCap5": "日落光線很難照到雲層",
           "noVisibleSunsetPathCap15": "雨後灰幕偏重，日落光線大概率被擋住",

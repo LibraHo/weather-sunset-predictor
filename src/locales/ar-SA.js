@@ -368,7 +368,8 @@ apiAccess: 'الوصول إلى API'
         "reasons": {
           "precipitationCap45": "rain plus low clouds keeps the score low",
           "overcastCap35": "low clouds block the sunlight path",
-          "overcastFogCap15": "low cloud and low visibility make the sky too gray",
+          "overcastLowVisibilityCap35": "very cloudy sky and low visibility keep the score conservative",
+          "overcastFogCap15": "very cloudy sky and low visibility make the sky too gray",
           "rainyMidCloudOvercastCap35": "post-rain moisture makes the glow hard to show",
           "noVisibleSunsetPathCap5": "sunset light is unlikely to reach the clouds",
           "noVisibleSunsetPathCap15": "rainy gray sky likely blocks sunset light",
