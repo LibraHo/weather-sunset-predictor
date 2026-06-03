@@ -1074,8 +1074,13 @@ function assessHighCloudCarrierAdjustment(weatherData, aerosolHazeCap, thickHigh
     return { applied: false, floor: null, reason: null };
   }
 
-  const { aod, pm10, dust } = getAerosolMetrics(weatherData);
-  const airClearEnough = visibility >= 15 && (aod == null || aod <= 0.45) && (pm10 == null || pm10 < 120) && (dust == null || dust < 80);
+  const { aod, pm25, pm10, dust } = getAerosolMetrics(weatherData);
+  const hasAirQualityMetric = aod != null || pm25 != null || pm10 != null || dust != null;
+  const airClearEnough = hasAirQualityMetric
+    && visibility >= 15
+    && (aod == null || aod <= 0.45)
+    && (pm10 == null || pm10 < 120)
+    && (dust == null || dust < 80);
   const carrierStrong = ((highClouds >= 85) || (highClouds >= 80 && midClouds >= 30)) && lowClouds <= 10 && airClearEnough;
 
   if (!carrierStrong) {
