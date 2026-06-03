@@ -1,0 +1,112 @@
+{
+  "id": "2026-06-02-beijing-sunset-gray-mid-cloud-curtain",
+  "title": "2026-06-02 Beijing sunset: high score but gray mid-cloud curtain",
+  "location": {
+    "name": "Beijing",
+    "nameZh": "北京",
+    "lat": 39.9042,
+    "lon": 116.4074,
+    "timezone": "Asia/Shanghai"
+  },
+  "event": {
+    "period": "sunset",
+    "localDate": "2026-06-02",
+    "calculationTimeUtc": "2026-06-02T11:36:00.000Z"
+  },
+  "feedback": {
+    "source": "Alex现场反馈",
+    "reportedAt": "2026-06-03T01:43:11+08:00",
+    "summary": "实际无降雨，但晚霞被灰幕/厚中云遮住，日落防线有透进来的橙色光。",
+    "subjectiveScore": {
+      "min": 30,
+      "max": 45,
+      "label": "局部暖色，不值得高分等待"
+    },
+    "actualOutcome": {
+      "fireCloud": "weak_or_none",
+      "rainDuringWindow": false,
+      "notes": "不是降雨问题，是中云满、高云弱、低太阳透射和灰空气共同导致的遮光。"
+    },
+    "previousModelScores": [
+      {
+        "score": 88,
+        "source": "早期线上/现场截图反馈"
+      },
+      {
+        "score": 65.2,
+        "source": "修复前复盘计算"
+      }
+    ]
+  },
+  "capture": {
+    "dataCompleteness": "partial_original_snapshot",
+    "missingData": [
+      "周边格点云量原始快照",
+      "日落方向远端采样原始快照",
+      "分高度云层逐小时序列"
+    ],
+    "requiredForFutureCases": [
+      "核心天气小时数据",
+      "低/中/高云分层",
+      "direct/shortwave/diffuse radiation",
+      "AOD/PM/AQI/水汽/能见度",
+      "光路方向采样",
+      "周边格点",
+      "当前模型完整 breakdown",
+      "用户主观分数与实况结果"
+    ]
+  },
+  "input": {
+    "weatherData": {
+      "cloudCover": 95,
+      "lowClouds": 0,
+      "midClouds": 100,
+      "highClouds": 29,
+      "precipitation": 0,
+      "weatherCode": null,
+      "visibility": 20,
+      "shortwaveRadiation": 12,
+      "directRadiation": 0,
+      "diffuseRadiation": 12,
+      "waterVapourColumn": 35.1,
+      "aerosolOpticalDepth": 0.87,
+      "pm2_5": 64.7,
+      "pm10": 70.1,
+      "aqi": 151
+    },
+    "options": {
+      "rainedRecently": false,
+      "remoteCloudData": null,
+      "prevHourData": null
+    }
+  },
+  "expectations": {
+    "score": {
+      "min": 25,
+      "max": 45
+    },
+    "statusAnyOf": [
+      "light_glow",
+      "no_fire_cloud"
+    ],
+    "contains": [
+      {
+        "path": "cloudThickness.reasons",
+        "value": "low_solar_transmission"
+      }
+    ],
+    "equals": [
+      {
+        "path": "severeWeatherCap.reason",
+        "value": null
+      }
+    ],
+    "notAbove": [
+      {
+        "path": "score",
+        "value": 50,
+        "reason": "This real-world miss must not regress to a high-score recommendation."
+      }
+    ]
+  }
+}
