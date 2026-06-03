@@ -1201,6 +1201,31 @@ describe('EnhancedPredictionService', () => {
       expect(result.status).toBe('very_likely');
     });
 
+    test('should not treat missing aerosol metrics as clear air for upper-cloud carrier floor', () => {
+      const weatherData = {
+        cloudCover: 97,
+        lowClouds: 0,
+        midClouds: 100,
+        highClouds: 100,
+        humidity: 62,
+        visibility: 20,
+        precipitation: 0,
+        shortwaveRadiation: 5,
+        directRadiation: 0,
+        diffuseRadiation: 5,
+        waterVapourColumn: 32.8
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData, new Date('2026-06-03T11:37:00.000Z'), 39.9599, 116.2983, 'sunset'
+      );
+
+      expect(result.highCloudCarrierAdjustment.applied).toBe(false);
+      expect(result.highCloudCarrierAdjustment.reason).toBeNull();
+      expect(result.score).toBeLessThan(65);
+      expect(result.breakdown.unclampedFinalScore).toBeLessThan(65);
+    });
+
     test('should not let carrier floor override thick high-cloud cap', () => {
       const weatherData = {
         cloudCover: 100,
