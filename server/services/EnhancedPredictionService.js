@@ -2440,6 +2440,31 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
 }
 
 /**
+ * 火烧云地图网格使用的简化分支。
+ *
+ * 地图数据来自 GFS/CAMS 区域格点，缺少单点预测的 10/25/50/75/100km
+ * 太阳方向精细采样，因此只使用格点自身云、辐射、水汽和空气质量字段。
+ */
+function calculateMapSimplifiedPrediction(weatherData, date, lat, lon, type) {
+  const result = calculateEnhancedPrediction(weatherData, date, lat, lon, type, {
+    scoringContext: 'map_grid_simplified'
+  });
+  return {
+    ...result,
+    scoringContext: 'map_grid_simplified',
+    mapSimplifiedScoring: {
+      applied: true,
+      reason: 'gfs_cams_grid_without_point_light_path_samples',
+      usesRemoteLightPathSamples: false
+    },
+    algorithm: {
+      ...(result.algorithm || {}),
+      mode: 'map_grid_simplified'
+    }
+  };
+}
+
+/**
  * 批量计算增强预测（多天）
  * @param {Object} weatherDataArray - 天气数据数组
  * @param {number} lat - 纬度
@@ -2504,5 +2529,6 @@ module.exports = {
 
   // 主函数
   calculateEnhancedPrediction,
+  calculateMapSimplifiedPrediction,
   calculateBatchEnhancedPredictions
 };
