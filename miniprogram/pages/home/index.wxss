@@ -239,6 +239,73 @@
   gap: 18rpx;
 }
 
+.weather-unavailable-card {
+  padding: 34rpx 28rpx;
+  text-align: center;
+}
+
+.weather-unavailable-title {
+  color: #f8fafc;
+  font-size: 34rpx;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.weather-unavailable-body {
+  margin-top: 10rpx;
+  color: rgba(226, 232, 240, 0.72);
+  font-size: 26rpx;
+  line-height: 1.5;
+}
+
+.weather-unavailable-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14rpx;
+  margin-top: 24rpx;
+}
+
+.weather-unavailable-action {
+  min-height: 76rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.12);
+  border-radius: 8rpx;
+  color: rgba(226, 232, 240, 0.88);
+  font-size: 26rpx;
+  font-weight: 800;
+  line-height: 76rpx;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.weather-unavailable-action.primary {
+  color: #1b1206;
+  border-color: transparent;
+  background: linear-gradient(135deg, #ffd166, #fb923c);
+}
+
+.home-page.theme-light .weather-unavailable-card {
+  background: rgba(255, 251, 243, 0.92);
+  border-color: rgba(186, 132, 72, 0.18);
+}
+
+.home-page.theme-light .weather-unavailable-title {
+  color: #3d2b1f;
+}
+
+.home-page.theme-light .weather-unavailable-body {
+  color: #7a6554;
+}
+
+.home-page.theme-light .weather-unavailable-action {
+  color: #3d2b1f;
+  border-color: rgba(186, 132, 72, 0.18);
+  background: rgba(255, 252, 246, 0.78);
+}
+
+.home-page.theme-dark .weather-unavailable-card {
+  background: rgba(15, 28, 48, 0.78);
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
 .control-card {
   padding: 26rpx;
 }

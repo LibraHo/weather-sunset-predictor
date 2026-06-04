@@ -28,6 +28,15 @@ const setupDOM = () => {
     <input id="location-input" type="text" />
     <button id="search-btn">搜索</button>
     <div id="location-error" class="error-message hidden" style="display: none;"></div>
+    <section id="weather-unavailable-card" class="card weather-unavailable-card hidden" hidden>
+      <h2>天气预测暂时不可用</h2>
+      <p>请稍后再来。</p>
+      <button data-weather-unavailable-action="gallery">分享地图</button>
+      <button data-weather-unavailable-action="map">火烧云地图</button>
+    </section>
+    <section id="location-section"></section>
+    <section id="weather-section"></section>
+    <section id="forecast-section"></section>
     <section id="prediction-section" class="card hidden">
       <div id="loading-indicator" class="loading hidden" style="display: none;">
         <p id="loading-text">加载中...</p>
@@ -289,10 +298,12 @@ describe('AppController', () => {
 
       await expect(appController.handleLocationChange(location)).resolves.toBeUndefined();
 
-      // 当前实现：天气失败不阻塞地图等功能，只显示错误提示
-      const errorElement = document.getElementById('error-message');
-      expect(errorElement.style.display).toBe('block');
-      expect(errorElement.textContent).toContain('天气数据暂时不可用');
+      // 天气失败不阻塞地图等功能，进入同一个预测不可用 UI
+      const unavailableCard = document.getElementById('weather-unavailable-card');
+      expect(unavailableCard.hidden).toBe(false);
+      expect(document.getElementById('location-section').hidden).toBe(true);
+      expect(document.getElementById('weather-section').hidden).toBe(true);
+      expect(document.getElementById('prediction-section').hidden).toBe(true);
     });
 
     test('当天气数据为空时，应该抛出错误', async () => {

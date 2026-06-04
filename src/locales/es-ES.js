@@ -1,4 +1,4 @@
-const translations = {
+﻿const translations = {
   "app": {
     "title": "Sunset Voyager",
     "apiKeyRequired": "Introduce la clave API",
@@ -41,6 +41,7 @@ const translations = {
     "methodology": "Metodología de cálculo",
       "map": "Mapa de Resplandor",
             "shareMap": "Mapa compartido",
+      "firecloudMap": "Firecloud Map",
 apiAccess: 'Acceso API'
     },
     "menu": {
@@ -285,6 +286,10 @@ apiAccess: 'Acceso API'
     "mapView": "Pronóstico en Mapa",
     "daysOverview": "Resumen de {{days}} Días",
     "precipChance": "{{prob}}% precip",
+    unavailable: {
+      title: 'Weather forecast is temporarily unavailable',
+      body: 'Please come back later.'
+    },
     "dataInfo": "ℹ️ La fuente de datos proporciona {{hours}} horas de datos de pronóstico (~{{days}} días). Considere usar otras fuentes de datos del clima para más días."
   },
   "prediction": {
@@ -913,6 +918,13 @@ apiAccess: 'Acceso API'
     "weather": "Obteniendo datos del clima...",
     "prediction": "Calculando predicción...",
     "pleaseWait": "Espere por favor..."
+  },
+  admin: {
+    globalSwitches: {
+      title: 'Global switches',
+      siteClosed: { label: 'Close site', status: 'Closed' },
+      weatherPredictionClosed: { label: 'Close weather forecast', status: 'Closed' }
+    }
   },
   "other": {
     "copyright": "© 2026 Predictor de Atardecer",

@@ -1,4 +1,4 @@
-const translations = {
+﻿const translations = {
   "app": {
     "title": "하객(霞客)",
     "apiKeyRequired": "API 키를 입력하세요",
@@ -41,6 +41,7 @@ const translations = {
     "methodology": "화염구름 점수 계산 방법",
       "map": "노을 지도",
             shareMap: '공유 지도',
+      "firecloudMap": "Firecloud Map",
 apiAccess: 'API 연동'
     },
     "menu": {
@@ -304,6 +305,10 @@ apiAccess: 'API 연동'
     "threeDayGlowLoading": "3일치 로딩 중...",
     "daysOverview": "{{days}}일 개요",
     "precipChance": "{{prob}}% 강수",
+    unavailable: {
+      title: 'Weather forecast is temporarily unavailable',
+      body: 'Please come back later.'
+    },
     "dataInfo": "ℹ️ 데이터 출처는 {{hours}}시간 예측 데이터를 제공합니다 (약 {{days}}일). 더 많은 일수가 필요한 경우 다른 날씨 데이터 소스를 고려하세요.",
     "mapView": ""
   },
@@ -959,6 +964,13 @@ apiAccess: 'API 연동'
     "weather": "날씨 데이터 가져오는 중...",
     "prediction": "예측 계산 중...",
     "pleaseWait": "잠시 기다려주세요..."
+  },
+  admin: {
+    globalSwitches: {
+      title: 'Global switches',
+      siteClosed: { label: 'Close site', status: 'Closed' },
+      weatherPredictionClosed: { label: 'Close weather forecast', status: 'Closed' }
+    }
   },
   "other": {
     "copyright": "© 2026 날씨 노을 예측기",

@@ -41,6 +41,7 @@ const translations = {
     "methodology": "火燒雲計算方法",
       "map": "火燒雲地圖",
       "shareMap": "分享地圖",
+      "firecloudMap": "?????",
       "apiAccess": "API接入"
     },
     "menu": {
@@ -304,6 +305,10 @@ const translations = {
     "threeDayGlowLoading": "正在讀取3天朝晚霞...",
     "daysOverview": "{{days}}天概覽",
     "precipChance": "{{prob}}%降水",
+    "unavailable": {
+      "title": "天氣預測暫時不可用",
+      "body": "請稍後再來。"
+    },
     "dataInfo": "ℹ️ 資料來源提供 {{hours}} 小時預測資料（約 {{days}} 天）。若需要更多天數，請考慮使用其他天氣資料來源。",
     "mapView": ""
   },
@@ -989,6 +994,19 @@ const translations = {
     "active": "已啟用",
     "error": "錯誤",
     "notAvailable": "不可用"
+  },
+  "admin": {
+    "globalSwitches": {
+      "title": "????",
+      "siteClosed": {
+        "label": "關閉站點",
+        "status": "已關閉"
+      },
+      "weatherPredictionClosed": {
+        "label": "關閉天氣預測",
+        "status": "已關閉"
+      }
+    }
   },
   "weatherMap": {
     "surroundingFair": "目前周邊區域的火燒雲觀賞條件普通",

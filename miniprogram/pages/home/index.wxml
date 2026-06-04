@@ -59,6 +59,16 @@
     <button class="settings-done" bindtap="closeSettings">完成</button>
   </view>
 
+  <view class="weather-unavailable-card xiake-card" wx:if="{{siteState.weatherPredictionClosed}}">
+    <view class="weather-unavailable-title">天气预测暂时不可用</view>
+    <view class="weather-unavailable-body">请稍后再来。</view>
+    <view class="weather-unavailable-actions">
+      <view class="weather-unavailable-action primary tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="gallery" bindtap="navigateFeature">分享地图</view>
+      <view class="weather-unavailable-action tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="map" bindtap="navigateFeature">火烧云地图</view>
+    </view>
+  </view>
+
+  <block wx:if="{{!siteState.weatherPredictionClosed}}">
   <location-search value="{{locationText}}" locating="{{locating}}" favoriteLoading="{{favoriteLoading}}" loading="{{loading}}" theme="{{resolvedThemeMode}}" candidates="{{locationCandidates}}" bind:change="onLocationChange" bind:confirm="onSearch" bind:locate="onUseCurrentLocation" bind:favorite="onAddCurrentFavorite" bind:selectcandidate="selectLocationCandidate" />
 
   <view class="home-search-loading xiake-card" wx:if="{{loading}}" role="status" aria-live="polite">
@@ -103,8 +113,9 @@
   <button class="primary-button query-button" loading="{{loading}}" disabled="{{loading}}" hover-class="button-hover" hover-stay-time="80" bindtap="onSearch">
     {{loading ? '查询中...' : '查询霞光分数'}}
   </button>
+  </block>
 
-  <view class="home-weather-preview xiake-card" wx:if="{{weatherPreview.visible}}">
+  <view class="home-weather-preview xiake-card" wx:if="{{weatherPreview.visible && !siteState.weatherPredictionClosed}}">
     <view class="preview-head weather-panel-head">
       <view>
         <view class="section-title weather-panel-title">{{weatherPreview.title}}</view>
@@ -218,7 +229,7 @@
     </view>
   </view>
 
-  <view class="home-prediction-preview xiake-card" wx:if="{{weatherPreview.visible}}">
+  <view class="home-prediction-preview xiake-card" wx:if="{{weatherPreview.visible && !siteState.weatherPredictionClosed}}">
     <view class="preview-head prediction-panel-head">
       <view>
         <view class="section-title prediction-panel-title">朝晚霞预测</view>

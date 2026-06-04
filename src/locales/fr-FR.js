@@ -1,4 +1,4 @@
-const translations = {
+﻿const translations = {
   "app": {
     "title": "Sunset Voyager",
     "subtitle": "Prédire le meilleur moment pour les nuages rouges",
@@ -41,6 +41,7 @@ const translations = {
     "methodology": "Méthode de calcul",
       "map": "Carte Lueur",
       "shareMap": "Carte partagée",
+      "firecloudMap": "Firecloud Map",
       "apiAccess": "Accès API"
     },
     "menu": {
@@ -304,6 +305,10 @@ const translations = {
     "threeDayGlowLoading": "Chargement des lueurs d’aube et de crépuscule sur 3 jours...",
     "daysOverview": "Aperçu sur {{days}} jours",
     "precipChance": "{{prob}}% précip",
+    unavailable: {
+      title: 'Weather forecast is temporarily unavailable',
+      body: 'Please come back later.'
+    },
     "dataInfo": "ℹ️ La source de données fournit {{hours}} heures de prévisions (~{{days}} jours). Envisagez d'utiliser d'autres sources pour plus de jours.",
     "mapView": ""
   },
@@ -969,6 +974,13 @@ const translations = {
       "poor": "Médiocre（<40 points）"
     },
     "fallbackMessage": "Votre navigateur ne prend pas en charge Canvas, affichage en tableau"
+  },
+  admin: {
+    globalSwitches: {
+      title: 'Global switches',
+      siteClosed: { label: 'Close site', status: 'Closed' },
+      weatherPredictionClosed: { label: 'Close weather forecast', status: 'Closed' }
+    }
   },
   "other": {
     "copyright": "© 2026 Prédicteur de Coucher de Soleil",

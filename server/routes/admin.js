@@ -19,6 +19,7 @@ const { exec } = require('child_process');
 const util = require('util');
 const photoService = require('../services/PhotoService');
 const { requireAdminAuth, requireAdminRequestIntegrity } = require('../middleware/adminSecurity');
+const globalSwitchService = require('../services/GlobalSwitchRuntime');
 
 const execAsync = util.promisify(exec);
 
@@ -194,6 +195,18 @@ router.post('/admin/restart', requireAuth, async (req, res) => {
     setTimeout(() => process.exit(0), 1000);
     res.json({ success: true, note: '已发送重启信号' });
   }
+});
+
+router.get('/admin/global-switches', requireAuth, (req, res) => {
+  res.json({ state: globalSwitchService.getState() });
+});
+
+router.post('/admin/global-switches', requireAuth, (req, res) => {
+  const state = globalSwitchService.updateState({
+    siteClosed: req.body?.siteClosed,
+    weatherPredictionClosed: req.body?.weatherPredictionClosed
+  });
+  res.json({ success: true, state });
 });
 
 // ---------------------------------------------------------------------------

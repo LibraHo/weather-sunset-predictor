@@ -1,4 +1,4 @@
-const translations = {
+﻿const translations = {
   "app": {
     "title": "Sunset Voyager",
     "subtitle": "Prevedere il momento migliore per le nuvole rosse"
@@ -10,6 +10,7 @@ const translations = {
     "methodology": "Metodologia di calcolo",
       "map": "Mappa Luminosità",
             "shareMap": "Mappa condivisa",
+      "firecloudMap": "Firecloud Map",
 apiAccess: 'Accesso API'
     },
     "menu": {
@@ -258,6 +259,10 @@ apiAccess: 'Accesso API'
     "threeDayGlowLoading": "Caricamento dei bagliori di alba e tramonto per 3 giorni...",
     "daysOverview": "Panoramica {{days}} Giorni",
     "precipChance": "{{prob}}% precip",
+    unavailable: {
+      title: 'Weather forecast is temporarily unavailable',
+      body: 'Please come back later.'
+    },
     "dataInfo": "ℹ️ La fonte dati fornisce {{hours}} ore di dati di previsione (~{{days}} giorni). Considera l'uso di altre fonti dati meteo per più giorni.",
     "mapView": ""
   },
@@ -865,6 +870,13 @@ apiAccess: 'Accesso API'
     "weather": "Ottenimento dati meteo...",
     "prediction": "Calcolo previsione...",
     "pleaseWait": "Attendere prego..."
+  },
+  admin: {
+    globalSwitches: {
+      title: 'Global switches',
+      siteClosed: { label: 'Close site', status: 'Closed' },
+      weatherPredictionClosed: { label: 'Close weather forecast', status: 'Closed' }
+    }
   },
   "other": {
     "copyright": "© 2026 Previsore del Tramonto",

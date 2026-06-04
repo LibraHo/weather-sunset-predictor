@@ -1,4 +1,4 @@
-const translations = {
+﻿const translations = {
   "app": {
     "title": "霞客",
     "apiKeyRequired": "APIキーを入力してください",
@@ -41,6 +41,7 @@ const translations = {
     "methodology": "焼き雲スコアの計算方法",
       "map": "火焼け空マップ",
             shareMap: '共有マップ',
+      "firecloudMap": "Firecloud Map",
 apiAccess: 'API接続'
     },
     "menu": {
@@ -304,6 +305,10 @@ apiAccess: 'API接続'
     "threeDayGlowLoading": "3日分を読み込み中...",
     "daysOverview": "{{days}}日間の概要",
     "precipChance": "{{prob}}%の降水確率",
+    unavailable: {
+      title: 'Weather forecast is temporarily unavailable',
+      body: 'Please come back later.'
+    },
     "dataInfo": "ℹ️ データソースは{{hours}}時間分の予報データを提供しています（約{{days}}日分）。それ以上の日数については、他の天気データソースの利用をご検討ください。",
     "mapView": ""
   },
@@ -930,6 +935,13 @@ apiAccess: 'API接続'
     "weather": "天気データを取得中...",
     "prediction": "予測を計算中...",
     "pleaseWait": "お待ちください..."
+  },
+  admin: {
+    globalSwitches: {
+      title: 'Global switches',
+      siteClosed: { label: 'Close site', status: 'Closed' },
+      weatherPredictionClosed: { label: 'Close weather forecast', status: 'Closed' }
+    }
   },
   "other": {
     "copyright": "© 2026 天気夕焼け予測",

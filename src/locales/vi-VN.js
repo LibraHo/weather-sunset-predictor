@@ -1,4 +1,4 @@
-const translations = {
+﻿const translations = {
   "app": {
     "title": "Sunset Voyager",
     "subtitle": "Dự đoán thời điểm tốt nhất để thấy mây đẹp",
@@ -41,6 +41,7 @@ const translations = {
     "methodology": "Phương pháp tính điểm mây đẹp",
       "map": "Bản đồ Ráng đỏ",
       "shareMap": "Bản đồ chia sẻ",
+      "firecloudMap": "Firecloud Map",
       "apiAccess": "Truy cập API"
     },
     "menu": {
@@ -304,6 +305,10 @@ const translations = {
     "threeDayGlowLoading": "Đang tải ráng bình minh và hoàng hôn trong 3 ngày...",
     "daysOverview": "Tổng Quan {{days}} Ngày",
     "precipChance": "{{prob}}% khả năng mưa",
+    unavailable: {
+      title: 'Weather forecast is temporarily unavailable',
+      body: 'Please come back later.'
+    },
     "dataInfo": "ℹ️ Nguồn dữ liệu cung cấp dữ liệu dự báo {{hours}} giờ (~{{days}} ngày). Cân nhắc sử dụng nguồn dữ liệu thời tiết khác để có nhiều ngày hơn.",
     "mapView": ""
   },
@@ -969,6 +974,13 @@ const translations = {
     "weather": "Đang lấy dữ liệu thời tiết...",
     "prediction": "Đang tính dự đoán...",
     "pleaseWait": "Vui lòng đợi..."
+  },
+  admin: {
+    globalSwitches: {
+      title: 'Global switches',
+      siteClosed: { label: 'Close site', status: 'Closed' },
+      weatherPredictionClosed: { label: 'Close weather forecast', status: 'Closed' }
+    }
   },
   "other": {
     "copyright": "© 2026 Dự Đáo Bảo Hoàng Hôn",
