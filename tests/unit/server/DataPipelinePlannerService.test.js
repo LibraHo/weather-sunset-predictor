@@ -46,6 +46,7 @@ describe('DataPipelinePlannerService', () => {
     const camsStep = plan.steps.find(step => step.source === 'cams');
     expect(gfsStep).toMatchObject({
       bbox: { north: 55, south: 17, west: 72, east: 147 },
+      outputBbox: { north: 54, south: 18, west: 73, east: 146 },
       request: null,
       dataUrl: expect.stringContaining('filter_gfs_0p25.pl'),
       idxUrl: expect.stringContaining('.idx')
@@ -56,6 +57,7 @@ describe('DataPipelinePlannerService', () => {
       cycle: '2026052512',
       forecastHour: 12,
       bbox: { north: 55, south: 17, west: 72, east: 147 },
+      outputBbox: { north: 54, south: 18, west: 73, east: 146 },
       request: expect.objectContaining({
         dataset: 'cams-global-atmospheric-composition-forecasts',
         type: 'forecast',

@@ -125,6 +125,7 @@ class DataPipelinePlannerService {
       forecastHours: Array.isArray(batch.forecastHours) ? batch.forecastHours.slice() : null,
       variables: batch.variables.slice(),
       bbox: batch.bbox,
+      outputBbox: clone(batch.outputBbox || null),
       estimatedBytes: batch.estimatedBytes,
       dataUrl: batch.dataUrl || null,
       idxUrl: batch.idxUrl || null,
