@@ -1,0 +1,203 @@
+{
+  "id": "2026-06-04-beijing-sunset-solar-direction-mid-cloud-glow",
+  "title": "2026-06-04 Beijing sunset: orange-red-purple glow from solar-direction mid cloud",
+  "location": {
+    "name": "Beijing",
+    "nameZh": "北京",
+    "lat": 39.9042,
+    "lon": 116.4074,
+    "timezone": "Asia/Shanghai"
+  },
+  "event": {
+    "period": "sunset",
+    "localDate": "2026-06-04",
+    "calculationTimeUtc": "2026-06-04T11:38:00.000Z",
+    "sunAzimuth": 303
+  },
+  "feedback": {
+    "source": "Alex现场反馈 + 1x 手机主摄照片",
+    "reportedAt": "2026-06-04T19:39:01+08:00",
+    "summary": "现场橙、红、紫很好看，云主要在光路方向；远处有一部分灰色低云/近地层云，但没有压住其他被照亮区域。Alex 认为详细测试应约 50 分。",
+    "subjectiveScore": {
+      "min": 48,
+      "max": 55,
+      "label": "主观约 50"
+    },
+    "calibrationTarget": {
+      "score": 50,
+      "status": "calibrated",
+      "reason": "详细预测不能只看本地点头顶云量；日落 303° 西北光路方向中云被照亮时，应作为可见晚霞载体参与评分。"
+    },
+    "actualOutcome": {
+      "fireCloud": "good_glow",
+      "rainDuringWindow": false,
+      "orangeLightOrOpening": true,
+      "worthWaiting": true,
+      "notes": "1x 主摄照片显示低空橙红范围较大，局部有红紫色；不是大面积通透高云爆烧。"
+    },
+    "previousModelScores": [
+      {
+        "score": 0.7,
+        "source": "旧详细单点回放，本地点 Open-Meteo 数据给中云/高云为 0 且缺少可靠光路方向载体"
+      }
+    ]
+  },
+  "capture": {
+    "dataCompleteness": "field_feedback_reconstructed_detail_input",
+    "predictionReplay": "enhanced_detail_calculateEnhancedPrediction",
+    "sourceFiles": [
+      "memory/real-sunset-cases/2026-06-04-beijing-sunset/2026-06-04T11-29-40-753Z-evening-photo.json",
+      "memory/real-sunset-cases/2026-06-04-beijing-sunset/2026-06-04-beijing-sunset-1x-observation.json",
+      "memory/real-sunset-cases/2026-06-04-beijing-sunset/2026-06-04-beijing-sunset-traffic-light-1x-observation.json"
+    ],
+    "knownLimitations": [
+      "Open-Meteo single-point forecast and solar-direction sampling were intermittently unavailable during live capture due to ECONNRESET/502.",
+      "This fixture is reconstructed for the detailed prediction path from field feedback and 1x photos; it is not a GFS/CAMS map-grid calibration sample.",
+      "Future complete captures should replace reconstructed samples with same-source /api/prediction/enhanced closed-loop weather and solar-direction samples."
+    ]
+  },
+  "input": {
+    "weatherData": {
+      "cloudCover": 20,
+      "humidity": 58,
+      "visibility": 18,
+      "lowCloudCover": 8,
+      "temp": 20.3,
+      "windSpeed": 1.9,
+      "windDirection": 43,
+      "pressure": 1000,
+      "precipitation": 0,
+      "recentPrecipitation6h": 0,
+      "recentRainHours": 0,
+      "recentRainSignal": 0,
+      "recentRainMaxHourly": 0,
+      "recentRainWetHourEquivalent": 0,
+      "lowClouds": 8,
+      "midClouds": 0,
+      "highClouds": 0,
+      "cloudBaseHeight": null,
+      "cape": null,
+      "weatherCode": null,
+      "shortwaveRadiation": 18,
+      "directRadiation": 0,
+      "diffuseRadiation": 10,
+      "waterVapourColumn": 22,
+      "aerosolOpticalDepth": 0.45,
+      "dust": 60,
+      "pm2_5": 35,
+      "pm10": 80,
+      "aqi": 95
+    },
+    "options": {
+      "rainedRecently": false,
+      "prevHourData": null,
+      "remoteCloudData": {
+        "source": "solar_direction_openmeteo_reconstructed_from_field_feedback",
+        "azimuth": 303,
+        "samples": [
+          {
+            "distanceKm": 10,
+            "bearing": 303,
+            "cloudBaseHeight": null,
+            "lowCloud": 18,
+            "midCloud": 68,
+            "highCloud": 0,
+            "totalCloud": 72,
+            "humidity": 55,
+            "precipitation": 0,
+            "weatherCode": null,
+            "provider": "openmeteo_reconstructed",
+            "error": null
+          },
+          {
+            "distanceKm": 25,
+            "bearing": 303,
+            "cloudBaseHeight": null,
+            "lowCloud": 18,
+            "midCloud": 62,
+            "highCloud": 0,
+            "totalCloud": 66,
+            "humidity": 55,
+            "precipitation": 0,
+            "weatherCode": null,
+            "provider": "openmeteo_reconstructed",
+            "error": null
+          },
+          {
+            "distanceKm": 50,
+            "bearing": 303,
+            "cloudBaseHeight": null,
+            "lowCloud": 10,
+            "midCloud": 48,
+            "highCloud": 0,
+            "totalCloud": 52,
+            "humidity": 55,
+            "precipitation": 0,
+            "weatherCode": null,
+            "provider": "openmeteo_reconstructed",
+            "error": null
+          },
+          {
+            "distanceKm": 75,
+            "bearing": 303,
+            "cloudBaseHeight": null,
+            "lowCloud": 10,
+            "midCloud": 30,
+            "highCloud": 0,
+            "totalCloud": 34,
+            "humidity": 55,
+            "precipitation": 0,
+            "weatherCode": null,
+            "provider": "openmeteo_reconstructed",
+            "error": null
+          },
+          {
+            "distanceKm": 100,
+            "bearing": 303,
+            "cloudBaseHeight": null,
+            "lowCloud": 10,
+            "midCloud": 18,
+            "highCloud": 0,
+            "totalCloud": 22,
+            "humidity": 55,
+            "precipitation": 0,
+            "weatherCode": null,
+            "provider": "openmeteo_reconstructed",
+            "error": null
+          }
+        ],
+        "errors": []
+      }
+    }
+  },
+  "expectations": {
+    "score": {
+      "min": 48,
+      "max": 55
+    },
+    "statusAnyOf": [
+      "good_glow"
+    ],
+    "equals": [
+      {
+        "path": "carrierAnalysis.activeCarrier",
+        "value": "directional_curtain"
+      },
+      {
+        "path": "directionalCurtainCarrier.reason",
+        "value": "solar_direction_mid_cloud_glow_carrier"
+      },
+      {
+        "path": "clearSunsetAdvice.applied",
+        "value": false
+      }
+    ],
+    "notAbove": [
+      {
+        "path": "score",
+        "value": 55,
+        "reason": "Solar-direction mid cloud can make a beautiful localized orange-red-purple sunset near 50, but should not be promoted into a 70+ widespread high-cloud eruption."
+      }
+    ]
+  }
+}

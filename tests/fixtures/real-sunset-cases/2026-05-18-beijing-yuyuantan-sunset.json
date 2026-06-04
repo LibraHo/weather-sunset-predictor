@@ -43,6 +43,7 @@
   },
   "capture": {
     "dataCompleteness": "historical_forecast_cloud_path_supplemented",
+    "predictionReplay": "enhanced_detail_calculateEnhancedPrediction",
     "sourceFiles": [
       "https://historical-forecast-api.open-meteo.com/v1/forecast",
       "https://air-quality-api.open-meteo.com/v1/air-quality",

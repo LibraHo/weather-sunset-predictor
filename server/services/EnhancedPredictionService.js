@@ -975,24 +975,27 @@ function scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore = {}, we
   const low = avg('lowCloud');
   const mid = avg('midCloud');
   const high = avg('highCloud');
-  const upperSignal = clamp(high * 0.9 + mid * 0.55, 0, 100);
+  const upperSignal = clamp(high * 0.9 + mid * 0.75, 0, 100);
   const lowMidBlock = low * 0.75 + mid * 0.20;
   const lightPath = Number(lightPathScore?.score ?? 0);
   const precipitation = Number(weatherData.precipitation ?? weatherData.rain ?? weatherData.showers ?? 0);
+  const visibility = Number(weatherData.visibility ?? 20);
   const hasDirectionalOpening = directionalReason.includes('opening');
+  const hasOpenPath = hasDirectionalOpening || lightPath >= 65;
 
-  if (upperSignal < 18 || (!hasDirectionalOpening && lightPath < 55) || precipitation > 1) {
+  if (upperSignal < 18 || (!hasDirectionalOpening && lightPath < 55) || precipitation > 1 || visibility < 6) {
     return {
       applied: false,
       score: 0,
       floor: null,
-      reason: upperSignal < 18 ? 'directional_upper_cloud_too_weak' : ((!hasDirectionalOpening && lightPath < 55) ? 'light_path_not_open' : 'precipitation_blocks_directional_curtain'),
+      reason: upperSignal < 18 ? 'directional_upper_cloud_too_weak' : ((!hasDirectionalOpening && lightPath < 55) ? 'light_path_not_open' : (visibility < 6 ? 'visibility_blocks_directional_curtain' : 'precipitation_blocks_directional_curtain')),
       metrics: {
         low: parseFloat(low.toFixed(1)),
         mid: parseFloat(mid.toFixed(1)),
         high: parseFloat(high.toFixed(1)),
         upperSignal: parseFloat(upperSignal.toFixed(1)),
-        lowMidBlock: parseFloat(lowMidBlock.toFixed(1))
+        lowMidBlock: parseFloat(lowMidBlock.toFixed(1)),
+        visibility
       }
     };
   }
@@ -1008,23 +1011,37 @@ function scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore = {}, we
     score *= 0.85;
   }
 
+  // A common Beijing sunset pattern: the user's visible cloud canvas is not
+  // overhead, but in the solar-direction corridor. If the path is open and
+  // weighted mid cloud is substantial, treat it as a local visible carrier,
+  // while still limiting it below widespread high-cloud eruptions.
+  const directionalMidGlow = hasOpenPath && mid >= 45 && high < 20 && lowMidBlock <= 36 && visibility >= 10;
+  if (directionalMidGlow) {
+    const midGlowScore = 48 + Math.min((mid - 45) / 25 * 8, 8);
+    score = Math.max(score, midGlowScore);
+  }
+
   score = parseFloat(clamp(score, 0, 62).toFixed(1));
-  const floor = score >= 42
-    ? (lowMidBlock >= 38 ? 30 : 35)
-    : (score >= 30 ? 24 : null);
+  const floor = directionalMidGlow
+    ? (lowMidBlock >= 32 ? 42 : 48)
+    : (score >= 42
+      ? (lowMidBlock >= 38 ? 30 : 35)
+      : (score >= 30 ? 24 : null));
 
   return {
     applied: score >= 24,
     score,
     floor,
-    reason: floor != null ? 'solar_direction_curtain_carrier' : 'directional_curtain_weak',
+    reason: directionalMidGlow ? 'solar_direction_mid_cloud_glow_carrier' : (floor != null ? 'solar_direction_curtain_carrier' : 'directional_curtain_weak'),
     metrics: {
       low: parseFloat(low.toFixed(1)),
       mid: parseFloat(mid.toFixed(1)),
       high: parseFloat(high.toFixed(1)),
       upperSignal: parseFloat(upperSignal.toFixed(1)),
       lowMidBlock: parseFloat(lowMidBlock.toFixed(1)),
-      lightPath: Number.isFinite(lightPath) ? parseFloat(lightPath.toFixed(1)) : null
+      lightPath: Number.isFinite(lightPath) ? parseFloat(lightPath.toFixed(1)) : null,
+      visibility,
+      directionalMidGlow
     }
   };
 }
@@ -1358,6 +1375,7 @@ function assessClearSunsetViewingAdvice(weatherData, canvasScore, lightPathScore
   const overcastText = /(overcast|阴天|陰天|阴|陰)/.test(weatherConditionText);
 
   const clearSkyCarrierMissing = canvasScore?.cloudLevel === 'space' || upperCloudCover < 12;
+  const directionalCarrierApplied = context.directionalCurtainCarrier?.applied === true;
   const hardBlocked =
     context.aerosolHazeCap?.applied ||
     context.severeCap?.reason ||
@@ -1368,6 +1386,7 @@ function assessClearSunsetViewingAdvice(weatherData, canvasScore, lightPathScore
 
   const applied = Boolean(
     clearSkyCarrierMissing &&
+    !directionalCarrierApplied &&
     lowClouds <= 20 &&
     precipitation <= 0.2 &&
     visibility >= 15 &&
@@ -1383,7 +1402,8 @@ function assessClearSunsetViewingAdvice(weatherData, canvasScore, lightPathScore
       lowClouds: parseFloat(lowClouds.toFixed(1)),
       visibility: parseFloat(visibility.toFixed(1)),
       precipitation: parseFloat(precipitation.toFixed(2)),
-      lightPath: Number.isFinite(lightPath) ? parseFloat(lightPath.toFixed(1)) : null
+      lightPath: Number.isFinite(lightPath) ? parseFloat(lightPath.toFixed(1)) : null,
+      directionalCarrierApplied
     }
   };
 }
@@ -2432,7 +2452,8 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
       severeCap,
       occlusion,
       geometric,
-      postRainAdjustment
+      postRainAdjustment,
+      directionalCurtainCarrier
     })
     : { applied: false, reason: null, metrics: null };
   let adjustedAdvice = finalResult.advice;
