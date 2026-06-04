@@ -152,8 +152,8 @@ describe('LightPathV2Service', () => {
     expect(result).toHaveProperty('capReason');
     expect(result).toHaveProperty('explain');
     expect(Array.isArray(result.samples)).toBe(true);
-    expect(result.samples).toHaveLength(4);
-    expect(result.samples.map(sample => sample.distanceKm)).toEqual([25, 50, 75, 100]);
+    expect(result.samples).toHaveLength(5);
+    expect(result.samples.map(sample => sample.distanceKm)).toEqual([10, 25, 50, 75, 100]);
   });
 });
 

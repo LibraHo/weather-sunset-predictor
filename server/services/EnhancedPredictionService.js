@@ -44,8 +44,14 @@ const FINAL_WEIGHTS = {
   LIGHT_PATH: 0.2      // 光路约束（保守权重）
 };
 
-const SOLAR_DIRECTION_SAMPLE_DISTANCES_KM = [25, 50, 75, 100];
-const SOLAR_DIRECTION_SAMPLE_WEIGHTS = [0.40, 0.35, 0.18, 0.07];
+const SOLAR_DIRECTION_SAMPLE_DISTANCES_KM = [10, 25, 50, 75, 100];
+const SOLAR_DIRECTION_SAMPLE_WEIGHTS = [0.25, 0.30, 0.25, 0.14, 0.06];
+const SOLAR_DIRECTION_SAMPLE_WEIGHT_BY_DISTANCE = Object.freeze(
+  SOLAR_DIRECTION_SAMPLE_DISTANCES_KM.reduce((acc, distanceKm, index) => {
+    acc[distanceKm] = SOLAR_DIRECTION_SAMPLE_WEIGHTS[index];
+    return acc;
+  }, {})
+);
 
 // ========== 辅助函数 ==========
 
@@ -936,6 +942,14 @@ function scoreAerosolCarrier(weatherData, lightPathScore = {}) {
   };
 }
 
+function getSolarDirectionSampleWeight(sample, index) {
+  const distanceKey = Math.round(Number(sample?.distanceKm));
+  if (Number.isFinite(distanceKey) && SOLAR_DIRECTION_SAMPLE_WEIGHT_BY_DISTANCE[distanceKey] != null) {
+    return SOLAR_DIRECTION_SAMPLE_WEIGHT_BY_DISTANCE[distanceKey];
+  }
+  return SOLAR_DIRECTION_SAMPLE_WEIGHTS[index] || 0.1;
+}
+
 function scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore = {}, weatherData = {}) {
   const samples = Array.isArray(remoteCloudData?.samples)
     ? remoteCloudData.samples.filter(sample => sample && !sample.error)
@@ -949,10 +963,9 @@ function scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore = {}, we
     return { applied: false, score: 0, floor: null, reason: 'directional_cloud_wall' };
   }
 
-  const weights = SOLAR_DIRECTION_SAMPLE_WEIGHTS;
-  const totalWeight = samples.reduce((sum, _sample, index) => sum + (weights[index] || 0.1), 0);
+  const totalWeight = samples.reduce((sum, sample, index) => sum + getSolarDirectionSampleWeight(sample, index), 0);
   const avg = (key) => samples.reduce((sum, sample, index) => (
-    sum + Number(sample[key] || 0) * (weights[index] || 0.1)
+    sum + Number(sample[key] || 0) * getSolarDirectionSampleWeight(sample, index)
   ), 0) / totalWeight;
 
   const low = avg('lowCloud');
@@ -1403,9 +1416,10 @@ function analyzeRemoteLightPath(samples) {
   const valid = Array.isArray(samples) ? samples.filter(s => !s.error) : [];
   if (valid.length === 0) return { available: false, modifier: 1, cap: null, reason: 'no_remote_samples' };
 
-  const weights = SOLAR_DIRECTION_SAMPLE_WEIGHTS;
-  const totalWeight = valid.reduce((sum, _s, idx) => sum + (weights[idx] || 0.1), 0);
-  const avg = (key) => valid.reduce((sum, s, idx) => sum + Number(s[key] || 0) * (weights[idx] || 0.1), 0) / totalWeight;
+  const totalWeight = valid.reduce((sum, sample, index) => sum + getSolarDirectionSampleWeight(sample, index), 0);
+  const avg = (key) => valid.reduce((sum, sample, index) => (
+    sum + Number(sample[key] || 0) * getSolarDirectionSampleWeight(sample, index)
+  ), 0) / totalWeight;
   const near = valid[0] || {};
   const far = valid[valid.length - 1] || {};
   const lowMid = avg('lowCloud') * 0.65 + avg('midCloud') * 0.35;
@@ -1452,21 +1466,19 @@ function analyzeRemoteLightPath(samples) {
  * 基于太阳高度角 + 云底高度 + 多点采样估算光路遮挡概率。
  */
 function scoreLightPath(weatherData, solarElevation, azimuth, remoteCloudData = null) {
-  const distanceWeights = SOLAR_DIRECTION_SAMPLE_WEIGHTS; // 25/50/75/100km
-
   let samples = [];
   let hasRemoteData = false;
 
   if (remoteCloudData && Array.isArray(remoteCloudData.samples) && remoteCloudData.samples.length >= 4) {
     hasRemoteData = true;
-    samples = remoteCloudData.samples.slice(0, 4);
+    samples = remoteCloudData.samples.slice(0, SOLAR_DIRECTION_SAMPLE_DISTANCES_KM.length);
   } else {
     samples = buildLocalLightPathSamples(weatherData);
   }
 
   const sampleResults = samples.map((s, i) => {
     const r = calcSampleBlock(s, solarElevation);
-    return { ...r, weightedBlock: r.block * (distanceWeights[i] || 0.3) };
+    return { ...r, weightedBlock: r.block * getSolarDirectionSampleWeight(s, i) };
   });
 
   const rawOcclusionProbability = 1 - sampleResults.reduce((prod, s) => prod * (1 - s.weightedBlock), 1);
@@ -2244,8 +2256,10 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   const scoringV2 = type === 'sunset'
     ? assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightPathGate, renderingFactor, remoteCloudData)
     : { applied: false };
-  const visibleSunsetSectorCap = scoringV2.visibleSunsetSectorCap
-    || assessVisibleSunsetSectorCap(weatherData, carrierScore, lightPathScore, lightPathGate, remoteCloudData);
+  const visibleSunsetSectorCap = type === 'sunset'
+    ? (scoringV2.visibleSunsetSectorCap
+      || assessVisibleSunsetSectorCap(weatherData, carrierScore, lightPathScore, lightPathGate, remoteCloudData))
+    : { applied: false, cap: null, reason: null };
   if (!thickHighCloudPenalty.applied && scoringV2.applied && scoringV2.score > adjustedScore) {
     adjustedScore = scoringV2.score;
     if (adjustedScore >= 82) {
@@ -2289,11 +2303,12 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   }
 
   if (visibleSunsetSectorCap.applied) {
+    const scoreBeforeVisibleSectorCap = adjustedScore;
     adjustedScore = Math.min(adjustedScore, visibleSunsetSectorCap.cap);
-    if (adjustedScore >= 65) {
+    if (adjustedScore < scoreBeforeVisibleSectorCap && adjustedScore >= 65) {
       adjustedStatus = 'very_likely';
       adjustedDescription = 'excellent_conditions';
-    } else if (adjustedScore >= 40) {
+    } else if (adjustedScore < scoreBeforeVisibleSectorCap && adjustedScore >= 40) {
       adjustedStatus = 'good_glow';
       adjustedDescription = 'conditions_good';
     }

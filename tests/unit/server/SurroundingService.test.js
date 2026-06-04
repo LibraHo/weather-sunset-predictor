@@ -142,13 +142,14 @@ describe('SurroundingService', () => {
 
       expect(fetchBatchSpy).toHaveBeenCalledTimes(1);
       expect(fetchBatchSpy).toHaveBeenCalledWith(expect.arrayContaining([
+        expect.objectContaining({ distanceKm: 10 }),
         expect.objectContaining({ distanceKm: 25 }),
         expect.objectContaining({ distanceKm: 50 }),
         expect.objectContaining({ distanceKm: 75 }),
         expect.objectContaining({ distanceKm: 100 })
       ]), 72, undefined, { includeAirQuality: false, fields: 'lightPath' });
       expect(fetchSingleSpy).not.toHaveBeenCalled();
-      expect(result.samples).toHaveLength(4);
+      expect(result.samples).toHaveLength(5);
       expect(result.samples[0]).toMatchObject({
         highCloud: 66,
         midCloud: 34,

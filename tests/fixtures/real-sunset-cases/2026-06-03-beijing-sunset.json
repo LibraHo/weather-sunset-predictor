@@ -17,18 +17,23 @@
   "feedback": {
     "source": "Alex现场反馈",
     "reportedAt": "2026-06-03T20:31:06+08:00",
-    "summary": "实际光非常美，是橙红色；无雨，值得等。",
+    "summary": "实际光非常美，是橙红色；无雨，值得等；应高于 5/18，进入 70 档。",
     "subjectiveScore": {
-      "min": 60,
-      "max": 68,
-      "label": "主观 68，可推荐等待"
+      "min": 70,
+      "max": 72,
+      "label": "主观约 70，高于 5/18"
+    },
+    "calibrationTarget": {
+      "score": 70,
+      "status": "pending_more_data",
+      "reason": "现有 25km 起步光路和云量字段不足以可靠区分本地近场参与；需补 10km 近场采样和云厚/透光数据后再收紧硬阈值。"
     },
     "actualOutcome": {
       "fireCloud": "good_glow",
       "rainDuringWindow": false,
       "orangeLightOrOpening": true,
       "worthWaiting": true,
-      "notes": "有中高云接光，日落方向光路开；轻/中度霾增强橙红散射，但不属于顶级通透大烧。"
+      "notes": "本地中高云与日落方向光路共同参与，轻/中度霾增强橙红散射；整体应高于 5/18，但不属于顶级通透大烧。"
     },
     "previousModelScores": [
       {
@@ -163,7 +168,7 @@
   "expectations": {
     "score": {
       "min": 60,
-      "max": 68
+      "max": 72
     },
     "statusAnyOf": [
       "good_glow",
@@ -186,8 +191,8 @@
     "notAbove": [
       {
         "path": "score",
-        "value": 68,
-        "reason": "Warm haze with open path is good, but not a top-tier clear-air eruption."
+        "value": 72,
+        "reason": "Warm haze with open path and full local upper-cloud participation is strong, but not a top-tier clear-air eruption."
       }
     ]
   }
