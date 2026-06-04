@@ -376,6 +376,36 @@ describe('GridProductScoreAdapter', () => {
     expect(center.score).toBeGreaterThan(center.mapDirectionalScoring.adjustment.originalScore);
   });
 
+  test('caps map simplified base scores before directional lift', () => {
+    const cacheService = new GridProductCacheService({
+      dataDir: makeTempDir(),
+      now: new Date('2026-05-26T12:30:00Z')
+    });
+    cacheService.writeProduct({
+      source: 'gfs',
+      productType: 'weather_grid',
+      schemaVersion: 1,
+      cycle: '2026052606',
+      forecastHour: 6,
+      validTime: '2026-05-26T11:30:00.000Z',
+      grid: { bbox: { north: 41, south: 39, west: 115, east: 117 }, resolution: 0.5 },
+      fields: ['TCDC', 'LCDC', 'MCDC', 'HCDC', 'RH', 'VIS', 'APCP', 'DSWRF', 'PWAT', 'UGRD', 'VGRD'],
+      points: [{
+        lat: 40,
+        lon: 116,
+        weather: fullGfsWeather({ TCDC: 100, LCDC: 0, MCDC: 100, HCDC: 100, DSWRF: 180 })
+      }]
+    });
+
+    const adapter = new GridProductScoreAdapter({ cacheService });
+    const cache = adapter.getScoreCache('sunset');
+
+    expect(cache.gridPoints[0].score).toBeLessThanOrEqual(78);
+    expect(cache.gridPoints[0].mapSimplifiedScoring).toMatchObject({
+      cap: 78
+    });
+  });
+
   test('uses buffered directional neighbors without exposing buffer cells in public cache', () => {
     const cacheService = new GridProductCacheService({
       dataDir: makeTempDir(),
