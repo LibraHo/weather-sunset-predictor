@@ -110,7 +110,7 @@ const translations = {
           "date": "2026-06-03",
           "title": "Sunset scoring v2",
           "summary": "The final score now combines cloud carrier, sunset path, and air rendering. With an open path and acceptable visibility, moderate AOD, PM, and dust are treated as warm orange-red scattering instead of automatic gray-curtain failure.",
-          "validation": "Validation: 2026-06-02 Beijing remains low around 30; 2026-06-03 Beijing replays around 66, matching the 60-68 real-world feedback range."
+          "validation": "Validation: 2026-06-02 Beijing remains low around 30; the 2026-06-03 detailed point forecast replays around 71 and reaches the 70 band, while the fire-cloud map still uses the regional simplified branch."
         },
         "cloudThickness": {
           "date": "2026-05-27",

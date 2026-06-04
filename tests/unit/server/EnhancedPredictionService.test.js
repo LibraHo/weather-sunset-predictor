@@ -1330,6 +1330,75 @@ describe('EnhancedPredictionService', () => {
       expect(result.score).toBeLessThan(65);
     });
 
+    test('should lift full local upper-cloud warm scattering into 70 band for detailed point forecast only', () => {
+      const weatherData = {
+        cloudCover: 98,
+        lowClouds: 0,
+        midClouds: 100,
+        highClouds: 100,
+        humidity: 62,
+        visibility: 20,
+        precipitation: 0,
+        shortwaveRadiation: 7,
+        directRadiation: 0,
+        diffuseRadiation: 7,
+        waterVapourColumn: 32.8,
+        aerosolOpticalDepth: 0.72,
+        dust: 96,
+        pm2_5: 39.5,
+        pm10: 91.3,
+        aqi: 116
+      };
+      const remoteCloudData = {
+        source: 'solar_direction_openmeteo',
+        samples: [
+          { distanceKm: 25, lowCloud: 0, midCloud: 100, highCloud: 100, totalCloud: 97 },
+          { distanceKm: 50, lowCloud: 0, midCloud: 72, highCloud: 25, totalCloud: 93 },
+          { distanceKm: 75, lowCloud: 0, midCloud: 51, highCloud: 0, totalCloud: 80 },
+          { distanceKm: 100, lowCloud: 0, midCloud: 33, highCloud: 0, totalCloud: 84 }
+        ]
+      };
+
+      const pointResult = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData,
+        new Date('2026-06-03T11:37:00.000Z'),
+        39.9042,
+        116.4074,
+        'sunset',
+        { remoteCloudData }
+      );
+      const mapContextResult = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData,
+        new Date('2026-06-03T11:37:00.000Z'),
+        39.9042,
+        116.4074,
+        'sunset',
+        { remoteCloudData, scoringContext: 'map_grid_simplified' }
+      );
+
+      expect(pointResult.scoringV2).toMatchObject({
+        airMode: 'warm_scattering_path_open',
+        cloudCarrier: 63.2,
+        warmScatteringUpperCarrierAdjustment: {
+          applied: true,
+          reason: 'full_upper_cloud_warm_scattering_participation',
+          originalCarrier: 59.1,
+          adjustedCarrier: 63.2
+        }
+      });
+      expect(pointResult.score).toBeGreaterThanOrEqual(70);
+      expect(pointResult.score).toBeLessThanOrEqual(72);
+      expect(mapContextResult.scoringV2).toMatchObject({
+        airMode: 'warm_scattering_path_open',
+        cloudCarrier: 59.1,
+        warmScatteringUpperCarrierAdjustment: {
+          applied: false,
+          reason: 'map_grid_simplified_no_point_carrier_lift'
+        }
+      });
+      expect(mapContextResult.score).toBeLessThan(70);
+    });
+
     test('should not let carrier floor override thick high-cloud cap', () => {
       const weatherData = {
         cloudCover: 100,

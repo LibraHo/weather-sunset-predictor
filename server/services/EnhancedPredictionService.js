@@ -1136,7 +1136,84 @@ function assessVisibleSunsetSectorCap(weatherData, carrierScore, lightPathScore,
   };
 }
 
-function assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightPathGate, renderingFactor, remoteCloudData = null) {
+function assessWarmScatteringUpperCarrierAdjustment(weatherData, carrierScore, lightPathScore, lightPathGate, remoteCloudData = null, context = {}) {
+  if (context.scoringContext === 'map_grid_simplified') {
+    return { applied: false, reason: 'map_grid_simplified_no_point_carrier_lift' };
+  }
+
+  const lowClouds = Number(weatherData.lowClouds || 0);
+  const midClouds = Number(weatherData.midClouds || 0);
+  const highClouds = Number(weatherData.highClouds || 0);
+  const visibility = Number(weatherData.visibility ?? 20);
+  const precipitation = Number(weatherData.precipitation ?? weatherData.rain ?? weatherData.showers ?? 0);
+  const cloudCarrier = clamp(Number(carrierScore?.score ?? 0), 0, 100);
+  const pathScore = clamp(Number(lightPathScore?.score ?? 0), 0, 100);
+  const pathGate = clamp(Number(lightPathGate?.gate ?? 0), 0, 1.12);
+  const directionalReason = lightPathScore?.directionalAnalysis?.reason || lightPathGate?.reason || '';
+  const pathOpen = pathGate >= 0.85 || directionalReason.includes('opening');
+  const { aod, pm25, pm10, dust } = getAerosolMetrics(weatherData);
+  const upperCloudCarrier = highClouds * 0.65 + midClouds * 0.35;
+  const moderateWarmAir =
+    visibility >= 12 &&
+    (aod != null && aod >= 0.45 && aod < 0.8) &&
+    (pm25 == null || pm25 < 65) &&
+    (pm10 == null || pm10 < 120) &&
+    (dust == null || dust < 150);
+  const samples = Array.isArray(remoteCloudData?.samples)
+    ? remoteCloudData.samples.filter(sample => sample && !sample.error)
+    : [];
+  const nearSamples = samples.filter(sample => Number(sample.distanceKm) <= 25);
+  const nearUpperCarrier = nearSamples.length > 0
+    ? nearSamples.reduce((sum, sample) => (
+      sum + Number(sample.highCloud || 0) * 0.65 + Number(sample.midCloud || 0) * 0.35
+    ), 0) / nearSamples.length
+    : 0;
+  const directionalUpperCarrier = Number(lightPathScore?.directionalAnalysis?.upperSignal ?? 0);
+
+  if (
+    pathOpen &&
+    lowClouds <= 10 &&
+    precipitation <= 0.2 &&
+    upperCloudCarrier >= 90 &&
+    pathScore >= 85 &&
+    moderateWarmAir &&
+    (nearUpperCarrier >= 70 || directionalUpperCarrier >= 80)
+  ) {
+    const adjustedCarrier = Math.max(cloudCarrier, 63.2);
+    return {
+      applied: adjustedCarrier > cloudCarrier,
+      reason: adjustedCarrier > cloudCarrier ? 'full_upper_cloud_warm_scattering_participation' : 'carrier_already_sufficient',
+      originalCarrier: parseFloat(cloudCarrier.toFixed(1)),
+      adjustedCarrier: parseFloat(adjustedCarrier.toFixed(1)),
+      metrics: {
+        localUpperCarrier: parseFloat(upperCloudCarrier.toFixed(1)),
+        nearUpperCarrier: parseFloat(nearUpperCarrier.toFixed(1)),
+        directionalUpperCarrier: Number.isFinite(directionalUpperCarrier) ? parseFloat(directionalUpperCarrier.toFixed(1)) : null,
+        pathScore: parseFloat(pathScore.toFixed(1)),
+        pathGate: parseFloat(pathGate.toFixed(2)),
+        aod,
+        pm25,
+        pm10,
+        dust,
+        visibility
+      }
+    };
+  }
+
+  return {
+    applied: false,
+    reason: 'full_upper_cloud_warm_scattering_not_matched',
+    metrics: {
+      localUpperCarrier: parseFloat(upperCloudCarrier.toFixed(1)),
+      nearUpperCarrier: parseFloat(nearUpperCarrier.toFixed(1)),
+      directionalUpperCarrier: Number.isFinite(directionalUpperCarrier) ? parseFloat(directionalUpperCarrier.toFixed(1)) : null,
+      pathScore: parseFloat(pathScore.toFixed(1)),
+      pathGate: parseFloat(pathGate.toFixed(2))
+    }
+  };
+}
+
+function assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightPathGate, renderingFactor, remoteCloudData = null, context = {}) {
   const lowClouds = Number(weatherData.lowClouds || 0);
   const midClouds = Number(weatherData.midClouds || 0);
   const highClouds = Number(weatherData.highClouds || 0);
@@ -1144,7 +1221,7 @@ function assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightP
   const precipitation = Number(weatherData.precipitation ?? weatherData.rain ?? weatherData.showers ?? 0);
   const { aod, pm25, pm10, dust } = getAerosolMetrics(weatherData);
 
-  const cloudCarrier = clamp(Number(carrierScore?.score ?? 0), 0, 100);
+  let cloudCarrier = clamp(Number(carrierScore?.score ?? 0), 0, 100);
   const pathScore = clamp(Number(lightPathScore?.score ?? 0), 0, 100);
   const pathGate = clamp(Number(lightPathGate?.gate ?? 0), 0, 1.12);
   const directionalReason = lightPathScore?.directionalAnalysis?.reason || lightPathGate?.reason || '';
@@ -1181,6 +1258,13 @@ function assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightP
     airMode = 'heavy_haze_suppression';
   }
 
+  const warmScatteringUpperCarrierAdjustment = airMode === 'warm_scattering_path_open'
+    ? assessWarmScatteringUpperCarrierAdjustment(weatherData, carrierScore, lightPathScore, lightPathGate, remoteCloudData, context)
+    : { applied: false, reason: 'air_mode_not_warm_scattering_path_open' };
+  if (warmScatteringUpperCarrierAdjustment.applied) {
+    cloudCarrier = warmScatteringUpperCarrierAdjustment.adjustedCarrier;
+  }
+
   const pathFactor = pathOpen ? Math.max(1, pathGate) : pathGate;
   const rawScore = clamp(cloudCarrier * pathFactor * airFactor, 0, 100);
   const visibleSunsetSectorCap = assessVisibleSunsetSectorCap(weatherData, carrierScore, lightPathScore, lightPathGate, remoteCloudData);
@@ -1197,6 +1281,7 @@ function assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightP
     airMode,
     pathOpen,
     hardBlocked,
+    warmScatteringUpperCarrierAdjustment,
     visibleSunsetSectorCap,
     metrics: {
       upperCloudCarrier: parseFloat(upperCloudCarrier.toFixed(1)),
@@ -2132,7 +2217,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   // 确保 date 是 Date 对象
   const dateObj = date instanceof Date ? date : new Date(date);
 
-  const { remoteCloudData = null, rainedRecently = false, prevHourData = null } = options;
+  const { remoteCloudData = null, rainedRecently = false, prevHourData = null, scoringContext = null } = options;
 
   logger.debug('[EnhancedPredictionService]', '开始计算增强版预测...');
 
@@ -2254,7 +2339,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   }
 
   const scoringV2 = type === 'sunset'
-    ? assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightPathGate, renderingFactor, remoteCloudData)
+    ? assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightPathGate, renderingFactor, remoteCloudData, { scoringContext })
     : { applied: false };
   const visibleSunsetSectorCap = type === 'sunset'
     ? (scoringV2.visibleSunsetSectorCap

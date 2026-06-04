@@ -994,7 +994,7 @@ describe('PredictionController', () => {
 
     test('开口暖色散射场景应显示空气显色较好', () => {
       const groups = predictionController.buildAnalysisGroups({
-        score: 66,
+        score: 71,
         cloudLayers: { high: 100, mid: 100, low: 0 },
         visibility: 20,
         humidity: 62,
@@ -1004,7 +1004,7 @@ describe('PredictionController', () => {
         scoringV2: {
           applied: true,
           airMode: 'warm_scattering_path_open',
-          score: 66.3
+          score: 70.8
         },
         lightPathAnalysis: {
           score: 92.5,

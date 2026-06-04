@@ -25,8 +25,8 @@
     },
     "calibrationTarget": {
       "score": 70,
-      "status": "pending_more_data",
-      "reason": "现有 25km 起步光路和云量字段不足以可靠区分本地近场参与；需补 10km 近场采样和云厚/透光数据后再收紧硬阈值。"
+      "status": "calibrated",
+      "reason": "本地中高云满、日落方向近距云层参与、光路开且暖色散射成立，单点详细预测应进入 70 档；地图简化分支不使用这条精细单点修正。"
     },
     "actualOutcome": {
       "fireCloud": "good_glow",
@@ -167,7 +167,7 @@
   },
   "expectations": {
     "score": {
-      "min": 60,
+      "min": 70,
       "max": 72
     },
     "statusAnyOf": [
@@ -186,6 +186,10 @@
       {
         "path": "scoringV2.airMode",
         "value": "warm_scattering_path_open"
+      },
+      {
+        "path": "scoringV2.warmScatteringUpperCarrierAdjustment.applied",
+        "value": true
       }
     ],
     "notAbove": [
