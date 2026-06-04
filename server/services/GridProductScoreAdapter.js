@@ -272,6 +272,10 @@ function pointInBbox(point, bbox) {
     && lon <= Number(bbox.east);
 }
 
+function hasUsableWeatherFields(point) {
+  return missingRequiredGfsFields(point?.weather || {}).length === 0;
+}
+
 function uniqueSorted(values) {
   return Array.from(new Set(
     values
@@ -577,7 +581,7 @@ class GridProductScoreAdapter {
 
     const mergedPoints = Array.from(merged.values());
     const gridStepKm = estimateGridStepKm(mergedPoints, weatherProduct.grid?.resolution);
-    const gridLookup = buildGridLookup(mergedPoints);
+    const gridLookup = buildGridLookup(mergedPoints.filter(hasUsableWeatherFields));
     const outputBbox = weatherProduct.sourceMeta?.outputBbox || weatherProduct.grid?.outputBbox || null;
     const gridPoints = mergedPoints
       .map(point => {
@@ -586,9 +590,8 @@ class GridProductScoreAdapter {
           score: isFiniteNumber(point._weatherScore) ? point._weatherScore : point._aerosolScore
         };
         const score = scoreFromFields(scoringPoint, safePeriod);
-        const date = point.sourceMeta?.weather?.validTime || weatherProduct.validTime || new Date().toISOString();
         const directionalContext = score !== null
-          ? buildDirectionalContext(point, gridLookup, date, safePeriod, gridStepKm)
+          ? buildDirectionalContext(point, gridLookup, targetTime.toISOString(), safePeriod, gridStepKm)
           : null;
         const directionalScore = score !== null
           ? applyDirectionalMapScoring(score, point.weather, directionalContext)
