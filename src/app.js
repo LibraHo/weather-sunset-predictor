@@ -15,6 +15,7 @@ import GlobalErrorBoundary from './utils/GlobalErrorBoundary.js';
 import ErrorHandler from './utils/ErrorHandler.js';
 import { API_CONFIG } from '../config.api.js';
 import initializeHomeTabs from './utils/HomeTabs.js';
+import UserPanelController from './controllers/UserPanelController.js';
 
 console.log('Weather Sunset Predictor - Application Starting...');
 
@@ -107,6 +108,7 @@ console.log('[App] API模式: 后端代理（固定）');
 
 const weatherController = new WeatherController(storageService, savedAPIKey, USE_MOCK_API, useProxy);
 const predictionController = new PredictionController(storageService);
+let userPanelController = null;
 
 const appController = new AppController(
   storageService,
@@ -171,6 +173,7 @@ async function initializeApp() {
     initializeHomeTabs(document, () => onMapPanelVisible());
     setupLogoBackHome();
     setupApiApplicationForm();
+    setupUserPanelController();
 
     // 朝/晚霞 tab 早期绑定（init 前就可点击）
     document.getElementById('map-tab-sunrise')?.addEventListener('click', () => {
@@ -228,6 +231,12 @@ async function initializeApp() {
   }
 }
 
+function setupUserPanelController() {
+  userPanelController = new UserPanelController({ storageService });
+  userPanelController.initialize();
+  window.userPanelController = userPanelController;
+}
+
 function setupGalleryBasemapSync() {
   const galleryFrame = document.getElementById('gallery-iframe');
   if (!galleryFrame) return;
@@ -281,6 +290,7 @@ function setupApiApplicationForm() {
     try {
       const res = await fetch('/api/applications', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
@@ -290,6 +300,7 @@ function setupApiApplicationForm() {
       }
       form.reset();
       setMessage(getI18nText('home.apiAccess.submitSuccess', 'Application submitted. We will review it before issuing a token.'), 'success');
+      window.userPanelController?.refresh?.();
     } catch (error) {
       setMessage(error?.message || getI18nText('home.apiAccess.submitFailed', 'Submission failed.'), 'error');
     } finally {

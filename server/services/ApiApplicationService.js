@@ -69,6 +69,10 @@ class ApiApplicationService {
     const nickname = String(item.nickname || item.contact || '').trim();
     const contact = String(item.contact || nickname).trim();
     const userId = typeof item.userId === 'string' && item.userId.trim() ? item.userId.trim() : null;
+    const ownerType = userId ? 'user' : 'anonymous';
+    const ownerLevel = ownerType === 'user'
+      ? (typeof item.ownerLevel === 'string' && item.ownerLevel.trim() ? item.ownerLevel.trim() : 'account')
+      : null;
 
     return {
       id: item.id || uuidv4(),
@@ -82,7 +86,8 @@ class ApiApplicationService {
       remarks: typeof item.remarks === 'string' ? item.remarks : '',
       tokenId: item.tokenId || null,
       userId,
-      ownerType: userId ? 'user' : 'anonymous',
+      ownerType,
+      ownerLevel,
       createdAt: item.createdAt || now,
       updatedAt: item.updatedAt || now,
     };
@@ -94,6 +99,12 @@ class ApiApplicationService {
 
   _getById(id) {
     return this.applications.find((item) => item.id === id) || null;
+  }
+
+  _getByUserId(userId) {
+    const normalizedUserId = typeof userId === 'string' ? userId.trim() : '';
+    if (!normalizedUserId) return null;
+    return this.applications.find((item) => item.ownerType === 'user' && item.userId === normalizedUserId) || null;
   }
 
   submitApplication(payload = {}) {
@@ -109,6 +120,15 @@ class ApiApplicationService {
       throw err;
     }
 
+    const userId = typeof payload.userId === 'string' && payload.userId.trim() ? payload.userId.trim() : null;
+    const existingForUser = this._getByUserId(userId);
+    if (existingForUser) {
+      const err = new Error('signed-in users can only have one API application');
+      err.code = 'APPLICATION_ALREADY_EXISTS';
+      err.application = this._toPublic(existingForUser);
+      throw err;
+    }
+
     const entry = this._normalize({
       ...payload,
       id: uuidv4(),
@@ -116,7 +136,7 @@ class ApiApplicationService {
       updatedAt: new Date().toISOString(),
       status: 'pending',
       tokenId: null,
-      userId: typeof payload.userId === 'string' && payload.userId.trim() ? payload.userId.trim() : null,
+      userId,
     });
 
     entry.email = email;
@@ -188,6 +208,12 @@ class ApiApplicationService {
   getApplicationById(id) {
     this._load();
     const record = this._getById(id);
+    return record ? this._toPublic(record) : null;
+  }
+
+  getApplicationByUserId(userId) {
+    this._load();
+    const record = this._getByUserId(userId);
     return record ? this._toPublic(record) : null;
   }
 

@@ -283,7 +283,8 @@ describe('需求45 PR C - Token 管理 / API 申请 / 审计日志', () => {
     expect(loggedInRes.status).toBe(201);
     expect(loggedInRes.body.application).toMatchObject({
       ownerType: 'user',
-      userId: user.userId
+      userId: user.userId,
+      ownerLevel: 'account'
     });
 
     const publicListRes = await request(app)
@@ -297,7 +298,108 @@ describe('需求45 PR C - Token 管理 / API 申请 / 审计日志', () => {
       .get('/api/admin/applications')
       .set('Authorization', makeAdminHeader(adminPassword));
     const owned = adminListRes.body.applications.find((item) => item.email === 'owner@example.com');
-    expect(owned).toMatchObject({ userId: user.userId, ownerType: 'user' });
+    expect(owned).toMatchObject({ userId: user.userId, ownerType: 'user', ownerLevel: 'account' });
+
+    const cookieUser = userService.upsertWechatUser({ openid: 'openid-cookie-api-application', sessionKey: 'session-key' });
+    const cookieToken = userService.issueToken(cookieUser);
+    const cookieOwnedRes = await request(app)
+      .post('/api/applications')
+      .set('Cookie', `xiake_session=${cookieToken}`)
+      .send({
+        email: 'cookie-owner@example.com',
+        countryRegion: 'SG',
+        nickname: 'Cookie Owner',
+        purpose: 'cookie owned test'
+      });
+
+    expect(cookieOwnedRes.status).toBe(201);
+    expect(cookieOwnedRes.body.application).toMatchObject({
+      ownerType: 'user',
+      userId: cookieUser.userId,
+      ownerLevel: 'account'
+    });
+
+    const cookieMineRes = await request(app)
+      .get('/api/applications/me')
+      .set('Cookie', `xiake_session=${cookieToken}`);
+
+    expect(cookieMineRes.status).toBe(200);
+    expect(cookieMineRes.body.application).toMatchObject({
+      email: 'cookie-owner@example.com',
+      userId: cookieUser.userId,
+      ownerLevel: 'account'
+    });
+  });
+
+  test('signed-in users can only keep one account-level API application and fetch it', async () => {
+    const UserService = require('../../../server/services/UserService');
+    const userService = new UserService({
+      dataFile: process.env.USER_DATA_FILE,
+      sessionSecret: process.env.USER_SESSION_SECRET
+    });
+    const user = userService.upsertWechatUser({ openid: 'openid-single-api-application', sessionKey: 'session-key' });
+    const userToken = userService.issueToken(user);
+
+    const firstRes = await request(app)
+      .post('/api/applications')
+      .set('Authorization', `Bearer ${userToken}`)
+      .send({
+        email: 'first-owner@example.com',
+        countryRegion: 'US',
+        nickname: 'First Owner',
+        purpose: 'first owned application'
+      });
+
+    expect(firstRes.status).toBe(201);
+    expect(firstRes.body.application).toMatchObject({
+      email: 'first-owner@example.com',
+      ownerType: 'user',
+      ownerLevel: 'account',
+      userId: user.userId
+    });
+
+    const mineRes = await request(app)
+      .get('/api/applications/me')
+      .set('Authorization', `Bearer ${userToken}`);
+
+    expect(mineRes.status).toBe(200);
+    expect(mineRes.body).toMatchObject({
+      success: true,
+      application: {
+        id: firstRes.body.application.id,
+        ownerType: 'user',
+        ownerLevel: 'account',
+        userId: user.userId
+      }
+    });
+
+    const secondRes = await request(app)
+      .post('/api/applications')
+      .set('Authorization', `Bearer ${userToken}`)
+      .send({
+        email: 'second-owner@example.com',
+        countryRegion: 'CA',
+        nickname: 'Second Owner',
+        purpose: 'duplicate owned application'
+      });
+
+    expect(secondRes.status).toBe(409);
+    expect(secondRes.body.error).toMatchObject({
+      code: 'APPLICATION_ALREADY_EXISTS'
+    });
+    expect(secondRes.body.application).toMatchObject({
+      id: firstRes.body.application.id,
+      email: 'first-owner@example.com',
+      ownerType: 'user',
+      ownerLevel: 'account',
+      userId: user.userId
+    });
+
+    const adminListRes = await request(app)
+      .get('/api/admin/applications')
+      .set('Authorization', makeAdminHeader(adminPassword));
+
+    expect(adminListRes.body.applications.filter((item) => item.userId === user.userId)).toHaveLength(1);
   });
 
   test('optional analytics hook failures do not block API applications', async () => {

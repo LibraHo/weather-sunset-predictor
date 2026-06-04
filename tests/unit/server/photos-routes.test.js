@@ -88,6 +88,8 @@ describe('photos routes', () => {
     expect(res.body.photos[0].uploadIpHash).toBeUndefined();
     expect(res.body.photos[0].uploadDay).toBeUndefined();
     expect(res.body.photos[0].uploaderUserId).toBeUndefined();
+    expect(res.body.photos[0].origFile).toBeUndefined();
+    expect(res.body.photos[0].originalUrl).toBeUndefined();
     expect(res.body.photos[0].userId).toBeUndefined();
     expect(res.body.photos[0].ownerUserId).toBeUndefined();
     expect(res.body.photos[0].identity).toBeUndefined();
@@ -129,7 +131,10 @@ describe('photos routes', () => {
     expect(res.body.photo.uploadDay).toBeUndefined();
 
     const PhotoService = require('../../../server/services/PhotoService.js');
-    expect(PhotoService.getPhotoById(res.body.photo.id).uploaderUserId).toBe(userService.verifyToken(token).userId);
+    const stored = PhotoService.getPhotoById(res.body.photo.id);
+    expect(stored.uploaderUserId).toBe(userService.verifyToken(token).userId);
+    expect(stored.origFile).toBeNull();
+    expect(fs.readdirSync(PhotoService.ORIGINALS_DIR)).toEqual([]);
   });
 
   test('user uploads are pending until admin review approves them for the public list', async () => {
@@ -177,6 +182,13 @@ describe('photos routes', () => {
   });
 
   test('users can manage only their own uploads and edits require re-review', async () => {
+    const AdminRoutes = require('../../../server/routes/admin.js');
+    process.env.ADMIN_PASSWORD = 'edit-review-secret';
+    const adminApp = express();
+    adminApp.use(express.json());
+    adminApp.use('/', AdminRoutes);
+    const adminAuth = `Basic ${Buffer.from('admin:edit-review-secret').toString('base64')}`;
+
     const firstUpload = await request(app)
       .post('/api/photos/upload')
       .set('Authorization', `Bearer ${token}`)
@@ -187,11 +199,30 @@ describe('photos routes', () => {
       .attach('photo', makeJpegBuffer(), { filename: 'mine.jpg', contentType: 'image/jpeg' })
       .expect(201);
 
+    await request(adminApp)
+      .post(`/photos/${firstUpload.body.photo.id}/review`)
+      .set('Authorization', adminAuth)
+      .send({ reviewStatus: 'approved' })
+      .expect(200);
+
+    const publicBeforeEdit = await request(app).get('/api/photos').expect(200);
+    expect(publicBeforeEdit.body.photos.find(photo => photo.id === firstUpload.body.photo.id)).toMatchObject({
+      locationName: 'Mine',
+      desc: 'Keep me',
+      reviewStatus: 'approved'
+    });
+
     const mine = await request(app)
       .get('/api/photos/mine')
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
     expect(mine.body.photos.map(photo => photo.id)).toContain(firstUpload.body.photo.id);
+
+    const mineByCookie = await request(app)
+      .get('/api/photos/mine')
+      .set('Cookie', `xiake_session=${token}`)
+      .expect(200);
+    expect(mineByCookie.body.photos.map(photo => photo.id)).toContain(firstUpload.body.photo.id);
 
     await request(app)
       .patch(`/api/photos/mine/${firstUpload.body.photo.id}`)
@@ -205,11 +236,47 @@ describe('photos routes', () => {
       .send({ locationName: 'Edited Mine', reviewStatus: 'approved' })
       .expect(200);
     expect(edited.body.photo).toMatchObject({
-      locationName: 'Edited Mine',
+      locationName: 'Mine',
       desc: 'Keep me',
       lat: 39.9,
       lon: 116.4,
-      reviewStatus: 'pending'
+      reviewStatus: 'approved',
+      pendingEdit: {
+        locationName: 'Edited Mine',
+        reviewStatus: 'pending'
+      }
+    });
+
+    const publicWhileEditPending = await request(app).get('/api/photos').expect(200);
+    expect(publicWhileEditPending.body.photos.find(photo => photo.id === firstUpload.body.photo.id)).toMatchObject({
+      locationName: 'Mine',
+      desc: 'Keep me',
+      reviewStatus: 'approved'
+    });
+
+    const mineWithPendingEdit = await request(app)
+      .get('/api/photos/mine')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(mineWithPendingEdit.body.photos.find(photo => photo.id === firstUpload.body.photo.id)).toMatchObject({
+      locationName: 'Mine',
+      pendingEdit: {
+        locationName: 'Edited Mine',
+        reviewStatus: 'pending'
+      }
+    });
+
+    await request(adminApp)
+      .post(`/photos/${firstUpload.body.photo.id}/review`)
+      .set('Authorization', adminAuth)
+      .send({ reviewStatus: 'approved', reviewNote: 'edit ok' })
+      .expect(200);
+
+    const publicAfterEditApproval = await request(app).get('/api/photos').expect(200);
+    expect(publicAfterEditApproval.body.photos.find(photo => photo.id === firstUpload.body.photo.id)).toMatchObject({
+      locationName: 'Edited Mine',
+      desc: 'Keep me',
+      reviewStatus: 'approved'
     });
 
     await request(app)
@@ -232,6 +299,7 @@ describe('photos routes', () => {
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
     expect(afterDelete.body.photos.map(photo => photo.id)).not.toContain(firstUpload.body.photo.id);
+    delete process.env.ADMIN_PASSWORD;
   });
 
   test('optional analytics hook failures do not block photo upload', async () => {

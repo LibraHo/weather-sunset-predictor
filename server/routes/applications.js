@@ -10,6 +10,7 @@
 const express = require('express');
 const ApiApplicationService = require('../services/ApiApplicationService');
 const UserService = require('../services/UserService');
+const { _test: authHelpers } = require('./auth');
 
 function extractBearerToken(req) {
   const auth = req.get('authorization') || '';
@@ -18,7 +19,8 @@ function extractBearerToken(req) {
 }
 
 function getOptionalUser(req, userService) {
-  const token = extractBearerToken(req);
+  const cookies = authHelpers.parseCookies(req.headers.cookie || '');
+  const token = extractBearerToken(req) || cookies[authHelpers.SESSION_COOKIE];
   if (!token) return null;
   try {
     if (typeof userService.load === 'function') {
@@ -55,6 +57,7 @@ function toSubmissionResponse(application) {
     remarks: application.remarks,
     userId: application.userId || null,
     ownerType: application.ownerType || (application.userId ? 'user' : 'anonymous'),
+    ownerLevel: application.ownerLevel || null,
     createdAt: application.createdAt
   };
 }
@@ -87,11 +90,30 @@ function createRouter(options = {}) {
         application: toSubmissionResponse(application)
       });
     } catch (err) {
+      if (err.code === 'APPLICATION_ALREADY_EXISTS') {
+        return res.status(409).json({
+          error: { code: err.code, message: err.message },
+          application: toSubmissionResponse(err.application)
+        });
+      }
       const status = err.code === 'INVALID_PARAMS' ? 400 : 500;
       return res.status(status).json({
         error: { code: err.code || 'SUBMIT_FAILED', message: err.message || 'submit failed' }
       });
     }
+  });
+
+  router.get('/me', (req, res) => {
+    const user = getOptionalUser(req, userService);
+    if (!user?.userId) {
+      return res.status(401).json({ error: { code: 'UNAUTHORIZED', message: 'signed-in user is required' } });
+    }
+
+    const application = service.getApplicationByUserId(user.userId);
+    return res.json({
+      success: true,
+      application: application ? toSubmissionResponse(application) : null
+    });
   });
 
   router.get('/', (req, res) => {
