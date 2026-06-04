@@ -1,7 +1,7 @@
 'use strict';
 
 const GridProductCacheService = require('./GridProductCacheService');
-const { calculateEnhancedPrediction } = require('./EnhancedPredictionService');
+const { calculateMapSimplifiedPrediction } = require('./EnhancedPredictionService');
 const SunCalculator = require('../utils/SunCalculator');
 
 const REQUIRED_GFS_FIELDS = [
@@ -178,9 +178,11 @@ function scoreFromFields(point, period) {
 
   const date = point.validTime || point.sourceMeta?.weather?.validTime || new Date().toISOString();
   try {
-    const result = calculateEnhancedPrediction(weatherData, date, point.lat, point.lon, period);
+    const result = calculateMapSimplifiedPrediction(weatherData, date, point.lat, point.lon, period);
     point._predictionBreakdown = result.breakdown || null;
     point._predictionQuality = result.quality || null;
+    point._predictionScoringContext = result.scoringContext || null;
+    point._predictionMapSimplifiedScoring = result.mapSimplifiedScoring || null;
     point._predictionWeatherData = weatherData;
     return clampScore(result.score);
   } catch (err) {
@@ -267,6 +269,8 @@ class GridProductScoreAdapter {
           aerosol: point.aerosol,
           sourceMeta: clone(point.sourceMeta || {}),
           breakdown: scoringPoint._predictionBreakdown || null,
+          scoringContext: scoringPoint._predictionScoringContext || null,
+          mapSimplifiedScoring: scoringPoint._predictionMapSimplifiedScoring || null,
           missingRequiredFields: scoringPoint._missingRequiredFields || undefined,
           scoreError: scoringPoint._scoreError || undefined
         };

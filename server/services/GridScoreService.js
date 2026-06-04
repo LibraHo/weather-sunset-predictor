@@ -14,7 +14,7 @@ const os = require('os');
 
 const orchestrator = require('./ProviderOrchestrator');
 const quota = require('./OpenMeteoQuota');
-const { calculateEnhancedPrediction } = require('./EnhancedPredictionService');
+const { calculateMapSimplifiedPrediction } = require('./EnhancedPredictionService');
 const SunCalculator = require('../utils/SunCalculator');
 const GridProductScoreAdapter = require('./GridProductScoreAdapter');
 const DataPipelineModeService = require('./DataPipelineModeService');
@@ -358,13 +358,15 @@ class GridScoreService {
                 }, hourly[0]);
               }
 
-              const prediction = calculateEnhancedPrediction(weatherData, predictionDate, point.lat, point.lon, safePeriod);
+              const prediction = calculateMapSimplifiedPrediction(weatherData, predictionDate, point.lat, point.lon, safePeriod);
               scoredBatch.push({
                 lat: point.lat,
                 lon: point.lon,
                 score: prediction.score,
                 quality: prediction.quality,
-                breakdown: prediction.breakdown || null
+                breakdown: prediction.breakdown || null,
+                scoringContext: prediction.scoringContext || null,
+                mapSimplifiedScoring: prediction.mapSimplifiedScoring || null
               });
             } catch (err) {
               scoredBatch.push({

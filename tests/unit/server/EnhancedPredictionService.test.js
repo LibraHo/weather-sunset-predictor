@@ -46,8 +46,8 @@ describe('EnhancedPredictionService', () => {
     });
 
     test('should use unified solar-direction sampling distances for light path and curtain carrier', () => {
-      expect(EnhancedPredictionService.SOLAR_DIRECTION_SAMPLE_DISTANCES_KM).toEqual([25, 50, 75, 100]);
-      expect(EnhancedPredictionService.SOLAR_DIRECTION_SAMPLE_WEIGHTS).toEqual([0.40, 0.35, 0.18, 0.07]);
+      expect(EnhancedPredictionService.SOLAR_DIRECTION_SAMPLE_DISTANCES_KM).toEqual([10, 25, 50, 75, 100]);
+      expect(EnhancedPredictionService.SOLAR_DIRECTION_SAMPLE_WEIGHTS).toEqual([0.25, 0.30, 0.25, 0.14, 0.06]);
     });
   });
 
@@ -838,6 +838,52 @@ describe('EnhancedPredictionService', () => {
       expect(result.type).toBe('sunrise');
     });
 
+    test('should not apply visible sunset-sector caps to sunrise predictions', () => {
+      const weatherData = {
+        cloudCover: 100,
+        lowClouds: 0,
+        midClouds: 62,
+        highClouds: 51,
+        humidity: 17,
+        visibility: 20,
+        precipitation: 0,
+        shortwaveRadiation: 20,
+        directRadiation: 5,
+        diffuseRadiation: 15,
+        waterVapourColumn: 19.1,
+        aerosolOpticalDepth: 0.28,
+        pm10: 31.5,
+        dust: 24
+      };
+      const remoteCloudData = {
+        samples: [25, 50, 75, 100].map(distanceKm => ({
+          distanceKm,
+          cloudBaseHeight: 7000,
+          lowCloud: 0,
+          midCloud: 8,
+          highCloud: 65
+        }))
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData,
+        new Date('2026-05-10T21:17:00.000Z'),
+        39.999617,
+        116.275179,
+        'sunrise',
+        { remoteCloudData }
+      );
+
+      expect(result.type).toBe('sunrise');
+      expect(result.scoringV2.applied).toBe(false);
+      expect(result.visibleSunsetSectorCap).toMatchObject({
+        applied: false,
+        cap: null,
+        reason: null
+      });
+      expect(result.score).toBeGreaterThan(68);
+    });
+
     test('should cap water-heavy high-cloud curtain scenes below 50 points', () => {
       const weatherData = {
         cloudCover: 64,
@@ -872,7 +918,7 @@ describe('EnhancedPredictionService', () => {
         cap: 48,
         reason: 'water_heavy_high_cloud_cap_48'
       });
-      expect(result.lightPathAnalysis.scoreBeforeThickHighCloudPenalty).toBeGreaterThan(75);
+      expect(result.lightPathAnalysis.scoreBeforeThickHighCloudPenalty).toBeGreaterThan(70);
       expect(result.lightPathAnalysis.score).toBeLessThanOrEqual(55);
       expect(result.score).toBeLessThanOrEqual(48);
       expect(result.description).toBe('weak_local_colors');
@@ -982,8 +1028,18 @@ describe('EnhancedPredictionService', () => {
         reason: 'directional_high_cloud_carrier_canvas_only'
       });
       expect(result.canvasAnalysis.score).toBeGreaterThanOrEqual(58);
-      expect(result.score).toBeGreaterThan(90);
-      expect(result.status).toBe('legendary_eruption');
+      expect(result.visibleSunsetSectorCap).toMatchObject({
+        applied: true,
+        cap: 68,
+        reason: 'visible_sunset_sector_cap'
+      });
+      expect(result.scoringV2).toMatchObject({
+        rawScore: 100,
+        score: 68
+      });
+      expect(result.score).toBeGreaterThanOrEqual(60);
+      expect(result.score).toBeLessThanOrEqual(68);
+      expect(result.status).toBe('very_likely');
       expect(result.lightPathGate).toMatchObject({
         reason: 'solar_direction_clear_opening'
       });
@@ -1039,8 +1095,13 @@ describe('EnhancedPredictionService', () => {
         cap: null,
         reason: 'directional_high_cloud_carrier_canvas_only'
       });
+      expect(result.visibleSunsetSectorCap).toMatchObject({
+        applied: true,
+        cap: 68,
+        reason: 'visible_sunset_sector_cap'
+      });
       expect(result.score).toBeGreaterThanOrEqual(52);
-      expect(result.score).toBeLessThanOrEqual(80);
+      expect(result.score).toBeLessThanOrEqual(68);
       expect(result.status).toBe('very_likely');
     });
 
@@ -1096,6 +1157,14 @@ describe('EnhancedPredictionService', () => {
         cap: 35,
         reason: 'severe_haze_cap_35'
       });
+      expect(result.visibleSunsetSectorCap).toMatchObject({
+        applied: true,
+        cap: 68,
+        reason: 'visible_sunset_sector_cap'
+      });
+      expect(result.score).toBeLessThanOrEqual(35);
+      expect(result.status).not.toBe('good_glow');
+      expect(result.description).not.toBe('conditions_good');
     });
 
     test('should not over-penalize cloud thickness from very low sunset shortwave alone', () => {
@@ -1261,6 +1330,75 @@ describe('EnhancedPredictionService', () => {
       expect(result.score).toBeLessThan(65);
     });
 
+    test('should lift full local upper-cloud warm scattering into 70 band for detailed point forecast only', () => {
+      const weatherData = {
+        cloudCover: 98,
+        lowClouds: 0,
+        midClouds: 100,
+        highClouds: 100,
+        humidity: 62,
+        visibility: 20,
+        precipitation: 0,
+        shortwaveRadiation: 7,
+        directRadiation: 0,
+        diffuseRadiation: 7,
+        waterVapourColumn: 32.8,
+        aerosolOpticalDepth: 0.72,
+        dust: 96,
+        pm2_5: 39.5,
+        pm10: 91.3,
+        aqi: 116
+      };
+      const remoteCloudData = {
+        source: 'solar_direction_openmeteo',
+        samples: [
+          { distanceKm: 25, lowCloud: 0, midCloud: 100, highCloud: 100, totalCloud: 97 },
+          { distanceKm: 50, lowCloud: 0, midCloud: 72, highCloud: 25, totalCloud: 93 },
+          { distanceKm: 75, lowCloud: 0, midCloud: 51, highCloud: 0, totalCloud: 80 },
+          { distanceKm: 100, lowCloud: 0, midCloud: 33, highCloud: 0, totalCloud: 84 }
+        ]
+      };
+
+      const pointResult = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData,
+        new Date('2026-06-03T11:37:00.000Z'),
+        39.9042,
+        116.4074,
+        'sunset',
+        { remoteCloudData }
+      );
+      const mapContextResult = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData,
+        new Date('2026-06-03T11:37:00.000Z'),
+        39.9042,
+        116.4074,
+        'sunset',
+        { remoteCloudData, scoringContext: 'map_grid_simplified' }
+      );
+
+      expect(pointResult.scoringV2).toMatchObject({
+        airMode: 'warm_scattering_path_open',
+        cloudCarrier: 63.2,
+        warmScatteringUpperCarrierAdjustment: {
+          applied: true,
+          reason: 'full_upper_cloud_warm_scattering_participation',
+          originalCarrier: 59.1,
+          adjustedCarrier: 63.2
+        }
+      });
+      expect(pointResult.score).toBeGreaterThanOrEqual(70);
+      expect(pointResult.score).toBeLessThanOrEqual(72);
+      expect(mapContextResult.scoringV2).toMatchObject({
+        airMode: 'warm_scattering_path_open',
+        cloudCarrier: 59.1,
+        warmScatteringUpperCarrierAdjustment: {
+          applied: false,
+          reason: 'map_grid_simplified_no_point_carrier_lift'
+        }
+      });
+      expect(mapContextResult.score).toBeLessThan(70);
+    });
+
     test('should not let carrier floor override thick high-cloud cap', () => {
       const weatherData = {
         cloudCover: 100,
@@ -1293,7 +1431,7 @@ describe('EnhancedPredictionService', () => {
       expect(result.status).toBe('light_glow');
     });
 
-    test('should gate strong cloud carrier when solar-direction samples show a near cloud wall', () => {
+    test('should gate strong cloud carrier when solar-direction samples show a blocked corridor', () => {
       const weatherData = {
         cloudCover: 80,
         lowClouds: 0,
@@ -1322,11 +1460,9 @@ describe('EnhancedPredictionService', () => {
         { remoteCloudData }
       );
 
-      expect(result.lightPathAnalysis.directionalAnalysis.reason).toBe('solar_direction_near_cloud_wall');
-      expect(result.lightPathGate).toMatchObject({
-        gate: 0.42,
-        reason: 'solar_direction_near_cloud_wall'
-      });
+      expect(result.lightPathAnalysis.directionalAnalysis.reason).toBe('solar_direction_blocked_corridor');
+      expect(result.lightPathGate.reason).toBe('solar_direction_blocked_corridor');
+      expect(result.lightPathGate.gate).toBe(0.42);
       expect(result.score).toBeLessThan(40);
       expect(result.status).toBe('no_fire_cloud');
     });
@@ -1612,7 +1748,7 @@ describe('EnhancedPredictionService', () => {
       expect(result.lightPathAnalysis.remoteBlockSignal).toBe(true);
       expect(result.lightPathAnalysis.occlusionWeight).toBe(1);
       expect(result.lightPathAnalysis.score).toBeLessThan(55);
-      expect(result.lightPathAnalysis.directionalAnalysis.reason).toBe('solar_direction_near_cloud_wall');
+      expect(result.lightPathAnalysis.directionalAnalysis.reason).toBe('solar_direction_blocked_corridor');
     });
 
     test('should cap extreme dust haze high-cloud scenes below 30 points', () => {

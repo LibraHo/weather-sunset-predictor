@@ -5,7 +5,7 @@
  * 需求：35，任务：55/59
  *
  * 算法流程：
- * 1. 沿光路在太阳反向方向采样 4 个点（25/50/75/100km）
+ * 1. 沿光路在太阳反向方向采样 5 个点（10/25/50/75/100km）
  * 2. 各点计算 criticalElevation = atan(cloudBaseHeight / distanceMeters) * (180/π)
  * 3. 单点遮挡强度：block_i = sigmoid(criticalElevation_i - solarElevation) * layerWeight_i
  * 4. 全路径遮挡：occlusionProbability = 1 - Π(1 - block_i)
@@ -14,7 +14,7 @@
 
 // ========== 常量 ==========
 
-const SAMPLE_DISTANCES_KM = [25, 50, 75, 100];
+const SAMPLE_DISTANCES_KM = [10, 25, 50, 75, 100];
 
 const LAYER_WEIGHTS = {
   LOW:  0.7,

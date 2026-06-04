@@ -88,6 +88,11 @@ describe('GridProductScoreAdapter', () => {
       lat: 40,
       lon: 116,
       score: expect.any(Number),
+      scoringContext: 'map_grid_simplified',
+      mapSimplifiedScoring: expect.objectContaining({
+        applied: true,
+        usesRemoteLightPathSamples: false
+      }),
       weather: expect.objectContaining({ TCDC: 58, HCDC: 72, RH: 55 }),
       aerosol: { aod550: 0.18 },
       sourceMeta: {
