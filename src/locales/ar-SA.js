@@ -15,6 +15,7 @@ export default {
       map: 'خريطة السحب الحمراء',
             shareMap: 'خريطة المشاركة',
       firecloudMap: 'Firecloud Map',
+      user: 'حسابي',
 apiAccess: 'الوصول إلى API'
     },
     menu: {
@@ -264,7 +265,8 @@ apiAccess: 'الوصول إلى API'
     precipChance: '{{prob}}% هطول',
     unavailable: {
       title: 'Weather forecast is temporarily unavailable',
-      body: 'Please come back later.'
+      body: 'Please come back later.',
+      inline: 'Weather data is temporarily unavailable. Firecloud map remains available.',
     },
     dataInfo: 'ℹ️ مصدر البيانات يوفر بيانات التنبؤ لـ {{hours}} ساعة (~{{days}} أيام). فكر في استخدام مصادر بيانات طقس أخرى لمزيد من الأيام.'
   },

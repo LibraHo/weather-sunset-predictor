@@ -57,7 +57,8 @@ Component({
         forecast: '/pages/home/index',
         methodology: '/pages/methodology/index',
         map: `/pages/map/index?period=${this.properties.period || 'sunset'}`,
-        gallery: '/pages/gallery/index'
+        gallery: '/pages/gallery/index',
+        user: '/pages/user/index'
       };
       const url = routes[target];
       this.setData({ homeMenuOpen: false });

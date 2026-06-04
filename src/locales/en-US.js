@@ -34,6 +34,77 @@ const translations = {
     "clusterListAria": "Clustered photo thumbnails",
     "clusterPhotoLabel": "Photo {{index}}: {{location}}"
   },
+  "account": {
+    "auth": {
+      "closeAria": "Close account window",
+      "loginTitle": "Account login",
+      "registerTitle": "Create account",
+      "forgotTitle": "Reset password",
+      "tabsAria": "Account actions",
+      "loginTab": "Log in",
+      "registerTab": "Register",
+      "forgotTab": "Reset password",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "passwordMinPlaceholder": "At least 6 characters",
+      "recoveryQuestionLabel": "Recovery question",
+      "recoveryQuestionPlaceholder": "Example: my first sunset-watching city?",
+      "recoveryAnswerLabel": "Recovery answer",
+      "recoveryAnswerPlaceholder": "Remember this answer. It will not be shown later.",
+      "recoveryAnswerResetPlaceholder": "Answer from registration",
+      "recoveryHint": "Enter your email to show the recovery question. If it does not appear, you can still enter the answer and try resetting.",
+      "newPasswordLabel": "New password",
+      "loginAction": "Log in",
+      "createAction": "Create account",
+      "resetAction": "Reset password",
+      "or": "or",
+      "googleLogin": "Continue with Google",
+      "loginSuccess": "Signed in.",
+      "registerSuccess": "Account created.",
+      "resetSuccess": "Password reset. Please sign in with the new password.",
+      "requestFailed": "Account request failed.",
+      "done": "Done.",
+      "recoveryQuestionFallback": "If the account exists, enter the recovery answer and a new password.",
+      "recoveryQuestionUnavailable": "Recovery question is temporarily unavailable. You can still try the answer and new password."
+    },
+    "menu": {
+      "buttonAria": "Account",
+      "dropdownAria": "Account menu"
+    },
+    "panel": {
+      "signedOut": "Signed out",
+      "signedOutTitle": "Sign in to sync your sunset trail",
+      "signedOutSummary": "Favorite places can sync with your account.",
+      "signedIn": "Signed in",
+      "emptyFavorites": "No account favorites yet.",
+      "emptyLocalFavorites": "No local favorites yet.",
+      "dataUnavailable": "Account data is temporarily unavailable.",
+      "signInForUploads": "Sign in to view your uploaded photos.",
+      "signInForApi": "Sign in to view account API applications.",
+      "emptyUploads": "No uploaded photos yet.",
+      "logout": "Log out",
+      "favoritesTitle": "Favorite places",
+      "favoritesDesc": "Jump back to your regular forecast spots quickly.",
+      "uploadsTitle": "Uploads",
+      "uploadsDesc": "Photo uploads, review status, and public gallery records appear here.",
+      "apiTitle": "API applications",
+      "apiDesc": "Token requests, review status, and usage limits appear here.",
+      "emptyApiApplication": "No API application yet.",
+      "statusPending": "pending",
+      "noEmail": "No email",
+      "apiApplicationFallback": "API application",
+      "untitledPhoto": "Untitled photo",
+      "userPrefix": "Sunset user",
+      "connectedSuffix": "connected",
+      "accountConnected": "Account connected",
+      "typeSunrise": "Sunrise",
+      "typeSunset": "Sunset",
+      "typePlace": "Place",
+      "untitledLocation": "Untitled location",
+      "coordinatesPending": "Coordinates pending"
+    }
+  },
   "home": {
     "tabs": {
       "ariaLabel": "Home tab navigation",
@@ -42,6 +113,7 @@ const translations = {
       "map": "Fire Sky Map",
       "shareMap": "Share Map",
       "firecloudMap": "Firecloud Map",
+      "user": "My Account",
       "apiAccess": "API Access"
     },
     "menu": {
@@ -308,7 +380,8 @@ const translations = {
     "precipChance": "{{prob}}% precip",
     "unavailable": {
       "title": "Weather forecast is temporarily unavailable",
-      "body": "Please come back later."
+      "body": "Please come back later.",
+      "inline": "Weather data is temporarily unavailable. Firecloud map remains available.",
     },
     "dataInfo": "ℹ️ Data source provides {{hours}} hours forecast data (~{{days}} days). Consider using other weather data sources for more days."
   },

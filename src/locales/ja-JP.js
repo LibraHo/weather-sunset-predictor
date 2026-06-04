@@ -34,6 +34,77 @@
     "clusterListAria": "Clustered photo thumbnails",
     "clusterPhotoLabel": "Photo {{index}}: {{location}}"
   },
+  "account": {
+    "auth": {
+      "closeAria": "アカウント画面を閉じる",
+      "loginTitle": "アカウントログイン",
+      "registerTitle": "アカウント作成",
+      "forgotTitle": "パスワード再設定",
+      "tabsAria": "アカウント操作",
+      "loginTab": "ログイン",
+      "registerTab": "登録",
+      "forgotTab": "パスワード再設定",
+      "emailLabel": "メール",
+      "passwordLabel": "パスワード",
+      "passwordPlaceholder": "パスワードを入力",
+      "passwordMinPlaceholder": "6文字以上",
+      "recoveryQuestionLabel": "復旧用の質問",
+      "recoveryQuestionPlaceholder": "例：初めて夕焼けを見た街は？",
+      "recoveryAnswerLabel": "復旧用の答え",
+      "recoveryAnswerPlaceholder": "この答えは後から表示されません",
+      "recoveryAnswerResetPlaceholder": "登録時に設定した答え",
+      "recoveryHint": "メールを入力すると復旧用の質問が表示されます。表示されない場合も、答えを入力して再設定できます。",
+      "newPasswordLabel": "新しいパスワード",
+      "loginAction": "ログイン",
+      "createAction": "アカウント作成",
+      "resetAction": "パスワード再設定",
+      "or": "または",
+      "googleLogin": "Googleでログイン",
+      "loginSuccess": "ログインしました。",
+      "registerSuccess": "アカウントを作成しました。",
+      "resetSuccess": "パスワードを再設定しました。新しいパスワードでログインしてください。",
+      "requestFailed": "アカウントリクエストに失敗しました。",
+      "done": "完了。",
+      "recoveryQuestionFallback": "アカウントが存在する場合は、復旧用の答えと新しいパスワードを入力してください。",
+      "recoveryQuestionUnavailable": "復旧用の質問は一時的に利用できません。答えと新しいパスワードは引き続き試せます。"
+    },
+    "menu": {
+      "buttonAria": "アカウント",
+      "dropdownAria": "アカウントメニュー"
+    },
+    "panel": {
+      "signedOut": "未ログイン",
+      "signedOutTitle": "ログインして夕焼けの記録を同期",
+      "signedOutSummary": "お気に入り地点をアカウントと同期できます。",
+      "signedIn": "ログイン中",
+      "emptyFavorites": "アカウントのお気に入りはまだありません。",
+      "emptyLocalFavorites": "ローカルのお気に入りはまだありません。",
+      "dataUnavailable": "アカウントデータを一時的に利用できません。",
+      "signInForUploads": "ログインすると写真アップロードを確認できます。",
+      "signInForApi": "ログインするとAPI申請を確認できます。",
+      "emptyUploads": "アップロードした写真はまだありません。",
+      "logout": "ログアウト",
+      "favoritesTitle": "お気に入り地点",
+      "favoritesDesc": "よく見る地点へすばやく戻れます。",
+      "uploadsTitle": "アップロード履歴",
+      "uploadsDesc": "写真アップロード、審査状態、公開記録がここに表示されます。",
+      "apiTitle": "API申請",
+      "apiDesc": "Token申請、審査状況、利用枠がここに表示されます。",
+      "emptyApiApplication": "API申請はまだありません。",
+      "statusPending": "保留中",
+      "noEmail": "メール未設定",
+      "apiApplicationFallback": "API申請",
+      "untitledPhoto": "無題の写真",
+      "userPrefix": "霞客ユーザー",
+      "connectedSuffix": "接続済み",
+      "accountConnected": "アカウント接続済み",
+      "typeSunrise": "朝焼け",
+      "typeSunset": "夕焼け",
+      "typePlace": "地点",
+      "untitledLocation": "無題の地点",
+      "coordinatesPending": "座標未設定"
+    }
+  },
   "home": {
     "tabs": {
       "ariaLabel": "ホームタブナビゲーション",
@@ -42,6 +113,7 @@
       "map": "火焼け空マップ",
             shareMap: '共有マップ',
       "firecloudMap": "Firecloud Map",
+      user: 'マイページ',
 apiAccess: 'API接続'
     },
     "menu": {
@@ -307,7 +379,8 @@ apiAccess: 'API接続'
     "precipChance": "{{prob}}%の降水確率",
     unavailable: {
       title: 'Weather forecast is temporarily unavailable',
-      body: 'Please come back later.'
+      body: 'Please come back later.',
+      inline: 'Weather data is temporarily unavailable. Firecloud map remains available.',
     },
     "dataInfo": "ℹ️ データソースは{{hours}}時間分の予報データを提供しています（約{{days}}日分）。それ以上の日数については、他の天気データソースの利用をご検討ください。",
     "mapView": ""

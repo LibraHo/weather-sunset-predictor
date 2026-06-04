@@ -11,6 +11,7 @@
       "map": "Mappa Luminosità",
             "shareMap": "Mappa condivisa",
       "firecloudMap": "Firecloud Map",
+      "user": "Account",
 apiAccess: 'Accesso API'
     },
     "menu": {
@@ -261,7 +262,8 @@ apiAccess: 'Accesso API'
     "precipChance": "{{prob}}% precip",
     unavailable: {
       title: 'Weather forecast is temporarily unavailable',
-      body: 'Please come back later.'
+      body: 'Please come back later.',
+      inline: 'Weather data is temporarily unavailable. Firecloud map remains available.',
     },
     "dataInfo": "ℹ️ La fonte dati fornisce {{hours}} ore di dati di previsione (~{{days}} giorni). Considera l'uso di altre fonti dati meteo per più giorni.",
     "mapView": ""

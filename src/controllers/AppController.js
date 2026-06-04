@@ -193,10 +193,12 @@ class AppController {
         const errorCode = weatherErr?.code || weatherErr?.error?.code || weatherErr?.response?.data?.error?.code;
         if (errorCode === 'WEATHER_PREDICTION_CLOSED') {
           this.siteState = { ...this.siteState, weatherPredictionClosed: true };
+          this.applyWeatherPredictionAvailability(true);
+          return;
         }
         console.warn('[AppController] 天气数据获取失败，继续加载其他功能:', weatherErr.message);
-        this.applyWeatherPredictionAvailability(true);
-        return;
+        this.showError(this.i18n.t('weather.unavailable.inline'));
+        setTimeout(() => this.hideError?.(), 4000);
       }
 
       if (weatherData && weatherData.length > 0) {

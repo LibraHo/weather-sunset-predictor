@@ -88,6 +88,22 @@ describe('user routes', () => {
     expect(afterDelete.body.favorites).toEqual([]);
   });
 
+  test('accepts web session cookie for favorites without bearer token', async () => {
+    const location = { id: 'cookie-oslo', name: 'Oslo', lat: 59.9139, lon: 10.7522, countryCode: 'NO' };
+
+    await request(app)
+      .post('/api/user/favorites')
+      .set('Cookie', `xiake_session=${token}`)
+      .send({ location })
+      .expect(201);
+
+    const list = await request(app)
+      .get('/api/user/favorites')
+      .set('Cookie', `xiake_session=${token}`)
+      .expect(200);
+    expect(list.body.favorites[0]).toMatchObject(location);
+  });
+
   test('creates and lists recent locations with newest first', async () => {
     await request(app)
       .post('/api/user/recent-locations')

@@ -60,6 +60,14 @@ function sendLogin(res, result) {
   });
 }
 
+function sendCreatedLogin(res, result) {
+  res.cookie(SESSION_COOKIE, result.token, cookieOptions(30 * 24 * 60 * 60 * 1000));
+  return res.status(201).json({
+    token: result.token,
+    user: serializeUser(result.user)
+  });
+}
+
 function findRequestUser(req, oauthLoginService) {
   const cookies = parseCookies(req.headers.cookie);
   const token = getBearerToken(req) || cookies[SESSION_COOKIE];
@@ -81,6 +89,21 @@ function sendCurrentUser(req, res, oauthLoginService) {
   return res.json({ user: serializeUser(user) });
 }
 
+function createAttemptLimiter({ maxAttempts = 5, windowMs = 15 * 60 * 1000 } = {}) {
+  const attempts = new Map();
+  return function checkAttempt(key) {
+    const now = Date.now();
+    const record = attempts.get(key) || { count: 0, firstAt: now };
+    if (now - record.firstAt > windowMs) {
+      record.count = 0;
+      record.firstAt = now;
+    }
+    record.count += 1;
+    attempts.set(key, record);
+    return record.count <= maxAttempts;
+  };
+}
+
 function createServices(options = {}) {
   const userService = options.userService || new UserService(options.userServiceOptions);
   const oauthLoginService = options.oauthLoginService || new OAuthLoginService({
@@ -92,7 +115,73 @@ function createServices(options = {}) {
 
 function createRouter(options = {}) {
   const router = express.Router();
-  const { oauthLoginService } = createServices(options);
+  const { userService, oauthLoginService } = createServices(options);
+  const allowRecoveryAttempt = options.recoveryAttemptLimiter || createAttemptLimiter();
+
+  router.post('/register', (req, res) => {
+    try {
+      const user = userService.registerEmailUser({
+        email: req.body?.email,
+        password: req.body?.password,
+        recoveryQuestion: req.body?.recoveryQuestion,
+        recoveryAnswer: req.body?.recoveryAnswer
+      });
+      sendCreatedLogin(res, { user, token: userService.issueToken(user) });
+    } catch (error) {
+      sendError(res, error);
+    }
+  });
+
+  router.post('/login', (req, res) => {
+    try {
+      const user = userService.verifyPasswordLogin(req.body?.email, req.body?.password);
+      if (!user) {
+        return res.status(401).json({
+          error: { code: 'INVALID_CREDENTIALS', message: 'Invalid email or password' }
+        });
+      }
+      sendLogin(res, { user, token: userService.issueToken(user) });
+    } catch (error) {
+      sendError(res, error);
+    }
+  });
+
+  router.post('/password/recovery-question', (req, res) => {
+    try {
+      const result = userService.getRecoveryQuestion(req.body?.email);
+      res.json({
+        success: true,
+        recoveryQuestion: result?.recoveryQuestion || null
+      });
+    } catch (error) {
+      sendError(res, error);
+    }
+  });
+
+  router.post('/password/reset', (req, res) => {
+    try {
+      const email = String(req.body?.email || '').trim().toLowerCase();
+      const key = `${req.ip || req.socket?.remoteAddress || 'unknown'}:${email}`;
+      if (!allowRecoveryAttempt(key)) {
+        return res.status(429).json({
+          error: { code: 'TOO_MANY_RECOVERY_ATTEMPTS', message: 'Too many recovery attempts, please try later' }
+        });
+      }
+      const reset = userService.resetPasswordWithRecovery({
+        email: req.body?.email,
+        recoveryAnswer: req.body?.recoveryAnswer,
+        newPassword: req.body?.newPassword
+      });
+      if (!reset) {
+        return res.status(401).json({
+          error: { code: 'INVALID_RECOVERY_ANSWER', message: 'Invalid recovery answer' }
+        });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      sendError(res, error);
+    }
+  });
 
   router.get('/wechat/web/start', (req, res) => {
     try {
@@ -185,6 +274,7 @@ module.exports._test = {
   STATE_COOKIE,
   cookieOptions,
   parseCookies,
+  createAttemptLimiter,
   findRequestToken,
   serializeUser,
   sendError

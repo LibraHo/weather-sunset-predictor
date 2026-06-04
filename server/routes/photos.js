@@ -15,7 +15,8 @@ const exifr = require('exifr');
 const photoService = require('../services/PhotoService');
 const UserService = require('../services/UserService');
 
-const MAX_FILE_SIZE = 20 * 1024 * 1024;
+const SESSION_COOKIE = 'xiake_session';
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/heic', 'image/heif'];
 const FALLBACK_UPLOAD_MIMES = ['application/octet-stream'];
 
@@ -35,7 +36,22 @@ const upload = multer({
 function extractToken(req) {
   const auth = req.get('authorization') || '';
   if (/^Bearer\s+/i.test(auth)) return auth.replace(/^Bearer\s+/i, '').trim();
-  return req.get('x-session-token') || '';
+  return req.get('x-session-token') || getCookie(req.headers.cookie, SESSION_COOKIE) || '';
+}
+
+function getCookie(header = '', name) {
+  const cookies = String(header)
+    .split(';')
+    .map((part) => part.trim())
+    .filter(Boolean);
+  for (const cookie of cookies) {
+    const separator = cookie.indexOf('=');
+    if (separator < 0) continue;
+    if (cookie.slice(0, separator) === name) {
+      return decodeURIComponent(cookie.slice(separator + 1));
+    }
+  }
+  return null;
 }
 
 function createAuthMiddleware(userService) {
@@ -67,7 +83,7 @@ function isPhotoOwner(photo = {}, user = {}) {
 function sendUploadError(res, err) {
   if (err?.code === 'LIMIT_FILE_SIZE' || err?.message?.startsWith('FILE_TOO_LARGE')) {
     return res.status(400).json({
-      error: { code: 'FILE_TOO_LARGE', message: '文件过大，最大支持 20MB' }
+      error: { code: 'FILE_TOO_LARGE', message: '文件过大，最大支持 10MB' }
     });
   }
 
@@ -125,6 +141,7 @@ function sanitizeBasePhoto(photo = {}) {
     identities,
     openid,
     unionid,
+    origFile,
     ...publicPhoto
   } = photo;
   return publicPhoto;
@@ -135,6 +152,7 @@ function sanitizePublicPhoto(photo = {}) {
     reviewNote,
     reviewedAt,
     reviewedBy,
+    pendingEdit,
     ...publicPhoto
   } = sanitizeBasePhoto(photo);
   return publicPhoto;
@@ -388,7 +406,13 @@ router.get('/:id/thumb', (req, res) => {
 // GET /api/photos/:id/original
 // 返回指定照片的原图文件
 // ---------------------------------------------------------------------------
-router.get('/:id/original', requireUser, (req, res) => {
+router.get('/:id/original', (req, res) => {
+  return res.status(404).json({
+    error: {
+      code: 'ORIGINAL_NOT_AVAILABLE',
+      message: 'Original image is not available'
+    }
+  });
   try {
     const { id } = req.params;
     const photo = photoService.getPhotoById(id);
@@ -429,4 +453,4 @@ router.get('/:id/original', requireUser, (req, res) => {
 
 module.exports = createRouter();
 module.exports.createRouter = createRouter;
-module.exports._test = { createAuthMiddleware, extractToken, parseOptionalCoordinate };
+module.exports._test = { createAuthMiddleware, extractToken, getCookie, parseOptionalCoordinate };

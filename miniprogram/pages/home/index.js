@@ -61,6 +61,7 @@ Page({
     this.predictionService = options.predictionService || this.predictionService || null;
     this.applyDefaultPredictionDay();
     this.applySavedSettings();
+    this.applyInitialLocation(options);
     if (options.weatherTest === '1' || options.test === 'weather') {
       this.setData({
         weatherPreview: buildTestWeatherPreview(),
@@ -315,6 +316,16 @@ Page({
   onShareAppMessage() {
     trackShareClick({ path: '/pages/home/index', targetLabel: 'home-share' });
     return buildHomeShareMessage(this.data.predictionPreview, this.currentPredictionQuery || {});
+  },
+
+  applyInitialLocation(options = {}) {
+    if (!options.location) return;
+    this.setData({
+      locationText: decodeURIComponent(options.location),
+      coordinate: null,
+      locationCandidates: [],
+      errorMessage: ''
+    });
   },
 
   switchWeatherView(event) {

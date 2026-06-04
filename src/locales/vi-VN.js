@@ -34,6 +34,77 @@
     "clusterListAria": "Danh sách ảnh thu nhỏ đã gom cụm",
     "clusterPhotoLabel": "Ảnh {{index}}: {{location}}"
   },
+  "account": {
+    "auth": {
+      "closeAria": "Đóng cửa sổ tài khoản",
+      "loginTitle": "Đăng nhập tài khoản",
+      "registerTitle": "Tạo tài khoản",
+      "forgotTitle": "Đặt lại mật khẩu",
+      "tabsAria": "Thao tác tài khoản",
+      "loginTab": "Đăng nhập",
+      "registerTab": "Đăng ký",
+      "forgotTab": "Quên mật khẩu",
+      "emailLabel": "Email",
+      "passwordLabel": "Mật khẩu",
+      "passwordPlaceholder": "Nhập mật khẩu",
+      "passwordMinPlaceholder": "Ít nhất 6 ký tự",
+      "recoveryQuestionLabel": "Câu hỏi khôi phục",
+      "recoveryQuestionPlaceholder": "Ví dụ: thành phố đầu tiên tôi thường ngắm hoàng hôn?",
+      "recoveryAnswerLabel": "Câu trả lời khôi phục",
+      "recoveryAnswerPlaceholder": "Hãy ghi nhớ câu trả lời này. Nó sẽ không được hiển thị lại.",
+      "recoveryAnswerResetPlaceholder": "Câu trả lời đã đặt khi đăng ký",
+      "recoveryHint": "Nhập email để hiển thị câu hỏi khôi phục. Nếu không hiển thị, bạn vẫn có thể nhập câu trả lời để thử đặt lại.",
+      "newPasswordLabel": "Mật khẩu mới",
+      "loginAction": "Đăng nhập",
+      "createAction": "Tạo tài khoản",
+      "resetAction": "Đặt lại mật khẩu",
+      "or": "hoặc",
+      "googleLogin": "Tiếp tục với Google",
+      "loginSuccess": "Đã đăng nhập.",
+      "registerSuccess": "Đã tạo tài khoản.",
+      "resetSuccess": "Đã đặt lại mật khẩu. Hãy đăng nhập bằng mật khẩu mới.",
+      "requestFailed": "Yêu cầu tài khoản thất bại.",
+      "done": "Hoàn tất.",
+      "recoveryQuestionFallback": "Nếu tài khoản tồn tại, hãy nhập câu trả lời khôi phục và mật khẩu mới.",
+      "recoveryQuestionUnavailable": "Câu hỏi khôi phục tạm thời không khả dụng. Bạn vẫn có thể thử câu trả lời và mật khẩu mới."
+    },
+    "menu": {
+      "buttonAria": "Tài khoản",
+      "dropdownAria": "Menu tài khoản"
+    },
+    "panel": {
+      "signedOut": "Chưa đăng nhập",
+      "signedOutTitle": "Đăng nhập để đồng bộ các địa điểm của bạn",
+      "signedOutSummary": "Địa điểm yêu thích có thể đồng bộ với tài khoản của bạn.",
+      "signedIn": "Đã đăng nhập",
+      "emptyFavorites": "Chưa có địa điểm yêu thích trong tài khoản.",
+      "emptyLocalFavorites": "Chưa có địa điểm yêu thích cục bộ.",
+      "dataUnavailable": "Dữ liệu tài khoản tạm thời không khả dụng.",
+      "signInForUploads": "Đăng nhập để xem ảnh bạn đã tải lên.",
+      "signInForApi": "Đăng nhập để xem đơn đăng ký API.",
+      "emptyUploads": "Chưa có ảnh tải lên.",
+      "logout": "Đăng xuất",
+      "favoritesTitle": "Địa điểm yêu thích",
+      "favoritesDesc": "Quay lại nhanh các địa điểm dự báo thường dùng.",
+      "uploadsTitle": "Ảnh đã tải lên",
+      "uploadsDesc": "Ảnh tải lên, trạng thái duyệt và bản ghi công khai sẽ hiển thị tại đây.",
+      "apiTitle": "Đăng ký API",
+      "apiDesc": "Đơn xin Token, trạng thái duyệt và hạn mức sử dụng sẽ hiển thị tại đây.",
+      "emptyApiApplication": "Chưa có đơn đăng ký API.",
+      "statusPending": "đang chờ",
+      "noEmail": "Chưa có email",
+      "apiApplicationFallback": "Đơn đăng ký API",
+      "untitledPhoto": "Ảnh chưa đặt tên",
+      "userPrefix": "Người dùng Xiake",
+      "connectedSuffix": "đã kết nối",
+      "accountConnected": "Tài khoản đã kết nối",
+      "typeSunrise": "Bình minh",
+      "typeSunset": "Hoàng hôn",
+      "typePlace": "Địa điểm",
+      "untitledLocation": "Địa điểm chưa đặt tên",
+      "coordinatesPending": "Tọa độ đang chờ"
+    }
+  },
   "home": {
     "tabs": {
       "ariaLabel": "Điều hướng tab trang chủ",
@@ -42,6 +113,7 @@
       "map": "Bản đồ Ráng đỏ",
       "shareMap": "Bản đồ chia sẻ",
       "firecloudMap": "Firecloud Map",
+      "user": "Tài khoản",
       "apiAccess": "Truy cập API"
     },
     "menu": {
@@ -307,7 +379,8 @@
     "precipChance": "{{prob}}% khả năng mưa",
     unavailable: {
       title: 'Weather forecast is temporarily unavailable',
-      body: 'Please come back later.'
+      body: 'Please come back later.',
+      inline: 'Weather data is temporarily unavailable. Firecloud map remains available.',
     },
     "dataInfo": "ℹ️ Nguồn dữ liệu cung cấp dữ liệu dự báo {{hours}} giờ (~{{days}} ngày). Cân nhắc sử dụng nguồn dữ liệu thời tiết khác để có nhiều ngày hơn.",
     "mapView": ""

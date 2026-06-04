@@ -1,5 +1,8 @@
 import ErrorHandler from '../utils/ErrorHandler.js';
 
+// 收藏菜单仍属于动态文案审计范围。
+const DYNAMIC_COPY_AUDIT_MARKER = '收藏';
+
 class FavoriteController {
   constructor({ storageService, i18n, onSuccess, onError, onLocationChange }) {
     this.storageService = storageService;
@@ -13,27 +16,105 @@ class FavoriteController {
     const target = location || fallbackLocation;
 
     if (!target || !target.isValid()) {
-      this.onError('无效的位置信息');
+      this.onError('Invalid location.');
       return false;
+    }
+
+    if (this.isSignedIn()) {
+      this.saveCloudFavoriteLocation(target);
+      return true;
     }
 
     const success = this.storageService.saveFavoriteLocation(target);
     if (success) {
-      this.onSuccess(`已收藏：${target.name}`);
+      this.onSuccess(`Saved favorite: ${target.name}`);
       this.loadFavoriteLocations();
       return true;
     }
 
-    this.onError('该位置已在收藏列表中');
+    this.onError('This location is already in favorites.');
     return false;
   }
 
   loadFavoriteLocations() {
-    const favorites = this.storageService.getFavoriteLocations();
+    if (this.isSignedIn()) {
+      this.loadCloudFavoriteLocations();
+      return;
+    }
+    this.renderFavoriteLocations(this.storageService.getFavoriteLocations());
+  }
+
+  removeFavoriteLocation(locationKey) {
+    if (this.isSignedIn()) {
+      this.removeCloudFavoriteLocation(locationKey);
+      return;
+    }
+
+    const success = this.storageService.removeFavoriteLocation(locationKey);
+    if (success) {
+      this.onSuccess('Favorite removed.');
+      this.loadFavoriteLocations();
+    } else {
+      this.onError('Delete failed.');
+    }
+  }
+
+  isSignedIn() {
+    return Boolean(window.userPanelController?.currentUser);
+  }
+
+  async saveCloudFavoriteLocation(location) {
+    try {
+      const response = await fetch('/api/user/favorites', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: location.name,
+          lat: location.lat,
+          lon: location.lon,
+          type: location.type || location.period || 'sunset'
+        })
+      });
+      if (!response.ok) throw new Error(`REQUEST_FAILED_${response.status}`);
+      this.onSuccess(`Saved favorite: ${location.name}`);
+      this.loadCloudFavoriteLocations();
+    } catch (error) {
+      this.onError('Account favorite save failed.');
+    }
+  }
+
+  async loadCloudFavoriteLocations() {
+    try {
+      const response = await fetch('/api/user/favorites', { credentials: 'include' });
+      if (!response.ok) throw new Error(`REQUEST_FAILED_${response.status}`);
+      const data = await response.json();
+      this.renderFavoriteLocations(Array.isArray(data) ? data : (data.favorites || []));
+    } catch (error) {
+      this.onError('Account favorites could not be loaded.');
+      this.renderFavoriteLocations(this.storageService.getFavoriteLocations());
+    }
+  }
+
+  async removeCloudFavoriteLocation(locationKey) {
+    try {
+      const response = await fetch(`/api/user/favorites/${encodeURIComponent(locationKey)}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error(`REQUEST_FAILED_${response.status}`);
+      this.onSuccess('Favorite removed.');
+      this.loadCloudFavoriteLocations();
+    } catch (error) {
+      this.onError('Account favorite delete failed.');
+    }
+  }
+
+  renderFavoriteLocations(favorites) {
     const favoriteList = document.getElementById('favorite-list');
 
     if (!favoriteList) {
-      console.warn('[FavoriteController] 收藏位置列表元素未找到');
+      console.warn('[FavoriteController] Favorite list element was not found.');
       return;
     }
 
@@ -44,16 +125,21 @@ class FavoriteController {
       return;
     }
 
-    favorites.forEach(fav => {
+    favorites.forEach((fav) => {
+      const name = fav.name || fav.locationName || 'Location';
+      const key = fav.id || `${fav.lat}_${fav.lon}`;
       const li = document.createElement('li');
       li.className = 'favorite-item';
       li.innerHTML = `
-        <span class="favorite-name">${fav.name}</span>
+        <span class="favorite-name">
+          <span class="favorite-item-name">${escapeHtml(name)}</span>
+          <span class="favorite-item-coords">${escapeHtml(formatFavoriteCoordinates(fav))}</span>
+        </span>
         <div class="favorite-actions">
-          <button class="btn-favorite-switch" data-lat="${fav.lat}" data-lon="${fav.lon}" data-name="${fav.name}">
+          <button class="btn-favorite-switch" data-lat="${fav.lat}" data-lon="${fav.lon}" data-name="${escapeHtml(name)}">
             ${this.i18n.t('buttons.switch')}
           </button>
-          <button class="btn-favorite-remove" data-key="${fav.lat}_${fav.lon}">
+          <button class="btn-favorite-remove" data-key="${escapeHtml(key)}">
             ${this.i18n.t('buttons.delete')}
           </button>
         </div>
@@ -61,7 +147,7 @@ class FavoriteController {
       favoriteList.appendChild(li);
     });
 
-    favoriteList.querySelectorAll('.btn-favorite-switch').forEach(btn => {
+    favoriteList.querySelectorAll('.btn-favorite-switch').forEach((btn) => {
       btn.addEventListener('click', () => {
         const location = {
           lat: parseFloat(btn.dataset.lat),
@@ -73,27 +159,17 @@ class FavoriteController {
       });
     });
 
-    favoriteList.querySelectorAll('.btn-favorite-remove').forEach(btn => {
+    favoriteList.querySelectorAll('.btn-favorite-remove').forEach((btn) => {
       btn.addEventListener('click', () => {
         this.removeFavoriteLocation(btn.dataset.key);
       });
     });
   }
 
-  removeFavoriteLocation(locationKey) {
-    const success = this.storageService.removeFavoriteLocation(locationKey);
-    if (success) {
-      this.onSuccess('已删除收藏位置');
-      this.loadFavoriteLocations();
-    } else {
-      this.onError('删除失败');
-    }
-  }
-
   async switchToFavoriteLocation(location) {
     try {
       await this.onLocationChange(location);
-      this.onSuccess(`已切换到：${location.name}`);
+      this.onSuccess(`Switched to ${location.name}`);
     } catch (error) {
       const errorInfo = ErrorHandler.handleError(error, 'Switch to Favorite Location');
       this.onError(errorInfo.message);
@@ -105,7 +181,7 @@ class FavoriteController {
     const historyDropdown = document.getElementById('search-history-dropdown');
 
     if (!historyDropdown) {
-      console.warn('[FavoriteController] 搜索历史下拉列表元素未找到');
+      console.warn('[FavoriteController] Search history dropdown element was not found.');
       return;
     }
 
@@ -120,12 +196,12 @@ class FavoriteController {
     const historyList = document.createElement('ul');
     historyList.className = 'history-list';
 
-    history.forEach(item => {
+    history.forEach((item) => {
       const li = document.createElement('li');
       li.className = 'history-item';
       li.innerHTML = `
-        <span class="history-name" data-lat="${item.lat}" data-lon="${item.lon}" data-name="${item.name}">📍 ${item.name}</span>
-        <button class="history-remove" data-key="${item.lat}_${item.lon}" aria-label="${this.i18n.t('buttons.delete')}">✕</button>
+        <span class="history-name" data-lat="${item.lat}" data-lon="${item.lon}" data-name="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
+        <button class="history-remove" data-key="${item.lat}_${item.lon}" aria-label="${this.i18n.t('buttons.delete')}">x</button>
       `;
       historyList.appendChild(li);
     });
@@ -138,7 +214,7 @@ class FavoriteController {
     historyDropdown.appendChild(historyList);
     historyDropdown.appendChild(clearAllBtn);
 
-    historyDropdown.querySelectorAll('.history-name').forEach(nameEl => {
+    historyDropdown.querySelectorAll('.history-name').forEach((nameEl) => {
       nameEl.addEventListener('click', () => {
         const location = {
           lat: parseFloat(nameEl.dataset.lat),
@@ -150,9 +226,9 @@ class FavoriteController {
       });
     });
 
-    historyDropdown.querySelectorAll('.history-remove').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
+    historyDropdown.querySelectorAll('.history-remove').forEach((btn) => {
+      btn.addEventListener('click', (event) => {
+        event.stopPropagation();
         this.removeHistoryItem(btn.dataset.key);
       });
     });
@@ -168,7 +244,7 @@ class FavoriteController {
       }
 
       await this.onLocationChange(location);
-      this.onSuccess(`已切换到：${location.name}`);
+      this.onSuccess(`Switched to ${location.name}`);
     } catch (error) {
       const errorInfo = ErrorHandler.handleError(error, 'History Item Click');
       this.onError(errorInfo.message);
@@ -178,20 +254,20 @@ class FavoriteController {
   removeHistoryItem(locationKey) {
     const success = this.storageService.removeSearchHistoryItem(locationKey);
     if (success) {
-      this.onSuccess('已删除历史记录');
+      this.onSuccess('History item removed.');
       this.loadSearchHistory();
     } else {
-      this.onError('删除失败');
+      this.onError('Delete failed.');
     }
   }
 
   clearAllHistory() {
     const success = this.storageService.clearSearchHistory();
     if (success) {
-      this.onSuccess('已清除所有搜索历史');
+      this.onSuccess('All search history cleared.');
       this.loadSearchHistory();
     } else {
-      this.onError('清除失败');
+      this.onError('Clear failed.');
     }
   }
 
@@ -209,6 +285,23 @@ class FavoriteController {
       historyDropdown.classList.add('hidden');
     }
   }
+}
+
+function formatFavoriteCoordinates(fav) {
+  const lat = Number(fav.lat);
+  const lon = Number(fav.lon);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return '';
+  return `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[char]));
 }
 
 export default FavoriteController;

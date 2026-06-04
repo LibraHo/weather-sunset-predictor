@@ -34,6 +34,77 @@ const translations = {
     "clusterListAria": "聚合照片縮圖列表",
     "clusterPhotoLabel": "第 {{index}} 張照片：{{location}}"
   },
+  "account": {
+    "auth": {
+      "closeAria": "關閉帳號視窗",
+      "loginTitle": "帳號登入",
+      "registerTitle": "建立帳號",
+      "forgotTitle": "重設密碼",
+      "tabsAria": "帳號操作",
+      "loginTab": "登入",
+      "registerTab": "註冊",
+      "forgotTab": "找回密碼",
+      "emailLabel": "Email",
+      "passwordLabel": "密碼",
+      "passwordPlaceholder": "請輸入密碼",
+      "passwordMinPlaceholder": "至少 6 位",
+      "recoveryQuestionLabel": "找回問題",
+      "recoveryQuestionPlaceholder": "例如：我的第一座常看晚霞的城市？",
+      "recoveryAnswerLabel": "找回答案",
+      "recoveryAnswerPlaceholder": "請記住答案，之後不會明文顯示",
+      "recoveryAnswerResetPlaceholder": "註冊時設定的答案",
+      "recoveryHint": "輸入 Email 後會顯示找回問題；如果沒有顯示，也可以直接填寫答案嘗試重設。",
+      "newPasswordLabel": "新密碼",
+      "loginAction": "登入",
+      "createAction": "建立帳號",
+      "resetAction": "重設密碼",
+      "or": "或",
+      "googleLogin": "Google 登入",
+      "loginSuccess": "已登入。",
+      "registerSuccess": "帳號已建立。",
+      "resetSuccess": "密碼已重設，請用新密碼登入。",
+      "requestFailed": "帳號請求失敗。",
+      "done": "完成。",
+      "recoveryQuestionFallback": "如果帳號存在，請輸入找回答案和新密碼。",
+      "recoveryQuestionUnavailable": "找回問題暫時不可用，你仍可嘗試填寫答案和新密碼。"
+    },
+    "menu": {
+      "buttonAria": "帳號",
+      "dropdownAria": "帳號選單"
+    },
+    "panel": {
+      "signedOut": "未登入",
+      "signedOutTitle": "登入後同步你的霞光足跡",
+      "signedOutSummary": "收藏地點會和後端使用者系統保持同步。",
+      "signedIn": "已登入",
+      "emptyFavorites": "暫無帳號收藏地點。",
+      "emptyLocalFavorites": "暫無本地收藏地點。",
+      "dataUnavailable": "帳號資料暫時不可用。",
+      "signInForUploads": "登入後查看你的照片上傳記錄。",
+      "signInForApi": "登入後查看帳號 API 申請。",
+      "emptyUploads": "暫無上傳照片。",
+      "logout": "登出",
+      "favoritesTitle": "收藏地點",
+      "favoritesDesc": "常看的地點可以從這裡快速回到預測頁。",
+      "uploadsTitle": "上傳記錄",
+      "uploadsDesc": "照片上傳、審核狀態和公開展示記錄會顯示在這裡。",
+      "apiTitle": "API 申請",
+      "apiDesc": "Token 申請、審核進度和呼叫額度會顯示在這裡。",
+      "emptyApiApplication": "暫無 API 申請。",
+      "statusPending": "待處理",
+      "noEmail": "未填寫信箱",
+      "apiApplicationFallback": "API 申請",
+      "untitledPhoto": "未命名照片",
+      "userPrefix": "霞客使用者",
+      "connectedSuffix": "已連接",
+      "accountConnected": "帳號已連接",
+      "typeSunrise": "朝霞",
+      "typeSunset": "晚霞",
+      "typePlace": "地點",
+      "untitledLocation": "未命名地點",
+      "coordinatesPending": "座標待補充"
+    }
+  },
   "home": {
     "tabs": {
       "ariaLabel": "主頁分頁導航",
@@ -41,7 +112,8 @@ const translations = {
     "methodology": "火燒雲計算方法",
       "map": "火燒雲地圖",
       "shareMap": "分享地圖",
-      "firecloudMap": "?????",
+      "firecloudMap": "火燒雲地圖",
+      "user": "我的",
       "apiAccess": "API接入"
     },
     "menu": {
@@ -307,7 +379,8 @@ const translations = {
     "precipChance": "{{prob}}%降水",
     "unavailable": {
       "title": "天氣預測暫時不可用",
-      "body": "請稍後再來。"
+      "body": "請稍後再來。",
+      "inline": "天氣資料暫時不可用，火燒雲地圖仍可正常使用。",
     },
     "dataInfo": "ℹ️ 資料來源提供 {{hours}} 小時預測資料（約 {{days}} 天）。若需要更多天數，請考慮使用其他天氣資料來源。",
     "mapView": ""

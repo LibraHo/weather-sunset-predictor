@@ -34,6 +34,77 @@
     "clusterListAria": "Miniatures des photos groupées",
     "clusterPhotoLabel": "Photo {{index}} : {{location}}"
   },
+  "account": {
+    "auth": {
+      "closeAria": "Fermer la fenêtre du compte",
+      "loginTitle": "Connexion au compte",
+      "registerTitle": "Créer un compte",
+      "forgotTitle": "Réinitialiser le mot de passe",
+      "tabsAria": "Actions du compte",
+      "loginTab": "Connexion",
+      "registerTab": "Inscription",
+      "forgotTab": "Mot de passe oublié",
+      "emailLabel": "E-mail",
+      "passwordLabel": "Mot de passe",
+      "passwordPlaceholder": "Saisissez le mot de passe",
+      "passwordMinPlaceholder": "Au moins 6 caractères",
+      "recoveryQuestionLabel": "Question de récupération",
+      "recoveryQuestionPlaceholder": "Exemple : ma première ville pour observer le coucher de soleil ?",
+      "recoveryAnswerLabel": "Réponse de récupération",
+      "recoveryAnswerPlaceholder": "Mémorisez cette réponse. Elle ne sera plus affichée.",
+      "recoveryAnswerResetPlaceholder": "Réponse définie lors de l'inscription",
+      "recoveryHint": "Saisissez votre e-mail pour afficher la question de récupération. Si elle n'apparaît pas, vous pouvez quand même essayer avec la réponse.",
+      "newPasswordLabel": "Nouveau mot de passe",
+      "loginAction": "Se connecter",
+      "createAction": "Créer le compte",
+      "resetAction": "Réinitialiser",
+      "or": "ou",
+      "googleLogin": "Continuer avec Google",
+      "loginSuccess": "Connecté.",
+      "registerSuccess": "Compte créé.",
+      "resetSuccess": "Mot de passe réinitialisé. Connectez-vous avec le nouveau mot de passe.",
+      "requestFailed": "La demande liée au compte a échoué.",
+      "done": "Terminé.",
+      "recoveryQuestionFallback": "Si le compte existe, saisissez la réponse de récupération et un nouveau mot de passe.",
+      "recoveryQuestionUnavailable": "La question de récupération est temporairement indisponible. Vous pouvez quand même essayer la réponse et le nouveau mot de passe."
+    },
+    "menu": {
+      "buttonAria": "Compte",
+      "dropdownAria": "Menu du compte"
+    },
+    "panel": {
+      "signedOut": "Déconnecté",
+      "signedOutTitle": "Connectez-vous pour synchroniser vos lieux",
+      "signedOutSummary": "Vos lieux favoris peuvent être synchronisés avec votre compte.",
+      "signedIn": "Connecté",
+      "emptyFavorites": "Aucun favori de compte pour le moment.",
+      "emptyLocalFavorites": "Aucun favori local pour le moment.",
+      "dataUnavailable": "Les données du compte sont temporairement indisponibles.",
+      "signInForUploads": "Connectez-vous pour voir vos photos envoyées.",
+      "signInForApi": "Connectez-vous pour voir vos demandes API.",
+      "emptyUploads": "Aucune photo envoyée pour le moment.",
+      "logout": "Se déconnecter",
+      "favoritesTitle": "Lieux favoris",
+      "favoritesDesc": "Revenez rapidement à vos lieux de prévision habituels.",
+      "uploadsTitle": "Envois",
+      "uploadsDesc": "Les photos envoyées, leur statut de révision et les publications apparaissent ici.",
+      "apiTitle": "Demandes API",
+      "apiDesc": "Les demandes de Token, leur statut de révision et les quotas apparaissent ici.",
+      "emptyApiApplication": "Aucune demande API pour le moment.",
+      "statusPending": "en attente",
+      "noEmail": "Aucun e-mail",
+      "apiApplicationFallback": "Demande API",
+      "untitledPhoto": "Photo sans titre",
+      "userPrefix": "Utilisateur Xiake",
+      "connectedSuffix": "connecté",
+      "accountConnected": "Compte connecté",
+      "typeSunrise": "Lever de soleil",
+      "typeSunset": "Coucher de soleil",
+      "typePlace": "Lieu",
+      "untitledLocation": "Lieu sans titre",
+      "coordinatesPending": "Coordonnées en attente"
+    }
+  },
   "home": {
     "tabs": {
       "ariaLabel": "Navigation par onglets",
@@ -42,6 +113,7 @@
       "map": "Carte Lueur",
       "shareMap": "Carte partagée",
       "firecloudMap": "Firecloud Map",
+      "user": "Mon compte",
       "apiAccess": "Accès API"
     },
     "menu": {
@@ -307,7 +379,8 @@
     "precipChance": "{{prob}}% précip",
     unavailable: {
       title: 'Weather forecast is temporarily unavailable',
-      body: 'Please come back later.'
+      body: 'Please come back later.',
+      inline: 'Weather data is temporarily unavailable. Firecloud map remains available.',
     },
     "dataInfo": "ℹ️ La source de données fournit {{hours}} heures de prévisions (~{{days}} jours). Envisagez d'utiliser d'autres sources pour plus de jours.",
     "mapView": ""

@@ -312,4 +312,107 @@ describe('auth routes', () => {
     expect(logout.headers['set-cookie'].join('\n')).toContain('xiake_session=;');
     expect(logout.headers['set-cookie'].join('\n')).toContain('HttpOnly');
   });
+
+  test('registers and logs in with email password credentials using an httpOnly session cookie', async () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'xiake-auth-email-routes-'));
+    const UserService = require('../../../server/services/UserService.js');
+    const realUserService = new UserService({
+      dataFile: path.join(tempDir, 'users.json'),
+      sessionSecret: 'email-route-secret'
+    });
+
+    try {
+      const app = createApp(createRouter({ userService: realUserService }));
+
+      const registered = await request(app)
+        .post('/auth/register')
+        .send({
+          email: 'Alex@Example.COM',
+          password: 'correct horse battery staple',
+          recoveryQuestion: 'First sunset spot?',
+          recoveryAnswer: 'Jingshan Park'
+        })
+        .expect(201);
+
+      expect(registered.body.token).toMatch(/^ey/);
+      expect(registered.body.user.userId).toBeTruthy();
+      expect(registered.body.user.identities).toEqual([{ provider: 'email' }]);
+      expect(registered.headers['set-cookie'].join('\n')).toContain('xiake_session=');
+      expect(registered.headers['set-cookie'].join('\n')).toContain('HttpOnly');
+      expect(JSON.stringify(registered.body)).not.toContain('correct horse battery staple');
+      expect(JSON.stringify(registered.body)).not.toContain('Jingshan Park');
+
+      const login = await request(app)
+        .post('/auth/login')
+        .send({ email: 'alex@example.com', password: 'correct horse battery staple' })
+        .expect(200);
+
+      expect(login.body.user.userId).toBe(registered.body.user.userId);
+      const sessionCookie = cookieValue(login.headers['set-cookie'], 'xiake_session');
+      const me = await request(app)
+        .get('/auth/me')
+        .set('Cookie', `xiake_session=${sessionCookie}`)
+        .expect(200);
+      expect(me.body.user.userId).toBe(registered.body.user.userId);
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  test('supports recovery question lookup and password reset without exposing recovery answer', async () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'xiake-auth-recovery-routes-'));
+    const UserService = require('../../../server/services/UserService.js');
+    const realUserService = new UserService({
+      dataFile: path.join(tempDir, 'users.json'),
+      sessionSecret: 'recovery-route-secret'
+    });
+
+    try {
+      const app = createApp(createRouter({ userService: realUserService }));
+      await request(app)
+        .post('/auth/register')
+        .send({
+          email: 'alex@example.com',
+          password: 'old password',
+          recoveryQuestion: 'Favorite horizon?',
+          recoveryAnswer: 'West lake'
+        })
+        .expect(201);
+
+      const question = await request(app)
+        .post('/auth/password/recovery-question')
+        .send({ email: 'alex@example.com' })
+        .expect(200);
+      expect(question.body).toEqual({ success: true, recoveryQuestion: 'Favorite horizon?' });
+      expect(JSON.stringify(question.body)).not.toContain('West lake');
+
+      const unknownQuestion = await request(app)
+        .post('/auth/password/recovery-question')
+        .send({ email: 'missing@example.com' })
+        .expect(200);
+      expect(unknownQuestion.body).toEqual({ success: true, recoveryQuestion: null });
+
+      await request(app)
+        .post('/auth/password/reset')
+        .send({ email: 'alex@example.com', recoveryAnswer: 'wrong answer', newPassword: 'new password' })
+        .expect(401);
+
+      await request(app)
+        .post('/auth/password/reset')
+        .send({ email: 'alex@example.com', recoveryAnswer: 'West lake', newPassword: 'new password' })
+        .expect(200);
+
+      await request(app)
+        .post('/auth/login')
+        .send({ email: 'alex@example.com', password: 'old password' })
+        .expect(401);
+
+      await request(app)
+        .post('/auth/login')
+        .send({ email: 'alex@example.com', password: 'new password' })
+        .expect(200);
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
 });

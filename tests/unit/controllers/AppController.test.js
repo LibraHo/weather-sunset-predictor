@@ -288,7 +288,7 @@ describe('AppController', () => {
       expect(updatePredictionDisplayArg).toBe(mockPredictions);
     });
 
-    test('当获取天气数据失败时，应该显示错误', async () => {
+    test('当获取天气数据失败时，应该保留预测入口并显示错误', async () => {
       const location = new Location(39.9042, 116.4074, '北京');
 
       // Mock fetchWeather to throw error
@@ -298,7 +298,25 @@ describe('AppController', () => {
 
       await expect(appController.handleLocationChange(location)).resolves.toBeUndefined();
 
-      // 天气失败不阻塞地图等功能，进入同一个预测不可用 UI
+      // 普通天气失败不等同于后台全局关闭，用户仍可重新查询。
+      const unavailableCard = document.getElementById('weather-unavailable-card');
+      expect(unavailableCard.hidden).toBe(true);
+      expect(document.getElementById('location-section').hidden).toBe(false);
+      expect(document.getElementById('weather-section').hidden).toBe(false);
+      expect(document.getElementById('prediction-section').hidden).toBe(false);
+    });
+
+    test('当天气预测被后台关闭时，应该显示预测不可用 UI', async () => {
+      const location = new Location(39.9042, 116.4074, '北京');
+
+      weatherController.fetchWeather = async () => {
+        const error = new Error('closed');
+        error.code = 'WEATHER_PREDICTION_CLOSED';
+        throw error;
+      };
+
+      await expect(appController.handleLocationChange(location)).resolves.toBeUndefined();
+
       const unavailableCard = document.getElementById('weather-unavailable-card');
       expect(unavailableCard.hidden).toBe(false);
       expect(document.getElementById('location-section').hidden).toBe(true);

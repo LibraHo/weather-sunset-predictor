@@ -35,7 +35,7 @@ const THUMBS_DIR       = path.join(PHOTOS_DIR, 'thumbs');
 const PHOTOS_INDEX     = path.join(PHOTOS_DIR, 'photos.json');
 
 const THUMB_SIZE       = 300; // px，正方形
-const MAX_FILE_SIZE_MB = 20;  // 上传上限（MB）
+const MAX_FILE_SIZE_MB = 10;  // 上传上限（MB）
 const ALLOWED_MIMES    = new Set(['image/jpeg', 'image/png', 'image/heic', 'image/heif']);
 const OCTET_STREAM_MIME = 'application/octet-stream';
 const DAILY_UPLOAD_LIMIT_PER_IP = Math.max(
@@ -75,6 +75,7 @@ function normalizePhotoRecord(photo = {}) {
     reviewNote: String(photo.reviewNote || ''),
     reviewedAt: photo.reviewedAt || null,
     reviewedBy: photo.reviewedBy || null,
+    pendingEdit: photo.pendingEdit || null,
   };
 }
 
@@ -243,6 +244,16 @@ async function generateThumbnail(srcPath, dstPath) {
   }
 }
 
+async function generateDisplayImageFromBuffer(buffer, dstPath) {
+  const tempPath = path.join(PHOTOS_DIR, `${uuidv4()}_upload.tmp`);
+  try {
+    fs.writeFileSync(tempPath, buffer);
+    return await generateThumbnail(tempPath, dstPath);
+  } finally {
+    try { fs.unlinkSync(tempPath); } catch { /* already removed */ }
+  }
+}
+
 /**
  * 保存照片（原图写盘 + 缩略图生成 + 写入索引）。
  *
@@ -280,24 +291,20 @@ async function savePhoto({ buffer, mimeType, filename = '', lat, lon, takenAt, l
   initDirs();
 
   const id       = uuidv4();
-  const ext      = normalizedMime === 'image/png'
-    ? '.png'
-    : (normalizedMime === 'image/heic' || normalizedMime === 'image/heif') ? '.heic' : '.jpg';
-  const origFile = `${id}${ext}`;
+  const origFile = null;
   const thumbFile = `${id}_thumb.jpg`;
 
-  const origPath  = path.join(ORIGINALS_DIR, origFile);
   const thumbPath = path.join(THUMBS_DIR, thumbFile);
 
   // 写原图
-  fs.writeFileSync(origPath, buffer);
+  // Original uploads are transient; only the compressed display image is retained.
 
   // 生成缩略图
-  const thumbOk = await generateThumbnail(origPath, thumbPath);
+  const thumbOk = await generateDisplayImageFromBuffer(buffer, thumbPath);
 
   const meta = {
     id,
-    filename: filename || origFile,
+    filename: filename || `${id}.jpg`,
     mimeType: normalizedMime,
     origFile,
     thumbFile: thumbOk ? thumbFile : null,
@@ -315,6 +322,7 @@ async function savePhoto({ buffer, mimeType, filename = '', lat, lon, takenAt, l
     reviewNote: String(reviewNote || '').trim(),
     reviewedAt: normalizeReviewStatus(reviewStatus, 'approved') === 'approved' ? now.toISOString() : null,
     reviewedBy: reviewedBy || (normalizeReviewStatus(reviewStatus, 'approved') === 'approved' ? 'admin' : null),
+    pendingEdit: null,
     sizeMb: parseFloat(sizeMb.toFixed(3)),
   };
 
@@ -416,16 +424,40 @@ function updatePhoto(id, patch = {}) {
   return next;
 }
 
+function buildMetadataPatch(current, patch = {}) {
+  const next = {};
+
+  if (Object.prototype.hasOwnProperty.call(patch, 'desc')) {
+    next.desc = normalizeOptionalText(patch.desc);
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, 'locationName')) {
+    next.locationName = normalizeOptionalText(patch.locationName);
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, 'uploaderName')) {
+    next.uploaderName = normalizeOptionalText(patch.uploaderName);
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, 'takenAt')) {
+    next.takenAt = normalizeOptionalDate(patch.takenAt);
+  }
+
+  const hasLat = Object.prototype.hasOwnProperty.call(patch, 'lat');
+  const hasLon = Object.prototype.hasOwnProperty.call(patch, 'lon');
+  if (hasLat || hasLon) {
+    const lat = hasLat ? normalizeOptionalCoordinate(patch.lat, -90, 90) : current.lat;
+    const lon = hasLon ? normalizeOptionalCoordinate(patch.lon, -180, 180) : current.lon;
+    next.lat = Number.isFinite(lat) && Number.isFinite(lon) ? lat : null;
+    next.lon = Number.isFinite(lat) && Number.isFinite(lon) ? lon : null;
+  }
+
+  return next;
+}
+
 function updateUserPhoto(id, userId, patch = {}) {
   initDirs();
   const current = getPhotoById(id);
   if (!current || String(current.uploaderUserId || '') !== String(userId || '')) return null;
 
-  const userPatch = {
-    reviewStatus: 'pending',
-    reviewNote: '',
-    reviewedBy: null
-  };
+  const userPatch = {};
   for (const key of ['desc', 'locationName', 'uploaderName', 'takenAt', 'lat', 'lon']) {
     if (Object.prototype.hasOwnProperty.call(patch, key)) {
       userPatch[key] = patch[key];
@@ -435,6 +467,29 @@ function updateUserPhoto(id, userId, patch = {}) {
     userPatch.desc = patch.description;
   }
 
+  if (normalizeReviewStatus(current.reviewStatus) === 'approved') {
+    const photos = readIndex();
+    const idx = photos.findIndex(p => p.id === id);
+    if (idx === -1) return null;
+
+    const pendingPatch = buildMetadataPatch(current, userPatch);
+    photos[idx] = {
+      ...current,
+      pendingEdit: {
+        ...(current.pendingEdit || {}),
+        ...pendingPatch,
+        reviewStatus: 'pending',
+        reviewNote: '',
+        submittedAt: new Date().toISOString(),
+      },
+    };
+    writeIndex(photos);
+    return photos[idx];
+  }
+
+  userPatch.reviewStatus = 'pending';
+  userPatch.reviewNote = '';
+  userPatch.reviewedBy = null;
   return updatePhoto(id, userPatch);
 }
 
@@ -444,6 +499,34 @@ function reviewPhoto(id, { reviewStatus, reviewNote = '', reviewedBy = 'admin' }
     const err = new Error('reviewStatus must be approved or rejected');
     err.code = 'INVALID_REVIEW_STATUS';
     throw err;
+  }
+  const current = getPhotoById(id);
+  if (current?.pendingEdit) {
+    const photos = readIndex();
+    const idx = photos.findIndex(p => p.id === id);
+    if (idx === -1) return null;
+
+    const { reviewStatus: _status, reviewNote: _note, submittedAt: _submittedAt, ...pendingPatch } = current.pendingEdit;
+    const now = new Date().toISOString();
+    photos[idx] = status === 'approved'
+      ? {
+          ...current,
+          ...pendingPatch,
+          reviewStatus: 'approved',
+          reviewNote: String(reviewNote || '').trim(),
+          reviewedAt: now,
+          reviewedBy,
+          pendingEdit: null,
+        }
+      : {
+          ...current,
+          reviewNote: String(reviewNote || '').trim(),
+          reviewedAt: now,
+          reviewedBy,
+          pendingEdit: null,
+        };
+    writeIndex(photos);
+    return photos[idx];
   }
   return updatePhoto(id, { reviewStatus: status, reviewNote, reviewedBy });
 }
@@ -462,7 +545,7 @@ function deletePhoto(id) {
   const photo = photos[idx];
 
   // 删除磁盘文件（容错：文件不存在不报错）
-  const origPath  = path.join(ORIGINALS_DIR, photo.origFile);
+  const origPath  = photo.origFile ? path.join(ORIGINALS_DIR, photo.origFile) : null;
   const thumbPath = photo.thumbFile ? path.join(THUMBS_DIR, photo.thumbFile) : null;
 
   try { fs.unlinkSync(origPath);  } catch { /* 已不存在 */ }

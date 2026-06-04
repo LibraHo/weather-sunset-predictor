@@ -6,6 +6,10 @@ const { v4: uuidv4 } = require('uuid');
 
 const DEFAULT_DATA_FILE = path.join(os.homedir(), '.xiake', 'users.json');
 const WECHAT_PROVIDERS = new Set(['wechat', 'wechat_web', 'wechat_miniprogram']);
+const EMAIL_PROVIDER = 'email';
+const HASH_ALGORITHM = 'sha256';
+const HASH_ITERATIONS = 120000;
+const HASH_KEY_LENGTH = 32;
 
 function nowIso() {
   return new Date().toISOString();
@@ -35,6 +39,33 @@ function stableLocationId(name, lat, lon) {
 
 function hashToken(token) {
   return crypto.createHash('sha256').update(String(token)).digest('hex');
+}
+
+function normalizeEmail(email) {
+  return String(email || '').trim().toLowerCase();
+}
+
+function createInputError(code, message) {
+  const error = new Error(message);
+  error.code = code;
+  error.status = 400;
+  return error;
+}
+
+function hashSecret(secret) {
+  const salt = crypto.randomBytes(16).toString('base64url');
+  const hash = crypto.pbkdf2Sync(String(secret), salt, HASH_ITERATIONS, HASH_KEY_LENGTH, HASH_ALGORITHM).toString('base64url');
+  return `pbkdf2:${HASH_ALGORITHM}:${HASH_ITERATIONS}:${salt}:${hash}`;
+}
+
+function verifySecret(secret, storedHash) {
+  const parts = String(storedHash || '').split(':');
+  if (parts.length !== 5 || parts[0] !== 'pbkdf2') return false;
+  const [, algorithm, iterationsText, salt, expectedHash] = parts;
+  const iterations = Number(iterationsText);
+  if (!algorithm || !Number.isInteger(iterations) || iterations <= 0 || !salt || !expectedHash) return false;
+  const actualHash = crypto.pbkdf2Sync(String(secret), salt, iterations, HASH_KEY_LENGTH, algorithm).toString('base64url');
+  return timingSafeEqualString(actualHash, expectedHash);
 }
 
 function envSessionSecret() {
@@ -290,6 +321,12 @@ class UserService {
     return identity ? this.findById(identity.userId) : null;
   }
 
+  findEmailIdentity(email) {
+    const normalizedEmail = normalizeEmail(email);
+    if (!normalizedEmail) return null;
+    return this.findExactIdentity(EMAIL_PROVIDER, normalizedEmail);
+  }
+
   findById(userId) {
     return this.data.users.find(user => user.userId === userId) || null;
   }
@@ -352,7 +389,11 @@ class UserService {
     const timestamp = nowIso();
     const subjectRecords = this.findIdentityRecords('google', identitySubject);
     const userId = this.findSingleUserId(subjectRecords, 'Identity conflict: google sub belongs to multiple users');
-    const user = userId ? this.findById(userId) : this.createUser(timestamp);
+    const emailIdentity = email ? this.findEmailIdentity(email) : null;
+    if (userId && emailIdentity && emailIdentity.userId !== userId) {
+      throw createConflictError('Identity conflict: google email belongs to another user');
+    }
+    const user = userId ? this.findById(userId) : (emailIdentity ? this.findById(emailIdentity.userId) : this.createUser(timestamp));
     this.upsertIdentity(user.userId, {
       provider: 'google',
       subject: identitySubject,
@@ -365,6 +406,99 @@ class UserService {
     this.hydrateUsers();
     this.save();
     return user;
+  }
+
+  validateEmailPasswordFields({ email, password, recoveryQuestion, recoveryAnswer }, options = {}) {
+    const normalizedEmail = normalizeEmail(email);
+    if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      throw createInputError('INVALID_EMAIL', 'Valid email is required');
+    }
+    if (!password || String(password).length < 6) {
+      throw createInputError('INVALID_PASSWORD', 'Password must be at least 6 characters');
+    }
+    if (!options.passwordOnly) {
+      if (!String(recoveryQuestion || '').trim()) {
+        throw createInputError('INVALID_RECOVERY_QUESTION', 'Recovery question is required');
+      }
+      if (!String(recoveryAnswer || '').trim()) {
+        throw createInputError('INVALID_RECOVERY_ANSWER', 'Recovery answer is required');
+      }
+    }
+    return normalizedEmail;
+  }
+
+  setPasswordForUser(userId, credentials = {}) {
+    const email = this.validateEmailPasswordFields(credentials);
+    const user = this.findById(userId);
+    if (!user) {
+      const error = new Error('User not found');
+      error.code = 'USER_NOT_FOUND';
+      error.status = 404;
+      throw error;
+    }
+    const existing = this.findEmailIdentity(email);
+    if (existing && existing.userId !== userId) {
+      throw createConflictError('Email is already registered');
+    }
+    this.upsertIdentity(user.userId, {
+      ...(existing || {}),
+      provider: EMAIL_PROVIDER,
+      subject: email,
+      email,
+      passwordHash: hashSecret(credentials.password),
+      recoveryQuestion: String(credentials.recoveryQuestion).trim(),
+      recoveryAnswerHash: hashSecret(String(credentials.recoveryAnswer).trim())
+    });
+    user.email = email;
+    user.updatedAt = nowIso();
+    this.hydrateUsers();
+    this.save();
+    return this.findById(user.userId);
+  }
+
+  registerEmailUser(credentials = {}) {
+    const email = this.validateEmailPasswordFields(credentials);
+    if (this.findEmailIdentity(email)) {
+      const error = new Error('Email is already registered');
+      error.code = 'EMAIL_ALREADY_REGISTERED';
+      error.status = 409;
+      throw error;
+    }
+    const user = this.createUser(nowIso());
+    return this.setPasswordForUser(user.userId, { ...credentials, email });
+  }
+
+  verifyPasswordLogin(email, password) {
+    const identity = this.findEmailIdentity(email);
+    if (!identity || !identity.passwordHash || !password) return null;
+    if (!verifySecret(password, identity.passwordHash)) return null;
+    return this.findById(identity.userId);
+  }
+
+  getRecoveryQuestion(email) {
+    const identity = this.findEmailIdentity(email);
+    if (!identity?.recoveryQuestion) return null;
+    return { recoveryQuestion: identity.recoveryQuestion };
+  }
+
+  resetPasswordWithRecovery({ email, recoveryAnswer, newPassword } = {}) {
+    const normalizedEmail = this.validateEmailPasswordFields({
+      email,
+      password: newPassword,
+      recoveryQuestion: 'not-needed',
+      recoveryAnswer: 'not-needed'
+    });
+    const identity = this.findEmailIdentity(normalizedEmail);
+    if (!identity?.recoveryAnswerHash) return false;
+    if (!verifySecret(String(recoveryAnswer || '').trim(), identity.recoveryAnswerHash)) return false;
+    identity.passwordHash = hashSecret(newPassword);
+    identity.updatedAt = nowIso();
+    const user = this.findById(identity.userId);
+    if (user) user.updatedAt = identity.updatedAt;
+    this.revokeUserSessions(identity.userId, { save: false, revokedAt: identity.updatedAt });
+    this.hydrateUsers();
+    this.save();
+    return true;
   }
 
   issueToken(user, options = {}) {
@@ -443,6 +577,19 @@ class UserService {
     session.updatedAt = session.revokedAt;
     this.save();
     return true;
+  }
+
+  revokeUserSessions(userId, options = {}) {
+    const revokedAt = options.revokedAt || nowIso();
+    let count = 0;
+    for (const session of this.data.sessions) {
+      if (session.userId !== userId || session.revokedAt) continue;
+      session.revokedAt = revokedAt;
+      session.updatedAt = revokedAt;
+      count += 1;
+    }
+    if (count > 0 && options.save !== false) this.save();
+    return count;
   }
 
   revokeToken(token) {

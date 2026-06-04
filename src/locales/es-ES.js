@@ -34,6 +34,77 @@
     "clusterListAria": "Clustered photo thumbnails",
     "clusterPhotoLabel": "Photo {{index}}: {{location}}"
   },
+  "account": {
+    "auth": {
+      "closeAria": "Cerrar ventana de cuenta",
+      "loginTitle": "Iniciar sesión",
+      "registerTitle": "Crear cuenta",
+      "forgotTitle": "Restablecer contraseña",
+      "tabsAria": "Acciones de cuenta",
+      "loginTab": "Entrar",
+      "registerTab": "Registro",
+      "forgotTab": "Recuperar contraseña",
+      "emailLabel": "Correo",
+      "passwordLabel": "Contraseña",
+      "passwordPlaceholder": "Introduce la contraseña",
+      "passwordMinPlaceholder": "Al menos 6 caracteres",
+      "recoveryQuestionLabel": "Pregunta de recuperación",
+      "recoveryQuestionPlaceholder": "Ejemplo: ¿mi primera ciudad para ver el atardecer?",
+      "recoveryAnswerLabel": "Respuesta de recuperación",
+      "recoveryAnswerPlaceholder": "Recuerda esta respuesta. No se mostrará después.",
+      "recoveryAnswerResetPlaceholder": "Respuesta configurada al registrarte",
+      "recoveryHint": "Introduce el correo para ver la pregunta de recuperación. Si no aparece, también puedes escribir la respuesta e intentar restablecer.",
+      "newPasswordLabel": "Nueva contraseña",
+      "loginAction": "Entrar",
+      "createAction": "Crear cuenta",
+      "resetAction": "Restablecer contraseña",
+      "or": "o",
+      "googleLogin": "Entrar con Google",
+      "loginSuccess": "Sesión iniciada.",
+      "registerSuccess": "Cuenta creada.",
+      "resetSuccess": "Contraseña restablecida. Inicia sesión con la nueva contraseña.",
+      "requestFailed": "Error en la solicitud de cuenta.",
+      "done": "Hecho.",
+      "recoveryQuestionFallback": "Si la cuenta existe, introduce la respuesta de recuperación y una nueva contraseña.",
+      "recoveryQuestionUnavailable": "La pregunta de recuperación no está disponible temporalmente. Aun así puedes probar con la respuesta y la nueva contraseña."
+    },
+    "menu": {
+      "buttonAria": "Cuenta",
+      "dropdownAria": "Menú de cuenta"
+    },
+    "panel": {
+      "signedOut": "Sesión cerrada",
+      "signedOutTitle": "Inicia sesión para sincronizar tus lugares",
+      "signedOutSummary": "Los lugares favoritos pueden sincronizarse con tu cuenta.",
+      "signedIn": "Sesión iniciada",
+      "emptyFavorites": "Aún no hay favoritos en la cuenta.",
+      "emptyLocalFavorites": "Aún no hay favoritos locales.",
+      "dataUnavailable": "Los datos de la cuenta no están disponibles temporalmente.",
+      "signInForUploads": "Inicia sesión para ver tus fotos subidas.",
+      "signInForApi": "Inicia sesión para ver las solicitudes API de la cuenta.",
+      "emptyUploads": "Aún no hay fotos subidas.",
+      "logout": "Cerrar sesión",
+      "favoritesTitle": "Lugares favoritos",
+      "favoritesDesc": "Vuelve rápido a tus lugares habituales de pronóstico.",
+      "uploadsTitle": "Subidas",
+      "uploadsDesc": "Las fotos subidas, su revisión y los registros públicos aparecen aquí.",
+      "apiTitle": "Solicitudes API",
+      "apiDesc": "Las solicitudes de Token, revisión y límites de uso aparecen aquí.",
+      "emptyApiApplication": "Aún no hay solicitud API.",
+      "statusPending": "pendiente",
+      "noEmail": "Sin correo",
+      "apiApplicationFallback": "Solicitud API",
+      "untitledPhoto": "Foto sin título",
+      "userPrefix": "Usuario Xiake",
+      "connectedSuffix": "conectado",
+      "accountConnected": "Cuenta conectada",
+      "typeSunrise": "Amanecer",
+      "typeSunset": "Atardecer",
+      "typePlace": "Lugar",
+      "untitledLocation": "Lugar sin título",
+      "coordinatesPending": "Coordenadas pendientes"
+    }
+  },
   "home": {
     "tabs": {
       "ariaLabel": "Navegación por pestañas",
@@ -42,6 +113,7 @@
       "map": "Mapa de Resplandor",
             "shareMap": "Mapa compartido",
       "firecloudMap": "Firecloud Map",
+      "user": "Mi cuenta",
 apiAccess: 'Acceso API'
     },
     "menu": {
@@ -288,7 +360,8 @@ apiAccess: 'Acceso API'
     "precipChance": "{{prob}}% precip",
     unavailable: {
       title: 'Weather forecast is temporarily unavailable',
-      body: 'Please come back later.'
+      body: 'Please come back later.',
+      inline: 'Weather data is temporarily unavailable. Firecloud map remains available.',
     },
     "dataInfo": "ℹ️ La fuente de datos proporciona {{hours}} horas de datos de pronóstico (~{{days}} días). Considere usar otras fuentes de datos del clima para más días."
   },
