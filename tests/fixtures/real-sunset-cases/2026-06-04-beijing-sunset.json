@@ -1,0 +1,166 @@
+{
+  "id": "2026-06-04-beijing-sunset-mid-cloud-orange-red-glow",
+  "title": "2026-06-04 Beijing sunset: orange-red-purple glow from sunset-direction mid cloud",
+  "location": {
+    "name": "Beijing",
+    "nameZh": "北京",
+    "lat": 39.9042,
+    "lon": 116.4074,
+    "timezone": "Asia/Shanghai"
+  },
+  "event": {
+    "period": "sunset",
+    "localDate": "2026-06-04",
+    "calculationTimeUtc": "2026-06-04T11:38:00.000Z",
+    "sunAzimuth": 303
+  },
+  "feedback": {
+    "source": "Alex现场反馈 + 1x 手机主摄照片",
+    "reportedAt": "2026-06-04T19:39:01+08:00",
+    "summary": "现场颜色橙、红、紫很好看；远处有一部分灰色低云/近地层云，但不影响其他区域观感。Alex 认为这个日落约 50 分。",
+    "subjectiveScore": {
+      "min": 48,
+      "max": 55,
+      "label": "主观约 50"
+    },
+    "calibrationTarget": {
+      "score": 50,
+      "status": "calibrated",
+      "reason": "高云为 0 时也不能直接判低分；日落方向中云、清晰光路和适中 AOD 可以形成漂亮橙红日落，但范围局部，不能抬到 70 档。"
+    },
+    "actualOutcome": {
+      "fireCloud": "good_glow",
+      "rainDuringWindow": false,
+      "orangeLightOrOpening": true,
+      "worthWaiting": true,
+      "notes": "1x 主摄照片显示低空橙红范围较大，云底被照亮，局部有红紫色；不是大面积通透高云爆烧。"
+    },
+    "previousModelScores": [
+      {
+        "score": 45,
+        "source": "GFS/CAMS map nearest grid product cache"
+      },
+      {
+        "score": 57.2,
+        "source": "current single-point replay from nearest GFS/CAMS fields"
+      }
+    ]
+  },
+  "capture": {
+    "dataCompleteness": "grid_product_cache_snapshot_plus_photo_feedback",
+    "sourceFiles": [
+      "memory/real-sunset-cases/2026-06-04-beijing-sunset/2026-06-04T11-29-40-753Z-evening-photo.json",
+      "memory/real-sunset-cases/2026-06-04-beijing-sunset/2026-06-04-beijing-sunset-map-nearby.json",
+      "memory/real-sunset-cases/2026-06-04-beijing-sunset/2026-06-04-beijing-sunset-1x-observation.json",
+      "memory/real-sunset-cases/2026-06-04-beijing-sunset/2026-06-04-beijing-sunset-traffic-light-1x-observation.json"
+    ],
+    "knownLimitations": [
+      "Open-Meteo single-point forecast was intermittently unavailable during capture due to ECONNRESET.",
+      "This fixture uses the nearest GFS/CAMS grid-product-cache fields rather than a complete Open-Meteo hourly point forecast.",
+      "1x phone photo is useful for apparent angle and visual outcome, but not for absolute cloud height."
+    ]
+  },
+  "input": {
+    "weatherData": {
+      "cloudCover": 54.5,
+      "humidity": 28.4,
+      "visibility": 24.13491796875,
+      "lowCloudCover": 0,
+      "temp": 20.3,
+      "windSpeed": 1.88,
+      "windDirection": 43,
+      "pressure": 1000,
+      "precipitation": 0,
+      "recentPrecipitation6h": 0,
+      "recentRainHours": 0,
+      "recentRainSignal": 0,
+      "recentRainMaxHourly": 0,
+      "recentRainWetHourEquivalent": 0,
+      "lowClouds": 0,
+      "midClouds": 54.5,
+      "highClouds": 0,
+      "cloudBaseHeight": null,
+      "cape": null,
+      "weatherCode": null,
+      "shortwaveRadiation": 295.3,
+      "directRadiation": 0,
+      "diffuseRadiation": 0,
+      "waterVapourColumn": 20.48,
+      "aerosolOpticalDepth": 0.338,
+      "dust": null,
+      "pm2_5": null,
+      "pm10": null,
+      "aqi": null
+    },
+    "options": {
+      "rainedRecently": false,
+      "prevHourData": null,
+      "remoteCloudData": {
+        "source": "gfs_cams_directional_neighbor_grid",
+        "azimuth": 303,
+        "samples": [
+          {
+            "lat": 40.5,
+            "lon": 116,
+            "distanceKm": 25,
+            "bearing": 303,
+            "cloudBaseHeight": null,
+            "lowCloud": 0,
+            "midCloud": 6.3,
+            "highCloud": 0,
+            "totalCloud": 54.5,
+            "humidity": 28,
+            "precipitation": 0,
+            "weatherCode": null,
+            "provider": "gfs_cams",
+            "error": null
+          },
+          {
+            "lat": 40.5,
+            "lon": 115.5,
+            "distanceKm": 50,
+            "bearing": 303,
+            "cloudBaseHeight": null,
+            "lowCloud": 0,
+            "midCloud": 8.9,
+            "highCloud": 0,
+            "totalCloud": 25.2,
+            "humidity": 25,
+            "precipitation": 0,
+            "weatherCode": null,
+            "provider": "gfs_cams",
+            "error": null
+          }
+        ],
+        "errors": []
+      }
+    }
+  },
+  "expectations": {
+    "score": {
+      "min": 50,
+      "max": 58
+    },
+    "statusAnyOf": [
+      "good_glow",
+      "light_glow"
+    ],
+    "equals": [
+      {
+        "path": "aerosolHazeCap.applied",
+        "value": false
+      },
+      {
+        "path": "scoringV2.warmScatteringUpperCarrierAdjustment.applied",
+        "value": false
+      }
+    ],
+    "notAbove": [
+      {
+        "path": "score",
+        "value": 58,
+        "reason": "A beautiful orange-red localized sunset with mid-cloud carrier and no high cloud should stay near 50, not jump into the 70+ widespread firecloud range."
+      }
+    ]
+  }
+}
