@@ -1362,7 +1362,7 @@ describe('EnhancedPredictionService', () => {
       expect(result.status).toBe('light_glow');
     });
 
-    test('should gate strong cloud carrier when solar-direction samples show a near cloud wall', () => {
+    test('should gate strong cloud carrier when solar-direction samples show a blocked corridor', () => {
       const weatherData = {
         cloudCover: 80,
         lowClouds: 0,
@@ -1391,11 +1391,9 @@ describe('EnhancedPredictionService', () => {
         { remoteCloudData }
       );
 
-      expect(result.lightPathAnalysis.directionalAnalysis.reason).toBe('solar_direction_near_cloud_wall');
-      expect(result.lightPathGate).toMatchObject({
-        gate: 0.42,
-        reason: 'solar_direction_near_cloud_wall'
-      });
+      expect(result.lightPathAnalysis.directionalAnalysis.reason).toBe('solar_direction_blocked_corridor');
+      expect(result.lightPathGate.reason).toBe('solar_direction_blocked_corridor');
+      expect(result.lightPathGate.gate).toBe(0.42);
       expect(result.score).toBeLessThan(40);
       expect(result.status).toBe('no_fire_cloud');
     });
@@ -1681,7 +1679,7 @@ describe('EnhancedPredictionService', () => {
       expect(result.lightPathAnalysis.remoteBlockSignal).toBe(true);
       expect(result.lightPathAnalysis.occlusionWeight).toBe(1);
       expect(result.lightPathAnalysis.score).toBeLessThan(55);
-      expect(result.lightPathAnalysis.directionalAnalysis.reason).toBe('solar_direction_near_cloud_wall');
+      expect(result.lightPathAnalysis.directionalAnalysis.reason).toBe('solar_direction_blocked_corridor');
     });
 
     test('should cap extreme dust haze high-cloud scenes below 30 points', () => {

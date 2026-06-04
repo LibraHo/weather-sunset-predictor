@@ -42,28 +42,31 @@
     ]
   },
   "capture": {
-    "dataCompleteness": "historical_partial_snapshot",
+    "dataCompleteness": "historical_forecast_cloud_path_supplemented",
     "sourceFiles": [
+      "https://historical-forecast-api.open-meteo.com/v1/forecast",
+      "https://air-quality-api.open-meteo.com/v1/air-quality",
       "tests/unit/server/EnhancedPredictionService.test.js"
     ]
   },
   "input": {
     "weatherData": {
-      "cloudCover": 87,
+      "cloudCover": 45,
       "lowClouds": 0,
       "midClouds": 0,
-      "highClouds": 66,
-      "humidity": 68,
-      "visibility": 20,
+      "highClouds": 45,
+      "humidity": 71,
+      "visibility": 11.54,
       "precipitation": 0,
-      "shortwaveRadiation": 93,
-      "directRadiation": 28.2,
-      "diffuseRadiation": 64.8,
+      "shortwaveRadiation": 77,
+      "directRadiation": 22,
+      "diffuseRadiation": 55,
+      "weatherCode": 1,
       "waterVapourColumn": 22.2,
-      "aerosolOpticalDepth": 0.21,
-      "pm2_5": 38.8,
-      "pm10": 44.9,
-      "dust": 12,
+      "aerosolOpticalDepth": 0.26,
+      "pm2_5": 42.3,
+      "pm10": 52.4,
+      "dust": 19,
       "aqi": 70
     },
     "options": {
@@ -71,32 +74,39 @@
         "source": "solar_direction_openmeteo",
         "samples": [
           {
+            "distanceKm": 10,
+            "cloudBaseHeight": 7000,
+            "lowCloud": 0,
+            "midCloud": 0,
+            "highCloud": 44
+          },
+          {
             "distanceKm": 25,
             "cloudBaseHeight": 7000,
             "lowCloud": 0,
             "midCloud": 0,
-            "highCloud": 92
+            "highCloud": 54
           },
           {
             "distanceKm": 50,
             "cloudBaseHeight": 7000,
             "lowCloud": 0,
-            "midCloud": 0,
-            "highCloud": 92
+            "midCloud": 1,
+            "highCloud": 80
           },
           {
             "distanceKm": 75,
             "cloudBaseHeight": 7000,
             "lowCloud": 0,
             "midCloud": 0,
-            "highCloud": 92
+            "highCloud": 38
           },
           {
             "distanceKm": 100,
             "cloudBaseHeight": 7000,
             "lowCloud": 0,
             "midCloud": 0,
-            "highCloud": 92
+            "highCloud": 17
           }
         ]
       }
@@ -118,7 +128,7 @@
       },
       {
         "path": "visibleSunsetSectorCap.cap",
-        "value": 68
+        "value": 66
       }
     ],
     "notAbove": [

@@ -950,6 +950,10 @@ function getSolarDirectionSampleWeight(sample, index) {
   return SOLAR_DIRECTION_SAMPLE_WEIGHTS[index] || 0.1;
 }
 
+function isDirectionalCorridorBlocked(reason = '') {
+  return reason.includes('blocked_corridor') || reason.includes('cloud_wall');
+}
+
 function scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore = {}, weatherData = {}) {
   const samples = Array.isArray(remoteCloudData?.samples)
     ? remoteCloudData.samples.filter(sample => sample && !sample.error)
@@ -959,8 +963,8 @@ function scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore = {}, we
   }
 
   const directionalReason = lightPathScore?.directionalAnalysis?.reason || '';
-  if (directionalReason.includes('cloud_wall')) {
-    return { applied: false, score: 0, floor: null, reason: 'directional_cloud_wall' };
+  if (isDirectionalCorridorBlocked(directionalReason)) {
+    return { applied: false, score: 0, floor: null, reason: 'directional_blocked_corridor' };
   }
 
   const totalWeight = samples.reduce((sum, sample, index) => sum + getSolarDirectionSampleWeight(sample, index), 0);
@@ -973,8 +977,6 @@ function scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore = {}, we
   const high = avg('highCloud');
   const upperSignal = clamp(high * 0.9 + mid * 0.55, 0, 100);
   const lowMidBlock = low * 0.75 + mid * 0.20;
-  const near = samples[0] || {};
-  const nearLowMidBlock = Number(near.lowCloud || 0) * 0.75 + Number(near.midCloud || 0) * 0.25;
   const lightPath = Number(lightPathScore?.score ?? 0);
   const precipitation = Number(weatherData.precipitation ?? weatherData.rain ?? weatherData.showers ?? 0);
   const hasDirectionalOpening = directionalReason.includes('opening');
@@ -1002,9 +1004,6 @@ function scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore = {}, we
   if (lowMidBlock > 28) {
     score -= Math.min((lowMidBlock - 28) / 32 * 14, 14);
   }
-  if (nearLowMidBlock > 45) {
-    score -= Math.min((nearLowMidBlock - 45) / 35 * 10, 10);
-  }
   if (precipitation > 0.2) {
     score *= 0.85;
   }
@@ -1025,7 +1024,6 @@ function scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore = {}, we
       high: parseFloat(high.toFixed(1)),
       upperSignal: parseFloat(upperSignal.toFixed(1)),
       lowMidBlock: parseFloat(lowMidBlock.toFixed(1)),
-      nearLowMidBlock: parseFloat(nearLowMidBlock.toFixed(1)),
       lightPath: Number.isFinite(lightPath) ? parseFloat(lightPath.toFixed(1)) : null
     }
   };
@@ -1151,7 +1149,7 @@ function assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightP
   const pathGate = clamp(Number(lightPathGate?.gate ?? 0), 0, 1.12);
   const directionalReason = lightPathScore?.directionalAnalysis?.reason || lightPathGate?.reason || '';
   const pathOpen = pathGate >= 0.85 || directionalReason.includes('opening');
-  const pathBlocked = pathGate <= 0.45 || directionalReason.includes('cloud_wall');
+  const pathBlocked = pathGate <= 0.45 || isDirectionalCorridorBlocked(directionalReason);
   const upperCloudCarrier = highClouds * 0.65 + midClouds * 0.35;
   const cloudCanReceiveLight = upperCloudCarrier >= 45 && lowClouds <= 35;
   const heavyAir =
@@ -1420,23 +1418,25 @@ function analyzeRemoteLightPath(samples) {
   const avg = (key) => valid.reduce((sum, sample, index) => (
     sum + Number(sample[key] || 0) * getSolarDirectionSampleWeight(sample, index)
   ), 0) / totalWeight;
-  const near = valid[0] || {};
-  const far = valid[valid.length - 1] || {};
   const lowMid = avg('lowCloud') * 0.65 + avg('midCloud') * 0.35;
   const high = avg('highCloud');
-  const farWall = (Number(far.lowCloud || 0) * 0.7 + Number(far.midCloud || 0) * 0.3) >= 68;
-  const nearWall = (Number(near.lowCloud || 0) * 0.7 + Number(near.midCloud || 0) * 0.3) >= 72;
+  const maxSampleLowMid = valid.reduce((max, sample) => {
+    const sampleLowMid = Number(sample.lowCloud || 0) * 0.65 + Number(sample.midCloud || 0) * 0.35;
+    return Math.max(max, sampleLowMid);
+  }, 0);
+  const blockedCorridor = lowMid >= 68 || (lowMid >= 38 && maxSampleLowMid >= 78);
   const opening = lowMid <= 28 && high >= 25;
   const clearCorridor = lowMid <= 22;
 
-  if (farWall || nearWall) {
+  if (blockedCorridor) {
     return {
       available: true,
-      modifier: nearWall ? 0.72 : 0.82,
-      cap: nearWall ? 48 : 56,
-      reason: nearWall ? 'solar_direction_near_cloud_wall' : 'solar_direction_far_cloud_wall',
+      modifier: 0.72,
+      cap: 48,
+      reason: 'solar_direction_blocked_corridor',
       lowMid: parseFloat(lowMid.toFixed(1)),
-      high: parseFloat(high.toFixed(1))
+      high: parseFloat(high.toFixed(1)),
+      maxSampleLowMid: parseFloat(maxSampleLowMid.toFixed(1))
     };
   }
 
@@ -1874,8 +1874,8 @@ function buildLightPathGate(lightPathScore, cloudTypeAdjustment = {}) {
   }
 
   const directionalReason = lightPathScore?.directionalAnalysis?.reason || '';
-  if (directionalReason.includes('cloud_wall')) {
-    gate = Math.min(gate, directionalReason.includes('near') ? 0.42 : 0.55);
+  if (isDirectionalCorridorBlocked(directionalReason)) {
+    gate = Math.min(gate, 0.42);
   } else if (directionalReason.includes('opening')) {
     gate = Math.min(Math.max(gate, 0.90), 0.96);
   } else if (directionalReason.includes('cloudy_corridor')) {
@@ -2319,7 +2319,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   if (postRainMode === 'post_rain_gray_curtain' || postRainMode === 'humid_haze_gray_curtain') {
     const lowMid = (weatherData.lowClouds || 0) * 0.6 + (weatherData.midClouds || 0) * 0.4;
     const directionalReason = lightPathScore.directionalAnalysis?.reason || '';
-    const directionalWall = directionalReason.includes('cloud_wall');
+    const directionalWall = isDirectionalCorridorBlocked(directionalReason);
     const directionalOpening = directionalReason.includes('opening');
     const cap = directionalOpening ? null : (postRainMode === 'humid_haze_gray_curtain' || directionalWall || lowMid >= 55 ? 42 : 50);
     if (cap != null) {
