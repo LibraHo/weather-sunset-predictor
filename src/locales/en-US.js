@@ -34,6 +34,57 @@ const translations = {
     "clusterListAria": "Clustered photo thumbnails",
     "clusterPhotoLabel": "Photo {{index}}: {{location}}"
   },
+  "account": {
+    "auth": {
+      "closeAria": "Close account window",
+      "loginTitle": "Account login",
+      "registerTitle": "Create account",
+      "forgotTitle": "Reset password",
+      "tabsAria": "Account actions",
+      "loginTab": "Log in",
+      "registerTab": "Register",
+      "forgotTab": "Reset password",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "passwordMinPlaceholder": "At least 6 characters",
+      "recoveryQuestionLabel": "Recovery question",
+      "recoveryQuestionPlaceholder": "Example: my first sunset-watching city?",
+      "recoveryAnswerLabel": "Recovery answer",
+      "recoveryAnswerPlaceholder": "Remember this answer. It will not be shown later.",
+      "recoveryAnswerResetPlaceholder": "Answer from registration",
+      "recoveryHint": "Enter your email to show the recovery question. If it does not appear, you can still enter the answer and try resetting.",
+      "newPasswordLabel": "New password",
+      "loginAction": "Log in",
+      "createAction": "Create account",
+      "resetAction": "Reset password",
+      "or": "or",
+      "googleLogin": "Continue with Google"
+    },
+    "menu": {
+      "buttonAria": "Account",
+      "dropdownAria": "Account menu"
+    },
+    "panel": {
+      "signedOut": "Signed out",
+      "signedOutTitle": "Sign in to sync your sunset trail",
+      "signedOutSummary": "Favorite places can sync with your account.",
+      "signedIn": "Signed in",
+      "emptyFavorites": "No account favorites yet.",
+      "emptyLocalFavorites": "No local favorites yet.",
+      "dataUnavailable": "Account data is temporarily unavailable.",
+      "signInForUploads": "Sign in to view your uploaded photos.",
+      "signInForApi": "Sign in to view account API applications.",
+      "emptyUploads": "No uploaded photos yet.",
+      "logout": "Log out",
+      "favoritesTitle": "Favorite places",
+      "favoritesDesc": "Jump back to your regular forecast spots quickly.",
+      "uploadsTitle": "Uploads",
+      "uploadsDesc": "Photo uploads, review status, and public gallery records appear here.",
+      "apiTitle": "API applications",
+      "apiDesc": "Token requests, review status, and usage limits appear here."
+    }
+  },
   "home": {
     "tabs": {
       "ariaLabel": "Home tab navigation",

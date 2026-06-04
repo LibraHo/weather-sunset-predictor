@@ -34,6 +34,57 @@ const translations = {
     "clusterListAria": "Clustered photo thumbnails",
     "clusterPhotoLabel": "Photo {{index}}: {{location}}"
   },
+  "account": {
+    "auth": {
+      "closeAria": "Cerrar ventana de cuenta",
+      "loginTitle": "Iniciar sesión",
+      "registerTitle": "Crear cuenta",
+      "forgotTitle": "Restablecer contraseña",
+      "tabsAria": "Acciones de cuenta",
+      "loginTab": "Entrar",
+      "registerTab": "Registro",
+      "forgotTab": "Recuperar contraseña",
+      "emailLabel": "Correo",
+      "passwordLabel": "Contraseña",
+      "passwordPlaceholder": "Introduce la contraseña",
+      "passwordMinPlaceholder": "Al menos 6 caracteres",
+      "recoveryQuestionLabel": "Pregunta de recuperación",
+      "recoveryQuestionPlaceholder": "Ejemplo: ¿mi primera ciudad para ver el atardecer?",
+      "recoveryAnswerLabel": "Respuesta de recuperación",
+      "recoveryAnswerPlaceholder": "Recuerda esta respuesta. No se mostrará después.",
+      "recoveryAnswerResetPlaceholder": "Respuesta configurada al registrarte",
+      "recoveryHint": "Introduce el correo para ver la pregunta de recuperación. Si no aparece, también puedes escribir la respuesta e intentar restablecer.",
+      "newPasswordLabel": "Nueva contraseña",
+      "loginAction": "Entrar",
+      "createAction": "Crear cuenta",
+      "resetAction": "Restablecer contraseña",
+      "or": "o",
+      "googleLogin": "Entrar con Google"
+    },
+    "menu": {
+      "buttonAria": "Cuenta",
+      "dropdownAria": "Menú de cuenta"
+    },
+    "panel": {
+      "signedOut": "Sesión cerrada",
+      "signedOutTitle": "Inicia sesión para sincronizar tus lugares",
+      "signedOutSummary": "Los lugares favoritos pueden sincronizarse con tu cuenta.",
+      "signedIn": "Sesión iniciada",
+      "emptyFavorites": "Aún no hay favoritos en la cuenta.",
+      "emptyLocalFavorites": "Aún no hay favoritos locales.",
+      "dataUnavailable": "Los datos de la cuenta no están disponibles temporalmente.",
+      "signInForUploads": "Inicia sesión para ver tus fotos subidas.",
+      "signInForApi": "Inicia sesión para ver las solicitudes API de la cuenta.",
+      "emptyUploads": "Aún no hay fotos subidas.",
+      "logout": "Cerrar sesión",
+      "favoritesTitle": "Lugares favoritos",
+      "favoritesDesc": "Vuelve rápido a tus lugares habituales de pronóstico.",
+      "uploadsTitle": "Subidas",
+      "uploadsDesc": "Las fotos subidas, su revisión y los registros públicos aparecen aquí.",
+      "apiTitle": "Solicitudes API",
+      "apiDesc": "Las solicitudes de Token, revisión y límites de uso aparecen aquí."
+    }
+  },
   "home": {
     "tabs": {
       "ariaLabel": "Navegación por pestañas",

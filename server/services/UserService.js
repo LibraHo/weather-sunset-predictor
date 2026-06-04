@@ -495,6 +495,7 @@ class UserService {
     identity.updatedAt = nowIso();
     const user = this.findById(identity.userId);
     if (user) user.updatedAt = identity.updatedAt;
+    this.revokeUserSessions(identity.userId, { save: false, revokedAt: identity.updatedAt });
     this.hydrateUsers();
     this.save();
     return true;
@@ -576,6 +577,19 @@ class UserService {
     session.updatedAt = session.revokedAt;
     this.save();
     return true;
+  }
+
+  revokeUserSessions(userId, options = {}) {
+    const revokedAt = options.revokedAt || nowIso();
+    let count = 0;
+    for (const session of this.data.sessions) {
+      if (session.userId !== userId || session.revokedAt) continue;
+      session.revokedAt = revokedAt;
+      session.updatedAt = revokedAt;
+      count += 1;
+    }
+    if (count > 0 && options.save !== false) this.save();
+    return count;
   }
 
   revokeToken(token) {

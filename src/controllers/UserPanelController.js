@@ -1,3 +1,5 @@
+import i18n from '../i18n.js';
+
 export default class UserPanelController {
   constructor({ documentRef = document, storageService = null, windowRef = window } = {}) {
     this.document = documentRef;
@@ -119,9 +121,9 @@ export default class UserPanelController {
       panel.classList.toggle('hidden', panel.dataset.authPanel !== this.authView);
     });
     const titles = {
-      login: 'Account login',
-      register: 'Create account',
-      forgot: 'Reset password'
+      login: this.t('account.auth.loginTitle', 'Account login'),
+      register: this.t('account.auth.registerTitle', 'Create account'),
+      forgot: this.t('account.auth.forgotTitle', 'Reset password')
     };
     this.setText('account-auth-title', titles[this.authView]);
     this.setAuthMessage('', '');
@@ -151,16 +153,19 @@ export default class UserPanelController {
 
   async renderCloudLists() {
     try {
-      const [favorites, apiApplication] = await Promise.all([
+      const [favorites, uploads, apiApplication] = await Promise.all([
         this.fetchFavorites(),
+        this.fetchUploads(),
         this.fetchMyApiApplication()
       ]);
-      this.renderList('user-favorites-list', favorites, 'No account favorites yet.');
+      this.renderList('user-favorites-list', favorites, this.t('account.panel.emptyFavorites', 'No account favorites yet.'));
+      this.renderUploads(uploads, this.t('account.panel.emptyUploads', 'No uploaded photos yet.'));
       this.renderApiApplication(apiApplication);
       this.setText('user-favorites-count', String(favorites.length));
-      this.setText('user-recent-count', apiApplication ? '1' : '0');
+      this.setText('user-uploads-count', String(uploads.length));
+      this.setText('user-api-count', apiApplication ? '1' : '0');
     } catch (error) {
-      this.showError('Account data is temporarily unavailable.');
+      this.showError(this.t('account.panel.dataUnavailable', 'Account data is temporarily unavailable.'));
       this.renderLocalLists();
     }
   }
@@ -173,6 +178,11 @@ export default class UserPanelController {
   fetchRecentLocations() {
     return fetch('/api/user/recent-locations', { credentials: 'include' })
       .then((response) => this.unwrapListResponse(response, 'recentLocations'));
+  }
+
+  fetchUploads() {
+    return fetch('/api/photos/mine', { credentials: 'include' })
+      .then((response) => this.unwrapListResponse(response, 'photos'));
   }
 
   fetchMyApiApplication() {
@@ -205,7 +215,7 @@ export default class UserPanelController {
 
   renderSession(user) {
     const state = buildSessionState(user);
-    this.setText('user-status-label', 'Signed in');
+    this.setText('user-status-label', this.t('account.panel.signedIn', 'Signed in'));
     this.setText('user-display-name', state.displayName);
     this.setText('user-identity-summary', state.identitySummary);
     this.byId('user-signed-out-actions')?.classList.add('hidden');
@@ -216,9 +226,9 @@ export default class UserPanelController {
   }
 
   renderSignedOut() {
-    this.setText('user-status-label', 'Signed out');
-    this.setText('user-display-name', 'Sign in to sync your sunset trail');
-    this.setText('user-identity-summary', 'Favorites and recent places can sync with your account after login.');
+    this.setText('user-status-label', this.t('account.panel.signedOut', 'Signed out'));
+    this.setText('user-display-name', this.t('account.panel.signedOutTitle', 'Sign in to sync your sunset trail'));
+    this.setText('user-identity-summary', this.t('account.panel.signedOutSummary', 'Favorite places can sync with your account.'));
     this.byId('user-signed-out-actions')?.classList.remove('hidden');
     this.byId('user-logout-btn')?.classList.add('hidden');
     this.byId('account-menu-btn')?.classList.remove('signed-in');
@@ -228,10 +238,12 @@ export default class UserPanelController {
 
   renderLocalLists() {
     const favorites = this.getLocalFavoriteLocations();
-    this.renderList('user-favorites-list', favorites, 'No local favorites yet.');
-    this.renderApiApplication(null, 'Sign in to view account API applications.');
+    this.renderList('user-favorites-list', favorites, this.t('account.panel.emptyLocalFavorites', 'No local favorites yet.'));
+    this.renderUploads([], this.t('account.panel.signInForUploads', 'Sign in to view your uploaded photos.'));
+    this.renderApiApplication(null, this.t('account.panel.signInForApi', 'Sign in to view account API applications.'));
     this.setText('user-favorites-count', String(favorites.length));
-    this.setText('user-recent-count', '0');
+    this.setText('user-uploads-count', '0');
+    this.setText('user-api-count', '0');
   }
 
   getLocalFavoriteLocations() {
@@ -294,6 +306,35 @@ export default class UserPanelController {
     `;
     li.addEventListener('click', () => this.document.querySelector('.home-view-option[data-view="api"]')?.click());
     list.appendChild(li);
+  }
+
+  renderUploads(photos, emptyText = 'No uploaded photos yet.') {
+    const list = this.byId('user-uploads-list');
+    if (!list) return;
+    list.innerHTML = '';
+    if (!photos.length) {
+      const empty = this.document.createElement('li');
+      empty.className = 'user-panel-empty';
+      empty.textContent = emptyText;
+      list.appendChild(empty);
+      return;
+    }
+    photos.slice(0, 8).forEach((photo) => {
+      const li = this.document.createElement('li');
+      li.className = 'user-panel-location-row';
+      const location = photo.locationName || photo.location || 'Untitled photo';
+      const status = photo.status || 'pending';
+      const uploadedAt = photo.uploadedAt || photo.createdAt || '';
+      li.innerHTML = `
+        <span class="user-panel-location-main">
+          <strong>${escapeHtml(location)}</strong>
+          <small>${escapeHtml(status)}${uploadedAt ? ` - ${escapeHtml(formatDateTime(uploadedAt))}` : ''}</small>
+        </span>
+        <span class="user-panel-chevron" aria-hidden="true"></span>
+      `;
+      li.addEventListener('click', () => this.document.querySelector('.home-view-option[data-view="gallery"]')?.click());
+      list.appendChild(li);
+    });
   }
 
   async loginWithEmail(form) {
@@ -414,6 +455,11 @@ export default class UserPanelController {
     if (el) el.textContent = text;
   }
 
+  t(key, fallback) {
+    const translated = i18n.t(key);
+    return translated === key ? fallback : translated;
+  }
+
   byId(id) {
     return this.document.getElementById(id);
   }
@@ -446,6 +492,12 @@ function identityLabel(provider) {
     wechat_mini: 'WeChat Mini Program'
   };
   return labels[provider] || provider || '';
+}
+
+function formatDateTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toISOString().slice(0, 10);
 }
 
 function escapeHtml(value) {

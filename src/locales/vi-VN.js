@@ -34,6 +34,57 @@ const translations = {
     "clusterListAria": "Danh sách ảnh thu nhỏ đã gom cụm",
     "clusterPhotoLabel": "Ảnh {{index}}: {{location}}"
   },
+  "account": {
+    "auth": {
+      "closeAria": "Đóng cửa sổ tài khoản",
+      "loginTitle": "Đăng nhập tài khoản",
+      "registerTitle": "Tạo tài khoản",
+      "forgotTitle": "Đặt lại mật khẩu",
+      "tabsAria": "Thao tác tài khoản",
+      "loginTab": "Đăng nhập",
+      "registerTab": "Đăng ký",
+      "forgotTab": "Quên mật khẩu",
+      "emailLabel": "Email",
+      "passwordLabel": "Mật khẩu",
+      "passwordPlaceholder": "Nhập mật khẩu",
+      "passwordMinPlaceholder": "Ít nhất 6 ký tự",
+      "recoveryQuestionLabel": "Câu hỏi khôi phục",
+      "recoveryQuestionPlaceholder": "Ví dụ: thành phố đầu tiên tôi thường ngắm hoàng hôn?",
+      "recoveryAnswerLabel": "Câu trả lời khôi phục",
+      "recoveryAnswerPlaceholder": "Hãy ghi nhớ câu trả lời này. Nó sẽ không được hiển thị lại.",
+      "recoveryAnswerResetPlaceholder": "Câu trả lời đã đặt khi đăng ký",
+      "recoveryHint": "Nhập email để hiển thị câu hỏi khôi phục. Nếu không hiển thị, bạn vẫn có thể nhập câu trả lời để thử đặt lại.",
+      "newPasswordLabel": "Mật khẩu mới",
+      "loginAction": "Đăng nhập",
+      "createAction": "Tạo tài khoản",
+      "resetAction": "Đặt lại mật khẩu",
+      "or": "hoặc",
+      "googleLogin": "Tiếp tục với Google"
+    },
+    "menu": {
+      "buttonAria": "Tài khoản",
+      "dropdownAria": "Menu tài khoản"
+    },
+    "panel": {
+      "signedOut": "Chưa đăng nhập",
+      "signedOutTitle": "Đăng nhập để đồng bộ các địa điểm của bạn",
+      "signedOutSummary": "Địa điểm yêu thích có thể đồng bộ với tài khoản của bạn.",
+      "signedIn": "Đã đăng nhập",
+      "emptyFavorites": "Chưa có địa điểm yêu thích trong tài khoản.",
+      "emptyLocalFavorites": "Chưa có địa điểm yêu thích cục bộ.",
+      "dataUnavailable": "Dữ liệu tài khoản tạm thời không khả dụng.",
+      "signInForUploads": "Đăng nhập để xem ảnh bạn đã tải lên.",
+      "signInForApi": "Đăng nhập để xem đơn đăng ký API.",
+      "emptyUploads": "Chưa có ảnh tải lên.",
+      "logout": "Đăng xuất",
+      "favoritesTitle": "Địa điểm yêu thích",
+      "favoritesDesc": "Quay lại nhanh các địa điểm dự báo thường dùng.",
+      "uploadsTitle": "Ảnh đã tải lên",
+      "uploadsDesc": "Ảnh tải lên, trạng thái duyệt và bản ghi công khai sẽ hiển thị tại đây.",
+      "apiTitle": "Đăng ký API",
+      "apiDesc": "Đơn xin Token, trạng thái duyệt và hạn mức sử dụng sẽ hiển thị tại đây."
+    }
+  },
   "home": {
     "tabs": {
       "ariaLabel": "Điều hướng tab trang chủ",

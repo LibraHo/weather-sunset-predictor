@@ -76,64 +76,64 @@
 
     <div id="account-auth-modal" class="account-auth-modal hidden" role="dialog" aria-modal="true" aria-labelledby="account-auth-title">
       <div class="account-auth-card">
-        <button id="account-auth-close" class="account-auth-close" type="button" aria-label="关闭账号窗口">×</button>
+        <button id="account-auth-close" class="account-auth-close" type="button" aria-label="关闭账号窗口" data-i18n-aria-label="account.auth.closeAria">×</button>
         <div class="account-auth-header">
           <p class="account-auth-kicker">Sunset Voyager Account</p>
-          <h2 id="account-auth-title">账号登录</h2>
+          <h2 id="account-auth-title" data-i18n="account.auth.loginTitle">账号登录</h2>
         </div>
-        <div class="account-auth-tabs" role="tablist" aria-label="账号操作">
-          <button type="button" class="account-auth-tab active" data-auth-view="login">登录</button>
-          <button type="button" class="account-auth-tab" data-auth-view="register">注册</button>
-          <button type="button" class="account-auth-tab" data-auth-view="forgot">找回密码</button>
+        <div class="account-auth-tabs" role="tablist" aria-label="账号操作" data-i18n-aria-label="account.auth.tabsAria">
+          <button type="button" class="account-auth-tab active" data-auth-view="login" data-i18n="account.auth.loginTab">登录</button>
+          <button type="button" class="account-auth-tab" data-auth-view="register" data-i18n="account.auth.registerTab">注册</button>
+          <button type="button" class="account-auth-tab" data-auth-view="forgot" data-i18n="account.auth.forgotTab">找回密码</button>
         </div>
         <form id="account-login-form" class="account-auth-form" data-auth-panel="login">
           <label>
-            <span>邮箱</span>
+            <span data-i18n="account.auth.emailLabel">邮箱</span>
             <input id="account-login-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
           </label>
           <label>
-            <span>密码</span>
-            <input id="account-login-password" name="password" type="password" autocomplete="current-password" placeholder="请输入密码" required>
+            <span data-i18n="account.auth.passwordLabel">密码</span>
+            <input id="account-login-password" name="password" type="password" autocomplete="current-password" placeholder="请输入密码" data-i18n-placeholder="account.auth.passwordPlaceholder" required>
           </label>
-          <button type="submit" class="btn btn-primary">登录</button>
+          <button type="submit" class="btn btn-primary" data-i18n="account.auth.loginAction">登录</button>
         </form>
         <form id="account-register-form" class="account-auth-form hidden" data-auth-panel="register">
           <label>
-            <span>邮箱</span>
+            <span data-i18n="account.auth.emailLabel">邮箱</span>
             <input id="account-register-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
           </label>
           <label>
-            <span>密码</span>
-            <input id="account-register-password" name="password" type="password" autocomplete="new-password" placeholder="至少 6 位" minlength="6" required>
+            <span data-i18n="account.auth.passwordLabel">密码</span>
+            <input id="account-register-password" name="password" type="password" autocomplete="new-password" placeholder="至少 6 位" data-i18n-placeholder="account.auth.passwordMinPlaceholder" minlength="6" required>
           </label>
           <label>
-            <span>找回问题</span>
-            <input id="account-register-recovery-question" name="recoveryQuestion" type="text" autocomplete="off" placeholder="例如：我的第一座常看晚霞的城市？" required>
+            <span data-i18n="account.auth.recoveryQuestionLabel">找回问题</span>
+            <input id="account-register-recovery-question" name="recoveryQuestion" type="text" autocomplete="off" placeholder="例如：我的第一座常看晚霞的城市？" data-i18n-placeholder="account.auth.recoveryQuestionPlaceholder" required>
           </label>
           <label>
-            <span>找回答案</span>
-            <input id="account-register-recovery-answer" name="recoveryAnswer" type="text" autocomplete="off" placeholder="请记住答案，之后不会明文显示" required>
+            <span data-i18n="account.auth.recoveryAnswerLabel">找回答案</span>
+            <input id="account-register-recovery-answer" name="recoveryAnswer" type="text" autocomplete="off" placeholder="请记住答案，之后不会明文显示" data-i18n-placeholder="account.auth.recoveryAnswerPlaceholder" required>
           </label>
-          <button type="submit" class="btn btn-primary">创建账号</button>
+          <button type="submit" class="btn btn-primary" data-i18n="account.auth.createAction">创建账号</button>
         </form>
         <form id="account-forgot-form" class="account-auth-form hidden" data-auth-panel="forgot">
           <label>
-            <span>邮箱</span>
+            <span data-i18n="account.auth.emailLabel">邮箱</span>
             <input id="account-forgot-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
           </label>
-          <p id="account-recovery-question" class="account-recovery-question">输入邮箱后会显示找回问题；如果没有显示，也可以直接填写答案尝试重置。</p>
+          <p id="account-recovery-question" class="account-recovery-question" data-i18n="account.auth.recoveryHint">输入邮箱后会显示找回问题；如果没有显示，也可以直接填写答案尝试重置。</p>
           <label>
-            <span>找回答案</span>
-            <input id="account-forgot-recovery-answer" name="recoveryAnswer" type="text" autocomplete="off" placeholder="注册时设置的答案" required>
+            <span data-i18n="account.auth.recoveryAnswerLabel">找回答案</span>
+            <input id="account-forgot-recovery-answer" name="recoveryAnswer" type="text" autocomplete="off" placeholder="注册时设置的答案" data-i18n-placeholder="account.auth.recoveryAnswerResetPlaceholder" required>
           </label>
           <label>
-            <span>新密码</span>
-            <input id="account-forgot-new-password" name="newPassword" type="password" autocomplete="new-password" placeholder="至少 6 位" minlength="6" required>
+            <span data-i18n="account.auth.newPasswordLabel">新密码</span>
+            <input id="account-forgot-new-password" name="newPassword" type="password" autocomplete="new-password" placeholder="至少 6 位" data-i18n-placeholder="account.auth.passwordMinPlaceholder" minlength="6" required>
           </label>
-          <button type="submit" class="btn btn-primary">重置密码</button>
+          <button type="submit" class="btn btn-primary" data-i18n="account.auth.resetAction">重置密码</button>
         </form>
-        <div class="account-auth-divider"><span>或</span></div>
-        <button id="account-login-google" type="button" class="account-google-btn">Google 登录</button>
+        <div class="account-auth-divider"><span data-i18n="account.auth.or">或</span></div>
+        <button id="account-login-google" type="button" class="account-google-btn" data-i18n="account.auth.googleLogin">Google 登录</button>
         <p id="account-auth-message" class="account-auth-message" role="status" aria-live="polite"></p>
       </div>
     </div>
@@ -166,13 +166,13 @@
             </div>
           </div>
           <div class="account-menu">
-            <button id="account-menu-btn" class="icon-btn header-svg-btn" aria-label="账号" aria-expanded="false" aria-controls="account-dropdown">
+            <button id="account-menu-btn" class="icon-btn header-svg-btn" aria-label="账号" data-i18n-aria-label="account.menu.buttonAria" aria-expanded="false" aria-controls="account-dropdown">
               <svg class="header-action-icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
                 <path d="M12 12.2a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2Z" fill="none" stroke="currentColor" stroke-width="1.7"/>
                 <path d="M5.2 20c1.1-3.45 3.35-5.15 6.8-5.15s5.7 1.7 6.8 5.15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
               </svg>
             </button>
-            <div id="account-dropdown" class="account-dropdown hidden" role="menu" aria-label="账号菜单">
+            <div id="account-dropdown" class="account-dropdown hidden" role="menu" aria-label="账号菜单" data-i18n-aria-label="account.menu.dropdownAria">
               <button id="account-manage-btn" class="account-dropdown-item" type="button" role="menuitem">Manage</button>
               <button id="account-logout-btn" class="account-dropdown-item" type="button" role="menuitem">Logout</button>
             </div>
@@ -714,17 +714,17 @@
             </svg>
           </div>
           <div class="user-panel-copy">
-            <span id="user-status-label" class="user-panel-status">未登录</span>
-            <h2 id="user-display-name">登录后同步你的霞光足迹</h2>
-            <p id="user-identity-summary">收藏地点、最近查询会和后端用户系统保持同步。</p>
+            <span id="user-status-label" class="user-panel-status" data-i18n="account.panel.signedOut">未登录</span>
+            <h2 id="user-display-name" data-i18n="account.panel.signedOutTitle">登录后同步你的霞光足迹</h2>
+            <p id="user-identity-summary" data-i18n="account.panel.signedOutSummary">收藏地点会和后端用户系统保持同步。</p>
           </div>
         </div>
 
         <div id="user-signed-out-actions" class="user-panel-actions">
-          <button id="user-login-google" class="btn btn-primary user-panel-action-primary">Google 登录</button>
+          <button id="user-login-google" class="btn btn-primary user-panel-action-primary" data-i18n="account.auth.googleLogin">Google 登录</button>
         </div>
         <div class="user-panel-actions user-panel-signed-in-actions">
-          <button id="user-logout-btn" class="btn btn-secondary user-panel-action-secondary hidden">退出登录</button>
+          <button id="user-logout-btn" class="btn btn-secondary user-panel-action-secondary hidden" data-i18n="account.panel.logout">退出登录</button>
         </div>
 
         <div id="user-error" class="error-message hidden" role="status" aria-live="polite"></div>
@@ -733,8 +733,8 @@
           <article id="account-management-favorites" class="user-panel-card">
             <div class="user-panel-card-head">
               <div>
-                <h3>收藏地点</h3>
-                <p>常看的地点可以从这里快速回到预测页。</p>
+                <h3 data-i18n="account.panel.favoritesTitle">收藏地点</h3>
+                <p data-i18n="account.panel.favoritesDesc">常看的地点可以从这里快速回到预测页。</p>
               </div>
               <span id="user-favorites-count" class="user-panel-count">0</span>
             </div>
@@ -744,23 +744,21 @@
           <article id="account-management-uploads" class="user-panel-card">
             <div class="user-panel-card-head">
               <div>
-                <h3>上传记录</h3>
-                <p>照片上传、审核状态和公开展示记录会显示在这里。</p>
+                <h3 data-i18n="account.panel.uploadsTitle">上传记录</h3>
+                <p data-i18n="account.panel.uploadsDesc">照片上传、审核状态和公开展示记录会显示在这里。</p>
               </div>
-              <span class="user-panel-count">0</span>
+              <span id="user-uploads-count" class="user-panel-count">0</span>
             </div>
-            <ul class="user-panel-list">
-              <li class="user-panel-empty">上传服务接入后会自动同步。</li>
-            </ul>
+            <ul id="user-uploads-list" class="user-panel-list"></ul>
           </article>
 
           <article id="account-management-api" class="user-panel-card">
             <div class="user-panel-card-head">
               <div>
-                <h3>API 申请</h3>
-                <p>Token 申请、审核进度和调用额度会显示在这里。</p>
+                <h3 data-i18n="account.panel.apiTitle">API 申请</h3>
+                <p data-i18n="account.panel.apiDesc">Token 申请、审核进度和调用额度会显示在这里。</p>
               </div>
-              <span class="user-panel-count">0</span>
+              <span id="user-api-count" class="user-panel-count">0</span>
             </div>
             <ul id="user-recent-list" class="user-panel-list"></ul>
           </article>

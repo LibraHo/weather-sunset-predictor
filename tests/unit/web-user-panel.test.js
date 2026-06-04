@@ -118,6 +118,9 @@ describe('UserPanelController behavior', () => {
         <div id="user-signed-out-actions"></div>
         <div id="user-error" class="hidden"></div>
         <ul id="user-favorites-list"></ul>
+        <span id="user-uploads-count"></span>
+        <ul id="user-uploads-list"></ul>
+        <span id="user-api-count"></span>
         <ul id="user-recent-list"></ul>
       </section>
     `;
@@ -139,6 +142,7 @@ describe('UserPanelController behavior', () => {
     await controller.initialize();
 
     expect(document.getElementById('user-favorites-list').textContent).toContain('Beijing');
+    expect(document.getElementById('user-uploads-list').textContent).toContain('Sign in to view your uploaded photos.');
     expect(document.getElementById('user-recent-list').textContent).toContain('Sign in to view account API applications.');
     expect(storageService.getFavoriteLocations).toHaveBeenCalled();
   });
@@ -153,6 +157,12 @@ describe('UserPanelController behavior', () => {
       }
       if (url === '/api/user/recent-locations') {
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ recentLocations: [{ locationName: 'Fragrant Hills', lat: 39.99, lon: 116.18 }] }) });
+      }
+      if (url === '/api/photos/mine') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ photos: [{ locationName: 'Jingshan', status: 'approved', uploadedAt: '2026-06-04T12:00:00.000Z' }] })
+        });
       }
       if (url === '/api/applications/me') {
         return Promise.resolve({
@@ -169,7 +179,10 @@ describe('UserPanelController behavior', () => {
     expect(document.getElementById('user-display-name').textContent).toBe('Sunset user abcdef');
     expect(document.getElementById('user-identity-summary').textContent).toContain('Google connected');
     expect(document.getElementById('user-favorites-list').textContent).toContain('Temple');
+    expect(document.getElementById('user-uploads-list').textContent).toContain('Jingshan');
+    expect(document.getElementById('user-uploads-count').textContent).toBe('1');
     expect(document.getElementById('user-recent-list').textContent).toContain('api@example.com');
+    expect(document.getElementById('user-api-count').textContent).toBe('1');
   });
 
   test('login action uses the injected window reference', async () => {

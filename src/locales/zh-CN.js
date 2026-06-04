@@ -40,6 +40,58 @@ export default {
     clusterPhotoLabel: '第 {{index}} 张照片：{{location}}'
   },
 
+  account: {
+    auth: {
+      closeAria: '关闭账号窗口',
+      loginTitle: '账号登录',
+      registerTitle: '创建账号',
+      forgotTitle: '重置密码',
+      tabsAria: '账号操作',
+      loginTab: '登录',
+      registerTab: '注册',
+      forgotTab: '找回密码',
+      emailLabel: '邮箱',
+      passwordLabel: '密码',
+      passwordPlaceholder: '请输入密码',
+      passwordMinPlaceholder: '至少 6 位',
+      recoveryQuestionLabel: '找回问题',
+      recoveryQuestionPlaceholder: '例如：我的第一座常看晚霞的城市？',
+      recoveryAnswerLabel: '找回答案',
+      recoveryAnswerPlaceholder: '请记住答案，之后不会明文显示',
+      recoveryAnswerResetPlaceholder: '注册时设置的答案',
+      recoveryHint: '输入邮箱后会显示找回问题；如果没有显示，也可以直接填写答案尝试重置。',
+      newPasswordLabel: '新密码',
+      loginAction: '登录',
+      createAction: '创建账号',
+      resetAction: '重置密码',
+      or: '或',
+      googleLogin: 'Google 登录'
+    },
+    menu: {
+      buttonAria: '账号',
+      dropdownAria: '账号菜单'
+    },
+    panel: {
+      signedOut: '未登录',
+      signedOutTitle: '登录后同步你的霞光足迹',
+      signedOutSummary: '收藏地点会和后端用户系统保持同步。',
+      signedIn: '已登录',
+      emptyFavorites: '暂无账号收藏地点。',
+      emptyLocalFavorites: '暂无本地收藏地点。',
+      dataUnavailable: '账号数据暂时不可用。',
+      signInForUploads: '登录后查看你的照片上传记录。',
+      signInForApi: '登录后查看账号 API 申请。',
+      emptyUploads: '暂无上传照片。',
+      logout: '退出登录',
+      favoritesTitle: '收藏地点',
+      favoritesDesc: '常看的地点可以从这里快速回到预测页。',
+      uploadsTitle: '上传记录',
+      uploadsDesc: '照片上传、审核状态和公开展示记录会显示在这里。',
+      apiTitle: 'API 申请',
+      apiDesc: 'Token 申请、审核进度和调用额度会显示在这里。'
+    }
+  },
+
   // Home tabs & methodology
   home: {
     tabs: {

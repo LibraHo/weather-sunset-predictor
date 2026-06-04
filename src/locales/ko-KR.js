@@ -34,6 +34,57 @@ const translations = {
     "clusterListAria": "Clustered photo thumbnails",
     "clusterPhotoLabel": "Photo {{index}}: {{location}}"
   },
+  "account": {
+    "auth": {
+      "closeAria": "계정 창 닫기",
+      "loginTitle": "계정 로그인",
+      "registerTitle": "계정 만들기",
+      "forgotTitle": "비밀번호 재설정",
+      "tabsAria": "계정 작업",
+      "loginTab": "로그인",
+      "registerTab": "가입",
+      "forgotTab": "비밀번호 찾기",
+      "emailLabel": "이메일",
+      "passwordLabel": "비밀번호",
+      "passwordPlaceholder": "비밀번호를 입력하세요",
+      "passwordMinPlaceholder": "6자 이상",
+      "recoveryQuestionLabel": "복구 질문",
+      "recoveryQuestionPlaceholder": "예: 처음 노을을 보러 간 도시는?",
+      "recoveryAnswerLabel": "복구 답변",
+      "recoveryAnswerPlaceholder": "이 답변은 나중에 표시되지 않습니다",
+      "recoveryAnswerResetPlaceholder": "가입 시 설정한 답변",
+      "recoveryHint": "이메일을 입력하면 복구 질문이 표시됩니다. 표시되지 않아도 답변을 입력해 재설정을 시도할 수 있습니다.",
+      "newPasswordLabel": "새 비밀번호",
+      "loginAction": "로그인",
+      "createAction": "계정 만들기",
+      "resetAction": "비밀번호 재설정",
+      "or": "또는",
+      "googleLogin": "Google로 로그인"
+    },
+    "menu": {
+      "buttonAria": "계정",
+      "dropdownAria": "계정 메뉴"
+    },
+    "panel": {
+      "signedOut": "로그아웃됨",
+      "signedOutTitle": "로그인하고 노을 기록을 동기화",
+      "signedOutSummary": "즐겨찾기 위치를 계정과 동기화할 수 있습니다.",
+      "signedIn": "로그인됨",
+      "emptyFavorites": "아직 계정 즐겨찾기가 없습니다.",
+      "emptyLocalFavorites": "아직 로컬 즐겨찾기가 없습니다.",
+      "dataUnavailable": "계정 데이터를 일시적으로 사용할 수 없습니다.",
+      "signInForUploads": "로그인하면 업로드한 사진을 볼 수 있습니다.",
+      "signInForApi": "로그인하면 계정 API 신청을 볼 수 있습니다.",
+      "emptyUploads": "아직 업로드한 사진이 없습니다.",
+      "logout": "로그아웃",
+      "favoritesTitle": "즐겨찾기 위치",
+      "favoritesDesc": "자주 보는 예보 위치로 빠르게 돌아갈 수 있습니다.",
+      "uploadsTitle": "업로드 기록",
+      "uploadsDesc": "사진 업로드, 검토 상태, 공개 기록이 여기에 표시됩니다.",
+      "apiTitle": "API 신청",
+      "apiDesc": "Token 신청, 검토 상태, 사용 한도가 여기에 표시됩니다."
+    }
+  },
   "home": {
     "tabs": {
       "ariaLabel": "홈 탭 내비게이션",

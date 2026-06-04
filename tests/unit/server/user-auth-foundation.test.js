@@ -197,6 +197,8 @@ describe('UserService auth foundation', () => {
       recoveryQuestion: 'Favorite horizon?',
       recoveryAnswer: 'West lake'
     });
+    const oldToken = service.issueToken(user);
+    expect(service.verifyToken(oldToken).userId).toBe(user.userId);
 
     expect(service.getRecoveryQuestion('alex@example.com')).toEqual({ recoveryQuestion: 'Favorite horizon?' });
     expect(service.resetPasswordWithRecovery({
@@ -213,6 +215,8 @@ describe('UserService auth foundation', () => {
 
     expect(service.verifyPasswordLogin('alex@example.com', 'old password')).toBeNull();
     expect(service.verifyPasswordLogin('alex@example.com', 'new password').userId).toBe(user.userId);
+    expect(service.verifyToken(oldToken)).toBeNull();
+    expect(service.data.sessions.every(session => session.userId !== user.userId || session.revokedAt)).toBe(true);
 
     const saved = fs.readFileSync(dataFile, 'utf8');
     expect(saved).not.toContain('new password');

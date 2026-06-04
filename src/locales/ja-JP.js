@@ -34,6 +34,57 @@ const translations = {
     "clusterListAria": "Clustered photo thumbnails",
     "clusterPhotoLabel": "Photo {{index}}: {{location}}"
   },
+  "account": {
+    "auth": {
+      "closeAria": "アカウント画面を閉じる",
+      "loginTitle": "アカウントログイン",
+      "registerTitle": "アカウント作成",
+      "forgotTitle": "パスワード再設定",
+      "tabsAria": "アカウント操作",
+      "loginTab": "ログイン",
+      "registerTab": "登録",
+      "forgotTab": "パスワード再設定",
+      "emailLabel": "メール",
+      "passwordLabel": "パスワード",
+      "passwordPlaceholder": "パスワードを入力",
+      "passwordMinPlaceholder": "6文字以上",
+      "recoveryQuestionLabel": "復旧用の質問",
+      "recoveryQuestionPlaceholder": "例：初めて夕焼けを見た街は？",
+      "recoveryAnswerLabel": "復旧用の答え",
+      "recoveryAnswerPlaceholder": "この答えは後から表示されません",
+      "recoveryAnswerResetPlaceholder": "登録時に設定した答え",
+      "recoveryHint": "メールを入力すると復旧用の質問が表示されます。表示されない場合も、答えを入力して再設定できます。",
+      "newPasswordLabel": "新しいパスワード",
+      "loginAction": "ログイン",
+      "createAction": "アカウント作成",
+      "resetAction": "パスワード再設定",
+      "or": "または",
+      "googleLogin": "Googleでログイン"
+    },
+    "menu": {
+      "buttonAria": "アカウント",
+      "dropdownAria": "アカウントメニュー"
+    },
+    "panel": {
+      "signedOut": "未ログイン",
+      "signedOutTitle": "ログインして夕焼けの記録を同期",
+      "signedOutSummary": "お気に入り地点をアカウントと同期できます。",
+      "signedIn": "ログイン中",
+      "emptyFavorites": "アカウントのお気に入りはまだありません。",
+      "emptyLocalFavorites": "ローカルのお気に入りはまだありません。",
+      "dataUnavailable": "アカウントデータを一時的に利用できません。",
+      "signInForUploads": "ログインすると写真アップロードを確認できます。",
+      "signInForApi": "ログインするとAPI申請を確認できます。",
+      "emptyUploads": "アップロードした写真はまだありません。",
+      "logout": "ログアウト",
+      "favoritesTitle": "お気に入り地点",
+      "favoritesDesc": "よく見る地点へすばやく戻れます。",
+      "uploadsTitle": "アップロード履歴",
+      "uploadsDesc": "写真アップロード、審査状態、公開記録がここに表示されます。",
+      "apiTitle": "API申請",
+      "apiDesc": "Token申請、審査状況、利用枠がここに表示されます。"
+    }
+  },
   "home": {
     "tabs": {
       "ariaLabel": "ホームタブナビゲーション",
