@@ -372,6 +372,55 @@ describe('GridProductScoreAdapter', () => {
     expect(center.score).toBeGreaterThan(center.mapDirectionalScoring.adjustment.originalScore);
   });
 
+  test('uses buffered directional neighbors without exposing buffer cells in public cache', () => {
+    const cacheService = new GridProductCacheService({
+      dataDir: makeTempDir(),
+      now: new Date('2026-05-26T12:30:00Z')
+    });
+    const outputBbox = { north: 40, south: 40, west: 116, east: 116 };
+    cacheService.writeProduct({
+      source: 'gfs',
+      productType: 'weather_grid',
+      schemaVersion: 1,
+      cycle: '2026052606',
+      forecastHour: 6,
+      validTime: '2026-05-26T11:30:00.000Z',
+      grid: { bbox: { north: 41, south: 39, west: 115, east: 117 }, resolution: 0.5 },
+      sourceMeta: { outputBbox },
+      fields: ['TCDC', 'LCDC', 'MCDC', 'HCDC', 'RH', 'VIS', 'APCP', 'DSWRF', 'PWAT', 'UGRD', 'VGRD'],
+      points: [
+        {
+          lat: 40,
+          lon: 116,
+          weather: fullGfsWeather({ TCDC: 50, LCDC: 4, MCDC: 30, HCDC: 40, DSWRF: 90 })
+        },
+        {
+          lat: 40.2,
+          lon: 115.5,
+          weather: fullGfsWeather({ TCDC: 98, LCDC: 0, MCDC: 86, HCDC: 96, DSWRF: 85 })
+        }
+      ]
+    });
+
+    const adapter = new GridProductScoreAdapter({ cacheService });
+    const cache = adapter.getScoreCache('sunset');
+
+    expect(cache.gridPoints).toHaveLength(1);
+    expect(cache.gridPoints[0]).toMatchObject({
+      lat: 40,
+      lon: 116,
+      mapDirectionalScoring: expect.objectContaining({
+        applied: true,
+        neighborCount: 1,
+        adjustment: expect.objectContaining({
+          reason: 'directional_neighbor_upper_cloud_lift'
+        })
+      })
+    });
+    expect(cache.meta.outputBbox).toEqual(outputBbox);
+    expect(cache.meta.products.weather.outputBbox).toEqual(outputBbox);
+  });
+
   test('keeps local low-cloud cover from being lifted by a strong directional neighbor', () => {
     const cacheService = new GridProductCacheService({
       dataDir: makeTempDir(),

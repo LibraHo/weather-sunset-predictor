@@ -84,15 +84,17 @@ class CamsAerosolSourceService {
 
   buildRequestPlan(config = {}) {
     const bbox = normalizeBbox(config.bbox || { north: 54, south: 18, west: 73, east: 135 });
+    const outputBbox = config.outputBbox ? normalizeBbox(config.outputBbox) : null;
     const resolution = Number(config.resolution || 0.5);
     const cycle = config.camsForecastCycle || config.camsCycle || latestForecastCycle(this.now || new Date());
     const hours = forecastHours(config, cycle);
-    const batches = hours.map(forecastHour => this._buildForecastBatch({ cycle, bbox, resolution, forecastHour }));
+    const batches = hours.map(forecastHour => this._buildForecastBatch({ cycle, bbox, outputBbox, resolution, forecastHour }));
 
     return {
       source: 'cams',
       cycle,
       bbox,
+      outputBbox,
       resolution,
       forecastHours: hours,
       variables: FIELD_WHITELIST.slice(),
@@ -141,7 +143,8 @@ class CamsAerosolSourceService {
       sourceMeta: {
         requestId: batch.requestId,
         rawPath: batch.rawPath,
-        productType: batch.productType || 'forecast'
+        productType: batch.productType || 'forecast',
+        outputBbox: clone(batch.outputBbox || null)
       }
     };
   }
@@ -164,7 +167,7 @@ class CamsAerosolSourceService {
     throw err;
   }
 
-  _buildForecastBatch({ cycle, bbox, resolution, forecastHour }) {
+  _buildForecastBatch({ cycle, bbox, outputBbox, resolution, forecastHour }) {
     const estimatedBytes = Math.ceil(
       CAMS_GLOBAL_FIELD_BYTES_PER_CYCLE *
       (gridPointCount(bbox, resolution) / GLOBAL_CAMS_GRID_POINTS) *
@@ -181,6 +184,7 @@ class CamsAerosolSourceService {
       forecastHour,
       forecastHours: [forecastHour],
       bbox: clone(bbox),
+      outputBbox: clone(outputBbox || null),
       resolution,
       variables: FIELD_WHITELIST.slice(),
       request: {

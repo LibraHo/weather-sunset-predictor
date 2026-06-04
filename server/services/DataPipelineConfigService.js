@@ -30,6 +30,7 @@ const DEFAULT_CONFIG = {
   regionDefinition: DEFAULT_REGION_DEFINITION,
   bbox: DEFAULT_BBOXES.china_japan_korea,
   resolution: 0.5,
+  directionalNeighborBufferCells: 2,
   forecastHours: 48,
   forecastStepHours: 1,
   sources: { gfs: true, cams: true, openMeteoFallback: true },
@@ -142,6 +143,16 @@ function normalizeBbox(bbox = {}) {
   };
 }
 
+function expandBboxForDirectionalNeighbors(bbox, resolution, cells = DEFAULT_CONFIG.directionalNeighborBufferCells) {
+  const buffer = Math.max(0, Number(resolution) || 0) * Math.max(0, Number(cells) || 0);
+  return {
+    north: Math.min(90, Number((bbox.north + buffer).toFixed(4))),
+    south: Math.max(-90, Number((bbox.south - buffer).toFixed(4))),
+    west: Math.max(-180, Number((bbox.west - buffer).toFixed(4))),
+    east: Math.min(180, Number((bbox.east + buffer).toFixed(4)))
+  };
+}
+
 function gridPointCount(bbox, resolution) {
   const latCount = Math.floor((bbox.north - bbox.south) / resolution) + 1;
   const lonCount = Math.floor((bbox.east - bbox.west) / resolution) + 1;
@@ -185,8 +196,13 @@ class DataPipelineConfigService {
     const config = mergeConfig(input);
     const reasons = [];
     const bbox = config.bbox;
-    const bboxAreaDeg2 = Math.max(0, (bbox.north - bbox.south) * (bbox.east - bbox.west));
-    const gridPoints = gridPointCount(bbox, config.resolution);
+    const requestBbox = expandBboxForDirectionalNeighbors(
+      bbox,
+      config.resolution,
+      config.directionalNeighborBufferCells
+    );
+    const bboxAreaDeg2 = Math.max(0, (requestBbox.north - requestBbox.south) * (requestBbox.east - requestBbox.west));
+    const gridPoints = gridPointCount(requestBbox, config.resolution);
     const forecastHourCount = Math.floor(config.forecastHours / config.forecastStepHours) + 1;
 
     this._validateConfigShape(config, reasons);
@@ -227,6 +243,8 @@ class DataPipelineConfigService {
       reasons,
       config,
       regionDefinition: clone(config.regionDefinition),
+      bbox: clone(bbox),
+      requestBbox,
       bboxAreaDeg2,
       gridPoints,
       forecastHourCount,
@@ -269,5 +287,6 @@ class DataPipelineConfigService {
 
 DataPipelineConfigService.DEFAULT_CONFIG = DEFAULT_CONFIG;
 DataPipelineConfigService.DEFAULT_BBOXES = DEFAULT_BBOXES;
+DataPipelineConfigService.expandBboxForDirectionalNeighbors = expandBboxForDirectionalNeighbors;
 
 module.exports = DataPipelineConfigService;

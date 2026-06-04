@@ -34,6 +34,8 @@ describe('DataPipelinePlannerService', () => {
 
     expect(plan.safe).toBe(true);
     expect(plan.windowHours).toBe(48);
+    expect(plan.bbox).toEqual({ north: 54, south: 18, west: 73, east: 146 });
+    expect(plan.requestBbox).toEqual({ north: 55, south: 17, west: 72, east: 147 });
     expect(plan.sources).toEqual(['gfs', 'cams']);
     expect(plan.runtimePolicy).toMatchObject({
       workerConcurrency: 1,
@@ -43,22 +45,30 @@ describe('DataPipelinePlannerService', () => {
     const gfsStep = plan.steps.find(step => step.source === 'gfs' && step.forecastHour === 0);
     const camsStep = plan.steps.find(step => step.source === 'cams');
     expect(gfsStep).toMatchObject({
+      bbox: { north: 55, south: 17, west: 72, east: 147 },
+      request: null,
       dataUrl: expect.stringContaining('filter_gfs_0p25.pl'),
       idxUrl: expect.stringContaining('.idx')
     });
+    expect(gfsStep.dataUrl).toContain('leftlon=72');
+    expect(gfsStep.dataUrl).toContain('rightlon=147');
     expect(camsStep).toMatchObject({
       cycle: '2026052512',
       forecastHour: 12,
+      bbox: { north: 55, south: 17, west: 72, east: 147 },
       request: expect.objectContaining({
         dataset: 'cams-global-atmospheric-composition-forecasts',
         type: 'forecast',
         format: 'netcdf',
+        area: [55, 72, 17, 147],
         leadtime_hour: ['12']
       })
     });
     expect(plan.cams.forecastHours.slice(0, 3)).toEqual([12, 13, 14]);
     expect(plan.estimate).toMatchObject({
-      gridPoints: 10731,
+      bbox: { north: 54, south: 18, west: 73, east: 146 },
+      requestBbox: { north: 55, south: 17, west: 72, east: 147 },
+      gridPoints: 11627,
       estimatedDownloadBytes: expect.any(Number),
       estimatedRawTmpBytes: expect.any(Number),
       maxResidentBytes: expect.any(Number),
