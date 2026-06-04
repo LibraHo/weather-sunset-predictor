@@ -2530,17 +2530,24 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
  * 地图数据来自 GFS/CAMS 区域格点，缺少单点预测的 10/25/50/75/100km
  * 太阳方向精细采样，因此只使用格点自身云、辐射、水汽和空气质量字段。
  */
+const MAP_SIMPLIFIED_SCORE_CAP = 78;
+
 function calculateMapSimplifiedPrediction(weatherData, date, lat, lon, type) {
   const result = calculateEnhancedPrediction(weatherData, date, lat, lon, type, {
     scoringContext: 'map_grid_simplified'
   });
+  const cappedScore = Math.min(Number(result.score) || 0, MAP_SIMPLIFIED_SCORE_CAP);
   return {
     ...result,
+    score: cappedScore,
     scoringContext: 'map_grid_simplified',
     mapSimplifiedScoring: {
       applied: true,
       reason: 'gfs_cams_grid_without_point_light_path_samples',
-      usesRemoteLightPathSamples: false
+      usesRemoteLightPathSamples: false,
+      cap: MAP_SIMPLIFIED_SCORE_CAP,
+      originalScore: result.score,
+      capped: cappedScore !== result.score
     },
     algorithm: {
       ...(result.algorithm || {}),
