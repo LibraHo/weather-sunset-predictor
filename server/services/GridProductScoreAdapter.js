@@ -173,9 +173,6 @@ function weatherDataFromPoint(point) {
 }
 
 function scoreFromFields(point, period) {
-  const explicit = clampScore(point?.score ?? point?.firecloudScore);
-  if (explicit !== null) return explicit;
-
   const { weatherData, missing } = weatherDataFromPoint(point);
   if (!weatherData) {
     point._missingRequiredFields = missing;
