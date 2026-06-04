@@ -46,7 +46,9 @@ describe('DataPipelineConfigService', () => {
     const estimate = service.estimate(service.getConfig());
 
     expect(estimate.safe).toBe(true);
-    expect(estimate.gridPoints).toBe(10731);
+    expect(estimate.bbox).toEqual({ north: 54, south: 18, west: 73, east: 146 });
+    expect(estimate.requestBbox).toEqual({ north: 55, south: 17, west: 72, east: 147 });
+    expect(estimate.gridPoints).toBe(11627);
     expect(estimate.forecastHourCount).toBe(49);
     expect(estimate.estimatedDownloadBytes).toBeGreaterThan(0);
     expect(estimate.estimatedResidentMemoryMb).toBeLessThanOrEqual(512);

@@ -258,6 +258,21 @@ function coordinateKey(lat, lon) {
   return `${Number(lat).toFixed(4)},${Number(lon).toFixed(4)}`;
 }
 
+function pointInBbox(point, bbox) {
+  if (!bbox) return true;
+  const lat = toNumber(point?.lat);
+  const lon = toNumber(point?.lon);
+  if (lat === null || lon === null) return false;
+  return lat >= Number(bbox.south)
+    && lat <= Number(bbox.north)
+    && lon >= Number(bbox.west)
+    && lon <= Number(bbox.east);
+}
+
+function hasUsableWeatherFields(point) {
+  return missingRequiredGfsFields(point?.weather || {}).length === 0;
+}
+
 function uniqueSorted(values) {
   return Array.from(new Set(
     values
@@ -563,7 +578,8 @@ class GridProductScoreAdapter {
 
     const mergedPoints = Array.from(merged.values());
     const gridStepKm = estimateGridStepKm(mergedPoints, weatherProduct.grid?.resolution);
-    const gridLookup = buildGridLookup(mergedPoints);
+    const gridLookup = buildGridLookup(mergedPoints.filter(hasUsableWeatherFields));
+    const outputBbox = weatherProduct.sourceMeta?.outputBbox || weatherProduct.grid?.outputBbox || null;
     const gridPoints = mergedPoints
       .map(point => {
         const scoringPoint = {
@@ -571,9 +587,8 @@ class GridProductScoreAdapter {
           score: isFiniteNumber(point._weatherScore) ? point._weatherScore : point._aerosolScore
         };
         const score = scoreFromFields(scoringPoint, safePeriod);
-        const date = point.sourceMeta?.weather?.validTime || weatherProduct.validTime || new Date().toISOString();
         const directionalContext = score !== null
-          ? buildDirectionalContext(point, gridLookup, date, safePeriod, gridStepKm)
+          ? buildDirectionalContext(point, gridLookup, targetTime.toISOString(), safePeriod, gridStepKm)
           : null;
         const directionalScore = score !== null
           ? applyDirectionalMapScoring(score, point.weather, directionalContext)
@@ -597,6 +612,7 @@ class GridProductScoreAdapter {
           scoreError: scoringPoint._scoreError || undefined
         };
       })
+      .filter(point => pointInBbox(point, outputBbox))
       .filter(point => Number.isFinite(point.score));
 
     if (gridPoints.length === 0) return null;
@@ -615,6 +631,7 @@ class GridProductScoreAdapter {
           weather: this._productMeta(weatherProduct),
           aerosol: aerosolProduct ? this._productMeta(aerosolProduct) : null
         },
+        outputBbox: clone(outputBbox),
         targetTime: targetTime.toISOString(),
         referencePoint: clone(MAP_REFERENCE_POINT)
       }
@@ -648,6 +665,7 @@ class GridProductScoreAdapter {
       validTime: product.validTime || null,
       createdAt: product.createdAt || null,
       bbox: clone(product.grid?.bbox || null),
+      outputBbox: clone(product.sourceMeta?.outputBbox || product.grid?.outputBbox || null),
       resolution: product.grid?.resolution ?? null,
       sourceMeta: clone(product.sourceMeta || {}),
       pointCount: Array.isArray(product.points) ? product.points.length : 0

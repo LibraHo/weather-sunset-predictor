@@ -78,6 +78,7 @@ class GfsGridSourceService {
 
   buildRequestPlan(config = {}) {
     const bbox = normalizeBbox(config.bbox || { north: 54, south: 18, west: 73, east: 135 });
+    const outputBbox = config.outputBbox ? normalizeBbox(config.outputBbox) : null;
     const resolution = Number(config.resolution || 0.5);
     const forecastHours = Number.isFinite(Number(config.forecastHours)) ? Number(config.forecastHours) : 48;
     const forecastStepHours = Number.isFinite(Number(config.forecastStepHours)) ? Number(config.forecastStepHours) : 1;
@@ -88,11 +89,12 @@ class GfsGridSourceService {
       hours.push(hour);
     }
 
-    const batches = hours.map(hour => this._buildBatch({ cycle, forecastHour: hour, bbox, resolution }));
+    const batches = hours.map(hour => this._buildBatch({ cycle, forecastHour: hour, bbox, outputBbox, resolution }));
     return {
       source: 'gfs',
       cycle,
       bbox,
+      outputBbox,
       resolution,
       forecastHours: hours,
       variables: FIELD_WHITELIST.slice(),
@@ -128,7 +130,8 @@ class GfsGridSourceService {
         requestId: batch.requestId,
         idxUrl: batch.idxUrl,
         dataUrl: batch.dataUrl,
-        rawPath: batch.rawPath
+        rawPath: batch.rawPath,
+        outputBbox: clone(batch.outputBbox || null)
       }
     };
   }
@@ -151,7 +154,7 @@ class GfsGridSourceService {
     throw err;
   }
 
-  _buildBatch({ cycle, forecastHour, bbox, resolution }) {
+  _buildBatch({ cycle, forecastHour, bbox, outputBbox, resolution }) {
     const forecastToken = `f${pad(forecastHour, 3)}`;
     const file = `gfs.t${cycle.slice(8, 10)}z.pgrb2.0p25.${forecastToken}`;
     const dir = `/gfs.${cycle.slice(0, 8)}/${cycle.slice(8, 10)}/atmos`;
@@ -174,6 +177,7 @@ class GfsGridSourceService {
       cycle,
       forecastHour,
       bbox: clone(bbox),
+      outputBbox: clone(outputBbox || null),
       resolution,
       variables: FIELD_WHITELIST.slice(),
       idxUrl: `https://nomads.ncep.noaa.gov/pub/data/nccf/com/gfs/prod/gfs.${cycle.slice(0, 8)}/${cycle.slice(8, 10)}/atmos/${file}.idx`,
