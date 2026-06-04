@@ -1,4 +1,4 @@
-/**
+﻿/**
  * الترجمة العربية
  */
 export default {
@@ -14,6 +14,7 @@ export default {
     methodology: 'طريقة حساب النقاط',
       map: 'خريطة السحب الحمراء',
             shareMap: 'خريطة المشاركة',
+      firecloudMap: 'Firecloud Map',
       user: 'حسابي',
 apiAccess: 'الوصول إلى API'
     },
@@ -262,6 +263,11 @@ apiAccess: 'الوصول إلى API'
     threeDayGlowLoading: 'جارٍ تحميل توهج الشروق والغروب لثلاثة أيام...',
     daysOverview: 'نظرة عامة لـ {{days}} أيام',
     precipChance: '{{prob}}% هطول',
+    unavailable: {
+      title: 'Weather forecast is temporarily unavailable',
+      body: 'Please come back later.',
+      inline: 'Weather data is temporarily unavailable. Firecloud map remains available.',
+    },
     dataInfo: 'ℹ️ مصدر البيانات يوفر بيانات التنبؤ لـ {{hours}} ساعة (~{{days}} أيام). فكر في استخدام مصادر بيانات طقس أخرى لمزيد من الأيام.'
   },
   prediction: {
@@ -857,6 +863,13 @@ apiAccess: 'الوصول إلى API'
     weather: 'جاري الحصول على بيانات الطقس...',
     prediction: 'جاري حساب التنبؤ...',
     pleaseWait: 'يرجى الانتظار...'
+  },
+  admin: {
+    globalSwitches: {
+      title: 'Global switches',
+      siteClosed: { label: 'Close site', status: 'Closed' },
+      weatherPredictionClosed: { label: 'Close weather forecast', status: 'Closed' }
+    }
   },
   other: {
     copyright: '© 2026 تنبؤ الغروب',

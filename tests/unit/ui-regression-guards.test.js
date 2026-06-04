@@ -292,6 +292,15 @@ describe('recent user-reported UI regression guards', () => {
     expect(block).not.toContain('background: var(--glass-bg-heavy) !important');
   });
 
+  test('desktop score summary divider reaches the paired info cards', () => {
+    const source = css();
+    const block = source.match(/\.score-summary-divider \{[\s\S]*?\n\}/)?.[0] || '';
+
+    expect(block).toContain('width: 1px');
+    expect(block).toContain('height: min(100%, 176px)');
+    expect(source).toContain('.score-summary-divider { width: 100%; height: 1px; }');
+  });
+
   test('mobile prediction card children cannot widen the card', () => {
     const source = css();
     const radarSource = fs.readFileSync(path.resolve('src/components/RadarCompass.js'), 'utf8');

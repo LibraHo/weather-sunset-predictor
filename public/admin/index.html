@@ -181,6 +181,7 @@
       <section id="admin-panel-ops" class="admin-panel hidden" data-admin-panel="ops" role="tabpanel" aria-label="运维">
         <nav class="ops-center-nav" aria-label="运维中心内部导航">
           <a class="ops-center-link" href="#ops-status">状态</a>
+          <a class="ops-center-link" href="#ops-global-switches">全局开关</a>
           <a class="ops-center-link" href="#ops-guard">防护</a>
           <a class="ops-center-link" href="#ops-mode">方案</a>
           <a class="ops-center-link" href="#ops-queue">任务队列</a>
@@ -192,6 +193,42 @@
           <div class="two-col">
             <div class="admin-card"><h3 class="card-title">Grid 队列状态</h3><div id="queueStatusGrid" class="queue-status-grid"><p class="empty">加载中...</p></div></div>
             <div class="admin-card ops-focus-card"><h3 class="card-title">值班焦点</h3><p class="admin-muted">先确认队列、调度、数据管线和最近 run，再进入配置或危险操作。</p><div class="ops-focus-list"><span>1. 看队列状态</span><span>2. 查刷新调度</span><span>3. 估算后再运行</span><span>4. 危险操作在底部</span></div></div>
+          </div>
+        </section>
+        <section id="ops-global-switches" class="admin-section ops-workspace-section">
+          <div class="admin-section-heading"><h2>全局开关</h2><p>关闭站点或仅关闭天气预测。关闭天气预测后，分享地图和火烧云地图仍然可用。</p></div>
+          <div class="admin-card global-switch-card">
+            <div class="global-switch-row">
+              <div class="global-switch-copy">
+                <strong>关闭站点</strong>
+                <span>公开站点进入维护状态；后台和健康检查保留。</span>
+              </div>
+              <div class="global-switch-control">
+                <span id="global-switch-site-status" class="global-switch-status">未关闭</span>
+                <label class="setting-switch" for="global-switch-site">
+                  <input id="global-switch-site" class="setting-checkbox" type="checkbox">
+                  <span class="setting-switch-slider" aria-hidden="true"></span>
+                </label>
+              </div>
+            </div>
+            <div class="global-switch-row">
+              <div class="global-switch-copy">
+                <strong>关闭天气预测</strong>
+                <span>天气预测、搜索、重新查询不可用；分享地图和火烧云地图保留。</span>
+              </div>
+              <div class="global-switch-control">
+                <span id="global-switch-weather-status" class="global-switch-status">未关闭</span>
+                <label class="setting-switch" for="global-switch-weather">
+                  <input id="global-switch-weather" class="setting-checkbox" type="checkbox">
+                  <span class="setting-switch-slider" aria-hidden="true"></span>
+                </label>
+              </div>
+            </div>
+            <div class="admin-form-actions">
+              <button class="btn btn-secondary" type="button" onclick="loadGlobalSwitches()">重载</button>
+              <button class="btn btn-primary" type="button" onclick="saveGlobalSwitches()">保存配置</button>
+            </div>
+            <div id="globalSwitchMsg" class="admin-message hidden"></div>
           </div>
         </section>
         <section id="ops-guard" class="admin-section ops-workspace-section">
