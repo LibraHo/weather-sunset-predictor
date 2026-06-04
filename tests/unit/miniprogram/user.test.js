@@ -70,6 +70,29 @@ describe('miniprogram services/user', () => {
     }));
   });
 
+  test('favorites and recent locations fall back locally when silent login is unavailable', async () => {
+    const wxMock = {
+      login: jest.fn(({ fail }) => fail({ errMsg: 'login:fail personal subject unavailable' })),
+      getStorageSync: jest.fn(),
+      setStorageSync: jest.fn(),
+      removeStorageSync: jest.fn(),
+      request: jest.fn()
+    };
+    setWxInstance(wxMock);
+    configureApi({ baseUrl: 'https://api.example.com' });
+
+    const location = { name: '北京', lat: 39.9, lon: 116.4 };
+
+    await expect(listFavorites({ wx: wxMock })).resolves.toEqual([]);
+    await expect(addFavorite(location, { wx: wxMock })).resolves.toMatchObject(location);
+    await expect(deleteFavorite(location, { wx: wxMock })).resolves.toEqual({ success: true });
+    await expect(listRecentLocations({ wx: wxMock })).resolves.toEqual([]);
+    await expect(addRecentLocation(location, { wx: wxMock })).resolves.toMatchObject(location);
+
+    expect(wxMock.login).toHaveBeenCalled();
+    expect(wxMock.request).not.toHaveBeenCalled();
+  });
+
   test('writes favorite and recent endpoints', async () => {
     const calls = [];
     const wxMock = {

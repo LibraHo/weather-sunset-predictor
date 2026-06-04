@@ -8,8 +8,14 @@ function authHeaders(token) {
 async function getAuthorizedToken(options = {}) {
   const existing = options.token ?? getSessionToken({ wx: options.wx });
   if (existing) return existing;
-  const session = await loginWithWechat({ wx: options.wx });
-  return session.sessionToken;
+  if (options.autoLogin === false) return null;
+  let session = null;
+  try {
+    session = await loginWithWechat({ wx: options.wx });
+  } catch (error) {
+    return null;
+  }
+  return session?.sessionToken || session?.token || null;
 }
 
 function unwrap(response) {
@@ -56,6 +62,7 @@ export function normalizeLocation(input = {}) {
 
 export async function listFavorites(options = {}) {
   const token = await getAuthorizedToken(options);
+  if (!token) return [];
   const response = await request('/api/user/favorites', {
     method: 'GET',
     token,
@@ -68,6 +75,7 @@ export async function listFavorites(options = {}) {
 export async function addFavorite(location, options = {}) {
   const token = await getAuthorizedToken(options);
   const payload = normalizeLocation(location);
+  if (!token) return payload;
   const response = await request('/api/user/favorites', {
     method: 'POST',
     data: payload,
@@ -81,6 +89,7 @@ export async function addFavorite(location, options = {}) {
 export async function deleteFavorite(location, options = {}) {
   const token = await getAuthorizedToken(options);
   const payload = normalizeLocation(location);
+  if (!token) return { success: true };
   const response = await request(`/api/user/favorites/${encodeURIComponent(payload.id)}`, {
     method: 'DELETE',
     token,
@@ -92,6 +101,7 @@ export async function deleteFavorite(location, options = {}) {
 
 export async function listRecentLocations(options = {}) {
   const token = await getAuthorizedToken(options);
+  if (!token) return [];
   const response = await request('/api/user/recent-locations', {
     method: 'GET',
     token,
@@ -104,6 +114,7 @@ export async function listRecentLocations(options = {}) {
 export async function addRecentLocation(location, options = {}) {
   const token = await getAuthorizedToken(options);
   const payload = normalizeLocation(location);
+  if (!token) return payload;
   const response = await request('/api/user/recent-locations', {
     method: 'POST',
     data: payload,
