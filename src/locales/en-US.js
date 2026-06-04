@@ -41,6 +41,7 @@ const translations = {
     "methodology": "Methodology",
       "map": "Fire Sky Map",
       "shareMap": "Share Map",
+      "user": "My Account",
       "apiAccess": "API Access"
     },
     "menu": {

@@ -15,7 +15,7 @@ const exifr = require('exifr');
 const photoService = require('../services/PhotoService');
 const UserService = require('../services/UserService');
 
-const MAX_FILE_SIZE = 20 * 1024 * 1024;
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/heic', 'image/heif'];
 const FALLBACK_UPLOAD_MIMES = ['application/octet-stream'];
 
@@ -67,7 +67,7 @@ function isPhotoOwner(photo = {}, user = {}) {
 function sendUploadError(res, err) {
   if (err?.code === 'LIMIT_FILE_SIZE' || err?.message?.startsWith('FILE_TOO_LARGE')) {
     return res.status(400).json({
-      error: { code: 'FILE_TOO_LARGE', message: '文件过大，最大支持 20MB' }
+      error: { code: 'FILE_TOO_LARGE', message: '文件过大，最大支持 10MB' }
     });
   }
 
@@ -125,6 +125,7 @@ function sanitizeBasePhoto(photo = {}) {
     identities,
     openid,
     unionid,
+    origFile,
     ...publicPhoto
   } = photo;
   return publicPhoto;
@@ -135,6 +136,7 @@ function sanitizePublicPhoto(photo = {}) {
     reviewNote,
     reviewedAt,
     reviewedBy,
+    pendingEdit,
     ...publicPhoto
   } = sanitizeBasePhoto(photo);
   return publicPhoto;
@@ -388,7 +390,13 @@ router.get('/:id/thumb', (req, res) => {
 // GET /api/photos/:id/original
 // 返回指定照片的原图文件
 // ---------------------------------------------------------------------------
-router.get('/:id/original', requireUser, (req, res) => {
+router.get('/:id/original', (req, res) => {
+  return res.status(404).json({
+    error: {
+      code: 'ORIGINAL_NOT_AVAILABLE',
+      message: 'Original image is not available'
+    }
+  });
   try {
     const { id } = req.params;
     const photo = photoService.getPhotoById(id);

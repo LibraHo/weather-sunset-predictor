@@ -41,6 +41,7 @@ const translations = {
     "methodology": "Phương pháp tính điểm mây đẹp",
       "map": "Bản đồ Ráng đỏ",
       "shareMap": "Bản đồ chia sẻ",
+      "user": "Tài khoản",
       "apiAccess": "Truy cập API"
     },
     "menu": {

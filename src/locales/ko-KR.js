@@ -41,6 +41,7 @@ const translations = {
     "methodology": "화염구름 점수 계산 방법",
       "map": "노을 지도",
             shareMap: '공유 지도',
+      user: '내 계정',
 apiAccess: 'API 연동'
     },
     "menu": {

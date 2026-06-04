@@ -118,11 +118,11 @@ describe('savePhoto()', () => {
     expect(typeof meta.uploadedAt).toBe('string');
   });
 
-  test('writes original file to ORIGINALS_DIR', async () => {
+  test('stores only compressed display image and does not retain original upload', async () => {
     const buffer = makeJpegBuffer(512);
     const meta = await PhotoService.savePhoto({ buffer, mimeType: 'image/jpeg' });
-    const origPath = path.join(PhotoService.ORIGINALS_DIR, meta.origFile);
-    expect(fs.existsSync(origPath)).toBe(true);
+    expect(meta.origFile).toBeNull();
+    expect(fs.readdirSync(PhotoService.ORIGINALS_DIR)).toEqual([]);
   });
 
   test('appends to photos.json index', async () => {
@@ -141,7 +141,7 @@ describe('savePhoto()', () => {
     const buffer = makePngBuffer(256);
     const meta = await PhotoService.savePhoto({ buffer, mimeType: 'image/png' });
     expect(meta.mimeType).toBe('image/png');
-    expect(meta.origFile.endsWith('.png')).toBe(true);
+    expect(meta.origFile).toBeNull();
   });
 
   test('accepts JPEG uploaded as application/octet-stream when file signature is valid', async () => {
@@ -153,7 +153,7 @@ describe('savePhoto()', () => {
     });
 
     expect(meta.mimeType).toBe('image/jpeg');
-    expect(meta.origFile.endsWith('.jpg')).toBe(true);
+    expect(meta.origFile).toBeNull();
   });
 
   test('accepts PNG uploaded as application/octet-stream when file signature is valid', async () => {
@@ -165,7 +165,7 @@ describe('savePhoto()', () => {
     });
 
     expect(meta.mimeType).toBe('image/png');
-    expect(meta.origFile.endsWith('.png')).toBe(true);
+    expect(meta.origFile).toBeNull();
   });
 
   test('rejects application/octet-stream when it is not an image', async () => {
@@ -187,6 +187,10 @@ describe('savePhoto()', () => {
     await expect(
       PhotoService.savePhoto({ buffer: bigBuffer, mimeType: 'image/jpeg' })
     ).rejects.toThrow('FILE_TOO_LARGE');
+  });
+
+  test('uses a 10MB upload limit', () => {
+    expect(PhotoService.MAX_FILE_SIZE_MB).toBe(10);
   });
 
   test('handles null/undefined lat/lon gracefully', async () => {
@@ -322,6 +326,61 @@ describe('updatePhoto()', () => {
   });
 });
 
+describe('approved user edit review versioning', () => {
+  test('keeps approved public metadata visible until pending owner edit is approved', async () => {
+    const meta = await PhotoService.savePhoto({
+      buffer: makeJpegBuffer(256),
+      mimeType: 'image/jpeg',
+      desc: 'approved caption',
+      locationName: 'Approved Hill',
+      uploaderUserId: 'owner-1',
+      reviewStatus: 'approved',
+    });
+
+    const edited = PhotoService.updateUserPhoto(meta.id, 'owner-1', {
+      desc: 'pending caption',
+      locationName: 'Pending Valley',
+    });
+
+    expect(edited).toMatchObject({
+      id: meta.id,
+      desc: 'approved caption',
+      locationName: 'Approved Hill',
+      reviewStatus: 'approved',
+      pendingEdit: {
+        desc: 'pending caption',
+        locationName: 'Pending Valley',
+        reviewStatus: 'pending',
+      },
+    });
+    expect(PhotoService.getPublicPhotos()[0]).toMatchObject({
+      id: meta.id,
+      desc: 'approved caption',
+      locationName: 'Approved Hill',
+      reviewStatus: 'approved',
+    });
+
+    const approved = PhotoService.reviewPhoto(meta.id, {
+      reviewStatus: 'approved',
+      reviewNote: 'edit ok',
+      reviewedBy: 'admin',
+    });
+
+    expect(approved).toMatchObject({
+      id: meta.id,
+      desc: 'pending caption',
+      locationName: 'Pending Valley',
+      reviewStatus: 'approved',
+      reviewNote: 'edit ok',
+    });
+    expect(approved.pendingEdit).toBeNull();
+    expect(PhotoService.getPublicPhotos()[0]).toMatchObject({
+      desc: 'pending caption',
+      locationName: 'Pending Valley',
+    });
+  });
+});
+
 // ─── deletePhoto ──────────────────────────────────────────────────────────
 describe('deletePhoto()', () => {
   test('removes photo entry from index', async () => {
@@ -333,13 +392,12 @@ describe('deletePhoto()', () => {
     expect(PhotoService.getPhotos()).toHaveLength(0);
   });
 
-  test('removes original file from disk', async () => {
+  test('delete tolerates missing original file and removes display image metadata', async () => {
     const meta = await PhotoService.savePhoto({ buffer: makeJpegBuffer(256), mimeType: 'image/jpeg' });
-    const origPath = PhotoService.getOriginalPath(meta.origFile);
-    expect(fs.existsSync(origPath)).toBe(true);
+    expect(meta.origFile).toBeNull();
 
     PhotoService.deletePhoto(meta.id);
-    expect(fs.existsSync(origPath)).toBe(false);
+    expect(PhotoService.getPhotoById(meta.id)).toBeNull();
   });
 
   test('returns false for non-existent id', () => {

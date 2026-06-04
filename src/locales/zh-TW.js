@@ -41,6 +41,7 @@ const translations = {
     "methodology": "火燒雲計算方法",
       "map": "火燒雲地圖",
       "shareMap": "分享地圖",
+      "user": "我的",
       "apiAccess": "API接入"
     },
     "menu": {

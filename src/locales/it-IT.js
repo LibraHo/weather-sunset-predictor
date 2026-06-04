@@ -10,6 +10,7 @@ const translations = {
     "methodology": "Metodologia di calcolo",
       "map": "Mappa Luminosità",
             "shareMap": "Mappa condivisa",
+      "user": "Account",
 apiAccess: 'Accesso API'
     },
     "menu": {

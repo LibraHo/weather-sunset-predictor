@@ -41,6 +41,7 @@ const translations = {
     "methodology": "Méthode de calcul",
       "map": "Carte Lueur",
       "shareMap": "Carte partagée",
+      "user": "Mon compte",
       "apiAccess": "Accès API"
     },
     "menu": {

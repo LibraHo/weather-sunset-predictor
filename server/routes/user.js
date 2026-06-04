@@ -1,6 +1,8 @@
 const express = require('express');
 const UserService = require('../services/UserService');
 
+const SESSION_COOKIE = 'xiake_session';
+
 function sendError(res, error) {
   return res.status(error.status || 500).json({
     error: {
@@ -13,7 +15,8 @@ function sendError(res, error) {
 
 function createAuthMiddleware(userService) {
   return (req, res, next) => {
-    const user = userService.getBearerUser(req.get('authorization'));
+    const user = userService.getBearerUser(req.get('authorization')) ||
+      userService.verifyToken(getCookie(req.headers.cookie, SESSION_COOKIE));
     if (!user) {
       return res.status(401).json({
         error: { code: 'UNAUTHORIZED', message: '请先登录' }
@@ -22,6 +25,21 @@ function createAuthMiddleware(userService) {
     req.user = user;
     next();
   };
+}
+
+function getCookie(header = '', name) {
+  const cookies = String(header)
+    .split(';')
+    .map((part) => part.trim())
+    .filter(Boolean);
+  for (const cookie of cookies) {
+    const separator = cookie.indexOf('=');
+    if (separator < 0) continue;
+    if (cookie.slice(0, separator) === name) {
+      return decodeURIComponent(cookie.slice(separator + 1));
+    }
+  }
+  return null;
 }
 
 function createRouter(options = {}) {
@@ -70,4 +88,4 @@ function createRouter(options = {}) {
 
 module.exports = createRouter();
 module.exports.createRouter = createRouter;
-module.exports._test = { createAuthMiddleware, sendError };
+module.exports._test = { createAuthMiddleware, sendError, getCookie };

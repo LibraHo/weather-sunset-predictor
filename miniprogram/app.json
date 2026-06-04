@@ -2,6 +2,7 @@
   "pages": [
     "pages/home/index",
     "pages/methodology/index",
+    "pages/user/index",
     "pages/map/index",
     "pages/result/index",
     "pages/gallery/index",

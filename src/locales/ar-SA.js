@@ -14,6 +14,7 @@ export default {
     methodology: 'طريقة حساب النقاط',
       map: 'خريطة السحب الحمراء',
             shareMap: 'خريطة المشاركة',
+      user: 'حسابي',
 apiAccess: 'الوصول إلى API'
     },
     menu: {

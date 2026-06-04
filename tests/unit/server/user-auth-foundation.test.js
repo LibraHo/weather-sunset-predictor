@@ -137,6 +137,108 @@ describe('UserService auth foundation', () => {
     });
   });
 
+  test('registers email users with hashed password and recovery answer', () => {
+    const service = makeService();
+
+    const user = service.registerEmailUser({
+      email: '  Alex@Example.COM ',
+      password: 'correct horse battery staple',
+      recoveryQuestion: 'First sunset spot?',
+      recoveryAnswer: 'Jingshan Park'
+    });
+
+    expect(user.email).toBe('alex@example.com');
+    expect(user.passwordHash).toBeUndefined();
+    expect(user.recoveryAnswerHash).toBeUndefined();
+    expect(service.verifyPasswordLogin('alex@example.com', 'correct horse battery staple').userId).toBe(user.userId);
+
+    const stored = service.findByIdentity('email', 'alex@example.com');
+    const emailIdentity = stored.identities.find(identity => identity.provider === 'email');
+    expect(emailIdentity).toMatchObject({
+      provider: 'email',
+      subject: 'alex@example.com',
+      email: 'alex@example.com',
+      recoveryQuestion: 'First sunset spot?'
+    });
+    expect(emailIdentity.passwordHash).toEqual(expect.any(String));
+    expect(emailIdentity.recoveryAnswerHash).toEqual(expect.any(String));
+    expect(emailIdentity.passwordHash).not.toContain('correct horse battery staple');
+    expect(emailIdentity.recoveryAnswerHash).not.toContain('Jingshan Park');
+
+    const saved = fs.readFileSync(dataFile, 'utf8');
+    expect(saved).not.toContain('correct horse battery staple');
+    expect(saved).not.toContain('Jingshan Park');
+  });
+
+  test('rejects duplicate email registration and invalid password login', () => {
+    const service = makeService();
+    service.registerEmailUser({
+      email: 'alex@example.com',
+      password: 'correct horse battery staple',
+      recoveryQuestion: 'Question?',
+      recoveryAnswer: 'Answer'
+    });
+
+    expect(() => service.registerEmailUser({
+      email: 'ALEX@example.com',
+      password: 'another password',
+      recoveryQuestion: 'Question?',
+      recoveryAnswer: 'Answer'
+    })).toThrow(/already registered/i);
+
+    expect(service.verifyPasswordLogin('alex@example.com', 'wrong password')).toBeNull();
+  });
+
+  test('returns recovery question and resets password with hashed answer', () => {
+    const service = makeService();
+    const user = service.registerEmailUser({
+      email: 'alex@example.com',
+      password: 'old password',
+      recoveryQuestion: 'Favorite horizon?',
+      recoveryAnswer: 'West lake'
+    });
+
+    expect(service.getRecoveryQuestion('alex@example.com')).toEqual({ recoveryQuestion: 'Favorite horizon?' });
+    expect(service.resetPasswordWithRecovery({
+      email: 'alex@example.com',
+      recoveryAnswer: 'wrong answer',
+      newPassword: 'new password'
+    })).toBe(false);
+
+    expect(service.resetPasswordWithRecovery({
+      email: 'alex@example.com',
+      recoveryAnswer: 'West lake',
+      newPassword: 'new password'
+    })).toBe(true);
+
+    expect(service.verifyPasswordLogin('alex@example.com', 'old password')).toBeNull();
+    expect(service.verifyPasswordLogin('alex@example.com', 'new password').userId).toBe(user.userId);
+
+    const saved = fs.readFileSync(dataFile, 'utf8');
+    expect(saved).not.toContain('new password');
+    expect(saved).not.toContain('West lake');
+  });
+
+  test('can add password credentials to an existing google account without removing google identity', () => {
+    const service = makeService();
+    const googleUser = service.upsertGoogleUser({
+      sub: 'google-sub-1',
+      email: 'alex@example.com'
+    });
+
+    const linked = service.setPasswordForUser(googleUser.userId, {
+      email: 'alex@example.com',
+      password: 'manual password',
+      recoveryQuestion: 'Question?',
+      recoveryAnswer: 'Answer'
+    });
+
+    expect(linked.userId).toBe(googleUser.userId);
+    expect(service.verifyPasswordLogin('alex@example.com', 'manual password').userId).toBe(googleUser.userId);
+    expect(service.findByIdentity('google', 'google-sub-1').userId).toBe(googleUser.userId);
+    expect(service.findByIdentity('email', 'alex@example.com').userId).toBe(googleUser.userId);
+  });
+
   test('issues verifiable sessions with AUTH_SECRET ahead of USER_SESSION_SECRET', () => {
     process.env.AUTH_SECRET = 'auth-secret';
     process.env.USER_SESSION_SECRET = 'user-session-secret';

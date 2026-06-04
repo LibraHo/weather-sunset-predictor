@@ -59,7 +59,7 @@ describe('photo original file access', () => {
     delete process.env.PHOTO_UPLOAD_DAILY_IP_LIMIT;
   });
 
-  test('does not expose original photo files to anonymous visitors', async () => {
+  test('does not expose original photo files because originals are not retained', async () => {
     const PhotoService = require('../../../server/services/PhotoService.js');
     const photo = await PhotoService.savePhoto({
       buffer: makeJpegBuffer(),
@@ -70,12 +70,15 @@ describe('photo original file access', () => {
 
     await request(app)
       .get(`/api/photos/${photo.id}/original`)
-      .expect(401);
+      .expect(404);
 
     await request(app)
       .get(`/api/photos/${photo.id}/original`)
       .set('Authorization', `Bearer ${token}`)
-      .expect(200);
+      .expect(404);
+
+    expect(photo.origFile).toBeNull();
+    expect(fs.readdirSync(PhotoService.ORIGINALS_DIR)).toEqual([]);
   });
 
   test('does not expose pending thumbnails to anonymous visitors or other users', async () => {

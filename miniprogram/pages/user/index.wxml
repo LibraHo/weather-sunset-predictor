@@ -1,0 +1,72 @@
+<view class="container user-page theme-{{resolvedThemeMode}}">
+  <app-topbar current="user" theme-mode="{{themeMode}}" resolved-theme-mode="{{resolvedThemeMode}}" bind:settingschange="onAppSettingsChange" />
+
+  <view class="user-hero-card xiake-card">
+    <view class="user-avatar">
+      <image class="user-avatar-icon" src="/assets/icons/users.svg" mode="aspectFit" aria-hidden="true" />
+    </view>
+    <view class="user-hero-copy">
+      <view class="user-kicker">{{isSignedIn ? '已登录' : '未登录'}}</view>
+      <view class="user-title">{{isSignedIn ? displayName : '登录后同步你的霞光足迹'}}</view>
+      <view class="user-subtitle">{{isSignedIn ? identitySummary : '收藏地点、最近查询会和后端用户系统保持同步。'}}</view>
+    </view>
+  </view>
+
+  <view class="user-actions">
+    <button wx:if="{{!isSignedIn}}" class="user-action-primary" loading="{{authLoading}}" disabled="{{authLoading}}" bindtap="login" hover-class="button-hover" hover-stay-time="80">微信登录</button>
+    <button wx:else class="user-action-secondary" loading="{{authLoading}}" disabled="{{authLoading}}" bindtap="logout" hover-class="button-hover" hover-stay-time="80">退出登录</button>
+  </view>
+
+  <view wx:if="{{isSignedIn}}" class="user-session-card xiake-card">
+    <view class="user-session-title">账号已连接</view>
+    <view class="user-session-copy">{{identitySummary}}</view>
+  </view>
+
+  <view class="user-state-card xiake-card" wx:if="{{errorMessage}}">
+    <view class="user-state-title">加载失败</view>
+    <view class="user-state-copy">{{errorMessage}}</view>
+    <button class="user-inline-button" bindtap="refreshUserData" hover-class="button-hover" hover-stay-time="80">重试</button>
+  </view>
+
+  <view class="user-section-card xiake-card">
+    <view class="user-section-head">
+      <view>
+        <view class="user-section-title">收藏地点</view>
+        <view class="user-section-subtitle">常看的地点可以从这里快速回到预测页。</view>
+      </view>
+      <view class="user-count">{{favorites.length}}</view>
+    </view>
+
+    <block wx:if="{{favorites.length}}">
+      <view class="user-location-row tap-feedback" wx:for="{{favorites}}" wx:key="id" data-index="{{index}}" data-source="favorites" bindtap="openLocation" hover-class="card-tap-hover" hover-stay-time="80">
+        <view class="user-location-main">
+          <view class="user-location-name">{{item.name}}</view>
+          <view class="user-location-meta">{{item.typeLabel}} · {{item.coordinateText}}</view>
+        </view>
+        <view class="user-row-chevron" aria-hidden="true"></view>
+      </view>
+    </block>
+    <view class="user-empty" wx:else>{{isSignedIn ? '还没有收藏地点。' : '登录后会显示云端收藏。'}}</view>
+  </view>
+
+  <view class="user-section-card xiake-card">
+    <view class="user-section-head">
+      <view>
+        <view class="user-section-title">最近地点</view>
+        <view class="user-section-subtitle">保留最近查询，方便继续观察云况变化。</view>
+      </view>
+      <view class="user-count">{{recentLocations.length}}</view>
+    </view>
+
+    <block wx:if="{{recentLocations.length}}">
+      <view class="user-location-row tap-feedback" wx:for="{{recentLocations}}" wx:key="id" data-index="{{index}}" data-source="recentLocations" bindtap="openLocation" hover-class="card-tap-hover" hover-stay-time="80">
+        <view class="user-location-main">
+          <view class="user-location-name">{{item.name}}</view>
+          <view class="user-location-meta">{{item.typeLabel}} · {{item.coordinateText}}</view>
+        </view>
+        <view class="user-row-chevron" aria-hidden="true"></view>
+      </view>
+    </block>
+    <view class="user-empty" wx:else>{{isSignedIn ? '还没有最近查询。' : '登录后会显示云端最近地点。'}}</view>
+  </view>
+</view>

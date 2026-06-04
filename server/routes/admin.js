@@ -27,7 +27,7 @@ const router = express.Router();
 // ---------------------------------------------------------------------------
 // 配置
 // ---------------------------------------------------------------------------
-const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/heic', 'image/heif'];
 const FALLBACK_UPLOAD_MIMES = ['application/octet-stream'];
 
@@ -52,7 +52,7 @@ function sendUploadValidationError(res, err) {
     return res.status(400).json({
       error: {
         code: 'FILE_TOO_LARGE',
-        message: '文件过大，最大支持 20MB'
+        message: '文件过大，最大支持 10MB'
       }
     });
   }
@@ -122,7 +122,7 @@ function withPhotoUrls(photo = {}) {
   return {
     ...photo,
     thumbUrl: photo.thumbFile ? `/api/photos/${photo.id}/thumb` : null,
-    originalUrl: photo.origFile ? `/api/photos/${photo.id}/original` : null
+    originalUrl: null
   };
 }
 
@@ -269,7 +269,7 @@ router.post('/upload', requireAuth, handlePhotoUpload, async (req, res) => {
       return res.status(400).json({
         error: {
           code: 'FILE_TOO_LARGE',
-          message: '文件过大，最大支持 20MB'
+          message: '文件过大，最大支持 10MB'
         }
       });
     }
@@ -278,7 +278,7 @@ router.post('/upload', requireAuth, handlePhotoUpload, async (req, res) => {
       return res.status(400).json({
         error: {
           code: 'FILE_TOO_LARGE',
-          message: '文件过大，最大支持 20MB'
+          message: '文件过大，最大支持 10MB'
         }
       });
     }

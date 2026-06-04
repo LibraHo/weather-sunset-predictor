@@ -41,6 +41,7 @@ const translations = {
     "methodology": "Metodología de cálculo",
       "map": "Mapa de Resplandor",
             "shareMap": "Mapa compartido",
+      "user": "Mi cuenta",
 apiAccess: 'Acceso API'
     },
     "menu": {

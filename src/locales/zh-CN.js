@@ -48,6 +48,7 @@ export default {
     methodology: '火烧云计算方法',
       map: '火烧云地图',
       shareMap: '分享地图',
+      user: '我的',
       apiAccess: 'API接入'
     },
     menu: {

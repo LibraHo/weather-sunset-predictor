@@ -41,6 +41,7 @@ const translations = {
     "methodology": "焼き雲スコアの計算方法",
       "map": "火焼け空マップ",
             shareMap: '共有マップ',
+      user: 'マイページ',
 apiAccess: 'API接続'
     },
     "menu": {
