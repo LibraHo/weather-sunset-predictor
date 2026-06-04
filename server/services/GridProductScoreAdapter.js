@@ -257,15 +257,65 @@ function estimateGridStepKm(points, productResolution) {
   return Number.isFinite(min) ? min : 55;
 }
 
-function nearestPoint(points, target, toleranceKm, excludedKey) {
+function coordinateKey(lat, lon) {
+  return `${Number(lat).toFixed(4)},${Number(lon).toFixed(4)}`;
+}
+
+function uniqueSorted(values) {
+  return Array.from(new Set(
+    values
+      .map(Number)
+      .filter(Number.isFinite)
+      .map(value => value.toFixed(4))
+  ))
+    .map(Number)
+    .sort((a, b) => a - b);
+}
+
+function buildGridLookup(points) {
+  const byCoordinate = new Map();
+  for (const point of points) {
+    byCoordinate.set(coordinateKey(point.lat, point.lon), point);
+  }
+  return {
+    byCoordinate,
+    lats: uniqueSorted(points.map(point => point.lat)),
+    lons: uniqueSorted(points.map(point => point.lon))
+  };
+}
+
+function closestCandidateIndexes(values, target, radius = 1) {
+  if (!values.length) return [];
+  let low = 0;
+  let high = values.length;
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2);
+    if (values[mid] < target) low = mid + 1;
+    else high = mid;
+  }
+  const indexes = new Set();
+  for (let offset = -radius; offset <= radius; offset += 1) {
+    const index = low + offset;
+    if (index >= 0 && index < values.length) indexes.add(index);
+  }
+  return Array.from(indexes);
+}
+
+function nearestIndexedPoint(lookup, target, toleranceKm, excludedKey) {
+  if (!lookup) return null;
   let nearest = null;
   let nearestDistance = Infinity;
-  for (const point of points) {
-    if (pointKey(point) === excludedKey) continue;
-    const d = distanceKm(point, target);
-    if (d < nearestDistance) {
-      nearest = point;
-      nearestDistance = d;
+  const latIndexes = closestCandidateIndexes(lookup.lats, target.lat, 1);
+  const lonIndexes = closestCandidateIndexes(lookup.lons, target.lon, 1);
+  for (const latIndex of latIndexes) {
+    for (const lonIndex of lonIndexes) {
+      const candidate = lookup.byCoordinate.get(coordinateKey(lookup.lats[latIndex], lookup.lons[lonIndex]));
+      if (!candidate || pointKey(candidate) === excludedKey) continue;
+      const d = distanceKm(candidate, target);
+      if (d < nearestDistance) {
+        nearest = candidate;
+        nearestDistance = d;
+      }
     }
   }
   return nearest && nearestDistance <= toleranceKm
@@ -296,7 +346,7 @@ function weightedMetric(items, getter) {
   return weightTotal > 0 ? total / weightTotal : null;
 }
 
-function buildDirectionalContext(point, allPoints, date, period, gridStepKm) {
+function buildDirectionalContext(point, gridLookup, date, period, gridStepKm) {
   const lat = toNumber(point.lat);
   const lon = toNumber(point.lon);
   if (lat === null || lon === null) return null;
@@ -316,7 +366,7 @@ function buildDirectionalContext(point, allPoints, date, period, gridStepKm) {
   const neighbors = DIRECTIONAL_NEIGHBOR_STEPS
     .map((step, index) => {
       const target = destinationPoint(lat, lon, azimuth, gridStepKm * step);
-      const match = nearestPoint(allPoints, target, toleranceKm, key);
+      const match = nearestIndexedPoint(gridLookup, target, toleranceKm, key);
       if (!match) return null;
       return {
         ...match,
@@ -516,6 +566,7 @@ class GridProductScoreAdapter {
 
     const mergedPoints = Array.from(merged.values());
     const gridStepKm = estimateGridStepKm(mergedPoints, weatherProduct.grid?.resolution);
+    const gridLookup = buildGridLookup(mergedPoints);
     const gridPoints = mergedPoints
       .map(point => {
         const scoringPoint = {
@@ -525,7 +576,7 @@ class GridProductScoreAdapter {
         const score = scoreFromFields(scoringPoint, safePeriod);
         const date = point.sourceMeta?.weather?.validTime || weatherProduct.validTime || new Date().toISOString();
         const directionalContext = score !== null
-          ? buildDirectionalContext(point, mergedPoints, date, safePeriod, gridStepKm)
+          ? buildDirectionalContext(point, gridLookup, date, safePeriod, gridStepKm)
           : null;
         const directionalScore = score !== null
           ? applyDirectionalMapScoring(score, point.weather, directionalContext)
