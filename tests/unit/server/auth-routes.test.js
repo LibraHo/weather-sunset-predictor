@@ -287,7 +287,7 @@ describe('auth routes', () => {
     const callback = await request(app)
       .get(`/auth/google/callback?code=google-code&state=${state}`)
       .set('Cookie', `xiake_oauth_state=${stateCookie}`)
-      .expect(200);
+      .expect(302);
 
     expect(httpClient.post).toHaveBeenCalledWith(
       'https://oauth2.googleapis.com/token',
@@ -295,9 +295,15 @@ describe('auth routes', () => {
       expect.objectContaining({ headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
     );
     expect(googleIdTokenVerifier.verify).toHaveBeenCalledWith('mock-id-token', 'google-client-id');
-    expect(callback.body.user.identities).toEqual([{ provider: 'google' }]);
+    expect(callback.headers.location).toBe('/');
 
     const sessionCookie = cookieValue(callback.headers['set-cookie'], 'xiake_session');
+    const me = await request(app)
+      .get('/auth/me')
+      .set('Cookie', `xiake_session=${sessionCookie}`)
+      .expect(200);
+    expect(me.body.user.identities).toEqual([{ provider: 'google' }]);
+
     await request(app)
       .post('/auth/logout')
       .set('Cookie', `xiake_session=${sessionCookie}`)
