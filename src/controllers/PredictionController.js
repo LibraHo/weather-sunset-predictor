@@ -1550,7 +1550,7 @@ class PredictionController {
       'factors.lightPath.status.good': '较好', 'factors.lightPath.status.fair': '一般', 'factors.lightPath.status.weak': '较弱',
       'factors.lightPath.desc.good': '太阳方向相对通透，光线有机会照到云底。',
       'factors.lightPath.desc.fair': '太阳方向有一定遮挡，晚霞可能只出现在局部。',
-      'factors.lightPath.desc.weak': '低云或云墙挡住光路，光线不容易打到云层。',
+      'factors.lightPath.desc.weak': '低云或阻挡走廊挡住光路，光线不容易打到云层。',
       'factors.rendering.title': '空气显色',
       'factors.rendering.status.good': '较好', 'factors.rendering.status.fair': '一般', 'factors.rendering.status.weak': '较弱',
       'factors.rendering.desc.good': '空气里有适度颗粒和水汽，颜色更容易偏暖、偏红。',
@@ -1583,8 +1583,8 @@ class PredictionController {
       'aerosol.extremeHaze': '沙尘/灰幕很重', 'aerosol.extremeHazeDesc': '高云虽多，但空气光学条件失效，霞光容易被压成灰黄色',
       'aerosol.hazeCap': '灰幕风险明显', 'aerosol.hazeCapDesc': '颗粒物或气溶胶偏高，会削弱红橙色染色',
       'aerosol.carrier': '薄雾红日载体', 'aerosol.carrierDesc': '云层很少时，适度气溶胶在光路通畅时也能带来一点暖色日落',
-      'lightPath.opening': '太阳方向有透光开口', 'lightPath.openingDesc': '后端沿太阳方位采样 25/50/75/100km，低中云走廊较通畅，光线更容易打到云层',
-      'lightPath.wall': '太阳方向有云墙遮挡', 'lightPath.wallDesc': '太阳方位周边低/中云偏厚，远端光路会压低主评分',
+      'lightPath.opening': '太阳方向有透光开口', 'lightPath.openingDesc': '后端沿太阳方位采样 10/25/50/75/100km，低中云走廊较通畅，光线更容易打到云层',
+      'lightPath.wall': '太阳方向有阻挡走廊', 'lightPath.wallDesc': '太阳方位周边低/中云整体偏厚，光路门控会压低主评分',
       'lightPath.lowCloudBlock': '低云遮住光线', 'lightPath.lowCloudBlockDesc': '低云挡在太阳方向，阳光不容易照到中高云',
       'postRain.clear': '雨后空气清透', 'postRain.clearDesc': '近6小时有降水，但能见度和颗粒物条件较好，雨后加成保留',
       'postRain.gray': '雨后灰幕风险', 'postRain.grayDesc': '降水后水汽或颗粒物偏重，霞光容易发灰',
@@ -1739,6 +1739,7 @@ class PredictionController {
     const carrierAdjustment = prediction?.highCloudCarrierAdjustment;
     const aerosolCarrier = prediction?.aerosolCarrierScore || prediction?.breakdown?.aerosolCarrierScore;
     const postRainAdjustment = prediction?.postRainAdjustment;
+    const scoringV2 = prediction?.scoringV2;
     const lightPathAnalysis = prediction?.lightPathAnalysis || {};
     const directional = lightPathAnalysis.directionalAnalysis;
 
@@ -1778,6 +1779,7 @@ class PredictionController {
     if (
       lightPathAnalysis.capReason === 'overcast_cap_40' ||
       directional?.reason?.includes('cloud_wall') ||
+      directional?.reason?.includes('blocked_corridor') ||
       directional?.reason?.includes('cloudy_corridor') ||
       weather.low >= 60
     ) {
@@ -1788,7 +1790,9 @@ class PredictionController {
     const aod = Number(weather.aod);
     const grayCurtainMode = postRainAdjustment?.mode === 'post_rain_gray_curtain' || postRainAdjustment?.mode === 'humid_haze_gray_curtain';
     let renderingLevel = 'fair';
-    if (
+    if (scoringV2?.airMode === 'warm_scattering_path_open') {
+      renderingLevel = 'good';
+    } else if (
       grayCurtainMode ||
       aerosolHazeCap?.applied ||
       weather.visibility < 8 ||
@@ -1799,6 +1803,7 @@ class PredictionController {
       renderingLevel = 'weak';
     } else if (
       postRainAdjustment?.mode === 'post_rain_clear' ||
+      scoringV2?.airMode === 'warm_scattering_path_open' ||
       aerosolCarrier?.activatedScore >= 12 ||
       renderingFactor >= 1.03 ||
       (weather.visibility >= 15 && weather.humidity >= 35 && weather.humidity <= 75 && (!Number.isFinite(aod) || aod <= 0.35))
@@ -1824,7 +1829,7 @@ class PredictionController {
       weather.low >= 25 ||
       weather.visibility < 15 ||
       weather.humidity > 75 ||
-      (Number.isFinite(aod) && aod > 0.35) ||
+      (scoringV2?.airMode !== 'warm_scattering_path_open' && Number.isFinite(aod) && aod > 0.35) ||
       precipitation > 0.1
     );
     if (strongLimit) {
@@ -2004,6 +2009,7 @@ class PredictionController {
     const carrierAdjustment = prediction?.highCloudCarrierAdjustment;
     const directionalCurtainCarrier = prediction?.directionalCurtainCarrier || prediction?.breakdown?.directionalCurtainCarrier;
     const postRainAdjustment = prediction?.postRainAdjustment;
+    const scoringV2 = prediction?.scoringV2;
     const severeWeatherCap = prediction?.severeWeatherCap;
     const occlusionAnalysis = prediction?.occlusionAnalysis;
     const geometricModel = prediction?.geometricModel;
@@ -2037,13 +2043,15 @@ class PredictionController {
     const reasonText = (reason) => ({
       precipitation_cap_45: ledgerText('reasons.precipitationCap45', {}, 'rain plus low clouds keeps the score low', '降水叠加低云，观赏条件明显变差'),
       overcast_cap_35: ledgerText('reasons.overcastCap35', {}, 'low clouds block the sunlight path', '低云遮住太阳方向，光线不容易照到云层'),
-      overcast_fog_cap_15: ledgerText('reasons.overcastFogCap15', {}, 'low cloud and low visibility make the sky too gray', '低云叠加低能见度，天空容易发灰'),
+      overcast_low_visibility_cap_35: ledgerText('reasons.overcastLowVisibilityCap35', {}, 'very cloudy sky and low visibility keep the score conservative', '总云量很高叠加低能见度，先保守压低评分'),
+      overcast_fog_cap_15: ledgerText('reasons.overcastFogCap15', {}, 'very cloudy sky and low visibility make the sky too gray', '总云量很高叠加低能见度，天空容易发灰'),
       rainy_mid_cloud_overcast_cap_35: ledgerText('reasons.rainyMidCloudOvercastCap35', {}, 'post-rain moisture makes the glow hard to show', '雨后水汽偏重，霞光不容易显色'),
       no_visible_sunset_path_cap_5: ledgerText('reasons.noVisibleSunsetPathCap5', {}, 'sunset light is unlikely to reach the clouds', '日落光线很难照到云层'),
       no_visible_sunset_path_cap_15: ledgerText('reasons.noVisibleSunsetPathCap15', {}, 'rainy gray sky likely blocks sunset light', '雨后灰幕偏重，日落光线大概率被挡住'),
       extreme_dust_haze_cap_28: ledgerText('reasons.extremeDustHazeCap28', {}, 'heavy dust or haze suppresses the glow', '强沙尘或灰幕会压住霞光'),
       severe_haze_cap_35: ledgerText('reasons.severeHazeCap35', {}, 'heavy haze makes colors hard to show', '重度灰霾让颜色不容易出来'),
-      moderate_haze_cap_45: ledgerText('reasons.moderateHazeCap45', {}, 'haze weakens orange-red color', '灰霾会削弱红橙色')
+      moderate_haze_cap_45: ledgerText('reasons.moderateHazeCap45', {}, 'haze weakens orange-red color', '灰霾会削弱红橙色'),
+      haze_warm_scattering_path_open: ledgerText('reasons.hazeWarmScatteringPathOpen', {}, 'open sunset path turns moderate particles into warm orange-red scattering', '日落光路打开，适度颗粒增强橙红散射')
     }[reason] || reason || ledgerText('reasons.adjustmentApplied', {}, 'score adjusted for limiting conditions', '已按限制条件修正'));
 
     const capEvents = [
@@ -2073,11 +2081,14 @@ class PredictionController {
             diffuse: fmt(Number(cloudThicknessEvidence.diffuseRatio) * 100, 0),
             water: fmt(cloudThicknessEvidence.waterIndex, 1),
             relief: fmt(cloudThicknessEvidence.carrierRelief, 2),
+            solar: cloudThickness?.reasons?.includes('low_solar_transmission')
+              ? ledgerText('details.lowSolarTransmissionYes', {}, 'yes', '命中')
+              : ledgerText('details.lowSolarTransmissionNo', {}, 'no', '未命中'),
             base: fmt(cloudThicknessAdjustment.baseScore, 1),
             max: fmt(cloudThicknessAdjustment.maxPenalty, 1)
           },
-          'cloud thickness {{thickness}}, base {{base}} × 30% × pressure {{pressure}} = max {{max}} scaled; diffuse {{diffuse}}%, water {{water}}, carrier relief {{relief}}',
-          '云厚 {{thickness}}，画布 {{base}} × 30% × 压力 {{pressure}}，最大折损 {{max}}；散射 {{diffuse}}%，水汽 {{water}}，载体缓冲 {{relief}}'
+          'cloud thickness {{thickness}}, base {{base}} × 30% × pressure {{pressure}} = max {{max}} scaled; diffuse {{diffuse}}%, water {{water}}, carrier relief {{relief}}, low solar transmission {{solar}}',
+          '云厚 {{thickness}}，画布 {{base}} × 30% × 压力 {{pressure}}，最大折损 {{max}}；散射 {{diffuse}}%，水汽 {{water}}，载体缓冲 {{relief}}，低太阳透射 {{solar}}'
         ),
         tone: Number(cloudThicknessAdjustment.adjustment) < 0 ? 'cap' : 'good'
       } : null,
@@ -2106,9 +2117,24 @@ class PredictionController {
         tone: 'bad'
       } : null,
       carrierAdjustment?.applied ? {
-        label: ledgerText('labels.carrierFloor', {}, 'Carrier floor', '载体保底'),
+        label: ledgerText('labels.carrierFloor', {}, 'Carrier protection', '载体保护'),
         value: `≥${fmt(carrierAdjustment.floor, 0)}`,
-        detail: ledgerText('details.carrierFloor', {}, 'clear high-cloud carrier prevents over-penalty', '高云载体清透，避免误伤低估'),
+        detail: ledgerText('details.carrierFloor', {}, 'clear high-cloud carrier avoids over-penalty from cloud-thickness evidence', '高云载体清透，避免被云厚信号误伤低估'),
+        tone: 'good'
+      } : null,
+      scoringV2?.applied && scoringV2?.airMode === 'warm_scattering_path_open' ? {
+        label: ledgerText('labels.scoringV2', {}, 'Open-path warm scattering', '开口暖色散射'),
+        value: fmt(scoringV2.score, 1),
+        detail: ledgerText(
+          'details.scoringV2',
+          {
+            carrier: fmt(scoringV2.cloudCarrier, 1),
+            path: fmt(scoringV2.pathFactor, 2),
+            air: fmt(scoringV2.airFactor, 2)
+          },
+          'cloud carrier {{carrier}} × sunset path {{path}} × air rendering {{air}}',
+          '云载体 {{carrier}} × 日落光路 {{path}} × 空气显色 {{air}}'
+        ),
         tone: 'good'
       } : null,
       aerosolCarrier?.activatedScore >= 12 ? {
@@ -2213,7 +2239,7 @@ class PredictionController {
         return ledgerText('details.lightPathRain', {}, 'rain weakens direct sunset light', '降水会削弱日落直射光');
       }
       return prediction?.lightPathAnalysis?.source === 'solar_direction_openmeteo'
-        ? ledgerText('details.directionalSamples', {}, 'solar-azimuth samples at 25/50/75/100km are included', '已接入太阳方位 25/50/75/100km 周边采样')
+        ? ledgerText('details.directionalSamples', {}, 'solar-azimuth samples at 10/25/50/75/100km are included', '已接入太阳方位 10/25/50/75/100km 周边采样')
         : '';
     })();
 
@@ -2261,11 +2287,14 @@ class PredictionController {
             diffuse: fmt(Number(cloudThicknessEvidence.diffuseRatio) * 100, 0),
             water: fmt(cloudThicknessEvidence.waterIndex, 1),
             relief: fmt(cloudThicknessEvidence.carrierRelief, 2),
+            solar: cloudThickness?.reasons?.includes('low_solar_transmission')
+              ? ledgerText('details.lowSolarTransmissionYes', {}, 'yes', '命中')
+              : ledgerText('details.lowSolarTransmissionNo', {}, 'no', '未命中'),
             base: fmt(cloudThicknessAdjustment.baseScore, 1),
             max: fmt(cloudThicknessAdjustment.maxPenalty, 1)
           },
-          'cloud thickness {{thickness}}, base {{base}} × 30% × pressure {{pressure}} = max {{max}} scaled; diffuse {{diffuse}}%, water {{water}}, carrier relief {{relief}}',
-          '云厚 {{thickness}}，画布 {{base}} × 30% × 压力 {{pressure}}，最大折损 {{max}}；散射 {{diffuse}}%，水汽 {{water}}，载体缓冲 {{relief}}'
+          'cloud thickness {{thickness}}, base {{base}} × 30% × pressure {{pressure}} = max {{max}} scaled; diffuse {{diffuse}}%, water {{water}}, carrier relief {{relief}}, low solar transmission {{solar}}',
+          '云厚 {{thickness}}，画布 {{base}} × 30% × 压力 {{pressure}}，最大折损 {{max}}；散射 {{diffuse}}%，水汽 {{water}}，载体缓冲 {{relief}}，低太阳透射 {{solar}}'
         ));
       }
       if (directionalCurtainCarrier?.applied) {

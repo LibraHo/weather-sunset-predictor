@@ -24,19 +24,16 @@ describe('miniprogram completion workflow docs', () => {
     expect(doc).toContain('体验版上传和二维码');
   });
 
-  test('keeps task status synchronized with implemented gallery clustering and miniprogram planning', () => {
+  test('keeps Kiro task docs focused on current work instead of historical completion logs', () => {
     const tasks = read('.kiro/specs/weather-sunset-predictor/tasks.md');
 
-    expect(tasks).toContain('- [x] 51.6 地图聚合展示');
-    expect(tasks).toContain('- [x] 51.9 测试与验证');
-    expect(tasks).toContain('PR #663');
-    expect(tasks).toContain('- [x] 52.12 MVP 信息架构');
-    expect(tasks).toContain('- [x] 52.13 共享 API 契约文档');
-    expect(tasks).toContain('- [x] 52.23 真机验收矩阵');
-    expect(tasks).toContain('真实执行待外部条件');
-    expect(tasks).toContain('PR #690/#691 已合并，体验版 `1.0.2` 已通过 `miniprogram-ci upload` 上传');
-    expect(tasks).toContain('PR #691 已把首页/结果页入口和原生火烧云地图往 Web 体验对齐');
-    expect(tasks).toContain('仍需真机连续操作验收');
+    expect(tasks).toContain('## 当前 P0');
+    expect(tasks).toContain('### T1 修复地图 raw score 泄漏');
+    expect(tasks).toContain('### T6 小程序版本号流程固化');
+    expect(tasks).toContain('本文件只维护当前待办、进行中事项和固定约束');
+    expect(tasks).toContain('完成任务从本文移除，不追加长篇完成记录');
+    expect(tasks).not.toContain('- [x] 51.6 地图聚合展示');
+    expect(tasks).not.toContain('PR #690/#691 已合并，体验版 `1.0.2`');
   });
 
   test('platform checklist explicitly warns that unchecked items require real platform work', () => {

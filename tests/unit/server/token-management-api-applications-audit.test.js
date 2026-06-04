@@ -488,6 +488,8 @@ describe('需求45 PR C - Token 管理 / API 申请 / 审计日志', () => {
       trustedUser: 'tester-c',
       nonCommercial: true,
       dailyLimit: 4000,
+      applicationId: approveId,
+      userId: null,
       note: '国家地区：中国大陆；申请用途：科研用途'
     });
 

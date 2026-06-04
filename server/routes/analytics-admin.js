@@ -40,6 +40,39 @@ function parseDays(value) {
   return Math.min(Math.max(days, 1), 90);
 }
 
+function parseRangeDays(range) {
+  const normalized = String(range || '').trim().toLowerCase();
+  const match = normalized.match(/^(\d+)d$/);
+  if (match) return parseDays(match[1]);
+  return null;
+}
+
+function formatDateOnly(date) {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function parseQueryOptions(query = {}, now = new Date()) {
+  const startDate = query.startDate || undefined;
+  const endDate = query.endDate || undefined;
+  const range = String(query.range || '').trim().toLowerCase();
+  if (range === 'today' && !startDate && !endDate) {
+    const today = formatDateOnly(now);
+    return {
+      days: 1,
+      startDate: today,
+      endDate: today
+    };
+  }
+  return {
+    days: parseRangeDays(range) || parseDays(query.days),
+    startDate,
+    endDate
+  };
+}
+
 function roundPercent(value) {
   return Number((value || 0).toFixed(2));
 }
@@ -52,11 +85,7 @@ function asArray(value) {
 }
 
 async function readEvents(analyticsService, req) {
-  const options = {
-    days: parseDays(req.query.days),
-    startDate: req.query.startDate || undefined,
-    endDate: req.query.endDate || undefined
-  };
+  const options = parseQueryOptions(req.query);
 
   if (analyticsService && typeof analyticsService.listEvents === 'function') {
     return asArray(await analyticsService.listEvents(options));

@@ -1,0 +1,203 @@
+{
+  "id": "2026-06-03-beijing-sunset-warm-scattering-path-open",
+  "title": "2026-06-03 Beijing sunset: warm orange scattering with open sunset path",
+  "location": {
+    "name": "Beijing",
+    "nameZh": "北京",
+    "lat": 39.9042,
+    "lon": 116.4074,
+    "timezone": "Asia/Shanghai"
+  },
+  "event": {
+    "period": "sunset",
+    "localDate": "2026-06-03",
+    "calculationTimeUtc": "2026-06-03T11:37:00.000Z",
+    "sunAzimuth": 302
+  },
+  "feedback": {
+    "source": "Alex现场反馈",
+    "reportedAt": "2026-06-03T20:31:06+08:00",
+    "summary": "实际光非常美，是橙红色；无雨，值得等；应高于 5/18，进入 70 档。",
+    "subjectiveScore": {
+      "min": 70,
+      "max": 72,
+      "label": "主观约 70，高于 5/18"
+    },
+    "calibrationTarget": {
+      "score": 70,
+      "status": "calibrated",
+      "reason": "本地中高云满、日落方向近距云层参与、光路开且暖色散射成立，单点详细预测应进入 70 档；地图简化分支不使用这条精细单点修正。"
+    },
+    "actualOutcome": {
+      "fireCloud": "good_glow",
+      "rainDuringWindow": false,
+      "orangeLightOrOpening": true,
+      "worthWaiting": true,
+      "notes": "本地中高云与日落方向光路共同参与，轻/中度霾增强橙红散射；整体应高于 5/18，但不属于顶级通透大烧。"
+    },
+    "previousModelScores": [
+      {
+        "score": 35,
+        "source": "旧 severe_haze_cap_35 回放"
+      }
+    ]
+  },
+  "capture": {
+    "dataCompleteness": "scheduled_multi_snapshot",
+    "sourceFiles": [
+      "memory/real-sunset-cases/2026-06-03-beijing-sunset/2026-06-03T11-41-25-615Z-1940-feedback.json"
+    ],
+    "requiredForFutureCases": [
+      "核心天气小时数据",
+      "低/中/高云分层",
+      "direct/shortwave/diffuse radiation",
+      "AOD/PM/AQI/水汽/能见度",
+      "光路方向采样",
+      "当前模型完整 breakdown",
+      "用户主观分数与实况结果"
+    ]
+  },
+  "input": {
+    "weatherData": {
+      "cloudCover": 98,
+      "humidity": 62,
+      "visibility": 20,
+      "lowCloudCover": 98,
+      "temp": 23.4,
+      "windSpeed": 2.26,
+      "windDirection": 103,
+      "pressure": 997.9,
+      "precipitation": 0,
+      "recentPrecipitation6h": 0,
+      "recentRainHours": 0,
+      "recentRainSignal": 0,
+      "recentRainMaxHourly": 0,
+      "recentRainWetHourEquivalent": 0,
+      "lowClouds": 0,
+      "midClouds": 100,
+      "highClouds": 100,
+      "cloudBaseHeight": null,
+      "cape": null,
+      "weatherCode": null,
+      "shortwaveRadiation": 7,
+      "directRadiation": 0,
+      "diffuseRadiation": 7,
+      "waterVapourColumn": 32.8,
+      "aerosolOpticalDepth": 0.72,
+      "dust": 96,
+      "pm2_5": 39.5,
+      "pm10": 91.3,
+      "aqi": 116
+    },
+    "options": {
+      "rainedRecently": false,
+      "prevHourData": null,
+      "remoteCloudData": {
+        "source": "solar_direction_openmeteo",
+        "azimuth": 302,
+        "samples": [
+          {
+            "lat": 40.02307597916654,
+            "lon": 116.15841760816261,
+            "distanceKm": 25,
+            "bearing": 302,
+            "cloudBaseHeight": null,
+            "lowCloud": 0,
+            "midCloud": 100,
+            "highCloud": 100,
+            "totalCloud": 97,
+            "humidity": 53,
+            "precipitation": 0,
+            "weatherCode": null,
+            "provider": "openmeteo",
+            "error": null
+          },
+          {
+            "lat": 40.141417260218546,
+            "lon": 115.90856802301437,
+            "distanceKm": 50,
+            "bearing": 302,
+            "cloudBaseHeight": null,
+            "lowCloud": 0,
+            "midCloud": 72,
+            "highCloud": 25,
+            "totalCloud": 93,
+            "humidity": 68,
+            "precipitation": 0,
+            "weatherCode": null,
+            "provider": "openmeteo",
+            "error": null
+          },
+          {
+            "lat": 40.25921972689631,
+            "lon": 115.65784852331763,
+            "distanceKm": 75,
+            "bearing": 302,
+            "cloudBaseHeight": null,
+            "lowCloud": 0,
+            "midCloud": 51,
+            "highCloud": 0,
+            "totalCloud": 80,
+            "humidity": 70,
+            "precipitation": 0,
+            "weatherCode": null,
+            "provider": "openmeteo",
+            "error": null
+          },
+          {
+            "lat": 40.37647924393636,
+            "lon": 115.40625644834677,
+            "distanceKm": 100,
+            "bearing": 302,
+            "cloudBaseHeight": null,
+            "lowCloud": 0,
+            "midCloud": 33,
+            "highCloud": 0,
+            "totalCloud": 84,
+            "humidity": 39,
+            "precipitation": 0,
+            "weatherCode": null,
+            "provider": "openmeteo",
+            "error": null
+          }
+        ],
+        "errors": []
+      }
+    }
+  },
+  "expectations": {
+    "score": {
+      "min": 70,
+      "max": 72
+    },
+    "statusAnyOf": [
+      "good_glow",
+      "very_likely"
+    ],
+    "equals": [
+      {
+        "path": "aerosolHazeCap.applied",
+        "value": false
+      },
+      {
+        "path": "aerosolHazeCap.reason",
+        "value": "haze_warm_scattering_path_open"
+      },
+      {
+        "path": "scoringV2.airMode",
+        "value": "warm_scattering_path_open"
+      },
+      {
+        "path": "scoringV2.warmScatteringUpperCarrierAdjustment.applied",
+        "value": true
+      }
+    ],
+    "notAbove": [
+      {
+        "path": "score",
+        "value": 72,
+        "reason": "Warm haze with open path and full local upper-cloud participation is strong, but not a top-tier clear-air eruption."
+      }
+    ]
+  }
+}

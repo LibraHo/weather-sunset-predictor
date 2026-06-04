@@ -1,6 +1,6 @@
 {
   "name": "weather-sunset-predictor",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "天气晚霞预测器 - 基于Windy API的火烧云预测应用",
   "type": "module",
   "scripts": {

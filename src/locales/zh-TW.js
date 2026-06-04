@@ -173,12 +173,18 @@ const translations = {
     "methodology": {
       "title": "火燒雲計算方法",
       "intro": "目前的火燒雲指數會先判斷「有沒有可顯色載體」，再判斷太陽方向的光路能不能把光打到載體上，最後只用空氣顯色條件做小幅修正。它不再把一串好條件連續相乘，所以高雲 100% 不會自動滿分。",
-      "versionLabel": "算法版本：2026.05.27-cloud-thickness-proportional-v2",
-      "versionDesc": "本版將雲厚扣分改為「畫布修正前分×30%×雲厚壓力」，去掉固定 -28/24 上限，並將濕灰幕場景校準到小燒／可看但不強。",
+      "versionLabel": "算法版本：2026.06.03-sunset-scoring-v2",
+      "versionDesc": "本版把最終評分收斂為「雲載體 × 日落光路 × 空氣顯色」：有光路時輕／中度氣溶膠可增強橙紅散射，無光路、極端霾、低能見度、降水和厚低雲仍優先壓制。",
       changelogTitle: "版本更新記錄",
       changelogHint: "近三個月內的算法更新都會放在這裡，可捲動回看原因、影響和驗證方式",
       changelog: {
         "latest": {
+          "date": "2026-06-03",
+          "title": "日落評分 v2",
+          "summary": "最終分改為雲載體、日落光路、空氣顯色三部分合成；光路開且能見度可接受時，輕／中度 AOD、PM、dust 作為橙紅散射正向因素，而不是一律當灰幕。",
+          "validation": "驗證：2026-06-02 北京無雨灰幕仍約 30；2026-06-03 北京無雨、橙紅光很美，單點回放約 71，進入 70 檔；火燒雲地圖仍走區域簡化分支。"
+        },
+        "cloudThickness": {
           "date": "2026-05-27",
           "title": "雲厚比例折損 v2",
           "summary": "雲厚扣分改為畫布修正前分 × 30% × 雲厚壓力，去掉固定 -28/24 上限；濕灰幕場景同步按小燒／可看但不強校準。",
@@ -248,23 +254,23 @@ const translations = {
           "midCloud": "中雲：權重 0.45，也是可顯色載體；高雲與中雲同時存在時會提高畫布穩定性",
           "lowCloudBonus": "低雲：權重只有 0.10，主要進入低雲懲罰和光路遮擋；低雲少不加分，只是不扣分",
           "formula": "中高雲畫布量 = 高雲×0.75 + 中雲×0.45\n畫布基礎分：≤10→10，10–30→40–70，30–70→70–100，70–100→70–50，>100→43\n畫布分 = 區間分 × 低雲懲罰 × 陰天懲罰 + 高雲 bonus + 雲種修正 + 雲厚修正",
-          "highCloudBonus": "高雲 bonus：高雲>50 且低雲<30 時，按 (高雲-50)/50×6 加 0–6 分。雲種／雲厚是加減分：高層雲 +4、高積雲 +6、薄雲 +5；偏厚／厚雲按當前畫布比例連續扣分，公式為雲厚修正前分×30%×雲厚壓力。低雲類雲種還會壓低光路門控"
+          "highCloudBonus": "高雲 bonus：高雲>50 且低雲<30 時，按 (高雲-50)/50×6 加 0–6 分。雲種／雲厚是加減分：高層雲 +4、高積雲 +6、薄雲 +5；偏厚／厚雲按當前畫布比例連續扣分，公式為雲厚修正前分×30%×雲厚壓力。若中雲／總雲量很高、高雲載體弱、direct/shortwave 極低且灰空氣明顯，會加入低太陽透射證據。低雲類雲種還會壓低光路門控"
         },
         "lightPath": {
           "title": "光路條件",
           "subtitle": "夕陽是否能照到雲層",
           "desc": "光路分回答一個問題：日出／日落方向的陽光能不能照到可顯色雲層。既有太陽方向多點採樣會參與判斷，不新增 API 請求。",
-          "lowCloudEffect": "採樣距離為 25 / 50 / 75 / 100km，權重為 0.40 / 0.35 / 0.18 / 0.07；每個點結合太陽高度、雲底高度和低／中／高雲遮擋估算 block",
-          "visibility": "太陽方向走廊會額外修正：25km 近端雲牆封頂約 48，遠端雲牆封頂約 56；低雲+中雲走廊很低且高雲存在時視為開口",
+          "lowCloudEffect": "採樣距離為 10 / 25 / 50 / 75 / 100km，權重為 0.25 / 0.30 / 0.25 / 0.14 / 0.06；每個點走同一套太陽高度、雲底高度和低／中／高雲遮擋估算",
+          "visibility": "太陽方向走廊按整體低／中雲阻擋判斷；25/50km 權重最高，10km 作為近距樣本參與加權，但不單獨加分或扣死",
           "formula": "遮擋機率 = 1 - Π(1 - 加權block)\n光路分 = 100×(1-遮擋機率)×低雲權重修正×太陽方向走廊修正"
         },
         "transparency": {
           "title": "3. 大氣透明度",
           "subtitle": "Transparency · 渲染評分",
-          "desc": "能見度、濕度、雨後狀態和空氣顆粒只影響「顯色品質」，不再直接取代雲層載體。",
+          "desc": "能見度、濕度、雨後狀態和空氣顆粒只影響「顯色品質」。有光路時，適度顆粒可增強橙紅散射；無光路或顆粒過重時才轉為灰幕扣分。",
           "visibility": "渲染因子會綜合 visibilityFactor、humidityFactor、rainBonus、aqiFactor、aerosolFactor",
           "humidity": "渲染修正不是乘爆分數：factor≥1 時轉成最多約 +9 分；factor<1 時最多約 -25 分",
-          "formula": "顯色修正 = factor≥1 ? min((factor-1)×50, 9) : -min((1-factor)×55, 25)"
+          "formula": "空氣顯色 = 光路開 ? 暖色散射係數 1.02–1.12 : 原渲染係數；重霾／低能見度約 0.6–0.8"
         },
         "layerDiversity": {
           "title": "4. 光路門控",
@@ -272,7 +278,7 @@ const translations = {
           "desc": "光路分不再按 20% 權重簡單相加，而是變成門控係數，直接決定載體分能保留多少。",
           "threeLayer": "光路≥85：門控 1.00–1.08；特別通暢時才小幅放大",
           "twoLayer": "光路70–85：門控 0.88–1.00；光路50–70：門控 0.65–0.88",
-          "oneLayer": "光路<50：門控 0.25–0.65；太陽方向雲牆會進一步壓到約 0.42/0.55"
+          "oneLayer": "光路<50：門控 0.25–0.65；太陽方向阻擋走廊會進一步壓到約 0.42"
         },
         "lowCloudPenalty": {
           "title": "5. 低雲懲罰係數",
@@ -286,11 +292,11 @@ const translations = {
         thickHighCloudPenalty: {
           title: '7. 載體與灰幕修正',
           subtitle: 'Carrier Quality · 畫布與薄霧',
-          desc: '算法把「能顯色的載體」分成雲層載體和氣溶膠弱載體，最終取兩者較高者作為載體分。',
+          desc: '算法先求「能顯色的載體」，再用日落光路和空氣顯色決定它能發揮多少。氣溶膠不再只是弱載體，也會在光路打開時參與暖色散射。',
           level1: '雲層載體 = 畫布基礎分 + 雲種／雲厚／高雲有限加減分；高雲強但光路沒開，不允許直接滿分',
-          level2: '氣溶膠弱載體只在雲很少時兜底：AOD/PM 在適中區間且低雲<40、降水≤0.2、光路分>45 才會被激活',
-          level3: '重霾、沙塵、能見度<8、厚雲、雨低雲會把載體壓低或封頂；清透高雲保底也會被光路門控否決',
-          formula: '氣溶膠激活 = rawAerosolScore × clamp((光路分-45)/35, 0, 1)\n載體分 = max(雲層畫布分, 氣溶膠激活分)'
+          level2: '雲少時仍保留氣溶膠弱載體；雲多且光路開時，適度 AOD/PM/dust 進入空氣顯色，增強橙紅散射',
+          level3: '重霾、沙塵、能見度<8、厚雲、雨低雲會把載體壓低或封頂；清透高雲保護也會被光路門控否決',
+          formula: 'scoringV2 = 雲載體 × 日落光路 × 空氣顯色\n暖色散射只在光路開、低雲不堵、能見度可接受時生效'
         },
         "precipPenalty": {
           "title": "6. 降水懲罰係數",
@@ -304,13 +310,13 @@ const translations = {
         },
         "finalFormula": {
           "title": "8. 最終分數",
-          "subtitle": "Final Score · 載體 × 光路門控 + 顯色修正",
-          "desc": "最終分不是把多個好條件連續相乘，而是先得到「可顯色載體分」，再讓太陽方向光路決定這份載體能發揮多少，最後只做小幅顯色修正。",
-          "formula": "最終分 = clamp(載體分 × 光路門控 + 顯色修正, 0, 100)",
+          "subtitle": "Final Score · 雲載體 × 日落光路 × 空氣顯色",
+          "desc": "最終分不為單個城市或日期加特殊抬分，而是讓雲、光路、空氣三部分共同解釋分數。光路打開時，適度顆粒可讓橙紅更明顯；光路關閉時，同樣的顆粒只會壓灰。",
+          "formula": "最終分 = clamp(雲載體 × 日落光路 × 空氣顯色, 0, 100)，再經過硬否決／厚雲／灰幕校準",
           "highCloudCap": "高雲充足但光路被擋時，光路門控會壓低最高得分。",
           "carrier": "載體分 = max(雲層畫布分, 氣溶膠弱載體分)",
-          "lightGate": "光路門控 = 0.25–1.12；近處雲牆可壓到約 0.42，遠處雲牆約 0.55，太陽方向開口約 0.90–0.96",
-          "rendering": "顯色修正 = 能見度、濕度、雨後狀態和空氣顆粒帶來的小幅加減，正向最多約 +9 分",
+          "lightGate": "光路門控 = 0.25–1.12；太陽方向阻擋走廊可壓到約 0.42，太陽方向開口約 0.90–0.96",
+          "rendering": "空氣顯色 = 0.6–1.15；光路開時輕／中度 AOD、PM、dust 可進入 1.02–1.12 暖色散射區間",
           "statusCaps": "顯示分還會按狀態校準：無火燒雲低於 40，輕微霞光低於 60；幾何不可行、厚雲、灰幕和雨低雲會進一步封頂"
         }
       }
@@ -412,7 +418,7 @@ const translations = {
       "baseHint": "太陽方向光路門控後的載體基礎分",
       "canvasHint": "高雲/中雲提供主要色彩載體，適度薄霧可提供弱載體，低雲可能遮擋",
       "lightPathHint": "太陽光是否能照到雲層",
-      "finalFormula": "最終分 = 基礎分 + 顯色修正",
+      "finalFormula": "最終分 = 雲載體 × 日落光路 × 空氣顯色",
       "renderingHint": "濕度與能見度影響色彩表現",
       "aerosolHint": "適度氣溶膠增強橙紅散射，過多則發灰",
       "ledger": {
@@ -448,10 +454,11 @@ const translations = {
           "cloudThicknessModifier": "雲層厚度影響",
           "geometryCap": "太陽角度",
           "occlusion": "遮擋修正",
-          "carrierFloor": "載體保底",
+          "carrierFloor": "載體保護",
           "postRainCap": "濕灰幕",
           "displayCalibration": "展示分校準",
           "aerosolCarrier": "氣溶膠載體",
+          "scoringV2": "開口暖色散射",
           "evidence": "計算依據"
         },
         "details": {
@@ -460,8 +467,11 @@ const translations = {
           "upperCloudCanvas": "中高雲畫布 {{upper}} = 高雲 {{high}}×0.75 + 中雲 {{mid}}×0.45；區間分 {{range}}",
           "highCloudBonus": "高雲主導 bonus {{bonus}}",
           "cloudTypeAdjustment": "雲種 {{reason}} {{bonus}}",
-          "cloudThicknessAdjustment": "雲厚 {{thickness}}，畫布 {{base}} × 30% × 壓力 {{pressure}}，最大折損 {{max}}；散射 {{diffuse}}%，水汽 {{water}}，載體緩衝 {{relief}}",
+          "cloudThicknessAdjustment": "雲厚 {{thickness}}，畫布 {{base}} × 30% × 壓力 {{pressure}}，最大折損 {{max}}；散射 {{diffuse}}%，水汽 {{water}}，載體緩衝 {{relief}}，低太陽透射 {{solar}}",
+          "lowSolarTransmissionYes": "命中",
+          "lowSolarTransmissionNo": "未命中",
           "aerosolCarrier": "雲層很少時，薄霧在光路通暢時可承接一點暖色，光路激活 ×{{activation}}",
+          "scoringV2": "雲載體 {{carrier}} × 日落光路 {{path}} × 空氣顯色 {{air}}",
           "lightPath": "陽光是否能照到雲層",
           "renderingFactors": "能見度 ×{{visibility}}，濕度 ×{{humidity}}，氣溶膠 ×{{aerosol}}",
           "afterAdjustments": "結合天氣和能見度後",
@@ -482,13 +492,15 @@ const translations = {
         "reasons": {
           "precipitationCap45": "降水疊加低雲，觀賞條件明顯變差",
           "overcastCap35": "低雲遮住太陽方向，光線不容易照到雲層",
-          "overcastFogCap15": "低雲疊加低能見度，天空容易發灰",
+          "overcastLowVisibilityCap35": "總雲量很高疊加低能見度，先保守壓低評分",
+          "overcastFogCap15": "總雲量很高疊加低能見度，天空容易發灰",
           "rainyMidCloudOvercastCap35": "雨後水氣偏重，霞光不容易顯色",
           "noVisibleSunsetPathCap5": "日落光線很難照到雲層",
           "noVisibleSunsetPathCap15": "雨後灰幕偏重，日落光線大概率被擋住",
           "extremeDustHazeCap28": "強沙塵或灰幕會壓住霞光",
           "severeHazeCap35": "重度灰霾讓顏色不容易出來",
           "moderateHazeCap45": "灰霾會削弱紅橙色",
+          "hazeWarmScatteringPathOpen": "日落光路打開，適度顆粒增強橙紅散射",
           "denseCarrierCanvasOnly": "中高雲層仍能承接晚霞光線",
           "adjustmentApplied": "已按限制條件修正",
           "displayCalibration": "最終展示分按預測狀態檔位校準",
@@ -515,7 +527,7 @@ const translations = {
           "desc": {
             "good": "太陽方向相對通透，光線有機會照到雲底。",
             "fair": "太陽方向有一定遮擋，晚霞可能只出現在局部。",
-            "weak": "低雲或雲牆擋住光路，光線不容易打到雲層。"
+            "weak": "低雲或阻擋走廊擋住光路，光線不容易打到雲層。"
           }
         },
         "rendering": {
@@ -543,7 +555,7 @@ const translations = {
       "visibility": { "good": "能見度良好（{{value}}km）", "goodDesc": "空氣通透，觀賞視野好", "moderate": "能見度一般（{{value}}km）", "moderateDesc": "色彩飽和度可能略受影響", "low": "能見度偏低（{{value}}km）", "lowDesc": "霧霾或水氣可能影響觀賞" },
       "humidity": { "moderate": "濕度適中（{{value}}%）", "moderateDesc": "有利於光線散射", "high": "濕度偏高（{{value}}%）", "highDesc": "可能略影響通透感", "low": "濕度偏低（{{value}}%）", "lowDesc": "空氣較乾，色彩可能偏淡" },
       "aerosol": { "moderate": "氣溶膠適中（AOD {{value}}）", "moderateDesc": "有利於增強紅橙色散射", "high": "氣溶膠偏高（AOD {{value}}）", "highDesc": "可能灰霾發暗", "low": "空氣過於通透（AOD {{value}}）", "lowDesc": "顏色可能偏淡", "carrier": "薄霧紅日載體", "carrierDesc": "雲層很少時，適度氣溶膠在光路通暢時也能帶來一點暖色日落" },
-      "lightPath": { "opening": "太陽方向有透光開口", "openingDesc": "太陽方向的低雲較少，光線更容易打到雲層", "wall": "太陽方向有雲牆遮擋", "wallDesc": "太陽方位周邊低/中雲偏厚，遠端光路會壓低主評分", "lowCloudBlock": "低雲遮住光線", "lowCloudBlockDesc": "低雲擋在太陽方向，陽光不容易照到中高雲" },
+      "lightPath": { "opening": "太陽方向有透光開口", "openingDesc": "太陽方向的低雲較少，光線更容易打到雲層", "wall": "太陽方向有阻擋走廊", "wallDesc": "太陽方位周邊低/中雲整體偏厚，光路門控會壓低主評分", "lowCloudBlock": "低雲遮住光線", "lowCloudBlockDesc": "低雲擋在太陽方向，陽光不容易照到中高雲" },
       "postRain": { "clear": "雨後空氣清透", "clearDesc": "近6小時有降水，但能見度和顆粒物條件較好，雨後加成保留", "gray": "濕灰幕風險", "grayDesc": "水氣、顆粒物或直達光偏弱時，霞光容易發灰" },
       "carrier": { "strong": "高雲載體清晰", "strongDesc": "高雲充足、低雲稀少且空氣較通透，具備中高分基礎", "dense": "中高雲載體明確", "denseDesc": "高雲和中雲共同提供畫布，色彩載體更穩定" },
       "layer": { "single": "雲層單一", "singleDesc": "高層雲品質好，仍可形成鮮明火燒雲" }
@@ -608,7 +620,7 @@ const translations = {
       analysisDesc: '高雲雖多，但雲層偏厚、直射光弱，通常只會在日落方向出現局部霞光'
     },
     highCloudCarrier: {
-      title: '高雲載體保底',
+      title: '高雲載體保護',
       scoreHint: '高雲充足、低雲少且空氣較通透時，避免雲厚訊號誤傷'
     },
     aerosolHaze: {

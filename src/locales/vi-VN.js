@@ -184,6 +184,12 @@ const translations = {
           "summary": "Mức trừ do mây dày nay là điểm nền mây trước hiệu chỉnh độ dày × 30% × áp lực độ dày, bỏ trần cố định -28/24. Màn mây xám ẩm được hiệu chỉnh thành cháy yếu/có thể xem nhưng không mạnh.",
           "validation": "Kiểm chứng: mẫu Bắc Kinh ngày 2026-05-27 có áp lực 0.78 trên nền 76.7 nên trừ khoảng -18 điểm, giữ kết quả trong vùng cháy yếu/có thể xem."
         },
+        "cloudThickness": {
+          "date": "2026-05-27",
+          "title": "Trừ điểm tỷ lệ theo độ dày mây v2",
+          "summary": "Mức trừ do mây dày nay là điểm nền mây trước hiệu chỉnh độ dày × 30% × áp lực độ dày, bỏ trần cố định -28/24. Màn mây xám ẩm được hiệu chỉnh thành cháy yếu/có thể xem nhưng không mạnh.",
+          "validation": "Kiểm chứng: mẫu Bắc Kinh ngày 2026-05-27 có áp lực 0.78 trên nền 76.7 nên trừ khoảng -18 điểm, giữ kết quả trong vùng cháy yếu/có thể xem."
+        },
         "aerosol": {
           "date": "2026-05-12",
           "title": "Nền aerosol yếu v1",
@@ -454,6 +460,7 @@ const translations = {
           "postRainCap": "Post-rain haze",
           "displayCalibration": "Display calibration",
           "aerosolCarrier": "Aerosol carrier",
+          "scoringV2": "Open-path warm scattering",
           "evidence": "Calculation evidence"
         },
         "details": {
@@ -462,8 +469,11 @@ const translations = {
           "upperCloudCanvas": "nền mây trung/cao {{upper}} = mây cao {{high}}×0.75 + mây trung {{mid}}×0.45; điểm khoảng {{range}}",
           "highCloudBonus": "điểm cộng khi mây cao chiếm ưu thế {{bonus}}",
           "cloudTypeAdjustment": "loại mây {{reason}} {{bonus}}",
-          "cloudThicknessAdjustment": "độ dày mây {{thickness}}, nền {{base}} × 30% × áp lực {{pressure}}, tối đa {{max}}, khuếch tán {{diffuse}}%, hơi nước {{water}}, giảm nhẹ nền mây {{relief}}",
+          "cloudThicknessAdjustment": "độ dày mây {{thickness}}, nền {{base}} × 30% × áp lực {{pressure}}, tối đa {{max}}, khuếch tán {{diffuse}}%, hơi nước {{water}}, giảm nhẹ nền mây {{relief}}, truyền sáng mặt trời yếu {{solar}}",
+          "lowSolarTransmissionYes": "có",
+          "lowSolarTransmissionNo": "không",
           "aerosolCarrier": "thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}",
+          "scoringV2": "cloud carrier {{carrier}} × sunset path {{path}} × air rendering {{air}}",
           "lightPath": "sunlight reaches the cloud layer",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
           "afterAdjustments": "after weather and visibility adjustments",
@@ -484,13 +494,15 @@ const translations = {
         "reasons": {
           "precipitationCap45": "rain plus low clouds keeps the score low",
           "overcastCap35": "low clouds block the sunlight path",
-          "overcastFogCap15": "low cloud and low visibility make the sky too gray",
+          "overcastLowVisibilityCap35": "very cloudy sky and low visibility keep the score conservative",
+          "overcastFogCap15": "very cloudy sky and low visibility make the sky too gray",
           "rainyMidCloudOvercastCap35": "post-rain moisture makes the glow hard to show",
           "noVisibleSunsetPathCap5": "sunset light is unlikely to reach the clouds",
           "noVisibleSunsetPathCap15": "rainy gray sky likely blocks sunset light",
           "extremeDustHazeCap28": "heavy dust or haze suppresses the glow",
           "severeHazeCap35": "heavy haze makes colors hard to show",
           "moderateHazeCap45": "haze weakens orange-red color",
+          "hazeWarmScatteringPathOpen": "open sunset path turns moderate particles into warm orange-red scattering",
           "denseCarrierCanvasOnly": "mid/high clouds can still catch sunset light",
           "adjustmentApplied": "score adjusted for limiting conditions",
           "displayCalibration": "final display score is aligned with the prediction status band",

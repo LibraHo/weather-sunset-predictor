@@ -51,14 +51,22 @@ class DataPipelinePlannerService {
     const forecastHours = Number(config.forecastHours);
     config.forecastHours = Math.min(Number.isFinite(forecastHours) ? forecastHours : 48, 48);
 
-    const gfsPlan = config.sources.gfs
-      ? new GfsGridSourceService({ dataDir: this.dataDir, now: this.now }).buildRequestPlan(config)
+    const estimate = configService.estimate(config);
+    const normalizedConfig = estimate.config;
+    const requestConfig = {
+      ...normalizedConfig,
+      bbox: estimate.requestBbox || normalizedConfig.bbox,
+      outputBbox: normalizedConfig.bbox
+    };
+
+    const gfsPlan = normalizedConfig.sources.gfs
+      ? new GfsGridSourceService({ dataDir: this.dataDir, now: this.now }).buildRequestPlan(requestConfig)
       : null;
-    const camsPlan = config.sources.cams
+    const camsPlan = normalizedConfig.sources.cams
       ? new CamsAerosolSourceService({ dataDir: this.dataDir, now: this.now }).buildRequestPlan({
-        ...config,
+        ...requestConfig,
         forecastValidTimes: gfsPlan?.batches ? gfsPlan.batches.map(forecastValidTime) : null,
-        forecastStepHours: Math.max(3, Number(config.forecastStepHours) || 3)
+        forecastStepHours: Math.max(3, Number(normalizedConfig.forecastStepHours) || 3)
       })
       : null;
 
@@ -66,7 +74,6 @@ class DataPipelinePlannerService {
       ...(gfsPlan ? gfsPlan.batches.map(batch => this._toStep(batch)) : []),
       ...(camsPlan ? camsPlan.batches.map(batch => this._toStep(batch)) : [])
     ];
-    const estimate = configService.estimate(config);
     const estimatedDownloadBytes = (gfsPlan?.estimatedBytes || 0) + (camsPlan?.estimatedBytes || 0);
     const estimatedRawTmpBytes = Math.max(estimate.estimatedRawTmpBytes, estimatedDownloadBytes * 2);
     const maxResidentBytes = Math.ceil(Math.max(64 * 1024 * 1024, Math.min(
@@ -83,15 +90,16 @@ class DataPipelinePlannerService {
     return {
       safe: reasons.length === 0,
       reasons,
-      mode: config.mode,
-      windowHours: config.forecastHours,
-      bbox: config.bbox,
-      resolution: config.resolution,
+      mode: normalizedConfig.mode,
+      windowHours: normalizedConfig.forecastHours,
+      bbox: normalizedConfig.bbox,
+      requestBbox: estimate.requestBbox || normalizedConfig.bbox,
+      resolution: normalizedConfig.resolution,
       sources: [
         ...(gfsPlan ? ['gfs'] : []),
         ...(camsPlan ? ['cams'] : [])
       ],
-      runtimePolicy: config.runtimePolicy,
+      runtimePolicy: normalizedConfig.runtimePolicy,
       gfs: gfsPlan,
       cams: camsPlan,
       steps,
@@ -117,6 +125,7 @@ class DataPipelinePlannerService {
       forecastHours: Array.isArray(batch.forecastHours) ? batch.forecastHours.slice() : null,
       variables: batch.variables.slice(),
       bbox: batch.bbox,
+      outputBbox: clone(batch.outputBbox || null),
       estimatedBytes: batch.estimatedBytes,
       dataUrl: batch.dataUrl || null,
       idxUrl: batch.idxUrl || null,

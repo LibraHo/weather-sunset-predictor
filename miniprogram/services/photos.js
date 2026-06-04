@@ -130,6 +130,13 @@ function toPhotoServiceError(error, fallback = {}) {
   return createApiError(error?.error || error, fallback);
 }
 
+function createAuthUnavailableError() {
+  return toPhotoServiceError({
+    code: 'MINI_LOGIN_UNAVAILABLE',
+    message: '当前无法完成小程序基础登录，照片上传暂不可用；预测、地图和收藏可继续使用。'
+  }, { status: 401 });
+}
+
 function rejectUploadResponse(response = {}) {
   const status = response.statusCode ?? response.status ?? 0;
   const body = parseUploadBody(response.data);
@@ -152,7 +159,12 @@ async function resolveUploadToken(options = {}, wxClient) {
   if (existingToken) return existingToken;
 
   if (options.autoLogin === false) return null;
-  const session = await loginWithWechat({ wx: wxClient, profile: options.profile });
+  let session = null;
+  try {
+    session = await loginWithWechat({ wx: wxClient, profile: options.profile });
+  } catch (error) {
+    return null;
+  }
   return session?.sessionToken || session?.token || null;
 }
 
@@ -195,6 +207,7 @@ export async function listMyPhotos(options = {}) {
   const config = getApiConfig();
   const wxClient = getWx(options);
   const token = await resolveUploadToken(options, wxClient);
+  if (!token) return [];
   const response = await request(MY_PHOTOS_PATH, {
     method: 'GET',
     wx: wxClient,
@@ -213,6 +226,7 @@ export async function updateMyPhoto(id, patch = {}, options = {}) {
   const config = getApiConfig();
   const wxClient = getWx(options);
   const token = await resolveUploadToken(options, wxClient);
+  if (!token) throw createAuthUnavailableError();
   const response = await request(`${MY_PHOTOS_PATH}/${encodeURIComponent(id)}`, {
     method: 'PATCH',
     data: patch,
@@ -230,6 +244,7 @@ export async function updateMyPhoto(id, patch = {}, options = {}) {
 export async function deleteMyPhoto(id, options = {}) {
   const wxClient = getWx(options);
   const token = await resolveUploadToken(options, wxClient);
+  if (!token) throw createAuthUnavailableError();
   await request(`${MY_PHOTOS_PATH}/${encodeURIComponent(id)}`, {
     method: 'DELETE',
     wx: wxClient,
@@ -252,6 +267,7 @@ export async function uploadPhoto(photo = {}, options = {}) {
 
   const config = getApiConfig();
   const token = await resolveUploadToken(options, wxClient);
+  if (!token) throw createAuthUnavailableError();
   const url = joinUrl(options.baseUrl ?? config.baseUrl, options.path || PHOTO_UPLOAD_PATH);
   const formData = buildPhotoUploadFormData(photo);
   const header = buildUploadHeader(token, options);

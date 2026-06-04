@@ -37,7 +37,7 @@ function makePrediction(score = 75) {
 
 /**
  * 创建一个"已注入 mock 依赖"的 GridScoreService 实例。
- * 通过覆盖内部使用的 orchestrator + calculateEnhancedPrediction 引用。
+ * 通过覆盖内部使用的 orchestrator + calculateMapSimplifiedPrediction 引用。
  */
 function makeServiceWithMocks({ fetchWeather, calcPrediction } = {}) {
   const service = new GridScoreService();
@@ -47,7 +47,7 @@ function makeServiceWithMocks({ fetchWeather, calcPrediction } = {}) {
   // 替换 service._orchestrator / service._calcPrediction（如果有），
   // 否则我们用 spy 覆写 fetchAndScore 的依赖调用。
   //
-  // 由于 GridScoreService 实现里直接用了 module-level 的 orchestrator/calculateEnhancedPrediction，
+  // 由于 GridScoreService 实现里直接用了 module-level 的 orchestrator/calculateMapSimplifiedPrediction，
   // 最可靠的方式是：重写 service.fetchAndScore 为同语义的可注入版本，
   // 或者测试其对外行为（单独将关键逻辑提取为可测试的方法）。
   //
@@ -170,7 +170,7 @@ describe('GridScoreService.fetchAndScore 功能测试', () => {
     ok.forEach(r => expect(typeof r.score).toBe('number'));
   });
 
-  test('period 参数透传到 calculateEnhancedPrediction', async () => {
+  test('period 参数透传到 map simplified prediction', async () => {
     const mockFetch = jest.fn().mockResolvedValue([makeWeatherData()]);
     const mockCalc  = jest.fn().mockReturnValue(makePrediction(70));
 

@@ -311,6 +311,8 @@ router.post('/applications/:id/review', (req, res) => {
             minuteLimit: parseIntSafe(req.body?.minuteLimit, 120),
             dailyLimit: parseIntSafe(req.body?.dailyLimit, 3),
             trustedUser: existing.nickname || existing.contact || existing.email || '',
+            applicationId: existing.id,
+            userId: existing.userId || null,
             note: [
               existing.countryRegion ? `国家地区：${existing.countryRegion}` : '',
               existing.purpose ? `申请用途：${existing.purpose}` : 'API 申请审批创建'

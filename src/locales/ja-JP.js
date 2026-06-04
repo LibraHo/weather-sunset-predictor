@@ -184,6 +184,12 @@ apiAccess: 'API接続'
           "summary": "雲の厚さペナルティを、厚み補正前のキャンバス点 × 30% × 厚み圧に変更し、固定の -28/24 上限を外しました。湿った灰色の雲幕は弱い焼け／見られるが強くない範囲へ校正されます。",
           "validation": "検証：2026-05-27 の北京サンプルでは厚み圧 0.78、キャンバス 76.7 のとき約 -18 点となり、結果は弱い焼け／見られる範囲に残ります。"
         },
+        "cloudThickness": {
+          "date": "2026-05-27",
+          "title": "雲厚比例ペナルティ v2",
+          "summary": "雲の厚さペナルティを、厚み補正前のキャンバス点 × 30% × 厚み圧に変更し、固定の -28/24 上限を外しました。湿った灰色の雲幕は弱い焼け／見られるが強くない範囲へ校正されます。",
+          "validation": "検証：2026-05-27 の北京サンプルでは厚み圧 0.78、キャンバス 76.7 のとき約 -18 点となり、結果は弱い焼け／見られる範囲に残ります。"
+        },
         "aerosol": {
           "date": "2026-05-12",
           "title": "エアロゾル弱載体 v1",
@@ -452,6 +458,7 @@ apiAccess: 'API接続'
           "postRainCap": "雨上がりの灰幕",
           "displayCalibration": "表示スコア調整",
           "aerosolCarrier": "エアロゾル載体",
+          "scoringV2": "開いた光路の暖色散乱",
           "evidence": "計算根拠"
         },
         "details": {
@@ -460,8 +467,11 @@ apiAccess: 'API接続'
           "upperCloudCanvas": "中高層雲キャンバス {{upper}} = 高層雲 {{high}}×0.75 + 中層雲 {{mid}}×0.45；区間スコア {{range}}",
           "highCloudBonus": "高層雲優勢ボーナス {{bonus}}",
           "cloudTypeAdjustment": "雲種 {{reason}} {{bonus}}",
-          "cloudThicknessAdjustment": "雲厚 {{thickness}}、画布 {{base}} × 30% × 圧力 {{pressure}}、最大 {{max}}、散乱 {{diffuse}}%、水蒸気 {{water}}、キャリア緩和 {{relief}}",
+          "cloudThicknessAdjustment": "雲厚 {{thickness}}、画布 {{base}} × 30% × 圧力 {{pressure}}、最大 {{max}}、散乱 {{diffuse}}%、水蒸気 {{water}}、キャリア緩和 {{relief}}、低い太陽透過 {{solar}}",
+          "lowSolarTransmissionYes": "該当",
+          "lowSolarTransmissionNo": "該当なし",
           "aerosolCarrier": "雲が少ない時、光路が開いていれば薄い霞も暖色を少し運べます。光路活性 ×{{activation}}",
+          "scoringV2": "雲キャリア {{carrier}} × 日没光路 {{path}} × 空気の発色 {{air}}",
           "lightPath": "日光が雲層へ届くか",
           "renderingFactors": "視程 ×{{visibility}}、湿度 ×{{humidity}}、エアロゾル ×{{aerosol}}",
           "afterAdjustments": "天候と見通しを加味した後",
@@ -482,13 +492,15 @@ apiAccess: 'API接続'
         "reasons": {
           "precipitationCap45": "雨と低い雲で観賞条件が大きく下がります",
           "overcastCap35": "低い雲が太陽方向をふさぎ、光が雲まで届きにくいです",
-          "overcastFogCap15": "低い雲と低い視程で空が灰色に見えやすいです",
+          "overcastLowVisibilityCap35": "雲量が非常に多く視程も低いため、スコアを保守的に下げています",
+          "overcastFogCap15": "雲量が非常に多く視程も低いため、空が灰色に見えやすいです",
           "rainyMidCloudOvercastCap35": "雨上がりの水蒸気が多く、色が出にくいです",
           "noVisibleSunsetPathCap5": "夕日の光が雲まで届きにくいです",
           "noVisibleSunsetPathCap15": "雨後の灰幕で夕日の光が遮られやすいです",
           "extremeDustHazeCap28": "強い黄砂や霞が夕焼けの色を弱めます",
           "severeHazeCap35": "濃い霞で色が出にくいです",
           "moderateHazeCap45": "霞が橙や赤の色を弱めます",
+          "hazeWarmScatteringPathOpen": "日没方向の光路が開き、適度な粒子が暖かい橙赤色の散乱を強めます",
           "denseCarrierCanvasOnly": "mid/high clouds can still catch sunset light",
           "adjustmentApplied": "天候による調整を反映",
           "displayCalibration": "最終表示スコアを予測ステータスの帯に合わせます",

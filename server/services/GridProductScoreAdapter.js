@@ -1,7 +1,10 @@
 'use strict';
 
 const GridProductCacheService = require('./GridProductCacheService');
-const { calculateEnhancedPrediction } = require('./EnhancedPredictionService');
+const {
+  calculateMapSimplifiedPrediction,
+  calculateSolarAzimuth
+} = require('./EnhancedPredictionService');
 const SunCalculator = require('../utils/SunCalculator');
 
 const REQUIRED_GFS_FIELDS = [
@@ -24,6 +27,9 @@ const MAP_REFERENCE_POINT = {
   lon: 116.4074,
   timezone: 'Asia/Shanghai'
 };
+const EARTH_RADIUS_KM = 6371;
+const DIRECTIONAL_NEIGHBOR_STEPS = [1, 2];
+const DIRECTIONAL_NEIGHBOR_WEIGHTS = [0.72, 0.28];
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -167,9 +173,6 @@ function weatherDataFromPoint(point) {
 }
 
 function scoreFromFields(point, period) {
-  const explicit = clampScore(point?.score ?? point?.firecloudScore);
-  if (explicit !== null) return explicit;
-
   const { weatherData, missing } = weatherDataFromPoint(point);
   if (!weatherData) {
     point._missingRequiredFields = missing;
@@ -178,15 +181,337 @@ function scoreFromFields(point, period) {
 
   const date = point.validTime || point.sourceMeta?.weather?.validTime || new Date().toISOString();
   try {
-    const result = calculateEnhancedPrediction(weatherData, date, point.lat, point.lon, period);
+    const result = calculateMapSimplifiedPrediction(weatherData, date, point.lat, point.lon, period);
     point._predictionBreakdown = result.breakdown || null;
     point._predictionQuality = result.quality || null;
+    point._predictionScoringContext = result.scoringContext || null;
+    point._predictionMapSimplifiedScoring = result.mapSimplifiedScoring || null;
     point._predictionWeatherData = weatherData;
     return clampScore(result.score);
   } catch (err) {
     point._scoreError = err.message;
     return null;
   }
+}
+
+function degToRad(deg) {
+  return (deg * Math.PI) / 180;
+}
+
+function radToDeg(rad) {
+  return (rad * 180) / Math.PI;
+}
+
+function distanceKm(a, b) {
+  const lat1 = degToRad(Number(a.lat));
+  const lat2 = degToRad(Number(b.lat));
+  const dLat = lat2 - lat1;
+  const dLon = degToRad(Number(b.lon) - Number(a.lon));
+  const sinLat = Math.sin(dLat / 2);
+  const sinLon = Math.sin(dLon / 2);
+  const h = sinLat * sinLat + Math.cos(lat1) * Math.cos(lat2) * sinLon * sinLon;
+  return 2 * EARTH_RADIUS_KM * Math.atan2(Math.sqrt(h), Math.sqrt(Math.max(0, 1 - h)));
+}
+
+function destinationPoint(lat, lon, bearingDeg, distance) {
+  const angular = distance / EARTH_RADIUS_KM;
+  const bearing = degToRad(bearingDeg);
+  const lat1 = degToRad(lat);
+  const lon1 = degToRad(lon);
+  const sinLat1 = Math.sin(lat1);
+  const cosLat1 = Math.cos(lat1);
+  const sinAngular = Math.sin(angular);
+  const cosAngular = Math.cos(angular);
+
+  const lat2 = Math.asin(
+    sinLat1 * cosAngular + cosLat1 * sinAngular * Math.cos(bearing)
+  );
+  const lon2 = lon1 + Math.atan2(
+    Math.sin(bearing) * sinAngular * cosLat1,
+    cosAngular - sinLat1 * Math.sin(lat2)
+  );
+
+  return {
+    lat: radToDeg(lat2),
+    lon: ((radToDeg(lon2) + 540) % 360) - 180
+  };
+}
+
+function estimateGridStepKm(points, productResolution) {
+  const resolution = toNumber(productResolution);
+  if (resolution !== null && resolution > 0) {
+    return Math.max(18, resolution * 111);
+  }
+
+  const sample = points.slice(0, 60);
+  let min = Infinity;
+  for (let i = 0; i < sample.length; i += 1) {
+    for (let j = i + 1; j < sample.length; j += 1) {
+      const d = distanceKm(sample[i], sample[j]);
+      if (d > 1 && d < min) min = d;
+    }
+  }
+  return Number.isFinite(min) ? min : 55;
+}
+
+function coordinateKey(lat, lon) {
+  return `${Number(lat).toFixed(4)},${Number(lon).toFixed(4)}`;
+}
+
+function pointInBbox(point, bbox) {
+  if (!bbox) return true;
+  const lat = toNumber(point?.lat);
+  const lon = toNumber(point?.lon);
+  if (lat === null || lon === null) return false;
+  return lat >= Number(bbox.south)
+    && lat <= Number(bbox.north)
+    && lon >= Number(bbox.west)
+    && lon <= Number(bbox.east);
+}
+
+function hasUsableWeatherFields(point) {
+  return missingRequiredGfsFields(point?.weather || {}).length === 0;
+}
+
+function uniqueSorted(values) {
+  return Array.from(new Set(
+    values
+      .map(Number)
+      .filter(Number.isFinite)
+      .map(value => value.toFixed(4))
+  ))
+    .map(Number)
+    .sort((a, b) => a - b);
+}
+
+function buildGridLookup(points) {
+  const byCoordinate = new Map();
+  for (const point of points) {
+    byCoordinate.set(coordinateKey(point.lat, point.lon), point);
+  }
+  return {
+    byCoordinate,
+    lats: uniqueSorted(points.map(point => point.lat)),
+    lons: uniqueSorted(points.map(point => point.lon))
+  };
+}
+
+function closestCandidateIndexes(values, target, radius = 1) {
+  if (!values.length) return [];
+  let low = 0;
+  let high = values.length;
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2);
+    if (values[mid] < target) low = mid + 1;
+    else high = mid;
+  }
+  const indexes = new Set();
+  for (let offset = -radius; offset <= radius; offset += 1) {
+    const index = low + offset;
+    if (index >= 0 && index < values.length) indexes.add(index);
+  }
+  return Array.from(indexes);
+}
+
+function nearestIndexedPoint(lookup, target, toleranceKm, excludedKey) {
+  if (!lookup) return null;
+  let nearest = null;
+  let nearestDistance = Infinity;
+  const latIndexes = closestCandidateIndexes(lookup.lats, target.lat, 1);
+  const lonIndexes = closestCandidateIndexes(lookup.lons, target.lon, 1);
+  for (const latIndex of latIndexes) {
+    for (const lonIndex of lonIndexes) {
+      const candidate = lookup.byCoordinate.get(coordinateKey(lookup.lats[latIndex], lookup.lons[lonIndex]));
+      if (!candidate || pointKey(candidate) === excludedKey) continue;
+      const d = distanceKm(candidate, target);
+      if (d < nearestDistance) {
+        nearest = candidate;
+        nearestDistance = d;
+      }
+    }
+  }
+  return nearest && nearestDistance <= toleranceKm
+    ? { point: nearest, distanceKm: nearestDistance }
+    : null;
+}
+
+function upperCarrierFromWeather(weather) {
+  return Number(weather?.HCDC || 0) * 0.65 + Number(weather?.MCDC || 0) * 0.35;
+}
+
+function directionalBlockFromWeather(weather) {
+  const low = Number(weather?.LCDC || 0);
+  const mid = Number(weather?.MCDC || 0);
+  const high = Number(weather?.HCDC || 0);
+  return low * 0.75 + Math.max(0, mid - high) * 0.25;
+}
+
+function weightedMetric(items, getter) {
+  let total = 0;
+  let weightTotal = 0;
+  for (const item of items) {
+    const value = Number(getter(item));
+    if (!Number.isFinite(value)) continue;
+    total += value * item.weight;
+    weightTotal += item.weight;
+  }
+  return weightTotal > 0 ? total / weightTotal : null;
+}
+
+function buildDirectionalContext(point, gridLookup, date, period, gridStepKm) {
+  const lat = toNumber(point.lat);
+  const lon = toNumber(point.lon);
+  if (lat === null || lon === null) return null;
+
+  let azimuth = null;
+  try {
+    azimuth = calculateSolarAzimuth(new Date(date), lat, lon);
+  } catch (_) {
+    azimuth = period === 'sunrise' ? 90 : 270;
+  }
+  if (!Number.isFinite(Number(azimuth))) {
+    azimuth = period === 'sunrise' ? 90 : 270;
+  }
+
+  const key = pointKey(point);
+  const toleranceKm = Math.max(20, gridStepKm * 0.7);
+  const neighbors = DIRECTIONAL_NEIGHBOR_STEPS
+    .map((step, index) => {
+      const target = destinationPoint(lat, lon, azimuth, gridStepKm * step);
+      const match = nearestIndexedPoint(gridLookup, target, toleranceKm, key);
+      if (!match) return null;
+      return {
+        ...match,
+        step,
+        weight: DIRECTIONAL_NEIGHBOR_WEIGHTS[index] || 0,
+        upperCarrier: upperCarrierFromWeather(match.point.weather),
+        blockRisk: directionalBlockFromWeather(match.point.weather)
+      };
+    })
+    .filter(Boolean);
+
+  if (neighbors.length === 0) {
+    return {
+      applied: false,
+      reason: 'no_directional_neighbor',
+      azimuth: parseFloat(Number(azimuth).toFixed(1)),
+      neighborCount: 0
+    };
+  }
+
+  return {
+    applied: true,
+    reason: 'gfs_cams_directional_neighbor_grid',
+    azimuth: parseFloat(Number(azimuth).toFixed(1)),
+    neighborCount: neighbors.length,
+    gridStepKm: parseFloat(gridStepKm.toFixed(1)),
+    directionalUpperCarrier: parseFloat(weightedMetric(neighbors, item => item.upperCarrier).toFixed(1)),
+    directionalBlockRisk: parseFloat(weightedMetric(neighbors, item => item.blockRisk).toFixed(1)),
+    nearestNeighborKm: parseFloat(Math.min(...neighbors.map(item => item.distanceKm)).toFixed(1)),
+    samples: neighbors.map(item => ({
+      lat: item.point.lat,
+      lon: item.point.lon,
+      step: item.step,
+      distanceKm: parseFloat(item.distanceKm.toFixed(1)),
+      weight: item.weight,
+      upperCarrier: parseFloat(item.upperCarrier.toFixed(1)),
+      blockRisk: parseFloat(item.blockRisk.toFixed(1))
+    }))
+  };
+}
+
+function applyDirectionalMapScoring(baseScore, weather, context) {
+  if (!context?.applied || !Number.isFinite(baseScore)) {
+    return {
+      score: baseScore,
+      adjustment: { applied: false, reason: context?.reason || 'directional_context_unavailable' }
+    };
+  }
+
+  const localUpperCarrier = upperCarrierFromWeather(weather);
+  const localLow = Number(weather?.LCDC || 0);
+  const precipitation = Number(weather?.APCP || weather?.precipitation || 0);
+  const directionalUpper = Number(context.directionalUpperCarrier || 0);
+  const directionalBlock = Number(context.directionalBlockRisk || 0);
+  const metrics = {
+    localUpperCarrier: parseFloat(localUpperCarrier.toFixed(1)),
+    localLowCloud: parseFloat(localLow.toFixed(1)),
+    directionalUpperCarrier: parseFloat(directionalUpper.toFixed(1)),
+    directionalBlockRisk: parseFloat(directionalBlock.toFixed(1))
+  };
+
+  if (precipitation > 0.2 || localLow >= 55) {
+    const score = Math.min(baseScore, localLow >= 75 ? 35 : 45);
+    return {
+      score,
+      adjustment: {
+        applied: score !== baseScore,
+        reason: 'local_low_cloud_or_precip_blocks_map_directional_lift',
+        originalScore: baseScore,
+        adjustedScore: score,
+        metrics
+      }
+    };
+  }
+
+  if (localUpperCarrier < 18) {
+    return {
+      score: baseScore,
+      adjustment: {
+        applied: false,
+        reason: 'local_canvas_too_weak_for_directional_map_lift',
+        metrics
+      }
+    };
+  }
+
+  if (directionalBlock >= 60) {
+    const score = Math.min(baseScore, 48);
+    return {
+      score,
+      adjustment: {
+        applied: score !== baseScore,
+        reason: 'directional_neighbor_blocked_corridor',
+        originalScore: baseScore,
+        adjustedScore: score,
+        metrics
+      }
+    };
+  }
+
+  if (directionalUpper < 45) {
+    return {
+      score: baseScore,
+      adjustment: {
+        applied: false,
+        reason: 'directional_neighbor_upper_cloud_too_weak',
+        metrics
+      }
+    };
+  }
+
+  const trendScore = clampScore(
+    28
+    + localUpperCarrier * 0.28
+    + directionalUpper * 0.44
+    - directionalBlock * 0.18
+  );
+  const cappedTrendScore = Math.min(trendScore, 78);
+  const score = Math.max(baseScore, cappedTrendScore);
+
+  return {
+    score,
+    adjustment: {
+      applied: score !== baseScore,
+      reason: score !== baseScore
+        ? 'directional_neighbor_upper_cloud_lift'
+        : 'directional_neighbor_no_score_change',
+      originalScore: baseScore,
+      adjustedScore: score,
+      trendScore: cappedTrendScore,
+      metrics
+    }
+  };
 }
 
 class GridProductScoreAdapter {
@@ -251,26 +576,43 @@ class GridProductScoreAdapter {
       }
     }
 
-    const gridPoints = Array.from(merged.values())
+    const mergedPoints = Array.from(merged.values());
+    const gridStepKm = estimateGridStepKm(mergedPoints, weatherProduct.grid?.resolution);
+    const gridLookup = buildGridLookup(mergedPoints.filter(hasUsableWeatherFields));
+    const outputBbox = weatherProduct.sourceMeta?.outputBbox || weatherProduct.grid?.outputBbox || null;
+    const gridPoints = mergedPoints
       .map(point => {
         const scoringPoint = {
           ...point,
           score: isFiniteNumber(point._weatherScore) ? point._weatherScore : point._aerosolScore
         };
         const score = scoreFromFields(scoringPoint, safePeriod);
+        const directionalContext = score !== null
+          ? buildDirectionalContext(point, gridLookup, targetTime.toISOString(), safePeriod, gridStepKm)
+          : null;
+        const directionalScore = score !== null
+          ? applyDirectionalMapScoring(score, point.weather, directionalContext)
+          : { score, adjustment: null };
         return {
           lat: point.lat,
           lon: point.lon,
-          score,
+          score: directionalScore.score,
           quality: scoringPoint._predictionQuality || (score === null ? 'no-data' : 'pipeline-cache'),
           weather: point.weather,
           aerosol: point.aerosol,
           sourceMeta: clone(point.sourceMeta || {}),
           breakdown: scoringPoint._predictionBreakdown || null,
+          scoringContext: score === null ? null : 'map_grid_directional',
+          mapSimplifiedScoring: scoringPoint._predictionMapSimplifiedScoring || null,
+          mapDirectionalScoring: directionalContext ? {
+            ...directionalContext,
+            adjustment: directionalScore.adjustment
+          } : null,
           missingRequiredFields: scoringPoint._missingRequiredFields || undefined,
           scoreError: scoringPoint._scoreError || undefined
         };
       })
+      .filter(point => pointInBbox(point, outputBbox))
       .filter(point => Number.isFinite(point.score));
 
     if (gridPoints.length === 0) return null;
@@ -289,6 +631,7 @@ class GridProductScoreAdapter {
           weather: this._productMeta(weatherProduct),
           aerosol: aerosolProduct ? this._productMeta(aerosolProduct) : null
         },
+        outputBbox: clone(outputBbox),
         targetTime: targetTime.toISOString(),
         referencePoint: clone(MAP_REFERENCE_POINT)
       }
@@ -322,6 +665,7 @@ class GridProductScoreAdapter {
       validTime: product.validTime || null,
       createdAt: product.createdAt || null,
       bbox: clone(product.grid?.bbox || null),
+      outputBbox: clone(product.sourceMeta?.outputBbox || product.grid?.outputBbox || null),
       resolution: product.grid?.resolution ?? null,
       sourceMeta: clone(product.sourceMeta || {}),
       pointCount: Array.isArray(product.points) ? product.points.length : 0

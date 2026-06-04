@@ -4,12 +4,15 @@ import path from 'path';
 
 let GridProductCacheService;
 let GridProductScoreAdapter;
+let calculateSolarAzimuth;
 
 beforeAll(async () => {
   const cacheMod = await import('../../../server/services/GridProductCacheService.js');
   GridProductCacheService = cacheMod.default || cacheMod;
   const adapterMod = await import('../../../server/services/GridProductScoreAdapter.js');
   GridProductScoreAdapter = adapterMod.default || adapterMod;
+  const predictionMod = await import('../../../server/services/EnhancedPredictionService.js');
+  calculateSolarAzimuth = predictionMod.calculateSolarAzimuth;
 });
 
 function makeTempDir() {
@@ -88,6 +91,14 @@ describe('GridProductScoreAdapter', () => {
       lat: 40,
       lon: 116,
       score: expect.any(Number),
+      scoringContext: 'map_grid_directional',
+      mapSimplifiedScoring: expect.objectContaining({
+        applied: true,
+        usesRemoteLightPathSamples: false
+      }),
+      mapDirectionalScoring: expect.objectContaining({
+        reason: expect.any(String)
+      }),
       weather: expect.objectContaining({ TCDC: 58, HCDC: 72, RH: 55 }),
       aerosol: { aod550: 0.18 },
       sourceMeta: {
@@ -95,7 +106,8 @@ describe('GridProductScoreAdapter', () => {
         aerosol: { source: 'cams', cycle: '2026052600', forecastHour: 6, bbox: { north: 41, south: 39, west: 115, east: 117 } }
       }
     });
-    expect(cache.gridPoints[1].score).toBe(91);
+    expect(cache.gridPoints[1].score).toBe(30);
+    expect(cache.gridPoints[1].score).not.toBe(91);
     expect(cache.meta.products.weather.source).toBe('gfs');
     expect(cache.meta.products.aerosol.source).toBe('cams');
     expect(cache.meta.products.weather.bbox).toEqual({ north: 41, south: 39, west: 115, east: 117 });
@@ -311,5 +323,264 @@ describe('GridProductScoreAdapter', () => {
     expect(cache.degradedReason).toBe('CAMS_AEROSOL_CACHE_NOT_READY');
     expect(cache.meta.products.aerosol).toBeNull();
     expect(cache.gridPoints[0].aerosol).toEqual({});
+  });
+
+  test('uses sunset-direction neighboring grid cells as regional light-path trend', () => {
+    const cacheService = new GridProductCacheService({
+      dataDir: makeTempDir(),
+      now: new Date('2026-05-26T12:30:00Z')
+    });
+    cacheService.writeProduct({
+      source: 'gfs',
+      productType: 'weather_grid',
+      schemaVersion: 1,
+      cycle: '2026052606',
+      forecastHour: 6,
+      validTime: '2026-05-26T11:30:00.000Z',
+      grid: { bbox: { north: 41, south: 39, west: 115, east: 117 }, resolution: 0.5 },
+      fields: ['TCDC', 'LCDC', 'MCDC', 'HCDC', 'RH', 'VIS', 'APCP', 'DSWRF', 'PWAT', 'UGRD', 'VGRD'],
+      points: [
+        {
+          lat: 40,
+          lon: 116,
+          weather: fullGfsWeather({ TCDC: 50, LCDC: 4, MCDC: 30, HCDC: 40, DSWRF: 90 })
+        },
+        {
+          lat: 40.2,
+          lon: 115.5,
+          weather: fullGfsWeather({ TCDC: 98, LCDC: 0, MCDC: 86, HCDC: 96, DSWRF: 85 })
+        },
+        {
+          lat: 40.4,
+          lon: 115.0,
+          weather: fullGfsWeather({ TCDC: 92, LCDC: 0, MCDC: 70, HCDC: 84, DSWRF: 80 })
+        }
+      ]
+    });
+
+    const adapter = new GridProductScoreAdapter({ cacheService });
+    const cache = adapter.getScoreCache('sunset');
+    const center = cache.gridPoints.find(point => point.lat === 40 && point.lon === 116);
+
+    expect(center.scoringContext).toBe('map_grid_directional');
+    expect(center.mapDirectionalScoring).toMatchObject({
+      applied: true,
+      reason: 'gfs_cams_directional_neighbor_grid',
+      neighborCount: expect.any(Number),
+      adjustment: expect.objectContaining({
+        applied: true,
+        reason: 'directional_neighbor_upper_cloud_lift'
+      })
+    });
+    expect(center.mapDirectionalScoring.directionalUpperCarrier).toBeGreaterThanOrEqual(80);
+    expect(center.score).toBeGreaterThan(center.mapDirectionalScoring.adjustment.originalScore);
+  });
+
+  test('caps map simplified base scores before directional lift', () => {
+    const cacheService = new GridProductCacheService({
+      dataDir: makeTempDir(),
+      now: new Date('2026-05-26T12:30:00Z')
+    });
+    cacheService.writeProduct({
+      source: 'gfs',
+      productType: 'weather_grid',
+      schemaVersion: 1,
+      cycle: '2026052606',
+      forecastHour: 6,
+      validTime: '2026-05-26T11:30:00.000Z',
+      grid: { bbox: { north: 41, south: 39, west: 115, east: 117 }, resolution: 0.5 },
+      fields: ['TCDC', 'LCDC', 'MCDC', 'HCDC', 'RH', 'VIS', 'APCP', 'DSWRF', 'PWAT', 'UGRD', 'VGRD'],
+      points: [{
+        lat: 40,
+        lon: 116,
+        weather: fullGfsWeather({ TCDC: 100, LCDC: 0, MCDC: 100, HCDC: 100, DSWRF: 180 })
+      }]
+    });
+
+    const adapter = new GridProductScoreAdapter({ cacheService });
+    const cache = adapter.getScoreCache('sunset');
+
+    expect(cache.gridPoints[0].score).toBeLessThanOrEqual(78);
+    expect(cache.gridPoints[0].mapSimplifiedScoring).toMatchObject({
+      cap: 78
+    });
+  });
+
+  test('uses buffered directional neighbors without exposing buffer cells in public cache', () => {
+    const cacheService = new GridProductCacheService({
+      dataDir: makeTempDir(),
+      now: new Date('2026-05-26T12:30:00Z')
+    });
+    const outputBbox = { north: 40, south: 40, west: 116, east: 116 };
+    cacheService.writeProduct({
+      source: 'gfs',
+      productType: 'weather_grid',
+      schemaVersion: 1,
+      cycle: '2026052606',
+      forecastHour: 6,
+      validTime: '2026-05-26T11:30:00.000Z',
+      grid: { bbox: { north: 41, south: 39, west: 115, east: 117 }, resolution: 0.5 },
+      sourceMeta: { outputBbox },
+      fields: ['TCDC', 'LCDC', 'MCDC', 'HCDC', 'RH', 'VIS', 'APCP', 'DSWRF', 'PWAT', 'UGRD', 'VGRD'],
+      points: [
+        {
+          lat: 40,
+          lon: 116,
+          weather: fullGfsWeather({ TCDC: 50, LCDC: 4, MCDC: 30, HCDC: 40, DSWRF: 90 })
+        },
+        {
+          lat: 40.2,
+          lon: 115.5,
+          weather: fullGfsWeather({ TCDC: 98, LCDC: 0, MCDC: 86, HCDC: 96, DSWRF: 85 })
+        }
+      ]
+    });
+
+    const adapter = new GridProductScoreAdapter({ cacheService });
+    const cache = adapter.getScoreCache('sunset');
+
+    expect(cache.gridPoints).toHaveLength(1);
+    expect(cache.gridPoints[0]).toMatchObject({
+      lat: 40,
+      lon: 116,
+      mapDirectionalScoring: expect.objectContaining({
+        applied: true,
+        neighborCount: 1,
+        adjustment: expect.objectContaining({
+          reason: 'directional_neighbor_upper_cloud_lift'
+        })
+      })
+    });
+    expect(cache.meta.outputBbox).toEqual(outputBbox);
+    expect(cache.meta.products.weather.outputBbox).toEqual(outputBbox);
+  });
+
+  test('ignores CAMS-only points when selecting directional weather neighbors', () => {
+    const cacheService = new GridProductCacheService({
+      dataDir: makeTempDir(),
+      now: new Date('2026-05-26T12:30:00Z')
+    });
+    cacheService.writeProduct({
+      source: 'gfs',
+      productType: 'weather_grid',
+      schemaVersion: 1,
+      cycle: '2026052606',
+      forecastHour: 6,
+      validTime: '2026-05-26T11:30:00.000Z',
+      grid: { bbox: { north: 41, south: 39, west: 115, east: 117 }, resolution: 0.5 },
+      fields: ['TCDC', 'LCDC', 'MCDC', 'HCDC', 'RH', 'VIS', 'APCP', 'DSWRF', 'PWAT', 'UGRD', 'VGRD'],
+      points: [
+        {
+          lat: 40,
+          lon: 116,
+          weather: fullGfsWeather({ TCDC: 50, LCDC: 4, MCDC: 30, HCDC: 40, DSWRF: 90 })
+        },
+        {
+          lat: 40.2,
+          lon: 115.5,
+          weather: fullGfsWeather({ TCDC: 98, LCDC: 0, MCDC: 86, HCDC: 96, DSWRF: 85 })
+        }
+      ]
+    });
+    cacheService.writeProduct({
+      source: 'cams',
+      productType: 'aerosol_grid',
+      schemaVersion: 1,
+      cycle: '2026052600',
+      forecastHour: 6,
+      validTime: '2026-05-26T11:30:00.000Z',
+      grid: { bbox: { north: 41, south: 39, west: 115, east: 117 }, resolution: 0.5 },
+      fields: ['aod550'],
+      points: [
+        { lat: 40, lon: 116, aerosol: { aod550: 0.2 } },
+        { lat: 40.18, lon: 115.55, aerosol: { aod550: 0.3 } }
+      ]
+    });
+
+    const adapter = new GridProductScoreAdapter({ cacheService });
+    const cache = adapter.getScoreCache('sunset');
+    const center = cache.gridPoints.find(point => point.lat === 40 && point.lon === 116);
+
+    expect(center.mapDirectionalScoring.samples[0]).toMatchObject({
+      lat: 40.2,
+      lon: 115.5
+    });
+    expect(center.mapDirectionalScoring.directionalUpperCarrier).toBeGreaterThan(80);
+  });
+
+  test('uses the map event time, not product validTime, for directional bearing', () => {
+    const cacheService = new GridProductCacheService({
+      dataDir: makeTempDir(),
+      now: new Date('2026-05-30T21:00:00Z')
+    });
+    cacheService.writeProduct({
+      source: 'gfs',
+      productType: 'weather_grid',
+      schemaVersion: 1,
+      cycle: '2026053018',
+      forecastHour: 6,
+      validTime: '2026-05-31T00:00:00.000Z',
+      grid: { bbox: { north: 41, south: 39, west: 115, east: 117 }, resolution: 0.5 },
+      fields: ['TCDC', 'LCDC', 'MCDC', 'HCDC', 'RH', 'VIS', 'APCP', 'DSWRF', 'PWAT', 'UGRD', 'VGRD'],
+      points: [{ lat: 40, lon: 116, weather: fullGfsWeather() }]
+    });
+
+    const adapter = new GridProductScoreAdapter({
+      cacheService,
+      now: new Date('2026-05-30T21:00:00Z')
+    });
+    const cache = adapter.getScoreCache('sunrise');
+    const point = cache.gridPoints[0];
+    const eventAzimuth = parseFloat(calculateSolarAzimuth(
+      new Date(cache.meta.targetTime),
+      point.lat,
+      point.lon
+    ).toFixed(1));
+    const productAzimuth = parseFloat(calculateSolarAzimuth(
+      new Date(cache.meta.products.weather.validTime),
+      point.lat,
+      point.lon
+    ).toFixed(1));
+
+    expect(point.mapDirectionalScoring.azimuth).toBe(eventAzimuth);
+    expect(point.mapDirectionalScoring.azimuth).not.toBe(productAzimuth);
+  });
+
+  test('keeps local low-cloud cover from being lifted by a strong directional neighbor', () => {
+    const cacheService = new GridProductCacheService({
+      dataDir: makeTempDir(),
+      now: new Date('2026-05-26T12:30:00Z')
+    });
+    cacheService.writeProduct({
+      source: 'gfs',
+      productType: 'weather_grid',
+      schemaVersion: 1,
+      cycle: '2026052606',
+      forecastHour: 6,
+      validTime: '2026-05-26T11:30:00.000Z',
+      grid: { bbox: { north: 41, south: 39, west: 115, east: 117 }, resolution: 0.5 },
+      fields: ['TCDC', 'LCDC', 'MCDC', 'HCDC', 'RH', 'VIS', 'APCP', 'DSWRF', 'PWAT', 'UGRD', 'VGRD'],
+      points: [
+        {
+          lat: 40,
+          lon: 116,
+          weather: fullGfsWeather({ TCDC: 96, LCDC: 82, MCDC: 52, HCDC: 74, DSWRF: 70 })
+        },
+        {
+          lat: 40.2,
+          lon: 115.5,
+          weather: fullGfsWeather({ TCDC: 98, LCDC: 0, MCDC: 86, HCDC: 96, DSWRF: 85 })
+        }
+      ]
+    });
+
+    const adapter = new GridProductScoreAdapter({ cacheService });
+    const cache = adapter.getScoreCache('sunset');
+    const center = cache.gridPoints.find(point => point.lat === 40 && point.lon === 116);
+
+    expect(center.mapDirectionalScoring.adjustment).toMatchObject({
+      reason: 'local_low_cloud_or_precip_blocks_map_directional_lift'
+    });
+    expect(center.score).toBeLessThanOrEqual(35);
   });
 });

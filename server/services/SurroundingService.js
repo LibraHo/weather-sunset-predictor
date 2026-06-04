@@ -144,7 +144,7 @@ class SurroundingService {
       }
     }
 
-    const distances = [25, 50, 75, 100];
+    const distances = [10, 25, 50, 75, 100];
     const points = distances.map(distanceKm => this.calculatePointByBearing(lat, lon, distanceKm, solarAzimuth));
     const buildSample = (point, weatherResponse) => {
       try {
@@ -177,7 +177,7 @@ class SurroundingService {
       }
     };
 
-    // Fetch all four light-path sample points in one cloud-only batch.
+    // Fetch all light-path sample points in one cloud-only batch.
     let samples;
     try {
       const weatherMap = await orchestrator.fetchWeatherDataBatch(points, 72, undefined, {

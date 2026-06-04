@@ -618,11 +618,19 @@
           <div class="methodology-changelog-scroll" tabindex="0" role="region" aria-labelledby="methodology-changelog-title">
             <ol class="methodology-changelog-list">
               <li>
-                <time datetime="2026-05-27" data-i18n="home.methodology.changelog.latest.date">2026-05-27</time>
+                <time datetime="2026-06-03" data-i18n="home.methodology.changelog.latest.date">2026-06-03</time>
                 <div>
-                  <strong data-i18n="home.methodology.changelog.latest.title">云厚比例折损 v2</strong>
-                  <p data-i18n="home.methodology.changelog.latest.summary">云厚扣分改为画布修正前分 × 30% × 云厚压力，去掉固定 -28/24 上限；湿灰幕场景同步按小烧/可看但不强校准。</p>
-                  <small data-i18n="home.methodology.changelog.latest.validation">验证：2026-05-27 北京样本云厚压力 0.78，画布 76.7 时扣分约 -18；最终保留在小烧/可顺带看区间。</small>
+                  <strong data-i18n="home.methodology.changelog.latest.title">日落评分 v2</strong>
+                  <p data-i18n="home.methodology.changelog.latest.summary">最终分改为云载体、日落光路、空气显色三部分合成；光路开且能见度可接受时，轻/中度气溶胶可增强橙红散射。</p>
+                  <small data-i18n="home.methodology.changelog.latest.validation">验证：2026-06-02 北京无雨灰幕仍约 30；2026-06-03 北京无雨、橙红光很美，回放约 66，落入 60-68 实况区间。</small>
+                </div>
+              </li>
+              <li>
+                <time datetime="2026-05-27" data-i18n="home.methodology.changelog.cloudThickness.date">2026-05-27</time>
+                <div>
+                  <strong data-i18n="home.methodology.changelog.cloudThickness.title">云厚比例折损 v2</strong>
+                  <p data-i18n="home.methodology.changelog.cloudThickness.summary">云厚扣分改为画布修正前分 × 30% × 云厚压力，去掉固定 -28/24 上限；湿灰幕场景同步按小烧/可看但不强校准。</p>
+                  <small data-i18n="home.methodology.changelog.cloudThickness.validation">验证：2026-05-27 北京样本云厚压力 0.78，画布 76.7 时扣分约 -18；最终保留在小烧/可顺带看区间。</small>
                 </div>
               </li>
               <li>
@@ -660,8 +668,8 @@
             </ol>
           </div>
           <div class="methodology-version-card">
-            <strong data-i18n="home.methodology.versionLabel">算法版本：2026.05.27-cloud-thickness-proportional-v2</strong>
-            <span data-i18n="home.methodology.versionDesc">本版将云厚扣分改为“画布修正前分×30%×云厚压力”，去掉固定 -28/24 上限，并将湿灰幕场景校准到小烧/可看但不强。</span>
+            <strong data-i18n="home.methodology.versionLabel">算法版本：2026.06.03-sunset-scoring-v2</strong>
+            <span data-i18n="home.methodology.versionDesc">本版把最终评分收敛为“云载体 × 日落光路 × 空气显色”：有光路时轻/中度气溶胶可增强橙红散射，无光路、极端霾、低能见度、降水和厚低云仍优先压制。</span>
           </div>
         </div>
       </section>

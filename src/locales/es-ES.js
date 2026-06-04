@@ -184,6 +184,12 @@ apiAccess: 'Acceso API'
           "summary": "La penalización por espesor de nubes ahora es puntuación de lienzo antes del espesor × 30% × presión de espesor, sin los topes fijos -28/24. Las cortinas grises húmedas se calibran como resplandor débil/observable pero no fuerte.",
           "validation": "Validación: en la muestra de Pekín del 2026-05-27, presión 0.78 sobre lienzo 76.7 da unos -18 puntos y mantiene el resultado en el rango de resplandor débil/observable."
         },
+        "cloudThickness": {
+          "date": "2026-05-27",
+          "title": "Penalización proporcional por espesor de nubes v2",
+          "summary": "La penalización por espesor de nubes ahora es puntuación de lienzo antes del espesor × 30% × presión de espesor, sin los topes fijos -28/24. Las cortinas grises húmedas se calibran como resplandor débil/observable pero no fuerte.",
+          "validation": "Validación: en la muestra de Pekín del 2026-05-27, presión 0.78 sobre lienzo 76.7 da unos -18 puntos y mantiene el resultado en el rango de resplandor débil/observable."
+        },
         "aerosol": {
           "date": "2026-05-12",
           "title": "Soporte débil de aerosol v1",
@@ -434,6 +440,7 @@ apiAccess: 'Acceso API'
           "postRainCap": "Post-rain haze",
           "displayCalibration": "Display calibration",
           "aerosolCarrier": "Aerosol carrier",
+          "scoringV2": "Open-path warm scattering",
           "evidence": "Calculation evidence"
         },
         "details": {
@@ -442,8 +449,11 @@ apiAccess: 'Acceso API'
           "upperCloudCanvas": "lienzo de nubes medias/altas {{upper}} = altas {{high}}×0.75 + medias {{mid}}×0.45; puntuación de rango {{range}}",
           "highCloudBonus": "bono por predominio de nubes altas {{bonus}}",
           "cloudTypeAdjustment": "tipo de nube {{reason}} {{bonus}}",
-          "cloudThicknessAdjustment": "grosor de nube {{thickness}}, base {{base}} × 30% × presión {{pressure}} = máx {{max}} escalado; difusa {{diffuse}}%, vapor {{water}}, alivio portador {{relief}}",
+          "cloudThicknessAdjustment": "grosor de nube {{thickness}}, base {{base}} × 30% × presión {{pressure}} = máx {{max}} escalado; difusa {{diffuse}}%, vapor {{water}}, alivio portador {{relief}}, baja transmisión solar {{solar}}",
+          "lowSolarTransmissionYes": "sí",
+          "lowSolarTransmissionNo": "no",
           "aerosolCarrier": "thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}",
+          "scoringV2": "cloud carrier {{carrier}} × sunset path {{path}} × air rendering {{air}}",
           "lightPath": "sunlight reaches the cloud layer",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
           "afterAdjustments": "after weather and visibility adjustments",
@@ -464,13 +474,15 @@ apiAccess: 'Acceso API'
         "reasons": {
           "precipitationCap45": "rain plus low clouds keeps the score low",
           "overcastCap35": "low clouds block the sunlight path",
-          "overcastFogCap15": "low cloud and low visibility make the sky too gray",
+          "overcastLowVisibilityCap35": "very cloudy sky and low visibility keep the score conservative",
+          "overcastFogCap15": "very cloudy sky and low visibility make the sky too gray",
           "rainyMidCloudOvercastCap35": "post-rain moisture makes the glow hard to show",
           "noVisibleSunsetPathCap5": "sunset light is unlikely to reach the clouds",
           "noVisibleSunsetPathCap15": "rainy gray sky likely blocks sunset light",
           "extremeDustHazeCap28": "heavy dust or haze suppresses the glow",
           "severeHazeCap35": "heavy haze makes colors hard to show",
           "moderateHazeCap45": "haze weakens orange-red color",
+          "hazeWarmScatteringPathOpen": "open sunset path turns moderate particles into warm orange-red scattering",
           "denseCarrierCanvasOnly": "mid/high clouds can still catch sunset light",
           "adjustmentApplied": "score adjusted for limiting conditions",
           "displayCalibration": "final display score is aligned with the prediction status band",

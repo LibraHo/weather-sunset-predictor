@@ -236,6 +236,21 @@ describe('miniprogram services/photos', () => {
     }));
   });
 
+  test('listMyPhotos returns empty list when silent mini login is unavailable', async () => {
+    const wxMock = {
+      login: jest.fn(({ fail }) => fail({ errMsg: 'login:fail unavailable' })),
+      request: jest.fn(),
+      getStorageSync: jest.fn(),
+      setStorageSync: jest.fn(),
+      removeStorageSync: jest.fn()
+    };
+    configureApi({ baseUrl: 'https://api.example.com' });
+
+    await expect(listMyPhotos({ wx: wxMock })).resolves.toEqual([]);
+    expect(wxMock.login).toHaveBeenCalledTimes(1);
+    expect(wxMock.request).not.toHaveBeenCalled();
+  });
+
   test('updateMyPhoto and deleteMyPhoto use owner management endpoints', async () => {
     const wxMock = {
       request: jest.fn(({ method, success }) => success({
@@ -314,6 +329,27 @@ describe('miniprogram services/photos', () => {
       status: 413,
       isApiError: true
     });
+  });
+
+  test('uploadPhoto reports optional mini login unavailable instead of requiring a WeChat login button', async () => {
+    const wxMock = {
+      uploadFile: jest.fn(),
+      login: jest.fn(({ fail }) => fail({ errMsg: 'login:fail unavailable' })),
+      getStorageSync: jest.fn(),
+      setStorageSync: jest.fn(),
+      removeStorageSync: jest.fn()
+    };
+
+    await expect(uploadPhoto({ filePath: '/tmp/photo.jpg' }, {
+      wx: wxMock,
+      baseUrl: 'https://api.example.com'
+    })).rejects.toMatchObject({
+      name: 'ApiError',
+      code: 'MINI_LOGIN_UNAVAILABLE',
+      status: 401,
+      isApiError: true
+    });
+    expect(wxMock.uploadFile).not.toHaveBeenCalled();
   });
 
   test('uploadPhoto rejects when wx.uploadFile is unavailable', async () => {
