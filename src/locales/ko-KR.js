@@ -59,7 +59,14 @@ const translations = {
       "createAction": "계정 만들기",
       "resetAction": "비밀번호 재설정",
       "or": "또는",
-      "googleLogin": "Google로 로그인"
+      "googleLogin": "Google로 로그인",
+      "loginSuccess": "로그인되었습니다.",
+      "registerSuccess": "계정이 생성되었습니다.",
+      "resetSuccess": "비밀번호가 재설정되었습니다. 새 비밀번호로 로그인하세요.",
+      "requestFailed": "계정 요청에 실패했습니다.",
+      "done": "완료.",
+      "recoveryQuestionFallback": "계정이 있으면 복구 답변과 새 비밀번호를 입력하세요.",
+      "recoveryQuestionUnavailable": "복구 질문을 일시적으로 사용할 수 없습니다. 답변과 새 비밀번호는 계속 시도할 수 있습니다."
     },
     "menu": {
       "buttonAria": "계정",
@@ -82,7 +89,20 @@ const translations = {
       "uploadsTitle": "업로드 기록",
       "uploadsDesc": "사진 업로드, 검토 상태, 공개 기록이 여기에 표시됩니다.",
       "apiTitle": "API 신청",
-      "apiDesc": "Token 신청, 검토 상태, 사용 한도가 여기에 표시됩니다."
+      "apiDesc": "Token 신청, 검토 상태, 사용 한도가 여기에 표시됩니다.",
+      "emptyApiApplication": "아직 API 신청이 없습니다.",
+      "statusPending": "대기 중",
+      "noEmail": "이메일 없음",
+      "apiApplicationFallback": "API 신청",
+      "untitledPhoto": "제목 없는 사진",
+      "userPrefix": "霞客 사용자",
+      "connectedSuffix": "연결됨",
+      "accountConnected": "계정 연결됨",
+      "typeSunrise": "아침노을",
+      "typeSunset": "저녁노을",
+      "typePlace": "장소",
+      "untitledLocation": "제목 없는 장소",
+      "coordinatesPending": "좌표 대기 중"
     }
   },
   "home": {

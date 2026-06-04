@@ -59,7 +59,14 @@ const translations = {
       "createAction": "Crear cuenta",
       "resetAction": "Restablecer contraseña",
       "or": "o",
-      "googleLogin": "Entrar con Google"
+      "googleLogin": "Entrar con Google",
+      "loginSuccess": "Sesión iniciada.",
+      "registerSuccess": "Cuenta creada.",
+      "resetSuccess": "Contraseña restablecida. Inicia sesión con la nueva contraseña.",
+      "requestFailed": "Error en la solicitud de cuenta.",
+      "done": "Hecho.",
+      "recoveryQuestionFallback": "Si la cuenta existe, introduce la respuesta de recuperación y una nueva contraseña.",
+      "recoveryQuestionUnavailable": "La pregunta de recuperación no está disponible temporalmente. Aun así puedes probar con la respuesta y la nueva contraseña."
     },
     "menu": {
       "buttonAria": "Cuenta",
@@ -82,7 +89,20 @@ const translations = {
       "uploadsTitle": "Subidas",
       "uploadsDesc": "Las fotos subidas, su revisión y los registros públicos aparecen aquí.",
       "apiTitle": "Solicitudes API",
-      "apiDesc": "Las solicitudes de Token, revisión y límites de uso aparecen aquí."
+      "apiDesc": "Las solicitudes de Token, revisión y límites de uso aparecen aquí.",
+      "emptyApiApplication": "Aún no hay solicitud API.",
+      "statusPending": "pendiente",
+      "noEmail": "Sin correo",
+      "apiApplicationFallback": "Solicitud API",
+      "untitledPhoto": "Foto sin título",
+      "userPrefix": "Usuario Xiake",
+      "connectedSuffix": "conectado",
+      "accountConnected": "Cuenta conectada",
+      "typeSunrise": "Amanecer",
+      "typeSunset": "Atardecer",
+      "typePlace": "Lugar",
+      "untitledLocation": "Lugar sin título",
+      "coordinatesPending": "Coordenadas pendientes"
     }
   },
   "home": {

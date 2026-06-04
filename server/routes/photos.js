@@ -15,6 +15,7 @@ const exifr = require('exifr');
 const photoService = require('../services/PhotoService');
 const UserService = require('../services/UserService');
 
+const SESSION_COOKIE = 'xiake_session';
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/heic', 'image/heif'];
 const FALLBACK_UPLOAD_MIMES = ['application/octet-stream'];
@@ -35,7 +36,22 @@ const upload = multer({
 function extractToken(req) {
   const auth = req.get('authorization') || '';
   if (/^Bearer\s+/i.test(auth)) return auth.replace(/^Bearer\s+/i, '').trim();
-  return req.get('x-session-token') || '';
+  return req.get('x-session-token') || getCookie(req.headers.cookie, SESSION_COOKIE) || '';
+}
+
+function getCookie(header = '', name) {
+  const cookies = String(header)
+    .split(';')
+    .map((part) => part.trim())
+    .filter(Boolean);
+  for (const cookie of cookies) {
+    const separator = cookie.indexOf('=');
+    if (separator < 0) continue;
+    if (cookie.slice(0, separator) === name) {
+      return decodeURIComponent(cookie.slice(separator + 1));
+    }
+  }
+  return null;
 }
 
 function createAuthMiddleware(userService) {
@@ -437,4 +453,4 @@ router.get('/:id/original', (req, res) => {
 
 module.exports = createRouter();
 module.exports.createRouter = createRouter;
-module.exports._test = { createAuthMiddleware, extractToken, parseOptionalCoordinate };
+module.exports._test = { createAuthMiddleware, extractToken, getCookie, parseOptionalCoordinate };

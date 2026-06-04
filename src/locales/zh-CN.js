@@ -65,7 +65,14 @@ export default {
       createAction: '创建账号',
       resetAction: '重置密码',
       or: '或',
-      googleLogin: 'Google 登录'
+      googleLogin: 'Google 登录',
+      loginSuccess: '已登录。',
+      registerSuccess: '账号已创建。',
+      resetSuccess: '密码已重置，请用新密码登录。',
+      requestFailed: '账号请求失败。',
+      done: '完成。',
+      recoveryQuestionFallback: '如果账号存在，请输入找回答案和新密码。',
+      recoveryQuestionUnavailable: '找回问题暂时不可用，你仍可尝试填写答案和新密码。'
     },
     menu: {
       buttonAria: '账号',
@@ -88,7 +95,20 @@ export default {
       uploadsTitle: '上传记录',
       uploadsDesc: '照片上传、审核状态和公开展示记录会显示在这里。',
       apiTitle: 'API 申请',
-      apiDesc: 'Token 申请、审核进度和调用额度会显示在这里。'
+      apiDesc: 'Token 申请、审核进度和调用额度会显示在这里。',
+      emptyApiApplication: '暂无 API 申请。',
+      statusPending: '待处理',
+      noEmail: '未填写邮箱',
+      apiApplicationFallback: 'API 申请',
+      untitledPhoto: '未命名照片',
+      userPrefix: '霞客用户',
+      connectedSuffix: '已连接',
+      accountConnected: '账号已连接',
+      typeSunrise: '朝霞',
+      typeSunset: '晚霞',
+      typePlace: '地点',
+      untitledLocation: '未命名地点',
+      coordinatesPending: '坐标待补充'
     }
   },
 

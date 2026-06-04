@@ -59,7 +59,14 @@ const translations = {
       "createAction": "建立帳號",
       "resetAction": "重設密碼",
       "or": "或",
-      "googleLogin": "Google 登入"
+      "googleLogin": "Google 登入",
+      "loginSuccess": "已登入。",
+      "registerSuccess": "帳號已建立。",
+      "resetSuccess": "密碼已重設，請用新密碼登入。",
+      "requestFailed": "帳號請求失敗。",
+      "done": "完成。",
+      "recoveryQuestionFallback": "如果帳號存在，請輸入找回答案和新密碼。",
+      "recoveryQuestionUnavailable": "找回問題暫時不可用，你仍可嘗試填寫答案和新密碼。"
     },
     "menu": {
       "buttonAria": "帳號",
@@ -82,7 +89,20 @@ const translations = {
       "uploadsTitle": "上傳記錄",
       "uploadsDesc": "照片上傳、審核狀態和公開展示記錄會顯示在這裡。",
       "apiTitle": "API 申請",
-      "apiDesc": "Token 申請、審核進度和呼叫額度會顯示在這裡。"
+      "apiDesc": "Token 申請、審核進度和呼叫額度會顯示在這裡。",
+      "emptyApiApplication": "暫無 API 申請。",
+      "statusPending": "待處理",
+      "noEmail": "未填寫信箱",
+      "apiApplicationFallback": "API 申請",
+      "untitledPhoto": "未命名照片",
+      "userPrefix": "霞客使用者",
+      "connectedSuffix": "已連接",
+      "accountConnected": "帳號已連接",
+      "typeSunrise": "朝霞",
+      "typeSunset": "晚霞",
+      "typePlace": "地點",
+      "untitledLocation": "未命名地點",
+      "coordinatesPending": "座標待補充"
     }
   },
   "home": {

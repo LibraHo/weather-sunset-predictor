@@ -218,6 +218,12 @@ describe('photos routes', () => {
       .expect(200);
     expect(mine.body.photos.map(photo => photo.id)).toContain(firstUpload.body.photo.id);
 
+    const mineByCookie = await request(app)
+      .get('/api/photos/mine')
+      .set('Cookie', `xiake_session=${token}`)
+      .expect(200);
+    expect(mineByCookie.body.photos.map(photo => photo.id)).toContain(firstUpload.body.photo.id);
+
     await request(app)
       .patch(`/api/photos/mine/${firstUpload.body.photo.id}`)
       .set('Authorization', `Bearer ${secondToken}`)

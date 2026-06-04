@@ -59,7 +59,14 @@ const translations = {
       "createAction": "Create account",
       "resetAction": "Reset password",
       "or": "or",
-      "googleLogin": "Continue with Google"
+      "googleLogin": "Continue with Google",
+      "loginSuccess": "Signed in.",
+      "registerSuccess": "Account created.",
+      "resetSuccess": "Password reset. Please sign in with the new password.",
+      "requestFailed": "Account request failed.",
+      "done": "Done.",
+      "recoveryQuestionFallback": "If the account exists, enter the recovery answer and a new password.",
+      "recoveryQuestionUnavailable": "Recovery question is temporarily unavailable. You can still try the answer and new password."
     },
     "menu": {
       "buttonAria": "Account",
@@ -82,7 +89,20 @@ const translations = {
       "uploadsTitle": "Uploads",
       "uploadsDesc": "Photo uploads, review status, and public gallery records appear here.",
       "apiTitle": "API applications",
-      "apiDesc": "Token requests, review status, and usage limits appear here."
+      "apiDesc": "Token requests, review status, and usage limits appear here.",
+      "emptyApiApplication": "No API application yet.",
+      "statusPending": "pending",
+      "noEmail": "No email",
+      "apiApplicationFallback": "API application",
+      "untitledPhoto": "Untitled photo",
+      "userPrefix": "Sunset user",
+      "connectedSuffix": "connected",
+      "accountConnected": "Account connected",
+      "typeSunrise": "Sunrise",
+      "typeSunset": "Sunset",
+      "typePlace": "Place",
+      "untitledLocation": "Untitled location",
+      "coordinatesPending": "Coordinates pending"
     }
   },
   "home": {

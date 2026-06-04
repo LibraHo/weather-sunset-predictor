@@ -59,7 +59,14 @@ const translations = {
       "createAction": "Tạo tài khoản",
       "resetAction": "Đặt lại mật khẩu",
       "or": "hoặc",
-      "googleLogin": "Tiếp tục với Google"
+      "googleLogin": "Tiếp tục với Google",
+      "loginSuccess": "Đã đăng nhập.",
+      "registerSuccess": "Đã tạo tài khoản.",
+      "resetSuccess": "Đã đặt lại mật khẩu. Hãy đăng nhập bằng mật khẩu mới.",
+      "requestFailed": "Yêu cầu tài khoản thất bại.",
+      "done": "Hoàn tất.",
+      "recoveryQuestionFallback": "Nếu tài khoản tồn tại, hãy nhập câu trả lời khôi phục và mật khẩu mới.",
+      "recoveryQuestionUnavailable": "Câu hỏi khôi phục tạm thời không khả dụng. Bạn vẫn có thể thử câu trả lời và mật khẩu mới."
     },
     "menu": {
       "buttonAria": "Tài khoản",
@@ -82,7 +89,20 @@ const translations = {
       "uploadsTitle": "Ảnh đã tải lên",
       "uploadsDesc": "Ảnh tải lên, trạng thái duyệt và bản ghi công khai sẽ hiển thị tại đây.",
       "apiTitle": "Đăng ký API",
-      "apiDesc": "Đơn xin Token, trạng thái duyệt và hạn mức sử dụng sẽ hiển thị tại đây."
+      "apiDesc": "Đơn xin Token, trạng thái duyệt và hạn mức sử dụng sẽ hiển thị tại đây.",
+      "emptyApiApplication": "Chưa có đơn đăng ký API.",
+      "statusPending": "đang chờ",
+      "noEmail": "Chưa có email",
+      "apiApplicationFallback": "Đơn đăng ký API",
+      "untitledPhoto": "Ảnh chưa đặt tên",
+      "userPrefix": "Người dùng Xiake",
+      "connectedSuffix": "đã kết nối",
+      "accountConnected": "Tài khoản đã kết nối",
+      "typeSunrise": "Bình minh",
+      "typeSunset": "Hoàng hôn",
+      "typePlace": "Địa điểm",
+      "untitledLocation": "Địa điểm chưa đặt tên",
+      "coordinatesPending": "Tọa độ đang chờ"
     }
   },
   "home": {

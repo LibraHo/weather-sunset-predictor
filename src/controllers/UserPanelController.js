@@ -214,8 +214,8 @@ export default class UserPanelController {
   }
 
   renderSession(user) {
-    const state = buildSessionState(user);
-    this.setText('user-status-label', this.t('account.panel.signedIn', 'Signed in'));
+    const state = buildSessionState(user, this.sessionLabels());
+    this.setText('user-status-label', this.t('account.panel.signedIn'));
     this.setText('user-display-name', state.displayName);
     this.setText('user-identity-summary', state.identitySummary);
     this.byId('user-signed-out-actions')?.classList.add('hidden');
@@ -266,7 +266,7 @@ export default class UserPanelController {
       return;
     }
     locations.forEach((location) => {
-      const item = decorateLocation(location);
+      const item = decorateLocation(location, this.locationLabels());
       const li = this.document.createElement('li');
       li.className = 'user-panel-location-row';
       li.innerHTML = `
@@ -281,7 +281,7 @@ export default class UserPanelController {
     });
   }
 
-  renderApiApplication(application, emptyText = 'No API application yet.') {
+  renderApiApplication(application, emptyText = this.t('account.panel.emptyApiApplication')) {
     const list = this.byId('user-recent-list');
     if (!list) return;
     list.innerHTML = '';
@@ -294,9 +294,9 @@ export default class UserPanelController {
     }
     const li = this.document.createElement('li');
     li.className = 'user-panel-location-row';
-    const status = application.status || 'pending';
-    const email = application.email || 'No email';
-    const purpose = application.purpose || application.nickname || 'API application';
+    const status = application.status || this.t('account.panel.statusPending');
+    const email = application.email || this.t('account.panel.noEmail');
+    const purpose = application.purpose || application.nickname || this.t('account.panel.apiApplicationFallback');
     li.innerHTML = `
       <span class="user-panel-location-main">
         <strong>${escapeHtml(email)}</strong>
@@ -308,7 +308,7 @@ export default class UserPanelController {
     list.appendChild(li);
   }
 
-  renderUploads(photos, emptyText = 'No uploaded photos yet.') {
+  renderUploads(photos, emptyText = this.t('account.panel.emptyUploads')) {
     const list = this.byId('user-uploads-list');
     if (!list) return;
     list.innerHTML = '';
@@ -322,8 +322,8 @@ export default class UserPanelController {
     photos.slice(0, 8).forEach((photo) => {
       const li = this.document.createElement('li');
       li.className = 'user-panel-location-row';
-      const location = photo.locationName || photo.location || 'Untitled photo';
-      const status = photo.status || 'pending';
+      const location = photo.locationName || photo.location || this.t('account.panel.untitledPhoto');
+      const status = photo.status || photo.reviewStatus || this.t('account.panel.statusPending');
       const uploadedAt = photo.uploadedAt || photo.createdAt || '';
       li.innerHTML = `
         <span class="user-panel-location-main">
@@ -340,7 +340,7 @@ export default class UserPanelController {
   async loginWithEmail(form) {
     const payload = this.formPayload(form, ['email', 'password']);
     await this.submitAuth('/auth/login', payload, {
-      successMessage: 'Signed in.',
+      successMessage: this.t('account.auth.loginSuccess'),
       resetForm: false
     });
   }
@@ -348,7 +348,7 @@ export default class UserPanelController {
   async registerWithEmail(form) {
     const payload = this.formPayload(form, ['email', 'password', 'recoveryQuestion', 'recoveryAnswer']);
     await this.submitAuth('/auth/register', payload, {
-      successMessage: 'Account created.',
+      successMessage: this.t('account.auth.registerSuccess'),
       form,
       resetForm: true
     });
@@ -357,7 +357,7 @@ export default class UserPanelController {
   async resetPassword(form) {
     const payload = this.formPayload(form, ['email', 'recoveryAnswer', 'newPassword']);
     const data = await this.submitAuth('/auth/password/reset', payload, {
-      successMessage: 'Password reset. Please sign in with the new password.',
+      successMessage: this.t('account.auth.resetSuccess'),
       form,
       resetForm: true,
       refreshAfterSuccess: false
@@ -376,16 +376,16 @@ export default class UserPanelController {
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(data?.error?.message || 'Account request failed.');
+        throw new Error(data?.error?.message || this.t('account.auth.requestFailed'));
       }
-      this.setAuthMessage(options.successMessage || 'Done.', 'success');
+      this.setAuthMessage(options.successMessage || this.t('account.auth.done'), 'success');
       if (options.resetForm) options.form?.reset?.();
       if (options.refreshAfterSuccess !== false) {
         await this.refresh();
       }
       return data;
     } catch (error) {
-      this.setAuthMessage(error?.message || 'Account request failed.', 'error');
+      this.setAuthMessage(error?.message || this.t('account.auth.requestFailed'), 'error');
       return null;
     }
   }
@@ -403,9 +403,9 @@ export default class UserPanelController {
       });
       const data = await response.json().catch(() => ({}));
       const question = data?.recoveryQuestion;
-      target.textContent = question || 'If the account exists, enter the recovery answer and a new password.';
+      target.textContent = question || this.t('account.auth.recoveryQuestionFallback');
     } catch (error) {
-      target.textContent = 'Recovery question is temporarily unavailable. You can still try the answer and new password.';
+      target.textContent = this.t('account.auth.recoveryQuestionUnavailable');
     }
   }
 
@@ -457,7 +457,25 @@ export default class UserPanelController {
 
   t(key, fallback) {
     const translated = i18n.t(key);
-    return translated === key ? fallback : translated;
+    return translated === key ? (fallback || key) : translated;
+  }
+
+  locationLabels() {
+    return {
+      sunrise: this.t('account.panel.typeSunrise'),
+      sunset: this.t('account.panel.typeSunset'),
+      place: this.t('account.panel.typePlace'),
+      untitledLocation: this.t('account.panel.untitledLocation'),
+      coordinatesPending: this.t('account.panel.coordinatesPending')
+    };
+  }
+
+  sessionLabels() {
+    return {
+      userPrefix: this.t('account.panel.userPrefix'),
+      connectedSuffix: this.t('account.panel.connectedSuffix'),
+      accountConnected: this.t('account.panel.accountConnected')
+    };
   }
 
   byId(id) {
@@ -465,23 +483,32 @@ export default class UserPanelController {
   }
 }
 
-export function buildSessionState(user = {}) {
+export function buildSessionState(user = {}, labels = {}) {
   const userId = user.userId || user.id || '';
   const identities = Array.isArray(user.identities) ? user.identities : [];
   const identitySummary = identities.map((identity) => identityLabel(identity.provider)).filter(Boolean).join(', ');
+  const userPrefix = labels.userPrefix || 'account.panel.userPrefix';
+  const connectedSuffix = labels.connectedSuffix || 'account.panel.connectedSuffix';
+  const accountConnected = labels.accountConnected || 'account.panel.accountConnected';
   return {
-    displayName: userId ? `Sunset user ${String(userId).slice(-6)}` : 'Sunset user',
-    identitySummary: identitySummary ? `${identitySummary} connected` : 'Account connected'
+    displayName: userId ? `${userPrefix} ${String(userId).slice(-6)}` : userPrefix,
+    identitySummary: identitySummary ? `${identitySummary} ${connectedSuffix}` : accountConnected
   };
 }
 
-export function decorateLocation(location = {}) {
-  const name = location.name || location.locationName || location.location || 'Untitled location';
+export function decorateLocation(location = {}, labels = {}) {
+  const name = location.name || location.locationName || location.location || labels.untitledLocation || 'account.panel.untitledLocation';
   const lat = Number(location.lat);
   const lon = Number(location.lon);
   const type = location.type || location.period || '';
-  const typeLabel = type === 'sunrise' ? 'Sunrise' : type === 'sunset' ? 'Sunset' : 'Place';
-  const coordinate = Number.isFinite(lat) && Number.isFinite(lon) ? `${lat.toFixed(4)}, ${lon.toFixed(4)}` : 'Coordinates pending';
+  const typeLabel = type === 'sunrise'
+    ? (labels.sunrise || 'account.panel.typeSunrise')
+    : type === 'sunset'
+      ? (labels.sunset || 'account.panel.typeSunset')
+      : (labels.place || 'account.panel.typePlace');
+  const coordinate = Number.isFinite(lat) && Number.isFinite(lon)
+    ? `${lat.toFixed(4)}, ${lon.toFixed(4)}`
+    : (labels.coordinatesPending || 'account.panel.coordinatesPending');
   return { ...location, name, meta: `${typeLabel} - ${coordinate}` };
 }
 

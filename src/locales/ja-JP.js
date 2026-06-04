@@ -59,7 +59,14 @@ const translations = {
       "createAction": "アカウント作成",
       "resetAction": "パスワード再設定",
       "or": "または",
-      "googleLogin": "Googleでログイン"
+      "googleLogin": "Googleでログイン",
+      "loginSuccess": "ログインしました。",
+      "registerSuccess": "アカウントを作成しました。",
+      "resetSuccess": "パスワードを再設定しました。新しいパスワードでログインしてください。",
+      "requestFailed": "アカウントリクエストに失敗しました。",
+      "done": "完了。",
+      "recoveryQuestionFallback": "アカウントが存在する場合は、復旧用の答えと新しいパスワードを入力してください。",
+      "recoveryQuestionUnavailable": "復旧用の質問は一時的に利用できません。答えと新しいパスワードは引き続き試せます。"
     },
     "menu": {
       "buttonAria": "アカウント",
@@ -82,7 +89,20 @@ const translations = {
       "uploadsTitle": "アップロード履歴",
       "uploadsDesc": "写真アップロード、審査状態、公開記録がここに表示されます。",
       "apiTitle": "API申請",
-      "apiDesc": "Token申請、審査状況、利用枠がここに表示されます。"
+      "apiDesc": "Token申請、審査状況、利用枠がここに表示されます。",
+      "emptyApiApplication": "API申請はまだありません。",
+      "statusPending": "保留中",
+      "noEmail": "メール未設定",
+      "apiApplicationFallback": "API申請",
+      "untitledPhoto": "無題の写真",
+      "userPrefix": "霞客ユーザー",
+      "connectedSuffix": "接続済み",
+      "accountConnected": "アカウント接続済み",
+      "typeSunrise": "朝焼け",
+      "typeSunset": "夕焼け",
+      "typePlace": "地点",
+      "untitledLocation": "無題の地点",
+      "coordinatesPending": "座標未設定"
     }
   },
   "home": {

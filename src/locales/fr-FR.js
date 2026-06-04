@@ -59,7 +59,14 @@ const translations = {
       "createAction": "Créer le compte",
       "resetAction": "Réinitialiser",
       "or": "ou",
-      "googleLogin": "Continuer avec Google"
+      "googleLogin": "Continuer avec Google",
+      "loginSuccess": "Connecté.",
+      "registerSuccess": "Compte créé.",
+      "resetSuccess": "Mot de passe réinitialisé. Connectez-vous avec le nouveau mot de passe.",
+      "requestFailed": "La demande liée au compte a échoué.",
+      "done": "Terminé.",
+      "recoveryQuestionFallback": "Si le compte existe, saisissez la réponse de récupération et un nouveau mot de passe.",
+      "recoveryQuestionUnavailable": "La question de récupération est temporairement indisponible. Vous pouvez quand même essayer la réponse et le nouveau mot de passe."
     },
     "menu": {
       "buttonAria": "Compte",
@@ -82,7 +89,20 @@ const translations = {
       "uploadsTitle": "Envois",
       "uploadsDesc": "Les photos envoyées, leur statut de révision et les publications apparaissent ici.",
       "apiTitle": "Demandes API",
-      "apiDesc": "Les demandes de Token, leur statut de révision et les quotas apparaissent ici."
+      "apiDesc": "Les demandes de Token, leur statut de révision et les quotas apparaissent ici.",
+      "emptyApiApplication": "Aucune demande API pour le moment.",
+      "statusPending": "en attente",
+      "noEmail": "Aucun e-mail",
+      "apiApplicationFallback": "Demande API",
+      "untitledPhoto": "Photo sans titre",
+      "userPrefix": "Utilisateur Xiake",
+      "connectedSuffix": "connecté",
+      "accountConnected": "Compte connecté",
+      "typeSunrise": "Lever de soleil",
+      "typeSunset": "Coucher de soleil",
+      "typePlace": "Lieu",
+      "untitledLocation": "Lieu sans titre",
+      "coordinatesPending": "Coordonnées en attente"
     }
   },
   "home": {

@@ -125,6 +125,10 @@ describe('UserPanelController behavior', () => {
       </section>
     `;
     ({ default: UserPanelController } = await import('../../src/controllers/UserPanelController.js'));
+    const { default: i18n } = await import('../../src/i18n.js');
+    const { default: enUS } = await import('../../src/locales/en-US.js');
+    i18n.currentLanguage = 'en-US';
+    i18n.translations = { 'en-US': enUS };
   });
 
   afterEach(() => {
