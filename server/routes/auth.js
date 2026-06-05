@@ -68,6 +68,11 @@ function sendCreatedLogin(res, result) {
   });
 }
 
+function redirectBrowserLogin(res, result, target = '/') {
+  res.cookie(SESSION_COOKIE, result.token, cookieOptions(30 * 24 * 60 * 60 * 1000));
+  return res.redirect(target);
+}
+
 function findRequestUser(req, oauthLoginService) {
   const cookies = parseCookies(req.headers.cookie);
   const token = getBearerToken(req) || cookies[SESSION_COOKIE];
@@ -235,7 +240,7 @@ function createRouter(options = {}) {
       oauthLoginService.validateState('google', req.query?.state, cookies[STATE_COOKIE]);
       const result = await oauthLoginService.loginGoogle(req.query?.code);
       res.clearCookie(STATE_COOKIE, cookieOptions());
-      sendLogin(res, result);
+      redirectBrowserLogin(res, result);
     } catch (error) {
       sendError(res, error);
     }
