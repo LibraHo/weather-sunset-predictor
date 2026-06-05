@@ -723,6 +723,67 @@ describe('WeatherController - 24小时温度连续化', () => {
     nowSpy.mockRestore();
   });
 
+  test('updateWeatherDisplay: 当前小时缺 AOD 时使用同批最近有效 AOD', () => {
+    document.body.innerHTML = `
+      <section id="weather-section" class="card hidden">
+        <div id="weather-data" class="hidden"></div>
+        <div id="weather-location"></div>
+        <span id="current-temp-main"></span>
+        <span id="current-temp-unit"></span>
+        <span id="weather-icon-main"></span>
+        <span id="weather-description"></span>
+        <span id="current-humidity"></span>
+        <span id="current-cloud-cover"></span>
+        <span id="current-wind-speed"></span>
+        <span id="current-wind-direction-icon"></span>
+        <span id="current-wind-direction-text"></span>
+        <span id="current-pressure"></span>
+        <span id="current-visibility"></span>
+        <span id="current-aerosol"></span>
+        <span id="current-precipitation"></span>
+        <div id="weekly-cards"></div>
+      </section>
+    `;
+    controller.i18n = { t: jest.fn(key => key) };
+    controller.tempUnit = 'celsius';
+    controller.getConvertedTemp = value => value;
+    controller.formatWindSpeed = value => `${value} km/h`;
+    controller.renderWeeklyOverview = jest.fn();
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(new Date('2026-06-05T10:15:00Z').getTime());
+
+    controller.updateWeatherDisplay([
+      {
+        timestamp: new Date('2026-06-05T10:00:00Z').getTime(),
+        temp: 24,
+        humidity: 80,
+        cloudCover: 65,
+        windSpeed: 4,
+        windDirection: 90,
+        pressure: 1008,
+        visibility: 10,
+        aerosolOpticalDepth: null,
+        precipitation: 0
+      },
+      {
+        timestamp: new Date('2026-06-05T11:00:00Z').getTime(),
+        temp: 25,
+        humidity: 78,
+        cloudCover: 60,
+        windSpeed: 4,
+        windDirection: 90,
+        pressure: 1008,
+        visibility: 10,
+        aerosolOpticalDepth: 0.34,
+        precipitation: 0
+      }
+    ], { name: '贵州凯里', lat: 26.582, lon: 107.9775 });
+
+    expect(document.getElementById('current-aerosol').textContent).toBe('0.34');
+    expect(document.getElementById('current-aerosol').title).toBe('AOD 0.34');
+
+    nowSpy.mockRestore();
+  });
+
   test('showError: 无 #weather-error 元素时不报错', () => {
     document.body.innerHTML = '';
     expect(() => controller.showError('test error')).not.toThrow();
