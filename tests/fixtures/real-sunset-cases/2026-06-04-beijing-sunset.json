@@ -17,14 +17,14 @@
   "feedback": {
     "source": "Alex现场反馈 + 1x 手机主摄照片",
     "reportedAt": "2026-06-04T19:39:01+08:00",
-    "summary": "现场橙、红、紫很好看，云主要在光路方向；远处有一部分灰色低云/近地层云，但没有压住其他被照亮区域。Alex 认为详细测试应约 50 分。",
+    "summary": "现场橙、红、紫很好看，云主要在光路方向；远处有一部分灰色低云/近地层云，但没有压住其他被照亮区域。Alex 后续修正认为详细测试应在 50-60 分。",
     "subjectiveScore": {
-      "min": 48,
-      "max": 55,
-      "label": "主观约 50"
+      "min": 50,
+      "max": 60,
+      "label": "主观 50-60"
     },
     "calibrationTarget": {
-      "score": 50,
+      "score": 55,
       "status": "calibrated",
       "reason": "详细预测不能只看本地点头顶云量；日落 303° 西北光路方向中云被照亮时，应作为可见晚霞载体参与评分。"
     },
@@ -176,8 +176,8 @@
   },
   "expectations": {
     "score": {
-      "min": 48,
-      "max": 55
+      "min": 50,
+      "max": 60
     },
     "statusAnyOf": [
       "good_glow"
@@ -199,8 +199,8 @@
     "notAbove": [
       {
         "path": "score",
-        "value": 55,
-        "reason": "Solar-direction mid cloud can make a beautiful localized orange-red-purple sunset near 50, but should not be promoted into a 70+ widespread high-cloud eruption."
+        "value": 60,
+        "reason": "Solar-direction mid cloud can make a beautiful localized orange-red-purple sunset in the 50-60 range, but should not be promoted into a 70+ widespread high-cloud eruption."
       }
     ]
   }

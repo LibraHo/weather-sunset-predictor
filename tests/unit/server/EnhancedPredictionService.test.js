@@ -1618,7 +1618,7 @@ describe('EnhancedPredictionService', () => {
 
       expect(result.directionalCurtainCarrier).toMatchObject({
         applied: true,
-        floor: 48,
+        floor: 52,
         reason: 'solar_direction_mid_cloud_glow_carrier'
       });
       expect(result.carrierAnalysis.activeCarrier).toBe('directional_curtain');
@@ -1626,8 +1626,8 @@ describe('EnhancedPredictionService', () => {
         applied: false,
         metrics: { directionalCarrierApplied: true }
       });
-      expect(result.score).toBeGreaterThanOrEqual(48);
-      expect(result.score).toBeLessThanOrEqual(55);
+      expect(result.score).toBeGreaterThanOrEqual(50);
+      expect(result.score).toBeLessThanOrEqual(60);
       expect(result.status).toBe('good_glow');
     });
 
