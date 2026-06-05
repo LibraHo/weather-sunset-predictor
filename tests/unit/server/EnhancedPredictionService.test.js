@@ -55,6 +55,16 @@ describe('EnhancedPredictionService', () => {
       expect(EnhancedPredictionService.VISIBLE_CARRIER_SAMPLE_WEIGHTS).toEqual([0.15, 0.20, 0.25, 0.22, 0.12, 0.06]);
       expect(EnhancedPredictionService.VISIBLE_CARRIER_SAMPLE_WEIGHTS.reduce((sum, weight) => sum + weight, 0)).toBeCloseTo(1);
     });
+
+    test('should use a saturating upper-cloud signal curve', () => {
+      const lowEndGain = EnhancedPredictionService.upperCloudSignal(10) - EnhancedPredictionService.upperCloudSignal(0);
+      const highEndGain = EnhancedPredictionService.upperCloudSignal(90) - EnhancedPredictionService.upperCloudSignal(80);
+
+      expect(lowEndGain).toBeGreaterThan(highEndGain);
+      expect(EnhancedPredictionService.upperCloudSignal(10)).toBeGreaterThan(10);
+      expect(EnhancedPredictionService.upperCloudSignal(50)).toBeLessThan(52);
+      expect(EnhancedPredictionService.upperCloudSignal(100)).toBeCloseTo(100);
+    });
   });
 
   // ========== 辅助函数测试 ==========
@@ -205,8 +215,10 @@ describe('EnhancedPredictionService', () => {
       const weatherData = { lowClouds: 50, midClouds: 50, highClouds: 50 };
       const result = EnhancedPredictionService.scoreCloudCanvas(weatherData);
 
-      // 50*0.75 + 50*0.45 + 50*0.10 = 37.5 + 22.5 + 5 = 65.0
-      expect(result.effectiveCloudCover).toBeCloseTo(65.0, 1);
+      expect(result.breakdown.midCloudSignal).toBeGreaterThan(result.breakdown.midClouds);
+      expect(result.breakdown.highCloudSignal).toBeGreaterThan(result.breakdown.highClouds);
+      expect(result.effectiveCloudCover).toBeGreaterThan(65.0);
+      expect(result.effectiveCloudCover).toBeLessThan(67.0);
     });
 
     test('should handle overcast conditions (all layers thick)', () => {
@@ -842,6 +854,35 @@ describe('EnhancedPredictionService', () => {
       );
 
       expect(result.type).toBe('sunrise');
+    });
+
+    test('should treat sparse upper clouds as weak visible canvas instead of clear sky', () => {
+      const weatherData = {
+        lowClouds: 0,
+        midClouds: 2.2,
+        highClouds: 7.1,
+        cloudCover: 9,
+        visibility: 15,
+        humidity: 50,
+        precipitation: 0,
+        aerosolOpticalDepth: 0.21,
+        pm2_5: 57.3,
+        pm10: 70,
+        dust: 2
+      };
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData,
+        new Date('2026-06-04T20:47:00.000Z'),
+        39.9042,
+        116.4074,
+        'sunrise'
+      );
+
+      expect(result.carrierAnalysis.cloudLevel).toBe('fair');
+      expect(result.carrierAnalysis.cloudTypeAdjustment.reason).toBe('weak_upper_cloud_canvas_present');
+      expect(result.carrierAnalysis.activeCarrier).toBe('cloud');
+      expect(result.score).toBeGreaterThanOrEqual(40);
+      expect(result.score).toBeLessThan(50);
     });
 
     test('should not apply visible sunset-sector caps to sunrise predictions', () => {
