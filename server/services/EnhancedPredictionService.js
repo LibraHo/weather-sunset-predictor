@@ -1063,14 +1063,14 @@ function scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore = {}, we
   // while still limiting it below widespread high-cloud eruptions.
   const directionalMidGlow = hasOpenPath && mid >= 44 && high < 20 && lowMidBlock <= 36 && visibility >= 10;
   if (directionalMidGlow) {
-    const lightPathBonus = Math.max(0, Math.min((lightPath - 65) / 20 * 2, 2));
-    const midGlowScore = 50 + Math.min((mid - 44) / 26 * 8, 8) + lightPathBonus;
-    score = Math.max(score, midGlowScore);
+    const lightPathBonus = Math.max(0, Math.min((lightPath - 65) / 20 * 5, 5));
+    const midGlowScore = 56 + Math.min((mid - 44) / 26 * 6, 6) + lightPathBonus;
+    score = Math.min(Math.max(score, midGlowScore), 60);
   }
 
   score = parseFloat(clamp(score, 0, 62).toFixed(1));
   const floor = directionalMidGlow
-    ? (lowMidBlock >= 32 ? 44 : 50)
+    ? (lowMidBlock >= 32 ? 46 : 52)
     : (score >= 42
       ? (lowMidBlock >= 38 ? 30 : 35)
       : (score >= 30 ? 24 : null));
