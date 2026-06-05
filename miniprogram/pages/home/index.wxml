@@ -148,6 +148,7 @@
           <image class="weather-metric-image" src="/assets/icons/metric-{{item.key}}.svg" mode="aspectFit" aria-hidden="true" />
           <text class="metric-label">{{item.label}}</text>
           <text class="metric-value">{{item.value}}</text>
+          <text class="metric-hint" wx:if="{{item.hint}}">{{item.hint}}</text>
         </view>
       </view>
     </view>

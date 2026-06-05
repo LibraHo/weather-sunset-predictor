@@ -338,6 +338,36 @@ describe('miniprogram page user/share helpers', () => {
     ]));
   });
 
+  test('home and result weather metrics mark nearest-hour AOD fallback', () => {
+    const prediction = normalizePrediction({
+      score: 42,
+      status: 'fair',
+      locationName: '贵州凯里',
+      referenceTime: '2026-06-05T11:38:00.000Z',
+      cloudLayers: { high: 20, mid: 30, low: 12 },
+      weatherData: {
+        temperature_2m: 23,
+        relative_humidity_2m: 82,
+        aerosolOpticalDepth: null,
+        hourly: [
+          { time: '2026-06-05T10:00:00.000Z', aerosolOpticalDepth: null },
+          { time: '2026-06-05T11:00:00.000Z', aerosolOpticalDepth: 0.34 },
+          { time: '2026-06-05T12:00:00.000Z', aerosolOpticalDepth: 0.52 }
+        ]
+      }
+    });
+
+    const homeState = homeHelpers.buildHomePredictionSurface(prediction, { locationName: '贵州凯里', period: 'sunset' });
+    expect(homeState.weatherPreview.metrics).toEqual(expect.arrayContaining([
+      expect.objectContaining({ key: 'aerosol', value: '≈0.52', hint: '邻近时次' })
+    ]));
+
+    const resultState = resultHelpers.buildResultPeriodState(prediction);
+    expect(resultState.metrics).toEqual(expect.arrayContaining([
+      expect.objectContaining({ key: 'aod', value: '≈0.52', hint: '邻近时次' })
+    ]));
+  });
+
   test('home weather card converts numeric wind direction to web-style label and arrow', () => {
     const prediction = normalizePrediction({
       score: 76,

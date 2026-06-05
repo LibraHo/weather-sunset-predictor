@@ -1036,6 +1036,11 @@
   font-weight: 800;
 }
 
+.metric-hint {
+  color: #fdba74;
+  font-size: 20rpx;
+}
+
 .weather-forecast-module {
   margin-top: 22rpx;
   padding: 12rpx;

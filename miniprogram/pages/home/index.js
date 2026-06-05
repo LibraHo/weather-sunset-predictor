@@ -1,5 +1,5 @@
 import { reverseGeocode, searchLocations } from '../../services/geocoding.js';
-import { getEnhancedPrediction, getEnhancedPredictionBatch, getHomeGateway, getSiteState, getWeatherForecast } from '../../services/prediction.js';
+import { getEnhancedPrediction, getEnhancedPredictionBatch, getHomeGateway, getSiteState, getWeatherForecast, resolveAodDisplay } from '../../services/prediction.js';
 import { addFavorite, addRecentLocation, listRecentLocations } from '../../services/user.js';
 import { formatVisitorCount, incrementVisitorCount } from '../../services/visitor.js';
 import { trackMapView, trackPageVisit, trackShareClick } from '../../services/analytics.js';
@@ -1409,6 +1409,7 @@ export function buildWeatherPreview(weather = {}) {
   const hourly = buildWeatherHourlyPreview(weather);
   const hourlyView = buildWeatherHourlyViewModel(hourly, 'temp');
   const windDirection = formatWindDirectionLabel(weather.windDirection);
+  const aerosolMetric = formatAodMetric(weather);
   return {
     sourceWeather: weather,
     visible: true,
@@ -1437,7 +1438,7 @@ export function buildWeatherPreview(weather = {}) {
       { key: 'cloud', label: '云量', value: formatPercentValue(cloudAverage) },
       { key: 'pressure', label: '气压', value: formatNumberValue(weather.pressure, 'hPa') },
       { key: 'visibility', label: '能见度', value: formatDistanceValue(weather.visibility) },
-      { key: 'aerosol', label: '气溶胶', value: formatNumberValue(weather.aod ?? weather.aerosolOpticalDepth, '') },
+      { key: 'aerosol', label: '气溶胶', ...aerosolMetric },
       { key: 'precipitation', label: '降水', value: formatNumberValue(weather.precipitation, 'mm') }
     ],
     note: `高 ${formatPercentValue(highCloud)} / 中 ${formatPercentValue(midCloud)} / 低 ${formatPercentValue(lowCloud)} · ${windDirection} ${windSpeed}`
@@ -2016,6 +2017,16 @@ function formatNumberValue(value, unit) {
   return `${num}${unit ? ` ${unit}` : ''}`;
 }
 
+function formatAodMetric(weather = {}) {
+  const aerosol = resolveAodDisplay(weather, { referenceTime: weather.referenceTime });
+  if (aerosol.value === null) return { value: '--', hint: '' };
+  const value = formatNumberValue(aerosol.value, '');
+  return {
+    value: aerosol.approximate ? `≈${value}` : value,
+    hint: aerosol.approximate ? '邻近时次' : ''
+  };
+}
+
 function formatTemperatureValue(value) {
   if (value === null || value === undefined || value === '') return '--';
   const num = Number(value);
@@ -2055,6 +2066,7 @@ function buildWeatherFromPrediction(prediction = {}, query = {}) {
     location: prediction.locationName || prediction.location || query.locationName || query.location,
     provider: weather.provider || prediction.provider || prediction.providerMeta?.name || 'Open-Meteo',
     providerMeta: weather.providerMeta || prediction.providerMeta,
+    referenceTime: prediction.referenceTime || weather.referenceTime || prediction.eventTime || prediction.date,
     temp: weather.temp ?? weather.temperature ?? metrics.temp ?? metrics.temperature ?? prediction.temperature,
     humidity: weather.humidity ?? metrics.humidity ?? prediction.humidity,
     pressure: weather.pressure ?? metrics.pressure ?? prediction.pressure,
