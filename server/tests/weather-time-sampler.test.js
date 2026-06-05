@@ -6,26 +6,28 @@ describe('WeatherTimeSampler', () => {
     sampler = mod.default || mod;
   });
 
-  test('builds a weighted weather sample from nearby hourly rows', () => {
+  test('builds a weighted weather sample from the two bounding hourly rows', () => {
     const hourly = [
-      { timestamp: Date.parse('2026-06-05T04:00:00Z'), highClouds: 0, midClouds: 10, lowClouds: 5 },
-      { timestamp: Date.parse('2026-06-05T05:00:00Z'), highClouds: 9, midClouds: 0, lowClouds: 0 },
-      { timestamp: Date.parse('2026-06-05T06:00:00Z'), highClouds: 40, midClouds: 15, lowClouds: 0 },
-      { timestamp: Date.parse('2026-06-05T07:00:00Z'), highClouds: 81, midClouds: 30, lowClouds: 0 }
+      { timestamp: Date.parse('2026-06-05T18:00:00Z'), highClouds: 10, midClouds: 20, lowClouds: 5 },
+      { timestamp: Date.parse('2026-06-05T19:00:00Z'), highClouds: 40, midClouds: 60, lowClouds: 0 },
+      { timestamp: Date.parse('2026-06-05T20:00:00Z'), highClouds: 80, midClouds: 20, lowClouds: 0 },
+      { timestamp: Date.parse('2026-06-05T21:00:00Z'), highClouds: 100, midClouds: 80, lowClouds: 0 }
     ];
 
     const result = sampler.buildTimeWeightedWeatherSample(
       hourly,
-      new Date('2026-06-05T04:47:00Z')
+      new Date('2026-06-05T19:15:00Z')
     );
 
     expect(result.selectedIdx).toBe(1);
-    expect(result.weighted.highClouds).toBeGreaterThan(9);
-    expect(result.weighted.highClouds).toBeLessThan(40);
-    expect(result.weighted.midClouds).toBeGreaterThan(0);
-    expect(result.weighted.timeWeightedSamples).toHaveLength(3);
+    expect(result.weighted.highClouds).toBe(50);
+    expect(result.weighted.midClouds).toBe(50);
+    expect(result.weighted.timeWeightedSamples).toEqual([
+      { timestamp: Date.parse('2026-06-05T19:00:00Z'), weight: 0.75 },
+      { timestamp: Date.parse('2026-06-05T20:00:00Z'), weight: 0.25 }
+    ]);
     expect(result.weighted.timeWeightedSamples.some(sample => (
-      sample.timestamp === Date.parse('2026-06-05T07:00:00Z')
+      sample.timestamp === Date.parse('2026-06-05T21:00:00Z')
     ))).toBe(false);
   });
 

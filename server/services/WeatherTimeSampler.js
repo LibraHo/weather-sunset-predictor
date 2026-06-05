@@ -1,6 +1,3 @@
-const DEFAULT_WINDOW_MS = 90 * 60 * 1000;
-const DEFAULT_MIN_WEIGHT = 0.05;
-
 const WEIGHTED_NUMERIC_FIELDS = [
   'cloudCover',
   'humidity',
@@ -69,11 +66,6 @@ function selectHourlyAt(hourly = [], referenceTime = new Date()) {
   return { selected: closest.item, selectedIdx: closest.idx, selectedTs: closest.ts };
 }
 
-function getLinearTimeWeight(diffMs, windowMs = DEFAULT_WINDOW_MS) {
-  if (!Number.isFinite(diffMs) || diffMs > windowMs) return 0;
-  return Math.max(0, 1 - diffMs / windowMs);
-}
-
 function averageWeightedField(samples, field) {
   let total = 0;
   let weightTotal = 0;
@@ -89,7 +81,40 @@ function averageWeightedField(samples, field) {
   return total / weightTotal;
 }
 
-function buildTimeWeightedWeatherSample(hourly = [], referenceTime = new Date(), options = {}) {
+function selectBoundingSamples(entries, refTs) {
+  const sorted = [...entries].sort((a, b) => a.ts - b.ts);
+  const exact = sorted.find(entry => entry.ts === refTs);
+  if (exact) {
+    return [{ ...exact, diffMs: 0, weight: 1 }];
+  }
+
+  const before = [...sorted].reverse().find(entry => entry.ts < refTs);
+  const after = sorted.find(entry => entry.ts > refTs);
+
+  if (!before || !after) {
+    const closest = sorted.reduce((best, current) => {
+      const bestDiff = Math.abs(best.ts - refTs);
+      const currentDiff = Math.abs(current.ts - refTs);
+      return currentDiff < bestDiff ? current : best;
+    }, sorted[0]);
+    return [{ ...closest, diffMs: Math.abs(closest.ts - refTs), weight: 1 }];
+  }
+
+  const span = after.ts - before.ts;
+  if (span <= 0) {
+    return [{ ...before, diffMs: Math.abs(before.ts - refTs), weight: 1 }];
+  }
+
+  const afterWeight = (refTs - before.ts) / span;
+  const beforeWeight = 1 - afterWeight;
+
+  return [
+    { ...before, diffMs: refTs - before.ts, weight: beforeWeight },
+    { ...after, diffMs: after.ts - refTs, weight: afterWeight }
+  ];
+}
+
+function buildTimeWeightedWeatherSample(hourly = [], referenceTime = new Date()) {
   const entries = normalizeHourlyEntries(hourly);
   if (!entries.length) {
     return {
@@ -101,25 +126,13 @@ function buildTimeWeightedWeatherSample(hourly = [], referenceTime = new Date(),
   }
 
   const refTs = toEpochMs(referenceTime) ?? Date.now();
-  const windowMs = Number(options.windowMs) > 0 ? Number(options.windowMs) : DEFAULT_WINDOW_MS;
-  const minWeight = Number(options.minWeight) >= 0 ? Number(options.minWeight) : DEFAULT_MIN_WEIGHT;
   const closest = entries.reduce((best, current) => {
     const bestDiff = Math.abs(best.ts - refTs);
     const currentDiff = Math.abs(current.ts - refTs);
     return currentDiff < bestDiff ? current : best;
   }, entries[0]);
 
-  const samples = entries
-    .map(entry => {
-      const diffMs = Math.abs(entry.ts - refTs);
-      return {
-        ...entry,
-        diffMs,
-        weight: getLinearTimeWeight(diffMs, windowMs)
-      };
-    })
-    .filter(sample => sample.weight >= minWeight)
-    .sort((a, b) => a.ts - b.ts);
+  const samples = selectBoundingSamples(entries, refTs);
 
   if (!samples.length) {
     return {
