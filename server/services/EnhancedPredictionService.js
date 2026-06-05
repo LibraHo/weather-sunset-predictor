@@ -52,6 +52,14 @@ const SOLAR_DIRECTION_SAMPLE_WEIGHT_BY_DISTANCE = Object.freeze(
     return acc;
   }, {})
 );
+const VISIBLE_CARRIER_SAMPLE_DISTANCES_KM = [0, 10, 25, 50, 75, 100];
+const VISIBLE_CARRIER_SAMPLE_WEIGHTS = [0.15, 0.20, 0.25, 0.22, 0.12, 0.06];
+const VISIBLE_CARRIER_SAMPLE_WEIGHT_BY_DISTANCE = Object.freeze(
+  VISIBLE_CARRIER_SAMPLE_DISTANCES_KM.reduce((acc, distanceKm, index) => {
+    acc[distanceKm] = VISIBLE_CARRIER_SAMPLE_WEIGHTS[index];
+    return acc;
+  }, {})
+);
 
 // ========== 辅助函数 ==========
 
@@ -950,15 +958,33 @@ function getSolarDirectionSampleWeight(sample, index) {
   return SOLAR_DIRECTION_SAMPLE_WEIGHTS[index] || 0.1;
 }
 
+function getVisibleCarrierSampleWeight(sample, index) {
+  const distanceKey = Math.round(Number(sample?.distanceKm));
+  if (Number.isFinite(distanceKey) && VISIBLE_CARRIER_SAMPLE_WEIGHT_BY_DISTANCE[distanceKey] != null) {
+    return VISIBLE_CARRIER_SAMPLE_WEIGHT_BY_DISTANCE[distanceKey];
+  }
+  return VISIBLE_CARRIER_SAMPLE_WEIGHTS[index] || 0.1;
+}
+
 function isDirectionalCorridorBlocked(reason = '') {
   return reason.includes('blocked_corridor') || reason.includes('cloud_wall');
 }
 
+function buildLocalVisibleCarrierSample(weatherData = {}) {
+  return {
+    distanceKm: 0,
+    lowCloud: Number(weatherData.lowClouds ?? weatherData.lowCloudCover ?? 0),
+    midCloud: Number(weatherData.midClouds ?? 0),
+    highCloud: Number(weatherData.highClouds ?? 0),
+    totalCloud: Number(weatherData.cloudCover ?? 0)
+  };
+}
+
 function scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore = {}, weatherData = {}) {
-  const samples = Array.isArray(remoteCloudData?.samples)
+  const remoteSamples = Array.isArray(remoteCloudData?.samples)
     ? remoteCloudData.samples.filter(sample => sample && !sample.error)
     : [];
-  if (samples.length < 4) {
+  if (remoteSamples.length < 4) {
     return { applied: false, score: 0, floor: null, reason: 'no_directional_samples' };
   }
 
@@ -967,9 +993,10 @@ function scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore = {}, we
     return { applied: false, score: 0, floor: null, reason: 'directional_blocked_corridor' };
   }
 
-  const totalWeight = samples.reduce((sum, sample, index) => sum + getSolarDirectionSampleWeight(sample, index), 0);
+  const samples = [buildLocalVisibleCarrierSample(weatherData), ...remoteSamples];
+  const totalWeight = samples.reduce((sum, sample, index) => sum + getVisibleCarrierSampleWeight(sample, index), 0);
   const avg = (key) => samples.reduce((sum, sample, index) => (
-    sum + Number(sample[key] || 0) * getSolarDirectionSampleWeight(sample, index)
+    sum + Number(sample[key] || 0) * getVisibleCarrierSampleWeight(sample, index)
   ), 0) / totalWeight;
 
   const low = avg('lowCloud');
@@ -1015,9 +1042,9 @@ function scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore = {}, we
   // overhead, but in the solar-direction corridor. If the path is open and
   // weighted mid cloud is substantial, treat it as a local visible carrier,
   // while still limiting it below widespread high-cloud eruptions.
-  const directionalMidGlow = hasOpenPath && mid >= 45 && high < 20 && lowMidBlock <= 36 && visibility >= 10;
+  const directionalMidGlow = hasOpenPath && mid >= 44 && high < 20 && lowMidBlock <= 36 && visibility >= 10;
   if (directionalMidGlow) {
-    const midGlowScore = 48 + Math.min((mid - 45) / 25 * 8, 8);
+    const midGlowScore = 48 + Math.min((mid - 44) / 26 * 8, 8);
     score = Math.max(score, midGlowScore);
   }
 
@@ -1042,7 +1069,11 @@ function scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore = {}, we
       lightPath: Number.isFinite(lightPath) ? parseFloat(lightPath.toFixed(1)) : null,
       visibility,
       directionalMidGlow
-    }
+    },
+    sampleWeights: samples.map((sample, index) => ({
+      distanceKm: sample.distanceKm,
+      weight: parseFloat(getVisibleCarrierSampleWeight(sample, index).toFixed(2))
+    }))
   };
 }
 
@@ -2608,6 +2639,8 @@ module.exports = {
   FINAL_WEIGHTS,
   SOLAR_DIRECTION_SAMPLE_DISTANCES_KM,
   SOLAR_DIRECTION_SAMPLE_WEIGHTS,
+  VISIBLE_CARRIER_SAMPLE_DISTANCES_KM,
+  VISIBLE_CARRIER_SAMPLE_WEIGHTS,
   ALGORITHM_VERSION,
 
   // 辅助函数

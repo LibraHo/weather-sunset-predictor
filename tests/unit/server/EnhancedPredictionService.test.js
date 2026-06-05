@@ -49,6 +49,12 @@ describe('EnhancedPredictionService', () => {
       expect(EnhancedPredictionService.SOLAR_DIRECTION_SAMPLE_DISTANCES_KM).toEqual([10, 25, 50, 75, 100]);
       expect(EnhancedPredictionService.SOLAR_DIRECTION_SAMPLE_WEIGHTS).toEqual([0.25, 0.30, 0.25, 0.14, 0.06]);
     });
+
+    test('should include local 0km in visible carrier weights without changing light-path weights', () => {
+      expect(EnhancedPredictionService.VISIBLE_CARRIER_SAMPLE_DISTANCES_KM).toEqual([0, 10, 25, 50, 75, 100]);
+      expect(EnhancedPredictionService.VISIBLE_CARRIER_SAMPLE_WEIGHTS).toEqual([0.15, 0.20, 0.25, 0.22, 0.12, 0.06]);
+      expect(EnhancedPredictionService.VISIBLE_CARRIER_SAMPLE_WEIGHTS.reduce((sum, weight) => sum + weight, 0)).toBeCloseTo(1);
+    });
   });
 
   // ========== 辅助函数测试 ==========
