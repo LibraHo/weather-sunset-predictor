@@ -1,5 +1,5 @@
 import { formatPercent, formatVisibility } from '../../utils/format.js';
-import { getEnhancedPrediction, getEnhancedPredictionBatch, getSurroundingPrediction, getThreeDayGlow, scoreToLevel } from '../../services/prediction.js';
+import { getEnhancedPrediction, getEnhancedPredictionBatch, getSurroundingPrediction, getThreeDayGlow, resolveAodDisplay, scoreToLevel } from '../../services/prediction.js';
 import { addFavorite, deleteFavorite, listFavorites } from '../../services/user.js';
 import { trackApiApplicationEntry, trackPageVisit, trackShareClick, trackUploadEntry } from '../../services/analytics.js';
 import { buildRadarCloudGradients, paintRadarCloudCanvas } from '../../utils/radar-cloud-field.js';
@@ -610,12 +610,16 @@ function normalizePrediction(input = {}, options = {}) {
   const period = input.period || input.type || options.type || options.period || 'sunset';
   const day = input.day || options.day || 'today';
   const metrics = input.metrics || input.factors || input.weather || {};
+  const weatherSource = input.weatherData || input.weather || {};
+  const weatherData = compactMetricObject(weatherSource);
+  const hourlyAod = compactAodHourly(weatherSource.hourly || input.hourly);
+  if (hourlyAod.length) weatherData.hourly = hourlyAod;
   const locationName = input.locationName || input.location || options.name || '未命名地点';
 
   return {
     metrics: compactMetricObject(metrics),
     clouds: compactMetricObject(input.clouds || {}),
-    weatherData: compactMetricObject(input.weatherData || input.weather || {}),
+    weatherData,
     period,
     type: period,
     day,
@@ -690,6 +694,20 @@ function compactMetricObject(source = {}) {
   }, {});
 }
 
+function compactAodHourly(source = []) {
+  if (!Array.isArray(source)) return [];
+  return source
+    .map((item) => {
+      const value = item?.aod ?? item?.aerosolOpticalDepth ?? item?.aerosol_optical_depth;
+      if (value === undefined || value === null || value === '') return null;
+      return {
+        time: item.time || item.date || item.timestamp || item.key || null,
+        aod: value
+      };
+    })
+    .filter(Boolean);
+}
+
 export function buildPredictionPeriodRequest(prediction = {}, period = 'sunset', options = {}) {
   const currentPeriod = prediction.period || prediction.type || 'sunset';
   const lat = Number(prediction.lat ?? prediction.latitude ?? prediction.coordinate?.lat);
@@ -743,6 +761,7 @@ function buildMetrics(prediction) {
   const metrics = prediction.metrics || {};
   const clouds = prediction.clouds || {};
   const weather = prediction.weatherData || prediction.weather || {};
+  const aerosol = formatAodMetric(prediction, metrics, weather);
   const pick = (...keys) => {
     for (const key of keys) {
       const value = metrics[key] ?? clouds[key] ?? weather[key] ?? prediction[key];
@@ -762,8 +781,25 @@ function buildMetrics(prediction) {
     { key: 'humidity', label: '湿度', value: formatPercent(pick('humidity', 'relativeHumidity')) },
     { key: 'pressure', label: '气压', value: formatWithUnit(pick('pressure', 'surfacePressure', 'surface_pressure'), 'hPa') },
     { key: 'precipitation', label: '降水', value: formatWithUnit(pick('precipitation', 'precip', 'rain', 'showers'), 'mm') },
-    { key: 'aod', label: 'AOD', value: formatPlain(pick('aod', 'aerosolOpticalDepth')) }
+    { key: 'aod', label: 'AOD', ...aerosol }
   ];
+}
+
+function formatAodMetric(prediction = {}, metrics = {}, weather = {}) {
+  const source = {
+    ...prediction,
+    ...metrics,
+    ...weather,
+    hourly: weather.hourly || prediction.hourly || [],
+    referenceTime: prediction.referenceTime || weather.referenceTime || prediction.eventTime || prediction.date
+  };
+  const aerosol = resolveAodDisplay(source, { referenceTime: source.referenceTime });
+  if (aerosol.value === null) return { value: '--', hint: '' };
+  const value = formatPlain(aerosol.value);
+  return {
+    value: aerosol.approximate ? `≈${value}` : value,
+    hint: aerosol.approximate ? '邻近时次' : ''
+  };
 }
 
 export function buildFavoritePayload(prediction = {}) {
