@@ -182,8 +182,7 @@
       "max": 45
     },
     "statusAnyOf": [
-      "light_glow",
-      "good_glow"
+      "light_glow"
     ],
     "equals": [
       {

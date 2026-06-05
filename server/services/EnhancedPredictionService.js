@@ -1063,13 +1063,14 @@ function scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore = {}, we
   // while still limiting it below widespread high-cloud eruptions.
   const directionalMidGlow = hasOpenPath && mid >= 44 && high < 20 && lowMidBlock <= 36 && visibility >= 10;
   if (directionalMidGlow) {
-    const midGlowScore = 48 + Math.min((mid - 44) / 26 * 8, 8);
+    const lightPathBonus = Math.max(0, Math.min((lightPath - 65) / 20 * 2, 2));
+    const midGlowScore = 50 + Math.min((mid - 44) / 26 * 8, 8) + lightPathBonus;
     score = Math.max(score, midGlowScore);
   }
 
   score = parseFloat(clamp(score, 0, 62).toFixed(1));
   const floor = directionalMidGlow
-    ? (lowMidBlock >= 32 ? 42 : 48)
+    ? (lowMidBlock >= 32 ? 44 : 50)
     : (score >= 42
       ? (lowMidBlock >= 38 ? 30 : 35)
       : (score >= 30 ? 24 : null));
@@ -2490,7 +2491,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     : { applied: false, cap: null, reason: null };
   if (!thickHighCloudPenalty.applied && scoringV2.applied && scoringV2.airMode === 'gray_veil_air_suppression' && scoringV2.score < adjustedScore) {
     adjustedScore = scoringV2.score;
-    if (adjustedScore < 40) {
+    if (adjustedScore < 46) {
       adjustedStatus = 'light_glow';
       adjustedDescription = 'weak_local_colors';
     } else {
