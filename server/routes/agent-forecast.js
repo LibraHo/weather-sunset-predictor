@@ -5,6 +5,7 @@ const BackendGeocodingService = require('../services/BackendGeocodingService');
 const orchestrator = require('../services/ProviderOrchestrator');
 const SunCalculator = require('../utils/SunCalculator');
 const EnhancedPredictionService = require('../services/EnhancedPredictionService');
+const { buildTimeWeightedWeatherSample } = require('../services/WeatherTimeSampler');
 
 function errorResponse(res, status, code, message, extra = null) {
   const body = {
@@ -43,32 +44,9 @@ function parseDateParam(value) {
   return parsed;
 }
 
-function toEpochMs(value) {
-  const num = Number(value);
-  if (!Number.isFinite(num)) return null;
-
-  if (num > 1e12) return num;
-  if (num > 1e10) return num * 1000;
-  return num * 1000;
-}
-
 function pickClosestWeather(hourly = [], targetTs) {
-  const entries = Array.isArray(hourly)
-    ? hourly
-        .map(item => ({
-          item,
-          ts: toEpochMs(item?.timestamp ?? item?.time ?? null)
-        }))
-        .filter(entry => Number.isFinite(entry.ts))
-    : [];
-
-  if (!entries.length) return null;
-
-  return entries.reduce((closest, current) => {
-    const currentDiff = Math.abs(current.ts - targetTs);
-    const closestDiff = Math.abs(closest.ts - targetTs);
-    return currentDiff < closestDiff ? current : closest;
-  }, entries[0]).item;
+  const sample = buildTimeWeightedWeatherSample(hourly, targetTs);
+  return sample.weighted || sample.selected;
 }
 
 function normalizeWeatherForPrediction(weather = {}, providerMeta = {}) {
