@@ -626,11 +626,19 @@
           <div class="methodology-changelog-scroll" tabindex="0" role="region" aria-labelledby="methodology-changelog-title">
             <ol class="methodology-changelog-list">
               <li>
-                <time datetime="2026-06-03" data-i18n="home.methodology.changelog.latest.date">2026-06-03</time>
+                <time datetime="2026-06-06" data-i18n="home.methodology.changelog.latest.date">2026-06-06</time>
                 <div>
-                  <strong data-i18n="home.methodology.changelog.latest.title">日落评分 v2</strong>
-                  <p data-i18n="home.methodology.changelog.latest.summary">最终分改为云载体、日落光路、空气显色三部分合成；光路开且能见度可接受时，轻/中度气溶胶可增强橙红散射。</p>
-                  <small data-i18n="home.methodology.changelog.latest.validation">验证：2026-06-02 北京无雨灰幕仍约 30；2026-06-03 北京无雨、橙红光很美，回放约 66，落入 60-68 实况区间。</small>
+                  <strong data-i18n="home.methodology.changelog.latest.title">灰幕空气显色 + 方向中云带 v2</strong>
+                  <p data-i18n="home.methodology.changelog.latest.summary">满铺中高云叠加 PM/AOD 偏高时，不再默认当暖色散射加分，而是按灰幕压力连续降低空气显色；太阳方向中云带改为连续载体，光路越开、方向中云越强，越接近 50-60 档。</p>
+                  <small data-i18n="home.methodology.changelog.latest.validation">验证：2026-06-03 北京暖散射保持 70 档；2026-06-04 北京方向中云带约 53.5；2026-06-05 北京满铺灰幕压到约 44；真实校准样本库全量回放通过。</small>
+                </div>
+              </li>
+              <li>
+                <time datetime="2026-06-03" data-i18n="home.methodology.changelog.scoringV2.date">2026-06-03</time>
+                <div>
+                  <strong data-i18n="home.methodology.changelog.scoringV2.title">日落评分 v2</strong>
+                  <p data-i18n="home.methodology.changelog.scoringV2.summary">最终分改为云载体、日落光路、空气显色三部分合成；光路开且能见度可接受时，轻/中度气溶胶可增强橙红散射。</p>
+                  <small data-i18n="home.methodology.changelog.scoringV2.validation">验证：2026-06-02 北京无雨灰幕仍约 30；2026-06-03 北京无雨、橙红光很美，回放约 66，落入 60-68 实况区间。</small>
                 </div>
               </li>
               <li>
@@ -676,8 +684,8 @@
             </ol>
           </div>
           <div class="methodology-version-card">
-            <strong data-i18n="home.methodology.versionLabel">算法版本：2026.06.03-sunset-scoring-v2</strong>
-            <span data-i18n="home.methodology.versionDesc">本版把最终评分收敛为“云载体 × 日落光路 × 空气显色”：有光路时轻/中度气溶胶可增强橙红散射，无光路、极端霾、低能见度、降水和厚低云仍优先压制。</span>
+            <strong data-i18n="home.methodology.versionLabel">算法版本：2026.06.06-gray-veil-directional-carrier-v2</strong>
+            <span data-i18n="home.methodology.versionDesc">本版继续使用“云载体 × 日落光路 × 空气显色”，但会区分开口暖散射、满铺灰幕和太阳方向中云带：适度颗粒只有在云幕不灰、光路通畅时加分；满铺中高云叠加偏脏空气会连续压低显色。</span>
           </div>
         </div>
       </section>

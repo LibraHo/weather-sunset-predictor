@@ -174,12 +174,18 @@ const translations = {
     "methodology": {
       "title": "Fire Cloud Calculation Method",
       "intro": "The current Fire Cloud Index first asks whether there is a usable color carrier, then whether sunlight can reach it along the sun direction, and finally applies only a small rendering adjustment. It no longer multiplies a chain of positive factors, so 100% high cloud does not automatically mean a perfect score.",
-      "versionLabel": "Algorithm version: 2026.06.03-sunset-scoring-v2",
-      "versionDesc": "This version combines cloud carrier, sunset path, and air rendering. Moderate particles can enhance orange-red scattering when the path is open; blocked paths, extreme haze, low visibility, rain, and thick low clouds still suppress the score.",
+      "versionLabel": "Algorithm version: 2026.06.06-gray-veil-directional-carrier-v2",
+      "versionDesc": "This version still uses cloud carrier × sunset path × air rendering, but separates open-path warm scattering, full-deck gray veil, and sun-direction mid-cloud bands. Moderate particles only add warmth when the deck is not gray and the path is open; full mid/high cloud with dirty air continuously suppresses rendering.",
       changelogTitle: "Version update history",
       changelogHint: "Algorithm updates from the last three months live here; scroll to review why each change happened, its impact, and validation",
       changelog: {
         "latest": {
+          "date": "2026-06-06",
+          "title": "Gray-veil rendering + directional mid-cloud v2",
+          "summary": "Full mid/high cloud plus elevated PM/AOD no longer defaults to warm-scattering uplift; the model continuously lowers air rendering by gray-veil pressure. Sun-direction mid-cloud bands are now a continuous carrier: stronger band plus more open path moves toward the 50-60 range.",
+          "validation": "Validation: 2026-06-03 Beijing warm scattering stays in the 70 band; 2026-06-04 directional mid-cloud replays around 53.5; 2026-06-05 full gray veil falls around 44; all real calibration cases replay."
+        },
+        "scoringV2": {
           "date": "2026-06-03",
           "title": "Sunset scoring v2",
           "summary": "The final score now combines cloud carrier, sunset path, and air rendering. With an open path and acceptable visibility, moderate AOD, PM, and dust are treated as warm orange-red scattering instead of automatic gray-curtain failure.",
@@ -268,10 +274,10 @@ const translations = {
         "transparency": {
           "title": "3. Atmospheric Transparency",
           "subtitle": "Transparency · Rendering Score",
-          "desc": "Visibility, humidity, post-rain state, and aerosols affect rendering quality. With an open path, moderate particles can enhance warm scattering; with a blocked path or excessive particles, they become gray-curtain suppression.",
+          "desc": "Visibility, humidity, post-rain state, and aerosols affect rendering quality. With an open path and a non-gray cloud deck, moderate particles can enhance warm scattering; when mid/high clouds are full and PM/AOD is elevated, they become gray-veil suppression.",
           "visibility": "The rendering factor combines visibilityFactor, humidityFactor, rainBonus, aqiFactor, and aerosolFactor",
           "humidity": "Rendering cannot multiply the score upward: factor≥1 becomes at most about +9 pts; factor<1 becomes at most about -25 pts",
-          "formula": "Air rendering = open path ? warm-scattering factor 1.02-1.12 : base rendering factor; heavy haze / low visibility stays around 0.6-0.8"
+          "formula": "Air rendering = gray-veil pressure first ? 0.70-0.95 : open path ? warm-scattering factor 1.02-1.12 : base rendering factor"
         },
         "layerDiversity": {
           "title": "4. Light-Path Gate",
@@ -293,11 +299,11 @@ const translations = {
         "thickHighCloudPenalty": {
           "title": "7. Carrier and Haze Corrections",
           "subtitle": "Carrier Quality · Canvas and Thin Haze",
-          "desc": "The model first scores what can take color, then uses the sunset path and air rendering to decide how much of that carrier can show. Aerosol is no longer only a weak fallback; it can also contribute warm scattering when the path is open.",
+          "desc": "The model first scores what can take color, then uses the sunset path and air rendering to decide how much of that carrier can show. Sun-direction mid-cloud bands participate continuously; aerosols contribute warm scattering only when the path is open and the deck is not gray.",
           "level1": "Cloud carrier = canvas base + additive cloud-type/thickness/high-cloud adjustments. Strong high cloud cannot reach a perfect score if the light path is blocked",
-          "level2": "When clouds are scarce, weak aerosol carrier still acts as a fallback. When clouds are present and the path is open, moderate AOD/PM/dust enters air rendering as warm scattering.",
-          "level3": "Heavy haze, dust, visibility <8, thick cloud, or rainy low cloud suppresses or caps the carrier; even clear high-cloud protection can be rejected by the light-path gate",
-          "formula": "scoringV2 = cloud carrier × sunset path × air rendering\nWarm scattering only applies when the path is open, low clouds are not blocking, and visibility is acceptable."
+          "level2": "When clouds are scarce, weak aerosol carrier still acts as a fallback. A sun-direction mid-cloud band can reach the 50-60 range when the path is open, but it is not treated as a breakout setup.",
+          "level3": "Full mid/high cloud with elevated PM/AOD is handled as gray-veil rendering suppression; heavy haze, dust, visibility <8, thick cloud, or rainy low cloud still suppresses or caps the carrier",
+          "formula": "scoringV2 = cloud carrier × sunset path × air rendering\nGray-veil pressure is checked before open-path warm scattering; directional mid-cloud bands join as a continuous carrier."
         },
         "precipPenalty": {
           "title": "6. Precipitation Penalty",
@@ -317,7 +323,7 @@ const translations = {
           "highCloudCap": "When high clouds are rich but the light path is blocked, the light-path gate still lowers the ceiling.",
           "carrier": "Carrier score = max(cloud canvas score, weak aerosol carrier score)",
           "lightGate": "Light-path gate = 0.25-1.12; a blocked sun-direction corridor can clamp near 0.42, while an opening sits around 0.90-0.96",
-          "rendering": "Air rendering = 0.6-1.15; with an open path, moderate AOD, PM, and dust can enter the 1.02-1.12 warm-scattering band",
+          "rendering": "Air rendering = 0.70-1.12; with an open non-gray path, moderate AOD, PM, and dust can add warmth, while a full gray veil continuously suppresses color",
           "statusCaps": "Display score is status-calibrated: no-fire-cloud stays below 40, light glow below 60; geometry failure, thick cloud, gray curtain, and rainy low cloud can cap it further"
         }
       }
@@ -465,6 +471,7 @@ const translations = {
           "displayCalibration": "Display calibration",
           "aerosolCarrier": "Aerosol carrier",
           "scoringV2": "Open-path warm scattering",
+          "grayVeilAirRendering": "Gray-veil rendering",
           "evidence": "Calculation evidence"
         },
         "details": {
@@ -478,6 +485,7 @@ const translations = {
           "lowSolarTransmissionNo": "not hit",
           "aerosolCarrier": "thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}",
           "scoringV2": "cloud carrier {{carrier}} × sunset path {{path}} × air rendering {{air}}",
+          "grayVeilAirRendering": "full mid/high cloud with dirty air: carrier {{carrier}} × path {{path}} × suppressed air rendering {{air}}",
           "lightPath": "sunlight reaches the cloud layer",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
           "afterAdjustments": "after weather and visibility adjustments",
@@ -507,6 +515,7 @@ const translations = {
           "severeHazeCap35": "heavy haze makes colors hard to show",
           "moderateHazeCap45": "haze weakens orange-red color",
           "hazeWarmScatteringPathOpen": "open sunset path turns moderate particles into warm orange-red scattering",
+          "fullUpperCloudGrayVeilAirRendering": "full mid/high cloud plus dirty air suppresses color rendering",
           "denseCarrierCanvasOnly": "mid/high clouds can still catch sunset light",
           "adjustmentApplied": "score adjusted for limiting conditions",
           "displayCalibration": "final display score is aligned with the prediction status band",

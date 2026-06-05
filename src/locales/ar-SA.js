@@ -76,8 +76,8 @@ apiAccess: 'الوصول إلى API'
     methodology: {
       title: 'كيف يتم حساب النقاط',
       intro: 'يجمع مؤشر السحب الحمراء أربعة عوامل رئيسية لتقدير ما إذا كانت مشاهدة الغروب تستحق العناء.',
-      versionLabel: 'إصدار الخوارزمية: 2026.05.27-cloud-thickness-proportional-v2',
-      versionDesc: 'يحوّل هذا الإصدار خصم سماكة السحب إلى درجة لوحة ما قبل السماكة × 30% × ضغط السماكة، ويلغي حدود -28/24 الثابتة، ويعاير الستائر الرمادية الرطبة كوهج ضعيف/قابل للمشاهدة لكنه ليس قويًا.',
+      versionLabel: 'Algorithm version: 2026.06.06-gray-veil-directional-carrier-v2',
+      versionDesc: 'This version still uses cloud carrier × sunset path × air rendering, but separates open-path warm scattering, full-deck gray veil, and sun-direction mid-cloud bands. Moderate particles only add warmth when the deck is not gray and the path is open; full mid/high cloud with dirty air continuously suppresses rendering.',
       changelogTitle: 'سجل تحديثات الإصدار',
       changelogHint: 'توجد هنا تحديثات الخوارزمية خلال آخر ثلاثة أشهر؛ مرر لمراجعة السبب والأثر والتحقق',
       changelog: {

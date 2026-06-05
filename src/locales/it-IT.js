@@ -72,8 +72,8 @@ apiAccess: 'Accesso API'
     "methodology": {
       "title": "Come viene calcolato il punteggio",
       "intro": "L'indice nuvole rosse combina quattro fattori chiave per stimare se vale la pena osservare il tramonto.",
-      "versionLabel": "Versione algoritmo: 2026.05.27-cloud-thickness-proportional-v2",
-      "versionDesc": "Questa versione trasforma la penalità per spessore delle nuvole in punteggio canvas prima dello spessore × 30% × pressione di spessore, rimuove i limiti fissi -28/24 e calibra i sipari grigi umidi come bagliore debole/osservabile ma non forte.",
+      "versionLabel": 'Algorithm version: 2026.06.06-gray-veil-directional-carrier-v2',
+      "versionDesc": 'This version still uses cloud carrier × sunset path × air rendering, but separates open-path warm scattering, full-deck gray veil, and sun-direction mid-cloud bands. Moderate particles only add warmth when the deck is not gray and the path is open; full mid/high cloud with dirty air continuously suppresses rendering.',
       changelogTitle: "Cronologia versioni",
       changelogHint: "Gli aggiornamenti degli ultimi tre mesi sono qui; scorri per rivedere motivo, impatto e validazione",
       changelog: {

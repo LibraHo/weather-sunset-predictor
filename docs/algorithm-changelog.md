@@ -7,6 +7,25 @@
 3. 火烧云形成条件文字分析
 4. 对应回归测试/样本回放
 
+## 2026.06.06-gray-veil-directional-carrier-v2
+
+- 日期：2026-06-06
+- 代码：`server/services/EnhancedPredictionService.js`、`src/controllers/PredictionController.js`、`src/locales/*.js`、`miniprogram/pages/methodology/index.js`
+- 背景：北京 2026-06-04 现场反馈应在 50-60，属于太阳方向中云带被照亮；北京 2026-06-05 现场反馈远不如 4 号，只有远处一点点，但旧 `scoringV2` 把满铺中高云 + PM/AOD 偏高当成 `warm_scattering_path_open`，从 `62 × 1.1` 抬到 68.2。
+- 改动：
+  - 新增连续灰幕空气显色：本地与太阳方向中高云接近满铺、总云量高且 PM2.5/PM10/AOD/dust/visibility 呈灰幕压力时，优先进入 `gray_veil_air_suppression`，降低 `airFactor`，而不是继续给暖散射加成。
+  - 太阳方向中云带载体改为连续评分：低云不挡、光路打开、日落方向中云带明确时，可进入 50-60 档；仍有上限，避免把局部方向云带误判成 70+ 爆发。
+  - 同步 Web 算法页、评分细则、火烧云形成条件文字分析、多语言文案，以及小程序算法页和小程序文字分析口径。
+- 预期影响：
+  - 2026-06-03 北京暖色散射样本保持 70 档。
+  - 2026-06-04 北京方向中云带样本约 53.5。
+  - 2026-06-05 北京满铺灰幕样本约 44，且状态为轻微霞光。
+- 回归测试：
+  - `tests/fixtures/real-sunset-cases/2026-06-04-beijing-sunset.json`：方向中云带样本。
+  - `tests/fixtures/real-sunset-cases/2026-06-05-beijing-sunset.json`：满铺灰幕样本。
+  - `tests/unit/server/real-sunset-case-library.test.js`：真实样本全量回放。
+  - `tests/unit/controllers/PredictionController.test.js`、`tests/unit/home-methodology-structure.test.js`、`tests/unit/miniprogram/methodology-page.test.js`：展示文案同步。
+
 ## 2026.06.04-local-upper-participation-cap
 
 - 日期：2026-06-04

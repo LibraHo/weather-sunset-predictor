@@ -174,16 +174,22 @@ apiAccess: 'API接続'
     "methodology": {
       "title": "焼き雲スコアの計算方法",
       "intro": "焼き雲指数は4つの主要因子を組み合わせて計算され、その日の夕焼け観賞が価値あるかどうかを素早く判断するのに役立ちます。",
-      "versionLabel": "アルゴリズム版：2026.05.27-cloud-thickness-proportional-v2",
-      "versionDesc": "この版では雲の厚さペナルティを「厚み補正前のキャンバス点 × 30% × 厚み圧」に変更し、固定の -28/24 上限を外し、湿った灰色の雲幕を弱い焼け／見られるが強くない範囲へ調整しました。",
+      "versionLabel": 'Algorithm version: 2026.06.06-gray-veil-directional-carrier-v2',
+      "versionDesc": 'This version still uses cloud carrier × sunset path × air rendering, but separates open-path warm scattering, full-deck gray veil, and sun-direction mid-cloud bands. Moderate particles only add warmth when the deck is not gray and the path is open; full mid/high cloud with dirty air continuously suppresses rendering.',
       changelogTitle: "バージョン更新履歴",
       changelogHint: "直近3か月のアルゴリズム更新をここにまとめています。スクロールして理由、影響、検証内容を確認できます",
       changelog: {
         "latest": {
-          "date": "2026-05-27",
-          "title": "雲厚比例ペナルティ v2",
-          "summary": "雲の厚さペナルティを、厚み補正前のキャンバス点 × 30% × 厚み圧に変更し、固定の -28/24 上限を外しました。湿った灰色の雲幕は弱い焼け／見られるが強くない範囲へ校正されます。",
-          "validation": "検証：2026-05-27 の北京サンプルでは厚み圧 0.78、キャンバス 76.7 のとき約 -18 点となり、結果は弱い焼け／見られる範囲に残ります。"
+          "date": "2026-06-06",
+          "title": "Gray-veil rendering + directional mid-cloud v2",
+          "summary": "Full mid/high cloud plus elevated PM/AOD no longer defaults to warm-scattering uplift; the model continuously lowers air rendering by gray-veil pressure. Sun-direction mid-cloud bands are now a continuous carrier: stronger band plus more open path moves toward the 50-60 range.",
+          "validation": "Validation: 2026-06-03 Beijing warm scattering stays in the 70 band; 2026-06-04 directional mid-cloud replays around 53.5; 2026-06-05 full gray veil falls around 44; all real calibration cases replay."
+        },
+        "scoringV2": {
+          "date": "2026-06-03",
+          "title": "Sunset scoring v2",
+          "summary": "The final score now combines cloud carrier, sunset path, and air rendering. With an open path and acceptable visibility, moderate AOD, PM, and dust are treated as warm orange-red scattering instead of automatic gray-curtain failure.",
+          "validation": "Validation: 2026-06-02 Beijing remains low around 30; the 2026-06-03 detailed point forecast replays around 71 and reaches the 70 band, while the fire-cloud map still uses the regional simplified branch."
         },
         "cloudThickness": {
           "date": "2026-05-27",
@@ -465,6 +471,7 @@ apiAccess: 'API接続'
           "displayCalibration": "表示スコア調整",
           "aerosolCarrier": "エアロゾル載体",
           "scoringV2": "開いた光路の暖色散乱",
+          "grayVeilAirRendering": "Gray-veil rendering",
           "evidence": "計算根拠"
         },
         "details": {
@@ -478,6 +485,7 @@ apiAccess: 'API接続'
           "lowSolarTransmissionNo": "該当なし",
           "aerosolCarrier": "雲が少ない時、光路が開いていれば薄い霞も暖色を少し運べます。光路活性 ×{{activation}}",
           "scoringV2": "雲キャリア {{carrier}} × 日没光路 {{path}} × 空気の発色 {{air}}",
+          "grayVeilAirRendering": "full mid/high cloud with dirty air: carrier {{carrier}} × path {{path}} × suppressed air rendering {{air}}",
           "lightPath": "日光が雲層へ届くか",
           "renderingFactors": "視程 ×{{visibility}}、湿度 ×{{humidity}}、エアロゾル ×{{aerosol}}",
           "afterAdjustments": "天候と見通しを加味した後",
@@ -507,6 +515,7 @@ apiAccess: 'API接続'
           "severeHazeCap35": "濃い霞で色が出にくいです",
           "moderateHazeCap45": "霞が橙や赤の色を弱めます",
           "hazeWarmScatteringPathOpen": "日没方向の光路が開き、適度な粒子が暖かい橙赤色の散乱を強めます",
+          "fullUpperCloudGrayVeilAirRendering": "full mid/high cloud plus dirty air suppresses color rendering",
           "denseCarrierCanvasOnly": "mid/high clouds can still catch sunset light",
           "adjustmentApplied": "天候による調整を反映",
           "displayCalibration": "最終表示スコアを予測ステータスの帯に合わせます",
