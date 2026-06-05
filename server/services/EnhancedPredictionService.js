@@ -1282,6 +1282,66 @@ function assessWarmScatteringUpperCarrierAdjustment(weatherData, carrierScore, l
   };
 }
 
+function normalizeRange(value, min, max) {
+  if (!Number.isFinite(value) || value <= min) return 0;
+  if (value >= max) return 1;
+  return (value - min) / (max - min);
+}
+
+function assessGrayVeilAirRendering(weatherData, remoteCloudData = null) {
+  const lowClouds = Number(weatherData.lowClouds || 0);
+  const midClouds = Number(weatherData.midClouds || 0);
+  const highClouds = Number(weatherData.highClouds || 0);
+  const visibility = Number(weatherData.visibility ?? 20);
+  const { aod, pm25, pm10, dust } = getAerosolMetrics(weatherData);
+  const localUpperCarrier = highClouds * 0.65 + midClouds * 0.35;
+  const samples = Array.isArray(remoteCloudData?.samples)
+    ? remoteCloudData.samples.filter(sample => sample && !sample.error)
+    : [];
+  const sampleUpperCarriers = samples.map(sample => (
+    Number(sample.highCloud || 0) * 0.65 + Number(sample.midCloud || 0) * 0.35
+  ));
+  const sampleTotalClouds = samples.map(sample => Number(sample.totalCloud || 0));
+  const remoteUpperCarrier = sampleUpperCarriers.length > 0
+    ? sampleUpperCarriers.reduce((sum, value) => sum + value, 0) / sampleUpperCarriers.length
+    : 0;
+  const remoteTotalCloud = sampleTotalClouds.length > 0
+    ? sampleTotalClouds.reduce((sum, value) => sum + value, 0) / sampleTotalClouds.length
+    : 0;
+  const fullVeilPressure = Math.min(
+    normalizeRange(localUpperCarrier, 82, 98),
+    samples.length >= 4 ? normalizeRange(remoteUpperCarrier, 78, 94) : 0,
+    samples.length >= 4 ? normalizeRange(remoteTotalCloud, 90, 98) : 0
+  );
+  const pollutionPressure = Math.max(
+    aod == null ? 0 : normalizeRange(aod, 0.30, 0.52),
+    pm25 == null ? 0 : normalizeRange(pm25, 55, 75),
+    pm10 == null ? 0 : normalizeRange(pm10, 75, 125),
+    dust == null ? 0 : normalizeRange(dust, 80, 160),
+    visibility < 12 ? normalizeRange(12 - visibility, 0, 6) : 0
+  );
+  const grayVeilPressure = fullVeilPressure * pollutionPressure;
+  const factor = parseFloat((1 - grayVeilPressure * 0.38).toFixed(2));
+  return {
+    applied: lowClouds <= 20 && grayVeilPressure >= 0.25,
+    factor: clamp(factor, 0.62, 1),
+    pressure: parseFloat(grayVeilPressure.toFixed(2)),
+    reason: 'full_upper_cloud_gray_veil_air_rendering',
+    metrics: {
+      localUpperCarrier: parseFloat(localUpperCarrier.toFixed(1)),
+      remoteUpperCarrier: samples.length ? parseFloat(remoteUpperCarrier.toFixed(1)) : null,
+      remoteTotalCloud: samples.length ? parseFloat(remoteTotalCloud.toFixed(1)) : null,
+      fullVeilPressure: parseFloat(fullVeilPressure.toFixed(2)),
+      pollutionPressure: parseFloat(pollutionPressure.toFixed(2)),
+      aod,
+      pm25,
+      pm10,
+      dust,
+      visibility
+    }
+  };
+}
+
 function assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightPathGate, renderingFactor, remoteCloudData = null, context = {}) {
   const lowClouds = Number(weatherData.lowClouds || 0);
   const midClouds = Number(weatherData.midClouds || 0);
@@ -1310,10 +1370,14 @@ function assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightP
     (pm10 != null && pm10 >= 70) ||
     (dust != null && dust >= 70);
   const hardBlocked = precipitation > 0.2 || lowClouds >= 60 || pathBlocked || visibility < 6;
+  const grayVeilAirRendering = assessGrayVeilAirRendering(weatherData, remoteCloudData);
 
   let airFactor = Number(renderingFactor?.factor ?? 1);
   let airMode = renderingFactor?.breakdown?.specialMode || 'neutral';
-  if (pathOpen && cloudCanReceiveLight && moderateAir && !heavyAir && !hardBlocked) {
+  if (pathOpen && cloudCanReceiveLight && grayVeilAirRendering.applied && !heavyAir && !hardBlocked) {
+    airFactor = Math.min(airFactor, grayVeilAirRendering.factor);
+    airMode = 'gray_veil_air_suppression';
+  } else if (pathOpen && cloudCanReceiveLight && moderateAir && !heavyAir && !hardBlocked) {
     const aerosolWarmth = Math.max(
       aod == null ? 0 : scoreRangePeak(aod, 0.35, 0.62, 0.8),
       pm25 == null ? 0 : scoreRangePeak(pm25, 20, 42, 65),
@@ -1350,6 +1414,7 @@ function assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightP
     airMode,
     pathOpen,
     hardBlocked,
+    grayVeilAirRendering,
     warmScatteringUpperCarrierAdjustment,
     visibleSunsetSectorCap,
     metrics: {
@@ -2423,7 +2488,16 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     ? (scoringV2.visibleSunsetSectorCap
       || assessVisibleSunsetSectorCap(weatherData, carrierScore, lightPathScore, lightPathGate, remoteCloudData))
     : { applied: false, cap: null, reason: null };
-  if (!thickHighCloudPenalty.applied && scoringV2.applied && scoringV2.score > adjustedScore) {
+  if (!thickHighCloudPenalty.applied && scoringV2.applied && scoringV2.airMode === 'gray_veil_air_suppression' && scoringV2.score < adjustedScore) {
+    adjustedScore = scoringV2.score;
+    if (adjustedScore < 40) {
+      adjustedStatus = 'light_glow';
+      adjustedDescription = 'weak_local_colors';
+    } else {
+      adjustedStatus = 'good_glow';
+      adjustedDescription = 'conditions_good';
+    }
+  } else if (!thickHighCloudPenalty.applied && scoringV2.applied && scoringV2.score > adjustedScore) {
     adjustedScore = scoringV2.score;
     if (adjustedScore >= 82) {
       adjustedStatus = 'legendary_eruption';

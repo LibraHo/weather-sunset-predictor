@@ -1,0 +1,206 @@
+{
+  "id": "2026-06-05-beijing-sunset-gray-veil-full-upper-cloud",
+  "title": "2026-06-05 Beijing sunset: pale distant glow under full upper-cloud gray veil",
+  "location": {
+    "name": "Beijing",
+    "nameZh": "北京",
+    "lat": 39.9042,
+    "lon": 116.4074,
+    "timezone": "Asia/Shanghai"
+  },
+  "event": {
+    "period": "sunset",
+    "localDate": "2026-06-05",
+    "calculationTimeUtc": "2026-06-05T11:38:00.000Z",
+    "sunAzimuth": 303
+  },
+  "feedback": {
+    "source": "Alex现场反馈",
+    "reportedAt": "2026-06-06T00:39:51+08:00",
+    "summary": "实况颜色很淡，远处只有一点点，明显不如 2026-06-04。满铺中高云和偏高 PM/AOD 不应被当作暖散射加成。",
+    "subjectiveScore": {
+      "min": 38,
+      "max": 45,
+      "label": "远不如 6/4，偏弱到一般"
+    },
+    "calibrationTarget": {
+      "score": 42,
+      "status": "calibrated",
+      "reason": "本地和太阳方向中高云接近满铺，叠加 PM2.5/AOD 偏高时更像灰幕淡色，应连续降低空气显色因子，而不是进入 warm_scattering_path_open 加成。"
+    },
+    "actualOutcome": {
+      "fireCloud": "light_glow",
+      "rainDuringWindow": false,
+      "orangeLightOrOpening": false,
+      "worthWaiting": false,
+      "notes": "远处有一点点颜色，但整体远不如 6/4 的 50-60 分表现。"
+    },
+    "previousModelScores": [
+      {
+        "score": 68.2,
+        "source": "生产 main a8848f85 /api/prediction/enhanced，scoringV2 进入 warm_scattering_path_open，airFactor 1.1。"
+      }
+    ]
+  },
+  "capture": {
+    "dataCompleteness": "production_detail_response_breakdown",
+    "predictionReplay": "enhanced_detail_calculateEnhancedPrediction",
+    "sourceFiles": [
+      "/tmp/beijing-2026-06-05-sunset.json"
+    ],
+    "knownLimitations": [
+      "该样本来自生产详细预测响应和现场文字反馈；后续如有照片应补充图像观测。"
+    ]
+  },
+  "input": {
+    "weatherData": {
+      "cloudCover": 100,
+      "humidity": 43,
+      "visibility": 20,
+      "lowCloudCover": 0,
+      "temp": 23.4,
+      "windSpeed": 2.26,
+      "windDirection": 103,
+      "pressure": 997.9,
+      "precipitation": 0,
+      "recentPrecipitation6h": 0,
+      "recentRainHours": 0,
+      "recentRainSignal": 0,
+      "recentRainMaxHourly": 0,
+      "recentRainWetHourEquivalent": 0,
+      "lowClouds": 0,
+      "midClouds": 100,
+      "highClouds": 100,
+      "cloudBaseHeight": null,
+      "cape": null,
+      "weatherCode": null,
+      "shortwaveRadiation": 0,
+      "directRadiation": 0,
+      "diffuseRadiation": 0,
+      "waterVapourColumn": 32.8,
+      "aerosolOpticalDepth": 0.4,
+      "dust": 25,
+      "pm2_5": 70.1,
+      "pm10": 86.4,
+      "aqi": 116
+    },
+    "options": {
+      "rainedRecently": false,
+      "prevHourData": null,
+      "remoteCloudData": {
+        "source": "solar_direction_openmeteo",
+        "azimuth": 303,
+        "samples": [
+          {
+            "lat": 39.953139006928495,
+            "lon": 116.30900915344375,
+            "distanceKm": 10,
+            "bearing": 303,
+            "cloudBaseHeight": null,
+            "lowCloud": 0,
+            "midCloud": 76,
+            "highCloud": 100,
+            "totalCloud": 100,
+            "humidity": 52,
+            "precipitation": 0,
+            "weatherCode": null,
+            "provider": "openmeteo",
+            "error": null
+          },
+          {
+            "lat": 40.02639126234367,
+            "lon": 116.16115885151714,
+            "distanceKm": 25,
+            "bearing": 303,
+            "cloudBaseHeight": null,
+            "lowCloud": 0,
+            "midCloud": 76,
+            "highCloud": 100,
+            "totalCloud": 100,
+            "humidity": 52,
+            "precipitation": 0,
+            "weatherCode": null,
+            "provider": "openmeteo",
+            "error": null
+          },
+          {
+            "lat": 40.14805947385405,
+            "lon": 115.9140358958756,
+            "distanceKm": 50,
+            "bearing": 303,
+            "cloudBaseHeight": null,
+            "lowCloud": 0,
+            "midCloud": 89,
+            "highCloud": 100,
+            "totalCloud": 95,
+            "humidity": 65,
+            "precipitation": 0,
+            "weatherCode": null,
+            "provider": "openmeteo",
+            "error": null
+          },
+          {
+            "lat": 40.26920049402311,
+            "lon": 115.66602798043743,
+            "distanceKm": 75,
+            "bearing": 303,
+            "cloudBaseHeight": null,
+            "lowCloud": 0,
+            "midCloud": 100,
+            "highCloud": 100,
+            "totalCloud": 100,
+            "humidity": 70,
+            "precipitation": 0,
+            "weatherCode": null,
+            "provider": "openmeteo",
+            "error": null
+          },
+          {
+            "lat": 40.38981016122446,
+            "lon": 115.41713200789206,
+            "distanceKm": 100,
+            "bearing": 303,
+            "cloudBaseHeight": null,
+            "lowCloud": 0,
+            "midCloud": 100,
+            "highCloud": 100,
+            "totalCloud": 97,
+            "humidity": 64,
+            "precipitation": 0,
+            "weatherCode": null,
+            "provider": "openmeteo",
+            "error": null
+          }
+        ],
+        "errors": []
+      }
+    }
+  },
+  "expectations": {
+    "score": {
+      "min": 38,
+      "max": 45
+    },
+    "statusAnyOf": [
+      "light_glow",
+      "good_glow"
+    ],
+    "equals": [
+      {
+        "path": "scoringV2.airMode",
+        "value": "gray_veil_air_suppression"
+      },
+      {
+        "path": "scoringV2.grayVeilAirRendering.applied",
+        "value": true
+      }
+    ],
+    "notAbove": [
+      {
+        "path": "score",
+        "value": 45,
+        "reason": "Full upper-cloud coverage with higher PM/AOD produced only pale distant color and should remain below the better 2026-06-04 sunset."
+      }
+    ]
+  }
+}
