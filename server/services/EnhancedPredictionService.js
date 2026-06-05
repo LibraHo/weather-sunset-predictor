@@ -60,6 +60,8 @@ const VISIBLE_CARRIER_SAMPLE_WEIGHT_BY_DISTANCE = Object.freeze(
     return acc;
   }, {})
 );
+const UPPER_CLOUD_SIGNAL_LOW_CLOUD_LIFT = 12;
+const UPPER_CLOUD_SIGNAL_LOW_CLOUD_SCALE = 8;
 
 // ========== 辅助函数 ==========
 
@@ -72,6 +74,15 @@ function smoothStep(edge0, edge1, value) {
   if (edge0 === edge1) return value >= edge1 ? 1 : 0;
   const t = clamp((value - edge0) / (edge1 - edge0), 0, 1);
   return t * t * (3 - 2 * t);
+}
+
+function upperCloudSignal(cloudPercent) {
+  const cloud = clamp(Number(cloudPercent) || 0, 0, 100);
+  if (cloud <= 0) return 0;
+  const lowCloudPresence = 1 - Math.exp(-cloud / UPPER_CLOUD_SIGNAL_LOW_CLOUD_SCALE);
+  const saturationFade = Math.pow(clamp(1 - cloud / 70, 0, 1), 2);
+  const lowAmountLift = UPPER_CLOUD_SIGNAL_LOW_CLOUD_LIFT * lowCloudPresence * saturationFade;
+  return clamp(cloud + lowAmountLift, 0, 100);
 }
 
 function getCloudTypeAdditiveAdjustment(cloudType) {
@@ -384,6 +395,8 @@ function scoreCloudCanvas(weatherData) {
   const lowClouds = weatherData.lowClouds || 0;
   const midClouds = weatherData.midClouds || 0;
   const highClouds = weatherData.highClouds || 0;
+  const midCloudSignal = upperCloudSignal(midClouds);
+  const highCloudSignal = upperCloudSignal(highClouds);
 
   // Bug 2 修复：总云量改用最大值（更符合物理叠加）
   const layerBasedCloudCover = Math.min(
@@ -416,7 +429,7 @@ function scoreCloudCanvas(weatherData) {
   // 1. 计算有效云量（只用中高云，低云不算画布）
   // 气象学依据：中云(高积云/高层云)和高云(卷云)都能散射红橙色光，是火烧云的画布
   // 低云(层云/积云)主要遮挡视线，不算画布贡献
-  const upperCloudCover = highClouds * CLOUD_WEIGHTS.HIGH + midClouds * CLOUD_WEIGHTS.MID;
+  const upperCloudCover = highCloudSignal * CLOUD_WEIGHTS.HIGH + midCloudSignal * CLOUD_WEIGHTS.MID;
   const effectiveCloudCover = upperCloudCover + lowClouds * CLOUD_WEIGHTS.LOW;
 
   // 2. 云量区间评分（基于中高云画布，低云单独惩罚）
@@ -503,7 +516,9 @@ function scoreCloudCanvas(weatherData) {
     breakdown: {
       lowClouds: parseFloat(lowClouds.toFixed(1)),
       midClouds: parseFloat(midClouds.toFixed(1)),
-      highClouds: parseFloat(highClouds.toFixed(1))
+      highClouds: parseFloat(highClouds.toFixed(1)),
+      midCloudSignal: parseFloat(midCloudSignal.toFixed(1)),
+      highCloudSignal: parseFloat(highCloudSignal.toFixed(1))
     }
   };
 }
@@ -1002,7 +1017,9 @@ function scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore = {}, we
   const low = avg('lowCloud');
   const mid = avg('midCloud');
   const high = avg('highCloud');
-  const upperSignal = clamp(high * 0.9 + mid * 0.75, 0, 100);
+  const midSignal = upperCloudSignal(mid);
+  const highSignal = upperCloudSignal(high);
+  const upperSignal = clamp(highSignal * 0.9 + midSignal * 0.75, 0, 100);
   const lowMidBlock = low * 0.75 + mid * 0.20;
   const lightPath = Number(lightPathScore?.score ?? 0);
   const precipitation = Number(weatherData.precipitation ?? weatherData.rain ?? weatherData.showers ?? 0);
@@ -1020,6 +1037,8 @@ function scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore = {}, we
         low: parseFloat(low.toFixed(1)),
         mid: parseFloat(mid.toFixed(1)),
         high: parseFloat(high.toFixed(1)),
+        midSignal: parseFloat(midSignal.toFixed(1)),
+        highSignal: parseFloat(highSignal.toFixed(1)),
         upperSignal: parseFloat(upperSignal.toFixed(1)),
         lowMidBlock: parseFloat(lowMidBlock.toFixed(1)),
         visibility
@@ -1064,6 +1083,8 @@ function scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore = {}, we
       low: parseFloat(low.toFixed(1)),
       mid: parseFloat(mid.toFixed(1)),
       high: parseFloat(high.toFixed(1)),
+      midSignal: parseFloat(midSignal.toFixed(1)),
+      highSignal: parseFloat(highSignal.toFixed(1)),
       upperSignal: parseFloat(upperSignal.toFixed(1)),
       lowMidBlock: parseFloat(lowMidBlock.toFixed(1)),
       lightPath: Number.isFinite(lightPath) ? parseFloat(lightPath.toFixed(1)) : null,
@@ -2288,10 +2309,16 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   // 3. 画布评分（本地云况）+ 云种加分。正向证据用加分，避免重复连乘。
   const canvasScoreRaw = scoreCloudCanvas(weatherData);
   const cloudTypeAdjustment = getCloudTypeAdditiveAdjustment(cloudType);
+  const effectiveCloudTypeAdjustment = (
+    cloudTypeAdjustment.reason === 'clear_but_no_cloud_canvas' &&
+    Number(canvasScoreRaw.effectiveCloudCover || 0) > 10
+  )
+    ? { canvasBonus: 0, lightGateDelta: cloudTypeAdjustment.lightGateDelta, reason: 'weak_upper_cloud_canvas_present' }
+    : cloudTypeAdjustment;
   const canvasScore = {
     ...canvasScoreRaw,
-    score: parseFloat(clamp(canvasScoreRaw.score + cloudTypeAdjustment.canvasBonus, 0, 100).toFixed(1)),
-    cloudTypeAdjustment
+    score: parseFloat(clamp(canvasScoreRaw.score + effectiveCloudTypeAdjustment.canvasBonus, 0, 100).toFixed(1)),
+    cloudTypeAdjustment: effectiveCloudTypeAdjustment
   };
   logger.debug('[EnhancedPredictionService]', '画布评分(含云种):', canvasScore.score);
 
@@ -2641,12 +2668,15 @@ module.exports = {
   SOLAR_DIRECTION_SAMPLE_WEIGHTS,
   VISIBLE_CARRIER_SAMPLE_DISTANCES_KM,
   VISIBLE_CARRIER_SAMPLE_WEIGHTS,
+  UPPER_CLOUD_SIGNAL_LOW_CLOUD_LIFT,
+  UPPER_CLOUD_SIGNAL_LOW_CLOUD_SCALE,
   ALGORITHM_VERSION,
 
   // 辅助函数
   getJulianDay,
   calculateSolarElevation,
   calculateSolarAzimuth,
+  upperCloudSignal,
 
   // 核心评分模块
   checkTimeWindow,
