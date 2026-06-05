@@ -182,12 +182,18 @@ export default {
     methodology: {
       title: '火烧云计算方法',
       intro: '当前火烧云指数先判断“有没有可显色载体”，再判断太阳方向光路是否能把光打到载体上，最后用空气显色条件做小幅修正。它不是把一串好条件连续相乘，所以高云 100% 不会自动满分。',
-      versionLabel: '算法版本：2026.06.03-sunset-scoring-v2',
-      versionDesc: '本版把最终评分收敛为“云载体 × 日落光路 × 空气显色”：有光路时轻/中度气溶胶可增强橙红散射，无光路、极端霾、低能见度、降水和厚低云仍优先压制。',
+      versionLabel: '算法版本：2026.06.06-gray-veil-directional-carrier-v2',
+      versionDesc: '本版继续使用“云载体 × 日落光路 × 空气显色”，但会区分开口暖散射、满铺灰幕和太阳方向中云带：适度颗粒只有在云幕不灰、光路通畅时加分；满铺中高云叠加偏脏空气会连续压低显色。',
       changelogTitle: "版本更新记录",
       changelogHint: "近三个月内的算法更新都会放在这里，可滚动回看原因、影响和验证方式",
       changelog: {
         latest: {
+          date: '2026-06-06',
+          title: '灰幕空气显色 + 方向中云带 v2',
+          summary: '满铺中高云叠加 PM/AOD 偏高时，不再默认当暖色散射加分，而是按灰幕压力连续降低空气显色；太阳方向中云带改为连续载体，光路越开、方向中云越强，越接近 50-60 档。',
+          validation: '验证：2026-06-03 北京暖散射保持 70 档；2026-06-04 北京方向中云带约 53.5；2026-06-05 北京满铺灰幕压到约 44；真实校准样本库全量回放通过。'
+        },
+        scoringV2: {
           date: '2026-06-03',
           title: '日落评分 v2',
           summary: '最终分改为云载体、日落光路、空气显色三部分合成；光路开且能见度可接受时，轻/中度 AOD、PM、dust 作为橙红散射正向因素，而不是一律当灰幕。',
@@ -276,10 +282,10 @@ export default {
         transparency: {
           title: '3. 大气透明度',
           subtitle: 'Transparency · 渲染评分',
-          desc: '能见度、湿度、降水后状态和空气颗粒只影响“显色质量”。有光路时，适度颗粒可增强橙红散射；无光路或颗粒过重时才转为灰幕扣分。',
+          desc: '能见度、湿度、降水后状态和空气颗粒只影响“显色质量”。有光路且云幕不灰时，适度颗粒可增强橙红散射；中高云满铺且 PM/AOD 偏高时，会转为灰幕显色抑制。',
           visibility: '渲染因子会综合 visibilityFactor、humidityFactor、rainBonus、aqiFactor、aerosolFactor',
           humidity: '渲染修正不是乘爆分数：factor≥1 时转成最多约 +9 分；factor<1 时最多约 -25 分',
-          formula: '空气显色 = 光路开 ? 暖色散射系数 1.02–1.12 : 原渲染系数；重霾/低能见度约 0.6–0.8'
+          formula: '空气显色 = 灰幕压力优先 ? 0.70–0.95 : 光路开 ? 暖色散射系数 1.02–1.12 : 原渲染系数'
         },
         layerDiversity: {
           title: '4. 光路门控',
@@ -301,11 +307,11 @@ export default {
         thickHighCloudPenalty: {
           title: '7. 载体与灰幕修正',
           subtitle: 'Carrier Quality · 画布与薄雾',
-          desc: '算法先求“能显色的载体”，再用日落光路和空气显色决定它能发挥多少。气溶胶不再只是弱载体，也会在光路打开时参与暖色散射。',
+          desc: '算法先求“能显色的载体”，再用日落光路和空气显色决定它能发挥多少。太阳方向中云带会按强度连续参与评分；气溶胶只有在光路打开且云幕不灰时参与暖色散射。',
           level1: '云层载体 = 画布基础分 + 云种/云厚/高云有限加减分；高云强但光路没开，不允许直接满分',
-          level2: '云少时仍保留气溶胶弱载体；云多且光路开时，适度 AOD/PM/dust 进入空气显色，增强橙红散射',
-          level3: '重霾、沙尘、能见度<8、厚云、雨低云会把载体压低或封顶；清透高云保护也会被光路门控否决',
-          formula: 'scoringV2 = 云载体 × 日落光路 × 空气显色\n暖色散射只在光路开、低云不堵、能见度可接受时生效'
+          level2: '云少时仍保留气溶胶弱载体；太阳方向中云带在光路通畅时可进入 50-60 档，但不会当成顶级爆发',
+          level3: '满铺中高云叠加 PM/AOD 偏高会按灰幕显色抑制处理；重霾、沙尘、能见度<8、厚云、雨低云仍会压低或封顶',
+          formula: 'scoringV2 = 云载体 × 日落光路 × 空气显色\n先判灰幕压力，再判开口暖散射；方向中云带按连续载体参与'
         },
         precipPenalty: {
           title: '6. 降水惩罚系数',
@@ -325,7 +331,7 @@ export default {
           highCloudCap: '高云充足但光路被挡时，光路门控会压低最高得分。',
           carrier: '载体分 = max(云层画布分, 气溶胶弱载体分)',
           lightGate: '光路门控 = 0.25–1.12；太阳方向阻挡走廊可压到约 0.42，太阳方向开口约 0.90–0.96',
-          rendering: '空气显色 = 0.6–1.15；光路开时轻/中度 AOD、PM、dust 可进入 1.02–1.12 暖色散射区间',
+          rendering: '空气显色 = 0.70–1.12；光路开且云幕不灰时轻/中度 AOD、PM、dust 可加暖色，满铺灰幕则连续压低',
           statusCaps: '显示分还会按状态校准：无火烧云低于 40，轻微霞光低于 60；几何不可行、厚云、灰幕和雨低云会进一步封顶'
         }
       }
@@ -489,6 +495,7 @@ export default {
           displayCalibration: '展示分校准',
           aerosolCarrier: '气溶胶载体',
           scoringV2: '开口暖色散射',
+          grayVeilAirRendering: '灰幕显色抑制',
           evidence: '计算依据'
         },
         details: {
@@ -502,6 +509,7 @@ export default {
           lowSolarTransmissionNo: '未命中',
           aerosolCarrier: '云层很少时，薄雾在光路通畅时可承接一点暖色，光路激活 ×{{activation}}',
           scoringV2: '云载体 {{carrier}} × 日落光路 {{path}} × 空气显色 {{air}}',
+          grayVeilAirRendering: '满铺中高云叠加偏脏空气：云载体 {{carrier}} × 日落光路 {{path}} × 灰幕显色 {{air}}',
           lightPath: '阳光是否能打到云层',
           renderingFactors: '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}',
           afterAdjustments: '结合天气和能见度后',
@@ -531,6 +539,7 @@ export default {
           severeHazeCap35: '重度灰霾让颜色不容易出来',
           moderateHazeCap45: '灰霾会削弱红橙色',
           hazeWarmScatteringPathOpen: '日落光路打开，适度颗粒增强橙红散射',
+          fullUpperCloudGrayVeilAirRendering: '满铺中高云叠加偏脏空气，显色转为灰幕抑制',
           denseCarrierCanvasOnly: '中高云层仍能承接晚霞光线',
           adjustmentApplied: '已按限制条件修正',
           displayCalibration: '最终展示分按预测状态档位校准',

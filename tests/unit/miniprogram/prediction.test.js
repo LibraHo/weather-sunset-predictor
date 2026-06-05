@@ -104,6 +104,32 @@ describe('miniprogram services/prediction', () => {
     });
   });
 
+  test('normalizePrediction preserves backend scoringV2 for home analysis copy', () => {
+    const normalized = normalizePrediction({
+      score: 44,
+      status: 'light_glow',
+      scoringV2: {
+        applied: true,
+        airMode: 'gray_veil_air_suppression',
+        cloudCarrier: 62,
+        pathFactor: 1,
+        airFactor: 0.71,
+        score: 44
+      },
+      breakdown: {
+        scoringV2: {
+          airMode: 'warm_scattering_path_open'
+        }
+      }
+    });
+
+    expect(normalized.scoringV2).toMatchObject({
+      applied: true,
+      airMode: 'gray_veil_air_suppression',
+      score: 44
+    });
+  });
+
   test('getWeatherForecast fetches basic weather without invoking scoring', async () => {
     const wxMock = {
       request: jest.fn(({ success }) => success({

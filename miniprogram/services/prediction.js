@@ -138,6 +138,7 @@ export function normalizePrediction(data = {}) {
     description: source.description || '',
     advice: source.advice || '',
     breakdown: source.breakdown || null,
+    scoringV2: source.scoringV2 || source.breakdown?.scoringV2 || null,
     canvasAnalysis: source.canvasAnalysis || null,
     lightPathAnalysis: source.lightPathAnalysis || null,
     renderingAnalysis: source.renderingAnalysis || null,

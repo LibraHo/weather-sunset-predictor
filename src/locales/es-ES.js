@@ -174,16 +174,22 @@ apiAccess: 'Acceso API'
     "methodology": {
       "title": "Cómo se calcula la puntuación",
       "intro": "El índice de nubes rojas combina cuatro factores clave para estimar si vale la pena salir a ver el atardecer.",
-      "versionLabel": "Versión del algoritmo: 2026.05.27-cloud-thickness-proportional-v2",
-      "versionDesc": "Esta versión cambia la penalización por espesor de nubes a puntuación de lienzo antes del espesor × 30% × presión de espesor, elimina los topes fijos -28/24 y calibra las cortinas grises húmedas como resplandor débil/observable pero no fuerte.",
+      "versionLabel": 'Algorithm version: 2026.06.06-gray-veil-directional-carrier-v2',
+      "versionDesc": 'This version still uses cloud carrier × sunset path × air rendering, but separates open-path warm scattering, full-deck gray veil, and sun-direction mid-cloud bands. Moderate particles only add warmth when the deck is not gray and the path is open; full mid/high cloud with dirty air continuously suppresses rendering.',
       changelogTitle: "Historial de versiones",
       changelogHint: "Aquí están las actualizaciones de los últimos tres meses; desplázate para revisar motivo, impacto y validación",
       changelog: {
         "latest": {
-          "date": "2026-05-27",
-          "title": "Penalización proporcional por espesor de nubes v2",
-          "summary": "La penalización por espesor de nubes ahora es puntuación de lienzo antes del espesor × 30% × presión de espesor, sin los topes fijos -28/24. Las cortinas grises húmedas se calibran como resplandor débil/observable pero no fuerte.",
-          "validation": "Validación: en la muestra de Pekín del 2026-05-27, presión 0.78 sobre lienzo 76.7 da unos -18 puntos y mantiene el resultado en el rango de resplandor débil/observable."
+          "date": "2026-06-06",
+          "title": "Gray-veil rendering + directional mid-cloud v2",
+          "summary": "Full mid/high cloud plus elevated PM/AOD no longer defaults to warm-scattering uplift; the model continuously lowers air rendering by gray-veil pressure. Sun-direction mid-cloud bands are now a continuous carrier: stronger band plus more open path moves toward the 50-60 range.",
+          "validation": "Validation: 2026-06-03 Beijing warm scattering stays in the 70 band; 2026-06-04 directional mid-cloud replays around 53.5; 2026-06-05 full gray veil falls around 44; all real calibration cases replay."
+        },
+        "scoringV2": {
+          "date": "2026-06-03",
+          "title": "Sunset scoring v2",
+          "summary": "The final score now combines cloud carrier, sunset path, and air rendering. With an open path and acceptable visibility, moderate AOD, PM, and dust are treated as warm orange-red scattering instead of automatic gray-curtain failure.",
+          "validation": "Validation: 2026-06-02 Beijing remains low around 30; the 2026-06-03 detailed point forecast replays around 71 and reaches the 70 band, while the fire-cloud map still uses the regional simplified branch."
         },
         "cloudThickness": {
           "date": "2026-05-27",
@@ -447,6 +453,7 @@ apiAccess: 'Acceso API'
           "displayCalibration": "Display calibration",
           "aerosolCarrier": "Aerosol carrier",
           "scoringV2": "Open-path warm scattering",
+          "grayVeilAirRendering": "Gray-veil rendering",
           "evidence": "Calculation evidence"
         },
         "details": {
@@ -460,6 +467,7 @@ apiAccess: 'Acceso API'
           "lowSolarTransmissionNo": "no",
           "aerosolCarrier": "thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}",
           "scoringV2": "cloud carrier {{carrier}} × sunset path {{path}} × air rendering {{air}}",
+          "grayVeilAirRendering": "full mid/high cloud with dirty air: carrier {{carrier}} × path {{path}} × suppressed air rendering {{air}}",
           "lightPath": "sunlight reaches the cloud layer",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
           "afterAdjustments": "after weather and visibility adjustments",
@@ -489,6 +497,7 @@ apiAccess: 'Acceso API'
           "severeHazeCap35": "heavy haze makes colors hard to show",
           "moderateHazeCap45": "haze weakens orange-red color",
           "hazeWarmScatteringPathOpen": "open sunset path turns moderate particles into warm orange-red scattering",
+          "fullUpperCloudGrayVeilAirRendering": "full mid/high cloud plus dirty air suppresses color rendering",
           "denseCarrierCanvasOnly": "mid/high clouds can still catch sunset light",
           "adjustmentApplied": "score adjusted for limiting conditions",
           "displayCalibration": "final display score is aligned with the prediction status band",

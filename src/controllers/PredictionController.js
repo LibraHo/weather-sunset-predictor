@@ -1555,7 +1555,7 @@ class PredictionController {
       'factors.rendering.status.good': '较好', 'factors.rendering.status.fair': '一般', 'factors.rendering.status.weak': '较弱',
       'factors.rendering.desc.good': '空气里有适度颗粒和水汽，颜色更容易偏暖、偏红。',
       'factors.rendering.desc.fair': '空气条件普通，颜色表现主要看云层和光路。',
-      'factors.rendering.desc.weak': '空气偏灰或颗粒过重，颜色容易变暗、变淡。',
+      'factors.rendering.desc.weak': '空气偏灰或颗粒过重，满铺云幕容易把颜色压暗、压淡。',
       'factors.limits.title': '限制因素',
       'factors.limits.status.good': '无明显', 'factors.limits.status.fair': '轻微', 'factors.limits.status.weak': '明显',
       'factors.limits.desc.good': '没有明显压制条件。',
@@ -1790,9 +1790,11 @@ class PredictionController {
     const aod = Number(weather.aod);
     const grayCurtainMode = postRainAdjustment?.mode === 'post_rain_gray_curtain' || postRainAdjustment?.mode === 'humid_haze_gray_curtain';
     let renderingLevel = 'fair';
+    const grayVeilAirSuppression = scoringV2?.airMode === 'gray_veil_air_suppression';
     if (scoringV2?.airMode === 'warm_scattering_path_open') {
       renderingLevel = 'good';
     } else if (
+      grayVeilAirSuppression ||
       grayCurtainMode ||
       aerosolHazeCap?.applied ||
       weather.visibility < 8 ||
@@ -1829,6 +1831,7 @@ class PredictionController {
       weather.low >= 25 ||
       weather.visibility < 15 ||
       weather.humidity > 75 ||
+      grayVeilAirSuppression ||
       (scoringV2?.airMode !== 'warm_scattering_path_open' && Number.isFinite(aod) && aod > 0.35) ||
       precipitation > 0.1
     );
@@ -2051,7 +2054,8 @@ class PredictionController {
       extreme_dust_haze_cap_28: ledgerText('reasons.extremeDustHazeCap28', {}, 'heavy dust or haze suppresses the glow', '强沙尘或灰幕会压住霞光'),
       severe_haze_cap_35: ledgerText('reasons.severeHazeCap35', {}, 'heavy haze makes colors hard to show', '重度灰霾让颜色不容易出来'),
       moderate_haze_cap_45: ledgerText('reasons.moderateHazeCap45', {}, 'haze weakens orange-red color', '灰霾会削弱红橙色'),
-      haze_warm_scattering_path_open: ledgerText('reasons.hazeWarmScatteringPathOpen', {}, 'open sunset path turns moderate particles into warm orange-red scattering', '日落光路打开，适度颗粒增强橙红散射')
+      haze_warm_scattering_path_open: ledgerText('reasons.hazeWarmScatteringPathOpen', {}, 'open sunset path turns moderate particles into warm orange-red scattering', '日落光路打开，适度颗粒增强橙红散射'),
+      full_upper_cloud_gray_veil_air_rendering: ledgerText('reasons.fullUpperCloudGrayVeilAirRendering', {}, 'full mid/high cloud plus dirty air suppresses color rendering', '满铺中高云叠加偏脏空气，显色转为灰幕抑制')
     }[reason] || reason || ledgerText('reasons.adjustmentApplied', {}, 'score adjusted for limiting conditions', '已按限制条件修正'));
 
     const capEvents = [
@@ -2136,6 +2140,21 @@ class PredictionController {
           '云载体 {{carrier}} × 日落光路 {{path}} × 空气显色 {{air}}'
         ),
         tone: 'good'
+      } : null,
+      scoringV2?.applied && scoringV2?.airMode === 'gray_veil_air_suppression' ? {
+        label: ledgerText('labels.grayVeilAirRendering', {}, 'Gray-veil rendering', '灰幕显色抑制'),
+        value: fmt(scoringV2.score, 1),
+        detail: ledgerText(
+          'details.grayVeilAirRendering',
+          {
+            carrier: fmt(scoringV2.cloudCarrier, 1),
+            path: fmt(scoringV2.pathFactor, 2),
+            air: fmt(scoringV2.airFactor, 2)
+          },
+          'full mid/high cloud with dirty air: carrier {{carrier}} × path {{path}} × suppressed air rendering {{air}}',
+          '满铺中高云叠加偏脏空气：云载体 {{carrier}} × 日落光路 {{path}} × 灰幕显色 {{air}}'
+        ),
+        tone: 'cap'
       } : null,
       aerosolCarrier?.activatedScore >= 12 ? {
         label: ledgerText('labels.aerosolCarrier', {}, 'Aerosol carrier', '气溶胶载体'),

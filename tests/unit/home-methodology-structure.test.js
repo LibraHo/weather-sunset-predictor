@@ -41,7 +41,7 @@ describe('home methodology structure', () => {
     expect((html.slice(scrollIndex, versionIndex).match(/<li>/g) || []).length).toBeGreaterThanOrEqual(5);
   });
 
-  test('shows the current sunset scoring v2 in version history', () => {
+  test('shows the current gray-veil and directional-carrier update in version history', () => {
     const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
     const localeFiles = [
       'zh-CN.js',
@@ -57,11 +57,14 @@ describe('home methodology structure', () => {
     ];
     const localeTexts = localeFiles.map(file => fs.readFileSync(path.join(ROOT, 'src/locales', file), 'utf8'));
 
+    expect(html).toContain('2026-06-06');
+    expect(html).toContain('2026.06.06-gray-veil-directional-carrier-v2');
+    expect(html).toContain('灰幕空气显色 + 方向中云带 v2');
     expect(html).toContain('2026-06-03');
-    expect(html).toContain('2026.06.03-sunset-scoring-v2');
-    expect(html).toContain('日落评分 v2');
+    expect(html).toContain('home.methodology.changelog.scoringV2.title');
     expect(html).toContain('云载体 × 日落光路 × 空气显色');
-    expect(html).toContain('轻/中度气溶胶可增强橙红散射');
+    expect(html).toContain('满铺中高云叠加 PM/AOD 偏高');
+    expect(html).toContain('方向中云越强，越接近 50-60 档');
     expect(html).toContain('云厚比例折损 v2');
     expect(html).toContain('画布修正前分 × 30% × 云厚压力');
     expect(html).toContain('去掉固定 -28/24 上限');
@@ -71,7 +74,9 @@ describe('home methodology structure', () => {
       .map(file => fs.readFileSync(path.join(ROOT, 'src/locales', file), 'utf8'))
       .join('\n');
 
-    expect(coreLocaleTexts).toContain('2026.06.03-sunset-scoring-v2');
+    expect(coreLocaleTexts).toContain('2026.06.06-gray-veil-directional-carrier-v2');
+    expect(coreLocaleTexts).toContain('Gray-veil rendering + directional mid-cloud v2');
+    expect(coreLocaleTexts).toContain('gray-veil pressure');
     expect(coreLocaleTexts).toContain('Sunset scoring v2');
     expect(coreLocaleTexts).toContain('cloud carrier, sunset path, and air rendering');
     expect(localeTexts.join('\n')).toContain('2026-05-27');
@@ -124,6 +129,8 @@ describe('home methodology structure', () => {
     expect(zh).toContain('中高云画布量 = 高云×0.75 + 中云×0.45');
     expect(zh).toContain('光路门控 = 0.25–1.12');
     expect(zh).toContain('最终分 = clamp(云载体 × 日落光路 × 空气显色, 0, 100)');
+    expect(zh).toContain('先判灰幕压力，再判开口暖散射');
+    expect(zh).toContain('方向中云带按连续载体参与');
     expect(zh).toContain('降水影响 = 光路封顶 + 弱载体禁用 + 渲染因子修正');
     expect(zh).not.toContain('画布分×1.2倍');
     expect(zh).not.toContain('透明度分 = 能见度分 + 湿度分（最高25分）');

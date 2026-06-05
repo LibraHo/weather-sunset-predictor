@@ -1018,6 +1018,41 @@ describe('PredictionController', () => {
       expect(rendering.desc).toContain('颜色更容易偏暖、偏红');
     });
 
+    test('满铺灰幕显色抑制场景应显示空气显色较弱', () => {
+      const prediction = {
+        score: 44,
+        cloudLayers: { high: 100, mid: 100, low: 0 },
+        visibility: 20,
+        humidity: 62,
+        aerosolOpticalDepth: 0.4,
+        pm10: 86.4,
+        scoringV2: {
+          applied: true,
+          airMode: 'gray_veil_air_suppression',
+          score: 44,
+          cloudCarrier: 62,
+          pathFactor: 1,
+          airFactor: 0.71
+        },
+        lightPathAnalysis: {
+          score: 84,
+          directionalAnalysis: { reason: 'solar_direction_neutral' }
+        }
+      };
+      const groups = predictionController.buildAnalysisGroups(prediction);
+      const rendering = groups.find(item => item.key === 'rendering');
+      const limits = groups.find(item => item.key === 'limits');
+      const html = predictionController.renderScoreBreakdownPopover(prediction);
+
+      expect(rendering.status).toBe('较弱');
+      expect(rendering.statusTone).toBe('weak');
+      expect(rendering.desc).toContain('满铺云幕');
+      expect(limits.status).toBe('轻微');
+      expect(html).toContain('灰幕显色抑制');
+      expect(html).toContain('满铺中高云叠加偏脏空气');
+      expect(html).not.toContain('开口暖色散射');
+    });
+
     test('太阳方向采样不是 opening 时光路条件不能显示良好', () => {
       const groups = predictionController.buildAnalysisGroups({
         score: 12,

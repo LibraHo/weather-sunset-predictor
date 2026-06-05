@@ -1248,7 +1248,8 @@ export function buildPredictionPreviewFromPrediction(prediction = {}, query = {}
     ],
     visibility: weather.visibility,
     humidity: weather.humidity,
-    aod: weather.aod ?? weather.aerosolOpticalDepth
+    aod: weather.aod ?? weather.aerosolOpticalDepth,
+    scoringV2: prediction.scoringV2 || prediction.breakdown?.scoringV2 || null
   };
   return buildCompletePredictionPreview(preview);
 }
@@ -1291,6 +1292,7 @@ export function compactPredictionPreviewPayload(prediction = {}) {
     canvasAnalysis: prediction.canvasAnalysis || null,
     lightPathAnalysis: compactLightPathAnalysis(prediction.lightPathAnalysis),
     renderingAnalysis: prediction.renderingAnalysis || null,
+    scoringV2: prediction.scoringV2 || prediction.breakdown?.scoringV2 || null,
     lightPathGate: prediction.lightPathGate || null,
     renderingAdjustment: prediction.renderingAdjustment || null,
     cloudThickness: prediction.cloudThickness || null,
@@ -1651,11 +1653,19 @@ export function buildPredictionAnalysisGroups(input = {}) {
   const visibility = Number(input.visibility ?? 13);
   const humidity = Number(input.humidity ?? 72);
   const aod = Number(input.aod ?? 0.11);
+  const airMode = input.scoringV2?.airMode || '';
+  const grayVeil = airMode === 'gray_veil_air_suppression';
+  const warmScattering = airMode === 'warm_scattering_path_open';
+  const renderingStatus = grayVeil ? '较弱' : (warmScattering || (visibility >= 10 && humidity < 85) ? '较好' : '一般');
+  const renderingTone = grayVeil ? 'weak' : (renderingStatus === '较好' ? 'good' : 'fair');
+  const renderingDesc = grayVeil
+    ? `能见度 ${Math.round(visibility)}km、湿度 ${Math.round(humidity)}%、AOD ${aod.toFixed(2)}；满铺云幕叠加偏脏空气，颜色容易被压淡。`
+    : `能见度 ${Math.round(visibility)}km、湿度 ${Math.round(humidity)}%、AOD ${aod.toFixed(2)}；${warmScattering ? '光路打开，适度颗粒可增强橙红散射。' : '颜色表现主要看云层和光路。'}`;
   return [
     { key: 'carrier', title: '云层载体', status: high >= 50 || mid >= 30 ? '较好' : '一般', tone: high >= 50 || mid >= 30 ? 'good' : 'fair', desc: `高云 ${Math.round(high)}%、中云 ${Math.round(mid)}%，有可染色云层基础。` },
     { key: 'lightPath', title: '光路条件', status: low <= 25 ? '较好' : '一般', tone: low <= 25 ? 'good' : 'fair', desc: `低云 ${Math.round(low)}%，太阳方向相对通透，光线有机会照到云底。` },
-    { key: 'rendering', title: '空气显色', status: visibility >= 10 && humidity < 85 ? '较好' : '一般', tone: visibility >= 10 && humidity < 85 ? 'good' : 'fair', desc: `能见度 ${Math.round(visibility)}km、湿度 ${Math.round(humidity)}%、AOD ${aod.toFixed(2)}。` },
-    { key: 'limits', title: '限制因素', status: low > 45 ? '明显' : '无明显', tone: low > 45 ? 'weak' : 'good', desc: low > 45 ? '低云偏多可能遮挡太阳方向。' : '降水和厚低云限制不明显。' }
+    { key: 'rendering', title: '空气显色', status: renderingStatus, tone: renderingTone, desc: renderingDesc },
+    { key: 'limits', title: '限制因素', status: low > 45 || grayVeil ? '明显' : '无明显', tone: low > 45 || grayVeil ? 'weak' : 'good', desc: low > 45 ? '低云偏多可能遮挡太阳方向。' : (grayVeil ? '满铺中高云和偏脏空气会压低颜色强度。' : '降水和厚低云限制不明显。') }
   ];
 }
 
@@ -1704,7 +1714,8 @@ function buildCompletePredictionPreview(preview = {}) {
       low: preview.clouds?.[2]?.value,
       visibility: preview.visibility,
       humidity: preview.humidity,
-      aod: preview.aod
+      aod: preview.aod,
+      scoringV2: preview.scoringV2
     }),
     radar: buildPredictionRadarFromClouds(preview.periodKey, preview.clouds, preview.direction)
   };

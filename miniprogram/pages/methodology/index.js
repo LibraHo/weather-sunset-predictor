@@ -11,7 +11,7 @@ Page({
     currentNav: 'methodology',
     heroEyebrow: '霞客方法',
     heroTitle: '火烧云计算方法',
-    heroCopy: '霞客先算云能不能接光，再看日落方向光路是否打开，最后判断空气是增强橙红散射还是压成灰幕。高云 100% 不会自动满分。',
+    heroCopy: '霞客先算云能不能接光，再看日落方向光路是否打开，最后判断空气是开口暖散射、满铺灰幕，还是方向中云带。高云 100% 不会自动满分。',
     scoreBands: [
       { tone: 'rare', name: '顶级 Rare', range: '85-100 分', desc: '少见的爆发级条件，值得优先安排。' },
       { tone: 'strong', name: '高分 Strong', range: '70-84 分', desc: '明显高于常态，适合专程蹲守。' },
@@ -24,18 +24,20 @@ Page({
       { title: '太阳透射', subtitle: 'direct + shortwave 组合证据', desc: '直射和短波辐射极低不会单独扣死；只有总云量/中云很高、高云载体弱且灰空气明显时，才说明光被云幕和空气压住。' },
       { title: '光路条件', subtitle: '10/25/50/75/100km 多点采样', desc: '太阳方向采样会结合太阳高度、云底高度和低/中/高云遮挡估算 block；所有距离走同一套逻辑，再按距离加权，25/50km 权重最高。' },
       { title: '光路门控', subtitle: '载体分能发挥多少', desc: '光路分不再按 20% 相加，而是转成 0.25-1.12 的门控；开口约 0.90-0.96，太阳方向阻挡走廊可压到约 0.42。' },
-      { title: '空气显色', subtitle: '光路开时可增强橙红', desc: '能见度、湿度、雨后状态和空气颗粒只改变显色质量：日落光路打开时，轻/中度 AOD、PM、dust 可增强橙红散射；光路关闭或颗粒过重时才按灰幕压低。' },
+      { title: '空气显色', subtitle: '先判灰幕，再判暖散射', desc: '能见度、湿度、雨后状态和空气颗粒只改变显色质量：光路开且云幕不灰时，轻/中度 AOD、PM、dust 可增强橙红；中高云满铺且 PM/AOD 偏高时，会转为灰幕显色抑制。' },
+      { title: '方向中云带', subtitle: '太阳方向可染色云带', desc: '本地点头顶云不多，但日落方向有中云带且光路通畅时，会按连续载体参与评分；方向中云越强、光路越开，越接近 50-60 档。' },
       { title: '限制因素', subtitle: '坏天气会封顶', desc: '厚云、湿灰幕、沙尘、低云主导和降水低云会压低载体或封顶；无火烧云状态低于 40，轻微霞光低于 60。' }
     ],
     calculationSteps: [
       { title: '1. 云层画布分', formula: 'upper = high×0.75 + mid×0.45', desc: 'upper 在 30-70 最佳；低云从 20-80% 将画布乘数从 1.0 降到 0.1。高云>50 且低云<30 时只加 0-6 分。' },
-      { title: '2. 空气显色', formula: 'air = openPath ? warmScattering : baseRendering', desc: '云少时仍保留气溶胶弱载体；云多且光路开时，适度 AOD/PM/dust 进入空气显色，增强橙红散射。' },
+      { title: '2. 空气显色', formula: 'air = grayVeil ? suppression : openPath ? warmScattering : baseRendering', desc: '先看满铺中高云、总云量、PM2.5/PM10/AOD、dust 和能见度的灰幕压力；不灰且光路开时，适度颗粒才进入暖色散射。' },
       { title: '3. 云厚比例折损', formula: 'thicknessPenalty = canvasBeforeThickness × 0.30 × thicknessPressure', desc: 'thicknessPressure 由厚云证据、net、散射占比、水汽指数和低太阳透射证据合成；高云载体只给小缓冲，不会把高散射和高水汽风险洗掉。' },
-      { title: '4. 载体分', formula: 'carrier = max(cloudCanvas, aerosol)', desc: '云层画布和气溶胶弱载体二选一取高值；厚云、湿灰幕、重霾、沙尘会扣分或封顶。' },
+      { title: '4. 载体分', formula: 'carrier = max(cloudCanvas, aerosol, directionalMidCloud)', desc: '云层画布、气溶胶弱载体和太阳方向中云带统一进入载体判断；方向中云带可到 50-60 档，但不会当成顶级爆发。' },
       { title: '5. 光路门控', formula: 'gate = f(lightPathScore, sun-direction corridor)', desc: '光路≥85 时 1.00-1.08；70-85 时 0.88-1.00；50-70 时 0.65-0.88；低于 50 时 0.25-0.65。' },
-      { title: '6. 最终显示分', formula: 'score = clamp(cloudCarrier × sunsetPath × airRendering, 0, 100)', desc: '最终还会按硬否决校准：无火烧云 <40，轻微霞光 <60；几何不可行、厚云、湿灰幕、雨低云会进一步封顶。' }
+      { title: '6. 最终显示分', formula: 'score = clamp(cloudCarrier × sunsetPath × airRendering, 0, 100)', desc: '最终还会按硬否决校准：无火烧云 <40，轻微霞光 <60；几何不可行、厚云、满铺灰幕、湿灰幕、雨低云会进一步压制。' }
     ],
     changelog: [
+      { date: '2026-06-06', title: '灰幕空气显色 + 方向中云带 v2', summary: '满铺中高云叠加 PM/AOD 偏高时按灰幕压力连续降低显色；太阳方向中云带改为连续载体，强光路下可进入 50-60 档。' },
       { date: '2026-06-03', title: '日落评分 v2', summary: '最终分改为云载体、日落光路、空气显色三部分合成；光路开且能见度可接受时，轻/中度 AOD、PM、dust 作为橙红散射正向因素。' },
       { date: '2026-06-02', title: '低太阳透射证据 v1', summary: '云厚评估恢复 direct/shortwave 太阳透射证据；只在高总云量、高中云、弱高云载体和灰空气同时出现时压分。' },
       { date: '2026-05-27', title: '云厚比例折损 v2', summary: '云厚扣分改为画布修正前分 × 30% × 云厚压力，去掉固定 -28/24 上限；湿灰幕场景同步按小烧/可看但不强校准。' },
@@ -75,7 +77,7 @@ Page({
       heroTitle: apiOnly ? 'API接入' : '火烧云计算方法',
       heroCopy: apiOnly
         ? '面向 Agent、自动化脚本和研究项目的受控接口。先申请 Token，再用 Bearer 鉴权调用 /api/agent 下的接口。'
-        : '霞客先算云能不能接光，再看日落方向光路是否打开，最后判断空气是增强橙红散射还是压成灰幕。高云 100% 不会自动满分。'
+        : '霞客先算云能不能接光，再看日落方向光路是否打开，最后判断空气是开口暖散射、满铺灰幕，还是方向中云带。高云 100% 不会自动满分。'
     });
   },
 

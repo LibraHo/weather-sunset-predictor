@@ -326,6 +326,9 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeJs).toContain("periodKey: 'sunset'");
     expect(homeJs).not.toContain("dateLabel: 'TEST'");
     expect(homeJs).toContain('buildPredictionAnalysisGroups');
+    expect(homeJs).toContain("airMode === 'gray_veil_air_suppression'");
+    expect(homeJs).toContain('满铺云幕叠加偏脏空气，颜色容易被压淡');
+    expect(homeJs).toContain('scoringV2: prediction.scoringV2 || prediction.breakdown?.scoringV2 || null');
     expect(homeJs).toContain('buildPredictionRadarPreview');
     expect(homeJs).toContain('buildRadarSunMarker');
     expect(homeJs).toContain('normalizeSunDirectionBearing');
