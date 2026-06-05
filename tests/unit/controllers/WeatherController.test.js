@@ -778,8 +778,8 @@ describe('WeatherController - 24小时温度连续化', () => {
       }
     ], { name: '贵州凯里', lat: 26.582, lon: 107.9775 });
 
-    expect(document.getElementById('current-aerosol').textContent).toBe('0.34');
-    expect(document.getElementById('current-aerosol').title).toBe('AOD 0.34');
+    expect(document.getElementById('current-aerosol').textContent).toBe('≈0.34');
+    expect(document.getElementById('current-aerosol').title).toBe('AOD 0.34 · 当前小时缺少 AOD，使用邻近时次数据');
 
     nowSpy.mockRestore();
   });

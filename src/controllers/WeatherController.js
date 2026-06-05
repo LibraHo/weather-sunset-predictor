@@ -384,12 +384,12 @@ class WeatherController {
       elements.visibility.textContent = currentWeather.visibility != null ? `${currentWeather.visibility.toFixed(1)} km` : '--';
     }
     if (elements.aerosol) {
-      const aerosolOpticalDepth = this._getDisplayAerosolOpticalDepth(weatherData, currentWeather);
-      elements.aerosol.textContent = aerosolOpticalDepth != null
-        ? Number(aerosolOpticalDepth).toFixed(2)
+      const aerosol = this._getDisplayAerosolOpticalDepth(weatherData, currentWeather);
+      elements.aerosol.textContent = aerosol.value != null
+        ? `${aerosol.isFallback ? '≈' : ''}${Number(aerosol.value).toFixed(2)}`
         : '--';
-      elements.aerosol.title = aerosolOpticalDepth != null
-        ? `AOD ${Number(aerosolOpticalDepth).toFixed(2)}`
+      elements.aerosol.title = aerosol.value != null
+        ? `AOD ${Number(aerosol.value).toFixed(2)}${aerosol.isFallback ? ' · 当前小时缺少 AOD，使用邻近时次数据' : ''}`
         : '';
     }
     if (elements.precipitation) {
@@ -479,10 +479,10 @@ class WeatherController {
 
   _getDisplayAerosolOpticalDepth(weatherData, currentWeather, now = Date.now()) {
     const directValue = this._pickAerosolOpticalDepth(currentWeather);
-    if (directValue != null) return directValue;
+    if (directValue != null) return { value: directValue, isFallback: false };
 
     if (!Array.isArray(weatherData) || weatherData.length === 0) {
-      return null;
+      return { value: null, isFallback: false };
     }
 
     const targetTime = Number.isFinite(Number(currentWeather?.timestamp))
@@ -505,7 +505,7 @@ class WeatherController {
       }
     }
 
-    return best;
+    return { value: best, isFallback: best != null };
   }
 
   _pickAerosolOpticalDepth(weatherPoint) {
