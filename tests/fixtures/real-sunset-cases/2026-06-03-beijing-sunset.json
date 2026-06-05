@@ -44,6 +44,7 @@
   },
   "capture": {
     "dataCompleteness": "scheduled_multi_snapshot",
+    "predictionReplay": "enhanced_detail_calculateEnhancedPrediction",
     "sourceFiles": [
       "memory/real-sunset-cases/2026-06-03-beijing-sunset/2026-06-03T11-41-25-615Z-1940-feedback.json"
     ],

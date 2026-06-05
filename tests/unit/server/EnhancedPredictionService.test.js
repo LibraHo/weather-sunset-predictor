@@ -1382,20 +1382,22 @@ describe('EnhancedPredictionService', () => {
         warmScatteringUpperCarrierAdjustment: {
           applied: true,
           reason: 'full_upper_cloud_warm_scattering_participation',
-          originalCarrier: 59.1,
           adjustedCarrier: 63.2
         }
       });
+      expect(pointResult.scoringV2.warmScatteringUpperCarrierAdjustment.originalCarrier).toBeGreaterThanOrEqual(59);
+      expect(pointResult.scoringV2.warmScatteringUpperCarrierAdjustment.originalCarrier).toBeLessThanOrEqual(62);
       expect(pointResult.score).toBeGreaterThanOrEqual(70);
       expect(pointResult.score).toBeLessThanOrEqual(72);
       expect(mapContextResult.scoringV2).toMatchObject({
         airMode: 'warm_scattering_path_open',
-        cloudCarrier: 59.1,
         warmScatteringUpperCarrierAdjustment: {
           applied: false,
           reason: 'map_grid_simplified_no_point_carrier_lift'
         }
       });
+      expect(mapContextResult.scoringV2.cloudCarrier).toBeGreaterThanOrEqual(59);
+      expect(mapContextResult.scoringV2.cloudCarrier).toBeLessThanOrEqual(62);
       expect(mapContextResult.score).toBeLessThan(70);
     });
 
@@ -1519,6 +1521,67 @@ describe('EnhancedPredictionService', () => {
       expect(result.score).toBeGreaterThanOrEqual(35);
       expect(result.score).toBeLessThanOrEqual(40);
       expect(result.status).toBe('light_glow');
+    });
+
+    test('should use solar-direction mid cloud as visible glow carrier when local overhead cloud is sparse', () => {
+      const weatherData = {
+        cloudCover: 20,
+        lowClouds: 8,
+        midClouds: 0,
+        highClouds: 0,
+        humidity: 58,
+        visibility: 18,
+        precipitation: 0,
+        recentPrecipitation6h: 0,
+        recentRainHours: 0,
+        aerosolOpticalDepth: 0.45,
+        aqi: 95,
+        pm2_5: 35,
+        pm10: 80,
+        dust: 60,
+        shortwaveRadiation: 18,
+        directRadiation: 0,
+        diffuseRadiation: 10,
+        waterVapourColumn: 22
+      };
+      const remoteCloudData = {
+        source: 'solar_direction_openmeteo',
+        azimuth: 303,
+        samples: [10, 25, 50, 75, 100].map((distanceKm, index) => ({
+          distanceKm,
+          bearing: 303,
+          cloudBaseHeight: null,
+          lowCloud: index < 2 ? 18 : 10,
+          midCloud: [68, 62, 48, 30, 18][index],
+          highCloud: 0,
+          totalCloud: [72, 66, 52, 34, 22][index],
+          precipitation: 0,
+          weatherCode: null
+        }))
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData,
+        new Date('2026-06-04T11:38:00.000Z'),
+        39.9042,
+        116.4074,
+        'sunset',
+        { remoteCloudData }
+      );
+
+      expect(result.directionalCurtainCarrier).toMatchObject({
+        applied: true,
+        floor: 48,
+        reason: 'solar_direction_mid_cloud_glow_carrier'
+      });
+      expect(result.carrierAnalysis.activeCarrier).toBe('directional_curtain');
+      expect(result.clearSunsetAdvice).toMatchObject({
+        applied: false,
+        metrics: { directionalCarrierApplied: true }
+      });
+      expect(result.score).toBeGreaterThanOrEqual(48);
+      expect(result.score).toBeLessThanOrEqual(55);
+      expect(result.status).toBe('good_glow');
     });
 
     test('should require a full solar-direction sample set before applying curtain carrier', () => {

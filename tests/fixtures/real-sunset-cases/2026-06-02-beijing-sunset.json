@@ -40,6 +40,7 @@
   },
   "capture": {
     "dataCompleteness": "partial_original_snapshot",
+    "predictionReplay": "enhanced_detail_calculateEnhancedPrediction",
     "missingData": [
       "周边格点云量原始快照",
       "日落方向远端采样原始快照",

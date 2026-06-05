@@ -43,6 +43,7 @@
   },
   "capture": {
     "dataCompleteness": "historical_calibration_snapshot",
+    "predictionReplay": "enhanced_detail_calculateEnhancedPrediction",
     "sourceFiles": [
       "memory/calibration/2026-05-10-summer-palace-note.md",
       "memory/calibration/2026-05-10-summer-palace-weather.json",

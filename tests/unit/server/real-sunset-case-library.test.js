@@ -74,7 +74,10 @@ describe('real sunset feedback case library', () => {
       expect(realCase.feedback.summary).toBeTruthy();
       expect(realCase.feedback.subjectiveScore.min).toEqual(expect.any(Number));
       expect(realCase.feedback.subjectiveScore.max).toEqual(expect.any(Number));
+      expect(realCase.capture.predictionReplay).toBe('enhanced_detail_calculateEnhancedPrediction');
       expect(realCase.input.weatherData).toEqual(expect.any(Object));
+      const remoteSource = realCase.input.options?.remoteCloudData?.source || '';
+      expect(remoteSource).not.toMatch(/gfs|cams|grid/i);
       expect(realCase.expectations.score.min).toEqual(expect.any(Number));
       expect(realCase.expectations.score.max).toEqual(expect.any(Number));
     }
