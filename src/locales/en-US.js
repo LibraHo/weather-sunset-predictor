@@ -112,6 +112,7 @@ const translations = {
     "methodology": "Methodology",
       "map": "Fire Sky Map",
       "shareMap": "Share Map",
+      "firecloudMap": "Firecloud Map",
       "user": "My Account",
       "apiAccess": "API Access"
     },
@@ -377,6 +378,11 @@ const translations = {
     "mapView": "",
     "daysOverview": "{{days}}-Day Overview",
     "precipChance": "{{prob}}% precip",
+    "unavailable": {
+      "title": "Weather forecast is temporarily unavailable",
+      "body": "Please come back later.",
+      "inline": "Weather data is temporarily unavailable. Firecloud map remains available.",
+    },
     "dataInfo": "ℹ️ Data source provides {{hours}} hours forecast data (~{{days}} days). Consider using other weather data sources for more days."
   },
   "prediction": {
@@ -1049,6 +1055,19 @@ const translations = {
     "weather": "Getting weather data...",
     "prediction": "Calculating prediction...",
     "pleaseWait": "Please wait..."
+  },
+  "admin": {
+    "globalSwitches": {
+      "title": "Global switches",
+      "siteClosed": {
+        "label": "Close site",
+        "status": "Closed"
+      },
+      "weatherPredictionClosed": {
+        "label": "Close weather forecast",
+        "status": "Closed"
+      }
+    }
   },
   "other": {
     "copyright": "© 2026 Weather Sunset Predictor",

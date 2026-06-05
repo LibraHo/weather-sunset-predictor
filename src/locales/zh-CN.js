@@ -120,6 +120,7 @@ export default {
     methodology: '火烧云计算方法',
       map: '火烧云地图',
       shareMap: '分享地图',
+      firecloudMap: '火烧云地图',
       user: '我的',
       apiAccess: 'API接入'
     },
@@ -395,6 +396,11 @@ export default {
     mapView: '地图预测',
     daysOverview: '{{days}}天概览',
     precipChance: '{{prob}}%降水',
+    unavailable: {
+      title: '天气预测暂时不可用',
+      body: '请稍后再来。',
+      inline: '天气数据暂时不可用，火烧云地图仍可正常使用。',
+    },
     dataInfo: 'ℹ️ 数据源提供 {{hours}} 小时预测数据（约 {{days}} 天）。若需更多天数，请考虑使用其他天气数据源。'
   },
 
@@ -1189,6 +1195,20 @@ formationAnalysis: {
     weather: '正在获取天气数据...',
     prediction: '正在计算预测...',
     pleaseWait: '请稍候...'
+  },
+
+  admin: {
+    globalSwitches: {
+      title: '????',
+      siteClosed: {
+        label: '关闭站点',
+        status: '已关闭'
+      },
+      weatherPredictionClosed: {
+        label: '关闭天气预测',
+        status: '已关闭'
+      }
+    }
   },
 
   // 其他

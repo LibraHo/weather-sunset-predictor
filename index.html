@@ -198,6 +198,14 @@
     
     <main>
       <div id="tab-panel-forecast" role="tabpanel" aria-label="forecast-panel" tabindex="0">
+      <section id="weather-unavailable-card" class="card weather-unavailable-card hidden" aria-live="polite">
+        <h2 data-i18n="weather.unavailable.title">天气预测暂时不可用</h2>
+        <p data-i18n="weather.unavailable.body">请稍后再来。</p>
+        <div class="weather-unavailable-actions">
+          <button type="button" class="btn btn-primary xiake-action-btn xiake-action-btn-primary" data-weather-unavailable-action="gallery" data-i18n="home.tabs.shareMap">分享地图</button>
+          <button type="button" class="btn btn-secondary xiake-action-btn xiake-action-btn-secondary" data-weather-unavailable-action="map" data-i18n="home.tabs.map">火烧云地图</button>
+        </div>
+      </section>
       <!-- 位置选择 -->
       <section id="location-section" class="card">
         <h2 data-i18n="location.label">选择位置</h2>

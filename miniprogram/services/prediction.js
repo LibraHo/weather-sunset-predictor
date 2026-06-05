@@ -152,6 +152,20 @@ export async function getWeatherForecast({ lat, lon, hours = 168 } = {}) {
   return normalizeWeatherForecast(response?.data ? response : (response || {}));
 }
 
+export async function getSiteState() {
+  const response = await request('/api/config/site-state', {
+    method: 'GET',
+    timeout: 8000
+  });
+  const source = response?.data || response || {};
+  return {
+    siteClosed: source.siteClosed === true,
+    weatherPredictionClosed: source.weatherPredictionClosed === true,
+    shareMapAvailable: source.shareMapAvailable !== false,
+    firecloudMapAvailable: source.firecloudMapAvailable !== false
+  };
+}
+
 export function normalizeWeatherForecast(response = {}) {
   const data = Array.isArray(response.data) ? response.data : [];
   const current = response.current || data[0] || {};

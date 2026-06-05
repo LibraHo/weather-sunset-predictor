@@ -33,6 +33,12 @@ const userRouteModule = require('./routes/user');
 const UserService = require('./services/UserService');
 const { requestLogger, errorLogger } = require('./middleware/logger');
 const { requireAdminAuth, requireAdminRequestIntegrity } = require('./middleware/adminSecurity');
+const globalSwitchService = require('./services/GlobalSwitchRuntime');
+const {
+  blockAgentWeatherPredictionWhenClosed,
+  blockPublicSiteWhenClosed,
+  blockWeatherPredictionWhenClosed
+} = require('./middleware/globalSwitches');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -89,6 +95,7 @@ app.use(cors({
 app.use(express.json());
 app.use(morgan('combined')); // HTTP request logging
 app.use(requestLogger()); // Custom request logging
+app.use(blockPublicSiteWhenClosed);
 
 // 访问统计中间件（排除 health、静态资源、瓦片）
 const accessLogService = require('./services/AccessLogService');
@@ -201,13 +208,17 @@ app.get('/api/config/features', (req, res) => {
   });
 });
 
-app.use('/api/agent', agentRoutes);
+app.get('/api/config/site-state', (req, res) => {
+  res.json(globalSwitchService.getPublicState());
+});
+
+app.use('/api/agent', blockAgentWeatherPredictionWhenClosed, agentRoutes);
 app.use('/api/applications', applicationsRoutes.createRouter({ userService }));
 app.use('/api/analytics', analyticsRoutes);
-app.use('/api/weather', weatherRoutes);
-app.use('/api/agent', agentForecastRoutes);
+app.use('/api/weather', blockWeatherPredictionWhenClosed, weatherRoutes);
+app.use('/api/agent', blockAgentWeatherPredictionWhenClosed, agentForecastRoutes);
 app.use('/api/firecloud', firecloudRoutes);
-app.use('/api/prediction', predictionRoutes);
+app.use('/api/prediction', blockWeatherPredictionWhenClosed, predictionRoutes);
 app.use('/api/visitor', visitorRoutes);
 app.use('/api/share', shareStatsRoutes);
 app.use('/auth', authRouteModule.createRouter({ userService }));

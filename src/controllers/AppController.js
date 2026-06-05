@@ -36,6 +36,12 @@ class AppController {
     this.citySuggestions = [];
     this.citySuggestionTimer = null;
     this.citySuggestionRequestId = 0;
+    this.siteState = {
+      siteClosed: false,
+      weatherPredictionClosed: false,
+      shareMapAvailable: true,
+      firecloudMapAvailable: true
+    };
 
     // 需求14：初始化I18n系统
     this.i18n = i18n;
@@ -74,6 +80,7 @@ class AppController {
       console.log('[AppController] 初始化I18n系统...');
       await this.i18n.init();
       console.log('[AppController] I18n系统初始化完成，当前语言:', this.i18n.getLanguage());
+      this.siteState = await this.loadSiteState();
 
       // 任务17.2：初始化主题系统
       console.log('[AppController] 初始化主题系统...');
@@ -85,6 +92,7 @@ class AppController {
       // API 模式固定为后端代理：前端不再执行 API 密钥门禁
       console.log('[AppController] API模式: 后端代理（固定），跳过前端 API 密钥检查');
       this.initializeUI();
+      this.applyWeatherPredictionAvailability();
 
       // 需求12：加载收藏位置列表
       this.loadFavoriteLocations();
@@ -144,6 +152,11 @@ class AppController {
    * @throws {Error} 如果位置无效或数据获取失败
    */
   async handleLocationChange(location) {
+    if (this.siteState?.weatherPredictionClosed) {
+      this.applyWeatherPredictionAvailability(true);
+      return;
+    }
+
     // 验证位置对象
     if (!location || typeof location !== 'object') {
       throw new Error('无效的位置对象');
@@ -177,8 +190,14 @@ class AppController {
       try {
         weatherData = await this.weatherController.fetchWeather(location);
       } catch (weatherErr) {
+        const errorCode = weatherErr?.code || weatherErr?.error?.code || weatherErr?.response?.data?.error?.code;
+        if (errorCode === 'WEATHER_PREDICTION_CLOSED') {
+          this.siteState = { ...this.siteState, weatherPredictionClosed: true };
+          this.applyWeatherPredictionAvailability(true);
+          return;
+        }
         console.warn('[AppController] 天气数据获取失败，继续加载其他功能:', weatherErr.message);
-        this.showError('天气数据暂时不可用，火烧云地图仍可正常使用');
+        this.showError(this.i18n.t('weather.unavailable.inline'));
         setTimeout(() => this.hideError?.(), 4000);
       }
 
@@ -247,6 +266,59 @@ class AppController {
       // 重新抛出错误供调用者处理
       throw error;
     }
+  }
+
+  async loadSiteState() {
+    try {
+      const response = await fetch('/api/config/site-state', { credentials: 'same-origin' });
+      if (!response.ok) throw new Error('site state unavailable');
+      const data = await response.json();
+      return {
+        siteClosed: data.siteClosed === true,
+        weatherPredictionClosed: data.weatherPredictionClosed === true,
+        shareMapAvailable: data.shareMapAvailable !== false,
+        firecloudMapAvailable: data.firecloudMapAvailable !== false
+      };
+    } catch (error) {
+      return {
+        siteClosed: false,
+        weatherPredictionClosed: false,
+        shareMapAvailable: true,
+        firecloudMapAvailable: true
+      };
+    }
+  }
+
+  applyWeatherPredictionAvailability(forceUnavailable = false) {
+    const unavailable = forceUnavailable || this.siteState?.weatherPredictionClosed === true;
+    const unavailableCard = document.getElementById('weather-unavailable-card');
+    const predictionSurfaceIds = [
+      'location-section',
+      'weather-section',
+      'prediction-section',
+      'forecast-section'
+    ];
+
+    if (unavailableCard) {
+      unavailableCard.classList.toggle('hidden', !unavailable);
+      unavailableCard.hidden = !unavailable;
+    }
+
+    predictionSurfaceIds.forEach((id) => {
+      const element = document.getElementById(id);
+      if (!element) return;
+      element.classList.toggle('hidden', unavailable);
+      element.hidden = unavailable;
+    });
+
+    document.querySelectorAll('[data-weather-unavailable-action]').forEach((button) => {
+      if (button.dataset.weatherUnavailableBound === 'true') return;
+      button.dataset.weatherUnavailableBound = 'true';
+      button.addEventListener('click', () => {
+        const target = button.getAttribute('data-weather-unavailable-action');
+        document.querySelector(`.home-view-option[data-view="${target}"]`)?.click();
+      });
+    });
   }
 
   /**

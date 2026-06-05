@@ -1,5 +1,5 @@
 import { reverseGeocode, searchLocations } from '../../services/geocoding.js';
-import { getEnhancedPrediction, getEnhancedPredictionBatch, getHomeGateway, getWeatherForecast } from '../../services/prediction.js';
+import { getEnhancedPrediction, getEnhancedPredictionBatch, getHomeGateway, getSiteState, getWeatherForecast } from '../../services/prediction.js';
 import { addFavorite, addRecentLocation, listRecentLocations } from '../../services/user.js';
 import { formatVisitorCount, incrementVisitorCount } from '../../services/visitor.js';
 import { trackMapView, trackPageVisit, trackShareClick } from '../../services/analytics.js';
@@ -47,6 +47,13 @@ Page({
     recentQueries: [],
     favorites: [],
     visitorCountText: '--'
+    ,
+    siteState: {
+      siteClosed: false,
+      weatherPredictionClosed: false,
+      shareMapAvailable: true,
+      firecloudMapAvailable: true
+    }
   },
 
   onLoad(options = {}) {
@@ -65,13 +72,31 @@ Page({
     }
     this.refreshSavedLists();
     this.refreshVisitorCount();
+    this.loadSiteState();
   },
 
   onShow() {
     this.applySavedSettings();
     this.refreshSavedLists();
+    this.loadSiteState();
     this.paintPredictionRadarCloudField();
     this.paintHourlyChartLine({ force: true });
+  },
+
+  async loadSiteState() {
+    try {
+      const siteState = await getSiteState();
+      this.setData({ siteState });
+    } catch (error) {
+      this.setData({
+        siteState: {
+          siteClosed: false,
+          weatherPredictionClosed: false,
+          shareMapAvailable: true,
+          firecloudMapAvailable: true
+        }
+      });
+    }
   },
 
   onUnload() {
@@ -455,6 +480,7 @@ Page({
   },
 
   async onSearch() {
+    if (this.data.siteState?.weatherPredictionClosed) return;
     const locationText = (this.data.locationText || '').trim();
     if (this.data.loading) return;
 

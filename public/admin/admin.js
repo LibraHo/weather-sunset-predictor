@@ -19,6 +19,7 @@ const ADMIN_VIEW_ALIASES = {
   schedule: 'ops',
   'data-pipeline': 'ops',
   'ops-status': 'ops',
+  'ops-global-switches': 'ops',
   'ops-guard': 'ops',
   'ops-mode': 'ops',
   'ops-queue': 'ops',
@@ -32,6 +33,7 @@ const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'ops', 'logs', 'agent', 'p
 ADMIN_VIEWS.add('analytics');
 const OPS_INTERNAL_ANCHORS = new Set([
   'ops-status',
+  'ops-global-switches',
   'ops-guard',
   'ops-mode',
   'ops-queue',
@@ -218,7 +220,7 @@ async function loadActiveView() {
       await Promise.all([loadAccessStats(), loadLogSummary(), loadHealth(), loadShareStats()]);
       break;
     case 'ops':
-      await Promise.all([loadQueue(), loadHealth(), loadSchedule(), loadDataPipeline(), loadAccessGuard()]);
+      await Promise.all([loadQueue(), loadHealth(), loadSchedule(), loadDataPipeline(), loadAccessGuard(), loadGlobalSwitches()]);
       break;
     case 'visitors':
       await loadVisitorRecords();
@@ -244,7 +246,7 @@ function refreshActiveView() {
   if (activeAdminView === 'dashboard') {
     Promise.all([loadAccessStats(), loadLogSummary(), loadHealth(), loadShareStats()]);
   } else if (activeAdminView === 'ops') {
-    Promise.all([loadQueue(), loadHealth(), loadDataPipelineStatus(), loadDataPipelineRuns(), loadAccessGuard()]);
+    Promise.all([loadQueue(), loadHealth(), loadDataPipelineStatus(), loadDataPipelineRuns(), loadAccessGuard(), loadGlobalSwitches()]);
   } else if (activeAdminView === 'visitors') {
     loadVisitorRecords();
   } else if (activeAdminView === 'analytics') {
@@ -265,6 +267,54 @@ function showMessage(msg, type = 'success', targetId = 'message') {
   el.className = 'admin-message ' + type;
   el.classList.remove('hidden');
   setTimeout(() => el.classList.add('hidden'), 5000);
+}
+
+function updateGlobalSwitchUI(state = {}) {
+  const siteInput = document.getElementById('global-switch-site');
+  const weatherInput = document.getElementById('global-switch-weather');
+  const siteStatus = document.getElementById('global-switch-site-status');
+  const weatherStatus = document.getElementById('global-switch-weather-status');
+  if (siteInput) siteInput.checked = state.siteClosed === true;
+  if (weatherInput) weatherInput.checked = state.weatherPredictionClosed === true;
+  if (siteStatus) {
+    siteStatus.textContent = state.siteClosed ? '已关闭' : '未关闭';
+    siteStatus.classList.toggle('is-on', state.siteClosed === true);
+  }
+  if (weatherStatus) {
+    weatherStatus.textContent = state.weatherPredictionClosed ? '已关闭' : '未关闭';
+    weatherStatus.classList.toggle('is-on', state.weatherPredictionClosed === true);
+  }
+}
+
+async function loadGlobalSwitches() {
+  try {
+    const res = await fetch('/admin/global-switches', { credentials: 'include' });
+    if (!res.ok) throw new Error('读取全局开关失败');
+    const data = await res.json();
+    updateGlobalSwitchUI(data.state || {});
+  } catch (error) {
+    showMessage(error.message || '读取全局开关失败', 'error', 'globalSwitchMsg');
+  }
+}
+
+async function saveGlobalSwitches() {
+  try {
+    const res = await fetch('/admin/global-switches', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        siteClosed: document.getElementById('global-switch-site')?.checked === true,
+        weatherPredictionClosed: document.getElementById('global-switch-weather')?.checked === true
+      })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.error?.message || '保存全局开关失败');
+    updateGlobalSwitchUI(data.state || {});
+    showMessage('全局开关已保存', 'success', 'globalSwitchMsg');
+  } catch (error) {
+    showMessage(error.message || '保存全局开关失败', 'error', 'globalSwitchMsg');
+  }
 }
 
 // =================== 访问统计 & 图表 ===================
