@@ -81,11 +81,6 @@
           <p class="account-auth-kicker">Sunset Voyager Account</p>
           <h2 id="account-auth-title" data-i18n="account.auth.loginTitle">账号登录</h2>
         </div>
-        <div class="account-auth-tabs" role="tablist" aria-label="账号操作" data-i18n-aria-label="account.auth.tabsAria">
-          <button type="button" class="account-auth-tab active" data-auth-view="login" data-i18n="account.auth.loginTab">登录</button>
-          <button type="button" class="account-auth-tab" data-auth-view="register" data-i18n="account.auth.registerTab">注册</button>
-          <button type="button" class="account-auth-tab" data-auth-view="forgot" data-i18n="account.auth.forgotTab">找回密码</button>
-        </div>
         <form id="account-login-form" class="account-auth-form" data-auth-panel="login">
           <label>
             <span data-i18n="account.auth.emailLabel">邮箱</span>
@@ -96,6 +91,10 @@
             <input id="account-login-password" name="password" type="password" autocomplete="current-password" placeholder="请输入密码" data-i18n-placeholder="account.auth.passwordPlaceholder" required>
           </label>
           <button type="submit" class="btn btn-primary" data-i18n="account.auth.loginAction">登录</button>
+          <div class="account-auth-links" aria-label="账号辅助操作" data-i18n-aria-label="account.auth.linksAria">
+            <button type="button" class="account-auth-link" data-auth-view="register" data-i18n="account.auth.registerLink">注册账号</button>
+            <button type="button" class="account-auth-link" data-auth-view="forgot" data-i18n="account.auth.forgotLink">找回密码</button>
+          </div>
         </form>
         <form id="account-register-form" class="account-auth-form hidden" data-auth-panel="register">
           <label>
@@ -107,6 +106,10 @@
             <input id="account-register-password" name="password" type="password" autocomplete="new-password" placeholder="至少 6 位" data-i18n-placeholder="account.auth.passwordMinPlaceholder" minlength="6" required>
           </label>
           <label>
+            <span data-i18n="account.auth.confirmPasswordLabel">确认密码</span>
+            <input id="account-register-confirm-password" name="confirmPassword" type="password" autocomplete="new-password" placeholder="再次输入密码" data-i18n-placeholder="account.auth.confirmPasswordPlaceholder" minlength="6" required>
+          </label>
+          <label>
             <span data-i18n="account.auth.recoveryQuestionLabel">找回问题</span>
             <input id="account-register-recovery-question" name="recoveryQuestion" type="text" autocomplete="off" placeholder="例如：我的第一座常看晚霞的城市？" data-i18n-placeholder="account.auth.recoveryQuestionPlaceholder" required>
           </label>
@@ -115,6 +118,7 @@
             <input id="account-register-recovery-answer" name="recoveryAnswer" type="text" autocomplete="off" placeholder="请记住答案，之后不会明文显示" data-i18n-placeholder="account.auth.recoveryAnswerPlaceholder" required>
           </label>
           <button type="submit" class="btn btn-primary" data-i18n="account.auth.createAction">创建账号</button>
+          <button type="button" class="account-auth-link account-auth-link-single" data-auth-view="login" data-i18n="account.auth.backToLogin">返回登录</button>
         </form>
         <form id="account-forgot-form" class="account-auth-form hidden" data-auth-panel="forgot">
           <label>
@@ -131,6 +135,7 @@
             <input id="account-forgot-new-password" name="newPassword" type="password" autocomplete="new-password" placeholder="至少 6 位" data-i18n-placeholder="account.auth.passwordMinPlaceholder" minlength="6" required>
           </label>
           <button type="submit" class="btn btn-primary" data-i18n="account.auth.resetAction">重置密码</button>
+          <button type="button" class="account-auth-link account-auth-link-single" data-auth-view="login" data-i18n="account.auth.backToLogin">返回登录</button>
         </form>
         <div class="account-auth-divider"><span data-i18n="account.auth.or">或</span></div>
         <button id="account-login-google" type="button" class="account-google-btn" data-i18n="account.auth.googleLogin">Google 登录</button>
