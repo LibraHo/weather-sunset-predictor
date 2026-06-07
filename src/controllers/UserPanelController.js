@@ -346,6 +346,13 @@ export default class UserPanelController {
   }
 
   async registerWithEmail(form) {
+    const data = new FormData(form);
+    const password = String(data.get('password') || '').trim();
+    const confirmPassword = String(data.get('confirmPassword') || '').trim();
+    if (password !== confirmPassword) {
+      this.setAuthMessage(this.t('account.auth.passwordMismatch'), 'error');
+      return;
+    }
     const payload = this.formPayload(form, ['email', 'password', 'recoveryQuestion', 'recoveryAnswer']);
     await this.submitAuth('/auth/register', payload, {
       successMessage: this.t('account.auth.registerSuccess'),

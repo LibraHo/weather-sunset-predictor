@@ -22,6 +22,8 @@ describe('web account surface source', () => {
     expect(html).toContain('data-auth-view="login"');
     expect(html).toContain('data-auth-view="register"');
     expect(html).toContain('data-auth-view="forgot"');
+    expect(html).toContain('class="account-auth-links"');
+    expect(html).toContain('name="confirmPassword"');
     expect(html).toContain('name="recoveryQuestion"');
     expect(html).toContain('name="recoveryAnswer"');
     expect(html).toContain('name="newPassword"');
@@ -39,9 +41,10 @@ describe('web account surface source', () => {
     expect(css).toContain('.account-dropdown');
     expect(css).toContain('.account-auth-modal');
     expect(css).toContain('.account-management-panel');
-    expect(css).toContain('.account-auth-tab.active');
+    expect(css).toContain('.account-auth-link');
     expect(css).toContain('var(--theme-accent, #d97706)');
-    expect(css).not.toContain('.account-auth-tab.active {\n  background: var(--color-primary);');
+    expect(css).not.toContain('.account-auth-tabs');
+    expect(css).not.toContain('.account-auth-tab');
 
     expect(app).toContain("import UserPanelController from './controllers/UserPanelController.js'");
     expect(app).toContain('setupUserPanelController()');
@@ -93,26 +96,29 @@ describe('UserPanelController behavior', () => {
         <button id="account-logout-btn"></button>
         <div id="account-auth-modal" class="hidden">
           <button id="account-auth-close"></button>
-          <button data-auth-view="login"></button>
-          <button data-auth-view="register"></button>
-          <button data-auth-view="forgot"></button>
           <form id="account-login-form">
             <input name="email">
             <input name="password">
+            <button type="button" data-auth-view="register"></button>
+            <button type="button" data-auth-view="forgot"></button>
           </form>
           <form id="account-register-form" class="hidden">
             <input name="email">
             <input name="password">
+            <input name="confirmPassword">
             <input name="recoveryQuestion">
             <input name="recoveryAnswer">
+            <button type="button" data-auth-view="login"></button>
           </form>
           <form id="account-forgot-form" class="hidden">
             <input id="account-forgot-email" name="email">
             <p id="account-recovery-question"></p>
             <input name="recoveryAnswer">
             <input name="newPassword">
+            <button type="button" data-auth-view="login"></button>
           </form>
           <button id="account-login-google"></button>
+          <p id="account-auth-message"></p>
         </div>
         <section id="account-management-panel" class="hidden"></section>
         <span id="user-status-label"></span>
@@ -253,6 +259,7 @@ describe('UserPanelController behavior', () => {
     await controller.initialize();
     document.querySelector('#account-register-form [name="email"]').value = 'new@example.com';
     document.querySelector('#account-register-form [name="password"]').value = 'secret123';
+    document.querySelector('#account-register-form [name="confirmPassword"]').value = 'secret123';
     document.querySelector('#account-register-form [name="recoveryQuestion"]').value = 'City?';
     document.querySelector('#account-register-form [name="recoveryAnswer"]').value = 'Beijing';
 
@@ -270,6 +277,26 @@ describe('UserPanelController behavior', () => {
         recoveryAnswer: 'Beijing'
       })
     }));
+  });
+
+  test('register form blocks mismatched confirmation password', async () => {
+    global.fetch = jest.fn((url) => {
+      if (url === '/auth/me') return Promise.resolve({ ok: false, status: 401 });
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+    });
+    const controller = new UserPanelController({ documentRef: document, storageService: {} });
+    await controller.initialize();
+    document.querySelector('#account-register-form [name="email"]').value = 'new@example.com';
+    document.querySelector('#account-register-form [name="password"]').value = 'secret123';
+    document.querySelector('#account-register-form [name="confirmPassword"]').value = 'different';
+    document.querySelector('#account-register-form [name="recoveryQuestion"]').value = 'City?';
+    document.querySelector('#account-register-form [name="recoveryAnswer"]').value = 'Beijing';
+
+    document.getElementById('account-register-form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await Promise.resolve();
+
+    expect(global.fetch).not.toHaveBeenCalledWith('/auth/register', expect.anything());
+    expect(document.getElementById('account-auth-message').textContent).toBe('The two passwords do not match.');
   });
 
   test('forgot password loads recovery question and resets with answer', async () => {
