@@ -39,6 +39,9 @@ describe('web account surface source', () => {
     expect(css).toContain('.account-dropdown');
     expect(css).toContain('.account-auth-modal');
     expect(css).toContain('.account-management-panel');
+    expect(css).toContain('.account-auth-tab.active');
+    expect(css).toContain('var(--theme-accent, #d97706)');
+    expect(css).not.toContain('.account-auth-tab.active {\n  background: var(--color-primary);');
 
     expect(app).toContain("import UserPanelController from './controllers/UserPanelController.js'");
     expect(app).toContain('setupUserPanelController()');
