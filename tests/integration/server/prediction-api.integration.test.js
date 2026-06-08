@@ -412,6 +412,46 @@ describe('Prediction API Integration', () => {
       expect(res.body.data.predictions.current.referenceTime).toMatch(/^2026-05-30T20:/);
     });
 
+    test('keeps current-day sunset requests inside the 45 minute rollover buffer', async () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-05-28T12:10:00Z'));
+      jest.spyOn(orchestrator, 'fetchWeatherData').mockResolvedValue({
+        data: [
+          {
+            timestamp: new Date('2026-05-28T11:35:00Z').getTime(),
+            cloudCover: 45,
+            humidity: 45,
+            visibility: 20,
+            lowClouds: 0,
+            midClouds: 35,
+            highClouds: 20,
+            temp: 24,
+            windSpeed: 3,
+            windDirection: 90,
+            pressure: 1008,
+            precipitation: 0,
+            shortwaveRadiation: 20
+          }
+        ],
+        providerMeta: { name: 'openmeteo', timezone: 'Asia/Shanghai' }
+      });
+
+      const res = await request(app)
+        .get('/api/prediction/home')
+        .query({
+          lat: 39.9042,
+          lon: 116.4074,
+          date: '2026-05-28',
+          period: 'sunset',
+          days: 1,
+          includeRemoteCloudData: 'false'
+        })
+        .expect(200);
+
+      expect(res.body.data.request.date).toBe('2026-05-28');
+      expect(res.body.data.predictions.current.dateKey).toBe('2026-05-28');
+      expect(res.body.data.predictions.current.type).toBe('sunset');
+    });
+
     test('does not roll requests that are not today in the target local date', async () => {
       jest.useFakeTimers().setSystemTime(new Date('2026-05-30T23:30:00Z'));
       jest.spyOn(orchestrator, 'fetchWeatherData').mockResolvedValue({

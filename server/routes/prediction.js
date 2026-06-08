@@ -28,7 +28,7 @@ const cacheService = new CacheService({ defaultTTL: cacheConfig.ttl.DEFAULT });
 const surroundingService = new SurroundingService({ cacheService });
 
 const CLOSED_LOOP_WEATHER_CACHE_TTL_SECONDS = 120;
-const EVENT_ROLLOVER_BUFFER_MS = 30 * 60 * 1000;
+const EVENT_ROLLOVER_BUFFER_MS = 45 * 60 * 1000;
 const RADAR_WEATHER_FORECAST_HOURS = 48;
 const inFlightWeatherFetches = new Map();
 

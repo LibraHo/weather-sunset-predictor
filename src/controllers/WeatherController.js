@@ -92,7 +92,7 @@ function generateManualTestRadarData(type = 'sunset') {
   };
 }
 
-const RADAR_EVENT_ROLLOVER_MS = 30 * 60 * 1000;
+const RADAR_EVENT_ROLLOVER_MS = 45 * 60 * 1000;
 const radarSunService = new SunsetPredictionService();
 
 function getNextRadarEventDate(location, type = 'sunset', now = new Date()) {
