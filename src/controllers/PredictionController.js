@@ -17,7 +17,7 @@ import NotificationService from '../services/NotificationService.js';
 import i18n from '../i18n.js';
 import { loadConfig } from '../../config.api.js';
 
-const EVENT_PASSED_BUFFER_MS = 30 * 60 * 1000;
+const EVENT_PASSED_BUFFER_MS = 45 * 60 * 1000;
 
 // 分享面板状态
 let sharePanelInstance = null;
