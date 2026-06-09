@@ -3,6 +3,7 @@ const DEFAULT_MIN_WEIGHT = 0.05;
 
 const WEIGHTED_NUMERIC_FIELDS = [
   'cloudCover',
+  'cloudBaseHeight',
   'humidity',
   'visibility',
   'lowClouds',
