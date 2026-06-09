@@ -20,6 +20,7 @@ const CacheService = require('../services/CacheService.js');
 const cacheConfig = require('../config/cacheConfig.js');
 const orchestrator = require('../services/ProviderOrchestrator');
 const SunCalculator = require('../utils/SunCalculator.js');
+const { buildTimeWeightedWeatherSample } = require('../services/WeatherTimeSampler');
 const { startProfile, profileDurationMs, logProfile } = require('../utils/ProfileLogger');
 
 // 创建服务实例（使用统一TTL配置）
@@ -129,23 +130,6 @@ function validatePredictionRequest(req, res, next) {
   }
 
   next();
-}
-
-function selectHourlyAt(hourly, referenceTime) {
-  const rows = Array.isArray(hourly) ? hourly : [];
-  if (!rows.length) return { selected: null, selectedIdx: -1 };
-  const refTs = referenceTime instanceof Date && !isNaN(referenceTime.getTime())
-    ? referenceTime.getTime()
-    : Date.now();
-  let selectedIdx = 0;
-  let selected = rows[0];
-  rows.forEach((row, idx) => {
-    if (Math.abs((row.timestamp || 0) - refTs) < Math.abs((selected.timestamp || 0) - refTs)) {
-      selected = row;
-      selectedIdx = idx;
-    }
-  });
-  return { selected, selectedIdx };
 }
 
 function smoothStep(edge0, edge1, value) {
@@ -273,8 +257,11 @@ async function buildClosedLoopPredictionInput({
     throw error;
   }
 
-  const { selected, selectedIdx } = selectHourlyAt(hourly, refTime);
+  const timeSample = buildTimeWeightedWeatherSample(hourly, refTime);
+  const selected = timeSample.weighted || timeSample.selected;
+  const selectedIdx = timeSample.selectedIdx;
   const built = buildWeatherDataFromHourly(selected, hourly, selectedIdx);
+  built.weatherData.timeWeightedSamples = timeSample.weighted?.timeWeightedSamples || [];
   const azimuth = EnhancedPredictionService.calculateSolarAzimuth(refTime, lat, lon);
   let remoteCloudData = null;
   const remoteCloudProfile = startProfile();
@@ -317,6 +304,11 @@ async function buildClosedLoopPredictionInput({
   return {
     ...built,
     referenceTime: refTime,
+    weatherSample: {
+      strategy: timeSample.weighted ? 'time_weighted' : 'closest',
+      selectedIdx,
+      samples: timeSample.weighted?.timeWeightedSamples || []
+    },
     providerMeta: weatherResponse.providerMeta || null,
     remoteCloudData,
     source: includeRemoteCloudData ? 'backend_closed_loop' : 'backend_closed_loop_fast',
@@ -385,6 +377,7 @@ function buildEnhancedPredictionResponse({ closedLoop, lat, lon, type, options =
     weatherDataSource: closedLoop.source || 'backend_closed_loop',
     clientWeatherFallback: closedLoop.clientWeatherFallback === true,
     referenceTime: closedLoop.referenceTime.toISOString(),
+    weatherSample: closedLoop.weatherSample || null,
     weatherData: closedLoop.weatherData,
     remoteCloudData: closedLoop.remoteCloudData,
     profileTimings: closedLoop.profileTimings || null,
@@ -487,7 +480,8 @@ function buildGatewayPredictionItems({ startDate, days, lat, lon, timezone }) {
 
 function buildGatewayWeatherPayload(weatherResponse, referenceTime = new Date()) {
   const hourly = Array.isArray(weatherResponse?.data) ? weatherResponse.data : [];
-  const current = selectHourlyAt(hourly, referenceTime).selected;
+  const sample = buildTimeWeightedWeatherSample(hourly, referenceTime);
+  const current = sample.weighted || sample.selected;
   return {
     current,
     hourly,
