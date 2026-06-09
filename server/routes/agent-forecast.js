@@ -5,6 +5,7 @@ const BackendGeocodingService = require('../services/BackendGeocodingService');
 const orchestrator = require('../services/ProviderOrchestrator');
 const SunCalculator = require('../utils/SunCalculator');
 const EnhancedPredictionService = require('../services/EnhancedPredictionService');
+const { buildTimeWeightedWeatherSample } = require('../services/WeatherTimeSampler');
 
 function errorResponse(res, status, code, message, extra = null) {
   const body = {
@@ -41,34 +42,6 @@ function parseDateParam(value) {
   }
 
   return parsed;
-}
-
-function toEpochMs(value) {
-  const num = Number(value);
-  if (!Number.isFinite(num)) return null;
-
-  if (num > 1e12) return num;
-  if (num > 1e10) return num * 1000;
-  return num * 1000;
-}
-
-function pickClosestWeather(hourly = [], targetTs) {
-  const entries = Array.isArray(hourly)
-    ? hourly
-        .map(item => ({
-          item,
-          ts: toEpochMs(item?.timestamp ?? item?.time ?? null)
-        }))
-        .filter(entry => Number.isFinite(entry.ts))
-    : [];
-
-  if (!entries.length) return null;
-
-  return entries.reduce((closest, current) => {
-    const currentDiff = Math.abs(current.ts - targetTs);
-    const closestDiff = Math.abs(closest.ts - targetTs);
-    return currentDiff < closestDiff ? current : closest;
-  }, entries[0]).item;
 }
 
 function normalizeWeatherForPrediction(weather = {}, providerMeta = {}) {
@@ -215,8 +188,8 @@ router.get('/forecast', async (req, res) => {
     const bestWindow = SunCalculator.getGoldenHour(referenceTime, type);
 
     const hourly = Array.isArray(weatherResponse?.data) ? weatherResponse.data : [];
-    const referenceTs = referenceTime.getTime();
-    const selectedWeatherRaw = pickClosestWeather(hourly, referenceTs);
+    const selectedSample = buildTimeWeightedWeatherSample(hourly, referenceTime);
+    const selectedWeatherRaw = selectedSample.weighted || selectedSample.selected;
 
     if (!selectedWeatherRaw) {
       return errorResponse(res, 502, 'NO_WEATHER_DATA', 'No weather data available for forecast calculation');
@@ -305,6 +278,11 @@ router.get('/forecast', async (req, res) => {
         timezone: targetTimezone,
         providerMeta: weatherResponse?.providerMeta || null,
         providerName: weatherResponse?.providerMeta?.name || null,
+        weatherSample: {
+          strategy: selectedSample.weighted ? 'time_weighted' : 'closest',
+          selectedIdx: selectedSample.selectedIdx,
+          samples: selectedSample.weighted?.timeWeightedSamples || []
+        },
         source: resolved.source,
         hasLocationInput: Boolean(location)
       },
