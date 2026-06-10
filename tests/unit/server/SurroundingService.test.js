@@ -206,8 +206,8 @@ describe('SurroundingService', () => {
         cloudBaseHeight: 1800
       });
       expect(result.samples[0].timeWeightedSamples).toEqual([
-        expect.objectContaining({ weight: 0.667 }),
-        expect.objectContaining({ weight: 0.667 })
+        expect.objectContaining({ weight: 0.5 }),
+        expect.objectContaining({ weight: 0.5 })
       ]);
     });
   });
