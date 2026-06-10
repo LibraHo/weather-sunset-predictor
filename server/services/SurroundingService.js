@@ -43,6 +43,11 @@ class SurroundingService {
     this.predictionService = new PredictionService();
   }
 
+  getCloudBaseHeightSource(weatherData = {}) {
+    const value = Number(weatherData.cloudBaseHeight);
+    return Number.isFinite(value) && value > 0 ? 'provider' : 'unavailable';
+  }
+
   /**
    * 计算周边8个方位的坐标点
    *
@@ -158,6 +163,7 @@ class SurroundingService {
         return {
           ...point,
           cloudBaseHeight: selected.cloudBaseHeight ?? null,
+          cloudBaseHeightSource: this.getCloudBaseHeightSource(selected),
           lowCloud: selected.lowClouds ?? 0,
           midCloud: selected.midClouds ?? 0,
           highCloud: selected.highClouds ?? 0,
@@ -320,7 +326,7 @@ class SurroundingService {
           cloudCover: selectedWeather.cloudCover || 0,
           humidity: selectedWeather.humidity || 0,
           visibility: selectedWeather.visibility || 10,
-          lowCloudCover: selectedWeather.lowClouds || selectedWeather.cloudCover || 0,
+          lowCloudCover: selectedWeather.lowClouds ?? selectedWeather.cloudCover ?? 0,
           temp: selectedWeather.temp || 0,
           windSpeed: selectedWeather.windSpeed || 0,
           windDirection: selectedWeather.windDirection || 0,
@@ -330,6 +336,7 @@ class SurroundingService {
           midClouds: selectedWeather.midClouds || 0,
           highClouds: selectedWeather.highClouds || 0,
           cloudBaseHeight: selectedWeather.cloudBaseHeight ?? null,
+          cloudBaseHeightSource: this.getCloudBaseHeightSource(selectedWeather),
           cape: selectedWeather.cape ?? null,
           weatherCode: selectedWeather.weatherCode ?? null
         };
@@ -353,7 +360,8 @@ class SurroundingService {
             low: weatherData.lowClouds,
             mid: weatherData.midClouds,
             high: weatherData.highClouds,
-            cloudBaseHeight: weatherData.cloudBaseHeight
+            cloudBaseHeight: weatherData.cloudBaseHeight,
+            cloudBaseHeightSource: weatherData.cloudBaseHeightSource
           },
           error: null
         };

@@ -557,6 +557,38 @@ function estimateCloudBaseHeight(weatherData) {
   return 2200;
 }
 
+function getCloudBaseHeightMeta(weatherData) {
+  const observed = Number(weatherData.cloudBaseHeight);
+  if (Number.isFinite(observed) && observed > 0) {
+    return {
+      heightM: observed,
+      source: 'provider',
+      reason: 'provider_cloud_base_height'
+    };
+  }
+
+  const low = Number(weatherData.lowClouds || 0);
+  const mid = Number(weatherData.midClouds || 0);
+  const high = Number(weatherData.highClouds || 0);
+  const heightM = estimateCloudBaseHeight(weatherData);
+  let reason = 'estimated_default_cloud_base_height';
+  if (high > 50 && low < 30) {
+    reason = 'estimated_high_cloud_dominant';
+  } else if (low > 60) {
+    reason = 'estimated_dense_low_cloud';
+  } else if (low > 30) {
+    reason = 'estimated_low_cloud';
+  } else if (mid > 50) {
+    reason = 'estimated_mid_cloud';
+  }
+
+  return {
+    heightM,
+    source: 'estimated',
+    reason
+  };
+}
+
 // ========== 云厚评估模块（Phase 22）==========
 
 function hasClearAirForUpperCloudCarrier(weatherData) {
@@ -2389,8 +2421,8 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   logger.debug('[EnhancedPredictionService]', '画布评分(含云种):', canvasScore.score);
 
   // 3.5 光路几何模型（需求40）——预测开始时间 + 持续时长
-  const cloudBaseM = estimateCloudBaseHeight(weatherData);
-  const geometric = geometricLightModel(timeCheck.elevation, cloudBaseM / 1000, lat);
+  const cloudBaseMeta = getCloudBaseHeightMeta(weatherData);
+  const geometric = geometricLightModel(timeCheck.elevation, cloudBaseMeta.heightM / 1000, lat);
   logger.debug('[EnhancedPredictionService]', '光路几何:', geometric.feasible ? '可行' : '不可行', '开始偏移(min):', geometric.startOffsetMin, '持续(min):', geometric.durationMin);
 
   const azimuth = calculateSolarAzimuth(dateObj, lat, lon);
@@ -2634,6 +2666,9 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
       reason:              geometric.reason,
       sunAltitudeDeg:      geometric.sunAltitudeDeg,
       cloudBaseKm:         geometric.cloudBaseKm,
+      cloudBaseSource:     cloudBaseMeta.source,
+      cloudBaseReason:     cloudBaseMeta.reason,
+      observedCloudBaseHeightM: cloudBaseMeta.source === 'provider' ? cloudBaseMeta.heightM : null,
       cloudBoundaryKm:      geometric.cloudBoundaryKm,
       startOffsetMin:       geometric.startOffsetMin,
       durationMin:         geometric.durationMin,

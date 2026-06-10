@@ -130,10 +130,10 @@ describe('Prediction API Integration', () => {
       const fetchSpy = jest.spyOn(orchestrator, 'fetchWeatherData').mockResolvedValue({
         data: [{
           timestamp: new Date('2024-06-21T10:00:00Z').getTime(),
-          cloudCover: 45,
+          cloudCover: 68,
           humidity: 55,
           visibility: 14,
-          lowClouds: 20,
+          lowClouds: 0,
           midClouds: 45,
           highClouds: 25,
           temp: 21,
@@ -172,10 +172,20 @@ describe('Prediction API Integration', () => {
         temp: 21,
         humidity: 55,
         visibility: 14,
+        lowCloudCover: 0,
+        lowClouds: 0,
+        cloudCover: 68,
+        cloudBaseHeight: null,
+        cloudBaseHeightSource: 'unavailable',
         windSpeed: 3,
         windDirection: 180,
         pressure: 1010,
         precipitation: 0
+      }));
+      expect(res.body.data.geometricModel).toEqual(expect.objectContaining({
+        cloudBaseSource: 'estimated',
+        cloudBaseReason: 'estimated_default_cloud_base_height',
+        observedCloudBaseHeightM: null
       }));
       expect(res.body.data.diagnostics.timings).toEqual(expect.objectContaining({
         referenceMs: expect.any(Number),
