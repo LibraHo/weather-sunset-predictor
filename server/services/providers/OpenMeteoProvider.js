@@ -161,7 +161,7 @@ class OpenMeteoProvider extends BaseWeatherProvider {
           gfs_seamless: 'Open-Meteo GFS Seamless',
           best_match: 'Open-Meteo Best Match'
         }[model] || `Open-Meteo ${model}`,
-        unsupportedFields: [],
+        unsupportedFields: ['cloudBaseHeight'],
         degradedReason: []
       }
     };

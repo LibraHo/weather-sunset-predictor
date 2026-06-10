@@ -209,7 +209,7 @@ function normalizeWeatherData(selected = {}) {
     lowClouds: selected.lowClouds || 0,
     midClouds: selected.midClouds || 0,
     highClouds: selected.highClouds || 0,
-    lowCloudCover: selected.lowClouds || selected.lowCloudCover || 0,
+    lowCloudCover: selected.lowClouds ?? selected.lowCloudCover ?? 0,
     precipitation: selected.precipitation || 0,
     shortwaveRadiation: selected.shortwaveRadiation ?? null,
     directRadiation: selected.directRadiation ?? null,

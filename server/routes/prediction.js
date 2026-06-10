@@ -37,6 +37,11 @@ function closedLoopWeatherCacheKey(lat, lon, hours = 168) {
   return `closed-loop-weather:${Number(lat).toFixed(4)}:${Number(lon).toFixed(4)}:${hours}`;
 }
 
+function getCloudBaseHeightSource(weatherData = {}) {
+  const value = Number(weatherData.cloudBaseHeight);
+  return Number.isFinite(value) && value > 0 ? 'provider' : 'unavailable';
+}
+
 async function fetchClosedLoopWeatherData(lat, lon, hours = 168, fetchOptions = {}) {
   const key = closedLoopWeatherCacheKey(lat, lon, hours);
   const cached = await cacheService.get(key);
@@ -189,7 +194,7 @@ function buildWeatherDataFromHourly(selected, hourly, selectedIdx) {
       cloudCover: selected.cloudCover || 0,
       humidity: selected.humidity || 0,
       visibility: selected.visibility || 10,
-      lowCloudCover: selected.lowClouds || selected.cloudCover || 0,
+      lowCloudCover: selected.lowClouds ?? selected.cloudCover ?? 0,
       temp: selected.temp || 0,
       windSpeed: selected.windSpeed || 0,
       windDirection: selected.windDirection || 0,
@@ -204,6 +209,7 @@ function buildWeatherDataFromHourly(selected, hourly, selectedIdx) {
       midClouds: selected.midClouds || 0,
       highClouds: selected.highClouds || 0,
       cloudBaseHeight: selected.cloudBaseHeight ?? null,
+      cloudBaseHeightSource: getCloudBaseHeightSource(selected),
       cape: selected.cape ?? null,
       weatherCode: selected.weatherCode ?? null,
       shortwaveRadiation: selected.shortwaveRadiation ?? null,
@@ -378,7 +384,10 @@ function buildEnhancedPredictionResponse({ closedLoop, lat, lon, type, options =
     clientWeatherFallback: closedLoop.clientWeatherFallback === true,
     referenceTime: closedLoop.referenceTime.toISOString(),
     weatherSample: closedLoop.weatherSample || null,
-    weatherData: closedLoop.weatherData,
+    weatherData: {
+      ...closedLoop.weatherData,
+      cloudBaseHeightSource: getCloudBaseHeightSource(closedLoop.weatherData)
+    },
     remoteCloudData: closedLoop.remoteCloudData,
     profileTimings: closedLoop.profileTimings || null,
     diagnostics: {
