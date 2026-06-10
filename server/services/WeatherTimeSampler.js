@@ -1,5 +1,4 @@
-const DEFAULT_WINDOW_MS = 90 * 60 * 1000;
-const DEFAULT_MIN_WEIGHT = 0.05;
+const ONE_HOUR_MS = 60 * 60 * 1000;
 
 const WEIGHTED_NUMERIC_FIELDS = [
   'cloudCover',
@@ -70,11 +69,6 @@ function selectHourlyAt(hourly = [], referenceTime = new Date()) {
   return { selected: closest.item, selectedIdx: closest.idx, selectedTs: closest.ts };
 }
 
-function getLinearTimeWeight(diffMs, windowMs = DEFAULT_WINDOW_MS) {
-  if (!Number.isFinite(diffMs) || diffMs > windowMs) return 0;
-  return Math.max(0, 1 - diffMs / windowMs);
-}
-
 function averageWeightedField(samples, field) {
   let total = 0;
   let weightTotal = 0;
@@ -90,6 +84,33 @@ function averageWeightedField(samples, field) {
   return total / weightTotal;
 }
 
+function buildAdjacentHourSamples(entries, refTs) {
+  if (!Number.isFinite(refTs)) return [];
+
+  const lowerTs = Math.floor(refTs / ONE_HOUR_MS) * ONE_HOUR_MS;
+  const upperTs = Math.ceil(refTs / ONE_HOUR_MS) * ONE_HOUR_MS;
+  const targetTsList = lowerTs === upperTs ? [lowerTs] : [lowerTs, upperTs];
+  const targetEntries = targetTsList
+    .map(targetTs => entries.find(entry => entry.ts === targetTs))
+    .filter(Boolean);
+
+  if (!targetEntries.length) return [];
+  if (lowerTs === upperTs) {
+    return targetEntries.map(entry => ({ ...entry, diffMs: 0, weight: 1 }));
+  }
+
+  return targetEntries.map((entry) => {
+    const weight = entry.ts === lowerTs
+      ? (upperTs - refTs) / ONE_HOUR_MS
+      : (refTs - lowerTs) / ONE_HOUR_MS;
+    return {
+      ...entry,
+      diffMs: Math.abs(entry.ts - refTs),
+      weight: Math.max(0, Math.min(1, weight))
+    };
+  });
+}
+
 function buildTimeWeightedWeatherSample(hourly = [], referenceTime = new Date(), options = {}) {
   const entries = normalizeHourlyEntries(hourly);
   if (!entries.length) {
@@ -102,24 +123,13 @@ function buildTimeWeightedWeatherSample(hourly = [], referenceTime = new Date(),
   }
 
   const refTs = toEpochMs(referenceTime) ?? Date.now();
-  const windowMs = Number(options.windowMs) > 0 ? Number(options.windowMs) : DEFAULT_WINDOW_MS;
-  const minWeight = Number(options.minWeight) >= 0 ? Number(options.minWeight) : DEFAULT_MIN_WEIGHT;
   const closest = entries.reduce((best, current) => {
     const bestDiff = Math.abs(best.ts - refTs);
     const currentDiff = Math.abs(current.ts - refTs);
     return currentDiff < bestDiff ? current : best;
   }, entries[0]);
 
-  const samples = entries
-    .map(entry => {
-      const diffMs = Math.abs(entry.ts - refTs);
-      return {
-        ...entry,
-        diffMs,
-        weight: getLinearTimeWeight(diffMs, windowMs)
-      };
-    })
-    .filter(sample => sample.weight >= minWeight)
+  const samples = buildAdjacentHourSamples(entries, refTs)
     .sort((a, b) => a.ts - b.ts);
 
   if (!samples.length) {
