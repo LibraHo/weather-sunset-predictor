@@ -168,6 +168,7 @@ function buildRecord(payload = {}, files = [], context = {}) {
   return {
     id,
     createdAt: nowIso,
+    submittedAt: nowIso,
     source,
     feedbackType,
     feedbackTypeLabel: TYPE_LABELS[feedbackType],
@@ -205,6 +206,28 @@ function listFeedback({ limit = 200 } = {}) {
   return readIndex().slice(0, Math.max(1, Math.min(500, Number(limit) || 200)));
 }
 
+function deleteFeedback(id) {
+  const feedbackId = normalizeText(id, 120);
+  const rows = readIndex();
+  const index = rows.findIndex((row) => row.id === feedbackId);
+  if (index < 0) return null;
+
+  const [removed] = rows.splice(index, 1);
+  writeIndex(rows);
+
+  for (const image of removed.images || []) {
+    const safeName = path.basename(String(image?.storedName || ''));
+    if (!safeName) continue;
+    try {
+      fs.unlinkSync(path.join(IMAGE_DIR, safeName));
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
+  }
+
+  return removed;
+}
+
 function getImagePath(storedName) {
   const safeName = path.basename(String(storedName || ''));
   if (!safeName) return null;
@@ -215,6 +238,7 @@ function getImagePath(storedName) {
 module.exports = {
   TYPE_LABELS,
   createFeedback,
+  deleteFeedback,
   getImagePath,
   isFeedbackWindowOpen,
   listFeedback,

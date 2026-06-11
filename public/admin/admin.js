@@ -2084,14 +2084,18 @@ function renderFeedbackList(items = []) {
   }
   tbody.innerHTML = items.map((item) => {
     const id = escapeJsString(item.id);
+    const submittedAt = item.submittedAt || item.createdAt;
     return `<tr>
-      <td>${escapeHtml(formatPhotoDateTime(item.createdAt) || '--')}</td>
+      <td>${escapeHtml(formatPhotoDateTime(submittedAt) || '--')}</td>
       <td>${escapeHtml(item.feedbackTypeLabel || item.feedbackType || '--')}</td>
       <td>${escapeHtml(item.locationName || `${item.lat ?? '--'}, ${item.lon ?? '--'}`)}</td>
       <td>${escapeHtml(item.date || '--')} / ${escapeHtml(item.period || '--')}</td>
       <td>${escapeHtml(item.score ?? '--')}</td>
       <td>${escapeHtml(item.source || '--')} / ${escapeHtml(item.client || '--')}</td>
-      <td><button class="btn btn-secondary btn-sm" onclick="renderFeedbackDetail('${id}')">查看</button></td>
+      <td>
+        <button class="btn btn-secondary btn-sm" onclick="renderFeedbackDetail('${id}')">查看</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteFeedback('${id}')">删除</button>
+      </td>
     </tr>`;
   }).join('');
 }
@@ -2109,9 +2113,11 @@ function renderFeedbackDetail(id) {
     if (!src) return '';
     return `<a href="${escapeHtml(src)}" target="_blank" rel="noopener"><img class="feedback-admin-image" src="${escapeHtml(src)}" alt="${escapeHtml(image.originalName || '反馈图片')}" loading="lazy"></a>`;
   }).join('');
+  const submittedAt = item.submittedAt || item.createdAt;
+  const jsId = escapeJsString(item.id);
   detail.innerHTML = `
     <div class="feedback-admin-meta">
-      <div><span>提交时间</span><strong>${escapeHtml(formatPhotoDateTime(item.createdAt) || '--')}</strong></div>
+      <div><span>提交时间</span><strong>${escapeHtml(formatPhotoDateTime(submittedAt) || '--')}</strong></div>
       <div><span>反馈类型</span><strong>${escapeHtml(item.feedbackTypeLabel || item.feedbackType || '--')}</strong></div>
       <div><span>地点</span><strong>${escapeHtml(item.locationName || '--')} (${escapeHtml(item.lat ?? '--')}, ${escapeHtml(item.lon ?? '--')})</strong></div>
       <div><span>日期/类型</span><strong>${escapeHtml(item.date || '--')} / ${escapeHtml(item.period || '--')}</strong></div>
@@ -2123,9 +2129,23 @@ function renderFeedbackDetail(id) {
     </div>
     <div class="feedback-admin-comment">${escapeHtml(item.comment || '未填写评论')}</div>
     <div class="feedback-admin-images">${images || '<p class="empty">未上传图片</p>'}</div>
+    <div><button class="btn btn-danger btn-sm" onclick="deleteFeedback('${jsId}')">删除反馈</button></div>
     <details class="admin-details" open><summary>预测快照</summary><pre class="code-box">${escapeHtml(JSON.stringify(item.predictionSnapshot || {}, null, 2))}</pre></details>
     <details class="admin-details"><summary>天气快照</summary><pre class="code-box">${escapeHtml(JSON.stringify(item.weatherSnapshot || {}, null, 2))}</pre></details>
   `;
+}
+
+async function deleteFeedback(id) {
+  if (!confirm('确定删除这条反馈吗？对应图片也会删除。')) return;
+  try {
+    const res = await fetch(`/admin/feedback/${encodeURIComponent(id)}`, { method: 'DELETE', credentials: 'include' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.error?.message || '删除失败');
+    showMessage('反馈已删除');
+    await loadFeedback();
+  } catch (err) {
+    showMessage(err.message || '删除失败', 'error');
+  }
 }
 
 function formatPhotoCoordinate(photo) {

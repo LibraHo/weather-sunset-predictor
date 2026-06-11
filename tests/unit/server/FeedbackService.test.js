@@ -37,6 +37,7 @@ describe('FeedbackService', () => {
     }, [], { now: new Date('2026-06-12T09:30:00.000Z') });
 
     expect(record.id).toBeTruthy();
+    expect(record.submittedAt).toBe(record.createdAt);
     expect(record.feedbackTypeLabel).toBe('误报');
     expect(record.predictionSnapshot.score).toBe(68);
     expect(service.listFeedback()).toHaveLength(1);
@@ -75,5 +76,24 @@ describe('FeedbackService', () => {
 
     expect(record.images).toHaveLength(2);
     expect(fs.existsSync(service.getImagePath(record.images[0].storedName))).toBe(true);
+  });
+
+  test('deletes feedback record and stored images', () => {
+    const tinyJpegBase64 = Buffer.from('image').toString('base64');
+    const record = service.createFeedback({
+      source: 'home',
+      feedbackType: 'wrong',
+      period: 'sunset',
+      predictionSnapshot: { score: 50 },
+      photos: [{ name: 'one.jpg', mimeType: 'image/jpeg', base64: tinyJpegBase64 }]
+    }, [], { now: new Date('2026-06-12T12:00:00.000Z') });
+    const imagePath = service.getImagePath(record.images[0].storedName);
+
+    const removed = service.deleteFeedback(record.id);
+
+    expect(removed.id).toBe(record.id);
+    expect(service.listFeedback()).toHaveLength(0);
+    expect(fs.existsSync(imagePath)).toBe(false);
+    expect(service.deleteFeedback(record.id)).toBeNull();
   });
 });

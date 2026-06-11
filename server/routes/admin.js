@@ -373,6 +373,19 @@ router.get('/admin/feedback/images/:name', requireAuth, (req, res) => {
   res.sendFile(filePath);
 });
 
+router.delete('/admin/feedback/:id', requireAuth, (req, res) => {
+  try {
+    const removed = feedbackService.deleteFeedback(req.params.id);
+    if (!removed) {
+      return res.status(404).json({ error: { code: 'FEEDBACK_NOT_FOUND', message: '反馈不存在' } });
+    }
+    res.json({ success: true, id: removed.id });
+  } catch (err) {
+    console.error('[AdminRoutes] DELETE /admin/feedback/:id error:', err);
+    res.status(500).json({ error: { code: 'FEEDBACK_DELETE_FAILED', message: '删除反馈失败' } });
+  }
+});
+
 router.post('/photos/:id/review', requireAuth, express.json(), (req, res) => {
   try {
     const reviewStatus = req.body?.reviewStatus || req.body?.status;
