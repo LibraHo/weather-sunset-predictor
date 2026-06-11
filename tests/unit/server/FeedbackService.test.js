@@ -52,6 +52,15 @@ describe('FeedbackService', () => {
     }, [], { now: new Date('2026-06-12T12:00:00.000Z') })).toThrow(/反馈暂未开放/);
   });
 
+  test('rejects unknown feedback source instead of bypassing gates', () => {
+    expect(() => service.createFeedback({
+      source: 'mobile',
+      feedbackType: 'missed',
+      period: 'sunrise',
+      eventTime: '2026-06-12T10:00:00.000Z'
+    }, [], { now: new Date('2026-06-12T12:00:00.000Z') })).toThrow(/来源无效/);
+  });
+
   test('requires prediction snapshot for home feedback', () => {
     expect(() => service.createFeedback({
       source: 'home',

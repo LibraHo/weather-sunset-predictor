@@ -53,6 +53,11 @@ function normalizePeriod(value) {
   return ['sunrise', 'sunset'].includes(period) ? period : null;
 }
 
+function normalizeSource(value) {
+  const source = String(value || 'card').trim();
+  return ['card', 'home'].includes(source) ? source : null;
+}
+
 function normalizeNumber(value, min, max) {
   if (value === '' || value === null || value === undefined) return null;
   const number = Number(value);
@@ -131,7 +136,14 @@ function buildRecord(payload = {}, files = [], context = {}) {
     throw error;
   }
 
-  const source = normalizeText(payload.source || 'card', 40);
+  const source = normalizeSource(payload.source);
+  if (!source) {
+    const error = new Error('反馈来源无效');
+    error.code = 'INVALID_FEEDBACK_SOURCE';
+    error.status = 400;
+    throw error;
+  }
+
   const period = normalizePeriod(payload.period || payload.predictionType);
   if (!period) {
     const error = new Error('请选择朝霞或晚霞');
