@@ -261,6 +261,7 @@ apiAccess: 'الوصول إلى API'
     hourly: 'التوقعات الساعية',
     threeDayGlow: 'توهج 3 أيام',
     threeDayGlowLoading: 'جارٍ تحميل توهج الشروق والغروب لثلاثة أيام...',
+    threeDayGlowReferenceNote: 'قد تكون الاحتمالات بعد أكثر من يوم غير دقيقة وهي للمرجع فقط.',
     daysOverview: 'نظرة عامة لـ {{days}} أيام',
     precipChance: '{{prob}}% هطول',
     unavailable: {
@@ -853,6 +854,7 @@ apiAccess: 'الوصول إلى API'
     updatedAt: 'Updated at {{time}}',
     supportedRegions: 'مدعوم حاليًا: بر الصين الرئيسي، هونغ كونغ، ماكاو، تايوان، اليابان، كوريا الجنوبية، كوريا الشمالية، والمدن الرئيسية في جنوب شرق آسيا القاري. تركز شبكة الخريطة الحرارية حاليًا على الصين.',
     interactionHint: 'Drag the map · scroll to zoom',
+    layerLoading: 'جارٍ تحميل طبقة السحب النارية...',
     tabs: { sunrise: 'Sunrise', sunset: 'Sunset' },
     quality: { excellent: 'Excellent', good: 'Good' },
     period: { sunriseTomorrow: "Tomorrow's sunrise glow", sunsetToday: "Today's sunset glow", testLayer: 'Test layer (mock data)' }

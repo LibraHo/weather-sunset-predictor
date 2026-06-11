@@ -388,6 +388,7 @@ apiAccess: 'API接続'
     "hourly": "時間別予報",
     "threeDayGlow": "3日朝夕焼け",
     "threeDayGlowLoading": "3日分を読み込み中...",
+    "threeDayGlowReferenceNote": "1日以上先の確率は正確でない場合があり、参考値です。",
     "daysOverview": "{{days}}日間の概要",
     "precipChance": "{{prob}}%の降水確率",
     unavailable: {
@@ -1060,6 +1061,7 @@ apiAccess: 'API接続'
     "surroundingFair": "周辺エリアの焼け雲観賞条件は普通です",
     "scoreWithQuality": "{{score}}点 - {{quality}}",
     "pointToast": "{{name}}方向｜スコア: {{score}}点｜距離: {{distance}}km",
+    "layerLoading": "火焼け雲レイヤーを読み込み中...",
     "emptyChinaSpots": "本日表示できる焼け雲スポットはありません",
     "updatedAt": "{{time}} 更新",
     "supportedRegions": "現在対応：中国大陸、香港、マカオ、台湾、日本、韓国、北朝鮮、インドシナ半島の主要都市。ヒートマップ格子は現在中国エリアが中心です。",

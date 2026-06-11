@@ -388,6 +388,7 @@ const translations = {
     "hourly": "詳細預報",
     "threeDayGlow": "3天朝晚霞",
     "threeDayGlowLoading": "正在讀取3天朝晚霞...",
+    "threeDayGlowReferenceNote": "超過一天後的機率可能不準，僅供參考。",
     "daysOverview": "{{days}}天概覽",
     "precipChance": "{{prob}}%降水",
     "unavailable": {
@@ -1105,6 +1106,7 @@ const translations = {
     "updatedAt": "更新於 {{time}}",
     "supportedRegions": "目前支援：中國大陸、港澳臺、日本、韓國、朝鮮及中南半島主要城市；熱力柵格目前以中國區域為主。",
     "interactionHint": "可拖曳地圖 · 滾輪縮放",
+    "layerLoading": "正在讀取火燒雲圖層...",
     "tabs": { "sunrise": "朝霞", "sunset": "晚霞" },
     "quality": {
       "excellent": "優秀",
