@@ -388,6 +388,7 @@ const translations = {
     "hourly": "Hourly Forecast",
     "threeDayGlow": "3-Day Glow",
     "threeDayGlowLoading": "Loading 3-day sunrise and sunset glow...",
+    "threeDayGlowReferenceNote": "Probabilities more than one day out may be inaccurate and are for reference only.",
     "mapView": "",
     "daysOverview": "{{days}}-Day Overview",
     "precipChance": "{{prob}}% precip",
@@ -862,6 +863,7 @@ const translations = {
     "updatedAt": "Updated at {{time}}",
     "supportedRegions": "Currently supported: Mainland China, Hong Kong, Macao, Taiwan, Japan, South Korea, North Korea, and major cities in mainland Southeast Asia. The heatmap grid is currently focused on China.",
     "interactionHint": "Drag the map · scroll to zoom",
+    "layerLoading": "Loading fire-cloud layer...",
     "tabs": { "sunrise": "Sunrise", "sunset": "Sunset" },
     "quality": { "excellent": "Excellent", "good": "Good" },
     "period": { "sunriseTomorrow": "Tomorrow's sunrise glow", "sunsetToday": "Today's sunset glow", "testLayer": "Test layer (mock data)" }

@@ -24,6 +24,8 @@ export default class ChinaRasterOverlayManager {
     this._tabContainer = null;
     this._tabButtons = {};
     this._onPeriodChange = null; // 外部回调
+    this._onLoadingChange = null;
+    this._loadingCount = 0;
   }
 
   /**
@@ -32,6 +34,22 @@ export default class ChinaRasterOverlayManager {
    */
   onPeriodChange(fn) {
     this._onPeriodChange = fn;
+  }
+
+  onLoadingChange(fn) {
+    this._onLoadingChange = fn;
+  }
+
+  _emitLoading(show, period) {
+    if (show) {
+      this._loadingCount += 1;
+    } else {
+      this._loadingCount = Math.max(0, this._loadingCount - 1);
+    }
+
+    if (typeof this._onLoadingChange === 'function') {
+      this._onLoadingChange(this._loadingCount > 0, period);
+    }
   }
 
   /**
@@ -198,7 +216,12 @@ export default class ChinaRasterOverlayManager {
 
     const overlay = period === 'sunrise' ? this._sunriseOverlay : (period === 'test' ? this._testOverlay : this._sunsetOverlay);
     overlay.setPeriod(period);
-    await overlay.loadAndRender(period);
+    this._emitLoading(true, period);
+    try {
+      await overlay.loadAndRender(period);
+    } finally {
+      this._emitLoading(false, period);
+    }
   }
 
   /**

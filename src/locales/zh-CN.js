@@ -406,6 +406,7 @@ export default {
     hourly: '详细预报',
     threeDayGlow: '3天朝晚霞',
     threeDayGlowLoading: '正在读取3天朝晚霞...',
+    threeDayGlowReferenceNote: '超过一天后的概率可能不准，仅供参考。',
     mapView: '地图预测',
     daysOverview: '{{days}}天概览',
     precipChance: '{{prob}}%降水',
@@ -963,6 +964,7 @@ formationAnalysis: {
     updatedAt: '更新于 {{time}}',
     supportedRegions: '目前支持：中国大陆、港澳台、日本、韩国、朝鲜及中南半岛主要城市；热力栅格当前以中国区域为主。',
     interactionHint: '可拖拽地图 · 滚轮缩放',
+    layerLoading: '正在读取火烧云图层...',
     tabs: { sunrise: '朝霞', sunset: '晚霞' },
     quality: { excellent: '优秀', good: '良好' },
     period: { sunriseTomorrow: '明天的朝霞', sunsetToday: '今天的晚霞', testLayer: '测试图层（模拟数据）' }

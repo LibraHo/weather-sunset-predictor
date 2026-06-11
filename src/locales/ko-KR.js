@@ -388,6 +388,7 @@ apiAccess: 'API 연동'
     "hourly": "시간별 예보",
     "threeDayGlow": "3일 노을",
     "threeDayGlowLoading": "3일치 로딩 중...",
+    "threeDayGlowReferenceNote": "하루 이후의 확률은 정확하지 않을 수 있으며 참고용입니다.",
     "daysOverview": "{{days}}일 개요",
     "precipChance": "{{prob}}% 강수",
     unavailable: {
@@ -1089,6 +1090,7 @@ apiAccess: 'API 연동'
     "surroundingFair": "주변 지역의 노을구름 관측 조건은 보통입니다",
     "scoreWithQuality": "{{score}}점 - {{quality}}",
     "pointToast": "{{name}} 방향 | 점수: {{score}}점 | 거리: {{distance}}km",
+    "layerLoading": "노을구름 레이어를 불러오는 중...",
     "emptyChinaSpots": "오늘 표시할 수 있는 노을구름 지점이 없습니다",
     "updatedAt": "{{time}} 업데이트",
     "supportedRegions": "현재 지원: 중국 본토, 홍콩, 마카오, 대만, 일본, 대한민국, 북한 및 인도차이나반도 주요 도시. 히트맵 격자는 현재 중국 지역 중심입니다.",

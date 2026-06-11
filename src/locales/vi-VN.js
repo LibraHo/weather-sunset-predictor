@@ -388,6 +388,7 @@
     "hourly": "Dự Báo Theo Giờ",
     "threeDayGlow": "Ráng trời 3 ngày",
     "threeDayGlowLoading": "Đang tải ráng bình minh và hoàng hôn trong 3 ngày...",
+    "threeDayGlowReferenceNote": "Xác suất sau hơn một ngày có thể không chính xác, chỉ dùng để tham khảo.",
     "daysOverview": "Tổng Quan {{days}} Ngày",
     "precipChance": "{{prob}}% khả năng mưa",
     unavailable: {
@@ -1103,6 +1104,7 @@
     "updatedAt": "Updated at {{time}}",
     "supportedRegions": "Hiện hỗ trợ: Trung Quốc đại lục, Hồng Kông, Ma Cao, Đài Loan, Nhật Bản, Hàn Quốc, Triều Tiên và các thành phố lớn ở Đông Nam Á lục địa. Lưới heatmap hiện tập trung vào khu vực Trung Quốc.",
     "interactionHint": "Drag the map · scroll to zoom",
+    "layerLoading": "Đang tải lớp bản đồ mây lửa...",
     "tabs": { "sunrise": "Sunrise", "sunset": "Sunset" },
     "quality": {
       "excellent": "Excellent",

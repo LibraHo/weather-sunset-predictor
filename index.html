@@ -442,6 +442,9 @@
           <div id="forecast-timeline" data-loaded="false">
             <!-- 动态填充未来朝晚霞 -->
           </div>
+          <div class="forecast-reference-note" data-i18n="weather.threeDayGlowReferenceNote">
+            超过一天后的概率可能不准，仅供参考。
+          </div>
         </div>
 
         <div id="weather-error" class="error-message hidden"></div>
@@ -712,7 +715,18 @@
         <!-- 时段说明 -->
         <div id="china-spots-period-label" class="china-spots-period-label"></div>
         <!-- Leaflet 地图（可拖拽 + 缩放） -->
-        <div id="china-spots-map" class="china-spots-map"></div>
+        <div class="china-spots-map-wrap">
+          <div id="china-spots-map" class="china-spots-map"></div>
+          <div id="china-spots-layer-loading" class="china-spots-layer-loading hidden" role="status" aria-live="polite">
+            <div class="spinner china-spots-layer-spinner" aria-hidden="true"></div>
+            <div class="china-spots-layer-loading-copy">
+              <p data-i18n="weatherMap.layerLoading">正在读取火烧云图层...</p>
+              <div class="loading-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="64">
+                <div class="loading-progress-fill china-spots-layer-progress-fill"></div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div id="china-spots-empty" class="china-spots-empty hidden" data-i18n="weatherMap.emptyChinaSpots">今日暂无可见火烧云点位</div>
         <!-- 任务 64.8：朝/晚霞双时段分数并行展示 -->
         <div id="china-spots-dual-score" class="china-spots-dual-score hidden"></div>

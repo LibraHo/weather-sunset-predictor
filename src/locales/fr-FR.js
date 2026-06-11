@@ -388,6 +388,7 @@
     "hourly": "Prévisions Horaires",
     "threeDayGlow": "Lueurs sur 3 jours",
     "threeDayGlowLoading": "Chargement des lueurs d’aube et de crépuscule sur 3 jours...",
+    "threeDayGlowReferenceNote": "Les probabilités au-delà d’un jour peuvent être imprécises et sont fournies à titre indicatif.",
     "daysOverview": "Aperçu sur {{days}} jours",
     "precipChance": "{{prob}}% précip",
     unavailable: {
@@ -1103,6 +1104,7 @@
     "updatedAt": "Updated at {{time}}",
     "supportedRegions": "Actuellement pris en charge : Chine continentale, Hong Kong, Macao, Taïwan, Japon, Corée du Sud, Corée du Nord et principales villes de l’Asie du Sud-Est continentale. La grille thermique est actuellement centrée sur la Chine.",
     "interactionHint": "Drag the map · scroll to zoom",
+    "layerLoading": "Chargement de la couche de nuages flamboyants...",
     "tabs": { "sunrise": "Sunrise", "sunset": "Sunset" },
     "quality": {
       "excellent": "Excellent",

@@ -2073,6 +2073,12 @@ class WeatherController {
       : '';
   }
 
+  _setChinaSpotsLayerLoading(show) {
+    const loadingEl = document.getElementById('china-spots-layer-loading');
+    if (!loadingEl) return;
+    loadingEl.classList.toggle('hidden', !show);
+  }
+
   /**
    * 更新火烧云地图时段说明标签
    * @param {string} period - 'sunrise' 或 'sunset'
@@ -2246,6 +2252,11 @@ class WeatherController {
           this._setChinaSpotsEmptyState((overlay?.getSpotCount?.() ?? 0) === 0);
         });
       }
+      if (typeof this.chinaSpotsOverlayManager.onLoadingChange === 'function') {
+        this.chinaSpotsOverlayManager.onLoadingChange((loading) => {
+          this._setChinaSpotsLayerLoading(loading);
+        });
+      }
 
       // 加载所有时段数据
       await this.chinaSpotsOverlayManager.loadAllPeriods();
@@ -2274,6 +2285,7 @@ class WeatherController {
     } finally {
       // 释放初始化锁
       this._chinaSpotsMapInitializing = false;
+      this._setChinaSpotsLayerLoading(false);
     }
   }
 
