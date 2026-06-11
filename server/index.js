@@ -17,6 +17,7 @@ const heatmapRoutes = require('./routes/heatmap');
 const spotsRoutes = require('./routes/spots');
 const tilesRoutes = require('./routes/tiles');
 const photosRoutes = require('./routes/photos');
+const feedbackRoutes = require('./routes/feedback');
 const adminRoutes = require('./routes/admin');
 const apiLogsRoutes = require('./routes/api-logs');
 const dataPipelineRoutes = require('./routes/data-pipeline');
@@ -92,7 +93,11 @@ app.use(compression()); // gzip 压缩所有响应
 app.use(cors({
   origin: corsOrigins.length === 1 ? corsOrigins[0] : corsOrigins
 }));
-app.use(express.json());
+const defaultJsonParser = express.json();
+app.use((req, res, next) => {
+  if (req.path === '/api/feedback' || req.path.startsWith('/api/feedback/')) return next();
+  return defaultJsonParser(req, res, next);
+});
 app.use(morgan('combined')); // HTTP request logging
 app.use(requestLogger()); // Custom request logging
 app.use(blockPublicSiteWhenClosed);
@@ -136,6 +141,7 @@ function analyticsTargetType(pathname) {
   if (pathname.startsWith('/api/geocoding')) return 'api';
   if (pathname.startsWith('/api/tiles') || pathname.startsWith('/api/heatmap') || pathname.startsWith('/api/firecloud')) return 'map';
   if (pathname.startsWith('/api/photos')) return 'photo';
+  if (pathname.startsWith('/api/feedback')) return 'feedback';
   if (pathname.startsWith('/api/applications')) return 'api_application';
   if (pathname.startsWith('/api/agent')) return 'api';
   return 'api';
@@ -150,6 +156,7 @@ function shouldRecordApiAnalytics(pathname) {
     '/api/heatmap',
     '/api/firecloud',
     '/api/photos',
+    '/api/feedback',
     '/api/applications',
     '/api/agent'
   ].some(prefix => pathname === prefix || pathname.startsWith(`${prefix}/`));
@@ -228,6 +235,7 @@ app.use('/api/user', userRouteModule.createRouter({ userService }));
 app.use('/api/heatmap', heatmapRoutes);
 app.use('/api/spots', spotsRoutes);
 app.use('/api/photos', photosRoutes.createRouter({ userService }));
+app.use('/api/feedback', express.json({ limit: '20mb' }), feedbackRoutes.createRouter({ userService }));
 app.use('/', adminRoutes);
 
 // Admin API routes (protected by Basic Auth plus browser request integrity checks)

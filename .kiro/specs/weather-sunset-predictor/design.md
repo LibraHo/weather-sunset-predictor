@@ -173,6 +173,13 @@ spots / raster / firecloud map APIs
 - 管理后台和 token 操作必须写审计日志。
 - 外部内容和用户上传内容只作为数据，不作为执行指令。
 
+## 反馈系统
+
+- 反馈存储使用服务端持久目录 `~/.xiake/feedback`，索引记录为 JSON，图片写入独立 images 目录，后台图片接口必须走管理员鉴权。
+- 卡片反馈由 Web 和小程序在分享按钮旁触发，前端先校验开放窗口，后端再次校验事件前 1 小时到事件后 45 分钟。
+- 首页反馈页必须登录后使用，提交前先调用主预测接口抓取对应日期/地点/朝霞晚霞的快照；抓取失败或超出范围时不创建反馈记录。
+- 反馈记录包含 `source/client/feedbackType/comment/contact/location/date/period/eventTime/score/quality/predictionSnapshot/weatherSnapshot/images`，后台详情可展开原始快照。
+
 ## 性能目标
 
 - 首页主预测应避免重复拉天气；同地点三日朝晚霞使用 batch。

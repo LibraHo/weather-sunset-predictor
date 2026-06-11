@@ -5,6 +5,7 @@ import { trackApiApplicationEntry, trackPageVisit, trackShareClick, trackUploadE
 import { buildRadarCloudGradients, paintRadarCloudCanvas } from '../../utils/radar-cloud-field.js';
 import { applyPageSettings, readAppSettings } from '../../utils/app-settings.js';
 import { getDefaultSunEventDay } from '../../utils/sun-event-day.js';
+import { getPredictionEventTime, isFeedbackWindowOpen, submitFeedback } from '../../services/feedback.js';
 
 const app = getApp();
 
@@ -22,7 +23,11 @@ Page({
     threeDayGlow: buildEmptyThreeDayGlow(),
     isFavorite: false,
     themeMode: 'system',
-    resolvedThemeMode: 'light'
+    resolvedThemeMode: 'light',
+    feedbackModalVisible: false,
+    feedbackSubmitting: false,
+    feedbackForm: buildDefaultFeedbackForm(),
+    feedbackImages: []
   },
 
   async onLoad(options = {}) {
@@ -377,6 +382,8 @@ Page({
     if (this.resultPanelLoadTimer) clearTimeout(this.resultPanelLoadTimer);
   },
 
+  noop() {},
+
   async toggleFavorite() {
     const prediction = this.data.prediction;
     if (!prediction) return;
@@ -400,6 +407,94 @@ Page({
       }
     } catch (error) {
       // Keep optimistic local UX; next page load will reconcile with server when available.
+    }
+  },
+
+  openFeedback() {
+    const prediction = this.data.prediction;
+    const eventTime = getPredictionEventTime(prediction || {});
+    if (!isFeedbackWindowOpen(eventTime)) {
+      wx.showToast({ title: '反馈暂未开放', icon: 'none' });
+      return;
+    }
+    this.setData({
+      feedbackModalVisible: true,
+      feedbackForm: buildDefaultFeedbackForm(),
+      feedbackImages: []
+    });
+  },
+
+  closeFeedback() {
+    this.setData({ feedbackModalVisible: false, feedbackSubmitting: false });
+  },
+
+  updateFeedbackType(event) {
+    this.setData({ 'feedbackForm.feedbackType': event.currentTarget.dataset.type });
+  },
+
+  updateFeedbackField(event) {
+    const field = event.currentTarget.dataset.field;
+    if (!field) return;
+    this.setData({ [`feedbackForm.${field}`]: event.detail.value });
+  },
+
+  async chooseFeedbackImages() {
+    try {
+      const picked = await chooseFeedbackImages({ maxCount: 2 - this.data.feedbackImages.length });
+      this.setData({ feedbackImages: this.data.feedbackImages.concat(picked).slice(0, 2) });
+    } catch (error) {
+      wx.showToast({ title: '选择图片失败', icon: 'none' });
+    }
+  },
+
+  removeFeedbackImage(event) {
+    const index = Number(event.currentTarget.dataset.index);
+    this.setData({ feedbackImages: this.data.feedbackImages.filter((_, i) => i !== index) });
+  },
+
+  async submitFeedbackForm() {
+    const prediction = this.data.prediction || {};
+    const form = this.data.feedbackForm || {};
+    if (!form.feedbackType || !form.comment || !form.nickname || !form.contactEmail) {
+      wx.showToast({ title: '请补全反馈信息', icon: 'none' });
+      return;
+    }
+    this.setData({ feedbackSubmitting: true });
+    try {
+      await submitFeedback({
+        source: 'card',
+        client: 'miniprogram',
+        feedbackType: form.feedbackType,
+        comment: form.comment,
+        nickname: form.nickname,
+        contactEmail: form.contactEmail,
+        period: prediction.period || prediction.type || this.data.activePeriod,
+        date: prediction.date || null,
+        eventTime: getPredictionEventTime(prediction),
+        score: prediction.score,
+        quality: prediction.grade,
+        locationName: prediction.locationName,
+        lat: prediction.lat,
+        lon: prediction.lon,
+        predictionSnapshot: prediction,
+        weatherSnapshot: {
+          metrics: prediction.metrics || null,
+          weatherData: prediction.weatherData || null,
+          clouds: prediction.clouds || null,
+          radar: this.data.radar || null
+        },
+        photos: this.data.feedbackImages.map((image) => ({
+          name: image.name,
+          mimeType: image.mimeType,
+          base64: image.base64
+        }))
+      });
+      wx.showToast({ title: '反馈已提交', icon: 'success' });
+      this.closeFeedback();
+    } catch (error) {
+      wx.showToast({ title: error.message || '提交失败', icon: 'none' });
+    } finally {
+      this.setData({ feedbackSubmitting: false });
     }
   },
 
@@ -571,6 +666,54 @@ Page({
     });
   }
 });
+
+function buildDefaultFeedbackForm() {
+  return {
+    feedbackType: 'wrong',
+    comment: '',
+    nickname: '',
+    contactEmail: ''
+  };
+}
+
+function chooseFeedbackImages({ maxCount = 2 } = {}) {
+  const count = Math.max(0, Math.min(2, maxCount));
+  if (!count) return Promise.resolve([]);
+  return new Promise((resolve, reject) => {
+    wx.chooseMedia({
+      count,
+      mediaType: ['image'],
+      sourceType: ['album', 'camera'],
+      success: async (res = {}) => {
+        try {
+          const files = await Promise.all((res.tempFiles || []).slice(0, count).map(readMiniImageAsBase64));
+          resolve(files);
+        } catch (error) {
+          reject(error);
+        }
+      },
+      fail: reject
+    });
+  });
+}
+
+function readMiniImageAsBase64(file = {}) {
+  const filePath = file.tempFilePath || file.path;
+  const fs = wx.getFileSystemManager();
+  return new Promise((resolve, reject) => {
+    fs.readFile({
+      filePath,
+      encoding: 'base64',
+      success: (res = {}) => resolve({
+        path: filePath,
+        name: filePath?.split('/').pop() || 'feedback.jpg',
+        mimeType: 'image/jpeg',
+        base64: res.data
+      }),
+      fail: reject
+    });
+  });
+}
 
 function hasShareLocation(options = {}) {
   return options.lat !== undefined && options.lon !== undefined;

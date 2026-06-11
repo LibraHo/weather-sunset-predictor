@@ -16,6 +16,7 @@ import ErrorHandler from './utils/ErrorHandler.js';
 import { API_CONFIG } from '../config.api.js';
 import initializeHomeTabs from './utils/HomeTabs.js';
 import UserPanelController from './controllers/UserPanelController.js';
+import FeedbackController from './controllers/FeedbackController.js';
 
 console.log('Weather Sunset Predictor - Application Starting...');
 
@@ -109,6 +110,7 @@ console.log('[App] API模式: 后端代理（固定）');
 const weatherController = new WeatherController(storageService, savedAPIKey, USE_MOCK_API, useProxy);
 const predictionController = new PredictionController(storageService);
 let userPanelController = null;
+let feedbackController = null;
 
 const appController = new AppController(
   storageService,
@@ -174,6 +176,7 @@ async function initializeApp() {
     setupLogoBackHome();
     setupApiApplicationForm();
     setupUserPanelController();
+    setupFeedbackController();
 
     // 朝/晚霞 tab 早期绑定（init 前就可点击）
     document.getElementById('map-tab-sunrise')?.addEventListener('click', () => {
@@ -235,6 +238,12 @@ function setupUserPanelController() {
   userPanelController = new UserPanelController({ storageService });
   userPanelController.initialize();
   window.userPanelController = userPanelController;
+}
+
+function setupFeedbackController() {
+  feedbackController = new FeedbackController({ userPanelController });
+  feedbackController.initialize();
+  window.feedbackController = feedbackController;
 }
 
 function setupGalleryBasemapSync() {
@@ -342,6 +351,7 @@ updateVisitorCount();
 window.appController = appController;
 window.weatherController = weatherController;
 window.predictionController = predictionController;
+window.feedbackController = feedbackController;
 window.storageService = storageService;
 window.configService = configService;
 window.geocodingService = geocodingService;

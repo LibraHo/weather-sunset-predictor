@@ -1284,6 +1284,14 @@ class PredictionController {
       });
     });
 
+    predictionDisplay.querySelectorAll('.prediction-feedback-btn').forEach((btn) => {
+      const type = btn.dataset.type;
+      const prediction = type === 'sunrise' ? displaySunrise : displaySunset;
+      btn.addEventListener('click', () => {
+        window.feedbackController?.openPredictionFeedback?.(prediction, type);
+      });
+    });
+
     const closestElement = (target, selector) => {
       if (!target) return null;
       if (typeof target.closest === 'function') {
@@ -1468,6 +1476,13 @@ class PredictionController {
                 </button>
               </div>
             </div>
+            <button class="prediction-feedback-btn prediction-nav-share prediction-nav-feedback" data-type="${type}" type="button" aria-label="${this.i18n.t('feedback.button', '反馈')}">
+              <svg class="share-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/>
+                <path d="M8 9h8M8 13h5"/>
+              </svg>
+              <span class="share-btn-label">${this.i18n.t('feedback.button', '反馈')}</span>
+            </button>
           </div>
           <div class="prediction-app-footer">${this._uiText('Observe the sky · Catch the beauty', '观天有时 · 收获美景')}</div>
         </div>

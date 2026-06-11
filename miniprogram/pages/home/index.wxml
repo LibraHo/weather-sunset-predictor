@@ -352,6 +352,35 @@
         <image class="share-icon-image" src="/assets/icons/share-upload.svg" mode="aspectFit" aria-hidden="true" />
         <text class="share-btn-label">分享评分</text>
       </button>
+      <button class="prediction-share-menu prediction-share-footer prediction-feedback-footer" bindtap="openFeedback" aria-label="反馈预测结果" hover-class="button-hover" hover-stay-time="80">
+        <text class="share-btn-label">反馈</text>
+      </button>
+    </view>
+
+    <view wx:if="{{feedbackModalVisible}}" class="feedback-mask" bindtap="closeFeedback">
+      <view class="feedback-sheet xiake-card" catchtap="noop">
+        <view class="feedback-title">反馈预测结果</view>
+        <view class="feedback-help">反馈只在日出/日落前 1 小时到事件后 45 分钟内开放。</view>
+        <view class="feedback-type-row">
+          <view class="feedback-type {{feedbackForm.feedbackType === 'missed' ? 'active' : ''}}" data-type="missed" bindtap="updateFeedbackType">漏报<text>实际很好但分低</text></view>
+          <view class="feedback-type {{feedbackForm.feedbackType === 'wrong' ? 'active' : ''}}" data-type="wrong" bindtap="updateFeedbackType">误报<text>实际不好但分高</text></view>
+          <view class="feedback-type {{feedbackForm.feedbackType === 'overstated' ? 'active' : ''}}" data-type="overstated" bindtap="updateFeedbackType">虚报<text>有颜色但不值冲</text></view>
+        </view>
+        <textarea class="feedback-input feedback-textarea" placeholder="评论：描述现场云量、颜色、遮挡和时间" data-field="comment" value="{{feedbackForm.comment}}" bindinput="updateFeedbackField" />
+        <input class="feedback-input" placeholder="昵称" data-field="nickname" value="{{feedbackForm.nickname}}" bindinput="updateFeedbackField" />
+        <input class="feedback-input" placeholder="邮箱" data-field="contactEmail" value="{{feedbackForm.contactEmail}}" bindinput="updateFeedbackField" />
+        <view class="feedback-image-row">
+          <view class="feedback-image" wx:for="{{feedbackImages}}" wx:key="path">
+            <image src="{{item.path}}" mode="aspectFill" />
+            <text data-index="{{index}}" bindtap="removeFeedbackImage">×</text>
+          </view>
+          <view wx:if="{{feedbackImages.length < 2}}" class="feedback-add-image" bindtap="chooseFeedbackImages">+ 图片</view>
+        </view>
+        <view class="feedback-actions">
+          <button class="ghost-button action-button" bindtap="closeFeedback">取消</button>
+          <button class="primary-button action-button" loading="{{feedbackSubmitting}}" bindtap="submitFeedbackForm">提交反馈</button>
+        </view>
+      </view>
     </view>
 
     <view class="prediction-app-footer">Observe the sky · Catch the beauty</view>

@@ -167,6 +167,7 @@
               <button class="home-view-option" role="menuitemradio" aria-checked="false" data-view="methodology" data-i18n="home.tabs.methodology">火烧云计算方法</button>
               <button class="home-view-option" role="menuitemradio" aria-checked="false" data-view="map" data-i18n="home.tabs.map">火烧云地图</button>
               <button class="home-view-option" role="menuitemradio" aria-checked="false" data-view="gallery" data-i18n="home.tabs.shareMap">分享地图</button>
+              <button class="home-view-option" role="menuitemradio" aria-checked="false" data-view="feedback" data-i18n="home.tabs.feedback">反馈</button>
               <button class="home-view-option" role="menuitemradio" aria-checked="false" data-view="api" data-i18n="home.tabs.apiAccess">API接入</button>
             </div>
           </div>
@@ -1021,7 +1022,110 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
         </div>
       </section>
 
+      <section id="tab-panel-feedback" class="card feedback-page-panel hidden" role="tabpanel" aria-label="feedback-panel" tabindex="0" hidden>
+        <div class="feedback-page-hero">
+          <div>
+            <p class="api-access-kicker" data-i18n="feedback.kicker">Prediction Feedback</p>
+            <h2 data-i18n="feedback.title">反馈预测结果</h2>
+            <p data-i18n="feedback.subtitle">提交漏报、误报或虚报，系统会保存预测快照、天气原始数据、评分、地点和图片，方便后台复盘。</p>
+          </div>
+        </div>
+        <div id="feedback-page-signed-out" class="feedback-login-card">
+          <p data-i18n="feedback.loginRequired">请先登录后再反馈。</p>
+          <button id="feedback-page-login-btn" class="btn btn-primary xiake-action-btn xiake-action-btn-primary" type="button" data-i18n="feedback.loginAction">登录</button>
+        </div>
+        <form id="feedback-page-form" class="feedback-form feedback-page-form hidden">
+          <div class="feedback-form-grid">
+            <label>
+              <span data-i18n="feedback.dateLabel">日期</span>
+              <input name="date" type="date" required>
+            </label>
+            <label>
+              <span data-i18n="feedback.periodLabel">类型</span>
+              <select name="period" required>
+                <option value="sunrise" data-i18n="feedback.sunrise">朝霞</option>
+                <option value="sunset" data-i18n="feedback.sunset" selected>晚霞</option>
+              </select>
+            </label>
+            <label>
+              <span data-i18n="feedback.locationLabel">地点名称</span>
+              <input name="locationName" type="text" required data-i18n-placeholder="feedback.locationPlaceholder" placeholder="北京景山">
+            </label>
+            <label>
+              <span data-i18n="feedback.latLabel">纬度</span>
+              <input name="lat" type="number" step="any" min="-90" max="90" required placeholder="39.9042">
+            </label>
+            <label>
+              <span data-i18n="feedback.lonLabel">经度</span>
+              <input name="lon" type="number" step="any" min="-180" max="180" required placeholder="116.4074">
+            </label>
+            <label>
+              <span data-i18n="feedback.typeLabel">反馈类型</span>
+              <select name="feedbackType" required>
+                <option value="missed" data-i18n="feedback.missed">漏报：实际很好但评分偏低</option>
+                <option value="wrong" data-i18n="feedback.wrong">误报：实际不好但评分偏高</option>
+                <option value="overstated" data-i18n="feedback.overstated">虚报：有颜色但不值得冲</option>
+              </select>
+            </label>
+            <label class="feedback-wide">
+              <span data-i18n="feedback.commentLabel">评论</span>
+              <textarea name="comment" rows="4" required data-i18n-placeholder="feedback.commentPlaceholder" placeholder="描述现场看到的云量、颜色、遮挡和时间"></textarea>
+            </label>
+            <label class="feedback-wide">
+              <span data-i18n="feedback.photoLabel">图片（最多 2 张）</span>
+              <input name="photos" type="file" accept="image/jpeg,image/png,image/heic,image/heif" multiple>
+            </label>
+          </div>
+          <p class="feedback-help" data-i18n="feedback.manualHelp">提交后会尝试抓取对应日期地点的预测快照；超出可抓取范围会提示不可反馈。</p>
+          <div class="feedback-actions">
+            <button type="submit" class="btn btn-primary xiake-action-btn xiake-action-btn-primary" data-i18n="feedback.submit">提交反馈</button>
+            <span id="feedback-page-message" class="feedback-message hidden" role="status" aria-live="polite"></span>
+          </div>
+        </form>
+      </section>
+
     </main>
+
+    <div id="feedback-modal" class="modal-overlay feedback-modal hidden" role="dialog" aria-modal="true" aria-labelledby="feedback-modal-title">
+      <form id="feedback-form" class="feedback-modal-card feedback-form">
+        <div class="feedback-modal-head">
+          <div>
+            <p class="api-access-kicker" data-i18n="feedback.kicker">Prediction Feedback</p>
+            <h2 id="feedback-modal-title" data-i18n="feedback.title">反馈预测结果</h2>
+          </div>
+          <button id="feedback-modal-close" class="icon-btn" type="button" aria-label="关闭" data-i18n-aria-label="feedback.closeAria">×</button>
+        </div>
+        <p class="feedback-help" data-i18n="feedback.openWindowHint">反馈只在日出/日落前 1 小时到事件后 45 分钟内开放。</p>
+        <div class="feedback-type-grid" role="radiogroup" aria-label="Feedback type" data-i18n-aria-label="feedback.typeLabel">
+          <label><input type="radio" name="feedbackType" value="missed" required><span><strong data-i18n="feedback.missedShort">漏报</strong><small data-i18n="feedback.missedHint">实际很好，但预测分数偏低。</small></span></label>
+          <label><input type="radio" name="feedbackType" value="wrong"><span><strong data-i18n="feedback.wrongShort">误报</strong><small data-i18n="feedback.wrongHint">实际不好，但预测分数偏高。</small></span></label>
+          <label><input type="radio" name="feedbackType" value="overstated"><span><strong data-i18n="feedback.overstatedShort">虚报</strong><small data-i18n="feedback.overstatedHint">有颜色但效果弱，不值得按高分推荐。</small></span></label>
+        </div>
+        <div class="feedback-form-grid">
+          <label class="feedback-wide">
+            <span data-i18n="feedback.commentLabel">评论</span>
+            <textarea name="comment" rows="4" required data-i18n-placeholder="feedback.commentPlaceholder" placeholder="描述现场看到的云量、颜色、遮挡和时间"></textarea>
+          </label>
+          <label>
+            <span data-i18n="feedback.nicknameLabel">昵称</span>
+            <input name="nickname" type="text" required autocomplete="nickname">
+          </label>
+          <label>
+            <span data-i18n="feedback.emailLabel">邮箱</span>
+            <input name="contactEmail" type="email" required autocomplete="email">
+          </label>
+          <label class="feedback-wide">
+            <span data-i18n="feedback.photoLabel">图片（最多 2 张）</span>
+            <input name="photos" type="file" accept="image/jpeg,image/png,image/heic,image/heif" multiple>
+          </label>
+        </div>
+        <div class="feedback-actions">
+          <button id="feedback-cancel-btn" type="button" class="btn btn-secondary" data-i18n="feedback.cancel">取消</button>
+          <button type="submit" class="btn btn-primary xiake-action-btn xiake-action-btn-primary" data-i18n="feedback.submit">提交反馈</button>
+          <span id="feedback-form-message" class="feedback-message hidden" role="status" aria-live="polite"></span>
+        </div>
+      </form>
+    </div>
 
     <footer>
       <button id="refresh-btn" class="btn btn-secondary xiake-action-btn xiake-action-btn-secondary" disabled>
