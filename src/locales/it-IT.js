@@ -258,6 +258,7 @@ apiAccess: 'Accesso API'
     "hourly": "Previsione Oraria",
     "threeDayGlow": "Bagliori 3 giorni",
     "threeDayGlowLoading": "Caricamento dei bagliori di alba e tramonto per 3 giorni...",
+    "threeDayGlowReferenceNote": "Le probabilità oltre un giorno possono essere imprecise e sono solo indicative.",
     "daysOverview": "Panoramica {{days}} Giorni",
     "precipChance": "{{prob}}% precip",
     unavailable: {
@@ -912,6 +913,7 @@ apiAccess: 'Accesso API'
     "updatedAt": "Updated at {{time}}",
     "supportedRegions": "Attualmente supportati: Cina continentale, Hong Kong, Macao, Taiwan, Giappone, Corea del Sud, Corea del Nord e principali città del Sud-est asiatico continentale. La griglia heatmap è attualmente centrata sulla Cina.",
     "interactionHint": "Drag the map · scroll to zoom",
+    "layerLoading": "Caricamento del livello nubi infuocate...",
     "tabs": { "sunrise": "Sunrise", "sunset": "Sunset" },
     "quality": { "excellent": "Excellent", "good": "Good" },
     "period": { "sunriseTomorrow": "Tomorrow's sunrise glow", "sunsetToday": "Today's sunset glow", "testLayer": "Test layer (mock data)" }
