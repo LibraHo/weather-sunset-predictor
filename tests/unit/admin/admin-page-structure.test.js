@@ -418,7 +418,7 @@ describe('admin page structure', () => {
     expect(html).toContain('字段都可以留空或手动修改');
     expect(html).toContain('访客记录');
     expect(html).toContain('日期（北京时间）');
-    expect(js).toContain("const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'ops', 'logs', 'agent', 'photos'])");
+    expect(js).toContain("const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'ops', 'logs', 'agent', 'photos', 'feedback'])");
     expect(js).toContain("fetch('/admin/visitor-records?'");
     expect(js).toContain('renderClientStats');
     expect(html).toContain('visitor-ip-table');

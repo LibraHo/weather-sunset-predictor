@@ -121,7 +121,8 @@
       "shareMap": "Carte partagée",
       "firecloudMap": "Firecloud Map",
       "user": "Mon compte",
-      "apiAccess": "Accès API"
+      "apiAccess": "Accès API",
+      "feedback": "Feedback"
     },
     "menu": {
       "ariaLabel": "Changer de vue",
@@ -359,6 +360,19 @@
     "permissionDenied": "Impossible d'obtenir la position, saisissez manuellement",
     "loading": "Obtention de la position..."
   },
+  feedback: {
+    kicker: 'Prediction Feedback', title: 'Prediction feedback', subtitle: 'Submit missed, wrong, or overstated predictions. We save the score, weather snapshot, cloud data, location, and images for review.',
+    button: 'Feedback', closeAria: 'Close feedback dialog', typeLabel: 'Feedback type',
+    missed: 'Missed: real sky was good but score was low', wrong: 'Wrong: real sky was poor but score was high', overstated: 'Overstated: some color but not worth a high recommendation',
+    missedShort: 'Missed', wrongShort: 'Wrong', overstatedShort: 'Overstated',
+    missedHint: 'The real sky was good, but the predicted score was low.', wrongHint: 'The real sky was poor, but the predicted score was high.', overstatedHint: 'There was color, but the result was too weak for a high recommendation.',
+    commentLabel: 'Comment', commentPlaceholder: 'Describe clouds, color, blockage, and timing on site', nicknameLabel: 'Nickname', emailLabel: 'Email', photoLabel: 'Images (up to 2)',
+    submit: 'Submit feedback', cancel: 'Cancel', loginRequired: 'Please log in before submitting feedback.', loginAction: 'Log in',
+    dateLabel: 'Date', locationLabel: 'Location name', locationPlaceholder: 'Beijing Jingshan', latLabel: 'Latitude', lonLabel: 'Longitude', periodLabel: 'Type', sunrise: 'Sunrise', sunset: 'Sunset',
+    manualHelp: 'We will try to fetch the prediction snapshot for the selected date and place. If the date is out of range, feedback cannot be submitted.', openWindowHint: 'Feedback is open from 1 hour before sunrise/sunset until 45 minutes after the event.', windowClosed: 'Feedback is not open now. It is only open from 1 hour before sunrise/sunset until 45 minutes after the event.',
+    fetchSnapshot: 'Fetching prediction snapshot...', rangeExpired: 'This date is outside the feedback range.', submitting: 'Submitting feedback...', submitFailed: 'Failed to submit feedback', success: 'Feedback submitted. Thanks for helping us calibrate the forecast.', tooManyPhotos: 'You can upload up to 2 images.'
+  },
+
   "weather": {
     "title": "Informations Météo",
     "current": "Météo Actuelle",

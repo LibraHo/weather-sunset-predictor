@@ -30,6 +30,7 @@
         <button class="admin-nav-item admin-view-option" aria-pressed="false" data-view="logs"><span>日志</span><small>调用与错误</small></button>
         <button class="admin-nav-item admin-view-option" aria-pressed="false" data-view="agent"><span>API Token</span><small>申请、用量、审计</small></button>
         <button class="admin-nav-item admin-view-option" aria-pressed="false" data-view="photos"><span>照片管理</span><small>上传与图库</small></button>
+        <button class="admin-nav-item admin-view-option" aria-pressed="false" data-view="feedback"><span>反馈管理</span><small>误报、漏报、图片</small></button>
       </nav>
       <div class="admin-sidebar-actions">
         <button id="theme-toggle" class="icon-btn header-svg-btn" aria-label="切换主题">
@@ -443,6 +444,26 @@
 
       <section id="admin-panel-photos" class="admin-panel hidden" data-admin-panel="photos" role="tabpanel" aria-label="照片">
         <section class="admin-section admin-section-group"><div class="two-col"><div class="admin-card"><h3 class="card-title">上传新照片</h3><form id="uploadForm" class="upload-form"><div class="form-row"><div class="file-input-wrapper"><input type="file" id="photoFile" accept="image/jpeg,image/png,image/heic" required><div class="file-input-text"><span>点击或拖拽照片到此处</span><br><small>支持 JPEG、PNG、HEIC（最大 20MB）</small><strong id="selectedPhotoName" class="selected-photo-name" aria-live="polite">尚未选择照片</strong></div></div></div><div class="form-row"><input type="text" id="description" placeholder="描述（可选）"></div><details class="admin-details" open><summary>照片元数据</summary><div class="form-row two-inputs"><input type="text" id="locationName" placeholder="拍摄地点（可选）"><input type="text" id="uploaderName" placeholder="上传者（可选）"></div><div class="photo-parse-actions" aria-label="照片信息解析"><button type="button" class="btn btn-secondary btn-sm" id="parseAddressBtn">解析地址</button><button type="button" class="btn btn-secondary btn-sm" id="parsePhotoCoordsBtn">解析经纬度</button><button type="button" class="btn btn-secondary btn-sm" id="parsePhotoTakenAtBtn">解析拍摄时间</button></div><div class="form-row"><input type="datetime-local" id="takenAt" placeholder="拍摄时间（可选）"></div><div class="form-row two-inputs"><input type="number" id="lat" placeholder="纬度（可选）" step="any" min="-90" max="90"><input type="number" id="lon" placeholder="经度（可选）" step="any" min="-180" max="180"></div><div id="photoGpsStatus" class="photo-gps-status" aria-live="polite">选择照片后会尝试读取 EXIF 位置和拍摄时间；字段都可以留空或手动修改。</div></details><div id="uploadProgress" class="upload-progress hidden" role="status" aria-live="polite"><div class="upload-progress-track"><span id="uploadProgressBar"></span></div><div id="uploadProgressText" class="upload-progress-text">等待上传</div></div><div id="uploadFeedback" class="admin-message hidden"></div><button type="submit" class="btn btn-primary" id="uploadBtn">上传照片</button></form></div><div class="admin-card"><h3 class="card-title">已上传照片</h3><div id="photoGrid" class="photo-grid"><p class="empty">加载中...</p></div></div></div></section>
+      </section>
+
+      <section id="admin-panel-feedback" class="admin-panel hidden" data-admin-panel="feedback" role="tabpanel" aria-label="反馈管理">
+        <section class="admin-section admin-section-group">
+          <div class="two-col">
+            <div class="admin-card">
+              <h3 class="card-title">反馈列表</h3>
+              <div class="table-wrap admin-table-scroll">
+                <table class="admin-table">
+                  <thead><tr><th>时间</th><th>类型</th><th>地点</th><th>日期</th><th>分数</th><th>来源</th><th>操作</th></tr></thead>
+                  <tbody id="feedbackTableBody"><tr><td colspan="7" class="empty">加载中...</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="admin-card">
+              <h3 class="card-title">反馈详情</h3>
+              <div id="feedbackDetail" class="feedback-admin-detail"><p class="empty">选择一条反馈查看详细天气快照。</p></div>
+            </div>
+          </div>
+        </section>
       </section>
       </main>
     </div>

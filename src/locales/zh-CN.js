@@ -129,7 +129,8 @@ export default {
       shareMap: '分享地图',
       firecloudMap: '火烧云地图',
       user: '我的',
-      apiAccess: 'API接入'
+      apiAccess: 'API接入',
+      feedback: '反馈'
     },
     menu: {
       ariaLabel: '页面切换',
@@ -370,6 +371,21 @@ export default {
     notFound: '未找到该位置，请尝试其他名称',
     permissionDenied: '无法获取位置权限，请手动输入位置',
     loading: '正在获取位置...'
+  },
+
+  feedback: {
+    kicker: 'Prediction Feedback',
+    title: '反馈预测结果',
+    subtitle: '提交漏报、误报或虚报，系统会保存预测快照、天气原始数据、评分、地点和图片，方便后台复盘。',
+    button: '反馈', closeAria: '关闭反馈窗口', typeLabel: '反馈类型',
+    missed: '漏报：实际很好但评分偏低', wrong: '误报：实际不好但评分偏高', overstated: '虚报：有颜色但不值得冲',
+    missedShort: '漏报', wrongShort: '误报', overstatedShort: '虚报',
+    missedHint: '实际很好，但预测分数偏低。', wrongHint: '实际不好，但预测分数偏高。', overstatedHint: '有颜色但效果弱，不值得按高分推荐。',
+    commentLabel: '评论', commentPlaceholder: '描述现场看到的云量、颜色、遮挡和时间', nicknameLabel: '昵称', emailLabel: '邮箱', photoLabel: '图片（最多 2 张）',
+    submit: '提交反馈', cancel: '取消', loginRequired: '请先登录后再反馈。', loginAction: '登录',
+    dateLabel: '日期', locationLabel: '地点名称', locationPlaceholder: '北京景山', latLabel: '纬度', lonLabel: '经度', periodLabel: '类型', sunrise: '朝霞', sunset: '晚霞',
+    manualHelp: '提交后会尝试抓取对应日期地点的预测快照；超出可抓取范围会提示不可反馈。', openWindowHint: '反馈只在日出/日落前 1 小时到事件后 45 分钟内开放。', windowClosed: '反馈暂未开放。反馈只在日出/日落前 1 小时到事件后 45 分钟内开放。',
+    fetchSnapshot: '正在抓取预测数据...', rangeExpired: '已经超出可反馈的日期范围。', submitting: '正在提交反馈...', submitFailed: '反馈提交失败', success: '反馈已提交，感谢你帮我们校准预测。', tooManyPhotos: '最多上传 2 张图片。'
   },
 
   // 天气

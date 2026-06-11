@@ -12,6 +12,7 @@ let activeAdminView = 'dashboard';
 let refreshTimer = null;
 let slowRefreshTimer = null;
 let photoCache = [];
+let feedbackCache = [];
 let dataPipelineConfigCache = null;
 let accessGuardConfigDirty = false;
 
@@ -29,7 +30,7 @@ const ADMIN_VIEW_ALIASES = {
   'ops-history': 'ops',
   'ops-danger': 'ops'
 };
-const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'ops', 'logs', 'agent', 'photos']);
+const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'ops', 'logs', 'agent', 'photos', 'feedback']);
 ADMIN_VIEWS.add('analytics');
 const OPS_INTERNAL_ANCHORS = new Set([
   'ops-status',
@@ -50,7 +51,8 @@ const ADMIN_VIEW_META = {
   ops: ['运维中心', '队列、定时任务、GFS+CAMS 数据管线集中管理。'],
   logs: ['日志', '集中查看外部 API 调用、错误率和每日统计。'],
   agent: ['API Token', 'Token 创建、申请审核、用量和审计日志。'],
-  photos: ['照片管理', '上传、解析和管理分享地图照片。']
+  photos: ['照片管理', '上传、解析和管理分享地图照片。'],
+  feedback: ['反馈管理', '查看漏报、误报、虚报和预测天气快照。']
 };
 
 // 初始化
@@ -104,6 +106,7 @@ async function loadAll() {
     loadAuditLogs(),
     loadAgentUsageStats(),
     loadPhotos(),
+    loadFeedback(),
     loadHealth(),
     loadShareStats()
   ]);
@@ -237,6 +240,9 @@ async function loadActiveView() {
     case 'photos':
       await loadPhotos();
       break;
+    case 'feedback':
+      await loadFeedback();
+      break;
     default:
       break;
   }
@@ -253,6 +259,8 @@ function refreshActiveView() {
     loadAnalyticsDashboard();
   } else if (activeAdminView === 'logs') {
     Promise.all([loadLogSummary(), loadLogs()]);
+  } else if (activeAdminView === 'feedback') {
+    loadFeedback();
   }
 }
 
@@ -2047,6 +2055,77 @@ function renderPhotoThumb(photo) {
     return `<div class="photo-thumb photo-thumb-placeholder" role="img" aria-label="${alt}">无缩略图</div>`;
   }
   return `<img class="photo-thumb" src="${escapeHtml(src)}" alt="${alt}" loading="lazy" decoding="async">`;
+}
+
+// =================== 反馈管理 ===================
+async function loadFeedback() {
+  const tbody = document.getElementById('feedbackTableBody');
+  try {
+    const res = await fetch('/admin/feedback', { credentials: 'include' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.error?.message || '加载反馈失败');
+    feedbackCache = data.feedback || [];
+    renderFeedbackList(feedbackCache);
+    if (feedbackCache.length) renderFeedbackDetail(feedbackCache[0].id);
+  } catch (err) {
+    if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="empty">加载失败</td></tr>';
+    console.error('加载反馈失败:', err);
+  }
+}
+
+function renderFeedbackList(items = []) {
+  const tbody = document.getElementById('feedbackTableBody');
+  if (!tbody) return;
+  if (!items.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">暂无反馈</td></tr>';
+    const detail = document.getElementById('feedbackDetail');
+    if (detail) detail.innerHTML = '<p class="empty">暂无反馈。</p>';
+    return;
+  }
+  tbody.innerHTML = items.map((item) => {
+    const id = escapeJsString(item.id);
+    return `<tr>
+      <td>${escapeHtml(formatPhotoDateTime(item.createdAt) || '--')}</td>
+      <td>${escapeHtml(item.feedbackTypeLabel || item.feedbackType || '--')}</td>
+      <td>${escapeHtml(item.locationName || `${item.lat ?? '--'}, ${item.lon ?? '--'}`)}</td>
+      <td>${escapeHtml(item.date || '--')} / ${escapeHtml(item.period || '--')}</td>
+      <td>${escapeHtml(item.score ?? '--')}</td>
+      <td>${escapeHtml(item.source || '--')} / ${escapeHtml(item.client || '--')}</td>
+      <td><button class="btn btn-secondary btn-sm" onclick="renderFeedbackDetail('${id}')">查看</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderFeedbackDetail(id) {
+  const detail = document.getElementById('feedbackDetail');
+  if (!detail) return;
+  const item = feedbackCache.find((row) => row.id === id);
+  if (!item) {
+    detail.innerHTML = '<p class="empty">反馈不存在。</p>';
+    return;
+  }
+  const images = (item.images || []).map((image) => {
+    const src = image.adminUrl || '';
+    if (!src) return '';
+    return `<a href="${escapeHtml(src)}" target="_blank" rel="noopener"><img class="feedback-admin-image" src="${escapeHtml(src)}" alt="${escapeHtml(image.originalName || '反馈图片')}" loading="lazy"></a>`;
+  }).join('');
+  detail.innerHTML = `
+    <div class="feedback-admin-meta">
+      <div><span>提交时间</span><strong>${escapeHtml(formatPhotoDateTime(item.createdAt) || '--')}</strong></div>
+      <div><span>反馈类型</span><strong>${escapeHtml(item.feedbackTypeLabel || item.feedbackType || '--')}</strong></div>
+      <div><span>地点</span><strong>${escapeHtml(item.locationName || '--')} (${escapeHtml(item.lat ?? '--')}, ${escapeHtml(item.lon ?? '--')})</strong></div>
+      <div><span>日期/类型</span><strong>${escapeHtml(item.date || '--')} / ${escapeHtml(item.period || '--')}</strong></div>
+      <div><span>事件时间</span><strong>${escapeHtml(formatPhotoDateTime(item.eventTime) || item.eventTime || '--')}</strong></div>
+      <div><span>评分</span><strong>${escapeHtml(item.score ?? '--')} / ${escapeHtml(item.quality || '--')}</strong></div>
+      <div><span>提交人</span><strong>${escapeHtml(item.nickname || item.userEmail || '--')}</strong></div>
+      <div><span>联系方式</span><strong>${escapeHtml(item.contactEmail || item.userEmail || '--')}</strong></div>
+      <div><span>来源</span><strong>${escapeHtml(item.source || '--')} / ${escapeHtml(item.client || '--')}</strong></div>
+    </div>
+    <div class="feedback-admin-comment">${escapeHtml(item.comment || '未填写评论')}</div>
+    <div class="feedback-admin-images">${images || '<p class="empty">未上传图片</p>'}</div>
+    <details class="admin-details" open><summary>预测快照</summary><pre class="code-box">${escapeHtml(JSON.stringify(item.predictionSnapshot || {}, null, 2))}</pre></details>
+    <details class="admin-details"><summary>天气快照</summary><pre class="code-box">${escapeHtml(JSON.stringify(item.weatherSnapshot || {}, null, 2))}</pre></details>
+  `;
 }
 
 function formatPhotoCoordinate(photo) {

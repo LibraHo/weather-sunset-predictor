@@ -18,6 +18,7 @@ const path = require('path');
 const { exec } = require('child_process');
 const util = require('util');
 const photoService = require('../services/PhotoService');
+const feedbackService = require('../services/FeedbackService');
 const { requireAdminAuth, requireAdminRequestIntegrity } = require('../middleware/adminSecurity');
 const globalSwitchService = require('../services/GlobalSwitchRuntime');
 
@@ -344,6 +345,32 @@ router.get('/admin/photos', requireAuth, (req, res) => {
       }
     });
   }
+});
+
+router.get('/admin/feedback', requireAuth, (req, res) => {
+  try {
+    const limit = Number(req.query.limit || 200);
+    res.json({
+      feedback: feedbackService.listFeedback({ limit }).map((item) => ({
+        ...item,
+        images: (item.images || []).map((image) => ({
+          ...image,
+          adminUrl: `/admin/feedback/images/${encodeURIComponent(image.storedName)}`
+        }))
+      }))
+    });
+  } catch (err) {
+    console.error('[AdminRoutes] GET /admin/feedback error:', err);
+    res.status(500).json({ error: { code: 'FEEDBACK_FETCH_FAILED', message: '获取反馈列表失败' } });
+  }
+});
+
+router.get('/admin/feedback/images/:name', requireAuth, (req, res) => {
+  const filePath = feedbackService.getImagePath(req.params.name);
+  if (!filePath) {
+    return res.status(404).json({ error: { code: 'FEEDBACK_IMAGE_NOT_FOUND', message: '图片不存在' } });
+  }
+  res.sendFile(filePath);
 });
 
 router.post('/photos/:id/review', requireAuth, express.json(), (req, res) => {

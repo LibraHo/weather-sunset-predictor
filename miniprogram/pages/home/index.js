@@ -6,6 +6,7 @@ import { trackMapView, trackPageVisit, trackShareClick } from '../../services/an
 import { applyPageSettings, readAppSettings, saveAppSettings as persistAppSettings } from '../../utils/app-settings.js';
 import { buildRadarCloudGradients, paintRadarCloudCanvas } from '../../utils/radar-cloud-field.js';
 import { getDefaultSunEventDay } from '../../utils/sun-event-day.js';
+import { getPredictionEventTime, isFeedbackWindowOpen, submitFeedback } from '../../services/feedback.js';
 
 const app = getApp();
 let cachedCanvasPixelRatio = null;
@@ -44,6 +45,10 @@ Page({
     predictionPreview: buildDefaultPredictionPreview(),
     predictionPeriodCards: {},
     predictionPreviewLoading: false,
+    feedbackModalVisible: false,
+    feedbackSubmitting: false,
+    feedbackForm: buildDefaultFeedbackForm(),
+    feedbackImages: [],
     recentQueries: [],
     favorites: [],
     visitorCountText: '--'
@@ -316,6 +321,99 @@ Page({
   onShareAppMessage() {
     trackShareClick({ path: '/pages/home/index', targetLabel: 'home-share' });
     return buildHomeShareMessage(this.data.predictionPreview, this.currentPredictionQuery || {});
+  },
+
+  noop() {},
+
+  openFeedback() {
+    const prediction = this.getCurrentFeedbackPrediction();
+    const eventTime = getPredictionEventTime(prediction || {});
+    if (!isFeedbackWindowOpen(eventTime)) {
+      wx.showToast({ title: '反馈暂未开放', icon: 'none' });
+      return;
+    }
+    this.setData({
+      feedbackModalVisible: true,
+      feedbackForm: buildDefaultFeedbackForm(),
+      feedbackImages: []
+    });
+  },
+
+  closeFeedback() {
+    this.setData({ feedbackModalVisible: false, feedbackSubmitting: false });
+  },
+
+  getCurrentFeedbackPrediction() {
+    return this.data.predictionPeriodCards?.[this.data.period] || this.data.predictionPreview || null;
+  },
+
+  updateFeedbackType(event) {
+    this.setData({ 'feedbackForm.feedbackType': event.currentTarget.dataset.type });
+  },
+
+  updateFeedbackField(event) {
+    const field = event.currentTarget.dataset.field;
+    if (!field) return;
+    this.setData({ [`feedbackForm.${field}`]: event.detail.value });
+  },
+
+  async chooseFeedbackImages() {
+    try {
+      const picked = await chooseFeedbackImages({ maxCount: 2 - this.data.feedbackImages.length });
+      this.setData({ feedbackImages: this.data.feedbackImages.concat(picked).slice(0, 2) });
+    } catch (error) {
+      wx.showToast({ title: '选择图片失败', icon: 'none' });
+    }
+  },
+
+  removeFeedbackImage(event) {
+    const index = Number(event.currentTarget.dataset.index);
+    this.setData({ feedbackImages: this.data.feedbackImages.filter((_, i) => i !== index) });
+  },
+
+  async submitFeedbackForm() {
+    const prediction = this.getCurrentFeedbackPrediction() || {};
+    const form = this.data.feedbackForm || {};
+    if (!form.feedbackType || !form.comment || !form.nickname || !form.contactEmail) {
+      wx.showToast({ title: '请补全反馈信息', icon: 'none' });
+      return;
+    }
+    this.setData({ feedbackSubmitting: true });
+    try {
+      await submitFeedback({
+        source: 'card',
+        client: 'miniprogram',
+        feedbackType: form.feedbackType,
+        comment: form.comment,
+        nickname: form.nickname,
+        contactEmail: form.contactEmail,
+        period: prediction.period || prediction.type || this.data.period,
+        date: prediction.date || this.currentPredictionQuery?.date || null,
+        eventTime: getPredictionEventTime(prediction),
+        score: prediction.score,
+        quality: prediction.grade || prediction.quality,
+        locationName: prediction.locationName || this.currentPredictionQuery?.locationName,
+        lat: prediction.lat ?? this.currentPredictionQuery?.lat,
+        lon: prediction.lon ?? this.currentPredictionQuery?.lon,
+        predictionSnapshot: prediction,
+        weatherSnapshot: {
+          weatherPreview: this.data.weatherPreview || null,
+          radar: prediction.radar || this.data.predictionPreview?.radar || null,
+          metrics: prediction.metrics || prediction.weatherData || null
+        },
+        photos: this.data.feedbackImages.map((image) => ({
+          name: image.name,
+          mimeType: image.mimeType,
+          base64: image.base64
+        }))
+      });
+      wx.showToast({ title: '反馈已提交', icon: 'success' });
+      this.closeFeedback();
+    } catch (error) {
+      wx.showToast({ title: error.message || '提交失败', icon: 'none' });
+    } finally {
+      this.setData({ feedbackSubmitting: false });
+    }
   },
 
   applyInitialLocation(options = {}) {
@@ -2248,6 +2346,54 @@ function estimatePayloadBytes(payload) {
   } catch (error) {
     return -1;
   }
+}
+
+function buildDefaultFeedbackForm() {
+  return {
+    feedbackType: 'wrong',
+    comment: '',
+    nickname: '',
+    contactEmail: ''
+  };
+}
+
+function chooseFeedbackImages({ maxCount = 2 } = {}) {
+  const count = Math.max(0, Math.min(2, maxCount));
+  if (!count) return Promise.resolve([]);
+  return new Promise((resolve, reject) => {
+    wx.chooseMedia({
+      count,
+      mediaType: ['image'],
+      sourceType: ['album', 'camera'],
+      success: async (res = {}) => {
+        try {
+          const files = await Promise.all((res.tempFiles || []).slice(0, count).map(readMiniImageAsBase64));
+          resolve(files);
+        } catch (error) {
+          reject(error);
+        }
+      },
+      fail: reject
+    });
+  });
+}
+
+function readMiniImageAsBase64(file = {}) {
+  const filePath = file.tempFilePath || file.path;
+  const fs = wx.getFileSystemManager();
+  return new Promise((resolve, reject) => {
+    fs.readFile({
+      filePath,
+      encoding: 'base64',
+      success: (res = {}) => resolve({
+        path: filePath,
+        name: filePath?.split('/').pop() || 'feedback.jpg',
+        mimeType: 'image/jpeg',
+        base64: res.data
+      }),
+      fail: reject
+    });
+  });
 }
 
 function logMiniPerf(event, payload = {}) {
