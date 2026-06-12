@@ -609,10 +609,11 @@ describe('miniprogram page user/share helpers', () => {
       cloudType: { label: '高层云' }
     });
 
-    expect(analysis).toHaveLength(3);
+    expect(analysis).toHaveLength(4);
     expect(analysis[0]).toMatchObject({ title: '云层载体', value: '83分', tone: 'good' });
     expect(analysis[1].detail).toContain('太阳方位 286°');
-    expect(analysis[2]).toMatchObject({ title: '显色修正', value: 'x0.82', tone: 'watch' });
+    expect(analysis[2]).toMatchObject({ title: '受光亮度', value: '--', tone: 'unknown' });
+    expect(analysis[3]).toMatchObject({ title: '显色修正', value: 'x0.82', tone: 'watch' });
   });
 
   test('result score ledger follows additive carrier and light gate formula copy', () => {
@@ -634,7 +635,7 @@ describe('miniprogram page user/share helpers', () => {
       }
     });
 
-    expect(ledger.summary).toContain('云层载体经光路门控');
+    expect(ledger.summary).toContain('云层载体、光路、受光亮度和空气显色');
     expect(ledger.steps.find((step) => step.key === 'baseScore')).toMatchObject({
       expression: '78 × 光路门控 0.82 = 64'
     });

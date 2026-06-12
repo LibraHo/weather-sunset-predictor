@@ -79,6 +79,18 @@ apiAccess: 'Accesso API',
       changelogHint: "Gli aggiornamenti degli ultimi tre mesi sono qui; scorri per rivedere motivo, impatto e validazione",
       changelog: {
         "latest": {
+          "date": "2026-06-12",
+          "title": "Layer brightness suppressor v1",
+          "summary": "Adds layerBrightness: mid/high clouds are only the carrier, and an open path is only necessary. The model now checks whether that layer is actually illuminated. When AOD, water vapor, diffuse-dominant light, and thick high-cloud gray veil align, high scores are capped into watchable or light-glow ranges.",
+          "validation": "Validation: the 2026-06-12 Beijing sunset sample drops from the high-60s to around 60; web score details, text analysis, and the mini-program methodology page now show layer brightness."
+        },
+        "grayVeilDirectional": {
+          "date": "2026-06-06",
+          "title": "Gray-veil rendering + directional mid-cloud v2",
+          "summary": "Full mid/high cloud plus elevated PM/AOD no longer defaults to warm-scattering uplift; the model continuously lowers air rendering by gray-veil pressure. Sun-direction mid-cloud bands are now a continuous carrier: stronger band plus more open path moves toward the 50-60 range.",
+          "validation": "Validation: 2026-06-03 Beijing warm scattering stays in the 70 band; 2026-06-04 directional mid-cloud replays around 53.5; 2026-06-05 full gray veil falls around 44; all real calibration cases replay."
+        },
+        "cloudThickness": {
           "date": "2026-05-27",
           "title": "Penalità proporzionale per spessore nuvoloso v2",
           "summary": "La penalità per spessore delle nuvole ora è punteggio canvas prima dello spessore × 30% × pressione di spessore, senza i limiti fissi -28/24. I sipari grigi umidi sono calibrati come bagliore debole/osservabile ma non forte.",

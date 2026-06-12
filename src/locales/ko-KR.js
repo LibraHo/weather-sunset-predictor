@@ -188,6 +188,12 @@ apiAccess: 'API 연동',
       changelogHint: "최근 3개월의 알고리즘 업데이트를 여기에 모았습니다. 스크롤해 변경 이유, 영향, 검증 내용을 확인할 수 있습니다",
       changelog: {
         "latest": {
+          "date": "2026-06-12",
+          "title": "Layer brightness suppressor v1",
+          "summary": "Adds layerBrightness: mid/high clouds are only the carrier, and an open path is only necessary. The model now checks whether that layer is actually illuminated. When AOD, water vapor, diffuse-dominant light, and thick high-cloud gray veil align, high scores are capped into watchable or light-glow ranges.",
+          "validation": "Validation: the 2026-06-12 Beijing sunset sample drops from the high-60s to around 60; web score details, text analysis, and the mini-program methodology page now show layer brightness."
+        },
+        "grayVeilDirectional": {
           "date": "2026-06-06",
           "title": "Gray-veil rendering + directional mid-cloud v2",
           "summary": "Full mid/high cloud plus elevated PM/AOD no longer defaults to warm-scattering uplift; the model continuously lowers air rendering by gray-veil pressure. Sun-direction mid-cloud bands are now a continuous carrier: stronger band plus more open path moves toward the 50-60 range.",
