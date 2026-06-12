@@ -2483,7 +2483,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     directionalCurtainCarrier
   });
   logger.debug('[EnhancedPredictionService]', '载体评分:', carrierScore.score, 'active:', carrierScore.activeCarrier, 'aerosol:', aerosolCarrierScore);
-  logger.debug('[EnhancedPredictionService]', '分层亮度:', layerBrightness.effectiveBrightness, 'gate:', layerBrightness.brightnessGate, 'cap:', layerBrightness.cap);
+  logger.debug('[EnhancedPredictionService]', '分层亮度:', layerBrightness.effectiveBrightness, 'multiplier:', layerBrightness.brightnessMultiplier, 'gate:', layerBrightness.brightnessGate);
   const lightPathGate = buildLightPathGate(lightPathScore, cloudTypeAdjustment);
   const renderingAdjustment = getRenderingScoreAdjustment(renderingFactor);
   const finalResult = calculateGatedFinalScore(carrierScore, lightPathScore, renderingFactor, type, {
@@ -2581,13 +2581,20 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     ? {
       ...layerBrightness,
       cap: null,
+      brightnessMultiplier: 1,
+      brightnessGate: 1,
       reason: 'warm_scattering_positive_calibration'
     }
     : layerBrightness;
-  const layerBrightnessAdjustment = LayerBrightnessService.applyLayerBrightnessCap(adjustedScore, layerBrightnessForAdjustment);
+  const layerBrightnessAdjustment = LayerBrightnessService.applyLayerBrightnessMultiplier(adjustedScore, layerBrightnessForAdjustment);
   if (layerBrightnessAdjustment.applied) {
     adjustedScore = layerBrightnessAdjustment.score;
-    if (adjustedScore < 40) {
+    if (adjustedStatus === 'no_fire_cloud') {
+      adjustedDescription = adjustedDescription || 'light_path_blocked';
+    } else if (adjustedScore < 20 && layerBrightnessAdjustment.reason === 'layer_brightness_unlit') {
+      adjustedStatus = 'no_fire_cloud';
+      adjustedDescription = 'light_path_blocked';
+    } else if (adjustedScore < 40) {
       adjustedStatus = 'light_glow';
       adjustedDescription = 'weak_local_colors';
     } else if (adjustedScore < 65) {

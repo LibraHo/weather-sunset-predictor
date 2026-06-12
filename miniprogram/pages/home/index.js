@@ -1770,10 +1770,11 @@ function formatNumberRaw(value) {
 function buildLayerBrightnessFact(input = {}) {
   const layerBrightness = input.layerBrightness || input.breakdown?.layerBrightness || {};
   const effectiveBrightness = Number(layerBrightness.effectiveBrightness ?? input.effectiveBrightness);
-  const capped = layerBrightness.cap != null || input.layerBrightnessAdjustment?.applied;
+  const multiplier = Number(input.layerBrightnessAdjustment?.multiplier ?? layerBrightness.brightnessMultiplier ?? layerBrightness.brightnessGate);
+  const brightnessGated = input.layerBrightnessAdjustment?.applied || (Number.isFinite(multiplier) && multiplier < 0.72);
   let tone = 'fair';
   let value = '一般';
-  if (capped || (Number.isFinite(effectiveBrightness) && effectiveBrightness < 30)) {
+  if (brightnessGated || (Number.isFinite(effectiveBrightness) && effectiveBrightness < 30)) {
     tone = 'weak';
     value = '偏弱';
   } else if (layerBrightness.reason === 'layer_brightness_sufficient' || effectiveBrightness >= 45) {

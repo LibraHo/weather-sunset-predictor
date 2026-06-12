@@ -23,7 +23,7 @@ Page({
       { title: '云厚修正', subtitle: '画布修正前分 × 30% × 云厚压力', desc: '云厚不再使用固定扣分上限；厚云证据、净证据、散射占比、水汽指数和低太阳透射证据会合成 0-1 压力，只按当前画布能力比例折损。' },
       { title: '太阳透射', subtitle: 'direct + shortwave 组合证据', desc: '直射和短波辐射极低不会单独扣死；只有总云量/中云很高、高云载体弱且灰空气明显时，才说明光被云幕和空气压住。' },
       { title: '光路条件', subtitle: '10/25/50/75/100km 多点采样', desc: '太阳方向采样会结合太阳高度、云底高度和低/中/高云遮挡估算 block；所有距离走同一套逻辑，再按距离加权，25/50km 权重最高。' },
-      { title: '受光亮度', subtitle: '三层云亮度模型', desc: '在载体和光路之外，系统会估算中高云是否真的被照亮。AOD、水汽、漫射光占优、厚高云灰幕等多个证据同时出现时，会保守压分。' },
+      { title: '受光亮度', subtitle: '三层云亮度模型', desc: '在载体和光路之外，系统会估算中高云是否真的被照亮。亮度弱时按乘性系数压分，没点亮就不再给高分。' },
       { title: '光路门控', subtitle: '载体分能发挥多少', desc: '光路分不再按 20% 相加，而是转成 0.25-1.12 的门控；开口约 0.90-0.96，太阳方向阻挡走廊可压到约 0.42。' },
       { title: '空气显色', subtitle: '先判灰幕，再判暖散射', desc: '能见度、湿度、雨后状态和空气颗粒只改变显色质量：光路开且云幕不灰时，轻/中度 AOD、PM、dust 可增强橙红；中高云满铺且 PM/AOD 偏高时，会转为灰幕显色抑制。' },
       { title: '方向中云带', subtitle: '太阳方向可染色云带', desc: '本地点头顶云不多，但日落方向有中云带且光路通畅时，会按连续载体参与评分；方向中云越强、光路越开，越接近 50-60 档。' },
@@ -35,7 +35,7 @@ Page({
       { title: '3. 云厚比例折损', formula: 'thicknessPenalty = canvasBeforeThickness × 0.30 × thicknessPressure', desc: 'thicknessPressure 由厚云证据、net、散射占比、水汽指数和低太阳透射证据合成；高云载体只给小缓冲，不会把高散射和高水汽风险洗掉。' },
       { title: '4. 载体分', formula: 'carrier = max(cloudCanvas, aerosol, directionalMidCloud)', desc: '云层画布、气溶胶弱载体和太阳方向中云带统一进入载体判断；方向中云带可到 50-60 档，但不会当成顶级爆发。' },
       { title: '5. 光路门控', formula: 'gate = f(lightPathScore, sun-direction corridor)', desc: '光路≥85 时 1.00-1.08；70-85 时 0.88-1.00；50-70 时 0.65-0.88；低于 50 时 0.25-0.65。' },
-      { title: '6. 受光亮度', formula: 'brightness = canvas × solar × path × air × thickness × beam', desc: '目前基于低/中/高三层云计算亮度，不是每个高度层单独射线追踪；亮度弱时会限制最终展示分。' },
+      { title: '6. 受光亮度', formula: 'brightnessGate = clamp(effectiveBrightness / 42, 0, 1.05)', desc: '目前基于低/中/高三层云计算亮度，不是每个高度层单独射线追踪；亮度弱时作为乘性门控进入最终分。' },
       { title: '7. 最终显示分', formula: 'score = clamp(cloudCarrier × sunsetPath × layerBrightness × airRendering, 0, 100)', desc: '最终还会按硬否决校准：无火烧云 <40，轻微霞光 <60；几何不可行、厚云、满铺灰幕、湿灰幕、雨低云会进一步压制。' }
     ],
     changelog: [

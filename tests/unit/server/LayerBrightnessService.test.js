@@ -5,7 +5,7 @@ describe('LayerBrightnessService', () => {
     service = await import('../../../server/services/LayerBrightnessService.js');
   });
 
-  test('caps diffuse gray-veil high cloud even when the light path is open', () => {
+  test('multiplies diffuse gray-veil high cloud down even when the light path is open', () => {
     const result = service.scoreLayerBrightness({
       type: 'sunset',
       timeAnalysis: { elevation: -0.86 },
@@ -33,7 +33,9 @@ describe('LayerBrightnessService', () => {
 
     expect(result.effectiveBrightness).toBeGreaterThanOrEqual(18);
     expect(result.effectiveBrightness).toBeLessThan(30);
-    expect(result.cap).toBe(52);
+    expect(result.brightnessMultiplier).toBeGreaterThanOrEqual(0.4);
+    expect(result.brightnessMultiplier).toBeLessThan(0.72);
+    expect(result.cap).toBeNull();
     expect(result.reason).toBe('layer_brightness_weak');
   });
 
@@ -61,22 +63,50 @@ describe('LayerBrightnessService', () => {
     });
 
     expect(result.effectiveBrightness).toBeGreaterThanOrEqual(42);
+    expect(result.brightnessMultiplier).toBeGreaterThanOrEqual(1);
     expect(result.cap).toBeNull();
-    expect(result.reason).toBe('layer_brightness_not_capped_insufficient_dim_evidence');
+    expect(result.reason).toBe('layer_brightness_sufficient');
   });
 
-  test('applies caps only when the score exceeds the brightness cap', () => {
-    const weak = { cap: 52, reason: 'layer_brightness_weak' };
+  test('applies brightness as a multiplier instead of a cap', () => {
+    const weak = { brightnessMultiplier: 0.5, effectiveBrightness: 21, reason: 'layer_brightness_weak' };
 
-    expect(service.applyLayerBrightnessCap(68, weak)).toEqual(expect.objectContaining({
+    expect(service.applyLayerBrightnessMultiplier(68, weak)).toEqual(expect.objectContaining({
       applied: true,
-      score: 52,
+      score: 34,
+      multiplier: 0.5,
       originalScore: 68
     }));
 
-    expect(service.applyLayerBrightnessCap(45, weak)).toEqual(expect.objectContaining({
+    expect(service.applyLayerBrightnessMultiplier(45, { brightnessMultiplier: 1, reason: 'layer_brightness_sufficient' })).toEqual(expect.objectContaining({
       applied: false,
       score: 45
+    }));
+  });
+
+  test('unlit cloud layers zero out the score', () => {
+    const result = service.scoreLayerBrightness({
+      type: 'sunset',
+      timeAnalysis: { elevation: -1 },
+      weatherData: {
+        lowClouds: 0,
+        midClouds: 0,
+        highClouds: 0,
+        cloudCover: 0,
+        visibility: 24,
+        humidity: 45
+      },
+      lightPathScore: { score: 100 },
+      renderingFactor: { factor: 1 },
+      cloudThickness: { modifier: 1 }
+    });
+
+    expect(result.effectiveBrightness).toBe(0);
+    expect(result.brightnessMultiplier).toBe(0);
+    expect(result.reason).toBe('layer_brightness_unlit');
+    expect(service.applyLayerBrightnessMultiplier(72, result)).toEqual(expect.objectContaining({
+      applied: true,
+      score: 0
     }));
   });
 });

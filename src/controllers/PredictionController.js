@@ -1811,10 +1811,12 @@ class PredictionController {
     }
 
     const effectiveBrightness = Number(layerBrightness?.effectiveBrightness);
+    const brightnessMultiplier = Number(layerBrightnessAdjustment?.multiplier ?? layerBrightness?.brightnessMultiplier ?? layerBrightness?.brightnessGate);
+    const brightnessGated = layerBrightnessAdjustment?.applied || (Number.isFinite(brightnessMultiplier) && brightnessMultiplier < 0.72);
     let brightnessLevel = 'fair';
     if (!layerBrightness?.applied && !Number.isFinite(effectiveBrightness)) {
       brightnessLevel = lightPathLevel === 'good' && carrierLevel !== 'weak' ? 'good' : 'fair';
-    } else if (layerBrightnessAdjustment?.applied || layerBrightness?.cap != null || effectiveBrightness < 30) {
+    } else if (brightnessGated || effectiveBrightness < 30) {
       brightnessLevel = 'weak';
     } else if (effectiveBrightness >= 45 || layerBrightness?.reason === 'layer_brightness_sufficient') {
       brightnessLevel = 'good';
@@ -1863,7 +1865,7 @@ class PredictionController {
     );
     const mildLimit = Boolean(
       denseCarrierCanvasOnly ||
-      layerBrightness?.cap != null ||
+      (Number.isFinite(brightnessMultiplier) && brightnessMultiplier < 0.9) ||
       weather.low >= 25 ||
       weather.visibility < 15 ||
       weather.humidity > 75 ||
@@ -2195,9 +2197,9 @@ class PredictionController {
       } : null,
       layerBrightnessAdjustment?.applied ? {
         label: ledgerText('labels.layerBrightness', {}, 'Layer brightness', '受光亮度'),
-        value: `≤${fmt(layerBrightnessAdjustment.cap ?? layerBrightness?.cap, 0)}`,
+        value: `×${fmt(layerBrightnessAdjustment.multiplier ?? layerBrightness?.brightnessMultiplier ?? layerBrightness?.brightnessGate ?? 1, 2)}`,
         detail: ledgerText(
-          'details.layerBrightnessCap',
+          'details.layerBrightnessMultiplier',
           {
             brightness: fmt(layerBrightness?.effectiveBrightness, 1),
             evidence: Array.isArray(layerBrightness?.dimEvidence) ? layerBrightness.dimEvidence.join(', ') : '--'

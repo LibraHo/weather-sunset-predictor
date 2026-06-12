@@ -81,7 +81,7 @@ apiAccess: 'Accesso API',
         "latest": {
           "date": "2026-06-12",
           "title": "Layer brightness suppressor v1",
-          "summary": "Adds layerBrightness: mid/high clouds are only the carrier, and an open path is only necessary. The model now checks whether that layer is actually illuminated. When AOD, water vapor, diffuse-dominant light, and thick high-cloud gray veil align, high scores are capped into watchable or light-glow ranges.",
+          "summary": "Adds layerBrightness: mid/high clouds are only the carrier, and an open path is only necessary. The model now checks whether that layer is actually illuminated. Weak brightness now applies a multiplicative score gate instead of a hard ceiling.",
           "validation": "Validation: the 2026-06-12 Beijing sunset sample drops from the high-60s to around 60; web score details, text analysis, and the mini-program methodology page now show layer brightness."
         },
         "grayVeilDirectional": {
