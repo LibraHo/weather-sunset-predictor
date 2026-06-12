@@ -1368,7 +1368,9 @@ export function buildPredictionPreviewFromPrediction(prediction = {}, query = {}
     visibility: weather.visibility,
     humidity: weather.humidity,
     aod: weather.aod ?? weather.aerosolOpticalDepth,
-    scoringV2: prediction.scoringV2 || prediction.breakdown?.scoringV2 || null
+    scoringV2: prediction.scoringV2 || prediction.breakdown?.scoringV2 || null,
+    layerBrightness: prediction.layerBrightness || prediction.breakdown?.layerBrightness || null,
+    layerBrightnessAdjustment: prediction.layerBrightnessAdjustment || prediction.breakdown?.layerBrightnessAdjustment || null
   };
   return buildCompletePredictionPreview(preview);
 }
