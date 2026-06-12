@@ -1,0 +1,170 @@
+{
+  "id": "2026-06-12-beijing-sunrise-success",
+  "title": "2026-06-12 Beijing sunrise: successful morning glow with sparse mid-cloud carrier",
+  "location": {
+    "name": "Beijing",
+    "nameZh": "北京",
+    "lat": 39.9042,
+    "lon": 116.4074,
+    "timezone": "Asia/Shanghai"
+  },
+  "event": {
+    "period": "sunrise",
+    "localDate": "2026-06-12",
+    "calculationTimeUtc": "2026-06-11T20:45:00.000Z",
+    "sunAzimuth": 61
+  },
+  "feedback": {
+    "source": "Alex现场反馈",
+    "reportedAt": "2026-06-12T23:00:19+08:00",
+    "summary": "今天早上的朝霞是成功样本；中云不多但光路开放，应该作为亮度/参与度调试时不能误杀的正例。",
+    "subjectiveScore": {
+      "min": 44,
+      "max": 60,
+      "label": "成功朝霞，good_glow 正例"
+    },
+    "calibrationTarget": {
+      "score": 50,
+      "status": "seed",
+      "reason": "Alex 指出该日早晨为成功样本；先用线上闭环天气快照和宽范围保护正例，后续补充照片或具体主观分后再收紧。"
+    },
+    "actualOutcome": {
+      "fireCloud": "good_glow",
+      "rainDuringWindow": false,
+      "orangeLightOrOpening": true,
+      "worthWaiting": true,
+      "notes": "缺少照片量化；当前只记录为成功朝霞正例，防止亮度非线性调试误杀。"
+    }
+  },
+  "capture": {
+    "dataCompleteness": "production_closed_loop_detail_response",
+    "predictionReplay": "enhanced_detail_calculateEnhancedPrediction",
+    "sourceFiles": [
+      "https://sunset.bjhyc.online/api/prediction/enhanced"
+    ],
+    "knownLimitations": [
+      "该样本来自 2026-06-12 晚间对同日朝霞的线上闭环回放；天气小时样本命中日出前后相邻整点，但缺少照片和精确主观分。"
+    ]
+  },
+  "input": {
+    "weatherData": {
+      "cloudCover": 10,
+      "humidity": 63.25,
+      "visibility": 20,
+      "lowCloudCover": 0,
+      "temp": 22.125,
+      "windSpeed": 0.625,
+      "windDirection": 233,
+      "pressure": 1003.05,
+      "precipitation": 0,
+      "recentPrecipitation6h": 0,
+      "recentRainHours": 0,
+      "recentRainSignal": 0,
+      "recentRainMaxHourly": 0,
+      "recentRainWetHourEquivalent": 0,
+      "lowClouds": 0,
+      "midClouds": 32,
+      "highClouds": 0,
+      "cloudBaseHeight": null,
+      "cloudBaseHeightSource": "unavailable",
+      "cape": null,
+      "weatherCode": null,
+      "shortwaveRadiation": 1.5,
+      "directRadiation": 0,
+      "diffuseRadiation": 1.5,
+      "waterVapourColumn": 31.425,
+      "aerosolOpticalDepth": 0.3,
+      "dust": 2,
+      "pm2_5": 41.7,
+      "pm10": 43.45,
+      "aqi": 71.25,
+      "timeWeightedSamples": [
+        {
+          "timestamp": 1781208000000,
+          "weight": 0.25
+        },
+        {
+          "timestamp": 1781211600000,
+          "weight": 0.75
+        }
+      ]
+    },
+    "options": {
+      "rainedRecently": false,
+      "prevHourData": null,
+      "remoteCloudData": {
+        "source": "solar_direction_openmeteo",
+        "azimuth": 61,
+        "samples": [
+          {
+            "distanceKm": 10,
+            "lowCloud": 0,
+            "midCloud": 32,
+            "highCloud": 0,
+            "totalCloud": 10,
+            "error": null
+          },
+          {
+            "distanceKm": 25,
+            "lowCloud": 0,
+            "midCloud": 14,
+            "highCloud": 0,
+            "totalCloud": 2.25,
+            "error": null
+          },
+          {
+            "distanceKm": 50,
+            "lowCloud": 0,
+            "midCloud": 0,
+            "highCloud": 0,
+            "totalCloud": 1.75,
+            "error": null
+          },
+          {
+            "distanceKm": 75,
+            "lowCloud": 0,
+            "midCloud": 0,
+            "highCloud": 0,
+            "totalCloud": 2.5,
+            "error": null
+          },
+          {
+            "distanceKm": 100,
+            "lowCloud": 0,
+            "midCloud": 0,
+            "highCloud": 0,
+            "totalCloud": 1.5,
+            "error": null
+          }
+        ],
+        "errors": []
+      }
+    }
+  },
+  "expectations": {
+    "score": {
+      "min": 44,
+      "max": 60
+    },
+    "statusAnyOf": [
+      "good_glow"
+    ],
+    "equals": [
+      {
+        "path": "type",
+        "value": "sunrise"
+      },
+      {
+        "path": "layerBrightness.cap",
+        "value": null
+      }
+    ],
+    "notAbove": [
+      {
+        "path": "layerBrightness.dimEvidence.length",
+        "value": 0,
+        "reason": "Sparse but successful morning mid-cloud carrier should not be marked as a gray-veil dim-evidence case."
+      }
+    ]
+  }
+}
