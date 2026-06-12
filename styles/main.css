@@ -10352,19 +10352,36 @@ html[data-actual-theme="dark"] #weather-section #weekly-cards.weekly-cards-conta
   }
 }
 
-/* 2026-05-10: formation analysis cards must read like compact notes, not split ledgers. */
+/* 2026-06-12: formation analysis reads as a compact diagnostic list. */
+.app-analysis-card .analysis-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  margin-bottom: 14px;
+}
+
+.app-analysis-card .analysis-card-subtitle {
+  flex: none;
+  color: var(--theme-text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
 .app-analysis-card .analysis-factor-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .app-analysis-card .analysis-factor {
   min-width: 0;
-  padding: 12px;
-  border: 1px solid var(--theme-card-border);
+  padding: 12px 13px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
   border-radius: 8px;
-  background: var(--theme-panel-soft);
+  background: color-mix(in srgb, var(--theme-panel-soft) 78%, transparent);
   box-shadow: none;
 }
 
@@ -10374,12 +10391,12 @@ html[data-actual-theme="dark"] #weather-section #weekly-cards.weekly-cards-conta
   align-items: center;
   gap: 8px;
   min-width: 0;
-  margin-bottom: 6px;
+  margin-bottom: 0;
 }
 
 .app-analysis-card .analysis-factor-icon {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   color: var(--theme-accent);
 }
 
@@ -10394,15 +10411,15 @@ html[data-actual-theme="dark"] #weather-section #weekly-cards.weekly-cards-conta
 
 .app-analysis-card .analysis-factor-title {
   color: var(--theme-text);
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: 0.92rem;
+  font-weight: 800;
 }
 
 .app-analysis-card .analysis-factor-status {
   padding: 3px 7px;
   border: 1px solid transparent;
   border-radius: 999px;
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   line-height: 1.15;
   white-space: nowrap;
 }
@@ -10435,7 +10452,7 @@ html[data-actual-theme="dark"] #weather-section #weekly-cards.weekly-cards-conta
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin: 0 0 6px;
+  margin: 7px 0 0;
 }
 
 .app-analysis-card .analysis-factor-subfact {
@@ -10446,7 +10463,7 @@ html[data-actual-theme="dark"] #weather-section #weekly-cards.weekly-cards-conta
   min-width: 0;
   padding: 3px 7px;
   border: 1px solid color-mix(in srgb, var(--chart-wind-color) 28%, transparent);
-  border-radius: 999px;
+  border-radius: 7px;
   color: var(--chart-wind-color);
   background: color-mix(in srgb, var(--chart-wind-color) 10%, transparent);
   font-size: 0.74rem;
@@ -10466,11 +10483,19 @@ html[data-actual-theme="dark"] #weather-section #weekly-cards.weekly-cards-conta
   border-color: color-mix(in srgb, var(--color-error) 28%, transparent);
 }
 
+.app-analysis-card .analysis-factor-summary {
+  margin: 6px 0 0 30px;
+  color: var(--theme-text);
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
 .app-analysis-card .analysis-factor p {
-  margin: 0;
+  margin: 6px 0 0 30px;
   color: var(--theme-text-muted);
-  font-size: 0.8rem;
-  line-height: 1.45;
+  font-size: 0.78rem;
+  line-height: 1.42;
   text-align: left;
 }
 
@@ -10522,8 +10547,16 @@ html[data-actual-theme="dark"] #weather-section #weekly-cards.weekly-cards-conta
 }
 
 @media (max-width: 430px) {
+  .app-analysis-card .analysis-card-head {
+    display: grid;
+    gap: 4px;
+  }
+
+  .app-analysis-card .analysis-card-subtitle {
+    font-size: 0.74rem;
+  }
+
   .app-analysis-card .analysis-factor-grid {
-    grid-template-columns: 1fr;
     gap: 8px;
   }
 
@@ -10539,6 +10572,11 @@ html[data-actual-theme="dark"] #weather-section #weekly-cards.weekly-cards-conta
   .app-analysis-card .analysis-factor-icon {
     width: 20px;
     height: 20px;
+  }
+
+  .app-analysis-card .analysis-factor-summary,
+  .app-analysis-card .analysis-factor p {
+    margin-left: 27px;
   }
 
   .app-analysis-card .analysis-item {

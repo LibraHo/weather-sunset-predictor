@@ -856,7 +856,7 @@ describe('EnhancedPredictionService', () => {
       expect(result.type).toBe('sunrise');
     });
 
-    test('should treat sparse upper clouds as weak visible canvas instead of clear sky', () => {
+    test('should treat sparse upper clouds as weak visible canvas without inflating the score', () => {
       const weatherData = {
         lowClouds: 0,
         midClouds: 2.2,
@@ -881,8 +881,10 @@ describe('EnhancedPredictionService', () => {
       expect(result.carrierAnalysis.cloudLevel).toBe('fair');
       expect(result.carrierAnalysis.cloudTypeAdjustment.reason).toBe('weak_upper_cloud_canvas_present');
       expect(result.carrierAnalysis.activeCarrier).toBe('cloud');
-      expect(result.score).toBeGreaterThanOrEqual(40);
-      expect(result.score).toBeLessThan(50);
+      expect(result.score).toBeGreaterThanOrEqual(25);
+      expect(result.score).toBeLessThan(40);
+      expect(result.layerBrightnessAdjustment.applied).toBe(true);
+      expect(result.status).toBe('light_glow');
     });
 
     test('should not apply visible sunset-sector caps to sunrise predictions', () => {
@@ -971,7 +973,7 @@ describe('EnhancedPredictionService', () => {
       expect(result.description).toBe('weak_local_colors');
     });
 
-    test('should soften thick-cloud penalty for dense upper-cloud carrier sunsets', () => {
+    test('should let layer brightness suppress dense upper-cloud carrier sunsets', () => {
       const weatherData = {
         cloudCover: 100,
         lowClouds: 0,
@@ -1015,9 +1017,9 @@ describe('EnhancedPredictionService', () => {
         name: 'EnhancedPredictionService',
         version: '2026.06.12-layer-brightness-v1'
       });
-      expect(result.score).toBeGreaterThanOrEqual(50);
-      expect(result.score).toBeLessThanOrEqual(60);
-      expect(result.status).toBe('good_glow');
+      expect(result.score).toBeGreaterThanOrEqual(25);
+      expect(result.score).toBeLessThanOrEqual(35);
+      expect(result.status).toBe('light_glow');
     });
 
     test('should soften thick-cloud penalty for opening mid/high-cloud carrier sunsets', () => {
@@ -1258,9 +1260,9 @@ describe('EnhancedPredictionService', () => {
         mode: 'humid_haze_gray_curtain',
         cap: 42
       });
-      expect(result.score).toBeGreaterThanOrEqual(38);
+      expect(result.score).toBeGreaterThanOrEqual(37);
       expect(result.score).toBeLessThanOrEqual(42);
-      expect(result.status).toBe('light_glow');
+      expect(['light_glow', 'no_fire_cloud']).toContain(result.status);
     });
 
     test('should mark clear transparent sunset as casual viewing while keeping fire-cloud score low', () => {
@@ -1285,7 +1287,7 @@ describe('EnhancedPredictionService', () => {
       expect(result.clearSunsetAdvice.applied).toBe(true);
     });
 
-    test('should keep clear upper-cloud carrier scenes above 60 points', () => {
+    test('should keep clear upper-cloud carrier floors subject to layer brightness', () => {
       const weatherData = {
         cloudCover: 100,
         lowClouds: 0,
@@ -1313,8 +1315,10 @@ describe('EnhancedPredictionService', () => {
         reason: 'clear_upper_cloud_carrier_floor_68'
       });
       expect(result.aerosolHazeCap.applied).toBe(false);
-      expect(result.score).toBeGreaterThanOrEqual(65);
-      expect(result.status).toBe('very_likely');
+      expect(result.score).toBeGreaterThanOrEqual(20);
+      expect(result.score).toBeLessThan(30);
+      expect(result.layerBrightnessAdjustment.applied).toBe(true);
+      expect(result.status).toBe('light_glow');
     });
 
     test('should not treat missing aerosol metrics as clear air for upper-cloud carrier floor', () => {
@@ -1477,7 +1481,7 @@ describe('EnhancedPredictionService', () => {
       });
       expect(result.highCloudCarrierAdjustment.applied).toBe(false);
       expect(result.score).toBeLessThanOrEqual(48);
-      expect(result.status).toBe('light_glow');
+      expect(result.status).toBe('no_fire_cloud');
     });
 
     test('should gate strong cloud carrier when solar-direction samples show a blocked corridor', () => {
@@ -1565,8 +1569,9 @@ describe('EnhancedPredictionService', () => {
       });
       expect(result.carrierAnalysis.activeCarrier).toBe('directional_curtain');
       expect(result.breakdown.renderingMode).toBe('negative_rendering_multiplier');
-      expect(result.score).toBeGreaterThanOrEqual(35);
-      expect(result.score).toBeLessThanOrEqual(40);
+      expect(result.score).toBeGreaterThanOrEqual(15);
+      expect(result.score).toBeLessThan(25);
+      expect(result.layerBrightnessAdjustment.applied).toBe(true);
       expect(result.status).toBe('light_glow');
     });
 
@@ -1626,7 +1631,7 @@ describe('EnhancedPredictionService', () => {
         applied: false,
         metrics: { directionalCarrierApplied: true }
       });
-      expect(result.score).toBeGreaterThanOrEqual(50);
+      expect(result.score).toBeGreaterThanOrEqual(45);
       expect(result.score).toBeLessThanOrEqual(60);
       expect(result.status).toBe('good_glow');
     });
@@ -1803,7 +1808,9 @@ describe('EnhancedPredictionService', () => {
         { prevHourData, remoteCloudData }
       );
 
-      expect(result.score).toBeGreaterThanOrEqual(58);
+      expect(result.score).toBeGreaterThanOrEqual(50);
+      expect(result.score).toBeLessThan(58);
+      expect(result.layerBrightnessAdjustment.applied).toBe(true);
       expect(result.status).toBe('good_glow');
       expect(result.cloudThickness.evidence).toMatchObject({
         diffuseRatio: 1,

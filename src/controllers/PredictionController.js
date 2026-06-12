@@ -1811,10 +1811,12 @@ class PredictionController {
     }
 
     const effectiveBrightness = Number(layerBrightness?.effectiveBrightness);
+    const brightnessMultiplier = Number(layerBrightnessAdjustment?.multiplier ?? layerBrightness?.brightnessMultiplier ?? layerBrightness?.brightnessGate);
+    const brightnessGated = layerBrightnessAdjustment?.applied || (Number.isFinite(brightnessMultiplier) && brightnessMultiplier < 0.72);
     let brightnessLevel = 'fair';
     if (!layerBrightness?.applied && !Number.isFinite(effectiveBrightness)) {
       brightnessLevel = lightPathLevel === 'good' && carrierLevel !== 'weak' ? 'good' : 'fair';
-    } else if (layerBrightnessAdjustment?.applied || layerBrightness?.cap != null || effectiveBrightness < 30) {
+    } else if (brightnessGated || effectiveBrightness < 30) {
       brightnessLevel = 'weak';
     } else if (effectiveBrightness >= 45 || layerBrightness?.reason === 'layer_brightness_sufficient') {
       brightnessLevel = 'good';
@@ -1863,7 +1865,7 @@ class PredictionController {
     );
     const mildLimit = Boolean(
       denseCarrierCanvasOnly ||
-      layerBrightness?.cap != null ||
+      (Number.isFinite(brightnessMultiplier) && brightnessMultiplier < 0.9) ||
       weather.low >= 25 ||
       weather.visibility < 15 ||
       weather.humidity > 75 ||
@@ -1894,13 +1896,28 @@ class PredictionController {
       value: this._analysisText(`factors.brightness.status.${brightnessLevel}`),
       tone: brightnessLevel === 'good' ? 'good' : (brightnessLevel === 'weak' ? 'weak' : 'fair')
     }];
+    carrierFactor.summary = this._isEnglishUI()
+      ? (carrierLevel === 'good' ? 'Usable color canvas' : (carrierLevel === 'weak' ? 'Weak cloud canvas' : 'Partial cloud canvas'))
+      : (carrierLevel === 'good' ? '有可染色云面' : (carrierLevel === 'weak' ? '云面基础偏弱' : '云面基础一般'));
     carrierFactor.desc = `${carrierFactor.desc}${this._isEnglishUI() ? ' Layer brightness: ' : ' 受光亮度：'}${this._analysisText(`factors.brightness.desc.${brightnessLevel}`)}`;
 
     return [
       carrierFactor,
-      factor('lightPath', lightPathLevel, lightPathLevel === 'weak' ? 'warn' : 'info'),
-      factor('rendering', renderingLevel, 'leaf'),
-      factor('limits', limitLevel, limitLevel === 'good' ? 'ok' : 'warn')
+      Object.assign(factor('lightPath', lightPathLevel, lightPathLevel === 'weak' ? 'warn' : 'info'), {
+        insight: this._isEnglishUI()
+          ? (lightPathLevel === 'good' ? 'Sun path is open' : (lightPathLevel === 'weak' ? 'Sun path is blocked' : 'Some path obstruction'))
+          : (lightPathLevel === 'good' ? '太阳方向较通透' : (lightPathLevel === 'weak' ? '光路遮挡明显' : '光路有局部遮挡'))
+      }),
+      Object.assign(factor('rendering', renderingLevel, 'leaf'), {
+        insight: this._isEnglishUI()
+          ? (renderingLevel === 'good' ? 'Warm color support' : (renderingLevel === 'weak' ? 'Colors may fade' : 'Neutral air color'))
+          : (renderingLevel === 'good' ? '有暖色散射条件' : (renderingLevel === 'weak' ? '颜色容易被压淡' : '显色条件中性'))
+      }),
+      Object.assign(factor('limits', limitLevel, limitLevel === 'good' ? 'ok' : 'warn'), {
+        insight: this._isEnglishUI()
+          ? (limitLevel === 'good' ? 'No hard cap now' : (limitLevel === 'weak' ? 'Strong score pressure' : 'Minor score pressure'))
+          : (limitLevel === 'good' ? '暂无硬压制' : (limitLevel === 'weak' ? '存在明显压分' : '有轻微压分'))
+      })
     ];
   }
 
@@ -1955,7 +1972,10 @@ class PredictionController {
       : groups.map(group => this.renderAnalysisGroup(group)).join('');
     return `
       <div class="analysis-card app-analysis-card">
-        <div class="analysis-card-title"><span>${this._analysisText('title')}</span></div>
+        <div class="analysis-card-head">
+          <div class="analysis-card-title"><span>${this._analysisText('title')}</span></div>
+          <div class="analysis-card-subtitle">${this._uiText('Cloud, path, air, limits', '云层、光路、空气和限制项')}</div>
+        </div>
         ${groupHtml}
       </div>
     `;
@@ -2000,6 +2020,7 @@ class PredictionController {
           <span class="analysis-factor-title">${factor.title}</span>
           <strong class="analysis-factor-status analysis-factor-status-${statusTone}">${factor.status}</strong>
         </div>
+        ${factor.insight ? `<div class="analysis-factor-summary">${factor.insight}</div>` : ''}
         ${subfacts}
         <p>${factor.desc}</p>
       </section>
@@ -2176,9 +2197,9 @@ class PredictionController {
       } : null,
       layerBrightnessAdjustment?.applied ? {
         label: ledgerText('labels.layerBrightness', {}, 'Layer brightness', '受光亮度'),
-        value: `≤${fmt(layerBrightnessAdjustment.cap ?? layerBrightness?.cap, 0)}`,
+        value: `×${fmt(layerBrightnessAdjustment.multiplier ?? layerBrightness?.brightnessMultiplier ?? layerBrightness?.brightnessGate ?? 1, 2)}`,
         detail: ledgerText(
-          'details.layerBrightnessCap',
+          'details.layerBrightnessMultiplier',
           {
             brightness: fmt(layerBrightness?.effectiveBrightness, 1),
             evidence: Array.isArray(layerBrightness?.dimEvidence) ? layerBrightness.dimEvidence.join(', ') : '--'

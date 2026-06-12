@@ -465,7 +465,8 @@ function applyDirectionalMapScoring(baseScore, weather, context, layerBrightness
     };
   }
 
-  if (layerBrightness?.cap != null && Number(layerBrightness.cap) < 65) {
+  const brightnessMultiplier = Number(layerBrightness?.brightnessMultiplier ?? layerBrightness?.brightnessGate);
+  if (Number.isFinite(brightnessMultiplier) && brightnessMultiplier < 0.72) {
     return {
       score: baseScore,
       adjustment: {
@@ -474,7 +475,7 @@ function applyDirectionalMapScoring(baseScore, weather, context, layerBrightness
         metrics: {
           ...metrics,
           effectiveBrightness: Number(layerBrightness.effectiveBrightness ?? 0),
-          brightnessCap: Number(layerBrightness.cap)
+          brightnessMultiplier
         }
       }
     };

@@ -183,14 +183,14 @@ const translations = {
       "title": "Fire Cloud Calculation Method",
       "intro": "The current Fire Cloud Index first asks whether there is a usable color carrier, then whether the sun-direction path is open, then whether that mid/high cloud layer is actually bright enough, and finally applies air-rendering adjustments. Rich high cloud plus an open path can still score lower when layer brightness is weak.",
       "versionLabel": "Algorithm version: 2026.06.12-layer-brightness-v1",
-      "versionDesc": "This version uses cloud carrier × sunset path × layer brightness × air rendering. Layer brightness is estimated from low/mid/high cloud layers, solar geometry, the sun-direction path, AOD/water vapor, direct/diffuse radiation, and thickness evidence; caps apply only when multiple dimming signals agree.",
+      "versionDesc": "This version uses cloud carrier × sunset path × layer brightness × air rendering. Layer brightness is estimated from low/mid/high cloud layers, solar geometry, the sun-direction path, AOD/water vapor, direct/diffuse radiation, and thickness evidence; unlit layers now reduce the final score through a multiplicative gate.",
       changelogTitle: "Version update history",
       changelogHint: "Algorithm updates from the last three months live here; scroll to review why each change happened, its impact, and validation",
       changelog: {
         "latest": {
           "date": "2026-06-12",
           "title": "Layer brightness suppressor v1",
-          "summary": "Adds a layerBrightness diagnostic: mid/high cloud is only the carrier and an open path is only necessary; the model now checks whether the cloud layer is actually illuminated. When AOD, water vapor, diffuse-dominant light, thick upper cloud, and gray-veil evidence align, high scores are capped into the watch/light-glow range.",
+          "summary": "Adds a layerBrightness diagnostic: mid/high cloud is only the carrier and an open path is only necessary; the model now checks whether the cloud layer is actually illuminated. When brightness evidence is weak, it now applies a multiplicative gate instead of a hard ceiling.",
           "validation": "Validation: the 2026-06-12 Beijing sunset sample drops from the high-60s to around 60; web score details, text analysis, and the mini-program methodology page now show layer brightness."
         },
         "grayVeilDirectional": {
@@ -315,7 +315,7 @@ const translations = {
           "subtitle": "Layer Brightness · Is the cloud layer actually lit",
           "desc": "Beyond carrier and path, the model estimates whether the mid/high cloud layer has enough illumination. This is a three-layer low/mid/high brightness model, not separate 4 km / 9 km / 13 km height-layer ray tracing.",
           "level1": "Brightness = cloud canvas × solar geometry × path openness × air transmission × thickness factor × direct/diffuse beam factor",
-          "level2": "AOD, water vapor, PM10, low visibility, diffuse-dominant light, thick upper cloud, and watery gray-veils are dimming evidence; caps require multiple signals to agree",
+          "level2": "AOD, water vapor, PM10, low visibility, diffuse-dominant light, thick upper cloud, and watery gray-veils are dimming evidence; weak brightness applies a 0-1 multiplicative score gate",
           "level3": "Rich high cloud no longer scores high from carrier + open path alone when brightness is weak; the 2026-06-12 Beijing sunset is the calibration sample",
           "formula": "layerBrightness = three-layer cloud carrier × path × illumination/air/thickness evidence\nWeak brightness limits the displayed score"
         },

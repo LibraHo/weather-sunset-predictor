@@ -304,13 +304,20 @@
     </view>
 
     <view class="analysis-card app-analysis-card">
-      <view class="analysis-card-title">火烧云形成条件分析</view>
+      <view class="analysis-card-head">
+        <view class="analysis-card-title">火烧云形成条件分析</view>
+        <view class="analysis-card-subtitle">云层、光路、空气和限制项</view>
+      </view>
       <view class="analysis-factor-grid">
         <view class="analysis-factor analysis-factor-{{item.tone}}" wx:for="{{predictionPreview.analysis}}" wx:key="key">
           <view class="analysis-factor-heading">
-            <text class="analysis-factor-title">{{item.title}}</text>
+            <view class="analysis-factor-title-wrap">
+              <text class="analysis-factor-icon-dot"></text>
+              <text class="analysis-factor-title">{{item.title}}</text>
+            </view>
             <text class="analysis-factor-status analysis-factor-status-{{item.tone}}">{{item.status}}</text>
           </view>
+          <view wx:if="{{item.insight}}" class="analysis-factor-summary">{{item.insight}}</view>
           <view wx:if="{{item.subfacts && item.subfacts.length}}" class="analysis-factor-subfacts">
             <view class="analysis-factor-subfact analysis-factor-subfact-{{fact.tone}}" wx:for="{{item.subfacts}}" wx:for-item="fact" wx:key="key">
               <text>{{fact.label}}</text>

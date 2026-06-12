@@ -1214,17 +1214,18 @@ function buildCloudThicknessStep(prediction = {}, canvas = {}) {
 
 function buildLayerBrightnessStep(layerBrightness = {}, adjustment = null) {
   if (!layerBrightness?.applied && !adjustment?.applied) return null;
-  const capped = adjustment?.applied || layerBrightness.cap != null;
-  const result = capped && Number.isFinite(Number(adjustment?.cap ?? layerBrightness.cap))
-    ? `≤${Math.round(Number(adjustment?.cap ?? layerBrightness.cap))}分`
+  const multiplier = Number(adjustment?.multiplier ?? layerBrightness.brightnessMultiplier ?? layerBrightness.brightnessGate);
+  const adjusted = adjustment?.applied || (Number.isFinite(multiplier) && multiplier < 0.99);
+  const result = adjusted && Number.isFinite(multiplier)
+    ? `×${roundTwo(multiplier)}`
     : formatScore(layerBrightness.effectiveBrightness);
   return {
     key: 'layerBrightness',
     label: '受光亮度',
     result,
-    expression: capped ? '云量够但亮度偏弱' : '云层受光强度',
+    expression: adjusted ? '亮度门控乘性压分' : '云层受光强度',
     detail: buildLayerBrightnessText(layerBrightness),
-    tone: capped ? 'bad' : levelFromBrightness(layerBrightness)
+    tone: adjusted ? 'bad' : levelFromBrightness(layerBrightness)
   };
 }
 
@@ -1332,8 +1333,9 @@ function levelFromFactor(value) {
 
 function levelFromBrightness(layerBrightness = {}) {
   const value = Number(layerBrightness.effectiveBrightness);
+  const multiplier = Number(layerBrightness.brightnessMultiplier ?? layerBrightness.brightnessGate);
   if (!Number.isFinite(value)) return 'unknown';
-  if (layerBrightness.cap != null || value < 30) return 'watch';
+  if ((Number.isFinite(multiplier) && multiplier < 0.72) || value < 30) return 'watch';
   if (value >= 45) return 'excellent';
   return 'good';
 }

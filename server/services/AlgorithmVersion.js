@@ -7,7 +7,7 @@ const ALGORITHM_CHANGELOG = [
     version: ALGORITHM_VERSION,
     date: '2026-06-12',
     title: 'Layer brightness suppressor v1',
-    summary: 'Adds an explainable layerBrightness diagnostic and conservative cap for dim high-cloud gray-veil cases. High scores now require a cloud carrier, an open light path, and sufficient layer brightness evidence.'
+    summary: 'Adds an explainable layerBrightness diagnostic with a multiplicative brightness gate for dim high-cloud gray-veil cases. High scores now require a cloud carrier, an open light path, and sufficient layer brightness evidence.'
   },
   {
     version: '2026.05.27-cloud-thickness-proportional-v2',

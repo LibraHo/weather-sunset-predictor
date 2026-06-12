@@ -44,7 +44,7 @@ function scoreSolarLayerFactor(solarElevation, type = 'sunset') {
 
   // Golden-hour cloud illumination usually peaks close to the horizon. Keep
   // this broad because model event times and local terrain can shift timing.
-  if (elevation >= -2 && elevation <= 3) return 0.88;
+  if (elevation >= -2 && elevation <= 3) return 0.96;
   if (elevation >= -5 && elevation < -2) return 0.72;
   if (elevation > 3 && elevation <= 6) return 0.68;
   if (absElevation <= 8) return 0.52;
@@ -104,7 +104,7 @@ function scoreBeamFactor(weatherData = {}) {
   const directRatio = direct / (direct + diffuse);
   // At sunrise/sunset surface direct radiation is naturally weak, so this is a
   // soft factor only. It mainly flags diffuse-dominant gray veil situations.
-  const factor = clamp(0.72 + directRatio * 0.42 + normalizeRange(shortwave, 20, 80) * 0.10, 0.68, 1.08);
+  const factor = clamp(0.72 + directRatio * 0.42 + normalizeRange(shortwave, 20, 80) * 0.10, 0.86, 1.08);
   return {
     factor,
     directRatio,
@@ -112,14 +112,16 @@ function scoreBeamFactor(weatherData = {}) {
   };
 }
 
-function buildBrightnessCap(effectiveBrightness, dimEvidence = []) {
-  if (dimEvidence.length < 2) {
-    return { cap: null, reason: 'layer_brightness_not_capped_insufficient_dim_evidence' };
-  }
-  if (effectiveBrightness < 18) return { cap: 42, reason: 'layer_brightness_very_weak' };
-  if (effectiveBrightness < 30) return { cap: 52, reason: 'layer_brightness_weak' };
-  if (effectiveBrightness < 42) return { cap: 60, reason: 'layer_brightness_moderate_cap' };
-  return { cap: null, reason: 'layer_brightness_sufficient' };
+function buildBrightnessReason(effectiveBrightness, dimEvidence = []) {
+  if (effectiveBrightness < 6) return 'layer_brightness_unlit';
+  if (effectiveBrightness < 18) return 'layer_brightness_very_weak';
+  if (effectiveBrightness < 30) return 'layer_brightness_weak';
+  if (effectiveBrightness < 42) return dimEvidence.length >= 2
+    ? 'layer_brightness_moderate_dim_evidence'
+    : 'layer_brightness_moderate';
+  return dimEvidence.length >= 2
+    ? 'layer_brightness_sufficient_with_dim_evidence'
+    : 'layer_brightness_sufficient';
 }
 
 function scoreLayerBrightness(params = {}) {
@@ -130,7 +132,8 @@ function scoreLayerBrightness(params = {}) {
     renderingFactor = {},
     cloudThickness = {},
     type = 'sunset',
-    directionalCurtainCarrier = null
+    directionalCurtainCarrier = null,
+    carrierScore = null
   } = params;
 
   const low = clamp(finiteNumber(weatherData.lowClouds ?? weatherData.lowCloudCover, 0), 0, 100);
@@ -142,7 +145,8 @@ function scoreLayerBrightness(params = {}) {
 
   const localCanvas = Math.max(midSignal, highSignal * 0.85);
   const directionalCanvas = directionalUpper === null ? 0 : directionalUpper * 0.72;
-  const cloudCanvas = clamp(Math.max(localCanvas, directionalCanvas), 0, 100) / 100;
+  const carrierCanvas = finiteNumber(carrierScore?.score) === null ? 0 : finiteNumber(carrierScore.score, 0);
+  const cloudCanvas = clamp(Math.max(localCanvas, directionalCanvas, carrierCanvas), 0, 100) / 100;
   const lowBlockFactor = clamp(1 - Math.max(0, low - 25) / 75 * 0.55, 0.45, 1);
 
   const solarFactor = scoreSolarLayerFactor(timeAnalysis.elevation, type);
@@ -184,15 +188,21 @@ function scoreLayerBrightness(params = {}) {
     0,
     100
   );
-  const brightnessGate = clamp(0.45 + effectiveBrightness / 80, 0.45, 1.05);
-  const cap = buildBrightnessCap(effectiveBrightness, dimEvidence);
+  const brightnessMultiplier = effectiveBrightness <= 0
+    ? 0
+    : (effectiveBrightness >= 42
+      ? 1
+      : clamp(effectiveBrightness / 42, 0, 1));
+  const brightnessGate = brightnessMultiplier;
+  const reason = buildBrightnessReason(effectiveBrightness, dimEvidence);
 
   return {
     applied: true,
     effectiveBrightness: round(effectiveBrightness, 1),
+    brightnessMultiplier: round(brightnessMultiplier, 2),
     brightnessGate: round(brightnessGate, 2),
-    cap: cap.cap,
-    reason: cap.reason,
+    cap: null,
+    reason,
     layers: {
       low: round(low, 1),
       mid: round(mid, 1),
@@ -221,28 +231,32 @@ function scoreLayerBrightness(params = {}) {
   };
 }
 
-function applyLayerBrightnessCap(score, layerBrightness) {
+function applyLayerBrightnessMultiplier(score, layerBrightness) {
   const numericScore = finiteNumber(score, 0);
-  const cap = finiteNumber(layerBrightness?.cap);
-  if (cap === null || numericScore <= cap) {
+  const multiplier = clamp(finiteNumber(layerBrightness?.brightnessMultiplier ?? layerBrightness?.brightnessGate, 1), 0, 1.05);
+  const adjustedScore = round(clamp(numericScore * multiplier, 0, 100), 1);
+
+  if (adjustedScore >= numericScore) {
     return {
       score: numericScore,
       applied: false,
       reason: layerBrightness?.reason || null,
-      cap
+      multiplier: round(multiplier, 2),
+      originalScore: round(numericScore, 1)
     };
   }
 
   return {
-    score: cap,
+    score: adjustedScore,
     applied: true,
-    reason: layerBrightness.reason,
-    cap,
+    reason: layerBrightness?.reason || null,
+    multiplier: round(multiplier, 2),
+    effectiveBrightness: layerBrightness?.effectiveBrightness ?? null,
     originalScore: round(numericScore, 1)
   };
 }
 
 module.exports = {
   scoreLayerBrightness,
-  applyLayerBrightnessCap
+  applyLayerBrightnessMultiplier
 };

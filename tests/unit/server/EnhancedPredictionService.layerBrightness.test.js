@@ -5,7 +5,7 @@ describe('EnhancedPredictionService layer brightness integration', () => {
     service = await import('../../../server/services/EnhancedPredictionService.js');
   });
 
-  test('exposes layer brightness and caps dim high-cloud false positives', () => {
+  test('exposes layer brightness and multiplies dim high-cloud false positives down', () => {
     const result = service.calculateEnhancedPrediction(
       {
         cloudCover: 76.6,
@@ -52,13 +52,16 @@ describe('EnhancedPredictionService layer brightness integration', () => {
 
     expect(result.layerBrightness).toEqual(expect.objectContaining({
       applied: true,
-      cap: 52
+      cap: null
     }));
+    expect(result.layerBrightness.brightnessMultiplier).toBeGreaterThan(0);
+    expect(result.layerBrightness.brightnessMultiplier).toBeLessThan(0.72);
     expect(result.layerBrightnessAdjustment).toEqual(expect.objectContaining({
       applied: true,
-      score: 52
+      multiplier: result.layerBrightness.brightnessMultiplier
     }));
-    expect(result.score).toBeLessThanOrEqual(52);
+    const expectedScore = result.layerBrightnessAdjustment.originalScore * result.layerBrightnessAdjustment.multiplier;
+    expect(result.score).toBeCloseTo(expectedScore, 1);
     expect(result.breakdown.layerBrightness).toBe(result.layerBrightness);
   });
 });

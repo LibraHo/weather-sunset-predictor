@@ -83,7 +83,7 @@
   },
   "expectations": {
     "score": {
-      "min": 25,
+      "min": 0,
       "max": 45
     },
     "statusAnyOf": [
@@ -105,7 +105,7 @@
     "notAbove": [
       {
         "path": "score",
-        "value": 50,
+        "value": 10,
         "reason": "This real-world miss must not regress to a high-score recommendation."
       }
     ]
