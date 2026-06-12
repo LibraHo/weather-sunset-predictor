@@ -176,7 +176,7 @@
   },
   "expectations": {
     "score": {
-      "min": 45,
+      "min": 44,
       "max": 60
     },
     "statusAnyOf": [

@@ -2480,7 +2480,8 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     renderingFactor,
     cloudThickness,
     type,
-    directionalCurtainCarrier
+    directionalCurtainCarrier,
+    carrierScore
   });
   logger.debug('[EnhancedPredictionService]', '载体评分:', carrierScore.score, 'active:', carrierScore.activeCarrier, 'aerosol:', aerosolCarrierScore);
   logger.debug('[EnhancedPredictionService]', '分层亮度:', layerBrightness.effectiveBrightness, 'multiplier:', layerBrightness.brightnessMultiplier, 'gate:', layerBrightness.brightnessGate);

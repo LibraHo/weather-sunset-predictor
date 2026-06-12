@@ -106,7 +106,7 @@ describe('GridProductScoreAdapter', () => {
         aerosol: { source: 'cams', cycle: '2026052600', forecastHour: 6, bbox: { north: 41, south: 39, west: 115, east: 117 } }
       }
     });
-    expect(cache.gridPoints[1].score).toBe(20);
+    expect(cache.gridPoints[1].score).toBe(3);
     expect(cache.gridPoints[1].score).not.toBe(91);
     expect(cache.meta.products.weather.source).toBe('gfs');
     expect(cache.meta.products.aerosol.source).toBe('cams');

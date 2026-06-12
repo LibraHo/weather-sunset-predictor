@@ -44,7 +44,7 @@ function scoreSolarLayerFactor(solarElevation, type = 'sunset') {
 
   // Golden-hour cloud illumination usually peaks close to the horizon. Keep
   // this broad because model event times and local terrain can shift timing.
-  if (elevation >= -2 && elevation <= 3) return 0.88;
+  if (elevation >= -2 && elevation <= 3) return 0.96;
   if (elevation >= -5 && elevation < -2) return 0.72;
   if (elevation > 3 && elevation <= 6) return 0.68;
   if (absElevation <= 8) return 0.52;
@@ -104,7 +104,7 @@ function scoreBeamFactor(weatherData = {}) {
   const directRatio = direct / (direct + diffuse);
   // At sunrise/sunset surface direct radiation is naturally weak, so this is a
   // soft factor only. It mainly flags diffuse-dominant gray veil situations.
-  const factor = clamp(0.72 + directRatio * 0.42 + normalizeRange(shortwave, 20, 80) * 0.10, 0.68, 1.08);
+  const factor = clamp(0.72 + directRatio * 0.42 + normalizeRange(shortwave, 20, 80) * 0.10, 0.86, 1.08);
   return {
     factor,
     directRatio,
@@ -132,7 +132,8 @@ function scoreLayerBrightness(params = {}) {
     renderingFactor = {},
     cloudThickness = {},
     type = 'sunset',
-    directionalCurtainCarrier = null
+    directionalCurtainCarrier = null,
+    carrierScore = null
   } = params;
 
   const low = clamp(finiteNumber(weatherData.lowClouds ?? weatherData.lowCloudCover, 0), 0, 100);
@@ -144,7 +145,8 @@ function scoreLayerBrightness(params = {}) {
 
   const localCanvas = Math.max(midSignal, highSignal * 0.85);
   const directionalCanvas = directionalUpper === null ? 0 : directionalUpper * 0.72;
-  const cloudCanvas = clamp(Math.max(localCanvas, directionalCanvas), 0, 100) / 100;
+  const carrierCanvas = finiteNumber(carrierScore?.score) === null ? 0 : finiteNumber(carrierScore.score, 0);
+  const cloudCanvas = clamp(Math.max(localCanvas, directionalCanvas, carrierCanvas), 0, 100) / 100;
   const lowBlockFactor = clamp(1 - Math.max(0, low - 25) / 75 * 0.55, 0.45, 1);
 
   const solarFactor = scoreSolarLayerFactor(timeAnalysis.elevation, type);
@@ -186,15 +188,11 @@ function scoreLayerBrightness(params = {}) {
     0,
     100
   );
-  const dimPenaltyCount = Math.max(0, dimEvidence.length - 1);
-  const curveBrightness = clamp(effectiveBrightness - dimPenaltyCount * 2.5, 0, 100);
-  const brightnessMultiplier = curveBrightness <= 0
+  const brightnessMultiplier = effectiveBrightness <= 0
     ? 0
-    : (curveBrightness >= 42
+    : (effectiveBrightness >= 42
       ? 1
-    : (dimEvidence.length >= 2
-      ? clamp(curveBrightness / 25, 0, 1)
-      : clamp(0.62 + curveBrightness / 52, 0, 0.99)));
+      : clamp(effectiveBrightness / 42, 0, 1));
   const brightnessGate = brightnessMultiplier;
   const reason = buildBrightnessReason(effectiveBrightness, dimEvidence);
 
@@ -238,7 +236,7 @@ function applyLayerBrightnessMultiplier(score, layerBrightness) {
   const multiplier = clamp(finiteNumber(layerBrightness?.brightnessMultiplier ?? layerBrightness?.brightnessGate, 1), 0, 1.05);
   const adjustedScore = round(clamp(numericScore * multiplier, 0, 100), 1);
 
-  if (multiplier >= 0.95 || adjustedScore >= numericScore) {
+  if (adjustedScore >= numericScore) {
     return {
       score: numericScore,
       applied: false,
