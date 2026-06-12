@@ -1,10 +1,16 @@
 'use strict';
 
-const ALGORITHM_VERSION = '2026.05.27-cloud-thickness-proportional-v2';
+const ALGORITHM_VERSION = '2026.06.12-layer-brightness-v1';
 
 const ALGORITHM_CHANGELOG = [
   {
     version: ALGORITHM_VERSION,
+    date: '2026-06-12',
+    title: 'Layer brightness suppressor v1',
+    summary: 'Adds an explainable layerBrightness diagnostic and conservative cap for dim high-cloud gray-veil cases. High scores now require a cloud carrier, an open light path, and sufficient layer brightness evidence.'
+  },
+  {
+    version: '2026.05.27-cloud-thickness-proportional-v2',
     date: '2026-05-27',
     title: 'Cloud-thickness proportional penalty v2',
     summary: 'Cloud-thickness penalty is now pre-thickness canvas score × 30% × thickness pressure, with the fixed -28/24 caps removed. Humid gray-curtain cases are calibrated as weak glow/watchable but not strong.'

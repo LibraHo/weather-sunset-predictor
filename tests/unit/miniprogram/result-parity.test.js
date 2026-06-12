@@ -17,6 +17,7 @@ describe('miniprogram result page web parity', () => {
     expect(web).toContain('score-ledger-steps');
     expect(web).toContain("ledgerText('labels.cloudCarrier'");
     expect(web).toContain("ledgerText('labels.lightPath'");
+    expect(web).toContain("ledgerText('labels.layerBrightness'");
     expect(web).toContain("ledgerText('labels.rendering'");
 
     expect(wxml).toContain('score-ledger-card');
@@ -26,6 +27,8 @@ describe('miniprogram result page web parity', () => {
     expect(js).toContain('export function buildScoreLedger');
     expect(js).toContain("key: 'cloudCarrier'");
     expect(js).toContain("key: 'lightPath'");
+    expect(js).toContain("key: 'layerBrightness'");
+    expect(js).toContain("title: '受光亮度'");
     expect(js).toContain("key: 'rendering'");
     expect(wxss).toContain('.score-ledger-card');
     expect(wxss).toContain('.score-ledger-step-final');

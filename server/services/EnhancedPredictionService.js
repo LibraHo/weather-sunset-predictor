@@ -17,6 +17,7 @@ const SunCalculator = require('../utils/SunCalculator.js');
 const logger = require('../utils/logger.js');
 const CloudLayerEstimator = require('./CloudLayerEstimator.js');
 const LightPathV2Service = require('./LightPathV2Service.js');
+const LayerBrightnessService = require('./LayerBrightnessService.js');
 const { ALGORITHM_VERSION } = require('./AlgorithmVersion.js');
 
 // ========== 常量定义 ==========
@@ -2472,7 +2473,17 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   const aerosolCarrierScore = scoreAerosolCarrier(weatherData, lightPathScore);
   const directionalCurtainCarrier = scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore, weatherData);
   const carrierScore = buildCarrierScore(canvasScore, aerosolCarrierScore, directionalCurtainCarrier);
+  const layerBrightness = LayerBrightnessService.scoreLayerBrightness({
+    weatherData,
+    timeAnalysis: timeCheck,
+    lightPathScore,
+    renderingFactor,
+    cloudThickness,
+    type,
+    directionalCurtainCarrier
+  });
   logger.debug('[EnhancedPredictionService]', '载体评分:', carrierScore.score, 'active:', carrierScore.activeCarrier, 'aerosol:', aerosolCarrierScore);
+  logger.debug('[EnhancedPredictionService]', '分层亮度:', layerBrightness.effectiveBrightness, 'gate:', layerBrightness.brightnessGate, 'cap:', layerBrightness.cap);
   const lightPathGate = buildLightPathGate(lightPathScore, cloudTypeAdjustment);
   const renderingAdjustment = getRenderingScoreAdjustment(renderingFactor);
   const finalResult = calculateGatedFinalScore(carrierScore, lightPathScore, renderingFactor, type, {
@@ -2566,6 +2577,25 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     };
   }
 
+  const layerBrightnessForAdjustment = scoringV2.warmScatteringUpperCarrierAdjustment?.applied
+    ? {
+      ...layerBrightness,
+      cap: null,
+      reason: 'warm_scattering_positive_calibration'
+    }
+    : layerBrightness;
+  const layerBrightnessAdjustment = LayerBrightnessService.applyLayerBrightnessCap(adjustedScore, layerBrightnessForAdjustment);
+  if (layerBrightnessAdjustment.applied) {
+    adjustedScore = layerBrightnessAdjustment.score;
+    if (adjustedScore < 40) {
+      adjustedStatus = 'light_glow';
+      adjustedDescription = 'weak_local_colors';
+    } else if (adjustedScore < 65) {
+      adjustedStatus = 'good_glow';
+      adjustedDescription = 'conditions_good';
+    }
+  }
+
   if (aerosolHazeCap.applied) {
     adjustedScore = Math.min(adjustedScore, aerosolHazeCap.cap);
     adjustedStatus = adjustedScore < 40 ? 'no_fire_cloud' : 'light_glow';
@@ -2629,6 +2659,11 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     adjustedScore = Math.min(adjustedScore, 39.9);
   }
 
+  if (thickHighCloudPenalty.applied && adjustedScore <= thickHighCloudPenalty.cap) {
+    adjustedStatus = adjustedScore < 40 ? 'no_fire_cloud' : 'light_glow';
+    adjustedDescription = 'weak_local_colors';
+  }
+
   logger.debug('[EnhancedPredictionService]', '最终得分:', adjustedScore, 'occlusion:', occlusion, 'severeCap:', severeCap.reason);
 
   const aerosolScattering = {
@@ -2677,7 +2712,9 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     ...finalResult,
     breakdown: {
       ...finalResult.breakdown,
-      aerosolScattering
+      aerosolScattering,
+      layerBrightness,
+      layerBrightnessAdjustment
     },
     aerosolOpticalDepth: aerosolScattering.aerosolOpticalDepth,
     dust: aerosolScattering.dust,
@@ -2693,6 +2730,8 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
       evidence: cloudThickness.evidence
     },
     thickHighCloudPenalty,
+    layerBrightness,
+    layerBrightnessAdjustment,
     aerosolHazeCap,
     scoringV2,
     visibleSunsetSectorCap,

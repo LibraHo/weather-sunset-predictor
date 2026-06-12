@@ -83,6 +83,18 @@ apiAccess: 'الوصول إلى API',
       changelogHint: 'توجد هنا تحديثات الخوارزمية خلال آخر ثلاثة أشهر؛ مرر لمراجعة السبب والأثر والتحقق',
       changelog: {
         latest: {
+          date: '2026-06-12',
+          title: 'Layer brightness suppressor v1',
+          summary: 'Adds layerBrightness: mid/high clouds are only the carrier, and an open path is only necessary. The model now checks whether that layer is actually illuminated. When AOD, water vapor, diffuse-dominant light, and thick high-cloud gray veil align, high scores are capped into watchable or light-glow ranges.',
+          validation: 'Validation: the 2026-06-12 Beijing sunset sample drops from the high-60s to around 60; web score details, text analysis, and the mini-program methodology page now show layer brightness.'
+        },
+        grayVeilDirectional: {
+          date: '2026-06-06',
+          title: 'Gray-veil rendering + directional mid-cloud v2',
+          summary: 'Full mid/high cloud plus elevated PM/AOD no longer defaults to warm-scattering uplift; the model continuously lowers air rendering by gray-veil pressure. Sun-direction mid-cloud bands are now a continuous carrier: stronger band plus more open path moves toward the 50-60 range.',
+          validation: 'Validation: 2026-06-03 Beijing warm scattering stays in the 70 band; 2026-06-04 directional mid-cloud replays around 53.5; 2026-06-05 full gray veil falls around 44; all real calibration cases replay.'
+        },
+        cloudThickness: {
           date: '2026-05-27',
           title: 'خصم نسبي لسماكة السحب v2',
           summary: 'أصبح خصم سماكة السحب هو درجة لوحة ما قبل السماكة × 30% × ضغط السماكة، مع إلغاء حدود -28/24 الثابتة. تتم معايرة الستائر الرمادية الرطبة كوهج ضعيف/قابل للمشاهدة لكنه ليس قويًا.',

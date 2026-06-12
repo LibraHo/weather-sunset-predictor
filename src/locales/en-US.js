@@ -181,13 +181,19 @@ const translations = {
     },
     "methodology": {
       "title": "Fire Cloud Calculation Method",
-      "intro": "The current Fire Cloud Index first asks whether there is a usable color carrier, then whether sunlight can reach it along the sun direction, and finally applies only a small rendering adjustment. It no longer multiplies a chain of positive factors, so 100% high cloud does not automatically mean a perfect score.",
-      "versionLabel": "Algorithm version: 2026.06.06-gray-veil-directional-carrier-v2",
-      "versionDesc": "This version still uses cloud carrier × sunset path × air rendering, but separates open-path warm scattering, full-deck gray veil, and sun-direction mid-cloud bands. Moderate particles only add warmth when the deck is not gray and the path is open; full mid/high cloud with dirty air continuously suppresses rendering.",
+      "intro": "The current Fire Cloud Index first asks whether there is a usable color carrier, then whether the sun-direction path is open, then whether that mid/high cloud layer is actually bright enough, and finally applies air-rendering adjustments. Rich high cloud plus an open path can still score lower when layer brightness is weak.",
+      "versionLabel": "Algorithm version: 2026.06.12-layer-brightness-v1",
+      "versionDesc": "This version uses cloud carrier × sunset path × layer brightness × air rendering. Layer brightness is estimated from low/mid/high cloud layers, solar geometry, the sun-direction path, AOD/water vapor, direct/diffuse radiation, and thickness evidence; caps apply only when multiple dimming signals agree.",
       changelogTitle: "Version update history",
       changelogHint: "Algorithm updates from the last three months live here; scroll to review why each change happened, its impact, and validation",
       changelog: {
         "latest": {
+          "date": "2026-06-12",
+          "title": "Layer brightness suppressor v1",
+          "summary": "Adds a layerBrightness diagnostic: mid/high cloud is only the carrier and an open path is only necessary; the model now checks whether the cloud layer is actually illuminated. When AOD, water vapor, diffuse-dominant light, thick upper cloud, and gray-veil evidence align, high scores are capped into the watch/light-glow range.",
+          "validation": "Validation: the 2026-06-12 Beijing sunset sample drops from the high-60s to around 60; web score details, text analysis, and the mini-program methodology page now show layer brightness."
+        },
+        "grayVeilDirectional": {
           "date": "2026-06-06",
           "title": "Gray-veil rendering + directional mid-cloud v2",
           "summary": "Full mid/high cloud plus elevated PM/AOD no longer defaults to warm-scattering uplift; the model continuously lowers air rendering by gray-veil pressure. Sun-direction mid-cloud bands are now a continuous carrier: stronger band plus more open path moves toward the 50-60 range.",
@@ -305,13 +311,13 @@ const translations = {
           "level4": "Total cloud cover ≥92 with low cloud ≥20% → light penalty to about ×0.75; explicit overcast text with low cloud ≥35% → another ×0.5"
         },
         "thickHighCloudPenalty": {
-          "title": "7. Carrier and Haze Corrections",
-          "subtitle": "Carrier Quality · Canvas and Thin Haze",
-          "desc": "The model first scores what can take color, then uses the sunset path and air rendering to decide how much of that carrier can show. Sun-direction mid-cloud bands participate continuously; aerosols contribute warm scattering only when the path is open and the deck is not gray.",
-          "level1": "Cloud carrier = canvas base + additive cloud-type/thickness/high-cloud adjustments. Strong high cloud cannot reach a perfect score if the light path is blocked",
-          "level2": "When clouds are scarce, weak aerosol carrier still acts as a fallback. A sun-direction mid-cloud band can reach the 50-60 range when the path is open, but it is not treated as a breakout setup.",
-          "level3": "Full mid/high cloud with elevated PM/AOD is handled as gray-veil rendering suppression; heavy haze, dust, visibility <8, thick cloud, or rainy low cloud still suppresses or caps the carrier",
-          "formula": "scoringV2 = cloud carrier × sunset path × air rendering\nGray-veil pressure is checked before open-path warm scattering; directional mid-cloud bands join as a continuous carrier."
+          "title": "7. Layer Brightness",
+          "subtitle": "Layer Brightness · Is the cloud layer actually lit",
+          "desc": "Beyond carrier and path, the model estimates whether the mid/high cloud layer has enough illumination. This is a three-layer low/mid/high brightness model, not separate 4 km / 9 km / 13 km height-layer ray tracing.",
+          "level1": "Brightness = cloud canvas × solar geometry × path openness × air transmission × thickness factor × direct/diffuse beam factor",
+          "level2": "AOD, water vapor, PM10, low visibility, diffuse-dominant light, thick upper cloud, and watery gray-veils are dimming evidence; caps require multiple signals to agree",
+          "level3": "Rich high cloud no longer scores high from carrier + open path alone when brightness is weak; the 2026-06-12 Beijing sunset is the calibration sample",
+          "formula": "layerBrightness = three-layer cloud carrier × path × illumination/air/thickness evidence\nWeak brightness limits the displayed score"
         },
         "precipPenalty": {
           "title": "6. Precipitation Penalty",
@@ -325,13 +331,13 @@ const translations = {
         },
         "finalFormula": {
           "title": "8. Final Score",
-          "subtitle": "Final Score · cloud carrier × sunset path × air rendering",
-          "desc": "The score is not a city/date-specific lift. Clouds, path, and air jointly explain the result. When the path is open, moderate particles can make orange-red light stronger; when the path is blocked, the same particles turn gray.",
-          "formula": "Final score = clamp(cloud carrier × sunset path × air rendering, 0, 100), then hard blockers / thick cloud / gray curtain calibrate it",
+          "subtitle": "Final Score · cloud carrier × sunset path × layer brightness × air rendering",
+          "desc": "The score is not a city/date-specific lift. Clouds, path, brightness, and air jointly explain the result. When the path is open, moderate particles can make orange-red light stronger; when layer brightness is weak, the score remains conservative.",
+          "formula": "Final score = clamp(cloud carrier × sunset path × layer brightness × air rendering, 0, 100), then hard blockers / thick cloud / gray curtain calibrate it",
           "highCloudCap": "When high clouds are rich but the light path is blocked, the light-path gate still lowers the ceiling.",
           "carrier": "Carrier score = max(cloud canvas score, weak aerosol carrier score)",
           "lightGate": "Light-path gate = 0.25-1.12; a blocked sun-direction corridor can clamp near 0.42, while an opening sits around 0.90-0.96",
-          "rendering": "Air rendering = 0.70-1.12; with an open non-gray path, moderate AOD, PM, and dust can add warmth, while a full gray veil continuously suppresses color",
+          "rendering": "Layer brightness first checks whether the cloud is actually lit; air rendering = 0.70-1.12, with moderate AOD/PM/dust adding warmth only in an open non-gray path",
           "statusCaps": "Display score is status-calibrated: no-fire-cloud stays below 40, light glow below 60; geometry failure, thick cloud, gray curtain, and rainy low cloud can cap it further"
         }
       }
@@ -448,12 +454,12 @@ const translations = {
       "title": "Score details",
       "viewDetails": "View score details",
       "finalDisplayed": "Final displayed score",
-      "baseFormula": "Base score = carrier × light-path gate",
-      "baseHint": "Base score after applying the sun-direction light-path gate",
-      "canvasHint": "High/mid clouds are the main color carrier; moderate thin haze can be a weak carrier; low clouds can block it",
+      "baseFormula": "Base score = carrier × light-path gate × layer brightness",
+      "baseHint": "Carrier base after the sun-direction path and layer brightness constraints",
+      "canvasHint": "High/mid clouds are the main color carrier; moderate thin haze can be a weak carrier; low clouds, thick upper cloud, and gray veils limit usable brightness",
       "lightPathHint": "Whether sunlight can reach the clouds",
-      "finalFormula": "Final score = cloud carrier × sunset path × air rendering",
-      "renderingHint": "Humidity and visibility affect color rendering",
+      "finalFormula": "Final score = cloud carrier × sunset path × layer brightness × air rendering",
+      "renderingHint": "Layer brightness, humidity, visibility, and aerosols jointly affect color rendering",
       "aerosolHint": "Moderate aerosol boosts orange-red scattering; too much turns gray",
       "ledger": {
         "pts": "pts",
