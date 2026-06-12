@@ -5,7 +5,7 @@ describe('LayerBrightnessService', () => {
     service = await import('../../../server/services/LayerBrightnessService.js');
   });
 
-  test('multiplies diffuse gray-veil high cloud down even when the light path is open', () => {
+  test('keeps light-path brightness separate from gray-veil air transmission', () => {
     const result = service.scoreLayerBrightness({
       type: 'sunset',
       timeAnalysis: { elevation: -0.86 },
@@ -31,12 +31,16 @@ describe('LayerBrightnessService', () => {
       }
     });
 
-    expect(result.effectiveBrightness).toBeGreaterThanOrEqual(18);
-    expect(result.effectiveBrightness).toBeLessThan(30);
-    expect(result.brightnessMultiplier).toBeGreaterThanOrEqual(0.4);
-    expect(result.brightnessMultiplier).toBeLessThan(0.72);
+    expect(result.effectiveBrightness).toBeGreaterThanOrEqual(42);
+    expect(result.brightnessMultiplier).toBe(1);
+    expect(result.factors.airTransmission).toBeLessThan(0.72);
+    expect(result.dimEvidence).toEqual(expect.arrayContaining([
+      'high_aod',
+      'high_water_vapour',
+      'diffuse_dominant_light'
+    ]));
     expect(result.cap).toBeNull();
-    expect(result.reason).toBe('layer_brightness_weak');
+    expect(result.reason).toBe('layer_brightness_sufficient_with_dim_evidence');
   });
 
   test('does not cap bright clean upper-cloud cases', () => {

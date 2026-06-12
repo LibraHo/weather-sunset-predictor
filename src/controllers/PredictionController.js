@@ -2088,6 +2088,7 @@ class PredictionController {
     const scoringV2 = prediction?.scoringV2;
     const layerBrightness = prediction?.layerBrightness || prediction?.breakdown?.layerBrightness;
     const layerBrightnessAdjustment = prediction?.layerBrightnessAdjustment || prediction?.breakdown?.layerBrightnessAdjustment;
+    const brightnessMultiplier = layerBrightnessAdjustment?.multiplier ?? layerBrightness?.brightnessMultiplier ?? layerBrightness?.brightnessGate;
     const severeWeatherCap = prediction?.severeWeatherCap;
     const occlusionAnalysis = prediction?.occlusionAnalysis;
     const geometricModel = prediction?.geometricModel;
@@ -2322,9 +2323,9 @@ class PredictionController {
         </div>
       </div>`;
 
-    const weightedDescription = Number.isFinite(Number(carrierScore)) && Number.isFinite(Number(lightPathGate)) && Number.isFinite(Number(baseScore))
-      ? ledgerText('gatedFormula', { carrier: fmt(carrierScore, 1), gate: fmt(lightPathGate, 2), base: fmt(baseScore, 1) }, '{{carrier}} × light-path gate {{gate}} = {{base}}', '{{carrier}} × 光路门控 {{gate}} = {{base}}')
-      : ledgerText('canvasPlusLightPath', {}, 'canvas + light path', '画布 + 光路');
+    const weightedDescription = Number.isFinite(Number(carrierScore)) && Number.isFinite(Number(brightnessMultiplier)) && Number.isFinite(Number(baseScore))
+      ? ledgerText('gatedFormula', { carrier: fmt(carrierScore, 1), brightness: fmt(brightnessMultiplier, 2), base: fmt(baseScore, 1) }, '{{carrier}} × brightness {{brightness}} = {{base}}', '{{carrier}} × 受光亮度 {{brightness}} = {{base}}')
+      : ledgerText('canvasPlusLightPath', {}, 'carrier × brightness', '载体 × 受光亮度');
     const renderingDescription = (() => {
       if (!Number.isFinite(Number(baseScore)) || !Number.isFinite(Number(renderedScore))) {
         return ledgerText('weatherTransparency', {}, 'weather transparency factor', '天气通透度');

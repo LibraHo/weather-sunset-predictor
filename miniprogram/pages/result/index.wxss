@@ -81,7 +81,7 @@
 
 .action-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) 128rpx minmax(0, 1fr);
   gap: 16rpx;
 }
 
@@ -90,6 +90,11 @@
   margin: 0;
   font-size: 28rpx;
   line-height: 82rpx;
+}
+
+.feedback-action-button {
+  min-width: 0;
+  padding: 0 14rpx;
 }
 
 .result-view-switch {

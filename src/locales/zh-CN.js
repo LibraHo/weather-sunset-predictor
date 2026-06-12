@@ -189,9 +189,9 @@ export default {
     },
     methodology: {
       title: '火烧云计算方法',
-      intro: '当前火烧云指数先判断“有没有可显色载体”，再判断太阳方向光路是否打开，然后估算这层中高云实际受光亮度，最后用空气显色条件修正。高云多、光路通，也可能因为亮度弱而降分。',
+      intro: '当前火烧云指数先判断“有没有可显色载体”，再把太阳方向光路并入受光亮度，最后用空气显色条件修正。高云多、光路通，也可能因为亮度弱而降分。',
       versionLabel: '算法版本：2026.06.12-layer-brightness-v1',
-      versionDesc: '本版使用“云载体 × 日落光路 × 受光亮度 × 空气显色”。受光亮度基于低/中/高三层云、太阳几何、太阳方向通路、AOD/水汽、直射/散射和云厚证据估算；云层没被点亮时按乘性门控直接压低最终分。',
+      versionDesc: '本版使用“（云载体 × 受光亮度）× 空气显色”。受光亮度基于低/中/高三层云、太阳几何、太阳方向通路、直射/散射和云厚证据估算；云层没被点亮时按乘性门控直接压低最终分。',
       changelogTitle: "版本更新记录",
       changelogHint: "近三个月内的算法更新都会放在这里，可滚动回看原因、影响和验证方式",
       changelog: {
@@ -325,7 +325,7 @@ export default {
           level1: '亮度 = 云层画布 × 太阳几何 × 光路开放度 × 空气透过率 × 云厚因子 × 直射/散射因子',
           level2: 'AOD、水汽、PM10、低能见度、漫射光占优、厚高云和高云水汽灰幕是压暗证据；亮度弱时按 0-1 乘性系数压分',
           level3: '高云很多但亮度弱时，不再因为“载体多 + 光路通”直接给高分；北京 2026-06-12 晚霞就是这类校准样本',
-          formula: 'layerBrightness = 三层云载体 × 光路 × 受光/空气/云厚证据\n亮度弱时会限制最终展示分'
+          formula: 'layerBrightness = 三层云载体 × 光路 × 受光/云厚/光束证据\n亮度弱时会限制最终展示分'
         },
         precipPenalty: {
           title: '6. 降水惩罚系数',
@@ -339,12 +339,12 @@ export default {
         },
         finalFormula: {
           title: '8. 最终分数',
-          subtitle: 'Final Score · 云载体 × 日落光路 × 受光亮度 × 空气显色',
+          subtitle: 'Final Score · （云载体 × 受光亮度）× 空气显色',
           desc: '最终分不为单个城市或日期加特殊抬分，而是让云、光路、亮度和空气共同解释分数。光路打开时，适度颗粒可让橙红更明显；但如果云层实际亮度弱，同样会被保守压分。',
-          formula: '最终分 = clamp(云载体 × 日落光路 × 受光亮度 × 空气显色, 0, 100)，再经过硬否决/厚云/灰幕校准',
-          highCloudCap: '高云充足但光路被挡时，光路门控会压低最高得分。',
+          formula: '最终分 = clamp((云载体 × 受光亮度) × 空气显色, 0, 100)，再经过硬否决/厚云/灰幕校准',
+          highCloudCap: '高云充足但光路被挡时，会先体现在受光亮度变弱。',
           carrier: '载体分 = max(云层画布分, 气溶胶弱载体分)',
-          lightGate: '光路门控 = 0.25–1.12；太阳方向阻挡走廊可压到约 0.42，太阳方向开口约 0.90–0.96',
+          lightGate: '光路不再单独参与最终乘法，而是作为受光亮度里的太阳方向通路因子',
           rendering: '受光亮度会先判断云是否真的亮；空气显色 = 0.70–1.12，光路开且云幕不灰时轻/中度 AOD、PM、dust 可加暖色，满铺灰幕则连续压低',
           statusCaps: '显示分还会按状态校准：无火烧云低于 40，轻微霞光低于 60；几何不可行、厚云、灰幕和雨低云会进一步封顶'
         }
@@ -480,19 +480,19 @@ export default {
       title: '分数明细',
       viewDetails: '查看评分明细',
       finalDisplayed: '最终展示分',
-      baseFormula: '基础分 = 载体 × 光路门控 × 受光亮度',
-      baseHint: '太阳方向光路和受光亮度共同约束后的载体基础分',
+      baseFormula: '基础分 = 载体 × 受光亮度',
+      baseHint: '太阳方向光路已并入受光亮度后的载体基础分',
       canvasHint: '高云/中云提供主要色彩载体，适度薄雾可提供弱载体；低云遮挡、厚高云和灰幕会限制可用亮度',
       lightPathHint: '太阳光是否能照到云层',
-      finalFormula: '最终分 = 云载体 × 日落光路 × 受光亮度 × 空气显色',
+      finalFormula: '最终分 =（云载体 × 受光亮度）× 空气显色',
       renderingHint: '受光亮度、湿度、能见度和颗粒物共同影响色彩表现',
       aerosolHint: '适度气溶胶增强橙红散射，过多则发灰',
       ledger: {
         pts: '分',
         whyThisScore: '为什么是这个分数',
         weightedFormula: '{{canvas}}×80% + {{light}}×20% = {{base}}',
-        gatedFormula: '{{carrier}} × 光路门控 {{gate}} = {{base}}',
-        canvasPlusLightPath: '画布 + 光路',
+        gatedFormula: '{{carrier}} × 受光亮度 {{brightness}} = {{base}}',
+        canvasPlusLightPath: '载体 × 受光亮度',
         renderingFormula: '{{base}} 经显色修正 = {{rendered}}',
         renderingMultiplierFormula: '{{base}} × 显色系数 {{factor}} = {{rendered}}',
         renderingAdjustmentFormula: '{{base}} {{sign}} 显色修正 {{adjustment}} = {{rendered}}',

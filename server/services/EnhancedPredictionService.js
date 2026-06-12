@@ -2148,9 +2148,27 @@ function buildLightPathGate(lightPathScore, cloudTypeAdjustment = {}) {
 
 function calculateGatedFinalScore(canvasScore, lightPathScore, renderingFactor, type = 'sunset', context = {}) {
   const lightPathGate = context.lightPathGate || buildLightPathGate(lightPathScore);
-  const renderingAdjustment = context.renderingAdjustment || getRenderingScoreAdjustment(renderingFactor);
-  const gatedScore = Number(canvasScore.score || 0) * lightPathGate.gate;
-  const rendered = applyRenderingToGatedScore(gatedScore, renderingFactor, renderingAdjustment);
+  const layerBrightness = context.layerBrightness || null;
+  const brightnessMultiplier = clamp(Number(layerBrightness?.brightnessMultiplier ?? layerBrightness?.brightnessGate ?? 1), 0, 1.05);
+  const dimEvidenceCount = Array.isArray(layerBrightness?.dimEvidence) ? layerBrightness.dimEvidence.length : 0;
+  const airTransmissionFloor = dimEvidenceCount === 0 ? 0.91 : 0.72;
+  const airTransmissionFactor = clamp(Number(layerBrightness?.factors?.airTransmission ?? 1), airTransmissionFloor, 1.08);
+  const airRenderingFactor = {
+    ...renderingFactor,
+    factor: clamp(Number(renderingFactor?.factor ?? 1) * airTransmissionFactor, 0.18, 1.12)
+  };
+  const renderingAdjustment = context.renderingAdjustment || getRenderingScoreAdjustment(airRenderingFactor);
+  const carrierScore = Number(canvasScore.score || 0);
+  const brightnessBaseScore = carrierScore * brightnessMultiplier;
+  const rendered = applyRenderingToGatedScore(brightnessBaseScore, airRenderingFactor, renderingAdjustment);
+  const layerBrightnessAdjustment = {
+    score: parseFloat(brightnessBaseScore.toFixed(1)),
+    applied: brightnessBaseScore < carrierScore,
+    reason: layerBrightness?.reason || null,
+    multiplier: parseFloat(brightnessMultiplier.toFixed(2)),
+    effectiveBrightness: layerBrightness?.effectiveBrightness ?? null,
+    originalScore: parseFloat(carrierScore.toFixed(1))
+  };
   const directionalCurtainCarrier = context.directionalCurtainCarrier || canvasScore.directionalCurtainCarrier || null;
   const directionalFloor = canvasScore.activeCarrier === 'directional_curtain' && directionalCurtainCarrier?.applied && lightPathGate.cap == null && lightPathGate.gate >= 0.75
     ? directionalCurtainCarrier.floor
@@ -2211,7 +2229,7 @@ function calculateGatedFinalScore(canvasScore, lightPathScore, renderingFactor, 
     advice,
     type,
     breakdown: {
-      baseScore: parseFloat(gatedScore.toFixed(1)),
+      baseScore: parseFloat(brightnessBaseScore.toFixed(1)),
       canvasScore: parseFloat((canvasScore.cloudCanvasScore ?? canvasScore.score).toFixed(1)),
       carrierScore: parseFloat(canvasScore.score.toFixed(1)),
       activeCarrier: canvasScore.activeCarrier || 'cloud',
@@ -2219,8 +2237,12 @@ function calculateGatedFinalScore(canvasScore, lightPathScore, renderingFactor, 
       directionalCurtainCarrier,
       lightPathScore: parseFloat(lightPathScore.score.toFixed(1)),
       lightPathGate: lightPathGate.gate,
+      brightnessMultiplier: layerBrightnessAdjustment.multiplier,
+      airTransmissionFactor: parseFloat(airTransmissionFactor.toFixed(2)),
+      airTransmissionFloor,
+      layerBrightnessAdjustment,
       renderingAdjustment: rendered.adjustment,
-      renderingFactor: renderingFactor.factor,
+      renderingFactor: airRenderingFactor.factor,
       renderingMode: rendered.reason,
       directionalFloor,
       unclampedFinalScore: parseFloat(clampedScore.toFixed(1))
@@ -2231,12 +2253,13 @@ function calculateGatedFinalScore(canvasScore, lightPathScore, renderingFactor, 
     directionalCurtainCarrier,
     lightPathAnalysis: lightPathScore,
     lightPathGate,
+    layerBrightnessAdjustment,
     renderingAdjustment: {
       ...renderingAdjustment,
       adjustment: rendered.adjustment,
       reason: rendered.reason
     },
-    renderingAnalysis: renderingFactor
+    renderingAnalysis: airRenderingFactor
   };
 }
 
@@ -2473,10 +2496,12 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   const aerosolCarrierScore = scoreAerosolCarrier(weatherData, lightPathScore);
   const directionalCurtainCarrier = scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore, weatherData);
   const carrierScore = buildCarrierScore(canvasScore, aerosolCarrierScore, directionalCurtainCarrier);
+  const lightPathGate = buildLightPathGate(lightPathScore, cloudTypeAdjustment);
   const layerBrightness = LayerBrightnessService.scoreLayerBrightness({
     weatherData,
     timeAnalysis: timeCheck,
     lightPathScore,
+    lightPathGate,
     renderingFactor,
     cloudThickness,
     type,
@@ -2485,11 +2510,9 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   });
   logger.debug('[EnhancedPredictionService]', '载体评分:', carrierScore.score, 'active:', carrierScore.activeCarrier, 'aerosol:', aerosolCarrierScore);
   logger.debug('[EnhancedPredictionService]', '分层亮度:', layerBrightness.effectiveBrightness, 'multiplier:', layerBrightness.brightnessMultiplier, 'gate:', layerBrightness.brightnessGate);
-  const lightPathGate = buildLightPathGate(lightPathScore, cloudTypeAdjustment);
-  const renderingAdjustment = getRenderingScoreAdjustment(renderingFactor);
   const finalResult = calculateGatedFinalScore(carrierScore, lightPathScore, renderingFactor, type, {
     lightPathGate,
-    renderingAdjustment,
+    layerBrightness,
     directionalCurtainCarrier
   });
 
@@ -2533,6 +2556,8 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     ? (scoringV2.visibleSunsetSectorCap
       || assessVisibleSunsetSectorCap(weatherData, carrierScore, lightPathScore, lightPathGate, remoteCloudData))
     : { applied: false, cap: null, reason: null };
+  const airClearEnoughForPositiveCalibration = Number(finalResult.breakdown?.renderingFactor ?? 1) >= 0.75
+    || scoringV2.warmScatteringUpperCarrierAdjustment?.applied;
   if (!thickHighCloudPenalty.applied && scoringV2.applied && scoringV2.airMode === 'gray_veil_air_suppression' && scoringV2.score < adjustedScore) {
     adjustedScore = scoringV2.score;
     if (adjustedScore < 46) {
@@ -2542,7 +2567,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
       adjustedStatus = 'good_glow';
       adjustedDescription = 'conditions_good';
     }
-  } else if (!thickHighCloudPenalty.applied && scoringV2.applied && scoringV2.score > adjustedScore) {
+  } else if (!thickHighCloudPenalty.applied && airClearEnoughForPositiveCalibration && scoringV2.applied && scoringV2.score > adjustedScore) {
     adjustedScore = scoringV2.score;
     if (adjustedScore >= 82) {
       adjustedStatus = 'legendary_eruption';
@@ -2560,7 +2585,8 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   const aerosolHazeCap = assessAerosolHazeCap(weatherData, { pathOpen: scoringV2.pathOpen === true });
   let highCloudCarrierAdjustment = assessHighCloudCarrierAdjustment(weatherData, aerosolHazeCap, thickHighCloudPenalty);
 
-  if (highCloudCarrierAdjustment.applied && lightPathGate.cap == null && (lightPathGate.gate >= 0.82 || !lightPathScore.hasRemoteData)) {
+  const airClearEnoughForCarrierFloor = Number(finalResult.breakdown?.renderingFactor ?? 1) >= 0.75;
+  if (highCloudCarrierAdjustment.applied && airClearEnoughForCarrierFloor && lightPathGate.cap == null && (lightPathGate.gate >= 0.82 || !lightPathScore.hasRemoteData)) {
     adjustedScore = Math.max(adjustedScore, highCloudCarrierAdjustment.floor);
     if (adjustedScore >= 65) {
       adjustedStatus = 'very_likely';
@@ -2574,21 +2600,28 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
       ...highCloudCarrierAdjustment,
       applied: false,
       suppressed: true,
-      suppressReason: 'light_path_gate_not_open'
+      suppressReason: airClearEnoughForCarrierFloor ? 'light_path_gate_not_open' : 'air_rendering_not_clear'
     };
   }
 
-  const layerBrightnessForAdjustment = scoringV2.warmScatteringUpperCarrierAdjustment?.applied
-    ? {
-      ...layerBrightness,
-      cap: null,
-      brightnessMultiplier: 1,
-      brightnessGate: 1,
-      reason: 'warm_scattering_positive_calibration'
+  let layerBrightnessAdjustment = finalResult.layerBrightnessAdjustment || finalResult.breakdown?.layerBrightnessAdjustment || {
+    applied: false,
+    multiplier: layerBrightness.brightnessMultiplier,
+    effectiveBrightness: layerBrightness.effectiveBrightness,
+    reason: layerBrightness.reason,
+    originalScore: carrierScore.score
+  };
+  if (adjustedScore > finalResult.score && !scoringV2.warmScatteringUpperCarrierAdjustment?.applied) {
+    const postCalibrationBrightnessAdjustment = LayerBrightnessService.applyLayerBrightnessMultiplier(adjustedScore, layerBrightness);
+    if (postCalibrationBrightnessAdjustment.applied && postCalibrationBrightnessAdjustment.score < adjustedScore) {
+      layerBrightnessAdjustment = {
+        ...postCalibrationBrightnessAdjustment,
+        postCalibrationApplied: true
+      };
+      adjustedScore = layerBrightnessAdjustment.score;
     }
-    : layerBrightness;
-  const layerBrightnessAdjustment = LayerBrightnessService.applyLayerBrightnessMultiplier(adjustedScore, layerBrightnessForAdjustment);
-  if (layerBrightnessAdjustment.applied) {
+  }
+  if (layerBrightnessAdjustment.postCalibrationApplied) {
     adjustedScore = layerBrightnessAdjustment.score;
     if (adjustedStatus === 'no_fire_cloud') {
       adjustedDescription = adjustedDescription || 'light_path_blocked';
@@ -2672,6 +2705,11 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     adjustedDescription = 'weak_local_colors';
   }
 
+  if (!aerosolHazeCap.applied && (layerBrightness.dimEvidence || []).length >= 3 && adjustedScore <= 45) {
+    adjustedStatus = adjustedScore < 40 ? 'no_fire_cloud' : 'light_glow';
+    adjustedDescription = 'weak_local_colors';
+  }
+
   logger.debug('[EnhancedPredictionService]', '最终得分:', adjustedScore, 'occlusion:', occlusion, 'severeCap:', severeCap.reason);
 
   const aerosolScattering = {
@@ -2691,8 +2729,6 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   return {
     date: dateObj.toISOString(),
     type: type,
-    score: adjustedScore,
-    quality: getQualityLevel(adjustedScore),
     timeAnalysis: timeCheck,
     occlusionAnalysis: occlusion,
     severeWeatherCap: severeCap,
@@ -2718,6 +2754,8 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
       vsun:                geometric.vsun
     },
     ...finalResult,
+    score: adjustedScore,
+    quality: getQualityLevel(adjustedScore),
     breakdown: {
       ...finalResult.breakdown,
       aerosolScattering,
