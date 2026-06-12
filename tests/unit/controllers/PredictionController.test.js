@@ -1097,10 +1097,14 @@ describe('PredictionController', () => {
 
     test('分析卡片最终 CSS 应保持上下文案左对齐且可换行', () => {
       const css = fs.readFileSync(path.join(rootDir, 'styles/main.css'), 'utf8');
-      const finalRules = css.slice(css.lastIndexOf('formation analysis cards must read like compact notes'));
+      const finalRules = css.slice(css.lastIndexOf('formation analysis reads as a compact diagnostic list'));
 
+      expect(finalRules).toContain('analysis-card-head');
+      expect(finalRules).toContain('analysis-card-subtitle');
       expect(finalRules).toContain('analysis-factor-grid');
+      expect(finalRules).toContain('flex-direction: column');
       expect(finalRules).toContain('analysis-factor-heading');
+      expect(finalRules).toContain('analysis-factor-summary');
       expect(finalRules).toContain('analysis-factor-status-good');
       expect(finalRules).toContain('analysis-factor-status-fair');
       expect(finalRules).toContain('analysis-factor-status-mild');

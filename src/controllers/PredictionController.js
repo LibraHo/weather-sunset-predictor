@@ -1894,13 +1894,28 @@ class PredictionController {
       value: this._analysisText(`factors.brightness.status.${brightnessLevel}`),
       tone: brightnessLevel === 'good' ? 'good' : (brightnessLevel === 'weak' ? 'weak' : 'fair')
     }];
+    carrierFactor.summary = this._isEnglishUI()
+      ? (carrierLevel === 'good' ? 'Usable color canvas' : (carrierLevel === 'weak' ? 'Weak cloud canvas' : 'Partial cloud canvas'))
+      : (carrierLevel === 'good' ? '有可染色云面' : (carrierLevel === 'weak' ? '云面基础偏弱' : '云面基础一般'));
     carrierFactor.desc = `${carrierFactor.desc}${this._isEnglishUI() ? ' Layer brightness: ' : ' 受光亮度：'}${this._analysisText(`factors.brightness.desc.${brightnessLevel}`)}`;
 
     return [
       carrierFactor,
-      factor('lightPath', lightPathLevel, lightPathLevel === 'weak' ? 'warn' : 'info'),
-      factor('rendering', renderingLevel, 'leaf'),
-      factor('limits', limitLevel, limitLevel === 'good' ? 'ok' : 'warn')
+      Object.assign(factor('lightPath', lightPathLevel, lightPathLevel === 'weak' ? 'warn' : 'info'), {
+        summary: this._isEnglishUI()
+          ? (lightPathLevel === 'good' ? 'Sun path is open' : (lightPathLevel === 'weak' ? 'Sun path is blocked' : 'Some path obstruction'))
+          : (lightPathLevel === 'good' ? '太阳方向较通透' : (lightPathLevel === 'weak' ? '光路遮挡明显' : '光路有局部遮挡'))
+      }),
+      Object.assign(factor('rendering', renderingLevel, 'leaf'), {
+        summary: this._isEnglishUI()
+          ? (renderingLevel === 'good' ? 'Warm color support' : (renderingLevel === 'weak' ? 'Colors may fade' : 'Neutral air color'))
+          : (renderingLevel === 'good' ? '有暖色散射条件' : (renderingLevel === 'weak' ? '颜色容易被压淡' : '显色条件中性'))
+      }),
+      Object.assign(factor('limits', limitLevel, limitLevel === 'good' ? 'ok' : 'warn'), {
+        summary: this._isEnglishUI()
+          ? (limitLevel === 'good' ? 'No hard cap now' : (limitLevel === 'weak' ? 'Strong score pressure' : 'Minor score pressure'))
+          : (limitLevel === 'good' ? '暂无硬压制' : (limitLevel === 'weak' ? '存在明显压分' : '有轻微压分'))
+      })
     ];
   }
 
@@ -1955,7 +1970,10 @@ class PredictionController {
       : groups.map(group => this.renderAnalysisGroup(group)).join('');
     return `
       <div class="analysis-card app-analysis-card">
-        <div class="analysis-card-title"><span>${this._analysisText('title')}</span></div>
+        <div class="analysis-card-head">
+          <div class="analysis-card-title"><span>${this._analysisText('title')}</span></div>
+          <div class="analysis-card-subtitle">${this._uiText('Cloud, path, air, limits', '云层、光路、空气和限制项')}</div>
+        </div>
         ${groupHtml}
       </div>
     `;
@@ -2000,6 +2018,7 @@ class PredictionController {
           <span class="analysis-factor-title">${factor.title}</span>
           <strong class="analysis-factor-status analysis-factor-status-${statusTone}">${factor.status}</strong>
         </div>
+        ${factor.summary ? `<div class="analysis-factor-summary">${factor.summary}</div>` : ''}
         ${subfacts}
         <p>${factor.desc}</p>
       </section>

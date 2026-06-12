@@ -1800,10 +1800,39 @@ export function buildPredictionAnalysisGroups(input = {}) {
     : `能见度 ${Math.round(visibility)}km、湿度 ${Math.round(humidity)}%、AOD ${aod.toFixed(2)}；${warmScattering ? '光路打开，适度颗粒可增强橙红散射。' : '颜色表现主要看云层和光路。'}`;
   const brightness = buildLayerBrightnessFact(input);
   return [
-    { key: 'carrier', title: '云层载体', status: high >= 50 || mid >= 30 ? '较好' : '一般', tone: high >= 50 || mid >= 30 ? 'good' : 'fair', desc: `高云 ${Math.round(high)}%、中云 ${Math.round(mid)}%，有可染色云层基础；受光亮度会决定这层载体能不能真正显色。`, subfacts: [brightness] },
-    { key: 'lightPath', title: '光路条件', status: low <= 25 ? '较好' : '一般', tone: low <= 25 ? 'good' : 'fair', desc: `低云 ${Math.round(low)}%，太阳方向相对通透，光线有机会照到云底。` },
-    { key: 'rendering', title: '空气显色', status: renderingStatus, tone: renderingTone, desc: renderingDesc },
-    { key: 'limits', title: '限制因素', status: low > 45 || grayVeil ? '明显' : '无明显', tone: low > 45 || grayVeil ? 'weak' : 'good', desc: low > 45 ? '低云偏多可能遮挡太阳方向。' : (grayVeil ? '满铺中高云和偏脏空气会压低颜色强度。' : '降水和厚低云限制不明显。') }
+    {
+      key: 'carrier',
+      title: '云层载体',
+      status: high >= 50 || mid >= 30 ? '较好' : '一般',
+      tone: high >= 50 || mid >= 30 ? 'good' : 'fair',
+      summary: high >= 50 || mid >= 30 ? '有可染色云面' : '云面基础一般',
+      desc: `高云 ${Math.round(high)}%，中云 ${Math.round(mid)}%。`,
+      subfacts: [brightness]
+    },
+    {
+      key: 'lightPath',
+      title: '光路条件',
+      status: low <= 25 ? '较好' : '一般',
+      tone: low <= 25 ? 'good' : 'fair',
+      summary: low <= 25 ? '太阳方向较通透' : '低空有遮挡风险',
+      desc: `低云 ${Math.round(low)}%，决定光线能否照到云底。`
+    },
+    {
+      key: 'rendering',
+      title: '空气显色',
+      status: renderingStatus,
+      tone: renderingTone,
+      summary: grayVeil ? '颜色容易被压淡' : (warmScattering ? '有暖色散射条件' : '显色条件中性'),
+      desc: renderingDesc
+    },
+    {
+      key: 'limits',
+      title: '限制因素',
+      status: low > 45 || grayVeil ? '明显' : '无明显',
+      tone: low > 45 || grayVeil ? 'weak' : 'good',
+      summary: low > 45 || grayVeil ? '存在压分因素' : '暂无硬压制',
+      desc: low > 45 ? '低云偏多可能遮挡太阳方向。' : (grayVeil ? '满铺中高云和偏脏空气会压低颜色强度。' : '降水和厚低云限制不明显。')
+    }
   ];
 }
 
