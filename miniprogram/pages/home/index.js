@@ -329,7 +329,11 @@ Page({
     const prediction = this.getCurrentFeedbackPrediction();
     const eventTime = getPredictionEventTime(prediction || {});
     if (!isFeedbackWindowOpen(eventTime)) {
-      wx.showToast({ title: '反馈暂未开放', icon: 'none' });
+      wx.showModal({
+        title: '反馈暂未开放',
+        content: '反馈只在日出/日落前 1 小时到事件后 45 分钟内开放。',
+        showCancel: false
+      });
       return;
     }
     this.setData({
@@ -1339,6 +1343,7 @@ export function buildPredictionPreviewFromPrediction(prediction = {}, query = {}
     periodLabel,
     date: normalizeDateKey(prediction.date) || normalizeDateKey(prediction.referenceTime) || null,
     referenceTime: prediction.referenceTime || null,
+    eventTime: prediction.eventTime || prediction.referenceTime || null,
     locationName: prediction.locationName || prediction.location || query.locationName || query.location || '',
     lat: prediction.lat ?? prediction.latitude ?? query.coordinate?.lat ?? query.lat ?? null,
     lon: prediction.lon ?? prediction.lng ?? prediction.longitude ?? query.coordinate?.lon ?? query.lon ?? null,

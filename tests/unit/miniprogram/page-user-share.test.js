@@ -67,6 +67,20 @@ describe('miniprogram page user/share helpers', () => {
     });
   });
 
+  test('home prediction preview keeps event time for feedback window checks', () => {
+    const preview = homeHelpers.buildPredictionPreviewFromPrediction({
+      period: 'sunset',
+      eventTime: '2026-06-12T18:58:00+08:00',
+      score: 72,
+      cloudLayers: { high: 52, mid: 34, low: 8 }
+    }, {
+      locationName: '北京',
+      coordinate: { lat: 39.9042, lon: 116.4074 }
+    });
+
+    expect(preview.eventTime).toBe('2026-06-12T18:58:00+08:00');
+  });
+
   test('home share path uses the selected prediction card date', () => {
     const message = homeHelpers.buildHomeShareMessage({
       periodKey: 'sunrise',

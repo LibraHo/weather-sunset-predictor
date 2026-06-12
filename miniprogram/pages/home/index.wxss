@@ -534,19 +534,23 @@
 }
 
 .prediction-share-footer-row {
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: minmax(248rpx, 1fr) 196rpx;
+  justify-content: stretch;
   gap: 14rpx;
   width: 100%;
   margin: 18rpx 0 8rpx;
 }
 
 .prediction-share-footer {
-  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+  padding: 0 24rpx;
 }
 
 .prediction-feedback-footer {
-  min-width: 156rpx;
+  min-width: 196rpx;
+  padding: 0 22rpx;
   background: rgba(255, 252, 246, 0.9);
   color: #4b3621;
 }
@@ -557,6 +561,12 @@
   font-weight: 900;
   line-height: 1;
   white-space: nowrap;
+}
+
+.prediction-feedback-footer .share-btn-label {
+  display: block;
+  width: 56rpx;
+  flex: none;
 }
 
 .prediction-preview-action-label {
@@ -1884,6 +1894,12 @@
 .share-icon-image {
   width: 36rpx;
   height: 36rpx;
+}
+
+.feedback-icon-image {
+  width: 38rpx;
+  height: 38rpx;
+  flex: none;
 }
 
 .sun-event-image {
