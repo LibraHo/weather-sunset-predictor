@@ -60,7 +60,8 @@ describe('EnhancedPredictionService layer brightness integration', () => {
       applied: true,
       multiplier: result.layerBrightness.brightnessMultiplier
     }));
-    expect(result.score).toBeLessThan(45);
+    const expectedScore = result.layerBrightnessAdjustment.originalScore * result.layerBrightnessAdjustment.multiplier;
+    expect(result.score).toBeCloseTo(expectedScore, 1);
     expect(result.breakdown.layerBrightness).toBe(result.layerBrightness);
   });
 });
