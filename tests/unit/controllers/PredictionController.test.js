@@ -954,7 +954,7 @@ describe('PredictionController', () => {
   });
 
   describe('火烧云分析卡片', () => {
-    test('火烧云分析应合并为五个固定因子', () => {
+    test('火烧云分析应合并为四个固定因子且亮度归入载体', () => {
       const groups = predictionController.buildAnalysisGroups({
         score: 72,
         cloudLayers: { high: 88, mid: 42, low: 4 },
@@ -963,12 +963,15 @@ describe('PredictionController', () => {
       });
       const html = predictionController.renderAnalysisCard(groups, 'test');
 
-      expect(groups).toHaveLength(5);
+      expect(groups).toHaveLength(4);
       expect(html).toContain('云层载体');
       expect(html).toContain('光路条件');
       expect(html).toContain('受光亮度');
       expect(html).toContain('空气显色');
       expect(html).toContain('限制因素');
+      expect(groups.find(item => item.key === 'carrier').subfacts).toEqual([
+        expect.objectContaining({ key: 'brightness' })
+      ]);
       expect(html).toContain('analysis-factor-grid');
       expect(html).not.toContain('不再重复封顶');
       expect(html).not.toContain('不再额外封顶');
@@ -987,7 +990,7 @@ describe('PredictionController', () => {
       });
       const html = predictionController.renderAnalysisCard(groups, 'test');
 
-      expect(groups).toHaveLength(5);
+      expect(groups).toHaveLength(4);
       expect(html).toContain('空气显色');
       expect(html).toContain('受光亮度');
       expect(html).toContain('颜色更容易偏暖、偏红');

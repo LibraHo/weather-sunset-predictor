@@ -1887,10 +1887,18 @@ class PredictionController {
       icon
     });
 
+    const carrierFactor = factor('carrier', carrierLevel, 'cloud');
+    carrierFactor.subfacts = [{
+      key: 'brightness',
+      label: this._analysisText('factors.brightness.title'),
+      value: this._analysisText(`factors.brightness.status.${brightnessLevel}`),
+      tone: brightnessLevel === 'good' ? 'good' : (brightnessLevel === 'weak' ? 'weak' : 'fair')
+    }];
+    carrierFactor.desc = `${carrierFactor.desc}${this._isEnglishUI() ? ' Layer brightness: ' : ' 受光亮度：'}${this._analysisText(`factors.brightness.desc.${brightnessLevel}`)}`;
+
     return [
-      factor('carrier', carrierLevel, 'cloud'),
+      carrierFactor,
       factor('lightPath', lightPathLevel, lightPathLevel === 'weak' ? 'warn' : 'info'),
-      factor('brightness', brightnessLevel, brightnessLevel === 'weak' ? 'warn' : 'leaf'),
       factor('rendering', renderingLevel, 'leaf'),
       factor('limits', limitLevel, limitLevel === 'good' ? 'ok' : 'warn')
     ];
@@ -1979,6 +1987,12 @@ class PredictionController {
 
   renderAnalysisFactor(factor) {
     const statusTone = ['good', 'fair', 'mild', 'weak'].includes(factor.statusTone) ? factor.statusTone : 'fair';
+    const subfacts = Array.isArray(factor.subfacts) && factor.subfacts.length
+      ? `<div class="analysis-factor-subfacts">${factor.subfacts.map((item) => {
+        const tone = ['good', 'fair', 'mild', 'weak'].includes(item.tone) ? item.tone : 'fair';
+        return `<span class="analysis-factor-subfact analysis-factor-subfact-${tone}"><span>${item.label}</span><strong>${item.value}</strong></span>`;
+      }).join('')}</div>`
+      : '';
     return `
       <section class="analysis-factor analysis-factor-${factor.type} analysis-factor-${factor.key}">
         <div class="analysis-factor-heading">
@@ -1986,6 +2000,7 @@ class PredictionController {
           <span class="analysis-factor-title">${factor.title}</span>
           <strong class="analysis-factor-status analysis-factor-status-${statusTone}">${factor.status}</strong>
         </div>
+        ${subfacts}
         <p>${factor.desc}</p>
       </section>
     `;

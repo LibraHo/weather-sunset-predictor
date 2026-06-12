@@ -311,6 +311,12 @@
             <text class="analysis-factor-title">{{item.title}}</text>
             <text class="analysis-factor-status analysis-factor-status-{{item.tone}}">{{item.status}}</text>
           </view>
+          <view wx:if="{{item.subfacts && item.subfacts.length}}" class="analysis-factor-subfacts">
+            <view class="analysis-factor-subfact analysis-factor-subfact-{{fact.tone}}" wx:for="{{item.subfacts}}" wx:for-item="fact" wx:key="key">
+              <text>{{fact.label}}</text>
+              <text>{{fact.value}}</text>
+            </view>
+          </view>
           <view class="analysis-factor-desc">{{item.desc}}</view>
         </view>
       </view>
@@ -353,6 +359,7 @@
         <text class="share-btn-label">分享评分</text>
       </button>
       <button class="prediction-share-menu prediction-share-footer prediction-feedback-footer" bindtap="openFeedback" aria-label="反馈预测结果" hover-class="button-hover" hover-stay-time="80">
+        <image class="feedback-icon-image" src="/assets/icons/feedback-message.svg" mode="aspectFit" aria-hidden="true" />
         <text class="share-btn-label">反馈</text>
       </button>
     </view>

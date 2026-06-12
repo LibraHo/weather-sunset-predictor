@@ -8792,10 +8792,9 @@ body[data-actual-theme="dark"] .weather-feature-item:hover {
 
 .feedback-page-panel {
   display: grid;
-  gap: 18px;
+  gap: 14px;
 }
 
-.feedback-page-hero,
 .feedback-login-card,
 .feedback-modal-card {
   border: 1px solid var(--theme-card-border, rgba(255, 255, 255, 0.12));
@@ -8804,24 +8803,28 @@ body[data-actual-theme="dark"] .weather-feature-item:hover {
   box-shadow: var(--theme-card-shadow, 0 16px 40px rgba(15, 23, 42, 0.08));
 }
 
-.feedback-page-hero,
 .feedback-login-card {
   padding: 22px;
 }
 
-.feedback-page-hero h2,
+.feedback-page-panel > h2,
 .feedback-modal-head h2 {
   margin: 0;
   font-size: 1.35rem;
   letter-spacing: 0;
 }
 
-.feedback-page-hero p:last-child,
+.feedback-page-intro,
 .feedback-login-card p,
 .feedback-help {
-  margin: 8px 0 0;
+  margin: 0;
   color: var(--theme-muted-text, #667085);
   line-height: 1.7;
+}
+
+.feedback-login-card p,
+.feedback-help {
+  margin-top: 8px;
 }
 
 .feedback-form {
@@ -10426,6 +10429,41 @@ html[data-actual-theme="dark"] #weather-section #weekly-cards.weekly-cards-conta
   color: var(--color-error);
   background: color-mix(in srgb, var(--color-error) 12%, transparent);
   border-color: color-mix(in srgb, var(--color-error) 32%, transparent);
+}
+
+.app-analysis-card .analysis-factor-subfacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 6px;
+}
+
+.app-analysis-card .analysis-factor-subfact {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-width: 0;
+  padding: 3px 7px;
+  border: 1px solid color-mix(in srgb, var(--chart-wind-color) 28%, transparent);
+  border-radius: 999px;
+  color: var(--chart-wind-color);
+  background: color-mix(in srgb, var(--chart-wind-color) 10%, transparent);
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.app-analysis-card .analysis-factor-subfact-good {
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  border-color: color-mix(in srgb, var(--color-success) 28%, transparent);
+}
+
+.app-analysis-card .analysis-factor-subfact-weak {
+  color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
+  border-color: color-mix(in srgb, var(--color-error) 28%, transparent);
 }
 
 .app-analysis-card .analysis-factor p {

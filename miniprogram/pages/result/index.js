@@ -414,7 +414,11 @@ Page({
     const prediction = this.data.prediction;
     const eventTime = getPredictionEventTime(prediction || {});
     if (!isFeedbackWindowOpen(eventTime)) {
-      wx.showToast({ title: '反馈暂未开放', icon: 'none' });
+      wx.showModal({
+        title: '反馈暂未开放',
+        content: '反馈只在日出/日落前 1 小时到事件后 45 分钟内开放。',
+        showCancel: false
+      });
       return;
     }
     this.setData({

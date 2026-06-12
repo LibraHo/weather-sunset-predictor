@@ -1031,13 +1031,8 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
       </section>
 
       <section id="tab-panel-feedback" class="card feedback-page-panel hidden" role="tabpanel" aria-label="feedback-panel" tabindex="0" hidden>
-        <div class="feedback-page-hero">
-          <div>
-            <p class="api-access-kicker" data-i18n="feedback.kicker">Prediction Feedback</p>
-            <h2 data-i18n="feedback.title">反馈预测结果</h2>
-            <p data-i18n="feedback.subtitle">提交漏报、误报或虚报，系统会保存预测快照、天气原始数据、评分、地点和图片，方便后台复盘。</p>
-          </div>
-        </div>
+        <h2 data-i18n="feedback.title">反馈预测结果</h2>
+        <p class="feedback-page-intro" data-i18n="feedback.subtitle">提交漏报、误报或虚报，系统会保存预测快照、天气原始数据、评分、地点和图片，方便后台复盘。</p>
         <div id="feedback-page-signed-out" class="feedback-login-card">
           <p data-i18n="feedback.loginRequired">请先登录后再反馈。</p>
           <button id="feedback-page-login-btn" class="btn btn-primary xiake-action-btn xiake-action-btn-primary" type="button" data-i18n="feedback.loginAction">登录</button>
