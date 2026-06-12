@@ -1902,17 +1902,17 @@ class PredictionController {
     return [
       carrierFactor,
       Object.assign(factor('lightPath', lightPathLevel, lightPathLevel === 'weak' ? 'warn' : 'info'), {
-        summary: this._isEnglishUI()
+        insight: this._isEnglishUI()
           ? (lightPathLevel === 'good' ? 'Sun path is open' : (lightPathLevel === 'weak' ? 'Sun path is blocked' : 'Some path obstruction'))
           : (lightPathLevel === 'good' ? '太阳方向较通透' : (lightPathLevel === 'weak' ? '光路遮挡明显' : '光路有局部遮挡'))
       }),
       Object.assign(factor('rendering', renderingLevel, 'leaf'), {
-        summary: this._isEnglishUI()
+        insight: this._isEnglishUI()
           ? (renderingLevel === 'good' ? 'Warm color support' : (renderingLevel === 'weak' ? 'Colors may fade' : 'Neutral air color'))
           : (renderingLevel === 'good' ? '有暖色散射条件' : (renderingLevel === 'weak' ? '颜色容易被压淡' : '显色条件中性'))
       }),
       Object.assign(factor('limits', limitLevel, limitLevel === 'good' ? 'ok' : 'warn'), {
-        summary: this._isEnglishUI()
+        insight: this._isEnglishUI()
           ? (limitLevel === 'good' ? 'No hard cap now' : (limitLevel === 'weak' ? 'Strong score pressure' : 'Minor score pressure'))
           : (limitLevel === 'good' ? '暂无硬压制' : (limitLevel === 'weak' ? '存在明显压分' : '有轻微压分'))
       })
@@ -2018,7 +2018,7 @@ class PredictionController {
           <span class="analysis-factor-title">${factor.title}</span>
           <strong class="analysis-factor-status analysis-factor-status-${statusTone}">${factor.status}</strong>
         </div>
-        ${factor.summary ? `<div class="analysis-factor-summary">${factor.summary}</div>` : ''}
+        ${factor.insight ? `<div class="analysis-factor-summary">${factor.insight}</div>` : ''}
         ${subfacts}
         <p>${factor.desc}</p>
       </section>

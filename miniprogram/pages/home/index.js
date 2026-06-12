@@ -1399,7 +1399,7 @@ export function compactPredictionPreviewPayload(prediction = {}) {
     scoreDesc: prediction.scoreDesc || null,
     conclusion: prediction.conclusion || null,
     explanation: prediction.explanation || null,
-    summary: typeof summary === 'string'
+    insight: typeof summary === 'string'
       ? summary
       : (summary ? {
         description: summary.description || '',
@@ -1805,7 +1805,7 @@ export function buildPredictionAnalysisGroups(input = {}) {
       title: '云层载体',
       status: high >= 50 || mid >= 30 ? '较好' : '一般',
       tone: high >= 50 || mid >= 30 ? 'good' : 'fair',
-      summary: high >= 50 || mid >= 30 ? '有可染色云面' : '云面基础一般',
+      insight: high >= 50 || mid >= 30 ? '有可染色云面' : '云面基础一般',
       desc: `高云 ${Math.round(high)}%，中云 ${Math.round(mid)}%。`,
       subfacts: [brightness]
     },
@@ -1814,7 +1814,7 @@ export function buildPredictionAnalysisGroups(input = {}) {
       title: '光路条件',
       status: low <= 25 ? '较好' : '一般',
       tone: low <= 25 ? 'good' : 'fair',
-      summary: low <= 25 ? '太阳方向较通透' : '低空有遮挡风险',
+      insight: low <= 25 ? '太阳方向较通透' : '低空有遮挡风险',
       desc: `低云 ${Math.round(low)}%，决定光线能否照到云底。`
     },
     {
@@ -1822,7 +1822,7 @@ export function buildPredictionAnalysisGroups(input = {}) {
       title: '空气显色',
       status: renderingStatus,
       tone: renderingTone,
-      summary: grayVeil ? '颜色容易被压淡' : (warmScattering ? '有暖色散射条件' : '显色条件中性'),
+      insight: grayVeil ? '颜色容易被压淡' : (warmScattering ? '有暖色散射条件' : '显色条件中性'),
       desc: renderingDesc
     },
     {
@@ -1830,7 +1830,7 @@ export function buildPredictionAnalysisGroups(input = {}) {
       title: '限制因素',
       status: low > 45 || grayVeil ? '明显' : '无明显',
       tone: low > 45 || grayVeil ? 'weak' : 'good',
-      summary: low > 45 || grayVeil ? '存在压分因素' : '暂无硬压制',
+      insight: low > 45 || grayVeil ? '存在压分因素' : '暂无硬压制',
       desc: low > 45 ? '低云偏多可能遮挡太阳方向。' : (grayVeil ? '满铺中高云和偏脏空气会压低颜色强度。' : '降水和厚低云限制不明显。')
     }
   ];
@@ -2002,7 +2002,7 @@ export function buildWeatherGlowPreview(weather = {}) {
       dayDate: item.dayDate || item.dateLabel || formatGlowDateLabel(item.date, index),
       sunrise: item.sunrise ?? item.sunriseScore ?? '--',
       sunset: item.sunset ?? item.sunsetScore ?? '--',
-      summary: item.summary || item.condition || ''
+      insight: item.summary || item.condition || ''
     }));
   }
 
@@ -2014,9 +2014,9 @@ export function buildWeatherGlowPreview(weather = {}) {
   ]);
   const base = Number.isFinite(Number(cloudAverage)) ? Math.round(cloudAverage) : 53;
   return [
-    { key: 'today', label: '今天', dayDate: '今日', sunrise: Math.max(0, base - 8), sunset: Math.min(100, base + 18), summary: '云层结构适合观察霞光' },
-    { key: 'tomorrow', label: '明天', dayDate: '次日', sunrise: Math.max(0, base - 3), sunset: Math.min(100, base + 12), summary: '留意西侧云带变化' },
-    { key: 'day-3', label: '后天', dayDate: '第3天', sunrise: Math.max(0, base - 12), sunset: Math.min(100, base + 6), summary: '中等把握，适合顺路观察' }
+    { key: 'today', label: '今天', dayDate: '今日', sunrise: Math.max(0, base - 8), sunset: Math.min(100, base + 18), insight: '云层结构适合观察霞光' },
+    { key: 'tomorrow', label: '明天', dayDate: '次日', sunrise: Math.max(0, base - 3), sunset: Math.min(100, base + 12), insight: '留意西侧云带变化' },
+    { key: 'day-3', label: '后天', dayDate: '第3天', sunrise: Math.max(0, base - 12), sunset: Math.min(100, base + 6), insight: '中等把握，适合顺路观察' }
   ];
 }
 
