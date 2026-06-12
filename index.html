@@ -635,11 +635,19 @@
           <div class="methodology-changelog-scroll" tabindex="0" role="region" aria-labelledby="methodology-changelog-title">
             <ol class="methodology-changelog-list">
               <li>
-                <time datetime="2026-06-06" data-i18n="home.methodology.changelog.latest.date">2026-06-06</time>
+                <time datetime="2026-06-12" data-i18n="home.methodology.changelog.latest.date">2026-06-12</time>
                 <div>
-                  <strong data-i18n="home.methodology.changelog.latest.title">灰幕空气显色 + 方向中云带 v2</strong>
-                  <p data-i18n="home.methodology.changelog.latest.summary">满铺中高云叠加 PM/AOD 偏高时，不再默认当暖色散射加分，而是按灰幕压力连续降低空气显色；太阳方向中云带改为连续载体，光路越开、方向中云越强，越接近 50-60 档。</p>
-                  <small data-i18n="home.methodology.changelog.latest.validation">验证：2026-06-03 北京暖散射保持 70 档；2026-06-04 北京方向中云带约 53.5；2026-06-05 北京满铺灰幕压到约 44；真实校准样本库全量回放通过。</small>
+                  <strong data-i18n="home.methodology.changelog.latest.title">分层亮度抑制 v1</strong>
+                  <p data-i18n="home.methodology.changelog.latest.summary">新增 layerBrightness 诊断：高云/中云是载体，光路通只是必要条件，还要看这层云是否真的被照亮。AOD、水汽、漫射光占优、厚高云灰幕等多个压暗证据同时出现时，高分会被压到可观赏或轻微霞光区间。</p>
+                  <small data-i18n="home.methodology.changelog.latest.validation">验证：北京 2026-06-12 晚霞样本从高 60 档压到约 60；网页评分细则、文字分析和小程序算法页同步显示受光亮度。</small>
+                </div>
+              </li>
+              <li>
+                <time datetime="2026-06-06" data-i18n="home.methodology.changelog.grayVeilDirectional.date">2026-06-06</time>
+                <div>
+                  <strong data-i18n="home.methodology.changelog.grayVeilDirectional.title">灰幕空气显色 + 方向中云带 v2</strong>
+                  <p data-i18n="home.methodology.changelog.grayVeilDirectional.summary">满铺中高云叠加 PM/AOD 偏高时，不再默认当暖色散射加分，而是按灰幕压力连续降低空气显色；太阳方向中云带改为连续载体，光路越开、方向中云越强，越接近 50-60 档。</p>
+                  <small data-i18n="home.methodology.changelog.grayVeilDirectional.validation">验证：2026-06-03 北京暖散射保持 70 档；2026-06-04 北京方向中云带约 53.5；2026-06-05 北京满铺灰幕压到约 44；真实校准样本库全量回放通过。</small>
                 </div>
               </li>
               <li>
@@ -693,8 +701,8 @@
             </ol>
           </div>
           <div class="methodology-version-card">
-            <strong data-i18n="home.methodology.versionLabel">算法版本：2026.06.06-gray-veil-directional-carrier-v2</strong>
-            <span data-i18n="home.methodology.versionDesc">本版继续使用“云载体 × 日落光路 × 空气显色”，但会区分开口暖散射、满铺灰幕和太阳方向中云带：适度颗粒只有在云幕不灰、光路通畅时加分；满铺中高云叠加偏脏空气会连续压低显色。</span>
+            <strong data-i18n="home.methodology.versionLabel">算法版本：2026.06.12-layer-brightness-v1</strong>
+            <span data-i18n="home.methodology.versionDesc">本版使用“云载体 × 日落光路 × 受光亮度 × 空气显色”。受光亮度基于低/中/高三层云、太阳几何、太阳方向通路、AOD/水汽、直射/散射和云厚证据估算；多个压暗证据同时成立时才保守封顶。</span>
           </div>
         </div>
       </section>

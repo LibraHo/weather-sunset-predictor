@@ -781,6 +781,8 @@ function normalizePrediction(input = {}, options = {}) {
     canvasAnalysis: input.canvasAnalysis || null,
     lightPathAnalysis: input.lightPathAnalysis || null,
     renderingAnalysis: input.renderingAnalysis || null,
+    layerBrightness: input.layerBrightness || input.breakdown?.layerBrightness || null,
+    layerBrightnessAdjustment: input.layerBrightnessAdjustment || input.breakdown?.layerBrightnessAdjustment || null,
     lightPathGate: input.lightPathGate || null,
     renderingAdjustment: input.renderingAdjustment || null,
     cloudThickness: input.cloudThickness || null,
@@ -1046,6 +1048,7 @@ export function buildAnalysisItems(prediction = {}) {
   const canvas = prediction.canvasAnalysis || {};
   const lightPath = prediction.lightPathAnalysis || {};
   const rendering = prediction.renderingAnalysis || {};
+  const layerBrightness = prediction.layerBrightness || prediction.breakdown?.layerBrightness || {};
   const breakdown = prediction.breakdown || {};
 
   return [
@@ -1064,6 +1067,13 @@ export function buildAnalysisItems(prediction = {}) {
       detail: buildLightPathText(lightPath)
     },
     {
+      key: 'brightness',
+      title: '受光亮度',
+      value: formatScore(layerBrightness.effectiveBrightness),
+      tone: levelFromBrightness(layerBrightness),
+      detail: buildLayerBrightnessText(layerBrightness)
+    },
+    {
       key: 'rendering',
       title: '显色修正',
       value: formatFactor(rendering.factor ?? breakdown.renderingFactor),
@@ -1078,6 +1088,8 @@ export function buildScoreLedger(prediction = {}) {
   const lightPath = prediction.lightPathAnalysis || {};
   const rendering = prediction.renderingAnalysis || {};
   const breakdown = prediction.breakdown || {};
+  const layerBrightness = prediction.layerBrightness || breakdown.layerBrightness || {};
+  const layerBrightnessAdjustment = prediction.layerBrightnessAdjustment || breakdown.layerBrightnessAdjustment || null;
   const finalScore = prediction.score ?? prediction.totalScore ?? prediction.finalScore;
   const canvasScore = canvas.score ?? breakdown.canvasScore;
   const lightPathScore = lightPath.score ?? breakdown.lightPathScore;
@@ -1087,9 +1099,10 @@ export function buildScoreLedger(prediction = {}) {
   const renderingAdjustment = prediction.renderingAdjustment?.adjustment ?? breakdown.renderingAdjustment;
   const renderedScore = breakdown.unclampedFinalScore ?? breakdown.renderedScore ?? finalScore;
   const cloudThicknessStep = buildCloudThicknessStep(prediction, canvas);
+  const layerBrightnessStep = buildLayerBrightnessStep(layerBrightness, layerBrightnessAdjustment);
 
   const summary = Number.isFinite(Number(finalScore))
-    ? `${Math.round(Number(finalScore))} 分：由云层载体经光路门控后，再叠加显色修正`
+    ? `${Math.round(Number(finalScore))} 分：由云层载体、光路、受光亮度和空气显色共同计算`
     : '等待评分数据后展示完整解释';
 
   const steps = [
@@ -1114,10 +1127,11 @@ export function buildScoreLedger(prediction = {}) {
       label: '基础分',
       result: formatScore(baseScore),
       expression: buildBaseScoreExpression(canvasScore, lightPathGate, baseScore),
-      detail: '对齐网页版：载体分先看可染色云面，再由太阳方向光路作为门控',
+      detail: '对齐网页版：载体分先看可染色云面，再由太阳方向光路和受光亮度共同约束',
       tone: levelFromScore(baseScore)
     }
   ];
+  if (layerBrightnessStep) steps.push(layerBrightnessStep);
   if (cloudThicknessStep) steps.push(cloudThicknessStep);
   steps.push(
     {
@@ -1194,6 +1208,22 @@ function buildCloudThicknessStep(prediction = {}, canvas = {}) {
   };
 }
 
+function buildLayerBrightnessStep(layerBrightness = {}, adjustment = null) {
+  if (!layerBrightness?.applied && !adjustment?.applied) return null;
+  const capped = adjustment?.applied || layerBrightness.cap != null;
+  const result = capped && Number.isFinite(Number(adjustment?.cap ?? layerBrightness.cap))
+    ? `≤${Math.round(Number(adjustment?.cap ?? layerBrightness.cap))}分`
+    : formatScore(layerBrightness.effectiveBrightness);
+  return {
+    key: 'layerBrightness',
+    label: '受光亮度',
+    result,
+    expression: capped ? '云量够但亮度偏弱' : '云层受光强度',
+    detail: buildLayerBrightnessText(layerBrightness),
+    tone: capped ? 'bad' : levelFromBrightness(layerBrightness)
+  };
+}
+
 function buildBaseScoreExpression(canvasScore, lightPathGate, baseScore) {
   if (Number.isFinite(Number(canvasScore)) && Number.isFinite(Number(lightPathGate)) && Number.isFinite(Number(baseScore))) {
     return `${roundOne(canvasScore)} × 光路门控 ${roundTwo(lightPathGate)} = ${roundOne(baseScore)}`;
@@ -1243,6 +1273,26 @@ function buildLightPathText(lightPath = {}) {
   return parts.join('，') || '结合太阳高度角、远近云层和地平线遮挡判断光路。';
 }
 
+function buildLayerBrightnessText(layerBrightness = {}) {
+  if (!layerBrightness?.applied) {
+    return '当前版本会结合云层载体、光路、空气和云厚估算受光亮度。';
+  }
+  const parts = [];
+  if (Number.isFinite(Number(layerBrightness.layers?.cloudCanvas))) {
+    parts.push(`云层画布 ${formatPercent(layerBrightness.layers.cloudCanvas)}`);
+  }
+  if (Number.isFinite(Number(layerBrightness.factors?.airTransmission))) {
+    parts.push(`空气透过 ${roundTwo(layerBrightness.factors.airTransmission)}`);
+  }
+  if (Number.isFinite(Number(layerBrightness.factors?.beamFactor))) {
+    parts.push(`直射/散射 ${roundTwo(layerBrightness.factors.beamFactor)}`);
+  }
+  if (Array.isArray(layerBrightness.dimEvidence) && layerBrightness.dimEvidence.length) {
+    parts.push(`压暗证据 ${layerBrightness.dimEvidence.length} 项`);
+  }
+  return parts.join('，') || '判断中高云是否真的被日出/日落低角度光照亮。';
+}
+
 function buildRenderingText(rendering = {}) {
   const breakdown = rendering.breakdown || {};
   const parts = [];
@@ -1274,6 +1324,14 @@ function levelFromFactor(value) {
   if (number >= 0.85) return 'good';
   if (number >= 0.65) return 'watch';
   return 'weak';
+}
+
+function levelFromBrightness(layerBrightness = {}) {
+  const value = Number(layerBrightness.effectiveBrightness);
+  if (!Number.isFinite(value)) return 'unknown';
+  if (layerBrightness.cap != null || value < 30) return 'watch';
+  if (value >= 45) return 'excellent';
+  return 'good';
 }
 
 function buildEmptyRadar({ loading = false, error = '' } = {}) {

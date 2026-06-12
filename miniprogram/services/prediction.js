@@ -142,6 +142,8 @@ export function normalizePrediction(data = {}) {
     canvasAnalysis: source.canvasAnalysis || null,
     lightPathAnalysis: source.lightPathAnalysis || null,
     renderingAnalysis: source.renderingAnalysis || null,
+    layerBrightness: source.layerBrightness || source.breakdown?.layerBrightness || null,
+    layerBrightnessAdjustment: source.layerBrightnessAdjustment || source.breakdown?.layerBrightnessAdjustment || null,
     cloudThickness: source.cloudThickness || null,
     thickHighCloudPenalty: source.thickHighCloudPenalty || null,
     aerosolHazeCap: source.aerosolHazeCap || null,

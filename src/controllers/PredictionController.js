@@ -1566,6 +1566,11 @@ class PredictionController {
       'factors.lightPath.desc.good': '太阳方向相对通透，光线有机会照到云底。',
       'factors.lightPath.desc.fair': '太阳方向有一定遮挡，晚霞可能只出现在局部。',
       'factors.lightPath.desc.weak': '低云或阻挡走廊挡住光路，光线不容易打到云层。',
+      'factors.brightness.title': '受光亮度',
+      'factors.brightness.status.good': '充足', 'factors.brightness.status.fair': '一般', 'factors.brightness.status.weak': '偏弱',
+      'factors.brightness.desc.good': '可显色云层有足够受光证据，颜色更容易出来。',
+      'factors.brightness.desc.fair': '云层存在但亮度一般，可能只出现局部或偏淡色彩。',
+      'factors.brightness.desc.weak': '云量虽然够，但直射弱、水汽或灰幕证据会压低真实亮度。',
       'factors.rendering.title': '空气显色',
       'factors.rendering.status.good': '较好', 'factors.rendering.status.fair': '一般', 'factors.rendering.status.weak': '较弱',
       'factors.rendering.desc.good': '空气里有适度颗粒和水汽，颜色更容易偏暖、偏红。',
@@ -1598,6 +1603,8 @@ class PredictionController {
       'aerosol.extremeHaze': '沙尘/灰幕很重', 'aerosol.extremeHazeDesc': '高云虽多，但空气光学条件失效，霞光容易被压成灰黄色',
       'aerosol.hazeCap': '灰幕风险明显', 'aerosol.hazeCapDesc': '颗粒物或气溶胶偏高，会削弱红橙色染色',
       'aerosol.carrier': '薄雾红日载体', 'aerosol.carrierDesc': '云层很少时，适度气溶胶在光路通畅时也能带来一点暖色日落',
+      'brightness.weak': '云层亮度偏弱', 'brightness.weakDesc': '系统看到云量和光路，但水汽、AOD、漫射光或厚高云证据显示这层云未必能被充分照亮',
+      'brightness.good': '云层受光较好', 'brightness.goodDesc': '载体、光路和空气条件共同支持中高云被照亮',
       'lightPath.opening': '太阳方向有透光开口', 'lightPath.openingDesc': '后端沿太阳方位采样 10/25/50/75/100km，低中云走廊较通畅，光线更容易打到云层',
       'lightPath.wall': '太阳方向有阻挡走廊', 'lightPath.wallDesc': '太阳方位周边低/中云整体偏厚，光路门控会压低主评分',
       'lightPath.lowCloudBlock': '低云遮住光线', 'lightPath.lowCloudBlockDesc': '低云挡在太阳方向，阳光不容易照到中高云',
@@ -1757,6 +1764,8 @@ class PredictionController {
     const scoringV2 = prediction?.scoringV2;
     const lightPathAnalysis = prediction?.lightPathAnalysis || {};
     const directional = lightPathAnalysis.directionalAnalysis;
+    const layerBrightness = prediction?.layerBrightness || prediction?.breakdown?.layerBrightness;
+    const layerBrightnessAdjustment = prediction?.layerBrightnessAdjustment || prediction?.breakdown?.layerBrightnessAdjustment;
 
     const carrierScore = Number(
       prediction?.breakdown?.carrierScore ??
@@ -1801,6 +1810,16 @@ class PredictionController {
       lightPathLevel = lightPathScore >= 45 ? 'fair' : 'weak';
     }
 
+    const effectiveBrightness = Number(layerBrightness?.effectiveBrightness);
+    let brightnessLevel = 'fair';
+    if (!layerBrightness?.applied && !Number.isFinite(effectiveBrightness)) {
+      brightnessLevel = lightPathLevel === 'good' && carrierLevel !== 'weak' ? 'good' : 'fair';
+    } else if (layerBrightnessAdjustment?.applied || layerBrightness?.cap != null || effectiveBrightness < 30) {
+      brightnessLevel = 'weak';
+    } else if (effectiveBrightness >= 45 || layerBrightness?.reason === 'layer_brightness_sufficient') {
+      brightnessLevel = 'good';
+    }
+
     const renderingFactor = Number(prediction?.breakdown?.renderingFactor ?? prediction?.renderingAnalysis?.factor);
     const aod = Number(weather.aod);
     const grayCurtainMode = postRainAdjustment?.mode === 'post_rain_gray_curtain' || postRainAdjustment?.mode === 'humid_haze_gray_curtain';
@@ -1833,6 +1852,7 @@ class PredictionController {
     const strongLimit = Boolean(
       prediction?.severeWeatherCap?.reason ||
       aerosolHazeCap?.applied ||
+      layerBrightnessAdjustment?.applied ||
       thickHighCloudPenalty?.applied ||
       prediction?.geometricModel?.feasible === false ||
       prediction?.occlusionAnalysis?.occluded ||
@@ -1843,6 +1863,7 @@ class PredictionController {
     );
     const mildLimit = Boolean(
       denseCarrierCanvasOnly ||
+      layerBrightness?.cap != null ||
       weather.low >= 25 ||
       weather.visibility < 15 ||
       weather.humidity > 75 ||
@@ -1869,6 +1890,7 @@ class PredictionController {
     return [
       factor('carrier', carrierLevel, 'cloud'),
       factor('lightPath', lightPathLevel, lightPathLevel === 'weak' ? 'warn' : 'info'),
+      factor('brightness', brightnessLevel, brightnessLevel === 'weak' ? 'warn' : 'leaf'),
       factor('rendering', renderingLevel, 'leaf'),
       factor('limits', limitLevel, limitLevel === 'good' ? 'ok' : 'warn')
     ];
@@ -2028,6 +2050,8 @@ class PredictionController {
     const directionalCurtainCarrier = prediction?.directionalCurtainCarrier || prediction?.breakdown?.directionalCurtainCarrier;
     const postRainAdjustment = prediction?.postRainAdjustment;
     const scoringV2 = prediction?.scoringV2;
+    const layerBrightness = prediction?.layerBrightness || prediction?.breakdown?.layerBrightness;
+    const layerBrightnessAdjustment = prediction?.layerBrightnessAdjustment || prediction?.breakdown?.layerBrightnessAdjustment;
     const severeWeatherCap = prediction?.severeWeatherCap;
     const occlusionAnalysis = prediction?.occlusionAnalysis;
     const geometricModel = prediction?.geometricModel;
@@ -2133,6 +2157,20 @@ class PredictionController {
         label: ledgerText('labels.occlusion', {}, 'Occlusion', '遮挡修正'),
         value: '×0.75',
         detail: ledgerText('details.occlusion', {}, 'distant obstruction reduces the score', '远端遮挡压低最终分'),
+        tone: 'bad'
+      } : null,
+      layerBrightnessAdjustment?.applied ? {
+        label: ledgerText('labels.layerBrightness', {}, 'Layer brightness', '受光亮度'),
+        value: `≤${fmt(layerBrightnessAdjustment.cap ?? layerBrightness?.cap, 0)}`,
+        detail: ledgerText(
+          'details.layerBrightnessCap',
+          {
+            brightness: fmt(layerBrightness?.effectiveBrightness, 1),
+            evidence: Array.isArray(layerBrightness?.dimEvidence) ? layerBrightness.dimEvidence.join(', ') : '--'
+          },
+          'effective brightness {{brightness}}; dim evidence: {{evidence}}',
+          '有效亮度 {{brightness}}；压暗证据：{{evidence}}'
+        ),
         tone: 'bad'
       } : null,
       carrierAdjustment?.applied ? {
@@ -2342,9 +2380,30 @@ class PredictionController {
       return parts.join('；');
     })();
 
+    const brightnessDetail = (() => {
+      if (!layerBrightness?.applied) return '';
+      const factors = layerBrightness.factors || {};
+      const layers = layerBrightness.layers || {};
+      return ledgerText(
+        'details.layerBrightness',
+        {
+          brightness: fmt(layerBrightness.effectiveBrightness, 1),
+          gate: fmt(layerBrightness.brightnessGate, 2),
+          canvas: fmt(layers.cloudCanvas, 1),
+          solar: fmt(factors.solarFactor, 2),
+          path: fmt(factors.pathFactor, 2),
+          air: fmt(factors.airTransmission, 2),
+          thickness: fmt(factors.thicknessFactor, 2),
+          beam: fmt(factors.beamFactor, 2)
+        },
+        'brightness {{brightness}}, gate {{gate}}; cloud canvas {{canvas}}, solar {{solar}}, path {{path}}, air {{air}}, thickness {{thickness}}, beam {{beam}}',
+        '亮度 {{brightness}}，门控 {{gate}}；云画布 {{canvas}}，太阳几何 {{solar}}，光路 {{path}}，空气 {{air}}，云厚 {{thickness}}，直射/散射 {{beam}}'
+      );
+    })();
+
     const adjustmentHtml = capEvents.length
       ? capEvents.map((event, idx) => step(
-        idx + 5,
+        idx + 6,
         event.label,
         event.tone === 'good'
           ? ledgerText('details.positiveAdjustment', {}, 'favorable condition adjustment', '有利条件修正')
@@ -2365,10 +2424,11 @@ class PredictionController {
         <div class="score-ledger-steps">
           ${step(1, ledgerText('labels.cloudCarrier', {}, 'Carrier', '载体'), ledgerText('details.cloudCarrier', {}, 'usable color carrier from cloud, solar direction, or thin haze', '可被染色的本地云面、日落方向云幕或薄雾载体'), fmt(carrierScore, 1), carrierDetail)}
           ${step(2, ledgerText('labels.lightPath', {}, 'Light path', '光路'), ledgerText('details.lightPath', {}, 'sunlight reaches the cloud layer', '阳光是否能打到云层'), fmt(lightPathScore, 1), lightPathDetail)}
-          ${step(3, ledgerText('labels.baseScore', {}, 'Base score', '基础分'), weightedDescription, fmt(baseScore, 1))}
-          ${step(4, ledgerText('labels.rendering', {}, 'Rendering', '显色修正'), renderingDescription, fmt(renderedScore, 1), ledgerText('details.renderingFactors', { visibility: fmt(prediction?.renderingAnalysis?.visibilityFactor, 2), humidity: fmt(prediction?.renderingAnalysis?.humidityFactor, 2), aerosol: fmt(aerosolFactor, 2) }, 'visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}', '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}'))}
+          ${step(3, ledgerText('labels.layerBrightness', {}, 'Layer brightness', '受光亮度'), ledgerText('details.layerBrightnessShort', {}, 'whether the carrier is actually illuminated enough', '载体是否真的被照亮'), layerBrightness?.applied ? fmt(layerBrightness.effectiveBrightness, 1) : '--', brightnessDetail)}
+          ${step(4, ledgerText('labels.baseScore', {}, 'Base score', '基础分'), weightedDescription, fmt(baseScore, 1))}
+          ${step(5, ledgerText('labels.rendering', {}, 'Rendering', '显色修正'), renderingDescription, fmt(renderedScore, 1), ledgerText('details.renderingFactors', { visibility: fmt(prediction?.renderingAnalysis?.visibilityFactor, 2), humidity: fmt(prediction?.renderingAnalysis?.humidityFactor, 2), aerosol: fmt(aerosolFactor, 2) }, 'visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}', '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}'))}
           ${adjustmentHtml}
-          ${step(capEvents.length ? capEvents.length + 5 : 5, ledgerText('labels.final', {}, 'Final', '最终分'), capEvents.length ? ledgerText('details.afterAdjustments', {}, 'after weather and visibility adjustments', '结合天气和能见度后') : ledgerText('details.finalDisplayed', {}, 'final displayed result', '最终展示结果'), fmt(finalScore, 0), '', 'final')}
+          ${step(capEvents.length ? capEvents.length + 6 : 6, ledgerText('labels.final', {}, 'Final', '最终分'), capEvents.length ? ledgerText('details.afterAdjustments', {}, 'after weather and visibility adjustments', '结合天气和能见度后') : ledgerText('details.finalDisplayed', {}, 'final displayed result', '最终展示结果'), fmt(finalScore, 0), '', 'final')}
         </div>
       </div>
     `;
