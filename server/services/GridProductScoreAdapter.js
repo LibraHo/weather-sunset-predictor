@@ -420,7 +420,7 @@ function buildDirectionalContext(point, gridLookup, date, period, gridStepKm) {
   };
 }
 
-function applyDirectionalMapScoring(baseScore, weather, context) {
+function applyDirectionalMapScoring(baseScore, weather, context, layerBrightness = null) {
   if (!context?.applied || !Number.isFinite(baseScore)) {
     return {
       score: baseScore,
@@ -461,6 +461,21 @@ function applyDirectionalMapScoring(baseScore, weather, context) {
         applied: false,
         reason: 'local_canvas_too_weak_for_directional_map_lift',
         metrics
+      }
+    };
+  }
+
+  if (layerBrightness?.cap != null && Number(layerBrightness.cap) < 65) {
+    return {
+      score: baseScore,
+      adjustment: {
+        applied: false,
+        reason: 'layer_brightness_too_weak_for_directional_map_lift',
+        metrics: {
+          ...metrics,
+          effectiveBrightness: Number(layerBrightness.effectiveBrightness ?? 0),
+          brightnessCap: Number(layerBrightness.cap)
+        }
       }
     };
   }
@@ -591,7 +606,7 @@ class GridProductScoreAdapter {
           ? buildDirectionalContext(point, gridLookup, targetTime.toISOString(), safePeriod, gridStepKm)
           : null;
         const directionalScore = score !== null
-          ? applyDirectionalMapScoring(score, point.weather, directionalContext)
+          ? applyDirectionalMapScoring(score, point.weather, directionalContext, scoringPoint._predictionBreakdown?.layerBrightness)
           : { score, adjustment: null };
         return {
           lat: point.lat,
