@@ -1188,8 +1188,7 @@ export function buildDefaultPredictionPreview() {
         title: '云层载体',
         status: '待判断',
         tone: 'fair',
-        desc: '查询后判断中高云是否能承接霞光。',
-        subfacts: [{ key: 'brightness', label: '受光亮度', value: '待判断', tone: 'fair' }]
+        desc: '查询后判断中高云是否能承接霞光，以及这些云是否能被照亮。'
       },
       {
         key: 'lightPath',
@@ -1265,8 +1264,7 @@ export function buildTestPredictionPreview() {
         title: '云层载体',
         status: '较好',
         tone: 'good',
-        desc: '中高云能承接日落光线，是今天主要的显色画布。',
-        subfacts: [{ key: 'brightness', label: '受光亮度', value: '充足', tone: 'good' }]
+        desc: '中高云能承接日落光线，受光亮度充足，是今天主要的显色画布。'
       },
       {
         key: 'lightPath',
@@ -1784,6 +1782,31 @@ function buildLayerBrightnessFact(input = {}) {
   return { key: 'brightness', label: '受光亮度', value, tone };
 }
 
+function buildCarrierAnalysis({ high, mid, brightness } = {}) {
+  const hasCarrier = high >= 50 || mid >= 30;
+  const carrierStatus = hasCarrier ? '较好' : '一般';
+  const carrierTone = hasCarrier ? 'good' : 'fair';
+  const brightnessText = brightness.value === '充足'
+    ? '受光亮度充足'
+    : (brightness.value === '偏弱' ? '受光偏弱' : '受光亮度待判断');
+
+  if (brightness.tone === 'weak') {
+    return {
+      status: '偏弱',
+      tone: 'weak',
+      insight: hasCarrier ? '云面有，但受光偏弱' : '云面一般，受光也偏弱',
+      desc: `高云 ${Math.round(high)}%，中云 ${Math.round(mid)}%；${brightnessText}。`
+    };
+  }
+
+  return {
+    status: carrierStatus,
+    tone: carrierTone,
+    insight: hasCarrier ? '有可染色云面' : '云面基础一般',
+    desc: `高云 ${Math.round(high)}%，中云 ${Math.round(mid)}%；${brightnessText}。`
+  };
+}
+
 export function buildPredictionAnalysisGroups(input = {}) {
   const high = Number(input.high ?? 62);
   const mid = Number(input.mid ?? 36);
@@ -1800,15 +1823,15 @@ export function buildPredictionAnalysisGroups(input = {}) {
     ? `能见度 ${Math.round(visibility)}km、湿度 ${Math.round(humidity)}%、AOD ${aod.toFixed(2)}；满铺云幕叠加偏脏空气，颜色容易被压淡。`
     : `能见度 ${Math.round(visibility)}km、湿度 ${Math.round(humidity)}%、AOD ${aod.toFixed(2)}；${warmScattering ? '光路打开，适度颗粒可增强橙红散射。' : '颜色表现主要看云层和光路。'}`;
   const brightness = buildLayerBrightnessFact(input);
+  const carrier = buildCarrierAnalysis({ high, mid, brightness });
   return [
     {
       key: 'carrier',
       title: '云层载体',
-      status: high >= 50 || mid >= 30 ? '较好' : '一般',
-      tone: high >= 50 || mid >= 30 ? 'good' : 'fair',
-      insight: high >= 50 || mid >= 30 ? '有可染色云面' : '云面基础一般',
-      desc: `高云 ${Math.round(high)}%，中云 ${Math.round(mid)}%。`,
-      subfacts: [brightness]
+      status: carrier.status,
+      tone: carrier.tone,
+      insight: carrier.insight,
+      desc: carrier.desc
     },
     {
       key: 'lightPath',

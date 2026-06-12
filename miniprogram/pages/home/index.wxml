@@ -318,12 +318,6 @@
             <text class="analysis-factor-status analysis-factor-status-{{item.tone}}">{{item.status}}</text>
           </view>
           <view wx:if="{{item.insight}}" class="analysis-factor-summary">{{item.insight}}</view>
-          <view wx:if="{{item.subfacts && item.subfacts.length}}" class="analysis-factor-subfacts">
-            <view class="analysis-factor-subfact analysis-factor-subfact-{{fact.tone}}" wx:for="{{item.subfacts}}" wx:for-item="fact" wx:key="key">
-              <text>{{fact.label}}</text>
-              <text>{{fact.value}}</text>
-            </view>
-          </view>
           <view class="analysis-factor-desc">{{item.desc}}</view>
         </view>
       </view>

@@ -100,11 +100,14 @@ describe('miniprogram page user/share helpers', () => {
       }
     });
 
-    expect(preview.analysis[0].subfacts).toContainEqual(expect.objectContaining({
-      key: 'brightness',
-      value: '偏弱',
-      tone: 'weak'
-    }));
+    expect(preview.analysis[0]).toMatchObject({
+      key: 'carrier',
+      status: '偏弱',
+      tone: 'weak',
+      insight: '云面有，但受光偏弱'
+    });
+    expect(preview.analysis[0].desc).toContain('受光偏弱');
+    expect(preview.analysis[0].subfacts).toBeUndefined();
   });
 
   test('home share path uses the selected prediction card date', () => {
