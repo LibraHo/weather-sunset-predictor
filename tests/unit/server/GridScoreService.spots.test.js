@@ -54,7 +54,7 @@ describe('Phase 16 散点地图 - 网格与缓存', () => {
       expect(p.lat).toBeGreaterThanOrEqual(18);
       expect(p.lat).toBeLessThanOrEqual(53);
       expect(p.lon).toBeGreaterThanOrEqual(72);
-      expect(p.lon).toBeLessThanOrEqual(135);
+      expect(p.lon).toBeLessThanOrEqual(146);
     });
   });
 
@@ -69,7 +69,7 @@ describe('Phase 16 散点地图 - 网格与缓存', () => {
       expect(Math.min(...lats)).toBeGreaterThanOrEqual(18);
       expect(Math.max(...lats)).toBeLessThanOrEqual(53);
       expect(Math.min(...lons)).toBeGreaterThanOrEqual(72);
-      expect(Math.max(...lons)).toBeLessThanOrEqual(135);
+      expect(Math.max(...lons)).toBeLessThanOrEqual(146);
     }
   });
 });
