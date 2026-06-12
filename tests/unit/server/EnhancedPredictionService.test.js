@@ -1287,7 +1287,7 @@ describe('EnhancedPredictionService', () => {
       expect(result.clearSunsetAdvice.applied).toBe(true);
     });
 
-    test('should keep clear upper-cloud carrier floors subject to layer brightness', () => {
+    test('should keep clear upper-cloud carrier floors subject to air rendering', () => {
       const weatherData = {
         cloudCover: 100,
         lowClouds: 0,
@@ -1310,13 +1310,13 @@ describe('EnhancedPredictionService', () => {
       );
 
       expect(result.highCloudCarrierAdjustment).toMatchObject({
-        applied: true,
-        floor: 68,
-        reason: 'clear_upper_cloud_carrier_floor_68'
+        applied: false,
+        suppressed: true,
+        suppressReason: 'air_rendering_not_clear'
       });
       expect(result.aerosolHazeCap.applied).toBe(false);
-      expect(result.score).toBeGreaterThanOrEqual(20);
-      expect(result.score).toBeLessThan(30);
+      expect(result.score).toBeGreaterThanOrEqual(10);
+      expect(result.score).toBeLessThan(20);
       expect(result.layerBrightnessAdjustment.applied).toBe(true);
       expect(result.status).toBe('light_glow');
     });
@@ -1516,8 +1516,8 @@ describe('EnhancedPredictionService', () => {
       expect(result.lightPathAnalysis.directionalAnalysis.reason).toBe('solar_direction_blocked_corridor');
       expect(result.lightPathGate.reason).toBe('solar_direction_blocked_corridor');
       expect(result.lightPathGate.gate).toBe(0.42);
-      expect(result.score).toBeLessThan(40);
-      expect(result.status).toBe('no_fire_cloud');
+      expect(result.score).toBeLessThan(50);
+      expect(result.status).toBe('light_glow');
     });
 
     test('should use solar-direction curtain as carrier when local overhead clouds are sparse', () => {
@@ -1569,8 +1569,8 @@ describe('EnhancedPredictionService', () => {
       });
       expect(result.carrierAnalysis.activeCarrier).toBe('directional_curtain');
       expect(result.breakdown.renderingMode).toBe('negative_rendering_multiplier');
-      expect(result.score).toBeGreaterThanOrEqual(15);
-      expect(result.score).toBeLessThan(25);
+      expect(result.score).toBeGreaterThanOrEqual(30);
+      expect(result.score).toBeLessThan(40);
       expect(result.layerBrightnessAdjustment.applied).toBe(true);
       expect(result.status).toBe('light_glow');
     });
@@ -1808,16 +1808,16 @@ describe('EnhancedPredictionService', () => {
         { prevHourData, remoteCloudData }
       );
 
-      expect(result.score).toBeGreaterThanOrEqual(50);
-      expect(result.score).toBeLessThan(58);
-      expect(result.layerBrightnessAdjustment.applied).toBe(true);
+      expect(result.score).toBeGreaterThanOrEqual(40);
+      expect(result.score).toBeLessThan(50);
+      expect(result.layerBrightnessAdjustment.applied).toBe(false);
       expect(result.status).toBe('good_glow');
       expect(result.cloudThickness.evidence).toMatchObject({
         diffuseRatio: 1,
         diffusePressure: 0
       });
       expect(result.renderingAnalysis).toMatchObject({
-        factor: 0.9,
+        factor: 0.648,
         aqiFactor: 1,
         aerosolFactor: 0.9
       });

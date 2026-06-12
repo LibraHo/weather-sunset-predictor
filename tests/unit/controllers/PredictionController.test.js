@@ -835,7 +835,7 @@ describe('PredictionController', () => {
       expect(html).toContain('70.7');
       expect(html).toContain('72.5');
       expect(html).toContain('71.1');
-      expect(html).toContain('光路门控 0.91');
+      expect(html).toContain('载体 × 受光亮度');
       expect(html).not.toContain('70.7×80% + 72.5×20%');
       expect(html).toContain('71.1 × 显色系数 0.85 = 60.4');
       expect(html).toContain('60.4');

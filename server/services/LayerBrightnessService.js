@@ -129,6 +129,7 @@ function scoreLayerBrightness(params = {}) {
     weatherData = {},
     timeAnalysis = {},
     lightPathScore = {},
+    lightPathGate = null,
     renderingFactor = {},
     cloudThickness = {},
     type = 'sunset',
@@ -150,7 +151,11 @@ function scoreLayerBrightness(params = {}) {
   const lowBlockFactor = clamp(1 - Math.max(0, low - 25) / 75 * 0.55, 0.45, 1);
 
   const solarFactor = scoreSolarLayerFactor(timeAnalysis.elevation, type);
-  const pathFactor = clamp(finiteNumber(lightPathScore.score, 0) / 100, 0, 1.05);
+  const pathScoreFactor = clamp(finiteNumber(lightPathScore.score, 0) / 100, 0, 1.05);
+  const pathGateFactor = finiteNumber(lightPathGate?.gate);
+  const pathFactor = pathGateFactor === null
+    ? pathScoreFactor
+    : clamp(Math.min(pathScoreFactor, pathGateFactor), 0, 1.05);
   const air = scoreAirTransmission(weatherData, renderingFactor);
   const thicknessFactor = scoreThicknessFactor(weatherData, cloudThickness, lightPathScore);
   const beam = scoreBeamFactor(weatherData);
@@ -184,15 +189,16 @@ function scoreLayerBrightness(params = {}) {
   }
 
   const effectiveBrightness = clamp(
-    100 * cloudCanvas * lowBlockFactor * solarFactor * pathFactor * air.factor * thicknessFactor * beam.factor,
+    100 * cloudCanvas * lowBlockFactor * solarFactor * pathFactor * thicknessFactor * beam.factor,
     0,
     100
   );
+  const brightnessThreshold = dimEvidence.length >= 3 && effectiveBrightness < 30 ? 50 : 42;
   const brightnessMultiplier = effectiveBrightness <= 0
     ? 0
-    : (effectiveBrightness >= 42
+    : (effectiveBrightness >= brightnessThreshold
       ? 1
-      : clamp(effectiveBrightness / 42, 0, 1));
+      : clamp(effectiveBrightness / brightnessThreshold, 0, 1));
   const brightnessGate = brightnessMultiplier;
   const reason = buildBrightnessReason(effectiveBrightness, dimEvidence);
 
@@ -217,6 +223,7 @@ function scoreLayerBrightness(params = {}) {
       solarFactor: round(solarFactor, 2),
       pathFactor: round(pathFactor, 2),
       airTransmission: round(air.factor, 2),
+      brightnessThreshold,
       visibilityFactor: round(air.visibilityFactor, 2),
       humidityFactor: round(air.humidityFactor, 2),
       aerosolFactor: round(air.aerosolFactor, 2),

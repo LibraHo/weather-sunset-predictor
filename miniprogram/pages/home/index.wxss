@@ -535,7 +535,7 @@
 
 .prediction-share-footer-row {
   display: grid;
-  grid-template-columns: minmax(248rpx, 1fr) 196rpx;
+  grid-template-columns: minmax(0, 1fr) 128rpx;
   justify-content: stretch;
   gap: 14rpx;
   width: 100%;
@@ -549,8 +549,8 @@
 }
 
 .prediction-feedback-footer {
-  min-width: 196rpx;
-  padding: 0 22rpx;
+  min-width: 0;
+  padding: 0 14rpx;
   background: rgba(255, 252, 246, 0.9);
   color: #4b3621;
 }
@@ -565,7 +565,7 @@
 
 .prediction-feedback-footer .share-btn-label {
   display: block;
-  width: 56rpx;
+  width: auto;
   flex: none;
 }
 

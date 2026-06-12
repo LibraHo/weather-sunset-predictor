@@ -1099,14 +1099,14 @@ export function buildScoreLedger(prediction = {}) {
   const lightPathScore = lightPath.score ?? breakdown.lightPathScore;
   const baseScore = breakdown.baseScore;
   const renderingFactor = rendering.factor ?? breakdown.renderingFactor;
-  const lightPathGate = prediction.lightPathGate?.gate ?? breakdown.lightPathGate;
+  const brightnessMultiplier = layerBrightnessAdjustment?.multiplier ?? layerBrightness.brightnessMultiplier ?? layerBrightness.brightnessGate;
   const renderingAdjustment = prediction.renderingAdjustment?.adjustment ?? breakdown.renderingAdjustment;
   const renderedScore = breakdown.unclampedFinalScore ?? breakdown.renderedScore ?? finalScore;
   const cloudThicknessStep = buildCloudThicknessStep(prediction, canvas);
   const layerBrightnessStep = buildLayerBrightnessStep(layerBrightness, layerBrightnessAdjustment);
 
   const summary = Number.isFinite(Number(finalScore))
-    ? `${Math.round(Number(finalScore))} 分：由云层载体、光路、受光亮度和空气显色共同计算`
+    ? `${Math.round(Number(finalScore))} 分：由云层载体、受光亮度和空气显色共同计算`
     : '等待评分数据后展示完整解释';
 
   const steps = [
@@ -1130,8 +1130,8 @@ export function buildScoreLedger(prediction = {}) {
       key: 'baseScore',
       label: '基础分',
       result: formatScore(baseScore),
-      expression: buildBaseScoreExpression(canvasScore, lightPathGate, baseScore),
-      detail: '对齐网页版：载体分先看可染色云面，再由太阳方向光路和受光亮度共同约束',
+      expression: buildBaseScoreExpression(canvasScore, brightnessMultiplier, baseScore),
+      detail: '对齐网页版：载体分先看可染色云面，再由受光亮度约束；光路已并入亮度',
       tone: levelFromScore(baseScore)
     }
   ];
@@ -1229,11 +1229,11 @@ function buildLayerBrightnessStep(layerBrightness = {}, adjustment = null) {
   };
 }
 
-function buildBaseScoreExpression(canvasScore, lightPathGate, baseScore) {
-  if (Number.isFinite(Number(canvasScore)) && Number.isFinite(Number(lightPathGate)) && Number.isFinite(Number(baseScore))) {
-    return `${roundOne(canvasScore)} × 光路门控 ${roundTwo(lightPathGate)} = ${roundOne(baseScore)}`;
+function buildBaseScoreExpression(canvasScore, brightnessMultiplier, baseScore) {
+  if (Number.isFinite(Number(canvasScore)) && Number.isFinite(Number(brightnessMultiplier)) && Number.isFinite(Number(baseScore))) {
+    return `${roundOne(canvasScore)} × 受光亮度 ${roundTwo(brightnessMultiplier)} = ${roundOne(baseScore)}`;
   }
-  return '载体 × 光路门控';
+  return '载体 × 受光亮度';
 }
 
 function buildRenderingExpression(baseScore, renderingAdjustment, renderingFactor, renderedScore) {

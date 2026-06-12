@@ -668,6 +668,7 @@ describe('miniprogram page user/share helpers', () => {
       },
       lightPathAnalysis: { score: 72 },
       lightPathGate: { gate: 0.82 },
+      layerBrightnessAdjustment: { multiplier: 0.82 },
       renderingAdjustment: { adjustment: 3.2 },
       renderingAnalysis: { factor: 1.08 },
       breakdown: {
@@ -678,9 +679,9 @@ describe('miniprogram page user/share helpers', () => {
       }
     });
 
-    expect(ledger.summary).toContain('云层载体、光路、受光亮度和空气显色');
+    expect(ledger.summary).toContain('云层载体、受光亮度和空气显色');
     expect(ledger.steps.find((step) => step.key === 'baseScore')).toMatchObject({
-      expression: '78 × 光路门控 0.82 = 64'
+      expression: '78 × 受光亮度 0.82 = 64'
     });
     expect(ledger.steps.find((step) => step.key === 'cloudThickness')).toMatchObject({
       result: '-12分',
