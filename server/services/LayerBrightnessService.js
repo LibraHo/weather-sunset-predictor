@@ -186,11 +186,15 @@ function scoreLayerBrightness(params = {}) {
     0,
     100
   );
-  const brightnessMultiplier = effectiveBrightness <= 0
+  const dimPenaltyCount = Math.max(0, dimEvidence.length - 1);
+  const curveBrightness = clamp(effectiveBrightness - dimPenaltyCount * 2.5, 0, 100);
+  const brightnessMultiplier = curveBrightness <= 0
     ? 0
+    : (curveBrightness >= 42
+      ? 1
     : (dimEvidence.length >= 2
-      ? clamp(effectiveBrightness / 42, 0, 1.05)
-      : clamp(0.72 + effectiveBrightness / 120, 0, 1.05));
+      ? clamp(curveBrightness / 25, 0, 1)
+      : clamp(0.62 + curveBrightness / 52, 0, 0.99)));
   const brightnessGate = brightnessMultiplier;
   const reason = buildBrightnessReason(effectiveBrightness, dimEvidence);
 
@@ -234,7 +238,7 @@ function applyLayerBrightnessMultiplier(score, layerBrightness) {
   const multiplier = clamp(finiteNumber(layerBrightness?.brightnessMultiplier ?? layerBrightness?.brightnessGate, 1), 0, 1.05);
   const adjustedScore = round(clamp(numericScore * multiplier, 0, 100), 1);
 
-  if (multiplier >= 0.98 || adjustedScore >= numericScore) {
+  if (multiplier >= 0.95 || adjustedScore >= numericScore) {
     return {
       score: numericScore,
       applied: false,
