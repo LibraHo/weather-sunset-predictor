@@ -1184,7 +1184,8 @@ export function buildDefaultPredictionPreview() {
         title: '云层载体',
         status: '待判断',
         tone: 'fair',
-        desc: '查询后判断中高云是否能承接霞光。'
+        desc: '查询后判断中高云是否能承接霞光。',
+        subfacts: [{ key: 'brightness', label: '受光亮度', value: '待判断', tone: 'fair' }]
       },
       {
         key: 'lightPath',
@@ -1199,6 +1200,13 @@ export function buildDefaultPredictionPreview() {
         status: '待判断',
         tone: 'fair',
         desc: '查询后结合能见度、湿度和气溶胶判断颜色表现。'
+      },
+      {
+        key: 'limits',
+        title: '限制因素',
+        status: '待判断',
+        tone: 'fair',
+        desc: '查询后判断降水、厚低云或灰幕是否压制表现。'
       }
     ]
   };
@@ -1253,7 +1261,8 @@ export function buildTestPredictionPreview() {
         title: '云层载体',
         status: '较好',
         tone: 'good',
-        desc: '中高云能承接日落光线，是今天主要的显色画布。'
+        desc: '中高云能承接日落光线，是今天主要的显色画布。',
+        subfacts: [{ key: 'brightness', label: '受光亮度', value: '充足', tone: 'good' }]
       },
       {
         key: 'lightPath',
@@ -1268,6 +1277,13 @@ export function buildTestPredictionPreview() {
         status: '一般',
         tone: 'fair',
         desc: '湿度和 AOD 适中，颜色表现主要看临近日落时段云层变化。'
+      },
+      {
+        key: 'limits',
+        title: '限制因素',
+        status: '无明显',
+        tone: 'good',
+        desc: '降水和厚低云限制不明显。'
       }
     ]
   };
@@ -1744,6 +1760,22 @@ function formatNumberRaw(value) {
   return Number.isFinite(number) ? Math.round(number * 10) / 10 : 0;
 }
 
+function buildLayerBrightnessFact(input = {}) {
+  const layerBrightness = input.layerBrightness || input.breakdown?.layerBrightness || {};
+  const effectiveBrightness = Number(layerBrightness.effectiveBrightness ?? input.effectiveBrightness);
+  const capped = layerBrightness.cap != null || input.layerBrightnessAdjustment?.applied;
+  let tone = 'fair';
+  let value = '一般';
+  if (capped || (Number.isFinite(effectiveBrightness) && effectiveBrightness < 30)) {
+    tone = 'weak';
+    value = '偏弱';
+  } else if (layerBrightness.reason === 'layer_brightness_sufficient' || effectiveBrightness >= 45) {
+    tone = 'good';
+    value = '充足';
+  }
+  return { key: 'brightness', label: '受光亮度', value, tone };
+}
+
 export function buildPredictionAnalysisGroups(input = {}) {
   const high = Number(input.high ?? 62);
   const mid = Number(input.mid ?? 36);
@@ -1759,8 +1791,9 @@ export function buildPredictionAnalysisGroups(input = {}) {
   const renderingDesc = grayVeil
     ? `能见度 ${Math.round(visibility)}km、湿度 ${Math.round(humidity)}%、AOD ${aod.toFixed(2)}；满铺云幕叠加偏脏空气，颜色容易被压淡。`
     : `能见度 ${Math.round(visibility)}km、湿度 ${Math.round(humidity)}%、AOD ${aod.toFixed(2)}；${warmScattering ? '光路打开，适度颗粒可增强橙红散射。' : '颜色表现主要看云层和光路。'}`;
+  const brightness = buildLayerBrightnessFact(input);
   return [
-    { key: 'carrier', title: '云层载体', status: high >= 50 || mid >= 30 ? '较好' : '一般', tone: high >= 50 || mid >= 30 ? 'good' : 'fair', desc: `高云 ${Math.round(high)}%、中云 ${Math.round(mid)}%，有可染色云层基础。` },
+    { key: 'carrier', title: '云层载体', status: high >= 50 || mid >= 30 ? '较好' : '一般', tone: high >= 50 || mid >= 30 ? 'good' : 'fair', desc: `高云 ${Math.round(high)}%、中云 ${Math.round(mid)}%，有可染色云层基础；受光亮度会决定这层载体能不能真正显色。`, subfacts: [brightness] },
     { key: 'lightPath', title: '光路条件', status: low <= 25 ? '较好' : '一般', tone: low <= 25 ? 'good' : 'fair', desc: `低云 ${Math.round(low)}%，太阳方向相对通透，光线有机会照到云底。` },
     { key: 'rendering', title: '空气显色', status: renderingStatus, tone: renderingTone, desc: renderingDesc },
     { key: 'limits', title: '限制因素', status: low > 45 || grayVeil ? '明显' : '无明显', tone: low > 45 || grayVeil ? 'weak' : 'good', desc: low > 45 ? '低云偏多可能遮挡太阳方向。' : (grayVeil ? '满铺中高云和偏脏空气会压低颜色强度。' : '降水和厚低云限制不明显。') }
@@ -1813,7 +1846,9 @@ function buildCompletePredictionPreview(preview = {}) {
       visibility: preview.visibility,
       humidity: preview.humidity,
       aod: preview.aod,
-      scoringV2: preview.scoringV2
+      scoringV2: preview.scoringV2,
+      layerBrightness: preview.layerBrightness,
+      layerBrightnessAdjustment: preview.layerBrightnessAdjustment
     }),
     radar: buildPredictionRadarFromClouds(preview.periodKey, preview.clouds, preview.direction)
   };
