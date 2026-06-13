@@ -41,17 +41,35 @@ describe('miniprogram result page web parity', () => {
     const web = read('src/controllers/PredictionController.js');
     const wxml = read('miniprogram/pages/result/index.wxml');
     const js = read('miniprogram/pages/result/index.js');
+    const wxss = read('miniprogram/pages/result/index.wxss');
     const renderStart = web.indexOf('  renderSinglePrediction(');
 
     expect(web.indexOf('score-summary-card', renderStart)).toBeLessThan(web.indexOf('prediction-share-menu prediction-share-footer', renderStart));
     expect(web.indexOf('renderAnalysisCard', renderStart)).toBeLessThan(web.indexOf('prediction-share-menu prediction-share-footer', renderStart));
 
     expect(wxml.indexOf('open-type="share"')).toBeLessThan(wxml.indexOf('bindtap="toggleFavorite"'));
+    expect(wxss).toContain('grid-template-columns: minmax(0, 1fr) 196rpx minmax(0, 1fr)');
     expect(wxml.indexOf('data-target="map"')).toBeLessThan(wxml.indexOf('data-target="methodology"'));
     expect(wxml.indexOf('data-target="gallery"')).toBeLessThan(wxml.indexOf('data-target="api"'));
     expect(wxml.indexOf('data-target="api"')).toBeLessThan(wxml.indexOf('data-target="upload"'));
     expect(js.indexOf("map: `/pages/map/index?period=${this.data.prediction?.period")).toBeLessThan(js.indexOf("methodology: '/pages/methodology/index'"));
     expect(js).toContain("api: '/pages/methodology/index?section=api'");
+  });
+
+  test('keeps result text analysis as a clean 2x2 card without extra value labels', () => {
+    const wxml = read('miniprogram/pages/result/index.wxml');
+    const wxss = read('miniprogram/pages/result/index.wxss');
+
+    expect(wxml).toContain('wx:for="{{analysisItems}}"');
+    expect(wxml).toContain('analysis-title');
+    expect(wxml).toContain('analysis-detail');
+    expect(wxml).not.toContain('analysis-value');
+    expect(wxml).not.toContain('analysis-factor-status');
+    expect(wxml).not.toContain('analysis-factor-subfact');
+    expect(wxss).toMatch(/\.analysis-grid\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
+    expect(wxss).not.toContain('.analysis-value');
+    expect(wxss).not.toContain('.analysis-factor-status');
+    expect(wxss).not.toContain('.analysis-factor-subfact');
   });
 
   test('keeps the web sunrise sunset card switch on the result surface', () => {
