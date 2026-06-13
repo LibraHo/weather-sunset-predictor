@@ -370,7 +370,14 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxss).toContain('grid-template-columns: repeat(2, minmax(0, 1fr))');
     expect(homeWxml).toContain('analysis-factor-tag');
     expect(homeWxss).toContain('.analysis-factor-tag');
+    expect(homeWxss).toContain('.analysis-factor-good .analysis-factor-tag');
+    expect(homeWxss).toContain('.analysis-factor-fair .analysis-factor-tag');
+    expect(homeWxss).toContain('.analysis-factor-weak .analysis-factor-tag');
+    expect(homeWxss).toContain('.home-page.has-weather .analysis-factor-good .analysis-factor-tag');
     expect(homeWxss).toContain('.home-page.theme-dark.has-weather .analysis-factor-tag');
+    expect(homeWxss).toContain('.home-page.theme-dark.has-weather .analysis-factor-weak .analysis-factor-tag');
+    expect(homeWxml).not.toMatch(/prediction-share-menu[^"]*analysis-factor-tag/);
+    expect(homeWxml).not.toMatch(/prediction-feedback-footer[^"]*analysis-factor-tag/);
     expect(homeWxml).not.toContain('analysis-factor-summary');
     expect(homeWxss).not.toContain('.analysis-factor-summary');
     expect(homeWxml).not.toContain('analysis-factor-status');

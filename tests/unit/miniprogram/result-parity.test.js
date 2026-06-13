@@ -73,6 +73,12 @@ describe('miniprogram result page web parity', () => {
     expect(wxml).not.toContain('analysis-factor-subfact');
     expect(wxss).toMatch(/\.analysis-grid\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
     expect(wxss).toContain('.analysis-status-label');
+    expect(wxss).toContain('.tone-excellent .analysis-status-label');
+    expect(wxss).toContain('.tone-good .analysis-status-label');
+    expect(wxss).toContain('.tone-watch .analysis-status-label');
+    expect(wxss).toContain('.tone-weak .analysis-status-label');
+    expect(wxml).not.toMatch(/action-button[^"]*analysis-status-label/);
+    expect(wxml).not.toMatch(/feedback-action-button[^"]*analysis-status-label/);
     expect(wxss).not.toContain('.analysis-factor-status');
     expect(wxss).not.toContain('.analysis-factor-subfact');
   });
