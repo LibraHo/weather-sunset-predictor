@@ -93,7 +93,6 @@
         <view class="analysis-item tone-{{item.tone}}" wx:for="{{analysisItems}}" wx:key="key">
           <view class="analysis-topline">
             <text class="analysis-title">{{item.title}}</text>
-            <text class="analysis-value">{{item.value}}</text>
           </view>
           <view class="analysis-detail">{{item.detail}}</view>
         </view>
