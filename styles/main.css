@@ -10483,19 +10483,11 @@ html[data-actual-theme="dark"] #weather-section #weekly-cards.weekly-cards-conta
   border-color: color-mix(in srgb, var(--color-error) 28%, transparent);
 }
 
-.app-analysis-card .analysis-factor-summary {
-  margin: 6px 0 0 30px;
-  color: var(--theme-text);
-  font-size: 0.86rem;
-  font-weight: 800;
-  line-height: 1.25;
-}
-
 .app-analysis-card .analysis-factor p {
-  margin: 6px 0 0 30px;
+  margin: 7px 0 0 30px;
   color: var(--theme-text-muted);
-  font-size: 0.78rem;
-  line-height: 1.42;
+  font-size: 0.82rem;
+  line-height: 1.46;
   text-align: left;
 }
 
@@ -10574,7 +10566,6 @@ html[data-actual-theme="dark"] #weather-section #weekly-cards.weekly-cards-conta
     height: 20px;
   }
 
-  .app-analysis-card .analysis-factor-summary,
   .app-analysis-card .analysis-factor p {
     margin-left: 27px;
   }

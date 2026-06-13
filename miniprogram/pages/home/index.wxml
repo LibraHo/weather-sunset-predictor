@@ -317,7 +317,6 @@
             </view>
             <text class="analysis-factor-status analysis-factor-status-{{item.tone}}">{{item.status}}</text>
           </view>
-          <view wx:if="{{item.insight}}" class="analysis-factor-summary">{{item.insight}}</view>
           <view class="analysis-factor-desc">{{item.desc}}</view>
         </view>
       </view>

@@ -2020,7 +2020,6 @@ class PredictionController {
           <span class="analysis-factor-title">${factor.title}</span>
           <strong class="analysis-factor-status analysis-factor-status-${statusTone}">${factor.status}</strong>
         </div>
-        ${factor.insight ? `<div class="analysis-factor-summary">${factor.insight}</div>` : ''}
         ${subfacts}
         <p>${factor.desc}</p>
       </section>

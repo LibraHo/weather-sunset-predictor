@@ -1104,7 +1104,7 @@ describe('PredictionController', () => {
       expect(finalRules).toContain('analysis-factor-grid');
       expect(finalRules).toContain('flex-direction: column');
       expect(finalRules).toContain('analysis-factor-heading');
-      expect(finalRules).toContain('analysis-factor-summary');
+      expect(finalRules).not.toContain('analysis-factor-summary');
       expect(finalRules).toContain('analysis-factor-status-good');
       expect(finalRules).toContain('analysis-factor-status-fair');
       expect(finalRules).toContain('analysis-factor-status-mild');

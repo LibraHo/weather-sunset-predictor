@@ -367,6 +367,8 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxss).toContain('.cloud-condition-card');
     expect(homeWxss).toContain('grid-template-columns: repeat(3, minmax(0, 1fr))');
     expect(homeWxss).toContain('.app-analysis-card');
+    expect(homeWxml).not.toContain('analysis-factor-summary');
+    expect(homeWxss).not.toContain('.analysis-factor-summary');
     expect(homeWxss).toContain('.analysis-factor-status-good');
     expect(homeWxss).toContain('.analysis-factor-status-fair');
     expect(homeWxss).toContain('.analysis-factor-status-mild');

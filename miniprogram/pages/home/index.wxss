@@ -957,19 +957,11 @@
   border-color: rgba(220, 38, 38, 0.26);
 }
 
-.analysis-factor-summary {
-  margin-top: 8rpx;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 23rpx;
-  font-weight: 800;
-  line-height: 1.28;
-}
-
 .analysis-factor-desc {
-  margin-top: 8rpx;
+  margin-top: 10rpx;
   color: rgba(255, 255, 255, 0.52);
-  font-size: 21rpx;
-  line-height: 1.42;
+  font-size: 22rpx;
+  line-height: 1.48;
 }
 
 .prediction-preview-action-primary {
@@ -1612,10 +1604,6 @@
 .home-page.has-weather .analysis-card-subtitle,
 .home-page.has-weather .analysis-factor-desc {
   color: rgba(89, 67, 54, 0.58);
-}
-
-.home-page.has-weather .analysis-factor-summary {
-  color: rgba(61, 48, 40, 0.84);
 }
 
 .home-page.has-weather .score-summary-divider,
@@ -3137,10 +3125,6 @@
 
 .home-page.theme-dark.has-weather .analysis-card-subtitle {
   color: rgba(226, 232, 240, 0.48);
-}
-
-.home-page.theme-dark.has-weather .analysis-factor-summary {
-  color: rgba(255, 255, 255, 0.82);
 }
 
 .home-page.theme-dark.has-weather .weather-desc,
