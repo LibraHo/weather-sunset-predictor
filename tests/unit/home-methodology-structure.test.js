@@ -57,7 +57,7 @@ describe('home methodology structure', () => {
     ];
     const localeTexts = localeFiles.map(file => fs.readFileSync(path.join(ROOT, 'src/locales', file), 'utf8'));
 
-    expect(html).toContain('2026-06-12');
+    expect(html).toContain('2026-06-13');
     expect(html).toContain('2026.06.13-layer-weighted-brightness-v1');
     expect(html).toContain('分层求和亮度公式 v1');
     expect(html).toContain('2026-06-03');
