@@ -2014,11 +2014,16 @@ class PredictionController {
   }
 
   renderAnalysisFactor(factor) {
+    const toneClass = factor.statusTone || factor.type;
+    const statusHtml = factor.status
+      ? `<span class="analysis-factor-tag">${factor.status}</span>`
+      : '';
     return `
-      <section class="analysis-factor analysis-factor-${factor.type} analysis-factor-${factor.key}">
+      <section class="analysis-factor analysis-factor-${factor.type} analysis-factor-${toneClass} analysis-factor-${factor.key}">
         <div class="analysis-factor-heading">
           <span class="analysis-factor-icon">${this.renderInlineSvgIcon(factor.icon)}</span>
           <span class="analysis-factor-title">${factor.title}</span>
+          ${statusHtml}
         </div>
         <p>${factor.desc}</p>
       </section>

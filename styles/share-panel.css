@@ -240,6 +240,22 @@
   margin: 0;
 }
 
+.prediction-nav-feedback .share-btn-icon {
+  width: 18px !important;
+  height: 18px !important;
+  flex: 0 0 18px;
+  margin: 0;
+  max-width: 18px;
+  max-height: 18px;
+}
+
+.prediction-nav-feedback .share-btn-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .prediction-share-footer .share-btn-label {
   display: inline-flex;
   align-items: center;
