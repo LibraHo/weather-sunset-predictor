@@ -292,6 +292,9 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxss).toContain('.prediction-feedback-footer');
     expect(homeWxss).toContain('.feedback-icon-image');
     expect(homeWxss).toContain('.share-btn-label');
+    expect(homeWxss).toMatch(/\.prediction-share-footer-row\s*\{[\s\S]*?grid-template-columns:\s*minmax\(248rpx,\s*1fr\)\s*196rpx;/);
+    expect(homeWxss).toMatch(/\.prediction-feedback-footer\s*\{[\s\S]*?min-width:\s*196rpx;/);
+    expect(homeWxss).toMatch(/\.prediction-feedback-footer \.share-btn-label\s*\{[\s\S]*?width:\s*56rpx;/);
     expect(homeWxss).toMatch(/\.prediction-share-menu\s*\{[\s\S]*?min-width:\s*248rpx;/);
     expect(homeWxss).toMatch(/\.prediction-share-menu\s*\{[\s\S]*?border-radius:\s*999rpx;/);
     expect(homeWxss).toMatch(/\.prediction-share-menu\s*\{[\s\S]*?box-sizing:\s*border-box;/);
