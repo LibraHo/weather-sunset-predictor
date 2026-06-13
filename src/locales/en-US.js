@@ -182,16 +182,16 @@ const translations = {
     "methodology": {
       "title": "Fire Cloud Calculation Method",
       "intro": "The current Fire Cloud Index first asks whether there is a usable color carrier, then whether the sun-direction path is open, then whether that mid/high cloud layer is actually bright enough, and finally applies air-rendering adjustments. Rich high cloud plus an open path can still score lower when layer brightness is weak.",
-      "versionLabel": "Algorithm version: 2026.06.12-layer-brightness-v1",
-      "versionDesc": "This version uses cloud carrier × sunset path × layer brightness × air rendering. Layer brightness is estimated from low/mid/high cloud layers, solar geometry, the sun-direction path, AOD/water vapor, direct/diffuse radiation, and thickness evidence; unlit layers now reduce the final score through a multiplicative gate.",
+      "versionLabel": "Algorithm version: 2026.06.13-layer-weighted-brightness-v1",
+      "versionDesc": "This version uses Σ(layer carrier × layer brightness) × air rendering. Layer brightness is estimated from low/mid/high cloud layers, solar geometry, the sun-direction path, AOD/water vapor, direct/diffuse radiation, and thickness evidence.",
       changelogTitle: "Version update history",
       changelogHint: "Algorithm updates from the last three months live here; scroll to review why each change happened, its impact, and validation",
       changelog: {
         "latest": {
-          "date": "2026-06-12",
-          "title": "Layer brightness suppressor v1",
-          "summary": "Adds a layerBrightness diagnostic: mid/high cloud is only the carrier and an open path is only necessary; the model now checks whether the cloud layer is actually illuminated. When brightness evidence is weak, it now applies a multiplicative gate instead of a hard ceiling.",
-          "validation": "Validation: the 2026-06-12 Beijing sunset sample drops from the high-60s to around 60; web score details, text analysis, and the mini-program methodology page now show layer brightness."
+          "date": "2026-06-13",
+          "title": "Layer-weighted brightness formula v1",
+          "summary": "The final score now uses Σ(layer carrier × layer brightness) × air rendering; the sun-direction path remains folded into layer brightness instead of being multiplied as an independent final factor.",
+          "validation": "Validation: backend scoring, web score details, the methodology page, and the mini-program result page all expose the layer-sum formula."
         },
         "grayVeilDirectional": {
           "date": "2026-06-06",
@@ -331,9 +331,9 @@ const translations = {
         },
         "finalFormula": {
           "title": "8. Final Score",
-          "subtitle": "Final Score · (cloud carrier × layer brightness) × air rendering",
+          "subtitle": "Final Score · Σ(layer carrier × layer brightness) × air rendering",
           "desc": "The score is not a city/date-specific lift. Clouds first provide the carrier, the light path is folded into brightness, then air rendering explains the visible color.",
-          "formula": "Final score = clamp((cloud carrier × layer brightness) × air rendering, 0, 100), then hard blockers / thick cloud / gray curtain calibrate it",
+          "formula": "Final score = clamp(Σ(layer carrier × layer brightness) × air rendering, 0, 100), then hard blockers / thick cloud / gray curtain calibrate it",
           "highCloudCap": "When high clouds are rich but the light path is blocked, it first weakens layer brightness.",
           "carrier": "Carrier score = max(cloud canvas score, weak aerosol carrier score)",
           "lightGate": "Light path no longer stands alone in the final multiplication; it is a sun-direction factor inside layer brightness",
@@ -454,11 +454,11 @@ const translations = {
       "title": "Score details",
       "viewDetails": "View score details",
       "finalDisplayed": "Final displayed score",
-      "baseFormula": "Base score = carrier × layer brightness",
+      "baseFormula": "Base score = Σ(layer carrier × layer brightness)",
       "baseHint": "Carrier base after the sun-direction path is folded into layer brightness",
       "canvasHint": "High/mid clouds are the main color carrier; moderate thin haze can be a weak carrier; low clouds, thick upper cloud, and gray veils limit usable brightness",
       "lightPathHint": "Whether sunlight can reach the clouds",
-      "finalFormula": "Final score = (cloud carrier × layer brightness) × air rendering",
+      "finalFormula": "Final score = Σ(layer carrier × layer brightness) × air rendering",
       "renderingHint": "Layer brightness, humidity, visibility, and aerosols jointly affect color rendering",
       "aerosolHint": "Moderate aerosol boosts orange-red scattering; too much turns gray",
       "ledger": {
@@ -466,7 +466,8 @@ const translations = {
         "whyThisScore": "Why this score",
         "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
         "gatedFormula": "{{carrier}} × brightness {{brightness}} = {{base}}",
-        "canvasPlusLightPath": "carrier × brightness",
+        "layerSumFormula": "Σ(carrier × brightness) = {{base}}",
+        "canvasPlusLightPath": "Σ(carrier × brightness)",
         "renderingFormula": "{{base}} adjusted by rendering = {{rendered}}",
         "renderingMultiplierFormula": "{{base}} × rendering {{factor}} = {{rendered}}",
         "renderingAdjustmentFormula": "{{base}} {{sign}} rendering adjustment {{adjustment}} = {{rendered}}",

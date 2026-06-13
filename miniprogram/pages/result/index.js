@@ -1130,7 +1130,7 @@ export function buildScoreLedger(prediction = {}) {
       key: 'baseScore',
       label: '基础分',
       result: formatScore(baseScore),
-      expression: buildBaseScoreExpression(canvasScore, brightnessMultiplier, baseScore),
+      expression: buildBaseScoreExpression(canvasScore, brightnessMultiplier, baseScore, breakdown),
       detail: '对齐网页版：载体分先看可染色云面，再由受光亮度约束；光路已并入亮度',
       tone: levelFromScore(baseScore)
     }
@@ -1229,11 +1229,14 @@ function buildLayerBrightnessStep(layerBrightness = {}, adjustment = null) {
   };
 }
 
-function buildBaseScoreExpression(canvasScore, brightnessMultiplier, baseScore) {
+function buildBaseScoreExpression(canvasScore, brightnessMultiplier, baseScore, breakdown = {}) {
+  if (breakdown.layerContributionFormula === 'sum_layer_carrier_brightness' && Number.isFinite(Number(baseScore))) {
+    return `Σ(载体×受光亮度) = ${roundOne(baseScore)}`;
+  }
   if (Number.isFinite(Number(canvasScore)) && Number.isFinite(Number(brightnessMultiplier)) && Number.isFinite(Number(baseScore))) {
     return `${roundOne(canvasScore)} × 受光亮度 ${roundTwo(brightnessMultiplier)} = ${roundOne(baseScore)}`;
   }
-  return '载体 × 受光亮度';
+  return 'Σ(载体×受光亮度)';
 }
 
 function buildRenderingExpression(baseScore, renderingAdjustment, renderingFactor, renderedScore) {

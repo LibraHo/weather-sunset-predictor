@@ -34,12 +34,12 @@ Page({
       { title: '2. 空气显色', formula: 'air = grayVeil ? suppression : openPath ? warmScattering : baseRendering', desc: '先看满铺中高云、总云量、PM2.5/PM10/AOD、dust 和能见度的灰幕压力；不灰且光路开时，适度颗粒才进入暖色散射。' },
       { title: '3. 云厚比例折损', formula: 'thicknessPenalty = canvasBeforeThickness × 0.30 × thicknessPressure', desc: 'thicknessPressure 由厚云证据、net、散射占比、水汽指数和低太阳透射证据合成；高云载体只给小缓冲，不会把高散射和高水汽风险洗掉。' },
       { title: '4. 载体分', formula: 'carrier = max(cloudCanvas, aerosol, directionalMidCloud)', desc: '云层画布、气溶胶弱载体和太阳方向中云带统一进入载体判断；方向中云带可到 50-60 档，但不会当成顶级爆发。' },
-      { title: '5. 受光亮度', formula: 'brightness = f(云载体、低云遮挡、太阳高度、光路、云厚、光束)', desc: '目前基于低/中/高三层云计算亮度，不是每个高度层单独射线追踪；亮度弱时作为乘性门控进入最终分。' },
+      { title: '5. 受光亮度', formula: 'layerBrightness = f(云载体、低云遮挡、太阳高度、光路、云厚、光束)', desc: '目前基于低/中/高三层云计算亮度，不是每个高度层单独射线追踪；亮度弱时作为乘性门控进入最终分。' },
       { title: '6. 空气显色', formula: 'air = grayVeil ? suppression : warmScattering/baseRendering', desc: '能见度、湿度、AOD、PM 和雨后状态只改变显色质量，不再混进受光亮度。' },
-      { title: '7. 最终显示分', formula: 'score = clamp((cloudCarrier × brightness) × airRendering, 0, 100)', desc: '最终还会按硬否决校准：无火烧云 <40，轻微霞光 <60；几何不可行、厚云、满铺灰幕、湿灰幕、雨低云会进一步压制。' }
+      { title: '7. 最终显示分', formula: 'score = clamp(Σ(carrierLayer × brightnessLayer) × airRendering, 0, 100)', desc: '最终还会按硬否决校准：无火烧云 <40，轻微霞光 <60；几何不可行、厚云、满铺灰幕、湿灰幕、雨低云会进一步压制。' }
     ],
     changelog: [
-      { date: '2026-06-12', title: '分层亮度抑制 v1', summary: '新增 layerBrightness：有中高云和通畅光路后，还会判断这层云是否真的够亮。北京 2026-06-12 晚霞这类“高云多但亮度弱”的场景会被压到可观赏区间。' },
+      { date: '2026-06-13', title: '分层求和亮度公式 v1', summary: '最终分改为 Σ(分层载体 × 分层受光亮度) × 空气显色；光路继续作为受光亮度内部因子，不再作为最终分独立乘子。' },
       { date: '2026-06-06', title: '灰幕空气显色 + 方向中云带 v2', summary: '满铺中高云叠加 PM/AOD 偏高时按灰幕压力连续降低显色；太阳方向中云带改为连续载体，强光路下可进入 50-60 档。' },
       { date: '2026-06-03', title: '日落评分 v2', summary: '最终分改为云载体、日落光路、空气显色三部分合成；光路开且能见度可接受时，轻/中度 AOD、PM、dust 作为橙红散射正向因素。' },
       { date: '2026-06-02', title: '低太阳透射证据 v1', summary: '云厚评估恢复 direct/shortwave 太阳透射证据；只在高总云量、高中云、弱高云载体和灰空气同时出现时压分。' },

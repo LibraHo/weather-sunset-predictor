@@ -59,9 +59,17 @@ describe('EnhancedPredictionService layer brightness integration', () => {
     expect(result.breakdown.airTransmissionFactor).toBeLessThan(0.75);
     expect(result.breakdown.renderingFactor).toBeLessThan(0.7);
     expect(result.layerBrightnessAdjustment).toEqual(expect.objectContaining({
-      applied: false,
+      applied: true,
       multiplier: result.layerBrightness.brightnessMultiplier
     }));
+    expect(result.layerBrightness.formula).toBe('sum_layer_carrier_brightness');
+    expect(result.breakdown.layerContributionFormula).toBe('sum_layer_carrier_brightness');
+    expect(result.layerBrightness.layerContributions.length).toBeGreaterThan(0);
+    expect(result.breakdown.weightedCarrierScore).toBe(result.breakdown.baseScore);
+    expect(result.breakdown.baseScore).toBeCloseTo(
+      result.layerBrightness.layerContributions.reduce((sum, item) => sum + item.score, 0),
+      1
+    );
     const expectedScore = result.breakdown.baseScore * result.breakdown.renderingFactor;
     expect(result.score).toBeCloseTo(expectedScore, 1);
     expect(result.breakdown.layerBrightness).toBe(result.layerBrightness);

@@ -7,25 +7,25 @@
 3. 火烧云形成条件文字分析
 4. 对应回归测试/样本回放
 
-## 2026.06.12-layer-brightness-v1
+## 2026.06.13-layer-weighted-brightness-v1
 
-- 日期：2026-06-12
-- 代码：`server/services/LayerBrightnessService.js`、`server/services/EnhancedPredictionService.js`、`server/services/GridProductScoreAdapter.js`、`src/controllers/PredictionController.js`、`src/locales/*.js`、`miniprogram/pages/methodology/index.js`、`miniprogram/pages/result/index.js`
-- 背景：北京 2026-06-12 晚霞预报中，高云很多、低云少、太阳方向光路通畅，旧模型给到高 60 分；但 sunsettop 和其他软件显示亮度很弱，实况预期应更接近“微微/可看但不强”。这说明“载体 × 光路 × 空气显色”还缺少“这层云实际会不会被照亮”的中间量。
+- 日期：2026-06-13
+- 代码：`server/services/LayerBrightnessService.js`、`server/services/EnhancedPredictionService.js`、`src/controllers/PredictionController.js`、`src/locales/*.js`、`miniprogram/pages/methodology/index.js`、`miniprogram/pages/result/index.js`
+- 背景：最终评分口径需要从整体 `载体 × 受光亮度 × 空气显色` 收敛为 `Σ(分层载体 × 分层受光亮度) × 空气显色`；太阳方向光路继续作为受光亮度的内部因子，不再作为最终分的独立乘子。
 - 改动：
-  - 新增 `layerBrightness`：基于低/中/高三层云、太阳几何、光路开放度、空气透过率、云厚因子、直射/散射因子计算有效亮度。
-  - 当 AOD、水汽、PM10、低能见度、漫射光占优、厚高云、高云水汽灰幕等多个压暗证据同时成立时，保守限制高分。
-  - 单点预测的评分细则和文字分析新增“受光亮度”；小程序算法页和结果页同步解释当前是三层亮度模型，不是每个高度层单独射线追踪。
-  - 火烧云地图在亮度弱时不再使用方向云层抬分，避免区域趋势图把“有云但不亮”误判成高分。
+  - `LayerBrightnessService` 输出 `weightedCarrierScore` 和 `layerContributions`，按低云/中云/高云/方向云带/气溶胶载体贡献分别乘受光亮度后求和。
+  - `EnhancedPredictionService` 使用 `weightedCarrierScore` 作为空气显色前基础分，保留旧 `brightnessMultiplier` 作为展示和兼容字段。
+  - Web 评分细则、算法页、小程序算法页和结果页同步显示 `Σ(载体 × 受光亮度)` 口径。
 - 预期影响：
-  - 高云多、光路通但直射弱/水汽高/AOD 偏高的灰幕场景从高分降到可观赏或轻微霞光区间。
-  - 清透、暖散射和已校准的正例不因单一亮度信号被误伤；需要多个压暗证据同时成立才封顶。
+  - 远端光路阻挡、单层云带和方向云带场景会按各层真实贡献加权，不再用一个整体亮度系数套所有载体。
+  - 清透、暖散射和已校准的正例保持原有区间；弱亮度场景仍会被乘性压分。
 - 回归测试：
   - `tests/unit/server/LayerBrightnessService.test.js`
   - `tests/unit/server/EnhancedPredictionService.layerBrightness.test.js`
   - `tests/unit/server/EnhancedPredictionService.test.js`
-  - `tests/unit/server/GridProductScoreAdapter.test.js`
-  - `tests/unit/server/GridScoreService.test.js`
+  - `tests/unit/controllers/PredictionController.test.js`
+  - `tests/unit/home-methodology-structure.test.js`
+  - `tests/unit/miniprogram/methodology-page.test.js`
 
 ## 2026.06.06-gray-veil-directional-carrier-v2
 

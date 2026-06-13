@@ -124,6 +124,87 @@ function buildBrightnessReason(effectiveBrightness, dimEvidence = []) {
     : 'layer_brightness_sufficient';
 }
 
+function buildLayerWeightedCarrierScore({
+  low,
+  midSignal,
+  highSignal,
+  directionalUpper,
+  carrierScore,
+  lowBlockFactor,
+  solarFactor,
+  pathFactor,
+  thicknessFactor,
+  beamFactor
+}) {
+  const carrier = clamp(finiteNumber(carrierScore?.score, 0), 0, 100);
+  if (carrier <= 0) {
+    return {
+      score: 0,
+      formula: 'sum_layer_carrier_brightness',
+      contributions: []
+    };
+  }
+
+  const activeCarrier = carrierScore?.activeCarrier || 'cloud';
+  const aerosolScore = finiteNumber(carrierScore?.aerosolCarrierScore?.activatedScore, 0);
+  const directionalScore = directionalUpper === null ? 0 : clamp(finiteNumber(directionalUpper, 0) * 0.72, 0, 100);
+  const cloudMidCarrier = clamp(midSignal * 0.75, 0, 100);
+  const cloudHighCarrier = clamp(highSignal * 0.9, 0, 100);
+  const cloudLowCarrier = low <= 45 ? clamp(low * 0.12, 0, 8) : 0;
+
+  let rawLayers;
+  if (activeCarrier === 'directional_curtain' && directionalScore > 0) {
+    rawLayers = [
+      { key: 'directional', carrier: directionalScore, brightnessBias: 1.02 },
+      { key: 'mid', carrier: cloudMidCarrier * 0.35, brightnessBias: 1 },
+      { key: 'high', carrier: cloudHighCarrier * 0.35, brightnessBias: 0.96 }
+    ];
+  } else if (activeCarrier === 'aerosol' && aerosolScore > 0) {
+    rawLayers = [
+      { key: 'aerosol', carrier: aerosolScore, brightnessBias: 0.92 },
+      { key: 'mid', carrier: cloudMidCarrier * 0.25, brightnessBias: 1 },
+      { key: 'high', carrier: cloudHighCarrier * 0.25, brightnessBias: 0.96 }
+    ];
+  } else {
+    rawLayers = [
+      { key: 'low', carrier: cloudLowCarrier, brightnessBias: 0.58 },
+      { key: 'mid', carrier: cloudMidCarrier, brightnessBias: 1.04 },
+      { key: 'high', carrier: cloudHighCarrier, brightnessBias: 0.96 },
+      { key: 'directional', carrier: directionalScore * 0.35, brightnessBias: 1.02 }
+    ];
+  }
+
+  const usefulLayers = rawLayers.filter(layer => layer.carrier > 0);
+  const rawTotal = usefulLayers.reduce((sum, layer) => sum + layer.carrier, 0);
+  if (rawTotal <= 0) {
+    return {
+      score: 0,
+      formula: 'sum_layer_carrier_brightness',
+      contributions: []
+    };
+  }
+
+  const commonBrightness = lowBlockFactor * solarFactor * pathFactor * thicknessFactor * beamFactor;
+  const contributions = usefulLayers.map((layer) => {
+    const normalizedCarrier = carrier * layer.carrier / rawTotal;
+    const brightness = clamp(commonBrightness * layer.brightnessBias, 0, 1.05);
+    const multiplier = clamp(brightness / 0.66, 0, 1);
+    const score = normalizedCarrier * multiplier;
+    return {
+      key: layer.key,
+      carrier: round(normalizedCarrier, 1),
+      brightness: round(multiplier, 2),
+      score: round(score, 1)
+    };
+  });
+
+  return {
+    score: round(contributions.reduce((sum, layer) => sum + layer.score, 0), 1),
+    formula: 'sum_layer_carrier_brightness',
+    contributions
+  };
+}
+
 function scoreLayerBrightness(params = {}) {
   const {
     weatherData = {},
@@ -194,6 +275,18 @@ function scoreLayerBrightness(params = {}) {
     100
   );
   const brightnessThreshold = dimEvidence.length >= 3 && effectiveBrightness < 30 ? 50 : 42;
+  const weightedCarrierScore = buildLayerWeightedCarrierScore({
+    low,
+    midSignal,
+    highSignal,
+    directionalUpper,
+    carrierScore,
+    lowBlockFactor,
+    solarFactor,
+    pathFactor,
+    thicknessFactor,
+    beamFactor: beam.factor,
+  });
   const brightnessMultiplier = effectiveBrightness <= 0
     ? 0
     : (effectiveBrightness >= brightnessThreshold
@@ -205,6 +298,9 @@ function scoreLayerBrightness(params = {}) {
   return {
     applied: true,
     effectiveBrightness: round(effectiveBrightness, 1),
+    weightedCarrierScore: weightedCarrierScore.score,
+    formula: weightedCarrierScore.formula,
+    layerContributions: weightedCarrierScore.contributions,
     brightnessMultiplier: round(brightnessMultiplier, 2),
     brightnessGate: round(brightnessGate, 2),
     cap: null,

@@ -1,13 +1,13 @@
 'use strict';
 
-const ALGORITHM_VERSION = '2026.06.12-layer-brightness-v1';
+const ALGORITHM_VERSION = '2026.06.13-layer-weighted-brightness-v1';
 
 const ALGORITHM_CHANGELOG = [
   {
     version: ALGORITHM_VERSION,
-    date: '2026-06-12',
-    title: 'Layer brightness suppressor v1',
-    summary: 'Adds an explainable layerBrightness diagnostic with a multiplicative brightness gate for dim high-cloud gray-veil cases. High scores now require a cloud carrier, an open light path, and sufficient layer brightness evidence.'
+    date: '2026-06-13',
+    title: 'Layer-weighted brightness formula v1',
+    summary: 'The pre-air-rendering score is now Σ(layer carrier × layer brightness), with the sun-direction light path folded into layer brightness instead of multiplied as an independent final factor.'
   },
   {
     version: '2026.05.27-cloud-thickness-proportional-v2',
