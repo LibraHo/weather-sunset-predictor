@@ -1,0 +1,200 @@
+{
+  "id": "2026-06-13-beijing-sunset-rain-wet-veil-low-score",
+  "title": "2026-06-13 Beijing sunset: rain and wet veil should stay low",
+  "location": {
+    "name": "Beijing",
+    "nameZh": "北京",
+    "lat": 39.9042,
+    "lon": 116.4074,
+    "timezone": "Asia/Shanghai"
+  },
+  "event": {
+    "period": "sunset",
+    "localDate": "2026-06-13",
+    "calculationTimeUtc": "2026-06-13T11:43:00.000Z",
+    "sunAzimuth": 304
+  },
+  "feedback": {
+    "source": "Alex现场反馈",
+    "reportedAt": "2026-06-13T15:31:26+08:00",
+    "summary": "北京当天详细预测分数只有 18.4，后续现场确认正在下雨。线上数据虽然显示高云载体和太阳方向高云很强，但 precipitation、近 6 小时降雨、近雨小时数和湿幕证据都明显，基础公式应维持低分，不能评成中烧。",
+    "subjectiveScore": {
+      "min": 10,
+      "max": 25,
+      "label": "低分 / 下雨湿幕"
+    },
+    "calibrationTarget": {
+      "score": 18,
+      "status": "rain_low_score",
+      "reason": "高云约 96%、太阳方向高云强不能覆盖正在下雨和近雨湿幕；precipitation=0.1、recentPrecipitation6h=2.5、recentRainHours=7、湿度接近 89%，基础公式应保持低分。"
+    },
+    "actualOutcome": {
+      "fireCloud": "no_fire_cloud",
+      "rainDuringWindow": true,
+      "orangeLightOrOpening": true,
+      "worthWaiting": false,
+      "notes": "该样本用于防止正在下雨或近雨湿幕被误评为中烧。"
+    },
+    "previousModelScores": [
+      {
+        "score": 18.4,
+        "source": "生产 main a623eb0b /api/prediction/enhanced，score 18.4；该低分后经现场下雨确认是合理结果，不应校准到 40.9。"
+      }
+    ]
+  },
+  "capture": {
+    "dataCompleteness": "production_detail_response_breakdown",
+    "predictionReplay": "enhanced_detail_calculateEnhancedPrediction",
+    "sourceFiles": [
+      "/tmp/beijing-2026-06-13-sunset.json"
+    ],
+    "knownLimitations": [
+      "该样本来自生产详细预测响应、现场反馈和后续下雨确认；用于约束雨天/近雨湿幕在基础公式下保持低分。"
+    ]
+  },
+  "input": {
+    "weatherData": {
+      "cloudCover": 88.583,
+      "humidity": 88.567,
+      "visibility": 10,
+      "lowCloudCover": 1.433,
+      "temp": 20.987,
+      "windSpeed": 2.74,
+      "windDirection": 11,
+      "pressure": 996.843,
+      "precipitation": 0.1,
+      "recentPrecipitation6h": 2.5,
+      "recentRainHours": 7,
+      "recentRainSignal": 0.978,
+      "recentRainMaxHourly": 0.7,
+      "recentRainWetHourEquivalent": 3.79,
+      "lowClouds": 1.433,
+      "midClouds": 0.717,
+      "highClouds": 95.75,
+      "cloudBaseHeight": null,
+      "cloudBaseHeightSource": "unavailable",
+      "cape": null,
+      "weatherCode": null,
+      "shortwaveRadiation": 18.05,
+      "directRadiation": 0.623,
+      "diffuseRadiation": 17.427,
+      "waterVapourColumn": 36.598,
+      "aerosolOpticalDepth": 0.625,
+      "dust": 28.983,
+      "pm2_5": 43.328,
+      "pm10": 59.353,
+      "aqi": 156
+    },
+    "options": {
+      "remoteCloudData": {
+        "source": "solar_direction_openmeteo",
+        "azimuth": 304,
+        "samples": [
+          {
+            "lat": 39.95444881581224,
+            "lon": 116.31013741211837,
+            "distanceKm": 10,
+            "bearing": 304,
+            "cloudBaseHeight": null,
+            "cloudBaseHeightSource": "unavailable",
+            "lowCloud": 5.717,
+            "midCloud": 0,
+            "highCloud": 100,
+            "totalCloud": 86.567,
+            "humidity": 82.167,
+            "precipitation": 0.3,
+            "weatherCode": null,
+            "provider": "openmeteo",
+            "error": null
+          },
+          {
+            "lat": 40.02966933832227,
+            "lon": 116.16397550424767,
+            "distanceKm": 25,
+            "bearing": 304,
+            "cloudBaseHeight": null,
+            "cloudBaseHeightSource": "unavailable",
+            "lowCloud": 5.717,
+            "midCloud": 0,
+            "highCloud": 100,
+            "totalCloud": 86.567,
+            "humidity": 82.167,
+            "precipitation": 0.3,
+            "weatherCode": null,
+            "provider": "openmeteo",
+            "error": null
+          },
+          {
+            "lat": 40.154627463644644,
+            "lon": 115.91965566197518,
+            "distanceKm": 50,
+            "bearing": 304,
+            "cloudBaseHeight": null,
+            "cloudBaseHeightSource": "unavailable",
+            "lowCloud": 37.3,
+            "midCloud": 18.583,
+            "highCloud": 100,
+            "totalCloud": 87.717,
+            "humidity": 97.583,
+            "precipitation": 0.4,
+            "weatherCode": null,
+            "provider": "openmeteo",
+            "error": null
+          },
+          {
+            "lat": 40.27907021903488,
+            "lon": 115.67443689284914,
+            "distanceKm": 75,
+            "bearing": 304,
+            "cloudBaseHeight": null,
+            "cloudBaseHeightSource": "unavailable",
+            "lowCloud": 18.733,
+            "midCloud": 8.567,
+            "highCloud": 95.183,
+            "totalCloud": 40.85,
+            "humidity": 90.583,
+            "precipitation": 0,
+            "weatherCode": null,
+            "provider": "openmeteo",
+            "error": null
+          },
+          {
+            "lat": 40.40299342440654,
+            "lon": 115.42831566630002,
+            "distanceKm": 100,
+            "bearing": 304,
+            "cloudBaseHeight": null,
+            "cloudBaseHeightSource": "unavailable",
+            "lowCloud": 0,
+            "midCloud": 10.867,
+            "highCloud": 97.733,
+            "totalCloud": 81.133,
+            "humidity": 87.15,
+            "precipitation": 0.1,
+            "weatherCode": null,
+            "provider": "openmeteo",
+            "error": null
+          }
+        ],
+        "errors": []
+      }
+    }
+  },
+  "expectations": {
+    "score": {
+      "min": 10,
+      "max": 25
+    },
+    "statusAnyOf": [
+      "no_fire_cloud",
+      "light_glow"
+    ],
+    "notAbove": [
+      {
+        "path": "score",
+        "value": 25,
+        "reason": "Active rain and recent wet veil should keep the event low even with strong upper-cloud carrier."
+      }
+    ]
+  }
+}
