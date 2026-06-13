@@ -192,10 +192,10 @@
 .share-option { color: var(--color-text); }
 .share-option:hover { background: var(--glass-bg-hover); }
 
-/* Bottom card actions: share fills the left column, feedback stays aligned on the right. */
+/* Bottom card actions: share and feedback share the row evenly. */
 .prediction-share-footer-row {
   display: grid !important;
-  grid-template-columns: minmax(0, 1fr) minmax(104px, 128px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   justify-content: stretch !important;
   align-items: center !important;
   gap: 12px;
@@ -285,7 +285,7 @@
 
 @media (max-width: 480px) {
   .prediction-share-footer-row {
-    grid-template-columns: minmax(0, 1fr) minmax(104px, 120px);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
     margin: 10px 0 10px;
   }
@@ -294,6 +294,11 @@
     height: 40px;
     padding: 0 16px !important;
     font-size: 0.94rem;
+  }
+
+  .prediction-nav-feedback {
+    height: 40px;
+    padding: 0 16px !important;
   }
 
   .prediction-share-footer .prediction-share-dropdown {
