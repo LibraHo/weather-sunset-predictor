@@ -1188,7 +1188,7 @@ export function buildDefaultPredictionPreview() {
         title: '云层载体',
         status: '待判断',
         tone: 'fair',
-        desc: '查询后判断中高云是否能承接霞光，以及这些云是否能被照亮。'
+        desc: '查询后判断是否有可染色云面，以及云面是否真的被照亮。'
       },
       {
         key: 'lightPath',
@@ -1264,7 +1264,7 @@ export function buildTestPredictionPreview() {
         title: '云层载体',
         status: '较好',
         tone: 'good',
-        desc: '中高云能承接日落光线，受光亮度充足，是今天主要的显色画布。'
+        desc: '中高云提供可染色云面，受光也够，具备显色基础。'
       },
       {
         key: 'lightPath',
