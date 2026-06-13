@@ -970,6 +970,8 @@ describe('PredictionController', () => {
       expect(html).toContain('光路条件');
       expect(html).toContain('空气显色');
       expect(html).toContain('限制因素');
+      expect(html).toContain('analysis-factor-tag');
+      expect(html).toMatch(/analysis-factor-tag">(?:较好|一般|偏弱|较弱|轻微|明显|暂无|充足|优秀)</);
       expect(groups.find(item => item.key === 'carrier').desc).toContain('受光');
       expect(html).not.toContain('受光亮度');
       expect(groups.find(item => item.key === 'carrier').subfacts).toBeUndefined();
@@ -1093,6 +1095,14 @@ describe('PredictionController', () => {
 
       expect(html).not.toContain('analysis-factor-status');
       expect(html).not.toContain('analysis-factor-subfact');
+      expect(html).toContain('analysis-factor-tag">较好</span>');
+      expect(html).toContain('analysis-factor-tag">一般</span>');
+      expect(html).toContain('analysis-factor-tag">轻微</span>');
+      expect(html).toContain('analysis-factor-tag">较弱</span>');
+      expect(html).toContain('analysis-factor-good');
+      expect(html).toContain('analysis-factor-fair');
+      expect(html).toContain('analysis-factor-mild');
+      expect(html).toContain('analysis-factor-weak');
     });
 
     test('分析卡片最终 CSS 应保持上下文案左对齐且可换行', () => {
@@ -1104,10 +1114,14 @@ describe('PredictionController', () => {
       expect(finalRules).toContain('analysis-factor-grid');
       expect(finalRules).toContain('grid-template-columns: repeat(2, minmax(0, 1fr))');
       expect(finalRules).toContain('analysis-factor-heading');
+      expect(finalRules).toContain('analysis-factor-tag');
+      expect(finalRules).toContain('analysis-factor-good .analysis-factor-tag');
+      expect(finalRules).toContain('analysis-factor-fair .analysis-factor-tag');
+      expect(finalRules).toContain('analysis-factor-weak .analysis-factor-tag');
       expect(finalRules).not.toContain('analysis-factor-summary');
       expect(finalRules).not.toContain('analysis-factor-status');
       expect(finalRules).not.toContain('analysis-factor-subfact');
-      expect(finalRules).toContain('grid-template-columns: 22px minmax(0, 1fr)');
+      expect(finalRules).toContain('grid-template-columns: 22px minmax(0, 1fr) auto');
       expect(finalRules).toContain('display: grid !important');
       expect(finalRules).toContain('white-space: normal !important');
       expect(finalRules).toContain('text-align: left !important');
@@ -1140,8 +1154,12 @@ describe('PredictionController', () => {
       expect(html).toContain('prediction-nav-feedback');
       expect(html.indexOf('prediction-share-menu prediction-share-footer')).toBeLessThan(html.indexOf('prediction-nav-feedback'));
       expect(css).toMatch(/\.prediction-share-footer-row\s*\{[\s\S]*?display:\s*grid;/);
-      expect(css).toMatch(/\.prediction-share-footer-row\s*\{[\s\S]*?grid-template-columns:\s*minmax\(180px,\s*1fr\)\s*112px;/);
-      expect(css).toMatch(/\.prediction-nav-feedback\s*\{[\s\S]*?min-width:\s*112px;/);
+      expect(css).toMatch(/\.prediction-share-footer-row\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\)\s*minmax\(104px,\s*128px\);/);
+      expect(css).toMatch(/\.prediction-nav-feedback\s*\{[\s\S]*?max-width:\s*128px;/);
+      expect(css).toMatch(/\.prediction-nav-feedback\s*\{[\s\S]*?padding:\s*0 14px !important;/);
+      expect(css).toMatch(/\.prediction-nav-feedback \.share-btn-icon\s*\{[\s\S]*?width:\s*18px !important;/);
+      expect(css).toMatch(/\.prediction-nav-feedback \.share-btn-icon\s*\{[\s\S]*?height:\s*18px !important;/);
+      expect(css).toMatch(/\.prediction-nav-feedback \.share-btn-label\s*\{[\s\S]*?text-overflow:\s*ellipsis;/);
       expect(css).toMatch(/\.prediction-app-nav-compact \.prediction-share-menu\s*\{[\s\S]*?width:\s*100%;/);
     });
   });
