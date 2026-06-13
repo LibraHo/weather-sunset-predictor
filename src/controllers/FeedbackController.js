@@ -229,6 +229,12 @@ export default class FeedbackController {
     toast.className = `share-toast feedback-toast ${type}`;
     toast.textContent = message;
     document.body.appendChild(toast);
+    setTimeout(() => {
+      toast.classList.add('show');
+    }, 10);
+    setTimeout(() => {
+      toast.classList.remove('show');
+    }, 3200);
     setTimeout(() => toast.remove(), 3600);
   }
 }

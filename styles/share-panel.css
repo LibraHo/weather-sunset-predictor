@@ -123,6 +123,12 @@
   transform: translateX(-50%) translateY(0);
 }
 
+.feedback-toast {
+  max-width: calc(100vw - 32px);
+  text-align: center;
+  white-space: normal;
+}
+
 /* ===== 响应式：桌面端字体与点击区放大 ===== */
 @media (min-width: 1024px) {
   .prediction-share-dropdown {
@@ -186,11 +192,13 @@
 .share-option { color: var(--color-text); }
 .share-option:hover { background: var(--glass-bg-hover); }
 
-/* Bottom card action: a centered share pill that adapts to light/dark theme tokens. */
+/* Bottom card actions: share fills the left column, feedback stays aligned on the right. */
 .prediction-share-footer-row {
-  display: flex !important;
-  justify-content: center !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(104px, 128px);
+  justify-content: stretch !important;
   align-items: center !important;
+  gap: 12px;
   width: 100%;
   min-height: 0;
   margin: 12px 0 10px;
@@ -202,10 +210,13 @@
   z-index: 40;
   display: inline-flex;
   justify-content: center;
+  width: 100%;
+  min-width: 0;
   margin: 0;
 }
 
 .prediction-share-footer .prediction-share-btn {
+  width: 100%;
   min-width: 116px;
   height: 42px;
   padding: 0 18px !important;
@@ -274,11 +285,12 @@
 
 @media (max-width: 480px) {
   .prediction-share-footer-row {
+    grid-template-columns: minmax(0, 1fr) minmax(104px, 120px);
+    gap: 10px;
     margin: 10px 0 10px;
   }
 
   .prediction-share-footer .prediction-share-btn {
-    min-width: 108px;
     height: 40px;
     padding: 0 16px !important;
     font-size: 0.94rem;
