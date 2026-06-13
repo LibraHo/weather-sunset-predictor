@@ -1167,7 +1167,7 @@ function assessAerosolHazeCap(weatherData, context = {}) {
   const severeHaze = (aod != null && aod >= 0.55) || (dust != null && dust >= 150) || (pm10 != null && pm10 >= 180) || (pm25 != null && pm25 >= 90) || visibility < 6;
   const warmScatteringHaze =
     pathOpen &&
-    visibility >= 12 &&
+    visibility >= 10 &&
     (aod == null || aod < 0.8) &&
     (pm25 == null || pm25 < 65) &&
     (pm10 == null || pm10 < 120) &&
@@ -2643,6 +2643,24 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     }
   }
 
+  const warmHazeCarrierFloor = {
+    applied: false,
+    floor: null,
+    reason: null
+  };
+  if (!scoringV2.hardBlocked && !aerosolHazeCap.applied && aerosolHazeCap.level === 'warm_scattering') {
+    const weightedCarrier = Number(layerBrightness.weightedCarrierScore);
+    const floor = Number.isFinite(weightedCarrier) ? Math.min(45, parseFloat(weightedCarrier.toFixed(1))) : null;
+    if (floor !== null && floor >= 40 && adjustedScore < floor) {
+      adjustedScore = floor;
+      adjustedStatus = 'good_glow';
+      adjustedDescription = 'conditions_good';
+      warmHazeCarrierFloor.applied = true;
+      warmHazeCarrierFloor.floor = floor;
+      warmHazeCarrierFloor.reason = 'warm_haze_uses_layer_weighted_carrier_floor';
+    }
+  }
+
   if (aerosolHazeCap.applied) {
     adjustedScore = Math.min(adjustedScore, aerosolHazeCap.cap);
     adjustedStatus = adjustedScore < 40 ? 'no_fire_cloud' : 'light_glow';
@@ -2706,12 +2724,12 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     adjustedScore = Math.min(adjustedScore, 39.9);
   }
 
-  if (thickHighCloudPenalty.applied && adjustedScore <= thickHighCloudPenalty.cap) {
+  if (!warmHazeCarrierFloor.applied && thickHighCloudPenalty.applied && adjustedScore <= thickHighCloudPenalty.cap) {
     adjustedStatus = adjustedScore < 40 ? 'no_fire_cloud' : 'light_glow';
     adjustedDescription = 'weak_local_colors';
   }
 
-  if (!aerosolHazeCap.applied && (layerBrightness.dimEvidence || []).length >= 3 && adjustedScore <= 45) {
+  if (!warmHazeCarrierFloor.applied && !aerosolHazeCap.applied && (layerBrightness.dimEvidence || []).length >= 3 && adjustedScore <= 45) {
     adjustedStatus = adjustedScore < 40 ? 'no_fire_cloud' : 'light_glow';
     adjustedDescription = 'weak_local_colors';
   }
@@ -2785,6 +2803,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     layerBrightness,
     layerBrightnessAdjustment,
     aerosolHazeCap,
+    warmHazeCarrierFloor,
     scoringV2,
     visibleSunsetSectorCap,
     highCloudCarrierAdjustment,

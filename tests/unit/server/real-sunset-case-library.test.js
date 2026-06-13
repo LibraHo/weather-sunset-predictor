@@ -26,9 +26,11 @@ function getPath(target, dottedPath) {
 
 describe('real sunset feedback case library', () => {
   let EnhancedPredictionService;
+  let realCases;
 
   beforeAll(async () => {
     EnhancedPredictionService = await import('../../../server/services/EnhancedPredictionService.js');
+    realCases = readCases();
   });
 
   test.each(readCases())('$id replays within observed expectation', (realCase) => {
@@ -66,7 +68,7 @@ describe('real sunset feedback case library', () => {
   });
 
   test('each real case keeps enough metadata to explain future algorithm changes', () => {
-    for (const realCase of readCases()) {
+    for (const realCase of realCases) {
       expect(realCase.id).toBeTruthy();
       expect(realCase.location.lat).toEqual(expect.any(Number));
       expect(realCase.location.lon).toEqual(expect.any(Number));
@@ -81,5 +83,27 @@ describe('real sunset feedback case library', () => {
       expect(realCase.expectations.score.min).toEqual(expect.any(Number));
       expect(realCase.expectations.score.max).toEqual(expect.any(Number));
     }
+  });
+
+  test('warm haze carrier floor does not override an active-rain hard block', () => {
+    const beijingCase = realCases.find((realCase) => realCase.id === '2026-06-13-beijing-sunset-warm-haze-mid-glow');
+    expect(beijingCase).toBeTruthy();
+
+    const rainyWeather = {
+      ...beijingCase.input.weatherData,
+      precipitation: 2
+    };
+    const result = EnhancedPredictionService.calculateEnhancedPrediction(
+      rainyWeather,
+      new Date(beijingCase.event.calculationTimeUtc),
+      beijingCase.location.lat,
+      beijingCase.location.lon,
+      beijingCase.event.period,
+      beijingCase.input.options || {}
+    );
+
+    expect(result.scoringV2.hardBlocked).toBe(true);
+    expect(result.warmHazeCarrierFloor.applied).toBe(false);
+    expect(result.status).not.toBe('good_glow');
   });
 });
