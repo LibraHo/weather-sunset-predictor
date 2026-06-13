@@ -85,7 +85,7 @@ describe('real sunset feedback case library', () => {
     }
   });
 
-  test('warm haze carrier floor does not override rain or recent wet veil', () => {
+  test('Beijing rainy wet-veil sunset stays low under the base formula', () => {
     const beijingCase = realCases.find((realCase) => realCase.id === '2026-06-13-beijing-sunset-rain-wet-veil-low-score');
     expect(beijingCase).toBeTruthy();
 
@@ -98,8 +98,6 @@ describe('real sunset feedback case library', () => {
       beijingCase.input.options || {}
     );
 
-    expect(result.warmHazeCarrierFloor.applied).toBe(false);
-    expect(result.warmHazeCarrierFloor.reason).toBe('rain_or_recent_rain_blocks_warm_haze_floor');
     expect(result.status).not.toBe('good_glow');
     expect(result.score).toBeLessThanOrEqual(25);
   });

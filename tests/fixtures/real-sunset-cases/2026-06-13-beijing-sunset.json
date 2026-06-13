@@ -1,6 +1,6 @@
 {
   "id": "2026-06-13-beijing-sunset-rain-wet-veil-low-score",
-  "title": "2026-06-13 Beijing sunset: rain and wet veil should block warm-haze uplift",
+  "title": "2026-06-13 Beijing sunset: rain and wet veil should stay low",
   "location": {
     "name": "Beijing",
     "nameZh": "北京",
@@ -17,7 +17,7 @@
   "feedback": {
     "source": "Alex现场反馈",
     "reportedAt": "2026-06-13T15:31:26+08:00",
-    "summary": "北京当天详细预测分数只有 18.4，后续现场确认正在下雨。线上数据虽然显示高云载体和太阳方向高云很强，但 precipitation、近 6 小时降雨、近雨小时数和湿幕证据都明显，应该维持低分，不能被暖霾保底抬到中烧。",
+    "summary": "北京当天详细预测分数只有 18.4，后续现场确认正在下雨。线上数据虽然显示高云载体和太阳方向高云很强，但 precipitation、近 6 小时降雨、近雨小时数和湿幕证据都明显，基础公式应维持低分，不能评成中烧。",
     "subjectiveScore": {
       "min": 10,
       "max": 25,
@@ -25,15 +25,15 @@
     },
     "calibrationTarget": {
       "score": 18,
-      "status": "rain_veto",
-      "reason": "高云约 96%、太阳方向高云强不能覆盖正在下雨和近雨湿幕；precipitation=0.1、recentPrecipitation6h=2.5、recentRainHours=7、湿度接近 89%，应禁止暖霾保底。"
+      "status": "rain_low_score",
+      "reason": "高云约 96%、太阳方向高云强不能覆盖正在下雨和近雨湿幕；precipitation=0.1、recentPrecipitation6h=2.5、recentRainHours=7、湿度接近 89%，基础公式应保持低分。"
     },
     "actualOutcome": {
       "fireCloud": "no_fire_cloud",
       "rainDuringWindow": true,
       "orangeLightOrOpening": true,
       "worthWaiting": false,
-      "notes": "该样本用于防止正在下雨或近雨湿幕被 warm haze carrier floor 误抬到中烧。"
+      "notes": "该样本用于防止正在下雨或近雨湿幕被误评为中烧。"
     },
     "previousModelScores": [
       {
@@ -49,7 +49,7 @@
       "/tmp/beijing-2026-06-13-sunset.json"
     ],
     "knownLimitations": [
-      "该样本来自生产详细预测响应、现场反馈和后续下雨确认；用于约束雨天/近雨湿幕不能被暖霾逻辑抬分。"
+      "该样本来自生产详细预测响应、现场反馈和后续下雨确认；用于约束雨天/近雨湿幕在基础公式下保持低分。"
     ]
   },
   "input": {
@@ -188,24 +188,6 @@
     "statusAnyOf": [
       "no_fire_cloud",
       "light_glow"
-    ],
-    "equals": [
-      {
-        "path": "aerosolHazeCap.applied",
-        "value": false
-      },
-      {
-        "path": "aerosolHazeCap.level",
-        "value": "warm_scattering"
-      },
-      {
-        "path": "warmHazeCarrierFloor.applied",
-        "value": false
-      },
-      {
-        "path": "warmHazeCarrierFloor.reason",
-        "value": "rain_or_recent_rain_blocks_warm_haze_floor"
-      }
     ],
     "notAbove": [
       {

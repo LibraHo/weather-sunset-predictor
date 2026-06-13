@@ -58,8 +58,8 @@ describe('home methodology structure', () => {
     const localeTexts = localeFiles.map(file => fs.readFileSync(path.join(ROOT, 'src/locales', file), 'utf8'));
 
     expect(html).toContain('2026-06-13');
-    expect(html).toContain('2026.06.13-rain-veto-warm-haze-v1');
-    expect(html).toContain('分层亮度 + 雨天暖霾否决');
+    expect(html).toContain('2026.06.13-layer-weighted-brightness-v1');
+    expect(html).toContain('分层求和亮度公式 v1');
     expect(html).toContain('2026-06-03');
     expect(html).toContain('home.methodology.changelog.scoringV2.title');
     expect(html).toContain('home.methodology.sections.finalFormula.formula');
@@ -74,11 +74,9 @@ describe('home methodology structure', () => {
       .map(file => fs.readFileSync(path.join(ROOT, 'src/locales', file), 'utf8'))
       .join('\n');
 
-    expect(coreLocaleTexts).toContain('2026.06.13-rain-veto-warm-haze-v1');
-    expect(coreLocaleTexts).toContain('Layer brightness + rain veto for warm haze');
+    expect(coreLocaleTexts).toContain('2026.06.13-layer-weighted-brightness-v1');
+    expect(coreLocaleTexts).toContain('Layer-weighted brightness formula v1');
     expect(coreLocaleTexts).toContain('layerBrightness');
-    expect(coreLocaleTexts).toContain('wet-veil signals block the warm-haze floor');
-    expect(coreLocaleTexts).toContain('当前降雨或近雨湿幕不允许暖霾保底');
     expect(coreLocaleTexts).toContain('Sunset scoring v2');
     expect(coreLocaleTexts).toContain('cloud carrier, sunset path, and air rendering');
     expect(localeTexts.join('\n')).toContain('2026-05-27');
@@ -134,15 +132,12 @@ describe('home methodology structure', () => {
     expect(zh).toContain('layerBrightness = 三层云载体 × 光路 × 受光/云厚/光束证据');
     expect(zh).toContain('亮度弱时会限制最终展示分');
     expect(zh).toContain('降水影响 = 光路封顶 + 弱载体禁用 + 渲染因子修正');
-    expect(zh).toContain('太阳方向云幕载体分');
-    expect(zh).toContain('当前降雨或近雨湿幕不允许暖霾保底');
     expect(zh).not.toContain('画布分×1.2倍');
     expect(zh).not.toContain('透明度分 = 能见度分 + 湿度分（最高25分）');
 
     expect(en).toContain('Upper-cloud canvas = high×0.75 + mid×0.45');
     expect(en).toContain('Light path no longer stands alone in the final multiplication');
     expect(en).toContain('Final score = clamp(Σ(layer carrier × layer brightness) × air rendering, 0, 100)');
-    expect(en).toContain('sun-direction curtain carrier score');
   });
 
   test('keeps methodology formula blocks readable across multiple lines', () => {
