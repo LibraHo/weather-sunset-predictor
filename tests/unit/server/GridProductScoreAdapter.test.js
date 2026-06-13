@@ -106,7 +106,7 @@ describe('GridProductScoreAdapter', () => {
         aerosol: { source: 'cams', cycle: '2026052600', forecastHour: 6, bbox: { north: 41, south: 39, west: 115, east: 117 } }
       }
     });
-    expect(cache.gridPoints[1].score).toBe(7);
+    expect(cache.gridPoints[1].score).toBe(14);
     expect(cache.gridPoints[1].score).not.toBe(91);
     expect(cache.meta.products.weather.source).toBe('gfs');
     expect(cache.meta.products.aerosol.source).toBe('cams');
@@ -369,11 +369,12 @@ describe('GridProductScoreAdapter', () => {
       neighborCount: expect.any(Number),
       adjustment: expect.objectContaining({
         applied: false,
-        reason: 'directional_neighbor_no_score_change'
+        reason: 'directional_neighbor_no_score_change',
+        adjustedScore: 78
       })
     });
     expect(center.mapDirectionalScoring.directionalUpperCarrier).toBeGreaterThanOrEqual(80);
-    expect(center.score).toBe(center.mapDirectionalScoring.adjustment.originalScore);
+    expect(center.score).toBe(center.mapDirectionalScoring.adjustment.adjustedScore);
   });
 
   test('caps map simplified base scores before directional lift', () => {
@@ -448,7 +449,8 @@ describe('GridProductScoreAdapter', () => {
         neighborCount: 1,
         adjustment: expect.objectContaining({
           applied: false,
-          reason: 'directional_neighbor_no_score_change'
+          reason: 'directional_neighbor_no_score_change',
+          adjustedScore: 78
         })
       })
     });

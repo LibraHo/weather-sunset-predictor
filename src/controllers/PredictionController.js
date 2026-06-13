@@ -2058,15 +2058,16 @@ class PredictionController {
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
 
-    const baseScore = prediction?.breakdown?.baseScore;
-    const canvasScore = prediction?.canvasAnalysis?.score ?? prediction?.breakdown?.canvasScore;
-    const carrierScore = prediction?.carrierAnalysis?.score ?? prediction?.breakdown?.carrierScore ?? canvasScore;
-    const lightPathScore = prediction?.lightPathAnalysis?.score ?? prediction?.breakdown?.lightPathScore;
-    const lightPathGate = prediction?.lightPathGate?.gate ?? prediction?.breakdown?.lightPathGate;
-    const renderingFactor = prediction?.renderingAnalysis?.factor ?? prediction?.breakdown?.renderingFactor;
-    const renderingAdjustment = prediction?.renderingAdjustment?.adjustment ?? prediction?.breakdown?.renderingAdjustment;
-    const renderingMode = prediction?.renderingAdjustment?.reason ?? prediction?.breakdown?.renderingMode;
-    const renderedScore = prediction?.breakdown?.unclampedFinalScore;
+    const breakdown = prediction?.breakdown || {};
+    const baseScore = breakdown.baseScore;
+    const canvasScore = prediction?.canvasAnalysis?.score ?? breakdown.canvasScore;
+    const carrierScore = prediction?.carrierAnalysis?.score ?? breakdown.carrierScore ?? canvasScore;
+    const lightPathScore = prediction?.lightPathAnalysis?.score ?? breakdown.lightPathScore;
+    const lightPathGate = prediction?.lightPathGate?.gate ?? breakdown.lightPathGate;
+    const renderingFactor = prediction?.renderingAnalysis?.factor ?? breakdown.renderingFactor;
+    const renderingAdjustment = prediction?.renderingAdjustment?.adjustment ?? breakdown.renderingAdjustment;
+    const renderingMode = prediction?.renderingAdjustment?.reason ?? breakdown.renderingMode;
+    const renderedScore = breakdown.unclampedFinalScore;
     const finalScore = prediction?.score;
     const aerosol = prediction?.breakdown?.aerosolScattering;
     const aerosolCarrier = prediction?.aerosolCarrierScore || prediction?.breakdown?.aerosolCarrierScore;
@@ -2323,9 +2324,11 @@ class PredictionController {
         </div>
       </div>`;
 
-    const weightedDescription = Number.isFinite(Number(carrierScore)) && Number.isFinite(Number(brightnessMultiplier)) && Number.isFinite(Number(baseScore))
+    const weightedDescription = breakdown?.layerContributionFormula === 'sum_layer_carrier_brightness' && Number.isFinite(Number(baseScore))
+      ? ledgerText('layerSumFormula', { base: fmt(baseScore, 1) }, 'Σ(carrier × brightness) = {{base}}', 'Σ(载体 × 受光亮度) = {{base}}')
+      : Number.isFinite(Number(carrierScore)) && Number.isFinite(Number(brightnessMultiplier)) && Number.isFinite(Number(baseScore))
       ? ledgerText('gatedFormula', { carrier: fmt(carrierScore, 1), brightness: fmt(brightnessMultiplier, 2), base: fmt(baseScore, 1) }, '{{carrier}} × brightness {{brightness}} = {{base}}', '{{carrier}} × 受光亮度 {{brightness}} = {{base}}')
-      : ledgerText('canvasPlusLightPath', {}, 'carrier × brightness', '载体 × 受光亮度');
+      : ledgerText('canvasPlusLightPath', {}, 'Σ(carrier × brightness)', 'Σ(载体 × 受光亮度)');
     const renderingDescription = (() => {
       if (!Number.isFinite(Number(baseScore)) || !Number.isFinite(Number(renderedScore))) {
         return ledgerText('weatherTransparency', {}, 'weather transparency factor', '天气通透度');

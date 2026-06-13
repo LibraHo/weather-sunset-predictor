@@ -29,6 +29,17 @@ function normalizeRange(value, min, max, invert = false) {
   return invert ? 1 - normalized : normalized;
 }
 
+function scoreBrightnessResponse(value, fullBrightnessReference, curve = 6) {
+  const number = finiteNumber(value, 0);
+  const reference = finiteNumber(fullBrightnessReference, 1);
+  if (number <= 0 || reference <= 0) return 0;
+  if (number >= reference) return 1;
+
+  const normalized = clamp(number / reference, 0, 1);
+  if (curve <= 0) return normalized;
+  return clamp(Math.log1p(curve * normalized) / Math.log1p(curve), 0, 1);
+}
+
 function upperCloudSignal(cloudPercent) {
   const cloud = clamp(finiteNumber(cloudPercent, 0), 0, 100);
   if (cloud <= 0) return 0;
@@ -124,6 +135,88 @@ function buildBrightnessReason(effectiveBrightness, dimEvidence = []) {
     : 'layer_brightness_sufficient';
 }
 
+function buildLayerWeightedCarrierScore({
+  low,
+  midSignal,
+  highSignal,
+  directionalUpper,
+  carrierScore,
+  lowBlockFactor,
+  solarFactor,
+  pathFactor,
+  thicknessFactor,
+  beamFactor,
+  brightnessResponseCurve = 6
+}) {
+  const carrier = clamp(finiteNumber(carrierScore?.score, 0), 0, 100);
+  if (carrier <= 0) {
+    return {
+      score: 0,
+      formula: 'sum_layer_carrier_brightness',
+      contributions: []
+    };
+  }
+
+  const activeCarrier = carrierScore?.activeCarrier || 'cloud';
+  const aerosolScore = finiteNumber(carrierScore?.aerosolCarrierScore?.activatedScore, 0);
+  const directionalScore = directionalUpper === null ? 0 : clamp(finiteNumber(directionalUpper, 0) * 0.72, 0, 100);
+  const cloudMidCarrier = clamp(midSignal * 0.75, 0, 100);
+  const cloudHighCarrier = clamp(highSignal * 0.9, 0, 100);
+  const cloudLowCarrier = low <= 45 ? clamp(low * 0.12, 0, 8) : 0;
+
+  let rawLayers;
+  if (activeCarrier === 'directional_curtain' && directionalScore > 0) {
+    rawLayers = [
+      { key: 'directional', carrier: directionalScore, brightnessBias: 1.02 },
+      { key: 'mid', carrier: cloudMidCarrier * 0.35, brightnessBias: 1 },
+      { key: 'high', carrier: cloudHighCarrier * 0.35, brightnessBias: 0.96 }
+    ];
+  } else if (activeCarrier === 'aerosol' && aerosolScore > 0) {
+    rawLayers = [
+      { key: 'aerosol', carrier: aerosolScore, brightnessBias: 0.92 },
+      { key: 'mid', carrier: cloudMidCarrier * 0.25, brightnessBias: 1 },
+      { key: 'high', carrier: cloudHighCarrier * 0.25, brightnessBias: 0.96 }
+    ];
+  } else {
+    rawLayers = [
+      { key: 'low', carrier: cloudLowCarrier, brightnessBias: 0.58 },
+      { key: 'mid', carrier: cloudMidCarrier, brightnessBias: 1.04 },
+      { key: 'high', carrier: cloudHighCarrier, brightnessBias: 0.96 },
+      { key: 'directional', carrier: directionalScore * 0.35, brightnessBias: 1.02 }
+    ];
+  }
+
+  const usefulLayers = rawLayers.filter(layer => layer.carrier > 0);
+  const rawTotal = usefulLayers.reduce((sum, layer) => sum + layer.carrier, 0);
+  if (rawTotal <= 0) {
+    return {
+      score: 0,
+      formula: 'sum_layer_carrier_brightness',
+      contributions: []
+    };
+  }
+
+  const commonBrightness = lowBlockFactor * solarFactor * pathFactor * thicknessFactor * beamFactor;
+  const contributions = usefulLayers.map((layer) => {
+    const normalizedCarrier = carrier * layer.carrier / rawTotal;
+    const brightness = clamp(commonBrightness * layer.brightnessBias, 0, 1.05);
+    const multiplier = scoreBrightnessResponse(brightness, 0.66, brightnessResponseCurve);
+    const score = normalizedCarrier * multiplier;
+    return {
+      key: layer.key,
+      carrier: round(normalizedCarrier, 1),
+      brightness: round(multiplier, 2),
+      score: round(score, 1)
+    };
+  });
+
+  return {
+    score: round(contributions.reduce((sum, layer) => sum + layer.score, 0), 1),
+    formula: 'sum_layer_carrier_brightness',
+    contributions
+  };
+}
+
 function scoreLayerBrightness(params = {}) {
   const {
     weatherData = {},
@@ -194,17 +287,34 @@ function scoreLayerBrightness(params = {}) {
     100
   );
   const brightnessThreshold = dimEvidence.length >= 3 && effectiveBrightness < 30 ? 50 : 42;
+  const brightnessResponseCurve = lightPathGate?.reason === 'solar_direction_blocked_corridor' ? 0 : 6;
+  const weightedCarrierScore = buildLayerWeightedCarrierScore({
+    low,
+    midSignal,
+    highSignal,
+    directionalUpper,
+    carrierScore,
+    lowBlockFactor,
+    solarFactor,
+    pathFactor,
+    thicknessFactor,
+    beamFactor: beam.factor,
+    brightnessResponseCurve,
+  });
   const brightnessMultiplier = effectiveBrightness <= 0
     ? 0
     : (effectiveBrightness >= brightnessThreshold
       ? 1
-      : clamp(effectiveBrightness / brightnessThreshold, 0, 1));
+      : scoreBrightnessResponse(effectiveBrightness, brightnessThreshold, brightnessResponseCurve));
   const brightnessGate = brightnessMultiplier;
   const reason = buildBrightnessReason(effectiveBrightness, dimEvidence);
 
   return {
     applied: true,
     effectiveBrightness: round(effectiveBrightness, 1),
+    weightedCarrierScore: weightedCarrierScore.score,
+    formula: weightedCarrierScore.formula,
+    layerContributions: weightedCarrierScore.contributions,
     brightnessMultiplier: round(brightnessMultiplier, 2),
     brightnessGate: round(brightnessGate, 2),
     cap: null,
@@ -224,6 +334,7 @@ function scoreLayerBrightness(params = {}) {
       pathFactor: round(pathFactor, 2),
       airTransmission: round(air.factor, 2),
       brightnessThreshold,
+      brightnessResponse: brightnessResponseCurve > 0 ? 'log1p_k6' : 'linear_blocked_corridor',
       visibilityFactor: round(air.visibilityFactor, 2),
       humidityFactor: round(air.humidityFactor, 2),
       aerosolFactor: round(air.aerosolFactor, 2),

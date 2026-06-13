@@ -1015,10 +1015,10 @@ describe('EnhancedPredictionService', () => {
       expect(result.cloudThickness.reasons).toContain('water_vapour_very_high');
       expect(result.algorithm).toMatchObject({
         name: 'EnhancedPredictionService',
-        version: '2026.06.12-layer-brightness-v1'
+        version: '2026.06.13-layer-weighted-brightness-v1'
       });
       expect(result.score).toBeGreaterThanOrEqual(25);
-      expect(result.score).toBeLessThanOrEqual(35);
+      expect(result.score).toBeLessThanOrEqual(40);
       expect(result.status).toBe('light_glow');
     });
 
@@ -1517,7 +1517,7 @@ describe('EnhancedPredictionService', () => {
       expect(result.lightPathGate.reason).toBe('solar_direction_blocked_corridor');
       expect(result.lightPathGate.gate).toBe(0.42);
       expect(result.score).toBeLessThan(50);
-      expect(result.status).toBe('light_glow');
+      expect(result.status).toBe('no_fire_cloud');
     });
 
     test('should use solar-direction curtain as carrier when local overhead clouds are sparse', () => {

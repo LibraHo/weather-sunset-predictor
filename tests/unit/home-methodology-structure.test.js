@@ -57,9 +57,9 @@ describe('home methodology structure', () => {
     ];
     const localeTexts = localeFiles.map(file => fs.readFileSync(path.join(ROOT, 'src/locales', file), 'utf8'));
 
-    expect(html).toContain('2026-06-12');
-    expect(html).toContain('2026.06.12-layer-brightness-v1');
-    expect(html).toContain('分层亮度抑制 v1');
+    expect(html).toContain('2026-06-13');
+    expect(html).toContain('2026.06.13-layer-weighted-brightness-v1');
+    expect(html).toContain('分层求和亮度公式 v1');
     expect(html).toContain('2026-06-03');
     expect(html).toContain('home.methodology.changelog.scoringV2.title');
     expect(html).toContain('home.methodology.sections.finalFormula.formula');
@@ -74,8 +74,8 @@ describe('home methodology structure', () => {
       .map(file => fs.readFileSync(path.join(ROOT, 'src/locales', file), 'utf8'))
       .join('\n');
 
-    expect(coreLocaleTexts).toContain('2026.06.12-layer-brightness-v1');
-    expect(coreLocaleTexts).toContain('Layer brightness suppressor v1');
+    expect(coreLocaleTexts).toContain('2026.06.13-layer-weighted-brightness-v1');
+    expect(coreLocaleTexts).toContain('Layer-weighted brightness formula v1');
     expect(coreLocaleTexts).toContain('layerBrightness');
     expect(coreLocaleTexts).toContain('Sunset scoring v2');
     expect(coreLocaleTexts).toContain('cloud carrier, sunset path, and air rendering');
@@ -128,7 +128,7 @@ describe('home methodology structure', () => {
 
     expect(zh).toContain('中高云画布量 = 高云×0.75 + 中云×0.45');
     expect(zh).toContain('光路不再单独参与最终乘法');
-    expect(zh).toContain('最终分 = clamp((云载体 × 受光亮度) × 空气显色, 0, 100)');
+    expect(zh).toContain('最终分 = clamp(Σ(分层载体 × 分层受光亮度) × 空气显色, 0, 100)');
     expect(zh).toContain('layerBrightness = 三层云载体 × 光路 × 受光/云厚/光束证据');
     expect(zh).toContain('亮度弱时会限制最终展示分');
     expect(zh).toContain('降水影响 = 光路封顶 + 弱载体禁用 + 渲染因子修正');
@@ -137,7 +137,7 @@ describe('home methodology structure', () => {
 
     expect(en).toContain('Upper-cloud canvas = high×0.75 + mid×0.45');
     expect(en).toContain('Light path no longer stands alone in the final multiplication');
-    expect(en).toContain('Final score = clamp((cloud carrier × layer brightness) × air rendering, 0, 100)');
+    expect(en).toContain('Final score = clamp(Σ(layer carrier × layer brightness) × air rendering, 0, 100)');
   });
 
   test('keeps methodology formula blocks readable across multiple lines', () => {

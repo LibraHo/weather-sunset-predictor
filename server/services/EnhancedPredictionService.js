@@ -2159,11 +2159,14 @@ function calculateGatedFinalScore(canvasScore, lightPathScore, renderingFactor, 
   };
   const renderingAdjustment = context.renderingAdjustment || getRenderingScoreAdjustment(airRenderingFactor);
   const carrierScore = Number(canvasScore.score || 0);
-  const brightnessBaseScore = carrierScore * brightnessMultiplier;
+  const weightedCarrierScore = Number(layerBrightness?.weightedCarrierScore);
+  const brightnessBaseScore = Number.isFinite(weightedCarrierScore)
+    ? clamp(weightedCarrierScore, 0, 100)
+    : carrierScore * brightnessMultiplier;
   const rendered = applyRenderingToGatedScore(brightnessBaseScore, airRenderingFactor, renderingAdjustment);
   const layerBrightnessAdjustment = {
     score: parseFloat(brightnessBaseScore.toFixed(1)),
-    applied: brightnessBaseScore < carrierScore,
+    applied: brightnessBaseScore < carrierScore || brightnessMultiplier < 1,
     reason: layerBrightness?.reason || null,
     multiplier: parseFloat(brightnessMultiplier.toFixed(2)),
     effectiveBrightness: layerBrightness?.effectiveBrightness ?? null,
@@ -2238,6 +2241,9 @@ function calculateGatedFinalScore(canvasScore, lightPathScore, renderingFactor, 
       lightPathScore: parseFloat(lightPathScore.score.toFixed(1)),
       lightPathGate: lightPathGate.gate,
       brightnessMultiplier: layerBrightnessAdjustment.multiplier,
+      weightedCarrierScore: parseFloat(brightnessBaseScore.toFixed(1)),
+      layerContributionFormula: layerBrightness?.formula || 'carrier_brightness_multiplier',
+      layerContributions: Array.isArray(layerBrightness?.layerContributions) ? layerBrightness.layerContributions : [],
       airTransmissionFactor: parseFloat(airTransmissionFactor.toFixed(2)),
       airTransmissionFloor,
       layerBrightnessAdjustment,

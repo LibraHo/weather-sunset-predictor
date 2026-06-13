@@ -181,17 +181,17 @@ const translations = {
     },
     "methodology": {
       "title": "火燒雲計算方法",
-      "intro": "目前的火燒雲指數會先判斷「有沒有可顯色載體」，再判斷太陽方向光路是否打開，接著估算這層中高雲實際受光亮度，最後用空氣顯色條件修正。高雲多、光路通，也可能因亮度弱而降分。",
-      "versionLabel": "算法版本：2026.06.12-layer-brightness-v1",
-      "versionDesc": "本版使用「雲載體 × 日落光路 × 受光亮度 × 空氣顯色」。受光亮度基於低／中／高三層雲、太陽幾何、太陽方向通路、AOD／水汽、直射／散射和雲厚證據估算；多個壓暗證據同時成立時才保守封頂。",
+      "intro": "目前的火燒雲指數會先判斷「有沒有可顯色載體」，再把太陽方向光路併入受光亮度，最後用空氣顯色條件修正。高雲多、光路通，也可能因亮度弱而降分。",
+      "versionLabel": "算法版本：2026.06.13-layer-weighted-brightness-v1",
+      "versionDesc": "本版使用「Σ(分層載體 × 分層受光亮度) × 空氣顯色」。受光亮度基於低／中／高三層雲、太陽幾何、太陽方向通路、AOD／水汽、直射／散射和雲厚證據估算，並採用對數飽和響應：從無光到弱光更敏感，接近滿亮後邊際變小。",
       changelogTitle: "版本更新記錄",
       changelogHint: "近三個月內的算法更新都會放在這裡，可捲動回看原因、影響和驗證方式",
       changelog: {
         "latest": {
-          "date": "2026-06-12",
-          "title": "分層亮度抑制 v1",
-          "summary": "新增 layerBrightness 診斷：高雲／中雲是載體，光路通只是必要條件，還要看這層雲是否真的被照亮。AOD、水汽、漫射光占優、厚高雲灰幕等多個壓暗證據同時出現時，高分會被壓到可觀賞或輕微霞光區間。",
-          "validation": "驗證：北京 2026-06-12 晚霞樣本從高 60 檔壓到約 60；Web 評分細則、文字分析和小程序算法頁同步顯示受光亮度。"
+          "date": "2026-06-13",
+          "title": "分層求和亮度公式 v1",
+          "summary": "最終分改為 Σ(分層載體 × 分層受光亮度) × 空氣顯色；受光亮度採用對數飽和響應，光路繼續作為內部因子。",
+          "validation": "驗證：核心評分、Web 評分細則、小程序算法頁和結果頁都顯示分層求和口徑。"
         },
         "grayVeilDirectional": {
           "date": "2026-06-06",
@@ -331,9 +331,9 @@ const translations = {
         },
         "finalFormula": {
           "title": "8. 最終分數",
-          "subtitle": "Final Score ·（雲載體 × 受光亮度）× 空氣顯色",
+          "subtitle": "Final Score · Σ(分層載體 × 分層受光亮度) × 空氣顯色",
           "desc": "最終分不為單個城市或日期加特殊抬分，而是先看雲載體，再把光路併入受光亮度，最後由空氣顯色修正。",
-          "formula": "最終分 = clamp((雲載體 × 受光亮度) × 空氣顯色, 0, 100)，再經過硬否決／厚雲／灰幕校準",
+          "formula": "最終分 = clamp(Σ(分層載體 × 分層受光亮度) × 空氣顯色, 0, 100)，再經過硬否決／厚雲／灰幕校準",
           "highCloudCap": "高雲充足但光路被擋時，會先體現在受光亮度變弱。",
           "carrier": "載體分 = max(雲層畫布分, 氣溶膠弱載體分)",
           "lightGate": "光路不再單獨參與最終乘法，而是作為受光亮度裡的太陽方向通路因子",
@@ -456,11 +456,11 @@ const translations = {
       "title": "評分明細",
       "viewDetails": "查看評分明細",
       "finalDisplayed": "最終顯示分",
-      "baseFormula": "基礎分 = 載體 × 受光亮度",
+      "baseFormula": "基礎分 = Σ(分層載體 × 分層受光亮度)",
       "baseHint": "太陽方向光路已併入受光亮度後的載體基礎分",
       "canvasHint": "高雲/中雲提供主要色彩載體，適度薄霧可提供弱載體；低雲遮擋、厚高雲和灰幕會限制可用亮度",
       "lightPathHint": "太陽光是否能照到雲層",
-      "finalFormula": "最終分 =（雲載體 × 受光亮度）× 空氣顯色",
+      "finalFormula": "最終分 = Σ(分層載體 × 分層受光亮度) × 空氣顯色",
       "renderingHint": "受光亮度、濕度、能見度和顆粒物共同影響色彩表現",
       "aerosolHint": "適度氣溶膠增強橙紅散射，過多則發灰",
       "ledger": {
@@ -468,7 +468,8 @@ const translations = {
         "whyThisScore": "為什麼是這個分數",
         "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
         "gatedFormula": "{{carrier}} × 受光亮度 {{brightness}} = {{base}}",
-        "canvasPlusLightPath": "載體 × 受光亮度",
+        "layerSumFormula": "Σ(載體 × 受光亮度) = {{base}}",
+        "canvasPlusLightPath": "Σ(載體 × 受光亮度)",
         "renderingFormula": "{{base}} 經顯色修正 = {{rendered}}",
         "renderingMultiplierFormula": "{{base}} × 顯色係數 {{factor}} = {{rendered}}",
         "renderingAdjustmentFormula": "{{base}} {{sign}} 顯色修正 {{adjustment}} = {{rendered}}",

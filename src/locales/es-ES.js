@@ -189,7 +189,7 @@ apiAccess: 'Acceso API',
       changelog: {
         "latest": {
           "date": "2026-06-12",
-          "title": "Layer brightness suppressor v1",
+          "title": "Layer-weighted brightness formula v1",
           "summary": "Adds layerBrightness: mid/high clouds are only the carrier, and an open path is only necessary. The model now checks whether that layer is actually illuminated. Weak brightness now applies a multiplicative score gate instead of a hard ceiling.",
           "validation": "Validation: the 2026-06-12 Beijing sunset sample drops from the high-60s to around 60; web score details, text analysis, and the mini-program methodology page now show layer brightness."
         },
@@ -448,6 +448,7 @@ apiAccess: 'Acceso API',
         "whyThisScore": "Why this score",
         "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
         "gatedFormula": "{{carrier}} × light-path gate {{gate}} = {{base}}",
+        "layerSumFormula": "Σ(carrier × brightness) = {{base}}",
         "canvasPlusLightPath": "canvas + light path",
         "renderingFormula": "{{base}} adjusted by rendering = {{rendered}}",
         "renderingMultiplierFormula": "{{base}} × rendering {{factor}} = {{rendered}}",
