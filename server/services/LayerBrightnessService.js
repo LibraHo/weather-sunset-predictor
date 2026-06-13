@@ -29,6 +29,17 @@ function normalizeRange(value, min, max, invert = false) {
   return invert ? 1 - normalized : normalized;
 }
 
+function scoreBrightnessResponse(value, fullBrightnessReference, curve = 6) {
+  const number = finiteNumber(value, 0);
+  const reference = finiteNumber(fullBrightnessReference, 1);
+  if (number <= 0 || reference <= 0) return 0;
+  if (number >= reference) return 1;
+
+  const normalized = clamp(number / reference, 0, 1);
+  if (curve <= 0) return normalized;
+  return clamp(Math.log1p(curve * normalized) / Math.log1p(curve), 0, 1);
+}
+
 function upperCloudSignal(cloudPercent) {
   const cloud = clamp(finiteNumber(cloudPercent, 0), 0, 100);
   if (cloud <= 0) return 0;
@@ -134,7 +145,8 @@ function buildLayerWeightedCarrierScore({
   solarFactor,
   pathFactor,
   thicknessFactor,
-  beamFactor
+  beamFactor,
+  brightnessResponseCurve = 6
 }) {
   const carrier = clamp(finiteNumber(carrierScore?.score, 0), 0, 100);
   if (carrier <= 0) {
@@ -188,7 +200,7 @@ function buildLayerWeightedCarrierScore({
   const contributions = usefulLayers.map((layer) => {
     const normalizedCarrier = carrier * layer.carrier / rawTotal;
     const brightness = clamp(commonBrightness * layer.brightnessBias, 0, 1.05);
-    const multiplier = clamp(brightness / 0.66, 0, 1);
+    const multiplier = scoreBrightnessResponse(brightness, 0.66, brightnessResponseCurve);
     const score = normalizedCarrier * multiplier;
     return {
       key: layer.key,
@@ -275,6 +287,7 @@ function scoreLayerBrightness(params = {}) {
     100
   );
   const brightnessThreshold = dimEvidence.length >= 3 && effectiveBrightness < 30 ? 50 : 42;
+  const brightnessResponseCurve = lightPathGate?.reason === 'solar_direction_blocked_corridor' ? 0 : 6;
   const weightedCarrierScore = buildLayerWeightedCarrierScore({
     low,
     midSignal,
@@ -286,12 +299,13 @@ function scoreLayerBrightness(params = {}) {
     pathFactor,
     thicknessFactor,
     beamFactor: beam.factor,
+    brightnessResponseCurve,
   });
   const brightnessMultiplier = effectiveBrightness <= 0
     ? 0
     : (effectiveBrightness >= brightnessThreshold
       ? 1
-      : clamp(effectiveBrightness / brightnessThreshold, 0, 1));
+      : scoreBrightnessResponse(effectiveBrightness, brightnessThreshold, brightnessResponseCurve));
   const brightnessGate = brightnessMultiplier;
   const reason = buildBrightnessReason(effectiveBrightness, dimEvidence);
 
@@ -320,6 +334,7 @@ function scoreLayerBrightness(params = {}) {
       pathFactor: round(pathFactor, 2),
       airTransmission: round(air.factor, 2),
       brightnessThreshold,
+      brightnessResponse: brightnessResponseCurve > 0 ? 'log1p_k6' : 'linear_blocked_corridor',
       visibilityFactor: round(air.visibilityFactor, 2),
       humidityFactor: round(air.humidityFactor, 2),
       aerosolFactor: round(air.aerosolFactor, 2),

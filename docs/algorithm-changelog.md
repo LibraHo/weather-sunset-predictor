@@ -14,11 +14,12 @@
 - 背景：最终评分口径需要从整体 `载体 × 受光亮度 × 空气显色` 收敛为 `Σ(分层载体 × 分层受光亮度) × 空气显色`；太阳方向光路继续作为受光亮度的内部因子，不再作为最终分的独立乘子。
 - 改动：
   - `LayerBrightnessService` 输出 `weightedCarrierScore` 和 `layerContributions`，按低云/中云/高云/方向云带/气溶胶载体贡献分别乘受光亮度后求和。
+  - 受光亮度使用 `log1p` 饱和响应：从无光到弱光的分数增长更敏感，接近满亮后边际增益变小；太阳方向阻挡走廊仍保持线性保守响应。
   - `EnhancedPredictionService` 使用 `weightedCarrierScore` 作为空气显色前基础分，保留旧 `brightnessMultiplier` 作为展示和兼容字段。
   - Web 评分细则、算法页、小程序算法页和结果页同步显示 `Σ(载体 × 受光亮度)` 口径。
 - 预期影响：
   - 远端光路阻挡、单层云带和方向云带场景会按各层真实贡献加权，不再用一个整体亮度系数套所有载体。
-  - 清透、暖散射和已校准的正例保持原有区间；弱亮度场景仍会被乘性压分。
+  - 清透、暖散射和已校准的正例保持原有区间；弱亮度场景仍会被压分，但不再把“有一点光”的样本压到接近无光。
 - 回归测试：
   - `tests/unit/server/LayerBrightnessService.test.js`
   - `tests/unit/server/EnhancedPredictionService.layerBrightness.test.js`

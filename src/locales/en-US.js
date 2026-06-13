@@ -183,14 +183,14 @@ const translations = {
       "title": "Fire Cloud Calculation Method",
       "intro": "The current Fire Cloud Index first asks whether there is a usable color carrier, then whether the sun-direction path is open, then whether that mid/high cloud layer is actually bright enough, and finally applies air-rendering adjustments. Rich high cloud plus an open path can still score lower when layer brightness is weak.",
       "versionLabel": "Algorithm version: 2026.06.13-layer-weighted-brightness-v1",
-      "versionDesc": "This version uses Σ(layer carrier × layer brightness) × air rendering. Layer brightness is estimated from low/mid/high cloud layers, solar geometry, the sun-direction path, AOD/water vapor, direct/diffuse radiation, and thickness evidence.",
+      "versionDesc": "This version uses Σ(layer carrier × layer brightness) × air rendering. Layer brightness is estimated from low/mid/high cloud layers, solar geometry, the sun-direction path, AOD/water vapor, direct/diffuse radiation, and thickness evidence, then mapped through a log-saturation response: weak light rises faster, while near-full brightness has smaller marginal gains.",
       changelogTitle: "Version update history",
       changelogHint: "Algorithm updates from the last three months live here; scroll to review why each change happened, its impact, and validation",
       changelog: {
         "latest": {
           "date": "2026-06-13",
           "title": "Layer-weighted brightness formula v1",
-          "summary": "The final score now uses Σ(layer carrier × layer brightness) × air rendering; the sun-direction path remains folded into layer brightness instead of being multiplied as an independent final factor.",
+          "summary": "The final score now uses Σ(layer carrier × layer brightness) × air rendering; layer brightness uses a log-saturation response, and the sun-direction path remains folded into it.",
           "validation": "Validation: backend scoring, web score details, the methodology page, and the mini-program result page all expose the layer-sum formula."
         },
         "grayVeilDirectional": {

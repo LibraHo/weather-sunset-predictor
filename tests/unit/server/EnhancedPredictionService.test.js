@@ -1018,7 +1018,7 @@ describe('EnhancedPredictionService', () => {
         version: '2026.06.13-layer-weighted-brightness-v1'
       });
       expect(result.score).toBeGreaterThanOrEqual(25);
-      expect(result.score).toBeLessThanOrEqual(35);
+      expect(result.score).toBeLessThanOrEqual(40);
       expect(result.status).toBe('light_glow');
     });
 
