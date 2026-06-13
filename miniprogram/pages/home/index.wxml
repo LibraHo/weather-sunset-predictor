@@ -305,7 +305,7 @@
 
     <view class="analysis-card app-analysis-card">
       <view class="analysis-card-head">
-        <view class="analysis-card-title">火烧云形成条件分析</view>
+        <view class="analysis-card-title">火烧云文字分析</view>
         <view class="analysis-card-subtitle">云层、光路、空气和限制项</view>
       </view>
       <view class="analysis-factor-grid">
@@ -356,7 +356,7 @@
     <view class="prediction-share-footer-row">
       <button class="prediction-share-menu prediction-share-footer" open-type="share" aria-label="分享霞光评分" hover-class="button-hover" hover-stay-time="80">
         <image class="share-icon-image" src="/assets/icons/share-upload.svg" mode="aspectFit" aria-hidden="true" />
-        <text class="share-btn-label">分享评分</text>
+        <text class="share-btn-label">分享</text>
       </button>
       <button class="prediction-share-menu prediction-share-footer prediction-feedback-footer" bindtap="openFeedback" aria-label="反馈预测结果" hover-class="button-hover" hover-stay-time="80">
         <image class="feedback-icon-image" src="/assets/icons/feedback-message.svg" mode="aspectFit" aria-hidden="true" />

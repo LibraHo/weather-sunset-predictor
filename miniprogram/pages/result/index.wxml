@@ -20,9 +20,15 @@
     </view>
 
     <view class="action-row">
-      <button class="ghost-button action-button" open-type="share" hover-class="button-hover" hover-stay-time="80">分享评分</button>
-      <button class="ghost-button action-button feedback-action-button" bindtap="openFeedback" hover-class="button-hover" hover-stay-time="80">反馈</button>
-      <button class="ghost-button action-button" bindtap="toggleFavorite" hover-class="button-hover" hover-stay-time="80">{{isFavorite ? '取消收藏' : '收藏地点'}}</button>
+      <button class="result-share-action result-share-primary" open-type="share" aria-label="分享霞光评分" hover-class="button-hover" hover-stay-time="80">
+        <image class="share-icon-image" src="/assets/icons/share-upload.svg" mode="aspectFit" aria-hidden="true" />
+        <text class="result-action-label">分享</text>
+      </button>
+      <button class="result-share-action result-feedback-action" bindtap="openFeedback" aria-label="反馈预测结果" hover-class="button-hover" hover-stay-time="80">
+        <image class="feedback-icon-image" src="/assets/icons/feedback-message.svg" mode="aspectFit" aria-hidden="true" />
+        <text class="result-action-label">反馈</text>
+      </button>
+      <button class="result-share-action result-favorite-action" bindtap="toggleFavorite" hover-class="button-hover" hover-stay-time="80">{{isFavorite ? '取消收藏' : '收藏地点'}}</button>
     </view>
 
     <view wx:if="{{feedbackModalVisible}}" class="feedback-mask" bindtap="closeFeedback">
