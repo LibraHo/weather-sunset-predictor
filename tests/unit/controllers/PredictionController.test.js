@@ -966,12 +966,11 @@ describe('PredictionController', () => {
       expect(groups).toHaveLength(4);
       expect(html).toContain('云层载体');
       expect(html).toContain('光路条件');
-      expect(html).toContain('受光亮度');
       expect(html).toContain('空气显色');
       expect(html).toContain('限制因素');
-      expect(groups.find(item => item.key === 'carrier').subfacts).toEqual([
-        expect.objectContaining({ key: 'brightness' })
-      ]);
+      expect(groups.find(item => item.key === 'carrier').desc).toContain('受光');
+      expect(html).not.toContain('受光亮度');
+      expect(groups.find(item => item.key === 'carrier').subfacts).toBeUndefined();
       expect(html).toContain('analysis-factor-grid');
       expect(html).not.toContain('不再重复封顶');
       expect(html).not.toContain('不再额外封顶');
@@ -992,7 +991,8 @@ describe('PredictionController', () => {
 
       expect(groups).toHaveLength(4);
       expect(html).toContain('空气显色');
-      expect(html).toContain('受光亮度');
+      expect(groups.find(item => item.key === 'carrier').desc).toContain('受光');
+      expect(html).not.toContain('受光亮度');
       expect(html).toContain('颜色更容易偏暖、偏红');
       expect(html).not.toContain('薄雾红日载体');
     });
@@ -1089,10 +1089,8 @@ describe('PredictionController', () => {
         { key: 'rendering', title: '空气显色', status: '较弱', desc: 'test', type: 'warning', icon: 'warn', statusTone: 'weak' }
       ], 'test');
 
-      expect(html).toContain('analysis-factor-status-good');
-      expect(html).toContain('analysis-factor-status-fair');
-      expect(html).toContain('analysis-factor-status-mild');
-      expect(html).toContain('analysis-factor-status-weak');
+      expect(html).not.toContain('analysis-factor-status');
+      expect(html).not.toContain('analysis-factor-subfact');
     });
 
     test('分析卡片最终 CSS 应保持上下文案左对齐且可换行', () => {
@@ -1102,13 +1100,11 @@ describe('PredictionController', () => {
       expect(finalRules).toContain('analysis-card-head');
       expect(finalRules).toContain('analysis-card-subtitle');
       expect(finalRules).toContain('analysis-factor-grid');
-      expect(finalRules).toContain('flex-direction: column');
+      expect(finalRules).toContain('grid-template-columns: repeat(2, minmax(0, 1fr))');
       expect(finalRules).toContain('analysis-factor-heading');
       expect(finalRules).not.toContain('analysis-factor-summary');
-      expect(finalRules).toContain('analysis-factor-status-good');
-      expect(finalRules).toContain('analysis-factor-status-fair');
-      expect(finalRules).toContain('analysis-factor-status-mild');
-      expect(finalRules).toContain('analysis-factor-status-weak');
+      expect(finalRules).not.toContain('analysis-factor-status');
+      expect(finalRules).not.toContain('analysis-factor-subfact');
       expect(finalRules).toContain('grid-template-columns: 22px minmax(0, 1fr)');
       expect(finalRules).toContain('display: grid !important');
       expect(finalRules).toContain('white-space: normal !important');

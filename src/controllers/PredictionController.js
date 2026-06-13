@@ -1558,9 +1558,9 @@ class PredictionController {
       'groups.positive': '有利条件', 'groups.neutral': '一般因素', 'groups.warning': '注意因素',
       'factors.carrier.title': '云层载体',
       'factors.carrier.status.good': '较好', 'factors.carrier.status.fair': '一般', 'factors.carrier.status.weak': '较弱',
-      'factors.carrier.desc.good': '中高云能承接日落光线，是今天主要的显色画布。',
-      'factors.carrier.desc.fair': '有一些可被染色的云层，但面积或高度不够理想。',
-      'factors.carrier.desc.weak': '缺少合适的中高云，天空不容易形成大片火烧云。',
+      'factors.carrier.desc.good': '中高云提供可染色云面，具备承接霞光的基础。',
+      'factors.carrier.desc.fair': '有可染色云面，但面积、高度或稳定性不够理想。',
+      'factors.carrier.desc.weak': '可染色云面不足，难形成成片火烧云。',
       'factors.lightPath.title': '光路条件',
       'factors.lightPath.status.good': '较好', 'factors.lightPath.status.fair': '一般', 'factors.lightPath.status.weak': '较弱',
       'factors.lightPath.desc.good': '太阳方向相对通透，光线有机会照到云底。',
@@ -1890,16 +1890,10 @@ class PredictionController {
     });
 
     const carrierFactor = factor('carrier', carrierLevel, 'cloud');
-    carrierFactor.subfacts = [{
-      key: 'brightness',
-      label: this._analysisText('factors.brightness.title'),
-      value: this._analysisText(`factors.brightness.status.${brightnessLevel}`),
-      tone: brightnessLevel === 'good' ? 'good' : (brightnessLevel === 'weak' ? 'weak' : 'fair')
-    }];
     carrierFactor.summary = this._isEnglishUI()
       ? (carrierLevel === 'good' ? 'Usable color canvas' : (carrierLevel === 'weak' ? 'Weak cloud canvas' : 'Partial cloud canvas'))
       : (carrierLevel === 'good' ? '有可染色云面' : (carrierLevel === 'weak' ? '云面基础偏弱' : '云面基础一般'));
-    carrierFactor.desc = `${carrierFactor.desc}${this._isEnglishUI() ? ' Layer brightness: ' : ' 受光亮度：'}${this._analysisText(`factors.brightness.desc.${brightnessLevel}`)}`;
+    carrierFactor.desc = this._buildCarrierAnalysisDesc(carrierLevel, brightnessLevel);
 
     return [
       carrierFactor,
@@ -1919,6 +1913,20 @@ class PredictionController {
           : (limitLevel === 'good' ? '暂无硬压制' : (limitLevel === 'weak' ? '存在明显压分' : '有轻微压分'))
       })
     ];
+  }
+
+  _buildCarrierAnalysisDesc(carrierLevel, brightnessLevel) {
+    if (this._isEnglishUI()) {
+      if (carrierLevel === 'weak') return 'The colorable cloud canvas is limited, or the lit portion is too weak for broad fire clouds.';
+      if (brightnessLevel === 'good') return 'Mid/high clouds provide a colorable canvas, and the lit portion is strong enough to support visible color.';
+      if (brightnessLevel === 'weak') return 'There is some colorable cloud canvas, but the lit portion is weak, so color may stay faint or local.';
+      return 'Some colorable cloud canvas is present, but height, coverage, or illumination is not ideal.';
+    }
+
+    if (carrierLevel === 'weak') return '可染色云面不足，或真正被照亮的部分偏弱，难形成成片火烧云。';
+    if (brightnessLevel === 'good') return '中高云提供可染色云面，受光也够，具备显色基础。';
+    if (brightnessLevel === 'weak') return '有可染色云面，但真正被照亮的部分偏弱，颜色可能偏淡或只出现在局部。';
+    return '有可染色云面，但面积、高度或受光稳定性一般，表现更偏局部。';
   }
 
   extractAnalysisWeather(prediction) {
@@ -2006,21 +2014,12 @@ class PredictionController {
   }
 
   renderAnalysisFactor(factor) {
-    const statusTone = ['good', 'fair', 'mild', 'weak'].includes(factor.statusTone) ? factor.statusTone : 'fair';
-    const subfacts = Array.isArray(factor.subfacts) && factor.subfacts.length
-      ? `<div class="analysis-factor-subfacts">${factor.subfacts.map((item) => {
-        const tone = ['good', 'fair', 'mild', 'weak'].includes(item.tone) ? item.tone : 'fair';
-        return `<span class="analysis-factor-subfact analysis-factor-subfact-${tone}"><span>${item.label}</span><strong>${item.value}</strong></span>`;
-      }).join('')}</div>`
-      : '';
     return `
       <section class="analysis-factor analysis-factor-${factor.type} analysis-factor-${factor.key}">
         <div class="analysis-factor-heading">
           <span class="analysis-factor-icon">${this.renderInlineSvgIcon(factor.icon)}</span>
           <span class="analysis-factor-title">${factor.title}</span>
-          <strong class="analysis-factor-status analysis-factor-status-${statusTone}">${factor.status}</strong>
         </div>
-        ${subfacts}
         <p>${factor.desc}</p>
       </section>
     `;

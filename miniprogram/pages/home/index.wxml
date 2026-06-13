@@ -315,7 +315,6 @@
               <text class="analysis-factor-icon-dot"></text>
               <text class="analysis-factor-title">{{item.title}}</text>
             </view>
-            <text class="analysis-factor-status analysis-factor-status-{{item.tone}}">{{item.status}}</text>
           </view>
           <view class="analysis-factor-desc">{{item.desc}}</view>
         </view>

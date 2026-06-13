@@ -560,9 +560,9 @@ const translations = {
           "title": "Cloud carrier",
           "status": { "good": "Good", "fair": "Fair", "weak": "Weak" },
           "desc": {
-            "good": "Mid/high clouds can catch sunset light and act as today's main color canvas.",
-            "fair": "Some colorable cloud layers exist, but their area or height is not ideal.",
-            "weak": "Suitable mid/high clouds are missing, so broad fire clouds are unlikely."
+            "good": "Mid/high clouds provide a colorable canvas for sunset light.",
+            "fair": "A colorable cloud canvas exists, but coverage, height, or stability is not ideal.",
+            "weak": "The colorable cloud canvas is limited, so broad fire clouds are unlikely."
           }
         },
         "lightPath": {
