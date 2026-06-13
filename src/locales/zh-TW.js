@@ -555,7 +555,7 @@ const translations = {
         }
       }},
 "formationAnalysis": {
-      "title": "火燒雲形成條件分析",
+      "title": "火燒雲文字分析",
       "groups": { "positive": "有利條件", "neutral": "一般因素", "warning": "注意因素" },
       "factors": {
         "carrier": {

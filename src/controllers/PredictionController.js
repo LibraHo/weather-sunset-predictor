@@ -1554,7 +1554,7 @@ class PredictionController {
     if (translated !== fullKey) return translated;
 
     const fallback = {
-      'title': '火烧云形成条件分析',
+      'title': '火烧云文字分析',
       'groups.positive': '有利条件', 'groups.neutral': '一般因素', 'groups.warning': '注意因素',
       'factors.carrier.title': '云层载体',
       'factors.carrier.status.good': '较好', 'factors.carrier.status.fair': '一般', 'factors.carrier.status.weak': '较弱',

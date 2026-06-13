@@ -579,7 +579,7 @@ export default {
         }
       }},
 formationAnalysis: {
-      title: '火烧云形成条件分析',
+      title: '火烧云文字分析',
       groups: { positive: '有利条件', neutral: '一般因素', warning: '注意因素' },
       factors: {
         carrier: {

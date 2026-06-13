@@ -964,6 +964,8 @@ describe('PredictionController', () => {
       const html = predictionController.renderAnalysisCard(groups, 'test');
 
       expect(groups).toHaveLength(4);
+      expect(html).toContain('火烧云文字分析');
+      expect(html).not.toContain('火烧云形成条件分析');
       expect(html).toContain('云层载体');
       expect(html).toContain('光路条件');
       expect(html).toContain('空气显色');
@@ -1111,6 +1113,36 @@ describe('PredictionController', () => {
       expect(finalRules).toContain('text-align: left !important');
       expect(finalRules).not.toContain('display: contents');
       expect(finalRules).not.toContain('text-align: right');
+    });
+
+    test('预测卡分享和反馈按钮保持同一行动区布局', () => {
+      const html = predictionController.renderSinglePrediction({
+        score: 72,
+        quality: 'good',
+        type: 'sunset',
+        time: '2026-06-13T11:30:00Z',
+        sunsetTime: new Date('2026-06-13T19:30:00+08:00'),
+        timezone: 'Asia/Shanghai',
+        sunAzimuth: null,
+        cloudLayers: { high: 88, mid: 42, low: 4 },
+        visibility: 18,
+        humidity: 58,
+        factors: {},
+        getOptimalViewingWindow: () => ({
+          start: new Date('2026-06-13T19:00:00+08:00'),
+          end: new Date('2026-06-13T20:00:00+08:00')
+        }),
+        shouldShowAzimuth: () => false
+      }, '', '晚霞', '日落时间', '今天', 'sunset');
+      const css = fs.readFileSync(path.join(rootDir, 'styles/main.css'), 'utf8');
+
+      expect(html).toContain('prediction-share-footer-row');
+      expect(html).toContain('prediction-nav-feedback');
+      expect(html.indexOf('prediction-share-menu prediction-share-footer')).toBeLessThan(html.indexOf('prediction-nav-feedback'));
+      expect(css).toMatch(/\.prediction-share-footer-row\s*\{[\s\S]*?display:\s*grid;/);
+      expect(css).toMatch(/\.prediction-share-footer-row\s*\{[\s\S]*?grid-template-columns:\s*minmax\(180px,\s*1fr\)\s*112px;/);
+      expect(css).toMatch(/\.prediction-nav-feedback\s*\{[\s\S]*?min-width:\s*112px;/);
+      expect(css).toMatch(/\.prediction-app-nav-compact \.prediction-share-menu\s*\{[\s\S]*?width:\s*100%;/);
     });
   });
 

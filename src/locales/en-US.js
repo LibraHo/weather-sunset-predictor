@@ -553,7 +553,7 @@ const translations = {
         }
       }},
 "formationAnalysis": {
-      "title": "Fire cloud formation analysis",
+      "title": "Fire cloud text analysis",
       "groups": { "positive": "Favorable", "neutral": "Neutral", "warning": "Watch-outs" },
       "factors": {
         "carrier": {
