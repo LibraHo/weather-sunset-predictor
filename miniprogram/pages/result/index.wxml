@@ -93,7 +93,7 @@
     <metric-grid metrics="{{metrics}}" />
 
     <view class="section-head">火烧云文字分析</view>
-    <view class="analysis-card result-analysis-card">
+    <view class="analysis-card xiake-card">
       <view class="analysis-lead">{{prediction.explanation}}</view>
       <view class="analysis-grid">
         <view class="analysis-item tone-{{item.tone}}" wx:for="{{analysisItems}}" wx:key="key">

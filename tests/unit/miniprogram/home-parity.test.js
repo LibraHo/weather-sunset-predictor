@@ -283,7 +283,10 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxml).toContain('open-type="share"');
     expect(homeWxml).toContain('prediction-share-footer-row');
     expect(homeWxml).toContain('prediction-share-menu prediction-share-footer');
-    expect(homeWxml).toContain('share-btn-label">分享评分');
+    expect(homeWxml).toContain('analysis-card-title">火烧云文字分析');
+    expect(homeWxml).not.toContain('analysis-card-title">火烧云形成条件分析');
+    expect(homeWxml).toContain('share-btn-label">分享');
+    expect(homeWxml).not.toContain('share-btn-label">分享评分');
     expect(homeWxml).toContain('src="/assets/icons/share-upload.svg"');
     expect(homeWxml).toContain('bindtap="openFeedback"');
     expect(homeWxml).toContain('src="/assets/icons/feedback-message.svg"');

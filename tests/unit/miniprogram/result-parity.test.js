@@ -73,8 +73,7 @@ describe('miniprogram result page web parity', () => {
     expect(wxml).toContain('analysis-title');
     expect(wxml).toContain('analysis-status-label');
     expect(wxml).toContain('analysis-detail');
-    expect(wxml).toContain('result-analysis-card');
-    expect(wxml).not.toContain('analysis-card xiake-card');
+    expect(wxml).toContain('analysis-card xiake-card');
     expect(js).toContain('status: statusFromScore');
     expect(js).toContain('status: statusFromBrightness');
     expect(js).toContain('status: statusFromFactor');
@@ -83,7 +82,6 @@ describe('miniprogram result page web parity', () => {
     expect(wxml).not.toContain('analysis-factor-subfact');
     expect(wxss).toMatch(/\.analysis-grid\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
     expect(wxss).toContain('.analysis-status-label');
-    expect(wxss).toContain('.result-analysis-card');
     expect(wxss).toContain('.tone-excellent .analysis-status-label');
     expect(wxss).toContain('.tone-good .analysis-status-label');
     expect(wxss).toContain('.tone-watch .analysis-status-label');

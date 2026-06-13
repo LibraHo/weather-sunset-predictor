@@ -299,13 +299,6 @@
   padding: 24rpx;
 }
 
-.result-analysis-card {
-  border: 1rpx solid rgba(255, 255, 255, 0.08);
-  border-radius: 20rpx;
-  background: rgba(7, 16, 31, 0.42);
-  box-shadow: none;
-}
-
 .analysis-lead {
   color: rgba(255, 255, 255, 0.78);
   font-size: 27rpx;
