@@ -1149,6 +1149,7 @@ describe('PredictionController', () => {
         shouldShowAzimuth: () => false
       }, '', '晚霞', '日落时间', '今天', 'sunset');
       const css = fs.readFileSync(path.join(rootDir, 'styles/main.css'), 'utf8');
+      const shareCss = fs.readFileSync(path.join(rootDir, 'styles/share-panel.css'), 'utf8');
 
       expect(html).toContain('prediction-share-footer-row');
       expect(html).toContain('prediction-nav-feedback');
@@ -1161,6 +1162,10 @@ describe('PredictionController', () => {
       expect(css).toMatch(/\.prediction-nav-feedback \.share-btn-icon\s*\{[\s\S]*?height:\s*18px !important;/);
       expect(css).toMatch(/\.prediction-nav-feedback \.share-btn-label\s*\{[\s\S]*?text-overflow:\s*ellipsis;/);
       expect(css).toMatch(/\.prediction-app-nav-compact \.prediction-share-menu\s*\{[\s\S]*?width:\s*100%;/);
+      expect(shareCss).toMatch(/\.prediction-share-footer-row\s*\{[\s\S]*?display:\s*grid !important;/);
+      expect(shareCss).toMatch(/\.prediction-share-footer-row\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\)\s*minmax\(104px,\s*128px\);/);
+      expect(shareCss).toMatch(/\.prediction-share-footer \.prediction-share-btn\s*\{[\s\S]*?width:\s*100%;/);
+      expect(shareCss).not.toMatch(/\.prediction-share-footer-row\s*\{[\s\S]*?display:\s*flex !important;/);
     });
   });
 
