@@ -123,6 +123,12 @@
   transform: translateX(-50%) translateY(0);
 }
 
+.feedback-toast {
+  max-width: calc(100vw - 32px);
+  text-align: center;
+  white-space: normal;
+}
+
 /* ===== 响应式：桌面端字体与点击区放大 ===== */
 @media (min-width: 1024px) {
   .prediction-share-dropdown {
