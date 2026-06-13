@@ -49,6 +49,14 @@ describe('miniprogram result page web parity', () => {
 
     expect(wxml.indexOf('open-type="share"')).toBeLessThan(wxml.indexOf('bindtap="toggleFavorite"'));
     expect(wxss).toContain('grid-template-columns: minmax(0, 1fr) 196rpx minmax(0, 1fr)');
+    expect(wxml).toContain('result-share-action result-share-primary');
+    expect(wxml).toContain('/assets/icons/share-upload.svg');
+    expect(wxml).toContain('result-action-label">分享');
+    expect(wxml).toContain('result-share-action result-feedback-action');
+    expect(wxml).toContain('feedback-icon-image');
+    expect(wxml).toContain('/assets/icons/feedback-message.svg');
+    expect(wxml).toContain('result-action-label">反馈');
+    expect(wxml).not.toContain('ghost-button action-button result-action-button');
     expect(wxml.indexOf('data-target="map"')).toBeLessThan(wxml.indexOf('data-target="methodology"'));
     expect(wxml.indexOf('data-target="gallery"')).toBeLessThan(wxml.indexOf('data-target="api"'));
     expect(wxml.indexOf('data-target="api"')).toBeLessThan(wxml.indexOf('data-target="upload"'));
@@ -65,6 +73,8 @@ describe('miniprogram result page web parity', () => {
     expect(wxml).toContain('analysis-title');
     expect(wxml).toContain('analysis-status-label');
     expect(wxml).toContain('analysis-detail');
+    expect(wxml).toContain('result-analysis-card');
+    expect(wxml).not.toContain('analysis-card xiake-card');
     expect(js).toContain('status: statusFromScore');
     expect(js).toContain('status: statusFromBrightness');
     expect(js).toContain('status: statusFromFactor');
@@ -73,12 +83,13 @@ describe('miniprogram result page web parity', () => {
     expect(wxml).not.toContain('analysis-factor-subfact');
     expect(wxss).toMatch(/\.analysis-grid\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
     expect(wxss).toContain('.analysis-status-label');
+    expect(wxss).toContain('.result-analysis-card');
     expect(wxss).toContain('.tone-excellent .analysis-status-label');
     expect(wxss).toContain('.tone-good .analysis-status-label');
     expect(wxss).toContain('.tone-watch .analysis-status-label');
     expect(wxss).toContain('.tone-weak .analysis-status-label');
     expect(wxml).not.toMatch(/action-button[^"]*analysis-status-label/);
-    expect(wxml).not.toMatch(/feedback-action-button[^"]*analysis-status-label/);
+    expect(wxml).not.toMatch(/result-feedback-action[^"]*analysis-status-label/);
     expect(wxss).not.toContain('.analysis-factor-status');
     expect(wxss).not.toContain('.analysis-factor-subfact');
   });
