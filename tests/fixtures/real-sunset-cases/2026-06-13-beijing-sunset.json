@@ -1,6 +1,6 @@
 {
-  "id": "2026-06-13-beijing-sunset-warm-haze-mid-glow",
-  "title": "2026-06-13 Beijing sunset: upper-cloud carrier with usable warm haze should stay mid-range",
+  "id": "2026-06-13-beijing-sunset-rain-wet-veil-low-score",
+  "title": "2026-06-13 Beijing sunset: rain and wet veil should block warm-haze uplift",
   "location": {
     "name": "Beijing",
     "nameZh": "北京",
@@ -17,28 +17,28 @@
   "feedback": {
     "source": "Alex现场反馈",
     "reportedAt": "2026-06-13T15:31:26+08:00",
-    "summary": "北京当天详细预测分数只有 18.4，但其它来源报中烧。线上数据本身显示高云载体和太阳方向高云很强，空气偏湿偏脏应压到中等观察区间，而不是被受光亮度、显色修正和灰幕 cap 多次叠扣到低分。",
+    "summary": "北京当天详细预测分数只有 18.4，后续现场确认正在下雨。线上数据虽然显示高云载体和太阳方向高云很强，但 precipitation、近 6 小时降雨、近雨小时数和湿幕证据都明显，应该维持低分，不能被暖霾保底抬到中烧。",
     "subjectiveScore": {
-      "min": 40,
-      "max": 45,
-      "label": "中烧 / 中等观察价值"
+      "min": 10,
+      "max": 25,
+      "label": "低分 / 下雨湿幕"
     },
     "calibrationTarget": {
-      "score": 41,
-      "status": "calibrated",
-      "reason": "高云约 96%，太阳方向 10-25km 高云满铺，低云很少；AOD/湿度/水汽偏高意味着不能报高分，但光路可用且能见度 10km，应保留中等火烧云概率。"
+      "score": 18,
+      "status": "rain_veto",
+      "reason": "高云约 96%、太阳方向高云强不能覆盖正在下雨和近雨湿幕；precipitation=0.1、recentPrecipitation6h=2.5、recentRainHours=7、湿度接近 89%，应禁止暖霾保底。"
     },
     "actualOutcome": {
-      "fireCloud": "good_glow",
-      "rainDuringWindow": false,
+      "fireCloud": "no_fire_cloud",
+      "rainDuringWindow": true,
       "orangeLightOrOpening": true,
-      "worthWaiting": true,
-      "notes": "该样本用于防止 warm haze / post-rain gray curtain 证据在多个评分层重复压分。"
+      "worthWaiting": false,
+      "notes": "该样本用于防止正在下雨或近雨湿幕被 warm haze carrier floor 误抬到中烧。"
     },
     "previousModelScores": [
       {
         "score": 18.4,
-        "source": "生产 main a623eb0b /api/prediction/enhanced，layerBrightness weightedCarrierScore 40.9 后又被 renderingFactor 0.4248 乘到 18.4，并被 severe_haze_cap_35 标成低分。"
+        "source": "生产 main a623eb0b /api/prediction/enhanced，score 18.4；该低分后经现场下雨确认是合理结果，不应校准到 40.9。"
       }
     ]
   },
@@ -49,7 +49,7 @@
       "/tmp/beijing-2026-06-13-sunset.json"
     ],
     "knownLimitations": [
-      "该样本来自生产详细预测响应、现场对比反馈和外部中烧预报反馈；后续如有实况照片应补充图像观测。"
+      "该样本来自生产详细预测响应、现场反馈和后续下雨确认；用于约束雨天/近雨湿幕不能被暖霾逻辑抬分。"
     ]
   },
   "input": {
@@ -182,11 +182,12 @@
   },
   "expectations": {
     "score": {
-      "min": 40,
-      "max": 45
+      "min": 10,
+      "max": 25
     },
     "statusAnyOf": [
-      "good_glow"
+      "no_fire_cloud",
+      "light_glow"
     ],
     "equals": [
       {
@@ -199,14 +200,18 @@
       },
       {
         "path": "warmHazeCarrierFloor.applied",
-        "value": true
+        "value": false
+      },
+      {
+        "path": "warmHazeCarrierFloor.reason",
+        "value": "rain_or_recent_rain_blocks_warm_haze_floor"
       }
     ],
     "notAbove": [
       {
         "path": "score",
-        "value": 45,
-        "reason": "Air remains humid and hazy, so the strong upper-cloud carrier should be mid-range rather than high confidence."
+        "value": 25,
+        "reason": "Active rain and recent wet veil should keep the event low even with strong upper-cloud carrier."
       }
     ]
   }

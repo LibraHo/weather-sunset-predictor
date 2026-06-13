@@ -85,16 +85,12 @@ describe('real sunset feedback case library', () => {
     }
   });
 
-  test('warm haze carrier floor does not override an active-rain hard block', () => {
-    const beijingCase = realCases.find((realCase) => realCase.id === '2026-06-13-beijing-sunset-warm-haze-mid-glow');
+  test('warm haze carrier floor does not override rain or recent wet veil', () => {
+    const beijingCase = realCases.find((realCase) => realCase.id === '2026-06-13-beijing-sunset-rain-wet-veil-low-score');
     expect(beijingCase).toBeTruthy();
 
-    const rainyWeather = {
-      ...beijingCase.input.weatherData,
-      precipitation: 2
-    };
     const result = EnhancedPredictionService.calculateEnhancedPrediction(
-      rainyWeather,
+      beijingCase.input.weatherData,
       new Date(beijingCase.event.calculationTimeUtc),
       beijingCase.location.lat,
       beijingCase.location.lon,
@@ -102,8 +98,9 @@ describe('real sunset feedback case library', () => {
       beijingCase.input.options || {}
     );
 
-    expect(result.scoringV2.hardBlocked).toBe(true);
     expect(result.warmHazeCarrierFloor.applied).toBe(false);
+    expect(result.warmHazeCarrierFloor.reason).toBe('rain_or_recent_rain_blocks_warm_haze_floor');
     expect(result.status).not.toBe('good_glow');
+    expect(result.score).toBeLessThanOrEqual(25);
   });
 });

@@ -58,8 +58,8 @@ describe('home methodology structure', () => {
     const localeTexts = localeFiles.map(file => fs.readFileSync(path.join(ROOT, 'src/locales', file), 'utf8'));
 
     expect(html).toContain('2026-06-13');
-    expect(html).toContain('2026.06.13-warm-haze-mid-glow-v1');
-    expect(html).toContain('分层亮度 + 暖霾中烧校准');
+    expect(html).toContain('2026.06.13-rain-veto-warm-haze-v1');
+    expect(html).toContain('分层亮度 + 雨天暖霾否决');
     expect(html).toContain('2026-06-03');
     expect(html).toContain('home.methodology.changelog.scoringV2.title');
     expect(html).toContain('home.methodology.sections.finalFormula.formula');
@@ -74,11 +74,11 @@ describe('home methodology structure', () => {
       .map(file => fs.readFileSync(path.join(ROOT, 'src/locales', file), 'utf8'))
       .join('\n');
 
-    expect(coreLocaleTexts).toContain('2026.06.13-warm-haze-mid-glow-v1');
-    expect(coreLocaleTexts).toContain('Layer brightness + warm-haze mid-glow calibration');
+    expect(coreLocaleTexts).toContain('2026.06.13-rain-veto-warm-haze-v1');
+    expect(coreLocaleTexts).toContain('Layer brightness + rain veto for warm haze');
     expect(coreLocaleTexts).toContain('layerBrightness');
-    expect(coreLocaleTexts).toContain('rainy hard blocks cannot be lifted');
-    expect(coreLocaleTexts).toContain('雨天 hard block 不允许暖霾保底');
+    expect(coreLocaleTexts).toContain('wet-veil signals block the warm-haze floor');
+    expect(coreLocaleTexts).toContain('当前降雨或近雨湿幕不允许暖霾保底');
     expect(coreLocaleTexts).toContain('Sunset scoring v2');
     expect(coreLocaleTexts).toContain('cloud carrier, sunset path, and air rendering');
     expect(localeTexts.join('\n')).toContain('2026-05-27');
@@ -135,7 +135,7 @@ describe('home methodology structure', () => {
     expect(zh).toContain('亮度弱时会限制最终展示分');
     expect(zh).toContain('降水影响 = 光路封顶 + 弱载体禁用 + 渲染因子修正');
     expect(zh).toContain('太阳方向云幕载体分');
-    expect(zh).toContain('雨天 hard block 不允许暖霾保底');
+    expect(zh).toContain('当前降雨或近雨湿幕不允许暖霾保底');
     expect(zh).not.toContain('画布分×1.2倍');
     expect(zh).not.toContain('透明度分 = 能见度分 + 湿度分（最高25分）');
 

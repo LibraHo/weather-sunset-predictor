@@ -2648,7 +2648,23 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     floor: null,
     reason: null
   };
-  if (!scoringV2.hardBlocked && !aerosolHazeCap.applied && aerosolHazeCap.level === 'warm_scattering') {
+  const precipitationForWarmHaze = Number(weatherData.precipitation ?? weatherData.rain ?? weatherData.showers ?? 0);
+  const recentPrecipitation6hForWarmHaze = Number(weatherData.recentPrecipitation6h || 0);
+  const recentRainHoursForWarmHaze = Number(weatherData.recentRainHours || 0);
+  const recentRainSignalForWarmHaze = Number(weatherData.recentRainSignal || 0);
+  const recentRainWetHourEquivalentForWarmHaze = Number(weatherData.recentRainWetHourEquivalent || 0);
+  const warmHazeRainVeto =
+    precipitationForWarmHaze > 0 ||
+    recentPrecipitation6hForWarmHaze >= 1 ||
+    recentRainHoursForWarmHaze >= 2 ||
+    recentRainSignalForWarmHaze >= 0.5 ||
+    recentRainWetHourEquivalentForWarmHaze >= 1;
+  if (
+    !warmHazeRainVeto &&
+    !scoringV2.hardBlocked &&
+    !aerosolHazeCap.applied &&
+    aerosolHazeCap.level === 'warm_scattering'
+  ) {
     const weightedCarrier = Number(layerBrightness.weightedCarrierScore);
     const floor = Number.isFinite(weightedCarrier) ? Math.min(45, parseFloat(weightedCarrier.toFixed(1))) : null;
     if (floor !== null && floor >= 40 && adjustedScore < floor) {
@@ -2659,6 +2675,8 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
       warmHazeCarrierFloor.floor = floor;
       warmHazeCarrierFloor.reason = 'warm_haze_uses_layer_weighted_carrier_floor';
     }
+  } else if (warmHazeRainVeto && aerosolHazeCap.level === 'warm_scattering') {
+    warmHazeCarrierFloor.reason = 'rain_or_recent_rain_blocks_warm_haze_floor';
   }
 
   if (aerosolHazeCap.applied) {

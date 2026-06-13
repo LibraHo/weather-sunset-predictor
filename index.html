@@ -589,7 +589,7 @@
               <li data-i18n="home.methodology.sections.finalFormula.carrier">载体分 = max(云层画布分, 气溶胶弱载体分, 太阳方向云幕载体分)</li>
               <li data-i18n="home.methodology.sections.finalFormula.lightGate">光路不再单独参与最终乘法，而是作为受光亮度里的太阳方向通路因子</li>
               <li data-i18n="home.methodology.sections.finalFormula.rendering">受光亮度会先判断云是否真的亮；空气显色 = 0.70–1.12，光路开且云幕不灰时轻/中度 AOD、PM、dust 可加暖色，满铺灰幕则连续压低</li>
-              <li data-i18n="home.methodology.sections.finalFormula.statusCaps">显示分还会按状态校准：无火烧云低于 40，轻微霞光低于 60；几何不可行、厚云、灰幕和雨低云会进一步封顶；雨天 hard block 不允许暖霾保底</li>
+              <li data-i18n="home.methodology.sections.finalFormula.statusCaps">显示分还会按状态校准：无火烧云低于 40，轻微霞光低于 60；几何不可行、厚云、灰幕和雨低云会进一步封顶；当前降雨或近雨湿幕不允许暖霾保底</li>
             </ul>
             <p class="methodology-formula" data-i18n="home.methodology.sections.finalFormula.formula">最终分 = clamp(Σ(分层载体 × 分层受光亮度) × 空气显色, 0, 100)，再经过硬否决/厚云/灰幕校准</p>
           </article>
@@ -637,9 +637,9 @@
               <li>
                 <time datetime="2026-06-13" data-i18n="home.methodology.changelog.latest.date">2026-06-13</time>
                 <div>
-                  <strong data-i18n="home.methodology.changelog.latest.title">分层亮度 + 暖霾中烧校准</strong>
-                  <p data-i18n="home.methodology.changelog.latest.summary">最终分使用 Σ(分层载体 × 分层受光亮度) × 空气显色；光路打开、太阳方向高云强且暖霾可散射时，保留中烧观察价值；雨天 hard block 不会被保底抬分。</p>
-                  <small data-i18n="home.methodology.changelog.latest.validation">验证：2026-06-13 北京日落从 18.4 回放到 40.9；同样样本改为正在下雨时，暖霾保底不生效。</small>
+                  <strong data-i18n="home.methodology.changelog.latest.title">分层亮度 + 雨天暖霾否决</strong>
+                  <p data-i18n="home.methodology.changelog.latest.summary">最终分使用 Σ(分层载体 × 分层受光亮度) × 空气显色；光路打开、太阳方向高云强且暖霾可散射时，也必须先通过当前降雨和近雨湿幕检查。</p>
+                  <small data-i18n="home.methodology.changelog.latest.validation">验证：2026-06-13 北京日落维持 18.4 低分；当前小雨、近 6 小时降雨和近雨湿幕会阻止暖霾保底。</small>
                 </div>
               </li>
               <li>
@@ -701,8 +701,8 @@
             </ol>
           </div>
           <div class="methodology-version-card">
-            <strong data-i18n="home.methodology.versionLabel">算法版本：2026.06.13-warm-haze-mid-glow-v1</strong>
-            <span data-i18n="home.methodology.versionDesc">本版使用“Σ(分层载体 × 分层受光亮度) × 空气显色”。受光亮度基于低/中/高三层云、太阳几何、太阳方向通路、直射/散射和云厚证据估算；光路打开、太阳方向高云强且暖霾可散射时，保留中烧区间，雨天硬阻断不保底。</span>
+            <strong data-i18n="home.methodology.versionLabel">算法版本：2026.06.13-rain-veto-warm-haze-v1</strong>
+            <span data-i18n="home.methodology.versionDesc">本版使用“Σ(分层载体 × 分层受光亮度) × 空气显色”。受光亮度基于低/中/高三层云、太阳几何、太阳方向通路、直射/散射和云厚证据估算；光路打开、太阳方向高云强且暖霾可散射时，只在无当前降雨和无明显近雨湿幕时保留中烧区间。</span>
           </div>
         </div>
       </section>

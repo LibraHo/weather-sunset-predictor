@@ -181,17 +181,17 @@ const translations = {
     },
     "methodology": {
       "title": "Fire Cloud Calculation Method",
-      "intro": "The current Fire Cloud Index first asks whether there is a usable color carrier, folds the sun-direction path into layer brightness, and then applies air-rendering adjustments. An open path with warm haze can preserve a mid-glow watch score, while rainy hard blocks cannot be lifted.",
-      "versionLabel": "Algorithm version: 2026.06.13-warm-haze-mid-glow-v1",
-      "versionDesc": "This version uses Σ(layer carrier × layer brightness) × air rendering. Layer brightness is estimated from low/mid/high cloud layers, solar geometry, the sun-direction path, AOD/water vapor, direct/diffuse radiation, and thickness evidence. When the path is open, sun-direction high cloud is strong, and haze is warm-scattering rather than blocked, the score can stay in the mid-glow band; rainy hard blocks do not receive that floor.",
+      "intro": "The current Fire Cloud Index first asks whether there is a usable color carrier, folds the sun-direction path into layer brightness, and then applies air-rendering adjustments. An open path with warm haze can preserve watch value only when active rain and recent wet-veil signals are absent.",
+      "versionLabel": "Algorithm version: 2026.06.13-rain-veto-warm-haze-v1",
+      "versionDesc": "This version uses Σ(layer carrier × layer brightness) × air rendering. Layer brightness is estimated from low/mid/high cloud layers, solar geometry, the sun-direction path, AOD/water vapor, direct/diffuse radiation, and thickness evidence. When the path is open, sun-direction high cloud is strong, and haze is warm-scattering rather than blocked, the score can stay in the mid-glow band only if active rain and recent wet-veil signals are absent.",
       changelogTitle: "Version update history",
       changelogHint: "Algorithm updates from the last three months live here; scroll to review why each change happened, its impact, and validation",
       changelog: {
         "latest": {
           "date": "2026-06-13",
-          "title": "Layer brightness + warm-haze mid-glow calibration",
-          "summary": "The final score uses Σ(layer carrier × layer brightness) × air rendering. When the path is open, sun-direction high cloud is strong, and haze can scatter warm color, the result keeps a mid-glow watch score; rainy hard blocks cannot be lifted by that floor.",
-          "validation": "Validation: the 2026-06-13 Beijing sunset replays from 18.4 to 40.9; changing the same sample to active rain disables the warm-haze floor."
+          "title": "Layer brightness + rain veto for warm haze",
+          "summary": "The final score uses Σ(layer carrier × layer brightness) × air rendering. Open-path warm haze must now pass active-rain and recent wet-veil checks before any mid-glow floor can apply.",
+          "validation": "Validation: the 2026-06-13 Beijing sunset stays low around 18.4; trace rain, recent six-hour rainfall, and wet-veil signals block the warm-haze floor."
         },
         "grayVeilDirectional": {
           "date": "2026-06-06",
@@ -332,7 +332,7 @@ const translations = {
         "finalFormula": {
           "title": "8. Final Score",
           "subtitle": "Final Score · Σ(layer carrier × layer brightness) × air rendering",
-          "desc": "The score is not a city/date-specific lift. Clouds first provide the carrier, the light path is folded into brightness, then air rendering explains the visible color. Open-path warm haze can preserve a mid-glow watch score, but weak layer brightness keeps it out of the high-score bands.",
+          "desc": "The score is not a city/date-specific lift. Clouds first provide the carrier, the light path is folded into brightness, then air rendering explains the visible color. Open-path warm haze can preserve a mid-glow watch score only when active rain and recent wet-veil signals are absent.",
           "formula": "Final score = clamp(Σ(layer carrier × layer brightness) × air rendering, 0, 100), then hard blockers / thick cloud / gray curtain calibrate it",
           "highCloudCap": "When high clouds are rich but the light path is blocked, it first weakens layer brightness.",
           "carrier": "Carrier score = max(cloud canvas score, weak aerosol carrier score, sun-direction curtain carrier score)",

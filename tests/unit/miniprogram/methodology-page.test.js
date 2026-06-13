@@ -45,8 +45,8 @@ describe('miniprogram methodology page', () => {
     expect(js).toContain('high×0.75 + mid×0.45');
     expect(js).toContain('Σ(carrierLayer × brightnessLayer) × airRendering');
     expect(js).toContain('暖霾可散射');
-    expect(js).toContain('雨天 hard block 不会被保底抬分');
-    expect(js).toContain('只保留到中烧区间');
+    expect(js).toContain('当前降雨或近雨湿幕明显时不抬分');
+    expect(js).toContain('才会保留中烧观察价值');
     expect(js).toContain('grayVeil ? suppression');
     expect(js).toContain('directionalMidCloud');
     expect(js).toContain('受光亮度');
@@ -55,7 +55,7 @@ describe('miniprogram methodology page', () => {
     expect(js).toContain('方向中云带可到 50-60 档');
     expect(js).toContain('并入受光亮度');
     expect(js).toContain('无火烧云 <40');
-    expect(wxml).toContain('2026.06.13 · 分层亮度 + 暖霾中烧校准');
+    expect(wxml).toContain('2026.06.13 · 分层亮度 + 雨天暖霾否决');
     expect(wxml).toContain('地图分');
     expect(wxml).toContain('地点详情分');
     expect(js).not.toContain('DOM');

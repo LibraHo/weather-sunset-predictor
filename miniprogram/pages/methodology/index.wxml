@@ -92,7 +92,7 @@
     </scroll-view>
     <view class="version-card">
       <view class="version-title">当前说明版本</view>
-      <view class="version-copy">2026.06.13 · 分层亮度 + 暖霾中烧校准；评分口径与 Web 保持一致。</view>
+      <view class="version-copy">2026.06.13 · 分层亮度 + 雨天暖霾否决；评分口径与 Web 保持一致。</view>
     </view>
   </view>
 </view>
