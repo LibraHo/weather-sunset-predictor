@@ -412,6 +412,21 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(options.attributionControl).toBe(false);
   });
 
+  test('火烧云地图染色图层 loading 使用紧凑浮层，不占据地图主体', () => {
+    const css = readFileSync('styles/main.css', 'utf8');
+
+    expect(css).toMatch(/\.china-spots-layer-loading\s*\{[\s\S]*?top:\s*12px;/);
+    expect(css).toMatch(/\.china-spots-layer-loading\s*\{[\s\S]*?right:\s*12px;/);
+    expect(css).toMatch(/\.china-spots-layer-loading\s*\{[\s\S]*?display:\s*inline-flex;/);
+    expect(css).toMatch(/\.china-spots-layer-loading\s*\{[\s\S]*?border-radius:\s*999px;/);
+    expect(css).toMatch(/\.china-spots-layer-spinner\s*\{[\s\S]*?width:\s*16px;/);
+    expect(css).toMatch(/\.china-spots-layer-spinner\s*\{[\s\S]*?height:\s*16px;/);
+    expect(css).toMatch(/\.china-spots-layer-spinner\s*\{[\s\S]*?margin:\s*0;/);
+    expect(css).toMatch(/\.china-spots-layer-loading \.loading-progress\s*\{[\s\S]*?display:\s*none;/);
+    expect(css).not.toMatch(/\.china-spots-layer-loading\s*\{[\s\S]*?inset:\s*12px;/);
+    expect(css).not.toMatch(/\.china-spots-layer-loading\s*\{[\s\S]*?min-height:\s*84px;/);
+  });
+
   // ========== 修复：_initChinaSpotsMap 使用 ChinaMapCanvas（非 L.map）==========
 
   test('64.10: _initChinaSpotsMap 地图已初始化时刷新当前时段数据', async () => {
