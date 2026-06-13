@@ -56,18 +56,23 @@ describe('miniprogram result page web parity', () => {
     expect(js).toContain("api: '/pages/methodology/index?section=api'");
   });
 
-  test('keeps result text analysis as a clean 2x2 card without extra value labels', () => {
+  test('keeps result text analysis as a clean 2x2 card with short status labels only', () => {
     const wxml = read('miniprogram/pages/result/index.wxml');
     const wxss = read('miniprogram/pages/result/index.wxss');
+    const js = read('miniprogram/pages/result/index.js');
 
     expect(wxml).toContain('wx:for="{{analysisItems}}"');
     expect(wxml).toContain('analysis-title');
+    expect(wxml).toContain('analysis-status-label');
     expect(wxml).toContain('analysis-detail');
-    expect(wxml).not.toContain('analysis-value');
+    expect(js).toContain('status: statusFromScore');
+    expect(js).toContain('status: statusFromBrightness');
+    expect(js).toContain('status: statusFromFactor');
+    expect(js).toContain("return '一般'");
     expect(wxml).not.toContain('analysis-factor-status');
     expect(wxml).not.toContain('analysis-factor-subfact');
     expect(wxss).toMatch(/\.analysis-grid\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
-    expect(wxss).not.toContain('.analysis-value');
+    expect(wxss).toContain('.analysis-status-label');
     expect(wxss).not.toContain('.analysis-factor-status');
     expect(wxss).not.toContain('.analysis-factor-subfact');
   });

@@ -892,6 +892,7 @@
 .analysis-factor-heading {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10rpx;
 }
 
@@ -915,6 +916,24 @@
   color: rgba(255, 255, 255, 0.86);
   font-size: 24rpx;
   font-weight: 900;
+}
+
+.analysis-factor-tag {
+  flex: none;
+  max-width: 96rpx;
+  box-sizing: border-box;
+  padding: 4rpx 10rpx;
+  border: 1rpx solid rgba(245, 200, 122, 0.18);
+  border-radius: 999rpx;
+  color: rgba(245, 200, 122, 0.92);
+  font-size: 20rpx;
+  font-weight: 900;
+  line-height: 1.2;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: rgba(245, 200, 122, 0.08);
 }
 
 .analysis-factor-desc {
@@ -1564,6 +1583,12 @@
 .home-page.has-weather .analysis-card-subtitle,
 .home-page.has-weather .analysis-factor-desc {
   color: rgba(89, 67, 54, 0.58);
+}
+
+.home-page.has-weather .analysis-factor-tag {
+  border-color: rgba(127, 83, 29, 0.14);
+  color: rgba(89, 67, 54, 0.70);
+  background: rgba(255, 255, 255, 0.48);
 }
 
 .home-page.has-weather .score-summary-divider,
@@ -3085,6 +3110,12 @@
 
 .home-page.theme-dark.has-weather .analysis-card-subtitle {
   color: rgba(226, 232, 240, 0.48);
+}
+
+.home-page.theme-dark.has-weather .analysis-factor-tag {
+  border-color: rgba(245, 200, 122, 0.20);
+  color: rgba(245, 200, 122, 0.92);
+  background: rgba(245, 200, 122, 0.10);
 }
 
 .home-page.theme-dark.has-weather .weather-desc,

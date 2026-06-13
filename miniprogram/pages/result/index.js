@@ -1060,6 +1060,7 @@ export function buildAnalysisItems(prediction = {}) {
       key: 'canvas',
       title: '云层载体',
       value: formatScore(canvas.score ?? breakdown.canvasScore),
+      status: statusFromScore(canvas.score ?? breakdown.canvasScore),
       tone: levelFromScore(canvas.score ?? breakdown.canvasScore),
       detail: buildCloudCanvasText(canvas, prediction.cloudType)
     },
@@ -1067,6 +1068,7 @@ export function buildAnalysisItems(prediction = {}) {
       key: 'lightPath',
       title: '光路门控',
       value: formatScore(lightPath.score ?? breakdown.lightPathScore),
+      status: statusFromScore(lightPath.score ?? breakdown.lightPathScore),
       tone: levelFromScore(lightPath.score ?? breakdown.lightPathScore),
       detail: buildLightPathText(lightPath)
     },
@@ -1074,6 +1076,7 @@ export function buildAnalysisItems(prediction = {}) {
       key: 'brightness',
       title: '受光亮度',
       value: formatScore(layerBrightness.effectiveBrightness),
+      status: statusFromBrightness(layerBrightness),
       tone: levelFromBrightness(layerBrightness),
       detail: buildLayerBrightnessText(layerBrightness)
     },
@@ -1081,6 +1084,7 @@ export function buildAnalysisItems(prediction = {}) {
       key: 'rendering',
       title: '显色修正',
       value: formatFactor(rendering.factor ?? breakdown.renderingFactor),
+      status: statusFromFactor(rendering.factor ?? breakdown.renderingFactor),
       tone: levelFromFactor(rendering.factor ?? breakdown.renderingFactor),
       detail: buildRenderingText(rendering)
     }
@@ -1319,6 +1323,33 @@ function formatScore(value) {
 function formatFactor(value) {
   const number = Number(value);
   return Number.isFinite(number) ? `x${Math.round(number * 100) / 100}` : '--';
+}
+
+function statusFromScore(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return '待判断';
+  if (number >= 85) return '优秀';
+  if (number >= 70) return '较好';
+  if (number >= 40) return '一般';
+  return '偏弱';
+}
+
+function statusFromFactor(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return '待判断';
+  if (number >= 1) return '增强';
+  if (number >= 0.85) return '较好';
+  if (number >= 0.65) return '一般';
+  return '偏弱';
+}
+
+function statusFromBrightness(layerBrightness = {}) {
+  const value = Number(layerBrightness.effectiveBrightness);
+  const multiplier = Number(layerBrightness.brightnessMultiplier ?? layerBrightness.brightnessGate);
+  if (!Number.isFinite(value)) return '待判断';
+  if ((Number.isFinite(multiplier) && multiplier < 0.72) || value < 30) return '偏弱';
+  if (value >= 45) return '充足';
+  return '一般';
 }
 
 function levelFromScore(value) {
