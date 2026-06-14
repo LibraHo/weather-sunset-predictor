@@ -10565,33 +10565,35 @@ html[data-actual-theme="dark"] #weather-section #weekly-cards.weekly-cards-conta
   }
 
   .app-analysis-card .analysis-factor {
-    padding: 10px 9px;
+    padding: 10px 7px;
   }
 
   .app-analysis-card .analysis-factor-heading {
-    grid-template-columns: 18px minmax(0, 1fr);
-    gap: 5px;
+    grid-template-columns: 16px minmax(0, 1fr) max-content;
+    gap: 4px;
   }
 
   .app-analysis-card .analysis-factor-icon {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
   }
 
   .app-analysis-card .analysis-factor-title {
-    font-size: 0.86rem;
+    font-size: 0.82rem;
   }
 
   .app-analysis-card .analysis-factor-tag {
-    grid-column: 2;
-    justify-self: start;
-    max-width: 52px;
-    padding: 2px 6px;
-    font-size: 0.66rem;
+    max-width: 44px;
+    padding: 2px 4px;
+    font-size: 0.62rem;
   }
 
   .app-analysis-card .analysis-factor p {
-    margin-left: 23px;
+    margin-left: 20px;
+  }
+
+  html:not([lang^="zh"]) .app-analysis-card .analysis-factor-grid {
+    grid-template-columns: 1fr;
   }
 
   .app-analysis-card .analysis-item {
