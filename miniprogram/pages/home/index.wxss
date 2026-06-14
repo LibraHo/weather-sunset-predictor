@@ -796,6 +796,171 @@
   text-align: right;
 }
 
+.score-detail-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 54rpx;
+  margin: 12rpx 0 0;
+  padding: 0 18rpx;
+  border: 1rpx solid rgba(255, 209, 102, 0.28);
+  border-radius: 999rpx;
+  color: #fff4cf;
+  font-size: 22rpx;
+  font-weight: 900;
+  background: rgba(255, 209, 102, 0.12);
+  box-sizing: border-box;
+}
+
+.score-detail-trigger::after {
+  display: none;
+}
+
+.home-score-ledger-panel {
+  position: relative;
+  margin-top: 16rpx;
+  padding: 20rpx;
+  overflow: hidden;
+  border: 1rpx solid rgba(255, 255, 255, 0.16);
+  border-radius: 22rpx;
+  background: rgba(255, 252, 246, 0.56);
+  box-shadow: 0 18rpx 54rpx rgba(60, 39, 17, 0.14), inset 0 1rpx 0 rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(28rpx);
+}
+
+.home-score-ledger-panel::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1rpx;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+}
+
+.home-score-ledger-head {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.home-score-ledger-title {
+  color: #3f2b1f;
+  font-size: 28rpx;
+  font-weight: 900;
+}
+
+.home-score-ledger-subtitle {
+  margin-top: 6rpx;
+  color: rgba(80, 55, 36, 0.68);
+  font-size: 21rpx;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.home-score-ledger-close {
+  flex: none;
+  width: 48rpx;
+  height: 48rpx;
+  padding: 0;
+  border: 1rpx solid rgba(127, 83, 29, 0.12);
+  border-radius: 50%;
+  color: rgba(80, 55, 36, 0.72);
+  font-size: 28rpx;
+  line-height: 46rpx;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.home-score-ledger-close::after {
+  display: none;
+}
+
+.home-score-ledger-summary {
+  position: relative;
+  z-index: 1;
+  margin-top: 16rpx;
+  padding: 16rpx 18rpx;
+  border-radius: 18rpx;
+  color: #4a321e;
+  font-size: 23rpx;
+  font-weight: 900;
+  line-height: 1.4;
+  background: rgba(255, 236, 205, 0.62);
+}
+
+.home-score-ledger-flow {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 12rpx;
+  margin-top: 14rpx;
+}
+
+.home-score-ledger-step {
+  display: grid;
+  grid-template-columns: 42rpx minmax(0, 1fr);
+  gap: 12rpx;
+  padding: 16rpx;
+  border: 1rpx solid rgba(127, 83, 29, 0.12);
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.46);
+}
+
+.home-score-ledger-index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38rpx;
+  height: 38rpx;
+  border-radius: 50%;
+  color: #a15c12;
+  font-size: 21rpx;
+  font-weight: 900;
+  background: rgba(255, 247, 237, 0.78);
+}
+
+.home-score-ledger-body {
+  min-width: 0;
+}
+
+.home-score-ledger-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.home-score-ledger-label {
+  min-width: 0;
+  color: #3f2b1f;
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.home-score-ledger-result {
+  flex: none;
+  color: #d97706;
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.home-score-ledger-expression,
+.home-score-ledger-detail {
+  margin-top: 8rpx;
+  color: rgba(80, 55, 36, 0.70);
+  font-size: 20rpx;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.home-score-ledger-step-final .home-score-ledger-result {
+  color: #f59e0b;
+}
+
 .cloud-condition-card {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3067,6 +3232,46 @@
 .home-page.theme-dark.has-weather .conclusion-banner {
   color: #bbf7d0;
   background: rgba(22, 101, 52, 0.24);
+}
+
+.home-page.theme-dark.has-weather .score-detail-trigger {
+  color: rgba(255, 247, 237, 0.92);
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.home-page.theme-dark.has-weather .home-score-ledger-panel {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(15, 23, 42, 0.68);
+  box-shadow: 0 18rpx 54rpx rgba(0, 0, 0, 0.30), inset 0 1rpx 0 rgba(255, 255, 255, 0.08);
+}
+
+.home-page.theme-dark.has-weather .home-score-ledger-title,
+.home-page.theme-dark.has-weather .home-score-ledger-label {
+  color: rgba(255, 247, 237, 0.95);
+}
+
+.home-page.theme-dark.has-weather .home-score-ledger-subtitle,
+.home-page.theme-dark.has-weather .home-score-ledger-expression,
+.home-page.theme-dark.has-weather .home-score-ledger-detail {
+  color: rgba(255, 247, 237, 0.66);
+}
+
+.home-page.theme-dark.has-weather .home-score-ledger-summary {
+  color: rgba(255, 247, 237, 0.92);
+  background: rgba(255, 209, 102, 0.10);
+}
+
+.home-page.theme-dark.has-weather .home-score-ledger-step {
+  border-color: rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.home-page.theme-dark.has-weather .home-score-ledger-index,
+.home-page.theme-dark.has-weather .home-score-ledger-close {
+  color: rgba(255, 247, 237, 0.78);
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .home-page.theme-dark.has-weather .prediction-radar-title {

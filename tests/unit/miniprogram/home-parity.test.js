@@ -271,12 +271,18 @@ describe('mini-program home parity with mobile web home', () => {
       'phenomenon-title-card',
       'conclusion-banner',
       'score-summary-card',
+      'home-score-ledger-panel',
       'cloud-condition-card',
       'app-analysis-card',
       'home-experience-strip'
     ]);
 
     expect(homeWxml).toContain('predictionPreview.score');
+    expect(homeWxml).toContain('bindtap="toggleScoreLedger"');
+    expect(homeWxml).toContain('bindtap="closeScoreLedger"');
+    expect(homeWxml).toContain('predictionPreview.scoreLedger.summary');
+    expect(homeWxml).toContain('wx:for="{{predictionPreview.scoreLedger.steps}}"');
+    expect(homeWxml.indexOf('score-summary-card')).toBeLessThan(homeWxml.indexOf('home-score-ledger-panel'));
     expect(homeWxml).toContain('class="section-title prediction-panel-title">朝晚霞预测</view>');
     expect(homeWxml).toContain('predictionPreview.scoreLabel');
     expect(homeWxml).toContain('predictionPreview.bestViewingTime');
@@ -354,6 +360,10 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxss).toMatch(/\.prediction-toggle\s*\{[\s\S]*flex: 1;[\s\S]*min-width: 0;[\s\S]*box-sizing: border-box;/);
     expect(homeWxss).toContain('.prediction-hero-card');
     expect(homeWxss).toContain('.score-summary-card');
+    expect(homeWxss).toContain('.score-detail-trigger');
+    expect(homeWxss).toContain('.home-score-ledger-panel');
+    expect(homeWxss).toContain('.home-page.theme-dark.has-weather .home-score-ledger-panel');
+    expect(homeWxss).toContain('backdrop-filter: blur(28rpx)');
     expect(homeWxss).toContain('.home-page.theme-dark.has-weather .prediction-hero-card');
     expect(homeWxss).toContain('.app-main-time');
     expect(homeWxss).toContain('text-align: center;');

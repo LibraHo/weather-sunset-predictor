@@ -45,6 +45,7 @@ Page({
     predictionPreview: buildDefaultPredictionPreview(),
     predictionPeriodCards: {},
     predictionPreviewLoading: false,
+    scoreLedgerOpen: false,
     feedbackModalVisible: false,
     feedbackSubmitting: false,
     feedbackForm: buildDefaultFeedbackForm(),
@@ -324,6 +325,14 @@ Page({
   },
 
   noop() {},
+
+  toggleScoreLedger() {
+    this.setData({ scoreLedgerOpen: !this.data.scoreLedgerOpen });
+  },
+
+  closeScoreLedger() {
+    this.setData({ scoreLedgerOpen: false });
+  },
 
   openFeedback() {
     const prediction = this.getCurrentFeedbackPrediction();
@@ -1368,9 +1377,67 @@ export function buildPredictionPreviewFromPrediction(prediction = {}, query = {}
     aod: weather.aod ?? weather.aerosolOpticalDepth,
     scoringV2: prediction.scoringV2 || prediction.breakdown?.scoringV2 || null,
     layerBrightness: prediction.layerBrightness || prediction.breakdown?.layerBrightness || null,
-    layerBrightnessAdjustment: prediction.layerBrightnessAdjustment || prediction.breakdown?.layerBrightnessAdjustment || null
+    layerBrightnessAdjustment: prediction.layerBrightnessAdjustment || prediction.breakdown?.layerBrightnessAdjustment || null,
+    scoreLedger: buildHomeScoreLedger(prediction)
   };
   return buildCompletePredictionPreview(preview);
+}
+
+export function buildHomeScoreLedger(prediction = {}) {
+  const breakdown = prediction.breakdown || {};
+  const canvas = prediction.canvasAnalysis || {};
+  const lightPath = prediction.lightPathAnalysis || {};
+  const rendering = prediction.renderingAnalysis || {};
+  const layerBrightness = prediction.layerBrightness || breakdown.layerBrightness || {};
+  const layerBrightnessAdjustment = prediction.layerBrightnessAdjustment || breakdown.layerBrightnessAdjustment || {};
+  const finalScore = firstFiniteNumber(prediction.score, prediction.totalScore, prediction.finalScore);
+  const carrierScore = firstFiniteNumber(canvas.score, breakdown.canvasScore, prediction.carrierScore);
+  const baseScore = firstFiniteNumber(breakdown.baseScore, prediction.baseScore);
+  const renderingFactor = firstFiniteNumber(rendering.factor, breakdown.renderingFactor, prediction.renderingFactor);
+  const renderedScore = firstFiniteNumber(breakdown.unclampedFinalScore, breakdown.renderedScore, finalScore);
+  const brightnessValue = firstFiniteNumber(layerBrightness.effectiveBrightness, layerBrightness.brightnessScore, layerBrightnessAdjustment.effectiveBrightness);
+
+  return {
+    summary: Number.isFinite(finalScore)
+      ? `${Math.round(finalScore)} 分：由分层载体、分层受光亮度和空气显色计算`
+      : '等待评分数据后展示完整细则',
+    steps: [
+      {
+        key: 'layerCarrierBrightness',
+        label: '分层载体 × 分层受光亮度',
+        result: Number.isFinite(baseScore) ? `${roundHomeOne(baseScore)} 分` : '--',
+        expression: buildHomeBaseExpression(baseScore),
+        detail: buildHomeBrightnessEvidence({ carrierScore, brightnessValue, lightPath, layerBrightness }),
+        tone: homeToneFromScore(baseScore)
+      },
+      {
+        key: 'baseScore',
+        label: '各层贡献求和得到基础分',
+        result: Number.isFinite(baseScore) ? `${roundHomeOne(baseScore)} 分` : '--',
+        expression: Number.isFinite(baseScore)
+          ? `Σ(分层载体 × 分层受光亮度) = ${roundHomeOne(baseScore)}`
+          : 'Σ(分层载体 × 分层受光亮度)',
+        detail: '光路只作为受光亮度证据：太阳方向、遮挡、亮度响应会影响各层受光，不再作为独立主评分项。',
+        tone: homeToneFromScore(baseScore)
+      },
+      {
+        key: 'airRendering',
+        label: '再乘空气显色',
+        result: Number.isFinite(renderedScore) ? `${roundHomeOne(renderedScore)} 分` : '--',
+        expression: buildHomeRenderingExpression(baseScore, renderingFactor, renderedScore),
+        detail: buildHomeRenderingEvidence(rendering),
+        tone: homeToneFromFactor(renderingFactor)
+      },
+      {
+        key: 'finalScore',
+        label: '得到最终分',
+        result: Number.isFinite(finalScore) ? `${Math.round(finalScore)} 分` : '--',
+        expression: '最终分 = 基础分 × 空气显色',
+        detail: humanizePredictionConclusion(prediction.conclusion || prediction.explanation || prediction.summary?.description, finalScore, prediction.period === 'sunrise' ? '朝霞' : '晚霞'),
+        tone: 'final'
+      }
+    ]
+  };
 }
 
 export function compactPredictionPreviewPayload(prediction = {}) {
@@ -1899,6 +1966,7 @@ export function buildPredictionRadarPreview(period = 'sunset', sunDirection = ''
 function buildCompletePredictionPreview(preview = {}) {
   return {
     ...preview,
+    scoreLedger: preview.scoreLedger || buildHomeScoreLedger(preview),
     analysis: buildPredictionAnalysisGroups({
       high: preview.clouds?.[0]?.value,
       mid: preview.clouds?.[1]?.value,
@@ -1912,6 +1980,72 @@ function buildCompletePredictionPreview(preview = {}) {
     }),
     radar: buildPredictionRadarFromClouds(preview.periodKey, preview.clouds, preview.direction)
   };
+}
+
+function firstFiniteNumber(...values) {
+  for (const value of values) {
+    const number = Number(value);
+    if (Number.isFinite(number)) return number;
+  }
+  return NaN;
+}
+
+function roundHomeOne(value) {
+  return Math.round(Number(value) * 10) / 10;
+}
+
+function roundHomeTwo(value) {
+  return Math.round(Number(value) * 100) / 100;
+}
+
+function buildHomeBaseExpression(baseScore) {
+  if (Number.isFinite(Number(baseScore))) {
+    return `Σ(分层载体 × 分层受光亮度) = ${roundHomeOne(baseScore)}`;
+  }
+  return 'Σ(分层载体 × 分层受光亮度)';
+}
+
+function buildHomeBrightnessEvidence({ carrierScore, brightnessValue, lightPath = {}, layerBrightness = {} } = {}) {
+  const parts = [];
+  if (Number.isFinite(carrierScore)) parts.push(`载体 ${roundHomeOne(carrierScore)} 分`);
+  if (Number.isFinite(brightnessValue)) parts.push(`受光亮度 ${roundHomeOne(brightnessValue)} 分`);
+  if (Number.isFinite(Number(lightPath.azimuth))) parts.push(`太阳方位 ${Math.round(Number(lightPath.azimuth))}°`);
+  if (Number.isFinite(Number(lightPath.occlusionProbability))) parts.push(`遮挡 ${Math.round(Number(lightPath.occlusionProbability) * 100)}%`);
+  if (Number.isFinite(Number(layerBrightness.factors?.pathFactor))) parts.push(`亮度响应 ${roundHomeTwo(layerBrightness.factors.pathFactor)}`);
+  return parts.join('；') || '按每一层可显色载体与实际受光亮度分别计算贡献。';
+}
+
+function buildHomeRenderingExpression(baseScore, renderingFactor, renderedScore) {
+  if (Number.isFinite(Number(baseScore)) && Number.isFinite(Number(renderingFactor)) && Number.isFinite(Number(renderedScore))) {
+    return `${roundHomeOne(baseScore)} × 空气显色 ${roundHomeTwo(renderingFactor)} = ${roundHomeOne(renderedScore)}`;
+  }
+  return '基础分 × 空气显色';
+}
+
+function buildHomeRenderingEvidence(rendering = {}) {
+  const breakdown = rendering.breakdown || {};
+  const parts = [];
+  if (breakdown.visibility) parts.push(`能见度 ${breakdown.visibility}`);
+  if (breakdown.humidity) parts.push(`湿度 ${breakdown.humidity}`);
+  if (breakdown.aerosol) parts.push(`气溶胶 ${breakdown.aerosol}`);
+  if (breakdown.colorTendency) parts.push(`色彩倾向 ${breakdown.colorTendency}`);
+  return parts.join('；') || '能见度、湿度、气溶胶和降水后状态共同影响空气显色。';
+}
+
+function homeToneFromScore(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return 'unknown';
+  if (number >= 70) return 'good';
+  if (number >= 40) return 'watch';
+  return 'weak';
+}
+
+function homeToneFromFactor(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return 'unknown';
+  if (number >= 1) return 'good';
+  if (number >= 0.75) return 'watch';
+  return 'weak';
 }
 
 function buildPredictionRadarFromClouds(period = 'sunset', clouds = [], sunDirection = '') {

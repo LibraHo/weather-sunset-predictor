@@ -750,6 +750,43 @@ describe('miniprogram page user/share helpers', () => {
     expect(serialized).not.toContain('65.4 × 受光亮度 0.71 = 65.2');
   });
 
+  test('home prediction preview exposes score details from the searched-address result card', () => {
+    const preview = homeHelpers.buildPredictionPreviewFromPrediction({
+      period: 'sunset',
+      score: 44,
+      canvasAnalysis: { score: 65.4 },
+      lightPathAnalysis: {
+        score: 107.2,
+        azimuth: 286,
+        occlusionProbability: 0.08
+      },
+      layerBrightness: {
+        applied: true,
+        effectiveBrightness: 46.3,
+        factors: { pathFactor: 1.07 }
+      },
+      renderingAnalysis: { factor: 0.68, breakdown: { visibility: 'fair' } },
+      breakdown: {
+        baseScore: 65.2,
+        canvasScore: 65.4,
+        renderingFactor: 0.68,
+        unclampedFinalScore: 44.1
+      }
+    }, { locationName: '北京' });
+
+    const keys = preview.scoreLedger.steps.map((step) => step.key);
+    const labels = preview.scoreLedger.steps.map((step) => step.label);
+    const serialized = JSON.stringify(preview.scoreLedger);
+
+    expect(keys).toEqual(['layerCarrierBrightness', 'baseScore', 'airRendering', 'finalScore']);
+    expect(labels).not.toContain('光路');
+    expect(serialized).toContain('Σ(分层载体 × 分层受光亮度)');
+    expect(serialized).toContain('太阳方位 286°');
+    expect(serialized).toContain('亮度响应 1.07');
+    expect(serialized).toContain('基础分 × 空气显色');
+    expect(serialized).not.toContain('载体分 × 受光亮度');
+  });
+
   test('result page maps surrounding and 3-day data to display rows', () => {
     const radar = resultHelpers.buildRadarView({
       points: [
