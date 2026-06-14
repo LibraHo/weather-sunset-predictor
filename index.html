@@ -553,6 +553,15 @@
 
         <div class="profile-results">
           <div class="profile-summary" id="profile-summary" aria-live="polite"></div>
+          <div class="profile-insight">
+            <strong id="profile-selected-reason">选择云块查看判定原因</strong>
+            <div class="profile-rule-grid" aria-label="模拟规则说明">
+              <span>遮挡：只挡阴影带覆盖到的后方云高</span>
+              <span>散射：光带上下有 twilight scatter 宽度</span>
+              <span>厚云幕：高覆盖率 + 高光学厚度会吸光变灰</span>
+              <span>全程黑：整段日出/日落采样都未进入暖色照亮</span>
+            </div>
+          </div>
           <div class="profile-cloud-list" data-profile-cloud-list></div>
         </div>
       </section>

@@ -33,6 +33,8 @@ describe('firecloud profile simulator structure', () => {
     expect(panel).toContain('id="profile-selected-base-height"');
     expect(panel).toContain('id="profile-selected-top-height"');
     expect(panel).toContain('id="profile-selected-optical-depth"');
+    expect(panel).toContain('id="profile-selected-reason"');
+    expect(panel).toContain('模拟规则说明');
     expect(panel).toContain('data-profile-cloud-list');
     expect(panel).toContain('km');
     expect(panel).toContain('m');

@@ -4,7 +4,7 @@ import {
 } from '../../../src/services/FireCloudProfileSimulator.js';
 
 describe('FireCloudProfileSimulator', () => {
-  test('uses kilometer distance and meter cloud bounds to mark illuminated clouds', () => {
+  test('only shadows clouds inside the blocker shadow band', () => {
     const result = simulateFireCloudProfile({
       solarElevationDeg: 2.2,
       clouds: [
@@ -18,10 +18,19 @@ describe('FireCloudProfileSimulator', () => {
           opticalDepth: 0.92,
         },
         {
+          id: 'far-low',
+          label: '70km low haze',
+          distanceKm: 70,
+          baseHeightM: 1200,
+          topHeightM: 2200,
+          coverage: 58,
+          opticalDepth: 0.34,
+        },
+        {
           id: 'far-high',
           label: '70km high canvas',
-          distanceKm: 70,
-          baseHeightM: 5200,
+          distanceKm: 72,
+          baseHeightM: 6200,
           topHeightM: 7600,
           coverage: 58,
           opticalDepth: 0.34,
@@ -33,7 +42,7 @@ describe('FireCloudProfileSimulator', () => {
       solarElevationDeg: 2.2,
       mode: 'sunset',
     });
-    expect(result.clouds).toHaveLength(2);
+    expect(result.clouds).toHaveLength(3);
     expect(result.clouds[0]).toMatchObject({
       id: 'near-low',
       status: 'blocking',
@@ -42,10 +51,12 @@ describe('FireCloudProfileSimulator', () => {
       topHeightM: 900,
     });
     expect(result.clouds[1]).toMatchObject({
-      id: 'far-high',
+      id: 'far-low',
       status: 'shadowed',
       blockedBy: 'near-low',
     });
+    expect(result.clouds[2].id).toBe('far-high');
+    expect(result.clouds[2].status).not.toBe('shadowed');
     expect(result.summary.blockedCount).toBe(1);
   });
 

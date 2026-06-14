@@ -127,6 +127,28 @@ function isBlockingCloud(cloud, isIntersecting, illumination) {
   return isIntersecting && cloud.coverage >= 68 && cloud.opticalDepth >= 0.72 && illumination >= 0.18;
 }
 
+function getShadowBand(blocker, target, solarElevationDeg) {
+  const distanceDeltaM = Math.max(0, target.distanceKm - blocker.distanceKm) * 1000;
+  const elevation = finiteNumber(solarElevationDeg, 0);
+  const lowAngleReach = Math.max(0, 2.2 - elevation);
+  const shadowLift = lowAngleReach * distanceDeltaM * 0.018;
+  const scatterExpansion = 320 + Math.max(0, 2 - Math.abs(elevation)) * 180;
+  const densityExpansion = blocker.coverage * 4 + blocker.opticalDepth * 360;
+  const top = blocker.topHeightM + shadowLift + scatterExpansion + densityExpansion;
+  const bottom = Math.max(0, blocker.baseHeightM - 500);
+
+  return {
+    bottom,
+    top,
+  };
+}
+
+function blocksCloud(blocker, target, solarElevationDeg) {
+  if (!blocker || blocker.distanceKm >= target.distanceKm) return false;
+  const shadowBand = getShadowBand(blocker, target, solarElevationDeg);
+  return shadowBand.top >= target.baseHeightM && shadowBand.bottom <= target.topHeightM;
+}
+
 function summarize(clouds) {
   return clouds.reduce((summary, cloud) => {
     if (cloud.status === 'lit') summary.litCount += 1;
@@ -193,7 +215,7 @@ function simulateFireCloudProfile(options = {}) {
   const simulatedClouds = clouds.map((cloud) => {
     const lightBand = getLightBand(cloud.distanceKm, solarElevationDeg);
     const isIntersecting = intersectsCloud(lightBand, cloud);
-    const blockingCloud = blockers.find(blocker => blocker.distanceKm < cloud.distanceKm);
+    const blockingCloud = blockers.find(blocker => blocksCloud(blocker, cloud, solarElevationDeg));
 
     if (blockingCloud) {
       return {
@@ -204,7 +226,7 @@ function simulateFireCloudProfile(options = {}) {
         colorName: 'blue gray',
         color: '#5f7188',
         blockedBy: blockingCloud.id,
-        reason: `${blockingCloud.label} blocks the low-angle light path before this cloud.`,
+        reason: `${blockingCloud.label} casts a low-angle shadow band across this cloud height.`,
       };
     }
 

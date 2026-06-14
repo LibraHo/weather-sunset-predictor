@@ -10,9 +10,10 @@ function cloneClouds() {
   return DEFAULT_PROFILE_CLOUDS.map(cloud => ({ ...cloud }));
 }
 
-function solarElevationFromTimeOffset(offsetMinutes) {
+function solarElevationFromTimeOffset(offsetMinutes, mode = 'sunset') {
   const offset = Number(offsetMinutes) || 0;
-  return Math.max(-5.5, Math.min(7.5, 0.6 + offset * 0.12));
+  const direction = mode === 'sunrise' ? 1 : -1;
+  return Math.max(-5.5, Math.min(7.5, 0.6 + offset * 0.12 * direction));
 }
 
 function px(value, max, size, inset) {
@@ -100,6 +101,7 @@ class FireCloudProfileSimulatorView {
     this.addButton = byId('profile-add-cloud');
     this.resetButton = byId('profile-reset-clouds');
     this.summaryEl = byId('profile-summary');
+    this.selectedReasonEl = byId('profile-selected-reason');
     this.cloudListEl = this.panel.querySelector('[data-profile-cloud-list]');
     this.modeLabel = byId('profile-mode-label');
     this.solarAngle = byId('profile-solar-angle');
@@ -197,7 +199,7 @@ class FireCloudProfileSimulatorView {
   }
 
   render() {
-    const solarElevationDeg = solarElevationFromTimeOffset(this.timeOffset);
+    const solarElevationDeg = solarElevationFromTimeOffset(this.timeOffset, this.mode);
     const result = simulateFireCloudProfile({
       mode: this.mode,
       solarElevationDeg,
@@ -222,6 +224,12 @@ class FireCloudProfileSimulatorView {
     }
     if (this.summaryEl) {
       this.summaryEl.textContent = `照亮 ${result.summary.litCount} 块，遮挡 ${result.summary.blockingCount} 块，阴影 ${result.summary.blockedCount} 块，变暗 ${result.summary.dimmedCount} 块，全程黑云 ${result.summary.alwaysDarkCount} 块`;
+    }
+    if (this.selectedReasonEl) {
+      const selected = result.clouds.find(cloud => cloud.id === this.selectedCloudId);
+      this.selectedReasonEl.textContent = selected
+        ? `${selected.label}：${this.reasonText(selected)}`
+        : '选择云块查看判定原因';
     }
   }
 
@@ -463,7 +471,7 @@ class FireCloudProfileSimulatorView {
       <button class="profile-cloud-row ${cloud.id === this.selectedCloudId ? 'active' : ''} ${cloud.alwaysDark ? 'always-dark' : ''}" type="button" data-cloud-id="${cloud.id}">
         <span class="profile-cloud-swatch" style="background:${cloud.alwaysDark ? '#111827' : cloud.color}"></span>
         <strong>${cloud.label}</strong>
-        <small>${cloud.distanceKm}km · ${cloud.baseHeightM}-${cloud.topHeightM}m · ${cloud.alwaysDark ? '全程黑云' : this.statusText(cloud.status)}</small>
+        <small>${cloud.distanceKm}km · ${cloud.baseHeightM}-${cloud.topHeightM}m · ${cloud.alwaysDark ? '全程黑云' : this.statusText(cloud.status)} · ${this.reasonText(cloud)}</small>
       </button>
     `).join('');
     this.cloudListEl.querySelectorAll('[data-cloud-id]').forEach(button => {
@@ -484,6 +492,16 @@ class FireCloudProfileSimulatorView {
       blocking: '遮挡云墙',
       unlit: '未照亮',
     }[status] || status;
+  }
+
+  reasonText(cloud) {
+    if (cloud.alwaysDark) return '整段窗口都没进入暖色光带';
+    if (cloud.status === 'shadowed') return '被前方云的阴影带覆盖';
+    if (cloud.status === 'blocking') return '低角度光穿过时形成遮挡云墙';
+    if (cloud.status === 'dimmed') return '云幕太厚，吸收后只剩灰紫光';
+    if (cloud.status === 'lit') return '云高与散射光带相交';
+    if (cloud.status === 'unlit') return '云高暂未碰到光带';
+    return cloud.reason || '';
   }
 }
 
