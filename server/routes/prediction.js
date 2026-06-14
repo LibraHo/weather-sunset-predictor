@@ -20,8 +20,8 @@ const CacheService = require('../services/CacheService.js');
 const cacheConfig = require('../config/cacheConfig.js');
 const orchestrator = require('../services/ProviderOrchestrator');
 const SunCalculator = require('../utils/SunCalculator.js');
-const { buildTimeWeightedWeatherSample } = require('../services/WeatherTimeSampler');
 const { startProfile, profileDurationMs, logProfile } = require('../utils/ProfileLogger');
+const { buildTimeWeightedWeatherSample, selectHourlyAt } = require('../services/WeatherTimeSampler');
 
 // 创建服务实例（使用统一TTL配置）
 const predictionService = new PredictionService();
