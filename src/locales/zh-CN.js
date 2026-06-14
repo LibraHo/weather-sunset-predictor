@@ -166,6 +166,7 @@ export default {
         "baseHeight": "云底 m",
         "topHeight": "云顶 m",
         "coverage": "覆盖率 %",
+        "width": "宽度 km",
         "opticalDepth": "光学厚度"
       },
       "actions": {
@@ -193,6 +194,7 @@ export default {
         "before": "{{mode}}前 {{minutes}} 分钟",
         "after": "{{mode}}后 {{minutes}} 分钟"
       },
+      "widthLabel": "宽 {{width}} km",
       "summary": "照亮 {{lit}} 块，遮挡 {{blocking}} 块，阴影 {{shadowed}} 块，变暗 {{dimmed}} 块，全程黑云 {{alwaysDark}} 块",
       "selectedReason": "{{label}}：{{reason}}",
       "status": {

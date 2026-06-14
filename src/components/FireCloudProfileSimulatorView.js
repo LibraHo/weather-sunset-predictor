@@ -103,6 +103,7 @@ class FireCloudProfileSimulatorView {
     this.baseInput = byId('profile-selected-base-height');
     this.topInput = byId('profile-selected-top-height');
     this.coverageInput = byId('profile-selected-coverage');
+    this.widthInput = byId('profile-selected-width');
     this.opticalDepthInput = byId('profile-selected-optical-depth');
     this.addButton = byId('profile-add-cloud');
     this.resetButton = byId('profile-reset-clouds');
@@ -137,6 +138,7 @@ class FireCloudProfileSimulatorView {
       this.baseInput,
       this.topInput,
       this.coverageInput,
+      this.widthInput,
       this.opticalDepthInput,
     ].forEach(input => input?.addEventListener('input', () => this.updateSelectedCloud()));
 
@@ -163,6 +165,7 @@ class FireCloudProfileSimulatorView {
     this.baseInput.value = cloud.baseHeightM;
     this.topInput.value = cloud.topHeightM;
     this.coverageInput.value = cloud.coverage;
+    if (this.widthInput) this.widthInput.value = cloud.widthKm;
     this.opticalDepthInput.value = cloud.opticalDepth;
   }
 
@@ -174,6 +177,7 @@ class FireCloudProfileSimulatorView {
     cloud.baseHeightM = Number(this.baseInput.value) || 0;
     cloud.topHeightM = Math.max(cloud.baseHeightM + 50, Number(this.topInput.value) || cloud.baseHeightM + 50);
     cloud.coverage = Number(this.coverageInput.value) || 0;
+    cloud.widthKm = Math.max(2, Number(this.widthInput?.value) || 18);
     cloud.opticalDepth = Number(this.opticalDepthInput.value) || 0.05;
     this.render();
   }
@@ -187,6 +191,7 @@ class FireCloudProfileSimulatorView {
       baseHeightM: 1800 + nextIndex * 450,
       topHeightM: 3100 + nextIndex * 450,
       coverage: 52,
+      widthKm: 16,
       opticalDepth: 0.5,
     };
     this.clouds.push(cloud);
@@ -353,7 +358,13 @@ class FireCloudProfileSimulatorView {
     const x = scaledPx(cloud.distanceKm, DEFAULT_MAX_DISTANCE_KM, width, inset, this.axisScale, 1);
     const yTop = scaledPy(cloud.topHeightM, DEFAULT_MAX_HEIGHT_M, height, inset, this.axisScale, 100);
     const yBase = scaledPy(cloud.baseHeightM, DEFAULT_MAX_HEIGHT_M, height, inset, this.axisScale, 100);
-    const cloudWidth = 42 + cloud.coverage * 0.72;
+    const leftDistance = Math.max(0, cloud.distanceKm - (cloud.widthKm || 18) / 2);
+    const rightDistance = Math.min(DEFAULT_MAX_DISTANCE_KM, cloud.distanceKm + (cloud.widthKm || 18) / 2);
+    const cloudWidth = Math.max(
+      28,
+      scaledPx(rightDistance, DEFAULT_MAX_DISTANCE_KM, width, inset, this.axisScale, 1) -
+      scaledPx(leftDistance, DEFAULT_MAX_DISTANCE_KM, width, inset, this.axisScale, 1)
+    );
     const cloudHeight = Math.max(18, yBase - yTop);
     const alpha = cloud.status === 'shadowed' || cloud.status === 'unlit' ? 0.7 : 0.9;
     const drawColor = cloud.alwaysDark ? '#111827' : cloud.color;
@@ -505,7 +516,7 @@ class FireCloudProfileSimulatorView {
       <button class="profile-cloud-row ${cloud.id === this.selectedCloudId ? 'active' : ''} ${cloud.alwaysDark ? 'always-dark' : ''}" type="button" data-cloud-id="${cloud.id}">
         <span class="profile-cloud-swatch" style="background:${cloud.alwaysDark ? '#111827' : cloud.color}"></span>
         <strong>${this.cloudLabel(cloud)}</strong>
-        <small>${cloud.distanceKm}km · ${cloud.baseHeightM}-${cloud.topHeightM}m · ${cloud.alwaysDark ? translate('home.simulator.status.alwaysDark', 'Always dark cloud') : this.statusText(cloud.status)} · ${this.reasonText(cloud)}</small>
+        <small>${cloud.distanceKm}km · ${translate('home.simulator.widthLabel', '{{width}} km wide', { width: cloud.widthKm })} · ${cloud.baseHeightM}-${cloud.topHeightM}m · ${cloud.alwaysDark ? translate('home.simulator.status.alwaysDark', 'Always dark cloud') : this.statusText(cloud.status)} · ${this.reasonText(cloud)}</small>
       </button>
     `).join('');
     this.cloudListEl.querySelectorAll('[data-cloud-id]').forEach(button => {

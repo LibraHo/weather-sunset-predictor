@@ -53,6 +53,7 @@ apiAccess: 'الوصول إلى API',
         "baseHeight": "Cloud base m",
         "topHeight": "Cloud top m",
         "coverage": "Coverage %",
+        "width": "??? km",
         "opticalDepth": "Optical depth"
       },
       "actions": {
@@ -80,6 +81,7 @@ apiAccess: 'الوصول إلى API',
         "before": "{{minutes}} min before {{mode}}",
         "after": "{{minutes}} min after {{mode}}"
       },
+      "widthLabel": "??? {{width}} km",
       "summary": "Lit {{lit}}, blockers {{blocking}}, shadowed {{shadowed}}, dimmed {{dimmed}}, always dark {{alwaysDark}}",
       "selectedReason": "{{label}}: {{reason}}",
       "status": {

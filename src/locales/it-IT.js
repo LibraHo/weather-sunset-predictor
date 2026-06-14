@@ -49,6 +49,7 @@ apiAccess: 'Accesso API',
         "baseHeight": "Cloud base m",
         "topHeight": "Cloud top m",
         "coverage": "Coverage %",
+        "width": "Larghezza km",
         "opticalDepth": "Optical depth"
       },
       "actions": {
@@ -76,6 +77,7 @@ apiAccess: 'Accesso API',
         "before": "{{minutes}} min before {{mode}}",
         "after": "{{minutes}} min after {{mode}}"
       },
+      "widthLabel": "{{width}} km di larghezza",
       "summary": "Lit {{lit}}, blockers {{blocking}}, shadowed {{shadowed}}, dimmed {{dimmed}}, always dark {{alwaysDark}}",
       "selectedReason": "{{label}}: {{reason}}",
       "status": {

@@ -158,6 +158,7 @@ const translations = {
         "baseHeight": "雲底 m",
         "topHeight": "雲頂 m",
         "coverage": "覆蓋率 %",
+        "width": "寬度 km",
         "opticalDepth": "光學厚度"
       },
       "actions": {
@@ -185,6 +186,7 @@ const translations = {
         "before": "{{mode}}前 {{minutes}} 分鐘",
         "after": "{{mode}}後 {{minutes}} 分鐘"
       },
+      "widthLabel": "寬 {{width}} km",
       "summary": "照亮 {{lit}} 塊，遮擋 {{blocking}} 塊，陰影 {{shadowed}} 塊，變暗 {{dimmed}} 塊，全程黑雲 {{alwaysDark}} 塊",
       "selectedReason": "{{label}}：{{reason}}",
       "status": {

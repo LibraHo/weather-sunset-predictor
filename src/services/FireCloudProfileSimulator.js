@@ -10,6 +10,7 @@ const DEFAULT_PROFILE_CLOUDS = [
     baseHeightM: 260,
     topHeightM: 1100,
     coverage: 78,
+    widthKm: 22,
     opticalDepth: 0.92,
   },
   {
@@ -20,6 +21,7 @@ const DEFAULT_PROFILE_CLOUDS = [
     baseHeightM: 2400,
     topHeightM: 4200,
     coverage: 54,
+    widthKm: 18,
     opticalDepth: 0.48,
   },
   {
@@ -30,6 +32,7 @@ const DEFAULT_PROFILE_CLOUDS = [
     baseHeightM: 6900,
     topHeightM: 9100,
     coverage: 46,
+    widthKm: 28,
     opticalDepth: 0.26,
   },
   {
@@ -40,6 +43,7 @@ const DEFAULT_PROFILE_CLOUDS = [
     baseHeightM: 5200,
     topHeightM: 7800,
     coverage: 82,
+    widthKm: 34,
     opticalDepth: 1.05,
   },
 ];
@@ -75,6 +79,7 @@ function normalizeCloud(rawCloud, index) {
     baseHeightM,
     topHeightM,
     coverage: clamp(finiteNumber(rawCloud.coverage, 50), 0, 100),
+    widthKm: clamp(finiteNumber(rawCloud.widthKm, 18), 2, 80),
     opticalDepth: clamp(finiteNumber(rawCloud.opticalDepth, 0.5), 0.05, 1.6),
   };
 }

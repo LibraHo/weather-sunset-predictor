@@ -158,6 +158,7 @@ apiAccess: 'API接続',
         "baseHeight": "Cloud base m",
         "topHeight": "Cloud top m",
         "coverage": "Coverage %",
+        "width": "Width km",
         "opticalDepth": "Optical depth"
       },
       "actions": {
@@ -185,6 +186,7 @@ apiAccess: 'API接続',
         "before": "{{minutes}} min before {{mode}}",
         "after": "{{minutes}} min after {{mode}}"
       },
+      "widthLabel": "{{width}} km wide",
       "summary": "Lit {{lit}}, blockers {{blocking}}, shadowed {{shadowed}}, dimmed {{dimmed}}, always dark {{alwaysDark}}",
       "selectedReason": "{{label}}: {{reason}}",
       "status": {

@@ -158,6 +158,7 @@
         "baseHeight": "Cloud base m",
         "topHeight": "Cloud top m",
         "coverage": "Coverage %",
+        "width": "Do rong km",
         "opticalDepth": "Optical depth"
       },
       "actions": {
@@ -185,6 +186,7 @@
         "before": "{{minutes}} min before {{mode}}",
         "after": "{{minutes}} min after {{mode}}"
       },
+      "widthLabel": "rong {{width}} km",
       "summary": "Lit {{lit}}, blockers {{blocking}}, shadowed {{shadowed}}, dimmed {{dimmed}}, always dark {{alwaysDark}}",
       "selectedReason": "{{label}}: {{reason}}",
       "status": {

@@ -173,6 +173,8 @@ describe('FireCloudProfileSimulator', () => {
       Number.isFinite(cloud.distanceKm) &&
       Number.isFinite(cloud.baseHeightM) &&
       Number.isFinite(cloud.topHeightM) &&
+      Number.isFinite(cloud.widthKm) &&
+      cloud.widthKm >= 2 &&
       cloud.topHeightM > cloud.baseHeightM
     )).toBe(true);
   });
