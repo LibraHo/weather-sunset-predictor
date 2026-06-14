@@ -33,16 +33,24 @@ async function run() {
     else bins['阴']++;
   }
 
+  const aodItems = arr.filter(x => x.aerosolOpticalDepth != null || x.aod != null || x.aerosol_optical_depth != null);
+  const current = arr[0] || {};
+  const currentAod = current.aerosolOpticalDepth ?? current.aod ?? current.aerosol_optical_depth ?? null;
+
   console.log('== Beijing Weather Smoke Test ==');
   console.log('providerMeta:', meta);
   console.log('hours:', arr.length);
   console.log('missingRequiredValues:', missing);
+  console.log('aerosolCoverage:', `${aodItems.length}/${arr.length}`);
+  console.log('currentAod:', currentAod);
   console.log('weatherBins:', bins);
   console.log('sample0:', arr[0]);
 
   if (!obj.success) throw new Error('success=false');
   if (arr.length < 24) throw new Error('hourly data too short');
   if (missing > 0) throw new Error(`missing required fields: ${missing}`);
+  if (aodItems.length === 0) throw new Error('missing Beijing aerosol/AOD data');
+  if (currentAod == null) throw new Error('missing current Beijing aerosol/AOD display value');
 
   console.log('RESULT: PASS');
 }

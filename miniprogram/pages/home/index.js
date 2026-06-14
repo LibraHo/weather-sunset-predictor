@@ -700,15 +700,12 @@ Page({
       this.recordRecentLocation(query);
       app.saveLatestPrediction(prediction);
 
-      this.setData({
-        weatherPreview: buildWeatherPreview({ ...weather, location: query.locationName }),
-        ...buildHomePredictionSurface(prediction, query),
-        predictionPeriodCards: predictionCards,
-        predictionPreviewLoading: false,
-        weatherView: 'overview',
-        weatherDay: query.day,
-        weatherParameter: 'temp'
-      }, () => {
+      this.setData(buildHomeWeatherPredictionPatch({
+        weather,
+        prediction,
+        predictionCards,
+        query
+      }), () => {
         this.paintPredictionRadarCloudField();
       });
     } catch (error) {
@@ -953,15 +950,12 @@ Page({
     this.recordRecentLocation(query);
     app.saveLatestPrediction(unified.prediction);
 
-    this.setData({
-      weatherPreview: buildWeatherPreview({ ...unified.weather, location: query.locationName }),
-      predictionPreviewLoading: false,
-      predictionPeriodCards: unified.predictionCards,
-      ...buildHomePredictionSurface(unified.prediction, query),
-      weatherView: 'overview',
-      weatherDay: query.day,
-      weatherParameter: 'temp'
-    }, () => {
+    this.setData(buildHomeWeatherPredictionPatch({
+      weather: unified.weather,
+      prediction: unified.prediction,
+      predictionCards: unified.predictionCards,
+      query
+    }), () => {
       this.paintPredictionRadarCloudField();
     });
   },
@@ -1374,6 +1368,18 @@ export function buildHomePredictionSurface(prediction = {}, query = {}) {
   return {
     weatherPreview: buildWeatherPreview(weather),
     predictionPreview: buildPredictionPreviewFromPrediction(prediction, query)
+  };
+}
+
+export function buildHomeWeatherPredictionPatch({ weather = {}, prediction = {}, predictionCards = {}, query = {} } = {}) {
+  return {
+    ...buildHomePredictionSurface(prediction, query),
+    weatherPreview: buildWeatherPreview({ ...weather, location: query.locationName }),
+    predictionPeriodCards: predictionCards,
+    predictionPreviewLoading: false,
+    weatherView: 'overview',
+    weatherDay: query.day,
+    weatherParameter: 'temp'
   };
 }
 

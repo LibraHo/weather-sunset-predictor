@@ -76,7 +76,8 @@ describe('Weather API Integration', () => {
     test('returns forecast payload for valid query', async () => {
       windyService.fetchWeatherData = async (lat, lon, hours) => ({
         hours,
-        data: [{ timestamp: 1700000000000, temp: 24.5, humidity: 60 }]
+        data: [{ timestamp: 1700000000000, temp: 24.5, humidity: 60, aerosolOpticalDepth: 0.18 }],
+        providerMeta: { name: 'openmeteo', airQualitySource: 'openmeteo_air_quality' }
       });
 
       const res = await request(app)
@@ -88,6 +89,38 @@ describe('Weather API Integration', () => {
       expect(res.body.location).toEqual({ lat: 39.9, lon: 116.4 });
       expect(res.body.hours).toBe(24);
       expect(Array.isArray(res.body.data)).toBe(true);
+      expect(res.body.data[0].aerosolOpticalDepth).toBe(0.18);
+      expect(res.body.providerMeta.airQualitySource).toBe('openmeteo_air_quality');
+    });
+
+    test('Beijing forecast contract includes AOD so the UI aerosol card cannot silently disappear', async () => {
+      windyService.fetchWeatherData = async (lat, lon, hours) => ({
+        hours,
+        data: [
+          {
+            timestamp: 1781366400000,
+            temp: 18.7,
+            humidity: 97,
+            cloudCover: 44,
+            aerosolOpticalDepth: 1.18
+          }
+        ],
+        providerMeta: { name: 'openmeteo', airQualitySource: 'openmeteo_air_quality' }
+      });
+
+      const res = await request(app)
+        .get('/api/weather/forecast')
+        .query({ lat: '39.9042', lon: '116.4074', hours: '24' })
+        .expect(200);
+
+      expect(res.body.success).toBe(true);
+      expect(res.body.location).toEqual({ lat: 39.9042, lon: 116.4074 });
+      expect(res.body.data).toEqual(expect.arrayContaining([
+        expect.objectContaining({ aerosolOpticalDepth: expect.any(Number) })
+      ]));
+      expect(res.body.providerMeta).toEqual(expect.objectContaining({
+        airQualitySource: 'openmeteo_air_quality'
+      }));
     });
 
     test('returns 400 when lat/lon are missing', async () => {
