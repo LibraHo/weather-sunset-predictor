@@ -27,6 +27,7 @@ const shareRoutes = require('./routes/share');
 const shareStatsRoutes = require('./routes/share-stats');
 const analyticsRoutes = require('./routes/analytics');
 const analyticsAdminRoutes = require('./routes/analytics-admin');
+const adminUsersRoutes = require('./routes/admin-users');
 const analyticsService = require('./services/AnalyticsService');
 const authRouteModule = require('./routes/auth');
 const wechatRouteModule = require('./routes/wechat');
@@ -241,6 +242,7 @@ app.use('/', adminRoutes);
 // Admin API routes (protected by Basic Auth plus browser request integrity checks)
 app.use('/api/admin/data-pipeline', requireAdminAuth, requireAdminRequestIntegrity, dataPipelineRoutes);
 app.use('/api/admin/analytics', requireAdminAuth, requireAdminRequestIntegrity, analyticsAdminRoutes);
+app.use('/api/admin/users', requireAdminAuth, requireAdminRequestIntegrity, adminUsersRoutes);
 app.use('/api/admin', requireAdminAuth, requireAdminRequestIntegrity, apiLogsRoutes);
 app.use('/api/admin/share', requireAdminAuth, requireAdminRequestIntegrity, shareStatsRoutes);
 app.use('/share', shareRoutes);
