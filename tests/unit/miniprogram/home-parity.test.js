@@ -93,6 +93,8 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxml).toContain('weather-hourly-point-label-{{item.labelPlacement}}');
     expect(homeWxml).not.toContain('weather-hourly-chart-path');
     expect(homeWxml).toContain('weather-hourly-axis-label');
+    expect(homeWxml).toContain('weather-hourly-time-axis');
+    expect(homeWxml).toContain('weatherPreview.hourlyView.xAxisLabels');
     expect(homeWxml).not.toContain('hourly-weather-strip');
     expect(homeWxml).not.toContain('weather-hourly-row" wx:for="{{weatherPreview.hourly}}"');
     expect(homeWxml).toContain('weather-glow-panel');
@@ -142,6 +144,8 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxss).toContain('.home-page.theme-dark.has-weather .weather-chart-title');
     expect(homeWxss).toContain('.weather-hourly-point-label-right');
     expect(homeWxss).toContain('.weather-hourly-point-label-left');
+    expect(homeWxss).toContain('.weather-hourly-time-label');
+    expect(homeWxss).toContain('.weather-hourly-time-label-left');
     expect(homeWxss).toContain('color: rgba(226, 232, 240, 0.84);');
     expect(homeWxss).not.toContain('.weather-glow-summary');
     expect(homeWxml).toContain('weather-forecast-module');

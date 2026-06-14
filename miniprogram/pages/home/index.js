@@ -1749,7 +1749,7 @@ export function buildWeatherHourlyViewModel(hourly = [], parameter = 'temp') {
     const value = getHourlyParameterValue(item, parameter);
     const normalized = Number.isFinite(value) ? (value - min) / span : 0.5;
     const x = Math.round((inset + (index / displayCount) * plotWidth) * 10) / 10;
-    const y = Math.round((80 - normalized * 54) * 10) / 10;
+    const y = Math.round((74 - normalized * 50) * 10) / 10;
     return {
       key: item.key,
       time: item.time,
@@ -1772,6 +1772,14 @@ export function buildWeatherHourlyViewModel(hourly = [], parameter = 'temp') {
       { key: 'tomorrow', label: '明天' }
     ],
     chart,
+    xAxisLabels: chart.filter((_, index) => (
+      index % 2 === 0 || index === chart.length - 1
+    )).map((item) => ({
+      key: `time-${item.key}`,
+      value: item.time,
+      left: item.left,
+      placement: item.labelPlacement
+    })),
     axisLabels: [max, min + span / 2, min].map((value, index) => ({
       key: `axis-${index}`,
       value: formatHourlyParameterValue(value, config.unit)
