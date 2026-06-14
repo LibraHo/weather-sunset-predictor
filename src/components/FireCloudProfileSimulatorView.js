@@ -287,7 +287,8 @@ class FireCloudProfileSimulatorView {
 
   drawSunAndLight(result, inset, width, height) {
     const ctx = this.ctx;
-    const solarX = width - inset + 14;
+    const isSunrise = result.sun.mode === 'sunrise';
+    const solarX = isSunrise ? inset - 14 : width - inset + 14;
     const solarY = scaledPy(Math.max(0, result.sun.solarElevationDeg + 2) * 650, DEFAULT_MAX_HEIGHT_M, height, inset, this.axisScale, 100);
     const sunGradient = ctx.createRadialGradient(solarX, solarY, 6, solarX, solarY, 38);
     sunGradient.addColorStop(0, '#fff7c2');
@@ -303,7 +304,7 @@ class FireCloudProfileSimulatorView {
     ctx.setLineDash([8, 8]);
     ctx.beginPath();
     for (let km = 0; km <= DEFAULT_MAX_DISTANCE_KM; km += 3) {
-      const band = getLightBand(km, result.sun.solarElevationDeg);
+      const band = getLightBand(km, result.sun.solarElevationDeg, result.sun.mode);
       const x = scaledPx(km, DEFAULT_MAX_DISTANCE_KM, width, inset, this.axisScale, 1);
       const y = scaledPy(Math.max(0, Math.min(DEFAULT_MAX_HEIGHT_M, band.center)), DEFAULT_MAX_HEIGHT_M, height, inset, this.axisScale, 100);
       if (km === 0) ctx.moveTo(x, y);

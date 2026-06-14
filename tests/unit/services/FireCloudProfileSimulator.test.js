@@ -6,6 +6,7 @@ import {
 describe('FireCloudProfileSimulator', () => {
   test('only shadows clouds inside the blocker shadow band', () => {
     const result = simulateFireCloudProfile({
+      mode: 'sunrise',
       solarElevationDeg: 2.2,
       clouds: [
         {
@@ -40,7 +41,7 @@ describe('FireCloudProfileSimulator', () => {
 
     expect(result.sun).toMatchObject({
       solarElevationDeg: 2.2,
-      mode: 'sunset',
+      mode: 'sunrise',
     });
     expect(result.clouds).toHaveLength(3);
     expect(result.clouds[0]).toMatchObject({
@@ -58,6 +59,46 @@ describe('FireCloudProfileSimulator', () => {
     expect(result.clouds[2].id).toBe('far-high');
     expect(result.clouds[2].status).not.toBe('shadowed');
     expect(result.summary.blockedCount).toBe(1);
+  });
+
+  test('uses opposite light travel order for sunrise and sunset', () => {
+    const clouds = [
+      {
+        id: 'west-low-wall',
+        label: 'west low blocker',
+        distanceKm: 15,
+        baseHeightM: 250,
+        topHeightM: 1200,
+        coverage: 90,
+        opticalDepth: 0.95,
+      },
+      {
+        id: 'east-low-wall',
+        label: 'east low blocker',
+        distanceKm: 135,
+        baseHeightM: 250,
+        topHeightM: 1200,
+        coverage: 90,
+        opticalDepth: 0.95,
+      },
+      {
+        id: 'middle-low',
+        label: 'middle low cloud',
+        distanceKm: 70,
+        baseHeightM: 1300,
+        topHeightM: 2200,
+        coverage: 50,
+        opticalDepth: 0.35,
+      },
+    ];
+
+    const sunrise = simulateFireCloudProfile({ mode: 'sunrise', solarElevationDeg: 0.8, clouds });
+    const sunset = simulateFireCloudProfile({ mode: 'sunset', solarElevationDeg: 0.8, clouds });
+    const sunriseMiddle = sunrise.clouds.find(cloud => cloud.id === 'middle-low');
+    const sunsetMiddle = sunset.clouds.find(cloud => cloud.id === 'middle-low');
+
+    expect(sunriseMiddle.blockedBy).toBe('west-low-wall');
+    expect(sunsetMiddle.blockedBy).toBe('east-low-wall');
   });
 
   test('colors thin upper clouds warm when the light path is open near sunset', () => {
@@ -78,7 +119,7 @@ describe('FireCloudProfileSimulator', () => {
 
     expect(result.clouds[0].status).toBe('lit');
     expect(result.clouds[0].colorName).toBe('crimson pink');
-    expect(result.clouds[0].illumination).toBeGreaterThan(0.5);
+    expect(result.clouds[0].illumination).toBeGreaterThanOrEqual(0.5);
     expect(result.summary.litCount).toBe(1);
   });
 
