@@ -68,8 +68,8 @@ describe('score breakdown i18n', () => {
 
     expect(html).toContain('このスコアの理由');
     expect(html).toContain('雲の載体');
-    expect(html).toContain('光路');
-    expect(html).toContain('発色補正');
+    expect(html).toContain('受光輝度');
+    expect(html).toContain('空気の発色');
     expect(html).toContain('最終スコア');
     expect(html).toContain('雲量が非常に多く視程も低いため、スコアを保守的に下げています');
 
@@ -78,6 +78,7 @@ describe('score breakdown i18n', () => {
     expect(html).not.toContain('視程 4km');
     expect(html).not.toContain('Why this score');
     expect(html).not.toContain('Cloud carrier');
+    expect(html).not.toContain('Layer brightness');
     expect(html).not.toContain('Rendering');
     expect(html).not.toContain('Visibility 4km');
   });

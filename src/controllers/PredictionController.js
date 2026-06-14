@@ -2230,8 +2230,8 @@ class PredictionController {
             path: fmt(scoringV2.pathFactor, 2),
             air: fmt(scoringV2.airFactor, 2)
           },
-          'cloud carrier {{carrier}} × sunset path {{path}} × air rendering {{air}}',
-          '云载体 {{carrier}} × 日落光路 {{path}} × 空气显色 {{air}}'
+          'cloud carrier {{carrier}}; path evidence is folded into layer brightness; air rendering {{air}}',
+          '云载体 {{carrier}}；光路证据已并入分层受光亮度；空气显色 {{air}}'
         ),
         tone: 'good'
       } : null,
@@ -2245,8 +2245,8 @@ class PredictionController {
             path: fmt(scoringV2.pathFactor, 2),
             air: fmt(scoringV2.airFactor, 2)
           },
-          'full mid/high cloud with dirty air: carrier {{carrier}} × path {{path}} × suppressed air rendering {{air}}',
-          '满铺中高云叠加偏脏空气：云载体 {{carrier}} × 日落光路 {{path}} × 灰幕显色 {{air}}'
+          'full mid/high cloud with dirty air: carrier {{carrier}}; path evidence is brightness evidence; suppressed air rendering {{air}}',
+          '满铺中高云叠加偏脏空气：云载体 {{carrier}}；光路证据作为亮度证据；灰幕显色 {{air}}'
         ),
         tone: 'cap'
       } : null,
@@ -2308,7 +2308,7 @@ class PredictionController {
       )
       : Number.isFinite(Number(baseScore)) && Number.isFinite(Number(renderedScore))
         ? ledgerText('summary.rendered', { base: fmt(baseScore, 0), rendered: fmt(renderedScore, 0) }, '{{base}} points adjusted by rendering conditions to {{rendered}}', '{{base}} 分经显色条件修正为 {{rendered}} 分')
-        : ledgerText('summary.default', { score: fmt(finalScore, 0) }, '{{score}} points: calculated from cloud carrier, light path, and rendering conditions', '{{score}} 分：由云层、光路和显色条件综合计算');
+        : ledgerText('summary.default', { score: fmt(finalScore, 0) }, '{{score}} points: calculated from layer carrier, layer brightness, and air rendering', '{{score}} 分：由分层载体、分层受光亮度和空气显色计算');
 
     const step = (index, label, description, result, detail = '', tone = '') => `
       <div class="score-ledger-step ${tone ? `score-ledger-step-${tone}` : ''}">
@@ -2327,17 +2327,15 @@ class PredictionController {
         </div>
       </div>`;
 
-    const weightedDescription = breakdown?.layerContributionFormula === 'sum_layer_carrier_brightness' && Number.isFinite(Number(baseScore))
-      ? ledgerText('layerSumFormula', { base: fmt(baseScore, 1) }, 'Σ(carrier × brightness) = {{base}}', 'Σ(载体 × 受光亮度) = {{base}}')
-      : Number.isFinite(Number(carrierScore)) && Number.isFinite(Number(brightnessMultiplier)) && Number.isFinite(Number(baseScore))
-      ? ledgerText('gatedFormula', { carrier: fmt(carrierScore, 1), brightness: fmt(brightnessMultiplier, 2), base: fmt(baseScore, 1) }, '{{carrier}} × brightness {{brightness}} = {{base}}', '{{carrier}} × 受光亮度 {{brightness}} = {{base}}')
-      : ledgerText('canvasPlusLightPath', {}, 'Σ(carrier × brightness)', 'Σ(载体 × 受光亮度)');
+    const weightedDescription = Number.isFinite(Number(baseScore))
+      ? ledgerText('layerSumFormula', { base: fmt(baseScore, 1) }, 'Σ(layer carrier × layer brightness) = {{base}}', 'Σ(分层载体 × 分层受光亮度) = {{base}}')
+      : ledgerText('canvasPlusLightPath', {}, 'Σ(layer carrier × layer brightness)', 'Σ(分层载体 × 分层受光亮度)');
     const renderingDescription = (() => {
       if (!Number.isFinite(Number(baseScore)) || !Number.isFinite(Number(renderedScore))) {
         return ledgerText('weatherTransparency', {}, 'weather transparency factor', '天气通透度');
       }
-      if (renderingMode === 'negative_rendering_multiplier' && Number.isFinite(Number(renderingFactor))) {
-        return ledgerText('renderingMultiplierFormula', { base: fmt(baseScore, 1), factor: fmt(renderingFactor, 2), rendered: fmt(renderedScore, 1) }, '{{base}} × rendering {{factor}} = {{rendered}}', '{{base}} × 显色系数 {{factor}} = {{rendered}}');
+      if (Number.isFinite(Number(renderingFactor))) {
+        return ledgerText('renderingMultiplierFormula', { base: fmt(baseScore, 1), factor: fmt(renderingFactor, 2), rendered: fmt(renderedScore, 1) }, '{{base}} × air rendering {{factor}} = {{rendered}}', '{{base}} × 空气显色系数 {{factor}} = {{rendered}}');
       }
       if (Number.isFinite(Number(renderingAdjustment))) {
         const sign = Number(renderingAdjustment) >= 0 ? '+' : '-';
@@ -2355,7 +2353,9 @@ class PredictionController {
       }
       return prediction?.lightPathAnalysis?.source === 'solar_direction_openmeteo'
         ? ledgerText('details.directionalSamples', {}, 'solar-azimuth samples at 10/25/50/75/100km are included', '已接入太阳方位 10/25/50/75/100km 周边采样')
-        : '';
+        : Number.isFinite(Number(lightPathScore))
+          ? ledgerText('details.lightPathScoreEvidence', { light: fmt(lightPathScore, 1) }, 'path evidence score {{light}} is folded into brightness', '光路证据 {{light}} 已并入受光亮度')
+          : '';
     })();
 
     const carrierDetail = (() => {
@@ -2368,12 +2368,6 @@ class PredictionController {
           '中高云画布 {{upper}} = 高云 {{high}}×0.75 + 中云 {{mid}}×0.45；区间分 {{range}}'
         ));
       }
-      parts.push(ledgerText(
-        'details.cloudPenalty',
-        { canvas: fmt(canvasScore, 1), low: fmt(prediction?.canvasAnalysis?.lowCloudPenalty, 2), overcast: fmt(prediction?.canvasAnalysis?.overcastPenalty, 2) },
-        'cloud canvas {{canvas}}, low cloud ×{{low}}, overcast ×{{overcast}}',
-        '云画布 {{canvas}}，低云 ×{{low}}，阴天 ×{{overcast}}'
-      ));
       if (Number(prediction?.canvasAnalysis?.highCloudBonus)) {
         parts.push(ledgerText(
           'details.highCloudBonus',
@@ -2433,20 +2427,22 @@ class PredictionController {
           brightness: fmt(layerBrightness.effectiveBrightness, 1),
           gate: fmt(layerBrightness.brightnessGate, 2),
           canvas: fmt(layers.cloudCanvas, 1),
+          low: fmt(layers.low, 1),
+          lowBlock: fmt(factors.lowBlockFactor, 2),
           solar: fmt(factors.solarFactor, 2),
           path: fmt(factors.pathFactor, 2),
           air: fmt(factors.airTransmission, 2),
           thickness: fmt(factors.thicknessFactor, 2),
           beam: fmt(factors.beamFactor, 2)
         },
-        'brightness {{brightness}}, gate {{gate}}; cloud canvas {{canvas}}, solar {{solar}}, path {{path}}, air {{air}}, thickness {{thickness}}, beam {{beam}}',
-        '亮度 {{brightness}}，门控 {{gate}}；云画布 {{canvas}}，太阳几何 {{solar}}，光路 {{path}}，空气 {{air}}，云厚 {{thickness}}，直射/散射 {{beam}}'
+        'brightness {{brightness}}, gate {{gate}}; layer carrier {{canvas}}, low-cloud block {{low}} / transmission {{lowBlock}}, solar {{solar}}, path {{path}}, air {{air}}, thickness {{thickness}}, beam {{beam}}',
+        '亮度 {{brightness}}，门控 {{gate}}；分层载体 {{canvas}}，低云遮挡 {{low}} / 透过 {{lowBlock}}，太阳几何 {{solar}}，光路因子 {{path}}，空气 {{air}}，云厚 {{thickness}}，直射/散射 {{beam}}'
       );
     })();
 
     const adjustmentHtml = capEvents.length
       ? capEvents.map((event, idx) => step(
-        idx + 6,
+        idx + 5,
         event.label,
         event.tone === 'good'
           ? ledgerText('details.positiveAdjustment', {}, 'favorable condition adjustment', '有利条件修正')
@@ -2465,13 +2461,12 @@ class PredictionController {
         </div>
         <div class="score-ledger-summary">${escape(summary)}</div>
         <div class="score-ledger-steps">
-          ${step(1, ledgerText('labels.cloudCarrier', {}, 'Carrier', '载体'), ledgerText('details.cloudCarrier', {}, 'usable color carrier from cloud, solar direction, or thin haze', '可被染色的本地云面、日落方向云幕或薄雾载体'), fmt(carrierScore, 1), carrierDetail)}
-          ${step(2, ledgerText('labels.lightPath', {}, 'Light path', '光路'), ledgerText('details.lightPath', {}, 'sunlight reaches the cloud layer', '阳光是否能打到云层'), fmt(lightPathScore, 1), lightPathDetail)}
-          ${step(3, ledgerText('labels.layerBrightness', {}, 'Layer brightness', '受光亮度'), ledgerText('details.layerBrightnessShort', {}, 'whether the carrier is actually illuminated enough', '载体是否真的被照亮'), layerBrightness?.applied ? fmt(layerBrightness.effectiveBrightness, 1) : '--', brightnessDetail)}
-          ${step(4, ledgerText('labels.baseScore', {}, 'Base score', '基础分'), weightedDescription, fmt(baseScore, 1))}
-          ${step(5, ledgerText('labels.rendering', {}, 'Rendering', '显色修正'), renderingDescription, fmt(renderedScore, 1), ledgerText('details.renderingFactors', { visibility: fmt(prediction?.renderingAnalysis?.visibilityFactor, 2), humidity: fmt(prediction?.renderingAnalysis?.humidityFactor, 2), aerosol: fmt(aerosolFactor, 2) }, 'visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}', '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}'))}
+          ${step(1, ledgerText('labels.cloudCarrier', {}, 'Cloud carrier', '云层载体'), ledgerText('details.cloudCarrier', {}, 'usable color carrier from cloud layers, solar-direction cloud, or thin haze', '可被染色的本地云面、日落方向云幕或薄雾载体'), fmt(carrierScore, 1), carrierDetail)}
+          ${step(2, ledgerText('labels.layerBrightness', {}, 'Layer brightness', '分层受光亮度'), ledgerText('details.layerBrightnessShort', {}, 'sun direction, blockage, and illumination evidence explain whether each carrier layer is lit', '太阳方向、遮挡和亮度响应共同解释各层载体是否被照亮'), layerBrightness?.applied ? fmt(layerBrightness.effectiveBrightness, 1) : '--', [brightnessDetail, lightPathDetail].filter(Boolean).join('；'))}
+          ${step(3, ledgerText('labels.baseScore', {}, 'Base score', '基础分'), weightedDescription, fmt(baseScore, 1))}
+          ${step(4, ledgerText('labels.rendering', {}, 'Air rendering', '空气显色'), renderingDescription, fmt(renderedScore, 1), ledgerText('details.renderingFactors', { visibility: fmt(prediction?.renderingAnalysis?.visibilityFactor, 2), humidity: fmt(prediction?.renderingAnalysis?.humidityFactor, 2), aerosol: fmt(aerosolFactor, 2) }, 'visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}', '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}'))}
           ${adjustmentHtml}
-          ${step(capEvents.length ? capEvents.length + 6 : 6, ledgerText('labels.final', {}, 'Final', '最终分'), capEvents.length ? ledgerText('details.afterAdjustments', {}, 'after weather and visibility adjustments', '结合天气和能见度后') : ledgerText('details.finalDisplayed', {}, 'final displayed result', '最终展示结果'), fmt(finalScore, 0), '', 'final')}
+          ${step(capEvents.length ? capEvents.length + 5 : 5, ledgerText('labels.final', {}, 'Final', '最终分'), capEvents.length ? ledgerText('details.afterAdjustments', {}, 'after weather and visibility adjustments', '结合天气和能见度后') : ledgerText('details.finalDisplayed', {}, 'final displayed result', '最终展示结果'), fmt(finalScore, 0), '', 'final')}
         </div>
       </div>
     `;

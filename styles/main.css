@@ -9280,45 +9280,50 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
 
 /* Score breakdown as a focused mobile ledger, distinct from narrative analysis */
 .score-breakdown-ledger {
-  width: min(392px, calc(100vw - 24px));
-  max-width: 392px;
-  padding: 14px;
+  width: min(430px, calc(100vw - 24px));
+  max-width: 430px;
+  padding: 16px;
+  border-radius: 18px;
 }
 .score-ledger-hero {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   min-width: 0;
+  display: grid;
+  gap: 4px;
+  text-align: left;
 }
 .score-ledger-subtitle {
-  margin-top: 3px;
   color: var(--color-text-light);
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 750;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
 }
 .score-ledger-summary {
-  margin: 0 0 10px;
-  padding: 10px 11px;
+  margin: 0 0 12px;
+  padding: 11px 12px;
   border-radius: 14px;
-  background: color-mix(in srgb, var(--theme-accent-soft, #ffb347) 18%, var(--glass-bg-hover));
-  border-left: 4px solid color-mix(in srgb, var(--theme-accent, #ff8c00) 76%, transparent);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.34), rgba(255,255,255,0.08)),
+    color-mix(in srgb, var(--theme-accent-soft, #ffb347) 14%, var(--glass-bg-hover));
+  border: 1px solid color-mix(in srgb, var(--theme-accent, #ff8c00) 22%, var(--glass-border));
   color: var(--color-text);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 780;
-  line-height: 1.35;
+  line-height: 1.42;
 }
 .score-ledger-steps {
   display: grid;
-  gap: 7px;
+  gap: 8px;
 }
 .score-ledger-step {
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr);
-  gap: 8px;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 9px;
   align-items: stretch;
 }
 .score-ledger-index {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   display: inline-grid;
   place-items: center;
   border-radius: 999px;
@@ -9331,10 +9336,13 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
 }
 .score-ledger-body {
   min-width: 0;
-  padding: 8px 10px;
-  border-radius: 13px;
-  background: color-mix(in srgb, var(--glass-bg-hover) 68%, transparent);
-  border: 1px solid color-mix(in srgb, var(--glass-border) 74%, transparent);
+  padding: 10px 11px;
+  border-radius: 14px;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,0.22), rgba(255,255,255,0.05)),
+    color-mix(in srgb, var(--glass-bg-hover) 62%, transparent);
+  border: 1px solid color-mix(in srgb, var(--glass-border) 78%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.22);
 }
 .score-ledger-line {
   display: flex;
@@ -9345,7 +9353,7 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
 .score-ledger-label {
   min-width: 0;
   color: var(--color-text);
-  font-size: 0.77rem;
+  font-size: 0.8rem;
   font-weight: 850;
   line-height: 1.2;
 }
@@ -9358,17 +9366,17 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
   white-space: nowrap;
 }
 .score-ledger-expression {
-  margin-top: 3px;
+  margin-top: 5px;
   color: var(--color-text-light);
-  font-size: 0.67rem;
+  font-size: 0.7rem;
   font-weight: 680;
-  line-height: 1.32;
+  line-height: 1.38;
   font-variant-numeric: tabular-nums;
 }
 .score-ledger-detail {
-  margin-top: 6px;
+  margin-top: 7px;
   color: var(--color-text-light);
-  font-size: 0.63rem;
+  font-size: 0.66rem;
   line-height: 1.4;
 }
 .score-ledger-detail summary {
@@ -9399,11 +9407,11 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
 }
 .score-ledger-detail-copy {
   margin-top: 5px;
-  padding: 7px 8px;
+  padding: 8px 9px;
   border-radius: 10px;
-  background: color-mix(in srgb, var(--glass-bg-hover) 52%, transparent);
+  background: color-mix(in srgb, var(--glass-bg-hover) 58%, transparent);
+  border: 1px solid color-mix(in srgb, var(--glass-border) 58%, transparent);
   color: var(--color-text-light);
-  opacity: 0.88;
   overflow-wrap: anywhere;
 }
 .score-ledger-step-cap .score-ledger-index,

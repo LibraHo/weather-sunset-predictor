@@ -211,14 +211,16 @@ describe('EnhancedPredictionService', () => {
       expect(result.breakdown.highClouds).toBe(60);
     });
 
-    test('should calculate effective cloud cover with weights', () => {
+    test('should calculate effective cloud cover from mid/high carrier without low-cloud lift', () => {
       const weatherData = { lowClouds: 50, midClouds: 50, highClouds: 50 };
       const result = EnhancedPredictionService.scoreCloudCanvas(weatherData);
+      const withoutLowCloud = EnhancedPredictionService.scoreCloudCanvas({ ...weatherData, lowClouds: 0 });
 
       expect(result.breakdown.midCloudSignal).toBeGreaterThan(result.breakdown.midClouds);
       expect(result.breakdown.highCloudSignal).toBeGreaterThan(result.breakdown.highClouds);
-      expect(result.effectiveCloudCover).toBeGreaterThan(65.0);
-      expect(result.effectiveCloudCover).toBeLessThan(67.0);
+      expect(result.effectiveCloudCover).toBeGreaterThan(61.0);
+      expect(result.effectiveCloudCover).toBeLessThan(62.0);
+      expect(result.effectiveCloudCover).toBe(withoutLowCloud.effectiveCloudCover);
     });
 
     test('should handle overcast conditions (all layers thick)', () => {

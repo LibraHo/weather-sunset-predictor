@@ -681,17 +681,73 @@ describe('miniprogram page user/share helpers', () => {
 
     expect(ledger.summary).toContain('云层载体、受光亮度和空气显色');
     expect(ledger.steps.find((step) => step.key === 'baseScore')).toMatchObject({
-      expression: '78 × 受光亮度 0.82 = 64'
+      expression: 'Σ(分层载体×分层受光亮度) = 64'
     });
     expect(ledger.steps.find((step) => step.key === 'cloudThickness')).toMatchObject({
       result: '-12分',
       expression: '厚云幕扣分'
     });
     expect(ledger.steps.find((step) => step.key === 'rendering')).toMatchObject({
-      expression: '64 +3.2 = 67'
+      expression: '64 × 空气显色系数 1.08 = 67'
     });
     expect(JSON.stringify(ledger)).not.toContain('80%');
     expect(JSON.stringify(ledger)).not.toContain('20%');
+  });
+
+  test('result score ledger uses layer-sum scoring without a standalone light-path main step', () => {
+    const ledger = resultHelpers.buildScoreLedger({
+      score: 44,
+      canvasAnalysis: {
+        score: 65.4,
+        breakdown: { highClouds: 70, midClouds: 45, lowClouds: 12 }
+      },
+      lightPathAnalysis: {
+        score: 107.2,
+        azimuth: 286,
+        occlusionProbability: 0.08,
+        explain: 'sun direction open'
+      },
+      layerBrightness: {
+        applied: true,
+        effectiveBrightness: 46.3,
+        brightnessGate: 0.71,
+        layers: { cloudCanvas: 65.4, low: 12 },
+        factors: {
+          lowBlockFactor: 0.95,
+          solarFactor: 0.82,
+          pathFactor: 1.07,
+          airTransmission: 0.9,
+          thicknessFactor: 0.78,
+          beamFactor: 0.65
+        },
+        dimEvidence: ['weak beam']
+      },
+      renderingAnalysis: { factor: 0.68, breakdown: { visibility: 'fair' } },
+      breakdown: {
+        layerContributionFormula: 'sum_layer_carrier_brightness',
+        baseScore: 65.2,
+        canvasScore: 65.4,
+        lightPathScore: 107.2,
+        renderingFactor: 0.68,
+        unclampedFinalScore: 44.1
+      }
+    });
+
+    const keys = ledger.steps.map((step) => step.key);
+    const labels = ledger.steps.map((step) => step.label);
+    const carrierStep = ledger.steps.find((step) => step.key === 'cloudCarrier');
+    const brightnessStep = ledger.steps.find((step) => step.key === 'layerBrightness');
+    const serialized = JSON.stringify(ledger);
+
+    expect(keys.slice(0, 5)).toEqual(['cloudCarrier', 'layerBrightness', 'baseScore', 'rendering', 'final']);
+    expect(keys).not.toContain('lightPath');
+    expect(labels).not.toContain('光路');
+    expect(carrierStep.detail).not.toContain('低云');
+    expect(brightnessStep.detail).toContain('低云遮挡 12%');
+    expect(brightnessStep.detail).toContain('遮挡透过 0.95');
+    expect(serialized).toContain('Σ(分层载体×分层受光亮度)');
+    expect(serialized).toContain('光路因子 1.07');
+    expect(serialized).not.toContain('65.4 × 受光亮度 0.71 = 65.2');
   });
 
   test('result page maps surrounding and 3-day data to display rows', () => {

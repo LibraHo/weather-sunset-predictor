@@ -59,6 +59,7 @@ describe('PredictionController', () => {
   });
 
   afterEach(() => {
+    predictionController.i18n.currentLanguage = 'zh-CN';
     document.body.innerHTML = '';
   });
 
@@ -835,9 +836,9 @@ describe('PredictionController', () => {
       expect(html).toContain('70.7');
       expect(html).toContain('72.5');
       expect(html).toContain('71.1');
-      expect(html).toContain('载体 × 受光亮度');
+      expect(html).toContain('分层载体 × 分层受光亮度');
       expect(html).not.toContain('70.7×80% + 72.5×20%');
-      expect(html).toContain('71.1 × 显色系数 0.85 = 60.4');
+      expect(html).toContain('71.1 × 空气显色系数 0.85 = 60.4');
       expect(html).toContain('60.4');
       expect(html).toContain('≤28');
       expect(html).toContain('最终分');
@@ -865,8 +866,8 @@ describe('PredictionController', () => {
         renderingAnalysis: { factor: 1.12, visibilityFactor: 1.1, humidityFactor: 1, aerosolFactor: 1 }
       });
 
-      expect(html).toContain('71.1 + 显色修正 6.0 = 77.1');
-      expect(html).not.toContain('71.1 × 显色系数 1.12 = 77.1');
+      expect(html).toContain('71.1 × 空气显色系数 1.12 = 77.1');
+      expect(html).not.toContain('71.1 + 显色修正 6.0 = 77.1');
     });
 
     test('分数明细应展示云层画布、云种和云厚扣分来源', () => {
@@ -935,6 +936,62 @@ describe('PredictionController', () => {
       expect(html).toContain('60 分：主要调整是 展示分校准 79.4→60');
     });
   });
+
+    test('score detail ledger uses layer-sum algorithm without standalone light-path main step', () => {
+      predictionController.i18n.currentLanguage = 'en-US';
+      const html = predictionController.renderScoreBreakdownPopover({
+        score: 44,
+        canvasAnalysis: { score: 65.4, breakdown: { highClouds: 70, midClouds: 45, lowClouds: 12 } },
+        carrierAnalysis: { score: 65.4 },
+        lightPathAnalysis: {
+          score: 107.2,
+          source: 'solar_direction_openmeteo',
+          azimuth: 286,
+          occlusionProbability: 0.08
+        },
+        layerBrightness: {
+          applied: true,
+          effectiveBrightness: 46.3,
+          brightnessGate: 0.71,
+          layers: { cloudCanvas: 65.4 },
+          factors: {
+            solarFactor: 0.82,
+            pathFactor: 1.07,
+            airTransmission: 0.9,
+            thicknessFactor: 0.78,
+            beamFactor: 0.65
+          },
+          dimEvidence: ['weak beam']
+        },
+        breakdown: {
+          layerContributionFormula: 'sum_layer_carrier_brightness',
+          baseScore: 65.2,
+          canvasScore: 65.4,
+          carrierScore: 65.4,
+          lightPathScore: 107.2,
+          renderingFactor: 0.68,
+          unclampedFinalScore: 44.1,
+          aerosolScattering: { factor: 0.68 }
+        },
+        renderingAnalysis: { factor: 0.68, visibilityFactor: 0.78, humidityFactor: 0.92, aerosolFactor: 0.95 }
+      });
+
+      document.body.innerHTML = html;
+      const labels = [...document.querySelectorAll('.score-ledger-label')].map((node) => node.textContent.trim());
+
+      expect(labels.slice(0, 5)).toEqual([
+        'Cloud carrier',
+        'Layer brightness',
+        'Base score',
+        'Air rendering',
+        'Final'
+      ]);
+      expect(labels).not.toContain('Light path');
+      expect(html).toContain('Σ(layer carrier × layer brightness)');
+      expect(html).toContain('path 1.07');
+      expect(html).not.toContain('65.4 × brightness 0.71 = 65.2');
+      expect(html).not.toContain('sunset path 1.07 × air rendering');
+    });
 
   describe('renderCloudLayers', () => {
     test('null cloudLayers 返回空字符串', () => {

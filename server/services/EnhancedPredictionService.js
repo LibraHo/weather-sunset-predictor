@@ -431,7 +431,7 @@ function scoreCloudCanvas(weatherData) {
   // 气象学依据：中云(高积云/高层云)和高云(卷云)都能散射红橙色光，是火烧云的画布
   // 低云(层云/积云)主要遮挡视线，不算画布贡献
   const upperCloudCover = highCloudSignal * CLOUD_WEIGHTS.HIGH + midCloudSignal * CLOUD_WEIGHTS.MID;
-  const effectiveCloudCover = upperCloudCover + lowClouds * CLOUD_WEIGHTS.LOW;
+  const effectiveCloudCover = upperCloudCover;
 
   // 2. 云量区间评分（基于中高云画布，低云单独惩罚）
   let cloudRangeScore = 0;
