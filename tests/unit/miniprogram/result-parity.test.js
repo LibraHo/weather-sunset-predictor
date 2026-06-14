@@ -37,6 +37,9 @@ describe('miniprogram result page web parity', () => {
     expect(scoreLedgerJs).not.toContain("key: 'lightPath'");
     expect(wxss).toContain('.score-ledger-card');
     expect(wxss).toContain('.score-ledger-step-final');
+    expect(wxss).toContain('.result-page.theme-dark .score-ledger-card');
+    expect(wxss).toContain('.result-page.theme-dark .score-ledger-step');
+    expect(wxss).toContain('.result-page.theme-dark .score-ledger-detail');
 
     expect(wxml.indexOf('score-ledger-card')).toBeLessThan(wxml.indexOf('metric-grid'));
     expect(wxml.indexOf('score-ledger-card')).toBeLessThan(wxml.indexOf('analysis-card'));
