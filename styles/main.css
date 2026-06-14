@@ -8788,7 +8788,7 @@ body[data-actual-theme="dark"] .weather-feature-item:hover {
 
 .prediction-share-footer-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(104px, 128px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: stretch;
   justify-content: stretch;
   gap: 12px;
@@ -8805,9 +8805,9 @@ body[data-actual-theme="dark"] .weather-feature-item:hover {
   height: 42px;
   width: 100%;
   min-width: 0;
-  max-width: 128px;
+  max-width: none;
   overflow: hidden;
-  padding: 0 14px !important;
+  padding: 0 18px !important;
   line-height: 1;
 }
 
@@ -8983,8 +8983,8 @@ body[data-actual-theme="dark"] .weather-feature-item:hover {
   }
 
   .prediction-nav-feedback {
-    max-width: 112px;
-    padding: 0 12px !important;
+    max-width: none;
+    padding: 0 16px !important;
   }
 }
 
@@ -10413,16 +10413,16 @@ html[data-actual-theme="dark"] #weather-section #weekly-cards.weekly-cards-conta
 .app-analysis-card .analysis-factor-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: 10px;
 }
 
 .app-analysis-card .analysis-factor {
   min-width: 0;
   padding: 12px 13px;
-  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 55%, rgba(255, 255, 255, 0.42));
   border-radius: 8px;
-  background: color-mix(in srgb, var(--theme-panel-soft) 78%, transparent);
-  box-shadow: none;
+  background: color-mix(in srgb, var(--theme-panel-soft) 88%, rgba(255, 255, 255, 0.06));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .app-analysis-card .analysis-factor-heading {
@@ -10452,6 +10452,11 @@ html[data-actual-theme="dark"] #weather-section #weekly-cards.weekly-cards-conta
   color: var(--theme-text);
   font-size: 0.92rem;
   font-weight: 800;
+  overflow: hidden;
+  overflow-wrap: normal;
+  text-overflow: clip;
+  white-space: nowrap;
+  word-break: keep-all;
 }
 
 .app-analysis-card .analysis-factor-tag {
@@ -10556,25 +10561,37 @@ html[data-actual-theme="dark"] #weather-section #weekly-cards.weekly-cards-conta
   }
 
   .app-analysis-card .analysis-factor-grid {
-    gap: 8px;
+    gap: 9px;
   }
 
   .app-analysis-card .analysis-factor {
-    padding: 10px;
+    padding: 10px 9px;
   }
 
   .app-analysis-card .analysis-factor-heading {
-    grid-template-columns: 20px minmax(0, 1fr) auto;
-    gap: 7px;
+    grid-template-columns: 18px minmax(0, 1fr);
+    gap: 5px;
   }
 
   .app-analysis-card .analysis-factor-icon {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
+  }
+
+  .app-analysis-card .analysis-factor-title {
+    font-size: 0.86rem;
+  }
+
+  .app-analysis-card .analysis-factor-tag {
+    grid-column: 2;
+    justify-self: start;
+    max-width: 52px;
+    padding: 2px 6px;
+    font-size: 0.66rem;
   }
 
   .app-analysis-card .analysis-factor p {
-    margin-left: 27px;
+    margin-left: 23px;
   }
 
   .app-analysis-card .analysis-item {
