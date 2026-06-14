@@ -1123,8 +1123,10 @@ describe('PredictionController', () => {
       expect(finalRules).not.toContain('analysis-factor-status');
       expect(finalRules).not.toContain('analysis-factor-subfact');
       expect(finalRules).toContain('grid-template-columns: 22px minmax(0, 1fr) auto');
-      expect(finalRules).toContain('grid-template-columns: 18px minmax(0, 1fr)');
-      expect(finalRules).toContain('grid-column: 2');
+      expect(finalRules).toContain('grid-template-columns: 16px minmax(0, 1fr) max-content');
+      expect(finalRules).toContain('max-width: 44px');
+      expect(finalRules).toContain('html:not([lang^="zh"]) .app-analysis-card .analysis-factor-grid');
+      expect(finalRules).toContain('grid-template-columns: 1fr');
       expect(finalRules).toContain('white-space: nowrap');
       expect(finalRules).toContain('word-break: keep-all');
       expect(finalRules).toContain('display: grid !important');
