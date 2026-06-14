@@ -5,6 +5,11 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '../../..');
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8');
+const sliceBetween = (source, startToken, endToken) => {
+  const start = source.indexOf(startToken);
+  const end = source.indexOf(endToken, start + startToken.length);
+  return source.slice(start, end === -1 ? undefined : end);
+};
 
 describe('miniprogram result page web parity', () => {
   test('surfaces the website score ledger before weather metrics and text analysis', () => {
@@ -12,11 +17,11 @@ describe('miniprogram result page web parity', () => {
     const wxml = read('miniprogram/pages/result/index.wxml');
     const js = read('miniprogram/pages/result/index.js');
     const wxss = read('miniprogram/pages/result/index.wxss');
+    const scoreLedgerJs = sliceBetween(js, 'export function buildScoreLedger', 'function buildCloudThicknessStep');
 
     expect(web).toContain('score-breakdown-popover score-breakdown-ledger');
     expect(web).toContain('score-ledger-steps');
     expect(web).toContain("ledgerText('labels.cloudCarrier'");
-    expect(web).toContain("ledgerText('labels.lightPath'");
     expect(web).toContain("ledgerText('labels.layerBrightness'");
     expect(web).toContain("ledgerText('labels.rendering'");
 
@@ -25,11 +30,11 @@ describe('miniprogram result page web parity', () => {
     expect(wxml).toContain('wx:for="{{scoreLedger.steps}}"');
     expect(js).toContain('scoreLedger: buildScoreLedger(normalized)');
     expect(js).toContain('export function buildScoreLedger');
-    expect(js).toContain("key: 'cloudCarrier'");
-    expect(js).toContain("key: 'lightPath'");
-    expect(js).toContain("key: 'layerBrightness'");
-    expect(js).toContain("title: '受光亮度'");
-    expect(js).toContain("key: 'rendering'");
+    expect(scoreLedgerJs).toContain("key: 'cloudCarrier'");
+    expect(scoreLedgerJs).toContain("key: 'layerBrightness'");
+    expect(scoreLedgerJs).toContain("key: 'baseScore'");
+    expect(scoreLedgerJs).toContain("key: 'rendering'");
+    expect(scoreLedgerJs).not.toContain("key: 'lightPath'");
     expect(wxss).toContain('.score-ledger-card');
     expect(wxss).toContain('.score-ledger-step-final');
 

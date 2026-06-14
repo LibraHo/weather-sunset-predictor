@@ -89,7 +89,7 @@ describe('gallery share map page', () => {
   });
 
   test('title card leaves the Leaflet zoom control unobstructed', () => {
-    expect(html).toContain('.gallery-title {\n      top: 16px;\n      left: 72px;');
+    expect(html).toMatch(/\.gallery-title\s*\{\s*top:\s*16px;\s*left:\s*72px;/);
     expect(html).toContain('.gallery-title { top: 12px; left: 64px;');
     expect(html).not.toContain('.gallery-title { top: 12px; left: 12px;');
   });
