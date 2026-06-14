@@ -67,7 +67,7 @@ Page({
     this.predictionService = options.predictionService || this.predictionService || null;
     this.applyDefaultPredictionDay();
     this.applySavedSettings();
-    this.applyInitialLocation(options);
+    const shouldAutoSearch = this.applyInitialLocation(options);
     if (options.weatherTest === '1' || options.test === 'weather') {
       this.setData({
         weatherPreview: buildTestWeatherPreview(),
@@ -79,6 +79,11 @@ Page({
     this.refreshSavedLists();
     this.refreshVisitorCount();
     this.loadSiteState();
+    if (shouldAutoSearch) {
+      setTimeout(() => {
+        this.onSearch();
+      }, 0);
+    }
   },
 
   onShow() {
@@ -430,13 +435,27 @@ Page({
   },
 
   applyInitialLocation(options = {}) {
-    if (!options.location) return;
-    this.setData({
-      locationText: decodeURIComponent(options.location),
-      coordinate: null,
+    const rawLocation = options.location || options.name;
+    if (!rawLocation && !options.lat && !options.lon) return false;
+    const lat = toNumberOrNull(options.lat);
+    const lon = toNumberOrNull(options.lon);
+    const period = options.period || options.type;
+    const patch = {
+      locationText: rawLocation ? decodeURIComponent(rawLocation) : '分享地点',
+      coordinate: lat !== null && lon !== null ? { lat, lon } : null,
       locationCandidates: [],
       errorMessage: ''
+    };
+    if (['sunrise', 'sunset'].includes(period)) patch.period = period;
+    const sharedDay = resolveSharedDay(options.date);
+    if (sharedDay) {
+      patch.day = sharedDay;
+      patch.weatherDay = sharedDay;
+    }
+    this.setData({
+      ...patch
     });
+    return options.auto === '1' || options.share === '1';
   },
 
   switchWeatherView(event) {
@@ -1020,19 +1039,39 @@ export function buildHomeSharePath(preview = {}, query = {}) {
   const period = preview.periodKey || query.period || query.type || 'sunset';
   const date = normalizeDateKey(preview.date) || normalizeDateKey(preview.referenceTime) || query.date || resolvePredictionDate(resolveQueryDay(query.day));
   const params = {
+    location: locationName,
     lat,
     lon,
-    name: locationName,
     type: period,
-    date
+    date,
+    share: '1',
+    auto: '1'
   };
   const queryString = Object.entries(params)
     .filter(([, value]) => value !== undefined && value !== null && value !== '')
     .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
     .join('&');
   return lat !== undefined && lat !== null && lon !== undefined && lon !== null
-    ? `/pages/result/index?${queryString}`
+    ? `/pages/home/index?${queryString}`
     : '/pages/home/index';
+}
+
+export function resolveSharedDay(dateValue, now = new Date()) {
+  const dateKey = normalizeDateKey(dateValue);
+  if (!dateKey) return null;
+  const today = formatDateKey(now);
+  const tomorrowDate = new Date(now);
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+  if (dateKey === today) return 'today';
+  if (dateKey === formatDateKey(tomorrowDate)) return 'tomorrow';
+  return null;
+}
+
+function formatDateKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 export function getDefaultPredictionDay(now = new Date(), options = {}) {

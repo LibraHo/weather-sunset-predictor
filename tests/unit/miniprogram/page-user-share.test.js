@@ -52,8 +52,8 @@ describe('miniprogram page user/share helpers', () => {
     });
   });
 
-  test('home prediction share button opens the current compact result', () => {
-    expect(homeHelpers.buildHomeShareMessage({
+  test('home prediction share button opens the searched-address result on home', () => {
+    const message = homeHelpers.buildHomeShareMessage({
       periodKey: 'sunset',
       periodLabel: '晚霞',
       score: 76
@@ -61,10 +61,13 @@ describe('miniprogram page user/share helpers', () => {
       locationName: '北京',
       coordinate: { lat: 39.9042, lon: 116.4074 },
       day: 'today'
-    })).toMatchObject({
-      title: '霞客｜北京晚霞评分 76分',
-      path: expect.stringContaining('/pages/result/index?')
     });
+    expect(message).toMatchObject({
+      title: '霞客｜北京晚霞评分 76分',
+      path: expect.stringContaining('/pages/home/index?')
+    });
+    expect(message.path).toContain('share=1');
+    expect(message.path).toContain('auto=1');
   });
 
   test('home prediction preview keeps event time for feedback window checks', () => {
@@ -125,6 +128,12 @@ describe('miniprogram page user/share helpers', () => {
 
     expect(message.path).toContain('type=sunrise');
     expect(message.path).toContain('date=2026-05-31');
+  });
+
+  test('home share landing can restore the shared day on the home card', () => {
+    expect(homeHelpers.resolveSharedDay('2026-06-14', new Date('2026-06-14T08:00:00+08:00'))).toBe('today');
+    expect(homeHelpers.resolveSharedDay('2026-06-15', new Date('2026-06-14T08:00:00+08:00'))).toBe('tomorrow');
+    expect(homeHelpers.resolveSharedDay('2026-06-20', new Date('2026-06-14T08:00:00+08:00'))).toBeNull();
   });
 
   test('favorite helper matches coordinates and payload shape', () => {
