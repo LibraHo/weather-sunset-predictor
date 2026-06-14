@@ -41,7 +41,7 @@ describe('home methodology structure', () => {
     expect((html.slice(scrollIndex, versionIndex).match(/<li>/g) || []).length).toBeGreaterThanOrEqual(5);
   });
 
-  test('shows the current sunset scoring v2 in version history', () => {
+  test('shows the current gray-veil and directional-carrier update in version history', () => {
     const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
     const localeFiles = [
       'zh-CN.js',
@@ -57,11 +57,14 @@ describe('home methodology structure', () => {
     ];
     const localeTexts = localeFiles.map(file => fs.readFileSync(path.join(ROOT, 'src/locales', file), 'utf8'));
 
+    expect(html).toContain('2026-06-13');
+    expect(html).toContain('2026.06.13-layer-weighted-brightness-v1');
+    expect(html).toContain('分层求和亮度公式 v1');
     expect(html).toContain('2026-06-03');
-    expect(html).toContain('2026.06.03-sunset-scoring-v2');
-    expect(html).toContain('日落评分 v2');
-    expect(html).toContain('云载体 × 日落光路 × 空气显色');
-    expect(html).toContain('轻/中度气溶胶可增强橙红散射');
+    expect(html).toContain('home.methodology.changelog.scoringV2.title');
+    expect(html).toContain('home.methodology.sections.finalFormula.formula');
+    expect(html).toContain('满铺中高云叠加 PM/AOD 偏高');
+    expect(html).toContain('方向中云越强，越接近 50-60 档');
     expect(html).toContain('云厚比例折损 v2');
     expect(html).toContain('画布修正前分 × 30% × 云厚压力');
     expect(html).toContain('去掉固定 -28/24 上限');
@@ -71,7 +74,9 @@ describe('home methodology structure', () => {
       .map(file => fs.readFileSync(path.join(ROOT, 'src/locales', file), 'utf8'))
       .join('\n');
 
-    expect(coreLocaleTexts).toContain('2026.06.03-sunset-scoring-v2');
+    expect(coreLocaleTexts).toContain('2026.06.13-layer-weighted-brightness-v1');
+    expect(coreLocaleTexts).toContain('Layer-weighted brightness formula v1');
+    expect(coreLocaleTexts).toContain('layerBrightness');
     expect(coreLocaleTexts).toContain('Sunset scoring v2');
     expect(coreLocaleTexts).toContain('cloud carrier, sunset path, and air rendering');
     expect(localeTexts.join('\n')).toContain('2026-05-27');
@@ -112,7 +117,7 @@ describe('home methodology structure', () => {
     expect(scoreGuide).not.toContain('地图分与精确点分为什么会不同');
   });
 
-  test('documents the current additive carrier and light gate scoring formula', () => {
+  test('documents the current carrier, brightness, and air scoring formula', () => {
     const zh = fs.readFileSync(path.join(ROOT, 'src/locales/zh-CN.js'), 'utf8');
     const en = fs.readFileSync(path.join(ROOT, 'src/locales/en-US.js'), 'utf8');
     const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
@@ -122,15 +127,17 @@ describe('home methodology structure', () => {
     expect(html).toContain('home.methodology.sections.finalFormula.statusCaps');
 
     expect(zh).toContain('中高云画布量 = 高云×0.75 + 中云×0.45');
-    expect(zh).toContain('光路门控 = 0.25–1.12');
-    expect(zh).toContain('最终分 = clamp(云载体 × 日落光路 × 空气显色, 0, 100)');
+    expect(zh).toContain('光路不再单独参与最终乘法');
+    expect(zh).toContain('最终分 = clamp(Σ(分层载体 × 分层受光亮度) × 空气显色, 0, 100)');
+    expect(zh).toContain('layerBrightness = 三层云载体 × 光路 × 受光/云厚/光束证据');
+    expect(zh).toContain('亮度弱时会限制最终展示分');
     expect(zh).toContain('降水影响 = 光路封顶 + 弱载体禁用 + 渲染因子修正');
     expect(zh).not.toContain('画布分×1.2倍');
     expect(zh).not.toContain('透明度分 = 能见度分 + 湿度分（最高25分）');
 
     expect(en).toContain('Upper-cloud canvas = high×0.75 + mid×0.45');
-    expect(en).toContain('Light-path gate = 0.25-1.12');
-    expect(en).toContain('Final score = clamp(cloud carrier × sunset path × air rendering, 0, 100)');
+    expect(en).toContain('Light path no longer stands alone in the final multiplication');
+    expect(en).toContain('Final score = clamp(Σ(layer carrier × layer brightness) × air rendering, 0, 100)');
   });
 
   test('keeps methodology formula blocks readable across multiple lines', () => {

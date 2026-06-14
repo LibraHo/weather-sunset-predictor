@@ -412,6 +412,26 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(options.attributionControl).toBe(false);
   });
 
+  test('火烧云地图染色图层 loading 使用主页同款进度条小浮层', () => {
+    const css = readFileSync('styles/main.css', 'utf8');
+    const progressBlock = css.match(/\.china-spots-layer-loading \.loading-progress\s*\{[\s\S]*?\n\}/)?.[0] || '';
+
+    expect(css).toMatch(/\.china-spots-layer-loading\s*\{[\s\S]*?top:\s*12px;/);
+    expect(css).toMatch(/\.china-spots-layer-loading\s*\{[\s\S]*?right:\s*12px;/);
+    expect(css).toMatch(/\.china-spots-layer-loading\s*\{[\s\S]*?display:\s*inline-flex;/);
+    expect(css).toMatch(/\.china-spots-layer-loading\s*\{[\s\S]*?width:\s*min\(260px, calc\(100% - 24px\)\);/);
+    expect(css).toMatch(/\.china-spots-layer-loading\s*\{[\s\S]*?border-radius:\s*12px;/);
+    expect(css).toMatch(/\.china-spots-layer-spinner\s*\{[\s\S]*?width:\s*16px;/);
+    expect(css).toMatch(/\.china-spots-layer-spinner\s*\{[\s\S]*?height:\s*16px;/);
+    expect(css).toMatch(/\.china-spots-layer-spinner\s*\{[\s\S]*?margin:\s*0;/);
+    expect(progressBlock).toContain('height: 8px;');
+    expect(progressBlock).toContain('margin-top: 7px;');
+    expect(progressBlock).not.toContain('display: none;');
+    expect(css).toMatch(/\.china-spots-layer-progress-fill\s*\{[\s\S]*?animation:\s*xiake-loading-progress/);
+    expect(css).not.toMatch(/\.china-spots-layer-loading\s*\{[\s\S]*?inset:\s*12px;/);
+    expect(css).not.toMatch(/\.china-spots-layer-loading\s*\{[\s\S]*?min-height:\s*84px;/);
+  });
+
   // ========== 修复：_initChinaSpotsMap 使用 ChinaMapCanvas（非 L.map）==========
 
   test('64.10: _initChinaSpotsMap 地图已初始化时刷新当前时段数据', async () => {
@@ -719,6 +739,67 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(document.getElementById('current-humidity').textContent).toBe('28%');
     expect(document.getElementById('current-wind-direction-text').textContent).toBe('surrounding.directions.S');
     expect(document.getElementById('current-wind-direction-icon').style.transform).toBe('rotate(0deg)');
+
+    nowSpy.mockRestore();
+  });
+
+  test('updateWeatherDisplay: 当前小时缺 AOD 时使用同批最近有效 AOD', () => {
+    document.body.innerHTML = `
+      <section id="weather-section" class="card hidden">
+        <div id="weather-data" class="hidden"></div>
+        <div id="weather-location"></div>
+        <span id="current-temp-main"></span>
+        <span id="current-temp-unit"></span>
+        <span id="weather-icon-main"></span>
+        <span id="weather-description"></span>
+        <span id="current-humidity"></span>
+        <span id="current-cloud-cover"></span>
+        <span id="current-wind-speed"></span>
+        <span id="current-wind-direction-icon"></span>
+        <span id="current-wind-direction-text"></span>
+        <span id="current-pressure"></span>
+        <span id="current-visibility"></span>
+        <span id="current-aerosol"></span>
+        <span id="current-precipitation"></span>
+        <div id="weekly-cards"></div>
+      </section>
+    `;
+    controller.i18n = { t: jest.fn(key => key) };
+    controller.tempUnit = 'celsius';
+    controller.getConvertedTemp = value => value;
+    controller.formatWindSpeed = value => `${value} km/h`;
+    controller.renderWeeklyOverview = jest.fn();
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(new Date('2026-06-05T10:15:00Z').getTime());
+
+    controller.updateWeatherDisplay([
+      {
+        timestamp: new Date('2026-06-05T10:00:00Z').getTime(),
+        temp: 24,
+        humidity: 80,
+        cloudCover: 65,
+        windSpeed: 4,
+        windDirection: 90,
+        pressure: 1008,
+        visibility: 10,
+        aerosolOpticalDepth: null,
+        precipitation: 0
+      },
+      {
+        timestamp: new Date('2026-06-05T11:00:00Z').getTime(),
+        temp: 25,
+        humidity: 78,
+        cloudCover: 60,
+        windSpeed: 4,
+        windDirection: 90,
+        pressure: 1008,
+        visibility: 10,
+        aerosolOpticalDepth: 0.34,
+        precipitation: 0
+      }
+    ], { name: '贵州凯里', lat: 26.582, lon: 107.9775 });
+
+    expect(document.getElementById('current-aerosol').textContent).toBe('≈0.34');
+    expect(document.getElementById('current-aerosol').title).toBe('AOD 0.34 · 当前小时缺少 AOD，使用邻近时次数据');
 
     nowSpy.mockRestore();
   });

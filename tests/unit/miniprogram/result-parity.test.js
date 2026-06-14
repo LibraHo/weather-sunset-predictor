@@ -5,6 +5,11 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '../../..');
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8');
+const sliceBetween = (source, startToken, endToken) => {
+  const start = source.indexOf(startToken);
+  const end = source.indexOf(endToken, start + startToken.length);
+  return source.slice(start, end === -1 ? undefined : end);
+};
 
 describe('miniprogram result page web parity', () => {
   test('surfaces the website score ledger before weather metrics and text analysis', () => {
@@ -12,11 +17,12 @@ describe('miniprogram result page web parity', () => {
     const wxml = read('miniprogram/pages/result/index.wxml');
     const js = read('miniprogram/pages/result/index.js');
     const wxss = read('miniprogram/pages/result/index.wxss');
+    const scoreLedgerJs = sliceBetween(js, 'export function buildScoreLedger', 'function buildCloudThicknessStep');
 
     expect(web).toContain('score-breakdown-popover score-breakdown-ledger');
     expect(web).toContain('score-ledger-steps');
     expect(web).toContain("ledgerText('labels.cloudCarrier'");
-    expect(web).toContain("ledgerText('labels.lightPath'");
+    expect(web).toContain("ledgerText('labels.layerBrightness'");
     expect(web).toContain("ledgerText('labels.rendering'");
 
     expect(wxml).toContain('score-ledger-card');
@@ -24,11 +30,16 @@ describe('miniprogram result page web parity', () => {
     expect(wxml).toContain('wx:for="{{scoreLedger.steps}}"');
     expect(js).toContain('scoreLedger: buildScoreLedger(normalized)');
     expect(js).toContain('export function buildScoreLedger');
-    expect(js).toContain("key: 'cloudCarrier'");
-    expect(js).toContain("key: 'lightPath'");
-    expect(js).toContain("key: 'rendering'");
+    expect(scoreLedgerJs).toContain("key: 'cloudCarrier'");
+    expect(scoreLedgerJs).toContain("key: 'layerBrightness'");
+    expect(scoreLedgerJs).toContain("key: 'baseScore'");
+    expect(scoreLedgerJs).toContain("key: 'rendering'");
+    expect(scoreLedgerJs).not.toContain("key: 'lightPath'");
     expect(wxss).toContain('.score-ledger-card');
     expect(wxss).toContain('.score-ledger-step-final');
+    expect(wxss).toContain('.result-page.theme-dark .score-ledger-card');
+    expect(wxss).toContain('.result-page.theme-dark .score-ledger-step');
+    expect(wxss).toContain('.result-page.theme-dark .score-ledger-detail');
 
     expect(wxml.indexOf('score-ledger-card')).toBeLessThan(wxml.indexOf('metric-grid'));
     expect(wxml.indexOf('score-ledger-card')).toBeLessThan(wxml.indexOf('analysis-card'));
@@ -38,17 +49,60 @@ describe('miniprogram result page web parity', () => {
     const web = read('src/controllers/PredictionController.js');
     const wxml = read('miniprogram/pages/result/index.wxml');
     const js = read('miniprogram/pages/result/index.js');
+    const wxss = read('miniprogram/pages/result/index.wxss');
     const renderStart = web.indexOf('  renderSinglePrediction(');
 
     expect(web.indexOf('score-summary-card', renderStart)).toBeLessThan(web.indexOf('prediction-share-menu prediction-share-footer', renderStart));
     expect(web.indexOf('renderAnalysisCard', renderStart)).toBeLessThan(web.indexOf('prediction-share-menu prediction-share-footer', renderStart));
 
     expect(wxml.indexOf('open-type="share"')).toBeLessThan(wxml.indexOf('bindtap="toggleFavorite"'));
+    expect(wxss).toContain('grid-template-columns: repeat(3, minmax(0, 1fr))');
+    expect(wxml).toContain('result-share-action result-share-primary');
+    expect(wxml).toContain('/assets/icons/share-upload.svg');
+    expect(wxml).toContain('result-action-label">分享');
+    expect(wxml).toContain('result-share-action result-feedback-action');
+    expect(wxml).toContain('feedback-icon-image');
+    expect(wxml).toContain('/assets/icons/feedback-message.svg');
+    expect(wxml).toContain('result-action-label">反馈');
+    expect(wxml).toContain('result-action-label result-favorite-label');
+    expect(wxml).toContain('收藏地点');
+    expect(wxss).toContain('.result-favorite-label');
+    expect(wxss).toContain('.result-page.theme-dark .result-feedback-action');
+    expect(wxss).toContain('.result-page.theme-dark .result-favorite-action');
+    expect(wxml).not.toContain('ghost-button action-button result-action-button');
     expect(wxml.indexOf('data-target="map"')).toBeLessThan(wxml.indexOf('data-target="methodology"'));
     expect(wxml.indexOf('data-target="gallery"')).toBeLessThan(wxml.indexOf('data-target="api"'));
     expect(wxml.indexOf('data-target="api"')).toBeLessThan(wxml.indexOf('data-target="upload"'));
     expect(js.indexOf("map: `/pages/map/index?period=${this.data.prediction?.period")).toBeLessThan(js.indexOf("methodology: '/pages/methodology/index'"));
     expect(js).toContain("api: '/pages/methodology/index?section=api'");
+  });
+
+  test('keeps result text analysis as a clean 2x2 card with short status labels only', () => {
+    const wxml = read('miniprogram/pages/result/index.wxml');
+    const wxss = read('miniprogram/pages/result/index.wxss');
+    const js = read('miniprogram/pages/result/index.js');
+
+    expect(wxml).toContain('wx:for="{{analysisItems}}"');
+    expect(wxml).toContain('analysis-title');
+    expect(wxml).toContain('analysis-status-label');
+    expect(wxml).toContain('analysis-detail');
+    expect(wxml).toContain('analysis-card xiake-card');
+    expect(js).toContain('status: statusFromScore');
+    expect(js).toContain('status: statusFromBrightness');
+    expect(js).toContain('status: statusFromFactor');
+    expect(js).toContain("return '一般'");
+    expect(wxml).not.toContain('analysis-factor-status');
+    expect(wxml).not.toContain('analysis-factor-subfact');
+    expect(wxss).toMatch(/\.analysis-grid\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
+    expect(wxss).toContain('.analysis-status-label');
+    expect(wxss).toContain('.tone-excellent .analysis-status-label');
+    expect(wxss).toContain('.tone-good .analysis-status-label');
+    expect(wxss).toContain('.tone-watch .analysis-status-label');
+    expect(wxss).toContain('.tone-weak .analysis-status-label');
+    expect(wxml).not.toMatch(/action-button[^"]*analysis-status-label/);
+    expect(wxml).not.toMatch(/result-feedback-action[^"]*analysis-status-label/);
+    expect(wxss).not.toContain('.analysis-factor-status');
+    expect(wxss).not.toContain('.analysis-factor-subfact');
   });
 
   test('keeps the web sunrise sunset card switch on the result surface', () => {

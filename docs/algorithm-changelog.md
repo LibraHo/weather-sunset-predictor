@@ -7,6 +7,46 @@
 3. 火烧云形成条件文字分析
 4. 对应回归测试/样本回放
 
+## 2026.06.13-layer-weighted-brightness-v1
+
+- 日期：2026-06-13
+- 代码：`server/services/LayerBrightnessService.js`、`server/services/EnhancedPredictionService.js`、`src/controllers/PredictionController.js`、`src/locales/*.js`、`miniprogram/pages/methodology/index.js`、`miniprogram/pages/result/index.js`
+- 背景：最终评分口径需要从整体 `载体 × 受光亮度 × 空气显色` 收敛为 `Σ(分层载体 × 分层受光亮度) × 空气显色`；太阳方向光路继续作为受光亮度的内部因子，不再作为最终分的独立乘子。
+- 改动：
+  - `LayerBrightnessService` 输出 `weightedCarrierScore` 和 `layerContributions`，按低云/中云/高云/方向云带/气溶胶载体贡献分别乘受光亮度后求和。
+  - 受光亮度使用 `log1p` 饱和响应：从无光到弱光的分数增长更敏感，接近满亮后边际增益变小；太阳方向阻挡走廊仍保持线性保守响应。
+  - `EnhancedPredictionService` 使用 `weightedCarrierScore` 作为空气显色前基础分，保留旧 `brightnessMultiplier` 作为展示和兼容字段。
+  - Web 评分细则、算法页、小程序算法页和结果页同步显示 `Σ(载体 × 受光亮度)` 口径。
+- 预期影响：
+  - 远端光路阻挡、单层云带和方向云带场景会按各层真实贡献加权，不再用一个整体亮度系数套所有载体。
+  - 清透、暖散射和已校准的正例保持原有区间；弱亮度场景仍会被压分，但不再把“有一点光”的样本压到接近无光。
+- 回归测试：
+  - `tests/unit/server/LayerBrightnessService.test.js`
+  - `tests/unit/server/EnhancedPredictionService.layerBrightness.test.js`
+  - `tests/unit/server/EnhancedPredictionService.test.js`
+  - `tests/unit/controllers/PredictionController.test.js`
+  - `tests/unit/home-methodology-structure.test.js`
+  - `tests/unit/miniprogram/methodology-page.test.js`
+
+## 2026.06.06-gray-veil-directional-carrier-v2
+
+- 日期：2026-06-06
+- 代码：`server/services/EnhancedPredictionService.js`、`src/controllers/PredictionController.js`、`src/locales/*.js`、`miniprogram/pages/methodology/index.js`
+- 背景：北京 2026-06-04 现场反馈应在 50-60，属于太阳方向中云带被照亮；北京 2026-06-05 现场反馈远不如 4 号，只有远处一点点，但旧 `scoringV2` 把满铺中高云 + PM/AOD 偏高当成 `warm_scattering_path_open`，从 `62 × 1.1` 抬到 68.2。
+- 改动：
+  - 新增连续灰幕空气显色：本地与太阳方向中高云接近满铺、总云量高且 PM2.5/PM10/AOD/dust/visibility 呈灰幕压力时，优先进入 `gray_veil_air_suppression`，降低 `airFactor`，而不是继续给暖散射加成。
+  - 太阳方向中云带载体改为连续评分：低云不挡、光路打开、日落方向中云带明确时，可进入 50-60 档；仍有上限，避免把局部方向云带误判成 70+ 爆发。
+  - 同步 Web 算法页、评分细则、火烧云形成条件文字分析、多语言文案，以及小程序算法页和小程序文字分析口径。
+- 预期影响：
+  - 2026-06-03 北京暖色散射样本保持 70 档。
+  - 2026-06-04 北京方向中云带样本约 53.5。
+  - 2026-06-05 北京满铺灰幕样本约 44，且状态为轻微霞光。
+- 回归测试：
+  - `tests/fixtures/real-sunset-cases/2026-06-04-beijing-sunset.json`：方向中云带样本。
+  - `tests/fixtures/real-sunset-cases/2026-06-05-beijing-sunset.json`：满铺灰幕样本。
+  - `tests/unit/server/real-sunset-case-library.test.js`：真实样本全量回放。
+  - `tests/unit/controllers/PredictionController.test.js`、`tests/unit/home-methodology-structure.test.js`、`tests/unit/miniprogram/methodology-page.test.js`：展示文案同步。
+
 ## 2026.06.04-local-upper-participation-cap
 
 - 日期：2026-06-04

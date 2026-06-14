@@ -123,6 +123,12 @@
   transform: translateX(-50%) translateY(0);
 }
 
+.feedback-toast {
+  max-width: calc(100vw - 32px);
+  text-align: center;
+  white-space: normal;
+}
+
 /* ===== 响应式：桌面端字体与点击区放大 ===== */
 @media (min-width: 1024px) {
   .prediction-share-dropdown {
@@ -186,11 +192,13 @@
 .share-option { color: var(--color-text); }
 .share-option:hover { background: var(--glass-bg-hover); }
 
-/* Bottom card action: a centered share pill that adapts to light/dark theme tokens. */
+/* Bottom card actions: share and feedback share the row evenly. */
 .prediction-share-footer-row {
-  display: flex !important;
-  justify-content: center !important;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  justify-content: stretch !important;
   align-items: center !important;
+  gap: 12px;
   width: 100%;
   min-height: 0;
   margin: 12px 0 10px;
@@ -202,10 +210,13 @@
   z-index: 40;
   display: inline-flex;
   justify-content: center;
+  width: 100%;
+  min-width: 0;
   margin: 0;
 }
 
 .prediction-share-footer .prediction-share-btn {
+  width: 100%;
   min-width: 116px;
   height: 42px;
   padding: 0 18px !important;
@@ -240,6 +251,22 @@
   margin: 0;
 }
 
+.prediction-nav-feedback .share-btn-icon {
+  width: 18px !important;
+  height: 18px !important;
+  flex: 0 0 18px;
+  margin: 0;
+  max-width: 18px;
+  max-height: 18px;
+}
+
+.prediction-nav-feedback .share-btn-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .prediction-share-footer .share-btn-label {
   display: inline-flex;
   align-items: center;
@@ -258,14 +285,20 @@
 
 @media (max-width: 480px) {
   .prediction-share-footer-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
     margin: 10px 0 10px;
   }
 
   .prediction-share-footer .prediction-share-btn {
-    min-width: 108px;
     height: 40px;
     padding: 0 16px !important;
     font-size: 0.94rem;
+  }
+
+  .prediction-nav-feedback {
+    height: 40px;
+    padding: 0 16px !important;
   }
 
   .prediction-share-footer .prediction-share-dropdown {

@@ -1,10 +1,11 @@
 import { formatPercent, formatVisibility } from '../../utils/format.js';
-import { getEnhancedPrediction, getEnhancedPredictionBatch, getSurroundingPrediction, getThreeDayGlow, scoreToLevel } from '../../services/prediction.js';
+import { getEnhancedPrediction, getEnhancedPredictionBatch, getSurroundingPrediction, getThreeDayGlow, resolveAodDisplay, scoreToLevel } from '../../services/prediction.js';
 import { addFavorite, deleteFavorite, listFavorites } from '../../services/user.js';
 import { trackApiApplicationEntry, trackPageVisit, trackShareClick, trackUploadEntry } from '../../services/analytics.js';
 import { buildRadarCloudGradients, paintRadarCloudCanvas } from '../../utils/radar-cloud-field.js';
 import { applyPageSettings, readAppSettings } from '../../utils/app-settings.js';
 import { getDefaultSunEventDay } from '../../utils/sun-event-day.js';
+import { getPredictionEventTime, isFeedbackWindowOpen, submitFeedback } from '../../services/feedback.js';
 
 const app = getApp();
 
@@ -22,7 +23,11 @@ Page({
     threeDayGlow: buildEmptyThreeDayGlow(),
     isFavorite: false,
     themeMode: 'system',
-    resolvedThemeMode: 'light'
+    resolvedThemeMode: 'light',
+    feedbackModalVisible: false,
+    feedbackSubmitting: false,
+    feedbackForm: buildDefaultFeedbackForm(),
+    feedbackImages: []
   },
 
   async onLoad(options = {}) {
@@ -377,6 +382,8 @@ Page({
     if (this.resultPanelLoadTimer) clearTimeout(this.resultPanelLoadTimer);
   },
 
+  noop() {},
+
   async toggleFavorite() {
     const prediction = this.data.prediction;
     if (!prediction) return;
@@ -400,6 +407,98 @@ Page({
       }
     } catch (error) {
       // Keep optimistic local UX; next page load will reconcile with server when available.
+    }
+  },
+
+  openFeedback() {
+    const prediction = this.data.prediction;
+    const eventTime = getPredictionEventTime(prediction || {});
+    if (!isFeedbackWindowOpen(eventTime)) {
+      wx.showModal({
+        title: '反馈暂未开放',
+        content: '反馈只在日出/日落前 1 小时到事件后 45 分钟内开放。',
+        showCancel: false
+      });
+      return;
+    }
+    this.setData({
+      feedbackModalVisible: true,
+      feedbackForm: buildDefaultFeedbackForm(),
+      feedbackImages: []
+    });
+  },
+
+  closeFeedback() {
+    this.setData({ feedbackModalVisible: false, feedbackSubmitting: false });
+  },
+
+  updateFeedbackType(event) {
+    this.setData({ 'feedbackForm.feedbackType': event.currentTarget.dataset.type });
+  },
+
+  updateFeedbackField(event) {
+    const field = event.currentTarget.dataset.field;
+    if (!field) return;
+    this.setData({ [`feedbackForm.${field}`]: event.detail.value });
+  },
+
+  async chooseFeedbackImages() {
+    try {
+      const picked = await chooseFeedbackImages({ maxCount: 2 - this.data.feedbackImages.length });
+      this.setData({ feedbackImages: this.data.feedbackImages.concat(picked).slice(0, 2) });
+    } catch (error) {
+      wx.showToast({ title: '选择图片失败', icon: 'none' });
+    }
+  },
+
+  removeFeedbackImage(event) {
+    const index = Number(event.currentTarget.dataset.index);
+    this.setData({ feedbackImages: this.data.feedbackImages.filter((_, i) => i !== index) });
+  },
+
+  async submitFeedbackForm() {
+    const prediction = this.data.prediction || {};
+    const form = this.data.feedbackForm || {};
+    if (!form.feedbackType || !form.comment || !form.nickname || !form.contactEmail) {
+      wx.showToast({ title: '请补全反馈信息', icon: 'none' });
+      return;
+    }
+    this.setData({ feedbackSubmitting: true });
+    try {
+      await submitFeedback({
+        source: 'card',
+        client: 'miniprogram',
+        feedbackType: form.feedbackType,
+        comment: form.comment,
+        nickname: form.nickname,
+        contactEmail: form.contactEmail,
+        period: prediction.period || prediction.type || this.data.activePeriod,
+        date: prediction.date || null,
+        eventTime: getPredictionEventTime(prediction),
+        score: prediction.score,
+        quality: prediction.grade,
+        locationName: prediction.locationName,
+        lat: prediction.lat,
+        lon: prediction.lon,
+        predictionSnapshot: prediction,
+        weatherSnapshot: {
+          metrics: prediction.metrics || null,
+          weatherData: prediction.weatherData || null,
+          clouds: prediction.clouds || null,
+          radar: this.data.radar || null
+        },
+        photos: this.data.feedbackImages.map((image) => ({
+          name: image.name,
+          mimeType: image.mimeType,
+          base64: image.base64
+        }))
+      });
+      wx.showToast({ title: '反馈已提交', icon: 'success' });
+      this.closeFeedback();
+    } catch (error) {
+      wx.showToast({ title: error.message || '提交失败', icon: 'none' });
+    } finally {
+      this.setData({ feedbackSubmitting: false });
     }
   },
 
@@ -572,6 +671,54 @@ Page({
   }
 });
 
+function buildDefaultFeedbackForm() {
+  return {
+    feedbackType: 'wrong',
+    comment: '',
+    nickname: '',
+    contactEmail: ''
+  };
+}
+
+function chooseFeedbackImages({ maxCount = 2 } = {}) {
+  const count = Math.max(0, Math.min(2, maxCount));
+  if (!count) return Promise.resolve([]);
+  return new Promise((resolve, reject) => {
+    wx.chooseMedia({
+      count,
+      mediaType: ['image'],
+      sourceType: ['album', 'camera'],
+      success: async (res = {}) => {
+        try {
+          const files = await Promise.all((res.tempFiles || []).slice(0, count).map(readMiniImageAsBase64));
+          resolve(files);
+        } catch (error) {
+          reject(error);
+        }
+      },
+      fail: reject
+    });
+  });
+}
+
+function readMiniImageAsBase64(file = {}) {
+  const filePath = file.tempFilePath || file.path;
+  const fs = wx.getFileSystemManager();
+  return new Promise((resolve, reject) => {
+    fs.readFile({
+      filePath,
+      encoding: 'base64',
+      success: (res = {}) => resolve({
+        path: filePath,
+        name: filePath?.split('/').pop() || 'feedback.jpg',
+        mimeType: 'image/jpeg',
+        base64: res.data
+      }),
+      fail: reject
+    });
+  });
+}
+
 function hasShareLocation(options = {}) {
   return options.lat !== undefined && options.lon !== undefined;
 }
@@ -610,12 +757,16 @@ function normalizePrediction(input = {}, options = {}) {
   const period = input.period || input.type || options.type || options.period || 'sunset';
   const day = input.day || options.day || 'today';
   const metrics = input.metrics || input.factors || input.weather || {};
+  const weatherSource = input.weatherData || input.weather || {};
+  const weatherData = compactMetricObject(weatherSource);
+  const hourlyAod = compactAodHourly(weatherSource.hourly || input.hourly);
+  if (hourlyAod.length) weatherData.hourly = hourlyAod;
   const locationName = input.locationName || input.location || options.name || '未命名地点';
 
   return {
     metrics: compactMetricObject(metrics),
     clouds: compactMetricObject(input.clouds || {}),
-    weatherData: compactMetricObject(input.weatherData || input.weather || {}),
+    weatherData,
     period,
     type: period,
     day,
@@ -634,6 +785,8 @@ function normalizePrediction(input = {}, options = {}) {
     canvasAnalysis: input.canvasAnalysis || null,
     lightPathAnalysis: input.lightPathAnalysis || null,
     renderingAnalysis: input.renderingAnalysis || null,
+    layerBrightness: input.layerBrightness || input.breakdown?.layerBrightness || null,
+    layerBrightnessAdjustment: input.layerBrightnessAdjustment || input.breakdown?.layerBrightnessAdjustment || null,
     lightPathGate: input.lightPathGate || null,
     renderingAdjustment: input.renderingAdjustment || null,
     cloudThickness: input.cloudThickness || null,
@@ -690,6 +843,20 @@ function compactMetricObject(source = {}) {
   }, {});
 }
 
+function compactAodHourly(source = []) {
+  if (!Array.isArray(source)) return [];
+  return source
+    .map((item) => {
+      const value = item?.aod ?? item?.aerosolOpticalDepth ?? item?.aerosol_optical_depth;
+      if (value === undefined || value === null || value === '') return null;
+      return {
+        time: item.time || item.date || item.timestamp || item.key || null,
+        aod: value
+      };
+    })
+    .filter(Boolean);
+}
+
 export function buildPredictionPeriodRequest(prediction = {}, period = 'sunset', options = {}) {
   const currentPeriod = prediction.period || prediction.type || 'sunset';
   const lat = Number(prediction.lat ?? prediction.latitude ?? prediction.coordinate?.lat);
@@ -743,6 +910,7 @@ function buildMetrics(prediction) {
   const metrics = prediction.metrics || {};
   const clouds = prediction.clouds || {};
   const weather = prediction.weatherData || prediction.weather || {};
+  const aerosol = formatAodMetric(prediction, metrics, weather);
   const pick = (...keys) => {
     for (const key of keys) {
       const value = metrics[key] ?? clouds[key] ?? weather[key] ?? prediction[key];
@@ -762,8 +930,25 @@ function buildMetrics(prediction) {
     { key: 'humidity', label: '湿度', value: formatPercent(pick('humidity', 'relativeHumidity')) },
     { key: 'pressure', label: '气压', value: formatWithUnit(pick('pressure', 'surfacePressure', 'surface_pressure'), 'hPa') },
     { key: 'precipitation', label: '降水', value: formatWithUnit(pick('precipitation', 'precip', 'rain', 'showers'), 'mm') },
-    { key: 'aod', label: 'AOD', value: formatPlain(pick('aod', 'aerosolOpticalDepth')) }
+    { key: 'aod', label: 'AOD', ...aerosol }
   ];
+}
+
+function formatAodMetric(prediction = {}, metrics = {}, weather = {}) {
+  const source = {
+    ...prediction,
+    ...metrics,
+    ...weather,
+    hourly: weather.hourly || prediction.hourly || [],
+    referenceTime: prediction.referenceTime || weather.referenceTime || prediction.eventTime || prediction.date
+  };
+  const aerosol = resolveAodDisplay(source, { referenceTime: source.referenceTime });
+  if (aerosol.value === null) return { value: '--', hint: '' };
+  const value = formatPlain(aerosol.value);
+  return {
+    value: aerosol.approximate ? `≈${value}` : value,
+    hint: aerosol.approximate ? '邻近时次' : ''
+  };
 }
 
 export function buildFavoritePayload(prediction = {}) {
@@ -867,6 +1052,7 @@ export function buildAnalysisItems(prediction = {}) {
   const canvas = prediction.canvasAnalysis || {};
   const lightPath = prediction.lightPathAnalysis || {};
   const rendering = prediction.renderingAnalysis || {};
+  const layerBrightness = prediction.layerBrightness || prediction.breakdown?.layerBrightness || {};
   const breakdown = prediction.breakdown || {};
 
   return [
@@ -874,6 +1060,7 @@ export function buildAnalysisItems(prediction = {}) {
       key: 'canvas',
       title: '云层载体',
       value: formatScore(canvas.score ?? breakdown.canvasScore),
+      status: statusFromScore(canvas.score ?? breakdown.canvasScore),
       tone: levelFromScore(canvas.score ?? breakdown.canvasScore),
       detail: buildCloudCanvasText(canvas, prediction.cloudType)
     },
@@ -881,13 +1068,23 @@ export function buildAnalysisItems(prediction = {}) {
       key: 'lightPath',
       title: '光路门控',
       value: formatScore(lightPath.score ?? breakdown.lightPathScore),
+      status: statusFromScore(lightPath.score ?? breakdown.lightPathScore),
       tone: levelFromScore(lightPath.score ?? breakdown.lightPathScore),
       detail: buildLightPathText(lightPath)
+    },
+    {
+      key: 'brightness',
+      title: '受光亮度',
+      value: formatScore(layerBrightness.effectiveBrightness),
+      status: statusFromBrightness(layerBrightness),
+      tone: levelFromBrightness(layerBrightness),
+      detail: buildLayerBrightnessText(layerBrightness)
     },
     {
       key: 'rendering',
       title: '显色修正',
       value: formatFactor(rendering.factor ?? breakdown.renderingFactor),
+      status: statusFromFactor(rendering.factor ?? breakdown.renderingFactor),
       tone: levelFromFactor(rendering.factor ?? breakdown.renderingFactor),
       detail: buildRenderingText(rendering)
     }
@@ -899,18 +1096,19 @@ export function buildScoreLedger(prediction = {}) {
   const lightPath = prediction.lightPathAnalysis || {};
   const rendering = prediction.renderingAnalysis || {};
   const breakdown = prediction.breakdown || {};
+  const layerBrightness = prediction.layerBrightness || breakdown.layerBrightness || {};
+  const layerBrightnessAdjustment = prediction.layerBrightnessAdjustment || breakdown.layerBrightnessAdjustment || null;
   const finalScore = prediction.score ?? prediction.totalScore ?? prediction.finalScore;
   const canvasScore = canvas.score ?? breakdown.canvasScore;
-  const lightPathScore = lightPath.score ?? breakdown.lightPathScore;
   const baseScore = breakdown.baseScore;
   const renderingFactor = rendering.factor ?? breakdown.renderingFactor;
-  const lightPathGate = prediction.lightPathGate?.gate ?? breakdown.lightPathGate;
   const renderingAdjustment = prediction.renderingAdjustment?.adjustment ?? breakdown.renderingAdjustment;
   const renderedScore = breakdown.unclampedFinalScore ?? breakdown.renderedScore ?? finalScore;
   const cloudThicknessStep = buildCloudThicknessStep(prediction, canvas);
+  const layerBrightnessStep = buildLayerBrightnessStep(layerBrightness, layerBrightnessAdjustment, lightPath);
 
   const summary = Number.isFinite(Number(finalScore))
-    ? `${Math.round(Number(finalScore))} 分：由云层载体经光路门控后，再叠加显色修正`
+    ? `${Math.round(Number(finalScore))} 分：由云层载体、受光亮度和空气显色共同计算`
     : '等待评分数据后展示完整解释';
 
   const steps = [
@@ -922,20 +1120,20 @@ export function buildScoreLedger(prediction = {}) {
       detail: buildCloudCanvasText(canvas, prediction.cloudType),
       tone: levelFromScore(canvasScore)
     },
-    {
-      key: 'lightPath',
-      label: '光路',
-      result: formatScore(lightPathScore),
-      expression: '阳光是否能打到云层',
-      detail: buildLightPathText(lightPath),
-      tone: levelFromScore(lightPathScore)
+    layerBrightnessStep || {
+      key: 'layerBrightness',
+      label: '分层受光亮度',
+      result: '--',
+      expression: '太阳方向、遮挡和亮度响应作为受光证据',
+      detail: buildLayerBrightnessText(layerBrightness, lightPath),
+      tone: 'unknown'
     },
     {
       key: 'baseScore',
       label: '基础分',
       result: formatScore(baseScore),
-      expression: buildBaseScoreExpression(canvasScore, lightPathGate, baseScore),
-      detail: '对齐网页版：载体分先看可染色云面，再由太阳方向光路作为门控',
+      expression: buildBaseScoreExpression(baseScore),
+      detail: '各层载体先分别乘以对应受光亮度，再求和得到基础分；光路只作为亮度证据。',
       tone: levelFromScore(baseScore)
     }
   ];
@@ -943,7 +1141,7 @@ export function buildScoreLedger(prediction = {}) {
   steps.push(
     {
       key: 'rendering',
-      label: '显色修正',
+      label: '空气显色',
       result: formatScore(renderedScore),
       expression: buildRenderingExpression(baseScore, renderingAdjustment, renderingFactor, renderedScore),
       detail: buildRenderingText(rendering),
@@ -1015,20 +1213,37 @@ function buildCloudThicknessStep(prediction = {}, canvas = {}) {
   };
 }
 
-function buildBaseScoreExpression(canvasScore, lightPathGate, baseScore) {
-  if (Number.isFinite(Number(canvasScore)) && Number.isFinite(Number(lightPathGate)) && Number.isFinite(Number(baseScore))) {
-    return `${roundOne(canvasScore)} × 光路门控 ${roundTwo(lightPathGate)} = ${roundOne(baseScore)}`;
+function buildLayerBrightnessStep(layerBrightness = {}, adjustment = null, lightPath = {}) {
+  if (!layerBrightness?.applied && !adjustment?.applied) return null;
+  const multiplier = Number(adjustment?.multiplier ?? layerBrightness.brightnessMultiplier ?? layerBrightness.brightnessGate);
+  const adjusted = adjustment?.applied || (Number.isFinite(multiplier) && multiplier < 0.99);
+  const result = adjusted && Number.isFinite(multiplier)
+    ? `×${roundTwo(multiplier)}`
+    : formatScore(layerBrightness.effectiveBrightness);
+  return {
+    key: 'layerBrightness',
+    label: '分层受光亮度',
+    result,
+    expression: adjusted ? '逐层亮度响应与遮挡证据' : '各层载体的受光强度',
+    detail: buildLayerBrightnessText(layerBrightness, lightPath),
+    tone: adjusted ? 'bad' : levelFromBrightness(layerBrightness)
+  };
+}
+
+function buildBaseScoreExpression(baseScore) {
+  if (Number.isFinite(Number(baseScore))) {
+    return `Σ(分层载体×分层受光亮度) = ${roundOne(baseScore)}`;
   }
-  return '载体 × 光路门控';
+  return 'Σ(分层载体×分层受光亮度)';
 }
 
 function buildRenderingExpression(baseScore, renderingAdjustment, renderingFactor, renderedScore) {
+  if (Number.isFinite(Number(baseScore)) && Number.isFinite(Number(renderingFactor)) && Number.isFinite(Number(renderedScore))) {
+    return `${roundOne(baseScore)} × 空气显色系数 ${roundTwo(renderingFactor)} = ${roundOne(renderedScore)}`;
+  }
   if (Number.isFinite(Number(baseScore)) && Number.isFinite(Number(renderingAdjustment)) && Number.isFinite(Number(renderedScore))) {
     const sign = Number(renderingAdjustment) >= 0 ? '+' : '';
     return `${roundOne(baseScore)} ${sign}${roundOne(renderingAdjustment)} = ${roundOne(renderedScore)}`;
-  }
-  if (Number.isFinite(Number(baseScore)) && Number.isFinite(Number(renderingFactor)) && Number.isFinite(Number(renderedScore))) {
-    return `${roundOne(baseScore)} × 显色系数 ${roundTwo(renderingFactor)} = ${roundOne(renderedScore)}`;
   }
   return '显色小幅修正';
 }
@@ -1045,14 +1260,13 @@ function buildCloudCanvasText(canvas = {}, cloudType = null) {
   const cloudLabel = cloudType?.label || cloudType?.type;
   const high = canvas.breakdown?.highClouds;
   const mid = canvas.breakdown?.midClouds;
-  const low = canvas.breakdown?.lowClouds;
   const parts = [];
   if (cloudLabel) parts.push(cloudLabel);
-  if (high !== undefined || mid !== undefined || low !== undefined) {
-    parts.push(`高云 ${formatPercent(high ?? 0)} / 中云 ${formatPercent(mid ?? 0)} / 低云 ${formatPercent(low ?? 0)}`);
+  if (high !== undefined || mid !== undefined) {
+    parts.push(`高云 ${formatPercent(high ?? 0)} / 中云 ${formatPercent(mid ?? 0)}`);
   }
   if (canvas.cloudThickness?.thickness) parts.push(`云层厚度 ${canvas.cloudThickness.thickness}`);
-  return parts.join('，') || '结合高云、中云、低云结构判断霞光画布。';
+  return parts.join('，') || '结合高云、中云、日落方向云幕或薄雾判断可显色载体。';
 }
 
 function buildLightPathText(lightPath = {}) {
@@ -1062,6 +1276,44 @@ function buildLightPathText(lightPath = {}) {
   if (Number.isFinite(Number(lightPath.occlusionProbability))) parts.push(`遮挡概率 ${formatPercent(Number(lightPath.occlusionProbability) * 100)}`);
   if (lightPath.directionalAnalysis?.reason) parts.push(lightPath.directionalAnalysis.reason);
   return parts.join('，') || '结合太阳高度角、远近云层和地平线遮挡判断光路。';
+}
+
+function buildLayerBrightnessText(layerBrightness = {}, lightPath = {}) {
+  const lightPathParts = [];
+  if (Number.isFinite(Number(lightPath.score))) lightPathParts.push(`光路因子 ${roundTwo(Number(lightPath.score) / 100)}`);
+  if (Number.isFinite(Number(lightPath.azimuth))) lightPathParts.push(`太阳方位 ${Math.round(Number(lightPath.azimuth))}°`);
+  if (Number.isFinite(Number(lightPath.occlusionProbability))) lightPathParts.push(`遮挡概率 ${formatPercent(Number(lightPath.occlusionProbability) * 100)}`);
+  if (lightPath.directionalAnalysis?.reason) lightPathParts.push(lightPath.directionalAnalysis.reason);
+  if (!layerBrightness?.applied) {
+    return lightPathParts.length
+      ? `太阳方向证据：${lightPathParts.join('，')}。`
+      : '当前版本会结合分层载体、太阳方向、遮挡、空气和云厚估算受光亮度。';
+  }
+  const parts = [];
+  if (Number.isFinite(Number(layerBrightness.layers?.cloudCanvas))) {
+    parts.push(`分层载体 ${formatPercent(layerBrightness.layers.cloudCanvas)}`);
+  }
+  if (Number.isFinite(Number(layerBrightness.layers?.low))) {
+    parts.push(`低云遮挡 ${formatPercent(layerBrightness.layers.low)}`);
+  }
+  if (Number.isFinite(Number(layerBrightness.factors?.lowBlockFactor))) {
+    parts.push(`遮挡透过 ${roundTwo(layerBrightness.factors.lowBlockFactor)}`);
+  }
+  if (Number.isFinite(Number(layerBrightness.factors?.pathFactor))) {
+    parts.push(`光路因子 ${roundTwo(layerBrightness.factors.pathFactor)}`);
+  } else if (lightPathParts.length) {
+    parts.push(...lightPathParts);
+  }
+  if (Number.isFinite(Number(layerBrightness.factors?.airTransmission))) {
+    parts.push(`空气透过 ${roundTwo(layerBrightness.factors.airTransmission)}`);
+  }
+  if (Number.isFinite(Number(layerBrightness.factors?.beamFactor))) {
+    parts.push(`直射/散射 ${roundTwo(layerBrightness.factors.beamFactor)}`);
+  }
+  if (Array.isArray(layerBrightness.dimEvidence) && layerBrightness.dimEvidence.length) {
+    parts.push(`压暗证据 ${layerBrightness.dimEvidence.length} 项`);
+  }
+  return parts.join('，') || '判断各层载体是否真的被日出/日落低角度光照亮。';
 }
 
 function buildRenderingText(rendering = {}) {
@@ -1084,6 +1336,33 @@ function formatFactor(value) {
   return Number.isFinite(number) ? `x${Math.round(number * 100) / 100}` : '--';
 }
 
+function statusFromScore(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return '待判断';
+  if (number >= 85) return '优秀';
+  if (number >= 70) return '较好';
+  if (number >= 40) return '一般';
+  return '偏弱';
+}
+
+function statusFromFactor(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return '待判断';
+  if (number >= 1) return '增强';
+  if (number >= 0.85) return '较好';
+  if (number >= 0.65) return '一般';
+  return '偏弱';
+}
+
+function statusFromBrightness(layerBrightness = {}) {
+  const value = Number(layerBrightness.effectiveBrightness);
+  const multiplier = Number(layerBrightness.brightnessMultiplier ?? layerBrightness.brightnessGate);
+  if (!Number.isFinite(value)) return '待判断';
+  if ((Number.isFinite(multiplier) && multiplier < 0.72) || value < 30) return '偏弱';
+  if (value >= 45) return '充足';
+  return '一般';
+}
+
 function levelFromScore(value) {
   return scoreToLevel(value);
 }
@@ -1095,6 +1374,15 @@ function levelFromFactor(value) {
   if (number >= 0.85) return 'good';
   if (number >= 0.65) return 'watch';
   return 'weak';
+}
+
+function levelFromBrightness(layerBrightness = {}) {
+  const value = Number(layerBrightness.effectiveBrightness);
+  const multiplier = Number(layerBrightness.brightnessMultiplier ?? layerBrightness.brightnessGate);
+  if (!Number.isFinite(value)) return 'unknown';
+  if ((Number.isFinite(multiplier) && multiplier < 0.72) || value < 30) return 'watch';
+  if (value >= 45) return 'excellent';
+  return 'good';
 }
 
 function buildEmptyRadar({ loading = false, error = '' } = {}) {

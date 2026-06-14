@@ -319,6 +319,88 @@ describe('auth routes', () => {
     expect(logout.headers['set-cookie'].join('\n')).toContain('HttpOnly');
   });
 
+  test('passes timeout and proxy options to Google OAuth token exchange', async () => {
+    const httpClient = {
+      post: jest.fn().mockResolvedValue({ data: { id_token: 'mock-id-token' } })
+    };
+    const googleIdTokenVerifier = {
+      verify: jest.fn().mockResolvedValue({ sub: 'google-sub' })
+    };
+    const app = createApp(createRouter({
+      userService,
+      oauthOptions: {
+        httpClient,
+        googleIdTokenVerifier,
+        config: {
+          googleClientId: 'google-client-id',
+          googleClientSecret: 'google-client-secret',
+          googleRedirectUri: 'https://example.test/auth/google/callback',
+          googleRequestTimeoutMs: '12345',
+          googleProxyUrl: 'http://proxy-user:proxy-pass@127.0.0.1:7890'
+        }
+      }
+    }));
+
+    const start = await request(app).get('/auth/google/start').expect(302);
+    const stateCookie = cookieValue(start.headers['set-cookie'], 'xiake_oauth_state');
+    const state = new URL(start.headers.location).searchParams.get('state');
+
+    await request(app)
+      .get(`/auth/google/callback?code=google-code&state=${state}`)
+      .set('Cookie', `xiake_oauth_state=${stateCookie}`)
+      .expect(302);
+
+    expect(httpClient.post).toHaveBeenCalledWith(
+      'https://oauth2.googleapis.com/token',
+      expect.any(URLSearchParams),
+      expect.objectContaining({
+        timeout: 12345,
+        proxy: {
+          protocol: 'http',
+          host: '127.0.0.1',
+          port: 7890,
+          auth: { username: 'proxy-user', password: 'proxy-pass' }
+        }
+      })
+    );
+  });
+
+  test('returns a specific 504 when Google OAuth token exchange times out', async () => {
+    const timeoutError = Object.assign(new Error('connect ETIMEDOUT 142.250.0.0:443'), {
+      code: 'ETIMEDOUT'
+    });
+    const httpClient = {
+      post: jest.fn().mockRejectedValue(timeoutError)
+    };
+    const app = createApp(createRouter({
+      userService,
+      oauthOptions: {
+        httpClient,
+        config: {
+          googleClientId: 'google-client-id',
+          googleClientSecret: 'google-client-secret',
+          googleRedirectUri: 'https://example.test/auth/google/callback'
+        }
+      }
+    }));
+
+    const start = await request(app).get('/auth/google/start').expect(302);
+    const stateCookie = cookieValue(start.headers['set-cookie'], 'xiake_oauth_state');
+    const state = new URL(start.headers.location).searchParams.get('state');
+
+    const callback = await request(app)
+      .get(`/auth/google/callback?code=google-code&state=${state}`)
+      .set('Cookie', `xiake_oauth_state=${stateCookie}`)
+      .expect(504);
+
+    expect(callback.body.error).toEqual({
+      code: 'GOOGLE_UPSTREAM_TIMEOUT',
+      message: 'Google OAuth token exchange timed out'
+    });
+    expect(JSON.stringify(callback.body)).not.toContain('google-code');
+    expect(JSON.stringify(callback.body)).not.toContain('142.250.0.0');
+  });
+
   test('registers and logs in with email password credentials using an httpOnly session cookie', async () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'xiake-auth-email-routes-'));
     const UserService = require('../../../server/services/UserService.js');

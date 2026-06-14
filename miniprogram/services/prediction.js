@@ -13,6 +13,51 @@ function pick(source, keys) {
   return null;
 }
 
+const AOD_KEYS = ['aod', 'aerosolOpticalDepth', 'aerosol_optical_depth'];
+
+function pickAod(source) {
+  return numberOrNull(pick(source, AOD_KEYS));
+}
+
+function parseTimeMs(value) {
+  if (!value) return null;
+  const time = new Date(value).getTime();
+  return Number.isFinite(time) ? time : null;
+}
+
+export function resolveAodDisplay(source = {}, options = {}) {
+  const current = pickAod(source);
+  if (current !== null) {
+    return { value: current, approximate: false, hint: '', sourceTime: null };
+  }
+
+  const hourly = Array.isArray(source.hourly)
+    ? source.hourly
+    : (Array.isArray(source.weatherData?.hourly) ? source.weatherData.hourly : []);
+  const candidates = hourly
+    .map((item) => ({
+      value: pickAod(item),
+      time: item.time || item.date || item.timestamp || item.key || null
+    }))
+    .filter((item) => item.value !== null);
+  if (!candidates.length) return { value: null, approximate: false, hint: '', sourceTime: null };
+
+  const targetMs = parseTimeMs(options.referenceTime || source.referenceTime || source.eventTime || source.date);
+  if (targetMs === null) {
+    const first = candidates[0];
+    return { value: first.value, approximate: true, hint: '邻近时次', sourceTime: first.time };
+  }
+
+  const nearest = candidates.reduce((best, item) => {
+    const itemMs = parseTimeMs(item.time);
+    if (itemMs === null) return best;
+    const distance = Math.abs(itemMs - targetMs);
+    return !best || distance < best.distance ? { ...item, distance } : best;
+  }, null);
+  const fallback = nearest || candidates[0];
+  return { value: fallback.value, approximate: true, hint: '邻近时次', sourceTime: fallback.time };
+}
+
 function pickWeatherSource(source = {}) {
   const weather = source.weatherData || source.weather || source.currentWeather || source.current_weather || {};
   if (Array.isArray(weather)) return weather[0] || {};
@@ -93,9 +138,12 @@ export function normalizePrediction(data = {}) {
     description: source.description || '',
     advice: source.advice || '',
     breakdown: source.breakdown || null,
+    scoringV2: source.scoringV2 || source.breakdown?.scoringV2 || null,
     canvasAnalysis: source.canvasAnalysis || null,
     lightPathAnalysis: source.lightPathAnalysis || null,
     renderingAnalysis: source.renderingAnalysis || null,
+    layerBrightness: source.layerBrightness || source.breakdown?.layerBrightness || null,
+    layerBrightnessAdjustment: source.layerBrightnessAdjustment || source.breakdown?.layerBrightnessAdjustment || null,
     cloudThickness: source.cloudThickness || null,
     thickHighCloudPenalty: source.thickHighCloudPenalty || null,
     aerosolHazeCap: source.aerosolHazeCap || null,

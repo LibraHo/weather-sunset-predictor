@@ -81,11 +81,6 @@
           <p class="account-auth-kicker">Sunset Voyager Account</p>
           <h2 id="account-auth-title" data-i18n="account.auth.loginTitle">账号登录</h2>
         </div>
-        <div class="account-auth-tabs" role="tablist" aria-label="账号操作" data-i18n-aria-label="account.auth.tabsAria">
-          <button type="button" class="account-auth-tab active" data-auth-view="login" data-i18n="account.auth.loginTab">登录</button>
-          <button type="button" class="account-auth-tab" data-auth-view="register" data-i18n="account.auth.registerTab">注册</button>
-          <button type="button" class="account-auth-tab" data-auth-view="forgot" data-i18n="account.auth.forgotTab">找回密码</button>
-        </div>
         <form id="account-login-form" class="account-auth-form" data-auth-panel="login">
           <label>
             <span data-i18n="account.auth.emailLabel">邮箱</span>
@@ -96,6 +91,10 @@
             <input id="account-login-password" name="password" type="password" autocomplete="current-password" placeholder="请输入密码" data-i18n-placeholder="account.auth.passwordPlaceholder" required>
           </label>
           <button type="submit" class="btn btn-primary" data-i18n="account.auth.loginAction">登录</button>
+          <div class="account-auth-links" aria-label="账号辅助操作" data-i18n-aria-label="account.auth.linksAria">
+            <button type="button" class="account-auth-link" data-auth-view="register" data-i18n="account.auth.registerLink">注册账号</button>
+            <button type="button" class="account-auth-link" data-auth-view="forgot" data-i18n="account.auth.forgotLink">找回密码</button>
+          </div>
         </form>
         <form id="account-register-form" class="account-auth-form hidden" data-auth-panel="register">
           <label>
@@ -107,6 +106,10 @@
             <input id="account-register-password" name="password" type="password" autocomplete="new-password" placeholder="至少 6 位" data-i18n-placeholder="account.auth.passwordMinPlaceholder" minlength="6" required>
           </label>
           <label>
+            <span data-i18n="account.auth.confirmPasswordLabel">确认密码</span>
+            <input id="account-register-confirm-password" name="confirmPassword" type="password" autocomplete="new-password" placeholder="再次输入密码" data-i18n-placeholder="account.auth.confirmPasswordPlaceholder" minlength="6" required>
+          </label>
+          <label>
             <span data-i18n="account.auth.recoveryQuestionLabel">找回问题</span>
             <input id="account-register-recovery-question" name="recoveryQuestion" type="text" autocomplete="off" placeholder="例如：我的第一座常看晚霞的城市？" data-i18n-placeholder="account.auth.recoveryQuestionPlaceholder" required>
           </label>
@@ -115,6 +118,7 @@
             <input id="account-register-recovery-answer" name="recoveryAnswer" type="text" autocomplete="off" placeholder="请记住答案，之后不会明文显示" data-i18n-placeholder="account.auth.recoveryAnswerPlaceholder" required>
           </label>
           <button type="submit" class="btn btn-primary" data-i18n="account.auth.createAction">创建账号</button>
+          <button type="button" class="account-auth-link account-auth-link-single" data-auth-view="login" data-i18n="account.auth.backToLogin">返回登录</button>
         </form>
         <form id="account-forgot-form" class="account-auth-form hidden" data-auth-panel="forgot">
           <label>
@@ -131,6 +135,7 @@
             <input id="account-forgot-new-password" name="newPassword" type="password" autocomplete="new-password" placeholder="至少 6 位" data-i18n-placeholder="account.auth.passwordMinPlaceholder" minlength="6" required>
           </label>
           <button type="submit" class="btn btn-primary" data-i18n="account.auth.resetAction">重置密码</button>
+          <button type="button" class="account-auth-link account-auth-link-single" data-auth-view="login" data-i18n="account.auth.backToLogin">返回登录</button>
         </form>
         <div class="account-auth-divider"><span data-i18n="account.auth.or">或</span></div>
         <button id="account-login-google" type="button" class="account-google-btn" data-i18n="account.auth.googleLogin">Google 登录</button>
@@ -162,6 +167,7 @@
               <button class="home-view-option" role="menuitemradio" aria-checked="false" data-view="methodology" data-i18n="home.tabs.methodology">火烧云计算方法</button>
               <button class="home-view-option" role="menuitemradio" aria-checked="false" data-view="map" data-i18n="home.tabs.map">火烧云地图</button>
               <button class="home-view-option" role="menuitemradio" aria-checked="false" data-view="gallery" data-i18n="home.tabs.shareMap">分享地图</button>
+              <button class="home-view-option" role="menuitemradio" aria-checked="false" data-view="feedback" data-i18n="home.tabs.feedback">反馈</button>
               <button class="home-view-option" role="menuitemradio" aria-checked="false" data-view="api" data-i18n="home.tabs.apiAccess">API接入</button>
             </div>
           </div>
@@ -437,6 +443,9 @@
           <div id="forecast-timeline" data-loaded="false">
             <!-- 动态填充未来朝晚霞 -->
           </div>
+          <div class="forecast-reference-note" data-i18n="weather.threeDayGlowReferenceNote">
+            超过一天后的概率可能不准，仅供参考。
+          </div>
         </div>
 
         <div id="weather-error" class="error-message hidden"></div>
@@ -626,11 +635,27 @@
           <div class="methodology-changelog-scroll" tabindex="0" role="region" aria-labelledby="methodology-changelog-title">
             <ol class="methodology-changelog-list">
               <li>
-                <time datetime="2026-06-03" data-i18n="home.methodology.changelog.latest.date">2026-06-03</time>
+                <time datetime="2026-06-13" data-i18n="home.methodology.changelog.latest.date">2026-06-13</time>
                 <div>
-                  <strong data-i18n="home.methodology.changelog.latest.title">日落评分 v2</strong>
-                  <p data-i18n="home.methodology.changelog.latest.summary">最终分改为云载体、日落光路、空气显色三部分合成；光路开且能见度可接受时，轻/中度气溶胶可增强橙红散射。</p>
-                  <small data-i18n="home.methodology.changelog.latest.validation">验证：2026-06-02 北京无雨灰幕仍约 30；2026-06-03 北京无雨、橙红光很美，回放约 66，落入 60-68 实况区间。</small>
+                  <strong data-i18n="home.methodology.changelog.latest.title">分层求和亮度公式 v1</strong>
+                  <p data-i18n="home.methodology.changelog.latest.summary">最终分改为 Σ(分层载体 × 分层受光亮度) × 空气显色；受光亮度采用对数饱和响应，光路继续作为内部因子。</p>
+                  <small data-i18n="home.methodology.changelog.latest.validation">验证：核心评分、网页评分细则、小程序算法页和结果页都显示分层求和口径。</small>
+                </div>
+              </li>
+              <li>
+                <time datetime="2026-06-06" data-i18n="home.methodology.changelog.grayVeilDirectional.date">2026-06-06</time>
+                <div>
+                  <strong data-i18n="home.methodology.changelog.grayVeilDirectional.title">灰幕空气显色 + 方向中云带 v2</strong>
+                  <p data-i18n="home.methodology.changelog.grayVeilDirectional.summary">满铺中高云叠加 PM/AOD 偏高时，不再默认当暖色散射加分，而是按灰幕压力连续降低空气显色；太阳方向中云带改为连续载体，光路越开、方向中云越强，越接近 50-60 档。</p>
+                  <small data-i18n="home.methodology.changelog.grayVeilDirectional.validation">验证：2026-06-03 北京暖散射保持 70 档；2026-06-04 北京方向中云带约 53.5；2026-06-05 北京满铺灰幕压到约 44；真实校准样本库全量回放通过。</small>
+                </div>
+              </li>
+              <li>
+                <time datetime="2026-06-03" data-i18n="home.methodology.changelog.scoringV2.date">2026-06-03</time>
+                <div>
+                  <strong data-i18n="home.methodology.changelog.scoringV2.title">日落评分 v2</strong>
+                  <p data-i18n="home.methodology.changelog.scoringV2.summary">最终分改为云载体、日落光路、空气显色三部分合成；光路开且能见度可接受时，轻/中度气溶胶可增强橙红散射。</p>
+                  <small data-i18n="home.methodology.changelog.scoringV2.validation">验证：2026-06-02 北京无雨灰幕仍约 30；2026-06-03 北京无雨、橙红光很美，回放约 66，落入 60-68 实况区间。</small>
                 </div>
               </li>
               <li>
@@ -676,8 +701,8 @@
             </ol>
           </div>
           <div class="methodology-version-card">
-            <strong data-i18n="home.methodology.versionLabel">算法版本：2026.06.03-sunset-scoring-v2</strong>
-            <span data-i18n="home.methodology.versionDesc">本版把最终评分收敛为“云载体 × 日落光路 × 空气显色”：有光路时轻/中度气溶胶可增强橙红散射，无光路、极端霾、低能见度、降水和厚低云仍优先压制。</span>
+            <strong data-i18n="home.methodology.versionLabel">算法版本：2026.06.13-layer-weighted-brightness-v1</strong>
+            <span data-i18n="home.methodology.versionDesc">本版使用“Σ(分层载体 × 分层受光亮度) × 空气显色”。受光亮度基于低/中/高三层云、太阳几何、太阳方向通路、直射/散射和云厚证据估算，并采用对数饱和响应：从无光到弱光更敏感，接近满亮后边际变小。</span>
           </div>
         </div>
       </section>
@@ -699,7 +724,18 @@
         <!-- 时段说明 -->
         <div id="china-spots-period-label" class="china-spots-period-label"></div>
         <!-- Leaflet 地图（可拖拽 + 缩放） -->
-        <div id="china-spots-map" class="china-spots-map"></div>
+        <div class="china-spots-map-wrap">
+          <div id="china-spots-map" class="china-spots-map"></div>
+          <div id="china-spots-layer-loading" class="china-spots-layer-loading hidden" role="status" aria-live="polite">
+            <div class="spinner china-spots-layer-spinner" aria-hidden="true"></div>
+            <div class="china-spots-layer-loading-copy">
+              <p data-i18n="weatherMap.layerLoading">正在读取火烧云图层...</p>
+              <div class="loading-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="64">
+                <div class="loading-progress-fill china-spots-layer-progress-fill"></div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div id="china-spots-empty" class="china-spots-empty hidden" data-i18n="weatherMap.emptyChinaSpots">今日暂无可见火烧云点位</div>
         <!-- 任务 64.8：朝/晚霞双时段分数并行展示 -->
         <div id="china-spots-dual-score" class="china-spots-dual-score hidden"></div>
@@ -994,7 +1030,105 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
         </div>
       </section>
 
+      <section id="tab-panel-feedback" class="card feedback-page-panel hidden" role="tabpanel" aria-label="feedback-panel" tabindex="0" hidden>
+        <h2 data-i18n="feedback.title">反馈预测结果</h2>
+        <p class="feedback-page-intro" data-i18n="feedback.subtitle">提交漏报、误报或虚报，系统会保存预测快照、天气原始数据、评分、地点和图片，方便后台复盘。</p>
+        <div id="feedback-page-signed-out" class="feedback-login-card">
+          <p data-i18n="feedback.loginRequired">请先登录后再反馈。</p>
+          <button id="feedback-page-login-btn" class="btn btn-primary xiake-action-btn xiake-action-btn-primary" type="button" data-i18n="feedback.loginAction">登录</button>
+        </div>
+        <form id="feedback-page-form" class="feedback-form feedback-page-form hidden">
+          <div class="feedback-form-grid">
+            <label>
+              <span data-i18n="feedback.dateLabel">日期</span>
+              <input name="date" type="date" required>
+            </label>
+            <label>
+              <span data-i18n="feedback.periodLabel">类型</span>
+              <select name="period" required>
+                <option value="sunrise" data-i18n="feedback.sunrise">朝霞</option>
+                <option value="sunset" data-i18n="feedback.sunset" selected>晚霞</option>
+              </select>
+            </label>
+            <label>
+              <span data-i18n="feedback.locationLabel">地点名称</span>
+              <input name="locationName" type="text" required data-i18n-placeholder="feedback.locationPlaceholder" placeholder="北京景山">
+            </label>
+            <label>
+              <span data-i18n="feedback.latLabel">纬度</span>
+              <input name="lat" type="number" step="any" min="-90" max="90" required placeholder="39.9042">
+            </label>
+            <label>
+              <span data-i18n="feedback.lonLabel">经度</span>
+              <input name="lon" type="number" step="any" min="-180" max="180" required placeholder="116.4074">
+            </label>
+            <label>
+              <span data-i18n="feedback.typeLabel">反馈类型</span>
+              <select name="feedbackType" required>
+                <option value="missed" data-i18n="feedback.missed">漏报：实际很好但评分偏低</option>
+                <option value="wrong" data-i18n="feedback.wrong">误报：实际不好但评分偏高</option>
+                <option value="overstated" data-i18n="feedback.overstated">虚报：有颜色但不值得冲</option>
+              </select>
+            </label>
+            <label class="feedback-wide">
+              <span data-i18n="feedback.commentLabel">评论</span>
+              <textarea name="comment" rows="4" required data-i18n-placeholder="feedback.commentPlaceholder" placeholder="描述现场看到的云量、颜色、遮挡和时间"></textarea>
+            </label>
+            <label class="feedback-wide">
+              <span data-i18n="feedback.photoLabel">图片（最多 2 张）</span>
+              <input name="photos" type="file" accept="image/jpeg,image/png,image/heic,image/heif" multiple>
+            </label>
+          </div>
+          <p class="feedback-help" data-i18n="feedback.manualHelp">提交后会尝试抓取对应日期地点的预测快照；超出可抓取范围会提示不可反馈。</p>
+          <div class="feedback-actions">
+            <button type="submit" class="btn btn-primary xiake-action-btn xiake-action-btn-primary" data-i18n="feedback.submit">提交反馈</button>
+            <span id="feedback-page-message" class="feedback-message hidden" role="status" aria-live="polite"></span>
+          </div>
+        </form>
+      </section>
+
     </main>
+
+    <div id="feedback-modal" class="modal-overlay feedback-modal hidden" role="dialog" aria-modal="true" aria-labelledby="feedback-modal-title">
+      <form id="feedback-form" class="feedback-modal-card feedback-form">
+        <div class="feedback-modal-head">
+          <div>
+            <p class="api-access-kicker" data-i18n="feedback.kicker">Prediction Feedback</p>
+            <h2 id="feedback-modal-title" data-i18n="feedback.title">反馈预测结果</h2>
+          </div>
+          <button id="feedback-modal-close" class="icon-btn" type="button" aria-label="关闭" data-i18n-aria-label="feedback.closeAria">×</button>
+        </div>
+        <p class="feedback-help" data-i18n="feedback.openWindowHint">反馈只在日出/日落前 1 小时到事件后 45 分钟内开放。</p>
+        <div class="feedback-type-grid" role="radiogroup" aria-label="Feedback type" data-i18n-aria-label="feedback.typeLabel">
+          <label><input type="radio" name="feedbackType" value="missed" required><span><strong data-i18n="feedback.missedShort">漏报</strong><small data-i18n="feedback.missedHint">实际很好，但预测分数偏低。</small></span></label>
+          <label><input type="radio" name="feedbackType" value="wrong"><span><strong data-i18n="feedback.wrongShort">误报</strong><small data-i18n="feedback.wrongHint">实际不好，但预测分数偏高。</small></span></label>
+          <label><input type="radio" name="feedbackType" value="overstated"><span><strong data-i18n="feedback.overstatedShort">虚报</strong><small data-i18n="feedback.overstatedHint">有颜色但效果弱，不值得按高分推荐。</small></span></label>
+        </div>
+        <div class="feedback-form-grid">
+          <label class="feedback-wide">
+            <span data-i18n="feedback.commentLabel">评论</span>
+            <textarea name="comment" rows="4" required data-i18n-placeholder="feedback.commentPlaceholder" placeholder="描述现场看到的云量、颜色、遮挡和时间"></textarea>
+          </label>
+          <label>
+            <span data-i18n="feedback.nicknameLabel">昵称</span>
+            <input name="nickname" type="text" required autocomplete="nickname">
+          </label>
+          <label>
+            <span data-i18n="feedback.emailLabel">邮箱</span>
+            <input name="contactEmail" type="email" required autocomplete="email">
+          </label>
+          <label class="feedback-wide">
+            <span data-i18n="feedback.photoLabel">图片（最多 2 张）</span>
+            <input name="photos" type="file" accept="image/jpeg,image/png,image/heic,image/heif" multiple>
+          </label>
+        </div>
+        <div class="feedback-actions">
+          <button id="feedback-cancel-btn" type="button" class="btn btn-secondary" data-i18n="feedback.cancel">取消</button>
+          <button type="submit" class="btn btn-primary xiake-action-btn xiake-action-btn-primary" data-i18n="feedback.submit">提交反馈</button>
+          <span id="feedback-form-message" class="feedback-message hidden" role="status" aria-live="polite"></span>
+        </div>
+      </form>
+    </div>
 
     <footer>
       <button id="refresh-btn" class="btn btn-secondary xiake-action-btn xiake-action-btn-secondary" disabled>

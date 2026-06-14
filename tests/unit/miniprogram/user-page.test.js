@@ -81,7 +81,8 @@ describe('mini-program user page source', () => {
     const homeJs = read('miniprogram/pages/home/index.js');
 
     expect(homeJs).toContain('applyInitialLocation(options)');
-    expect(homeJs).toContain('locationText: decodeURIComponent(options.location)');
+    expect(homeJs).toContain('const rawLocation = options.location || options.name');
+    expect(homeJs).toContain("locationText: rawLocation ? decodeURIComponent(rawLocation) : '分享地点'");
   });
 
   test('user page module exports stable display helpers', async () => {

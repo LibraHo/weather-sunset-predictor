@@ -59,6 +59,7 @@ describe('PredictionController', () => {
   });
 
   afterEach(() => {
+    predictionController.i18n.currentLanguage = 'zh-CN';
     document.body.innerHTML = '';
   });
 
@@ -835,9 +836,9 @@ describe('PredictionController', () => {
       expect(html).toContain('70.7');
       expect(html).toContain('72.5');
       expect(html).toContain('71.1');
-      expect(html).toContain('光路门控 0.91');
+      expect(html).toContain('分层载体 × 分层受光亮度');
       expect(html).not.toContain('70.7×80% + 72.5×20%');
-      expect(html).toContain('71.1 × 显色系数 0.85 = 60.4');
+      expect(html).toContain('71.1 × 空气显色系数 0.85 = 60.4');
       expect(html).toContain('60.4');
       expect(html).toContain('≤28');
       expect(html).toContain('最终分');
@@ -865,8 +866,8 @@ describe('PredictionController', () => {
         renderingAnalysis: { factor: 1.12, visibilityFactor: 1.1, humidityFactor: 1, aerosolFactor: 1 }
       });
 
-      expect(html).toContain('71.1 + 显色修正 6.0 = 77.1');
-      expect(html).not.toContain('71.1 × 显色系数 1.12 = 77.1');
+      expect(html).toContain('71.1 × 空气显色系数 1.12 = 77.1');
+      expect(html).not.toContain('71.1 + 显色修正 6.0 = 77.1');
     });
 
     test('分数明细应展示云层画布、云种和云厚扣分来源', () => {
@@ -936,6 +937,62 @@ describe('PredictionController', () => {
     });
   });
 
+    test('score detail ledger uses layer-sum algorithm without standalone light-path main step', () => {
+      predictionController.i18n.currentLanguage = 'en-US';
+      const html = predictionController.renderScoreBreakdownPopover({
+        score: 44,
+        canvasAnalysis: { score: 65.4, breakdown: { highClouds: 70, midClouds: 45, lowClouds: 12 } },
+        carrierAnalysis: { score: 65.4 },
+        lightPathAnalysis: {
+          score: 107.2,
+          source: 'solar_direction_openmeteo',
+          azimuth: 286,
+          occlusionProbability: 0.08
+        },
+        layerBrightness: {
+          applied: true,
+          effectiveBrightness: 46.3,
+          brightnessGate: 0.71,
+          layers: { cloudCanvas: 65.4 },
+          factors: {
+            solarFactor: 0.82,
+            pathFactor: 1.07,
+            airTransmission: 0.9,
+            thicknessFactor: 0.78,
+            beamFactor: 0.65
+          },
+          dimEvidence: ['weak beam']
+        },
+        breakdown: {
+          layerContributionFormula: 'sum_layer_carrier_brightness',
+          baseScore: 65.2,
+          canvasScore: 65.4,
+          carrierScore: 65.4,
+          lightPathScore: 107.2,
+          renderingFactor: 0.68,
+          unclampedFinalScore: 44.1,
+          aerosolScattering: { factor: 0.68 }
+        },
+        renderingAnalysis: { factor: 0.68, visibilityFactor: 0.78, humidityFactor: 0.92, aerosolFactor: 0.95 }
+      });
+
+      document.body.innerHTML = html;
+      const labels = [...document.querySelectorAll('.score-ledger-label')].map((node) => node.textContent.trim());
+
+      expect(labels.slice(0, 5)).toEqual([
+        'Cloud carrier',
+        'Layer brightness',
+        'Base score',
+        'Air rendering',
+        'Final'
+      ]);
+      expect(labels).not.toContain('Light path');
+      expect(html).toContain('Σ(layer carrier × layer brightness)');
+      expect(html).toContain('path 1.07');
+      expect(html).not.toContain('65.4 × brightness 0.71 = 65.2');
+      expect(html).not.toContain('sunset path 1.07 × air rendering');
+    });
+
   describe('renderCloudLayers', () => {
     test('null cloudLayers 返回空字符串', () => {
       expect(predictionController.renderCloudLayers(null)).toBe('');
@@ -954,7 +1011,7 @@ describe('PredictionController', () => {
   });
 
   describe('火烧云分析卡片', () => {
-    test('火烧云分析应合并为四个固定因子', () => {
+    test('火烧云分析应合并为四个固定因子且亮度归入载体', () => {
       const groups = predictionController.buildAnalysisGroups({
         score: 72,
         cloudLayers: { high: 88, mid: 42, low: 4 },
@@ -964,10 +1021,17 @@ describe('PredictionController', () => {
       const html = predictionController.renderAnalysisCard(groups, 'test');
 
       expect(groups).toHaveLength(4);
+      expect(html).toContain('火烧云文字分析');
+      expect(html).not.toContain('火烧云形成条件分析');
       expect(html).toContain('云层载体');
       expect(html).toContain('光路条件');
       expect(html).toContain('空气显色');
       expect(html).toContain('限制因素');
+      expect(html).toContain('analysis-factor-tag');
+      expect(html).toMatch(/analysis-factor-tag">(?:较好|一般|偏弱|较弱|轻微|明显|暂无|充足|优秀)</);
+      expect(groups.find(item => item.key === 'carrier').desc).toContain('受光');
+      expect(html).not.toContain('受光亮度');
+      expect(groups.find(item => item.key === 'carrier').subfacts).toBeUndefined();
       expect(html).toContain('analysis-factor-grid');
       expect(html).not.toContain('不再重复封顶');
       expect(html).not.toContain('不再额外封顶');
@@ -988,6 +1052,8 @@ describe('PredictionController', () => {
 
       expect(groups).toHaveLength(4);
       expect(html).toContain('空气显色');
+      expect(groups.find(item => item.key === 'carrier').desc).toContain('受光');
+      expect(html).not.toContain('受光亮度');
       expect(html).toContain('颜色更容易偏暖、偏红');
       expect(html).not.toContain('薄雾红日载体');
     });
@@ -1016,6 +1082,41 @@ describe('PredictionController', () => {
       expect(rendering.status).toBe('较好');
       expect(rendering.statusTone).toBe('good');
       expect(rendering.desc).toContain('颜色更容易偏暖、偏红');
+    });
+
+    test('满铺灰幕显色抑制场景应显示空气显色较弱', () => {
+      const prediction = {
+        score: 44,
+        cloudLayers: { high: 100, mid: 100, low: 0 },
+        visibility: 20,
+        humidity: 62,
+        aerosolOpticalDepth: 0.4,
+        pm10: 86.4,
+        scoringV2: {
+          applied: true,
+          airMode: 'gray_veil_air_suppression',
+          score: 44,
+          cloudCarrier: 62,
+          pathFactor: 1,
+          airFactor: 0.71
+        },
+        lightPathAnalysis: {
+          score: 84,
+          directionalAnalysis: { reason: 'solar_direction_neutral' }
+        }
+      };
+      const groups = predictionController.buildAnalysisGroups(prediction);
+      const rendering = groups.find(item => item.key === 'rendering');
+      const limits = groups.find(item => item.key === 'limits');
+      const html = predictionController.renderScoreBreakdownPopover(prediction);
+
+      expect(rendering.status).toBe('较弱');
+      expect(rendering.statusTone).toBe('weak');
+      expect(rendering.desc).toContain('满铺云幕');
+      expect(limits.status).toBe('轻微');
+      expect(html).toContain('灰幕显色抑制');
+      expect(html).toContain('满铺中高云叠加偏脏空气');
+      expect(html).not.toContain('开口暖色散射');
     });
 
     test('太阳方向采样不是 opening 时光路条件不能显示良好', () => {
@@ -1049,28 +1150,87 @@ describe('PredictionController', () => {
         { key: 'rendering', title: '空气显色', status: '较弱', desc: 'test', type: 'warning', icon: 'warn', statusTone: 'weak' }
       ], 'test');
 
-      expect(html).toContain('analysis-factor-status-good');
-      expect(html).toContain('analysis-factor-status-fair');
-      expect(html).toContain('analysis-factor-status-mild');
-      expect(html).toContain('analysis-factor-status-weak');
+      expect(html).not.toContain('analysis-factor-status');
+      expect(html).not.toContain('analysis-factor-subfact');
+      expect(html).toContain('analysis-factor-tag">较好</span>');
+      expect(html).toContain('analysis-factor-tag">一般</span>');
+      expect(html).toContain('analysis-factor-tag">轻微</span>');
+      expect(html).toContain('analysis-factor-tag">较弱</span>');
+      expect(html).toContain('analysis-factor-good');
+      expect(html).toContain('analysis-factor-fair');
+      expect(html).toContain('analysis-factor-mild');
+      expect(html).toContain('analysis-factor-weak');
     });
 
     test('分析卡片最终 CSS 应保持上下文案左对齐且可换行', () => {
       const css = fs.readFileSync(path.join(rootDir, 'styles/main.css'), 'utf8');
-      const finalRules = css.slice(css.lastIndexOf('formation analysis cards must read like compact notes'));
+      const finalRules = css.slice(css.lastIndexOf('formation analysis reads as a compact diagnostic list'));
 
+      expect(finalRules).toContain('analysis-card-head');
+      expect(finalRules).toContain('analysis-card-subtitle');
       expect(finalRules).toContain('analysis-factor-grid');
+      expect(finalRules).toContain('grid-template-columns: repeat(2, minmax(0, 1fr))');
       expect(finalRules).toContain('analysis-factor-heading');
-      expect(finalRules).toContain('analysis-factor-status-good');
-      expect(finalRules).toContain('analysis-factor-status-fair');
-      expect(finalRules).toContain('analysis-factor-status-mild');
-      expect(finalRules).toContain('analysis-factor-status-weak');
-      expect(finalRules).toContain('grid-template-columns: 22px minmax(0, 1fr)');
+      expect(finalRules).toContain('analysis-factor-tag');
+      expect(finalRules).toContain('border: 1px solid color-mix(in srgb, var(--theme-card-border) 55%');
+      expect(finalRules).toContain('analysis-factor-good .analysis-factor-tag');
+      expect(finalRules).toContain('analysis-factor-fair .analysis-factor-tag');
+      expect(finalRules).toContain('analysis-factor-weak .analysis-factor-tag');
+      expect(finalRules).not.toContain('analysis-factor-summary');
+      expect(finalRules).not.toContain('analysis-factor-status');
+      expect(finalRules).not.toContain('analysis-factor-subfact');
+      expect(finalRules).toContain('grid-template-columns: 22px minmax(0, 1fr) auto');
+      expect(finalRules).toContain('grid-template-columns: 16px minmax(0, 1fr) max-content');
+      expect(finalRules).toContain('max-width: 44px');
+      expect(finalRules).toContain('html:not([lang^="zh"]) .app-analysis-card .analysis-factor-grid');
+      expect(finalRules).toContain('grid-template-columns: 1fr');
+      expect(finalRules).toContain('white-space: nowrap');
+      expect(finalRules).toContain('word-break: keep-all');
       expect(finalRules).toContain('display: grid !important');
       expect(finalRules).toContain('white-space: normal !important');
       expect(finalRules).toContain('text-align: left !important');
       expect(finalRules).not.toContain('display: contents');
       expect(finalRules).not.toContain('text-align: right');
+    });
+
+    test('预测卡分享和反馈按钮保持同一行动区布局', () => {
+      const html = predictionController.renderSinglePrediction({
+        score: 72,
+        quality: 'good',
+        type: 'sunset',
+        time: '2026-06-13T11:30:00Z',
+        sunsetTime: new Date('2026-06-13T19:30:00+08:00'),
+        timezone: 'Asia/Shanghai',
+        sunAzimuth: null,
+        cloudLayers: { high: 88, mid: 42, low: 4 },
+        visibility: 18,
+        humidity: 58,
+        factors: {},
+        getOptimalViewingWindow: () => ({
+          start: new Date('2026-06-13T19:00:00+08:00'),
+          end: new Date('2026-06-13T20:00:00+08:00')
+        }),
+        shouldShowAzimuth: () => false
+      }, '', '晚霞', '日落时间', '今天', 'sunset');
+      const css = fs.readFileSync(path.join(rootDir, 'styles/main.css'), 'utf8');
+      const shareCss = fs.readFileSync(path.join(rootDir, 'styles/share-panel.css'), 'utf8');
+
+      expect(html).toContain('prediction-share-footer-row');
+      expect(html).toContain('prediction-nav-feedback');
+      expect(html.indexOf('prediction-share-menu prediction-share-footer')).toBeLessThan(html.indexOf('prediction-nav-feedback'));
+      expect(css).toMatch(/\.prediction-share-footer-row\s*\{[\s\S]*?display:\s*grid;/);
+      expect(css).toMatch(/\.prediction-share-footer-row\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/);
+      expect(css).toMatch(/\.prediction-nav-feedback\s*\{[\s\S]*?max-width:\s*none;/);
+      expect(css).toMatch(/\.prediction-nav-feedback\s*\{[\s\S]*?padding:\s*0 18px !important;/);
+      expect(css).toMatch(/\.prediction-nav-feedback \.share-btn-icon\s*\{[\s\S]*?width:\s*18px !important;/);
+      expect(css).toMatch(/\.prediction-nav-feedback \.share-btn-icon\s*\{[\s\S]*?height:\s*18px !important;/);
+      expect(css).toMatch(/\.prediction-nav-feedback \.share-btn-label\s*\{[\s\S]*?text-overflow:\s*ellipsis;/);
+      expect(css).toMatch(/\.prediction-app-nav-compact \.prediction-share-menu\s*\{[\s\S]*?width:\s*100%;/);
+      expect(shareCss).toMatch(/\.prediction-share-footer-row\s*\{[\s\S]*?display:\s*grid !important;/);
+      expect(shareCss).toMatch(/\.prediction-share-footer-row\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/);
+      expect(shareCss).toMatch(/\.prediction-share-footer \.prediction-share-btn\s*\{[\s\S]*?width:\s*100%;/);
+      expect(shareCss).toMatch(/\.prediction-nav-feedback\s*\{[\s\S]*?height:\s*40px;/);
+      expect(shareCss).not.toMatch(/\.prediction-share-footer-row\s*\{[\s\S]*?display:\s*flex !important;/);
     });
   });
 

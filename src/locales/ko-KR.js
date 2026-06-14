@@ -44,10 +44,16 @@
       "loginTab": "로그인",
       "registerTab": "가입",
       "forgotTab": "비밀번호 찾기",
+      "linksAria": "계정 보조 작업",
+      "registerLink": "계정 만들기",
+      "forgotLink": "비밀번호 찾기",
+      "backToLogin": "로그인으로 돌아가기",
       "emailLabel": "이메일",
       "passwordLabel": "비밀번호",
+      "confirmPasswordLabel": "비밀번호 확인",
       "passwordPlaceholder": "비밀번호를 입력하세요",
       "passwordMinPlaceholder": "6자 이상",
+      "confirmPasswordPlaceholder": "비밀번호를 다시 입력하세요",
       "recoveryQuestionLabel": "복구 질문",
       "recoveryQuestionPlaceholder": "예: 처음 노을을 보러 간 도시는?",
       "recoveryAnswerLabel": "복구 답변",
@@ -64,6 +70,7 @@
       "registerSuccess": "계정이 생성되었습니다.",
       "resetSuccess": "비밀번호가 재설정되었습니다. 새 비밀번호로 로그인하세요.",
       "requestFailed": "계정 요청에 실패했습니다.",
+      "passwordMismatch": "두 비밀번호가 일치하지 않습니다.",
       "done": "완료.",
       "recoveryQuestionFallback": "계정이 있으면 복구 답변과 새 비밀번호를 입력하세요.",
       "recoveryQuestionUnavailable": "복구 질문을 일시적으로 사용할 수 없습니다. 답변과 새 비밀번호는 계속 시도할 수 있습니다."
@@ -114,7 +121,8 @@
             shareMap: '공유 지도',
       "firecloudMap": "Firecloud Map",
       user: '내 계정',
-apiAccess: 'API 연동'
+apiAccess: 'API 연동',
+      feedback: 'Feedback'
     },
     "menu": {
       "ariaLabel": "페이지 전환",
@@ -174,16 +182,28 @@ apiAccess: 'API 연동'
     "methodology": {
       "title": "화염구름 점수 계산 방법",
       "intro": "화염구름 지수는 4가지 주요 요인을 종합하여 계산되며, 해당 날의 노을 관람이 가치 있는지 빠르게 판단하는 데 도움을 줍니다.",
-      "versionLabel": "알고리즘 버전: 2026.05.27-cloud-thickness-proportional-v2",
-      "versionDesc": "이번 버전은 구름 두께 감점을 '두께 보정 전 캔버스 점수 × 30% × 두께 압력'으로 바꾸고, 고정 -28/24 상한을 제거하며, 습한 회색 장막 사례를 약한 노을/볼 만하지만 강하지 않은 범위로 보정합니다.",
+      "versionLabel": 'Algorithm version: 2026.06.06-gray-veil-directional-carrier-v2',
+      "versionDesc": 'This version still uses cloud carrier × sunset path × air rendering, but separates open-path warm scattering, full-deck gray veil, and sun-direction mid-cloud bands. Moderate particles only add warmth when the deck is not gray and the path is open; full mid/high cloud with dirty air continuously suppresses rendering.',
       changelogTitle: "버전 업데이트 기록",
       changelogHint: "최근 3개월의 알고리즘 업데이트를 여기에 모았습니다. 스크롤해 변경 이유, 영향, 검증 내용을 확인할 수 있습니다",
       changelog: {
         "latest": {
-          "date": "2026-05-27",
-          "title": "구름 두께 비례 감점 v2",
-          "summary": "구름 두께 감점은 이제 두께 보정 전 캔버스 점수 × 30% × 두께 압력이며, 고정 -28/24 상한을 제거했습니다. 습한 회색 장막은 약한 노을/볼 만하지만 강하지 않은 범위로 보정됩니다.",
-          "validation": "검증: 2026-05-27 베이징 샘플에서 두께 압력 0.78, 캔버스 76.7이면 약 -18점이 적용되어 결과가 약한 노을/볼 만한 범위에 남습니다."
+          "date": "2026-06-12",
+          "title": "Layer-weighted brightness formula v1",
+          "summary": "Adds layerBrightness: mid/high clouds are only the carrier, and an open path is only necessary. The model now checks whether that layer is actually illuminated. Weak brightness now applies a multiplicative score gate instead of a hard ceiling.",
+          "validation": "Validation: the 2026-06-12 Beijing sunset sample drops from the high-60s to around 60; web score details, text analysis, and the mini-program methodology page now show layer brightness."
+        },
+        "grayVeilDirectional": {
+          "date": "2026-06-06",
+          "title": "Gray-veil rendering + directional mid-cloud v2",
+          "summary": "Full mid/high cloud plus elevated PM/AOD no longer defaults to warm-scattering uplift; the model continuously lowers air rendering by gray-veil pressure. Sun-direction mid-cloud bands are now a continuous carrier: stronger band plus more open path moves toward the 50-60 range.",
+          "validation": "Validation: 2026-06-03 Beijing warm scattering stays in the 70 band; 2026-06-04 directional mid-cloud replays around 53.5; 2026-06-05 full gray veil falls around 44; all real calibration cases replay."
+        },
+        "scoringV2": {
+          "date": "2026-06-03",
+          "title": "Sunset scoring v2",
+          "summary": "The final score now combines cloud carrier, sunset path, and air rendering. With an open path and acceptable visibility, moderate AOD, PM, and dust are treated as warm orange-red scattering instead of automatic gray-curtain failure.",
+          "validation": "Validation: 2026-06-02 Beijing remains low around 30; the 2026-06-03 detailed point forecast replays around 71 and reaches the 70 band, while the fire-cloud map still uses the regional simplified branch."
         },
         "cloudThickness": {
           "date": "2026-05-27",
@@ -346,6 +366,19 @@ apiAccess: 'API 연동'
     "permissionDenied": "위치 권한을 가져올 수 없습니다. 수동으로 입력해주세요",
     "loading": "위치를 가져오는 중..."
   },
+  feedback: {
+    kicker: 'Prediction Feedback', title: 'Prediction feedback', subtitle: 'Submit missed, wrong, or overstated predictions. We save the score, weather snapshot, cloud data, location, and images for review.',
+    button: 'Feedback', closeAria: 'Close feedback dialog', typeLabel: 'Feedback type',
+    missed: 'Missed: real sky was good but score was low', wrong: 'Wrong: real sky was poor but score was high', overstated: 'Overstated: some color but not worth a high recommendation',
+    missedShort: 'Missed', wrongShort: 'Wrong', overstatedShort: 'Overstated',
+    missedHint: 'The real sky was good, but the predicted score was low.', wrongHint: 'The real sky was poor, but the predicted score was high.', overstatedHint: 'There was color, but the result was too weak for a high recommendation.',
+    commentLabel: 'Comment', commentPlaceholder: 'Describe clouds, color, blockage, and timing on site', nicknameLabel: 'Nickname', emailLabel: 'Email', photoLabel: 'Images (up to 2)',
+    submit: 'Submit feedback', cancel: 'Cancel', loginRequired: 'Please log in before submitting feedback.', loginAction: 'Log in',
+    dateLabel: 'Date', locationLabel: 'Location name', locationPlaceholder: 'Beijing Jingshan', latLabel: 'Latitude', lonLabel: 'Longitude', periodLabel: 'Type', sunrise: 'Sunrise', sunset: 'Sunset',
+    manualHelp: 'We will try to fetch the prediction snapshot for the selected date and place. If the date is out of range, feedback cannot be submitted.', openWindowHint: 'Feedback is open from 1 hour before sunrise/sunset until 45 minutes after the event.', windowClosed: 'Feedback is not open now. It is only open from 1 hour before sunrise/sunset until 45 minutes after the event.',
+    fetchSnapshot: 'Fetching prediction snapshot...', rangeExpired: 'This date is outside the feedback range.', submitting: 'Submitting feedback...', submitFailed: 'Failed to submit feedback', success: 'Feedback submitted. Thanks for helping us calibrate the forecast.', tooManyPhotos: 'You can upload up to 2 images.'
+  },
+
   "weather": {
     "title": "날씨 정보",
     "current": "현재 날씨",
@@ -375,6 +408,7 @@ apiAccess: 'API 연동'
     "hourly": "시간별 예보",
     "threeDayGlow": "3일 노을",
     "threeDayGlowLoading": "3일치 로딩 중...",
+    "threeDayGlowReferenceNote": "하루 이후의 확률은 정확하지 않을 수 있으며 참고용입니다.",
     "daysOverview": "{{days}}일 개요",
     "precipChance": "{{prob}}% 강수",
     unavailable: {
@@ -440,6 +474,7 @@ apiAccess: 'API 연동'
         "whyThisScore": "Why this score",
         "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
         "gatedFormula": "{{carrier}} × light-path gate {{gate}} = {{base}}",
+        "layerSumFormula": "Σ(carrier × brightness) = {{base}}",
         "canvasPlusLightPath": "canvas + light path",
         "renderingFormula": "{{base}} adjusted by rendering = {{rendered}}",
         "renderingMultiplierFormula": "{{base}} × rendering {{factor}} = {{rendered}}",
@@ -459,6 +494,7 @@ apiAccess: 'API 연동'
         "labels": {
           "cloudCarrier": "Cloud carrier",
           "lightPath": "Light path",
+          "layerBrightness": "Layer brightness",
           "baseScore": "Base score",
           "rendering": "Rendering",
           "final": "Final",
@@ -473,6 +509,7 @@ apiAccess: 'API 연동'
           "displayCalibration": "Display calibration",
           "aerosolCarrier": "Aerosol carrier",
           "scoringV2": "Open-path warm scattering",
+          "grayVeilAirRendering": "Gray-veil rendering",
           "evidence": "Calculation evidence"
         },
         "details": {
@@ -486,7 +523,10 @@ apiAccess: 'API 연동'
           "lowSolarTransmissionNo": "해당 없음",
           "aerosolCarrier": "thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}",
           "scoringV2": "cloud carrier {{carrier}} × sunset path {{path}} × air rendering {{air}}",
+          "grayVeilAirRendering": "full mid/high cloud with dirty air: carrier {{carrier}} × path {{path}} × suppressed air rendering {{air}}",
           "lightPath": "sunlight reaches the cloud layer",
+          "layerBrightnessShort": "sun direction, blockage, and illumination evidence explain whether each carrier layer is lit",
+          "layerBrightness": "brightness {{brightness}}, gate {{gate}}; layer carrier {{canvas}}, low-cloud block {{low}} / transmission {{lowBlock}}, solar {{solar}}, path {{path}}, air {{air}}, thickness {{thickness}}, beam {{beam}}",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
           "afterAdjustments": "after weather and visibility adjustments",
           "finalDisplayed": "final displayed result",
@@ -496,6 +536,7 @@ apiAccess: 'API 연동'
           "occlusion": "distant obstruction reduces the score",
           "carrierFloor": "clear high-cloud carrier prevents over-penalty",
           "directionalSamples": "nearby clouds along the sun direction are included",
+          "lightPathScoreEvidence": "path evidence score {{light}} is folded into brightness",
           "lightPathLowCloudBlock": "low clouds block sunlight from reaching the colorable clouds",
           "lightPathRain": "rain weakens direct sunset light",
           "postRainCap": "post-rain moisture or haze turns the glow into a gray curtain",
@@ -515,6 +556,7 @@ apiAccess: 'API 연동'
           "severeHazeCap35": "heavy haze makes colors hard to show",
           "moderateHazeCap45": "haze weakens orange-red color",
           "hazeWarmScatteringPathOpen": "open sunset path turns moderate particles into warm orange-red scattering",
+          "fullUpperCloudGrayVeilAirRendering": "full mid/high cloud plus dirty air suppresses color rendering",
           "denseCarrierCanvasOnly": "mid/high clouds can still catch sunset light",
           "adjustmentApplied": "score adjusted for limiting conditions",
           "displayCalibration": "final display score is aligned with the prediction status band",
@@ -1073,6 +1115,7 @@ apiAccess: 'API 연동'
     "surroundingFair": "주변 지역의 노을구름 관측 조건은 보통입니다",
     "scoreWithQuality": "{{score}}점 - {{quality}}",
     "pointToast": "{{name}} 방향 | 점수: {{score}}점 | 거리: {{distance}}km",
+    "layerLoading": "노을구름 레이어를 불러오는 중...",
     "emptyChinaSpots": "오늘 표시할 수 있는 노을구름 지점이 없습니다",
     "updatedAt": "{{time}} 업데이트",
     "supportedRegions": "현재 지원: 중국 본토, 홍콩, 마카오, 대만, 일본, 대한민국, 북한 및 인도차이나반도 주요 도시. 히트맵 격자는 현재 중국 지역 중심입니다.",

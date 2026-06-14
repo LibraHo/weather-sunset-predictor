@@ -17,7 +17,7 @@ import NotificationService from '../services/NotificationService.js';
 import i18n from '../i18n.js';
 import { loadConfig } from '../../config.api.js';
 
-const EVENT_PASSED_BUFFER_MS = 30 * 60 * 1000;
+const EVENT_PASSED_BUFFER_MS = 45 * 60 * 1000;
 
 // 分享面板状态
 let sharePanelInstance = null;
@@ -1284,6 +1284,14 @@ class PredictionController {
       });
     });
 
+    predictionDisplay.querySelectorAll('.prediction-feedback-btn').forEach((btn) => {
+      const type = btn.dataset.type;
+      const prediction = type === 'sunrise' ? displaySunrise : displaySunset;
+      btn.addEventListener('click', () => {
+        window.feedbackController?.openPredictionFeedback?.(prediction, type);
+      });
+    });
+
     const closestElement = (target, selector) => {
       if (!target) return null;
       if (typeof target.closest === 'function') {
@@ -1468,6 +1476,13 @@ class PredictionController {
                 </button>
               </div>
             </div>
+            <button class="prediction-feedback-btn prediction-nav-share prediction-nav-feedback" data-type="${type}" type="button" aria-label="${this.i18n.t('feedback.button', '反馈')}">
+              <svg class="share-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/>
+                <path d="M8 9h8M8 13h5"/>
+              </svg>
+              <span class="share-btn-label">${this.i18n.t('feedback.button', '反馈')}</span>
+            </button>
           </div>
           <div class="prediction-app-footer">${this._uiText('Observe the sky · Catch the beauty', '观天有时 · 收获美景')}</div>
         </div>
@@ -1539,23 +1554,28 @@ class PredictionController {
     if (translated !== fullKey) return translated;
 
     const fallback = {
-      'title': '火烧云形成条件分析',
+      'title': '火烧云文字分析',
       'groups.positive': '有利条件', 'groups.neutral': '一般因素', 'groups.warning': '注意因素',
       'factors.carrier.title': '云层载体',
       'factors.carrier.status.good': '较好', 'factors.carrier.status.fair': '一般', 'factors.carrier.status.weak': '较弱',
-      'factors.carrier.desc.good': '中高云能承接日落光线，是今天主要的显色画布。',
-      'factors.carrier.desc.fair': '有一些可被染色的云层，但面积或高度不够理想。',
-      'factors.carrier.desc.weak': '缺少合适的中高云，天空不容易形成大片火烧云。',
+      'factors.carrier.desc.good': '中高云提供可染色云面，具备承接霞光的基础。',
+      'factors.carrier.desc.fair': '有可染色云面，但面积、高度或稳定性不够理想。',
+      'factors.carrier.desc.weak': '可染色云面不足，难形成成片火烧云。',
       'factors.lightPath.title': '光路条件',
       'factors.lightPath.status.good': '较好', 'factors.lightPath.status.fair': '一般', 'factors.lightPath.status.weak': '较弱',
       'factors.lightPath.desc.good': '太阳方向相对通透，光线有机会照到云底。',
       'factors.lightPath.desc.fair': '太阳方向有一定遮挡，晚霞可能只出现在局部。',
       'factors.lightPath.desc.weak': '低云或阻挡走廊挡住光路，光线不容易打到云层。',
+      'factors.brightness.title': '受光亮度',
+      'factors.brightness.status.good': '充足', 'factors.brightness.status.fair': '一般', 'factors.brightness.status.weak': '偏弱',
+      'factors.brightness.desc.good': '可显色云层有足够受光证据，颜色更容易出来。',
+      'factors.brightness.desc.fair': '云层存在但亮度一般，可能只出现局部或偏淡色彩。',
+      'factors.brightness.desc.weak': '云量虽然够，但直射弱、水汽或灰幕证据会压低真实亮度。',
       'factors.rendering.title': '空气显色',
       'factors.rendering.status.good': '较好', 'factors.rendering.status.fair': '一般', 'factors.rendering.status.weak': '较弱',
       'factors.rendering.desc.good': '空气里有适度颗粒和水汽，颜色更容易偏暖、偏红。',
       'factors.rendering.desc.fair': '空气条件普通，颜色表现主要看云层和光路。',
-      'factors.rendering.desc.weak': '空气偏灰或颗粒过重，颜色容易变暗、变淡。',
+      'factors.rendering.desc.weak': '空气偏灰或颗粒过重，满铺云幕容易把颜色压暗、压淡。',
       'factors.limits.title': '限制因素',
       'factors.limits.status.good': '无明显', 'factors.limits.status.fair': '轻微', 'factors.limits.status.weak': '明显',
       'factors.limits.desc.good': '没有明显压制条件。',
@@ -1583,6 +1603,8 @@ class PredictionController {
       'aerosol.extremeHaze': '沙尘/灰幕很重', 'aerosol.extremeHazeDesc': '高云虽多，但空气光学条件失效，霞光容易被压成灰黄色',
       'aerosol.hazeCap': '灰幕风险明显', 'aerosol.hazeCapDesc': '颗粒物或气溶胶偏高，会削弱红橙色染色',
       'aerosol.carrier': '薄雾红日载体', 'aerosol.carrierDesc': '云层很少时，适度气溶胶在光路通畅时也能带来一点暖色日落',
+      'brightness.weak': '云层亮度偏弱', 'brightness.weakDesc': '系统看到云量和光路，但水汽、AOD、漫射光或厚高云证据显示这层云未必能被充分照亮',
+      'brightness.good': '云层受光较好', 'brightness.goodDesc': '载体、光路和空气条件共同支持中高云被照亮',
       'lightPath.opening': '太阳方向有透光开口', 'lightPath.openingDesc': '后端沿太阳方位采样 10/25/50/75/100km，低中云走廊较通畅，光线更容易打到云层',
       'lightPath.wall': '太阳方向有阻挡走廊', 'lightPath.wallDesc': '太阳方位周边低/中云整体偏厚，光路门控会压低主评分',
       'lightPath.lowCloudBlock': '低云遮住光线', 'lightPath.lowCloudBlockDesc': '低云挡在太阳方向，阳光不容易照到中高云',
@@ -1742,6 +1764,8 @@ class PredictionController {
     const scoringV2 = prediction?.scoringV2;
     const lightPathAnalysis = prediction?.lightPathAnalysis || {};
     const directional = lightPathAnalysis.directionalAnalysis;
+    const layerBrightness = prediction?.layerBrightness || prediction?.breakdown?.layerBrightness;
+    const layerBrightnessAdjustment = prediction?.layerBrightnessAdjustment || prediction?.breakdown?.layerBrightnessAdjustment;
 
     const carrierScore = Number(
       prediction?.breakdown?.carrierScore ??
@@ -1786,13 +1810,27 @@ class PredictionController {
       lightPathLevel = lightPathScore >= 45 ? 'fair' : 'weak';
     }
 
+    const effectiveBrightness = Number(layerBrightness?.effectiveBrightness);
+    const brightnessMultiplier = Number(layerBrightnessAdjustment?.multiplier ?? layerBrightness?.brightnessMultiplier ?? layerBrightness?.brightnessGate);
+    const brightnessGated = layerBrightnessAdjustment?.applied || (Number.isFinite(brightnessMultiplier) && brightnessMultiplier < 0.72);
+    let brightnessLevel = 'fair';
+    if (!layerBrightness?.applied && !Number.isFinite(effectiveBrightness)) {
+      brightnessLevel = lightPathLevel === 'good' && carrierLevel !== 'weak' ? 'good' : 'fair';
+    } else if (brightnessGated || effectiveBrightness < 30) {
+      brightnessLevel = 'weak';
+    } else if (effectiveBrightness >= 45 || layerBrightness?.reason === 'layer_brightness_sufficient') {
+      brightnessLevel = 'good';
+    }
+
     const renderingFactor = Number(prediction?.breakdown?.renderingFactor ?? prediction?.renderingAnalysis?.factor);
     const aod = Number(weather.aod);
     const grayCurtainMode = postRainAdjustment?.mode === 'post_rain_gray_curtain' || postRainAdjustment?.mode === 'humid_haze_gray_curtain';
     let renderingLevel = 'fair';
+    const grayVeilAirSuppression = scoringV2?.airMode === 'gray_veil_air_suppression';
     if (scoringV2?.airMode === 'warm_scattering_path_open') {
       renderingLevel = 'good';
     } else if (
+      grayVeilAirSuppression ||
       grayCurtainMode ||
       aerosolHazeCap?.applied ||
       weather.visibility < 8 ||
@@ -1816,6 +1854,7 @@ class PredictionController {
     const strongLimit = Boolean(
       prediction?.severeWeatherCap?.reason ||
       aerosolHazeCap?.applied ||
+      layerBrightnessAdjustment?.applied ||
       thickHighCloudPenalty?.applied ||
       prediction?.geometricModel?.feasible === false ||
       prediction?.occlusionAnalysis?.occluded ||
@@ -1826,9 +1865,11 @@ class PredictionController {
     );
     const mildLimit = Boolean(
       denseCarrierCanvasOnly ||
+      (Number.isFinite(brightnessMultiplier) && brightnessMultiplier < 0.9) ||
       weather.low >= 25 ||
       weather.visibility < 15 ||
       weather.humidity > 75 ||
+      grayVeilAirSuppression ||
       (scoringV2?.airMode !== 'warm_scattering_path_open' && Number.isFinite(aod) && aod > 0.35) ||
       precipitation > 0.1
     );
@@ -1848,12 +1889,44 @@ class PredictionController {
       icon
     });
 
+    const carrierFactor = factor('carrier', carrierLevel, 'cloud');
+    carrierFactor.summary = this._isEnglishUI()
+      ? (carrierLevel === 'good' ? 'Usable color canvas' : (carrierLevel === 'weak' ? 'Weak cloud canvas' : 'Partial cloud canvas'))
+      : (carrierLevel === 'good' ? '有可染色云面' : (carrierLevel === 'weak' ? '云面基础偏弱' : '云面基础一般'));
+    carrierFactor.desc = this._buildCarrierAnalysisDesc(carrierLevel, brightnessLevel);
+
     return [
-      factor('carrier', carrierLevel, 'cloud'),
-      factor('lightPath', lightPathLevel, lightPathLevel === 'weak' ? 'warn' : 'info'),
-      factor('rendering', renderingLevel, 'leaf'),
-      factor('limits', limitLevel, limitLevel === 'good' ? 'ok' : 'warn')
+      carrierFactor,
+      Object.assign(factor('lightPath', lightPathLevel, lightPathLevel === 'weak' ? 'warn' : 'info'), {
+        insight: this._isEnglishUI()
+          ? (lightPathLevel === 'good' ? 'Sun path is open' : (lightPathLevel === 'weak' ? 'Sun path is blocked' : 'Some path obstruction'))
+          : (lightPathLevel === 'good' ? '太阳方向较通透' : (lightPathLevel === 'weak' ? '光路遮挡明显' : '光路有局部遮挡'))
+      }),
+      Object.assign(factor('rendering', renderingLevel, 'leaf'), {
+        insight: this._isEnglishUI()
+          ? (renderingLevel === 'good' ? 'Warm color support' : (renderingLevel === 'weak' ? 'Colors may fade' : 'Neutral air color'))
+          : (renderingLevel === 'good' ? '有暖色散射条件' : (renderingLevel === 'weak' ? '颜色容易被压淡' : '显色条件中性'))
+      }),
+      Object.assign(factor('limits', limitLevel, limitLevel === 'good' ? 'ok' : 'warn'), {
+        insight: this._isEnglishUI()
+          ? (limitLevel === 'good' ? 'No hard cap now' : (limitLevel === 'weak' ? 'Strong score pressure' : 'Minor score pressure'))
+          : (limitLevel === 'good' ? '暂无硬压制' : (limitLevel === 'weak' ? '存在明显压分' : '有轻微压分'))
+      })
     ];
+  }
+
+  _buildCarrierAnalysisDesc(carrierLevel, brightnessLevel) {
+    if (this._isEnglishUI()) {
+      if (carrierLevel === 'weak') return 'The colorable cloud canvas is limited, or the lit portion is too weak for broad fire clouds.';
+      if (brightnessLevel === 'good') return 'Mid/high clouds provide a colorable canvas, and the lit portion is strong enough to support visible color.';
+      if (brightnessLevel === 'weak') return 'There is some colorable cloud canvas, but the lit portion is weak, so color may stay faint or local.';
+      return 'Some colorable cloud canvas is present, but height, coverage, or illumination is not ideal.';
+    }
+
+    if (carrierLevel === 'weak') return '可染色云面不足，或真正被照亮的部分偏弱，难形成成片火烧云。';
+    if (brightnessLevel === 'good') return '中高云提供可染色云面，受光也够，具备显色基础。';
+    if (brightnessLevel === 'weak') return '有可染色云面，但真正被照亮的部分偏弱，颜色可能偏淡或只出现在局部。';
+    return '有可染色云面，但面积、高度或受光稳定性一般，表现更偏局部。';
   }
 
   extractAnalysisWeather(prediction) {
@@ -1907,7 +1980,10 @@ class PredictionController {
       : groups.map(group => this.renderAnalysisGroup(group)).join('');
     return `
       <div class="analysis-card app-analysis-card">
-        <div class="analysis-card-title"><span>${this._analysisText('title')}</span></div>
+        <div class="analysis-card-head">
+          <div class="analysis-card-title"><span>${this._analysisText('title')}</span></div>
+          <div class="analysis-card-subtitle">${this._uiText('Cloud, path, air, limits', '云层、光路、空气和限制项')}</div>
+        </div>
         ${groupHtml}
       </div>
     `;
@@ -1938,13 +2014,16 @@ class PredictionController {
   }
 
   renderAnalysisFactor(factor) {
-    const statusTone = ['good', 'fair', 'mild', 'weak'].includes(factor.statusTone) ? factor.statusTone : 'fair';
+    const toneClass = factor.statusTone || factor.type;
+    const statusHtml = factor.status
+      ? `<span class="analysis-factor-tag">${factor.status}</span>`
+      : '';
     return `
-      <section class="analysis-factor analysis-factor-${factor.type} analysis-factor-${factor.key}">
+      <section class="analysis-factor analysis-factor-${factor.type} analysis-factor-${toneClass} analysis-factor-${factor.key}">
         <div class="analysis-factor-heading">
           <span class="analysis-factor-icon">${this.renderInlineSvgIcon(factor.icon)}</span>
           <span class="analysis-factor-title">${factor.title}</span>
-          <strong class="analysis-factor-status analysis-factor-status-${statusTone}">${factor.status}</strong>
+          ${statusHtml}
         </div>
         <p>${factor.desc}</p>
       </section>
@@ -1982,15 +2061,16 @@ class PredictionController {
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
 
-    const baseScore = prediction?.breakdown?.baseScore;
-    const canvasScore = prediction?.canvasAnalysis?.score ?? prediction?.breakdown?.canvasScore;
-    const carrierScore = prediction?.carrierAnalysis?.score ?? prediction?.breakdown?.carrierScore ?? canvasScore;
-    const lightPathScore = prediction?.lightPathAnalysis?.score ?? prediction?.breakdown?.lightPathScore;
-    const lightPathGate = prediction?.lightPathGate?.gate ?? prediction?.breakdown?.lightPathGate;
-    const renderingFactor = prediction?.renderingAnalysis?.factor ?? prediction?.breakdown?.renderingFactor;
-    const renderingAdjustment = prediction?.renderingAdjustment?.adjustment ?? prediction?.breakdown?.renderingAdjustment;
-    const renderingMode = prediction?.renderingAdjustment?.reason ?? prediction?.breakdown?.renderingMode;
-    const renderedScore = prediction?.breakdown?.unclampedFinalScore;
+    const breakdown = prediction?.breakdown || {};
+    const baseScore = breakdown.baseScore;
+    const canvasScore = prediction?.canvasAnalysis?.score ?? breakdown.canvasScore;
+    const carrierScore = prediction?.carrierAnalysis?.score ?? breakdown.carrierScore ?? canvasScore;
+    const lightPathScore = prediction?.lightPathAnalysis?.score ?? breakdown.lightPathScore;
+    const lightPathGate = prediction?.lightPathGate?.gate ?? breakdown.lightPathGate;
+    const renderingFactor = prediction?.renderingAnalysis?.factor ?? breakdown.renderingFactor;
+    const renderingAdjustment = prediction?.renderingAdjustment?.adjustment ?? breakdown.renderingAdjustment;
+    const renderingMode = prediction?.renderingAdjustment?.reason ?? breakdown.renderingMode;
+    const renderedScore = breakdown.unclampedFinalScore;
     const finalScore = prediction?.score;
     const aerosol = prediction?.breakdown?.aerosolScattering;
     const aerosolCarrier = prediction?.aerosolCarrierScore || prediction?.breakdown?.aerosolCarrierScore;
@@ -2010,6 +2090,9 @@ class PredictionController {
     const directionalCurtainCarrier = prediction?.directionalCurtainCarrier || prediction?.breakdown?.directionalCurtainCarrier;
     const postRainAdjustment = prediction?.postRainAdjustment;
     const scoringV2 = prediction?.scoringV2;
+    const layerBrightness = prediction?.layerBrightness || prediction?.breakdown?.layerBrightness;
+    const layerBrightnessAdjustment = prediction?.layerBrightnessAdjustment || prediction?.breakdown?.layerBrightnessAdjustment;
+    const brightnessMultiplier = layerBrightnessAdjustment?.multiplier ?? layerBrightness?.brightnessMultiplier ?? layerBrightness?.brightnessGate;
     const severeWeatherCap = prediction?.severeWeatherCap;
     const occlusionAnalysis = prediction?.occlusionAnalysis;
     const geometricModel = prediction?.geometricModel;
@@ -2051,7 +2134,8 @@ class PredictionController {
       extreme_dust_haze_cap_28: ledgerText('reasons.extremeDustHazeCap28', {}, 'heavy dust or haze suppresses the glow', '强沙尘或灰幕会压住霞光'),
       severe_haze_cap_35: ledgerText('reasons.severeHazeCap35', {}, 'heavy haze makes colors hard to show', '重度灰霾让颜色不容易出来'),
       moderate_haze_cap_45: ledgerText('reasons.moderateHazeCap45', {}, 'haze weakens orange-red color', '灰霾会削弱红橙色'),
-      haze_warm_scattering_path_open: ledgerText('reasons.hazeWarmScatteringPathOpen', {}, 'open sunset path turns moderate particles into warm orange-red scattering', '日落光路打开，适度颗粒增强橙红散射')
+      haze_warm_scattering_path_open: ledgerText('reasons.hazeWarmScatteringPathOpen', {}, 'open sunset path turns moderate particles into warm orange-red scattering', '日落光路打开，适度颗粒增强橙红散射'),
+      full_upper_cloud_gray_veil_air_rendering: ledgerText('reasons.fullUpperCloudGrayVeilAirRendering', {}, 'full mid/high cloud plus dirty air suppresses color rendering', '满铺中高云叠加偏脏空气，显色转为灰幕抑制')
     }[reason] || reason || ledgerText('reasons.adjustmentApplied', {}, 'score adjusted for limiting conditions', '已按限制条件修正'));
 
     const capEvents = [
@@ -2116,6 +2200,20 @@ class PredictionController {
         detail: ledgerText('details.occlusion', {}, 'distant obstruction reduces the score', '远端遮挡压低最终分'),
         tone: 'bad'
       } : null,
+      layerBrightnessAdjustment?.applied ? {
+        label: ledgerText('labels.layerBrightness', {}, 'Layer brightness', '受光亮度'),
+        value: `×${fmt(layerBrightnessAdjustment.multiplier ?? layerBrightness?.brightnessMultiplier ?? layerBrightness?.brightnessGate ?? 1, 2)}`,
+        detail: ledgerText(
+          'details.layerBrightnessMultiplier',
+          {
+            brightness: fmt(layerBrightness?.effectiveBrightness, 1),
+            evidence: Array.isArray(layerBrightness?.dimEvidence) ? layerBrightness.dimEvidence.join(', ') : '--'
+          },
+          'effective brightness {{brightness}}; dim evidence: {{evidence}}',
+          '有效亮度 {{brightness}}；压暗证据：{{evidence}}'
+        ),
+        tone: 'bad'
+      } : null,
       carrierAdjustment?.applied ? {
         label: ledgerText('labels.carrierFloor', {}, 'Carrier protection', '载体保护'),
         value: `≥${fmt(carrierAdjustment.floor, 0)}`,
@@ -2132,10 +2230,25 @@ class PredictionController {
             path: fmt(scoringV2.pathFactor, 2),
             air: fmt(scoringV2.airFactor, 2)
           },
-          'cloud carrier {{carrier}} × sunset path {{path}} × air rendering {{air}}',
-          '云载体 {{carrier}} × 日落光路 {{path}} × 空气显色 {{air}}'
+          'cloud carrier {{carrier}}; path evidence is folded into layer brightness; air rendering {{air}}',
+          '云载体 {{carrier}}；光路证据已并入分层受光亮度；空气显色 {{air}}'
         ),
         tone: 'good'
+      } : null,
+      scoringV2?.applied && scoringV2?.airMode === 'gray_veil_air_suppression' ? {
+        label: ledgerText('labels.grayVeilAirRendering', {}, 'Gray-veil rendering', '灰幕显色抑制'),
+        value: fmt(scoringV2.score, 1),
+        detail: ledgerText(
+          'details.grayVeilAirRendering',
+          {
+            carrier: fmt(scoringV2.cloudCarrier, 1),
+            path: fmt(scoringV2.pathFactor, 2),
+            air: fmt(scoringV2.airFactor, 2)
+          },
+          'full mid/high cloud with dirty air: carrier {{carrier}}; path evidence is brightness evidence; suppressed air rendering {{air}}',
+          '满铺中高云叠加偏脏空气：云载体 {{carrier}}；光路证据作为亮度证据；灰幕显色 {{air}}'
+        ),
+        tone: 'cap'
       } : null,
       aerosolCarrier?.activatedScore >= 12 ? {
         label: ledgerText('labels.aerosolCarrier', {}, 'Aerosol carrier', '气溶胶载体'),
@@ -2195,7 +2308,7 @@ class PredictionController {
       )
       : Number.isFinite(Number(baseScore)) && Number.isFinite(Number(renderedScore))
         ? ledgerText('summary.rendered', { base: fmt(baseScore, 0), rendered: fmt(renderedScore, 0) }, '{{base}} points adjusted by rendering conditions to {{rendered}}', '{{base}} 分经显色条件修正为 {{rendered}} 分')
-        : ledgerText('summary.default', { score: fmt(finalScore, 0) }, '{{score}} points: calculated from cloud carrier, light path, and rendering conditions', '{{score}} 分：由云层、光路和显色条件综合计算');
+        : ledgerText('summary.default', { score: fmt(finalScore, 0) }, '{{score}} points: calculated from layer carrier, layer brightness, and air rendering', '{{score}} 分：由分层载体、分层受光亮度和空气显色计算');
 
     const step = (index, label, description, result, detail = '', tone = '') => `
       <div class="score-ledger-step ${tone ? `score-ledger-step-${tone}` : ''}">
@@ -2214,15 +2327,15 @@ class PredictionController {
         </div>
       </div>`;
 
-    const weightedDescription = Number.isFinite(Number(carrierScore)) && Number.isFinite(Number(lightPathGate)) && Number.isFinite(Number(baseScore))
-      ? ledgerText('gatedFormula', { carrier: fmt(carrierScore, 1), gate: fmt(lightPathGate, 2), base: fmt(baseScore, 1) }, '{{carrier}} × light-path gate {{gate}} = {{base}}', '{{carrier}} × 光路门控 {{gate}} = {{base}}')
-      : ledgerText('canvasPlusLightPath', {}, 'canvas + light path', '画布 + 光路');
+    const weightedDescription = Number.isFinite(Number(baseScore))
+      ? ledgerText('layerSumFormula', { base: fmt(baseScore, 1) }, 'Σ(layer carrier × layer brightness) = {{base}}', 'Σ(分层载体 × 分层受光亮度) = {{base}}')
+      : ledgerText('canvasPlusLightPath', {}, 'Σ(layer carrier × layer brightness)', 'Σ(分层载体 × 分层受光亮度)');
     const renderingDescription = (() => {
       if (!Number.isFinite(Number(baseScore)) || !Number.isFinite(Number(renderedScore))) {
         return ledgerText('weatherTransparency', {}, 'weather transparency factor', '天气通透度');
       }
-      if (renderingMode === 'negative_rendering_multiplier' && Number.isFinite(Number(renderingFactor))) {
-        return ledgerText('renderingMultiplierFormula', { base: fmt(baseScore, 1), factor: fmt(renderingFactor, 2), rendered: fmt(renderedScore, 1) }, '{{base}} × rendering {{factor}} = {{rendered}}', '{{base}} × 显色系数 {{factor}} = {{rendered}}');
+      if (Number.isFinite(Number(renderingFactor))) {
+        return ledgerText('renderingMultiplierFormula', { base: fmt(baseScore, 1), factor: fmt(renderingFactor, 2), rendered: fmt(renderedScore, 1) }, '{{base}} × air rendering {{factor}} = {{rendered}}', '{{base}} × 空气显色系数 {{factor}} = {{rendered}}');
       }
       if (Number.isFinite(Number(renderingAdjustment))) {
         const sign = Number(renderingAdjustment) >= 0 ? '+' : '-';
@@ -2240,7 +2353,9 @@ class PredictionController {
       }
       return prediction?.lightPathAnalysis?.source === 'solar_direction_openmeteo'
         ? ledgerText('details.directionalSamples', {}, 'solar-azimuth samples at 10/25/50/75/100km are included', '已接入太阳方位 10/25/50/75/100km 周边采样')
-        : '';
+        : Number.isFinite(Number(lightPathScore))
+          ? ledgerText('details.lightPathScoreEvidence', { light: fmt(lightPathScore, 1) }, 'path evidence score {{light}} is folded into brightness', '光路证据 {{light}} 已并入受光亮度')
+          : '';
     })();
 
     const carrierDetail = (() => {
@@ -2253,12 +2368,6 @@ class PredictionController {
           '中高云画布 {{upper}} = 高云 {{high}}×0.75 + 中云 {{mid}}×0.45；区间分 {{range}}'
         ));
       }
-      parts.push(ledgerText(
-        'details.cloudPenalty',
-        { canvas: fmt(canvasScore, 1), low: fmt(prediction?.canvasAnalysis?.lowCloudPenalty, 2), overcast: fmt(prediction?.canvasAnalysis?.overcastPenalty, 2) },
-        'cloud canvas {{canvas}}, low cloud ×{{low}}, overcast ×{{overcast}}',
-        '云画布 {{canvas}}，低云 ×{{low}}，阴天 ×{{overcast}}'
-      ));
       if (Number(prediction?.canvasAnalysis?.highCloudBonus)) {
         parts.push(ledgerText(
           'details.highCloudBonus',
@@ -2308,6 +2417,29 @@ class PredictionController {
       return parts.join('；');
     })();
 
+    const brightnessDetail = (() => {
+      if (!layerBrightness?.applied) return '';
+      const factors = layerBrightness.factors || {};
+      const layers = layerBrightness.layers || {};
+      return ledgerText(
+        'details.layerBrightness',
+        {
+          brightness: fmt(layerBrightness.effectiveBrightness, 1),
+          gate: fmt(layerBrightness.brightnessGate, 2),
+          canvas: fmt(layers.cloudCanvas, 1),
+          low: fmt(layers.low, 1),
+          lowBlock: fmt(factors.lowBlockFactor, 2),
+          solar: fmt(factors.solarFactor, 2),
+          path: fmt(factors.pathFactor, 2),
+          air: fmt(factors.airTransmission, 2),
+          thickness: fmt(factors.thicknessFactor, 2),
+          beam: fmt(factors.beamFactor, 2)
+        },
+        'brightness {{brightness}}, gate {{gate}}; layer carrier {{canvas}}, low-cloud block {{low}} / transmission {{lowBlock}}, solar {{solar}}, path {{path}}, air {{air}}, thickness {{thickness}}, beam {{beam}}',
+        '亮度 {{brightness}}，门控 {{gate}}；分层载体 {{canvas}}，低云遮挡 {{low}} / 透过 {{lowBlock}}，太阳几何 {{solar}}，光路因子 {{path}}，空气 {{air}}，云厚 {{thickness}}，直射/散射 {{beam}}'
+      );
+    })();
+
     const adjustmentHtml = capEvents.length
       ? capEvents.map((event, idx) => step(
         idx + 5,
@@ -2329,10 +2461,10 @@ class PredictionController {
         </div>
         <div class="score-ledger-summary">${escape(summary)}</div>
         <div class="score-ledger-steps">
-          ${step(1, ledgerText('labels.cloudCarrier', {}, 'Carrier', '载体'), ledgerText('details.cloudCarrier', {}, 'usable color carrier from cloud, solar direction, or thin haze', '可被染色的本地云面、日落方向云幕或薄雾载体'), fmt(carrierScore, 1), carrierDetail)}
-          ${step(2, ledgerText('labels.lightPath', {}, 'Light path', '光路'), ledgerText('details.lightPath', {}, 'sunlight reaches the cloud layer', '阳光是否能打到云层'), fmt(lightPathScore, 1), lightPathDetail)}
+          ${step(1, ledgerText('labels.cloudCarrier', {}, 'Cloud carrier', '云层载体'), ledgerText('details.cloudCarrier', {}, 'usable color carrier from cloud layers, solar-direction cloud, or thin haze', '可被染色的本地云面、日落方向云幕或薄雾载体'), fmt(carrierScore, 1), carrierDetail)}
+          ${step(2, ledgerText('labels.layerBrightness', {}, 'Layer brightness', '分层受光亮度'), ledgerText('details.layerBrightnessShort', {}, 'sun direction, blockage, and illumination evidence explain whether each carrier layer is lit', '太阳方向、遮挡和亮度响应共同解释各层载体是否被照亮'), layerBrightness?.applied ? fmt(layerBrightness.effectiveBrightness, 1) : '--', [brightnessDetail, lightPathDetail].filter(Boolean).join('；'))}
           ${step(3, ledgerText('labels.baseScore', {}, 'Base score', '基础分'), weightedDescription, fmt(baseScore, 1))}
-          ${step(4, ledgerText('labels.rendering', {}, 'Rendering', '显色修正'), renderingDescription, fmt(renderedScore, 1), ledgerText('details.renderingFactors', { visibility: fmt(prediction?.renderingAnalysis?.visibilityFactor, 2), humidity: fmt(prediction?.renderingAnalysis?.humidityFactor, 2), aerosol: fmt(aerosolFactor, 2) }, 'visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}', '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}'))}
+          ${step(4, ledgerText('labels.rendering', {}, 'Air rendering', '空气显色'), renderingDescription, fmt(renderedScore, 1), ledgerText('details.renderingFactors', { visibility: fmt(prediction?.renderingAnalysis?.visibilityFactor, 2), humidity: fmt(prediction?.renderingAnalysis?.humidityFactor, 2), aerosol: fmt(aerosolFactor, 2) }, 'visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}', '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}'))}
           ${adjustmentHtml}
           ${step(capEvents.length ? capEvents.length + 5 : 5, ledgerText('labels.final', {}, 'Final', '最终分'), capEvents.length ? ledgerText('details.afterAdjustments', {}, 'after weather and visibility adjustments', '结合天气和能见度后') : ledgerText('details.finalDisplayed', {}, 'final displayed result', '最终展示结果'), fmt(finalScore, 0), '', 'final')}
         </div>

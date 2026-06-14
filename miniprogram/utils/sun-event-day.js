@@ -1,4 +1,4 @@
-const EVENT_PASSED_BUFFER_MS = 30 * 60 * 1000;
+const EVENT_PASSED_BUFFER_MS = 45 * 60 * 1000;
 const DEFAULT_REFERENCE_COORDINATE = { lat: 39.9042, lon: 116.4074 };
 
 export function getDefaultSunEventDay(now = new Date(), { period = 'sunset', coordinate = null, lat = null, lon = null } = {}) {

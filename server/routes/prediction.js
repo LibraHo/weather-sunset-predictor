@@ -29,12 +29,17 @@ const cacheService = new CacheService({ defaultTTL: cacheConfig.ttl.DEFAULT });
 const surroundingService = new SurroundingService({ cacheService });
 
 const CLOSED_LOOP_WEATHER_CACHE_TTL_SECONDS = 120;
-const EVENT_ROLLOVER_BUFFER_MS = 30 * 60 * 1000;
+const EVENT_ROLLOVER_BUFFER_MS = 45 * 60 * 1000;
 const RADAR_WEATHER_FORECAST_HOURS = 48;
 const inFlightWeatherFetches = new Map();
 
 function closedLoopWeatherCacheKey(lat, lon, hours = 168) {
   return `closed-loop-weather:${Number(lat).toFixed(4)}:${Number(lon).toFixed(4)}:${hours}`;
+}
+
+function getCloudBaseHeightSource(weatherData = {}) {
+  const value = Number(weatherData.cloudBaseHeight);
+  return Number.isFinite(value) && value > 0 ? 'provider' : 'unavailable';
 }
 
 async function fetchClosedLoopWeatherData(lat, lon, hours = 168, fetchOptions = {}) {
@@ -189,7 +194,7 @@ function buildWeatherDataFromHourly(selected, hourly, selectedIdx) {
       cloudCover: selected.cloudCover || 0,
       humidity: selected.humidity || 0,
       visibility: selected.visibility || 10,
-      lowCloudCover: selected.lowClouds || selected.cloudCover || 0,
+      lowCloudCover: selected.lowClouds ?? selected.cloudCover ?? 0,
       temp: selected.temp || 0,
       windSpeed: selected.windSpeed || 0,
       windDirection: selected.windDirection || 0,
@@ -204,6 +209,7 @@ function buildWeatherDataFromHourly(selected, hourly, selectedIdx) {
       midClouds: selected.midClouds || 0,
       highClouds: selected.highClouds || 0,
       cloudBaseHeight: selected.cloudBaseHeight ?? null,
+      cloudBaseHeightSource: getCloudBaseHeightSource(selected),
       cape: selected.cape ?? null,
       weatherCode: selected.weatherCode ?? null,
       shortwaveRadiation: selected.shortwaveRadiation ?? null,
@@ -304,6 +310,11 @@ async function buildClosedLoopPredictionInput({
   return {
     ...built,
     referenceTime: refTime,
+    weatherSample: {
+      strategy: timeSample.weighted ? 'time_weighted' : 'closest',
+      selectedIdx,
+      samples: timeSample.weighted?.timeWeightedSamples || []
+    },
     providerMeta: weatherResponse.providerMeta || null,
     remoteCloudData,
     source: includeRemoteCloudData ? 'backend_closed_loop' : 'backend_closed_loop_fast',
@@ -372,7 +383,11 @@ function buildEnhancedPredictionResponse({ closedLoop, lat, lon, type, options =
     weatherDataSource: closedLoop.source || 'backend_closed_loop',
     clientWeatherFallback: closedLoop.clientWeatherFallback === true,
     referenceTime: closedLoop.referenceTime.toISOString(),
-    weatherData: closedLoop.weatherData,
+    weatherSample: closedLoop.weatherSample || null,
+    weatherData: {
+      ...closedLoop.weatherData,
+      cloudBaseHeightSource: getCloudBaseHeightSource(closedLoop.weatherData)
+    },
     remoteCloudData: closedLoop.remoteCloudData,
     profileTimings: closedLoop.profileTimings || null,
     diagnostics: {
@@ -474,7 +489,8 @@ function buildGatewayPredictionItems({ startDate, days, lat, lon, timezone }) {
 
 function buildGatewayWeatherPayload(weatherResponse, referenceTime = new Date()) {
   const hourly = Array.isArray(weatherResponse?.data) ? weatherResponse.data : [];
-  const current = selectHourlyAt(hourly, referenceTime).selected;
+  const sample = buildTimeWeightedWeatherSample(hourly, referenceTime);
+  const current = sample.weighted || sample.selected;
   return {
     current,
     hourly,

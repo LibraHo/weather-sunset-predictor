@@ -59,6 +59,24 @@ class OpenMeteoProvider extends BaseWeatherProvider {
     return `${fallbackLabel} 错误: ${status}${detail ? ` - ${detail}` : ''}`;
   }
 
+  _isRetryableTransportError(error) {
+    const code = String(error?.code || '').toUpperCase();
+    const message = String(error?.message || '').toLowerCase();
+    return [
+      'ECONNRESET',
+      'ECONNREFUSED',
+      'EPIPE',
+      'ETIMEDOUT',
+      'ENOTFOUND',
+      'EAI_AGAIN',
+      'ERR_NETWORK'
+    ].includes(code) ||
+      message.includes('socket disconnected') ||
+      message.includes('socket hang up') ||
+      message.includes('unexpected eof') ||
+      message.includes('tls connection');
+  }
+
   async _getWithRetry(params, timeoutMs = 15000, label = 'request', url = this.API_URL, logType = 'grid', retryOptions = {}) {
     // 记录本次调用
     quota.record(1);
@@ -87,7 +105,10 @@ class OpenMeteoProvider extends BaseWeatherProvider {
           // 不 break，继续重试
           continue;
         }
-        const retryable = status === 503 || error?.code === 'ECONNABORTED';
+        const retryable = status === 503 ||
+          status === 502 ||
+          error?.code === 'ECONNABORTED' ||
+          this._isRetryableTransportError(error);
         if (!retryable || attempt >= maxRetries) {
           tracker.fail(error, status || 0);
           break;
@@ -161,7 +182,7 @@ class OpenMeteoProvider extends BaseWeatherProvider {
           gfs_seamless: 'Open-Meteo GFS Seamless',
           best_match: 'Open-Meteo Best Match'
         }[model] || `Open-Meteo ${model}`,
-        unsupportedFields: [],
+        unsupportedFields: ['cloudBaseHeight'],
         degradedReason: []
       }
     };

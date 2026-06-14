@@ -1,10 +1,16 @@
 'use strict';
 
-const ALGORITHM_VERSION = '2026.05.27-cloud-thickness-proportional-v2';
+const ALGORITHM_VERSION = '2026.06.13-layer-weighted-brightness-v1';
 
 const ALGORITHM_CHANGELOG = [
   {
     version: ALGORITHM_VERSION,
+    date: '2026-06-13',
+    title: 'Layer-weighted brightness formula v1',
+    summary: 'The pre-air-rendering score is now Σ(layer carrier × layer brightness), with the sun-direction light path folded into layer brightness instead of multiplied as an independent final factor.'
+  },
+  {
+    version: '2026.05.27-cloud-thickness-proportional-v2',
     date: '2026-05-27',
     title: 'Cloud-thickness proportional penalty v2',
     summary: 'Cloud-thickness penalty is now pre-thickness canvas score × 30% × thickness pressure, with the fixed -28/24 caps removed. Humid gray-curtain cases are calibrated as weak glow/watchable but not strong.'

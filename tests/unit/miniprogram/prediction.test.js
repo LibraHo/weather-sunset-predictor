@@ -104,6 +104,32 @@ describe('miniprogram services/prediction', () => {
     });
   });
 
+  test('normalizePrediction preserves backend scoringV2 for home analysis copy', () => {
+    const normalized = normalizePrediction({
+      score: 44,
+      status: 'light_glow',
+      scoringV2: {
+        applied: true,
+        airMode: 'gray_veil_air_suppression',
+        cloudCarrier: 62,
+        pathFactor: 1,
+        airFactor: 0.71,
+        score: 44
+      },
+      breakdown: {
+        scoringV2: {
+          airMode: 'warm_scattering_path_open'
+        }
+      }
+    });
+
+    expect(normalized.scoringV2).toMatchObject({
+      applied: true,
+      airMode: 'gray_veil_air_suppression',
+      score: 44
+    });
+  });
+
   test('getWeatherForecast fetches basic weather without invoking scoring', async () => {
     const wxMock = {
       request: jest.fn(({ success }) => success({
@@ -119,6 +145,7 @@ describe('miniprogram services/prediction', () => {
               wind_speed_10m: 11.4,
               wind_direction_10m: 270,
               precipitation: 0,
+              aerosolOpticalDepth: 0.12,
               cloud_cover: 36,
               cloud_cover_high: 62,
               cloud_cover_mid: 36,
@@ -148,12 +175,51 @@ describe('miniprogram services/prediction', () => {
       windSpeed: 11.4,
       windDirection: 270,
       precipitation: 0,
+      aod: 0.12,
+      aerosolOpticalDepth: 0.12,
       cloudCover: 36,
       highClouds: 62,
       midClouds: 36,
       lowClouds: 8,
       provider: 'openmeteo'
     });
+  });
+
+  test('getWeatherForecast preserves nearest-hour AOD for the home aerosol card', async () => {
+    const wxMock = {
+      request: jest.fn(({ success }) => success({
+        statusCode: 200,
+        data: {
+          success: true,
+          data: [
+            {
+              timestamp: 1781366400000,
+              temperature_2m: 18.7,
+              relative_humidity_2m: 97,
+              visibility: 8000,
+              aerosolOpticalDepth: null
+            },
+            {
+              timestamp: 1781370000000,
+              temperature_2m: 19.3,
+              relative_humidity_2m: 94,
+              visibility: 9000,
+              aerosolOpticalDepth: 1.18
+            }
+          ],
+          providerMeta: { name: 'openmeteo', airQualitySource: 'openmeteo_air_quality' }
+        }
+      }))
+    };
+    setWxInstance(wxMock);
+    configureApi({ baseUrl: 'https://api.example.com' });
+
+    const result = await getWeatherForecast({ lat: 39.9042, lon: 116.4074, hours: 24 });
+
+    expect(result.hourly).toEqual(expect.arrayContaining([
+      expect.objectContaining({ aerosolOpticalDepth: 1.18 })
+    ]));
+    expect(result.providerMeta.airQualitySource).toBe('openmeteo_air_quality');
   });
 
   test('getHomeGateway fetches one authoritative home payload', async () => {

@@ -44,10 +44,16 @@
       "loginTab": "ログイン",
       "registerTab": "登録",
       "forgotTab": "パスワード再設定",
+      "linksAria": "アカウント補助操作",
+      "registerLink": "アカウント作成",
+      "forgotLink": "パスワード再設定",
+      "backToLogin": "ログインに戻る",
       "emailLabel": "メール",
       "passwordLabel": "パスワード",
+      "confirmPasswordLabel": "パスワード確認",
       "passwordPlaceholder": "パスワードを入力",
       "passwordMinPlaceholder": "6文字以上",
+      "confirmPasswordPlaceholder": "もう一度入力",
       "recoveryQuestionLabel": "復旧用の質問",
       "recoveryQuestionPlaceholder": "例：初めて夕焼けを見た街は？",
       "recoveryAnswerLabel": "復旧用の答え",
@@ -64,6 +70,7 @@
       "registerSuccess": "アカウントを作成しました。",
       "resetSuccess": "パスワードを再設定しました。新しいパスワードでログインしてください。",
       "requestFailed": "アカウントリクエストに失敗しました。",
+      "passwordMismatch": "2つのパスワードが一致しません。",
       "done": "完了。",
       "recoveryQuestionFallback": "アカウントが存在する場合は、復旧用の答えと新しいパスワードを入力してください。",
       "recoveryQuestionUnavailable": "復旧用の質問は一時的に利用できません。答えと新しいパスワードは引き続き試せます。"
@@ -114,7 +121,8 @@
             shareMap: '共有マップ',
       "firecloudMap": "Firecloud Map",
       user: 'マイページ',
-apiAccess: 'API接続'
+apiAccess: 'API接続',
+      feedback: 'Feedback'
     },
     "menu": {
       "ariaLabel": "ページ切り替え",
@@ -174,16 +182,28 @@ apiAccess: 'API接続'
     "methodology": {
       "title": "焼き雲スコアの計算方法",
       "intro": "焼き雲指数は4つの主要因子を組み合わせて計算され、その日の夕焼け観賞が価値あるかどうかを素早く判断するのに役立ちます。",
-      "versionLabel": "アルゴリズム版：2026.05.27-cloud-thickness-proportional-v2",
-      "versionDesc": "この版では雲の厚さペナルティを「厚み補正前のキャンバス点 × 30% × 厚み圧」に変更し、固定の -28/24 上限を外し、湿った灰色の雲幕を弱い焼け／見られるが強くない範囲へ調整しました。",
+      "versionLabel": 'Algorithm version: 2026.06.06-gray-veil-directional-carrier-v2',
+      "versionDesc": 'This version still uses cloud carrier × sunset path × air rendering, but separates open-path warm scattering, full-deck gray veil, and sun-direction mid-cloud bands. Moderate particles only add warmth when the deck is not gray and the path is open; full mid/high cloud with dirty air continuously suppresses rendering.',
       changelogTitle: "バージョン更新履歴",
       changelogHint: "直近3か月のアルゴリズム更新をここにまとめています。スクロールして理由、影響、検証内容を確認できます",
       changelog: {
         "latest": {
-          "date": "2026-05-27",
-          "title": "雲厚比例ペナルティ v2",
-          "summary": "雲の厚さペナルティを、厚み補正前のキャンバス点 × 30% × 厚み圧に変更し、固定の -28/24 上限を外しました。湿った灰色の雲幕は弱い焼け／見られるが強くない範囲へ校正されます。",
-          "validation": "検証：2026-05-27 の北京サンプルでは厚み圧 0.78、キャンバス 76.7 のとき約 -18 点となり、結果は弱い焼け／見られる範囲に残ります。"
+          "date": "2026-06-12",
+          "title": "Layer-weighted brightness formula v1",
+          "summary": "Adds layerBrightness: mid/high clouds are only the carrier, and an open path is only necessary. The model now checks whether that layer is actually illuminated. Weak brightness now applies a multiplicative score gate instead of a hard ceiling.",
+          "validation": "Validation: the 2026-06-12 Beijing sunset sample drops from the high-60s to around 60; web score details, text analysis, and the mini-program methodology page now show layer brightness."
+        },
+        "grayVeilDirectional": {
+          "date": "2026-06-06",
+          "title": "Gray-veil rendering + directional mid-cloud v2",
+          "summary": "Full mid/high cloud plus elevated PM/AOD no longer defaults to warm-scattering uplift; the model continuously lowers air rendering by gray-veil pressure. Sun-direction mid-cloud bands are now a continuous carrier: stronger band plus more open path moves toward the 50-60 range.",
+          "validation": "Validation: 2026-06-03 Beijing warm scattering stays in the 70 band; 2026-06-04 directional mid-cloud replays around 53.5; 2026-06-05 full gray veil falls around 44; all real calibration cases replay."
+        },
+        "scoringV2": {
+          "date": "2026-06-03",
+          "title": "Sunset scoring v2",
+          "summary": "The final score now combines cloud carrier, sunset path, and air rendering. With an open path and acceptable visibility, moderate AOD, PM, and dust are treated as warm orange-red scattering instead of automatic gray-curtain failure.",
+          "validation": "Validation: 2026-06-02 Beijing remains low around 30; the 2026-06-03 detailed point forecast replays around 71 and reaches the 70 band, while the fire-cloud map still uses the regional simplified branch."
         },
         "cloudThickness": {
           "date": "2026-05-27",
@@ -346,6 +366,19 @@ apiAccess: 'API接続'
     "permissionDenied": "位置情報の権限を取得できません。手動で入力してください",
     "loading": "位置情報を取得中..."
   },
+  feedback: {
+    kicker: 'Prediction Feedback', title: 'Prediction feedback', subtitle: 'Submit missed, wrong, or overstated predictions. We save the score, weather snapshot, cloud data, location, and images for review.',
+    button: 'Feedback', closeAria: 'Close feedback dialog', typeLabel: 'Feedback type',
+    missed: 'Missed: real sky was good but score was low', wrong: 'Wrong: real sky was poor but score was high', overstated: 'Overstated: some color but not worth a high recommendation',
+    missedShort: 'Missed', wrongShort: 'Wrong', overstatedShort: 'Overstated',
+    missedHint: 'The real sky was good, but the predicted score was low.', wrongHint: 'The real sky was poor, but the predicted score was high.', overstatedHint: 'There was color, but the result was too weak for a high recommendation.',
+    commentLabel: 'Comment', commentPlaceholder: 'Describe clouds, color, blockage, and timing on site', nicknameLabel: 'Nickname', emailLabel: 'Email', photoLabel: 'Images (up to 2)',
+    submit: 'Submit feedback', cancel: 'Cancel', loginRequired: 'Please log in before submitting feedback.', loginAction: 'Log in',
+    dateLabel: 'Date', locationLabel: 'Location name', locationPlaceholder: 'Beijing Jingshan', latLabel: 'Latitude', lonLabel: 'Longitude', periodLabel: 'Type', sunrise: 'Sunrise', sunset: 'Sunset',
+    manualHelp: 'We will try to fetch the prediction snapshot for the selected date and place. If the date is out of range, feedback cannot be submitted.', openWindowHint: 'Feedback is open from 1 hour before sunrise/sunset until 45 minutes after the event.', windowClosed: 'Feedback is not open now. It is only open from 1 hour before sunrise/sunset until 45 minutes after the event.',
+    fetchSnapshot: 'Fetching prediction snapshot...', rangeExpired: 'This date is outside the feedback range.', submitting: 'Submitting feedback...', submitFailed: 'Failed to submit feedback', success: 'Feedback submitted. Thanks for helping us calibrate the forecast.', tooManyPhotos: 'You can upload up to 2 images.'
+  },
+
   "weather": {
     "title": "天気情報",
     "current": "現在の天気",
@@ -375,6 +408,7 @@ apiAccess: 'API接続'
     "hourly": "時間別予報",
     "threeDayGlow": "3日朝夕焼け",
     "threeDayGlowLoading": "3日分を読み込み中...",
+    "threeDayGlowReferenceNote": "1日以上先の確率は正確でない場合があり、参考値です。",
     "daysOverview": "{{days}}日間の概要",
     "precipChance": "{{prob}}%の降水確率",
     unavailable: {
@@ -432,6 +466,7 @@ apiAccess: 'API接続'
         "whyThisScore": "このスコアの理由",
         "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
         "gatedFormula": "{{carrier}} × 光路ゲート {{gate}} = {{base}}",
+        "layerSumFormula": "Σ(キャリア × 受光輝度) = {{base}}",
         "canvasPlusLightPath": "雲のキャンバス + 光路",
         "renderingFormula": "{{base}} adjusted by rendering = {{rendered}}",
         "renderingMultiplierFormula": "{{base}} × rendering {{factor}} = {{rendered}}",
@@ -450,9 +485,10 @@ apiAccess: 'API接続'
         },
         "labels": {
           "cloudCarrier": "雲の載体",
-          "lightPath": "光路",
+          "lightPath": "光路証拠",
+          "layerBrightness": "受光輝度",
           "baseScore": "基礎点",
-          "rendering": "発色補正",
+          "rendering": "空気の発色",
           "final": "最終スコア",
           "hardCap": "天候による調整",
           "hazeCap": "霞・灰幕の影響",
@@ -465,6 +501,7 @@ apiAccess: 'API接続'
           "displayCalibration": "表示スコア調整",
           "aerosolCarrier": "エアロゾル載体",
           "scoringV2": "開いた光路の暖色散乱",
+          "grayVeilAirRendering": "Gray-veil rendering",
           "evidence": "計算根拠"
         },
         "details": {
@@ -477,8 +514,11 @@ apiAccess: 'API接続'
           "lowSolarTransmissionYes": "該当",
           "lowSolarTransmissionNo": "該当なし",
           "aerosolCarrier": "雲が少ない時、光路が開いていれば薄い霞も暖色を少し運べます。光路活性 ×{{activation}}",
-          "scoringV2": "雲キャリア {{carrier}} × 日没光路 {{path}} × 空気の発色 {{air}}",
-          "lightPath": "日光が雲層へ届くか",
+          "scoringV2": "雲キャリア {{carrier}}；光路証拠は受光輝度に織り込み済み；空気の発色 {{air}}",
+          "grayVeilAirRendering": "中高層雲が多く空気が汚れている状態：キャリア {{carrier}}；光路証拠は輝度証拠；抑制された空気の発色 {{air}}",
+          "lightPath": "受光輝度を説明する太陽方向の証拠",
+          "layerBrightnessShort": "太陽方向、遮蔽、輝度応答から各層の載体が照らされているかを見る",
+          "layerBrightness": "明るさ {{brightness}}、ゲート {{gate}}；層別キャリア {{canvas}}、低層雲の遮蔽 {{low}} / 透過 {{lowBlock}}、太陽幾何 {{solar}}、光路 {{path}}、空気 {{air}}、雲厚 {{thickness}}、直達／散乱 {{beam}}",
           "renderingFactors": "視程 ×{{visibility}}、湿度 ×{{humidity}}、エアロゾル ×{{aerosol}}",
           "afterAdjustments": "天候と見通しを加味した後",
           "finalDisplayed": "最終表示結果",
@@ -488,6 +528,7 @@ apiAccess: 'API接続'
           "occlusion": "遠方の遮蔽により最終スコアが下がります",
           "carrierFloor": "澄んだ高層雲の載体により過小評価を抑えます",
           "directionalSamples": "太陽方位25/50/75/100kmの周辺採取を反映済み",
+          "lightPathScoreEvidence": "光路証拠 {{light}} は受光輝度に織り込み済みです",
           "lightPathLowCloudBlock": "低い雲が日差しを遮り、色づく雲まで光が届きにくいです",
           "lightPathRain": "雨が夕日の直射光を弱めます",
           "postRainCap": "雨後の水蒸気や霞で光が弱まり、色が灰色っぽくなります",
@@ -507,6 +548,7 @@ apiAccess: 'API接続'
           "severeHazeCap35": "濃い霞で色が出にくいです",
           "moderateHazeCap45": "霞が橙や赤の色を弱めます",
           "hazeWarmScatteringPathOpen": "日没方向の光路が開き、適度な粒子が暖かい橙赤色の散乱を強めます",
+          "fullUpperCloudGrayVeilAirRendering": "full mid/high cloud plus dirty air suppresses color rendering",
           "denseCarrierCanvasOnly": "mid/high clouds can still catch sunset light",
           "adjustmentApplied": "天候による調整を反映",
           "displayCalibration": "最終表示スコアを予測ステータスの帯に合わせます",
@@ -1044,6 +1086,7 @@ apiAccess: 'API接続'
     "surroundingFair": "周辺エリアの焼け雲観賞条件は普通です",
     "scoreWithQuality": "{{score}}点 - {{quality}}",
     "pointToast": "{{name}}方向｜スコア: {{score}}点｜距離: {{distance}}km",
+    "layerLoading": "火焼け雲レイヤーを読み込み中...",
     "emptyChinaSpots": "本日表示できる焼け雲スポットはありません",
     "updatedAt": "{{time}} 更新",
     "supportedRegions": "現在対応：中国大陸、香港、マカオ、台湾、日本、韓国、北朝鮮、インドシナ半島の主要都市。ヒートマップ格子は現在中国エリアが中心です。",

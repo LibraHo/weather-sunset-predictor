@@ -157,6 +157,59 @@ describe('SurroundingService', () => {
         provider: 'openmeteo'
       });
     });
+
+    test('time-weights each solar-direction distance sample around the event time', async () => {
+      const referenceTime = new Date('2026-05-17T10:30:00Z');
+      jest.spyOn(orchestrator, 'fetchWeatherDataBatch').mockImplementation(async (points) => {
+        const weatherMap = {};
+        for (const point of points) {
+          weatherMap[`${point.lat},${point.lon}`] = {
+            data: [
+              {
+                timestamp: new Date('2026-05-17T10:00:00Z').getTime(),
+                cloudCover: 20,
+                lowClouds: 0,
+                midClouds: 20,
+                highClouds: 80,
+                cloudBaseHeight: 1500
+              },
+              {
+                timestamp: new Date('2026-05-17T11:00:00Z').getTime(),
+                cloudCover: 60,
+                lowClouds: 10,
+                midClouds: 40,
+                highClouds: 20,
+                cloudBaseHeight: 2100
+              }
+            ],
+            providerMeta: { name: 'openmeteo' }
+          };
+        }
+        return weatherMap;
+      });
+
+      const result = await surroundingService.getSolarDirectionLightPathSamples({
+        lat: 39.9,
+        lon: 116.4,
+        type: 'sunset',
+        date: '2026-05-17',
+        azimuth: 285,
+        referenceTime
+      });
+
+      expect(result.samples).toHaveLength(5);
+      expect(result.samples[0]).toMatchObject({
+        totalCloud: 40,
+        lowCloud: 5,
+        midCloud: 30,
+        highCloud: 50,
+        cloudBaseHeight: 1800
+      });
+      expect(result.samples[0].timeWeightedSamples).toEqual([
+        expect.objectContaining({ weight: 0.5 }),
+        expect.objectContaining({ weight: 0.5 })
+      ]);
+    });
   });
 
   describe('getSurroundingPredictions - 参数验证', () => {

@@ -50,10 +50,16 @@ export default {
       loginTab: '登录',
       registerTab: '注册',
       forgotTab: '找回密码',
+      linksAria: '账号辅助操作',
+      registerLink: '注册账号',
+      forgotLink: '找回密码',
+      backToLogin: '返回登录',
       emailLabel: '邮箱',
       passwordLabel: '密码',
+      confirmPasswordLabel: '确认密码',
       passwordPlaceholder: '请输入密码',
       passwordMinPlaceholder: '至少 6 位',
+      confirmPasswordPlaceholder: '再次输入密码',
       recoveryQuestionLabel: '找回问题',
       recoveryQuestionPlaceholder: '例如：我的第一座常看晚霞的城市？',
       recoveryAnswerLabel: '找回答案',
@@ -70,6 +76,7 @@ export default {
       registerSuccess: '账号已创建。',
       resetSuccess: '密码已重置，请用新密码登录。',
       requestFailed: '账号请求失败。',
+      passwordMismatch: '两次输入的密码不一致。',
       done: '完成。',
       recoveryQuestionFallback: '如果账号存在，请输入找回答案和新密码。',
       recoveryQuestionUnavailable: '找回问题暂时不可用，你仍可尝试填写答案和新密码。'
@@ -122,7 +129,8 @@ export default {
       shareMap: '分享地图',
       firecloudMap: '火烧云地图',
       user: '我的',
-      apiAccess: 'API接入'
+      apiAccess: 'API接入',
+      feedback: '反馈'
     },
     menu: {
       ariaLabel: '页面切换',
@@ -181,13 +189,25 @@ export default {
     },
     methodology: {
       title: '火烧云计算方法',
-      intro: '当前火烧云指数先判断“有没有可显色载体”，再判断太阳方向光路是否能把光打到载体上，最后用空气显色条件做小幅修正。它不是把一串好条件连续相乘，所以高云 100% 不会自动满分。',
-      versionLabel: '算法版本：2026.06.03-sunset-scoring-v2',
-      versionDesc: '本版把最终评分收敛为“云载体 × 日落光路 × 空气显色”：有光路时轻/中度气溶胶可增强橙红散射，无光路、极端霾、低能见度、降水和厚低云仍优先压制。',
+      intro: '当前火烧云指数先判断“有没有可显色载体”，再把太阳方向光路并入受光亮度，最后用空气显色条件修正。高云多、光路通，也可能因为亮度弱而降分。',
+      versionLabel: '算法版本：2026.06.13-layer-weighted-brightness-v1',
+      versionDesc: '本版使用“Σ(分层载体 × 分层受光亮度) × 空气显色”。受光亮度基于低/中/高三层云、太阳几何、太阳方向通路、直射/散射和云厚证据估算，并采用对数饱和响应：从无光到弱光更敏感，接近满亮后边际变小。',
       changelogTitle: "版本更新记录",
       changelogHint: "近三个月内的算法更新都会放在这里，可滚动回看原因、影响和验证方式",
       changelog: {
         latest: {
+          date: '2026-06-13',
+          title: '分层求和亮度公式 v1',
+          summary: '最终分改为 Σ(分层载体 × 分层受光亮度) × 空气显色；受光亮度采用对数饱和响应，光路继续作为内部因子。',
+          validation: '验证：核心评分、网页评分细则、小程序算法页和结果页都显示分层求和口径。'
+        },
+        grayVeilDirectional: {
+          date: '2026-06-06',
+          title: '灰幕空气显色 + 方向中云带 v2',
+          summary: '满铺中高云叠加 PM/AOD 偏高时，不再默认当暖色散射加分，而是按灰幕压力连续降低空气显色；太阳方向中云带改为连续载体，光路越开、方向中云越强，越接近 50-60 档。',
+          validation: '验证：2026-06-03 北京暖散射保持 70 档；2026-06-04 北京方向中云带约 53.5；2026-06-05 北京满铺灰幕压到约 44；真实校准样本库全量回放通过。'
+        },
+        scoringV2: {
           date: '2026-06-03',
           title: '日落评分 v2',
           summary: '最终分改为云载体、日落光路、空气显色三部分合成；光路开且能见度可接受时，轻/中度 AOD、PM、dust 作为橙红散射正向因素，而不是一律当灰幕。',
@@ -276,10 +296,10 @@ export default {
         transparency: {
           title: '3. 大气透明度',
           subtitle: 'Transparency · 渲染评分',
-          desc: '能见度、湿度、降水后状态和空气颗粒只影响“显色质量”。有光路时，适度颗粒可增强橙红散射；无光路或颗粒过重时才转为灰幕扣分。',
+          desc: '能见度、湿度、降水后状态和空气颗粒只影响“显色质量”。有光路且云幕不灰时，适度颗粒可增强橙红散射；中高云满铺且 PM/AOD 偏高时，会转为灰幕显色抑制。',
           visibility: '渲染因子会综合 visibilityFactor、humidityFactor、rainBonus、aqiFactor、aerosolFactor',
           humidity: '渲染修正不是乘爆分数：factor≥1 时转成最多约 +9 分；factor<1 时最多约 -25 分',
-          formula: '空气显色 = 光路开 ? 暖色散射系数 1.02–1.12 : 原渲染系数；重霾/低能见度约 0.6–0.8'
+          formula: '空气显色 = 灰幕压力优先 ? 0.70–0.95 : 光路开 ? 暖色散射系数 1.02–1.12 : 原渲染系数'
         },
         layerDiversity: {
           title: '4. 光路门控',
@@ -299,13 +319,13 @@ export default {
           level4: '总云量≥92 且低云≥20% → 轻惩罚到约 ×0.75；天气文案明确阴天且低云≥35% → 再 ×0.5'
         },
         thickHighCloudPenalty: {
-          title: '7. 载体与灰幕修正',
-          subtitle: 'Carrier Quality · 画布与薄雾',
-          desc: '算法先求“能显色的载体”，再用日落光路和空气显色决定它能发挥多少。气溶胶不再只是弱载体，也会在光路打开时参与暖色散射。',
-          level1: '云层载体 = 画布基础分 + 云种/云厚/高云有限加减分；高云强但光路没开，不允许直接满分',
-          level2: '云少时仍保留气溶胶弱载体；云多且光路开时，适度 AOD/PM/dust 进入空气显色，增强橙红散射',
-          level3: '重霾、沙尘、能见度<8、厚云、雨低云会把载体压低或封顶；清透高云保护也会被光路门控否决',
-          formula: 'scoringV2 = 云载体 × 日落光路 × 空气显色\n暖色散射只在光路开、低云不堵、能见度可接受时生效'
+          title: '7. 受光亮度',
+          subtitle: 'Layer Brightness · 云层是否真的亮',
+          desc: '载体和光路之外，系统会估算中高云实际受光强度。现在是基于低/中/高三层云的亮度模型，不是 4km/9km/13km 每个高度层单独计算。',
+          level1: '亮度 = 云层画布 × 太阳几何 × 光路开放度 × 空气透过率 × 云厚因子 × 直射/散射因子',
+          level2: 'AOD、水汽、PM10、低能见度、漫射光占优、厚高云和高云水汽灰幕是压暗证据；亮度弱时按 0-1 乘性系数压分',
+          level3: '高云很多但亮度弱时，不再因为“载体多 + 光路通”直接给高分；北京 2026-06-12 晚霞就是这类校准样本',
+          formula: 'layerBrightness = 三层云载体 × 光路 × 受光/云厚/光束证据\n亮度弱时会限制最终展示分'
         },
         precipPenalty: {
           title: '6. 降水惩罚系数',
@@ -319,13 +339,13 @@ export default {
         },
         finalFormula: {
           title: '8. 最终分数',
-          subtitle: 'Final Score · 云载体 × 日落光路 × 空气显色',
-          desc: '最终分不为单个城市或日期加特殊抬分，而是让云、光路、空气三部分共同解释分数。光路打开时，适度颗粒可让橙红更明显；光路关闭时，同样的颗粒只会压灰。',
-          formula: '最终分 = clamp(云载体 × 日落光路 × 空气显色, 0, 100)，再经过硬否决/厚云/灰幕校准',
-          highCloudCap: '高云充足但光路被挡时，光路门控会压低最高得分。',
+          subtitle: 'Final Score · Σ(分层载体 × 分层受光亮度) × 空气显色',
+          desc: '最终分不为单个城市或日期加特殊抬分，而是让云、光路、亮度和空气共同解释分数。光路打开时，适度颗粒可让橙红更明显；但如果云层实际亮度弱，同样会被保守压分。',
+          formula: '最终分 = clamp(Σ(分层载体 × 分层受光亮度) × 空气显色, 0, 100)，再经过硬否决/厚云/灰幕校准',
+          highCloudCap: '高云充足但光路被挡时，会先体现在受光亮度变弱。',
           carrier: '载体分 = max(云层画布分, 气溶胶弱载体分)',
-          lightGate: '光路门控 = 0.25–1.12；太阳方向阻挡走廊可压到约 0.42，太阳方向开口约 0.90–0.96',
-          rendering: '空气显色 = 0.6–1.15；光路开时轻/中度 AOD、PM、dust 可进入 1.02–1.12 暖色散射区间',
+          lightGate: '光路不再单独参与最终乘法，而是作为受光亮度里的太阳方向通路因子',
+          rendering: '受光亮度会先判断云是否真的亮；空气显色 = 0.70–1.12，光路开且云幕不灰时轻/中度 AOD、PM、dust 可加暖色，满铺灰幕则连续压低',
           statusCaps: '显示分还会按状态校准：无火烧云低于 40，轻微霞光低于 60；几何不可行、厚云、灰幕和雨低云会进一步封顶'
         }
       }
@@ -357,6 +377,21 @@ export default {
     notFound: '未找到该位置，请尝试其他名称',
     permissionDenied: '无法获取位置权限，请手动输入位置',
     loading: '正在获取位置...'
+  },
+
+  feedback: {
+    kicker: 'Prediction Feedback',
+    title: '反馈预测结果',
+    subtitle: '提交漏报、误报或虚报，系统会保存预测快照、天气原始数据、评分、地点和图片，方便后台复盘。',
+    button: '反馈', closeAria: '关闭反馈窗口', typeLabel: '反馈类型',
+    missed: '漏报：实际很好但评分偏低', wrong: '误报：实际不好但评分偏高', overstated: '虚报：有颜色但不值得冲',
+    missedShort: '漏报', wrongShort: '误报', overstatedShort: '虚报',
+    missedHint: '实际很好，但预测分数偏低。', wrongHint: '实际不好，但预测分数偏高。', overstatedHint: '有颜色但效果弱，不值得按高分推荐。',
+    commentLabel: '评论', commentPlaceholder: '描述现场看到的云量、颜色、遮挡和时间', nicknameLabel: '昵称', emailLabel: '邮箱', photoLabel: '图片（最多 2 张）',
+    submit: '提交反馈', cancel: '取消', loginRequired: '请先登录后再反馈。', loginAction: '登录',
+    dateLabel: '日期', locationLabel: '地点名称', locationPlaceholder: '北京景山', latLabel: '纬度', lonLabel: '经度', periodLabel: '类型', sunrise: '朝霞', sunset: '晚霞',
+    manualHelp: '提交后会尝试抓取对应日期地点的预测快照；超出可抓取范围会提示不可反馈。', openWindowHint: '反馈只在日出/日落前 1 小时到事件后 45 分钟内开放。', windowClosed: '反馈暂未开放。反馈只在日出/日落前 1 小时到事件后 45 分钟内开放。',
+    fetchSnapshot: '正在抓取预测数据...', rangeExpired: '已经超出可反馈的日期范围。', submitting: '正在提交反馈...', submitFailed: '反馈提交失败', success: '反馈已提交，感谢你帮我们校准预测。', tooManyPhotos: '最多上传 2 张图片。'
   },
 
   // 天气
@@ -393,6 +428,7 @@ export default {
     hourly: '详细预报',
     threeDayGlow: '3天朝晚霞',
     threeDayGlowLoading: '正在读取3天朝晚霞...',
+    threeDayGlowReferenceNote: '超过一天后的概率可能不准，仅供参考。',
     mapView: '地图预测',
     daysOverview: '{{days}}天概览',
     precipChance: '{{prob}}%降水',
@@ -444,27 +480,28 @@ export default {
       title: '分数明细',
       viewDetails: '查看评分明细',
       finalDisplayed: '最终展示分',
-      baseFormula: '基础分 = 载体 × 光路门控',
-      baseHint: '太阳方向光路门控后的载体基础分',
-      canvasHint: '高云/中云提供主要色彩载体，适度薄雾可提供弱载体，低云会遮挡',
+      baseFormula: '基础分 = Σ(分层载体 × 分层受光亮度)',
+      baseHint: '太阳方向光路已并入受光亮度后的载体基础分',
+      canvasHint: '高云/中云提供主要色彩载体，适度薄雾可提供弱载体；低云遮挡、厚高云和灰幕会限制可用亮度',
       lightPathHint: '太阳光是否能照到云层',
-      finalFormula: '最终分 = 云载体 × 日落光路 × 空气显色',
-      renderingHint: '湿度、能见度影响颜色表现',
+      finalFormula: '最终分 = Σ(分层载体 × 分层受光亮度) × 空气显色',
+      renderingHint: '受光亮度、湿度、能见度和颗粒物共同影响色彩表现',
       aerosolHint: '适度气溶胶增强橙红散射，过多则发灰',
       ledger: {
         pts: '分',
         whyThisScore: '为什么是这个分数',
         weightedFormula: '{{canvas}}×80% + {{light}}×20% = {{base}}',
-        gatedFormula: '{{carrier}} × 光路门控 {{gate}} = {{base}}',
-        canvasPlusLightPath: '画布 + 光路',
+        gatedFormula: 'Σ(分层载体 × 分层受光亮度) = {{base}}',
+        layerSumFormula: 'Σ(分层载体 × 分层受光亮度) = {{base}}',
+        canvasPlusLightPath: 'Σ(分层载体 × 分层受光亮度)',
         renderingFormula: '{{base}} 经显色修正 = {{rendered}}',
-        renderingMultiplierFormula: '{{base}} × 显色系数 {{factor}} = {{rendered}}',
+        renderingMultiplierFormula: '{{base}} × 空气显色系数 {{factor}} = {{rendered}}',
         renderingAdjustmentFormula: '{{base}} {{sign}} 显色修正 {{adjustment}} = {{rendered}}',
         weatherTransparency: '天气通透度',
         summary: {
           event: '{{score}} 分：主要调整是 {{detail}}',
           rendered: '{{base}} 分经显色条件修正为 {{rendered}} 分',
-          default: '{{score}} 分：由云层、光路和显色条件综合计算'
+          default: '{{score}} 分：由分层载体、分层受光亮度和空气显色计算'
         },
         weather: {
           clouds: '高/中/低云 {{high}}/{{mid}}/{{low}}%',
@@ -474,9 +511,10 @@ export default {
         },
         labels: {
           cloudCarrier: '云层载体',
-          lightPath: '光路',
+          lightPath: '光路证据',
+          layerBrightness: '分层受光亮度',
           baseScore: '基础分',
-          rendering: '显色修正',
+          rendering: '空气显色',
           final: '最终分',
           hardCap: '天气限制',
           hazeCap: '灰幕影响',
@@ -489,6 +527,7 @@ export default {
           displayCalibration: '展示分校准',
           aerosolCarrier: '气溶胶载体',
           scoringV2: '开口暖色散射',
+          grayVeilAirRendering: '灰幕显色抑制',
           evidence: '计算依据'
         },
         details: {
@@ -501,8 +540,11 @@ export default {
           lowSolarTransmissionYes: '命中',
           lowSolarTransmissionNo: '未命中',
           aerosolCarrier: '云层很少时，薄雾在光路通畅时可承接一点暖色，光路激活 ×{{activation}}',
-          scoringV2: '云载体 {{carrier}} × 日落光路 {{path}} × 空气显色 {{air}}',
-          lightPath: '阳光是否能打到云层',
+          scoringV2: '云载体 {{carrier}}；光路证据已并入分层受光亮度；空气显色 {{air}}',
+          grayVeilAirRendering: '满铺中高云叠加偏脏空气：云载体 {{carrier}}；光路证据作为亮度证据；灰幕显色 {{air}}',
+          lightPath: '作为受光亮度解释的太阳方向证据',
+          layerBrightnessShort: '太阳方向、遮挡和亮度响应共同解释各层载体是否被照亮',
+          layerBrightness: '亮度 {{brightness}}，门控 {{gate}}；分层载体 {{canvas}}，低云遮挡 {{low}} / 透过 {{lowBlock}}，太阳几何 {{solar}}，光路因子 {{path}}，空气 {{air}}，云厚 {{thickness}}，直射/散射 {{beam}}',
           renderingFactors: '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}',
           afterAdjustments: '结合天气和能见度后',
           finalDisplayed: '最终展示结果',
@@ -512,6 +554,7 @@ export default {
           occlusion: '远端遮挡压低最终分',
           carrierFloor: '高云载体清透，避免被云厚信号误伤低估',
           directionalSamples: '已参考太阳方向周边云况',
+          lightPathScoreEvidence: '光路证据 {{light}} 已并入受光亮度',
           lightPathLowCloudBlock: '低云遮住太阳方向，光线不容易照到中高云',
           lightPathRain: '降水会削弱日落直射光',
           postRainCap: '水汽、颗粒物或直达光偏弱，霞光容易发灰',
@@ -531,6 +574,7 @@ export default {
           severeHazeCap35: '重度灰霾让颜色不容易出来',
           moderateHazeCap45: '灰霾会削弱红橙色',
           hazeWarmScatteringPathOpen: '日落光路打开，适度颗粒增强橙红散射',
+          fullUpperCloudGrayVeilAirRendering: '满铺中高云叠加偏脏空气，显色转为灰幕抑制',
           denseCarrierCanvasOnly: '中高云层仍能承接晚霞光线',
           adjustmentApplied: '已按限制条件修正',
           displayCalibration: '最终展示分按预测状态档位校准',
@@ -539,16 +583,16 @@ export default {
         }
       }},
 formationAnalysis: {
-      title: '火烧云形成条件分析',
+      title: '火烧云文字分析',
       groups: { positive: '有利条件', neutral: '一般因素', warning: '注意因素' },
       factors: {
         carrier: {
           title: '云层载体',
           status: { good: '较好', fair: '一般', weak: '较弱' },
           desc: {
-            good: '中高云能承接日落光线，是今天主要的显色画布。',
-            fair: '有一些可被染色的云层，但面积或高度不够理想。',
-            weak: '缺少合适的中高云，天空不容易形成大片火烧云。'
+            good: '中高云提供可染色云面，具备承接霞光的基础。',
+            fair: '有可染色云面，但面积、高度或稳定性不够理想。',
+            weak: '可染色云面不足，难形成成片火烧云。'
           }
         },
         lightPath: {
@@ -947,6 +991,7 @@ formationAnalysis: {
     updatedAt: '更新于 {{time}}',
     supportedRegions: '目前支持：中国大陆、港澳台、日本、韩国、朝鲜及中南半岛主要城市；热力栅格当前以中国区域为主。',
     interactionHint: '可拖拽地图 · 滚轮缩放',
+    layerLoading: '正在读取火烧云图层...',
     tabs: { sunrise: '朝霞', sunset: '晚霞' },
     quality: { excellent: '优秀', good: '良好' },
     period: { sunriseTomorrow: '明天的朝霞', sunsetToday: '今天的晚霞', testLayer: '测试图层（模拟数据）' }

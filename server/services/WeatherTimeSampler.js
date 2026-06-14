@@ -1,5 +1,6 @@
 const WEIGHTED_NUMERIC_FIELDS = [
   'cloudCover',
+  'cloudBaseHeight',
   'humidity',
   'visibility',
   'lowClouds',

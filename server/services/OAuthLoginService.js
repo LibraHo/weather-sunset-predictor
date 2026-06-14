@@ -6,6 +6,7 @@ const WECHAT_MINI_SESSION_ENDPOINT = 'https://api.weixin.qq.com/sns/jscode2sessi
 const GOOGLE_AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GOOGLE_TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
 const GOOGLE_TOKENINFO_ENDPOINT = 'https://oauth2.googleapis.com/tokeninfo';
+const DEFAULT_GOOGLE_TIMEOUT_MS = 10000;
 
 function nowIso() {
   return new Date().toISOString();
@@ -21,6 +22,11 @@ function createError(code, message, status = 500, details) {
 
 function firstValue(...values) {
   return values.find((value) => typeof value === 'string' && value.trim())?.trim();
+}
+
+function parsePositiveInteger(value, fallback) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
 function buildConfig(config, env) {
@@ -59,6 +65,17 @@ function buildConfig(config, env) {
       env.GOOGLE_REDIRECT_URI,
       'https://sunset.bjhyc.online/auth/google/callback'
     ),
+    googleRequestTimeoutMs: parsePositiveInteger(
+      firstValue(config.googleRequestTimeoutMs, config.GOOGLE_OAUTH_TIMEOUT_MS, env.GOOGLE_OAUTH_TIMEOUT_MS),
+      DEFAULT_GOOGLE_TIMEOUT_MS
+    ),
+    googleProxyUrl: firstValue(
+      config.googleProxyUrl,
+      config.GOOGLE_OAUTH_PROXY,
+      env.GOOGLE_OAUTH_PROXY,
+      env.HTTPS_PROXY,
+      env.HTTP_PROXY
+    ),
     stateSecret: firstValue(config.stateSecret, config.AUTH_SECRET, env.AUTH_SECRET, env.USER_SESSION_SECRET, 'xiake-dev-oauth-state-secret')
   };
 }
@@ -78,10 +95,62 @@ function sanitizeGoogleProfile(profile) {
   };
 }
 
+function createAxiosProxy(proxyUrl) {
+  if (!proxyUrl) return undefined;
+  let url;
+  try {
+    url = new URL(proxyUrl);
+  } catch (error) {
+    throw createError('GOOGLE_PROXY_INVALID', 'Google OAuth proxy URL is invalid', 500);
+  }
+
+  if (!['http:', 'https:'].includes(url.protocol) || !url.hostname) {
+    throw createError('GOOGLE_PROXY_INVALID', 'Google OAuth proxy URL is invalid', 500);
+  }
+
+  return {
+    protocol: url.protocol.slice(0, -1),
+    host: url.hostname,
+    port: Number(url.port || (url.protocol === 'https:' ? 443 : 80)),
+    ...(url.username || url.password
+      ? { auth: { username: decodeURIComponent(url.username), password: decodeURIComponent(url.password) } }
+      : {})
+  };
+}
+
+function buildGoogleRequestOptions(config) {
+  return {
+    timeout: config.googleRequestTimeoutMs || DEFAULT_GOOGLE_TIMEOUT_MS,
+    ...(config.googleProxyUrl ? { proxy: createAxiosProxy(config.googleProxyUrl) } : {})
+  };
+}
+
+function isGoogleTimeoutError(error) {
+  return ['ETIMEDOUT', 'ECONNABORTED', 'ESOCKETTIMEDOUT'].includes(error?.code)
+    || /timeout|timed out/i.test(String(error?.message || ''));
+}
+
+function wrapGoogleUpstreamError(error, stage) {
+  if (error?.code?.startsWith?.('GOOGLE_')) return error;
+  if (isGoogleTimeoutError(error)) {
+    return createError('GOOGLE_UPSTREAM_TIMEOUT', `Google OAuth ${stage} timed out`, 504);
+  }
+  if (error?.response?.status) {
+    return createError('GOOGLE_UPSTREAM_REJECTED', `Google OAuth ${stage} failed`, 502, {
+      status: error.response.status
+    });
+  }
+  if (error?.code) {
+    return createError('GOOGLE_UPSTREAM_UNAVAILABLE', `Google OAuth ${stage} unavailable`, 502);
+  }
+  return error;
+}
+
 class GoogleIdTokenVerifier {
   constructor(options = {}) {
     this.httpClient = options.httpClient || axios;
     this.endpoint = options.endpoint || GOOGLE_TOKENINFO_ENDPOINT;
+    this.requestOptions = options.requestOptions || {};
   }
 
   async verify(idToken, expectedAudience) {
@@ -89,9 +158,15 @@ class GoogleIdTokenVerifier {
       throw createError('GOOGLE_ID_TOKEN_MISSING', 'Google id_token is missing', 502);
     }
 
-    const response = await this.httpClient.get(this.endpoint, {
-      params: { id_token: idToken }
-    });
+    let response;
+    try {
+      response = await this.httpClient.get(this.endpoint, {
+        ...this.requestOptions,
+        params: { id_token: idToken }
+      });
+    } catch (error) {
+      throw wrapGoogleUpstreamError(error, 'id token verification');
+    }
     const payload = response.data || {};
     if (expectedAudience && payload.aud !== expectedAudience) {
       throw createError('GOOGLE_ID_TOKEN_INVALID', 'Google id_token audience is invalid', 401);
@@ -109,10 +184,14 @@ class OAuthLoginService {
     this.httpClient = options.httpClient || axios;
     const env = options.config ? {} : process.env;
     this.config = buildConfig(options.config || {}, env);
+    this.googleRequestOptions = buildGoogleRequestOptions(this.config);
     this.wechatWebTokenEndpoint = options.wechatWebTokenEndpoint || WECHAT_WEB_TOKEN_ENDPOINT;
     this.wechatMiniSessionEndpoint = options.wechatMiniSessionEndpoint || WECHAT_MINI_SESSION_ENDPOINT;
     this.googleTokenEndpoint = options.googleTokenEndpoint || GOOGLE_TOKEN_ENDPOINT;
-    this.googleIdTokenVerifier = options.googleIdTokenVerifier || new GoogleIdTokenVerifier({ httpClient: this.httpClient });
+    this.googleIdTokenVerifier = options.googleIdTokenVerifier || new GoogleIdTokenVerifier({
+      httpClient: this.httpClient,
+      requestOptions: this.googleRequestOptions
+    });
   }
 
   ensureUserService() {
@@ -273,11 +352,22 @@ class OAuthLoginService {
       redirect_uri: this.config.googleRedirectUri,
       grant_type: 'authorization_code'
     });
-    const response = await this.httpClient.post(this.googleTokenEndpoint, body, {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-    });
+    let response;
+    try {
+      response = await this.httpClient.post(this.googleTokenEndpoint, body, {
+        ...this.googleRequestOptions,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+    } catch (error) {
+      throw wrapGoogleUpstreamError(error, 'token exchange');
+    }
     const idToken = response.data?.id_token;
-    const profile = await this.verifyGoogleIdToken(idToken);
+    let profile;
+    try {
+      profile = await this.verifyGoogleIdToken(idToken);
+    } catch (error) {
+      throw wrapGoogleUpstreamError(error, 'id token verification');
+    }
 
     return this.createSessionForIdentity({
       provider: 'google',
@@ -391,7 +481,10 @@ module.exports = OAuthLoginService;
 module.exports.GoogleIdTokenVerifier = GoogleIdTokenVerifier;
 module.exports._test = {
   buildConfig,
+  buildGoogleRequestOptions,
   createError,
+  createAxiosProxy,
   sanitizeGoogleProfile,
+  wrapGoogleUpstreamError,
   timingSafeEqualString
 };

@@ -44,10 +44,16 @@
       "loginTab": "Connexion",
       "registerTab": "Inscription",
       "forgotTab": "Mot de passe oublié",
+      "linksAria": "Actions d'aide du compte",
+      "registerLink": "Créer un compte",
+      "forgotLink": "Mot de passe oublié",
+      "backToLogin": "Retour à la connexion",
       "emailLabel": "E-mail",
       "passwordLabel": "Mot de passe",
+      "confirmPasswordLabel": "Confirmer le mot de passe",
       "passwordPlaceholder": "Saisissez le mot de passe",
       "passwordMinPlaceholder": "Au moins 6 caractères",
+      "confirmPasswordPlaceholder": "Saisissez à nouveau le mot de passe",
       "recoveryQuestionLabel": "Question de récupération",
       "recoveryQuestionPlaceholder": "Exemple : ma première ville pour observer le coucher de soleil ?",
       "recoveryAnswerLabel": "Réponse de récupération",
@@ -64,6 +70,7 @@
       "registerSuccess": "Compte créé.",
       "resetSuccess": "Mot de passe réinitialisé. Connectez-vous avec le nouveau mot de passe.",
       "requestFailed": "La demande liée au compte a échoué.",
+      "passwordMismatch": "Les deux mots de passe ne correspondent pas.",
       "done": "Terminé.",
       "recoveryQuestionFallback": "Si le compte existe, saisissez la réponse de récupération et un nouveau mot de passe.",
       "recoveryQuestionUnavailable": "La question de récupération est temporairement indisponible. Vous pouvez quand même essayer la réponse et le nouveau mot de passe."
@@ -114,7 +121,8 @@
       "shareMap": "Carte partagée",
       "firecloudMap": "Firecloud Map",
       "user": "Mon compte",
-      "apiAccess": "Accès API"
+      "apiAccess": "Accès API",
+      "feedback": "Feedback"
     },
     "menu": {
       "ariaLabel": "Changer de vue",
@@ -174,16 +182,28 @@
     "methodology": {
       "title": "Comment le score est calculé",
       "intro": "L'indice de nuages rouges est calculé à partir de quatre facteurs clés pour vous aider à décider rapidement si la soirée vaut le déplacement.",
-      "versionLabel": "Version de l’algorithme : 2026.05.27-cloud-thickness-proportional-v2",
-      "versionDesc": "Cette version remplace la pénalité d’épaisseur nuageuse par score de canevas avant épaisseur × 30 % × pression d’épaisseur, supprime les plafonds fixes -28/24 et calibre les rideaux gris humides comme faible lueur / observable mais non fort.",
+      "versionLabel": 'Algorithm version: 2026.06.06-gray-veil-directional-carrier-v2',
+      "versionDesc": 'This version still uses cloud carrier × sunset path × air rendering, but separates open-path warm scattering, full-deck gray veil, and sun-direction mid-cloud bands. Moderate particles only add warmth when the deck is not gray and the path is open; full mid/high cloud with dirty air continuously suppresses rendering.',
       changelogTitle: "Historique des versions",
       changelogHint: "Les mises a jour des trois derniers mois sont ici ; faites defiler pour revoir la raison, l'impact et la validation",
       changelog: {
         "latest": {
-          "date": "2026-05-27",
-          "title": "Pénalité proportionnelle d’épaisseur nuageuse v2",
-          "summary": "La pénalité d’épaisseur nuageuse devient score de canevas avant épaisseur × 30 % × pression d’épaisseur, avec suppression des plafonds fixes -28/24. Les rideaux gris humides sont calibrés comme faible lueur / observable mais non fort.",
-          "validation": "Validation : sur l’échantillon de Pékin du 2026-05-27, une pression 0,78 sur un canevas 76,7 donne environ -18 points et conserve le résultat dans la zone faible lueur / observable."
+          "date": "2026-06-12",
+          "title": "Layer-weighted brightness formula v1",
+          "summary": "Adds layerBrightness: mid/high clouds are only the carrier, and an open path is only necessary. The model now checks whether that layer is actually illuminated. Weak brightness now applies a multiplicative score gate instead of a hard ceiling.",
+          "validation": "Validation: the 2026-06-12 Beijing sunset sample drops from the high-60s to around 60; web score details, text analysis, and the mini-program methodology page now show layer brightness."
+        },
+        "grayVeilDirectional": {
+          "date": "2026-06-06",
+          "title": "Gray-veil rendering + directional mid-cloud v2",
+          "summary": "Full mid/high cloud plus elevated PM/AOD no longer defaults to warm-scattering uplift; the model continuously lowers air rendering by gray-veil pressure. Sun-direction mid-cloud bands are now a continuous carrier: stronger band plus more open path moves toward the 50-60 range.",
+          "validation": "Validation: 2026-06-03 Beijing warm scattering stays in the 70 band; 2026-06-04 directional mid-cloud replays around 53.5; 2026-06-05 full gray veil falls around 44; all real calibration cases replay."
+        },
+        "scoringV2": {
+          "date": "2026-06-03",
+          "title": "Sunset scoring v2",
+          "summary": "The final score now combines cloud carrier, sunset path, and air rendering. With an open path and acceptable visibility, moderate AOD, PM, and dust are treated as warm orange-red scattering instead of automatic gray-curtain failure.",
+          "validation": "Validation: 2026-06-02 Beijing remains low around 30; the 2026-06-03 detailed point forecast replays around 71 and reaches the 70 band, while the fire-cloud map still uses the regional simplified branch."
         },
         "cloudThickness": {
           "date": "2026-05-27",
@@ -346,6 +366,19 @@
     "permissionDenied": "Impossible d'obtenir la position, saisissez manuellement",
     "loading": "Obtention de la position..."
   },
+  feedback: {
+    kicker: 'Prediction Feedback', title: 'Prediction feedback', subtitle: 'Submit missed, wrong, or overstated predictions. We save the score, weather snapshot, cloud data, location, and images for review.',
+    button: 'Feedback', closeAria: 'Close feedback dialog', typeLabel: 'Feedback type',
+    missed: 'Missed: real sky was good but score was low', wrong: 'Wrong: real sky was poor but score was high', overstated: 'Overstated: some color but not worth a high recommendation',
+    missedShort: 'Missed', wrongShort: 'Wrong', overstatedShort: 'Overstated',
+    missedHint: 'The real sky was good, but the predicted score was low.', wrongHint: 'The real sky was poor, but the predicted score was high.', overstatedHint: 'There was color, but the result was too weak for a high recommendation.',
+    commentLabel: 'Comment', commentPlaceholder: 'Describe clouds, color, blockage, and timing on site', nicknameLabel: 'Nickname', emailLabel: 'Email', photoLabel: 'Images (up to 2)',
+    submit: 'Submit feedback', cancel: 'Cancel', loginRequired: 'Please log in before submitting feedback.', loginAction: 'Log in',
+    dateLabel: 'Date', locationLabel: 'Location name', locationPlaceholder: 'Beijing Jingshan', latLabel: 'Latitude', lonLabel: 'Longitude', periodLabel: 'Type', sunrise: 'Sunrise', sunset: 'Sunset',
+    manualHelp: 'We will try to fetch the prediction snapshot for the selected date and place. If the date is out of range, feedback cannot be submitted.', openWindowHint: 'Feedback is open from 1 hour before sunrise/sunset until 45 minutes after the event.', windowClosed: 'Feedback is not open now. It is only open from 1 hour before sunrise/sunset until 45 minutes after the event.',
+    fetchSnapshot: 'Fetching prediction snapshot...', rangeExpired: 'This date is outside the feedback range.', submitting: 'Submitting feedback...', submitFailed: 'Failed to submit feedback', success: 'Feedback submitted. Thanks for helping us calibrate the forecast.', tooManyPhotos: 'You can upload up to 2 images.'
+  },
+
   "weather": {
     "title": "Informations Météo",
     "current": "Météo Actuelle",
@@ -375,6 +408,7 @@
     "hourly": "Prévisions Horaires",
     "threeDayGlow": "Lueurs sur 3 jours",
     "threeDayGlowLoading": "Chargement des lueurs d’aube et de crépuscule sur 3 jours...",
+    "threeDayGlowReferenceNote": "Les probabilités au-delà d’un jour peuvent être imprécises et sont fournies à titre indicatif.",
     "daysOverview": "Aperçu sur {{days}} jours",
     "precipChance": "{{prob}}% précip",
     unavailable: {
@@ -434,6 +468,7 @@
         "whyThisScore": "Why this score",
         "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
         "gatedFormula": "{{carrier}} × light-path gate {{gate}} = {{base}}",
+        "layerSumFormula": "Σ(carrier × brightness) = {{base}}",
         "canvasPlusLightPath": "canvas + light path",
         "renderingFormula": "{{base}} adjusted by rendering = {{rendered}}",
         "renderingMultiplierFormula": "{{base}} × rendering {{factor}} = {{rendered}}",
@@ -453,6 +488,7 @@
         "labels": {
           "cloudCarrier": "Cloud carrier",
           "lightPath": "Light path",
+          "layerBrightness": "Layer brightness",
           "baseScore": "Base score",
           "rendering": "Rendering",
           "final": "Final",
@@ -467,6 +503,7 @@
           "displayCalibration": "Display calibration",
           "aerosolCarrier": "Aerosol carrier",
           "scoringV2": "Open-path warm scattering",
+          "grayVeilAirRendering": "Gray-veil rendering",
           "evidence": "Calculation evidence"
         },
         "details": {
@@ -480,7 +517,10 @@
           "lowSolarTransmissionNo": "non",
           "aerosolCarrier": "thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}",
           "scoringV2": "cloud carrier {{carrier}} × sunset path {{path}} × air rendering {{air}}",
+          "grayVeilAirRendering": "full mid/high cloud with dirty air: carrier {{carrier}} × path {{path}} × suppressed air rendering {{air}}",
           "lightPath": "sunlight reaches the cloud layer",
+          "layerBrightnessShort": "sun direction, blockage, and illumination evidence explain whether each carrier layer is lit",
+          "layerBrightness": "brightness {{brightness}}, gate {{gate}}; layer carrier {{canvas}}, low-cloud block {{low}} / transmission {{lowBlock}}, solar {{solar}}, path {{path}}, air {{air}}, thickness {{thickness}}, beam {{beam}}",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
           "afterAdjustments": "after weather and visibility adjustments",
           "finalDisplayed": "final displayed result",
@@ -490,6 +530,7 @@
           "occlusion": "distant obstruction reduces the score",
           "carrierFloor": "clear high-cloud carrier prevents over-penalty",
           "directionalSamples": "nearby clouds along the sun direction are included",
+          "lightPathScoreEvidence": "path evidence score {{light}} is folded into brightness",
           "lightPathLowCloudBlock": "low clouds block sunlight from reaching the colorable clouds",
           "lightPathRain": "rain weakens direct sunset light",
           "postRainCap": "post-rain moisture or haze turns the glow into a gray curtain",
@@ -509,6 +550,7 @@
           "severeHazeCap35": "heavy haze makes colors hard to show",
           "moderateHazeCap45": "haze weakens orange-red color",
           "hazeWarmScatteringPathOpen": "open sunset path turns moderate particles into warm orange-red scattering",
+          "fullUpperCloudGrayVeilAirRendering": "full mid/high cloud plus dirty air suppresses color rendering",
           "denseCarrierCanvasOnly": "mid/high clouds can still catch sunset light",
           "adjustmentApplied": "score adjusted for limiting conditions",
           "displayCalibration": "final display score is aligned with the prediction status band",
@@ -1087,6 +1129,7 @@
     "updatedAt": "Updated at {{time}}",
     "supportedRegions": "Actuellement pris en charge : Chine continentale, Hong Kong, Macao, Taïwan, Japon, Corée du Sud, Corée du Nord et principales villes de l’Asie du Sud-Est continentale. La grille thermique est actuellement centrée sur la Chine.",
     "interactionHint": "Drag the map · scroll to zoom",
+    "layerLoading": "Chargement de la couche de nuages flamboyants...",
     "tabs": { "sunrise": "Sunrise", "sunset": "Sunset" },
     "quality": {
       "excellent": "Excellent",

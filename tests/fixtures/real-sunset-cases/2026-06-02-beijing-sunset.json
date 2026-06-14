@@ -83,8 +83,8 @@
   },
   "expectations": {
     "score": {
-      "min": 25,
-      "max": 45
+      "min": 12,
+      "max": 35
     },
     "statusAnyOf": [
       "light_glow",
@@ -105,8 +105,8 @@
     "notAbove": [
       {
         "path": "score",
-        "value": 50,
-        "reason": "This real-world miss must not regress to a high-score recommendation."
+        "value": 35,
+        "reason": "This real-world weak glow should stay low, but not collapse to a near-zero no-light score."
       }
     ]
   }

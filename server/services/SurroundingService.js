@@ -13,6 +13,7 @@ const PredictionService = require('./PredictionService.js');
 const EnhancedPredictionService = require('./EnhancedPredictionService.js');
 const SunCalculator = require('../utils/SunCalculator.js');
 const cacheConfig = require('../config/cacheConfig.js');
+const { buildTimeWeightedWeatherSample } = require('./WeatherTimeSampler.js');
 
 const RADAR_WEATHER_FORECAST_HOURS = 48;
 
@@ -40,6 +41,11 @@ class SurroundingService {
 
     this.cacheService = options.cacheService || null;
     this.predictionService = new PredictionService();
+  }
+
+  getCloudBaseHeightSource(weatherData = {}) {
+    const value = Number(weatherData.cloudBaseHeight);
+    return Number.isFinite(value) && value > 0 ? 'provider' : 'unavailable';
   }
 
   /**
@@ -151,23 +157,21 @@ class SurroundingService {
         const hourly = Array.isArray(weatherResponse.data) ? weatherResponse.data : [];
         if (!hourly.length) throw new Error('天气数据为空');
 
-        const refTs = sunTime?.getTime?.() || targetDate.getTime();
-        const selected = hourly.reduce((closest, current) => {
-          const cDiff = Math.abs((closest.timestamp || 0) - refTs);
-          const nDiff = Math.abs((current.timestamp || 0) - refTs);
-          return nDiff < cDiff ? current : closest;
-        }, hourly[0]);
+        const timeSample = buildTimeWeightedWeatherSample(hourly, sunTime || targetDate);
+        const selected = timeSample.weighted || timeSample.selected;
 
         return {
           ...point,
           cloudBaseHeight: selected.cloudBaseHeight ?? null,
-          lowCloud: selected.lowClouds || 0,
-          midCloud: selected.midClouds || 0,
-          highCloud: selected.highClouds || 0,
-          totalCloud: selected.cloudCover || 0,
+          cloudBaseHeightSource: this.getCloudBaseHeightSource(selected),
+          lowCloud: selected.lowClouds ?? 0,
+          midCloud: selected.midClouds ?? 0,
+          highCloud: selected.highClouds ?? 0,
+          totalCloud: selected.cloudCover ?? 0,
           humidity: selected.humidity ?? null,
           precipitation: selected.precipitation ?? 0,
           weatherCode: selected.weatherCode ?? null,
+          timeWeightedSamples: timeSample.weighted?.timeWeightedSamples || [],
           provider: weatherResponse.providerMeta?.name || weatherResponse.provider || null,
           error: null
         };
@@ -322,7 +326,7 @@ class SurroundingService {
           cloudCover: selectedWeather.cloudCover || 0,
           humidity: selectedWeather.humidity || 0,
           visibility: selectedWeather.visibility || 10,
-          lowCloudCover: selectedWeather.lowClouds || selectedWeather.cloudCover || 0,
+          lowCloudCover: selectedWeather.lowClouds ?? selectedWeather.cloudCover ?? 0,
           temp: selectedWeather.temp || 0,
           windSpeed: selectedWeather.windSpeed || 0,
           windDirection: selectedWeather.windDirection || 0,
@@ -332,6 +336,7 @@ class SurroundingService {
           midClouds: selectedWeather.midClouds || 0,
           highClouds: selectedWeather.highClouds || 0,
           cloudBaseHeight: selectedWeather.cloudBaseHeight ?? null,
+          cloudBaseHeightSource: this.getCloudBaseHeightSource(selectedWeather),
           cape: selectedWeather.cape ?? null,
           weatherCode: selectedWeather.weatherCode ?? null
         };
@@ -355,7 +360,8 @@ class SurroundingService {
             low: weatherData.lowClouds,
             mid: weatherData.midClouds,
             high: weatherData.highClouds,
-            cloudBaseHeight: weatherData.cloudBaseHeight
+            cloudBaseHeight: weatherData.cloudBaseHeight,
+            cloudBaseHeightSource: weatherData.cloudBaseHeightSource
           },
           error: null
         };

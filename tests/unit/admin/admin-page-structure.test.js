@@ -76,6 +76,28 @@ describe('admin page structure', () => {
     expect(mobileCss).toContain('display: none');
   });
 
+  test('admin exposes user management as a first-class panel', () => {
+    const html = readAdminHtml();
+    const js = readAdminJs();
+
+    expect(html).toContain('data-view="users"');
+    expect(html).toContain('id="admin-panel-users"');
+    expect(html).toContain('id="adminUserSearch"');
+    expect(html).toContain('id="adminUserTableBody"');
+    expect(html).toContain('id="adminUserDetail"');
+    expect(html).toContain('用户管理');
+    expect(html).toContain('撤销会话');
+    expect(html).toContain('禁用');
+
+    expect(js).toContain("'users'");
+    expect(js).toContain("case 'users'");
+    expect(js).toContain('loadAdminUsers()');
+    expect(js).toContain('loadAdminUserDetail');
+    expect(js).toContain('toggleAdminUserDisabled');
+    expect(js).toContain('revokeAdminUserSessions');
+    expect(js).toContain('deleteAdminUser');
+  });
+
   test('mobile photo management keeps thumbnails visible in narrow layouts', () => {
     const css = readAdminCss();
     const js = readAdminJs();
@@ -418,7 +440,7 @@ describe('admin page structure', () => {
     expect(html).toContain('字段都可以留空或手动修改');
     expect(html).toContain('访客记录');
     expect(html).toContain('日期（北京时间）');
-    expect(js).toContain("const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'ops', 'logs', 'agent', 'photos'])");
+    expect(js).toContain("const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'users', 'ops', 'logs', 'agent', 'photos', 'feedback'])");
     expect(js).toContain("fetch('/admin/visitor-records?'");
     expect(js).toContain('renderClientStats');
     expect(html).toContain('visitor-ip-table');

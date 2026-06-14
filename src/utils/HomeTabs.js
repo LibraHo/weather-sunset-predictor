@@ -15,7 +15,7 @@
  * Both modes control shared home panels:
  * - `#tab-panel-forecast`    — default visible panel
  * - `#tab-panel-methodology` — hidden by default
- * - `#tab-panel-map` / `#tab-panel-gallery` / `#tab-panel-api` when present
+ * - `#tab-panel-map` / `#tab-panel-gallery` / `#tab-panel-feedback` / `#tab-panel-api` when present
  *
  * @param {Document} [documentRef=document] - Document reference (injectable for testing)
  * @returns {void}
@@ -40,6 +40,7 @@ export function initializeHomeTabs(documentRef = document, onMapVisible = null) 
   const mapPanel = documentRef.getElementById('tab-panel-map');
   const galleryPanel = documentRef.getElementById('tab-panel-gallery');
   const userPanel = documentRef.getElementById('tab-panel-user');
+  const feedbackPanel = documentRef.getElementById('tab-panel-feedback');
   const apiPanel = documentRef.getElementById('tab-panel-api');
 
   const tabForecast = documentRef.getElementById('tab-forecast');
@@ -54,6 +55,7 @@ export function initializeHomeTabs(documentRef = document, onMapVisible = null) 
     ...(mapPanel ? [{ id: 'map', el: mapPanel }] : []),
     ...(galleryPanel ? [{ id: 'gallery', el: galleryPanel }] : []),
     ...(userPanel ? [{ id: 'user', el: userPanel }] : []),
+    ...(feedbackPanel ? [{ id: 'feedback', el: feedbackPanel }] : []),
     ...(apiPanel ? [{ id: 'api', el: apiPanel }] : []),
   ];
 

@@ -44,11 +44,6 @@ function parseDateParam(value) {
   return parsed;
 }
 
-function pickClosestWeather(hourly = [], targetTs) {
-  const sample = buildTimeWeightedWeatherSample(hourly, targetTs);
-  return sample.weighted || sample.selected;
-}
-
 function normalizeWeatherForPrediction(weather = {}, providerMeta = {}) {
   return {
     cloudCover: weather.cloudCover ?? 0,
@@ -193,8 +188,8 @@ router.get('/forecast', async (req, res) => {
     const bestWindow = SunCalculator.getGoldenHour(referenceTime, type);
 
     const hourly = Array.isArray(weatherResponse?.data) ? weatherResponse.data : [];
-    const referenceTs = referenceTime.getTime();
-    const selectedWeatherRaw = pickClosestWeather(hourly, referenceTs);
+    const selectedSample = buildTimeWeightedWeatherSample(hourly, referenceTime);
+    const selectedWeatherRaw = selectedSample.weighted || selectedSample.selected;
 
     if (!selectedWeatherRaw) {
       return errorResponse(res, 502, 'NO_WEATHER_DATA', 'No weather data available for forecast calculation');
@@ -283,6 +278,11 @@ router.get('/forecast', async (req, res) => {
         timezone: targetTimezone,
         providerMeta: weatherResponse?.providerMeta || null,
         providerName: weatherResponse?.providerMeta?.name || null,
+        weatherSample: {
+          strategy: selectedSample.weighted ? 'time_weighted' : 'closest',
+          selectedIdx: selectedSample.selectedIdx,
+          samples: selectedSample.weighted?.timeWeightedSamples || []
+        },
         source: resolved.source,
         hasLocationInput: Boolean(location)
       },

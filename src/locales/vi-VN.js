@@ -44,10 +44,16 @@
       "loginTab": "Đăng nhập",
       "registerTab": "Đăng ký",
       "forgotTab": "Quên mật khẩu",
+      "linksAria": "Thao tác hỗ trợ tài khoản",
+      "registerLink": "Tạo tài khoản",
+      "forgotLink": "Quên mật khẩu",
+      "backToLogin": "Quay lại đăng nhập",
       "emailLabel": "Email",
       "passwordLabel": "Mật khẩu",
+      "confirmPasswordLabel": "Xác nhận mật khẩu",
       "passwordPlaceholder": "Nhập mật khẩu",
       "passwordMinPlaceholder": "Ít nhất 6 ký tự",
+      "confirmPasswordPlaceholder": "Nhập lại mật khẩu",
       "recoveryQuestionLabel": "Câu hỏi khôi phục",
       "recoveryQuestionPlaceholder": "Ví dụ: thành phố đầu tiên tôi thường ngắm hoàng hôn?",
       "recoveryAnswerLabel": "Câu trả lời khôi phục",
@@ -64,6 +70,7 @@
       "registerSuccess": "Đã tạo tài khoản.",
       "resetSuccess": "Đã đặt lại mật khẩu. Hãy đăng nhập bằng mật khẩu mới.",
       "requestFailed": "Yêu cầu tài khoản thất bại.",
+      "passwordMismatch": "Hai mật khẩu không khớp.",
       "done": "Hoàn tất.",
       "recoveryQuestionFallback": "Nếu tài khoản tồn tại, hãy nhập câu trả lời khôi phục và mật khẩu mới.",
       "recoveryQuestionUnavailable": "Câu hỏi khôi phục tạm thời không khả dụng. Bạn vẫn có thể thử câu trả lời và mật khẩu mới."
@@ -114,7 +121,8 @@
       "shareMap": "Bản đồ chia sẻ",
       "firecloudMap": "Firecloud Map",
       "user": "Tài khoản",
-      "apiAccess": "Truy cập API"
+      "apiAccess": "Truy cập API",
+      "feedback": "Feedback"
     },
     "menu": {
       "ariaLabel": "Chuyển trang",
@@ -174,16 +182,28 @@
     "methodology": {
       "title": "Phương pháp tính điểm mây đẹp",
       "intro": "Chỉ số mây đẹp được tính toán tổng hợp từ bốn yếu tố chính, giúp bạn nhanh chóng đánh giá liệu ngày hôm đó có đáng để chờ đợi hoàng hôn hay không.",
-      "versionLabel": "Phiên bản thuật toán: 2026.05.27-cloud-thickness-proportional-v2",
-      "versionDesc": "Phiên bản này đổi mức trừ do mây dày thành điểm nền mây trước hiệu chỉnh độ dày × 30% × áp lực độ dày, bỏ trần cố định -28/24 và hiệu chỉnh màn mây xám ẩm thành mức cháy yếu/có thể xem nhưng không mạnh.",
+      "versionLabel": 'Algorithm version: 2026.06.06-gray-veil-directional-carrier-v2',
+      "versionDesc": 'This version still uses cloud carrier × sunset path × air rendering, but separates open-path warm scattering, full-deck gray veil, and sun-direction mid-cloud bands. Moderate particles only add warmth when the deck is not gray and the path is open; full mid/high cloud with dirty air continuously suppresses rendering.',
       changelogTitle: "Lịch sử cập nhật phiên bản",
       changelogHint: "Các cập nhật thuật toán trong ba tháng gần đây nằm ở đây; cuộn để xem lý do, tác động và cách kiểm chứng",
       changelog: {
         "latest": {
-          "date": "2026-05-27",
-          "title": "Trừ điểm tỷ lệ theo độ dày mây v2",
-          "summary": "Mức trừ do mây dày nay là điểm nền mây trước hiệu chỉnh độ dày × 30% × áp lực độ dày, bỏ trần cố định -28/24. Màn mây xám ẩm được hiệu chỉnh thành cháy yếu/có thể xem nhưng không mạnh.",
-          "validation": "Kiểm chứng: mẫu Bắc Kinh ngày 2026-05-27 có áp lực 0.78 trên nền 76.7 nên trừ khoảng -18 điểm, giữ kết quả trong vùng cháy yếu/có thể xem."
+          "date": "2026-06-12",
+          "title": "Layer-weighted brightness formula v1",
+          "summary": "Adds layerBrightness: mid/high clouds are only the carrier, and an open path is only necessary. The model now checks whether that layer is actually illuminated. Weak brightness now applies a multiplicative score gate instead of a hard ceiling.",
+          "validation": "Validation: the 2026-06-12 Beijing sunset sample drops from the high-60s to around 60; web score details, text analysis, and the mini-program methodology page now show layer brightness."
+        },
+        "grayVeilDirectional": {
+          "date": "2026-06-06",
+          "title": "Gray-veil rendering + directional mid-cloud v2",
+          "summary": "Full mid/high cloud plus elevated PM/AOD no longer defaults to warm-scattering uplift; the model continuously lowers air rendering by gray-veil pressure. Sun-direction mid-cloud bands are now a continuous carrier: stronger band plus more open path moves toward the 50-60 range.",
+          "validation": "Validation: 2026-06-03 Beijing warm scattering stays in the 70 band; 2026-06-04 directional mid-cloud replays around 53.5; 2026-06-05 full gray veil falls around 44; all real calibration cases replay."
+        },
+        "scoringV2": {
+          "date": "2026-06-03",
+          "title": "Sunset scoring v2",
+          "summary": "The final score now combines cloud carrier, sunset path, and air rendering. With an open path and acceptable visibility, moderate AOD, PM, and dust are treated as warm orange-red scattering instead of automatic gray-curtain failure.",
+          "validation": "Validation: 2026-06-02 Beijing remains low around 30; the 2026-06-03 detailed point forecast replays around 71 and reaches the 70 band, while the fire-cloud map still uses the regional simplified branch."
         },
         "cloudThickness": {
           "date": "2026-05-27",
@@ -346,6 +366,19 @@
     "permissionDenied": "Không thể lấy quyền vị trí, hãy nhập thủ công",
     "loading": "Đang lấy vị trí..."
   },
+  feedback: {
+    kicker: 'Prediction Feedback', title: 'Prediction feedback', subtitle: 'Submit missed, wrong, or overstated predictions. We save the score, weather snapshot, cloud data, location, and images for review.',
+    button: 'Feedback', closeAria: 'Close feedback dialog', typeLabel: 'Feedback type',
+    missed: 'Missed: real sky was good but score was low', wrong: 'Wrong: real sky was poor but score was high', overstated: 'Overstated: some color but not worth a high recommendation',
+    missedShort: 'Missed', wrongShort: 'Wrong', overstatedShort: 'Overstated',
+    missedHint: 'The real sky was good, but the predicted score was low.', wrongHint: 'The real sky was poor, but the predicted score was high.', overstatedHint: 'There was color, but the result was too weak for a high recommendation.',
+    commentLabel: 'Comment', commentPlaceholder: 'Describe clouds, color, blockage, and timing on site', nicknameLabel: 'Nickname', emailLabel: 'Email', photoLabel: 'Images (up to 2)',
+    submit: 'Submit feedback', cancel: 'Cancel', loginRequired: 'Please log in before submitting feedback.', loginAction: 'Log in',
+    dateLabel: 'Date', locationLabel: 'Location name', locationPlaceholder: 'Beijing Jingshan', latLabel: 'Latitude', lonLabel: 'Longitude', periodLabel: 'Type', sunrise: 'Sunrise', sunset: 'Sunset',
+    manualHelp: 'We will try to fetch the prediction snapshot for the selected date and place. If the date is out of range, feedback cannot be submitted.', openWindowHint: 'Feedback is open from 1 hour before sunrise/sunset until 45 minutes after the event.', windowClosed: 'Feedback is not open now. It is only open from 1 hour before sunrise/sunset until 45 minutes after the event.',
+    fetchSnapshot: 'Fetching prediction snapshot...', rangeExpired: 'This date is outside the feedback range.', submitting: 'Submitting feedback...', submitFailed: 'Failed to submit feedback', success: 'Feedback submitted. Thanks for helping us calibrate the forecast.', tooManyPhotos: 'You can upload up to 2 images.'
+  },
+
   "weather": {
     "title": "Thông Tin Thời Tiết",
     "current": "Thời Tiết Hiện Tại",
@@ -375,6 +408,7 @@
     "hourly": "Dự Báo Theo Giờ",
     "threeDayGlow": "Ráng trời 3 ngày",
     "threeDayGlowLoading": "Đang tải ráng bình minh và hoàng hôn trong 3 ngày...",
+    "threeDayGlowReferenceNote": "Xác suất sau hơn một ngày có thể không chính xác, chỉ dùng để tham khảo.",
     "daysOverview": "Tổng Quan {{days}} Ngày",
     "precipChance": "{{prob}}% khả năng mưa",
     unavailable: {
@@ -434,6 +468,7 @@
         "whyThisScore": "Why this score",
         "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
         "gatedFormula": "{{carrier}} × light-path gate {{gate}} = {{base}}",
+        "layerSumFormula": "Σ(carrier × brightness) = {{base}}",
         "canvasPlusLightPath": "canvas + light path",
         "renderingFormula": "{{base}} adjusted by rendering = {{rendered}}",
         "renderingMultiplierFormula": "{{base}} × rendering {{factor}} = {{rendered}}",
@@ -453,6 +488,7 @@
         "labels": {
           "cloudCarrier": "Cloud carrier",
           "lightPath": "Light path",
+          "layerBrightness": "Layer brightness",
           "baseScore": "Base score",
           "rendering": "Rendering",
           "final": "Final",
@@ -467,6 +503,7 @@
           "displayCalibration": "Display calibration",
           "aerosolCarrier": "Aerosol carrier",
           "scoringV2": "Open-path warm scattering",
+          "grayVeilAirRendering": "Gray-veil rendering",
           "evidence": "Calculation evidence"
         },
         "details": {
@@ -480,7 +517,10 @@
           "lowSolarTransmissionNo": "không",
           "aerosolCarrier": "thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}",
           "scoringV2": "cloud carrier {{carrier}} × sunset path {{path}} × air rendering {{air}}",
+          "grayVeilAirRendering": "full mid/high cloud with dirty air: carrier {{carrier}} × path {{path}} × suppressed air rendering {{air}}",
           "lightPath": "sunlight reaches the cloud layer",
+          "layerBrightnessShort": "sun direction, blockage, and illumination evidence explain whether each carrier layer is lit",
+          "layerBrightness": "brightness {{brightness}}, gate {{gate}}; layer carrier {{canvas}}, low-cloud block {{low}} / transmission {{lowBlock}}, solar {{solar}}, path {{path}}, air {{air}}, thickness {{thickness}}, beam {{beam}}",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
           "afterAdjustments": "after weather and visibility adjustments",
           "finalDisplayed": "final displayed result",
@@ -490,6 +530,7 @@
           "occlusion": "distant obstruction reduces the score",
           "carrierFloor": "clear high-cloud carrier prevents over-penalty",
           "directionalSamples": "nearby clouds along the sun direction are included",
+          "lightPathScoreEvidence": "path evidence score {{light}} is folded into brightness",
           "lightPathLowCloudBlock": "low clouds block sunlight from reaching the colorable clouds",
           "lightPathRain": "rain weakens direct sunset light",
           "postRainCap": "post-rain moisture or haze turns the glow into a gray curtain",
@@ -509,6 +550,7 @@
           "severeHazeCap35": "heavy haze makes colors hard to show",
           "moderateHazeCap45": "haze weakens orange-red color",
           "hazeWarmScatteringPathOpen": "open sunset path turns moderate particles into warm orange-red scattering",
+          "fullUpperCloudGrayVeilAirRendering": "full mid/high cloud plus dirty air suppresses color rendering",
           "denseCarrierCanvasOnly": "mid/high clouds can still catch sunset light",
           "adjustmentApplied": "score adjusted for limiting conditions",
           "displayCalibration": "final display score is aligned with the prediction status band",
@@ -1087,6 +1129,7 @@
     "updatedAt": "Updated at {{time}}",
     "supportedRegions": "Hiện hỗ trợ: Trung Quốc đại lục, Hồng Kông, Ma Cao, Đài Loan, Nhật Bản, Hàn Quốc, Triều Tiên và các thành phố lớn ở Đông Nam Á lục địa. Lưới heatmap hiện tập trung vào khu vực Trung Quốc.",
     "interactionHint": "Drag the map · scroll to zoom",
+    "layerLoading": "Đang tải lớp bản đồ mây lửa...",
     "tabs": { "sunrise": "Sunrise", "sunset": "Sunset" },
     "quality": {
       "excellent": "Excellent",

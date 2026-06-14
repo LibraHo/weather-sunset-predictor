@@ -44,10 +44,16 @@ const translations = {
       "loginTab": "登入",
       "registerTab": "註冊",
       "forgotTab": "找回密碼",
+      "linksAria": "帳號輔助操作",
+      "registerLink": "註冊帳號",
+      "forgotLink": "找回密碼",
+      "backToLogin": "返回登入",
       "emailLabel": "Email",
       "passwordLabel": "密碼",
+      "confirmPasswordLabel": "確認密碼",
       "passwordPlaceholder": "請輸入密碼",
       "passwordMinPlaceholder": "至少 6 位",
+      "confirmPasswordPlaceholder": "再次輸入密碼",
       "recoveryQuestionLabel": "找回問題",
       "recoveryQuestionPlaceholder": "例如：我的第一座常看晚霞的城市？",
       "recoveryAnswerLabel": "找回答案",
@@ -64,6 +70,7 @@ const translations = {
       "registerSuccess": "帳號已建立。",
       "resetSuccess": "密碼已重設，請用新密碼登入。",
       "requestFailed": "帳號請求失敗。",
+      "passwordMismatch": "兩次輸入的密碼不一致。",
       "done": "完成。",
       "recoveryQuestionFallback": "如果帳號存在，請輸入找回答案和新密碼。",
       "recoveryQuestionUnavailable": "找回問題暫時不可用，你仍可嘗試填寫答案和新密碼。"
@@ -114,7 +121,8 @@ const translations = {
       "shareMap": "分享地圖",
       "firecloudMap": "火燒雲地圖",
       "user": "我的",
-      "apiAccess": "API接入"
+      "apiAccess": "API接入",
+      "feedback": "反馈"
     },
     "menu": {
       "ariaLabel": "切換頁面",
@@ -173,13 +181,25 @@ const translations = {
     },
     "methodology": {
       "title": "火燒雲計算方法",
-      "intro": "目前的火燒雲指數會先判斷「有沒有可顯色載體」，再判斷太陽方向的光路能不能把光打到載體上，最後只用空氣顯色條件做小幅修正。它不再把一串好條件連續相乘，所以高雲 100% 不會自動滿分。",
-      "versionLabel": "算法版本：2026.06.03-sunset-scoring-v2",
-      "versionDesc": "本版把最終評分收斂為「雲載體 × 日落光路 × 空氣顯色」：有光路時輕／中度氣溶膠可增強橙紅散射，無光路、極端霾、低能見度、降水和厚低雲仍優先壓制。",
+      "intro": "目前的火燒雲指數會先判斷「有沒有可顯色載體」，再把太陽方向光路併入受光亮度，最後用空氣顯色條件修正。高雲多、光路通，也可能因亮度弱而降分。",
+      "versionLabel": "算法版本：2026.06.13-layer-weighted-brightness-v1",
+      "versionDesc": "本版使用「Σ(分層載體 × 分層受光亮度) × 空氣顯色」。受光亮度基於低／中／高三層雲、太陽幾何、太陽方向通路、AOD／水汽、直射／散射和雲厚證據估算，並採用對數飽和響應：從無光到弱光更敏感，接近滿亮後邊際變小。",
       changelogTitle: "版本更新記錄",
       changelogHint: "近三個月內的算法更新都會放在這裡，可捲動回看原因、影響和驗證方式",
       changelog: {
         "latest": {
+          "date": "2026-06-13",
+          "title": "分層求和亮度公式 v1",
+          "summary": "最終分改為 Σ(分層載體 × 分層受光亮度) × 空氣顯色；受光亮度採用對數飽和響應，光路繼續作為內部因子。",
+          "validation": "驗證：核心評分、Web 評分細則、小程序算法頁和結果頁都顯示分層求和口徑。"
+        },
+        "grayVeilDirectional": {
+          "date": "2026-06-06",
+          "title": "灰幕空氣顯色 + 方向中雲帶 v2",
+          "summary": "滿鋪中高雲疊加 PM/AOD 偏高時，不再預設當暖色散射加分，而是按灰幕壓力連續降低空氣顯色；太陽方向中雲帶改為連續載體，光路越開、方向中雲越強，越接近 50-60 檔。",
+          "validation": "驗證：2026-06-03 北京暖散射保持 70 檔；2026-06-04 北京方向中雲帶約 53.5；2026-06-05 北京滿鋪灰幕壓到約 44；真實校準樣本庫全量回放通過。"
+        },
+        "scoringV2": {
           "date": "2026-06-03",
           "title": "日落評分 v2",
           "summary": "最終分改為雲載體、日落光路、空氣顯色三部分合成；光路開且能見度可接受時，輕／中度 AOD、PM、dust 作為橙紅散射正向因素，而不是一律當灰幕。",
@@ -268,10 +288,10 @@ const translations = {
         "transparency": {
           "title": "3. 大氣透明度",
           "subtitle": "Transparency · 渲染評分",
-          "desc": "能見度、濕度、雨後狀態和空氣顆粒只影響「顯色品質」。有光路時，適度顆粒可增強橙紅散射；無光路或顆粒過重時才轉為灰幕扣分。",
+          "desc": "能見度、濕度、雨後狀態和空氣顆粒只影響「顯色品質」。有光路且雲幕不灰時，適度顆粒可增強橙紅散射；中高雲滿鋪且 PM/AOD 偏高時，會轉為灰幕顯色抑制。",
           "visibility": "渲染因子會綜合 visibilityFactor、humidityFactor、rainBonus、aqiFactor、aerosolFactor",
           "humidity": "渲染修正不是乘爆分數：factor≥1 時轉成最多約 +9 分；factor<1 時最多約 -25 分",
-          "formula": "空氣顯色 = 光路開 ? 暖色散射係數 1.02–1.12 : 原渲染係數；重霾／低能見度約 0.6–0.8"
+          "formula": "空氣顯色 = 灰幕壓力優先 ? 0.70–0.95 : 光路開 ? 暖色散射係數 1.02–1.12 : 原渲染係數"
         },
         "layerDiversity": {
           "title": "4. 光路門控",
@@ -291,13 +311,13 @@ const translations = {
           "level4": "總雲量≥92 且低雲≥20% → 輕懲罰到約 ×0.75；天氣文案明確陰天且低雲≥35% → 再 ×0.5"
         },
         thickHighCloudPenalty: {
-          title: '7. 載體與灰幕修正',
-          subtitle: 'Carrier Quality · 畫布與薄霧',
-          desc: '算法先求「能顯色的載體」，再用日落光路和空氣顯色決定它能發揮多少。氣溶膠不再只是弱載體，也會在光路打開時參與暖色散射。',
-          level1: '雲層載體 = 畫布基礎分 + 雲種／雲厚／高雲有限加減分；高雲強但光路沒開，不允許直接滿分',
-          level2: '雲少時仍保留氣溶膠弱載體；雲多且光路開時，適度 AOD/PM/dust 進入空氣顯色，增強橙紅散射',
-          level3: '重霾、沙塵、能見度<8、厚雲、雨低雲會把載體壓低或封頂；清透高雲保護也會被光路門控否決',
-          formula: 'scoringV2 = 雲載體 × 日落光路 × 空氣顯色\n暖色散射只在光路開、低雲不堵、能見度可接受時生效'
+          title: '7. 受光亮度',
+          subtitle: 'Layer Brightness · 雲層是否真的亮',
+          desc: '載體和光路之外，系統會估算中高雲實際受光強度。現在是基於低／中／高三層雲的亮度模型，不是 4km／9km／13km 每個高度層單獨計算。',
+          level1: '亮度 = 雲層畫布 × 太陽幾何 × 光路開放度 × 空氣透過率 × 雲厚因子 × 直射／散射因子',
+          level2: 'AOD、水汽、PM10、低能見度、漫射光占優、厚高雲和高雲水汽灰幕是壓暗證據；至少多個證據同時成立才封頂',
+          level3: '高雲很多但亮度弱時，不再因為「載體多 + 光路通」直接給高分；北京 2026-06-12 晚霞就是這類校準樣本',
+          formula: 'layerBrightness = 三層雲載體 × 光路 × 受光／空氣／雲厚證據\n亮度弱時會限制最終展示分'
         },
         "precipPenalty": {
           "title": "6. 降水懲罰係數",
@@ -311,13 +331,13 @@ const translations = {
         },
         "finalFormula": {
           "title": "8. 最終分數",
-          "subtitle": "Final Score · 雲載體 × 日落光路 × 空氣顯色",
-          "desc": "最終分不為單個城市或日期加特殊抬分，而是讓雲、光路、空氣三部分共同解釋分數。光路打開時，適度顆粒可讓橙紅更明顯；光路關閉時，同樣的顆粒只會壓灰。",
-          "formula": "最終分 = clamp(雲載體 × 日落光路 × 空氣顯色, 0, 100)，再經過硬否決／厚雲／灰幕校準",
-          "highCloudCap": "高雲充足但光路被擋時，光路門控會壓低最高得分。",
+          "subtitle": "Final Score · Σ(分層載體 × 分層受光亮度) × 空氣顯色",
+          "desc": "最終分不為單個城市或日期加特殊抬分，而是先看雲載體，再把光路併入受光亮度，最後由空氣顯色修正。",
+          "formula": "最終分 = clamp(Σ(分層載體 × 分層受光亮度) × 空氣顯色, 0, 100)，再經過硬否決／厚雲／灰幕校準",
+          "highCloudCap": "高雲充足但光路被擋時，會先體現在受光亮度變弱。",
           "carrier": "載體分 = max(雲層畫布分, 氣溶膠弱載體分)",
-          "lightGate": "光路門控 = 0.25–1.12；太陽方向阻擋走廊可壓到約 0.42，太陽方向開口約 0.90–0.96",
-          "rendering": "空氣顯色 = 0.6–1.15；光路開時輕／中度 AOD、PM、dust 可進入 1.02–1.12 暖色散射區間",
+          "lightGate": "光路不再單獨參與最終乘法，而是作為受光亮度裡的太陽方向通路因子",
+          "rendering": "受光亮度會先判斷雲是否真的亮；空氣顯色 = 0.70–1.12，光路開且雲幕不灰時輕／中度 AOD、PM、dust 可加暖色，滿鋪灰幕則連續壓低",
           "statusCaps": "顯示分還會按狀態校準：無火燒雲低於 40，輕微霞光低於 60；幾何不可行、厚雲、灰幕和雨低雲會進一步封頂"
         }
       }
@@ -346,6 +366,21 @@ const translations = {
     "permissionDenied": "無法取得位置權限，請手動輸入位置",
     "loading": "正在取得位置..."
   },
+  feedback: {
+    kicker: 'Prediction Feedback',
+    title: '反馈预测结果',
+    subtitle: '提交漏报、误报或虚报，系统会保存预测快照、天气原始数据、评分、地点和图片，方便后台复盘。',
+    button: '反馈', closeAria: '关闭反馈窗口', typeLabel: '反馈类型',
+    missed: '漏报：实际很好但评分偏低', wrong: '误报：实际不好但评分偏高', overstated: '虚报：有颜色但不值得冲',
+    missedShort: '漏报', wrongShort: '误报', overstatedShort: '虚报',
+    missedHint: '实际很好，但预测分数偏低。', wrongHint: '实际不好，但预测分数偏高。', overstatedHint: '有颜色但效果弱，不值得按高分推荐。',
+    commentLabel: '评论', commentPlaceholder: '描述现场看到的云量、颜色、遮挡和时间', nicknameLabel: '昵称', emailLabel: '邮箱', photoLabel: '图片（最多 2 张）',
+    submit: '提交反馈', cancel: '取消', loginRequired: '请先登录后再反馈。', loginAction: '登录',
+    dateLabel: '日期', locationLabel: '地点名称', locationPlaceholder: '北京景山', latLabel: '纬度', lonLabel: '经度', periodLabel: '类型', sunrise: '朝霞', sunset: '晚霞',
+    manualHelp: '提交后会尝试抓取对应日期地点的预测快照；超出可抓取范围会提示不可反馈。', openWindowHint: '反馈只在日出/日落前 1 小时到事件后 45 分钟内开放。', windowClosed: '反馈暂未开放。反馈只在日出/日落前 1 小时到事件后 45 分钟内开放。',
+    fetchSnapshot: '正在抓取预测数据...', rangeExpired: '已经超出可反馈的日期范围。', submitting: '正在提交反馈...', submitFailed: '反馈提交失败', success: '反馈已提交，感谢你帮我们校准预测。', tooManyPhotos: '最多上传 2 张图片。'
+  },
+
   "weather": {
     "title": "天氣資訊",
     "current": "目前天氣",
@@ -375,6 +410,7 @@ const translations = {
     "hourly": "詳細預報",
     "threeDayGlow": "3天朝晚霞",
     "threeDayGlowLoading": "正在讀取3天朝晚霞...",
+    "threeDayGlowReferenceNote": "超過一天後的機率可能不準，僅供參考。",
     "daysOverview": "{{days}}天概覽",
     "precipChance": "{{prob}}%降水",
     "unavailable": {
@@ -420,27 +456,28 @@ const translations = {
       "title": "評分明細",
       "viewDetails": "查看評分明細",
       "finalDisplayed": "最終顯示分",
-      "baseFormula": "基礎分 = 載體 × 光路門控",
-      "baseHint": "太陽方向光路門控後的載體基礎分",
-      "canvasHint": "高雲/中雲提供主要色彩載體，適度薄霧可提供弱載體，低雲可能遮擋",
+      "baseFormula": "基礎分 = Σ(分層載體 × 分層受光亮度)",
+      "baseHint": "太陽方向光路已併入受光亮度後的載體基礎分",
+      "canvasHint": "高雲/中雲提供主要色彩載體，適度薄霧可提供弱載體；低雲遮擋、厚高雲和灰幕會限制可用亮度",
       "lightPathHint": "太陽光是否能照到雲層",
-      "finalFormula": "最終分 = 雲載體 × 日落光路 × 空氣顯色",
-      "renderingHint": "濕度與能見度影響色彩表現",
+      "finalFormula": "最終分 = Σ(分層載體 × 分層受光亮度) × 空氣顯色",
+      "renderingHint": "受光亮度、濕度、能見度和顆粒物共同影響色彩表現",
       "aerosolHint": "適度氣溶膠增強橙紅散射，過多則發灰",
       "ledger": {
         "pts": "分",
         "whyThisScore": "為什麼是這個分數",
         "weightedFormula": "{{canvas}}×80% + {{light}}×20% = {{base}}",
-        "gatedFormula": "{{carrier}} × 光路門控 {{gate}} = {{base}}",
-        "canvasPlusLightPath": "畫布 + 光路",
+        "gatedFormula": "Σ(分層載體 × 分層受光亮度) = {{base}}",
+        "layerSumFormula": "Σ(分層載體 × 分層受光亮度) = {{base}}",
+        "canvasPlusLightPath": "Σ(分層載體 × 分層受光亮度)",
         "renderingFormula": "{{base}} 經顯色修正 = {{rendered}}",
-        "renderingMultiplierFormula": "{{base}} × 顯色係數 {{factor}} = {{rendered}}",
+        "renderingMultiplierFormula": "{{base}} × 空氣顯色係數 {{factor}} = {{rendered}}",
         "renderingAdjustmentFormula": "{{base}} {{sign}} 顯色修正 {{adjustment}} = {{rendered}}",
         "weatherTransparency": "天氣通透度",
         "summary": {
           "event": "{{score}} 分：主要調整是 {{detail}}",
           "rendered": "{{base}} 分經顯色條件修正為 {{rendered}} 分",
-          "default": "{{score}} 分：由雲層、光路和顯色條件綜合計算"
+          "default": "{{score}} 分：由分層載體、分層受光亮度和空氣顯色計算"
         },
         "weather": {
           "clouds": "高/中/低雲 {{high}}/{{mid}}/{{low}}%",
@@ -450,9 +487,10 @@ const translations = {
         },
         "labels": {
           "cloudCarrier": "雲層載體",
-          "lightPath": "光路",
+          "lightPath": "光路證據",
+          "layerBrightness": "分層受光亮度",
           "baseScore": "基礎分",
-          "rendering": "顯色修正",
+          "rendering": "空氣顯色",
           "final": "最終分",
           "hardCap": "天氣限制",
           "hazeCap": "灰幕影響",
@@ -465,6 +503,7 @@ const translations = {
           "displayCalibration": "展示分校準",
           "aerosolCarrier": "氣溶膠載體",
           "scoringV2": "開口暖色散射",
+          "grayVeilAirRendering": "灰幕顯色抑制",
           "evidence": "計算依據"
         },
         "details": {
@@ -477,8 +516,11 @@ const translations = {
           "lowSolarTransmissionYes": "命中",
           "lowSolarTransmissionNo": "未命中",
           "aerosolCarrier": "雲層很少時，薄霧在光路通暢時可承接一點暖色，光路激活 ×{{activation}}",
-          "scoringV2": "雲載體 {{carrier}} × 日落光路 {{path}} × 空氣顯色 {{air}}",
-          "lightPath": "陽光是否能照到雲層",
+          "scoringV2": "雲載體 {{carrier}}；光路證據已併入分層受光亮度；空氣顯色 {{air}}",
+          "grayVeilAirRendering": "滿鋪中高雲疊加偏髒空氣：雲載體 {{carrier}}；光路證據作為亮度證據；灰幕顯色 {{air}}",
+          "lightPath": "作為受光亮度解釋的太陽方向證據",
+          "layerBrightnessShort": "太陽方向、遮擋和亮度響應共同解釋各層載體是否被照亮",
+          "layerBrightness": "亮度 {{brightness}}，門控 {{gate}}；分層載體 {{canvas}}，低雲遮擋 {{low}} / 透過 {{lowBlock}}，太陽幾何 {{solar}}，光路因子 {{path}}，空氣 {{air}}，雲厚 {{thickness}}，直射／散射 {{beam}}",
           "renderingFactors": "能見度 ×{{visibility}}，濕度 ×{{humidity}}，氣溶膠 ×{{aerosol}}",
           "afterAdjustments": "結合天氣和能見度後",
           "finalDisplayed": "最終顯示結果",
@@ -488,6 +530,7 @@ const translations = {
           "occlusion": "遠端遮擋壓低最終分",
           "carrierFloor": "高雲載體清透，避免誤傷低估",
           "directionalSamples": "已參考太陽方向周邊雲況",
+          "lightPathScoreEvidence": "光路證據 {{light}} 已併入受光亮度",
           "lightPathLowCloudBlock": "低雲遮住太陽方向，光線不容易照到中高雲",
           "lightPathRain": "降水會削弱日落直射光",
           "postRainCap": "水氣、顆粒物或直達光偏弱，霞光容易發灰",
@@ -507,6 +550,7 @@ const translations = {
           "severeHazeCap35": "重度灰霾讓顏色不容易出來",
           "moderateHazeCap45": "灰霾會削弱紅橙色",
           "hazeWarmScatteringPathOpen": "日落光路打開，適度顆粒增強橙紅散射",
+          "fullUpperCloudGrayVeilAirRendering": "滿鋪中高雲疊加偏髒空氣，顯色轉為灰幕抑制",
           "denseCarrierCanvasOnly": "中高雲層仍能承接晚霞光線",
           "adjustmentApplied": "已按限制條件修正",
           "displayCalibration": "最終展示分按預測狀態檔位校準",
@@ -515,16 +559,16 @@ const translations = {
         }
       }},
 "formationAnalysis": {
-      "title": "火燒雲形成條件分析",
+      "title": "火燒雲文字分析",
       "groups": { "positive": "有利條件", "neutral": "一般因素", "warning": "注意因素" },
       "factors": {
         "carrier": {
           "title": "雲層載體",
           "status": { "good": "較好", "fair": "一般", "weak": "較弱" },
           "desc": {
-            "good": "中高雲能承接日落光線，是今天主要的顯色畫布。",
-            "fair": "有一些可被染色的雲層，但面積或高度不夠理想。",
-            "weak": "缺少合適的中高雲，天空不容易形成大片火燒雲。"
+            "good": "中高雲提供可染色雲面，具備承接霞光的基礎。",
+            "fair": "有可染色雲面，但面積、高度或穩定性不夠理想。",
+            "weak": "可染色雲面不足，難形成成片火燒雲。"
           }
         },
         "lightPath": {
@@ -1089,6 +1133,7 @@ const translations = {
     "updatedAt": "更新於 {{time}}",
     "supportedRegions": "目前支援：中國大陸、港澳臺、日本、韓國、朝鮮及中南半島主要城市；熱力柵格目前以中國區域為主。",
     "interactionHint": "可拖曳地圖 · 滾輪縮放",
+    "layerLoading": "正在讀取火燒雲圖層...",
     "tabs": { "sunrise": "朝霞", "sunset": "晚霞" },
     "quality": {
       "excellent": "優秀",
