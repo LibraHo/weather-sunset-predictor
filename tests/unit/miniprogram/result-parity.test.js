@@ -56,7 +56,7 @@ describe('miniprogram result page web parity', () => {
     expect(web.indexOf('renderAnalysisCard', renderStart)).toBeLessThan(web.indexOf('prediction-share-menu prediction-share-footer', renderStart));
 
     expect(wxml.indexOf('open-type="share"')).toBeLessThan(wxml.indexOf('bindtap="toggleFavorite"'));
-    expect(wxss).toContain('grid-template-columns: minmax(0, 1fr) 196rpx minmax(0, 1fr)');
+    expect(wxss).toContain('grid-template-columns: repeat(3, minmax(0, 1fr))');
     expect(wxml).toContain('result-share-action result-share-primary');
     expect(wxml).toContain('/assets/icons/share-upload.svg');
     expect(wxml).toContain('result-action-label">分享');
@@ -64,6 +64,11 @@ describe('miniprogram result page web parity', () => {
     expect(wxml).toContain('feedback-icon-image');
     expect(wxml).toContain('/assets/icons/feedback-message.svg');
     expect(wxml).toContain('result-action-label">反馈');
+    expect(wxml).toContain('result-action-label result-favorite-label');
+    expect(wxml).toContain('收藏地点');
+    expect(wxss).toContain('.result-favorite-label');
+    expect(wxss).toContain('.result-page.theme-dark .result-feedback-action');
+    expect(wxss).toContain('.result-page.theme-dark .result-favorite-action');
     expect(wxml).not.toContain('ghost-button action-button result-action-button');
     expect(wxml.indexOf('data-target="map"')).toBeLessThan(wxml.indexOf('data-target="methodology"'));
     expect(wxml.indexOf('data-target="gallery"')).toBeLessThan(wxml.indexOf('data-target="api"'));

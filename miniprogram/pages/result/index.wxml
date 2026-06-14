@@ -28,7 +28,9 @@
         <image class="feedback-icon-image" src="/assets/icons/feedback-message.svg" mode="aspectFit" aria-hidden="true" />
         <text class="result-action-label">反馈</text>
       </button>
-      <button class="result-share-action result-favorite-action" bindtap="toggleFavorite" hover-class="button-hover" hover-stay-time="80">{{isFavorite ? '取消收藏' : '收藏地点'}}</button>
+      <button class="result-share-action result-favorite-action" bindtap="toggleFavorite" hover-class="button-hover" hover-stay-time="80">
+        <text class="result-action-label result-favorite-label">{{isFavorite ? '取消收藏' : '收藏地点'}}</text>
+      </button>
     </view>
 
     <view wx:if="{{feedbackModalVisible}}" class="feedback-mask" bindtap="closeFeedback">
