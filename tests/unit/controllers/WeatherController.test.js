@@ -412,17 +412,22 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(options.attributionControl).toBe(false);
   });
 
-  test('火烧云地图染色图层 loading 使用紧凑浮层，不占据地图主体', () => {
+  test('火烧云地图染色图层 loading 使用主页同款进度条小浮层', () => {
     const css = readFileSync('styles/main.css', 'utf8');
+    const progressBlock = css.match(/\.china-spots-layer-loading \.loading-progress\s*\{[\s\S]*?\n\}/)?.[0] || '';
 
     expect(css).toMatch(/\.china-spots-layer-loading\s*\{[\s\S]*?top:\s*12px;/);
     expect(css).toMatch(/\.china-spots-layer-loading\s*\{[\s\S]*?right:\s*12px;/);
     expect(css).toMatch(/\.china-spots-layer-loading\s*\{[\s\S]*?display:\s*inline-flex;/);
-    expect(css).toMatch(/\.china-spots-layer-loading\s*\{[\s\S]*?border-radius:\s*999px;/);
+    expect(css).toMatch(/\.china-spots-layer-loading\s*\{[\s\S]*?width:\s*min\(260px, calc\(100% - 24px\)\);/);
+    expect(css).toMatch(/\.china-spots-layer-loading\s*\{[\s\S]*?border-radius:\s*12px;/);
     expect(css).toMatch(/\.china-spots-layer-spinner\s*\{[\s\S]*?width:\s*16px;/);
     expect(css).toMatch(/\.china-spots-layer-spinner\s*\{[\s\S]*?height:\s*16px;/);
     expect(css).toMatch(/\.china-spots-layer-spinner\s*\{[\s\S]*?margin:\s*0;/);
-    expect(css).toMatch(/\.china-spots-layer-loading \.loading-progress\s*\{[\s\S]*?display:\s*none;/);
+    expect(progressBlock).toContain('height: 8px;');
+    expect(progressBlock).toContain('margin-top: 7px;');
+    expect(progressBlock).not.toContain('display: none;');
+    expect(css).toMatch(/\.china-spots-layer-progress-fill\s*\{[\s\S]*?animation:\s*xiake-loading-progress/);
     expect(css).not.toMatch(/\.china-spots-layer-loading\s*\{[\s\S]*?inset:\s*12px;/);
     expect(css).not.toMatch(/\.china-spots-layer-loading\s*\{[\s\S]*?min-height:\s*84px;/);
   });
