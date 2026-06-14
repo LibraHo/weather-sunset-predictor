@@ -38,6 +38,7 @@ export function initializeHomeTabs(documentRef = document, onMapVisible = null) 
   }
 
   const mapPanel = documentRef.getElementById('tab-panel-map');
+  const simulatorPanel = documentRef.getElementById('tab-panel-simulator');
   const galleryPanel = documentRef.getElementById('tab-panel-gallery');
   const userPanel = documentRef.getElementById('tab-panel-user');
   const feedbackPanel = documentRef.getElementById('tab-panel-feedback');
@@ -51,6 +52,7 @@ export function initializeHomeTabs(documentRef = document, onMapVisible = null) 
 
   const allPanels = [
     { id: 'forecast', el: forecastPanel },
+    ...(simulatorPanel ? [{ id: 'simulator', el: simulatorPanel }] : []),
     { id: 'methodology', el: methodologyPanel },
     ...(mapPanel ? [{ id: 'map', el: mapPanel }] : []),
     ...(galleryPanel ? [{ id: 'gallery', el: galleryPanel }] : []),

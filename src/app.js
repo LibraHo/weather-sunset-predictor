@@ -17,6 +17,7 @@ import { API_CONFIG } from '../config.api.js';
 import initializeHomeTabs from './utils/HomeTabs.js';
 import UserPanelController from './controllers/UserPanelController.js';
 import FeedbackController from './controllers/FeedbackController.js';
+import FireCloudProfileSimulatorView from './components/FireCloudProfileSimulatorView.js';
 
 console.log('Weather Sunset Predictor - Application Starting...');
 
@@ -111,6 +112,7 @@ const weatherController = new WeatherController(storageService, savedAPIKey, USE
 const predictionController = new PredictionController(storageService);
 let userPanelController = null;
 let feedbackController = null;
+let fireCloudProfileSimulatorView = null;
 
 const appController = new AppController(
   storageService,
@@ -177,6 +179,7 @@ async function initializeApp() {
     setupApiApplicationForm();
     setupUserPanelController();
     setupFeedbackController();
+    setupFireCloudProfileSimulator();
 
     // 朝/晚霞 tab 早期绑定（init 前就可点击）
     document.getElementById('map-tab-sunrise')?.addEventListener('click', () => {
@@ -244,6 +247,12 @@ function setupFeedbackController() {
   feedbackController = new FeedbackController({ userPanelController });
   feedbackController.initialize();
   window.feedbackController = feedbackController;
+}
+
+function setupFireCloudProfileSimulator() {
+  fireCloudProfileSimulatorView = new FireCloudProfileSimulatorView(document);
+  fireCloudProfileSimulatorView.initialize();
+  window.fireCloudProfileSimulatorView = fireCloudProfileSimulatorView;
 }
 
 function setupGalleryBasemapSync() {
