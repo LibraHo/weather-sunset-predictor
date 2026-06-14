@@ -237,7 +237,7 @@ describe('miniprogram page user/share helpers', () => {
   });
 
   test('home real-city search builds the same weather and prediction surface as test mode', () => {
-    const state = homeHelpers.buildHomePredictionSurface({
+    const prediction = {
       locationName: '北京',
       period: 'sunset',
       date: '2026-05-14',
@@ -259,7 +259,12 @@ describe('miniprogram page user/share helpers', () => {
         precipitation: 0
       },
       clouds: { high: 66, mid: 41, low: 12 }
-    }, { locationName: '北京', period: 'sunset' });
+    };
+    const state = homeHelpers.buildHomeWeatherPredictionPatch({
+      weather: prediction.weatherData,
+      prediction,
+      query: { locationName: '北京', period: 'sunset' }
+    });
 
     expect(state.weatherPreview).toMatchObject({
       visible: true,
@@ -290,6 +295,22 @@ describe('miniprogram page user/share helpers', () => {
       left: 16.7,
       top: 36.2
     });
+  });
+
+  test('home prediction surface cannot overwrite the authoritative weather card', () => {
+    const surface = homeHelpers.buildHomePredictionSurface({
+      locationName: '北京',
+      period: 'sunset',
+      score: 76,
+      weatherData: {
+        temp: 22,
+        humidity: 63,
+        visibility: 18
+      }
+    }, { locationName: '北京', period: 'sunset' });
+
+    expect(surface).toHaveProperty('predictionPreview');
+    expect(surface).not.toHaveProperty('weatherPreview');
   });
 
   test('home radar marks sunrise direction on the cloud field', () => {
@@ -376,7 +397,11 @@ describe('miniprogram page user/share helpers', () => {
         aerosol_optical_depth: 0.12
       }
     });
-    const state = homeHelpers.buildHomePredictionSurface(prediction, { locationName: '北京', period: 'sunset' });
+    const state = homeHelpers.buildHomeWeatherPredictionPatch({
+      weather: prediction.weatherData,
+      prediction,
+      query: { locationName: '北京', period: 'sunset' }
+    });
 
     expect(state.weatherPreview.temperature).toBe('21.6');
     expect(state.weatherPreview.windSpeed).toBe('11 km/h');
@@ -409,7 +434,11 @@ describe('miniprogram page user/share helpers', () => {
       }
     });
 
-    const homeState = homeHelpers.buildHomePredictionSurface(prediction, { locationName: '贵州凯里', period: 'sunset' });
+    const homeState = homeHelpers.buildHomeWeatherPredictionPatch({
+      weather: prediction.weatherData,
+      prediction,
+      query: { locationName: '贵州凯里', period: 'sunset' }
+    });
     expect(homeState.weatherPreview.metrics).toEqual(expect.arrayContaining([
       expect.objectContaining({ key: 'aerosol', value: '≈0.52', hint: '邻近时次' })
     ]));
@@ -432,7 +461,11 @@ describe('miniprogram page user/share helpers', () => {
         wind_direction_10m: 180
       }
     });
-    const state = homeHelpers.buildHomePredictionSurface(prediction, { locationName: '北京', period: 'sunset' });
+    const state = homeHelpers.buildHomeWeatherPredictionPatch({
+      weather: prediction.weatherData,
+      prediction,
+      query: { locationName: '北京', period: 'sunset' }
+    });
 
     expect(state.weatherPreview.windSpeed).toBe('2 km/h');
     expect(state.weatherPreview.windDirection).toBe('南');
@@ -568,6 +601,54 @@ describe('miniprogram page user/share helpers', () => {
     expect(homeSource).toContain('const cachedPrediction = this.data.predictionPeriodCards?.[value];');
     expect(homeSource).toContain('const pendingPrediction = this.predictionPreviewPromises?.[value];');
     expect(homeSource.indexOf('const cachedPrediction = this.data.predictionPeriodCards?.[value];')).toBeLessThan(homeSource.indexOf('predictionPreview: buildPredictionPreviewForPeriod(value, this.data.day)'));
+  });
+
+  test.each([
+    { name: '北京', aod: 0.46, fallbackAod: 1.18 },
+    { name: '上海', aod: 0.28, fallbackAod: 0.31 },
+    { name: '广州', aod: 0.19, fallbackAod: 0.24 }
+  ])('home unified gateway keeps full weather AOD for $name when prediction weather lacks aerosol', ({ name, aod, fallbackAod }) => {
+    const patch = homeHelpers.buildHomeWeatherPredictionPatch({
+      weather: {
+        location: name,
+        temp: 25.8,
+        humidity: 58,
+        visibility: 12,
+        pressure: 1006,
+        windSpeed: 6,
+        windDirection: 180,
+        precipitation: 0,
+        cloudCover: 44,
+        aerosolOpticalDepth: aod,
+        hourly: [
+          { timestamp: 1781366400000, aerosolOpticalDepth: fallbackAod },
+          { timestamp: 1781370000000, aerosolOpticalDepth: aod }
+        ]
+      },
+      prediction: {
+        type: 'sunset',
+        score: 62,
+        weatherData: {
+          temp: 25.8,
+          humidity: 58,
+          visibility: 12
+        },
+        cloudLayers: { high: 70, mid: 58, low: 28 }
+      },
+      predictionCards: {
+        sunset: { type: 'sunset', score: 62 }
+      },
+      query: {
+        locationName: name,
+        period: 'sunset',
+        day: 'today'
+      }
+    });
+
+    expect(patch.weatherPreview.location).toBe(name);
+    expect(patch.weatherPreview.metrics).toEqual(expect.arrayContaining([
+      expect.objectContaining({ key: 'aerosol', value: String(aod) })
+    ]));
   });
 
   test('home defaults to tomorrow after the selected sun event has passed by 45 minutes', () => {
