@@ -208,7 +208,10 @@ describe('miniprogram page user/share helpers', () => {
     expect(view.chart[0].labelPlacement).toBe('right');
     expect(view.chart.at(-1).labelPlacement).toBe('left');
     expect(view.chart[Math.floor((view.chart.length - 1) / 2)].labelPlacement).toBe('center');
-    expect(view.chart.every((point) => point.top >= 26 && point.top <= 80)).toBe(true);
+    expect(view.chart.every((point) => point.top >= 24 && point.top <= 74)).toBe(true);
+    expect(view.xAxisLabels).toHaveLength(7);
+    expect(view.xAxisLabels[0]).toMatchObject({ value: '00:00', left: view.chart[0].left, placement: 'right' });
+    expect(view.xAxisLabels.at(-1)).toMatchObject({ value: '23:00', left: view.chart.at(-1).left, placement: 'left' });
     expect(view.chartSegments).toBeUndefined();
   });
 

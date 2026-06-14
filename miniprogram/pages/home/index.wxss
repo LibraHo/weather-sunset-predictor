@@ -2281,7 +2281,7 @@
 
 .weather-hourly-chart {
   position: relative;
-  height: 214rpx;
+  height: 244rpx;
   margin-bottom: 4rpx;
   overflow: hidden;
   border: 2rpx solid rgba(127, 83, 29, 0.09);
@@ -2299,7 +2299,7 @@
 
 .weather-hourly-grid-line-top { top: 34rpx; }
 .weather-hourly-grid-line-mid { top: 108rpx; }
-.weather-hourly-grid-line-bottom { bottom: 34rpx; }
+.weather-hourly-grid-line-bottom { bottom: 62rpx; }
 
 .weather-hourly-canvas {
   position: absolute;
@@ -2368,6 +2368,34 @@
   left: auto;
   right: 26rpx;
   transform: none;
+}
+
+.weather-hourly-time-axis {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 16rpx;
+  height: 30rpx;
+  z-index: 2;
+}
+
+.weather-hourly-time-label {
+  position: absolute;
+  top: 0;
+  color: rgba(89, 67, 54, 0.50);
+  font-size: 19rpx;
+  font-weight: 800;
+  line-height: 30rpx;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.weather-hourly-time-label-right {
+  transform: none;
+}
+
+.weather-hourly-time-label-left {
+  transform: translateX(-100%);
 }
 
 .weather-glow-card {
@@ -3315,6 +3343,7 @@
 }
 
 .home-page.theme-dark.has-weather .weather-hourly-axis-label,
+.home-page.theme-dark.has-weather .weather-hourly-time-label,
 .home-page.theme-dark.has-weather .weather-hourly-point-label {
   color: rgba(255, 255, 255, 0.72);
   text-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.32);
