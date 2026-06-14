@@ -551,7 +551,8 @@ class UserService {
         if (session.expiresAt && new Date(session.expiresAt).getTime() <= this.clock().getTime()) return null;
         if (session.tokenHash && !timingSafeEqualString(session.tokenHash, hashToken(token))) return null;
       }
-      return this.findById(payload.sub);
+      const user = this.findById(payload.sub);
+      return user && user.disabled !== true ? user : null;
     } catch (error) {
       return null;
     }
@@ -668,6 +669,108 @@ class UserService {
     user.updatedAt = nowIso();
     this.save();
     return recent;
+  }
+
+  getPrimaryEmail(user = {}) {
+    const identity = (user.identities || []).find(item => item.provider === EMAIL_PROVIDER && item.email);
+    return identity?.email || user.email || '';
+  }
+
+  toAdminSummary(user = {}) {
+    const sessions = this.data.sessions.filter(session => session.userId === user.userId);
+    const activeSessions = sessions.filter(session => !session.revokedAt && (!session.expiresAt || new Date(session.expiresAt).getTime() > this.clock().getTime()));
+    return {
+      userId: user.userId,
+      email: this.getPrimaryEmail(user),
+      disabled: user.disabled === true,
+      adminNote: user.adminNote || '',
+      identityProviders: uniqueValues((user.identities || []).map(identity => identity.provider)).sort(),
+      identitiesCount: (user.identities || []).length,
+      favoritesCount: (user.favorites || []).length,
+      recentLocationsCount: (user.recentLocations || []).length,
+      sessionsCount: sessions.length,
+      activeSessionsCount: activeSessions.length,
+      createdAt: user.createdAt || null,
+      updatedAt: user.updatedAt || null,
+      disabledAt: user.disabledAt || null
+    };
+  }
+
+  listAdminUsers({ query = '' } = {}) {
+    this.data = this.normalizeData(this.load());
+    this.hydrateUsers();
+    const needle = String(query || '').trim().toLowerCase();
+    return this.data.users
+      .map(user => this.toAdminSummary(user))
+      .filter(user => !needle ||
+        String(user.userId || '').toLowerCase().includes(needle) ||
+        String(user.email || '').toLowerCase().includes(needle) ||
+        user.identityProviders.some(provider => provider.toLowerCase().includes(needle))
+      )
+      .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+  }
+
+  getAdminUserDetail(userId) {
+    this.data = this.normalizeData(this.load());
+    this.hydrateUsers();
+    const user = this.findById(userId);
+    if (!user) return null;
+    const summary = this.toAdminSummary(user);
+    return {
+      ...summary,
+      identities: (user.identities || []).map(identity => ({
+        identityId: identity.identityId,
+        provider: identity.provider,
+        subject: identity.provider === EMAIL_PROVIDER ? identity.email || identity.subject : identity.subject,
+        email: identity.email || '',
+        createdAt: identity.createdAt || null,
+        updatedAt: identity.updatedAt || null
+      })),
+      favorites: (user.favorites || []).map(item => ({ ...item })),
+      recentLocations: (user.recentLocations || []).map(item => ({ ...item })),
+      sessions: this.data.sessions
+        .filter(session => session.userId === user.userId)
+        .map(session => ({
+          sessionId: session.sessionId,
+          createdAt: session.createdAt || null,
+          updatedAt: session.updatedAt || null,
+          expiresAt: session.expiresAt || null,
+          revokedAt: session.revokedAt || null,
+          active: !session.revokedAt && (!session.expiresAt || new Date(session.expiresAt).getTime() > this.clock().getTime())
+        }))
+    };
+  }
+
+  updateAdminUser(userId, patch = {}) {
+    this.data = this.normalizeData(this.load());
+    this.hydrateUsers();
+    const user = this.findById(userId);
+    if (!user) return null;
+    const timestamp = nowIso();
+    if (Object.prototype.hasOwnProperty.call(patch, 'disabled')) {
+      const nextDisabled = patch.disabled === true;
+      user.disabled = nextDisabled;
+      user.disabledAt = nextDisabled ? timestamp : null;
+      if (nextDisabled) this.revokeUserSessions(userId, { save: false, revokedAt: timestamp });
+    }
+    if (Object.prototype.hasOwnProperty.call(patch, 'adminNote')) {
+      user.adminNote = String(patch.adminNote || '').trim().slice(0, 500);
+    }
+    user.updatedAt = timestamp;
+    this.hydrateUsers();
+    this.save();
+    return this.getAdminUserDetail(userId);
+  }
+
+  deleteUser(userId) {
+    this.data = this.normalizeData(this.load());
+    const user = this.findById(userId);
+    if (!user) return false;
+    this.data.users = this.data.users.filter(item => item.userId !== userId);
+    this.data.userIdentities = this.data.userIdentities.filter(identity => identity.userId !== userId);
+    this.data.sessions = this.data.sessions.filter(session => session.userId !== userId);
+    this.save();
+    return true;
   }
 }
 

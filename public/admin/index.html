@@ -26,6 +26,7 @@
         <button class="admin-nav-item admin-view-option active" aria-current="page" aria-pressed="true" data-view="dashboard"><span>总览</span><small>状态和值班</small></button>
         <button class="admin-nav-item admin-view-option" aria-pressed="false" data-view="visitors"><span>访客分析</span><small>PV、UV、IP</small></button>
         <button class="admin-nav-item admin-view-option" aria-pressed="false" data-view="analytics"><span>运营分析</span><small>来源、行为、质量</small></button>
+        <button class="admin-nav-item admin-view-option" aria-pressed="false" data-view="users"><span>用户管理</span><small>账号、会话、风控</small></button>
         <button class="admin-nav-item admin-view-option" aria-pressed="false" data-view="ops"><span>运维中心</span><small>队列、定时、数据管线</small></button>
         <button class="admin-nav-item admin-view-option" aria-pressed="false" data-view="logs"><span>日志</span><small>调用与错误</small></button>
         <button class="admin-nav-item admin-view-option" aria-pressed="false" data-view="agent"><span>API Token</span><small>申请、用量、审计</small></button>
@@ -174,6 +175,40 @@
                 <thead><tr><th>类别</th><th>目标</th><th>次数</th><th>耗时 / 错误</th></tr></thead>
                 <tbody id="analyticsQualityBody"><tr><td colspan="4" class="empty">加载中...</td></tr></tbody>
               </table>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section id="admin-panel-users" class="admin-panel hidden" data-admin-panel="users" role="tabpanel" aria-label="用户管理">
+        <section class="admin-section">
+          <div class="admin-card">
+            <div class="admin-filter-row">
+              <label for="adminUserSearch">用户搜索</label>
+              <input id="adminUserSearch" type="search" placeholder="邮箱、UserId、身份来源">
+              <button class="btn btn-secondary" type="button" onclick="loadAdminUsers()">查询</button>
+            </div>
+            <div class="kpi-grid visitor-kpi-grid">
+              <div class="kpi-card"><div class="kpi-label">用户总数</div><div class="kpi-value" id="admin-users-total">--</div></div>
+              <div class="kpi-card"><div class="kpi-label">已禁用</div><div class="kpi-value" id="admin-users-disabled">--</div></div>
+              <div class="kpi-card"><div class="kpi-label">活跃会话</div><div class="kpi-value" id="admin-users-active-sessions">--</div></div>
+            </div>
+          </div>
+        </section>
+        <section class="admin-section">
+          <div class="two-col admin-users-grid">
+            <div class="admin-card admin-table-card">
+              <h3 class="card-title">用户列表</h3>
+              <div class="table-wrap admin-table-scroll">
+                <table class="admin-table">
+                  <thead><tr><th>用户</th><th>身份</th><th>收藏</th><th>上传</th><th>会话</th><th>状态</th><th>操作</th></tr></thead>
+                  <tbody id="adminUserTableBody"><tr><td colspan="7" class="empty">加载中...</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="admin-card">
+              <h3 class="card-title">用户详情</h3>
+              <div id="adminUserDetail" class="admin-user-detail"><p class="empty">选择用户查看身份、收藏、最近地点和会话，可执行禁用、撤销会话或删除。</p></div>
             </div>
           </div>
         </section>
