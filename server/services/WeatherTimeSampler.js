@@ -30,15 +30,18 @@ function toEpochMs(value) {
     return Number.isFinite(time) ? time : null;
   }
 
+  const num = Number(value);
+  if (Number.isFinite(num)) {
+    if (num > 1e12) return num;
+    return num * 1000;
+  }
+
   if (typeof value === 'string') {
     const parsed = new Date(value).getTime();
     return Number.isFinite(parsed) ? parsed : null;
   }
 
-  const num = Number(value);
-  if (!Number.isFinite(num)) return null;
-  if (num > 1e12) return num;
-  return num * 1000;
+  return null;
 }
 
 function normalizeHourlyEntries(hourly = []) {
@@ -72,7 +75,9 @@ function averageWeightedField(samples, field) {
   let weightTotal = 0;
 
   samples.forEach(({ item, weight }) => {
-    const value = Number(item?.[field]);
+    const rawValue = item?.[field];
+    if (rawValue == null || rawValue === '') return;
+    const value = Number(rawValue);
     if (!Number.isFinite(value)) return;
     total += value * weight;
     weightTotal += weight;
