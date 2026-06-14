@@ -28,7 +28,7 @@ jobs:
 
       - name: Install dependencies
         timeout-minutes: 10
-        run: npm ci --no-audit --no-fund
+        run: npm install --no-audit --no-fund
 
       # This is the required gate for merging: tests must pass.
       # Keep coverage non-blocking for now because current global thresholds
