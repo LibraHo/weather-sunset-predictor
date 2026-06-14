@@ -1364,9 +1364,7 @@ export function buildPredictionPreviewForPeriod(period = 'sunset', day = getDefa
 }
 
 export function buildHomePredictionSurface(prediction = {}, query = {}) {
-  const weather = buildWeatherFromPrediction(prediction, query);
   return {
-    weatherPreview: buildWeatherPreview(weather),
     predictionPreview: buildPredictionPreviewFromPrediction(prediction, query)
   };
 }
@@ -1374,7 +1372,11 @@ export function buildHomePredictionSurface(prediction = {}, query = {}) {
 export function buildHomeWeatherPredictionPatch({ weather = {}, prediction = {}, predictionCards = {}, query = {} } = {}) {
   return {
     ...buildHomePredictionSurface(prediction, query),
-    weatherPreview: buildWeatherPreview({ ...weather, location: query.locationName }),
+    weatherPreview: buildWeatherPreview({
+      referenceTime: prediction.referenceTime || prediction.eventTime || prediction.date,
+      ...weather,
+      location: query.locationName
+    }),
     predictionPeriodCards: predictionCards,
     predictionPreviewLoading: false,
     weatherView: 'overview',
