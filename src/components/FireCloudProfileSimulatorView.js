@@ -68,6 +68,12 @@ function translate(key, fallback, params = {}) {
   return translated && translated !== key ? translated : fallback;
 }
 
+function clampNumber(value, min, max, fallback) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.max(min, Math.min(max, number));
+}
+
 class FireCloudProfileSimulatorView {
   constructor(documentRef = document) {
     this.document = documentRef;
@@ -173,12 +179,13 @@ class FireCloudProfileSimulatorView {
     const cloud = this.selectedCloud;
     if (!cloud) return;
 
-    cloud.distanceKm = Number(this.distanceInput.value) || 0;
-    cloud.baseHeightM = Number(this.baseInput.value) || 0;
-    cloud.topHeightM = Math.max(cloud.baseHeightM + 50, Number(this.topInput.value) || cloud.baseHeightM + 50);
-    cloud.coverage = Number(this.coverageInput.value) || 0;
-    cloud.widthKm = Math.max(2, Number(this.widthInput?.value) || 18);
-    cloud.opticalDepth = Number(this.opticalDepthInput.value) || 0.05;
+    cloud.distanceKm = clampNumber(this.distanceInput.value, 0, DEFAULT_MAX_DISTANCE_KM, 0);
+    cloud.baseHeightM = clampNumber(this.baseInput.value, 0, DEFAULT_MAX_HEIGHT_M - 50, 0);
+    cloud.topHeightM = clampNumber(this.topInput.value, cloud.baseHeightM + 50, DEFAULT_MAX_HEIGHT_M, cloud.baseHeightM + 50);
+    cloud.coverage = clampNumber(this.coverageInput.value, 0, 100, 0);
+    cloud.widthKm = clampNumber(this.widthInput?.value, 2, 80, 18);
+    cloud.opticalDepth = clampNumber(this.opticalDepthInput.value, 0.05, 1.6, 0.05);
+    this.syncSelectedInputs();
     this.render();
   }
 
