@@ -11,6 +11,7 @@ export default {
     tabs: {
       ariaLabel: 'تنقل تبويبات الصفحة الرئيسية',
       forecast: 'التنبؤ',
+      "simulator": "????? ??????",
     methodology: 'طريقة حساب النقاط',
       map: 'خريطة السحب الحمراء',
             shareMap: 'خريطة المشاركة',
@@ -23,6 +24,83 @@ apiAccess: 'الوصول إلى API',
       ariaLabel: 'تبديل العرض',
       dropdownAriaLabel: 'قائمة التنقل'
     },
+    "simulator": {
+      "title": "????? ???? ????? ???????",
+      "intro": "Place cloud blocks by distance and meter-level height, then scrub sunrise or sunset time to see which clouds light up, which are shadowed, and which dim because they are thick.",
+      "mode": {
+        "sunrise": "??????",
+        "sunset": "??????"
+      },
+      "solarAngle": "?????? ?????",
+      "canvasAria": "Fire-cloud layer cross-section canvas",
+      "axisDistance": "Distance X: 0-150 km",
+      "axisHeight": "Height Y: 0-12000 m",
+      "controlsAria": "Profile simulation controls",
+      "controls": {
+        "mode": "Mode",
+        "time": "Simulation time",
+        "axisScale": "Axis scale",
+        "cloud": "Selected cloud"
+      },
+      "axis": {
+        "linear": "Linear axis",
+        "log": "Log axis",
+        "linearShort": "LINEAR axis",
+        "logShort": "LOG axis"
+      },
+      "fields": {
+        "distance": "Distance km",
+        "baseHeight": "Cloud base m",
+        "topHeight": "Cloud top m",
+        "coverage": "Coverage %",
+        "opticalDepth": "Optical depth"
+      },
+      "actions": {
+        "addCloud": "Add cloud",
+        "reset": "Reset presets"
+      },
+      "selectCloudHint": "Select a cloud to inspect the decision reason",
+      "rules": {
+        "aria": "Simulation rule notes",
+        "shadow": "Shadow: only cloud heights reached by the shadow band are blocked",
+        "scatter": "Scatter: twilight scatter adds width above and below the light band",
+        "thick": "Thick veil: high coverage plus high optical depth absorbs light into gray",
+        "alwaysDark": "Always dark: every sunrise/sunset sample misses warm illumination"
+      },
+      "customCloudLabel": "Custom cloud {{index}}",
+      "cloudNames": {
+        "nearLowWall": "???? ??? ????? ????",
+        "midAltocumulus": "??? ?????? ??????",
+        "farCirrus": "???? ??? ????? ?????",
+        "distantThickVeil": "???? ????? ???? ????"
+      },
+      "time": {
+        "atSunrise": "Sunrise time",
+        "atSunset": "Sunset time",
+        "before": "{{minutes}} min before {{mode}}",
+        "after": "{{minutes}} min after {{mode}}"
+      },
+      "summary": "Lit {{lit}}, blockers {{blocking}}, shadowed {{shadowed}}, dimmed {{dimmed}}, always dark {{alwaysDark}}",
+      "selectedReason": "{{label}}: {{reason}}",
+      "status": {
+        "lit": "Lit",
+        "dimmed": "Dimmed",
+        "shadowed": "Shadowed",
+        "blocking": "Blocking wall",
+        "unlit": "Unlit",
+        "alwaysDark": "Always dark cloud",
+        "alwaysDarkShort": "Dark"
+      },
+      "reasons": {
+        "alwaysDark": "The full sampled window misses the warm light band",
+        "shadowed": "Covered by the shadow band from an upstream cloud",
+        "blocking": "Low-angle light forms a blocking cloud wall",
+        "dimmed": "The cloud veil is thick enough to absorb warm light",
+        "lit": "Cloud height intersects the scattered light band",
+        "unlit": "Cloud height has not reached the light band yet"
+      }
+    },
+
     apiAccess: {
       kicker: 'Sunset Voyager API',
       intro: 'The Sunset Voyager Agent API provides geocoding, sunrise/sunset glow scores, and score explanations for personal, learning, and research use.',

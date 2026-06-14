@@ -4,7 +4,8 @@ const DEFAULT_MAX_HEIGHT_M = 12000;
 const DEFAULT_PROFILE_CLOUDS = [
   {
     id: 'near-low-wall',
-    label: '近处低云墙',
+    label: 'Near low cloud wall',
+    labelKey: 'home.simulator.cloudNames.nearLowWall',
     distanceKm: 14,
     baseHeightM: 260,
     topHeightM: 1100,
@@ -13,7 +14,8 @@ const DEFAULT_PROFILE_CLOUDS = [
   },
   {
     id: 'mid-altocumulus',
-    label: '中距高积云',
+    label: 'Mid-distance altocumulus',
+    labelKey: 'home.simulator.cloudNames.midAltocumulus',
     distanceKm: 34,
     baseHeightM: 2400,
     topHeightM: 4200,
@@ -22,7 +24,8 @@ const DEFAULT_PROFILE_CLOUDS = [
   },
   {
     id: 'far-cirrus',
-    label: '远处卷云层',
+    label: 'Far cirrus layer',
+    labelKey: 'home.simulator.cloudNames.farCirrus',
     distanceKm: 72,
     baseHeightM: 6900,
     topHeightM: 9100,
@@ -31,7 +34,8 @@ const DEFAULT_PROFILE_CLOUDS = [
   },
   {
     id: 'distant-thick-veil',
-    label: '远处厚云幕',
+    label: 'Distant thick veil',
+    labelKey: 'home.simulator.cloudNames.distantThickVeil',
     distanceKm: 112,
     baseHeightM: 5200,
     topHeightM: 7800,
@@ -66,6 +70,7 @@ function normalizeCloud(rawCloud, index) {
   return {
     id: rawCloud.id || `cloud-${index + 1}`,
     label: rawCloud.label || `Cloud ${index + 1}`,
+    labelKey: rawCloud.labelKey || null,
     distanceKm,
     baseHeightM,
     topHeightM,

@@ -179,7 +179,6 @@ async function initializeApp() {
     setupApiApplicationForm();
     setupUserPanelController();
     setupFeedbackController();
-    setupFireCloudProfileSimulator();
 
     // 朝/晚霞 tab 早期绑定（init 前就可点击）
     document.getElementById('map-tab-sunrise')?.addEventListener('click', () => {
@@ -202,6 +201,7 @@ async function initializeApp() {
     setupGalleryBasemapSync();
 
     await appController.initialize();
+    setupFireCloudProfileSimulator();
     console.log('Application initialized successfully');
   } catch (error) {
     console.error('Failed to initialize application:', error);

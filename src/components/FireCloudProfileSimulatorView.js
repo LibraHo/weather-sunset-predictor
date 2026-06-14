@@ -5,6 +5,7 @@ import {
   getLightBand,
   simulateFireCloudProfile,
 } from '../services/FireCloudProfileSimulator.js';
+import i18n from '../i18n.js';
 
 function cloneClouds() {
   return DEFAULT_PROFILE_CLOUDS.map(cloud => ({ ...cloud }));
@@ -60,6 +61,11 @@ function hexToRgb(hex) {
 function rgba(hex, alpha) {
   const { r, g, b } = hexToRgb(hex);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function translate(key, fallback, params = {}) {
+  const translated = i18n?.t?.(key, params);
+  return translated && translated !== key ? translated : fallback;
 }
 
 class FireCloudProfileSimulatorView {
@@ -145,7 +151,7 @@ class FireCloudProfileSimulatorView {
   syncCloudSelect() {
     if (!this.cloudSelect) return;
     this.cloudSelect.innerHTML = this.clouds.map(cloud =>
-      `<option value="${cloud.id}">${cloud.label}</option>`
+      `<option value="${cloud.id}">${this.cloudLabel(cloud)}</option>`
     ).join('');
     this.cloudSelect.value = this.selectedCloudId;
   }
@@ -176,7 +182,7 @@ class FireCloudProfileSimulatorView {
     const nextIndex = this.clouds.length + 1;
     const cloud = {
       id: `custom-cloud-${Date.now()}`,
-      label: `自定义云块 ${nextIndex}`,
+      label: translate('home.simulator.customCloudLabel', `Custom cloud ${nextIndex}`, { index: nextIndex }),
       distanceKm: 30 + nextIndex * 8,
       baseHeightM: 1800 + nextIndex * 450,
       topHeightM: 3100 + nextIndex * 450,
@@ -213,23 +219,44 @@ class FireCloudProfileSimulatorView {
   }
 
   renderReadouts(result) {
-    const modeText = this.mode === 'sunrise' ? '日出' : '日落';
+    const modeText = this.modeText(this.mode);
     if (this.modeLabel) this.modeLabel.textContent = modeText;
     if (this.solarAngle) this.solarAngle.textContent = `${result.sun.solarElevationDeg}°`;
     if (this.timeValue) {
       const offset = this.timeOffset;
       this.timeValue.textContent = offset === 0
-        ? `${modeText}时刻`
-        : `${modeText}${offset > 0 ? '后' : '前'} ${Math.abs(offset)} 分钟`;
+        ? translate(
+          `home.simulator.time.at${this.mode === 'sunrise' ? 'Sunrise' : 'Sunset'}`,
+          `${modeText} time`
+        )
+        : translate(
+          offset > 0 ? 'home.simulator.time.after' : 'home.simulator.time.before',
+          `${Math.abs(offset)} min ${offset > 0 ? 'after' : 'before'} ${modeText}`,
+          { mode: modeText, minutes: Math.abs(offset) }
+        );
     }
     if (this.summaryEl) {
-      this.summaryEl.textContent = `照亮 ${result.summary.litCount} 块，遮挡 ${result.summary.blockingCount} 块，阴影 ${result.summary.blockedCount} 块，变暗 ${result.summary.dimmedCount} 块，全程黑云 ${result.summary.alwaysDarkCount} 块`;
+      this.summaryEl.textContent = translate(
+        'home.simulator.summary',
+        `Lit ${result.summary.litCount}, blockers ${result.summary.blockingCount}, shadowed ${result.summary.blockedCount}, dimmed ${result.summary.dimmedCount}, always dark ${result.summary.alwaysDarkCount}`,
+        {
+          lit: result.summary.litCount,
+          blocking: result.summary.blockingCount,
+          shadowed: result.summary.blockedCount,
+          dimmed: result.summary.dimmedCount,
+          alwaysDark: result.summary.alwaysDarkCount,
+        }
+      );
     }
     if (this.selectedReasonEl) {
       const selected = result.clouds.find(cloud => cloud.id === this.selectedCloudId);
       this.selectedReasonEl.textContent = selected
-        ? `${selected.label}：${this.reasonText(selected)}`
-        : '选择云块查看判定原因';
+        ? translate(
+          'home.simulator.selectedReason',
+          `${this.cloudLabel(selected)}: ${this.reasonText(selected)}`,
+          { label: this.cloudLabel(selected), reason: this.reasonText(selected) }
+        )
+        : translate('home.simulator.selectCloudHint', 'Select a cloud to inspect the decision reason');
     }
   }
 
@@ -279,7 +306,13 @@ class FireCloudProfileSimulatorView {
 
     ctx.fillStyle = 'rgba(255,255,255,0.86)';
     ctx.font = '700 12px system-ui, sans-serif';
-    ctx.fillText(this.axisScale === 'log' ? 'LOG 坐标' : 'LINEAR 坐标', width - inset - 88, inset - 14);
+    ctx.fillText(
+      this.axisScale === 'log'
+        ? translate('home.simulator.axis.logShort', 'LOG axis')
+        : translate('home.simulator.axis.linearShort', 'LINEAR axis'),
+      width - inset - 88,
+      inset - 14
+    );
 
     this.drawSunAndLight(result, inset, width, height);
     result.clouds.forEach(cloud => this.drawCloud(cloud, inset, width, height));
@@ -348,7 +381,7 @@ class FireCloudProfileSimulatorView {
     if (cloud.alwaysDark) {
       ctx.fillStyle = '#f8fafc';
       ctx.font = '700 11px system-ui, sans-serif';
-      ctx.fillText('全程黑', x - 22, yTop + 14);
+      ctx.fillText(translate('home.simulator.status.alwaysDarkShort', 'Dark'), x - 22, yTop + 14);
     }
   }
 
@@ -471,8 +504,8 @@ class FireCloudProfileSimulatorView {
     this.cloudListEl.innerHTML = result.clouds.map(cloud => `
       <button class="profile-cloud-row ${cloud.id === this.selectedCloudId ? 'active' : ''} ${cloud.alwaysDark ? 'always-dark' : ''}" type="button" data-cloud-id="${cloud.id}">
         <span class="profile-cloud-swatch" style="background:${cloud.alwaysDark ? '#111827' : cloud.color}"></span>
-        <strong>${cloud.label}</strong>
-        <small>${cloud.distanceKm}km · ${cloud.baseHeightM}-${cloud.topHeightM}m · ${cloud.alwaysDark ? '全程黑云' : this.statusText(cloud.status)} · ${this.reasonText(cloud)}</small>
+        <strong>${this.cloudLabel(cloud)}</strong>
+        <small>${cloud.distanceKm}km · ${cloud.baseHeightM}-${cloud.topHeightM}m · ${cloud.alwaysDark ? translate('home.simulator.status.alwaysDark', 'Always dark cloud') : this.statusText(cloud.status)} · ${this.reasonText(cloud)}</small>
       </button>
     `).join('');
     this.cloudListEl.querySelectorAll('[data-cloud-id]').forEach(button => {
@@ -487,21 +520,34 @@ class FireCloudProfileSimulatorView {
 
   statusText(status) {
     return {
-      lit: '被照亮',
-      dimmed: '变暗',
-      shadowed: '被遮挡',
-      blocking: '遮挡云墙',
-      unlit: '未照亮',
+      lit: translate('home.simulator.status.lit', 'Lit'),
+      dimmed: translate('home.simulator.status.dimmed', 'Dimmed'),
+      shadowed: translate('home.simulator.status.shadowed', 'Shadowed'),
+      blocking: translate('home.simulator.status.blocking', 'Blocking wall'),
+      unlit: translate('home.simulator.status.unlit', 'Unlit'),
     }[status] || status;
   }
 
+  cloudLabel(cloud) {
+    if (!cloud) return '';
+    return cloud.labelKey
+      ? translate(cloud.labelKey, cloud.label || cloud.id)
+      : cloud.label;
+  }
+
+  modeText(mode) {
+    return mode === 'sunrise'
+      ? translate('home.simulator.mode.sunrise', 'Sunrise')
+      : translate('home.simulator.mode.sunset', 'Sunset');
+  }
+
   reasonText(cloud) {
-    if (cloud.alwaysDark) return '整段窗口都没进入暖色光带';
-    if (cloud.status === 'shadowed') return '被前方云的阴影带覆盖';
-    if (cloud.status === 'blocking') return '低角度光穿过时形成遮挡云墙';
-    if (cloud.status === 'dimmed') return '云幕太厚，吸收后只剩灰紫光';
-    if (cloud.status === 'lit') return '云高与散射光带相交';
-    if (cloud.status === 'unlit') return '云高暂未碰到光带';
+    if (cloud.alwaysDark) return translate('home.simulator.reasons.alwaysDark', 'The full sampled window misses the warm light band');
+    if (cloud.status === 'shadowed') return translate('home.simulator.reasons.shadowed', 'Covered by the shadow band from an upstream cloud');
+    if (cloud.status === 'blocking') return translate('home.simulator.reasons.blocking', 'Low-angle light forms a blocking cloud wall');
+    if (cloud.status === 'dimmed') return translate('home.simulator.reasons.dimmed', 'The cloud veil is thick enough to absorb warm light');
+    if (cloud.status === 'lit') return translate('home.simulator.reasons.lit', 'Cloud height intersects the scattered light band');
+    if (cloud.status === 'unlit') return translate('home.simulator.reasons.unlit', 'Cloud height has not reached the light band yet');
     return cloud.reason || '';
   }
 }
