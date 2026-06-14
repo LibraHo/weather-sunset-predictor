@@ -570,10 +570,14 @@ describe('miniprogram page user/share helpers', () => {
     expect(homeSource.indexOf('const cachedPrediction = this.data.predictionPeriodCards?.[value];')).toBeLessThan(homeSource.indexOf('predictionPreview: buildPredictionPreviewForPeriod(value, this.data.day)'));
   });
 
-  test('home unified gateway keeps full weather AOD when prediction weather lacks aerosol', () => {
+  test.each([
+    { name: '北京', aod: 0.46, fallbackAod: 1.18 },
+    { name: '上海', aod: 0.28, fallbackAod: 0.31 },
+    { name: '广州', aod: 0.19, fallbackAod: 0.24 }
+  ])('home unified gateway keeps full weather AOD for $name when prediction weather lacks aerosol', ({ name, aod, fallbackAod }) => {
     const patch = homeHelpers.buildHomeWeatherPredictionPatch({
       weather: {
-        location: '北京',
+        location: name,
         temp: 25.8,
         humidity: 58,
         visibility: 12,
@@ -582,10 +586,10 @@ describe('miniprogram page user/share helpers', () => {
         windDirection: 180,
         precipitation: 0,
         cloudCover: 44,
-        aerosolOpticalDepth: 0.46,
+        aerosolOpticalDepth: aod,
         hourly: [
-          { timestamp: 1781366400000, aerosolOpticalDepth: 1.18 },
-          { timestamp: 1781370000000, aerosolOpticalDepth: 0.46 }
+          { timestamp: 1781366400000, aerosolOpticalDepth: fallbackAod },
+          { timestamp: 1781370000000, aerosolOpticalDepth: aod }
         ]
       },
       prediction: {
@@ -602,14 +606,15 @@ describe('miniprogram page user/share helpers', () => {
         sunset: { type: 'sunset', score: 62 }
       },
       query: {
-        locationName: '北京',
+        locationName: name,
         period: 'sunset',
         day: 'today'
       }
     });
 
+    expect(patch.weatherPreview.location).toBe(name);
     expect(patch.weatherPreview.metrics).toEqual(expect.arrayContaining([
-      expect.objectContaining({ key: 'aerosol', value: '0.46' })
+      expect.objectContaining({ key: 'aerosol', value: String(aod) })
     ]));
   });
 

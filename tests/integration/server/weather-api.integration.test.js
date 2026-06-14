@@ -93,7 +93,11 @@ describe('Weather API Integration', () => {
       expect(res.body.providerMeta.airQualitySource).toBe('openmeteo_air_quality');
     });
 
-    test('Beijing forecast contract includes AOD so the UI aerosol card cannot silently disappear', async () => {
+    test.each([
+      { name: 'Beijing', lat: '39.9042', lon: '116.4074', aod: 1.18 },
+      { name: 'Shanghai', lat: '31.2304', lon: '121.4737', aod: 0.28 },
+      { name: 'Guangzhou', lat: '23.1291', lon: '113.2644', aod: 0.19 }
+    ])('$name forecast contract includes AOD so the UI aerosol card cannot silently disappear', async ({ lat, lon, aod }) => {
       windyService.fetchWeatherData = async (lat, lon, hours) => ({
         hours,
         data: [
@@ -102,7 +106,7 @@ describe('Weather API Integration', () => {
             temp: 18.7,
             humidity: 97,
             cloudCover: 44,
-            aerosolOpticalDepth: 1.18
+            aerosolOpticalDepth: aod
           }
         ],
         providerMeta: { name: 'openmeteo', airQualitySource: 'openmeteo_air_quality' }
@@ -110,11 +114,11 @@ describe('Weather API Integration', () => {
 
       const res = await request(app)
         .get('/api/weather/forecast')
-        .query({ lat: '39.9042', lon: '116.4074', hours: '24' })
+        .query({ lat, lon, hours: '24' })
         .expect(200);
 
       expect(res.body.success).toBe(true);
-      expect(res.body.location).toEqual({ lat: 39.9042, lon: 116.4074 });
+      expect(res.body.location).toEqual({ lat: Number(lat), lon: Number(lon) });
       expect(res.body.data).toEqual(expect.arrayContaining([
         expect.objectContaining({ aerosolOpticalDepth: expect.any(Number) })
       ]));
