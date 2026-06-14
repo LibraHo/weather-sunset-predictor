@@ -1100,14 +1100,12 @@ export function buildScoreLedger(prediction = {}) {
   const layerBrightnessAdjustment = prediction.layerBrightnessAdjustment || breakdown.layerBrightnessAdjustment || null;
   const finalScore = prediction.score ?? prediction.totalScore ?? prediction.finalScore;
   const canvasScore = canvas.score ?? breakdown.canvasScore;
-  const lightPathScore = lightPath.score ?? breakdown.lightPathScore;
   const baseScore = breakdown.baseScore;
   const renderingFactor = rendering.factor ?? breakdown.renderingFactor;
-  const brightnessMultiplier = layerBrightnessAdjustment?.multiplier ?? layerBrightness.brightnessMultiplier ?? layerBrightness.brightnessGate;
   const renderingAdjustment = prediction.renderingAdjustment?.adjustment ?? breakdown.renderingAdjustment;
   const renderedScore = breakdown.unclampedFinalScore ?? breakdown.renderedScore ?? finalScore;
   const cloudThicknessStep = buildCloudThicknessStep(prediction, canvas);
-  const layerBrightnessStep = buildLayerBrightnessStep(layerBrightness, layerBrightnessAdjustment);
+  const layerBrightnessStep = buildLayerBrightnessStep(layerBrightness, layerBrightnessAdjustment, lightPath);
 
   const summary = Number.isFinite(Number(finalScore))
     ? `${Math.round(Number(finalScore))} 分：由云层载体、受光亮度和空气显色共同计算`
@@ -1122,29 +1120,28 @@ export function buildScoreLedger(prediction = {}) {
       detail: buildCloudCanvasText(canvas, prediction.cloudType),
       tone: levelFromScore(canvasScore)
     },
-    {
-      key: 'lightPath',
-      label: '光路',
-      result: formatScore(lightPathScore),
-      expression: '阳光是否能打到云层',
-      detail: buildLightPathText(lightPath),
-      tone: levelFromScore(lightPathScore)
+    layerBrightnessStep || {
+      key: 'layerBrightness',
+      label: '分层受光亮度',
+      result: '--',
+      expression: '太阳方向、遮挡和亮度响应作为受光证据',
+      detail: buildLayerBrightnessText(layerBrightness, lightPath),
+      tone: 'unknown'
     },
     {
       key: 'baseScore',
       label: '基础分',
       result: formatScore(baseScore),
-      expression: buildBaseScoreExpression(canvasScore, brightnessMultiplier, baseScore, breakdown),
-      detail: '对齐网页版：载体分先看可染色云面，再由受光亮度约束；光路已并入亮度',
+      expression: buildBaseScoreExpression(baseScore),
+      detail: '各层载体先分别乘以对应受光亮度，再求和得到基础分；光路只作为亮度证据。',
       tone: levelFromScore(baseScore)
     }
   ];
-  if (layerBrightnessStep) steps.push(layerBrightnessStep);
   if (cloudThicknessStep) steps.push(cloudThicknessStep);
   steps.push(
     {
       key: 'rendering',
-      label: '显色修正',
+      label: '空气显色',
       result: formatScore(renderedScore),
       expression: buildRenderingExpression(baseScore, renderingAdjustment, renderingFactor, renderedScore),
       detail: buildRenderingText(rendering),
@@ -1216,7 +1213,7 @@ function buildCloudThicknessStep(prediction = {}, canvas = {}) {
   };
 }
 
-function buildLayerBrightnessStep(layerBrightness = {}, adjustment = null) {
+function buildLayerBrightnessStep(layerBrightness = {}, adjustment = null, lightPath = {}) {
   if (!layerBrightness?.applied && !adjustment?.applied) return null;
   const multiplier = Number(adjustment?.multiplier ?? layerBrightness.brightnessMultiplier ?? layerBrightness.brightnessGate);
   const adjusted = adjustment?.applied || (Number.isFinite(multiplier) && multiplier < 0.99);
@@ -1225,31 +1222,28 @@ function buildLayerBrightnessStep(layerBrightness = {}, adjustment = null) {
     : formatScore(layerBrightness.effectiveBrightness);
   return {
     key: 'layerBrightness',
-    label: '受光亮度',
+    label: '分层受光亮度',
     result,
-    expression: adjusted ? '亮度门控乘性压分' : '云层受光强度',
-    detail: buildLayerBrightnessText(layerBrightness),
+    expression: adjusted ? '逐层亮度响应与遮挡证据' : '各层载体的受光强度',
+    detail: buildLayerBrightnessText(layerBrightness, lightPath),
     tone: adjusted ? 'bad' : levelFromBrightness(layerBrightness)
   };
 }
 
-function buildBaseScoreExpression(canvasScore, brightnessMultiplier, baseScore, breakdown = {}) {
-  if (breakdown.layerContributionFormula === 'sum_layer_carrier_brightness' && Number.isFinite(Number(baseScore))) {
-    return `Σ(载体×受光亮度) = ${roundOne(baseScore)}`;
+function buildBaseScoreExpression(baseScore) {
+  if (Number.isFinite(Number(baseScore))) {
+    return `Σ(分层载体×分层受光亮度) = ${roundOne(baseScore)}`;
   }
-  if (Number.isFinite(Number(canvasScore)) && Number.isFinite(Number(brightnessMultiplier)) && Number.isFinite(Number(baseScore))) {
-    return `${roundOne(canvasScore)} × 受光亮度 ${roundTwo(brightnessMultiplier)} = ${roundOne(baseScore)}`;
-  }
-  return 'Σ(载体×受光亮度)';
+  return 'Σ(分层载体×分层受光亮度)';
 }
 
 function buildRenderingExpression(baseScore, renderingAdjustment, renderingFactor, renderedScore) {
+  if (Number.isFinite(Number(baseScore)) && Number.isFinite(Number(renderingFactor)) && Number.isFinite(Number(renderedScore))) {
+    return `${roundOne(baseScore)} × 空气显色系数 ${roundTwo(renderingFactor)} = ${roundOne(renderedScore)}`;
+  }
   if (Number.isFinite(Number(baseScore)) && Number.isFinite(Number(renderingAdjustment)) && Number.isFinite(Number(renderedScore))) {
     const sign = Number(renderingAdjustment) >= 0 ? '+' : '';
     return `${roundOne(baseScore)} ${sign}${roundOne(renderingAdjustment)} = ${roundOne(renderedScore)}`;
-  }
-  if (Number.isFinite(Number(baseScore)) && Number.isFinite(Number(renderingFactor)) && Number.isFinite(Number(renderedScore))) {
-    return `${roundOne(baseScore)} × 显色系数 ${roundTwo(renderingFactor)} = ${roundOne(renderedScore)}`;
   }
   return '显色小幅修正';
 }
@@ -1266,14 +1260,13 @@ function buildCloudCanvasText(canvas = {}, cloudType = null) {
   const cloudLabel = cloudType?.label || cloudType?.type;
   const high = canvas.breakdown?.highClouds;
   const mid = canvas.breakdown?.midClouds;
-  const low = canvas.breakdown?.lowClouds;
   const parts = [];
   if (cloudLabel) parts.push(cloudLabel);
-  if (high !== undefined || mid !== undefined || low !== undefined) {
-    parts.push(`高云 ${formatPercent(high ?? 0)} / 中云 ${formatPercent(mid ?? 0)} / 低云 ${formatPercent(low ?? 0)}`);
+  if (high !== undefined || mid !== undefined) {
+    parts.push(`高云 ${formatPercent(high ?? 0)} / 中云 ${formatPercent(mid ?? 0)}`);
   }
   if (canvas.cloudThickness?.thickness) parts.push(`云层厚度 ${canvas.cloudThickness.thickness}`);
-  return parts.join('，') || '结合高云、中云、低云结构判断霞光画布。';
+  return parts.join('，') || '结合高云、中云、日落方向云幕或薄雾判断可显色载体。';
 }
 
 function buildLightPathText(lightPath = {}) {
@@ -1285,13 +1278,31 @@ function buildLightPathText(lightPath = {}) {
   return parts.join('，') || '结合太阳高度角、远近云层和地平线遮挡判断光路。';
 }
 
-function buildLayerBrightnessText(layerBrightness = {}) {
+function buildLayerBrightnessText(layerBrightness = {}, lightPath = {}) {
+  const lightPathParts = [];
+  if (Number.isFinite(Number(lightPath.score))) lightPathParts.push(`光路因子 ${roundTwo(Number(lightPath.score) / 100)}`);
+  if (Number.isFinite(Number(lightPath.azimuth))) lightPathParts.push(`太阳方位 ${Math.round(Number(lightPath.azimuth))}°`);
+  if (Number.isFinite(Number(lightPath.occlusionProbability))) lightPathParts.push(`遮挡概率 ${formatPercent(Number(lightPath.occlusionProbability) * 100)}`);
+  if (lightPath.directionalAnalysis?.reason) lightPathParts.push(lightPath.directionalAnalysis.reason);
   if (!layerBrightness?.applied) {
-    return '当前版本会结合云层载体、光路、空气和云厚估算受光亮度。';
+    return lightPathParts.length
+      ? `太阳方向证据：${lightPathParts.join('，')}。`
+      : '当前版本会结合分层载体、太阳方向、遮挡、空气和云厚估算受光亮度。';
   }
   const parts = [];
   if (Number.isFinite(Number(layerBrightness.layers?.cloudCanvas))) {
-    parts.push(`云层画布 ${formatPercent(layerBrightness.layers.cloudCanvas)}`);
+    parts.push(`分层载体 ${formatPercent(layerBrightness.layers.cloudCanvas)}`);
+  }
+  if (Number.isFinite(Number(layerBrightness.layers?.low))) {
+    parts.push(`低云遮挡 ${formatPercent(layerBrightness.layers.low)}`);
+  }
+  if (Number.isFinite(Number(layerBrightness.factors?.lowBlockFactor))) {
+    parts.push(`遮挡透过 ${roundTwo(layerBrightness.factors.lowBlockFactor)}`);
+  }
+  if (Number.isFinite(Number(layerBrightness.factors?.pathFactor))) {
+    parts.push(`光路因子 ${roundTwo(layerBrightness.factors.pathFactor)}`);
+  } else if (lightPathParts.length) {
+    parts.push(...lightPathParts);
   }
   if (Number.isFinite(Number(layerBrightness.factors?.airTransmission))) {
     parts.push(`空气透过 ${roundTwo(layerBrightness.factors.airTransmission)}`);
@@ -1302,7 +1313,7 @@ function buildLayerBrightnessText(layerBrightness = {}) {
   if (Array.isArray(layerBrightness.dimEvidence) && layerBrightness.dimEvidence.length) {
     parts.push(`压暗证据 ${layerBrightness.dimEvidence.length} 项`);
   }
-  return parts.join('，') || '判断中高云是否真的被日出/日落低角度光照亮。';
+  return parts.join('，') || '判断各层载体是否真的被日出/日落低角度光照亮。';
 }
 
 function buildRenderingText(rendering = {}) {

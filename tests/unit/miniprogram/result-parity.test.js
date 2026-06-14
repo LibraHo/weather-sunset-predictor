@@ -5,6 +5,11 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '../../..');
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8');
+const sliceBetween = (source, startToken, endToken) => {
+  const start = source.indexOf(startToken);
+  const end = source.indexOf(endToken, start + startToken.length);
+  return source.slice(start, end === -1 ? undefined : end);
+};
 
 describe('miniprogram result page web parity', () => {
   test('surfaces the website score ledger before weather metrics and text analysis', () => {
@@ -12,11 +17,11 @@ describe('miniprogram result page web parity', () => {
     const wxml = read('miniprogram/pages/result/index.wxml');
     const js = read('miniprogram/pages/result/index.js');
     const wxss = read('miniprogram/pages/result/index.wxss');
+    const scoreLedgerJs = sliceBetween(js, 'export function buildScoreLedger', 'function buildCloudThicknessStep');
 
     expect(web).toContain('score-breakdown-popover score-breakdown-ledger');
     expect(web).toContain('score-ledger-steps');
     expect(web).toContain("ledgerText('labels.cloudCarrier'");
-    expect(web).toContain("ledgerText('labels.lightPath'");
     expect(web).toContain("ledgerText('labels.layerBrightness'");
     expect(web).toContain("ledgerText('labels.rendering'");
 
@@ -25,13 +30,16 @@ describe('miniprogram result page web parity', () => {
     expect(wxml).toContain('wx:for="{{scoreLedger.steps}}"');
     expect(js).toContain('scoreLedger: buildScoreLedger(normalized)');
     expect(js).toContain('export function buildScoreLedger');
-    expect(js).toContain("key: 'cloudCarrier'");
-    expect(js).toContain("key: 'lightPath'");
-    expect(js).toContain("key: 'layerBrightness'");
-    expect(js).toContain("title: '受光亮度'");
-    expect(js).toContain("key: 'rendering'");
+    expect(scoreLedgerJs).toContain("key: 'cloudCarrier'");
+    expect(scoreLedgerJs).toContain("key: 'layerBrightness'");
+    expect(scoreLedgerJs).toContain("key: 'baseScore'");
+    expect(scoreLedgerJs).toContain("key: 'rendering'");
+    expect(scoreLedgerJs).not.toContain("key: 'lightPath'");
     expect(wxss).toContain('.score-ledger-card');
     expect(wxss).toContain('.score-ledger-step-final');
+    expect(wxss).toContain('.result-page.theme-dark .score-ledger-card');
+    expect(wxss).toContain('.result-page.theme-dark .score-ledger-step');
+    expect(wxss).toContain('.result-page.theme-dark .score-ledger-detail');
 
     expect(wxml.indexOf('score-ledger-card')).toBeLessThan(wxml.indexOf('metric-grid'));
     expect(wxml.indexOf('score-ledger-card')).toBeLessThan(wxml.indexOf('analysis-card'));
@@ -48,7 +56,7 @@ describe('miniprogram result page web parity', () => {
     expect(web.indexOf('renderAnalysisCard', renderStart)).toBeLessThan(web.indexOf('prediction-share-menu prediction-share-footer', renderStart));
 
     expect(wxml.indexOf('open-type="share"')).toBeLessThan(wxml.indexOf('bindtap="toggleFavorite"'));
-    expect(wxss).toContain('grid-template-columns: minmax(0, 1fr) 196rpx minmax(0, 1fr)');
+    expect(wxss).toContain('grid-template-columns: repeat(3, minmax(0, 1fr))');
     expect(wxml).toContain('result-share-action result-share-primary');
     expect(wxml).toContain('/assets/icons/share-upload.svg');
     expect(wxml).toContain('result-action-label">分享');
@@ -56,6 +64,11 @@ describe('miniprogram result page web parity', () => {
     expect(wxml).toContain('feedback-icon-image');
     expect(wxml).toContain('/assets/icons/feedback-message.svg');
     expect(wxml).toContain('result-action-label">反馈');
+    expect(wxml).toContain('result-action-label result-favorite-label');
+    expect(wxml).toContain('收藏地点');
+    expect(wxss).toContain('.result-favorite-label');
+    expect(wxss).toContain('.result-page.theme-dark .result-feedback-action');
+    expect(wxss).toContain('.result-page.theme-dark .result-favorite-action');
     expect(wxml).not.toContain('ghost-button action-button result-action-button');
     expect(wxml.indexOf('data-target="map"')).toBeLessThan(wxml.indexOf('data-target="methodology"'));
     expect(wxml.indexOf('data-target="gallery"')).toBeLessThan(wxml.indexOf('data-target="api"'));

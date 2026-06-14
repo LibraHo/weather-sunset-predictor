@@ -72,6 +72,29 @@ describe('LayerBrightnessService', () => {
     expect(result.reason).toBe('layer_brightness_sufficient');
   });
 
+  test('keeps low clouds out of carrier contributions and uses them only as brightness blockage', () => {
+    const result = service.scoreLayerBrightness({
+      type: 'sunset',
+      timeAnalysis: { elevation: -1 },
+      weatherData: {
+        lowClouds: 35,
+        midClouds: 48,
+        highClouds: 42,
+        cloudCover: 70,
+        visibility: 22,
+        humidity: 48
+      },
+      lightPathScore: { score: 92 },
+      renderingFactor: { factor: 1 },
+      cloudThickness: { modifier: 1 },
+      carrierScore: { score: 68, activeCarrier: 'cloud' }
+    });
+
+    expect(result.layerContributions.map(item => item.key)).not.toContain('low');
+    expect(result.layers.low).toBe(35);
+    expect(result.factors.lowBlockFactor).toBeLessThan(1);
+  });
+
   test('applies brightness as a multiplier instead of a cap', () => {
     const weak = { brightnessMultiplier: 0.5, effectiveBrightness: 21, reason: 'layer_brightness_weak' };
 

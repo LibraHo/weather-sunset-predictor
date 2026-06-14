@@ -162,8 +162,6 @@ function buildLayerWeightedCarrierScore({
   const directionalScore = directionalUpper === null ? 0 : clamp(finiteNumber(directionalUpper, 0) * 0.72, 0, 100);
   const cloudMidCarrier = clamp(midSignal * 0.75, 0, 100);
   const cloudHighCarrier = clamp(highSignal * 0.9, 0, 100);
-  const cloudLowCarrier = low <= 45 ? clamp(low * 0.12, 0, 8) : 0;
-
   let rawLayers;
   if (activeCarrier === 'directional_curtain' && directionalScore > 0) {
     rawLayers = [
@@ -179,7 +177,6 @@ function buildLayerWeightedCarrierScore({
     ];
   } else {
     rawLayers = [
-      { key: 'low', carrier: cloudLowCarrier, brightnessBias: 0.58 },
       { key: 'mid', carrier: cloudMidCarrier, brightnessBias: 1.04 },
       { key: 'high', carrier: cloudHighCarrier, brightnessBias: 0.96 },
       { key: 'directional', carrier: directionalScore * 0.35, brightnessBias: 1.02 }

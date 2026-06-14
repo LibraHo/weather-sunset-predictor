@@ -286,6 +286,32 @@
           <text class="app-info-label">{{predictionPreview.directionLabel}}</text>
           <text class="app-info-value">{{predictionPreview.direction}}</text>
         </view>
+        <button class="score-detail-trigger tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" bindtap="toggleScoreLedger">
+          <text>{{scoreLedgerOpen ? '收起评分细则' : '查看评分细则'}}</text>
+        </button>
+      </view>
+    </view>
+    <view class="home-score-ledger-panel" wx:if="{{scoreLedgerOpen}}">
+      <view class="home-score-ledger-head">
+        <view>
+          <view class="home-score-ledger-title">评分细则</view>
+          <view class="home-score-ledger-subtitle">分层载体 × 分层受光亮度，再乘空气显色</view>
+        </view>
+        <button class="home-score-ledger-close" bindtap="closeScoreLedger" aria-label="关闭评分细则">×</button>
+      </view>
+      <view class="home-score-ledger-summary">{{predictionPreview.scoreLedger.summary}}</view>
+      <view class="home-score-ledger-flow">
+        <view class="home-score-ledger-step home-score-ledger-step-{{item.tone}}" wx:for="{{predictionPreview.scoreLedger.steps}}" wx:key="key">
+          <text class="home-score-ledger-index">{{index + 1}}</text>
+          <view class="home-score-ledger-body">
+            <view class="home-score-ledger-line">
+              <text class="home-score-ledger-label">{{item.label}}</text>
+              <text class="home-score-ledger-result">{{item.result}}</text>
+            </view>
+            <view class="home-score-ledger-expression" wx:if="{{item.expression}}">{{item.expression}}</view>
+            <view class="home-score-ledger-detail" wx:if="{{item.detail}}">{{item.detail}}</view>
+          </view>
+        </view>
       </view>
     </view>
     </view>

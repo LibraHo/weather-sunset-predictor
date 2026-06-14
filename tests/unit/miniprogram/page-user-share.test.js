@@ -52,8 +52,8 @@ describe('miniprogram page user/share helpers', () => {
     });
   });
 
-  test('home prediction share button opens the current compact result', () => {
-    expect(homeHelpers.buildHomeShareMessage({
+  test('home prediction share button opens the searched-address result on home', () => {
+    const message = homeHelpers.buildHomeShareMessage({
       periodKey: 'sunset',
       periodLabel: '晚霞',
       score: 76
@@ -61,10 +61,13 @@ describe('miniprogram page user/share helpers', () => {
       locationName: '北京',
       coordinate: { lat: 39.9042, lon: 116.4074 },
       day: 'today'
-    })).toMatchObject({
-      title: '霞客｜北京晚霞评分 76分',
-      path: expect.stringContaining('/pages/result/index?')
     });
+    expect(message).toMatchObject({
+      title: '霞客｜北京晚霞评分 76分',
+      path: expect.stringContaining('/pages/home/index?')
+    });
+    expect(message.path).toContain('share=1');
+    expect(message.path).toContain('auto=1');
   });
 
   test('home prediction preview keeps event time for feedback window checks', () => {
@@ -125,6 +128,12 @@ describe('miniprogram page user/share helpers', () => {
 
     expect(message.path).toContain('type=sunrise');
     expect(message.path).toContain('date=2026-05-31');
+  });
+
+  test('home share landing can restore the shared day on the home card', () => {
+    expect(homeHelpers.resolveSharedDay('2026-06-14', new Date('2026-06-14T08:00:00+08:00'))).toBe('today');
+    expect(homeHelpers.resolveSharedDay('2026-06-15', new Date('2026-06-14T08:00:00+08:00'))).toBe('tomorrow');
+    expect(homeHelpers.resolveSharedDay('2026-06-20', new Date('2026-06-14T08:00:00+08:00'))).toBeNull();
   });
 
   test('favorite helper matches coordinates and payload shape', () => {
@@ -681,17 +690,110 @@ describe('miniprogram page user/share helpers', () => {
 
     expect(ledger.summary).toContain('云层载体、受光亮度和空气显色');
     expect(ledger.steps.find((step) => step.key === 'baseScore')).toMatchObject({
-      expression: '78 × 受光亮度 0.82 = 64'
+      expression: 'Σ(分层载体×分层受光亮度) = 64'
     });
     expect(ledger.steps.find((step) => step.key === 'cloudThickness')).toMatchObject({
       result: '-12分',
       expression: '厚云幕扣分'
     });
     expect(ledger.steps.find((step) => step.key === 'rendering')).toMatchObject({
-      expression: '64 +3.2 = 67'
+      expression: '64 × 空气显色系数 1.08 = 67'
     });
     expect(JSON.stringify(ledger)).not.toContain('80%');
     expect(JSON.stringify(ledger)).not.toContain('20%');
+  });
+
+  test('result score ledger uses layer-sum scoring without a standalone light-path main step', () => {
+    const ledger = resultHelpers.buildScoreLedger({
+      score: 44,
+      canvasAnalysis: {
+        score: 65.4,
+        breakdown: { highClouds: 70, midClouds: 45, lowClouds: 12 }
+      },
+      lightPathAnalysis: {
+        score: 107.2,
+        azimuth: 286,
+        occlusionProbability: 0.08,
+        explain: 'sun direction open'
+      },
+      layerBrightness: {
+        applied: true,
+        effectiveBrightness: 46.3,
+        brightnessGate: 0.71,
+        layers: { cloudCanvas: 65.4, low: 12 },
+        factors: {
+          lowBlockFactor: 0.95,
+          solarFactor: 0.82,
+          pathFactor: 1.07,
+          airTransmission: 0.9,
+          thicknessFactor: 0.78,
+          beamFactor: 0.65
+        },
+        dimEvidence: ['weak beam']
+      },
+      renderingAnalysis: { factor: 0.68, breakdown: { visibility: 'fair' } },
+      breakdown: {
+        layerContributionFormula: 'sum_layer_carrier_brightness',
+        baseScore: 65.2,
+        canvasScore: 65.4,
+        lightPathScore: 107.2,
+        renderingFactor: 0.68,
+        unclampedFinalScore: 44.1
+      }
+    });
+
+    const keys = ledger.steps.map((step) => step.key);
+    const labels = ledger.steps.map((step) => step.label);
+    const carrierStep = ledger.steps.find((step) => step.key === 'cloudCarrier');
+    const brightnessStep = ledger.steps.find((step) => step.key === 'layerBrightness');
+    const serialized = JSON.stringify(ledger);
+
+    expect(keys.slice(0, 5)).toEqual(['cloudCarrier', 'layerBrightness', 'baseScore', 'rendering', 'final']);
+    expect(keys).not.toContain('lightPath');
+    expect(labels).not.toContain('光路');
+    expect(carrierStep.detail).not.toContain('低云');
+    expect(brightnessStep.detail).toContain('低云遮挡 12%');
+    expect(brightnessStep.detail).toContain('遮挡透过 0.95');
+    expect(serialized).toContain('Σ(分层载体×分层受光亮度)');
+    expect(serialized).toContain('光路因子 1.07');
+    expect(serialized).not.toContain('65.4 × 受光亮度 0.71 = 65.2');
+  });
+
+  test('home prediction preview exposes score details from the searched-address result card', () => {
+    const preview = homeHelpers.buildPredictionPreviewFromPrediction({
+      period: 'sunset',
+      score: 44,
+      canvasAnalysis: { score: 65.4 },
+      lightPathAnalysis: {
+        score: 107.2,
+        azimuth: 286,
+        occlusionProbability: 0.08
+      },
+      layerBrightness: {
+        applied: true,
+        effectiveBrightness: 46.3,
+        factors: { pathFactor: 1.07 }
+      },
+      renderingAnalysis: { factor: 0.68, breakdown: { visibility: 'fair' } },
+      breakdown: {
+        baseScore: 65.2,
+        canvasScore: 65.4,
+        renderingFactor: 0.68,
+        unclampedFinalScore: 44.1
+      }
+    }, { locationName: '北京' });
+
+    const keys = preview.scoreLedger.steps.map((step) => step.key);
+    const labels = preview.scoreLedger.steps.map((step) => step.label);
+    const serialized = JSON.stringify(preview.scoreLedger);
+
+    expect(keys).toEqual(['layerCarrierBrightness', 'baseScore', 'airRendering', 'finalScore']);
+    expect(labels).not.toContain('光路');
+    expect(serialized).toContain('Σ(分层载体 × 分层受光亮度)');
+    expect(serialized).toContain('太阳方位 286°');
+    expect(serialized).toContain('亮度响应 1.07');
+    expect(serialized).toContain('基础分 × 空气显色');
+    expect(serialized).not.toContain('载体分 × 受光亮度');
   });
 
   test('result page maps surrounding and 3-day data to display rows', () => {
