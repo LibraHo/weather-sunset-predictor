@@ -1,7 +1,7 @@
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
-const { buildTimeWeightedWeatherSample } = require('../../../server/services/WeatherTimeSampler');
+const { buildTimeWeightedWeatherSample, selectHourlyAt, toEpochMs } = require('../../../server/services/WeatherTimeSampler');
 
 describe('WeatherTimeSampler', () => {
   test('builds a weighted weather sample from nearby hourly rows', () => {
@@ -107,5 +107,46 @@ describe('WeatherTimeSampler', () => {
 
     expect(sample.selected).toBe(null);
     expect(sample.weighted).toBe(null);
+  });
+
+  test('parses epoch timestamp strings before Date strings', () => {
+    const beforeTs = new Date('2026-06-10T11:00:00.000Z').getTime();
+    const afterTs = new Date('2026-06-10T12:00:00.000Z').getTime();
+    const referenceTime = new Date('2026-06-10T11:41:00.000Z');
+    const hourly = [
+      { timestamp: String(beforeTs), cloudCover: 60 },
+      { timestamp: String(afterTs), cloudCover: 90 }
+    ];
+
+    expect(toEpochMs(String(beforeTs))).toBe(beforeTs);
+    expect(selectHourlyAt(hourly, referenceTime).selected).toBe(hourly[1]);
+    expect(buildTimeWeightedWeatherSample(hourly, referenceTime).weighted.cloudCover).toBe(80.5);
+  });
+
+  test('ignores null optional metrics instead of averaging them as zero', () => {
+    const referenceTime = new Date('2026-06-10T11:30:00.000Z');
+    const hourly = [
+      {
+        timestamp: new Date('2026-06-10T11:00:00.000Z').getTime(),
+        cloudCover: 40,
+        pressure: null,
+        directRadiation: null,
+        aerosolOpticalDepth: 0.4
+      },
+      {
+        timestamp: new Date('2026-06-10T12:00:00.000Z').getTime(),
+        cloudCover: 80,
+        pressure: 1008,
+        directRadiation: 120,
+        aerosolOpticalDepth: null
+      }
+    ];
+
+    const sample = buildTimeWeightedWeatherSample(hourly, referenceTime);
+
+    expect(sample.weighted.cloudCover).toBe(60);
+    expect(sample.weighted.pressure).toBe(1008);
+    expect(sample.weighted.directRadiation).toBe(120);
+    expect(sample.weighted.aerosolOpticalDepth).toBe(0.4);
   });
 });
