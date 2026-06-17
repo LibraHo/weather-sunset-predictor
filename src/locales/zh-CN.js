@@ -228,7 +228,7 @@ export default {
         aerosol: {
           date: '2026-05-12',
           title: '气溶胶弱载体 v1',
-          summary: '云层很少时，适度气溶胶可作为弱载体候选；若未被采用，不再显示成最终分后加分。',
+          summary: '适度气溶胶只作为弱载体候选；若未被采用，不再显示成最终分后加分。',
           validation: '验证：北京弱红日落可进入 30 多分；干净晴空、重霾沙尘、低云遮挡和厚灰幕场景不被抬高。'
         },
         openingCarrier: {
@@ -294,7 +294,7 @@ export default {
         lightPath: {
           title: '2. 本地云层',
           subtitle: 'Local Cloud · 画布怎么算',
-          desc: '结果页会展开本地云层的可读公式：中高云画布、区间分、云种修正、云厚修正，而不是列出散射和水汽等内部证据。',
+          desc: '结果页会展开本地云层的可读公式：中高云画布、区间分、云种修正、云厚修正，而不是列出内部采样证据。',
           lowCloudEffect: '中高云画布 = 高云×0.75 + 中云×0.45',
           visibility: '区间分把“过少、适中、过满”的云量转成 0-100 的画布能力',
           formula: '本地云层 = 区间分 + 云种修正 + 云厚修正\n例如：中高云画布 37.1 → 区间分 75.9；云种 +4.0；云厚 -2.0'
@@ -302,9 +302,9 @@ export default {
         transparency: {
           title: '3. 受光亮度',
           subtitle: 'Layer Brightness · 云是否真的亮',
-          desc: '光路、太阳几何、低云遮挡、云厚和直射/散射证据会合成受光亮度。它是基础分的一部分，不再作为独立修正条目重复展示。',
+          desc: '太阳方向、低云遮挡、云厚和亮度响应会合成受光亮度。它是基础分的一部分，不再作为独立修正条目重复展示。',
           visibility: '光路通畅会提高云层可用亮度；太阳方向阻挡会降低亮度',
-          humidity: '厚云、灰幕、低太阳透射等只进入亮度估算，不在用户页逐项堆叠',
+          humidity: '厚云、灰幕等只进入亮度估算，不在用户页逐项堆叠',
           formula: '基础分 = Σ(分层载体 × 分层受光亮度)'
         },
         layerDiversity: {
@@ -668,7 +668,7 @@ formationAnalysis: {
         moderate: '气溶胶适中（AOD {{value}}）', moderateDesc: '有利于增强红橙色散射',
         high: '气溶胶偏高（AOD {{value}}）', highDesc: '可能灰霾发暗',
         low: '空气过于通透（AOD {{value}}）', lowDesc: '颜色可能偏淡',
-        carrier: '薄雾红日载体', carrierDesc: '云层很少时，适度气溶胶在光路通畅时也能带来一点暖色日落'
+        carrier: '薄雾红日载体', carrierDesc: '适度气溶胶只作为弱载体候选，被采用时才解释为普通暖色日落'
       },
       lightPath: {
         opening: '太阳方向有透光开口', openingDesc: '太阳方向的低云较少，光线更容易打到云层',
