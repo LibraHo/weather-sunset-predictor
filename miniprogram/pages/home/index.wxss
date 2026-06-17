@@ -539,17 +539,27 @@
   justify-content: stretch;
   gap: 14rpx;
   width: 100%;
+  max-width: 100%;
   margin: 18rpx 0 8rpx;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .prediction-share-footer {
   width: 100%;
   min-width: 0;
+  max-width: 100%;
   padding: 0 24rpx;
+  overflow: hidden;
+}
+
+.prediction-share-footer.prediction-share-menu {
+  min-width: 0;
 }
 
 .prediction-feedback-footer {
   min-width: 196rpx;
+  max-width: 196rpx;
   padding: 0 22rpx;
   background: rgba(255, 252, 246, 0.9);
   color: #4b3621;
@@ -561,6 +571,8 @@
   font-weight: 900;
   line-height: 1;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .prediction-feedback-footer .share-btn-label {

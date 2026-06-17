@@ -776,10 +776,8 @@ describe('miniprogram page user/share helpers', () => {
     expect(ledger.steps.find((step) => step.key === 'baseScore')).toMatchObject({
       expression: 'Σ(分层载体×分层受光亮度) = 64'
     });
-    expect(ledger.steps.find((step) => step.key === 'cloudThickness')).toMatchObject({
-      result: '-12分',
-      expression: '厚云幕扣分'
-    });
+    expect(ledger.steps.find((step) => step.key === 'cloudCarrier')?.detail).toContain('云厚修正 -12分');
+    expect(ledger.steps.find((step) => step.key === 'cloudThickness')).toBeUndefined();
     expect(ledger.steps.find((step) => step.key === 'rendering')).toMatchObject({
       expression: '64 × 空气显色系数 1.08 = 67'
     });

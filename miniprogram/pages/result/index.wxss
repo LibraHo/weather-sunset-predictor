@@ -85,7 +85,9 @@
   gap: 10rpx;
   width: 100%;
   min-width: 0;
+  max-width: 100%;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .result-share-action {
@@ -106,6 +108,13 @@
   line-height: 1;
   white-space: nowrap;
   overflow: hidden;
+}
+
+.result-action-label {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .result-share-action::after {
