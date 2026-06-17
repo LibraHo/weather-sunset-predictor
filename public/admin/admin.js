@@ -13,6 +13,7 @@ let refreshTimer = null;
 let slowRefreshTimer = null;
 let photoCache = [];
 let feedbackCache = [];
+let adminUserCache = [];
 let dataPipelineConfigCache = null;
 let accessGuardConfigDirty = false;
 
@@ -30,7 +31,7 @@ const ADMIN_VIEW_ALIASES = {
   'ops-history': 'ops',
   'ops-danger': 'ops'
 };
-const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'ops', 'logs', 'agent', 'photos', 'feedback']);
+const ADMIN_VIEWS = new Set(['dashboard', 'visitors', 'users', 'ops', 'logs', 'agent', 'photos', 'feedback']);
 ADMIN_VIEWS.add('analytics');
 const OPS_INTERNAL_ANCHORS = new Set([
   'ops-status',
@@ -48,6 +49,7 @@ const ADMIN_VIEW_META = {
   dashboard: ['运行总览', '状态优先、操作分区，快速判断霞客当前运行情况。'],
   visitors: ['访客分析', '按北京时间查看 PV、UV、IP 和访问明细。'],
   analytics: ['运营分析', '聚合查看来源、热门路径、关键行为、转化漏斗和质量阻塞。'],
+  users: ['用户管理', '查看站内账号、身份来源、会话状态和高风险账号操作。'],
   ops: ['运维中心', '队列、定时任务、GFS+CAMS 数据管线集中管理。'],
   logs: ['日志', '集中查看外部 API 调用、错误率和每日统计。'],
   agent: ['API Token', 'Token 创建、申请审核、用量和审计日志。'],
@@ -66,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTokenEditForm();
   initDataPipelineForm();
   initAccessGuardConfigForm();
+  initAdminUserSearch();
 
   refreshTimer = setInterval(refreshActiveView, 15000);
   slowRefreshTimer = setInterval(() => {
@@ -96,6 +99,7 @@ async function loadAll() {
     loadLogs(),
     loadQueue(),
     loadVisitorRecords(),
+    loadAdminUsers(),
     loadAnalyticsDashboard(),
     loadDailyStats(),
     loadSchedule(),
@@ -231,6 +235,9 @@ async function loadActiveView() {
     case 'analytics':
       await loadAnalyticsDashboard();
       break;
+    case 'users':
+      await loadAdminUsers();
+      break;
     case 'logs':
       await Promise.all([loadLogSummary(), loadLogs(), loadDailyStats()]);
       break;
@@ -257,6 +264,8 @@ function refreshActiveView() {
     loadVisitorRecords();
   } else if (activeAdminView === 'analytics') {
     loadAnalyticsDashboard();
+  } else if (activeAdminView === 'users') {
+    loadAdminUsers();
   } else if (activeAdminView === 'logs') {
     Promise.all([loadLogSummary(), loadLogs()]);
   } else if (activeAdminView === 'feedback') {
@@ -456,6 +465,216 @@ function formatClientLabel(client) {
   if (client === 'agent_api') return 'Agent/API';
   if (client === 'admin') return '后台';
   return client || '--';
+}
+
+// =================== 用户管理 ===================
+function initAdminUserSearch() {
+  const input = document.getElementById('adminUserSearch');
+  if (!input) return;
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') loadAdminUsers();
+  });
+}
+
+function formatAdminUserName(user = {}) {
+  return user.email || user.userId || '-';
+}
+
+function formatAdminDate(value) {
+  if (!value) return '-';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString('zh-CN');
+}
+
+function renderAdminUserCounters(users = []) {
+  const total = users.length;
+  const disabled = users.filter(user => user.disabled).length;
+  const activeSessions = users.reduce((sum, user) => sum + Number(user.activeSessionsCount || 0), 0);
+  const totalEl = document.getElementById('admin-users-total');
+  const disabledEl = document.getElementById('admin-users-disabled');
+  const sessionsEl = document.getElementById('admin-users-active-sessions');
+  if (totalEl) totalEl.textContent = String(total);
+  if (disabledEl) disabledEl.textContent = String(disabled);
+  if (sessionsEl) sessionsEl.textContent = String(activeSessions);
+}
+
+function renderAdminUserTable(users = []) {
+  const tbody = document.getElementById('adminUserTableBody');
+  if (!tbody) return;
+  if (!users.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">暂无用户</td></tr>';
+    return;
+  }
+  tbody.innerHTML = users.map((user) => {
+    const providers = (user.identityProviders || []).join(', ') || '-';
+    const status = user.disabled ? '<span class="status-err">禁用</span>' : '<span class="status-ok">正常</span>';
+    const name = formatAdminUserName(user);
+    return `<tr>
+      <td><strong>${escapeHtml(name)}</strong><br><small>${escapeHtml(user.userId || '-')}</small></td>
+      <td>${escapeHtml(providers)}</td>
+      <td>${Number(user.favoritesCount || 0)}</td>
+      <td>${Number(user.photosCount || 0)}</td>
+      <td>${Number(user.activeSessionsCount || 0)} / ${Number(user.sessionsCount || 0)}</td>
+      <td>${status}</td>
+      <td><button class="btn btn-secondary" type="button" onclick="loadAdminUserDetail('${escapeHtml(user.userId)}')">详情</button></td>
+    </tr>`;
+  }).join('');
+}
+
+async function loadAdminUsers() {
+  const tbody = document.getElementById('adminUserTableBody');
+  const query = document.getElementById('adminUserSearch')?.value?.trim() || '';
+  if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="empty">加载中...</td></tr>';
+  try {
+    const params = query ? `?q=${encodeURIComponent(query)}` : '';
+    const res = await fetch('/api/admin/users' + params, { credentials: 'include' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.error?.message || '用户列表加载失败');
+    adminUserCache = data.users || [];
+    renderAdminUserCounters(adminUserCache);
+    renderAdminUserTable(adminUserCache);
+    if (adminUserCache.length && !document.getElementById('adminUserDetail')?.dataset.userId) {
+      await loadAdminUserDetail(adminUserCache[0].userId);
+    }
+  } catch (err) {
+    renderAdminUserCounters([]);
+    if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="empty">用户加载失败</td></tr>';
+    showMessage(err.message || '用户加载失败', 'error');
+  }
+}
+
+function renderAdminUserDetail(user = {}) {
+  const target = document.getElementById('adminUserDetail');
+  if (!target) return;
+  target.dataset.userId = user.userId || '';
+  const identities = (user.identities || [])
+    .map(identity => `<li><strong>${escapeHtml(identity.provider || '-')}</strong><small>${escapeHtml(identity.email || identity.subject || '-')}</small></li>`)
+    .join('') || '<li class="empty">暂无身份</li>';
+  const sessions = (user.sessions || [])
+    .map(session => `<li><strong>${session.active ? '活跃' : '已失效'}</strong><small>${escapeHtml(formatAdminDate(session.createdAt))}${session.revokedAt ? ' / revoked' : ''}</small></li>`)
+    .join('') || '<li class="empty">暂无会话</li>';
+  const favorites = (user.favorites || []).slice(0, 6)
+    .map(item => `<li><strong>${escapeHtml(item.name || item.id || '-')}</strong><small>${Number(item.lat || 0).toFixed(4)}, ${Number(item.lon || 0).toFixed(4)}</small></li>`)
+    .join('') || '<li class="empty">暂无收藏</li>';
+  const statusText = user.disabled ? '已禁用' : '正常';
+  const nextDisabled = user.disabled ? 'false' : 'true';
+  const toggleLabel = user.disabled ? '启用' : '禁用';
+  target.innerHTML = `
+    <div class="admin-user-detail-head">
+      <div>
+        <strong>${escapeHtml(formatAdminUserName(user))}</strong>
+        <small>${escapeHtml(user.userId || '-')}</small>
+      </div>
+      <span class="${user.disabled ? 'status-err' : 'status-ok'}">${statusText}</span>
+    </div>
+    <div class="admin-user-detail-meta">
+      <span>创建：${escapeHtml(formatAdminDate(user.createdAt))}</span>
+      <span>更新：${escapeHtml(formatAdminDate(user.updatedAt))}</span>
+      <span>收藏：${Number(user.favoritesCount || 0)}</span>
+      <span>最近地点：${Number(user.recentLocationsCount || 0)}</span>
+    </div>
+    <div class="admin-user-actions">
+      <button class="btn btn-secondary" type="button" onclick="toggleAdminUserDisabled('${escapeHtml(user.userId)}', ${nextDisabled})">${toggleLabel}</button>
+      <button class="btn btn-secondary" type="button" onclick="revokeAdminUserSessions('${escapeHtml(user.userId)}')">撤销会话</button>
+      <button class="btn btn-danger" type="button" onclick="deleteAdminUser('${escapeHtml(user.userId)}')">删除</button>
+    </div>
+    <label class="admin-user-note-label">管理员备注
+      <textarea id="adminUserNoteInput" rows="3" placeholder="风控、封禁或客服备注">${escapeHtml(user.adminNote || '')}</textarea>
+    </label>
+    <button class="btn btn-primary" type="button" onclick="saveAdminUserNote('${escapeHtml(user.userId)}')">保存备注</button>
+    <div class="admin-user-detail-grid">
+      <div><h4>身份</h4><ul>${identities}</ul></div>
+      <div><h4>会话</h4><ul>${sessions}</ul></div>
+      <div><h4>收藏</h4><ul>${favorites}</ul></div>
+    </div>
+  `;
+}
+
+async function loadAdminUserDetail(userId) {
+  if (!userId) return;
+  const target = document.getElementById('adminUserDetail');
+  if (target) target.innerHTML = '<p class="empty">加载中...</p>';
+  try {
+    const res = await fetch('/api/admin/users/' + encodeURIComponent(userId), { credentials: 'include' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.error?.message || '用户详情加载失败');
+    renderAdminUserDetail(data.user || {});
+  } catch (err) {
+    if (target) target.innerHTML = '<p class="empty">用户详情加载失败</p>';
+    showMessage(err.message || '用户详情加载失败', 'error');
+  }
+}
+
+async function patchAdminUser(userId, patch) {
+  const res = await fetch('/api/admin/users/' + encodeURIComponent(userId), {
+    method: 'PATCH',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch)
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.error?.message || '用户更新失败');
+  renderAdminUserDetail(data.user || {});
+  await loadAdminUsers();
+  return data.user;
+}
+
+async function toggleAdminUserDisabled(userId, disabled) {
+  if (disabled && !confirm('禁用后该用户现有会话会失效，确定继续？')) return;
+  try {
+    const adminNote = document.getElementById('adminUserNoteInput')?.value || '';
+    await patchAdminUser(userId, { disabled, adminNote });
+    showMessage(disabled ? '用户已禁用' : '用户已启用', 'success');
+  } catch (err) {
+    showMessage(err.message || '用户更新失败', 'error');
+  }
+}
+
+async function saveAdminUserNote(userId) {
+  try {
+    await patchAdminUser(userId, { adminNote: document.getElementById('adminUserNoteInput')?.value || '' });
+    showMessage('用户备注已保存', 'success');
+  } catch (err) {
+    showMessage(err.message || '用户备注保存失败', 'error');
+  }
+}
+
+async function revokeAdminUserSessions(userId) {
+  if (!confirm('确定撤销该用户全部会话？')) return;
+  try {
+    const res = await fetch('/api/admin/users/' + encodeURIComponent(userId) + '/revoke-sessions', {
+      method: 'POST',
+      credentials: 'include'
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.error?.message || '撤销会话失败');
+    renderAdminUserDetail(data.user || {});
+    await loadAdminUsers();
+    showMessage(`已撤销 ${data.revokedCount || 0} 个会话`, 'success');
+  } catch (err) {
+    showMessage(err.message || '撤销会话失败', 'error');
+  }
+}
+
+async function deleteAdminUser(userId) {
+  if (!confirm('删除用户会移除账号、身份、会话和该用户照片，确定继续？')) return;
+  try {
+    const res = await fetch('/api/admin/users/' + encodeURIComponent(userId), {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.error?.message || '删除用户失败');
+    const target = document.getElementById('adminUserDetail');
+    if (target) {
+      target.dataset.userId = '';
+      target.innerHTML = '<p class="empty">用户已删除。</p>';
+    }
+    await loadAdminUsers();
+    showMessage(`用户已删除，移除照片 ${data.deletedPhotos || 0} 张`, 'success');
+  } catch (err) {
+    showMessage(err.message || '删除用户失败', 'error');
+  }
 }
 
 // =================== 访客与运营分析 ===================

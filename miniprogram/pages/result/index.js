@@ -1104,7 +1104,6 @@ export function buildScoreLedger(prediction = {}) {
   const renderingFactor = rendering.factor ?? breakdown.renderingFactor;
   const renderingAdjustment = prediction.renderingAdjustment?.adjustment ?? breakdown.renderingAdjustment;
   const renderedScore = breakdown.unclampedFinalScore ?? breakdown.renderedScore ?? finalScore;
-  const cloudThicknessStep = buildCloudThicknessStep(prediction, canvas);
   const layerBrightnessStep = buildLayerBrightnessStep(layerBrightness, layerBrightnessAdjustment, lightPath);
 
   const summary = Number.isFinite(Number(finalScore))
@@ -1117,7 +1116,9 @@ export function buildScoreLedger(prediction = {}) {
       label: '载体',
       result: formatScore(canvasScore),
       expression: '可被染色的云面或薄雾载体',
-      detail: buildCloudCanvasText(canvas, prediction.cloudType),
+      detail: [buildCloudCanvasText(canvas, prediction.cloudType), buildCloudThicknessText(prediction, canvas)]
+        .filter(Boolean)
+        .join('；'),
       tone: levelFromScore(canvasScore)
     },
     layerBrightnessStep || {
@@ -1137,7 +1138,6 @@ export function buildScoreLedger(prediction = {}) {
       tone: levelFromScore(baseScore)
     }
   ];
-  if (cloudThicknessStep) steps.push(cloudThicknessStep);
   steps.push(
     {
       key: 'rendering',
@@ -1211,6 +1211,12 @@ function buildCloudThicknessStep(prediction = {}, canvas = {}) {
       : '云层偏厚会降低可染色画布表现。',
     tone: softened ? 'cap' : levelFromFactor(cloudThickness.modifier)
   };
+}
+
+function buildCloudThicknessText(prediction = {}, canvas = {}) {
+  const step = buildCloudThicknessStep(prediction, canvas);
+  if (!step) return '';
+  return `${step.label} ${step.result}：${step.detail || step.expression}`;
 }
 
 function buildLayerBrightnessStep(layerBrightness = {}, adjustment = null, lightPath = {}) {

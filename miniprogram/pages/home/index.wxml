@@ -210,6 +210,9 @@
             <text class="weather-hourly-point-label weather-hourly-point-label-{{item.labelPlacement}}" wx:if="{{item.labelVisible}}">{{item.valueText}}</text>
             <view class="weather-hourly-chart-dot"></view>
           </view>
+        <view class="weather-hourly-time-axis">
+          <text class="weather-hourly-time-label weather-hourly-time-label-{{item.placement}}" wx:for="{{weatherPreview.hourlyView.xAxisLabels}}" wx:key="key" style="left: {{item.left}}%;">{{item.value}}</text>
+        </view>
       </view>
       </view>
     </view>

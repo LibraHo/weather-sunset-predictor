@@ -54,6 +54,22 @@ describe('OpenMeteoProvider air quality merge', () => {
     expect(message).not.toContain('\\r\\n');
   });
 
+  test('marks transient TLS socket failures retryable', () => {
+    const provider = new OpenMeteoProvider();
+
+    expect(provider._isRetryableTransportError({
+      code: 'ECONNRESET',
+      message: 'Client network socket disconnected before secure TLS connection was established'
+    })).toBe(true);
+    expect(provider._isRetryableTransportError({
+      message: 'error:0A000126:SSL routines::unexpected eof while reading'
+    })).toBe(true);
+    expect(provider._isRetryableTransportError({
+      response: { status: 400 },
+      message: 'bad request'
+    })).toBe(false);
+  });
+
   test('fetchWeatherData merges aerosol and particulate fields by timestamp', async () => {
     const provider = new OpenMeteoProvider();
     provider._getWithRetry = jest.fn(async (_params, _timeout, label) => {

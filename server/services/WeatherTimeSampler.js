@@ -1,5 +1,3 @@
-const ONE_HOUR_MS = 60 * 60 * 1000;
-
 const WEIGHTED_NUMERIC_FIELDS = [
   'cloudCover',
   'cloudBaseHeight',
@@ -32,15 +30,18 @@ function toEpochMs(value) {
     return Number.isFinite(time) ? time : null;
   }
 
+  const num = Number(value);
+  if (Number.isFinite(num)) {
+    if (num > 1e12) return num;
+    return num * 1000;
+  }
+
   if (typeof value === 'string') {
     const parsed = new Date(value).getTime();
     return Number.isFinite(parsed) ? parsed : null;
   }
 
-  const num = Number(value);
-  if (!Number.isFinite(num)) return null;
-  if (num > 1e12) return num;
-  return num * 1000;
+  return null;
 }
 
 function normalizeHourlyEntries(hourly = []) {
@@ -74,7 +75,9 @@ function averageWeightedField(samples, field) {
   let weightTotal = 0;
 
   samples.forEach(({ item, weight }) => {
-    const value = Number(item?.[field]);
+    const rawValue = item?.[field];
+    if (rawValue == null || rawValue === '') return;
+    const value = Number(rawValue);
     if (!Number.isFinite(value)) return;
     total += value * weight;
     weightTotal += weight;
@@ -84,34 +87,40 @@ function averageWeightedField(samples, field) {
   return total / weightTotal;
 }
 
-function buildAdjacentHourSamples(entries, refTs) {
-  if (!Number.isFinite(refTs)) return [];
-
-  const lowerTs = Math.floor(refTs / ONE_HOUR_MS) * ONE_HOUR_MS;
-  const upperTs = Math.ceil(refTs / ONE_HOUR_MS) * ONE_HOUR_MS;
-  const targetTsList = lowerTs === upperTs ? [lowerTs] : [lowerTs, upperTs];
-  const targetEntries = targetTsList
-    .map(targetTs => entries.find(entry => entry.ts === targetTs))
-    .filter(Boolean);
-
-  if (!targetEntries.length) return [];
-  if (lowerTs === upperTs) {
-    return targetEntries.map(entry => ({ ...entry, diffMs: 0, weight: 1 }));
+function selectBoundingSamples(entries, refTs) {
+  const sorted = [...entries].sort((a, b) => a.ts - b.ts);
+  const exact = sorted.find(entry => entry.ts === refTs);
+  if (exact) {
+    return [{ ...exact, diffMs: 0, weight: 1 }];
   }
 
-  return targetEntries.map((entry) => {
-    const weight = entry.ts === lowerTs
-      ? (upperTs - refTs) / ONE_HOUR_MS
-      : (refTs - lowerTs) / ONE_HOUR_MS;
-    return {
-      ...entry,
-      diffMs: Math.abs(entry.ts - refTs),
-      weight: Math.max(0, Math.min(1, weight))
-    };
-  });
+  const before = [...sorted].reverse().find(entry => entry.ts < refTs);
+  const after = sorted.find(entry => entry.ts > refTs);
+
+  if (!before || !after) {
+    const closest = sorted.reduce((best, current) => {
+      const bestDiff = Math.abs(best.ts - refTs);
+      const currentDiff = Math.abs(current.ts - refTs);
+      return currentDiff < bestDiff ? current : best;
+    }, sorted[0]);
+    return [{ ...closest, diffMs: Math.abs(closest.ts - refTs), weight: 1 }];
+  }
+
+  const span = after.ts - before.ts;
+  if (span <= 0) {
+    return [{ ...before, diffMs: Math.abs(before.ts - refTs), weight: 1 }];
+  }
+
+  const afterWeight = (refTs - before.ts) / span;
+  const beforeWeight = 1 - afterWeight;
+
+  return [
+    { ...before, diffMs: refTs - before.ts, weight: beforeWeight },
+    { ...after, diffMs: after.ts - refTs, weight: afterWeight }
+  ];
 }
 
-function buildTimeWeightedWeatherSample(hourly = [], referenceTime = new Date(), options = {}) {
+function buildTimeWeightedWeatherSample(hourly = [], referenceTime = new Date()) {
   const entries = normalizeHourlyEntries(hourly);
   if (!entries.length) {
     return {
@@ -129,8 +138,7 @@ function buildTimeWeightedWeatherSample(hourly = [], referenceTime = new Date(),
     return currentDiff < bestDiff ? current : best;
   }, entries[0]);
 
-  const samples = buildAdjacentHourSamples(entries, refTs)
-    .sort((a, b) => a.ts - b.ts);
+  const samples = selectBoundingSamples(entries, refTs);
 
   if (!samples.length) {
     return {

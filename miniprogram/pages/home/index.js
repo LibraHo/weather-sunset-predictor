@@ -700,15 +700,12 @@ Page({
       this.recordRecentLocation(query);
       app.saveLatestPrediction(prediction);
 
-      this.setData({
-        weatherPreview: buildWeatherPreview({ ...weather, location: query.locationName }),
-        ...buildHomePredictionSurface(prediction, query),
-        predictionPeriodCards: predictionCards,
-        predictionPreviewLoading: false,
-        weatherView: 'overview',
-        weatherDay: query.day,
-        weatherParameter: 'temp'
-      }, () => {
+      this.setData(buildHomeWeatherPredictionPatch({
+        weather,
+        prediction,
+        predictionCards,
+        query
+      }), () => {
         this.paintPredictionRadarCloudField();
       });
     } catch (error) {
@@ -953,15 +950,12 @@ Page({
     this.recordRecentLocation(query);
     app.saveLatestPrediction(unified.prediction);
 
-    this.setData({
-      weatherPreview: buildWeatherPreview({ ...unified.weather, location: query.locationName }),
-      predictionPreviewLoading: false,
-      predictionPeriodCards: unified.predictionCards,
-      ...buildHomePredictionSurface(unified.prediction, query),
-      weatherView: 'overview',
-      weatherDay: query.day,
-      weatherParameter: 'temp'
-    }, () => {
+    this.setData(buildHomeWeatherPredictionPatch({
+      weather: unified.weather,
+      prediction: unified.prediction,
+      predictionCards: unified.predictionCards,
+      query
+    }), () => {
       this.paintPredictionRadarCloudField();
     });
   },
@@ -1370,10 +1364,24 @@ export function buildPredictionPreviewForPeriod(period = 'sunset', day = getDefa
 }
 
 export function buildHomePredictionSurface(prediction = {}, query = {}) {
-  const weather = buildWeatherFromPrediction(prediction, query);
   return {
-    weatherPreview: buildWeatherPreview(weather),
     predictionPreview: buildPredictionPreviewFromPrediction(prediction, query)
+  };
+}
+
+export function buildHomeWeatherPredictionPatch({ weather = {}, prediction = {}, predictionCards = {}, query = {} } = {}) {
+  return {
+    ...buildHomePredictionSurface(prediction, query),
+    weatherPreview: buildWeatherPreview({
+      referenceTime: prediction.referenceTime || prediction.eventTime || prediction.date,
+      ...weather,
+      location: query.locationName
+    }),
+    predictionPeriodCards: predictionCards,
+    predictionPreviewLoading: false,
+    weatherView: 'overview',
+    weatherDay: query.day,
+    weatherParameter: 'temp'
   };
 }
 
@@ -1741,7 +1749,7 @@ export function buildWeatherHourlyViewModel(hourly = [], parameter = 'temp') {
     const value = getHourlyParameterValue(item, parameter);
     const normalized = Number.isFinite(value) ? (value - min) / span : 0.5;
     const x = Math.round((inset + (index / displayCount) * plotWidth) * 10) / 10;
-    const y = Math.round((80 - normalized * 54) * 10) / 10;
+    const y = Math.round((74 - normalized * 50) * 10) / 10;
     return {
       key: item.key,
       time: item.time,
@@ -1764,6 +1772,14 @@ export function buildWeatherHourlyViewModel(hourly = [], parameter = 'temp') {
       { key: 'tomorrow', label: '明天' }
     ],
     chart,
+    xAxisLabels: chart.filter((_, index) => (
+      index % 2 === 0 || index === chart.length - 1
+    )).map((item) => ({
+      key: `time-${item.key}`,
+      value: item.time,
+      left: item.left,
+      placement: item.labelPlacement
+    })),
     axisLabels: [max, min + span / 2, min].map((value, index) => ({
       key: `axis-${index}`,
       value: formatHourlyParameterValue(value, config.unit)

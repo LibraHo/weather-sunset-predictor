@@ -1765,6 +1765,92 @@ body.theme-dark .admin-table tr:hover td {
   color: var(--color-error);
 }
 
+.admin-users-grid {
+  align-items: start;
+}
+
+.admin-user-detail {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-user-detail-head {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.admin-user-detail-head strong,
+.admin-user-detail-head small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.admin-user-detail-meta,
+.admin-user-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-user-detail-meta span {
+  border: 1px solid var(--theme-card-border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  color: var(--theme-text-muted);
+  font-size: 0.82rem;
+}
+
+.admin-user-note-label {
+  display: grid;
+  gap: 6px;
+  color: var(--theme-text-muted);
+  font-size: 0.86rem;
+}
+
+.admin-user-note-label textarea {
+  width: 100%;
+  min-height: 72px;
+  resize: vertical;
+}
+
+.admin-user-detail-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-user-detail-grid h4 {
+  margin: 0 0 6px;
+  color: var(--theme-text);
+  font-size: 0.9rem;
+}
+
+.admin-user-detail-grid ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-user-detail-grid li {
+  border: 1px solid var(--theme-card-border);
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.admin-user-detail-grid li strong,
+.admin-user-detail-grid li small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.admin-user-detail-grid li small {
+  color: var(--theme-text-muted);
+  font-size: 0.8rem;
+}
+
 @media (max-width: 1024px) {
   .admin-shell {
     grid-template-columns: 1fr;
