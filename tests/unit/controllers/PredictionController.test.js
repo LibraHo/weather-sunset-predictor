@@ -908,11 +908,14 @@ describe('PredictionController', () => {
         renderingAnalysis: { factor: 1, visibilityFactor: 1, humidityFactor: 1, aerosolFactor: 1 }
       });
 
-      expect(html).toContain('中高云画布 75.0 = 高云 100.0×0.75 + 中云 0.0×0.45；区间分 66.7');
+      expect(html).toContain('候选载体：本地云层 48.7；采用 云层载体 48.7');
+      expect(html).toContain('本地云层：中高云画布 75.0 → 区间分 66.7');
       expect(html).toContain('高云主导 bonus +6.0');
-      expect(html).toContain('云种 upper_cloud_carrier +4.0');
-      expect(html).toContain('云厚 thick，画布 76.7 × 30% × 压力 0.78，最大折损 23.0；散射 77%，水汽 10.5，载体缓冲 0.08');
+      expect(html).toContain('云种 +4.0');
+      expect(html).toContain('云厚 -18.0');
       expect(html).toContain('-18.0');
+      expect(html).not.toContain('低太阳透射');
+      expect(html).not.toContain('载体缓冲');
     });
 
     test('分数明细应解释渲染后分到展示分的状态档位校准', () => {

@@ -2116,7 +2116,6 @@ class PredictionController {
     const upperCloudCover = Number(highClouds) * 0.75 + Number(midClouds) * 0.45;
     const cloudTypeAdjustment = prediction?.canvasAnalysis?.cloudTypeAdjustment;
     const cloudThicknessAdjustment = prediction?.canvasAnalysis?.cloudThicknessAdjustment;
-    const cloudThicknessEvidence = cloudThickness?.evidence || {};
     const signed = (value) => {
       const n = Number(value);
       if (!Number.isFinite(n)) return '--';
@@ -2129,6 +2128,11 @@ class PredictionController {
       aerosol: ledgerText('labels.aerosolCarrier', {}, 'Aerosol carrier', '气溶胶载体'),
       directional: ledgerText('labels.directionalCarrier', {}, 'Sun-direction carrier', '日落方向载体')
     }[key] || key || '--');
+    const carrierLabel = (key) => ({
+      cloud: ledgerText('labels.cloudCarrier', {}, 'Cloud carrier', '云层载体'),
+      aerosol: ledgerText('labels.aerosolCarrier', {}, 'Aerosol carrier', '气溶胶载体'),
+      directional_curtain: ledgerText('labels.directionalCarrier', {}, 'Sun-direction carrier', '日落方向载体')
+    }[key] || ledgerText('labels.cloudCarrier', {}, 'Cloud carrier', '云层载体'));
 
     const reasonText = (reason) => ({
       precipitation_cap_45: ledgerText('reasons.precipitationCap45', {}, 'rain plus low clouds keeps the score low', '降水叠加低云，观赏条件明显变差'),
@@ -2324,17 +2328,57 @@ class PredictionController {
     })();
 
     const carrierDetail = (() => {
-      const parts = [];
+      const activeCarrier = prediction?.carrierAnalysis?.activeCarrier || breakdown.activeCarrier || 'cloud';
+      const cloudCandidate = prediction?.carrierAnalysis?.cloudCanvasScore
+        ?? (activeCarrier === 'cloud' ? breakdown.carrierScore : null)
+        ?? prediction?.canvasAnalysis?.score
+        ?? breakdown.canvasScore;
+      const candidateParts = [];
+      if (Number.isFinite(Number(cloudCandidate))) {
+        candidateParts.push(ledgerText(
+          'details.cloudCarrierCandidate',
+          { score: fmt(cloudCandidate, 1) },
+          'cloud {{score}}',
+          '本地云层 {{score}}'
+        ));
+      }
+      if (directionalCurtainCarrier?.applied && Number.isFinite(Number(directionalCurtainCarrier.score))) {
+        candidateParts.push(ledgerText(
+          'details.directionalCarrierCandidate',
+          { score: fmt(directionalCurtainCarrier.score, 1) },
+          'sun-direction {{score}}',
+          '日落方向 {{score}}'
+        ));
+      }
+      if (aerosolCarrier?.activatedScore >= 12) {
+        candidateParts.push(ledgerText(
+          'details.aerosolCarrierCandidate',
+          { score: fmt(aerosolCarrier.activatedScore, 1) },
+          'aerosol {{score}}',
+          '气溶胶 {{score}}'
+        ));
+      }
+
+      const summary = candidateParts.length
+        ? ledgerText(
+          'details.carrierCandidates',
+          { candidates: candidateParts.join('；'), active: carrierLabel(activeCarrier), score: fmt(carrierScore, 1) },
+          'candidates: {{candidates}}; adopted {{active}} {{score}}',
+          '候选载体：{{candidates}}；采用 {{active}} {{score}}'
+        )
+        : '';
+
+      const sourceParts = [];
       if (Number.isFinite(upperCloudCover)) {
-        parts.push(ledgerText(
-          'details.upperCloudCanvas',
+        sourceParts.push(ledgerText(
+          'details.upperCloudCanvasShort',
           { high: fmt(highClouds, 1), mid: fmt(midClouds, 1), upper: fmt(upperCloudCover, 1), range: fmt(prediction?.canvasAnalysis?.cloudRangeScore, 1) },
-          'upper canvas {{upper}} = high {{high}}×0.75 + mid {{mid}}×0.45; range score {{range}}',
-          '中高云画布 {{upper}} = 高云 {{high}}×0.75 + 中云 {{mid}}×0.45；区间分 {{range}}'
+          'upper canvas {{upper}} from high {{high}} and mid {{mid}} -> range {{range}}',
+          '中高云画布 {{upper}} → 区间分 {{range}}'
         ));
       }
       if (Number(prediction?.canvasAnalysis?.highCloudBonus)) {
-        parts.push(ledgerText(
+        sourceParts.push(ledgerText(
           'details.highCloudBonus',
           { bonus: signed(prediction.canvasAnalysis.highCloudBonus) },
           'high-cloud dominant bonus {{bonus}}',
@@ -2342,53 +2386,31 @@ class PredictionController {
         ));
       }
       if (Number(cloudTypeAdjustment?.canvasBonus)) {
-        parts.push(ledgerText(
-          'details.cloudTypeAdjustment',
-          { bonus: signed(cloudTypeAdjustment.canvasBonus), reason: cloudTypeAdjustment.reason || '--' },
-          'cloud type {{reason}} {{bonus}}',
-          '云种 {{reason}} {{bonus}}'
+        sourceParts.push(ledgerText(
+          'details.cloudTypeAdjustmentShort',
+          { bonus: signed(cloudTypeAdjustment.canvasBonus) },
+          'cloud type {{bonus}}',
+          '云种 {{bonus}}'
         ));
       }
       if (Number(cloudThicknessAdjustment?.adjustment)) {
-        parts.push(ledgerText(
-          'details.cloudThicknessAdjustment',
-          {
-            thickness: cloudThickness?.thickness || '--',
-            thin: fmt(cloudThicknessEvidence.thin, 1),
-            thick: fmt(cloudThicknessEvidence.thick, 1),
-            net: fmt(cloudThicknessEvidence.net, 1),
-            pressure: fmt(cloudThicknessEvidence.pressure ?? cloudThicknessAdjustment.pressure, 2),
-            diffuse: fmt(Number(cloudThicknessEvidence.diffuseRatio) * 100, 0),
-            water: fmt(cloudThicknessEvidence.waterIndex, 1),
-            relief: fmt(cloudThicknessEvidence.carrierRelief, 2),
-            adjustment: signed(cloudThicknessAdjustment.adjustment),
-            solar: cloudThickness?.reasons?.includes('low_solar_transmission')
-              ? ledgerText('details.lowSolarTransmissionYes', {}, 'yes', '命中')
-              : ledgerText('details.lowSolarTransmissionNo', {}, 'no', '未命中'),
-            base: fmt(cloudThicknessAdjustment.baseScore, 1),
-            max: fmt(cloudThicknessAdjustment.maxPenalty, 1)
-          },
-          'cloud thickness {{thickness}}, base {{base}} × 30% × pressure {{pressure}} = max {{max}} scaled; diffuse {{diffuse}}%, water {{water}}, carrier relief {{relief}}, low solar transmission {{solar}}, adjustment {{adjustment}}',
-          '云厚 {{thickness}}，画布 {{base}} × 30% × 压力 {{pressure}}，最大折损 {{max}}；散射 {{diffuse}}%，水汽 {{water}}，载体缓冲 {{relief}}，低太阳透射 {{solar}}，修正 {{adjustment}}'
+        sourceParts.push(ledgerText(
+          'details.cloudThicknessAdjustmentShort',
+          { adjustment: signed(cloudThicknessAdjustment.adjustment) },
+          'cloud thickness {{adjustment}}',
+          '云厚 {{adjustment}}'
         ));
       }
-      if (directionalCurtainCarrier?.applied) {
-        parts.push(ledgerText(
-          'details.directionalCurtainCarrier',
-          { score: fmt(directionalCurtainCarrier.score, 1), high: fmt(directionalCurtainCarrier.metrics?.high, 1), lowMid: fmt(directionalCurtainCarrier.metrics?.lowMidBlock, 1) },
-          'solar-direction curtain {{score}}, high cloud {{high}}, low/mid block {{lowMid}}',
-          '日落方向幕布 {{score}}，高云 {{high}}，低中云遮挡 {{lowMid}}'
-        ));
-      }
-      if (aerosolCarrier?.activatedScore >= 12) {
-        parts.push(ledgerText(
-          'details.aerosolCarrier',
-          { activation: fmt(aerosolCarrier.lightPathActivation, 2) },
-          'thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}',
-          '云层很少时，薄雾在光路通畅时可承接一点暖色，光路激活 ×{{activation}}'
-        ));
-      }
-      return parts.join('；');
+      const source = sourceParts.length
+        ? ledgerText(
+          'details.cloudCarrierSource',
+          { source: sourceParts.join('；') },
+          'local cloud: {{source}}',
+          '本地云层：{{source}}'
+        )
+        : '';
+
+      return [summary, source].filter(Boolean).join('；');
     })();
 
     const baseScoreDetail = (() => {

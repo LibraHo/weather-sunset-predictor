@@ -83,7 +83,7 @@ describe('score breakdown i18n', () => {
     expect(html).not.toContain('Visibility 4km');
   });
 
-  test('Chinese score detail ledger explains low solar transmission evidence', () => {
+  test('Chinese score detail ledger keeps carrier evidence concise', () => {
     i18n.currentLanguage = 'zh-CN';
     const controller = new PredictionController(mockStorageService);
     const prediction = {
@@ -111,8 +111,11 @@ describe('score breakdown i18n', () => {
 
     const html = controller.renderScoreBreakdownPopover(prediction);
 
-    expect(html).toContain('低太阳透射');
-    expect(html).toContain('命中');
+    expect(html).toContain('候选载体');
+    expect(html).toContain('本地云层');
+    expect(html).toContain('云厚 -18.0');
+    expect(html).not.toContain('低太阳透射');
+    expect(html).not.toContain('载体缓冲');
     expect(html).not.toContain('low solar transmission hit');
   });
 });
