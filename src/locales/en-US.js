@@ -116,7 +116,7 @@ const translations = {
     "tabs": {
       "ariaLabel": "Home tab navigation",
       "forecast": "Forecast",
-      "simulator": "Profile Simulator",
+      "simulator": "Fire Cloud Simulator",
     "methodology": "Methodology",
       "map": "Fire Sky Map",
       "shareMap": "Share Map",
@@ -130,7 +130,7 @@ const translations = {
       "dropdownAriaLabel": "Home view menu"
     },
     "simulator": {
-      "title": "Fire Cloud Profile Simulator",
+      "title": "Fire Cloud Simulator",
       "intro": "Place cloud blocks by distance and meter-level height, then scrub sunrise or sunset time to see which clouds light up, which are shadowed, and which dim because they are thick.",
       "mode": {
         "sunrise": "Sunrise",

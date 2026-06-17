@@ -116,7 +116,7 @@
     "tabs": {
       "ariaLabel": "ホームタブナビゲーション",
       "forecast": "予測機能",
-      "simulator": "Profile Simulator",
+      "simulator": "Fire Cloud Simulator",
     "methodology": "焼き雲スコアの計算方法",
       "map": "火焼け空マップ",
             shareMap: '共有マップ',
@@ -130,7 +130,7 @@ apiAccess: 'API接続',
       "dropdownAriaLabel": "ページ切り替えメニュー"
     },
     "simulator": {
-      "title": "Fire Cloud Profile Simulator",
+      "title": "Fire Cloud Simulator",
       "intro": "Place cloud blocks by distance and meter-level height, then scrub sunrise or sunset time to see which clouds light up, which are shadowed, and which dim because they are thick.",
       "mode": {
         "sunrise": "Sunrise",

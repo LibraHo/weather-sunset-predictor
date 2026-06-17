@@ -130,7 +130,7 @@ const translations = {
       "dropdownAriaLabel": "頁面切換選單"
     },
     "simulator": {
-      "title": "火燒雲剖面模擬器",
+      "title": "火燒雲模擬器",
       "intro": "用公里距離和米級雲高布置雲塊，拖動日出/日落時間，觀察哪些雲被照亮、哪些被前方雲牆遮擋、哪些因厚雲變暗。",
       "mode": {
         "sunrise": "日出",

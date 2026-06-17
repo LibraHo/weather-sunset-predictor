@@ -124,7 +124,7 @@ export default {
     tabs: {
       ariaLabel: '主页分页导航',
       forecast: '预测功能',
-      "simulator": "剖面模拟",
+      "simulator": "火烧云模拟器",
     methodology: '火烧云计算方法',
       map: '火烧云地图',
       shareMap: '分享地图',
@@ -138,7 +138,7 @@ export default {
       dropdownAriaLabel: '页面切换菜单'
     },
     "simulator": {
-      "title": "火烧云剖面模拟器",
+      "title": "火烧云模拟器",
       "intro": "用公里距离和米级云高布置云块，拖动日出/日落时间，观察哪些云被照亮、哪些被前方云墙遮挡、哪些因厚云变暗。",
       "mode": {
         "sunrise": "日出",

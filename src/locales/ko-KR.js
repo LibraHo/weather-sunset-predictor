@@ -116,7 +116,7 @@
     "tabs": {
       "ariaLabel": "홈 탭 내비게이션",
       "forecast": "예측 기능",
-      "simulator": "Profile Simulator",
+      "simulator": "Fire Cloud Simulator",
     "methodology": "화염구름 점수 계산 방법",
       "map": "노을 지도",
             shareMap: '공유 지도',
@@ -130,7 +130,7 @@ apiAccess: 'API 연동',
       "dropdownAriaLabel": "페이지 전환 메뉴"
     },
     "simulator": {
-      "title": "Fire Cloud Profile Simulator",
+      "title": "Fire Cloud Simulator",
       "intro": "Place cloud blocks by distance and meter-level height, then scrub sunrise or sunset time to see which clouds light up, which are shadowed, and which dim because they are thick.",
       "mode": {
         "sunrise": "Sunrise",
