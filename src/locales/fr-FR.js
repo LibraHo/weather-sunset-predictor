@@ -193,6 +193,12 @@
           "summary": "Adds layerBrightness: mid/high clouds are only the carrier, and an open path is only necessary. The model now checks whether that layer is actually illuminated. Weak brightness now applies a multiplicative score gate instead of a hard ceiling.",
           "validation": "Validation: the 2026-06-12 Beijing sunset sample drops from the high-60s to around 60; web score details, text analysis, and the mini-program methodology page now show layer brightness."
         },
+        "layerBrightness": {
+          "date": "2026-06-13",
+          "title": "Layer-weighted brightness formula v1",
+          "summary": "The final score uses Σ(layer carrier × layer brightness) × air rendering; layer brightness uses a log-saturation response, and the sun-direction path remains folded into it.",
+          "validation": "Validation: backend scoring, web score details, the methodology page, and the mini-program result page all expose the layer-sum formula."
+        },
         "grayVeilDirectional": {
           "date": "2026-06-06",
           "title": "Gray-veil rendering + directional mid-cloud v2",
@@ -502,12 +508,21 @@
           "postRainCap": "Post-rain haze",
           "displayCalibration": "Display calibration",
           "aerosolCarrier": "Aerosol carrier",
+          "directionalCarrier": "Sunset-direction carrier",
           "scoringV2": "Open-path warm scattering",
           "grayVeilAirRendering": "Gray-veil rendering",
           "evidence": "Calculation evidence"
         },
         "details": {
           "cloudCarrier": "usable color carrier from cloud or thin haze",
+          "cloudCarrierCandidate": "cloud candidate {{score}}",
+          "aerosolCarrierCandidate": "aerosol candidate {{score}}",
+          "directionalCarrierCandidate": "sunset-direction candidate {{score}}",
+          "carrierCandidates": "using {{active}} {{score}}",
+          "upperCloudCanvasShort": "upper canvas {{upper}} → range score {{range}}",
+          "cloudTypeAdjustmentShort": "cloud type {{bonus}}",
+          "cloudThicknessAdjustmentShort": "cloud thickness {{adjustment}}",
+          "cloudCarrierSource": "chosen from local cloud, sunset-direction curtain, or weak aerosol carrier",
           "cloudPenalty": "cloud canvas {{canvas}}, low cloud ×{{low}}, overcast ×{{overcast}}",
           "upperCloudCanvas": "toile nuageuse moyenne/haute {{upper}} = hauts {{high}}×0.75 + moyens {{mid}}×0.45; score de plage {{range}}",
           "highCloudBonus": "bonus de dominance des nuages hauts {{bonus}}",
@@ -515,7 +530,7 @@
           "cloudThicknessAdjustment": "épaisseur nuageuse {{thickness}}, base {{base}} × 30% × pression {{pressure}} = max {{max}} ajusté; diffus {{diffuse}}%, vapeur {{water}}, allègement support {{relief}}, faible transmission solaire {{solar}}",
           "lowSolarTransmissionYes": "oui",
           "lowSolarTransmissionNo": "non",
-          "aerosolCarrier": "thin haze can carry warm sunset color when the light path is open, activation ×{{activation}}",
+          "aerosolCarrier": "aerosol candidate {{score}}",
           "scoringV2": "cloud carrier {{carrier}} × sunset path {{path}} × air rendering {{air}}",
           "grayVeilAirRendering": "full mid/high cloud with dirty air: carrier {{carrier}} × path {{path}} × suppressed air rendering {{air}}",
           "lightPath": "sunlight reaches the cloud layer",
