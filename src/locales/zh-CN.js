@@ -124,6 +124,7 @@ export default {
     tabs: {
       ariaLabel: '主页分页导航',
       forecast: '预测功能',
+      "simulator": "火烧云模拟器",
     methodology: '火烧云计算方法',
       map: '火烧云地图',
       shareMap: '分享地图',
@@ -136,6 +137,85 @@ export default {
       ariaLabel: '页面切换',
       dropdownAriaLabel: '页面切换菜单'
     },
+    "simulator": {
+      "title": "火烧云模拟器",
+      "intro": "用公里距离和米级云高布置云块，拖动日出/日落时间，观察哪些云被照亮、哪些被前方云墙遮挡、哪些因厚云变暗。",
+      "mode": {
+        "sunrise": "日出",
+        "sunset": "日落"
+      },
+      "solarAngle": "太阳高度角",
+      "canvasAria": "火烧云云层横切面画布",
+      "axisDistance": "距离 X：0-150 km",
+      "axisHeight": "高度 Y：0-12000 m",
+      "controlsAria": "剖面模拟控制台",
+      "controls": {
+        "mode": "模式",
+        "time": "模拟时间",
+        "axisScale": "坐标轴比例",
+        "cloud": "选中云块"
+      },
+      "axis": {
+        "linear": "线性坐标",
+        "log": "对数坐标",
+        "linearShort": "LINEAR 坐标",
+        "logShort": "LOG 坐标"
+      },
+      "fields": {
+        "distance": "距离 km",
+        "baseHeight": "云底 m",
+        "topHeight": "云顶 m",
+        "coverage": "覆盖率 %",
+        "width": "宽度 km",
+        "opticalDepth": "光学厚度"
+      },
+      "actions": {
+        "addCloud": "添加云块",
+        "reset": "重置预设"
+      },
+      "selectCloudHint": "选择云块查看判定原因",
+      "rules": {
+        "aria": "模拟规则说明",
+        "shadow": "遮挡：只挡阴影带覆盖到的后方云高",
+        "scatter": "散射：光带上下有 twilight scatter 宽度",
+        "thick": "厚云幕：高覆盖率 + 高光学厚度会吸光变灰",
+        "alwaysDark": "全程黑：整段日出/日落采样都未进入暖色照亮"
+      },
+      "customCloudLabel": "自定义云块 {{index}}",
+      "cloudNames": {
+        "nearLowWall": "近处低云墙",
+        "midAltocumulus": "中距高积云",
+        "farCirrus": "远处卷云层",
+        "distantThickVeil": "远处厚云幕"
+      },
+      "time": {
+        "atSunrise": "日出时刻",
+        "atSunset": "日落时刻",
+        "before": "{{mode}}前 {{minutes}} 分钟",
+        "after": "{{mode}}后 {{minutes}} 分钟"
+      },
+      "widthLabel": "宽 {{width}} km",
+      "summary": "照亮 {{lit}} 块，遮挡 {{blocking}} 块，阴影 {{shadowed}} 块，变暗 {{dimmed}} 块，全程黑云 {{alwaysDark}} 块",
+      "selectedReason": "{{label}}：{{reason}}",
+      "status": {
+        "lit": "被照亮",
+        "dimmed": "变暗",
+        "shadowed": "被遮挡",
+        "blocking": "遮挡云墙",
+        "unlit": "未照亮",
+        "alwaysDark": "全程黑云",
+        "alwaysDarkShort": "全程黑"
+      },
+      "reasons": {
+        "alwaysDark": "整段窗口都没进入暖色光带",
+        "shadowed": "被前方云的阴影带覆盖",
+        "blocking": "低角度光穿过时形成遮挡云墙",
+        "dimmed": "云幕太厚，吸收后只剩灰紫光",
+        "lit": "云高与散射光带相交",
+        "unlit": "云高暂未碰到光带"
+      }
+    },
+
     apiAccess: {
       kicker: 'Sunset Voyager API',
       intro: '霞客 Agent API 提供地点解析、朝霞/晚霞评分和评分解释，适合个人、学习与研究场景。',
