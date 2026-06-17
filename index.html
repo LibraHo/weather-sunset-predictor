@@ -496,7 +496,7 @@
               <span data-i18n="home.methodology.sections.lightPath.title">2. 本地云层</span>
               <small data-i18n="home.methodology.sections.lightPath.subtitle">Local Cloud · 画布怎么算</small>
             </h3>
-            <p data-i18n="home.methodology.sections.lightPath.desc">结果页会展开本地云层的可读公式：中高云画布、区间分、云种修正、云厚修正，而不是列出散射和水汽等内部证据。</p>
+            <p data-i18n="home.methodology.sections.lightPath.desc">结果页会展开本地云层的可读公式：中高云画布、区间分、云种修正、云厚修正，而不是列出内部采样证据。</p>
             <ul class="methodology-detail-list">
               <li data-i18n="home.methodology.sections.lightPath.lowCloudEffect">中高云画布 = 高云×0.75 + 中云×0.45</li>
               <li data-i18n="home.methodology.sections.lightPath.visibility">区间分把“过少、适中、过满”的云量转成 0-100 的画布能力</li>
@@ -510,10 +510,10 @@
               <span data-i18n="home.methodology.sections.transparency.title">3. 受光亮度</span>
               <small data-i18n="home.methodology.sections.transparency.subtitle">Layer Brightness · 云是否真的亮</small>
             </h3>
-            <p data-i18n="home.methodology.sections.transparency.desc">光路、太阳几何、低云遮挡、云厚和直射/散射证据会合成受光亮度。它是基础分的一部分，不再作为独立修正条目重复展示。</p>
+            <p data-i18n="home.methodology.sections.transparency.desc">太阳方向、低云遮挡、云厚和亮度响应会合成受光亮度。它是基础分的一部分，不再作为独立修正条目重复展示。</p>
             <ul class="methodology-detail-list">
               <li data-i18n="home.methodology.sections.transparency.visibility">光路通畅会提高云层可用亮度；太阳方向阻挡会降低亮度</li>
-              <li data-i18n="home.methodology.sections.transparency.humidity">厚云、灰幕、低太阳透射等只进入亮度估算，不在用户页逐项堆叠</li>
+              <li data-i18n="home.methodology.sections.transparency.humidity">厚云、灰幕等只进入亮度估算，不在用户页逐项堆叠</li>
             </ul>
             <p class="methodology-formula" data-i18n="home.methodology.sections.transparency.formula">基础分 = Σ(分层载体 × 分层受光亮度)</p>
           </article>
@@ -678,7 +678,7 @@
                 <time datetime="2026-05-12" data-i18n="home.methodology.changelog.aerosol.date">2026-05-12</time>
                 <div>
                   <strong data-i18n="home.methodology.changelog.aerosol.title">气溶胶弱载体 v1</strong>
-                  <p data-i18n="home.methodology.changelog.aerosol.summary">云层很少时，适度薄雾/气溶胶必须被太阳方向光路激活，才会作为普通红日落的弱载体参与评分。</p>
+                  <p data-i18n="home.methodology.changelog.aerosol.summary">适度气溶胶只作为弱载体候选；若未被采用，不再显示成最终分后加分。</p>
                   <small data-i18n="home.methodology.changelog.aerosol.validation">验证：北京弱红日落可进入 30 多分；干净晴空、重霾沙尘、低云遮挡和厚灰幕场景不被抬高。</small>
                 </div>
               </li>
