@@ -472,110 +472,110 @@
 
       <section id="tab-panel-methodology" class="card methodology-panel hidden" role="tabpanel" aria-label="methodology-panel" tabindex="0" hidden>
         <h2 data-i18n="home.methodology.title">火烧云计算方法</h2>
-        <p data-i18n="home.methodology.intro">火烧云指数综合评估天空条件与光学传播路径，判断当日形成火烧云的概率与强度。以下为基于气象数据的完整计算原理。</p>
+        <p data-i18n="home.methodology.intro">当前火烧云指数按“候选载体 → 受光亮度 → 空气显色 → 封顶校准”展示。结果页的计算依据只呈现这条主链路，不再把内部诊断项混成最终修正。</p>
 
                 <div class="methodology-grid">
-          <!-- 第一部分：云种判别与画布评分 -->
+          <!-- 第一部分：候选载体 -->
           <article class="methodology-item">
             <h3>
-              <span data-i18n="home.methodology.sections.cloudStructure.title">1. 云层结构</span>
-              <small data-i18n="home.methodology.sections.cloudStructure.subtitle">Cloud Structure · 画布评分</small>
+              <span data-i18n="home.methodology.sections.cloudStructure.title">1. 候选载体</span>
+              <small data-i18n="home.methodology.sections.cloudStructure.subtitle">Carrier Candidates · 先选谁能显色</small>
             </h3>
-            <p data-i18n="home.methodology.sections.cloudStructure.desc">火烧云需要合适的云层作为"画布"，高云和中云是核心载体，低云起遮挡作用。</p>
+            <p data-i18n="home.methodology.sections.cloudStructure.desc">系统先比较本地云层、日落方向云幕和气溶胶弱载体，采用最能显色的一项作为主载体。</p>
             <ul class="methodology-detail-list">
-              <li data-i18n="home.methodology.sections.cloudStructure.highCloud">高云（>6km）：火烧云的最佳载体，透光性好，能染出大片红橙色</li>
-              <li data-i18n="home.methodology.sections.cloudStructure.midCloud">中云（2–6km）：同样能产生火烧云，效果略逊于高云</li>
-              <li data-i18n="home.methodology.sections.cloudStructure.lowCloudBonus">低云（&lt;2km）：主要起遮挡作用，不贡献正面分数</li>
+              <li data-i18n="home.methodology.sections.cloudStructure.highCloud">本地云层：高云×0.75 + 中云×0.45 得到中高云画布，再映射为区间分</li>
+              <li data-i18n="home.methodology.sections.cloudStructure.midCloud">日落方向：太阳方向云幕可作为远端载体，但不会替代本地详细评分</li>
+              <li data-i18n="home.methodology.sections.cloudStructure.lowCloudBonus">气溶胶：只作为弱载体候选；云层载体更强时不会单独显示成最终加分</li>
             </ul>
-            <p class="methodology-formula" data-i18n="home.methodology.sections.cloudStructure.formula">高云分 = 25 × exp(−(高云−50)²/800)，最优50%，满分25<br>中云分 = 高云≥40%时更宽容（中云也是色彩载体），否则严格高斯<br>低云加分 = 10 × max(0, 1−低云/20)，越低越好，满分10</p>
+            <p class="methodology-formula" data-i18n="home.methodology.sections.cloudStructure.formula">候选载体 = max(本地云层, 日落方向云幕, 气溶胶弱载体)<br>本地云层 = 中高云画布 → 区间分 + 云种修正 + 云厚修正</p>
           </article>
 
-          <!-- 第二部分：光路几何模型 -->
+          <!-- 第二部分：本地云层展开 -->
           <article class="methodology-item">
             <h3>
-              <span data-i18n="home.methodology.sections.lightPath.title">2. 光路评估</span>
-              <small data-i18n="home.methodology.sections.lightPath.subtitle">Light Path · 光路评分</small>
+              <span data-i18n="home.methodology.sections.lightPath.title">2. 本地云层</span>
+              <small data-i18n="home.methodology.sections.lightPath.subtitle">Local Cloud · 画布怎么算</small>
             </h3>
-            <p data-i18n="home.methodology.sections.lightPath.desc">光路通畅度决定阳光能否照到可染色的中高云。低云挡在太阳方向时会明显拉低光路；中高云多时通常先看作晚霞画布。</p>
+            <p data-i18n="home.methodology.sections.lightPath.desc">结果页会展开本地云层的可读公式：中高云画布、区间分、云种修正、云厚修正，而不是列出散射和水汽等内部证据。</p>
             <ul class="methodology-detail-list">
-              <li data-i18n="home.methodology.sections.lightPath.lowCloudEffect">低云少时光路更容易打开；低云主导或太阳方向有低云墙时，光线更难照到云层</li>
-              <li data-i18n="home.methodology.sections.lightPath.visibility">能见度：影响光线传播清晰度</li>
+              <li data-i18n="home.methodology.sections.lightPath.lowCloudEffect">中高云画布 = 高云×0.75 + 中云×0.45</li>
+              <li data-i18n="home.methodology.sections.lightPath.visibility">区间分把“过少、适中、过满”的云量转成 0-100 的画布能力</li>
             </ul>
-            <p class="methodology-formula" data-i18n="home.methodology.sections.lightPath.formula">光路分 = 太阳角度与云底高度估算 + 低云遮挡 + 太阳方向走廊修正</p>
+            <p class="methodology-formula" data-i18n="home.methodology.sections.lightPath.formula">本地云层 = 区间分 + 云种修正 + 云厚修正<br>例如：中高云画布 37.1 → 区间分 75.9；云种 +4.0；云厚 -2.0</p>
           </article>
 
-          <!-- 第三部分：大气透明度 -->
+          <!-- 第三部分：受光亮度 -->
           <article class="methodology-item">
             <h3>
-              <span data-i18n="home.methodology.sections.transparency.title">3. 大气透明度</span>
-              <small data-i18n="home.methodology.sections.transparency.subtitle">Transparency · 25分</small>
+              <span data-i18n="home.methodology.sections.transparency.title">3. 受光亮度</span>
+              <small data-i18n="home.methodology.sections.transparency.subtitle">Layer Brightness · 云是否真的亮</small>
             </h3>
-            <p data-i18n="home.methodology.sections.transparency.desc">透明的大气让光线更纯粹地染色云层，湿度适中有助于散射增强色彩。</p>
+            <p data-i18n="home.methodology.sections.transparency.desc">光路、太阳几何、低云遮挡、云厚和直射/散射证据会合成受光亮度。它是基础分的一部分，不再作为独立修正条目重复展示。</p>
             <ul class="methodology-detail-list">
-              <li data-i18n="home.methodology.sections.transparency.visibility">能见度：15 × (1 − e^(−v/15))，满分15分</li>
-              <li data-i18n="home.methodology.sections.transparency.humidity">湿度：最优55%，高斯曲线，满分10分</li>
+              <li data-i18n="home.methodology.sections.transparency.visibility">光路通畅会提高云层可用亮度；太阳方向阻挡会降低亮度</li>
+              <li data-i18n="home.methodology.sections.transparency.humidity">厚云、灰幕、低太阳透射等只进入亮度估算，不在用户页逐项堆叠</li>
             </ul>
-            <p class="methodology-formula" data-i18n="home.methodology.sections.transparency.formula">透明度分 = 能见度分 + 湿度分（最高25分）</p>
+            <p class="methodology-formula" data-i18n="home.methodology.sections.transparency.formula">基础分 = Σ(分层载体 × 分层受光亮度)</p>
           </article>
 
-          <!-- 第四部分：光路门控 -->
+          <!-- 第四部分：空气显色 -->
           <article class="methodology-item">
             <h3>
-              <span data-i18n="home.methodology.sections.layerDiversity.title">4. 云层立体感</span>
-              <small data-i18n="home.methodology.sections.layerDiversity.subtitle">Layer Diversity · 15分</small>
+              <span data-i18n="home.methodology.sections.layerDiversity.title">4. 空气显色</span>
+              <small data-i18n="home.methodology.sections.layerDiversity.subtitle">Air Rendering · 颜色质量</small>
             </h3>
-            <p data-i18n="home.methodology.sections.layerDiversity.desc">高中低三层云同时存在时，光线折射角度多样，色彩层次更丰富。</p>
+            <p data-i18n="home.methodology.sections.layerDiversity.desc">空气显色只解释颜色质量：能见度、湿度、雨后状态、AOD/PM/dust 会共同影响红橙色强弱。</p>
             <ul class="methodology-detail-list">
-              <li data-i18n="home.methodology.sections.layerDiversity.threeLayer">三层云均>10% → 15分</li>
-              <li data-i18n="home.methodology.sections.layerDiversity.twoLayer">任意两层>10% → 8分</li>
-              <li data-i18n="home.methodology.sections.layerDiversity.oneLayer">仅一层或无云 → 0分</li>
-            </ul>
-          </article>
-
-          <!-- 第四部分：渲染系数 -->
-          <article class="methodology-item">
-            <h3>
-              <span data-i18n="home.methodology.sections.lowCloudPenalty.title">5. 低云惩罚系数</span>
-              <small data-i18n="home.methodology.sections.lowCloudPenalty.subtitle">Low Cloud Penalty · Multiplier</small>
-            </h3>
-            <p data-i18n="home.methodology.sections.lowCloudPenalty.desc">低云挡在视线前方，是火烧云的"视线杀手"，以乘性系数惩罚总分。</p>
-            <ul class="methodology-detail-list">
-              <li data-i18n="home.methodology.sections.lowCloudPenalty.level1">低云&lt;20% → ×1.0（无惩罚）</li>
-              <li data-i18n="home.methodology.sections.lowCloudPenalty.level2">低云20–40% → ×1.0 到 ×0.8（线性）</li>
-              <li data-i18n="home.methodology.sections.lowCloudPenalty.level3">低云40–70% → ×0.8 到 ×0.5（线性）</li>
-              <li data-i18n="home.methodology.sections.lowCloudPenalty.level4">低云>70% → ×0.2（严重遮挡）</li>
+              <li data-i18n="home.methodology.sections.layerDiversity.threeLayer">光路开且云幕不灰：轻/中度颗粒可增强暖色</li>
+              <li data-i18n="home.methodology.sections.layerDiversity.twoLayer">中高云满铺且 PM/AOD 偏高：按灰幕连续压低显色</li>
+              <li data-i18n="home.methodology.sections.layerDiversity.oneLayer">降水和低能见度会降低颜色清晰度</li>
             </ul>
           </article>
 
-          <!-- 第五部分：置信度评级 -->
+          <!-- 第五部分：限制因素 -->
           <article class="methodology-item">
             <h3>
-              <span data-i18n="home.methodology.sections.precipPenalty.title">6. 降水惩罚系数</span>
-              <small data-i18n="home.methodology.sections.precipPenalty.subtitle">Precipitation Penalty · Multiplier</small>
+              <span data-i18n="home.methodology.sections.lowCloudPenalty.title">5. 限制因素</span>
+              <small data-i18n="home.methodology.sections.lowCloudPenalty.subtitle">Caps · 坏条件封顶</small>
             </h3>
-            <p data-i18n="home.methodology.sections.precipPenalty.desc">降水直接削弱火烧云可见性，以乘性系数惩罚总分。</p>
+            <p data-i18n="home.methodology.sections.lowCloudPenalty.desc">低云、降水、厚云、满铺灰幕、几何不可行会限制最终展示分。它们只在命中时作为封顶/校准说明出现。</p>
             <ul class="methodology-detail-list">
-              <li data-i18n="home.methodology.sections.precipPenalty.level1">降水&lt;0.1mm/h → ×1.0（无惩罚）</li>
-              <li data-i18n="home.methodology.sections.precipPenalty.level2">0.1–0.5mm/h → ×0.85</li>
-              <li data-i18n="home.methodology.sections.precipPenalty.level3">0.5–2mm/h → ×0.5</li>
-              <li data-i18n="home.methodology.sections.precipPenalty.level4">&gt;2mm/h → ×0.15（大雨，基本无望）</li>
+              <li data-i18n="home.methodology.sections.lowCloudPenalty.level1">无火烧云状态通常低于 40</li>
+              <li data-i18n="home.methodology.sections.lowCloudPenalty.level2">轻微霞光通常低于 60</li>
+              <li data-i18n="home.methodology.sections.lowCloudPenalty.level3">雨低云、厚云和灰幕会进一步封顶</li>
+              <li data-i18n="home.methodology.sections.lowCloudPenalty.level4">这些限制不会伪装成“最终分后加减分”</li>
             </ul>
-            <p class="methodology-formula" data-i18n="home.methodology.sections.precipPenalty.formula">最终得分 = 基础分 × 低云系数 × 降水系数</p>
           </article>
 
-          <!-- 第六部分：厚高云惩罚 -->
+          <!-- 第六部分：降水处理 -->
           <article class="methodology-item">
             <h3>
-              <span data-i18n="home.methodology.sections.thickHighCloudPenalty.title">7. 载体与灰幕修正</span>
-              <small data-i18n="home.methodology.sections.thickHighCloudPenalty.subtitle">Carrier Quality · Canvas & Haze</small>
+              <span data-i18n="home.methodology.sections.precipPenalty.title">6. 降水处理</span>
+              <small data-i18n="home.methodology.sections.precipPenalty.subtitle">Precipitation · 影响光路和状态</small>
             </h3>
-            <p data-i18n="home.methodology.sections.thickHighCloudPenalty.desc">算法把“能显色的载体”分成云层载体和气溶胶弱载体：中高云决定火烧云上限，适度薄雾只在光路通畅时提供普通红日落的中低分基础。</p>
+            <p data-i18n="home.methodology.sections.precipPenalty.desc">降水不再作为“最终分 × 降水系数”的单独乘法展示，而是影响光路、弱载体可见性和状态封顶。</p>
             <ul class="methodology-detail-list">
-              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level1">中高云载体明确：高云很充足，或中高云同时存在且太阳方向有透光开口，低云少、无降水且空气不灰</li>
-              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level2">云很少时，适度气溶胶必须被太阳方向光路激活，才会作为弱载体参与评分</li>
-              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level3">如果云幕很厚、重霾或沙尘明显，颜色会变暗变灰，仍按衰减和限制处理</li>
+              <li data-i18n="home.methodology.sections.precipPenalty.level1">小雨后清透可能改善空气显色</li>
+              <li data-i18n="home.methodology.sections.precipPenalty.level2">明显降水会禁用气溶胶弱载体</li>
+              <li data-i18n="home.methodology.sections.precipPenalty.level3">降水叠加低云会压低光路并触发封顶</li>
+              <li data-i18n="home.methodology.sections.precipPenalty.level4">结果页只显示命中的主限制，避免凭据堆叠</li>
             </ul>
-            <p class="methodology-formula" data-i18n="home.methodology.sections.thickHighCloudPenalty.formula">载体分 = 云层画布基础 + 有界载体加分 - 灰幕/厚云扣分；最终分 = 载体分 × 光路门控 + 显色小幅修正</p>
+            <p class="methodology-formula" data-i18n="home.methodology.sections.precipPenalty.formula">降水影响 = 光路/载体可见性/状态封顶，不是最终分连乘</p>
+          </article>
+
+          <!-- 第七部分：计算依据展示 -->
+          <article class="methodology-item">
+            <h3>
+              <span data-i18n="home.methodology.sections.thickHighCloudPenalty.title">7. 计算依据展示</span>
+              <small data-i18n="home.methodology.sections.thickHighCloudPenalty.subtitle">Score Ledger · 只展示主链路</small>
+            </h3>
+            <p data-i18n="home.methodology.sections.thickHighCloudPenalty.desc">计算依据按“采用哪个载体、这个载体怎么算、基础分是多少、空气显色怎么影响最终分”展示。</p>
+            <ul class="methodology-detail-list">
+              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level1">候选载体：列出本地云层、日落方向、气溶胶，并明确采用项</li>
+              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level2">本地云层：只展示中高云画布、区间分、云种、云厚这几个可理解步骤</li>
+              <li data-i18n="home.methodology.sections.thickHighCloudPenalty.level3">内部诊断：内部诊断项不再单独塞进结果页凭据</li>
+            </ul>
+            <p class="methodology-formula" data-i18n="home.methodology.sections.thickHighCloudPenalty.formula">展示顺序：候选载体 → 本地云层展开 → 基础分 → 空气显色 → 最终分</p>
           </article>
 
           <!-- 第八部分：最终公式 -->
@@ -584,14 +584,14 @@
               <span data-i18n="home.methodology.sections.finalFormula.title">8. 最终分数</span>
               <small data-i18n="home.methodology.sections.finalFormula.subtitle">Final Score · 载体 × 光路门控 + 显色修正</small>
             </h3>
-            <p data-i18n="home.methodology.sections.finalFormula.desc">最终分不是把多个好条件连续相乘，而是先得到“可显色载体分”，再让太阳方向光路决定这份载体能发挥多少，最后只做小幅显色修正。</p>
+            <p data-i18n="home.methodology.sections.finalFormula.desc">最终分来自分层载体和受光亮度的求和，再乘空气显色，并经过状态封顶。结果页展示分会和公式链路保持一致。</p>
             <ul class="methodology-detail-list">
-              <li data-i18n="home.methodology.sections.finalFormula.carrier">载体分 = max(云层画布分, 气溶胶弱载体分)</li>
-              <li data-i18n="home.methodology.sections.finalFormula.lightGate">光路门控 = 0.25–1.12；近处云墙可压到约 0.42，远处云墙约 0.55，太阳方向开口约 0.90–0.96</li>
-              <li data-i18n="home.methodology.sections.finalFormula.rendering">显色修正 = 能见度、湿度、降水后状态和空气颗粒带来的小幅加减，正向最多约 +9 分</li>
+              <li data-i18n="home.methodology.sections.finalFormula.carrier">基础分 = Σ(分层载体 × 分层受光亮度)</li>
+              <li data-i18n="home.methodology.sections.finalFormula.lightGate">光路已经并入受光亮度，不再单独显示成最终乘子</li>
+              <li data-i18n="home.methodology.sections.finalFormula.rendering">空气显色用于解释颜色质量，不再把气溶胶弱载体重复显示成最终加分</li>
               <li data-i18n="home.methodology.sections.finalFormula.statusCaps">显示分还会按状态校准：无火烧云低于 40，轻微霞光低于 60；几何不可行、厚云、灰幕和雨低云会进一步封顶</li>
             </ul>
-            <p class="methodology-formula" data-i18n="home.methodology.sections.finalFormula.formula">最终分 = clamp(载体分 × 光路门控 + 显色修正, 0, 100)</p>
+            <p class="methodology-formula" data-i18n="home.methodology.sections.finalFormula.formula">最终分 = clamp(Σ(分层载体 × 分层受光亮度) × 空气显色, 0, 100)，再经过状态封顶校准</p>
           </article>
         </div>
 
@@ -635,11 +635,19 @@
           <div class="methodology-changelog-scroll" tabindex="0" role="region" aria-labelledby="methodology-changelog-title">
             <ol class="methodology-changelog-list">
               <li>
-                <time datetime="2026-06-13" data-i18n="home.methodology.changelog.latest.date">2026-06-13</time>
+                <time datetime="2026-06-17" data-i18n="home.methodology.changelog.latest.date">2026-06-17</time>
                 <div>
-                  <strong data-i18n="home.methodology.changelog.latest.title">分层求和亮度公式 v1</strong>
-                  <p data-i18n="home.methodology.changelog.latest.summary">最终分改为 Σ(分层载体 × 分层受光亮度) × 空气显色；受光亮度采用对数饱和响应，光路继续作为内部因子。</p>
-                  <small data-i18n="home.methodology.changelog.latest.validation">验证：核心评分、网页评分细则、小程序算法页和结果页都显示分层求和口径。</small>
+                  <strong data-i18n="home.methodology.changelog.latest.title">计算依据精简 v2</strong>
+                  <p data-i18n="home.methodology.changelog.latest.summary">结果页和算法页统一为候选载体、本地云层展开、基础分、空气显色、最终分；内部诊断项不再作为用户可见凭据堆叠。</p>
+                  <small data-i18n="home.methodology.changelog.latest.validation">验证：网页 home 菜单算法页、小程序算法页和结果页计算依据使用同一主链路。</small>
+                </div>
+              </li>
+              <li>
+                <time datetime="2026-06-13" data-i18n="home.methodology.changelog.layerBrightness.date">2026-06-13</time>
+                <div>
+                  <strong data-i18n="home.methodology.changelog.layerBrightness.title">分层求和亮度公式 v1</strong>
+                  <p data-i18n="home.methodology.changelog.layerBrightness.summary">最终分改为 Σ(分层载体 × 分层受光亮度) × 空气显色；受光亮度采用对数饱和响应，光路继续作为内部因子。</p>
+                  <small data-i18n="home.methodology.changelog.layerBrightness.validation">验证：核心评分、网页评分细则、小程序算法页和结果页都显示分层求和口径。</small>
                 </div>
               </li>
               <li>
@@ -662,7 +670,7 @@
                 <time datetime="2026-05-27" data-i18n="home.methodology.changelog.cloudThickness.date">2026-05-27</time>
                 <div>
                   <strong data-i18n="home.methodology.changelog.cloudThickness.title">云厚比例折损 v2</strong>
-                  <p data-i18n="home.methodology.changelog.cloudThickness.summary">云厚扣分改为画布修正前分 × 30% × 云厚压力，去掉固定 -28/24 上限；湿灰幕场景同步按小烧/可看但不强校准。</p>
+                  <p data-i18n="home.methodology.changelog.cloudThickness.summary">云厚作为本地云层修正参与基础分，不再在用户可见凭据里展开内部压力证据。</p>
                   <small data-i18n="home.methodology.changelog.cloudThickness.validation">验证：2026-05-27 北京样本云厚压力 0.78，画布 76.7 时扣分约 -18；最终保留在小烧/可顺带看区间。</small>
                 </div>
               </li>
@@ -701,8 +709,8 @@
             </ol>
           </div>
           <div class="methodology-version-card">
-            <strong data-i18n="home.methodology.versionLabel">算法版本：2026.06.13-layer-weighted-brightness-v1</strong>
-            <span data-i18n="home.methodology.versionDesc">本版使用“Σ(分层载体 × 分层受光亮度) × 空气显色”。受光亮度基于低/中/高三层云、太阳几何、太阳方向通路、直射/散射和云厚证据估算，并采用对数饱和响应：从无光到弱光更敏感，接近满亮后边际变小。</span>
+            <strong data-i18n="home.methodology.versionLabel">算法说明版本：2026.06.17-score-ledger-v2</strong>
+            <span data-i18n="home.methodology.versionDesc">本版说明与结果页计算依据一致：先选候选载体，再展开本地云层和基础分，最后显示空气显色与最终分。内部诊断项保留在模型里，不再混入用户可见凭据。</span>
           </div>
         </div>
       </section>
