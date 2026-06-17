@@ -140,6 +140,7 @@ function buildLayerWeightedCarrierScore({
   midSignal,
   highSignal,
   directionalUpper,
+  remoteLayerCarriers = null,
   carrierScore,
   lowBlockFactor,
   solarFactor,
@@ -207,10 +208,47 @@ function buildLayerWeightedCarrierScore({
     };
   });
 
+  if (remoteLayerCarriers?.applied && activeCarrier !== 'directional_curtain' && (highSignal < 70 || activeCarrier === 'remote_layer')) {
+    const remoteLowBlock = clamp(finiteNumber(remoteLayerCarriers.remoteLowBlock, 0), 0, 100);
+    const remotePathFactor = clamp(pathFactor, 0, 1.05);
+    const remoteHighLowBlockFactor = clamp(1 - Math.max(0, remoteLowBlock - 35) / 65 * 0.22, 0.78, 1.02);
+    const remoteMidLowBlockFactor = clamp(1 - Math.max(0, remoteLowBlock - 22) / 58 * 0.42, 0.55, 1.02);
+    const remoteCommon = solarFactor * remotePathFactor * thicknessFactor * beamFactor;
+    const remoteLayers = [
+      {
+        key: 'remoteHigh',
+        carrier: clamp(finiteNumber(remoteLayerCarriers.remoteHighCarrier, 0), 0, 32),
+        brightness: clamp(remoteCommon * remoteHighLowBlockFactor * 1.08, 0, 1.05)
+      },
+      {
+        key: 'remoteMid',
+        carrier: clamp(finiteNumber(remoteLayerCarriers.remoteMidCarrier, 0), 0, 24),
+        brightness: clamp(remoteCommon * remoteMidLowBlockFactor * 0.98, 0, 1.05)
+      }
+    ].filter(layer => layer.carrier > 0);
+
+    remoteLayers.forEach((layer) => {
+      const multiplier = scoreBrightnessResponse(layer.brightness, 0.66, brightnessResponseCurve);
+      const score = layer.carrier * multiplier;
+      contributions.push({
+        key: layer.key,
+        carrier: round(layer.carrier, 1),
+        brightness: round(multiplier, 2),
+        score: round(score, 1)
+      });
+    });
+  }
+
+  const totalScore = contributions.reduce((sum, layer) => sum + layer.score, 0);
+  const scoreScale = totalScore > 100 ? 100 / totalScore : 1;
+  const scaledContributions = scoreScale < 1
+    ? contributions.map(layer => ({ ...layer, score: round(layer.score * scoreScale, 1) }))
+    : contributions;
+
   return {
-    score: round(contributions.reduce((sum, layer) => sum + layer.score, 0), 1),
+    score: round(clamp(scaledContributions.reduce((sum, layer) => sum + layer.score, 0), 0, 100), 1),
     formula: 'sum_layer_carrier_brightness',
-    contributions
+    contributions: scaledContributions
   };
 }
 
@@ -224,6 +262,7 @@ function scoreLayerBrightness(params = {}) {
     cloudThickness = {},
     type = 'sunset',
     directionalCurtainCarrier = null,
+    remoteLayerCarriers = null,
     carrierScore = null
   } = params;
 
@@ -290,6 +329,7 @@ function scoreLayerBrightness(params = {}) {
     midSignal,
     highSignal,
     directionalUpper,
+    remoteLayerCarriers,
     carrierScore,
     lowBlockFactor,
     solarFactor,
@@ -323,7 +363,10 @@ function scoreLayerBrightness(params = {}) {
       midSignal: round(midSignal, 1),
       highSignal: round(highSignal, 1),
       cloudCanvas: round(cloudCanvas * 100, 1),
-      directionalUpper: directionalUpper === null ? null : round(directionalUpper, 1)
+      directionalUpper: directionalUpper === null ? null : round(directionalUpper, 1),
+      remoteHigh: remoteLayerCarriers?.metrics?.high ?? null,
+      remoteMid: remoteLayerCarriers?.metrics?.mid ?? null,
+      remoteLowBlock: remoteLayerCarriers?.remoteLowBlock != null ? round(remoteLayerCarriers.remoteLowBlock, 1) : null
     },
     factors: {
       lowBlockFactor: round(lowBlockFactor, 2),

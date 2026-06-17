@@ -509,6 +509,8 @@
           "displayCalibration": "Display calibration",
           "aerosolCarrier": "Aerosol carrier",
           "directionalCarrier": "Sunset-direction carrier",
+          "remoteHighLayer": "High cloud toward sunset",
+          "remoteMidLayer": "Mid cloud toward sunset",
           "scoringV2": "Open-path warm scattering",
           "grayVeilAirRendering": "Gray-veil rendering",
           "evidence": "Calculation evidence"

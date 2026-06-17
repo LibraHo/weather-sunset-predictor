@@ -95,6 +95,60 @@ describe('LayerBrightnessService', () => {
     expect(result.factors.lowBlockFactor).toBeLessThan(1);
   });
 
+  test('adds solar-direction high cloud as an independent remote carrier layer', () => {
+    const withoutRemote = service.scoreLayerBrightness({
+      type: 'sunset',
+      timeAnalysis: { elevation: -1 },
+      weatherData: {
+        lowClouds: 0,
+        midClouds: 0,
+        highClouds: 36.75,
+        cloudCover: 37,
+        visibility: 18,
+        humidity: 55,
+        directRadiation: 10,
+        diffuseRadiation: 18,
+        shortwaveRadiation: 35
+      },
+      lightPathScore: { score: 96 },
+      renderingFactor: { factor: 1 },
+      cloudThickness: { modifier: 1 },
+      carrierScore: { score: 73.4, activeCarrier: 'cloud' }
+    });
+
+    const withRemote = service.scoreLayerBrightness({
+      type: 'sunset',
+      timeAnalysis: { elevation: -1 },
+      weatherData: {
+        lowClouds: 0,
+        midClouds: 0,
+        highClouds: 36.75,
+        cloudCover: 37,
+        visibility: 18,
+        humidity: 55,
+        directRadiation: 10,
+        diffuseRadiation: 18,
+        shortwaveRadiation: 35
+      },
+      lightPathScore: { score: 96 },
+      renderingFactor: { factor: 1 },
+      cloudThickness: { modifier: 1 },
+      carrierScore: { score: 73.4, activeCarrier: 'cloud' },
+      remoteLayerCarriers: {
+        applied: true,
+        remoteHighCarrier: 22,
+        remoteMidCarrier: 0,
+        remoteLowBlock: 0,
+        metrics: { high: 43, mid: 0 }
+      }
+    });
+
+    expect(withRemote.layerContributions.map(item => item.key)).toContain('remoteHigh');
+    expect(withRemote.layerContributions.map(item => item.key)).not.toContain('remoteMid');
+    expect(withRemote.weightedCarrierScore).toBeGreaterThan(withoutRemote.weightedCarrierScore);
+    expect(withRemote.layers.remoteHigh).toBe(43);
+  });
+
   test('applies brightness as a multiplier instead of a cap', () => {
     const weak = { brightnessMultiplier: 0.5, effectiveBrightness: 21, reason: 'layer_brightness_weak' };
 

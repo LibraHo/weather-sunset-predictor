@@ -2126,7 +2126,9 @@ class PredictionController {
       high: ledgerText('labels.highLayer', {}, 'High cloud', '高云层'),
       low: ledgerText('labels.lowLayer', {}, 'Low cloud', '低云层'),
       aerosol: ledgerText('labels.aerosolCarrier', {}, 'Aerosol carrier', '气溶胶载体'),
-      directional: ledgerText('labels.directionalCarrier', {}, 'Sun-direction carrier', '日落方向载体')
+      directional: ledgerText('labels.directionalCarrier', {}, 'Sun-direction carrier', '日落方向载体'),
+      remoteHigh: ledgerText('labels.remoteHighLayer', {}, 'Sun-direction high cloud', '日落方向高云'),
+      remoteMid: ledgerText('labels.remoteMidLayer', {}, 'Sun-direction mid cloud', '日落方向中云')
     }[key] || key || '--');
     const carrierLabel = (key) => ({
       cloud: ledgerText('labels.cloudCarrier', {}, 'Cloud carrier', '云层载体'),

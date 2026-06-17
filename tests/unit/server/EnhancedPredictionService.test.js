@@ -1017,7 +1017,7 @@ describe('EnhancedPredictionService', () => {
       expect(result.cloudThickness.reasons).toContain('water_vapour_very_high');
       expect(result.algorithm).toMatchObject({
         name: 'EnhancedPredictionService',
-        version: '2026.06.13-layer-weighted-brightness-v1'
+        version: '2026.06.17-remote-layer-carriers-v1'
       });
       expect(result.score).toBeGreaterThanOrEqual(25);
       expect(result.score).toBeLessThanOrEqual(40);
@@ -1662,6 +1662,56 @@ describe('EnhancedPredictionService', () => {
         floor: null,
         reason: 'no_directional_samples'
       });
+    });
+
+    test('should expose remote high cloud as a separate carrier layer when solar-direction high clouds are present', () => {
+      const weatherData = {
+        cloudCover: 23,
+        lowClouds: 0,
+        midClouds: 0,
+        highClouds: 36.75,
+        humidity: 58,
+        visibility: 18,
+        precipitation: 0,
+        recentPrecipitation6h: 0,
+        recentRainHours: 0,
+        aerosolOpticalDepth: 0.2,
+        aqi: 60,
+        pm2_5: 15,
+        pm10: 30,
+        dust: 5,
+        shortwaveRadiation: 35,
+        directRadiation: 10,
+        diffuseRadiation: 18,
+        waterVapourColumn: 22
+      };
+      const remoteCloudData = {
+        source: 'solar_direction_openmeteo',
+        samples: [
+          { distanceKm: 10, lowCloud: 0, midCloud: 0, highCloud: 49, totalCloud: 42 },
+          { distanceKm: 25, lowCloud: 0, midCloud: 0, highCloud: 49, totalCloud: 42 },
+          { distanceKm: 50, lowCloud: 0, midCloud: 0, highCloud: 35, totalCloud: 27 },
+          { distanceKm: 75, lowCloud: 0, midCloud: 0, highCloud: 43, totalCloud: 38 },
+          { distanceKm: 100, lowCloud: 0, midCloud: 0, highCloud: 19, totalCloud: 71 }
+        ]
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData,
+        new Date('2026-06-17T11:45:00.000Z'),
+        39.9042,
+        116.4074,
+        'sunset',
+        { remoteCloudData }
+      );
+
+      expect(result.remoteLayerCarriers).toEqual(expect.objectContaining({
+        applied: true,
+        reason: 'remote_layer_carriers'
+      }));
+      expect(result.remoteLayerCarriers.metrics.high).toBeGreaterThan(35);
+      expect(result.layerBrightness.layerContributions.map(item => item.key)).toContain('remoteHigh');
+      expect(result.breakdown.remoteLayerCarriers.metrics.high).toBe(result.remoteLayerCarriers.metrics.high);
     });
 
     test('should not apply directional floor when cloud remains the active carrier', () => {

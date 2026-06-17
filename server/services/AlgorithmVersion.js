@@ -1,10 +1,16 @@
 'use strict';
 
-const ALGORITHM_VERSION = '2026.06.13-layer-weighted-brightness-v1';
+const ALGORITHM_VERSION = '2026.06.17-remote-layer-carriers-v1';
 
 const ALGORITHM_CHANGELOG = [
   {
     version: ALGORITHM_VERSION,
+    date: '2026-06-17',
+    title: 'Remote mid/high cloud carriers v1',
+    summary: 'Solar-direction mid/high clouds are now exposed as separate remote carrier layers and can add bounded layer contribution when the local cloud carrier is not already a directional curtain or dense local upper-cloud veil.'
+  },
+  {
+    version: '2026.06.13-layer-weighted-brightness-v1',
     date: '2026-06-13',
     title: 'Layer-weighted brightness formula v1',
     summary: 'The pre-air-rendering score is now Σ(layer carrier × layer brightness), with the sun-direction light path folded into layer brightness instead of multiplied as an independent final factor.'

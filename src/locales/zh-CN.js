@@ -533,6 +533,8 @@ export default {
           displayCalibration: '展示分校准',
           aerosolCarrier: '气溶胶载体',
           directionalCarrier: '日落方向载体',
+          remoteHighLayer: '日落方向高云',
+          remoteMidLayer: '日落方向中云',
           scoringV2: '开口暖色散射',
           grayVeilAirRendering: '灰幕显色抑制',
           evidence: '计算依据'
