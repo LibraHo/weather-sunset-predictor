@@ -8788,6 +8788,7 @@ body[data-actual-theme="dark"] .weather-feature-item:hover {
 }
 
 .prediction-share-footer-row {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: stretch;
@@ -8795,6 +8796,8 @@ body[data-actual-theme="dark"] .weather-feature-item:hover {
   gap: 12px;
   width: 100%;
   min-width: 0;
+  max-width: 100%;
+  overflow: visible;
 }
 
 .prediction-nav-feedback {
@@ -8807,6 +8810,7 @@ body[data-actual-theme="dark"] .weather-feature-item:hover {
   width: 100%;
   min-width: 0;
   max-width: none;
+  max-inline-size: 100%;
   overflow: hidden;
   padding: 0 18px !important;
   line-height: 1;
