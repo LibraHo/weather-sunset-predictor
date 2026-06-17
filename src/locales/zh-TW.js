@@ -116,6 +116,7 @@ const translations = {
     "tabs": {
       "ariaLabel": "主頁分頁導航",
       "forecast": "預測功能",
+      "simulator": "剖面模擬",
     "methodology": "火燒雲計算方法",
       "map": "火燒雲地圖",
       "shareMap": "分享地圖",
@@ -128,6 +129,85 @@ const translations = {
       "ariaLabel": "切換頁面",
       "dropdownAriaLabel": "頁面切換選單"
     },
+    "simulator": {
+      "title": "火燒雲模擬器",
+      "intro": "用公里距離和米級雲高布置雲塊，拖動日出/日落時間，觀察哪些雲被照亮、哪些被前方雲牆遮擋、哪些因厚雲變暗。",
+      "mode": {
+        "sunrise": "日出",
+        "sunset": "日落"
+      },
+      "solarAngle": "太陽高度角",
+      "canvasAria": "火燒雲雲層橫切面畫布",
+      "axisDistance": "距離 X：0-150 km",
+      "axisHeight": "高度 Y：0-12000 m",
+      "controlsAria": "剖面模擬控制台",
+      "controls": {
+        "mode": "模式",
+        "time": "模擬時間",
+        "axisScale": "座標軸比例",
+        "cloud": "選中雲塊"
+      },
+      "axis": {
+        "linear": "線性座標",
+        "log": "對數座標",
+        "linearShort": "LINEAR 座標",
+        "logShort": "LOG 座標"
+      },
+      "fields": {
+        "distance": "距離 km",
+        "baseHeight": "雲底 m",
+        "topHeight": "雲頂 m",
+        "coverage": "覆蓋率 %",
+        "width": "寬度 km",
+        "opticalDepth": "光學厚度"
+      },
+      "actions": {
+        "addCloud": "新增雲塊",
+        "reset": "重置預設"
+      },
+      "selectCloudHint": "選擇雲塊查看判定原因",
+      "rules": {
+        "aria": "模擬規則說明",
+        "shadow": "遮擋：只擋陰影帶覆蓋到的後方雲高",
+        "scatter": "散射：光帶上下有 twilight scatter 寬度",
+        "thick": "厚雲幕：高覆蓋率 + 高光學厚度會吸光變灰",
+        "alwaysDark": "全程黑：整段日出/日落採樣都未進入暖色照亮"
+      },
+      "customCloudLabel": "自訂雲塊 {{index}}",
+      "cloudNames": {
+        "nearLowWall": "近處低雲牆",
+        "midAltocumulus": "中距高積雲",
+        "farCirrus": "遠處卷雲層",
+        "distantThickVeil": "遠處厚雲幕"
+      },
+      "time": {
+        "atSunrise": "日出時刻",
+        "atSunset": "日落時刻",
+        "before": "{{mode}}前 {{minutes}} 分鐘",
+        "after": "{{mode}}後 {{minutes}} 分鐘"
+      },
+      "widthLabel": "寬 {{width}} km",
+      "summary": "照亮 {{lit}} 塊，遮擋 {{blocking}} 塊，陰影 {{shadowed}} 塊，變暗 {{dimmed}} 塊，全程黑雲 {{alwaysDark}} 塊",
+      "selectedReason": "{{label}}：{{reason}}",
+      "status": {
+        "lit": "被照亮",
+        "dimmed": "變暗",
+        "shadowed": "被遮擋",
+        "blocking": "遮擋雲牆",
+        "unlit": "未照亮",
+        "alwaysDark": "全程黑雲",
+        "alwaysDarkShort": "全程黑"
+      },
+      "reasons": {
+        "alwaysDark": "整段窗口都沒進入暖色光帶",
+        "shadowed": "被前方雲的陰影帶覆蓋",
+        "blocking": "低角度光穿過時形成遮擋雲牆",
+        "dimmed": "雲幕太厚，吸收後只剩灰紫光",
+        "lit": "雲高與散射光帶相交",
+        "unlit": "雲高暫未碰到光帶"
+      }
+    },
+
     apiAccess: {
       kicker: 'Sunset Voyager API',
       intro: '霞客 Agent API 提供地點解析、朝霞/晚霞評分與評分解釋，適合個人、學習與研究場景。',
