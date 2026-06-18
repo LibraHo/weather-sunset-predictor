@@ -23,7 +23,9 @@ Component({
   data: {
     homeMenuOpen: false,
     settingsOpen: false,
-    interfaceLanguage: 'zh-CN'
+    interfaceLanguage: 'zh-CN',
+    temperatureUnit: 'celsius',
+    windSpeedUnit: 'kmh'
   },
 
   lifetimes: {
@@ -80,6 +82,18 @@ Component({
       const value = event.currentTarget.dataset.value;
       if (!['system', 'light', 'dark'].includes(value)) return;
       this.saveAppSettings({ themeMode: value });
+    },
+
+    selectTemperatureUnit(event) {
+      const value = event.currentTarget.dataset.value;
+      if (!['celsius', 'fahrenheit'].includes(value)) return;
+      this.saveAppSettings({ temperatureUnit: value });
+    },
+
+    selectWindSpeedUnit(event) {
+      const value = event.currentTarget.dataset.value;
+      if (!['kmh', 'ms'].includes(value)) return;
+      this.saveAppSettings({ windSpeedUnit: value });
     },
 
     applySavedSettings() {

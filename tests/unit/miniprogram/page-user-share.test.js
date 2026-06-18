@@ -196,6 +196,42 @@ describe('miniprogram page user/share helpers', () => {
     ]));
   });
 
+  test('home weather preview applies temperature and wind units to weekly and hourly forecasts', () => {
+    const preview = homeHelpers.buildWeatherPreview({
+      location: '北京',
+      temp: 20,
+      windSpeed: 18,
+      windDirection: 135,
+      cloudCover: 40,
+      highClouds: 40,
+      midClouds: 50,
+      lowClouds: 30,
+      weekly: [
+        { date: '2026-06-18', minTemp: 10, maxTemp: 20, windSpeed: 18, precip: 20 }
+      ],
+      hourly: [
+        { key: 'h0', timeLabel: '00:00', temp: 10, windSpeed: 18 },
+        { key: 'h1', timeLabel: '01:00', temp: 20, windSpeed: 36 }
+      ]
+    }, 'en-US', { temperatureUnit: 'fahrenheit', windSpeedUnit: 'ms' });
+    const windView = homeHelpers.buildWeatherHourlyViewModel(preview.hourly, 'wind', 'en-US', preview.units);
+
+    expect(preview.temperature).toBe('68.0');
+    expect(preview.temperatureUnit).toBe('°F');
+    expect(preview.windSpeed).toBe('5.0 m/s');
+    expect(preview.weekly[0]).toEqual(expect.objectContaining({
+      minTemp: '50°',
+      maxTemp: '68°',
+      temp: '50° / 68°',
+      wind: '5.0 m/s'
+    }));
+    expect(preview.hourly[0]).toEqual(expect.objectContaining({ temp: '50.0', wind: '5.0 m/s', windValue: 5 }));
+    expect(preview.hourly[1]).toEqual(expect.objectContaining({ temp: '68.0', wind: '10.0 m/s', windValue: 10 }));
+    expect(windView.unit).toBe('m/s');
+    expect(windView.axisLabels[0].value).toContain('m/s');
+    expect(windView.chart.at(-1).valueText).toBe('10m/s');
+  });
+
   test('home hourly chart keeps points inside the plot area', () => {
     const hourly = Array.from({ length: 24 }, (_, index) => ({
       key: `h-${index}`,
@@ -620,7 +656,7 @@ describe('miniprogram page user/share helpers', () => {
     const homeWxml = fs.readFileSync(path.resolve(process.cwd(), 'miniprogram/pages/home/index.wxml'), 'utf8');
 
     expect(homeSource.indexOf('weather = await this.callWeatherForecast(query);')).toBeLessThan(homeSource.indexOf('const raw = await this.callPredictionService(query);'));
-    expect(homeSource).toContain('weatherPreview: buildWeatherPreview({ ...weather, location: query.locationName }, this.data.interfaceLanguage)');
+    expect(homeSource).toContain('weatherPreview: buildWeatherPreview({ ...weather, location: query.locationName }, this.data.interfaceLanguage, this.data)');
     expect(homeSource).toContain("this.setSearchLoadingStep('正在计算霞光评分', 72, '基础天气暂未返回，继续读取综合预测');");
     expect(homeSource).toContain('predictionPreviewLoading: true');
     expect(homeSource).toContain('predictionPreviewLoading: false');

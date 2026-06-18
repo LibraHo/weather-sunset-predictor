@@ -36,6 +36,8 @@ Page({
     settingsOpen: false,
     interfaceLanguage: 'zh-CN',
     themeMode: 'system',
+    temperatureUnit: 'celsius',
+    windSpeedUnit: 'kmh',
     resolvedThemeMode: 'light',
     weatherView: 'overview',
     weatherDay: getDefaultPredictionDay(),
@@ -539,7 +541,14 @@ Page({
   },
 
   applySavedSettings() {
-    applyPageSettings(this);
+    const settings = applyPageSettings(this);
+    if (this.data.weatherPreview?.sourceWeather) {
+      this.setData({
+        weatherPreview: buildWeatherPreview(this.data.weatherPreview.sourceWeather, settings.interfaceLanguage, settings)
+      }, () => {
+        if (this.data.weatherView === 'hourly') this.paintHourlyChartLine({ force: true });
+      });
+    }
   },
 
   applyDefaultPredictionDay() {
@@ -555,14 +564,21 @@ Page({
   saveAppSettings(patch = {}) {
     const settings = persistAppSettings(patch, this.data);
     const update = { ...settings };
-    if (patch.interfaceLanguage && this.data.weatherPreview?.sourceWeather) {
-      update.weatherPreview = buildWeatherPreview(this.data.weatherPreview.sourceWeather, settings.interfaceLanguage);
+    if ((patch.interfaceLanguage || patch.temperatureUnit || patch.windSpeedUnit) && this.data.weatherPreview?.sourceWeather) {
+      update.weatherPreview = buildWeatherPreview(this.data.weatherPreview.sourceWeather, settings.interfaceLanguage, settings);
     }
     this.setData(update);
   },
 
   onAppSettingsChange(event) {
-    this.setData(event.detail || readAppSettings());
+    const settings = event.detail || readAppSettings();
+    const update = { ...settings };
+    if (this.data.weatherPreview?.sourceWeather) {
+      update.weatherPreview = buildWeatherPreview(this.data.weatherPreview.sourceWeather, settings.interfaceLanguage, settings);
+    }
+    this.setData(update, () => {
+      if (update.weatherPreview && this.data.weatherView === 'hourly') this.paintHourlyChartLine({ force: true });
+    });
   },
 
   async useHistory(event) {
@@ -675,7 +691,7 @@ Page({
       try {
         weather = await this.callWeatherForecast(query);
         this.setData({
-          weatherPreview: buildWeatherPreview({ ...weather, location: query.locationName }, this.data.interfaceLanguage),
+          weatherPreview: buildWeatherPreview({ ...weather, location: query.locationName }, this.data.interfaceLanguage, this.data),
           predictionPreview: buildPredictionPreviewLoading(query.period, query.day, weather),
           predictionPreviewLoading: true,
           weatherView: 'overview',
@@ -1375,14 +1391,14 @@ export function buildHomePredictionSurface(prediction = {}, query = {}) {
   };
 }
 
-export function buildHomeWeatherPredictionPatch({ weather = {}, prediction = {}, predictionCards = {}, query = {}, locale = query.interfaceLanguage || 'zh-CN' } = {}) {
+export function buildHomeWeatherPredictionPatch({ weather = {}, prediction = {}, predictionCards = {}, query = {}, locale = query.interfaceLanguage || 'zh-CN', settings = query } = {}) {
   return {
     ...buildHomePredictionSurface(prediction, query),
     weatherPreview: buildWeatherPreview({
       referenceTime: prediction.referenceTime || prediction.eventTime || prediction.date,
       ...weather,
       location: query.locationName
-    }, locale),
+    }, locale, settings),
     predictionPeriodCards: predictionCards,
     predictionPreviewLoading: false,
     weatherView: 'overview',
@@ -1788,21 +1804,23 @@ function getMiniWeatherCopy(locale = 'zh-CN') {
   return MINI_WEATHER_COPY[locale] || MINI_WEATHER_COPY['zh-CN'];
 }
 
-export function buildWeatherPreview(weather = {}, locale = 'zh-CN') {
+export function buildWeatherPreview(weather = {}, locale = 'zh-CN', settings = {}) {
+  const units = normalizeWeatherUnits(settings);
   const copy = getMiniWeatherCopy(locale);
   const highCloud = weather.highClouds ?? weather.highCloud ?? weather.clouds?.high;
   const midCloud = weather.midClouds ?? weather.midCloud ?? weather.clouds?.mid;
   const lowCloud = weather.lowClouds ?? weather.lowCloud ?? weather.clouds?.low;
   const cloudAverage = averageNumber([highCloud, midCloud, lowCloud, weather.cloudCover]);
   const provider = weather.provider || weather.providerMeta?.name || 'test';
-  const windSpeed = formatWindSpeedValue(weather.windSpeed);
-  const hourly = buildWeatherHourlyPreview(weather);
-  const hourlyView = buildWeatherHourlyViewModel(hourly, 'temp', locale);
+  const windSpeed = formatWindSpeedValue(weather.windSpeed, units.windSpeedUnit);
+  const hourly = buildWeatherHourlyPreview(weather, 'today', units);
+  const hourlyView = buildWeatherHourlyViewModel(hourly, 'temp', locale, units);
   const windDirection = formatWindDirectionLabel(weather.windDirection, locale);
   const aerosolMetric = formatAodMetric(weather);
   return {
     sourceWeather: weather,
     locale,
+    units,
     visible: true,
     title: copy.title,
     description: provider === 'test' ? copy.descriptionTest(provider) : copy.descriptionProvider(provider),
@@ -1811,12 +1829,12 @@ export function buildWeatherPreview(weather = {}, locale = 'zh-CN') {
     iconType: weather.iconType || getWeatherPreviewIconType(cloudAverage, weather.precipitation ?? weather.precipitationProbability),
     iconSrc: `/assets/icons/weather-${weather.iconType || getWeatherPreviewIconType(cloudAverage, weather.precipitation ?? weather.precipitationProbability)}.svg`,
     condition: translateWeatherCondition(weather.condition, cloudAverage, locale),
-    temperature: formatTemperatureValue(weather.temp ?? weather.temperature),
-    temperatureUnit: '°C',
+    temperature: formatTemperatureValue(weather.temp ?? weather.temperature, units.temperatureUnit),
+    temperatureUnit: getTemperatureUnitLabel(units.temperatureUnit),
     windSpeed,
     windDirection,
     windDirectionArrow: formatWindDirectionArrow(weather.windDirection),
-    weekly: buildWeatherWeeklyPreview(weather, locale),
+    weekly: buildWeatherWeeklyPreview(weather, locale, units),
     hourly,
     hourlyChart: hourlyView.chart,
     hourlyView,
@@ -1836,7 +1854,8 @@ export function buildWeatherPreview(weather = {}, locale = 'zh-CN') {
   };
 }
 
-export function buildWeatherHourlyPreview(weather = {}, day = 'today') {
+export function buildWeatherHourlyPreview(weather = {}, day = 'today', settings = {}) {
+  const units = normalizeWeatherUnits(settings);
   const source = Array.isArray(weather.hourly) ? weather.hourly : [];
   if (source.length) {
     const offset = day === 'tomorrow' ? 24 : 0;
@@ -1844,14 +1863,14 @@ export function buildWeatherHourlyPreview(weather = {}, day = 'today') {
     return (window.length ? window : source.slice(0, 24)).map((item, index) => ({
       key: item.key || item.time || `hour-${index}`,
       time: item.timeLabel || compactHour(item.time || item.date || item.timestamp) || `${index}:00`,
-      temp: formatTemperatureValue(item.temp ?? item.temperature),
+      temp: formatTemperatureValue(item.temp ?? item.temperature, units.temperatureUnit),
       precip: formatNumberRaw(item.precipitation ?? item.precip ?? 0),
       humidity: formatPercentValue(item.humidity),
       humidityValue: formatNumberRaw(item.humidity),
       cloud: formatPercentValue(item.cloudCover ?? item.clouds),
       cloudValue: formatNumberRaw(item.cloudCover ?? item.clouds),
-      wind: formatWindSpeedValue(item.windSpeed ?? item.wind),
-      windValue: formatNumberRaw(item.windSpeed ?? item.wind),
+      wind: formatWindSpeedValue(item.windSpeed ?? item.wind, units.windSpeedUnit),
+      windValue: formatWindSpeedRaw(item.windSpeed ?? item.wind, units.windSpeedUnit),
       pressure: formatNumberRaw(item.pressure)
     }));
   }
@@ -1868,14 +1887,14 @@ export function buildWeatherHourlyPreview(weather = {}, day = 'today') {
     return {
       key: `test-hour-${day}-${hour}`,
       time: `${String(hour).padStart(2, '0')}:00`,
-      temp: formatTemperatureValue(tempValue),
+      temp: formatTemperatureValue(tempValue, units.temperatureUnit),
       precip: formatNumberRaw(index % 9 === 0 ? 0.4 : 0),
       humidity: formatPercentValue(humidityValue),
       humidityValue: formatNumberRaw(humidityValue),
       cloud: formatPercentValue(cloudValue),
       cloudValue: formatNumberRaw(cloudValue),
-      wind: formatWindSpeedValue(windValue),
-      windValue: formatNumberRaw(windValue),
+      wind: formatWindSpeedValue(windValue, units.windSpeedUnit),
+      windValue: formatWindSpeedRaw(windValue, units.windSpeedUnit),
       pressure: formatNumberRaw((weather.pressure ?? 1007) + Math.sin(index / 5) * 3)
     };
   });
@@ -1885,8 +1904,9 @@ export function buildWeatherHourlyChart(weather = {}) {
   return buildWeatherHourlyViewModel(buildWeatherHourlyPreview(weather), 'temp').chart;
 }
 
-export function buildWeatherHourlyViewModel(hourly = [], parameter = 'temp', locale = 'zh-CN') {
-  const parameterConfig = getWeatherParameterConfig(locale);
+export function buildWeatherHourlyViewModel(hourly = [], parameter = 'temp', locale = 'zh-CN', settings = {}) {
+  const units = normalizeWeatherUnits(settings);
+  const parameterConfig = getWeatherParameterConfig(locale, units);
   const config = parameterConfig[parameter] || parameterConfig.temp;
   const values = hourly.map((item) => getHourlyParameterValue(item, parameter)).filter(Number.isFinite);
   const min = values.length ? Math.min(...values) : 0;
@@ -1996,22 +2016,24 @@ function paintHourlyChartCanvas(canvasId, chart = [], options = {}) {
   return true;
 }
 
-function getWeatherParameterConfig(locale = 'zh-CN') {
+function getWeatherParameterConfig(locale = 'zh-CN', settings = {}) {
+  const units = normalizeWeatherUnits(settings);
   const labels = getMiniWeatherCopy(locale).hourlyParameters;
   return {
-    temp: { label: labels.temp, unit: '°C', iconSrc: '/assets/icons/weather-param-temperature.svg' },
+    temp: { label: labels.temp, unit: getTemperatureUnitLabel(units.temperatureUnit), iconSrc: '/assets/icons/weather-param-temperature.svg' },
     precip: { label: labels.precip, unit: 'mm', iconSrc: '/assets/icons/weather-param-precipitation.svg' },
     humidity: { label: labels.humidity, unit: '%', iconSrc: '/assets/icons/weather-param-humidity.svg' },
-    wind: { label: labels.wind, unit: 'km/h', iconSrc: '/assets/icons/weather-param-wind.svg' },
+    wind: { label: labels.wind, unit: getWindSpeedUnitLabel(units.windSpeedUnit), iconSrc: '/assets/icons/weather-param-wind.svg' },
     pressure: { label: labels.pressure, unit: 'hPa', iconSrc: '/assets/icons/weather-param-pressure.svg' },
     clouds: { label: labels.clouds, unit: '%', iconSrc: '/assets/icons/weather-param-cloud.svg' }
   };
 }
 
 function refreshWeatherHourlyView(preview = {}, day = 'today', parameter = 'temp') {
-  const hourly = buildWeatherHourlyPreview(preview.sourceWeather || {}, day);
+  const units = preview.units || {};
+  const hourly = buildWeatherHourlyPreview(preview.sourceWeather || {}, day, units);
   const fallbackHourly = hourly.length ? hourly : (preview.hourly || []);
-  const hourlyView = buildWeatherHourlyViewModel(fallbackHourly, parameter, preview.locale || 'zh-CN');
+  const hourlyView = buildWeatherHourlyViewModel(fallbackHourly, parameter, preview.locale || 'zh-CN', units);
   return {
     ...preview,
     hourly: fallbackHourly,
@@ -2414,7 +2436,8 @@ export function isWeatherTestLocation(value = '') {
   return String(value).trim().toLowerCase() === 'test';
 }
 
-function buildWeatherWeeklyPreview(weather = {}, locale = 'zh-CN') {
+function buildWeatherWeeklyPreview(weather = {}, locale = 'zh-CN', settings = {}) {
+  const units = normalizeWeatherUnits(settings);
   if (Array.isArray(weather.weekly) && weather.weekly.length) {
     return weather.weekly.map((item, index) => {
       const temps = splitWeeklyTemperatures(item);
@@ -2426,46 +2449,47 @@ function buildWeatherWeeklyPreview(weather = {}, locale = 'zh-CN') {
         dayDate: item.dayDate || item.dateLabel || formatWeeklyDateLabel(item.date, index, locale),
         condition: translateWeatherCondition(item.condition || item.summary || weather.condition, cloudCover, locale),
         iconSrc: `/assets/icons/weather-${item.iconType || getWeatherPreviewIconType(cloudCover, precip)}.svg`,
-        minTemp: formatWeeklyTemperature(temps.min),
-        maxTemp: formatWeeklyTemperature(temps.max),
-        temp: item.temp || formatTempRange(temps.min, temps.max),
+        minTemp: formatWeeklyTemperature(temps.min, units.temperatureUnit),
+        maxTemp: formatWeeklyTemperature(temps.max, units.temperatureUnit),
+        temp: item.temp || formatTempRange(temps.min, temps.max, units.temperatureUnit),
         precip: formatPercentValue(precip),
-        wind: formatWindSpeedValue(item.windSpeed ?? item.wind),
+        wind: formatWindSpeedValue(item.windSpeed ?? item.wind, units.windSpeedUnit),
         windArrow: formatWindDirectionArrow(item.windDirection ?? item.windDeg ?? weather.windDirection)
       };
     });
   }
 
   return [
-    buildWeeklyRow('today', formatWeeklyDayLabel(null, 0, locale), formatWeeklyDateLabel(null, 0, locale), 'partly-cloudy', 15, 31, 8, 21, 180),
-    buildWeeklyRow('tomorrow', formatWeeklyDayLabel(null, 1, locale), formatWeeklyDateLabel(null, 1, locale), 'partly-cloudy', 15, 32, 6, 19, 180),
-    buildWeeklyRow('sat', formatWeeklyDayLabel(null, 2, locale), formatWeeklyDateLabel(null, 2, locale), 'partly-cloudy', 15, 28, 14, 24, 180),
-    buildWeeklyRow('sun', formatWeeklyDayLabel(null, 3, locale), formatWeeklyDateLabel(null, 3, locale), 'partly-cloudy', 17, 27, 10, 18, 180),
-    buildWeeklyRow('mon', formatWeeklyDayLabel(null, 4, locale), formatWeeklyDateLabel(null, 4, locale), 'partly-cloudy', 16, 31, 5, 16, 180),
-    buildWeeklyRow('tue', formatWeeklyDayLabel(null, 5, locale), formatWeeklyDateLabel(null, 5, locale), 'partly-cloudy', 16, 32, 7, 20, 180),
-    buildWeeklyRow('wed', formatWeeklyDayLabel(null, 6, locale), formatWeeklyDateLabel(null, 6, locale), 'sunny', 16, 29, 4, 17, 180)
+    buildWeeklyRow('today', formatWeeklyDayLabel(null, 0, locale), formatWeeklyDateLabel(null, 0, locale), 'partly-cloudy', 15, 31, 8, 21, 180, units),
+    buildWeeklyRow('tomorrow', formatWeeklyDayLabel(null, 1, locale), formatWeeklyDateLabel(null, 1, locale), 'partly-cloudy', 15, 32, 6, 19, 180, units),
+    buildWeeklyRow('sat', formatWeeklyDayLabel(null, 2, locale), formatWeeklyDateLabel(null, 2, locale), 'partly-cloudy', 15, 28, 14, 24, 180, units),
+    buildWeeklyRow('sun', formatWeeklyDayLabel(null, 3, locale), formatWeeklyDateLabel(null, 3, locale), 'partly-cloudy', 17, 27, 10, 18, 180, units),
+    buildWeeklyRow('mon', formatWeeklyDayLabel(null, 4, locale), formatWeeklyDateLabel(null, 4, locale), 'partly-cloudy', 16, 31, 5, 16, 180, units),
+    buildWeeklyRow('tue', formatWeeklyDayLabel(null, 5, locale), formatWeeklyDateLabel(null, 5, locale), 'partly-cloudy', 16, 32, 7, 20, 180, units),
+    buildWeeklyRow('wed', formatWeeklyDayLabel(null, 6, locale), formatWeeklyDateLabel(null, 6, locale), 'sunny', 16, 29, 4, 17, 180, units)
   ];
 }
 
-function formatTempRange(min, max) {
+function formatTempRange(min, max, temperatureUnit = 'celsius') {
   const minNum = Number(min);
   const maxNum = Number(max);
   if (!Number.isFinite(minNum) || !Number.isFinite(maxNum)) return '--';
-  return `${Math.round(minNum)}° / ${Math.round(maxNum)}°`;
+  return `${formatWeeklyTemperature(minNum, temperatureUnit)} / ${formatWeeklyTemperature(maxNum, temperatureUnit)}`;
 }
 
-function buildWeeklyRow(key, label, dayDate, iconType, minTemp, maxTemp, precip, windSpeed, windDirection) {
+function buildWeeklyRow(key, label, dayDate, iconType, minTemp, maxTemp, precip, windSpeed, windDirection, settings = {}) {
+  const units = normalizeWeatherUnits(settings);
   return {
     key,
     label,
     dayDate,
     condition: '',
     iconSrc: `/assets/icons/weather-${iconType}.svg`,
-    minTemp: formatWeeklyTemperature(minTemp),
-    maxTemp: formatWeeklyTemperature(maxTemp),
-    temp: formatTempRange(minTemp, maxTemp),
+    minTemp: formatWeeklyTemperature(minTemp, units.temperatureUnit),
+    maxTemp: formatWeeklyTemperature(maxTemp, units.temperatureUnit),
+    temp: formatTempRange(minTemp, maxTemp, units.temperatureUnit),
     precip: formatPercentValue(precip),
-    wind: formatWindSpeedValue(windSpeed),
+    wind: formatWindSpeedValue(windSpeed, units.windSpeedUnit),
     windArrow: formatWindDirectionArrow(windDirection)
   };
 }
@@ -2485,9 +2509,9 @@ function splitWeeklyTemperatures(item = {}) {
   return { min: null, max: null };
 }
 
-function formatWeeklyTemperature(value) {
+function formatWeeklyTemperature(value, temperatureUnit = 'celsius') {
   const num = Number(value);
-  return Number.isFinite(num) ? `${Math.round(num)}°` : '--';
+  return Number.isFinite(num) ? `${Math.round(convertTemperatureValue(num, temperatureUnit))}°` : '--';
 }
 
 function formatWeeklyDayLabel(dateValue, index, locale = 'zh-CN') {
@@ -2566,10 +2590,45 @@ function formatDistanceValue(value) {
   return Number.isFinite(num) ? `${num.toFixed(num >= 10 ? 0 : 1)} km` : '--';
 }
 
-function formatWindSpeedValue(speed) {
-  if (speed === null || speed === undefined || speed === '') return '--';
+function normalizeWeatherUnits(settings = {}) {
+  return {
+    temperatureUnit: settings.temperatureUnit === 'fahrenheit' ? 'fahrenheit' : 'celsius',
+    windSpeedUnit: settings.windSpeedUnit === 'ms' ? 'ms' : 'kmh'
+  };
+}
+
+function getTemperatureUnitLabel(temperatureUnit = 'celsius') {
+  return temperatureUnit === 'fahrenheit' ? '°F' : '°C';
+}
+
+function getWindSpeedUnitLabel(windSpeedUnit = 'kmh') {
+  return windSpeedUnit === 'ms' ? 'm/s' : 'km/h';
+}
+
+function convertTemperatureValue(value, temperatureUnit = 'celsius') {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return NaN;
+  return temperatureUnit === 'fahrenheit' ? (num * 9 / 5) + 32 : num;
+}
+
+function convertWindSpeedValue(speed, windSpeedUnit = 'kmh') {
   const speedNum = Number(speed);
-  return Number.isFinite(speedNum) ? `${Math.round(speedNum)} km/h` : '--';
+  if (!Number.isFinite(speedNum)) return NaN;
+  return windSpeedUnit === 'ms' ? speedNum / 3.6 : speedNum;
+}
+
+function formatWindSpeedRaw(speed, windSpeedUnit = 'kmh') {
+  const value = convertWindSpeedValue(speed, windSpeedUnit);
+  if (!Number.isFinite(value)) return '--';
+  return Math.round(value * 10) / 10;
+}
+
+function formatWindSpeedValue(speed, windSpeedUnit = 'kmh') {
+  if (speed === null || speed === undefined || speed === '') return '--';
+  const value = convertWindSpeedValue(speed, windSpeedUnit);
+  if (!Number.isFinite(value)) return '--';
+  const unit = getWindSpeedUnitLabel(windSpeedUnit);
+  return windSpeedUnit === 'ms' ? `${value.toFixed(1)} ${unit}` : `${Math.round(value)} ${unit}`;
 }
 
 function formatWindValue(direction, speed) {
@@ -2593,9 +2652,9 @@ function formatAodMetric(weather = {}) {
   };
 }
 
-function formatTemperatureValue(value) {
+function formatTemperatureValue(value, temperatureUnit = 'celsius') {
   if (value === null || value === undefined || value === '') return '--';
-  const num = Number(value);
+  const num = convertTemperatureValue(value, temperatureUnit);
   return Number.isFinite(num) ? num.toFixed(1) : '--';
 }
 

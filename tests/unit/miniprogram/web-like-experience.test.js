@@ -203,9 +203,15 @@ describe('miniprogram web-like experience shell', () => {
     }
 
     expect(topbarWxml).toContain('theme-{{resolvedThemeMode}} theme-setting-{{themeMode}}');
+    expect(topbarWxml).toContain('bindtap="selectTemperatureUnit"');
+    expect(topbarWxml).toContain('bindtap="selectWindSpeedUnit"');
     expect(topbarJs).toContain("this.triggerEvent('settingschange'");
+    expect(topbarJs).toContain('temperatureUnit');
+    expect(topbarJs).toContain('windSpeedUnit');
     expect(topbarJs).toContain('applyNavigationTheme(settings.resolvedThemeMode)');
     expect(appSettings).toContain('resolveThemeMode(themeMode)');
+    expect(appSettings).toContain('temperatureUnit');
+    expect(appSettings).toContain('windSpeedUnit');
     expect(appSettings).toContain('wx.getAppBaseInfo');
     expect(appSettings).toContain('wx.getSystemSetting');
     expect(appWxss).toContain('.container.theme-dark');
