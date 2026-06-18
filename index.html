@@ -581,13 +581,13 @@
               <span data-i18n="home.methodology.sections.cloudStructure.title">1. 候选载体</span>
               <small data-i18n="home.methodology.sections.cloudStructure.subtitle">Carrier Candidates · 先选谁能显色</small>
             </h3>
-            <p data-i18n="home.methodology.sections.cloudStructure.desc">系统先比较本地云层、日落方向云幕和气溶胶弱载体，采用最能显色的一项作为主载体。</p>
+            <p data-i18n="home.methodology.sections.cloudStructure.desc">系统先比较本地云层、远端分层载体和气溶胶弱载体，采用最能显色的一项作为主载体。</p>
             <ul class="methodology-detail-list">
               <li data-i18n="home.methodology.sections.cloudStructure.highCloud">本地云层：高云×0.75 + 中云×0.45 得到中高云画布，再映射为区间分</li>
-              <li data-i18n="home.methodology.sections.cloudStructure.midCloud">日落方向：太阳方向云幕可作为远端载体，但不会替代本地详细评分</li>
+              <li data-i18n="home.methodology.sections.cloudStructure.midCloud">日落方向：按 10/25/50/75/100km 小时两点窗口加权，拆成远端高云、远端中云和远端低云遮挡</li>
               <li data-i18n="home.methodology.sections.cloudStructure.lowCloudBonus">气溶胶：只作为弱载体候选；云层载体更强时不会单独显示成最终加分</li>
             </ul>
-            <p class="methodology-formula" data-i18n="home.methodology.sections.cloudStructure.formula">候选载体 = max(本地云层, 日落方向云幕, 气溶胶弱载体)<br>本地云层 = 中高云画布 → 区间分 + 云种修正 + 云厚修正</p>
+            <p class="methodology-formula" data-i18n="home.methodology.sections.cloudStructure.formula">候选载体 = max(本地云层, 远端分层载体, 气溶胶弱载体)<br>远端分层载体 = 日落方向高云 / 中云 - 低云遮挡</p>
           </article>
 
           <!-- 第二部分：本地云层展开 -->
@@ -735,11 +735,11 @@
           <div class="methodology-changelog-scroll" tabindex="0" role="region" aria-labelledby="methodology-changelog-title">
             <ol class="methodology-changelog-list">
               <li>
-                <time datetime="2026-06-17" data-i18n="home.methodology.changelog.latest.date">2026-06-17</time>
+                <time datetime="2026-06-18" data-i18n="home.methodology.changelog.latest.date">2026-06-18</time>
                 <div>
-                  <strong data-i18n="home.methodology.changelog.latest.title">计算依据精简 v2</strong>
-                  <p data-i18n="home.methodology.changelog.latest.summary">结果页和算法页统一为候选载体、本地云层展开、基础分、空气显色、最终分；内部诊断项不再作为用户可见凭据堆叠。</p>
-                  <small data-i18n="home.methodology.changelog.latest.validation">验证：网页 home 菜单算法页、小程序算法页和结果页计算依据使用同一主链路。</small>
+                  <strong data-i18n="home.methodology.changelog.latest.title">远端分层载体 v1</strong>
+                  <p data-i18n="home.methodology.changelog.latest.summary">日落方向云不再合成一个远端云幕，而是拆成远端高云、远端中云和远端低云遮挡，再进入 Σ(分层载体 × 分层受光亮度)。</p>
+                  <small data-i18n="home.methodology.changelog.latest.validation">验证：历史 9 个真实样本和 6/17 北京样本全量回放通过；评分细则会列出远端高云/中云贡献。</small>
                 </div>
               </li>
               <li>
@@ -809,8 +809,8 @@
             </ol>
           </div>
           <div class="methodology-version-card">
-            <strong data-i18n="home.methodology.versionLabel">算法说明版本：2026.06.17-score-ledger-v2</strong>
-            <span data-i18n="home.methodology.versionDesc">本版说明与结果页计算依据一致：先选候选载体，再展开本地云层和基础分，最后显示空气显色与最终分。内部诊断项保留在模型里，不再混入用户可见凭据。</span>
+            <strong data-i18n="home.methodology.versionLabel">算法说明版本：2026.06.18-remote-layer-carriers</strong>
+            <span data-i18n="home.methodology.versionDesc">本版说明与结果页计算依据一致：先选本地云层、远端分层载体或气溶胶弱载体，再展开分层受光贡献、空气显色与最终分。</span>
           </div>
         </div>
       </section>

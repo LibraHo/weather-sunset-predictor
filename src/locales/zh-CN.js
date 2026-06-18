@@ -270,16 +270,16 @@ export default {
     methodology: {
       title: '火烧云计算方法',
       intro: '当前火烧云指数按“候选载体 → 受光亮度 → 空气显色 → 封顶校准”展示。结果页的计算依据只呈现这条主链路，不再把内部诊断项混成最终修正。',
-      versionLabel: '算法说明版本：2026.06.17-score-ledger-v2',
-      versionDesc: '本版说明与结果页计算依据一致：先选候选载体，再展开本地云层和基础分，最后显示空气显色与最终分。内部诊断项保留在模型里，不再混入用户可见凭据。',
+      versionLabel: '算法说明版本：2026.06.18-remote-layer-carriers',
+      versionDesc: '本版说明与结果页计算依据一致：先选本地云层、远端分层载体或气溶胶弱载体，再展开分层受光贡献、空气显色与最终分。',
       changelogTitle: "版本更新记录",
       changelogHint: "近三个月内的算法更新都会放在这里，可滚动回看原因、影响和验证方式",
       changelog: {
         latest: {
-          date: '2026-06-17',
-          title: '计算依据精简 v2',
-          summary: '结果页和算法页统一为候选载体、本地云层展开、基础分、空气显色、最终分；内部诊断项不再作为用户可见凭据堆叠。',
-          validation: '验证：网页 home 菜单算法页、小程序算法页和结果页计算依据使用同一主链路。'
+          date: '2026-06-18',
+          title: '远端分层载体 v1',
+          summary: '日落方向云不再合成一个远端云幕，而是拆成远端高云、远端中云和远端低云遮挡，再进入 Σ(分层载体 × 分层受光亮度)。',
+          validation: '验证：历史 9 个真实样本和 6/17 北京样本全量回放通过；评分细则会列出远端高云/中云贡献。'
         },
         layerBrightness: {
           date: '2026-06-13',
@@ -364,11 +364,11 @@ export default {
         cloudStructure: {
           title: '1. 候选载体',
           subtitle: 'Carrier Candidates · 先选谁能显色',
-          desc: '系统先比较本地云层、日落方向云幕和气溶胶弱载体，采用最能显色的一项作为主载体。',
+          desc: '系统先比较本地云层、远端分层载体和气溶胶弱载体，采用最能显色的一项作为主载体。',
           highCloud: '本地云层：高云×0.75 + 中云×0.45 得到中高云画布，再映射为区间分',
-          midCloud: '日落方向：太阳方向云幕可作为远端载体，但不会替代本地详细评分',
+          midCloud: '日落方向：按 10/25/50/75/100km 小时两点窗口加权，拆成远端高云、远端中云和远端低云遮挡',
           lowCloudBonus: '气溶胶：只作为弱载体候选；云层载体更强时不会单独显示成最终加分',
-          formula: '候选载体 = max(本地云层, 日落方向云幕, 气溶胶弱载体)\n本地云层 = 中高云画布 → 区间分 + 云种修正 + 云厚修正',
+          formula: '候选载体 = max(本地云层, 远端分层载体, 气溶胶弱载体)\n远端分层载体 = 日落方向高云 / 中云 - 低云遮挡',
           highCloudBonus: '结果页会显示候选载体明细，例如：本地云层 77.9；日落方向 37.9；气溶胶 27.3；采用 云层载体 77.9。未采用的弱载体不再伪装成最终加分。'
         },
         lightPath: {
@@ -613,6 +613,7 @@ export default {
           displayCalibration: '展示分校准',
           aerosolCarrier: '气溶胶载体',
           directionalCarrier: '日落方向载体',
+          remoteLayerCarrier: '远端分层载体',
           remoteHighLayer: '日落方向高云',
           remoteMidLayer: '日落方向中云',
           scoringV2: '开口暖色散射',
@@ -624,7 +625,8 @@ export default {
           "cloudCarrierCandidate": "本地云层 {{score}}",
           "aerosolCarrierCandidate": "气溶胶 {{score}}",
           "directionalCarrierCandidate": "日落方向 {{score}}",
-          "carrierCandidates": "候选载体：采用 {{active}} {{score}}",
+          "remoteLayerCarrierCandidate": "远端分层 {{score}}（高云 {{high}}，中云 {{mid}}，低云遮挡 {{low}}）",
+          "carrierCandidates": "候选载体：{{candidates}}；采用 {{active}} {{score}}",
           "upperCloudCanvasShort": "中高云画布 {{upper}} → 区间分 {{range}}",
           "cloudTypeAdjustmentShort": "云种 {{bonus}}",
           "cloudThicknessAdjustmentShort": "云厚 {{adjustment}}",
@@ -641,7 +643,7 @@ export default {
           grayVeilAirRendering: '满铺中高云叠加偏脏空气：云载体 {{carrier}}；光路证据作为亮度证据；灰幕显色 {{air}}',
           lightPath: '作为受光亮度解释的太阳方向证据',
           layerBrightnessShort: '太阳方向、遮挡和亮度响应共同解释各层载体是否被照亮',
-          layerBrightness: '亮度 {{brightness}}，门控 {{gate}}；分层载体 {{canvas}}，低云遮挡 {{low}} / 透过 {{lowBlock}}，太阳几何 {{solar}}，光路因子 {{path}}，空气 {{air}}，云厚 {{thickness}}，直射/散射 {{beam}}',
+          layerBrightness: '亮度 {{brightness}}，门控 {{gate}}；本地载体 {{canvas}}，远端高云 {{remoteHigh}}，远端中云 {{remoteMid}}，远端低云遮挡 {{remoteLowBlock}}，低云遮挡 {{low}} / 透过 {{lowBlock}}，太阳几何 {{solar}}，光路因子 {{path}}，空气 {{air}}，云厚 {{thickness}}，直射/散射 {{beam}}',
           renderingFactors: '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}',
           afterAdjustments: '结合天气和能见度后',
           finalDisplayed: '最终展示结果',

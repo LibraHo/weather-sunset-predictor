@@ -262,16 +262,16 @@ const translations = {
     "methodology": {
       "title": "火燒雲計算方法",
       "intro": "目前的火燒雲指數按「候選載體 → 受光亮度 → 空氣顯色 → 封頂校準」展示。結果頁的計算依據只呈現這條主鏈路，不再把內部診斷項混成最終修正。",
-      "versionLabel": "算法說明版本：2026.06.17-score-ledger-v2",
-      "versionDesc": "本版說明與結果頁計算依據一致：先選候選載體，再展開本地雲層和基礎分，最後顯示空氣顯色與最終分。內部診斷項保留在模型裡，不再混入使用者可見依據。",
+      "versionLabel": "算法說明版本：2026.06.18-remote-layer-carriers",
+      "versionDesc": "本版說明與結果頁計算依據一致：先選本地雲層、遠端分層載體或氣溶膠弱載體，再展開分層受光貢獻、空氣顯色與最終分。",
       changelogTitle: "版本更新記錄",
       changelogHint: "近三個月內的算法更新都會放在這裡，可捲動回看原因、影響和驗證方式",
       changelog: {
         "latest": {
-          "date": "2026-06-17",
-          "title": "計算依據精簡 v2",
-          "summary": "結果頁和算法頁統一為候選載體、本地雲層展開、基礎分、空氣顯色、最終分；內部診斷項不再作為使用者可見依據堆疊。",
-          "validation": "驗證：Web home 選單算法頁、小程序算法頁和結果頁計算依據使用同一主鏈路。"
+          "date": "2026-06-18",
+          "title": "遠端分層載體 v1",
+          "summary": "日落方向雲不再合成一個遠端雲幕，而是拆成遠端高雲、遠端中雲和遠端低雲遮擋，再進入 Σ(分層載體 × 分層受光亮度)。",
+          "validation": "驗證：歷史 9 個真實樣本和 6/17 北京樣本全量回放通過；評分細則會列出遠端高雲／中雲貢獻。"
         },
         "layerBrightness": {
           "date": "2026-06-13",
@@ -356,11 +356,11 @@ const translations = {
         "cloudStructure": {
           "title": "1. 候選載體",
           "subtitle": "Carrier Candidates · 先選誰能顯色",
-          "desc": "系統先比較本地雲層、日落方向雲幕和氣溶膠弱載體，採用最能顯色的一項作為主載體。",
+          "desc": "系統先比較本地雲層、遠端分層載體和氣溶膠弱載體，採用最能顯色的一項作為主載體。",
           "highCloud": "本地雲層：高雲×0.75 + 中雲×0.45 得到中高雲畫布，再映射為區間分",
-          "midCloud": "日落方向：太陽方向雲幕可作為遠端載體，但不會替代本地詳細評分",
+          "midCloud": "日落方向：按 10/25/50/75/100km 小時兩點窗口加權，拆成遠端高雲、遠端中雲和遠端低雲遮擋",
           "lowCloudBonus": "氣溶膠：只作為弱載體候選；雲層載體更強時不會單獨顯示成最終加分",
-          "formula": "候選載體 = max(本地雲層, 日落方向雲幕, 氣溶膠弱載體)\n本地雲層 = 中高雲畫布 → 區間分 + 雲種修正 + 雲厚修正",
+          "formula": "候選載體 = max(本地雲層, 遠端分層載體, 氣溶膠弱載體)\n遠端分層載體 = 日落方向高雲 / 中雲 - 低雲遮擋",
           "highCloudBonus": "結果頁會顯示候選載體明細，例如：本地雲層 77.9；日落方向 37.9；氣溶膠 27.3；採用 雲層載體 77.9。未採用的弱載體不再偽裝成最終加分。"
         },
         "lightPath": {
@@ -589,6 +589,7 @@ const translations = {
           "displayCalibration": "展示分校準",
           "aerosolCarrier": "氣溶膠載體",
           "directionalCarrier": "Sunset-direction carrier",
+          "remoteLayerCarrier": "遠端分層載體",
           "remoteHighLayer": "日落方向高雲",
           "remoteMidLayer": "日落方向中雲",
           "scoringV2": "開口暖色散射",
@@ -596,15 +597,16 @@ const translations = {
           "evidence": "計算依據"
         },
         "details": {
-          "cloudCarrier": "可被染色的本地雲面、日落方向雲幕或弱載體",
+          "cloudCarrier": "可被染色的本地雲面、遠端分層載體或弱載體",
           "cloudCarrierCandidate": "cloud candidate {{score}}",
           "aerosolCarrierCandidate": "aerosol candidate {{score}}",
           "directionalCarrierCandidate": "sunset-direction candidate {{score}}",
-          "carrierCandidates": "using {{active}} {{score}}",
+          "remoteLayerCarrierCandidate": "遠端分層 {{score}}（高雲 {{high}}，中雲 {{mid}}，低雲遮擋 {{low}}）",
+          "carrierCandidates": "候選載體：{{candidates}}；採用 {{active}} {{score}}",
           "upperCloudCanvasShort": "upper canvas {{upper}} → range score {{range}}",
           "cloudTypeAdjustmentShort": "cloud type {{bonus}}",
           "cloudThicknessAdjustmentShort": "cloud thickness {{adjustment}}",
-          "cloudCarrierSource": "chosen from local cloud, sunset-direction curtain, or weak aerosol carrier",
+          "cloudCarrierSource": "從本地雲層、遠端分層載體或氣溶膠弱載體中選用主載體",
           "cloudPenalty": "雲畫布 {{canvas}}，低雲 ×{{low}}，陰天 ×{{overcast}}",
           "upperCloudCanvas": "中高雲畫布 {{upper}} = 高雲 {{high}}×0.75 + 中雲 {{mid}}×0.45；區間分 {{range}}",
           "highCloudBonus": "高雲主導 bonus {{bonus}}",
@@ -617,7 +619,7 @@ const translations = {
           "grayVeilAirRendering": "滿鋪中高雲疊加偏髒空氣：雲載體 {{carrier}}；光路證據作為亮度證據；灰幕顯色 {{air}}",
           "lightPath": "作為受光亮度解釋的太陽方向證據",
           "layerBrightnessShort": "太陽方向、遮擋和亮度響應共同解釋各層載體是否被照亮",
-          "layerBrightness": "亮度 {{brightness}}，門控 {{gate}}；分層載體 {{canvas}}，低雲遮擋 {{low}} / 透過 {{lowBlock}}，太陽幾何 {{solar}}，光路因子 {{path}}，空氣 {{air}}，雲厚 {{thickness}}，直射／散射 {{beam}}",
+          "layerBrightness": "亮度 {{brightness}}，門控 {{gate}}；本地載體 {{canvas}}，遠端高雲 {{remoteHigh}}，遠端中雲 {{remoteMid}}，遠端低雲遮擋 {{remoteLowBlock}}，低雲遮擋 {{low}} / 透過 {{lowBlock}}，太陽幾何 {{solar}}，光路因子 {{path}}，空氣 {{air}}，雲厚 {{thickness}}，直射／散射 {{beam}}",
           "renderingFactors": "能見度 ×{{visibility}}，濕度 ×{{humidity}}，氣溶膠 ×{{aerosol}}",
           "afterAdjustments": "結合天氣和能見度後",
           "finalDisplayed": "最終顯示結果",

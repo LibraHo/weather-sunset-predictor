@@ -57,9 +57,10 @@ describe('home methodology structure', () => {
     ];
     const localeTexts = localeFiles.map(file => fs.readFileSync(path.join(ROOT, 'src/locales', file), 'utf8'));
 
-    expect(html).toContain('2026-06-17');
-    expect(html).toContain('2026.06.17-score-ledger-v2');
-    expect(html).toContain('计算依据精简 v2');
+    expect(html).toContain('2026-06-18');
+    expect(html).toContain('2026.06.18-remote-layer-carriers');
+    expect(html).toContain('远端分层载体 v1');
+    expect(html).toContain('远端高云、远端中云和远端低云遮挡');
     expect(html).toContain('分层求和亮度公式 v1');
     expect(html).toContain('2026-06-03');
     expect(html).toContain('home.methodology.changelog.scoringV2.title');
@@ -67,7 +68,7 @@ describe('home methodology structure', () => {
     expect(html).toContain('满铺中高云叠加 PM/AOD 偏高');
     expect(html).toContain('方向中云越强，越接近 50-60 档');
     expect(html).toContain('云厚比例折损 v2');
-    expect(html).toContain('内部诊断项不再作为用户可见凭据堆叠');
+    expect(html).toContain('评分细则会列出远端高云/中云贡献');
     expect(html).not.toContain('载体缓冲');
     expect(html).not.toContain('低太阳透射 未命中');
 
@@ -76,11 +77,13 @@ describe('home methodology structure', () => {
       .map(file => fs.readFileSync(path.join(ROOT, 'src/locales', file), 'utf8'))
       .join('\n');
 
-    expect(coreLocaleTexts).toContain('2026.06.17-score-ledger-v2');
+    expect(coreLocaleTexts).toContain('2026.06.18-remote-layer-carriers');
+    expect(coreLocaleTexts).toContain('Remote layer carriers v1');
+    expect(coreLocaleTexts).toContain('遠端分層載體 v1');
     expect(coreLocaleTexts).toContain('Layer-weighted brightness formula v1');
-    expect(coreLocaleTexts).toContain('Score ledger cleanup v2');
+    expect(coreLocaleTexts).toContain('remote high cloud');
     expect(coreLocaleTexts).toContain('Sunset scoring v2');
-    expect(coreLocaleTexts).toContain('carrier candidates, local-cloud expansion, base score');
+    expect(coreLocaleTexts).toContain('remote layer carriers');
     expect(localeTexts.join('\n')).toContain('2026-05-27');
     expect(localeTexts.join('\n')).toContain('Cloud-thickness proportional penalty v2');
   });
@@ -127,7 +130,8 @@ describe('home methodology structure', () => {
     expect(html).toContain('home.methodology.sections.finalFormula.lightGate');
     expect(html).toContain('home.methodology.sections.finalFormula.statusCaps');
 
-    expect(zh).toContain('候选载体 = max(本地云层, 日落方向云幕, 气溶胶弱载体)');
+    expect(zh).toContain('候选载体 = max(本地云层, 远端分层载体, 气溶胶弱载体)');
+    expect(zh).toContain('远端分层载体 = 日落方向高云 / 中云 - 低云遮挡');
     expect(zh).toContain('本地云层 = 区间分 + 云种修正 + 云厚修正');
     expect(zh).toContain('最终分 = clamp(Σ(分层载体 × 分层受光亮度) × 空气显色, 0, 100)');
     expect(zh).toContain('展示顺序：候选载体 → 本地云层展开 → 基础分 → 空气显色 → 最终分');
@@ -136,7 +140,8 @@ describe('home methodology structure', () => {
     expect(zh).not.toContain('透明度分 = 能见度分 + 湿度分（最高25分）');
     expect(zh).not.toContain('载体缓冲');
 
-    expect(en).toContain('Carrier candidate = max(local cloud, sunset-direction curtain, weak aerosol carrier)');
+    expect(en).toContain('Carrier candidate = max(local cloud, remote layer carrier, weak aerosol carrier)');
+    expect(en).toContain('Remote layer carrier = sunset-direction high/mid cloud - low-cloud blockage');
     expect(en).toContain('Local cloud = range score + cloud-type adjustment + cloud-thickness adjustment');
     expect(en).toContain('Final score = clamp(Σ(layer carrier × layer brightness) × air rendering, 0, 100)');
     expect(en).not.toContain('carrier relief');

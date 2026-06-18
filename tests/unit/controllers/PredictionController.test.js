@@ -946,6 +946,13 @@ describe('PredictionController', () => {
         score: 44,
         canvasAnalysis: { score: 65.4, breakdown: { highClouds: 70, midClouds: 45, lowClouds: 12 } },
         carrierAnalysis: { score: 65.4 },
+        remoteLayerCarriers: {
+          applied: true,
+          remoteHighCarrier: 22,
+          remoteMidCarrier: 9,
+          remoteLowBlock: 18,
+          metrics: { high: 82, mid: 34, low: 12 }
+        },
         lightPathAnalysis: {
           score: 107.2,
           source: 'solar_direction_openmeteo',
@@ -956,7 +963,7 @@ describe('PredictionController', () => {
           applied: true,
           effectiveBrightness: 46.3,
           brightnessGate: 0.71,
-          layers: { cloudCanvas: 65.4 },
+          layers: { cloudCanvas: 65.4, remoteHigh: 82, remoteMid: 34, remoteLowBlock: 18 },
           factors: {
             solarFactor: 0.82,
             pathFactor: 1.07,
@@ -971,6 +978,13 @@ describe('PredictionController', () => {
           baseScore: 65.2,
           canvasScore: 65.4,
           carrierScore: 65.4,
+          remoteLayerCarriers: {
+            applied: true,
+            remoteHighCarrier: 22,
+            remoteMidCarrier: 9,
+            remoteLowBlock: 18,
+            metrics: { high: 82, mid: 34, low: 12 }
+          },
           lightPathScore: 107.2,
           renderingFactor: 0.68,
           unclampedFinalScore: 44.1,
@@ -991,6 +1005,9 @@ describe('PredictionController', () => {
       ]);
       expect(labels).not.toContain('Light path');
       expect(html).toContain('Σ(layer carrier × layer brightness)');
+      expect(html).toContain('remote layers 22.0 (high 22.0, mid 9.0, low block 18.0)');
+      expect(html).toContain('remote high 82.0');
+      expect(html).toContain('remote mid 34.0');
       expect(html).toContain('path 1.07');
       expect(html).not.toContain('65.4 × brightness 0.71 = 65.2');
       expect(html).not.toContain('sunset path 1.07 × air rendering');

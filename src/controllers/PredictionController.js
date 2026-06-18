@@ -2088,6 +2088,7 @@ class PredictionController {
     const aerosolHazeCap = prediction?.aerosolHazeCap;
     const carrierAdjustment = prediction?.highCloudCarrierAdjustment;
     const directionalCurtainCarrier = prediction?.directionalCurtainCarrier || prediction?.breakdown?.directionalCurtainCarrier;
+    const remoteLayerCarriers = prediction?.remoteLayerCarriers || prediction?.carrierAnalysis?.remoteLayerCarriers || prediction?.breakdown?.remoteLayerCarriers || breakdown.remoteLayerCarriers;
     const postRainAdjustment = prediction?.postRainAdjustment;
     const scoringV2 = prediction?.scoringV2;
     const layerBrightness = prediction?.layerBrightness || prediction?.breakdown?.layerBrightness;
@@ -2133,7 +2134,8 @@ class PredictionController {
     const carrierLabel = (key) => ({
       cloud: ledgerText('labels.cloudCarrier', {}, 'Cloud carrier', '云层载体'),
       aerosol: ledgerText('labels.aerosolCarrier', {}, 'Aerosol carrier', '气溶胶载体'),
-      directional_curtain: ledgerText('labels.directionalCarrier', {}, 'Sun-direction carrier', '日落方向载体')
+      directional_curtain: ledgerText('labels.directionalCarrier', {}, 'Sun-direction carrier', '日落方向载体'),
+      remote_layer: ledgerText('labels.remoteLayerCarrier', {}, 'Remote layer carrier', '远端分层载体')
     }[key] || ledgerText('labels.cloudCarrier', {}, 'Cloud carrier', '云层载体'));
 
     const reasonText = (reason) => ({
@@ -2352,6 +2354,25 @@ class PredictionController {
           '日落方向 {{score}}'
         ));
       }
+      if (remoteLayerCarriers?.applied) {
+        const remoteScore = Math.max(
+          Number(remoteLayerCarriers.remoteHighCarrier || 0),
+          Number(remoteLayerCarriers.remoteMidCarrier || 0)
+        );
+        if (Number.isFinite(remoteScore) && remoteScore > 0) {
+          candidateParts.push(ledgerText(
+            'details.remoteLayerCarrierCandidate',
+            {
+              high: fmt(remoteLayerCarriers.remoteHighCarrier, 1),
+              mid: fmt(remoteLayerCarriers.remoteMidCarrier, 1),
+              low: fmt(remoteLayerCarriers.remoteLowBlock, 1),
+              score: fmt(remoteScore, 1)
+            },
+            'remote layers {{score}} (high {{high}}, mid {{mid}}, low block {{low}})',
+            '远端分层 {{score}}（高云 {{high}}，中云 {{mid}}，低云遮挡 {{low}}）'
+          ));
+        }
+      }
       if (aerosolCarrier?.activatedScore >= 12) {
         candidateParts.push(ledgerText(
           'details.aerosolCarrierCandidate',
@@ -2445,6 +2466,9 @@ class PredictionController {
           brightness: fmt(layerBrightness.effectiveBrightness, 1),
           gate: fmt(layerBrightness.brightnessGate, 2),
           canvas: fmt(layers.cloudCanvas, 1),
+          remoteHigh: fmt(layers.remoteHigh, 1),
+          remoteMid: fmt(layers.remoteMid, 1),
+          remoteLowBlock: fmt(layers.remoteLowBlock, 1),
           low: fmt(layers.low, 1),
           lowBlock: fmt(factors.lowBlockFactor, 2),
           solar: fmt(factors.solarFactor, 2),
@@ -2453,8 +2477,8 @@ class PredictionController {
           thickness: fmt(factors.thicknessFactor, 2),
           beam: fmt(factors.beamFactor, 2)
         },
-        'brightness {{brightness}}, gate {{gate}}; layer carrier {{canvas}}, low-cloud block {{low}} / transmission {{lowBlock}}, solar {{solar}}, path {{path}}, air {{air}}, thickness {{thickness}}, beam {{beam}}',
-        '亮度 {{brightness}}，门控 {{gate}}；分层载体 {{canvas}}，低云遮挡 {{low}} / 透过 {{lowBlock}}，太阳几何 {{solar}}，光路因子 {{path}}，空气 {{air}}，云厚 {{thickness}}，直射/散射 {{beam}}'
+        'brightness {{brightness}}, gate {{gate}}; local carrier {{canvas}}, remote high {{remoteHigh}}, remote mid {{remoteMid}}, remote low block {{remoteLowBlock}}, low-cloud block {{low}} / transmission {{lowBlock}}, solar {{solar}}, path {{path}}, air {{air}}, thickness {{thickness}}, beam {{beam}}',
+        '亮度 {{brightness}}，门控 {{gate}}；本地载体 {{canvas}}，远端高云 {{remoteHigh}}，远端中云 {{remoteMid}}，远端低云遮挡 {{remoteLowBlock}}，低云遮挡 {{low}} / 透过 {{lowBlock}}，太阳几何 {{solar}}，光路因子 {{path}}，空气 {{air}}，云厚 {{thickness}}，直射/散射 {{beam}}'
       );
     })();
 

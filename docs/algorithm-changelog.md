@@ -7,6 +7,21 @@
 3. 火烧云形成条件文字分析
 4. 对应回归测试/样本回放
 
+## 2026.06.18-remote-layer-carriers-v1
+
+- 日期：2026-06-18
+- 代码：`server/services/EnhancedPredictionService.js`、`server/services/LayerBrightnessService.js`、`src/controllers/PredictionController.js`、`src/locales/*.js`、`miniprogram/pages/methodology/index.js`、`miniprogram/pages/result/index.js`
+- 背景：远端日落方向云原先容易被解释成一个“日落方向云幕”，用户看不到高云、中云和低云遮挡分别如何影响基础分。
+- 改动：
+  - 评分细则把远端方向载体展示为 `remoteHigh`、`remoteMid` 和 `remoteLowBlock`，并在基础分贡献里列出远端高云/中云。
+  - Web 算法页、小程序算法页同步说明：10/25/50/75/100km 的小时两点窗口加权后，拆成远端高云、远端中云和远端低云遮挡。
+  - 说明版本更新为 `2026.06.18-remote-layer-carriers`。
+- 回归测试：
+  - `tests/unit/controllers/PredictionController.test.js`
+  - `tests/unit/home-methodology-structure.test.js`
+  - `tests/unit/miniprogram/methodology-page.test.js`
+  - 真实校准样本库要求 9 个历史样本 + 2026-06-17 北京样本全量回放。
+
 ## 2026.06.13-layer-weighted-brightness-v1
 
 - 日期：2026-06-13

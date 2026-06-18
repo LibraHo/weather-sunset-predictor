@@ -1299,6 +1299,15 @@ function buildLayerBrightnessText(layerBrightness = {}, lightPath = {}) {
   if (Number.isFinite(Number(layerBrightness.layers?.cloudCanvas))) {
     parts.push(`分层载体 ${formatPercent(layerBrightness.layers.cloudCanvas)}`);
   }
+  if (Number.isFinite(Number(layerBrightness.layers?.remoteHigh))) {
+    parts.push(`远端高云 ${formatPercent(layerBrightness.layers.remoteHigh)}`);
+  }
+  if (Number.isFinite(Number(layerBrightness.layers?.remoteMid))) {
+    parts.push(`远端中云 ${formatPercent(layerBrightness.layers.remoteMid)}`);
+  }
+  if (Number.isFinite(Number(layerBrightness.layers?.remoteLowBlock))) {
+    parts.push(`远端低云遮挡 ${formatPercent(layerBrightness.layers.remoteLowBlock)}`);
+  }
   if (Number.isFinite(Number(layerBrightness.layers?.low))) {
     parts.push(`低云遮挡 ${formatPercent(layerBrightness.layers.low)}`);
   }
