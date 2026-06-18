@@ -11,7 +11,7 @@ Page({
     currentNav: 'methodology',
     heroEyebrow: '霞客方法',
     heroTitle: '火烧云计算方法',
-    heroCopy: '霞客按候选载体、受光亮度、空气显色、封顶校准展示计算依据；结果页只显示这条主链路，不再堆内部诊断项。',
+    heroCopy: '霞客按本地云层、远端分层载体、受光亮度、空气显色、封顶校准展示计算依据；结果页只显示这条主链路，不再堆内部诊断项。',
     scoreBands: [
       { tone: 'rare', name: '顶级 Rare', range: '85-100 分', desc: '少见的爆发级条件，值得优先安排。' },
       { tone: 'strong', name: '高分 Strong', range: '70-84 分', desc: '明显高于常态，适合专程蹲守。' },
@@ -19,21 +19,21 @@ Page({
       { tone: 'low', name: '低概率 Low', range: '<40 分', desc: '火烧云条件偏弱；不建议专程追霞，普通日落效果需看实时天气和视野。' }
     ],
     formationFactors: [
-      { title: '候选载体', subtitle: '本地云层 / 日落方向 / 气溶胶', desc: '先比较谁更能显色，再采用主载体。结果页会明确“采用 云层载体 77.9”这类结论，未采用的弱载体不再显示成最终加分。' },
+      { title: '候选载体', subtitle: '本地云层 / 远端分层 / 气溶胶', desc: '先比较谁更能显色，再采用主载体。日落方向云会拆成远端高云、远端中云和远端低云遮挡，未采用的弱载体不再显示成最终加分。' },
       { title: '本地云层', subtitle: '高云×0.75 + 中云×0.45', desc: '本地云层只展开中高云画布、区间分、云种修正和云厚修正，避免把内部诊断项塞进用户凭据。' },
       { title: '受光亮度', subtitle: '基础分的一部分', desc: '太阳方向、低云遮挡、云厚和亮度响应会合成受光亮度；它进入基础分，不再重复显示成最终分后修正。' },
       { title: '空气显色', subtitle: '颜色质量', desc: '能见度、湿度、雨后状态和 AOD/PM/dust 只解释颜色强弱；气溶胶弱载体被采用时才作为主载体，否则不重复加分。' },
       { title: '限制因素', subtitle: '命中才显示', desc: '低云、降水、厚云、满铺灰幕和几何不可行会封顶或校准展示分；结果页只显示命中的主限制。' }
     ],
     calculationSteps: [
-      { title: '1. 候选载体', formula: 'carrier = max(localCloud, sunsetDirection, aerosolWeakCarrier)', desc: '展示本地云层、日落方向、气溶胶三项候选，并明确采用哪一项。' },
+      { title: '1. 候选载体', formula: 'carrier = max(localCloud, remoteLayer, aerosolWeakCarrier)', desc: '展示本地云层、远端分层、气溶胶三项候选，并明确采用哪一项。' },
       { title: '2. 本地云层展开', formula: 'localCloud = rangeScore + cloudTypeAdjustment + thicknessAdjustment', desc: '例如：中高云画布 37.1 → 区间分 75.9；云种 +4.0；云厚 -2.0。' },
       { title: '3. 基础分', formula: 'base = Σ(layerCarrier × layerBrightness)', desc: '分层载体和分层受光亮度共同决定基础分；光路已经并入亮度。' },
       { title: '4. 空气显色', formula: 'rendered = base × airRendering', desc: '空气显色解释颜色质量，不把气溶胶弱载体重复显示成最终加分。' },
       { title: '5. 最终显示分', formula: 'score = clamp(rendered, 0, 100) + status caps', desc: '无火烧云 <40，轻微霞光 <60；几何不可行、厚云、满铺灰幕、雨低云会进一步压制。' }
     ],
     changelog: [
-      { date: '2026-06-17', title: '计算依据精简 v2', summary: '结果页和算法页统一为候选载体、本地云层展开、基础分、空气显色、最终分；内部诊断项不再作为用户可见凭据堆叠。' },
+      { date: '2026-06-18', title: '远端分层载体 v1', summary: '日落方向云拆成远端高云、远端中云和远端低云遮挡，再进入 Σ(分层载体 × 分层受光亮度)。' },
       { date: '2026-06-13', title: '分层求和亮度公式 v1', summary: '最终分改为 Σ(分层载体 × 分层受光亮度) × 空气显色；受光亮度采用对数饱和响应，光路继续作为内部因子。' },
       { date: '2026-06-06', title: '灰幕空气显色 + 方向中云带 v2', summary: '满铺中高云叠加 PM/AOD 偏高时按灰幕压力连续降低显色；太阳方向中云带改为连续载体，强光路下可进入 50-60 档。' },
       { date: '2026-06-03', title: '日落评分 v2', summary: '最终分改为云载体、日落光路、空气显色三部分合成；光路开且能见度可接受时，轻/中度 AOD、PM、dust 作为橙红散射正向因素。' },
@@ -73,7 +73,7 @@ Page({
       heroTitle: apiOnly ? 'API接入' : '火烧云计算方法',
       heroCopy: apiOnly
         ? '面向 Agent、自动化脚本和研究项目的受控接口。先申请 Token，再用 Bearer 鉴权调用 /api/agent 下的接口。'
-        : '霞客按候选载体、受光亮度、空气显色、封顶校准展示计算依据；结果页只显示这条主链路，不再堆内部诊断项。'
+        : '霞客按本地云层、远端分层载体、受光亮度、空气显色、封顶校准展示计算依据；结果页只显示这条主链路，不再堆内部诊断项。'
     });
   },
 

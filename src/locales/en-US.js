@@ -262,16 +262,16 @@ const translations = {
     "methodology": {
       "title": "Fire Cloud Calculation Method",
       "intro": "The current Fire Cloud Index is presented as carrier candidates, layer brightness, air rendering, and score caps. The result-page evidence now shows that main chain only, instead of mixing internal diagnostics into final-score adjustments.",
-      "versionLabel": "Methodology version: 2026.06.17-score-ledger-v2",
-      "versionDesc": "This version matches the result-page score ledger: choose the carrier candidate, expand local-cloud evidence and the base score, then show air rendering and the final score. Internal diagnostics stay inside the model instead of appearing as user-facing evidence clutter.",
+      "versionLabel": "Methodology version: 2026.06.18-remote-layer-carriers",
+      "versionDesc": "This version matches the result-page score ledger: choose local cloud, remote layer carriers, or weak aerosol carrier, then show layer contributions, air rendering, and the final score.",
       changelogTitle: "Version update history",
       changelogHint: "Algorithm updates from the last three months live here; scroll to review why each change happened, its impact, and validation",
       changelog: {
         "latest": {
-          "date": "2026-06-17",
-          "title": "Score ledger cleanup v2",
-          "summary": "The result page and methodology page now share one chain: carrier candidates, local-cloud expansion, base score, air rendering, and final score. Internal diagnostics no longer appear as stacked user-facing evidence.",
-          "validation": "Validation: the web home-menu methodology page, mini-program methodology page, and result-page score ledger use the same main chain."
+          "date": "2026-06-18",
+          "title": "Remote layer carriers v1",
+          "summary": "Sun-direction clouds are no longer collapsed into one remote curtain. They are split into remote high cloud, remote mid cloud, and remote low-cloud blockage before entering Σ(layer carrier × layer brightness).",
+          "validation": "Validation: all 9 historical real cases plus the 2026-06-17 Beijing case replay; score details list remote high/mid contributions."
         },
         "layerBrightness": {
           "date": "2026-06-13",
@@ -356,11 +356,11 @@ const translations = {
         "cloudStructure": {
           "title": "1. Carrier Candidates",
           "subtitle": "Carrier Candidates · Pick what can take color",
-          "desc": "The model first compares local cloud, the sunset-direction cloud curtain, and the weak aerosol carrier, then uses the strongest colorable carrier as the main carrier.",
+          "desc": "The model first compares local cloud, remote layer carriers, and the weak aerosol carrier, then uses the strongest colorable carrier as the main carrier.",
           "highCloud": "Local cloud: high×0.75 + mid×0.45 gives the upper-cloud canvas, then maps it to a range score",
-          "midCloud": "Sunset direction: a sun-direction cloud curtain can be a distant carrier, but it does not replace the detailed local score",
+          "midCloud": "Sunset direction: the 10/25/50/75/100km two-hour window is split into remote high cloud, remote mid cloud, and remote low-cloud blockage",
           "lowCloudBonus": "Aerosol: only a weak carrier candidate; when cloud carrier is stronger, it is not shown as a separate final-score bonus",
-          "formula": "Carrier candidate = max(local cloud, sunset-direction curtain, weak aerosol carrier)\nLocal cloud = upper-cloud canvas → range score + cloud-type adjustment + cloud-thickness adjustment",
+          "formula": "Carrier candidate = max(local cloud, remote layer carrier, weak aerosol carrier)\nRemote layer carrier = sunset-direction high/mid cloud - low-cloud blockage",
           "highCloudBonus": "The result page shows candidate evidence, for example: local cloud 77.9; sunset direction 37.9; aerosol 27.3; using cloud carrier 77.9. Unused weak carriers are not presented as final-score bonuses."
         },
         "lightPath": {
@@ -587,6 +587,7 @@ const translations = {
           "displayCalibration": "Display calibration",
           "aerosolCarrier": "Aerosol carrier",
           "directionalCarrier": "Sunset-direction carrier",
+          "remoteLayerCarrier": "Remote layer carrier",
           "remoteHighLayer": "Sunset-direction high cloud",
           "remoteMidLayer": "Sunset-direction mid cloud",
           "scoringV2": "Open-path warm scattering",
@@ -594,15 +595,16 @@ const translations = {
           "evidence": "Calculation evidence"
         },
         "details": {
-          "cloudCarrier": "usable local cloud, sunset-direction curtain, or weak carrier",
+          "cloudCarrier": "usable local cloud, remote layer carrier, or weak carrier",
           "cloudCarrierCandidate": "cloud candidate {{score}}",
           "aerosolCarrierCandidate": "aerosol candidate {{score}}",
           "directionalCarrierCandidate": "sunset-direction candidate {{score}}",
-          "carrierCandidates": "using {{active}} {{score}}",
+          "remoteLayerCarrierCandidate": "remote layers {{score}} (high {{high}}, mid {{mid}}, low block {{low}})",
+          "carrierCandidates": "candidates: {{candidates}}; adopted {{active}} {{score}}",
           "upperCloudCanvasShort": "upper canvas {{upper}} → range score {{range}}",
           "cloudTypeAdjustmentShort": "cloud type {{bonus}}",
           "cloudThicknessAdjustmentShort": "cloud thickness {{adjustment}}",
-          "cloudCarrierSource": "chosen from local cloud, sunset-direction curtain, or weak aerosol carrier",
+          "cloudCarrierSource": "chosen from local cloud, remote layer carrier, or weak aerosol carrier",
           "cloudPenalty": "cloud canvas {{canvas}}, low cloud ×{{low}}, overcast ×{{overcast}}",
           "upperCloudCanvas": "upper canvas {{upper}} = high {{high}}×0.75 + mid {{mid}}×0.45; range score {{range}}",
           "highCloudBonus": "high-cloud dominant bonus {{bonus}}",
@@ -615,7 +617,7 @@ const translations = {
           "grayVeilAirRendering": "full mid/high cloud with dirty air: carrier {{carrier}}; path evidence is brightness evidence; suppressed air rendering {{air}}",
           "lightPath": "sun-direction evidence for layer brightness",
           "layerBrightnessShort": "sun direction, blockage, and illumination evidence explain whether each carrier layer is lit",
-          "layerBrightness": "brightness {{brightness}}, gate {{gate}}; layer carrier {{canvas}}, low-cloud block {{low}} / transmission {{lowBlock}}, solar {{solar}}, path {{path}}, air {{air}}, thickness {{thickness}}, beam {{beam}}",
+          "layerBrightness": "brightness {{brightness}}, gate {{gate}}; local carrier {{canvas}}, remote high {{remoteHigh}}, remote mid {{remoteMid}}, remote low block {{remoteLowBlock}}, low-cloud block {{low}} / transmission {{lowBlock}}, solar {{solar}}, path {{path}}, air {{air}}, thickness {{thickness}}, beam {{beam}}",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
           "afterAdjustments": "after weather and visibility adjustments",
           "finalDisplayed": "final displayed result",

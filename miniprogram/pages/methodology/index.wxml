@@ -92,7 +92,7 @@
     </scroll-view>
     <view class="version-card">
       <view class="version-title">当前说明版本</view>
-      <view class="version-copy">2026.06.17 · 计算依据精简 v2；评分口径与 Web 和结果页保持一致。</view>
+      <view class="version-copy">2026.06.18 · 远端分层载体 v1；评分口径与 Web 和结果页保持一致。</view>
     </view>
   </view>
 </view>

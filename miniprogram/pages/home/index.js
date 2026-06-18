@@ -2064,6 +2064,8 @@ function buildHomeBrightnessEvidence({ carrierScore, brightnessValue, lightPath 
   const parts = [];
   if (Number.isFinite(carrierScore)) parts.push(`载体 ${roundHomeOne(carrierScore)} 分`);
   if (Number.isFinite(brightnessValue)) parts.push(`受光亮度 ${roundHomeOne(brightnessValue)} 分`);
+  if (Number.isFinite(Number(layerBrightness.layers?.remoteHigh))) parts.push(`远端高云 ${roundHomeOne(layerBrightness.layers.remoteHigh)}`);
+  if (Number.isFinite(Number(layerBrightness.layers?.remoteMid))) parts.push(`远端中云 ${roundHomeOne(layerBrightness.layers.remoteMid)}`);
   if (Number.isFinite(Number(lightPath.azimuth))) parts.push(`太阳方位 ${Math.round(Number(lightPath.azimuth))}°`);
   if (Number.isFinite(Number(lightPath.occlusionProbability))) parts.push(`遮挡 ${Math.round(Number(lightPath.occlusionProbability) * 100)}%`);
   if (Number.isFinite(Number(layerBrightness.factors?.pathFactor))) parts.push(`亮度响应 ${roundHomeTwo(layerBrightness.factors.pathFactor)}`);
