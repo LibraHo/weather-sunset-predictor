@@ -554,7 +554,11 @@ Page({
 
   saveAppSettings(patch = {}) {
     const settings = persistAppSettings(patch, this.data);
-    this.setData(settings);
+    const update = { ...settings };
+    if (patch.interfaceLanguage && this.data.weatherPreview?.sourceWeather) {
+      update.weatherPreview = buildWeatherPreview(this.data.weatherPreview.sourceWeather, settings.interfaceLanguage);
+    }
+    this.setData(update);
   },
 
   onAppSettingsChange(event) {
@@ -671,7 +675,7 @@ Page({
       try {
         weather = await this.callWeatherForecast(query);
         this.setData({
-          weatherPreview: buildWeatherPreview({ ...weather, location: query.locationName }),
+          weatherPreview: buildWeatherPreview({ ...weather, location: query.locationName }, this.data.interfaceLanguage),
           predictionPreview: buildPredictionPreviewLoading(query.period, query.day, weather),
           predictionPreviewLoading: true,
           weatherView: 'overview',
@@ -704,7 +708,8 @@ Page({
         weather,
         prediction,
         predictionCards,
-        query
+        query,
+        locale: this.data.interfaceLanguage
       }), () => {
         this.paintPredictionRadarCloudField();
       });
@@ -954,7 +959,8 @@ Page({
       weather: unified.weather,
       prediction: unified.prediction,
       predictionCards: unified.predictionCards,
-      query
+      query,
+      locale: this.data.interfaceLanguage
     }), () => {
       this.paintPredictionRadarCloudField();
     });
@@ -1369,14 +1375,14 @@ export function buildHomePredictionSurface(prediction = {}, query = {}) {
   };
 }
 
-export function buildHomeWeatherPredictionPatch({ weather = {}, prediction = {}, predictionCards = {}, query = {} } = {}) {
+export function buildHomeWeatherPredictionPatch({ weather = {}, prediction = {}, predictionCards = {}, query = {}, locale = query.interfaceLanguage || 'zh-CN' } = {}) {
   return {
     ...buildHomePredictionSurface(prediction, query),
     weatherPreview: buildWeatherPreview({
       referenceTime: prediction.referenceTime || prediction.eventTime || prediction.date,
       ...weather,
       location: query.locationName
-    }),
+    }, locale),
     predictionPeriodCards: predictionCards,
     predictionPreviewLoading: false,
     weatherView: 'overview',
@@ -1634,7 +1640,156 @@ function buildScoreConclusion(score, periodLabel = '霞光') {
   return '火烧云条件偏弱，不建议只凭当前评分专程追霞。';
 }
 
-export function buildWeatherPreview(weather = {}) {
+var MINI_WEATHER_COPY = {
+  'zh-CN': {
+    title: '天气信息',
+    currentLocation: '当前位置',
+    descriptionTest: (provider) => `${provider} 天气测试数据，用于先验收天气卡片 UI。`,
+    descriptionProvider: (provider) => `${provider} 天气数据，用于评估当前火烧云条件。`,
+    overviewBadge: '7天概览',
+    weeklyTab: '7天概览',
+    hourlyTab: '24小时预报',
+    glowTab: '3天朝晚霞',
+    metrics: {
+      humidity: '湿度',
+      cloud: '云量',
+      pressure: '气压',
+      visibility: '能见度',
+      aerosol: '气溶胶',
+      precipitation: '降水'
+    },
+    cloudLayers: { high: '高', mid: '中', low: '低' },
+    conditions: { clear: '晴', cloudy: '多云', overcast: '阴' },
+    directions: { N: '北', NE: '东北', E: '东', SE: '东南', S: '南', SW: '西南', W: '西', NW: '西北' },
+    days: {
+      today: '今天',
+      tomorrow: '明天',
+      dayAfterTomorrow: '后天',
+      nextDay: '次日',
+      dayPrefix: '第',
+      daySuffix: '天',
+      week: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
+      fallbackWeek: ['今天', '明天', '周一', '周二', '周三', '周四', '周五'],
+      dateSuffix: '日'
+    },
+    hourlyParameters: {
+      temp: '温度',
+      precip: '降水',
+      humidity: '湿度',
+      wind: '风速',
+      pressure: '气压',
+      clouds: '云量'
+    },
+    glowInsights: {
+      goodClouds: '云层结构适合观察霞光',
+      watchWest: '留意西侧云带变化',
+      moderate: '中等把握，适合顺路观察'
+    },
+    fallbackWindDirection: '风向'
+  },
+  'en-US': {
+    title: 'Weather Information',
+    currentLocation: 'Current Location',
+    descriptionTest: (provider) => `${provider} weather test data for checking the weather card UI.`,
+    descriptionProvider: (provider) => `${provider} weather data for evaluating current fire-cloud conditions.`,
+    overviewBadge: '7-Day Overview',
+    weeklyTab: '7-Day Overview',
+    hourlyTab: '24-Hour Forecast',
+    glowTab: '3-Day Glow',
+    metrics: {
+      humidity: 'Humidity',
+      cloud: 'Cloud Cover',
+      pressure: 'Pressure',
+      visibility: 'Visibility',
+      aerosol: 'Aerosol',
+      precipitation: 'Precipitation'
+    },
+    cloudLayers: { high: 'High', mid: 'Mid', low: 'Low' },
+    conditions: { clear: 'Clear', cloudy: 'Cloudy', overcast: 'Overcast' },
+    directions: { N: 'North', NE: 'Northeast', E: 'East', SE: 'Southeast', S: 'South', SW: 'Southwest', W: 'West', NW: 'Northwest' },
+    days: {
+      today: 'Today',
+      tomorrow: 'Tomorrow',
+      dayAfterTomorrow: 'Day 3',
+      nextDay: 'Next day',
+      dayPrefix: 'Day ',
+      daySuffix: '',
+      week: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+      fallbackWeek: ['Today', 'Tomorrow', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+      dateSuffix: '',
+      date: (date) => `(${date.getMonth() + 1}/${date.getDate()})`
+    },
+    hourlyParameters: {
+      temp: 'Temperature',
+      precip: 'Precipitation',
+      humidity: 'Humidity',
+      wind: 'Wind Speed',
+      pressure: 'Pressure',
+      clouds: 'Cloud Cover'
+    },
+    glowInsights: {
+      goodClouds: 'Cloud structure is suitable for glow watching',
+      watchWest: 'Watch the western cloud band',
+      moderate: 'Moderate confidence; good for a nearby check'
+    },
+    fallbackWindDirection: 'Wind'
+  }
+};
+
+const MINI_WIND_DIRECTION_CODE_BY_ZH = {
+  北: 'N',
+  东北: 'NE',
+  東北: 'NE',
+  东: 'E',
+  東: 'E',
+  东南: 'SE',
+  東南: 'SE',
+  南: 'S',
+  西南: 'SW',
+  西: 'W',
+  西北: 'NW'
+};
+
+const MINI_CONDITION_KEY_BY_TEXT = {
+  晴: 'clear',
+  晴天: 'clear',
+  Clear: 'clear',
+  clear: 'clear',
+  多云: 'cloudy',
+  多雲: 'cloudy',
+  Cloudy: 'cloudy',
+  cloudy: 'cloudy',
+  阴: 'overcast',
+  陰: 'overcast',
+  阴天: 'overcast',
+  陰天: 'overcast',
+  Overcast: 'overcast',
+  overcast: 'overcast'
+};
+
+function getMiniWeatherCopy(locale = 'zh-CN') {
+  if (!MINI_WEATHER_COPY) {
+    return {
+      days: {
+        today: '今天',
+        tomorrow: '明天',
+        fallbackWeek: ['今天', '明天', '周一', '周二', '周三', '周四', '周五']
+      },
+      hourlyParameters: {
+        temp: '温度',
+        precip: '降水',
+        humidity: '湿度',
+        wind: '风速',
+        pressure: '气压',
+        clouds: '云量'
+      }
+    };
+  }
+  return MINI_WEATHER_COPY[locale] || MINI_WEATHER_COPY['zh-CN'];
+}
+
+export function buildWeatherPreview(weather = {}, locale = 'zh-CN') {
+  const copy = getMiniWeatherCopy(locale);
   const highCloud = weather.highClouds ?? weather.highCloud ?? weather.clouds?.high;
   const midCloud = weather.midClouds ?? weather.midCloud ?? weather.clouds?.mid;
   const lowCloud = weather.lowClouds ?? weather.lowCloud ?? weather.clouds?.low;
@@ -1642,41 +1797,42 @@ export function buildWeatherPreview(weather = {}) {
   const provider = weather.provider || weather.providerMeta?.name || 'test';
   const windSpeed = formatWindSpeedValue(weather.windSpeed);
   const hourly = buildWeatherHourlyPreview(weather);
-  const hourlyView = buildWeatherHourlyViewModel(hourly, 'temp');
-  const windDirection = formatWindDirectionLabel(weather.windDirection);
+  const hourlyView = buildWeatherHourlyViewModel(hourly, 'temp', locale);
+  const windDirection = formatWindDirectionLabel(weather.windDirection, locale);
   const aerosolMetric = formatAodMetric(weather);
   return {
     sourceWeather: weather,
+    locale,
     visible: true,
-    title: '天气信息',
-    description: provider === 'test' ? `${provider} 天气测试数据，用于先验收天气卡片 UI。` : `${provider} 天气数据，用于评估当前火烧云条件。`,
-    badge: provider === 'test' ? 'TEST' : '7天概览',
-    location: weather.location || weather.locationName || '当前位置',
+    title: copy.title,
+    description: provider === 'test' ? copy.descriptionTest(provider) : copy.descriptionProvider(provider),
+    badge: provider === 'test' ? 'TEST' : copy.overviewBadge,
+    location: weather.location || weather.locationName || copy.currentLocation,
     iconType: weather.iconType || getWeatherPreviewIconType(cloudAverage, weather.precipitation ?? weather.precipitationProbability),
     iconSrc: `/assets/icons/weather-${weather.iconType || getWeatherPreviewIconType(cloudAverage, weather.precipitation ?? weather.precipitationProbability)}.svg`,
-    condition: weather.condition || getWeatherPreviewCondition(cloudAverage),
+    condition: translateWeatherCondition(weather.condition, cloudAverage, locale),
     temperature: formatTemperatureValue(weather.temp ?? weather.temperature),
     temperatureUnit: '°C',
     windSpeed,
     windDirection,
     windDirectionArrow: formatWindDirectionArrow(weather.windDirection),
-    weekly: buildWeatherWeeklyPreview(weather),
+    weekly: buildWeatherWeeklyPreview(weather, locale),
     hourly,
     hourlyChart: hourlyView.chart,
     hourlyView,
-    glow: buildWeatherGlowPreview(weather),
-    weeklyTab: '7天概览',
-    hourlyTab: '24小时预报',
-    glowTab: '3天朝晚霞',
+    glow: buildWeatherGlowPreview(weather, locale),
+    weeklyTab: copy.weeklyTab,
+    hourlyTab: copy.hourlyTab,
+    glowTab: copy.glowTab,
     metrics: [
-      { key: 'humidity', label: '湿度', value: formatPercentValue(weather.humidity) },
-      { key: 'cloud', label: '云量', value: formatPercentValue(cloudAverage) },
-      { key: 'pressure', label: '气压', value: formatNumberValue(weather.pressure, 'hPa') },
-      { key: 'visibility', label: '能见度', value: formatDistanceValue(weather.visibility) },
-      { key: 'aerosol', label: '气溶胶', ...aerosolMetric },
-      { key: 'precipitation', label: '降水', value: formatNumberValue(weather.precipitation, 'mm') }
+      { key: 'humidity', label: copy.metrics.humidity, value: formatPercentValue(weather.humidity) },
+      { key: 'cloud', label: copy.metrics.cloud, value: formatPercentValue(cloudAverage) },
+      { key: 'pressure', label: copy.metrics.pressure, value: formatNumberValue(weather.pressure, 'hPa') },
+      { key: 'visibility', label: copy.metrics.visibility, value: formatDistanceValue(weather.visibility) },
+      { key: 'aerosol', label: copy.metrics.aerosol, ...aerosolMetric },
+      { key: 'precipitation', label: copy.metrics.precipitation, value: formatNumberValue(weather.precipitation, 'mm') }
     ],
-    note: `高 ${formatPercentValue(highCloud)} / 中 ${formatPercentValue(midCloud)} / 低 ${formatPercentValue(lowCloud)} · ${windDirection} ${windSpeed}`
+    note: `${copy.cloudLayers.high} ${formatPercentValue(highCloud)} / ${copy.cloudLayers.mid} ${formatPercentValue(midCloud)} / ${copy.cloudLayers.low} ${formatPercentValue(lowCloud)} · ${windDirection} ${windSpeed}`
   };
 }
 
@@ -1729,8 +1885,8 @@ export function buildWeatherHourlyChart(weather = {}) {
   return buildWeatherHourlyViewModel(buildWeatherHourlyPreview(weather), 'temp').chart;
 }
 
-export function buildWeatherHourlyViewModel(hourly = [], parameter = 'temp') {
-  const parameterConfig = getWeatherParameterConfig();
+export function buildWeatherHourlyViewModel(hourly = [], parameter = 'temp', locale = 'zh-CN') {
+  const parameterConfig = getWeatherParameterConfig(locale);
   const config = parameterConfig[parameter] || parameterConfig.temp;
   const values = hourly.map((item) => getHourlyParameterValue(item, parameter)).filter(Number.isFinite);
   const min = values.length ? Math.min(...values) : 0;
@@ -1768,8 +1924,8 @@ export function buildWeatherHourlyViewModel(hourly = [], parameter = 'temp') {
     unit: config.unit,
     parameters: Object.keys(parameterConfig).map((key) => ({ key, ...parameterConfig[key] })),
     dayOptions: [
-      { key: 'today', label: '今天' },
-      { key: 'tomorrow', label: '明天' }
+      { key: 'today', label: getMiniWeatherCopy(locale).days.today },
+      { key: 'tomorrow', label: getMiniWeatherCopy(locale).days.tomorrow }
     ],
     chart,
     xAxisLabels: chart.filter((_, index) => (
@@ -1840,21 +1996,22 @@ function paintHourlyChartCanvas(canvasId, chart = [], options = {}) {
   return true;
 }
 
-function getWeatherParameterConfig() {
+function getWeatherParameterConfig(locale = 'zh-CN') {
+  const labels = getMiniWeatherCopy(locale).hourlyParameters;
   return {
-    temp: { label: '温度', unit: '°C', iconSrc: '/assets/icons/weather-param-temperature.svg' },
-    precip: { label: '降水', unit: 'mm', iconSrc: '/assets/icons/weather-param-precipitation.svg' },
-    humidity: { label: '湿度', unit: '%', iconSrc: '/assets/icons/weather-param-humidity.svg' },
-    wind: { label: '风速', unit: 'km/h', iconSrc: '/assets/icons/weather-param-wind.svg' },
-    pressure: { label: '气压', unit: 'hPa', iconSrc: '/assets/icons/weather-param-pressure.svg' },
-    clouds: { label: '云量', unit: '%', iconSrc: '/assets/icons/weather-param-cloud.svg' }
+    temp: { label: labels.temp, unit: '°C', iconSrc: '/assets/icons/weather-param-temperature.svg' },
+    precip: { label: labels.precip, unit: 'mm', iconSrc: '/assets/icons/weather-param-precipitation.svg' },
+    humidity: { label: labels.humidity, unit: '%', iconSrc: '/assets/icons/weather-param-humidity.svg' },
+    wind: { label: labels.wind, unit: 'km/h', iconSrc: '/assets/icons/weather-param-wind.svg' },
+    pressure: { label: labels.pressure, unit: 'hPa', iconSrc: '/assets/icons/weather-param-pressure.svg' },
+    clouds: { label: labels.clouds, unit: '%', iconSrc: '/assets/icons/weather-param-cloud.svg' }
   };
 }
 
 function refreshWeatherHourlyView(preview = {}, day = 'today', parameter = 'temp') {
   const hourly = buildWeatherHourlyPreview(preview.sourceWeather || {}, day);
   const fallbackHourly = hourly.length ? hourly : (preview.hourly || []);
-  const hourlyView = buildWeatherHourlyViewModel(fallbackHourly, parameter);
+  const hourlyView = buildWeatherHourlyViewModel(fallbackHourly, parameter, preview.locale || 'zh-CN');
   return {
     ...preview,
     hourly: fallbackHourly,
@@ -2209,12 +2366,13 @@ function normalizeSunDirectionBearing(direction = '', period = 'sunset') {
   return period === 'sunrise' ? 67.5 : 292.5;
 }
 
-export function buildWeatherGlowPreview(weather = {}) {
+export function buildWeatherGlowPreview(weather = {}, locale = 'zh-CN') {
+  const copy = getMiniWeatherCopy(locale);
   if (Array.isArray(weather.glow) && weather.glow.length) {
     return weather.glow.map((item, index) => ({
       key: item.key || item.date || `glow-${index}`,
-      label: item.label || formatGlowDayLabel(item.date, index),
-      dayDate: item.dayDate || item.dateLabel || formatGlowDateLabel(item.date, index),
+      label: item.label || formatGlowDayLabel(item.date, index, locale),
+      dayDate: item.dayDate || item.dateLabel || formatGlowDateLabel(item.date, index, locale),
       sunrise: item.sunrise ?? item.sunriseScore ?? '--',
       sunset: item.sunset ?? item.sunsetScore ?? '--',
       insight: item.summary || item.condition || ''
@@ -2229,32 +2387,34 @@ export function buildWeatherGlowPreview(weather = {}) {
   ]);
   const base = Number.isFinite(Number(cloudAverage)) ? Math.round(cloudAverage) : 53;
   return [
-    { key: 'today', label: '今天', dayDate: '今日', sunrise: Math.max(0, base - 8), sunset: Math.min(100, base + 18), insight: '云层结构适合观察霞光' },
-    { key: 'tomorrow', label: '明天', dayDate: '次日', sunrise: Math.max(0, base - 3), sunset: Math.min(100, base + 12), insight: '留意西侧云带变化' },
-    { key: 'day-3', label: '后天', dayDate: '第3天', sunrise: Math.max(0, base - 12), sunset: Math.min(100, base + 6), insight: '中等把握，适合顺路观察' }
+    { key: 'today', label: copy.days.today, dayDate: copy.days.today, sunrise: Math.max(0, base - 8), sunset: Math.min(100, base + 18), insight: copy.glowInsights.goodClouds },
+    { key: 'tomorrow', label: copy.days.tomorrow, dayDate: copy.days.nextDay, sunrise: Math.max(0, base - 3), sunset: Math.min(100, base + 12), insight: copy.glowInsights.watchWest },
+    { key: 'day-3', label: copy.days.dayAfterTomorrow, dayDate: `${copy.days.dayPrefix}3${copy.days.daySuffix}`, sunrise: Math.max(0, base - 12), sunset: Math.min(100, base + 6), insight: copy.glowInsights.moderate }
   ];
 }
 
-function formatGlowDayLabel(dateValue, index) {
-  if (index === 0) return '今天';
-  if (index === 1) return '明天';
-  if (index === 2) return '后天';
+function formatGlowDayLabel(dateValue, index, locale = 'zh-CN') {
+  const copy = getMiniWeatherCopy(locale);
+  if (index === 0) return copy.days.today;
+  if (index === 1) return copy.days.tomorrow;
+  if (index === 2) return copy.days.dayAfterTomorrow;
   const date = parseWeeklyDate(dateValue);
-  if (!date) return `第${index + 1}天`;
-  return ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][date.getDay()];
+  if (!date) return `${copy.days.dayPrefix}${index + 1}${copy.days.daySuffix}`;
+  return copy.days.week[date.getDay()];
 }
 
-function formatGlowDateLabel(dateValue, index) {
+function formatGlowDateLabel(dateValue, index, locale = 'zh-CN') {
+  const copy = getMiniWeatherCopy(locale);
   const date = parseWeeklyDate(dateValue);
   if (date) return `${date.getMonth() + 1}/${date.getDate()}`;
-  return index === 0 ? '今日' : index === 1 ? '次日' : `第${index + 1}天`;
+  return index === 0 ? copy.days.today : index === 1 ? copy.days.nextDay : `${copy.days.dayPrefix}${index + 1}${copy.days.daySuffix}`;
 }
 
 export function isWeatherTestLocation(value = '') {
   return String(value).trim().toLowerCase() === 'test';
 }
 
-function buildWeatherWeeklyPreview(weather = {}) {
+function buildWeatherWeeklyPreview(weather = {}, locale = 'zh-CN') {
   if (Array.isArray(weather.weekly) && weather.weekly.length) {
     return weather.weekly.map((item, index) => {
       const temps = splitWeeklyTemperatures(item);
@@ -2262,9 +2422,9 @@ function buildWeatherWeeklyPreview(weather = {}) {
       const cloudCover = item.cloudCover ?? item.cloud ?? weather.cloudCover;
       return {
         key: item.key || item.date || `day-${index}`,
-        label: item.label || item.day || formatWeeklyDayLabel(item.date, index),
-        dayDate: item.dayDate || item.dateLabel || formatWeeklyDateLabel(item.date, index),
-        condition: item.condition || item.summary || weather.condition || '--',
+        label: item.label || item.day || formatWeeklyDayLabel(item.date, index, locale),
+        dayDate: item.dayDate || item.dateLabel || formatWeeklyDateLabel(item.date, index, locale),
+        condition: translateWeatherCondition(item.condition || item.summary || weather.condition, cloudCover, locale),
         iconSrc: `/assets/icons/weather-${item.iconType || getWeatherPreviewIconType(cloudCover, precip)}.svg`,
         minTemp: formatWeeklyTemperature(temps.min),
         maxTemp: formatWeeklyTemperature(temps.max),
@@ -2277,13 +2437,13 @@ function buildWeatherWeeklyPreview(weather = {}) {
   }
 
   return [
-    buildWeeklyRow('today', '今天', '(16日)', 'partly-cloudy', 15, 31, 8, 21, 180),
-    buildWeeklyRow('tomorrow', '明天', '(17日)', 'partly-cloudy', 15, 32, 6, 19, 180),
-    buildWeeklyRow('sat', '周六', '(18日)', 'partly-cloudy', 15, 28, 14, 24, 180),
-    buildWeeklyRow('sun', '周日', '(19日)', 'partly-cloudy', 17, 27, 10, 18, 180),
-    buildWeeklyRow('mon', '周一', '(20日)', 'partly-cloudy', 16, 31, 5, 16, 180),
-    buildWeeklyRow('tue', '周二', '(21日)', 'partly-cloudy', 16, 32, 7, 20, 180),
-    buildWeeklyRow('wed', '周三', '(22日)', 'sunny', 16, 29, 4, 17, 180)
+    buildWeeklyRow('today', formatWeeklyDayLabel(null, 0, locale), formatWeeklyDateLabel(null, 0, locale), 'partly-cloudy', 15, 31, 8, 21, 180),
+    buildWeeklyRow('tomorrow', formatWeeklyDayLabel(null, 1, locale), formatWeeklyDateLabel(null, 1, locale), 'partly-cloudy', 15, 32, 6, 19, 180),
+    buildWeeklyRow('sat', formatWeeklyDayLabel(null, 2, locale), formatWeeklyDateLabel(null, 2, locale), 'partly-cloudy', 15, 28, 14, 24, 180),
+    buildWeeklyRow('sun', formatWeeklyDayLabel(null, 3, locale), formatWeeklyDateLabel(null, 3, locale), 'partly-cloudy', 17, 27, 10, 18, 180),
+    buildWeeklyRow('mon', formatWeeklyDayLabel(null, 4, locale), formatWeeklyDateLabel(null, 4, locale), 'partly-cloudy', 16, 31, 5, 16, 180),
+    buildWeeklyRow('tue', formatWeeklyDayLabel(null, 5, locale), formatWeeklyDateLabel(null, 5, locale), 'partly-cloudy', 16, 32, 7, 20, 180),
+    buildWeeklyRow('wed', formatWeeklyDayLabel(null, 6, locale), formatWeeklyDateLabel(null, 6, locale), 'sunny', 16, 29, 4, 17, 180)
   ];
 }
 
@@ -2330,18 +2490,22 @@ function formatWeeklyTemperature(value) {
   return Number.isFinite(num) ? `${Math.round(num)}°` : '--';
 }
 
-function formatWeeklyDayLabel(dateValue, index) {
-  const labels = ['今天', '明天', '周一', '周二', '周三', '周四', '周五'];
+function formatWeeklyDayLabel(dateValue, index, locale = 'zh-CN') {
+  const copy = getMiniWeatherCopy(locale);
+  const labels = copy.days.fallbackWeek;
   if (index < 2) return labels[index];
   const date = parseWeeklyDate(dateValue);
   if (!date) return labels[index] || `D${index + 1}`;
-  return ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][date.getDay()];
+  return copy.days.week[date.getDay()];
 }
 
-function formatWeeklyDateLabel(dateValue, index) {
+function formatWeeklyDateLabel(dateValue, index, locale = 'zh-CN') {
+  const copy = getMiniWeatherCopy(locale);
   const date = parseWeeklyDate(dateValue);
-  if (date) return `(${date.getDate()}日)`;
-  return `(${16 + index}日)`;
+  if (date) {
+    return copy.days.date ? copy.days.date(date) : `(${date.getDate()}${copy.days.dateSuffix})`;
+  }
+  return `(${16 + index}${copy.days.dateSuffix})`;
 }
 
 function parseWeeklyDate(dateValue) {
@@ -2364,14 +2528,21 @@ function formatWindDirectionArrow(direction) {
   return '↖';
 }
 
-function formatWindDirectionLabel(direction) {
-  if (direction === null || direction === undefined || direction === '') return '风向';
+function formatWindDirectionLabel(direction, locale = 'zh-CN') {
+  const copy = getMiniWeatherCopy(locale);
+  if (direction === null || direction === undefined || direction === '') return copy.fallbackWindDirection;
   const deg = Number(direction);
-  if (!Number.isFinite(deg)) return String(direction);
-  const normalizedDirection = ((deg % 360) + 360) % 360;
-  const directions = ['北', '东北', '东', '东南', '南', '西南', '西', '西北'];
-  const index = Math.round(normalizedDirection / 45) % directions.length;
-  return directions[index];
+  const code = Number.isFinite(deg)
+    ? windDirectionCodeFromDegrees(deg)
+    : MINI_WIND_DIRECTION_CODE_BY_ZH[String(direction)] || String(direction).toUpperCase();
+  return copy.directions[code] || String(direction);
+}
+
+function windDirectionCodeFromDegrees(direction) {
+  const normalizedDirection = ((direction % 360) + 360) % 360;
+  const codes = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  const index = Math.round(normalizedDirection / 45) % codes.length;
+  return codes[index];
 }
 
 function decorateRecentQueries(recent = []) {
@@ -2444,12 +2615,18 @@ function getWeatherPreviewIconType(cloudCover, precipitation = 0) {
   return 'cloud';
 }
 
-function getWeatherPreviewCondition(cloudCover) {
+function translateWeatherCondition(condition, cloudCover, locale = 'zh-CN') {
+  const copy = getMiniWeatherCopy(locale);
+  const key = condition ? MINI_CONDITION_KEY_BY_TEXT[String(condition)] : getWeatherPreviewConditionKey(cloudCover);
+  return key ? copy.conditions[key] : '--';
+}
+
+function getWeatherPreviewConditionKey(cloudCover) {
   const value = Number(cloudCover);
-  if (!Number.isFinite(value)) return '--';
-  if (value < 25) return '晴';
-  if (value < 65) return '多云';
-  return '阴';
+  if (!Number.isFinite(value)) return null;
+  if (value < 25) return 'clear';
+  if (value < 65) return 'cloudy';
+  return 'overcast';
 }
 
 function buildWeatherFromPrediction(prediction = {}, query = {}) {

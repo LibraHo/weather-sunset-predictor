@@ -476,6 +476,43 @@ describe('miniprogram page user/share helpers', () => {
     expect(state.weatherPreview.windDirectionArrow).toBe('↑');
   });
 
+  test('home weather card localizes condition and wind direction in English', () => {
+    const state = homeHelpers.buildHomeWeatherPredictionPatch({
+      weather: {
+        provider: 'open-meteo',
+        temp: 29.7,
+        cloudCover: 82,
+        windSpeed: 1.7,
+        windDirection: 135,
+        humidity: 58,
+        pressure: 1002,
+        visibility: 12,
+        precipitation: 0
+      },
+      prediction: { score: 42, cloudLayers: { high: 30, mid: 40, low: 50 } },
+      query: { locationName: 'Current Location', period: 'sunset' },
+      locale: 'en-US'
+    });
+
+    expect(state.weatherPreview).toMatchObject({
+      title: 'Weather Information',
+      badge: '7-Day Overview',
+      condition: 'Overcast',
+      windDirection: 'Southeast',
+      weeklyTab: '7-Day Overview',
+      hourlyTab: '24-Hour Forecast',
+      glowTab: '3-Day Glow'
+    });
+    expect(state.weatherPreview.metrics).toEqual(expect.arrayContaining([
+      expect.objectContaining({ key: 'humidity', label: 'Humidity' }),
+      expect.objectContaining({ key: 'cloud', label: 'Cloud Cover' }),
+      expect.objectContaining({ key: 'aerosol', label: 'Aerosol' })
+    ]));
+    expect(state.weatherPreview.note).toContain('High');
+    expect(state.weatherPreview.note).toContain('Southeast 2 km/h');
+    expect(JSON.stringify(state.weatherPreview)).not.toMatch(/阴|东南|天气信息|云量|气溶胶/);
+  });
+
   test('home formation analysis uses web-style semantic status tones', () => {
     const analysis = homeHelpers.buildPredictionAnalysisGroups({
       high: 32,
@@ -583,7 +620,7 @@ describe('miniprogram page user/share helpers', () => {
     const homeWxml = fs.readFileSync(path.resolve(process.cwd(), 'miniprogram/pages/home/index.wxml'), 'utf8');
 
     expect(homeSource.indexOf('weather = await this.callWeatherForecast(query);')).toBeLessThan(homeSource.indexOf('const raw = await this.callPredictionService(query);'));
-    expect(homeSource).toContain('weatherPreview: buildWeatherPreview({ ...weather, location: query.locationName })');
+    expect(homeSource).toContain('weatherPreview: buildWeatherPreview({ ...weather, location: query.locationName }, this.data.interfaceLanguage)');
     expect(homeSource).toContain("this.setSearchLoadingStep('正在计算霞光评分', 72, '基础天气暂未返回，继续读取综合预测');");
     expect(homeSource).toContain('predictionPreviewLoading: true');
     expect(homeSource).toContain('predictionPreviewLoading: false');
