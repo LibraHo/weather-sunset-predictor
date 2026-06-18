@@ -587,6 +587,8 @@ const translations = {
           "displayCalibration": "Display calibration",
           "aerosolCarrier": "Aerosol carrier",
           "directionalCarrier": "Sunset-direction carrier",
+          "remoteHighLayer": "Sunset-direction high cloud",
+          "remoteMidLayer": "Sunset-direction mid cloud",
           "scoringV2": "Open-path warm scattering",
           "grayVeilAirRendering": "Gray-veil rendering",
           "evidence": "Calculation evidence"

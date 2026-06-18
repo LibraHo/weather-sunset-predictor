@@ -589,6 +589,8 @@ const translations = {
           "displayCalibration": "展示分校準",
           "aerosolCarrier": "氣溶膠載體",
           "directionalCarrier": "Sunset-direction carrier",
+          "remoteHighLayer": "日落方向高雲",
+          "remoteMidLayer": "日落方向中雲",
           "scoringV2": "開口暖色散射",
           "grayVeilAirRendering": "灰幕顯色抑制",
           "evidence": "計算依據"

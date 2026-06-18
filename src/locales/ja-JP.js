@@ -587,6 +587,8 @@ apiAccess: 'API接続',
           "displayCalibration": "表示スコア調整",
           "aerosolCarrier": "エアロゾル載体",
           "directionalCarrier": "Sunset-direction carrier",
+          "remoteHighLayer": "日没方向の高層雲",
+          "remoteMidLayer": "日没方向の中層雲",
           "scoringV2": "開いた光路の暖色散乱",
           "grayVeilAirRendering": "Gray-veil rendering",
           "evidence": "計算根拠"

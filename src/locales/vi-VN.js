@@ -589,6 +589,8 @@
           "displayCalibration": "Display calibration",
           "aerosolCarrier": "Aerosol carrier",
           "directionalCarrier": "Sunset-direction carrier",
+          "remoteHighLayer": "Mây cao hướng hoàng hôn",
+          "remoteMidLayer": "Mây trung hướng hoàng hôn",
           "scoringV2": "Open-path warm scattering",
           "grayVeilAirRendering": "Gray-veil rendering",
           "evidence": "Calculation evidence"

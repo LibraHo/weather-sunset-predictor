@@ -3,6 +3,17 @@ import path from 'path';
 
 const ROOT = path.resolve('.');
 const CASE_DIR = path.join(ROOT, 'tests/fixtures/real-sunset-cases');
+const EXPECTED_REAL_CASE_IDS = [
+  '2026-05-10-summer-palace-sunset-open-path-golden-cloud-band',
+  '2026-05-18-beijing-yuyuantan-sunset-rain-season-high-cloud-path',
+  '2026-06-02-beijing-sunset-gray-mid-cloud-curtain',
+  '2026-06-03-beijing-sunset-warm-scattering-path-open',
+  '2026-06-04-beijing-sunset-solar-direction-mid-cloud-glow',
+  '2026-06-05-beijing-sunset-gray-veil-full-upper-cloud',
+  '2026-06-12-beijing-sunrise-success',
+  '2026-06-13-beijing-sunset-rain-wet-veil-low-score',
+  '2026-06-17-beijing-sunset-window-remote-high-carrier'
+];
 
 function readCases() {
   return fs.readdirSync(CASE_DIR)
@@ -83,6 +94,10 @@ describe('real sunset feedback case library', () => {
       expect(realCase.expectations.score.min).toEqual(expect.any(Number));
       expect(realCase.expectations.score.max).toEqual(expect.any(Number));
     }
+  });
+
+  test('replays the full historical calibration set', () => {
+    expect(realCases.map((realCase) => realCase.id)).toEqual(EXPECTED_REAL_CASE_IDS);
   });
 
   test('Beijing rainy wet-veil sunset stays low under the base formula', () => {

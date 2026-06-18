@@ -1,0 +1,209 @@
+{
+  "id": "2026-06-17-beijing-sunset-window-remote-high-carrier",
+  "title": "2026-06-17 Beijing sunset: two-hour-window local and remote high cloud carrier",
+  "location": {
+    "name": "Beijing",
+    "nameZh": "北京",
+    "lat": 39.9042,
+    "lon": 116.4074,
+    "timezone": "Asia/Shanghai"
+  },
+  "event": {
+    "period": "sunset",
+    "localDate": "2026-06-17",
+    "calculationTimeUtc": "2026-06-17T11:45:00.000Z",
+    "sunAzimuth": 304
+  },
+  "feedback": {
+    "source": "Alex现场校准反馈 + 19:00/20:00 小时级窗口讨论",
+    "reportedAt": "2026-06-17T23:17:46+08:00",
+    "summary": "北京当天本地高云不低，太阳方向远端高云也不低；低云/中云基本不堵光路。评分应按 19:00 和 20:00 两点窗口评价，并把远端高云作为独立载体，整体落在 50-60 分，而不是 20 多分或 70+。",
+    "subjectiveScore": {
+      "min": 50,
+      "max": 60,
+      "label": "主观 50-60"
+    },
+    "calibrationTarget": {
+      "score": 54,
+      "status": "remote_high_carrier_calibrated",
+      "reason": "19:00/20:00 两点窗口下，本地高云约 33.5%，太阳方向远端高云约 40-50%；空气污染压色后应为中等偏好的晚霞机会。"
+    },
+    "actualOutcome": {
+      "fireCloud": "good_glow",
+      "rainDuringWindow": false,
+      "orangeLightOrOpening": true,
+      "worthWaiting": true,
+      "notes": "用于防止远端高云被揉进 directional 后贡献过低，也防止只看本地点高云给到过高分。"
+    },
+    "previousModelScores": [
+      {
+        "score": 25.2,
+        "source": "早先线上/缓存口径异常低分，后续确认本地高云 11.x 说法不可复现。"
+      },
+      {
+        "score": 49.9,
+        "source": "单点 19:45 插值复算，未按 19:00/20:00 窗口且远端高云未作为独立载体。"
+      }
+    ]
+  },
+  "capture": {
+    "dataCompleteness": "manual_two_hour_window_from_openmeteo_discussion",
+    "predictionReplay": "enhanced_detail_calculateEnhancedPrediction",
+    "sourceFiles": [
+      "telegram:-5258255173 messages 39129-39139"
+    ],
+    "knownLimitations": [
+      "该样本固定的是 19:00/20:00 小时级窗口平均后的天气和太阳方向采样，不是单一 19:45 插值点。",
+      "远端 10/25km 在讨论中主要来自 20:00 数据；50/75/100km 使用讨论中的 19:00/20:00 已知值折中成窗口平均。",
+      "该样本用于详细预测校准，不替代地图格点/GFS-CAMS 校准。"
+    ]
+  },
+  "input": {
+    "weatherData": {
+      "cloudCover": 34,
+      "humidity": 70,
+      "visibility": 18,
+      "lowCloudCover": 0,
+      "temp": 28,
+      "windSpeed": 2,
+      "windDirection": 50,
+      "pressure": 1002,
+      "precipitation": 0,
+      "recentPrecipitation6h": 0,
+      "recentRainHours": 0,
+      "recentRainSignal": 0,
+      "recentRainMaxHourly": 0,
+      "recentRainWetHourEquivalent": 0,
+      "lowClouds": 0,
+      "midClouds": 0,
+      "highClouds": 33.5,
+      "cloudBaseHeight": null,
+      "cloudBaseHeightSource": "unavailable",
+      "cape": null,
+      "weatherCode": null,
+      "shortwaveRadiation": 35,
+      "directRadiation": 10,
+      "diffuseRadiation": 18,
+      "waterVapourColumn": 30,
+      "aerosolOpticalDepth": 0.4,
+      "dust": 8,
+      "pm2_5": 90,
+      "pm10": 108,
+      "aqi": 148
+    },
+    "options": {
+      "remoteCloudData": {
+        "source": "solar_direction_openmeteo_two_point_window",
+        "azimuth": 304,
+        "samples": [
+          {
+            "distanceKm": 10,
+            "bearing": 304,
+            "cloudBaseHeight": null,
+            "cloudBaseHeightSource": "unavailable",
+            "lowCloud": 0,
+            "midCloud": 0,
+            "highCloud": 49,
+            "totalCloud": 49,
+            "humidity": 65,
+            "precipitation": 0,
+            "weatherCode": null,
+            "provider": "openmeteo",
+            "error": null
+          },
+          {
+            "distanceKm": 25,
+            "bearing": 304,
+            "cloudBaseHeight": null,
+            "cloudBaseHeightSource": "unavailable",
+            "lowCloud": 0,
+            "midCloud": 0,
+            "highCloud": 49,
+            "totalCloud": 49,
+            "humidity": 65,
+            "precipitation": 0,
+            "weatherCode": null,
+            "provider": "openmeteo",
+            "error": null
+          },
+          {
+            "distanceKm": 50,
+            "bearing": 304,
+            "cloudBaseHeight": null,
+            "cloudBaseHeightSource": "unavailable",
+            "lowCloud": 0,
+            "midCloud": 0,
+            "highCloud": 41.5,
+            "totalCloud": 41.5,
+            "humidity": 70,
+            "precipitation": 0,
+            "weatherCode": null,
+            "provider": "openmeteo",
+            "error": null
+          },
+          {
+            "distanceKm": 75,
+            "bearing": 304,
+            "cloudBaseHeight": null,
+            "cloudBaseHeightSource": "unavailable",
+            "lowCloud": 0,
+            "midCloud": 0,
+            "highCloud": 47,
+            "totalCloud": 47,
+            "humidity": 70,
+            "precipitation": 0,
+            "weatherCode": null,
+            "provider": "openmeteo",
+            "error": null
+          },
+          {
+            "distanceKm": 100,
+            "bearing": 304,
+            "cloudBaseHeight": null,
+            "cloudBaseHeightSource": "unavailable",
+            "lowCloud": 0,
+            "midCloud": 0,
+            "highCloud": 39,
+            "totalCloud": 65,
+            "humidity": 72,
+            "precipitation": 0,
+            "weatherCode": null,
+            "provider": "openmeteo",
+            "error": null
+          }
+        ],
+        "errors": []
+      }
+    }
+  },
+  "expectations": {
+    "score": {
+      "min": 50,
+      "max": 60
+    },
+    "statusAnyOf": [
+      "good_glow"
+    ],
+    "equals": [
+      {
+        "path": "carrierAnalysis.remoteLayerCarriers.reason",
+        "value": "remote_layer_carriers"
+      },
+      {
+        "path": "carrierAnalysis.remoteLayerCarriers.metrics.high",
+        "value": 46.2
+      },
+      {
+        "path": "layerBrightness.layers.remoteHigh",
+        "value": 46.2
+      }
+    ],
+    "notAbove": [
+      {
+        "path": "score",
+        "value": 60,
+        "reason": "Air rendering and only moderate local high-cloud canvas should keep this in the 50-60 calibration band, not 70+."
+      }
+    ]
+  }
+}

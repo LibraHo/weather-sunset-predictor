@@ -1132,14 +1132,87 @@ function scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore = {}, we
   };
 }
 
-function buildCarrierScore(canvasScore, aerosolCarrierScore, directionalCurtainCarrier = null) {
+function scoreRemoteLayerCarriers(remoteCloudData, lightPathScore = {}, weatherData = {}) {
+  const remoteSamples = Array.isArray(remoteCloudData?.samples)
+    ? remoteCloudData.samples.filter(sample => sample && !sample.error)
+    : [];
+  if (remoteSamples.length < 4) {
+    return { applied: false, reason: 'no_directional_samples', metrics: null };
+  }
+
+  const directionalReason = lightPathScore?.directionalAnalysis?.reason || '';
+  if (isDirectionalCorridorBlocked(directionalReason)) {
+    return { applied: false, reason: 'directional_blocked_corridor', metrics: null };
+  }
+
+  const precipitation = Number(weatherData.precipitation ?? weatherData.rain ?? weatherData.showers ?? 0);
+  const recentPrecipitation6h = Number(weatherData.recentPrecipitation6h ?? 0);
+  const recentRainHours = Number(weatherData.recentRainHours ?? 0);
+  const humidity = Number(weatherData.humidity ?? 0);
+  const waterVapour = Number(weatherData.waterVapourColumn);
+  const wetVeil = precipitation > 0.2
+    || recentPrecipitation6h >= 0.5
+    || recentRainHours >= 2
+    || (precipitation > 0 && humidity >= 86)
+    || (precipitation > 0 && Number.isFinite(waterVapour) && waterVapour >= 34);
+  if (wetVeil) {
+    return { applied: false, reason: 'wet_veil_blocks_remote_carrier', metrics: null };
+  }
+
+  const totalWeight = remoteSamples.reduce((sum, sample, index) => sum + getSolarDirectionSampleWeight(sample, index), 0);
+  const avg = (key) => remoteSamples.reduce((sum, sample, index) => (
+    sum + Number(sample[key] || 0) * getSolarDirectionSampleWeight(sample, index)
+  ), 0) / totalWeight;
+
+  const low = avg('lowCloud');
+  const mid = avg('midCloud');
+  const high = avg('highCloud');
+  const total = avg('totalCloud');
+  const midSignal = upperCloudSignal(mid);
+  const highSignal = upperCloudSignal(high);
+  const lowMidBlock = low * 0.75 + mid * 0.25;
+  const lightPath = Number(lightPathScore?.score ?? 0);
+  const pathOpen = directionalReason.includes('opening') || lightPath >= 55;
+  const upperSignal = clamp(highSignal * 0.9 + midSignal * 0.75, 0, 100);
+
+  return {
+    applied: pathOpen && upperSignal >= 18,
+    reason: pathOpen ? 'remote_layer_carriers' : 'light_path_not_open',
+    remoteHighCarrier: clamp(highSignal * 0.42, 0, 32),
+    remoteMidCarrier: clamp(midSignal * 0.30, 0, 24),
+    remoteLowBlock: clamp(lowMidBlock, 0, 100),
+    metrics: {
+      low: parseFloat(low.toFixed(1)),
+      mid: parseFloat(mid.toFixed(1)),
+      high: parseFloat(high.toFixed(1)),
+      total: Number.isFinite(total) ? parseFloat(total.toFixed(1)) : null,
+      midSignal: parseFloat(midSignal.toFixed(1)),
+      highSignal: parseFloat(highSignal.toFixed(1)),
+      upperSignal: parseFloat(upperSignal.toFixed(1)),
+      lowMidBlock: parseFloat(lowMidBlock.toFixed(1)),
+      lightPath: Number.isFinite(lightPath) ? parseFloat(lightPath.toFixed(1)) : null
+    },
+    sampleWeights: remoteSamples.map((sample, index) => ({
+      distanceKm: sample.distanceKm,
+      weight: parseFloat(getSolarDirectionSampleWeight(sample, index).toFixed(2))
+    }))
+  };
+}
+
+function buildCarrierScore(canvasScore, aerosolCarrierScore, directionalCurtainCarrier = null, remoteLayerCarriers = null) {
   const cloudScore = Number(canvasScore?.score ?? 0);
   const aerosolScore = Number(aerosolCarrierScore?.activatedScore ?? 0);
   const directionalScore = directionalCurtainCarrier?.applied ? Number(directionalCurtainCarrier.score || 0) : 0;
-  const maxScore = Math.max(cloudScore, aerosolScore, directionalScore);
+  const remoteScore = remoteLayerCarriers?.applied
+    ? Math.max(
+      Number(remoteLayerCarriers.remoteHighCarrier || 0),
+      Number(remoteLayerCarriers.remoteMidCarrier || 0)
+    )
+    : 0;
+  const maxScore = Math.max(cloudScore, aerosolScore, directionalScore, remoteScore);
   const activeCarrier = maxScore === directionalScore && directionalScore > cloudScore && directionalScore >= aerosolScore
     ? 'directional_curtain'
-    : (aerosolScore > cloudScore ? 'aerosol' : 'cloud');
+    : (maxScore === remoteScore && remoteScore > cloudScore && remoteScore >= aerosolScore ? 'remote_layer' : (aerosolScore > cloudScore ? 'aerosol' : 'cloud'));
 
   return {
     ...canvasScore,
@@ -1147,6 +1220,7 @@ function buildCarrierScore(canvasScore, aerosolCarrierScore, directionalCurtainC
     cloudCanvasScore: parseFloat(cloudScore.toFixed(1)),
     aerosolCarrierScore,
     directionalCurtainCarrier,
+    remoteLayerCarriers,
     activeCarrier
   };
 }
@@ -2173,6 +2247,7 @@ function calculateGatedFinalScore(canvasScore, lightPathScore, renderingFactor, 
     originalScore: parseFloat(carrierScore.toFixed(1))
   };
   const directionalCurtainCarrier = context.directionalCurtainCarrier || canvasScore.directionalCurtainCarrier || null;
+  const remoteLayerCarriers = context.remoteLayerCarriers || canvasScore.remoteLayerCarriers || null;
   const directionalFloor = canvasScore.activeCarrier === 'directional_curtain' && directionalCurtainCarrier?.applied && lightPathGate.cap == null && lightPathGate.gate >= 0.75
     ? directionalCurtainCarrier.floor
     : null;
@@ -2238,6 +2313,7 @@ function calculateGatedFinalScore(canvasScore, lightPathScore, renderingFactor, 
       activeCarrier: canvasScore.activeCarrier || 'cloud',
       aerosolCarrierScore: canvasScore.aerosolCarrierScore || null,
       directionalCurtainCarrier,
+      remoteLayerCarriers,
       lightPathScore: parseFloat(lightPathScore.score.toFixed(1)),
       lightPathGate: lightPathGate.gate,
       brightnessMultiplier: layerBrightnessAdjustment.multiplier,
@@ -2257,6 +2333,7 @@ function calculateGatedFinalScore(canvasScore, lightPathScore, renderingFactor, 
     carrierAnalysis: canvasScore,
     aerosolCarrierScore: canvasScore.aerosolCarrierScore || null,
     directionalCurtainCarrier,
+    remoteLayerCarriers,
     lightPathAnalysis: lightPathScore,
     lightPathGate,
     layerBrightnessAdjustment,
@@ -2501,7 +2578,8 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   // 6. 综合输出：云画布 + 气溶胶弱载体统一进入“载体分”
   const aerosolCarrierScore = scoreAerosolCarrier(weatherData, lightPathScore);
   const directionalCurtainCarrier = scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore, weatherData);
-  const carrierScore = buildCarrierScore(canvasScore, aerosolCarrierScore, directionalCurtainCarrier);
+  const remoteLayerCarriers = scoreRemoteLayerCarriers(remoteCloudData, lightPathScore, weatherData);
+  const carrierScore = buildCarrierScore(canvasScore, aerosolCarrierScore, directionalCurtainCarrier, remoteLayerCarriers);
   const lightPathGate = buildLightPathGate(lightPathScore, cloudTypeAdjustment);
   const layerBrightness = LayerBrightnessService.scoreLayerBrightness({
     weatherData,
@@ -2512,6 +2590,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     cloudThickness,
     type,
     directionalCurtainCarrier,
+    remoteLayerCarriers,
     carrierScore
   });
   logger.debug('[EnhancedPredictionService]', '载体评分:', carrierScore.score, 'active:', carrierScore.activeCarrier, 'aerosol:', aerosolCarrierScore);
@@ -2519,7 +2598,8 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   const finalResult = calculateGatedFinalScore(carrierScore, lightPathScore, renderingFactor, type, {
     lightPathGate,
     layerBrightness,
-    directionalCurtainCarrier
+    directionalCurtainCarrier,
+    remoteLayerCarriers
   });
 
   // 6. 太阳遮挡判定（试验版，温和惩罚）
@@ -2886,6 +2966,7 @@ module.exports = {
   scoreCloudCanvas,
   scoreAerosolCarrier,
   scoreDirectionalCurtainCarrier,
+  scoreRemoteLayerCarriers,
   buildCarrierScore,
   scoreLightPath,
   scoreRendering,
