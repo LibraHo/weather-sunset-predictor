@@ -194,6 +194,23 @@ class ProviderOrchestrator {
       primaryError = err;
       const isQuality = err.isQualityError;
 
+      if (this._shouldRetryOpenMeteoBestMatch(primaryKey, weatherModel, err)) {
+        console.warn(`[ProviderOrchestrator] Open-Meteo ${weatherModel} 对当前坐标不可用，尝试 best_match:`, err.message);
+        try {
+          const bestMatchData = await this._fetchWithQualityGate(primaryKey, lat, lon, hours, 'best_match', fetchOptions);
+          bestMatchData.providerMeta = bestMatchData.providerMeta || {};
+          bestMatchData.providerMeta.degradedReason = bestMatchData.providerMeta.degradedReason || [];
+          bestMatchData.providerMeta.degradedReason.push(
+            `Primary weather model (${weatherModel}) failed: ${primaryError.message}`
+          );
+          bestMatchData.providerMeta.usedModelFallback = true;
+          bestMatchData.providerMeta.modelFallbackReason = 'primary_model_unavailable_for_coordinate';
+          return bestMatchData;
+        } catch (bestMatchError) {
+          console.error('[ProviderOrchestrator] Open-Meteo best_match 重试失败:', bestMatchError.message);
+        }
+      }
+
       if (isQuality) {
         console.warn(`[ProviderOrchestrator] Primary (${primaryKey}) 数据质量门禁失败:`, err.message);
       } else {
@@ -235,6 +252,20 @@ class ProviderOrchestrator {
         );
       }
     }
+  }
+
+  _shouldRetryOpenMeteoBestMatch(providerKey, weatherModel, error) {
+    if (providerKey !== 'openmeteo') return false;
+    if (weatherModel === 'best_match') return false;
+
+    const message = String(error?.message || error?.response?.data?.reason || '').toLowerCase();
+    return message.includes('open-meteo api 错误: 400') ||
+      message.includes('no data') ||
+      message.includes('no weather data') ||
+      message.includes('not available') ||
+      message.includes('is invalid') ||
+      message.includes('out of allowed range') ||
+      message.includes('domain');
   }
 
   async fetchWeatherDataBatch(points, hours = 168, weatherModel = 'ecmwf_ifs025', fetchOptions = {}) {
