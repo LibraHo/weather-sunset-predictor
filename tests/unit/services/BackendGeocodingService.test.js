@@ -195,6 +195,17 @@ describe('BackendGeocodingService', () => {
       expect(name).toBeNull();
     });
 
+    test('provider 返回非字符串 name 时应返回 null', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ name: [] })
+      });
+
+      const name = await service.reverseGeocode(-8.4095, 115.1889);
+      expect(name).toBeNull();
+    });
+
     test('非 ok 状态时应抛出错误', async () => {
       fetch.mockResolvedValueOnce({
         ok: false,
@@ -253,6 +264,29 @@ describe('BackendGeocodingService', () => {
       expect(location).toBeInstanceOf(Location);
       expect(location.lat).toBeCloseTo(39.9);
       expect(location.lon).toBeCloseTo(116.4);
+    });
+
+    test('反查返回非字符串 name 时应使用坐标作为当前位置名称', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ name: [] })
+      });
+
+      const mockGeolocation = {
+        getCurrentPosition: jest.fn((success) =>
+          success({ coords: { latitude: -8.4095, longitude: 115.1889 } })
+        )
+      };
+
+      Object.defineProperty(global, 'navigator', {
+        value: { geolocation: mockGeolocation },
+        configurable: true
+      });
+
+      const location = await service.getCurrentLocation();
+      expect(location).toBeInstanceOf(Location);
+      expect(location.name).toBe('-8.4095, 115.1889');
     });
 
     test('GPS 权限拒绝时应抛出错误', async () => {
