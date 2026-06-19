@@ -598,10 +598,15 @@ Page({
 
     try {
       const res = await wxPromise(wx.getLocation, { type: 'wgs84' });
-      const reverseName = await reverseGeocode(res.latitude, res.longitude).catch(() => '');
+      const coordinate = normalizeCurrentLocationCoordinate(res);
+      if (!coordinate) {
+        this.setData({ errorMessage: '当前位置坐标不可用，请手动输入地点。' });
+        return;
+      }
+      const reverseName = await reverseGeocode(coordinate.lat, coordinate.lon).catch(() => '');
       const locationText = reverseName || '当前位置';
       this.setData({
-        coordinate: { lat: res.latitude, lon: res.longitude },
+        coordinate,
         locationText,
         locationCandidates: []
       });
@@ -2738,6 +2743,15 @@ function wxPromise(fn, options) {
   return new Promise((resolve, reject) => {
     fn({ ...options, success: resolve, fail: reject });
   });
+}
+
+function normalizeCurrentLocationCoordinate(location = {}) {
+  const lat = toNumberOrNull(location.latitude);
+  const lon = toNumberOrNull(location.longitude);
+  if (lat === null || lon === null || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+    return null;
+  }
+  return { lat, lon };
 }
 
 function normalizePrediction(raw = {}, query) {
