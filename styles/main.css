@@ -8967,6 +8967,17 @@ body[data-actual-theme="dark"] .weather-feature-item:hover {
   cursor: pointer;
 }
 
+.feedback-type-grid input[type="radio"] {
+  width: auto;
+  min-width: 16px;
+  flex: 0 0 auto;
+  margin: 3px 0 0;
+}
+
+.feedback-type-grid label span {
+  min-width: 0;
+}
+
 .feedback-type-grid small {
   display: block;
   margin-top: 4px;
