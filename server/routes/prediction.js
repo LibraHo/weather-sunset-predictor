@@ -31,6 +31,7 @@ const surroundingService = new SurroundingService({ cacheService });
 const CLOSED_LOOP_WEATHER_CACHE_TTL_SECONDS = 120;
 const EVENT_ROLLOVER_BUFFER_MS = 45 * 60 * 1000;
 const RADAR_WEATHER_FORECAST_HOURS = 48;
+const HOME_REMOTE_CLOUD_TIMEOUT_MS = 2000;
 const inFlightWeatherFetches = new Map();
 
 function closedLoopWeatherCacheKey(lat, lon, hours = 168) {
@@ -64,6 +65,23 @@ async function fetchClosedLoopWeatherData(lat, lon, hours = 168, fetchOptions = 
 
   inFlightWeatherFetches.set(key, pending);
   return pending;
+}
+
+function withTimeout(promise, timeoutMs, errorCode) {
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) return promise;
+  let timer = null;
+  return Promise.race([
+    promise.finally(() => {
+      if (timer) clearTimeout(timer);
+    }),
+    new Promise((_, reject) => {
+      timer = setTimeout(() => {
+        const error = new Error(errorCode || 'OPERATION_TIMEOUT');
+        error.code = errorCode || 'OPERATION_TIMEOUT';
+        reject(error);
+      }, timeoutMs);
+    })
+  ]);
 }
 
 // 服务器退出时释放定时器，避免 Node.js 进程无法正常退出
@@ -236,7 +254,8 @@ async function buildClosedLoopPredictionInput({
   weatherResponseOverride = null,
   includeRemoteCloudData = true,
   forecastHours = 168,
-  weatherFetchOptions = {}
+  weatherFetchOptions = {},
+  remoteCloudTimeoutMs = null
 }) {
   const timings = {};
   const targetDate = date ? new Date(date) : new Date();
@@ -270,12 +289,14 @@ async function buildClosedLoopPredictionInput({
   built.weatherData.timeWeightedSamples = timeSample.weighted?.timeWeightedSamples || [];
   const azimuth = EnhancedPredictionService.calculateSolarAzimuth(refTime, lat, lon);
   let remoteCloudData = null;
+  let remoteCloudTimedOut = false;
   const remoteCloudProfile = startProfile();
   if (includeRemoteCloudData) {
     try {
-      remoteCloudData = await surroundingService.getSolarDirectionLightPathSamples({
+      const remoteCloudPromise = surroundingService.getSolarDirectionLightPathSamples({
         lat, lon, date: targetDate, type, azimuth, referenceTime: refTime
       });
+      remoteCloudData = await withTimeout(remoteCloudPromise, remoteCloudTimeoutMs, 'REMOTE_CLOUD_TIMEOUT');
       logProfile('prediction.closedLoop', 'remote_cloud', remoteCloudProfile, {
         status: 'ok',
         lat,
@@ -287,14 +308,26 @@ async function buildClosedLoopPredictionInput({
       });
       timings.remoteCloudMs = profileDurationMs(remoteCloudProfile);
     } catch (error) {
-      logProfile('prediction.closedLoop', 'remote_cloud', remoteCloudProfile, {
-        status: 'error',
-        lat,
-        lon,
-        type,
-        error: error.message
-      });
-      throw error;
+      timings.remoteCloudMs = profileDurationMs(remoteCloudProfile);
+      if (error?.code === 'REMOTE_CLOUD_TIMEOUT') {
+        remoteCloudTimedOut = true;
+        logProfile('prediction.closedLoop', 'remote_cloud', remoteCloudProfile, {
+          status: 'timeout',
+          lat,
+          lon,
+          type,
+          timeoutMs: remoteCloudTimeoutMs
+        });
+      } else {
+        logProfile('prediction.closedLoop', 'remote_cloud', remoteCloudProfile, {
+          status: 'error',
+          lat,
+          lon,
+          type,
+          error: error.message
+        });
+        throw error;
+      }
     }
   } else {
     logProfile('prediction.closedLoop', 'remote_cloud', remoteCloudProfile, {
@@ -317,7 +350,10 @@ async function buildClosedLoopPredictionInput({
     },
     providerMeta: weatherResponse.providerMeta || null,
     remoteCloudData,
-    source: includeRemoteCloudData ? 'backend_closed_loop' : 'backend_closed_loop_fast',
+    remoteCloudTimedOut,
+    source: remoteCloudTimedOut
+      ? 'backend_closed_loop_remote_timeout'
+      : (includeRemoteCloudData ? 'backend_closed_loop' : 'backend_closed_loop_fast'),
     profileTimings: timings,
     timings
   };
@@ -672,7 +708,8 @@ router.get('/home', async (req, res) => {
         referenceTime: item.referenceTime,
         weatherResponseOverride: weatherResponse,
         includeRemoteCloudData,
-        forecastHours
+        forecastHours,
+        remoteCloudTimeoutMs: includeRemoteCloudData ? HOME_REMOTE_CLOUD_TIMEOUT_MS : null
       });
       return {
         id: item.id,

@@ -14,14 +14,17 @@ describe('Prediction API Integration', () => {
   let app;
   let request;
   let orchestrator;
+  let SurroundingService;
 
   beforeAll(async () => {
     const predictionRouterModule = await import('../../../server/routes/prediction.js');
     const supertestModule = await import('supertest');
     const orchestratorModule = await import('../../../server/services/ProviderOrchestrator.js');
+    const surroundingModule = await import('../../../server/services/SurroundingService.js');
     const predictionRouter = predictionRouterModule.default || predictionRouterModule;
     request = supertestModule.default || supertestModule;
     orchestrator = orchestratorModule.default || orchestratorModule;
+    SurroundingService = surroundingModule.default || surroundingModule;
 
     app = express();
     app.use(express.json());
@@ -379,6 +382,56 @@ describe('Prediction API Integration', () => {
         days: 1,
         includeRemoteCloudData: false
       }));
+    });
+
+    test('keeps home payload available when remote cloud sampling times out', async () => {
+      jest.spyOn(orchestrator, 'fetchWeatherData').mockResolvedValue({
+        data: [
+          {
+            timestamp: new Date('2026-06-19T10:00:00Z').getTime(),
+            cloudCover: 55,
+            humidity: 88,
+            visibility: 5,
+            lowClouds: 61,
+            midClouds: 0,
+            highClouds: 0,
+            temp: 22,
+            windSpeed: 2,
+            windDirection: 84,
+            pressure: 959,
+            precipitation: 0.8,
+            shortwaveRadiation: 27
+          }
+        ],
+        providerMeta: { name: 'openmeteo', timezone: 'Asia/Makassar' }
+      });
+      jest
+        .spyOn(SurroundingService.prototype, 'getSolarDirectionLightPathSamples')
+        .mockImplementation(() => new Promise(() => {}));
+
+      const res = await request(app)
+        .get('/api/prediction/home')
+        .query({
+          lat: -8.4095,
+          lon: 115.1889,
+          date: '2026-06-19',
+          period: 'sunset',
+          days: 1
+        })
+        .expect(200);
+
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.weather.current).toMatchObject({
+        temp: 22,
+        humidity: 88,
+        visibility: 5
+      });
+      expect(res.body.data.predictions.current).toMatchObject({
+        type: 'sunset',
+        weatherDataSource: 'backend_closed_loop_remote_timeout',
+        remoteCloudData: null
+      });
+      expect(res.body.data.request.includeRemoteCloudData).toBe(true);
     });
 
     test('rolls stale current-day sunrise requests to the next event day', async () => {
