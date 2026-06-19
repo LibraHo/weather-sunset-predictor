@@ -75,4 +75,17 @@ describe('miniprogram services/geocoding', () => {
     await expect(reverseGeocode(39.9042, 116.4074)).resolves.toBe('Beijing, China');
     expect(wxMock.request.mock.calls[0][0].url).toBe('https://api.example.com/api/geocoding/reverse?lat=39.9042&lon=116.4074');
   });
+
+  test('reverseGeocode ignores non-string names from empty provider results', async () => {
+    const wxMock = {
+      request: jest.fn(({ success }) => success({
+        statusCode: 200,
+        data: { success: true, name: [] }
+      }))
+    };
+    setWxInstance(wxMock);
+    configureApi({ baseUrl: 'https://api.example.com' });
+
+    await expect(reverseGeocode(-7.7574, 113.1794)).resolves.toBe('');
+  });
 });
