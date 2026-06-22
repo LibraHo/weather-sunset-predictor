@@ -368,9 +368,9 @@ describe('GridProductScoreAdapter', () => {
       reason: 'gfs_cams_directional_neighbor_grid',
       neighborCount: expect.any(Number),
       adjustment: expect.objectContaining({
-        applied: false,
-        reason: 'directional_neighbor_no_score_change',
-        adjustedScore: 78
+        applied: true,
+        reason: 'directional_neighbor_upper_cloud_lift',
+        adjustedScore: 77
       })
     });
     expect(center.mapDirectionalScoring.directionalUpperCarrier).toBeGreaterThanOrEqual(80);
@@ -448,8 +448,8 @@ describe('GridProductScoreAdapter', () => {
         applied: true,
         neighborCount: 1,
         adjustment: expect.objectContaining({
-          applied: false,
-          reason: 'directional_neighbor_no_score_change',
+          applied: true,
+          reason: 'directional_neighbor_upper_cloud_lift',
           adjustedScore: 78
         })
       })

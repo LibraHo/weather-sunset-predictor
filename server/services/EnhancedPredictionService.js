@@ -2225,11 +2225,32 @@ function calculateGatedFinalScore(canvasScore, lightPathScore, renderingFactor, 
   const layerBrightness = context.layerBrightness || null;
   const brightnessMultiplier = clamp(Number(layerBrightness?.brightnessMultiplier ?? layerBrightness?.brightnessGate ?? 1), 0, 1.05);
   const dimEvidenceCount = Array.isArray(layerBrightness?.dimEvidence) ? layerBrightness.dimEvidence.length : 0;
-  const airTransmissionFloor = dimEvidenceCount === 0 ? 0.91 : 0.72;
+  const particulateCap = Number(layerBrightness?.factors?.particulateCap ?? 1.08);
+  const airTransmissionFloor = Math.min(dimEvidenceCount === 0 ? 0.91 : 0.72, particulateCap);
   const airTransmissionFactor = clamp(Number(layerBrightness?.factors?.airTransmission ?? 1), airTransmissionFloor, 1.08);
+  const parsedBaseRenderingFactor = Number(renderingFactor?.factor ?? 1);
+  const baseRenderingFactor = Number.isFinite(parsedBaseRenderingFactor) ? parsedBaseRenderingFactor : 1;
+  const localUpperSignal = Number(layerBrightness?.layers?.highSignal ?? 0);
+  const remoteUpperSignal = Number(layerBrightness?.layers?.remoteHigh ?? 0);
+  const directRatio = Number(layerBrightness?.factors?.directRatio ?? 1);
+  const hasAerosolDimEvidence = Array.isArray(layerBrightness?.dimEvidence)
+    && layerBrightness.dimEvidence.includes('high_aod');
+  const diffuseDimNoRemoteCap = localUpperSignal >= 80
+    && remoteUpperSignal <= 0
+    && directRatio < 0.05
+    && hasAerosolDimEvidence
+    ? 0.74
+    : null;
+  const weakUpperHazeCap = localUpperSignal > 0
+    && localUpperSignal < 45
+    && remoteUpperSignal < 35
+    && directRatio < 0.18
+    && hasAerosolDimEvidence
+    ? 0.648
+    : null;
   const airRenderingFactor = {
     ...renderingFactor,
-    factor: clamp(Number(renderingFactor?.factor ?? 1) * airTransmissionFactor, 0.18, 1.12)
+    factor: clamp(Math.min(baseRenderingFactor, airTransmissionFactor, weakUpperHazeCap ?? 1.12, diffuseDimNoRemoteCap ?? 1.12), 0.18, 1.12)
   };
   const renderingAdjustment = context.renderingAdjustment || getRenderingScoreAdjustment(airRenderingFactor);
   const carrierScore = Number(canvasScore.score || 0);
@@ -2322,6 +2343,9 @@ function calculateGatedFinalScore(canvasScore, lightPathScore, renderingFactor, 
       layerContributions: Array.isArray(layerBrightness?.layerContributions) ? layerBrightness.layerContributions : [],
       airTransmissionFactor: parseFloat(airTransmissionFactor.toFixed(2)),
       airTransmissionFloor,
+      baseRenderingFactor: parseFloat(baseRenderingFactor.toFixed(2)),
+      weakUpperHazeCap,
+      diffuseDimNoRemoteCap,
       layerBrightnessAdjustment,
       renderingAdjustment: rendered.adjustment,
       renderingFactor: airRenderingFactor.factor,
@@ -2671,7 +2695,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   const aerosolHazeCap = assessAerosolHazeCap(weatherData, { pathOpen: scoringV2.pathOpen === true });
   let highCloudCarrierAdjustment = assessHighCloudCarrierAdjustment(weatherData, aerosolHazeCap, thickHighCloudPenalty);
 
-  const airClearEnoughForCarrierFloor = Number(finalResult.breakdown?.renderingFactor ?? 1) >= 0.75;
+  const airClearEnoughForCarrierFloor = Number(finalResult.breakdown?.renderingFactor ?? 1) >= 0.90;
   if (highCloudCarrierAdjustment.applied && airClearEnoughForCarrierFloor && lightPathGate.cap == null && (lightPathGate.gate >= 0.82 || !lightPathScore.hasRemoteData)) {
     adjustedScore = Math.max(adjustedScore, highCloudCarrierAdjustment.floor);
     if (adjustedScore >= 65) {
