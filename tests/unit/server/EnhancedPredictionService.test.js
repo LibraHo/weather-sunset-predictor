@@ -1318,7 +1318,7 @@ describe('EnhancedPredictionService', () => {
       });
       expect(result.aerosolHazeCap.applied).toBe(false);
       expect(result.score).toBeGreaterThanOrEqual(10);
-      expect(result.score).toBeLessThan(25);
+      expect(result.score).toBeLessThan(20);
       expect(result.layerBrightnessAdjustment.applied).toBe(true);
       expect(result.status).toBe('light_glow');
     });
