@@ -67,16 +67,21 @@ describe('recent user-reported UI regression guards', () => {
   test('mobile dark score details use neutral Xiake night-sky glass', () => {
     const source = css();
     const block = source.match(/\/\* UI regression: mobile dark score details use Xiake night-sky glass, not bright warm glass\. \*\/[\s\S]*?@media \(max-width: 640px\) and \(prefers-color-scheme: dark\)/)?.[0] || '';
+    const autoBlock = source.match(/@media \(max-width: 640px\) and \(prefers-color-scheme: dark\) \{[\s\S]*?body\.theme-auto \.score-breakdown-ledger \.score-ledger-step-final \.score-ledger-body \{[\s\S]*?\n  \}[\s\S]*?\n\}/)?.[0] || '';
 
     expect(block).toContain('@media (max-width: 640px)');
     expect(block).toContain('html.theme-dark .score-breakdown-ledger');
     expect(block).toContain('body[data-actual-theme="dark"] .score-breakdown-ledger');
-    expect(block).toContain('linear-gradient(180deg, rgba(18, 28, 52, 0.96), rgba(10, 15, 35, 0.94))');
-    expect(block).toContain('border-color: rgba(148, 163, 184, 0.18) !important;');
+    expect(block).toContain('linear-gradient(180deg, rgba(10, 17, 36, 0.985), rgba(6, 11, 26, 0.975))');
+    expect(block).toContain('border-color: rgba(96, 116, 150, 0.36) !important;');
     expect(block).toContain('.score-ledger-body');
-    expect(block).toContain('background: rgba(18, 28, 52, 0.62) !important;');
+    expect(block).toContain('background: rgba(9, 16, 34, 0.94) !important;');
     expect(block).toContain('.score-ledger-summary');
-    expect(block).toContain('rgba(251, 146, 60, 0.13)');
+    expect(block).toContain('rgba(11, 18, 38, 0.96)');
+    expect(block).toContain('@media (max-width: 640px) and (prefers-color-scheme: dark)');
+    expect(autoBlock).toContain('body.theme-auto .score-breakdown-ledger .score-ledger-summary');
+    expect(autoBlock).toContain('body.theme-auto .score-breakdown-ledger .score-ledger-body');
+    expect(autoBlock).toContain('background: rgba(9, 16, 34, 0.94) !important;');
     expect(block).not.toContain('rgba(255,255,255,0.34)');
     expect(block).not.toContain('rgba(31, 24, 16');
   });
