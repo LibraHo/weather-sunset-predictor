@@ -9496,9 +9496,9 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
   body.theme-actual-dark .score-breakdown-ledger .score-ledger-summary,
   body[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-summary {
     background:
-      linear-gradient(135deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.90)),
-      rgba(11, 18, 38, 0.96) !important;
-    border-color: rgba(96, 116, 150, 0.28) !important;
+      linear-gradient(135deg, rgba(18, 30, 54, 0.96), rgba(9, 16, 34, 0.94)),
+      rgba(9, 16, 34, 0.96) !important;
+    border-color: rgba(96, 116, 150, 0.32) !important;
     color: rgba(241, 245, 249, 0.94) !important;
   }
 
@@ -9539,6 +9539,47 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
     border-color: rgba(96, 116, 150, 0.22) !important;
   }
 
+  html.theme-dark .score-breakdown-ledger .score-ledger-detail summary,
+  html[data-theme="dark"] .score-breakdown-ledger .score-ledger-detail summary,
+  html.theme-actual-dark .score-breakdown-ledger .score-ledger-detail summary,
+  html[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-detail summary,
+  body.theme-dark .score-breakdown-ledger .score-ledger-detail summary,
+  body[data-theme="dark"] .score-breakdown-ledger .score-ledger-detail summary,
+  body.theme-actual-dark .score-breakdown-ledger .score-ledger-detail summary,
+  body[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-detail summary {
+    color: rgba(190, 203, 224, 0.82) !important;
+  }
+
+  html.theme-dark .score-breakdown-ledger .score-ledger-detail summary::after,
+  html[data-theme="dark"] .score-breakdown-ledger .score-ledger-detail summary::after,
+  html.theme-actual-dark .score-breakdown-ledger .score-ledger-detail summary::after,
+  html[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-detail summary::after,
+  body.theme-dark .score-breakdown-ledger .score-ledger-detail summary::after,
+  body[data-theme="dark"] .score-breakdown-ledger .score-ledger-detail summary::after,
+  body.theme-actual-dark .score-breakdown-ledger .score-ledger-detail summary::after,
+  body[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-detail summary::after {
+    border-color: rgba(96, 116, 150, 0.30) !important;
+  }
+
+  html.theme-dark .score-breakdown-ledger .score-ledger-step-final .score-ledger-index,
+  html.theme-dark .score-breakdown-ledger .score-ledger-step-final .score-ledger-result,
+  html[data-theme="dark"] .score-breakdown-ledger .score-ledger-step-final .score-ledger-index,
+  html[data-theme="dark"] .score-breakdown-ledger .score-ledger-step-final .score-ledger-result,
+  html.theme-actual-dark .score-breakdown-ledger .score-ledger-step-final .score-ledger-index,
+  html.theme-actual-dark .score-breakdown-ledger .score-ledger-step-final .score-ledger-result,
+  html[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-step-final .score-ledger-index,
+  html[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-step-final .score-ledger-result,
+  body.theme-dark .score-breakdown-ledger .score-ledger-step-final .score-ledger-index,
+  body.theme-dark .score-breakdown-ledger .score-ledger-step-final .score-ledger-result,
+  body[data-theme="dark"] .score-breakdown-ledger .score-ledger-step-final .score-ledger-index,
+  body[data-theme="dark"] .score-breakdown-ledger .score-ledger-step-final .score-ledger-result,
+  body.theme-actual-dark .score-breakdown-ledger .score-ledger-step-final .score-ledger-index,
+  body.theme-actual-dark .score-breakdown-ledger .score-ledger-step-final .score-ledger-result,
+  body[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-step-final .score-ledger-index,
+  body[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-step-final .score-ledger-result {
+    color: rgba(147, 197, 253, 0.98) !important;
+  }
+
   html.theme-dark .score-breakdown-ledger .score-ledger-step-final .score-ledger-body,
   html[data-theme="dark"] .score-breakdown-ledger .score-ledger-step-final .score-ledger-body,
   html.theme-actual-dark .score-breakdown-ledger .score-ledger-step-final .score-ledger-body,
@@ -9547,12 +9588,14 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
   body[data-theme="dark"] .score-breakdown-ledger .score-ledger-step-final .score-ledger-body,
   body.theme-actual-dark .score-breakdown-ledger .score-ledger-step-final .score-ledger-body,
   body[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-step-final .score-ledger-body {
-    background: rgba(9, 16, 34, 0.94) !important;
-    border-color: rgba(251, 191, 36, 0.28) !important;
+    background:
+      linear-gradient(135deg, rgba(14, 25, 48, 0.96), rgba(7, 13, 29, 0.94)) !important;
+    border-color: rgba(96, 165, 250, 0.30) !important;
   }
 }
 
 @media (max-width: 640px) and (prefers-color-scheme: dark) {
+  html.theme-auto .score-breakdown-ledger,
   body.theme-auto .score-breakdown-ledger {
     background:
       radial-gradient(circle at 16% 0%, rgba(59, 130, 246, 0.10), transparent 34%),
@@ -9563,37 +9606,61 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
       inset 0 1px 0 rgba(148, 163, 184, 0.10) !important;
   }
 
+  html.theme-auto .score-breakdown-ledger::before,
   body.theme-auto .score-breakdown-ledger::before {
     background: linear-gradient(180deg, rgba(8, 13, 30, 0.68), rgba(2, 6, 18, 0.54));
   }
 
+  html.theme-auto .score-breakdown-ledger .score-ledger-summary,
   body.theme-auto .score-breakdown-ledger .score-ledger-summary {
     background:
-      linear-gradient(135deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.90)),
-      rgba(11, 18, 38, 0.96) !important;
-    border-color: rgba(96, 116, 150, 0.28) !important;
+      linear-gradient(135deg, rgba(18, 30, 54, 0.96), rgba(9, 16, 34, 0.94)),
+      rgba(9, 16, 34, 0.96) !important;
+    border-color: rgba(96, 116, 150, 0.32) !important;
     color: rgba(241, 245, 249, 0.94) !important;
   }
 
+  html.theme-auto .score-breakdown-ledger .score-ledger-body,
   body.theme-auto .score-breakdown-ledger .score-ledger-body {
     background: rgba(9, 16, 34, 0.94) !important;
     border-color: rgba(96, 116, 150, 0.28) !important;
     box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.08) !important;
   }
 
+  html.theme-auto .score-breakdown-ledger .score-ledger-index,
   body.theme-auto .score-breakdown-ledger .score-ledger-index {
     background: rgba(6, 11, 26, 0.92) !important;
     border-color: rgba(96, 116, 150, 0.28) !important;
   }
 
+  html.theme-auto .score-breakdown-ledger .score-ledger-detail-copy,
   body.theme-auto .score-breakdown-ledger .score-ledger-detail-copy {
     background: rgba(6, 11, 26, 0.88) !important;
     border-color: rgba(96, 116, 150, 0.22) !important;
   }
 
+  html.theme-auto .score-breakdown-ledger .score-ledger-detail summary,
+  body.theme-auto .score-breakdown-ledger .score-ledger-detail summary {
+    color: rgba(190, 203, 224, 0.82) !important;
+  }
+
+  html.theme-auto .score-breakdown-ledger .score-ledger-detail summary::after,
+  body.theme-auto .score-breakdown-ledger .score-ledger-detail summary::after {
+    border-color: rgba(96, 116, 150, 0.30) !important;
+  }
+
+  html.theme-auto .score-breakdown-ledger .score-ledger-step-final .score-ledger-index,
+  html.theme-auto .score-breakdown-ledger .score-ledger-step-final .score-ledger-result,
+  body.theme-auto .score-breakdown-ledger .score-ledger-step-final .score-ledger-index,
+  body.theme-auto .score-breakdown-ledger .score-ledger-step-final .score-ledger-result {
+    color: rgba(147, 197, 253, 0.98) !important;
+  }
+
+  html.theme-auto .score-breakdown-ledger .score-ledger-step-final .score-ledger-body,
   body.theme-auto .score-breakdown-ledger .score-ledger-step-final .score-ledger-body {
-    background: rgba(9, 16, 34, 0.94) !important;
-    border-color: rgba(251, 191, 36, 0.28) !important;
+    background:
+      linear-gradient(135deg, rgba(14, 25, 48, 0.96), rgba(7, 13, 29, 0.94)) !important;
+    border-color: rgba(96, 165, 250, 0.30) !important;
   }
 }
 

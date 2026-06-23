@@ -77,13 +77,20 @@ describe('recent user-reported UI regression guards', () => {
     expect(block).toContain('.score-ledger-body');
     expect(block).toContain('background: rgba(9, 16, 34, 0.94) !important;');
     expect(block).toContain('.score-ledger-summary');
-    expect(block).toContain('rgba(11, 18, 38, 0.96)');
+    expect(block).toContain('rgba(9, 16, 34, 0.96)');
+    expect(block).toContain('.score-ledger-detail summary');
+    expect(block).toContain('rgba(190, 203, 224, 0.82)');
+    expect(block).toContain('.score-ledger-step-final .score-ledger-result');
+    expect(block).toContain('rgba(147, 197, 253, 0.98)');
+    expect(block).toContain('border-color: rgba(96, 165, 250, 0.30) !important;');
     expect(block).toContain('@media (max-width: 640px) and (prefers-color-scheme: dark)');
+    expect(autoBlock).toContain('html.theme-auto .score-breakdown-ledger .score-ledger-summary');
     expect(autoBlock).toContain('body.theme-auto .score-breakdown-ledger .score-ledger-summary');
     expect(autoBlock).toContain('body.theme-auto .score-breakdown-ledger .score-ledger-body');
     expect(autoBlock).toContain('background: rgba(9, 16, 34, 0.94) !important;');
     expect(block).not.toContain('rgba(255,255,255,0.34)');
     expect(block).not.toContain('rgba(31, 24, 16');
+    expect(block).not.toContain('rgba(251, 191, 36, 0.28)');
   });
 
   test('3-day glow forecast is a weather tab with a loading state', () => {
