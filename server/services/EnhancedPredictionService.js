@@ -1199,7 +1199,139 @@ function scoreRemoteLayerCarriers(remoteCloudData, lightPathScore = {}, weatherD
   };
 }
 
-function buildCarrierScore(canvasScore, aerosolCarrierScore, directionalCurtainCarrier = null, remoteLayerCarriers = null) {
+function scoreVisibleSectorCarrier(remoteCloudData, lightPathScore = {}, weatherData = {}) {
+  const sectorSamples = Array.isArray(remoteCloudData?.visibleSectorSamples)
+    ? remoteCloudData.visibleSectorSamples.filter(sample => sample && !sample.error)
+    : [];
+  if (sectorSamples.length < 8) {
+    return { applied: false, score: 0, floor: null, reason: 'no_visible_sector_samples', bestDirection: null, metrics: null };
+  }
+
+  const precipitation = Number(weatherData.precipitation ?? weatherData.rain ?? weatherData.showers ?? 0);
+  const visibility = Number(weatherData.visibility ?? 20);
+  const lightPath = Number(lightPathScore?.score ?? 0);
+  const directionalReason = lightPathScore?.directionalAnalysis?.reason || '';
+  const pathOpen = directionalReason.includes('opening') || lightPath >= 55;
+  if (!pathOpen || precipitation > 1 || visibility < 6) {
+    return {
+      applied: false,
+      score: 0,
+      floor: null,
+      reason: !pathOpen ? 'light_path_not_open' : (visibility < 6 ? 'visibility_blocks_visible_sector' : 'precipitation_blocks_visible_sector'),
+      bestDirection: null,
+      metrics: { lightPath: Number.isFinite(lightPath) ? parseFloat(lightPath.toFixed(1)) : null, visibility }
+    };
+  }
+
+  const byOffset = new Map();
+  sectorSamples.forEach((sample) => {
+    const offset = Number(sample.offsetDeg ?? 0);
+    const key = Number.isFinite(offset) ? offset : 0;
+    if (!byOffset.has(key)) byOffset.set(key, []);
+    byOffset.get(key).push(sample);
+  });
+
+  const directionScores = Array.from(byOffset.entries()).map(([offsetDeg, samples]) => {
+    const totalWeight = samples.reduce((sum, sample, index) => sum + getSolarDirectionSampleWeight(sample, index), 0);
+    const avg = (key) => samples.reduce((sum, sample, index) => (
+      sum + Number(sample[key] || 0) * getSolarDirectionSampleWeight(sample, index)
+    ), 0) / totalWeight;
+
+    const low = avg('lowCloud');
+    const mid = avg('midCloud');
+    const high = avg('highCloud');
+    const total = avg('totalCloud');
+    const midSignal = upperCloudSignal(mid);
+    const highSignal = upperCloudSignal(high);
+    const upperSignal = clamp(highSignal * 0.85 + midSignal * 0.80, 0, 100);
+    const lowMidBlock = low * 0.75 + mid * 0.20;
+    const sideWeight = Math.abs(offsetDeg) < 0.001
+      ? 0.72
+      : (Math.abs(offsetDeg) <= 22 ? 1.0 : 0.92);
+
+    let score = 0;
+    if (upperSignal >= 18 && lowMidBlock <= 55) {
+      score = 24 + (Math.min(upperSignal, 88) - 18) / 70 * 34;
+      if (upperSignal > 88) score += Math.min((upperSignal - 88) / 12 * 4, 4);
+      if (lowMidBlock > 28) score -= Math.min((lowMidBlock - 28) / 27 * 16, 16);
+      score *= sideWeight;
+    }
+
+    return {
+      offsetDeg,
+      bearing: Number(samples[0]?.sectorBearing ?? samples[0]?.bearing ?? null),
+      score: clamp(score, 0, 62),
+      low,
+      mid,
+      high,
+      total,
+      midSignal,
+      highSignal,
+      upperSignal,
+      lowMidBlock,
+      sampleCount: samples.length
+    };
+  });
+
+  const best = directionScores.reduce((winner, item) => item.score > winner.score ? item : winner, { score: 0 });
+  if (!best || best.score < 24) {
+    return {
+      applied: false,
+      score: parseFloat((best?.score || 0).toFixed(1)),
+      floor: null,
+      reason: 'visible_sector_carrier_weak',
+      bestDirection: best?.bearing == null ? null : {
+        offsetDeg: best.offsetDeg,
+        bearing: parseFloat(best.bearing.toFixed(1))
+      },
+      metrics: best ? {
+        upperSignal: parseFloat(best.upperSignal.toFixed(1)),
+        lowMidBlock: parseFloat(best.lowMidBlock.toFixed(1)),
+        lightPath: Number.isFinite(lightPath) ? parseFloat(lightPath.toFixed(1)) : null
+      } : null,
+      directions: directionScores.map(item => ({
+        offsetDeg: item.offsetDeg,
+        bearing: Number.isFinite(item.bearing) ? parseFloat(item.bearing.toFixed(1)) : null,
+        score: parseFloat(item.score.toFixed(1)),
+        upperSignal: parseFloat(item.upperSignal.toFixed(1)),
+        lowMidBlock: parseFloat(item.lowMidBlock.toFixed(1))
+      }))
+    };
+  }
+
+  const score = parseFloat(clamp(best.score, 0, 62).toFixed(1));
+  return {
+    applied: true,
+    score,
+    floor: best.lowMidBlock >= 38 ? 28 : 34,
+    reason: 'visible_sunset_sector_carrier',
+    bestDirection: {
+      offsetDeg: best.offsetDeg,
+      bearing: Number.isFinite(best.bearing) ? parseFloat(best.bearing.toFixed(1)) : null
+    },
+    metrics: {
+      low: parseFloat(best.low.toFixed(1)),
+      mid: parseFloat(best.mid.toFixed(1)),
+      high: parseFloat(best.high.toFixed(1)),
+      total: Number.isFinite(best.total) ? parseFloat(best.total.toFixed(1)) : null,
+      midSignal: parseFloat(best.midSignal.toFixed(1)),
+      highSignal: parseFloat(best.highSignal.toFixed(1)),
+      upperSignal: parseFloat(best.upperSignal.toFixed(1)),
+      lowMidBlock: parseFloat(best.lowMidBlock.toFixed(1)),
+      lightPath: Number.isFinite(lightPath) ? parseFloat(lightPath.toFixed(1)) : null,
+      visibility
+    },
+    directions: directionScores.map(item => ({
+      offsetDeg: item.offsetDeg,
+      bearing: Number.isFinite(item.bearing) ? parseFloat(item.bearing.toFixed(1)) : null,
+      score: parseFloat(item.score.toFixed(1)),
+      upperSignal: parseFloat(item.upperSignal.toFixed(1)),
+      lowMidBlock: parseFloat(item.lowMidBlock.toFixed(1))
+    }))
+  };
+}
+
+function buildCarrierScore(canvasScore, aerosolCarrierScore, directionalCurtainCarrier = null, remoteLayerCarriers = null, visibleSectorCarrier = null) {
   const cloudScore = Number(canvasScore?.score ?? 0);
   const aerosolScore = Number(aerosolCarrierScore?.activatedScore ?? 0);
   const directionalScore = directionalCurtainCarrier?.applied ? Number(directionalCurtainCarrier.score || 0) : 0;
@@ -1209,10 +1341,12 @@ function buildCarrierScore(canvasScore, aerosolCarrierScore, directionalCurtainC
       Number(remoteLayerCarriers.remoteMidCarrier || 0)
     )
     : 0;
-  const maxScore = Math.max(cloudScore, aerosolScore, directionalScore, remoteScore);
+  const visibleSectorScore = visibleSectorCarrier?.applied ? Number(visibleSectorCarrier.score || 0) : 0;
+  const maxScore = Math.max(cloudScore, aerosolScore, directionalScore, remoteScore, visibleSectorScore);
   const activeCarrier = maxScore === directionalScore && directionalScore > cloudScore && directionalScore >= aerosolScore
     ? 'directional_curtain'
-    : (maxScore === remoteScore && remoteScore > cloudScore && remoteScore >= aerosolScore ? 'remote_layer' : (aerosolScore > cloudScore ? 'aerosol' : 'cloud'));
+    : (maxScore === visibleSectorScore && visibleSectorScore > cloudScore && visibleSectorScore >= aerosolScore ? 'visible_sector'
+      : (maxScore === remoteScore && remoteScore > cloudScore && remoteScore >= aerosolScore ? 'remote_layer' : (aerosolScore > cloudScore ? 'aerosol' : 'cloud')));
 
   return {
     ...canvasScore,
@@ -1221,6 +1355,7 @@ function buildCarrierScore(canvasScore, aerosolCarrierScore, directionalCurtainC
     aerosolCarrierScore,
     directionalCurtainCarrier,
     remoteLayerCarriers,
+    visibleSectorCarrier,
     activeCarrier
   };
 }
@@ -2269,6 +2404,7 @@ function calculateGatedFinalScore(canvasScore, lightPathScore, renderingFactor, 
   };
   const directionalCurtainCarrier = context.directionalCurtainCarrier || canvasScore.directionalCurtainCarrier || null;
   const remoteLayerCarriers = context.remoteLayerCarriers || canvasScore.remoteLayerCarriers || null;
+  const visibleSectorCarrier = context.visibleSectorCarrier || canvasScore.visibleSectorCarrier || null;
   const directionalFloor = canvasScore.activeCarrier === 'directional_curtain' && directionalCurtainCarrier?.applied && lightPathGate.cap == null && lightPathGate.gate >= 0.75
     ? directionalCurtainCarrier.floor
     : null;
@@ -2335,6 +2471,7 @@ function calculateGatedFinalScore(canvasScore, lightPathScore, renderingFactor, 
       aerosolCarrierScore: canvasScore.aerosolCarrierScore || null,
       directionalCurtainCarrier,
       remoteLayerCarriers,
+      visibleSectorCarrier,
       lightPathScore: parseFloat(lightPathScore.score.toFixed(1)),
       lightPathGate: lightPathGate.gate,
       brightnessMultiplier: layerBrightnessAdjustment.multiplier,
@@ -2358,6 +2495,7 @@ function calculateGatedFinalScore(canvasScore, lightPathScore, renderingFactor, 
     aerosolCarrierScore: canvasScore.aerosolCarrierScore || null,
     directionalCurtainCarrier,
     remoteLayerCarriers,
+    visibleSectorCarrier,
     lightPathAnalysis: lightPathScore,
     lightPathGate,
     layerBrightnessAdjustment,
@@ -2603,7 +2741,8 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   const aerosolCarrierScore = scoreAerosolCarrier(weatherData, lightPathScore);
   const directionalCurtainCarrier = scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore, weatherData);
   const remoteLayerCarriers = scoreRemoteLayerCarriers(remoteCloudData, lightPathScore, weatherData);
-  const carrierScore = buildCarrierScore(canvasScore, aerosolCarrierScore, directionalCurtainCarrier, remoteLayerCarriers);
+  const visibleSectorCarrier = scoreVisibleSectorCarrier(remoteCloudData, lightPathScore, weatherData);
+  const carrierScore = buildCarrierScore(canvasScore, aerosolCarrierScore, directionalCurtainCarrier, remoteLayerCarriers, visibleSectorCarrier);
   const lightPathGate = buildLightPathGate(lightPathScore, cloudTypeAdjustment);
   const layerBrightness = LayerBrightnessService.scoreLayerBrightness({
     weatherData,
@@ -2615,6 +2754,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     type,
     directionalCurtainCarrier,
     remoteLayerCarriers,
+    visibleSectorCarrier,
     carrierScore
   });
   logger.debug('[EnhancedPredictionService]', '载体评分:', carrierScore.score, 'active:', carrierScore.activeCarrier, 'aerosol:', aerosolCarrierScore);
@@ -2623,7 +2763,8 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     lightPathGate,
     layerBrightness,
     directionalCurtainCarrier,
-    remoteLayerCarriers
+    remoteLayerCarriers,
+    visibleSectorCarrier
   });
 
   // 6. 太阳遮挡判定（试验版，温和惩罚）
@@ -2894,6 +3035,8 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     highCloudCarrierAdjustment,
     aerosolCarrierScore,
     directionalCurtainCarrier,
+    remoteLayerCarriers,
+    visibleSectorCarrier,
     postRainAdjustment,
     clearSunsetAdvice,
     algorithm: {
@@ -2991,6 +3134,7 @@ module.exports = {
   scoreAerosolCarrier,
   scoreDirectionalCurtainCarrier,
   scoreRemoteLayerCarriers,
+  scoreVisibleSectorCarrier,
   buildCarrierScore,
   scoreLightPath,
   scoreRendering,

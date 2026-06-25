@@ -1,10 +1,16 @@
 'use strict';
 
-const ALGORITHM_VERSION = '2026.06.17-remote-layer-carriers-v1';
+const ALGORITHM_VERSION = '2026.06.25-visible-sector-carriers-v1';
 
 const ALGORITHM_CHANGELOG = [
   {
     version: ALGORITHM_VERSION,
+    date: '2026-06-25',
+    title: 'Visible sunset sector carriers v1',
+    summary: 'Solar-direction light-path scoring remains strict on the sun azimuth, while additional azimuth offsets around the sun are sampled as visible cloud-carrier evidence for sunset/sunrise sector glow.'
+  },
+  {
+    version: '2026.06.17-remote-layer-carriers-v1',
     date: '2026-06-17',
     title: 'Remote mid/high cloud carriers v1',
     summary: 'Solar-direction mid/high clouds are now exposed as separate remote carrier layers and can add bounded layer contribution when the local cloud carrier is not already a directional curtain or dense local upper-cloud veil.'
