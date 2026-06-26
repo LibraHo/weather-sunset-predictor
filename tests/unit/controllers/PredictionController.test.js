@@ -955,7 +955,7 @@ describe('PredictionController', () => {
         },
         lightPathAnalysis: {
           score: 107.2,
-          source: 'solar_direction_openmeteo',
+          source: 'sunset_visible_sector_openmeteo',
           azimuth: 286,
           occlusionProbability: 0.08
         },

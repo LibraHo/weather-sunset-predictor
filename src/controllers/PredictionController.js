@@ -2327,7 +2327,7 @@ class PredictionController {
       if (prediction?.lightPathAnalysis?.capReason === 'precipitation_cap_50') {
         return ledgerText('details.lightPathRain', {}, 'rain weakens direct sunset light', '降水会削弱日落直射光');
       }
-      return prediction?.lightPathAnalysis?.source === 'solar_direction_openmeteo'
+      return ['solar_direction_openmeteo', 'sunset_visible_sector_openmeteo'].includes(prediction?.lightPathAnalysis?.source)
         ? ledgerText('details.directionalSamples', {}, 'solar-azimuth samples at 10/25/50/75/100km are included', '已接入太阳方位 10/25/50/75/100km 周边采样')
         : Number.isFinite(Number(lightPathScore))
           ? ledgerText('details.lightPathScoreEvidence', { light: fmt(lightPathScore, 1) }, 'path evidence score {{light}} is folded into brightness', '光路证据 {{light}} 已并入受光亮度')
