@@ -261,17 +261,17 @@ const translations = {
     },
     "methodology": {
       "title": "火燒雲計算方法",
-      "intro": "目前的火燒雲指數按「候選載體 → 受光亮度 → 空氣顯色 → 封頂校準」展示。結果頁的計算依據只呈現這條主鏈路，不再把內部診斷項混成最終修正。",
-      "versionLabel": "算法說明版本：2026.06.18-remote-layer-carriers",
-      "versionDesc": "本版說明與結果頁計算依據一致：先選本地雲層、遠端分層載體或氣溶膠弱載體，再展開分層受光貢獻、空氣顯色與最終分。",
+      "intro": "目前的火燒雲指數按「候選載體 → 側向／主光路受光亮度 → 空氣顯色 → 封頂校準」展示。結果頁只呈現這條主鏈路，重點說明雲是否能被照亮，以及為什麼高雲很多時仍可能被灰幕、厚雲、水氣或弱直射壓低。",
+      "versionLabel": "算法說明版本：2026.06.26-visible-sector-illumination-v2",
+      "versionDesc": "本版說明與結果頁計算依據一致：先比較本地雲層、遠端分層載體、側向可視雲帶和氣溶膠弱載體，再展開受光亮度、空氣顯色與最終分。",
       changelogTitle: "版本更新記錄",
       changelogHint: "近三個月內的算法更新都會放在這裡，可捲動回看原因、影響和驗證方式",
       changelog: {
         "latest": {
-          "date": "2026-06-18",
-          "title": "遠端分層載體 v1",
-          "summary": "日落方向雲不再合成一個遠端雲幕，而是拆成遠端高雲、遠端中雲和遠端低雲遮擋，再進入 Σ(分層載體 × 分層受光亮度)。",
-          "validation": "驗證：歷史 9 個真實樣本和 6/17 北京樣本全量回放通過；評分細則會列出遠端高雲／中雲貢獻。"
+          "date": "2026-06-26",
+          "title": "側向可視雲帶受光 v2",
+          "summary": "主太陽光路仍按太陽方位嚴格判斷；側向可視扇區只作為額外雲載體進入評分，並按主光路通透度、方位角衰減、雲高／距離仰角、空氣透射和雲層類型計算受光。",
+          "validation": "驗證：側向雲帶可在評分細則列出候選方位和受光證據；單個距離點不能啟動側向；晴空建議不會覆蓋側向載體。"
         },
         "layerBrightness": {
           "date": "2026-06-13",
@@ -356,12 +356,12 @@ const translations = {
         "cloudStructure": {
           "title": "1. 候選載體",
           "subtitle": "Carrier Candidates · 先選誰能顯色",
-          "desc": "系統先比較本地雲層、遠端分層載體和氣溶膠弱載體，採用最能顯色的一項作為主載體。",
+          "desc": "系統先比較本地雲層、遠端分層載體、側向可視雲帶和氣溶膠弱載體，採用最能顯色的一項作為主載體。",
           "highCloud": "本地雲層：高雲×0.75 + 中雲×0.45 得到中高雲畫布，再映射為區間分",
           "midCloud": "日落方向：按 10/25/50/75/100km 小時兩點窗口加權，拆成遠端高雲、遠端中雲和遠端低雲遮擋",
-          "lowCloudBonus": "氣溶膠：只作為弱載體候選；雲層載體更強時不會單獨顯示成最終加分",
-          "formula": "候選載體 = max(本地雲層, 遠端分層載體, 氣溶膠弱載體)\n遠端分層載體 = 日落方向高雲 / 中雲 - 低雲遮擋",
-          "highCloudBonus": "結果頁會顯示候選載體明細，例如：本地雲層 77.9；日落方向 37.9；氣溶膠 27.3；採用 雲層載體 77.9。未採用的弱載體不再偽裝成最終加分。"
+          "lowCloudBonus": "側向可視雲帶：主光路先判通透，再按方位角、雲高／距離仰角、空氣透射和雲層類型評估是否受光；氣溶膠只作為弱載體候選",
+          "formula": "候選載體 = max(本地雲層, 遠端分層載體, 側向可視雲帶, 氣溶膠弱載體)\n側向可視雲帶 = 主光路通透 × 方位角衰減 × 雲高／距離仰角 × 空氣透射 × 雲層權重",
+          "highCloudBonus": "結果頁會顯示候選載體明細，例如：本地雲層 77.9；遠端分層 37.9；側向可視雲帶 52.4（約 325°）；採用 側向可視雲帶 52.4。未採用的弱載體不再偽裝成最終加分。"
         },
         "lightPath": {
           "title": "2. 本地雲層",
@@ -374,9 +374,9 @@ const translations = {
         "transparency": {
           "title": "3. 受光亮度",
           "subtitle": "Layer Brightness · 雲是否真的亮",
-          "desc": "光路、太陽幾何、低雲遮擋、雲厚和直射／散射證據會合成受光亮度。它是基礎分的一部分，不再作為獨立修正條目重複展示。",
-          "visibility": "光路通暢會提高雲層可用亮度；太陽方向阻擋會降低亮度",
-          "humidity": "厚雲、灰幕、低太陽透射等只進入亮度估算，不在使用者頁面逐項堆疊",
+          "desc": "主太陽方向、側向受光、低雲遮擋、雲厚、直射／散射和亮度響應會合成受光亮度。它是基礎分的一部分，不再作為獨立修正條目重複展示。",
+          "visibility": "主光路通暢會提高雲層可用亮度；側向雲帶必須有足夠樣本和受光幾何才參與",
+          "humidity": "厚雲、灰幕、水氣偏重、直射弱等只進入亮度估算，不在使用者頁面逐項堆疊",
           "formula": "基礎分 = Σ(分層載體 × 分層受光亮度)"
         },
         "layerDiversity": {
@@ -384,7 +384,7 @@ const translations = {
           "subtitle": "Air Rendering · 顏色品質",
           "desc": "空氣顯色只解釋顏色品質：能見度、濕度、雨後狀態、AOD/PM/dust 會共同影響紅橙色強弱。",
           "threeLayer": "光路開且雲幕不灰：輕／中度顆粒可增強暖色",
-          "twoLayer": "中高雲滿鋪且 PM/AOD 偏高：按灰幕連續壓低顯色",
+          "twoLayer": "中高雲滿鋪且 PM/AOD、水氣或直射光偏弱：按灰幕／厚雲壓力連續壓低顯色",
           "oneLayer": "降水和低能見度會降低顏色清晰度"
         },
         "lowCloudPenalty": {
@@ -592,6 +592,7 @@ const translations = {
           "remoteLayerCarrier": "遠端分層載體",
           "remoteHighLayer": "日落方向高雲",
           "remoteMidLayer": "日落方向中雲",
+          "visibleSectorCarrier": "側向可視雲帶",
           "scoringV2": "開口暖色散射",
           "grayVeilAirRendering": "灰幕顯色抑制",
           "evidence": "計算依據"
@@ -601,12 +602,13 @@ const translations = {
           "cloudCarrierCandidate": "cloud candidate {{score}}",
           "aerosolCarrierCandidate": "aerosol candidate {{score}}",
           "directionalCarrierCandidate": "sunset-direction candidate {{score}}",
+          "visibleSectorCarrierCandidate": "側向可視雲帶 {{score}}（約 {{bearing}}°）",
           "remoteLayerCarrierCandidate": "遠端分層 {{score}}（高雲 {{high}}，中雲 {{mid}}，低雲遮擋 {{low}}）",
           "carrierCandidates": "候選載體：{{candidates}}；採用 {{active}} {{score}}",
           "upperCloudCanvasShort": "upper canvas {{upper}} → range score {{range}}",
           "cloudTypeAdjustmentShort": "cloud type {{bonus}}",
           "cloudThicknessAdjustmentShort": "cloud thickness {{adjustment}}",
-          "cloudCarrierSource": "從本地雲層、遠端分層載體或氣溶膠弱載體中選用主載體",
+          "cloudCarrierSource": "從本地雲層、遠端分層、側向可視雲帶或氣溶膠弱載體中選用主載體",
           "cloudPenalty": "雲畫布 {{canvas}}，低雲 ×{{low}}，陰天 ×{{overcast}}",
           "upperCloudCanvas": "中高雲畫布 {{upper}} = 高雲 {{high}}×0.75 + 中雲 {{mid}}×0.45；區間分 {{range}}",
           "highCloudBonus": "高雲主導 bonus {{bonus}}",
@@ -619,7 +621,9 @@ const translations = {
           "grayVeilAirRendering": "滿鋪中高雲疊加偏髒空氣：雲載體 {{carrier}}；光路證據作為亮度證據；灰幕顯色 {{air}}",
           "lightPath": "作為受光亮度解釋的太陽方向證據",
           "layerBrightnessShort": "太陽方向、遮擋和亮度響應共同解釋各層載體是否被照亮",
-          "layerBrightness": "亮度 {{brightness}}，門控 {{gate}}；本地載體 {{canvas}}，遠端高雲 {{remoteHigh}}，遠端中雲 {{remoteMid}}，遠端低雲遮擋 {{remoteLowBlock}}，低雲遮擋 {{low}} / 透過 {{lowBlock}}，太陽幾何 {{solar}}，光路因子 {{path}}，空氣 {{air}}，雲厚 {{thickness}}，直射／散射 {{beam}}",
+          "layerBrightness": "亮度 {{brightness}}，門控 {{gate}}；本地載體 {{canvas}}，遠端高雲 {{remoteHigh}}，遠端中雲 {{remoteMid}}，側向上層雲 {{visibleSector}}（約 {{visibleBearing}}°），遠端低雲遮擋 {{remoteLowBlock}}，低雲遮擋 {{low}} / 透過 {{lowBlock}}，太陽幾何 {{solar}}，光路因子 {{path}}，空氣 {{air}}，雲厚 {{thickness}}，直射／散射 {{beam}}",
+          "layerBrightnessMultiplier": "有效亮度 {{brightness}}；壓暗證據：{{evidence}}",
+          "layerContribution": "{{layer}}：載體 {{carrier}} × 受光 {{brightness}} = {{score}}",
           "renderingFactors": "能見度 ×{{visibility}}，濕度 ×{{humidity}}，氣溶膠 ×{{aerosol}}",
           "afterAdjustments": "結合天氣和能見度後",
           "finalDisplayed": "最終顯示結果",
@@ -628,7 +632,7 @@ const translations = {
           "geometryCap": "太陽與雲層幾何條件不足",
           "occlusion": "遠端遮擋壓低最終分",
           "carrierFloor": "高雲載體清透，避免誤傷低估",
-          "directionalSamples": "已參考太陽方向周邊雲況",
+          "directionalSamples": "主光路按太陽方向嚴格判斷；側向可視扇區只作為雲載體和受光證據參與",
           "lightPathScoreEvidence": "光路證據 {{light}} 已併入受光亮度",
           "lightPathLowCloudBlock": "低雲遮住太陽方向，光線不容易照到中高雲",
           "lightPathRain": "降水會削弱日落直射光",
@@ -665,17 +669,17 @@ const translations = {
           "title": "雲層載體",
           "status": { "good": "較好", "fair": "一般", "weak": "較弱" },
           "desc": {
-            "good": "中高雲提供可染色雲面，具備承接霞光的基礎。",
-            "fair": "有可染色雲面，但面積、高度或穩定性不夠理想。",
-            "weak": "可染色雲面不足，難形成成片火燒雲。"
+            "good": "本地或側向中高雲提供可染色雲面，具備承接霞光的基礎。",
+            "fair": "有可染色雲面，但面積、高度、側向受光或穩定性不夠理想。",
+            "weak": "可染色雲面不足，或真正被照亮的部分偏弱，難形成成片火燒雲。"
           }
         },
         "lightPath": {
           "title": "光路條件",
           "status": { "good": "較好", "fair": "一般", "weak": "較弱" },
           "desc": {
-            "good": "太陽方向相對通透，光線有機會照到雲底。",
-            "fair": "太陽方向有一定遮擋，晚霞可能只出現在局部。",
+            "good": "太陽主光路相對通透，或側向可視雲帶有明確受光證據。",
+            "fair": "太陽方向有一定遮擋，側向雲帶或局地開口可能只帶來局部晚霞。",
             "weak": "低雲或阻擋走廊擋住光路，光線不容易打到雲層。"
           }
         },
@@ -685,7 +689,7 @@ const translations = {
           "desc": {
             "good": "空氣裡有適度顆粒和水氣，顏色更容易偏暖、偏紅。",
             "fair": "空氣條件普通，顏色表現主要看雲層和光路。",
-            "weak": "空氣偏灰或顆粒過重，顏色容易變暗、變淡。"
+            "weak": "空氣偏灰、顆粒偏重、水氣偏高或直射弱，滿鋪高雲也可能變暗、變淡。"
           }
         },
         "limits": {
@@ -694,7 +698,7 @@ const translations = {
           "desc": {
             "good": "沒有明顯壓制條件。",
             "fair": "有輕微不利因素，可能壓低持續時間或顏色強度。",
-            "weak": "降水、厚雲、低雲遮擋或灰幕明顯，會壓低整體表現。"
+            "weak": "降水、厚雲、低雲遮擋、灰幕或弱直射明顯，會壓低整體表現。"
           }
         }
       },

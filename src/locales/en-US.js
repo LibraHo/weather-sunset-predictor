@@ -261,17 +261,17 @@ const translations = {
     },
     "methodology": {
       "title": "Fire Cloud Calculation Method",
-      "intro": "The current Fire Cloud Index is presented as carrier candidates, layer brightness, air rendering, and score caps. The result-page evidence now shows that main chain only, instead of mixing internal diagnostics into final-score adjustments.",
-      "versionLabel": "Methodology version: 2026.06.18-remote-layer-carriers",
-      "versionDesc": "This version matches the result-page score ledger: choose local cloud, remote layer carriers, or weak aerosol carrier, then show layer contributions, air rendering, and the final score.",
+      "intro": "The current Fire Cloud Index is presented as carrier candidates, main/side-sector illumination, air rendering, and score caps. The result-page evidence focuses on whether the cloud can actually be lit, and why abundant high cloud can still be suppressed by gray veil, thick cloud, moisture, or weak direct beam.",
+      "versionLabel": "Methodology version: 2026.06.26-visible-sector-illumination-v2",
+      "versionDesc": "This version matches the result-page score ledger: compare local cloud, remote layer carriers, visible side-sector carriers, and weak aerosol carriers, then show illumination, air rendering, and the final score.",
       changelogTitle: "Version update history",
       changelogHint: "Algorithm updates from the last three months live here; scroll to review why each change happened, its impact, and validation",
       changelog: {
         "latest": {
-          "date": "2026-06-18",
-          "title": "Remote layer carriers v1",
-          "summary": "Sun-direction clouds are no longer collapsed into one remote curtain. They are split into remote high cloud, remote mid cloud, and remote low-cloud blockage before entering Σ(layer carrier × layer brightness).",
-          "validation": "Validation: all 9 historical real cases plus the 2026-06-17 Beijing case replay; score details list remote high/mid contributions."
+          "date": "2026-06-26",
+          "title": "Visible side-sector illumination v2",
+          "summary": "The main solar path stays strict. Visible side sectors only add carrier evidence, and their illumination is scored from main-path openness, azimuth falloff, cloud-height/distance elevation, air transmission, and cloud-layer type.",
+          "validation": "Validation: score details list the side-sector bearing and illumination evidence; one isolated distance point cannot activate the side sector; clear-sunset advice no longer overrides the side-sector carrier."
         },
         "layerBrightness": {
           "date": "2026-06-13",
@@ -356,12 +356,12 @@ const translations = {
         "cloudStructure": {
           "title": "1. Carrier Candidates",
           "subtitle": "Carrier Candidates · Pick what can take color",
-          "desc": "The model first compares local cloud, remote layer carriers, and the weak aerosol carrier, then uses the strongest colorable carrier as the main carrier.",
+          "desc": "The model first compares local cloud, remote layer carriers, visible side-sector carriers, and the weak aerosol carrier, then uses the strongest colorable carrier as the main carrier.",
           "highCloud": "Local cloud: high×0.75 + mid×0.45 gives the upper-cloud canvas, then maps it to a range score",
           "midCloud": "Sunset direction: the 10/25/50/75/100km two-hour window is split into remote high cloud, remote mid cloud, and remote low-cloud blockage",
-          "lowCloudBonus": "Aerosol: only a weak carrier candidate; when cloud carrier is stronger, it is not shown as a separate final-score bonus",
-          "formula": "Carrier candidate = max(local cloud, remote layer carrier, weak aerosol carrier)\nRemote layer carrier = sunset-direction high/mid cloud - low-cloud blockage",
-          "highCloudBonus": "The result page shows candidate evidence, for example: local cloud 77.9; sunset direction 37.9; aerosol 27.3; using cloud carrier 77.9. Unused weak carriers are not presented as final-score bonuses."
+          "lowCloudBonus": "Visible side sector: the main path must be open first, then azimuth, cloud-height/distance elevation, air transmission, and layer type determine illumination; aerosol remains a weak carrier candidate",
+          "formula": "Carrier candidate = max(local cloud, remote layer carrier, visible side-sector carrier, weak aerosol carrier)\nVisible side-sector carrier = main-path openness × azimuth falloff × cloud-height/distance elevation × air transmission × layer weight",
+          "highCloudBonus": "The result page shows candidate evidence, for example: local cloud 77.9; remote layers 37.9; visible side sector 52.4 near 325°; adopted visible side sector 52.4. Unused weak carriers are not presented as final-score bonuses."
         },
         "lightPath": {
           "title": "2. Local Cloud",
@@ -374,9 +374,9 @@ const translations = {
         "transparency": {
           "title": "3. Layer Brightness",
           "subtitle": "Layer Brightness · Is the cloud actually lit",
-          "desc": "Light path, solar geometry, low-cloud blockage, cloud thickness, and direct/diffuse evidence combine into layer brightness. It is part of the base score, not a repeated standalone adjustment.",
-          "visibility": "An open path raises usable cloud brightness; sun-direction blockage lowers it",
-          "humidity": "Thick cloud, gray veil, and low solar-transmission diagnostics stay inside brightness estimation instead of being stacked on the user page",
+          "desc": "The main solar path, side-sector illumination, low-cloud blockage, cloud thickness, direct/diffuse beam evidence, and brightness response combine into layer brightness. It is part of the base score, not a repeated standalone adjustment.",
+          "visibility": "An open main path raises usable brightness; side sectors need enough samples and feasible illumination geometry before they count",
+          "humidity": "Thick cloud, gray veil, high moisture, and weak direct beam diagnostics stay inside brightness estimation instead of being stacked on the user page",
           "formula": "Base score = Σ(layer carrier × layer brightness)"
         },
         "layerDiversity": {
@@ -384,7 +384,7 @@ const translations = {
           "subtitle": "Air Rendering · Color quality",
           "desc": "Air rendering explains color quality only: visibility, humidity, post-rain state, AOD/PM/dust jointly affect warm red-orange color strength.",
           "threeLayer": "Open path with a non-gray cloud deck: light to moderate particles can enhance warmth",
-          "twoLayer": "Full mid/high cloud with elevated PM/AOD: gray-veil pressure continuously lowers rendering",
+          "twoLayer": "Full mid/high cloud with elevated PM/AOD, moisture, or weak direct beam: gray-veil and thick-cloud pressure continuously lower rendering",
           "oneLayer": "Precipitation and low visibility reduce color clarity"
         },
         "lowCloudPenalty": {
@@ -590,6 +590,7 @@ const translations = {
           "remoteLayerCarrier": "Remote layer carrier",
           "remoteHighLayer": "Sunset-direction high cloud",
           "remoteMidLayer": "Sunset-direction mid cloud",
+          "visibleSectorCarrier": "Visible side-sector carrier",
           "scoringV2": "Open-path warm scattering",
           "grayVeilAirRendering": "Gray-veil rendering",
           "evidence": "Calculation evidence"
@@ -599,12 +600,13 @@ const translations = {
           "cloudCarrierCandidate": "cloud candidate {{score}}",
           "aerosolCarrierCandidate": "aerosol candidate {{score}}",
           "directionalCarrierCandidate": "sunset-direction candidate {{score}}",
+          "visibleSectorCarrierCandidate": "visible side sector {{score}} near {{bearing}}°",
           "remoteLayerCarrierCandidate": "remote layers {{score}} (high {{high}}, mid {{mid}}, low block {{low}})",
           "carrierCandidates": "candidates: {{candidates}}; adopted {{active}} {{score}}",
           "upperCloudCanvasShort": "upper canvas {{upper}} → range score {{range}}",
           "cloudTypeAdjustmentShort": "cloud type {{bonus}}",
           "cloudThicknessAdjustmentShort": "cloud thickness {{adjustment}}",
-          "cloudCarrierSource": "chosen from local cloud, remote layer carrier, or weak aerosol carrier",
+          "cloudCarrierSource": "chosen from local cloud, remote layer carrier, visible side-sector carrier, or weak aerosol carrier",
           "cloudPenalty": "cloud canvas {{canvas}}, low cloud ×{{low}}, overcast ×{{overcast}}",
           "upperCloudCanvas": "upper canvas {{upper}} = high {{high}}×0.75 + mid {{mid}}×0.45; range score {{range}}",
           "highCloudBonus": "high-cloud dominant bonus {{bonus}}",
@@ -617,7 +619,9 @@ const translations = {
           "grayVeilAirRendering": "full mid/high cloud with dirty air: carrier {{carrier}}; path evidence is brightness evidence; suppressed air rendering {{air}}",
           "lightPath": "sun-direction evidence for layer brightness",
           "layerBrightnessShort": "sun direction, blockage, and illumination evidence explain whether each carrier layer is lit",
-          "layerBrightness": "brightness {{brightness}}, gate {{gate}}; local carrier {{canvas}}, remote high {{remoteHigh}}, remote mid {{remoteMid}}, remote low block {{remoteLowBlock}}, low-cloud block {{low}} / transmission {{lowBlock}}, solar {{solar}}, path {{path}}, air {{air}}, thickness {{thickness}}, beam {{beam}}",
+          "layerBrightness": "brightness {{brightness}}, gate {{gate}}; local carrier {{canvas}}, remote high {{remoteHigh}}, remote mid {{remoteMid}}, visible-sector upper cloud {{visibleSector}} near {{visibleBearing}}°, remote low block {{remoteLowBlock}}, low-cloud block {{low}} / transmission {{lowBlock}}, solar {{solar}}, path {{path}}, air {{air}}, thickness {{thickness}}, beam {{beam}}",
+          "layerBrightnessMultiplier": "effective brightness {{brightness}}; dim evidence: {{evidence}}",
+          "layerContribution": "{{layer}}: carrier {{carrier}} × brightness {{brightness}} = {{score}}",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
           "afterAdjustments": "after weather and visibility adjustments",
           "finalDisplayed": "final displayed result",
@@ -626,7 +630,7 @@ const translations = {
           "geometryCap": "sun/cloud geometry is not feasible",
           "occlusion": "distant obstruction reduces the score",
           "carrierFloor": "clear high-cloud carrier avoids over-penalty from cloud-thickness evidence",
-          "directionalSamples": "nearby clouds along the sun direction are included",
+          "directionalSamples": "main solar path stays strict; visible side sectors only provide carrier and illumination evidence",
           "lightPathScoreEvidence": "path evidence score {{light}} is folded into brightness",
           "lightPathLowCloudBlock": "low clouds block sunlight from reaching the colorable clouds",
           "lightPathRain": "rain weakens direct sunset light",
@@ -663,17 +667,17 @@ const translations = {
           "title": "Cloud carrier",
           "status": { "good": "Good", "fair": "Fair", "weak": "Weak" },
           "desc": {
-            "good": "Mid/high clouds provide a colorable canvas for sunset light.",
-            "fair": "A colorable cloud canvas exists, but coverage, height, or stability is not ideal.",
-            "weak": "The colorable cloud canvas is limited, so broad fire clouds are unlikely."
+            "good": "Local or side-sector mid/high clouds provide a colorable canvas for sunset light.",
+            "fair": "A colorable cloud canvas exists, but coverage, height, side-sector illumination, or stability is not ideal.",
+            "weak": "The colorable cloud canvas is limited, or the lit portion is too weak for broad fire clouds."
           }
         },
         "lightPath": {
           "title": "Light path",
           "status": { "good": "Good", "fair": "Fair", "weak": "Weak" },
           "desc": {
-            "good": "The sun direction is relatively open, so light can reach the cloud base.",
-            "fair": "There is some obstruction toward the sun, so color may stay local.",
+            "good": "The main solar path is relatively open, or a visible side-sector cloud band has clear illumination evidence.",
+            "fair": "There is some obstruction toward the sun, so side-sector cloud or local openings may only create local color.",
             "weak": "Low clouds or a blocked corridor obstruct the light path, making it hard for light to reach the clouds."
           }
         },
@@ -683,7 +687,7 @@ const translations = {
           "desc": {
             "good": "Moderate particles and moisture make warm red-orange color easier to show.",
             "fair": "Air conditions are ordinary; color mainly depends on clouds and light path.",
-            "weak": "Gray air or excessive particles can make color darker and flatter."
+            "weak": "Gray air, excessive particles, high moisture, or weak direct beam can make even abundant high cloud darker and flatter."
           }
         },
         "limits": {
@@ -692,7 +696,7 @@ const translations = {
           "desc": {
             "good": "No obvious suppressing condition is present.",
             "fair": "Minor unfavorable factors may reduce duration or color intensity.",
-            "weak": "Rain, thick cloud, low-cloud blockage, or gray haze can suppress the overall result."
+            "weak": "Rain, thick cloud, low-cloud blockage, gray haze, or weak direct beam can suppress the overall result."
           }
         }
       },

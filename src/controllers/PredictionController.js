@@ -1605,6 +1605,8 @@ class PredictionController {
       'aerosol.carrier': '薄雾红日载体', 'aerosol.carrierDesc': '云层很少时，适度气溶胶在光路通畅时也能带来一点暖色日落',
       'brightness.weak': '云层亮度偏弱', 'brightness.weakDesc': '系统看到云量和光路，但水汽、AOD、漫射光或厚高云证据显示这层云未必能被充分照亮',
       'brightness.good': '云层受光较好', 'brightness.goodDesc': '载体、光路和空气条件共同支持中高云被照亮',
+      'visibleSector.carrier': '侧向可视云带参与', 'visibleSector.carrierDesc': '太阳主光路保持严格，同时参考侧向可视扇区里可被照亮的中高云带',
+      'visibleSector.lightPath': '主光路 + 侧向受光', 'visibleSector.lightPathDesc': '主太阳方向先确认可透光，再按方位角、云高距离、空气透射和云层类型评估侧向云带受光',
       'lightPath.opening': '太阳方向有透光开口', 'lightPath.openingDesc': '后端沿太阳方位采样 10/25/50/75/100km，低中云走廊较通畅，光线更容易打到云层',
       'lightPath.wall': '太阳方向有阻挡走廊', 'lightPath.wallDesc': '太阳方位周边低/中云整体偏厚，光路门控会压低主评分',
       'lightPath.lowCloudBlock': '低云遮住光线', 'lightPath.lowCloudBlockDesc': '低云挡在太阳方向，阳光不容易照到中高云',
@@ -1766,6 +1768,8 @@ class PredictionController {
     const directional = lightPathAnalysis.directionalAnalysis;
     const layerBrightness = prediction?.layerBrightness || prediction?.breakdown?.layerBrightness;
     const layerBrightnessAdjustment = prediction?.layerBrightnessAdjustment || prediction?.breakdown?.layerBrightnessAdjustment;
+    const visibleSectorCarrier = prediction?.visibleSectorCarrier || prediction?.carrierAnalysis?.visibleSectorCarrier || prediction?.breakdown?.visibleSectorCarrier;
+    const visibleSectorApplied = Boolean(visibleSectorCarrier?.applied || prediction?.carrierAnalysis?.activeCarrier === 'visible_sector');
 
     const carrierScore = Number(
       prediction?.breakdown?.carrierScore ??
@@ -1784,7 +1788,7 @@ class PredictionController {
       : weather.high * 0.8 + weather.mid * 0.55;
 
     let carrierLevel = 'weak';
-    if (carrierAdjustment?.applied || denseCarrierCanvasOnly || cloudCanvasScore >= 58 || weather.high >= 60 || effectiveCloudCover >= 48) {
+    if (visibleSectorApplied || carrierAdjustment?.applied || denseCarrierCanvasOnly || cloudCanvasScore >= 58 || weather.high >= 60 || effectiveCloudCover >= 48) {
       carrierLevel = 'good';
     } else if (cloudCanvasScore >= 30 || weather.high >= 15 || weather.mid >= 20 || aerosolCarrier?.activatedScore >= 12 || effectiveCloudCover >= 18) {
       carrierLevel = 'fair';
@@ -1795,7 +1799,7 @@ class PredictionController {
     const directionalOpening = directionalReason.includes('opening');
     const hasDirectionalSamples = Boolean(directionalReason);
     let lightPathLevel = 'weak';
-    if (directionalOpening || (!hasDirectionalSamples && lightPathScore >= 75)) {
+    if (visibleSectorApplied || directionalOpening || (!hasDirectionalSamples && lightPathScore >= 75)) {
       lightPathLevel = 'good';
     } else if (lightPathScore >= 45 || weather.low < 35) {
       lightPathLevel = 'fair';
@@ -1893,15 +1897,19 @@ class PredictionController {
     carrierFactor.summary = this._isEnglishUI()
       ? (carrierLevel === 'good' ? 'Usable color canvas' : (carrierLevel === 'weak' ? 'Weak cloud canvas' : 'Partial cloud canvas'))
       : (carrierLevel === 'good' ? '有可染色云面' : (carrierLevel === 'weak' ? '云面基础偏弱' : '云面基础一般'));
-    carrierFactor.desc = this._buildCarrierAnalysisDesc(carrierLevel, brightnessLevel);
+    carrierFactor.desc = this._buildCarrierAnalysisDesc(carrierLevel, brightnessLevel, visibleSectorApplied);
 
     return [
       carrierFactor,
-      Object.assign(factor('lightPath', lightPathLevel, lightPathLevel === 'weak' ? 'warn' : 'info'), {
+      Object.assign(
+        factor('lightPath', lightPathLevel, lightPathLevel === 'weak' ? 'warn' : 'info'),
+        {
         insight: this._isEnglishUI()
-          ? (lightPathLevel === 'good' ? 'Sun path is open' : (lightPathLevel === 'weak' ? 'Sun path is blocked' : 'Some path obstruction'))
-          : (lightPathLevel === 'good' ? '太阳方向较通透' : (lightPathLevel === 'weak' ? '光路遮挡明显' : '光路有局部遮挡'))
-      }),
+          ? (visibleSectorApplied ? 'Side sector is lit' : (lightPathLevel === 'good' ? 'Sun path is open' : (lightPathLevel === 'weak' ? 'Sun path is blocked' : 'Some path obstruction')))
+          : (visibleSectorApplied ? '侧向云带有受光证据' : (lightPathLevel === 'good' ? '太阳方向较通透' : (lightPathLevel === 'weak' ? '光路遮挡明显' : '光路有局部遮挡')))
+        },
+        visibleSectorApplied ? { desc: this._buildVisibleSectorLightPathDesc(visibleSectorCarrier) } : {}
+      ),
       Object.assign(factor('rendering', renderingLevel, 'leaf'), {
         insight: this._isEnglishUI()
           ? (renderingLevel === 'good' ? 'Warm color support' : (renderingLevel === 'weak' ? 'Colors may fade' : 'Neutral air color'))
@@ -1915,18 +1923,34 @@ class PredictionController {
     ];
   }
 
-  _buildCarrierAnalysisDesc(carrierLevel, brightnessLevel) {
+  _buildCarrierAnalysisDesc(carrierLevel, brightnessLevel, visibleSectorApplied = false) {
     if (this._isEnglishUI()) {
+      if (visibleSectorApplied && brightnessLevel === 'weak') return 'A side visible cloud band is available as a color carrier, but weak direct light, moisture, or gray-veil evidence may keep the color muted.';
+      if (visibleSectorApplied) return 'Besides the strict sun-direction path, a side visible mid/high cloud band is also counted as a colorable carrier.';
       if (carrierLevel === 'weak') return 'The colorable cloud canvas is limited, or the lit portion is too weak for broad fire clouds.';
       if (brightnessLevel === 'good') return 'Mid/high clouds provide a colorable canvas, and the lit portion is strong enough to support visible color.';
       if (brightnessLevel === 'weak') return 'There is some colorable cloud canvas, but the lit portion is weak, so color may stay faint or local.';
       return 'Some colorable cloud canvas is present, but height, coverage, or illumination is not ideal.';
     }
 
+    if (visibleSectorApplied && brightnessLevel === 'weak') return '侧向可视中高云带已经作为载体参与，但直射弱、水汽或灰幕证据仍可能让颜色偏淡。';
+    if (visibleSectorApplied) return '除严格太阳主光路外，侧向可视中高云带也作为可染色载体参与评分。';
     if (carrierLevel === 'weak') return '可染色云面不足，或真正被照亮的部分偏弱，难形成成片火烧云。';
     if (brightnessLevel === 'good') return '中高云提供可染色云面，受光也够，具备显色基础。';
     if (brightnessLevel === 'weak') return '有可染色云面，但真正被照亮的部分偏弱，颜色可能偏淡或只出现在局部。';
     return '有可染色云面，但面积、高度或受光稳定性一般，表现更偏局部。';
+  }
+
+  _buildVisibleSectorLightPathDesc(visibleSectorCarrier) {
+    const bearing = Number(visibleSectorCarrier?.bestDirection?.bearing);
+    if (this._isEnglishUI()) {
+      return Number.isFinite(bearing)
+        ? `The main sun path remains strict; the side sector near ${bearing.toFixed(0)} degrees has illuminated mid/high cloud evidence.`
+        : 'The main sun path remains strict; a side visible sector has illuminated mid/high cloud evidence.';
+    }
+    return Number.isFinite(bearing)
+      ? `太阳主光路仍严格判断；约 ${bearing.toFixed(0)}° 侧向扇区有中高云受光证据。`
+      : '太阳主光路仍严格判断；侧向可视扇区有中高云受光证据。';
   }
 
   extractAnalysisWeather(prediction) {
@@ -2328,7 +2352,7 @@ class PredictionController {
         return ledgerText('details.lightPathRain', {}, 'rain weakens direct sunset light', '降水会削弱日落直射光');
       }
       return ['solar_direction_openmeteo', 'sunset_visible_sector_openmeteo'].includes(prediction?.lightPathAnalysis?.source)
-        ? ledgerText('details.directionalSamples', {}, 'solar-azimuth samples at 10/25/50/75/100km are included', '已接入太阳方位 10/25/50/75/100km 周边采样')
+        ? ledgerText('details.directionalSamples', {}, 'main solar path stays strict; visible side sectors only provide carrier and illumination evidence', '主光路按太阳方向严格判断；侧向可视扇区只作为云载体和受光证据参与')
         : Number.isFinite(Number(lightPathScore))
           ? ledgerText('details.lightPathScoreEvidence', { light: fmt(lightPathScore, 1) }, 'path evidence score {{light}} is folded into brightness', '光路证据 {{light}} 已并入受光亮度')
           : '';
@@ -2482,6 +2506,8 @@ class PredictionController {
           canvas: fmt(layers.cloudCanvas, 1),
           remoteHigh: fmt(layers.remoteHigh, 1),
           remoteMid: fmt(layers.remoteMid, 1),
+          visibleSector: fmt(layers.visibleSectorUpper, 1),
+          visibleBearing: fmt(layers.visibleSectorBestBearing, 0),
           remoteLowBlock: fmt(layers.remoteLowBlock, 1),
           low: fmt(layers.low, 1),
           lowBlock: fmt(factors.lowBlockFactor, 2),
@@ -2491,8 +2517,8 @@ class PredictionController {
           thickness: fmt(factors.thicknessFactor, 2),
           beam: fmt(factors.beamFactor, 2)
         },
-        'brightness {{brightness}}, gate {{gate}}; local carrier {{canvas}}, remote high {{remoteHigh}}, remote mid {{remoteMid}}, remote low block {{remoteLowBlock}}, low-cloud block {{low}} / transmission {{lowBlock}}, solar {{solar}}, path {{path}}, air {{air}}, thickness {{thickness}}, beam {{beam}}',
-        '亮度 {{brightness}}，门控 {{gate}}；本地载体 {{canvas}}，远端高云 {{remoteHigh}}，远端中云 {{remoteMid}}，远端低云遮挡 {{remoteLowBlock}}，低云遮挡 {{low}} / 透过 {{lowBlock}}，太阳几何 {{solar}}，光路因子 {{path}}，空气 {{air}}，云厚 {{thickness}}，直射/散射 {{beam}}'
+        'brightness {{brightness}}, gate {{gate}}; local carrier {{canvas}}, remote high {{remoteHigh}}, remote mid {{remoteMid}}, visible-sector upper cloud {{visibleSector}} near {{visibleBearing}}°, remote low block {{remoteLowBlock}}, low-cloud block {{low}} / transmission {{lowBlock}}, solar {{solar}}, path {{path}}, air {{air}}, thickness {{thickness}}, beam {{beam}}',
+        '亮度 {{brightness}}，门控 {{gate}}；本地载体 {{canvas}}，远端高云 {{remoteHigh}}，远端中云 {{remoteMid}}，侧向上层云 {{visibleSector}}（约 {{visibleBearing}}°），远端低云遮挡 {{remoteLowBlock}}，低云遮挡 {{low}} / 透过 {{lowBlock}}，太阳几何 {{solar}}，光路因子 {{path}}，空气 {{air}}，云厚 {{thickness}}，直射/散射 {{beam}}'
       );
     })();
 
