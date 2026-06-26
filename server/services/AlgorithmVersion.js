@@ -1,13 +1,13 @@
 'use strict';
 
-const ALGORITHM_VERSION = '2026.06.25-visible-sector-carriers-v1';
+const ALGORITHM_VERSION = '2026.06.26-visible-sector-illumination-v2';
 
 const ALGORITHM_CHANGELOG = [
   {
     version: ALGORITHM_VERSION,
-    date: '2026-06-25',
-    title: 'Visible sunset sector carriers v1',
-    summary: 'Solar-direction light-path scoring remains strict on the sun azimuth, while additional azimuth offsets around the sun are sampled as visible cloud-carrier evidence for sunset/sunrise sector glow.'
+    date: '2026-06-26',
+    title: 'Visible sunset sector illumination v2',
+    summary: 'Visible-sector carrier scoring now keeps the solar light path strict while applying side illumination from path transparency, azimuth offset, cloud layer height versus distance, and local air transmission.'
   },
   {
     version: '2026.06.17-remote-layer-carriers-v1',
