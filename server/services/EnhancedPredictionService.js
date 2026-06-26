@@ -914,6 +914,42 @@ function assessThickHighCloudPenalty(weatherData, cloudThickness) {
   };
 }
 
+function maybeSuppressWaterHeavyHighCloudCap(thickHighCloudPenalty, visibleSectorCarrier, weatherData = {}) {
+  if (!thickHighCloudPenalty?.applied || thickHighCloudPenalty.reason !== 'water_heavy_high_cloud_cap_48') {
+    return thickHighCloudPenalty;
+  }
+
+  const lowClouds = Number(weatherData.lowClouds || 0);
+  const precipitation = Number(weatherData.precipitation ?? weatherData.rain ?? weatherData.showers ?? 0);
+  const visibility = Number(weatherData.visibility ?? 20);
+  const visibleScore = Number(visibleSectorCarrier?.score ?? 0);
+  const upperSignal = Number(visibleSectorCarrier?.metrics?.upperSignal ?? 0);
+  const lowMidBlock = Number(visibleSectorCarrier?.metrics?.lowMidBlock ?? 100);
+  const hasStrongSideCarrier = visibleSectorCarrier?.applied
+    && visibleScore >= 40
+    && upperSignal >= 45
+    && lowMidBlock <= 35;
+
+  if (!hasStrongSideCarrier || lowClouds > 10 || precipitation > 0.2 || visibility < 10) {
+    return thickHighCloudPenalty;
+  }
+
+  return {
+    applied: false,
+    cap: null,
+    reason: 'visible_sector_relief_from_water_heavy_high_cloud_cap',
+    suppressed: true,
+    originalCap: thickHighCloudPenalty.cap,
+    originalReason: thickHighCloudPenalty.reason,
+    metrics: {
+      visibleSectorScore: parseFloat(visibleScore.toFixed(1)),
+      visibleSectorUpperSignal: parseFloat(upperSignal.toFixed(1)),
+      visibleSectorLowMidBlock: parseFloat(lowMidBlock.toFixed(1)),
+      visibility
+    }
+  };
+}
+
 function parseOptionalFiniteMetric(value) {
   if (value === null || value === undefined || value === '') return null;
   const numeric = Number(value);
@@ -2822,7 +2858,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   }
 
   // 5.6 厚高云惩罚：厚高云不再被简单视为理想画布
-  const thickHighCloudPenalty = assessThickHighCloudPenalty(weatherData, cloudThickness);
+  let thickHighCloudPenalty = assessThickHighCloudPenalty(weatherData, cloudThickness);
   if (thickHighCloudPenalty.applied) {
     const originalLightPathScore = lightPathScore.score;
     lightPathScore.score = Math.min(lightPathScore.score, 55);
@@ -2836,6 +2872,11 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   const directionalCurtainCarrier = scoreDirectionalCurtainCarrier(remoteCloudData, lightPathScore, weatherData);
   const remoteLayerCarriers = scoreRemoteLayerCarriers(remoteCloudData, lightPathScore, weatherData);
   const visibleSectorCarrier = scoreVisibleSectorCarrier(remoteCloudData, lightPathScore, weatherData);
+  const suppressedThickHighCloudPenalty = maybeSuppressWaterHeavyHighCloudCap(thickHighCloudPenalty, visibleSectorCarrier, weatherData);
+  if (suppressedThickHighCloudPenalty !== thickHighCloudPenalty) {
+    lightPathScore.thickHighCloudPenalty = suppressedThickHighCloudPenalty;
+    thickHighCloudPenalty = suppressedThickHighCloudPenalty;
+  }
   const carrierScore = buildCarrierScore(canvasScore, aerosolCarrierScore, directionalCurtainCarrier, remoteLayerCarriers, visibleSectorCarrier);
   const lightPathGate = buildLightPathGate(lightPathScore, cloudTypeAdjustment);
   const layerBrightness = LayerBrightnessService.scoreLayerBrightness({
