@@ -2088,6 +2088,7 @@ class PredictionController {
     const aerosolHazeCap = prediction?.aerosolHazeCap;
     const carrierAdjustment = prediction?.highCloudCarrierAdjustment;
     const directionalCurtainCarrier = prediction?.directionalCurtainCarrier || prediction?.breakdown?.directionalCurtainCarrier;
+    const visibleSectorCarrier = prediction?.visibleSectorCarrier || prediction?.carrierAnalysis?.visibleSectorCarrier || prediction?.breakdown?.visibleSectorCarrier;
     const remoteLayerCarriers = prediction?.remoteLayerCarriers || prediction?.carrierAnalysis?.remoteLayerCarriers || prediction?.breakdown?.remoteLayerCarriers || breakdown.remoteLayerCarriers;
     const postRainAdjustment = prediction?.postRainAdjustment;
     const scoringV2 = prediction?.scoringV2;
@@ -2128,6 +2129,7 @@ class PredictionController {
       low: ledgerText('labels.lowLayer', {}, 'Low cloud', '低云层'),
       aerosol: ledgerText('labels.aerosolCarrier', {}, 'Aerosol carrier', '气溶胶载体'),
       directional: ledgerText('labels.directionalCarrier', {}, 'Sun-direction carrier', '日落方向载体'),
+      visibleSector: ledgerText('labels.visibleSectorCarrier', {}, 'Visible sector carrier', '侧向可视云带'),
       remoteHigh: ledgerText('labels.remoteHighLayer', {}, 'Sun-direction high cloud', '日落方向高云'),
       remoteMid: ledgerText('labels.remoteMidLayer', {}, 'Sun-direction mid cloud', '日落方向中云')
     }[key] || key || '--');
@@ -2135,6 +2137,7 @@ class PredictionController {
       cloud: ledgerText('labels.cloudCarrier', {}, 'Cloud carrier', '云层载体'),
       aerosol: ledgerText('labels.aerosolCarrier', {}, 'Aerosol carrier', '气溶胶载体'),
       directional_curtain: ledgerText('labels.directionalCarrier', {}, 'Sun-direction carrier', '日落方向载体'),
+      visible_sector: ledgerText('labels.visibleSectorCarrier', {}, 'Visible sector carrier', '侧向可视云带'),
       remote_layer: ledgerText('labels.remoteLayerCarrier', {}, 'Remote layer carrier', '远端分层载体')
     }[key] || ledgerText('labels.cloudCarrier', {}, 'Cloud carrier', '云层载体'));
 
@@ -2352,6 +2355,17 @@ class PredictionController {
           { score: fmt(directionalCurtainCarrier.score, 1) },
           'sun-direction {{score}}',
           '日落方向 {{score}}'
+        ));
+      }
+      if (visibleSectorCarrier?.applied && Number.isFinite(Number(visibleSectorCarrier.score))) {
+        candidateParts.push(ledgerText(
+          'details.visibleSectorCarrierCandidate',
+          {
+            score: fmt(visibleSectorCarrier.score, 1),
+            bearing: fmt(visibleSectorCarrier.bestDirection?.bearing, 0)
+          },
+          'visible sector {{score}} near {{bearing}}°',
+          '侧向可视云带 {{score}}（约 {{bearing}}°）'
         ));
       }
       if (remoteLayerCarriers?.applied) {

@@ -1697,6 +1697,10 @@ describe('EnhancedPredictionService', () => {
       });
       expect(result.carrierAnalysis.activeCarrier).toBe('visible_sector');
       expect(result.breakdown.visibleSectorCarrier.applied).toBe(true);
+      expect(result.clearSunsetAdvice).toMatchObject({
+        applied: false,
+        metrics: { visibleSectorCarrierApplied: true }
+      });
       expect(result.layerBrightness.layers.visibleSectorBestBearing).toBe(285);
       expect(result.visibleSectorCarrier.metrics).toMatchObject({
         azimuthFactor: 1,
@@ -1745,6 +1749,59 @@ describe('EnhancedPredictionService', () => {
       expect(carrier.bestDirection).toMatchObject({ offsetDeg: -20, bearing: 285 });
       expect(nearSolar.illuminationFactor).toBeGreaterThan(farSide.illuminationFactor);
       expect(nearSolar.score).toBeGreaterThan(farSide.score);
+    });
+
+    test('should ignore visible-sector directions with too few distance samples', () => {
+      const clearProfile = [10, 25, 50, 75, 100].flatMap(distanceKm => [
+        {
+          offsetDeg: 0,
+          sectorBearing: 305,
+          bearing: 305,
+          distanceKm,
+          lowCloud: 0,
+          midCloud: 0,
+          highCloud: 0,
+          totalCloud: 0
+        },
+        {
+          offsetDeg: 20,
+          sectorBearing: 325,
+          bearing: 325,
+          distanceKm,
+          lowCloud: 0,
+          midCloud: 0,
+          highCloud: 0,
+          totalCloud: 0
+        }
+      ]);
+      const carrier = EnhancedPredictionService.scoreVisibleSectorCarrier(
+        {
+          source: 'sunset_visible_sector_openmeteo',
+          azimuth: 305,
+          visibleSectorSamples: [
+            {
+              offsetDeg: -20,
+              sectorBearing: 285,
+              bearing: 285,
+              distanceKm: 75,
+              lowCloud: 0,
+              midCloud: 95,
+              highCloud: 80,
+              totalCloud: 98
+            },
+            ...clearProfile
+          ]
+        },
+        { score: 82, directionalAnalysis: { reason: 'solar_direction_opening' } },
+        { visibility: 22, precipitation: 0 }
+      );
+
+      const sparseDirection = carrier.directions.find(item => item.offsetDeg === -20);
+      expect(carrier.applied).toBe(false);
+      expect(sparseDirection).toMatchObject({
+        score: 0,
+        weakReason: 'insufficient_direction_samples'
+      });
     });
 
     test('should require a full solar-direction sample set before applying curtain carrier', () => {

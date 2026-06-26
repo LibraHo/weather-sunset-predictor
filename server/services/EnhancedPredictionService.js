@@ -1276,6 +1276,29 @@ function scoreVisibleSectorCarrier(remoteCloudData, lightPathScore = {}, weather
   const airFactor = scoreVisibleSectorAirFactor(weatherData, visibility);
 
   const directionScores = Array.from(byOffset.entries()).map(([offsetDeg, samples]) => {
+    if (samples.length < 4) {
+      return {
+        offsetDeg,
+        bearing: Number(samples[0]?.sectorBearing ?? samples[0]?.bearing ?? null),
+        score: 0,
+        low: 0,
+        mid: 0,
+        high: 0,
+        total: null,
+        midSignal: 0,
+        highSignal: 0,
+        upperSignal: 0,
+        lowMidBlock: 100,
+        azimuthFactor: scoreVisibleSectorAzimuthFactor(offsetDeg),
+        pathFactor,
+        airFactor,
+        illuminationFactor: 0,
+        midIlluminated: 0,
+        highIlluminated: 0,
+        sampleCount: samples.length,
+        weakReason: 'insufficient_direction_samples'
+      };
+    }
     const totalWeight = samples.reduce((sum, sample, index) => sum + getSolarDirectionSampleWeight(sample, index), 0);
     const avg = (key) => samples.reduce((sum, sample, index) => (
       sum + Number(sample[key] || 0) * getSolarDirectionSampleWeight(sample, index)
@@ -1329,7 +1352,7 @@ function scoreVisibleSectorCarrier(remoteCloudData, lightPathScore = {}, weather
     };
   });
 
-  const best = directionScores.reduce((winner, item) => item.score > winner.score ? item : winner, { score: 0 });
+  const best = directionScores.reduce((winner, item) => (!winner || item.score > winner.score) ? item : winner, null);
   if (!best || best.score < 24) {
     return {
       applied: false,
@@ -1352,7 +1375,8 @@ function scoreVisibleSectorCarrier(remoteCloudData, lightPathScore = {}, weather
         score: parseFloat(item.score.toFixed(1)),
         upperSignal: parseFloat(item.upperSignal.toFixed(1)),
         lowMidBlock: parseFloat(item.lowMidBlock.toFixed(1)),
-        illuminationFactor: parseFloat(item.illuminationFactor.toFixed(2))
+        illuminationFactor: parseFloat(item.illuminationFactor.toFixed(2)),
+        weakReason: item.weakReason || null
       }))
     };
   }
@@ -1391,7 +1415,8 @@ function scoreVisibleSectorCarrier(remoteCloudData, lightPathScore = {}, weather
       score: parseFloat(item.score.toFixed(1)),
       upperSignal: parseFloat(item.upperSignal.toFixed(1)),
       lowMidBlock: parseFloat(item.lowMidBlock.toFixed(1)),
-      illuminationFactor: parseFloat(item.illuminationFactor.toFixed(2))
+      illuminationFactor: parseFloat(item.illuminationFactor.toFixed(2)),
+      weakReason: item.weakReason || null
     }))
   };
 }
@@ -1801,6 +1826,8 @@ function assessClearSunsetViewingAdvice(weatherData, canvasScore, lightPathScore
 
   const clearSkyCarrierMissing = canvasScore?.cloudLevel === 'space' || upperCloudCover < 12;
   const directionalCarrierApplied = context.directionalCurtainCarrier?.applied === true;
+  const visibleSectorCarrierApplied = context.visibleSectorCarrier?.applied === true
+    || canvasScore?.activeCarrier === 'visible_sector';
   const hardBlocked =
     context.aerosolHazeCap?.applied ||
     context.severeCap?.reason ||
@@ -1812,6 +1839,7 @@ function assessClearSunsetViewingAdvice(weatherData, canvasScore, lightPathScore
   const applied = Boolean(
     clearSkyCarrierMissing &&
     !directionalCarrierApplied &&
+    !visibleSectorCarrierApplied &&
     lowClouds <= 20 &&
     precipitation <= 0.2 &&
     visibility >= 15 &&
@@ -1828,7 +1856,8 @@ function assessClearSunsetViewingAdvice(weatherData, canvasScore, lightPathScore
       visibility: parseFloat(visibility.toFixed(1)),
       precipitation: parseFloat(precipitation.toFixed(2)),
       lightPath: Number.isFinite(lightPath) ? parseFloat(lightPath.toFixed(1)) : null,
-      directionalCarrierApplied
+      directionalCarrierApplied,
+      visibleSectorCarrierApplied
     }
   };
 }
@@ -3005,7 +3034,8 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
       occlusion,
       geometric,
       postRainAdjustment,
-      directionalCurtainCarrier
+      directionalCurtainCarrier,
+      visibleSectorCarrier
     })
     : { applied: false, reason: null, metrics: null };
   let adjustedAdvice = finalResult.advice;
