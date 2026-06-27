@@ -38,7 +38,8 @@ export async function reverseGeocode(lat, lon) {
   });
 
   const data = response?.data || response || {};
-  return data.name || data.displayName || data.display_name || '';
+  const name = data.name || data.displayName || data.display_name || '';
+  return typeof name === 'string' ? name : '';
 }
 
 export default { searchLocations, reverseGeocode };

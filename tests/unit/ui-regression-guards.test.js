@@ -64,6 +64,35 @@ describe('recent user-reported UI regression guards', () => {
     expect(metricHoverBlock).not.toContain('var(--theme-accent)');
   });
 
+  test('mobile dark score details use neutral Xiake night-sky glass', () => {
+    const source = css();
+    const block = source.match(/\/\* UI regression: mobile dark score details use Xiake night-sky glass, not bright warm glass\. \*\/[\s\S]*?@media \(max-width: 640px\) and \(prefers-color-scheme: dark\)/)?.[0] || '';
+    const autoBlock = source.match(/@media \(max-width: 640px\) and \(prefers-color-scheme: dark\) \{[\s\S]*?body\.theme-auto \.score-breakdown-ledger \.score-ledger-step-final \.score-ledger-body \{[\s\S]*?\n  \}[\s\S]*?\n\}/)?.[0] || '';
+
+    expect(block).toContain('@media (max-width: 640px)');
+    expect(block).toContain('html.theme-dark .score-breakdown-ledger');
+    expect(block).toContain('body[data-actual-theme="dark"] .score-breakdown-ledger');
+    expect(block).toContain('linear-gradient(180deg, rgba(10, 17, 36, 0.985), rgba(6, 11, 26, 0.975))');
+    expect(block).toContain('border-color: rgba(96, 116, 150, 0.36) !important;');
+    expect(block).toContain('.score-ledger-body');
+    expect(block).toContain('background: rgba(9, 16, 34, 0.94) !important;');
+    expect(block).toContain('.score-ledger-summary');
+    expect(block).toContain('rgba(9, 16, 34, 0.96)');
+    expect(block).toContain('.score-ledger-detail summary');
+    expect(block).toContain('rgba(190, 203, 224, 0.82)');
+    expect(block).toContain('.score-ledger-step-final .score-ledger-result');
+    expect(block).toContain('rgba(147, 197, 253, 0.98)');
+    expect(block).toContain('border-color: rgba(96, 165, 250, 0.30) !important;');
+    expect(block).toContain('@media (max-width: 640px) and (prefers-color-scheme: dark)');
+    expect(autoBlock).toContain('html.theme-auto .score-breakdown-ledger .score-ledger-summary');
+    expect(autoBlock).toContain('body.theme-auto .score-breakdown-ledger .score-ledger-summary');
+    expect(autoBlock).toContain('body.theme-auto .score-breakdown-ledger .score-ledger-body');
+    expect(autoBlock).toContain('background: rgba(9, 16, 34, 0.94) !important;');
+    expect(block).not.toContain('rgba(255,255,255,0.34)');
+    expect(block).not.toContain('rgba(31, 24, 16');
+    expect(block).not.toContain('rgba(251, 191, 36, 0.28)');
+  });
+
   test('3-day glow forecast is a weather tab with a loading state', () => {
     const page = html();
     const source = css();
@@ -281,6 +310,7 @@ describe('recent user-reported UI regression guards', () => {
   test('score breakdown popover keeps translucent glass effect', () => {
     const source = css();
     const block = source.match(/\.score-breakdown-popover,\nbody\.theme-light \.score-breakdown-popover,[\s\S]*?\n\}/)?.[0] || '';
+    const darkLedgerBlock = source.match(/\/\* Dark score ledger cards must stay in the Xiake night-glass language\. \*\/[\s\S]*?body\[data-actual-theme="dark"\] \.score-ledger-step-final \.score-ledger-body \{[\s\S]*?\n\}/)?.[0] || '';
 
     expect(block).toContain('color-mix(in srgb, var(--glass-bg-heavy) 72%, transparent)');
     expect(block).toContain('backdrop-filter: blur(var(--glass-blur-heavy)) saturate(1.24)');
@@ -289,6 +319,13 @@ describe('recent user-reported UI regression guards', () => {
     expect(source).toContain('color-mix(in srgb, var(--glass-bg-heavy) 42%, transparent)');
     expect(source).toContain('radial-gradient(circle at 16% 0%, rgba(255, 224, 178, 0.32), transparent 38%)');
     expect(source).toContain('.score-breakdown-popover::before');
+    expect(darkLedgerBlock).toContain('html[data-actual-theme="dark"] .score-ledger-summary');
+    expect(darkLedgerBlock).toContain('body[data-actual-theme="dark"] .score-ledger-body');
+    expect(darkLedgerBlock).toContain('rgba(18, 28, 52, 0.74)');
+    expect(darkLedgerBlock).toContain('rgba(12, 20, 40, 0.68)');
+    expect(darkLedgerBlock).toContain('rgba(251, 191, 36, 0.30)');
+    expect(darkLedgerBlock).not.toContain('rgba(255,255,255,0.34)');
+    expect(darkLedgerBlock).not.toContain('var(--glass-bg-hover) 62%');
     expect(block).not.toContain('background: var(--glass-bg-heavy) !important');
   });
 

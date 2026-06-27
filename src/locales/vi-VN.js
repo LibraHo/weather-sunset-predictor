@@ -145,6 +145,7 @@
         "mode": "Mode",
         "time": "Simulation time",
         "axisScale": "Axis scale",
+        "viewMode": "View",
         "cloud": "Selected cloud"
       },
       "axis": {
@@ -152,6 +153,13 @@
         "log": "Log axis",
         "linearShort": "LINEAR axis",
         "logShort": "LOG axis"
+      },
+      "view": {
+        "crossSection": "Cross-section",
+        "facingSun": "Facing sunrise/sunset",
+        "facingSunShort": "FACING SUN",
+        "facingDistanceNote": "Depth: 25-150 km distance rings",
+        "facingHeightNote": "Height: cloud base/top projected in meters"
       },
       "fields": {
         "distance": "Distance km",
@@ -168,7 +176,7 @@
       "selectCloudHint": "Select a cloud to inspect the decision reason",
       "rules": {
         "aria": "Simulation rule notes",
-        "shadow": "Shadow: only cloud heights reached by the shadow band are blocked",
+        "shadow": "Shadow: cloud width participates in the light path, and only cloud heights reached by the shadow band are blocked",
         "scatter": "Scatter: twilight scatter adds width above and below the light band",
         "thick": "Thick veil: high coverage plus high optical depth absorbs light into gray",
         "alwaysDark": "Always dark: every sunrise/sunset sample misses warm illumination"
@@ -592,6 +600,7 @@
           "remoteLayerCarrier": "Lớp mây xa",
           "remoteHighLayer": "Mây cao hướng hoàng hôn",
           "remoteMidLayer": "Mây trung hướng hoàng hôn",
+          "visibleSectorCarrier": "Visible side-sector carrier",
           "scoringV2": "Open-path warm scattering",
           "grayVeilAirRendering": "Gray-veil rendering",
           "evidence": "Calculation evidence"
@@ -601,12 +610,13 @@
           "cloudCarrierCandidate": "cloud candidate {{score}}",
           "aerosolCarrierCandidate": "aerosol candidate {{score}}",
           "directionalCarrierCandidate": "sunset-direction candidate {{score}}",
+          "visibleSectorCarrierCandidate": "visible side sector {{score}} near {{bearing}}°",
           "remoteLayerCarrierCandidate": "lớp xa {{score}} (mây cao {{high}}, mây trung {{mid}}, mây thấp chắn {{low}})",
           "carrierCandidates": "using {{active}} {{score}}",
           "upperCloudCanvasShort": "upper canvas {{upper}} → range score {{range}}",
           "cloudTypeAdjustmentShort": "cloud type {{bonus}}",
           "cloudThicknessAdjustmentShort": "cloud thickness {{adjustment}}",
-          "cloudCarrierSource": "chosen from local cloud, sunset-direction curtain, or weak aerosol carrier",
+          "cloudCarrierSource": "chosen from local cloud, remote layer carrier, visible side-sector carrier, or weak aerosol carrier",
           "cloudPenalty": "cloud canvas {{canvas}}, low cloud ×{{low}}, overcast ×{{overcast}}",
           "upperCloudCanvas": "nền mây trung/cao {{upper}} = mây cao {{high}}×0.75 + mây trung {{mid}}×0.45; điểm khoảng {{range}}",
           "highCloudBonus": "điểm cộng khi mây cao chiếm ưu thế {{bonus}}",
@@ -619,7 +629,9 @@
           "grayVeilAirRendering": "full mid/high cloud with dirty air: carrier {{carrier}} × path {{path}} × suppressed air rendering {{air}}",
           "lightPath": "sunlight reaches the cloud layer",
           "layerBrightnessShort": "sun direction, blockage, and illumination evidence explain whether each carrier layer is lit",
-          "layerBrightness": "brightness {{brightness}}, gate {{gate}}; layer carrier {{canvas}}, low-cloud block {{low}} / transmission {{lowBlock}}, solar {{solar}}, path {{path}}, air {{air}}, thickness {{thickness}}, beam {{beam}}",
+          "layerBrightness": "brightness {{brightness}}, gate {{gate}}; layer carrier {{canvas}}, visible-sector upper cloud {{visibleSector}} near {{visibleBearing}}°, low-cloud block {{low}} / transmission {{lowBlock}}, solar {{solar}}, path {{path}}, air {{air}}, thickness {{thickness}}, beam {{beam}}",
+          "layerBrightnessMultiplier": "effective brightness {{brightness}}; dim evidence: {{evidence}}",
+          "layerContribution": "{{layer}}: carrier {{carrier}} × brightness {{brightness}} = {{score}}",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
           "afterAdjustments": "after weather and visibility adjustments",
           "finalDisplayed": "final displayed result",
@@ -628,7 +640,7 @@
           "geometryCap": "sun/cloud geometry is not feasible",
           "occlusion": "distant obstruction reduces the score",
           "carrierFloor": "clear high-cloud carrier prevents over-penalty",
-          "directionalSamples": "nearby clouds along the sun direction are included",
+          "directionalSamples": "main solar path stays strict; visible side sectors only provide carrier and illumination evidence",
           "lightPathScoreEvidence": "path evidence score {{light}} is folded into brightness",
           "lightPathLowCloudBlock": "low clouds block sunlight from reaching the colorable clouds",
           "lightPathRain": "rain weakens direct sunset light",

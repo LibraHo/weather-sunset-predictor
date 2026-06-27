@@ -8967,6 +8967,17 @@ body[data-actual-theme="dark"] .weather-feature-item:hover {
   cursor: pointer;
 }
 
+.feedback-type-grid input[type="radio"] {
+  width: auto;
+  min-width: 16px;
+  flex: 0 0 auto;
+  margin: 3px 0 0;
+}
+
+.feedback-type-grid label span {
+  min-width: 0;
+}
+
 .feedback-type-grid small {
   display: block;
   margin-top: 4px;
@@ -9437,11 +9448,281 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
   background: color-mix(in srgb, var(--theme-accent-soft, #ffb347) 22%, var(--glass-bg-hover));
   border-color: color-mix(in srgb, var(--theme-accent, #ff8c00) 40%, var(--glass-border));
 }
+
+/* Dark score ledger cards must stay in the Xiake night-glass language. */
+html.theme-dark .score-ledger-summary,
+html[data-theme="dark"] .score-ledger-summary,
+html.theme-actual-dark .score-ledger-summary,
+html[data-actual-theme="dark"] .score-ledger-summary,
+body.theme-dark .score-ledger-summary,
+body[data-theme="dark"] .score-ledger-summary,
+body.theme-actual-dark .score-ledger-summary,
+body[data-actual-theme="dark"] .score-ledger-summary {
+  background:
+    linear-gradient(145deg, rgba(148, 163, 184, 0.14), rgba(15, 23, 42, 0.22)),
+    rgba(18, 28, 52, 0.74) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;
+  color: rgba(255, 255, 255, 0.90) !important;
+}
+
+html.theme-dark .score-ledger-index,
+html[data-theme="dark"] .score-ledger-index,
+html.theme-actual-dark .score-ledger-index,
+html[data-actual-theme="dark"] .score-ledger-index,
+body.theme-dark .score-ledger-index,
+body[data-theme="dark"] .score-ledger-index,
+body.theme-actual-dark .score-ledger-index,
+body[data-actual-theme="dark"] .score-ledger-index,
+html.theme-dark .score-ledger-body,
+html[data-theme="dark"] .score-ledger-body,
+html.theme-actual-dark .score-ledger-body,
+html[data-actual-theme="dark"] .score-ledger-body,
+body.theme-dark .score-ledger-body,
+body[data-theme="dark"] .score-ledger-body,
+body.theme-actual-dark .score-ledger-body,
+body[data-actual-theme="dark"] .score-ledger-body,
+html.theme-dark .score-ledger-detail-copy,
+html[data-theme="dark"] .score-ledger-detail-copy,
+html.theme-actual-dark .score-ledger-detail-copy,
+html[data-actual-theme="dark"] .score-ledger-detail-copy,
+body.theme-dark .score-ledger-detail-copy,
+body[data-theme="dark"] .score-ledger-detail-copy,
+body.theme-actual-dark .score-ledger-detail-copy,
+body[data-actual-theme="dark"] .score-ledger-detail-copy {
+  background:
+    linear-gradient(145deg, rgba(148, 163, 184, 0.12), rgba(15, 23, 42, 0.18)),
+    rgba(12, 20, 40, 0.68) !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+html.theme-dark .score-ledger-step-final .score-ledger-body,
+html[data-theme="dark"] .score-ledger-step-final .score-ledger-body,
+html.theme-actual-dark .score-ledger-step-final .score-ledger-body,
+html[data-actual-theme="dark"] .score-ledger-step-final .score-ledger-body,
+body.theme-dark .score-ledger-step-final .score-ledger-body,
+body[data-theme="dark"] .score-ledger-step-final .score-ledger-body,
+body.theme-actual-dark .score-ledger-step-final .score-ledger-body,
+body[data-actual-theme="dark"] .score-ledger-step-final .score-ledger-body {
+  background:
+    linear-gradient(145deg, rgba(251, 191, 36, 0.13), rgba(15, 23, 42, 0.18)),
+    rgba(12, 20, 40, 0.72) !important;
+  border-color: rgba(251, 191, 36, 0.30) !important;
+}
 @media (max-width: 640px) {
   .score-breakdown-ledger {
     top: 70px;
     max-height: min(76vh, 560px);
     padding: 12px;
+  }
+}
+
+/* UI regression: mobile dark score details use Xiake night-sky glass, not bright warm glass. */
+@media (max-width: 640px) {
+  html.theme-dark .score-breakdown-ledger,
+  html[data-theme="dark"] .score-breakdown-ledger,
+  html.theme-actual-dark .score-breakdown-ledger,
+  html[data-actual-theme="dark"] .score-breakdown-ledger,
+  body.theme-dark .score-breakdown-ledger,
+  body[data-theme="dark"] .score-breakdown-ledger,
+  body.theme-actual-dark .score-breakdown-ledger,
+  body[data-actual-theme="dark"] .score-breakdown-ledger {
+    background:
+      radial-gradient(circle at 16% 0%, rgba(59, 130, 246, 0.10), transparent 34%),
+      linear-gradient(180deg, rgba(10, 17, 36, 0.985), rgba(6, 11, 26, 0.975)) !important;
+    border-color: rgba(96, 116, 150, 0.36) !important;
+    box-shadow:
+      0 22px 56px rgba(0, 0, 0, 0.56),
+      inset 0 1px 0 rgba(148, 163, 184, 0.10) !important;
+    color: rgba(241, 245, 249, 0.95) !important;
+  }
+
+  html.theme-dark .score-breakdown-ledger::before,
+  html[data-theme="dark"] .score-breakdown-ledger::before,
+  html.theme-actual-dark .score-breakdown-ledger::before,
+  html[data-actual-theme="dark"] .score-breakdown-ledger::before,
+  body.theme-dark .score-breakdown-ledger::before,
+  body[data-theme="dark"] .score-breakdown-ledger::before,
+  body.theme-actual-dark .score-breakdown-ledger::before,
+  body[data-actual-theme="dark"] .score-breakdown-ledger::before {
+    background: linear-gradient(180deg, rgba(8, 13, 30, 0.68), rgba(2, 6, 18, 0.54));
+  }
+
+  html.theme-dark .score-breakdown-ledger .score-ledger-summary,
+  html[data-theme="dark"] .score-breakdown-ledger .score-ledger-summary,
+  html.theme-actual-dark .score-breakdown-ledger .score-ledger-summary,
+  html[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-summary,
+  body.theme-dark .score-breakdown-ledger .score-ledger-summary,
+  body[data-theme="dark"] .score-breakdown-ledger .score-ledger-summary,
+  body.theme-actual-dark .score-breakdown-ledger .score-ledger-summary,
+  body[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-summary {
+    background:
+      linear-gradient(135deg, rgba(18, 30, 54, 0.96), rgba(9, 16, 34, 0.94)),
+      rgba(9, 16, 34, 0.96) !important;
+    border-color: rgba(96, 116, 150, 0.32) !important;
+    color: rgba(241, 245, 249, 0.94) !important;
+  }
+
+  html.theme-dark .score-breakdown-ledger .score-ledger-body,
+  html[data-theme="dark"] .score-breakdown-ledger .score-ledger-body,
+  html.theme-actual-dark .score-breakdown-ledger .score-ledger-body,
+  html[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-body,
+  body.theme-dark .score-breakdown-ledger .score-ledger-body,
+  body[data-theme="dark"] .score-breakdown-ledger .score-ledger-body,
+  body.theme-actual-dark .score-breakdown-ledger .score-ledger-body,
+  body[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-body {
+    background: rgba(9, 16, 34, 0.94) !important;
+    border-color: rgba(96, 116, 150, 0.28) !important;
+    box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.08) !important;
+  }
+
+  html.theme-dark .score-breakdown-ledger .score-ledger-index,
+  html[data-theme="dark"] .score-breakdown-ledger .score-ledger-index,
+  html.theme-actual-dark .score-breakdown-ledger .score-ledger-index,
+  html[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-index,
+  body.theme-dark .score-breakdown-ledger .score-ledger-index,
+  body[data-theme="dark"] .score-breakdown-ledger .score-ledger-index,
+  body.theme-actual-dark .score-breakdown-ledger .score-ledger-index,
+  body[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-index {
+    background: rgba(6, 11, 26, 0.92) !important;
+    border-color: rgba(96, 116, 150, 0.28) !important;
+  }
+
+  html.theme-dark .score-breakdown-ledger .score-ledger-detail-copy,
+  html[data-theme="dark"] .score-breakdown-ledger .score-ledger-detail-copy,
+  html.theme-actual-dark .score-breakdown-ledger .score-ledger-detail-copy,
+  html[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-detail-copy,
+  body.theme-dark .score-breakdown-ledger .score-ledger-detail-copy,
+  body[data-theme="dark"] .score-breakdown-ledger .score-ledger-detail-copy,
+  body.theme-actual-dark .score-breakdown-ledger .score-ledger-detail-copy,
+  body[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-detail-copy {
+    background: rgba(6, 11, 26, 0.88) !important;
+    border-color: rgba(96, 116, 150, 0.22) !important;
+  }
+
+  html.theme-dark .score-breakdown-ledger .score-ledger-detail summary,
+  html[data-theme="dark"] .score-breakdown-ledger .score-ledger-detail summary,
+  html.theme-actual-dark .score-breakdown-ledger .score-ledger-detail summary,
+  html[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-detail summary,
+  body.theme-dark .score-breakdown-ledger .score-ledger-detail summary,
+  body[data-theme="dark"] .score-breakdown-ledger .score-ledger-detail summary,
+  body.theme-actual-dark .score-breakdown-ledger .score-ledger-detail summary,
+  body[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-detail summary {
+    color: rgba(190, 203, 224, 0.82) !important;
+  }
+
+  html.theme-dark .score-breakdown-ledger .score-ledger-detail summary::after,
+  html[data-theme="dark"] .score-breakdown-ledger .score-ledger-detail summary::after,
+  html.theme-actual-dark .score-breakdown-ledger .score-ledger-detail summary::after,
+  html[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-detail summary::after,
+  body.theme-dark .score-breakdown-ledger .score-ledger-detail summary::after,
+  body[data-theme="dark"] .score-breakdown-ledger .score-ledger-detail summary::after,
+  body.theme-actual-dark .score-breakdown-ledger .score-ledger-detail summary::after,
+  body[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-detail summary::after {
+    border-color: rgba(96, 116, 150, 0.30) !important;
+  }
+
+  html.theme-dark .score-breakdown-ledger .score-ledger-step-final .score-ledger-index,
+  html.theme-dark .score-breakdown-ledger .score-ledger-step-final .score-ledger-result,
+  html[data-theme="dark"] .score-breakdown-ledger .score-ledger-step-final .score-ledger-index,
+  html[data-theme="dark"] .score-breakdown-ledger .score-ledger-step-final .score-ledger-result,
+  html.theme-actual-dark .score-breakdown-ledger .score-ledger-step-final .score-ledger-index,
+  html.theme-actual-dark .score-breakdown-ledger .score-ledger-step-final .score-ledger-result,
+  html[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-step-final .score-ledger-index,
+  html[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-step-final .score-ledger-result,
+  body.theme-dark .score-breakdown-ledger .score-ledger-step-final .score-ledger-index,
+  body.theme-dark .score-breakdown-ledger .score-ledger-step-final .score-ledger-result,
+  body[data-theme="dark"] .score-breakdown-ledger .score-ledger-step-final .score-ledger-index,
+  body[data-theme="dark"] .score-breakdown-ledger .score-ledger-step-final .score-ledger-result,
+  body.theme-actual-dark .score-breakdown-ledger .score-ledger-step-final .score-ledger-index,
+  body.theme-actual-dark .score-breakdown-ledger .score-ledger-step-final .score-ledger-result,
+  body[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-step-final .score-ledger-index,
+  body[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-step-final .score-ledger-result {
+    color: rgba(147, 197, 253, 0.98) !important;
+  }
+
+  html.theme-dark .score-breakdown-ledger .score-ledger-step-final .score-ledger-body,
+  html[data-theme="dark"] .score-breakdown-ledger .score-ledger-step-final .score-ledger-body,
+  html.theme-actual-dark .score-breakdown-ledger .score-ledger-step-final .score-ledger-body,
+  html[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-step-final .score-ledger-body,
+  body.theme-dark .score-breakdown-ledger .score-ledger-step-final .score-ledger-body,
+  body[data-theme="dark"] .score-breakdown-ledger .score-ledger-step-final .score-ledger-body,
+  body.theme-actual-dark .score-breakdown-ledger .score-ledger-step-final .score-ledger-body,
+  body[data-actual-theme="dark"] .score-breakdown-ledger .score-ledger-step-final .score-ledger-body {
+    background:
+      linear-gradient(135deg, rgba(14, 25, 48, 0.96), rgba(7, 13, 29, 0.94)) !important;
+    border-color: rgba(96, 165, 250, 0.30) !important;
+  }
+}
+
+@media (max-width: 640px) and (prefers-color-scheme: dark) {
+  html.theme-auto .score-breakdown-ledger,
+  body.theme-auto .score-breakdown-ledger {
+    background:
+      radial-gradient(circle at 16% 0%, rgba(59, 130, 246, 0.10), transparent 34%),
+      linear-gradient(180deg, rgba(10, 17, 36, 0.985), rgba(6, 11, 26, 0.975)) !important;
+    border-color: rgba(96, 116, 150, 0.36) !important;
+    box-shadow:
+      0 22px 56px rgba(0, 0, 0, 0.56),
+      inset 0 1px 0 rgba(148, 163, 184, 0.10) !important;
+  }
+
+  html.theme-auto .score-breakdown-ledger::before,
+  body.theme-auto .score-breakdown-ledger::before {
+    background: linear-gradient(180deg, rgba(8, 13, 30, 0.68), rgba(2, 6, 18, 0.54));
+  }
+
+  html.theme-auto .score-breakdown-ledger .score-ledger-summary,
+  body.theme-auto .score-breakdown-ledger .score-ledger-summary {
+    background:
+      linear-gradient(135deg, rgba(18, 30, 54, 0.96), rgba(9, 16, 34, 0.94)),
+      rgba(9, 16, 34, 0.96) !important;
+    border-color: rgba(96, 116, 150, 0.32) !important;
+    color: rgba(241, 245, 249, 0.94) !important;
+  }
+
+  html.theme-auto .score-breakdown-ledger .score-ledger-body,
+  body.theme-auto .score-breakdown-ledger .score-ledger-body {
+    background: rgba(9, 16, 34, 0.94) !important;
+    border-color: rgba(96, 116, 150, 0.28) !important;
+    box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.08) !important;
+  }
+
+  html.theme-auto .score-breakdown-ledger .score-ledger-index,
+  body.theme-auto .score-breakdown-ledger .score-ledger-index {
+    background: rgba(6, 11, 26, 0.92) !important;
+    border-color: rgba(96, 116, 150, 0.28) !important;
+  }
+
+  html.theme-auto .score-breakdown-ledger .score-ledger-detail-copy,
+  body.theme-auto .score-breakdown-ledger .score-ledger-detail-copy {
+    background: rgba(6, 11, 26, 0.88) !important;
+    border-color: rgba(96, 116, 150, 0.22) !important;
+  }
+
+  html.theme-auto .score-breakdown-ledger .score-ledger-detail summary,
+  body.theme-auto .score-breakdown-ledger .score-ledger-detail summary {
+    color: rgba(190, 203, 224, 0.82) !important;
+  }
+
+  html.theme-auto .score-breakdown-ledger .score-ledger-detail summary::after,
+  body.theme-auto .score-breakdown-ledger .score-ledger-detail summary::after {
+    border-color: rgba(96, 116, 150, 0.30) !important;
+  }
+
+  html.theme-auto .score-breakdown-ledger .score-ledger-step-final .score-ledger-index,
+  html.theme-auto .score-breakdown-ledger .score-ledger-step-final .score-ledger-result,
+  body.theme-auto .score-breakdown-ledger .score-ledger-step-final .score-ledger-index,
+  body.theme-auto .score-breakdown-ledger .score-ledger-step-final .score-ledger-result {
+    color: rgba(147, 197, 253, 0.98) !important;
+  }
+
+  html.theme-auto .score-breakdown-ledger .score-ledger-step-final .score-ledger-body,
+  body.theme-auto .score-breakdown-ledger .score-ledger-step-final .score-ledger-body {
+    background:
+      linear-gradient(135deg, rgba(14, 25, 48, 0.96), rgba(7, 13, 29, 0.94)) !important;
+    border-color: rgba(96, 165, 250, 0.30) !important;
   }
 }
 
@@ -10876,7 +11157,7 @@ body.theme-dark .web-user-panel .user-panel-count {
 /* Firecloud profile simulator */
 .firecloud-profile-panel {
   display: grid;
-  gap: 16px;
+  gap: 20px;
   padding: clamp(18px, 3vw, 28px);
   border-color: rgba(122, 85, 45, 0.12);
   background:
@@ -10942,20 +11223,20 @@ body.theme-dark .web-user-panel .user-panel-count {
 
 .profile-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(270px, 304px);
-  gap: 14px;
-  align-items: stretch;
+  grid-template-columns: minmax(0, 1fr) minmax(292px, 320px);
+  gap: 16px;
+  align-items: start;
 }
 
 .profile-canvas-shell {
   min-width: 0;
   overflow: hidden;
-  border: 1px solid rgba(39, 54, 89, 0.34);
-  border-radius: 8px;
-  background: #17213d;
+  border: 1px solid rgba(122, 85, 45, 0.14);
+  border-radius: 10px;
+  background: rgba(255, 252, 246, 0.78);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 16px 36px rgba(31, 41, 55, 0.16);
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    0 18px 38px rgba(86, 62, 32, 0.12);
 }
 
 #firecloud-profile-canvas {
@@ -10970,9 +11251,9 @@ body.theme-dark .web-user-panel .user-panel-count {
   justify-content: space-between;
   gap: 12px;
   padding: 9px 14px 11px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(10, 18, 38, 0.72);
-  color: rgba(239, 246, 255, 0.82);
+  border-top: 1px solid rgba(122, 85, 45, 0.12);
+  background: rgba(255, 248, 236, 0.92);
+  color: rgba(88, 62, 35, 0.84);
   font-size: 0.82rem;
   line-height: 1.25;
 }
@@ -10982,11 +11263,87 @@ body.theme-dark .web-user-panel .user-panel-count {
   align-content: start;
   gap: 12px;
   min-width: 0;
-  padding: 13px;
-  border: 1px solid rgba(122, 85, 45, 0.16);
-  border-radius: 8px;
-  background: rgba(255, 252, 246, 0.68);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.76);
+  max-height: var(--profile-controls-max-height, 474px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 14px;
+  border: 1px solid rgba(122, 85, 45, 0.14);
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 249, 240, 0.72));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    0 14px 30px rgba(86, 62, 32, 0.08);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 63, 17, 0.28) transparent;
+}
+
+.profile-controls::-webkit-scrollbar {
+  width: 8px;
+}
+
+.profile-controls::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(124, 63, 17, 0.22);
+  background-clip: padding-box;
+}
+
+body.theme-dark .firecloud-profile-panel {
+  border-color: rgba(148, 163, 184, 0.12);
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(7, 16, 31, 0.90)),
+    var(--theme-card-bg, #0f172a);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.30);
+}
+
+body.theme-dark .profile-canvas-shell {
+  border-color: rgba(148, 163, 184, 0.18);
+  background: rgba(15, 23, 42, 0.78);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 18px 38px rgba(0, 0, 0, 0.24);
+}
+
+body.theme-dark .profile-axis-note {
+  border-top-color: rgba(148, 163, 184, 0.16);
+  background: rgba(10, 18, 38, 0.82);
+  color: rgba(226, 232, 240, 0.82);
+}
+
+body.theme-dark .profile-controls {
+  border-color: rgba(148, 163, 184, 0.16);
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.88), rgba(7, 16, 31, 0.72));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 14px 30px rgba(0, 0, 0, 0.22);
+}
+
+body.theme-dark .profile-control-group select,
+body.theme-dark .profile-control-grid input {
+  border-color: rgba(148, 163, 184, 0.18);
+  background: rgba(2, 6, 23, 0.52);
+  color: rgba(248, 250, 252, 0.94);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+body.theme-dark .profile-summary {
+  border-color: rgba(251, 146, 60, 0.24);
+  background: rgba(251, 146, 60, 0.12);
+  color: rgba(248, 250, 252, 0.92);
+}
+
+body.theme-dark .profile-insight,
+body.theme-dark .profile-cloud-row {
+  border-color: rgba(148, 163, 184, 0.14);
+  background: rgba(15, 23, 42, 0.54);
+}
+
+body.theme-dark .profile-rule-grid span {
+  border-color: rgba(148, 163, 184, 0.12);
+  background: rgba(2, 6, 23, 0.38);
+  color: rgba(203, 213, 225, 0.72);
 }
 
 .profile-control-group {
@@ -11043,9 +11400,17 @@ body.theme-dark .web-user-panel .user-panel-count {
 }
 
 .profile-actions {
+  position: sticky;
+  bottom: -14px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+  margin: 2px -14px -14px;
+  padding: 12px 14px 14px;
+  border-top: 1px solid rgba(122, 85, 45, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 249, 240, 0.78), rgba(255, 252, 246, 0.96));
+  backdrop-filter: blur(10px);
 }
 
 .profile-actions .btn {
@@ -11210,6 +11575,30 @@ html[data-actual-theme="dark"] .profile-control-grid input {
   border-color: rgba(255, 255, 255, 0.12);
 }
 
+body.theme-dark .profile-controls,
+html.theme-dark .profile-controls,
+html[data-theme="dark"] .profile-controls,
+html[data-actual-theme="dark"] .profile-controls {
+  scrollbar-color: rgba(226, 232, 240, 0.24) transparent;
+}
+
+body.theme-dark .profile-controls::-webkit-scrollbar-thumb,
+html.theme-dark .profile-controls::-webkit-scrollbar-thumb,
+html[data-theme="dark"] .profile-controls::-webkit-scrollbar-thumb,
+html[data-actual-theme="dark"] .profile-controls::-webkit-scrollbar-thumb {
+  background: rgba(226, 232, 240, 0.20);
+  background-clip: padding-box;
+}
+
+body.theme-dark .profile-actions,
+html.theme-dark .profile-actions,
+html[data-theme="dark"] .profile-actions,
+html[data-actual-theme="dark"] .profile-actions {
+  border-top-color: rgba(255, 255, 255, 0.10);
+  background:
+    linear-gradient(180deg, rgba(18, 28, 52, 0.58), rgba(12, 20, 40, 0.94));
+}
+
 body.theme-dark .profile-cloud-row.always-dark,
 html.theme-dark .profile-cloud-row.always-dark,
 html[data-theme="dark"] .profile-cloud-row.always-dark,
@@ -11240,6 +11629,20 @@ html[data-actual-theme="dark"] .profile-cloud-row.always-dark small {
   .profile-sun-readout {
     width: min(180px, 100%);
     justify-self: start;
+  }
+
+  .profile-controls {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .profile-actions {
+    position: static;
+    margin: 0;
+    padding: 0;
+    border-top: 0;
+    background: transparent;
+    backdrop-filter: none;
   }
 
   .profile-cloud-list {

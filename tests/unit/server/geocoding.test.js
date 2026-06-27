@@ -187,16 +187,33 @@ describe('Geocoding Route — 数据转换逻辑', () => {
 
     test('高德 regeocode.formatted_address 存在时应返回该名称', () => {
       const data = { status: '1', regeocode: { formatted_address: '上海市徐汇区' } };
-      const name = (data.status === '1' && data.regeocode?.formatted_address)
-        ? data.regeocode.formatted_address
+      const formattedAddress = typeof data.regeocode?.formatted_address === 'string'
+        ? data.regeocode.formatted_address.trim()
+        : '';
+      const name = (data.status === '1' && formattedAddress)
+        ? formattedAddress
         : null;
       expect(name).toBe('上海市徐汇区');
     });
 
+    test('高德 formatted_address 为数组时应返回 null', () => {
+      const data = { status: '1', regeocode: { formatted_address: [] } };
+      const formattedAddress = typeof data.regeocode?.formatted_address === 'string'
+        ? data.regeocode.formatted_address.trim()
+        : '';
+      const name = (data.status === '1' && formattedAddress)
+        ? formattedAddress
+        : null;
+      expect(name).toBeNull();
+    });
+
     test('高德 regeocode 为空时应返回 null', () => {
       const data = { status: '0' };
-      const name = (data.status === '1' && data.regeocode?.formatted_address)
-        ? data.regeocode.formatted_address
+      const formattedAddress = typeof data.regeocode?.formatted_address === 'string'
+        ? data.regeocode.formatted_address.trim()
+        : '';
+      const name = (data.status === '1' && formattedAddress)
+        ? formattedAddress
         : null;
       expect(name).toBeNull();
     });

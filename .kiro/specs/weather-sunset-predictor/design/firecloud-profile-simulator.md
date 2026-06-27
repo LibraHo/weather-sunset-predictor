@@ -71,3 +71,18 @@
 - Persistent darkness: simulations can request `includeLifecycle`, sampling the sunrise/sunset elevation sweep to mark clouds that stay `shadowed`, `unlit`, or low-brightness `dimmed` from start to end as `alwaysDark`.
 - Visual rendering: cloud blocks should render as radar-like cloud blobs with overlapping lobes, inner contour rings, and scan-line texture rather than plain rectangles.
 - UI readout: summary and cloud rows expose `alwaysDarkCount` / `全程黑云` so users can identify permanently dark clouds without inferring solely from color.
+
+## 2026-06-27 Refinements
+
+- Cloud size is a model input, not only a drawing input. `widthKm` participates in the light-path span, shadow gap, and shadow-band expansion, so wider blocking clouds can shadow more downstream cloud volume.
+- The simulator keeps the cross-section view as the default because it explains distance, height, and the low-angle light path most explicitly.
+- A second `facingSun` view projects the same simulated cloud states into a view facing the sunrise/sunset direction. In this mode distance becomes perspective depth, cloud width becomes apparent horizontal spread, and meter-level cloud thickness controls the vertical footprint.
+- The front-facing view is a visualization of the same profile facts, not a separate forecast model. The cloud list, summary, blocking, dimming, and always-dark states remain driven by `simulateFireCloudProfile`.
+
+## 2026-06-27 Mini Program Native Version
+
+- The mini program registers `pages/simulator/index` so the firecloud simulator is available without a web-view.
+- Home shortcuts and the shared topbar include `data-target="simulator"` and route to `/pages/simulator/index`; the entry sits before the methodology page to match the product hierarchy.
+- The native simulator keeps the same core facts as the Web simulator: sunrise/sunset mode, cross-section view, facing-sun view, minute offset, kilometer distance, meter cloud base/top, coverage, `widthKm`, and optical depth.
+- The mini program renderer uses `canvas-id="firecloudSimulatorCanvas"` with a lightweight native canvas drawing. It does not copy Web DOM/CSS or Chart.js behavior.
+- Acceptance tests cover app routing, home/topbar entry points, the simulator canvas, view toggles, physical cloud fields, `alwaysDarkCount`, and the model/renderer function names.

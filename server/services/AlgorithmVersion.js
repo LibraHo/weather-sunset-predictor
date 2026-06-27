@@ -1,10 +1,22 @@
 'use strict';
 
-const ALGORITHM_VERSION = '2026.06.17-remote-layer-carriers-v1';
+const ALGORITHM_VERSION = '2026.06.26-visible-sector-water-cap-v3';
 
 const ALGORITHM_CHANGELOG = [
   {
     version: ALGORITHM_VERSION,
+    date: '2026-06-26',
+    title: 'Visible-sector water-cap calibration v3',
+    summary: 'Strong lit side-sector upper cloud can now relieve the water-heavy high-cloud hard cap while keeping the conservative light-path gate, so humid full-high-cloud scenes remain moderate instead of being double-penalized.'
+  },
+  {
+    version: '2026.06.26-visible-sector-illumination-v2',
+    date: '2026-06-26',
+    title: 'Visible sunset sector illumination v2',
+    summary: 'Visible-sector carrier scoring now keeps the solar light path strict while applying side illumination from path transparency, azimuth offset, cloud layer height versus distance, and local air transmission.'
+  },
+  {
+    version: '2026.06.17-remote-layer-carriers-v1',
     date: '2026-06-17',
     title: 'Remote mid/high cloud carriers v1',
     summary: 'Solar-direction mid/high clouds are now exposed as separate remote carrier layers and can add bounded layer contribution when the local cloud carrier is not already a directional curtain or dense local upper-cloud veil.'

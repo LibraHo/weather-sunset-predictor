@@ -101,6 +101,159 @@ describe('FireCloudProfileSimulator', () => {
     expect(sunsetMiddle.blockedBy).toBe('east-low-wall');
   });
 
+  test('uses cloud width when estimating low-angle shadow reach', () => {
+    const makeClouds = (blockerWidthKm) => [
+      {
+        id: 'west-low-wall',
+        label: 'wide or narrow west low blocker',
+        distanceKm: 30,
+        baseHeightM: 250,
+        topHeightM: 900,
+        coverage: 90,
+        widthKm: blockerWidthKm,
+        opticalDepth: 1,
+      },
+      {
+        id: 'east-mid-cloud',
+        label: 'east mid height cloud',
+        distanceKm: 70,
+        baseHeightM: 2500,
+        topHeightM: 3200,
+        coverage: 50,
+        widthKm: 8,
+        opticalDepth: 0.35,
+      },
+    ];
+
+    const narrow = simulateFireCloudProfile({
+      mode: 'sunrise',
+      solarElevationDeg: 1.8,
+      clouds: makeClouds(2),
+    });
+    const wide = simulateFireCloudProfile({
+      mode: 'sunrise',
+      solarElevationDeg: 1.8,
+      clouds: makeClouds(80),
+    });
+
+    expect(narrow.clouds.find(cloud => cloud.id === 'east-mid-cloud').status).not.toBe('shadowed');
+    expect(wide.clouds.find(cloud => cloud.id === 'east-mid-cloud')).toMatchObject({
+      status: 'shadowed',
+      blockedBy: 'west-low-wall',
+    });
+  });
+
+  test('orders shadow casters by their sunward edge instead of only center distance', () => {
+    const result = simulateFireCloudProfile({
+      mode: 'sunrise',
+      solarElevationDeg: 1.8,
+      clouds: [
+        {
+          id: 'wide-overlapping-blocker',
+          label: 'wide overlapping blocker',
+          distanceKm: 50,
+          baseHeightM: 250,
+          topHeightM: 900,
+          coverage: 90,
+          widthKm: 80,
+          opticalDepth: 1,
+        },
+        {
+          id: 'near-target',
+          label: 'near target inside blocker span',
+          distanceKm: 30,
+          baseHeightM: 1000,
+          topHeightM: 1600,
+          coverage: 50,
+          widthKm: 8,
+          opticalDepth: 0.35,
+        },
+      ],
+    });
+
+    expect(result.clouds.find(cloud => cloud.id === 'near-target')).toMatchObject({
+      status: 'shadowed',
+      blockedBy: 'wide-overlapping-blocker',
+    });
+  });
+
+  test('keeps shadow reach monotonic when blocker width increases', () => {
+    const makeClouds = (blockerWidthKm) => [
+      {
+        id: 'low-blocker',
+        label: 'low blocker',
+        distanceKm: 20,
+        baseHeightM: 250,
+        topHeightM: 900,
+        coverage: 90,
+        widthKm: blockerWidthKm,
+        opticalDepth: 1,
+      },
+      {
+        id: 'high-target',
+        label: 'high target',
+        distanceKm: 80,
+        baseHeightM: 4100,
+        topHeightM: 4500,
+        coverage: 50,
+        widthKm: 8,
+        opticalDepth: 0.35,
+      },
+    ];
+
+    const narrow = simulateFireCloudProfile({
+      mode: 'sunrise',
+      solarElevationDeg: 0,
+      clouds: makeClouds(2),
+    });
+    const wide = simulateFireCloudProfile({
+      mode: 'sunrise',
+      solarElevationDeg: 0,
+      clouds: makeClouds(80),
+    });
+
+    expect(narrow.clouds.find(cloud => cloud.id === 'high-target').status).toBe('shadowed');
+    expect(wide.clouds.find(cloud => cloud.id === 'high-target')).toMatchObject({
+      status: 'shadowed',
+      blockedBy: 'low-blocker',
+    });
+  });
+
+  test('qualifies wide blockers when the sunward edge intersects the light band', () => {
+    const result = simulateFireCloudProfile({
+      mode: 'sunrise',
+      solarElevationDeg: 1,
+      clouds: [
+        {
+          id: 'edge-lit-wide-blocker',
+          label: 'edge lit wide blocker',
+          distanceKm: 95,
+          baseHeightM: 900,
+          topHeightM: 1900,
+          coverage: 90,
+          widthKm: 80,
+          opticalDepth: 1,
+        },
+        {
+          id: 'far-target',
+          label: 'far target',
+          distanceKm: 135,
+          baseHeightM: 2500,
+          topHeightM: 3500,
+          coverage: 50,
+          widthKm: 8,
+          opticalDepth: 0.35,
+        },
+      ],
+    });
+
+    expect(result.clouds.find(cloud => cloud.id === 'edge-lit-wide-blocker').status).toBe('blocking');
+    expect(result.clouds.find(cloud => cloud.id === 'far-target')).toMatchObject({
+      status: 'shadowed',
+      blockedBy: 'edge-lit-wide-blocker',
+    });
+  });
+
   test('colors thin upper clouds warm when the light path is open near sunset', () => {
     const result = simulateFireCloudProfile({
       solarElevationDeg: -1.2,

@@ -601,13 +601,17 @@ async function handleGaodeReverse(res, lat, lon, apiKey) {
     tracker.ok(response.status);
 
     const data = response.data;
-    if (data.status !== '1' || !data.regeocode?.formatted_address) {
+    const formattedAddress = typeof data.regeocode?.formatted_address === 'string'
+      ? data.regeocode.formatted_address.trim()
+      : '';
+    if (data.status !== '1' || !formattedAddress) {
       return res.json({ name: null });
     }
 
-    const adcode = data.regeocode?.addressComponent?.adcode || null;
+    const rawAdcode = data.regeocode?.addressComponent?.adcode;
+    const adcode = typeof rawAdcode === 'string' && rawAdcode.trim() ? rawAdcode.trim() : null;
     return res.json({
-      name: data.regeocode.formatted_address,
+      name: formattedAddress,
       lat,
       lon,
       provider: 'gaode',

@@ -1,0 +1,94 @@
+<view class="container simulator-page theme-{{resolvedThemeMode}}">
+  <app-topbar current="simulator" theme-mode="{{themeMode}}" resolved-theme-mode="{{resolvedThemeMode}}" bind:settingschange="onAppSettingsChange" />
+
+  <view class="simulator-hero">
+    <view class="simulator-kicker">Firecloud profile</view>
+    <view class="simulator-title">火烧云模拟器</view>
+    <view class="simulator-copy">用太阳低角度光路、公里级距离和米级云高，判断哪些云会被照亮、变暗或从始至终偏黑。</view>
+  </view>
+
+  <view class="simulator-radar-card xiake-card">
+    <view class="simulator-card-head">
+      <view>
+        <view class="simulator-card-title">{{viewTitle}}</view>
+        <view class="simulator-card-subtitle">{{summaryText}}</view>
+      </view>
+      <view class="simulator-angle-pill">{{solarAngleText}}</view>
+    </view>
+
+    <view class="simulator-canvas-wrap">
+      <canvas id="firecloudSimulatorCanvas" canvas-id="firecloudSimulatorCanvas" class="simulator-canvas" disable-scroll="true"></canvas>
+      <view class="simulator-legend">
+        <view class="legend-item"><text class="legend-dot legend-lit"></text>照亮</view>
+        <view class="legend-item"><text class="legend-dot legend-dimmed"></text>变暗</view>
+        <view class="legend-item"><text class="legend-dot legend-shadowed"></text>遮挡</view>
+        <view class="legend-item"><text class="legend-dot legend-dark"></text>全程黑</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="simulator-controls xiake-card">
+    <view class="simulator-control-grid">
+      <view class="control-block">
+        <view class="control-label">日出 / 日落</view>
+        <view class="simulator-segmented">
+          <view class="simulator-segment {{mode === 'sunrise' ? 'active' : ''}}" data-mode="sunrise" bindtap="selectMode">日出</view>
+          <view class="simulator-segment {{mode === 'sunset' ? 'active' : ''}}" data-mode="sunset" bindtap="selectMode">日落</view>
+        </view>
+      </view>
+
+      <view class="control-block">
+        <view class="control-label">视角</view>
+        <view class="simulator-segmented">
+          <view class="simulator-segment {{viewMode === 'crossSection' ? 'active' : ''}}" data-view="crossSection" bindtap="selectViewMode">横切面</view>
+          <view class="simulator-segment {{viewMode === 'facingSun' ? 'active' : ''}}" data-view="facingSun" bindtap="selectViewMode">正对太阳</view>
+        </view>
+      </view>
+
+      <view class="control-block control-wide">
+        <view class="control-label">模拟时间：{{timeOffsetText}}</view>
+        <slider min="-30" max="30" step="1" value="{{timeOffset}}" activeColor="#f97316" backgroundColor="rgba(148, 163, 184, 0.24)" bindchange="updateTimeOffset" />
+      </view>
+    </view>
+  </view>
+
+  <view class="simulator-cloud-editor xiake-card">
+    <view class="simulator-card-head compact">
+      <view>
+        <view class="simulator-card-title">云块参数</view>
+        <view class="simulator-card-subtitle">选中一块云后，可精确修改距离、高度、大小和光学厚度。</view>
+      </view>
+      <view class="simulator-add-button" bindtap="addCloud">+ 云</view>
+    </view>
+
+    <view class="cloud-picker-row">
+      <view class="cloud-picker {{selectedCloudId === item.id ? 'active' : ''}}" wx:for="{{cloudRows}}" wx:key="id" data-id="{{item.id}}" bindtap="selectCloud">
+        <view class="cloud-picker-name">{{item.name}}</view>
+        <view class="cloud-picker-meta">{{item.distanceText}} · {{item.heightText}}</view>
+      </view>
+    </view>
+
+    <view class="field-grid">
+      <view class="field-card"><text>距离 km</text><input type="digit" value="{{selectedCloud.distanceKm}}" data-field="distanceKm" bindinput="updateCloudField" /></view>
+      <view class="field-card"><text>云底 m</text><input type="number" value="{{selectedCloud.baseHeightM}}" data-field="baseHeightM" bindinput="updateCloudField" /></view>
+      <view class="field-card"><text>云顶 m</text><input type="number" value="{{selectedCloud.topHeightM}}" data-field="topHeightM" bindinput="updateCloudField" /></view>
+      <view class="field-card"><text>云量 %</text><input type="number" value="{{selectedCloud.coverage}}" data-field="coverage" bindinput="updateCloudField" /></view>
+      <view class="field-card"><text>大小 km</text><input type="digit" value="{{selectedCloud.widthKm}}" data-field="widthKm" bindinput="updateCloudField" /></view>
+      <view class="field-card"><text>光学厚度</text><input type="digit" value="{{selectedCloud.opticalDepth}}" data-field="opticalDepth" bindinput="updateCloudField" /></view>
+    </view>
+  </view>
+
+  <view class="simulator-result-list xiake-card">
+    <view class="simulator-card-title">受光结果</view>
+    <view class="simulator-cloud-row simulator-cloud-row-{{item.status}} {{item.alwaysDark ? 'always-dark' : ''}}" wx:for="{{cloudRows}}" wx:key="id" data-id="{{item.id}}" bindtap="selectCloud">
+      <view class="cloud-row-main">
+        <view class="cloud-row-name">{{item.name}}</view>
+        <view class="cloud-row-reason">{{item.reason}}</view>
+      </view>
+      <view class="cloud-row-status">
+        <text>{{item.statusText}}</text>
+        <text wx:if="{{item.alwaysDark}}" class="always-dark-tag">全程黑</text>
+      </view>
+    </view>
+  </view>
+</view>

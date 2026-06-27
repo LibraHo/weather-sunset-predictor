@@ -63,6 +63,7 @@ Component({
       const target = event.currentTarget.dataset.target;
       const routes = {
         forecast: '/pages/home/index',
+        simulator: '/pages/simulator/index',
         methodology: '/pages/methodology/index',
         map: `/pages/map/index?period=${this.properties.period || 'sunset'}`,
         gallery: '/pages/gallery/index',

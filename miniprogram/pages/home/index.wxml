@@ -14,6 +14,7 @@
         <view class="home-view-menu-dropdown" wx:if="{{homeMenuOpen}}">
           <view class="home-view-option active" data-target="forecast" bindtap="navigateFeature">预测功能</view>
           <view class="home-view-option" data-target="settings" bindtap="navigateFeature">设置</view>
+          <view class="home-view-option" data-target="simulator" bindtap="navigateFeature">火烧云模拟器</view>
           <view class="home-view-option" data-target="methodology" bindtap="navigateFeature">火烧云计算方法</view>
           <view class="home-view-option" data-target="map" bindtap="navigateFeature">火烧云地图</view>
           <view class="home-view-option" data-target="gallery" bindtap="navigateFeature">分享地图</view>
@@ -424,6 +425,7 @@
   </view>
 
   <view class="home-experience-strip" wx:if="{{weatherPreview.visible}}">
+        <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="simulator" bindtap="navigateFeature">模拟器</view>
         <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="methodology" bindtap="navigateFeature">方法</view>
         <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="map" bindtap="navigateFeature">地图</view>
         <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="gallery" bindtap="navigateFeature">照片</view>

@@ -233,7 +233,8 @@ class BackendGeocodingService {
     }
 
     const data = await response.json();
-    return data.name || null;
+    const name = typeof data.name === 'string' ? data.name.trim() : '';
+    return name || null;
   }
 }
 
