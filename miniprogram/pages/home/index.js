@@ -515,6 +515,7 @@ Page({
     }
     const routes = {
       forecast: '',
+      simulator: '/pages/simulator/index',
       methodology: '/pages/methodology/index',
       map: `/pages/map/index?period=${this.data.period}`,
       gallery: '/pages/gallery/index'

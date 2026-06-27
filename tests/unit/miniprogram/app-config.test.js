@@ -15,6 +15,7 @@ describe('miniprogram app configuration', () => {
 
     expect(appJson.pages).toEqual([
       'pages/home/index',
+      'pages/simulator/index',
       'pages/methodology/index',
       'pages/user/index',
       'pages/map/index',

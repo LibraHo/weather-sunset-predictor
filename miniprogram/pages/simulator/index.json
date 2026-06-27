@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "火烧云模拟器",
+  "usingComponents": {
+    "app-topbar": "/components/app-topbar/index"
+  }
+}
