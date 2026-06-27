@@ -50,6 +50,8 @@ describe('mini-program firecloud simulator page', () => {
     expect(js).toContain('renderSimulator');
     expect(js).toContain('drawCrossSectionView');
     expect(js).toContain('drawFacingSunView');
+    expect(js).toContain('drawOvalStroke');
+    expect(js).toContain('bezierCurveTo');
     expect(js).toContain('alwaysDarkCount');
     expect(js).toContain('widthKm');
     expect(wxss).toContain('.simulator-radar-card');

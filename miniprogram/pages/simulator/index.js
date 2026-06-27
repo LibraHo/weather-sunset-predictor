@@ -351,10 +351,28 @@ function drawCloudBlob(ctx, cx, cy, width, height, row) {
   }
   ctx.setStrokeStyle(row.alwaysDark ? 'rgba(148, 163, 184, 0.38)' : 'rgba(255, 255, 255, 0.25)');
   ctx.setLineWidth(2);
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, width * 0.48, height * 0.48, 0, 0, Math.PI * 2);
-  ctx.stroke();
+  drawOvalStroke(ctx, cx, cy, width * 0.48, height * 0.48);
   if (ctx.setGlobalAlpha) ctx.setGlobalAlpha(1);
+}
+
+function drawOvalStroke(ctx, cx, cy, rx, ry) {
+  if (typeof ctx.ellipse === 'function') {
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    return;
+  }
+
+  const kappa = 0.5522848;
+  const ox = rx * kappa;
+  const oy = ry * kappa;
+  ctx.beginPath();
+  ctx.moveTo(cx - rx, cy);
+  ctx.bezierCurveTo(cx - rx, cy - oy, cx - ox, cy - ry, cx, cy - ry);
+  ctx.bezierCurveTo(cx + ox, cy - ry, cx + rx, cy - oy, cx + rx, cy);
+  ctx.bezierCurveTo(cx + rx, cy + oy, cx + ox, cy + ry, cx, cy + ry);
+  ctx.bezierCurveTo(cx - ox, cy + ry, cx - rx, cy + oy, cx - rx, cy);
+  ctx.stroke();
 }
 
 function drawAxisLabels(ctx, xLabel, yLabel) {
