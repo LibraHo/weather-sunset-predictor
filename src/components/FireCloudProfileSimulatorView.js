@@ -39,6 +39,10 @@ function scaledPy(value, max, size, inset, scale, offset = 100) {
   return size - inset - scaledRatio(value, max, scale, offset) * (size - inset * 2);
 }
 
+function bounded(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
 function hashCloudId(id) {
   return Array.from(String(id)).reduce((hash, char) => hash + char.charCodeAt(0), 0);
 }
@@ -74,6 +78,31 @@ function clampNumber(value, min, max, fallback) {
   return Math.max(min, Math.min(max, number));
 }
 
+function projectFacingSunCloud(cloud, { width, height, inset }) {
+  const usableWidth = width - inset * 2;
+  const usableHeight = height - inset * 2;
+  const distanceKm = bounded(Number(cloud.distanceKm) || 0, 0, DEFAULT_MAX_DISTANCE_KM);
+  const perspective = bounded(1 - distanceKm / (DEFAULT_MAX_DISTANCE_KM * 1.18), 0.24, 1);
+  const seed = hashCloudId(cloud.id || cloud.label || distanceKm);
+  const lateralJitter = (noise(seed, 2) - 0.5) * usableWidth * 0.26 * perspective;
+  const widthPx = bounded((Number(cloud.widthKm) || 18) * 5.6 * perspective, 28, usableWidth * 0.72);
+  const topY = scaledPy(cloud.topHeightM, DEFAULT_MAX_HEIGHT_M, height, inset, 'linear', 100);
+  const baseY = scaledPy(cloud.baseHeightM, DEFAULT_MAX_HEIGHT_M, height, inset, 'linear', 100);
+  const heightPx = bounded((baseY - topY) * (0.62 + perspective * 0.48), 18, usableHeight * 0.74);
+  const centerY = bounded((topY + baseY) / 2 + (1 - perspective) * 32, inset + heightPx / 2, height - inset - heightPx / 2);
+  const x = bounded(width / 2 + lateralJitter - widthPx / 2, inset, width - inset - widthPx);
+
+  return {
+    x,
+    y: centerY - heightPx / 2,
+    centerX: x + widthPx / 2,
+    centerY,
+    width: widthPx,
+    height: heightPx,
+    perspective,
+  };
+}
+
 class FireCloudProfileSimulatorView {
   constructor(documentRef = document) {
     this.document = documentRef;
@@ -85,6 +114,7 @@ class FireCloudProfileSimulatorView {
     this.mode = 'sunset';
     this.timeOffset = 0;
     this.axisScale = 'linear';
+    this.viewMode = 'crossSection';
     this.bound = false;
   }
 
@@ -104,6 +134,7 @@ class FireCloudProfileSimulatorView {
     this.timeInput = byId('profile-solar-time');
     this.timeValue = byId('profile-solar-time-value');
     this.axisScaleInput = byId('profile-axis-scale');
+    this.viewModeInput = byId('profile-view-mode');
     this.cloudSelect = byId('profile-cloud-select');
     this.distanceInput = byId('profile-selected-distance');
     this.baseInput = byId('profile-selected-base-height');
@@ -118,6 +149,8 @@ class FireCloudProfileSimulatorView {
     this.cloudListEl = this.panel.querySelector('[data-profile-cloud-list]');
     this.modeLabel = byId('profile-mode-label');
     this.solarAngle = byId('profile-solar-angle');
+    this.axisDistanceNote = byId('profile-axis-distance-note');
+    this.axisHeightNote = byId('profile-axis-height-note');
   }
 
   bindEvents() {
@@ -131,6 +164,10 @@ class FireCloudProfileSimulatorView {
     });
     this.axisScaleInput?.addEventListener('change', () => {
       this.axisScale = this.axisScaleInput.value === 'log' ? 'log' : 'linear';
+      this.render();
+    });
+    this.viewModeInput?.addEventListener('change', () => {
+      this.viewMode = this.viewModeInput.value === 'facingSun' ? 'facingSun' : 'crossSection';
       this.render();
     });
     this.cloudSelect?.addEventListener('change', () => {
@@ -260,6 +297,16 @@ class FireCloudProfileSimulatorView {
         }
       );
     }
+    if (this.axisDistanceNote) {
+      this.axisDistanceNote.textContent = this.viewMode === 'facingSun'
+        ? translate('home.simulator.view.facingDistanceNote', 'Depth: 25-150 km distance rings')
+        : translate('home.simulator.axisDistance', 'Distance X: 0-150 km');
+    }
+    if (this.axisHeightNote) {
+      this.axisHeightNote.textContent = this.viewMode === 'facingSun'
+        ? translate('home.simulator.view.facingHeightNote', 'Height: cloud base/top projected in meters')
+        : translate('home.simulator.axisHeight', 'Height Y: 0-12000 m');
+    }
     if (this.selectedReasonEl) {
       const selected = result.clouds.find(cloud => cloud.id === this.selectedCloudId);
       this.selectedReasonEl.textContent = selected
@@ -285,6 +332,11 @@ class FireCloudProfileSimulatorView {
     sky.addColorStop(1, '#f2a35f');
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, width, height);
+
+    if (this.viewMode === 'facingSun') {
+      this.drawFacingSunView(result, inset, width, height);
+      return;
+    }
 
     ctx.strokeStyle = 'rgba(255,255,255,0.24)';
     ctx.lineWidth = 1;
@@ -328,6 +380,84 @@ class FireCloudProfileSimulatorView {
 
     this.drawSunAndLight(result, inset, width, height);
     result.clouds.forEach(cloud => this.drawCloud(cloud, inset, width, height));
+  }
+
+  drawFacingSunView(result, inset, width, height) {
+    const ctx = this.ctx;
+    const horizonY = height - inset - 54;
+    const centerX = width / 2;
+
+    ctx.fillStyle = 'rgba(255,255,255,0.82)';
+    ctx.font = '700 12px system-ui, sans-serif';
+    ctx.fillText(
+      translate('home.simulator.view.facingSunShort', 'FACING SUN'),
+      width - inset - 112,
+      inset - 14
+    );
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(inset, horizonY);
+    ctx.lineTo(width - inset, horizonY);
+    ctx.stroke();
+
+    [25, 50, 100, 150].forEach((distanceKm) => {
+      const ratio = distanceKm / DEFAULT_MAX_DISTANCE_KM;
+      const ringWidth = (width - inset * 2) * (1 - ratio * 0.64);
+      const ringY = horizonY - 18 - ratio * 72;
+      ctx.strokeStyle = 'rgba(255,255,255,0.13)';
+      ctx.beginPath();
+      ctx.ellipse(centerX, ringY, ringWidth / 2, 18 + ratio * 12, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,0.58)';
+      ctx.font = '11px system-ui, sans-serif';
+      ctx.fillText(`${distanceKm}km`, centerX + ringWidth / 2 - 30, ringY - 4);
+    });
+
+    const sunY = horizonY + Math.min(30, Math.max(-26, -result.sun.solarElevationDeg * 8));
+    const sunGradient = ctx.createRadialGradient(centerX, sunY, 8, centerX, sunY, 76);
+    sunGradient.addColorStop(0, '#fff8c7');
+    sunGradient.addColorStop(0.36, '#ffb347');
+    sunGradient.addColorStop(1, 'rgba(255,112,67,0)');
+    ctx.fillStyle = sunGradient;
+    ctx.beginPath();
+    ctx.arc(centerX, sunY, 76, 0, Math.PI * 2);
+    ctx.fill();
+
+    const sortedClouds = [...result.clouds].sort((a, b) => b.distanceKm - a.distanceKm);
+    sortedClouds.forEach(cloud => this.drawFacingSunCloud(cloud, inset, width, height));
+  }
+
+  drawFacingSunCloud(cloud, inset, width, height) {
+    const ctx = this.ctx;
+    const projection = projectFacingSunCloud(cloud, { width, height, inset });
+    const selected = cloud.id === this.selectedCloudId;
+    const drawColor = cloud.alwaysDark ? '#111827' : cloud.color;
+    const alpha = cloud.status === 'shadowed' || cloud.status === 'unlit'
+      ? 0.68
+      : 0.86 + projection.perspective * 0.1;
+
+    ctx.globalAlpha = alpha;
+    this.drawRadarCloudField({
+      x: projection.centerX,
+      y: projection.centerY,
+      width: projection.width,
+      height: projection.height,
+      color: drawColor,
+      seed: hashCloudId(`${cloud.id}-facing`),
+      selected,
+      alwaysDark: cloud.alwaysDark,
+      illumination: cloud.illumination || 0,
+      coverage: cloud.coverage,
+      status: cloud.status,
+    });
+    ctx.globalAlpha = 1;
+
+    ctx.fillStyle = selected ? '#ffffff' : 'rgba(255,255,255,0.82)';
+    ctx.font = selected ? '700 12px system-ui, sans-serif' : '12px system-ui, sans-serif';
+    ctx.fillText(`${cloud.distanceKm}km`, projection.x + 4, projection.y - 8);
+    ctx.fillText(this.statusText(cloud.status), projection.x + 4, projection.y + projection.height + 16);
   }
 
   drawSunAndLight(result, inset, width, height) {
@@ -571,4 +701,4 @@ class FireCloudProfileSimulatorView {
 }
 
 export default FireCloudProfileSimulatorView;
-export { solarElevationFromTimeOffset };
+export { projectFacingSunCloud, solarElevationFromTimeOffset };

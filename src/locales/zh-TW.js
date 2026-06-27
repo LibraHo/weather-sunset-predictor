@@ -145,6 +145,7 @@ const translations = {
         "mode": "模式",
         "time": "模擬時間",
         "axisScale": "座標軸比例",
+        "viewMode": "視角",
         "cloud": "選中雲塊"
       },
       "axis": {
@@ -152,6 +153,13 @@ const translations = {
         "log": "對數座標",
         "linearShort": "LINEAR 座標",
         "logShort": "LOG 座標"
+      },
+      "view": {
+        "crossSection": "橫切剖面",
+        "facingSun": "正對日出/日落方向",
+        "facingSunShort": "正對太陽",
+        "facingDistanceNote": "縱深：25-150 km 距離環",
+        "facingHeightNote": "高度：按雲底/雲頂米級投影"
       },
       "fields": {
         "distance": "距離 km",
@@ -168,7 +176,7 @@ const translations = {
       "selectCloudHint": "選擇雲塊查看判定原因",
       "rules": {
         "aria": "模擬規則說明",
-        "shadow": "遮擋：只擋陰影帶覆蓋到的後方雲高",
+        "shadow": "遮擋：雲的寬度會參與光路，陰影只擋覆蓋到的後方雲高",
         "scatter": "散射：光帶上下有 twilight scatter 寬度",
         "thick": "厚雲幕：高覆蓋率 + 高光學厚度會吸光變灰",
         "alwaysDark": "全程黑：整段日出/日落採樣都未進入暖色照亮"
