@@ -16,6 +16,8 @@ const cacheConfig = require('../config/cacheConfig.js');
 const { buildTimeWeightedWeatherSample } = require('./WeatherTimeSampler.js');
 
 const RADAR_WEATHER_FORECAST_HOURS = 48;
+const LIGHT_PATH_DISTANCES_KM = [10, 25, 50, 75, 100];
+const VISIBLE_SECTOR_OFFSETS_DEG = [-35, -20, 0, 20, 35];
 
 // ========== 服务类定义 ==========
 
@@ -127,6 +129,10 @@ class SurroundingService {
     };
   }
 
+  normalizeBearing(bearingDeg) {
+    return ((Number(bearingDeg) % 360) + 360) % 360;
+  }
+
   async getSolarDirectionLightPathSamples(params) {
     const { lat, lon, date, type = 'sunset', azimuth = null, referenceTime = null } = params;
     const targetDate = date instanceof Date ? date : new Date(date);
@@ -150,8 +156,18 @@ class SurroundingService {
       }
     }
 
-    const distances = [10, 25, 50, 75, 100];
-    const points = distances.map(distanceKm => this.calculatePointByBearing(lat, lon, distanceKm, solarAzimuth));
+    const distances = LIGHT_PATH_DISTANCES_KM;
+    const sectorBearings = VISIBLE_SECTOR_OFFSETS_DEG.map(offsetDeg => ({
+      offsetDeg,
+      bearing: this.normalizeBearing(solarAzimuth + offsetDeg)
+    }));
+    const points = sectorBearings.flatMap(({ offsetDeg, bearing }) =>
+      distances.map(distanceKm => ({
+        ...this.calculatePointByBearing(lat, lon, distanceKm, bearing),
+        offsetDeg,
+        sectorBearing: bearing
+      }))
+    );
     const buildSample = (point, weatherResponse) => {
       try {
         const hourly = Array.isArray(weatherResponse.data) ? weatherResponse.data : [];
@@ -176,7 +192,7 @@ class SurroundingService {
           error: null
         };
       } catch (error) {
-        console.warn(`[SurroundingService] 太阳方向 ${point.distanceKm}km 采样失败:`, error.message);
+        console.warn(`[SurroundingService] 太阳方向 ${point.bearing}°/${point.distanceKm}km 采样失败:`, error.message);
         return { ...point, error: error.message };
       }
     };
@@ -200,16 +216,30 @@ class SurroundingService {
           const weatherResponse = await orchestrator.fetchWeatherData(point.lat, point.lon, 72, undefined, { includeAirQuality: false });
           return buildSample(point, weatherResponse);
         } catch (error) {
-          console.warn(`[SurroundingService] Solar-direction ${point.distanceKm}km sample failed:`, error.message);
+          console.warn(`[SurroundingService] Solar-direction ${point.bearing}°/${point.distanceKm}km sample failed:`, error.message);
           return { ...point, error: error.message };
         }
       }));
     }
 
+    const validSamples = samples.filter(sample => !sample.error);
+    const mainBearing = this.normalizeBearing(solarAzimuth);
+    const mainSamples = validSamples.filter(sample => Math.abs(Number(sample.offsetDeg || 0)) < 0.001);
+
     const payload = {
-      source: 'solar_direction_openmeteo',
+      source: 'sunset_visible_sector_openmeteo',
       azimuth: parseFloat(solarAzimuth.toFixed(1)),
-      samples: samples.filter(sample => !sample.error),
+      samples: mainSamples,
+      visibleSector: {
+        offsetsDeg: VISIBLE_SECTOR_OFFSETS_DEG,
+        bearings: sectorBearings.map(item => ({
+          offsetDeg: item.offsetDeg,
+          bearing: parseFloat(item.bearing.toFixed(1))
+        })),
+        distancesKm: distances,
+        mainBearing: parseFloat(mainBearing.toFixed(1))
+      },
+      visibleSectorSamples: validSamples,
       errors: samples.filter(sample => sample.error)
     };
 
@@ -228,7 +258,7 @@ class SurroundingService {
       ? referenceTime.toISOString().slice(0, 13)
       : new Date(referenceTime).toISOString().slice(0, 13);
     const az = Number.isFinite(Number(azimuth)) ? Math.round(Number(azimuth)) : 'na';
-    return `light_path_v1_${Number(lat).toFixed(3)}_${Number(lon).toFixed(3)}_${type}_${ref}_${az}`;
+    return `light_path_sector_v1_${Number(lat).toFixed(3)}_${Number(lon).toFixed(3)}_${type}_${ref}_${az}`;
   }
 
   /**

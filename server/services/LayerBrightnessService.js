@@ -158,6 +158,7 @@ function buildLayerWeightedCarrierScore({
   highSignal,
   directionalUpper,
   remoteLayerCarriers = null,
+  visibleSectorCarrier = null,
   carrierScore,
   lowBlockFactor,
   solarFactor,
@@ -178,10 +179,18 @@ function buildLayerWeightedCarrierScore({
   const activeCarrier = carrierScore?.activeCarrier || 'cloud';
   const aerosolScore = finiteNumber(carrierScore?.aerosolCarrierScore?.activatedScore, 0);
   const directionalScore = directionalUpper === null ? 0 : clamp(finiteNumber(directionalUpper, 0) * 0.72, 0, 100);
+  const visibleSectorScore = visibleSectorCarrier?.applied ? clamp(finiteNumber(visibleSectorCarrier.score, 0), 0, 62) : 0;
   const cloudMidCarrier = clamp(midSignal * 0.75, 0, 100);
   const cloudHighCarrier = clamp(highSignal * 0.9, 0, 100);
   let rawLayers;
-  if (activeCarrier === 'directional_curtain' && directionalScore > 0) {
+  if (activeCarrier === 'visible_sector' && visibleSectorScore > 0) {
+    rawLayers = [
+      { key: 'visibleSector', carrier: visibleSectorScore, brightnessBias: 1.02 },
+      { key: 'directional', carrier: directionalScore * 0.25, brightnessBias: 1 },
+      { key: 'mid', carrier: cloudMidCarrier * 0.25, brightnessBias: 1 },
+      { key: 'high', carrier: cloudHighCarrier * 0.25, brightnessBias: 0.96 }
+    ];
+  } else if (activeCarrier === 'directional_curtain' && directionalScore > 0) {
     rawLayers = [
       { key: 'directional', carrier: directionalScore, brightnessBias: 1.02 },
       { key: 'mid', carrier: cloudMidCarrier * 0.35, brightnessBias: 1 },
@@ -280,6 +289,7 @@ function scoreLayerBrightness(params = {}) {
     type = 'sunset',
     directionalCurtainCarrier = null,
     remoteLayerCarriers = null,
+    visibleSectorCarrier = null,
     carrierScore = null
   } = params;
 
@@ -289,11 +299,13 @@ function scoreLayerBrightness(params = {}) {
   const midSignal = upperCloudSignal(mid);
   const highSignal = upperCloudSignal(high);
   const directionalUpper = finiteNumber(directionalCurtainCarrier?.metrics?.upperSignal);
+  const visibleSectorUpper = finiteNumber(visibleSectorCarrier?.metrics?.upperSignal);
 
   const localCanvas = Math.max(midSignal, highSignal * 0.85);
   const directionalCanvas = directionalUpper === null ? 0 : directionalUpper * 0.72;
+  const visibleSectorCanvas = visibleSectorUpper === null ? 0 : visibleSectorUpper * 0.74;
   const carrierCanvas = finiteNumber(carrierScore?.score) === null ? 0 : finiteNumber(carrierScore.score, 0);
-  const cloudCanvas = clamp(Math.max(localCanvas, directionalCanvas, carrierCanvas), 0, 100) / 100;
+  const cloudCanvas = clamp(Math.max(localCanvas, directionalCanvas, visibleSectorCanvas, carrierCanvas), 0, 100) / 100;
   const lowBlockFactor = clamp(1 - Math.max(0, low - 25) / 75 * 0.55, 0.45, 1);
 
   const solarFactor = scoreSolarLayerFactor(timeAnalysis.elevation, type);
@@ -347,6 +359,7 @@ function scoreLayerBrightness(params = {}) {
     highSignal,
     directionalUpper,
     remoteLayerCarriers,
+    visibleSectorCarrier,
     carrierScore,
     lowBlockFactor,
     solarFactor,
@@ -381,6 +394,8 @@ function scoreLayerBrightness(params = {}) {
       highSignal: round(highSignal, 1),
       cloudCanvas: round(cloudCanvas * 100, 1),
       directionalUpper: directionalUpper === null ? null : round(directionalUpper, 1),
+      visibleSectorUpper: visibleSectorUpper === null ? null : round(visibleSectorUpper, 1),
+      visibleSectorBestBearing: visibleSectorCarrier?.bestDirection?.bearing ?? null,
       remoteHigh: remoteLayerCarriers?.metrics?.high ?? null,
       remoteMid: remoteLayerCarriers?.metrics?.mid ?? null,
       remoteLowBlock: remoteLayerCarriers?.remoteLowBlock != null ? round(remoteLayerCarriers.remoteLowBlock, 1) : null

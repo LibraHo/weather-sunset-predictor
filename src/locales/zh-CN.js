@@ -277,17 +277,17 @@ export default {
     },
     methodology: {
       title: '火烧云计算方法',
-      intro: '当前火烧云指数按“候选载体 → 受光亮度 → 空气显色 → 封顶校准”展示。结果页的计算依据只呈现这条主链路，不再把内部诊断项混成最终修正。',
-      versionLabel: '算法说明版本：2026.06.18-remote-layer-carriers',
-      versionDesc: '本版说明与结果页计算依据一致：先选本地云层、远端分层载体或气溶胶弱载体，再展开分层受光贡献、空气显色与最终分。',
+      intro: '当前火烧云指数按“候选载体 → 侧向/主光路受光亮度 → 空气显色 → 封顶校准”展示。结果页只呈现这条主链路，重点说明云是否能被照亮，以及为什么高云很多时仍可能被灰幕、厚云、水汽或弱直射压低。',
+      versionLabel: '算法说明版本：2026.06.26-visible-sector-illumination-v2',
+      versionDesc: '本版说明与结果页计算依据一致：先比较本地云层、远端分层载体、侧向可视云带和气溶胶弱载体，再展开受光亮度、空气显色与最终分。',
       changelogTitle: "版本更新记录",
       changelogHint: "近三个月内的算法更新都会放在这里，可滚动回看原因、影响和验证方式",
       changelog: {
         latest: {
-          date: '2026-06-18',
-          title: '远端分层载体 v1',
-          summary: '日落方向云不再合成一个远端云幕，而是拆成远端高云、远端中云和远端低云遮挡，再进入 Σ(分层载体 × 分层受光亮度)。',
-          validation: '验证：历史 9 个真实样本和 6/17 北京样本全量回放通过；评分细则会列出远端高云/中云贡献。'
+          date: '2026-06-26',
+          title: '侧向可视云带受光 v2',
+          summary: '主太阳光路仍按太阳方位严格判断；侧向可视扇区只作为额外云载体进入评分，并按主光路通透度、方位角衰减、云高/距离仰角、空气透射和云层类型计算受光。',
+          validation: '验证：侧向云带可在评分细则列出候选方位和受光证据；单个距离点不能激活侧向；晴空建议不会覆盖侧向载体。'
         },
         layerBrightness: {
           date: '2026-06-13',
@@ -372,12 +372,12 @@ export default {
         cloudStructure: {
           title: '1. 候选载体',
           subtitle: 'Carrier Candidates · 先选谁能显色',
-          desc: '系统先比较本地云层、远端分层载体和气溶胶弱载体，采用最能显色的一项作为主载体。',
+          desc: '系统先比较本地云层、远端分层载体、侧向可视云带和气溶胶弱载体，采用最能显色的一项作为主载体。',
           highCloud: '本地云层：高云×0.75 + 中云×0.45 得到中高云画布，再映射为区间分',
           midCloud: '日落方向：按 10/25/50/75/100km 小时两点窗口加权，拆成远端高云、远端中云和远端低云遮挡',
-          lowCloudBonus: '气溶胶：只作为弱载体候选；云层载体更强时不会单独显示成最终加分',
-          formula: '候选载体 = max(本地云层, 远端分层载体, 气溶胶弱载体)\n远端分层载体 = 日落方向高云 / 中云 - 低云遮挡',
-          highCloudBonus: '结果页会显示候选载体明细，例如：本地云层 77.9；日落方向 37.9；气溶胶 27.3；采用 云层载体 77.9。未采用的弱载体不再伪装成最终加分。'
+          lowCloudBonus: '侧向可视云带：主光路先判通透，再按方位角、云高/距离仰角、空气透射和云层类型评估是否受光；气溶胶只作为弱载体候选',
+          formula: '候选载体 = max(本地云层, 远端分层载体, 侧向可视云带, 气溶胶弱载体)\n侧向可视云带 = 主光路通透 × 方位角衰减 × 云高/距离仰角 × 空气透射 × 云层权重',
+          highCloudBonus: '结果页会显示候选载体明细，例如：本地云层 77.9；远端分层 37.9；侧向可视云带 52.4（约 325°）；采用 侧向可视云带 52.4。未采用的弱载体不再伪装成最终加分。'
         },
         lightPath: {
           title: '2. 本地云层',
@@ -390,9 +390,9 @@ export default {
         transparency: {
           title: '3. 受光亮度',
           subtitle: 'Layer Brightness · 云是否真的亮',
-          desc: '太阳方向、低云遮挡、云厚和亮度响应会合成受光亮度。它是基础分的一部分，不再作为独立修正条目重复展示。',
-          visibility: '光路通畅会提高云层可用亮度；太阳方向阻挡会降低亮度',
-          humidity: '厚云、灰幕等只进入亮度估算，不在用户页逐项堆叠',
+          desc: '主太阳方向、侧向受光、低云遮挡、云厚、直射/漫射和亮度响应会合成受光亮度。它是基础分的一部分，不再作为独立修正条目重复展示。',
+          visibility: '主光路通畅会提高云层可用亮度；侧向云带必须有足够样本和受光几何才参与',
+          humidity: '厚云、灰幕、水汽偏重、直射弱等只进入亮度估算，不在用户页逐项堆叠',
           formula: '基础分 = Σ(分层载体 × 分层受光亮度)'
         },
         layerDiversity: {
@@ -400,7 +400,7 @@ export default {
           subtitle: 'Air Rendering · 颜色质量',
           desc: '空气显色只解释颜色质量：能见度、湿度、雨后状态、AOD/PM/dust 会共同影响红橙色强弱。',
           threeLayer: '光路开且云幕不灰：轻/中度颗粒可增强暖色',
-          twoLayer: '中高云满铺且 PM/AOD 偏高：按灰幕连续压低显色',
+          twoLayer: '中高云满铺且 PM/AOD、水汽或直射光偏弱：按灰幕/厚云压力连续压低显色',
           oneLayer: '降水和低能见度会降低颜色清晰度'
         },
         lowCloudPenalty: {
@@ -624,6 +624,7 @@ export default {
           remoteLayerCarrier: '远端分层载体',
           remoteHighLayer: '日落方向高云',
           remoteMidLayer: '日落方向中云',
+          visibleSectorCarrier: '侧向可视云带',
           scoringV2: '开口暖色散射',
           grayVeilAirRendering: '灰幕显色抑制',
           evidence: '计算依据'
@@ -633,12 +634,13 @@ export default {
           "cloudCarrierCandidate": "本地云层 {{score}}",
           "aerosolCarrierCandidate": "气溶胶 {{score}}",
           "directionalCarrierCandidate": "日落方向 {{score}}",
+          "visibleSectorCarrierCandidate": "侧向可视云带 {{score}}（约 {{bearing}}°）",
           "remoteLayerCarrierCandidate": "远端分层 {{score}}（高云 {{high}}，中云 {{mid}}，低云遮挡 {{low}}）",
           "carrierCandidates": "候选载体：{{candidates}}；采用 {{active}} {{score}}",
           "upperCloudCanvasShort": "中高云画布 {{upper}} → 区间分 {{range}}",
           "cloudTypeAdjustmentShort": "云种 {{bonus}}",
           "cloudThicknessAdjustmentShort": "云厚 {{adjustment}}",
-          "cloudCarrierSource": "本地云层、日落方向云幕或气溶胶弱载体中采用最强主载体",
+          "cloudCarrierSource": "本地云层、远端分层、侧向可视云带或气溶胶弱载体中采用最强主载体",
           cloudPenalty: '云画布 {{canvas}}，低云 ×{{low}}，阴天 ×{{overcast}}',
           upperCloudCanvas: '中高云画布 {{upper}} = 高云 {{high}}×0.75 + 中云 {{mid}}×0.45；区间分 {{range}}',
           highCloudBonus: '高云主导 bonus {{bonus}}',
@@ -651,7 +653,9 @@ export default {
           grayVeilAirRendering: '满铺中高云叠加偏脏空气：云载体 {{carrier}}；光路证据作为亮度证据；灰幕显色 {{air}}',
           lightPath: '作为受光亮度解释的太阳方向证据',
           layerBrightnessShort: '太阳方向、遮挡和亮度响应共同解释各层载体是否被照亮',
-          layerBrightness: '亮度 {{brightness}}，门控 {{gate}}；本地载体 {{canvas}}，远端高云 {{remoteHigh}}，远端中云 {{remoteMid}}，远端低云遮挡 {{remoteLowBlock}}，低云遮挡 {{low}} / 透过 {{lowBlock}}，太阳几何 {{solar}}，光路因子 {{path}}，空气 {{air}}，云厚 {{thickness}}，直射/散射 {{beam}}',
+          layerBrightness: '亮度 {{brightness}}，门控 {{gate}}；本地载体 {{canvas}}，远端高云 {{remoteHigh}}，远端中云 {{remoteMid}}，侧向上层云 {{visibleSector}}（约 {{visibleBearing}}°），远端低云遮挡 {{remoteLowBlock}}，低云遮挡 {{low}} / 透过 {{lowBlock}}，太阳几何 {{solar}}，光路因子 {{path}}，空气 {{air}}，云厚 {{thickness}}，直射/散射 {{beam}}',
+          layerBrightnessMultiplier: '有效亮度 {{brightness}}；压暗证据：{{evidence}}',
+          layerContribution: '{{layer}}：载体 {{carrier}} × 受光 {{brightness}} = {{score}}',
           renderingFactors: '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}',
           afterAdjustments: '结合天气和能见度后',
           finalDisplayed: '最终展示结果',
@@ -660,7 +664,7 @@ export default {
           geometryCap: '太阳与云层几何条件不足',
           occlusion: '远端遮挡压低最终分',
           carrierFloor: '高云载体清透，避免被云厚信号误伤低估',
-          directionalSamples: '已参考太阳方向周边云况',
+          directionalSamples: '主光路按太阳方向严格判断；侧向可视扇区只作为云载体和受光证据参与',
           lightPathScoreEvidence: '光路证据 {{light}} 已并入受光亮度',
           lightPathLowCloudBlock: '低云遮住太阳方向，光线不容易照到中高云',
           lightPathRain: '降水会削弱日落直射光',
@@ -697,17 +701,17 @@ formationAnalysis: {
           title: '云层载体',
           status: { good: '较好', fair: '一般', weak: '较弱' },
           desc: {
-            good: '中高云提供可染色云面，具备承接霞光的基础。',
-            fair: '有可染色云面，但面积、高度或稳定性不够理想。',
-            weak: '可染色云面不足，难形成成片火烧云。'
+            good: '本地或侧向中高云提供可染色云面，具备承接霞光的基础。',
+            fair: '有可染色云面，但面积、高度、侧向受光或稳定性不够理想。',
+            weak: '可染色云面不足，或真正被照亮的部分偏弱，难形成成片火烧云。'
           }
         },
         lightPath: {
           title: '光路条件',
           status: { good: '较好', fair: '一般', weak: '较弱' },
           desc: {
-            good: '太阳方向相对通透，光线有机会照到云底。',
-            fair: '太阳方向有一定遮挡，晚霞可能只出现在局部。',
+            good: '太阳主光路相对通透，或侧向可视云带有明确受光证据。',
+            fair: '太阳方向有一定遮挡，侧向云带或局地开口可能只带来局部晚霞。',
             weak: '低云或阻挡走廊挡住光路，光线不容易打到云层。'
           }
         },
@@ -717,7 +721,7 @@ formationAnalysis: {
           desc: {
             good: '空气里有适度颗粒和水汽，颜色更容易偏暖、偏红。',
             fair: '空气条件普通，颜色表现主要看云层和光路。',
-            weak: '空气偏灰或颗粒过重，颜色容易变暗、变淡。'
+            weak: '空气偏灰、颗粒偏重、水汽偏高或直射弱，满铺高云也可能变暗、变淡。'
           }
         },
         limits: {
@@ -726,7 +730,7 @@ formationAnalysis: {
           desc: {
             good: '没有明显压制条件。',
             fair: '有轻微不利因素，可能压低持续时间或颜色强度。',
-            weak: '降水、厚云、低云遮挡或灰幕明显，会压低整体表现。'
+            weak: '降水、厚云、低云遮挡、灰幕或弱直射明显，会压低整体表现。'
           }
         }
       },
