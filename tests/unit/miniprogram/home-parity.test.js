@@ -109,6 +109,7 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxml).not.toContain('{{item.summary}}');
     expect(homeWxml).not.toContain('home-three-day-glow');
     expect(homeWxml).toContain('data-target="methodology"');
+    expect(homeWxml).toContain('data-target="simulator"');
     expect(homeWxml).toContain('data-target="map"');
     expect(homeWxml).toContain('data-target="gallery"');
     expect(homeWxml).not.toContain('data-target="upload"');
@@ -187,6 +188,7 @@ describe('mini-program home parity with mobile web home', () => {
     ]);
 
     expectInOrder(homeWxml, [
+      'data-target="simulator"',
       'data-target="methodology"',
       'data-target="map"',
       'data-target="gallery"'

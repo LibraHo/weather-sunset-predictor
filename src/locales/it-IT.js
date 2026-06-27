@@ -36,6 +36,7 @@ apiAccess: 'Accesso API',
         "mode": "Mode",
         "time": "Simulation time",
         "axisScale": "Axis scale",
+        "viewMode": "View",
         "cloud": "Selected cloud"
       },
       "axis": {
@@ -43,6 +44,13 @@ apiAccess: 'Accesso API',
         "log": "Log axis",
         "linearShort": "LINEAR axis",
         "logShort": "LOG axis"
+      },
+      "view": {
+        "crossSection": "Cross-section",
+        "facingSun": "Facing sunrise/sunset",
+        "facingSunShort": "FACING SUN",
+        "facingDistanceNote": "Depth: 25-150 km distance rings",
+        "facingHeightNote": "Height: cloud base/top projected in meters"
       },
       "fields": {
         "distance": "Distance km",
@@ -59,7 +67,7 @@ apiAccess: 'Accesso API',
       "selectCloudHint": "Select a cloud to inspect the decision reason",
       "rules": {
         "aria": "Simulation rule notes",
-        "shadow": "Shadow: only cloud heights reached by the shadow band are blocked",
+        "shadow": "Shadow: cloud width participates in the light path, and only cloud heights reached by the shadow band are blocked",
         "scatter": "Scatter: twilight scatter adds width above and below the light band",
         "thick": "Thick veil: high coverage plus high optical depth absorbs light into gray",
         "alwaysDark": "Always dark: every sunrise/sunset sample misses warm illumination"

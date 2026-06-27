@@ -12,6 +12,7 @@
         </button>
         <view class="home-view-menu-dropdown" wx:if="{{homeMenuOpen}}">
           <view class="home-view-option tap-feedback {{current === 'home' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="forecast" bindtap="navigateFeature">预测功能</view>
+          <view class="home-view-option tap-feedback {{current === 'simulator' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="simulator" bindtap="navigateFeature">火烧云模拟器</view>
           <view class="home-view-option tap-feedback {{current === 'methodology' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="methodology" bindtap="navigateFeature">火烧云算法</view>
           <view class="home-view-option tap-feedback {{current === 'map' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="map" bindtap="navigateFeature">火烧云地图</view>
           <view class="home-view-option tap-feedback {{current === 'gallery' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="gallery" bindtap="navigateFeature">分享地图</view>

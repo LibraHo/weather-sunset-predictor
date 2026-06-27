@@ -64,6 +64,35 @@ describe('recent user-reported UI regression guards', () => {
     expect(metricHoverBlock).not.toContain('var(--theme-accent)');
   });
 
+  test('mobile dark score details use neutral Xiake night-sky glass', () => {
+    const source = css();
+    const block = source.match(/\/\* UI regression: mobile dark score details use Xiake night-sky glass, not bright warm glass\. \*\/[\s\S]*?@media \(max-width: 640px\) and \(prefers-color-scheme: dark\)/)?.[0] || '';
+    const autoBlock = source.match(/@media \(max-width: 640px\) and \(prefers-color-scheme: dark\) \{[\s\S]*?body\.theme-auto \.score-breakdown-ledger \.score-ledger-step-final \.score-ledger-body \{[\s\S]*?\n  \}[\s\S]*?\n\}/)?.[0] || '';
+
+    expect(block).toContain('@media (max-width: 640px)');
+    expect(block).toContain('html.theme-dark .score-breakdown-ledger');
+    expect(block).toContain('body[data-actual-theme="dark"] .score-breakdown-ledger');
+    expect(block).toContain('linear-gradient(180deg, rgba(10, 17, 36, 0.985), rgba(6, 11, 26, 0.975))');
+    expect(block).toContain('border-color: rgba(96, 116, 150, 0.36) !important;');
+    expect(block).toContain('.score-ledger-body');
+    expect(block).toContain('background: rgba(9, 16, 34, 0.94) !important;');
+    expect(block).toContain('.score-ledger-summary');
+    expect(block).toContain('rgba(9, 16, 34, 0.96)');
+    expect(block).toContain('.score-ledger-detail summary');
+    expect(block).toContain('rgba(190, 203, 224, 0.82)');
+    expect(block).toContain('.score-ledger-step-final .score-ledger-result');
+    expect(block).toContain('rgba(147, 197, 253, 0.98)');
+    expect(block).toContain('border-color: rgba(96, 165, 250, 0.30) !important;');
+    expect(block).toContain('@media (max-width: 640px) and (prefers-color-scheme: dark)');
+    expect(autoBlock).toContain('html.theme-auto .score-breakdown-ledger .score-ledger-summary');
+    expect(autoBlock).toContain('body.theme-auto .score-breakdown-ledger .score-ledger-summary');
+    expect(autoBlock).toContain('body.theme-auto .score-breakdown-ledger .score-ledger-body');
+    expect(autoBlock).toContain('background: rgba(9, 16, 34, 0.94) !important;');
+    expect(block).not.toContain('rgba(255,255,255,0.34)');
+    expect(block).not.toContain('rgba(31, 24, 16');
+    expect(block).not.toContain('rgba(251, 191, 36, 0.28)');
+  });
+
   test('3-day glow forecast is a weather tab with a loading state', () => {
     const page = html();
     const source = css();

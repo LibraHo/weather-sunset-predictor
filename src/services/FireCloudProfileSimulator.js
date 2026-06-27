@@ -144,32 +144,99 @@ function isBlockingCloud(cloud, isIntersecting, illumination) {
   return isIntersecting && cloud.coverage >= 68 && cloud.opticalDepth >= 0.72 && illumination >= 0.18;
 }
 
-function isAheadOfLight(blocker, target, mode = 'sunset') {
-  if (!blocker || !target) return false;
-  return mode === 'sunrise'
-    ? blocker.distanceKm < target.distanceKm
-    : blocker.distanceKm > target.distanceKm;
+function getCloudSpanKm(cloud) {
+  const halfWidthKm = clamp(finiteNumber(cloud.widthKm, 18), 2, 80) / 2;
+  return {
+    start: clamp(cloud.distanceKm - halfWidthKm, 0, DEFAULT_MAX_DISTANCE_KM),
+    end: clamp(cloud.distanceKm + halfWidthKm, 0, DEFAULT_MAX_DISTANCE_KM),
+  };
 }
 
-function getShadowBand(blocker, target, solarElevationDeg) {
-  const distanceDeltaM = Math.abs(target.distanceKm - blocker.distanceKm) * 1000;
+function getSunwardEdgeKm(cloud, mode = 'sunset') {
+  const span = getCloudSpanKm(cloud);
+  return mode === 'sunrise' ? span.start : span.end;
+}
+
+function getLightOrderValue(cloud, mode = 'sunset') {
+  const edge = getSunwardEdgeKm(cloud, mode);
+  return mode === 'sunrise' ? edge : -edge;
+}
+
+function uniqueDistances(distances) {
+  return Array.from(new Set(distances.map(distance => round(distance, 3))));
+}
+
+function getLightSampleDistances(cloud, mode = 'sunset') {
+  const span = getCloudSpanKm(cloud);
+  return uniqueDistances([
+    cloud.distanceKm,
+    getSunwardEdgeKm(cloud, mode),
+    mode === 'sunrise' ? span.end : span.start,
+  ]);
+}
+
+function getCloudLightMetrics(cloud, solarElevationDeg, mode = 'sunset') {
+  const bands = getLightSampleDistances(cloud, mode).map(distanceKm =>
+    getLightBand(distanceKm, solarElevationDeg, mode)
+  );
+  const bestBand = bands.reduce((best, band) => {
+    const illumination = intersectsCloud(band, cloud)
+      ? computeIllumination(cloud, band, solarElevationDeg)
+      : 0;
+    return illumination > best.illumination
+      ? { band, illumination }
+      : best;
+  }, {
+    band: getLightBand(cloud.distanceKm, solarElevationDeg, mode),
+    illumination: 0,
+  });
+
+  return {
+    lightBand: bestBand.band,
+    isIntersecting: bands.some(band => intersectsCloud(band, cloud)),
+    illumination: bestBand.illumination,
+  };
+}
+
+function isAheadOfLight(blocker, target, mode = 'sunset') {
+  if (!blocker || !target) return false;
+  const blockerSpan = getCloudSpanKm(blocker);
+  const targetSpan = getCloudSpanKm(target);
+  return mode === 'sunrise'
+    ? blockerSpan.start < targetSpan.end
+    : blockerSpan.end > targetSpan.start;
+}
+
+function getLightPathGapKm(blocker, target, mode = 'sunset') {
+  const blockerSpan = getCloudSpanKm(blocker);
+  const targetSpan = getCloudSpanKm(target);
+  return mode === 'sunrise'
+    ? Math.max(0, targetSpan.start - blockerSpan.end)
+    : Math.max(0, blockerSpan.start - targetSpan.end);
+}
+
+function getShadowBand(blocker, target, solarElevationDeg, mode = 'sunset') {
+  const edgeGapM = getLightPathGapKm(blocker, target, mode) * 1000;
+  const centerDeltaM = Math.abs(target.distanceKm - blocker.distanceKm) * 1000;
+  const distanceDeltaM = Math.max(edgeGapM, centerDeltaM);
   const elevation = finiteNumber(solarElevationDeg, 0);
   const lowAngleReach = Math.max(0, 2.2 - elevation);
   const shadowLift = lowAngleReach * distanceDeltaM * 0.018;
   const scatterExpansion = 320 + Math.max(0, 2 - Math.abs(elevation)) * 180;
   const densityExpansion = blocker.coverage * 4 + blocker.opticalDepth * 360;
+  const widthExpansion = finiteNumber(blocker.widthKm, 18) * 12 + finiteNumber(target.widthKm, 18) * 4;
   const top = blocker.topHeightM + shadowLift + scatterExpansion + densityExpansion;
-  const bottom = Math.max(0, blocker.baseHeightM - 500);
+  const bottom = Math.max(0, blocker.baseHeightM - 500 - widthExpansion * 0.18);
 
   return {
     bottom,
-    top,
+    top: top + widthExpansion,
   };
 }
 
 function blocksCloud(blocker, target, solarElevationDeg, mode = 'sunset') {
   if (!isAheadOfLight(blocker, target, mode)) return false;
-  const shadowBand = getShadowBand(blocker, target, solarElevationDeg);
+  const shadowBand = getShadowBand(blocker, target, solarElevationDeg, mode);
   return shadowBand.top >= target.baseHeightM && shadowBand.bottom <= target.topHeightM;
 }
 
@@ -236,14 +303,9 @@ function simulateFireCloudProfile(options = {}) {
     .sort((a, b) => a.distanceKm - b.distanceKm);
 
   const blockers = [];
-  const lightOrderClouds = [...clouds].sort((a, b) => (
-    mode === 'sunrise'
-      ? a.distanceKm - b.distanceKm
-      : b.distanceKm - a.distanceKm
-  ));
+  const lightOrderClouds = [...clouds].sort((a, b) => getLightOrderValue(a, mode) - getLightOrderValue(b, mode));
   const simulatedClouds = lightOrderClouds.map((cloud) => {
-    const lightBand = getLightBand(cloud.distanceKm, solarElevationDeg, mode);
-    const isIntersecting = intersectsCloud(lightBand, cloud);
+    const { lightBand, isIntersecting, illumination } = getCloudLightMetrics(cloud, solarElevationDeg, mode);
     const blockingCloud = blockers.find(blocker => blocksCloud(blocker, cloud, solarElevationDeg, mode));
 
     if (blockingCloud) {
@@ -272,7 +334,6 @@ function simulateFireCloudProfile(options = {}) {
       };
     }
 
-    const illumination = computeIllumination(cloud, lightBand, solarElevationDeg);
     if (cloud.opticalDepth >= 1.05 || (cloud.baseHeightM >= 2500 && cloud.coverage >= 86 && cloud.opticalDepth >= 0.9)) {
       return {
         ...cloud,

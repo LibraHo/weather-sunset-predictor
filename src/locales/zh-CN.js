@@ -153,6 +153,7 @@ export default {
         "mode": "模式",
         "time": "模拟时间",
         "axisScale": "坐标轴比例",
+        "viewMode": "视角",
         "cloud": "选中云块"
       },
       "axis": {
@@ -160,6 +161,13 @@ export default {
         "log": "对数坐标",
         "linearShort": "LINEAR 坐标",
         "logShort": "LOG 坐标"
+      },
+      "view": {
+        "crossSection": "横切剖面",
+        "facingSun": "正对日出/日落方向",
+        "facingSunShort": "正对太阳",
+        "facingDistanceNote": "纵深：25-150 km 距离环",
+        "facingHeightNote": "高度：按云底/云顶米级投影"
       },
       "fields": {
         "distance": "距离 km",
@@ -176,7 +184,7 @@ export default {
       "selectCloudHint": "选择云块查看判定原因",
       "rules": {
         "aria": "模拟规则说明",
-        "shadow": "遮挡：只挡阴影带覆盖到的后方云高",
+        "shadow": "遮挡：云的宽度会参与光路，阴影只挡覆盖到的后方云高",
         "scatter": "散射：光带上下有 twilight scatter 宽度",
         "thick": "厚云幕：高覆盖率 + 高光学厚度会吸光变灰",
         "alwaysDark": "全程黑：整段日出/日落采样都未进入暖色照亮"

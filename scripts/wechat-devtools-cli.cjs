@@ -11,13 +11,19 @@ if (args.length === 0) {
   console.log('Pass CLI arguments after --, for example: npm run mp:devtools -- --help');
 }
 
-const command = `call "${cliPath}" ${args.map((arg) => `"${String(arg).replace(/"/g, '""')}"`).join(' ')}`;
-const child = spawn(process.env.ComSpec || 'cmd.exe', ['/d', '/c', command], {
-  cwd: projectPath || process.cwd(),
-  stdio: 'inherit',
-  shell: false,
-  windowsVerbatimArguments: true,
-});
+const isBatch = /\.bat$/i.test(cliPath);
+const child = isBatch
+  ? spawn(process.env.ComSpec || 'cmd.exe', ['/d', '/c', `call "${cliPath}" ${args.map((arg) => `"${String(arg).replace(/"/g, '""')}"`).join(' ')}`], {
+      cwd: projectPath || process.cwd(),
+      stdio: 'inherit',
+      shell: false,
+      windowsVerbatimArguments: true,
+    })
+  : spawn(cliPath, args, {
+      cwd: path.dirname(cliPath),
+      stdio: 'inherit',
+      shell: false,
+    });
 
 child.on('exit', (code, signal) => {
   if (signal) {

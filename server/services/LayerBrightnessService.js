@@ -40,6 +40,18 @@ function scoreBrightnessResponse(value, fullBrightnessReference, curve = 6) {
   return clamp(Math.log1p(curve * normalized) / Math.log1p(curve), 0, 1);
 }
 
+function scoreSaturatedRatio(value, fullReference, floor, curve = 6) {
+  const number = finiteNumber(value);
+  const reference = finiteNumber(fullReference, 1);
+  if (number === null) return 1;
+  if (number <= 0 || reference <= 0) return floor;
+  const normalized = clamp(number / reference, 0, 1);
+  const response = curve <= 0
+    ? normalized
+    : Math.log1p(curve * normalized) / Math.log1p(curve);
+  return clamp(floor + (1 - floor) * response, floor, 1);
+}
+
 function upperCloudSignal(cloudPercent) {
   const cloud = clamp(finiteNumber(cloudPercent, 0), 0, 100);
   if (cloud <= 0) return 0;
@@ -66,25 +78,30 @@ function scoreAirTransmission(weatherData = {}, renderingFactor = {}) {
   const visibility = finiteNumber(weatherData.visibility);
   const humidity = finiteNumber(weatherData.humidity);
   const aod = finiteNumber(weatherData.aerosolOpticalDepth ?? weatherData.aod);
+  const pm25 = finiteNumber(weatherData.pm2_5 ?? weatherData.pm25);
   const pm10 = finiteNumber(weatherData.pm10);
+  const dust = finiteNumber(weatherData.dust);
   const waterVapour = finiteNumber(weatherData.waterVapourColumn);
-  const rendering = finiteNumber(renderingFactor.factor, 1);
 
-  const visibilityFactor = visibility === null ? 1 : clamp(visibility / 18, 0.45, 1);
+  const visibilityFactor = scoreSaturatedRatio(visibility, 18, 0.72);
   const humidityFactor = humidity === null ? 1 : clamp(1 - normalizeRange(humidity, 70, 96) * 0.28, 0.72, 1);
   const aerosolFactor = aod === null ? 1 : clamp(1 - normalizeRange(aod, 0.25, 0.65) * 0.36, 0.58, 1.04);
   const pm10Factor = pm10 === null ? 1 : clamp(1 - normalizeRange(pm10, 70, 180) * 0.22, 0.78, 1);
   const waterFactor = waterVapour === null ? 1 : clamp(1 - normalizeRange(waterVapour, 28, 44) * 0.32, 0.68, 1);
+  const particulateCap = ((pm25 !== null && pm25 >= 75) || (pm10 !== null && pm10 >= 100) || (dust !== null && dust >= 100))
+    ? 0.68
+    : 1.08;
+  const transmission = visibilityFactor * humidityFactor * aerosolFactor * pm10Factor * waterFactor;
 
-  // Rendering already contains several air-quality signals. Use it as one
-  // factor, but keep explicit metrics visible so dim-but-open cases can be
-  // diagnosed and calibrated.
+  // Keep air transmission as an independent cap/diagnostic. The main rendering
+  // factor already contains visibility, humidity, AQI, and aerosol effects.
   return {
-    factor: clamp(rendering * visibilityFactor * humidityFactor * aerosolFactor * pm10Factor * waterFactor, 0.18, 1.08),
+    factor: clamp(Math.min(transmission, particulateCap), 0.18, 1.08),
     visibilityFactor,
     humidityFactor,
     aerosolFactor,
     pm10Factor,
+    particulateCap,
     waterFactor
   };
 }
@@ -379,6 +396,7 @@ function scoreLayerBrightness(params = {}) {
       humidityFactor: round(air.humidityFactor, 2),
       aerosolFactor: round(air.aerosolFactor, 2),
       pm10Factor: round(air.pm10Factor, 2),
+      particulateCap: round(air.particulateCap, 2),
       waterVapourFactor: round(air.waterFactor, 2),
       thicknessFactor: round(thicknessFactor, 2),
       beamFactor: round(beam.factor, 2),

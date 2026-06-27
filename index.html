@@ -488,8 +488,8 @@
           <div class="profile-canvas-shell">
               <canvas id="firecloud-profile-canvas" width="1080" height="620" aria-label="火烧云云层横切面画布" data-i18n-aria-label="home.simulator.canvasAria"></canvas>
             <div class="profile-axis-note">
-              <span data-i18n="home.simulator.axisDistance">距离 X：0-150 km</span>
-              <span data-i18n="home.simulator.axisHeight">高度 Y：0-12000 m</span>
+              <span id="profile-axis-distance-note" data-i18n="home.simulator.axisDistance">距离 X：0-150 km</span>
+              <span id="profile-axis-height-note" data-i18n="home.simulator.axisHeight">高度 Y：0-12000 m</span>
             </div>
           </div>
 
@@ -513,6 +513,14 @@
               <select id="profile-axis-scale">
                 <option value="linear" selected data-i18n="home.simulator.axis.linear">线性坐标</option>
                 <option value="log" data-i18n="home.simulator.axis.log">对数坐标</option>
+              </select>
+            </div>
+
+            <div class="profile-control-group">
+              <label for="profile-view-mode" data-i18n="home.simulator.controls.viewMode">视角</label>
+              <select id="profile-view-mode">
+                <option value="crossSection" selected data-i18n="home.simulator.view.crossSection">横切剖面</option>
+                <option value="facingSun" data-i18n="home.simulator.view.facingSun">正对日出/日落方向</option>
               </select>
             </div>
 
@@ -560,7 +568,7 @@
           <div class="profile-insight">
             <strong id="profile-selected-reason" data-i18n="home.simulator.selectCloudHint">选择云块查看判定原因</strong>
             <div class="profile-rule-grid" aria-label="模拟规则说明" data-i18n-aria-label="home.simulator.rules.aria">
-              <span data-i18n="home.simulator.rules.shadow">遮挡：只挡阴影带覆盖到的后方云高</span>
+              <span data-i18n="home.simulator.rules.shadow">遮挡：云的宽度会参与光路，阴影只挡覆盖到的后方云高</span>
               <span data-i18n="home.simulator.rules.scatter">散射：光带上下有 twilight scatter 宽度</span>
               <span data-i18n="home.simulator.rules.thick">厚云幕：高覆盖率 + 高光学厚度会吸光变灰</span>
               <span data-i18n="home.simulator.rules.alwaysDark">全程黑：整段日出/日落采样都未进入暖色照亮</span>

@@ -18,7 +18,8 @@
     "mp:upload": "node scripts/miniprogram-ci.cjs upload",
     "mp:devtools": "node scripts/wechat-devtools-cli.cjs",
     "mp:auto": "node scripts/wechat-devtools-auto.cjs",
-    "mp:auto:check": "node scripts/miniprogram-automator-check.cjs"
+    "mp:auto:check": "node scripts/miniprogram-automator-check.cjs",
+    "mp:auto:simulator": "node scripts/miniprogram-simulator-automator.cjs"
   },
   "keywords": [
     "weather",
