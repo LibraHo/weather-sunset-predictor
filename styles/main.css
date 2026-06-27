@@ -11201,6 +11201,9 @@ body.theme-dark .web-user-panel .user-panel-count {
   align-content: start;
   gap: 12px;
   min-width: 0;
+  max-height: var(--profile-controls-max-height, 474px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 14px;
   border: 1px solid rgba(122, 85, 45, 0.14);
   border-radius: 10px;
@@ -11209,6 +11212,19 @@ body.theme-dark .web-user-panel .user-panel-count {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.82),
     0 14px 30px rgba(86, 62, 32, 0.08);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 63, 17, 0.28) transparent;
+}
+
+.profile-controls::-webkit-scrollbar {
+  width: 8px;
+}
+
+.profile-controls::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(124, 63, 17, 0.22);
+  background-clip: padding-box;
 }
 
 body.theme-dark .firecloud-profile-panel {
@@ -11322,9 +11338,17 @@ body.theme-dark .profile-rule-grid span {
 }
 
 .profile-actions {
+  position: sticky;
+  bottom: -14px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+  margin: 2px -14px -14px;
+  padding: 12px 14px 14px;
+  border-top: 1px solid rgba(122, 85, 45, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 249, 240, 0.78), rgba(255, 252, 246, 0.96));
+  backdrop-filter: blur(10px);
 }
 
 .profile-actions .btn {
@@ -11489,6 +11513,30 @@ html[data-actual-theme="dark"] .profile-control-grid input {
   border-color: rgba(255, 255, 255, 0.12);
 }
 
+body.theme-dark .profile-controls,
+html.theme-dark .profile-controls,
+html[data-theme="dark"] .profile-controls,
+html[data-actual-theme="dark"] .profile-controls {
+  scrollbar-color: rgba(226, 232, 240, 0.24) transparent;
+}
+
+body.theme-dark .profile-controls::-webkit-scrollbar-thumb,
+html.theme-dark .profile-controls::-webkit-scrollbar-thumb,
+html[data-theme="dark"] .profile-controls::-webkit-scrollbar-thumb,
+html[data-actual-theme="dark"] .profile-controls::-webkit-scrollbar-thumb {
+  background: rgba(226, 232, 240, 0.20);
+  background-clip: padding-box;
+}
+
+body.theme-dark .profile-actions,
+html.theme-dark .profile-actions,
+html[data-theme="dark"] .profile-actions,
+html[data-actual-theme="dark"] .profile-actions {
+  border-top-color: rgba(255, 255, 255, 0.10);
+  background:
+    linear-gradient(180deg, rgba(18, 28, 52, 0.58), rgba(12, 20, 40, 0.94));
+}
+
 body.theme-dark .profile-cloud-row.always-dark,
 html.theme-dark .profile-cloud-row.always-dark,
 html[data-theme="dark"] .profile-cloud-row.always-dark,
@@ -11519,6 +11567,20 @@ html[data-actual-theme="dark"] .profile-cloud-row.always-dark small {
   .profile-sun-readout {
     width: min(180px, 100%);
     justify-self: start;
+  }
+
+  .profile-controls {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .profile-actions {
+    position: static;
+    margin: 0;
+    padding: 0;
+    border-top: 0;
+    background: transparent;
+    backdrop-filter: none;
   }
 
   .profile-cloud-list {
