@@ -137,7 +137,8 @@ describe('miniprogram web-like experience shell', () => {
     expect(locationWxml).toMatch(/class="favorite-icon"[\s\S]*bindtap="onFavorite"/);
     expect(locationWxml).toMatch(/class="pin-location-button"[\s\S]*bindtap="onLocate"/);
     expect(homeJs).toMatch(/async onUseCurrentLocation\(\)[\s\S]*await this\.onSearch\(\);/);
-    expect(homeJs).toContain('reverseGeocode(res.latitude, res.longitude)');
+    expect(homeJs).toContain('normalizeCurrentLocationCoordinate(res)');
+    expect(homeJs).toContain('reverseGeocode(coordinate.lat, coordinate.lon)');
     expect(homeJs).toContain('async onAddCurrentFavorite()');
     expect(homeJs).toMatch(/async useHistory\(event\)[\s\S]*await this\.onSearch\(\);/);
     expect(homeJs).toMatch(/async resolveLocation\(locationText\)[\s\S]*if \(this\.data\.coordinate\)/);

@@ -175,6 +175,43 @@ describe('45.1 orchestrator 降级逻辑', () => {
     await expect(orch.fetchWeatherData(39.9, 116.4, 24)).rejects.toThrow('ECONNREFUSED');
   });
 
+  test('Open-Meteo primary model unavailable for a GPS point retries best_match before failing current location', async () => {
+    const orch = makeOrch({ emergencyFallbackEnabled: false });
+    orch.providers.openmeteo.fetchWeatherData = jest.fn(async (lat, lon, hours, userApiKey, model) => {
+      if (model === 'best_match') {
+        return {
+          hours: 24,
+          data: makeData(),
+          providerMeta: { name: 'openmeteo', weatherModel: 'best_match', degradedReason: [] }
+        };
+      }
+      throw new Error('Open-Meteo API 错误: 400 - No data is available for this location');
+    });
+
+    const result = await orch.fetchWeatherData(-8.4095, 115.1889, 24);
+
+    expect(result.providerMeta.name).toBe('openmeteo');
+    expect(result.providerMeta.weatherModel).toBe('best_match');
+    expect(result.providerMeta.usedModelFallback).toBe(true);
+    expect(result.providerMeta.modelFallbackReason).toBe('primary_model_unavailable_for_coordinate');
+    expect(orch.providers.openmeteo.fetchWeatherData).toHaveBeenCalledWith(
+      -8.4095,
+      115.1889,
+      24,
+      null,
+      'ecmwf_ifs025',
+      {}
+    );
+    expect(orch.providers.openmeteo.fetchWeatherData).toHaveBeenCalledWith(
+      -8.4095,
+      115.1889,
+      24,
+      null,
+      'best_match',
+      {}
+    );
+  });
+
   test('primary 网络故障 + emergency fallback enabled → 使用 fallback', async () => {
     const orch = makeOrch({ emergencyFallbackEnabled: true });
     orch.providers.openmeteo.fetchWeatherData = jest.fn(async () => { throw new Error('ECONNREFUSED'); });
