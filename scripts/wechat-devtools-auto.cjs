@@ -14,13 +14,19 @@ const args = ['auto', '--project', projectPath, '--auto-port', autoPort];
 console.log(`Starting WeChat DevTools automation on ws://127.0.0.1:${autoPort}`);
 console.log(`Project: ${projectPath}`);
 
-const command = `call "${cliPath}" ${args.map((arg) => `"${String(arg).replace(/"/g, '""')}"`).join(' ')}`;
-const child = spawn(process.env.ComSpec || 'cmd.exe', ['/d', '/c', command], {
-  cwd: projectPath,
-  stdio: 'inherit',
-  shell: false,
-  windowsVerbatimArguments: true,
-});
+const isBatch = /\.bat$/i.test(cliPath);
+const child = isBatch
+  ? spawn(process.env.ComSpec || 'cmd.exe', ['/d', '/c', `call "${cliPath}" ${args.map((arg) => `"${String(arg).replace(/"/g, '""')}"`).join(' ')}`], {
+      cwd: projectPath,
+      stdio: 'inherit',
+      shell: false,
+      windowsVerbatimArguments: true,
+    })
+  : spawn(cliPath, args, {
+      cwd: path.dirname(cliPath),
+      stdio: 'inherit',
+      shell: false,
+    });
 
 child.on('exit', (code, signal) => {
   if (signal) {

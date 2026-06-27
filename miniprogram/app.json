@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/home/index",
+    "pages/simulator/index",
     "pages/methodology/index",
     "pages/user/index",
     "pages/map/index",
