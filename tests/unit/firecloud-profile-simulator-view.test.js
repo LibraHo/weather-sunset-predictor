@@ -1,4 +1,7 @@
-import { solarElevationFromTimeOffset } from '../../src/components/FireCloudProfileSimulatorView.js';
+import {
+  projectFacingSunCloud,
+  solarElevationFromTimeOffset,
+} from '../../src/components/FireCloudProfileSimulatorView.js';
 
 describe('FireCloudProfileSimulatorView helpers', () => {
   test('maps sunset time so before sunset is higher and after sunset is lower', () => {
@@ -17,5 +20,37 @@ describe('FireCloudProfileSimulatorView helpers', () => {
     expect(solarElevationFromTimeOffset(40, 'sunrise')).toBeGreaterThan(
       solarElevationFromTimeOffset(0, 'sunrise')
     );
+  });
+
+  test('projects front-facing clouds with perspective and meter-level thickness', () => {
+    const near = projectFacingSunCloud({
+      id: 'near',
+      distanceKm: 20,
+      widthKm: 20,
+      baseHeightM: 1000,
+      topHeightM: 3000,
+      coverage: 70,
+    }, { width: 1080, height: 620, inset: 44 });
+    const far = projectFacingSunCloud({
+      id: 'far',
+      distanceKm: 100,
+      widthKm: 20,
+      baseHeightM: 1000,
+      topHeightM: 3000,
+      coverage: 70,
+    }, { width: 1080, height: 620, inset: 44 });
+    const deep = projectFacingSunCloud({
+      id: 'deep',
+      distanceKm: 20,
+      widthKm: 20,
+      baseHeightM: 1000,
+      topHeightM: 7000,
+      coverage: 70,
+    }, { width: 1080, height: 620, inset: 44 });
+
+    expect(near.width).toBeGreaterThan(far.width);
+    expect(deep.height).toBeGreaterThan(near.height);
+    expect(near.x).toBeGreaterThanOrEqual(44);
+    expect(near.x + near.width).toBeLessThanOrEqual(1080 - 44);
   });
 });

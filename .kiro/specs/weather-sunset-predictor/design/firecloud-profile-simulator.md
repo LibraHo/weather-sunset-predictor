@@ -71,3 +71,10 @@
 - Persistent darkness: simulations can request `includeLifecycle`, sampling the sunrise/sunset elevation sweep to mark clouds that stay `shadowed`, `unlit`, or low-brightness `dimmed` from start to end as `alwaysDark`.
 - Visual rendering: cloud blocks should render as radar-like cloud blobs with overlapping lobes, inner contour rings, and scan-line texture rather than plain rectangles.
 - UI readout: summary and cloud rows expose `alwaysDarkCount` / `全程黑云` so users can identify permanently dark clouds without inferring solely from color.
+
+## 2026-06-27 Refinements
+
+- Cloud size is a model input, not only a drawing input. `widthKm` participates in the light-path span, shadow gap, and shadow-band expansion, so wider blocking clouds can shadow more downstream cloud volume.
+- The simulator keeps the cross-section view as the default because it explains distance, height, and the low-angle light path most explicitly.
+- A second `facingSun` view projects the same simulated cloud states into a view facing the sunrise/sunset direction. In this mode distance becomes perspective depth, cloud width becomes apparent horizontal spread, and meter-level cloud thickness controls the vertical footprint.
+- The front-facing view is a visualization of the same profile facts, not a separate forecast model. The cloud list, summary, blocking, dimming, and always-dark states remain driven by `simulateFireCloudProfile`.
