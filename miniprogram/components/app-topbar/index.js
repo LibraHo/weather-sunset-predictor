@@ -34,6 +34,12 @@ Component({
     }
   },
 
+  pageLifetimes: {
+    show() {
+      this.applySavedSettings();
+    }
+  },
+
   methods: {
     toggleHomeMenu() {
       this.setData({ homeMenuOpen: !this.data.homeMenuOpen, settingsOpen: false });
@@ -103,7 +109,8 @@ Component({
     },
 
     saveAppSettings(patch = {}) {
-      const settings = saveAppSettings(patch, this.data);
+      const latest = readAppSettings();
+      const settings = saveAppSettings(patch, { ...this.data, ...latest });
       this.setData(settings);
       applyNavigationTheme(settings.resolvedThemeMode);
       this.triggerEvent('settingschange', settings, { bubbles: true, composed: true });

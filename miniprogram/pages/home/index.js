@@ -544,11 +544,20 @@ Page({
     const settings = applyPageSettings(this);
     if (this.data.weatherPreview?.sourceWeather) {
       this.setData({
-        weatherPreview: buildWeatherPreview(this.data.weatherPreview.sourceWeather, settings.interfaceLanguage, settings)
+        weatherPreview: this.rebuildWeatherPreviewForCurrentSelection(this.data.weatherPreview.sourceWeather, settings)
       }, () => {
         if (this.data.weatherView === 'hourly') this.paintHourlyChartLine({ force: true });
       });
     }
+  },
+
+  rebuildWeatherPreviewForCurrentSelection(sourceWeather, settings = this.data) {
+    const preview = buildWeatherPreview(sourceWeather, settings.interfaceLanguage, settings);
+    return refreshWeatherHourlyView(
+      preview,
+      this.data.weatherDay || this.data.day || 'today',
+      this.data.weatherParameter || 'temp'
+    );
   },
 
   applyDefaultPredictionDay() {
@@ -565,7 +574,7 @@ Page({
     const settings = persistAppSettings(patch, this.data);
     const update = { ...settings };
     if ((patch.interfaceLanguage || patch.temperatureUnit || patch.windSpeedUnit) && this.data.weatherPreview?.sourceWeather) {
-      update.weatherPreview = buildWeatherPreview(this.data.weatherPreview.sourceWeather, settings.interfaceLanguage, settings);
+      update.weatherPreview = this.rebuildWeatherPreviewForCurrentSelection(this.data.weatherPreview.sourceWeather, settings);
     }
     this.setData(update);
   },
@@ -574,7 +583,7 @@ Page({
     const settings = event.detail || readAppSettings();
     const update = { ...settings };
     if (this.data.weatherPreview?.sourceWeather) {
-      update.weatherPreview = buildWeatherPreview(this.data.weatherPreview.sourceWeather, settings.interfaceLanguage, settings);
+      update.weatherPreview = this.rebuildWeatherPreviewForCurrentSelection(this.data.weatherPreview.sourceWeather, settings);
     }
     this.setData(update, () => {
       if (update.weatherPreview && this.data.weatherView === 'hourly') this.paintHourlyChartLine({ force: true });
@@ -725,7 +734,8 @@ Page({
         prediction,
         predictionCards,
         query,
-        locale: this.data.interfaceLanguage
+        locale: this.data.interfaceLanguage,
+        settings: this.data
       }), () => {
         this.paintPredictionRadarCloudField();
       });
@@ -976,7 +986,8 @@ Page({
       prediction: unified.prediction,
       predictionCards: unified.predictionCards,
       query,
-      locale: this.data.interfaceLanguage
+      locale: this.data.interfaceLanguage,
+      settings: this.data
     }), () => {
       this.paintPredictionRadarCloudField();
     });
@@ -2614,7 +2625,7 @@ function convertTemperatureValue(value, temperatureUnit = 'celsius') {
 function convertWindSpeedValue(speed, windSpeedUnit = 'kmh') {
   const speedNum = Number(speed);
   if (!Number.isFinite(speedNum)) return NaN;
-  return windSpeedUnit === 'ms' ? speedNum / 3.6 : speedNum;
+  return windSpeedUnit === 'ms' ? speedNum : speedNum * 3.6;
 }
 
 function formatWindSpeedRaw(speed, windSpeedUnit = 'kmh') {
