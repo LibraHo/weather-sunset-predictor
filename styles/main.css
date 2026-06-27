@@ -11163,7 +11163,7 @@ body.theme-dark .web-user-panel .user-panel-count {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(270px, 304px);
   gap: 14px;
-  align-items: stretch;
+  align-items: start;
 }
 
 .profile-canvas-shell {
