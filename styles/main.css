@@ -11201,7 +11201,7 @@ body.theme-dark .web-user-panel .user-panel-count {
   align-content: start;
   gap: 12px;
   min-width: 0;
-  max-height: clamp(420px, 33vw, 474px);
+  max-height: var(--profile-controls-max-height, 474px);
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 14px;

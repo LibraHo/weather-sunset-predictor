@@ -159,6 +159,8 @@ class FireCloudProfileSimulatorView {
     this.axisScale = 'linear';
     this.viewMode = 'crossSection';
     this.bound = false;
+    this.layoutFrame = null;
+    this.resizeObserver = null;
   }
 
   initialize() {
@@ -166,6 +168,7 @@ class FireCloudProfileSimulatorView {
     this.bound = true;
     this.cacheElements();
     this.bindEvents();
+    this.bindLayoutSync();
     this.syncCloudSelect();
     this.syncSelectedInputs();
     this.render();
@@ -194,6 +197,8 @@ class FireCloudProfileSimulatorView {
     this.solarAngle = byId('profile-solar-angle');
     this.axisDistanceNote = byId('profile-axis-distance-note');
     this.axisHeightNote = byId('profile-axis-height-note');
+    this.canvasShell = this.panel.querySelector('.profile-canvas-shell');
+    this.controls = this.panel.querySelector('.profile-controls');
   }
 
   bindEvents() {
@@ -230,6 +235,44 @@ class FireCloudProfileSimulatorView {
 
     this.addButton?.addEventListener('click', () => this.addCloud());
     this.resetButton?.addEventListener('click', () => this.resetClouds());
+  }
+
+  bindLayoutSync() {
+    const view = this.document.defaultView || (typeof window !== 'undefined' ? window : null);
+    const ResizeObserverCtor = view?.ResizeObserver;
+    if (ResizeObserverCtor && this.canvasShell) {
+      this.resizeObserver = new ResizeObserverCtor(() => this.scheduleControlPanelSizing());
+      this.resizeObserver.observe(this.canvasShell);
+    }
+    view?.addEventListener?.('resize', () => this.scheduleControlPanelSizing(), { passive: true });
+    this.scheduleControlPanelSizing();
+  }
+
+  scheduleControlPanelSizing() {
+    const view = this.document.defaultView || (typeof window !== 'undefined' ? window : null);
+    if (!view?.requestAnimationFrame) {
+      this.syncControlPanelSizing();
+      return;
+    }
+    if (this.layoutFrame) view.cancelAnimationFrame?.(this.layoutFrame);
+    this.layoutFrame = view.requestAnimationFrame(() => {
+      this.layoutFrame = null;
+      this.syncControlPanelSizing();
+    });
+  }
+
+  syncControlPanelSizing() {
+    if (!this.canvasShell || !this.controls) return;
+    const view = this.document.defaultView || (typeof window !== 'undefined' ? window : null);
+    const isStacked = view?.matchMedia?.('(max-width: 860px)')?.matches;
+    if (isStacked) {
+      this.controls.style.removeProperty('--profile-controls-max-height');
+      return;
+    }
+    const height = Math.round(this.canvasShell.getBoundingClientRect().height);
+    if (height > 0) {
+      this.controls.style.setProperty('--profile-controls-max-height', `${height}px`);
+    }
   }
 
   get selectedCloud() {
@@ -308,6 +351,7 @@ class FireCloudProfileSimulatorView {
     this.renderReadouts(result);
     this.drawProfile(result);
     this.renderCloudList(result);
+    this.scheduleControlPanelSizing();
   }
 
   renderReadouts(result) {
