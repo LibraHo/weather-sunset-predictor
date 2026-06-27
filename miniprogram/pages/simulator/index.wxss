@@ -298,3 +298,89 @@
   border: 1rpx solid rgba(148, 163, 184, 0.22);
   font-size: 20rpx;
 }
+
+.simulator-page.theme-light {
+  color: #3d3028;
+  background: linear-gradient(180deg, #f6efe6 0%, #efe4d6 100%);
+}
+
+.simulator-page.theme-light .simulator-kicker {
+  color: #9a5b18;
+}
+
+.simulator-page.theme-light .simulator-title,
+.simulator-page.theme-light .simulator-card-title,
+.simulator-page.theme-light .cloud-picker-name,
+.simulator-page.theme-light .cloud-row-name {
+  color: #2f261f;
+}
+
+.simulator-page.theme-light .simulator-copy,
+.simulator-page.theme-light .simulator-card-subtitle,
+.simulator-page.theme-light .cloud-picker-meta,
+.simulator-page.theme-light .cloud-row-reason {
+  color: rgba(79, 62, 49, 0.68);
+}
+
+.simulator-page.theme-light .simulator-radar-card,
+.simulator-page.theme-light .simulator-controls,
+.simulator-page.theme-light .simulator-cloud-editor,
+.simulator-page.theme-light .simulator-result-list {
+  background: rgba(255, 252, 246, 0.86);
+  border-color: rgba(122, 85, 45, 0.14);
+  box-shadow: 0 16rpx 42rpx rgba(86, 62, 32, 0.10), inset 0 1rpx 0 rgba(255, 255, 255, 0.86);
+}
+
+.simulator-page.theme-light .simulator-canvas-wrap {
+  background: rgba(255, 248, 236, 0.86);
+  border-color: rgba(122, 85, 45, 0.14);
+}
+
+.simulator-page.theme-light .simulator-legend,
+.simulator-page.theme-light .control-label,
+.simulator-page.theme-light .field-card text {
+  color: rgba(79, 62, 49, 0.76);
+}
+
+.simulator-page.theme-light .simulator-segmented {
+  background: rgba(255, 247, 235, 0.86);
+  border-color: rgba(122, 85, 45, 0.14);
+}
+
+.simulator-page.theme-light .simulator-segment {
+  color: rgba(79, 62, 49, 0.70);
+}
+
+.simulator-page.theme-light .simulator-segment.active {
+  color: #2f1d0a;
+}
+
+.simulator-page.theme-light .cloud-picker,
+.simulator-page.theme-light .field-card,
+.simulator-page.theme-light .simulator-cloud-row {
+  background: rgba(255, 255, 255, 0.62);
+  border-color: rgba(122, 85, 45, 0.12);
+}
+
+.simulator-page.theme-light .cloud-picker.active {
+  background: rgba(255, 237, 213, 0.72);
+  border-color: rgba(251, 146, 60, 0.42);
+}
+
+.simulator-page.theme-light .field-card input {
+  color: #2f261f;
+}
+
+.simulator-page.theme-light .simulator-cloud-row.always-dark {
+  background: rgba(241, 245, 249, 0.78);
+}
+
+.simulator-page.theme-light .cloud-row-status {
+  color: #9a5b18;
+}
+
+.simulator-page.theme-light .always-dark-tag {
+  color: #475569;
+  background: rgba(226, 232, 240, 0.72);
+  border-color: rgba(100, 116, 139, 0.18);
+}

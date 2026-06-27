@@ -144,12 +144,13 @@ Page({
     });
     const elevation = solarElevationDeg || solarElevationFromTimeOffset(this.data.mode, this.data.timeOffset);
     const ctx = wx.createCanvasContext('firecloudSimulatorCanvas', this);
+    const palette = simulatorPalette(this.data.resolvedThemeMode === 'light' ? 'light' : 'dark');
     ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    drawBackground(ctx);
+    drawBackground(ctx, palette);
     if (this.data.viewMode === 'facingSun') {
-      drawFacingSunView(ctx, resolvedProfile.cloudRows, elevation);
+      drawFacingSunView(ctx, resolvedProfile.cloudRows, elevation, palette);
     } else {
-      drawCrossSectionView(ctx, resolvedProfile.cloudRows, elevation);
+      drawCrossSectionView(ctx, resolvedProfile.cloudRows, elevation, palette);
     }
     ctx.draw();
   }
@@ -264,10 +265,32 @@ function toCloudRow(row) {
   };
 }
 
-function drawBackground(ctx) {
-  ctx.setFillStyle('#08111f');
+function simulatorPalette(theme) {
+  return theme === 'light'
+    ? {
+        background: '#f8dcc2',
+        grid: 'rgba(124, 88, 55, 0.22)',
+        label: 'rgba(92, 64, 43, 0.72)',
+        note: 'rgba(92, 64, 43, 0.66)',
+        cloudStroke: 'rgba(116, 83, 54, 0.24)',
+        darkCloud: '#263241',
+        darkStroke: 'rgba(38, 50, 65, 0.36)'
+      }
+    : {
+        background: '#08111f',
+        grid: 'rgba(148, 163, 184, 0.18)',
+        label: 'rgba(226, 232, 240, 0.66)',
+        note: 'rgba(226, 232, 240, 0.58)',
+        cloudStroke: 'rgba(255, 255, 255, 0.25)',
+        darkCloud: '#111827',
+        darkStroke: 'rgba(148, 163, 184, 0.38)'
+      };
+}
+
+function drawBackground(ctx, palette) {
+  ctx.setFillStyle(palette.background);
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  ctx.setStrokeStyle('rgba(148, 163, 184, 0.18)');
+  ctx.setStrokeStyle(palette.grid);
   ctx.setLineWidth(1);
   for (let i = 0; i <= 4; i += 1) {
     const y = PLOT.top + ((CANVAS_HEIGHT - PLOT.top - PLOT.bottom) * i) / 4;
@@ -285,19 +308,19 @@ function drawBackground(ctx) {
   }
 }
 
-function drawCrossSectionView(ctx, cloudRows, solarElevationDeg) {
+function drawCrossSectionView(ctx, cloudRows, solarElevationDeg, palette) {
   drawSunRay(ctx, solarElevationDeg);
   for (const row of cloudRows) {
     const x = mapDistance(row.distanceKm);
     const yTop = mapHeight(row.topHeightM);
     const yBottom = mapHeight(row.baseHeightM);
     const width = Math.max(32, (row.widthKm / MAX_DISTANCE_KM) * (CANVAS_WIDTH - PLOT.left - PLOT.right));
-    drawCloudBlob(ctx, x, (yTop + yBottom) / 2, width, Math.max(28, yBottom - yTop), row);
+    drawCloudBlob(ctx, x, (yTop + yBottom) / 2, width, Math.max(28, yBottom - yTop), row, palette);
   }
-  drawAxisLabels(ctx, 'distance km', 'height m');
+  drawAxisLabels(ctx, 'distance km', 'height m', palette);
 }
 
-function drawFacingSunView(ctx, cloudRows, solarElevationDeg) {
+function drawFacingSunView(ctx, cloudRows, solarElevationDeg, palette) {
   drawFacingSunDisc(ctx, solarElevationDeg);
   for (const row of cloudRows) {
     const depth = row.distanceKm / MAX_DISTANCE_KM;
@@ -305,9 +328,9 @@ function drawFacingSunView(ctx, cloudRows, solarElevationDeg) {
     const y = 98 + (1 - row.topHeightM / MAX_HEIGHT_M) * 300 + depth * 52;
     const width = Math.max(42, row.widthKm * (2.4 - depth));
     const height = Math.max(26, ((row.topHeightM - row.baseHeightM) / 1000) * (28 - depth * 8));
-    drawCloudBlob(ctx, x, y, width, height, row);
+    drawCloudBlob(ctx, x, y, width, height, row, palette);
   }
-  ctx.setFillStyle('rgba(226, 232, 240, 0.58)');
+  ctx.setFillStyle(palette.note);
   ctx.setFontSize(20);
   ctx.fillText('远近由大小与垂直位置表示', 44, CANVAS_HEIGHT - 26);
 }
@@ -339,8 +362,8 @@ function drawFacingSunDisc(ctx, solarElevationDeg) {
   ctx.fill();
 }
 
-function drawCloudBlob(ctx, cx, cy, width, height, row) {
-  const color = row.alwaysDark ? '#111827' : row.color;
+function drawCloudBlob(ctx, cx, cy, width, height, row, palette) {
+  const color = row.alwaysDark ? palette.darkCloud : row.color;
   const lobes = [-0.36, -0.16, 0.08, 0.28, 0.42];
   if (ctx.setGlobalAlpha) ctx.setGlobalAlpha(row.alwaysDark ? 0.76 : 0.9);
   for (let i = 0; i < lobes.length; i += 1) {
@@ -349,7 +372,7 @@ function drawCloudBlob(ctx, cx, cy, width, height, row) {
     ctx.arc(cx + lobes[i] * width, cy + Math.sin(i) * height * 0.12, Math.max(14, height * (0.52 + (i % 2) * 0.14)), 0, Math.PI * 2);
     ctx.fill();
   }
-  ctx.setStrokeStyle(row.alwaysDark ? 'rgba(148, 163, 184, 0.38)' : 'rgba(255, 255, 255, 0.25)');
+  ctx.setStrokeStyle(row.alwaysDark ? palette.darkStroke : palette.cloudStroke);
   ctx.setLineWidth(2);
   drawOvalStroke(ctx, cx, cy, width * 0.48, height * 0.48);
   if (ctx.setGlobalAlpha) ctx.setGlobalAlpha(1);
@@ -375,8 +398,8 @@ function drawOvalStroke(ctx, cx, cy, rx, ry) {
   ctx.stroke();
 }
 
-function drawAxisLabels(ctx, xLabel, yLabel) {
-  ctx.setFillStyle('rgba(226, 232, 240, 0.66)');
+function drawAxisLabels(ctx, xLabel, yLabel, palette) {
+  ctx.setFillStyle(palette.label);
   ctx.setFontSize(20);
   ctx.fillText(xLabel, CANVAS_WIDTH - 154, CANVAS_HEIGHT - 18);
   ctx.fillText(yLabel, 18, 28);
