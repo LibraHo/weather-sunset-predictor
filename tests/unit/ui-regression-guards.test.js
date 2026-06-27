@@ -310,6 +310,7 @@ describe('recent user-reported UI regression guards', () => {
   test('score breakdown popover keeps translucent glass effect', () => {
     const source = css();
     const block = source.match(/\.score-breakdown-popover,\nbody\.theme-light \.score-breakdown-popover,[\s\S]*?\n\}/)?.[0] || '';
+    const darkLedgerBlock = source.match(/\/\* Dark score ledger cards must stay in the Xiake night-glass language\. \*\/[\s\S]*?body\[data-actual-theme="dark"\] \.score-ledger-step-final \.score-ledger-body \{[\s\S]*?\n\}/)?.[0] || '';
 
     expect(block).toContain('color-mix(in srgb, var(--glass-bg-heavy) 72%, transparent)');
     expect(block).toContain('backdrop-filter: blur(var(--glass-blur-heavy)) saturate(1.24)');
@@ -318,6 +319,13 @@ describe('recent user-reported UI regression guards', () => {
     expect(source).toContain('color-mix(in srgb, var(--glass-bg-heavy) 42%, transparent)');
     expect(source).toContain('radial-gradient(circle at 16% 0%, rgba(255, 224, 178, 0.32), transparent 38%)');
     expect(source).toContain('.score-breakdown-popover::before');
+    expect(darkLedgerBlock).toContain('html[data-actual-theme="dark"] .score-ledger-summary');
+    expect(darkLedgerBlock).toContain('body[data-actual-theme="dark"] .score-ledger-body');
+    expect(darkLedgerBlock).toContain('rgba(18, 28, 52, 0.74)');
+    expect(darkLedgerBlock).toContain('rgba(12, 20, 40, 0.68)');
+    expect(darkLedgerBlock).toContain('rgba(251, 191, 36, 0.30)');
+    expect(darkLedgerBlock).not.toContain('rgba(255,255,255,0.34)');
+    expect(darkLedgerBlock).not.toContain('var(--glass-bg-hover) 62%');
     expect(block).not.toContain('background: var(--glass-bg-heavy) !important');
   });
 

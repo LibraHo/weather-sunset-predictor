@@ -9448,6 +9448,68 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
   background: color-mix(in srgb, var(--theme-accent-soft, #ffb347) 22%, var(--glass-bg-hover));
   border-color: color-mix(in srgb, var(--theme-accent, #ff8c00) 40%, var(--glass-border));
 }
+
+/* Dark score ledger cards must stay in the Xiake night-glass language. */
+html.theme-dark .score-ledger-summary,
+html[data-theme="dark"] .score-ledger-summary,
+html.theme-actual-dark .score-ledger-summary,
+html[data-actual-theme="dark"] .score-ledger-summary,
+body.theme-dark .score-ledger-summary,
+body[data-theme="dark"] .score-ledger-summary,
+body.theme-actual-dark .score-ledger-summary,
+body[data-actual-theme="dark"] .score-ledger-summary {
+  background:
+    linear-gradient(145deg, rgba(148, 163, 184, 0.14), rgba(15, 23, 42, 0.22)),
+    rgba(18, 28, 52, 0.74) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;
+  color: rgba(255, 255, 255, 0.90) !important;
+}
+
+html.theme-dark .score-ledger-index,
+html[data-theme="dark"] .score-ledger-index,
+html.theme-actual-dark .score-ledger-index,
+html[data-actual-theme="dark"] .score-ledger-index,
+body.theme-dark .score-ledger-index,
+body[data-theme="dark"] .score-ledger-index,
+body.theme-actual-dark .score-ledger-index,
+body[data-actual-theme="dark"] .score-ledger-index,
+html.theme-dark .score-ledger-body,
+html[data-theme="dark"] .score-ledger-body,
+html.theme-actual-dark .score-ledger-body,
+html[data-actual-theme="dark"] .score-ledger-body,
+body.theme-dark .score-ledger-body,
+body[data-theme="dark"] .score-ledger-body,
+body.theme-actual-dark .score-ledger-body,
+body[data-actual-theme="dark"] .score-ledger-body,
+html.theme-dark .score-ledger-detail-copy,
+html[data-theme="dark"] .score-ledger-detail-copy,
+html.theme-actual-dark .score-ledger-detail-copy,
+html[data-actual-theme="dark"] .score-ledger-detail-copy,
+body.theme-dark .score-ledger-detail-copy,
+body[data-theme="dark"] .score-ledger-detail-copy,
+body.theme-actual-dark .score-ledger-detail-copy,
+body[data-actual-theme="dark"] .score-ledger-detail-copy {
+  background:
+    linear-gradient(145deg, rgba(148, 163, 184, 0.12), rgba(15, 23, 42, 0.18)),
+    rgba(12, 20, 40, 0.68) !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+html.theme-dark .score-ledger-step-final .score-ledger-body,
+html[data-theme="dark"] .score-ledger-step-final .score-ledger-body,
+html.theme-actual-dark .score-ledger-step-final .score-ledger-body,
+html[data-actual-theme="dark"] .score-ledger-step-final .score-ledger-body,
+body.theme-dark .score-ledger-step-final .score-ledger-body,
+body[data-theme="dark"] .score-ledger-step-final .score-ledger-body,
+body.theme-actual-dark .score-ledger-step-final .score-ledger-body,
+body[data-actual-theme="dark"] .score-ledger-step-final .score-ledger-body {
+  background:
+    linear-gradient(145deg, rgba(251, 191, 36, 0.13), rgba(15, 23, 42, 0.18)),
+    rgba(12, 20, 40, 0.72) !important;
+  border-color: rgba(251, 191, 36, 0.30) !important;
+}
 @media (max-width: 640px) {
   .score-breakdown-ledger {
     top: 70px;
