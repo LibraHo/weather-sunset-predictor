@@ -2,9 +2,13 @@ export function readAppSettings() {
   const settings = wx.getStorageSync('appSettings') || {};
   const interfaceLanguage = settings.interfaceLanguage === 'en-US' ? 'en-US' : 'zh-CN';
   const themeMode = ['system', 'light', 'dark'].includes(settings.themeMode) ? settings.themeMode : 'system';
+  const temperatureUnit = ['celsius', 'fahrenheit'].includes(settings.temperatureUnit) ? settings.temperatureUnit : 'celsius';
+  const windSpeedUnit = ['kmh', 'ms'].includes(settings.windSpeedUnit) ? settings.windSpeedUnit : 'kmh';
   return {
     interfaceLanguage,
     themeMode,
+    temperatureUnit,
+    windSpeedUnit,
     resolvedThemeMode: resolveThemeMode(themeMode)
   };
 }
@@ -18,9 +22,13 @@ export function resolveThemeMode(themeMode = 'system') {
 }
 
 export function saveAppSettings(patch = {}, current = {}) {
+  const temperatureUnit = patch.temperatureUnit || current.temperatureUnit || 'celsius';
+  const windSpeedUnit = patch.windSpeedUnit || current.windSpeedUnit || 'kmh';
   const settings = {
     interfaceLanguage: patch.interfaceLanguage || current.interfaceLanguage || 'zh-CN',
-    themeMode: patch.themeMode || current.themeMode || 'system'
+    themeMode: patch.themeMode || current.themeMode || 'system',
+    temperatureUnit: ['celsius', 'fahrenheit'].includes(temperatureUnit) ? temperatureUnit : 'celsius',
+    windSpeedUnit: ['kmh', 'ms'].includes(windSpeedUnit) ? windSpeedUnit : 'kmh'
   };
   wx.setStorageSync('appSettings', settings);
   return {

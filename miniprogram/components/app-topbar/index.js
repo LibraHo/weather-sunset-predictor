@@ -23,11 +23,19 @@ Component({
   data: {
     homeMenuOpen: false,
     settingsOpen: false,
-    interfaceLanguage: 'zh-CN'
+    interfaceLanguage: 'zh-CN',
+    temperatureUnit: 'celsius',
+    windSpeedUnit: 'kmh'
   },
 
   lifetimes: {
     attached() {
+      this.applySavedSettings();
+    }
+  },
+
+  pageLifetimes: {
+    show() {
       this.applySavedSettings();
     }
   },
@@ -83,6 +91,18 @@ Component({
       this.saveAppSettings({ themeMode: value });
     },
 
+    selectTemperatureUnit(event) {
+      const value = event.currentTarget.dataset.value;
+      if (!['celsius', 'fahrenheit'].includes(value)) return;
+      this.saveAppSettings({ temperatureUnit: value });
+    },
+
+    selectWindSpeedUnit(event) {
+      const value = event.currentTarget.dataset.value;
+      if (!['kmh', 'ms'].includes(value)) return;
+      this.saveAppSettings({ windSpeedUnit: value });
+    },
+
     applySavedSettings() {
       const settings = readAppSettings();
       this.setData(settings);
@@ -90,7 +110,8 @@ Component({
     },
 
     saveAppSettings(patch = {}) {
-      const settings = saveAppSettings(patch, this.data);
+      const latest = readAppSettings();
+      const settings = saveAppSettings(patch, { ...this.data, ...latest });
       this.setData(settings);
       applyNavigationTheme(settings.resolvedThemeMode);
       this.triggerEvent('settingschange', settings, { bubbles: true, composed: true });

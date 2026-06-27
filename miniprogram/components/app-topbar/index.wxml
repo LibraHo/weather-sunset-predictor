@@ -32,7 +32,7 @@
     <view class="settings-panel-head">
       <view>
         <view class="settings-title">设置</view>
-        <view class="settings-subtitle">调整界面语言和显示主题。</view>
+        <view class="settings-subtitle">调整界面语言、显示主题和天气单位。</view>
       </view>
       <button class="settings-close" aria-label="close settings" hover-class="button-hover" hover-stay-time="80" bindtap="closeSettings">×</button>
     </view>
@@ -49,6 +49,20 @@
         <view class="settings-segment tap-feedback {{themeMode === 'system' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-value="system" bindtap="selectThemeMode">跟随系统</view>
         <view class="settings-segment tap-feedback {{themeMode === 'light' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-value="light" bindtap="selectThemeMode">浅色</view>
         <view class="settings-segment tap-feedback {{themeMode === 'dark' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-value="dark" bindtap="selectThemeMode">深色</view>
+      </view>
+    </view>
+    <view class="settings-group">
+      <view class="settings-label">温度单位</view>
+      <view class="settings-segmented">
+        <view class="settings-segment tap-feedback {{temperatureUnit === 'celsius' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-value="celsius" bindtap="selectTemperatureUnit">°C</view>
+        <view class="settings-segment tap-feedback {{temperatureUnit === 'fahrenheit' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-value="fahrenheit" bindtap="selectTemperatureUnit">°F</view>
+      </view>
+    </view>
+    <view class="settings-group">
+      <view class="settings-label">风速单位</view>
+      <view class="settings-segmented">
+        <view class="settings-segment tap-feedback {{windSpeedUnit === 'kmh' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-value="kmh" bindtap="selectWindSpeedUnit">km/h</view>
+        <view class="settings-segment tap-feedback {{windSpeedUnit === 'ms' ? 'active' : ''}}" hover-class="tap-feedback-hover" hover-stay-time="80" data-value="ms" bindtap="selectWindSpeedUnit">m/s</view>
       </view>
     </view>
     <button class="settings-done" hover-class="button-hover" hover-stay-time="80" bindtap="closeSettings">保存</button>

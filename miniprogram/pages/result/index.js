@@ -24,6 +24,8 @@ Page({
     isFavorite: false,
     themeMode: 'system',
     resolvedThemeMode: 'light',
+    temperatureUnit: 'celsius',
+    windSpeedUnit: 'kmh',
     feedbackModalVisible: false,
     feedbackSubmitting: false,
     feedbackForm: buildDefaultFeedbackForm(),
@@ -51,7 +53,7 @@ Page({
         activePeriod: normalized.period,
         periodCards: { [normalized.period]: normalized },
         prediction: normalized,
-        metrics: buildMetrics(normalized),
+        metrics: buildMetrics(normalized, this.data),
         analysisItems: buildAnalysisItems(normalized),
         scoreLedger: buildScoreLedger(normalized),
         radar: buildEmptyRadar({ loading: hasCoordinates(normalized) }),
@@ -370,11 +372,17 @@ Page({
   },
 
   applySavedSettings() {
-    applyPageSettings(this);
+    const settings = applyPageSettings(this);
+    if (this.data.prediction) {
+      this.setData({ metrics: buildMetrics(this.data.prediction, settings) });
+    }
   },
 
   onAppSettingsChange(event) {
-    this.setData(event.detail || readAppSettings());
+    const settings = event.detail || readAppSettings();
+    const update = { ...settings };
+    if (this.data.prediction) update.metrics = buildMetrics(this.data.prediction, settings);
+    this.setData(update);
   },
 
   onUnload() {
@@ -900,13 +908,13 @@ export function buildResultPeriodState(prediction = {}) {
   return {
     activePeriod: normalized.period,
     prediction: normalized,
-    metrics: buildMetrics(normalized),
+    metrics: buildMetrics(normalized, readAppSettings()),
     analysisItems: buildAnalysisItems(normalized),
     scoreLedger: buildScoreLedger(normalized)
   };
 }
 
-function buildMetrics(prediction) {
+function buildMetrics(prediction, settings = {}) {
   const metrics = prediction.metrics || {};
   const clouds = prediction.clouds || {};
   const weather = prediction.weatherData || prediction.weather || {};
@@ -920,8 +928,8 @@ function buildMetrics(prediction) {
   };
 
   return [
-    { key: 'temp', label: '温度', value: formatTemperature(pick('temp', 'temperature', 'temperature_2m')) },
-    { key: 'wind', label: '风速', value: formatWindSpeed(pick('windSpeed', 'wind', 'wind_speed_10m')) },
+    { key: 'temp', label: '温度', value: formatTemperature(pick('temp', 'temperature', 'temperature_2m'), settings.temperatureUnit) },
+    { key: 'wind', label: '风速', value: formatWindSpeed(pick('windSpeed', 'wind', 'wind_speed_10m'), settings.windSpeedUnit) },
     { key: 'windDirection', label: '风向', value: formatWindDirection(pick('windDirection', 'windDeg', 'wind_direction_10m')) },
     { key: 'highCloud', label: '高云', value: formatPercent(pick('highCloud', 'highCloudCover', 'cloudHigh', 'high')) },
     { key: 'midCloud', label: '中云', value: formatPercent(pick('midCloud', 'midCloudCover', 'cloudMid', 'mid')) },
@@ -1016,10 +1024,12 @@ function formatPlain(value) {
   return Number.isFinite(number) ? String(Math.round(number * 1000) / 1000) : String(value);
 }
 
-function formatTemperature(value) {
+function formatTemperature(value, temperatureUnit = 'celsius') {
   if (value === '--') return value;
   const number = Number(value);
-  return Number.isFinite(number) ? `${Math.round(number * 10) / 10}°C` : '--';
+  const converted = temperatureUnit === 'fahrenheit' ? (number * 9 / 5) + 32 : number;
+  const unit = temperatureUnit === 'fahrenheit' ? '°F' : '°C';
+  return Number.isFinite(converted) ? `${Math.round(converted * 10) / 10}${unit}` : '--';
 }
 
 function formatWithUnit(value, unit) {
@@ -1028,8 +1038,12 @@ function formatWithUnit(value, unit) {
   return Number.isFinite(number) ? `${Math.round(number * 10) / 10} ${unit}` : '--';
 }
 
-function formatWindSpeed(value) {
-  return formatWithUnit(value, 'km/h');
+function formatWindSpeed(value, windSpeedUnit = 'kmh') {
+  if (value === '--') return value;
+  const number = Number(value);
+  if (!Number.isFinite(number)) return '--';
+  if (windSpeedUnit === 'ms') return `${Math.round(number * 10) / 10} m/s`;
+  return `${Math.round(number * 3.6 * 10) / 10} km/h`;
 }
 
 function formatWindDirection(value) {

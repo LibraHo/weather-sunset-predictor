@@ -177,7 +177,7 @@ describe('miniprogram page user/share helpers', () => {
       condition: '多云',
       temperature: '19.9',
       temperatureUnit: '°C',
-      windSpeed: '11 km/h',
+      windSpeed: '40 km/h',
       windDirection: '西',
       metrics: [
         { key: 'humidity', value: '72%' },
@@ -187,13 +187,51 @@ describe('miniprogram page user/share helpers', () => {
         { key: 'aerosol', value: '0.11' },
         { key: 'precipitation', value: '0 mm' }
       ],
-      note: '高 62% / 中 54% / 低 43% · 西 11 km/h'
+      note: '高 62% / 中 54% / 低 43% · 西 40 km/h'
     });
 
     expect(preview.weekly).toEqual(expect.arrayContaining([
-      expect.objectContaining({ key: 'today', label: '今天', temp: '15° / 31°', precip: '8%', wind: '21 km/h' }),
-      expect.objectContaining({ key: 'tomorrow', label: '明天', temp: '15° / 32°', precip: '6%', wind: '19 km/h' })
+      expect.objectContaining({ key: 'today', label: '今天', temp: '15° / 31°', precip: '8%', wind: '76 km/h' }),
+      expect.objectContaining({ key: 'tomorrow', label: '明天', temp: '15° / 32°', precip: '6%', wind: '68 km/h' })
     ]));
+  });
+
+  test('home weather preview applies temperature and wind units to weekly and hourly forecasts', () => {
+    const preview = homeHelpers.buildWeatherPreview({
+      location: '北京',
+      temp: 20,
+      windSpeed: 18,
+      windDirection: 135,
+      cloudCover: 40,
+      highClouds: 40,
+      midClouds: 50,
+      lowClouds: 30,
+      weekly: [
+        { date: '2026-06-18', minTemp: 10, maxTemp: 20, windSpeed: 18, precip: 20 }
+      ],
+      hourly: [
+        { key: 'h0', timeLabel: '00:00', temp: 10, windSpeed: 18 },
+        { key: 'h1', timeLabel: '01:00', temp: 20, windSpeed: 36 }
+      ]
+    }, 'en-US', { temperatureUnit: 'fahrenheit', windSpeedUnit: 'ms' });
+    const windView = homeHelpers.buildWeatherHourlyViewModel(preview.hourly, 'wind', 'en-US', preview.units);
+    const kmhPreview = homeHelpers.buildWeatherPreview({ windSpeed: 5 }, 'zh-CN', { windSpeedUnit: 'kmh' });
+
+    expect(preview.temperature).toBe('68.0');
+    expect(preview.temperatureUnit).toBe('°F');
+    expect(preview.windSpeed).toBe('18.0 m/s');
+    expect(preview.weekly[0]).toEqual(expect.objectContaining({
+      minTemp: '50°',
+      maxTemp: '68°',
+      temp: '50° / 68°',
+      wind: '18.0 m/s'
+    }));
+    expect(preview.hourly[0]).toEqual(expect.objectContaining({ temp: '50.0', wind: '18.0 m/s', windValue: 18 }));
+    expect(preview.hourly[1]).toEqual(expect.objectContaining({ temp: '68.0', wind: '36.0 m/s', windValue: 36 }));
+    expect(windView.unit).toBe('m/s');
+    expect(windView.axisLabels[0].value).toContain('m/s');
+    expect(windView.chart.at(-1).valueText).toBe('36m/s');
+    expect(kmhPreview.windSpeed).toBe('18 km/h');
   });
 
   test('home hourly chart keeps points inside the plot area', () => {
@@ -407,7 +445,7 @@ describe('miniprogram page user/share helpers', () => {
     });
 
     expect(state.weatherPreview.temperature).toBe('21.6');
-    expect(state.weatherPreview.windSpeed).toBe('11 km/h');
+    expect(state.weatherPreview.windSpeed).toBe('41 km/h');
     expect(state.weatherPreview.windDirection).toBe('西');
     expect(state.weatherPreview.metrics).toEqual(expect.arrayContaining([
       expect.objectContaining({ key: 'humidity', value: '68%' }),
@@ -470,7 +508,7 @@ describe('miniprogram page user/share helpers', () => {
       query: { locationName: '北京', period: 'sunset' }
     });
 
-    expect(state.weatherPreview.windSpeed).toBe('2 km/h');
+    expect(state.weatherPreview.windSpeed).toBe('7 km/h');
     expect(state.weatherPreview.windDirection).toBe('南');
     expect(state.weatherPreview.windDirection).not.toBe('180');
     expect(state.weatherPreview.windDirectionArrow).toBe('↑');
@@ -509,7 +547,7 @@ describe('miniprogram page user/share helpers', () => {
       expect.objectContaining({ key: 'aerosol', label: 'Aerosol' })
     ]));
     expect(state.weatherPreview.note).toContain('High');
-    expect(state.weatherPreview.note).toContain('Southeast 2 km/h');
+    expect(state.weatherPreview.note).toContain('Southeast 6 km/h');
     expect(JSON.stringify(state.weatherPreview)).not.toMatch(/阴|东南|天气信息|云量|气溶胶/);
   });
 
@@ -620,7 +658,7 @@ describe('miniprogram page user/share helpers', () => {
     const homeWxml = fs.readFileSync(path.resolve(process.cwd(), 'miniprogram/pages/home/index.wxml'), 'utf8');
 
     expect(homeSource.indexOf('weather = await this.callWeatherForecast(query);')).toBeLessThan(homeSource.indexOf('const raw = await this.callPredictionService(query);'));
-    expect(homeSource).toContain('weatherPreview: buildWeatherPreview({ ...weather, location: query.locationName }, this.data.interfaceLanguage)');
+    expect(homeSource).toContain('weatherPreview: buildWeatherPreview({ ...weather, location: query.locationName }, this.data.interfaceLanguage, this.data)');
     expect(homeSource).toContain("this.setSearchLoadingStep('正在计算霞光评分', 72, '基础天气暂未返回，继续读取综合预测');");
     expect(homeSource).toContain('predictionPreviewLoading: true');
     expect(homeSource).toContain('predictionPreviewLoading: false');
@@ -765,7 +803,7 @@ describe('miniprogram page user/share helpers', () => {
 
     expect(state.metrics).toEqual(expect.arrayContaining([
       expect.objectContaining({ key: 'temp', value: '21.6°C' }),
-      expect.objectContaining({ key: 'wind', value: expect.stringContaining('11.4') }),
+      expect.objectContaining({ key: 'wind', value: '41 km/h' }),
       expect.objectContaining({ key: 'windDirection', value: '270°' }),
       expect.objectContaining({ key: 'humidity', value: '68%' }),
       expect.objectContaining({ key: 'visibility', value: '16km' }),
