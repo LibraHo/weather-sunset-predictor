@@ -101,6 +101,48 @@ describe('FireCloudProfileSimulator', () => {
     expect(sunsetMiddle.blockedBy).toBe('east-low-wall');
   });
 
+  test('uses cloud width when estimating low-angle shadow reach', () => {
+    const makeClouds = (blockerWidthKm) => [
+      {
+        id: 'west-low-wall',
+        label: 'wide or narrow west low blocker',
+        distanceKm: 30,
+        baseHeightM: 250,
+        topHeightM: 900,
+        coverage: 90,
+        widthKm: blockerWidthKm,
+        opticalDepth: 1,
+      },
+      {
+        id: 'east-mid-cloud',
+        label: 'east mid height cloud',
+        distanceKm: 70,
+        baseHeightM: 2500,
+        topHeightM: 3200,
+        coverage: 50,
+        widthKm: 8,
+        opticalDepth: 0.35,
+      },
+    ];
+
+    const narrow = simulateFireCloudProfile({
+      mode: 'sunrise',
+      solarElevationDeg: 1.8,
+      clouds: makeClouds(2),
+    });
+    const wide = simulateFireCloudProfile({
+      mode: 'sunrise',
+      solarElevationDeg: 1.8,
+      clouds: makeClouds(80),
+    });
+
+    expect(narrow.clouds.find(cloud => cloud.id === 'east-mid-cloud').status).not.toBe('shadowed');
+    expect(wide.clouds.find(cloud => cloud.id === 'east-mid-cloud')).toMatchObject({
+      status: 'shadowed',
+      blockedBy: 'west-low-wall',
+    });
+  });
+
   test('colors thin upper clouds warm when the light path is open near sunset', () => {
     const result = simulateFireCloudProfile({
       solarElevationDeg: -1.2,
