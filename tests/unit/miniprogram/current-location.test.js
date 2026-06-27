@@ -69,6 +69,26 @@ describe('miniprogram current location search', () => {
     expect(ctx.data.locating).toBe(false);
   });
 
+  test('clears stale current coordinates when wx.getLocation returns invalid coordinates', async () => {
+    global.wx.getLocation.mockImplementation(({ success }) => {
+      success({ latitude: undefined, longitude: 115.1889 });
+    });
+    const ctx = createPageContext({
+      data: {
+        coordinate: { lat: 39.9042, lon: 116.4074 },
+        locationText: '当前位置',
+        locationCandidates: [{ name: 'Beijing', lat: 39.9042, lon: 116.4074 }]
+      }
+    });
+
+    await page.onUseCurrentLocation.call(ctx);
+
+    expect(ctx.data.coordinate).toBeNull();
+    expect(ctx.data.locationText).toBe('');
+    expect(ctx.data.locationCandidates).toEqual([]);
+    expect(ctx.onSearch).not.toHaveBeenCalled();
+  });
+
   test('uses validated current coordinates for the following weather search', async () => {
     global.wx.getLocation.mockImplementation(({ success }) => {
       success({ latitude: '-8.4095', longitude: '115.1889' });

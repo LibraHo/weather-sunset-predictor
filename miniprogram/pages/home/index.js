@@ -600,7 +600,12 @@ Page({
       const res = await wxPromise(wx.getLocation, { type: 'wgs84' });
       const coordinate = normalizeCurrentLocationCoordinate(res);
       if (!coordinate) {
-        this.setData({ errorMessage: '当前位置坐标不可用，请手动输入地点。' });
+        this.setData({
+          coordinate: null,
+          locationText: '',
+          locationCandidates: [],
+          errorMessage: '当前位置坐标不可用，请手动输入地点。'
+        });
         return;
       }
       const reverseName = await reverseGeocode(coordinate.lat, coordinate.lon).catch(() => '');
