@@ -410,7 +410,7 @@ describe('PredictionController', () => {
       expect(html).toContain('app-info-row');
       expect(html).toContain('19:15–20:15');
       expect(html).toContain('score-breakdown-trigger');
-      expect(html).toContain('查看评分明细');
+      expect(html).toContain('评分细则');
       expect(html).not.toContain('倒计时');
     });
 

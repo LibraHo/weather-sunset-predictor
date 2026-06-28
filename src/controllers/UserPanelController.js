@@ -463,6 +463,9 @@ export default class UserPanelController {
   }
 
   t(key, fallback) {
+    if (fallback !== undefined && !i18n.translations?.[i18n.currentLanguage]) {
+      return fallback;
+    }
     const translated = i18n.t(key);
     return translated === key ? (fallback || key) : translated;
   }
