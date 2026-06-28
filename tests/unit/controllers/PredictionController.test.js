@@ -410,7 +410,7 @@ describe('PredictionController', () => {
       expect(html).toContain('app-info-row');
       expect(html).toContain('19:15–20:15');
       expect(html).toContain('score-breakdown-trigger');
-      expect(html).toContain('查看评分明细');
+      expect(html).toContain('评分细则');
       expect(html).not.toContain('倒计时');
     });
 
@@ -1251,6 +1251,51 @@ describe('PredictionController', () => {
       expect(shareCss).toMatch(/\.prediction-share-footer \.prediction-share-btn\s*\{[\s\S]*?width:\s*100%;/);
       expect(shareCss).toMatch(/\.prediction-nav-feedback\s*\{[\s\S]*?height:\s*40px;/);
       expect(shareCss).not.toMatch(/\.prediction-share-footer-row\s*\{[\s\S]*?display:\s*flex !important;/);
+    });
+
+    test('backend explanation factors use localized copy outside Chinese locales', () => {
+      const copy = {
+        'prediction.formationAnalysis.factors.carrier.title': 'Cloud carrier',
+        'prediction.formationAnalysis.factors.carrier.status.good': 'Good',
+        'prediction.formationAnalysis.factors.carrier.desc.good': 'Clouds can carry sunset color.',
+        'prediction.formationAnalysis.factors.lightPath.title': 'Light path',
+        'prediction.formationAnalysis.factors.lightPath.status.weak': 'Weak',
+        'prediction.formationAnalysis.factors.lightPath.desc.weak': 'The sun direction is blocked.',
+        'prediction.formationAnalysis.factors.rendering.title': 'Air rendering',
+        'prediction.formationAnalysis.factors.rendering.status.fair': 'Fair',
+        'prediction.formationAnalysis.factors.rendering.desc.fair': 'Air color support is neutral.',
+        'prediction.formationAnalysis.factors.limits.title': 'Limits',
+        'prediction.formationAnalysis.factors.limits.status.good': 'None obvious',
+        'prediction.formationAnalysis.factors.limits.desc.good': 'No hard limit is obvious.'
+      };
+      predictionController.i18n = {
+        currentLanguage: 'en-US',
+        t: (key) => copy[key] || key
+      };
+      const prediction = {
+        score: 72,
+        explanationModel: {
+          factors: [
+            { key: 'carrier', title: '云层载体', status: '较好', tone: 'good', desc: '有可染色云面。' },
+            { key: 'lightPath', title: '光路条件', status: '较弱', tone: 'weak', desc: '低云遮挡明显。' },
+            { key: 'rendering', title: '空气显色', status: '一般', tone: 'fair', desc: '空气条件普通。' },
+            { key: 'limits', title: '限制因素', status: '无明显', tone: 'good', desc: '暂无硬限制。' }
+          ]
+        }
+      };
+
+      const groups = predictionController.buildAnalysisGroups(prediction);
+
+      expect(groups.map(item => item.title)).toEqual(['Cloud carrier', 'Light path', 'Air rendering', 'Limits']);
+      expect(groups.map(item => item.status)).toEqual(['Good', 'Weak', 'Fair', 'None obvious']);
+      expect(groups.map(item => item.desc)).toEqual([
+        'Clouds can carry sunset color.',
+        'The sun direction is blocked.',
+        'Air color support is neutral.',
+        'No hard limit is obvious.'
+      ]);
+      expect(groups.map(item => item.title).join(' ')).not.toContain('云层载体');
+      expect(groups.map(item => item.desc).join(' ')).not.toContain('低云遮挡');
     });
   });
 

@@ -145,6 +145,7 @@ describe('UserPanelController behavior', () => {
   });
 
   test('renders signed-out state with local favorites and history fallback', async () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 401 });
     const storageService = {
       getFavoriteLocations: jest.fn(() => [{ name: 'Beijing', lat: 39.9042, lon: 116.4074 }]),
@@ -158,6 +159,8 @@ describe('UserPanelController behavior', () => {
     expect(document.getElementById('user-uploads-list').textContent).toContain('Sign in to view your uploaded photos.');
     expect(document.getElementById('user-recent-list').textContent).toContain('Sign in to view account API applications.');
     expect(storageService.getFavoriteLocations).toHaveBeenCalled();
+    expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining('account.panel.'));
+    warnSpy.mockRestore();
   });
 
   test('renders signed-in state and loads cloud lists', async () => {

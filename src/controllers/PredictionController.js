@@ -1312,9 +1312,38 @@ class PredictionController {
     if (!document.__scoreBreakdownDelegateBound) {
       document.__scoreBreakdownDelegateBound = true;
 
+      const isMobileScoreBreakdown = () => (
+        typeof window !== 'undefined' &&
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(max-width: 640px)').matches
+      );
+
+      const restoreScoreBreakdown = (pop) => {
+        const placeholder = pop?.__scoreBreakdownPlaceholder;
+        if (!placeholder?.parentNode) return;
+        placeholder.parentNode.replaceChild(pop, placeholder);
+        pop.classList.remove('score-breakdown-popover--portal');
+        delete pop.__scoreBreakdownPlaceholder;
+      };
+
+      const portalScoreBreakdown = (pop) => {
+        if (!isMobileScoreBreakdown()) {
+          restoreScoreBreakdown(pop);
+          return;
+        }
+        if (!pop.__scoreBreakdownPlaceholder) {
+          const placeholder = document.createComment('score-breakdown-popover');
+          pop.parentNode.insertBefore(placeholder, pop);
+          pop.__scoreBreakdownPlaceholder = placeholder;
+        }
+        pop.classList.add('score-breakdown-popover--portal');
+        document.body.appendChild(pop);
+      };
+
       const closeAllScoreBreakdowns = () => {
         document.querySelectorAll('.score-breakdown-popover').forEach(pop => {
           pop.hidden = true;
+          restoreScoreBreakdown(pop);
         });
         document.querySelectorAll('.score-breakdown-trigger').forEach(trigger => {
           trigger.setAttribute('aria-expanded', 'false');
@@ -1339,11 +1368,15 @@ class PredictionController {
         }
         e.stopPropagation();
 
-        const pop = trigger.querySelector('.score-breakdown-popover');
+        const pop = trigger.__scoreBreakdownPopover || trigger.querySelector('.score-breakdown-popover');
         if (!pop) return;
+        trigger.__scoreBreakdownPopover = pop;
 
         const willOpen = pop.hidden;
         closeAllScoreBreakdowns();
+        if (willOpen) {
+          portalScoreBreakdown(pop);
+        }
         pop.hidden = !willOpen;
         trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
       }, true);
@@ -1685,7 +1718,7 @@ class PredictionController {
         <div class="score-gauge-caption">
           <div class="score-gauge-grade" style="color:${scoreTheme[1]}">${forecast.scoreLabel}</div>
           <div class="score-gauge-desc">${forecast.scoreDesc}</div>
-          <div class="score-breakdown-hint-trigger">${this._translateOrFallback('prediction.scoreBreakdown.viewDetails', '查看评分明细')}</div>
+          <div class="score-breakdown-hint-trigger">${this._translateOrFallback('prediction.scoreBreakdown.viewDetails', '评分细则')}</div>
         </div>
       </div>
     `;
@@ -1747,7 +1780,55 @@ class PredictionController {
     return this.buildAnalysisFactors(prediction);
   }
 
+  isChineseLocale() {
+    const language = this.i18n?.currentLanguage || this.i18n?.getCurrentLanguage?.() || 'zh-CN';
+    return String(language).toLowerCase().startsWith('zh');
+  }
+
+  backendFactorLevel(factor = {}) {
+    const raw = factor.tone || factor.level || 'fair';
+    if (raw === 'good' || raw === 'positive') return 'good';
+    if (raw === 'weak' || raw === 'warning' || raw === 'poor') return 'weak';
+    return 'fair';
+  }
+
+  translateFactorCopy(key, level, field, fallback = '') {
+    const fullKey = `prediction.formationAnalysis.factors.${key}.${field}.${level}`;
+    const translated = this.i18n.t(fullKey);
+    return translated === fullKey ? fallback : translated;
+  }
+
+  normalizeBackendAnalysisFactors(factors = []) {
+    if (!Array.isArray(factors) || factors.length === 0) return null;
+    const iconByKey = {
+      carrier: 'cloud',
+      lightPath: 'info',
+      rendering: 'leaf',
+      limits: 'warn'
+    };
+    const useRawBackendCopy = this.isChineseLocale();
+    return factors.map(factor => {
+      const key = factor.key;
+      const tone = this.backendFactorLevel(factor);
+      const titleKey = `prediction.formationAnalysis.factors.${key}.title`;
+      const localizedTitle = this.i18n.t(titleKey);
+      return {
+        key,
+        title: useRawBackendCopy ? factor.title : (localizedTitle === titleKey ? factor.title : localizedTitle),
+        status: useRawBackendCopy ? factor.status : this.translateFactorCopy(key, tone, 'status', factor.status),
+        desc: useRawBackendCopy ? (factor.desc || factor.detail || factor.insight || '') : this.translateFactorCopy(key, tone, 'desc', factor.desc || factor.detail || factor.insight || ''),
+        statusTone: tone,
+        type: tone === 'good' ? 'positive' : (tone === 'weak' ? 'warning' : 'neutral'),
+        icon: iconByKey[key] || 'info',
+        insight: useRawBackendCopy ? (factor.insight || '') : ''
+      };
+    });
+  }
+
   buildAnalysisFactors(prediction) {
+    const backendFactors = this.normalizeBackendAnalysisFactors(prediction?.explanationModel?.factors);
+    if (backendFactors) return backendFactors;
+
     const weather = this.extractAnalysisWeather(prediction);
     const thickHighCloudPenalty = prediction?.thickHighCloudPenalty || prediction?.lightPathAnalysis?.thickHighCloudPenalty;
     const cloudThickness = prediction?.cloudThickness || prediction?.lightPathAnalysis?.cloudThickness;
