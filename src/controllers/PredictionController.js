@@ -1780,7 +1780,55 @@ class PredictionController {
     return this.buildAnalysisFactors(prediction);
   }
 
+  isChineseLocale() {
+    const language = this.i18n?.currentLanguage || this.i18n?.getCurrentLanguage?.() || 'zh-CN';
+    return String(language).toLowerCase().startsWith('zh');
+  }
+
+  backendFactorLevel(factor = {}) {
+    const raw = factor.tone || factor.level || 'fair';
+    if (raw === 'good' || raw === 'positive') return 'good';
+    if (raw === 'weak' || raw === 'warning' || raw === 'poor') return 'weak';
+    return 'fair';
+  }
+
+  translateFactorCopy(key, level, field, fallback = '') {
+    const fullKey = `prediction.formationAnalysis.factors.${key}.${field}.${level}`;
+    const translated = this.i18n.t(fullKey);
+    return translated === fullKey ? fallback : translated;
+  }
+
+  normalizeBackendAnalysisFactors(factors = []) {
+    if (!Array.isArray(factors) || factors.length === 0) return null;
+    const iconByKey = {
+      carrier: 'cloud',
+      lightPath: 'info',
+      rendering: 'leaf',
+      limits: 'warn'
+    };
+    const useRawBackendCopy = this.isChineseLocale();
+    return factors.map(factor => {
+      const key = factor.key;
+      const tone = this.backendFactorLevel(factor);
+      const titleKey = `prediction.formationAnalysis.factors.${key}.title`;
+      const localizedTitle = this.i18n.t(titleKey);
+      return {
+        key,
+        title: useRawBackendCopy ? factor.title : (localizedTitle === titleKey ? factor.title : localizedTitle),
+        status: useRawBackendCopy ? factor.status : this.translateFactorCopy(key, tone, 'status', factor.status),
+        desc: useRawBackendCopy ? (factor.desc || factor.detail || factor.insight || '') : this.translateFactorCopy(key, tone, 'desc', factor.desc || factor.detail || factor.insight || ''),
+        statusTone: tone,
+        type: tone === 'good' ? 'positive' : (tone === 'weak' ? 'warning' : 'neutral'),
+        icon: iconByKey[key] || 'info',
+        insight: useRawBackendCopy ? (factor.insight || '') : ''
+      };
+    });
+  }
+
   buildAnalysisFactors(prediction) {
+    const backendFactors = this.normalizeBackendAnalysisFactors(prediction?.explanationModel?.factors);
+    if (backendFactors) return backendFactors;
+
     const weather = this.extractAnalysisWeather(prediction);
     const thickHighCloudPenalty = prediction?.thickHighCloudPenalty || prediction?.lightPathAnalysis?.thickHighCloudPenalty;
     const cloudThickness = prediction?.cloudThickness || prediction?.lightPathAnalysis?.cloudThickness;
