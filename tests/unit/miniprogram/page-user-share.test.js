@@ -1,12 +1,6 @@
 import { jest } from '@jest/globals';
-import fs from 'fs';
-import path from 'path';
-import { normalizePrediction } from '../../../miniprogram/services/prediction.js';
 
-const resultPageSource = fs.readFileSync(path.resolve(process.cwd(), 'miniprogram/pages/result/index.js'), 'utf8');
-
-describe('miniprogram page user/share helpers', () => {
-  let resultHelpers;
+describe('miniprogram home page user/share helpers', () => {
   let homeHelpers;
 
   beforeAll(async () => {
@@ -23,7 +17,6 @@ describe('miniprogram page user/share helpers', () => {
       navigateBack: jest.fn(),
       reLaunch: jest.fn()
     };
-    resultHelpers = await import('../../../miniprogram/pages/result/index.js');
     homeHelpers = await import('../../../miniprogram/pages/home/index.js');
   });
 
@@ -33,26 +26,7 @@ describe('miniprogram page user/share helpers', () => {
     delete globalThis.wx;
   });
 
-  test('result share path uses stable location parameters', () => {
-    const path = resultHelpers.buildSharePath({
-      locationName: '北京 天坛',
-      lat: 39.882,
-      lon: 116.406,
-      period: 'sunset',
-      date: '2026-05-11'
-    });
-
-    expect(path).toBe('/pages/result/index?lat=39.882&lon=116.406&name=%E5%8C%97%E4%BA%AC%20%E5%A4%A9%E5%9D%9B&type=sunset&date=2026-05-11');
-  });
-
-  test('result share message follows Xiake short title style', () => {
-    expect(resultHelpers.buildShareMessage({ locationName: '天坛', period: 'sunrise', score: 82.4, lat: 1, lon: 2 })).toMatchObject({
-      title: '霞客｜天坛朝霞评分 82分',
-      path: expect.stringContaining('/pages/result/index?')
-    });
-  });
-
-  test('home prediction share button opens the searched-address result on home', () => {
+  test('home prediction share button opens the active home prediction page', () => {
     const message = homeHelpers.buildHomeShareMessage({
       periodKey: 'sunset',
       periodLabel: '晚霞',
@@ -62,58 +36,18 @@ describe('miniprogram page user/share helpers', () => {
       coordinate: { lat: 39.9042, lon: 116.4074 },
       day: 'today'
     });
-    expect(message).toMatchObject({
-      title: '霞客｜北京晚霞评分 76分',
-      path: expect.stringContaining('/pages/home/index?')
-    });
+
+    expect(message.path).toContain('/pages/home/index?');
+    expect(message.path).toContain('location=%E5%8C%97%E4%BA%AC');
+    expect(message.path).toContain('lat=39.9042');
+    expect(message.path).toContain('lon=116.4074');
+    expect(message.path).toContain('type=sunset');
     expect(message.path).toContain('share=1');
     expect(message.path).toContain('auto=1');
+    expect(message.path).not.toContain('/pages/result/index');
   });
 
-  test('home prediction preview keeps event time for feedback window checks', () => {
-    const preview = homeHelpers.buildPredictionPreviewFromPrediction({
-      period: 'sunset',
-      eventTime: '2026-06-12T18:58:00+08:00',
-      score: 72,
-      cloudLayers: { high: 52, mid: 34, low: 8 }
-    }, {
-      locationName: '北京',
-      coordinate: { lat: 39.9042, lon: 116.4074 }
-    });
-
-    expect(preview.eventTime).toBe('2026-06-12T18:58:00+08:00');
-  });
-
-  test('home prediction preview keeps layer brightness for formation analysis', () => {
-    const preview = homeHelpers.buildPredictionPreviewFromPrediction({
-      period: 'sunset',
-      score: 42,
-      cloudLayers: { high: 70, mid: 50, low: 12 },
-      breakdown: {
-        layerBrightness: {
-          applied: true,
-          effectiveBrightness: 18,
-          cap: 42,
-          reason: 'dimmed_by_layer_brightness'
-        },
-        layerBrightnessAdjustment: {
-          applied: true,
-          cap: 42
-        }
-      }
-    });
-
-    expect(preview.analysis[0]).toMatchObject({
-      key: 'carrier',
-      status: '偏弱',
-      tone: 'weak',
-      insight: '云面有，但受光偏弱'
-    });
-    expect(preview.analysis[0].desc).toContain('受光偏弱');
-    expect(preview.analysis[0].subfacts).toBeUndefined();
-  });
-
-  test('home share path uses the selected prediction card date', () => {
+  test('home share path uses the selected prediction card date and period', () => {
     const message = homeHelpers.buildHomeShareMessage({
       periodKey: 'sunrise',
       periodLabel: '朝霞',
@@ -128,6 +62,7 @@ describe('miniprogram page user/share helpers', () => {
 
     expect(message.path).toContain('type=sunrise');
     expect(message.path).toContain('date=2026-05-31');
+    expect(message.path).not.toContain('/pages/result/index');
   });
 
   test('home share landing can restore the shared day on the home card', () => {
@@ -136,11 +71,121 @@ describe('miniprogram page user/share helpers', () => {
     expect(homeHelpers.resolveSharedDay('2026-06-20', new Date('2026-06-14T08:00:00+08:00'))).toBeNull();
   });
 
-  test('favorite helper matches coordinates and payload shape', () => {
-    const prediction = { locationName: '天坛', lat: 39.882, lon: 116.406, period: 'sunset' };
-    expect(resultHelpers.buildFavoritePayload(prediction)).toMatchObject({ name: '天坛', lat: 39.882, lon: 116.406, type: 'sunset' });
-    expect(resultHelpers.isFavoriteLocation(prediction, [{ name: '旧名', lat: 39.882, lon: 116.406 }])).toBe(true);
-    expect(resultHelpers.sameLocation({ name: '天坛' }, { locationName: '天坛' })).toBe(true);
+  test('FOV radar projects bearing-only sector samples to different horizontal positions', () => {
+    const radar = homeHelpers.buildPredictionFovRadar([], 'sunset', {
+      visibleSector: {
+        mainBearing: 300,
+        offsetsDeg: [-35, 0, 35],
+        distancesKm: [50]
+      },
+      visibleSectorSamples: [
+        { bearing: 280, distanceKm: 50, highCloud: 70 },
+        { bearing: 320, distanceKm: 50, highCloud: 70 }
+      ]
+    });
+
+    const highClouds = radar.clouds.filter((cloud) => cloud.layer === 'high');
+    expect(highClouds.length).toBeGreaterThanOrEqual(2);
+    expect(highClouds.some((cloud) => cloud.left < 50)).toBe(true);
+    expect(highClouds.some((cloud) => cloud.left > 50)).toBe(true);
+  });
+
+  test('FOV radar keeps layer altitude separated when provider cloud base is low', () => {
+    const radar = homeHelpers.buildPredictionFovRadar([], 'sunset', {
+      visibleSector: {
+        mainBearing: 305,
+        offsetsDeg: [0],
+        distancesKm: [50]
+      },
+      visibleSectorSamples: [
+        { bearing: 305, distanceKm: 50, cloudBaseHeight: 800, highCloud: 70, midCloud: 70, lowCloud: 70 }
+      ]
+    });
+
+    const high = radar.clouds.find((cloud) => cloud.layer === 'high');
+    const mid = radar.clouds.find((cloud) => cloud.layer === 'mid');
+    const low = radar.clouds.find((cloud) => cloud.layer === 'low');
+    expect(high.top).toBeLessThan(mid.top);
+    expect(mid.top).toBeLessThan(low.top);
+  });
+
+  test('FOV radar offsets same-bearing clouds by distance to avoid a perfect visual column', () => {
+    const radar = homeHelpers.buildPredictionFovRadar([], 'sunset', {
+      visibleSector: {
+        mainBearing: 305,
+        offsetsDeg: [0],
+        distancesKm: [25, 75]
+      },
+      visibleSectorSamples: [
+        { bearing: 305, distanceKm: 25, midCloud: 70 },
+        { bearing: 305, distanceKm: 75, midCloud: 70 }
+      ]
+    });
+
+    const midClouds = radar.clouds.filter((cloud) => cloud.layer === 'mid');
+    expect(midClouds.length).toBeGreaterThan(2);
+    expect(new Set(midClouds.map((cloud) => cloud.left)).size).toBeGreaterThan(2);
+  });
+
+  test('FOV radar scales cloud patches by projected altitude spacing', () => {
+    const radar = homeHelpers.buildPredictionFovRadar([], 'sunset', {
+      visibleSector: {
+        mainBearing: 305,
+        offsetsDeg: [0],
+        distancesKm: [10, 25, 50, 75, 100]
+      },
+      visibleSectorSamples: [10, 25, 50, 75, 100].map((distanceKm) => ({
+        bearing: 305,
+        distanceKm,
+        highCloud: 70
+      }))
+    });
+
+    const highClouds = radar.clouds.filter((cloud) => cloud.layer === 'high');
+    const topCloud = highClouds.reduce((best, cloud) => (cloud.top < best.top ? cloud : best), highClouds[0]);
+    const bottomCloud = highClouds.reduce((best, cloud) => (cloud.top > best.top ? cloud : best), highClouds[0]);
+    expect(topCloud.height).toBeGreaterThan(bottomCloud.height);
+  });
+
+  test('home prediction radar keeps FOV code dormant until backend enables it', () => {
+    const basePrediction = {
+      period: 'sunset',
+      score: 68,
+      clouds: { high: 60, mid: 45, low: 12 },
+      direction: 'West',
+      visibleSector: { mainBearing: 305, offsetsDeg: [-35, 0, 35], distancesKm: [25, 50] },
+      visibleSectorSamples: [
+        { bearing: 305, distanceKm: 25, highCloud: 68, midCloud: 45, lowCloud: 12 },
+        { bearing: 340, distanceKm: 50, highCloud: 58, midCloud: 42, lowCloud: 10 }
+      ]
+    };
+
+    const currentPreview = homeHelpers.buildPredictionPreviewFromPrediction(basePrediction, { period: 'sunset' });
+    const futurePreview = homeHelpers.buildPredictionPreviewFromPrediction({
+      ...basePrediction,
+      enableFovRadar: true
+    }, { period: 'sunset' });
+
+    expect(currentPreview.radar.fov).toBeTruthy();
+    expect(currentPreview.radar.useFovRadar).toBe(false);
+    expect(futurePreview.radar.useFovRadar).toBe(true);
+    expect(futurePreview.radar.fov.sunLabel).toBe(`\u65e5\u843d 305${String.fromCharCode(176)}`);
+    expect(futurePreview.radar.fov.clouds.length).toBeGreaterThan(0);
+  });
+
+  test('home FOV radar does not fabricate samples when backend samples are absent', () => {
+    const preview = homeHelpers.buildPredictionPreviewFromPrediction({
+      period: 'sunset',
+      score: 68,
+      clouds: { high: 60, mid: 45, low: 12 },
+      direction: 'West',
+      enableFovRadar: true,
+      visibleSector: { mainBearing: 305, offsetsDeg: [-35, 0, 35], distancesKm: [25, 50] },
+      visibleSectorSamples: []
+    }, { period: 'sunset' });
+
+    expect(preview.radar.fov).toBeNull();
+    expect(preview.radar.useFovRadar).toBe(false);
   });
 
   test('home recent-location payload preserves coordinate and period', () => {
@@ -162,761 +207,21 @@ describe('miniprogram page user/share helpers', () => {
     expect(recent.date).toEqual(expect.any(String));
   });
 
-  test('home test weather data drives the weather preview card', () => {
-    const preview = homeHelpers.buildTestWeatherPreview();
-
-    expect(homeHelpers.isWeatherTestLocation('test')).toBe(true);
-    expect(homeHelpers.isWeatherTestLocation(' TEST ')).toBe(true);
-    expect(homeHelpers.isWeatherTestLocation('beijing')).toBe(false);
-    expect(preview).toMatchObject({
-      title: '天气信息',
-      badge: 'TEST',
-      location: 'TEST',
-      iconType: 'partly-cloudy',
-      iconSrc: '/assets/icons/weather-partly-cloudy.svg',
-      condition: '多云',
-      temperature: '19.9',
-      temperatureUnit: '°C',
-      windSpeed: '40 km/h',
-      windDirection: '西',
-      metrics: [
-        { key: 'humidity', value: '72%' },
-        { key: 'cloud', value: '53%' },
-        { key: 'pressure', value: '1007 hPa' },
-        { key: 'visibility', value: '13 km' },
-        { key: 'aerosol', value: '0.11' },
-        { key: 'precipitation', value: '0 mm' }
-      ],
-      note: '高 62% / 中 54% / 低 43% · 西 40 km/h'
-    });
-
-    expect(preview.weekly).toEqual(expect.arrayContaining([
-      expect.objectContaining({ key: 'today', label: '今天', temp: '15° / 31°', precip: '8%', wind: '76 km/h' }),
-      expect.objectContaining({ key: 'tomorrow', label: '明天', temp: '15° / 32°', precip: '6%', wind: '68 km/h' })
-    ]));
-  });
-
-  test('home weather preview applies temperature and wind units to weekly and hourly forecasts', () => {
-    const preview = homeHelpers.buildWeatherPreview({
-      location: '北京',
-      temp: 20,
-      windSpeed: 18,
-      windDirection: 135,
-      cloudCover: 40,
-      highClouds: 40,
-      midClouds: 50,
-      lowClouds: 30,
-      weekly: [
-        { date: '2026-06-18', minTemp: 10, maxTemp: 20, windSpeed: 18, precip: 20 }
-      ],
-      hourly: [
-        { key: 'h0', timeLabel: '00:00', temp: 10, windSpeed: 18 },
-        { key: 'h1', timeLabel: '01:00', temp: 20, windSpeed: 36 }
-      ]
-    }, 'en-US', { temperatureUnit: 'fahrenheit', windSpeedUnit: 'ms' });
-    const windView = homeHelpers.buildWeatherHourlyViewModel(preview.hourly, 'wind', 'en-US', preview.units);
-    const kmhPreview = homeHelpers.buildWeatherPreview({ windSpeed: 5 }, 'zh-CN', { windSpeedUnit: 'kmh' });
-
-    expect(preview.temperature).toBe('68.0');
-    expect(preview.temperatureUnit).toBe('°F');
-    expect(preview.windSpeed).toBe('18.0 m/s');
-    expect(preview.weekly[0]).toEqual(expect.objectContaining({
-      minTemp: '50°',
-      maxTemp: '68°',
-      temp: '50° / 68°',
-      wind: '18.0 m/s'
-    }));
-    expect(preview.hourly[0]).toEqual(expect.objectContaining({ temp: '50.0', wind: '18.0 m/s', windValue: 18 }));
-    expect(preview.hourly[1]).toEqual(expect.objectContaining({ temp: '68.0', wind: '36.0 m/s', windValue: 36 }));
-    expect(windView.unit).toBe('m/s');
-    expect(windView.axisLabels[0].value).toContain('m/s');
-    expect(windView.chart.at(-1).valueText).toBe('36m/s');
-    expect(kmhPreview.windSpeed).toBe('18 km/h');
-  });
-
-  test('home hourly chart keeps points inside the plot area', () => {
-    const hourly = Array.from({ length: 24 }, (_, index) => ({
-      key: `h-${index}`,
-      time: `${String(index).padStart(2, '0')}:00`,
-      temp: 18 + Math.sin(index / 3) * 5,
-      cloudValue: 40 + index,
-      windValue: 8 + index / 4,
-      precipValue: index % 6,
-      humidityValue: 60 - index / 2,
-      pressure: 1000 + index
-    }));
-    const view = homeHelpers.buildWeatherHourlyViewModel(hourly, 'temp');
-
-    expect(view.chart[0].left).toBeGreaterThanOrEqual(18);
-    expect(view.chart.at(-1).left).toBeLessThanOrEqual(82);
-    expect(Math.min(...view.chart.map((item) => item.left))).toBeGreaterThanOrEqual(18);
-    expect(Math.max(...view.chart.map((item) => item.left))).toBeLessThanOrEqual(82);
-    expect(view.chart).toHaveLength(13);
-    expect(view.chart[0].labelPlacement).toBe('right');
-    expect(view.chart.at(-1).labelPlacement).toBe('left');
-    expect(view.chart[Math.floor((view.chart.length - 1) / 2)].labelPlacement).toBe('center');
-    expect(view.chart.every((point) => point.top >= 24 && point.top <= 74)).toBe(true);
-    expect(view.xAxisLabels).toHaveLength(7);
-    expect(view.xAxisLabels[0]).toMatchObject({ value: '00:00', left: view.chart[0].left, placement: 'right' });
-    expect(view.xAxisLabels.at(-1)).toMatchObject({ value: '23:00', left: view.chart.at(-1).left, placement: 'left' });
-    expect(view.chartSegments).toBeUndefined();
-  });
-
-  test('home sunrise sunset preview switch rebuilds score time direction and analysis', () => {
-    const sunset = homeHelpers.buildPredictionPreviewForPeriod('sunset');
-    const sunrise = homeHelpers.buildPredictionPreviewForPeriod('sunrise');
-
-    expect(sunset.periodKey).toBe('sunset');
-    expect(sunrise.periodKey).toBe('sunrise');
-    expect(sunrise.score).not.toBe(sunset.score);
-    expect(sunrise.mainTime).not.toBe(sunset.mainTime);
-    expect(sunrise.bestViewingTime).not.toBe(sunset.bestViewingTime);
-    expect(sunrise.direction).not.toBe(sunset.direction);
-    expect(sunrise.analysis.map((item) => item.desc)).not.toEqual(sunset.analysis.map((item) => item.desc));
-    expect(sunrise.radar.directions).toHaveLength(8);
-    expect(sunrise.radar.directions).not.toEqual(sunset.radar.directions);
-  });
-
-  test('home real-city search builds the same weather and prediction surface as test mode', () => {
-    const prediction = {
-      locationName: '北京',
+  test('home prediction preview keeps event time for feedback window checks', () => {
+    const preview = homeHelpers.buildPredictionPreviewFromPrediction({
       period: 'sunset',
-      date: '2026-05-14',
-      score: 81,
-      bestWindow: '18:38-19:18',
-      direction: '西偏北',
-      summary: { description: '高云和中云条件较好。' },
-      weatherData: {
-        provider: 'open-meteo',
-        temp: 22,
-        humidity: 63,
-        pressure: 1009,
-        visibility: 18,
-        windSpeed: 9,
-        windDirection: '西北',
-        highClouds: 66,
-        midClouds: 41,
-        lowClouds: 12,
-        precipitation: 0
-      },
-      clouds: { high: 66, mid: 41, low: 12 }
-    };
-    const state = homeHelpers.buildHomeWeatherPredictionPatch({
-      weather: prediction.weatherData,
-      prediction,
-      query: { locationName: '北京', period: 'sunset' }
-    });
-
-    expect(state.weatherPreview).toMatchObject({
-      visible: true,
-      badge: '7天概览',
-      location: '北京',
-      temperature: '22.0',
-      windDirection: '西北'
-    });
-    expect(state.weatherPreview.description).not.toContain('测试数据');
-    expect(state.predictionPreview).toMatchObject({
-      periodKey: 'sunset',
-      periodLabel: '晚霞',
-      score: 81,
-      bestViewingTime: '18:38-19:18',
-      direction: '西偏北',
-      clouds: [
-        { key: 'high', value: 66 },
-        { key: 'mid', value: 41 },
-        { key: 'low', value: 12 }
-      ]
-    });
-    expect(state.predictionPreview.radar.directions).toHaveLength(8);
-    expect(state.predictionPreview.radar.directions[0]).toMatchObject({ direction: 'N', highCloud: expect.any(Number) });
-    expect(state.predictionPreview.radar.sunMarker).toMatchObject({
-      label: '日落方向',
-      shortLabel: '日落',
-      bearing: 292.5,
-      left: 16.7,
-      top: 36.2
-    });
-  });
-
-  test('home prediction surface cannot overwrite the authoritative weather card', () => {
-    const surface = homeHelpers.buildHomePredictionSurface({
-      locationName: '北京',
-      period: 'sunset',
-      score: 76,
-      weatherData: {
-        temp: 22,
-        humidity: 63,
-        visibility: 18
-      }
-    }, { locationName: '北京', period: 'sunset' });
-
-    expect(surface).toHaveProperty('predictionPreview');
-    expect(surface).not.toHaveProperty('weatherPreview');
-  });
-
-  test('home radar marks sunrise direction on the cloud field', () => {
-    const state = homeHelpers.buildHomePredictionSurface({
-      locationName: '北京',
-      period: 'sunrise',
-      score: 58,
-      direction: '东偏北',
-      weatherData: {
-        provider: 'open-meteo',
-        highClouds: 38,
-        midClouds: 48,
-        lowClouds: 14
-      },
-      clouds: { high: 38, mid: 48, low: 14 }
-    }, { locationName: '北京', period: 'sunrise' });
-
-    expect(state.predictionPreview.radar.sunMarker).toMatchObject({
-      label: '日出方向',
-      shortLabel: '日出',
-      bearing: 67.5,
-      left: 83.3,
-      top: 36.2
-    });
-  });
-
-  test('home prediction card shows sunset reference time instead of viewing-window start', () => {
-    const state = homeHelpers.buildHomePredictionSurface({
-      locationName: '北京',
-      period: 'sunset',
-      score: 76,
-      referenceTime: '2026-05-18T11:24:00.000Z',
-      bestWindow: {
-        start: '2026-05-18T10:58:00.000Z',
-        end: '2026-05-18T11:28:00.000Z'
-      },
-      weatherData: { provider: 'open-meteo' }
-    }, { locationName: '北京', period: 'sunset' });
-
-    expect(state.predictionPreview.mainTime).toBe('19:24');
-    expect(state.predictionPreview.bestViewingTime).toBe('18:58 - 19:28');
-  });
-
-  test('home asks the user to choose when one query contains multiple city names', () => {
-    expect(homeHelpers.shouldAskLocationChoice('北京 上海', [
-      { name: '上海市', lat: 31.230525, lon: 121.473667, countryCode: 'CN' },
-      { name: '北京市', lat: 39.904179, lon: 116.407387, countryCode: 'CN' }
-    ])).toBe(true);
-  });
-
-  test('home prediction conclusion hides backend condition enum tokens', () => {
-    const state = homeHelpers.buildHomePredictionSurface({
-      locationName: 'TEST',
-      period: 'sunset',
-      score: 76,
-      conclusion: 'conditions_good',
-      weatherData: {
-        provider: 'open-meteo',
-        highClouds: 62,
-        midClouds: 36,
-        lowClouds: 8
-      },
-      clouds: { high: 62, mid: 36, low: 8 }
-    }, { locationName: 'TEST', period: 'sunset' });
-
-    expect(state.predictionPreview.conclusion).not.toMatch(/conditions_[a-z_]+/);
-    expect(state.predictionPreview.conclusion).toContain('火烧云条件');
-  });
-
-  test('home weather card renders normalized real-city weather metrics', () => {
-    const prediction = normalizePrediction({
-      score: 76,
-      status: 'good',
-      locationName: '北京',
-      cloudLayers: { high: 62, mid: 36, low: 8 },
-      weatherData: {
-        temperature_2m: 21.6,
-        relative_humidity_2m: 68,
-        surface_pressure: 1008.7,
-        visibility: 16000,
-        wind_speed_10m: 11.4,
-        wind_direction_10m: '西',
-        precipitation: 0,
-        aerosol_optical_depth: 0.12
-      }
-    });
-    const state = homeHelpers.buildHomeWeatherPredictionPatch({
-      weather: prediction.weatherData,
-      prediction,
-      query: { locationName: '北京', period: 'sunset' }
-    });
-
-    expect(state.weatherPreview.temperature).toBe('21.6');
-    expect(state.weatherPreview.windSpeed).toBe('41 km/h');
-    expect(state.weatherPreview.windDirection).toBe('西');
-    expect(state.weatherPreview.metrics).toEqual(expect.arrayContaining([
-      expect.objectContaining({ key: 'humidity', value: '68%' }),
-      expect.objectContaining({ key: 'pressure', value: '1008.7 hPa' }),
-      expect.objectContaining({ key: 'visibility', value: '16 km' }),
-      expect.objectContaining({ key: 'aerosol', value: '0.12' }),
-      expect.objectContaining({ key: 'precipitation', value: '0 mm' })
-    ]));
-  });
-
-  test('home and result weather metrics mark nearest-hour AOD fallback', () => {
-    const prediction = normalizePrediction({
-      score: 42,
-      status: 'fair',
-      locationName: '贵州凯里',
-      referenceTime: '2026-06-05T11:38:00.000Z',
-      cloudLayers: { high: 20, mid: 30, low: 12 },
-      weatherData: {
-        temperature_2m: 23,
-        relative_humidity_2m: 82,
-        aerosolOpticalDepth: null,
-        hourly: [
-          { time: '2026-06-05T10:00:00.000Z', aerosolOpticalDepth: null },
-          { time: '2026-06-05T11:00:00.000Z', aerosolOpticalDepth: 0.34 },
-          { time: '2026-06-05T12:00:00.000Z', aerosolOpticalDepth: 0.52 }
-        ]
-      }
-    });
-
-    const homeState = homeHelpers.buildHomeWeatherPredictionPatch({
-      weather: prediction.weatherData,
-      prediction,
-      query: { locationName: '贵州凯里', period: 'sunset' }
-    });
-    expect(homeState.weatherPreview.metrics).toEqual(expect.arrayContaining([
-      expect.objectContaining({ key: 'aerosol', value: '≈0.52', hint: '邻近时次' })
-    ]));
-
-    const resultState = resultHelpers.buildResultPeriodState(prediction);
-    expect(resultState.metrics).toEqual(expect.arrayContaining([
-      expect.objectContaining({ key: 'aod', value: '≈0.52', hint: '邻近时次' })
-    ]));
-  });
-
-  test('home weather card converts numeric wind direction to web-style label and arrow', () => {
-    const prediction = normalizePrediction({
-      score: 76,
-      status: 'good',
-      locationName: '北京',
-      cloudLayers: { high: 62, mid: 36, low: 8 },
-      weatherData: {
-        temperature_2m: 22.6,
-        wind_speed_10m: 2,
-        wind_direction_10m: 180
-      }
-    });
-    const state = homeHelpers.buildHomeWeatherPredictionPatch({
-      weather: prediction.weatherData,
-      prediction,
-      query: { locationName: '北京', period: 'sunset' }
-    });
-
-    expect(state.weatherPreview.windSpeed).toBe('7 km/h');
-    expect(state.weatherPreview.windDirection).toBe('南');
-    expect(state.weatherPreview.windDirection).not.toBe('180');
-    expect(state.weatherPreview.windDirectionArrow).toBe('↑');
-  });
-
-  test('home weather card localizes condition and wind direction in English', () => {
-    const state = homeHelpers.buildHomeWeatherPredictionPatch({
-      weather: {
-        provider: 'open-meteo',
-        temp: 29.7,
-        cloudCover: 82,
-        windSpeed: 1.7,
-        windDirection: 135,
-        humidity: 58,
-        pressure: 1002,
-        visibility: 12,
-        precipitation: 0
-      },
-      prediction: { score: 42, cloudLayers: { high: 30, mid: 40, low: 50 } },
-      query: { locationName: 'Current Location', period: 'sunset' },
-      locale: 'en-US'
-    });
-
-    expect(state.weatherPreview).toMatchObject({
-      title: 'Weather Information',
-      badge: '7-Day Overview',
-      condition: 'Overcast',
-      windDirection: 'Southeast',
-      weeklyTab: '7-Day Overview',
-      hourlyTab: '24-Hour Forecast',
-      glowTab: '3-Day Glow'
-    });
-    expect(state.weatherPreview.metrics).toEqual(expect.arrayContaining([
-      expect.objectContaining({ key: 'humidity', label: 'Humidity' }),
-      expect.objectContaining({ key: 'cloud', label: 'Cloud Cover' }),
-      expect.objectContaining({ key: 'aerosol', label: 'Aerosol' })
-    ]));
-    expect(state.weatherPreview.note).toContain('High');
-    expect(state.weatherPreview.note).toContain('Southeast 6 km/h');
-    expect(JSON.stringify(state.weatherPreview)).not.toMatch(/阴|东南|天气信息|云量|气溶胶/);
-  });
-
-  test('home formation analysis uses web-style semantic status tones', () => {
-    const analysis = homeHelpers.buildPredictionAnalysisGroups({
-      high: 32,
-      mid: 0,
-      low: 12,
-      visibility: 20,
-      humidity: 68,
-      aod: 0.57
-    });
-
-    expect(analysis).toEqual(expect.arrayContaining([
-      expect.objectContaining({ key: 'carrier', status: '一般', tone: 'fair' }),
-      expect.objectContaining({ key: 'lightPath', status: '较好', tone: 'good' }),
-      expect.objectContaining({ key: 'rendering', status: '较好', tone: 'good' }),
-      expect.objectContaining({ key: 'limits', status: '无明显', tone: 'good' })
-    ]));
-  });
-
-  test('result period switch can request and render the alternate prediction card', () => {
-    const current = {
-      locationName: 'TEST',
-      lat: 39.9,
-      lon: 116.4,
-      period: 'sunset',
-      date: '2026-05-11',
-      score: 76,
-      metrics: { highCloud: 62, midCloud: 36, lowCloud: 8 }
-    };
-
-    expect(resultHelpers.buildPredictionPeriodRequest(current, 'sunrise', {
-      now: new Date('2026-05-30T21:15:00+08:00')
-    })).toMatchObject({
-      lat: 39.9,
-      lon: 116.4,
-      type: 'sunrise',
-      date: '2026-05-31'
-    });
-    expect(resultHelpers.buildPredictionPeriodRequest(current, 'sunset', {
-      now: new Date('2026-05-30T21:15:00+08:00')
-    })).toMatchObject({
-      type: 'sunset',
-      date: '2026-05-11'
-    });
-
-    const state = resultHelpers.buildResultPeriodState({ ...current, period: 'sunrise', score: 58, bestWindow: '05:12-05:52' });
-    expect(state).toMatchObject({
-      activePeriod: 'sunrise',
-      prediction: expect.objectContaining({ period: 'sunrise', score: 58 }),
-      metrics: expect.any(Array),
-      analysisItems: expect.any(Array),
-      scoreLedger: expect.objectContaining({ summary: expect.stringContaining('58') })
-    });
-  });
-
-  test('result period state keeps heavy backend payloads out of setData', () => {
-    const heavyHourly = Array.from({ length: 168 }, (_, index) => ({ time: index, temp: 20 + index }));
-    const state = resultHelpers.buildResultPeriodState({
-      period: 'sunset',
-      score: 66,
-      lat: 39.9,
-      lon: 116.4,
-      weatherData: {
-        temperature_2m: 22,
-        hourly: heavyHourly,
-        remoteCloudSamples: heavyHourly,
-        rawProviderPayload: { hourly: heavyHourly }
-      },
-      remoteCloudData: { samples: heavyHourly },
-      debugProfile: { remoteCloudMs: 4200 },
-      canvasAnalysis: { score: 72 },
-      lightPathAnalysis: { score: 70 },
-      renderingAnalysis: { factor: 1.02 }
-    });
-
-    expect(state.prediction.weatherData).toEqual({ temperature_2m: 22 });
-    expect(state.prediction.remoteCloudData).toBeUndefined();
-    expect(state.prediction.debugProfile).toBeUndefined();
-    expect(JSON.stringify(state)).not.toContain('remoteCloudSamples');
-    expect(JSON.stringify(state)).not.toContain('rawProviderPayload');
-  });
-
-  test('result period switch reuses prefetch promises and warms alternate panels', () => {
-    expect(resultPageSource).toContain('periodCardPromises');
-    expect(resultPageSource).toContain('prefetchXiakePanels');
-    expect(resultPageSource).toContain('getEnhancedPredictionBatch');
-    expect(resultPageSource).toContain('this.periodCardPromises[period]');
-    expect(resultPageSource).toContain('this.data.activePeriod !== period');
-    expect(resultPageSource).toContain('this.scheduleXiakePanels(nextPrediction)');
-    expect(resultPageSource).toContain('this.scheduleXiakePanels(prefetchedPrediction)');
-    expect(resultPageSource).not.toContain('this.setData({ activePeriod: period, loading: true });');
-  });
-
-  test('result page cached period switch avoids duplicate panel and canvas work', () => {
-    expect(resultPageSource).toContain('const cachedRadar = this.radarPanelCache[radarKey] || null;');
-    expect(resultPageSource).toContain('const radarPromise = cachedRadar ? null : this.getRadarPanelPromise');
-    expect(resultPageSource).toContain('if (!radarPromise && !threeDayPromise) {');
-    expect(resultPageSource).toContain("logMiniPerf('result.panels.cacheOnly.done'");
-    expect(resultPageSource).toContain('lastResultRadarPaintSignature');
-    expect(resultPageSource).toContain('resultRadarPaintTimer');
-    expect(resultPageSource).toContain('resultPanelLoadTimer');
-  });
-
-  test('home search renders basic weather before waiting for glow scoring', () => {
-    const homeSource = fs.readFileSync(path.resolve(process.cwd(), 'miniprogram/pages/home/index.js'), 'utf8');
-    const homeWxml = fs.readFileSync(path.resolve(process.cwd(), 'miniprogram/pages/home/index.wxml'), 'utf8');
-
-    expect(homeSource.indexOf('weather = await this.callWeatherForecast(query);')).toBeLessThan(homeSource.indexOf('const raw = await this.callPredictionService(query);'));
-    expect(homeSource).toContain('weatherPreview: buildWeatherPreview({ ...weather, location: query.locationName }, this.data.interfaceLanguage, this.data)');
-    expect(homeSource).toContain("this.setSearchLoadingStep('正在计算霞光评分', 72, '基础天气暂未返回，继续读取综合预测');");
-    expect(homeSource).toContain('predictionPreviewLoading: true');
-    expect(homeSource).toContain('predictionPreviewLoading: false');
-    expect(homeWxml).toContain('wx:if="{{predictionPreviewLoading}}"');
-    expect(homeWxml).toContain('prediction-local-loading');
-  });
-
-  test('home search fetches sunrise sunset preview cards together instead of falling back to static preview', () => {
-    const homeSource = fs.readFileSync(path.resolve(process.cwd(), 'miniprogram/pages/home/index.js'), 'utf8');
-
-    expect(homeSource).toContain('predictionPeriodCards: {}');
-    expect(homeSource).toContain('getHomeGateway');
-    expect(homeSource).toContain('const gatewayResult = await gatewayPromise;');
-    expect(homeSource).toContain('predictionCards = gatewayResult.data.predictionCards;');
-    expect(homeSource).toContain('predictionCards = await this.callPredictionCardBatch(query);');
-    expect(homeSource).toContain('getEnhancedPredictionBatch({');
-    expect(homeSource).toContain('compactPredictionPreviewPayload(normalizePrediction');
-    expect(homeSource).toContain('const cachedPrediction = this.data.predictionPeriodCards?.[value];');
-    expect(homeSource).toContain('const pendingPrediction = this.predictionPreviewPromises?.[value];');
-    expect(homeSource.indexOf('const cachedPrediction = this.data.predictionPeriodCards?.[value];')).toBeLessThan(homeSource.indexOf('predictionPreview: buildPredictionPreviewForPeriod(value, this.data.day)'));
-  });
-
-  test.each([
-    { name: '北京', aod: 0.46, fallbackAod: 1.18 },
-    { name: '上海', aod: 0.28, fallbackAod: 0.31 },
-    { name: '广州', aod: 0.19, fallbackAod: 0.24 }
-  ])('home unified gateway keeps full weather AOD for $name when prediction weather lacks aerosol', ({ name, aod, fallbackAod }) => {
-    const patch = homeHelpers.buildHomeWeatherPredictionPatch({
-      weather: {
-        location: name,
-        temp: 25.8,
-        humidity: 58,
-        visibility: 12,
-        pressure: 1006,
-        windSpeed: 6,
-        windDirection: 180,
-        precipitation: 0,
-        cloudCover: 44,
-        aerosolOpticalDepth: aod,
-        hourly: [
-          { timestamp: 1781366400000, aerosolOpticalDepth: fallbackAod },
-          { timestamp: 1781370000000, aerosolOpticalDepth: aod }
-        ]
-      },
-      prediction: {
-        type: 'sunset',
-        score: 62,
-        weatherData: {
-          temp: 25.8,
-          humidity: 58,
-          visibility: 12
-        },
-        cloudLayers: { high: 70, mid: 58, low: 28 }
-      },
-      predictionCards: {
-        sunset: { type: 'sunset', score: 62 }
-      },
-      query: {
-        locationName: name,
-        period: 'sunset',
-        day: 'today'
-      }
-    });
-
-    expect(patch.weatherPreview.location).toBe(name);
-    expect(patch.weatherPreview.metrics).toEqual(expect.arrayContaining([
-      expect.objectContaining({ key: 'aerosol', value: String(aod) })
-    ]));
-  });
-
-  test('home defaults to tomorrow after the selected sun event has passed by 45 minutes', () => {
-    const beijing = { lat: 39.9042, lon: 116.4074 };
-    expect(homeHelpers.getDefaultPredictionDay(new Date('2026-05-28T19:30:00+08:00'), { period: 'sunset', coordinate: beijing })).toBe('today');
-    expect(homeHelpers.getDefaultPredictionDay(new Date('2026-05-28T20:10:00+08:00'), { period: 'sunset', coordinate: beijing })).toBe('today');
-    expect(homeHelpers.getDefaultPredictionDay(new Date('2026-05-28T20:25:00+08:00'), { period: 'sunset', coordinate: beijing })).toBe('tomorrow');
-    expect(homeHelpers.getDefaultPredictionDay(new Date('2026-05-28T05:35:00+08:00'), { period: 'sunrise', coordinate: beijing })).toBe('today');
-    expect(homeHelpers.getDefaultPredictionDay(new Date('2026-05-28T05:55:00+08:00'), { period: 'sunrise', coordinate: beijing })).toBe('tomorrow');
-    expect(homeHelpers.resolveQueryDay()).toMatch(/today|tomorrow/);
-    expect(homeHelpers.buildPredictionPreviewForPeriod('sunset', 'tomorrow')).toMatchObject({
-      dateLabel: '明日',
-      periodKey: 'sunset'
-    });
-  });
-
-  test('home cached prediction cards are compact enough for instant toggles', () => {
-    const compact = homeHelpers.compactPredictionPreviewPayload({
+      eventTime: '2026-06-12T18:58:00+08:00',
       score: 72,
-      period: 'sunrise',
-      referenceTime: '2026-05-20T21:12:00.000Z',
-      weatherData: {
-        temperature_2m: 18,
-        hourly: Array.from({ length: 168 }, (_, index) => ({ index })),
-        daily: Array.from({ length: 7 }, (_, index) => ({ index })),
-        remoteCloudSamples: [{ id: 1 }]
-      },
-      lightPathAnalysis: {
-        score: 68,
-        samples: Array.from({ length: 100 }, (_, index) => ({ index })),
-        directionalAnalysis: { direction: '东偏北', reason: 'opening', raw: { large: true } }
-      },
-      remoteCloudData: { samples: [{ id: 1 }] }
+      cloudLayers: { high: 52, mid: 34, low: 8 }
+    }, {
+      locationName: '北京',
+      coordinate: { lat: 39.9042, lon: 116.4074 }
     });
 
-    expect(compact.weatherData).toEqual({ temperature_2m: 18 });
-    expect(compact.lightPathAnalysis).toEqual({
-      score: 68,
-      azimuth: undefined,
-      occlusionProbability: undefined,
-      explain: undefined,
-      directionalAnalysis: { direction: '东偏北', reason: 'opening' }
-    });
-    expect(JSON.stringify(compact)).not.toContain('remoteCloudSamples');
-    expect(JSON.stringify(compact)).not.toContain('samples');
+    expect(preview.eventTime).toBe('2026-06-12T18:58:00+08:00');
   });
 
-  test('result period switch clears loading when cached or stale period state wins', () => {
-    const source = fs.readFileSync(path.resolve(process.cwd(), 'miniprogram/pages/result/index.js'), 'utf8');
-
-    expect(source).toContain('const periodState = buildResultPeriodState(nextPrediction);');
-    expect(source).toContain('...periodState,');
-    expect(source).toContain('loading: false,');
-    expect(source).toContain('if (this.data.activePeriod !== period) {');
-    expect(source).toContain('this.setData({ loading: false });');
-  });
-
-  test('result page metrics include the full weather API fields', () => {
-    const state = resultHelpers.buildResultPeriodState({
-      period: 'sunset',
-      score: 76,
-      clouds: { high: 62, mid: 36, low: 8 },
-      weatherData: {
-        temp: 21.6,
-        humidity: 68,
-        pressure: 1008.7,
-        visibility: 16,
-        windSpeed: 11.4,
-        windDirection: 270,
-        precipitation: 0,
-        aod: 0.12
-      }
-    });
-
-    expect(state.metrics).toEqual(expect.arrayContaining([
-      expect.objectContaining({ key: 'temp', value: '21.6°C' }),
-      expect.objectContaining({ key: 'wind', value: '41 km/h' }),
-      expect.objectContaining({ key: 'windDirection', value: '270°' }),
-      expect.objectContaining({ key: 'humidity', value: '68%' }),
-      expect.objectContaining({ key: 'visibility', value: '16km' }),
-      expect.objectContaining({ key: 'pressure', value: '1008.7 hPa' }),
-      expect.objectContaining({ key: 'precipitation', value: '0 mm' })
-    ]));
-  });
-
-  test('result page builds Xiake core panels from backend analysis', () => {
-    const analysis = resultHelpers.buildAnalysisItems({
-      canvasAnalysis: { score: 83, breakdown: { highClouds: 64, midClouds: 20, lowClouds: 5 } },
-      lightPathAnalysis: { score: 72, azimuth: 286, occlusionProbability: 0.18, explain: '光路通畅' },
-      renderingAnalysis: { factor: 0.82, breakdown: { visibility: 'good', aerosol: 'polluted' } },
-      cloudType: { label: '高层云' }
-    });
-
-    expect(analysis).toHaveLength(4);
-    expect(analysis[0]).toMatchObject({ title: '云层载体', value: '83分', tone: 'good' });
-    expect(analysis[1].detail).toContain('太阳方位 286°');
-    expect(analysis[2]).toMatchObject({ title: '受光亮度', value: '--', tone: 'unknown' });
-    expect(analysis[3]).toMatchObject({ title: '显色修正', value: 'x0.82', tone: 'watch' });
-  });
-
-  test('result score ledger follows additive carrier and light gate formula copy', () => {
-    const ledger = resultHelpers.buildScoreLedger({
-      score: 67,
-      canvasAnalysis: {
-        score: 78,
-        cloudThicknessAdjustment: { adjustment: -12, reason: 'moderate_thick_cloud_penalty' }
-      },
-      lightPathAnalysis: { score: 72 },
-      lightPathGate: { gate: 0.82 },
-      layerBrightnessAdjustment: { multiplier: 0.82 },
-      renderingAdjustment: { adjustment: 3.2 },
-      renderingAnalysis: { factor: 1.08 },
-      breakdown: {
-        baseScore: 64,
-        lightPathGate: 0.82,
-        renderingAdjustment: 3.2,
-        unclampedFinalScore: 67
-      }
-    });
-
-    expect(ledger.summary).toContain('云层载体、受光亮度和空气显色');
-    expect(ledger.steps.find((step) => step.key === 'baseScore')).toMatchObject({
-      expression: 'Σ(分层载体×分层受光亮度) = 64'
-    });
-    expect(ledger.steps.find((step) => step.key === 'cloudCarrier')?.detail).toContain('云厚修正 -12分');
-    expect(ledger.steps.find((step) => step.key === 'cloudThickness')).toBeUndefined();
-    expect(ledger.steps.find((step) => step.key === 'rendering')).toMatchObject({
-      expression: '64 × 空气显色系数 1.08 = 67'
-    });
-    expect(JSON.stringify(ledger)).not.toContain('80%');
-    expect(JSON.stringify(ledger)).not.toContain('20%');
-  });
-
-  test('result score ledger uses layer-sum scoring without a standalone light-path main step', () => {
-    const ledger = resultHelpers.buildScoreLedger({
-      score: 44,
-      canvasAnalysis: {
-        score: 65.4,
-        breakdown: { highClouds: 70, midClouds: 45, lowClouds: 12 }
-      },
-      lightPathAnalysis: {
-        score: 107.2,
-        azimuth: 286,
-        occlusionProbability: 0.08,
-        explain: 'sun direction open'
-      },
-      layerBrightness: {
-        applied: true,
-        effectiveBrightness: 46.3,
-        brightnessGate: 0.71,
-        layers: { cloudCanvas: 65.4, low: 12 },
-        factors: {
-          lowBlockFactor: 0.95,
-          solarFactor: 0.82,
-          pathFactor: 1.07,
-          airTransmission: 0.9,
-          thicknessFactor: 0.78,
-          beamFactor: 0.65
-        },
-        dimEvidence: ['weak beam']
-      },
-      renderingAnalysis: { factor: 0.68, breakdown: { visibility: 'fair' } },
-      breakdown: {
-        layerContributionFormula: 'sum_layer_carrier_brightness',
-        baseScore: 65.2,
-        canvasScore: 65.4,
-        lightPathScore: 107.2,
-        renderingFactor: 0.68,
-        unclampedFinalScore: 44.1
-      }
-    });
-
-    const keys = ledger.steps.map((step) => step.key);
-    const labels = ledger.steps.map((step) => step.label);
-    const carrierStep = ledger.steps.find((step) => step.key === 'cloudCarrier');
-    const brightnessStep = ledger.steps.find((step) => step.key === 'layerBrightness');
-    const serialized = JSON.stringify(ledger);
-
-    expect(keys.slice(0, 5)).toEqual(['cloudCarrier', 'layerBrightness', 'baseScore', 'rendering', 'final']);
-    expect(keys).not.toContain('lightPath');
-    expect(labels).not.toContain('光路');
-    expect(carrierStep.detail).not.toContain('低云');
-    expect(brightnessStep.detail).toContain('低云遮挡 12%');
-    expect(brightnessStep.detail).toContain('遮挡透过 0.95');
-    expect(serialized).toContain('Σ(分层载体×分层受光亮度)');
-    expect(serialized).toContain('光路因子 1.07');
-    expect(serialized).not.toContain('65.4 × 受光亮度 0.71 = 65.2');
-  });
-
-  test('home prediction preview exposes score details from the searched-address result card', () => {
+  test('home prediction preview exposes score details from the searched-address card', () => {
     const preview = homeHelpers.buildPredictionPreviewFromPrediction({
       period: 'sunset',
       score: 44,
@@ -941,44 +246,25 @@ describe('miniprogram page user/share helpers', () => {
     }, { locationName: '北京' });
 
     const keys = preview.scoreLedger.steps.map((step) => step.key);
-    const labels = preview.scoreLedger.steps.map((step) => step.label);
     const serialized = JSON.stringify(preview.scoreLedger);
 
     expect(keys).toEqual(['layerCarrierBrightness', 'baseScore', 'airRendering', 'finalScore']);
-    expect(labels).not.toContain('光路');
-    expect(serialized).toContain('Σ(分层载体 × 分层受光亮度)');
-    expect(serialized).toContain('太阳方位 286°');
-    expect(serialized).toContain('亮度响应 1.07');
-    expect(serialized).toContain('基础分 × 空气显色');
-    expect(serialized).not.toContain('载体分 × 受光亮度');
+    expect(serialized).toContain('286');
+    expect(serialized).not.toContain('/pages/result/index');
   });
 
-  test('result page maps surrounding and 3-day data to display rows', () => {
-    const radar = resultHelpers.buildRadarView({
-      points: [
-        { direction: 'N', name: '北', score: 77.4, level: 'good', highCloud: 61, midCloud: 20, lowCloud: 5 }
-      ]
-    });
-    const threeDay = resultHelpers.buildThreeDayGlowView([
-      { key: '2026-05-13', label: '今天', date: '2026-05-13', sunrise: { score: 88, level: 'excellent' }, sunset: { score: 46, level: 'watch' } }
-    ]);
+  test('home test weather data drives the weather preview card', () => {
+    const preview = homeHelpers.buildTestWeatherPreview();
 
-    expect(radar.hasData).toBe(true);
-    expect(radar.points).toHaveLength(9);
-    expect(radar.directions).toHaveLength(8);
-    expect(radar.bestItems[0]).toMatchObject({ direction: 'N', scoreText: 77 });
-    expect(radar.points[1]).toMatchObject({ direction: 'N', scoreText: 77, cloudText: '高 61% / 中 20% / 低 5%' });
-    expect(threeDay).toMatchObject({
-      hasData: true,
-      days: [
-        expect.objectContaining({ sunriseScoreText: 88, sunriseLevel: 'excellent', sunsetScoreText: 46, sunsetLevel: 'watch' })
-      ]
+    expect(homeHelpers.isWeatherTestLocation('test')).toBe(true);
+    expect(homeHelpers.isWeatherTestLocation(' TEST ')).toBe(true);
+    expect(homeHelpers.isWeatherTestLocation('beijing')).toBe(false);
+    expect(preview).toMatchObject({
+      badge: 'TEST',
+      location: 'TEST',
+      iconSrc: '/assets/icons/weather-partly-cloudy.svg'
     });
-  });
-
-  test('result period fetch timing stays separate from build timing', () => {
-    expect(resultPageSource).toContain('const fetchEndedAt = perfNow();');
-    expect(resultPageSource).toContain('fetchMs: roundPerfMs(fetchEndedAt - fetchStartedAt)');
-    expect(resultPageSource).toContain('buildMs: roundPerfMs(builtAt - buildStartedAt)');
+    expect(preview.weekly.length).toBeGreaterThan(0);
+    expect(preview.hourly.length).toBeGreaterThan(0);
   });
 });

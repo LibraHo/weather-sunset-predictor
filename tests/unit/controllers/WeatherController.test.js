@@ -52,9 +52,25 @@ describe('WeatherController - 24小时温度连续化', () => {
     expect(controller._radarCompass.render).toHaveBeenCalledTimes(1);
     const payload = controller._radarCompass.render.mock.calls[0][1];
     expect(payload.predictionType).toBe('sunset');
+    expect(payload.enableFovAltitudeRadar).toBe(true);
     expect(payload.directions).toHaveLength(8);
     expect(payload.directions[0].cloudLayers).toEqual(expect.objectContaining({ low: expect.any(Number), mid: expect.any(Number), high: expect.any(Number) }));
     expect(payload.sunAzimuths).toHaveProperty('sunset');
+  });
+
+  test('renderRadarCompass: legacy radar mode disables FOV altitude radar', async () => {
+    document.body.innerHTML = '<div id="radar-compass-sunset"></div>';
+    controller.i18n = { t: (key) => key };
+    controller.predictionAPIService = {
+      getSurrounding: jest.fn(() => Promise.reject(new Error('API should not be called')))
+    };
+    controller._radarCompass = { render: jest.fn() };
+    controller.setRadarFovMode('legacy');
+
+    await controller.renderRadarCompass({ name: 'test', lat: 0, lon: 0, isValid: () => true }, 'sunset');
+
+    const payload = controller._radarCompass.render.mock.calls[0][1];
+    expect(payload.enableFovAltitudeRadar).toBe(false);
   });
 
   test('renderRadarCompass: 晚上查看朝霞时应请求下一次日出日期', async () => {
@@ -73,6 +89,36 @@ describe('WeatherController - 24小时温度连续化', () => {
       const dateArg = controller.predictionAPIService.getSurrounding.mock.calls[0][4];
       expect(dateArg).toBeInstanceOf(Date);
       expect(dateArg.toISOString().slice(0, 10)).toBe('2026-05-31');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  test('renderRadarCompass: surrounding response without azimuth should still pass a real event bearing to FOV radar', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-06-28T10:00:00.000Z'));
+    try {
+      document.body.innerHTML = '<div id="radar-compass-sunset"></div>';
+      controller.i18n = { t: (key) => key };
+      controller.predictionAPIService = {
+        getSurrounding: jest.fn(async () => ({
+          points: [],
+          sunAzimuths: {},
+          visibleSector: {
+            offsetsDeg: [-35, 0, 35],
+            bearings: [],
+            distancesKm: [10, 25, 50]
+          },
+          visibleSectorSamples: []
+        }))
+      };
+      controller._radarCompass = { render: jest.fn() };
+
+      await controller.renderRadarCompass({ name: 'Shanghai', lat: 31.22222, lon: 121.45806 }, 'sunset');
+
+      const payload = controller._radarCompass.render.mock.calls[0][1];
+      expect(Number.isFinite(Number(payload.azimuth))).toBe(true);
+      expect(Math.round(Number(payload.azimuth))).not.toBe(0);
+      expect(payload.visibleSector.mainBearing).toBe(Number(payload.azimuth));
     } finally {
       jest.useRealTimers();
     }

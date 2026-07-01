@@ -143,6 +143,20 @@
       </div>
     </div>
     
+    <div id="announcement-modal" class="account-auth-modal announcement-modal hidden" role="dialog" aria-modal="true" aria-labelledby="announcement-title">
+      <div class="account-auth-card announcement-card">
+        <button class="account-auth-close announcement-close" type="button" aria-label="关闭公告" data-i18n-aria-label="home.announcement.closeAria" data-announcement-close>×</button>
+        <div class="account-auth-header">
+          <p class="account-auth-kicker">Sunset Voyager Notice</p>
+          <h2 id="announcement-title" data-i18n="home.announcement.defaultTitle">公告</h2>
+        </div>
+        <div id="announcement-content" class="announcement-content"></div>
+        <div class="announcement-actions">
+          <button type="button" class="btn btn-primary" data-i18n="home.announcement.confirm" data-announcement-close>知道了</button>
+        </div>
+      </div>
+    </div>
+
     <!-- 主界面 -->
     <header>
       <div class="header-top-row">
@@ -262,6 +276,10 @@
           </div>
           <button id="search-btn" class="btn btn-primary search-action-btn xiake-action-btn xiake-action-btn-primary" data-i18n="buttons.search">查询</button>
         </div>
+        <button id="announcement-entry" class="announcement-entry hidden" type="button" hidden>
+          <span class="announcement-entry-label" data-i18n="home.announcement.entryLabel">公告</span>
+          <span id="announcement-entry-text" class="announcement-entry-text"></span>
+        </button>
         <div id="location-error" class="error-message hidden"></div>
       </section>
       

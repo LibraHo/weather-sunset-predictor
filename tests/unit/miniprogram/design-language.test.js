@@ -9,6 +9,10 @@ function readText(relativePath) {
   return fs.readFileSync(path.join(root, relativePath), 'utf8');
 }
 
+function stripFovCloudRendering(wxss) {
+  return wxss.replace(/\.prediction-fov-cloud[^{]*\{[\s\S]*?\n\}/g, '');
+}
+
 describe('miniprogram design language styles', () => {
   const appWxss = readText('miniprogram/app.wxss');
 
@@ -58,7 +62,7 @@ describe('miniprogram design language styles', () => {
 
   test('keeps page typography below the topbar logo and readable in score audit blocks', () => {
     const topbarWxss = readText('miniprogram/components/app-topbar/index.wxss');
-    const resultWxss = readText('miniprogram/pages/result/index.wxss');
+    const homeWxss = readText('miniprogram/pages/home/index.wxss');
     const methodologyWxss = readText('miniprogram/pages/methodology/index.wxss');
     const mapWxss = readText('miniprogram/pages/map/index.wxss');
 
@@ -68,7 +72,7 @@ describe('miniprogram design language styles', () => {
     expect(topbarWxss).toContain('font-weight: 300');
     expect(methodologyWxss).not.toMatch(/font-size:\s*(4[3-9]|[5-9]\d)rpx/);
     expect(mapWxss).not.toMatch(/font-size:\s*(4[3-9]|[5-9]\d)rpx/);
-    expect(resultWxss).not.toMatch(/score-ledger-[^{]+{[^}]*font-size:\s*(2[0-3])rpx/s);
+    expect(homeWxss).not.toMatch(/home-score-ledger-[^{]+{[^}]*font-size:\s*(1[0-9])rpx/s);
   });
 
   test('keeps primary page card spacing consistent', () => {
@@ -77,8 +81,7 @@ describe('miniprogram design language styles', () => {
       'miniprogram/pages/methodology/index.wxss',
       'miniprogram/pages/map/index.wxss',
       'miniprogram/pages/gallery/index.wxss',
-      'miniprogram/pages/upload/index.wxss',
-      'miniprogram/pages/result/index.wxss'
+      'miniprogram/pages/upload/index.wxss'
     ].forEach((file) => {
       const wxss = readText(file);
 
@@ -96,12 +99,11 @@ describe('miniprogram design language styles', () => {
       'miniprogram/pages/methodology/index.wxss',
       'miniprogram/pages/map/index.wxss',
       'miniprogram/pages/gallery/index.wxss',
-      'miniprogram/pages/upload/index.wxss',
-      'miniprogram/pages/result/index.wxss'
+      'miniprogram/pages/upload/index.wxss'
     ];
 
     pageFiles.forEach((file) => {
-      expect(readText(file)).not.toMatch(/radial-gradient/i);
+      expect(stripFovCloudRendering(readText(file))).not.toMatch(/radial-gradient/i);
     });
 
     const homeWxss = readText('miniprogram/pages/home/index.wxss');

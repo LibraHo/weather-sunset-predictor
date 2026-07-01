@@ -7,10 +7,7 @@
     <view class="location-input-shell">
       <input class="location-input" value="{{value}}" placeholder="请输入城市名称..." placeholder-class="input-placeholder" confirm-type="search" bindinput="onInput" bindconfirm="onConfirm" />
       <button class="pin-location-button" aria-label="使用当前位置" loading="{{locating}}" hover-class="button-hover" hover-stay-time="80" bindtap="onLocate">
-      <view class="pin-icon">
-        <view class="pin-head"></view>
-        <view class="pin-stem"></view>
-      </view>
+        <image class="pin-icon-image" src="/assets/icons/weather-location-pin.svg" mode="aspectFit" aria-hidden="true" />
       </button>
       <view class="location-suggestion-dropdown" wx:if="{{candidates.length}}">
         <view class="location-suggestion-item tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" wx:for="{{candidates}}" wx:key="key" data-index="{{index}}" bindtap="onSelectCandidate">
@@ -23,5 +20,9 @@
       </view>
     </view>
     <button class="location-query-button {{loading ? 'is-disabled' : ''}}" loading="{{loading}}" disabled="{{loading}}" hover-class="button-hover" hover-stay-time="80" bindtap="onConfirm">{{loading ? '读取中' : '查询'}}</button>
+  </view>
+  <view class="announcement-entry tap-feedback" wx:if="{{announcement && announcement.enabled && announcement.active !== false && (announcement.summary || announcement.title || announcement.blocks.length)}}" hover-class="tap-feedback-hover" hover-stay-time="80" bindtap="onAnnouncement">
+    <text class="announcement-entry-label">公告</text>
+    <text class="announcement-entry-text">{{announcement.summary || announcement.title}}</text>
   </view>
 </view>

@@ -129,6 +129,13 @@ apiAccess: 'Acceso API',
       "ariaLabel": "Cambiar vista",
       "dropdownAriaLabel": "Menú de navegación"
     },
+    "announcement": {
+      "entryLabel": "Aviso",
+      "defaultTitle": "Aviso",
+      "closeAria": "Cerrar aviso",
+      "confirm": "Entendido",
+      "imageAlt": "Imagen del aviso"
+    },
     "simulator": {
       "title": "Simulador de perfil de nubes rojas",
       "intro": "Place cloud blocks by distance and meter-level height, then scrub sunrise or sunset time to see which clouds light up, which are shadowed, and which dim because they are thick.",
@@ -887,8 +894,8 @@ apiAccess: 'Acceso API',
   },
   "surrounding": {
     "title": "Análisis de Nubes de Fuego Circundantes",
-    "radarTitle": "Radar de nubes cercanas",
-    "radarSubtitle": "20 km · Campo nuboso continuo",
+    "radarTitle": "Radar de nubes del campo visual",
+    "radarSubtitle": "Acimut x altura del cielo",
     "radius": "Radio de Detección",
     "radiusUnit": "km",
     "directions": {

@@ -22,6 +22,7 @@ describe('mini-program home parity with mobile web home', () => {
     const homeWxss = read('miniprogram/pages/home/index.wxss');
     const homeJs = read('miniprogram/pages/home/index.js');
     const locationSearchWxml = read('miniprogram/components/location-search/index.wxml');
+    const locationSearchWxss = read('miniprogram/components/location-search/index.wxss');
 
     expectInOrder(web, [
       'id="location-section"',
@@ -36,7 +37,6 @@ describe('mini-program home parity with mobile web home', () => {
       'query-button',
       'home-weather-preview',
       'home-prediction-preview',
-      'home-experience-strip',
       'placeholder-grid'
     ]);
 
@@ -85,6 +85,16 @@ describe('mini-program home parity with mobile web home', () => {
     expect(`${homeWxml}\n${locationSearchWxml}`).not.toMatch(/[👥📍★☁∿〰◇≈≡◎∴◌℃]/u);
     expect(locationSearchWxml).toContain('/assets/icons/favorite-star.svg');
     expect(locationSearchWxml).toContain('/assets/icons/weather-location-pin.svg');
+    expect(locationSearchWxml).toContain('class="pin-icon-image"');
+    expect(locationSearchWxml).not.toContain('pin-head');
+    expect(locationSearchWxml).not.toContain('pin-stem');
+    expect(locationSearchWxss).toContain('.pin-icon-image');
+    expect(locationSearchWxss).not.toContain('.pin-head');
+    expect(locationSearchWxss).not.toContain('.pin-stem');
+    expect(locationSearchWxml).toContain('announcement-entry');
+    expect(locationSearchWxml).toContain('bindtap="onAnnouncement"');
+    expect(homeWxml).toContain('bind:announcement="openAnnouncementPanel"');
+    expect(homeWxml).toContain('announcement-sheet');
     expect(homeWxml).toContain('/assets/icons/users.svg');
     expect(homeWxml).toContain('weather-chart-panel');
     expect(homeWxml).toContain('weather-hourly-chart');
@@ -153,7 +163,10 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxss).toContain('.weather-forecast-module');
     expect(homeWxss).toContain('grid-template-columns: repeat(2, minmax(0, 1fr));');
     expect(homeWxss).toContain('align-self: stretch;');
-    expect(homeWxss).toContain('.home-experience-strip');
+    expect(homeWxml).not.toContain('home-experience-strip');
+    expect(homeWxml).not.toContain('experience-chip');
+    expect(homeWxss).not.toContain('.home-experience-strip');
+    expect(homeWxss).not.toContain('.experience-chip');
   });
 
   test('weather icons keep the same colored SVG palette as the web weather card', () => {
@@ -280,7 +293,7 @@ describe('mini-program home parity with mobile web home', () => {
       'home-score-ledger-panel',
       'cloud-condition-card',
       'app-analysis-card',
-      'home-experience-strip'
+      'placeholder-grid'
     ]);
 
     expect(homeWxml).toContain('predictionPreview.score');
@@ -307,9 +320,11 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxss).toContain('.prediction-feedback-footer');
     expect(homeWxss).toContain('.feedback-icon-image');
     expect(homeWxss).toContain('.share-btn-label');
-    expect(homeWxss).toMatch(/\.prediction-share-footer-row\s*\{[\s\S]*?grid-template-columns:\s*minmax\(248rpx,\s*1fr\)\s*196rpx;/);
-    expect(homeWxss).toMatch(/\.prediction-feedback-footer\s*\{[\s\S]*?min-width:\s*196rpx;/);
-    expect(homeWxss).toMatch(/\.prediction-feedback-footer \.share-btn-label\s*\{[\s\S]*?width:\s*56rpx;/);
+    expect(homeWxss).toMatch(/\.prediction-share-footer-row\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/);
+    expect(homeWxss).toMatch(/\.prediction-share-footer\s*\{[\s\S]*?height:\s*82rpx;/);
+    expect(homeWxss).toMatch(/\.prediction-feedback-footer\s*\{[\s\S]*?min-width:\s*0;/);
+    expect(homeWxss).toMatch(/\.prediction-feedback-footer\s*\{[\s\S]*?max-width:\s*100%;/);
+    expect(homeWxss).toMatch(/\.prediction-feedback-footer \.share-btn-label\s*\{[\s\S]*?width:\s*auto;/);
     expect(homeWxss).toMatch(/\.prediction-share-menu\s*\{[\s\S]*?min-width:\s*248rpx;/);
     expect(homeWxss).toMatch(/\.prediction-share-menu\s*\{[\s\S]*?border-radius:\s*999rpx;/);
     expect(homeWxss).toMatch(/\.prediction-share-menu\s*\{[\s\S]*?box-sizing:\s*border-box;/);
@@ -334,9 +349,13 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxml).toContain('prediction-radar-sun-marker');
     expect(homeWxml).toContain('predictionPreview.radar.sunMarker.left');
     expect(homeWxml).toContain('predictionPreview.radar.sunMarker.shortLabel');
+    expect(homeWxml).toContain('wx:for="{{predictionPreview.radar.directions}}"');
+    expect(homeWxml).toContain('wx:if="{{siteState.radarFovMode !== \'legacy\' && predictionPreview.radar.useFovRadar && predictionPreview.radar.fov}}"');
+    expect(homeWxml).toContain('prediction-fov-radar');
+    expect(homeWxml).toContain('prediction-fov-cloud prediction-fov-cloud-{{item.layer}}');
+    expect(homeWxml.indexOf('prediction-radar-dial')).toBeGreaterThan(homeWxml.indexOf('<block wx:else>'));
     expect(homeWxml).not.toContain('prediction-radar-cloud-gradient');
     expect(homeWxml).not.toContain('prediction-radar-score');
-    expect(homeWxml).toContain('wx:for="{{predictionPreview.radar.directions}}"');
     expect(homeWxml).not.toContain('prediction-radar-detail');
     expect(homeWxml).not.toContain('prediction-radar-cloud-blob');
     expect(homeWxml).not.toContain('predictionPreview.radar.cloudBlobs');
@@ -352,9 +371,12 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeJs).toContain('满铺云幕叠加偏脏空气，颜色容易被压淡');
     expect(homeJs).toContain('scoringV2: prediction.scoringV2 || prediction.breakdown?.scoringV2 || null');
     expect(homeJs).toContain('buildPredictionRadarPreview');
+    expect(homeJs).toContain('buildPredictionFovRadar');
     expect(homeJs).toContain('buildRadarSunMarker');
     expect(homeJs).toContain('normalizeSunDirectionBearing');
-    expect(homeJs).toContain('sunMarker: buildRadarSunMarker(period, sunDirection)');
+    expect(homeJs).toContain('useFovRadar: sectorData.useFovRadar === true');
+    expect(homeJs).toContain('const fov = buildPredictionFovRadar(directions, period, sectorData)');
+    expect(homeJs).not.toContain('if (this.data.predictionPreview?.radar?.fov?.clouds?.length) return;');
     expect(homeJs).toContain('lastRadarPaintSignature');
     expect(homeJs).toContain('clearTimeout(this.radarPaintTimer)');
     expect(homeJs).toContain('}, 80);');
@@ -367,6 +389,9 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxss).toContain('.prediction-hero-card');
     expect(homeWxss).toContain('.score-summary-card');
     expect(homeWxss).toContain('.score-detail-trigger');
+    expect(homeWxss).toMatch(/\.score-detail-trigger\s*\{[\s\S]*?height:\s*58rpx;/);
+    expect(homeWxss).toMatch(/\.score-detail-trigger\s*\{[\s\S]*?line-height:\s*1;/);
+    expect(homeWxss).toMatch(/\.score-detail-trigger text\s*\{[\s\S]*?text-overflow:\s*ellipsis;/);
     expect(homeWxss).toContain('.home-score-ledger-panel');
     expect(homeWxss).toContain('.home-page.theme-dark.has-weather .home-score-ledger-panel');
     expect(homeWxss).toContain('backdrop-filter: blur(28rpx)');
@@ -412,6 +437,7 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxss).toContain('.prediction-radar-sun-marker');
     expect(homeWxss).toContain('.prediction-radar-sun-dot');
     expect(homeWxss).toContain('.prediction-radar-sun-label');
+    expect(homeWxss).toContain('.prediction-fov-radar');
     expect(homeWxss).toContain('.home-page.theme-dark.has-weather .prediction-radar-title');
     expect(homeWxss).toContain('color: rgba(241, 245, 249, 0.95);');
     expect(homeWxss).toContain('.home-page.theme-dark.has-weather .prediction-radar-subtitle');
@@ -421,7 +447,7 @@ describe('mini-program home parity with mobile web home', () => {
     expect(homeWxss).toContain('.home-page.theme-dark.has-weather .prediction-radar-name');
     expect(homeWxss).toContain('color: rgba(220, 230, 245, 0.92);');
     expect(homeWxss).toContain('.home-page.theme-dark.has-weather .prediction-app-footer');
-    expect(homeWxss).toContain('.home-page.theme-dark.has-weather .experience-chip');
+    expect(homeWxss).not.toContain('.home-page.theme-dark.has-weather .experience-chip');
     expect(homeWxss).toContain('.home-page.theme-dark.has-weather .query-item');
     expect(homeWxss).toContain('.home-page.theme-dark.has-weather .mini-card');
     expect(homeWxss).not.toContain('.prediction-radar-score');

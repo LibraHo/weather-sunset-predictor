@@ -23,6 +23,15 @@ describe('GlobalSwitchService', () => {
     expect(service.getState()).toEqual({
       siteClosed: false,
       weatherPredictionClosed: false,
+      radarFovMode: 'fov',
+      announcement: {
+        enabled: false,
+        summary: '',
+        title: '',
+        blocks: [],
+        startsAt: null,
+        endsAt: null
+      },
       updatedAt: null
     });
     expect(service.isSiteClosed()).toBe(false);
@@ -30,17 +39,82 @@ describe('GlobalSwitchService', () => {
   });
 
   test('persists normalized switch updates', () => {
-    const updated = service.updateState({ siteClosed: true, weatherPredictionClosed: true });
+    const updated = service.updateState({
+      siteClosed: true,
+      weatherPredictionClosed: true,
+      radarFovMode: 'legacy',
+      announcement: {
+        enabled: true,
+        summary: '公告入口',
+        title: '公告标题',
+        startsAt: '2026-06-28T09:00:00+08:00',
+        endsAt: '2026-06-29T09:00:00+08:00',
+        blocks: [
+          { type: 'text', text: '第一段公告' },
+          { type: 'image', url: 'https://example.com/a.jpg' }
+        ]
+      }
+    });
 
     expect(updated.siteClosed).toBe(true);
     expect(updated.weatherPredictionClosed).toBe(true);
+    expect(updated.radarFovMode).toBe('legacy');
+    expect(updated.announcement).toMatchObject({
+      enabled: true,
+      summary: '公告入口',
+      title: '公告标题',
+      startsAt: '2026-06-28T01:00:00.000Z',
+      endsAt: '2026-06-29T01:00:00.000Z',
+      blocks: [
+        { type: 'text', text: '第一段公告' },
+        { type: 'image', url: 'https://example.com/a.jpg' }
+      ]
+    });
     expect(typeof updated.updatedAt).toBe('string');
 
     const reloaded = new GlobalSwitchService({ filePath: path.join(tempDir, 'global-switches.json') });
     expect(reloaded.getState()).toMatchObject({
       siteClosed: true,
-      weatherPredictionClosed: true
+      weatherPredictionClosed: true,
+      radarFovMode: 'legacy',
+      announcement: {
+        enabled: true,
+        summary: '公告入口',
+        title: '公告标题'
+      }
     });
+  });
+
+  test('publishes announcement active status from content and schedule', () => {
+    const now = Date.now();
+
+    service.updateState({
+      announcement: {
+        enabled: true,
+        summary: 'Soon',
+        startsAt: new Date(now + 60 * 60 * 1000).toISOString()
+      }
+    });
+    expect(service.getPublicState().announcement.active).toBe(false);
+
+    service.updateState({
+      announcement: {
+        enabled: true,
+        summary: 'Live',
+        startsAt: new Date(now - 60 * 60 * 1000).toISOString(),
+        endsAt: new Date(now + 60 * 60 * 1000).toISOString()
+      }
+    });
+    expect(service.getPublicState().announcement.active).toBe(true);
+
+    service.updateState({
+      announcement: {
+        enabled: true,
+        summary: 'Expired',
+        endsAt: new Date(now - 60 * 60 * 1000).toISOString()
+      }
+    });
+    expect(service.getPublicState().announcement.active).toBe(false);
   });
 
   test('builds structured unavailable response for weather prediction closure', () => {
@@ -54,6 +128,7 @@ describe('GlobalSwitchService', () => {
       },
       availability: expect.objectContaining({
         weatherPredictionClosed: true,
+        radarFovMode: 'fov',
         shareMapAvailable: true,
         firecloudMapAvailable: true
       })

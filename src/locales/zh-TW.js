@@ -129,6 +129,13 @@ const translations = {
       "ariaLabel": "切換頁面",
       "dropdownAriaLabel": "頁面切換選單"
     },
+    "announcement": {
+      "entryLabel": "公告",
+      "defaultTitle": "公告",
+      "closeAria": "關閉公告",
+      "confirm": "知道了",
+      "imageAlt": "公告圖片"
+    },
     "simulator": {
       "title": "火燒雲模擬器",
       "intro": "用公里距離和米級雲高布置雲塊，拖動日出/日落時間，觀察哪些雲被照亮、哪些被前方雲牆遮擋、哪些因厚雲變暗。",
@@ -1162,8 +1169,8 @@ const translations = {
   },
   "surrounding": {
     "title": "周邊火燒雲分析",
-    "radarTitle": "周邊雲況雷達",
-    "radarSubtitle": "25km · 連續雲場",
+    "radarTitle": "視場雲況雷達",
+    "radarSubtitle": "方位角 × 天空高度角",
     "radius": "探測半徑",
     "radiusUnit": "公里",
     "directions": {

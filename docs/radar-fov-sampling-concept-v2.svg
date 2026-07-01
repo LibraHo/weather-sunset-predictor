@@ -1,0 +1,162 @@
+<svg width="1280" height="820" viewBox="0 0 1280 820" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="panelBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fffaf2"/>
+      <stop offset="0.58" stop-color="#f7ecdc"/>
+      <stop offset="1" stop-color="#eadbc6"/>
+    </linearGradient>
+    <style>
+      text { font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif; fill: #2f261f; }
+      .muted { font-size: 13px; fill: rgba(47,38,31,0.66); }
+      .axis { font-size: 12px; font-weight: 800; fill: rgba(47,38,31,0.72); }
+      .title { font-size: 26px; font-weight: 900; }
+      .section { font-size: 17px; font-weight: 900; }
+      .grid { stroke: rgba(105,82,58,0.20); stroke-dasharray: 5 6; }
+      .colLine { stroke: rgba(105,82,58,0.18); stroke-dasharray: 4 6; }
+      .sample { fill: #fff7ed; stroke-width: 1.2; }
+      .high { stroke: #b69668; fill: rgba(224,207,179,0.82); }
+      .mid { stroke: #8f8878; fill: rgba(203,196,180,0.82); }
+      .low { stroke: #68645d; fill: rgba(170,166,156,0.84); }
+      .sampleText { font-size: 10px; font-weight: 900; text-anchor: middle; dominant-baseline: central; fill: #4e3823; }
+      .bandHigh { fill: rgba(224,207,179,0.23); stroke: rgba(182,150,104,0.45); }
+      .bandMid { fill: rgba(174,166,148,0.20); stroke: rgba(143,136,120,0.44); }
+      .bandLow { fill: rgba(104,100,93,0.20); stroke: rgba(104,100,93,0.44); }
+      .sun { stroke: #f97316; stroke-width: 3; }
+      .callout { fill: rgba(255,247,237,0.92); stroke: rgba(170,111,45,0.18); }
+    </style>
+  </defs>
+
+  <rect width="1280" height="820" fill="#f7f1e7"/>
+  <rect x="34" y="28" width="1212" height="764" rx="22" fill="rgba(255,250,242,0.94)" stroke="rgba(170,111,45,0.18)"/>
+
+  <text x="64" y="72" class="title">修正版：采样点编号不等于单一屏幕点</text>
+  <text x="64" y="101" class="muted">D1 和 F1 都是 10km 采样；同一云层内 y 值相同。真正改变 y 的是云层高度：高云/中云/低云会分别投影到不同天空高度。</text>
+
+  <g transform="translate(64 132)">
+    <rect x="0" y="0" width="850" height="560" rx="16" fill="url(#panelBg)" stroke="rgba(170,111,45,0.16)"/>
+    <rect x="82" y="58" width="690" height="386" fill="rgba(255,255,255,0.18)" stroke="rgba(105,82,58,0.16)"/>
+
+    <!-- grid -->
+    <g>
+      <line x1="82" y1="444" x2="772" y2="444" class="grid"/>
+      <line x1="82" y1="380" x2="772" y2="380" class="grid"/>
+      <line x1="82" y1="315" x2="772" y2="315" class="grid"/>
+      <line x1="82" y1="251" x2="772" y2="251" class="grid"/>
+      <line x1="82" y1="187" x2="772" y2="187" class="grid"/>
+      <line x1="82" y1="122" x2="772" y2="122" class="grid"/>
+      <line x1="82" y1="58" x2="772" y2="58" class="grid"/>
+      <text x="786" y="448" class="axis">0°</text>
+      <text x="786" y="384" class="axis">5°</text>
+      <text x="786" y="319" class="axis">10°</text>
+      <text x="786" y="255" class="axis">15°</text>
+      <text x="786" y="191" class="axis">20°</text>
+      <text x="786" y="126" class="axis">25°</text>
+      <text x="786" y="62" class="axis">30°</text>
+    </g>
+
+    <!-- column ownership bands -->
+    <g opacity="0.68">
+      <rect x="82" y="58" width="87" height="386" fill="rgba(255,255,255,0.22)"/>
+      <rect x="169" y="58" width="108" height="386" fill="rgba(255,255,255,0.08)"/>
+      <rect x="277" y="58" width="112" height="386" fill="rgba(255,255,255,0.22)"/>
+      <rect x="389" y="58" width="112" height="386" fill="rgba(255,255,255,0.08)"/>
+      <rect x="501" y="58" width="126" height="386" fill="rgba(255,255,255,0.22)"/>
+      <rect x="627" y="58" width="112" height="386" fill="rgba(255,255,255,0.08)"/>
+      <rect x="739" y="58" width="33" height="386" fill="rgba(255,255,255,0.22)"/>
+      <line x1="169" y1="58" x2="169" y2="444" class="colLine"/>
+      <line x1="277" y1="58" x2="277" y2="444" class="colLine"/>
+      <line x1="389" y1="58" x2="389" y2="444" class="colLine"/>
+      <line x1="501" y1="58" x2="501" y2="444" class="colLine"/>
+      <line x1="627" y1="58" x2="627" y2="444" class="colLine"/>
+      <line x1="739" y1="58" x2="739" y2="444" class="colLine"/>
+    </g>
+
+    <!-- layer projected bands -->
+    <path class="bandHigh" d="M82 58 C210 70, 320 118, 430 190 C540 262, 650 336, 772 378 L772 404 C640 362, 520 300, 406 230 C300 166, 190 130, 82 122 Z"/>
+    <path class="bandMid" d="M82 151 C196 196, 330 296, 430 350 C556 408, 662 424, 772 432 L772 444 C650 439, 530 425, 410 372 C298 322, 190 244, 82 214 Z"/>
+    <path class="bandLow" d="M82 356 C180 402, 286 426, 430 436 C556 444, 660 444, 772 444 L82 444 Z"/>
+
+    <!-- center sun bearing -->
+    <line x1="426" y1="58" x2="426" y2="444" class="sun"/>
+    <circle cx="426" cy="58" r="5" fill="#f97316"/>
+    <circle cx="426" cy="444" r="5" fill="#f97316"/>
+    <text x="426" y="46" fill="#ea580c" text-anchor="middle" font-size="18" font-weight="900">305°</text>
+
+    <!-- x labels -->
+    <g text-anchor="middle" class="axis">
+      <text x="82" y="34">A 270°</text>
+      <text x="212" y="34">B 280°</text>
+      <text x="333" y="34">C 293°</text>
+      <text x="426" y="34">D 305°</text>
+      <text x="565" y="34">E 319°</text>
+      <text x="690" y="34">F 332°</text>
+      <text x="772" y="34">G 340°</text>
+    </g>
+
+    <!-- selected comparison lines: D1 vs F1 same layer -->
+    <line x1="426" y1="58" x2="690" y2="58" stroke="#b69668" stroke-width="2" stroke-dasharray="7 5"/>
+    <line x1="426" y1="151" x2="690" y2="151" stroke="#8f8878" stroke-width="2" stroke-dasharray="7 5"/>
+    <line x1="426" y1="356" x2="690" y2="356" stroke="#68645d" stroke-width="2" stroke-dasharray="7 5"/>
+
+    <!-- D1 and F1 for each layer -->
+    <g>
+      <circle class="sample high" cx="426" cy="58" r="14"/><text class="sampleText" x="426" y="58">D1-H</text>
+      <circle class="sample high" cx="690" cy="58" r="14"/><text class="sampleText" x="690" y="58">F1-H</text>
+      <circle class="sample mid" cx="426" cy="151" r="14"/><text class="sampleText" x="426" y="151">D1-M</text>
+      <circle class="sample mid" cx="690" cy="151" r="14"/><text class="sampleText" x="690" y="151">F1-M</text>
+      <circle class="sample low" cx="426" cy="356" r="14"/><text class="sampleText" x="426" y="356">D1-L</text>
+      <circle class="sample low" cx="690" cy="356" r="14"/><text class="sampleText" x="690" y="356">F1-L</text>
+    </g>
+
+    <!-- representative D-column distance samples for three layers -->
+    <g>
+      <circle class="sample high" cx="333" cy="185" r="11"/><text class="sampleText" x="333" y="185">C2-H</text>
+      <circle class="sample high" cx="333" cy="313" r="10"/><text class="sampleText" x="333" y="313">C3-H</text>
+      <circle class="sample high" cx="333" cy="356" r="9"/><text class="sampleText" x="333" y="356">C4-H</text>
+      <circle class="sample high" cx="333" cy="378" r="8"/><text class="sampleText" x="333" y="378">C5-H</text>
+
+      <circle class="sample mid" cx="565" cy="326" r="11"/><text class="sampleText" x="565" y="326">E2-M</text>
+      <circle class="sample mid" cx="565" cy="382" r="10"/><text class="sampleText" x="565" y="382">E3-M</text>
+      <circle class="sample mid" cx="565" cy="403" r="9"/><text class="sampleText" x="565" y="403">E4-M</text>
+      <circle class="sample mid" cx="565" cy="413" r="8"/><text class="sampleText" x="565" y="413">E5-M</text>
+
+      <circle class="sample low" cx="82" cy="407" r="11"/><text class="sampleText" x="82" y="407">A2-L</text>
+      <circle class="sample low" cx="82" cy="426" r="10"/><text class="sampleText" x="82" y="426">A3-L</text>
+      <circle class="sample low" cx="82" cy="432" r="9"/><text class="sampleText" x="82" y="432">A4-L</text>
+      <circle class="sample low" cx="82" cy="435" r="8"/><text class="sampleText" x="82" y="435">A5-L</text>
+    </g>
+
+    <text x="82" y="474" class="axis">天空高度角；同一层的同距离点横向移动，纵向不变</text>
+    <text x="82" y="502" class="muted">示例：D1-H 和 F1-H 都在 30° 顶部；D1-L 和 F1-L 都在 6.8° 附近。旧图把不同层的点混在一起标，容易误读。</text>
+  </g>
+
+  <g transform="translate(950 132)">
+    <rect x="0" y="0" width="260" height="560" rx="16" fill="rgba(255,255,255,0.50)" stroke="rgba(170,111,45,0.16)"/>
+    <text x="24" y="42" class="section">投影公式</text>
+    <text x="24" y="72" class="muted">天空高度角 = atan(云层高度 / 距离)</text>
+    <text x="24" y="96" class="muted">显示范围夹到 0°-30°。</text>
+
+    <line x1="24" y1="122" x2="236" y2="122" stroke="rgba(170,111,45,0.16)"/>
+    <text x="24" y="156" class="section">10km，即 row 1</text>
+    <text x="24" y="188" class="muted">高云 H：atan(9 / 10) = 42.0° → 30°</text>
+    <text x="24" y="214" class="muted">中云 M：atan(4.2 / 10) = 22.8°</text>
+    <text x="24" y="240" class="muted">低云 L：atan(1.2 / 10) = 6.8°</text>
+
+    <line x1="24" y1="270" x2="236" y2="270" stroke="rgba(170,111,45,0.16)"/>
+    <text x="24" y="304" class="section">所以 D1 vs F1</text>
+    <text x="24" y="336" class="muted">D1-H = F1-H 的 y</text>
+    <text x="24" y="362" class="muted">D1-M = F1-M 的 y</text>
+    <text x="24" y="388" class="muted">D1-L = F1-L 的 y</text>
+    <text x="24" y="424" class="muted">差异只在 x：D 是 305°，F 是 332°。</text>
+
+    <line x1="24" y1="456" x2="236" y2="456" stroke="rgba(170,111,45,0.16)"/>
+    <circle cx="34" cy="488" r="7" class="high"/><text x="52" y="493" class="muted">H 高云：9km</text>
+    <circle cx="34" cy="516" r="7" class="mid"/><text x="52" y="521" class="muted">M 中云：4.2km</text>
+    <circle cx="34" cy="544" r="7" class="low"/><text x="52" y="549" class="muted">L 低云：1.2km / 云底高</text>
+  </g>
+
+  <g transform="translate(64 732)">
+    <rect x="0" y="0" width="1146" height="42" rx="12" class="callout"/>
+    <text x="20" y="27" class="muted">结论：编号必须写成 D1-H / D1-M / D1-L 这种三层形式。只写 D1 会把“采样位置”和“云层投影位置”混在一起。</text>
+  </g>
+</svg>

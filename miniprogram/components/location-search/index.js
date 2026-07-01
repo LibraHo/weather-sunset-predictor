@@ -5,7 +5,8 @@ Component({
     favoriteLoading: { type: Boolean, value: false },
     loading: { type: Boolean, value: false },
     theme: { type: String, value: 'light' },
-    candidates: { type: Array, value: [] }
+    candidates: { type: Array, value: [] },
+    announcement: { type: Object, value: null }
   },
 
   methods: {
@@ -23,6 +24,10 @@ Component({
 
     onFavorite() {
       this.triggerEvent('favorite');
+    },
+
+    onAnnouncement() {
+      this.triggerEvent('announcement');
     },
 
     onSelectCandidate(event) {

@@ -152,7 +152,6 @@ describe('miniprogram web-like experience shell', () => {
     const topbarWxml = read('miniprogram/components/app-topbar/index.wxml');
     const locationWxml = read('miniprogram/components/location-search/index.wxml');
     const homeWxml = read('miniprogram/pages/home/index.wxml');
-    const resultWxml = read('miniprogram/pages/result/index.wxml');
     const mapWxml = read('miniprogram/pages/map/index.wxml');
     const galleryWxml = read('miniprogram/pages/gallery/index.wxml');
     const uploadWxml = read('miniprogram/pages/upload/index.wxml');
@@ -171,8 +170,6 @@ describe('miniprogram web-like experience shell', () => {
     expect(homeWxml).toContain('class="weather-toggle tap-feedback');
     expect(homeWxml).toContain('class="prediction-toggle tap-feedback');
     expect(homeWxml).toContain('class="query-item tap-feedback"');
-    expect(resultWxml).toContain('class="result-period-option tap-feedback');
-    expect(resultWxml).toContain('class="switch-option tap-feedback"');
     expect(mapWxml).toContain('class="segment tap-feedback');
     expect(mapWxml).not.toContain('class="spot-row tap-feedback"');
     expect(galleryWxml).toContain('class="photo-card xiake-card glass-card tap-feedback"');
@@ -236,52 +233,54 @@ describe('miniprogram web-like experience shell', () => {
     expect(homeWxss).not.toContain('.home-page.theme-dark.has-weather .weather-hourly-chart {\n  background: linear-gradient(180deg, rgba(255, 252, 246');
   });
 
-  test('result page keeps users in the Xiake product loop after scoring', () => {
-    const wxml = read('miniprogram/pages/result/index.wxml');
-    const js = read('miniprogram/pages/result/index.js');
-    const wxss = read('miniprogram/pages/result/index.wxss');
+  test('active home prediction page keeps users in the Xiake product loop after scoring', () => {
+    const wxml = read('miniprogram/pages/home/index.wxml');
+    const js = read('miniprogram/pages/home/index.js');
 
     expect(wxml).toContain('data-target="methodology"');
     expect(wxml).toContain('data-target="map"');
     expect(wxml).toContain('data-target="gallery"');
-    expect(wxml).toContain('data-target="api"');
-    expect(wxml).toContain('data-target="upload"');
-    expect(js).toContain('navigateExperience(event)');
+    expect(wxml).toContain('data-target="simulator"');
+    expect(js).toContain('navigateFeature(event)');
     expect(js).toContain("methodology: '/pages/methodology/index'");
-    expect(js).toContain("map: `/pages/map/index?period=${this.data.prediction?.period || this.data.prediction?.type || 'sunset'}`");
     expect(js).toContain("gallery: '/pages/gallery/index'");
-    expect(js).toContain("upload: '/pages/upload/index'");
-    expect(wxss).toContain('.result-view-switch');
-    expect(wxss).toContain('.switch-options');
-    expect(wxss).toContain('border-radius: 999rpx');
-    expect(wxss).not.toContain('.dock-grid');
+    expect(js).toContain("simulator: '/pages/simulator/index'");
   });
 
-  test('result page never exposes backend condition enum tokens to users', () => {
-    const wxml = read('miniprogram/pages/result/index.wxml');
-    const js = read('miniprogram/pages/result/index.js');
+  test('deprecated result page is not registered or referenced by the active mini-program', () => {
+    const appConfig = JSON.parse(read('miniprogram/app.json'));
+    const homeJs = read('miniprogram/pages/home/index.js');
+    const homeWxml = read('miniprogram/pages/home/index.wxml');
 
-    expect(js).toContain('humanizeExplanation');
-    expect(js).toContain('conditions_good');
-    expect(wxml).not.toMatch(/conditions_[a-z_]+/);
+    expect(appConfig.pages).not.toContain('pages/result/index');
+    expect(homeJs).not.toContain('/pages/result/index');
+    expect(homeWxml).not.toContain('/pages/result/index');
   });
 
-  test('surrounding cloud panel uses a compass radar instead of a low-fi grid', () => {
-    const wxml = read('miniprogram/pages/result/index.wxml');
-    const wxss = read('miniprogram/pages/result/index.wxss');
-    const js = read('miniprogram/pages/result/index.js');
+  test('home surrounding cloud panel keeps the legacy disc active during mini-program review window', () => {
+    const wxml = read('miniprogram/pages/home/index.wxml');
+    const wxss = read('miniprogram/pages/home/index.wxss');
+    const js = read('miniprogram/pages/home/index.js');
 
-    expect(wxml).toContain('radar-compass');
-    expect(wxml).toContain('radar-compass-dial');
-    expect(wxml).toContain('canvas-id="resultRadarCloudField"');
-    expect(wxml).toContain('radar-direction-{{item.direction}}');
-    expect(wxml).toContain('radar-legend');
+    expect(wxml).toContain('prediction-radar-card');
+    expect(wxml).toContain('prediction-radar-dial');
+    expect(wxml).toContain('prediction-radar-cloud-field');
+    expect(wxml).toContain('canvas-id="homeRadarCloudField"');
+    expect(wxml).toContain('prediction-radar-ring-label-high');
+    expect(wxml).toContain('prediction-radar-sun-marker');
+    expect(wxml).toContain('wx:for="{{predictionPreview.radar.directions}}"');
+    expect(wxml).toContain('wx:if="{{siteState.radarFovMode !== \'legacy\' && predictionPreview.radar.useFovRadar && predictionPreview.radar.fov}}"');
+    expect(wxml).toContain('prediction-fov-radar');
+    expect(wxml).toContain('prediction-fov-alt-line');
+    expect(wxml.indexOf('prediction-radar-dial')).toBeGreaterThan(wxml.indexOf('<block wx:else>'));
     expect(wxml).not.toContain('class="radar-grid"');
-    expect(wxss).toContain('.radar-compass-dial');
-    expect(wxss).toContain('.radar-ring-outer');
-    expect(wxss).toContain('.radar-ring-low-inner');
-    expect(js).toContain('orderRadarDirections');
-    expect(js).toContain('bestItems');
+    expect(wxss).toContain('.prediction-radar-dial');
+    expect(wxss).toContain('.prediction-radar-cloud-canvas');
+    expect(wxss).toContain('.prediction-fov-radar');
+    expect(js).toContain('buildPredictionFovRadar');
+    expect(js).toContain('useFovRadar: sectorData.useFovRadar === true');
+    expect(js).not.toContain('if (this.data.predictionPreview?.radar?.fov?.clouds?.length) return;');
+    expect(js).toContain('buildRadarCloudGradients');
     expect(js).toContain('paintRadarCloudCanvas');
   });
 

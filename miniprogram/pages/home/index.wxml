@@ -70,7 +70,26 @@
   </view>
 
   <block wx:if="{{!siteState.weatherPredictionClosed}}">
-  <location-search value="{{locationText}}" locating="{{locating}}" favoriteLoading="{{favoriteLoading}}" loading="{{loading}}" theme="{{resolvedThemeMode}}" candidates="{{locationCandidates}}" bind:change="onLocationChange" bind:confirm="onSearch" bind:locate="onUseCurrentLocation" bind:favorite="onAddCurrentFavorite" bind:selectcandidate="selectLocationCandidate" />
+  <location-search value="{{locationText}}" locating="{{locating}}" favoriteLoading="{{favoriteLoading}}" loading="{{loading}}" theme="{{resolvedThemeMode}}" candidates="{{locationCandidates}}" announcement="{{siteState.announcement}}" bind:change="onLocationChange" bind:confirm="onSearch" bind:locate="onUseCurrentLocation" bind:favorite="onAddCurrentFavorite" bind:announcement="openAnnouncementPanel" bind:selectcandidate="selectLocationCandidate" />
+
+  <view wx:if="{{announcementPanelVisible}}" class="announcement-mask" bindtap="closeAnnouncementPanel">
+    <view class="announcement-sheet xiake-card" catchtap="noop">
+      <view class="announcement-sheet-head">
+        <view>
+          <view class="announcement-kicker">Sunset Voyager Notice</view>
+          <view class="announcement-title">{{siteState.announcement.title || '公告'}}</view>
+        </view>
+        <button class="announcement-close" bindtap="closeAnnouncementPanel" aria-label="关闭公告">×</button>
+      </view>
+      <view class="announcement-content">
+        <block wx:for="{{siteState.announcement.blocks}}" wx:key="index">
+          <view wx:if="{{item.type === 'text'}}" class="announcement-paragraph">{{item.text}}</view>
+          <image wx:elif="{{item.type === 'image'}}" class="announcement-image" src="{{item.url}}" mode="widthFix" />
+        </block>
+        <view wx:if="{{!siteState.announcement.blocks.length && siteState.announcement.summary}}" class="announcement-paragraph">{{siteState.announcement.summary}}</view>
+      </view>
+    </view>
+  </view>
 
   <view class="home-search-loading xiake-card" wx:if="{{loading}}" role="status" aria-live="polite">
     <view class="home-search-spinner" aria-hidden="true"></view>
@@ -353,9 +372,49 @@
     </view>
 
     <view class="prediction-radar-card">
-      <view class="prediction-radar-head">
-        <view class="prediction-radar-title">周边云况雷达</view>
-        <view class="prediction-radar-subtitle">25km · 连续云场</view>
+      <block wx:if="{{siteState.radarFovMode !== 'legacy' && predictionPreview.radar.useFovRadar && predictionPreview.radar.fov}}">
+        <view class="prediction-radar-head prediction-fov-head">
+          <view>
+            <view class="prediction-radar-title">{{predictionPreview.radar.fov.title}}</view>
+            <view class="prediction-radar-subtitle">{{predictionPreview.radar.fov.subtitle}}</view>
+          </view>
+          <view class="prediction-fov-bearing-pill">
+            <view class="prediction-fov-bearing-mini">
+              <text class="prediction-fov-bearing-n">N</text>
+              <text class="prediction-fov-bearing-e">E</text>
+              <text class="prediction-fov-bearing-s">S</text>
+              <text class="prediction-fov-bearing-w">W</text>
+              <view class="prediction-fov-bearing-line" style="transform: rotate({{predictionPreview.radar.fov.mainBearingRaw}}deg);"></view>
+              <view class="prediction-fov-bearing-dot"></view>
+            </view>
+            <text>{{predictionPreview.radar.fov.sunLabel}}</text>
+          </view>
+        </view>
+        <view class="prediction-fov-radar">
+          <view class="prediction-fov-boundary prediction-fov-boundary-left"></view>
+          <view class="prediction-fov-boundary prediction-fov-boundary-right"></view>
+          <view class="prediction-fov-main-path"></view>
+          <view class="prediction-fov-alt-line" wx:for="{{predictionPreview.radar.fov.altitudeLines}}" wx:key="key" style="top: {{item.top}}%;">
+            <text>{{item.label}}</text>
+          </view>
+          <view class="prediction-fov-cloud prediction-fov-cloud-{{item.layer}} prediction-fov-cloud-{{item.mode}} prediction-fov-cloud-{{item.strength}}" wx:for="{{predictionPreview.radar.fov.clouds}}" wx:key="key" style="left: {{item.left}}%; top: {{item.top}}%; width: {{item.width}}%; height: {{item.height}}%;">
+            <view class="prediction-fov-cloud-core"></view>
+          </view>
+          <text class="prediction-fov-label prediction-fov-label-left">{{predictionPreview.radar.fov.leftLabel}} {{predictionPreview.radar.fov.leftBearing}}</text>
+          <text class="prediction-fov-label prediction-fov-label-center">{{predictionPreview.radar.fov.mainBearing}}</text>
+          <text class="prediction-fov-label prediction-fov-label-right">{{predictionPreview.radar.fov.rightLabel}} {{predictionPreview.radar.fov.rightBearing}}</text>
+          <text class="prediction-fov-axis-label">{{predictionPreview.radar.fov.axisLabel}}</text>
+        </view>
+        <view class="prediction-fov-legend">
+          <view class="prediction-fov-legend-item"><text class="prediction-fov-legend-cloud high"></text>{{predictionPreview.radar.fov.highLabel}}</view>
+          <view class="prediction-fov-legend-item"><text class="prediction-fov-legend-cloud"></text>{{predictionPreview.radar.fov.midLabel}}</view>
+          <view class="prediction-fov-legend-item"><text class="prediction-fov-legend-cloud low"></text>{{predictionPreview.radar.fov.lowLabel}}</view>
+        </view>
+      </block>
+      <block wx:else>
+        <view class="prediction-radar-head">
+          <view class="prediction-radar-title">周边云况雷达</view>
+          <view class="prediction-radar-subtitle">25km · 连续云场</view>
         </view>
         <view class="prediction-radar-dial">
           <view class="prediction-radar-cloud-field">
@@ -363,24 +422,25 @@
           </view>
           <view class="prediction-radar-ring prediction-radar-ring-low-inner"></view>
           <view class="prediction-radar-ring prediction-radar-ring-low"></view>
-        <view class="prediction-radar-ring prediction-radar-ring-mid"></view>
-        <view class="prediction-radar-ring prediction-radar-ring-high"></view>
-        <view class="prediction-radar-ring-label prediction-radar-ring-label-high">高云</view>
-        <view class="prediction-radar-ring-label prediction-radar-ring-label-mid">中云</view>
-        <view class="prediction-radar-ring-label prediction-radar-ring-label-low">低云</view>
-        <view class="prediction-radar-axis prediction-radar-axis-ns"></view>
-        <view class="prediction-radar-axis prediction-radar-axis-ew"></view>
-        <view class="prediction-radar-axis prediction-radar-axis-ne"></view>
-        <view class="prediction-radar-axis prediction-radar-axis-nw"></view>
-        <view class="prediction-radar-center"></view>
-        <view wx:if="{{predictionPreview.radar.sunMarker}}" class="prediction-radar-sun-marker" style="left: {{predictionPreview.radar.sunMarker.left}}%; top: {{predictionPreview.radar.sunMarker.top}}%;">
-          <view class="prediction-radar-sun-dot"></view>
-          <text class="prediction-radar-sun-label">{{predictionPreview.radar.sunMarker.shortLabel}}</text>
+          <view class="prediction-radar-ring prediction-radar-ring-mid"></view>
+          <view class="prediction-radar-ring prediction-radar-ring-high"></view>
+          <view class="prediction-radar-ring-label prediction-radar-ring-label-high">高云</view>
+          <view class="prediction-radar-ring-label prediction-radar-ring-label-mid">中云</view>
+          <view class="prediction-radar-ring-label prediction-radar-ring-label-low">低云</view>
+          <view class="prediction-radar-axis prediction-radar-axis-ns"></view>
+          <view class="prediction-radar-axis prediction-radar-axis-ew"></view>
+          <view class="prediction-radar-axis prediction-radar-axis-ne"></view>
+          <view class="prediction-radar-axis prediction-radar-axis-nw"></view>
+          <view class="prediction-radar-center"></view>
+          <view wx:if="{{predictionPreview.radar.sunMarker}}" class="prediction-radar-sun-marker" style="left: {{predictionPreview.radar.sunMarker.left}}%; top: {{predictionPreview.radar.sunMarker.top}}%;">
+            <view class="prediction-radar-sun-dot"></view>
+            <text class="prediction-radar-sun-label">{{predictionPreview.radar.sunMarker.shortLabel}}</text>
+          </view>
+          <view class="prediction-radar-direction prediction-radar-direction-{{item.direction}}" wx:for="{{predictionPreview.radar.directions}}" wx:key="direction">
+            <text class="prediction-radar-name">{{item.name}}</text>
+          </view>
         </view>
-        <view class="prediction-radar-direction prediction-radar-direction-{{item.direction}}" wx:for="{{predictionPreview.radar.directions}}" wx:key="direction">
-          <text class="prediction-radar-name">{{item.name}}</text>
-        </view>
-      </view>
+      </block>
     </view>
 
     <view class="prediction-share-footer-row">
@@ -424,12 +484,6 @@
 
   </view>
 
-  <view class="home-experience-strip" wx:if="{{weatherPreview.visible}}">
-        <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="simulator" bindtap="navigateFeature">模拟器</view>
-        <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="methodology" bindtap="navigateFeature">方法</view>
-        <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="map" bindtap="navigateFeature">地图</view>
-        <view class="experience-chip tap-feedback" hover-class="tap-feedback-hover" hover-stay-time="80" data-target="gallery" bindtap="navigateFeature">照片</view>
-      </view>
 
   <view class="home-section-head" wx:if="{{weatherPreview.visible}}">
     <view class="section-title">最近地点</view>

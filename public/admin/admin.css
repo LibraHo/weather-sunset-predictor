@@ -932,6 +932,24 @@ body.theme-dark .admin-table tr:hover td {
   color: var(--color-text-light);
 }
 
+.announcement-admin-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--admin-border, rgba(148, 163, 184, 0.25));
+}
+
+.announcement-admin-heading {
+  margin: 0;
+}
+
+.announcement-admin-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
 .admin-modal {
   position: fixed;
   inset: 0;
@@ -1552,6 +1570,23 @@ body.theme-dark .admin-table tr:hover td {
   display: inline-flex;
   align-items: center;
   gap: 10px;
+}
+
+.global-switch-control-wide {
+  min-width: 150px;
+}
+
+.global-switch-select {
+  width: 100%;
+  min-width: 140px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--theme-card-border, rgba(148, 163, 184, 0.22));
+  background: var(--theme-card-bg, rgba(15, 23, 42, 0.72));
+  color: var(--theme-text, var(--color-text));
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0 10px;
 }
 
 .global-switch-status {

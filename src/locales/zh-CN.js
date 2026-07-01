@@ -137,6 +137,13 @@ export default {
       ariaLabel: '页面切换',
       dropdownAriaLabel: '页面切换菜单'
     },
+    announcement: {
+      entryLabel: '公告',
+      defaultTitle: '公告',
+      closeAria: '关闭公告',
+      confirm: '知道了',
+      imageAlt: '公告图片'
+    },
     "simulator": {
       "title": "火烧云模拟器",
       "intro": "用公里距离和米级云高布置云块，拖动日出/日落时间，观察哪些云被照亮、哪些被前方云墙遮挡、哪些因厚云变暗。",
@@ -1046,8 +1053,8 @@ formationAnalysis: {
   // 任务19：周边火烧云
   surrounding: {
     title: '周边火烧云分析',
-    radarTitle: '周边云况雷达',
-    radarSubtitle: '25km · 连续云场',
+    radarTitle: '视场云况雷达',
+    radarSubtitle: '方位角 × 天空高度角',
     radius: '探测半径',
     radiusUnit: '公里',
     directions: {

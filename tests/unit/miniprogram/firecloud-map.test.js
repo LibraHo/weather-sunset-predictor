@@ -31,13 +31,12 @@ describe('miniprogram firecloud map', () => {
   test('registers a native firecloud map page with a backend-rendered raster image surface', () => {
     const appJson = JSON.parse(read('miniprogram/app.json'));
     const homeWxml = read('miniprogram/pages/home/index.wxml');
-    const resultWxml = read('miniprogram/pages/result/index.wxml');
     const mapWxml = read('miniprogram/pages/map/index.wxml');
     const mapJs = read('miniprogram/pages/map/index.js');
 
     expect(appJson.pages).toContain('pages/map/index');
     expect(homeWxml).toContain('data-target="map"');
-    expect(resultWxml).toContain('data-target="map"');
+    expect(appJson.pages).not.toContain('pages/result/index');
     expect(mapWxml).toContain('<map');
     expect(mapWxml).toContain('id="firecloud-native-map"');
     expect(mapWxml).toContain('ground-overlays="{{groundOverlays}}"');
