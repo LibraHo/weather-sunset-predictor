@@ -2424,6 +2424,32 @@ class PredictionController {
       }
       return ledgerText('renderingFormula', { base: fmt(baseScore, 1), factor: fmt(renderingFactor, 2), rendered: fmt(renderedScore, 1) }, '{{base}} adjusted by rendering = {{rendered}}', '{{base}} 经显色修正 = {{rendered}}');
     })();
+    const renderingDetail = (() => {
+      const baseDetail = ledgerText(
+        'details.renderingFactors',
+        {
+          visibility: fmt(prediction?.renderingAnalysis?.visibilityFactor, 2),
+          humidity: fmt(prediction?.renderingAnalysis?.humidityFactor, 2),
+          aerosol: fmt(aerosolFactor, 2)
+        },
+        'visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}',
+        '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}'
+      );
+      const rawFactor = Number(prediction?.renderingAnalysis?.rawFactor);
+      const floor = Number(prediction?.renderingAnalysis?.correlationFloor);
+      if (Number.isFinite(rawFactor) && Number.isFinite(floor) && floor > rawFactor) {
+        return [
+          baseDetail,
+          ledgerText(
+            'details.renderingCorrelationFloor',
+            { raw: fmt(rawFactor, 2), floor: fmt(floor, 2) },
+            'correlated wet-haze evidence is softened: raw ×{{raw}} -> floor ×{{floor}}',
+            '湿霾相关证据软下限：原始 ×{{raw}} → ×{{floor}}'
+          )
+        ].join('；');
+      }
+      return baseDetail;
+    })();
 
     const lightPathDetail = (() => {
       if (prediction?.lightPathAnalysis?.capReason === 'overcast_cap_40') {
@@ -2627,7 +2653,7 @@ class PredictionController {
           ${step(1, ledgerText('labels.cloudCarrier', {}, 'Cloud carrier', '云层载体'), ledgerText('details.cloudCarrier', {}, 'usable color carrier from cloud layers, solar-direction cloud, or thin haze', '可被染色的本地云面、日落方向云幕或薄雾载体'), fmt(carrierScore, 1), carrierDetail)}
           ${step(2, ledgerText('labels.layerBrightness', {}, 'Layer brightness', '分层受光亮度'), ledgerText('details.layerBrightnessShort', {}, 'sun direction, blockage, and illumination evidence explain whether each carrier layer is lit', '太阳方向、遮挡和亮度响应共同解释各层载体是否被照亮'), layerBrightness?.applied ? fmt(layerBrightness.effectiveBrightness, 1) : '--', [brightnessDetail, lightPathDetail].filter(Boolean).join('；'))}
           ${step(3, ledgerText('labels.baseScore', {}, 'Base score', '基础分'), weightedDescription, fmt(baseScore, 1), baseScoreDetail)}
-          ${step(4, ledgerText('labels.rendering', {}, 'Air rendering', '空气显色'), renderingDescription, fmt(renderedScore, 1), ledgerText('details.renderingFactors', { visibility: fmt(prediction?.renderingAnalysis?.visibilityFactor, 2), humidity: fmt(prediction?.renderingAnalysis?.humidityFactor, 2), aerosol: fmt(aerosolFactor, 2) }, 'visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}', '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}'))}
+          ${step(4, ledgerText('labels.rendering', {}, 'Air rendering', '空气显色'), renderingDescription, fmt(renderedScore, 1), renderingDetail)}
           ${adjustmentHtml}
           ${step(capEvents.length ? capEvents.length + 5 : 5, ledgerText('labels.final', {}, 'Final', '最终分'), capEvents.length ? ledgerText('details.afterAdjustments', {}, 'after weather and visibility adjustments', '结合天气和能见度后') : ledgerText('details.finalDisplayed', {}, 'final displayed result', '最终展示结果'), fmt(finalScore, 0), '', 'final')}
         </div>

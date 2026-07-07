@@ -278,16 +278,16 @@ export default {
     methodology: {
       title: '火烧云计算方法',
       intro: '当前火烧云指数按“候选载体 → 侧向/主光路受光亮度 → 空气显色 → 封顶校准”展示。结果页只呈现这条主链路，重点说明云是否能被照亮，以及为什么高云很多时仍可能被灰幕、厚云、水汽或弱直射压低。',
-      versionLabel: '算法说明版本：2026.06.26-visible-sector-illumination-v2',
+      versionLabel: '算法说明版本：2026.07.07-wet-haze-rendering-floor',
       versionDesc: '本版说明与结果页计算依据一致：先比较本地云层、远端分层载体、侧向可视云带和气溶胶弱载体，再展开受光亮度、空气显色与最终分。',
       changelogTitle: "版本更新记录",
       changelogHint: "近三个月内的算法更新都会放在这里，可滚动回看原因、影响和验证方式",
       changelog: {
         latest: {
-          date: '2026-06-26',
-          title: '侧向可视云带受光 v2',
-          summary: '主太阳光路仍按太阳方位严格判断；侧向可视扇区只作为额外云载体进入评分，并按主光路通透度、方位角衰减、云高/距离仰角、空气透射和云层类型计算受光。',
-          validation: '验证：侧向云带可在评分细则列出候选方位和受光证据；单个距离点不能激活侧向；晴空建议不会覆盖侧向载体。'
+          date: '2026-07-07',
+          title: '湿霾空气显色软下限',
+          summary: '低能见度、雨后灰幕、AQI 和 AOD 同时指向同一团湿霾时，不再把相关证据无限连乘；非极端污染下给空气显色软下限，极端沙尘/重霾仍保持重罚。',
+          validation: '验证：2026-07-03 北京湿霾高云样本从 28.1 调整到 32.5，仍保持无火烧云；真实校准样本库和完整后端单测通过。'
         },
         layerBrightness: {
           date: '2026-06-13',
@@ -398,10 +398,10 @@ export default {
         layerDiversity: {
           title: '4. 空气显色',
           subtitle: 'Air Rendering · 颜色质量',
-          desc: '空气显色只解释颜色质量：能见度、湿度、雨后状态、AOD/PM/dust 会共同影响红橙色强弱。',
+          desc: '空气显色只解释颜色质量：能见度、湿度、雨后状态、AOD/PM/dust 会共同影响红橙色强弱；相关湿霾证据会做软下限校准，避免重复连乘过杀。',
           threeLayer: '光路开且云幕不灰：轻/中度颗粒可增强暖色',
           twoLayer: '中高云满铺且 PM/AOD、水汽或直射光偏弱：按灰幕/厚云压力连续压低显色',
-          oneLayer: '降水和低能见度会降低颜色清晰度'
+          oneLayer: '降水和低能见度会降低颜色清晰度；非极端湿霾不会把同一证据无限连乘'
         },
         lowCloudPenalty: {
           title: '5. 限制因素',
@@ -439,7 +439,7 @@ export default {
           highCloudCap: '高云充足但光路被挡时，会先体现在受光亮度变弱。',
           carrier: '基础分 = Σ(分层载体 × 分层受光亮度)',
           lightGate: '光路已经并入受光亮度，不再单独显示成最终乘子',
-          rendering: '空气显色用于解释颜色质量，不再把气溶胶弱载体重复显示成最终加分',
+          rendering: '空气显色用于解释颜色质量；低能见度、雨后灰幕、AQI 和 AOD 属于同一团湿霾证据时使用软下限，不再把气溶胶弱载体重复显示成最终加分',
           statusCaps: '显示分还会按状态校准：无火烧云低于 40，轻微霞光低于 60；几何不可行、厚云、灰幕和雨低云会进一步封顶'
         }
       }
@@ -657,6 +657,7 @@ export default {
           layerBrightnessMultiplier: '有效亮度 {{brightness}}；压暗证据：{{evidence}}',
           layerContribution: '{{layer}}：载体 {{carrier}} × 受光 {{brightness}} = {{score}}',
           renderingFactors: '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}',
+          renderingCorrelationFloor: '湿霾相关证据软下限：原始 ×{{raw}} → ×{{floor}}',
           afterAdjustments: '结合天气和能见度后',
           finalDisplayed: '最终展示结果',
           thickCloudCap: '厚云幕或灰幕会削弱真实可染色效果',
