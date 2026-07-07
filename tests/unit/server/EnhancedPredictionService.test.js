@@ -574,6 +574,26 @@ describe('EnhancedPredictionService', () => {
       expect(result.breakdown.specialMode).toBe('post_rain_gray_curtain');
     });
 
+    test('should dampen correlated wet haze penalties without removing haze risk', () => {
+      const weatherData = {
+        visibility: 5,
+        humidity: 78,
+        aqi: 211,
+        aerosolOpticalDepth: 0.472,
+        pm2_5: 54.4,
+        pm10: 58.9,
+        dust: 8.4,
+        recentPrecipitation6h: 2.7,
+        recentRainSignal: 0.93
+      };
+      const result = EnhancedPredictionService.scoreRendering(weatherData, true);
+
+      expect(result.rawFactor).toBeCloseTo(0.44, 2);
+      expect(result.factor).toBe(0.52);
+      expect(result.correlationFloor).toBe(0.52);
+      expect(result.breakdown.specialMode).toBe('post_rain_gray_curtain');
+    });
+
     test('should identify color tendency based on AQI', () => {
       const goodAqi = EnhancedPredictionService.scoreRendering({ aqi: 30 });
       expect(goodAqi.breakdown.colorTendency).toBe('golden_orange');

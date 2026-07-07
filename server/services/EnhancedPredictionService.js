@@ -2308,11 +2308,28 @@ function scoreRendering(weatherData, rainedRecently = false) {
     }
   }
 
-  // 最终渲染系数 = 能见度 × 湿度 × 雨后加成 × AQI 修正 × 气溶胶修正
-  const renderingFactor = visibilityFactor * humidityFactor * rainBonus * aqiFactor * aerosolFactor;
+  // 最终渲染系数 = 能见度 × 湿度 × 雨后加成 × AQI 修正 × 气溶胶修正。
+  // 低能见度、雨后灰幕、AQI 与 AOD 往往描述同一团湿霾；非极端污染下给软下限，
+  // 避免同一证据被连乘到过低，但保留极端沙尘/重霾的重罚。
+  const rawRenderingFactor = visibilityFactor * humidityFactor * rainBonus * aqiFactor * aerosolFactor;
+  const correlatedWetHaze =
+    visibility >= 5 &&
+    visibility < 8 &&
+    (specialMode === 'post_rain_gray_curtain' || specialMode === 'humid_haze_gray_curtain');
+  const extremeParticulate =
+    (Number.isFinite(aerosolOpticalDepth) && aerosolOpticalDepth >= 0.65) ||
+    pm25 >= 90 ||
+    pm10 >= 150 ||
+    dust >= 120;
+  const correlationFloor = correlatedWetHaze && !extremeParticulate ? 0.52 : null;
+  const renderingFactor = correlationFloor == null
+    ? rawRenderingFactor
+    : Math.max(rawRenderingFactor, correlationFloor);
 
   return {
     factor: parseFloat(renderingFactor.toFixed(2)),
+    rawFactor: parseFloat(rawRenderingFactor.toFixed(2)),
+    correlationFloor,
     visibilityFactor: parseFloat(visibilityFactor.toFixed(2)),
     humidityFactor: parseFloat(humidityFactor.toFixed(2)),
     rainBonus: parseFloat(rainBonus.toFixed(2)),
