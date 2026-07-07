@@ -270,16 +270,16 @@ const translations = {
     "methodology": {
       "title": "火燒雲計算方法",
       "intro": "目前的火燒雲指數按「候選載體 → 側向／主光路受光亮度 → 空氣顯色 → 封頂校準」展示。結果頁只呈現這條主鏈路，重點說明雲是否能被照亮，以及為什麼高雲很多時仍可能被灰幕、厚雲、水氣或弱直射壓低。",
-      "versionLabel": "算法說明版本：2026.06.26-visible-sector-illumination-v2",
+      "versionLabel": "算法說明版本：2026.07.07-wet-haze-rendering-floor",
       "versionDesc": "本版說明與結果頁計算依據一致：先比較本地雲層、遠端分層載體、側向可視雲帶和氣溶膠弱載體，再展開受光亮度、空氣顯色與最終分。",
       changelogTitle: "版本更新記錄",
       changelogHint: "近三個月內的算法更新都會放在這裡，可捲動回看原因、影響和驗證方式",
       changelog: {
         "latest": {
-          "date": "2026-06-26",
-          "title": "側向可視雲帶受光 v2",
-          "summary": "主太陽光路仍按太陽方位嚴格判斷；側向可視扇區只作為額外雲載體進入評分，並按主光路通透度、方位角衰減、雲高／距離仰角、空氣透射和雲層類型計算受光。",
-          "validation": "驗證：側向雲帶可在評分細則列出候選方位和受光證據；單個距離點不能啟動側向；晴空建議不會覆蓋側向載體。"
+          "date": "2026-07-07",
+          "title": "濕霾空氣顯色軟下限",
+          "summary": "低能見度、雨後灰幕、AQI 和 AOD 同時指向同一團濕霾時，不再把相關證據無限連乘；非極端污染下給空氣顯色軟下限，極端沙塵／重霾仍保持重罰。",
+          "validation": "驗證：2026-07-03 北京濕霾高雲樣本從 28.1 調整到 32.5，仍保持無火燒雲；真實校準樣本庫和完整後端單測通過。"
         },
         "layerBrightness": {
           "date": "2026-06-13",
@@ -390,10 +390,10 @@ const translations = {
         "layerDiversity": {
           "title": "4. 空氣顯色",
           "subtitle": "Air Rendering · 顏色品質",
-          "desc": "空氣顯色只解釋顏色品質：能見度、濕度、雨後狀態、AOD/PM/dust 會共同影響紅橙色強弱。",
+          "desc": "空氣顯色只解釋顏色品質：能見度、濕度、雨後狀態、AOD/PM/dust 會共同影響紅橙色強弱；相關濕霾證據會做軟下限校準，避免重複連乘過殺。",
           "threeLayer": "光路開且雲幕不灰：輕／中度顆粒可增強暖色",
           "twoLayer": "中高雲滿鋪且 PM/AOD、水氣或直射光偏弱：按灰幕／厚雲壓力連續壓低顯色",
-          "oneLayer": "降水和低能見度會降低顏色清晰度"
+          "oneLayer": "降水和低能見度會降低顏色清晰度；非極端濕霾不會把同一證據無限連乘"
         },
         "lowCloudPenalty": {
           "title": "5. 限制因素",
@@ -431,7 +431,7 @@ const translations = {
           "highCloudCap": "高雲充足但光路被擋時，會先體現在受光亮度變弱。",
           "carrier": "基礎分 = Σ(分層載體 × 分層受光亮度)",
           "lightGate": "光路已經併入受光亮度，不再單獨顯示成最終乘子",
-          "rendering": "空氣顯色用於解釋顏色品質，不再把氣溶膠弱載體重複顯示成最終加分",
+          "rendering": "空氣顯色用於解釋顏色品質；低能見度、雨後灰幕、AQI 和 AOD 屬於同一團濕霾證據時使用軟下限，不再把氣溶膠弱載體重複顯示成最終加分",
           "statusCaps": "顯示分還會按狀態校準：無火燒雲低於 40，輕微霞光低於 60；幾何不可行、厚雲、灰幕和雨低雲會進一步封頂"
         }
       }
@@ -633,6 +633,7 @@ const translations = {
           "layerBrightnessMultiplier": "有效亮度 {{brightness}}；壓暗證據：{{evidence}}",
           "layerContribution": "{{layer}}：載體 {{carrier}} × 受光 {{brightness}} = {{score}}",
           "renderingFactors": "能見度 ×{{visibility}}，濕度 ×{{humidity}}，氣溶膠 ×{{aerosol}}",
+          "renderingCorrelationFloor": "濕霾相關證據軟下限：原始 ×{{raw}} → ×{{floor}}",
           "afterAdjustments": "結合天氣和能見度後",
           "finalDisplayed": "最終顯示結果",
           "thickCloudCap": "厚雲幕或灰幕會削弱真實可染色效果",

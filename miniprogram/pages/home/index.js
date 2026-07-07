@@ -2286,6 +2286,9 @@ function buildHomeRenderingEvidence(rendering = {}) {
   if (breakdown.visibility) parts.push(`能见度 ${breakdown.visibility}`);
   if (breakdown.humidity) parts.push(`湿度 ${breakdown.humidity}`);
   if (breakdown.aerosol) parts.push(`气溶胶 ${breakdown.aerosol}`);
+  if (Number.isFinite(Number(rendering.rawFactor)) && Number.isFinite(Number(rendering.correlationFloor)) && Number(rendering.correlationFloor) > Number(rendering.rawFactor)) {
+    parts.push(`湿霾相关证据软下限 ${roundHomeTwo(rendering.rawFactor)}→${roundHomeTwo(rendering.correlationFloor)}`);
+  }
   if (breakdown.colorTendency) parts.push(`色彩倾向 ${breakdown.colorTendency}`);
   return parts.join('；') || '能见度、湿度、气溶胶和降水后状态共同影响空气显色。';
 }

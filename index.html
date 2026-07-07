@@ -632,11 +632,11 @@
               <span data-i18n="home.methodology.sections.layerDiversity.title">4. 空气显色</span>
               <small data-i18n="home.methodology.sections.layerDiversity.subtitle">Air Rendering · 颜色质量</small>
             </h3>
-            <p data-i18n="home.methodology.sections.layerDiversity.desc">空气显色只解释颜色质量：能见度、湿度、雨后状态、AOD/PM/dust 会共同影响红橙色强弱。</p>
+            <p data-i18n="home.methodology.sections.layerDiversity.desc">空气显色只解释颜色质量：能见度、湿度、雨后状态、AOD/PM/dust 会共同影响红橙色强弱；相关湿霾证据会做软下限校准，避免重复连乘过杀。</p>
             <ul class="methodology-detail-list">
               <li data-i18n="home.methodology.sections.layerDiversity.threeLayer">光路开且云幕不灰：轻/中度颗粒可增强暖色</li>
               <li data-i18n="home.methodology.sections.layerDiversity.twoLayer">中高云满铺且 PM/AOD、水汽或直射光偏弱：按灰幕/厚云压力连续压低显色</li>
-              <li data-i18n="home.methodology.sections.layerDiversity.oneLayer">降水和低能见度会降低颜色清晰度</li>
+              <li data-i18n="home.methodology.sections.layerDiversity.oneLayer">降水和低能见度会降低颜色清晰度；非极端湿霾不会把同一证据无限连乘</li>
             </ul>
           </article>
 
@@ -743,11 +743,11 @@
           <div class="methodology-changelog-scroll" tabindex="0" role="region" aria-labelledby="methodology-changelog-title">
             <ol class="methodology-changelog-list">
               <li>
-                <time datetime="2026-06-26" data-i18n="home.methodology.changelog.latest.date">2026-06-26</time>
+                <time datetime="2026-07-07" data-i18n="home.methodology.changelog.latest.date">2026-07-07</time>
                 <div>
-                  <strong data-i18n="home.methodology.changelog.latest.title">侧向可视云带受光 v2</strong>
-                  <p data-i18n="home.methodology.changelog.latest.summary">主太阳光路仍按太阳方位严格判断；侧向可视扇区只作为额外云载体进入评分，并按主光路通透度、方位角衰减、云高/距离仰角、空气透射和云层类型计算受光。</p>
-                  <small data-i18n="home.methodology.changelog.latest.validation">验证：侧向云带可在评分细则列出候选方位和受光证据；单个距离点不能激活侧向；晴空建议不会覆盖侧向载体。</small>
+                  <strong data-i18n="home.methodology.changelog.latest.title">湿霾空气显色软下限</strong>
+                  <p data-i18n="home.methodology.changelog.latest.summary">低能见度、雨后灰幕、AQI 和 AOD 同时指向同一团湿霾时，不再把相关证据无限连乘；非极端污染下给空气显色软下限，极端沙尘/重霾仍保持重罚。</p>
+                  <small data-i18n="home.methodology.changelog.latest.validation">验证：2026-07-03 北京湿霾高云样本从 28.1 调整到 32.5，仍保持无火烧云；真实校准样本库和完整后端单测通过。</small>
                 </div>
               </li>
               <li>
@@ -817,7 +817,7 @@
             </ol>
           </div>
           <div class="methodology-version-card">
-            <strong data-i18n="home.methodology.versionLabel">算法说明版本：2026.06.26-visible-sector-illumination-v2</strong>
+            <strong data-i18n="home.methodology.versionLabel">算法说明版本：2026.07.07-wet-haze-rendering-floor</strong>
             <span data-i18n="home.methodology.versionDesc">本版说明与结果页计算依据一致：先比较本地云层、远端分层载体、侧向可视云带和气溶胶弱载体，再展开受光亮度、空气显色与最终分。</span>
           </div>
         </div>

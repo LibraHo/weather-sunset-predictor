@@ -270,16 +270,16 @@ const translations = {
     "methodology": {
       "title": "Fire Cloud Calculation Method",
       "intro": "The current Fire Cloud Index is presented as carrier candidates, main/side-sector illumination, air rendering, and score caps. The result-page evidence focuses on whether the cloud can actually be lit, and why abundant high cloud can still be suppressed by gray veil, thick cloud, moisture, or weak direct beam.",
-      "versionLabel": "Methodology version: 2026.06.26-visible-sector-illumination-v2",
+      "versionLabel": "Methodology version: 2026.07.07-wet-haze-rendering-floor",
       "versionDesc": "This version matches the result-page score ledger: compare local cloud, remote layer carriers, visible side-sector carriers, and weak aerosol carriers, then show illumination, air rendering, and the final score.",
       changelogTitle: "Version update history",
       changelogHint: "Algorithm updates from the last three months live here; scroll to review why each change happened, its impact, and validation",
       changelog: {
         "latest": {
-          "date": "2026-06-26",
-          "title": "Visible side-sector illumination v2",
-          "summary": "The main solar path stays strict. Visible side sectors only add carrier evidence, and their illumination is scored from main-path openness, azimuth falloff, cloud-height/distance elevation, air transmission, and cloud-layer type.",
-          "validation": "Validation: score details list the side-sector bearing and illumination evidence; one isolated distance point cannot activate the side sector; clear-sunset advice no longer overrides the side-sector carrier."
+          "date": "2026-07-07",
+          "title": "Wet-haze air-rendering soft floor",
+          "summary": "When low visibility, post-rain gray curtain, AQI, and AOD point to the same wet-haze evidence, the model no longer multiplies that correlated evidence without bound. Non-extreme pollution gets an air-rendering soft floor; extreme dust or heavy haze still stays heavily penalized.",
+          "validation": "Validation: the 2026-07-03 Beijing wet-haze high-cloud case moves from 28.1 to 32.5 while remaining no-fire-cloud; the real calibration library and full backend unit suite pass."
         },
         "layerBrightness": {
           "date": "2026-06-13",
@@ -390,10 +390,10 @@ const translations = {
         "layerDiversity": {
           "title": "4. Air Rendering",
           "subtitle": "Air Rendering · Color quality",
-          "desc": "Air rendering explains color quality only: visibility, humidity, post-rain state, AOD/PM/dust jointly affect warm red-orange color strength.",
+          "desc": "Air rendering explains color quality only: visibility, humidity, post-rain state, and AOD/PM/dust jointly affect warm red-orange color strength; correlated wet-haze evidence uses a soft floor to avoid over-stacking the same signal.",
           "threeLayer": "Open path with a non-gray cloud deck: light to moderate particles can enhance warmth",
           "twoLayer": "Full mid/high cloud with elevated PM/AOD, moisture, or weak direct beam: gray-veil and thick-cloud pressure continuously lower rendering",
-          "oneLayer": "Precipitation and low visibility reduce color clarity"
+          "oneLayer": "Precipitation and low visibility reduce color clarity; non-extreme wet haze does not multiply the same evidence without bound"
         },
         "lowCloudPenalty": {
           "title": "5. Caps",
@@ -431,7 +431,7 @@ const translations = {
           "highCloudCap": "When high clouds are rich but the light path is blocked, it first weakens layer brightness.",
           "carrier": "Base score = Σ(layer carrier × layer brightness)",
           "lightGate": "Light path is already folded into layer brightness, so it is not shown as a separate final multiplier",
-          "rendering": "Air rendering explains color quality; weak aerosol carrier is not repeated as a final-score bonus",
+          "rendering": "Air rendering explains color quality; when low visibility, post-rain gray curtain, AQI, and AOD describe the same wet-haze evidence, a soft floor is used, and the weak aerosol carrier is not repeated as a final-score bonus",
           "statusCaps": "Display score is status-calibrated: no-fire-cloud stays below 40, light glow below 60; geometry failure, thick cloud, gray curtain, and rainy low cloud can cap it further"
         }
       }
@@ -631,6 +631,7 @@ const translations = {
           "layerBrightnessMultiplier": "effective brightness {{brightness}}; dim evidence: {{evidence}}",
           "layerContribution": "{{layer}}: carrier {{carrier}} × brightness {{brightness}} = {{score}}",
           "renderingFactors": "visibility ×{{visibility}}, humidity ×{{humidity}}, aerosol ×{{aerosol}}",
+          "renderingCorrelationFloor": "correlated wet-haze evidence is softened: raw ×{{raw}} -> floor ×{{floor}}",
           "afterAdjustments": "after weather and visibility adjustments",
           "finalDisplayed": "final displayed result",
           "thickCloudCap": "thick cloud or gray curtain reduces usable color rendering",
