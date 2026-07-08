@@ -870,6 +870,31 @@ describe('PredictionController', () => {
       expect(html).not.toContain('71.1 + 显色修正 6.0 = 77.1');
     });
 
+    test('分数明细应把湿霾开光路中间档显示成中文解释', () => {
+      const html = predictionController.renderScoreBreakdownPopover({
+        score: 46,
+        breakdown: {
+          baseScore: 68.1,
+          canvasScore: 77,
+          carrierScore: 77,
+          lightPathScore: 83.1,
+          lightPathGate: 0.9,
+          renderingFactor: 0.68,
+          renderingMode: 'wet_haze_path_open_mid_rendering',
+          unclampedFinalScore: 46.3
+        },
+        canvasAnalysis: { score: 77 },
+        carrierAnalysis: { score: 77 },
+        lightPathAnalysis: { score: 83.1 },
+        lightPathGate: { gate: 0.9 },
+        renderingAnalysis: { factor: 0.68, visibilityFactor: 0.8, humidityFactor: 0.9, aerosolFactor: 0.85 },
+        aerosolHazeCap: { applied: true, cap: 55, level: 'wet_haze_mid', reason: 'wet_haze_path_open_mid_rendering' }
+      });
+
+      expect(html).toContain('光路打开但湿霾偏重，按中等显色并限制上限');
+      expect(html).not.toContain('wet_haze_path_open_mid_rendering');
+    });
+
     test('分数明细应展示云层画布、云种和云厚扣分来源', () => {
       const html = predictionController.renderScoreBreakdownPopover({
         score: 49,

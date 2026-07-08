@@ -7,6 +7,25 @@
 3. 火烧云形成条件文字分析
 4. 对应回归测试/样本回放
 
+## 2026.07.08-wet-haze-open-path-mid-rendering
+
+- 日期：2026-07-08
+- 代码：`server/services/EnhancedPredictionService.js`、`src/controllers/PredictionController.js`、`src/locales/*.js`、`miniprogram/pages/methodology/index.js`
+- 背景：北京 2026-07-07 晚霞现场约 50 分，旧生产回放约 35。该样本不是清透高分，也不是完全灰幕；西侧光路打开、本地/近端高云充足，但湿度、AOD/PM 和水汽偏高，应限制上限而不是把分数压穿。
+- 改动：
+  - 雨后灰幕的 `waterVapourColumn` 阈值从 `>7` 收紧到 `>=38`，避免普通水汽数据单独误触发灰幕。
+  - 新增 `wet_haze_path_open_mid_rendering`：光路打开、高云载体强、低云未封死且非暴雨/极端污染时，湿霾空气显色进入中间档。
+  - `hardBlocked` 拆成 hard/soft：明显降水、低能见度、低云封死或极端污染仍硬压；小雨尾巴/雨后湿但光路开时只限制上限。
+  - 避免分层受光亮度已因水汽/AOD/弱直射压暗后，空气显色再用同一批湿霾证据连续乘到底。
+- 预期影响：
+  - 湿霾但光路打开的中等晚霞可进入 45-55 分。
+  - 真雨幕、强灰幕、极端污染样本仍保持低分。
+- 回归测试：
+  - `tests/fixtures/real-sunset-cases/2026-07-07-beijing-sunset.json`：北京湿霾开光路样本目标 45-55。
+  - `tests/fixtures/real-sunset-cases/2026-06-13-beijing-sunset.json`：真雨幕低分样本保持约 24。
+  - `tests/unit/server/real-sunset-case-library.test.js`：真实样本统一回放。
+  - `tests/unit/controllers/PredictionController.test.js`、`tests/unit/home-methodology-structure.test.js`、`tests/unit/miniprogram/methodology-page.test.js`：评分细则和方法页文案同步。
+
 ## 2026.06.18-remote-layer-carriers-v1
 
 - 日期：2026-06-18

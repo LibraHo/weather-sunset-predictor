@@ -33,6 +33,8 @@ describe('miniprogram methodology page', () => {
     expect(js).toContain('70-84 分');
     expect(js).toContain('40-69 分');
     expect(js).toContain('<40 分');
+    expect(js).toContain('湿霾开光路中间档');
+    expect(js).toContain('硬阻断拆成 hard/soft');
     expect(js).toContain('远端分层载体 v1');
     expect(js).toContain('候选载体');
     expect(js).toContain('本地云层展开');
@@ -47,6 +49,7 @@ describe('miniprogram methodology page', () => {
     expect(js).toContain('高云×0.75 + 中云×0.45');
     expect(js).toContain('Σ(layerCarrier × layerBrightness)');
     expect(js).toContain('airRendering');
+    expect(js).toContain('中等显色档');
     expect(js).toContain('localCloud, remoteLayer, aerosolWeakCarrier');
     expect(js).toContain('受光亮度');
     expect(js).toContain('光路已经并入亮度');

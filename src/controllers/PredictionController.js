@@ -2258,6 +2258,7 @@ class PredictionController {
       severe_haze_cap_35: ledgerText('reasons.severeHazeCap35', {}, 'heavy haze makes colors hard to show', '重度灰霾让颜色不容易出来'),
       moderate_haze_cap_45: ledgerText('reasons.moderateHazeCap45', {}, 'haze weakens orange-red color', '灰霾会削弱红橙色'),
       haze_warm_scattering_path_open: ledgerText('reasons.hazeWarmScatteringPathOpen', {}, 'open sunset path turns moderate particles into warm orange-red scattering', '日落光路打开，适度颗粒增强橙红散射'),
+      wet_haze_path_open_mid_rendering: ledgerText('reasons.wetHazePathOpenMidRendering', {}, 'open path with wet haze keeps the glow in a capped mid-score range', '光路打开但湿霾偏重，按中等显色并限制上限'),
       full_upper_cloud_gray_veil_air_rendering: ledgerText('reasons.fullUpperCloudGrayVeilAirRendering', {}, 'full mid/high cloud plus dirty air suppresses color rendering', '满铺中高云叠加偏脏空气，显色转为灰幕抑制')
     }[reason] || reason || ledgerText('reasons.adjustmentApplied', {}, 'score adjusted for limiting conditions', '已按限制条件修正'));
 

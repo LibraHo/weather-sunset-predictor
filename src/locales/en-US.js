@@ -270,16 +270,16 @@ const translations = {
     "methodology": {
       "title": "Fire Cloud Calculation Method",
       "intro": "The current Fire Cloud Index is presented as carrier candidates, main/side-sector illumination, air rendering, and score caps. The result-page evidence focuses on whether the cloud can actually be lit, and why abundant high cloud can still be suppressed by gray veil, thick cloud, moisture, or weak direct beam.",
-      "versionLabel": "Methodology version: 2026.07.07-wet-haze-rendering-floor",
+      "versionLabel": "Methodology version: 2026.07.08-wet-haze-open-path-mid-rendering",
       "versionDesc": "This version matches the result-page score ledger: compare local cloud, remote layer carriers, visible side-sector carriers, and weak aerosol carriers, then show illumination, air rendering, and the final score.",
       changelogTitle: "Version update history",
       changelogHint: "Algorithm updates from the last three months live here; scroll to review why each change happened, its impact, and validation",
       changelog: {
         "latest": {
-          "date": "2026-07-07",
-          "title": "Wet-haze air-rendering soft floor",
-          "summary": "When low visibility, post-rain gray curtain, AQI, and AOD point to the same wet-haze evidence, the model no longer multiplies that correlated evidence without bound. Non-extreme pollution gets an air-rendering soft floor; extreme dust or heavy haze still stays heavily penalized.",
-          "validation": "Validation: the 2026-07-03 Beijing wet-haze high-cloud case moves from 28.1 to 32.5 while remaining no-fire-cloud; the real calibration library and full backend unit suite pass."
+          "date": "2026-07-08",
+          "title": "Wet-haze open-path mid rendering",
+          "summary": "When the path is open, high-cloud carrier is strong, low clouds are not sealed, but air is wet and gray, the model uses a capped mid-rendering wet-haze band. Water vapour no longer triggers the post-rain gray curtain by itself, and hard blocking is split into hard/soft cases.",
+          "validation": "Validation: the 2026-07-07 Beijing wet-haze open-path case moves from 35 to 46; the 2026-06-13 active rain-curtain case stays around 24; the real calibration library and backend unit suite pass."
         },
         "layerBrightness": {
           "date": "2026-06-13",
@@ -660,6 +660,7 @@ const translations = {
           "severeHazeCap35": "heavy haze makes colors hard to show",
           "moderateHazeCap45": "haze weakens orange-red color",
           "hazeWarmScatteringPathOpen": "open sunset path turns moderate particles into warm orange-red scattering",
+          "wetHazePathOpenMidRendering": "open path with wet haze keeps the glow in a capped mid-score range",
           "fullUpperCloudGrayVeilAirRendering": "full mid/high cloud plus dirty air suppresses color rendering",
           "denseCarrierCanvasOnly": "mid/high clouds can still catch sunset light",
           "adjustmentApplied": "score adjusted for limiting conditions",

@@ -270,16 +270,16 @@ const translations = {
     "methodology": {
       "title": "火燒雲計算方法",
       "intro": "目前的火燒雲指數按「候選載體 → 側向／主光路受光亮度 → 空氣顯色 → 封頂校準」展示。結果頁只呈現這條主鏈路，重點說明雲是否能被照亮，以及為什麼高雲很多時仍可能被灰幕、厚雲、水氣或弱直射壓低。",
-      "versionLabel": "算法說明版本：2026.07.07-wet-haze-rendering-floor",
+      "versionLabel": "算法說明版本：2026.07.08-wet-haze-open-path-mid-rendering",
       "versionDesc": "本版說明與結果頁計算依據一致：先比較本地雲層、遠端分層載體、側向可視雲帶和氣溶膠弱載體，再展開受光亮度、空氣顯色與最終分。",
       changelogTitle: "版本更新記錄",
       changelogHint: "近三個月內的算法更新都會放在這裡，可捲動回看原因、影響和驗證方式",
       changelog: {
         "latest": {
-          "date": "2026-07-07",
-          "title": "濕霾空氣顯色軟下限",
-          "summary": "低能見度、雨後灰幕、AQI 和 AOD 同時指向同一團濕霾時，不再把相關證據無限連乘；非極端污染下給空氣顯色軟下限，極端沙塵／重霾仍保持重罰。",
-          "validation": "驗證：2026-07-03 北京濕霾高雲樣本從 28.1 調整到 32.5，仍保持無火燒雲；真實校準樣本庫和完整後端單測通過。"
+          "date": "2026-07-08",
+          "title": "濕霾開光路中間檔",
+          "summary": "光路打開、高雲載體充足、低雲未封死但空氣偏濕偏灰時，進入濕霾中等顯色檔；水氣不再單獨觸發雨後灰幕，硬阻斷拆成 hard/soft。",
+          "validation": "驗證：2026-07-07 北京濕霾開光路樣本從 35 調整到 46；2026-06-13 真雨幕仍保持約 24；真實校準樣本庫和後端單測通過。"
         },
         "layerBrightness": {
           "date": "2026-06-13",
@@ -662,6 +662,7 @@ const translations = {
           "severeHazeCap35": "重度灰霾讓顏色不容易出來",
           "moderateHazeCap45": "灰霾會削弱紅橙色",
           "hazeWarmScatteringPathOpen": "日落光路打開，適度顆粒增強橙紅散射",
+          "wetHazePathOpenMidRendering": "光路打開但濕霾偏重，按中等顯色並限制上限",
           "fullUpperCloudGrayVeilAirRendering": "滿鋪中高雲疊加偏髒空氣，顯色轉為灰幕抑制",
           "denseCarrierCanvasOnly": "中高雲層仍能承接晚霞光線",
           "adjustmentApplied": "已按限制條件修正",

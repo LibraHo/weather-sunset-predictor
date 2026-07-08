@@ -29,11 +29,11 @@ Page({
       { title: '1. 候选载体', formula: 'carrier = max(localCloud, remoteLayer, aerosolWeakCarrier)', desc: '展示本地云层、远端分层、气溶胶三项候选，并明确采用哪一项。' },
       { title: '2. 本地云层展开', formula: 'localCloud = rangeScore + cloudTypeAdjustment + thicknessAdjustment', desc: '例如：中高云画布 37.1 → 区间分 75.9；云种 +4.0；云厚 -2.0。' },
       { title: '3. 基础分', formula: 'base = Σ(layerCarrier × layerBrightness)', desc: '分层载体和分层受光亮度共同决定基础分；光路已经并入亮度。' },
-      { title: '4. 空气显色', formula: 'rendered = base × airRendering', desc: '空气显色解释颜色质量；低能见度、雨后灰幕、AQI 和 AOD 属于同一团湿霾证据时使用软下限，避免重复连乘过杀。' },
+      { title: '4. 空气显色', formula: 'rendered = base × airRendering', desc: '空气显色解释颜色质量；光路打开、高云载体充足但空气湿灰时进入中等显色档，限制上限但不按纯灰幕压穿。' },
       { title: '5. 最终显示分', formula: 'score = clamp(rendered, 0, 100) + status caps', desc: '无火烧云 <40，轻微霞光 <60；几何不可行、厚云、满铺灰幕、雨低云会进一步压制。' }
     ],
     changelog: [
-      { date: '2026-07-07', title: '湿霾空气显色软下限', summary: '低能见度、雨后灰幕、AQI 和 AOD 同时指向同一团湿霾时，不再把相关证据无限连乘；非极端污染下给空气显色软下限，极端沙尘/重霾仍保持重罚。' },
+      { date: '2026-07-08', title: '湿霾开光路中间档', summary: '光路打开、高云载体充足、低云未封死但空气偏湿偏灰时，进入湿霾中等显色档；水汽不再单独触发雨后灰幕，硬阻断拆成 hard/soft。' },
       { date: '2026-06-18', title: '远端分层载体 v1', summary: '日落方向云拆成远端高云、远端中云和远端低云遮挡，再进入 Σ(分层载体 × 分层受光亮度)。' },
       { date: '2026-06-13', title: '分层求和亮度公式 v1', summary: '最终分改为 Σ(分层载体 × 分层受光亮度) × 空气显色；受光亮度采用对数饱和响应，光路继续作为内部因子。' },
       { date: '2026-06-06', title: '灰幕空气显色 + 方向中云带 v2', summary: '满铺中高云叠加 PM/AOD 偏高时按灰幕压力连续降低显色；太阳方向中云带改为连续载体，强光路下可进入 50-60 档。' },
