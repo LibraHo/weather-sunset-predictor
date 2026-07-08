@@ -537,6 +537,24 @@ describe('EnhancedPredictionService', () => {
       expect(result.breakdown.specialMode).toBe('post_rain');
     });
 
+    test('should not classify ordinary water vapour alone as post-rain gray curtain', () => {
+      const weatherData = {
+        visibility: 15,
+        humidity: 70,
+        aqi: 80,
+        aerosolOpticalDepth: 0.25,
+        pm2_5: 20,
+        pm10: 35,
+        waterVapourColumn: 30,
+        recentRainSignal: 0.8,
+        recentPrecipitation6h: 1.2
+      };
+      const result = EnhancedPredictionService.scoreRendering(weatherData, true);
+
+      expect(result.rainBonus).toBeGreaterThan(1);
+      expect(result.breakdown.specialMode).toBe('post_rain_clear');
+    });
+
     test('should not treat trace precipitation plus haze as post-rain gray curtain', () => {
       const weatherData = {
         visibility: 15,
