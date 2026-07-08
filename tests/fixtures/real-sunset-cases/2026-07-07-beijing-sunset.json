@@ -1,0 +1,131 @@
+{
+  "id": "2026-07-07-beijing-sunset-wet-haze-open-path-mid-glow",
+  "title": "2026-07-07 Beijing sunset: wet haze open path should stay mid score",
+  "location": {
+    "name": "Beijing",
+    "nameZh": "北京",
+    "lat": 39.9042,
+    "lon": 116.4074,
+    "timezone": "Asia/Shanghai"
+  },
+  "event": {
+    "period": "sunset",
+    "localDate": "2026-07-07",
+    "calculationTimeUtc": "2026-07-07T11:46:00.000Z",
+    "sunAzimuth": 304
+  },
+  "feedback": {
+    "source": "Alex现场校准反馈 + 生产 closed-loop 回放",
+    "reportedAt": "2026-07-08T12:02:34+08:00",
+    "summary": "北京当天晚霞实况约 50 分左右。生产回放路径已开、高云载体强，但湿度、AOD/PM 和水汽把空气显色按 heavy haze 压到约 35；该样本应落在中等显色，而不是弱光低分。",
+    "subjectiveScore": {
+      "min": 45,
+      "max": 55,
+      "label": "主观约 50"
+    },
+    "calibrationTarget": {
+      "score": 50,
+      "status": "wet_haze_open_path_mid_glow",
+      "reason": "西侧光路开放且本地/近端高云充足；湿霾和高水汽应限制上限，但不应把中等可见颜色压到 35 以下。"
+    },
+    "actualOutcome": {
+      "fireCloud": "good_glow",
+      "rainDuringWindow": false,
+      "orangeLightOrOpening": true,
+      "worthWaiting": true,
+      "notes": "用于校准湿霾开光路场景，防止空气显色和分层亮度对同一湿灰证据重复强扣。"
+    },
+    "previousModelScores": [
+      {
+        "score": 23.1,
+        "source": "2026-07-07 线上解释链路：canvasScore 77、guarded light 44.5、airFactor 0.52。"
+      },
+      {
+        "score": 35,
+        "source": "2026-07-08 生产 closed-loop 回放：lightPathScore 83.1、gate 0.90、renderingFactor 0.61、airMode heavy_haze_suppression。"
+      }
+    ]
+  },
+  "capture": {
+    "dataCompleteness": "production_closed_loop_replay",
+    "predictionReplay": "enhanced_detail_calculateEnhancedPrediction",
+    "sourceFiles": [
+      "telegram:-5258255173 messages 42733-42745",
+      "https://sunset.bjhyc.online/api/prediction/enhanced production replay 2026-07-08"
+    ],
+    "knownLimitations": [
+      "生产回放固定的是 Open-Meteo closed-loop 返回的日落窗口样本；该样本用于详细预测校准，不替代地图格点/GFS-CAMS 校准。",
+      "此前同日线上解释链路曾出现更低的 23.1 分，本 fixture 锁定当前可复现的生产回放输入并保留 23.1 作为历史低估证据。"
+    ]
+  },
+  "input": {
+    "weatherData": {
+      "cloudCover": 100,
+      "humidity": 94,
+      "visibility": 8,
+      "lowCloudCover": 24,
+      "temp": 22.2,
+      "windSpeed": 1.56,
+      "windDirection": 135,
+      "pressure": 993.9,
+      "precipitation": 0,
+      "recentPrecipitation6h": 0,
+      "recentRainHours": 0,
+      "recentRainSignal": 0,
+      "recentRainMaxHourly": 0,
+      "recentRainWetHourEquivalent": 0,
+      "lowClouds": 24,
+      "midClouds": 10,
+      "highClouds": 100,
+      "cloudBaseHeight": null,
+      "cloudBaseHeightSource": "unavailable",
+      "cape": null,
+      "weatherCode": null,
+      "shortwaveRadiation": 0,
+      "directRadiation": 0,
+      "diffuseRadiation": 0,
+      "waterVapourColumn": 46,
+      "aerosolOpticalDepth": 0.83,
+      "dust": 5,
+      "pm2_5": 81.7,
+      "pm10": 84.3,
+      "aqi": 128
+    },
+    "options": {
+      "remoteCloudData": {
+        "source": "sunset_visible_sector_openmeteo",
+        "azimuth": 304,
+        "samples": [
+          { "distanceKm": 10, "bearing": 304, "cloudBaseHeight": null, "cloudBaseHeightSource": "unavailable", "lowCloud": 24, "midCloud": 8, "highCloud": 100, "totalCloud": 99, "humidity": 93, "precipitation": 0, "weatherCode": null, "provider": "openmeteo", "error": null },
+          { "distanceKm": 25, "bearing": 304, "cloudBaseHeight": null, "cloudBaseHeightSource": "unavailable", "lowCloud": 24, "midCloud": 8, "highCloud": 100, "totalCloud": 99, "humidity": 93, "precipitation": 0, "weatherCode": null, "provider": "openmeteo", "error": null },
+          { "distanceKm": 50, "bearing": 304, "cloudBaseHeight": null, "cloudBaseHeightSource": "unavailable", "lowCloud": 53, "midCloud": 14, "highCloud": 35, "totalCloud": 76, "humidity": 99, "precipitation": 0, "weatherCode": null, "provider": "openmeteo", "error": null },
+          { "distanceKm": 75, "bearing": 304, "cloudBaseHeight": null, "cloudBaseHeightSource": "unavailable", "lowCloud": 20, "midCloud": 15, "highCloud": 33, "totalCloud": 3, "humidity": 94, "precipitation": 0, "weatherCode": null, "provider": "openmeteo", "error": null },
+          { "distanceKm": 100, "bearing": 304, "cloudBaseHeight": null, "cloudBaseHeightSource": "unavailable", "lowCloud": 1, "midCloud": 16, "highCloud": 2, "totalCloud": 4, "humidity": 87, "precipitation": 0, "weatherCode": null, "provider": "openmeteo", "error": null }
+        ],
+        "errors": []
+      }
+    }
+  },
+  "expectations": {
+    "score": {
+      "min": 45,
+      "max": 55
+    },
+    "statusAnyOf": [
+      "good_glow"
+    ],
+    "equals": [
+      {
+        "path": "scoringV2.airMode",
+        "value": "wet_haze_path_open_mid_rendering"
+      }
+    ],
+    "notAbove": [
+      {
+        "path": "score",
+        "value": 55,
+        "reason": "High humidity, high AOD/PM, and high water vapour should cap this as a mid-score wet haze event, not a high-confidence burn."
+      }
+    ]
+  }
+}

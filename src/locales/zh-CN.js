@@ -278,16 +278,16 @@ export default {
     methodology: {
       title: '火烧云计算方法',
       intro: '当前火烧云指数按“候选载体 → 侧向/主光路受光亮度 → 空气显色 → 封顶校准”展示。结果页只呈现这条主链路，重点说明云是否能被照亮，以及为什么高云很多时仍可能被灰幕、厚云、水汽或弱直射压低。',
-      versionLabel: '算法说明版本：2026.07.07-wet-haze-rendering-floor',
+      versionLabel: '算法说明版本：2026.07.08-wet-haze-open-path-mid-rendering',
       versionDesc: '本版说明与结果页计算依据一致：先比较本地云层、远端分层载体、侧向可视云带和气溶胶弱载体，再展开受光亮度、空气显色与最终分。',
       changelogTitle: "版本更新记录",
       changelogHint: "近三个月内的算法更新都会放在这里，可滚动回看原因、影响和验证方式",
       changelog: {
         latest: {
-          date: '2026-07-07',
-          title: '湿霾空气显色软下限',
-          summary: '低能见度、雨后灰幕、AQI 和 AOD 同时指向同一团湿霾时，不再把相关证据无限连乘；非极端污染下给空气显色软下限，极端沙尘/重霾仍保持重罚。',
-          validation: '验证：2026-07-03 北京湿霾高云样本从 28.1 调整到 32.5，仍保持无火烧云；真实校准样本库和完整后端单测通过。'
+          date: '2026-07-08',
+          title: '湿霾开光路中间档',
+          summary: '光路打开、高云载体充足、低云未封死但空气偏湿偏灰时，进入湿霾中等显色档；水汽不再单独触发雨后灰幕，硬阻断拆成 hard/soft。',
+          validation: '验证：2026-07-07 北京湿霾开光路样本从 35 调整到 46；2026-06-13 真雨幕仍保持约 24；真实校准样本库和后端单测通过。'
         },
         layerBrightness: {
           date: '2026-06-13',
@@ -686,6 +686,7 @@ export default {
           severeHazeCap35: '重度灰霾让颜色不容易出来',
           moderateHazeCap45: '灰霾会削弱红橙色',
           hazeWarmScatteringPathOpen: '日落光路打开，适度颗粒增强橙红散射',
+          wetHazePathOpenMidRendering: '光路打开但湿霾偏重，按中等显色并限制上限',
           fullUpperCloudGrayVeilAirRendering: '满铺中高云叠加偏脏空气，显色转为灰幕抑制',
           denseCarrierCanvasOnly: '中高云层仍能承接晚霞光线',
           adjustmentApplied: '已按限制条件修正',

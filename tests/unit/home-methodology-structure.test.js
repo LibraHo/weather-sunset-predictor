@@ -57,10 +57,10 @@ describe('home methodology structure', () => {
     ];
     const localeTexts = localeFiles.map(file => fs.readFileSync(path.join(ROOT, 'src/locales', file), 'utf8'));
 
-    expect(html).toContain('2026-07-07');
-    expect(html).toContain('2026.07.07-wet-haze-rendering-floor');
-    expect(html).toContain('湿霾空气显色软下限');
-    expect(html).toContain('相关证据无限连乘');
+    expect(html).toContain('2026-07-08');
+    expect(html).toContain('2026.07.08-wet-haze-open-path-mid-rendering');
+    expect(html).toContain('湿霾开光路中间档');
+    expect(html).toContain('硬阻断拆成 hard/soft');
     expect(html).toContain('远端高云、远端中云和远端低云遮挡');
     expect(html).toContain('分层求和亮度公式 v1');
     expect(html).toContain('2026-06-03');
@@ -69,7 +69,7 @@ describe('home methodology structure', () => {
     expect(html).toContain('满铺中高云叠加 PM/AOD 偏高');
     expect(html).toContain('方向中云越强，越接近 50-60 档');
     expect(html).toContain('云厚比例折损 v2');
-    expect(html).toContain('2026-07-03 北京湿霾高云样本');
+    expect(html).toContain('2026-07-07 北京湿霾开光路样本');
     expect(html).not.toContain('载体缓冲');
     expect(html).not.toContain('低太阳透射 未命中');
 
@@ -78,9 +78,9 @@ describe('home methodology structure', () => {
       .map(file => fs.readFileSync(path.join(ROOT, 'src/locales', file), 'utf8'))
       .join('\n');
 
-    expect(coreLocaleTexts).toContain('2026.07.07-wet-haze-rendering-floor');
-    expect(coreLocaleTexts).toContain('Wet-haze air-rendering soft floor');
-    expect(coreLocaleTexts).toContain('濕霾空氣顯色軟下限');
+    expect(coreLocaleTexts).toContain('2026.07.08-wet-haze-open-path-mid-rendering');
+    expect(coreLocaleTexts).toContain('Wet-haze open-path mid rendering');
+    expect(coreLocaleTexts).toContain('濕霾開光路中間檔');
     expect(coreLocaleTexts).toContain('Layer-weighted brightness formula v1');
     expect(coreLocaleTexts).toContain('remote high cloud');
     expect(coreLocaleTexts).toContain('Sunset scoring v2');

@@ -12,7 +12,8 @@ const EXPECTED_REAL_CASE_IDS = [
   '2026-06-05-beijing-sunset-gray-veil-full-upper-cloud',
   '2026-06-12-beijing-sunrise-success',
   '2026-06-13-beijing-sunset-rain-wet-veil-low-score',
-  '2026-06-17-beijing-sunset-window-remote-high-carrier'
+  '2026-06-17-beijing-sunset-window-remote-high-carrier',
+  '2026-07-07-beijing-sunset-wet-haze-open-path-mid-glow'
 ];
 
 function readCases() {
