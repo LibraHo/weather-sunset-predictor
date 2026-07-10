@@ -95,9 +95,9 @@ describe('Spots API Integration', () => {
     expect(res.body.degraded).toBe(false);
     // 业务当前阈值 MIN_SPOT_SCORE=40，58 分也应被包含
     expect(res.body.spots).toEqual([
-      { lat: 31.2, lon: 121.5, score: 83, quality: '高分' },
-      { lat: 30.6, lon: 104.1, score: 60, quality: '可观赏' },
-      { lat: 39.9, lon: 116.4, score: 58, quality: '可观赏' }
+      { lat: 31.2, lon: 121.5, score: 83, quality: 'good', qualityLabelKey: 'prediction.good' },
+      { lat: 30.6, lon: 104.1, score: 60, quality: 'fair', qualityLabelKey: 'prediction.fair' },
+      { lat: 39.9, lon: 116.4, score: 58, quality: 'fair', qualityLabelKey: 'prediction.fair' }
     ]);
   });
 

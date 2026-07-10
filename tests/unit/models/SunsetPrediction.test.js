@@ -1,4 +1,5 @@
 import SunsetPrediction from '../../../src/models/SunsetPrediction.js';
+import { jest } from '@jest/globals';
 
 describe('SunsetPrediction', () => {
   test('getQualityLabel 应覆盖评分阈值分支', () => {
@@ -6,6 +7,13 @@ describe('SunsetPrediction', () => {
     expect(new SunsetPrediction(new Date(), 70, 'good', {}, new Date()).getQualityLabel()).toBe('高分');
     expect(new SunsetPrediction(new Date(), 40, 'fair', {}, new Date()).getQualityLabel()).toBe('可观赏');
     expect(new SunsetPrediction(new Date(), 39, 'poor', {}, new Date()).getQualityLabel()).toBe('低概率');
+  });
+
+  test('getQualityLabel 应通过语义 key 使用调用方的当前语言翻译', () => {
+    const prediction = new SunsetPrediction(new Date(), 85, 'excellent', {}, new Date());
+    const translate = jest.fn(key => ({ 'prediction.excellent': 'Top-tier' }[key]));
+    expect(prediction.getQualityLabel(translate)).toBe('Top-tier');
+    expect(translate).toHaveBeenCalledWith('prediction.excellent');
   });
 
   test('toJSON 与 fromJSON 应正确处理可选字段和默认 type', () => {

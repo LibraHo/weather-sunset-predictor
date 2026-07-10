@@ -1,8 +1,8 @@
 const DEFAULT_LEVELS = Object.freeze([
-  Object.freeze({ key: 'excellent', min: 85, labelZh: '顶级', labelEn: 'Rare', color: '#dc5a28' }),
-  Object.freeze({ key: 'good', min: 70, labelZh: '高分', labelEn: 'Strong', color: '#d97706' }),
-  Object.freeze({ key: 'fair', min: 40, labelZh: '可观赏', labelEn: 'Watch', color: '#b7793b' }),
-  Object.freeze({ key: 'poor', min: 0, labelZh: '低概率', labelEn: 'Low', color: '#7a6554' })
+  Object.freeze({ key: 'excellent', min: 85, labelKey: 'prediction.excellent' }),
+  Object.freeze({ key: 'good', min: 70, labelKey: 'prediction.good' }),
+  Object.freeze({ key: 'fair', min: 40, labelKey: 'prediction.fair' }),
+  Object.freeze({ key: 'poor', min: 0, labelKey: 'prediction.poor' })
 ]);
 
 let levels = DEFAULT_LEVELS;
@@ -24,7 +24,7 @@ export async function loadQualityLevelConfig(fetchImpl = globalThis.fetch) {
     const config = await response.json();
     levels = normalizeLevels(config?.levels) || DEFAULT_LEVELS;
   } catch (error) {
-    console.warn('[QualityLevels] 使用内置等级配置:', error.message);
+    console.warn('[QualityLevels] Falling back to built-in thresholds:', error.message);
     levels = DEFAULT_LEVELS;
   }
   return levels;

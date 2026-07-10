@@ -132,7 +132,7 @@ function dedupeStrings(values = []) {
 }
 
 function compactLocationName(rawName, address = {}) {
-  const city = address.city || address.town || address.municipality || address.village || address.county || '';
+  const city = address.city || address.town || address.municipality || address.village || address.county || address.locality || '';
   const district = address.city_district || address.district || address.suburb || '';
   const state = address.state || address.province || '';
   const country = address.country || '';
@@ -152,7 +152,7 @@ function compactLocationName(rawName, address = {}) {
     return area ? `${shortName}, ${area}` : shortName;
   }
 
-  return dedupeStrings(input.split(/[,，]/u)).slice(0, 3).join(', ') || input;
+  return dedupeStrings(input.split(/[,，]/u)).slice(0, 2).join(', ') || input;
 }
 
 function getCityAliasDataForQuery(query) {

@@ -110,13 +110,16 @@ router.get('/china', async (req, res, next) => {
     const today = new Date().toISOString().slice(0, 10);
     const spots = cache.gridPoints
       .filter(p => typeof p.score === 'number' && p.score >= MIN_SPOT_SCORE && isSupportedFirecloudRegion(p.lat, p.lon))
-      .map(p => ({
-
-        lat: p.lat,
-        lon: p.lon,
-        score: p.score,
-        quality: getQualityConfig(getQualityLevel(p.score)).labelZh
-      }))
+      .map(p => {
+        const quality = getQualityLevel(p.score);
+        return {
+          lat: p.lat,
+          lon: p.lon,
+          score: p.score,
+          quality,
+          qualityLabelKey: getQualityConfig(quality).labelKey
+        };
+      })
       .sort((a, b) => b.score - a.score);
 
     res.json({

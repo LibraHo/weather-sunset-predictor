@@ -74,7 +74,6 @@ describe('requirement 47.3 dynamic copy audit', () => {
       'src/utils/ErrorHandler.js',
       'src/utils/GlobalErrorBoundary.js',
       'src/utils/LocationName.js',
-      'src/utils/QualityLevels.js',
     ]);
 
     for (const rel of filesWithCjk) {

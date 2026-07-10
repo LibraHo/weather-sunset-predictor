@@ -50,8 +50,16 @@ class SunsetPrediction {
    * 需求：5.7 - 评分在40-70之间时标记为"良好"
    * 需求：5.8 - 评分低于40时标记为"一般"
    */
-  getQualityLabel() {
-    return getQualityConfig(getQualityLevel(this.score)).labelZh;
+  getQualityLabel(translator) {
+    const quality = getQualityConfig(getQualityLevel(this.score));
+    if (typeof translator === 'function') return translator(quality.labelKey);
+    if (translator && typeof translator.t === 'function') return translator.t(quality.labelKey);
+    return {
+      excellent: '顶级',
+      good: '高分',
+      fair: '可观赏',
+      poor: '低概率'
+    }[quality.key];
   }
 
   /**
