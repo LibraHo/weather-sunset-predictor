@@ -11,6 +11,7 @@ const gridService = require('../services/GridScoreService');
 const chinaRasterService = require('../services/ChinaRasterService');
 const chinaRasterOverlayImageService = require('../services/ChinaRasterOverlayImageService');
 const { isSupportedFirecloudRegion } = require('../utils/SupportedFirecloudRegion');
+const { getQualityConfig, getQualityLevel } = require('../config/qualityLevels');
 const {
   renderRasterOverlayPng,
   scoreToRasterRgba
@@ -114,7 +115,7 @@ router.get('/china', async (req, res, next) => {
         lat: p.lat,
         lon: p.lon,
         score: p.score,
-        quality: p.score >= 80 ? '顶级' : (p.score >= 60 ? '优质' : '可观赏')
+        quality: getQualityConfig(getQualityLevel(p.score)).labelZh
       }))
       .sort((a, b) => b.score - a.score);
 

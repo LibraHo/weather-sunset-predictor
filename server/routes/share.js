@@ -12,6 +12,7 @@ const EnhancedPredictionService = require('../services/EnhancedPredictionService
 const BackendGeocodingService = require('../services/BackendGeocodingService.js');
 const orchestrator = require('../services/ProviderOrchestrator');
 const SunCalculator = require('../utils/SunCalculator.js');
+const { getQualityConfig, getQualityLevel } = require('../config/qualityLevels');
 
 // 创建地理编码服务实例
 const geocodingService = new BackendGeocodingService({
@@ -20,12 +21,15 @@ const geocodingService = new BackendGeocodingService({
 });
 
 // 质量等级配置
-const QUALITY_LEVELS = {
-  excellent: { label: '极佳', labelEn: 'Excellent', color: '#FF6B35', bgColor: 'linear-gradient(135deg, #FF6B35 0%, #F7931E 100%)' },
-  good: { label: '良好', labelEn: 'Good', color: '#4CAF50', bgColor: 'linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%)' },
-  fair: { label: '一般', labelEn: 'Fair', color: '#FFC107', bgColor: 'linear-gradient(135deg, #FFC107 0%, #FF9800 100%)' },
-  poor: { label: '较差', labelEn: 'Poor', color: '#9E9E9E', bgColor: 'linear-gradient(135deg, #9E9E9E 0%, #757575 100%)' }
-};
+const QUALITY_LEVELS = Object.fromEntries(['excellent', 'good', 'fair', 'poor'].map(key => {
+  const level = getQualityConfig(key);
+  return [key, {
+    label: level.labelZh,
+    labelEn: level.labelEn,
+    color: level.color,
+    bgColor: `linear-gradient(135deg, ${level.color} 0%, ${level.color}cc 100%)`
+  }];
+}));
 
 /**
  * 逆地理编码 - 根据坐标获取地点名称
@@ -162,7 +166,7 @@ router.get('/', async (req, res) => {
       );
       
       score = Math.round(prediction.score || 0);
-      quality = prediction.quality || 'poor';
+      quality = getQualityLevel(score);
     }
     
     const qualityConfig = QUALITY_LEVELS[quality] || QUALITY_LEVELS.poor;

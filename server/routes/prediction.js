@@ -412,12 +412,12 @@ function parseGatewayDate(value) {
   if (typeof value === 'string') {
     const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (match) {
-      return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 0, 0, 0, 0);
+      return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12, 0, 0, 0);
     }
   }
   const parsed = value ? new Date(value) : new Date();
   if (parsed instanceof Date && !Number.isNaN(parsed.getTime())) {
-    parsed.setHours(0, 0, 0, 0);
+    parsed.setHours(12, 0, 0, 0);
     return parsed;
   }
   return null;
@@ -446,15 +446,32 @@ function formatDateKeyAtOffset(date, offsetHours) {
   ].join('-');
 }
 
-function resolveNextEventDate(date, period, lat, lon, now = new Date()) {
+function formatDateKeyInTimezone(date, timezone, lon) {
+  if (timezone) {
+    try {
+      const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: timezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).formatToParts(date);
+      const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+      return `${values.year}-${values.month}-${values.day}`;
+    } catch (_) {
+      // Fall back to longitude-derived offset for providers without a valid IANA zone.
+    }
+  }
+  return formatDateKeyAtOffset(date, SunCalculator.getTargetTimezoneOffsetHours(date, lon));
+}
+
+function resolveNextEventDate(date, period, lat, lon, timezone = null, now = new Date()) {
   if (!(date instanceof Date) || Number.isNaN(date.getTime())) return date;
   if (period !== 'sunrise' && period !== 'sunset') return date;
-  const timezoneOffset = SunCalculator.getTargetTimezoneOffsetHours(now, lon);
-  if (formatDateKey(date) !== formatDateKeyAtOffset(now, timezoneOffset)) return date;
+  if (formatDateKey(date) !== formatDateKeyInTimezone(now, timezone, lon)) return date;
 
   const eventTime = period === 'sunrise'
-    ? SunCalculator.getSunriseTime(date, lat, lon)
-    : SunCalculator.getSunsetTime(date, lat, lon);
+    ? SunCalculator.getSunriseTime(date, lat, lon, { timezone })
+    : SunCalculator.getSunsetTime(date, lat, lon, { timezone });
 
   if (eventTime instanceof Date && !Number.isNaN(eventTime.getTime())
       && now.getTime() > eventTime.getTime() + EVENT_ROLLOVER_BUFFER_MS) {
@@ -651,7 +668,6 @@ router.get('/home', async (req, res) => {
     }
 
     const period = normalizeGatewayPeriod(req.query.period || req.query.type);
-    const startDate = resolveNextEventDate(requestedStartDate, period, lat, lon);
     const days = Math.max(1, Math.min(parseInt(req.query.days, 10) || 3, 4));
     const includeRemoteCloudData = String(req.query.includeRemoteCloudData || 'true') !== 'false';
     const forecastHours = Math.max(24, Math.min(parseInt(req.query.hours, 10) || 168, 168));
@@ -660,6 +676,7 @@ router.get('/home', async (req, res) => {
     const weatherResponse = await fetchClosedLoopWeatherData(lat, lon, forecastHours);
     const weatherFetchMs = profileDurationMs(weatherFetchProfile);
     const timezone = weatherResponse?.providerMeta?.timezone || null;
+    const startDate = resolveNextEventDate(requestedStartDate, period, lat, lon, timezone);
     const items = buildGatewayPredictionItems({ startDate, days, lat, lon, timezone });
     const predictions = new Array(items.length);
 

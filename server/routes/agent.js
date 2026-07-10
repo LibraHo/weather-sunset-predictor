@@ -17,6 +17,7 @@ const createAgentAuth = require('../middleware/agentAuth');
 const apiAuditLog = require('../services/ApiAgentAuditLog');
 const geocodingRoute = require('./geocoding');
 const gridScoreService = require('../services/GridScoreService');
+const { getQualityLevel } = require('../config/qualityLevels');
 const geocodingPrivate = geocodingRoute._private || {};
 
 const VALID_TYPES = new Set(['sunrise', 'sunset']);
@@ -124,10 +125,7 @@ function pointInBbox(point, bbox) {
 }
 
 function scoreQuality(score) {
-  if (score >= 80) return 'excellent';
-  if (score >= 60) return 'good';
-  if (score >= 40) return 'fair';
-  return 'poor';
+  return getQualityLevel(score);
 }
 
 function buildMapSummary({ cache, type, bbox, threshold, limit }) {

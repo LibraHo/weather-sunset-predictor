@@ -2,9 +2,10 @@ import SunsetPrediction from '../../../src/models/SunsetPrediction.js';
 
 describe('SunsetPrediction', () => {
   test('getQualityLabel 应覆盖评分阈值分支', () => {
-    expect(new SunsetPrediction(new Date(), 70, 'good', {}, new Date()).getQualityLabel()).toBe('优秀');
-    expect(new SunsetPrediction(new Date(), 40, 'good', {}, new Date()).getQualityLabel()).toBe('良好');
-    expect(new SunsetPrediction(new Date(), 39, 'fair', {}, new Date()).getQualityLabel()).toBe('一般');
+    expect(new SunsetPrediction(new Date(), 85, 'excellent', {}, new Date()).getQualityLabel()).toBe('顶级');
+    expect(new SunsetPrediction(new Date(), 70, 'good', {}, new Date()).getQualityLabel()).toBe('高分');
+    expect(new SunsetPrediction(new Date(), 40, 'fair', {}, new Date()).getQualityLabel()).toBe('可观赏');
+    expect(new SunsetPrediction(new Date(), 39, 'poor', {}, new Date()).getQualityLabel()).toBe('低概率');
   });
 
   test('toJSON 与 fromJSON 应正确处理可选字段和默认 type', () => {

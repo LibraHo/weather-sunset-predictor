@@ -6,6 +6,7 @@
  * 需求：5.5, 5.6, 5.7, 5.8 - 预测质量评分和分类
  * 需求：12.1, 12.2, 12.3, 12.4, 12.5, 12.11 - 朝霞晚霞预测增强功能
  */
+import { getQualityConfig, getQualityLevel } from '../utils/QualityLevels.js';
 
 class SunsetPrediction {
   /**
@@ -50,9 +51,7 @@ class SunsetPrediction {
    * 需求：5.8 - 评分低于40时标记为"一般"
    */
   getQualityLabel() {
-    if (this.score >= 70) return '优秀';
-    if (this.score >= 40) return '良好';
-    return '一般';
+    return getQualityConfig(getQualityLevel(this.score)).labelZh;
   }
 
   /**

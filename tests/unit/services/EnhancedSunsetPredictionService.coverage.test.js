@@ -186,9 +186,10 @@ describe('EnhancedSunsetPredictionService coverage', () => {
   });
 
   test('_getQualityLevel and private date helpers cover boundaries', () => {
-    expect(service._getQualityLevel(80)).toBe('excellent');
-    expect(service._getQualityLevel(50)).toBe('good');
-    expect(service._getQualityLevel(49)).toBe('fair');
+    expect(service._getQualityLevel(85)).toBe('excellent');
+    expect(service._getQualityLevel(80)).toBe('good');
+    expect(service._getQualityLevel(50)).toBe('fair');
+    expect(service._getQualityLevel(39)).toBe('poor');
     expect(service._getJulianDay(new Date('2026-01-01T00:00:00Z'))).toBeGreaterThan(2400000);
     expect(service._getHourAngle(new Date('2026-01-01T12:30:00Z'), 116)).toBeCloseTo(123.5);
   });

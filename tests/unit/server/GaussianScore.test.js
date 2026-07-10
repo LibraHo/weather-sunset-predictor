@@ -213,22 +213,22 @@ describe('GaussianScore', () => {
   });
 
   describe('getQualityLevel', () => {
-    it('should return excellent for score >= 70', () => {
-      expect(GaussianScore.getQualityLevel(70)).toBe('excellent');
+    it('should return excellent for score >= 85', () => {
+      expect(GaussianScore.getQualityLevel(84)).toBe('good');
       expect(GaussianScore.getQualityLevel(85)).toBe('excellent');
       expect(GaussianScore.getQualityLevel(100)).toBe('excellent');
     });
 
-    it('should return good for score 40-69', () => {
-      expect(GaussianScore.getQualityLevel(40)).toBe('good');
-      expect(GaussianScore.getQualityLevel(55)).toBe('good');
-      expect(GaussianScore.getQualityLevel(69)).toBe('good');
+    it('should return good for score 70-84', () => {
+      expect(GaussianScore.getQualityLevel(70)).toBe('good');
+      expect(GaussianScore.getQualityLevel(77)).toBe('good');
+      expect(GaussianScore.getQualityLevel(84)).toBe('good');
     });
 
-    it('should return fair for score < 40', () => {
-      expect(GaussianScore.getQualityLevel(0)).toBe('fair');
-      expect(GaussianScore.getQualityLevel(20)).toBe('fair');
-      expect(GaussianScore.getQualityLevel(39)).toBe('fair');
+    it('should return fair for score 40-69 and poor below 40', () => {
+      expect(GaussianScore.getQualityLevel(40)).toBe('fair');
+      expect(GaussianScore.getQualityLevel(69)).toBe('fair');
+      expect(GaussianScore.getQualityLevel(39)).toBe('poor');
     });
   });
 
@@ -298,7 +298,7 @@ describe('GaussianScore', () => {
       };
       const result = GaussianScore.calculatePredictionScore(weatherData);
 
-      expect(result.quality).toBe('excellent');
+      expect(['good', 'excellent']).toContain(result.quality);
       expect(result.totalScore).toBeGreaterThanOrEqual(70);
     });
 
@@ -311,7 +311,7 @@ describe('GaussianScore', () => {
       };
       const result = GaussianScore.calculatePredictionScore(weatherData);
 
-      expect(result.quality).toBe('fair');
+      expect(result.quality).toBe('poor');
       expect(result.totalScore).toBeLessThan(40);
     });
   });

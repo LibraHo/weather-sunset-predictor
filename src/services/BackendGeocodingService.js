@@ -11,6 +11,7 @@
  */
 
 import Location from '../models/Location.js';
+import { compactLocationName } from '../utils/LocationName.js';
 
 const MANUAL_TEST_CITY = {
   displayName: 'test',
@@ -91,7 +92,7 @@ class BackendGeocodingService {
     }
 
     const first = data.results[0];
-    const location = new Location(first.lat, first.lon, first.name);
+    const location = new Location(first.lat, first.lon, compactLocationName(first.name));
     location.countryCode = (first.countryCode || '').toUpperCase() || null;
     location.regionCode = first.regionCode || null;
     if (!location.isValid()) {
@@ -196,8 +197,8 @@ class BackendGeocodingService {
       }
 
       return data.results.map(item => ({
-        displayName: item.name,
-        enName: item.name,
+        displayName: compactLocationName(item.name),
+        enName: compactLocationName(item.name),
         lat: item.lat,
         lon: item.lon,
         countryCode: (item.countryCode || '').toUpperCase() || null
@@ -234,7 +235,7 @@ class BackendGeocodingService {
 
     const data = await response.json();
     const name = typeof data.name === 'string' ? data.name.trim() : '';
-    return name || null;
+    return name ? compactLocationName(name) : null;
   }
 }
 

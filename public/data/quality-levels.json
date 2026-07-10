@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "levels": [
+    {
+      "key": "excellent",
+      "min": 85,
+      "labelZh": "顶级",
+      "labelEn": "Rare",
+      "color": "#dc5a28"
+    },
+    {
+      "key": "good",
+      "min": 70,
+      "labelZh": "高分",
+      "labelEn": "Strong",
+      "color": "#d97706"
+    },
+    {
+      "key": "fair",
+      "min": 40,
+      "labelZh": "可观赏",
+      "labelEn": "Watch",
+      "color": "#b7793b"
+    },
+    {
+      "key": "poor",
+      "min": 0,
+      "labelZh": "低概率",
+      "labelEn": "Low",
+      "color": "#7a6554"
+    }
+  ]
+}
