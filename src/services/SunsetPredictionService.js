@@ -8,6 +8,7 @@
  */
 
 import SunsetPrediction from '../models/SunsetPrediction.js';
+import { getQualityLevel } from '../utils/QualityLevels.js';
 
 class SunsetPredictionService {
   constructor() {
@@ -213,16 +214,7 @@ class SunsetPredictionService {
 
     // ── 第三步：quality 等级 ──────────────────────────────────────────
 
-    let quality;
-    if (finalScore >= 80) {
-      quality = 'excellent';
-    } else if (finalScore >= 60) {
-      quality = 'good';
-    } else if (finalScore >= 40) {
-      quality = 'fair';
-    } else {
-      quality = 'poor';
-    }
+    const quality = getQualityLevel(finalScore);
 
     // ── 返回结果 ──────────────────────────────────────────────────────
 

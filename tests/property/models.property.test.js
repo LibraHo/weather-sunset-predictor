@@ -131,12 +131,14 @@ describe('Data Models - Property-Based Tests', () => {
           (date, score, factors, sunsetTime) => {
             // Determine expected quality
             let expectedQuality;
-            if (score >= 70) {
+            if (score >= 85) {
               expectedQuality = 'excellent';
-            } else if (score >= 40) {
+            } else if (score >= 70) {
               expectedQuality = 'good';
-            } else {
+            } else if (score >= 40) {
               expectedQuality = 'fair';
+            } else {
+              expectedQuality = 'poor';
             }
 
             const prediction = new SunsetPrediction(
@@ -148,8 +150,9 @@ describe('Data Models - Property-Based Tests', () => {
             );
 
             expect(prediction.getQualityLabel()).toBe(
-              score >= 70 ? '优秀' :
-              score >= 40 ? '良好' : '一般'
+              score >= 85 ? '顶级' :
+              score >= 70 ? '高分' :
+              score >= 40 ? '可观赏' : '低概率'
             );
           }
         ),
@@ -157,10 +160,10 @@ describe('Data Models - Property-Based Tests', () => {
       );
     });
 
-    test('excellent quality requires score >= 70', () => {
+    test('excellent quality requires score >= 85', () => {
       fc.assert(
         fc.property(
-          fc.float({ min: 70, max: 100, noNaN: true }),
+          fc.float({ min: 85, max: 100, noNaN: true }),
           (score) => {
             const prediction = new SunsetPrediction(
               new Date(),
@@ -170,18 +173,18 @@ describe('Data Models - Property-Based Tests', () => {
               new Date()
             );
 
-            expect(prediction.getQualityLabel()).toBe('优秀');
-            expect(prediction.score).toBeGreaterThanOrEqual(70);
+            expect(prediction.getQualityLabel()).toBe('顶级');
+            expect(prediction.score).toBeGreaterThanOrEqual(85);
           }
         ),
         { numRuns: 50 }
       );
     });
 
-    test('good quality requires score in [40, 70)', () => {
+    test('good quality requires score in [70, 85)', () => {
       fc.assert(
         fc.property(
-          fc.float({ min: 40, max: Math.fround(69.99), noNaN: true }),
+          fc.float({ min: 70, max: Math.fround(84.99), noNaN: true }),
           (score) => {
             const prediction = new SunsetPrediction(
               new Date(),
@@ -191,19 +194,19 @@ describe('Data Models - Property-Based Tests', () => {
               new Date()
             );
 
-            expect(prediction.getQualityLabel()).toBe('良好');
-            expect(prediction.score).toBeGreaterThanOrEqual(40);
-            expect(prediction.score).toBeLessThan(70);
+            expect(prediction.getQualityLabel()).toBe('高分');
+            expect(prediction.score).toBeGreaterThanOrEqual(70);
+            expect(prediction.score).toBeLessThan(85);
           }
         ),
         { numRuns: 50 }
       );
     });
 
-    test('fair quality requires score < 40', () => {
+    test('fair quality requires score in [40, 70)', () => {
       fc.assert(
         fc.property(
-          fc.float({ min: 0, max: Math.fround(39.99), noNaN: true }),
+          fc.float({ min: 40, max: Math.fround(69.99), noNaN: true }),
           (score) => {
             const prediction = new SunsetPrediction(
               new Date(),
@@ -213,7 +216,22 @@ describe('Data Models - Property-Based Tests', () => {
               new Date()
             );
 
-            expect(prediction.getQualityLabel()).toBe('一般');
+            expect(prediction.getQualityLabel()).toBe('可观赏');
+            expect(prediction.score).toBeGreaterThanOrEqual(40);
+            expect(prediction.score).toBeLessThan(70);
+          }
+        ),
+        { numRuns: 50 }
+      );
+    });
+
+    test('poor quality requires score < 40', () => {
+      fc.assert(
+        fc.property(
+          fc.float({ min: 0, max: Math.fround(39.99), noNaN: true }),
+          (score) => {
+            const prediction = new SunsetPrediction(new Date(), score, 'poor', {}, new Date());
+            expect(prediction.getQualityLabel()).toBe('低概率');
             expect(prediction.score).toBeLessThan(40);
           }
         ),

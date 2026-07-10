@@ -131,6 +131,30 @@ function dedupeStrings(values = []) {
   return result;
 }
 
+function compactLocationName(rawName, address = {}) {
+  const city = address.city || address.town || address.municipality || address.village || address.county || address.locality || '';
+  const district = address.city_district || address.district || address.suburb || '';
+  const state = address.state || address.province || '';
+  const country = address.country || '';
+  const municipalitySource = String(city || state || rawName || '');
+  for (const [prefix, shortName] of [['北京市', '北京'], ['上海市', '上海'], ['天津市', '天津'], ['重庆市', '重庆']]) {
+    if (!municipalitySource.includes(prefix)) continue;
+    const rawDistrict = district || String(rawName || '').match(new RegExp(`${prefix}[,，·\\s]*([^区县,，]{1,8}[区县])`, 'u'))?.[1];
+    return dedupeStrings([shortName, rawDistrict]).join(', ');
+  }
+  const structured = dedupeStrings([city, district || state, country]).slice(0, 2);
+  if (structured.length) return structured.join(', ');
+
+  const input = String(rawName || '').trim();
+  for (const [prefix, shortName] of [['北京市', '北京'], ['上海市', '上海'], ['天津市', '天津'], ['重庆市', '重庆']]) {
+    if (!input.startsWith(prefix)) continue;
+    const area = input.slice(prefix.length).match(/^[,，·\s]*([^区县,，]{1,8}[区县])/u)?.[1];
+    return area ? `${shortName}, ${area}` : shortName;
+  }
+
+  return dedupeStrings(input.split(/[,，]/u)).slice(0, 2).join(', ') || input;
+}
+
 function getCityAliasDataForQuery(query) {
   const normalized = normalizeAliasToken(query);
   if (!normalized) return null;
@@ -344,7 +368,12 @@ async function handleAutoSearch(res, query, apiKey, limit = 8) {
           const [lonStr, latStr] = item.location.split(',');
           const regionCode = resolveGaodeRegionCode(item.adcode);
           return {
-            name: item.formatted_address,
+            name: compactLocationName(item.formatted_address, {
+              city: item.city,
+              district: item.district,
+              state: item.province,
+              country: '中国'
+            }),
             lat: parseFloat(latStr),
             lon: parseFloat(lonStr),
             type: 'place',
@@ -410,7 +439,7 @@ async function handleNominatimSearch(res, query, limit = 5) {
         if (!seenKeys.has(key)) {
           seenKeys.add(key);
           allResults.push({
-            name: item.display_name,
+            name: compactLocationName(item.display_name, item.address),
             lat: parseFloat(item.lat),
             lon: parseFloat(item.lon),
             type: item.type,
@@ -442,7 +471,7 @@ async function handleNominatimReverse(res, lat, lon) {
   if (!data || !data.display_name) return res.json({ name: null });
 
   return res.json({
-    name: data.display_name,
+    name: compactLocationName(data.display_name, data.address),
     lat,
     lon,
     provider: 'nominatim',
@@ -563,7 +592,12 @@ async function handleGaodeSearch(res, query, apiKey, limit = 8) {
       const [lonStr, latStr] = item.location.split(',');
       const regionCode = resolveGaodeRegionCode(item.adcode);
       return {
-        name: item.formatted_address,
+        name: compactLocationName(item.formatted_address, {
+          city: item.city,
+          district: item.district,
+          state: item.province,
+          country: '中国'
+        }),
         lat: parseFloat(latStr),
         lon: parseFloat(lonStr),
         type: 'place',
@@ -609,9 +643,15 @@ async function handleGaodeReverse(res, lat, lon, apiKey) {
     }
 
     const rawAdcode = data.regeocode?.addressComponent?.adcode;
+    const component = data.regeocode?.addressComponent || {};
     const adcode = typeof rawAdcode === 'string' && rawAdcode.trim() ? rawAdcode.trim() : null;
     return res.json({
-      name: formattedAddress,
+      name: compactLocationName(formattedAddress, {
+        city: Array.isArray(component.city) ? component.province : component.city,
+        district: component.district,
+        state: component.province,
+        country: component.country || '中国'
+      }),
       lat,
       lon,
       provider: 'gaode',
@@ -643,7 +683,7 @@ async function handleGoogleSearch(res, query, apiKey, limit = 5) {
   }
 
   let results = data.results.map(item => ({
-    name: item.formatted_address,
+    name: compactLocationName(item.formatted_address, getGoogleLocationParts(item.address_components)),
     lat: item.geometry.location.lat,
     lon: item.geometry.location.lng,
     type: item.types?.[0] || 'place',
@@ -674,7 +714,7 @@ async function handleGoogleReverse(res, lat, lon, apiKey) {
 
   const first = data.results[0];
   return res.json({
-    name: first.formatted_address,
+    name: compactLocationName(first.formatted_address, getGoogleLocationParts(first.address_components)),
     lat,
     lon,
     provider: 'google',
@@ -720,6 +760,19 @@ function deriveGoogleCountryCode(addressComponents = []) {
 function deriveGoogleRegionCode(addressComponents = []) {
   const admin1Code = getGoogleAddressShortCode(addressComponents, 'administrative_area_level_1');
   return resolveAdminRegionCode(admin1Code);
+}
+
+function getGoogleLocationParts(addressComponents = []) {
+  const getLongName = (...types) => addressComponents.find(component =>
+    types.some(type => component.types?.includes(type))
+  )?.long_name || '';
+
+  return {
+    city: getLongName('locality', 'postal_town', 'administrative_area_level_2'),
+    district: getLongName('sublocality_level_1', 'administrative_area_level_3'),
+    state: getLongName('administrative_area_level_1'),
+    country: getLongName('country')
+  };
 }
 
 
@@ -843,6 +896,7 @@ module.exports._test = {
   getQueryVariants,
   getAliasTokensForQuery,
   scoreResultByAlias,
+  compactLocationName,
   rankGeocodingResults,
   isManualTestQuery,
   getManualTestCityResult

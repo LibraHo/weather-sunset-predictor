@@ -17,6 +17,7 @@ const DEFAULT_WEIGHTS = {
   visibility: 0.20,   // 能见度权重
   lowClouds: 0.20     // 低层云权重
 };
+const { getQualityLevel } = require('../config/qualityLevels');
 
 /**
  * 高斯函数
@@ -167,16 +168,6 @@ function calculateWeightedScore(scores, weights = DEFAULT_WEIGHTS) {
  *
  * 需求：5.6, 5.7, 5.8 - 评分等级划分
  */
-function getQualityLevel(score) {
-  if (score >= 70) {
-    return 'excellent';  // 优秀
-  } else if (score >= 40) {
-    return 'good';       // 良好
-  } else {
-    return 'fair';       // 一般
-  }
-}
-
 /**
  * 计算所有因素得分
  *

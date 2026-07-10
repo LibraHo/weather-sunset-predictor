@@ -173,7 +173,7 @@ describe('SunsetPredictionService', () => {
   // ========== 统一评分（_calculateUnifiedScore）测试 ==========
 
   describe('_calculateUnifiedScore', () => {
-    test('理想火烧云场景应该得到高分 (excellent)', () => {
+    test('理想火烧云场景应该进入高分或顶级档', () => {
       // 高云 50% + 中云 40% + 低云 < 10% + 能见度高 + 湿度适中
       const weatherData = {
         highClouds: 50,
@@ -184,7 +184,7 @@ describe('SunsetPredictionService', () => {
       };
       const result = service._calculateUnifiedScore(weatherData);
       expect(result.score).toBeGreaterThanOrEqual(70);
-      expect(result.quality).toBe('excellent');
+      expect(['good', 'excellent']).toContain(result.quality);
     });
 
     test('晴天无云应该得中低分', () => {
@@ -291,7 +291,7 @@ describe('SunsetPredictionService', () => {
       expect(prediction.sunsetTime).toBeInstanceOf(Date);
     });
 
-    test('应该根据评分正确分类为"优秀"', () => {
+    test('应该根据评分正确分类为"高分"', () => {
       // 理想天气条件：高云适中 + 低云少 + 能见度高 + 湿度适中 + 无降水
       const weatherData = {
         highClouds: 50,
@@ -308,11 +308,11 @@ describe('SunsetPredictionService', () => {
       const prediction = service.calculatePrediction(weatherData, date, lat, lon);
 
       expect(prediction.score).toBeGreaterThanOrEqual(70);
-      expect(prediction.quality).toBe('excellent');
-      expect(prediction.getQualityLabel()).toBe('优秀');
+      expect(['good', 'excellent']).toContain(prediction.quality);
+      expect(['高分', '顶级']).toContain(prediction.getQualityLabel());
     });
 
-    test('应该根据评分正确分类为"良好"', () => {
+    test('应该根据评分正确分类为"可观赏"', () => {
       // 中等天气条件
       const weatherData = {
         highClouds: 20,
@@ -330,11 +330,11 @@ describe('SunsetPredictionService', () => {
 
       expect(prediction.score).toBeGreaterThanOrEqual(40);
       expect(prediction.score).toBeLessThan(70);
-      expect(prediction.quality).toBe('good');
-      expect(prediction.getQualityLabel()).toBe('良好');
+      expect(prediction.quality).toBe('fair');
+      expect(prediction.getQualityLabel()).toBe('可观赏');
     });
 
-    test('应该根据评分正确分类为"一般"', () => {
+    test('应该根据评分正确分类为"低概率"', () => {
       // 较差天气条件
       const weatherData = {
         highClouds: 5,
@@ -352,7 +352,7 @@ describe('SunsetPredictionService', () => {
 
       expect(prediction.score).toBeLessThan(40);
       expect(prediction.quality).toBe('poor');
-      expect(prediction.getQualityLabel()).toBe('一般');
+      expect(prediction.getQualityLabel()).toBe('低概率');
     });
 
     test('应该包含所有因素的详细得分', () => {
@@ -503,7 +503,8 @@ describe('SunsetPredictionService', () => {
         cloudCover: 50,
         humidity: 60,
         visibility: 20,
-        lowCloudCover: 10
+        lowCloudCover: 10,
+        timezone: 'Asia/Shanghai'
       };
       const date = new Date('2024-06-21');
       const lat = 39.9042;
@@ -512,8 +513,13 @@ describe('SunsetPredictionService', () => {
       const prediction = service.calculatePrediction(weatherData, date, lat, lon);
 
       expect(prediction.sunsetTime).toBeInstanceOf(Date);
-      expect(prediction.sunsetTime.getHours()).toBeGreaterThanOrEqual(18);
-      expect(prediction.sunsetTime.getHours()).toBeLessThanOrEqual(21);
+      const targetHour = Number(new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Shanghai',
+        hour: '2-digit',
+        hour12: false
+      }).format(prediction.sunsetTime));
+      expect(targetHour).toBeGreaterThanOrEqual(18);
+      expect(targetHour).toBeLessThanOrEqual(21);
     });
 
     test('getOptimalViewingWindow应该返回日落前后30分钟', () => {

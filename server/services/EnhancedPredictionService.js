@@ -19,6 +19,7 @@ const CloudLayerEstimator = require('./CloudLayerEstimator.js');
 const LightPathV2Service = require('./LightPathV2Service.js');
 const LayerBrightnessService = require('./LayerBrightnessService.js');
 const { ALGORITHM_VERSION } = require('./AlgorithmVersion.js');
+const { getQualityLevel: getSharedQualityLevel } = require('../config/qualityLevels');
 
 // ========== 常量定义 ==========
 
@@ -2404,9 +2405,7 @@ function scoreRendering(weatherData, rainedRecently = false) {
  * @returns {string} 质量等级：'excellent' | 'good' | 'fair'
  */
 function getQualityLevel(score) {
-  if (score >= 70) return 'excellent';
-  if (score >= 40) return 'good';
-  return 'fair';
+  return getSharedQualityLevel(score);
 }
 
 /**

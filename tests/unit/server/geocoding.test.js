@@ -301,6 +301,19 @@ describe('Geocoding Route — 数据转换逻辑', () => {
       expect(helpers.getManualTestCityResult('  TEST  ')).toMatchObject({ name: 'test' });
     });
 
+    test('地名精简应对全球结构化地址使用同一 locality/region 规则', () => {
+      expect(helpers.compactLocationName('New York, New York, United States', {
+        city: 'New York', state: 'New York', country: 'United States'
+      })).toBe('New York, United States');
+      expect(helpers.compactLocationName('Paris, Île-de-France, France', {
+        city: 'Paris', state: 'Île-de-France', country: 'France'
+      })).toBe('Paris, Île-de-France');
+      expect(helpers.compactLocationName('Shinjuku City, Tokyo, Japan', {
+        city: 'Shinjuku City', state: 'Tokyo', country: 'Japan'
+      })).toBe('Shinjuku City, Tokyo');
+      expect(helpers.compactLocationName('São Paulo, São Paulo, Brazil')).toBe('São Paulo, Brazil');
+    });
+
     test('北京/上海/香港 搜索样例应各自触发高优先级排序', () => {
       const beijing = [
         { name: 'Shanghai, China' },

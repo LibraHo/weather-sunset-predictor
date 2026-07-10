@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "levels": [
+    {
+      "key": "excellent",
+      "min": 85,
+      "labelKey": "prediction.excellent"
+    },
+    {
+      "key": "good",
+      "min": 70,
+      "labelKey": "prediction.good"
+    },
+    {
+      "key": "fair",
+      "min": 40,
+      "labelKey": "prediction.fair"
+    },
+    {
+      "key": "poor",
+      "min": 0,
+      "labelKey": "prediction.poor"
+    }
+  ]
+}

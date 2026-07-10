@@ -344,7 +344,7 @@ describe('Prediction Routes', () => {
       expect(apiResponse.data).toBeDefined();
       expect(apiResponse.data.score).toBeGreaterThanOrEqual(0);
       expect(apiResponse.data.score).toBeLessThanOrEqual(100);
-      expect(['excellent', 'good', 'fair'].includes(apiResponse.data.quality)).toBe(true);
+      expect(['excellent', 'good', 'fair', 'poor'].includes(apiResponse.data.quality)).toBe(true);
     });
 
     test('batch prediction response should have count', () => {

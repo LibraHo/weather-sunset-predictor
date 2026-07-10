@@ -11,6 +11,7 @@
  */
 
 import i18n from '../i18n.js';
+import { getQualityLevel } from '../utils/QualityLevels.js';
 
 class EnhancedSunsetPredictionService {
   constructor() {
@@ -556,9 +557,7 @@ class EnhancedSunsetPredictionService {
    * @private
    */
   _getQualityLevel(score) {
-    if (score >= 80) return 'excellent';
-    if (score >= 50) return 'good';
-    return 'fair';
+    return getQualityLevel(score);
   }
 
   /**

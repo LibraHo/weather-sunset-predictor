@@ -638,22 +638,21 @@ describe('EnhancedPredictionService', () => {
 
   // ========== 质量等级测试 ==========
   describe('getQualityLevel', () => {
-    // 阈值与 GaussianScore.getQualityLevel 对齐：excellent ≥70, good ≥40, fair <40
-    test('should return excellent for score >= 70', () => {
-      expect(EnhancedPredictionService.getQualityLevel(70)).toBe('excellent');
-      expect(EnhancedPredictionService.getQualityLevel(80)).toBe('excellent');
+    // 阈值与所有端统一：excellent ≥85, good ≥70, fair ≥40, poor <40
+    test('should return excellent for score >= 85', () => {
+      expect(EnhancedPredictionService.getQualityLevel(85)).toBe('excellent');
       expect(EnhancedPredictionService.getQualityLevel(95)).toBe('excellent');
     });
 
-    test('should return good for score 40-69', () => {
-      expect(EnhancedPredictionService.getQualityLevel(40)).toBe('good');
-      expect(EnhancedPredictionService.getQualityLevel(55)).toBe('good');
-      expect(EnhancedPredictionService.getQualityLevel(69)).toBe('good');
+    test('should return good for score 70-84', () => {
+      expect(EnhancedPredictionService.getQualityLevel(70)).toBe('good');
+      expect(EnhancedPredictionService.getQualityLevel(84)).toBe('good');
     });
 
-    test('should return fair for score < 40', () => {
-      expect(EnhancedPredictionService.getQualityLevel(39)).toBe('fair');
-      expect(EnhancedPredictionService.getQualityLevel(0)).toBe('fair');
+    test('should return fair for score 40-69 and poor below 40', () => {
+      expect(EnhancedPredictionService.getQualityLevel(40)).toBe('fair');
+      expect(EnhancedPredictionService.getQualityLevel(69)).toBe('fair');
+      expect(EnhancedPredictionService.getQualityLevel(39)).toBe('poor');
     });
   });
 

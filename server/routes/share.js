@@ -12,6 +12,7 @@ const EnhancedPredictionService = require('../services/EnhancedPredictionService
 const BackendGeocodingService = require('../services/BackendGeocodingService.js');
 const orchestrator = require('../services/ProviderOrchestrator');
 const SunCalculator = require('../utils/SunCalculator.js');
+const { getQualityLevel } = require('../config/qualityLevels');
 
 // 创建地理编码服务实例
 const geocodingService = new BackendGeocodingService({
@@ -21,10 +22,10 @@ const geocodingService = new BackendGeocodingService({
 
 // 质量等级配置
 const QUALITY_LEVELS = {
-  excellent: { label: '极佳', labelEn: 'Excellent', color: '#FF6B35', bgColor: 'linear-gradient(135deg, #FF6B35 0%, #F7931E 100%)' },
-  good: { label: '良好', labelEn: 'Good', color: '#4CAF50', bgColor: 'linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%)' },
-  fair: { label: '一般', labelEn: 'Fair', color: '#FFC107', bgColor: 'linear-gradient(135deg, #FFC107 0%, #FF9800 100%)' },
-  poor: { label: '较差', labelEn: 'Poor', color: '#9E9E9E', bgColor: 'linear-gradient(135deg, #9E9E9E 0%, #757575 100%)' }
+  excellent: { label: '顶级', labelEn: 'Rare', color: '#dc5a28', bgColor: 'linear-gradient(135deg, #dc5a28 0%, #dc5a28cc 100%)' },
+  good: { label: '高分', labelEn: 'Strong', color: '#d97706', bgColor: 'linear-gradient(135deg, #d97706 0%, #d97706cc 100%)' },
+  fair: { label: '可观赏', labelEn: 'Watch', color: '#b7793b', bgColor: 'linear-gradient(135deg, #b7793b 0%, #b7793bcc 100%)' },
+  poor: { label: '低概率', labelEn: 'Low', color: '#7a6554', bgColor: 'linear-gradient(135deg, #7a6554 0%, #7a6554cc 100%)' }
 };
 
 /**
@@ -162,7 +163,7 @@ router.get('/', async (req, res) => {
       );
       
       score = Math.round(prediction.score || 0);
-      quality = prediction.quality || 'poor';
+      quality = getQualityLevel(score);
     }
     
     const qualityConfig = QUALITY_LEVELS[quality] || QUALITY_LEVELS.poor;

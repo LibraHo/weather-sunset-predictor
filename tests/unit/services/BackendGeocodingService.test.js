@@ -75,7 +75,7 @@ describe('BackendGeocodingService', () => {
       expect(result).toBeInstanceOf(Location);
       expect(result.lat).toBeCloseTo(39.9042);
       expect(result.lon).toBeCloseTo(116.4074);
-      expect(result.name).toBe('北京市');
+      expect(result.name).toBe('北京');
       expect(result.countryCode).toBe('CN');
       expect(result.regionCode).toBe('110000');
     });
@@ -181,7 +181,7 @@ describe('BackendGeocodingService', () => {
       });
 
       const name = await service.reverseGeocode(39.9, 116.4);
-      expect(name).toBe('北京市朝阳区');
+      expect(name).toBe('北京 · 朝阳区');
     });
 
     test('无匹配时返回 null', async () => {

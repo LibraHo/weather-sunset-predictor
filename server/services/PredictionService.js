@@ -9,6 +9,7 @@
  */
 
 const SunCalculator = require('../utils/SunCalculator.js');
+const { getQualityLevel } = require('../config/qualityLevels');
 
 // ========== 服务类定义 ==========
 
@@ -111,10 +112,7 @@ class PredictionService {
 
 
   _getQualityLevel(score) {
-    if (score >= 80) return 'excellent';
-    if (score >= 60) return 'good';
-    if (score >= 40) return 'fair';
-    return 'poor';
+    return getQualityLevel(score);
   }
 
   /**
