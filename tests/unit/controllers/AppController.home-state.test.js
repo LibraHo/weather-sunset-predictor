@@ -90,4 +90,25 @@ describe('AppController home state audit items 13-17', () => {
     expect(document.getElementById('weather-context-event').textContent).toBe(i18n.t('prediction.sunset'));
     expect(document.getElementById('weather-context-inline').textContent).not.toContain('优先预测');
   });
+
+  test('renders the active event immediately from local sun times while predictions load', () => {
+    const controller = createController();
+    const now = Date.now();
+    controller.predictionController = {
+      predictionService: {
+        getSunriseTime: jest.fn().mockReturnValue(new Date(now - 8 * 60 * 60 * 1000)),
+        getSunsetTime: jest.fn().mockReturnValue(new Date(now + 2 * 60 * 60 * 1000))
+      }
+    };
+    const weatherData = Object.assign([{ timezone: 'Europe/Paris' }], { fetchedAt: now });
+
+    controller.updateWeatherContext(
+      { name: '巴黎', lat: 48.86, lon: 2.35, timezone: 'Europe/Paris' },
+      weatherData,
+      []
+    );
+
+    expect(document.getElementById('weather-context-inline').classList.contains('hidden')).toBe(false);
+    expect(document.getElementById('weather-context-event').textContent).toBe(i18n.t('prediction.sunset'));
+  });
 });

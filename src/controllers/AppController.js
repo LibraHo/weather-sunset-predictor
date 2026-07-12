@@ -1606,9 +1606,13 @@ class AppController {
           : (prediction.sunsetTime || prediction.date))
       }))
       .filter(item => !Number.isNaN(item.eventTime.getTime()));
-    const active = validPredictions
+    let active = validPredictions
       .filter(item => item.eventTime.getTime() + EVENT_ROLLOVER_MS > now.getTime())
       .sort((a, b) => a.eventTime - b.eventTime)[0] || validPredictions.sort((a, b) => b.eventTime - a.eventTime)[0];
+
+    if (!active) {
+      active = this.deriveActiveWeatherEvent(location, weatherData, now);
+    }
 
     if (!active) {
       container.classList.add('hidden');
@@ -1637,6 +1641,37 @@ class AppController {
     document.getElementById('weather-context-date-time').textContent = dateText;
     document.getElementById('weather-context-updated').textContent = this.i18n.t('weatherMap.updatedAt', { time: updatedTime });
     container.classList.remove('hidden');
+  }
+
+  deriveActiveWeatherEvent(location, weatherData, now = new Date()) {
+    const predictionService = this.predictionController?.predictionService;
+    const lat = Number(location?.lat);
+    const lon = Number(location?.lon);
+    if (!predictionService || !Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+
+    const timezone = location?.timezone || location?.timeZone
+      || weatherData?.find?.(item => item?.timezone)?.timezone
+      || weatherData?.providerMeta?.timezone
+      || null;
+    const options = { timezone };
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+    const sunriseTime = predictionService.getSunriseTime(today, lat, lon, options);
+    const sunsetTime = predictionService.getSunsetTime(today, lat, lon, options);
+
+    if (sunriseTime && now.getTime() <= sunriseTime.getTime() + EVENT_ROLLOVER_MS) {
+      return { prediction: { type: 'sunrise' }, eventTime: sunriseTime };
+    }
+    if (sunsetTime && now.getTime() <= sunsetTime.getTime() + EVENT_ROLLOVER_MS) {
+      return { prediction: { type: 'sunset' }, eventTime: sunsetTime };
+    }
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const nextSunriseTime = predictionService.getSunriseTime(tomorrow, lat, lon, options);
+    return nextSunriseTime
+      ? { prediction: { type: 'sunrise' }, eventTime: nextSunriseTime }
+      : null;
   }
 
   // ========== 需求13：搜索历史管理 ==========
