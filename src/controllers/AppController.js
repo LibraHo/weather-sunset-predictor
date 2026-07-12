@@ -1624,8 +1624,6 @@ class AppController {
     const formatOptions = timezone ? { timeZone: timezone } : {};
     const dateText = new Intl.DateTimeFormat(locale, {
       ...formatOptions,
-      month: 'short',
-      day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
       hour12: false
