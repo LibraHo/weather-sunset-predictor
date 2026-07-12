@@ -22,12 +22,12 @@ test.describe('home empty state and inline weather context', () => {
     await page.setViewportSize({ width: 1366, height: 900 });
 
     const input = page.locator('#location-input');
-    await input.fill('test');
+    await input.fill('北京');
     await page.locator('#search-btn').click();
 
     await expect(page.locator('#weather-section')).toBeVisible({ timeout: 15000 });
     await expect(page.locator('#weather-context-inline')).toBeVisible({ timeout: 15000 });
-    await expect(input).toHaveValue('test');
+    await expect(input).toHaveValue('北京');
     await expect(page.locator('#forecast-empty-state')).toBeHidden();
     await expect(page.locator('#result-context-bar')).toHaveCount(0);
     await page.screenshot({ path: 'test-results/home-state-result-desktop.png', fullPage: false });
