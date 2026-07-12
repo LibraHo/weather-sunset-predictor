@@ -15,6 +15,11 @@ test.describe('home empty state and inline weather context', () => {
   test('keeps search text and renders event context inside the weather card', async ({ page }) => {
     await expect(page.locator('#forecast-empty-state')).toBeVisible();
     await expect(page.locator('#refresh-btn')).toBeHidden();
+    await page.setViewportSize({ width: 1366, height: 900 });
+    await page.screenshot({ path: 'test-results/home-state-empty-desktop.png', fullPage: false });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.screenshot({ path: 'test-results/home-state-empty-mobile.png', fullPage: false });
+    await page.setViewportSize({ width: 1366, height: 900 });
 
     const input = page.locator('#location-input');
     await input.fill('test');
@@ -25,5 +30,8 @@ test.describe('home empty state and inline weather context', () => {
     await expect(input).toHaveValue('test');
     await expect(page.locator('#forecast-empty-state')).toBeHidden();
     await expect(page.locator('#result-context-bar')).toHaveCount(0);
+    await page.screenshot({ path: 'test-results/home-state-result-desktop.png', fullPage: false });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.screenshot({ path: 'test-results/home-state-result-mobile.png', fullPage: false });
   });
 });
