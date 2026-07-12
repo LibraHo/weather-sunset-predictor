@@ -30,8 +30,11 @@ test.describe('home empty state and inline weather context', () => {
     await expect(input).toHaveValue('北京');
     await expect(page.locator('#forecast-empty-state')).toBeHidden();
     await expect(page.locator('#result-context-bar')).toHaveCount(0);
+    await expect(page.locator('.toast')).toHaveCount(0, { timeout: 8000 });
+    await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({ path: 'test-results/home-state-result-desktop.png', fullPage: false });
     await page.setViewportSize({ width: 390, height: 844 });
+    await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({ path: 'test-results/home-state-result-mobile.png', fullPage: false });
   });
 });
