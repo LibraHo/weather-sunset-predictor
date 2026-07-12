@@ -461,37 +461,117 @@ describe('EnhancedPredictionService', () => {
 
   // ========== 光路评分测试 ==========
   describe('scoreLightPath', () => {
-    // LightPathV2 重构后，旧的 remoteData 接口已合并，以下测试基于旧行为，暂时跳过
-    test.skip('should return neutral score without remote data (not 100)', () => {
-      const weatherData = {};
-      const result = EnhancedPredictionService.scoreLightPath(weatherData, 270, null);
+    test('should estimate a local multi-distance light path without remote samples', () => {
+      const weatherData = { lowClouds: 40, midClouds: 30, highClouds: 20, cloudCover: 70 };
+      const result = EnhancedPredictionService.scoreLightPath(weatherData, -1, 295);
 
-      expect(result.score).toBeLessThanOrEqual(50);
-      expect(result.nearPointScore).toBeLessThanOrEqual(50);
-      expect(result.farPointScore).toBeLessThanOrEqual(50);
+      expect(result.source).toBe('local_estimate');
       expect(result.hasRemoteData).toBe(false);
+      expect(result.samples.map(sample => sample.distanceKm)).toEqual([10, 25, 50, 75, 100]);
+      expect(result.score).toBeGreaterThan(0);
+      expect(result.score).toBeLessThan(100);
+      expect(result.nearPointScore).toBeCloseTo(100 * (1 - result.samples[0].block), 1);
+      expect(result.farPointScore).toBeCloseTo(100 * (1 - result.samples[2].block), 1);
     });
 
-    test.skip('should use remote cloud data when provided', () => {
-      // LightPathV2 重构后行为变更，由集成测试覆盖
+    test('should use directional remote cloud samples when provided', () => {
+      const weatherData = { lowClouds: 40, midClouds: 30, highClouds: 20, cloudCover: 70 };
+      const openPathRemote = {
+        source: 'test_open_path',
+        samples: [10, 25, 50, 75, 100].map(distanceKm => ({
+          distanceKm,
+          lowCloud: 0,
+          midCloud: 5,
+          highCloud: 90,
+          totalCloud: 90
+        }))
+      };
+      const blockedPathRemote = {
+        source: 'test_blocked_path',
+        samples: [10, 25, 50, 75, 100].map(distanceKm => ({
+          distanceKm,
+          lowCloud: 90,
+          midCloud: 70,
+          highCloud: 10,
+          totalCloud: 95
+        }))
+      };
+
+      const open = EnhancedPredictionService.scoreLightPath(weatherData, -1, 295, openPathRemote);
+      const blocked = EnhancedPredictionService.scoreLightPath(weatherData, -1, 295, blockedPathRemote);
+
+      expect(open.hasRemoteData).toBe(true);
+      expect(open.source).toBe('test_open_path');
+      expect(open.directionalAnalysis).toMatchObject({
+        available: true,
+        reason: 'solar_direction_clear_opening'
+      });
+      expect(blocked.hasRemoteData).toBe(true);
+      expect(blocked.source).toBe('test_blocked_path');
+      expect(blocked.remoteBlockSignal).toBe(true);
+      expect(blocked.directionalAnalysis).toMatchObject({
+        available: true,
+        reason: 'solar_direction_blocked_corridor',
+        cap: 48
+      });
+      expect(open.score).toBeGreaterThan(blocked.score);
     });
 
-    test.skip('should weight far point (60%) more than near point (40%)', () => {
-      // LightPathV2 重构后行为变更，由集成测试覆盖
+    test('should apply current solar-direction distance weights', () => {
+      const weatherData = { lowClouds: 0, midClouds: 0, highClouds: 0, cloudCover: 0 };
+      const remoteWithSingleCloudWall = (blockedDistanceKm) => ({
+        source: `blocked_${blockedDistanceKm}`,
+        samples: [10, 25, 50, 75, 100].map(distanceKm => (
+          distanceKm === blockedDistanceKm
+            ? { distanceKm, lowCloud: 100, midCloud: 100, highCloud: 100, totalCloud: 100 }
+            : { distanceKm, lowCloud: 0, midCloud: 0, highCloud: 0, totalCloud: 0 }
+        ))
+      });
+
+      const blockedAt25km = EnhancedPredictionService.scoreLightPath(
+        weatherData, -1, 295, remoteWithSingleCloudWall(25)
+      );
+      const blockedAt100km = EnhancedPredictionService.scoreLightPath(
+        weatherData, -1, 295, remoteWithSingleCloudWall(100)
+      );
+
+      expect(EnhancedPredictionService.SOLAR_DIRECTION_SAMPLE_WEIGHTS).toEqual([0.25, 0.30, 0.25, 0.14, 0.06]);
+      expect(blockedAt25km.rawOcclusionProbability).toBeGreaterThan(blockedAt100km.rawOcclusionProbability);
+      expect(blockedAt25km.score).toBeLessThan(blockedAt100km.score);
     });
   });
 
   describe('calculateLightPathPointScore', () => {
-    test.skip('should return capped score for clear sky (<10% clouds)', () => {
-      // LightPathV2 重构后内部实现变更，旧函数行为已不适用
+    test('should return full transparency for clear sky', () => {
+      expect(EnhancedPredictionService.calculateLightPathPointScore({
+        lowCloud: 0,
+        midCloud: 0,
+        highCloud: 0
+      })).toBe(100);
     });
 
-    test.skip('should return 0 for cloud wall (>80% clouds)', () => {
-      // LightPathV2 重构后内部实现变更
+    test('should return low transparency for a full layer cloud wall', () => {
+      expect(EnhancedPredictionService.calculateLightPathPointScore({
+        lowCloud: 100,
+        midCloud: 100,
+        highCloud: 100
+      })).toBe(0);
     });
 
-    test.skip('should interpolate linearly between 10% and 80%', () => {
-      // LightPathV2 重构后内部实现变更
+    test('should weight low cloud opacity more than mid and high cloud opacity', () => {
+      const lowCloudWall = EnhancedPredictionService.calculateLightPathPointScore({ lowCloud: 100 });
+      const midCloudWall = EnhancedPredictionService.calculateLightPathPointScore({ midCloud: 100 });
+      const highCloudWall = EnhancedPredictionService.calculateLightPathPointScore({ highCloud: 100 });
+      const mixedLayers = EnhancedPredictionService.calculateLightPathPointScore({
+        lowCloud: 20,
+        midCloud: 40,
+        highCloud: 60
+      });
+
+      expect(lowCloudWall).toBe(30);
+      expect(midCloudWall).toBe(80);
+      expect(highCloudWall).toBe(90);
+      expect(mixedLayers).toBe(72);
     });
   });
 
@@ -863,8 +943,45 @@ describe('EnhancedPredictionService', () => {
       expect(result.date).toBe(new Date(dateString).toISOString());
     });
 
-    test.skip('should use remote cloud data when provided in options', () => {
-      // LightPathV2 重构后 remoteCloudData 接口变更，hasRemoteData 逻辑已变
+    test('should use directional remote cloud samples when provided in options', () => {
+      const weatherData = {
+        lowClouds: 0,
+        midClouds: 30,
+        highClouds: 80,
+        cloudCover: 90,
+        humidity: 60,
+        visibility: 18,
+        precipitation: 0
+      };
+      const date = new Date('2026-07-12T11:45:00.000Z');
+      const remoteCloudData = {
+        source: 'test_open_path',
+        samples: [10, 25, 50, 75, 100].map(distanceKm => ({
+          distanceKm,
+          lowCloud: 0,
+          midCloud: 5,
+          highCloud: 90,
+          totalCloud: 90
+        }))
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData, date, 39.9042, 116.4074, 'sunset', { remoteCloudData }
+      );
+
+      expect(result.lightPathAnalysis).toMatchObject({
+        hasRemoteData: true,
+        source: 'test_open_path'
+      });
+      expect(result.lightPathAnalysis.samples.map(sample => sample.distanceKm)).toEqual([10, 25, 50, 75, 100]);
+      expect(result.lightPathAnalysis.directionalAnalysis).toMatchObject({
+        available: true,
+        reason: 'solar_direction_clear_opening'
+      });
+      expect(result.scoringV2).toMatchObject({
+        applied: true,
+        pathOpen: true
+      });
     });
 
     test('should apply rain bonus when rainedRecently option is true', () => {
