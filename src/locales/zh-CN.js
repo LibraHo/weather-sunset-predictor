@@ -473,6 +473,12 @@ export default {
     loading: '正在获取位置...'
   },
 
+  emptyState: {
+    title: '搜索城市，查看今晚或下一次朝霞/晚霞概率',
+    body: '从默认城市、最近搜索或收藏位置快速开始。',
+    beijing: '北京'
+  },
+
   feedback: {
     kicker: 'Prediction Feedback',
     title: '反馈预测结果',

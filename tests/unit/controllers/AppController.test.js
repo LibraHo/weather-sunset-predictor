@@ -694,7 +694,7 @@ describe('AppController', () => {
       appController.handleLocationChange = originalHandleLocationChange;
     });
 
-    test('搜索成功后应该清空输入框', async () => {
+    test('搜索成功后应该保留输入内容', async () => {
       const locationInput = document.getElementById('location-input');
       locationInput.value = '广州';
 
@@ -709,7 +709,7 @@ describe('AppController', () => {
 
       await appController.handleLocationSearch();
 
-      expect(locationInput.value).toBe('');
+      expect(locationInput.value).toBe('广州');
     });
 
     test('搜索成功后应该显示成功消息', async () => {
@@ -1260,6 +1260,7 @@ describe('AppController', () => {
       };
 
       // Simulate button click
+      appController.setResultState(true);
       const refreshBtn = document.getElementById('refresh-btn');
       refreshBtn.click();
 

@@ -440,6 +440,11 @@ apiAccess: 'Acceso API',
     "permissionDenied": "No se puede obtener el permiso de ubicación, ingrésela manualmente",
     "loading": "Obteniendo ubicación..."
   },
+  emptyState: {
+    title: 'Busca una ciudad para ver la probabilidad del próximo amanecer o atardecer',
+    body: 'Empieza rápidamente desde tu ciudad predeterminada, búsquedas recientes o favoritos.',
+    beijing: 'Pekín'
+  },
   feedback: {
     kicker: 'Prediction Feedback', title: 'Prediction feedback', subtitle: 'Submit missed, wrong, or overstated predictions. We save the score, weather snapshot, cloud data, location, and images for review.',
     button: 'Feedback', closeAria: 'Close feedback dialog', typeLabel: 'Feedback type',

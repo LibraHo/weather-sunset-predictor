@@ -460,6 +460,11 @@ apiAccess: 'API接続',
     "permissionDenied": "位置情報の権限を取得できません。手動で入力してください",
     "loading": "位置情報を取得中..."
   },
+  emptyState: {
+    title: '都市を検索して、今夜または次の朝焼け・夕焼け確率を確認',
+    body: '既定の都市、最近の検索、お気に入りからすぐに始められます。',
+    beijing: '北京'
+  },
   feedback: {
     kicker: 'Prediction Feedback', title: 'Prediction feedback', subtitle: 'Submit missed, wrong, or overstated predictions. We save the score, weather snapshot, cloud data, location, and images for review.',
     button: 'Feedback', closeAria: 'Close feedback dialog', typeLabel: 'Feedback type',
