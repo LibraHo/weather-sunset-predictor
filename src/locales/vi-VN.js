@@ -662,7 +662,7 @@
           "severeHazeCap35": "heavy haze makes colors hard to show",
           "moderateHazeCap45": "haze weakens orange-red color",
           "hazeWarmScatteringPathOpen": "open sunset path turns moderate particles into warm orange-red scattering",
-          "wetHazePathOpenMidRendering": "open path with wet haze keeps the glow in a capped mid-score range",
+          "wetHazePathOpenMidRendering": "open path with unstable air rendering keeps the glow in a capped mid-score range",
           "fullUpperCloudGrayVeilAirRendering": "full mid/high cloud plus dirty air suppresses color rendering",
           "denseCarrierCanvasOnly": "mid/high clouds can still catch sunset light",
           "adjustmentApplied": "score adjusted for limiting conditions",
