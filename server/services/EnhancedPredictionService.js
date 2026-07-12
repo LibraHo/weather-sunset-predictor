@@ -1497,10 +1497,18 @@ function assessAerosolHazeCap(weatherData, context = {}) {
   const visibility = weatherData.visibility ?? 20;
   const { aod, pm25, pm10, dust } = getAerosolMetrics(weatherData);
   const pathOpen = context.pathOpen === true;
+  const scoringAirMode = context.airMode || null;
 
   const hasUpperCloudCarrier = (highClouds >= 65 || (midClouds >= 45 && highClouds >= 45)) && lowClouds <= 20;
   const extremeHaze = (aod != null && aod >= 0.8) || (dust != null && dust >= 300) || (pm10 != null && pm10 >= 250);
   const severeHaze = (aod != null && aod >= 0.55) || (dust != null && dust >= 150) || (pm10 != null && pm10 >= 180) || (pm25 != null && pm25 >= 90) || visibility < 6;
+  const wetHazePathOpenMidRendering =
+    pathOpen &&
+    scoringAirMode === 'wet_haze_path_open_mid_rendering' &&
+    visibility >= 10 &&
+    (aod == null || aod < 0.7) &&
+    (dust == null || dust < 80) &&
+    (pm10 == null || pm10 < 150);
   const warmScatteringHaze =
     pathOpen &&
     visibility >= 12 &&
@@ -1512,6 +1520,10 @@ function assessAerosolHazeCap(weatherData, context = {}) {
 
   if (hasUpperCloudCarrier && extremeHaze) {
     return { applied: true, cap: 28, level: 'extreme', reason: 'extreme_dust_haze_cap_28', metrics: { aod, pm25, pm10, dust, visibility } };
+  }
+
+  if (hasUpperCloudCarrier && severeHaze && wetHazePathOpenMidRendering) {
+    return { applied: false, cap: null, level: 'wet_haze_mid', reason: 'wet_haze_path_open_mid_rendering', metrics: { aod, pm25, pm10, dust, visibility } };
   }
 
   if (hasUpperCloudCarrier && severeHaze && warmScatteringHaze) {
@@ -3008,6 +3020,11 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   const airClearEnoughForPositiveCalibration = Number(finalResult.breakdown?.renderingFactor ?? 1) >= 0.75
     || scoringV2.warmScatteringUpperCarrierAdjustment?.applied
     || scoringV2.airMode === 'wet_haze_path_open_mid_rendering';
+  const wetHazePathOpenCalibration =
+    scoringV2.airMode === 'wet_haze_path_open_mid_rendering' &&
+    scoringV2.pathOpen === true &&
+    Number(weatherData.visibility ?? 20) >= 10 &&
+    Number(weatherData.lowClouds || 0) <= 20;
   if (!thickHighCloudPenalty.applied && scoringV2.applied && scoringV2.airMode === 'gray_veil_air_suppression' && scoringV2.score < adjustedScore) {
     adjustedScore = scoringV2.score;
     if (adjustedScore < 46) {
@@ -3017,7 +3034,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
       adjustedStatus = 'good_glow';
       adjustedDescription = 'conditions_good';
     }
-  } else if (!thickHighCloudPenalty.applied && airClearEnoughForPositiveCalibration && scoringV2.applied && scoringV2.score > adjustedScore) {
+  } else if ((!thickHighCloudPenalty.applied || wetHazePathOpenCalibration) && airClearEnoughForPositiveCalibration && scoringV2.applied && scoringV2.score > adjustedScore) {
     adjustedScore = scoringV2.score;
     if (adjustedScore >= 82) {
       adjustedStatus = 'legendary_eruption';
@@ -3032,7 +3049,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
   }
 
   // 6.8 气溶胶/沙尘灰幕封顶 + 清透高云载体保底（2026-05-06 北京/喀什反例）
-  const aerosolHazeCap = assessAerosolHazeCap(weatherData, { pathOpen: scoringV2.pathOpen === true });
+  const aerosolHazeCap = assessAerosolHazeCap(weatherData, { pathOpen: scoringV2.pathOpen === true, airMode: scoringV2.airMode });
   let highCloudCarrierAdjustment = assessHighCloudCarrierAdjustment(weatherData, aerosolHazeCap, thickHighCloudPenalty);
 
   const airClearEnoughForCarrierFloor = Number(finalResult.breakdown?.renderingFactor ?? 1) >= 0.90;
@@ -3061,7 +3078,8 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     reason: layerBrightness.reason,
     originalScore: carrierScore.score
   };
-  if (adjustedScore > finalResult.score && !scoringV2.warmScatteringUpperCarrierAdjustment?.applied) {
+  const scoringV2AlreadyIncludesAirRendering = scoringV2.airMode === 'wet_haze_path_open_mid_rendering';
+  if (adjustedScore > finalResult.score && !scoringV2.warmScatteringUpperCarrierAdjustment?.applied && !scoringV2AlreadyIncludesAirRendering) {
     const postCalibrationBrightnessAdjustment = LayerBrightnessService.applyLayerBrightnessMultiplier(adjustedScore, layerBrightness);
     if (postCalibrationBrightnessAdjustment.applied && postCalibrationBrightnessAdjustment.score < adjustedScore) {
       layerBrightnessAdjustment = {

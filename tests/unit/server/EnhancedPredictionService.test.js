@@ -1420,6 +1420,57 @@ describe('EnhancedPredictionService', () => {
       expect(result.score).toBeLessThan(65);
     });
 
+    test('should keep wet haze open-path Beijing sunset in mid score band without double haze penalties', () => {
+      const weatherData = {
+        cloudCover: 87.75,
+        lowClouds: 0,
+        midClouds: 11.25,
+        highClouds: 100,
+        humidity: 82,
+        visibility: 11.25,
+        precipitation: 0,
+        recentPrecipitation6h: 0.1,
+        recentRainSignal: 0,
+        shortwaveRadiation: 43.5,
+        directRadiation: 9.1,
+        diffuseRadiation: 34.4,
+        waterVapourColumn: 49.3,
+        aerosolOpticalDepth: 0.615,
+        dust: 46.5,
+        pm2_5: 92.15,
+        pm10: 119.5,
+        aqi: 97
+      };
+      const remoteCloudData = {
+        source: 'solar_direction_openmeteo',
+        samples: [10, 25, 50, 75, 100].map(distanceKm => ({
+          distanceKm,
+          lowCloud: 0,
+          midCloud: 3,
+          highCloud: 96,
+          totalCloud: 87
+        }))
+      };
+
+      const result = EnhancedPredictionService.calculateEnhancedPrediction(
+        weatherData, new Date('2026-07-12T11:45:00.000Z'), 39.9042, 116.4074, 'sunset', { remoteCloudData }
+      );
+
+      expect(result.scoringV2).toMatchObject({
+        airMode: 'wet_haze_path_open_mid_rendering',
+        pathOpen: true,
+        score: 55
+      });
+      expect(result.aerosolHazeCap).toMatchObject({
+        applied: false,
+        level: 'wet_haze_mid',
+        reason: 'wet_haze_path_open_mid_rendering'
+      });
+      expect(result.score).toBeGreaterThanOrEqual(55);
+      expect(result.score).toBeLessThanOrEqual(60);
+      expect(result.status).toBe('good_glow');
+    });
+
     test('should lift full local upper-cloud warm scattering into 70 band for detailed point forecast only', () => {
       const weatherData = {
         cloudCover: 98,
