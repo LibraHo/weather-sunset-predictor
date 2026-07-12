@@ -285,9 +285,9 @@ export default {
       changelog: {
         latest: {
           date: '2026-07-08',
-          title: '湿霾开光路中间档',
-          summary: '光路打开、高云载体充足、低云未封死但空气偏湿偏灰时，进入湿霾中等显色档；水汽不再单独触发雨后灰幕，硬阻断拆成 hard/soft。',
-          validation: '验证：2026-07-07 北京湿霾开光路样本从 35 调整到 46；2026-06-13 真雨幕仍保持约 24；真实校准样本库和后端单测通过。'
+          title: '开光路空气显色中间档',
+          summary: '光路打开、高云载体充足、低云未封死，但水汽与气溶胶预报提示显色不稳定时，进入中等显色档；水汽不再单独触发雨后灰幕，硬阻断拆成 hard/soft。',
+          validation: '验证：2026-07-07 北京开光路中等显色样本从 35 调整到 46；2026-06-13 真雨幕仍保持约 24；真实校准样本库和后端单测通过。'
         },
         layerBrightness: {
           date: '2026-06-13',
@@ -398,10 +398,10 @@ export default {
         layerDiversity: {
           title: '4. 空气显色',
           subtitle: 'Air Rendering · 颜色质量',
-          desc: '空气显色只解释颜色质量：能见度、湿度、雨后状态、AOD/PM/dust 会共同影响红橙色强弱；相关湿霾证据会做软下限校准，避免重复连乘过杀。',
+          desc: '空气显色只解释颜色质量：能见度、湿度、雨后状态、AOD/PM/dust 会共同影响红橙色强弱；相关空气衰减证据会做软下限校准，避免重复连乘过杀。',
           threeLayer: '光路开且云幕不灰：轻/中度颗粒可增强暖色',
           twoLayer: '中高云满铺且 PM/AOD、水汽或直射光偏弱：按灰幕/厚云压力连续压低显色',
-          oneLayer: '降水和低能见度会降低颜色清晰度；非极端湿霾不会把同一证据无限连乘'
+          oneLayer: '降水和低能见度会降低颜色清晰度；非极端空气衰减不会把同一证据无限连乘'
         },
         lowCloudPenalty: {
           title: '5. 限制因素',
@@ -439,7 +439,7 @@ export default {
           highCloudCap: '高云充足但光路被挡时，会先体现在受光亮度变弱。',
           carrier: '基础分 = Σ(分层载体 × 分层受光亮度)',
           lightGate: '光路已经并入受光亮度，不再单独显示成最终乘子',
-          rendering: '空气显色用于解释颜色质量；低能见度、雨后灰幕、AQI 和 AOD 属于同一团湿霾证据时使用软下限，不再把气溶胶弱载体重复显示成最终加分',
+          rendering: '空气显色用于解释颜色质量；低能见度、雨后灰幕、AQI 和 AOD 属于同一组空气衰减证据时使用软下限，不再把气溶胶弱载体重复显示成最终加分',
           statusCaps: '显示分还会按状态校准：无火烧云低于 40，轻微霞光低于 60；几何不可行、厚云、灰幕和雨低云会进一步封顶'
         }
       }
@@ -657,7 +657,7 @@ export default {
           layerBrightnessMultiplier: '有效亮度 {{brightness}}；压暗证据：{{evidence}}',
           layerContribution: '{{layer}}：载体 {{carrier}} × 受光 {{brightness}} = {{score}}',
           renderingFactors: '能见度 ×{{visibility}}，湿度 ×{{humidity}}，气溶胶 ×{{aerosol}}',
-          renderingCorrelationFloor: '湿霾相关证据软下限：原始 ×{{raw}} → ×{{floor}}',
+          renderingCorrelationFloor: '空气衰减相关证据软下限：原始 ×{{raw}} → ×{{floor}}',
           afterAdjustments: '结合天气和能见度后',
           finalDisplayed: '最终展示结果',
           thickCloudCap: '厚云幕或灰幕会削弱真实可染色效果',
@@ -686,7 +686,7 @@ export default {
           severeHazeCap35: '重度灰霾让颜色不容易出来',
           moderateHazeCap45: '灰霾会削弱红橙色',
           hazeWarmScatteringPathOpen: '日落光路打开，适度颗粒增强橙红散射',
-          wetHazePathOpenMidRendering: '光路打开但湿霾偏重，按中等显色并限制上限',
+          wetHazePathOpenMidRendering: '光路打开但空气显色不稳定，按中等显色并限制上限',
           fullUpperCloudGrayVeilAirRendering: '满铺中高云叠加偏脏空气，显色转为灰幕抑制',
           denseCarrierCanvasOnly: '中高云层仍能承接晚霞光线',
           adjustmentApplied: '已按限制条件修正',

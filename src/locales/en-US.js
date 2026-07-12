@@ -277,9 +277,9 @@ const translations = {
       changelog: {
         "latest": {
           "date": "2026-07-08",
-          "title": "Wet-haze open-path mid rendering",
-          "summary": "When the path is open, high-cloud carrier is strong, low clouds are not sealed, but air is wet and gray, the model uses a capped mid-rendering wet-haze band. Water vapour no longer triggers the post-rain gray curtain by itself, and hard blocking is split into hard/soft cases.",
-          "validation": "Validation: the 2026-07-07 Beijing wet-haze open-path case moves from 35 to 46; the 2026-06-13 active rain-curtain case stays around 24; the real calibration library and backend unit suite pass."
+          "title": "Open-path mid air-rendering band",
+          "summary": "When the path is open, high-cloud carrier is strong, and low clouds are not sealed, but moisture and aerosol forecasts suggest unstable color rendering, the model uses a capped mid-rendering band. Water vapour no longer triggers the post-rain gray curtain by itself, and hard blocking is split into hard/soft cases.",
+          "validation": "Validation: the 2026-07-07 Beijing open-path mid-rendering case moves from 35 to 46; the 2026-06-13 active rain-curtain case stays around 24; the real calibration library and backend unit suite pass."
         },
         "layerBrightness": {
           "date": "2026-06-13",
@@ -660,7 +660,7 @@ const translations = {
           "severeHazeCap35": "heavy haze makes colors hard to show",
           "moderateHazeCap45": "haze weakens orange-red color",
           "hazeWarmScatteringPathOpen": "open sunset path turns moderate particles into warm orange-red scattering",
-          "wetHazePathOpenMidRendering": "open path with wet haze keeps the glow in a capped mid-score range",
+          "wetHazePathOpenMidRendering": "open path with unstable air rendering keeps the glow in a capped mid-score range",
           "fullUpperCloudGrayVeilAirRendering": "full mid/high cloud plus dirty air suppresses color rendering",
           "denseCarrierCanvasOnly": "mid/high clouds can still catch sunset light",
           "adjustmentApplied": "score adjusted for limiting conditions",

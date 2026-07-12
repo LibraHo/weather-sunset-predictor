@@ -277,9 +277,9 @@ const translations = {
       changelog: {
         "latest": {
           "date": "2026-07-08",
-          "title": "濕霾開光路中間檔",
-          "summary": "光路打開、高雲載體充足、低雲未封死但空氣偏濕偏灰時，進入濕霾中等顯色檔；水氣不再單獨觸發雨後灰幕，硬阻斷拆成 hard/soft。",
-          "validation": "驗證：2026-07-07 北京濕霾開光路樣本從 35 調整到 46；2026-06-13 真雨幕仍保持約 24；真實校準樣本庫和後端單測通過。"
+          "title": "開光路空氣顯色中間檔",
+          "summary": "光路打開、高雲載體充足、低雲未封死，但水氣與氣溶膠預報提示顯色不穩定時，進入中等顯色檔；水氣不再單獨觸發雨後灰幕，硬阻斷拆成 hard/soft。",
+          "validation": "驗證：2026-07-07 北京開光路中等顯色樣本從 35 調整到 46；2026-06-13 真雨幕仍保持約 24；真實校準樣本庫和後端單測通過。"
         },
         "layerBrightness": {
           "date": "2026-06-13",
@@ -633,7 +633,7 @@ const translations = {
           "layerBrightnessMultiplier": "有效亮度 {{brightness}}；壓暗證據：{{evidence}}",
           "layerContribution": "{{layer}}：載體 {{carrier}} × 受光 {{brightness}} = {{score}}",
           "renderingFactors": "能見度 ×{{visibility}}，濕度 ×{{humidity}}，氣溶膠 ×{{aerosol}}",
-          "renderingCorrelationFloor": "濕霾相關證據軟下限：原始 ×{{raw}} → ×{{floor}}",
+          "renderingCorrelationFloor": "空氣衰減相關證據軟下限：原始 ×{{raw}} → ×{{floor}}",
           "afterAdjustments": "結合天氣和能見度後",
           "finalDisplayed": "最終顯示結果",
           "thickCloudCap": "厚雲幕或灰幕會削弱真實可染色效果",
@@ -662,7 +662,7 @@ const translations = {
           "severeHazeCap35": "重度灰霾讓顏色不容易出來",
           "moderateHazeCap45": "灰霾會削弱紅橙色",
           "hazeWarmScatteringPathOpen": "日落光路打開，適度顆粒增強橙紅散射",
-          "wetHazePathOpenMidRendering": "光路打開但濕霾偏重，按中等顯色並限制上限",
+          "wetHazePathOpenMidRendering": "光路打開但空氣顯色不穩定，按中等顯色並限制上限",
           "fullUpperCloudGrayVeilAirRendering": "滿鋪中高雲疊加偏髒空氣，顯色轉為灰幕抑制",
           "denseCarrierCanvasOnly": "中高雲層仍能承接晚霞光線",
           "adjustmentApplied": "已按限制條件修正",

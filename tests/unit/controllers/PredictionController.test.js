@@ -870,7 +870,7 @@ describe('PredictionController', () => {
       expect(html).not.toContain('71.1 + 显色修正 6.0 = 77.1');
     });
 
-    test('分数明细应把湿霾开光路中间档显示成中文解释', () => {
+    test('分数明细应把开光路空气显色中间档显示成中文解释', () => {
       const html = predictionController.renderScoreBreakdownPopover({
         score: 46,
         breakdown: {
@@ -891,7 +891,7 @@ describe('PredictionController', () => {
         aerosolHazeCap: { applied: true, cap: 55, level: 'wet_haze_mid', reason: 'wet_haze_path_open_mid_rendering' }
       });
 
-      expect(html).toContain('光路打开但湿霾偏重，按中等显色并限制上限');
+      expect(html).toContain('光路打开但空气显色不稳定，按中等显色并限制上限');
       expect(html).not.toContain('wet_haze_path_open_mid_rendering');
     });
 

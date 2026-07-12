@@ -59,7 +59,7 @@ describe('home methodology structure', () => {
 
     expect(html).toContain('2026-07-08');
     expect(html).toContain('2026.07.08-wet-haze-open-path-mid-rendering');
-    expect(html).toContain('湿霾开光路中间档');
+    expect(html).toContain('开光路空气显色中间档');
     expect(html).toContain('硬阻断拆成 hard/soft');
     expect(html).toContain('远端高云、远端中云和远端低云遮挡');
     expect(html).toContain('分层求和亮度公式 v1');
@@ -69,7 +69,7 @@ describe('home methodology structure', () => {
     expect(html).toContain('满铺中高云叠加 PM/AOD 偏高');
     expect(html).toContain('方向中云越强，越接近 50-60 档');
     expect(html).toContain('云厚比例折损 v2');
-    expect(html).toContain('2026-07-07 北京湿霾开光路样本');
+    expect(html).toContain('2026-07-07 北京开光路中等显色样本');
     expect(html).not.toContain('载体缓冲');
     expect(html).not.toContain('低太阳透射 未命中');
 
@@ -79,8 +79,8 @@ describe('home methodology structure', () => {
       .join('\n');
 
     expect(coreLocaleTexts).toContain('2026.07.08-wet-haze-open-path-mid-rendering');
-    expect(coreLocaleTexts).toContain('Wet-haze open-path mid rendering');
-    expect(coreLocaleTexts).toContain('濕霾開光路中間檔');
+    expect(coreLocaleTexts).toContain('Open-path mid air-rendering band');
+    expect(coreLocaleTexts).toContain('開光路空氣顯色中間檔');
     expect(coreLocaleTexts).toContain('Layer-weighted brightness formula v1');
     expect(coreLocaleTexts).toContain('remote high cloud');
     expect(coreLocaleTexts).toContain('Sunset scoring v2');

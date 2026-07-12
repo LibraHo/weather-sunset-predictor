@@ -33,7 +33,7 @@
       "rainDuringWindow": false,
       "orangeLightOrOpening": true,
       "worthWaiting": true,
-      "notes": "用于校准湿霾开光路场景，防止空气显色和分层亮度对同一湿灰证据重复强扣。"
+      "notes": "用于校准开光路空气显色中间档场景，防止空气显色和分层亮度对同一空气衰减证据重复强扣。"
     },
     "previousModelScores": [
       {

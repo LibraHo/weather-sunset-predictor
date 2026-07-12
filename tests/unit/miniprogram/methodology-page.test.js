@@ -33,7 +33,7 @@ describe('miniprogram methodology page', () => {
     expect(js).toContain('70-84 分');
     expect(js).toContain('40-69 分');
     expect(js).toContain('<40 分');
-    expect(js).toContain('湿霾开光路中间档');
+    expect(js).toContain('开光路空气显色中间档');
     expect(js).toContain('硬阻断拆成 hard/soft');
     expect(js).toContain('远端分层载体 v1');
     expect(js).toContain('候选载体');
