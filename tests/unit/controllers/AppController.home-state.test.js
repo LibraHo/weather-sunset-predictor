@@ -25,7 +25,6 @@ describe('AppController home state audit items 13-17', () => {
       <div id="empty-state-actions"></div>
       <footer id="app-footer" class="app-footer app-footer-empty"><button id="refresh-btn" disabled></button></footer>
       <div id="weather-context-inline" class="hidden">
-        <span id="weather-context-event"></span>
         <span id="weather-context-date-time"></span>
         <span id="weather-context-updated"></span>
       </div>
@@ -77,7 +76,7 @@ describe('AppController home state audit items 13-17', () => {
     expect(document.getElementById('location-input').value).toBe('Paris');
   });
 
-  test('renders the active event inside the weather card without a priority label', () => {
+  test('renders only the event time and update time below the location', () => {
     const controller = createController();
     const eventTime = new Date(Date.now() + 60 * 60 * 1000);
     controller.updateWeatherContext(
@@ -87,8 +86,10 @@ describe('AppController home state audit items 13-17', () => {
     );
 
     expect(document.getElementById('weather-context-inline').classList.contains('hidden')).toBe(false);
-    expect(document.getElementById('weather-context-event').textContent).toBe(i18n.t('prediction.sunset'));
     expect(document.getElementById('weather-context-inline').textContent).not.toContain('优先预测');
+    expect(document.getElementById('weather-context-inline').textContent).not.toContain(i18n.t('prediction.sunset'));
+    expect(document.getElementById('weather-context-date-time').textContent).not.toBe('');
+    expect(document.getElementById('weather-context-updated').textContent).not.toBe('');
   });
 
   test('renders the active event immediately from local sun times while predictions load', () => {
@@ -109,6 +110,6 @@ describe('AppController home state audit items 13-17', () => {
     );
 
     expect(document.getElementById('weather-context-inline').classList.contains('hidden')).toBe(false);
-    expect(document.getElementById('weather-context-event').textContent).toBe(i18n.t('prediction.sunset'));
+    expect(document.getElementById('weather-context-date-time').textContent).not.toBe('');
   });
 });

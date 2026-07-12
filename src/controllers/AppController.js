@@ -1637,7 +1637,6 @@ class AppController {
       hour12: false
     }).format(new Date(weatherData?.fetchedAt || Date.now()));
 
-    document.getElementById('weather-context-event').textContent = this.i18n.t(`prediction.${active.prediction.type}`);
     document.getElementById('weather-context-date-time').textContent = dateText;
     document.getElementById('weather-context-updated').textContent = this.i18n.t('weatherMap.updatedAt', { time: updatedTime });
     container.classList.remove('hidden');
