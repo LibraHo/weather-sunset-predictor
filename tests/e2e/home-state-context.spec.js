@@ -27,6 +27,7 @@ test.describe('home empty state and inline weather context', () => {
 
     await expect(page.locator('#weather-section')).toBeVisible({ timeout: 15000 });
     await expect(page.locator('#weather-context-inline')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('#weather-location')).toHaveText('北京');
     await expect(page.locator('#weather-context-inline')).toContainText('更新于');
     await expect(page.locator('#weather-context-inline')).not.toContainText(/朝霞|晚霞/);
     await expect(input).toHaveValue('北京');

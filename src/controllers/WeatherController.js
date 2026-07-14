@@ -24,6 +24,7 @@ import ChartRenderController from './ChartRenderController.js';
 import ChinaSpotsOverlay from '../services/ChinaSpotsOverlay.js';
 import ChinaRasterOverlayManager from '../services/ChinaRasterOverlayManager.js';
 import ChinaMapCanvas from '../components/ChinaMapCanvas.js';
+import { compactLocationName } from '../utils/LocationName.js';
 
 function isManualTestLocation(location) {
   return (location?.name || '').trim().toLowerCase() === 'test';
@@ -319,7 +320,9 @@ class WeatherController {
     // 更新位置
     const locationEl = document.getElementById('weather-location');
     if (locationEl) {
-      locationEl.textContent = location && location.name ? location.name : this.i18n.t('weather.currentLocation');
+      locationEl.textContent = location?.name
+        ? compactLocationName(location.name)
+        : this.i18n.t('weather.currentLocation');
     }
 
     // 更新主要天气信息

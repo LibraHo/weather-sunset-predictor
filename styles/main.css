@@ -10120,16 +10120,19 @@ body[data-actual-theme="dark"] .score-ledger-step-final .score-ledger-body {
   z-index: 1;
 }
 .weather-location-hero {
-  display: inline-grid;
-  grid-template-columns: 20px minmax(0, max-content);
+  display: flex;
   align-items: center;
   justify-content: center;
-  column-gap: 8px;
   max-width: min(100%, 720px);
   margin-bottom: 4px;
   color: var(--theme-text);
   font-size: clamp(1.05rem, 2.1vw, 1.55rem);
   line-height: 1.25;
+}
+.weather-location-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 .weather-location-hero #weather-location {
   min-width: 0;
@@ -10148,6 +10151,7 @@ body[data-actual-theme="dark"] .score-ledger-step-final .score-ledger-body {
   align-items: center;
   gap: 0 6px;
   margin-top: 5px;
+  margin-left: 28px;
   color: var(--theme-text-muted);
   font-size: clamp(0.72rem, 1.4vw, 0.86rem);
   font-weight: 520;
@@ -10305,8 +10309,14 @@ html[data-actual-theme="dark"] .weather-wind-main {
     padding: 14px 12px 13px;
   }
   .weather-location-hero {
-    grid-template-columns: 18px minmax(0, 1fr);
     font-size: 1rem;
+  }
+  .weather-location-copy {
+    align-items: center;
+    text-align: center;
+  }
+  .weather-context-inline {
+    margin-left: 0;
   }
   .weather-location-pin {
     width: 18px;

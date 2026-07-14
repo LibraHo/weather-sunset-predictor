@@ -668,12 +668,13 @@ describe('WeatherController - 24小时温度连续化', () => {
       visibility: 12,
       aerosolOpticalDepth: 0.12,
       precipitation: 1.6
-    }], { name: '北京', lat: 39.9, lon: 116.4 });
+    }], { name: '北京市 / Beijing, 中国', lat: 39.9, lon: 116.4 });
 
     const weatherData = document.getElementById('weather-data');
     expect(weatherData.classList.contains('hidden')).toBe(false);
     expect(weatherData.style.display).toBe('block');
     expect(document.getElementById('weather-section').classList.contains('hidden')).toBe(false);
+    expect(document.getElementById('weather-location').textContent).toBe('北京');
     expect(document.getElementById('current-aerosol').textContent).toBe('0.12');
     expect(document.getElementById('current-aerosol').title).toBe('AOD 0.12');
     expect(document.getElementById('current-precipitation').textContent).toBe('1.6 mm');
