@@ -460,6 +460,11 @@ const translations = {
     "permissionDenied": "Unable to get location permission, please enter location manually",
     "loading": "Getting location..."
   },
+  emptyState: {
+    title: 'Search a city to see tonight\'s or the next sunrise/sunset glow probability',
+    body: 'Start quickly from your default city, recent searches, or favorite locations.',
+    beijing: 'Beijing'
+  },
   feedback: {
     kicker: 'Prediction Feedback', title: 'Prediction feedback', subtitle: 'Submit missed, wrong, or overstated predictions. We save the score, weather snapshot, cloud data, location, and images for review.',
     button: 'Feedback', closeAria: 'Close feedback dialog', typeLabel: 'Feedback type',

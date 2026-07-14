@@ -16,6 +16,7 @@ export async function setTestEnvironment(page) {
   await page.evaluate(() => {
     // 设置中文语言
     localStorage.setItem('language', 'zh-CN');
+    localStorage.setItem('weather-sunset-predictor-language', 'zh-CN');
     // 设置 API 模式为 proxy（后端代理模式，跳过API密钥检查）
     localStorage.setItem('api_mode', 'proxy');
     // 设置 E2E 测试模式标记

@@ -460,6 +460,11 @@ apiAccess: 'API 연동',
     "permissionDenied": "위치 권한을 가져올 수 없습니다. 수동으로 입력해주세요",
     "loading": "위치를 가져오는 중..."
   },
+  emptyState: {
+    title: '도시를 검색해 오늘 밤 또는 다음 아침놀·저녁놀 확률 확인',
+    body: '기본 도시, 최근 검색 또는 즐겨찾기에서 빠르게 시작하세요.',
+    beijing: '베이징'
+  },
   feedback: {
     kicker: 'Prediction Feedback', title: 'Prediction feedback', subtitle: 'Submit missed, wrong, or overstated predictions. We save the score, weather snapshot, cloud data, location, and images for review.',
     button: 'Feedback', closeAria: 'Close feedback dialog', typeLabel: 'Feedback type',

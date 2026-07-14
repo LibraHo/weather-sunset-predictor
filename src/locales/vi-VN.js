@@ -460,6 +460,11 @@
     "permissionDenied": "Không thể lấy quyền vị trí, hãy nhập thủ công",
     "loading": "Đang lấy vị trí..."
   },
+  emptyState: {
+    title: 'Tìm thành phố để xem xác suất ráng bình minh hoặc hoàng hôn tiếp theo',
+    body: 'Bắt đầu nhanh từ thành phố mặc định, tìm kiếm gần đây hoặc địa điểm yêu thích.',
+    beijing: 'Bắc Kinh'
+  },
   feedback: {
     kicker: 'Prediction Feedback', title: 'Prediction feedback', subtitle: 'Submit missed, wrong, or overstated predictions. We save the score, weather snapshot, cloud data, location, and images for review.',
     button: 'Feedback', closeAria: 'Close feedback dialog', typeLabel: 'Feedback type',

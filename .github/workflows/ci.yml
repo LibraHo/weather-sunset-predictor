@@ -40,8 +40,17 @@ jobs:
       - name: Install Chromium for real-page i18n validation
         run: npx playwright install --with-deps chromium
 
-      - name: Run primary locale real-page layout validation
-        run: npx playwright test tests/e2e/primary-locale-layout.spec.js --project=chromium
+      - name: Run real-page layout and home-state validation
+        run: npx playwright test tests/e2e/primary-locale-layout.spec.js tests/e2e/home-state-context.spec.js --project=chromium
+
+      - name: Upload home-state screenshot evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: home-state-screenshots-node-${{ matrix.node-version }}
+          path: test-results/home-state-*.png
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Generate coverage report (non-blocking)
         run: npm run test:coverage -- --runInBand || true

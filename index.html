@@ -250,11 +250,6 @@
                 <circle cx="12" cy="10.8" r="2"/>
               </svg>
             </button>
-            <!-- 需求13：搜索历史下拉列表 + 空状态引导 -->
-            <div id="search-empty-hint" class="search-empty-hint hidden">
-              <span class="hint-icon">🔍</span>
-              <span class="hint-text">输入城市名称，查看今日火烧云预测</span>
-            </div>
             <div id="city-suggestions-dropdown" class="search-history-dropdown hidden"></div>
             <div id="search-history-dropdown" class="search-history-dropdown hidden">
               <!-- 动态填充搜索历史 -->
@@ -263,6 +258,19 @@
           <button id="search-btn" class="btn btn-primary search-action-btn xiake-action-btn xiake-action-btn-primary" data-i18n="buttons.search">查询</button>
         </div>
         <div id="location-error" class="error-message hidden"></div>
+        <div id="forecast-empty-state" class="forecast-empty-state" aria-labelledby="forecast-empty-title">
+          <span class="forecast-empty-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <circle cx="10.5" cy="10.5" r="5.5"/>
+              <path d="m15 15 4 4"/>
+            </svg>
+          </span>
+          <div class="forecast-empty-copy">
+            <h3 id="forecast-empty-title" data-i18n="emptyState.title">搜索城市，查看今晚或下一次朝霞/晚霞概率</h3>
+            <p data-i18n="emptyState.body">从默认城市、最近搜索或收藏位置快速开始。</p>
+          </div>
+          <div id="empty-state-actions" class="empty-state-actions"></div>
+        </div>
       </section>
       
       <!-- 当前天气 -->
@@ -277,13 +285,22 @@
               <div class="weather-visual-panel">
                 <!-- 位置（移至左主卡顶部） -->
                 <div class="weather-location-inline weather-location-hero">
-                  <span class="weather-location-pin" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 21s6-5.3 6-11a6 6 0 1 0-12 0c0 5.7 6 11 6 11Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                      <circle cx="12" cy="10" r="2.1" stroke="currentColor" stroke-width="1.8"/>
-                    </svg>
-                  </span>
-                  <span id="weather-location" data-i18n="weather.currentLocation">--</span>
+                  <div class="weather-location-copy">
+                    <div class="weather-location-heading">
+                      <span class="weather-location-pin" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12 21s6-5.3 6-11a6 6 0 1 0-12 0c0 5.7 6 11 6 11Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                          <circle cx="12" cy="10" r="2.1" stroke="currentColor" stroke-width="1.8"/>
+                        </svg>
+                      </span>
+                      <span id="weather-location" data-i18n="weather.currentLocation">--</span>
+                    </div>
+                    <div id="weather-context-inline" class="weather-context-inline hidden" aria-live="polite">
+                      <span id="weather-context-date-time"></span>
+                      <span class="weather-context-separator" aria-hidden="true">·</span>
+                      <span id="weather-context-updated"></span>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="weather-icon-large" id="weather-icon-main">☀️</div>
@@ -1246,7 +1263,7 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
       </form>
     </div>
 
-    <footer>
+    <footer id="app-footer" class="app-footer app-footer-empty">
       <button id="refresh-btn" class="btn btn-secondary xiake-action-btn xiake-action-btn-secondary" disabled>
         <svg class="xiake-btn-icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
           <path d="M20 6v5h-5"/>

@@ -16,6 +16,8 @@ import ThemeService from '../services/ThemeService.js';
 import UIStateController from './UIStateController.js';
 import FavoriteController from './FavoriteController.js';
 
+const EVENT_ROLLOVER_MS = 45 * 60 * 1000;
+
 class AppController {
   /**
    * 创建AppController实例
@@ -36,6 +38,8 @@ class AppController {
     this.citySuggestions = [];
     this.citySuggestionTimer = null;
     this.citySuggestionRequestId = 0;
+    this.hasForecastResults = false;
+    this.weatherContextState = null;
     this.siteState = {
       siteClosed: false,
       weatherPredictionClosed: false,
@@ -92,6 +96,7 @@ class AppController {
       // API 模式固定为后端代理：前端不再执行 API 密钥门禁
       console.log('[AppController] API模式: 后端代理（固定），跳过前端 API 密钥检查');
       this.initializeUI();
+      this.setResultState(false);
       this.applyWeatherPredictionAvailability();
 
       // 需求12：加载收藏位置列表
@@ -99,6 +104,7 @@ class AppController {
 
       // 需求13：加载搜索历史（预填充到下拉列表）
       this.loadSearchHistory();
+      this.renderForecastEmptyState();
 
       // 需求12：请求通知权限（如果用户启用了通知）
       await this.requestNotificationPermissionIfEnabled();
@@ -202,8 +208,11 @@ class AppController {
       }
 
       if (weatherData && weatherData.length > 0) {
+        weatherData.fetchedAt = Date.now();
         // 更新天气显示：天气信息先展示，再在朝霞/晚霞预测区域显示加载状态
         this.weatherController.updateWeatherDisplay(weatherData, location);
+        this.setResultState(true);
+        this.updateWeatherContext(location, weatherData, []);
         this._setThreeDayGlowLoading(true);
         this.showLoading(true, { progress: 48, message: this.i18n.t('loading.prediction') });
 
@@ -223,6 +232,7 @@ class AppController {
         if (predictions && predictions.length > 0) {
           this.updateLoadingProgress({ progress: 88, message: this.i18n.t('loading.pleaseWait') });
           this.predictionController.updatePredictionDisplay(predictions);
+          this.updateWeatherContext(location, weatherData, predictions);
         } else {
           console.warn('[AppController] 没有生成预测数据，跳过预测显示');
           this._setThreeDayGlowLoading(false);
@@ -480,6 +490,8 @@ class AppController {
     window.addEventListener('languageChanged', (event) => {
       console.log('[AppController] 语言已切换至:', event.detail.language);
       this.refreshUIText();
+      this.renderForecastEmptyState();
+      this.renderWeatherContext();
 
       // 语言切换会重建预测卡片DOM，需补渲染朝/晚霞云况雷达
       if (this.currentLocation && this.weatherController?.renderRadarCompass) {
@@ -1013,9 +1025,6 @@ class AppController {
         console.warn('[AppController] 搜索历史保存失败');
       }
 
-      // 清空输入框
-      locationInput.value = '';
-
       // 显示成功消息
       this.showSuccess(this.i18n.t('app.switchedToLocation', { name: location.name }));
 
@@ -1522,6 +1531,149 @@ class AppController {
       dropdown.innerHTML = '';
     }
     this.citySuggestions = [];
+  }
+
+  setResultState(hasResults) {
+    this.hasForecastResults = Boolean(hasResults);
+    document.getElementById('forecast-empty-state')?.classList.toggle('hidden', this.hasForecastResults);
+    document.getElementById('app-footer')?.classList.toggle('app-footer-empty', !this.hasForecastResults);
+    const refreshButton = document.getElementById('refresh-btn');
+    if (refreshButton) refreshButton.disabled = !this.hasForecastResults;
+  }
+
+  renderForecastEmptyState() {
+    const actions = document.getElementById('empty-state-actions');
+    if (!actions) return;
+
+    const defaultLocation = this.storageService.getDefaultLocation?.();
+    const recent = this.storageService.getSearchHistory?.() || [];
+    const favorites = this.storageService.getFavoriteLocations?.() || [];
+    const candidates = [
+      defaultLocation,
+      ...recent.slice(0, 2),
+      ...favorites.slice(0, 2),
+      { name: this.i18n.t('emptyState.beijing'), lat: 39.9042, lon: 116.4074 }
+    ].filter(Boolean);
+    const unique = candidates.filter((item, index, list) => {
+      const key = `${Number(item.lat).toFixed(3)}:${Number(item.lon).toFixed(3)}`;
+      return Number.isFinite(Number(item.lat))
+        && Number.isFinite(Number(item.lon))
+        && list.findIndex(candidate => `${Number(candidate.lat).toFixed(3)}:${Number(candidate.lon).toFixed(3)}` === key) === index;
+    }).slice(0, 5);
+
+    actions.replaceChildren();
+    unique.forEach((item) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'empty-state-location-btn';
+      button.textContent = item.name || this.i18n.t('weather.currentLocation');
+      button.addEventListener('click', async () => {
+        const location = {
+          lat: Number(item.lat),
+          lon: Number(item.lon),
+          name: item.name || this.i18n.t('weather.currentLocation'),
+          timezone: item.timezone || item.timeZone || null,
+          isValid: () => Number.isFinite(Number(item.lat)) && Number.isFinite(Number(item.lon))
+        };
+        const input = document.getElementById('location-input');
+        if (input) input.value = location.name;
+        try {
+          await this.handleLocationChange(location);
+        } catch (error) {
+          this.showError(error?.message || this.i18n.t('errors.unknown'));
+        }
+      });
+      actions.appendChild(button);
+    });
+  }
+
+  updateWeatherContext(location, weatherData, predictions) {
+    this.weatherContextState = { location, weatherData, predictions };
+    this.renderWeatherContext();
+  }
+
+  renderWeatherContext() {
+    const container = document.getElementById('weather-context-inline');
+    if (!container || !this.weatherContextState) return;
+
+    const { location, weatherData, predictions = [] } = this.weatherContextState;
+    const now = new Date();
+    const validPredictions = predictions
+      .map((prediction) => ({
+        prediction,
+        eventTime: new Date(prediction.type === 'sunrise'
+          ? (prediction.sunriseTime || prediction.sunsetTime || prediction.date)
+          : (prediction.sunsetTime || prediction.date))
+      }))
+      .filter(item => !Number.isNaN(item.eventTime.getTime()));
+    let active = validPredictions
+      .filter(item => item.eventTime.getTime() + EVENT_ROLLOVER_MS > now.getTime())
+      .sort((a, b) => a.eventTime - b.eventTime)[0] || validPredictions.sort((a, b) => b.eventTime - a.eventTime)[0];
+
+    if (!active) {
+      active = this.deriveActiveWeatherEvent(location, weatherData, now);
+    }
+
+    if (!active) {
+      container.classList.add('hidden');
+      return;
+    }
+
+    const locale = this.i18n.getLanguage?.() || document.documentElement.lang || 'zh-CN';
+    const timezone = active.prediction?.timezone || active.prediction?.timeZone
+      || weatherData?.find?.(item => item?.timezone || item?.timeZone)?.timezone
+      || weatherData?.find?.(item => item?.timezone || item?.timeZone)?.timeZone
+      || location?.timezone || location?.timeZone
+      || weatherData?.providerMeta?.timezone
+      || undefined;
+    const formatOptions = timezone ? { timeZone: timezone } : {};
+    const dateText = new Intl.DateTimeFormat(locale, {
+      ...formatOptions,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).format(active.eventTime);
+    const updatedTime = new Intl.DateTimeFormat(locale, {
+      ...formatOptions,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).format(new Date(weatherData?.fetchedAt || Date.now()));
+
+    document.getElementById('weather-context-date-time').textContent = dateText;
+    document.getElementById('weather-context-updated').textContent = this.i18n.t('weatherMap.updatedAt', { time: updatedTime });
+    container.classList.remove('hidden');
+  }
+
+  deriveActiveWeatherEvent(location, weatherData, now = new Date()) {
+    const predictionService = this.predictionController?.predictionService;
+    const lat = Number(location?.lat);
+    const lon = Number(location?.lon);
+    if (!predictionService || !Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+
+    const timezone = location?.timezone || location?.timeZone
+      || weatherData?.find?.(item => item?.timezone)?.timezone
+      || weatherData?.providerMeta?.timezone
+      || null;
+    const options = { timezone };
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+    const sunriseTime = predictionService.getSunriseTime(today, lat, lon, options);
+    const sunsetTime = predictionService.getSunsetTime(today, lat, lon, options);
+
+    if (sunriseTime && now.getTime() <= sunriseTime.getTime() + EVENT_ROLLOVER_MS) {
+      return { prediction: { type: 'sunrise' }, eventTime: sunriseTime };
+    }
+    if (sunsetTime && now.getTime() <= sunsetTime.getTime() + EVENT_ROLLOVER_MS) {
+      return { prediction: { type: 'sunset' }, eventTime: sunsetTime };
+    }
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const nextSunriseTime = predictionService.getSunriseTime(tomorrow, lat, lon, options);
+    return nextSunriseTime
+      ? { prediction: { type: 'sunrise' }, eventTime: nextSunriseTime }
+      : null;
   }
 
   // ========== 需求13：搜索历史管理 ==========

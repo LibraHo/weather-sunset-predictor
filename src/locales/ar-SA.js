@@ -333,6 +333,11 @@ apiAccess: 'الوصول إلى API',
     permissionDenied: 'تعذر الحصول على إذن الموقع، أدخل يدويًا',
     loading: 'جاري الحصول على الموقع...'
   },
+  emptyState: {
+    title: 'ابحث عن مدينة لمعرفة احتمال ألوان الشروق أو الغروب القادمة',
+    body: 'ابدأ سريعًا من مدينتك الافتراضية أو عمليات البحث الأخيرة أو المواقع المفضلة.',
+    beijing: 'بكين'
+  },
   feedback: {
     kicker: 'Prediction Feedback',
     title: 'Prediction feedback',
