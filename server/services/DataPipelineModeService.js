@@ -33,6 +33,15 @@ function isSparsePipelineCache(cache) {
   return pointCount(cache) > 0 && pointCount(cache) < MIN_PUBLIC_PIPELINE_POINTS;
 }
 
+function shouldUseHybridFallback(pipelineCache, legacyCache) {
+  if (!legacyCache || pointCount(legacyCache) === 0) return false;
+  if (!pipelineCache) return true;
+  if (isSparsePipelineCache(pipelineCache)) {
+    return pointCount(legacyCache) > pointCount(pipelineCache);
+  }
+  return pipelineCache.stale === true || pipelineCache.degraded === true || Boolean(pipelineCache.degradedReason);
+}
+
 class DataPipelineModeService {
   constructor(options = {}) {
     this.configService = options.configService || new DataPipelineConfigService();
@@ -64,10 +73,13 @@ class DataPipelineModeService {
       ? gridService.getPipelineCache(period)
       : null;
     if (pipelineCache) {
-      if (mode === 'hybrid' && isSparsePipelineCache(pipelineCache)) {
-        const legacyCache = withLegacyFallback(gridService.getCache(period), 'GRID_PRODUCT_CACHE_SPARSE');
-        if (legacyCache && pointCount(legacyCache) > pointCount(pipelineCache)) {
-          return { ...base, status: 'ready', cache: legacyCache, degradedReason: 'GRID_PRODUCT_CACHE_SPARSE' };
+      if (mode === 'hybrid') {
+        const fallbackReason = isSparsePipelineCache(pipelineCache)
+          ? 'GRID_PRODUCT_CACHE_SPARSE'
+          : (pipelineCache.degradedReason || (pipelineCache.stale === true ? 'GRID_PRODUCT_CACHE_STALE' : 'GRID_PRODUCT_CACHE_DEGRADED'));
+        const legacyCache = withLegacyFallback(gridService.getCache(period), fallbackReason);
+        if (shouldUseHybridFallback(pipelineCache, legacyCache)) {
+          return { ...base, status: 'ready', cache: legacyCache, degradedReason: fallbackReason };
         }
       }
 
@@ -110,3 +122,4 @@ class DataPipelineModeService {
 }
 
 module.exports = DataPipelineModeService;
+module.exports.shouldUseHybridFallback = shouldUseHybridFallback;
