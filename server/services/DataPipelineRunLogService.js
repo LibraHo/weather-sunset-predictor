@@ -178,6 +178,42 @@ class DataPipelineRunLogService {
     };
   }
 
+  failStaleActiveRuns({ staleAfterMs = 2 * 60 * 60 * 1000, errorCode = 'DATA_PIPELINE_STALE_RUN', message = 'stale active pipeline run failed automatically' } = {}) {
+    const now = this.now instanceof Date
+      ? this.now
+      : typeof this.now === 'function'
+        ? this.now()
+        : new Date();
+    const cutoffMs = now.getTime() - Math.max(0, Number(staleAfterMs) || 0);
+    const failedRuns = [];
+
+    for (const run of this._runs) {
+      if (run.status !== 'running' && run.status !== 'queued') continue;
+      const activeSince = new Date(run.startedAt || run.createdAt || 0).getTime();
+      if (!Number.isFinite(activeSince) || activeSince > cutoffMs) continue;
+
+      run.status = 'failed';
+      run.failedAt = this._nowIso();
+      run.errorCode = errorCode;
+      run.message = message;
+      run.totalBytesDownloaded = this._sumBytes(run.id);
+      failedRuns.push(clone(run));
+
+      for (const step of this._steps) {
+        if (step.runId !== run.id) continue;
+        if (step.status !== 'running' && step.status !== 'queued') continue;
+        step.status = 'failed';
+        step.failedAt = run.failedAt;
+        step.errorCode = errorCode;
+        step.message = message;
+        step.retryable = true;
+      }
+    }
+
+    if (failedRuns.length > 0) this._persist();
+    return failedRuns;
+  }
+
   pruneOlderThan({ olderThanDays = 7, maxRuns = 200, maxSteps = 2000 } = {}) {
     const nowMs = this.now instanceof Date
       ? this.now.getTime()

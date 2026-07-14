@@ -71,6 +71,7 @@ class GfsGridSourceService {
     this.now = options.now || null;
     this.baseUrl = options.baseUrl || 'https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl';
     this.downloadUrl = options.downloadUrl || downloadUrlToFile;
+    this.downloadTimeoutMs = Number(options.downloadTimeoutMs || process.env.GFS_DOWNLOAD_TIMEOUT_MS || 5 * 60 * 1000);
     this.parser = Object.prototype.hasOwnProperty.call(options, 'parser')
       ? options.parser
       : new GfsCfgribParserService();
@@ -142,7 +143,7 @@ class GfsGridSourceService {
       err.code = 'GFS_DOWNLOAD_BATCH_INVALID';
       throw err;
     }
-    return this.downloadUrl(batch.dataUrl, batch.rawPath);
+    return this.downloadUrl(batch.dataUrl, batch.rawPath, { timeoutMs: this.downloadTimeoutMs });
   }
 
   async readGridRecords(batch) {
@@ -196,21 +197,28 @@ class GfsGridSourceService {
   }
 }
 
-function downloadUrlToFile(url, targetPath) {
+function downloadUrlToFile(url, targetPath, options = {}) {
   return new Promise((resolve, reject) => {
     fs.mkdirSync(path.dirname(targetPath), { recursive: true });
     const tmpPath = `${targetPath}.download`;
     const file = fs.createWriteStream(tmpPath);
     let bytesDownloaded = 0;
+    let settled = false;
+
+    const fail = err => {
+      if (settled) return;
+      settled = true;
+      file.destroy();
+      fs.rmSync(tmpPath, { force: true });
+      reject(err);
+    };
 
     const request = https.get(url, response => {
       if (response.statusCode < 200 || response.statusCode >= 300) {
-        file.destroy();
-        fs.rmSync(tmpPath, { force: true });
         const err = new Error(`GFS download failed with HTTP ${response.statusCode}`);
         err.code = 'GFS_DOWNLOAD_HTTP_ERROR';
         response.resume();
-        reject(err);
+        fail(err);
         return;
       }
 
@@ -221,26 +229,34 @@ function downloadUrlToFile(url, targetPath) {
     });
 
     request.on('error', err => {
-      file.destroy();
-      fs.rmSync(tmpPath, { force: true });
       err.code = err.code || 'GFS_DOWNLOAD_FAILED';
-      reject(err);
+      fail(err);
     });
+    const timeoutMs = Number(options.timeoutMs);
+    if (Number.isFinite(timeoutMs) && timeoutMs > 0) {
+      request.setTimeout(timeoutMs, () => {
+        const err = new Error(`GFS download timed out after ${timeoutMs}ms`);
+        err.code = 'GFS_DOWNLOAD_TIMEOUT';
+        request.destroy(err);
+      });
+    }
 
     file.on('finish', () => {
       file.close(() => {
+        if (settled) return;
+        settled = true;
         fs.renameSync(tmpPath, targetPath);
         resolve({ bytesDownloaded, rawPath: targetPath });
       });
     });
     file.on('error', err => {
-      fs.rmSync(tmpPath, { force: true });
       err.code = err.code || 'GFS_DOWNLOAD_WRITE_FAILED';
-      reject(err);
+      fail(err);
     });
   });
 }
 
 GfsGridSourceService.FIELD_WHITELIST = FIELD_WHITELIST;
+GfsGridSourceService.downloadUrlToFile = downloadUrlToFile;
 
 module.exports = GfsGridSourceService;
