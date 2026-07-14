@@ -112,4 +112,21 @@ describe('AppController home state audit items 13-17', () => {
     expect(document.getElementById('weather-context-inline').classList.contains('hidden')).toBe(false);
     expect(document.getElementById('weather-context-date-time').textContent).not.toBe('');
   });
+
+  test('uses a cached weather row timezone when array metadata and location timezone are absent', () => {
+    const controller = createController();
+    const weatherData = Object.assign(
+      [{ timezone: 'Asia/Shanghai' }],
+      { fetchedAt: new Date('2026-07-14T12:30:00Z').getTime() }
+    );
+
+    controller.updateWeatherContext(
+      { name: '北京', lat: 39.9, lon: 116.4 },
+      weatherData,
+      [{ type: 'sunset', sunsetTime: new Date('2026-07-14T12:00:00Z') }]
+    );
+
+    expect(document.getElementById('weather-context-date-time').textContent).toBe('20:00');
+    expect(document.getElementById('weather-context-updated').textContent).toContain('20:30');
+  });
 });

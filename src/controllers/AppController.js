@@ -1620,7 +1620,12 @@ class AppController {
     }
 
     const locale = this.i18n.getLanguage?.() || document.documentElement.lang || 'zh-CN';
-    const timezone = location?.timezone || location?.timeZone || weatherData?.providerMeta?.timezone || undefined;
+    const timezone = active.prediction?.timezone || active.prediction?.timeZone
+      || weatherData?.find?.(item => item?.timezone || item?.timeZone)?.timezone
+      || weatherData?.find?.(item => item?.timezone || item?.timeZone)?.timeZone
+      || location?.timezone || location?.timeZone
+      || weatherData?.providerMeta?.timezone
+      || undefined;
     const formatOptions = timezone ? { timeZone: timezone } : {};
     const dateText = new Intl.DateTimeFormat(locale, {
       ...formatOptions,
