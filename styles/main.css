@@ -10132,7 +10132,10 @@ body[data-actual-theme="dark"] .score-ledger-step-final .score-ledger-body {
 .weather-location-heading {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
+  font-weight: 720;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 .weather-location-hero #weather-location {
   min-width: 0;
@@ -10149,17 +10152,18 @@ body[data-actual-theme="dark"] .score-ledger-step-final .score-ledger-body {
   display: inline-flex;
   flex-wrap: nowrap;
   align-items: center;
-  gap: 0 6px;
-  margin-top: 5px;
+  gap: 0 8px;
+  margin-top: 7px;
   margin-left: 28px;
   color: var(--theme-text-muted);
-  font-size: clamp(0.72rem, 1.4vw, 0.86rem);
-  font-weight: 520;
-  line-height: 1.35;
+  font-size: clamp(0.78rem, 1.35vw, 0.9rem);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
   white-space: nowrap;
 }
 .weather-context-separator {
-  opacity: 0.55;
+  opacity: 0.4;
 }
 .weather-location-pin {
   display: inline-flex;
@@ -10309,7 +10313,7 @@ html[data-actual-theme="dark"] .weather-wind-main {
     padding: 14px 12px 13px;
   }
   .weather-location-hero {
-    font-size: 1rem;
+    font-size: 1.1rem;
   }
   .weather-location-copy {
     align-items: center;
