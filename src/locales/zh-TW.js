@@ -460,6 +460,11 @@ const translations = {
     "permissionDenied": "無法取得位置權限，請手動輸入位置",
     "loading": "正在取得位置..."
   },
+  emptyState: {
+    title: '搜尋城市，查看今晚或下一次朝霞／晚霞機率',
+    body: '從預設城市、最近搜尋或收藏位置快速開始。',
+    beijing: '北京'
+  },
   feedback: {
     kicker: 'Prediction Feedback',
     title: '反馈预测结果',

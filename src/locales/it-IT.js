@@ -330,6 +330,11 @@ apiAccess: 'Accesso API',
     "permissionDenied": "Impossibile ottenere la posizione, inseriscila manualmente",
     "loading": "Ottenimento della posizione..."
   },
+  emptyState: {
+    title: 'Cerca una città per vedere la probabilità della prossima alba o tramonto',
+    body: 'Inizia dalla città predefinita, dalle ricerche recenti o dai preferiti.',
+    beijing: 'Pechino'
+  },
   feedback: {
     kicker: 'Prediction Feedback', title: 'Prediction feedback', subtitle: 'Submit missed, wrong, or overstated predictions. We save the score, weather snapshot, cloud data, location, and images for review.',
     button: 'Feedback', closeAria: 'Close feedback dialog', typeLabel: 'Feedback type',

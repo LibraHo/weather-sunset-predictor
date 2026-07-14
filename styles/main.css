@@ -381,6 +381,30 @@ main > section {
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 520px) {
+  .forecast-empty-state {
+    grid-template-columns: 36px minmax(0, 1fr);
+    padding: 12px;
+  }
+
+  .forecast-empty-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .empty-state-actions {
+    grid-column: 1 / -1;
+  }
+
+  .weather-context-inline {
+    justify-content: center;
+  }
+
+  .weather-location-hero .weather-location-copy {
+    align-items: center;
+  }
+}
 .account-menu {
   position: relative;
   z-index: 2100;
@@ -889,6 +913,27 @@ footer {
   gap: var(--spacing-md);
 }
 
+.app-footer-empty {
+  padding: 8px var(--spacing-md);
+  gap: 0;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.app-footer-empty #refresh-btn,
+.app-footer-empty .footer-text {
+  display: none;
+}
+
+.app-footer-empty .visitor-counter {
+  padding: 4px 10px;
+  background: transparent;
+  border-color: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 .footer-text {
   font-size: 0.875rem;
   color: var(--color-text-light);
@@ -1311,6 +1356,69 @@ input[type="text"]::placeholder {
   position: relative;
   z-index: 10;
   overflow: visible;
+}
+
+.forecast-empty-state {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 10px 12px;
+  align-items: start;
+  margin-top: var(--spacing-md);
+  padding: 14px 16px;
+  border: 1px solid var(--theme-card-border, var(--color-border));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--theme-panel-soft, var(--color-card-bg)) 82%, transparent);
+}
+
+.forecast-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  color: var(--theme-accent, var(--color-primary));
+  border-radius: 12px;
+  background: var(--theme-accent-soft, rgba(255, 152, 92, 0.12));
+}
+
+.forecast-empty-icon svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.forecast-empty-copy h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.forecast-empty-copy p {
+  margin: 4px 0 0;
+  color: var(--theme-text-muted, var(--color-text-secondary));
+  font-size: 0.88rem;
+}
+
+.empty-state-actions {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.empty-state-location-btn {
+  min-height: 36px;
+  padding: 6px 11px;
+  border: 1px solid var(--theme-card-border, var(--color-border));
+  border-radius: 999px;
+  color: var(--theme-text, var(--color-text));
+  background: var(--glass-bg, rgba(255, 255, 255, 0.5));
+  cursor: pointer;
+}
+
+.empty-state-location-btn:hover {
+  border-color: var(--theme-accent, var(--color-primary));
 }
 
 #weather-section {
@@ -10012,20 +10120,46 @@ body[data-actual-theme="dark"] .score-ledger-step-final .score-ledger-body {
   z-index: 1;
 }
 .weather-location-hero {
-  display: inline-grid;
-  grid-template-columns: 20px minmax(0, max-content);
+  display: flex;
   align-items: center;
   justify-content: center;
-  column-gap: 8px;
   max-width: min(100%, 720px);
   margin-bottom: 4px;
   color: var(--theme-text);
   font-size: clamp(1.05rem, 2.1vw, 1.55rem);
   line-height: 1.25;
 }
+.weather-location-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
 .weather-location-hero #weather-location {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+.weather-location-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  text-align: left;
+}
+.weather-context-inline {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0 6px;
+  margin-top: 5px;
+  margin-left: 28px;
+  color: var(--theme-text-muted);
+  font-size: clamp(0.72rem, 1.4vw, 0.86rem);
+  font-weight: 520;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+.weather-context-separator {
+  opacity: 0.55;
 }
 .weather-location-pin {
   display: inline-flex;
@@ -10175,8 +10309,14 @@ html[data-actual-theme="dark"] .weather-wind-main {
     padding: 14px 12px 13px;
   }
   .weather-location-hero {
-    grid-template-columns: 18px minmax(0, 1fr);
     font-size: 1rem;
+  }
+  .weather-location-copy {
+    align-items: center;
+    text-align: center;
+  }
+  .weather-context-inline {
+    margin-left: 0;
   }
   .weather-location-pin {
     width: 18px;

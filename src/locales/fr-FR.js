@@ -460,6 +460,11 @@
     "permissionDenied": "Impossible d'obtenir la position, saisissez manuellement",
     "loading": "Obtention de la position..."
   },
+  emptyState: {
+    title: 'Recherchez une ville pour voir la probabilité du prochain ciel coloré',
+    body: 'Commencez avec votre ville par défaut, vos recherches récentes ou vos favoris.',
+    beijing: 'Pékin'
+  },
   feedback: {
     kicker: 'Prediction Feedback', title: 'Prediction feedback', subtitle: 'Submit missed, wrong, or overstated predictions. We save the score, weather snapshot, cloud data, location, and images for review.',
     button: 'Feedback', closeAria: 'Close feedback dialog', typeLabel: 'Feedback type',
