@@ -130,4 +130,61 @@ describe('EnhancedPredictionService layer brightness integration', () => {
     expect(result.score).toBeLessThanOrEqual(70);
   });
 
+  test('PM-only haze with usable visibility softens Beijing upper-cloud carrier instead of hard-blocking it', () => {
+    const result = service.calculateEnhancedPrediction(
+      {
+        cloudCover: 97.9,
+        humidity: 83.9,
+        visibility: 11.5,
+        lowCloudCover: 13.1,
+        precipitation: 0,
+        recentPrecipitation6h: 0,
+        recentRainHours: 0,
+        recentRainSignal: 0,
+        lowClouds: 13.1,
+        midClouds: 17.4,
+        highClouds: 92,
+        shortwaveRadiation: 28.1,
+        directRadiation: 2.4,
+        diffuseRadiation: 25.7,
+        waterVapourColumn: 42.87,
+        aerosolOpticalDepth: 0.414,
+        dust: 7.7,
+        pm2_5: 137.06,
+        pm10: 144.39,
+        aqi: 161.4
+      },
+      new Date('2026-07-16T11:42:00.000Z'),
+      39.9042,
+      116.4074,
+      'sunset',
+      {
+        remoteCloudData: {
+          source: 'sunset_visible_sector_openmeteo',
+          azimuth: 303,
+          samples: [
+            { distanceKm: 10, bearing: 303, lowCloud: 0, midCloud: 20.8, highCloud: 100, totalCloud: 80.3, precipitation: 0 },
+            { distanceKm: 25, bearing: 303, lowCloud: 0, midCloud: 20.8, highCloud: 100, totalCloud: 80.3, precipitation: 0 },
+            { distanceKm: 50, bearing: 303, lowCloud: 0, midCloud: 56.5, highCloud: 6.9, totalCloud: 40.6, precipitation: 0 },
+            { distanceKm: 75, bearing: 303, lowCloud: 0, midCloud: 56.8, highCloud: 5.7, totalCloud: 20.8, precipitation: 0 },
+            { distanceKm: 100, bearing: 303, lowCloud: 0, midCloud: 61.1, highCloud: 3.9, totalCloud: 43.4, precipitation: 0 }
+          ]
+        }
+      }
+    );
+
+    expect(result.breakdown.carrierScore).toBeGreaterThanOrEqual(65);
+    expect(result.scoringV2).toEqual(expect.objectContaining({
+      applied: true,
+      airMode: 'wet_haze_path_open_mid_rendering'
+    }));
+    expect(result.aerosolHazeCap).toEqual(expect.objectContaining({
+      applied: false,
+      reason: 'transparent_path_particulate_damping_only'
+    }));
+    expect(result.score).toBeGreaterThanOrEqual(45);
+    expect(result.score).toBeLessThanOrEqual(60);
+    expect(result.status).toBe('good_glow');
+  });
+
 });

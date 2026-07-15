@@ -1503,8 +1503,9 @@ function assessAerosolHazeCap(weatherData, context = {}) {
   const opticalHazeSevere = (aod != null && aod >= 0.55) || (dust != null && dust >= 150) || visibility < 8;
   const particulateSevere = (pm10 != null && pm10 >= 180) || (pm25 != null && pm25 >= 90);
   const transparentPath = visibility >= 12 && (aod == null || aod < 0.55) && (dust == null || dust < 150);
-  const extremeHaze = (aod != null && aod >= 0.8) || (dust != null && dust >= 300) || (pm10 != null && pm10 >= 250 && !transparentPath);
-  const severeHaze = opticalHazeSevere || (particulateSevere && !transparentPath);
+  const particulateTransparentPath = visibility >= 10 && (aod == null || aod < 0.55) && (dust == null || dust < 120) && (pm10 == null || pm10 < 200);
+  const extremeHaze = (aod != null && aod >= 0.8) || (dust != null && dust >= 300) || (pm10 != null && pm10 >= 250 && !particulateTransparentPath);
+  const severeHaze = opticalHazeSevere || (particulateSevere && !particulateTransparentPath);
   const wetHazePathOpenMidRendering =
     pathOpen &&
     scoringAirMode === 'wet_haze_path_open_mid_rendering' &&
@@ -1538,7 +1539,7 @@ function assessAerosolHazeCap(weatherData, context = {}) {
   }
 
   if (hasUpperCloudCarrier && moderateHaze) {
-    if (pathOpen && transparentPath) {
+    if (pathOpen && (transparentPath || particulateTransparentPath)) {
       return { applied: false, cap: null, level: 'moderate_transparent', reason: 'transparent_path_particulate_damping_only', metrics: { aod, pm25, pm10, dust, visibility } };
     }
     return { applied: true, cap: 45, level: 'moderate', reason: 'moderate_haze_cap_45', metrics: { aod, pm25, pm10, dust, visibility } };
@@ -1762,6 +1763,7 @@ function assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightP
   const upperCloudCarrier = highClouds * 0.65 + midClouds * 0.35;
   const cloudCanReceiveLight = upperCloudCarrier >= 45 && lowClouds <= 35;
   const transparentPath = visibility >= 12 && (aod == null || aod < 0.55) && (dust == null || dust < 150);
+  const particulateTransparentPath = visibility >= 10 && (aod == null || aod < 0.55) && (dust == null || dust < 120) && (pm10 == null || pm10 < 200);
   const heavyAir =
     visibility < 8 ||
     (aod != null && aod >= 0.8) ||
@@ -1776,7 +1778,7 @@ function assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightP
     visibility < 4 ||
     (aod != null && aod >= 1.1) ||
     (dust != null && dust >= 180) ||
-    (!transparentPath && ((pm25 != null && pm25 >= 120) || (pm10 != null && pm10 >= 220)));
+    (!particulateTransparentPath && ((pm25 != null && pm25 >= 120) || (pm10 != null && pm10 >= 220)));
   const hardRain = precipitation > 1.0;
   const softRainOrWetVeil = precipitation > 0.2 || (recentRainSignal >= 0.75 && recentPrecipitation6h >= 1.5);
   const hardBlocked = hardRain || lowClouds >= 60 || pathBlocked || extremeAir;
@@ -3048,7 +3050,15 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     : { applied: false, cap: null, reason: null };
   const airClearEnoughForPositiveCalibration = Number(finalResult.breakdown?.renderingFactor ?? 1) >= 0.75
     || scoringV2.warmScatteringUpperCarrierAdjustment?.applied
-    || scoringV2.airMode === 'wet_haze_path_open_mid_rendering';
+    || scoringV2.airMode === 'wet_haze_path_open_mid_rendering'
+    || (
+      scoringV2.airMode === 'heavy_haze_suppression' &&
+      scoringV2.pathOpen === true &&
+      Number(weatherData.visibility ?? 20) >= 10 &&
+      Number(weatherData.aerosolOpticalDepth ?? weatherData.aod ?? 0) < 0.55 &&
+      Number(weatherData.dust ?? 0) < 120 &&
+      Number(weatherData.pm10 ?? 0) < 200
+    );
   const wetHazePathOpenCalibration =
     scoringV2.airMode === 'wet_haze_path_open_mid_rendering' &&
     scoringV2.pathOpen === true &&
@@ -3107,7 +3117,15 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     reason: layerBrightness.reason,
     originalScore: carrierScore.score
   };
-  const scoringV2AlreadyIncludesAirRendering = scoringV2.airMode === 'wet_haze_path_open_mid_rendering';
+  const scoringV2AlreadyIncludesAirRendering = scoringV2.airMode === 'wet_haze_path_open_mid_rendering'
+    || (
+      scoringV2.airMode === 'heavy_haze_suppression' &&
+      scoringV2.pathOpen === true &&
+      Number(weatherData.visibility ?? 20) >= 10 &&
+      Number(weatherData.aerosolOpticalDepth ?? weatherData.aod ?? 0) < 0.55 &&
+      Number(weatherData.dust ?? 0) < 120 &&
+      Number(weatherData.pm10 ?? 0) < 200
+    );
   if (adjustedScore > finalResult.score && !scoringV2.warmScatteringUpperCarrierAdjustment?.applied && !scoringV2AlreadyIncludesAirRendering) {
     const postCalibrationBrightnessAdjustment = LayerBrightnessService.applyLayerBrightnessMultiplier(adjustedScore, layerBrightness);
     if (postCalibrationBrightnessAdjustment.applied && postCalibrationBrightnessAdjustment.score < adjustedScore) {
