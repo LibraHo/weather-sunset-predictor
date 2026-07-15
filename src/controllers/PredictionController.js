@@ -2239,12 +2239,12 @@ class PredictionController {
       remoteMid: ledgerText('labels.remoteMidLayer', {}, 'Sun-direction mid cloud', '日落方向中云')
     }[key] || key || '--');
     const carrierLabel = (key) => ({
-      cloud: ledgerText('labels.cloudCarrier', {}, 'Cloud carrier', '云层载体'),
+      cloud: ledgerText('labels.cloudCarrier', {}, 'Cloud condition', '云层条件'),
       aerosol: ledgerText('labels.aerosolCarrier', {}, 'Aerosol carrier', '气溶胶载体'),
       directional_curtain: ledgerText('labels.directionalCarrier', {}, 'Sun-direction carrier', '日落方向载体'),
       visible_sector: ledgerText('labels.visibleSectorCarrier', {}, 'Visible sector carrier', '侧向可视云带'),
       remote_layer: ledgerText('labels.remoteLayerCarrier', {}, 'Remote layer carrier', '远端分层载体')
-    }[key] || ledgerText('labels.cloudCarrier', {}, 'Cloud carrier', '云层载体'));
+    }[key] || ledgerText('labels.cloudCarrier', {}, 'Cloud condition', '云层条件'));
 
     const reasonText = (reason) => ({
       precipitation_cap_45: ledgerText('reasons.precipitationCap45', {}, 'rain plus low clouds keeps the score low', '降水叠加低云，观赏条件明显变差'),
@@ -2294,7 +2294,7 @@ class PredictionController {
         tone: 'bad'
       } : null,
       layerBrightnessAdjustment?.postCalibrationApplied ? {
-        label: ledgerText('labels.layerBrightness', {}, 'Layer brightness', '受光亮度'),
+        label: ledgerText('labels.layerBrightness', {}, 'Cloud lighting', '云层受光'),
         value: `×${fmt(layerBrightnessAdjustment.multiplier ?? layerBrightness?.brightnessMultiplier ?? layerBrightness?.brightnessGate ?? 1, 2)}`,
         detail: ledgerText(
           'details.layerBrightnessMultiplier',
@@ -2323,8 +2323,8 @@ class PredictionController {
             path: fmt(scoringV2.pathFactor, 2),
             air: fmt(scoringV2.airFactor, 2)
           },
-          'cloud carrier {{carrier}}; path evidence is folded into layer brightness; air rendering {{air}}',
-          '云载体 {{carrier}}；光路证据已并入分层受光亮度；空气显色 {{air}}'
+          'cloud condition {{carrier}}; sunlight evidence is included; air rendering {{air}}',
+          '云层条件 {{carrier}}；日落光照已纳入判断；空气显色 {{air}}'
         ),
         tone: 'good'
       } : null,
@@ -2338,8 +2338,8 @@ class PredictionController {
             path: fmt(scoringV2.pathFactor, 2),
             air: fmt(scoringV2.airFactor, 2)
           },
-          'full mid/high cloud with dirty air: carrier {{carrier}}; path evidence is brightness evidence; suppressed air rendering {{air}}',
-          '满铺中高云叠加偏脏空气：云载体 {{carrier}}；光路证据作为亮度证据；灰幕显色 {{air}}'
+          'full mid/high cloud with dirty air: cloud condition {{carrier}}; suppressed air rendering {{air}}',
+          '满铺中高云叠加偏脏空气：云层条件 {{carrier}}；灰幕显色 {{air}}'
         ),
         tone: 'cap'
       } : null,
@@ -2390,7 +2390,7 @@ class PredictionController {
       )
       : Number.isFinite(Number(baseScore)) && Number.isFinite(Number(renderedScore))
         ? ledgerText('summary.rendered', { base: fmt(baseScore, 0), rendered: fmt(renderedScore, 0) }, '{{base}} points adjusted by rendering conditions to {{rendered}}', '{{base}} 分经显色条件修正为 {{rendered}} 分')
-        : ledgerText('summary.default', { score: fmt(finalScore, 0) }, '{{score}} points: calculated from layer carrier, layer brightness, and air rendering', '{{score}} 分：由分层载体、分层受光亮度和空气显色计算');
+        : ledgerText('summary.default', { score: fmt(finalScore, 0) }, '{{score}} points: calculated from clouds, sunlight, and air rendering', '{{score}} 分：由云层、受光和空气显色计算');
 
     const step = (index, label, description, result, detail = '', tone = '') => `
       <div class="score-ledger-step ${tone ? `score-ledger-step-${tone}` : ''}">
@@ -2410,8 +2410,8 @@ class PredictionController {
       </div>`;
 
     const weightedDescription = Number.isFinite(Number(baseScore))
-      ? ledgerText('layerSumFormula', { base: fmt(baseScore, 1) }, 'Σ(layer carrier × layer brightness) = {{base}}', 'Σ(分层载体 × 分层受光亮度) = {{base}}')
-      : ledgerText('canvasPlusLightPath', {}, 'Σ(layer carrier × layer brightness)', 'Σ(分层载体 × 分层受光亮度)');
+      ? ledgerText('layerSumFormula', { base: fmt(baseScore, 1) }, 'cloud layer base score {{base}}', '云层基础分 {{base}}')
+      : ledgerText('canvasPlusLightPath', {}, 'cloud layer base score', '云层基础分');
     const renderingDescription = (() => {
       if (!Number.isFinite(Number(baseScore)) || !Number.isFinite(Number(renderedScore))) {
         return ledgerText('weatherTransparency', {}, 'weather transparency factor', '天气通透度');
@@ -2460,9 +2460,9 @@ class PredictionController {
         return ledgerText('details.lightPathRain', {}, 'rain weakens direct sunset light', '降水会削弱日落直射光');
       }
       return ['solar_direction_openmeteo', 'sunset_visible_sector_openmeteo'].includes(prediction?.lightPathAnalysis?.source)
-        ? ledgerText('details.directionalSamples', {}, 'main solar path stays strict; visible side sectors only provide carrier and illumination evidence', '主光路按太阳方向严格判断；侧向可视扇区只作为云载体和受光证据参与')
+        ? ledgerText('details.directionalSamples', {}, 'main solar path stays strict; visible side sectors only support the cloud and sunlight assessment', '主光路按太阳方向判断；侧向可视云带只作为云层和受光参考')
         : Number.isFinite(Number(lightPathScore))
-          ? ledgerText('details.lightPathScoreEvidence', { light: fmt(lightPathScore, 1) }, 'path evidence score {{light}} is folded into brightness', '光路证据 {{light}} 已并入受光亮度')
+          ? ledgerText('details.lightPathScoreEvidence', { light: fmt(lightPathScore, 1) }, 'sunlight-path evidence {{light}} is included in the cloud lighting assessment', '太阳方向光路 {{light}} 已纳入云层受光判断')
           : '';
     })();
 
@@ -2596,8 +2596,8 @@ class PredictionController {
             brightness: fmt(layer.brightness, 2),
             score: fmt(layer.score, 1)
           },
-          '{{layer}}: carrier {{carrier}} × brightness {{brightness}} = {{score}}',
-          '{{layer}}：载体 {{carrier}} × 受光 {{brightness}} = {{score}}'
+          '{{layer}} contribution {{score}} (cloud {{carrier}}, sunlight {{brightness}})',
+          '{{layer}}贡献 {{score}}（云量基础 {{carrier}}，受光 {{brightness}}）'
         ))
         .join('；');
     })();
@@ -2625,8 +2625,8 @@ class PredictionController {
           thickness: fmt(factors.thicknessFactor, 2),
           beam: fmt(factors.beamFactor, 2)
         },
-        'brightness {{brightness}}, gate {{gate}}; local carrier {{canvas}}, remote high {{remoteHigh}}, remote mid {{remoteMid}}, visible-sector upper cloud {{visibleSector}} near {{visibleBearing}}°, remote low block {{remoteLowBlock}}, low-cloud block {{low}} / transmission {{lowBlock}}, solar {{solar}}, path {{path}}, air {{air}}, thickness {{thickness}}, beam {{beam}}',
-        '亮度 {{brightness}}，门控 {{gate}}；本地载体 {{canvas}}，远端高云 {{remoteHigh}}，远端中云 {{remoteMid}}，侧向上层云 {{visibleSector}}（约 {{visibleBearing}}°），远端低云遮挡 {{remoteLowBlock}}，低云遮挡 {{low}} / 透过 {{lowBlock}}，太阳几何 {{solar}}，光路因子 {{path}}，空气 {{air}}，云厚 {{thickness}}，直射/散射 {{beam}}'
+        'cloud lighting {{brightness}}, adjustment {{gate}}; local cloud {{canvas}}, remote high cloud {{remoteHigh}}, remote mid cloud {{remoteMid}}, side-sector upper cloud {{visibleSector}} near {{visibleBearing}}°, remote low-cloud block {{remoteLowBlock}}, low-cloud block {{low}} / transmission {{lowBlock}}, sun geometry {{solar}}, path {{path}}, air {{air}}, thickness {{thickness}}, beam {{beam}}',
+        '云层受光 {{brightness}}，调整系数 {{gate}}；本地云层 {{canvas}}，远端高云 {{remoteHigh}}，远端中云 {{remoteMid}}，侧向上层云 {{visibleSector}}（约 {{visibleBearing}}°），远端低云遮挡 {{remoteLowBlock}}，低云遮挡 {{low}} / 透过 {{lowBlock}}，太阳几何 {{solar}}，光路 {{path}}，空气 {{air}}，云厚 {{thickness}}，直射/散射 {{beam}}'
       );
     })();
 
@@ -2651,8 +2651,8 @@ class PredictionController {
         </div>
         <div class="score-ledger-summary">${escape(summary)}</div>
         <div class="score-ledger-steps">
-          ${step(1, ledgerText('labels.cloudCarrier', {}, 'Cloud carrier', '云层载体'), ledgerText('details.cloudCarrier', {}, 'usable color carrier from cloud layers, solar-direction cloud, or thin haze', '可被染色的本地云面、日落方向云幕或薄雾载体'), fmt(carrierScore, 1), carrierDetail)}
-          ${step(2, ledgerText('labels.layerBrightness', {}, 'Layer brightness', '分层受光亮度'), ledgerText('details.layerBrightnessShort', {}, 'sun direction, blockage, and illumination evidence explain whether each carrier layer is lit', '太阳方向、遮挡和亮度响应共同解释各层载体是否被照亮'), layerBrightness?.applied ? fmt(layerBrightness.effectiveBrightness, 1) : '--', [brightnessDetail, lightPathDetail].filter(Boolean).join('；'))}
+          ${step(1, ledgerText('labels.cloudCarrier', {}, 'Cloud condition', '云层条件'), ledgerText('details.cloudCarrier', {}, 'usable sunset-color cloud area from local or nearby clouds', '本地或周边是否有可被日落染色的云面'), fmt(carrierScore, 1), carrierDetail)}
+          ${step(2, ledgerText('labels.layerBrightness', {}, 'Cloud lighting', '云层受光'), ledgerText('details.layerBrightnessShort', {}, 'sun direction, blockage, and light response explain whether clouds can be lit', '太阳方向、遮挡和亮度响应共同判断云层能否被照亮'), layerBrightness?.applied ? fmt(layerBrightness.effectiveBrightness, 1) : '--', [brightnessDetail, lightPathDetail].filter(Boolean).join('；'))}
           ${step(3, ledgerText('labels.baseScore', {}, 'Base score', '基础分'), weightedDescription, fmt(baseScore, 1), baseScoreDetail)}
           ${step(4, ledgerText('labels.rendering', {}, 'Air rendering', '空气显色'), renderingDescription, fmt(renderedScore, 1), renderingDetail)}
           ${adjustmentHtml}

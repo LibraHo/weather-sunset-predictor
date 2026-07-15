@@ -836,7 +836,7 @@ describe('PredictionController', () => {
       expect(html).toContain('70.7');
       expect(html).toContain('72.5');
       expect(html).toContain('71.1');
-      expect(html).toContain('分层载体 × 分层受光亮度');
+      expect(html).toContain('云层基础分 71.1');
       expect(html).not.toContain('70.7×80% + 72.5×20%');
       expect(html).toContain('71.1 × 空气显色系数 0.85 = 60.4');
       expect(html).toContain('60.4');
@@ -933,7 +933,7 @@ describe('PredictionController', () => {
         renderingAnalysis: { factor: 1, visibilityFactor: 1, humidityFactor: 1, aerosolFactor: 1 }
       });
 
-      expect(html).toContain('候选载体：本地云层 48.7；采用 云层载体 48.7');
+      expect(html).toContain('候选载体：本地云层 48.7；采用 云层条件 48.7');
       expect(html).toContain('本地云层：中高云画布 75.0 → 区间分 66.7');
       expect(html).toContain('高云主导 bonus +6.0');
       expect(html).toContain('云种 +4.0');
@@ -1022,19 +1022,20 @@ describe('PredictionController', () => {
       const labels = [...document.querySelectorAll('.score-ledger-label')].map((node) => node.textContent.trim());
 
       expect(labels.slice(0, 5)).toEqual([
-        'Cloud carrier',
-        'Layer brightness',
+        'Cloud condition',
+        'Cloud lighting',
         'Base score',
         'Air rendering',
         'Final'
       ]);
       expect(labels).not.toContain('Light path');
-      expect(html).toContain('Σ(layer carrier × layer brightness)');
+      expect(html).toContain('cloud layer base score');
       expect(html).toContain('remote layers 22.0 (high 22.0, mid 9.0, low block 18.0)');
-      expect(html).toContain('remote high 82.0');
-      expect(html).toContain('remote mid 34.0');
+      expect(html).toContain('remote high cloud 82.0');
+      expect(html).toContain('remote mid cloud 34.0');
       expect(html).toContain('path 1.07');
       expect(html).not.toContain('65.4 × brightness 0.71 = 65.2');
+      expect(html).not.toContain('carrier 65.4 × brightness');
       expect(html).not.toContain('sunset path 1.07 × air rendering');
     });
 

@@ -847,9 +847,9 @@ describe('miniprogram page user/share helpers', () => {
       }
     });
 
-    expect(ledger.summary).toContain('云层载体、受光亮度和空气显色');
+    expect(ledger.summary).toContain('云层、受光和空气显色');
     expect(ledger.steps.find((step) => step.key === 'baseScore')).toMatchObject({
-      expression: 'Σ(分层载体×分层受光亮度) = 64'
+      expression: '云层基础分 64'
     });
     expect(ledger.steps.find((step) => step.key === 'cloudCarrier')?.detail).toContain('云厚修正 -12分');
     expect(ledger.steps.find((step) => step.key === 'cloudThickness')).toBeUndefined();
@@ -911,8 +911,9 @@ describe('miniprogram page user/share helpers', () => {
     expect(carrierStep.detail).not.toContain('低云');
     expect(brightnessStep.detail).toContain('低云遮挡 12%');
     expect(brightnessStep.detail).toContain('遮挡透过 0.95');
-    expect(serialized).toContain('Σ(分层载体×分层受光亮度)');
+    expect(serialized).toContain('云层基础分 65.2');
     expect(serialized).toContain('光路因子 1.07');
+    expect(serialized).not.toContain('分层载体×分层受光亮度');
     expect(serialized).not.toContain('65.4 × 受光亮度 0.71 = 65.2');
   });
 
@@ -946,10 +947,11 @@ describe('miniprogram page user/share helpers', () => {
 
     expect(keys).toEqual(['layerCarrierBrightness', 'baseScore', 'airRendering', 'finalScore']);
     expect(labels).not.toContain('光路');
-    expect(serialized).toContain('Σ(分层载体 × 分层受光亮度)');
+    expect(serialized).toContain('云层基础分 65.2');
     expect(serialized).toContain('太阳方位 286°');
     expect(serialized).toContain('亮度响应 1.07');
     expect(serialized).toContain('基础分 × 空气显色');
+    expect(serialized).not.toContain('分层载体 × 分层受光亮度');
     expect(serialized).not.toContain('载体分 × 受光亮度');
   });
 
