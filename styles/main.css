@@ -397,13 +397,6 @@ main > section {
     grid-column: 1 / -1;
   }
 
-  .weather-context-inline {
-    justify-content: center;
-  }
-
-  .weather-location-hero .weather-location-copy {
-    align-items: center;
-  }
 }
 .account-menu {
   position: relative;
