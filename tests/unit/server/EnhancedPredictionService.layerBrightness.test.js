@@ -187,4 +187,61 @@ describe('EnhancedPredictionService layer brightness integration', () => {
     expect(result.status).toBe('good_glow');
   });
 
+  test('Beijing sunrise upper-cloud carrier with usable hazy path is not collapsed to the 35 floor', () => {
+    const result = service.calculateEnhancedPrediction(
+      {
+        cloudCover: 99.9,
+        humidity: 83.9,
+        visibility: 8,
+        lowCloudCover: 0,
+        precipitation: 0,
+        recentPrecipitation6h: 0,
+        recentRainHours: 0,
+        recentRainSignal: 0,
+        lowClouds: 0,
+        midClouds: 49.6,
+        highClouds: 100,
+        shortwaveRadiation: 0,
+        directRadiation: 0,
+        diffuseRadiation: 0,
+        waterVapourColumn: 42.87,
+        aerosolOpticalDepth: 0.322,
+        dust: 14.067,
+        pm2_5: 66.117,
+        pm10: 75.013,
+        aqi: 161.4
+      },
+      new Date('2026-07-15T20:58:00.000Z'),
+      39.9042,
+      116.4074,
+      'sunrise',
+      {
+        remoteCloudData: {
+          source: 'sunrise_visible_sector_openmeteo',
+          azimuth: 64,
+          samples: [
+            { distanceKm: 10, bearing: 64, lowCloud: 0, midCloud: 45.1, highCloud: 100, totalCloud: 98.4, precipitation: 0 },
+            { distanceKm: 25, bearing: 64, lowCloud: 12.6, midCloud: 39.4, highCloud: 100, totalCloud: 99.4, precipitation: 0 },
+            { distanceKm: 50, bearing: 64, lowCloud: 14.9, midCloud: 38, highCloud: 100, totalCloud: 99.4, precipitation: 0 },
+            { distanceKm: 75, bearing: 64, lowCloud: 18, midCloud: 36, highCloud: 98, totalCloud: 97, precipitation: 0 },
+            { distanceKm: 100, bearing: 64, lowCloud: 20, midCloud: 34, highCloud: 95, totalCloud: 94, precipitation: 0 }
+          ]
+        }
+      }
+    );
+
+    expect(result.breakdown.baseScore).toBeGreaterThanOrEqual(58);
+    expect(result.breakdown.renderingFactor).toBeLessThan(0.75);
+    expect(result.sunriseTransparentHazeAdjustment).toEqual(expect.objectContaining({
+      applied: true,
+      reason: 'sunrise_transparent_haze_open_path_floor'
+    }));
+    expect(result.aerosolHazeCap).toEqual(expect.objectContaining({
+      applied: false
+    }));
+    expect(result.score).toBeGreaterThanOrEqual(50);
+    expect(result.score).toBeLessThanOrEqual(58);
+    expect(result.status).toBe('good_glow');
+  });
+
 });
