@@ -1,0 +1,129 @@
+{
+  "id": "2026-07-14-beijing-sunset-transparent-particulate-upper-cloud-burn",
+  "title": "2026-07-14 Beijing sunset: strong upper-cloud burn through transparent particulate haze",
+  "location": {
+    "name": "Beijing",
+    "nameZh": "北京",
+    "lat": 39.9042,
+    "lon": 116.4074,
+    "timezone": "Asia/Shanghai"
+  },
+  "event": {
+    "period": "sunset",
+    "localDate": "2026-07-14",
+    "calculationTimeUtc": "2026-07-14T11:43:00.000Z",
+    "sunAzimuth": 304
+  },
+  "feedback": {
+    "source": "Alex现场照片反馈 + 生产 closed-loop 数据记录",
+    "reportedAt": "2026-07-14T19:50:00+08:00",
+    "summary": "北京当天实际出现局部大烧/中烧，照片明显强于线上 35。模型输入显示低云为 0、强中高云载体和开放光路；PM/AOD/dust 偏高但能见度仍好，不应按灰幕硬封顶。",
+    "subjectiveScore": {
+      "min": 60,
+      "max": 70,
+      "label": "局部中烧，约 60-70"
+    },
+    "calibrationTarget": {
+      "score": 65,
+      "status": "transparent_particulate_air_calibrated",
+      "reason": "高 PM 在能见度好、AOD/dust 未到极端灰幕时应作为软显色扣分；强光路和中高云承载不能被 PM-only 惩罚压到 35。"
+    },
+    "actualOutcome": {
+      "fireCloud": "good_glow",
+      "rainDuringWindow": false,
+      "orangeLightOrOpening": true,
+      "worthWaiting": true,
+      "notes": "该样本约束基础空气渲染方法，禁止新增特例分支。"
+    },
+    "previousModelScores": [
+      {
+        "score": 35,
+        "source": "2026-07-14 生产 /api/prediction/home 主卡，severe haze / pollution rendering chain"
+      }
+    ]
+  },
+  "capture": {
+    "dataCompleteness": "production_closed_loop_snapshot_plus_photo_feedback",
+    "predictionReplay": "enhanced_detail_calculateEnhancedPrediction",
+    "sourceFiles": [
+      "memory/2026-07-14.md",
+      "telegram:-5258255173 messages 43426-43440"
+    ],
+    "knownLimitations": [
+      "生产记录保留了核心天气、空气和解释链；太阳方向样本按同源 openmeteo 结构固定为强中高云参与，用于详细单点校准，不替代 GFS/CAMS 地图格点校准。"
+    ]
+  },
+  "input": {
+    "weatherData": {
+      "cloudCover": 94.648,
+      "humidity": 55,
+      "visibility": 20,
+      "lowCloudCover": 0,
+      "precipitation": 0,
+      "recentPrecipitation6h": 0,
+      "recentRainHours": 0,
+      "recentRainSignal": 0,
+      "recentRainMaxHourly": 0,
+      "recentRainWetHourEquivalent": 0,
+      "lowClouds": 0,
+      "midClouds": 72,
+      "highClouds": 99,
+      "cloudBaseHeight": 7000,
+      "cloudBaseHeightSource": "estimated_upper_cloud",
+      "shortwaveRadiation": 0,
+      "directRadiation": 0,
+      "diffuseRadiation": 0,
+      "waterVapourColumn": null,
+      "aerosolOpticalDepth": 0.366,
+      "dust": 102,
+      "pm2_5": 127,
+      "pm10": 184,
+      "aqi": 177
+    },
+    "options": {
+      "remoteCloudData": {
+        "source": "solar_direction_openmeteo",
+        "azimuth": 304,
+        "samples": [
+          { "distanceKm": 10, "bearing": 304, "cloudBaseHeight": 7000, "lowCloud": 0, "midCloud": 72, "highCloud": 99, "totalCloud": 85, "humidity": 55, "precipitation": 0, "weatherCode": null, "provider": "openmeteo", "error": null },
+          { "distanceKm": 25, "bearing": 304, "cloudBaseHeight": 7000, "lowCloud": 0, "midCloud": 72, "highCloud": 99, "totalCloud": 85, "humidity": 55, "precipitation": 0, "weatherCode": null, "provider": "openmeteo", "error": null },
+          { "distanceKm": 50, "bearing": 304, "cloudBaseHeight": 7000, "lowCloud": 0, "midCloud": 72, "highCloud": 99, "totalCloud": 85, "humidity": 55, "precipitation": 0, "weatherCode": null, "provider": "openmeteo", "error": null },
+          { "distanceKm": 75, "bearing": 304, "cloudBaseHeight": 7000, "lowCloud": 0, "midCloud": 72, "highCloud": 99, "totalCloud": 85, "humidity": 55, "precipitation": 0, "weatherCode": null, "provider": "openmeteo", "error": null },
+          { "distanceKm": 100, "bearing": 304, "cloudBaseHeight": 7000, "lowCloud": 0, "midCloud": 72, "highCloud": 99, "totalCloud": 85, "humidity": 55, "precipitation": 0, "weatherCode": null, "provider": "openmeteo", "error": null }
+        ],
+        "errors": []
+      }
+    }
+  },
+  "expectations": {
+    "score": {
+      "min": 60,
+      "max": 70
+    },
+    "statusAnyOf": [
+      "good_glow",
+      "very_likely"
+    ],
+    "equals": [
+      {
+        "path": "aerosolHazeCap.applied",
+        "value": false
+      },
+      {
+        "path": "aerosolHazeCap.reason",
+        "value": "transparent_path_particulate_damping_only"
+      },
+      {
+        "path": "scoringV2.airMode",
+        "value": "warm_scattering_path_open"
+      }
+    ],
+    "notAbove": [
+      {
+        "path": "score",
+        "value": 70,
+        "reason": "High PM/AOD/dust still reduces clarity, so this localized burn should stay in the middle band rather than become a top-tier clear-air eruption."
+      }
+    ]
+  }
+}
