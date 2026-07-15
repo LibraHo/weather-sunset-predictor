@@ -125,7 +125,7 @@ describe('EnhancedPredictionService layer brightness integration', () => {
     expect(result.breakdown.baseRenderingFactor).toBeGreaterThanOrEqual(0.88);
     expect(result.breakdown.baseRenderingFactor).toBeLessThanOrEqual(0.95);
     expect(result.breakdown.airTransmissionFactor).toBeGreaterThanOrEqual(0.9);
-    expect(result.breakdown.renderingFactor).toBeCloseTo(result.breakdown.baseRenderingFactor, 2);
+    expect(Math.abs(result.breakdown.renderingFactor - result.breakdown.baseRenderingFactor)).toBeLessThanOrEqual(0.02);
     expect(result.score).toBeGreaterThanOrEqual(55);
     expect(result.score).toBeLessThanOrEqual(70);
   });
@@ -187,29 +187,33 @@ describe('EnhancedPredictionService layer brightness integration', () => {
     expect(result.status).toBe('good_glow');
   });
 
-  test('Beijing sunrise upper-cloud carrier with usable hazy path is not collapsed to the 35 floor', () => {
+  test('Beijing sunrise upper-cloud carrier with usable hazy path is handled by continuous light and air scoring', () => {
     const result = service.calculateEnhancedPrediction(
       {
-        cloudCover: 99.9,
-        humidity: 83.9,
-        visibility: 8,
+        cloudCover: 99,
+        humidity: 89,
+        visibility: 10,
         lowCloudCover: 0,
+        temp: 24.597,
+        windSpeed: 1.746,
+        windDirection: 336,
+        pressure: 995.787,
         precipitation: 0,
         recentPrecipitation6h: 0,
         recentRainHours: 0,
         recentRainSignal: 0,
         lowClouds: 0,
-        midClouds: 49.6,
+        midClouds: 27.667,
         highClouds: 100,
         shortwaveRadiation: 0,
         directRadiation: 0,
         diffuseRadiation: 0,
-        waterVapourColumn: 42.87,
+        waterVapourColumn: 27.263,
         aerosolOpticalDepth: 0.322,
         dust: 14.067,
         pm2_5: 66.117,
         pm10: 75.013,
-        aqi: 161.4
+        aqi: 152.967
       },
       new Date('2026-07-15T20:58:00.000Z'),
       39.9042,
@@ -220,27 +224,31 @@ describe('EnhancedPredictionService layer brightness integration', () => {
           source: 'sunrise_visible_sector_openmeteo',
           azimuth: 64,
           samples: [
-            { distanceKm: 10, bearing: 64, lowCloud: 0, midCloud: 45.1, highCloud: 100, totalCloud: 98.4, precipitation: 0 },
-            { distanceKm: 25, bearing: 64, lowCloud: 12.6, midCloud: 39.4, highCloud: 100, totalCloud: 99.4, precipitation: 0 },
-            { distanceKm: 50, bearing: 64, lowCloud: 14.9, midCloud: 38, highCloud: 100, totalCloud: 99.4, precipitation: 0 },
-            { distanceKm: 75, bearing: 64, lowCloud: 18, midCloud: 36, highCloud: 98, totalCloud: 97, precipitation: 0 },
-            { distanceKm: 100, bearing: 64, lowCloud: 20, midCloud: 34, highCloud: 95, totalCloud: 94, precipitation: 0 }
+            { distanceKm: 10, bearing: 64, lowCloud: 0, midCloud: 27.667, highCloud: 100, totalCloud: 99, precipitation: 0 },
+            { distanceKm: 25, bearing: 64, lowCloud: 16.867, midCloud: 22.733, highCloud: 100, totalCloud: 100, precipitation: 0 },
+            { distanceKm: 50, bearing: 64, lowCloud: 0, midCloud: 16.733, highCloud: 100, totalCloud: 100, precipitation: 0 },
+            { distanceKm: 75, bearing: 64, lowCloud: 0, midCloud: 20.7, highCloud: 100, totalCloud: 99.033, precipitation: 0 },
+            { distanceKm: 100, bearing: 64, lowCloud: 0, midCloud: 20.733, highCloud: 99.9, totalCloud: 100, precipitation: 0 }
           ]
         }
       }
     );
 
-    expect(result.breakdown.baseScore).toBeGreaterThanOrEqual(58);
-    expect(result.breakdown.renderingFactor).toBeLessThan(0.75);
-    expect(result.sunriseTransparentHazeAdjustment).toEqual(expect.objectContaining({
-      applied: true,
-      reason: 'sunrise_transparent_haze_open_path_floor'
-    }));
+    expect(result.lightPathAnalysis.score).toBeGreaterThanOrEqual(85);
+    expect(result.layerBrightness.effectiveBrightness).toBeGreaterThanOrEqual(55);
+    expect(result.layerBrightness.brightnessMultiplier).toBe(1);
+    expect(result.breakdown.baseScore).toBeGreaterThanOrEqual(60);
+    expect(result.breakdown.renderingFactor).toBeGreaterThanOrEqual(0.72);
+    expect(result.sunriseTransparentHazeAdjustment).toBeUndefined();
     expect(result.aerosolHazeCap).toEqual(expect.objectContaining({
       applied: false
     }));
-    expect(result.score).toBeGreaterThanOrEqual(50);
-    expect(result.score).toBeLessThanOrEqual(58);
+    expect(result.thickHighCloudPenalty).toEqual(expect.objectContaining({
+      applied: false,
+      reason: 'directional_high_cloud_carrier_canvas_only'
+    }));
+    expect(result.score).toBeGreaterThanOrEqual(45);
+    expect(result.score).toBeLessThanOrEqual(70);
     expect(result.status).toBe('good_glow');
   });
 

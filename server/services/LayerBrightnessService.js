@@ -88,14 +88,31 @@ function scoreAirTransmission(weatherData = {}, renderingFactor = {}) {
     && visibility >= 12
     && (aod === null || aod < 0.55)
     && (dust === null || dust < 150);
+  const usableHazyPath = visibility !== null
+    && visibility >= 8
+    && (aod === null || aod <= 0.45)
+    && (pm25 === null || pm25 < 90)
+    && (pm10 === null || pm10 < 120)
+    && (dust === null || dust < 80);
   const strongLocalUpperCarrier = highClouds >= 70 || (midClouds >= 45 && highClouds >= 45);
-  const transparentParticulateRelief = transparentPath && strongLocalUpperCarrier;
+  const transparentParticulateRelief = (transparentPath || usableHazyPath) && strongLocalUpperCarrier;
+  const marginalUsableHazeRelief = usableHazyPath && !transparentPath && strongLocalUpperCarrier;
 
-  const visibilityFactor = scoreSaturatedRatio(visibility, 18, 0.72);
-  const humidityFactor = humidity === null ? 1 : clamp(1 - normalizeRange(humidity, 70, 96) * 0.28, 0.72, 1);
-  const aerosolFactor = aod === null ? 1 : clamp(1 - normalizeRange(aod, 0.25, 0.65) * 0.36, 0.58, 1.04);
+  const visibilityFactor = marginalUsableHazeRelief
+    ? scoreSaturatedRatio(visibility, 12, 0.82)
+    : scoreSaturatedRatio(visibility, 18, 0.72);
+  const humidityFactor = humidity === null
+    ? 1
+    : clamp(1 - normalizeRange(humidity, 70, 96) * (marginalUsableHazeRelief ? 0.08 : 0.28), marginalUsableHazeRelief ? 0.92 : 0.72, 1);
+  const aerosolFactor = aod === null
+    ? 1
+    : (marginalUsableHazeRelief
+      ? clamp(1 - normalizeRange(aod, 0.30, 0.55) * 0.14, 0.94, 1.04)
+      : clamp(1 - normalizeRange(aod, 0.25, 0.65) * 0.36, 0.58, 1.04));
   const pm10Factor = pm10 === null ? 1 : clamp(1 - normalizeRange(pm10, 70, 180) * (transparentParticulateRelief ? 0.10 : 0.22), transparentParticulateRelief ? 0.90 : 0.78, 1);
-  const waterFactor = waterVapour === null ? 1 : clamp(1 - normalizeRange(waterVapour, 28, 44) * 0.32, 0.68, 1);
+  const waterFactor = waterVapour === null
+    ? 1
+    : clamp(1 - normalizeRange(waterVapour, 28, 44) * (marginalUsableHazeRelief ? 0.08 : 0.32), marginalUsableHazeRelief ? 0.92 : 0.68, 1);
   const particulateCap = ((pm25 !== null && pm25 >= 75) || (pm10 !== null && pm10 >= 100) || (dust !== null && dust >= 100))
     ? (transparentParticulateRelief ? 0.90 : 0.68)
     : 1.08;
