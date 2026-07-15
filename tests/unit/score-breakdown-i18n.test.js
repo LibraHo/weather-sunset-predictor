@@ -113,7 +113,7 @@ describe('score breakdown i18n', () => {
 
     expect(html).toContain('候选载体');
     expect(html).toContain('本地云层');
-    expect(html).toContain('采用 云层载体');
+    expect(html).toContain('采用 云层条件');
     expect(html).not.toContain('{{cloud}}');
     expect(html).not.toContain('低太阳透射');
     expect(html).not.toContain('载体缓冲');

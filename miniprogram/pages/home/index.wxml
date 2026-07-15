@@ -299,7 +299,7 @@
       <view class="home-score-ledger-head">
         <view>
           <view class="home-score-ledger-title">评分细则</view>
-          <view class="home-score-ledger-subtitle">分层载体 × 分层受光亮度，再乘空气显色</view>
+          <view class="home-score-ledger-subtitle">云层、受光和空气显色共同决定分数</view>
         </view>
         <button class="home-score-ledger-close" bindtap="closeScoreLedger" aria-label="关闭评分细则">×</button>
       </view>

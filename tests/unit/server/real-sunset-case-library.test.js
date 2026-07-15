@@ -13,7 +13,8 @@ const EXPECTED_REAL_CASE_IDS = [
   '2026-06-12-beijing-sunrise-success',
   '2026-06-13-beijing-sunset-rain-wet-veil-low-score',
   '2026-06-17-beijing-sunset-window-remote-high-carrier',
-  '2026-07-07-beijing-sunset-wet-haze-open-path-mid-glow'
+  '2026-07-07-beijing-sunset-wet-haze-open-path-mid-glow',
+  '2026-07-14-beijing-sunset-transparent-particulate-upper-cloud-burn'
 ];
 
 function readCases() {
@@ -116,5 +117,28 @@ describe('real sunset feedback case library', () => {
 
     expect(result.status).not.toBe('good_glow');
     expect(result.score).toBeLessThanOrEqual(25);
+  });
+
+  test('extreme dust variant of the 2026-07-14 Beijing case remains suppressed', () => {
+    const beijingCase = realCases.find((realCase) => realCase.id === '2026-07-14-beijing-sunset-transparent-particulate-upper-cloud-burn');
+    expect(beijingCase).toBeTruthy();
+
+    const result = EnhancedPredictionService.calculateEnhancedPrediction(
+      {
+        ...beijingCase.input.weatherData,
+        visibility: 6,
+        aerosolOpticalDepth: 0.9,
+        dust: 220,
+        pm10: 260
+      },
+      new Date(beijingCase.event.calculationTimeUtc),
+      beijingCase.location.lat,
+      beijingCase.location.lon,
+      beijingCase.event.period,
+      beijingCase.input.options || {}
+    );
+
+    expect(result.score).toBeLessThanOrEqual(35);
+    expect(result.aerosolHazeCap.applied).toBe(true);
   });
 });

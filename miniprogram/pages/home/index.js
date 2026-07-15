@@ -1490,12 +1490,12 @@ export function buildHomeScoreLedger(prediction = {}) {
 
   return {
     summary: Number.isFinite(finalScore)
-      ? `${Math.round(finalScore)} 分：由分层载体、分层受光亮度和空气显色计算`
+      ? `${Math.round(finalScore)} 分：由云层、受光和空气显色计算`
       : '等待评分数据后展示完整细则',
     steps: [
       {
         key: 'layerCarrierBrightness',
-        label: '分层载体 × 分层受光亮度',
+        label: '云层基础分',
         result: Number.isFinite(baseScore) ? `${roundHomeOne(baseScore)} 分` : '--',
         expression: buildHomeBaseExpression(baseScore),
         detail: buildHomeBrightnessEvidence({ carrierScore, brightnessValue, lightPath, layerBrightness }),
@@ -1503,12 +1503,12 @@ export function buildHomeScoreLedger(prediction = {}) {
       },
       {
         key: 'baseScore',
-        label: '各层贡献求和得到基础分',
+        label: '各层云贡献',
         result: Number.isFinite(baseScore) ? `${roundHomeOne(baseScore)} 分` : '--',
         expression: Number.isFinite(baseScore)
-          ? `Σ(分层载体 × 分层受光亮度) = ${roundHomeOne(baseScore)}`
-          : 'Σ(分层载体 × 分层受光亮度)',
-        detail: '光路只作为受光亮度证据：太阳方向、遮挡、亮度响应会影响各层受光，不再作为独立主评分项。',
+          ? `云层基础分 ${roundHomeOne(baseScore)}`
+          : '云层基础分',
+        detail: '太阳方向、遮挡和亮度响应会影响各层云能否被照亮。',
         tone: homeToneFromScore(baseScore)
       },
       {
@@ -2256,21 +2256,21 @@ function roundHomeTwo(value) {
 
 function buildHomeBaseExpression(baseScore) {
   if (Number.isFinite(Number(baseScore))) {
-    return `Σ(分层载体 × 分层受光亮度) = ${roundHomeOne(baseScore)}`;
+    return `云层基础分 ${roundHomeOne(baseScore)}`;
   }
-  return 'Σ(分层载体 × 分层受光亮度)';
+  return '云层基础分';
 }
 
 function buildHomeBrightnessEvidence({ carrierScore, brightnessValue, lightPath = {}, layerBrightness = {} } = {}) {
   const parts = [];
-  if (Number.isFinite(carrierScore)) parts.push(`载体 ${roundHomeOne(carrierScore)} 分`);
-  if (Number.isFinite(brightnessValue)) parts.push(`受光亮度 ${roundHomeOne(brightnessValue)} 分`);
+  if (Number.isFinite(carrierScore)) parts.push(`云层条件 ${roundHomeOne(carrierScore)} 分`);
+  if (Number.isFinite(brightnessValue)) parts.push(`云层受光 ${roundHomeOne(brightnessValue)} 分`);
   if (Number.isFinite(Number(layerBrightness.layers?.remoteHigh))) parts.push(`远端高云 ${roundHomeOne(layerBrightness.layers.remoteHigh)}`);
   if (Number.isFinite(Number(layerBrightness.layers?.remoteMid))) parts.push(`远端中云 ${roundHomeOne(layerBrightness.layers.remoteMid)}`);
   if (Number.isFinite(Number(lightPath.azimuth))) parts.push(`太阳方位 ${Math.round(Number(lightPath.azimuth))}°`);
   if (Number.isFinite(Number(lightPath.occlusionProbability))) parts.push(`遮挡 ${Math.round(Number(lightPath.occlusionProbability) * 100)}%`);
   if (Number.isFinite(Number(layerBrightness.factors?.pathFactor))) parts.push(`亮度响应 ${roundHomeTwo(layerBrightness.factors.pathFactor)}`);
-  return parts.join('；') || '按每一层可显色载体与实际受光亮度分别计算贡献。';
+  return parts.join('；') || '按各层云量和实际受光情况估算基础分。';
 }
 
 function buildHomeRenderingExpression(baseScore, renderingFactor, renderedScore) {

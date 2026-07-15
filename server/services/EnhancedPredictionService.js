@@ -1500,8 +1500,11 @@ function assessAerosolHazeCap(weatherData, context = {}) {
   const scoringAirMode = context.airMode || null;
 
   const hasUpperCloudCarrier = (highClouds >= 65 || (midClouds >= 45 && highClouds >= 45)) && lowClouds <= 20;
-  const extremeHaze = (aod != null && aod >= 0.8) || (dust != null && dust >= 300) || (pm10 != null && pm10 >= 250);
-  const severeHaze = (aod != null && aod >= 0.55) || (dust != null && dust >= 150) || (pm10 != null && pm10 >= 180) || (pm25 != null && pm25 >= 90) || visibility < 6;
+  const opticalHazeSevere = (aod != null && aod >= 0.55) || (dust != null && dust >= 150) || visibility < 8;
+  const particulateSevere = (pm10 != null && pm10 >= 180) || (pm25 != null && pm25 >= 90);
+  const transparentPath = visibility >= 12 && (aod == null || aod < 0.55) && (dust == null || dust < 150);
+  const extremeHaze = (aod != null && aod >= 0.8) || (dust != null && dust >= 300) || (pm10 != null && pm10 >= 250 && !transparentPath);
+  const severeHaze = opticalHazeSevere || (particulateSevere && !transparentPath);
   const wetHazePathOpenMidRendering =
     pathOpen &&
     scoringAirMode === 'wet_haze_path_open_mid_rendering' &&
@@ -1535,6 +1538,9 @@ function assessAerosolHazeCap(weatherData, context = {}) {
   }
 
   if (hasUpperCloudCarrier && moderateHaze) {
+    if (pathOpen && transparentPath) {
+      return { applied: false, cap: null, level: 'moderate_transparent', reason: 'transparent_path_particulate_damping_only', metrics: { aod, pm25, pm10, dust, visibility } };
+    }
     return { applied: true, cap: 45, level: 'moderate', reason: 'moderate_haze_cap_45', metrics: { aod, pm25, pm10, dust, visibility } };
   }
 
@@ -1675,6 +1681,7 @@ function assessGrayVeilAirRendering(weatherData, remoteCloudData = null) {
   const midClouds = Number(weatherData.midClouds || 0);
   const highClouds = Number(weatherData.highClouds || 0);
   const visibility = Number(weatherData.visibility ?? 20);
+  const waterVapour = Number(weatherData.waterVapourColumn);
   const { aod, pm25, pm10, dust } = getAerosolMetrics(weatherData);
   const localUpperCarrier = highClouds * 0.65 + midClouds * 0.35;
   const samples = Array.isArray(remoteCloudData?.samples)
@@ -1690,18 +1697,28 @@ function assessGrayVeilAirRendering(weatherData, remoteCloudData = null) {
   const remoteTotalCloud = sampleTotalClouds.length > 0
     ? sampleTotalClouds.reduce((sum, value) => sum + value, 0) / sampleTotalClouds.length
     : 0;
+  const transparentPath = visibility >= 12 && (aod == null || aod < 0.55) && (dust == null || dust < 150);
+  const transparentParticulateRelief =
+    transparentPath &&
+    (!Number.isFinite(waterVapour) || waterVapour < 32) &&
+    remoteTotalCloud < 92;
   const fullVeilPressure = Math.min(
     normalizeRange(localUpperCarrier, 82, 98),
     samples.length >= 4 ? normalizeRange(remoteUpperCarrier, 78, 94) : 0,
     samples.length >= 4 ? normalizeRange(remoteTotalCloud, 90, 98) : 0
   );
-  const pollutionPressure = Math.max(
+  const opticalPollutionPressure = Math.max(
     aod == null ? 0 : normalizeRange(aod, 0.30, 0.52),
-    pm25 == null ? 0 : normalizeRange(pm25, 55, 75),
-    pm10 == null ? 0 : normalizeRange(pm10, 75, 125),
     dust == null ? 0 : normalizeRange(dust, 80, 160),
     visibility < 12 ? normalizeRange(12 - visibility, 0, 6) : 0
   );
+  const particulatePressure = Math.max(
+    pm25 == null ? 0 : normalizeRange(pm25, 55, 95),
+    pm10 == null ? 0 : normalizeRange(pm10, 75, 170)
+  );
+  const pollutionPressure = transparentParticulateRelief
+    ? Math.max(opticalPollutionPressure, particulatePressure * 0.35)
+    : Math.max(opticalPollutionPressure, particulatePressure);
   const grayVeilPressure = fullVeilPressure * pollutionPressure;
   const factor = parseFloat((1 - grayVeilPressure * 0.38).toFixed(2));
   return {
@@ -1744,12 +1761,12 @@ function assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightP
   const pathBlocked = pathGate <= 0.45 || isDirectionalCorridorBlocked(directionalReason);
   const upperCloudCarrier = highClouds * 0.65 + midClouds * 0.35;
   const cloudCanReceiveLight = upperCloudCarrier >= 45 && lowClouds <= 35;
+  const transparentPath = visibility >= 12 && (aod == null || aod < 0.55) && (dust == null || dust < 150);
   const heavyAir =
     visibility < 8 ||
     (aod != null && aod >= 0.8) ||
-    (pm25 != null && pm25 >= 90) ||
-    (pm10 != null && pm10 >= 180) ||
-    (dust != null && dust >= 150);
+    (dust != null && dust >= 150) ||
+    (!transparentPath && ((pm25 != null && pm25 >= 90) || (pm10 != null && pm10 >= 180)));
   const moderateAir =
     (aod != null && aod >= 0.45) ||
     (pm25 != null && pm25 >= 25) ||
@@ -1758,9 +1775,8 @@ function assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightP
   const extremeAir =
     visibility < 4 ||
     (aod != null && aod >= 1.1) ||
-    (pm25 != null && pm25 >= 120) ||
-    (pm10 != null && pm10 >= 220) ||
-    (dust != null && dust >= 180);
+    (dust != null && dust >= 180) ||
+    (!transparentPath && ((pm25 != null && pm25 >= 120) || (pm10 != null && pm10 >= 220)));
   const hardRain = precipitation > 1.0;
   const softRainOrWetVeil = precipitation > 0.2 || (recentRainSignal >= 0.75 && recentPrecipitation6h >= 1.5);
   const hardBlocked = hardRain || lowClouds >= 60 || pathBlocked || extremeAir;
@@ -1819,9 +1835,13 @@ function assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightP
     ? (softBlocked ? 42 : 46)
     : null;
   const wetHazeMidScoreCap = airMode === 'wet_haze_path_open_mid_rendering' ? 55 : null;
-  const rawScore = wetHazeMidScoreFloor == null
+  const rawScoreAfterWetHaze = wetHazeMidScoreFloor == null
     ? rawScoreBeforeWetHazeFloor
     : Math.min(Math.max(rawScoreBeforeWetHazeFloor, wetHazeMidScoreFloor), wetHazeMidScoreCap);
+  const grayVeilScoreCap = airMode === 'gray_veil_air_suppression' && grayVeilAirRendering.pressure >= 0.35 ? 45 : null;
+  const rawScore = grayVeilScoreCap == null
+    ? rawScoreAfterWetHaze
+    : Math.min(rawScoreAfterWetHaze, grayVeilScoreCap);
   const visibleSunsetSectorCap = assessVisibleSunsetSectorCap(weatherData, carrierScore, lightPathScore, lightPathGate, remoteCloudData);
   const score = visibleSunsetSectorCap.applied
     ? Math.min(rawScore, visibleSunsetSectorCap.cap)
@@ -1831,6 +1851,7 @@ function assessSunsetScoringV2(weatherData, carrierScore, lightPathScore, lightP
     score: parseFloat(score.toFixed(1)),
     rawScore: parseFloat(rawScore.toFixed(1)),
     rawScoreBeforeWetHazeFloor: parseFloat(rawScoreBeforeWetHazeFloor.toFixed(1)),
+    grayVeilScoreCap,
     cloudCarrier: parseFloat(cloudCarrier.toFixed(1)),
     pathFactor: parseFloat(pathFactor.toFixed(2)),
     airFactor,
@@ -2241,12 +2262,14 @@ function scoreRendering(weatherData, rainedRecently = false) {
     || Number.isFinite(Number(weatherData.pm2_5 ?? weatherData.pm25))
     || Number.isFinite(Number(weatherData.pm10))
     || Number.isFinite(Number(weatherData.dust));
-  const moderateAerosolWithGoodVisibility = hasAerosolMetric
+  const transparentAerosolPath = hasAerosolMetric
     && visibility >= 12
     && (!Number.isFinite(aerosolOpticalDepth) || aerosolOpticalDepth <= 0.55)
-    && pm25 < 65
-    && pm10 < 80
-    && dust < 80;
+    && dust < 150;
+  const moderateAerosolWithGoodVisibility = transparentAerosolPath
+    && pm25 < 90
+    && pm10 < 150
+    && dust < 120;
   const explicitRainSignal = Number(weatherData.recentRainSignal);
   const rainSignal = Number.isFinite(explicitRainSignal)
     ? clamp(explicitRainSignal, 0, 1)
@@ -2333,7 +2356,7 @@ function scoreRendering(weatherData, rainedRecently = false) {
     aqiLevel = 'poor';               // 空气差
     colorTendency = 'dark_red';      // 暗红色调
     // AQI 偏高但能见度仍好、光学厚度未到灰幕级时，多表现为暖色散射，不直接按纯负面扣分。
-    aqiFactor = aqi > 150 && !moderateAerosolWithGoodVisibility ? 0.8 : 1.0;
+    aqiFactor = aqi > 150 && !transparentAerosolPath ? 0.8 : 1.0;
   }
 
   let aerosolFactor = 1.0;
@@ -2356,7 +2379,7 @@ function scoreRendering(weatherData, rainedRecently = false) {
     const particulateModerate = pm25 > 35 || pm10 > 80 || dust > 50;
     const particulateHigh = pm25 > 75 || pm10 > 150 || dust > 100;
     if (particulateHigh) {
-      aerosolFactor = Math.min(aerosolFactor, 0.85);
+      aerosolFactor = Math.min(aerosolFactor, transparentAerosolPath ? 0.95 : 0.85);
       aerosolLevel = 'polluted';
     } else if (particulateModerate) {
       aerosolFactor = Math.min(aerosolFactor, moderateAerosolWithGoodVisibility ? 0.9 : 0.94);
@@ -2588,9 +2611,15 @@ function calculateGatedFinalScore(canvasScore, lightPathScore, renderingFactor, 
     && hasAerosolDimEvidence
     ? 0.648
     : null;
+  const moderateDirectionalHazeCap = canvasScore.activeCarrier === 'directional_curtain'
+    && localUpperSignal < 30
+    && Number(layerBrightness?.layers?.directionalUpper ?? 0) < 70
+    && hasAerosolDimEvidence
+    ? 0.83
+    : null;
   const airRenderingFactor = {
     ...renderingFactor,
-    factor: clamp(Math.min(baseRenderingFactor, airTransmissionFactor, weakUpperHazeCap ?? 1.12, diffuseDimNoRemoteCap ?? 1.12), 0.18, 1.12)
+    factor: clamp(Math.min(baseRenderingFactor, airTransmissionFactor, weakUpperHazeCap ?? 1.12, diffuseDimNoRemoteCap ?? 1.12, moderateDirectionalHazeCap ?? 1.12), 0.18, 1.12)
   };
   const renderingAdjustment = context.renderingAdjustment || getRenderingScoreAdjustment(airRenderingFactor);
   const carrierScore = Number(canvasScore.score || 0);

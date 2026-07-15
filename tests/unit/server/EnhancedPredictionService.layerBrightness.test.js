@@ -122,7 +122,8 @@ describe('EnhancedPredictionService layer brightness integration', () => {
     );
 
     expect(result.breakdown.baseScore).toBeGreaterThanOrEqual(70);
-    expect(result.breakdown.baseRenderingFactor).toBeCloseTo(0.75, 1);
+    expect(result.breakdown.baseRenderingFactor).toBeGreaterThanOrEqual(0.88);
+    expect(result.breakdown.baseRenderingFactor).toBeLessThanOrEqual(0.95);
     expect(result.breakdown.airTransmissionFactor).toBeGreaterThanOrEqual(0.9);
     expect(result.breakdown.renderingFactor).toBeCloseTo(result.breakdown.baseRenderingFactor, 2);
     expect(result.score).toBeGreaterThanOrEqual(55);

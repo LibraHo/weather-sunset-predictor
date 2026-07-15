@@ -1,10 +1,16 @@
 'use strict';
 
-const ALGORITHM_VERSION = '2026.06.26-visible-sector-water-cap-v3';
+const ALGORITHM_VERSION = '2026.07.15-transparent-particulate-air-v1';
 
 const ALGORITHM_CHANGELOG = [
   {
     version: ALGORITHM_VERSION,
+    date: '2026-07-15',
+    title: 'Transparent particulate air rendering v1',
+    summary: 'High PM now remains a soft rendering penalty when visibility is good and AOD/dust do not indicate an optical gray veil; strong upper-cloud carriers with open light paths are no longer collapsed by PM-only haze caps.'
+  },
+  {
+    version: '2026.06.26-visible-sector-water-cap-v3',
     date: '2026-06-26',
     title: 'Visible-sector water-cap calibration v3',
     summary: 'Strong lit side-sector upper cloud can now relieve the water-heavy high-cloud hard cap while keeping the conservative light-path gate, so humid full-high-cloud scenes remain moderate instead of being double-penalized.'

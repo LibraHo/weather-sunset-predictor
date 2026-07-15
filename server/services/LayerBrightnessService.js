@@ -82,14 +82,22 @@ function scoreAirTransmission(weatherData = {}, renderingFactor = {}) {
   const pm10 = finiteNumber(weatherData.pm10);
   const dust = finiteNumber(weatherData.dust);
   const waterVapour = finiteNumber(weatherData.waterVapourColumn);
+  const midClouds = finiteNumber(weatherData.midClouds, 0);
+  const highClouds = finiteNumber(weatherData.highClouds, 0);
+  const transparentPath = visibility !== null
+    && visibility >= 12
+    && (aod === null || aod < 0.55)
+    && (dust === null || dust < 150);
+  const strongLocalUpperCarrier = highClouds >= 70 || (midClouds >= 45 && highClouds >= 45);
+  const transparentParticulateRelief = transparentPath && strongLocalUpperCarrier;
 
   const visibilityFactor = scoreSaturatedRatio(visibility, 18, 0.72);
   const humidityFactor = humidity === null ? 1 : clamp(1 - normalizeRange(humidity, 70, 96) * 0.28, 0.72, 1);
   const aerosolFactor = aod === null ? 1 : clamp(1 - normalizeRange(aod, 0.25, 0.65) * 0.36, 0.58, 1.04);
-  const pm10Factor = pm10 === null ? 1 : clamp(1 - normalizeRange(pm10, 70, 180) * 0.22, 0.78, 1);
+  const pm10Factor = pm10 === null ? 1 : clamp(1 - normalizeRange(pm10, 70, 180) * (transparentParticulateRelief ? 0.10 : 0.22), transparentParticulateRelief ? 0.90 : 0.78, 1);
   const waterFactor = waterVapour === null ? 1 : clamp(1 - normalizeRange(waterVapour, 28, 44) * 0.32, 0.68, 1);
   const particulateCap = ((pm25 !== null && pm25 >= 75) || (pm10 !== null && pm10 >= 100) || (dust !== null && dust >= 100))
-    ? 0.68
+    ? (transparentParticulateRelief ? 0.90 : 0.68)
     : 1.08;
   const transmission = visibilityFactor * humidityFactor * aerosolFactor * pm10Factor * waterFactor;
 
