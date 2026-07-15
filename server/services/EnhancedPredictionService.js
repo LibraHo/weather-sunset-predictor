@@ -1920,6 +1920,55 @@ function assessHighCloudCarrierAdjustment(weatherData, aerosolHazeCap, thickHigh
   return { applied: true, floor: 64, reason: 'clear_high_cloud_carrier_floor_64' };
 }
 
+function assessSunriseTransparentHazeAdjustment(weatherData, carrierScore, lightPathScore, lightPathGate, renderingFactor, thickHighCloudPenalty = null) {
+  const lowClouds = Number(weatherData.lowClouds || 0);
+  const midClouds = Number(weatherData.midClouds || 0);
+  const highClouds = Number(weatherData.highClouds || 0);
+  const visibility = Number(weatherData.visibility ?? 20);
+  const precipitation = Number(weatherData.precipitation ?? weatherData.rain ?? weatherData.showers ?? 0);
+  const recentPrecipitation6h = Number(weatherData.recentPrecipitation6h || 0);
+  const recentRainSignal = Number(weatherData.recentRainSignal || 0);
+  const { aod, pm25, pm10, dust } = getAerosolMetrics(weatherData);
+  const carrier = Number(carrierScore?.score ?? 0);
+  const pathScore = Number(lightPathScore?.score ?? 0);
+  const gate = Number(lightPathGate?.gate ?? 0);
+  const rendering = Number(renderingFactor?.factor ?? 1);
+  const upperCarrier = highClouds * 0.65 + midClouds * 0.35;
+  const wetOrRainy = precipitation > 0.2 || recentPrecipitation6h >= 1.5 || recentRainSignal >= 0.75;
+  const opticallyUsable =
+    visibility >= 8 &&
+    (aod == null || aod < 0.45) &&
+    (dust == null || dust < 80) &&
+    (pm10 == null || pm10 < 120) &&
+    (pm25 == null || pm25 < 90);
+
+  if (
+    thickHighCloudPenalty?.applied ||
+    wetOrRainy ||
+    lowClouds > 20 ||
+    upperCarrier < 58 ||
+    carrier < 55 ||
+    pathScore < 75 ||
+    gate < 0.85 ||
+    rendering >= 0.75 ||
+    !opticallyUsable
+  ) {
+    return {
+      applied: false,
+      reason: 'sunrise_transparent_haze_conditions_not_met',
+      metrics: { upperCarrier: parseFloat(upperCarrier.toFixed(1)), carrier, pathScore, gate, rendering, visibility, aod, pm25, pm10, dust }
+    };
+  }
+
+  const floor = clamp(carrier * 0.82, 50, 58);
+  return {
+    applied: true,
+    floor: parseFloat(floor.toFixed(1)),
+    reason: 'sunrise_transparent_haze_open_path_floor',
+    metrics: { upperCarrier: parseFloat(upperCarrier.toFixed(1)), carrier, pathScore, gate, rendering, visibility, aod, pm25, pm10, dust }
+  };
+}
+
 /**
  * 晴空通透提示：不改变火烧云指数，只在“无云但日落本身通透”的场景调整结论/出门建议。
  */
@@ -3110,6 +3159,20 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     };
   }
 
+  const sunriseTransparentHazeAdjustment = type === 'sunrise'
+    ? assessSunriseTransparentHazeAdjustment(weatherData, carrierScore, lightPathScore, lightPathGate, renderingFactor, thickHighCloudPenalty)
+    : { applied: false, reason: 'not_sunrise' };
+  if (!aerosolHazeCap.applied && sunriseTransparentHazeAdjustment.applied) {
+    adjustedScore = Math.max(adjustedScore, sunriseTransparentHazeAdjustment.floor);
+    if (adjustedScore >= 65) {
+      adjustedStatus = 'very_likely';
+      adjustedDescription = 'excellent_conditions';
+    } else if (adjustedScore >= 40) {
+      adjustedStatus = 'good_glow';
+      adjustedDescription = 'conditions_good';
+    }
+  }
+
   let layerBrightnessAdjustment = finalResult.layerBrightnessAdjustment || finalResult.breakdown?.layerBrightnessAdjustment || {
     applied: false,
     multiplier: layerBrightness.brightnessMultiplier,
@@ -3298,6 +3361,7 @@ function calculateEnhancedPrediction(weatherData, date, lat, lon, type, options 
     scoringV2,
     visibleSunsetSectorCap,
     highCloudCarrierAdjustment,
+    sunriseTransparentHazeAdjustment,
     aerosolCarrierScore,
     directionalCurtainCarrier,
     remoteLayerCarriers,
