@@ -76,15 +76,6 @@
   color: rgba(89, 67, 54, 0.62);
 }
 
-.pin-icon {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 22rpx;
-  height: 42rpx;
-  transform: translate(-50%, -50%);
-}
-
 .pin-location-button {
   position: absolute;
   right: 4rpx;
@@ -92,14 +83,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 54rpx !important;
+  width: 64rpx !important;
   min-width: 0 !important;
   height: 64rpx;
   margin: 0;
   padding: 0;
-  border: 0;
-  border-radius: 14rpx;
-  background: transparent;
+  border: 2rpx solid rgba(127, 83, 29, 0.12);
+  border-radius: 16rpx;
+  background: rgba(255, 250, 242, 0.86);
+  box-shadow: 0 8rpx 24rpx rgba(122, 74, 18, 0.12);
   transform: translateY(-50%);
 }
 
@@ -107,36 +99,10 @@
   border: 0;
 }
 
-.pin-head {
-  position: absolute;
-  left: 1rpx;
-  top: 0;
-  width: 20rpx;
-  height: 20rpx;
-  border-radius: 50%;
-  background: #e92f8a;
-  box-shadow: inset 0 3rpx 4rpx rgba(255, 255, 255, 0.65), 0 4rpx 8rpx rgba(233, 47, 138, 0.26);
-}
-
-.pin-head::after {
-  content: "";
-  position: absolute;
-  left: 6rpx;
-  top: 5rpx;
-  width: 6rpx;
-  height: 6rpx;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.pin-stem {
-  position: absolute;
-  left: 10rpx;
-  top: 16rpx;
-  width: 3rpx;
-  height: 26rpx;
-  border-radius: 999rpx;
-  background: linear-gradient(180deg, #9b5f2c, rgba(155, 95, 44, 0.25));
+.pin-icon-image {
+  display: block;
+  width: 34rpx;
+  height: 34rpx;
 }
 
 .location-query-button {
@@ -165,6 +131,40 @@
   color: rgba(255, 255, 255, 0.84);
   background: linear-gradient(135deg, #ffd166, #fb923c);
   box-shadow: 0 12rpx 26rpx rgba(251, 146, 60, 0.22);
+}
+
+.announcement-entry {
+  display: flex;
+  align-items: center;
+  min-height: 68rpx;
+  box-sizing: border-box;
+  margin-top: 18rpx;
+  padding: 0 22rpx;
+  border: 2rpx solid rgba(127, 83, 29, 0.14);
+  border-radius: 18rpx;
+  background: rgba(255, 252, 247, 0.94);
+}
+
+.announcement-entry-label {
+  flex: none;
+  margin-right: 18rpx;
+  padding-right: 18rpx;
+  border-right: 2rpx solid rgba(127, 83, 29, 0.12);
+  color: #b66a16;
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.announcement-entry-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: #3d3028;
+  font-size: 27rpx;
+  font-weight: 800;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .location-suggestion-dropdown {
@@ -253,8 +253,10 @@
   color: rgba(255, 255, 255, 0.42);
 }
 
-.location-search.theme-dark .pin-stem {
-  background: linear-gradient(180deg, #f5c87a, rgba(245, 200, 122, 0.24));
+.location-search.theme-dark .pin-location-button {
+  border-color: rgba(251, 191, 36, 0.18);
+  background: rgba(251, 146, 60, 0.10);
+  box-shadow: inset 0 2rpx 0 rgba(255, 255, 255, 0.06), 0 16rpx 36rpx rgba(0, 0, 0, 0.24);
 }
 
 .location-search.theme-dark .location-suggestion-dropdown {
@@ -273,4 +275,18 @@
 
 .location-search.theme-dark .location-suggestion-meta {
   color: rgba(226, 232, 240, 0.64);
+}
+
+.location-search.theme-dark .announcement-entry {
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.location-search.theme-dark .announcement-entry-label {
+  border-right-color: rgba(255, 255, 255, 0.10);
+  color: #f5c87a;
+}
+
+.location-search.theme-dark .announcement-entry-text {
+  color: rgba(255, 255, 255, 0.90);
 }

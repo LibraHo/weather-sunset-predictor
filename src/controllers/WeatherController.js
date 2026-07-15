@@ -124,6 +124,24 @@ function getNextRadarEventDate(location, type = 'sunset', now = new Date()) {
   return fallback;
 }
 
+function getRadarEventAzimuth(location, type = 'sunset', date = new Date()) {
+  if (!Number.isFinite(location?.lat) || !Number.isFinite(location?.lon)) return null;
+  const safeType = type === 'sunrise' ? 'sunrise' : 'sunset';
+  const targetDate = date instanceof Date && !Number.isNaN(date.getTime()) ? date : new Date(date);
+  const timezone = location?.timezone || location?.timeZone || null;
+
+  try {
+    const eventTime = safeType === 'sunrise'
+      ? radarSunService.getSunriseTime(targetDate, location.lat, location.lon, { timezone })
+      : radarSunService.getSunsetTime(targetDate, location.lat, location.lon, { timezone });
+    if (!(eventTime instanceof Date) || Number.isNaN(eventTime.getTime())) return null;
+    const azimuth = radarSunService.getSunAzimuth(targetDate, eventTime, location.lat, location.lon, { timezone });
+    return Number.isFinite(Number(azimuth)) ? Number(azimuth) : null;
+  } catch (_) {
+    return null;
+  }
+}
+
 /**
  * 中国火烧云地图固定使用栅格等值渲染
  */
@@ -166,6 +184,7 @@ class WeatherController {
 
     // Phase 18：雷达罗盘
     this._radarCompass = new RadarCompass({ size: 300 });
+    this.radarFovMode = 'fov';
     this.surroundingData = null; // 兼容旧引用
 
     // 需求22 Phase 2：初始化后端预测 API 服务
@@ -1416,6 +1435,10 @@ class WeatherController {
   /**
    * Phase 18：渲染雷达罗盘（需求19 v2）
    */
+  setRadarFovMode(mode) {
+    this.radarFovMode = mode === 'legacy' ? 'legacy' : 'fov';
+  }
+
   async renderRadarCompass(location, predictionType = null) {
     if (!Number.isFinite(location?.lat) || !Number.isFinite(location?.lon)) return;
 
@@ -1456,8 +1479,12 @@ class WeatherController {
     }
 
     try {
+      const enableFovAltitudeRadar = this.radarFovMode !== 'legacy';
       let dirs;
       let sunAzimuths = {};
+      let visibleSector = null;
+      let visibleSectorSamples = [];
+      let radarAzimuth = null;
       const radius = 50; // 后端仅接受 50/100/150
       const now = new Date();
       const type = predictionType || (now.getHours() < 12 ? 'sunrise' : 'sunset');
@@ -1465,7 +1492,12 @@ class WeatherController {
 
       if (isManualTestLocation(location)) {
         const manualRadar = generateManualTestRadarData(type);
-        this._radarCompass.render(container, { directions: manualRadar.dirs, sunAzimuths: manualRadar.sunAzimuths, predictionType: type });
+        this._radarCompass.render(container, {
+          directions: manualRadar.dirs,
+          sunAzimuths: manualRadar.sunAzimuths,
+          predictionType: type,
+          enableFovAltitudeRadar
+        });
         return;
       }
 
@@ -1481,6 +1513,9 @@ class WeatherController {
           );
           dirs = this._convertSurroundingToRadarDirs(data);
           sunAzimuths = data.sunAzimuths || {};
+          visibleSector = data.visibleSector || null;
+          visibleSectorSamples = Array.isArray(data.visibleSectorSamples) ? data.visibleSectorSamples : [];
+          radarAzimuth = data.azimuth ?? null;
         } catch (apiError) {
           console.warn('[WeatherController] 后端周边API失败，回退前端逐点请求:', apiError.message);
           dirs = await this._fetchRadarDirsFrontend(location, radius, type, radarDate);
@@ -1489,7 +1524,30 @@ class WeatherController {
         dirs = await this._fetchRadarDirsFrontend(location, radius, type, radarDate);
       }
 
-      this._radarCompass.render(container, { directions: dirs, sunAzimuths, predictionType: type });
+      const fallbackAzimuth = sunAzimuths?.[type];
+      const hasRadarAzimuth = radarAzimuth !== null && radarAzimuth !== undefined && Number.isFinite(Number(radarAzimuth));
+      const hasFallbackAzimuth = fallbackAzimuth !== null && fallbackAzimuth !== undefined && Number.isFinite(Number(fallbackAzimuth));
+      if (!hasRadarAzimuth) {
+        radarAzimuth = hasFallbackAzimuth
+          ? Number(fallbackAzimuth)
+          : getRadarEventAzimuth(location, type, radarDate);
+      }
+      const hasVisibleMainBearing = visibleSector?.mainBearing !== null
+        && visibleSector?.mainBearing !== undefined
+        && Number.isFinite(Number(visibleSector.mainBearing));
+      if (visibleSector && !hasVisibleMainBearing && Number.isFinite(Number(radarAzimuth))) {
+        visibleSector = { ...visibleSector, mainBearing: Number(radarAzimuth) };
+      }
+
+      this._radarCompass.render(container, {
+        directions: dirs,
+        sunAzimuths,
+        predictionType: type,
+        visibleSector,
+        visibleSectorSamples,
+        azimuth: radarAzimuth,
+        enableFovAltitudeRadar
+      });
     } catch (err) {
       console.error('[WeatherController] 雷达罗盘渲染失败:', err);
       // 不要直接隐藏容器，避免用户误认为功能消失

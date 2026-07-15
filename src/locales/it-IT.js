@@ -20,6 +20,13 @@ apiAccess: 'Accesso API',
       "ariaLabel": "Cambia vista",
       "dropdownAriaLabel": "Menu di navigazione"
     },
+    "announcement": {
+      "entryLabel": "Avviso",
+      "defaultTitle": "Avviso",
+      "closeAria": "Chiudi avviso",
+      "confirm": "Capito",
+      "imageAlt": "Immagine dell'avviso"
+    },
     "simulator": {
       "title": "Simulatore profilo nuvole rosse",
       "intro": "Place cloud blocks by distance and meter-level height, then scrub sunrise or sunset time to see which clouds light up, which are shadowed, and which dim because they are thick.",

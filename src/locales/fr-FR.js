@@ -129,6 +129,13 @@
       "ariaLabel": "Changer de vue",
       "dropdownAriaLabel": "Menu de navigation"
     },
+    "announcement": {
+      "entryLabel": "Annonce",
+      "defaultTitle": "Annonce",
+      "closeAria": "Fermer l'annonce",
+      "confirm": "Compris",
+      "imageAlt": "Image de l'annonce"
+    },
     "simulator": {
       "title": "Simulateur de profil de nuages rouges",
       "intro": "Place cloud blocks by distance and meter-level height, then scrub sunrise or sunset time to see which clouds light up, which are shadowed, and which dim because they are thick.",
@@ -1177,8 +1184,8 @@
   },
   "surrounding": {
     "title": "Analyse des nuages rouges environnants",
-    "radarTitle": "Radar des nuages environnants",
-    "radarSubtitle": "20 km · Champ nuageux continu",
+    "radarTitle": "Radar nuageux du champ de vision",
+    "radarSubtitle": "Azimut x hauteur du ciel",
     "radius": "Rayon de détection",
     "radiusUnit": "km",
     "directions": {

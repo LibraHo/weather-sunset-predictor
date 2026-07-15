@@ -1,0 +1,199 @@
+<svg width="1280" height="760" viewBox="0 0 1280 760" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fffaf0"/>
+      <stop offset="0.58" stop-color="#f6ead9"/>
+      <stop offset="1" stop-color="#ead9c0"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#8b5c2b" flood-opacity="0.13"/>
+    </filter>
+    <style>
+      text { font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif; fill: #34281f; }
+      .small { font-size: 13px; fill: rgba(52,40,31,0.68); }
+      .label { font-size: 15px; font-weight: 800; }
+      .axis { font-size: 13px; font-weight: 800; fill: rgba(52,40,31,0.72); }
+      .grid { stroke: rgba(110,92,68,0.22); stroke-dasharray: 5 6; }
+      .boundary { stroke: rgba(110,92,68,0.18); stroke-dasharray: 4 6; }
+      .sun { stroke: #f97316; stroke-width: 3; }
+      .sample { fill: #fff7ed; stroke: #a86724; stroke-width: 1.2; }
+      .sampleText { font-size: 11px; font-weight: 900; fill: #5c3b1c; text-anchor: middle; dominant-baseline: central; }
+      .low { fill: rgba(88,82,74,0.22); stroke: rgba(88,82,74,0.48); }
+      .mid { fill: rgba(132,126,112,0.18); stroke: rgba(132,126,112,0.48); }
+      .high { fill: rgba(185,173,151,0.18); stroke: rgba(185,173,151,0.48); }
+      .lowText { fill: #5b554e; }
+      .midText { fill: #756e61; }
+      .highText { fill: #9a8668; }
+    </style>
+  </defs>
+
+  <rect width="1280" height="760" fill="#f7f1e7"/>
+  <rect x="34" y="26" width="1212" height="708" rx="20" fill="rgba(255,250,242,0.92)" stroke="rgba(170,111,45,0.18)" filter="url(#softShadow)"/>
+
+  <text x="64" y="70" font-size="28" font-weight="900">视场云况雷达：采样点与屏幕区域对应关系</text>
+  <text x="64" y="98" class="small">横向按日落方向展开；纵向是天空高度角。每个采样点按“最近方位 × 最近投影高度”影响一块区域。</text>
+
+  <g transform="translate(64 132)">
+    <rect x="0" y="0" width="850" height="520" rx="16" fill="url(#sky)" stroke="rgba(170,111,45,0.16)"/>
+    <rect x="82" y="60" width="680" height="360" fill="rgba(255,255,255,0.20)" stroke="rgba(110,92,68,0.18)"/>
+
+    <!-- horizontal altitude grid -->
+    <g>
+      <line x1="82" y1="420" x2="762" y2="420" class="grid"/>
+      <line x1="82" y1="360" x2="762" y2="360" class="grid"/>
+      <line x1="82" y1="300" x2="762" y2="300" class="grid"/>
+      <line x1="82" y1="240" x2="762" y2="240" class="grid"/>
+      <line x1="82" y1="180" x2="762" y2="180" class="grid"/>
+      <line x1="82" y1="120" x2="762" y2="120" class="grid"/>
+      <line x1="82" y1="60" x2="762" y2="60" class="grid"/>
+      <text x="774" y="424" class="axis">0°</text>
+      <text x="774" y="364" class="axis">5°</text>
+      <text x="774" y="304" class="axis">10°</text>
+      <text x="774" y="244" class="axis">15°</text>
+      <text x="774" y="184" class="axis">20°</text>
+      <text x="774" y="124" class="axis">25°</text>
+      <text x="774" y="64" class="axis">30°</text>
+    </g>
+
+    <!-- azimuth ownership columns -->
+    <g opacity="0.55">
+      <rect x="82" y="60" width="75" height="360" fill="rgba(255,255,255,0.20)"/>
+      <rect x="157" y="60" width="102" height="360" fill="rgba(255,255,255,0.10)"/>
+      <rect x="259" y="60" width="126" height="360" fill="rgba(255,255,255,0.20)"/>
+      <rect x="385" y="60" width="126" height="360" fill="rgba(255,255,255,0.10)"/>
+      <rect x="511" y="60" width="126" height="360" fill="rgba(255,255,255,0.20)"/>
+      <rect x="637" y="60" width="84" height="360" fill="rgba(255,255,255,0.10)"/>
+      <rect x="721" y="60" width="41" height="360" fill="rgba(255,255,255,0.20)"/>
+    </g>
+    <g>
+      <line x1="157" y1="60" x2="157" y2="420" class="boundary"/>
+      <line x1="259" y1="60" x2="259" y2="420" class="boundary"/>
+      <line x1="385" y1="60" x2="385" y2="420" class="boundary"/>
+      <line x1="511" y1="60" x2="511" y2="420" class="boundary"/>
+      <line x1="637" y1="60" x2="637" y2="420" class="boundary"/>
+      <line x1="721" y1="60" x2="721" y2="420" class="boundary"/>
+    </g>
+
+    <!-- layer influence regions -->
+    <g>
+      <path class="high" d="M82 62 C190 66, 280 72, 354 72 C438 72, 520 92, 602 136 C670 172, 720 198, 762 205 L762 248 C672 215, 604 188, 540 162 C456 126, 360 118, 276 122 C198 126, 130 116, 82 108 Z"/>
+      <path class="mid" d="M82 164 C184 158, 286 164, 374 196 C468 230, 564 272, 762 284 L762 329 C612 316, 510 290, 428 262 C330 230, 210 210, 82 222 Z"/>
+      <path class="low" d="M82 330 C168 326, 244 338, 330 352 C452 372, 590 354, 762 322 L762 420 L82 420 Z"/>
+    </g>
+
+    <!-- sun center line -->
+    <line x1="422" y1="60" x2="422" y2="420" class="sun"/>
+    <circle cx="422" cy="60" r="5" fill="#f97316"/>
+    <circle cx="422" cy="420" r="5" fill="#f97316"/>
+    <text x="422" y="48" text-anchor="middle" fill="#ea580c" font-size="18" font-weight="900">305°</text>
+
+    <!-- column headings -->
+    <g class="axis" text-anchor="middle">
+      <text x="82" y="38">A 270°</text>
+      <text x="179" y="38">B 280°</text>
+      <text x="306" y="38">C 293°</text>
+      <text x="422" y="38">D 305°</text>
+      <text x="558" y="38">E 319°</text>
+      <text x="684" y="38">F 332°</text>
+      <text x="762" y="38">G 340°</text>
+    </g>
+
+    <!-- low sample points: 10/25/50/75/100km projected with 1.2km height -->
+    <g>
+      <text x="34" y="340" class="lowText label">低云</text>
+      <text x="34" y="356" class="small">1.2km</text>
+      <g>
+        <circle class="sample low" cx="82" cy="338" r="13"/><text class="sampleText" x="82" y="338">A1</text>
+        <circle class="sample low" cx="82" cy="387" r="12"/><text class="sampleText" x="82" y="387">A2</text>
+        <circle class="sample low" cx="82" cy="404" r="11"/><text class="sampleText" x="82" y="404">A3</text>
+        <circle class="sample low" cx="82" cy="409" r="10"/><text class="sampleText" x="82" y="409">A4</text>
+        <circle class="sample low" cx="82" cy="412" r="9"/><text class="sampleText" x="82" y="412">A5</text>
+      </g>
+      <g>
+        <circle class="sample low" cx="422" cy="338" r="13"/><text class="sampleText" x="422" y="338">D1</text>
+        <circle class="sample low" cx="422" cy="387" r="12"/><text class="sampleText" x="422" y="387">D2</text>
+        <circle class="sample low" cx="422" cy="404" r="11"/><text class="sampleText" x="422" y="404">D3</text>
+        <circle class="sample low" cx="422" cy="409" r="10"/><text class="sampleText" x="422" y="409">D4</text>
+        <circle class="sample low" cx="422" cy="412" r="9"/><text class="sampleText" x="422" y="412">D5</text>
+      </g>
+      <g>
+        <circle class="sample low" cx="762" cy="338" r="13"/><text class="sampleText" x="762" y="338">G1</text>
+        <circle class="sample low" cx="762" cy="387" r="12"/><text class="sampleText" x="762" y="387">G2</text>
+        <circle class="sample low" cx="762" cy="404" r="11"/><text class="sampleText" x="762" y="404">G3</text>
+        <circle class="sample low" cx="762" cy="409" r="10"/><text class="sampleText" x="762" y="409">G4</text>
+        <circle class="sample low" cx="762" cy="412" r="9"/><text class="sampleText" x="762" y="412">G5</text>
+      </g>
+    </g>
+
+    <!-- mid sample points -->
+    <g>
+      <text x="34" y="214" class="midText label">中云</text>
+      <text x="34" y="230" class="small">4.2km</text>
+      <circle class="sample mid" cx="179" cy="146" r="13"/><text class="sampleText" x="179" y="146">B1</text>
+      <circle class="sample mid" cx="179" cy="306" r="12"/><text class="sampleText" x="179" y="306">B2</text>
+      <circle class="sample mid" cx="179" cy="362" r="11"/><text class="sampleText" x="179" y="362">B3</text>
+      <circle class="sample mid" cx="179" cy="382" r="10"/><text class="sampleText" x="179" y="382">B4</text>
+      <circle class="sample mid" cx="179" cy="391" r="9"/><text class="sampleText" x="179" y="391">B5</text>
+      <circle class="sample mid" cx="558" cy="146" r="13"/><text class="sampleText" x="558" y="146">E1</text>
+      <circle class="sample mid" cx="558" cy="306" r="12"/><text class="sampleText" x="558" y="306">E2</text>
+      <circle class="sample mid" cx="558" cy="362" r="11"/><text class="sampleText" x="558" y="362">E3</text>
+      <circle class="sample mid" cx="558" cy="382" r="10"/><text class="sampleText" x="558" y="382">E4</text>
+      <circle class="sample mid" cx="558" cy="391" r="9"/><text class="sampleText" x="558" y="391">E5</text>
+    </g>
+
+    <!-- high sample points -->
+    <g>
+      <text x="34" y="104" class="highText label">高云</text>
+      <text x="34" y="120" class="small">9km</text>
+      <circle class="sample high" cx="306" cy="60" r="13"/><text class="sampleText" x="306" y="60">C1</text>
+      <circle class="sample high" cx="306" cy="183" r="12"/><text class="sampleText" x="306" y="183">C2</text>
+      <circle class="sample high" cx="306" cy="297" r="11"/><text class="sampleText" x="306" y="297">C3</text>
+      <circle class="sample high" cx="306" cy="338" r="10"/><text class="sampleText" x="306" y="338">C4</text>
+      <circle class="sample high" cx="306" cy="359" r="9"/><text class="sampleText" x="306" y="359">C5</text>
+      <circle class="sample high" cx="684" cy="60" r="13"/><text class="sampleText" x="684" y="60">F1</text>
+      <circle class="sample high" cx="684" cy="183" r="12"/><text class="sampleText" x="684" y="183">F2</text>
+      <circle class="sample high" cx="684" cy="297" r="11"/><text class="sampleText" x="684" y="297">F3</text>
+      <circle class="sample high" cx="684" cy="338" r="10"/><text class="sampleText" x="684" y="338">F4</text>
+      <circle class="sample high" cx="684" cy="359" r="9"/><text class="sampleText" x="684" y="359">F5</text>
+    </g>
+
+    <text x="82" y="448" class="axis">天空高度</text>
+    <text x="82" y="480" class="small">说明：图中只标了部分点避免拥挤；实际 A-G 每列都有 1-5 距离采样，高/中/低三层都参与映射。</text>
+  </g>
+
+  <g transform="translate(955 132)">
+    <rect x="0" y="0" width="250" height="520" rx="16" fill="rgba(255,255,255,0.46)" stroke="rgba(170,111,45,0.16)"/>
+    <text x="24" y="40" font-size="19" font-weight="900">采样编号</text>
+    <text x="24" y="68" class="small">列 = 方位角；行 = 距离。</text>
+
+    <g class="small">
+      <text x="24" y="108">A = 270°</text>
+      <text x="24" y="132">B = 280°</text>
+      <text x="24" y="156">C = 293°</text>
+      <text x="24" y="180">D = 305° 主光路</text>
+      <text x="24" y="204">E = 319°</text>
+      <text x="24" y="228">F = 332°</text>
+      <text x="24" y="252">G = 340°</text>
+    </g>
+
+    <line x1="24" y1="278" x2="226" y2="278" stroke="rgba(170,111,45,0.16)"/>
+    <g class="small">
+      <text x="24" y="312">1 = 10km：近处，投影高度最高</text>
+      <text x="24" y="338">2 = 25km</text>
+      <text x="24" y="364">3 = 50km</text>
+      <text x="24" y="390">4 = 75km</text>
+      <text x="24" y="416">5 = 100km：远处，贴近地平线</text>
+    </g>
+
+    <line x1="24" y1="442" x2="226" y2="442" stroke="rgba(170,111,45,0.16)"/>
+    <g>
+      <circle cx="34" cy="470" r="7" class="high"/><text x="52" y="475" class="small">高云：9km 投影，薄云/卷云</text>
+      <circle cx="34" cy="496" r="7" class="mid"/><text x="52" y="501" class="small">中云：4.2km 投影，片状/团块</text>
+      <circle cx="34" cy="522" r="7" class="low"/><text x="52" y="527" class="small">低云：1.2km 或云底高，近地平线</text>
+    </g>
+  </g>
+
+  <g transform="translate(64 690)">
+    <text class="small">关键规则：一个采样点不是一个固定小云朵，而是一个局部影响源。屏幕任意像素会从最近的方位列、最近的投影高度层取得云量贡献；高覆盖率时相邻采样点会合并成连续云带。</text>
+  </g>
+</svg>

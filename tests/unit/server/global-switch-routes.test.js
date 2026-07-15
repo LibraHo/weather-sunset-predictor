@@ -46,11 +46,12 @@ describe('global switch routes and weather closure guard', () => {
     await request(app)
       .post('/admin/global-switches')
       .set('Authorization', basic('admin', 'unit-secret'))
-      .send({ siteClosed: false, weatherPredictionClosed: true })
+      .send({ siteClosed: false, weatherPredictionClosed: true, radarFovMode: 'legacy' })
       .expect(200)
       .expect((res) => {
         expect(res.body.success).toBe(true);
         expect(res.body.state.weatherPredictionClosed).toBe(true);
+        expect(res.body.state.radarFovMode).toBe('legacy');
       });
 
     await request(app)
@@ -60,7 +61,8 @@ describe('global switch routes and weather closure guard', () => {
       .expect((res) => {
         expect(res.body.state).toMatchObject({
           siteClosed: false,
-          weatherPredictionClosed: true
+          weatherPredictionClosed: true,
+          radarFovMode: 'legacy'
         });
       });
   });
@@ -95,6 +97,7 @@ describe('global switch routes and weather closure guard', () => {
     await request(app).get('/api/firecloud/status').expect(200);
     await request(app).get('/api/config/site-state').expect(200).expect((res) => {
       expect(res.body.weatherPredictionClosed).toBe(true);
+      expect(res.body.radarFovMode).toBe('fov');
       expect(res.body.shareMapAvailable).toBe(true);
       expect(res.body.firecloudMapAvailable).toBe(true);
     });

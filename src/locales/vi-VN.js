@@ -129,6 +129,13 @@
       "ariaLabel": "Chuyển trang",
       "dropdownAriaLabel": "Menu chuyển trang"
     },
+    "announcement": {
+      "entryLabel": "Thong bao",
+      "defaultTitle": "Thong bao",
+      "closeAria": "Dong thong bao",
+      "confirm": "Da hieu",
+      "imageAlt": "Hinh anh thong bao"
+    },
     "simulator": {
       "title": "Mo phong mat cat may do",
       "intro": "Place cloud blocks by distance and meter-level height, then scrub sunrise or sunset time to see which clouds light up, which are shadowed, and which dim because they are thick.",
@@ -1160,8 +1167,8 @@
   },
   "surrounding": {
     "title": "Phân tích mây đỏ lân cận",
-    "radarTitle": "Radar mây xung quanh",
-    "radarSubtitle": "25km · Trường mây liên tục",
+    "radarTitle": "Radar mây theo trường nhìn",
+    "radarSubtitle": "Góc phương vị x độ cao bầu trời",
     "radius": "Bán kính thăm dò",
     "radiusUnit": "km",
     "directions": {

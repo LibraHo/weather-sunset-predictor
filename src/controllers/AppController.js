@@ -44,7 +44,9 @@ class AppController {
       siteClosed: false,
       weatherPredictionClosed: false,
       shareMapAvailable: true,
-      firecloudMapAvailable: true
+      firecloudMapAvailable: true,
+      radarFovMode: 'fov',
+      announcement: { enabled: false, active: false, summary: '', title: '', blocks: [], startsAt: null, endsAt: null }
     };
 
     // 需求14：初始化I18n系统
@@ -85,6 +87,7 @@ class AppController {
       await this.i18n.init();
       console.log('[AppController] I18n系统初始化完成，当前语言:', this.i18n.getLanguage());
       this.siteState = await this.loadSiteState();
+      this.syncRadarFovMode();
 
       // 任务17.2：初始化主题系统
       console.log('[AppController] 初始化主题系统...');
@@ -98,6 +101,7 @@ class AppController {
       this.initializeUI();
       this.setResultState(false);
       this.applyWeatherPredictionAvailability();
+      this.renderAnnouncementEntry();
 
       // 需求12：加载收藏位置列表
       this.loadFavoriteLocations();
@@ -287,16 +291,96 @@ class AppController {
         siteClosed: data.siteClosed === true,
         weatherPredictionClosed: data.weatherPredictionClosed === true,
         shareMapAvailable: data.shareMapAvailable !== false,
-        firecloudMapAvailable: data.firecloudMapAvailable !== false
+        firecloudMapAvailable: data.firecloudMapAvailable !== false,
+        radarFovMode: this.normalizeRadarFovMode(data.radarFovMode),
+        announcement: this.normalizeAnnouncement(data.announcement)
       };
     } catch (error) {
       return {
         siteClosed: false,
         weatherPredictionClosed: false,
         shareMapAvailable: true,
-        firecloudMapAvailable: true
+        firecloudMapAvailable: true,
+        radarFovMode: 'fov',
+        announcement: this.normalizeAnnouncement()
       };
     }
+  }
+
+  normalizeRadarFovMode(value) {
+    return value === 'legacy' ? 'legacy' : 'fov';
+  }
+
+  syncRadarFovMode() {
+    this.weatherController?.setRadarFovMode?.(this.normalizeRadarFovMode(this.siteState?.radarFovMode));
+  }
+
+  normalizeAnnouncement(source = {}) {
+    const raw = source && typeof source === 'object' ? source : {};
+    const blocks = Array.isArray(raw.blocks) ? raw.blocks : [];
+    return {
+      enabled: raw.enabled === true,
+      active: raw.active !== false,
+      summary: String(raw.summary || '').trim(),
+      title: String(raw.title || '').trim(),
+      startsAt: raw.startsAt || null,
+      endsAt: raw.endsAt || null,
+      blocks: blocks.map((block) => {
+        if (!block || typeof block !== 'object') return null;
+        if (block.type === 'image') {
+          const url = String(block.url || '').trim();
+          return url ? { type: 'image', url, alt: String(block.alt || '').trim() } : null;
+        }
+        const text = String(block.text || '').trim();
+        return text ? { type: 'text', text } : null;
+      }).filter(Boolean)
+    };
+  }
+
+  renderAnnouncementEntry() {
+    const entry = document.getElementById('announcement-entry');
+    const text = document.getElementById('announcement-entry-text');
+    const announcement = this.normalizeAnnouncement(this.siteState?.announcement);
+    const visible = announcement.enabled && announcement.active !== false && Boolean(announcement.summary || announcement.title || announcement.blocks.length);
+    if (!entry || !text) return;
+    entry.classList.toggle('hidden', !visible);
+    entry.hidden = !visible;
+    text.textContent = announcement.summary || announcement.title || this.i18n.t('home.announcement.entryLabel');
+  }
+
+  openAnnouncementPanel() {
+    const modal = document.getElementById('announcement-modal');
+    const title = document.getElementById('announcement-title');
+    const content = document.getElementById('announcement-content');
+    const announcement = this.normalizeAnnouncement(this.siteState?.announcement);
+    const hasContent = Boolean(announcement.summary || announcement.title || announcement.blocks.length);
+    if (announcement.enabled !== true || announcement.active === false || !hasContent) return;
+    if (!modal || !title || !content) return;
+    title.textContent = announcement.title || this.i18n.t('home.announcement.defaultTitle');
+    content.innerHTML = '';
+    announcement.blocks.forEach((block) => {
+      if (block.type === 'image') {
+        const image = document.createElement('img');
+        image.src = block.url;
+        image.alt = block.alt || announcement.title || this.i18n.t('home.announcement.imageAlt');
+        image.loading = 'lazy';
+        content.appendChild(image);
+        return;
+      }
+      const paragraph = document.createElement('p');
+      paragraph.textContent = block.text;
+      content.appendChild(paragraph);
+    });
+    if (!announcement.blocks.length && announcement.summary) {
+      const paragraph = document.createElement('p');
+      paragraph.textContent = announcement.summary;
+      content.appendChild(paragraph);
+    }
+    modal.classList.remove('hidden');
+  }
+
+  closeAnnouncementPanel() {
+    document.getElementById('announcement-modal')?.classList.add('hidden');
   }
 
   applyWeatherPredictionAvailability(forceUnavailable = false) {
@@ -562,6 +646,21 @@ class AppController {
       searchBtn.replaceWith(searchBtn.cloneNode(true));
       const newSearchBtn = document.getElementById('search-btn');
       newSearchBtn.addEventListener('click', () => this.handleLocationSearch());
+    }
+
+    const announcementEntry = document.getElementById('announcement-entry');
+    if (announcementEntry) {
+      announcementEntry.replaceWith(announcementEntry.cloneNode(true));
+      document.getElementById('announcement-entry')?.addEventListener('click', () => this.openAnnouncementPanel());
+    }
+    document.querySelectorAll('[data-announcement-close]').forEach((button) => {
+      button.addEventListener('click', () => this.closeAnnouncementPanel());
+    });
+    const announcementModal = document.getElementById('announcement-modal');
+    if (announcementModal) {
+      announcementModal.addEventListener('click', (event) => {
+        if (event.target === announcementModal) this.closeAnnouncementPanel();
+      });
     }
 
     // 设置位置输入框的Enter键事件和防抖（任务 13.2）

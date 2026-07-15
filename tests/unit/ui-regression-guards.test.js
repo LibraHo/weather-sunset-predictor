@@ -49,12 +49,14 @@ describe('recent user-reported UI regression guards', () => {
 
   test('dark weather metric cards use neutral Xiake glass borders', () => {
     const source = css();
+    const stableTokenBlock = (source.match(/html\.theme-dark,\nhtml\[data-theme="dark"\],[\s\S]*?body\[data-actual-theme="dark"\] \{[\s\S]*?\n\}/g) || [])
+      .find((block) => block.includes('--weather-metric-border')) || '';
     const tokenBlock = source.match(/\/\* 暗色实际主题兜底：评分条 token 不能被亮色\/默认规则覆盖成黑灰 \*\/[\s\S]*?\n\}/)?.[0] || '';
     const metricBlock = source.match(/\/\* Dark weather metric cards use the same neutral Xiake glass border as the rest of the panel\. \*\/[\s\S]*?body\[data-actual-theme="dark"\] \.weather-feature-item \{[\s\S]*?\n\}/)?.[0] || '';
     const metricHoverBlock = source.match(/body\[data-actual-theme="dark"\] \.weather-feature-item:hover \{[\s\S]*?\n\}/)?.[0] || '';
 
-    expect(tokenBlock).toContain('--theme-card-border: rgba(255, 255, 255, 0.10);');
-    expect(tokenBlock).toContain('--weather-metric-border: var(--theme-card-border);');
+    expect(stableTokenBlock).toContain('--theme-card-border: rgba(255, 255, 255, 0.10);');
+    expect(stableTokenBlock).toContain('--weather-metric-border: var(--theme-card-border);');
     expect(metricBlock).toContain('html[data-theme="dark"] .weather-feature-item');
     expect(metricBlock).toContain('html[data-actual-theme="dark"] .weather-feature-item');
     expect(metricBlock).toContain('border-color: var(--weather-metric-border) !important;');
@@ -350,11 +352,11 @@ describe('recent user-reported UI regression guards', () => {
     expect(guardBlock).toContain('width: 100%');
     expect(guardBlock).toContain('.conclusion-banner > strong');
     expect(guardBlock).toContain('overflow-wrap: anywhere');
-    expect(radarSource).toContain('width:min(${S}px,100%)');
-    expect(radarSource).toContain('aspect-ratio:1 / 1');
+    expect(radarSource).toContain('width:min(${W}px,100%)');
+    expect(radarSource).toContain('aspect-ratio:${W} / ${H}');
     expect(radarSource).toContain('width:100%;height:100%;display:block;');
-    expect(radarSource).toContain('const labelR = R_HIGH * 1.08;');
-    expect(radarSource).toContain('margin:8px auto 0');
+    expect(radarSource).toContain('visibleSectorSamples');
+    expect(radarSource).toContain('_paintFovAltitudeCloudField');
   });
 });
 

@@ -19,10 +19,10 @@ describe('miniprogram app configuration', () => {
       'pages/methodology/index',
       'pages/user/index',
       'pages/map/index',
-      'pages/result/index',
       'pages/gallery/index',
       'pages/upload/index'
     ]);
+    expect(appJson.pages).not.toContain('pages/result/index');
     expect(appJson.pages.some((page) => page.includes('admin'))).toBe(false);
   });
 

@@ -1,6 +1,6 @@
-/* ===== CSS变量和主题 ===== */
+/* ===== CSS闁告瑦锕㈤崳娲椽鐏炵厧鐦滃Λ?===== */
 :root {
-  /* 颜色方案 */
+  /* 濡増绮忔竟濠囧棘鐟欏嫷鏀?*/
   --color-primary: #4a90e2;
   --color-secondary: #7b68ee;
   --color-success: #4caf50;
@@ -10,7 +10,7 @@
   --color-good: #ffc107;
   --color-fair: #9e9e9e;
 
-  /* 中性色 */
+  /* 濞戞搩鍘介埀顑棗顥?*/
   --color-bg: #f5f5f5;
   --color-card-bg: #ffffff;
   --color-surface: rgba(255, 255, 255, 0.97);
@@ -19,18 +19,18 @@
   --color-border: #e0e0e0;
   --chart-grid-color: rgba(51, 51, 51, 0.16);
 
-  /* 日出日落时间颜色 */
+  /* 闁哄啨鍎遍崵顓㈠籍閵夈劍鍎伴柡鍐ㄧ埣濡寧锛愬鍡楊棌 */
   --sunset-time-bg: #fff3e0;
   --sunset-time-border: #ff9800;
   --sunset-time-text: #ff9800;
   --sunset-time-bg-subtle: rgba(255, 152, 0, 0.1);
   
-  /* 天气状态主题变量（默认为晴天） */
+  /* 濠㈠灈鏅滈惃鐢告偐閼哥鍋撴担宄扮槣濡増锚瑜板鏌岃箛銉х濮掓稒顭堥缁樼▔閻戞ɑ鐝靛鍨涙櫔缁?*/
   --weather-sunny-gradient: linear-gradient(135deg, #fff9c4 0%, #ffed4e 50%, #ffbe0b 100%);
   --weather-rainy-gradient: linear-gradient(135deg, #64748b 0%, #7f8c8d 50%, #a8c0ff 100%);
   --weather-sunset-gradient: linear-gradient(135deg, #ff9a9e 0%, #fd79a8 50%, #f472b6 100%);
   
-  /* 间距 */
+  /* 闂傚倻顥愮粣?*/
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
   --spacing-md: 1rem;
@@ -38,21 +38,21 @@
   --spacing-xl: 2rem;
   --page-gutter: var(--spacing-md);
   
-  /* 圆角 */
+  /* 闁革箑妫滈～?*/
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
   
-  /* 阴影 */
+  /* 闂傚啯娼欐總?*/
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
   
-  /* 过渡 */
+  /* 閺夆晛娲﹀ù?*/
   --transition-fast: 0.15s ease;
   --transition-normal: 0.3s ease;
 
-  /* 毛玻璃效果 - 明亮模式 */
+  /* 婵絾绋撻獮鎾绘偣閸愨晜娅忛柡?- 闁哄嫬绨肩€垫帒螣閳ュ磭纭€ */
   --glass-bg: rgba(255, 255, 255, 0.7);
   --glass-bg-hover: rgba(255, 255, 255, 0.8);
   --glass-bg-heavy: rgba(255, 255, 255, 0.85);
@@ -61,7 +61,7 @@
   --glass-blur-heavy: 20px;
   --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 
-  /* 顶部栏视觉变量 */
+  /* 濡炪倕鐖奸崕鎾冀韫囨凹娼掗悷娆忣槸瑜板鏌?*/
   --header-surface: rgba(255, 255, 255, 0.78);
   --header-surface-tint: rgba(255, 237, 205, 0.72);
   --header-border: rgba(255, 255, 255, 0.62);
@@ -83,11 +83,11 @@
   --button-icon-border: var(--glass-border);
 }
 
-/* ===== 暗色主题 ===== */
+/* ===== 闁哄棙顨夋竟濠冪▔婵犳凹鏆?===== */
 body.theme-dark {
-  /* ===== Apple-style 深色主题 ===== */
+  /* ===== Apple-style 婵烇綀绮炬竟濠冪▔婵犳凹鏆?===== */
 
-  /* 主色调 — 柔和、饱和度适中 */
+  /* 濞戞挻妲掓竟濠勬嫬?闁?闁哄本鏌ㄩ幏浼村Υ娓氣偓閵堥亶宕仦钘夘唺闂侇偄鍊烽懙?*/
   --color-primary: #64a8f0;
   --color-secondary: #a78bfa;
   --color-success: #4ade80;
@@ -97,7 +97,7 @@ body.theme-dark {
   --color-good: #fbbf24;
   --color-fair: #94a3b8;
 
-  /* 中性色 — 午夜深蓝底色（非纯黑）*/
+  /* Dark neutral colors */
   --color-bg: #0a0f1e;
   --color-card-bg: rgba(15, 22, 40, 0.85);
   --color-surface: rgba(18, 28, 52, 0.97);
@@ -106,18 +106,18 @@ body.theme-dark {
   --color-border: rgba(255, 255, 255, 0.08);
   --chart-grid-color: rgba(255, 255, 255, 0.22);
 
-  /* 日落色调 */
+  /* 闁哄啨鍎撮幆銈夋嚌閼煎墎娈?*/
   --sunset-time-bg: rgba(251, 146, 60, 0.10);
   --sunset-time-border: #fb923c;
   --sunset-time-text: #fdba74;
   --sunset-time-bg-subtle: rgba(15, 23, 42, 0.85);
 
-  /* 阴影 — 更深更扩散 */
+  /* 闂傚啯娼欐總?闁?闁哄洤鐡ㄧ换渚€寮寸€涙ê鈷栭柡?*/
   --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(255,255,255,0.04);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45), 0 0 0 0.5px rgba(255,255,255,0.06);
   --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 0 0.5px rgba(255,255,255,0.08);
 
-  /* 毛玻璃 — Apple 级别：高透 + 强模糊 + 细边框发光 */
+  /* 婵絾绋撻獮鎾绘偣?闁?Apple 缂佺嫏鍐ㄧ劶闁挎稒宀搁悵顕€鏌?+ 鐎殿喚鍎よ啯缂?+ 缂備礁妫滅粩鐔奉浖閸℃绲洪柛?*/
   --glass-bg: rgba(18, 28, 52, 0.60);
   --glass-bg-hover: rgba(24, 36, 64, 0.72);
   --glass-bg-heavy: rgba(12, 20, 40, 0.80);
@@ -126,7 +126,7 @@ body.theme-dark {
   --glass-blur-heavy: 40px;
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.08);
 
-  /* 顶栏 — 沉浸式暖暗渐变 */
+  /* 濡炪倛鍩栭悥?闁?婵炲苯顦伴煫鍫濐嚕韫囨梹顔€闁哄棙顨嗙粭搴ㄥ矗?*/
   --header-surface: rgba(14, 20, 38, 0.85);
   --header-surface-tint: rgba(28, 40, 72, 0.88);
   --header-border: rgba(255, 200, 120, 0.12);
@@ -148,7 +148,7 @@ body.theme-dark {
   --button-icon-border: rgba(251, 191, 36, 0.18);
 }
 
-/* ===== 基础样式 ===== */
+/* ===== 闁糕晞娅ｉ、鍛村冀瀹勬壆纭€ ===== */
 * {
   margin: 0;
   padding: 0;
@@ -161,7 +161,7 @@ body {
   line-height: 1.6;
   color: var(--color-text, #1f2937);
   background-color: var(--color-bg);
-  /* 需求21：添加渐变背景以展示玻璃特效 */
+  /* 闂傚洠鍋撴慨?1闁挎稒纰嶉崸濠囧礉閻樺磭鐟ら柛娆愵焾閸庢寮查娆庣鞍閻忕偞娲滈妵姘舵偝閼姐倖瀚呴柣妤勵潐閺?*/
   background-image:
     radial-gradient(at 40% 20%, rgba(102, 126, 234, 0.15) 0px, transparent 50%),
     radial-gradient(at 80% 0%, rgba(118, 75, 162, 0.15) 0px, transparent 50%),
@@ -173,7 +173,7 @@ body {
   min-height: 100vh;
 }
 
-/* ===== 布局 ===== */
+/* ===== 閻㈩垰鍟惇?===== */
 #app {
   display: flex;
   flex-direction: column;
@@ -229,7 +229,7 @@ header h1.app-title {
   background: var(--header-icon-bg);
   border: 1px solid var(--header-icon-border);
   box-shadow: var(--header-icon-shadow);
-  /* 统一尺寸 */
+  /* 缂備胶鍠嶇粩瀵镐焊閸濆嫷鍤?*/
   width: 40px;
   height: 40px;
   font-size: 1.25rem;
@@ -256,7 +256,7 @@ main {
   gap: var(--spacing-lg);
 }
 
-/* 需求6：在板块间增加统一垂直间距 */
+/* 闂傚洠鍋撴慨?闁挎稒鑹惧﹢顏堝级閸喗鍋ラ梻鍌涙綑椤ゅ啴宕濋悩鐢靛煚濞戞挴鍋撻柛銊ュ€诲ú鍧楁⒒绾惧鐛?*/
 main > section {
   margin-bottom: var(--spacing-lg);
 }
@@ -312,7 +312,7 @@ main > section {
   text-decoration: none;
 }
 
-/* 桌面端：顶部菜单字体明显放大 */
+/* 婵℃鐭傚鎵博椤栥倗绐楀銈呯埣閸庢挳鎳ｅ鍐ㄧ閻庢稒銇炵紞瀣及鎼淬垺鈻旈柡鈧幆褋浜?*/
 @media (min-width: 1024px) {
   .home-view-option {
     font-size: 1.15rem;
@@ -321,7 +321,7 @@ main > section {
   }
 }
 
-/* 平板/小桌面：字体适当放大 */
+/* 妤犵偠娅曞?閻忓繐绻戦、鎴︽椤喚绐楅悗娑欍仦缂嶅鏌呴崒姘辩Ъ闁衡偓閹佷海 */
 @media (min-width: 640px) and (max-width: 1023px) {
   .home-view-option {
     font-size: 1.05rem;
@@ -604,6 +604,40 @@ main > section {
   color: var(--color-success);
 }
 
+.announcement-card {
+  width: min(560px, 100%);
+}
+
+.announcement-content {
+  display: grid;
+  gap: 14px;
+  color: var(--theme-text, var(--color-text));
+}
+
+.announcement-content p {
+  margin: 0;
+  color: var(--theme-text, var(--color-text));
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.announcement-content img {
+  display: block;
+  width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid var(--theme-card-border, rgba(186, 132, 72, 0.18));
+  background: rgba(255, 255, 255, 0.64);
+}
+
+.announcement-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
 .account-recovery-question {
   margin: -2px 0 0;
   color: var(--theme-text-muted, var(--color-text-light));
@@ -804,7 +838,7 @@ main > section {
 }
 
 .methodology-detail-list li::before {
-  content: '•';
+  content: '闁?;
   position: absolute;
   left: 0;
   color: var(--color-primary);
@@ -833,7 +867,7 @@ main > section {
   line-height: 1.65;
 }
 
-/* 评分表格样式 */
+/* 閻犲洤瀚崹搴ｆ偘閵婏妇澹愰柡宥呭槻缁?*/
 .score-table {
   display: grid;
   grid-template-columns: 1fr;
@@ -962,7 +996,7 @@ footer {
   color: var(--color-primary);
 }
 
-/* ===== 卡片组件 ===== */
+/* ===== 闁告绱曟晶鏍磼閸曨亝顐?===== */
 .card {
   background-color: var(--color-card-bg);
   border-radius: var(--radius-lg);
@@ -983,7 +1017,7 @@ footer {
   color: var(--color-text);
 }
 
-/* ===== 按钮 ===== */
+/* ===== 闁圭顦甸幐?===== */
 .btn {
   padding: var(--spacing-sm) var(--spacing-lg);
   border: none;
@@ -1116,7 +1150,7 @@ footer {
   background-color: rgba(255, 255, 255, 0.2);
 }
 
-/* ===== 输入框 ===== */
+/* ===== 閺夊牊鎸搁崣鍡楊浖?===== */
 input[type="text"] {
   padding: var(--spacing-sm) var(--spacing-md);
   border: 1px solid var(--color-border);
@@ -1138,7 +1172,7 @@ input[type="text"]::placeholder {
   color: var(--color-text-light);
 }
 
-/* ===== 位置选择区域 ===== */
+/* ===== 濞达絽绉堕悿鍡涙焻婢跺顏ラ柛鏍ф惈閻?===== */
 .location-superbar {
   display: flex;
   gap: var(--spacing-sm);
@@ -1213,7 +1247,45 @@ input[type="text"]::placeholder {
   white-space: nowrap;
 }
 
-/* ===== 模态框 ===== */
+/* ===== 婵☆垪鍓濋埀顑跨劍椤?===== */
+.announcement-entry {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 38px;
+  margin: 10px 0 0;
+  padding: 0 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  background: var(--glass-bg);
+  color: var(--theme-text, var(--color-text));
+  box-shadow: var(--glass-shadow);
+  cursor: pointer;
+  text-align: left;
+}
+
+.announcement-entry-label {
+  flex: none;
+  margin-right: 10px;
+  padding-right: 10px;
+  border-right: 1px solid var(--theme-card-border, rgba(186, 132, 72, 0.18));
+  color: var(--theme-accent, #d97706);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.announcement-entry-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--theme-text, var(--color-text));
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .modal {
   position: fixed;
   top: 0;
@@ -1258,7 +1330,7 @@ input[type="text"]::placeholder {
   margin-top: var(--spacing-md);
 }
 
-/* ===== 错误消息 ===== */
+/* ===== 闂佹寧鐟ㄩ銈呪槈閸喍绱?===== */
 .error-message {
   background-color: #ffebee;
   color: var(--color-error);
@@ -1273,7 +1345,7 @@ input[type="text"]::placeholder {
   display: none;
 }
 
-/* ===== 成功消息 ===== */
+/* ===== 闁瑰瓨鍔曟慨娑樷槈閸喍绱?===== */
 .success-message {
   background-color: #e8f5e9;
   color: var(--color-success);
@@ -1288,7 +1360,7 @@ input[type="text"]::placeholder {
   display: none;
 }
 
-/* ===== 加载指示器 ===== */
+/* ===== 闁告梻濮惧ù鍥箰閸モ斂浠涢柛?===== */
 .loading {
   position: fixed;
   top: 50%;
@@ -1347,7 +1419,7 @@ input[type="text"]::placeholder {
   font-size: 0.82rem;
 }
 
-/* ===== 天气显示 ===== */
+/* ===== 濠㈠灈鏅滈惃鐢稿及閸撗佷粵 ===== */
 .weather-panel-title {
   margin-bottom: var(--spacing-sm);
 }
@@ -1449,7 +1521,7 @@ input[type="text"]::placeholder {
   box-shadow: 0 10px 24px rgba(29, 46, 74, 0.15);
 }
 
-/* 需求1：城市名移至左主卡顶部内联样式 */
+/* 闂傚洠鍋撴慨?闁挎稒鑹鹃悡鍕暜閸屾碍鍊崇紒澶嬫閸わ箑顔忛敂鍨槣闁告绻濋妴濠囨焾閵娿儱鏁堕柤杈ㄦ⒐閻楀崬顕?*/
 .weather-location-inline {
   font-size: 1.4rem;
   font-weight: 700;
@@ -1460,7 +1532,7 @@ input[type="text"]::placeholder {
 }
 
 .weather-location-block {
-  display: none; /* 需求1：隐藏旧的城市横条 */
+  display: none; /* 闂傚洠鍋撴慨?闁挎稒宀稿▓锝夋寠韫囨梹锛嬮柣銊ュ閻撳嫮鏁崒娴㈩參寮?*/
 }
 
 .weather-location {
@@ -1484,7 +1556,7 @@ input[type="text"]::placeholder {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start; /* 需求5：改为顶部对齐，减少无效留白 */
+  justify-content: flex-start; /* 闂傚洠鍋撴慨?闁挎稒纰嶉弫鍏肩▔濞差亗鈧﹪鏌堥妸銉殸濮掔粯鍔х槐婵嬪礄韫囨挾姣岄柡鍐У閺呫儵鎮惧▎鎴烆仱 */
   gap: 10px;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.4);
@@ -1502,7 +1574,7 @@ input[type="text"]::placeholder {
   font-size: clamp(3rem, 7vw, 4.8rem);
   font-weight: 700;
   color: #ffffff;
-  /* UI 精修 64.11.2：降低阴影强度，偏现代风格 */
+  /* UI 缂侇喖褰為幈?64.11.2闁挎稒宀稿閿嬫媴鎼淬劍鞋鐟滄澘宕杈ㄦ償閿旇偐绀夐柛瀣箳楠炲洦绂掗敐澶樻闁?*/
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
   display: flex;
   align-items: flex-start;
@@ -1567,7 +1639,7 @@ input[type="text"]::placeholder {
 
 .weather-feature-item {
   border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 16px; /* 需求3：统一圆角为 16px，与左侧卡片一致 */
+  border-radius: 16px; /* 闂傚洠鍋撴慨?闁挎稒姘ㄧ划鐑樼▔閳ь剟宕烽崱姘兼健濞?16px闁挎稑濂旂粭灞筋啅閿旀寧娅犻柛妤嬬磿婢ф牗绋夐埀顒勬嚊?*/
   background: rgba(255, 255, 255, 0.08);
   padding: 12px 10px;
   display: flex;
@@ -1575,7 +1647,7 @@ input[type="text"]::placeholder {
   align-items: center;
   justify-content: center;
   text-align: center;
-  /* 需求3：统一阴影效果 */
+  /* 闂傚洠鍋撴慨?闁挎稒姘ㄧ划鐑樼▔閳ь剟姊奸弶鎴濐殯闁轰礁鐗婇悘?*/
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.2s ease;
 }
@@ -1589,7 +1661,7 @@ input[type="text"]::placeholder {
 .weather-label {
   width: 100%;
   font-size: 0.78rem;
-  font-weight: 600; /* 需求4：增强标题层级 */
+  font-weight: 600; /* 闂傚洠鍋撴慨?闁挎稒鑹鹃·鍐嚕閻戞鍨煎Λ鐗埫惇鎵棯?*/
   color: rgba(52, 67, 89, 0.85);
   margin-bottom: 6px;
   white-space: nowrap;
@@ -1599,7 +1671,7 @@ input[type="text"]::placeholder {
 
 .weather-value {
   width: 100%;
-  font-size: 1.4rem; /* 需求4：增大数值字号 */
+  font-size: 1.4rem; /* 闂傚洠鍋撴慨?闁挎稒鑹鹃·鍐╁緞瑜庨弳鐔煎磹閻撳海鎽熼柛?*/
   font-weight: 700;
   color: #1f2a3d;
   white-space: nowrap;
@@ -1608,7 +1680,7 @@ input[type="text"]::placeholder {
 }
 
 .weather-feature-item-compact {
-  min-height: 72px; /* 需求5：压缩无效留白，减少高度 */
+  min-height: 72px; /* 闂傚洠鍋撴慨?闁挎稒鑹剧敮鍥╃磽閳哄倹锟ラ柡浣哥墢閺嗏偓闁谎勬灮缁辨繈宕欒箛鎾舵瘜濡ゅ倹锚鐎?*/
 }
 
 .weather-item-highlight {
@@ -1625,7 +1697,7 @@ input[type="text"]::placeholder {
     min-height: 220px;
   }
 
-  /* 手机版/窄屏：右侧指标卡改成长条单列，内容左到右 */
+  /* 闁归潧顑嗗┃鈧柣?缂佹劕瀚惈鍡涙晬濮橆剙绀佸〒姘€鍕樄闁哄秴娲ゅ畷閬嶅绩鐟欏嫬鐏囬梻鈧幐搴㈣拫闁告娲栭崹顏堟晬鐏炶棄鏁堕悗鍦嚀娑斿繘宕氶弶鍨 */
   .weather-feature-stack {
     grid-template-columns: 1fr;
     grid-template-rows: unset;
@@ -1758,7 +1830,7 @@ input[type="text"]::placeholder {
   margin-top: var(--spacing-xs);
 }
 
-/* ===== 预测显示 ===== */
+/* ===== 濡澘瀚粊鎾及閸撗佷粵 ===== */
 #prediction-section {
   margin-top: 16px;
 }
@@ -1848,7 +1920,7 @@ input[type="text"]::placeholder {
   margin-top: var(--spacing-xs);
 }
 
-/* ===== 未来预测时间线 ===== */
+/* ===== 闁哄牜浜濆鍨紣閸曨剛銈撮柡鍐ㄧ埣濡法鐥?===== */
 #forecast-timeline {
   display: flex;
   flex-direction: column;
@@ -1913,7 +1985,7 @@ input[type="text"]::placeholder {
   padding: var(--spacing-md);
 }
 
-/* ===== 工具类 ===== */
+/* ===== 鐎规悶鍎遍崣璺ㄧ尵?===== */
 .hidden {
   display: none !important;
 }
@@ -1934,7 +2006,7 @@ input[type="text"]::placeholder {
   margin-top: var(--spacing-lg);
 }
 
-/* ===== 响应式设计 - 移动端 ===== */
+/* ===== 闁告繂绉寸花鎻掝嚕韫囨凹鍟庨悹?- 缂佸顕ф慨鈺冪博?===== */
 @media (max-width: 768px) {
   :root {
     --page-gutter: var(--spacing-md);
@@ -2004,7 +2076,7 @@ input[type="text"]::placeholder {
   }
 }
 
-/* ===== 响应式设计 - 桌面端 ===== */
+/* ===== 闁告繂绉寸花鎻掝嚕韫囨凹鍟庨悹?- 婵℃鐭傚鎵博?===== */
 @media (min-width: 1024px) {
   :root {
     --page-gutter: var(--spacing-lg);
@@ -2036,7 +2108,7 @@ input[type="text"]::placeholder {
   }
 }
 
-/* ===== 可访问性增强 ===== */
+/* ===== 闁告瑯鍨甸鏍⒒椤旇В鍋撹椤ゅ啫顕?===== */
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
@@ -2045,7 +2117,7 @@ input[type="text"]::placeholder {
   }
 }
 
-/* 高对比度模式支持 */
+/* 濡ゅ倹锚椤曨喖袙閺傚灝顔婃俊顖椻偓宕囩闁衡偓椤栨稑鐦?*/
 @media (prefers-contrast: high) {
   :root {
     --color-border: #000000;
@@ -2057,14 +2129,14 @@ input[type="text"]::placeholder {
   }
 }
 
-/* 焦点可见性 */
+/* 闁绘帪濡囬崑锝夊矗椤栨繍娼岄柟?*/
 :focus-visible {
   outline: 3px solid var(--color-primary);
   outline-offset: 2px;
 }
 
 
-/* ===== 预测显示增强样式 ===== */
+/* ===== 濡澘瀚粊鎾及閸撗佷粵濠⒀呭仜瀹搁亶寮藉畡鎵 ===== */
 .prediction-score-container {
   display: flex;
   justify-content: center;
@@ -2097,7 +2169,7 @@ input[type="text"]::placeholder {
   overflow: hidden;
 }
 
-/* 深色模式下移除强烈的白色内阴影 */
+/* 婵烇綀绮炬竟濠偽熼垾宕囩濞戞挸顑囦簺闂傚嫨鍊曞閬嶆倻閸垺鐣遍柣褍鈧喎顥忛柛鎰嚇濡叉崘銇?*/
 body.theme-dark .score-circle {
   box-shadow:
     0 4px 20px rgba(0,0,0,0.3),
@@ -2174,7 +2246,7 @@ body.theme-dark .score-circle {
   z-index: 2;
 }
 
-/* 深色模式下增强标签颜色对比度 */
+/* 婵烇綀绮炬竟濠偽熼垾宕囩濞戞挸顑呴·鍐嚕閻戞鍨肩紒娑㈢畺椤や線鎳濋幓鎺濆殸婵絾鏌ㄧ€?*/
 body.theme-dark .score-label {
   color: var(--color-text);
 }
@@ -2231,7 +2303,7 @@ body.theme-dark .score-label {
     0 0 24px rgba(244, 67, 54, 0.15);
 }
 
-/* 未来预测的质量标签 */
+/* 闁哄牜浜濆鍨紣閸曨剛銈撮柣銊ュ瀹告繈鏌岃箛鏃傚灱缂?*/
 .forecast-item.quality-excellent .quality-badge {
   background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
   box-shadow:
@@ -2361,7 +2433,7 @@ body.theme-dark .best-time {
   text-align: right;
 }
 
-/* ===== 预测时间线 ===== */
+/* ===== 濡澘瀚粊鎾籍閸洘锛熺紒?===== */
 .forecast-list {
   display: flex;
   flex-direction: column;
@@ -2417,7 +2489,7 @@ body.theme-dark .best-time {
   color: var(--color-text-light);
 }
 
-/* 未来预测分数圆形显示 */
+/* 闁哄牜浜濆鍨紣閸曨剛銈撮柛鎺戞閺嗙喖宕烽崱妤勫煂闁哄嫬澧介妵?*/
 .forecast-score {
   width: 80px;
   height: 80px;
@@ -2522,7 +2594,7 @@ body.theme-dark .best-time {
   padding: var(--spacing-xs) 0;
 }
 
-/* ===== 响应式设计 ===== */
+/* ===== 闁告繂绉寸花鎻掝嚕韫囨凹鍟庨悹?===== */
 @media (max-width: 768px) {
   .prediction-score {
     font-size: 3rem;
@@ -2542,7 +2614,7 @@ body.theme-dark .best-time {
 }
 
 
-/* ===== 朝霞/晚霞预测样式 ===== */
+/* ===== 闁哄牊绻堝﹢?闁哄懏宀稿﹢鐘筹紣閸曨剛銈撮柡宥呭槻缁?===== */
 .today-predictions-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
@@ -2557,9 +2629,9 @@ body.theme-dark .best-time {
   min-width: 0;
 }
 
-/* ===== 高密度仪表盘预测卡片样式 ===== */
+/* ===== 濡ゅ倹锚閻︽垶鎯旈敂鍨磿閻炴稏鍔庡ú蹇旓紣閸曨剛銈撮柛妤嬬磿婢ф牠寮藉畡鎵 ===== */
 
-/* 分数+时间并排行 */
+/* 闁告帒妫欓弳?闁哄啫鐖煎Λ鍧楃嵁閼搁潧绗撻悶?*/
 .prediction-dashboard-row {
   display: flex;
   align-items: flex-start;
@@ -2568,7 +2640,7 @@ body.theme-dark .best-time {
   min-width: 0;
 }
 
-/* ===== 现代圆形仪表盘评分 ===== */
+/* ===== 闁绘粓顣﹂崬顒勫捶閸℃鍩屽ù鐙€浜ｉ妴鍐儎濡法妲戦柛?===== */
 .score-gauge-wrap {
   position: relative;
   display: flex;
@@ -2636,7 +2708,7 @@ body.theme-dark .best-time {
   overscroll-behavior: contain;
 }
 
-/* 移动端：用 fixed 居中，避免卡片内相对定位导致左侧超出屏幕 */
+/* 缂佸顕ф慨鈺冪博椤栥倗绐楅柣?fixed 閻忕偛鎳嶉懙鎴︽晬瀹€鍕級闁稿繐绉村畷閬嶆偋閸パ冩暥闁烩晝顭堥顔锯偓瑙勭煯缂嶅懐鈧絻澹堥崵褍顔忛敂鎸庢珷閻℃帒鎳庨崵顓犱沪韫囨挾顔?*/
 @media (max-width: 640px) {
   .score-breakdown-popover {
     position: fixed;
@@ -2723,7 +2795,7 @@ body.theme-dark .best-time {
   line-height: 1.35;
 }
 
-/* 左侧大数字分数区（兼容旧版） */
+/* 鐎归潻缂氶弲鑸靛緞瑜庨弳鐔衡偓娑欘殔閸ㄥ酣寮弶鍨殬闁挎稑鐗嗛崥瀣偓纭咁潐濡偊鎮ч崼顒傜 */
 .score-display {
   display: flex;
   flex-direction: column;
@@ -2754,7 +2826,7 @@ body.theme-dark .best-time {
   text-align: center;
 }
 
-/* 右侧时间信息区 */
+/* 闁告瑥鍘栭弲鍫曞籍閸洘锛熷ǎ鍥ｅ墲娴煎懘宕?*/
 .time-display {
   flex: 1;
   min-width: 0;
@@ -2848,7 +2920,7 @@ body.theme-dark .best-time {
   line-height: 1;
 }
 
-/* 紧凑云层行 */
+/* 缂佹瘱鍐ㄦ濞存粍鍨甸惇鎵偘?*/
 .compact-cloud-info {
   display: flex;
   align-items: center;
@@ -2913,7 +2985,7 @@ body.theme-dark .best-time {
   font-size: 0.75rem;
 }
 
-/* 紧凑分析文本 */
+/* 缂佹瘱鍐ㄦ闁告帒妫欓悗浠嬪棘閸ャ劍鎷?*/
 .compact-analysis {
   font-size: 0.845rem;
   line-height: 1.55;
@@ -2943,7 +3015,7 @@ body.theme-dark .best-time {
 }
 
 
-/* 朝霞/晚霞并排时：分析区域同高，避免文字长短导致卡片高度视觉错位 */
+/* 闁哄牊绻堝﹢?闁哄懏宀稿﹢鐘荤嵁閼搁潧绗撻柡鍐啇缁变即宕氶崱妯尖偓浠嬪礌閸濆嫮鍘甸柛姘焸閻濐噣鏁嶅畝鍕級闁稿繐绉甸弸鍐偓娑欘殜閺嗛亶鎯岄鐑嗗殼闁奸攱娼欏畷閬嶆偋閸ヮ剛褰幖杈剧畳椤鎲存径鎰櫓濞?*/
 @media (min-width: 760px) {
   .today-predictions-container {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2966,7 +3038,7 @@ body.theme-dark .best-time {
   }
 }
 
-/* 火烧云条件分析 */
+/* 闁诲浚鍋嗛崕铏閹寸偞钂嬪ù鐘烘硾閸ㄥ酣寮?*/
 .fire-cloud-details {
   margin-top: 10px;
   padding: 10px;
@@ -3077,7 +3149,7 @@ body.theme-dark .fca-summary-good {
   height: 100%;
 }
 
-/* 顶部彩色指示条 */
+/* 濡炪倕鐖奸崕纾嬨亹閳哄嫬顥忛柟绋挎川閵囨岸寮?*/
 .prediction-card::before {
   content: '';
   position: absolute;
@@ -3105,7 +3177,7 @@ body.theme-dark .fca-summary-good {
   position: relative;
 }
 
-/* 分享按钮兜底定位（避免 share-panel.css 加载异常时退化到左侧） */
+/* 闁告帒妫旈棅鈺呭箰婢舵劖灏﹂柛蹇旂矊缁ㄥ磭鈧鐭紞鍛存晬閸儰缂夐柛?share-panel.css 闁告梻濮惧ù鍥ь嚕閸屾氨鍩楅柡鍐ㄧ埣閳ь兘鍋撻柛鏍ㄧ墪閸╁苯顔忛敂鎸庢珷闁?*/
 .prediction-card .prediction-header .prediction-share-menu {
   position: absolute;
   top: 8px;
@@ -3127,7 +3199,7 @@ body.theme-dark .fca-summary-good {
   letter-spacing: 0.5px;
 }
 
-/* 深色模式下使用更柔和的渐变 */
+/* 婵烇綀绮炬竟濠偽熼垾宕囩濞戞挸顑勬繛鍥偨閵婏附绾柡灞炬煥閹蜂即鎯冮崟顒傜懁闁?*/
 body.theme-dark .prediction-date-badge {
   background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
   opacity: 0.9;
@@ -3144,7 +3216,7 @@ body.theme-dark .prediction-date-badge {
   margin-bottom: var(--spacing-sm);
 }
 
-/* 预测不可用卡片样式 */
+/* 濡澘瀚粊瀛樼▔瀹ュ懎璁查柣顫妼瀹曢亶鎮ч崶銊у鐎?*/
 .prediction-unavailable {
   background-color: var(--sunset-time-bg);
   border: 1px solid var(--sunset-time-border);
@@ -3249,7 +3321,7 @@ body.theme-dark .prediction-date-badge {
   hyphens: auto;
 }
 
-/* 朝霞特殊样式 */
+/* 闁哄牊绻堝﹢鐘绘偋鐟欏嫮鏆曢柡宥呭槻缁?*/
 .forecast-item[data-type="sunrise"] {
   border-left: 3px solid #ff9800;
 }
@@ -3258,7 +3330,7 @@ body.theme-dark .prediction-date-badge {
   filter: hue-rotate(30deg);
 }
 
-/* 晚霞特殊样式 */
+/* 闁哄懏宀稿﹢鐘绘偋鐟欏嫮鏆曢柡宥呭槻缁?*/
 .forecast-item[data-type="sunset"] {
   border-left: 3px solid #ff5722;
 }
@@ -3270,7 +3342,7 @@ body.theme-dark .prediction-date-badge {
 }
 
 
-/* ===== 预测分析文字样式 ===== */
+/* ===== 濡澘瀚粊鎾礆閸℃鈧粙寮崶褏鎽熼柡宥呭槻缁?===== */
 .prediction-analysis {
   margin: var(--spacing-lg) 0;
   padding: var(--spacing-md);
@@ -3301,9 +3373,9 @@ body.theme-dark .prediction-analysis {
 }
 
 
-/* ===== 需求11：天气界面优化样式 ===== */
+/* ===== 闂傚洠鍋撴慨?1闁挎稒鑹鹃妵澶婎潩閺冨倹娅曢梻鍫線缁鳖參宕犻弽銊у鐎?===== */
 
-/* 视图切换按钮 */
+/* 閻熸瑥妫楀ù姗€宕氶崶銊ュ簥闁圭顦甸幐?*/
 .view-toggle {
   display: flex;
   gap: var(--spacing-sm);
@@ -3335,7 +3407,7 @@ body.theme-dark .prediction-analysis {
   border-color: var(--color-primary);
 }
 
-/* 7天概览卡片容器 */
+/* 7濠㈠灈鏅滈々褏鎲撮崼婵嗗耿闁绘娲ら鎰板闯?*/
 .weekly-cards-container {
   display: flex;
   flex-direction: row;
@@ -3345,7 +3417,7 @@ body.theme-dark .prediction-analysis {
   margin-top: var(--spacing-md);
 }
 
-/* UI 精修 64.11.6：预报卡与朝晚霞区域过渡更自然 */
+/* UI 缂侇喖褰為幈?64.11.6闁挎稒宀搁。鈺呭箮閵夈儱骞㈠☉鎾冲濠€鐐哄疾濮樿埖绡勯柛鏍ф惈閻撴瑦娼婚崶銊﹁癁闁哄洨顥愰崵婊堟倿?*/
 .weekly-cards-container {
   margin-bottom: 24px;
   padding-bottom: 16px;
@@ -3380,7 +3452,7 @@ body.theme-dark .prediction-analysis {
   border-width: 2px;
 }
 
-/* 日期列 */
+/* 闁哄啨鍎插﹢锟犲礆?*/
 .day-label {
   flex-shrink: 0;
   font-size: 0.85rem;
@@ -3407,13 +3479,13 @@ body.theme-dark .prediction-analysis {
   color: var(--color-text-light);
 }
 
-/* 天气图标 */
+/* 濠㈠灈鏅滈惃鐢稿炊閻愵剛鍨?*/
 .weather-icon {
   font-size: 1.6rem;
   text-align: center;
 }
 
-/* 温度条 */
+/* 婵炴挴鏅涚€规娊寮?*/
 .temp-bar-container {
   width: 100%;
   display: flex;
@@ -3446,7 +3518,7 @@ body.theme-dark .prediction-analysis {
   color: #ff5722;
 }
 
-/* 底部数据行：横排展示降水+风速+风向 */
+/* 閹煎瓨娲熼崕鎾极閻楀牆绁﹂悶娑樼焿缁辨澘螣椤忓懎绗撻悘鐐存礈閵囨岸姊藉鍡樺瘻+濡炲閰ｉ埀?濡炲楠搁幃?*/
 .day-meta-lines {
   display: flex;
   flex-direction: column;
@@ -3480,13 +3552,13 @@ body.theme-dark .prediction-analysis {
   font-weight: 400;
 }
 
-/* 兼容旧样式（过渡期） */
+/* 闁稿繒鍘ч鎰板籍瑜庨悧鍗烆嚕韫囥儳绀勯弶鈺佹处濞搭噣寮甸悤鍌滅 */
 .temp-range {
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--color-text);
   margin: var(--spacing-sm) 0;
-  display: none; /* UI 精修 64.11.5：隐藏旧的温度显示 */
+  display: none; /* UI 缂侇喖褰為幈?64.11.5闁挎稒宀稿▓锝夋寠韫囨梹锛嬮柣銊ュ娣囶垱鎯旈敂鑺モ枖缂佲偓?*/
 }
 
 .temp-separator {
@@ -3499,7 +3571,7 @@ body.theme-dark .prediction-analysis {
   font-size: 0.82rem;
   color: var(--color-text-light);
   line-height: 1.25;
-  display: none; /* UI 精修 64.11.5：隐藏旧的元数据显示 */
+  display: none; /* UI 缂侇喖褰為幈?64.11.5闁挎稒宀稿▓锝夋寠韫囨梹锛嬮柣銊ュ閸樻捇寮悧鍫濈ウ闁哄嫬澧介妵?*/
 }
 
 .day-meta-row-direction {
@@ -3520,7 +3592,7 @@ body.theme-dark .prediction-analysis {
   transform-origin: center;
 }
 
-/* 24小时详细视图 */
+/* 24閻忓繐绻戝鍌滄嫚閿斿墽鐭庨悷娆忔濞?*/
 .weather-view {
   margin-top: var(--spacing-md);
 }
@@ -3529,7 +3601,7 @@ body.theme-dark .prediction-analysis {
   display: none;
 }
 
-/* 日期选择器 */
+/* 闁哄啨鍎插﹢锟犳焻婢跺顏ラ柛?*/
 .day-selector {
   display: flex;
   gap: var(--spacing-sm);
@@ -3537,7 +3609,7 @@ body.theme-dark .prediction-analysis {
   justify-content: center;
 }
 
-/* 参数选择器 */
+/* 闁告瑥鍊归弳鐔兼焻婢跺顏ラ柛?*/
 .parameter-selector {
   display: flex;
   flex-wrap: wrap;
@@ -3630,7 +3702,7 @@ body.theme-dark .prediction-analysis {
 .hourly-weather-text {
   font-weight: 850;
 }
-/* 图表容器 */
+/* 闁搞儲宕橀妴鍐偓鍦嚀濞?*/
 .chart-container {
   width: 100%;
   overflow-x: auto;
@@ -3639,7 +3711,7 @@ body.theme-dark .prediction-analysis {
   border-radius: var(--radius-md);
   padding: var(--spacing-md);
   box-shadow: var(--shadow-sm);
-  /* 支持移动端横向滚动 */
+  /* 闁衡偓椤栨稑鐦紒澶庮嚙婵晝绮╅娴㈩參宕ラ幋鐐垫硦闁?*/
   -webkit-overflow-scrolling: touch;
 }
 
@@ -3649,7 +3721,7 @@ body.theme-dark .prediction-analysis {
   height: auto;
 }
 
-/* 暗色模式图表容器适配 */
+/* 闁哄棙顨夋竟濠偽熼垾宕囩闁搞儲宕橀妴鍐偓鍦嚀濞呮帡鏌呴崒鐐插赋 */
 body.theme-dark .chart-container {
   background-color: var(--color-surface, rgba(30,41,59,0.8));
   border: 1px solid var(--color-border);
@@ -3665,7 +3737,7 @@ body.theme-dark .btn-param:hover {
   border-color: var(--color-primary);
 }
 
-/* 移动端优化 */
+/* 缂佸顕ф慨鈺冪博椤栨瑧鍠橀柛?*/
 @media (max-width: 640px) {
   .weekly-cards-container {
     flex-direction: column;
@@ -3769,20 +3841,20 @@ body.theme-dark .btn-param:hover {
     padding: var(--spacing-sm);
   }
 
-  /* 图表在移动端支持横向滚动 */
+  /* 闁搞儲宕橀妴鍐捶閵婎灝鈺呭礉閵娧屼紓闁衡偓椤栨稑鐦俊顖ｄ簻閹粌顭ㄥ顒€袟 */
   .chart-container canvas {
     min-width: 600px;
   }
 }
 
-/* 桌面优化 */
+/* 婵℃鐭傚鐗堝濡搫顕?*/
 @media (min-width: 769px) {
   .chart-container canvas {
     width: 100%;
   }
 }
 
-/* 可访问性增强 */
+/* 闁告瑯鍨甸鏍⒒椤旇В鍋撹椤ゅ啫顕?*/
 .btn-toggle:focus,
 .btn-param:focus {
   outline: 2px solid var(--color-primary);
@@ -3794,7 +3866,7 @@ body.theme-dark .btn-param:hover {
   outline-offset: 2px;
 }
 
-/* 打印样式 */
+/* 闁瑰灚鎸稿畵鍐冀瀹勬壆纭€ */
 @media print {
   .view-toggle,
   .day-selector,
@@ -3808,18 +3880,18 @@ body.theme-dark .btn-param:hover {
   }
 }
 
-/* ===== 需求12：朝霞晚霞预测增强功能样式 ===== */
+/* ===== 闂傚洠鍋撴慨?2闁挎稒纰嶅﹢鐐烘閻愬瓨鐝撻梻鍥╁仱椤ｂ晛霉鐎ｎ亶鏉荤€殿喖鎼慨娑㈡嚄閼恒儳澹夌€?===== */
 
-/* 头部操作按钮 */
+/* 濠㈣埖鎸抽崕鎾箼瀹ュ嫮绋婇柟绋款樀閹?*/
 .header-actions {
   display: flex;
   gap: var(--spacing-sm);
   align-items: center;
 }
 
-/* .header-actions .icon-btn 已由 .header-right-group .icon-btn 统一覆盖，无需重复定义 */
+/* .header-actions .icon-btn 鐎规瓕灏欓弫?.header-right-group .icon-btn 缂備胶鍠嶇粩瀵告啺閸℃瑦纾伴柨娑樻湰濡倝妫侀埀顒勬煂瀹ュ拋妲婚悗瑙勭煯缁?*/
 
-/* 通知设置模态框 */
+/* 闂侇偅姘ㄩ悡锛勬媼閸撗呮瀭婵☆垪鍓濋埀顑跨劍椤?*/
 .notification-settings {
   display: flex;
   flex-direction: column;
@@ -3868,7 +3940,7 @@ body.theme-dark .btn-param:hover {
   font-size: 0.875rem;
 }
 
-/* 收藏位置浮窗 */
+/* 闁衡偓閹増顥戝ù锝呯Ф閻ゅ棗霉椤斿墽宕?*/
 .favorite-popover {
   position: absolute;
   top: calc(100% + 8px);
@@ -4029,7 +4101,7 @@ body.theme-dark .btn-param:hover {
   }
 }
 
-/* 云层分层信息 */
+/* 濞存粍鍨甸惇浼村礆閸℃婀村ǎ鍥ｅ墲娴?*/
 .cloud-layers-section {
   margin-top: var(--spacing-lg);
   padding: var(--spacing-md);
@@ -4038,7 +4110,7 @@ body.theme-dark .btn-param:hover {
   border-left: 4px solid var(--color-primary);
 }
 
-/* 云层区域深色背景 — 见暗色主题区块 */
+/* 濞存粍鍨甸惇浼村礌閸濆嫮鍘垫繛锝堢簿婢瑰﹪鎳楃仦鐐彲 闁?閻熸瑤鐒﹀▓顐︽嚌闊厼鐦滃Λ鐗埫亸顖炲锤?*/
 
 .cloud-layers-section h4 {
   font-size: 1rem;
@@ -4070,7 +4142,7 @@ body.theme-dark .btn-param:hover {
   background-color: var(--color-card-bg);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-sm);
-  /* 确保所有云层卡片高度一致 */
+  /* 缁绢収鍠曠换姘跺箥閳ь剟寮垫径澶岄殬閻忕偛鍊稿畷閬嶆偋閸ヮ剛褰幖杈剧細缁旀挳鎳?*/
   height: 100%;
 }
 
@@ -4078,9 +4150,9 @@ body.theme-dark .btn-param:hover {
   font-size: 0.75rem;
   color: var(--color-text-light);
   margin-bottom: var(--spacing-xs);
-  /* 确保所有标签高度一致，防止文本换行导致进度条不对齐 */
+  /* 缁绢収鍠曠换姘跺箥閳ь剟寮垫径瀣灱缂佹盯绠栭悵顔芥償閿旇法顏遍柤鐤彧缁辨繈姊奸崣澶樺壘闁哄倸娲﹀﹢浼村箲閵忥綆鏀介悗浣冨閸ぱ勬交濞戞ê顔婇柡澶嗏偓鑼憹閻庨潧缍婄紞?*/
   white-space: nowrap;
-  min-height: 2.4em; /* 两行文字的高度，确保即使标签较长也能容纳 */
+  min-height: 2.4em; /* 濞戞挶鍊涢、鎴﹀棘閸パ呮憻闁汇劌瀚伴悵顔芥償閿旇偐绀夌痪顓у枙缁绘岸宕￠崗鍛枏闁哄秴娲ㄩ閿嬫綇閸愵喗姣愬☉鏃傚枙閸忔鈧懓婀遍幘?*/
   display: flex;
   align-items: center;
 }
@@ -4112,7 +4184,7 @@ body.theme-dark .btn-param:hover {
   margin-top: var(--spacing-sm);
 }
 
-/* 黄金时段和蓝调时段 */
+/* 濮掓稑瀚伴崳楣冨籍閼告鍞介柛婊冪焷閹芥垹鎷崘鈺傤槯婵?*/
 .golden-hour-info,
 .blue-hour-info {
   display: flex;
@@ -4158,7 +4230,7 @@ body.theme-dark .blue-hour-info {
   color: var(--color-text);
 }
 
-/* 太阳方位角 */
+/* 濠㈤浜Σ濂稿棘闁稓绉撮悷?*/
 .sun-azimuth-info {
   display: flex;
   align-items: center;
@@ -4190,7 +4262,7 @@ body.theme-dark .sun-azimuth-info {
   color: var(--color-text);
 }
 
-/* 移动端优化 */
+/* 缂佸顕ф慨鈺冪博椤栨瑧鍠橀柛?*/
 @media (max-width: 768px) {
   .header-right-group .icon-btn {
     width: 34px;
@@ -4237,7 +4309,7 @@ body.theme-dark .sun-azimuth-info {
   }
 }
 
-/* 可访问性增强 */
+/* 闁告瑯鍨甸鏍⒒椤旇В鍋撹椤ゅ啫顕?*/
 .favorite-item:focus {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
@@ -4248,7 +4320,7 @@ body.theme-dark .sun-azimuth-info {
   outline-offset: 2px;
 }
 
-/* 打印样式 */
+/* 闁瑰灚鎸稿畵鍐冀瀹勬壆纭€ */
 @media print {
   .header-actions,
   .favorite-popover,
@@ -4257,16 +4329,16 @@ body.theme-dark .sun-azimuth-info {
   }
 }
 
-/* ===== 需求13：搜索历史样式 ===== */
+/* ===== 闂傚洠鍋撴慨?3闁挎稒纰嶉幃宕囨閵忕姴鍧婇柛娆忓级閻楀崬顕?===== */
 
-/* 位置输入包装器 */
+/* 濞达絽绉堕悿鍡樻綇閹惧啿寮抽柛鏍ф嚀椤ュ﹪宕?*/
 .location-input-wrapper {
   position: relative;
   flex: 1;
   overflow: visible;
 }
 
-/* 搜索历史下拉列表 */
+/* 闁瑰吋绮庨崒銊╁储閸℃钑夊☉鎾愁儐婵椽宕氬Δ鍕┾偓?*/
 .search-history-dropdown {
   position: absolute;
   top: 100%;
@@ -4287,7 +4359,7 @@ body.theme-dark .sun-azimuth-info {
   display: none;
 }
 
-/* 历史记录列表 */
+/* 闁告ê妫楄ぐ鍓佹媼閺夎法绉块柛鎺擃殙閵?*/
 .history-list {
   list-style: none;
   padding: 0;
@@ -4324,7 +4396,7 @@ body.theme-dark .sun-azimuth-info {
   color: var(--color-primary);
 }
 
-/* 删除按钮 */
+/* 闁告帞濞€濞呭酣骞愭径鎰唉 */
 .history-remove {
   background: none;
   border: none;
@@ -4341,7 +4413,7 @@ body.theme-dark .sun-azimuth-info {
   color: var(--color-error);
 }
 
-/* 空状态 */
+/* 缂佸矁娅ｆ慨鎼佸箑?*/
 .history-empty {
   padding: var(--spacing-lg);
   text-align: center;
@@ -4349,7 +4421,7 @@ body.theme-dark .sun-azimuth-info {
   font-size: 0.875rem;
 }
 
-/* 清除全部按钮 */
+/* 婵炴挸鎳樺▍搴ㄥ礂閵娾晛鍔ラ柟绋款樀閹?*/
 .history-clear-all {
   width: 100%;
   margin: 0;
@@ -4363,7 +4435,7 @@ body.theme-dark .sun-azimuth-info {
   background-color: #e8e8e8;
 }
 
-/* 移动端优化 */
+/* 缂佸顕ф慨鈺冪博椤栨瑧鍠橀柛?*/
 @media (max-width: 768px) {
   .location-superbar {
     align-items: center;
@@ -4390,7 +4462,7 @@ body.theme-dark .sun-azimuth-info {
   }
 }
 
-/* 可访问性增强 */
+/* 闁告瑯鍨甸鏍⒒椤旇В鍋撹椤ゅ啫顕?*/
 .history-item:focus {
   outline: 2px solid var(--color-primary);
   outline-offset: -2px;
@@ -4401,14 +4473,14 @@ body.theme-dark .sun-azimuth-info {
   outline-offset: 2px;
 }
 
-/* 打印样式 */
+/* 闁瑰灚鎸稿畵鍐冀瀹勬壆纭€ */
 @media print {
   .search-history-dropdown {
     display: none;
   }
 }
 
-/* ===== 未来预测横向布局样式 ===== */
+/* ===== 闁哄牜浜濆鍨紣閸曨剛銈存俊顖ｄ簻閹粎鏁崘銊ф拱闁哄秴鍢茬槐?===== */
 #forecast-section {
   overflow: hidden;
 }
@@ -4431,7 +4503,7 @@ body.theme-dark .sun-azimuth-info {
   justify-content: flex-start;
 }
 
-/* 每天一张卡片，横排 */
+/* 婵絽绻愰妵澶嬬▔閳ь剙顕ｉ悩鎻掑耿闁绘娴勭槐婵單熼鍛瑩 */
 #forecast-section .forecast-day-card {
   flex: 1 1 0;
   min-width: 100px;
@@ -4602,7 +4674,7 @@ body.theme-dark #forecast-section .forecast-item {
   gap: 12px;
 }
 
-/* 桌面端：左中右3组布局 */
+/* 婵℃鐭傚鎵博椤栥倗绐楃€归潻缂氶懙鎴﹀矗?缂備礁瀚粩椋庝沪閳?*/
 #forecast-section .forecast-left-group {
   display: none;
   flex-direction: column;
@@ -4656,7 +4728,7 @@ body.theme-dark #forecast-section .sunset-time-small {
   color: rgba(47, 57, 72, 0.85);
 }
 
-/* 桌面端 >= 768px 启用3组布局 */
+/* 婵℃鐭傚鎵博?>= 768px 闁告凹鍨抽弫?缂備礁瀚粩椋庝沪閳?*/
 @media (min-width: 768px) {
   #forecast-section .forecast-left-group,
   #forecast-section .forecast-middle-group,
@@ -4703,7 +4775,7 @@ body.theme-dark #forecast-section .sunset-time-small {
     color: var(--color-text);
   }
 
-  /* 桌面端隐藏评分组，因为布局改为了左中右3组 */
+  /* 婵℃鐭傚鎵博椤栫偞顓洪柦妯虹箺閻﹀酣宕氶崱娆戠煁闁挎稑鑻ú婊勭▔閸濆嫮顏撮悘鐐╁亾闁衡偓闁稖绀嬪ù婊冩娑斿繑绋夐鐐茬3缂?*/
   #forecast-section .forecast-score-group {
     display: none;
   }
@@ -4777,7 +4849,7 @@ body.theme-dark #forecast-section .sunset-time-small {
   color: #dc2626;
 }
 
-/* 已过标签样式 */
+/* 鐎规瓕灏换鍐冀閸モ晩鍔柡宥呭槻缁?*/
 .passed-badge {
   display: inline-block;
   padding: 2px 6px;
@@ -4794,7 +4866,7 @@ body.theme-dark #forecast-section .sunset-time-small {
 }
 
 
-/* 移动端：未来预测三张卡片也保持一排，压缩信息密度但不折成三行 */
+/* 缂佸顕ф慨鈺冪博椤栥倗绐楅柡鍫簼濞煎灚锛愰崟顒傘偞濞戞挸顦槐鍫曞础閿涘嫬顣诲☉鏃傚枍缁绘岸骞愭担椋庮伇闁圭儤甯槐婵嬪储鐎ｎ剛绱氬ǎ鍥ｅ墲娴煎懐鈧潧妫楃€硅櫕鎷呴崱鏇犵憹闁硅埖蓱閸ㄦ碍绋夋径搴斀 */
 @media (max-width: 768px) {
   #forecast-section .forecast-horizontal-container {
     display: grid;
@@ -4882,10 +4954,10 @@ body.theme-dark #forecast-section .sunset-time-small {
   }
 }
 
-/* ===== 毛玻璃效果（Glassmorphism）===== */
-/* 需求21：为UI组件添加现代化毛玻璃视觉效果 */
+/* ===== 婵絾绋撻獮鎾绘偣閸愨晜娅忛柡瀣玻缁辨─lassmorphism闁?==== */
+/* 闂傚洠鍋撴慨?1闁挎稒鐭拹鐑綢缂備礁瀚▎銏犌庣拠鎻掝潱闁绘粓顣﹂崬顒勫礌閺嶃劎妯呴柣婊嗗吹閹锋垹鎲撮崱姘兼綍闁轰礁鐗婇悘?*/
 
-/* 标准毛玻璃效果 - 卡片组件 */
+/* 闁哄秴娲ら崳顖毿掑☉姘闁荤姴鍟弲銉╁几?- 闁告绱曟晶鏍磼閸曨亝顐?*/
 @supports (backdrop-filter: blur(1px)) {
   .card {
     background: var(--glass-bg);
@@ -4913,7 +4985,7 @@ body.theme-dark #forecast-section .sunset-time-small {
     box-shadow: var(--shadow-md);
   }
 
-  /* 重度毛玻璃效果 - 导航栏 */
+  /* 闂佹彃绉寸€瑰啿袙濞戞艾绠甸柣鐘插暞閺呫儵寮?- 閻庝絻澹堥崺鍛村冀?*/
   header {
     background: linear-gradient(120deg, var(--header-surface) 0%, rgba(255, 237, 205, 0.72) 100%);
     backdrop-filter: blur(var(--glass-blur-heavy));
@@ -4922,7 +4994,7 @@ body.theme-dark #forecast-section .sunset-time-small {
     box-shadow: var(--glass-shadow);
   }
 
-  /* 重度毛玻璃效果 - 页脚 */
+  /* 闂佹彃绉寸€瑰啿袙濞戞艾绠甸柣鐘插暞閺呫儵寮?- 濡炪倓绲婚崜?*/
   footer {
     background: var(--glass-bg-heavy);
     backdrop-filter: blur(var(--glass-blur-heavy));
@@ -4931,7 +5003,7 @@ body.theme-dark #forecast-section .sunset-time-small {
     box-shadow: var(--shadow-sm);
   }
 
-  /* 重度毛玻璃效果 - 模态框 */
+  /* 闂佹彃绉寸€瑰啿袙濞戞艾绠甸柣鐘插暞閺呫儵寮?- 婵☆垪鍓濋埀顑跨劍椤?*/
   .modal-content {
     background: var(--glass-bg-heavy);
     backdrop-filter: blur(var(--glass-blur-heavy));
@@ -4940,7 +5012,7 @@ body.theme-dark #forecast-section .sunset-time-small {
     box-shadow: var(--shadow-lg);
   }
 
-  /* 搜索历史下拉列表毛玻璃效果 */
+  /* 闁瑰吋绮庨崒銊╁储閸℃钑夊☉鎾愁儐婵椽宕氬Δ鍕┾偓鍐ㄐ掑☉姘闁荤姴鍟弲銉╁几?*/
   .search-history-dropdown {
     background: var(--glass-bg-heavy);
     backdrop-filter: blur(var(--glass-blur));
@@ -4948,7 +5020,7 @@ body.theme-dark #forecast-section .sunset-time-small {
     border: 1px solid var(--glass-border);
   }
 
-  /* 收藏位置列表毛玻璃效果 */
+  /* 闁衡偓閹増顥戝ù锝呯Ф閻ゅ棝宕氬Δ鍕┾偓鍐ㄐ掑☉姘闁荤姴鍟弲銉╁几?*/
   .favorites-section {
     background: var(--glass-bg);
     backdrop-filter: blur(var(--glass-blur));
@@ -4956,7 +5028,7 @@ body.theme-dark #forecast-section .sunset-time-small {
     border: 1px solid var(--glass-border);
   }
 
-  /* 天气信息区域毛玻璃效果 */
+  /* 濠㈠灈鏅滈惃鍨┍閳╁啩绱栭柛鏍ф惈閻撴瑥袙濞戞艾绠甸柣鐘插暞閺呫儵寮?*/
   .weather-overview,
   .weather-details {
     background: var(--glass-bg);
@@ -4965,7 +5037,7 @@ body.theme-dark #forecast-section .sunset-time-small {
     border: 1px solid var(--glass-border);
   }
 
-  /* 图表容器毛玻璃效果 */
+  /* 闁搞儲宕橀妴鍐偓鍦嚀濞呮帒袙濞戞艾绠甸柣鐘插暞閺呫儵寮?*/
   .chart-container {
     background: var(--glass-bg);
     backdrop-filter: blur(var(--glass-blur));
@@ -4975,7 +5047,7 @@ body.theme-dark #forecast-section .sunset-time-small {
     padding: var(--spacing-md);
   }
 
-  /* 雷达图容器毛玻璃效果 */
+  /* 闂傚棛鏌夐幓顏堝炊閹屽晣闁革絻鍔嶉惁娲偝閼姐倖瀚呴柡浣哥墛閻?*/
   .radar-chart-container {
     background: var(--glass-bg);
     backdrop-filter: blur(var(--glass-blur));
@@ -4983,7 +5055,7 @@ body.theme-dark #forecast-section .sunset-time-small {
     border: 1px solid var(--glass-border);
   }
 
-  /* 预测时间区域毛玻璃效果 */
+  /* 濡澘瀚粊鎾籍閸洘锛熼柛鏍ф惈閻撴瑥袙濞戞艾绠甸柣鐘插暞閺呫儵寮?*/
   .prediction-times {
     background: var(--glass-bg);
     backdrop-filter: blur(var(--glass-blur));
@@ -4993,7 +5065,7 @@ body.theme-dark #forecast-section .sunset-time-small {
   }
 }
 
-/* 移动端毛玻璃性能优化 - 降低模糊强度 */
+/* 缂佸顕ф慨鈺冪博椤栨稓妯呴柣婊嗗吹閹锋垿骞€瑜戦崗妯诲濡搫顕?- 闂傚嫬绉崇紞鍡椢熼敍鍕囩€殿喖鎼€?*/
 @media (max-width: 768px) {
   :root {
     --glass-blur: 8px;
@@ -5013,7 +5085,7 @@ body.theme-dark #forecast-section .sunset-time-small {
   }
 }
 
-/* Toast 通知 */
+/* Toast 闂侇偅姘ㄩ悡?*/
 .toast-container {
   position: fixed;
   top: 20px;
@@ -5142,17 +5214,17 @@ body.theme-dark #forecast-section .sunset-time-small {
   color: var(--color-text);
 }
 
-/* ===== 暗色主题背景 — 深邃星空感 ===== */
+/* ===== 闁哄棙顨夋竟濠冪▔婵犳凹鏆柤鍐叉湰濞?闁?婵烇綁浜堕崐鎴﹀及閻旇　鏁勯柟?===== */
 body.theme-dark,
-/* auto 模式：亮色系统默认与 light 相同，不设深色背景 */
+/* auto 婵☆垪鈧磭纭€闁挎稒鐭€垫帡鎳濋懠顒勫厙缂備胶鍠栫划顖滄媼閵堝嫮鐟?light 闁烩晝顭堥幃鎾绘晬鐏炶偐鐟濋悹浣哄亾缁讳線鎳濋懠璺哄壒闁?*/
 body.theme-auto {
-  /* 跟随 light 主题，不强制深色 */
+  /* 閻犺櫣鍠栧▓?light 濞戞挸顭烽。浠嬫晬鐏炶偐鐟濈€殿喖鎼崺妤€菐鏉堫偄顥?*/
 }
 
-/* auto 模式跟随系统暗色 */
+/* auto 婵☆垪鈧磭纭€閻犺櫣鍠栧▓銏㈠寲閼姐倗鍩犻柡鍡橆殙婢?*/
 @media (prefers-color-scheme: dark) {
   body.theme-auto {
-    /* 复用 theme-dark 的深蓝背景变量 */
+    /* 濠㈣泛绉堕弫?theme-dark 闁汇劌瀚换渚€鎷戝┑濠傚壒闁哄拋鍨拌ぐ澶愭煂?*/
     --color-primary: #64a8f0;
     --color-secondary: #a78bfa;
     --color-success: #4ade80;
@@ -5201,7 +5273,7 @@ body.theme-auto {
   }
 }
 
-/* 暗色 card 毛玻璃质感升级 */
+/* 闁哄棙顨夋竟?card 婵絾绋撻獮鎾绘偣閸愵厼绐涢柟鎵枎瀹曞瞼鐥?*/
 body.theme-dark .card {
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
@@ -5210,7 +5282,7 @@ body.theme-dark .card {
   box-shadow: var(--glass-shadow);
 }
 
-/* 暗色 header 升级 */
+/* 闁哄棙顨夋竟?header 闁告娲ㄦ?*/
 body.theme-dark header {
   background: linear-gradient(135deg, 
     rgba(14, 20, 38, 0.90) 0%, 
@@ -5221,7 +5293,7 @@ body.theme-dark header {
   box-shadow: 0 1px 0 rgba(255,200,120,0.08), 0 4px 20px rgba(0,0,0,0.4);
 }
 
-/* auto 跟随系统暗色 — 组件覆盖 */
+/* auto 閻犺櫣鍠栧▓銏㈠寲閼姐倗鍩犻柡鍡橆殙婢?闁?缂備礁瀚▎銏㈡啺閸℃瑦纾?*/
 @media (prefers-color-scheme: dark) {
   body.theme-auto .card {
     background: var(--glass-bg);
@@ -5246,7 +5318,7 @@ body.theme-dark header {
   }
 }
 
-/* ===== 暗色主题 — 天气面板适配 ===== */
+/* ===== 闁哄棙顨夋竟濠冪▔婵犳凹鏆?闁?濠㈠灈鏅滈惃鐢告閵忊剝绶查梺顐㈠€块崢?===== */
 body.theme-dark #weather-section::before {
   background:
     radial-gradient(circle at top left, rgba(251, 146, 60, 0.15), transparent 45%),
@@ -5275,7 +5347,7 @@ body.theme-dark .cloud-layers-section {
   background-color: rgba(59, 130, 246, 0.08);
 }
 
-/* 暗色主题右侧指标卡适配 */
+/* 闁哄棙顨夋竟濠冪▔婵犳凹鏆柛娆忓帠閺呭爼骞愰崶銊у灱闁告绻濋埀顒€鍊块崢?*/
 body.theme-dark .weather-feature-item {
   background: rgba(255, 255, 255, 0.04);
   border-color: rgba(255, 255, 255, 0.08);
@@ -5300,7 +5372,7 @@ body.theme-dark .weather-item-highlight {
   border-color: rgba(255, 255, 255, 0.20);
 }
 
-/* auto 跟随系统 — 天气面板 */
+/* auto 閻犺櫣鍠栧▓銏㈠寲閼姐倗鍩?闁?濠㈠灈鏅滈惃鐢告閵忊剝绶?*/
 @media (prefers-color-scheme: dark) {
   body.theme-auto #weather-section::before {
     background:
@@ -5355,7 +5427,7 @@ body.theme-dark .weather-item-highlight {
   }
 }
 
-/* 天气数据源状态只读信息区 */
+/* 濠㈠灈鏅滈惃鐢稿极閻楀牆绁︽繝褎鍔楁慨鎼佸箑娴ｇ娑ч悹鍥唺娣囧﹪骞侀姘殬 */
 .readonly-info {
   background: var(--bg-card);
   padding: 12px;
@@ -5378,27 +5450,33 @@ body.theme-dark .weather-item-highlight {
   font-weight: 500;
 }
 
-/* ===== 周边云况雷达罗盘 主题变量 ===== */
+/* ===== 闁告稏鍔忕粩鐔哥閹存繂鏋岄梻鍡欐焿閹活亞绱斿Δ鍐╃８ 濞戞挸顭烽。浠嬪矗濮椻偓閸?===== */
 :root {
-  --radar-bg: linear-gradient(180deg, rgba(240,244,252,0.92), rgba(230,236,250,0.75));
-  --radar-border: rgba(100,130,200,0.20);
-  --radar-ring: rgba(80,100,160,0.22);
-  --radar-axis-main: rgba(80,100,160,0.30);
-  --radar-axis-sub: rgba(80,100,160,0.12);
-  --radar-label-fill: rgba(40,60,100,0.88);
-  --radar-label-bg: rgba(230,236,250,0.70);
-  --radar-title: rgba(30,50,90,0.95);
-  --radar-subtitle: rgba(80,100,160,0.75);
-  --radar-legend-text: rgba(40,60,100,0.85);
+  --radar-bg: linear-gradient(180deg, rgba(255,250,242,0.94) 0%, rgba(250,242,230,0.88) 56%, rgba(244,234,220,0.90) 100%);
+  --radar-border: rgba(170,111,45,0.18);
+  --radar-ring: rgba(132,101,67,0.22);
+  --radar-axis-main: rgba(132,101,67,0.30);
+  --radar-axis-sub: rgba(132,101,67,0.14);
+  --radar-label-fill: rgba(67,52,39,0.90);
+  --radar-label-bg: rgba(255,247,235,0.72);
+  --radar-title: rgba(44,39,34,0.95);
+  --radar-subtitle: rgba(111,86,59,0.74);
+  --radar-legend-text: rgba(67,52,39,0.84);
   --radar-legend-bg: var(--radar-bg);
   --radar-center: rgba(220,80,20,0.90);
   --radar-center-stroke: rgba(0,0,0,0.20);
   --radar-ring-low: rgba(100,150,220,0.08);
   --radar-ring-mid: rgba(130,160,200,0.06);
   --radar-ring-high: rgba(160,170,200,0.05);
-  --radar-cloud-low: rgba(80,110,155,0.85);
-  --radar-cloud-mid: rgba(110,130,165,0.82);
-  --radar-cloud-high: rgba(145,155,175,0.80);
+  --radar-fov-bg: linear-gradient(180deg, rgba(255,248,236,0.98) 0%, rgba(246,232,208,0.96) 54%, rgba(231,204,166,0.92) 100%);
+  --radar-fov-pane: rgba(160,116,58,0.055);
+  --radar-bearing-bg: linear-gradient(180deg, rgba(255,250,242,0.90), rgba(248,239,225,0.78));
+  --radar-bearing-border: rgba(170,111,45,0.16);
+  --radar-bearing-text: rgba(61,48,40,0.92);
+  --radar-bearing-tick: rgba(100,76,48,0.28);
+  --radar-cloud-low: rgba(86,79,70,0.76);
+  --radar-cloud-mid: rgba(116,106,93,0.66);
+  --radar-cloud-high: rgba(154,142,124,0.56);
 }
 
 body.theme-dark {
@@ -5418,7 +5496,13 @@ body.theme-dark {
   --radar-ring-low: rgba(100,150,220,0.08);
   --radar-ring-mid: rgba(130,160,200,0.06);
   --radar-ring-high: rgba(160,170,200,0.05);
-  /* 增强暗色模式云况可见度：提高亮度和不透明度 */
+  /* 濠⒀呭仜瀹搁亶寮冲Δ鍕棌婵☆垪鈧磭纭€濞存粍鍨甸崰宀勫矗椤栨繍娼岄幖杈捐缁变即骞撻幇鎵蒋濞存粠鍠栫€规娊宕仦鑲╃憹闂侇偄绻戝Σ鎴炴償?*/
+  --radar-fov-bg: linear-gradient(180deg, rgba(20,31,57,0.90) 0%, rgba(14,24,48,0.82) 58%, rgba(10,17,34,0.92) 100%);
+  --radar-fov-pane: rgba(160,185,225,0.040);
+  --radar-bearing-bg: linear-gradient(180deg, rgba(18,28,52,0.86), rgba(12,20,40,0.78));
+  --radar-bearing-border: rgba(148,163,184,0.18);
+  --radar-bearing-text: rgba(241,245,249,0.90);
+  --radar-bearing-tick: rgba(180,200,230,0.34);
   --radar-cloud-low: rgba(180,210,255,0.98);
   --radar-cloud-mid: rgba(210,225,255,0.95);
   --radar-cloud-high: rgba(235,242,255,0.90);
@@ -5480,9 +5564,9 @@ body.theme-dark {
   --map-popup-border: rgba(255,255,255,0.2);
 }
 
-/* ===== 朝霞/晚霞切换开关（手机/电脑通用，手机生效） ===== */
+/* ===== 闁哄牊绻堝﹢?闁哄懏宀稿﹢鐘诲礆閸ャ劌搴婄€殿喒鍋撻柛蹇曨劜缁辨瑩骞嶇€ｎ偅绨?闁活澀绲婚崜鎶芥焻濮樿鲸鏆忛柨娑樻湰婢ф粓寮甸搹瑙勬櫢闁轰礁鐗炵槐?===== */
 .prediction-toggle-bar {
-  display: none; /* 桌面端隐藏 */
+  display: none; /* 婵℃鐭傚鎵博椤栫偞顓洪柦?*/
   background: var(--color-surface, #f8f7f4);
   border-radius: 999px;
   padding: 4px;
@@ -5516,7 +5600,7 @@ body.theme-dark {
   color: var(--color-text, #111827);
 }
 
-/* 手机端：切换开关可见，卡片单列显示 */
+/* 闁归潧顑嗗┃鈧紒鏃戝灲缁变即宕氶崶銊ュ簥鐎殿喒鍋撻柛蹇撳暱瑜拌尙鎲存笟濠勭闁告绱曟晶鏍础閺囩偛鐏欓柡鍕⒔閵?*/
 @media (max-width: 640px) {
   #prediction-display {
     display: flex;
@@ -5532,7 +5616,7 @@ body.theme-dark {
     display: flex;
   }
 
-  /* 手机端：grid 变成单列，隐藏的 panel 不占位 */
+  /* 闁归潧顑嗗┃鈧紒鏃戝灲缁辩櫟rid 闁告瑦蓱閸ㄦ岸宕￠弴鐐茬仚闁挎稑鐭傚▓锝夋寠韫囨洘鐣?panel 濞戞挸绉村畷鐗堟媴?*/
   #today-predictions-container {
     grid-template-columns: 1fr !important;
   }
@@ -5549,19 +5633,19 @@ body.theme-dark {
   }
 }
 
-/* 桌面端：两个 panel 都显示，并排布局 */
+/* 婵℃鐭傚鎵博椤栥倗绐楀☉鎾卞€撻柌?panel 闂侇喛濮ゅΟ澶岀矆閻氬绀夋鐐跺煐鐢挾鏁崘銊ф拱 */
 @media (min-width: 641px) {
   .prediction-toggle-bar {
     display: none !important;
   }
 
   .prediction-tab-panel {
-    display: flex !important; /* 强制显示，忽略 style="display:none" */
+    display: flex !important; /* 鐎殿喖鎼崺妤呭及閸撗佷粵闁挎稑鑻幏鐑芥偩?style="display:none" */
     align-items: stretch;
   }
 }
 
-/* ===== API 接入页面：复用主站 card / glass 语言 ===== */
+/* ===== API 闁规亽鍎遍崣鍡樸亜閻㈠憡妗ㄩ柨娑欒壘椤︽煡鎮介妸銈呯槣缂?card / glass 閻犲浂鍙€閳?===== */
 .api-access-panel {
   display: grid;
   gap: 14px;
@@ -5733,7 +5817,7 @@ body.theme-dark {
   color: var(--color-text-light);
 }
 
-/* ── API 接口参考文档（新版） ── */
+/* 闁冲厜鍋撻柍鍏夊亾 API 闁规亽鍎辫ぐ娑㈠矗閸屾績鍋撻崘鈺傜€俊妤嬬秶缁辨瑩寮幍顔碱暭闁?闁冲厜鍋撻柍鍏夊亾 */
 .api-ref-header {
   margin-top: 16px;
 }
@@ -5872,7 +5956,7 @@ body.theme-dark .code-box {
   }
 }
 
-/* ===== 火烧云地图专属页面 ===== */
+/* ===== 闁诲浚鍋嗛崕铏閹存繃鍕鹃柛銉ュ綖缁楁挾浠﹂悙鎭掆偓澶愭?===== */
 .map-panel {
   padding: 16px;
 }
@@ -5901,13 +5985,13 @@ body.theme-dark .code-box {
   text-align: center;
 }
 
-/* Leaflet 在 hidden panel 中初始时强制尺寸 */
+/* Leaflet 闁?hidden panel 濞戞搩鍘奸崹鍨叏鐎ｎ偅顦х€殿喖鎼崺妤冧焊閸濆嫷鍤?*/
 #map-panel-container .leaflet-container {
   width: 100% !important;
   height: 100% !important;
 }
 
-/* ===== 7天概览：去掉温度条，只显示数字 ===== */
+/* ===== 7濠㈠灈鏅滈々褏鎲撮崼顒傜獥闁告绮敮鈧繛鎾櫅鐎规娊寮堕埥鍛闁告瑯浜濆Ο澶岀矆閻戞ɑ娈堕悗?===== */
 .temp-range-inline {
   display: flex;
   align-items: center;
@@ -5924,7 +6008,7 @@ body.theme-dark .code-box {
   font-size: 0.75rem;
 }
 
-/* ===== 分享地图 panel ===== */
+/* ===== 闁告帒妫旈棅鈺呭捶閺夋寧绂?panel ===== */
 .gallery-panel {
   padding: 0;
 }
@@ -5956,7 +6040,7 @@ body.theme-dark .code-box {
   display: block;
 }
 
-/* ===== 地图底图切换按钮 ===== */
+/* ===== 闁革附婢樺ù妯绘償閺囩偞绂堥柛鎺戞处瀹曟煡骞愭径鎰唉 ===== */
 .map-tile-toggle {
   display: inline-flex;
   align-items: center;
@@ -5992,7 +6076,7 @@ body.theme-dark .code-box {
   background: rgba(96,165,250,0.08);
 }
 
-/* ===== 地图底图分段切换器 ===== */
+/* ===== 闁革附婢樺ù妯绘償閺囩偞绂堥柛鎺戞椤斿矂宕氶崶銊ュ簥闁?===== */
 .map-tile-switcher {
   display: inline-flex;
   border-radius: 20px;
@@ -6028,7 +6112,7 @@ body.theme-dark .code-box {
   font-weight: 600;
 }
 
-/* ===== 规则卡片横排滚动 ===== */
+/* ===== 閻熸瑥瀚崹顖炲础閿涘嫬顣绘俊顖ｄ簼鐢挸顭ㄥ顒€袟 ===== */
 .horizontal-scroll {
   display: flex !important;
   flex-wrap: nowrap;
@@ -6053,7 +6137,7 @@ body.theme-dark .code-box {
   flex-direction: column;
 }
 
-/* ===== 雷达罗盘 ===== */
+/* ===== 闂傚棛鏌夐幓顏嗙磾濡ゅ啯纾?===== */
 .radar-compass-container {
   margin-top: 16px;
   display: none;
@@ -6063,7 +6147,7 @@ body.theme-dark .code-box {
   margin-top: 30px;
 }
 
-/* ===== 全局消息提示 ===== */
+/* ===== 闁稿繈鍔岄惇顒€鈽夐崼鐔剁礀闁圭粯鍔楅妵?===== */
 .global-toast {
   position: fixed;
   top: 20px;
@@ -6073,7 +6157,7 @@ body.theme-dark .code-box {
   max-width: 500px;
 }
 
-/* ===== 中国火烧云地图区域 ===== */
+/* ===== 濞戞搩鍘煎ù妤呮倶椤愩倕鍔ゅù婊勫灥濠€鎾炊閹冮殬闁?===== */
 .map-panel-subtitle {
   font-size: 11px;
   font-weight: normal;
@@ -6104,7 +6188,7 @@ body.theme-dark .code-box {
   color: var(--color-text-light);
 }
 
-/* 地图 legend / popup UI token */
+/* 闁革附婢樺ù?legend / popup UI token */
 .china-map-legend {
   background: var(--map-legend-bg);
   color: var(--map-legend-text);
@@ -6152,7 +6236,7 @@ body.theme-dark .code-box {
   background: var(--map-popup-bg);
 }
 
-/* 时段切换：复用霞客通用分段开关 */
+/* 闁哄啳鍩栭宀勫礆閸ャ劌搴婇柨娑欒壘椤︽煡鎮介妸鈺傜瘎閻庡箍鍨介埀顒佹皑閺併倝宕氶崱姗嗗斀鐎殿喒鍋撻柛?*/
 .china-spots-tabs-container,
 .china-spots-tabs {
   position: relative;
@@ -6177,7 +6261,7 @@ body.theme-dark .code-box {
   font-weight: 700;
 }
 
-/* 时段说明 */
+/* 闁哄啳鍩栭宀€鎷犵€涙ɑ顫?*/
 .china-spots-period-label {
   font-size: 12px;
   color: var(--color-text-light);
@@ -6185,7 +6269,7 @@ body.theme-dark .code-box {
   text-align: center;
 }
 
-/* 地图容器 */
+/* 闁革附婢樺ù妯尖偓鍦嚀濞?*/
 .china-spots-map-wrap {
   position: relative;
   width: 100%;
@@ -6256,14 +6340,14 @@ body.theme-dark .code-box {
   animation: xiake-loading-progress 1.6s ease-in-out infinite alternate;
 }
 
-/* 空状态 */
+/* 缂佸矁娅ｆ慨鎼佸箑?*/
 .china-spots-empty {
   margin-top: 8px;
   font-size: 12px;
   color: var(--color-text-light);
 }
 
-/* 双分数容器 */
+/* 闁告瑥鑻崹搴ㄥ极閺夋鍟囬柛?*/
 .china-spots-dual-score {
   margin-top: 10px;
   display: none;
@@ -6275,7 +6359,7 @@ body.theme-dark .code-box {
   display: none !important;
 }
 
-/* ===== 中国火烧云地图区域响应式 ===== */
+/* ===== 濞戞搩鍘煎ù妤呮倶椤愩倕鍔ゅù婊勫灥濠€鎾炊閹冮殬闁糕晝鍠庨幖閿嬫償閺傝法纭€ ===== */
 @media (max-width: 640px) {
   .china-spots-tabs-container.xiake-toggle,
   .china-spots-tabs.xiake-toggle {
@@ -6287,7 +6371,7 @@ body.theme-dark .code-box {
   }
 }
 
-/* 需求46：iOS 风格朝霞/晚霞预测 App 卡片 */
+/* 闂傚洠鍋撴慨?6闁挎稒顒S 濡炲瀛╅悧鎼佸嫉濠靛绡?闁哄懏宀稿﹢鐘筹紣閸曨剛銈?App 闁告绱曟晶?*/
 .prediction-app-card {
   --app-card-bg: rgba(255, 255, 255, 0.88);
   --app-text: #222222;
@@ -6529,7 +6613,7 @@ body.theme-dark .prediction-app-card {
   .app-info-value { grid-column: 2; justify-self: start; }
 }
 
-/* 需求46 修正：只压缩 layout，不改色彩系统 */
+/* 闂傚洠鍋撴慨?6 濞ｅ浂鍠楅婊堟晬濮橆剙娑ч柛妯侯儑缂?layout闁挎稑濂旂粭澶愬绩绾懎顥忕憸鎵虫櫇闁绱?*/
 .prediction-app-shell { gap: 14px; padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
 .phenomenon-title-card {
   min-height: 92px;
@@ -6629,7 +6713,7 @@ body.theme-dark .prediction-app-card {
   .score-summary-left { justify-content: center; }
 }
 
-/* 需求46 修正：去掉外侧白框，修复评分文字穿模 */
+/* 闂傚洠鍋撴慨?6 濞ｅ浂鍠楅婊堟晬濮橆剙绠甸柟鍝勵槸椤︾粯绗熻濞呇冾浖閸☆厾绀夊ǎ鍥跺枛椤﹁尙鎷犻崟顐㈢€婚柡鍌氭搐閻⊙呯矚閹稿範?*/
 .prediction-app-card {
   border: none !important;
   box-shadow: none;
@@ -6673,7 +6757,7 @@ body.theme-dark .prediction-app-card {
   .score-gauge-grade { margin-top: 3px; }
 }
 
-/* 需求46 修正：云量三项保持一排 */
+/* 闂傚洠鍋撴慨?6 濞ｅ浂鍠楅婊堟晬濮橆偆闅橀梺鎻掔箣缁椾焦銇勯柅娑氱闁归晲妞掔粩鎾箳?*/
 .cloud-condition-card {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   min-height: 92px;
@@ -6716,7 +6800,7 @@ body.theme-dark .prediction-app-card {
   .cloud-condition-top strong { font-size: 0.95rem; }
 }
 
-/* 需求46 修正：分析条目改为一行，左标题右解释 */
+/* 闂傚洠鍋撴慨?6 濞ｅ浂鍠楅婊堟晬濮橆剙鐎婚柡瀣姈濞碱垶鎯勯鑺ユ毉濞戞捁妗ㄧ粩瀵告偘瀹€瀣鐎归潻闄勯悥锝嗭紣濡搫绀侀悷娆欑秮閸?*/
 .analysis-item {
   grid-template-columns: 22px minmax(6.5em, 0.9fr) minmax(0, 1.4fr);
   align-items: center;
@@ -6757,7 +6841,7 @@ body.theme-dark .prediction-app-card {
   .analysis-item-copy small { font-size: 0.74rem; }
 }
 
-/* 需求46 修正：朝霞/晚霞标题不需要背景板，文字居中 */
+/* 闂傚洠鍋撴慨?6 濞ｅ浂鍠楅婊堟晬濮橆厽绡傞梻?闁哄懏宀稿﹢鐘诲冀閸ヮ剦鏆☉鎾崇Ч濞撳墎鎲版担钘夊壒闁哄拋鍨卞姗€鏁嶇仦鐐€悗娑欘殔閻櫕绋?*/
 .phenomenon-title-card {
   min-height: 54px;
   padding: 4px 0 0;
@@ -6778,7 +6862,7 @@ body.theme-dark .prediction-app-card {
   font-size: clamp(2rem, 8vw, 2.35rem);
 }
 
-/* 需求46 修正：去掉预测卡片内部日期胶囊 */
+/* 闂傚洠鍋撴慨?6 濞ｅ浂鍠楅婊堟晬濮橆剙绠甸柟鍝勵樀椤ｂ晛霉鐎ｎ亜骞㈤柣妤€娲ら崬鎾焾閵婏附锛夐柡鍫㈠枙閸忓矂宕?*/
 .prediction-app-nav-compact {
   grid-template-columns: 1fr auto;
   min-height: 0;
@@ -6789,7 +6873,7 @@ body.theme-dark .prediction-app-card {
   display: none;
 }
 
-/* 需求46 修正：顶部只保留右上角分享 */
+/* 闂傚洠鍋撴慨?6 濞ｅ浂鍠楅婊堟晬濮樿翰鈧﹪鏌堥妸銉ユ锭濞ｅ洦绻勯弳鈧柛娆忓帠缁楀倻鎲撮幒鎴濈€诲ù?*/
 .prediction-app-nav-compact {
   display: flex;
   justify-content: flex-end;
@@ -6799,7 +6883,7 @@ body.theme-dark .prediction-app-card {
   display: block;
 }
 
-/* 需求46 修正：评分/时间比例与信息行上下结构 */
+/* 闂傚洠鍋撴慨?6 濞ｅ浂鍠楅婊堟晬濮樺磭妲戦柛?闁哄啫鐖煎Λ鍨掗弬鍓т紣濞戞挸绨兼穱濠囧箒椤栨繍鏀藉☉鎾筹梗缁楀懐绱掗幘瀵糕偓?*/
 .score-gauge-number {
   font-size: 2.45rem;
   letter-spacing: -0.045em;
@@ -6855,7 +6939,7 @@ body.theme-dark .prediction-app-card {
   .app-info-value { font-size: 0.84rem; }
 }
 
-/* 需求46 修正：云量标题和百分比同排，进度条第二行，多语言防穿模 */
+/* 闂傚洠鍋撴慨?6 濞ｅ浂鍠楅婊堟晬濮橆偆闅橀梺鎻掔箲閻栵絾锛愬Ο鐑樺闁谎勫劤閸ㄥ骸袙閺傛寧鍊遍柟鐑樺釜缁辨繃娼诲☉妯侯唺闁哄绱曢鍥ㄧ瀹€鍐炬斀闁挎稑鑻ˇ璺ㄦ嫚椤撯檧鏋呴梻鍐皺閳规稑螣?*/
 .cloud-condition-card {
   gap: 8px;
 }
@@ -6892,7 +6976,7 @@ body.theme-dark .prediction-app-card {
   .cloud-condition-top strong { font-size: 0.74rem; }
 }
 
-/* 需求46 修正：分析条目进一步压缩，优先一行显示 */
+/* 闂傚洠鍋撴慨?6 濞ｅ浂鍠楅婊堟晬濮橆剙鐎婚柡瀣姈濞碱垶鎯勯璺ㄧ濞戞挴鍋撴慨婵勫劚鐢洨绱撻埡瀣濞村吋锚閸樻稒绋夐埀顒傛偘鐏炵偓鈻旂紒鈧?*/
 .analysis-item {
   grid-template-columns: 18px minmax(5.2em, 0.78fr) minmax(0, 1.65fr);
   gap: 6px;
@@ -6932,7 +7016,7 @@ body.theme-dark .prediction-app-card {
   .analysis-item-copy small { font-size: 0.66rem; }
 }
 
-/* 需求46 修正：背景回归霞客/云况雷达一致的暗色玻璃风格 */
+/* 闂傚洠鍋撴慨?6 濞ｅ浂鍠楅婊堟晬濮樺啿鍓归柡鍜佸灠濞叉牞銇愰幒妤佺瘎閻?濞存粍鍨甸崰宀勬⒖閻ゎ垱褰у☉鎾亾闁煎嘲顕▓鎴﹀汲濡ゅ嫬顥忛柣婊嗗吹閹锋垶顦版惔銏㈠ */
 .prediction-app-shell {
   background:
     radial-gradient(circle at 18% 0%, rgba(251, 146, 60, 0.16), transparent 34%),
@@ -6981,14 +7065,14 @@ body.theme-dark .prediction-app-card {
   border: 1px solid rgba(34, 197, 94, 0.20);
 }
 
-/* 需求46 修正：分析标题无 emoji，字号对齐云况雷达 */
+/* 闂傚洠鍋撴慨?6 濞ｅ浂鍠楅婊堟晬濮橆剙鐎婚柡瀣姈閻栵絾锛愬Ο缁橈骏 emoji闁挎稑鑻悺褔宕ｅ畡閭﹀殸濮掔粯鍔掔花顖炲礃閻㈠憡绁弶?*/
 .analysis-card-title {
   font-size: 1rem;
   line-height: 1.35;
   gap: 0;
 }
 
-/* 需求46 修正：分数明细面板置顶，避免被其他卡片遮挡 */
+/* 闂傚洠鍋撴慨?6 濞ｅ浂鍠楅婊堟晬濮橆剙鐎婚柡浣哄濡叉垹绱掗崱娑欐〃闁哄娉曢悿鍡樸亜鐠佸湱绀夐梺顒€鐏濋崢銈囨偖椤愩垹寰撳ù鐘崇墪瀹曢亶鎮ч崶顑跨磿闁?*/
 .prediction-app-card,
 .prediction-app-shell,
 .score-summary-card,
@@ -7008,7 +7092,7 @@ body.theme-dark .prediction-app-card {
   z-index: 9999;
 }
 
-/* 需求46 最终修正：比例、文案、主题、弹层 */
+/* 闂傚洠鍋撴慨?6 闁哄牃鍋撶紓浣哥墔閹便劌顫㈤敐蹇曠獥婵絾鏌х欢銉╁Υ娴ｈ鐎俊妤€鐗勯埀顑挎鐎靛本锛愬Ο绯曞亾娴ｆ瓕鍓ㄩ悘?*/
 .score-gauge-large-wrap {
   height: 154px;
   flex-direction: column;
@@ -7151,7 +7235,7 @@ body:not(.theme-dark):not(.theme-auto) .prediction-app-shell {
   .analysis-item-copy small { font-size: 0.58rem; }
 }
 
-/* 需求46 修正：去掉信息行 emoji，值强化居中 */
+/* 闂傚洠鍋撴慨?6 濞ｅ浂鍠楅婊堟晬濮橆剙绠甸柟鍝勵槷娣囧﹪骞侀婵愭斀 emoji闁挎稑鑻埀顒傚帶瀹搁亶宕犻弽褏婀峰☉?*/
 .app-info-row {
   grid-template-columns: minmax(0, 1fr) !important;
   justify-items: center;
@@ -7170,7 +7254,7 @@ body:not(.theme-dark):not(.theme-auto) .prediction-app-shell {
   letter-spacing: -0.01em;
 }
 
-/* 需求46 修正：最佳时间/方向去掉前置 emoji 后保持两行对齐 */
+/* 闂傚洠鍋撴慨?6 濞ｅ浂鍠楅婊堟晬濮橆厽浠樺ù锝堟珪濡炲倿姊?闁哄倻鎳撻幃婊堝储缂佹ê绔撮柛鎾崇Ф閻?emoji 闁告艾绨肩换姘跺箰娴ｇ柉鈷堥悶娑樿嫰椤曨喗顬?*/
 .app-info-row {
   grid-template-columns: minmax(0, 1fr);
   padding-left: 10px;
@@ -7178,7 +7262,7 @@ body:not(.theme-dark):not(.theme-auto) .prediction-app-shell {
 .app-info-label,
 .app-info-value { grid-column: 1; }
 
-/* 需求46 修正：恢复完整分析文案，仅通过字号/间距适配 */
+/* 闂傚洠鍋撴慨?6 濞ｅ浂鍠楅婊堟晬濮橆厺鍒掑璺虹Т閻ｎ剟寮弶鎴濈€婚柡瀣姈閺嬪啫顩奸崼顒傜濞寸姴鎳橀埀顒佷亢缁诲啰鈧稒顨呰ぐ?闂傚倻顥愮粣娑㈡焻閸岀偛甯?*/
 .analysis-item {
   grid-template-columns: 14px minmax(0, 0.98fr) minmax(0, 1.45fr) !important;
   gap: 4px !important;
@@ -7220,18 +7304,18 @@ body:not(.theme-dark):not(.theme-auto) .prediction-app-shell {
   .analysis-item-copy small { font-size: 0.46rem !important; letter-spacing: -0.055em; }
 }
 
-/* 需求46 修正：亮色模式下统一云况雷达/天气模块/新预测 UI 色彩 */
+/* 闂傚洠鍋撴慨?6 濞ｅ浂鍠楅婊堟晬濮橆偄鐦ㄩ柤鐟板级鑶╃€殿喖绻嬬粭鍛磼閻斿墎顏卞ù婊勫灥閸犲矂姊块悿顖涘涧/濠㈠灈鏅滈惃闈浳熼垾铏仴/闁哄倷鍗抽。鈺伱?UI 闁艰褰冮崓?*/
 :root,
 body.theme-light,
 body:not(.theme-dark):not(.theme-auto) {
-  --radar-bg: var(--glass-bg-heavy);
-  --radar-border: var(--glass-border);
-  --radar-label-fill: var(--color-text);
-  --radar-label-bg: transparent;
-  --radar-title: var(--color-text);
-  --radar-subtitle: var(--color-text-light);
-  --radar-legend-text: var(--color-text);
-  --radar-legend-bg: transparent;
+  --radar-bg: linear-gradient(180deg, rgba(255,250,242,0.94) 0%, rgba(250,242,230,0.88) 56%, rgba(244,234,220,0.90) 100%);
+  --radar-border: rgba(170,111,45,0.18);
+  --radar-label-fill: rgba(67,52,39,0.90);
+  --radar-label-bg: rgba(255,247,235,0.72);
+  --radar-title: rgba(44,39,34,0.95);
+  --radar-subtitle: rgba(111,86,59,0.74);
+  --radar-legend-text: rgba(67,52,39,0.84);
+  --radar-legend-bg: rgba(250,244,234,0.78);
 }
 body.theme-light .weather-glass-panel,
 body.theme-light .weather-visual-panel,
@@ -7278,14 +7362,14 @@ body:not(.theme-dark):not(.theme-auto) .radar-chart-container {
 }
 @media (prefers-color-scheme: light) {
   body.theme-auto {
-    --radar-bg: var(--glass-bg-heavy);
-    --radar-border: var(--glass-border);
-    --radar-label-fill: var(--color-text);
-    --radar-label-bg: transparent;
-    --radar-title: var(--color-text);
-    --radar-subtitle: var(--color-text-light);
-    --radar-legend-text: var(--color-text);
-    --radar-legend-bg: transparent;
+    --radar-bg: linear-gradient(180deg, rgba(255,250,242,0.94) 0%, rgba(250,242,230,0.88) 56%, rgba(244,234,220,0.90) 100%);
+    --radar-border: rgba(170,111,45,0.18);
+    --radar-label-fill: rgba(67,52,39,0.90);
+    --radar-label-bg: rgba(255,247,235,0.72);
+    --radar-title: rgba(44,39,34,0.95);
+    --radar-subtitle: rgba(111,86,59,0.74);
+    --radar-legend-text: rgba(67,52,39,0.84);
+    --radar-legend-bg: rgba(250,244,234,0.78);
   }
   body.theme-auto .weather-glass-panel,
   body.theme-auto .weather-visual-panel,
@@ -7307,14 +7391,14 @@ body:not(.theme-dark):not(.theme-auto) .radar-chart-container {
   }
 }
 
-/* 需求46 修正：手机端朝霞/晚霞切换开关下方增加呼吸间距 */
+/* 闂傚洠鍋撴慨?6 濞ｅ浂鍠楅婊堟晬濮橆厼顤侀柡鍫ｆ椤忣剟寮靛┑瀣瘎/闁哄懏宀稿﹢鐘诲礆閸ャ劌搴婄€殿喒鍋撻柛蹇撳帠缁楀懘寮悷閭︽澔闁告梻濮撮幊鐘诲触閹间焦锛熼悹?*/
 @media (max-width: 640px) {
   .prediction-toggle-bar {
     margin-bottom: 22px !important;
   }
 }
 
-/* 需求46 修正：分数明细面板跟随亮/暗主题统一 glass 背景 */
+/* 闂傚洠鍋撴慨?6 濞ｅ浂鍠楅婊堟晬濮橆剙鐎婚柡浣哄濡叉垹绱掗崱娑欐〃闁哄鍎荤粣锟犳⒕韫囧骸鐦?闁哄棙銇炵€靛本锛愬Ο鑲╁煚濞戞挴鍋?glass 闁煎啿鏈▍?*/
 .score-breakdown-popover,
 body.theme-light .score-breakdown-popover,
 body.theme-dark .score-breakdown-popover,
@@ -7348,7 +7432,7 @@ body.theme-auto .score-breakdown-popover {
   border-top-color: var(--glass-border) !important;
 }
 
-/* 桌面端在同色玻璃卡片上弹出，单独增强透明层次，避免看起来像实色面板 */
+/* 婵℃鐭傚鎵博椤栨碍韬柛姘焷婢瑰﹪鎮抽懡銈嗗珔闁告绱曟晶鏍ㄧ▔婵犲倽鍓ㄩ柛鎴犲皑缁辨繈宕￠弴鐘差仾濠⒀呭仜瀹搁亶鏌呰箛鏃€顫栭悘鐐插€归濂告晬瀹€鍕級闁稿繐绉跺﹢鍛導闁垮闄嶉柛宥呯箰閻ゅ嫰鎳濋弻銉︽〃闁?*/
 @media (min-width: 641px) {
   .score-breakdown-popover {
     max-height: min(68vh, 620px);
@@ -7389,7 +7473,7 @@ body.theme-auto .score-breakdown-popover {
   }
 }
 
-/* 需求46 修正：手机切换仅显示朝霞/晚霞，日期回到卡片标题上方 */
+/* 闂傚洠鍋撴慨?6 濞ｅ浂鍠楅婊堟晬濮橆厼顤侀柡鍫濇惈閸ㄥ繘骞戦～顓犵煂闁哄嫬澧介妵姘跺嫉濠靛绡?闁哄懏宀稿﹢鐘绘晬鐏炵偓锛夐柡鍫㈠枎濞叉牠宕氶弶鍨耿闁绘娲﹂悥锝嗭紣濡湱鐟愰柡?*/
 .phenomenon-title-copy {
   min-width: 0;
   display: grid;
@@ -7415,7 +7499,7 @@ body.theme-auto .score-breakdown-popover {
   }
 }
 
-/* 需求46 修正：Safari 手选明亮模式必须整页统一为亮色体系 */
+/* 闂傚洠鍋撴慨?6 濞ｅ浂鍠楅婊堟晬濮濆獘fari 闁归潧顑夐埀顒€顦板Σ鎴炵椤斾茎浣割嚕韫囨挾绠戝銈囩帛閺嗭絾銇勯悽鐢靛煚濞戞挴鍋撳☉鎾规〃鐎垫帡鎳濋煫顓犵Ъ缂?*/
 html.theme-light,
 html[data-theme="light"],
 body.theme-light,
@@ -7432,8 +7516,8 @@ body[data-theme="light"] {
   --glass-bg-heavy: rgba(255,255,255,0.85);
   --glass-border: rgba(255,255,255,0.42);
   --glass-shadow: 0 4px 30px rgba(0,0,0,0.10);
-  --radar-bg: var(--glass-bg-heavy);
-  --radar-border: var(--glass-border);
+  --radar-bg: linear-gradient(180deg, rgba(255,250,242,0.94) 0%, rgba(250,242,230,0.88) 56%, rgba(244,234,220,0.90) 100%);
+  --radar-border: rgba(170,111,45,0.18);
   --radar-title: var(--color-text);
   --radar-subtitle: var(--color-text-light);
   --radar-legend-text: var(--color-text);
@@ -7508,7 +7592,7 @@ html[data-theme="light"] .phenomenon-date-tag {
   border-color: var(--glass-border) !important;
 }
 
-/* 需求46 修正：文字分析恢复完整文案后，字号略放大但保持紧凑 */
+/* 闂傚洠鍋撴慨?6 濞ｅ浂鍠楅婊堟晬濮橆厽鐎悗娑欘殔閸ㄥ酣寮搁幇顓濆垝濠㈣泛绉撮悾顒勫极鐎涙ɑ鐎俊妤€鐗嗛幃妤呮晬鐏炵晫鎽熼柛娆擃棑閺嗘劙寮ㄩ幆褋浜ｅù锝呮缁绘岸骞愭担鐑樺經闁?*/
 .analysis-item-copy strong {
   font-size: 0.61rem !important;
   line-height: 1.08 !important;
@@ -7525,7 +7609,7 @@ html[data-theme="light"] .phenomenon-date-tag {
 }
 
 
-/* 暗色模式最终兜底：避免亮色兜底规则把云况雷达背景覆盖成浅灰 */
+/* 闁哄棙顨夋竟濠偽熼垾宕囩闁哄牃鍋撶紓浣哥墕閸樿鎯旈弴顏嗙獥闂侇剙鐏濋崢銈嗙椤斿灝顥忛柛蹇旂矊缁ㄥ磭鎲撮崟顐㈢仧闁硅泛锕ｇ花顖炲礃閻㈠憡绁弶鍫熷礃閸庢寮查婵愭船闁烩晜鐗楅崹姘归崨顖欑礂 */
 html.theme-dark,
 html[data-theme="dark"],
 html.theme-actual-dark,
@@ -7535,17 +7619,23 @@ body[data-theme="dark"],
 body.theme-actual-dark,
 body[data-actual-theme="dark"] {
   color-scheme: dark;
-  --radar-bg: linear-gradient(180deg, rgba(15,23,42,0.88), rgba(10,15,35,0.72));
+  --radar-bg: linear-gradient(180deg, rgba(15,23,42,0.82), rgba(10,15,35,0.65));
   --radar-border: rgba(148,163,184,0.18);
   --radar-ring: rgba(180,200,230,0.22);
   --radar-axis-main: rgba(180,200,230,0.28);
   --radar-axis-sub: rgba(180,200,230,0.12);
   --radar-label-fill: rgba(220,230,245,0.92);
-  --radar-label-bg: rgba(10,18,35,0.70);
+  --radar-label-bg: rgba(10,18,35,0.60);
   --radar-title: rgba(241,245,249,0.95);
-  --radar-subtitle: rgba(148,163,184,0.84);
-  --radar-legend-text: rgba(200,212,228,0.88);
+  --radar-subtitle: rgba(148,163,184,0.80);
+  --radar-legend-text: rgba(200,212,228,0.85);
   --radar-legend-bg: var(--radar-bg);
+  --radar-fov-bg: linear-gradient(180deg, rgba(20,31,57,0.90) 0%, rgba(14,24,48,0.82) 58%, rgba(10,17,34,0.92) 100%);
+  --radar-fov-pane: rgba(160,185,225,0.040);
+  --radar-bearing-bg: linear-gradient(180deg, rgba(18,28,52,0.86), rgba(12,20,40,0.78));
+  --radar-bearing-border: rgba(148,163,184,0.18);
+  --radar-bearing-text: rgba(241,245,249,0.90);
+  --radar-bearing-tick: rgba(180,200,230,0.34);
   --radar-center: rgba(249,115,22,0.92);
   --radar-center-stroke: rgba(0,0,0,0.28);
   --radar-cloud-low: rgba(180,210,255,0.98);
@@ -7574,7 +7664,7 @@ body[data-actual-theme="dark"] .radar-compass-container {
   color: var(--radar-title) !important;
 }
 
-/* Safari 手动亮色最终兜底：按实际主题类覆盖所有残留深色/渐变状态 */
+/* Safari 闁归潧顑呮慨鈺傜椤斿灝顥忛柡鍫氬亾缂備礁鐗嗛崢瑙勬償閺囶亞绐楅柟绋款槸閻ゅ嫰姊介崨顒€鐦滃Λ鐗堫焽鐞氼偆鎲伴崱娆愮０闁圭鍋撻柡鍫濐槹閻ｎ偊鎮惧▎鎰畳闁?婵炴挻鍔曡ぐ澶愭偐閼哥鍋?*/
 html.theme-actual-light,
 body.theme-actual-light,
 html[data-actual-theme="light"],
@@ -7591,14 +7681,20 @@ body[data-actual-theme="light"] {
   --glass-bg-heavy: rgba(255,255,255,0.85);
   --glass-border: rgba(255,255,255,0.42);
   --glass-shadow: 0 4px 30px rgba(0,0,0,0.10);
-  --radar-bg: var(--glass-bg-heavy);
-  --radar-border: var(--glass-border);
-  --radar-label-fill: var(--color-text);
-  --radar-label-bg: transparent;
-  --radar-title: var(--color-text);
-  --radar-subtitle: var(--color-text-light);
-  --radar-legend-text: var(--color-text);
-  --radar-legend-bg: transparent;
+  --radar-bg: linear-gradient(180deg, rgba(255,250,242,0.94) 0%, rgba(250,242,230,0.88) 56%, rgba(244,234,220,0.90) 100%);
+  --radar-border: rgba(170,111,45,0.18);
+  --radar-label-fill: rgba(67,52,39,0.90);
+  --radar-label-bg: rgba(255,247,235,0.72);
+  --radar-title: rgba(44,39,34,0.95);
+  --radar-subtitle: rgba(111,86,59,0.74);
+  --radar-legend-text: rgba(67,52,39,0.84);
+  --radar-legend-bg: rgba(250,244,234,0.78);
+  --radar-fov-bg: linear-gradient(180deg, rgba(255,248,236,0.98) 0%, rgba(246,232,208,0.96) 54%, rgba(231,204,166,0.92) 100%);
+  --radar-fov-pane: rgba(160,116,58,0.055);
+  --radar-bearing-bg: linear-gradient(180deg, rgba(255,250,242,0.90), rgba(248,239,225,0.78));
+  --radar-bearing-border: rgba(170,111,45,0.16);
+  --radar-bearing-text: rgba(61,48,40,0.92);
+  --radar-bearing-tick: rgba(100,76,48,0.28);
 }
 html.theme-actual-light body,
 html[data-actual-theme="light"] body,
@@ -7676,7 +7772,7 @@ html[data-actual-theme="light"] .weather-desc {
   text-shadow: none !important;
 }
 
-/* 需求46 修正：标题标签/分享按钮居中，菜单与分数明细统一磨砂 glass */
+/* 闂傚洠鍋撴慨?6 濞ｅ浂鍠楅婊堟晬濮橆厾鍨煎Λ鐗埳戦悥锝囩驳?闁告帒妫旈棅鈺呭箰婢舵劖灏﹂悘鐐叉噸閼垫垿鏁嶅畝鍐ㄧ秴闁告娲戠粭宀勫礆閸℃ɑ娈堕柡鍕捣缁繒绱掗悢鍓侇伇缁句勘鍔庨悥?glass */
 .phenomenon-title-card {
   justify-content: center !important;
   text-align: center;
@@ -7731,7 +7827,7 @@ html[data-actual-theme="light"] .weather-desc {
   z-index: -1;
 }
 
-/* 需求：分析区图标 SVG 化 + 放大文字 */
+/* 闂傚洠鍋撴慨鐟板亰缁变即宕氶崱妯尖偓浠嬪礌閸濆嫭绂堥柡?SVG 闁?+ 闁衡偓閹佷海闁哄倸娲ら悺?*/
 .inline-svg-icon {
   width: 1em;
   height: 1em;
@@ -7799,7 +7895,7 @@ html[data-actual-theme="light"] .weather-desc {
   .fca-text { font-size: 0.78rem !important; }
 }
 
-/* 高/中/低云子卡片：左侧云层名称，右侧百分比 */
+/* 濡?濞?濞达絽绨肩花顖溾偓娑欏姇瀹曢亶鎮ч崶椋庣獥鐎归潻缂氶弲鑸电閹存繄婀撮柛姘Ф琚ㄩ柨娑樿嫰瑜板憡绗熻濞呫劑宕氶崱妯兼Х */
 .cloud-condition-top {
   display: flex !important;
   align-items: center !important;
@@ -7821,7 +7917,7 @@ html[data-actual-theme="light"] .weather-desc {
   justify-self: flex-end !important;
 }
 
-/* 高/中/低云条压缩高度，减少上下臃肿 */
+/* 濡?濞?濞达絽绨肩花顖炲级閳ュ啿绔剧紓鍌楁櫊閻濐喗鎯旈敂鑲╃闁告垵绻愰惃顖涚▔婵犱胶鐟撻柤宄板暢閸?*/
 .cloud-condition-card {
   min-height: unset !important;
   max-height: none !important;
@@ -7863,7 +7959,7 @@ html[data-actual-theme="light"] .weather-desc {
   .cloud-condition-track { margin-top: 4px !important; height: 4px !important; }
 }
 
-/* 火烧云文字分析条目：压缩条目上下间距 */
+/* 闁诲浚鍋嗛崕铏閹寸偞鐎悗娑欘殔閸ㄥ酣寮搁幇顓熻拫闁烩晩鍣槐浼村储鐎ｎ剛绱氶柡澶涚磿濞茬増绋夋繝浣虹憮闂傚倻顥愮粣?*/
 .app-analysis-card {
   padding: 14px !important;
 }
@@ -7938,7 +8034,7 @@ html[data-actual-theme="light"] .weather-desc {
   .analysis-group + .analysis-group { margin-top: 8px !important; }
 }
 
-/* 通用分段切换模板：与朝霞/晚霞切换统一 */
+/* 闂侇偅姘ㄩ弫銈夊礆閸℃﹩鍞介柛鎺戞处瀹曟彃螣閳╁啯绶查柨娑欑煯缁楀矂寮靛┑瀣瘎/闁哄懏宀稿﹢鐘诲礆閸ャ劌搴婄紓浣哄枍缁?*/
 .xiake-toggle {
   --toggle-bg: color-mix(in srgb, var(--glass-bg-heavy, var(--color-surface, #f8f7f4)) 86%, transparent);
   --toggle-border: var(--glass-border, var(--color-border, rgba(0,0,0,0.1)));
@@ -8036,7 +8132,7 @@ html[data-actual-theme="light"] .weather-desc {
   }
 }
 
-/* 天气信息指标卡：两行三列统一 SVG 模板 */
+/* 濠㈠灈鏅滈惃鍨┍閳╁啩绱栭柟绋挎处閻栵綁宕￠埥鍛獥濞戞挶鍊涢、鎴炵▔婢跺﹤鐏欑紓浣哄枍缁?SVG 婵☆垪鍓濆?*/
 .weather-metric-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
@@ -8118,7 +8214,7 @@ html[data-actual-theme="light"] .weather-desc {
   }
 }
 
-/* 天气指标：降水单位较长，保持单行 */
+/* 濠㈠灈鏅滈惃鐢稿箰閸ャ劎鍨奸柨娑欏哺濡惧嘲顫濋弶鎴濈濞达絽绉风欢婵嬫⒐閸栵紕绀夊ǎ鍥ㄧ箖鐎垫棃宕￠弴鈽嗘斀 */
 .weather-metric-precipitation .weather-value {
   font-size: 1.02rem;
 }
@@ -8128,7 +8224,7 @@ html[data-actual-theme="light"] .weather-desc {
   }
 }
 
-/* 7天卡片：SVG 指标图标对齐，天气图标略向左收 */
+/* 7濠㈠灈鏅涘畷閬嶆偋閸ラ绐桽VG 闁圭娲﹂悥锝夊炊閻愵剛鍨奸悗闈涚秺缂嶅牓鏁嶇仦濮愪函婵ɑ鏌ㄥù姗€寮介崶鈺傛闁告碍鍨垫稊蹇涘绩?*/
 .day-card .weather-icon {
   transform: translateX(-3px);
 }
@@ -8165,7 +8261,7 @@ html[data-actual-theme="light"] .weather-desc {
   height: 16px;
 }
 
-/* 7天卡片：天气图标及后续内容整体略向左，底部两行固定三列对齐 */
+/* 7濠㈠灈鏅涘畷閬嶆偋閸ラ绐楀鍨涙櫆閻ㄧ敻宕堕悙顒傚灱闁告瑥锕ら幃妤冪磼椤撶偛鏁堕悗纭咁潐閺嗭絾鎷呴幘鑸垫闁告碍鍨垫稊蹇涙晬鐏炵晫淇洪梺顔哄妺鐞氳京鎮扮仦鑺ョゼ閻庤鐭粭渚€宕氬Δ鈧顔筋瀲?*/
 .day-card {
   padding-top: 9px !important;
   padding-bottom: 9px !important;
@@ -8231,7 +8327,7 @@ html[data-actual-theme="light"] .weather-desc {
     width: 72px !important;
   }
 }
-/* 朝霞/晚霞切换：直接复用通用 xiake-toggle 分段开关 */
+/* 闁哄牊绻堝﹢?闁哄懏宀稿﹢鐘诲礆閸ャ劌搴婇柨娑欐皑濞插潡骞掗妷銉Щ闁活潿鍔戦埀顒佹皑閺?xiake-toggle 闁告帒妫欓灞筋嚕閳ь剟宕?*/
 .prediction-toggle-bar.xiake-toggle {
   display: none;
   margin-bottom: 22px !important;
@@ -8251,7 +8347,7 @@ html[data-actual-theme="light"] .weather-desc {
   }
 }
 
-/* 7天预测卡片：进一步压缩纵向间距 */
+/* 7濠㈠灈鏅犻。鈺伱圭€ｎ亜骞㈤柣妤€娴勭槐鐗堟交濞戞顏辨慨婵勫劚鐢洨绱撻埡鍐╂；闁告碍鍨垮Λ璺ㄦ崉?*/
 .day-card {
   padding-top: 6px !important;
   padding-bottom: 6px !important;
@@ -8300,7 +8396,7 @@ html[data-actual-theme="light"] .weather-desc {
   }
 }
 
-/* 7天预测卡片：底部天气细节改为单行两组，不再上下两排 */
+/* 7濠㈠灈鏅犻。鈺伱圭€ｎ亜骞㈤柣妤€娴勭槐鐗堟償閺囥垹鍔ュ鍨涙櫆閻ㄧ數绱掗崱姘濋柡鈧柅娑滅闁告娲濋、鎴炵▔閵堝洨鐭嬮柨娑樺缁楀宕樺鍕憪濞戞挸顑勭悮閬嶅箳?*/
 .day-meta-inline {
   display: flex !important;
   align-items: center !important;
@@ -8357,7 +8453,7 @@ html[data-actual-theme="light"] .weather-desc {
   }
 }
 
-/* 亮色模式视觉回归：统一为霞客暖白玻璃体系，暗色模式不受影响 */
+/* 濞存粠鍠涙竟濠偽熼垾宕囩閻熸瑥妫滈～搴ㄥ炊閻愯尙绉洪柨娑欐皑缁儤绋夐埀顒佺▔濞差亝绡勯悗骞垮灪濞堚晠鎯傞悾灞界闁荤姴鍟╃紞瀣寲娴兼瑧绀夐柡鍡橆殙婢瑰﹤螣閳ュ磭纭€濞戞挸绉磋ぐ鍫ｃ亹閸楃偞鎯?*/
 body.theme-light,
 body:not(.theme-dark):not(.theme-auto) {
   --color-bg: #f7f1e7;
@@ -8484,6 +8580,7 @@ body:not(.theme-dark):not(.theme-auto) .weather-feature-item {
   border-color: rgba(186, 132, 72, 0.18) !important;
   box-shadow: 0 6px 16px rgba(139, 92, 43, 0.08) !important;
 }
+
 body.theme-light .weather-feature-item:hover,
 body:not(.theme-dark):not(.theme-auto) .weather-feature-item:hover {
   background: rgba(255, 239, 214, 0.90) !important;
@@ -8596,7 +8693,7 @@ body.theme-dark .weather-metric-card .weather-value {
   }
 }
 
-/* 朝晚霞预测：方向值恢复方位箭头；云量卡片强制标签与百分比同排 */
+/* 闁哄牊绻冨▍鍕閻愪警鏆曟繛鏉戭儜缁变即寮悷鐗堝€婚柛濠傚悑娴狀喗寰勫鍡樼厵濞达絽绉堕鍕緞鏉堝墽骞㈠ù婊勫灴閸ｆ椽宕￠敍鍕暬鐎殿喖鎼崺妤呭冀閸モ晩鍔☉鎾虫捣濞呫劑宕氶崱妯兼Х闁告艾鏈敮?*/
 .app-info-row-direction .app-info-value {
   display: inline-flex !important;
   align-items: center !important;
@@ -8801,7 +8898,7 @@ body.theme-dark {
 }
 
 
-/* 暗色实际主题兜底：评分条 token 不能被亮色/默认规则覆盖成黑灰 */
+/* 闁哄棙顨夋竟濠勨偓鍦仱濡绢垱绋夋繝姘兼毌闁稿繑绮岀花鎶芥晬濮樺磭妲戦柛鎺戞濞?token 濞戞挸绉烽崗妯兼偖椤愨€崇槰闁?濮掓稒顭堥鑽ゆ喆閸曨偄鐏熼悷鏇炴濞插﹪骞嬮幇鎵嫧闁?*/
 html.theme-dark,
 html[data-theme="dark"],
 html.theme-actual-dark,
@@ -9202,7 +9299,7 @@ html[data-actual-theme="dark"] .prediction-app-card .phenomenon-title-card {
   -webkit-backdrop-filter: none !important;
 }
 
-/* 修复：桌面端评分圆环下方等级/明细文字与圆环穿模 */
+/* 濞ｅ浂鍠栭ˇ鏌ユ晬濮橆収鏀介梻鍫涘灮椤忣剛鎷犻崟顐㈢€婚柛锕€妫涢獮鍡樼▔鐎ｎ偅鐓欑紒娑橆槺妤?闁哄嫬娴风划蹇涘棘閸パ呮憻濞戞挸楠稿〒楣冩偝椤栨壕鏁嶆俊?*/
 @media (min-width: 431px) {
   .score-summary-left {
     min-height: 184px;
@@ -9225,7 +9322,7 @@ html[data-actual-theme="dark"] .prediction-app-card .phenomenon-title-card {
   }
 }
 
-/* 修复：桌面端朝霞/晚霞并排时分析行数不同导致两侧卡片高度不一致 */
+/* 濞ｅ浂鍠栭ˇ鏌ユ晬濮橆収鏀介梻鍫涘灮椤忣剟寮靛┑瀣瘎/闁哄懏宀稿﹢鐘荤嵁閼搁潧绗撻柡鍐硾閸ㄥ酣寮搁幇顖ｆ斀闁轰線顣︾粭澶愬触鐏炵瓔鍤ら柤椋庣節鐞氳鲸绗熻瀹曢亶鎮ч崶顒傚蒋閹艰揪缂氱粭澶嬬▔閳ь剟鎳?*/
 @media (min-width: 641px) {
   .today-predictions-container {
     align-items: stretch;
@@ -9252,7 +9349,7 @@ html[data-actual-theme="dark"] .prediction-app-card .phenomenon-title-card {
   }
 }
 
-/* 修复：桌面主页顶栏图标统一为轻量线性 SVG 风格 */
+/* 濞ｅ浂鍠栭ˇ鏌ユ晬濮橆収鏀介梻鍫線鐎靛本銇勯悽鎼炩偓濠囧冀韫囨挻绂堥柡宥呮川缁儤绋夐埀顒佺▔妤﹀じ姘﹂梺鎻掔箳閸ゅ酣骞€?SVG 濡炲瀛╅悧?*/
 .header-svg-btn .header-action-icon {
   width: 20px;
   height: 20px;
@@ -9282,7 +9379,7 @@ html[data-actual-theme="dark"] .prediction-app-card .phenomenon-title-card {
   }
 }
 
-/* 统一“朝霞/晚霞预测”与实时天气信息的设计语言：暖白玻璃 / 夜空玻璃，不再保留独立糖果渐变卡片。 */
+/* 缂備胶鍠嶇粩鎾灳濠婂嫭绡傞梻?闁哄懏宀稿﹢鐘筹紣閸曨剛銈撮柍銉︾箑缁楀瞼鈧湱鍋炲鍌涘緞閳哄倻姣滃ǎ鍥ｅ墲娴煎懘鎯冮崟顕呭晭閻犱籍銈庡殧閻熷皝鍋撻柨娑欑濞堚晠鎯傞悾灞界闁?/ 濠㈣埖绮庨埞鏍偝閼姐倖瀚呴柨娑樺缁楀宕樺鍕闁伙絾鐟х€氼厾绮╃€ｎ剛銆岄柡瀣矋缁楀酣宕ｅΟ鍝勫耿闁绘娲㈤埀?*/
 body.theme-dark .prediction-app-card {
   background: var(--glass-bg) !important;
   border: 1px solid var(--glass-border) !important;
@@ -9342,7 +9439,7 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
   box-shadow: 0 6px 16px rgba(139, 92, 43, 0.08) !important;
 }
 
-/* 修复：桌面端评分等级/明细文字继续下移，避免贴住圆环底部 */
+/* 濞ｅ浂鍠栭ˇ鏌ユ晬濮橆収鏀介梻鍫涘灮椤忣剛鎷犻崟顐㈢€荤紒娑橆槺妤?闁哄嫬娴风划蹇涘棘閸パ呮憻缂備綀鍛暰濞戞挸顑囦簺闁挎稑鐭傛导鈺呭礂瀹ュ牆鍨卞ù锝呯箰濞撻箖鎮抽姘变亢闂?*/
 @media (min-width: 431px) {
   .score-summary-left {
     min-height: 196px;
@@ -9358,7 +9455,7 @@ body:not(.theme-dark):not(.theme-auto) .analysis-item {
   }
 }
 
-/* 修复：电脑版预测信息区可读性，天气/时间/湿度/风向等指标一项一行 */
+/* 濞ｅ浂鍠栭ˇ鏌ユ晬濮樿鲸鏆╅柤瀛樺灩婢ф锛愰崟顒傘偞濞ｅ洠鍓濇导鍛村礌閸濆嫬璁查悹鍥╃帛閳ь儸宥囩濠㈠灈鏅滈惃?闁哄啫鐖煎Λ?婵犫偓閸喖顔?濡炲楠搁幃婊呯驳婢跺鐦归柡宥呮矗缁斿瓨銇勯柅娑氼伇閻?*/
 @media (min-width: 431px) {
   .score-summary-right {
     gap: 12px;
@@ -9975,7 +10072,7 @@ body[data-actual-theme="dark"] .score-ledger-step-final .score-ledger-body {
   }
 }
 
-/* 7天卡片天气图标改用内联 SVG，避免 emoji 字体缺失导致截图/设备空白 */
+/* 7濠㈠灈鏅涘畷閬嶆偋閸パ佷函婵ɑ鏌ㄥù姗€寮介崶銊︽毉闁活潿鍔岄崬鎾嚂?SVG闁挎稑鐭傛导鈺呭礂?emoji 閻庢稒銇炵紞瀣磽閸濆嫨浜奸悗浣冨閸ぱ囧箣椤忓嫭绂?閻犱焦鍎抽ˇ顒傜矚閾忚顏?*/
 .weather-icon-svg {
   width: 1.15em;
   height: 1.15em;

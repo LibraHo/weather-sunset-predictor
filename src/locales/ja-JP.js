@@ -129,6 +129,13 @@ apiAccess: 'API接続',
       "ariaLabel": "ページ切り替え",
       "dropdownAriaLabel": "ページ切り替えメニュー"
     },
+    "announcement": {
+      "entryLabel": "お知らせ",
+      "defaultTitle": "お知らせ",
+      "closeAria": "お知らせを閉じる",
+      "confirm": "了解",
+      "imageAlt": "お知らせ画像"
+    },
     "simulator": {
       "title": "Fire Cloud Simulator",
       "intro": "Place cloud blocks by distance and meter-level height, then scrub sunrise or sunset time to see which clouds light up, which are shadowed, and which dim because they are thick.",
@@ -1132,8 +1139,8 @@ apiAccess: 'API接続',
   },
   "surrounding": {
     "title": "周辺焼き雲分析",
-    "radarTitle": "周辺雲況レーダー",
-    "radarSubtitle": "25km · 連続した雲場",
+    "radarTitle": "視野雲況レーダー",
+    "radarSubtitle": "方位角 × 空の高度角",
     "radius": "探知半径",
     "radiusUnit": "キロメートル",
     "directions": {

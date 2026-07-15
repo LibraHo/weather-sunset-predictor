@@ -260,6 +260,39 @@
                 </label>
               </div>
             </div>
+            <div class="global-switch-row">
+              <div class="global-switch-copy">
+                <strong>云况雷达版本</strong>
+                <span>新版视场雷达只使用真实采样；旧版强制回到圆盘雷达，方便小程序审核期兜底。</span>
+              </div>
+              <div class="global-switch-control global-switch-control-wide">
+                <select id="global-switch-radar-mode" class="global-switch-select">
+                  <option value="fov">新版视场</option>
+                  <option value="legacy">旧版圆盘</option>
+                </select>
+              </div>
+            </div>
+            <div class="announcement-admin-form">
+              <div class="admin-section-heading announcement-admin-heading">
+                <h2>公告</h2>
+                <p>显示在搜索栏下方，点击后打开公告面板。正文每段一行，图片地址每行一张。</p>
+              </div>
+              <label class="admin-inline-switch"><input id="announcement-enabled" type="checkbox"><span>启用公告</span></label>
+              <div class="form-row two-inputs">
+                <input id="announcement-summary" type="text" maxlength="80" placeholder="搜索栏公告文字">
+                <input id="announcement-title" type="text" maxlength="80" placeholder="面板标题">
+              </div>
+              <div class="form-row two-inputs">
+                <input id="announcement-starts-at" type="datetime-local" placeholder="Announcement starts">
+                <input id="announcement-ends-at" type="datetime-local" placeholder="Announcement ends">
+              </div>
+              <div class="form-row">
+                <textarea id="announcement-text" rows="5" maxlength="1200" placeholder="公告正文，每段一行"></textarea>
+              </div>
+              <div class="form-row">
+                <textarea id="announcement-images" rows="3" placeholder="图片 URL，每行一个"></textarea>
+              </div>
+            </div>
             <div class="admin-form-actions">
               <button class="btn btn-secondary" type="button" onclick="loadGlobalSwitches()">重载</button>
               <button class="btn btn-primary" type="button" onclick="saveGlobalSwitches()">保存配置</button>

@@ -129,6 +129,13 @@ apiAccess: 'API 연동',
       "ariaLabel": "페이지 전환",
       "dropdownAriaLabel": "페이지 전환 메뉴"
     },
+    "announcement": {
+      "entryLabel": "공지",
+      "defaultTitle": "공지",
+      "closeAria": "공지 닫기",
+      "confirm": "확인",
+      "imageAlt": "공지 이미지"
+    },
     "simulator": {
       "title": "Fire Cloud Simulator",
       "intro": "Place cloud blocks by distance and meter-level height, then scrub sunrise or sunset time to see which clouds light up, which are shadowed, and which dim because they are thick.",
@@ -1161,8 +1168,8 @@ apiAccess: 'API 연동',
   },
   "surrounding": {
     "title": "주변 노을 분석",
-    "radarTitle": "주변 구름 레이더",
-    "radarSubtitle": "25km · 연속 구름장",
+    "radarTitle": "시야 구름 레이더",
+    "radarSubtitle": "방위각 x 하늘 고도각",
     "radius": "탐지 반경",
     "radiusUnit": "킬로미터",
     "directions": {

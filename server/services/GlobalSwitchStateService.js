@@ -6,8 +6,64 @@ const path = require('path');
 const DEFAULT_STATE = Object.freeze({
   siteClosed: false,
   weatherPredictionClosed: false,
+  radarFovMode: 'fov',
+  announcement: {
+    enabled: false,
+    summary: '',
+    title: '',
+    blocks: [],
+    startsAt: null,
+    endsAt: null
+  },
   updatedAt: null
 });
+
+function normalizeOptionalDate(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function normalizeRadarFovMode(value) {
+  return value === 'legacy' ? 'legacy' : 'fov';
+}
+
+function normalizeAnnouncement(input = {}) {
+  const source = input && typeof input === 'object' ? input : {};
+  const blocks = (Array.isArray(source.blocks) ? source.blocks : [])
+    .slice(0, 12)
+    .map((block) => {
+      if (!block || typeof block !== 'object') return null;
+      if (block.type === 'image') {
+        const url = String(block.url || '').trim().slice(0, 500);
+        if (!url) return null;
+        return { type: 'image', url, alt: String(block.alt || '').trim().slice(0, 80) };
+      }
+      const text = String(block.text || '').trim().slice(0, 1200);
+      return text ? { type: 'text', text } : null;
+    })
+    .filter(Boolean);
+  return {
+    enabled: source.enabled === true,
+    summary: String(source.summary || '').trim().slice(0, 80),
+    title: String(source.title || '').trim().slice(0, 80),
+    blocks,
+    startsAt: normalizeOptionalDate(source.startsAt),
+    endsAt: normalizeOptionalDate(source.endsAt)
+  };
+}
+
+function isAnnouncementActive(announcement, now = new Date()) {
+  const item = normalizeAnnouncement(announcement);
+  if (item.enabled !== true) return false;
+  if (!item.summary && !item.title && item.blocks.length === 0) return false;
+  const nowMs = now.getTime();
+  const startsMs = item.startsAt ? new Date(item.startsAt).getTime() : null;
+  const endsMs = item.endsAt ? new Date(item.endsAt).getTime() : null;
+  if (Number.isFinite(startsMs) && nowMs < startsMs) return false;
+  if (Number.isFinite(endsMs) && nowMs > endsMs) return false;
+  return true;
+}
 
 class GlobalSwitchStateService {
   constructor(options = {}) {
@@ -30,6 +86,10 @@ class GlobalSwitchStateService {
     const state = this.getState();
     return {
       ...state,
+      announcement: {
+        ...normalizeAnnouncement(state.announcement),
+        active: isAnnouncementActive(state.announcement)
+      },
       shareMapAvailable: true,
       firecloudMapAvailable: true
     };
@@ -42,6 +102,12 @@ class GlobalSwitchStateService {
       weatherPredictionClosed: typeof input.weatherPredictionClosed === 'boolean'
         ? input.weatherPredictionClosed
         : current.weatherPredictionClosed,
+      radarFovMode: Object.prototype.hasOwnProperty.call(input, 'radarFovMode')
+        ? normalizeRadarFovMode(input.radarFovMode)
+        : normalizeRadarFovMode(current.radarFovMode),
+      announcement: Object.prototype.hasOwnProperty.call(input, 'announcement')
+        ? normalizeAnnouncement(input.announcement)
+        : normalizeAnnouncement(current.announcement),
       updatedAt: new Date().toISOString()
     };
     this._state = next;
@@ -93,6 +159,8 @@ class GlobalSwitchStateService {
       return {
         siteClosed: parsed.siteClosed === true,
         weatherPredictionClosed: parsed.weatherPredictionClosed === true,
+        radarFovMode: normalizeRadarFovMode(parsed.radarFovMode),
+        announcement: normalizeAnnouncement(parsed.announcement),
         updatedAt: typeof parsed.updatedAt === 'string' ? parsed.updatedAt : null
       };
     } catch (error) {

@@ -49,6 +49,7 @@ Page({
     predictionPreviewLoading: false,
     scoreLedgerOpen: false,
     feedbackModalVisible: false,
+    announcementPanelVisible: false,
     feedbackSubmitting: false,
     feedbackForm: buildDefaultFeedbackForm(),
     feedbackImages: [],
@@ -60,7 +61,17 @@ Page({
       siteClosed: false,
       weatherPredictionClosed: false,
       shareMapAvailable: true,
-      firecloudMapAvailable: true
+      firecloudMapAvailable: true,
+      radarFovMode: 'fov',
+      announcement: {
+        enabled: false,
+        active: false,
+        summary: '',
+        title: '',
+        blocks: [],
+        startsAt: null,
+        endsAt: null
+      }
     }
   },
 
@@ -106,7 +117,17 @@ Page({
           siteClosed: false,
           weatherPredictionClosed: false,
           shareMapAvailable: true,
-          firecloudMapAvailable: true
+          firecloudMapAvailable: true,
+          radarFovMode: 'fov',
+          announcement: {
+            enabled: false,
+            active: false,
+            summary: '',
+            title: '',
+            blocks: [],
+            startsAt: null,
+            endsAt: null
+          }
         }
       });
     }
@@ -154,6 +175,17 @@ Page({
   onLocationChange(event) {
     this.selectedLocationCandidate = null;
     this.setData({ locationText: event.detail.value, coordinate: null, locationCandidates: [], errorMessage: '' });
+  },
+
+  openAnnouncementPanel() {
+    const announcement = this.data.siteState?.announcement || {};
+    const hasContent = Boolean(announcement.summary || announcement.title || announcement.blocks?.length);
+    if (announcement.enabled !== true || announcement.active === false || !hasContent) return;
+    this.setData({ announcementPanelVisible: true });
+  },
+
+  closeAnnouncementPanel() {
+    this.setData({ announcementPanelVisible: false });
   },
 
   selectPeriod(event) {
@@ -1469,6 +1501,15 @@ export function buildPredictionPreviewFromPrediction(prediction = {}, query = {}
     scoringV2: prediction.scoringV2 || prediction.breakdown?.scoringV2 || null,
     layerBrightness: prediction.layerBrightness || prediction.breakdown?.layerBrightness || null,
     layerBrightnessAdjustment: prediction.layerBrightnessAdjustment || prediction.breakdown?.layerBrightnessAdjustment || null,
+    visibleSector: prediction.visibleSector || prediction.surrounding?.visibleSector || null,
+    visibleSectorSamples: Array.isArray(prediction.visibleSectorSamples)
+      ? prediction.visibleSectorSamples
+      : (Array.isArray(prediction.surrounding?.visibleSectorSamples) ? prediction.surrounding.visibleSectorSamples : []),
+    useFovRadar: prediction.useFovRadar === true
+      || prediction.enableFovRadar === true
+      || prediction.radar?.useFovRadar === true
+      || prediction.surrounding?.useFovRadar === true,
+    azimuth: prediction.azimuth ?? prediction.lightPathAnalysis?.azimuth ?? null,
     scoreLedger: buildHomeScoreLedger(prediction)
   };
   return buildCompletePredictionPreview(preview);
@@ -1577,7 +1618,16 @@ export function compactPredictionPreviewPayload(prediction = {}) {
     thickHighCloudPenalty: prediction.thickHighCloudPenalty || null,
     algorithm: prediction.algorithm || null,
     cloudType: prediction.cloudType || null,
-    clearSunsetAdvice: prediction.clearSunsetAdvice || null
+    clearSunsetAdvice: prediction.clearSunsetAdvice || null,
+    visibleSector: prediction.visibleSector || prediction.surrounding?.visibleSector || null,
+    visibleSectorSamples: Array.isArray(prediction.visibleSectorSamples)
+      ? prediction.visibleSectorSamples
+      : (Array.isArray(prediction.surrounding?.visibleSectorSamples) ? prediction.surrounding.visibleSectorSamples : []),
+    useFovRadar: prediction.useFovRadar === true
+      || prediction.enableFovRadar === true
+      || prediction.radar?.useFovRadar === true
+      || prediction.surrounding?.useFovRadar === true,
+    azimuth: prediction.azimuth ?? prediction.lightPathAnalysis?.azimuth ?? null
   };
 }
 
@@ -2198,7 +2248,8 @@ export function buildPredictionRadarPreview(period = 'sunset', sunDirection = ''
     return {
       directions,
       sunMarker: buildRadarSunMarker(period, sunDirection),
-      cloudGradients: buildRadarCloudGradients(directions)
+      cloudGradients: buildRadarCloudGradients(directions),
+      useFovRadar: false
     };
   }
 
@@ -2215,11 +2266,18 @@ export function buildPredictionRadarPreview(period = 'sunset', sunDirection = ''
   return {
     directions,
     sunMarker: buildRadarSunMarker(period, sunDirection),
-    cloudGradients: buildRadarCloudGradients(directions)
+    cloudGradients: buildRadarCloudGradients(directions),
+      useFovRadar: false
   };
 }
 
 function buildCompletePredictionPreview(preview = {}) {
+  const radar = buildPredictionRadarFromClouds(preview.periodKey, preview.clouds, preview.direction, {
+    visibleSector: preview.visibleSector,
+    visibleSectorSamples: preview.visibleSectorSamples,
+    azimuth: preview.azimuth,
+    useFovRadar: preview.useFovRadar === true
+  });
   return {
     ...preview,
     scoreLedger: preview.scoreLedger || buildHomeScoreLedger(preview),
@@ -2234,7 +2292,7 @@ function buildCompletePredictionPreview(preview = {}) {
       layerBrightness: preview.layerBrightness,
       layerBrightnessAdjustment: preview.layerBrightnessAdjustment
     }),
-    radar: buildPredictionRadarFromClouds(preview.periodKey, preview.clouds, preview.direction)
+    radar
   };
 }
 
@@ -2309,11 +2367,15 @@ function homeToneFromFactor(value) {
   return 'weak';
 }
 
-function buildPredictionRadarFromClouds(period = 'sunset', clouds = [], sunDirection = '') {
+function buildPredictionRadarFromClouds(period = 'sunset', clouds = [], sunDirection = '', sectorData = {}) {
   const high = Number(clouds.find((item) => item.key === 'high')?.value);
   const mid = Number(clouds.find((item) => item.key === 'mid')?.value);
   const low = Number(clouds.find((item) => item.key === 'low')?.value);
-  if (![high, mid, low].every(Number.isFinite)) return buildPredictionRadarPreview(period, sunDirection);
+  if (![high, mid, low].every(Number.isFinite)) {
+    const preview = buildPredictionRadarPreview(period, sunDirection);
+    const fov = buildPredictionFovRadar(preview.directions, period, sectorData);
+    return { ...preview, useFovRadar: sectorData.useFovRadar === true && Boolean(fov), fov };
+  }
 
   const names = {
     N: '北', NE: '东北', E: '东', SE: '东南', S: '南', SW: '西南', W: '西', NW: '西北'
@@ -2334,11 +2396,233 @@ function buildPredictionRadarFromClouds(period = 'sunset', clouds = [], sunDirec
       cloudText: `高 ${Math.round(h)}% / 中 ${Math.round(m)}% / 低 ${Math.round(l)}%`
     };
   }));
+  const fov = buildPredictionFovRadar(directions, period, sectorData);
   return {
     directions,
     sunMarker: buildRadarSunMarker(period, sunDirection),
-    cloudGradients: buildRadarCloudGradients(directions)
+    cloudGradients: buildRadarCloudGradients(directions),
+    useFovRadar: sectorData.useFovRadar === true && Boolean(fov),
+    fov
   };
+}
+
+export function buildPredictionFovRadar(directions = [], period = 'sunset', sectorData = {}) {
+  const sector = sectorData.visibleSector || {};
+  const offsets = Array.isArray(sector.offsetsDeg) && sector.offsetsDeg.length
+    ? sector.offsetsDeg.map(Number).filter(Number.isFinite)
+    : [-35, -20, 0, 20, 35];
+  const distances = Array.isArray(sector.distancesKm) && sector.distancesKm.length
+    ? sector.distancesKm.map(Number).filter(Number.isFinite)
+    : [10, 25, 50, 75, 100];
+  const mainBearing = normalizeBearing(firstFiniteNumber(sector.mainBearing, sectorData.azimuth, period === 'sunrise' ? 75 : 285));
+  const maxAbsOffset = Math.max(1, ...offsets.map((offset) => Math.abs(offset)));
+  const bearingByOffset = new Map((sector.bearings || []).map((item) => [Number(item.offsetDeg), Number(item.bearing)]));
+  const rawSamples = Array.isArray(sectorData.visibleSectorSamples) && sectorData.visibleSectorSamples.length
+    ? sectorData.visibleSectorSamples
+    : [];
+  if (!rawSamples.length) return null;
+  const samples = rawSamples
+    .filter((sample) => sample && !sample.error)
+    .map((sample) => {
+      const offsetDeg = bearingOffsetDeg(sample, mainBearing);
+      return {
+        offsetDeg,
+        distanceKm: Math.max(1, firstFiniteNumber(sample.distanceKm, 25)),
+        bearing: normalizeBearing(firstFiniteNumber(sample.bearing, sample.sectorBearing, bearingByOffset.get(Number(offsetDeg)), mainBearing + offsetDeg)),
+        lowCloud: clampPercent(sample.lowCloud ?? sample.lowClouds),
+        midCloud: clampPercent(sample.midCloud ?? sample.midClouds),
+        highCloud: clampPercent(sample.highCloud ?? sample.highClouds),
+        cloudBaseHeight: firstFiniteNumber(sample.cloudBaseHeight, sample.cloudBaseHeightM)
+      };
+    });
+  if (!samples.length) return null;
+  const sampleMaxAbsOffset = Math.max(maxAbsOffset, ...samples.map((sample) => Math.abs(Number(sample.offsetDeg) || 0)));
+  const clouds = samples.flatMap((sample, index) => [
+    ...buildFovCloudPatches(sample, 'high', sample.highCloud, index, sampleMaxAbsOffset, samples),
+    ...buildFovCloudPatches(sample, 'mid', sample.midCloud, index, sampleMaxAbsOffset, samples),
+    ...buildFovCloudPatches(sample, 'low', sample.lowCloud, index, sampleMaxAbsOffset, samples)
+  ].filter(Boolean));
+  const minOffset = Math.min(...offsets);
+  const maxOffset = Math.max(...offsets);
+  const degree = String.fromCharCode(176);
+  return {
+    title: '\u89c6\u573a\u4e91\u51b5\u96f7\u8fbe',
+    subtitle: '\u65b9\u4f4d\u89d2 \u00d7 \u5929\u7a7a\u9ad8\u5ea6\u89d2',
+    mainBearing: `${Math.round(mainBearing)}${degree}`,
+    mainBearingRaw: Math.round(mainBearing),
+    sunLabel: `${period === 'sunrise' ? '\u65e5\u51fa' : '\u65e5\u843d'} ${Math.round(mainBearing)}${degree}`,
+    leftLabel: '\u5de6\u4fa7\u89c6\u573a',
+    rightLabel: '\u53f3\u4fa7\u89c6\u573a',
+    axisLabel: '\u5929\u7a7a\u9ad8\u5ea6',
+    highLabel: '\u9ad8\u4e91',
+    midLabel: '\u4e2d\u4e91',
+    lowLabel: '\u4f4e\u4e91',
+    leftBearing: `${Math.round(normalizeBearing(bearingByOffset.get(minOffset) ?? mainBearing + minOffset))}${degree}`,
+    rightBearing: `${Math.round(normalizeBearing(bearingByOffset.get(maxOffset) ?? mainBearing + maxOffset))}${degree}`,
+    altitudeLines: [0, 5, 10, 15, 20, 25, 30].map((altitude) => ({
+      key: `alt-${altitude}`,
+      label: `${altitude}${degree}`,
+      top: altitudeToFovTop(altitude)
+    })),
+    clouds
+  };
+}
+
+function buildFovCloudPatches(sample, layer, cover, index, maxAbsOffset, samples = []) {
+  const coverValue = clampPercent(cover);
+  if (!Number.isFinite(coverValue) || coverValue < 10) return [];
+  const altitude = sampleAltitudeDeg(sample, layer);
+  const visual = fovCloudVisualAnchor(sample, layer, coverValue, maxAbsOffset);
+  const spread = fovCoverSpreadScale(coverValue);
+  const altitudeGap = projectedAltitudeGap(sample, layer, samples);
+  const heightScale = Math.max(0.82, Math.min(1.75, altitudeGap * 0.20));
+  const widthScale = Math.max(0.90, Math.min(1.32, altitudeGap * 0.12));
+  const baseWidth = layer === 'high' ? 28 : (layer === 'mid' ? 22 : 19);
+  const baseHeight = layer === 'high' ? 10 : (layer === 'mid' ? 9 : 6);
+  const count = coverValue >= 72
+    ? (layer === 'low' ? 3 : 2)
+    : (coverValue >= 42 ? 2 : 1);
+  const offsetRoom = 15 * (0.34 + smoothStep(0.10, 0.92, coverValue / 100) * 0.14);
+  const altitudeRoom = Math.max(0.9, altitudeGap * 0.36);
+  const patches = Array.from({ length: count }, (_, childIndex) => {
+    const seed = hash2(Number(sample.offsetDeg || 0) * 23.41 + (layer === 'high' ? 9 : (layer === 'mid' ? 4.2 : 1.2)) * 7.13 + childIndex * 5.7, Number(sample.distanceKm || 25) * 0.67 + coverValue * 0.11);
+    const side = childIndex === 0 ? 0 : hash2(seed * 31.3, childIndex * 2.1) - 0.5;
+    const vertical = childIndex === 0 ? 0 : hash2(seed * 37.9, childIndex * 3.4 + Number(sample.offsetDeg || 0) * 0.13) - 0.5;
+    const distanceT = Math.max(0, Math.min(1, Number(sample.distanceKm || 25) / 100));
+    const nearSize = 1.16 - distanceT * 0.34;
+    const childScale = count === 1 ? 1 : (childIndex === 0 ? 0.88 : 0.48 + hash2(seed * 13.1, childIndex + 2.2) * 0.26);
+    const sizeNoise = 0.78 + hash2(seed * 11.7, childIndex + 9.3) * 0.46;
+    const layerWidthScale = layer === 'high' ? 0.74 : (layer === 'mid' ? 0.88 : 1.0);
+    const offsetDeg = Math.max(-maxAbsOffset, Math.min(maxAbsOffset, visual.offsetDeg + side * offsetRoom));
+    const left = 50 + (offsetDeg / maxAbsOffset) * 40;
+    return {
+      key: `${layer}-${index}-${childIndex}`,
+      layer,
+      mode: 'patch',
+      strength: coverValue >= 70 ? 'strong' : (coverValue >= 38 ? 'medium' : 'light'),
+      left: Math.max(5, Math.min(95, left)),
+      top: altitudeToFovTop(altitude + visual.altitudeJitterDeg + vertical * altitudeRoom),
+      width: Math.round(baseWidth * spread * widthScale * sizeNoise * nearSize * childScale * layerWidthScale * 10) / 10,
+      height: Math.round(baseHeight * spread * heightScale * nearSize * childScale * 10) / 10
+    };
+  });
+
+  if (coverValue >= 55) {
+    const distanceT = Math.max(0, Math.min(1, Number(sample.distanceKm || 25) / 100));
+    const curtainSeed = hash2(Number(sample.offsetDeg || 0) * 19.31 + index * 3.7, coverValue * 0.23 + distanceT);
+    const offsetDeg = Math.max(-maxAbsOffset, Math.min(maxAbsOffset, visual.offsetDeg + (curtainSeed - 0.5) * 4.2));
+    const left = 50 + (offsetDeg / maxAbsOffset) * 40;
+    const layerWide = layer === 'high' ? 1.28 : (layer === 'mid' ? 1.18 : 1.08);
+    const layerThin = layer === 'high' ? 0.58 : (layer === 'mid' ? 0.86 : 0.72);
+    const coverT = smoothStep(0.55, 0.96, coverValue / 100);
+    patches.push({
+      key: `${layer}-${index}-curtain`,
+      layer,
+      mode: 'curtain',
+      strength: coverValue >= 82 ? 'strong' : 'medium',
+      left: Math.max(5, Math.min(95, left)),
+      top: altitudeToFovTop(altitude + visual.altitudeJitterDeg * 0.55),
+      width: Math.round((baseWidth * 1.95 + altitudeGap * 2.4) * layerWide * (0.88 + coverT * 0.34) * 10) / 10,
+      height: Math.round((baseHeight * 1.45 + altitudeGap * 0.85) * layerThin * (0.78 + coverT * 0.26) * 10) / 10
+    });
+  }
+
+  return patches;
+}
+
+function projectedAltitudeGap(sample = {}, layer = 'mid', samples = []) {
+  const current = sampleAltitudeDeg(sample, layer);
+  const sameBearing = samples.filter((candidate) => Math.abs(Number(candidate.offsetDeg || 0) - Number(sample.offsetDeg || 0)) < 0.001);
+  return nearestProjectedGap(current, sameBearing.map((candidate) => sampleAltitudeDeg(candidate, layer)))
+    || nearestProjectedGap(current, samples.map((candidate) => sampleAltitudeDeg(candidate, layer)))
+    || 4;
+}
+
+function nearestProjectedGap(value, values = []) {
+  const gaps = values
+    .map((candidate) => Math.abs(Number(candidate) - Number(value)))
+    .filter((gap) => Number.isFinite(gap) && gap > 0.001)
+    .sort((a, b) => a - b);
+  return gaps[0] || 0;
+}
+
+function fovCoverSpreadScale(cover) {
+  const c = Math.max(0, Math.min(1, Number(cover) / 100));
+  return 0.55 + smoothStep(0.10, 0.92, c) * 0.43;
+}
+
+function fovCloudVisualAnchor(sample = {}, layer = 'mid', cover = 0, maxAbsOffset = 35) {
+  const offsetDeg = Number(sample.offsetDeg) || 0;
+  const distanceKm = Math.max(1, Number(sample.distanceKm) || 25);
+  const layerHeight = layer === 'high' ? 9 : (layer === 'mid' ? 4.2 : 1.2);
+  const seed = hash2(offsetDeg * 13.37 + layerHeight * 5.11, distanceKm * 0.41);
+  const side = hash2(seed * 17.1, cover * 0.37) - 0.5;
+  const vertical = hash2(seed * 29.7, offsetDeg * 0.23 + 4.9) - 0.5;
+  const coverT = smoothStep(0.10, 0.92, Math.max(0, Math.min(1, cover / 100)));
+  const xFactor = layer === 'high' ? 0.32 : (layer === 'mid' ? 0.27 : 0.22);
+  const yFactor = layer === 'high' ? 1.15 : (layer === 'mid' ? 0.92 : 0.68);
+  const offsetJitterDeg = side * 15 * xFactor * (0.75 + coverT * 0.35);
+  const altitudeJitterDeg = vertical * yFactor * (0.85 + coverT * 0.25);
+  return {
+    offsetDeg: Math.max(-maxAbsOffset, Math.min(maxAbsOffset, offsetDeg + offsetJitterDeg)),
+    altitudeJitterDeg
+  };
+}
+
+function hash2(x, y) {
+  const s = Math.sin(Number(x) * 127.1 + Number(y) * 311.7) * 43758.5453123;
+  return s - Math.floor(s);
+}
+
+function smoothStep(edge0, edge1, value) {
+  const t = Math.max(0, Math.min(1, (Number(value) - edge0) / Math.max(1e-6, edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
+
+function sampleAltitudeDeg(sample = {}, layer = 'mid') {
+  const explicit = Number(sample[`${layer}AltitudeDeg`] ?? sample.altitudeDeg);
+  if (Number.isFinite(explicit)) return Math.max(0, Math.min(30, explicit));
+  const fallbackHeightKm = layer === 'high' ? 9 : (layer === 'mid' ? 4.2 : 1.2);
+  const baseM = Number(sample.cloudBaseHeight);
+  const heightKm = layer === 'low' && Number.isFinite(baseM) && baseM > 0 ? Math.max(0.3, Math.min(12, baseM / 1000)) : fallbackHeightKm;
+  return Math.max(0, Math.min(30, Math.atan(heightKm / Math.max(1, Number(sample.distanceKm) || 25)) * 180 / Math.PI));
+}
+
+function altitudeToFovTop(altitude) {
+  return 84 - Math.max(0, Math.min(1, Number(altitude) / 30)) * 63;
+}
+
+function interpolateRadarDirectionCloud(directions = [], bearing, field) {
+  const order = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  const byDirection = new Map(directions.map((item) => [item.direction, item]));
+  const normalized = order.map((direction) => byDirection.get(direction) || {});
+  const t = normalizeBearing(bearing) / 45;
+  const i0 = Math.floor(t) % order.length;
+  const i1 = (i0 + 1) % order.length;
+  const f = t - Math.floor(t);
+  const a = Number(normalized[i0]?.[field] ?? 0);
+  const b = Number(normalized[i1]?.[field] ?? 0);
+  return (Number.isFinite(a) ? a : 0) * (1 - f) + (Number.isFinite(b) ? b : 0) * f;
+}
+
+function bearingOffsetDeg(sample = {}, mainBearing = 0) {
+  const explicit = Number(sample.offsetDeg);
+  if (Number.isFinite(explicit)) return explicit;
+  const bearing = Number(sample.bearing ?? sample.sectorBearing);
+  if (!Number.isFinite(bearing)) return 0;
+  const delta = normalizeBearing(bearing) - normalizeBearing(mainBearing);
+  return ((delta + 540) % 360) - 180;
+}
+
+function distanceLayerWeight(distanceKm, layer) {
+  const d = Math.max(0, Math.min(1, Number(distanceKm) / 100));
+  if (layer === 'low') return 1 - d * 0.42;
+  if (layer === 'mid') return 0.88 + d * 0.12;
+  return 0.72 + d * 0.36;
+}
+
+function normalizeBearing(value) {
+  return ((Number(value) % 360) + 360) % 360;
 }
 
 function buildRadarSunMarker(period = 'sunset', direction = '') {

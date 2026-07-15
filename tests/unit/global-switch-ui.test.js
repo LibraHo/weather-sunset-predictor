@@ -15,14 +15,23 @@ describe('global switch unavailable UI', () => {
     expect(html).toContain('data-i18n="weather.unavailable.body"');
     expect(html).toContain('data-weather-unavailable-action="gallery"');
     expect(html).toContain('data-weather-unavailable-action="map"');
+    expect(html).toContain('id="announcement-entry"');
+    expect(html).toContain('id="announcement-modal"');
     expect(html).toContain('data-view="gallery" data-i18n="home.tabs.shareMap"');
     expect(html).toContain('data-view="map" data-i18n="home.tabs.map"');
 
     expect(css).toContain('.weather-unavailable-card');
+    expect(css).toContain('.announcement-entry');
+    expect(css).toContain('.announcement-content img');
     expect(css).toContain('backdrop-filter');
     expect(appController).toContain('loadSiteState');
+    expect(appController).toContain('renderAnnouncementEntry');
+    expect(appController).toContain('announcement.active !== false');
+    expect(appController).toContain('openAnnouncementPanel');
     expect(appController).toContain('applyWeatherPredictionAvailability');
     expect(appController).toContain('weatherPredictionClosed');
+    expect(appController).toContain('radarFovMode');
+    expect(appController).toContain('syncRadarFovMode');
   });
 
   test('mini-program home hides prediction controls and shows two map entries when weather is unavailable', () => {
@@ -35,11 +44,34 @@ describe('global switch unavailable UI', () => {
     expect(wxml).toContain('data-target="gallery"');
     expect(wxml).toContain('data-target="map"');
     expect(wxml).toContain('wx:if="{{!siteState.weatherPredictionClosed}}"');
+    expect(wxml).toContain("siteState.radarFovMode !== 'legacy'");
+    expect(wxml).toContain('bind:announcement="openAnnouncementPanel"');
+    expect(wxml).toContain('announcementPanelVisible');
+    expect(wxml).toContain('siteState.announcement.blocks');
+    expect(read('miniprogram/components/location-search/index.wxml')).toContain('announcement.active !== false');
     expect(wxss).toContain('.weather-unavailable-card');
+    expect(wxss).toContain('.announcement-sheet');
+    expect(wxss).toContain('.announcement-image');
     expect(wxss).toContain('.theme-light .weather-unavailable-card');
     expect(wxss).toContain('.theme-dark .weather-unavailable-card');
     expect(js).toContain('loadSiteState');
+    expect(js).toContain('openAnnouncementPanel');
     expect(js).toContain('weatherPredictionClosed');
+    expect(js).toContain("radarFovMode: 'fov'");
+  });
+
+  test('admin global switch form supports announcement schedule and radar mode fields', () => {
+    const html = read('public/admin/index.html');
+    const adminJs = read('public/admin/admin.js');
+
+    expect(html).toContain('id="global-switch-radar-mode"');
+    expect(html).toContain('id="announcement-starts-at"');
+    expect(html).toContain('id="announcement-ends-at"');
+    expect(adminJs).toContain('radarFovMode');
+    expect(adminJs).toContain("value === 'legacy' ? 'legacy' : 'fov'");
+    expect(adminJs).toContain('announcement.startsAt');
+    expect(adminJs).toContain('announcement.endsAt');
+    expect(adminJs).toContain('new Date(document.getElementById');
   });
 
   test('required locale keys exist in all web locales', () => {

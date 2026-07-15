@@ -24,6 +24,13 @@ apiAccess: 'الوصول إلى API',
       ariaLabel: 'تبديل العرض',
       dropdownAriaLabel: 'قائمة التنقل'
     },
+    announcement: {
+      entryLabel: 'تنبيه',
+      defaultTitle: 'تنبيه',
+      closeAria: 'إغلاق التنبيه',
+      confirm: 'حسنا',
+      imageAlt: 'صورة التنبيه'
+    },
     "simulator": {
       "title": "????? ???? ????? ???????",
       "intro": "Place cloud blocks by distance and meter-level height, then scrub sunrise or sunset time to see which clouds light up, which are shadowed, and which dim because they are thick.",

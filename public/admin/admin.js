@@ -289,10 +289,13 @@ function showMessage(msg, type = 'success', targetId = 'message') {
 function updateGlobalSwitchUI(state = {}) {
   const siteInput = document.getElementById('global-switch-site');
   const weatherInput = document.getElementById('global-switch-weather');
+  const radarModeInput = document.getElementById('global-switch-radar-mode');
   const siteStatus = document.getElementById('global-switch-site-status');
   const weatherStatus = document.getElementById('global-switch-weather-status');
+  const announcement = state.announcement || {};
   if (siteInput) siteInput.checked = state.siteClosed === true;
   if (weatherInput) weatherInput.checked = state.weatherPredictionClosed === true;
+  if (radarModeInput) radarModeInput.value = state.radarFovMode === 'legacy' ? 'legacy' : 'fov';
   if (siteStatus) {
     siteStatus.textContent = state.siteClosed ? '已关闭' : '未关闭';
     siteStatus.classList.toggle('is-on', state.siteClosed === true);
@@ -301,6 +304,56 @@ function updateGlobalSwitchUI(state = {}) {
     weatherStatus.textContent = state.weatherPredictionClosed ? '已关闭' : '未关闭';
     weatherStatus.classList.toggle('is-on', state.weatherPredictionClosed === true);
   }
+  const enabledInput = document.getElementById('announcement-enabled');
+  const summaryInput = document.getElementById('announcement-summary');
+  const titleInput = document.getElementById('announcement-title');
+  const startsAtInput = document.getElementById('announcement-starts-at');
+  const endsAtInput = document.getElementById('announcement-ends-at');
+  const textInput = document.getElementById('announcement-text');
+  const imagesInput = document.getElementById('announcement-images');
+  const blocks = Array.isArray(announcement.blocks) ? announcement.blocks : [];
+  if (enabledInput) enabledInput.checked = announcement.enabled === true;
+  if (summaryInput) summaryInput.value = announcement.summary || '';
+  if (titleInput) titleInput.value = announcement.title || '';
+  if (startsAtInput) startsAtInput.value = toDatetimeLocal(announcement.startsAt);
+  if (endsAtInput) endsAtInput.value = toDatetimeLocal(announcement.endsAt);
+  if (textInput) {
+    textInput.value = blocks
+      .filter((block) => block?.type !== 'image' && block?.text)
+      .map((block) => block.text)
+      .join('\n');
+  }
+  if (imagesInput) {
+    imagesInput.value = blocks
+      .filter((block) => block?.type === 'image' && block?.url)
+      .map((block) => block.url)
+      .join('\n');
+  }
+}
+
+function readAnnouncementForm() {
+  const textBlocks = (document.getElementById('announcement-text')?.value || '')
+    .split(/\n+/)
+    .map((text) => text.trim())
+    .filter(Boolean)
+    .map((text) => ({ type: 'text', text }));
+  const imageBlocks = (document.getElementById('announcement-images')?.value || '')
+    .split(/\n+/)
+    .map((url) => url.trim())
+    .filter(Boolean)
+    .map((url) => ({ type: 'image', url }));
+  return {
+    enabled: document.getElementById('announcement-enabled')?.checked === true,
+    summary: document.getElementById('announcement-summary')?.value?.trim() || '',
+    title: document.getElementById('announcement-title')?.value?.trim() || '',
+    startsAt: document.getElementById('announcement-starts-at')?.value
+      ? new Date(document.getElementById('announcement-starts-at').value).toISOString()
+      : null,
+    endsAt: document.getElementById('announcement-ends-at')?.value
+      ? new Date(document.getElementById('announcement-ends-at').value).toISOString()
+      : null,
+    blocks: [...textBlocks, ...imageBlocks]
+  };
 }
 
 async function loadGlobalSwitches() {
@@ -322,7 +375,9 @@ async function saveGlobalSwitches() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         siteClosed: document.getElementById('global-switch-site')?.checked === true,
-        weatherPredictionClosed: document.getElementById('global-switch-weather')?.checked === true
+        weatherPredictionClosed: document.getElementById('global-switch-weather')?.checked === true,
+        radarFovMode: document.getElementById('global-switch-radar-mode')?.value === 'legacy' ? 'legacy' : 'fov',
+        announcement: readAnnouncementForm()
       })
     });
     const data = await res.json().catch(() => ({}));

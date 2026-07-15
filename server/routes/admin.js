@@ -205,7 +205,9 @@ router.get('/admin/global-switches', requireAuth, (req, res) => {
 router.post('/admin/global-switches', requireAuth, (req, res) => {
   const state = globalSwitchService.updateState({
     siteClosed: req.body?.siteClosed,
-    weatherPredictionClosed: req.body?.weatherPredictionClosed
+    weatherPredictionClosed: req.body?.weatherPredictionClosed,
+    radarFovMode: req.body?.radarFovMode,
+    announcement: req.body?.announcement
   });
   res.json({ success: true, state });
 });

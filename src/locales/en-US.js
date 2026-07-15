@@ -129,6 +129,13 @@ const translations = {
       "ariaLabel": "Switch home view",
       "dropdownAriaLabel": "Home view menu"
     },
+    "announcement": {
+      "entryLabel": "Notice",
+      "defaultTitle": "Notice",
+      "closeAria": "Close notice",
+      "confirm": "Got it",
+      "imageAlt": "Notice image"
+    },
     "simulator": {
       "title": "Fire Cloud Simulator",
       "intro": "Place cloud blocks by distance and meter-level height, then scrub sunrise or sunset time to see which clouds light up, which are shadowed, and which dim because they are thick.",
@@ -953,8 +960,8 @@ const translations = {
 
   "surrounding": {
     "title": "Surrounding Fire Cloud Analysis",
-    "radarTitle": "Surrounding Cloud Radar",
-    "radarSubtitle": "25km · Continuous cloud field",
+    "radarTitle": "Field-of-View Cloud Radar",
+    "radarSubtitle": "Azimuth x sky altitude",
     "radius": "Detection Radius",
     "radiusUnit": "km",
     "directions": {

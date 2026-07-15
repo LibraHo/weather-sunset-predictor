@@ -70,6 +70,10 @@ function normalizeVisibility(value) {
   return num > 1000 ? Number((num / 1000).toFixed(1)) : num;
 }
 
+function normalizeRadarFovMode(value) {
+  return value === 'legacy' ? 'legacy' : 'fov';
+}
+
 function normalizeWeatherData(weather = {}, source = {}) {
   const temp = pick(weather, ['temp', 'temperature', 'temperature_2m']) ?? pick(source, ['temp', 'temperature', 'temperature_2m']);
   const humidity = pick(weather, ['humidity', 'relativeHumidity', 'relative_humidity_2m']) ?? pick(source, ['humidity', 'relativeHumidity', 'relative_humidity_2m']);
@@ -210,7 +214,31 @@ export async function getSiteState() {
     siteClosed: source.siteClosed === true,
     weatherPredictionClosed: source.weatherPredictionClosed === true,
     shareMapAvailable: source.shareMapAvailable !== false,
-    firecloudMapAvailable: source.firecloudMapAvailable !== false
+    firecloudMapAvailable: source.firecloudMapAvailable !== false,
+    radarFovMode: normalizeRadarFovMode(source.radarFovMode),
+    announcement: normalizeAnnouncement(source.announcement)
+  };
+}
+
+function normalizeAnnouncement(source = {}) {
+  const raw = source && typeof source === 'object' ? source : {};
+  const blocks = Array.isArray(raw.blocks) ? raw.blocks : [];
+  return {
+    enabled: raw.enabled === true,
+    active: raw.active !== false,
+    summary: String(raw.summary || '').trim(),
+    title: String(raw.title || '').trim(),
+    startsAt: raw.startsAt || null,
+    endsAt: raw.endsAt || null,
+    blocks: blocks.map((block) => {
+      if (!block || typeof block !== 'object') return null;
+      if (block.type === 'image') {
+        const url = String(block.url || '').trim();
+        return url ? { type: 'image', url, alt: String(block.alt || '').trim() } : null;
+      }
+      const text = String(block.text || '').trim();
+      return text ? { type: 'text', text } : null;
+    }).filter(Boolean)
   };
 }
 
@@ -303,6 +331,9 @@ export function normalizeSurroundingPrediction(data = {}) {
     type: source.type || null,
     date: source.date || null,
     bestDirection: source.bestDirection || null,
+    azimuth: numberOrNull(source.azimuth),
+    visibleSector: source.visibleSector || null,
+    visibleSectorSamples: Array.isArray(source.visibleSectorSamples) ? source.visibleSectorSamples : [],
     points: points.map((point) => {
       const prediction = point.prediction || {};
       const cloudLayers = point.cloudLayers || prediction.cloudLayers || {};

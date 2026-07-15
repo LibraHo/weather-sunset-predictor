@@ -150,17 +150,18 @@ describe('home methodology structure', () => {
 
   test('keeps methodology formula blocks readable across multiple lines', () => {
     const css = fs.readFileSync(path.join(ROOT, 'styles/main.css'), 'utf8');
+    const formulaBlockStable = css.match(/\.methodology-formula\s*\{[\s\S]*?\n\}/)?.[0] || '';
     const formulaBlock = css.slice(
       css.indexOf('.methodology-formula'),
       css.indexOf('/* 评分表格样式 */')
     );
 
-    expect(formulaBlock).toContain('white-space: pre-line');
-    expect(formulaBlock).toContain('overflow-wrap: anywhere');
-    expect(formulaBlock).toContain('word-break: normal');
-    expect(formulaBlock).toContain('line-height: 1.65');
-    expect(formulaBlock).toContain('text-align: center');
-    expect(formulaBlock).not.toContain('white-space: nowrap');
+    expect(formulaBlockStable).toContain('white-space: pre-line');
+    expect(formulaBlockStable).toContain('overflow-wrap: anywhere');
+    expect(formulaBlockStable).toContain('word-break: normal');
+    expect(formulaBlockStable).toContain('line-height: 1.65');
+    expect(formulaBlockStable).toContain('text-align: center');
+    expect(formulaBlockStable).not.toContain('white-space: nowrap');
   });
 
   test('uses neutral methodology changelog styling instead of highlight gradients', () => {
