@@ -631,7 +631,7 @@ const translations = {
           "scoringV2": "cloud condition {{carrier}}; sunlight evidence is included; air rendering {{air}}",
           "grayVeilAirRendering": "full mid/high cloud with dirty air: cloud condition {{carrier}}; suppressed air rendering {{air}}",
           "lightPath": "sun-direction evidence for cloud lighting",
-          "layerBrightnessShort": "mid and high clouds use separate carrier and lighting scores, then cooperate by spatial independence",
+          "layerBrightnessShort": "cloud layers, lighting, and spatial coverage are assessed together",
           "layerBrightness": "cloud lighting {{brightness}}, adjustment {{gate}}; local cloud {{canvas}}, remote high cloud {{remoteHigh}}, remote mid cloud {{remoteMid}}, side-sector upper cloud {{visibleSector}} near {{visibleBearing}}°, remote low-cloud block {{remoteLowBlock}}, low-cloud block {{low}} / transmission {{lowBlock}}, sun geometry {{solar}}, path {{path}}, air {{air}}, thickness {{thickness}}, beam {{beam}}",
           "layerBrightnessMultiplier": "effective brightness {{brightness}}; dim evidence: {{evidence}}",
           "layerContribution": "{{layer}} contribution {{score}} (cloud {{carrier}}, sunlight {{brightness}})",

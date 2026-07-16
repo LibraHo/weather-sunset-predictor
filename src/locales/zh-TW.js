@@ -633,7 +633,7 @@ const translations = {
           "scoringV2": "雲層條件 {{carrier}}；日落光照已納入判斷；空氣顯色 {{air}}",
           "grayVeilAirRendering": "滿鋪中高雲疊加偏髒空氣：雲層條件 {{carrier}}；灰幕顯色 {{air}}",
           "lightPath": "作為雲層受光解釋的太陽方向證據",
-          "layerBrightnessShort": "中雲、高雲分別計算載體與受光，再按區域重疊程度連續協同",
+          "layerBrightnessShort": "綜合判斷中高雲受光與空間覆蓋",
           "layerBrightness": "雲層受光 {{brightness}}，調整係數 {{gate}}；本地雲層 {{canvas}}，遠端高雲 {{remoteHigh}}，遠端中雲 {{remoteMid}}，側向上層雲 {{visibleSector}}（約 {{visibleBearing}}°），遠端低雲遮擋 {{remoteLowBlock}}，低雲遮擋 {{low}} / 透過 {{lowBlock}}，太陽幾何 {{solar}}，光路 {{path}}，空氣 {{air}}，雲厚 {{thickness}}，直射／散射 {{beam}}",
           "layerBrightnessMultiplier": "有效亮度 {{brightness}}；壓暗證據：{{evidence}}",
           "layerContribution": "{{layer}}貢獻 {{score}}（雲量基礎 {{carrier}}，受光 {{brightness}}）",

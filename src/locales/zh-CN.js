@@ -658,7 +658,7 @@ export default {
           scoringV2: '云层条件 {{carrier}}；日落光照已纳入判断；空气显色 {{air}}',
           grayVeilAirRendering: '满铺中高云叠加偏脏空气：云层条件 {{carrier}}；灰幕显色 {{air}}',
           lightPath: '作为云层受光解释的太阳方向证据',
-          layerBrightnessShort: '中云、高云分别计算载体与受光，再按区域重叠程度连续协同',
+          layerBrightnessShort: '综合判断中高云受光与空间覆盖',
           layerBrightness: '云层受光 {{brightness}}，调整系数 {{gate}}；本地云层 {{canvas}}，远端高云 {{remoteHigh}}，远端中云 {{remoteMid}}，侧向上层云 {{visibleSector}}（约 {{visibleBearing}}°），远端低云遮挡 {{remoteLowBlock}}，低云遮挡 {{low}} / 透过 {{lowBlock}}，太阳几何 {{solar}}，光路 {{path}}，空气 {{air}}，云厚 {{thickness}}，直射/散射 {{beam}}',
           layerBrightnessMultiplier: '有效亮度 {{brightness}}；压暗证据：{{evidence}}',
           layerContribution: '{{layer}}贡献 {{score}}（云量基础 {{carrier}}，受光 {{brightness}}）',

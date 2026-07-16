@@ -118,32 +118,7 @@ describe('score breakdown i18n', () => {
     expect(html).not.toContain('低太阳透射');
     expect(html).not.toContain('载体缓冲');
     expect(html).not.toContain('low solar transmission hit');
+    expect(html).not.toContain('协同 +');
   });
 
-  test('Chinese score detail ledger exposes layer and spatial synergy evidence', () => {
-    i18n.currentLanguage = 'zh-CN';
-    const controller = new PredictionController(mockStorageService);
-    const prediction = {
-      ...makePrediction(),
-      layerBrightness: {
-        applied: true,
-        effectiveBrightness: 72,
-        brightnessGate: 1,
-        layers: {},
-        factors: {},
-        synergy: {
-          localLayers: { bonus: 3.2 },
-          solarLayers: { bonus: 1.4 },
-          spatialBonus: 2.6,
-          regions: [{ key: 'local' }, { key: 'solarDirection' }]
-        }
-      }
-    };
-
-    const html = controller.renderScoreBreakdownPopover(prediction);
-
-    expect(html).toContain('本地中高云协同 +3.2');
-    expect(html).toContain('太阳方向分层协同 +1.4');
-    expect(html).toContain('低重叠云带协同 +2.6');
-  });
 });
