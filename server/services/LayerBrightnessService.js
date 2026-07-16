@@ -113,9 +113,12 @@ function scoreAirTransmission(weatherData = {}, renderingFactor = {}) {
   const waterFactor = waterVapour === null
     ? 1
     : clamp(1 - normalizeRange(waterVapour, 28, 44) * (marginalUsableHazeRelief ? 0.08 : 0.32), marginalUsableHazeRelief ? 0.92 : 0.68, 1);
-  const particulateCap = ((pm25 !== null && pm25 >= 75) || (pm10 !== null && pm10 >= 100) || (dust !== null && dust >= 100))
-    ? (transparentParticulateRelief ? 0.90 : 0.68)
-    : 1.08;
+  const severeParticulateVeil = (visibility !== null && visibility < 10 && (
+    (pm25 !== null && pm25 >= 90) ||
+    (pm10 !== null && pm10 >= 180) ||
+    (dust !== null && dust >= 100)
+  )) || (dust !== null && dust >= 150);
+  const particulateCap = severeParticulateVeil ? 0.68 : 1.08;
   const transmission = visibilityFactor * humidityFactor * aerosolFactor * pm10Factor * waterFactor;
 
   // Keep air transmission as an independent cap/diagnostic. The main rendering
@@ -195,70 +198,35 @@ function buildLayerWeightedCarrierScore({
 }) {
   const scoredCarrier = clamp(finiteNumber(carrierScore?.score, 0), 0, 100);
   const activeCarrier = carrierScore?.activeCarrier || 'cloud';
-  const illuminatedUpperCarrier = clamp(highSignal * 0.78 + midSignal * 0.20, 0, 100);
-  const carrier = activeCarrier === 'cloud' && allowIlluminatedCarrierLift
-    ? Math.max(scoredCarrier, illuminatedUpperCarrier)
-    : scoredCarrier;
-  if (carrier <= 0) {
-    return {
-      score: 0,
-      formula: 'sum_layer_carrier_brightness',
-      contributions: []
-    };
-  }
-
   const aerosolScore = finiteNumber(carrierScore?.aerosolCarrierScore?.activatedScore, 0);
   const directionalScore = directionalUpper === null ? 0 : clamp(finiteNumber(directionalUpper, 0) * 0.72, 0, 100);
   const visibleSectorScore = visibleSectorCarrier?.applied ? clamp(finiteNumber(visibleSectorCarrier.score, 0), 0, 62) : 0;
-  const cloudMidCarrier = clamp(midSignal * 0.75, 0, 100);
-  const cloudHighCarrier = clamp(highSignal * 0.9, 0, 100);
-  let rawLayers;
-  if (activeCarrier === 'visible_sector' && visibleSectorScore > 0) {
-    rawLayers = [
-      { key: 'visibleSector', carrier: visibleSectorScore, brightnessBias: 1.02 },
-      { key: 'directional', carrier: directionalScore * 0.25, brightnessBias: 1 },
-      { key: 'mid', carrier: cloudMidCarrier * 0.25, brightnessBias: 1 },
-      { key: 'high', carrier: cloudHighCarrier * 0.25, brightnessBias: 0.96 }
-    ];
-  } else if (activeCarrier === 'directional_curtain' && directionalScore > 0) {
-    rawLayers = [
-      { key: 'directional', carrier: directionalScore, brightnessBias: 1.02 },
-      { key: 'mid', carrier: cloudMidCarrier * 0.35, brightnessBias: 1 },
-      { key: 'high', carrier: cloudHighCarrier * 0.35, brightnessBias: 0.96 }
-    ];
-  } else if (activeCarrier === 'aerosol' && aerosolScore > 0) {
-    rawLayers = [
-      { key: 'aerosol', carrier: aerosolScore, brightnessBias: 0.92 },
-      { key: 'mid', carrier: cloudMidCarrier * 0.25, brightnessBias: 1 },
-      { key: 'high', carrier: cloudHighCarrier * 0.25, brightnessBias: 0.96 }
-    ];
-  } else {
-    rawLayers = [
-      { key: 'mid', carrier: cloudMidCarrier, brightnessBias: 1.04 },
-      { key: 'high', carrier: cloudHighCarrier, brightnessBias: 0.96 },
-      { key: 'directional', carrier: directionalScore * 0.35, brightnessBias: 1.02 }
-    ];
-  }
-
-  const usefulLayers = rawLayers.filter(layer => layer.carrier > 0);
-  const rawTotal = usefulLayers.reduce((sum, layer) => sum + layer.carrier, 0);
-  if (rawTotal <= 0) {
+  const cloudMidCarrier = allowIlluminatedCarrierLift ? clamp(midSignal * 0.75, 0, 100) : 0;
+  const cloudHighCarrier = allowIlluminatedCarrierLift ? clamp(highSignal * 0.85, 0, 100) : 0;
+  const carrierCandidates = [
+    { key: activeCarrier, carrier: scoredCarrier, brightnessBias: 1 },
+    { key: 'mid', carrier: cloudMidCarrier, brightnessBias: 1.04 },
+    { key: 'high', carrier: cloudHighCarrier, brightnessBias: 0.96 },
+    { key: 'directional', carrier: directionalScore, brightnessBias: 1.02 },
+    { key: 'aerosol', carrier: aerosolScore, brightnessBias: 0.92 },
+    { key: 'visibleSector', carrier: visibleSectorScore, brightnessBias: 1.02 }
+  ].filter(candidate => candidate.carrier > 0);
+  if (carrierCandidates.length === 0) {
     return {
       score: 0,
-      formula: 'sum_layer_carrier_brightness',
+      formula: 'max_carrier_brightness',
       contributions: []
     };
   }
 
   const commonBrightness = lowBlockFactor * solarFactor * pathFactor * thicknessFactor * beamFactor;
-  const contributions = usefulLayers.map((layer) => {
-    const normalizedCarrier = carrier * layer.carrier / rawTotal;
-    const brightness = clamp(commonBrightness * layer.brightnessBias, 0, 1.05);
+  const contributions = carrierCandidates.map((candidate) => {
+    const brightness = clamp(commonBrightness * candidate.brightnessBias, 0, 1.05);
     const multiplier = scoreBrightnessResponse(brightness, 0.66, brightnessResponseCurve);
-    const score = normalizedCarrier * multiplier;
+    const score = candidate.carrier * multiplier;
     return {
-      key: layer.key,
-      carrier: round(normalizedCarrier, 1),
+      key: candidate.key,
+      carrier: round(candidate.carrier, 1),
       brightness: round(multiplier, 2),
       score: round(score, 1)
     };
@@ -295,16 +263,12 @@ function buildLayerWeightedCarrierScore({
     });
   }
 
-  const totalScore = contributions.reduce((sum, layer) => sum + layer.score, 0);
-  const scoreScale = totalScore > 100 ? 100 / totalScore : 1;
-  const scaledContributions = scoreScale < 1
-    ? contributions.map(layer => ({ ...layer, score: round(layer.score * scoreScale, 1) }))
-    : contributions;
+  const bestScore = contributions.reduce((best, candidate) => Math.max(best, candidate.score), 0);
 
   return {
-    score: round(clamp(scaledContributions.reduce((sum, layer) => sum + layer.score, 0), 0, 100), 1),
-    formula: 'sum_layer_carrier_brightness',
-    contributions: scaledContributions
+    score: round(clamp(bestScore, 0, 100), 1),
+    formula: 'max_carrier_brightness',
+    contributions
   };
 }
 

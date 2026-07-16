@@ -95,7 +95,7 @@ describe('LayerBrightnessService', () => {
     expect(result.factors.lowBlockFactor).toBeLessThan(1);
   });
 
-  test('adds solar-direction high cloud as an independent remote carrier layer', () => {
+  test('compares solar-direction high cloud as an independent carrier without adding it', () => {
     const withoutRemote = service.scoreLayerBrightness({
       type: 'sunset',
       timeAnalysis: { elevation: -1 },
@@ -145,7 +145,7 @@ describe('LayerBrightnessService', () => {
 
     expect(withRemote.layerContributions.map(item => item.key)).toContain('remoteHigh');
     expect(withRemote.layerContributions.map(item => item.key)).not.toContain('remoteMid');
-    expect(withRemote.weightedCarrierScore).toBeGreaterThan(withoutRemote.weightedCarrierScore);
+    expect(withRemote.weightedCarrierScore).toBe(withoutRemote.weightedCarrierScore);
     expect(withRemote.layers.remoteHigh).toBe(43);
   });
 
