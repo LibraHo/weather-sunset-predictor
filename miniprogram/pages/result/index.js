@@ -1339,6 +1339,16 @@ function buildLayerBrightnessText(layerBrightness = {}, lightPath = {}) {
   if (Number.isFinite(Number(layerBrightness.factors?.beamFactor))) {
     parts.push(`直射/散射 ${roundTwo(layerBrightness.factors.beamFactor)}`);
   }
+  const synergy = layerBrightness.synergy || {};
+  if (Number.isFinite(Number(synergy.localLayers?.bonus)) && Number(synergy.localLayers.bonus) > 0) {
+    parts.push(`本地中高云协同 +${roundTwo(synergy.localLayers.bonus)}`);
+  }
+  if (Number.isFinite(Number(synergy.solarLayers?.bonus)) && Number(synergy.solarLayers.bonus) > 0) {
+    parts.push(`太阳方向分层协同 +${roundTwo(synergy.solarLayers.bonus)}`);
+  }
+  if (Number.isFinite(Number(synergy.spatialBonus)) && Number(synergy.spatialBonus) > 0) {
+    parts.push(`低重叠云带协同 +${roundTwo(synergy.spatialBonus)}`);
+  }
   if (Array.isArray(layerBrightness.dimEvidence) && layerBrightness.dimEvidence.length) {
     parts.push(`压暗证据 ${layerBrightness.dimEvidence.length} 项`);
   }
