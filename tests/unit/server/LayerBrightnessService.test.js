@@ -190,4 +190,34 @@ describe('LayerBrightnessService', () => {
       score: 0
     }));
   });
+
+  test('adds a continuous bonus only when three independent illuminated carriers are strong', () => {
+    const common = {
+      type: 'sunrise',
+      timeAnalysis: { elevation: -1 },
+      weatherData: { lowClouds: 0, midClouds: 100, highClouds: 100, cloudCover: 100 },
+      lightPathScore: { score: 100 },
+      lightPathGate: { gate: 1 },
+      renderingFactor: { factor: 1 },
+      cloudThickness: { modifier: 1 },
+      carrierScore: { score: 80, activeCarrier: 'cloud' }
+    };
+    const single = service.scoreLayerBrightness(common);
+    const multiple = service.scoreLayerBrightness({
+      ...common,
+      directionalCurtainCarrier: { metrics: { upperSignal: 100 } },
+      visibleSectorCarrier: { applied: true, score: 62, metrics: { upperSignal: 84 } }
+    });
+
+    expect(single.synergy.bonus).toBe(0);
+    expect(multiple.synergy).toEqual(expect.objectContaining({
+      bestScore: 85,
+      secondScore: 72,
+      thirdScore: 62
+    }));
+    expect(multiple.synergy.bonus).toBeGreaterThan(0);
+    expect(multiple.weightedCarrierScore).toBeGreaterThan(single.weightedCarrierScore);
+    expect(multiple.weightedCarrierScore).toBeGreaterThanOrEqual(94);
+    expect(multiple.weightedCarrierScore).toBeLessThanOrEqual(96);
+  });
 });

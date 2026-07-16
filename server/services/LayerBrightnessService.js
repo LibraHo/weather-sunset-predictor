@@ -29,6 +29,11 @@ function normalizeRange(value, min, max, invert = false) {
   return invert ? 1 - normalized : normalized;
 }
 
+function smoothStep(min, max, value) {
+  const normalized = normalizeRange(value, min, max);
+  return normalized * normalized * (3 - 2 * normalized);
+}
+
 function scoreBrightnessResponse(value, fullBrightnessReference, curve = 6) {
   const number = finiteNumber(value, 0);
   const reference = finiteNumber(fullBrightnessReference, 1);
@@ -214,8 +219,9 @@ function buildLayerWeightedCarrierScore({
   if (carrierCandidates.length === 0) {
     return {
       score: 0,
-      formula: 'max_carrier_brightness',
-      contributions: []
+      formula: 'max_with_independent_carrier_synergy',
+      contributions: [],
+      synergy: { bestScore: 0, secondScore: 0, thirdScore: 0, factor: 0, bonus: 0 }
     };
   }
 
@@ -263,12 +269,36 @@ function buildLayerWeightedCarrierScore({
     });
   }
 
-  const bestScore = contributions.reduce((best, candidate) => Math.max(best, candidate.score), 0);
+  const groupForKey = (key) => {
+    if (key === 'mid' || key === 'high' || key === 'cloud') return 'localCloud';
+    if (key === 'remoteHigh' || key === 'remoteMid' || key === 'remote_layer') return 'remoteCloud';
+    if (key === 'directional' || key === 'directional_curtain') return 'directionalCloud';
+    if (key === 'visibleSector' || key === 'visible_sector') return 'visibleSector';
+    return key;
+  };
+  const independentScores = Array.from(contributions.reduce((groups, candidate) => {
+    const group = groupForKey(candidate.key);
+    groups.set(group, Math.max(groups.get(group) || 0, candidate.score));
+    return groups;
+  }, new Map()).values()).sort((a, b) => b - a);
+  const bestScore = independentScores[0] || 0;
+  const secondScore = independentScores[1] || 0;
+  const thirdScore = independentScores[2] || 0;
+  const synergy = smoothStep(45, 70, secondScore) * smoothStep(30, 60, thirdScore);
+  const synergyBonus = (100 - bestScore) * 0.65 * synergy;
+  const combinedScore = bestScore + synergyBonus;
 
   return {
-    score: round(clamp(bestScore, 0, 100), 1),
-    formula: 'max_carrier_brightness',
-    contributions
+    score: round(clamp(combinedScore, 0, 100), 1),
+    formula: 'max_with_independent_carrier_synergy',
+    contributions,
+    synergy: {
+      bestScore: round(bestScore, 1),
+      secondScore: round(secondScore, 1),
+      thirdScore: round(thirdScore, 1),
+      factor: round(synergy, 3),
+      bonus: round(synergyBonus, 1)
+    }
   };
 }
 
@@ -377,6 +407,7 @@ function scoreLayerBrightness(params = {}) {
     weightedCarrierScore: weightedCarrierScore.score,
     formula: weightedCarrierScore.formula,
     layerContributions: weightedCarrierScore.contributions,
+    synergy: weightedCarrierScore.synergy,
     brightnessMultiplier: round(brightnessMultiplier, 2),
     brightnessGate: round(brightnessGate, 2),
     cap: null,
