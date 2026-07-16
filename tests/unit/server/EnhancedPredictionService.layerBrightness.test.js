@@ -237,7 +237,8 @@ describe('EnhancedPredictionService layer brightness integration', () => {
     expect(result.lightPathAnalysis.score).toBeGreaterThanOrEqual(85);
     expect(result.layerBrightness.effectiveBrightness).toBeGreaterThanOrEqual(55);
     expect(result.layerBrightness.brightnessMultiplier).toBe(1);
-    expect(result.breakdown.baseScore).toBeGreaterThanOrEqual(60);
+    expect(result.breakdown.baseScore).toBeGreaterThanOrEqual(82);
+    expect(result.breakdown.baseScore).toBeLessThanOrEqual(88);
     expect(result.breakdown.renderingFactor).toBeGreaterThanOrEqual(0.72);
     expect(result.sunriseTransparentHazeAdjustment).toBeUndefined();
     expect(result.aerosolHazeCap).toEqual(expect.objectContaining({
@@ -247,9 +248,9 @@ describe('EnhancedPredictionService layer brightness integration', () => {
       applied: false,
       reason: 'directional_high_cloud_carrier_canvas_only'
     }));
-    expect(result.score).toBeGreaterThanOrEqual(45);
-    expect(result.score).toBeLessThanOrEqual(70);
-    expect(result.status).toBe('good_glow');
+    expect(result.score).toBeGreaterThanOrEqual(75);
+    expect(result.score).toBeLessThanOrEqual(80);
+    expect(result.status).toBe('very_likely');
   });
 
 });

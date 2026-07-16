@@ -190,9 +190,15 @@ function buildLayerWeightedCarrierScore({
   pathFactor,
   thicknessFactor,
   beamFactor,
+  allowIlluminatedCarrierLift = true,
   brightnessResponseCurve = 6
 }) {
-  const carrier = clamp(finiteNumber(carrierScore?.score, 0), 0, 100);
+  const scoredCarrier = clamp(finiteNumber(carrierScore?.score, 0), 0, 100);
+  const activeCarrier = carrierScore?.activeCarrier || 'cloud';
+  const illuminatedUpperCarrier = clamp(highSignal * 0.78 + midSignal * 0.20, 0, 100);
+  const carrier = activeCarrier === 'cloud' && allowIlluminatedCarrierLift
+    ? Math.max(scoredCarrier, illuminatedUpperCarrier)
+    : scoredCarrier;
   if (carrier <= 0) {
     return {
       score: 0,
@@ -201,7 +207,6 @@ function buildLayerWeightedCarrierScore({
     };
   }
 
-  const activeCarrier = carrierScore?.activeCarrier || 'cloud';
   const aerosolScore = finiteNumber(carrierScore?.aerosolCarrierScore?.activatedScore, 0);
   const directionalScore = directionalUpper === null ? 0 : clamp(finiteNumber(directionalUpper, 0) * 0.72, 0, 100);
   const visibleSectorScore = visibleSectorCarrier?.applied ? clamp(finiteNumber(visibleSectorCarrier.score, 0), 0, 62) : 0;
@@ -391,6 +396,7 @@ function scoreLayerBrightness(params = {}) {
     pathFactor,
     thicknessFactor,
     beamFactor: beam.factor,
+    allowIlluminatedCarrierLift: beam.directRatio === null || beam.directRatio >= 0.05,
     brightnessResponseCurve,
   });
   const brightnessMultiplier = effectiveBrightness <= 0
