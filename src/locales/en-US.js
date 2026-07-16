@@ -269,17 +269,17 @@ const translations = {
     },
     "methodology": {
       "title": "Fire Cloud Calculation Method",
-      "intro": "The current Fire Cloud Index is presented as carrier candidates, main/side-sector illumination, air rendering, and score caps. The result-page evidence focuses on whether the cloud can actually be lit, and why abundant high cloud can still be suppressed by gray veil, thick cloud, moisture, or weak direct beam.",
-      "versionLabel": "Methodology version: 2026.07.08-wet-haze-open-path-mid-rendering",
-      "versionDesc": "This version matches the result-page score ledger: compare local cloud, remote layer carriers, visible side-sector carriers, and weak aerosol carriers, then show illumination, air rendering, and the final score.",
+      "intro": "The Fire Cloud Index follows layer carrier × layer-specific lighting, within-region synergy, overlap-aware spatial synergy, air rendering, and limiting conditions. One strong cloud band stays near the maximum candidate; multiple well-lit, low-overlap bands raise the score continuously.",
+      "versionLabel": "Methodology version: 2026.07.16-layer-spatial-overlap-synergy",
+      "versionDesc": "Mid and high clouds are lit and scored separately. Layers within one region can cooperate, while spatial regions cooperate only in proportion to sampling and azimuth independence.",
       changelogTitle: "Version update history",
       changelogHint: "Algorithm updates from the last three months live here; scroll to review why each change happened, its impact, and validation",
       changelog: {
         "latest": {
-          "date": "2026-07-08",
-          "title": "Open-path mid air-rendering band",
-          "summary": "When the path is open, high-cloud carrier is strong, and low clouds are not sealed, but moisture and aerosol forecasts suggest unstable color rendering, the model uses a capped mid-rendering band. Water vapour no longer triggers the post-rain gray curtain by itself, and hard blocking is split into hard/soft cases.",
-          "validation": "Validation: the 2026-07-07 Beijing open-path mid-rendering case moves from 35 to 46; the 2026-06-13 active rain-curtain case stays around 24; the real calibration library and backend unit suite pass."
+          "date": "2026-07-16",
+          "title": "Layer and spatial overlap synergy v1",
+          "summary": "Mid and high cloud use separate carrier × lighting scores. Same-source solar-direction and remote samples are merged, while distinct cloud bands cooperate by spatial independence. Active or recent wet-rain curtains disable synergy.",
+          "validation": "Validation: the 2026-07-16 Beijing sunrise replays at 79.5; all 11 historical anchors remain in range; wet veil, sparse cloud, blocked-path, and dust counterexamples are not inflated."
         },
         "layerBrightness": {
           "date": "2026-06-13",
@@ -385,7 +385,7 @@ const translations = {
           "desc": "The main solar path, side-sector illumination, low-cloud blockage, cloud thickness, direct/diffuse beam evidence, and brightness response combine into layer brightness. It is part of the base score, not a repeated standalone adjustment.",
           "visibility": "An open main path raises usable brightness; side sectors need enough samples and feasible illumination geometry before they count",
           "humidity": "Thick cloud, gray veil, high moisture, and weak direct beam diagnostics stay inside brightness estimation instead of being stacked on the user page",
-          "formula": "Base score = Σ(layer carrier × layer brightness)"
+          "formula": "Layer score = carrier × layer-specific lighting; region score = primary layer + remaining room × layer synergy; base score = primary region + remaining room × overlap-aware spatial synergy"
         },
         "layerDiversity": {
           "title": "4. Air Rendering",
@@ -425,11 +425,11 @@ const translations = {
         },
         "finalFormula": {
           "title": "8. Final Score",
-          "subtitle": "Final Score · Σ(layer carrier × layer brightness) × air rendering",
-          "desc": "The final score comes from summing layer carrier × layer brightness, multiplying by air rendering, and then applying status caps. The result-page display score follows the same chain.",
-          "formula": "Final score = clamp(Σ(layer carrier × layer brightness) × air rendering, 0, 100), then hard blockers / thick cloud / gray curtain calibrate it",
+          "subtitle": "Final Score · two-level synergy base × air rendering",
+          "desc": "The final score uses within-region layer synergy and overlap-aware spatial synergy, then air rendering and limiting conditions. It is neither a simple sum nor a hard 80-point switch.",
+          "formula": "Final score = clamp(overlap-aware synergy base × air rendering, 0, 100), then hard blockers / thick cloud / gray curtain calibrate it",
           "highCloudCap": "When high clouds are rich but the light path is blocked, it first weakens layer brightness.",
-          "carrier": "Base score = Σ(layer carrier × layer brightness)",
+          "carrier": "Base score = within-region layer synergy → overlap-aware spatial synergy",
           "lightGate": "Light path is already folded into layer brightness, so it is not shown as a separate final multiplier",
           "rendering": "Air rendering explains color quality; when low visibility, post-rain gray curtain, AQI, and AOD describe the same wet-haze evidence, a soft floor is used, and the weak aerosol carrier is not repeated as a final-score bonus",
           "statusCaps": "Display score is status-calibrated: no-fire-cloud stays below 40, light glow below 60; geometry failure, thick cloud, gray curtain, and rainy low cloud can cap it further"
@@ -631,7 +631,7 @@ const translations = {
           "scoringV2": "cloud condition {{carrier}}; sunlight evidence is included; air rendering {{air}}",
           "grayVeilAirRendering": "full mid/high cloud with dirty air: cloud condition {{carrier}}; suppressed air rendering {{air}}",
           "lightPath": "sun-direction evidence for cloud lighting",
-          "layerBrightnessShort": "sun direction, blockage, and light response explain whether clouds can be lit",
+          "layerBrightnessShort": "cloud layers, lighting, and spatial coverage are assessed together",
           "layerBrightness": "cloud lighting {{brightness}}, adjustment {{gate}}; local cloud {{canvas}}, remote high cloud {{remoteHigh}}, remote mid cloud {{remoteMid}}, side-sector upper cloud {{visibleSector}} near {{visibleBearing}}°, remote low-cloud block {{remoteLowBlock}}, low-cloud block {{low}} / transmission {{lowBlock}}, sun geometry {{solar}}, path {{path}}, air {{air}}, thickness {{thickness}}, beam {{beam}}",
           "layerBrightnessMultiplier": "effective brightness {{brightness}}; dim evidence: {{evidence}}",
           "layerContribution": "{{layer}} contribution {{score}} (cloud {{carrier}}, sunlight {{brightness}})",

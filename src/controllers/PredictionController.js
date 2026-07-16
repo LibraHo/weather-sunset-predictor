@@ -2652,7 +2652,7 @@ class PredictionController {
         <div class="score-ledger-summary">${escape(summary)}</div>
         <div class="score-ledger-steps">
           ${step(1, ledgerText('labels.cloudCarrier', {}, 'Cloud condition', '云层条件'), ledgerText('details.cloudCarrier', {}, 'usable sunset-color cloud area from local or nearby clouds', '本地或周边是否有可被日落染色的云面'), fmt(carrierScore, 1), carrierDetail)}
-          ${step(2, ledgerText('labels.layerBrightness', {}, 'Cloud lighting', '云层受光'), ledgerText('details.layerBrightnessShort', {}, 'sun direction, blockage, and light response explain whether clouds can be lit', '太阳方向、遮挡和亮度响应共同判断云层能否被照亮'), layerBrightness?.applied ? fmt(layerBrightness.effectiveBrightness, 1) : '--', [brightnessDetail, lightPathDetail].filter(Boolean).join('；'))}
+          ${step(2, ledgerText('labels.layerBrightness', {}, 'Cloud lighting', '云层受光'), ledgerText('details.layerBrightnessShort', {}, 'cloud layers, lighting, and spatial coverage are assessed together', '综合判断中高云受光与空间覆盖'), layerBrightness?.applied ? fmt(layerBrightness.effectiveBrightness, 1) : '--', [brightnessDetail, lightPathDetail].filter(Boolean).join('；'))}
           ${step(3, ledgerText('labels.baseScore', {}, 'Base score', '基础分'), weightedDescription, fmt(baseScore, 1), baseScoreDetail)}
           ${step(4, ledgerText('labels.rendering', {}, 'Air rendering', '空气显色'), renderingDescription, fmt(renderedScore, 1), renderingDetail)}
           ${adjustmentHtml}

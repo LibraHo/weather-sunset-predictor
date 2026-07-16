@@ -95,7 +95,7 @@ describe('LayerBrightnessService', () => {
     expect(result.factors.lowBlockFactor).toBeLessThan(1);
   });
 
-  test('adds solar-direction high cloud as an independent remote carrier layer', () => {
+  test('compares solar-direction high cloud as an independent carrier without adding it', () => {
     const withoutRemote = service.scoreLayerBrightness({
       type: 'sunset',
       timeAnalysis: { elevation: -1 },
@@ -145,7 +145,9 @@ describe('LayerBrightnessService', () => {
 
     expect(withRemote.layerContributions.map(item => item.key)).toContain('remoteHigh');
     expect(withRemote.layerContributions.map(item => item.key)).not.toContain('remoteMid');
-    expect(withRemote.weightedCarrierScore).toBeGreaterThan(withoutRemote.weightedCarrierScore);
+    expect(withRemote.weightedCarrierScore).toBe(withoutRemote.weightedCarrierScore);
+    expect(withRemote.synergy.regions.map(region => region.key)).not.toContain('remoteCloud');
+    expect(withRemote.synergy.regions.map(region => region.key)).toContain('solarDirection');
     expect(withRemote.layers.remoteHigh).toBe(43);
   });
 
@@ -189,5 +191,44 @@ describe('LayerBrightnessService', () => {
       applied: true,
       score: 0
     }));
+  });
+
+  test('adds continuous layer and non-overlapping spatial synergy without double counting', () => {
+    const common = {
+      type: 'sunrise',
+      timeAnalysis: { elevation: -1 },
+      weatherData: { lowClouds: 0, midClouds: 100, highClouds: 100, cloudCover: 100 },
+      lightPathScore: { score: 100 },
+      lightPathGate: { gate: 1 },
+      renderingFactor: { factor: 1 },
+      cloudThickness: { modifier: 1 },
+      carrierScore: { score: 80, activeCarrier: 'cloud' }
+    };
+    const single = service.scoreLayerBrightness(common);
+    const multiple = service.scoreLayerBrightness({
+      ...common,
+      directionalCurtainCarrier: {
+        applied: true,
+        score: 62,
+        metrics: { upperSignal: 100, midSignal: 100, highSignal: 100 }
+      },
+      visibleSectorCarrier: {
+        applied: true,
+        score: 62,
+        bestDirection: { offsetDeg: 35 },
+        metrics: { upperSignal: 84 }
+      }
+    });
+
+    expect(single.synergy.localLayers.bonus).toBeGreaterThan(0);
+    expect(single.synergy.spatialBonus).toBe(0);
+    expect(multiple.synergy.solarLayers.bonus).toBeGreaterThan(0);
+    expect(multiple.synergy.spatialBonus).toBeGreaterThan(0);
+    expect(multiple.synergy.supports).toEqual(expect.arrayContaining([
+      expect.objectContaining({ key: 'visibleSector', independence: 1 })
+    ]));
+    expect(multiple.weightedCarrierScore).toBeGreaterThan(single.weightedCarrierScore);
+    expect(multiple.weightedCarrierScore).toBeGreaterThanOrEqual(95);
+    expect(multiple.weightedCarrierScore).toBeLessThanOrEqual(98);
   });
 });

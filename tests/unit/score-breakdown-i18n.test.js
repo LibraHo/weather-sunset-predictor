@@ -118,5 +118,7 @@ describe('score breakdown i18n', () => {
     expect(html).not.toContain('低太阳透射');
     expect(html).not.toContain('载体缓冲');
     expect(html).not.toContain('low solar transmission hit');
+    expect(html).not.toContain('协同 +');
   });
+
 });
