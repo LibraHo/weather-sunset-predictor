@@ -59,15 +59,14 @@ describe('EnhancedPredictionService layer brightness integration', () => {
     expect(result.breakdown.airTransmissionFactor).toBeLessThan(0.75);
     expect(result.breakdown.renderingFactor).toBeLessThanOrEqual(0.72);
     expect(result.layerBrightnessAdjustment).toEqual(expect.objectContaining({
-      applied: true,
       multiplier: result.layerBrightness.brightnessMultiplier
     }));
-    expect(result.layerBrightness.formula).toBe('max_with_independent_carrier_synergy');
-    expect(result.breakdown.layerContributionFormula).toBe('max_with_independent_carrier_synergy');
+    expect(result.layerBrightness.formula).toBe('layer_and_spatial_overlap_synergy');
+    expect(result.breakdown.layerContributionFormula).toBe('layer_and_spatial_overlap_synergy');
     expect(result.layerBrightness.layerContributions.length).toBeGreaterThan(0);
     expect(result.breakdown.weightedCarrierScore).toBe(result.breakdown.baseScore);
     expect(result.breakdown.baseScore).toBeCloseTo(
-      result.layerBrightness.synergy.bestScore + result.layerBrightness.synergy.bonus,
+      result.layerBrightness.synergy.primaryScore + result.layerBrightness.synergy.spatialBonus,
       1
     );
     const expectedScore = result.breakdown.baseScore * result.breakdown.renderingFactor;

@@ -34,6 +34,18 @@ function smoothStep(min, max, value) {
   return normalized * normalized * (3 - 2 * normalized);
 }
 
+function combineLayerScores(midScore, highScore, synergyEligibility = 1) {
+  const primary = Math.max(midScore, highScore);
+  const secondary = Math.min(midScore, highScore);
+  if (primary <= 0 || secondary <= 0) {
+    return { score: primary, primary, secondary, factor: 0, bonus: 0 };
+  }
+  const balance = 2 * secondary / (primary + secondary);
+  const factor = 0.35 * clamp(synergyEligibility, 0, 1) * smoothStep(30, 70, secondary) * balance;
+  const bonus = (100 - primary) * factor;
+  return { score: primary + bonus, primary, secondary, factor, bonus };
+}
+
 function scoreBrightnessResponse(value, fullBrightnessReference, curve = 6) {
   const number = finiteNumber(value, 0);
   const reference = finiteNumber(fullBrightnessReference, 1);
@@ -77,6 +89,20 @@ function scoreSolarLayerFactor(solarElevation, type = 'sunset') {
   if (elevation > 3 && elevation <= 6) return 0.68;
   if (absElevation <= 8) return 0.52;
   return type === 'sunrise' || type === 'sunset' ? 0.35 : 0.2;
+}
+
+function scoreLayerHeightFactor(solarElevation, layer) {
+  const elevation = finiteNumber(solarElevation, 0);
+  if (layer === 'high') {
+    // Height changes how quickly a layer loses illumination away from the
+    // horizon, but must not manufacture extra light in blocked/wet scenes.
+    if (elevation < -2) return clamp(1 - Math.abs(elevation + 2) / 8 * 0.10, 0.90, 1);
+    if (elevation > 3) return clamp(1 - (elevation - 3) / 5 * 0.06, 0.94, 1);
+    return 1;
+  }
+  if (elevation < -2) return clamp(0.98 - Math.abs(elevation + 2) / 5 * 0.24, 0.72, 0.98);
+  if (elevation > 3) return clamp(1 - (elevation - 3) / 5 * 0.12, 0.88, 1);
+  return 1;
 }
 
 function scoreAirTransmission(weatherData = {}, renderingFactor = {}) {
@@ -189,39 +215,59 @@ function buildLayerWeightedCarrierScore({
   low,
   midSignal,
   highSignal,
-  directionalUpper,
+  directionalCurtainCarrier = null,
   remoteLayerCarriers = null,
   visibleSectorCarrier = null,
   carrierScore,
+  solarElevation,
   lowBlockFactor,
   solarFactor,
   pathFactor,
   thicknessFactor,
   beamFactor,
   allowIlluminatedCarrierLift = true,
+  synergyEligibility = 1,
   brightnessResponseCurve = 6
 }) {
   const scoredCarrier = clamp(finiteNumber(carrierScore?.score, 0), 0, 100);
   const activeCarrier = carrierScore?.activeCarrier || 'cloud';
   const aerosolScore = finiteNumber(carrierScore?.aerosolCarrierScore?.activatedScore, 0);
-  const directionalScore = directionalUpper === null ? 0 : clamp(finiteNumber(directionalUpper, 0) * 0.72, 0, 100);
+  const directionalMidSignal = finiteNumber(directionalCurtainCarrier?.metrics?.midSignal, 0);
+  const directionalHighSignal = finiteNumber(directionalCurtainCarrier?.metrics?.highSignal, 0);
+  const directionalScore = directionalCurtainCarrier?.applied
+    ? clamp(finiteNumber(directionalCurtainCarrier.score, 0), 0, 100)
+    : 0;
   const visibleSectorScore = visibleSectorCarrier?.applied ? clamp(finiteNumber(visibleSectorCarrier.score, 0), 0, 62) : 0;
   const cloudMidCarrier = allowIlluminatedCarrierLift ? clamp(midSignal * 0.75, 0, 100) : 0;
   const cloudHighCarrier = allowIlluminatedCarrierLift ? clamp(highSignal * 0.85, 0, 100) : 0;
+  const midHeightFactor = scoreLayerHeightFactor(solarElevation, 'mid');
+  const highHeightFactor = scoreLayerHeightFactor(solarElevation, 'high');
+  const highViewTransmission = clamp(1 - midSignal / 100 * 0.08, 0.92, 1);
   const carrierCandidates = [
     { key: activeCarrier, carrier: scoredCarrier, brightnessBias: 1 },
-    { key: 'mid', carrier: cloudMidCarrier, brightnessBias: 1.04 },
-    { key: 'high', carrier: cloudHighCarrier, brightnessBias: 0.96 },
+    { key: 'mid', carrier: cloudMidCarrier, brightnessBias: midHeightFactor },
+    { key: 'high', carrier: cloudHighCarrier, brightnessBias: highHeightFactor * highViewTransmission },
     { key: 'directional', carrier: directionalScore, brightnessBias: 1.02 },
+    { key: 'directionalMid', carrier: clamp(directionalMidSignal * 0.75, 0, 100), brightnessBias: midHeightFactor },
+    { key: 'directionalHigh', carrier: clamp(directionalHighSignal * 0.85, 0, 100), brightnessBias: highHeightFactor * clamp(1 - directionalMidSignal / 100 * 0.08, 0.92, 1) },
     { key: 'aerosol', carrier: aerosolScore, brightnessBias: 0.92 },
     { key: 'visibleSector', carrier: visibleSectorScore, brightnessBias: 1.02 }
   ].filter(candidate => candidate.carrier > 0);
   if (carrierCandidates.length === 0) {
     return {
       score: 0,
-      formula: 'max_with_independent_carrier_synergy',
+      formula: 'layer_and_spatial_overlap_synergy',
       contributions: [],
-      synergy: { bestScore: 0, secondScore: 0, thirdScore: 0, factor: 0, bonus: 0 }
+      synergy: {
+        localLayers: { score: 0, factor: 0, bonus: 0 },
+        solarLayers: { score: 0, factor: 0, bonus: 0 },
+        primaryRegion: 'none',
+        primaryScore: 0,
+        spatialSupport: 0,
+        spatialBonus: 0,
+        regions: [],
+        supports: []
+      }
     };
   }
 
@@ -269,35 +315,72 @@ function buildLayerWeightedCarrierScore({
     });
   }
 
-  const groupForKey = (key) => {
-    if (key === 'mid' || key === 'high' || key === 'cloud') return 'localCloud';
-    if (key === 'remoteHigh' || key === 'remoteMid' || key === 'remote_layer') return 'remoteCloud';
-    if (key === 'directional' || key === 'directional_curtain') return 'directionalCloud';
-    if (key === 'visibleSector' || key === 'visible_sector') return 'visibleSector';
-    return key;
+  const scoreFor = (...keys) => contributions
+    .filter(candidate => keys.includes(candidate.key))
+    .reduce((best, candidate) => Math.max(best, candidate.score), 0);
+  const localLayers = combineLayerScores(scoreFor('mid'), scoreFor('high'), synergyEligibility);
+  const solarLayers = combineLayerScores(
+    scoreFor('directionalMid', 'remoteMid'),
+    scoreFor('directionalHigh', 'remoteHigh'),
+    synergyEligibility
+  );
+  const regions = [
+    { key: 'local', score: Math.max(localLayers.score, scoreFor('cloud')) },
+    { key: 'solarDirection', score: Math.max(solarLayers.score, scoreFor('directional', 'directional_curtain', 'remote_layer')) },
+    { key: 'visibleSector', score: scoreFor('visibleSector', 'visible_sector') }
+  ].filter(region => region.score > 0).sort((a, b) => b.score - a.score);
+  const aerosolBase = scoreFor('aerosol');
+  const primaryRegion = regions[0] || { key: 'none', score: 0 };
+  const independenceFromPrimary = (region) => {
+    if (primaryRegion.key === region.key) return 0;
+    if ([primaryRegion.key, region.key].includes('visibleSector')) {
+      const offset = Math.abs(finiteNumber(visibleSectorCarrier?.bestDirection?.offsetDeg, 0));
+      return smoothStep(8, 35, offset);
+    }
+    return 0.25;
   };
-  const independentScores = Array.from(contributions.reduce((groups, candidate) => {
-    const group = groupForKey(candidate.key);
-    groups.set(group, Math.max(groups.get(group) || 0, candidate.score));
-    return groups;
-  }, new Map()).values()).sort((a, b) => b - a);
-  const bestScore = independentScores[0] || 0;
-  const secondScore = independentScores[1] || 0;
-  const thirdScore = independentScores[2] || 0;
-  const synergy = smoothStep(45, 70, secondScore) * smoothStep(30, 60, thirdScore);
-  const synergyBonus = (100 - bestScore) * 0.65 * synergy;
-  const combinedScore = bestScore + synergyBonus;
+  const spatialSupports = regions.slice(1).map(region => ({
+    key: region.key,
+    score: region.score,
+    independence: independenceFromPrimary(region),
+    support: synergyEligibility * independenceFromPrimary(region) * smoothStep(40, 70, region.score)
+  }));
+  const spatialSupport = 1 - spatialSupports.reduce((remaining, region) => remaining * (1 - region.support), 1);
+  const spatialBonus = (100 - primaryRegion.score) * 0.65 * spatialSupport;
+  const cloudScore = primaryRegion.score + spatialBonus;
+  const combinedScore = Math.max(cloudScore, aerosolBase);
 
   return {
     score: round(clamp(combinedScore, 0, 100), 1),
-    formula: 'max_with_independent_carrier_synergy',
+    formula: 'layer_and_spatial_overlap_synergy',
     contributions,
     synergy: {
-      bestScore: round(bestScore, 1),
-      secondScore: round(secondScore, 1),
-      thirdScore: round(thirdScore, 1),
-      factor: round(synergy, 3),
-      bonus: round(synergyBonus, 1)
+      localLayers: {
+        score: round(localLayers.score, 1),
+        factor: round(localLayers.factor, 3),
+        bonus: round(localLayers.bonus, 1)
+      },
+      solarLayers: {
+        score: round(solarLayers.score, 1),
+        factor: round(solarLayers.factor, 3),
+        bonus: round(solarLayers.bonus, 1)
+      },
+      layerIllumination: {
+        midHeightFactor: round(midHeightFactor, 2),
+        highHeightFactor: round(highHeightFactor, 2),
+        highViewTransmission: round(highViewTransmission, 2)
+      },
+      primaryRegion: primaryRegion.key,
+      primaryScore: round(primaryRegion.score, 1),
+      spatialSupport: round(spatialSupport, 3),
+      spatialBonus: round(spatialBonus, 1),
+      regions: regions.map(region => ({ key: region.key, score: round(region.score, 1) })),
+      supports: spatialSupports.map(region => ({
+        key: region.key,
+        score: round(region.score, 1),
+        independence: round(region.independence, 2),
+        support: round(region.support, 3)
+      }))
     }
   };
 }
@@ -341,6 +424,12 @@ function scoreLayerBrightness(params = {}) {
   const air = scoreAirTransmission(weatherData, renderingFactor);
   const thicknessFactor = scoreThicknessFactor(weatherData, cloudThickness, lightPathScore);
   const beam = scoreBeamFactor(weatherData);
+  const precipitation = finiteNumber(weatherData.precipitation, 0);
+  const recentRainSignal = finiteNumber(weatherData.recentRainSignal, 0);
+  const recentPrecipitation6h = finiteNumber(weatherData.recentPrecipitation6h, 0);
+  const synergyEligibility = precipitation > 0 || recentRainSignal >= 0.75 || recentPrecipitation6h >= 2
+    ? 0
+    : 1;
   const visibility = finiteNumber(weatherData.visibility);
   const humidity = finiteNumber(weatherData.humidity);
   const aod = finiteNumber(weatherData.aerosolOpticalDepth ?? weatherData.aod);
@@ -381,16 +470,18 @@ function scoreLayerBrightness(params = {}) {
     low,
     midSignal,
     highSignal,
-    directionalUpper,
+    directionalCurtainCarrier,
     remoteLayerCarriers,
     visibleSectorCarrier,
     carrierScore,
+    solarElevation: timeAnalysis.elevation,
     lowBlockFactor,
     solarFactor,
     pathFactor,
     thicknessFactor,
     beamFactor: beam.factor,
     allowIlluminatedCarrierLift: beam.directRatio === null || beam.directRatio >= 0.05,
+    synergyEligibility,
     brightnessResponseCurve,
   });
   const brightnessMultiplier = effectiveBrightness <= 0

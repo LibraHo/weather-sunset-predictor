@@ -146,6 +146,8 @@ describe('LayerBrightnessService', () => {
     expect(withRemote.layerContributions.map(item => item.key)).toContain('remoteHigh');
     expect(withRemote.layerContributions.map(item => item.key)).not.toContain('remoteMid');
     expect(withRemote.weightedCarrierScore).toBe(withoutRemote.weightedCarrierScore);
+    expect(withRemote.synergy.regions.map(region => region.key)).not.toContain('remoteCloud');
+    expect(withRemote.synergy.regions.map(region => region.key)).toContain('solarDirection');
     expect(withRemote.layers.remoteHigh).toBe(43);
   });
 
@@ -191,7 +193,7 @@ describe('LayerBrightnessService', () => {
     }));
   });
 
-  test('adds a continuous bonus only when three independent illuminated carriers are strong', () => {
+  test('adds continuous layer and non-overlapping spatial synergy without double counting', () => {
     const common = {
       type: 'sunrise',
       timeAnalysis: { elevation: -1 },
@@ -205,19 +207,28 @@ describe('LayerBrightnessService', () => {
     const single = service.scoreLayerBrightness(common);
     const multiple = service.scoreLayerBrightness({
       ...common,
-      directionalCurtainCarrier: { metrics: { upperSignal: 100 } },
-      visibleSectorCarrier: { applied: true, score: 62, metrics: { upperSignal: 84 } }
+      directionalCurtainCarrier: {
+        applied: true,
+        score: 62,
+        metrics: { upperSignal: 100, midSignal: 100, highSignal: 100 }
+      },
+      visibleSectorCarrier: {
+        applied: true,
+        score: 62,
+        bestDirection: { offsetDeg: 35 },
+        metrics: { upperSignal: 84 }
+      }
     });
 
-    expect(single.synergy.bonus).toBe(0);
-    expect(multiple.synergy).toEqual(expect.objectContaining({
-      bestScore: 85,
-      secondScore: 72,
-      thirdScore: 62
-    }));
-    expect(multiple.synergy.bonus).toBeGreaterThan(0);
+    expect(single.synergy.localLayers.bonus).toBeGreaterThan(0);
+    expect(single.synergy.spatialBonus).toBe(0);
+    expect(multiple.synergy.solarLayers.bonus).toBeGreaterThan(0);
+    expect(multiple.synergy.spatialBonus).toBeGreaterThan(0);
+    expect(multiple.synergy.supports).toEqual(expect.arrayContaining([
+      expect.objectContaining({ key: 'visibleSector', independence: 1 })
+    ]));
     expect(multiple.weightedCarrierScore).toBeGreaterThan(single.weightedCarrierScore);
-    expect(multiple.weightedCarrierScore).toBeGreaterThanOrEqual(94);
-    expect(multiple.weightedCarrierScore).toBeLessThanOrEqual(96);
+    expect(multiple.weightedCarrierScore).toBeGreaterThanOrEqual(95);
+    expect(multiple.weightedCarrierScore).toBeLessThanOrEqual(98);
   });
 });

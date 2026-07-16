@@ -43,6 +43,41 @@ spots / raster / firecloud map APIs
 - 约束：厚云、灰幕、强霾、低云、降水、几何不可行、可见扇区不足。
 - 输出：score、quality、status、breakdown、scoringV2、algorithm version。
 
+### 分层受光与空间协同评分
+
+单点精细预测的云层基础分使用两级连续协同，不使用城市/日期特判、gap 保底或简单求和。
+
+第一层是同一区域内的中高云协同。每个区域分别估算中云和高云的载体与受光：
+
+```text
+midScore  = midCarrier  × midIllumination
+highScore = highCarrier × highIllumination
+primary   = max(midScore, highScore)
+secondary = min(midScore, highScore)
+layerSynergy = 0.35 × smoothstep(30, 70, secondary) × 2 × secondary / (primary + secondary)
+regionScore = primary + (100 - primary) × layerSynergy
+```
+
+- 当前数据能提供分层云量、太阳几何、方向采样、低层遮挡、云厚和辐射，只能得到分层受光估算，不等同真实分层辐射观测。
+- 同一区域的中云和高云不简单相加；两层都强且都受光时，才使用剩余分数空间的一部分形成协同。
+- 本地、太阳方向、可视侧向扇区分别形成空间区域。方向云幕和同源远程层采样属于同一太阳方向区域，必须先合并，不能重复计分。
+
+第二层是区域间的重叠感知协同：
+
+```text
+independence_i = 1 - overlap(primaryRegion, region_i)
+support_i = independence_i × smoothstep(40, 70, regionScore_i)
+totalSupport = 1 - product(1 - support_i)
+cloudScore = primaryRegionScore + (100 - primaryRegionScore) × 0.65 × totalSupport
+finalScore = cloudScore × airRendering
+```
+
+- 同源、同方位、同距离采样的重叠率按 100% 处理。
+- 可视扇区按相对太阳方位角连续估算独立度；靠近太阳方向时不重复加分，侧向分离后才逐步增加支持度。
+- 本地点与太阳方向走廊当前使用保守的部分独立度，因为缺少完整三维云体标识；breakdown 必须返回区域、分层协同、空间支持度和加分，便于后续真实案例校准。
+- 气溶胶是全局显色/弱载体信号，不作为独立空间云带制造覆盖协同。
+- 正在降水或近雨湿幕证据明确时，关闭分层与空间协同，只保留各载体自身的受光基础分，避免把多源湿云重复解释为可显色覆盖。
+
 ### SurroundingService
 
 - 计算太阳方向采样点，距离为 10/25/50/75/100km。
