@@ -2629,6 +2629,27 @@ class PredictionController {
         '云层受光 {{brightness}}，调整系数 {{gate}}；本地云层 {{canvas}}，远端高云 {{remoteHigh}}，远端中云 {{remoteMid}}，侧向上层云 {{visibleSector}}（约 {{visibleBearing}}°），远端低云遮挡 {{remoteLowBlock}}，低云遮挡 {{low}} / 透过 {{lowBlock}}，太阳几何 {{solar}}，光路 {{path}}，空气 {{air}}，云厚 {{thickness}}，直射/散射 {{beam}}'
       );
     })();
+    const synergyDetail = (() => {
+      const synergy = layerBrightness?.synergy;
+      if (!synergy) return '';
+      const localBonus = Number(synergy.localLayers?.bonus);
+      const solarBonus = Number(synergy.solarLayers?.bonus);
+      const spatialBonus = Number(synergy.spatialBonus);
+      const parts = [];
+      if (Number.isFinite(localBonus) && localBonus > 0) {
+        parts.push(localized(`local mid/high synergy +${fmt(localBonus, 1)}`, `本地中高云协同 +${fmt(localBonus, 1)}`));
+      }
+      if (Number.isFinite(solarBonus) && solarBonus > 0) {
+        parts.push(localized(`solar-direction layer synergy +${fmt(solarBonus, 1)}`, `太阳方向分层协同 +${fmt(solarBonus, 1)}`));
+      }
+      if (Number.isFinite(spatialBonus) && spatialBonus > 0) {
+        parts.push(localized(`low-overlap cloud-band synergy +${fmt(spatialBonus, 1)}`, `低重叠云带协同 +${fmt(spatialBonus, 1)}`));
+      }
+      if (parts.length === 0 && Array.isArray(synergy.regions) && synergy.regions.length > 1) {
+        parts.push(localized('overlapping regions were deduplicated; no extra synergy', '重叠区域已去重，本次没有额外协同加分'));
+      }
+      return parts.join('；');
+    })();
 
     const adjustmentHtml = capEvents.length
       ? capEvents.map((event, idx) => step(
@@ -2652,7 +2673,7 @@ class PredictionController {
         <div class="score-ledger-summary">${escape(summary)}</div>
         <div class="score-ledger-steps">
           ${step(1, ledgerText('labels.cloudCarrier', {}, 'Cloud condition', '云层条件'), ledgerText('details.cloudCarrier', {}, 'usable sunset-color cloud area from local or nearby clouds', '本地或周边是否有可被日落染色的云面'), fmt(carrierScore, 1), carrierDetail)}
-          ${step(2, ledgerText('labels.layerBrightness', {}, 'Cloud lighting', '云层受光'), ledgerText('details.layerBrightnessShort', {}, 'sun direction, blockage, and light response explain whether clouds can be lit', '太阳方向、遮挡和亮度响应共同判断云层能否被照亮'), layerBrightness?.applied ? fmt(layerBrightness.effectiveBrightness, 1) : '--', [brightnessDetail, lightPathDetail].filter(Boolean).join('；'))}
+          ${step(2, ledgerText('labels.layerBrightness', {}, 'Cloud lighting', '云层受光'), ledgerText('details.layerBrightnessShort', {}, 'mid and high clouds use separate carrier and lighting scores, then cooperate by spatial independence', '中云、高云分别计算载体与受光，再按区域重叠程度连续协同'), layerBrightness?.applied ? fmt(layerBrightness.effectiveBrightness, 1) : '--', [brightnessDetail, synergyDetail, lightPathDetail].filter(Boolean).join('；'))}
           ${step(3, ledgerText('labels.baseScore', {}, 'Base score', '基础分'), weightedDescription, fmt(baseScore, 1), baseScoreDetail)}
           ${step(4, ledgerText('labels.rendering', {}, 'Air rendering', '空气显色'), renderingDescription, fmt(renderedScore, 1), renderingDetail)}
           ${adjustmentHtml}
