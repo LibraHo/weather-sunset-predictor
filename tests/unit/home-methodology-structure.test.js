@@ -57,10 +57,10 @@ describe('home methodology structure', () => {
     ];
     const localeTexts = localeFiles.map(file => fs.readFileSync(path.join(ROOT, 'src/locales', file), 'utf8'));
 
-    expect(html).toContain('2026-07-08');
-    expect(html).toContain('2026.07.08-wet-haze-open-path-mid-rendering');
-    expect(html).toContain('开光路空气显色中间档');
-    expect(html).toContain('硬阻断拆成 hard/soft');
+    expect(html).toContain('2026-07-16');
+    expect(html).toContain('2026.07.16-layer-spatial-overlap-synergy');
+    expect(html).toContain('分层与空间重叠协同 v1');
+    expect(html).toContain('不同区域按采样重叠和方位独立度协同');
     expect(html).toContain('远端高云、远端中云和远端低云遮挡');
     expect(html).toContain('分层求和亮度公式 v1');
     expect(html).toContain('2026-06-03');
@@ -69,7 +69,7 @@ describe('home methodology structure', () => {
     expect(html).toContain('满铺中高云叠加 PM/AOD 偏高');
     expect(html).toContain('方向中云越强，越接近 50-60 档');
     expect(html).toContain('云厚比例折损 v2');
-    expect(html).toContain('2026-07-07 北京开光路中等显色样本');
+    expect(html).toContain('北京 2026-07-16 朝霞回放 79.5');
     expect(html).not.toContain('载体缓冲');
     expect(html).not.toContain('低太阳透射 未命中');
 
@@ -78,9 +78,9 @@ describe('home methodology structure', () => {
       .map(file => fs.readFileSync(path.join(ROOT, 'src/locales', file), 'utf8'))
       .join('\n');
 
-    expect(coreLocaleTexts).toContain('2026.07.08-wet-haze-open-path-mid-rendering');
-    expect(coreLocaleTexts).toContain('Open-path mid air-rendering band');
-    expect(coreLocaleTexts).toContain('開光路空氣顯色中間檔');
+    expect(coreLocaleTexts).toContain('2026.07.16-layer-spatial-overlap-synergy');
+    expect(coreLocaleTexts).toContain('Layer and spatial overlap synergy v1');
+    expect(coreLocaleTexts).toContain('分層與空間重疊協同 v1');
     expect(coreLocaleTexts).toContain('Layer-weighted brightness formula v1');
     expect(coreLocaleTexts).toContain('remote high cloud');
     expect(coreLocaleTexts).toContain('Sunset scoring v2');
@@ -134,7 +134,7 @@ describe('home methodology structure', () => {
     expect(zh).toContain('候选载体 = max(本地云层, 远端分层载体, 侧向可视云带, 气溶胶弱载体)');
     expect(zh).toContain('侧向可视云带 = 主光路通透 × 方位角衰减 × 云高/距离仰角 × 空气透射 × 云层权重');
     expect(zh).toContain('本地云层 = 区间分 + 云种修正 + 云厚修正');
-    expect(zh).toContain('最终分 = clamp(Σ(分层载体 × 分层受光亮度) × 空气显色, 0, 100)');
+    expect(zh).toContain('最终分 = clamp(重叠感知协同基础分 × 空气显色, 0, 100)');
     expect(zh).toContain('展示顺序：候选载体 → 本地云层展开 → 基础分 → 空气显色 → 最终分');
     expect(zh).toContain('气溶胶候选 {{score}}');
     expect(zh).not.toContain('画布分×1.2倍');
@@ -144,7 +144,7 @@ describe('home methodology structure', () => {
     expect(en).toContain('Carrier candidate = max(local cloud, remote layer carrier, visible side-sector carrier, weak aerosol carrier)');
     expect(en).toContain('Visible side-sector carrier = main-path openness × azimuth falloff × cloud-height/distance elevation × air transmission × layer weight');
     expect(en).toContain('Local cloud = range score + cloud-type adjustment + cloud-thickness adjustment');
-    expect(en).toContain('Final score = clamp(Σ(layer carrier × layer brightness) × air rendering, 0, 100)');
+    expect(en).toContain('Final score = clamp(overlap-aware synergy base × air rendering, 0, 100)');
     expect(en).not.toContain('carrier relief');
   });
 

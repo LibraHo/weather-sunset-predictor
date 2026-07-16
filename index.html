@@ -640,7 +640,7 @@
               <li data-i18n="home.methodology.sections.transparency.visibility">主光路通畅会提高云层可用亮度；侧向云带必须有足够样本和受光几何才参与</li>
               <li data-i18n="home.methodology.sections.transparency.humidity">厚云、灰幕、水汽偏重、直射弱等只进入亮度估算，不在用户页逐项堆叠</li>
             </ul>
-            <p class="methodology-formula" data-i18n="home.methodology.sections.transparency.formula">基础分 = Σ(分层载体 × 分层受光亮度)</p>
+            <p class="methodology-formula" data-i18n="home.methodology.sections.transparency.formula">分层分 = 载体 × 各自受光；区域内与区域间按重叠程度连续协同</p>
           </article>
 
           <!-- 第四部分：空气显色 -->
@@ -711,12 +711,12 @@
             </h3>
             <p data-i18n="home.methodology.sections.finalFormula.desc">最终分来自分层载体和受光亮度的求和，再乘空气显色，并经过状态封顶。结果页展示分会和公式链路保持一致。</p>
             <ul class="methodology-detail-list">
-              <li data-i18n="home.methodology.sections.finalFormula.carrier">基础分 = Σ(分层载体 × 分层受光亮度)</li>
+              <li data-i18n="home.methodology.sections.finalFormula.carrier">基础分 = 区域内分层协同 → 区域间重叠感知协同</li>
               <li data-i18n="home.methodology.sections.finalFormula.lightGate">光路已经并入受光亮度，不再单独显示成最终乘子</li>
               <li data-i18n="home.methodology.sections.finalFormula.rendering">空气显色用于解释颜色质量，不再把气溶胶弱载体重复显示成最终加分</li>
               <li data-i18n="home.methodology.sections.finalFormula.statusCaps">显示分还会按状态校准：无火烧云低于 40，轻微霞光低于 60；几何不可行、厚云、灰幕和雨低云会进一步封顶</li>
             </ul>
-            <p class="methodology-formula" data-i18n="home.methodology.sections.finalFormula.formula">最终分 = clamp(Σ(分层载体 × 分层受光亮度) × 空气显色, 0, 100)，再经过状态封顶校准</p>
+            <p class="methodology-formula" data-i18n="home.methodology.sections.finalFormula.formula">最终分 = clamp(重叠感知协同基础分 × 空气显色, 0, 100)，再经过状态封顶校准</p>
           </article>
         </div>
 
@@ -760,11 +760,11 @@
           <div class="methodology-changelog-scroll" tabindex="0" role="region" aria-labelledby="methodology-changelog-title">
             <ol class="methodology-changelog-list">
               <li>
-                <time datetime="2026-07-08" data-i18n="home.methodology.changelog.latest.date">2026-07-08</time>
+                <time datetime="2026-07-16" data-i18n="home.methodology.changelog.latest.date">2026-07-16</time>
                 <div>
-                  <strong data-i18n="home.methodology.changelog.latest.title">开光路空气显色中间档</strong>
-                  <p data-i18n="home.methodology.changelog.latest.summary">光路打开、高云载体充足、低云未封死，但水汽与气溶胶预报提示显色不稳定时，进入中等显色档；水汽不再单独触发雨后灰幕，硬阻断拆成 hard/soft。</p>
-                  <small data-i18n="home.methodology.changelog.latest.validation">验证：2026-07-07 北京开光路中等显色样本从 35 调整到 46；2026-06-13 真雨幕仍保持约 24；真实校准样本库和后端单测通过。</small>
+                  <strong data-i18n="home.methodology.changelog.latest.title">分层与空间重叠协同 v1</strong>
+                  <p data-i18n="home.methodology.changelog.latest.summary">中云、高云分别计算载体×受光；同一区域连续协同，不同区域按采样重叠和方位独立度协同。降水或近雨湿幕明确时关闭协同。</p>
+                  <small data-i18n="home.methodology.changelog.latest.validation">验证：北京 2026-07-16 朝霞回放 79.5；11 个历史样本全部留在观测区间；雨湿、稀疏云、阻塞和沙尘反例未被误抬。</small>
                 </div>
               </li>
               <li>
@@ -834,7 +834,7 @@
             </ol>
           </div>
           <div class="methodology-version-card">
-            <strong data-i18n="home.methodology.versionLabel">算法说明版本：2026.07.08-wet-haze-open-path-mid-rendering</strong>
+            <strong data-i18n="home.methodology.versionLabel">算法说明版本：2026.07.16-layer-spatial-overlap-synergy</strong>
             <span data-i18n="home.methodology.versionDesc">本版说明与结果页计算依据一致：先比较本地云层、远端分层载体、侧向可视云带和气溶胶弱载体，再展开受光亮度、空气显色与最终分。</span>
           </div>
         </div>
