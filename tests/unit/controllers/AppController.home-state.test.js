@@ -76,7 +76,7 @@ describe('AppController home state audit items 13-17', () => {
     expect(document.getElementById('location-input').value).toBe('Paris');
   });
 
-  test('renders only the event time and update time below the location', () => {
+  test('renders the event date/time and update time below the location', () => {
     const controller = createController();
     const eventTime = new Date(Date.now() + 60 * 60 * 1000);
     controller.updateWeatherContext(
@@ -126,7 +126,8 @@ describe('AppController home state audit items 13-17', () => {
       [{ type: 'sunset', sunsetTime: new Date('2026-07-14T12:00:00Z') }]
     );
 
-    expect(document.getElementById('weather-context-date-time').textContent).toBe('20:00');
+    expect(document.getElementById('weather-context-date-time').textContent).toContain('7月14日');
+    expect(document.getElementById('weather-context-date-time').textContent).toContain('20:00');
     expect(document.getElementById('weather-context-updated').textContent).toContain('20:30');
   });
 });
